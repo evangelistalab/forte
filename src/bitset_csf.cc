@@ -1,4 +1,4 @@
-#include <psi4-dec.h>
+#include "psi4/psi4-dec.h"
 
 #include "bitset_csf.h"
 #include "fci_vector.h"

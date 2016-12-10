@@ -1,14 +1,14 @@
 //[forte-public]
 #include <cmath>
 
-#include <libmints/wavefunction.h>
-#include <libmints/integral.h>
-#include <lib3index/cholesky.h>
-#include <libmints/basisset.h>
-#include <libmints/sieve.h>
-#include <libqt/qt.h>
-#include <libpsio/psio.hpp>
-#include <psifiles.h>
+#include "psi4/libmints/wavefunction.h"
+#include "psi4/libmints/integral.h"
+#include "psi4/lib3index/cholesky.h"
+#include "psi4/libmints/basisset.h"
+#include "psi4/libmints/sieve.h"
+#include "psi4/libqt/qt.h"
+#include "psi4/libpsio/psio.hpp"
+#include "psi4/psifiles.h"
 
 #include "integrals.h"
 
@@ -134,26 +134,26 @@ ambit::Tensor CholeskyIntegrals::three_integral_block(const std::vector<size_t> 
 void CholeskyIntegrals::gather_integrals()
 {
     if(print_){outfile->Printf("\n Computing the Cholesky Vectors \n");}
-    boost::shared_ptr<BasisSet> primary = wfn_->basisset();
+    std::shared_ptr<BasisSet> primary = wfn_->basisset();
     size_t nbf = primary->nbf();
 
     /// Needed to generate sieve information
-    boost::shared_ptr<IntegralFactory> integral(new IntegralFactory(primary, primary, primary, primary));
+    std::shared_ptr<IntegralFactory> integral(new IntegralFactory(primary, primary, primary, primary));
     double tol_cd = options_.get_double("CHOLESKY_TOLERANCE");
 
     //This is creates the cholesky decomposed AO integrals
     Timer timer;
-    boost::shared_ptr<CholeskyERI> Ch (new CholeskyERI(boost::shared_ptr<TwoBodyAOInt>(integral->eri()),options_.get_double("INTS_TOLERANCE"),tol_cd, Process::environment.get_memory()));
+    std::shared_ptr<CholeskyERI> Ch (new CholeskyERI(std::shared_ptr<TwoBodyAOInt>(integral->eri()),options_.get_double("INTS_TOLERANCE"),tol_cd, Process::environment.get_memory()));
     if(options_.get_str("DF_INTS_IO") == "LOAD")
     {
-        boost::shared_ptr<ERISieve> sieve(new ERISieve(primary, options_.get_double("INTS_TOLERANCE")));
+        std::shared_ptr<ERISieve> sieve(new ERISieve(primary, options_.get_double("INTS_TOLERANCE")));
         const std::vector<std::pair<int, int> >& function_pairs = sieve->function_pairs();
         int ntri = sieve->function_pairs().size();
         ULI nbf = primary->nbf();
         std::string str= "Reading CD Integrals";
         if(print_){outfile->Printf("\n    %-36s ...", str.c_str());}
 
-        boost::shared_ptr<PSIO> psio (new PSIO());
+        std::shared_ptr<PSIO> psio (new PSIO());
         psio_address addr = PSIO_ZERO;
         int file_unit = PSIF_DFSCF_BJ;
 
@@ -354,7 +354,7 @@ void CholeskyIntegrals::resort_integrals_after_freezing()
     resort_three(ThreeIntegral_,cmo2mo);
 
 }
-void CholeskyIntegrals::resort_three(boost::shared_ptr<Matrix>& threeint,std::vector<size_t>& map)
+void CholeskyIntegrals::resort_three(std::shared_ptr<Matrix>& threeint,std::vector<size_t>& map)
 {
     //Create a temperature threeint matrix
     SharedMatrix temp_threeint(threeint->clone());

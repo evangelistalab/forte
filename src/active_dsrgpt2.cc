@@ -1,8 +1,9 @@
 #include <map>
 #include <algorithm>
+
 #include "mini-boost/boost/format.hpp"
-#include <physconst.h>
-#include <libmints/pointgrp.h>
+#include "psi4/physconst.h"
+#include "psi4/libmints/pointgrp.h"
 
 #include "active_dsrgpt2.h"
 

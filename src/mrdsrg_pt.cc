@@ -3,7 +3,7 @@
 #include <map>
 #include "mini-boost/boost/format.hpp"
 
-#include <libdiis/diismanager.h>
+#include "psi4/libdiis/diismanager.h"
 
 #include "helpers.h"
 #include "mrdsrg.h"

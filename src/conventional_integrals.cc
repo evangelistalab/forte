@@ -1,11 +1,11 @@
 //[forte-public]
 #include <cmath>
 
-#include <psifiles.h>
-#include <libdpd/dpd.h>
-#include <libpsio/psio.hpp>
-#include "psi4-dec.h"
-
+#include "psi4/psifiles.h"
+#include "psi4/libdpd/dpd.h"
+#include "psi4/libpsio/psio.hpp"
+#include "psi4/psi4-dec.h"
+#include "psi4/libmints/mintshelper.h"
 
 #include "blockedtensorfactory.h"
 #include "integrals.h"
@@ -83,7 +83,7 @@ void ConventionalIntegrals::transform_integrals()
 {
 
     // For now, we'll just transform for closed shells and generate all integrals.
-    std::vector<boost::shared_ptr<MOSpace> > spaces;
+    std::vector<std::shared_ptr<MOSpace> > spaces;
 
     // TODO: transform only the orbitals within an energy range to save time on this step.
     spaces.push_back(MOSpace::all);
@@ -189,7 +189,7 @@ void ConventionalIntegrals::gather_integrals()
 
         // Read the integrals
         dpdbuf4 K;
-        boost::shared_ptr<PSIO> psio(_default_psio_lib_);
+        std::shared_ptr<PSIO> psio(_default_psio_lib_);
         psio->open(PSIF_LIBTRANS_DPD, PSIO_OPEN_OLD);
         // To only process the permutationally unique integrals, change the ID("[A,A]") to ID("[A>=A]+")
         global_dpd_->buf4_init(&K, PSIF_LIBTRANS_DPD, 0, ID("[A,A]"), ID("[A,A]"),

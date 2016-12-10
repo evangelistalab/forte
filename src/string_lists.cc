@@ -1,4 +1,4 @@
-#include <psi4-dec.h>
+#include "psi4/psi4-dec.h"
 
 #include "helpers.h"
 #include "string_lists.h"
@@ -28,29 +28,29 @@ void StringLists::startup()
     }
 
     // Allocate the alfa and beta graphs
-    alfa_graph_ = boost::shared_ptr<BinaryGraph>(new BinaryGraph(ncmo_,na_,cmopi_int));
-    beta_graph_ = boost::shared_ptr<BinaryGraph>(new BinaryGraph(ncmo_,nb_,cmopi_int));
-    pair_graph_ = boost::shared_ptr<BinaryGraph>(new BinaryGraph(ncmo_,2,cmopi_int));
+    alfa_graph_ = std::shared_ptr<BinaryGraph>(new BinaryGraph(ncmo_,na_,cmopi_int));
+    beta_graph_ = std::shared_ptr<BinaryGraph>(new BinaryGraph(ncmo_,nb_,cmopi_int));
+    pair_graph_ = std::shared_ptr<BinaryGraph>(new BinaryGraph(ncmo_,2,cmopi_int));
 
     if (na_ >= 1){
-        alfa_graph_1h_ = boost::shared_ptr<BinaryGraph>(new BinaryGraph(ncmo_,na_ - 1,cmopi_int));
+        alfa_graph_1h_ = std::shared_ptr<BinaryGraph>(new BinaryGraph(ncmo_,na_ - 1,cmopi_int));
     }
     if (nb_ >= 1){
-        beta_graph_1h_ = boost::shared_ptr<BinaryGraph>(new BinaryGraph(ncmo_,nb_ - 1,cmopi_int));
+        beta_graph_1h_ = std::shared_ptr<BinaryGraph>(new BinaryGraph(ncmo_,nb_ - 1,cmopi_int));
     }
 
     if (na_ >= 2){
-        alfa_graph_2h_ = boost::shared_ptr<BinaryGraph>(new BinaryGraph(ncmo_,na_ - 2,cmopi_int));
+        alfa_graph_2h_ = std::shared_ptr<BinaryGraph>(new BinaryGraph(ncmo_,na_ - 2,cmopi_int));
     }
     if (nb_ >= 2){
-        beta_graph_2h_ = boost::shared_ptr<BinaryGraph>(new BinaryGraph(ncmo_,nb_ - 2,cmopi_int));
+        beta_graph_2h_ = std::shared_ptr<BinaryGraph>(new BinaryGraph(ncmo_,nb_ - 2,cmopi_int));
     }
 
     if (na_ >= 3){
-        alfa_graph_3h_ = boost::shared_ptr<BinaryGraph>(new BinaryGraph(ncmo_,na_ - 3,cmopi_int));
+        alfa_graph_3h_ = std::shared_ptr<BinaryGraph>(new BinaryGraph(ncmo_,na_ - 3,cmopi_int));
     }
     if (nb_ >= 3){
-        beta_graph_3h_ = boost::shared_ptr<BinaryGraph>(new BinaryGraph(ncmo_,nb_ - 3,cmopi_int));
+        beta_graph_3h_ = std::shared_ptr<BinaryGraph>(new BinaryGraph(ncmo_,nb_ - 3,cmopi_int));
     }
 
 

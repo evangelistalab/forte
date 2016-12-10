@@ -23,8 +23,8 @@
 #ifndef _mp2_nos_h_
 #define _mp2_nos_h_
 
-#include <liboptions/liboptions.h>
-#include <libmints/wavefunction.h>
+#include "psi4/liboptions/liboptions.h"
+#include "psi4/libmints/wavefunction.h"
 
 #include "helpers.h"
 #include "integrals.h"
@@ -42,7 +42,7 @@ class MP2_NOS
 {
 public:
     // => Constructor <= //
-    MP2_NOS(boost::shared_ptr<Wavefunction> wfn, Options &options, std::shared_ptr<ForteIntegrals>  ints, std::shared_ptr<MOSpaceInfo> mo_space_info);
+    MP2_NOS(std::shared_ptr<Wavefunction> wfn, Options &options, std::shared_ptr<ForteIntegrals>  ints, std::shared_ptr<MOSpaceInfo> mo_space_info);
     //  => Destructor <= //
 };
 
@@ -55,7 +55,7 @@ class SemiCanonical
 {
 public:
     // => Constructor <= //
-    SemiCanonical(boost::shared_ptr<Wavefunction> wfn, Options &options, std::shared_ptr<ForteIntegrals>  ints, std::shared_ptr<MOSpaceInfo> mo_space_info, Reference& reference);
+    SemiCanonical(std::shared_ptr<Wavefunction> wfn, Options &options, std::shared_ptr<ForteIntegrals>  ints, std::shared_ptr<MOSpaceInfo> mo_space_info, Reference& reference);
 };
 
 }} // End Namespaces

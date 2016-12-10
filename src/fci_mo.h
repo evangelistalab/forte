@@ -1,22 +1,23 @@
 #ifndef _fci_mo_h_
 #define _fci_mo_h_
 
-#include <physconst.h>
-#include <libqt/qt.h>
-#include <libpsio/psio.hpp>
-#include <libpsio/psio.h>
-#include <liboptions/liboptions.h>
-#include <libmints/vector.h>
-#include <libmints/matrix.h>
-#include <libmints/wavefunction.h>
-#include <libmints/molecule.h>
-#include <libmints/basisset.h>
-#include <libmints/integral.h>
-#include <libmints/sointegral.h>
-#include <libmints/mintshelper.h>
 #include <vector>
 #include <tuple>
 #include <string>
+
+#include "psi4/physconst.h"
+#include "psi4/libqt/qt.h"
+#include "psi4/libpsio/psio.hpp"
+#include "psi4/libpsio/psio.h"
+#include "psi4/liboptions/liboptions.h"
+#include "psi4/libmints/vector.h"
+#include "psi4/libmints/matrix.h"
+#include "psi4/libmints/wavefunction.h"
+#include "psi4/libmints/molecule.h"
+#include "psi4/libmints/basisset.h"
+#include "psi4/libmints/integral.h"
+#include "psi4/libmints/sointegral_onebody.h"
+#include "psi4/libmints/mintshelper.h"
 
 #include "integrals.h"
 #include "dynamic_bitset_determinant.h"

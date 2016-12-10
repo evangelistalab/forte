@@ -1,7 +1,7 @@
 #include <fstream>
 #include <iostream>
 #include "mini-boost/boost/format.hpp"
-#include <libmints/molecule.h>
+#include "psi4/libmints/molecule.h"
 #include "v2rdm.h"
 
 namespace psi{ namespace forte {
@@ -83,7 +83,7 @@ void V2RDM::read_2pdm(){
     // test if files exist
     std::string str = "Testing if 2RDM files exist";
     outfile->Printf("\n  %-45s ...", str.c_str());
-    boost::shared_ptr<PSIO> psio (new PSIO());
+    std::shared_ptr<PSIO> psio (new PSIO());
     for(const auto& file: {PSIF_V2RDM_D2AA,PSIF_V2RDM_D2AB,PSIF_V2RDM_D2BB}) {
         if ( !psio->exists(file) ) {
             std::string error = "V2RDM file for " + filename[file] + " does not exist";
@@ -232,7 +232,7 @@ void V2RDM::read_3pdm(){
     // test if files exist
     std::string str = "Testing if 3RDM files exist";
     outfile->Printf("\n  %-45s ...", str.c_str());
-    boost::shared_ptr<PSIO> psio (new PSIO());
+    std::shared_ptr<PSIO> psio (new PSIO());
     for(const auto& file: {PSIF_V2RDM_D3AAA,PSIF_V2RDM_D3AAB,PSIF_V2RDM_D3BBA,PSIF_V2RDM_D3BBB}) {
         if ( !psio->exists(file) ) {
             std::string error = "V2RDM file for " + filename[file] + " does not exist";

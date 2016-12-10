@@ -245,7 +245,7 @@ public:
     // => Constructors <= //
 
     /// Class constructor
-    TensorSRG(boost::shared_ptr<Wavefunction> wfn, Options& options, std::shared_ptr<ForteIntegrals>  ints, std::shared_ptr<MOSpaceInfo> mo_space_info);
+    TensorSRG(std::shared_ptr<Wavefunction> wfn, Options& options, std::shared_ptr<ForteIntegrals>  ints, std::shared_ptr<MOSpaceInfo> mo_space_info);
 
     /// Class destructor
     ~TensorSRG();

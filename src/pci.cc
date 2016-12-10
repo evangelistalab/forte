@@ -6,13 +6,13 @@
 #include "mini-boost/boost/format.hpp"
 #include "mini-boost/boost/math/special_functions/bessel.hpp"
 
-#include <libciomr/libciomr.h>
-#include <libpsio/psio.h>
-#include <libpsio/psio.hpp>
-#include <libqt/qt.h>
-#include <libmints/molecule.h>
-#include "libmints/matrix.h"
-#include "libmints/vector.h"
+#include "psi4/libciomr/libciomr.h"
+#include "psi4/libpsio/psio.h"
+#include "psi4/libpsio/psio.hpp"
+#include "psi4/libqt/qt.h"
+#include "psi4/libmints/molecule.h"
+#include "psi4/libmints/matrix.h"
+#include "psi4/libmints/vector.h"
 
 #include "pci.h"
 #include "sparse_ci_solver.h"

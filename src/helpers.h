@@ -30,8 +30,8 @@
 #include <chrono>
 
 #include "ambit/blocked_tensor.h"
-#include <libmints/matrix.h>
-#include <libmints/vector.h>
+#include "psi4/libmints/matrix.h"
+#include "psi4/libmints/vector.h"
 
 namespace psi{ namespace forte{
 
@@ -169,7 +169,7 @@ void print_method_banner(const std::vector<std::string>& text, const std::string
  * @param diag_F -> The Orbital energies (diagonal elements of Fock operator)
  * @param occupation -> occupation vector
  */
-void view_modified_orbitals(SharedWavefunction wfn, const boost::shared_ptr<Matrix>& Ca, const boost::shared_ptr<Vector> &diag_F, const boost::shared_ptr<Vector> &occupation);
+void view_modified_orbitals(SharedWavefunction wfn, const std::shared_ptr<Matrix>& Ca, const std::shared_ptr<Vector> &diag_F, const std::shared_ptr<Vector> &occupation);
 
 /**
  * @brief print_h2 Print a header

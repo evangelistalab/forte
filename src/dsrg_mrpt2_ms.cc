@@ -80,7 +80,7 @@ std::vector<std::vector<double>> DSRG_MRPT2::compute_energy_sa(){
     oei.block("AA").data() = fci_ints->oei_b_vector();
 
     // get nuclear repulsion energy
-    boost::shared_ptr<Molecule> molecule = Process::environment.molecule();
+    std::shared_ptr<Molecule> molecule = Process::environment.molecule();
     double Enuc = molecule->nuclear_repulsion_energy();
 
     // loop over entries of AVG_STATE

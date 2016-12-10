@@ -1,7 +1,7 @@
 #include <cmath>
 
 #include "mini-boost/boost/shared_ptr.hpp"
-#include "libdiis/diismanager.h"
+#include "psi4/libdiis/diismanager.h"
 
 #include "tensorsrg.h"
 
@@ -27,11 +27,11 @@ double TensorSRG::compute_ct_energy()
     bool   converged  = false;
     int    cycle      = 0;
 
-    boost::shared_ptr<DIISManager> diis_manager;
+    std::shared_ptr<DIISManager> diis_manager;
 
     int max_diis_vectors = options_.get_int("DIIS_MAX_VECS");
     if (max_diis_vectors > 0){
-        diis_manager = boost::shared_ptr<DIISManager>(new DIISManager(max_diis_vectors, "L-CTSD DIIS vector", DIISManager::OldestAdded, DIISManager::InCore));
+        diis_manager = std::shared_ptr<DIISManager>(new DIISManager(max_diis_vectors, "L-CTSD DIIS vector", DIISManager::OldestAdded, DIISManager::InCore));
         diis_manager->set_error_vector_size(5,
                                            DIISEntry::Pointer,S1.block("ov").numel(),
                                            DIISEntry::Pointer,S1.block("OV").numel(),

@@ -1,15 +1,26 @@
 //[forte-public]
+
+#ifdef HAVE_GA
+
 #include <cmath>
 #include <numeric>
-
-#include <libmints/matrix.h>
-#include <libthce/lreri.h>
-#include <libmints/basisset.h>
-#include <libthce/thce.h>
-#include <libqt/qt.h>
-#include "integrals.h"
 #include <cassert>
-#include <omp.h>
+
+#include "psi4/libmints/matrix.h"
+#include "psi4/libthce/lreri.h"
+#include "psi4/libmints/basisset.h"
+#include "psi4/libthce/thce.h"
+#include "psi4/libqt/qt.h"
+#include "integrals.h"
+
+#ifdef _OPENMP
+    #include <omp.h>
+#else
+    #define omp_get_max_threads() 1
+    #define omp_get_thread_num() 0
+    #define omp_get_num_threads() 1
+#endif
+
 #ifdef HAVE_GA
     #include <ga.h>
     #include <macdecls.h>
@@ -74,14 +85,14 @@ void DistDFIntegrals::test_distributed_integrals()
 {
         outfile->Printf("\n Computing Density fitted integrals \n");
 
-        boost::shared_ptr<BasisSet> primary = wfn_->basisset();
+        std::shared_ptr<BasisSet> primary = wfn_->basisset();
         if(options_.get_str("DF_BASIS_MP2").length() == 0)
         {
             outfile->Printf("\n Please set a DF_BASIS_MP2 option to a specified auxiliary basis set");
             throw PSIEXCEPTION("Select a DF_BASIS_MP2 for use with DFIntegrals");
         }
 
-        boost::shared_ptr<BasisSet> auxiliary = BasisSet::pyconstruct_orbital(primary->molecule(), "DF_BASIS_MP2",options_.get_str("DF_BASIS_MP2"));
+        std::shared_ptr<BasisSet> auxiliary = BasisSet::pyconstruct_orbital(primary->molecule(), "DF_BASIS_MP2",options_.get_str("DF_BASIS_MP2"));
 
         size_t nprim = primary->nbf();
         size_t naux  = auxiliary->nbf();
@@ -115,7 +126,7 @@ void DistDFIntegrals::test_distributed_integrals()
 
         //Constructs the DF function
         //I used this version of build as this doesn't build all the apces and assume a RHF/UHF reference
-        boost::shared_ptr<DFERI> df = DFERI::build(primary,auxiliary,options_);
+        std::shared_ptr<DFERI> df = DFERI::build(primary,auxiliary,options_);
 
         //Pushes a C matrix that is ordered in pitzer ordering
         //into the C_matrix object
@@ -136,7 +147,7 @@ void DistDFIntegrals::test_distributed_integrals()
         df->compute();
         outfile->Printf("...Done. Timing %15.6f s", timer.get());
 
-        boost::shared_ptr<Tensor> B = df->ints()["B"];
+        std::shared_ptr<Tensor> B = df->ints()["B"];
         B_ = B;
         df.reset();
         int dim[2], chunk[2];
@@ -238,7 +249,7 @@ void DistDFIntegrals::test_distributed_integrals()
         delete test_int;
 }
 
-ambit::Tensor DistDFIntegrals::read_integral_chunk(boost::shared_ptr<Tensor>& B,std::vector<int>& lo, std::vector<int>& hi)
+ambit::Tensor DistDFIntegrals::read_integral_chunk(std::shared_ptr<Tensor>& B,std::vector<int>& lo, std::vector<int>& hi)
 {
     assert(lo.size()==2);
     assert(hi.size()==2);
@@ -419,7 +430,7 @@ ambit::Tensor DistDFIntegrals::three_integral_block(const std::vector<size_t>& A
 }
 void DistDFIntegrals::gather_integrals()
 {
-    boost::shared_ptr<BasisSet> auxiliary = BasisSet::pyconstruct_orbital(wfn_->molecule(), "DF_BASIS_MP2",options_.get_str("DF_BASIS_MP2"));
+    std::shared_ptr<BasisSet> auxiliary = BasisSet::pyconstruct_orbital(wfn_->molecule(), "DF_BASIS_MP2",options_.get_str("DF_BASIS_MP2"));
     SharedMatrix Ca = wfn_->Ca();
     SharedMatrix Ca_ao(new Matrix("CA_AO", wfn_->nso(), wfn_->nmo()));
     for (size_t h = 0, index = 0; h < wfn_->nirrep(); ++h){
@@ -464,4 +475,6 @@ void DistDFIntegrals::retransform_integrals()
 }
 
 }}
+
+#endif // HAVE_GA
 

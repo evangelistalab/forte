@@ -4,11 +4,11 @@
 #include <cmath>
 #include "mini-boost/boost/assign.hpp"
 
-#include <liboptions/liboptions.h>
-#include <libmints/wavefunction.h>
-#include <libpsio/psio.hpp>
-#include <libpsio/psio.h>
-#include <ambit/blocked_tensor.h>
+#include "psi4/liboptions/liboptions.h"
+#include "psi4/libmints/wavefunction.h"
+#include "psi4/libpsio/psio.hpp"
+#include "psi4/libpsio/psio.h"
+#include "ambit/blocked_tensor.h"
 
 #include "integrals.h"
 #include "reference.h"

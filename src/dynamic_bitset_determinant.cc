@@ -1,6 +1,5 @@
-#include <psi4-dec.h>
-#include <libmoinfo/libmoinfo.h>
-#include <libmints/matrix.h>
+#include "psi4/psi4-dec.h"
+#include "psi4/libmints/matrix.h"
 
 #include "dynamic_bitset_determinant.h"
 #include "fci_vector.h"

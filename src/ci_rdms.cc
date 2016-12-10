@@ -1,7 +1,7 @@
 
-#include <liboptions/liboptions.h>
-#include <libmints/molecule.h>
-#include <libmints/wavefunction.h>
+#include "psi4/liboptions/liboptions.h"
+#include "psi4/libmints/molecule.h"
+#include "psi4/libmints/wavefunction.h"
 
 #include "reference.h"
 #include "helpers.h"

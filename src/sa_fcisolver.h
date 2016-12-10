@@ -1,9 +1,9 @@
 #ifndef SA_FCISOLVER_H
 #define SA_FCISOLVER_H
 
-#include <liboptions/liboptions.h>
-#include <libmints/wavefunction.h>
-#include <libmints/wavefunction.h>
+#include "psi4/liboptions/liboptions.h"
+#include "psi4/libmints/wavefunction.h"
+#include "psi4/libmints/wavefunction.h"
 #include "fci_solver.h"
 #include "fci_vector.h"
 
@@ -14,7 +14,7 @@ class SA_FCISolver
 {
 public:
 
-    SA_FCISolver(Options& options, boost::shared_ptr<Wavefunction> wfn);
+    SA_FCISolver(Options& options, std::shared_ptr<Wavefunction> wfn);
 
     /// E_{sa-casscf} = gamma_{avg} h_{pq} + Gamma_{avg} g_{pqrs}
     double compute_energy();
@@ -33,7 +33,7 @@ private:
     /// Options from Psi4
     Options options_;
     /// The wavefunction object of Psi4
-    boost::shared_ptr<Wavefunction> wfn_;
+    std::shared_ptr<Wavefunction> wfn_;
     /// Integral objects (same for all SA computations)
     std::shared_ptr<ForteIntegrals> ints_;
     std::shared_ptr<FCIIntegrals> fci_ints_;

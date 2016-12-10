@@ -1,9 +1,9 @@
 #include "blockedtensorfactory.h"
-#include <libpsio/psio.hpp>
-#include <libpsio/psio.h>
-#include <libmints/molecule.h>
-#include <libmints/wavefunction.h>
-#include <liboptions/liboptions.h>
+#include "psi4/libpsio/psio.hpp"
+#include "psi4/libpsio/psio.h"
+#include "psi4/libmints/molecule.h"
+#include "psi4/libmints/wavefunction.h"
+#include "psi4/liboptions/liboptions.h"
 #include <tuple>
 #include <vector>
 #include <string>

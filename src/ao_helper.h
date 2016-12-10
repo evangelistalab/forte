@@ -1,8 +1,9 @@
 #ifndef _atomic_orbital_h_
 #define _atomic_orbital_h_
-#include <lib3index/denominator.h>
-#include <libmints/mints.h>
-#include <psi4-dec.h>
+
+#include "psi4/psi4-dec.h"
+#include "psi4/lib3index/denominator.h"
+
 namespace psi { namespace forte {
 
 class AtomicOrbitalHelper
@@ -42,8 +43,8 @@ public:
     AtomicOrbitalHelper(SharedMatrix CMO, SharedVector eps_occ, SharedVector eps_vir, double laplace_tolerance);
     AtomicOrbitalHelper(SharedMatrix CMO, SharedVector eps_occ, SharedVector eps_vir, double laplace_tolerance, int shift);
     /// Compute (mu nu | mu nu)^{(1/2)}
-    void Compute_AO_Screen(boost::shared_ptr<BasisSet>& primary);
-    void Estimate_TransAO_Screen(boost::shared_ptr<BasisSet>& primary, boost::shared_ptr<BasisSet>& auxiliary);
+    void Compute_AO_Screen(std::shared_ptr<BasisSet>& primary);
+    void Estimate_TransAO_Screen(std::shared_ptr<BasisSet>& primary, std::shared_ptr<BasisSet>& auxiliary);
 
     ~AtomicOrbitalHelper();
 

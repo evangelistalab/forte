@@ -23,13 +23,13 @@
 
 #include <numeric>
 
-#include "psi4-dec.h"
+#include "psi4/psi4-dec.h"
 
-#include <libmints/molecule.h>
-#include <libmints/pointgrp.h>
-#include "libmints/wavefunction.h"
-#include "libmints/writer.h"
-#include <libmints/writer_file_prefix.h>
+#include "psi4/libmints/molecule.h"
+#include "psi4/libmints/pointgrp.h"
+#include "psi4/libmints/wavefunction.h"
+#include "psi4/libmints/writer.h"
+#include "psi4/libmints/writer_file_prefix.h"
 
 #include "helpers.h"
 
@@ -373,16 +373,18 @@ std::pair<double, std::string> to_xb(size_t nele, size_t type_size){
     return out;
 }
 
-void view_modified_orbitals(SharedWavefunction wfn, const boost::shared_ptr<Matrix> &Ca, const boost::shared_ptr<Vector>& diag_F,const boost::shared_ptr<Vector>& occupation )
+void view_modified_orbitals(SharedWavefunction wfn, const std::shared_ptr<Matrix> &Ca, const std::shared_ptr<Vector>& diag_F,const std::shared_ptr<Vector>& occupation )
 {
-        boost::shared_ptr<MoldenWriter> molden(new MoldenWriter(wfn));
+        std::shared_ptr<MoldenWriter> molden(new MoldenWriter(wfn));
         std::string filename = get_writer_file_prefix(wfn->molecule()->name()) + ".molden";
 
         if(remove(filename.c_str()) == 0){
             outfile->Printf("\n  Remove previous molden file named %s.", filename.c_str());
         }
         outfile->Printf("\n  Write molden file to %s.", filename.c_str());
+        /* PORTTODO: re-enable this block
         molden->write(filename, Ca, Ca, diag_F, diag_F, occupation, occupation);
+        */
 }
 std::pair<std::vector<int>, std::vector<int> > split_up_tasks(size_t size_of_tasks,int nproc)
 {

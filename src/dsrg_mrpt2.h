@@ -29,10 +29,10 @@
 #include <tuple>
 #include "mini-boost/boost/assign.hpp"
 
-#include <liboptions/liboptions.h>
-#include <libmints/wavefunction.h>
-#include <libmints/molecule.h>
-#include <libmints/pointgrp.h>
+#include "psi4/liboptions/liboptions.h"
+#include "psi4/libmints/wavefunction.h"
+#include "psi4/libmints/molecule.h"
+#include "psi4/libmints/pointgrp.h"
 
 #include "integrals.h"
 #include "ambit/blocked_tensor.h"

@@ -23,9 +23,9 @@
 #ifndef _iterative_solvers_h_
 #define _iterative_solvers_h_
 
-#include <libqt/qt.h>
-#include <libmints/vector.h>
-#include <libmints/matrix.h>
+#include "psi4/libqt/qt.h"
+#include "psi4/libmints/vector.h"
+#include "psi4/libmints/matrix.h"
 
 namespace psi{ namespace forte{
 
