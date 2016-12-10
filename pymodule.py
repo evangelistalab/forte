@@ -31,7 +31,7 @@ import psi4
 import psi4.driver.p4util as p4util
 from psi4.driver.procedures import proc_util
 
-def run_forte_inversion(name, **kwargs):
+def run_forte(name, **kwargs):
     r"""Function encoding sequence of PSI module and plugin calls so that
     forte_inversion can be called via :py:func:`~driver.energy`. For post-scf plugins.
 
@@ -62,4 +62,4 @@ def run_forte_inversion(name, **kwargs):
 
 
 # Integration with driver routines
-psi4.driver.procedures['energy']['forte'] = run_forte_inversion
+psi4.driver.procedures['energy']['forte'] = run_forte
