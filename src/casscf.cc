@@ -302,7 +302,11 @@ void CASSCF::startup()
         throw PSIEXCEPTION("GTFock was not compiled in this version");
     #endif
     } else {
-        JK_ = JK::build_JK(this->basisset(), get_basisset("DF_BASIS_SCF"), this->options_);
+        if (options_.get_str("SCF_TYPE") == "DF"){
+            JK_ = JK::build_JK(basisset(), get_basisset("DF_BASIS_SCF"), options_);
+        } else {
+            JK_ = JK::build_JK(basisset(), BasisSet::zero_ao_basis_set(), options_);
+        }
     }
     JK_->set_memory(Process::environment.get_memory() * 0.8);
     JK_->initialize();
