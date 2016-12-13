@@ -1,8 +1,8 @@
 import forte
 
 refscf = -75.3790205732515943 
-refaci = -75.645407341861 
-refacipt2 = -75.837464107199
+refaci = -75.451751419651 
+refacipt2 = -75.452750874639 
 
 molecule C2{ 
 C  0.00000 0.00000 0.0 
@@ -45,5 +45,5 @@ compare_values(refscf, get_variable("CURRENT ENERGY"),9, "SCF energy")
 
 energy('forte')
 
-#compare_values(refaci, get_variable("ACI ENERGY"),9, "ACI energy")
-#compare_values(refacipt2, get_variable("ACI+PT2 ENERGY"),8, "ACI+PT2 energy")
+compare_values(refaci, get_variable("ACI ENERGY"),9, "ACI energy")
+compare_values(refacipt2, get_variable("ACI+PT2 ENERGY"),8, "ACI+PT2 energy")
