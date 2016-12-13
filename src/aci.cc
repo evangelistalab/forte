@@ -520,6 +520,7 @@ double AdaptiveCI::compute_energy()
     std::vector<STLBitsetDeterminant> full_space;
     std::vector<size_t> sizes(nroot_);
     SharedVector energies(new Vector(nroot_));
+    std::vector<double> pt2_energies(nroot_);
 
     for( int i = 0; i < nrun; ++i ){
         if(!quiet_mode_) outfile->Printf("\n  Computing wavefunction for root %d", i); 
@@ -541,7 +542,7 @@ double AdaptiveCI::compute_energy()
             // orthogonalize
             save_old_root( PQ_space_, PQ_evecs, i);
             energies->set(i,PQ_evals->get(0));
-            //compute_rdms( PQ_space_, PQ_evecs, i,i);
+            pt2_energies[i] = multistate_pt2_energy_correction_[0];
         }else if ((ex_alg_ == "MULTISTATE")){
             // orthogonalize
             save_old_root( PQ_space_, PQ_evecs, i);
@@ -552,6 +553,13 @@ double AdaptiveCI::compute_energy()
         }
     }
     dim = PQ_space_.size();    
+
+    int froot = options_.get_int("ROOT");
+    if( ex_alg_ == "ROOT_ORTHOGONALIZE" ){
+        froot = nroot_ - 1;
+        multistate_pt2_energy_correction_ = pt2_energies;
+        PQ_evals = energies;
+    }
 
     if( ex_alg_ == "ROOT_COMBINE" ){
         outfile->Printf("\n\n  ==> Diagonalizing Final Space <==");
@@ -612,8 +620,9 @@ double AdaptiveCI::compute_energy()
 //		outfile->Printf("\n Davidson corr: %1.9f", i);
 //	}}
 
-    double root_energy = PQ_evals->get(options_.get_int("ROOT")) + nuclear_repulsion_energy_ + fci_ints_->scalar_energy();
-    double root_energy_pt2 = root_energy + multistate_pt2_energy_correction_[options_.get_int("ROOT")];
+
+    double root_energy = PQ_evals->get(froot) + nuclear_repulsion_energy_ + fci_ints_->scalar_energy();
+    double root_energy_pt2 = root_energy + multistate_pt2_energy_correction_[froot];
     Process::environment.globals["CURRENT ENERGY"] = root_energy;
     Process::environment.globals["ACI ENERGY"] = root_energy;
     Process::environment.globals["ACI+PT2 ENERGY"] = root_energy_pt2;
@@ -683,8 +692,6 @@ void AdaptiveCI::default_find_q_space(SharedVector evals, SharedMatrix evecs)
 {
     Timer build;
 
-    int root = 1;
-    
     // This hash saves the determinant coupling to the model space eigenfunction
     det_hash<std::vector<double> > V_hash;
 
@@ -710,7 +717,6 @@ void AdaptiveCI::default_find_q_space(SharedVector evals, SharedMatrix evecs)
     Timer screen;    
 
     // Compute criteria for all dets, store them all
-    size_t hash_size = V_hash.size();
     std::vector<std::pair<double,STLBitsetDeterminant>> sorted_dets;
 //    int ithread = omp_get_thread_num();
 //    int nthreads = omp_get_num_threads();
@@ -804,7 +810,6 @@ void AdaptiveCI::find_q_space(int nroot,SharedVector evals,SharedMatrix evecs)
 	std::vector<double> e2(nroot_,0.0);
     std::vector<double> ept2(nroot_,0.0);
 	double criteria;
-    size_t hash_size = V_hash.size();
     std::vector<std::pair<double,STLBitsetDeterminant>> sorted_dets;
 
 	// Define coupling out of loop, assume perturb_select_ = false	
@@ -822,8 +827,6 @@ void AdaptiveCI::find_q_space(int nroot,SharedVector evals,SharedMatrix evecs)
     // Check the coupling between the reference and the SD space
 //    int ithread = omp_get_thread_num();
 //    int nthreads = omp_get_num_threads();
-    size_t p_size = PQ_space_.size();
-    size_t count = 0;
     for (const auto& it : V_hash){
 //        if( (count % nthreads) != ithread ){
 //            count++;
@@ -1732,11 +1735,11 @@ void AdaptiveCI::wfn_analyzer(std::vector<STLBitsetDeterminant>& det_space, Shar
                 auto bbits = det_space[I].get_beta_bits_vector_bool();
 
                 final_wfn << std::setw(18) << std::setprecision(12) <<  evecs->get(I,n) << "  ";// <<  abits << "  " << bbits << det_space[I].str().c_str() << endl;
-                for( int i = 0; i < nact_; ++i ){
+                for( size_t i = 0; i < nact_; ++i ){
                     final_wfn << abits[i];
                 }
                 final_wfn << "   ";
-                for( int i = 0; i < nact_; ++i ){
+                for( size_t i = 0; i < nact_; ++i ){
                     final_wfn << bbits[i];
                 }
                 final_wfn << endl;
@@ -2011,7 +2014,7 @@ void AdaptiveCI::print_nos()
     CharacterTable ct = Process::environment.molecule()->point_group()->char_table();
     std::sort(vec_irrep_occupation.begin(), vec_irrep_occupation.end(), std::greater<std::pair<double, std::pair<int, int> > >());
 
-    int count = 0;
+    size_t count = 0;
     outfile->Printf( "\n    ");
     for(auto vec : vec_irrep_occupation)
     {
