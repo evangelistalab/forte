@@ -34,7 +34,7 @@ set forte {
   ACI_INITIAL_SPACE CISD
   aci_preiterations 2
   maxiter_davidson 1000
-  diag_algorithm solver
+  diag_algorithm dlstring
 }
 
 set_num_threads(8)
