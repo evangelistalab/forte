@@ -38,14 +38,14 @@ SigmaVectorString::SigmaVectorString( const std::vector<STLBitsetDeterminant>& s
     using bstmap_it = det_hash::iterator;
 
 
-    int ntd = omp_get_num_threads();
+    int ntd = omp_get_max_threads();
     outfile->Printf("\n  Using %d threads.", ntd);
 
     print_ = print_details;
     
     size_t max_I = space.size();
 
-    use_disk_ = disk;
+    use_disk_ = false;
 //    if( max_I > 2.3e6 ){
 //        use_disk_ = true;
 //        if( print_ ) outfile->Printf("\n  Determinant space exceeds 2.3 x 10^6. Switching to disk algorithm");
@@ -165,7 +165,7 @@ SigmaVectorString::SigmaVectorString( const std::vector<STLBitsetDeterminant>& s
                     }else{
                         detA_add = it->second;
                     }
-                    a_ann_list_[I][a] = std::make_pair(detA_add,aa);// (sign > 0.0) ? (aa+1) : (-aa-1)));
+                    a_ann_list_[I][a] = std::make_pair(detA_add, (sign > 0.0) ? (aa+1) : (-aa-1) );
                     detA.set_alfa_bit(aa,true);
                 }
             }
@@ -227,7 +227,7 @@ SigmaVectorString::SigmaVectorString( const std::vector<STLBitsetDeterminant>& s
                     }else{
                         detB_add = it->second;
                     } 
-                    b_ann_list_[I][a] = std::make_pair(detB_add, aa);// (sign > 0.0) ? (aa+1) : (-aa-1))); 
+                    b_ann_list_[I][a] = std::make_pair(detB_add, (sign > 0.0) ? (aa+1) : (-aa-1)); 
                     detB.set_beta_bit(aa,true);
                 }
               //  b_ann_list_[I] = b_ann;
@@ -572,76 +572,44 @@ void SigmaVectorString::compute_sigma(SharedVector sigma, SharedVector b)
     double* sigma_p = sigma->pointer();
     double* b_p = b->pointer();
 
-    // aa singles
-    if( use_disk_ ){
-       // Timer t1;
-        a_ann_list_.resize(size_*noalfa_);
-        a_cre_list_.resize(size_*noalfa_);
-        read_single_from_disk(a_ann_list_, 0);
-        read_single_from_disk(a_cre_list_, 2);
-    }
-#pragma omp parallel for
+   // outfile->Printf("\n  size: %zu", size_);
+
+#pragma omp parallel for 
     for (size_t J = 0; J < size_; ++J){
         // reference
         sigma_p[J] += diag_[J] * b_p[J];
 
+      // aa singles
         for( auto& aJ_mo_sign : a_ann_list_[J]){
             const size_t aJ_add = aJ_mo_sign.first;
-            const size_t p = aJ_mo_sign.second;
+            const size_t p = std::abs( aJ_mo_sign.second ) - 1;
+            const double sign_p = (aJ_mo_sign.second > 0.0) ? 1.0 : -1.0; 
             for( auto& aaJ_mo : a_cre_list_[aJ_add] ){
-                const size_t q = aaJ_mo.second;
+                const size_t q = std::abs(aaJ_mo.second) - 1;
                 if (p != q){
                     const size_t I = aaJ_mo.first;
-                    double HIJ = space_[J].slater_rules_single_alpha(p,q);
+                    const double sign_q = (aaJ_mo.second > 0.0) ? 1.0 : -1.0;
+                    const double HIJ = space_[I].slater_rules_single_alpha_abs(p,q) * sign_p * sign_q;
                     sigma_p[J] += HIJ * b_p[I];
                 }
             }
         }
-    }
-
     // bb singles
-    if( use_disk_ ){
-        a_ann_list_.clear();
-        a_ann_list_.shrink_to_fit();
-        a_cre_list_.clear();
-        a_cre_list_.shrink_to_fit();
-        b_ann_list_.resize(size_*nobeta_);
-        b_cre_list_.resize(size_*nobeta_);
-        read_single_from_disk(b_ann_list_, 1);
-        read_single_from_disk(b_cre_list_, 3);
-    }
-//    outfile->Printf("\n  beta");
-#pragma omp parallel for
-    for (size_t J = 0; J < size_; ++J){
         for( auto& bpair : b_ann_list_[J]){
             const size_t bJ_add = bpair.first;
-            const size_t p = bpair.second;
+            const size_t p = std::abs( bpair.second ) - 1;
+            const double sign_p = bpair.second > 0.0 ? 1.0 : -1.0; 
             for( auto& bbJ_mo : b_cre_list_[bJ_add] ){
-                const size_t q = bbJ_mo.second;
+                const size_t q = std::abs(bbJ_mo.second) - 1;
                 if (p != q){
+                    const double sign_q = bbJ_mo.second > 0.0 ? 1.0 : -1.0;
                     const size_t I = bbJ_mo.first;
-                    double HIJ = space_[J].slater_rules_single_beta(p,q);
+                    const double HIJ = space_[I].slater_rules_single_beta_abs(p,q) * sign_p * sign_q;
                     sigma_p[J] += HIJ * b_p[I];
-//                    outfile->Printf("\n %zu -> %zu", J, I);
                 }
             }
         }
-    }
     // aaaa doubles
-    if( use_disk_ ){
-        b_ann_list_.clear();
-        b_ann_list_.shrink_to_fit();
-        b_cre_list_.clear();
-        b_cre_list_.shrink_to_fit();
-        aa_ann_list_.resize(size_*noalfa_*(noalfa_-1)/2);
-        aa_cre_list_.resize(size_*noalfa_*(noalfa_-1)/2);
-        read_double_from_disk(aa_ann_list_, 4);
-        read_double_from_disk(aa_cre_list_, 7);
-
-    }
-//    outfile->Printf("\n  alpha-alpha");
-#pragma omp parallel for
-    for (size_t J = 0; J < size_; ++J){
         for( auto& aaJ_mo_sign : aa_ann_list_[J]){
             const size_t aaJ_add = std::get<0>(aaJ_mo_sign);
             double sign_pq = std::get<1>(aaJ_mo_sign) > 0.0 ? 1.0 : -1.0;
@@ -655,25 +623,10 @@ void SigmaVectorString::compute_sigma(SharedVector sigma, SharedVector b)
                     const double sign_rs = std::get<1>(aaaaJ_mo_sign) > 0.0 ? 1.0 : -1.0;
                     const double HIJ = sign_pq * sign_rs * STLBitsetDeterminant::fci_ints_->tei_aa(p,q,r,s);
                     sigma_p[J] += HIJ * b_p[I];
-//                    outfile->Printf("\n %zu -> %zu", J, I);
                 }
             }
         }
-    }
         // bbbb singles
-    if( use_disk_ ){
-        aa_ann_list_.clear();
-        aa_ann_list_.shrink_to_fit();
-        aa_cre_list_.clear();
-        aa_cre_list_.shrink_to_fit();
-        bb_ann_list_.resize(size_*nobeta_*(nobeta_-1)/2);
-        bb_cre_list_.resize(size_*nobeta_*(nobeta_-1)/2);
-        read_double_from_disk(bb_ann_list_, 5);
-        read_double_from_disk(bb_cre_list_, 8);
-    }
-//    outfile->Printf("\n  beta-beta");
-#pragma omp parallel for
-    for (size_t J = 0; J < size_; ++J){
         for( auto& bbJ_mo_sign : bb_ann_list_[J]){
             const size_t bbJ_add = std::get<0>(bbJ_mo_sign);
             const double sign_pq = std::get<1>(bbJ_mo_sign) > 0.0 ? 1.0 : -1.0;
@@ -687,25 +640,9 @@ void SigmaVectorString::compute_sigma(SharedVector sigma, SharedVector b)
                     const double sign_rs = std::get<1>(bbbbJ_mo_sign) > 0.0 ? 1.0 : -1.0;
                     const double HIJ = sign_pq * sign_rs * STLBitsetDeterminant::fci_ints_->tei_bb(p,q,r,s);
                     sigma_p[J] += HIJ * b_p[I];
-//                    outfile->Printf("\n %zu -> %zu", J, I);
                 }
             }
         }
-    }
-        // aabb singles
-    if( use_disk_ ){
-        bb_ann_list_.clear();
-        bb_ann_list_.shrink_to_fit();
-        bb_cre_list_.clear();
-        bb_cre_list_.shrink_to_fit();
-        ab_ann_list_.resize(size_*nobeta_*noalfa_);
-        ab_cre_list_.resize(size_*nobeta_*noalfa_);
-        read_double_from_disk(ab_ann_list_, 6);
-        read_double_from_disk(ab_cre_list_, 9);
-    }
-  //  outfile->Printf("\n alpha-beta");
-#pragma omp parallel for
-    for (size_t J = 0; J < size_; ++J){
         for( auto& abJ_mo_sign : ab_ann_list_[J] ){
             const size_t abJ_add = std::get<0>(abJ_mo_sign);
             double sign_pq = std::get<1>(abJ_mo_sign) > 0.0 ? 1.0 : -1.0;
@@ -719,16 +656,9 @@ void SigmaVectorString::compute_sigma(SharedVector sigma, SharedVector b)
                     double sign_rs = std::get<1>(ababJ_mo_sign) > 0.0 ? 1.0 : -1.0;
                     const double HIJ = sign_pq * sign_rs * STLBitsetDeterminant::fci_ints_->tei_ab(p,q,r,s);
                     sigma_p[J] += HIJ * b_p[I];
-                //outfile->Printf("\n %zu -> %zu", J, I);
                 }
             }
         }
-    }
-    if( use_disk_ ){
-        ab_ann_list_.clear();
-        ab_ann_list_.shrink_to_fit();
-        ab_cre_list_.clear();
-        ab_cre_list_.shrink_to_fit();
     }
 }
 
