@@ -1003,7 +1003,6 @@ double AdaptiveCI::root_select( int nroot, std::vector<double>& C1, std::vector<
 void AdaptiveCI::get_excited_determinants( int nroot, SharedMatrix evecs, std::vector<STLBitsetDeterminant>& P_space, det_hash<std::vector<double>>& V_hash )
 {
  
-    outfile->Printf("\n  Using new algorithm.");
     // Build hash of reference determinants
     det_hash<size_t> P_hash;
     size_t max_P = P_space.size();
