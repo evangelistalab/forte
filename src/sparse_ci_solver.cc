@@ -488,11 +488,6 @@ SigmaVectorString::SigmaVectorString( const std::vector<STLBitsetDeterminant>& s
     outfile->Flush();
 }
 
-void SigmaVectorString::add_bad_roots( std::vector<std::vector<std::pair<size_t,double>>>& bad_states )
-{
-//
-}
-
 /*  Single/double creation/annihilaton are labeled as follows
  *  a_ann_list:  0
  *  b_ann_list:  1
@@ -572,6 +567,30 @@ void SigmaVectorString::compute_sigma(SharedVector sigma, SharedVector b)
     double* sigma_p = sigma->pointer();
     double* b_p = b->pointer();
 
+    // Compute the overlap with each root    
+    int nbad = bad_states_.size();
+    std::vector<double> overlap(nbad);
+    if( nbad != 0 ){
+        for( int n = 0; n < nbad; ++n ){
+            std::vector<std::pair<size_t,double>>& bad_state = bad_states_[n];
+            double dprd = 0.0;
+            for( size_t det = 0, ndet = bad_state.size(); det < ndet; ++det ){
+                dprd += bad_state[det].second * b_p[bad_state[det].first];
+            }
+            overlap[n] = dprd;
+        }
+        //outfile->Printf("\n Overlap: %1.6f", overlap[0]);
+
+        for( int n = 0; n < nbad; ++n ){
+            std::vector<std::pair<size_t,double>>& bad_state = bad_states_[n];
+            size_t ndet = bad_state.size();
+            
+            #pragma omp parallel for
+            for( size_t det = 0; det < ndet; ++det ){
+                b_p[bad_state[det].first] -= bad_state[det].second * overlap[n]; 
+            }        
+        }
+    }
    // outfile->Printf("\n  size: %zu", size_);
 
 #pragma omp parallel for 
@@ -659,6 +678,13 @@ void SigmaVectorString::compute_sigma(SharedVector sigma, SharedVector b)
                 }
             }
         }
+    }
+}
+void SigmaVectorString::add_bad_roots( std::vector<std::vector<std::pair<size_t, double>>>& roots )
+{
+    bad_states_.clear();
+    for( int i = 0, max_i = roots.size(); i < max_i; ++i ){
+        bad_states_.push_back( roots[i] );
     }
 }
 
@@ -1326,6 +1352,7 @@ void SparseCISolver::diagonalize_davidson_liu_string(const std::vector<STLBitset
     // Diagonalize H
     SigmaVectorString svl (space, print_details_, disk);
     SigmaVector* sigma_vector = &svl;
+    sigma_vector->add_bad_roots( bad_states_ );
     davidson_liu_solver(space,sigma_vector,evals,evecs,nroot,multiplicity);
 }
 

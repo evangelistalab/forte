@@ -122,6 +122,7 @@ public:
     void get_diagonal(Vector& diag);
     void add_bad_roots( std::vector<std::vector<std::pair<size_t,double>>>& bad_states_ );
 
+    std::vector<std::vector<std::pair<size_t,double>>> bad_states_;
 protected:
     bool print_;
     bool use_disk_ = false;    
