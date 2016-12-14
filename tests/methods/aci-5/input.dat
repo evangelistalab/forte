@@ -22,6 +22,7 @@ set {
   reference rhf
   scf_type pk
   docc = [2,0,0,0,0,1,0,0]
+  guess gwh
 }
 
 set forte {
