@@ -26,6 +26,7 @@ set globals{
    restricted_docc         [1, 0, 1, 1]
    active                  [2, 0, 0, 0]
    scf_type                out_of_core
+   guess gwh
 }
 refmcscf = energy('casscf')
 energy('scf')
