@@ -2,8 +2,8 @@
 #define _v2rdm_h_
 
 #include <map>
-#include <libiwl/iwl.h>
-#include <libpsio/psio.hpp>
+#include "psi4/libiwl/iwl.h"
+#include "psi4/libpsio/psio.hpp"
 #include "integrals.h"
 #include "helpers.h"
 #include "reference.h"

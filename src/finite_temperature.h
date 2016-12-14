@@ -1,13 +1,13 @@
 #ifndef ALTERNATIVESCASSCF_H
 #define ALTERNATIVESCASSCF_H
 
-#include <libmints/wavefunction.h>
-#include <libmints/matrix.h>
+#include "psi4/libmints/wavefunction.h"
+#include "psi4/libmints/matrix.h"
 #include <vector>
-#include <psi4-dec.h>
-#include <liboptions/liboptions.h>
+#include "psi4/psi4-dec.h"
+#include "psi4/liboptions/liboptions.h"
 #include "helpers.h"
-#include <libscf_solver/rhf.h>
+#include "psi4/libscf_solver/rhf.h"
 
 namespace psi { namespace forte {
 /// CASSCF can be expensive so many researchers have come up with different
@@ -75,7 +75,7 @@ protected:
     double ef_ = 0.0;
     double scf_energy_ = 0.0;
     /// A function for computing the SCF iterations
-    void scf_iteration(const boost::shared_ptr<Matrix> C_left);
+    void scf_iteration(const std::shared_ptr<Matrix> C_left);
     /// Function used to get all the SCF prelims
     void startup();
     /// Initialize the occupation vector
@@ -98,7 +98,7 @@ public:
     FiniteTemperatureHF(SharedWavefunction ref_wfn, Options& Options, std::shared_ptr<MOSpaceInfo> mo_space);
     /// Get the SCF ENERGY for the complete iteration
     double get_scf_energy(){return scf_energy_;}
-    boost::shared_ptr<Matrix> get_mo_coefficient(){return CMatrix_;}
+    std::shared_ptr<Matrix> get_mo_coefficient(){return CMatrix_;}
     double compute_energy();
 
 

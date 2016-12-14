@@ -1,10 +1,10 @@
 #include <numeric>
 #include <math.h>
 
-#include <libpsio/psio.hpp>
-#include <libpsio/psio.h>
-#include <libmints/molecule.h>
-#include <libqt/qt.h>
+#include "psi4/libpsio/psio.hpp"
+#include "psi4/libpsio/psio.h"
+#include "psi4/libmints/molecule.h"
+#include "psi4/libqt/qt.h"
 
 #include "so-mrdsrg.h"
 #include "blockedtensorfactory.h"

@@ -1,9 +1,9 @@
 #ifndef CASSCF_H
 #define CASSCF_H
 
-#include <liboptions/liboptions.h>
-#include <libmints/wavefunction.h>
-#include <libfock/jk.h>
+#include "psi4/liboptions/liboptions.h"
+#include "psi4/libmints/wavefunction.h"
+#include "psi4/libfock/jk.h"
 
 
 #include "integrals.h"
@@ -83,7 +83,7 @@ private:
     /// The One Electron integrals (H = T + V)  (in AO basis)
     SharedMatrix Hcore_;
     /// The JK object.  Built in constructor
-    boost::shared_ptr<JK> JK_;
+    std::shared_ptr<JK> JK_;
     /// Perform a CAS-CI with the updated MO coefficients
     void cas_ci();
     /// Sets up the FCISolver
@@ -105,7 +105,7 @@ private:
     bool casscf_debug_print_;
     /// Freeze the core and leave them unchanged
     /// set frozen_core_orbitals
-    boost::shared_ptr<Matrix> set_frozen_core_orbitals();
+    std::shared_ptr<Matrix> set_frozen_core_orbitals();
     /// Compute the restricted_one_body operator for FCI(done also in OrbitalOptimizer)
 
     std::vector<std::vector<double>  > compute_restricted_docc_operator();

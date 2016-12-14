@@ -2,7 +2,7 @@
 #include <vector>
 #include <map>
 
-#include <libmints/molecule.h>
+#include "psi4/libmints/molecule.h"
 
 #include "helpers.h"
 #include "mrdsrg_so.h"

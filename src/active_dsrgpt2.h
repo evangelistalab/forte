@@ -1,16 +1,17 @@
 #ifndef _active_dsrgpt2_h_
 #define _active_dsrgpt2_h_
 
-#include <libqt/qt.h>
-#include <libpsio/psio.hpp>
-#include <libpsio/psio.h>
-#include <liboptions/liboptions.h>
-#include <libmints/vector.h>
-#include <libmints/matrix.h>
-#include <libmints/wavefunction.h>
-#include <libmints/molecule.h>
 #include <vector>
 #include <string>
+
+#include "psi4/libqt/qt.h"
+#include "psi4/libpsio/psio.hpp"
+#include "psi4/libpsio/psio.h"
+#include "psi4/liboptions/liboptions.h"
+#include "psi4/libmints/vector.h"
+#include "psi4/libmints/matrix.h"
+#include "psi4/libmints/wavefunction.h"
+#include "psi4/libmints/molecule.h"
 
 #include "integrals.h"
 #include "reference.h"

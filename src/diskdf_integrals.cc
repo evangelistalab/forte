@@ -2,11 +2,11 @@
 #include <cmath>
 #include <numeric>
 
-#include <libmints/matrix.h>
-#include <libthce/lreri.h>
-#include <libmints/basisset.h>
-#include <libthce/thce.h>
-#include <libqt/qt.h>
+#include "psi4/libmints/matrix.h"
+#include "psi4/libthce/lreri.h"
+#include "psi4/libmints/basisset.h"
+#include "psi4/libthce/thce.h"
+#include "psi4/libqt/qt.h"
 #ifdef HAVE_GA
     #include <ga.h>
     #include <macdecls.h>
@@ -337,7 +337,7 @@ ambit::Tensor DISKDFIntegrals::three_integral_block(const std::vector<size_t> &A
     size_t pn, qn;
     if(nthree_ == A.size())
     {
-        std::vector<boost::shared_ptr<Matrix> > p_by_Aq;
+        std::vector<std::shared_ptr<Matrix> > p_by_Aq;
         for (auto p_block : p)
         {
             if(frozen_core)
@@ -349,7 +349,7 @@ ambit::Tensor DISKDFIntegrals::three_integral_block(const std::vector<size_t> &A
                 pn = p_block;
             }
 
-            boost::shared_ptr<Matrix> Aq(new Matrix("Aq", nmo_, nthree_));
+            std::shared_ptr<Matrix> Aq(new Matrix("Aq", nmo_, nthree_));
 
             fseek(B_->file_pointer(), pn*nthree_*nmo_*sizeof(double), SEEK_SET);
             fread(&(Aq->pointer()[0][0]), sizeof(double), nmo_ * nthree_, B_->file_pointer());
@@ -431,14 +431,15 @@ void DISKDFIntegrals::gather_integrals()
 {
     outfile->Printf("\n Computing Density fitted integrals \n");
 
-    boost::shared_ptr<BasisSet> primary = wfn_->basisset();
+    std::shared_ptr<BasisSet> primary = wfn_->basisset();
     if(options_.get_str("DF_BASIS_MP2").length() == 0)
     {
         outfile->Printf("\n Please set a DF_BASIS_MP2 option to a specified auxiliary basis set");
         throw PSIEXCEPTION("Select a DF_BASIS_MP2 for use with DFIntegrals");
     }
 
-    boost::shared_ptr<BasisSet> auxiliary = BasisSet::pyconstruct_orbital(primary->molecule(), "DF_BASIS_MP2",options_.get_str("DF_BASIS_MP2"));
+    std::shared_ptr<BasisSet> auxiliary = wfn_->get_basisset("DF_BASIS_MP2");
+//            BasisSet::pyconstruct_orbital(primary->molecule(), "DF_BASIS_MP2",options_.get_str("DF_BASIS_MP2"));
 
     size_t nprim = primary->nbf();
     size_t naux  = auxiliary->nbf();
@@ -472,7 +473,7 @@ void DISKDFIntegrals::gather_integrals()
 
     //Constructs the DF function
     //I used this version of build as this doesn't build all the apces and assume a RHF/UHF reference
-    boost::shared_ptr<DFERI> df = DFERI::build(primary,auxiliary,options_);
+    std::shared_ptr<DFERI> df = DFERI::build(primary,auxiliary,options_);
 
     //Pushes a C matrix that is ordered in pitzer ordering
     //into the C_matrix object
@@ -493,7 +494,7 @@ void DISKDFIntegrals::gather_integrals()
     df->compute();
     outfile->Printf("...Done. Timing %15.6f s", timer.get());
 
-    boost::shared_ptr<Tensor> B = df->ints()["B"];
+    std::shared_ptr<Tensor> B = df->ints()["B"];
     B_ = B;
     df.reset();
 
@@ -727,7 +728,7 @@ ambit::Tensor DISKDFIntegrals::three_integral_block_two_index(const std::vector<
             pn = p;
         }
 
-        boost::shared_ptr<Matrix> Aq(new Matrix("Aq", nmo_, nthree_));
+        std::shared_ptr<Matrix> Aq(new Matrix("Aq", nmo_, nthree_));
 
         fseek(B_->file_pointer(), pn*nthree_*nmo_*sizeof(double), SEEK_SET);
         fread(&(Aq->pointer()[0][0]), sizeof(double), nmo_ * nthree_, B_->file_pointer());

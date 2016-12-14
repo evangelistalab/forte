@@ -4,10 +4,10 @@
 #include <math.h>
 #include "mini-boost/boost/format.hpp"
 
-#include <libpsio/psio.hpp>
-#include <libpsio/psio.h>
-#include <libmints/molecule.h>
-#include <libqt/qt.h>
+#include "psi4/libpsio/psio.hpp"
+#include "psi4/libpsio/psio.h"
+#include "psi4/libmints/molecule.h"
+#include "psi4/libqt/qt.h"
 #include <iostream>
 #include <fstream>
 
@@ -1380,7 +1380,7 @@ double DSRG_MRPT3::compute_energy_multi_state(){
     oei.block("AA").data() = fci_ints->oei_b_vector();
 
     // get nuclear repulsion energy
-    boost::shared_ptr<Molecule> molecule = Process::environment.molecule();
+    std::shared_ptr<Molecule> molecule = Process::environment.molecule();
     double Enuc = molecule->nuclear_repulsion_energy();
 
     // loop over entries of AVG_STATE

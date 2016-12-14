@@ -25,10 +25,10 @@
 
 #include <fstream>
 
-#include <liboptions/liboptions.h>
-#include <libmints/vector.h>
-#include <libmints/matrix.h>
-#include <libmints/wavefunction.h>
+#include "psi4/liboptions/liboptions.h"
+#include "psi4/libmints/vector.h"
+#include "psi4/libmints/matrix.h"
+#include "psi4/libmints/wavefunction.h"
 #include <random>
 
 

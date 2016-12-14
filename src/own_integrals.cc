@@ -2,10 +2,10 @@
 #include <cmath>
 #include <numeric>
 
-#include <libmints/basisset.h>
-#include <libthce/thce.h>
-#include <libthce/lreri.h>
-#include <libqt/qt.h>
+#include "psi4/libmints/basisset.h"
+#include "psi4/libthce/thce.h"
+#include "psi4/libthce/lreri.h"
+#include "psi4/libqt/qt.h"
 
 #include "blockedtensorfactory.h"
 

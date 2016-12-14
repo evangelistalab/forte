@@ -1,9 +1,9 @@
 #include <cmath>
 
-#include <libmints/matrix.h>
+#include "psi4/libmints/matrix.h"
 #include "mini-boost/boost/numeric/odeint.hpp"
 
-#include "libdiis/diismanager.h"
+#include "psi4/libdiis/diismanager.h"
 
 #include "tensorsrg.h"
 

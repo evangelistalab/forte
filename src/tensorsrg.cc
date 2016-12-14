@@ -4,8 +4,8 @@
 
 #include "mini-boost/boost/numeric/odeint.hpp"
 
-#include <libmints/molecule.h>
-#include <libmints/wavefunction.h>
+#include "psi4/libmints/molecule.h"
+#include "psi4/libmints/wavefunction.h"
 
 #include "tensorsrg.h"
 
@@ -15,7 +15,7 @@ using namespace ambit;
 
 namespace psi{ namespace forte{
 
-TensorSRG::TensorSRG(boost::shared_ptr<Wavefunction> wfn, Options &options, std::shared_ptr<ForteIntegrals>  ints, std::shared_ptr<MOSpaceInfo> mo_space_info)
+TensorSRG::TensorSRG(std::shared_ptr<Wavefunction> wfn, Options &options, std::shared_ptr<ForteIntegrals>  ints, std::shared_ptr<MOSpaceInfo> mo_space_info)
     : MethodBase(wfn,options,ints, mo_space_info)
 {
     startup();

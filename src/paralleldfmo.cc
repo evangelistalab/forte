@@ -1,18 +1,24 @@
-#include <libfock/jk.h>
-#include <libmints/mints.h>
-#include <libmints/sieve.h>
-#include <psifiles.h>
-#include <psi4-dec.h>
-#include <lib3index/3index.h>
-#include <libqt/qt.h>
-#include <omp.h>
+#ifdef HAVE_GA
+
+#include "psi4/libfock/jk.h"
+#include "psi4/libmints/sieve.h"
+#include "psi4/psifiles.h"
+#include "psi4/psi4-dec.h"
+#include "psi4/lib3index/3index.h"
+#include "psi4/libqt/qt.h"
+#ifdef _OPENMP
+   #include <omp.h>
+#endif
 //#include <mpi.h>
 #include "paralleldfmo.h"
-#include <ga.h>
-#include <macdecls.h>
+#ifdef HAVE_GA
+    #include <ga.h>
+    #include <macdecls.h>
+#endif
+
 namespace psi { namespace forte {
 
-ParallelDFMO::ParallelDFMO(boost::shared_ptr<BasisSet> primary, boost::shared_ptr<BasisSet> auxiliary) : primary_(primary), auxiliary_(auxiliary)
+ParallelDFMO::ParallelDFMO(std::shared_ptr<BasisSet> primary, std::shared_ptr<BasisSet> auxiliary) : primary_(primary), auxiliary_(auxiliary)
 {
     memory_ = Process::environment.get_memory();
 }
@@ -147,24 +153,24 @@ void ParallelDFMO::transform_integrals()
 
     // => ERI Objects <= //
 
-    boost::shared_ptr<IntegralFactory> factory(new IntegralFactory(auxiliary_, BasisSet::zero_ao_basis_set(), primary_, primary_));
-    std::vector<boost::shared_ptr<TwoBodyAOInt> > eri;
+    std::shared_ptr<IntegralFactory> factory(new IntegralFactory(auxiliary_, BasisSet::zero_ao_basis_set(), primary_, primary_));
+    std::vector<std::shared_ptr<TwoBodyAOInt> > eri;
     for (int thread = 0; thread < nthread; thread++) {
-            eri.push_back(boost::shared_ptr<TwoBodyAOInt>(factory->eri()));
+            eri.push_back(std::shared_ptr<TwoBodyAOInt>(factory->eri()));
     }
 
     // => ERI Sieve <= //
 
-    boost::shared_ptr<ERISieve> sieve(new ERISieve(primary_, 1e-10));
+    std::shared_ptr<ERISieve> sieve(new ERISieve(primary_, 1e-10));
     const std::vector<std::pair<int,int> >& shell_pairs = sieve->shell_pairs();
     long int nshell_pairs = (long int) shell_pairs.size();
 
     // => Temporary Tensors <= //
 
     // > Three-index buffers < //
-    boost::shared_ptr<Matrix> Amn(new Matrix("(A|mn)", max_rows, nso * (unsigned long int) nso));
-    boost::shared_ptr<Matrix> Ami(new Matrix("(A|mi)", max_rows, nso * (unsigned long int) max1));
-    boost::shared_ptr<Matrix> Aia(new Matrix("(A|ia)", naux, max12));
+    std::shared_ptr<Matrix> Amn(new Matrix("(A|mn)", max_rows, nso * (unsigned long int) nso));
+    std::shared_ptr<Matrix> Ami(new Matrix("(A|mi)", max_rows, nso * (unsigned long int) max1));
+    std::shared_ptr<Matrix> Aia(new Matrix("(A|ia)", naux, max12));
     double** Amnp = Amn->pointer();
     double** Amip = Ami->pointer();
     double** Aiap = Aia->pointer();
@@ -275,7 +281,7 @@ void ParallelDFMO::transform_integrals()
         //Ami->print();
         //Aia->print();
 
-        //boost::shared_ptr<Tensor> A = ints_[name + "_temp"];
+        //std::shared_ptr<Tensor> A = ints_[name + "_temp"];
         //FILE* fh = A->file_pointer();
         //fwrite(Aiap[0],sizeof(double),rows*n12,fh);
         int ld = nmo_ * nmo_;
@@ -308,7 +314,7 @@ void ParallelDFMO::J_one_half()
 
     int naux = auxiliary_->nbf();
 
-    boost::shared_ptr<Matrix> J(new Matrix("J", naux, naux));
+    std::shared_ptr<Matrix> J(new Matrix("J", naux, naux));
     double** Jp = J->pointer();
 
     int dims[2];
@@ -323,10 +329,10 @@ void ParallelDFMO::J_one_half()
 
     //if(GA_Nodeid() == 0)
     {
-        boost::shared_ptr<IntegralFactory> Jfactory(new IntegralFactory(auxiliary_, BasisSet::zero_ao_basis_set(), auxiliary_, BasisSet::zero_ao_basis_set()));
-        std::vector<boost::shared_ptr<TwoBodyAOInt> > Jeri;
+        std::shared_ptr<IntegralFactory> Jfactory(new IntegralFactory(auxiliary_, BasisSet::zero_ao_basis_set(), auxiliary_, BasisSet::zero_ao_basis_set()));
+        std::vector<std::shared_ptr<TwoBodyAOInt> > Jeri;
         for (int thread = 0; thread < nthread; thread++) {
-            Jeri.push_back(boost::shared_ptr<TwoBodyAOInt>(Jfactory->eri()));
+            Jeri.push_back(std::shared_ptr<TwoBodyAOInt>(Jfactory->eri()));
         }
 
         std::vector<std::pair<int, int> > Jpairs;
@@ -386,3 +392,6 @@ void ParallelDFMO::J_one_half()
 
 }
 }}
+
+#endif
+

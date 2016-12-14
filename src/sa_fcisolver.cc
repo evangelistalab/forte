@@ -3,12 +3,15 @@
 #include <algorithm>
 #include <sstream>
 #include <iomanip>
-#include <libmints/mints.h>
+
+#include "psi4/libmints/molecule.h"
+#include "psi4/libmints/pointgrp.h"
+
 #include "sa_fcisolver.h"
 
 namespace psi{ namespace forte{
 
-SA_FCISolver::SA_FCISolver(Options& options, boost::shared_ptr<Wavefunction> wfn)
+SA_FCISolver::SA_FCISolver(Options& options, std::shared_ptr<Wavefunction> wfn)
     : options_(options), wfn_(wfn)
 {
     read_options();

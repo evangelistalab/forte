@@ -1,23 +1,31 @@
 #include "casscf.h"
 #include "reference.h"
 #include "integrals.h"
-#include <libqt/qt.h>
-#include <libmints/matrix.h>
+
+#include "psi4/psifiles.h"
+#include "psi4/libqt/qt.h"
+#include "psi4/libmints/matrix.h"
+#include "psi4/libmints/wavefunction.h"
+#include "psi4/libfock/jk.h"
+
 #include "helpers.h"
-#include <libfock/jk.h>
+
 #include "fci_solver.h"
 #include "aci.h"
-#include <psifiles.h>
+
 #include "fci_mo.h"
 #include "orbitaloptimizer.h"
 #include "sa_fcisolver.h"
 #include "mp2_nos.h"
+
+
 #ifdef HAVE_CHEMPS2
     #include "dmrgsolver.h"
 #endif
-#include <libdiis/diismanager.h>
-#include <libdiis/diisentry.h>
-#include <libmints/factory.h>
+#include "psi4/libdiis/diismanager.h"
+#include "psi4/libdiis/diisentry.h"
+#include "psi4/libmints/factory.h"
+
 namespace psi{ namespace forte{
 
 CASSCF::CASSCF(SharedWavefunction ref_wfn, Options &options,
@@ -272,7 +280,7 @@ void CASSCF::startup()
         for(auto virtual_index : restricted_uocc_abs_){outfile->Printf(" %d", virtual_index);}
 
     }
-    boost::shared_ptr<PSIO> psio_ = PSIO::shared_object();
+    std::shared_ptr<PSIO> psio_ = PSIO::shared_object();
     SharedMatrix T = SharedMatrix(matrix_factory()->create_matrix(PSIF_SO_T));
     SharedMatrix V = SharedMatrix(matrix_factory()->create_matrix(PSIF_SO_V));
     SharedMatrix OneInt = T;
@@ -289,12 +297,16 @@ void CASSCF::startup()
     {
     #ifdef HAVE_JK_FACTORY
         Process::environment.set_legacy_molecule(this->molecule());
-        JK_ = boost::shared_ptr<JK>(new GTFockJK(this->basisset()));
+        JK_ = std::shared_ptr<JK>(new GTFockJK(this->basisset()));
     #else
         throw PSIEXCEPTION("GTFock was not compiled in this version");
     #endif
     } else {
-        JK_ = JK::build_JK(this->basisset(), this->options_);
+        if (options_.get_str("SCF_TYPE") == "DF"){
+            JK_ = JK::build_JK(basisset(), get_basisset("DF_BASIS_SCF"), options_);
+        } else {
+            JK_ = JK::build_JK(basisset(), BasisSet::zero_ao_basis_set(), options_);
+        }
     }
     JK_->set_memory(Process::environment.get_memory() * 0.8);
     JK_->initialize();
@@ -472,7 +484,7 @@ double CASSCF::cas_check(Reference cas_ref)
     return E_casscf;
 
 }
-boost::shared_ptr<Matrix> CASSCF::set_frozen_core_orbitals()
+std::shared_ptr<Matrix> CASSCF::set_frozen_core_orbitals()
 {
     SharedMatrix Ca = this->Ca();
     Dimension nsopi = this->nsopi();
@@ -487,8 +499,8 @@ boost::shared_ptr<Matrix> CASSCF::set_frozen_core_orbitals()
 
     JK_->set_allow_desymmetrization(true);
     JK_->set_do_K(true);
-    std::vector<boost::shared_ptr<Matrix> >&Cl = JK_->C_left();
-    std::vector<boost::shared_ptr<Matrix> >&Cr = JK_->C_right();
+    std::vector<std::shared_ptr<Matrix> >&Cl = JK_->C_left();
+    std::vector<std::shared_ptr<Matrix> >&Cr = JK_->C_right();
 
     Cl.clear();
     Cl.push_back(C_core);
@@ -566,7 +578,7 @@ ambit::Tensor CASSCF::transform_integrals()
     ///         = C_{Mp}C_{Nu}J(D_{MN})^{xy})
     ///         = C_{Mp}^{T} D_{MN}^{xy} C_{Nu}
 
-    std::vector<std::pair<boost::shared_ptr<Matrix>, std::vector<int> > > D_vec;
+    std::vector<std::pair<std::shared_ptr<Matrix>, std::vector<int> > > D_vec;
     Timer c_dger;
     for(size_t i = 0; i < na_; i++){
         SharedVector C_i = CAct->get_column(0, i);
@@ -586,13 +598,12 @@ ambit::Tensor CASSCF::transform_integrals()
     {
         outfile->Printf("\n C_DGER takes %8.5f", c_dger.get());
     }
-    //boost::shared_ptr<JK> JK_trans = JK::build_JK(this->basisset(), this->options_);
     JK_->set_memory(Process::environment.get_memory() * 0.8);
     JK_->set_allow_desymmetrization(false);
     JK_->set_do_K(false);
     //JK_->initialize();
-    std::vector<boost::shared_ptr<Matrix> > &Cl = JK_->C_left();
-    std::vector<boost::shared_ptr<Matrix> > &Cr = JK_->C_right();
+    std::vector<std::shared_ptr<Matrix> > &Cl = JK_->C_left();
+    std::vector<std::shared_ptr<Matrix> > &Cr = JK_->C_right();
     Cl.clear();
     Cr.clear();
     for(size_t d = 0; d < D_vec.size(); d++)
@@ -809,13 +820,13 @@ std::vector<std::vector<double> > CASSCF::compute_restricted_docc_operator()
     /// D_{uv}^{inactive} = \sum_{i = 0}^{inactive}C_{ui} * C_{vi}
     /// This section of code computes the fock matrix for the INACTIVE_DOCC("RESTRICTED_DOCC")
 
-//    boost::shared_ptr<JK> JK_inactive = JK::build_JK(this->basisset(), this->options_);
+//    std::shared_ptr<JK> JK_inactive = JK::build_JK(this->basisset(), this->options_);
 //
 //    JK_inactive->set_memory(Process::environment.get_memory() * 0.8);
 //    JK_inactive->initialize();
 //
-    std::vector<boost::shared_ptr<Matrix> >&Cl = JK_->C_left();
-    std::vector<boost::shared_ptr<Matrix> >&Cr = JK_->C_right();
+    std::vector<std::shared_ptr<Matrix> >&Cl = JK_->C_left();
+    std::vector<std::shared_ptr<Matrix> >&Cr = JK_->C_right();
     JK_->set_allow_desymmetrization(true);
     JK_->set_do_K(true);
     Cl.clear();

@@ -5,9 +5,9 @@
 //#include <numeric>
 
 
-#include <libpsio/psio.hpp>
-#include <libmints/pointgrp.h>
-#include <libmints/molecule.h>
+#include "psi4/libpsio/psio.hpp"
+#include "psi4/libmints/pointgrp.h"
+#include "psi4/libmints/molecule.h"
 
 #include "aci_string.h"
 #include "sparse_ci_solver.h"

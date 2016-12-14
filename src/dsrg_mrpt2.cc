@@ -2,9 +2,9 @@
 #include <math.h>
 #include "mini-boost/boost/format.hpp"
 
-#include <libpsio/psio.hpp>
-#include <libpsio/psio.h>
-#include <libqt/qt.h>
+#include "psi4/libpsio/psio.hpp"
+#include "psi4/libpsio/psio.h"
+#include "psi4/libqt/qt.h"
 
 #include "dsrg_mrpt2.h"
 #include "blockedtensorfactory.h"

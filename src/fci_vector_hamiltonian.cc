@@ -1,4 +1,4 @@
-#include <libqt/qt.h>
+#include "psi4/libqt/qt.h"
 
 #include "helpers.h"
 #include "fci_vector.h"
