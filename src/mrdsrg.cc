@@ -5,7 +5,7 @@
 
 #include "mini-boost/boost/format.hpp"
 
-#include <libmints/molecule.h>
+#include "psi4/libmints/molecule.h"
 
 #include "helpers.h"
 #include "mrdsrg.h"
@@ -409,7 +409,7 @@ double MRDSRG::compute_energy_relaxed(){
         fcisolver.set_collapse_per_root(options_.get_int("DAVIDSON_COLLAPSE_PER_ROOT"));
         fcisolver.set_subspace_per_root(options_.get_int("DAVIDSON_SUBSPACE_PER_ROOT"));
         Erelax = fcisolver.compute_energy();
-//        boost::shared_ptr<FCI_MO> fci_mo(new FCI_MO(reference_wavefunction_,options_,ints_,mo_space_info_));
+//        std::shared_ptr<FCI_MO> fci_mo(new FCI_MO(reference_wavefunction_,options_,ints_,mo_space_info_));
 //        Erelax = fci_mo->compute_energy();
 
         // printing
@@ -638,7 +638,7 @@ double MRDSRG::compute_energy_sa(){
 //    oei.block("AA").data() = fci_ints->oei_b_vector();
 
 //    // get nuclear repulsion energy
-//    boost::shared_ptr<Molecule> molecule = Process::environment.molecule();
+//    std::shared_ptr<Molecule> molecule = Process::environment.molecule();
 //    double Enuc = molecule->nuclear_repulsion_energy();
 
 //    // loop over entries of AVG_STATE

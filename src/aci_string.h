@@ -25,9 +25,9 @@
 
 #include <fstream>
 
-#include <libmints/wavefunction.h>
-#include <liboptions/liboptions.h>
-#include <physconst.h>
+#include "psi4/libmints/wavefunction.h"
+#include "psi4/liboptions/liboptions.h"
+#include "psi4/physconst.h"
 
 #include "integrals.h"
 #include "helpers.h"

@@ -1,7 +1,7 @@
 #include <algorithm>
 #include <cmath>
 
-#include "psi4-dec.h"
+#include "psi4/psi4-dec.h"
 
 #include "sq.h"
 #include "helpers.h"

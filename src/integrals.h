@@ -10,11 +10,11 @@
 #include "mini-boost/boost/shared_ptr.hpp"
 #include "mini-boost/boost/dynamic_bitset.hpp"
 
-#include <libmints/wavefunction.h>
-#include <liboptions/liboptions.h>
-#include <libtrans/integraltransform.h>
-#include <libmints/matrix.h>
-#include <ambit/blocked_tensor.h>
+#include "psi4/libmints/wavefunction.h"
+#include "psi4/liboptions/liboptions.h"
+#include "psi4/libtrans/integraltransform.h"
+#include "psi4/libmints/matrix.h"
+#include "ambit/blocked_tensor.h"
 #include "helpers.h"
 
 
@@ -287,7 +287,7 @@ protected:
     virtual void resort_integrals_after_freezing() = 0;
 
 
-    virtual void resort_three(boost::shared_ptr<Matrix>&, std::vector<size_t>& map) = 0;
+    virtual void resort_three(std::shared_ptr<Matrix>&, std::vector<size_t>& map) = 0;
     virtual void resort_four(double*& tei, std::vector<size_t>& map) = 0;
     /// Function used to rotate MOs during contructor
     void rotate_mos();
@@ -296,7 +296,7 @@ protected:
     /// computes/reads integrals
     virtual void gather_integrals() = 0;
     /// The B tensor
-    boost::shared_ptr<psi::Tensor> B_;
+    std::shared_ptr<psi::Tensor> B_;
     /// The mapping from correlated to actual MO
     /// Basically gives the original ordering back
     std::vector<size_t> cmotomo_;
@@ -390,7 +390,7 @@ private:
     virtual void make_diagonal_integrals();
     virtual void resort_integrals_after_freezing();
     virtual void resort_four(double*& tei, std::vector<size_t>& map);
-    virtual void resort_three(boost::shared_ptr<Matrix>&, std::vector<size_t>&){}
+    virtual void resort_three(std::shared_ptr<Matrix>&, std::vector<size_t>&){}
     virtual void set_tei(size_t p, size_t q, size_t r,size_t s,double value,bool alpha1,bool alpha2);
 
     /// An addressing function to retrieve the two-electron integrals
@@ -514,7 +514,7 @@ private:
     virtual void make_diagonal_integrals();
     virtual void resort_integrals_after_freezing();
     virtual void resort_four(double*& tei, std::vector<size_t>& map);
-    virtual void resort_three(boost::shared_ptr<Matrix>&, std::vector<size_t>&){}
+    virtual void resort_three(std::shared_ptr<Matrix>&, std::vector<size_t>&){}
     virtual void set_tei(size_t p, size_t q, size_t r,size_t s,double value,bool alpha1,bool alpha2);
 
     /// An addressing function to retrieve the two-electron integrals
@@ -586,7 +586,7 @@ private:
     virtual void allocate();
     virtual void deallocate();
     virtual void make_diagonal_integrals();
-    virtual void resort_three(boost::shared_ptr<Matrix>& threeint, std::vector<size_t>& map);
+    virtual void resort_three(std::shared_ptr<Matrix>& threeint, std::vector<size_t>& map);
     virtual void resort_integrals_after_freezing();
     void transform_integrals();
     ///This is not used in Cholesky, but I have to have implementations for
@@ -595,7 +595,7 @@ private:
     {
         throw PSIEXCEPTION("No four integrals to sort");
     }
-    boost::shared_ptr<Matrix> ThreeIntegral_;
+    std::shared_ptr<Matrix> ThreeIntegral_;
     double* diagonal_aphys_tei_aa;
     double* diagonal_aphys_tei_ab;
     double* diagonal_aphys_tei_bb;
@@ -649,11 +649,11 @@ private:
     virtual void deallocate();
     //Grabs DF integrals with new Ca coefficients
     virtual void make_diagonal_integrals();
-    virtual void resort_three(boost::shared_ptr<Matrix>& threeint, std::vector<size_t>& map);
+    virtual void resort_three(std::shared_ptr<Matrix>& threeint, std::vector<size_t>& map);
     virtual void resort_integrals_after_freezing();
     virtual void resort_four(double *&, std::vector<size_t> &){}
 
-    boost::shared_ptr<Matrix> ThreeIntegral_;
+    std::shared_ptr<Matrix> ThreeIntegral_;
     double* diagonal_aphys_tei_aa;
     double* diagonal_aphys_tei_ab;
     double* diagonal_aphys_tei_bb;
@@ -708,11 +708,11 @@ private:
     virtual void deallocate();
     //Grabs DF integrals with new Ca coefficients
     virtual void make_diagonal_integrals();
-    virtual void resort_three(boost::shared_ptr<Matrix>& threeint, std::vector<size_t>& map);
+    virtual void resort_three(std::shared_ptr<Matrix>& threeint, std::vector<size_t>& map);
     virtual void resort_integrals_after_freezing();
     virtual void resort_four(double *&, std::vector<size_t> &){}
 
-    boost::shared_ptr<Matrix> ThreeIntegral_;
+    std::shared_ptr<Matrix> ThreeIntegral_;
     double* diagonal_aphys_tei_aa;
     double* diagonal_aphys_tei_ab;
     double* diagonal_aphys_tei_bb;
@@ -771,21 +771,21 @@ private:
     virtual void deallocate();
     //Grabs DF integrals with new Ca coefficients
     virtual void make_diagonal_integrals() {}
-    virtual void resort_three(boost::shared_ptr<Matrix>& /*threeint*/, std::vector<size_t>& /*map*/) {}
+    virtual void resort_three(std::shared_ptr<Matrix>& /*threeint*/, std::vector<size_t>& /*map*/) {}
     virtual void resort_integrals_after_freezing() {}
     virtual void resort_four(double *&, std::vector<size_t> &){}
 
     /// This is the handle for GA
     int DistDF_ga_;
 
-    boost::shared_ptr<Matrix> ThreeIntegral_;
+    std::shared_ptr<Matrix> ThreeIntegral_;
     double* diagonal_aphys_tei_aa;
     double* diagonal_aphys_tei_ab;
     double* diagonal_aphys_tei_bb;
     size_t nthree_ = 0;
     /// Assuming integrals are stored on disk
     /// Reads the block of integrals present for each process
-    ambit::Tensor read_integral_chunk(boost::shared_ptr<Tensor>& B, std::vector<int>& lo, std::vector<int>& hi);
+    ambit::Tensor read_integral_chunk(std::shared_ptr<Tensor>& B, std::vector<int>& lo, std::vector<int>& hi);
     /// Distributes tensor according to naux dimension
     void create_dist_df();
     void test_distributed_integrals();
@@ -841,7 +841,7 @@ private:
     virtual void allocate() {}
     virtual void deallocate() {}
     virtual void make_diagonal_integrals() {}
-    virtual void resort_three(boost::shared_ptr<Matrix>& /*threeint*/, std::vector<size_t>& /*map*/) {}
+    virtual void resort_three(std::shared_ptr<Matrix>& /*threeint*/, std::vector<size_t>& /*map*/) {}
     virtual void resort_integrals_after_freezing() {}
     virtual void resort_four(double *&, std::vector<size_t> &){}
     ambit::Tensor blank_tensor_;

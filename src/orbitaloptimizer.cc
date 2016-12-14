@@ -1,15 +1,15 @@
 #include "orbitaloptimizer.h"
 #include "helpers.h"
 #include "ambit/blocked_tensor.h"
-#include <libfock/jk.h>
+#include "psi4/libfock/jk.h"
 #include "reference.h"
 #include "integrals.h"
-#include <libqt/qt.h>
-#include <libmints/matrix.h>
+#include "psi4/libqt/qt.h"
+#include "psi4/libmints/matrix.h"
 #include "helpers.h"
 #include "fci_solver.h"
-#include <psifiles.h>
-#include <lib3index/cholesky.h>
+#include "psi4/psifiles.h"
+#include "psi4/lib3index/cholesky.h"
 using namespace psi;
 
 namespace psi{ namespace forte{
@@ -563,7 +563,7 @@ void OrbitalOptimizer::fill_shared_density_matrices()
         gamma2M_->print();
     }
 }
-boost::shared_ptr<Matrix> OrbitalOptimizer::make_c_sym_aware()
+std::shared_ptr<Matrix> OrbitalOptimizer::make_c_sym_aware()
 {
     ///Step 1: Obtain guess MO coefficients C_{mup}
     /// Since I want to use these in a symmetry aware basis,
@@ -705,14 +705,14 @@ void CASSCFOrbitalOptimizer::form_fock_intermediates()
     C_active_ao = Matrix::triplet(C_active, gamma1_sym, C_active, false, false, true);
     if(casscf_debug_print_)
         C_active_ao->print();
-    //boost::shared_ptr<JK> JK_fock = JK::build_JK(wfn_->basisset(),options_ );
+    //std::shared_ptr<JK> JK_fock = JK::build_JK(wfn_->basisset(),options_ );
     //JK_fock->set_memory(Process::environment.get_memory() * 0.8);
     //JK_fock->set_cutoff(options_.get_double("INTEGRAL_SCREENING"));
     //JK_fock->initialize();
     JK_->set_allow_desymmetrization(true);
     JK_->set_do_K(true);
-    std::vector<boost::shared_ptr<Matrix> >&Cl = JK_->C_left();
-    std::vector<boost::shared_ptr<Matrix> >&Cr = JK_->C_right();
+    std::vector<std::shared_ptr<Matrix> >&Cl = JK_->C_left();
+    std::vector<std::shared_ptr<Matrix> >&Cr = JK_->C_right();
 
     ///Since this is CASSCF this will always be an active fock matrix
     SharedMatrix Identity(new Matrix("I", nirrep_, nsopi_, nsopi_));

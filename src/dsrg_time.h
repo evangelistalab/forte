@@ -5,7 +5,7 @@
 #include <string>
 #include <map>
 
-#include <libtrans/integraltransform.h>
+#include "psi4/libtrans/integraltransform.h"
 
 namespace psi{ namespace forte{
 

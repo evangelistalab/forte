@@ -26,7 +26,7 @@
 #include <vector>
 #include "boost/shared_ptr.hpp"
 
-#include "libmints/matrix.h"
+#include "psi4/libmints/matrix.h"
 #include "integrals.h"
 #include "string_lists.h"
 

@@ -2,9 +2,9 @@
 #define _mcsrgpt2_mo_h_
 
 #include "mini-boost/boost/assign.hpp"
-#include <liboptions/liboptions.h>
-#include <libmints/vector.h>
-#include <libmints/matrix.h>
+#include "psi4/liboptions/liboptions.h"
+#include "psi4/libmints/vector.h"
+#include "psi4/libmints/matrix.h"
 #include <vector>
 #include <cmath>
 #include "fci_mo.h"

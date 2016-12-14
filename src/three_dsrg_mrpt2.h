@@ -4,10 +4,10 @@
 #include <fstream>
 #include <string>
 #include <vector>
-#include "liboptions/liboptions.h"
-#include "libmints/wavefunction.h"
+#include "psi4/liboptions/liboptions.h"
+#include "psi4/libmints/wavefunction.h"
 
-#include <ambit/blocked_tensor.h>
+#include "ambit/blocked_tensor.h"
 #include "integrals.h"
 #include "reference.h"
 #include "blockedtensorfactory.h"
@@ -255,7 +255,7 @@ protected:
     /// Param:  std::string is the lables - "cav"
     /// Will take a string like cav and generate all possible combinations of this
     /// for a four character string
-    boost::shared_ptr<BlockedTensorFactory> BTF_;
+    std::shared_ptr<BlockedTensorFactory> BTF_;
 
     /// The MOSpace object
     std::shared_ptr<MOSpaceInfo> mo_space_info_;

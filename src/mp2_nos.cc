@@ -1,10 +1,10 @@
 #include "ambit/blocked_tensor.h"
 
-#include <libpsio/psio.h>
-#include <libpsio/psio.hpp>
+#include "psi4/libpsio/psio.h"
+#include "psi4/libpsio/psio.hpp"
 
-#include <libmints/matrix.h>
-#include <libmints/vector.h>
+#include "psi4/libmints/matrix.h"
+#include "psi4/libmints/vector.h"
 
 #include "helpers.h"
 #include "mp2_nos.h"
@@ -13,7 +13,7 @@ namespace psi{ namespace forte{
 
 using namespace ambit;
 
-MP2_NOS::MP2_NOS(boost::shared_ptr<Wavefunction> wfn, Options &options, std::shared_ptr<ForteIntegrals>  ints, std::shared_ptr<MOSpaceInfo> mo_space_info)
+MP2_NOS::MP2_NOS(std::shared_ptr<Wavefunction> wfn, Options &options, std::shared_ptr<ForteIntegrals>  ints, std::shared_ptr<MOSpaceInfo> mo_space_info)
 {
     print_method_banner({"Second-Order Moller-Plesset Natural Orbitals",
                          "written by Francesco A. Evangelista"});
@@ -354,7 +354,7 @@ MP2_NOS::MP2_NOS(boost::shared_ptr<Wavefunction> wfn, Options &options, std::sha
     BlockedTensor::reset_mo_spaces();
 }
 
-SemiCanonical::SemiCanonical(boost::shared_ptr<Wavefunction> wfn,
+SemiCanonical::SemiCanonical(std::shared_ptr<Wavefunction> wfn,
                              Options &options, std::shared_ptr<ForteIntegrals> ints,
                              std::shared_ptr<MOSpaceInfo> mo_space_info, Reference &reference)
 {

@@ -2,10 +2,10 @@
 #include <cmath>
 #include <numeric>
 
-#include <libmints/basisset.h>
-#include <libthce/thce.h>
-#include <libthce/lreri.h>
-#include <libqt/qt.h>
+#include "psi4/libmints/basisset.h"
+#include "psi4/libthce/thce.h"
+#include "psi4/libthce/lreri.h"
+#include "psi4/libqt/qt.h"
 #ifdef HAVE_GA
 #include <ga.h>
 #include <macdecls.h>
@@ -164,8 +164,8 @@ void DFIntegrals::gather_integrals()
 
     }
 
-    boost::shared_ptr<BasisSet> primary = wfn_->basisset();
-    boost::shared_ptr<BasisSet> auxiliary = BasisSet::pyconstruct_orbital(primary->molecule(), "DF_BASIS_MP2",options_.get_str("DF_BASIS_MP2"));
+    std::shared_ptr<BasisSet> primary = wfn_->basisset();
+    std::shared_ptr<BasisSet> auxiliary = wfn_->get_basisset("DF_BASIS_MP2");
 
     size_t nprim = primary->nbf();
     size_t naux  = auxiliary->nbf();
@@ -202,7 +202,7 @@ void DFIntegrals::gather_integrals()
 
     //Constructs the DF function
     //I used this version of build as this doesn't build all the apces and assume a RHF/UHF reference
-    boost::shared_ptr<DFERI> df = DFERI::build(primary,auxiliary,options_);
+    std::shared_ptr<DFERI> df = DFERI::build(primary,auxiliary,options_);
 
     //Pushes a C matrix that is ordered in pitzer ordering
     //into the C_matrix object
@@ -225,7 +225,7 @@ void DFIntegrals::gather_integrals()
     df->compute();
     if(print_ > 0){outfile->Printf("...Done. Timing %15.6f s", timer.get());}
 
-    boost::shared_ptr<psi::Tensor> B = df->ints()["B"];
+    std::shared_ptr<psi::Tensor> B = df->ints()["B"];
     df.reset();
 
     FILE* Bf = B->file_pointer();

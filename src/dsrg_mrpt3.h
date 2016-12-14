@@ -29,8 +29,8 @@
 #include <utility>
 #include "mini-boost/boost/assign.hpp"
 
-#include <liboptions/liboptions.h>
-#include <libmints/wavefunction.h>
+#include "psi4/liboptions/liboptions.h"
+#include "psi4/libmints/wavefunction.h"
 
 #include "integrals.h"
 #include "ambit/blocked_tensor.h"

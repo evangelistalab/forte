@@ -1,6 +1,5 @@
-#include <psi4-dec.h>
-#include <libmoinfo/libmoinfo.h>
-#include <libmints/matrix.h>
+#include "psi4/psi4-dec.h"
+#include "psi4/libmints/matrix.h"
 
 
 #include "stl_bitset_determinant.h"
