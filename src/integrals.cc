@@ -242,9 +242,8 @@ void ForteIntegrals::compute_frozen_one_body_operator()
         throw PSIEXCEPTION("GTFock was not compiled in this version");
     #endif
     } else {
-        // PORTTODO is DF_BASIS_MP2 correct here?
         if (options_.get_str("SCF_TYPE") == "DF"){
-            JK_core = JK::build_JK(wfn_->basisset(), wfn_->get_basisset("DF_BASIS_SCF"), options_);
+            JK_core = JK::build_JK(wfn_->basisset(), wfn_->get_basisset("DF_BASIS_MP2"), options_);
         } else {
             JK_core = JK::build_JK(wfn_->basisset(), BasisSet::zero_ao_basis_set(), options_);
         }
