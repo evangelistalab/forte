@@ -598,7 +598,6 @@ ambit::Tensor CASSCF::transform_integrals()
     {
         outfile->Printf("\n C_DGER takes %8.5f", c_dger.get());
     }
-    //std::shared_ptr<JK> JK_trans = JK::build_JK(this->basisset(), this->options_);
     JK_->set_memory(Process::environment.get_memory() * 0.8);
     JK_->set_allow_desymmetrization(false);
     JK_->set_do_K(false);

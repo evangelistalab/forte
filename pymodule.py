@@ -51,6 +51,12 @@ def run_forte(name, **kwargs):
     if ref_wfn is None:
         ref_wfn = psi4.driver.scf_helper(name, **kwargs)
 
+    if ('DF' in psi4.core.get_option('FORTE','INT_TYPE')):
+        aux_basis = psi4.core.BasisSet.build(ref_wfn.molecule(), 'DF_BASIS_MP2',
+                                         psi4.core.get_global_option('DF_BASIS_MP2'),
+                                         'RIFIT', psi4.core.get_global_option('BASIS'))
+        ref_wfn.set_basisset('DF_BASIS_MP2', aux_basis)
+
     # Ensure IWL files have been written when not using DF/CD
     proc_util.check_iwl_file_from_scf_type(psi4.core.get_option('SCF', 'SCF_TYPE'), ref_wfn)
 
