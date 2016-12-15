@@ -81,6 +81,15 @@ def generate_cmakelist(args):
     ccfiles =  glob.glob('src/*.cc')
 
     forte_cmakelists = "\n".join(cmakelists[:-1])
+
+    #check for OpenMP and add flags
+    forte_cmakelists += '\nfind_package(OpenMP)'
+    forte_cmakelists += '\nif (OPENMP_FOUND)'
+    forte_cmakelists += '\n    set (CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${OpenMP_C_FLAGS}")'
+    forte_cmakelists += '\n    set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${OpenMP_CXX_FLAGS}")'
+    forte_cmakelists += '\nendif()\n'
+    
+
     forte_cmakelists += '\nlink_directories(%s)' % os.path.join(args.ambit_bindir,'lib')
     forte_cmakelists += '\ninclude_directories(%s)' % os.path.join(args.ambit_bindir,'include')
     forte_cmakelists += '\ninclude_directories(src/mini-boost)'
