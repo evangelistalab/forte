@@ -163,7 +163,7 @@ class static_rational
 
 #if BOOST_UNITS_HAS_BOOST_TYPEOF
 
-#include BOOST_TYPEOF_INCREMENT_REGISTRATION_GROUP()
+//#include BOOST_TYPEOF_INCREMENT_REGISTRATION_GROUP()
 
 BOOST_TYPEOF_REGISTER_TEMPLATE(boost::units::static_rational, (long)(long))
 
