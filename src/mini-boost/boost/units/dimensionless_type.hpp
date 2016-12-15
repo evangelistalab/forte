@@ -46,7 +46,7 @@ struct dimensionless_type
 
 #if BOOST_UNITS_HAS_BOOST_TYPEOF
 
-#include BOOST_TYPEOF_INCREMENT_REGISTRATION_GROUP()
+//#include BOOST_TYPEOF_INCREMENT_REGISTRATION_GROUP()
 
 BOOST_TYPEOF_REGISTER_TYPE(boost::units::dimensionless_type)
 
