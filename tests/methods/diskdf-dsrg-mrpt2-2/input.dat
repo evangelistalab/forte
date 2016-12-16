@@ -4,7 +4,7 @@
 import forte
 
 refmcscf     = -99.939316381644 #cc-pvdz
-refdsrgpt2    = -100.106152173248063
+refdsrgpt2    = -100.107827239
 
 memory 500 mb
 
