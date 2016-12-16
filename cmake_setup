@@ -76,6 +76,9 @@ def generate_cmakelist(args):
 
     with open(os.path.join('forte_template','CMakeLists.txt'),'r') as f:
         cmakelists = f.read().splitlines()
+    
+    if not cmakelists:
+        return False    
 
     # put together forte's CMakeLists.txt file
     ccfiles =  glob.glob('src/*.cc')
@@ -103,89 +106,13 @@ def generate_cmakelist(args):
 
     # remove the plugin created by psi4
     shutil.rmtree('forte_template')
-
-
-def generate_makefile(args):
-    print "   root directory: %s" % root_directory
-    print "   psi4 executable: %s" % args.psi4
-    print "   ambit binary installation directory: %s\n" % args.ambit_bindir
-    print "   chemps2 binary installation directory: %s\n" % args.chemps2_bindir
-    print "   Do we use MPI to compile PSI4: %s" % args.mpi
-    print "   global arrays install directory: %s" % args.ga_bindir
-
-    os.chdir(root_directory + "/src")
-
-    # Run psi4 --new-plugin-makefile
-    command = [args.psi4,"--new-plugin-makefile"]
-    p = subprocess.call(command, stdout=subprocess.PIPE)
-
-    with open('Makefile','r') as f:
-        makefile = f.read()
-
-    if makefile:
-        string_filter = ""
-        # "NAME = $(shell basename `pwd`)" -> "NAME = forte"
-        re_name = re.compile(r"NAME = \$\(shell basename `pwd`\)")
-        makefile = re_name.sub("NAME = forte",makefile)
-
-        # "PSITARGET = $(NAME).so" -> "PSITARGET = ../forte.so"
-        re_target = re.compile(r"PSITARGET = \$\(NAME\)\.so")
-        makefile = re_target.sub("PSITARGET = ../forte.so",makefile)
-
-        chemps2 = True
-        if not args.chemps2_bindir:
-            chemps2 = False
-
-        addons = "# Added by FORTE setup\n"
-        if chemps2:
-            addons += "CHEMPS2_BINDIR = %s\n" % args.chemps2_bindir
-            #addons += "INCLUDES +=  -I$(CHEMPS2_BINDIR)/include\n"
-            #addons += "LDFLAGS +=   -L$(CHEMPS2_BINDIR)/lib -lchemps2\n"
-            addons += "#This works on our cluster\n"
-            addons += "INCLUDES += -I$(CHEMPS2_BINDIR)/include\n"
-            addons += "LDFLAGS += -L$(CHEMPS2_BINDIR)/lib64 -lchemps2\n" 
-            addons += "CXXFLAGS += -DHAVE_CHEMPS2\n"
-        else:
-            string_filter = "dmrgscf.cc" + " dmrgsolver.cc" + " "
-            #addons += "CXXSRC = $(filter-out dmrgscf.cc dmrgsolver.cc, $(notdir $(wildcard *.cc)))\n"
-            addons += "DEPENDINCLUDE = $(filter-out dmrgscf.h dmrgsolver.h, $(notdir $(wildcard *.h*)))\n"
-
-        if args.mpi and args.ga_bindir:
-            addons += "GA_DIR = %s\n" % args.ga_bindir
-            addons += "INCLUDES += -I$(GA_DIR)/include\n"
-            addons += "LDFLAGS += -L$(GA_DIR)/lib64 -lga\n"
-            addons += "CXXFLAGS += -DHAVE_GA\n"
-        else:
-            print "Need both GA and MPI for parallel computing"
-            print "Turning off MPI based code"
-            string_filter += "parallel_ccvv_algorithms.cc distribute_df_integrals.cc "
-            string_filter += " paralleldfmo.cc"
-
-            #addons += "CXXSRC = $(filter-out parallel_ccvv_algorithms.cc distribute_df_integrals.cc, $(notdir $(wildcard *.cc)))\n"
-            
-        addons += ("INCLUDES += -I%s/mini-boost\n" % default_path)
-
-        addons  += "CXXSRC = $(filter-out %s, $(notdir $(wildcard *.cc)))\n" % string_filter 
-        re_addons = re.compile(r"DEPENDINCLUDE")
-        makefile = re_addons.sub(addons + "\nDEPENDINCLUDE",makefile)
-
-        # Add to CXXFLAGS "-Wno-unused-local-typedefs"
-        cxxaddons = "-Wno-unknown-pragmas -Wno-unused-local-typedefs"
-        re_cxxaddons = re.compile(r"-Wno-unknown-pragmas")
-        makefile = re_cxxaddons.sub(cxxaddons,makefile)
-
-        with open('Makefile','w+') as f:
-            f.write(makefile)
-    else:
-        print "Failed to generate a Makefile via 'psi4 --new-plugin-makefile'"
-        return False
     return True
 
-
 def print_build_help(build_path):
+    print{'\n'}
     print('   configure step is done')
     print('   now you need to compile the sources:')
-    print('   >>> cd ' + build_path + '/src')
+    print('   >>> cmake .')
     print('   >>> make')
 
 
@@ -207,12 +134,12 @@ def main(argv):
 #    configure_chemps2(args)
     status = generate_cmakelist(args)
 
-#    if status:
-#        # configuration was successful
-#        print_build_help(root_directory)
-#    else:
-#        # configuration was not successful
-#        print "Sorry, something went wrong :("
+    if status:
+        # configuration was successful
+        print_build_help(root_directory)
+    else:
+        # configuration was not successful
+        print "Sorry, something went wrong :("
 
 
 def configure_psi4(args):
