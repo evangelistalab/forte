@@ -23,8 +23,10 @@ Makefile
 /tests/*/*.plt
 /tests/*/timer.dat
 /tests/methods/*/timer.dat
+/tests/methods/*/*.txt
 
 doc/doxygen/html
 doc/doxygen/latex
 
 setup_command
+CMake*
