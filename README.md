@@ -20,7 +20,7 @@ Once you have the current versions of Psi4, CMake, and Ambit, follow the followi
 
 1. Run the setup script found in the forte folder:
   ```
-   python setup --psi4=<psi4 executable>
+   python cmake_setup --psi4=<psi4 executable> --ambit-bindir=<Ambit binary installation dir>
   ```
   
   ```
@@ -31,6 +31,8 @@ PSI4 and CheMPS2 options:
   --psi4 PATH           The PSI4 executable. If this is left blank this script
                         will attempt to find PSI4 on your system. Failing that
                         it will not be able to compile FORTE. (default: None)
+  --ambit-bindir PATH   The ambit binary installation directory. (default:
+                        None)
   --chemps2-bindir PATH
                         The chemps2 binary installation directory. (default:
                         None)
@@ -38,10 +40,10 @@ PSI4 and CheMPS2 options:
   --ga-bindir PATH      The GA install directory. (default: None)
    ```
 
-2. Follow the instructions provided in the output of the `setup` script to compile forte:
+2. Follow the instructions provided in the output of the `cmake_setup` script to compile forte:
   ```
    configure step is done
    now you need to compile the sources:
-   >>> cd <path to forte>/src
+   >>> cmake .
    >>> make
   ```
