@@ -593,10 +593,24 @@ void SigmaVectorString::compute_sigma(SharedVector sigma, SharedVector b)
     }
    // outfile->Printf("\n  size: %zu", size_);
 
-#pragma omp parallel for 
-    for (size_t J = 0; J < size_; ++J){
+#pragma omp parallel  
+{
+    int num_thread = omp_get_max_threads();
+    int tid = omp_get_thread_num();
+
+    size_t bin_size = size_ / num_thread;
+    bin_size += ( tid < (size_ % num_thread) ) ? 1 : 0; 
+
+    size_t start_idx = ( tid < (size_ % num_thread) ) ? tid * bin_size : (size_ % num_thread)*(bin_size + 1) + (tid - (size_ % num_thread))*bin_size;
+    size_t end_idx   = start_idx + bin_size;
+     
+//    outfile->Printf("\n  Thread %d start %zu, end %zu", tid, start_idx, end_idx);    
+
+    std::vector<double> sigma_td(bin_size,0.0);
+ 
+    for (size_t J = start_idx, counter = 0; J < end_idx; ++J){
         // reference
-        sigma_p[J] += diag_[J] * b_p[J];
+        sigma_td[counter] += diag_[J] * b_p[J];
 
       // aa singles
         for( auto& aJ_mo_sign : a_ann_list_[J]){
@@ -609,7 +623,7 @@ void SigmaVectorString::compute_sigma(SharedVector sigma, SharedVector b)
                     const size_t I = aaJ_mo.first;
                     const double sign_q = (aaJ_mo.second > 0.0) ? 1.0 : -1.0;
                     const double HIJ = space_[I].slater_rules_single_alpha_abs(p,q) * sign_p * sign_q;
-                    sigma_p[J] += HIJ * b_p[I];
+                    sigma_td[counter] += HIJ * b_p[I];
                 }
             }
         }
@@ -624,7 +638,7 @@ void SigmaVectorString::compute_sigma(SharedVector sigma, SharedVector b)
                     const double sign_q = bbJ_mo.second > 0.0 ? 1.0 : -1.0;
                     const size_t I = bbJ_mo.first;
                     const double HIJ = space_[I].slater_rules_single_beta_abs(p,q) * sign_p * sign_q;
-                    sigma_p[J] += HIJ * b_p[I];
+                    sigma_td[counter] += HIJ * b_p[I];
                 }
             }
         }
@@ -641,7 +655,7 @@ void SigmaVectorString::compute_sigma(SharedVector sigma, SharedVector b)
                     const size_t I = std::get<0>(aaaaJ_mo_sign);
                     const double sign_rs = std::get<1>(aaaaJ_mo_sign) > 0.0 ? 1.0 : -1.0;
                     const double HIJ = sign_pq * sign_rs * STLBitsetDeterminant::fci_ints_->tei_aa(p,q,r,s);
-                    sigma_p[J] += HIJ * b_p[I];
+                    sigma_td[counter] += HIJ * b_p[I];
                 }
             }
         }
@@ -658,7 +672,7 @@ void SigmaVectorString::compute_sigma(SharedVector sigma, SharedVector b)
                     const size_t I = std::get<0>(bbbbJ_mo_sign);
                     const double sign_rs = std::get<1>(bbbbJ_mo_sign) > 0.0 ? 1.0 : -1.0;
                     const double HIJ = sign_pq * sign_rs * STLBitsetDeterminant::fci_ints_->tei_bb(p,q,r,s);
-                    sigma_p[J] += HIJ * b_p[I];
+                    sigma_td[counter] += HIJ * b_p[I];
                 }
             }
         }
@@ -674,11 +688,23 @@ void SigmaVectorString::compute_sigma(SharedVector sigma, SharedVector b)
                     const size_t I = std::get<0>(ababJ_mo_sign);
                     double sign_rs = std::get<1>(ababJ_mo_sign) > 0.0 ? 1.0 : -1.0;
                     const double HIJ = sign_pq * sign_rs * STLBitsetDeterminant::fci_ints_->tei_ab(p,q,r,s);
-                    sigma_p[J] += HIJ * b_p[I];
+                    sigma_td[counter] += HIJ * b_p[I];
                 }
             }
         }
+        counter++;
     }
+
+    #pragma omp critical
+    {
+        size_t counter = 0;
+        for( size_t I = start_idx; I < end_idx; ++I ){
+            sigma_p[I] = sigma_td[counter]; 
+            counter++;
+        }
+    }    
+
+}
 }
 void SigmaVectorString::add_bad_roots( std::vector<std::vector<std::pair<size_t, double>>>& roots )
 {
