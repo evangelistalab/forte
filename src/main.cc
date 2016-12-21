@@ -48,9 +48,11 @@
 #ifdef HAVE_GA
 #include <ga.h>
 #include <macdecls.h>
-#include <mpi.h>
 #endif
 
+#ifdef HAVE_MPI
+#include <mpi.h>
+#endif
 
 //INIT_PLUGIN
 void forte_options(std::string name, psi::Options &options);
@@ -246,7 +248,7 @@ read_options(std::string name, Options &options)
         options.add_bool("SELECT",false);
 
         /*- The diagonalization method -*/
-        options.add_str("DIAG_ALGORITHM","DAVIDSON","DAVIDSON FULL DAVIDSONLIST SOLVER DLSTRING DLDISK");
+        options.add_str("DIAG_ALGORITHM","DLSTRING","DAVIDSON FULL DAVIDSONLIST SOLVER DLSTRING DLDISK");
 
         /*- Force the diagonalization procedure?  -*/
         options.add_bool("FORCE_DIAG_METHOD", false);
@@ -786,6 +788,10 @@ read_options(std::string name, Options &options)
 extern "C" SharedWavefunction forte(SharedWavefunction ref_wfn, Options &options)
 {
     ambit::initialize();
+
+    #ifdef HAVE_MPI
+    MPI::Init(NULL,NULL);    
+    #endif
 
     int my_proc = 0;
     int n_nodes = 1;
@@ -1365,6 +1371,10 @@ extern "C" SharedWavefunction forte(SharedWavefunction ref_wfn, Options &options
     //GA_Terminate();
     #endif
     ambit::finalize();
+
+    #ifdef HAVE_MPI
+    MPI::Finalize();
+    #endif
 
     return ref_wfn;
 }
