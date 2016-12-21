@@ -92,12 +92,27 @@ def generate_cmakelist(args):
     forte_cmakelists += '\n    set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${OpenMP_CXX_FLAGS}")'
     forte_cmakelists += '\nendif()\n'
     
+    #Check for MPI
+    if(args.mpi):
+        forte_cmakelists += '\nfind_package(MPI)'
+        forte_cmakelists += '\nif (MPI_FOUND)'
+        forte_cmakelists += '\n    include_directories(${MPI_INCLUDE_PATH})'
+        forte_cmakelists += '\n    set (CMAKE_CXX_COMPILE_FLAGS ${CMAKE_CXX_COMPILE_FLAGS} ${MPI_COMPILE_FLAGS})'
+        forte_cmakelists += '\n    set (CMAKE_CXX_LINK_FLAGS ${CMAKE_CXX_LINK_FLAGS} ${MPI_LINK_FLAGS})'
+        forte_cmakelists += '\n    set(HAVE_MPI ${MPI_FOUND})'
+        forte_cmakelists += '\n    include_directories(MPI_INCLUDE_PATH)'
+#        forte_cmakelists += '\n    target_link_libraries(forte ${MPI_LIBRARIES})'
+        forte_cmakelists += '\nendif()\n'
 
     forte_cmakelists += '\nlink_directories(%s)' % os.path.join(args.ambit_bindir,'lib')
     forte_cmakelists += '\ninclude_directories(%s)' % os.path.join(args.ambit_bindir,'include')
     forte_cmakelists += '\ninclude_directories(src/mini-boost)'
     forte_cmakelists += '\n\nadd_psi4_plugin(forte\n' + "\n".join(ccfiles) + "\n)"
-    forte_cmakelists += '\n\ntarget_link_libraries(forte ambit)'
+
+    forte_cmakelists += '\n    target_link_libraries(forte ambit)'
+    forte_cmakelists += '\nif (MPI_FOUND)'
+    forte_cmakelists += '\n    target_link_libraries(forte ${MPI_LIBRARIES})'
+    forte_cmakelists += '\nendif()\n'
 
     # write forte's CMakeLists.txt file
     cmakelist_file = open('CMakeLists.txt','w')
@@ -109,7 +124,7 @@ def generate_cmakelist(args):
     return True
 
 def print_build_help(build_path):
-    print{'\n'}
+    print('\n')
     print('   configure step is done')
     print('   now you need to compile the sources:')
     print('   >>> cmake .')
