@@ -790,7 +790,7 @@ extern "C" SharedWavefunction forte(SharedWavefunction ref_wfn, Options &options
     ambit::initialize();
 
     #ifdef HAVE_MPI
-    MPI::Init(NULL,NULL);    
+    MPI_Init(NULL,NULL);    
     #endif
 
     int my_proc = 0;
@@ -1373,7 +1373,7 @@ extern "C" SharedWavefunction forte(SharedWavefunction ref_wfn, Options &options
     ambit::finalize();
 
     #ifdef HAVE_MPI
-    MPI::Finalize();
+    MPI_Finalize();
     #endif
 
     return ref_wfn;
