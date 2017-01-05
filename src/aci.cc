@@ -523,13 +523,20 @@ double AdaptiveCI::compute_energy()
     std::vector<double> pt2_energies(nroot_);
 
     for( int i = 0; i < nrun; ++i ){
+        nroot_ = options_.get_int("NROOT");
         if(!quiet_mode_) outfile->Printf("\n  Computing wavefunction for root %d", i); 
         P_space_.clear();
         PQ_space_.clear();
+
+        
+
         if( multi_state ){
             ref_root_ = i;
             root_ = i;
         }
+
+        
+
         compute_aci( PQ_evecs, PQ_evals );
 
         if( ex_alg_ == "ROOT_COMBINE") {
@@ -2384,6 +2391,11 @@ void AdaptiveCI::compute_aci( SharedMatrix& PQ_evecs, SharedVector& PQ_evals )
 	if(options_["PRINT_REFS"].has_changed()){
 		print_refs = options_.get_bool("PRINT_REFS");
 	}
+
+    if(options_.get_str("EXCITED_ALGORITHM") == "ROOT_ORTHOGONALIZE" and root_ == 0){
+        nroot_ = 1;
+    } 
+
 
     SharedMatrix P_evecs;
     SharedVector P_evals;
