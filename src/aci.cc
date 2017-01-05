@@ -528,14 +528,10 @@ double AdaptiveCI::compute_energy()
         P_space_.clear();
         PQ_space_.clear();
 
-        
-
         if( multi_state ){
             ref_root_ = i;
             root_ = i;
         }
-
-        
 
         compute_aci( PQ_evecs, PQ_evals );
 
@@ -1536,20 +1532,29 @@ void AdaptiveCI::prune_q_space(std::vector<STLBitsetDeterminant>& large_space,st
     int off = options_.get_int("AVERAGE_OFFSET");
     if(nav == 0) nav = nroot;
 
+   // if( options_.get_str("EXCITED_ALGORITHM") == "ROOT_ORTHOGONALIZE" ){
+   //     nav = 1;
+   //     off = 0;
+   // }
+
     if( (off + nav) > nroot ) off = nroot - nav; //throw PSIEXCEPTION("\n  Your desired number of roots and the offset exceeds the maximum number of roots!");
 
     // Create a vector that stores the absolute value of the CI coefficients
     std::vector<std::pair<double,size_t> > dm_det_list;
     for (size_t I = 0, max = large_space.size(); I < max; ++I){
         double criteria = 0.0;
-        for (int n = 0; n < nav; ++n){
-            if(pq_function_ == "MAX"){
-				criteria = std::max(criteria, std::fabs(evecs->get(I,n)));
-			}else if(pq_function_ == "AVERAGE"){
-				criteria += std::fabs(evecs->get(I,n+off));
-			}
-		}
-		criteria /= static_cast<double>(nav);
+        if( ex_alg_ == "AVERAGE" ){
+            for (int n = 0; n < nav; ++n){
+                if(pq_function_ == "MAX"){
+		    		criteria = std::max(criteria, std::fabs(evecs->get(I,n)));
+		    	}else if(pq_function_ == "AVERAGE"){
+		    		criteria += std::fabs(evecs->get(I,n+off));
+		    	}
+		    }
+		    criteria /= static_cast<double>(nav);
+        }else{
+            criteria = std::fabs(evecs->get(I, ref_root_));
+        }
         dm_det_list.push_back(std::make_pair(criteria,I));
     }
 
@@ -2481,13 +2486,13 @@ void AdaptiveCI::compute_aci( SharedMatrix& PQ_evecs, SharedVector& PQ_evals )
         }
     
         // Grab and set the guess
-        if( cycle > 2 and nroot_ == 1){
+    //    if( cycle > 2 and nroot_ == 1){
      //       for( int n = 0; n < num_ref_roots; ++n ){
      //           auto guess = dl_initial_guess( old_dets, P_space_, old_evecs, ref_root_ );
     //            outfile->Printf("\n  Setting guess");
      //           sparse_solver.set_initial_guess( guess );
     //        }
-        }
+    //    }
 
         sparse_solver.manual_guess( false );
         Timer diag;
