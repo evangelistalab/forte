@@ -2397,7 +2397,9 @@ void AdaptiveCI::compute_aci( SharedMatrix& PQ_evecs, SharedVector& PQ_evals )
 		print_refs = options_.get_bool("PRINT_REFS");
 	}
 
-    if(options_.get_str("EXCITED_ALGORITHM") == "ROOT_ORTHOGONALIZE" and root_ == 0){
+    if((options_.get_str("EXCITED_ALGORITHM") == "ROOT_ORTHOGONALIZE" or 
+        options_.get_str("EXCITED_ALGORITHM") == "MULTISTATE" or
+        options_.get_str("EXCITED_ALGORITHM") == "ROOT_COMBINE") and root_ == 0){
         nroot_ = 1;
     } 
 
