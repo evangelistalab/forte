@@ -263,8 +263,8 @@ void AdaptiveCI::print_info()
         {"Determinant selection criterion",energy_selection_ ? "Second-order Energy" : "First-order Coefficients"},
         {"Selection criterion",aimed_selection_ ? "Aimed selection" : "Threshold"},
         {"Excited Algorithm", options_.get_str("EXCITED_ALGORITHM")},
-        {"Q Type", q_rel_ ? "Relative Energy" : "Absolute Energy"},
-        {"PT2 Parameters", options_.get_bool("PERTURB_SELECT") ? "True" : "False"},
+//        {"Q Type", q_rel_ ? "Relative Energy" : "Absolute Energy"},
+//        {"PT2 Parameters", options_.get_bool("PERTURB_SELECT") ? "True" : "False"},
         {"Project out spin contaminants",project_out_spin_contaminants_ ? "True" : "False"},
         {"Enforce spin completeness of basis", spin_complete_ ? "True" : "False"},
         {"Enforce complete aimed selection", add_aimed_degenerate_ ? "True" : "False"}};
@@ -1532,10 +1532,9 @@ void AdaptiveCI::prune_q_space(std::vector<STLBitsetDeterminant>& large_space,st
     int off = options_.get_int("AVERAGE_OFFSET");
     if(nav == 0) nav = nroot;
 
-   // if( options_.get_str("EXCITED_ALGORITHM") == "ROOT_ORTHOGONALIZE" ){
-   //     nav = 1;
-   //     off = 0;
-   // }
+  //  if( options_.get_str("EXCITED_ALGORITHM") == "ROOT_COMBINE" and (nav == 1) and (nroot > 1)){
+  //      off = ref_root_;
+  //  }
 
     if( (off + nav) > nroot ) off = nroot - nav; //throw PSIEXCEPTION("\n  Your desired number of roots and the offset exceeds the maximum number of roots!");
 
@@ -2439,7 +2438,6 @@ void AdaptiveCI::compute_aci( SharedMatrix& PQ_evecs, SharedVector& PQ_evals )
 
     if(streamline_qspace_ and !quiet_mode_) outfile->Printf("\n  Using streamlined Q-space builder.");
 
-   // compute_aci( PQ_evecs, PQevals );
     ex_alg_ = options_.get_str("EXCITED_ALGORITHM");
 
     std::vector<STLBitsetDeterminant> old_dets;
