@@ -110,7 +110,7 @@ def generate_cmakelist(args):
         forte_cmakelists += '\nset(HAVE_GA True)'
         forte_cmakelists += '\nlink_directories(%s)' % os.path.join(args.ga_bindir,'lib')
         forte_cmakelists += '\ninclude_directories(%s)' % os.path.join(args.ga_bindir,'include')
-        forte_cmakelists += '\nendif()\n'
+#        forte_cmakelists += '\nendif()\n'
 
     forte_cmakelists += '\nlink_directories(%s)' % os.path.join(args.ambit_bindir,'lib')
     forte_cmakelists += '\ninclude_directories(%s)' % os.path.join(args.ambit_bindir,'include')
