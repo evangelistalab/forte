@@ -112,7 +112,7 @@ def generate_cmakelist(args):
 
     if(args.ga_bindir):
         forte_cmakelists += '\nadd_definitions(-DHAVE_GA)'
-        forte_cmakelists += '\nset(HAVE_GA True)'
+        forte_cmakelists += '\nset(GA_FOUND True)'
         forte_cmakelists += '\nlink_directories(%s)' % os.path.join(args.ga_bindir,'lib64')
         forte_cmakelists += '\ninclude_directories(%s)' % os.path.join(args.ga_bindir,'include')
 #        forte_cmakelists += '\nendif()\n'
@@ -123,8 +123,12 @@ def generate_cmakelist(args):
     forte_cmakelists += '\n\nadd_psi4_plugin(forte\n' + "\n".join(ccfiles) + "\n)"
 
     forte_cmakelists += '\n    target_link_libraries(forte PRIVATE ambit)'
-    if(args.ga_bindir):
-        forte_cmakelists += '\n    target_link_libraries(forte PRIVATE ga)'
+    ga_dir_path = os.path.join(args.ga_bindir, 'lib64')
+    forte_cmakelists += '\n if (GA_FOUND)'
+    forte_cmakelists += '\n target_link_libraries(forte PRIVATE'
+    forte_cmakelists += '\n "%s"' % os.path.join(ga_dir_path, 'libga.a')
+    forte_cmakelists += '\n "%s")' % os.path.join(ga_dir_path, 'libarmci.a')
+    forte_cmakelists += '\nendif()\n'
     
     forte_cmakelists += '\nif (MPI_FOUND)'
     forte_cmakelists += '\n    target_link_libraries(forte PRIVATE ${MPI_LIBRARIES})'
