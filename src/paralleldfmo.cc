@@ -1,15 +1,20 @@
 #ifdef HAVE_GA
 
-#include "psi4/libfock/jk.h"
-#include "psi4/libmints/sieve.h"
 #include "psi4/psifiles.h"
 #include "psi4/psi4-dec.h"
+
 #include "psi4/lib3index/3index.h"
+
 #include "psi4/libqt/qt.h"
+
+#include "psi4/libmints/matrix.h"
+#include "psi4/libmints/integral.h"
+#include "psi4/libmints/sieve.h"
+
+#include "psi4/libfock/jk.h"
 #ifdef _OPENMP
    #include <omp.h>
 #endif
-//#include <mpi.h>
 #include "paralleldfmo.h"
 #ifdef HAVE_GA
     #include <ga.h>
