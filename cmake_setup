@@ -62,6 +62,11 @@ def parse_input():
 
     return parser.parse_args()
 
+def generate_cmake_command(args):
+    call = [args.psi4,"--plugin-compile"]
+    p = subprocess.check_output(call)
+    return p
+
 def generate_cmakelist(args):
     print "   root directory: %s" % root_directory
     print "   psi4 executable: %s" % args.psi4
@@ -71,7 +76,7 @@ def generate_cmakelist(args):
     print "   global arrays install directory: %s" % args.ga_bindir
 
     # create a psi4 plugin and grab its CMakeLists.txt file
-    command = [args.psi4,"--new-plugin","forte_template"]
+    command = [args.psi4,"--plugin-name","forte_template"]
     p = subprocess.call(command, stdout=subprocess.PIPE)
 
     with open(os.path.join('forte_template','CMakeLists.txt'),'r') as f:
@@ -117,12 +122,12 @@ def generate_cmakelist(args):
     forte_cmakelists += '\ninclude_directories(src/mini-boost)'
     forte_cmakelists += '\n\nadd_psi4_plugin(forte\n' + "\n".join(ccfiles) + "\n)"
 
-    forte_cmakelists += '\n    target_link_libraries(forte ambit)'
+    forte_cmakelists += '\n    target_link_libraries(forte PRIVATE ambit)'
     if(args.ga_bindir):
-        forte_cmakelists += '\n    target_link_libraries(forte ga)'
+        forte_cmakelists += '\n    target_link_libraries(forte PRIVATE ga)'
     
     forte_cmakelists += '\nif (MPI_FOUND)'
-    forte_cmakelists += '\n    target_link_libraries(forte ${MPI_LIBRARIES})'
+    forte_cmakelists += '\n    target_link_libraries(forte PRIVATE ${MPI_LIBRARIES})'
     forte_cmakelists += '\nendif()\n'
 
     # write forte's CMakeLists.txt file
@@ -134,11 +139,11 @@ def generate_cmakelist(args):
     shutil.rmtree('forte_template')
     return True
 
-def print_build_help(build_path):
+def print_build_help(build_path, args):
     print('\n')
     print('   configure step is done')
     print('   now you need to compile the sources:')
-    print('   >>> cmake .')
+    print('   >>> %s' % generate_cmake_command(args) )
     print('   >>> make')
 
 
@@ -162,7 +167,7 @@ def main(argv):
 
     if status:
         # configuration was successful
-        print_build_help(root_directory)
+        print_build_help(root_directory, args)
     else:
         # configuration was not successful
         print "Sorry, something went wrong :("
