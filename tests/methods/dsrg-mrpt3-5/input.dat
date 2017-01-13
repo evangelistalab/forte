@@ -34,7 +34,7 @@ set globals{
   mcscf_diis_start    4
   num_roots           2
   follow_root         2
-  avg_states          [1,2]
+  avg_states          [0,1]
 }
 
 set forte{
