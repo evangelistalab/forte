@@ -142,8 +142,6 @@ void AdaptiveCI::startup()
 	nalpha_ = (nactel_ + ms) / 2;
 	nbeta_  = nactel_ - nalpha_; 
 
-  //  outfile->Printf("\n  nbeta = %d", nbeta_);
-  //  outfile->Printf("\n  nalpha = %d", nalpha_);
 
 	mo_symmetry_ = mo_space_info_->symmetry("ACTIVE");
      
@@ -1717,18 +1715,20 @@ void AdaptiveCI::wfn_analyzer(std::vector<STLBitsetDeterminant>& det_space, Shar
 	auto ref_bits = rdet.bits();
 	for(int n = 0; n < nroot; ++n){
 		pVector<size_t,double> excitation_counter( 1 + (1 + cycle_) * 2 );
-		pVector<double,size_t> det_weight;
-		for( size_t I = 0, max = det_space.size(); I < max; ++I){
-			det_weight.push_back(std::make_pair(std::fabs(evecs->get(I,n)),I));
-		}
-
-		std::sort(det_weight.begin(), det_weight.end());
-		std::reverse(det_weight.begin(), det_weight.end());
+//		pVector<double,size_t> det_weight;
+//		for( size_t I = 0, max = det_space.size(); I < max; ++I){
+//			det_weight.push_back(std::make_pair(std::fabs(evecs->get(I,n)),I));
+//		}
+//
+//		std::sort(det_weight.begin(), det_weight.end());
+//		std::reverse(det_weight.begin(), det_weight.end());
 
 
 		for(size_t I = 0, max = det_space.size(); I < max; ++I){
 			int ndiff = 0;
-			auto ex_bits = det_space[det_weight[I].second].bits();
+			auto ex_bits = det_space[I].bits();
+
+            double coeff = evecs->get(I,n) * evecs->get(I,n);
 
 			//Compute number of differences in both alpha and beta strings wrt ref
 			for(size_t a = 0; a < nact_ *2; ++a){
@@ -1738,7 +1738,7 @@ void AdaptiveCI::wfn_analyzer(std::vector<STLBitsetDeterminant>& det_space, Shar
 			}
 			ndiff /= 2;
 			excitation_counter[ndiff] = std::make_pair(excitation_counter[ndiff].first + 1,
-													   excitation_counter[ndiff].second + det_weight[I].first * det_weight[I].first);
+													   excitation_counter[ndiff].second + coeff);
 
             if( print_final_wfn and (n == ref_root_) ){
 
@@ -2580,8 +2580,6 @@ void AdaptiveCI::compute_aci( SharedMatrix& PQ_evecs, SharedVector& PQ_evals )
 		// Ensure the solutions are spin-pure
 		if( (spin_projection == 1 or spin_projection == 3) and PQ_space_.size() <= 200){
             project_determinant_space(PQ_space_, PQ_evecs, PQ_evals, num_ref_roots);
-		}else if ( !quiet_mode_ ){
-			outfile->Printf("\n  Not performing spin projection.");
 		}
 
 		if( !quiet_mode_ ){
@@ -2753,19 +2751,12 @@ void AdaptiveCI::add_bad_roots( std::vector<STLBitsetDeterminant>& dets )
 //                outfile->Printf("\n %zu, %f ", I, detmapper[state[I].first] , state[I].second );
                 bad_root.push_back(std::make_pair( detmapper[state[I].first], state[I].second  )); 
                 nadd++;
-            }else{
-              //  dets.push_back( state[I].first );
-              //  detmapper[state[I].first] = nadd;
-              //  bad_root.push_back( std::make_pair(idx + nadd, state[I].second) );
             }
         }
         bad_roots_.push_back(bad_root);
         outfile->Printf("\n  Added %zu determinants from root %zu", nadd, i);
     }
     
-    for( int i = 0; i < bad_roots_.size(); ++i){
-     //   outfile->Printf("\n  Added %zu determinants from root %zu", bad_roots_[i].size(), i);
-    }
 }
 
 void AdaptiveCI::save_old_root( std::vector<STLBitsetDeterminant>& dets, SharedMatrix& PQ_evecs, int root )
