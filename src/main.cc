@@ -552,6 +552,9 @@ read_options(std::string name, Options &options)
         options.add_int("N_GUESS_VEC", 10);
         options.add_double("NO_THRESHOLD",0.02);
 
+        /*- Do compute nroots on first cycle? -*/
+        options.add_bool("FIRST_ITER_ROOTS", false);
+
         //////////////////////////////////////////////////////////////
         ///         OPTIONS FOR THE PROJECTOR CI
         //////////////////////////////////////////////////////////////
