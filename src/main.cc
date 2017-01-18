@@ -275,7 +275,7 @@ read_options(std::string name, Options &options)
         options.add_bool("SELECT",false);
 
         /*- The diagonalization method -*/
-        options.add_str("DIAG_ALGORITHM","DLSTRING","DAVIDSON FULL DAVIDSONLIST SOLVER DLSTRING DLDISK");
+        options.add_str("DIAG_ALGORITHM","DLSTRING","DAVIDSON FULL DAVIDSONLIST SOLVER DLSTRING");
 
         /*- Force the diagonalization procedure?  -*/
         options.add_bool("FORCE_DIAG_METHOD", false);
@@ -578,6 +578,9 @@ read_options(std::string name, Options &options)
         /*- Number of guess vectors for Sparse CI solver -*/
         options.add_int("N_GUESS_VEC", 10);
         options.add_double("NO_THRESHOLD",0.02);
+
+        /*- Do compute nroots on first cycle? -*/
+        options.add_bool("FIRST_ITER_ROOTS", false);
 
         //////////////////////////////////////////////////////////////
         ///         OPTIONS FOR THE PROJECTOR CI

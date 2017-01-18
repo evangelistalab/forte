@@ -1,8 +1,10 @@
+
     -----------------------------------------------------------------------
           Psi4: An Open-Source Ab Initio Electronic Structure Package
-                              Psi4 0.3.71 Driver
+                               Psi4 1.1a2.dev169 
 
-                          Git: Rev {master} 47c6ad3 dirty
+                         Git: Rev {master} b2d0904 
+
 
     J. M. Turney, A. C. Simmonett, R. M. Parrish, E. G. Hohenstein,
     F. A. Evangelista, J. T. Fermann, B. J. Mintz, L. A. Burns, J. J. Wilke,
@@ -11,17 +13,21 @@
     and T. D. Crawford, WIREs Comput. Mol. Sci. 2, 556-565 (2012)
     (doi: 10.1002/wcms.93)
 
+
                          Additional Contributions by
-    A. E. DePrince, M. Saitow, U. Bozkaya, A. Yu. Sokolov
+    A. E. DePrince, U. Bozkaya, A. Yu. Sokolov, D. G. A. Smith, R. Di Remigio,
+    R. M. Richard, J. F. Gonthier, H. R. McAlexander, M. Saitow, and
+    B. P. Pritchard
     -----------------------------------------------------------------------
 
 
-    Psi4 started on: Thu Sep 17 14:43:32 2015
+    Psi4 started on: Tuesday, 17 January 2017 02:29PM
 
-    Process ID:  22876
-    PSI4DATADIR: /Users/ChenyangLi/src/psi4private/lib
-    Memory level set to 256.000 MB
-
+    Process ID:  19347
+    PSIDATADIR: /Users/jeffschriber/src/psi4_debug_install/share/psi4
+    Memory:     500.0 MiB
+    Threads:    1
+    
   ==> Input File <==
 
 --------------------------------------------------------------------------
@@ -30,7 +36,7 @@
 import forte
 
 refmcscf     = -15.569761360883527 #TEST
-refdsrgpt2   = -15.627184888920119 #TEST
+refdsrgpt2   = -15.627184889290431 #TEST
 
 molecule {
   0 1
@@ -42,16 +48,16 @@ molecule {
 }
 
 set globals{
-   reference             twocon
-   scf_type              pk
+   reference             rhf
+   scf_type              out_of_core
    d_convergence         12
    e_convergence         15
-}
-
-set mcscf{
-   docc                  [2,0,0,0]
-   socc                  [1,0,0,1]
-   maxiter               1000
+   docc                  [2,0,0,1]
+   restricted_docc       [2,0,0,0]
+   active                [1,0,0,1]
+   mcscf_r_convergence   8
+   mcscf_e_convergence   10
+   mcscf_maxiter         150
 }
 
 set forte{
@@ -98,18 +104,187 @@ S   1   1.00
 ****
 }
 
-energy('mcscf')
+scf_energy, wfn = energy('casscf', return_wfn=True)
 compare_values(refmcscf,get_variable("CURRENT ENERGY"),10,"MCSCF energy") #TEST
 
-energy('forte')
+energy('forte', ref_wfn=wfn)
 compare_values(refdsrgpt2,get_variable("CURRENT ENERGY"),10, "MR-DSRG-PT2 energy") #TEST
 --------------------------------------------------------------------------
-/Users/ChenyangLi/src/forte/forte.so loaded.
+/Users/jeffschriber/src/forte/forte.so loaded.
 
-         ------------------------------------------
-           MCSCF: a self-consistent field program
-            written by Francesco A. Evangelista
-         ------------------------------------------ MINTS: Wrapper to libmints.
+         ---------------------------------------------------------
+                                   SCF
+            by Justin Turney, Rob Parrish, and Andy Simmonett
+                              RHF Reference
+                        1 Threads,    524 MiB Core
+         ---------------------------------------------------------
+
+  ==> Geometry <==
+
+    Molecular point group: c2v
+    Full point group: C2v
+
+    Geometry (in Bohr), charge = 0, multiplicity = 1:
+
+       Center              X                  Y                   Z               Mass       
+    ------------   -----------------  -----------------  -----------------  -----------------
+          BE          0.000000000000     0.000000000000    -0.456946119527     9.012182201000
+           H         -0.000000000000     1.390000000000     2.043053880473     1.007825032070
+           H          0.000000000000    -1.390000000000     2.043053880473     1.007825032070
+
+  Running in c2v symmetry.
+
+  Rotational constants: A =     15.45786  B =      5.84735  C =      4.24251 [cm^-1]
+  Rotational constants: A = 463415.11694  B = 175299.21379  C = 127187.22870 [MHz]
+  Nuclear repulsion =    3.156487659063052
+
+  Charge       = 0
+  Multiplicity = 1
+  Electrons    = 6
+  Nalpha       = 3
+  Nbeta        = 3
+
+  ==> Algorithm <==
+
+  SCF Algorithm Type is OUT_OF_CORE.
+  DIIS enabled.
+  MOM disabled.
+  Fractional occupation disabled.
+  Guess Type is SAD.
+  Energy threshold   = 1.00e-15
+  Density threshold  = 1.00e-12
+  Integral threshold = 0.00e+00
+
+  ==> Primary Basis <==
+
+  Basis Set: inputblock anonymous313
+    Number of shells: 9
+    Number of basis function: 13
+    Number of Cartesian functions: 13
+    Spherical Harmonics?: true
+    Max angular momentum: 1
+
+  ==> Pre-Iterations <==
+
+   -------------------------------------------------------
+    Irrep   Nso     Nmo     Nalpha   Nbeta   Ndocc  Nsocc
+   -------------------------------------------------------
+     A1         7       7       2       2       2       0
+     A2         0       0       0       0       0       0
+     B1         2       2       0       0       0       0
+     B2         4       4       1       1       1       0
+   -------------------------------------------------------
+    Total      13      13       3       3       3       0
+   -------------------------------------------------------
+
+  ==> Integral Setup <==
+
+  ==> DiskJK: Disk-Based J/K Matrices <==
+
+    J tasked:                  Yes
+    K tasked:                  Yes
+    wK tasked:                  No
+    Memory (MB):               375
+    Schwarz Cutoff:          1E-12
+
+  Minimum eigenvalue in the overlap matrix is 1.2053632228E-01.
+  Using Symmetric Orthogonalization.
+
+  SCF Guess: Superposition of Atomic Densities via on-the-fly atomic UHF.
+
+  ==> Iterations <==
+
+                        Total Energy        Delta E     RMS |[F,P]|
+
+   @RHF iter   0:   -15.56301095030743   -1.55630e+01   5.44147e-02 
+   @RHF iter   1:   -15.52996866392278    3.30423e-02   1.48767e-02 
+   @RHF iter   2:   -15.55738473050346   -2.74161e-02   4.69546e-03 DIIS
+   @RHF iter   3:   -15.56151938814143   -4.13466e-03   2.28944e-03 DIIS
+   @RHF iter   4:   -15.56286464827654   -1.34526e-03   2.24552e-04 DIIS
+   @RHF iter   5:   -15.56287226322972   -7.61495e-06   3.86260e-05 DIIS
+   @RHF iter   6:   -15.56287237470623   -1.11477e-07   3.70255e-06 DIIS
+   @RHF iter   7:   -15.56287237681813   -2.11189e-09   3.38095e-07 DIIS
+   @RHF iter   8:   -15.56287237683214   -1.40101e-11   3.56187e-08 DIIS
+   @RHF iter   9:   -15.56287237683229   -1.50990e-13   2.52796e-09 DIIS
+   @RHF iter  10:   -15.56287237683227    2.13163e-14   1.54895e-10 DIIS
+   @RHF iter  11:   -15.56287237683230   -3.19744e-14   2.26136e-11 DIIS
+   @RHF iter  12:   -15.56287237683227    2.66454e-14   2.41166e-13 DIIS
+   @RHF iter  13:   -15.56287237683228   -8.88178e-15   2.37838e-14 DIIS
+   @RHF iter  14:   -15.56287237683227    8.88178e-15   8.86190e-15 DIIS
+   @RHF iter  15:   -15.56287237683228   -8.88178e-15   4.93247e-15 DIIS
+   @RHF iter  16:   -15.56287237683228   -5.32907e-15   3.27703e-15 DIIS
+   @RHF iter  17:   -15.56287237683228    5.32907e-15   2.22444e-15 DIIS
+   @RHF iter  18:   -15.56287237683229   -1.06581e-14   1.64244e-15 DIIS
+   @RHF iter  19:   -15.56287237683228    8.88178e-15   1.38548e-15 DIIS
+   @RHF iter  20:   -15.56287237683227    1.06581e-14   1.08626e-15 DIIS
+   @RHF iter  21:   -15.56287237683229   -1.77636e-14   1.33900e-15 DIIS
+   @RHF iter  22:   -15.56287237683228    3.55271e-15   8.64035e-16 DIIS
+   @RHF iter  23:   -15.56287237683229   -3.55271e-15   1.32282e-15 DIIS
+   @RHF iter  24:   -15.56287237683227    1.42109e-14   7.50499e-16 DIIS
+   @RHF iter  25:   -15.56287237683228   -7.10543e-15   9.30727e-16 DIIS
+   @RHF iter  26:   -15.56287237683228   -1.77636e-15   8.17526e-16 DIIS
+   @RHF iter  27:   -15.56287237683229   -5.32907e-15   7.58390e-16 DIIS
+   @RHF iter  28:   -15.56287237683228    7.10543e-15   7.69604e-16 DIIS
+   @RHF iter  29:   -15.56287237683229   -5.32907e-15   7.51797e-16 DIIS
+   @RHF iter  30:   -15.56287237683229   -1.77636e-15   1.01898e-15 DIIS
+   @RHF iter  31:   -15.56287237683230   -7.10543e-15   8.28788e-16 DIIS
+   @RHF iter  32:   -15.56287237683228    1.95399e-14   6.70163e-16 DIIS
+   @RHF iter  33:   -15.56287237683228    0.00000e+00   9.92162e-16 DIIS
+
+  ==> Post-Iterations <==
+
+    Orbital Energies (a.u.)
+    -----------------------
+
+    Doubly Occupied:                                                      
+
+       1A1    -4.745154     2A1    -0.496862     1B2    -0.252144  
+
+    Virtual:                                                              
+
+       3A1    -0.004524     1B1     0.147520     4A1     0.268817  
+       2B2     0.280798     5A1     0.399681     3B2     1.190648  
+       6A1     1.301378     2B1     8.956704     4B2     9.007371  
+       7A1     9.098579  
+
+    Final Occupation by Irrep:
+             A1    A2    B1    B2 
+    DOCC [     2,    0,    0,    1 ]
+
+  Energy converged.
+
+  @RHF Final Energy:   -15.56287237683228
+
+   => Energetics <=
+
+    Nuclear Repulsion Energy =              3.1564876590630520
+    One-Electron Energy =                 -26.4504019931892564
+    Two-Electron Energy =                   7.7310419572939271
+    DFT Exchange-Correlation Energy =       0.0000000000000000
+    Empirical Dispersion Energy =           0.0000000000000000
+    PCM Polarization Energy =               0.0000000000000000
+    EFP Energy =                            0.0000000000000000
+    Total Energy =                        -15.5628723768322761
+
+    Alert: EFP and PCM quantities not currently incorporated into SCF psivars.
+
+Properties will be evaluated at   0.000000,   0.000000,   0.000000 Bohr
+
+Properties computed using the SCF density matrix
+
+  Nuclear Dipole Moment: (a.u.)
+     X:     0.0000      Y:     0.0000      Z:     2.2583
+
+  Electronic Dipole Moment: (a.u.)
+     X:     0.0000      Y:     0.0000      Z:    -3.9654
+
+  Dipole Moment: (a.u.)
+     X:     0.0000      Y:     0.0000      Z:    -1.7071     Total:     1.7071
+
+  Dipole Moment: (Debye)
+     X:     0.0000      Y:     0.0000      Z:    -4.3391     Total:     4.3391
+
+ MINTS: Wrapper to libmints.
    by Justin Turney
 
    Calculation information:
@@ -132,588 +307,138 @@ compare_values(refdsrgpt2,get_variable("CURRENT ENERGY"),10, "MR-DSRG-PT2 energy
         Stored in file 33.
 
 
+         ---------------------------------------------------------
+                Multi-Configurational Self-Consistent Field
+                            (a 'D E T C I' module)
 
-  MOs per irrep:                                      A1  A2  B1  B2 Total
-  ----------------------------------------------------------------------------
-  Total                                                7    0    2    4    13
-  Doubly Occupied                                      2    0    0    0     2
-  Active/Singly Occupied                               1    0    0    1     2
-  ----------------------------------------------------------------------------
-
-  Running an SCF calculation
-  TWOCON MOs = [2 (A1),9 (B2)]
-
-  Generated 91 pairs
-  Distributed as [41 A1][8 A2][14 B1][28 B2]
-  batch   0 pq = [       0,      41] index = [               0,             861]
-
-  Allocated the PK matrix (861 elements) 
-  Allocated the  K matrix (861 elements) 
-  Reading the two-electron integrals to form PK and K ... 
-  batch   0 ... done.
+                 Daniel G. A. Smith, C. David Sherrill, and
+                              Matt L. Leininger
+         ---------------------------------------------------------
 
 
-  =========================================================================================
-         Cycle          Energy               D(Energy)            D(Density)            DIIS
-  ===========================================================================================
-  Setting level shift to 0.000 S
-  @SCF    0      -15.095964782460     -15.095964782460       0.124371451250
-    ci      = [ 0.00000000, 0.00000000]
-    ci_grad = [ 0.00000000, 0.00000000]
-  Setting level shift to 0.000 S
-  @SCF    1      -15.480358046822      -0.384393264362       0.111190852968
-    ci      = [ 0.00000000, 0.00000000]
-    ci_grad = [ 0.00000000, 0.00000000]
-  Setting level shift to 0.000 S
-  @SCF    2      -15.477580816090       0.002777230732       0.009809199882
-    ci      = [ 0.00000000, 0.00000000]
-    ci_grad = [ 0.00000000, 0.00000000]
-  Setting level shift to 0.000 S
-  @SCF    3      -15.486632816077      -0.009051999987       0.002695266879
-    ci      = [ 0.00000000, 0.00000000]
-    ci_grad = [ 0.00000000, 0.00000000]
-  Setting level shift to 0.000 S
-  @SCF    4      -15.484559645649       0.002073170428       0.001179184163
-    ci      = [ 0.00000000, 0.00000000]
-    ci_grad = [ 0.00000000, 0.00000000]
-  Setting level shift to 0.000 S
-  @SCF    5      -15.485650291580      -0.001090645932       0.000460182618
-    ci      = [ 0.00000000, 0.00000000]
-    ci_grad = [ 0.00000000, 0.00000000]
-  Setting level shift to 0.000 S
-  @SCF    6      -15.485321117370       0.000329174210       0.000242730310
-    ci      = [ 0.00000000, 0.00000000]
-    ci_grad = [ 0.00000000, 0.00000000]
-  Setting level shift to 0.000 S/E
-  @SCF    7      -15.485449121809      -0.000128004439       0.000152659311
-    ci      = [ 0.00000000, 0.00000000]
-    ci_grad = [ 0.00000000, 0.00000000]
-  Setting level shift to 0.000 S/E
-  @SCF    8      -15.485425950509       0.000023171300       0.000064713898
-    ci      = [ 0.00000000, 0.00000000]
-    ci_grad = [ 0.00000000, 0.00000000]
-  Setting level shift to 0.000 S/E
-  @SCF    9      -15.485425888149       0.000000062360       0.000000035875
-    ci      = [-0.23788765, 0.97129268]
-    ci_grad = [ 0.00000000, 0.00000000]
-  Setting level shift to 0.000 S/E
-  @SCF   10      -15.485425886222       0.000000001927       0.000000001209
-    ci      = [-0.23788765, 0.97129268]
-    ci_grad = [ 0.00000000, 0.00000000]
-  Setting level shift to 0.000 S/E
-  @SCF   11      -15.485425888496      -0.000000002274       0.000000000376
-    ci      = [-0.23788765, 0.97129268]
-    ci_grad = [ 0.00000000,-0.00000000]
-  Setting level shift to 0.000 S/E
-  @SCF   12      -15.485425888782      -0.000000000286       0.000000000137
-    ci      = [-0.23788765, 0.97129268]
-    ci_grad = [ 0.00000000,-0.00000000]
-  Setting level shift to 0.000 S/E
-  @SCF   13      -15.485425891031      -0.000000002249       0.000000000541
-    ci      = [-0.23788765, 0.97129268]
-    ci_grad = [ 0.00000000,-0.00000000]
-  Setting level shift to 0.000 S/E
-  @SCF   14      -15.485425891160      -0.000000000129       0.000000000052
-    ci      = [-0.23788765, 0.97129268]
-    ci_grad = [ 0.00000000,-0.00000000]
-  Setting level shift to 0.000 S/E
-  @SCF   15      -15.485425897650      -0.000000006489       0.000000001426
-    ci      = [-0.23788764, 0.97129268]
-    ci_grad = [ 0.00000000,-0.00000001]
-  Setting level shift to 0.000 S/E
-  @SCF   16      -15.485425893602       0.000000004048       0.000000000810
-    ci      = [-0.23788764, 0.97129268]
-    ci_grad = [-0.00000000, 0.00000000]
-  Setting level shift to 0.000 S/E
-  @SCF   17      -15.551554440857      -0.066128547255       0.032868286578
-    ci      = [-0.23788764, 0.97129268]
-    ci_grad = [ 0.01538593,-0.06431383]
-  Setting level shift to 0.000 S/E
-  @SCF   18      -15.357253516270       0.194300924586       0.326819018736
-    ci      = [-0.23788764, 0.97129268]
-    ci_grad = [-0.16073842, 0.18500220]
-  Setting level shift to 0.000 S/E
-  @SCF   19      -15.568003432747      -0.210749916477       0.328068316914
-    ci      = [-0.23788764, 0.97129268]
-    ci_grad = [ 0.04267929,-0.20615588]
-  Setting level shift to 0.000 S/E
-  @SCF   20      -15.569136847725      -0.001133414978       0.003534262596
-    ci      = [-0.23788764, 0.97129268]
-    ci_grad = [-0.00626299,-0.00242368]
-  Setting level shift to 0.000 S/E
-  @SCF   21      -15.569317391822      -0.000180544097       0.001681586642
-    ci      = [-0.23788764, 0.97129268]
-    ci_grad = [-0.00643528,-0.00149003]
-  Setting level shift to 0.000 S/E
-  @SCF   22      -15.569396003808      -0.000078611987       0.001779245836
-    ci      = [-0.23788764, 0.97129268]
-    ci_grad = [-0.00619451,-0.00134817]
-  Setting level shift to 0.000 S/E
-  @SCF   23      -15.569477335824      -0.000081332016       0.002125524919
-    ci      = [-0.23788764, 0.97129268]
-    ci_grad = [-0.00602423,-0.00132341]
-  Setting level shift to 0.000 S/E
-  @SCF   24      -15.569615111278      -0.000137775453       0.004938916554
-    ci      = [-0.23788764, 0.97129268]
-    ci_grad = [-0.00593037,-0.00136755]
-  Setting level shift to 0.000 S/E
-  @SCF   25      -15.569683971167      -0.000068859890       0.004395349791
-    ci      = [-0.23788764, 0.97129268]
-    ci_grad = [-0.00623058,-0.00135341]
-  Setting level shift to 0.000 S/E
-  @SCF   26      -15.569695334264      -0.000011363097       0.000829186928
-    ci      = [-0.23788764, 0.97129268]
-    ci_grad = [-0.00631433,-0.00131030]
-  Setting level shift to 0.000 S/E
-  @SCF   27      -15.569699174396      -0.000003840132       0.000625720150
-    ci      = [-0.20151633, 0.97948515]
-    ci_grad = [-0.00630826,-0.00130176]
-  Setting level shift to 0.000 S/E
-  @SCF   28      -15.569704373039      -0.000005198644       0.001272150482
-    ci      = [-0.20162573, 0.97946264]
-    ci_grad = [ 0.00001996,-0.00000120]
-  Setting level shift to 0.000 S/E
-  @SCF   29      -15.569704693543      -0.000000320504       0.000077118194
-    ci      = [-0.20158775, 0.97947046]
-    ci_grad = [-0.00000650,-0.00000167]
-  Setting level shift to 0.000 S/E
-  @SCF   30      -15.569704068352       0.000000625192       0.000069133110
-    ci      = [-0.20164076, 0.97945955]
-    ci_grad = [ 0.00000904, 0.00000250]
-  Setting level shift to 0.000 S/E
-  @SCF   31      -15.569692318654       0.000011749698       0.000735694218
-    ci      = [-0.20164076, 0.97945955]
-    ci_grad = [ 0.00011797, 0.00003637]
-  Setting level shift to 0.000 S/E
-  @SCF   32      -15.569704880875      -0.000012562221       0.000667933553
-    ci      = [-0.20164076, 0.97945955]
-    ci_grad = [ 0.00000005,-0.00001282]
-  Setting level shift to 0.000 S/E
-  @SCF   33      -15.569712501526      -0.000007620651       0.000405253795
-    ci      = [-0.20114989, 0.97956047]
-    ci_grad = [-0.00008381,-0.00002499]
-  Setting level shift to 0.000 S/E
-  @SCF   34      -15.569717396294      -0.000004894769       0.000391800744
-    ci      = [-0.20075178, 0.97964214]
-    ci_grad = [-0.00006853,-0.00001904]
-  Setting level shift to 0.000 S/E
-  @SCF   35      -15.569740973346      -0.000023577051       0.002811153045
-    ci      = [-0.20075178, 0.97964214]
-    ci_grad = [-0.00090654,-0.00020503]
-  Setting level shift to 0.000 S/E
-  @SCF   36      -15.569745913207      -0.000004939861       0.000764820838
-    ci      = [-0.19604742, 0.98059442]
-    ci_grad = [-0.00085916,-0.00017681]
-  Setting level shift to 0.000 S/E
-  @SCF   37      -15.569753470834      -0.000007557627       0.002191332655
-    ci      = [-0.19651262, 0.98050130]
-    ci_grad = [ 0.00008608, 0.00000954]
-  Setting level shift to 0.000 S/E
-  @SCF   38      -15.569760683929      -0.000007213095       0.002096555358
-    ci      = [-0.19362327, 0.98107596]
-    ci_grad = [-0.00053904,-0.00011374]
-  Setting level shift to 0.000 S/E
-  @SCF   39      -15.569761168318      -0.000000484389       0.000792307311
-    ci      = [-0.19328957, 0.98114175]
-    ci_grad = [-0.00006254,-0.00001281]
-  Setting level shift to 0.000 S/E
-  @SCF   40      -15.569760892408       0.000000275911       0.000502866443
-    ci      = [-0.19426011, 0.98095005]
-    ci_grad = [ 0.00018050, 0.00003603]
-  Setting level shift to 0.000 S/E
-  @SCF   41      -15.569761126746      -0.000000234338       0.000214744409
-    ci      = [-0.19404631, 0.98099237]
-    ci_grad = [-0.00003982,-0.00000812]
-  Setting level shift to 0.000 S/E
-  @SCF   42      -15.569761246314      -0.000000119568       0.000162964137
-    ci      = [-0.19385825, 0.98102955]
-    ci_grad = [-0.00003512,-0.00000706]
-  Setting level shift to 0.000 S/E
-  @SCF   43      -15.569761295299      -0.000000048986       0.000186082593
-    ci      = [-0.19370785, 0.98105926]
-    ci_grad = [-0.00002813,-0.00000561]
-  Setting level shift to 0.000 S/E
-  @SCF   44      -15.569761306569      -0.000000011269       0.000083825623
-    ci      = [-0.19363249, 0.98107414]
-    ci_grad = [-0.00001411,-0.00000280]
-  Setting level shift to 0.000 S/E
-  @SCF   45      -15.569761325267      -0.000000018698       0.000085977527
-    ci      = [-0.19365934, 0.98106884]
-    ci_grad = [ 0.00000503, 0.00000097]
-  Setting level shift to 0.000 S/E
-  @SCF   46      -15.569761355025      -0.000000029758       0.000099644563
-    ci      = [-0.19352262, 0.98109581]
-    ci_grad = [-0.00002563,-0.00000509]
-  Setting level shift to 0.000 S/E
-  @SCF   47      -15.569761355607      -0.000000000582       0.000073523932
-    ci      = [-0.19355004, 0.98109040]
-    ci_grad = [ 0.00000514, 0.00000101]
-  Setting level shift to 0.000 S/E
-  @SCF   48      -15.569761358408      -0.000000002801       0.000025109842
-    ci      = [-0.19352898, 0.98109456]
-    ci_grad = [-0.00000395,-0.00000078]
-  Setting level shift to 0.000 S/E
-  @SCF   49      -15.569761359730      -0.000000001322       0.000026679387
-    ci      = [-0.19350851, 0.98109860]
-    ci_grad = [-0.00000384,-0.00000076]
-  Setting level shift to 0.000 S/E
-  @SCF   50      -15.569761360046      -0.000000000316       0.000006679893
-    ci      = [-0.19350679, 0.98109894]
-    ci_grad = [-0.00000032,-0.00000006]
-  Setting level shift to 0.000 S/E
-  @SCF   51      -15.569761360390      -0.000000000344       0.000008938125
-    ci      = [-0.19350087, 0.98110010]
-    ci_grad = [-0.00000111,-0.00000022]
-  Setting level shift to 0.000 S/E
-  @SCF   52      -15.569761360758      -0.000000000368       0.000015919860
-    ci      = [-0.19349780, 0.98110071]
-    ci_grad = [-0.00000058,-0.00000011]
-  Setting level shift to 0.000 S/E
-  @SCF   53      -15.569761360794      -0.000000000037       0.000005374432
-    ci      = [-0.19349766, 0.98110074]
-    ci_grad = [-0.00000003,-0.00000001]
-  Setting level shift to 0.000 S/E
-  @SCF   54      -15.569761360817      -0.000000000023       0.000001682212
-    ci      = [-0.19349655, 0.98110096]
-    ci_grad = [-0.00000021,-0.00000004]
-  Setting level shift to 0.000 S/E
-  @SCF   55      -15.569761360833      -0.000000000015       0.000000898497
-    ci      = [-0.19349514, 0.98110123]
-    ci_grad = [-0.00000026,-0.00000005]
-  Setting level shift to 0.000 S/E
-  @SCF   56      -15.569761360873      -0.000000000041       0.000002558631
-    ci      = [-0.19349008, 0.98110223]
-    ci_grad = [-0.00000095,-0.00000019]
-  Setting level shift to 0.000 S/E
-  @SCF   57      -15.569761360875      -0.000000000002       0.000000462074
-    ci      = [-0.19348985, 0.98110228]
-    ci_grad = [-0.00000004,-0.00000001]
-  Setting level shift to 0.000 S/E
-  @SCF   58      -15.569761360882      -0.000000000007       0.000001856857
-    ci      = [-0.19348692, 0.98110285]
-    ci_grad = [-0.00000055,-0.00000011]
-  Setting level shift to 0.000 S/E
-  @SCF   59      -15.569761360882       0.000000000000       0.000000639570
-    ci      = [-0.19348762, 0.98110272]
-    ci_grad = [ 0.00000013, 0.00000003]
-  Setting level shift to 0.000 S/E
-  @SCF   60      -15.569761360883      -0.000000000001       0.000000659344
-    ci      = [-0.19348641, 0.98110296]
-    ci_grad = [-0.00000023,-0.00000004]
-  Setting level shift to 0.000 S/E
-  @SCF   61      -15.569761360883      -0.000000000000       0.000000576901
-    ci      = [-0.19348647, 0.98110294]
-    ci_grad = [ 0.00000001, 0.00000000]
-  Setting level shift to 0.000 S/E
-  @SCF   62      -15.569761360883      -0.000000000000       0.000000371210
-    ci      = [-0.19348664, 0.98110291]
-    ci_grad = [ 0.00000003, 0.00000001]
-  Setting level shift to 0.000 S/E
-  @SCF   63      -15.569761360883      -0.000000000000       0.000000130723
-    ci      = [-0.19348649, 0.98110294]
-    ci_grad = [-0.00000003,-0.00000001]
-  Setting level shift to 0.000 S/E
-  @SCF   64      -15.569761360884      -0.000000000000       0.000000078477
-    ci      = [-0.19348636, 0.98110297]
-    ci_grad = [-0.00000002,-0.00000000]
-  Setting level shift to 0.000 S/E
-  @SCF   65      -15.569761360884      -0.000000000000       0.000000136689
-    ci      = [-0.19348622, 0.98110299]
-    ci_grad = [-0.00000003,-0.00000001]
-  Setting level shift to 0.000 S/E
-  @SCF   66      -15.569761360884      -0.000000000000       0.000000065357
-    ci      = [-0.19348634, 0.98110297]
-    ci_grad = [ 0.00000002, 0.00000000]
-  Setting level shift to 0.000 S/E
-  @SCF   67      -15.569761360884      -0.000000000000       0.000000037685
-    ci      = [-0.19348630, 0.98110298]
-    ci_grad = [-0.00000001,-0.00000000]
-  Setting level shift to 0.000 S/E
-  @SCF   68      -15.569761360884      -0.000000000000       0.000000013553
-    ci      = [-0.19348633, 0.98110297]
-    ci_grad = [ 0.00000001, 0.00000000]
-  Setting level shift to 0.000 S/E
-  @SCF   69      -15.569761360883       0.000000000000       0.000000015161
-    ci      = [-0.19348633, 0.98110297]
-    ci_grad = [-0.00000000,-0.00000000]
-  Setting level shift to 0.000 S/E
-  @SCF   70      -15.569761360884      -0.000000000000       0.000000008926
-    ci      = [-0.19348634, 0.98110297]
-    ci_grad = [ 0.00000000, 0.00000000]
-  Setting level shift to 0.000 S/E
-  @SCF   71      -15.569761360884       0.000000000000       0.000000007032
-    ci      = [-0.19348635, 0.98110297]
-    ci_grad = [ 0.00000000, 0.00000000]
-  Setting level shift to 0.000 S/E
-  @SCF   72      -15.569761360884      -0.000000000000       0.000000013422
-    ci      = [-0.19348637, 0.98110296]
-    ci_grad = [ 0.00000000, 0.00000000]
-  Setting level shift to 0.000 S/E
-  @SCF   73      -15.569761360884       0.000000000000       0.000000003028
-    ci      = [-0.19348637, 0.98110296]
-    ci_grad = [ 0.00000000, 0.00000000]
-  Setting level shift to 0.000 S/E
-  @SCF   74      -15.569761360884      -0.000000000000       0.000000002041
-    ci      = [-0.19348637, 0.98110296]
-    ci_grad = [ 0.00000000, 0.00000000]
-  Setting level shift to 0.000 S/E
-  @SCF   75      -15.569761360884       0.000000000000       0.000000001649
-    ci      = [-0.19348637, 0.98110296]
-    ci_grad = [ 0.00000000, 0.00000000]
-  Setting level shift to 0.000 S/E
-  @SCF   76      -15.569761360884      -0.000000000000       0.000000000733
-    ci      = [-0.19348637, 0.98110296]
-    ci_grad = [-0.00000000,-0.00000000]
-  Setting level shift to 0.000 S/E
-  @SCF   77      -15.569761360884       0.000000000000       0.000000000248
-    ci      = [-0.19348637, 0.98110296]
-    ci_grad = [ 0.00000000, 0.00000000]
-  Setting level shift to 0.000 S/E
-  @SCF   78      -15.569761360884       0.000000000000       0.000000000084
-    ci      = [-0.19348637, 0.98110296]
-    ci_grad = [ 0.00000000, 0.00000000]
-  Setting level shift to 0.000 S/E
-  @SCF   79      -15.569761360884      -0.000000000000       0.000000000044
-    ci      = [-0.19348637, 0.98110296]
-    ci_grad = [ 0.00000000, 0.00000000]
-  Setting level shift to 0.000 S/E
-  @SCF   80      -15.569761360884       0.000000000000       0.000000000151
-    ci      = [-0.19348637, 0.98110296]
-    ci_grad = [ 0.00000000, 0.00000000]
-  Setting level shift to 0.000 S/E
-  @SCF   81      -15.569761360884      -0.000000000000       0.000000000012
-    ci      = [-0.19348637, 0.98110296]
-    ci_grad = [ 0.00000000, 0.00000000]
-  Setting level shift to 0.000 S/E
-  @SCF   82      -15.569761360884       0.000000000000       0.000000000009
-    ci      = [-0.19348637, 0.98110296]
-    ci_grad = [-0.00000000,-0.00000000]
-  Setting level shift to 0.000 S/E
-  @SCF   83      -15.569761360884      -0.000000000000       0.000000000008
-    ci      = [-0.19348637, 0.98110296]
-    ci_grad = [-0.00000000,-0.00000000]
-  Setting level shift to 0.000 S/E
-  @SCF   84      -15.569761360884       0.000000000000       0.000000000001
-    ci      = [-0.19348637, 0.98110296]
-    ci_grad = [ 0.00000000, 0.00000000]
-  Setting level shift to 0.000 S/E
-  @SCF   85      -15.569761360884      -0.000000000000       0.000000000006
-    ci      = [-0.19348637, 0.98110296]
-    ci_grad = [-0.00000000,-0.00000000]
-  Setting level shift to 0.000 S/E
-  @SCF   86      -15.569761360884       0.000000000000       0.000000000001
-    ci      = [-0.19348637, 0.98110296]
-    ci_grad = [ 0.00000000, 0.00000000]
-  Setting level shift to 0.000 S/E
-  @SCF   87      -15.569761360884      -0.000000000000       0.000000000003
-    ci      = [-0.19348637, 0.98110296]
-    ci_grad = [-0.00000000,-0.00000000]
-  Setting level shift to 0.000 S/E
-  @SCF   88      -15.569761360884      -0.000000000000       0.000000000001
-    ci      = [-0.19348637, 0.98110296]
-    ci_grad = [ 0.00000000, 0.00000000]
-  Setting level shift to 0.000 S/E
-  @SCF   89      -15.569761360884      -0.000000000000       0.000000000000
-    ci      = [-0.19348637, 0.98110296]
-    ci_grad = [-0.00000000,-0.00000000]
-  Setting level shift to 0.000 S/E
-  @SCF   90      -15.569761360884      -0.000000000000       0.000000000000
-    ci      = [-0.19348637, 0.98110296]
-    ci_grad = [ 0.00000000,-0.00000000]
-  Setting level shift to 0.000 S/E
-  @SCF   91      -15.569761360884      -0.000000000000       0.000000000000
-    ci      = [-0.19348637, 0.98110296]
-    ci_grad = [-0.00000000,-0.00000000]
-  Setting level shift to 0.000 S/E
-  @SCF   92      -15.569761360884       0.000000000000       0.000000000000
-    ci      = [-0.19348637, 0.98110296]
-    ci_grad = [-0.00000000, 0.00000000]
-  Setting level shift to 0.000 S/E
-  @SCF   93      -15.569761360884      -0.000000000000       0.000000000000
-    ci      = [-0.19348637, 0.98110296]
-    ci_grad = [ 0.00000000,-0.00000000]
-  Setting level shift to 0.000 S/E
-  @SCF   94      -15.569761360884      -0.000000000000       0.000000000000
-    ci      = [-0.19348637, 0.98110296]
-    ci_grad = [-0.00000000,-0.00000000]
-  Setting level shift to 0.000 S/E
-  @SCF   95      -15.569761360884      -0.000000000000       0.000000000000
-    ci      = [-0.19348637, 0.98110296]
-    ci_grad = [ 0.00000000, 0.00000000]
-  Setting level shift to 0.000 S/E
-  @SCF   96      -15.569761360884       0.000000000000       0.000000000000
-    ci      = [-0.19348637, 0.98110296]
-    ci_grad = [ 0.00000000, 0.00000000]
-  Setting level shift to 0.000 S/E
-  @SCF   97      -15.569761360884      -0.000000000000       0.000000000000
-    ci      = [-0.19348637, 0.98110296]
-    ci_grad = [-0.00000000,-0.00000000]
-  Setting level shift to 0.000 S/E
-  @SCF   98      -15.569761360884      -0.000000000000       0.000000000000
-    ci      = [-0.19348637, 0.98110296]
-    ci_grad = [ 0.00000000,-0.00000000]
-  Setting level shift to 0.000 S/E
-  @SCF   99      -15.569761360884       0.000000000000       0.000000000000
-    ci      = [-0.19348637, 0.98110296]
-    ci_grad = [-0.00000000, 0.00000000]
-  Setting level shift to 0.000 S/E
-  @SCF  100      -15.569761360884       0.000000000000       0.000000000000
-    ci      = [-0.19348637, 0.98110296]
-    ci_grad = [ 0.00000000, 0.00000000]
-  Setting level shift to 0.000 S/E
-  @SCF  101      -15.569761360884       0.000000000000       0.000000000000
-    ci      = [-0.19348637, 0.98110296]
-    ci_grad = [ 0.00000000, 0.00000000]
-  Setting level shift to 0.000 S/E
-  @SCF  102      -15.569761360884      -0.000000000000       0.000000000000
-    ci      = [-0.19348637, 0.98110296]
-    ci_grad = [ 0.00000000,-0.00000000]
-  Setting level shift to 0.000 S/E
-  @SCF  103      -15.569761360884       0.000000000000       0.000000000000
-    ci      = [-0.19348637, 0.98110296]
-    ci_grad = [-0.00000000, 0.00000000]
-  Setting level shift to 0.000 S/E
-  @SCF  104      -15.569761360884       0.000000000000       0.000000000000
-    ci      = [-0.19348637, 0.98110296]
-    ci_grad = [-0.00000000, 0.00000000]
-  Setting level shift to 0.000 S/E
-  @SCF  105      -15.569761360884      -0.000000000000       0.000000000000
-    ci      = [-0.19348637, 0.98110296]
-    ci_grad = [-0.00000000,-0.00000000]
-  Setting level shift to 0.000 S/E
-  @SCF  106      -15.569761360884      -0.000000000000       0.000000000000
-    ci      = [-0.19348637, 0.98110296]
-    ci_grad = [ 0.00000000,-0.00000000]
-  Setting level shift to 0.000 S/E
-  @SCF  107      -15.569761360884       0.000000000000       0.000000000000
-    ci      = [-0.19348637, 0.98110296]
-    ci_grad = [-0.00000000, 0.00000000]
-  Setting level shift to 0.000 S/E
-  @SCF  108      -15.569761360884      -0.000000000000       0.000000000000
-    ci      = [-0.19348637, 0.98110296]
-    ci_grad = [ 0.00000000,-0.00000000]
-  Setting level shift to 0.000 S/E
-  @SCF  109      -15.569761360884       0.000000000000       0.000000000000
-    ci      = [-0.19348637, 0.98110296]
-    ci_grad = [ 0.00000000, 0.00000000]
-  Setting level shift to 0.000 S/E
-  @SCF  110      -15.569761360884       0.000000000000       0.000000000000
-    ci      = [-0.19348637, 0.98110296]
-    ci_grad = [-0.00000000, 0.00000000]
-  Setting level shift to 0.000 S/E
-  @SCF  111      -15.569761360884       0.000000000000       0.000000000000
-    ci      = [-0.19348637, 0.98110296]
-    ci_grad = [-0.00000000, 0.00000000]
-  Setting level shift to 0.000 S/E
-  @SCF  112      -15.569761360884      -0.000000000000       0.000000000000
-    ci      = [-0.19348637, 0.98110296]
-    ci_grad = [ 0.00000000,-0.00000000]
-  Setting level shift to 0.000 S/E
-  @SCF  113      -15.569761360884      -0.000000000000       0.000000000000
-    ci      = [-0.19348637, 0.98110296]
-    ci_grad = [ 0.00000000,-0.00000000]
-  Setting level shift to 0.000 S/E
-  @SCF  114      -15.569761360884      -0.000000000000       0.000000000000
-    ci      = [-0.19348637, 0.98110296]
-    ci_grad = [ 0.00000000,-0.00000000]
-  Setting level shift to 0.000 S/E
-  @SCF  115      -15.569761360884       0.000000000000       0.000000000000
-    ci      = [-0.19348637, 0.98110296]
-    ci_grad = [-0.00000000, 0.00000000]
-  Setting level shift to 0.000 S/E
-  @SCF  116      -15.569761360884      -0.000000000000       0.000000000000
-    ci      = [-0.19348637, 0.98110296]
-    ci_grad = [-0.00000000,-0.00000000]
-  Setting level shift to 0.000 S/E
-  @SCF  117      -15.569761360884      -0.000000000000       0.000000000000
-    ci      = [-0.19348637, 0.98110296]
-    ci_grad = [ 0.00000000,-0.00000000]
-  Setting level shift to 0.000 S/E
-  @SCF  118      -15.569761360884       0.000000000000       0.000000000000
-    ci      = [-0.19348637, 0.98110296]
-    ci_grad = [-0.00000000, 0.00000000]
-  Setting level shift to 0.000 S/E
-  @SCF  119      -15.569761360884      -0.000000000000       0.000000000000
-    ci      = [-0.19348637, 0.98110296]
-    ci_grad = [ 0.00000000,-0.00000000]
-  Setting level shift to 0.000 S/E
-  @SCF  120      -15.569761360884       0.000000000000       0.000000000000
-    ci      = [-0.19348637, 0.98110296]
-    ci_grad = [ 0.00000000, 0.00000000]
-  Setting level shift to 0.000 S/E
-  @SCF  121      -15.569761360884       0.000000000000       0.000000000000
-    ci      = [-0.19348637, 0.98110296]
-    ci_grad = [-0.00000000, 0.00000000]
-  Setting level shift to 0.000 S/E
-  @SCF  122      -15.569761360884      -0.000000000000       0.000000000000
-    ci      = [-0.19348637, 0.98110296]
-    ci_grad = [ 0.00000000,-0.00000000]
-  Setting level shift to 0.000 S/E
-  @SCF  123      -15.569761360884      -0.000000000000       0.000000000000
-    ci      = [-0.19348637, 0.98110296]
-    ci_grad = [ 0.00000000,-0.00000000]
-  Setting level shift to 0.000 S/E
-  @SCF  124      -15.569761360884       0.000000000000       0.000000000000
-    ci      = [-0.19348637, 0.98110296]
-    ci_grad = [-0.00000000, 0.00000000]
-  Setting level shift to 0.000 S/E
-  @SCF  125      -15.569761360884       0.000000000000       0.000000000000
-    ci      = [-0.19348637, 0.98110296]
-    ci_grad = [-0.00000000, 0.00000000]
-  Setting level shift to 0.000 S/E
-  @SCF  126      -15.569761360884      -0.000000000000       0.000000000000
-    ci      = [-0.19348637, 0.98110296]
-    ci_grad = [ 0.00000000,-0.00000000]
-  Setting level shift to 0.000 S/E
-  @SCF  127      -15.569761360884       0.000000000000       0.000000000000
-    ci      = [-0.19348637, 0.98110296]
-    ci_grad = [ 0.00000000, 0.00000000]
-  Setting level shift to 0.000 S/E
-  @SCF  128      -15.569761360884       0.000000000000       0.000000000000
-    ci      = [-0.19348637, 0.98110296]
-    ci_grad = [ 0.00000000, 0.00000000]
-  =========================================================================================
+   ==> Parameters <==
 
-      * SCF total energy   =     -15.569761360884
+    EX LEVEL       =        2      H0 BLOCKSIZE  =     1000
+    VAL EX LEVEL   =        0      H0 GUESS SIZE =     1000
+    H0COUPLINGSIZE =        0      H0 COUPLING   =       NO
+    MAXITER        =       12      NUM PRINT     =       20
+    NUM ROOTS      =        1      ICORE         =        1
+    PRINT LVL      =        1      FCI           =      YES
+    R CONV         = 1.00e-07      MIXED         =      YES
+    E CONV         = 1.00e-15      MIXED4        =      YES
+    R4S            =       NO      REPL OTF      =       NO
+    DIAG METHOD    =      SEM      FOLLOW ROOT   =        0
+    PRECONDITIONER = DAVIDSON      UPDATE        = DAVIDSON
+    S              =   0.0000      Ms0           =      YES
+    GUESS VECTOR   =   D FILE      OPENTYPE      =     NONE
+    COLLAPSE SIZE  =        1      HD AVG        = EVANGELISTI
+    MAX NUM VECS   =       13      REF SYM       =     AUTO
+    IOPEN        =       NO
+
+    EX ALLOW       =  1  1 
+    STATE AVERAGE  =  0(1.00) 
+
+   ==> CI Orbital and Space information <==
+
+   ------------------------------------------------------
+               Space    Total    A1    A2    B1    B2
+   ------------------------------------------------------
+                 Nso       13     7     0     2     4
+                 Nmo       13     7     0     2     4
+               Ndocc        3     2     0     0     1
+               Nsocc        0     0     0     0     0
+   ------------------------------------------------------
+                        MCSCF Spaces
+   ------------------------------------------------------
+         Frozen DOCC        0     0     0     0     0
+     Restricted DOCC        2     2     0     0     0
+              Active        2     1     0     0     1
+     Restricted UOCC        9     4     0     2     3
+         Frozen UOCC        0     0     0     0     0
+   ------------------------------------------------------
+
+   ==> Setting up CI strings <==
+
+    There are 2 alpha and 2 beta strings
+    The CI space requires 2 (2.00E+00) determinants and 2 blocks
 
 
-      CI coefficients  = [-0.193486374, 0.981102963]
+   ==> Setting up MCSCF integrals <==
 
-  End of SCF
-  MOs orthonormality check passed.
+  ==> DiskJK: Disk-Based J/K Matrices <==
 
-  Orbitals are canonicalized as:
-  inactive (docc + uocc) : Fock(core)
-  active   (actv)        : Fock(core)
-
-  =========================================================================
-  Eigenvalues (Eh)
-  -------------------------------------------------------------------------
-  Doubly occupied orbitals
-      1     -4.739924  A1      2     -0.500747  A1
-  Active orbitals
-      3     -0.244890  B2      4      0.064261  A1
-  Unoccupied orbitals
-      5      0.148361  B1      6      0.264471  A1      7      0.280038  B2
-      8      0.353880  A1      9      1.182543  B2     10      1.266276  A1
-     11      8.962250  B1     12      9.012677  B2     13      9.103846  A1
-  =========================================================================
+    J tasked:                  Yes
+    K tasked:                  Yes
+    wK tasked:                  No
+    Memory (MB):              3200
+    Schwarz Cutoff:          1E-12
 
 
-  MCSCF Execution Completed.
+   ==> Starting MCSCF iterations <==
+
+        Iter         Total Energy       Delta E   Orb RMS    CI RMS  NCI NORB
+   @MCSCF  1:    -15.565395299379   -2.5229e-03  4.22e-03  8.33e-17    1    1  Initial CI
+   @MCSCF  2:    -15.568787245105   -3.3919e-03  4.33e-03  3.66e-16    2    1  TS
+   @MCSCF  3:    -15.569513514152   -7.2627e-04  2.16e-03  3.87e-16    1    1  TS
+   @MCSCF  4:    -15.569688774896   -1.7526e-04  1.28e-03  3.18e-16    1    1  TS, DIIS
+   @MCSCF  5:    -15.569738390039   -4.9615e-05  8.09e-04  1.13e-15    1    1  TS, DIIS
+   @MCSCF  6:    -15.569756850288   -1.8460e-05  2.55e-04  2.14e-15    2    1  TS, DIIS
+   @MCSCF  7:    -15.569761268193   -4.4179e-06  8.24e-05  1.90e-15    2    1  TS, DIIS
+   @MCSCF  8:    -15.569761183819    8.4374e-08  8.18e-05  2.95e-15    1    1  TS, DIIS
+   @MCSCF  9:    -15.569761356644   -1.7282e-07  1.50e-05  1.77e-15    2    1  TS, DIIS
+   @MCSCF 10:    -15.569761360673   -4.0294e-09  1.83e-06  2.94e-15    1    1  TS, DIIS
+   @MCSCF 11:    -15.569761360713   -4.0369e-11  2.13e-06  3.38e-15    2    1  TS, DIIS
+   @MCSCF 12:    -15.569761360883   -1.7018e-10  4.21e-08  3.55e-15    2    1  TS, DIIS
+   @MCSCF 13:    -15.569761360884   -5.6843e-14  2.17e-08  3.15e-15    1    1  TS, DIIS
+   @MCSCF 14:    -15.569761360884    0.0000e+00  2.07e-09  3.42e-15    1    1  TS, DIIS
+
+          @MCSCF has converged!
+
+   @MCSCF Final Energy:  -15.569761360883531
+
+   ==> Energetics <==
+
+    SCF energy =          -15.562872376832276
+    Total CI energy =     -15.569761360883531
 
 
-*** tstop() called on dhcp189-188.emerson.emory.edu at Thu Sep 17 14:43:32 2015
-Module time:
-	user time   =       0.21 seconds =       0.00 minutes
-	system time =       0.07 seconds =       0.00 minutes
-	total time  = 1442515412 seconds = 24041923.53 minutes
-Total time:
-	user time   =       0.21 seconds =       0.00 minutes
-	system time =       0.07 seconds =       0.00 minutes
-	total time  = 1442515412 seconds = 24041923.53 minutes
+   ==> CI root 0 information <==
+
+    CI Root  0 energy =   -15.569761360883531
+
+   Natural occupation numbers:
+
+        B2   1.925126        A1   0.074874
+
+   The 2 most important determinants:
+
+    *   1    0.981103  (    1,    1)  1B2X  
+    *   2   -0.193486  (    0,    0)  3A1X  
+
+
+
+Properties will be evaluated at   0.000000,   0.000000,   0.000000 Bohr
+
+Properties computed using the CASSCF density matrix
+
+  Nuclear Dipole Moment: (a.u.)
+     X:     0.0000      Y:     0.0000      Z:     2.2583
+
+  Electronic Dipole Moment: (a.u.)
+     X:     0.0000      Y:     0.0000      Z:    -3.8124
+
+  Dipole Moment: (a.u.)
+     X:     0.0000      Y:     0.0000      Z:    -1.5540     Total:     1.5540
+
+  Dipole Moment: (Debye)
+     X:     0.0000      Y:     0.0000      Z:    -3.9500     Total:     3.9500
+
+	MCSCF energy......................................................PASSED
+
 Reading options from the FORTE block
-Calling plugin /Users/ChenyangLi/src/forte/forte.so.
+Calling plugin forte.so.
+
+
 
 
   ==> MO Space Information <==
@@ -738,52 +463,122 @@ Calling plugin /Users/ChenyangLi/src/forte/forte.so.
   Number of frozen occupied orbitals:          0
   Number of frozen unoccupied orbitals:        0
 
+    Molecular point group: c2v
+    Full point group: C2v
 
- Overall Conventional Integrals timings	Presorting SO-basis two-electron integrals.
+    Geometry (in Bohr), charge = 0, multiplicity = 1:
+
+       Center              X                  Y                   Z               Mass       
+    ------------   -----------------  -----------------  -----------------  -----------------
+          BE          0.000000000000     0.000000000000    -0.456946119527     9.012182201000
+           H         -0.000000000000     1.390000000000     2.043053880473     1.007825032070
+           H          0.000000000000    -1.390000000000     2.043053880473     1.007825032070
+
+          BE
+              CABS            inputblock anonymous313 36617505fdd03d90d8f7fa4694026223b5dffb86
+           H
+              CABS            inputblock anonymous313 790d3637a08eb5e579a9d845f3ae722494901299
+           H
+              CABS            inputblock anonymous313 790d3637a08eb5e579a9d845f3ae722494901299
+
+  -AO BASIS SET INFORMATION:
+    Name                   = inputblock anonymous313
+    Total number of shells = 9
+    Number of primitives   = 21
+    Number of AO           = 13
+    Number of SO           = 13
+    Maximum AM             = 1
+    Spherical Harmonics    = TRUE
+
+  -Contraction Scheme:
+    Atom   Type   All Primitives // Shells:
+   ------ ------ --------------------------
+       1    BE     10s 3p // 3s 2p 
+       2     H     4s // 2s 
+       3     H     4s // 2s 
+
+  ==> AO Basis Functions <==
+
+    [ inputblock anonymous313 ]
+    spherical
+    ****
+   BE   1
+    S   6 1.00
+                      1267.07000000           0.00194000
+                       190.35600000           0.01478600
+                        43.29590000           0.07179500
+                        12.14420000           0.23634800
+                         3.80923000           0.47176300
+                         1.26847000           0.35518300
+    S   3 1.00
+                         5.69388000          -0.02887600
+                         1.55563000          -0.17756500
+                         0.17185500           1.07163000
+    S   1 1.00
+                         0.05718100           1.00000000
+    P   2 1.00
+                         1.55563000           0.14404500
+                         0.17185500           0.94969200
+    P   1 1.00
+                         5.69388000           1.00000000
+    ****
+    H   2
+    S   3 1.00
+                        19.24060000           0.03282800
+                         2.89920000           0.23120800
+                         0.65340000           0.81723800
+    S   1 1.00
+                         0.17760000           1.00000000
+    ****
+
+
+  Overall Conventional Integrals timings
+
+	Presorting SO-basis two-electron integrals.
 	Sorting File: SO Ints (nn|nn) nbuckets = 1
 	Transforming the one-electron integrals and constructing Fock matrices
 	Starting first half-transformation.
-	h = 0; memfree         = 31999862
+	h = 0; memfree         = 65535862
 	h = 0; rows_per_bucket = 41
 	h = 0; rows_left       = 0
 	h = 0; nbuckets        = 1
-	h = 1; memfree         = 31999968
+	h = 1; memfree         = 65535968
 	h = 1; rows_per_bucket = 8
 	h = 1; rows_left       = 0
 	h = 1; nbuckets        = 1
-	h = 2; memfree         = 31999944
+	h = 2; memfree         = 65535944
 	h = 2; rows_per_bucket = 14
 	h = 2; rows_left       = 0
 	h = 2; nbuckets        = 1
-	h = 3; memfree         = 31999888
+	h = 3; memfree         = 65535888
 	h = 3; rows_per_bucket = 28
 	h = 3; rows_left       = 0
 	h = 3; nbuckets        = 1
 	Sorting half-transformed integrals.
 	First half integral transformation complete.
 	Starting second half-transformation.
-	h = 0; memfree         = 31999862
+	h = 0; memfree         = 65535862
 	h = 0; rows_per_bucket = 41
 	h = 0; rows_left       = 0
 	h = 0; nbuckets        = 1
-	h = 1; memfree         = 31999968
+	h = 1; memfree         = 65535968
 	h = 1; rows_per_bucket = 8
 	h = 1; rows_left       = 0
 	h = 1; nbuckets        = 1
-	h = 2; memfree         = 31999944
+	h = 2; memfree         = 65535944
 	h = 2; rows_per_bucket = 14
 	h = 2; rows_left       = 0
 	h = 2; nbuckets        = 1
-	h = 3; memfree         = 31999888
+	h = 3; memfree         = 65535888
 	h = 3; rows_per_bucket = 28
 	h = 3; rows_left       = 0
 	h = 3; nbuckets        = 1
 	Two-electron integral transformation complete.
 
-  Integral transformation done. 0.00633400 s
+  Integral transformation done. 0.00897700 s
   Reading the two-electron integrals from disk
   Size of two-electron integrals:   0.000638 GB
- Conventional integrals take 0.00741600 s
+  Conventional integrals take 0.05460200 s
 
               ---------------------------------------------------
                 Complete Active Space Configuration Interaction
@@ -820,8 +615,8 @@ Calling plugin /Users/ChenyangLi/src/forte/forte.so.
     VIRTUAL                          3    4    5    6    7    8   10   11   12 
     PARTICLE                         2    9    3    4    5    6    7    8   10   11   12 
 
-  Forming alpha and beta strings      ...  Done. Timing        0.000023 s
-  Forming determinants                ...  Done. Timing        0.000007 s
+  Forming alpha and beta strings      ...  Done. Timing        0.000058 s
+  Forming determinants                ...  Done. Timing        0.000027 s
 
   ==> Determinants Summary <==
 
@@ -832,17 +627,16 @@ Calling plugin /Users/ChenyangLi/src/forte/forte.so.
 
   ==> Determinants |alpha|beta> <==
   
-  |10|10>  
-  |01|01>
+  |20>  
+  |02>
 
 
   Diagonalizing Hamiltonian           ...
-  Time spent diagonalizing H using Full: 0.000012 s
 
-  Reference type: TWOCON
-  Threshold for spin check: 0.0001
+  Reference type: RHF
+  Threshold for spin check: 0.10
 
-  Spin State: S^2 = 0.000, S = 0.000, singlet (from 2 determinants)  Done. Timing        0.000069 s
+  Spin State: S^2 = 0.000, S = 0.000, singlet (from 2 determinants)  Done. Timing        0.000149 s
 
   Spin selected CI vectors
 
@@ -851,29 +645,29 @@ Calling plugin /Users/ChenyangLi/src/forte/forte.so.
       1: -0.1934864
       2:  0.9811030
 
-  Energy  =   -15.569761360883541
+  Energy  =   -15.569761360883527
 
 
   * * * * * * * * * * * * * * * * *
   *  CI Vectors & Configurations  *
   * * * * * * * * * * * * * * * * *
 
-  ==> Root No. 1 <==
+  ==> Root No. 0 <==
 
-    0 2            0.98110296
-    2 0           -0.19348637
+    0 2          0.9811029628
+    2 0         -0.1934863725
 
-    Total Energy:   -15.569761360883541
+    Total Energy:   -15.569761360883527
 
 
-  Forming one-particle density        ...  Done. Timing        0.000058 s  ## Da (Symmetry 0) ##
+  Forming one-particle density        ...  Done. Timing        0.000059 s  ## Da (Symmetry 0) ##
   Irrep: 1 Size: 13 x 13
 
                  1                   2                   3                   4                   5
 
     1     1.00000000000000     0.00000000000000     0.00000000000000     0.00000000000000     0.00000000000000
     2     0.00000000000000     1.00000000000000     0.00000000000000     0.00000000000000     0.00000000000000
-    3     0.00000000000000     0.00000000000000     0.03743697688364     0.00000000000000     0.00000000000000
+    3     0.00000000000000     0.00000000000000     0.03743697635456     0.00000000000000     0.00000000000000
     4     0.00000000000000     0.00000000000000     0.00000000000000     0.00000000000000     0.00000000000000
     5     0.00000000000000     0.00000000000000     0.00000000000000     0.00000000000000     0.00000000000000
     6     0.00000000000000     0.00000000000000     0.00000000000000     0.00000000000000     0.00000000000000
@@ -896,7 +690,7 @@ Calling plugin /Users/ChenyangLi/src/forte/forte.so.
     7     0.00000000000000     0.00000000000000     0.00000000000000     0.00000000000000     0.00000000000000
     8     0.00000000000000     0.00000000000000     0.00000000000000     0.00000000000000     0.00000000000000
     9     0.00000000000000     0.00000000000000     0.00000000000000     0.00000000000000     0.00000000000000
-   10     0.00000000000000     0.00000000000000     0.00000000000000     0.00000000000000     0.96256302311636
+   10     0.00000000000000     0.00000000000000     0.00000000000000     0.00000000000000     0.96256302364544
    11     0.00000000000000     0.00000000000000     0.00000000000000     0.00000000000000     0.00000000000000
    12     0.00000000000000     0.00000000000000     0.00000000000000     0.00000000000000     0.00000000000000
    13     0.00000000000000     0.00000000000000     0.00000000000000     0.00000000000000     0.00000000000000
@@ -926,7 +720,7 @@ Calling plugin /Users/ChenyangLi/src/forte/forte.so.
 
     1     1.00000000000000     0.00000000000000     0.00000000000000     0.00000000000000     0.00000000000000
     2     0.00000000000000     1.00000000000000     0.00000000000000     0.00000000000000     0.00000000000000
-    3     0.00000000000000     0.00000000000000     0.03743697688364     0.00000000000000     0.00000000000000
+    3     0.00000000000000     0.00000000000000     0.03743697635456     0.00000000000000     0.00000000000000
     4     0.00000000000000     0.00000000000000     0.00000000000000     0.00000000000000     0.00000000000000
     5     0.00000000000000     0.00000000000000     0.00000000000000     0.00000000000000     0.00000000000000
     6     0.00000000000000     0.00000000000000     0.00000000000000     0.00000000000000     0.00000000000000
@@ -949,7 +743,7 @@ Calling plugin /Users/ChenyangLi/src/forte/forte.so.
     7     0.00000000000000     0.00000000000000     0.00000000000000     0.00000000000000     0.00000000000000
     8     0.00000000000000     0.00000000000000     0.00000000000000     0.00000000000000     0.00000000000000
     9     0.00000000000000     0.00000000000000     0.00000000000000     0.00000000000000     0.00000000000000
-   10     0.00000000000000     0.00000000000000     0.00000000000000     0.00000000000000     0.96256302311636
+   10     0.00000000000000     0.00000000000000     0.00000000000000     0.00000000000000     0.96256302364544
    11     0.00000000000000     0.00000000000000     0.00000000000000     0.00000000000000     0.00000000000000
    12     0.00000000000000     0.00000000000000     0.00000000000000     0.00000000000000     0.00000000000000
    13     0.00000000000000     0.00000000000000     0.00000000000000     0.00000000000000     0.00000000000000
@@ -973,28 +767,32 @@ Calling plugin /Users/ChenyangLi/src/forte/forte.so.
 
 
 
-  Forming generalized Fock matrix     ...  Done. Timing        0.000016 s
+  Forming generalized Fock matrix     ...  Done. Timing        0.000058 s
   Checking Fock matrices (Fa, Fb)     ...
   Nonzero criteria: > 1.00E-12
-  Fa_CORE    block is diagonal.
-  Fb_CORE    block is diagonal.
+  Warning: Fa_CORE    NOT diagonal!
+  Nonzero off-diagonal:     2. Largest value:  0.000065048245968
+  Warning: Fb_CORE    NOT diagonal!
+  Nonzero off-diagonal:     2. Largest value:  0.000065048245968
   Fa_ACTIVE  block is diagonal.
   Fb_ACTIVE  block is diagonal.
-  Fa_VIRTUAL block is diagonal.
-  Fb_VIRTUAL block is diagonal.
-  Done checking Fock matrices.                   Timing        0.000021 s
+  Warning: Fa_VIRTUAL NOT diagonal!
+  Nonzero off-diagonal:    20. Largest value:  0.042697100607751
+  Warning: Fb_VIRTUAL NOT diagonal!
+  Nonzero off-diagonal:    20. Largest value:  0.042697100607751
+  Done checking Fock matrices.                   Timing        0.000060 s
   ## Fa (Symmetry 0) ##
   Irrep: 1 Size: 13 x 13
 
                  1                   2                   3                   4                   5
 
-    1    -4.73992357133505     0.00000000000000    -0.00042001440591     0.00000000000000     0.00000000000000
-    2     0.00000000000000    -0.50074669351398     0.00585380310436    -0.00000000000000    -0.00000000000000
-    3    -0.00042001440591     0.00585380310436     0.06426121145753    -0.04812184275565    -0.12150182850715
-    4     0.00000000000000    -0.00000000000000    -0.04812184275565     0.26447117145054    -0.00000000000000
-    5     0.00000000000000    -0.00000000000000    -0.12150182850716    -0.00000000000000     0.35387963613038
-    6     0.00000000000000    -0.00000000000000     0.17921392239227    -0.00000000000000    -0.00000000000000
-    7    -0.00000000000000    -0.00000000000000    -0.01765350393762    -0.00000000000000     0.00000000000000
+    1    -4.73992356999782     0.00006504824597     0.00042010540501     0.00000000055834     0.00000000073554
+    2     0.00006504824597    -0.50074669476296     0.00585379740259    -0.00000000017408    -0.00000000103283
+    3     0.00042010540501     0.00585379740259     0.06426121446636     0.02548542582090     0.11924365152089
+    4     0.00000000055834    -0.00000000017408     0.02548542582090     0.26700695056322    -0.01390984201363
+    5     0.00000000073554    -0.00000000103283     0.11924365152089    -0.01390984201363     0.35347563985631
+    6     0.00000000030936    -0.00000000058524     0.18526681703107    -0.01214005112306    -0.04269710060775
+    7     0.00000000037712     0.00000000004128     0.01775776635081    -0.00127977296233    -0.00437596394469
     8     0.00000000000000     0.00000000000000     0.00000000000000     0.00000000000000     0.00000000000000
     9     0.00000000000000     0.00000000000000     0.00000000000000     0.00000000000000     0.00000000000000
    10     0.00000000000000     0.00000000000000     0.00000000000000     0.00000000000000     0.00000000000000
@@ -1004,19 +802,19 @@ Calling plugin /Users/ChenyangLi/src/forte/forte.so.
 
                  6                   7                   8                   9                  10
 
-    1    -0.00000000000000    -0.00000000000000     0.00000000000000     0.00000000000000     0.00000000000000
-    2    -0.00000000000000    -0.00000000000000     0.00000000000000     0.00000000000000     0.00000000000000
-    3     0.17921392239227    -0.01765350393762     0.00000000000000     0.00000000000000     0.00000000000000
-    4    -0.00000000000000    -0.00000000000000     0.00000000000000     0.00000000000000     0.00000000000000
-    5    -0.00000000000000     0.00000000000000     0.00000000000000     0.00000000000000     0.00000000000000
-    6     1.26627633230465    -0.00000000000000     0.00000000000000     0.00000000000000     0.00000000000000
-    7    -0.00000000000000     9.10384581131233     0.00000000000000     0.00000000000000     0.00000000000000
-    8     0.00000000000000     0.00000000000000     0.14836125675450    -0.00000000000000     0.00000000000000
-    9     0.00000000000000     0.00000000000000    -0.00000000000000     8.96224990875577     0.00000000000000
-   10     0.00000000000000     0.00000000000000     0.00000000000000     0.00000000000000    -0.24489001922224
-   11     0.00000000000000     0.00000000000000     0.00000000000000     0.00000000000000    -0.00351217103354
-   12     0.00000000000000     0.00000000000000     0.00000000000000     0.00000000000000     0.00370887580130
-   13     0.00000000000000     0.00000000000000     0.00000000000000     0.00000000000000     0.00034576420029
+    1     0.00000000030936     0.00000000037712     0.00000000000000     0.00000000000000     0.00000000000000
+    2    -0.00000000058524     0.00000000004128     0.00000000000000     0.00000000000000     0.00000000000000
+    3     0.18526681703107     0.01775776635081     0.00000000000000     0.00000000000000     0.00000000000000
+    4    -0.01214005112306    -0.00127977296233     0.00000000000000     0.00000000000000     0.00000000000000
+    5    -0.04269710060775    -0.00437596394469     0.00000000000000     0.00000000000000     0.00000000000000
+    6     1.26414730385121    -0.00176304135375     0.00000000000000     0.00000000000000     0.00000000000000
+    7    -0.00176304135375     9.10384305380276     0.00000000000000     0.00000000000000     0.00000000000000
+    8     0.00000000000000     0.00000000000000     0.14836131956091    -0.00074378197899     0.00000000000000
+    9     0.00000000000000     0.00000000000000    -0.00074378197899     8.96224984638484     0.00000000000000
+   10     0.00000000000000     0.00000000000000     0.00000000000000     0.00000000000000    -0.24489001974575
+   11     0.00000000000000     0.00000000000000     0.00000000000000     0.00000000000000     0.00351765258313
+   12     0.00000000000000     0.00000000000000     0.00000000000000     0.00000000000000     0.00370364094848
+   13     0.00000000000000     0.00000000000000     0.00000000000000     0.00000000000000     0.00034616426851
 
                 11                  12                  13
 
@@ -1029,10 +827,10 @@ Calling plugin /Users/ChenyangLi/src/forte/forte.so.
     7     0.00000000000000     0.00000000000000     0.00000000000000
     8     0.00000000000000     0.00000000000000     0.00000000000000
     9     0.00000000000000     0.00000000000000     0.00000000000000
-   10    -0.00351217103354     0.00370887580130     0.00034576420029
-   11     0.28003783298596    -0.00000000000000    -0.00000000000000
-   12    -0.00000000000000     1.18254260457317     0.00000000000000
-   13    -0.00000000000000     0.00000000000000     9.01267665139025
+   10     0.00351765258313     0.00370364094848     0.00034616426851
+   11     0.28003991894746     0.00134308964530    -0.00087332705410
+   12     0.00134308964530     1.18254060644188    -0.00010208550204
+   13    -0.00087332705410    -0.00010208550204     9.01267656312038
 
 
 
@@ -1041,13 +839,13 @@ Calling plugin /Users/ChenyangLi/src/forte/forte.so.
 
                  1                   2                   3                   4                   5
 
-    1    -4.73992357133505     0.00000000000000    -0.00042001440591     0.00000000000000     0.00000000000000
-    2     0.00000000000000    -0.50074669351399     0.00585380310436    -0.00000000000000    -0.00000000000000
-    3    -0.00042001440591     0.00585380310436     0.06426121145753    -0.04812184275565    -0.12150182850715
-    4     0.00000000000000    -0.00000000000000    -0.04812184275565     0.26447117145054    -0.00000000000000
-    5     0.00000000000000    -0.00000000000000    -0.12150182850716    -0.00000000000000     0.35387963613038
-    6     0.00000000000000    -0.00000000000000     0.17921392239227    -0.00000000000000    -0.00000000000000
-    7    -0.00000000000000    -0.00000000000000    -0.01765350393762    -0.00000000000000     0.00000000000000
+    1    -4.73992356999782     0.00006504824597     0.00042010540501     0.00000000055834     0.00000000073554
+    2     0.00006504824597    -0.50074669476296     0.00585379740259    -0.00000000017408    -0.00000000103283
+    3     0.00042010540501     0.00585379740259     0.06426121446636     0.02548542582090     0.11924365152089
+    4     0.00000000055834    -0.00000000017408     0.02548542582090     0.26700695056322    -0.01390984201363
+    5     0.00000000073554    -0.00000000103283     0.11924365152089    -0.01390984201363     0.35347563985631
+    6     0.00000000030936    -0.00000000058524     0.18526681703107    -0.01214005112306    -0.04269710060775
+    7     0.00000000037712     0.00000000004128     0.01775776635081    -0.00127977296233    -0.00437596394469
     8     0.00000000000000     0.00000000000000     0.00000000000000     0.00000000000000     0.00000000000000
     9     0.00000000000000     0.00000000000000     0.00000000000000     0.00000000000000     0.00000000000000
    10     0.00000000000000     0.00000000000000     0.00000000000000     0.00000000000000     0.00000000000000
@@ -1057,19 +855,19 @@ Calling plugin /Users/ChenyangLi/src/forte/forte.so.
 
                  6                   7                   8                   9                  10
 
-    1    -0.00000000000000    -0.00000000000000     0.00000000000000     0.00000000000000     0.00000000000000
-    2    -0.00000000000000    -0.00000000000000     0.00000000000000     0.00000000000000     0.00000000000000
-    3     0.17921392239227    -0.01765350393762     0.00000000000000     0.00000000000000     0.00000000000000
-    4    -0.00000000000000    -0.00000000000000     0.00000000000000     0.00000000000000     0.00000000000000
-    5    -0.00000000000000     0.00000000000000     0.00000000000000     0.00000000000000     0.00000000000000
-    6     1.26627633230465    -0.00000000000000     0.00000000000000     0.00000000000000     0.00000000000000
-    7    -0.00000000000000     9.10384581131233     0.00000000000000     0.00000000000000     0.00000000000000
-    8     0.00000000000000     0.00000000000000     0.14836125675450    -0.00000000000000     0.00000000000000
-    9     0.00000000000000     0.00000000000000    -0.00000000000000     8.96224990875577     0.00000000000000
-   10     0.00000000000000     0.00000000000000     0.00000000000000     0.00000000000000    -0.24489001922224
-   11     0.00000000000000     0.00000000000000     0.00000000000000     0.00000000000000    -0.00351217103354
-   12     0.00000000000000     0.00000000000000     0.00000000000000     0.00000000000000     0.00370887580130
-   13     0.00000000000000     0.00000000000000     0.00000000000000     0.00000000000000     0.00034576420029
+    1     0.00000000030936     0.00000000037712     0.00000000000000     0.00000000000000     0.00000000000000
+    2    -0.00000000058524     0.00000000004128     0.00000000000000     0.00000000000000     0.00000000000000
+    3     0.18526681703107     0.01775776635081     0.00000000000000     0.00000000000000     0.00000000000000
+    4    -0.01214005112306    -0.00127977296233     0.00000000000000     0.00000000000000     0.00000000000000
+    5    -0.04269710060775    -0.00437596394469     0.00000000000000     0.00000000000000     0.00000000000000
+    6     1.26414730385121    -0.00176304135375     0.00000000000000     0.00000000000000     0.00000000000000
+    7    -0.00176304135375     9.10384305380276     0.00000000000000     0.00000000000000     0.00000000000000
+    8     0.00000000000000     0.00000000000000     0.14836131956091    -0.00074378197899     0.00000000000000
+    9     0.00000000000000     0.00000000000000    -0.00074378197899     8.96224984638484     0.00000000000000
+   10     0.00000000000000     0.00000000000000     0.00000000000000     0.00000000000000    -0.24489001974575
+   11     0.00000000000000     0.00000000000000     0.00000000000000     0.00000000000000     0.00351765258313
+   12     0.00000000000000     0.00000000000000     0.00000000000000     0.00000000000000     0.00370364094848
+   13     0.00000000000000     0.00000000000000     0.00000000000000     0.00000000000000     0.00034616426851
 
                 11                  12                  13
 
@@ -1082,42 +880,419 @@ Calling plugin /Users/ChenyangLi/src/forte/forte.so.
     7     0.00000000000000     0.00000000000000     0.00000000000000
     8     0.00000000000000     0.00000000000000     0.00000000000000
     9     0.00000000000000     0.00000000000000     0.00000000000000
-   10    -0.00351217103354     0.00370887580130     0.00034576420029
-   11     0.28003783298596    -0.00000000000000    -0.00000000000000
-   12    -0.00000000000000     1.18254260457317     0.00000000000000
-   13    -0.00000000000000     0.00000000000000     9.01267665139025
+   10     0.00351765258313     0.00370364094848     0.00034616426851
+   11     0.28003991894746     0.00134308964530    -0.00087332705410
+   12     0.00134308964530     1.18254060644188    -0.00010208550204
+   13    -0.00087332705410    -0.00010208550204     9.01267656312039
 
 
 
 
-  Forming Lambda2                     ...  Done. Timing        0.000104 s
+  Use semi-canonical orbitals.
+
+  Diagonalizing Fock                  ...  Done. Timing        0.000110 s
+
+
+    Molecular point group: c2v
+    Full point group: C2v
+
+    Geometry (in Bohr), charge = 0, multiplicity = 1:
+
+       Center              X                  Y                   Z               Mass       
+    ------------   -----------------  -----------------  -----------------  -----------------
+          BE          0.000000000000     0.000000000000    -0.456946119527     9.012182201000
+           H         -0.000000000000     1.390000000000     2.043053880473     1.007825032070
+           H          0.000000000000    -1.390000000000     2.043053880473     1.007825032070
+
+          BE
+              CABS            inputblock anonymous313 36617505fdd03d90d8f7fa4694026223b5dffb86
+           H
+              CABS            inputblock anonymous313 790d3637a08eb5e579a9d845f3ae722494901299
+           H
+              CABS            inputblock anonymous313 790d3637a08eb5e579a9d845f3ae722494901299
+
+  -AO BASIS SET INFORMATION:
+    Name                   = inputblock anonymous313
+    Total number of shells = 9
+    Number of primitives   = 21
+    Number of AO           = 13
+    Number of SO           = 13
+    Maximum AM             = 1
+    Spherical Harmonics    = TRUE
+
+  -Contraction Scheme:
+    Atom   Type   All Primitives // Shells:
+   ------ ------ --------------------------
+       1    BE     10s 3p // 3s 2p 
+       2     H     4s // 2s 
+       3     H     4s // 2s 
+
+  ==> AO Basis Functions <==
+
+    [ inputblock anonymous313 ]
+    spherical
+    ****
+   BE   1
+    S   6 1.00
+                      1267.07000000           0.00194000
+                       190.35600000           0.01478600
+                        43.29590000           0.07179500
+                        12.14420000           0.23634800
+                         3.80923000           0.47176300
+                         1.26847000           0.35518300
+    S   3 1.00
+                         5.69388000          -0.02887600
+                         1.55563000          -0.17756500
+                         0.17185500           1.07163000
+    S   1 1.00
+                         0.05718100           1.00000000
+    P   2 1.00
+                         1.55563000           0.14404500
+                         0.17185500           0.94969200
+    P   1 1.00
+                         5.69388000           1.00000000
+    ****
+    H   2
+    S   3 1.00
+                        19.24060000           0.03282800
+                         2.89920000           0.23120800
+                         0.65340000           0.81723800
+    S   1 1.00
+                         0.17760000           1.00000000
+    ****
+
+
+ Integrals are about to be computed.	Presorting SO-basis two-electron integrals.
+	Sorting File: SO Ints (nn|nn) nbuckets = 1
+	Transforming the one-electron integrals and constructing Fock matrices
+	Starting first half-transformation.
+	h = 0; memfree         = 65535862
+	h = 0; rows_per_bucket = 41
+	h = 0; rows_left       = 0
+	h = 0; nbuckets        = 1
+	h = 1; memfree         = 65535968
+	h = 1; rows_per_bucket = 8
+	h = 1; rows_left       = 0
+	h = 1; nbuckets        = 1
+	h = 2; memfree         = 65535944
+	h = 2; rows_per_bucket = 14
+	h = 2; rows_left       = 0
+	h = 2; nbuckets        = 1
+	h = 3; memfree         = 65535888
+	h = 3; rows_per_bucket = 28
+	h = 3; rows_left       = 0
+	h = 3; nbuckets        = 1
+	Sorting half-transformed integrals.
+	First half integral transformation complete.
+	Starting second half-transformation.
+	h = 0; memfree         = 65535862
+	h = 0; rows_per_bucket = 41
+	h = 0; rows_left       = 0
+	h = 0; nbuckets        = 1
+	h = 1; memfree         = 65535968
+	h = 1; rows_per_bucket = 8
+	h = 1; rows_left       = 0
+	h = 1; nbuckets        = 1
+	h = 2; memfree         = 65535944
+	h = 2; rows_per_bucket = 14
+	h = 2; rows_left       = 0
+	h = 2; nbuckets        = 1
+	h = 3; memfree         = 65535888
+	h = 3; rows_per_bucket = 28
+	h = 3; rows_left       = 0
+	h = 3; nbuckets        = 1
+	Two-electron integral transformation complete.
+
+  Integral transformation done. 0.00590400 s
+  Reading the two-electron integrals from disk
+  Size of two-electron integrals:   0.000638 GB
+ Integrals are about to be updated.
+  Frozen Orbitals takes     0.000 s.
+  Diagonalizing Hamiltonian           ...
+
+  Reference type: RHF
+  Threshold for spin check: 0.10
+
+  Spin State: S^2 = 0.000, S = 0.000, singlet (from 2 determinants)  Done. Timing        0.000089 s
+
+  Spin selected CI vectors
+
+ # Column #
+ Irrep: 1
+      1: -0.1934864
+      2:  0.9811030
+
+  Energy  =   -15.569761360883534
+
+
+  * * * * * * * * * * * * * * * * *
+  *  CI Vectors & Configurations  *
+  * * * * * * * * * * * * * * * * *
+
+  ==> Root No. 0 <==
+
+    0 2          0.9811029628
+    2 0         -0.1934863725
+
+    Total Energy:   -15.569761360883534
+
+
+  Forming one-particle density        ...  Done. Timing        0.000025 s  ## Da (Symmetry 0) ##
+  Irrep: 1 Size: 13 x 13
+
+                 1                   2                   3                   4                   5
+
+    1     1.00000000000000     0.00000000000000     0.00000000000000     0.00000000000000     0.00000000000000
+    2     0.00000000000000     1.00000000000000     0.00000000000000     0.00000000000000     0.00000000000000
+    3     0.00000000000000     0.00000000000000     0.03743697635456     0.00000000000000     0.00000000000000
+    4     0.00000000000000     0.00000000000000     0.00000000000000     0.00000000000000     0.00000000000000
+    5     0.00000000000000     0.00000000000000     0.00000000000000     0.00000000000000     0.00000000000000
+    6     0.00000000000000     0.00000000000000     0.00000000000000     0.00000000000000     0.00000000000000
+    7     0.00000000000000     0.00000000000000     0.00000000000000     0.00000000000000     0.00000000000000
+    8     0.00000000000000     0.00000000000000     0.00000000000000     0.00000000000000     0.00000000000000
+    9     0.00000000000000     0.00000000000000     0.00000000000000     0.00000000000000     0.00000000000000
+   10     0.00000000000000     0.00000000000000     0.00000000000000     0.00000000000000     0.00000000000000
+   11     0.00000000000000     0.00000000000000     0.00000000000000     0.00000000000000     0.00000000000000
+   12     0.00000000000000     0.00000000000000     0.00000000000000     0.00000000000000     0.00000000000000
+   13     0.00000000000000     0.00000000000000     0.00000000000000     0.00000000000000     0.00000000000000
+
+                 6                   7                   8                   9                  10
+
+    1     0.00000000000000     0.00000000000000     0.00000000000000     0.00000000000000     0.00000000000000
+    2     0.00000000000000     0.00000000000000     0.00000000000000     0.00000000000000     0.00000000000000
+    3     0.00000000000000     0.00000000000000     0.00000000000000     0.00000000000000     0.00000000000000
+    4     0.00000000000000     0.00000000000000     0.00000000000000     0.00000000000000     0.00000000000000
+    5     0.00000000000000     0.00000000000000     0.00000000000000     0.00000000000000     0.00000000000000
+    6     0.00000000000000     0.00000000000000     0.00000000000000     0.00000000000000     0.00000000000000
+    7     0.00000000000000     0.00000000000000     0.00000000000000     0.00000000000000     0.00000000000000
+    8     0.00000000000000     0.00000000000000     0.00000000000000     0.00000000000000     0.00000000000000
+    9     0.00000000000000     0.00000000000000     0.00000000000000     0.00000000000000     0.00000000000000
+   10     0.00000000000000     0.00000000000000     0.00000000000000     0.00000000000000     0.96256302364544
+   11     0.00000000000000     0.00000000000000     0.00000000000000     0.00000000000000     0.00000000000000
+   12     0.00000000000000     0.00000000000000     0.00000000000000     0.00000000000000     0.00000000000000
+   13     0.00000000000000     0.00000000000000     0.00000000000000     0.00000000000000     0.00000000000000
+
+                11                  12                  13
+
+    1     0.00000000000000     0.00000000000000     0.00000000000000
+    2     0.00000000000000     0.00000000000000     0.00000000000000
+    3     0.00000000000000     0.00000000000000     0.00000000000000
+    4     0.00000000000000     0.00000000000000     0.00000000000000
+    5     0.00000000000000     0.00000000000000     0.00000000000000
+    6     0.00000000000000     0.00000000000000     0.00000000000000
+    7     0.00000000000000     0.00000000000000     0.00000000000000
+    8     0.00000000000000     0.00000000000000     0.00000000000000
+    9     0.00000000000000     0.00000000000000     0.00000000000000
+   10     0.00000000000000     0.00000000000000     0.00000000000000
+   11     0.00000000000000     0.00000000000000     0.00000000000000
+   12     0.00000000000000     0.00000000000000     0.00000000000000
+   13     0.00000000000000     0.00000000000000     0.00000000000000
+
+
+
+  ## Db (Symmetry 0) ##
+  Irrep: 1 Size: 13 x 13
+
+                 1                   2                   3                   4                   5
+
+    1     1.00000000000000     0.00000000000000     0.00000000000000     0.00000000000000     0.00000000000000
+    2     0.00000000000000     1.00000000000000     0.00000000000000     0.00000000000000     0.00000000000000
+    3     0.00000000000000     0.00000000000000     0.03743697635456     0.00000000000000     0.00000000000000
+    4     0.00000000000000     0.00000000000000     0.00000000000000     0.00000000000000     0.00000000000000
+    5     0.00000000000000     0.00000000000000     0.00000000000000     0.00000000000000     0.00000000000000
+    6     0.00000000000000     0.00000000000000     0.00000000000000     0.00000000000000     0.00000000000000
+    7     0.00000000000000     0.00000000000000     0.00000000000000     0.00000000000000     0.00000000000000
+    8     0.00000000000000     0.00000000000000     0.00000000000000     0.00000000000000     0.00000000000000
+    9     0.00000000000000     0.00000000000000     0.00000000000000     0.00000000000000     0.00000000000000
+   10     0.00000000000000     0.00000000000000     0.00000000000000     0.00000000000000     0.00000000000000
+   11     0.00000000000000     0.00000000000000     0.00000000000000     0.00000000000000     0.00000000000000
+   12     0.00000000000000     0.00000000000000     0.00000000000000     0.00000000000000     0.00000000000000
+   13     0.00000000000000     0.00000000000000     0.00000000000000     0.00000000000000     0.00000000000000
+
+                 6                   7                   8                   9                  10
+
+    1     0.00000000000000     0.00000000000000     0.00000000000000     0.00000000000000     0.00000000000000
+    2     0.00000000000000     0.00000000000000     0.00000000000000     0.00000000000000     0.00000000000000
+    3     0.00000000000000     0.00000000000000     0.00000000000000     0.00000000000000     0.00000000000000
+    4     0.00000000000000     0.00000000000000     0.00000000000000     0.00000000000000     0.00000000000000
+    5     0.00000000000000     0.00000000000000     0.00000000000000     0.00000000000000     0.00000000000000
+    6     0.00000000000000     0.00000000000000     0.00000000000000     0.00000000000000     0.00000000000000
+    7     0.00000000000000     0.00000000000000     0.00000000000000     0.00000000000000     0.00000000000000
+    8     0.00000000000000     0.00000000000000     0.00000000000000     0.00000000000000     0.00000000000000
+    9     0.00000000000000     0.00000000000000     0.00000000000000     0.00000000000000     0.00000000000000
+   10     0.00000000000000     0.00000000000000     0.00000000000000     0.00000000000000     0.96256302364544
+   11     0.00000000000000     0.00000000000000     0.00000000000000     0.00000000000000     0.00000000000000
+   12     0.00000000000000     0.00000000000000     0.00000000000000     0.00000000000000     0.00000000000000
+   13     0.00000000000000     0.00000000000000     0.00000000000000     0.00000000000000     0.00000000000000
+
+                11                  12                  13
+
+    1     0.00000000000000     0.00000000000000     0.00000000000000
+    2     0.00000000000000     0.00000000000000     0.00000000000000
+    3     0.00000000000000     0.00000000000000     0.00000000000000
+    4     0.00000000000000     0.00000000000000     0.00000000000000
+    5     0.00000000000000     0.00000000000000     0.00000000000000
+    6     0.00000000000000     0.00000000000000     0.00000000000000
+    7     0.00000000000000     0.00000000000000     0.00000000000000
+    8     0.00000000000000     0.00000000000000     0.00000000000000
+    9     0.00000000000000     0.00000000000000     0.00000000000000
+   10     0.00000000000000     0.00000000000000     0.00000000000000
+   11     0.00000000000000     0.00000000000000     0.00000000000000
+   12     0.00000000000000     0.00000000000000     0.00000000000000
+   13     0.00000000000000     0.00000000000000     0.00000000000000
+
+
+
+
+  Forming generalized Fock matrix     ...  Done. Timing        0.000039 s
+  Checking Fock matrices (Fa, Fb)     ...
+  Nonzero criteria: > 1.00E-12
+  Fa_CORE    block is diagonal.
+  Fb_CORE    block is diagonal.
+  Fa_ACTIVE  block is diagonal.
+  Fb_ACTIVE  block is diagonal.
+  Fa_VIRTUAL block is diagonal.
+  Fb_VIRTUAL block is diagonal.
+  Done checking Fock matrices.                   Timing        0.000041 s
+  ## Fa (Symmetry 0) ##
+  Irrep: 1 Size: 13 x 13
+
+                 1                   2                   3                   4                   5
+
+    1    -4.73992357099596     0.00000000000000    -0.00042001558110    -0.00000000067678     0.00000000064714
+    2    -0.00000000000000    -0.50074669376483    -0.00585380384823     0.00000000035141    -0.00000000101504
+    3    -0.00042001558110    -0.00585380384823     0.06426121446636     0.04812184264786    -0.12150182660188
+    4    -0.00000000067678     0.00000000035141     0.04812184264786     0.26447117153820     0.00000000000000
+    5     0.00000000064714    -0.00000000101504    -0.12150182660188     0.00000000000000     0.35387963777757
+    6    -0.00000000026844     0.00000000053447     0.17921393715983    -0.00000000000000     0.00000000000000
+    7    -0.00000000037661    -0.00000000004195     0.01765350492548     0.00000000000000    -0.00000000000000
+    8     0.00000000000000     0.00000000000000     0.00000000000000     0.00000000000000     0.00000000000000
+    9     0.00000000000000     0.00000000000000     0.00000000000000     0.00000000000000     0.00000000000000
+   10     0.00000000000000     0.00000000000000     0.00000000000000     0.00000000000000     0.00000000000000
+   11     0.00000000000000     0.00000000000000     0.00000000000000     0.00000000000000     0.00000000000000
+   12     0.00000000000000     0.00000000000000     0.00000000000000     0.00000000000000     0.00000000000000
+   13     0.00000000000000     0.00000000000000     0.00000000000000     0.00000000000000     0.00000000000000
+
+                 6                   7                   8                   9                  10
+
+    1    -0.00000000026844    -0.00000000037661     0.00000000000000     0.00000000000000     0.00000000000000
+    2     0.00000000053448    -0.00000000004195     0.00000000000000     0.00000000000000     0.00000000000000
+    3     0.17921393715984     0.01765350492548     0.00000000000000     0.00000000000000     0.00000000000000
+    4     0.00000000000000    -0.00000000000000     0.00000000000000     0.00000000000000     0.00000000000000
+    5    -0.00000000000000     0.00000000000000     0.00000000000000     0.00000000000000     0.00000000000000
+    6     1.26627632707520    -0.00000000000000     0.00000000000000     0.00000000000000     0.00000000000000
+    7     0.00000000000000     9.10384581168253     0.00000000000000     0.00000000000000     0.00000000000000
+    8     0.00000000000000     0.00000000000000     0.14836125679501    -0.00000000000000     0.00000000000000
+    9     0.00000000000000     0.00000000000000     0.00000000000000     8.96224990915074     0.00000000000000
+   10     0.00000000000000     0.00000000000000     0.00000000000000     0.00000000000000    -0.24489001974575
+   11     0.00000000000000     0.00000000000000     0.00000000000000     0.00000000000000     0.00351217163427
+   12     0.00000000000000     0.00000000000000     0.00000000000000     0.00000000000000    -0.00370887627955
+   13     0.00000000000000     0.00000000000000     0.00000000000000     0.00000000000000     0.00034576411910
+
+                11                  12                  13
+
+    1     0.00000000000000     0.00000000000000     0.00000000000000
+    2     0.00000000000000     0.00000000000000     0.00000000000000
+    3     0.00000000000000     0.00000000000000     0.00000000000000
+    4     0.00000000000000     0.00000000000000     0.00000000000000
+    5     0.00000000000000     0.00000000000000     0.00000000000000
+    6     0.00000000000000     0.00000000000000     0.00000000000000
+    7     0.00000000000000     0.00000000000000     0.00000000000000
+    8     0.00000000000000     0.00000000000000     0.00000000000000
+    9     0.00000000000000     0.00000000000000     0.00000000000000
+   10     0.00351217163427    -0.00370887627955     0.00034576411910
+   11     0.28003783287511    -0.00000000000000     0.00000000000000
+   12     0.00000000000000     1.18254260384075     0.00000000000000
+   13     0.00000000000000     0.00000000000000     9.01267665179387
+
+
+
+  ## Fb (Symmetry 0) ##
+  Irrep: 1 Size: 13 x 13
+
+                 1                   2                   3                   4                   5
+
+    1    -4.73992357099596     0.00000000000000    -0.00042001558110    -0.00000000067678     0.00000000064714
+    2    -0.00000000000000    -0.50074669376483    -0.00585380384823     0.00000000035141    -0.00000000101504
+    3    -0.00042001558110    -0.00585380384823     0.06426121446636     0.04812184264786    -0.12150182660188
+    4    -0.00000000067678     0.00000000035141     0.04812184264786     0.26447117153820     0.00000000000000
+    5     0.00000000064714    -0.00000000101504    -0.12150182660188     0.00000000000000     0.35387963777757
+    6    -0.00000000026844     0.00000000053447     0.17921393715983    -0.00000000000000     0.00000000000000
+    7    -0.00000000037661    -0.00000000004195     0.01765350492548     0.00000000000000    -0.00000000000000
+    8     0.00000000000000     0.00000000000000     0.00000000000000     0.00000000000000     0.00000000000000
+    9     0.00000000000000     0.00000000000000     0.00000000000000     0.00000000000000     0.00000000000000
+   10     0.00000000000000     0.00000000000000     0.00000000000000     0.00000000000000     0.00000000000000
+   11     0.00000000000000     0.00000000000000     0.00000000000000     0.00000000000000     0.00000000000000
+   12     0.00000000000000     0.00000000000000     0.00000000000000     0.00000000000000     0.00000000000000
+   13     0.00000000000000     0.00000000000000     0.00000000000000     0.00000000000000     0.00000000000000
+
+                 6                   7                   8                   9                  10
+
+    1    -0.00000000026844    -0.00000000037661     0.00000000000000     0.00000000000000     0.00000000000000
+    2     0.00000000053448    -0.00000000004195     0.00000000000000     0.00000000000000     0.00000000000000
+    3     0.17921393715984     0.01765350492548     0.00000000000000     0.00000000000000     0.00000000000000
+    4     0.00000000000000    -0.00000000000000     0.00000000000000     0.00000000000000     0.00000000000000
+    5    -0.00000000000000    -0.00000000000000     0.00000000000000     0.00000000000000     0.00000000000000
+    6     1.26627632707520    -0.00000000000000     0.00000000000000     0.00000000000000     0.00000000000000
+    7     0.00000000000000     9.10384581168253     0.00000000000000     0.00000000000000     0.00000000000000
+    8     0.00000000000000     0.00000000000000     0.14836125679501    -0.00000000000000     0.00000000000000
+    9     0.00000000000000     0.00000000000000     0.00000000000000     8.96224990915074     0.00000000000000
+   10     0.00000000000000     0.00000000000000     0.00000000000000     0.00000000000000    -0.24489001974575
+   11     0.00000000000000     0.00000000000000     0.00000000000000     0.00000000000000     0.00351217163427
+   12     0.00000000000000     0.00000000000000     0.00000000000000     0.00000000000000    -0.00370887627955
+   13     0.00000000000000     0.00000000000000     0.00000000000000     0.00000000000000     0.00034576411910
+
+                11                  12                  13
+
+    1     0.00000000000000     0.00000000000000     0.00000000000000
+    2     0.00000000000000     0.00000000000000     0.00000000000000
+    3     0.00000000000000     0.00000000000000     0.00000000000000
+    4     0.00000000000000     0.00000000000000     0.00000000000000
+    5     0.00000000000000     0.00000000000000     0.00000000000000
+    6     0.00000000000000     0.00000000000000     0.00000000000000
+    7     0.00000000000000     0.00000000000000     0.00000000000000
+    8     0.00000000000000     0.00000000000000     0.00000000000000
+    9     0.00000000000000     0.00000000000000     0.00000000000000
+   10     0.00351217163427    -0.00370887627955     0.00034576411910
+   11     0.28003783287511    -0.00000000000000     0.00000000000000
+   12     0.00000000000000     1.18254260384075     0.00000000000000
+   13     0.00000000000000     0.00000000000000     9.01267665179387
+
+
+
+
+  Computing oscillator strength in c2v symmetry.
+  Currently only support transitions with the same irrep.
+  Please set molecular symmetry to C1.
+
+  Forming Lambda2                     ...  Done. Timing        0.000054 s
   ** L2aa **
-  Lambda [  0][  1][  0][  1] = -0.036035449645449
-  Lambda [  0][  1][  1][  0] =  0.036035449645449
-  Lambda [  1][  0][  0][  1] =  0.036035449645449
-  Lambda [  1][  0][  1][  0] = -0.036035449645449
+  Lambda [  0][  1][  0][  1] = -0.036035449155986
+  Lambda [  0][  1][  1][  0] =  0.036035449155986
+  Lambda [  1][  0][  0][  1] =  0.036035449155986
+  Lambda [  1][  0][  1][  0] = -0.036035449155986
 
   Number of Nonzero Elements: 4
 
   ** L2ab **
-  Lambda [  0][  0][  0][  0] =  0.036035449645449
-  Lambda [  0][  0][  1][  1] = -0.189830054642170
-  Lambda [  0][  1][  0][  1] = -0.036035449645449
-  Lambda [  1][  0][  1][  0] = -0.036035449645449
-  Lambda [  1][  1][  0][  0] = -0.189830054642170
-  Lambda [  1][  1][  1][  1] =  0.036035449645449
+  Lambda [  0][  0][  0][  0] =  0.036035449155986
+  Lambda [  0][  0][  1][  1] = -0.189830053352956
+  Lambda [  0][  1][  0][  1] = -0.036035449155986
+  Lambda [  1][  0][  1][  0] = -0.036035449155986
+  Lambda [  1][  1][  0][  0] = -0.189830053352956
+  Lambda [  1][  1][  1][  1] =  0.036035449155986
 
   Number of Nonzero Elements: 6
 
   ** L2bb **
-  Lambda [  0][  1][  0][  1] = -0.036035449645449
-  Lambda [  0][  1][  1][  0] =  0.036035449645449
-  Lambda [  1][  0][  0][  1] =  0.036035449645449
-  Lambda [  1][  0][  1][  0] = -0.036035449645449
+  Lambda [  0][  1][  0][  1] = -0.036035449155986
+  Lambda [  0][  1][  1][  0] =  0.036035449155986
+  Lambda [  1][  0][  0][  1] =  0.036035449155986
+  Lambda [  1][  0][  1][  0] = -0.036035449155986
 
   Number of Nonzero Elements: 4
 
-  Forming Lambda3                     ...  Done. Timing        0.000075 s
+  Forming Lambda3                     ...  Done. Timing        0.000084 s
 
                   -------------------------------------------
                     Driven Similarity Renormalization Group
@@ -1125,6 +1300,49 @@ Calling plugin /Users/ChenyangLi/src/forte/forte.so.
                                   Chenyang Li
                   -------------------------------------------
 
+
+  ==> Small Denominators for T1 with RE Partitioning <==
+
+    NULL.
+
+  ==> Small Denominators for T2aa with RE Partitioning <==
+
+          Indices            Denominator      Original Denom.
+    ---------------------------------------------------------
+       2    9    2   10    -0.141172384887    -0.524927852621
+       2    9    9    3    -0.251085090566    -0.200209957072
+       2    9    9    4    -0.252006103136    -0.289618423311
+       2    9    3   10    -0.377165304280    -0.725137809693
+       2    9    4   10    -0.391818661608    -0.814546275932
+       2    1    2    3    -0.275926123144    -0.765217865303
+       2    1    2    4    -0.277427722776    -0.854626331542
+       2    1    9   10    -0.284437021384    -0.471633292428
+       9    1    2    9    -0.012944212757    -0.565007908231
+       9    1    2   10    -0.159208262079    -1.089935760852
+       9    1    9    3    -0.337553253305    -0.765217865303
+       9    1    9    4    -0.255654472916    -0.854626331542
+       9    1    3   10    -0.441896580370    -1.290145717924
+       9    1    4   10    -0.373730144738    -1.379554184163
+    ---------------------------------------------------------
+
+  ==> Small Denominators for T2ab with RE Partitioning <==
+
+          Indices            Denominator      Original Denom.
+    ---------------------------------------------------------
+       2    2    2    3    -0.295253692820    -0.200209957072
+       2    2    2    4    -0.381024000006    -0.289618423311
+       2    2    9   11     0.433471659804    -0.809130155162
+       2    2    3    3    -0.464291011949    -0.400419914144
+       2    2    7    7    -0.393769267438    -0.168200084657
+       2    9    9    5     0.497708542700    -1.202015112609
+       2    1    9   11     0.351520819893    -1.374138063393
+       9    9    9   10     0.414695202358    -0.524927852621
+       9    9    9   11    -0.037041119043    -1.427432623586
+       9    1    9    3     0.002131601098    -0.765217865303
+       9    1    9    4     0.094729535263    -0.854626331542
+       9    1    9    5    -0.295476790031    -1.767023020840
+       1    1    9   11     0.211941194720    -1.939145971625
+    ---------------------------------------------------------
 
   ==> Correlated Subspace Indices <==
 
@@ -1144,55 +1362,55 @@ Calling plugin /Users/ChenyangLi/src/forte/forte.so.
 
      i   j   a   b              i   j   a   b              i   j   a   b          
   --------------------------------------------------------------------------------
-  [  2   9   9   3] -0.17514 [  2   9   3   9]  0.17514 [  9   2   9   3]  0.17514 
-  [  9   2   3   9] -0.17514 [  2   1   9  10] -0.06954 [  2   1  10   9]  0.06954 
-  [  1   2   9  10]  0.06954 [  1   2  10   9] -0.06954 [  9   2   9   4]  0.06508 
+  [  2   9   3   9] -0.17514 [  9   2   3   9]  0.17514 [  9   2   9   3] -0.17514 
+  [  2   9   9   3]  0.17514 [  2   1  10   9]  0.06954 [  1   2  10   9] -0.06954 
+  [  2   1   9  10] -0.06954 [  1   2   9  10]  0.06954 [  9   2   9   4]  0.06508 
   [  9   2   4   9] -0.06508 [  2   9   4   9]  0.06508 [  2   9   9   4] -0.06508 
-  [  2   1   2   4]  0.05961 [  1   2   2   4] -0.05961 [  2   1   4   2] -0.05961 
+  [  2   1   4   2]  0.05961 [  1   2   2   4]  0.05961 [  2   1   2   4] -0.05961 
   --------------------------------------------------------------------------------
-  Norm of T2AA vector: (nonzero elements:          440)         0.460056672605362.
+  Norm of T2AA vector: (nonzero elements:          440)         0.460056674850452.
   --------------------------------------------------------------------------------
 
   ==> T2 intruder states analysis for spin case AA: <==
   -----------------------------------------------------------------------------------------
       Amplitude        Value   Numerator                   Denominator
   -----------------------------------------------------------------------------------------
-  [  2   9   9   3] = -0.1751 =  0.0351 / ( 0.0643 + -0.2449 - -0.2449 -  0.2645 = -0.2002)
-  [  2   9   3   9] =  0.1751 = -0.0351 / ( 0.0643 + -0.2449 -  0.2645 - -0.2449 = -0.2002)
-  [  9   2   9   3] =  0.1751 = -0.0351 / (-0.2449 +  0.0643 - -0.2449 -  0.2645 = -0.2002)
-  [  9   2   3   9] = -0.1751 =  0.0351 / (-0.2449 +  0.0643 -  0.2645 - -0.2449 = -0.2002)
+  [  2   9   3   9] = -0.1751 =  0.0351 / ( 0.0643 + -0.2449 -  0.2645 - -0.2449 = -0.2002)
+  [  9   2   3   9] =  0.1751 = -0.0351 / (-0.2449 +  0.0643 -  0.2645 - -0.2449 = -0.2002)
+  [  2   9   9   3] =  0.1751 = -0.0351 / ( 0.0643 + -0.2449 - -0.2449 -  0.2645 = -0.2002)
+  [  9   2   9   3] = -0.1751 =  0.0351 / (-0.2449 +  0.0643 - -0.2449 -  0.2645 = -0.2002)
   -----------------------------------------------------------------------------------------
 
   ==> Largest T2 amplitudes for spin case AB: <==
          _       _                  _       _                  _       _          
      i   j   a   b              i   j   a   b              i   j   a   b          
   --------------------------------------------------------------------------------
-  [  2   1   9   9] -0.35935 [  1   2   9   9] -0.35935 [  2   2   7   7] -0.34479 
-  [  2   2   3   2]  0.26681 [  2   2   2   3]  0.26681 [  1   1   9   9] -0.20746 
-  [  2   9   3   9]  0.20166 [  9   2   9   3]  0.20166 [  2   2  10  10] -0.14651 
-  [  1   2   9  10]  0.14135 [  2   1  10   9]  0.14135 [  9   2   9   4]  0.10085 
-  [  2   9   4   9]  0.10085 [  2   2   4   4] -0.10084 [  2   2   2   4] -0.08145 
+  [  1   2   9   9]  0.35935 [  2   1   9   9]  0.35935 [  2   2   7   7] -0.34479 
+  [  2   2   3   2] -0.26681 [  2   2   2   3] -0.26681 [  1   1   9   9] -0.20746 
+  [  2   9   3   9] -0.20166 [  9   2   9   3] -0.20166 [  2   2  10  10] -0.14651 
+  [  1   2   9  10]  0.14135 [  2   1  10   9]  0.14135 [  2   9   4   9]  0.10085 
+  [  9   2   9   4]  0.10085 [  2   2   4   4] -0.10084 [  2   2   4   2] -0.08145 
   --------------------------------------------------------------------------------
-  Norm of T2AB vector: (nonzero elements:          682)         0.934888075750095.
+  Norm of T2AB vector: (nonzero elements:          682)         0.934888072440036.
   --------------------------------------------------------------------------------
 
   ==> T2 intruder states analysis for spin case AB: <==
   -----------------------------------------------------------------------------------------
       Amplitude        Value   Numerator                   Denominator
   -----------------------------------------------------------------------------------------
-  [  2   1   9   9] = -0.3593 = -0.0192 / ( 0.0643 + -0.5007 - -0.2449 - -0.2449 =  0.0533)
-  [  1   2   9   9] = -0.3593 = -0.0192 / (-0.5007 +  0.0643 - -0.2449 - -0.2449 =  0.0533)
+  [  1   2   9   9] =  0.3593 =  0.0192 / (-0.5007 +  0.0643 - -0.2449 - -0.2449 =  0.0533)
+  [  2   1   9   9] =  0.3593 =  0.0192 / ( 0.0643 + -0.5007 - -0.2449 - -0.2449 =  0.0533)
   [  2   2   7   7] = -0.3448 =  0.0580 / ( 0.0643 +  0.0643 -  0.1484 -  0.1484 = -0.1682)
-  [  2   2   3   2] =  0.2668 = -0.0534 / ( 0.0643 +  0.0643 -  0.2645 -  0.0643 = -0.2002)
-  [  2   2   2   3] =  0.2668 = -0.0534 / ( 0.0643 +  0.0643 -  0.0643 -  0.2645 = -0.2002)
+  [  2   2   3   2] = -0.2668 =  0.0534 / ( 0.0643 +  0.0643 -  0.2645 -  0.0643 = -0.2002)
+  [  2   2   2   3] = -0.2668 =  0.0534 / ( 0.0643 +  0.0643 -  0.0643 -  0.2645 = -0.2002)
   [  1   1   9   9] = -0.2075 =  0.1062 / (-0.5007 + -0.5007 - -0.2449 - -0.2449 = -0.5117)
-  [  2   9   3   9] =  0.2017 = -0.0404 / ( 0.0643 + -0.2449 -  0.2645 - -0.2449 = -0.2002)
-  [  9   2   9   3] =  0.2017 = -0.0404 / (-0.2449 +  0.0643 - -0.2449 -  0.2645 = -0.2002)
+  [  2   9   3   9] = -0.2017 =  0.0404 / ( 0.0643 + -0.2449 -  0.2645 - -0.2449 = -0.2002)
+  [  9   2   9   3] = -0.2017 =  0.0404 / (-0.2449 +  0.0643 - -0.2449 -  0.2645 = -0.2002)
   [  2   2  10  10] = -0.1465 =  0.0632 / ( 0.0643 +  0.0643 -  0.2800 -  0.2800 = -0.4316)
   [  1   2   9  10] =  0.1414 = -0.0667 / (-0.5007 +  0.0643 - -0.2449 -  0.2800 = -0.4716)
   [  2   1  10   9] =  0.1414 = -0.0667 / ( 0.0643 + -0.5007 -  0.2800 - -0.2449 = -0.4716)
-  [  9   2   9   4] =  0.1009 = -0.0292 / (-0.2449 +  0.0643 - -0.2449 -  0.3539 = -0.2896)
   [  2   9   4   9] =  0.1009 = -0.0292 / ( 0.0643 + -0.2449 -  0.3539 - -0.2449 = -0.2896)
+  [  9   2   9   4] =  0.1009 = -0.0292 / (-0.2449 +  0.0643 - -0.2449 -  0.3539 = -0.2896)
   [  2   2   4   4] = -0.1008 =  0.0584 / ( 0.0643 +  0.0643 -  0.3539 -  0.3539 = -0.5792)
   -----------------------------------------------------------------------------------------
 
@@ -1200,36 +1418,36 @@ Calling plugin /Users/ChenyangLi/src/forte/forte.so.
      _   _   _   _              _   _   _   _              _   _   _   _          
      i   j   a   b              i   j   a   b              i   j   a   b          
   --------------------------------------------------------------------------------
-  [  2   9   3   9]  0.17514 [  9   2   3   9] -0.17514 [  9   2   9   3]  0.17514 
-  [  2   9   9   3] -0.17514 [  2   1   9  10] -0.06954 [  2   1  10   9]  0.06954 
+  [  2   9   9   3]  0.17514 [  2   9   3   9] -0.17514 [  9   2   9   3] -0.17514 
+  [  9   2   3   9]  0.17514 [  2   1   9  10] -0.06954 [  2   1  10   9]  0.06954 
   [  1   2   9  10]  0.06954 [  1   2  10   9] -0.06954 [  9   2   9   4]  0.06508 
   [  2   9   9   4] -0.06508 [  2   9   4   9]  0.06508 [  9   2   4   9] -0.06508 
-  [  2   1   4   2] -0.05961 [  1   2   2   4] -0.05961 [  2   1   2   4]  0.05961 
+  [  2   1   4   2]  0.05961 [  1   2   4   2] -0.05961 [  1   2   2   4]  0.05961 
   --------------------------------------------------------------------------------
-  Norm of T2BB vector: (nonzero elements:          440)         0.460056672605362.
+  Norm of T2BB vector: (nonzero elements:          440)         0.460056674850452.
   --------------------------------------------------------------------------------
 
   ==> T2 intruder states analysis for spin case BB: <==
   -----------------------------------------------------------------------------------------
       Amplitude        Value   Numerator                   Denominator
   -----------------------------------------------------------------------------------------
-  [  2   9   3   9] =  0.1751 = -0.0351 / ( 0.0643 + -0.2449 -  0.2645 - -0.2449 = -0.2002)
-  [  9   2   3   9] = -0.1751 =  0.0351 / (-0.2449 +  0.0643 -  0.2645 - -0.2449 = -0.2002)
-  [  2   9   9   3] = -0.1751 =  0.0351 / ( 0.0643 + -0.2449 - -0.2449 -  0.2645 = -0.2002)
-  [  9   2   9   3] =  0.1751 = -0.0351 / (-0.2449 +  0.0643 - -0.2449 -  0.2645 = -0.2002)
+  [  2   9   9   3] =  0.1751 = -0.0351 / ( 0.0643 + -0.2449 - -0.2449 -  0.2645 = -0.2002)
+  [  2   9   3   9] = -0.1751 =  0.0351 / ( 0.0643 + -0.2449 -  0.2645 - -0.2449 = -0.2002)
+  [  9   2   9   3] = -0.1751 =  0.0351 / (-0.2449 +  0.0643 - -0.2449 -  0.2645 = -0.2002)
+  [  9   2   3   9] =  0.1751 = -0.0351 / (-0.2449 +  0.0643 -  0.2645 - -0.2449 = -0.2002)
   -----------------------------------------------------------------------------------------
 
   ==> Largest T1 amplitudes for spin case A: <==
 
      i       a                  i       a                  i       a              
   --------------------------------------------------------------------------------
-  [  2       4    ]  0.41952 [  2       3    ]  0.24036 [  2       5    ] -0.14909 
-  [  1       2    ] -0.01036 [  9      10    ]  0.00669 [  9      11    ] -0.00260 
-  [  2       6    ]  0.00195 [  0       2    ]  0.00009 [  9      12    ] -0.00004 
-  [  0       0    ]  0.00000 [  0       0    ]  0.00000 [  0       0    ]  0.00000 
-  [  0       0    ]  0.00000 [  0       0    ]  0.00000 [  0       0    ]  0.00000 
+  [  2       4    ]  0.41952 [  2       3    ] -0.24036 [  2       5    ] -0.14909 
+  [  1       2    ]  0.01036 [  9      10    ] -0.00669 [  9      11    ]  0.00260 
+  [  2       6    ] -0.00195 [  0       2    ]  0.00009 [  9      12    ] -0.00004 
+  [  1       4    ]  0.00000 [  1       3    ] -0.00000 [  1       5    ] -0.00000 
+  [  0       3    ]  0.00000 [  0       4    ] -0.00000 [  0       5    ]  0.00000 
   --------------------------------------------------------------------------------
-  Norm of T1A vector: (nonzero elements:            9)          0.506126013831586.
+  Norm of T1A vector: (nonzero elements:           17)          0.506126015386411.
   --------------------------------------------------------------------------------
 
   ==> T1 intruder states analysis for spin case A: <==
@@ -1237,7 +1455,7 @@ Calling plugin /Users/ChenyangLi/src/forte/forte.so.
       Amplitude        Value   Numerator          Denominator
   ---------------------------------------------------------------------
   [  2       4    ] =  0.4195 = -0.1215 / ( 0.0643 -  0.3539 = -0.2896)
-  [  2       3    ] =  0.2404 = -0.0481 / ( 0.0643 -  0.2645 = -0.2002)
+  [  2       3    ] = -0.2404 =  0.0481 / ( 0.0643 -  0.2645 = -0.2002)
   [  2       5    ] = -0.1491 =  0.1792 / ( 0.0643 -  1.2663 = -1.2020)
   ---------------------------------------------------------------------
 
@@ -1245,13 +1463,13 @@ Calling plugin /Users/ChenyangLi/src/forte/forte.so.
      _       _                  _       _                  _       _              
      i       a                  i       a                  i       a              
   --------------------------------------------------------------------------------
-  [  2       4    ]  0.41952 [  2       3    ]  0.24036 [  2       5    ] -0.14909 
-  [  1       2    ] -0.01036 [  9      10    ]  0.00669 [  9      11    ] -0.00260 
-  [  2       6    ]  0.00195 [  0       2    ]  0.00009 [  9      12    ] -0.00004 
-  [  0       0    ]  0.00000 [  0       0    ]  0.00000 [  0       0    ]  0.00000 
-  [  0       0    ]  0.00000 [  0       0    ]  0.00000 [  0       0    ]  0.00000 
+  [  2       4    ]  0.41952 [  2       3    ] -0.24036 [  2       5    ] -0.14909 
+  [  1       2    ]  0.01036 [  9      10    ] -0.00669 [  9      11    ]  0.00260 
+  [  2       6    ] -0.00195 [  0       2    ]  0.00009 [  9      12    ] -0.00004 
+  [  1       4    ]  0.00000 [  1       3    ] -0.00000 [  1       5    ] -0.00000 
+  [  0       3    ]  0.00000 [  0       4    ] -0.00000 [  0       5    ]  0.00000 
   --------------------------------------------------------------------------------
-  Norm of T1B vector: (nonzero elements:            9)          0.506126013831586.
+  Norm of T1B vector: (nonzero elements:           17)          0.506126015386411.
   --------------------------------------------------------------------------------
 
   ==> T1 intruder states analysis for spin case B: <==
@@ -1259,7 +1477,7 @@ Calling plugin /Users/ChenyangLi/src/forte/forte.so.
       Amplitude        Value   Numerator          Denominator
   ---------------------------------------------------------------------
   [  2       4    ] =  0.4195 = -0.1215 / ( 0.0643 -  0.3539 = -0.2896)
-  [  2       3    ] =  0.2404 = -0.0481 / ( 0.0643 -  0.2645 = -0.2002)
+  [  2       3    ] = -0.2404 =  0.0481 / ( 0.0643 -  0.2645 = -0.2002)
   [  2       5    ] = -0.1491 =  0.1792 / ( 0.0643 -  1.2663 = -1.2020)
   ---------------------------------------------------------------------
 
@@ -1274,29 +1492,32 @@ Calling plugin /Users/ChenyangLi/src/forte/forte.so.
   
   ==> MC-DSRG-PT2 Energy Summary <==
   
-    E0 (cumulant)                 =    -15.569761360883531
-    E([F, T1])                    =     -0.006866409451503
-    E([V, T1])                    =      0.006866409451502
-    E([V, T1]: V)                 =      0.006749582313824
-    E([V, T1]: C)                 =      0.000116827137678
-    E([F, T2])                    =      0.003999655607536
-    E([F, T2]: V)                 =      0.004756782592693
-    E([F, T2]: C)                 =     -0.000757126985156
-    E([V, T2] C_2^4)              =     -0.056789258635431
-    E([V, T2] C_2^2 * C_4)        =     -0.006490603827699
-    E([V, T2] C_2^2 * C_4: PP)    =      0.003883716695534
-    E([V, T2] C_2^2 * C_4: HH)    =      0.002566546986887
-    E([V, T2] C_2^2 * C_4: PH)    =     -0.012940867510121
-    E([V, T2] C_2 * C_6)          =      0.001856678819002
-    E([V, T2] C_2 * C_6: H)       =      0.000618529258095
-    E([V, T2] C_2 * C_6: P)       =      0.001238149560906
-    E([V, T2])                    =     -0.061423183644129
-    E(SRGPT2)                     =     -0.057423528036593
-  * E(Total)                      =    -15.627184888920123
-    max(T1)                       =      0.419523822230585
-    max(T2)                       =     -0.359349761674950
-    ||T1||                        =      0.715770273030462
-    ||T2||                        =      1.979739159772392
+    E0 (cumulant)                 =    -15.569761360883534
+    E([F, T1])                    =     -0.006866409657442
+    E([V, T1])                    =      0.006866409569065
+    E([V, T1]: V)                 =      0.006749582415591
+    E([V, T1]: C)                 =      0.000116827153474
+    E([F, T2])                    =      0.003999655607267
+    E([F, T2]: V)                 =      0.004756782650259
+    E([F, T2]: C)                 =     -0.000757127042993
+    E([V, T2] C_2^4)              =     -0.056789258852066
+    E([V, T2] C_2^2 * C_4)        =     -0.006490603872755
+    E([V, T2] C_2^2 * C_4: PP)    =      0.003883716760568
+    E([V, T2] C_2^2 * C_4: HH)    =      0.002566547025392
+    E([V, T2] C_2^2 * C_4: PH)    =     -0.012940867658715
+    E([V, T2] C_2 * C_6)          =      0.001856678799034
+    E([V, T2] C_2 * C_6: H)       =      0.000618529239742
+    E([V, T2] C_2 * C_6: P)       =      0.001238149559292
+    E([V, T2])                    =     -0.061423183925787
+    E(SRGPT2)                     =     -0.057423528406897
+  * E(Total)                      =    -15.627184889290431
+    max(T1)                       =      0.419523817624416
+    max(T2)                       =      0.359349746713081
+    ||T1||                        =      0.715770275229316
+    ||T2||                        =      1.979739154563422
     
- Your calculation took 0.03143400 seconds
-*** PSI4 exiting successfully. Buy a developer a beer!
+
+  Your calculation took 0.16078700 seconds
+	MR-DSRG-PT2 energy................................................PASSED
+
+*** Psi4 exiting successfully. Buy a developer a beer!

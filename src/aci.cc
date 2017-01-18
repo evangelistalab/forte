@@ -227,14 +227,14 @@ void AdaptiveCI::startup()
         reference_type_ = options_.get_str("ACI_INITIAL_SPACE");
     }
 
-    diag_method_ = DLSolver;
+    diag_method_ = DLString;
     if(options_["DIAG_ALGORITHM"].has_changed()){
         if (options_.get_str("DIAG_ALGORITHM") == "FULL"){
             diag_method_ = Full;
         } else if (options_.get_str("DIAG_ALGORITHM") == "DLSTRING"){
             diag_method_ = DLString;
-        } else if (options_.get_str("DIAG_ALGORITHM") == "DLDISK"){
-            diag_method_ = DLDisk;
+        } else if (options_.get_str("DIAG_ALGORITHM") == "SOLVER"){
+            diag_method_ = DLSolver;
         }
     }
     aimed_selection_ = false;
@@ -2420,13 +2420,21 @@ void AdaptiveCI::compute_aci( SharedMatrix& PQ_evecs, SharedVector& PQ_evals )
 {
 
     bool print_refs = false;
+    bool multi_root = false;
+    
+    if( options_["FIRST_ITER_ROOTS"].has_changed() ){
+        multi_root = options_.get_bool("FIRST_ITER_ROOTS");
+    }
+
 	if(options_["PRINT_REFS"].has_changed()){
 		print_refs = options_.get_bool("PRINT_REFS");
 	}
 
     if((options_.get_str("EXCITED_ALGORITHM") == "ROOT_ORTHOGONALIZE" or 
         options_.get_str("EXCITED_ALGORITHM") == "MULTISTATE" or
-        options_.get_str("EXCITED_ALGORITHM") == "ROOT_COMBINE") and root_ == 0){
+        options_.get_str("EXCITED_ALGORITHM") == "ROOT_COMBINE") and 
+        root_ == 0 and 
+        !multi_root){
         nroot_ = 1;
     } 
 
