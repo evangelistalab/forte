@@ -1173,10 +1173,22 @@ void SigmaVectorList::compute_sigma(SharedVector sigma, SharedVector b)
         }
     }
 
+#pragma omp parallel
+{
+    int num_thread = omp_get_max_threads();
+    int tid = omp_get_thread_num();
+    
+    size_t bin_size = size_ / num_thread;
+    bin_size += ( tid < (size_ % num_thread) ) ? 1 : 0;
 
-    for (size_t J = 0; J < size_; ++J){
+    size_t start_idx = ( tid < (size_ % num_thread) ) ? tid * bin_size : (size_ % num_thread)*(bin_size + 1) + (tid - (size_ % num_thread))*bin_size;
+    size_t end_idx   = start_idx + bin_size;
+
+    std::vector<double> sigma_td(bin_size,0.0);
+
+    for (size_t J = start_idx, counter = 0; J < end_idx; ++J){
         // reference
-        sigma_p[J] += diag_[J] * b_p[J];
+        sigma_td[counter] += diag_[J] * b_p[J];
 
         // aa singles
         for (auto& aJ_mo_sign : a_ann_list[J]){
@@ -1186,17 +1198,14 @@ void SigmaVectorList::compute_sigma(SharedVector sigma, SharedVector b)
             for (auto& aaJ_mo_sign : a_cre_list[aJ_add]){
                 const size_t q = std::abs(aaJ_mo_sign.second) - 1;
                 if (p != q){
-                    double sign_q = aaJ_mo_sign.second > 0.0 ? 1.0 : -1.0;
-                    const double HIJ = space_[J].slater_rules_single_alpha_abs(p,q) * sign_p * sign_q;
-                    //const double HIJ = space_[aaJ_mo_sign.first].slater_rules(space_[J]);
                     const size_t I = aaJ_mo_sign.first;
-                    sigma_p[I] += HIJ * b_p[J];
+                    double sign_q = aaJ_mo_sign.second > 0.0 ? 1.0 : -1.0;
+                    const double HIJ = space_[I].slater_rules_single_alpha_abs(p,q) * sign_p * sign_q;
+                    sigma_td[counter] += HIJ * b_p[I];
                 }
             }
         }
-    }
     // bb singles
-    for (size_t J = 0; J < size_; ++J){
         for (auto& bJ_mo_sign : b_ann_list[J]){
             const size_t bJ_add = bJ_mo_sign.first;
             const size_t p = std::abs(bJ_mo_sign.second) - 1;
@@ -1204,17 +1213,14 @@ void SigmaVectorList::compute_sigma(SharedVector sigma, SharedVector b)
             for (auto& bbJ_mo_sign : b_cre_list[bJ_add]){
                 const size_t q = std::abs(bbJ_mo_sign.second) - 1;
                 if (p != q){
-                    double sign_q = bbJ_mo_sign.second > 0.0 ? 1.0 : -1.0;
-                    const double HIJ = space_[J].slater_rules_single_beta_abs(p,q) * sign_p * sign_q;
-                  //  const double HIJ = space_[bbJ_mo_sign.first].slater_rules(space_[J] );
                     const size_t I = bbJ_mo_sign.first;
-                    sigma_p[I] += HIJ * b_p[J];
+                    double sign_q = bbJ_mo_sign.second > 0.0 ? 1.0 : -1.0;
+                    const double HIJ = space_[I].slater_rules_single_beta_abs(p,q) * sign_p * sign_q;
+                    sigma_td[counter] += HIJ * b_p[I];
                 }
             }
         }
-    }
     // aaaa doubles
-    for (size_t J = 0; J < size_; ++J){
         for (auto& aaJ_mo_sign : aa_ann_list[J]){
             const size_t aaJ_add = std::get<0>(aaJ_mo_sign);
             const double sign_pq = std::get<1>(aaJ_mo_sign) > 0.0 ? 1.0 : -1.0;
@@ -1228,14 +1234,11 @@ void SigmaVectorList::compute_sigma(SharedVector sigma, SharedVector b)
                     const double sign_rs = std::get<1>(aaaaJ_mo_sign) > 0.0 ? 1.0 : -1.0;
                     const size_t I = aaaaJ_add;
                     const double HIJ = sign_pq * sign_rs * STLBitsetDeterminant::fci_ints_->tei_aa(p,q,r,s);
-                    sigma_p[I] += HIJ * b_p[J];
+                    sigma_td[counter] += HIJ * b_p[I];
                 }
             }
         }
-    }
-
     // aabb singles
-    for (size_t J = 0; J < size_; ++J){
         for (auto& abJ_mo_sign : ab_ann_list[J]){
             const size_t abJ_add = std::get<0>(abJ_mo_sign);
             const double sign_pq = std::get<1>(abJ_mo_sign) > 0.0 ? 1.0 : -1.0;
@@ -1249,13 +1252,11 @@ void SigmaVectorList::compute_sigma(SharedVector sigma, SharedVector b)
                     const double sign_rs = std::get<1>(ababJ_mo_sign) > 0.0 ? 1.0 : -1.0;
                     const size_t I = ababJ_add;
                     const double HIJ = sign_pq * sign_rs * STLBitsetDeterminant::fci_ints_->tei_ab(p,q,r,s);
-                    sigma_p[I] += HIJ * b_p[J];
+                    sigma_td[counter] += HIJ * b_p[I];
                 }
             }
         }
-    }
     // bbbb singles
-    for (size_t J = 0; J < size_; ++J){
         for (auto& bbJ_mo_sign : bb_ann_list[J]){
             const size_t bbJ_add = std::get<0>(bbJ_mo_sign);
             const double sign_pq = std::get<1>(bbJ_mo_sign) > 0.0 ? 1.0 : -1.0;
@@ -1269,12 +1270,23 @@ void SigmaVectorList::compute_sigma(SharedVector sigma, SharedVector b)
                     const double sign_rs = std::get<1>(bbbbJ_mo_sign) > 0.0 ? 1.0 : -1.0;
                     const size_t I = bbbbJ_add;
                     const double HIJ = sign_pq * sign_rs * STLBitsetDeterminant::fci_ints_->tei_bb(p,q,r,s);
-                    sigma_p[I] += HIJ * b_p[J];
+                    sigma_td[counter] += HIJ * b_p[I];
                 }
             }
         }
+        counter++;
     }
 
+    #pragma omp critical
+    {
+        size_t counter = 0;
+        for( size_t I = start_idx; I < end_idx; ++I ){
+            sigma_p[I] = sigma_td[counter];
+            counter++;
+        }
+    }
+
+}
 }
 
 
