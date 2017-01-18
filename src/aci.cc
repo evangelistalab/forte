@@ -199,14 +199,14 @@ void AdaptiveCI::startup()
         reference_type_ = options_.get_str("ACI_INITIAL_SPACE");
     }
 
-    diag_method_ = DLSolver;
+    diag_method_ = DLString;
     if(options_["DIAG_ALGORITHM"].has_changed()){
         if (options_.get_str("DIAG_ALGORITHM") == "FULL"){
             diag_method_ = Full;
         } else if (options_.get_str("DIAG_ALGORITHM") == "DLSTRING"){
             diag_method_ = DLString;
-        } else if (options_.get_str("DIAG_ALGORITHM") == "DLDISK"){
-            diag_method_ = DLDisk;
+        } else if (options_.get_str("DIAG_ALGORITHM") == "SOLVER"){
+            diag_method_ = DLSolver;
         }
     }
     aimed_selection_ = false;

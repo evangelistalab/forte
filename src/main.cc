@@ -248,7 +248,7 @@ read_options(std::string name, Options &options)
         options.add_bool("SELECT",false);
 
         /*- The diagonalization method -*/
-        options.add_str("DIAG_ALGORITHM","DLSTRING","DAVIDSON FULL DAVIDSONLIST SOLVER DLSTRING DLDISK");
+        options.add_str("DIAG_ALGORITHM","DLSTRING","DAVIDSON FULL DAVIDSONLIST SOLVER DLSTRING");
 
         /*- Force the diagonalization procedure?  -*/
         options.add_bool("FORCE_DIAG_METHOD", false);

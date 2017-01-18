@@ -41,7 +41,7 @@ set forte {
   charge 0
   enforce_spin_complete true
   prescreen_threshold 0.0
-  diag_algorithm dlstring
+ # diag_algorithm dlstring
 }
 
 energy('scf')
