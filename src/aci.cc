@@ -607,9 +607,6 @@ double AdaptiveCI::compute_energy()
         }
         
     }
-    outfile->Flush();
-
-
    // test_ops(PQ_space_, PQ_evecs);
 
 
@@ -670,22 +667,22 @@ void AdaptiveCI::print_final( std::vector<STLBitsetDeterminant>& dets, SharedMat
 
         print_wfn(dets, PQ_evecs, nroot_);
 
-        outfile->Printf("\n\n     Order		 # of Dets        Total |c^2|   ");
-        outfile->Printf(  "\n  __________ 	____________   ________________ ");
-        wfn_analyzer(dets, PQ_evecs, nroot_);	
+    //    outfile->Printf("\n\n     Order		 # of Dets        Total |c^2|   ");
+    //    outfile->Printf(  "\n  __________ 	____________   ________________ ");
+    //    wfn_analyzer(dets, PQ_evecs, nroot_);	
     }
 
-   // if(options_.get_bool("DETERMINANT_HISTORY")){
-   // 	outfile->Printf("\n Det history (number,cycle,origin)");
-   // 	size_t counter = 0;
-   // 	for( auto &I : PQ_space_ ){
-   // 		outfile->Printf("\n Det number : %zu", counter);
-   // 		for( auto &n : det_history_[I]){
-   // 			outfile->Printf("\n %zu	   %s", n.first, n.second.c_str());		
-   // 		}
-   // 		++counter;
-   // 	}
-   // }
+    if(options_.get_bool("DETERMINANT_HISTORY")){
+    	outfile->Printf("\n Det history (number,cycle,origin)");
+    	size_t counter = 0;
+    	for( auto &I : PQ_space_ ){
+    		outfile->Printf("\n Det number : %zu", counter);
+    		for( auto &n : det_history_[I]){
+    			outfile->Printf("\n %zu	   %s", n.first, n.second.c_str());		
+    		}
+    		++counter;
+    	}
+    }
 
 }
 
@@ -1637,7 +1634,7 @@ pVector<std::pair<double, double>, std::pair<size_t,double>> AdaptiveCI::compute
 	double norm;
 	double S2;
 	double S;
-	pVector<std::pair<double,double>, std::pair<size_t, double> > spin_vec;
+	pVector<std::pair<double,double>, std::pair<size_t, double> > spin_vec(nroot);
 
 	for(int n = 0; n < nroot; ++n){
 		//Compute the expectation value of the spin
@@ -1671,6 +1668,7 @@ pVector<std::pair<double, double>, std::pair<size_t,double>> AdaptiveCI::compute
 		
 		S2 = 0.0;
 		norm = 0.0;
+        #pragma omp parallel for reduction(+:S2,norm)
 		for(size_t sI = 0; sI < max_I; ++sI){
 			size_t I = det_weight[sI].second;
 			for(size_t sJ = 0; sJ < max_I; ++sJ){
@@ -1686,7 +1684,7 @@ pVector<std::pair<double, double>, std::pair<size_t,double>> AdaptiveCI::compute
 		S2 /= norm;
 		S2  = std::fabs(S2);
 		S   = std::fabs( 0.5*(std::sqrt(1.0 + 4.0*S2)-1.0) );
-		spin_vec.push_back( make_pair(make_pair(S,S2), make_pair(max_I, sum_weight)));
+		spin_vec[n] =  make_pair(make_pair(S,S2), make_pair(max_I, sum_weight));
 	}
 	return spin_vec;
 }
@@ -1703,18 +1701,18 @@ void AdaptiveCI::wfn_analyzer(std::vector<STLBitsetDeterminant>& det_space, Shar
         occ[nact_ + labeled_orb_en[i].second.second] = 1;
     } 
 
-    bool print_final_wfn = options_.get_bool("SAVE_FINAL_WFN");
+    //bool print_final_wfn = options_.get_bool("SAVE_FINAL_WFN");
 
-    std::ofstream final_wfn;
-    if( print_final_wfn ){
-        final_wfn.open("final_wfn_"+ std::to_string(root_) +  ".txt");
-        final_wfn << det_space.size() << "  " << nact_ << "  " << nalpha_ << "  " << nbeta_ << endl;
-    }
+   // std::ofstream final_wfn;
+   // if( print_final_wfn ){
+   //     final_wfn.open("final_wfn_"+ std::to_string(root_) +  ".txt");
+   //     final_wfn << det_space.size() << "  " << nact_ << "  " << nalpha_ << "  " << nbeta_ << endl;
+   // }
     
     STLBitsetDeterminant rdet(occ);
 	auto ref_bits = rdet.bits();
 	for(int n = 0; n < nroot; ++n){
-		pVector<size_t,double> excitation_counter( 1 + (1 + cycle_) * 2 );
+		pVector<size_t,double> excitation_counter( 1 + (1 + cycle_) * 2, std::make_pair(0,0.0) );
 //		pVector<double,size_t> det_weight;
 //		for( size_t I = 0, max = det_space.size(); I < max; ++I){
 //			det_weight.push_back(std::make_pair(std::fabs(evecs->get(I,n)),I));
@@ -1740,21 +1738,21 @@ void AdaptiveCI::wfn_analyzer(std::vector<STLBitsetDeterminant>& det_space, Shar
 			excitation_counter[ndiff] = std::make_pair(excitation_counter[ndiff].first + 1,
 													   excitation_counter[ndiff].second + coeff);
 
-            if( print_final_wfn and (n == ref_root_) ){
+   //         if( print_final_wfn and (n == ref_root_) ){
 
-                auto abits = det_space[I].get_alfa_bits_vector_bool();
-                auto bbits = det_space[I].get_beta_bits_vector_bool();
+   //             auto abits = det_space[I].get_alfa_bits_vector_bool();
+   //             auto bbits = det_space[I].get_beta_bits_vector_bool();
 
-                final_wfn << std::setw(18) << std::setprecision(12) <<  evecs->get(I,n) << "  ";// <<  abits << "  " << bbits << det_space[I].str().c_str() << endl;
-                for( size_t i = 0; i < nact_; ++i ){
-                    final_wfn << abits[i];
-                }
-                final_wfn << "   ";
-                for( size_t i = 0; i < nact_; ++i ){
-                    final_wfn << bbits[i];
-                }
-                final_wfn << endl;
-            } 
+   //             final_wfn << std::setw(18) << std::setprecision(12) <<  evecs->get(I,n) << "  ";// <<  abits << "  " << bbits << det_space[I].str().c_str() << endl;
+   //             for( size_t i = 0; i < nact_; ++i ){
+   //                 final_wfn << abits[i];
+   //             }
+   //             final_wfn << "   ";
+   //             for( size_t i = 0; i < nact_; ++i ){
+   //                 final_wfn << bbits[i];
+   //             }
+   //             final_wfn << endl;
+   //         } 
 
 		}
 		int order = 0;
@@ -1767,7 +1765,8 @@ void AdaptiveCI::wfn_analyzer(std::vector<STLBitsetDeterminant>& det_space, Shar
 		}
 		outfile->Printf("\n\n  Highest-order excitation searched:     %zu  \n", excitation_counter.size() - 1);
 	}
-    if( print_final_wfn ) final_wfn.close();
+   // if( print_final_wfn ) final_wfn.close();
+    outfile->Flush();
 }
 
 oVector<double, int, int> AdaptiveCI::sym_labeled_orbitals(std::string type)
@@ -1828,7 +1827,7 @@ void AdaptiveCI::print_wfn(std::vector<STLBitsetDeterminant>& space,SharedMatrix
         outfile->Printf("\n\n  Most important contributions to root %3d:",n);
 
         std::vector<std::pair<double,size_t> > det_weight;
-        for (size_t I = 0; I < space.size(); ++I){
+        for (size_t I = 0,max_I = space.size(); I < max_I; ++I){
             det_weight.push_back(std::make_pair(std::fabs(evecs->get(I,n)),I));
         }
         std::sort(det_weight.begin(),det_weight.end());
@@ -1843,7 +1842,9 @@ void AdaptiveCI::print_wfn(std::vector<STLBitsetDeterminant>& space,SharedMatrix
                     space[det_weight[I].second].str().c_str());
         }
 
+        Timer spint;
 		auto spins = compute_spin(space,evecs,nroot);
+        outfile->Printf("\n  Time spent computing spin: %1.6f", spint.get());
 		state_label = s2_labels[std::round(spins[n].first.first * 2.0)];
 		root_spin_vec_.clear();
 		root_spin_vec_[n] = make_pair(spins[n].first.first, spins[n].first.second);
