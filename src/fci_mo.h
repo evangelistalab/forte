@@ -330,13 +330,13 @@ protected:
     size_t idx_diffused_;
     vector<size_t> diffused_orbs_;
 
+    /// Compute permanent dipole moments
+    void compute_permanent_dipole();
     /// Transition dipoles
-    vector<vector<double>> trans_dipole_;
+    map<string, vector<double>> trans_dipole_;
     /// Compute transition dipole
     void compute_trans_dipole();
 
-    /// Oscillator strengths
-    vector<vector<double>> osc_str_;
     /// Compute oscillator strength
     void compute_oscillator_strength();
 

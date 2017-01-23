@@ -34,7 +34,7 @@ set globals{
   mcscf_diis_start    4
   num_roots           2
   follow_root         2
-  avg_states          [1,2]
+  avg_states          [0,1]
 }
 
 set forte{
@@ -51,7 +51,7 @@ set forte{
   e_convergence      12
   cas_type           cas
   avg_state          [[0,1,2]]
-  dsrg_sa_heff       avg_states
+  dsrg_sa_heff       full
 }
 
 Emcscf, wfn = energy('casscf', return_wfn=True)
