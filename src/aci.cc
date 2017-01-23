@@ -56,46 +56,8 @@ namespace psi{ namespace forte{
     #define omp_get_num_threads() 1
 #endif
 
-
-/**
- * Template used to quickly access
- * vectors that store three related quantities
- **/
-
-template <typename a, typename b, typename c>
-using oVector = std::vector<std::pair<a, std::pair< b,c >> >;
-
-/**
- * Template for vector of pairs
- **/
-
-template < typename a, typename b>
-using pVector = std::vector<std::pair< a,b> >;
-
-inline double clamp(double x, double a, double b)
-
-{
-    return x < a ? a : (x > b ? b : x);
-}
-
 bool pairComp(const std::pair<double, STLBitsetDeterminant> E1, const std::pair<double, STLBitsetDeterminant> E2){
 	return E1.first < E2.first;
-}
-
-/**
- * This is a smooth step function that is
- * 0.0 for x <= edge0
- * 1.0 for x >= edge1
- */
-inline double smootherstep(double edge0, double edge1, double x)
-{
-    if (edge1 == edge0){
-        return x <= edge0 ? 0.0 : 1.0;
-    }
-    // Scale, and clamp x to 0..1 range
-    x = clamp((x - edge0)/(edge1 - edge0), 0.0, 1.0);
-    // Evaluate polynomial
-    return x * x * x *( x *( x * 6. - 15.) + 10.);
 }
 
 AdaptiveCI::AdaptiveCI(SharedWavefunction ref_wfn, Options &options,
@@ -196,9 +158,6 @@ void AdaptiveCI::startup()
     if(options_["ACI_PREITERATIONS"].has_changed()){
         pre_iter_ = options_.get_int("ACI_PREITERATIONS");
     }
-
-    do_smooth_ = options_.get_bool("SMOOTH");
-    smooth_threshold_ = options_.get_double("SMOOTH_THRESHOLD");
 
 	spin_tol_ = options_.get_double("SPIN_TOL");
 	//set the initial S^@ guess as input multiplicity
@@ -329,9 +288,9 @@ std::vector<int> AdaptiveCI::get_occupation()
 	}
 
 	// Grab an ordered list of orbital energies, sym labels, and idxs
-	oVector<double,int,int> labeled_orb_en;
-	oVector<double,int,int> labeled_orb_en_alfa;
-	oVector<double,int,int> labeled_orb_en_beta;
+	std::vector<std::tuple<double,int,int>> labeled_orb_en;
+	std::vector<std::tuple<double,int,int>> labeled_orb_en_alfa;
+	std::vector<std::tuple<double,int,int>> labeled_orb_en_beta;
 	
 	// For a restricted reference
 	if(ref_type == "RHF" or ref_type == "RKS" or ref_type == "ROHF"){
@@ -339,10 +298,10 @@ std::vector<int> AdaptiveCI::get_occupation()
 
 		// Build initial reference determinant from restricted reference
 		for(int i = 0 ; i < nalpha_; ++i){
-			occupation[labeled_orb_en[i].second.second] = 1;
+			occupation[std::get<2>(labeled_orb_en[i])] = 1;
 		}
 		for(int i = 0; i < nbeta_; ++i){
-			occupation[nact_ + labeled_orb_en[i].second.second] = 1;
+			occupation[nact_ + std::get<2>(labeled_orb_en[i])] = 1;
 		}
 
 		// Loop over as many outer-shell electrons as needed to get correct sym
@@ -350,29 +309,25 @@ std::vector<int> AdaptiveCI::get_occupation()
 		
 			bool add = false;
 			// Remove electron from highest energy docc
-			occupation[labeled_orb_en[nalpha_ - k].second.second] = 0;
-		//	outfile->Printf("\n  Electron removed from %d, out of %d", labeled_orb_en[nalpha_ - k].second.second, nactel_);
+			occupation[std::get<2>(labeled_orb_en[nalpha_ - k])] = 0;
 		
 			// Determine proper symmetry for new occupation
 			orb_sym = wavefunction_symmetry_; 
 			
 			if(wavefunction_multiplicity_ == 1){
-				orb_sym = labeled_orb_en[nalpha_ - 1].second.first ^ orb_sym;
+				orb_sym = std::get<1>(labeled_orb_en[nalpha_ - 1]) ^ orb_sym;
 			}else{
 				for(int i = 1; i <= nsym; ++i){
-					orb_sym = labeled_orb_en[nalpha_ - i].second.first ^ orb_sym;
+					orb_sym = std::get<1>(labeled_orb_en[nalpha_ - i]) ^ orb_sym;
 				}
-				orb_sym  = labeled_orb_en[nalpha_ - k].second.first ^ orb_sym;
+				orb_sym = std::get<1>(labeled_orb_en[nalpha_ - k]) ^ orb_sym;
 			}
-
-		//	outfile->Printf("\n  Need orbital of symmetry %d", orb_sym);
 
 			// Add electron to lowest-energy orbital of proper symmetry
 			// Loop from current occupation to max MO until correct orbital is reached
 			for(int i = nalpha_ - k, maxi = nact_; i < maxi; ++i){
-				if(orb_sym == labeled_orb_en[i].second.first and occupation[labeled_orb_en[i].second.second] != 1){
-					occupation[labeled_orb_en[i].second.second] = 1;
-		//			outfile->Printf("\n  Added electron to %d", labeled_orb_en[i].second.second);
+				if(orb_sym == std::get<1>(labeled_orb_en[i]) and occupation[std::get<2>(labeled_orb_en[i])] != 1){
+					occupation[std::get<2>(labeled_orb_en[i])] = 1;
 					add = true;
 					break;
 				}else{
@@ -381,8 +336,7 @@ std::vector<int> AdaptiveCI::get_occupation()
 			}
 			//If a new occupation could not be created, put electron back and remove a different one
 			if(!add){
-				occupation[labeled_orb_en[nalpha_ - k].second.second] = 1;
-		//		outfile->Printf("\n  No orbital of symmetry %d available! Putting electron back...", orb_sym);
+				occupation[std::get<2>(labeled_orb_en[nalpha_ - k])] = 1;
 				++k;
 			}else{
 				break;
@@ -399,10 +353,10 @@ std::vector<int> AdaptiveCI::get_occupation()
 		// For singlets, this will be closed-shell
 
 		for(int i = 0; i < nalpha_; ++i){
-			occupation[labeled_orb_en_alfa[i].second.second] = 1;
+			occupation[std::get<2>(labeled_orb_en_alfa[i])] = 1;
 		}
 		for(int i = 0; i < nbeta_; ++i){
-			occupation[labeled_orb_en_beta[i].second.second + nact_] = 1;
+			occupation[std::get<2>(labeled_orb_en_beta[i]) + nact_] = 1;
 		}
 
 		if( nalpha_ >= nbeta_ ) {
@@ -412,30 +366,26 @@ std::vector<int> AdaptiveCI::get_occupation()
 				
 				bool add = false;
 				// Remove highest energy alpha electron
-				occupation[labeled_orb_en_alfa[nalpha_ - k].second.second] = 0;
+				occupation[std::get<2>(labeled_orb_en_alfa[nalpha_ - k])] = 0;
 
-		//		outfile->Printf("\n  Electron removed from %d, out of %d", labeled_orb_en_alfa[nalpha_ - k].second.second, nactel_);
 
 				//Determine proper symmetry for new electron
 				
 				orb_sym = wavefunction_symmetry_;
 
 				if(wavefunction_multiplicity_ == 1){
-					orb_sym = labeled_orb_en_alfa[nalpha_ - 1].second.first ^ orb_sym;
+					orb_sym = std::get<1>(labeled_orb_en_alfa[nalpha_ - 1]) ^ orb_sym;
 				}else{
 					for(int i = 1; i <= nsym; ++i){
-						orb_sym = labeled_orb_en_alfa[nalpha_ - i].second.first ^ orb_sym;
+						orb_sym = std::get<1>(labeled_orb_en_alfa[nalpha_ - i]) ^ orb_sym;
 					}
-					orb_sym = labeled_orb_en_alfa[nalpha_ - k].second.first ^ orb_sym;
+					orb_sym = std::get<1>(labeled_orb_en_alfa[nalpha_ - k]) ^ orb_sym;
 				}
-
-		//		outfile->Printf("\n  Need orbital of symmetry %d", orb_sym);
 
 				// Add electron to lowest-energy orbital of proper symmetry
 				for(int i = nalpha_ - k; i < nactel_; ++i){
-					if(orb_sym == labeled_orb_en_alfa[i].second.first and occupation[labeled_orb_en_alfa[i].second.second] != 1 ){
-						occupation[labeled_orb_en_alfa[i].second.second] = 1;
-		//				outfile->Printf("\n  Added electron to %d", labeled_orb_en_alfa[i].second.second);
+					if(orb_sym == std::get<1>(labeled_orb_en_alfa[i]) and occupation[std::get<2>(labeled_orb_en_alfa[i])] != 1 ){
+						occupation[std::get<2>(labeled_orb_en_alfa[i])] = 1;
 						add = true;
 						break;
 					}else{
@@ -447,8 +397,7 @@ std::vector<int> AdaptiveCI::get_occupation()
 				// add electron back and try a different one
 
 				if(!add){
-					occupation[labeled_orb_en_alfa[nalpha_ - k].second.second] = 1;
-		//			outfile->Printf("\n  No orbital of symmetry %d available! Putting it back...", orb_sym);
+					occupation[std::get<2>(labeled_orb_en_alfa[nalpha_ - k])] = 1;
 					++k;
 				}else{
 					break;
@@ -462,29 +411,25 @@ std::vector<int> AdaptiveCI::get_occupation()
 				bool add = false;
 
 				// Remove highest-energy beta electron
-				occupation[labeled_orb_en_beta[nbeta_ - k].second.second] = 0;
-		//		outfile->Printf("\n  Electron removed from %d, out of %d", labeled_orb_en_beta[nbeta_ - k].second.second, nactel_);
+				occupation[std::get<2>(labeled_orb_en_beta[nbeta_ - k])] = 0;
 
 				//Determine proper symetry for new occupation
 				orb_sym = wavefunction_symmetry_;
 
 				if(wavefunction_multiplicity_ == 1){
-					orb_sym = labeled_orb_en_beta[nbeta_ - 1].second.first ^ orb_sym;
+					orb_sym = std::get<1>(labeled_orb_en_beta[nbeta_ - 1]) ^ orb_sym;
 				}else{
 					for(int i = 1; i <= nsym; ++i){
-						orb_sym = labeled_orb_en_beta[nbeta_ - i].second.first ^ orb_sym;
+						orb_sym = std::get<1>(labeled_orb_en_beta[nbeta_ - i]) ^ orb_sym;
 					}
-					orb_sym = labeled_orb_en_beta[nbeta_ - k].second.first ^  orb_sym;
+					orb_sym = std::get<1>(labeled_orb_en_beta[nbeta_ - k]) ^  orb_sym;
 				}
-
-		//		outfile->Printf("\n  Need orbital of symmetry %d", orb_sym);
 
 				// Add electron to lowest-energy beta orbital
 				
 				for(int i = nbeta_ - k; i < nactel_; ++i){
-					if( orb_sym == labeled_orb_en_beta[i].second.first and occupation[labeled_orb_en_beta[i].second.second] != 1){
-						occupation[labeled_orb_en_beta[i].second.second] = 1;
-		//				outfile->Printf("\n Added electron to %d", labeled_orb_en_beta[i].second.second);
+					if( orb_sym == std::get<1>(labeled_orb_en_beta[i]) and occupation[std::get<2>(labeled_orb_en_beta[i])] != 1){
+						occupation[std::get<2>(labeled_orb_en_beta[i])] = 1;
 						add = true;
 						break;
 					}
@@ -494,8 +439,7 @@ std::vector<int> AdaptiveCI::get_occupation()
 				// replace the electron and try again
 
 				if(!add){
-					occupation[labeled_orb_en_beta[nbeta_ - k].second.second] = 1;
-		//			outfile->Printf("\n  No orbital of symmetry %d available! Putting electron back...", orb_sym);
+					occupation[std::get<2>(labeled_orb_en_beta[nbeta_ - k])] = 1;
 					++k;
 				}else{
 					break;
@@ -1038,171 +982,172 @@ void AdaptiveCI::get_excited_determinants( int nroot, SharedMatrix evecs, std::v
     }
 
     // Loop over reference determinants
-#pragma omp parallel
-{
-    if ( omp_get_thread_num() == 0 ){
-        outfile->Printf("\n  Using %d threads.", omp_get_max_threads());
-    }
-    //This will store the excited determinant info for each thread
-    std::vector<std::pair<STLBitsetDeterminant, std::vector<double>>> thread_ex_dets;//( noalpha * nvalpha  );
-    
-    #pragma omp for schedule(guided) 
-    for( size_t P = 0; P < max_P; ++P ){
-        STLBitsetDeterminant& det(P_space[P]);
-
-        std::vector<int> aocc = det.get_alfa_occ();
-        std::vector<int> bocc = det.get_beta_occ();
-        std::vector<int> avir = det.get_alfa_vir();
-        std::vector<int> bvir = det.get_beta_vir();
-
-        int noalpha = aocc.size();
-        int nobeta  = bocc.size();
-        int nvalpha = avir.size();
-        int nvbeta  = bvir.size();
-        STLBitsetDeterminant new_det(det);
-
-        //Generate alpha excitations 
-        for (int i = 0; i < noalpha; ++i){
-            int ii = aocc[i];
-            for (int a = 0; a < nvalpha; ++a){
-                int aa = avir[a];
-                if ((mo_symmetry_[ii] ^ mo_symmetry_[aa]) == 0){
-                    double HIJ = det.slater_rules_single_alpha(ii,aa);
-	    			if ( (std::fabs(HIJ) * evecs->get_row(0,P)->norm() >= screen_thresh_) ){
-                        new_det = det;
-                        new_det.set_alfa_bit(ii,false);
-                        new_det.set_alfa_bit(aa,true);
-	    				if( (P_hash.count(new_det) == 0)){
-                            std::vector<double> coupling(nroot, 0.0);
-	    				    for (int n = 0; n < nroot; ++n){
-	    				    	coupling[n] += HIJ * evecs->get(P,n);
-	    				    }
-                           // thread_ex_dets[i * noalpha + a] = std::make_pair(new_det,coupling);
-                            thread_ex_dets.push_back( std::make_pair(new_det,coupling) );
-	    				}
-	    			}
-                }
-            }
+    #pragma omp parallel
+    {
+        if ( omp_get_thread_num() == 0 ){
+            outfile->Printf("\n  Using %d threads.", omp_get_max_threads());
         }
+        //This will store the excited determinant info for each thread
+        std::vector<std::pair<STLBitsetDeterminant, std::vector<double>>> thread_ex_dets;//( noalpha * nvalpha  );
+        
+        #pragma omp for schedule(guided) 
+        for( size_t P = 0; P < max_P; ++P ){
+            STLBitsetDeterminant& det(P_space[P]);
 
-        // Generate beta excitations
-        for (int i = 0; i < nobeta; ++i){
-            int ii = bocc[i];
-            for (int a = 0; a < nvbeta; ++a){
-                int aa = bvir[a];
-                if ((mo_symmetry_[ii] ^ mo_symmetry_[aa]) == 0){
-                    double HIJ = det.slater_rules_single_beta(ii,aa);
-	    			if ( (std::fabs(HIJ) * evecs->get_row(0,P)->norm() >= screen_thresh_) ){
-                        new_det = det;
-                        new_det.set_beta_bit(ii,false);
-                        new_det.set_beta_bit(aa,true);
-                        if (P_hash.count(new_det) == 0){
-                            std::vector<double> coupling(nroot, 0.0);
-	    				    for (int n = 0; n < nroot; ++n){
-	    				    	coupling[n] += HIJ * evecs->get(P,n);
-	    				    }
-                           // thread_ex_dets[i * nobeta + a] = std::make_pair(new_det,coupling);
-                            thread_ex_dets.push_back( std::make_pair(new_det,coupling) );
-                        }
-                    }
-                }
-            }
-        }
+            std::vector<int> aocc = det.get_alfa_occ();
+            std::vector<int> bocc = det.get_beta_occ();
+            std::vector<int> avir = det.get_alfa_vir();
+            std::vector<int> bvir = det.get_beta_vir();
 
-        // Generate aa excitations
-        for (int i = 0; i < noalpha; ++i){
-            int ii = aocc[i];
-            for (int j = i + 1; j < noalpha; ++j){
-                int jj = aocc[j];
+            int noalpha = aocc.size();
+            int nobeta  = bocc.size();
+            int nvalpha = avir.size();
+            int nvbeta  = bvir.size();
+            STLBitsetDeterminant new_det(det);
+
+            //Generate alpha excitations 
+            for (int i = 0; i < noalpha; ++i){
+                int ii = aocc[i];
                 for (int a = 0; a < nvalpha; ++a){
                     int aa = avir[a];
-                    for (int b = a + 1; b < nvalpha; ++b){
-                        int bb = avir[b];
-                        if ((mo_symmetry_[ii] ^ mo_symmetry_[jj] ^ mo_symmetry_[aa] ^ mo_symmetry_[bb]) == 0){
-                            double HIJ = fci_ints_->tei_aa(ii,jj,aa,bb);
-	    					if ( (std::fabs(HIJ) * evecs->get_row(0,P)->norm() >= screen_thresh_) ){
-                                new_det = det;
-                                new_det.set_alfa_bit(ii,false);
-                                new_det.set_alfa_bit(jj,false);
-                                new_det.set_alfa_bit(aa,true);
-                                new_det.set_alfa_bit(bb,true);
-                                HIJ *= det.slater_sign_alpha(ii) * det.slater_sign_alpha(jj) * new_det.slater_sign_alpha(aa) * new_det.slater_sign_alpha(bb);
-
-                                if (P_hash.count(new_det) == 0){
-                                    std::vector<double> coupling(nroot,0.0);
-                                    for( int n = 0; n < nroot; ++n ){
-                                        coupling[n] += HIJ * evecs->get(P,n);
-                                    }
-                                    //thread_ex_dets[i * noalpha*noalpha*nvalpha + j*nvalpha*noalpha +  a*nvalpha + b ] = std::make_pair(new_det,coupling);
-                                    thread_ex_dets.push_back( std::make_pair(new_det,coupling) );
-                                }
-                            }
-                        }
+                    if ((mo_symmetry_[ii] ^ mo_symmetry_[aa]) == 0){
+                        double HIJ = det.slater_rules_single_alpha(ii,aa);
+	        			if ( (std::fabs(HIJ) * evecs->get_row(0,P)->norm() >= screen_thresh_) ){
+                            new_det = det;
+                            new_det.set_alfa_bit(ii,false);
+                            new_det.set_alfa_bit(aa,true);
+	        				if( (P_hash.count(new_det) == 0)){
+                                std::vector<double> coupling(nroot, 0.0);
+	        				    for (int n = 0; n < nroot; ++n){
+	        				    	coupling[n] += HIJ * evecs->get(P,n);
+	        				    }
+                               // thread_ex_dets[i * noalpha + a] = std::make_pair(new_det,coupling);
+                                thread_ex_dets.push_back( std::make_pair(new_det,coupling) );
+	        				}
+	        			}
                     }
                 }
             }
-        }
 
-        // Generate ab excitations
-        for (int i = 0; i < noalpha; ++i){
-            int ii = aocc[i];
-            for (int j = 0; j < nobeta; ++j){
-                int jj = bocc[j];
-                for (int a = 0; a < nvalpha; ++a){
-                    int aa = avir[a];
-                    for (int b = 0; b < nvbeta; ++b){
-                        int bb = bvir[b];
-                        if ((mo_symmetry_[ii] ^ mo_symmetry_[jj] ^ mo_symmetry_[aa] ^ mo_symmetry_[bb]) == 0){
-                            double HIJ = fci_ints_->tei_ab(ii,jj,aa,bb);
-	    					if ( (std::fabs(HIJ) * evecs->get_row(0,P)->norm() >= screen_thresh_) ){
-                                new_det = det;
-                                new_det.set_alfa_bit(ii,false);
-                                new_det.set_beta_bit(jj,false);
-                                new_det.set_alfa_bit(aa,true);
-                                new_det.set_beta_bit(bb,true);
-
-                                HIJ *= det.slater_sign_alpha(ii) * det.slater_sign_beta(jj) * new_det.slater_sign_alpha(aa) * new_det.slater_sign_beta(bb);
-
-                                if (P_hash.count(new_det) == 0){
-                                    std::vector<double> coupling(nroot,0.0);
-                                    for( int n = 0; n < nroot; ++n ){
-                                        coupling[n] += HIJ * evecs->get(P,n);
-                                    }
-                                    //thread_ex_dets[i * nobeta * nvalpha *nvbeta + j * bvalpha * nvbeta + a * nvalpha]
-                                    thread_ex_dets.push_back( std::make_pair( new_det, coupling ));
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-        }
-
-        // Generate bb excitations
-        for (int i = 0; i < nobeta; ++i){
-            int ii = bocc[i];
-            for (int j = i + 1; j < nobeta; ++j){
-                int jj = bocc[j];
+            // Generate beta excitations
+            for (int i = 0; i < nobeta; ++i){
+                int ii = bocc[i];
                 for (int a = 0; a < nvbeta; ++a){
                     int aa = bvir[a];
-                    for (int b = a + 1; b < nvbeta; ++b){
-                        int bb = bvir[b];
-                        if ((mo_symmetry_[ii] ^ (mo_symmetry_[jj] ^ (mo_symmetry_[aa] ^ mo_symmetry_[bb]))) == 0){
-                            double HIJ = fci_ints_->tei_bb(ii,jj,aa,bb);
-	    					if ( (std::fabs(HIJ) * evecs->get_row(0,P)->norm() >= screen_thresh_) ){
-                                new_det = det;
-                                new_det.set_beta_bit(ii,false);
-                                new_det.set_beta_bit(jj,false);
-                                new_det.set_beta_bit(aa,true);
-                                new_det.set_beta_bit(bb,true);
+                    if ((mo_symmetry_[ii] ^ mo_symmetry_[aa]) == 0){
+                        double HIJ = det.slater_rules_single_beta(ii,aa);
+	        			if ( (std::fabs(HIJ) * evecs->get_row(0,P)->norm() >= screen_thresh_) ){
+                            new_det = det;
+                            new_det.set_beta_bit(ii,false);
+                            new_det.set_beta_bit(aa,true);
+                            if (P_hash.count(new_det) == 0){
+                                std::vector<double> coupling(nroot, 0.0);
+	        				    for (int n = 0; n < nroot; ++n){
+	        				    	coupling[n] += HIJ * evecs->get(P,n);
+	        				    }
+                               // thread_ex_dets[i * nobeta + a] = std::make_pair(new_det,coupling);
+                                thread_ex_dets.push_back( std::make_pair(new_det,coupling) );
+                            }
+                        }
+                    }
+                }
+            }
 
-                                HIJ *= det.slater_sign_beta(ii) * det.slater_sign_beta(jj) * new_det.slater_sign_beta(aa) * new_det.slater_sign_beta(bb);
-                                if (P_hash.count(new_det) == 0){
-                                    std::vector<double> coupling(nroot,0.0);
-                                    for( int n = 0; n < nroot; ++n ){
-                                        coupling[n] += HIJ * evecs->get(P,n);
+            // Generate aa excitations
+            for (int i = 0; i < noalpha; ++i){
+                int ii = aocc[i];
+                for (int j = i + 1; j < noalpha; ++j){
+                    int jj = aocc[j];
+                    for (int a = 0; a < nvalpha; ++a){
+                        int aa = avir[a];
+                        for (int b = a + 1; b < nvalpha; ++b){
+                            int bb = avir[b];
+                            if ((mo_symmetry_[ii] ^ mo_symmetry_[jj] ^ mo_symmetry_[aa] ^ mo_symmetry_[bb]) == 0){
+                                double HIJ = fci_ints_->tei_aa(ii,jj,aa,bb);
+	        					if ( (std::fabs(HIJ) * evecs->get_row(0,P)->norm() >= screen_thresh_) ){
+                                    new_det = det;
+                                    new_det.set_alfa_bit(ii,false);
+                                    new_det.set_alfa_bit(jj,false);
+                                    new_det.set_alfa_bit(aa,true);
+                                    new_det.set_alfa_bit(bb,true);
+                                    HIJ *= det.slater_sign_alpha(ii) * det.slater_sign_alpha(jj) * new_det.slater_sign_alpha(aa) * new_det.slater_sign_alpha(bb);
+
+                                    if (P_hash.count(new_det) == 0){
+                                        std::vector<double> coupling(nroot,0.0);
+                                        for( int n = 0; n < nroot; ++n ){
+                                            coupling[n] += HIJ * evecs->get(P,n);
+                                        }
+                                        //thread_ex_dets[i * noalpha*noalpha*nvalpha + j*nvalpha*noalpha +  a*nvalpha + b ] = std::make_pair(new_det,coupling);
+                                        thread_ex_dets.push_back( std::make_pair(new_det,coupling) );
                                     }
-                                    thread_ex_dets.push_back( std::make_pair( new_det, coupling) ); 
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+
+            // Generate ab excitations
+            for (int i = 0; i < noalpha; ++i){
+                int ii = aocc[i];
+                for (int j = 0; j < nobeta; ++j){
+                    int jj = bocc[j];
+                    for (int a = 0; a < nvalpha; ++a){
+                        int aa = avir[a];
+                        for (int b = 0; b < nvbeta; ++b){
+                            int bb = bvir[b];
+                            if ((mo_symmetry_[ii] ^ mo_symmetry_[jj] ^ mo_symmetry_[aa] ^ mo_symmetry_[bb]) == 0){
+                                double HIJ = fci_ints_->tei_ab(ii,jj,aa,bb);
+	        					if ( (std::fabs(HIJ) * evecs->get_row(0,P)->norm() >= screen_thresh_) ){
+                                    new_det = det;
+                                    new_det.set_alfa_bit(ii,false);
+                                    new_det.set_beta_bit(jj,false);
+                                    new_det.set_alfa_bit(aa,true);
+                                    new_det.set_beta_bit(bb,true);
+
+                                    HIJ *= det.slater_sign_alpha(ii) * det.slater_sign_beta(jj) * new_det.slater_sign_alpha(aa) * new_det.slater_sign_beta(bb);
+
+                                    if (P_hash.count(new_det) == 0){
+                                        std::vector<double> coupling(nroot,0.0);
+                                        for( int n = 0; n < nroot; ++n ){
+                                            coupling[n] += HIJ * evecs->get(P,n);
+                                        }
+                                        //thread_ex_dets[i * nobeta * nvalpha *nvbeta + j * bvalpha * nvbeta + a * nvalpha]
+                                        thread_ex_dets.push_back( std::make_pair( new_det, coupling ));
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+
+            // Generate bb excitations
+            for (int i = 0; i < nobeta; ++i){
+                int ii = bocc[i];
+                for (int j = i + 1; j < nobeta; ++j){
+                    int jj = bocc[j];
+                    for (int a = 0; a < nvbeta; ++a){
+                        int aa = bvir[a];
+                        for (int b = a + 1; b < nvbeta; ++b){
+                            int bb = bvir[b];
+                            if ((mo_symmetry_[ii] ^ (mo_symmetry_[jj] ^ (mo_symmetry_[aa] ^ mo_symmetry_[bb]))) == 0){
+                                double HIJ = fci_ints_->tei_bb(ii,jj,aa,bb);
+	        					if ( (std::fabs(HIJ) * evecs->get_row(0,P)->norm() >= screen_thresh_) ){
+                                    new_det = det;
+                                    new_det.set_beta_bit(ii,false);
+                                    new_det.set_beta_bit(jj,false);
+                                    new_det.set_beta_bit(aa,true);
+                                    new_det.set_beta_bit(bb,true);
+
+                                    HIJ *= det.slater_sign_beta(ii) * det.slater_sign_beta(jj) * new_det.slater_sign_beta(aa) * new_det.slater_sign_beta(bb);
+                                    if (P_hash.count(new_det) == 0){
+                                        std::vector<double> coupling(nroot,0.0);
+                                        for( int n = 0; n < nroot; ++n ){
+                                            coupling[n] += HIJ * evecs->get(P,n);
+                                        }
+                                        thread_ex_dets.push_back( std::make_pair( new_det, coupling) ); 
+                                    }
                                 }
                             }
                         }
@@ -1210,197 +1155,23 @@ void AdaptiveCI::get_excited_determinants( int nroot, SharedMatrix evecs, std::v
                 }
             }
         }
-    //outfile->Printf("\n  Computed %zu dets", thread_ex_dets.size());
-    }
 
-    #pragma omp critical
-    {
-        for( size_t I = 0, maxI = thread_ex_dets.size(); I < maxI; ++I ){
-            std::vector<double>& coupling = thread_ex_dets[I].second;
-            STLBitsetDeterminant& det = thread_ex_dets[I].first;
-            if( V_hash.count(det) != 0 ){
-                for( int n = 0; n < nroot; ++n ){
-                    V_hash[det][n] += coupling[n]; 
+        #pragma omp critical
+        {
+            for( size_t I = 0, maxI = thread_ex_dets.size(); I < maxI; ++I ){
+                std::vector<double>& coupling = thread_ex_dets[I].second;
+                STLBitsetDeterminant& det = thread_ex_dets[I].first;
+                if( V_hash.count(det) != 0 ){
+                    for( int n = 0; n < nroot; ++n ){
+                        V_hash[det][n] += coupling[n]; 
+                    }
+                }else{
+                    V_hash[det] = coupling;
                 }
-            }else{
-                V_hash[det] = coupling;
             }
-        }
-    } 
+        } 
+    }//Close threads
 }
-}
-
-
-void AdaptiveCI::generate_excited_determinants(int nroot,int I,SharedMatrix evecs,STLBitsetDeterminant& det,det_hash<std::vector<double>>& V_hash)
-{
-   // outfile->Printf("\n Old Algorithm");
-    std::vector<int> aocc = det.get_alfa_occ();
-    std::vector<int> bocc = det.get_beta_occ();
-    std::vector<int> avir = det.get_alfa_vir();
-    std::vector<int> bvir = det.get_beta_vir();
-
-    int noalpha = aocc.size();
-    int nobeta  = bocc.size();
-    int nvalpha = avir.size();
-    int nvbeta  = bvir.size();
-
-    STLBitsetDeterminant new_det(det);
-
-    size_t nadd = 0;
-
-    // Generate aa excitations
-    for (int i = 0; i < noalpha; ++i){
-        int ii = aocc[i];
-        for (int a = 0; a < nvalpha; ++a){
-            int aa = avir[a];
-            if ((mo_symmetry_[ii] ^ mo_symmetry_[aa]) == 0){
-                double HIJ = det.slater_rules_single_alpha(ii,aa);
-				if ( (std::fabs(HIJ * evecs->get_row(0,I)->norm() )>= screen_thresh_) ){
-                    new_det = det;
-                    new_det.set_alfa_bit(ii,false);
-                    new_det.set_alfa_bit(aa,true);
-					if( (V_hash.count(new_det) == 0)){
-						V_hash[new_det] = std::vector<double>(nroot, 0.0);
-                        nadd++;
-					}
-					for (int n = 0; n < nroot; ++n){
-						V_hash[new_det][n] += HIJ * evecs->get(I,n);
-					}
-				}
-            }
-        }
-    }
-    //outfile->Printf("\n  Added %zu determinants from alpha", nadd );
-    nadd = 0;
-
-    for (int i = 0; i < nobeta; ++i){
-        int ii = bocc[i];
-        for (int a = 0; a < nvbeta; ++a){
-            int aa = bvir[a];
-            if ((mo_symmetry_[ii] ^ mo_symmetry_[aa]) == 0){
-                double HIJ = det.slater_rules_single_beta(ii,aa);
-				if ( (std::fabs(HIJ * evecs->get_row(0,I)->norm() )>= screen_thresh_) ){
-                    new_det = det;
-                    new_det.set_beta_bit(ii,false);
-                    new_det.set_beta_bit(aa,true);
-                    if (V_hash.count(new_det) == 0){
-                        V_hash[new_det] = std::vector<double>(nroot, 0.0);
-                        nadd++;
-                    }
-                    for (int n = 0; n < nroot; ++n){
-                        V_hash[new_det][n] += HIJ * evecs->get(I,n);
-                    }
-                }
-            }
-        }
-    }
-    //outfile->Printf("\n  Added %zu determinants from beta", nadd );
-    nadd = 0;
-
-    // Generate aa excitations
-    for (int i = 0; i < noalpha; ++i){
-        int ii = aocc[i];
-        for (int j = i + 1; j < noalpha; ++j){
-            int jj = aocc[j];
-            for (int a = 0; a < nvalpha; ++a){
-                int aa = avir[a];
-                for (int b = a + 1; b < nvalpha; ++b){
-                    int bb = avir[b];
-                    if ((mo_symmetry_[ii] ^ mo_symmetry_[jj] ^ mo_symmetry_[aa] ^ mo_symmetry_[bb]) == 0){
-                        double HIJ = fci_ints_->tei_aa(ii,jj,aa,bb);
-						if ( (std::fabs(HIJ * evecs->get_row(0,I)->norm() )>= screen_thresh_) ){
-                            new_det = det;
-                            new_det.set_alfa_bit(ii,false);
-                            new_det.set_alfa_bit(jj,false);
-                            new_det.set_alfa_bit(aa,true);
-                            new_det.set_alfa_bit(bb,true);
-                            HIJ *= det.slater_sign_alpha(ii) * det.slater_sign_alpha(jj) * new_det.slater_sign_alpha(aa) * new_det.slater_sign_alpha(bb);
-
-                            if (V_hash.count(new_det) == 0){
-                                V_hash[new_det] = std::vector<double>(nroot, 0.0);
-                                nadd++;
-                            }
-                            for (int n = 0; n < nroot; ++n){
-                                V_hash[new_det][n] += HIJ * evecs->get(I,n);
-                            }
-                        }
-                    }
-                }
-            }
-        }
-    }
-    //outfile->Printf("\n  Added %zu determinants from alpha-alpha", nadd );
-    nadd = 0;
-
-    for (int i = 0; i < noalpha; ++i){
-        int ii = aocc[i];
-        for (int j = 0; j < nobeta; ++j){
-            int jj = bocc[j];
-            for (int a = 0; a < nvalpha; ++a){
-                int aa = avir[a];
-                for (int b = 0; b < nvbeta; ++b){
-                    int bb = bvir[b];
-                    if ((mo_symmetry_[ii] ^ mo_symmetry_[jj] ^ mo_symmetry_[aa] ^ mo_symmetry_[bb]) == 0){
-                        double HIJ = fci_ints_->tei_ab(ii,jj,aa,bb);
-						if ( (std::fabs(HIJ * evecs->get_row(0,I)->norm() )>= screen_thresh_) ){
-                            new_det = det;
-                            new_det.set_alfa_bit(ii,false);
-                            new_det.set_beta_bit(jj,false);
-                            new_det.set_alfa_bit(aa,true);
-                            new_det.set_beta_bit(bb,true);
-
-                            HIJ *= det.slater_sign_alpha(ii) * det.slater_sign_beta(jj) * new_det.slater_sign_alpha(aa) * new_det.slater_sign_beta(bb);
-
-                            if (V_hash.count(new_det) == 0){
-                                V_hash[new_det] = std::vector<double>(nroot, 0.0);
-                                nadd++;
-                            }
-                            for (int n = 0; n < nroot; ++n){
-                                V_hash[new_det][n] += HIJ * evecs->get(I,n);
-                            }
-                        }
-                    }
-                }
-            }
-        }
-    }
-   // outfile->Printf("\n  Added %zu determinants from alpha-beta", nadd );
-    nadd = 0;
-    for (int i = 0; i < nobeta; ++i){
-        int ii = bocc[i];
-        for (int j = i + 1; j < nobeta; ++j){
-            int jj = bocc[j];
-            for (int a = 0; a < nvbeta; ++a){
-                int aa = bvir[a];
-                for (int b = a + 1; b < nvbeta; ++b){
-                    int bb = bvir[b];
-                    if ((mo_symmetry_[ii] ^ mo_symmetry_[jj] ^ mo_symmetry_[aa] ^ mo_symmetry_[bb]) == 0){
-                        double HIJ = fci_ints_->tei_bb(ii,jj,aa,bb);
-						if ( (std::fabs(HIJ * evecs->get_row(0,I)->norm() )>= screen_thresh_) ){
-                            new_det = det;
-                            new_det.set_beta_bit(ii,false);
-                            new_det.set_beta_bit(jj,false);
-                            new_det.set_beta_bit(aa,true);
-                            new_det.set_beta_bit(bb,true);
-
-                            HIJ *= det.slater_sign_beta(ii) * det.slater_sign_beta(jj) * new_det.slater_sign_beta(aa) * new_det.slater_sign_beta(bb);
-                            if (V_hash.count(new_det) == 0){
-                                V_hash[new_det] = std::vector<double>(nroot, 0.0);
-                                nadd++;
-                            }
-                            for (int n = 0; n < nroot; ++n){
-                                V_hash[new_det][n] += HIJ * evecs->get(I,n);
-                            }
-                        }
-                    }
-                }
-            }
-        }
-    }
-   // outfile->Printf("\n  Added %zu determinants from beta-beta", nadd );
-}
-
-
 
 void AdaptiveCI::generate_pair_excited_determinants(int nroot,int I,SharedMatrix evecs,STLBitsetDeterminant& det,det_hash<std::vector<double>>& V_hash)
 {
@@ -1657,7 +1428,6 @@ std::vector<std::pair<double, double>> AdaptiveCI::compute_spin(std::vector<STLB
 																					  SharedMatrix evecs,
 																					  int nroot)
 {
-
     DeterminantMap aci_wfn( space );
     WFNOperator op(mo_space_info_);
     
@@ -1678,12 +1448,12 @@ void AdaptiveCI::wfn_analyzer(std::vector<STLBitsetDeterminant>& det_space, Shar
 {
 
     std::vector<bool> occ(2*nact_,0);
-    oVector<double,int,int> labeled_orb_en = sym_labeled_orbitals("RHF");
+    std::vector<std::tuple<double,int,int>> labeled_orb_en = sym_labeled_orbitals("RHF");
     for(int i = 0 ; i < nalpha_; ++i){
-        occ[labeled_orb_en[i].second.second] = 1;
+        occ[std::get<2>(labeled_orb_en[i])] = 1;
     }
     for(int i = 0; i < nbeta_; ++i){
-        occ[nact_ + labeled_orb_en[i].second.second] = 1;
+        occ[nact_ + std::get<2>(labeled_orb_en[i])] = 1;
     } 
 
     //bool print_final_wfn = options_.get_bool("SAVE_FINAL_WFN");
@@ -1697,15 +1467,7 @@ void AdaptiveCI::wfn_analyzer(std::vector<STLBitsetDeterminant>& det_space, Shar
     STLBitsetDeterminant rdet(occ);
 	auto ref_bits = rdet.bits();
 	for(int n = 0; n < nroot; ++n){
-		pVector<size_t,double> excitation_counter( 1 + (1 + cycle_) * 2, std::make_pair(0,0.0) );
-//		pVector<double,size_t> det_weight;
-//		for( size_t I = 0, max = det_space.size(); I < max; ++I){
-//			det_weight.push_back(std::make_pair(std::fabs(evecs->get(I,n)),I));
-//		}
-//
-//		std::sort(det_weight.begin(), det_weight.end());
-//		std::reverse(det_weight.begin(), det_weight.end());
-
+		std::vector<std::pair<size_t,double>> excitation_counter( 1 + (1 + cycle_) * 2, std::make_pair(0,0.0) );
 
 		for(size_t I = 0, max = det_space.size(); I < max; ++I){
 			int ndiff = 0;
@@ -1754,14 +1516,14 @@ void AdaptiveCI::wfn_analyzer(std::vector<STLBitsetDeterminant>& det_space, Shar
     outfile->Flush();
 }
 
-oVector<double, int, int> AdaptiveCI::sym_labeled_orbitals(std::string type)
+std::vector<std::tuple<double, int, int>> AdaptiveCI::sym_labeled_orbitals(std::string type)
 {
-	oVector<double, int, int> labeled_orb;
+	std::vector<std::tuple<double, int, int>> labeled_orb;
 
 	if(type == "RHF" or type == "ROHF" or type == "ALFA"){
 		
 		// Create a vector of orbital energy and index pairs
-		pVector<double, int> orb_e;
+		std::vector<std::pair<double, int>> orb_e;
 		int cumidx = 0;
 		for(int h = 0; h < nirrep_; ++h){
 			for(int a = 0; a < nactpi_[h]; ++a ){
@@ -1772,14 +1534,14 @@ oVector<double, int, int> AdaptiveCI::sym_labeled_orbitals(std::string type)
 
 		// Create a vector that stores the orbital energy, symmetry, and idx
 		for( size_t a = 0; a < nact_; ++a){
-			labeled_orb.push_back( make_pair(orb_e[a].first, make_pair(mo_symmetry_[a], orb_e[a].second) ) );
+			labeled_orb.push_back( make_tuple(orb_e[a].first, mo_symmetry_[a], orb_e[a].second) );
 		}
 		//Order by energy, low to high
 		std::sort(labeled_orb.begin(), labeled_orb.end());
 	}
 	if(type == "BETA"){
 		//Create a vector of orbital energies and index pairs
-		pVector<double, int> orb_e;
+		std::vector<std::pair<double, int>> orb_e;
 		int cumidx = 0;
 		for(int h  = 0; h < nirrep_; ++h){
 			for(size_t a = 0, max = nactpi_[h]; a < max; ++a){
@@ -1790,17 +1552,11 @@ oVector<double, int, int> AdaptiveCI::sym_labeled_orbitals(std::string type)
 
 		//Create a vector that stores the orbital energy, sym, and idx
 		for(size_t a = 0; a < nact_; ++a){
-			labeled_orb.push_back(make_pair(orb_e[a].first, make_pair(mo_symmetry_[a], orb_e[a].second) ));
+			labeled_orb.push_back(make_tuple(orb_e[a].first, mo_symmetry_[a], orb_e[a].second ));
 		}
 		std::sort(labeled_orb.begin(), labeled_orb.end());
 	}
-
-//	for(int i = 0; i < nact_; ++i){
-//		outfile->Printf("\n %1.5f    %d    %d", labeled_orb[i].first, labeled_orb[i].second.first, labeled_orb[i].second.second);
-//	}
-
 	return labeled_orb;
-	
 }
 
 void AdaptiveCI::print_wfn(std::vector<STLBitsetDeterminant>& space,SharedMatrix evecs,int nroot)
