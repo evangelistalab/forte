@@ -322,7 +322,7 @@ private:
 	void wfn_analyzer(std::vector<STLBitsetDeterminant>& det_space, SharedMatrix evecs, int nroot);
 
 	/// Returns a vector of orbital energy, sym label pairs
-	std::vector<std::pair<double, std::pair<int,int> > > sym_labeled_orbitals(std::string type);
+	std::vector<std::tuple<double, int, int> > sym_labeled_orbitals(std::string type);
 
 	/// Computes spin
 	std::vector<std::pair<double,double>> compute_spin(std::vector<STLBitsetDeterminant>& space, SharedMatrix evecs, int nroot);
