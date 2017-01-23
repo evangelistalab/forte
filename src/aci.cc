@@ -635,8 +635,6 @@ double AdaptiveCI::compute_energy()
         }
         
     }
-   // test_ops(PQ_space_, PQ_evecs);
-
 
     outfile->Flush();
 //	std::vector<double> davidson;
@@ -1655,65 +1653,24 @@ bool AdaptiveCI::check_stuck(std::vector<std::vector<double>>& energy_history, S
     return stuck;
 }
 
-pVector<std::pair<double, double>, std::pair<size_t,double>> AdaptiveCI::compute_spin(std::vector<STLBitsetDeterminant>& space,
+std::vector<std::pair<double, double>> AdaptiveCI::compute_spin(std::vector<STLBitsetDeterminant>& space,
 																					  SharedMatrix evecs,
 																					  int nroot)
 {
-	double norm;
-	double S2;
-	double S;
-	pVector<std::pair<double,double>, std::pair<size_t, double> > spin_vec(nroot);
 
-	for(int n = 0; n < nroot; ++n){
-		//Compute the expectation value of the spin
-		size_t max_sample = 1000;
-		size_t max_I = 0;
-		double sum_weight = 0.0;
-		pVector<double, size_t> det_weight;
+    DeterminantMap aci_wfn( space );
+    WFNOperator op(mo_space_info_);
+    
+    op.op_lists( aci_wfn );
+    op.tp_lists( aci_wfn );
+    
+	std::vector<std::pair<double, double>> spin_vec(nroot);
+    for( int n = 0; n < nroot_; ++n ){
+        double S2 = op.s2( aci_wfn, evecs, n );
+		double S = std::fabs( 0.5*(std::sqrt(1.0 + 4.0*S2)-1.0) );
+		spin_vec[n] =  make_pair(S,S2);
+    }
 
-		for(size_t I = 0, max = space.size(); I < max; ++I){
-			det_weight.push_back(make_pair(evecs->get(I,n), I));
-		}
-
-		//Don't require the determinats to be pre-ordered
-
-		std::sort(det_weight.begin(), det_weight.end());
-		std::reverse(det_weight.begin(), det_weight.end());
-
-		const double wfn_threshold = (space.size() < 10) ? 1.00: 0.95;
-		for(size_t I = 0, max = space.size(); I < max; ++I){
-			if( (sum_weight < wfn_threshold) and (I < max_sample)){
-				sum_weight += det_weight[I].first * det_weight[I].first;
-				max_I++;
-			}else if(std::fabs(det_weight[I].first - det_weight[I-1].first) < 1.0e-6){
-				//Special case, if there are several equivalent determinants
-				sum_weight += det_weight[I].first * det_weight[I].first;
-				max_I++;
-			}else{
-				break;
-			}
-		}
-		
-		S2 = 0.0;
-		norm = 0.0;
-        #pragma omp parallel for reduction(+:S2,norm)
-		for(size_t sI = 0; sI < max_I; ++sI){
-			size_t I = det_weight[sI].second;
-			for(size_t sJ = 0; sJ < max_I; ++sJ){
-				size_t J = det_weight[sJ].second;
-				if(std::fabs(evecs->get(I,n) * evecs->get(J,n)) > 1.0e-12){
-					const double S2IJ = space[I].spin2(space[J]);
-					S2 += evecs->get(I,n) * evecs->get(J,n) * S2IJ;
-				}
-			}
-			norm += evecs->get(I,n) * evecs->get(I,n);
-		}
-
-		S2 /= norm;
-		S2  = std::fabs(S2);
-		S   = std::fabs( 0.5*(std::sqrt(1.0 + 4.0*S2)-1.0) );
-		spin_vec[n] =  make_pair(make_pair(S,S2), make_pair(max_I, sum_weight));
-	}
 	return spin_vec;
 }
 
@@ -1851,6 +1808,8 @@ void AdaptiveCI::print_wfn(std::vector<STLBitsetDeterminant>& space,SharedMatrix
 	std::string state_label;
 	std::vector<string> s2_labels({"singlet", "doublet", "triplet", "quartet", "quintet", "sextet","septet","octet","nonet", "decatet"});
 
+	std::vector<std::pair<double,double>> spins = compute_spin(space,evecs,nroot);
+
     for (int n = 0; n < nroot; ++n){
         outfile->Printf("\n\n  Most important contributions to root %3d:",n);
 
@@ -1870,19 +1829,14 @@ void AdaptiveCI::print_wfn(std::vector<STLBitsetDeterminant>& space,SharedMatrix
                     space[det_weight[I].second].str().c_str());
         }
 
-        Timer spint;
-		auto spins = compute_spin(space,evecs,nroot);
-        outfile->Printf("\n  Time spent computing spin: %1.6f", spint.get());
-		state_label = s2_labels[std::round(spins[n].first.first * 2.0)];
+		state_label = s2_labels[std::round(spins[n].first * 2.0)];
 		root_spin_vec_.clear();
-		root_spin_vec_[n] = make_pair(spins[n].first.first, spins[n].first.second);
-        outfile->Printf("\n\n  Spin state for root %zu: S^2 = %5.6f, S = %5.3f, %s (from %zu determinants, %3.2f)",
+		root_spin_vec_[n] = make_pair(spins[n].first, spins[n].second);
+        outfile->Printf("\n\n  Spin state for root %zu: S^2 = %5.6f, S = %5.3f, %s",
 			n,
-			spins[n].first.second,
-			spins[n].first.first,
-			state_label.c_str(),
-			spins[n].second.first,
-			100.0 * spins[n].second.second);
+			root_spin_vec_[n].first,
+			root_spin_vec_[n].second,
+			state_label.c_str());
     }
 	outfile->Flush();
 }
@@ -1955,7 +1909,7 @@ double AdaptiveCI::compute_spin_contamination( std::vector<STLBitsetDeterminant>
 	auto spins = compute_spin(space, evecs, nroot);
 	double spin_contam = 0.0;
 	for(int n = 0; n < nroot; ++n){
-		spin_contam += spins[n].first.second;
+		spin_contam += spins[n].second;
 	}
 	spin_contam /= static_cast<double>(nroot);
 	spin_contam -= (0.25 * (wavefunction_multiplicity_ * wavefunction_multiplicity_ - 1.0));
