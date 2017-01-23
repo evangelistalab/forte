@@ -325,7 +325,7 @@ private:
 	std::vector<std::pair<double, std::pair<int,int> > > sym_labeled_orbitals(std::string type);
 
 	/// Computes spin
-	std::vector<std::pair<std::pair<double,double>, std::pair<size_t,double>>> compute_spin(std::vector<STLBitsetDeterminant>& space, SharedMatrix evecs, int nroot);
+	std::vector<std::pair<double,double>> compute_spin(std::vector<STLBitsetDeterminant>& space, SharedMatrix evecs, int nroot);
 
 	/// Compute 1-RDM
 	void compute_1rdm(SharedMatrix A, SharedMatrix B, std::vector<STLBitsetDeterminant>& det_space, SharedMatrix evecs, int nroot);
