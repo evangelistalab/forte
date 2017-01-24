@@ -62,11 +62,32 @@ public:
     /// Return the number of determinants
     double size();
 
+    // Clear hash
+    void clear();
+
     // Return a specific determinant by value
-    STLBitsetDeterminant get_det( size_t& value );
+    STLBitsetDeterminant get_det( size_t value );
+
+    // Return the index of a determinant
+    size_t get_idx( STLBitsetDeterminant& det );
 
     // Return a vector of the determinants
     std::vector<STLBitsetDeterminant> determinants();
+
+    // Make this spin complete
+    void make_spin_complete();
+
+    // Check if a determinant is in the wavefunction
+    bool has_det( STLBitsetDeterminant& det );
+
+    // Compute overlap between this and input wfn
+    double overlap( std::vector<double>& det1_evecs, DeterminantMap& det2, SharedMatrix det2_evecs, int root );
+
+    // Compute overlap between this and input wfn
+    double overlap( SharedMatrix det1_evecs, DeterminantMap& det2, SharedMatrix det2_evecs, int root );
+
+    // Save most important subspace as this
+    void subspace( DeterminantMap& dets, SharedMatrix evecs, std::vector<double>& new_evecs, int dim, int root);
 
 protected:
 
