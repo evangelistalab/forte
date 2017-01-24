@@ -79,13 +79,13 @@ double DeterminantMap::size()
 }
 
 
-void DeterminantMap::add( STLBitsetDeterminant& det )
+void DeterminantMap::add( const STLBitsetDeterminant& det )
 {
     wfn_[det] = wfn_size_;
     wfn_size_ = wfn_.size();
 }
 
-STLBitsetDeterminant DeterminantMap::get_det( size_t value )
+STLBitsetDeterminant DeterminantMap::get_det( const size_t value )
 {
     // Iterate through map to find the right one
     // Possibly a faster way to do this?
@@ -100,7 +100,7 @@ STLBitsetDeterminant DeterminantMap::get_det( size_t value )
     return det;
 }
 
-size_t DeterminantMap::get_idx( STLBitsetDeterminant& det )
+size_t DeterminantMap::get_idx( const STLBitsetDeterminant& det )
 {
     return wfn_[det];
 }
@@ -110,7 +110,7 @@ void DeterminantMap::make_spin_complete()
    
 }
 
-bool DeterminantMap::has_det( STLBitsetDeterminant& det )
+bool DeterminantMap::has_det( const STLBitsetDeterminant& det )
 {
     bool has = false;
 
@@ -123,10 +123,10 @@ bool DeterminantMap::has_det( STLBitsetDeterminant& det )
 double DeterminantMap::overlap( std::vector<double>& det1_evecs, DeterminantMap& det2, SharedMatrix det2_evecs, int root)
 {
     double overlap = 0.0;
-    for( detmap::iterator it = wfn_.begin, endit = wfn_.end(); it != endit; ++it ){
-        if( det2.has_det( it.first ){
-            size_t idx = det2.get_idx( it.first );
-            overlap += det1_evecs[it.second] * det2_evecs->get( idx, root ); 
+    for( detmap::iterator it = wfn_.begin(), endit = wfn_.end(); it != endit; ++it ){
+        if( det2.has_det( it->first )){
+            size_t idx = det2.get_idx( it->first );
+            overlap += det1_evecs[it->second] * det2_evecs->get( idx, root ); 
         }
     }
     return overlap;
@@ -135,10 +135,10 @@ double DeterminantMap::overlap( std::vector<double>& det1_evecs, DeterminantMap&
 double DeterminantMap::overlap( SharedMatrix det1_evecs, int root1, DeterminantMap& det2, SharedMatrix det2_evecs, int root2)
 {
     double overlap = 0.0;
-    for( detmap::iterator it = wfn_.begin, endit = wfn_.end(); it != endit; ++it ){
-        if( det2.has_det( it.first ){
-            size_t idx = det2.get_idx( it.first );
-            overlap += det1_evecs->get(it.second, root1) * det2_evecs->get( idx, root2 ); 
+    for( detmap::iterator it = wfn_.begin(), endit = wfn_.end(); it != endit; ++it ){
+        if( det2.has_det( it->first )){
+            size_t idx = det2.get_idx( it->first );
+            overlap += det1_evecs->get(it->second, root1) * det2_evecs->get( idx, root2 ); 
         }
     }
     return overlap;
@@ -147,21 +147,31 @@ double DeterminantMap::overlap( SharedMatrix det1_evecs, int root1, DeterminantM
 void DeterminantMap::subspace( DeterminantMap& dets, SharedMatrix evecs, std::vector<double>& new_evecs, int dim, int root )
 {
     // Clear current wfn
-    this.clear();
-    new_evecs.reset(dim);
+    this->clear();
+    new_evecs.assign(dim, 0.0);
 
     std::vector<std::pair<double, size_t>> det_weights;
     for( size_t I = 0, maxI = dets.size(); I < maxI; ++I ){
-        det_weights.push_back( evecs->get(I, root), I );
+        det_weights.push_back( std::make_pair(evecs->get(I, root), I) );
     }
     std::sort( det_weights.begin(), det_weights.end(), descending_pair);
 
     // Build this wfn with most important subset
     for( size_t I = 0; I < dim; ++I ){
-        STLBitsetDeterminant& detI = dets.get_det((det_weights[I].second));
-        this.add(detI);
+        const STLBitsetDeterminant& detI = dets.get_det((det_weights[I].second));
+        this->add(detI);
         new_evecs[I] = evecs->get(det_weights[I].second, root); 
     } 
+}
+
+void DeterminantMap::merge( DeterminantMap& dets )
+{
+    det_hash<size_t> detmap = dets.wfn_hash();
+    for( det_hash<size_t>::iterator it = detmap.begin(), endit = detmap.end(); it != endit; ++it ){
+        if( !(this->has_det( it->first )) ){
+            this->add(it->first);
+        }
+    }
 }
 
 }}
