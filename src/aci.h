@@ -204,9 +204,9 @@ private:
     bool streamline_qspace_;
 
     /// A vector of determinants in the P space
-    std::vector<STLBitsetDeterminant> P_space_;
+//    std::vector<STLBitsetDeterminant> P_space_;
     /// A vector of determinants in the P + Q space
-    std::vector<STLBitsetDeterminant> PQ_space_;
+//    std::vector<STLBitsetDeterminant> PQ_space_;
 	/// The CI coeffiecients
 	SharedMatrix evecs_;
 
@@ -263,7 +263,7 @@ private:
     void startup();
 
     /// Compute an aci wavefunction
-    void compute_aci( SharedMatrix& PQ_evecs, SharedVector& PQ_evals );
+    void compute_aci( DeterminantMap& PQ_space, SharedMatrix& PQ_evecs, SharedVector& PQ_evals );
 
 	/// Get the reference occupation
 	std::vector<int> get_occupation();
@@ -272,19 +272,13 @@ private:
     void print_info();
 
     /// Print a wave function
-    void print_wfn(std::vector<STLBitsetDeterminant>& space, SharedMatrix evecs, int nroot);
-
-    /// Diagonalize the Hamiltonian in a space of determinants
-    void diagonalize_hamiltonian(const std::vector<STLBitsetDeterminant>& space, SharedVector &evals, SharedMatrix &evecs, int nroot);
-
-    /// Diagonalize the Hamiltonian in a space of determinants
-    void diagonalize_hamiltonian2(const std::vector<STLBitsetDeterminant>& space, SharedVector &evals, SharedMatrix &evecs, int nroot);
+    void print_wfn(DeterminantMap& space, SharedMatrix evecs, int nroot);
 
     /// Streamlined version of find q space
-    void default_find_q_space( SharedVector evals, SharedMatrix evecs );
+    void default_find_q_space( DeterminantMap& P_space, DeterminantMap& PQ_space, SharedVector evals, SharedMatrix evecs );
 
     /// Find all the relevant excitations out of the P space
-    void find_q_space(int nroot, SharedVector evals, SharedMatrix evecs);
+    void find_q_space(  DeterminantMap& P_space, DeterminantMap& PQ_space, int nroot, SharedVector evals, SharedMatrix evecs);
 
 	/// Generate set of state-averaged q-criteria and determinants
 	double average_q_values(int nroot, std::vector<double>& C1, std::vector<double>& E2);
@@ -295,22 +289,12 @@ private:
     /// Find all the relevant excitations out of the P space - single root version
     void find_q_space_single_root(int nroot, SharedVector evals, SharedMatrix evecs);
 
-    /// Generate excited determinants
-    void generate_excited_determinants(int nroot, int I, SharedMatrix evecs, STLBitsetDeterminant &det, 
-										std::unordered_map<STLBitsetDeterminant,std::vector<double>, STLBitsetDeterminant::Hash>& V_hash);
-
     /// Alternate/experimental determinant generator
-    void get_excited_determinants( int nroot, SharedMatrix evecs, std::vector<STLBitsetDeterminant>& P_space, det_hash<std::vector<double>>& V_hash ); 
+    void get_excited_determinants( int nroot, SharedMatrix evecs, DeterminantMap& P_space, det_hash<std::vector<double>>& V_hash ); 
 
-    /// Experimental
-    void generate_pair_excited_determinants(int nroot,int I,SharedMatrix evecs,STLBitsetDeterminant& det,
-											std::unordered_map<STLBitsetDeterminant,std::vector<double>, STLBitsetDeterminant::Hash>& V_hash);
 
     /// Prune the space of determinants
-    void prune_q_space(std::vector<STLBitsetDeterminant>& large_space,std::vector<STLBitsetDeterminant>& pruned_space,
-                                   std::unordered_map<STLBitsetDeterminant,int,STLBitsetDeterminant::Hash>& pruned_space_map,SharedMatrix evecs,int nroot);
-
-    void smooth_hamiltonian(std::vector<STLBitsetDeterminant>& space,SharedVector evals,SharedMatrix evecs,int nroot);
+    void prune_q_space(DeterminantMap& PQ_space, DeterminantMap& P_space, SharedMatrix evecs,int nroot);
 
     /// Check if the procedure has converged
     bool check_convergence(std::vector<std::vector<double>>& energy_history,SharedVector new_energies);
@@ -319,34 +303,34 @@ private:
 	bool check_stuck(std::vector<std::vector<double>>& energy_history, SharedVector evals);
 
 	/// Analyze the wavefunction
-	void wfn_analyzer(std::vector<STLBitsetDeterminant>& det_space, SharedMatrix evecs, int nroot);
+	void wfn_analyzer(DeterminantMap& det_space, SharedMatrix evecs, int nroot);
 
 	/// Returns a vector of orbital energy, sym label pairs
 	std::vector<std::tuple<double, int, int> > sym_labeled_orbitals(std::string type);
 
 	/// Computes spin
-	std::vector<std::pair<double,double>> compute_spin(std::vector<STLBitsetDeterminant>& space, SharedMatrix evecs, int nroot);
+	std::vector<std::pair<double,double>> compute_spin(DeterminantMap& space, SharedMatrix evecs, int nroot);
 
 	/// Compute 1-RDM
 	void compute_1rdm(SharedMatrix A, SharedMatrix B, std::vector<STLBitsetDeterminant>& det_space, SharedMatrix evecs, int nroot);
 
 	/// Compute full S^2 matrix and diagonalize it
-	void full_spin_transform(std::vector<STLBitsetDeterminant>& det_space, SharedMatrix cI, int nroot);
+	void full_spin_transform(DeterminantMap& det_space, SharedMatrix cI, int nroot);
 
 	/// Check for spin contamination
-	double compute_spin_contamination(std::vector<STLBitsetDeterminant>& space, SharedMatrix evecs, int nroot);
+	double compute_spin_contamination(DeterminantMap& space, SharedMatrix evecs, int nroot);
 	
 	/// Save coefficients of lowest-root determinant	
-	void save_dets_to_file( std::vector<STLBitsetDeterminant>& space, SharedMatrix evecs );
+	void save_dets_to_file( DeterminantMap& space, SharedMatrix evecs );
 	/// Compute the Davidson correction
 	std::vector<double> davidson_correction( std::vector<STLBitsetDeterminant>& P_dets, SharedVector P_evals, SharedMatrix PQ_evecs, std::vector<STLBitsetDeterminant>& PQ_dets, SharedVector PQ_evals );   
 
-    void compute_H_expectation_val(const std::vector<STLBitsetDeterminant>& space,
-                                    SharedVector& evals,
-                                    const SharedMatrix evecs,
-                                    int nroot,
-                                    DiagonalizationMethod diag_method);
-
+//    void compute_H_expectation_val(const std::vector<STLBitsetDeterminant>& space,
+//                                    SharedVector& evals,
+//                                    const SharedMatrix evecs,
+//                                    int nroot,
+//                                    DiagonalizationMethod diag_method);
+//
 
 	/// Print natural orbitals
 	void print_nos();
@@ -355,32 +339,30 @@ private:
     void convert_to_string( const std::vector<STLBitsetDeterminant>& space );
 
     /// Build initial reference
-    void build_initial_reference();
+    void build_initial_reference( DeterminantMap& space );
 
     /// Compute overlap for root following
-    int root_follow( std::vector<std::pair<STLBitsetDeterminant, double>>& P_ref,
-                     std::vector<STLBitsetDeterminant>& det_space,
-                     SharedMatrix evecs,
+    int root_follow( DeterminantMap& P_ref,
+                     std::vector<double>& P_ref_evecs,
+                     DeterminantMap& P_space,
+                     SharedMatrix P_evecs,
                      int num_ref_roots);
 
     /// Project ACI wavefunction
-    void project_determinant_space( std::vector<STLBitsetDeterminant>& space, SharedMatrix evecs, SharedVector evals, int nroot );
+    void project_determinant_space( DeterminantMap& space, SharedMatrix evecs, SharedVector evals, int nroot );
 
-    void test_ops( std::vector<STLBitsetDeterminant>& det_space, SharedMatrix& PQ_evecs );
-
-    void merge_determinants( std::vector<STLBitsetDeterminant>& final, std::vector<STLBitsetDeterminant>& source );
 
     /// Compute the RDMs
-    void compute_rdms( std::vector<STLBitsetDeterminant>& dets, SharedMatrix& PQ_evecs, int root1, int root2 );
+    void compute_rdms( DeterminantMap& dets, SharedMatrix& PQ_evecs, int root1, int root2 );
 
     /// Save older roots
-    void save_old_root( std::vector<STLBitsetDeterminant>& dets, SharedMatrix& PQ_evecs, int root );
+    void save_old_root( DeterminantMap& dets, SharedMatrix& PQ_evecs, int root );
 
     /// Add roots to be projected out in DL
-    void add_bad_roots( std::vector<STLBitsetDeterminant>& dets);
+    void add_bad_roots( DeterminantMap& dets);
 
     /// Print Summary
-    void print_final( std::vector<STLBitsetDeterminant>& dets,  SharedMatrix& PQ_evecs, SharedVector& PQ_evals );
+    void print_final( DeterminantMap& dets,  SharedMatrix& PQ_evecs, SharedVector& PQ_evals );
 
     void compute_multistate(SharedVector& PQ_evals);
 
