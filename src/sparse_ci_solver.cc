@@ -56,7 +56,10 @@ namespace psi{ namespace forte{
     #define omp_get_num_threads() 1
 #endif
 
-
+SigmaVectorWfn::SigmaVectorWfn( DeterminantMap& space, WFNOperator& op ) : SigmaVector(space.size())
+{
+    
+}
 
 SigmaVectorString::SigmaVectorString( const std::vector<STLBitsetDeterminant>& space, bool print_details , bool disk)
     : SigmaVector(space.size()), space_(space)
@@ -1345,6 +1348,30 @@ void SparseCISolver::diagonalize_hamiltonian(const std::vector<STLBitsetDetermin
     }
 }
 
+void SparseCISolver::diagonalize_hamiltonian_map( const DeterminantMap& space, SharedVector& evals, SharedMatrix& evecs, int nroot, int multiplicity, DiagonalizationMethod diag_method)
+{
+    if( (space.size() <= 200 && !force_diag_method_) or diag_method == Full ){
+        diagonalize_full();
+    }else{
+        diagonalize_dl();
+    }
+}
+
+void SparseCISolver::diagonalize_dl( DeterminantMap& space, SharedVector& evals, SharedMatrix& evecs, int nroot )
+{
+    if( print_details_ ){
+        outfile->Printf("\n\n Davidson-liu solver algorithm");
+    }
+    size_t dim_space = space.size();
+    evecs.reset(new Matrix("U",dim_space,nroot));
+    evals.reset(new Vector("e",nroot));
+
+    SigmaVectorWfn svw(space, print_details_);
+    SigmaVector* sigma_vector = &svw;
+    sigma_vector->add_bad_roots( bad_states_ );
+    davidson_liu_solver_map(space, sigma_vector, evals, evecs, nroot, multiplicity);    
+}
+
 void SparseCISolver::diagonalize_full(const std::vector<STLBitsetDeterminant>& space,SharedVector& evals,SharedMatrix& evecs,int,int)
 {
     // Find all the eigenvalues and eigenvectors of the Hamiltonian
@@ -1615,22 +1642,136 @@ std::vector<std::pair<double,std::vector<std::pair<size_t,double>>>> SparseCISol
         }
     }
 
-//    // Check the spin
-//    for (int r = 0; r < nguess; ++r){
-//        double s2 = 0.0;
-//        double e = 0.0;
-//        for (size_t i = 0; i < nguess; i++) {
-//            for (size_t j = 0; j < nguess; j++) {
-//                size_t I = guess_dets_pos[i].second;
-//                size_t J = guess_dets_pos[j].second;
-//                double CI = evecs->get(I,r);
-//                double CJ = evecs->get(J,r);
-//                s2 += space[I].spin2(space[J]) * CI * CJ;
-//                e += space[I].slater_rules(space[J]) * CI * CJ;
-//            }
-//        }
-//        outfile->Printf("\n  Guess Root %d: <E> = %f, <S^2> = %f",r,e,s2);
-//    }
+    return guess;
+}
+
+std::vector<std::pair<double,std::vector<std::pair<size_t,double>>>> SparseCISolver::initial_guess_map(const DeterminantMap& space, int nroot, int multiplicity)
+{
+    size_t ndets = space.size();
+    size_t nguess = std::min(static_cast<size_t>(nroot) * dl_guess_,ndets);
+    std::vector<std::pair<double,std::vector<std::pair<size_t,double>>>> guess(nguess);
+
+    // Find the ntrial lowest diagonals
+    std::vector<std::pair<STLBitsetDeterminant,size_t>> guess_dets_pos;
+    std::vector<std::pair<double,STLBitsetDeterminant>> smallest(ndets);
+    det_hash<size_t>& detmap = space.wfn_hash();
+
+    for(det_hash::iterator it = detmap.begin(), endit = detmap.end(); it < endit; ++it){
+        smallest[I] = std::make_pair(it.first.energy(),it.first);
+    }
+    std::sort(smallest.begin(),smallest.end());
+
+    std::vector<STLBitsetDeterminant> guess_det;
+    for(size_t i = 0; i < nguess; i++) {
+        STLBitsetDeterminant detI = smallest[i].second;
+        guess_dets_pos.push_back(std::make_pair(detI,space.get_idx(I)));  // store a det and its position
+        guess_det.push_back(detI);
+    }
+
+    if (spin_project_){
+        STLBitsetDeterminant::enforce_spin_completeness(guess_det);
+        if (guess_det.size() > nguess){
+            size_t nnew_dets = guess_det.size() - nguess;
+            if (print_details_) outfile->Printf("\n  Initial guess space is incomplete.\n  Trying to add %d determinant(s).",nnew_dets);
+            int nfound = 0;
+            for (size_t i = 0; i < nnew_dets; ++i){
+                for (size_t j = nguess; j < ndets; ++j){
+                    STLBitsetDeterminant detJ = smallest[j].second;
+                    if ( detJ == guess_det[nguess + i]){
+                        guess_dets_pos.push_back(std::make_pair(detJ,space.get_idx(J)));  // store a det and its position
+                        nfound++;
+                        break;
+                    }
+                }
+            }
+            if(print_details_) outfile->Printf("  %d determinant(s) added.",nfound);
+        }
+        nguess = guess_dets_pos.size();
+    }
+
+    // Form the S^2 operator matrix and diagonalize it
+    Matrix S2("S^2",nguess,nguess);
+    for(size_t I = 0; I < nguess; I++) {
+        for(size_t J = I; J < nguess; J++) {
+            const STLBitsetDeterminant& detI = guess_dets_pos[I].first;
+            const STLBitsetDeterminant& detJ = guess_dets_pos[J].first;
+            double S2IJ = detI.spin2(detJ);
+            S2.set(I,J,S2IJ);
+            S2.set(J,I,S2IJ);
+        }
+    }
+    Matrix S2evecs("S^2",nguess,nguess);
+    Vector S2evals("S^2",nguess);
+    S2.diagonalize(S2evecs,S2evals);
+
+    // Form the Hamiltonian
+    Matrix H("H",nguess,nguess);
+    for(size_t I = 0; I < nguess; I++) {
+        for(size_t J = I; J < nguess; J++) {
+            const STLBitsetDeterminant& detI = guess_dets_pos[I].first;
+            const STLBitsetDeterminant& detJ = guess_dets_pos[J].first;
+            double HIJ = detI.slater_rules(detJ);
+            H.set(I,J,HIJ);
+            H.set(J,I,HIJ);
+        }
+    }
+   // H.print();
+    // Project H onto the spin-adapted subspace
+    H.transform(S2evecs);
+
+    // Find groups of solutions with same spin
+    double Stollerance = 1.0e-6;
+    std::map<int,std::vector<int>> mult_list;
+    for (size_t i = 0; i < nguess; ++i){
+        double mult = std::sqrt(1.0 + 4.0 * S2evals.get(i)); // 2S + 1 = Sqrt(1 + 4 S (S + 1))
+        int mult_int = std::round(mult);
+        double error = mult - static_cast<double>(mult_int);
+        if (std::fabs(error) < Stollerance){
+            mult_list[mult_int].push_back(i);
+        }else if (print_details_) {
+            outfile->Printf("\n  Found a guess vector with spin not close to integer value (%f)",mult);
+        }
+    }
+    if (mult_list[multiplicity].size() < static_cast<size_t>(nroot)){
+        size_t nfound = mult_list[multiplicity].size();
+        outfile->Printf("\n  Error: %d guess vectors with 2S+1 = %d but only %d were found!",nguess,multiplicity,nfound);
+        if(nfound== 0 ){exit(1);}
+    }
+
+    std::vector<int> mult_vals;
+    for (auto kv : mult_list){
+        mult_vals.push_back(kv.first);
+    }
+    std::sort(mult_vals.begin(),mult_vals.end());
+
+    for (int m : mult_vals){
+        std::vector<int>& mult_list_s = mult_list[m];
+        int nspin_states = mult_list_s.size();
+        if (print_details_)outfile->Printf("\n  Initial guess found %d solutions with 2S+1 = %d %c",nspin_states,m,m == multiplicity ? '*' : ' ');
+        // Extract the spin manifold
+        Matrix HS2("HS2",nspin_states,nspin_states);
+        Vector HS2evals("HS2",nspin_states);
+        Matrix HS2evecs("HS2",nspin_states,nspin_states);
+        for(int I = 0; I < nspin_states; I++) {
+            for(int J = 0; J < nspin_states; J++) {
+                HS2.set(I,J,H.get(mult_list_s[I],mult_list_s[J]));
+            }
+        }
+        HS2.diagonalize(HS2evecs,HS2evals);
+
+        // Project the spin-adapted solution onto the full manifold
+        for (int r = 0; r < nspin_states; ++r){
+            std::vector<std::pair<size_t,double>> det_C;
+            for (size_t I = 0; I < nguess; I++) {
+                double CIr = 0.0;
+                for (int J = 0; J < nspin_states; ++J){
+                    CIr += S2evecs.get(I,mult_list_s[J]) * HS2evecs(J,r);
+                }
+                det_C.push_back(std::make_pair(guess_dets_pos[I].second,CIr));
+            }
+            guess.push_back(std::make_pair(m,det_C));
+        }
+    }
 
     return guess;
  }
@@ -1694,6 +1835,138 @@ bool SparseCISolver::davidson_liu_solver(const std::vector<STLBitsetDeterminant>
     size_t guess_size = std::min( nvec_, dls.collapse_size());
 
     auto guess = initial_guess(space,nroot,multiplicity);
+    if( !set_guess_ ){
+        std::vector<int> guess_list;
+        for (size_t g = 0; g < guess.size(); ++g){
+            if (guess[g].first == multiplicity) guess_list.push_back(g);
+        }
+
+        // number of guess to be used
+        size_t nguess = std::min(guess_list.size(),guess_size);
+
+        if (nguess == 0){
+            throw PSIEXCEPTION("\n\n  Found zero FCI guesses with the requested multiplicity.\n\n");
+        }
+
+        for (size_t n = 0; n < nguess; ++n){
+            b->zero();
+            for (auto& guess_vec_info : guess[guess_list[n]].second){
+                b->set(guess_vec_info.first,guess_vec_info.second);
+            }
+            if( print_details_ ) outfile->Printf("\n  Adding guess %d (multiplicity = %f)",n,guess[guess_list[n]].first);
+            
+            dls.add_guess(b);
+        }
+    }
+
+    // Prepare a list of bad roots to project out and pass them to the solver
+    for (auto& g : guess){
+        if (g.first != multiplicity) bad_roots.push_back(g.second);
+    }
+    dls.set_project_out(bad_roots);
+
+    if( set_guess_ ){
+        // Use previous solution as guess
+        b->zero();        
+        for( size_t I = 0, max_I = guess_.size(); I < max_I; ++I ){
+            b->set( guess_[I].first, guess_[I].second );
+        }
+        double norm = sqrt( 1.0 / b->norm() );
+        b->scale(norm);
+        dls.add_guess(b);
+    }
+
+
+
+    SolverStatus converged = SolverStatus::NotConverged;
+    
+    if(print_details_){
+        outfile->Printf("\n\n  ==> Diagonalizing Hamiltonian <==\n");
+        outfile->Printf("\n  ----------------------------------------");
+        outfile->Printf("\n    Iter.      Avg. Energy       Delta_E");
+        outfile->Printf("\n  ----------------------------------------");
+    }
+
+    double old_avg_energy = 0.0;
+    int real_cycle = 1;
+
+//    maxiter_davidson_ = 2;
+//    b->print();
+    for (int cycle = 0; cycle < maxiter_davidson_; ++cycle){
+        bool add_sigma = true;
+        do{
+            dls.get_b(b);
+            sigma_vector->compute_sigma(sigma,b);
+
+            add_sigma = dls.add_sigma(sigma);
+        } while (add_sigma);
+
+        converged = dls.update();
+
+        if (converged != SolverStatus::Collapse){
+            double avg_energy = 0.0;
+            for (int r = 0; r < nroot; ++r) avg_energy += dls.eigenvalues()->get(r);
+            avg_energy /= static_cast<double>(nroot);
+            if (print_details_){
+                outfile->Printf("\n    %3d  %20.12f  %+.3e",real_cycle,avg_energy,avg_energy - old_avg_energy);
+            }
+            old_avg_energy = avg_energy;
+            real_cycle++;
+        }
+
+        if (converged == SolverStatus::Converged) break;
+    }
+
+    if (print_details_){
+        outfile->Printf("\n  ----------------------------------------");
+        if (converged == SolverStatus::Converged){
+            outfile->Printf("\n  The Davidson-Liu algorithm converged in %d iterations.", real_cycle);
+        }
+    }
+
+    if (converged == SolverStatus::NotConverged){
+        outfile->Printf("\n  FCI did not converge!");
+        exit(1);
+    }
+
+//    dls.get_results();
+    SharedVector evals = dls.eigenvalues();
+    SharedMatrix evecs = dls.eigenvectors();
+    for (int r = 0; r < nroot; ++r){
+        Eigenvalues->set(r,evals->get(r));
+        for (size_t I = 0; I < fci_size; ++I){
+            Eigenvectors->set(I,r,evecs->get(r,I));
+        }
+    }
+    return true;
+}
+
+bool SparseCISolver::davidson_liu_solver_map(const DeterminantMap& space,
+                                             SigmaVector* sigma_vector,
+                                             SharedVector Eigenvalues,
+                                             SharedMatrix Eigenvectors,
+                                             int nroot,
+                                             int multiplicity)
+{
+//    print_details_ = true;
+    size_t fci_size = sigma_vector->size();
+    DavidsonLiuSolver dls(fci_size,nroot);
+    dls.set_e_convergence(e_convergence_);
+    dls.set_print_level(0);
+
+
+    // allocate vectors
+    SharedVector b(new Vector("b",fci_size));
+    SharedVector sigma(new Vector("sigma",fci_size));
+
+    // get and pass diagonal
+    sigma_vector->get_diagonal(*sigma);
+    dls.startup(sigma);
+
+    std::vector<std::vector<std::pair<size_t,double>>> bad_roots;
+    size_t guess_size = std::min( nvec_, dls.collapse_size());
+
+    auto guess = initial_guess_map(space,nroot,multiplicity);
     if( !set_guess_ ){
         std::vector<int> guess_list;
         for (size_t g = 0; g < guess.size(); ++g){
