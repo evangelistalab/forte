@@ -119,7 +119,69 @@ size_t DeterminantMap::get_idx( const STLBitsetDeterminant& det ) const
 
 void DeterminantMap::make_spin_complete()
 {
-   
+    int nmo = this->get_det(0).nmo_;
+    size_t ndet_added = 0;
+    std::vector<size_t> closed(nmo,0);   
+    std::vector<size_t> open(nmo,0);
+    std::vector<size_t> open_bits(nmo,0);
+    DeterminantMap new_dets;
+
+    for( det_hash<size_t>::iterator it = wfn_.begin(), endit = wfn_.end(); it != endit; ++it ){ 
+        const STLBitsetDeterminant& det = it->first;
+//        outfile->Printf("\n  Original determinant: %s", det.str().c_str());
+        for(int i = 0; i < nmo; ++i ){
+            closed[i] = open[i] = 0;
+            open_bits[i] = false;
+        }
+        int naopen = 0;
+        int nbopen = 0;
+        int nclosed = 0;
+        for(int i = 0; i < nmo; ++i ){
+            if (det.get_alfa_bit(i) and (not det.get_beta_bit(i))){
+                open[naopen + nbopen] = i;
+                naopen += 1;
+            } else if ((not det.get_alfa_bit(i)) and det.get_beta_bit(i)){
+                open[naopen + nbopen] = i;
+                nbopen += 1;
+            } else if (det.get_alfa_bit(i) and det.get_beta_bit(i)){
+                closed[nclosed] = i;
+                nclosed += 1;
+            }
+        }
+
+        if (naopen + nbopen == 0) continue;
+
+        // Generate the strings 1111100000
+        //                      {nao}{nbo}
+        for(int i = 0; i < nbopen; ++i) open_bits[i] = false; // 0
+        for(int i = nbopen; i < naopen + nbopen; ++i) open_bits[i] = true;  // 1
+        do{
+            STLBitsetDeterminant new_det;
+            for (int c = 0; c < nclosed; ++c){
+                new_det.set_alfa_bit(closed[c],true);
+                new_det.set_beta_bit(closed[c],true);
+            }
+            for (int o = 0; o < naopen + nbopen; ++o){
+                if (open_bits[o]){ //? not
+                    new_det.set_alfa_bit(open[o],true);
+                }else{
+                    new_det.set_beta_bit(open[o],true);
+                }
+            }
+            if ((wfn_.count(new_det) == 0) and !(new_dets.has_det(new_det)) ){
+                new_dets.add(new_det);
+//                outfile->Printf("\n  added determinant:    %s", new_det.str().c_str());
+                ndet_added++;
+            }
+        } while (std::next_permutation(open_bits.begin(),open_bits.begin() + naopen + nbopen));
+    }
+    //if( ndet_added > 0 ){
+    //    outfile->Printf("\n\n  Determinant space is spin incomplete!");
+    //    outfile->Printf("\n  %zu more determinants were needed.", ndet_added);
+    //}else{
+    //    outfile->Printf("\n\n  Determinant space is spin complete.");
+    //}
+    this->merge(new_dets);
 }
 
 bool DeterminantMap::has_det( const STLBitsetDeterminant& det ) const
