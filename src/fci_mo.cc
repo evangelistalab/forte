@@ -73,9 +73,6 @@ void FCI_MO::read_options(){
     // IP / EA
     ipea_ = options_.get_str("IPEA");
 
-    // set orbitals
-    semi_ = options_.get_bool("SEMI_CANONICAL");
-
     // print level
     print_ = options_.get_int("PRINT");
 
@@ -86,6 +83,9 @@ void FCI_MO::read_options(){
     // nuclear repulsion
     std::shared_ptr<Molecule> molecule = Process::environment.molecule();
     e_nuc_ = molecule->nuclear_repulsion_energy();
+
+    // digonalization algorithm
+    diag_algorithm_ = options_.get_str("DIAG_ALGORITHM");
 
     // number of Irrep
     nirrep_ = this->nirrep();
@@ -396,7 +396,6 @@ double FCI_MO::compute_energy(){
     form_p_space();
 
     // diagonalize the CASCI Hamiltonian
-    diag_algorithm_ = options_.get_str("DIAG_ALGORITHM");
     Diagonalize_H(determinant_, eigen_);
     if(print_ > 2 && !quiet_){
         for(pair<SharedVector, double> x: eigen_){
@@ -434,73 +433,99 @@ double FCI_MO::compute_energy(){
         print_d2("Db", Db_);
     }
 
-    // Fock Matrix
-    size_t count = 0;
+    // build Fock Matrix
     Form_Fock(Fa_,Fb_);
-    Check_Fock(Fa_,Fb_,dconv_,count);
     if(print_ > 1){
         print_d2("Fa", Fa_);
         print_d2("Fb", Fb_);
     }
 
-    // Orbitals. If use Kevin's CASSCF, this part is ignored.
-    if(!default_orbitals_){
-        if(semi_ && count != 0){
-            // Semi-canonicalize orbitals
-            outfile->Printf("\n  Use semi-canonical orbitals.\n");
-            semi_canonicalize();
+//    // Orbitals. If use Kevin's CASSCF, this part is ignored.
+//    if(!default_orbitals_){
+//        if(semi_ && count != 0){
+//            // Semi-canonicalize orbitals
+//            outfile->Printf("\n  Use semi-canonical orbitals.\n");
+//            semi_canonicalize();
 
-            // Form and Diagonalize the CASCI Hamiltonian
-            Diagonalize_H(determinant_, eigen_);
-            if(print_ > 2){
-                for(pair<SharedVector, double> x: eigen_){
-                    outfile->Printf("\n\n  Spin selected CI vectors\n");
-                    (x.first)->print();
-                    outfile->Printf("  Energy  =  %20.15lf\n", x.second);
-                }
-            }
+//            // Form and Diagonalize the CASCI Hamiltonian
+//            Diagonalize_H(determinant_, eigen_);
+//            if(print_ > 2){
+//                for(pair<SharedVector, double> x: eigen_){
+//                    outfile->Printf("\n\n  Spin selected CI vectors\n");
+//                    (x.first)->print();
+//                    outfile->Printf("  Energy  =  %20.15lf\n", x.second);
+//                }
+//            }
 
-            // Store CI Vectors in eigen_
-            print_CI(nroot_, options_.get_double("PRINT_CI_VECTOR"), eigen_, determinant_);
+//            // Store CI Vectors in eigen_
+//            print_CI(nroot_, options_.get_double("PRINT_CI_VECTOR"), eigen_, determinant_);
 
-            // prepare ci_rdms for one density
-            int dim = (eigen_[0].first)->dim();
-            SharedMatrix evecs (new Matrix("evecs",dim,dim));
-            for(int i = 0; i < eigen_.size(); ++i){
-                evecs->set_column(0,i,(eigen_[i]).first);
-            }
-            CI_RDMS ci_rdms (options_,fci_ints_,determinant_,evecs,root_,root_);
+//            // prepare ci_rdms for one density
+//            int dim = (eigen_[0].first)->dim();
+//            SharedMatrix evecs (new Matrix("evecs",dim,dim));
+//            for(int i = 0; i < eigen_.size(); ++i){
+//                evecs->set_column(0,i,(eigen_[i]).first);
+//            }
+//            CI_RDMS ci_rdms (options_,fci_ints_,determinant_,evecs,root_,root_);
 
-            // Form Density
-            FormDensity(ci_rdms, Da_, Db_);
-            if(print_ > 1){
-                print_d2("Da", Da_);
-                print_d2("Db", Db_);
-            }
+//            // Form Density
+//            FormDensity(ci_rdms, Da_, Db_);
+//            if(print_ > 1){
+//                print_d2("Da", Da_);
+//                print_d2("Db", Db_);
+//            }
 
-            // Fock Matrix
-            count = 0;
-            Form_Fock(Fa_,Fb_);
-            Check_Fock(Fa_,Fb_,dconv_,count);
-            if(print_ > 1){
-                print_d2("Fa", Fa_);
-                print_d2("Fb", Fb_);
-            }
-        }else{
-//            nat_orbs();
-        }
-    }
+//            // Fock Matrix
+//            count = 0;
+//            Form_Fock(Fa_,Fb_);
+//            Check_Fock(Fa_,Fb_,dconv_,count);
+//            if(print_ > 1){
+//                print_d2("Fa", Fa_);
+//                print_d2("Fb", Fb_);
+//            }
+//        }else{
+////            nat_orbs();
+//        }
+//    }
 
     // compute dipole moments
     compute_permanent_dipole();
 
     // compute oscillator strength
-    compute_trans_dipole();
-    compute_oscillator_strength();
+    if(nroot_ > 1){
+        compute_trans_dipole();
+        compute_oscillator_strength();
+    }
 
     Eref_ = eigen_[root_].second;
     Process::environment.globals["CURRENT ENERGY"] = Eref_;
     return Eref_;
+}
+
+double FCI_MO::compute_canonical_energy(){
+    // compute energy
+    double Eref = compute_energy();
+
+    // check Fock matrix
+    size_t count = 0;
+    Check_Fock(Fa_, Fb_, dconv_, count);
+
+    // semi-canonicalize orbitals
+    if(count == 0){
+        outfile->Printf("\n  Orbitals are semi-canonicalized already.\n");
+    }else{
+        outfile->Printf("\n  Use semi-canonical orbitals.\n");
+        semi_canonicalize();
+
+        // recompute energy
+        Eref = compute_energy();
+
+        // recheck Fock matrix
+        count = 0;
+        Check_Fock(Fa_, Fb_, dconv_, count);
+    }
+
+    return Eref;
 }
 
 void FCI_MO::form_p_space(){
@@ -2335,7 +2360,11 @@ bool FCI_MO::CheckDensity(){
 }
 
 void FCI_MO::compute_permanent_dipole(){
-    print_h2("Computing Permanent Dipole Moments");
+
+    CharacterTable ct = Process::environment.molecule()->point_group()->char_table();
+    std::string irrep_symbol = ct.gamma(root_sym_).symbol();
+    std::string title = "Computing Permanent Dipole Moments (" + irrep_symbol + ")";
+    print_h2(title);
 
     // obtain AO dipole from libmints
     std::shared_ptr<BasisSet> basisset = this->basisset();
@@ -2440,11 +2469,11 @@ void FCI_MO::compute_trans_dipole(){
 //        return;
 //    }
 
-    print_h2("Computing Transition Dipole Moments");
-
     CharacterTable ct = Process::environment.molecule()->point_group()->char_table();
-    std::string irrep = ct.gamma(root_sym_).symbol();
-    outfile->Printf("\n  Two states are in the same symmetry (%s).", irrep.c_str());
+    std::string irrep_symbol = ct.gamma(root_sym_).symbol();
+    std::stringstream title;
+    title << "Computing Transition Dipole Moments (" << irrep_symbol << " -> " << irrep_symbol << ")";
+    print_h2(title.str());
 
     // obtain AO dipole from libmints
     std::shared_ptr<BasisSet> basisset = this->basisset();
@@ -2575,11 +2604,11 @@ void FCI_MO::compute_trans_dipole(){
 
 void FCI_MO::compute_oscillator_strength(){
 
-    print_h2("Computing Oscillator Strength");
-
     CharacterTable ct = Process::environment.molecule()->point_group()->char_table();
-    std::string irrep = ct.gamma(root_sym_).symbol();
-    outfile->Printf("\n  Two states are in the same symmetry (%s).", irrep.c_str());
+    std::string irrep_symbol = ct.gamma(root_sym_).symbol();
+    std::stringstream title;
+    title << "Computing Oscillator Strength (" << irrep_symbol << " -> " << irrep_symbol << ")";
+    print_h2(title.str());
 
     // obtain the excitation energies map
     std::map<std::string, double> Exs;
@@ -2889,7 +2918,6 @@ double FCI_MO::compute_sa_energy(){
         form_p_space();
 
         // diagonalize the CASCI Hamiltonian
-        diag_algorithm_ = options_.get_str("DIAG_ALGORITHM");
         eigen_.clear();
         Diagonalize_H(determinant_, eigen_);
         eigens_.push_back(eigen_);
@@ -2897,11 +2925,10 @@ double FCI_MO::compute_sa_energy(){
         // store CI vectors in eigen_
         if(nroot_ > eigen_.size()){
             outfile->Printf("\n  Too many roots of interest!");
-            if(eigen_.size() > 1){
-                outfile->Printf("\n  There are only %3d roots that satisfy the condition!", eigen_.size());
-            } else {
-                outfile->Printf("\n  There is only %3d root that satisfy the condition!", eigen_.size());
-            }
+            std::string be = (eigen_.size() > 1) ? "are" : "is";
+            std::string plural = (eigen_.size() > 1) ? "roots" : "root";
+            outfile->Printf("\n  There %s only %3d %s that satisfy the condition!",
+                            be.c_str(), eigen_.size(), plural.c_str());
             outfile->Printf("\n  Check root_sym, multi, and number of determinants.");
             throw PSIEXCEPTION("Too many roots of interest.");
         }
@@ -2930,6 +2957,13 @@ double FCI_MO::compute_sa_energy(){
             std::transform (sa_opdm_b.begin(), sa_opdm_b.end(), opdm_b.begin(), sa_opdm_b.begin(), std::plus<double>());
         }
 
+        // compute dipole moments
+        compute_permanent_dipole();
+
+        // compute oscillator strength
+        compute_trans_dipole();
+        compute_oscillator_strength();
+
     } // end looping over all averaged states
     eigen_.clear(); // make sure other code use eigens_ for state average
     outfile->Printf("\n  Total Energy (averaged over %d states): %20.15f\n", nstates, Ecas_sa);
@@ -2942,10 +2976,8 @@ double FCI_MO::compute_sa_energy(){
     }
 
     // form Fock matrix
-    size_t count = 0;
     if(form_Fock_){
         Form_Fock(Fa_,Fb_);
-        Check_Fock(Fa_,Fb_,dconv_,count);
         if(print_ > 1){
             print_d2("Fa", Fa_);
             print_d2("Fb", Fb_);
@@ -2954,176 +2986,278 @@ double FCI_MO::compute_sa_energy(){
         outfile->Printf("\n  Skip Fock matrix build in FCI_MO.");
     }
 
-    // Orbitals. If use Kevin's CASSCF, this part is ignored.
-    if(!default_orbitals_){
-        if(semi_ && count != 0){
-            // Semi-canonicalize orbitals
-            outfile->Printf("\n  Use semi-canonical orbitals.\n");
-            semi_canonicalize();
+//    // Orbitals. If use Kevin's CASSCF, this part is ignored.
+//    if(!default_orbitals_){
+//        if(semi_ && count != 0){
+//            // Semi-canonicalize orbitals
+//            outfile->Printf("\n  Use semi-canonical orbitals.\n");
+//            semi_canonicalize();
 
-            // clear previous stuff
-            Ecas_sa = 0.0;
-            sa_opdm_a = vector<double> (nelement, 0.0);
-            sa_opdm_b = vector<double> (nelement, 0.0);
-            eigens_.clear();
+//            // clear previous stuff
+//            Ecas_sa = 0.0;
+//            sa_opdm_a = vector<double> (nelement, 0.0);
+//            sa_opdm_b = vector<double> (nelement, 0.0);
+//            eigens_.clear();
 
-            // loop over all averaging states
-            for(const auto& info: sa_info_){
-                // set current symmetry, multiplicity, nroots
-                int irrep, multi, nroots;
-                std::vector<double> weights;
-                std::tie (irrep, multi, nroots, weights) = info;
+//            // loop over all averaging states
+//            for(const auto& info: sa_info_){
+//                // set current symmetry, multiplicity, nroots
+//                int irrep, multi, nroots;
+//                std::vector<double> weights;
+//                std::tie (irrep, multi, nroots, weights) = info;
 
-                root_sym_ = irrep;
-                multi_ = multi;
-                nroot_ = nroots;
-                root_ = nroot_ - 1; // not necessary
+//                root_sym_ = irrep;
+//                multi_ = multi;
+//                nroot_ = nroots;
+//                root_ = nroot_ - 1; // not necessary
 
-                // form determinants
-                form_p_space();
+//                // form determinants
+//                form_p_space();
 
-                // diagonalize the CASCI Hamiltonian
-                eigen_.clear();
-                Diagonalize_H(determinant_, eigen_);
-                eigens_.push_back(eigen_);
+//                // diagonalize the CASCI Hamiltonian
+//                eigen_.clear();
+//                Diagonalize_H(determinant_, eigen_);
+//                eigens_.push_back(eigen_);
 
-                // print CI vectors in eigen_
-                print_CI(nroot_, options_.get_double("PRINT_CI_VECTOR"), eigen_, determinant_);
+//                // print CI vectors in eigen_
+//                print_CI(nroot_, options_.get_double("PRINT_CI_VECTOR"), eigen_, determinant_);
 
-                // compute one density using ci_rdms
-                int dim = (eigen_[0].first)->dim();
-                SharedMatrix evecs (new Matrix("evecs",dim,dim));
-                for(int i = 0; i < eigen_.size(); ++i){
-                    evecs->set_column(0,i,(eigen_[i]).first);
-                }
+//                // compute one density using ci_rdms
+//                int dim = (eigen_[0].first)->dim();
+//                SharedMatrix evecs (new Matrix("evecs",dim,dim));
+//                for(int i = 0; i < eigen_.size(); ++i){
+//                    evecs->set_column(0,i,(eigen_[i]).first);
+//                }
 
-                for(int i = 0; i < nroots; ++i){
-                    double weight = weights[i];
-                    Ecas_sa += weight * eigen_[i].second;
+//                for(int i = 0; i < nroots; ++i){
+//                    double weight = weights[i];
+//                    Ecas_sa += weight * eigen_[i].second;
 
-                    CI_RDMS ci_rdms (options_,fci_ints_,determinant_,evecs,i,i);
+//                    CI_RDMS ci_rdms (options_,fci_ints_,determinant_,evecs,i,i);
+//                    ci_rdms.set_symmetry(irrep);
+//                    vector<double> opdm_a (nelement, 0.0);
+//                    vector<double> opdm_b (nelement, 0.0);
+//                    ci_rdms.compute_1rdm(opdm_a,opdm_b);
+
+//                    std::for_each(opdm_a.begin(), opdm_a.end(), [&](double& v) {v *= weight;});
+//                    std::for_each(opdm_b.begin(), opdm_b.end(), [&](double& v) {v *= weight;});
+//                    std::transform (sa_opdm_a.begin(), sa_opdm_a.end(), opdm_a.begin(), sa_opdm_a.begin(), std::plus<double>());
+//                    std::transform (sa_opdm_b.begin(), sa_opdm_b.end(), opdm_b.begin(), sa_opdm_b.begin(), std::plus<double>());
+//                }
+
+//            } // end looping over all averaged states
+//            outfile->Printf("\n    Total Energy (averaged over %d states): %20.15f\n", nstates, Ecas_sa);
+
+//            // fill in Da_, Db_, L1a, L1b
+//            fill_density(sa_opdm_a,sa_opdm_b);
+//            if(print_ > 1){
+//                print_d2("Da", Da_);
+//                print_d2("Db", Db_);
+//            }
+
+//            // form Fock matrix
+//            count = 0;
+//            if(form_Fock_){
+//                Form_Fock(Fa_,Fb_);
+//                Check_Fock(Fa_,Fb_,dconv_,count);
+//                if(print_ > 1){
+//                    print_d2("Fa", Fa_);
+//                    print_d2("Fb", Fb_);
+//                }
+//            }else{
+//                outfile->Printf("\n  Skip Fock matrix build in FCI_MO.");
+//            }
+
+//        }else{
+////            nat_orbs();
+//        }
+//    }
+
+//    // rotate references such that <M|F|N> is diagonal
+//    int nentry = eigens_.size();
+//    for(int i = 0; i < nentry; ++i){ // TODO: rotation should not do this, currently transition density should be in the same irrep
+//        int irrep = options_["AVG_STATE"][i][0].to_integer();
+
+//        auto& eigen = eigens_[i];
+//        int nroots = eigen.size();
+//        SharedMatrix Fock_MN (new Matrix("Fock_MN",nroots,nroots));
+
+//        int dim = (eigen[0].first)->dim();
+//        SharedMatrix evecs (new Matrix("evecs",dim,dim));
+//        for(int M = 0; M < nroots; ++M){
+//            evecs->set_column(0,M,(eigen[M]).first);
+//        }
+
+//        // compute matrix elements of Fock_MN
+//        for(int M = 0; M < nroots; ++M){
+//            for(int N = M; N < nroots; ++N){
+
+//                // compute density
+//                CI_RDMS ci_rdms (options_,fci_ints_,determinant_,evecs,M,N);
+//                ci_rdms.set_symmetry(irrep);
+//                vector<double> opdm_a (nelement, 0.0);
+//                vector<double> opdm_b (nelement, 0.0);
+//                ci_rdms.compute_1rdm(opdm_a,opdm_b);
+
+//                // contract density with SA-Fock
+//                double fuv = 0.0;
+//                for(size_t u = 0; u < na_; ++u){
+//                    size_t nu = idx_a_[u];
+
+//                    // just in case SA-Fock is not diaognal
+//                    for(size_t v = 0; v < na_; ++v){
+//                        size_t nv = idx_a_[v];
+
+//                        fuv += Fa_[nu][nv] * opdm_a[v * na_ + u];
+//                        fuv += Fb_[nu][nv] * opdm_b[v * na_ + u];
+//                    }
+//                }
+
+//                if(M == N){
+//                    Fock_MN->set(M, M, fuv);
+//                }else{
+//                    Fock_MN->set(M, N, fuv);
+//                    Fock_MN->set(N, M, fuv);
+//                }
+
+//            }
+//        }
+
+//        // diaognalize Fock_MN
+////        Fock_MN->print();
+//        SharedMatrix Fvecs (new Matrix("Fock_MN evecs", nroots, nroots));
+//        SharedVector Fvals (new Vector("Fock_MN evals", nroots));
+//        Fock_MN->diagonalize(Fvecs, Fvals);
+////        Fvecs->eivprint(Fvals);
+
+//        // rotate eigen vectors
+//        evecs = SharedMatrix (new Matrix("evecs", dim, nroots));
+//        for(int M = 0; M < nroots; ++M){
+//            evecs->set_column(0,M,(eigen[M]).first);
+//        }
+//        SharedMatrix rvecs (new Matrix("Rotated evecs", dim, nroots));
+//        rvecs->gemm(false,false,1.0,evecs,Fvecs,0.0);
+
+//        for(int M = 0; M < nroots; ++M){
+//            (eigens_[i][M].first)->print();
+//        }
+//        for(int M = 0; M < nroots; ++M){
+//            eigen[M].first = rvecs->get_column(0,M);
+//        }
+//        for(int M = 0; M < nroots; ++M){
+//            (eigens_[i][M].first)->print();
+//        }
+//    }
+
+    Eref_ = Ecas_sa;
+    Process::environment.globals["CURRENT ENERGY"] = Eref_;
+    return Eref_;
+}
+
+double FCI_MO::compute_canonical_sa_energy(){
+    // compute state-averaged energy
+    double Eref = compute_sa_energy();
+
+    // check Fock matrix
+    size_t count = 0;
+    if(form_Fock_){
+        Check_Fock(Fa_, Fb_, dconv_, count);
+    }
+
+    // semi-canonicalize orbitals
+    if(count == 0){
+        outfile->Printf("\n  Orbitals are semi-canonicalized already.\n");
+    }else{
+        outfile->Printf("\n  Use semi-canonical orbitals.\n");
+        semi_canonicalize();
+
+        // recompute energy
+        Eref = compute_sa_energy();
+
+        // recheck Fock matrix
+        count = 0;
+        if(form_Fock_){
+            Check_Fock(Fa_, Fb_, dconv_, count);
+        }
+    }
+
+    return Eref;
+}
+
+// TODO this function probably should not be here.
+void FCI_MO::xms_rotate(const int& irrep){
+    int nentry = eigens_.size();
+    for(int i = 0; i < nentry; ++i){
+        int this_irrep = options_["AVG_STATE"][i][0].to_integer();
+        if(this_irrep != irrep){
+            continue;
+        }else{
+            size_t nelement = na_ * na_;
+            auto& eigen = eigens_[i];
+            int nroots = eigen.size();
+            SharedMatrix Fock_MN (new Matrix("Fock_MN",nroots,nroots));
+
+            int dim = (eigen[0].first)->dim();
+            SharedMatrix evecs (new Matrix("evecs",dim,dim));
+            for(int M = 0; M < nroots; ++M){
+                evecs->set_column(0,M,(eigen[M]).first);
+            }
+
+            // compute matrix elements of Fock_MN
+            for(int M = 0; M < nroots; ++M){
+                for(int N = M; N < nroots; ++N){
+
+                    // compute density
+                    CI_RDMS ci_rdms (options_,fci_ints_,determinant_,evecs,M,N);
                     ci_rdms.set_symmetry(irrep);
                     vector<double> opdm_a (nelement, 0.0);
                     vector<double> opdm_b (nelement, 0.0);
                     ci_rdms.compute_1rdm(opdm_a,opdm_b);
 
-                    std::for_each(opdm_a.begin(), opdm_a.end(), [&](double& v) {v *= weight;});
-                    std::for_each(opdm_b.begin(), opdm_b.end(), [&](double& v) {v *= weight;});
-                    std::transform (sa_opdm_a.begin(), sa_opdm_a.end(), opdm_a.begin(), sa_opdm_a.begin(), std::plus<double>());
-                    std::transform (sa_opdm_b.begin(), sa_opdm_b.end(), opdm_b.begin(), sa_opdm_b.begin(), std::plus<double>());
-                }
+                    // contract density with SA-Fock
+                    double fuv = 0.0;
+                    for(size_t u = 0; u < na_; ++u){
+                        size_t nu = idx_a_[u];
 
-            } // end looping over all averaged states
-            outfile->Printf("\n    Total Energy (averaged over %d states): %20.15f\n", nstates, Ecas_sa);
+                        for(size_t v = 0; v < na_; ++v){
+                            size_t nv = idx_a_[v];
 
-            // fill in Da_, Db_, L1a, L1b
-            fill_density(sa_opdm_a,sa_opdm_b);
-            if(print_ > 1){
-                print_d2("Da", Da_);
-                print_d2("Db", Db_);
-            }
-
-            // form Fock matrix
-            count = 0;
-            if(form_Fock_){
-                Form_Fock(Fa_,Fb_);
-                Check_Fock(Fa_,Fb_,dconv_,count);
-                if(print_ > 1){
-                    print_d2("Fa", Fa_);
-                    print_d2("Fb", Fb_);
-                }
-            }else{
-                outfile->Printf("\n  Skip Fock matrix build in FCI_MO.");
-            }
-
-        }else{
-//            nat_orbs();
-        }
-    }
-
-    // rotate references such that <M|F|N> is diagonal
-
-    int nentry = eigens_.size();
-    for(int i = 0; i < nentry; ++i){
-        int irrep = options_["AVG_STATE"][i][0].to_integer();
-
-        auto& eigen = eigens_[i];
-        int nroots = eigen.size();
-        SharedMatrix Fock_MN (new Matrix("Fock_MN",nroots,nroots));
-
-        int dim = (eigen[0].first)->dim();
-        SharedMatrix evecs (new Matrix("evecs",dim,dim));
-        for(int M = 0; M < nroots; ++M){
-            evecs->set_column(0,M,(eigen[M]).first);
-        }
-
-        // compute matrix elements of Fock_MN
-        for(int M = 0; M < nroots; ++M){
-            for(int N = M; N < nroots; ++N){
-
-                // compute density
-                CI_RDMS ci_rdms (options_,fci_ints_,determinant_,evecs,M,N);
-                ci_rdms.set_symmetry(irrep);
-                vector<double> opdm_a (nelement, 0.0);
-                vector<double> opdm_b (nelement, 0.0);
-                ci_rdms.compute_1rdm(opdm_a,opdm_b);
-
-                // contract density with SA-Fock
-                double fuv = 0.0;
-                for(size_t u = 0; u < na_; ++u){
-                    size_t nu = idx_a_[u];
-
-                    // just in case SA-Fock is not diaognal
-                    for(size_t v = 0; v < na_; ++v){
-                        size_t nv = idx_a_[v];
-
-                        fuv += Fa_[nu][nv] * opdm_a[v * na_ + u];
-                        fuv += Fb_[nu][nv] * opdm_b[v * na_ + u];
+                            fuv += Fa_[nu][nv] * opdm_a[v * na_ + u];
+                            fuv += Fb_[nu][nv] * opdm_b[v * na_ + u];
+                        }
                     }
-                }
 
-                if(M == N){
-                    Fock_MN->set(M, M, fuv);
-                }else{
-                    Fock_MN->set(M, N, fuv);
-                    Fock_MN->set(N, M, fuv);
-                }
+                    if(M == N){
+                        Fock_MN->set(M, M, fuv); // ignored core part (a constant shift)
+                    }else{
+                        Fock_MN->set(M, N, fuv);
+                        Fock_MN->set(N, M, fuv);
+                    }
 
+                }
             }
-        }
 
-        // diaognalize Fock_MN
-//        Fock_MN->print();
-        SharedMatrix Fvecs (new Matrix("Fock_MN evecs", nroots, nroots));
-        SharedVector Fvals (new Vector("Fock_MN evals", nroots));
-        Fock_MN->diagonalize(Fvecs, Fvals);
-//        Fvecs->eivprint(Fvals);
+            // diaognalize Fock_MN
+            SharedMatrix Fvecs (new Matrix("Fock_MN evecs", nroots, nroots));
+            SharedVector Fvals (new Vector("Fock_MN evals", nroots));
+            Fock_MN->diagonalize(Fvecs, Fvals);
+//            Fvecs->eivprint(Fvals);
 
-        // rotate eigen vectors
-        evecs = SharedMatrix (new Matrix("evecs", dim, nroots));
-        for(int M = 0; M < nroots; ++M){
-            evecs->set_column(0,M,(eigen[M]).first);
-        }
-        SharedMatrix rvecs (new Matrix("Rotated evecs", dim, nroots));
-        rvecs->gemm(false,false,1.0,evecs,Fvecs,0.0);
+            // rotate eigen vectors
+            evecs = SharedMatrix (new Matrix("evecs", dim, nroots));
+            for(int M = 0; M < nroots; ++M){
+                evecs->set_column(0,M,(eigen[M]).first);
+            }
+            SharedMatrix rvecs (new Matrix("Rotated evecs", dim, nroots));
+            rvecs->gemm(false,false,1.0,evecs,Fvecs,0.0);
 
-        for(int M = 0; M < nroots; ++M){
-            (eigens_[i][M].first)->print();
-        }
-        for(int M = 0; M < nroots; ++M){
-            eigen[M].first = rvecs->get_column(0,M);
-        }
-        for(int M = 0; M < nroots; ++M){
-            (eigens_[i][M].first)->print();
+//            // recompute reference energies
+//            ambit::Tensor tei_active_aa = integral_->aptei_aa_block(idx_a_, idx_a_, idx_a_, idx_a_);
+//            ambit::Tensor tei_active_ab = integral_->aptei_ab_block(idx_a_, idx_a_, idx_a_, idx_a_);
+//            ambit::Tensor tei_active_bb = integral_->aptei_bb_block(idx_a_, idx_a_, idx_a_, idx_a_);
+//            fci_ints_->
         }
     }
-
-    // compute oscillator strength
-    compute_oscillator_strength();
-
-    Eref_ = Ecas_sa;
-    Process::environment.globals["CURRENT ENERGY"] = Eref_;
-    return Eref_;
 }
 
 void FCI_MO::compute_sa_ref(){

@@ -340,7 +340,6 @@ void CASSCF::cas_ci()
     {
         ints_->retransform_integrals();
         FCI_MO cas(reference_wavefunction_, options_, ints_, mo_space_info_);
-        cas.use_default_orbitals(true);
         cas.set_quite_mode(quiet);
         cas.compute_energy();
         cas_ref_ = cas.reference();
