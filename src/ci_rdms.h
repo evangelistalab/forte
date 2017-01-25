@@ -41,6 +41,7 @@
 #include "stl_bitset_string.h"
 #include "reference.h"
 #include "string_lists.h"
+#include "determinant_map.h"
 
 namespace psi{ namespace forte{
 
@@ -63,6 +64,12 @@ public:
             std::vector<STLBitsetString> beta_strings, 
             std::vector<std::vector<size_t>> a_to_b, 
             std::vector<std::vector<size_t>> b_to_a,
+            SharedMatrix evecs,
+            int root1,
+            int root2);
+
+    CI_RDMS(Options &options, std::shared_ptr<FCIIntegrals> fci_ints,
+            DeterminantMap& det_space,
             SharedMatrix evecs,
             int root1,
             int root2);

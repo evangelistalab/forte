@@ -541,6 +541,10 @@ double AdaptiveCI::compute_energy()
         }
 
         outfile->Printf("\n  Size of combined space: %zu", dim);
+
+        WFNOperator op( mo_space_info_ );
+        op.op_lists( full_space );
+        op.tp_lists( full_space );
         
         SparseCISolver sparse_solver;      
         sparse_solver.set_parallel(true);
@@ -549,7 +553,7 @@ double AdaptiveCI::compute_energy()
         sparse_solver.set_spin_project(project_out_spin_contaminants_);
         sparse_solver.set_force_diag(options_.get_bool("FORCE_DIAG_METHOD"));
         sparse_solver.set_guess_dimension(options_.get_int("DL_GUESS_SIZE"));
-        sparse_solver.diagonalize_hamiltonian_map(full_space,PQ_evals,PQ_evecs,nroot_,wavefunction_multiplicity_,diag_method_);
+        sparse_solver.diagonalize_hamiltonian_map(full_space,op, PQ_evals,PQ_evecs,nroot_,wavefunction_multiplicity_,diag_method_);
 
     }
 
@@ -1990,19 +1994,18 @@ void AdaptiveCI::compute_aci( DeterminantMap& PQ_space, SharedMatrix& PQ_evecs, 
         nroot_ = 1;
     } 
 
-
     SharedMatrix P_evecs;
     SharedVector P_evals;
 
     // This will store part of the wavefunction for computing an overlap
 //    std::vector<std::pair<STLBitsetDeterminant,double>> P_ref; 
+
     DeterminantMap P_ref;
-    DeterminantMap P_space;
+    DeterminantMap P_space( reference_determinant_ );
 
     // Use the reference determinant as a starting point
-//	P_space_.push_back(reference_determinant_);
 //    P_space_map_[reference_determinant_] = 1;
-    P_space.add(reference_determinant_);
+//    P_space.add(reference_determinant_);
 
 
 	//det_history_[reference_determinant_].push_back(std::make_pair(0, "I"));
@@ -2039,6 +2042,8 @@ void AdaptiveCI::compute_aci( DeterminantMap& PQ_space, SharedMatrix& PQ_evecs, 
     if( options_.get_str("EXCITED_ALGORITHM") == "ROOT_SELECT" ){
         ref_root_ = options_.get_int("ROOT");
     }
+
+    WFNOperator op(mo_space_info_);
 
 	int cycle;
     for (cycle = 0; cycle < max_cycle_; ++cycle){
@@ -2087,9 +2092,11 @@ void AdaptiveCI::compute_aci( DeterminantMap& PQ_space, SharedMatrix& PQ_evecs, 
     //        }
     //    }
 
+        op.op_lists( P_space );
+        op.tp_lists( P_space );
         sparse_solver.manual_guess( false );
         Timer diag;
-        sparse_solver.diagonalize_hamiltonian_map(P_space,P_evals,P_evecs,num_ref_roots,wavefunction_multiplicity_,diag_method_);
+        sparse_solver.diagonalize_hamiltonian_map(P_space,op,P_evals,P_evecs,num_ref_roots,wavefunction_multiplicity_,diag_method_);
         if (!quiet_mode_) outfile->Printf("\n  Time spent diagonalizing H:   %1.6f s", diag.get());
 
         if( cycle < pre_iter_ ){
@@ -2159,9 +2166,11 @@ void AdaptiveCI::compute_aci( DeterminantMap& PQ_space, SharedMatrix& PQ_evecs, 
 
 
         // Step 3. Diagonalize the Hamiltonian in the P + Q space
+        op.op_lists( PQ_space );
+        op.tp_lists( PQ_space );
         Timer diag_pq;
 
-        sparse_solver.diagonalize_hamiltonian_map(PQ_space,PQ_evals,PQ_evecs,num_ref_roots,wavefunction_multiplicity_,diag_method_);
+        sparse_solver.diagonalize_hamiltonian_map(PQ_space,op,PQ_evals,PQ_evecs,num_ref_roots,wavefunction_multiplicity_,diag_method_);
 
         if(!quiet_mode_) outfile->Printf("\n  Time spent diagonalizing H:   %1.6f s", diag_pq.get());
 		if(det_save_) save_dets_to_file( PQ_space, PQ_evecs );
