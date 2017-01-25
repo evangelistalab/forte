@@ -155,22 +155,22 @@ protected:
 class SigmaVectorWfn : public SigmaVector
 {
 public:
-    SigmaVectorWfn( const DeterminantMap space, WFNOperator& op );
+    SigmaVectorWfn( const DeterminantMap& space, WFNOperator& op );
     // Create the list of a_p|N>
-    std::vector<std::vector<std::pair<size_t,short>>> a_ann_list_;
-    std::vector<std::vector<std::pair<size_t,short>>> b_ann_list_;
+    std::vector<std::vector<std::pair<size_t,short>>>& a_ann_list_;
+    std::vector<std::vector<std::pair<size_t,short>>>& b_ann_list_;
     // Create the list of a+_q |N-1>
-    std::vector<std::vector<std::pair<size_t,short>>> a_cre_list_;
-    std::vector<std::vector<std::pair<size_t,short>>> b_cre_list_;
+    std::vector<std::vector<std::pair<size_t,short>>>& a_cre_list_;
+    std::vector<std::vector<std::pair<size_t,short>>>& b_cre_list_;
 
     // Create the list of a_q a_p|N>
-    std::vector<std::vector<std::tuple<size_t,short,short>>> aa_ann_list_;
-    std::vector<std::vector<std::tuple<size_t,short,short>>> ab_ann_list_;
-    std::vector<std::vector<std::tuple<size_t,short,short>>> bb_ann_list_;
+    std::vector<std::vector<std::tuple<size_t,short,short>>>& aa_ann_list_;
+    std::vector<std::vector<std::tuple<size_t,short,short>>>& ab_ann_list_;
+    std::vector<std::vector<std::tuple<size_t,short,short>>>& bb_ann_list_;
     // Create the list of a+_s a+_r |N-2>
-    std::vector<std::vector<std::tuple<size_t,short,short>>> aa_cre_list_;
-    std::vector<std::vector<std::tuple<size_t,short,short>>> ab_cre_list_;
-    std::vector<std::vector<std::tuple<size_t,short,short>>> bb_cre_list_;
+    std::vector<std::vector<std::tuple<size_t,short,short>>>& aa_cre_list_;
+    std::vector<std::vector<std::tuple<size_t,short,short>>>& ab_cre_list_;
+    std::vector<std::vector<std::tuple<size_t,short,short>>>& bb_cre_list_;
 
     void compute_sigma(SharedVector sigma, SharedVector b);
     void compute_sigma(Matrix& sigma, Matrix& b, int nroot);
@@ -182,10 +182,9 @@ protected:
     bool print_;
     bool use_disk_ = false;    
 
-    const std::vector<STLBitsetDeterminant>& space_;
-
-    size_t noalfa_;
-    size_t nobeta_;
+    const DeterminantMap& space_;
+    //size_t noalfa_;
+    //size_t nobeta_;
 
     std::vector<double> diag_;
     
@@ -216,6 +215,7 @@ public:
                                    DiagonalizationMethod diag_method);
 
     void diagonalize_hamiltonian_map( const DeterminantMap& space,
+                                            WFNOperator& op,
                                             SharedVector& evals,
                                             SharedMatrix& evecs,
                                             int nroot,
@@ -267,6 +267,13 @@ private:
                           int nroot,
                           int multiplicity);
 
+    void diagonalize_dl( const DeterminantMap& space,
+                            WFNOperator& op,
+                            SharedVector& evals,
+                            SharedMatrix& evecs,
+                            int nroot,
+                            int multiplicity); 
+
     void diagonalize_davidson_liu_solver(const std::vector<STLBitsetDeterminant>& space, SharedVector& evals, SharedMatrix& evecs, int nroot, int multiplicity);
 
     void diagonalize_davidson_liu_string(const std::vector<STLBitsetDeterminant>& space, SharedVector& evals, SharedMatrix& evecs, int nroot, int multiplicity, bool disk);
@@ -284,7 +291,7 @@ private:
                                              int nroot,
                                              int multiplicity);
 
-    bool davidson_liu_solveri_map(const DeterminantMap& space,
+    bool davidson_liu_solver_map(const DeterminantMap& space,
                                              SigmaVector* sigma_vector,
                                              SharedVector Eigenvalues,
                                              SharedMatrix Eigenvectors,
