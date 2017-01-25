@@ -44,11 +44,22 @@ DeterminantMap::DeterminantMap( std::vector<STLBitsetDeterminant>& dets )
     }        
 }
 
+DeterminantMap::DeterminantMap(STLBitsetDeterminant& det )
+{
+    wfn_[det] = 0;
+    wfn_size_ = wfn_.size();
+}
+
 DeterminantMap::DeterminantMap(){}
 
 DeterminantMap::DeterminantMap(detmap& wfn) : wfn_(wfn) 
 {
     wfn_size_ = wfn.size();
+}
+
+const detmap& DeterminantMap::wfn_hash() const
+{
+    return wfn_;
 }
 
 detmap& DeterminantMap::wfn_hash()
@@ -62,20 +73,19 @@ void DeterminantMap::clear()
     wfn_size_ = wfn_.size();
 }
 
-std::vector<STLBitsetDeterminant> DeterminantMap::determinants()
+std::vector<STLBitsetDeterminant> DeterminantMap::determinants() const
 {
-    std::vector<STLBitsetDeterminant> space;//( wfn_size_ );
+    std::vector<STLBitsetDeterminant> space( wfn_size_ );
 
-    for( detmap::iterator it = wfn_.begin(); it != wfn_.end(); ++it ){
-        space.push_back( it->first );
+    for( detmap::const_iterator it = wfn_.begin(); it != wfn_.end(); ++it ){
+        space[it->second] =  it->first ;
     } 
     return space;
 }
 
-double DeterminantMap::size()
+size_t DeterminantMap::size() const
 {
-    wfn_size_ = wfn_.size();
-    return wfn_size_;
+    return wfn_.size();
 }
 
 
@@ -85,13 +95,13 @@ void DeterminantMap::add( const STLBitsetDeterminant& det )
     wfn_size_ = wfn_.size();
 }
 
-STLBitsetDeterminant DeterminantMap::get_det( const size_t value )
+STLBitsetDeterminant DeterminantMap::get_det( const size_t value ) const
 {
     // Iterate through map to find the right one
     // Possibly a faster way to do this?
     STLBitsetDeterminant det;
     
-    for( detmap::iterator it = wfn_.begin(), endit = wfn_.end(); it != endit; ++it ){
+    for( detmap::const_iterator it = wfn_.begin(), endit = wfn_.end(); it != endit; ++it ){
         if( it->second == value ){
             det = it->first;
             break;
@@ -100,9 +110,11 @@ STLBitsetDeterminant DeterminantMap::get_det( const size_t value )
     return det;
 }
 
-size_t DeterminantMap::get_idx( const STLBitsetDeterminant& det )
+size_t DeterminantMap::get_idx( const STLBitsetDeterminant& det ) const
 {
-    return wfn_[det];
+    size_t idx = wfn_.at(det);
+
+    return idx;
 }
 
 void DeterminantMap::make_spin_complete()
@@ -110,7 +122,7 @@ void DeterminantMap::make_spin_complete()
    
 }
 
-bool DeterminantMap::has_det( const STLBitsetDeterminant& det )
+bool DeterminantMap::has_det( const STLBitsetDeterminant& det ) const
 {
     bool has = false;
 
@@ -151,16 +163,21 @@ void DeterminantMap::subspace( DeterminantMap& dets, SharedMatrix evecs, std::ve
     new_evecs.assign(dim, 0.0);
 
     std::vector<std::pair<double, size_t>> det_weights;
-    for( size_t I = 0, maxI = dets.size(); I < maxI; ++I ){
-        det_weights.push_back( std::make_pair(evecs->get(I, root), I) );
+    //for( size_t I = 0, maxI = dets.size(); I < maxI; ++I ){
+    detmap map = dets.wfn_hash();
+    for( detmap::iterator it = map.begin(), endit = map.end(); it != endit; ++it ){
+        det_weights.push_back( std::make_pair(std::abs(evecs->get(it->second, root)), it->second) );
+  //      outfile->Printf("\n %1.6f  %zu  %s", evecs->get(it->second, root), it->second, it->first.str().c_str()); 
     }
     std::sort( det_weights.begin(), det_weights.end(), descending_pair);
 
     // Build this wfn with most important subset
     for( size_t I = 0; I < dim; ++I ){
-        const STLBitsetDeterminant& detI = dets.get_det((det_weights[I].second));
+        const STLBitsetDeterminant& detI = dets.get_det(det_weights[I].second);
         this->add(detI);
         new_evecs[I] = evecs->get(det_weights[I].second, root); 
+        //outfile->Printf("\n %1.6f  %s", new_evecs[I], this->get_det(det_weights[I].second).str().c_str()); 
+//        outfile->Printf("\n %1.6f  %s", new_evecs[I], detI.str().c_str()); 
     } 
 }
 
