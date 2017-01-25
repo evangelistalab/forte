@@ -39,13 +39,13 @@ set forte {
   root_sym           0
   nroot              1
   dsrg_s             0.5
-  ntrial_per_root    56
+# ntrial_per_root    56
   relax_ref          once
   semi_canonical     false
 }
 
-Ecasscf, wfn_cas = energy('casscf', return_wfn=True)                                                                              
+Ecasscf, wfn_cas = energy('casscf', return_wfn=True)
 compare_values(refcasscf,get_variable("CURRENT ENERGY"),10,"CASSCF energy") #TEST
 
-Eforte, wfn_cas = energy('forte', ref_wfn=wfn_cas, return_wfn=True)                                                             
+Eforte, wfn_cas = energy('forte', ref_wfn=wfn_cas, return_wfn=True)
 compare_values(refpt2_relax,get_variable("CURRENT ENERGY"),10,"DSRG-MRPT2 relaxed energy") #TEST

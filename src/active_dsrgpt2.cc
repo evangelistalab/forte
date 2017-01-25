@@ -76,7 +76,6 @@ double ACTIVE_DSRGPT2::compute_energy(){
 
         // before real computation, we will do CI over all states to determine the excitation type
         outfile->Printf("\n    Looping over all roots to determine excitation type.");
-        fci_mo.set_semicanonical(false);
         for(int h = 0; h < nirrep; ++h){
             if(nrootpi_[h] == 0) continue;
             else{
@@ -169,7 +168,6 @@ double ACTIVE_DSRGPT2::compute_energy(){
                 } // end of <CIS|CISD>
             }
         }
-        fci_mo.set_semicanonical(true);
 
         // real computation
         for(int h = 0; h < nirrep; ++h){
@@ -184,7 +182,7 @@ double ACTIVE_DSRGPT2::compute_energy(){
                     outfile->Printf("\n  %s\n", std::string(35,'=').c_str());
                     fci_mo.set_nroots(i+1);
                     fci_mo.set_root(i);
-                    ref_energies_[h].push_back(fci_mo.compute_energy());
+                    ref_energies_[h].push_back(fci_mo.compute_canonical_energy());
                     Reference reference = fci_mo.reference();
 //                    dominant_dets_[h].push_back(fci_mo.dominant_det());
 //                    orb_extents_[h].push_back(flatten_fci_orbextents(fci_mo.orb_extents()));

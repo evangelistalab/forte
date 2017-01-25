@@ -59,12 +59,21 @@ public:
 
     /// Compute CASCI energy
     double compute_energy();
+    /// Compute semi-canonical CASCI energy
+    double compute_canonical_energy();
 
     /// Returns the reference object
     Reference reference(const int& level = 3);
 
     /// Compute state-averaged CASCI energy
     double compute_sa_energy();
+    /// Compute semi-canonical state-averaged CASCI energy
+    double compute_canonical_sa_energy();
+    /**
+     * @brief Rotate the SA references such that <M|F|N> is diagonal
+     * @param irrep The irrep of states M and N (same irrep)
+     */
+    void xms_rotate(const int& irrep);
 
     /// Set symmetry of the root
     void set_root_sym(int root_sym) {root_sym_ = root_sym;}
@@ -80,9 +89,6 @@ public:
 
     /// Set orbitals
     void set_orbs(SharedMatrix Ca, SharedMatrix Cb);
-
-    /// Use whatever orbitals passed to this code
-    void use_default_orbitals(bool default_orbitals) {default_orbitals_ = default_orbitals;}
 
     /// Return the vector of determinants
     vecdet p_space() {return determinant_;}
@@ -101,9 +107,6 @@ public:
 
     /// Return a vector of dominant determinant for each root
     vector<STLBitsetDeterminant> dominant_dets() {return dominant_dets_;}
-
-    /// Set to use semicanonical
-    void set_semicanonical(bool semi) {semi_ = semi;}
 
     /// Quiet mode (no printing, for use with CASSCF)
     void set_quite_mode(bool quiet) {quiet_ = quiet;}
@@ -234,10 +237,7 @@ protected:
     /// Print the CI Vectors and Configurations (figure out the dominant determinants)
     void print_CI(const int &nroot, const double &CI_threshold, const vector<pair<SharedVector,double>> &eigen, const vecdet &det);
 
-    /// Use whatever orbitals passed to this code
-    bool default_orbitals_ = false;
     /// Semi-canonicalize orbitals
-    bool semi_;
     void semi_canonicalize();
     /// Use natural orbitals
     void nat_orbs();

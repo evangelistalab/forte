@@ -887,8 +887,11 @@ extern "C" SharedWavefunction forte(SharedWavefunction ref_wfn, Options &options
 
             if (task == "PILOTCI"){
                 std::shared_ptr<FCI_MO> fci_mo(new FCI_MO(ref_wfn,options,ints_,mo_space_info));
-                fci_mo->set_semicanonical(true);
-                fci_mo->compute_energy();
+                if(options.get_bool("SEMI_CANONICAL")){
+                    fci_mo->compute_canonical_energy();
+                }else{
+                    fci_mo->compute_energy();
+                }
                 reference = fci_mo->reference();
             }
 
@@ -965,7 +968,11 @@ extern "C" SharedWavefunction forte(SharedWavefunction ref_wfn, Options &options
     if(options.get_str("JOB_TYPE")=="CAS")
     {
         FCI_MO fci_mo(ref_wfn,options,ints_,mo_space_info);
-        fci_mo.compute_energy();
+        if(options.get_bool("SEMI_CANONICAL")){
+            fci_mo.compute_canonical_energy();
+        }else{
+            fci_mo.compute_energy();
+        }
     }
     if(options.get_str("JOB_TYPE") == "MRDSRG"){
         std::string cas_type = options.get_str("CAS_TYPE");
@@ -974,14 +981,22 @@ extern "C" SharedWavefunction forte(SharedWavefunction ref_wfn, Options &options
 
             if(options["AVG_STATE"].has_changed()){
                 options.set_str("FORTE","RELAX_REF","STATE-AVG");
-                fci_mo.compute_sa_energy();
+                if(options.get_bool("SEMI_CANONICAL")){
+                    fci_mo.compute_canonical_sa_energy();
+                }else{
+                    fci_mo.compute_sa_energy();
+                }
                 Reference reference = fci_mo.reference();
                 std::shared_ptr<MRDSRG> mrdsrg(new MRDSRG(reference,ref_wfn,options,ints_,mo_space_info));
                 mrdsrg->set_p_space(fci_mo.p_space());
                 mrdsrg->set_eigens(fci_mo.eigens());
                 mrdsrg->compute_energy_sa();
             } else {
-                fci_mo.compute_energy();
+                if(options.get_bool("SEMI_CANONICAL")){
+                    fci_mo.compute_canonical_energy();
+                }else{
+                    fci_mo.compute_energy();
+                }
                 Reference reference = fci_mo.reference();
 
                 std::shared_ptr<MRDSRG> mrdsrg(new MRDSRG(reference,ref_wfn,options,ints_,mo_space_info));
@@ -1021,7 +1036,11 @@ extern "C" SharedWavefunction forte(SharedWavefunction ref_wfn, Options &options
     }
     if(options.get_str("JOB_TYPE") == "MRDSRG_SO"){
         FCI_MO fci_mo(ref_wfn,options,ints_,mo_space_info);
-        fci_mo.compute_energy();
+        if(options.get_bool("SEMI_CANONICAL")){
+            fci_mo.compute_canonical_energy();
+        }else{
+            fci_mo.compute_energy();
+        }
         Reference reference = fci_mo.reference();
         std::shared_ptr<MRDSRG_SO> mrdsrg(new MRDSRG_SO(reference,options,ints_,mo_space_info));
         mrdsrg->compute_energy();
@@ -1034,7 +1053,11 @@ extern "C" SharedWavefunction forte(SharedWavefunction ref_wfn, Options &options
         std::string cas_type = options.get_str("CAS_TYPE");
         if (cas_type == "CAS") {
             FCI_MO fci_mo(ref_wfn,options,ints_,mo_space_info);
-            fci_mo.compute_energy();
+            if(options.get_bool("SEMI_CANONICAL")){
+                fci_mo.compute_canonical_energy();
+            }else{
+                fci_mo.compute_energy();
+            }
             Reference reference = fci_mo.reference();
 
             std::shared_ptr<DSRG_MRPT> dsrg(new DSRG_MRPT(reference,ref_wfn,options,ints_,mo_space_info));
@@ -1072,14 +1095,22 @@ extern "C" SharedWavefunction forte(SharedWavefunction ref_wfn, Options &options
             std::shared_ptr<FCI_MO> fci_mo(new FCI_MO(ref_wfn,options,ints_,mo_space_info));
             if(options["AVG_STATE"].has_changed()){
                 options.set_str("FORTE","RELAX_REF","STATE-AVG");
-                fci_mo->compute_sa_energy();
+                if(options.get_bool("SEMI_CANONICAL")){
+                    fci_mo->compute_canonical_sa_energy();
+                }else{
+                    fci_mo->compute_sa_energy();
+                }
                 Reference reference = fci_mo->reference();
                 std::shared_ptr<DSRG_MRPT2> dsrg_mrpt2(new DSRG_MRPT2(reference,ref_wfn,options,ints_,mo_space_info));
                 dsrg_mrpt2->set_p_space(fci_mo->p_space());
                 dsrg_mrpt2->set_eigens(fci_mo->eigens());
                 dsrg_mrpt2->compute_energy_multi_state();
             } else {
-                fci_mo->compute_energy();
+                if(options.get_bool("SEMI_CANONICAL")){
+                    fci_mo->compute_canonical_energy();
+                }else{
+                    fci_mo->compute_energy();
+                }
                 Reference reference = fci_mo->reference();
                 std::shared_ptr<DSRG_MRPT2> dsrg_mrpt2(new DSRG_MRPT2(reference,ref_wfn,options,ints_,mo_space_info));
                 if(options.get_str("RELAX_REF") != "NONE"){
@@ -1172,7 +1203,11 @@ extern "C" SharedWavefunction forte(SharedWavefunction ref_wfn, Options &options
         if(options.get_str("CAS_TYPE")=="CAS")
         {
             FCI_MO fci_mo(ref_wfn,options,ints_,mo_space_info);
-            fci_mo.compute_energy();
+            if(options.get_bool("SEMI_CANONICAL")){
+                fci_mo.compute_canonical_energy();
+            }else{
+                fci_mo.compute_energy();
+            }
             Reference reference = fci_mo.reference();
             std::shared_ptr<THREE_DSRG_MRPT2> three_dsrg_mrpt2(new THREE_DSRG_MRPT2(reference,ref_wfn,options,ints_, mo_space_info));
             three_dsrg_mrpt2->compute_energy();
@@ -1337,7 +1372,11 @@ extern "C" SharedWavefunction forte(SharedWavefunction ref_wfn, Options &options
         if(options.get_str("CAS_TYPE")=="CAS")
         {
             FCI_MO fci_mo(ref_wfn,options,ints_,mo_space_info);
-            fci_mo.compute_energy();
+            if(options.get_bool("SEMI_CANONICAL")){
+                fci_mo.compute_canonical_energy();
+            }else{
+                fci_mo.compute_energy();
+            }
             Reference reference = fci_mo.reference();
             std::shared_ptr<SOMRDSRG> somrdsrg(new SOMRDSRG(reference,ref_wfn,options,ints_,mo_space_info));
             somrdsrg->compute_energy();
