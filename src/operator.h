@@ -58,6 +58,10 @@ public:
     /// Build the coupling lists for two-particle operators
     void tp_lists( DeterminantMap& wfn );
 
+    void clear_op_lists();
+    void clear_tp_lists();
+
+
     /*- Operators -*/
     
     /// Single excitations, a_p^(+) a_q|>
@@ -68,6 +72,7 @@ public:
 
     /// Compute total spin expectation value <|S^2|> 
     double s2( DeterminantMap& wfn, SharedMatrix& evecs, int root );
+
 
     /// The alpha single-annihilation/creation list
     std::vector< std::vector< std::pair<size_t,short> >> a_ann_list_;
