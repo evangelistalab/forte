@@ -1390,7 +1390,9 @@ void SigmaVectorWfn::compute_sigma(SharedVector sigma, SharedVector b)
 
     size_t start_idx = ( tid < (size_ % num_thread) ) ? tid * bin_size : (size_ % num_thread)*(bin_size + 1) + (tid - (size_ % num_thread))*bin_size;
     size_t end_idx   = start_idx + bin_size;
-Timer cycl;
+//Timer cycl;
+{
+    const std::vector<STLBitsetDeterminant>& dets = space_.determinants();
     for (size_t J = start_idx; J < end_idx; ++J){
         // reference
         sigma_p[J] += diag_[J] * b_p[J];
@@ -1404,7 +1406,7 @@ Timer cycl;
                 if (p != q){
                     const size_t I = aaJ_mo_sign.first;
                     double sign_q = aaJ_mo_sign.second > 0.0 ? 1.0 : -1.0;
-                    const double HIJ = space_.get_det(I).slater_rules_single_alpha_abs(p,q) * sign_p * sign_q;
+                    const double HIJ = dets[I].slater_rules_single_alpha_abs(p,q) * sign_p * sign_q;
                     sigma_p[J] += HIJ * b_p[I];
                 }
             }
@@ -1419,14 +1421,15 @@ Timer cycl;
                 if (p != q){
                     const size_t I = bbJ_mo_sign.first;
                     double sign_q = bbJ_mo_sign.second > 0.0 ? 1.0 : -1.0;
-                    const double HIJ = space_.get_det(I).slater_rules_single_beta_abs(p,q) * sign_p * sign_q;
+                    const double HIJ = dets[I].slater_rules_single_beta_abs(p,q) * sign_p * sign_q;
                     sigma_p[J] += HIJ * b_p[I];
                 }
             }
         }
     }
-outfile->Printf("\n  Time spent on singles: %1.5f", cycl.get()); 
-Timer cycl2;
+}
+//outfile->Printf("\n  Time spent on singles: %1.5f", cycl.get()); 
+//Timer cycl2;
     for (size_t J = start_idx; J < end_idx; ++J){
     // aaaa doubles
         for (auto& aaJ_mo_sign : aa_ann_list_[J]){
@@ -1480,7 +1483,7 @@ Timer cycl2;
             }
         }
     }
-outfile->Printf("\n  Time spent on doubles: %1.5f", cycl2.get()); 
+//outfile->Printf("\n  Time spent on doubles: %1.5f", cycl2.get()); 
     }
 }
 void SparseCISolver::set_spin_project(bool value)
