@@ -316,6 +316,13 @@ void WFNOperator::op_lists( DeterminantMap& wfn )
             b_cre_list_[J].push_back(std::make_pair(I,sign));
         }
     }
+    a_cre_list_.shrink_to_fit();
+    b_cre_list_.shrink_to_fit();
+
+//for( size_t I = 0; I < b_cre_list_.size(); ++I ){
+//for( auto& det : a_cre_list_[I] ){
+//outfile->Printf("\n  detadd: %zu, det: %zu, idx: %d", I, det.first, det.second);
+//}}
 }
 
 void WFNOperator::tp_lists( DeterminantMap& wfn )
@@ -485,5 +492,24 @@ void WFNOperator::tp_lists( DeterminantMap& wfn )
     ab_cre_list_.shrink_to_fit();
     bb_cre_list_.shrink_to_fit();
 }
+
+void WFNOperator::clear_op_lists()
+{
+    a_ann_list_.clear();
+    b_ann_list_.clear();
+    a_cre_list_.clear();
+    b_cre_list_.clear();
+}
+
+void WFNOperator::clear_tp_lists()
+{
+    aa_ann_list_.clear();
+    bb_ann_list_.clear();
+    aa_cre_list_.clear();
+    bb_cre_list_.clear();
+    ab_cre_list_.clear();
+    ab_cre_list_.clear();
+}
+
 
 }}
