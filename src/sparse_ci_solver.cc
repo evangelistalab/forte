@@ -75,7 +75,7 @@ SigmaVectorWfn::SigmaVectorWfn( const DeterminantMap& space, WFNOperator& op ) :
     diag_.resize(space_.size() );
     for( det_hash<size_t>::const_iterator it = detmap.begin(), endit = detmap.end(); it != endit; ++it){
         diag_[it->second] = it->first.energy();
-    } 
+    }
 
 }
 
@@ -1390,12 +1390,10 @@ void SigmaVectorWfn::compute_sigma(SharedVector sigma, SharedVector b)
 
     size_t start_idx = ( tid < (size_ % num_thread) ) ? tid * bin_size : (size_ % num_thread)*(bin_size + 1) + (tid - (size_ % num_thread))*bin_size;
     size_t end_idx   = start_idx + bin_size;
-
+Timer cycl;
     for (size_t J = start_idx; J < end_idx; ++J){
         // reference
         sigma_p[J] += diag_[J] * b_p[J];
-//outfile->Printf("\n  Get here");
-
         // aa singles
         for (auto& aJ_mo_sign : a_ann_list_[J]){
             const size_t aJ_add = aJ_mo_sign.first;
@@ -1426,6 +1424,10 @@ void SigmaVectorWfn::compute_sigma(SharedVector sigma, SharedVector b)
                 }
             }
         }
+    }
+outfile->Printf("\n  Time spent on singles: %1.5f", cycl.get()); 
+Timer cycl2;
+    for (size_t J = start_idx; J < end_idx; ++J){
     // aaaa doubles
         for (auto& aaJ_mo_sign : aa_ann_list_[J]){
             const size_t aaJ_add = std::get<0>(aaJ_mo_sign);
@@ -1436,9 +1438,8 @@ void SigmaVectorWfn::compute_sigma(SharedVector sigma, SharedVector b)
                 const size_t r = std::abs(std::get<1>(aaaaJ_mo_sign)) - 1;
                 const size_t s = std::get<2>(aaaaJ_mo_sign);
                 if ((p != r) and (q != s) and (p != s) and (q != r)){
-                    const size_t aaaaJ_add = std::get<0>(aaaaJ_mo_sign);
+                    const size_t I = std::get<0>(aaaaJ_mo_sign);
                     const double sign_rs = std::get<1>(aaaaJ_mo_sign) > 0.0 ? 1.0 : -1.0;
-                    const size_t I = aaaaJ_add;
                     const double HIJ = sign_pq * sign_rs * STLBitsetDeterminant::fci_ints_->tei_aa(p,q,r,s);
                     sigma_p[J] += HIJ * b_p[I];
                 }
@@ -1454,9 +1455,8 @@ void SigmaVectorWfn::compute_sigma(SharedVector sigma, SharedVector b)
                 const size_t r = std::abs(std::get<1>(ababJ_mo_sign)) - 1;
                 const size_t s = std::get<2>(ababJ_mo_sign);
                 if ((p != r) and (q != s)){
-                    const size_t ababJ_add = std::get<0>(ababJ_mo_sign);
+                    const size_t I = std::get<0>(ababJ_mo_sign);
                     const double sign_rs = std::get<1>(ababJ_mo_sign) > 0.0 ? 1.0 : -1.0;
-                    const size_t I = ababJ_add;
                     const double HIJ = sign_pq * sign_rs * STLBitsetDeterminant::fci_ints_->tei_ab(p,q,r,s);
                     sigma_p[J] += HIJ * b_p[I];
                 }
@@ -1472,16 +1472,15 @@ void SigmaVectorWfn::compute_sigma(SharedVector sigma, SharedVector b)
                 const size_t r = std::abs(std::get<1>(bbbbJ_mo_sign)) - 1;
                 const size_t s = std::get<2>(bbbbJ_mo_sign);
                 if ((p != r) and (q != s) and (p != s) and (q != r)){
-                    const size_t bbbbJ_add = std::get<0>(bbbbJ_mo_sign);
+                    const size_t I = std::get<0>(bbbbJ_mo_sign);
                     const double sign_rs = std::get<1>(bbbbJ_mo_sign) > 0.0 ? 1.0 : -1.0;
-                    const size_t I = bbbbJ_add;
                     const double HIJ = sign_pq * sign_rs * STLBitsetDeterminant::fci_ints_->tei_bb(p,q,r,s);
                     sigma_p[J] += HIJ * b_p[I];
                 }
             }
         }
     }
-
+outfile->Printf("\n  Time spent on doubles: %1.5f", cycl2.get()); 
     }
 }
 void SparseCISolver::set_spin_project(bool value)

@@ -50,7 +50,10 @@ DeterminantMap::DeterminantMap(STLBitsetDeterminant& det )
     wfn_size_ = wfn_.size();
 }
 
-DeterminantMap::DeterminantMap(){}
+DeterminantMap::DeterminantMap()
+{
+    wfn_size_ = wfn_.size();
+}
 
 DeterminantMap::DeterminantMap(detmap& wfn) : wfn_(wfn) 
 {
@@ -196,13 +199,16 @@ bool DeterminantMap::has_det( const STLBitsetDeterminant& det ) const
 
 double DeterminantMap::overlap( std::vector<double>& det1_evecs, DeterminantMap& det2, SharedMatrix det2_evecs, int root)
 {
+
     double overlap = 0.0;
+
     for( detmap::iterator it = wfn_.begin(), endit = wfn_.end(); it != endit; ++it ){
         if( det2.has_det( it->first )){
             size_t idx = det2.get_idx( it->first );
             overlap += det1_evecs[it->second] * det2_evecs->get( idx, root ); 
         }
     }
+    overlap = std::abs(overlap);
     return overlap;
 }
 

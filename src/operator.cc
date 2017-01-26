@@ -341,7 +341,7 @@ void WFNOperator::tp_lists( DeterminantMap& wfn )
             std::vector<int> aocc = detI.get_alfa_occ();
             int noalfa = aocc.size();    
             
-            std::vector< std::tuple<size_t,short,short> > aa_ann(noalfa*(noalfa-1));
+            std::vector< std::tuple<size_t,short,short> > aa_ann(noalfa*(noalfa-1)/2);
 
             for( int i = 0, ij = 0; i < noalfa; ++i ){
                 for( int j = i + 1; j < noalfa; ++j, ++ij){
@@ -370,9 +370,9 @@ void WFNOperator::tp_lists( DeterminantMap& wfn )
             aa_ann.shrink_to_fit();
             aa_ann_list_[I.second] = aa_ann;
         }
-        aa_ann_list_.shrink_to_fit();
-        aa_cre_list_.resize(naa_ann);
+        aa_cre_list_.resize(map_aa_ann.size());
     } 
+    aa_ann_list_.shrink_to_fit();
 
     // Generate beta-beta coupling list
     {
@@ -383,7 +383,7 @@ void WFNOperator::tp_lists( DeterminantMap& wfn )
             std::vector<int> bocc = detI.get_beta_occ();
             int nobeta = bocc.size();    
             
-            std::vector< std::tuple<size_t,short,short> > bb_ann(nobeta*(nobeta-1));
+            std::vector< std::tuple<size_t,short,short> > bb_ann(nobeta*(nobeta-1)/2);
 
             for( int i = 0, ij = 0; i < nobeta; ++i ){
                 for( int j = i + 1; j < nobeta; ++j, ++ij){ 
@@ -412,10 +412,9 @@ void WFNOperator::tp_lists( DeterminantMap& wfn )
             bb_ann.shrink_to_fit();
             bb_ann_list_[I.second] = bb_ann;
         }
-        bb_ann_list_.shrink_to_fit();
-        bb_cre_list_.resize(nbb_ann);
-
+        bb_cre_list_.resize(map_bb_ann.size());
     } 
+    bb_ann_list_.shrink_to_fit();
     
     // Generate alfa-beta coupling list
     {
@@ -507,7 +506,7 @@ void WFNOperator::clear_tp_lists()
     bb_ann_list_.clear();
     aa_cre_list_.clear();
     bb_cre_list_.clear();
-    ab_cre_list_.clear();
+    ab_ann_list_.clear();
     ab_cre_list_.clear();
 }
 

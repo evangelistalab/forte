@@ -1942,6 +1942,7 @@ int AdaptiveCI::root_follow( DeterminantMap& P_ref,
             
             outfile->Printf("\n  Saving reference for root %d", n);
             // Save most important subspace
+            new_root = n;
             P_int.subspace( P_space, P_evecs, P_int_evecs, max_dim, n );
             old_overlap = new_overlap;
         }
@@ -1951,6 +1952,8 @@ int AdaptiveCI::root_follow( DeterminantMap& P_ref,
     
     P_ref.clear();
     P_ref = P_int;
+
+    P_ref_evecs = P_int_evecs;
 
     outfile->Printf("\n  Setting reference root to: %d", new_root);
 
@@ -2001,6 +2004,7 @@ void AdaptiveCI::compute_aci( DeterminantMap& PQ_space, SharedMatrix& PQ_evecs, 
 //    std::vector<std::pair<STLBitsetDeterminant,double>> P_ref; 
 
     DeterminantMap P_ref;
+    std::vector<double> P_ref_evecs; 
     DeterminantMap P_space( reference_determinant_ );
 
     // Use the reference determinant as a starting point
@@ -2092,6 +2096,8 @@ void AdaptiveCI::compute_aci( DeterminantMap& PQ_space, SharedMatrix& PQ_evecs, 
     //        }
     //    }
 
+        op.clear_op_lists();
+        op.clear_tp_lists();
         op.op_lists( P_space );
         op.tp_lists( P_space );
         sparse_solver.manual_guess( false );
@@ -2105,18 +2111,17 @@ void AdaptiveCI::compute_aci( DeterminantMap& PQ_space, SharedMatrix& PQ_evecs, 
             ex_alg_ = options_.get_str("EXCITED_ALGORITHM");
         }        
         // If doing root-following, grab the initial root
-        std::vector<double> P_ref_evecs; 
-        if( follow and pre_iter_ == 0 ){
-            P_ref_evecs.resize( P_space.size() );
-            det_hash<size_t> detmap = P_space.wfn_hash();
-            for( auto& det : detmap ){
-                P_ref.add( det.first );
-                P_ref_evecs[det.second] = P_evecs->get(det.second, ref_root_) ;
-            } 
-        }
+     //   if( follow and pre_iter_ == 0 ){
+     //       P_ref_evecs.resize( P_space.size() );
+     //       det_hash<size_t> detmap = P_space.wfn_hash();
+     //       for( auto& det : detmap ){
+     //           P_ref.add( det.first );
+     //           P_ref_evecs[det.second] = P_evecs->get(det.second, ref_root_) ;
+     //       } 
+     //   }
 
 
-        if( follow and num_ref_roots > 1 and (cycle >= pre_iter_) ){
+        if( follow and num_ref_roots > 1 and (cycle >= pre_iter_) and cycle > 0 ){
             ref_root_ = root_follow( P_ref, P_ref_evecs, P_space, P_evecs, num_ref_roots);
         } 
 
@@ -2166,6 +2171,8 @@ void AdaptiveCI::compute_aci( DeterminantMap& PQ_space, SharedMatrix& PQ_evecs, 
 
 
         // Step 3. Diagonalize the Hamiltonian in the P + Q space
+        op.clear_op_lists();
+        op.clear_tp_lists();
         op.op_lists( PQ_space );
         op.tp_lists( PQ_space );
         Timer diag_pq;
@@ -2205,16 +2212,19 @@ void AdaptiveCI::compute_aci( DeterminantMap& PQ_space, SharedMatrix& PQ_evecs, 
         num_ref_roots = std::min(nroot_,int(PQ_space.size()));
 
         // If doing root-following, grab the initial root
-    //    if( follow and cycle == (pre_iter_ - 1)){
+        if( follow and (cycle == (pre_iter_ - 1) or (pre_iter_ == 0 and cycle == 0) )){
 
-    //        if( options_.get_str("EXCITED_ALGORITHM") == "ROOT_SELECT" ){
-    //            ref_root_ = options_.get_int("ROOT");
-    //        }
+            if( options_.get_str("EXCITED_ALGORITHM") == "ROOT_SELECT" ){
+                ref_root_ = options_.get_int("ROOT");
+            }
 
-    //        for( size_t I = 0, maxI = PQ_space_.size(); I < maxI; ++I){
-    //            P_ref.push_back( std::make_pair( PQ_space_[I], PQ_evecs->get(I, ref_root_) ));
-    //        } 
-    //    }
+            P_ref_evecs.resize( PQ_space.size() );
+            det_hash<size_t> detmap = PQ_space.wfn_hash();
+            for( auto& det : detmap ){
+                P_ref.add( det.first );
+                P_ref_evecs[det.second] = PQ_evecs->get(det.second, ref_root_) ;
+            } 
+        }
 
         //if( follow and num_ref_roots > 0 and (cycle >= (pre_iter_ - 1)) ){
         if( follow and num_ref_roots > 0 and (cycle >= pre_iter_) ){
