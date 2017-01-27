@@ -52,6 +52,9 @@ public:
     /// Empty constructor
     WFNOperator();
 
+    /// Initializer
+    void initialize( std::shared_ptr<MOSpaceInfo>& mo_space_info );
+
     /// Build the coupling lists for one-particle operators
     void op_lists( DeterminantMap& wfn );
 

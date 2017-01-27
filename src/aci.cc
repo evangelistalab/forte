@@ -71,6 +71,7 @@ AdaptiveCI::AdaptiveCI(SharedWavefunction ref_wfn, Options &options,
     shallow_copy(ref_wfn);
     reference_wavefunction_ = ref_wfn;
 
+    op_.initialize( mo_space_info_ );
     startup();
 }
 
@@ -600,7 +601,7 @@ double AdaptiveCI::compute_energy()
     outfile->Printf("\n\n  %s: %d","Saving information for root",options_.get_int("ROOT"));
 
     //printf( "\n%1.5f\n", aci_elapse.get());
-
+    final_wfn_.merge( PQ_space );
     return PQ_evals->get(options_.get_int("ROOT")) + nuclear_repulsion_energy_ + fci_ints_->scalar_energy();
 }
 
@@ -1618,8 +1619,8 @@ void AdaptiveCI::set_max_rdm( int rdm )
 
 Reference AdaptiveCI::reference()
 {
-    DeterminantMap final_wfn;
-    CI_RDMS ci_rdms(options_, fci_ints_, final_wfn, evecs_, 0, 0  );
+    const std::vector<STLBitsetDeterminant>& final_wfn = final_wfn_.determinants();
+    CI_RDMS ci_rdms(options_, fci_ints_, final_wfn,  evecs_, 0, 0  );
     ci_rdms.set_max_rdm( rdm_level_ );
 	Reference aci_ref = ci_rdms.reference(ordm_a_, ordm_b_, trdm_aa_, trdm_ab_, trdm_bb_, trdm_aaa_, trdm_aab_, trdm_abb_, trdm_bbb_);
 	return aci_ref;
@@ -2047,7 +2048,6 @@ void AdaptiveCI::compute_aci( DeterminantMap& PQ_space, SharedMatrix& PQ_evecs, 
         ref_root_ = options_.get_int("ROOT");
     }
 
-    WFNOperator op(mo_space_info_);
 
 	int cycle;
     for (cycle = 0; cycle < max_cycle_; ++cycle){
@@ -2096,13 +2096,13 @@ void AdaptiveCI::compute_aci( DeterminantMap& PQ_space, SharedMatrix& PQ_evecs, 
     //        }
     //    }
 
-        op.clear_op_lists();
-        op.clear_tp_lists();
-        op.op_lists( P_space );
-        op.tp_lists( P_space );
+        op_.clear_op_lists();
+        op_.clear_tp_lists();
+        op_.op_lists( P_space );
+        op_.tp_lists( P_space );
         sparse_solver.manual_guess( false );
         Timer diag;
-        sparse_solver.diagonalize_hamiltonian_map(P_space,op,P_evals,P_evecs,num_ref_roots,wavefunction_multiplicity_,diag_method_);
+        sparse_solver.diagonalize_hamiltonian_map(P_space,op_,P_evals,P_evecs,num_ref_roots,wavefunction_multiplicity_,diag_method_);
         if (!quiet_mode_) outfile->Printf("\n  Time spent diagonalizing H:   %1.6f s", diag.get());
 
         if( cycle < pre_iter_ ){
@@ -2171,13 +2171,13 @@ void AdaptiveCI::compute_aci( DeterminantMap& PQ_space, SharedMatrix& PQ_evecs, 
 
 
         // Step 3. Diagonalize the Hamiltonian in the P + Q space
-        op.clear_op_lists();
-        op.clear_tp_lists();
-        op.op_lists( PQ_space );
-        op.tp_lists( PQ_space );
+        op_.clear_op_lists();
+        op_.clear_tp_lists();
+        op_.op_lists( PQ_space );
+        op_.tp_lists( PQ_space );
         Timer diag_pq;
 
-        sparse_solver.diagonalize_hamiltonian_map(PQ_space,op,PQ_evals,PQ_evecs,num_ref_roots,wavefunction_multiplicity_,diag_method_);
+        sparse_solver.diagonalize_hamiltonian_map(PQ_space,op_,PQ_evals,PQ_evecs,num_ref_roots,wavefunction_multiplicity_,diag_method_);
 
         if(!quiet_mode_) outfile->Printf("\n  Time spent diagonalizing H:   %1.6f s", diag_pq.get());
 		if(det_save_) save_dets_to_file( PQ_space, PQ_evecs );
