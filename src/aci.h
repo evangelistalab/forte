@@ -90,6 +90,10 @@ private:
 
     // ==> Class data <==
 
+    DeterminantMap final_wfn_;
+
+    WFNOperator op_;
+
     /// The molecular integrals required by Explorer
     std::shared_ptr<ForteIntegrals>  ints_;
 	///Pointer to FCI integrals

@@ -35,6 +35,16 @@ WFNOperator::WFNOperator( std::shared_ptr<MOSpaceInfo> mo_space_info ) : mo_spac
     mo_symmetry_ = mo_space_info_->symmetry("ACTIVE");
 }
 
+WFNOperator::WFNOperator()
+{
+}
+
+void WFNOperator::initialize( std::shared_ptr<MOSpaceInfo>& mo_space_info  )
+{
+    mo_space_info_ = mo_space_info;
+    mo_symmetry_ = mo_space_info_->symmetry("ACTIVE");
+}
+
 double WFNOperator::s2( DeterminantMap& wfn, SharedMatrix& evecs, int root )
 {
     double S2 = 0.0;
