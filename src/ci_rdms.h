@@ -42,6 +42,7 @@
 #include "reference.h"
 #include "string_lists.h"
 #include "determinant_map.h"
+#include "operator.h"
 
 namespace psi{ namespace forte{
 
@@ -54,7 +55,7 @@ public:
 
 	// Class constructor and destructor
     CI_RDMS(Options &options, std::shared_ptr<FCIIntegrals>& fci_ints, 
-            std::vector<STLBitsetDeterminant>& det_space, 
+            const std::vector<STLBitsetDeterminant>& det_space, 
             SharedMatrix evecs,
             int root1,
             int root2);
@@ -70,6 +71,7 @@ public:
 
     CI_RDMS(Options &options, std::shared_ptr<FCIIntegrals> fci_ints,
             DeterminantMap& det_space,
+            WFNOperator& op,
             SharedMatrix evecs,
             int root1,
             int root2);
@@ -113,7 +115,7 @@ private:
 	std::shared_ptr<MOSpaceInfo> mo_space_info_;
 
 	// The Determinant Space
-    std::vector<STLBitsetDeterminant> det_space_; 
+    const std::vector<STLBitsetDeterminant> det_space_; 
 
 	// The CI coefficients
 	SharedMatrix evecs_;

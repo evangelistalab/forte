@@ -44,7 +44,7 @@ namespace psi{ namespace forte {
 
 CI_RDMS::CI_RDMS(Options &options,
                  std::shared_ptr<FCIIntegrals>& fci_ints,
-                 std::vector<STLBitsetDeterminant>& det_space,
+                 const std::vector<STLBitsetDeterminant>& det_space,
                  SharedMatrix evecs,
                  int root1,
                  int root2)
@@ -84,6 +84,7 @@ CI_RDMS::CI_RDMS( Options &options,
 CI_RDMS::CI_RDMS( Options &options,
                   std::shared_ptr<FCIIntegrals> fci_ints,
                   DeterminantMap& det_space,
+                  WFNOperator& op,
                   SharedMatrix evecs,
                   int root1,
                   int root2)
