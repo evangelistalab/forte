@@ -76,7 +76,7 @@ public:
     void set_eigens(std::vector<std::vector<std::pair<SharedVector,double>>> eigens) {eigens_ = eigens;}
 
     /// Set determinants in the model space
-    void set_p_space(std::vector<psi::forte::STLBitsetDeterminant> p_space) {p_space_ = p_space;}
+    void set_p_spaces(std::vector<std::vector<psi::forte::STLBitsetDeterminant>> p_spaces) {p_spaces_ = p_spaces;}
 
     /// Ignore semi-canonical testing in DSRG-MRPT2
     void set_ignore_semicanonical(bool ignore) {ignore_semicanonical_ = ignore;}
@@ -98,12 +98,12 @@ protected:
     /// Print levels
     int print_;
 
-    /// Multi-state or not
-    bool multi_state_;
+    /// Do multi-state in state-averaged way?
+    bool multi_state_sa_;
     /// CASCI eigen values and eigen vectors for state averaging
     std::vector<std::vector<std::pair<SharedVector,double>>> eigens_;
-    /// Determinants in the model space
-    std::vector<psi::forte::STLBitsetDeterminant> p_space_;
+    /// Determinants with different symmetries in the model space
+    std::vector<std::vector<psi::forte::STLBitsetDeterminant>> p_spaces_;
 
     /// The reference object
     Reference reference_;
@@ -158,6 +158,10 @@ protected:
     void build_density();
     /// Build Fock matrix and diagonal Fock matrix elements
     void build_fock();
+    /// Fill up one-electron integrals from FORTE integral class
+    void build_oei();
+    /// Build effective OEI: hbar_{pq} = h_{pq} + sum_{m} V_{pm,qm}
+    void build_eff_oei();
 
     /// Are orbitals semi-canonicalized?
     bool semi_canonical_;
@@ -201,6 +205,8 @@ protected:
     /// Three-body density cumulant
     ambit::BlockedTensor Lambda3_;
 
+    /// One-eletron integral
+    ambit::BlockedTensor Hoei_;
     /// Generalized Fock matrix (bare or renormalized)
     ambit::BlockedTensor F_;
     /// Two-electron integral (bare or renormalized)
@@ -260,6 +266,8 @@ protected:
 
     // => Energy terms <= //
 
+    /// Compute reference energy
+    double compute_ref();
     /// Compute DSRG-PT2 correlation energy - Group of functions to calculate individual pieces of energy
     double E_FT1();
     double E_VT1();
@@ -311,13 +319,31 @@ protected:
 
     /// Compute multi-state energy in the state-average way
     std::vector<std::vector<double>> compute_energy_sa();
-    /// Compute multi-state energy in the XMS way
+    /// Compute multi-state energy in the MS/XMS way
     std::vector<std::vector<double>> compute_energy_xms();
+    /// XMS rotation for the reference states
+    SharedMatrix xms_rotation(std::shared_ptr<FCIIntegrals> fci_ints,
+                              std::vector<STLBitsetDeterminant>& p_space,
+                              SharedMatrix civecs, const int& irrep);
+
+    /// Build effective singles: T_{ia} -= T_{iu,av} * Gamma_{vu}
+    void build_eff_t1();
 
     /// Compute density cumulants
     void compute_cumulants(std::shared_ptr<FCIIntegrals> fci_ints,
+                           std::vector<psi::forte::STLBitsetDeterminant>& p_space,
                            SharedMatrix evecs, const int& root1, const int& root2,
                            const int& irrep);
+    /// Compute denisty matrices and puts in Gamma1_, Lambda2_, and Lambda3_
+    void compute_densities(std::shared_ptr<FCIIntegrals> fci_ints,
+                           std::vector<STLBitsetDeterminant>& p_space,
+                           SharedMatrix evecs, const int& root1, const int& root2,
+                           const int& irrep);
+
+    /// Compute MS coupling <M|H|N>
+    double compute_ms_1st_coupling(const std::string& name);
+    /// Compute MS coupling <M|HT|N>
+    double compute_ms_2nd_coupling(const std::string& name);
 };
 
 }} // End Namespaces

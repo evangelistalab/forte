@@ -2895,6 +2895,7 @@ double FCI_MO::compute_sa_energy(){
     vector<double> sa_opdm_a (nelement, 0.0);
     vector<double> sa_opdm_b (nelement, 0.0);
     eigens_.clear();
+    p_spaces_.clear();
 
     // allocate Fock matrix
     Fa_ = d2(ncmo_, d1(ncmo_));
@@ -2916,6 +2917,7 @@ double FCI_MO::compute_sa_energy(){
 
         // form determinants
         form_p_space();
+        p_spaces_.push_back(determinant_);
 
         // diagonalize the CASCI Hamiltonian
         eigen_.clear();

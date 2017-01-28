@@ -93,6 +93,9 @@ public:
     /// Return the vector of determinants
     vecdet p_space() {return determinant_;}
 
+    /// Return P spaces for states with different symmetry
+    vector<vecdet> p_spaces() {return FCI_MO::p_spaces_;}
+
     /// Return the orbital extents of the current state
     vector<vector<vector<double>>> orb_extents() {
         compute_orbital_extents();
@@ -205,6 +208,7 @@ protected:
     void form_det_cisd();
     vecdet determinant_;
     vector<STLBitsetDeterminant> dominant_dets_;
+    vector<vecdet> p_spaces_;
 
     /// Exclude ground-state HF in CISD space or not for excited states
     /// If it is excluded, ground state will use HF energy
