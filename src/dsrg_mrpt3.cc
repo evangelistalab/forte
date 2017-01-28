@@ -1393,6 +1393,7 @@ double DSRG_MRPT3::compute_energy_multi_state(){
         int irrep = options_["AVG_STATE"][n][0].to_integer();
         int multi = options_["AVG_STATE"][n][1].to_integer();
         int nstates = options_["AVG_STATE"][n][2].to_integer();
+        std::vector<psi::forte::STLBitsetDeterminant> p_space = p_spaces_[n];
 
         // diagonalize which the second-order effective Hamiltonian
         // FULL: CASCI using determinants
@@ -1455,7 +1456,7 @@ double DSRG_MRPT3::compute_energy_multi_state(){
                 for(int B = A; B < nstates; ++B){
 
                     // compute rdms
-                    CI_RDMS ci_rdms (options_,fci_ints,p_space_,evecs,A,B);
+                    CI_RDMS ci_rdms (options_,fci_ints,p_space,evecs,A,B);
                     ci_rdms.set_symmetry(irrep);
 
                     std::vector<double> opdm_a,opdm_b;

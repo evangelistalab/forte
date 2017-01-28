@@ -736,10 +736,15 @@ read_options(std::string name, Options &options)
         options.add_str("SMART_DSRG_S", "DSRG_S", "DSRG_S MIN_DELTA1 MAX_DELTA1 DAVG_MIN_DELTA1 DAVG_MAX_DELTA1");
         /*- Print DSRG-MRPT3 Timing Profile -*/
         options.add_bool("PRINT_TIME_PROFILE", false);
-        /*- Diagonalize which Hamiltonian in MS-DSRG-MRPT2/3
-         *  - AVG_STATES: H_AB = <A|H|B> where A and B are SA-CAS states
-         *  - FULL:       CASCI using determinants -*/
-        options.add_str("DSRG_SA_HEFF", "FULL", "FULL AVG_STATES XMS");
+        /*- Diagonalize Which Hamiltonian in SA-DSRG-MRPT2/3
+         *  - FULL:       CASCI using determinants
+         *  - AVG_STATES: H_AB = <A|Hbar|B> where A and B are SA-CAS states -*/
+        options.add_str("DSRG_SA_HEFF", "FULL", "FULL AVG_STATES");
+        /*- Do Multi-State DSRG-MRPT2
+         *  - NONE: do SA-DSRG-MRPT2
+         *  - MS:   form the 2nd-order Heff_AB = <A|H|B> + 0.5 * [<A|(T_A)^+ H|B> + <A|H T_B|B>]
+         *  - XMS:  rotate reference states such that <A|F|B> is diagonal -*/
+        options.add_str("DSRG_MS_HEFF", "NONE", "NONE XMS MS");
         /*- DSRG Perturbation -*/
         options.add_bool("DSRGPT", true);
         /*- Include internal amplitudes according to excitation level -*/
@@ -988,7 +993,7 @@ extern "C" SharedWavefunction forte(SharedWavefunction ref_wfn, Options &options
                 }
                 Reference reference = fci_mo.reference();
                 std::shared_ptr<MRDSRG> mrdsrg(new MRDSRG(reference,ref_wfn,options,ints_,mo_space_info));
-                mrdsrg->set_p_space(fci_mo.p_space());
+                mrdsrg->set_p_spaces(fci_mo.p_spaces());
                 mrdsrg->set_eigens(fci_mo.eigens());
                 mrdsrg->compute_energy_sa();
             } else {
@@ -1102,7 +1107,7 @@ extern "C" SharedWavefunction forte(SharedWavefunction ref_wfn, Options &options
                 }
                 Reference reference = fci_mo->reference();
                 std::shared_ptr<DSRG_MRPT2> dsrg_mrpt2(new DSRG_MRPT2(reference,ref_wfn,options,ints_,mo_space_info));
-                dsrg_mrpt2->set_p_space(fci_mo->p_space());
+                dsrg_mrpt2->set_p_spaces(fci_mo->p_spaces());
                 dsrg_mrpt2->set_eigens(fci_mo->eigens());
                 dsrg_mrpt2->compute_energy_multi_state();
             } else {
@@ -1326,7 +1331,7 @@ extern "C" SharedWavefunction forte(SharedWavefunction ref_wfn, Options &options
                 fci_mo->compute_sa_energy();
                 Reference reference = fci_mo->reference();
                 std::shared_ptr<DSRG_MRPT3> dsrg_mrpt3(new DSRG_MRPT3(reference,ref_wfn,options,ints_,mo_space_info));
-                dsrg_mrpt3->set_p_space(fci_mo->p_space());
+                dsrg_mrpt3->set_p_spaces(fci_mo->p_spaces());
                 dsrg_mrpt3->set_eigens(fci_mo->eigens());
                 dsrg_mrpt3->compute_energy_multi_state();
             } else {

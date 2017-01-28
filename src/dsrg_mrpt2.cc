@@ -65,6 +65,8 @@ void DSRG_MRPT2::startup()
     ntamp_ = options_.get_int("NTAMP");
     intruder_tamp_ = options_.get_double("INTRUDER_TAMP");
 
+    multi_state_sa_ = options_["AVG_STATE"].has_changed() && (options_.get_str("DSRG_MS_HEFF") == "NONE");
+
     // get frozen core energy
     frozen_core_energy_ = ints_->frozen_core_energy();
 
@@ -133,9 +135,8 @@ void DSRG_MRPT2::startup()
 
     // Prepare Hbar
     relax_ref_ = options_.get_str("RELAX_REF");
-    multi_state_ = options_["AVG_STATE"].has_changed();
     if(relax_ref_ != "NONE"){
-        if(relax_ref_ != "ONCE" && !multi_state_){
+        if(relax_ref_ != "ONCE" && !multi_state_sa_){
             outfile->Printf("\n\n  Warning: RELAX_REF option \"%s\" is not supported. Change to ONCE", relax_ref_.c_str());
             relax_ref_ = "ONCE";
         }
@@ -344,7 +345,7 @@ void DSRG_MRPT2::print_summary()
     std::vector<std::pair<std::string,std::string>> calculation_info_string{
         {"int_type", options_.get_str("INT_TYPE")},
         {"source operator", source_},
-        {"state_type", multi_state_ ? "MULTI_STATE" : "STATE_SPECIFIC"},
+        {"state_type", multi_state_sa_ ? "MULTI_STATE" : "STATE_SPECIFIC"},
         {"reference relaxation", relax_ref_}};
 
     // Print some information
@@ -368,6 +369,40 @@ void DSRG_MRPT2::print_summary()
 void DSRG_MRPT2::cleanup()
 {
     dsrg_time_.print_comm_time();
+}
+
+double DSRG_MRPT2::compute_ref(){
+    Timer timer;
+    std::string str = "Computing reference energy";
+    outfile->Printf("\n    %-40s ...", str.c_str());
+    double E = 0.0;
+
+    for(const std::string block: {"cc", "CC"}){
+        F_.block(block).iterate([&](const std::vector<size_t>& i,double& value){
+            if(i[0] == i[1]){
+                E += 0.5 * value;
+            }
+        });
+        Hoei_.block(block).iterate([&](const std::vector<size_t>& i,double& value){
+            if(i[0] == i[1]){
+                E += 0.5 * value;
+            }
+        });
+    }
+
+    E += 0.5 * Hoei_["uv"] * Gamma1_["vu"];
+    E += 0.5 * Hoei_["UV"] * Gamma1_["VU"];
+    E += 0.5 * F_["uv"] * Gamma1_["vu"];
+    E += 0.5 * F_["UV"] * Gamma1_["VU"];
+
+    E += 0.25 * V_["uvxy"] * Lambda2_["xyuv"];
+    E += 0.25 * V_["UVXY"] * Lambda2_["XYUV"];
+    E += V_["uVxY"] * Lambda2_["xYuV"];
+
+    double Enuc = Process::environment.molecule()->nuclear_repulsion_energy();
+
+    outfile->Printf("  Done. Timing %15.6f s", timer.get());
+    return E + frozen_core_energy_ + Enuc;
 }
 
 double DSRG_MRPT2::compute_energy()
