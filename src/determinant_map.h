@@ -47,6 +47,9 @@ public:
     /// Default constructor
     DeterminantMap( std::vector<STLBitsetDeterminant>& dets );
 
+    /// Default constructor
+    DeterminantMap( STLBitsetDeterminant& det );
+
     /// Empty constructor
     DeterminantMap();
 
@@ -54,19 +57,46 @@ public:
     DeterminantMap( detmap& wfn_ );
 
     /// @return The hash
+    const detmap& wfn_hash() const;
+
+    /// @return The hash
     detmap& wfn_hash();
 
     /// Add a determinant
-    void add( STLBitsetDeterminant& det );
+    void add( const STLBitsetDeterminant& det );
 
     /// Return the number of determinants
-    double size();
+    size_t size() const;
+
+    // Clear hash
+    void clear();
 
     // Return a specific determinant by value
-    STLBitsetDeterminant get_det( size_t& value );
+    STLBitsetDeterminant get_det( const size_t value ) const;
+
+    // Return the index of a determinant
+    size_t get_idx( const STLBitsetDeterminant& det ) const;
 
     // Return a vector of the determinants
-    std::vector<STLBitsetDeterminant> determinants();
+    std::vector<STLBitsetDeterminant> determinants() const;
+
+    // Make this spin complete
+    void make_spin_complete();
+
+    // Check if a determinant is in the wavefunction
+    bool has_det( const STLBitsetDeterminant& det ) const;
+
+    // Compute overlap between this and input wfn
+    double overlap( std::vector<double>& det1_evecs, DeterminantMap& det2, SharedMatrix det2_evecs, int root );
+
+    // Compute overlap between this and input wfn
+    double overlap( SharedMatrix det1_evecs, int root1,  DeterminantMap& det2, SharedMatrix det2_evecs, int root2);
+
+    // Save most important subspace as this
+    void subspace( DeterminantMap& dets, SharedMatrix evecs, std::vector<double>& new_evecs, int dim, int root);
+
+    // Merge a wavefunction into this
+    void merge( DeterminantMap& dets);
 
 protected:
 
