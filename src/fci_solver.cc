@@ -476,8 +476,11 @@ double FCISolver::compute_energy()
         throw PSIEXCEPTION("FCI did not converge. Try increasing FCI_ITERATIONS.");
     }
 
+    // Compute final eigenvectors
+    dls.get_results();
+
     // Copy eigen values and eigen vectors
-    eigen_vals_ = dls.eigenvalues();
+    eigen_vals_ = dls.eigenvalues();    
     eigen_vecs_ = dls.eigenvectors();
 
     // Print determinants

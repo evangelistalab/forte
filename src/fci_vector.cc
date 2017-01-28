@@ -510,31 +510,37 @@ void FCIWfn::print_natural_orbitals(std::shared_ptr<MOSpaceInfo> mo_space_info)
     print_h2("NATURAL ORBITALS");
     Dimension active_dim = mo_space_info->get_dimension("ACTIVE");
 
-    std::shared_ptr<Matrix> opdm_a(new Matrix("OPDM_A",nirrep_,active_dim, active_dim));
-    std::shared_ptr<Matrix> opdm_b(new Matrix("OPDM_b",nirrep_, active_dim, active_dim));
+    size_t na = alfa_graph_->nones();
+    size_t nb = beta_graph_->nones();
+
+    auto opdm = std::make_shared<Matrix>(new Matrix("OPDM",active_dim, active_dim));
 
     int offset = 0;
     for(int h = 0; h < nirrep_; h++){
         for(int u = 0; u < active_dim[h]; u++){
             for(int v = 0; v < active_dim[h]; v++){
-                opdm_a->set(h, u, v, opdm_a_[(u + offset) * ncmo_ + v + offset]);
-                opdm_b->set(h, u, v, opdm_b_[(u + offset) * ncmo_ + v + offset]);
+                double gamma_uv = 0.0;
+                if (na > 0){
+                    gamma_uv += opdm_a_[(u + offset) * ncmo_ + v + offset];
+                }
+                if (nb > 0){
+                    gamma_uv += opdm_b_[(u + offset) * ncmo_ + v + offset];
+                }
+                opdm->set(h, u, v, gamma_uv);
             }
         }
         offset += active_dim[h];
     }
-    SharedVector OCC_A(new Vector("ALPHA OCCUPATION", nirrep_, active_dim));
-    SharedVector OCC_B(new Vector("BETA OCCUPATION",  nirrep_, active_dim));
-    SharedMatrix NO_A(new Matrix (nirrep_, active_dim, active_dim));
-    SharedMatrix NO_B(new Matrix (nirrep_, active_dim, active_dim));
 
-    opdm_a->diagonalize(NO_A, OCC_A, descending);
-    opdm_b->diagonalize(NO_B, OCC_B, descending);
+    auto OCC = std::make_shared<Vector>("Occupation numbers", active_dim);
+    auto NO = std::make_shared<Matrix>("MO -> NO transformation",active_dim, active_dim);
+
+    opdm->diagonalize(NO, OCC, descending);
     std::vector< std::pair<double, std::pair< int, int > > >vec_irrep_occupation;
     for(int h = 0; h < nirrep_; h++)
     {
         for(int u = 0; u < active_dim[h]; u++){
-            auto irrep_occ = std::make_pair(OCC_A->get(h, u) + OCC_B->get(h, u), std::make_pair(h, u + 1));
+            auto irrep_occ = std::make_pair(OCC->get(h, u), std::make_pair(h, u + 1));
             vec_irrep_occupation.push_back(irrep_occ);
         }
     }
@@ -549,9 +555,7 @@ void FCIWfn::print_natural_orbitals(std::shared_ptr<MOSpaceInfo> mo_space_info)
         if (count++ % 3 == 2 && count != vec_irrep_occupation.size())
             outfile->Printf( "\n    ");
     }
-    outfile->Printf( "\n\n");
-
-
+    outfile->Printf( "\n");
 }
 
 ///**
