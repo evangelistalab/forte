@@ -67,8 +67,8 @@ public:
     /// Compute the DSRG-MRPT3 energy with relaxed reference (once)
     double compute_energy_relaxed();
 
-    /// Compute the multi-state DSRG-MRPT2 energies
-    double compute_energy_multi_state();
+    /// Compute the state-averaged DSRG-MRPT3 energies
+    double compute_energy_sa();
 
     /// Set CASCI eigen values and eigen vectors for state averaging
     void set_eigens(std::vector<std::vector<std::pair<SharedVector,double>>> eigens) {eigens_ = eigens;}

@@ -2,8 +2,10 @@
 
 import forte
 
-refmcscf     = -106.752885060580013
-refdsrgpt2   = -106.929958783667061
+refmcscf    = -106.752885060580013
+#refpt2sub   = -106.929958783667061
+refpt2sub   = -106.929958806835
+refpt2full  = -106.929958810967
 
 molecule {
   0 1
@@ -47,14 +49,19 @@ set forte{
   root               0
   dsrg_s             0.5
   maxiter            50
-  relax_ref          once
-  e_convergence      8
+  e_convergence      10
   cas_type           cas
   avg_state          [[0,1,2]]
-  dsrg_sa_heff       avg_states
+  dsrg_multi_state   sa_sub
 }
 
 Emcscf, wfn = energy('casscf', return_wfn=True)
 
 energy('forte',ref_wfn=wfn)
-#compare_values(refdsrgpt2,get_variable("CURRENT ENERGY"),10,"MS-DSRG-MRPT2 energy root 0")
+compare_values(refpt2sub,get_variable("CURRENT ENERGY"),8,"SA-DSRG-MRPT2 SUB energy root 0")
+
+set forte{
+  dsrg_multi_state   sa_full
+}
+energy('forte',ref_wfn=wfn)
+compare_values(refpt2full,get_variable("CURRENT ENERGY"),8,"SA-DSRG-MRPT2 FULL energy root 0")

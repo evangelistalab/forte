@@ -98,8 +98,8 @@ protected:
     /// Print levels
     int print_;
 
-    /// Do multi-state in state-averaged way?
-    bool multi_state_sa_;
+    /// Do multi-state computation?
+    bool multi_state_;
     /// CASCI eigen values and eigen vectors for state averaging
     std::vector<std::vector<std::pair<SharedVector,double>>> eigens_;
     /// Determinants with different symmetries in the model space
