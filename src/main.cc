@@ -719,7 +719,7 @@ read_options(std::string name, Options &options)
         /*- T1 Amplitudes -*/
         options.add_str("T1_AMP", "DSRG", "DSRG SRG ZERO");
         /*- Reference Relaxation -*/
-        options.add_str("RELAX_REF", "NONE", "NONE ONCE ITERATE STATE-AVG");
+        options.add_str("RELAX_REF", "NONE", "NONE ONCE ITERATE");
         /*- Max Iteration for Reference Relaxation -*/
         options.add_int("MAXITER_RELAX_REF", 10);
         /*- DSRG Taylor Expansion Threshold -*/
@@ -736,15 +736,14 @@ read_options(std::string name, Options &options)
         options.add_str("SMART_DSRG_S", "DSRG_S", "DSRG_S MIN_DELTA1 MAX_DELTA1 DAVG_MIN_DELTA1 DAVG_MAX_DELTA1");
         /*- Print DSRG-MRPT3 Timing Profile -*/
         options.add_bool("PRINT_TIME_PROFILE", false);
-        /*- Diagonalize Which Hamiltonian in SA-DSRG-MRPT2/3
-         *  - FULL:       CASCI using determinants
-         *  - AVG_STATES: H_AB = <A|Hbar|B> where A and B are SA-CAS states -*/
-        options.add_str("DSRG_SA_HEFF", "FULL", "FULL AVG_STATES");
-        /*- Do Multi-State DSRG-MRPT2
-         *  - NONE: do SA-DSRG-MRPT2
-         *  - MS:   form the 2nd-order Heff_AB = <A|H|B> + 0.5 * [<A|(T_A)^+ H|B> + <A|H T_B|B>]
-         *  - XMS:  rotate reference states such that <A|F|B> is diagonal -*/
-        options.add_str("DSRG_MS_HEFF", "NONE", "NONE XMS MS");
+        /*- Multi-State DSRG options
+         *  - State-average approach
+         *    - SA_SUB:  form H_MN = <M|Hbar|N>; M, N are CAS states of interest
+         *    - SA_FULL: redo a CASCI
+         *  - Multi-state approach (currently only for MRPT2)
+         *    - MS:  form 2nd-order Heff_MN = <M|H|N> + 0.5 * [<M|(T_M)^+ H|N> + <M|H T_N|N>]
+         *    - XMS: rotate references such that <M|F|N> is diagonal before MS procedure -*/
+        options.add_str("DSRG_MULTI_STATE", "SA_FULL", "SA_FULL SA_SUB MS XMS");
         /*- DSRG Perturbation -*/
         options.add_bool("DSRGPT", true);
         /*- Include internal amplitudes according to excitation level -*/
@@ -985,7 +984,7 @@ extern "C" SharedWavefunction forte(SharedWavefunction ref_wfn, Options &options
             FCI_MO fci_mo(ref_wfn,options,ints_,mo_space_info);
 
             if(options["AVG_STATE"].has_changed()){
-                options.set_str("FORTE","RELAX_REF","STATE-AVG");
+                options.set_str("FORTE","RELAX_REF","ITERATE");
                 if(options.get_bool("SEMI_CANONICAL")){
                     fci_mo.compute_canonical_sa_energy();
                 }else{
@@ -1069,7 +1068,7 @@ extern "C" SharedWavefunction forte(SharedWavefunction ref_wfn, Options &options
             if(options.get_str("RELAX_REF") == "NONE"){
                 dsrg->compute_energy();
             }else{
-                //                dsrg->compute_energy_relaxed();
+//                dsrg->compute_energy_relaxed();
             }
         } else if (cas_type == "FCI") {
             if (options.get_bool("SEMI_CANONICAL")) {
@@ -1088,7 +1087,7 @@ extern "C" SharedWavefunction forte(SharedWavefunction ref_wfn, Options &options
             if(options.get_str("RELAX_REF") == "NONE"){
                 dsrg->compute_energy();
             }else{
-                //                dsrg->compute_energy_relaxed();
+//                dsrg->compute_energy_relaxed();
             }
         }
 
@@ -1099,7 +1098,11 @@ extern "C" SharedWavefunction forte(SharedWavefunction ref_wfn, Options &options
         {
             std::shared_ptr<FCI_MO> fci_mo(new FCI_MO(ref_wfn,options,ints_,mo_space_info));
             if(options["AVG_STATE"].has_changed()){
-                options.set_str("FORTE","RELAX_REF","STATE-AVG");
+                std::string ms_type = options.get_str("DSRG_MULTI_STATE");
+                if(ms_type.find("SA") != std::string::npos){
+                    options.set_str("FORTE","RELAX_REF","ONCE");
+                }
+
                 if(options.get_bool("SEMI_CANONICAL")){
                     fci_mo->compute_canonical_sa_energy();
                 }else{
@@ -1327,13 +1330,17 @@ extern "C" SharedWavefunction forte(SharedWavefunction ref_wfn, Options &options
         {
             std::shared_ptr<FCI_MO> fci_mo(new FCI_MO(ref_wfn,options,ints_,mo_space_info));
             if(options["AVG_STATE"].has_changed()){
-                options.set_str("FORTE","RELAX_REF","STATE-AVG");
+                std::string ms_type = options.get_str("DSRG_MULTI_STATE");
+                if(ms_type.find("SA") != std::string::npos){
+                    options.set_str("FORTE","RELAX_REF","ONCE");
+                }
+
                 fci_mo->compute_sa_energy();
                 Reference reference = fci_mo->reference();
                 std::shared_ptr<DSRG_MRPT3> dsrg_mrpt3(new DSRG_MRPT3(reference,ref_wfn,options,ints_,mo_space_info));
                 dsrg_mrpt3->set_p_spaces(fci_mo->p_spaces());
                 dsrg_mrpt3->set_eigens(fci_mo->eigens());
-                dsrg_mrpt3->compute_energy_multi_state();
+                dsrg_mrpt3->compute_energy_sa();
             } else {
                 fci_mo->compute_energy();
                 Reference reference = fci_mo->reference();

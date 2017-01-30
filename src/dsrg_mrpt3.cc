@@ -515,6 +515,19 @@ void DSRG_MRPT3::print_summary()
         {"state_type", multi_state_ ? "MULTI_STATE" : "STATE_SPECIFIC"},
         {"reference relaxation", relax_ref_}};
 
+    if(multi_state_){
+        calculation_info_string.push_back({"state_type", "MULTI-STATE"});
+        std::string ms_type = options_.get_str("DSRG_MULTI_STATE");
+        if(ms_type.find("SA") == std::string::npos){
+            outfile->Printf("\n    Warning: %s is not supported in DSRG-MRPT3 at present.", ms_type.c_str());
+            outfile->Printf("\n             Set DSRG_MULTI_STATE to the default SA_FULL.");
+            options_.set_str("FORTE","DSRG_MULTI_STATE","SA_FULL");
+        }
+        calculation_info_string.push_back({"multi-state type", options_.get_str("DSRG_MULTI_STATE")});
+    }else{
+        calculation_info_string.push_back({"state_type", "STATE-SPECIFIC"});
+    }
+
     // Print some information
     outfile->Printf("\n\n  ==> Calculation Information <==\n");
     for (auto& str_dim : calculation_info){
@@ -1345,7 +1358,7 @@ void DSRG_MRPT3::renormalize_F(const bool& plusone)
     outfile->Printf("  Done. Timing %10.3f s", timer.get());
 }
 
-double DSRG_MRPT3::compute_energy_multi_state(){
+double DSRG_MRPT3::compute_energy_sa(){
     // compute DSRG-MRPT3 energy
     compute_energy();
 
@@ -1395,10 +1408,16 @@ double DSRG_MRPT3::compute_energy_multi_state(){
         int nstates = options_["AVG_STATE"][n][2].to_integer();
         std::vector<psi::forte::STLBitsetDeterminant> p_space = p_spaces_[n];
 
+        // print current symmetry
+        std::stringstream ss;
+        ss << "Diagonalize Effective Hamiltonian (" << multi_label[multi - 1] << " "
+           << irrep_symbol[irrep] << ")";
+        print_h2(ss.str());
+
         // diagonalize which the second-order effective Hamiltonian
-        // FULL: CASCI using determinants
-        // AVG_STATES: H_AB = <A|H|B> where A and B are SA-CAS states
-        if(options_.get_str("DSRG_SA_HEFF") == "FULL") {
+        // SA_FULL: CASCI using determinants
+        // SA_SUB: H_AB = <A|H|B> where A and B are SA-CAS states
+        if(options_.get_str("DSRG_MULTI_STATE") == "SA_FULL") {
 
             outfile->Printf("    Use string FCI code.");
 
@@ -1443,6 +1462,8 @@ double DSRG_MRPT3::compute_energy_multi_state(){
             }
 
         } else {
+
+            outfile->Printf("\n    Use the sub-space of CASCI.");
 
             int dim = (eigens_[n][0].first)->dim();
             SharedMatrix evecs (new Matrix("evecs",dim,dim));
@@ -1493,11 +1514,13 @@ double DSRG_MRPT3::compute_energy_multi_state(){
                 }
             } // end forming effective Hamiltonian
 
+            print_h2("Effective Hamiltonian Summary");
+            outfile->Printf("\n");
             Heff->print();
-
             SharedMatrix U (new Matrix("U of Heff", nstates, nstates));
             SharedVector Ems (new Vector("MS Energies", nstates));
             Heff->diagonalize(U, Ems);
+            U->eivprint(Ems);
 
             // fill in Edsrg_sa
             for(int i = 0; i < nstates; ++i){

@@ -21,8 +21,9 @@ double DSRG_MRPT2::compute_energy_multi_state(){
 
     // multi-state calculation
     std::vector<std::vector<double>> Edsrg_ms;
+    std::string dsrg_multi_state = options_.get_str("DSRG_MULTI_STATE");
 
-    if(options_.get_str("DSRG_MS_HEFF") == "NONE"){
+    if(dsrg_multi_state.find("SA") != std::string::npos){
         Edsrg_ms = compute_energy_sa();
     }else{
         Edsrg_ms = compute_energy_xms();
@@ -108,7 +109,7 @@ std::vector<std::vector<double>> DSRG_MRPT2::compute_energy_sa(){
         // diagonalize which the second-order effective Hamiltonian
         // FULL: CASCI using determinants
         // AVG_STATES: H_AB = <A|H|B> where A and B are SA-CAS states
-        if(options_.get_str("DSRG_SA_HEFF") == "FULL") {
+        if(options_.get_str("DSRG_MULTI_STATE") == "SA_FULL") {
 
             outfile->Printf("\n    Use string FCI code.");
 
@@ -203,11 +204,13 @@ std::vector<std::vector<double>> DSRG_MRPT2::compute_energy_sa(){
                 }
             } // end forming effective Hamiltonian
 
+            print_h2("Effective Hamiltonian Summary");
+            outfile->Printf("\n");
             Heff->print();
             SharedMatrix U (new Matrix("U of Heff", nstates, nstates));
             SharedVector Ems (new Vector("MS Energies", nstates));
             Heff->diagonalize(U, Ems);
-//            U->eivprint(Ems);
+            U->eivprint(Ems);
 
             // fill in Edsrg_sa
             for(int i = 0; i < nstates; ++i){
@@ -235,13 +238,13 @@ std::vector<std::vector<double>> DSRG_MRPT2::compute_energy_xms(){
 
     // prepare FCI integrals
     std::shared_ptr<FCIIntegrals> fci_ints = std::make_shared<FCIIntegrals>(ints_, aactv_mos_, acore_mos_);
-    // TODO: check if the following really needs
-    ambit::Tensor actv_aa = ints_->aptei_aa_block(aactv_mos_, aactv_mos_, aactv_mos_, aactv_mos_);
-    ambit::Tensor actv_ab = ints_->aptei_ab_block(aactv_mos_, aactv_mos_, aactv_mos_, aactv_mos_);
-    ambit::Tensor actv_bb = ints_->aptei_bb_block(aactv_mos_, aactv_mos_, aactv_mos_, aactv_mos_);
-    fci_ints->set_active_integrals(actv_aa, actv_ab, actv_bb);
-    fci_ints->compute_restricted_one_body_operator();
+//    ambit::Tensor actv_aa = ints_->aptei_aa_block(aactv_mos_, aactv_mos_, aactv_mos_, aactv_mos_);
+//    ambit::Tensor actv_ab = ints_->aptei_ab_block(aactv_mos_, aactv_mos_, aactv_mos_, aactv_mos_);
+//    ambit::Tensor actv_bb = ints_->aptei_bb_block(aactv_mos_, aactv_mos_, aactv_mos_, aactv_mos_);
+//    fci_ints->set_active_integrals(actv_aa, actv_ab, actv_bb);
+//    fci_ints->compute_restricted_one_body_operator();
 
+    // allocate space for one-electron integrals
     Hoei_ = BTF_->build(tensor_type_,"OEI",spin_cases({"ph","cc"}));
 
     // obtain zeroth-order states
@@ -268,7 +271,7 @@ std::vector<std::vector<double>> DSRG_MRPT2::compute_energy_xms(){
         }
 
         // XMS rotaion if needed
-        if(options_.get_str("DSRG_MS_HEFF") == "XMS"){
+        if(options_.get_str("DSRG_MULTI_STATE") == "XMS"){
             if(nentry > 1){
                 // recompute state-averaged density
                 outfile->Printf("\n    Recompute SA density matrix of %s with equal weights.", ss.str().c_str());
@@ -304,9 +307,13 @@ std::vector<std::vector<double>> DSRG_MRPT2::compute_energy_xms(){
         // prepare Heff
         SharedMatrix Heff (new Matrix("Heff " + multi_label[multi - 1]
                            + " " + irrep_symbol[irrep], nstates, nstates));
+        SharedMatrix Heff_sym (new Matrix("Heff (Symmetrized) " + multi_label[multi - 1]
+                               + " " + irrep_symbol[irrep], nstates, nstates));
 
         // loop over states
         for(int M = 0; M < nstates; ++M){
+
+            print_h2("Compute DSRG-MRPT2 Energy of State " + std::to_string(M));
 
             // compute the densities
             compute_cumulants(fci_ints, p_space, civecs, M, M, irrep);
@@ -321,7 +328,12 @@ std::vector<std::vector<double>> DSRG_MRPT2::compute_energy_xms(){
             Eref_ = compute_ref();
 
             // compute DSRG-MRPT2 energy
-            Heff->set(M, M, compute_energy());
+            double Ept2 = compute_energy();
+
+            // set diagonal elements of Heff
+            Heff->set(M, M, Ept2);
+            Heff_sym->set(M, M, Ept2);
+
 
             // reset two-electron integrals because it is renormalized
             build_ints();
@@ -333,6 +345,7 @@ std::vector<std::vector<double>> DSRG_MRPT2::compute_energy_xms(){
             build_eff_t1();
 
             // compute couplings between states
+            print_h2("Compute Couplings with State " + std::to_string(M));
             for(int N = 0; N < nstates; ++N){
                 if(N == M){
                     continue;
@@ -340,170 +353,44 @@ std::vector<std::vector<double>> DSRG_MRPT2::compute_energy_xms(){
                     // compute transition densities
                     compute_densities(fci_ints, p_space, civecs, M, N, irrep);
 
-                    // compute coupling of <M|H|N>
-                    // TODO: check if ms of this is zero
-                    // TODO: check the values of xms
-                    // TODO: this can be improved and compute only once for MN and NM
+                    // compute coupling of <N|H|M>
                     std::stringstream ss;
-                    ss << "<" << M << "|H|" << N << ">";
-                    double c1 = compute_ms_1st_coupling(ss.str());
-                    Heff->add(M, N, 0.5 * c1);
-                    Heff->add(N, M, 0.5 * c1);
+                    if(N > M){
+                        ss << "<" << N << "|H|" << M << ">";
+                        double c1 = compute_ms_1st_coupling(ss.str());
+                        Heff->add(M, N, c1);
+                        Heff->add(N, M, c1);
+                        Heff_sym->add(M, N, c1);
+                        Heff_sym->add(N, M, c1);
+                    }
 
-                    // compute coupling of <M|HT|N>
+                    // compute coupling of <N|HT|M>
                     ss.str(std::string());
                     ss.clear();
-                    ss << "<" << M << "|HT|" << N << ">";
-//                    double c2 = compute_ms_2nd_coupling(ss.str());
-                    double c2 = 0.0;
-                    Heff->add(M, N, 0.5 * c2);
-                    Heff->add(N, M, 0.5 * c2);
+                    ss << "<" << N << "|HT|" << M << ">";
+                    double c2 = compute_ms_2nd_coupling(ss.str());
+                    Heff->add(N, M, c2);
+                    Heff_sym->add(N, M, 0.5 * c2);
+                    Heff_sym->add(M, N, 0.5 * c2);
                 }
             }
         }
 
+        print_h2("Effective Hamiltonian Summary");
+        outfile->Printf("\n");
+
         Heff->print();
-        SharedMatrix U (new Matrix("U of Heff", nstates, nstates));
+        Heff_sym->print();
+
+        SharedMatrix U (new Matrix("U of Heff (Symmetrized)", nstates, nstates));
         SharedVector Ems (new Vector("MS Energies", nstates));
-        Heff->diagonalize(U, Ems);
+        Heff_sym->diagonalize(U, Ems);
         U->eivprint(Ems);
 
         // fill in Edsrg_ms
         for(int i = 0; i < nstates; ++i){
             Edsrg_ms[n].push_back(Ems->get(i));
         }
-
-
-
-
-
-
-
-//        // build Fock matrix
-//        SharedMatrix Fock (new Matrix("Fock", nstates, nstates));
-
-//        for(int M = 0; M < nstates; ++M){
-//            for(int N = M; N < nstates; ++N){
-
-//                // compute transition density
-//                CI_RDMS ci_rdms (options_,fci_ints,p_space_,civecs,M,N);
-//                ci_rdms.set_symmetry(irrep);
-
-//                std::vector<double> opdm_a,opdm_b;
-//                ci_rdms.compute_1rdm(opdm_a,opdm_b);
-
-//                // put rdms in tensor format
-//                BlockedTensor D1 = BTF_->build(tensor_type_,"D1",spin_cases({"aa"}),true);
-//                D1.block("aa").data() = opdm_a;
-//                D1.block("AA").data() = opdm_b;
-
-//                // compute Fock elements
-//                double F_MN = 0.0;
-//                F_MN += D1["uv"] * F_["vu"];
-//                F_MN += D1["UV"] * F_["VU"];
-//                Fock->set(M,N,F_MN);
-//                if(M != N){
-//                    Fock->set(N,M,F_MN);
-//                }
-//            }
-//        }
-
-//        SharedMatrix Fevec (new Matrix("Fock Evec", nstates, nstates));
-//        SharedVector Feval (new Vector("Fock Eval", nstates));
-//        Fock->diagonalize(Fevec, Feval);
-//        Fock->print();
-//        Fevec->eivprint(Feval);
-
-//        // Rotate ci vecs
-//        SharedMatrix rcivecs (new Matrix("rotated ci vecs",dim,nstates));
-//        rcivecs->gemm(false,false,1.0,civecs,Fevec,1.0);
-
-
-//        // prepare effective Hamiltonian
-//        SharedMatrix Heff (new Matrix("Heff " + multi_label[multi - 1] + " "
-//                           + irrep_symbol[irrep], nstates, nstates));
-
-//        // loop over nstates (with the same irrep and multi)
-//        for(int N = 0; N < nstates; ++N){
-
-//            // compute rdm and fill into cumulants
-//            compute_cumulants(fci_ints,rcivecs,N,N,irrep);
-
-//            // rebuild Fock matrix
-//            build_fock();
-
-//            // compute DSRG-MRPT2 energy
-//            // need to turn off semicanonical
-//            // TODO: solve amplitudes iteratively due to Factv off-diagonal elements
-////            set_ignore_semicanonical(true);
-//            Eref_ = eigens_[n][N].second;
-//            double Edsrg = compute_energy();
-
-//            // TODO: save a copy of amplitudes
-
-//            // fill in diagonal Heff
-//            Heff->set(N,N,Edsrg);
-
-//            // rebuild integrals (because V is now renormalized)
-//            build_ints();
-//        }
-
-//        // get one-electron integrals
-//        BlockedTensor oei = BTF_->build(tensor_type_,"oei",spin_cases({"aa"}));
-//        oei.block("aa").data() = fci_ints->oei_a_vector();
-//        oei.block("AA").data() = fci_ints->oei_b_vector();
-
-//        // compute off-diagonal Heff
-//        for(int M = 0; M < nstates; ++M){
-//            for(int N = M + 1; N < nstates; ++N){
-
-//                // compute transition density
-//                CI_RDMS ci_rdms (options_,fci_ints,p_space_,rcivecs,M,N);
-//                ci_rdms.set_symmetry(irrep);
-
-//                std::vector<double> opdm_a,opdm_b;
-//                std::vector<double> tpdm_aa,tpdm_ab,tpdm_bb;
-
-//                ci_rdms.compute_1rdm(opdm_a,opdm_b);
-//                ci_rdms.compute_2rdm(tpdm_aa,tpdm_ab,tpdm_bb);
-
-//                // put rdms in tensor format
-//                BlockedTensor D1 = BTF_->build(tensor_type_,"D1",spin_cases({"aa"}),true);
-//                D1.block("aa").data() = opdm_a;
-//                D1.block("AA").data() = opdm_b;
-
-//                BlockedTensor D2 = BTF_->build(tensor_type_,"D2",spin_cases({"aaaa"}),true);
-//                D2.block("aaaa").data() = tpdm_aa;
-//                D2.block("aAaA").data() = tpdm_ab;
-//                D2.block("AAAA").data() = tpdm_bb;
-
-//                // first-order off-diagonal elements
-//                double H_MN = 0.0;
-//                H_MN += oei["uv"] * D1["uv"];
-//                H_MN += oei["UV"] * D1["UV"];
-//                H_MN += 0.25 * actv_aa("uvxy") * D2.block("aaaa")("xyuv");
-//                H_MN += 0.25 * actv_bb("UVXY") * D2.block("AAAA")("XYUV");
-//                H_MN += actv_ab("uVxY") * D2.block("aAaA")("xYuV");
-
-//                // TODO: compute second-order off-diagonal elements
-
-//                // fill in to Heff
-//                Heff->set(M,N,H_MN);
-//                Heff->set(N,M,H_MN);
-//            }
-//        }
-
-//        SharedMatrix U (new Matrix("U of Heff", nstates, nstates));
-//        SharedVector Ems (new Vector("MS Energies", nstates));
-//        Heff->diagonalize(U, Ems);
-
-//        Heff->print();
-////        U->eivprint(Ems);
-
-//        // fill in Edsrg_ms
-//        for(int i = 0; i < nstates; ++i){
-//            Edsrg_ms[n].push_back(Ems->get(i));
-//        }
     }
 
     return Edsrg_ms;
@@ -552,6 +439,9 @@ SharedMatrix DSRG_MRPT2::xms_rotation(std::shared_ptr<FCIIntegrals> fci_ints,
                                       std::vector<psi::forte::STLBitsetDeterminant>& p_space,
                                       SharedMatrix civecs, const int& irrep)
 {
+    print_h2("Perform XMS Rotation to Reference States");
+    outfile->Printf("\n");
+
     // build Fock matrix
     int nstates = civecs->ncol();
     SharedMatrix Fock (new Matrix("Fock", nstates, nstates));
@@ -587,7 +477,8 @@ SharedMatrix DSRG_MRPT2::xms_rotation(std::shared_ptr<FCIIntegrals> fci_ints,
     SharedMatrix Fevec (new Matrix("Fock Evec", nstates, nstates));
     SharedVector Feval (new Vector("Fock Eval", nstates));
     Fock->diagonalize(Fevec, Feval);
-    Fevec->eivprint(Feval);
+    Fevec->print();
+//    Fevec->eivprint(Feval);
 
     // Rotate ci vecs
     SharedMatrix rcivecs (civecs->clone());

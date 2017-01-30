@@ -65,7 +65,7 @@ void DSRG_MRPT2::startup()
     ntamp_ = options_.get_int("NTAMP");
     intruder_tamp_ = options_.get_double("INTRUDER_TAMP");
 
-    multi_state_sa_ = options_["AVG_STATE"].has_changed() && (options_.get_str("DSRG_MS_HEFF") == "NONE");
+    multi_state_ = options_["AVG_STATE"].has_changed();
 
     // get frozen core energy
     frozen_core_energy_ = ints_->frozen_core_energy();
@@ -136,7 +136,7 @@ void DSRG_MRPT2::startup()
     // Prepare Hbar
     relax_ref_ = options_.get_str("RELAX_REF");
     if(relax_ref_ != "NONE"){
-        if(relax_ref_ != "ONCE" && !multi_state_sa_){
+        if(relax_ref_ != "ONCE" && !multi_state_){
             outfile->Printf("\n\n  Warning: RELAX_REF option \"%s\" is not supported. Change to ONCE", relax_ref_.c_str());
             relax_ref_ = "ONCE";
         }
@@ -345,8 +345,14 @@ void DSRG_MRPT2::print_summary()
     std::vector<std::pair<std::string,std::string>> calculation_info_string{
         {"int_type", options_.get_str("INT_TYPE")},
         {"source operator", source_},
-        {"state_type", multi_state_sa_ ? "MULTI_STATE" : "STATE_SPECIFIC"},
         {"reference relaxation", relax_ref_}};
+
+    if(multi_state_){
+        calculation_info_string.push_back({"state_type", "MULTI-STATE"});
+        calculation_info_string.push_back({"multi-state type", options_.get_str("DSRG_MULTI_STATE")});
+    }else{
+        calculation_info_string.push_back({"state_type", "STATE-SPECIFIC"});
+    }
 
     // Print some information
     outfile->Printf("\n\n  ==> Calculation Information <==\n");
@@ -425,7 +431,7 @@ double DSRG_MRPT2::compute_energy()
         outfile->Printf("\n    Orbitals are semi-canonicalized.");
     }
 
-    Timer DSRG_energy;
+//    Timer DSRG_energy;
     outfile->Printf("\n\n  ==> Computing DSRG-MRPT2 ... <==\n");
 
     // Compute T2 and T1
@@ -521,7 +527,8 @@ double DSRG_MRPT2::compute_energy()
     }
 
     Process::environment.globals["CURRENT ENERGY"] = Etotal;
-    outfile->Printf("\n\n  Energy took %8.8f s", DSRG_energy.get());
+//    outfile->Printf("\n\n  Energy took %8.8f s", DSRG_energy.get());
+    outfile->Printf("\n");
 
     // relax reference
     if(relax_ref_ != "NONE"){
