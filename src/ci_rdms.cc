@@ -1,3 +1,31 @@
+/*
+ * @BEGIN LICENSE
+ *
+ * Forte: an open-source plugin to Psi4 (https://github.com/psi4/psi4)
+ * that implements a variety of quantum chemistry methods for strongly
+ * correlated electrons.
+ *
+ * Copyright (c) 2012-2017 by its authors (see LICENSE, AUTHORS).
+ *
+ * The copyrights for code used from other parties are included in
+ * the corresponding files.
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see http://www.gnu.org/licenses/.
+ *
+ * @END LICENSE
+ */
+
 
 #include "psi4/liboptions/liboptions.h"
 #include "psi4/libmints/molecule.h"
@@ -16,7 +44,7 @@ namespace psi{ namespace forte {
 
 CI_RDMS::CI_RDMS(Options &options,
                  std::shared_ptr<FCIIntegrals>& fci_ints,
-                 std::vector<STLBitsetDeterminant>& det_space,
+                 const std::vector<STLBitsetDeterminant>& det_space,
                  SharedMatrix evecs,
                  int root1,
                  int root2)
@@ -52,7 +80,22 @@ CI_RDMS::CI_RDMS( Options &options,
 {
     startup();
 }
-                  
+
+CI_RDMS::CI_RDMS( Options &options,
+                  std::shared_ptr<FCIIntegrals> fci_ints,
+                  DeterminantMap& det_space,
+                  WFNOperator& op,
+                  SharedMatrix evecs,
+                  int root1,
+                  int root2)
+    : options_(options),
+      fci_ints_(fci_ints),
+      evecs_(evecs),
+      root1_(root1),
+      root2_(root2)
+{
+
+}
 
 CI_RDMS::~CI_RDMS()
 {

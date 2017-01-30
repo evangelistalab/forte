@@ -1,3 +1,31 @@
+/*
+ * @BEGIN LICENSE
+ *
+ * Forte: an open-source plugin to Psi4 (https://github.com/psi4/psi4)
+ * that implements a variety of quantum chemistry methods for strongly
+ * correlated electrons.
+ *
+ * Copyright (c) 2012-2017 by its authors (see LICENSE, AUTHORS).
+ *
+ * The copyrights for code used from other parties are included in
+ * the corresponding files.
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see http://www.gnu.org/licenses/.
+ *
+ * @END LICENSE
+ */
+
 #include <cmath>
 #include <memory>
 
@@ -6,7 +34,6 @@
 
 #include "psi4/psi4-dec.h"
 #include "psi4/psifiles.h"
-//#include <libplugin/plugin.h>
 #include "psi4/libdpd/dpd.h"
 #include "psi4/libpsio/psio.hpp"
 #include "psi4/libtrans/integraltransform.h"
@@ -248,7 +275,7 @@ read_options(std::string name, Options &options)
         options.add_bool("SELECT",false);
 
         /*- The diagonalization method -*/
-        options.add_str("DIAG_ALGORITHM","DLSTRING","DAVIDSON FULL DAVIDSONLIST SOLVER DLSTRING DLDISK");
+        options.add_str("DIAG_ALGORITHM","DLSTRING","DAVIDSON FULL DAVIDSONLIST SOLVER DLSTRING");
 
         /*- Force the diagonalization procedure?  -*/
         options.add_bool("FORCE_DIAG_METHOD", false);
@@ -552,6 +579,9 @@ read_options(std::string name, Options &options)
         options.add_int("N_GUESS_VEC", 10);
         options.add_double("NO_THRESHOLD",0.02);
 
+        /*- Do compute nroots on first cycle? -*/
+        options.add_bool("FIRST_ITER_ROOTS", false);
+
         //////////////////////////////////////////////////////////////
         ///         OPTIONS FOR THE PROJECTOR CI
         //////////////////////////////////////////////////////////////
@@ -794,19 +824,20 @@ extern "C" SharedWavefunction forte(SharedWavefunction ref_wfn, Options &options
     ambit::initialize();
 
     #ifdef HAVE_MPI
-    MPI::Init(NULL,NULL);    
+    MPI_Init(NULL,NULL);    
     #endif
 
     int my_proc = 0;
     int n_nodes = 1;
     #ifdef HAVE_GA
-    //GA_Initialize();
+    GA_Initialize();
     ///Use C/C++ memory allocators 
     GA_Register_stack_memory(replace_malloc, replace_free);
     n_nodes = GA_Nnodes();
     my_proc = GA_Nodeid();
     size_t memory = Process::environment.get_memory() / n_nodes;
     #endif
+
     #ifdef HAVE_MPI
     MPI_Comm_rank(MPI_COMM_WORLD, &my_proc);
     MPI_Comm_size(MPI_COMM_WORLD, &n_nodes);
@@ -1419,12 +1450,12 @@ extern "C" SharedWavefunction forte(SharedWavefunction ref_wfn, Options &options
 
     outfile->Printf("\n\n  Your calculation took %.8f seconds\n", overall_time.get());
     #ifdef HAVE_GA
-    //GA_Terminate();
+    GA_Terminate();
     #endif
     ambit::finalize();
 
     #ifdef HAVE_MPI
-    MPI::Finalize();
+    MPI_Finalize();
     #endif
 
     return ref_wfn;

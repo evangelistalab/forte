@@ -28,7 +28,7 @@ set globals{
   docc                [4,0,1,1]
   restricted_docc     [3,0,1,1]
   active              [2,0,0,0]
-  mcscf_r_convergence 9
+  mcscf_r_convergence 8
   mcscf_e_convergence 12
   mcscf_maxiter       250
   mcscf_diis_start    4

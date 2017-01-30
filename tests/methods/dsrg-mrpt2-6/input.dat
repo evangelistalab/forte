@@ -3,8 +3,8 @@
 import forte
 
 refcasscf    = -109.090719613072
-refpt2       = -109.245620634334
-refpt2_relax = -109.246127656877
+refpt2       = -109.245619577567339
+refpt2_relax = -109.246126613789983
 
 molecule N2{
   0 1

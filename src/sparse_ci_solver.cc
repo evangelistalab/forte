@@ -1,3 +1,31 @@
+/*
+ * @BEGIN LICENSE
+ *
+ * Forte: an open-source plugin to Psi4 (https://github.com/psi4/psi4)
+ * that implements a variety of quantum chemistry methods for strongly
+ * correlated electrons.
+ *
+ * Copyright (c) 2012-2017 by its authors (see LICENSE, AUTHORS).
+ *
+ * The copyrights for code used from other parties are included in
+ * the corresponding files.
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see http://www.gnu.org/licenses/.
+ *
+ * @END LICENSE
+ */
+
 #include <cmath>
 
 
@@ -28,7 +56,28 @@ namespace psi{ namespace forte{
     #define omp_get_num_threads() 1
 #endif
 
+SigmaVectorWfn::SigmaVectorWfn( const DeterminantMap& space, WFNOperator& op ) : 
+    SigmaVector(space.size()), 
+    space_(space),
+    a_ann_list_(op.a_ann_list_),
+    a_cre_list_(op.a_cre_list_),
+    b_ann_list_(op.b_ann_list_),
+    b_cre_list_(op.b_cre_list_),
+    aa_ann_list_(op.aa_ann_list_),
+    aa_cre_list_(op.aa_cre_list_),
+    ab_ann_list_(op.ab_ann_list_),
+    ab_cre_list_(op.ab_cre_list_),
+    bb_ann_list_(op.bb_ann_list_),
+    bb_cre_list_(op.bb_cre_list_)
+{
 
+    det_hash<size_t> detmap = space_.wfn_hash();
+    diag_.resize(space_.size() );
+    for( det_hash<size_t>::const_iterator it = detmap.begin(), endit = detmap.end(); it != endit; ++it){
+        diag_[it->second] = it->first.energy();
+    }
+
+}
 
 SigmaVectorString::SigmaVectorString( const std::vector<STLBitsetDeterminant>& space, bool print_details , bool disk)
     : SigmaVector(space.size()), space_(space)
@@ -604,13 +653,9 @@ void SigmaVectorString::compute_sigma(SharedVector sigma, SharedVector b)
     size_t start_idx = ( tid < (size_ % num_thread) ) ? tid * bin_size : (size_ % num_thread)*(bin_size + 1) + (tid - (size_ % num_thread))*bin_size;
     size_t end_idx   = start_idx + bin_size;
      
-//    outfile->Printf("\n  Thread %d start %zu, end %zu", tid, start_idx, end_idx);    
-
-    std::vector<double> sigma_td(bin_size,0.0);
- 
-    for (size_t J = start_idx, counter = 0; J < end_idx; ++J){
+    for (size_t J = start_idx; J < end_idx; ++J){
         // reference
-        sigma_td[counter] += diag_[J] * b_p[J];
+        sigma_p[J] += diag_[J] * b_p[J];
 
       // aa singles
         for( auto& aJ_mo_sign : a_ann_list_[J]){
@@ -623,7 +668,7 @@ void SigmaVectorString::compute_sigma(SharedVector sigma, SharedVector b)
                     const size_t I = aaJ_mo.first;
                     const double sign_q = (aaJ_mo.second > 0.0) ? 1.0 : -1.0;
                     const double HIJ = space_[I].slater_rules_single_alpha_abs(p,q) * sign_p * sign_q;
-                    sigma_td[counter] += HIJ * b_p[I];
+                    sigma_p[J] += HIJ * b_p[I];
                 }
             }
         }
@@ -638,7 +683,7 @@ void SigmaVectorString::compute_sigma(SharedVector sigma, SharedVector b)
                     const double sign_q = bbJ_mo.second > 0.0 ? 1.0 : -1.0;
                     const size_t I = bbJ_mo.first;
                     const double HIJ = space_[I].slater_rules_single_beta_abs(p,q) * sign_p * sign_q;
-                    sigma_td[counter] += HIJ * b_p[I];
+                    sigma_p[J] += HIJ * b_p[I];
                 }
             }
         }
@@ -655,7 +700,7 @@ void SigmaVectorString::compute_sigma(SharedVector sigma, SharedVector b)
                     const size_t I = std::get<0>(aaaaJ_mo_sign);
                     const double sign_rs = std::get<1>(aaaaJ_mo_sign) > 0.0 ? 1.0 : -1.0;
                     const double HIJ = sign_pq * sign_rs * STLBitsetDeterminant::fci_ints_->tei_aa(p,q,r,s);
-                    sigma_td[counter] += HIJ * b_p[I];
+                    sigma_p[J] += HIJ * b_p[I];
                 }
             }
         }
@@ -672,7 +717,7 @@ void SigmaVectorString::compute_sigma(SharedVector sigma, SharedVector b)
                     const size_t I = std::get<0>(bbbbJ_mo_sign);
                     const double sign_rs = std::get<1>(bbbbJ_mo_sign) > 0.0 ? 1.0 : -1.0;
                     const double HIJ = sign_pq * sign_rs * STLBitsetDeterminant::fci_ints_->tei_bb(p,q,r,s);
-                    sigma_td[counter] += HIJ * b_p[I];
+                    sigma_p[J] += HIJ * b_p[I];
                 }
             }
         }
@@ -688,23 +733,13 @@ void SigmaVectorString::compute_sigma(SharedVector sigma, SharedVector b)
                     const size_t I = std::get<0>(ababJ_mo_sign);
                     double sign_rs = std::get<1>(ababJ_mo_sign) > 0.0 ? 1.0 : -1.0;
                     const double HIJ = sign_pq * sign_rs * STLBitsetDeterminant::fci_ints_->tei_ab(p,q,r,s);
-                    sigma_td[counter] += HIJ * b_p[I];
+                    sigma_p[J] += HIJ * b_p[I];
                 }
             }
         }
-        counter++;
     }
 
-    #pragma omp critical
-    {
-        size_t counter = 0;
-        for( size_t I = start_idx; I < end_idx; ++I ){
-            sigma_p[I] = sigma_td[counter]; 
-            counter++;
-        }
-    }    
-
-}
+    }
 }
 void SigmaVectorString::add_bad_roots( std::vector<std::vector<std::pair<size_t, double>>>& roots )
 {
@@ -1173,8 +1208,18 @@ void SigmaVectorList::compute_sigma(SharedVector sigma, SharedVector b)
         }
     }
 
+#pragma omp parallel
+{
+    int num_thread = omp_get_max_threads();
+    int tid = omp_get_thread_num();
+    
+    size_t bin_size = size_ / num_thread;
+    bin_size += ( tid < (size_ % num_thread) ) ? 1 : 0;
 
-    for (size_t J = 0; J < size_; ++J){
+    size_t start_idx = ( tid < (size_ % num_thread) ) ? tid * bin_size : (size_ % num_thread)*(bin_size + 1) + (tid - (size_ % num_thread))*bin_size;
+    size_t end_idx   = start_idx + bin_size;
+
+    for (size_t J = start_idx; J < end_idx; ++J){
         // reference
         sigma_p[J] += diag_[J] * b_p[J];
 
@@ -1186,17 +1231,14 @@ void SigmaVectorList::compute_sigma(SharedVector sigma, SharedVector b)
             for (auto& aaJ_mo_sign : a_cre_list[aJ_add]){
                 const size_t q = std::abs(aaJ_mo_sign.second) - 1;
                 if (p != q){
-                    double sign_q = aaJ_mo_sign.second > 0.0 ? 1.0 : -1.0;
-                    const double HIJ = space_[J].slater_rules_single_alpha_abs(p,q) * sign_p * sign_q;
-                    //const double HIJ = space_[aaJ_mo_sign.first].slater_rules(space_[J]);
                     const size_t I = aaJ_mo_sign.first;
-                    sigma_p[I] += HIJ * b_p[J];
+                    double sign_q = aaJ_mo_sign.second > 0.0 ? 1.0 : -1.0;
+                    const double HIJ = space_[I].slater_rules_single_alpha_abs(p,q) * sign_p * sign_q;
+                    sigma_p[J] += HIJ * b_p[I];
                 }
             }
         }
-    }
     // bb singles
-    for (size_t J = 0; J < size_; ++J){
         for (auto& bJ_mo_sign : b_ann_list[J]){
             const size_t bJ_add = bJ_mo_sign.first;
             const size_t p = std::abs(bJ_mo_sign.second) - 1;
@@ -1204,17 +1246,14 @@ void SigmaVectorList::compute_sigma(SharedVector sigma, SharedVector b)
             for (auto& bbJ_mo_sign : b_cre_list[bJ_add]){
                 const size_t q = std::abs(bbJ_mo_sign.second) - 1;
                 if (p != q){
-                    double sign_q = bbJ_mo_sign.second > 0.0 ? 1.0 : -1.0;
-                    const double HIJ = space_[J].slater_rules_single_beta_abs(p,q) * sign_p * sign_q;
-                  //  const double HIJ = space_[bbJ_mo_sign.first].slater_rules(space_[J] );
                     const size_t I = bbJ_mo_sign.first;
-                    sigma_p[I] += HIJ * b_p[J];
+                    double sign_q = bbJ_mo_sign.second > 0.0 ? 1.0 : -1.0;
+                    const double HIJ = space_[I].slater_rules_single_beta_abs(p,q) * sign_p * sign_q;
+                    sigma_p[J] += HIJ * b_p[I];
                 }
             }
         }
-    }
     // aaaa doubles
-    for (size_t J = 0; J < size_; ++J){
         for (auto& aaJ_mo_sign : aa_ann_list[J]){
             const size_t aaJ_add = std::get<0>(aaJ_mo_sign);
             const double sign_pq = std::get<1>(aaJ_mo_sign) > 0.0 ? 1.0 : -1.0;
@@ -1228,14 +1267,11 @@ void SigmaVectorList::compute_sigma(SharedVector sigma, SharedVector b)
                     const double sign_rs = std::get<1>(aaaaJ_mo_sign) > 0.0 ? 1.0 : -1.0;
                     const size_t I = aaaaJ_add;
                     const double HIJ = sign_pq * sign_rs * STLBitsetDeterminant::fci_ints_->tei_aa(p,q,r,s);
-                    sigma_p[I] += HIJ * b_p[J];
+                    sigma_p[J] += HIJ * b_p[I];
                 }
             }
         }
-    }
-
     // aabb singles
-    for (size_t J = 0; J < size_; ++J){
         for (auto& abJ_mo_sign : ab_ann_list[J]){
             const size_t abJ_add = std::get<0>(abJ_mo_sign);
             const double sign_pq = std::get<1>(abJ_mo_sign) > 0.0 ? 1.0 : -1.0;
@@ -1249,13 +1285,11 @@ void SigmaVectorList::compute_sigma(SharedVector sigma, SharedVector b)
                     const double sign_rs = std::get<1>(ababJ_mo_sign) > 0.0 ? 1.0 : -1.0;
                     const size_t I = ababJ_add;
                     const double HIJ = sign_pq * sign_rs * STLBitsetDeterminant::fci_ints_->tei_ab(p,q,r,s);
-                    sigma_p[I] += HIJ * b_p[J];
+                    sigma_p[J] += HIJ * b_p[I];
                 }
             }
         }
-    }
     // bbbb singles
-    for (size_t J = 0; J < size_; ++J){
         for (auto& bbJ_mo_sign : bb_ann_list[J]){
             const size_t bbJ_add = std::get<0>(bbJ_mo_sign);
             const double sign_pq = std::get<1>(bbJ_mo_sign) > 0.0 ? 1.0 : -1.0;
@@ -1269,12 +1303,13 @@ void SigmaVectorList::compute_sigma(SharedVector sigma, SharedVector b)
                     const double sign_rs = std::get<1>(bbbbJ_mo_sign) > 0.0 ? 1.0 : -1.0;
                     const size_t I = bbbbJ_add;
                     const double HIJ = sign_pq * sign_rs * STLBitsetDeterminant::fci_ints_->tei_bb(p,q,r,s);
-                    sigma_p[I] += HIJ * b_p[J];
+                    sigma_p[J] += HIJ * b_p[I];
                 }
             }
         }
     }
 
+    }
 }
 
 
@@ -1294,6 +1329,163 @@ void SigmaVectorList::get_diagonal(Vector& diag)
     }
 }
 
+void SigmaVectorWfn::add_bad_roots( std::vector<std::vector<std::pair<size_t, double>>>& roots )
+{
+    bad_states_.clear();
+    for( int i = 0, max_i = roots.size(); i < max_i; ++i ){
+        bad_states_.push_back( roots[i] );
+    }
+}
+
+
+void SigmaVectorWfn::get_diagonal(Vector& diag)
+{
+    for (size_t I = 0; I < diag_.size(); ++I){
+        diag.set(I,diag_[I]);
+    }
+}
+
+void SigmaVectorWfn::compute_sigma(Matrix& sigma, Matrix& b, int nroot )
+{
+
+}
+
+void SigmaVectorWfn::compute_sigma(SharedVector sigma, SharedVector b)
+{
+    sigma->zero();
+    double* sigma_p = sigma->pointer();
+    double* b_p = b->pointer();
+
+    // Compute the overlap with each root    
+    int nbad = bad_states_.size();
+    std::vector<double> overlap(nbad);
+    if( nbad != 0 ){
+        for( int n = 0; n < nbad; ++n ){
+            std::vector<std::pair<size_t,double>>& bad_state = bad_states_[n];
+            double dprd = 0.0;
+            for( size_t det = 0, ndet = bad_state.size(); det < ndet; ++det ){
+                dprd += bad_state[det].second * b_p[bad_state[det].first];
+            }
+            overlap[n] = dprd;
+        }
+        //outfile->Printf("\n Overlap: %1.6f", overlap[0]);
+
+        for( int n = 0; n < nbad; ++n ){
+            std::vector<std::pair<size_t,double>>& bad_state = bad_states_[n];
+            size_t ndet = bad_state.size();
+            
+            #pragma omp parallel for
+            for( size_t det = 0; det < ndet; ++det ){
+                b_p[bad_state[det].first] -= bad_state[det].second * overlap[n]; 
+            }        
+        }
+    }
+#pragma omp parallel
+{
+    int num_thread = omp_get_max_threads();
+    int tid = omp_get_thread_num();
+    
+    size_t bin_size = size_ / num_thread;
+    bin_size += ( tid < (size_ % num_thread) ) ? 1 : 0;
+
+    size_t start_idx = ( tid < (size_ % num_thread) ) ? tid * bin_size : (size_ % num_thread)*(bin_size + 1) + (tid - (size_ % num_thread))*bin_size;
+    size_t end_idx   = start_idx + bin_size;
+//Timer cycl;
+{
+    const std::vector<STLBitsetDeterminant>& dets = space_.determinants();
+    for (size_t J = start_idx; J < end_idx; ++J){
+        // reference
+        sigma_p[J] += diag_[J] * b_p[J];
+        // aa singles
+        for (auto& aJ_mo_sign : a_ann_list_[J]){
+            const size_t aJ_add = aJ_mo_sign.first;
+            const size_t p = std::abs(aJ_mo_sign.second) - 1;
+            double sign_p = aJ_mo_sign.second > 0.0 ? 1.0 : -1.0;
+            for (auto& aaJ_mo_sign : a_cre_list_[aJ_add]){
+                const size_t q = std::abs(aaJ_mo_sign.second) - 1;
+                if (p != q){
+                    const size_t I = aaJ_mo_sign.first;
+                    double sign_q = aaJ_mo_sign.second > 0.0 ? 1.0 : -1.0;
+                    const double HIJ = dets[I].slater_rules_single_alpha_abs(p,q) * sign_p * sign_q;
+                    sigma_p[J] += HIJ * b_p[I];
+                }
+            }
+        }
+    // bb singles
+        for (auto& bJ_mo_sign : b_ann_list_[J]){
+            const size_t bJ_add = bJ_mo_sign.first;
+            const size_t p = std::abs(bJ_mo_sign.second) - 1;
+            double sign_p = bJ_mo_sign.second > 0.0 ? 1.0 : -1.0;
+            for (auto& bbJ_mo_sign : b_cre_list_[bJ_add]){
+                const size_t q = std::abs(bbJ_mo_sign.second) - 1;
+                if (p != q){
+                    const size_t I = bbJ_mo_sign.first;
+                    double sign_q = bbJ_mo_sign.second > 0.0 ? 1.0 : -1.0;
+                    const double HIJ = dets[I].slater_rules_single_beta_abs(p,q) * sign_p * sign_q;
+                    sigma_p[J] += HIJ * b_p[I];
+                }
+            }
+        }
+    }
+}
+//outfile->Printf("\n  Time spent on singles: %1.5f", cycl.get()); 
+//Timer cycl2;
+    for (size_t J = start_idx; J < end_idx; ++J){
+    // aaaa doubles
+        for (auto& aaJ_mo_sign : aa_ann_list_[J]){
+            const size_t aaJ_add = std::get<0>(aaJ_mo_sign);
+            const double sign_pq = std::get<1>(aaJ_mo_sign) > 0.0 ? 1.0 : -1.0;
+            const size_t p = std::abs(std::get<1>(aaJ_mo_sign)) - 1;
+            const size_t q = std::get<2>(aaJ_mo_sign);
+            for (auto& aaaaJ_mo_sign : aa_cre_list_[aaJ_add]){
+                const size_t r = std::abs(std::get<1>(aaaaJ_mo_sign)) - 1;
+                const size_t s = std::get<2>(aaaaJ_mo_sign);
+                if ((p != r) and (q != s) and (p != s) and (q != r)){
+                    const size_t I = std::get<0>(aaaaJ_mo_sign);
+                    const double sign_rs = std::get<1>(aaaaJ_mo_sign) > 0.0 ? 1.0 : -1.0;
+                    const double HIJ = sign_pq * sign_rs * STLBitsetDeterminant::fci_ints_->tei_aa(p,q,r,s);
+                    sigma_p[J] += HIJ * b_p[I];
+                }
+            }
+        }
+    // aabb singles
+        for (auto& abJ_mo_sign : ab_ann_list_[J]){
+            const size_t abJ_add = std::get<0>(abJ_mo_sign);
+            const double sign_pq = std::get<1>(abJ_mo_sign) > 0.0 ? 1.0 : -1.0;
+            const size_t p = std::abs(std::get<1>(abJ_mo_sign)) - 1;
+            const size_t q = std::get<2>(abJ_mo_sign);
+            for (auto& ababJ_mo_sign : ab_cre_list_[abJ_add]){
+                const size_t r = std::abs(std::get<1>(ababJ_mo_sign)) - 1;
+                const size_t s = std::get<2>(ababJ_mo_sign);
+                if ((p != r) and (q != s)){
+                    const size_t I = std::get<0>(ababJ_mo_sign);
+                    const double sign_rs = std::get<1>(ababJ_mo_sign) > 0.0 ? 1.0 : -1.0;
+                    const double HIJ = sign_pq * sign_rs * STLBitsetDeterminant::fci_ints_->tei_ab(p,q,r,s);
+                    sigma_p[J] += HIJ * b_p[I];
+                }
+            }
+        }
+    // bbbb singles
+        for (auto& bbJ_mo_sign : bb_ann_list_[J]){
+            const size_t bbJ_add = std::get<0>(bbJ_mo_sign);
+            const double sign_pq = std::get<1>(bbJ_mo_sign) > 0.0 ? 1.0 : -1.0;
+            const size_t p = std::abs(std::get<1>(bbJ_mo_sign)) - 1;
+            const size_t q = std::get<2>(bbJ_mo_sign);
+            for (auto& bbbbJ_mo_sign : bb_cre_list_[bbJ_add]){
+                const size_t r = std::abs(std::get<1>(bbbbJ_mo_sign)) - 1;
+                const size_t s = std::get<2>(bbbbJ_mo_sign);
+                if ((p != r) and (q != s) and (p != s) and (q != r)){
+                    const size_t I = std::get<0>(bbbbJ_mo_sign);
+                    const double sign_rs = std::get<1>(bbbbJ_mo_sign) > 0.0 ? 1.0 : -1.0;
+                    const double HIJ = sign_pq * sign_rs * STLBitsetDeterminant::fci_ints_->tei_bb(p,q,r,s);
+                    sigma_p[J] += HIJ * b_p[I];
+                }
+            }
+        }
+    }
+//outfile->Printf("\n  Time spent on doubles: %1.5f", cycl2.get()); 
+    }
+}
 void SparseCISolver::set_spin_project(bool value)
 {
     spin_project_ = value;
@@ -1329,6 +1521,37 @@ void SparseCISolver::diagonalize_hamiltonian(const std::vector<STLBitsetDetermin
             diagonalize_davidson_liu_string(space,evals,evecs,nroot,multiplicity, true);
         }
     }
+}
+
+void SparseCISolver::diagonalize_hamiltonian_map( const DeterminantMap& space, 
+                                                    WFNOperator& op, 
+                                                    SharedVector& evals, 
+                                                    SharedMatrix& evecs, 
+                                                    int nroot, 
+                                                    int multiplicity, 
+                                                    DiagonalizationMethod diag_method)
+{
+    if( (space.size() <= 200 && !force_diag_method_) or diag_method == Full ){
+        const std::vector<STLBitsetDeterminant> dets = space.determinants();
+        diagonalize_full( dets, evals, evecs, nroot, multiplicity );
+    }else{
+        diagonalize_dl(space, op, evals, evecs, nroot, multiplicity);
+    }
+}
+
+void SparseCISolver::diagonalize_dl(const DeterminantMap& space, WFNOperator& op, SharedVector& evals, SharedMatrix& evecs, int nroot, int multiplicity )
+{
+    if( print_details_ ){
+        outfile->Printf("\n\n Davidson-liu solver algorithm");
+    }
+    size_t dim_space = space.size();
+    evecs.reset(new Matrix("U",dim_space,nroot));
+    evals.reset(new Vector("e",nroot));
+
+    SigmaVectorWfn svw(space, op);
+    SigmaVector* sigma_vector = &svw;
+    sigma_vector->add_bad_roots( bad_states_ );
+    davidson_liu_solver_map(space, sigma_vector, evals, evecs, nroot, multiplicity);    
 }
 
 void SparseCISolver::diagonalize_full(const std::vector<STLBitsetDeterminant>& space,SharedVector& evals,SharedMatrix& evecs,int,int)
@@ -1601,22 +1824,136 @@ std::vector<std::pair<double,std::vector<std::pair<size_t,double>>>> SparseCISol
         }
     }
 
-//    // Check the spin
-//    for (int r = 0; r < nguess; ++r){
-//        double s2 = 0.0;
-//        double e = 0.0;
-//        for (size_t i = 0; i < nguess; i++) {
-//            for (size_t j = 0; j < nguess; j++) {
-//                size_t I = guess_dets_pos[i].second;
-//                size_t J = guess_dets_pos[j].second;
-//                double CI = evecs->get(I,r);
-//                double CJ = evecs->get(J,r);
-//                s2 += space[I].spin2(space[J]) * CI * CJ;
-//                e += space[I].slater_rules(space[J]) * CI * CJ;
-//            }
-//        }
-//        outfile->Printf("\n  Guess Root %d: <E> = %f, <S^2> = %f",r,e,s2);
-//    }
+    return guess;
+}
+
+std::vector<std::pair<double,std::vector<std::pair<size_t,double>>>> SparseCISolver::initial_guess_map(const DeterminantMap& space, int nroot, int multiplicity)
+{
+    size_t ndets = space.size();
+    size_t nguess = std::min(static_cast<size_t>(nroot) * dl_guess_,ndets);
+    std::vector<std::pair<double,std::vector<std::pair<size_t,double>>>> guess(nguess);
+
+    // Find the ntrial lowest diagonals
+    std::vector<std::pair<STLBitsetDeterminant,size_t>> guess_dets_pos;
+    std::vector<std::pair<double,STLBitsetDeterminant>> smallest;
+    const det_hash<size_t>& detmap = space.wfn_hash();
+
+    for(det_hash<size_t>::const_iterator it = detmap.begin(), endit = detmap.end(); it != endit; ++it){
+        smallest.push_back(std::make_pair(it->first.energy(),it->first));
+    }
+    std::sort(smallest.begin(),smallest.end());
+
+    std::vector<STLBitsetDeterminant> guess_det;
+    for(size_t i = 0; i < nguess; i++) {
+        STLBitsetDeterminant detI = smallest[i].second;
+        guess_dets_pos.push_back(std::make_pair(detI,space.get_idx(detI)));  // store a det and its position
+        guess_det.push_back(detI);
+    }
+
+    if (spin_project_){
+        STLBitsetDeterminant::enforce_spin_completeness(guess_det);
+        if (guess_det.size() > nguess){
+            size_t nnew_dets = guess_det.size() - nguess;
+            if (print_details_) outfile->Printf("\n  Initial guess space is incomplete.\n  Trying to add %d determinant(s).",nnew_dets);
+            int nfound = 0;
+            for (size_t i = 0; i < nnew_dets; ++i){
+                for (size_t j = nguess; j < ndets; ++j){
+                    STLBitsetDeterminant detJ = smallest[j].second;
+                    if ( detJ == guess_det[nguess + i]){
+                        guess_dets_pos.push_back(std::make_pair(detJ,space.get_idx(detJ)));  // store a det and its position
+                        nfound++;
+                        break;
+                    }
+                }
+            }
+            if(print_details_) outfile->Printf("  %d determinant(s) added.",nfound);
+        }
+        nguess = guess_dets_pos.size();
+    }
+
+    // Form the S^2 operator matrix and diagonalize it
+    Matrix S2("S^2",nguess,nguess);
+    for(size_t I = 0; I < nguess; I++) {
+        for(size_t J = I; J < nguess; J++) {
+            const STLBitsetDeterminant& detI = guess_dets_pos[I].first;
+            const STLBitsetDeterminant& detJ = guess_dets_pos[J].first;
+            double S2IJ = detI.spin2(detJ);
+            S2.set(I,J,S2IJ);
+            S2.set(J,I,S2IJ);
+        }
+    }
+    Matrix S2evecs("S^2",nguess,nguess);
+    Vector S2evals("S^2",nguess);
+    S2.diagonalize(S2evecs,S2evals);
+
+    // Form the Hamiltonian
+    Matrix H("H",nguess,nguess);
+    for(size_t I = 0; I < nguess; I++) {
+        for(size_t J = I; J < nguess; J++) {
+            const STLBitsetDeterminant& detI = guess_dets_pos[I].first;
+            const STLBitsetDeterminant& detJ = guess_dets_pos[J].first;
+            double HIJ = detI.slater_rules(detJ);
+            H.set(I,J,HIJ);
+            H.set(J,I,HIJ);
+        }
+    }
+   // H.print();
+    // Project H onto the spin-adapted subspace
+    H.transform(S2evecs);
+
+    // Find groups of solutions with same spin
+    double Stollerance = 1.0e-6;
+    std::map<int,std::vector<int>> mult_list;
+    for (size_t i = 0; i < nguess; ++i){
+        double mult = std::sqrt(1.0 + 4.0 * S2evals.get(i)); // 2S + 1 = Sqrt(1 + 4 S (S + 1))
+        int mult_int = std::round(mult);
+        double error = mult - static_cast<double>(mult_int);
+        if (std::fabs(error) < Stollerance){
+            mult_list[mult_int].push_back(i);
+        }else if (print_details_) {
+            outfile->Printf("\n  Found a guess vector with spin not close to integer value (%f)",mult);
+        }
+    }
+    if (mult_list[multiplicity].size() < static_cast<size_t>(nroot)){
+        size_t nfound = mult_list[multiplicity].size();
+        outfile->Printf("\n  Error: %d guess vectors with 2S+1 = %d but only %d were found!",nguess,multiplicity,nfound);
+        if(nfound== 0 ){exit(1);}
+    }
+
+    std::vector<int> mult_vals;
+    for (auto kv : mult_list){
+        mult_vals.push_back(kv.first);
+    }
+    std::sort(mult_vals.begin(),mult_vals.end());
+
+    for (int m : mult_vals){
+        std::vector<int>& mult_list_s = mult_list[m];
+        int nspin_states = mult_list_s.size();
+        if (print_details_)outfile->Printf("\n  Initial guess found %d solutions with 2S+1 = %d %c",nspin_states,m,m == multiplicity ? '*' : ' ');
+        // Extract the spin manifold
+        Matrix HS2("HS2",nspin_states,nspin_states);
+        Vector HS2evals("HS2",nspin_states);
+        Matrix HS2evecs("HS2",nspin_states,nspin_states);
+        for(int I = 0; I < nspin_states; I++) {
+            for(int J = 0; J < nspin_states; J++) {
+                HS2.set(I,J,H.get(mult_list_s[I],mult_list_s[J]));
+            }
+        }
+        HS2.diagonalize(HS2evecs,HS2evals);
+
+        // Project the spin-adapted solution onto the full manifold
+        for (int r = 0; r < nspin_states; ++r){
+            std::vector<std::pair<size_t,double>> det_C;
+            for (size_t I = 0; I < nguess; I++) {
+                double CIr = 0.0;
+                for (int J = 0; J < nspin_states; ++J){
+                    CIr += S2evecs.get(I,mult_list_s[J]) * HS2evecs(J,r);
+                }
+                det_C.push_back(std::make_pair(guess_dets_pos[I].second,CIr));
+            }
+            guess.push_back(std::make_pair(m,det_C));
+        }
+    }
 
     return guess;
  }
@@ -1680,6 +2017,138 @@ bool SparseCISolver::davidson_liu_solver(const std::vector<STLBitsetDeterminant>
     size_t guess_size = std::min( nvec_, dls.collapse_size());
 
     auto guess = initial_guess(space,nroot,multiplicity);
+    if( !set_guess_ ){
+        std::vector<int> guess_list;
+        for (size_t g = 0; g < guess.size(); ++g){
+            if (guess[g].first == multiplicity) guess_list.push_back(g);
+        }
+
+        // number of guess to be used
+        size_t nguess = std::min(guess_list.size(),guess_size);
+
+        if (nguess == 0){
+            throw PSIEXCEPTION("\n\n  Found zero FCI guesses with the requested multiplicity.\n\n");
+        }
+
+        for (size_t n = 0; n < nguess; ++n){
+            b->zero();
+            for (auto& guess_vec_info : guess[guess_list[n]].second){
+                b->set(guess_vec_info.first,guess_vec_info.second);
+            }
+            if( print_details_ ) outfile->Printf("\n  Adding guess %d (multiplicity = %f)",n,guess[guess_list[n]].first);
+            
+            dls.add_guess(b);
+        }
+    }
+
+    // Prepare a list of bad roots to project out and pass them to the solver
+    for (auto& g : guess){
+        if (g.first != multiplicity) bad_roots.push_back(g.second);
+    }
+    dls.set_project_out(bad_roots);
+
+    if( set_guess_ ){
+        // Use previous solution as guess
+        b->zero();        
+        for( size_t I = 0, max_I = guess_.size(); I < max_I; ++I ){
+            b->set( guess_[I].first, guess_[I].second );
+        }
+        double norm = sqrt( 1.0 / b->norm() );
+        b->scale(norm);
+        dls.add_guess(b);
+    }
+
+
+
+    SolverStatus converged = SolverStatus::NotConverged;
+    
+    if(print_details_){
+        outfile->Printf("\n\n  ==> Diagonalizing Hamiltonian <==\n");
+        outfile->Printf("\n  ----------------------------------------");
+        outfile->Printf("\n    Iter.      Avg. Energy       Delta_E");
+        outfile->Printf("\n  ----------------------------------------");
+    }
+
+    double old_avg_energy = 0.0;
+    int real_cycle = 1;
+
+//    maxiter_davidson_ = 2;
+//    b->print();
+    for (int cycle = 0; cycle < maxiter_davidson_; ++cycle){
+        bool add_sigma = true;
+        do{
+            dls.get_b(b);
+            sigma_vector->compute_sigma(sigma,b);
+
+            add_sigma = dls.add_sigma(sigma);
+        } while (add_sigma);
+
+        converged = dls.update();
+
+        if (converged != SolverStatus::Collapse){
+            double avg_energy = 0.0;
+            for (int r = 0; r < nroot; ++r) avg_energy += dls.eigenvalues()->get(r);
+            avg_energy /= static_cast<double>(nroot);
+            if (print_details_){
+                outfile->Printf("\n    %3d  %20.12f  %+.3e",real_cycle,avg_energy,avg_energy - old_avg_energy);
+            }
+            old_avg_energy = avg_energy;
+            real_cycle++;
+        }
+
+        if (converged == SolverStatus::Converged) break;
+    }
+
+    if (print_details_){
+        outfile->Printf("\n  ----------------------------------------");
+        if (converged == SolverStatus::Converged){
+            outfile->Printf("\n  The Davidson-Liu algorithm converged in %d iterations.", real_cycle);
+        }
+    }
+
+    if (converged == SolverStatus::NotConverged){
+        outfile->Printf("\n  FCI did not converge!");
+        exit(1);
+    }
+
+//    dls.get_results();
+    SharedVector evals = dls.eigenvalues();
+    SharedMatrix evecs = dls.eigenvectors();
+    for (int r = 0; r < nroot; ++r){
+        Eigenvalues->set(r,evals->get(r));
+        for (size_t I = 0; I < fci_size; ++I){
+            Eigenvectors->set(I,r,evecs->get(r,I));
+        }
+    }
+    return true;
+}
+
+bool SparseCISolver::davidson_liu_solver_map(const DeterminantMap& space,
+                                             SigmaVector* sigma_vector,
+                                             SharedVector Eigenvalues,
+                                             SharedMatrix Eigenvectors,
+                                             int nroot,
+                                             int multiplicity)
+{
+//    print_details_ = true;
+    size_t fci_size = sigma_vector->size();
+    DavidsonLiuSolver dls(fci_size,nroot);
+    dls.set_e_convergence(e_convergence_);
+    dls.set_print_level(0);
+
+
+    // allocate vectors
+    SharedVector b(new Vector("b",fci_size));
+    SharedVector sigma(new Vector("sigma",fci_size));
+
+    // get and pass diagonal
+    sigma_vector->get_diagonal(*sigma);
+    dls.startup(sigma);
+
+    std::vector<std::vector<std::pair<size_t,double>>> bad_roots;
+    size_t guess_size = std::min( nvec_, dls.collapse_size());
+
+    auto guess = initial_guess_map(space,nroot,multiplicity);
     if( !set_guess_ ){
         std::vector<int> guess_list;
         for (size_t g = 0; g < guess.size(); ++g){

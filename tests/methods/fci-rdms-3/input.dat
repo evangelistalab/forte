@@ -1,0 +1,32 @@
+#! Generated using commit GITCOMMIT
+
+import forte
+
+molecule hh {
+1 2
+H
+H 1 1
+}
+
+set {
+  basis            aug-cc-pVDZ
+  reference        rohf
+  scf_type         pk
+  df_scf_guess     false
+  guess            gwh
+  e_convergence    6
+}
+
+set forte{
+  frozen_docc      [0, 0, 0, 0, 0, 0, 0, 0]
+  restricted_docc  [0, 0, 0, 0, 0, 0, 0, 0]
+  active           [1, 0, 0, 0, 0, 0, 0, 0]
+  cas_type          fci
+  multiplicity      2
+  root_sym          0
+  nroot             1
+  int_type          conventional
+  job_type          fci
+}
+
+energy('forte')

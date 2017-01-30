@@ -1,3 +1,31 @@
+/*
+ * @BEGIN LICENSE
+ *
+ * Forte: an open-source plugin to Psi4 (https://github.com/psi4/psi4)
+ * that implements a variety of quantum chemistry methods for strongly
+ * correlated electrons.
+ *
+ * Copyright (c) 2012-2017 by its authors (see LICENSE, AUTHORS).
+ *
+ * The copyrights for code used from other parties are included in
+ * the corresponding files.
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see http://www.gnu.org/licenses/.
+ *
+ * @END LICENSE
+ */
+
 #ifdef HAVE_MPI
 
 #include <numeric>
@@ -35,7 +63,7 @@ namespace psi{ namespace forte{
     #define GA_Nodeid() 0
 #endif
 
-
+#ifdef HAVE_GA
 double THREE_DSRG_MRPT2::E_VT2_2_batch_core_ga()
 {
     bool debug_print = options_.get_bool("DSRG_MRPT2_DEBUG");
@@ -488,6 +516,8 @@ double THREE_DSRG_MRPT2::E_VT2_2_batch_core_ga()
      MPI_Reduce(&local_sum, &total_sum, 1, MPI_DOUBLE, MPI_SUM, 0, MPI_COMM_WORLD);
      return total_sum;
 }
+#endif
+
 double THREE_DSRG_MRPT2::E_VT2_2_batch_core_rep()
 {
     bool debug_print = options_.get_bool("DSRG_MRPT2_DEBUG");
@@ -827,6 +857,8 @@ double THREE_DSRG_MRPT2::E_VT2_2_batch_core_rep()
     
     return (total_sum);
 }
+
+#ifdef HAVE_GA
 double THREE_DSRG_MRPT2::E_VT2_2_batch_virtual_ga()
 {
     bool debug_print = options_.get_bool("DSRG_MRPT2_DEBUG");
@@ -1045,6 +1077,8 @@ double THREE_DSRG_MRPT2::E_VT2_2_batch_virtual_ga()
     //return (Ealpha + Ebeta + Emixed);
     return (Ealpha + Ebeta + Emixed);
 }
+#endif
+
 }}
 
 #endif

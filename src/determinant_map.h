@@ -1,11 +1,18 @@
 /*
- *@BEGIN LICENSE
+ * @BEGIN LICENSE
  *
- * Libadaptive: an ab initio quantum chemistry software package
+ * Forte: an open-source plugin to Psi4 (https://github.com/psi4/psi4)
+ * that implements a variety of quantum chemistry methods for strongly
+ * correlated electrons.
  *
- * This program is free software; you can redistribute it and/or modify
+ * Copyright (c) 2012-2017 by its authors (see LICENSE, AUTHORS).
+ *
+ * The copyrights for code used from other parties are included in
+ * the corresponding files.
+ *
+ * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or
+ * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
  *
  * This program is distributed in the hope that it will be useful,
@@ -13,18 +20,16 @@
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
  *
- * You should have received a copy of the GNU General Public License along
- * with this program; if not, write to the Free Software Foundation, Inc.,
- * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see http://www.gnu.org/licenses/.
  *
- *@END LICENSE
+ * @END LICENSE
  */
 
 #ifndef _determinant_map_h_
 #define _determinant_map_h_
 
 #include "stl_bitset_determinant.h"
-
 
 namespace psi{ namespace forte{
 
@@ -42,6 +47,9 @@ public:
     /// Default constructor
     DeterminantMap( std::vector<STLBitsetDeterminant>& dets );
 
+    /// Default constructor
+    DeterminantMap( STLBitsetDeterminant& det );
+
     /// Empty constructor
     DeterminantMap();
 
@@ -49,19 +57,46 @@ public:
     DeterminantMap( detmap& wfn_ );
 
     /// @return The hash
+    const detmap& wfn_hash() const;
+
+    /// @return The hash
     detmap& wfn_hash();
 
     /// Add a determinant
-    void add( STLBitsetDeterminant& det );
+    void add( const STLBitsetDeterminant& det );
 
     /// Return the number of determinants
-    double size();
+    size_t size() const;
+
+    // Clear hash
+    void clear();
 
     // Return a specific determinant by value
-    STLBitsetDeterminant get_det( size_t& value );
+    STLBitsetDeterminant get_det( const size_t value ) const;
+
+    // Return the index of a determinant
+    size_t get_idx( const STLBitsetDeterminant& det ) const;
 
     // Return a vector of the determinants
-    std::vector<STLBitsetDeterminant> determinants();
+    std::vector<STLBitsetDeterminant> determinants() const;
+
+    // Make this spin complete
+    void make_spin_complete();
+
+    // Check if a determinant is in the wavefunction
+    bool has_det( const STLBitsetDeterminant& det ) const;
+
+    // Compute overlap between this and input wfn
+    double overlap( std::vector<double>& det1_evecs, DeterminantMap& det2, SharedMatrix det2_evecs, int root );
+
+    // Compute overlap between this and input wfn
+    double overlap( SharedMatrix det1_evecs, int root1,  DeterminantMap& det2, SharedMatrix det2_evecs, int root2);
+
+    // Save most important subspace as this
+    void subspace( DeterminantMap& dets, SharedMatrix evecs, std::vector<double>& new_evecs, int dim, int root);
+
+    // Merge a wavefunction into this
+    void merge( DeterminantMap& dets);
 
 protected:
 
