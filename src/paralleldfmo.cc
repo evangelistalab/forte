@@ -1,15 +1,48 @@
+/*
+ * @BEGIN LICENSE
+ *
+ * Forte: an open-source plugin to Psi4 (https://github.com/psi4/psi4)
+ * that implements a variety of quantum chemistry methods for strongly
+ * correlated electrons.
+ *
+ * Copyright (c) 2012-2017 by its authors (see LICENSE, AUTHORS).
+ *
+ * The copyrights for code used from other parties are included in
+ * the corresponding files.
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see http://www.gnu.org/licenses/.
+ *
+ * @END LICENSE
+ */
+
 #ifdef HAVE_GA
 
-#include "psi4/libfock/jk.h"
-#include "psi4/libmints/sieve.h"
 #include "psi4/psifiles.h"
 #include "psi4/psi4-dec.h"
+
 #include "psi4/lib3index/3index.h"
+
 #include "psi4/libqt/qt.h"
+
+#include "psi4/libmints/matrix.h"
+#include "psi4/libmints/integral.h"
+#include "psi4/libmints/sieve.h"
+
+#include "psi4/libfock/jk.h"
 #ifdef _OPENMP
    #include <omp.h>
 #endif
-//#include <mpi.h>
 #include "paralleldfmo.h"
 #ifdef HAVE_GA
     #include <ga.h>

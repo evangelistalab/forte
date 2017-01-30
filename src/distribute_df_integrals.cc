@@ -1,3 +1,31 @@
+/*
+ * @BEGIN LICENSE
+ *
+ * Forte: an open-source plugin to Psi4 (https://github.com/psi4/psi4)
+ * that implements a variety of quantum chemistry methods for strongly
+ * correlated electrons.
+ *
+ * Copyright (c) 2012-2017 by its authors (see LICENSE, AUTHORS).
+ *
+ * The copyrights for code used from other parties are included in
+ * the corresponding files.
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see http://www.gnu.org/licenses/.
+ *
+ * @END LICENSE
+ */
+
 //[forte-public]
 
 #ifdef HAVE_GA
@@ -91,8 +119,10 @@ void DistDFIntegrals::test_distributed_integrals()
             outfile->Printf("\n Please set a DF_BASIS_MP2 option to a specified auxiliary basis set");
             throw PSIEXCEPTION("Select a DF_BASIS_MP2 for use with DFIntegrals");
         }
+        
+        //std::shared_ptr<BasisSet> auxiliary = BasisSet::pyconstruct_orbital(primary->molecule(), "DF_BASIS_MP2",options_.get_str("DF_BASIS_MP2"));
 
-        std::shared_ptr<BasisSet> auxiliary = BasisSet::pyconstruct_orbital(primary->molecule(), "DF_BASIS_MP2",options_.get_str("DF_BASIS_MP2"));
+        std::shared_ptr<BasisSet> auxiliary = wfn_->get_basisset("DF_BASIS_MP2");
 
         size_t nprim = primary->nbf();
         size_t naux  = auxiliary->nbf();
@@ -430,7 +460,8 @@ ambit::Tensor DistDFIntegrals::three_integral_block(const std::vector<size_t>& A
 }
 void DistDFIntegrals::gather_integrals()
 {
-    std::shared_ptr<BasisSet> auxiliary = BasisSet::pyconstruct_orbital(wfn_->molecule(), "DF_BASIS_MP2",options_.get_str("DF_BASIS_MP2"));
+    //std::shared_ptr<BasisSet> auxiliary = BasisSet::pyconstruct_orbital(wfn_->molecule(), "DF_BASIS_MP2",options_.get_str("DF_BASIS_MP2"));
+    std::shared_ptr<BasisSet> auxiliary = wfn_->get_basisset("DF_BASIS_MP2");
     SharedMatrix Ca = wfn_->Ca();
     SharedMatrix Ca_ao(new Matrix("CA_AO", wfn_->nso(), wfn_->nmo()));
     for (size_t h = 0, index = 0; h < wfn_->nirrep(); ++h){

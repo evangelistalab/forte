@@ -1,11 +1,18 @@
 /*
- *@BEGIN LICENSE
+ * @BEGIN LICENSE
  *
- * Libadaptive: an ab initio quantum chemistry software package
+ * Forte: an open-source plugin to Psi4 (https://github.com/psi4/psi4)
+ * that implements a variety of quantum chemistry methods for strongly
+ * correlated electrons.
  *
- * This program is free software; you can redistribute it and/or modify
+ * Copyright (c) 2012-2017 by its authors (see LICENSE, AUTHORS).
+ *
+ * The copyrights for code used from other parties are included in
+ * the corresponding files.
+ *
+ * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or
+ * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
  *
  * This program is distributed in the hope that it will be useful,
@@ -13,11 +20,10 @@
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
  *
- * You should have received a copy of the GNU General Public License along
- * with this program; if not, write to the Free Software Foundation, Inc.,
- * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see http://www.gnu.org/licenses/.
  *
- *@END LICENSE
+ * @END LICENSE
  */
 
 #ifndef _wfn_operator_h_
@@ -46,11 +52,18 @@ public:
     /// Empty constructor
     WFNOperator();
 
+    /// Initializer
+    void initialize( std::shared_ptr<MOSpaceInfo>& mo_space_info );
+
     /// Build the coupling lists for one-particle operators
     void op_lists( DeterminantMap& wfn );
 
     /// Build the coupling lists for two-particle operators
     void tp_lists( DeterminantMap& wfn );
+
+    void clear_op_lists();
+    void clear_tp_lists();
+
 
     /*- Operators -*/
     
@@ -62,6 +75,7 @@ public:
 
     /// Compute total spin expectation value <|S^2|> 
     double s2( DeterminantMap& wfn, SharedMatrix& evecs, int root );
+
 
     /// The alpha single-annihilation/creation list
     std::vector< std::vector< std::pair<size_t,short> >> a_ann_list_;
