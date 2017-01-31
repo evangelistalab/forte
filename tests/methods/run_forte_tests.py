@@ -41,7 +41,7 @@ mrdsrg_tests = ["mrdsrg-pt2-1","mrdsrg-pt2-2","mrdsrg-pt2-3","mrdsrg-pt2-4"]
 dsrg_mrpt3_tests = ["dsrg-mrpt3-1","dsrg-mrpt3-2","dsrg-mrpt3-3","dsrg-mrpt3-4","dsrg-mrpt3-5"]
 dsrg_mrpt2_tests = ["mr-dsrg-pt2-1","mr-dsrg-pt2-2","mr-dsrg-pt2-3","mr-dsrg-pt2-4",
                     "dsrg-mrpt2-1","dsrg-mrpt2-2","dsrg-mrpt2-3","dsrg-mrpt2-4","dsrg-mrpt2-5","dsrg-mrpt2-6",
-                    "dsrg-mrpt2-7","dsrg-mrpt2-8",
+                    "dsrg-mrpt2-7","dsrg-mrpt2-8-sa","dsrg-mrpt2-9-xms",
                     "cd-dsrg-mrpt2-1","cd-dsrg-mrpt2-2","cd-dsrg-mrpt2-3","cd-dsrg-mrpt2-4","cd-dsrg-mrpt2-5",
                     "df-dsrg-mrpt2-1", "df-dsrg-mrpt2-2", "df-dsrg-mrpt2-3", "df-dsrg-mrpt2-4", "df-dsrg-mrpt2-5",
                     "df-dsrg-mrpt2-threading1", "df-dsrg-mrpt2-threading2", "df-dsrg-mrpt2-threading4",
