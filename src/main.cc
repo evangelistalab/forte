@@ -774,6 +774,8 @@ read_options(std::string name, Options &options)
          *    - MS:  form 2nd-order Heff_MN = <M|H|N> + 0.5 * [<M|(T_M)^+ H|N> + <M|H T_N|N>]
          *    - XMS: rotate references such that <M|F|N> is diagonal before MS procedure -*/
         options.add_str("DSRG_MULTI_STATE", "SA_FULL", "SA_FULL SA_SUB MS XMS");
+        /*- Form 3-Body Hbar (Test for SA_SUB) -*/
+        options.add_bool("FORM_HBAR3", false);
         /*- DSRG Perturbation -*/
         options.add_bool("DSRGPT", true);
         /*- Include internal amplitudes according to excitation level -*/

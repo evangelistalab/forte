@@ -225,6 +225,8 @@ protected:
     ambit::BlockedTensor Hbar1_;
     /// Two-body transformed Hamiltonian (active only)
     ambit::BlockedTensor Hbar2_;
+    /// Three-body transformed Hamiltonian (active only)
+    ambit::BlockedTensor Hbar3_;
 
     /// Unitary matrix to block diagonal Fock
     ambit::BlockedTensor U_;
@@ -310,6 +312,9 @@ protected:
     void H1_T2_C2(BlockedTensor& H1, BlockedTensor& T2, const double& alpha, BlockedTensor& C2);
     /// Compute two-body term of commutator [H2, T2]
     void H2_T2_C2(BlockedTensor& H2, BlockedTensor& T2, const double& alpha, BlockedTensor& C2);
+
+    /// Compute three-body term of commutator [H2, T2]
+    void H2_T2_C3(BlockedTensor& H2, BlockedTensor& T2, const double& alpha, BlockedTensor& C3);
 
     /// Transfer integrals for FCI
     void transfer_integrals();
