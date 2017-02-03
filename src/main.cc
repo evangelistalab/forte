@@ -66,6 +66,7 @@
 #include "dsrg_mrpt.h"
 #include "v2rdm.h"
 #include "localize.h"
+#include "cc.h"
 
 #ifdef HAVE_CHEMPS2
 #include "dmrgscf.h"
@@ -81,29 +82,21 @@
 #include <mpi.h>
 #endif
 
-//INIT_PLUGIN
-void forte_options(std::string name, psi::Options &options);
-/// These functions replace the Memory Allocator in GA with C/C++ allocator. 
-void* replace_malloc(size_t bytes, int align, char *name)
-{
+// INIT_PLUGIN
+void forte_options(std::string name, psi::Options& options);
+/// These functions replace the Memory Allocator in GA with C/C++ allocator.
+void* replace_malloc(size_t bytes, int align, char* name) {
     return malloc(bytes);
 }
-void replace_free(void *ptr)
-{
-    free(ptr);
-}
+void replace_free(void* ptr) { free(ptr); }
 
-
-
-namespace psi{ namespace forte{
+namespace psi {
+namespace forte {
 
 void test_bitset_performance();
 
-
-extern "C" int
-read_options(std::string name, Options &options)
-{
-    forte_options(name,options);
+extern "C" int read_options(std::string name, Options& options) {
+    forte_options(name, options);
 
     if (name == "FORTE" || options.read_globals()) {
         /*- MODULEDESCRIPTION Forte */
@@ -111,18 +104,21 @@ read_options(std::string name, Options &options)
         /*- SUBSECTION Job Type */
 
         /*- Compute natural orbitals using MP2 -*/
-        options.add_bool("MP2_NOS",false);
+        options.add_bool("MP2_NOS", false);
         /*- View the natural orbitals with their symmetry information -*/
         options.add_bool("NAT_ORBS_PRINT", false);
         /*- Use Natural Orbitals to suggest active space -*/
         options.add_bool("NAT_ACT", false);
         options.add_bool("MOLDEN_WRITE_FORTE", false);
 
-        // Natural Orbital selection criteria.  Used to fine tune how many active orbitals there are
+        // Natural Orbital selection criteria.  Used to fine tune how many
+        // active orbitals there are
 
-        /*- Typically, a occupied orbital with a NO occupation of <0.98 is considered active -*/
+        /*- Typically, a occupied orbital with a NO occupation of <0.98 is
+         * considered active -*/
         options.add_double("OCC_NATURAL", 0.98);
-        /*- Typically, a virtual orbital with a NO occupation of > 0.02 is considered active -*/
+        /*- Typically, a virtual orbital with a NO occupation of > 0.02 is
+         * considered active -*/
         options.add_double("VIRT_NATURAL", 0.02);
 
         /*- The amount of information printed
@@ -131,18 +127,19 @@ read_options(std::string name, Options &options)
         /*- Print summary of memory -*/
         options.add_bool("MEMORY_SUMMARY", false);
 
-
         /*- The algorithm used to screen the determinant
          *  - CONVENTIONAL Conventional two-electron integrals
          *  - DF Density fitted two-electron integrals
          *  - CHOLESKY Cholesky decomposed two-electron integrals -*/
-        options.add_str("INT_TYPE","CONVENTIONAL","CONVENTIONAL DF CHOLESKY DISKDF DISTDF ALL EFFECTIVE OWNINTEGRALS");
+        options.add_str("INT_TYPE", "CONVENTIONAL",
+                        "CONVENTIONAL DF CHOLESKY DISKDF DISTDF ALL EFFECTIVE "
+                        "OWNINTEGRALS");
 
         /*- The damping factor in the erf(x omega)/x integrals -*/
-        options.add_double("EFFECTIVE_COULOMB_OMEGA",1.0);
+        options.add_double("EFFECTIVE_COULOMB_OMEGA", 1.0);
         /*- The coefficient of the effective Coulomb interaction -*/
-        options.add_double("EFFECTIVE_COULOMB_FACTOR",1.0);
-        options.add_double("EFFECTIVE_COULOMB_EXPONENT",1.0);
+        options.add_double("EFFECTIVE_COULOMB_FACTOR", 1.0);
+        options.add_double("EFFECTIVE_COULOMB_EXPONENT", 1.0);
 
         /*- The screening for JK builds and DF libraries -*/
         options.add_double("INTEGRAL_SCREENING", 1e-12);
@@ -159,48 +156,52 @@ read_options(std::string name, Options &options)
          *  - THREE-DSRG-MRPT2 A DF/CD based DSRG-MRPT2 code.  Very fast
          *  - CASSCF A AO based CASSCF code by Kevin Hannon
         -*/
-        options.add_str("JOB_TYPE","EXPLORER","EXPLORER ACI ACI_SPARSE FCIQMC PCI FCI CAS DMRG"
-                                              " SR-DSRG SR-DSRG-ACI SR-DSRG-PCI TENSORSRG TENSORSRG-CI"
-                                              " DSRG-MRPT2 DSRG-MRPT3 MR-DSRG-PT2 THREE-DSRG-MRPT2 SQ NONE"
-                                              " SOMRDSRG BITSET_PERFORMANCE MRDSRG MRDSRG_SO CASSCF"
-                                              " ACTIVE-DSRGPT2 DSRG_MRPT TASKS");
+        options.add_str(
+            "JOB_TYPE", "EXPLORER",
+            "EXPLORER ACI ACI_SPARSE FCIQMC PCI FCI CAS DMRG"
+            " SR-DSRG SR-DSRG-ACI SR-DSRG-PCI TENSORSRG TENSORSRG-CI"
+            " DSRG-MRPT2 DSRG-MRPT3 MR-DSRG-PT2 THREE-DSRG-MRPT2 SQ NONE"
+            " SOMRDSRG BITSET_PERFORMANCE MRDSRG MRDSRG_SO CASSCF"
+            " ACTIVE-DSRGPT2 DSRG_MRPT TASKS CC");
 
         /*- The symmetry of the electronic state. (zero based) -*/
-        options.add_int("ROOT_SYM",0);
+        options.add_int("ROOT_SYM", 0);
 
         /*- The multiplicity (2S + 1 )of the electronic state.
          *  For example, 1 = singlet, 2 = doublet, 3 = triplet, ...
          *  If a value is provided it overrides the multiplicity
          *  of the SCF solution. -*/
-        options.add_int("MULTIPLICITY",0);
+        options.add_int("MULTIPLICITY", 0);
         /*- The number of trials for root for FCI -*/
-        options.add_int("NTRIAL_PER_ROOT",10);
-
+        options.add_int("NTRIAL_PER_ROOT", 10);
 
         /*- The charge of the molecule.  If a value is provided
             it overrides the charge of the SCF solution. -*/
-        options.add_int("CHARGE",0);
+        options.add_int("CHARGE", 0);
 
         /*- The minimum excitation level (Default value: 0) -*/
-        options.add_int("MIN_EXC_LEVEL",0);
+        options.add_int("MIN_EXC_LEVEL", 0);
 
-        /*- The maximum excitation level (Default value: 0 = number of electrons) -*/
-        options.add_int("MAX_EXC_LEVEL",0);
+        /*- The maximum excitation level (Default value: 0 = number of
+         * electrons) -*/
+        options.add_int("MAX_EXC_LEVEL", 0);
 
         /*- Number of frozen occupied orbitals per irrep (in Cotton order) -*/
-        options.add("FROZEN_DOCC",new ArrayType());
+        options.add("FROZEN_DOCC", new ArrayType());
 
-        /*- Number of restricted doubly occupied orbitals per irrep (in Cotton order) -*/
+        /*- Number of restricted doubly occupied orbitals per irrep (in Cotton
+         * order) -*/
         options.add("RESTRICTED_DOCC", new ArrayType());
 
         /*- Number of active orbitals per irrep (in Cotton order) -*/
-        options.add("ACTIVE",new ArrayType());
+        options.add("ACTIVE", new ArrayType());
 
-        /*- Number of restricted unoccupied orbitals per irrep (in Cotton order) -*/
+        /*- Number of restricted unoccupied orbitals per irrep (in Cotton order)
+         * -*/
         options.add("RESTRICTED_UOCC", new ArrayType());
 
         /*- Number of frozen unoccupied orbitals per irrep (in Cotton order) -*/
-        options.add("FROZEN_UOCC",new ArrayType());
+        options.add("FROZEN_UOCC", new ArrayType());
         /*- Molecular orbitals to swap -
          *  Swap mo_1 with mo_2 in irrep symmetry
          *  Swap mo_3 with mo_4 in irrep symmetry
@@ -210,107 +211,117 @@ read_options(std::string name, Options &options)
         /*- The algorithm used to screen the determinant
          *  - DENOMINATORS uses the MP denominators to screen strings
          *  - SINGLES generates the space by a series of single excitations -*/
-        options.add_str("EXPLORER_ALGORITHM","DENOMINATORS","DENOMINATORS SINGLES");
+        options.add_str("EXPLORER_ALGORITHM", "DENOMINATORS",
+                        "DENOMINATORS SINGLES");
 
         /*- The energy threshold for the determinant energy in Hartree -*/
-        options.add_double("DET_THRESHOLD",1.0);
+        options.add_double("DET_THRESHOLD", 1.0);
 
         /*- The energy threshold for the MP denominators energy in Hartree -*/
-        options.add_double("DEN_THRESHOLD",1.5);
+        options.add_double("DEN_THRESHOLD", 1.5);
 
         /*- The criteria used to screen the strings -*/
-        options.add_str("SCREENING_TYPE","MP","MP DET");
+        options.add_str("SCREENING_TYPE", "MP", "MP DET");
 
         // Options for the diagonalization of the Hamiltonian //
         /*- Determines if this job will compute the energy -*/
-        options.add_bool("COMPUTE_ENERGY",true);
+        options.add_bool("COMPUTE_ENERGY", true);
 
         /*- The form of the Hamiltonian matrix.
          *  - FIXED diagonalizes a matrix of fixed dimension
          *  - SMOOTH forms a matrix with smoothed matrix elements -*/
-        options.add_str("H_TYPE","FIXED_ENERGY","FIXED_ENERGY FIXED_SIZE");
+        options.add_str("H_TYPE", "FIXED_ENERGY", "FIXED_ENERGY FIXED_SIZE");
 
         /*- Determines if this job will compute the energy -*/
-        options.add_str("ENERGY_TYPE","FULL","FULL SELECTED LOWDIN SPARSE RENORMALIZE RENORMALIZE_FIXED LMRCISD LMRCIS IMRCISD IMRCISD_SPARSE LMRCISD_SPARSE LMRCIS_SPARSE FACTORIZED_CI");
+        options.add_str("ENERGY_TYPE", "FULL",
+                        "FULL SELECTED LOWDIN SPARSE RENORMALIZE "
+                        "RENORMALIZE_FIXED LMRCISD LMRCIS IMRCISD "
+                        "IMRCISD_SPARSE LMRCISD_SPARSE LMRCIS_SPARSE "
+                        "FACTORIZED_CI");
 
         /*- The form of the Hamiltonian matrix.
          *  - FIXED diagonalizes a matrix of fixed dimension
          *  - SMOOTH forms a matrix with smoothed matrix elements -*/
 
-        options.add_int("IMRCISD_TEST_SIZE",0);
-        options.add_int("IMRCISD_SIZE",0);
+        options.add_int("IMRCISD_TEST_SIZE", 0);
+        options.add_int("IMRCISD_SIZE", 0);
 
         /*- The number of determinants used to build the Hamiltonian -*/
-        options.add_int("NDETS",100);
+        options.add_int("NDETS", 100);
 
         /*- The maximum dimension of the Hamiltonian -*/
-        options.add_int("MAX_NDETS",1000000);
+        options.add_int("MAX_NDETS", 1000000);
 
         /*- The energy threshold for the model space -*/
-        options.add_double("SPACE_M_THRESHOLD",1000.0);
+        options.add_double("SPACE_M_THRESHOLD", 1000.0);
 
         /*- The energy threshold for the intermdiate space -*/
-        options.add_double("SPACE_I_THRESHOLD",1000.0);
+        options.add_double("SPACE_I_THRESHOLD", 1000.0);
 
         /*- The energy threshold for the intermdiate space -*/
-        options.add_double("T2_THRESHOLD",0.000001);
-
+        options.add_double("T2_THRESHOLD", 0.000001);
 
         /*- The number of steps used in the renormalized Lambda CI -*/
-        options.add_int("RENORMALIZATION_STEPS",10);
+        options.add_int("RENORMALIZATION_STEPS", 10);
 
-        /*- The maximum number of determinant in the fixed-size renormalized Lambda CI -*/
-        options.add_int("REN_MAX_NDETS",1000);
+        /*- The maximum number of determinant in the fixed-size renormalized
+         * Lambda CI -*/
+        options.add_int("REN_MAX_NDETS", 1000);
 
         /*- The energy threshold for smoothing the Hamiltonian.
-         *  Determinants with energy < DET_THRESHOLD - SMO_THRESHOLD will be included in H
-         *  Determinants with DET_THRESHOLD - SMO_THRESHOLD < energy < DET_THRESHOLD will be included in H but smoothed
-         *  Determinants with energy > DET_THRESHOLD will not be included in H -*/
-        options.add_double("SMO_THRESHOLD",0.0);
+         *  Determinants with energy < DET_THRESHOLD - SMO_THRESHOLD will be
+         * included in H
+         *  Determinants with DET_THRESHOLD - SMO_THRESHOLD < energy <
+         * DET_THRESHOLD will be included in H but smoothed
+         *  Determinants with energy > DET_THRESHOLD will not be included in H
+         * -*/
+        options.add_double("SMO_THRESHOLD", 0.0);
 
         /*- The method used to smooth the Hamiltonian -*/
-        options.add_bool("SMOOTH",false);
+        options.add_bool("SMOOTH", false);
 
         /*- The method used to smooth the Hamiltonian -*/
-        options.add_bool("SELECT",false);
+        options.add_bool("SELECT", false);
 
         /*- The diagonalization method -*/
-        options.add_str("DIAG_ALGORITHM","DLSTRING","DAVIDSON FULL DAVIDSONLIST SOLVER DLSTRING");
+        options.add_str("DIAG_ALGORITHM", "DLSTRING",
+                        "DAVIDSON FULL DAVIDSONLIST SOLVER DLSTRING");
 
         /*- Force the diagonalization procedure?  -*/
         options.add_bool("FORCE_DIAG_METHOD", false);
-    
+
         /*- The number of roots computed -*/
-        options.add_int("NROOT",1);
+        options.add_int("NROOT", 1);
 
         /*- The root selected for state-specific computations -*/
-        options.add_int("ROOT",0);
+        options.add_int("ROOT", 0);
 
         // Options for the Cartographer class //
         /*- Density of determinants format -*/
-        options.add_str("DOD_FORMAT","HISTOGRAM","GAUSSIAN HISTOGRAM");
+        options.add_str("DOD_FORMAT", "HISTOGRAM", "GAUSSIAN HISTOGRAM");
         /*- Number of bins used to form the DOD plot -*/
-        options.add_int("DOD_BINS",2000);
-        /*- Width of the DOD Gaussian/histogram.  Default 0.02 Hartree ~ 0.5 eV -*/
-        options.add_double("DOD_BIN_WIDTH",0.05);
+        options.add_int("DOD_BINS", 2000);
+        /*- Width of the DOD Gaussian/histogram.  Default 0.02 Hartree ~ 0.5 eV
+         * -*/
+        options.add_double("DOD_BIN_WIDTH", 0.05);
         /*- Write an output file? -*/
-        options.add_bool("DETTOUR_WRITE_FILE",false);
+        options.add_bool("DETTOUR_WRITE_FILE", false);
         /*- Write the determinant occupation? -*/
-        options.add_bool("WRITE_OCCUPATION",true);
+        options.add_bool("WRITE_OCCUPATION", true);
         /*- Write the determinant energy? -*/
-        options.add_bool("WRITE_DET_ENERGY",true);
+        options.add_bool("WRITE_DET_ENERGY", true);
         /*- Write the denominator energy? -*/
-        options.add_bool("WRITE_DEN_ENERGY",false);
+        options.add_bool("WRITE_DEN_ENERGY", false);
         /*- Write the excitation level? -*/
-        options.add_bool("WRITE_EXC_LEVEL",false);
+        options.add_bool("WRITE_EXC_LEVEL", false);
         /*- Write information only for a given excitation level.
             0 (default) means print all -*/
-        options.add_int("RESTRICT_EXCITATION",0);
+        options.add_int("RESTRICT_EXCITATION", 0);
         /*- The energy buffer for building the Hamiltonian matrix in Hartree -*/
-        options.add_double("H_BUFFER",0.0);
+        options.add_double("H_BUFFER", 0.0);
 
         /*- The maximum number of iterations -*/
-        options.add_int("MAXITER",100);
+        options.add_int("MAXITER", 100);
 
         /*- Use localized basis? -*/
         options.add_bool("LOCALIZE", false);
@@ -319,7 +330,7 @@ read_options(std::string name, Options &options)
 
         // Options for the Genetic Algorithm CI //
         /*- The size of the population -*/
-        options.add_int("NPOP",100);
+        options.add_int("NPOP", 100);
 
         //////////////////////////////////////////////////////////////
         ///         OPTIONS FOR ALTERNATIVES FOR CASSCF ORBITALS
@@ -333,20 +344,20 @@ read_options(std::string name, Options &options)
         //////////////////////////////////////////////////////////////
 
         /*- The number of trial guess vectors to generate per root -*/
-        options.add_int("FCI_MAX_RDM",1);
+        options.add_int("FCI_MAX_RDM", 1);
         /*- Test the FCI reduced density matrices? -*/
-        options.add_bool("TEST_RDMS",false);
+        options.add_bool("TEST_RDMS", false);
         /*- Print the NO from the rdm of FCI -*/
-        options.add_bool("PRINT_NO",false);
+        options.add_bool("PRINT_NO", false);
 
         /*- The number of trial guess vectors to generate per root -*/
-        options.add_int("NTRIAL_PER_ROOT",10);
+        options.add_int("NTRIAL_PER_ROOT", 10);
         /*- The maximum number of iterations -*/
-        options.add_int("MAXITER_DAVIDSON",100);
+        options.add_int("MAXITER_DAVIDSON", 100);
         /*- The number of trial vector to retain after collapsing -*/
-        options.add_int("DAVIDSON_COLLAPSE_PER_ROOT",2);
+        options.add_int("DAVIDSON_COLLAPSE_PER_ROOT", 2);
         /*- The maxim number of trial vectors -*/
-        options.add_int("DAVIDSON_SUBSPACE_PER_ROOT",8);
+        options.add_int("DAVIDSON_SUBSPACE_PER_ROOT", 8);
         /*- Number of iterations for FCI code -*/
         options.add_int("FCI_ITERATIONS", 30);
 
@@ -363,8 +374,10 @@ read_options(std::string name, Options &options)
         options.add_double("CASSCF_E_CONVERGENCE", 1e-6);
         /* - Debug printing for CASSCF -*/
         options.add_bool("CASSCF_DEBUG_PRINTING", false);
-        /* - Multiplicity for the CASSCF solution (if different from multiplicity)
-         You should not use this if you are interested in having a CASSCF solution with the same multiplicitity as the DSRG-MRPT2-                                          */
+        /* - Multiplicity for the CASSCF solution (if different from
+         multiplicity)
+         You should not use this if you are interested in having a CASSCF
+         solution with the same multiplicitity as the DSRG-MRPT2- */
 
         options.add_int("CASSCF_MULTIPLICITY", 0);
         /*- A complete SOSCF ie Form full Hessian -*/
@@ -378,7 +391,8 @@ read_options(std::string name, Options &options)
         /*- Use JK builder for restricted docc (EXPERT) -*/
         options.add_bool("RESTRICTED_DOCC_JK", true);
         /*- Orbital rotation algorithm -*/
-        options.add_str("ORB_ROTATION_ALGORITHM", "DIAGONAL", "DIAGONAL AUGMENTED_HESSIAN");
+        options.add_str("ORB_ROTATION_ALGORITHM", "DIAGONAL",
+                        "DIAGONAL AUGMENTED_HESSIAN");
 
         /*- DIIS Options -*/
         options.add_bool("CASSCF_DO_DIIS", true);
@@ -400,9 +414,11 @@ read_options(std::string name, Options &options)
         //////////////////////////////////////////////////////////////
         /// OPTIONS FOR STATE-AVERAGE CASCI/CASSCF
         //////////////////////////////////////////////////////////////
-        /*- An array of states [[irrep1, multi1, nstates1], [irrep2, multi2, nstates2], ...] -*/
+        /*- An array of states [[irrep1, multi1, nstates1], [irrep2, multi2,
+         * nstates2], ...] -*/
         options.add("AVG_STATE", new ArrayType());
-        /*- An array of weights [[w1_1, w1_2, ..., w1_n], [w2_1, w2_2, ..., w2_n], ...] -*/
+        /*- An array of weights [[w1_1, w1_2, ..., w1_n], [w2_1, w2_2, ...,
+         * w2_n], ...] -*/
         options.add("AVG_WEIGHT", new ArrayType());
         /*- Monitor the CAS-CI solutions through iterations -*/
         options.add_bool("MONITOR_SA_SOLUTION", false);
@@ -413,12 +429,14 @@ read_options(std::string name, Options &options)
 
         options.add_int("DMRG_WFN_MULTP", -1);
 
-        /*- The DMRGSCF wavefunction irrep uses the same conventions as PSI4. How convenient :-).
+        /*- The DMRGSCF wavefunction irrep uses the same conventions as PSI4.
+        How convenient :-).
             Just to avoid confusion, it's copied here. It can also be found on
             http://sebwouters.github.io/CheMPS2/classCheMPS2_1_1Irreps.html .
 
             Symmetry Conventions        Irrep Number & Name
-            Group Number & Name         0 	1 	2 	3 	4 	5 	6 	7
+            Group Number & Name         0 	1 	2 	3 	4 	5 	6
+        7
             0: c1                       A
             1: ci                       Ag 	Au
             2: c2                       A 	B
@@ -426,12 +444,12 @@ read_options(std::string name, Options &options)
             4: d2                       A 	B1 	B2 	B3
             5: c2v                      A1 	A2 	B1 	B2
             6: c2h                      Ag 	Bg 	Au 	Bu
-            7: d2h                      Ag 	B1g 	B2g 	B3g 	Au 	B1u 	B2u 	B3u
+            7: d2h                      Ag 	B1g 	B2g 	B3g 	Au
+        B1u 	B2u 	B3u
         -*/
         options.add_int("DMRG_WFN_IRREP", -1);
         /*- FrozenDocc for DMRG (frozen means restricted) -*/
         options.add_array("DMRG_FROZEN_DOCC");
-
 
         /*- The number of reduced renormalized basis states to be
             retained during successive DMRG instructions -*/
@@ -444,13 +462,15 @@ read_options(std::string name, Options &options)
         /*- The maximum number of sweeps to stop an instruction
             during successive DMRG instructions -*/
         options.add_array("DMRG_MAXSWEEPS");
-        /*- The Davidson R tolerance (Wouters says this will cause RDms to be close to exact -*/
+        /*- The Davidson R tolerance (Wouters says this will cause RDms to be
+         * close to exact -*/
         options.add_array("DMRG_DAVIDSON_RTOL");
 
         /*- The noiseprefactors for successive DMRG instructions -*/
         options.add_array("DMRG_NOISEPREFACTORS");
 
-        /*- Whether or not to print the correlation functions after the DMRG calculation -*/
+        /*- Whether or not to print the correlation functions after the DMRG
+         * calculation -*/
         options.add_bool("DMRG_PRINT_CORR", false);
 
         /*- Whether or not to create intermediary MPS checkpoints -*/
@@ -459,7 +479,8 @@ read_options(std::string name, Options &options)
         /*- Convergence threshold for the gradient norm. -*/
         options.add_double("DMRG_CONVERGENCE", 1e-6);
 
-        /*- Whether or not to store the unitary on disk (convenient for restarting). -*/
+        /*- Whether or not to store the unitary on disk (convenient for
+         * restarting). -*/
         options.add_bool("DMRG_STORE_UNIT", true);
 
         /*- Whether or not to use DIIS for DMRGSCF. -*/
@@ -468,16 +489,19 @@ read_options(std::string name, Options &options)
         /*- When the update norm is smaller than this value DIIS starts. -*/
         options.add_double("DMRG_DIIS_BRANCH", 1e-2);
 
-        /*- Whether or not to store the DIIS checkpoint on disk (convenient for restarting). -*/
+        /*- Whether or not to store the DIIS checkpoint on disk (convenient for
+         * restarting). -*/
         options.add_bool("DMRG_STORE_DIIS", true);
 
         /*- Maximum number of DMRGSCF iterations -*/
         options.add_int("DMRGSCF_MAX_ITER", 100);
 
-        /*- Which root is targeted: 1 means ground state, 2 first excited state, etc. -*/
+        /*- Which root is targeted: 1 means ground state, 2 first excited state,
+         * etc. -*/
         options.add_int("DMRG_WHICH_ROOT", 1);
 
-        /*- Whether or not to use state-averaging for roots >=2 with DMRG-SCF. -*/
+        /*- Whether or not to use state-averaging for roots >=2 with DMRG-SCF.
+         * -*/
         options.add_bool("DMRG_AVG_STATES", true);
 
         /*- Which active space to use for DMRGSCF calculations:
@@ -486,42 +510,44 @@ read_options(std::string name, Options &options)
                --> localized and ordered orbitals (LOC) -*/
         options.add_str("DMRG_ACTIVE_SPACE", "INPUT", "INPUT NO LOC");
 
-        /*- Whether to start the active space localization process from a random unitary or the unit matrix. -*/
+        /*- Whether to start the active space localization process from a random
+         * unitary or the unit matrix. -*/
         options.add_bool("DMRG_LOC_RANDOM", true);
         /*- Use the older DMRGSCF algorithm -*/
         options.add_bool("USE_DMRGSCF", false);
-        
-
 
         //////////////////////////////////////////////////////////////
         ///         OPTIONS FOR THE ADAPTIVE CI
         //////////////////////////////////////////////////////////////
-        
+
         /* Convergence Threshold -*/
         options.add_double("ACI_CONVERGENCE", 1e-9);
 
         /*- The selection type for the Q-space-*/
-        options.add_str("SELECT_TYPE","AIMED_ENERGY","ENERGY AMP AIMED_AMP AIMED_ENERGY");
+        options.add_str("SELECT_TYPE", "AIMED_ENERGY",
+                        "ENERGY AMP AIMED_AMP AIMED_ENERGY");
         /*-Threshold for the selection of the P space -*/
-        options.add_double("SIGMA",0.01);
+        options.add_double("SIGMA", 0.01);
         /*- The threshold for the selection of the Q space -*/
-        options.add_double("GAMMA",1.0);
+        options.add_double("GAMMA", 1.0);
         /*- The SD-space prescreening threshold -*/
         options.add_double("PRESCREEN_THRESHOLD", 1e-9);
         /*- The threshold for smoothing the Hamiltonian. -*/
-        options.add_double("SMOOTH_THRESHOLD",0.01);
+        options.add_double("SMOOTH_THRESHOLD", 0.01);
         /*- The type of selection parameters to use*/
         options.add_bool("PERTURB_SELECT", false);
         /*Function of q-space criteria, per root*/
-        options.add_str("PQ_FUNCTION", "AVERAGE","MAX");
+        options.add_str("PQ_FUNCTION", "AVERAGE", "MAX");
         /*Type of  q-space criteria to use (only change for excited states)*/
         options.add_bool("Q_REL", false);
         /*Reference to be used in calculating ∆e (q_rel has to be true)*/
         options.add_str("Q_REFERENCE", "GS", "ADJACENT");
         /* Method to calculate excited state */
-        options.add_str("EXCITED_ALGORITHM", "AVERAGE","ROOT_SELECT AVERAGE COMPOSITE ROOT_COMBINE ROOT_ORTHOGONALIZE MULTISTATE");
+        options.add_str("EXCITED_ALGORITHM", "AVERAGE",
+                        "ROOT_SELECT AVERAGE COMPOSITE ROOT_COMBINE "
+                        "ROOT_ORTHOGONALIZE MULTISTATE");
         /*Number of roots to compute on final re-diagonalization*/
-        options.add_int("POST_ROOT",1);
+        options.add_int("POST_ROOT", 1);
         /*Diagonalize after ACI procedure with higher number of roots*/
         options.add_bool("POST_DIAGONALIZE", false);
         /*Maximum number of determinants*/
@@ -544,7 +570,8 @@ read_options(std::string name, Options &options)
         options.add_bool("ENFORCE_SPIN_COMPLETE", true);
         /*- Project out spin contaminants in Davidson-Liu's algorithm? -*/
         options.add_bool("PROJECT_OUT_SPIN_CONTAMINANTS", true);
-        /*- Add "degenerate" determinants not included in the aimed selection? -*/
+        /*- Add "degenerate" determinants not included in the aimed selection?
+         * -*/
         options.add_bool("ACI_ADD_AIMED_DEGENERATE", true);
 
         /*- Print an analysis of determinant history? -*/
@@ -577,7 +604,7 @@ read_options(std::string name, Options &options)
         options.add_int("DL_GUESS_SIZE", 100);
         /*- Number of guess vectors for Sparse CI solver -*/
         options.add_int("N_GUESS_VEC", 10);
-        options.add_double("NO_THRESHOLD",0.02);
+        options.add_double("NO_THRESHOLD", 0.02);
 
         /*- Do compute nroots on first cycle? -*/
         options.add_bool("FIRST_ITER_ROOTS", false);
@@ -586,52 +613,56 @@ read_options(std::string name, Options &options)
         ///         OPTIONS FOR THE PROJECTOR CI
         //////////////////////////////////////////////////////////////
         /*- The propagation algorithm -*/
-        options.add_str("GENERATOR","WALL-CHEBYSHEV","LINEAR QUADRATIC CUBIC QUARTIC POWER TROTTER OLSEN DAVIDSON MITRUSHENKOV EXP-CHEBYSHEV WALL-CHEBYSHEV CHEBYSHEV LANCZOS DL");
+        options.add_str("GENERATOR", "WALL-CHEBYSHEV",
+                        "LINEAR QUADRATIC CUBIC QUARTIC POWER TROTTER OLSEN "
+                        "DAVIDSON MITRUSHENKOV EXP-CHEBYSHEV WALL-CHEBYSHEV "
+                        "CHEBYSHEV LANCZOS DL");
         /*- The determinant importance threshold -*/
-        options.add_double("SPAWNING_THRESHOLD",0.001);
-        /*- The maximum number of determinants used to form the guess wave function -*/
-        options.add_double("MAX_GUESS_SIZE",10000);
+        options.add_double("SPAWNING_THRESHOLD", 0.001);
+        /*- The maximum number of determinants used to form the guess wave
+         * function -*/
+        options.add_double("MAX_GUESS_SIZE", 10000);
         /*- The determinant importance threshold -*/
-        options.add_double("GUESS_SPAWNING_THRESHOLD",-1);
+        options.add_double("GUESS_SPAWNING_THRESHOLD", -1);
         /*- The threshold with which we estimate the variational energy.
             Note that the final energy is always estimated exactly. -*/
-        options.add_double("ENERGY_ESTIMATE_THRESHOLD",1.0e-6);
+        options.add_double("ENERGY_ESTIMATE_THRESHOLD", 1.0e-6);
         /*- The time step in imaginary time (a.u.) -*/
-        options.add_double("TAU",1.0);
+        options.add_double("TAU", 1.0);
         /*- The energy convergence criterion -*/
-        options.add_double("E_CONVERGENCE",1.0e-8);
+        options.add_double("E_CONVERGENCE", 1.0e-8);
         /*- Use a fast (sparse) estimate of the energy -*/
-        options.add_bool("FAST_EVAR",false);
+        options.add_bool("FAST_EVAR", false);
         /*- Iterations in between variational estimation of the energy -*/
-        options.add_int("ENERGY_ESTIMATE_FREQ",1);
+        options.add_int("ENERGY_ESTIMATE_FREQ", 1);
         /*- Use an adaptive time step? -*/
-        options.add_bool("ADAPTIVE_BETA",false);
+        options.add_bool("ADAPTIVE_BETA", false);
         /*- Use intermediate normalization -*/
-        options.add_bool("USE_INTER_NORM",false);
+        options.add_bool("USE_INTER_NORM", false);
         /*- Use a shift in the exponential -*/
-        options.add_bool("USE_SHIFT",false);
+        options.add_bool("USE_SHIFT", false);
         /*- Estimate variational energy during calculation -*/
-        options.add_bool("VAR_ESTIMATE",false);
+        options.add_bool("VAR_ESTIMATE", false);
         /*- Print full wavefunction when finish -*/
-        options.add_bool("PRINT_FULL_WAVEFUNCTION",false);
+        options.add_bool("PRINT_FULL_WAVEFUNCTION", false);
         /*- Prescreen the spawning of excitations -*/
-        options.add_bool("SIMPLE_PRESCREENING",false);
+        options.add_bool("SIMPLE_PRESCREENING", false);
         /*- Use dynamic prescreening -*/
-        options.add_bool("DYNAMIC_PRESCREENING",false);
+        options.add_bool("DYNAMIC_PRESCREENING", false);
         /*- Use schwarz prescreening -*/
-        options.add_bool("SCHWARZ_PRESCREENING",false);
+        options.add_bool("SCHWARZ_PRESCREENING", false);
         /*- Use initiator approximation -*/
-        options.add_bool("INITIATOR_APPROX",false);
+        options.add_bool("INITIATOR_APPROX", false);
         /*- The initiator approximation factor -*/
-        options.add_double("INITIATOR_APPROX_FACTOR",1.0);
+        options.add_double("INITIATOR_APPROX_FACTOR", 1.0);
         /*- Do result perturbation analysis -*/
-        options.add_bool("PERTURB_ANALYSIS",false);
+        options.add_bool("PERTURB_ANALYSIS", false);
         /*- Use Symmetric Approximate Hamiltonian -*/
-        options.add_bool("SYMM_APPROX_H",false);
+        options.add_bool("SYMM_APPROX_H", false);
         /*- Stop iteration when higher new low detected -*/
-        options.add_bool("STOP_HIGHER_NEW_LOW",false);
+        options.add_bool("STOP_HIGHER_NEW_LOW", false);
         /*- The maximum value of beta -*/
-        options.add_double("MAXBETA",1000.0);
+        options.add_double("MAXBETA", 1000.0);
         /*- The maximum value of Davidson generator iteration -*/
         options.add_int("MAX_DAVIDSON_ITER", 12);
         /*- The order of Chebyshev truncation -*/
@@ -639,17 +670,17 @@ read_options(std::string name, Options &options)
         /*- The order of Krylov truncation -*/
         options.add_int("KRYLOV_ORDER", 5);
         /*- The minimum norm of orthogonal vector -*/
-        options.add_double("COLINEAR_THRESHOLD",1.0e-6);
+        options.add_double("COLINEAR_THRESHOLD", 1.0e-6);
         /*- Do spawning according to reference -*/
-        options.add_bool("REFERENCE_SPAWNING",false);
+        options.add_bool("REFERENCE_SPAWNING", false);
 
         //////////////////////////////////////////////////////////////
         ///         OPTIONS FOR THE FULL CI QUANTUM MONTE-CARLO
         //////////////////////////////////////////////////////////////
         /*- The maximum value of beta -*/
-        options.add_double("START_NUM_WALKERS",1000.0);
+        options.add_double("START_NUM_WALKERS", 1000.0);
         /*- Spawn excitation type -*/
-        options.add_str("SPAWN_TYPE","RANDOM", "RANDOM ALL GROUND_AND_RANDOM");
+        options.add_str("SPAWN_TYPE", "RANDOM", "RANDOM ALL GROUND_AND_RANDOM");
         /*- The number of walkers for shift -*/
         options.add_double("SHIFT_NUM_WALKERS", 10000.0);
         options.add_int("SHIFT_FREQ", 10);
@@ -660,9 +691,9 @@ read_options(std::string name, Options &options)
         options.add_bool("USE_INITIATOR", false);
         options.add_double("INITIATOR_NA", 3.0);
         /*- Iterations in between variational estimation of the energy -*/
-        options.add_int("VAR_ENERGY_ESTIMATE_FREQ",1000);
+        options.add_int("VAR_ENERGY_ESTIMATE_FREQ", 1000);
         /*- Iterations in between printing information -*/
-        options.add_int("PRINT_FREQ",100);
+        options.add_int("PRINT_FREQ", 100);
 
         //////////////////////////////////////////////////////////////
         ///
@@ -670,38 +701,39 @@ read_options(std::string name, Options &options)
         ///
         //////////////////////////////////////////////////////////////
         /*- The type of operator to use in the SRG transformation -*/
-        options.add_str("SRG_MODE","DSRG","DSRG CT");
+        options.add_str("SRG_MODE", "DSRG", "DSRG CT");
         /*- The type of operator to use in the SRG transformation -*/
-        options.add_str("SRG_OP","UNITARY","UNITARY CC");
+        options.add_str("SRG_OP", "UNITARY", "UNITARY CC");
         /*- The flow generator to use in the SRG equations -*/
-        options.add_str("SRG_ETA","WHITE","WEGNER_BLOCK WHITE");
+        options.add_str("SRG_ETA", "WHITE", "WEGNER_BLOCK WHITE");
         /*- The integrator used to propagate the SRG equations -*/
-        options.add_str("SRG_ODEINT","FEHLBERG78","DOPRI5 CASHKARP FEHLBERG78");
+        options.add_str("SRG_ODEINT", "FEHLBERG78",
+                        "DOPRI5 CASHKARP FEHLBERG78");
         /*- The end value of the integration parameter s -*/
-        options.add_double("SRG_SMAX",10.0);
+        options.add_double("SRG_SMAX", 10.0);
         /*- The end value of the integration parameter s -*/
-        options.add_double("DSRG_S",1.0e10);
+        options.add_double("DSRG_S", 1.0e10);
         /*- The end value of the integration parameter s -*/
-        options.add_double("DSRG_POWER",2.0);
+        options.add_double("DSRG_POWER", 2.0);
 
-
-        // --------------------------- SRG EXPERT OPTIONS ---------------------------
+        // --------------------------- SRG EXPERT OPTIONS
+        // ---------------------------
 
         /*- The initial time step used by the ode solver -*/
-        options.add_double("SRG_DT",0.001);
+        options.add_double("SRG_DT", 0.001);
         /*- The absolute error tollerance for the ode solver -*/
-        options.add_double("SRG_ODEINT_ABSERR",1.0e-12);
+        options.add_double("SRG_ODEINT_ABSERR", 1.0e-12);
         /*- The absolute error tollerance for the ode solver -*/
-        options.add_double("SRG_ODEINT_RELERR",1.0e-12);
+        options.add_double("SRG_ODEINT_RELERR", 1.0e-12);
         /*- Select a modified commutator -*/
-        options.add_str("SRG_COMM","STANDARD","STANDARD FO FO2");
-        /*- The maximum number of commutators in the recursive single commutator approximation -*/
-        options.add_int("SRG_RSC_NCOMM",20);
+        options.add_str("SRG_COMM", "STANDARD", "STANDARD FO FO2");
+        /*- The maximum number of commutators in the recursive single commutator
+         * approximation -*/
+        options.add_int("SRG_RSC_NCOMM", 20);
         /*- The treshold for terminating the RSC approximation -*/
-        options.add_double("SRG_RSC_THRESHOLD",1.0e-12);
+        options.add_double("SRG_RSC_THRESHOLD", 1.0e-12);
         /*- Save Hbar? -*/
-        options.add_bool("SAVE_HBAR",false);
-
+        options.add_bool("SAVE_HBAR", false);
 
         //////////////////////////////////////////////////////////////
         ///         OPTIONS FOR THE PILOT FULL CI CODE
@@ -711,8 +743,10 @@ read_options(std::string name, Options &options)
         /*- Threshold for printing CI vectors -*/
         options.add_double("PRINT_CI_VECTOR", 0.05);
         /*- Active space type -*/
-        options.add_str("ACTIVE_SPACE_TYPE", "COMPLETE", "COMPLETE CIS CISD DOCI");
-        /*- Exclude HF to the CISD space for excited state (ground state will be HF energy) -*/
+        options.add_str("ACTIVE_SPACE_TYPE", "COMPLETE",
+                        "COMPLETE CIS CISD DOCI");
+        /*- Exclude HF to the CISD space for excited state (ground state will be
+         * HF energy) -*/
         options.add_bool("CISD_EX_NO_HF", false);
         /*- Compute <CIS|CISD> overlap in CIS computations -*/
         options.add_bool("CIS_CISD_OVERLAP", false);
@@ -727,7 +761,7 @@ read_options(std::string name, Options &options)
         /*- Number of roots per irrep (in Cotton order) -*/
         options.add("NROOTPI", new ArrayType());
         /*- The density convergence criterion -*/
-        options.add_double("D_CONVERGENCE",1.0e-8);
+        options.add_double("D_CONVERGENCE", 1.0e-8);
 
         //////////////////////////////////////////////////////////////
         ///         OPTIONS FOR THE V2RDM INTERFACE
@@ -739,9 +773,12 @@ read_options(std::string name, Options &options)
         ///              OPTIONS FOR THE MR-DSRG MODULE
         //////////////////////////////////////////////////////////////
         /*- Correlation level -*/
-        options.add_str("CORR_LEVEL", "PT2", "LDSRG2 QDSRG2 LDSRG2_P3 QDSRG2_P3 PT2 PT3 LDSRG2_QC LSRG2 SRG_PT2");
+        options.add_str("CORR_LEVEL", "PT2",
+                        "LDSRG2 QDSRG2 LDSRG2_P3 QDSRG2_P3 PT2 PT3 LDSRG2_QC "
+                        "LSRG2 SRG_PT2");
         /*- Source Operator -*/
-        options.add_str("SOURCE", "STANDARD", "STANDARD LABS DYSON AMP EMP2 LAMP LEMP2");
+        options.add_str("SOURCE", "STANDARD",
+                        "STANDARD LABS DYSON AMP EMP2 LAMP LEMP2");
         /*- The Algorithm to Form T Amplitudes -*/
         options.add_str("T_ALGORITHM", "DSRG", "DSRG DSRG_NOSEMI SELEC ISA");
         /*- Different Zeroth-order Hamiltonian -*/
@@ -759,11 +796,13 @@ read_options(std::string name, Options &options)
         /*- T Threshold for Intruder States -*/
         options.add_double("INTRUDER_TAMP", 0.10);
         /*- The residue convergence criterion -*/
-        options.add_double("R_CONVERGENCE",1.0e-6);
+        options.add_double("R_CONVERGENCE", 1.0e-6);
         /*- DSRG Transformation Type -*/
         options.add_str("DSRG_TRANS_TYPE", "UNITARY", "UNITARY CC");
         /*- Automatic Adjusting Flow Parameter -*/
-        options.add_str("SMART_DSRG_S", "DSRG_S", "DSRG_S MIN_DELTA1 MAX_DELTA1 DAVG_MIN_DELTA1 DAVG_MAX_DELTA1");
+        options.add_str(
+            "SMART_DSRG_S", "DSRG_S",
+            "DSRG_S MIN_DELTA1 MAX_DELTA1 DAVG_MIN_DELTA1 DAVG_MAX_DELTA1");
         /*- Print DSRG-MRPT3 Timing Profile -*/
         options.add_bool("PRINT_TIME_PROFILE", false);
         /*- Multi-State DSRG options
@@ -779,10 +818,14 @@ read_options(std::string name, Options &options)
         /*- DSRG Perturbation -*/
         options.add_bool("DSRGPT", true);
         /*- Include internal amplitudes according to excitation level -*/
-        options.add_str("INTERNAL_AMP", "NONE", "NONE SINGLES_DOUBLES SINGLES DOUBLES");
-        /*- Select only part of the asked internal amplitudes (IAs) in V-CIS/CISD
-         *  - AUTO: all IAs that changes excitations (O->V; OO->VV, OO->OV, OV->VV)
-         *  - ALL:  all IAs (O->O, V->V, O->V; OO->OO, OV->OV, VV->VV, OO->VV, OO->OV, OV->VV)
+        options.add_str("INTERNAL_AMP", "NONE",
+                        "NONE SINGLES_DOUBLES SINGLES DOUBLES");
+        /*- Select only part of the asked internal amplitudes (IAs) in
+         * V-CIS/CISD
+         *  - AUTO: all IAs that changes excitations (O->V; OO->VV, OO->OV,
+         * OV->VV)
+         *  - ALL:  all IAs (O->O, V->V, O->V; OO->OO, OV->OV, VV->VV, OO->VV,
+         * OO->OV, OV->VV)
          *  - OOVV: pure external (O->V; OO->VV) -*/
         options.add_str("INTERNAL_AMP_SELECT", "AUTO", "AUTO ALL OOVV");
         /*- Exponent of Energy Denominator -*/
@@ -801,10 +844,13 @@ read_options(std::string name, Options &options)
         /*- Defintion for source operator for ccvv term -*/
         options.add_str("CCVV_SOURCE", "NORMAL", "ZERO NORMAL");
         /*- Algorithm for the ccvv term for three-dsrg-mrpt2 -*/
-        options.add_str("CCVV_ALGORITHM", "FLY_AMBIT", "CORE FLY_AMBIT FLY_LOOP BATCH_CORE BATCH_VIRTUAL BATCH_CORE_GA BATCH_VIRTUAL_GA BATCH_VIRTUAL_MPI BATCH_CORE_MPI BATCH_CORE_REP BATCH_VIRTUAL_REP");
+        options.add_str("CCVV_ALGORITHM", "FLY_AMBIT",
+                        "CORE FLY_AMBIT FLY_LOOP BATCH_CORE BATCH_VIRTUAL "
+                        "BATCH_CORE_GA BATCH_VIRTUAL_GA BATCH_VIRTUAL_MPI "
+                        "BATCH_CORE_MPI BATCH_CORE_REP BATCH_VIRTUAL_REP");
         /*- Do AO-DSRG-MRPT2 -*/
         options.add_bool("AO_DSRG_MRPT2", false);
-        
+
         /*- Batches for CCVV_ALGORITHM -*/
         options.add_int("CCVV_BATCH_NUMBER", -1);
         /*- Excessive printing for DF_DSRG_MRPT2 -*/
@@ -821,32 +867,31 @@ read_options(std::string name, Options &options)
     return true;
 }
 
-extern "C" SharedWavefunction forte(SharedWavefunction ref_wfn, Options &options)
-{
+extern "C" SharedWavefunction forte(SharedWavefunction ref_wfn,
+                                    Options& options) {
     ambit::initialize();
 
-    #ifdef HAVE_MPI
-    MPI_Init(NULL,NULL);    
-    #endif
+#ifdef HAVE_MPI
+    MPI_Init(NULL, NULL);
+#endif
 
     int my_proc = 0;
     int n_nodes = 1;
-    #ifdef HAVE_GA
+#ifdef HAVE_GA
     GA_Initialize();
-    ///Use C/C++ memory allocators 
+    /// Use C/C++ memory allocators
     GA_Register_stack_memory(replace_malloc, replace_free);
     n_nodes = GA_Nnodes();
     my_proc = GA_Nodeid();
     size_t memory = Process::environment.get_memory() / n_nodes;
-    #endif
+#endif
 
-    #ifdef HAVE_MPI
+#ifdef HAVE_MPI
     MPI_Comm_rank(MPI_COMM_WORLD, &my_proc);
     MPI_Comm_size(MPI_COMM_WORLD, &n_nodes);
-    #endif
+#endif
 
-    
-    if (options.get_str("JOB_TYPE") == "BITSET_PERFORMANCE"){
+    if (options.get_str("JOB_TYPE") == "BITSET_PERFORMANCE") {
         test_bitset_performance();
         return ref_wfn;
     }
@@ -854,12 +899,13 @@ extern "C" SharedWavefunction forte(SharedWavefunction ref_wfn, Options &options
 
     // Create a MOSpaceInfo object
     Dimension nmopi = ref_wfn->nmopi();
-    std::shared_ptr<MOSpaceInfo> mo_space_info = std::make_shared<MOSpaceInfo>(nmopi);
+    std::shared_ptr<MOSpaceInfo> mo_space_info =
+        std::make_shared<MOSpaceInfo>(nmopi);
     mo_space_info->read_options(options);
 
     // Create a subspace object
-    SharedMatrix Ps = create_aosubspace_projector(ref_wfn,options);
-    if (Ps){
+    SharedMatrix Ps = create_aosubspace_projector(ref_wfn, options);
+    if (Ps) {
         SharedMatrix CPsC = Ps->clone();
         CPsC->transform(ref_wfn->Ca());
 
@@ -867,56 +913,69 @@ extern "C" SharedWavefunction forte(SharedWavefunction ref_wfn, Options &options
         outfile->Printf("    ========================\n");
         outfile->Printf("    Irrep   MO   <phi|P|phi>\n");
         outfile->Printf("    ------------------------\n");
-        for (int h = 0; h < CPsC->nirrep(); h++){
-            for (int i = 0; i < CPsC->rowspi(h); i++){
-                outfile->Printf("      %1d   %4d    %.6f\n",h,i + 1,CPsC->get(h,i,i));
+        for (int h = 0; h < CPsC->nirrep(); h++) {
+            for (int i = 0; i < CPsC->rowspi(h); i++) {
+                outfile->Printf("      %1d   %4d    %.6f\n", h, i + 1,
+                                CPsC->get(h, i, i));
             }
         }
         outfile->Printf("    ========================\n");
     }
 
     std::shared_ptr<ForteIntegrals> ints_;
-    if (options.get_str("INT_TYPE") == "CHOLESKY"){
-        ints_ = std::make_shared<CholeskyIntegrals>(options,ref_wfn,UnrestrictedMOs,RemoveFrozenMOs, mo_space_info);
-    }else if (options.get_str("INT_TYPE") == "DF"){
-        ints_ = std::make_shared<DFIntegrals>(options,ref_wfn,UnrestrictedMOs,RemoveFrozenMOs, mo_space_info);
-    }else if (options.get_str("INT_TYPE") == "DISKDF"){
-        ints_ =  std::make_shared<DISKDFIntegrals>(options,ref_wfn,UnrestrictedMOs,RemoveFrozenMOs, mo_space_info);
-    }else if (options.get_str("INT_TYPE") == "CONVENTIONAL"){
-        ints_ = std::make_shared<ConventionalIntegrals>(options,ref_wfn,UnrestrictedMOs,RemoveFrozenMOs, mo_space_info);
-    }else if (options.get_str("INT_TYPE") == "EFFECTIVE"){
-        ints_ = std::make_shared<EffectiveIntegrals>(options,ref_wfn,UnrestrictedMOs,RemoveFrozenMOs, mo_space_info);
-    }else if (options.get_str("INT_TYPE") == "DISTDF"){
-        #ifdef HAVE_GA
-        ints_ = std::make_shared<DistDFIntegrals>(options, ref_wfn, UnrestrictedMOs, RemoveFrozenMOs, mo_space_info);
-        #endif
-    }else if(options.get_str("INT_TYPE") == "OWNINTEGRALS") {
-        ints_ = std::make_shared<OwnIntegrals>(options, ref_wfn, UnrestrictedMOs, RemoveFrozenMOs, mo_space_info);
-    }
-    else{
-        outfile->Printf("\n Please check your int_type. Choices are CHOLESKY, DF, DISKDF , DISTRIBUTEDDF Effective, CONVENTIONAL or OwnIntegrals");
+    if (options.get_str("INT_TYPE") == "CHOLESKY") {
+        ints_ = std::make_shared<CholeskyIntegrals>(
+            options, ref_wfn, UnrestrictedMOs, RemoveFrozenMOs, mo_space_info);
+    } else if (options.get_str("INT_TYPE") == "DF") {
+        ints_ = std::make_shared<DFIntegrals>(options, ref_wfn, UnrestrictedMOs,
+                                              RemoveFrozenMOs, mo_space_info);
+    } else if (options.get_str("INT_TYPE") == "DISKDF") {
+        ints_ = std::make_shared<DISKDFIntegrals>(
+            options, ref_wfn, UnrestrictedMOs, RemoveFrozenMOs, mo_space_info);
+    } else if (options.get_str("INT_TYPE") == "CONVENTIONAL") {
+        ints_ = std::make_shared<ConventionalIntegrals>(
+            options, ref_wfn, UnrestrictedMOs, RemoveFrozenMOs, mo_space_info);
+    } else if (options.get_str("INT_TYPE") == "EFFECTIVE") {
+        ints_ = std::make_shared<EffectiveIntegrals>(
+            options, ref_wfn, UnrestrictedMOs, RemoveFrozenMOs, mo_space_info);
+    } else if (options.get_str("INT_TYPE") == "DISTDF") {
+#ifdef HAVE_GA
+        ints_ = std::make_shared<DistDFIntegrals>(
+            options, ref_wfn, UnrestrictedMOs, RemoveFrozenMOs, mo_space_info);
+#endif
+    } else if (options.get_str("INT_TYPE") == "OWNINTEGRALS") {
+        ints_ = std::make_shared<OwnIntegrals>(
+            options, ref_wfn, UnrestrictedMOs, RemoveFrozenMOs, mo_space_info);
+    } else {
+        outfile->Printf(
+            "\n Please check your int_type. Choices are CHOLESKY, DF, DISKDF , "
+            "DISTRIBUTEDDF Effective, CONVENTIONAL or OwnIntegrals");
         throw PSIEXCEPTION("INT_TYPE is not correct.  Check options");
     }
 
-    if (options.get_str("JOB_TYPE") == "TASKS"){
-        std::vector<std::string> tasks{"FCI_SEMI_CANONICAL","DSRG-MRPT2"};
+    if (options.get_str("JOB_TYPE") == "TASKS") {
+        std::vector<std::string> tasks{"FCI_SEMI_CANONICAL", "DSRG-MRPT2"};
         Reference reference;
 
-        for (std::string& task : tasks){
-            if (task == "FCI"){
-                auto fci = std::make_shared<FCI>(ref_wfn,options,ints_,mo_space_info);
+        for (std::string& task : tasks) {
+            if (task == "FCI") {
+                auto fci = std::make_shared<FCI>(ref_wfn, options, ints_,
+                                                 mo_space_info);
                 fci->compute_energy();
             }
 
-            if (task == "FCI_SEMI_CANONICAL"){
+            if (task == "FCI_SEMI_CANONICAL") {
                 {
-                    std::shared_ptr<FCI> fci(new FCI(ref_wfn,options,ints_,mo_space_info));
+                    std::shared_ptr<FCI> fci(
+                        new FCI(ref_wfn, options, ints_, mo_space_info));
                     fci->set_max_rdm_level(1);
                     fci->compute_energy();
                     reference = fci->reference();
                 }
-                SemiCanonical semi(ref_wfn,options,ints_,mo_space_info,reference);
-                std::shared_ptr<FCI> fci(new FCI(ref_wfn,options,ints_,mo_space_info));
+                SemiCanonical semi(ref_wfn, options, ints_, mo_space_info,
+                                   reference);
+                std::shared_ptr<FCI> fci(
+                    new FCI(ref_wfn, options, ints_, mo_space_info));
                 fci->set_max_rdm_level(3);
                 fci->compute_energy();
                 reference = fci->reference();
@@ -932,74 +991,84 @@ extern "C" SharedWavefunction forte(SharedWavefunction ref_wfn, Options &options
                 reference = fci_mo->reference();
             }
 
-            if (task == "DSRG-MRPT2"){
-                std::shared_ptr<THREE_DSRG_MRPT2> three_dsrg_mrpt2(new THREE_DSRG_MRPT2(reference,ref_wfn,options,ints_, mo_space_info));
+            if (task == "DSRG-MRPT2") {
+                std::shared_ptr<THREE_DSRG_MRPT2> three_dsrg_mrpt2(
+                    new THREE_DSRG_MRPT2(reference, ref_wfn, options, ints_,
+                                         mo_space_info));
                 three_dsrg_mrpt2->compute_energy();
             }
         }
     }
 
-    if(options.get_str("ALTERNATIVE_CASSCF") == "FTHF")
-    {
-        auto FTHF = std::make_shared<FiniteTemperatureHF>(ref_wfn, options, mo_space_info);
+    if (options.get_str("ALTERNATIVE_CASSCF") == "FTHF") {
+        auto FTHF = std::make_shared<FiniteTemperatureHF>(ref_wfn, options,
+                                                          mo_space_info);
         FTHF->compute_energy();
         ints_->retransform_integrals();
     }
 
-    if(options.get_bool("CASSCF_REFERENCE") == true or options.get_str("JOB_TYPE") == "CASSCF")
-    {
-        auto casscf = std::make_shared<CASSCF>(ref_wfn,options,ints_,mo_space_info);
+    if (options.get_bool("CASSCF_REFERENCE") == true or
+        options.get_str("JOB_TYPE") == "CASSCF") {
+        auto casscf =
+            std::make_shared<CASSCF>(ref_wfn, options, ints_, mo_space_info);
         casscf->compute_casscf();
     }
-    if (options.get_bool("MP2_NOS")){
-        auto mp2_nos = std::make_shared<MP2_NOS>(ref_wfn,options,ints_, mo_space_info);
+    if (options.get_bool("MP2_NOS")) {
+        auto mp2_nos =
+            std::make_shared<MP2_NOS>(ref_wfn, options, ints_, mo_space_info);
     }
 
-    if (options.get_bool("LOCALIZE")){
-        auto localize = std::make_shared<LOCALIZE>(ref_wfn,options,ints_,mo_space_info);
+    if (options.get_bool("LOCALIZE")) {
+        auto localize =
+            std::make_shared<LOCALIZE>(ref_wfn, options, ints_, mo_space_info);
         localize->localize_orbitals();
     }
 
-    if (options.get_str("JOB_TYPE") == "MR-DSRG-PT2"){
+    if (options.get_str("JOB_TYPE") == "MR-DSRG-PT2") {
         MCSRGPT2_MO mcsrgpt2_mo(ref_wfn, options, ints_, mo_space_info);
     }
-    if (options.get_str("JOB_TYPE") == "FCIQMC"){
-        auto fciqmc = std::make_shared<FCIQMC>(ref_wfn,options,ints_, mo_space_info);
+    if (options.get_str("JOB_TYPE") == "FCIQMC") {
+        auto fciqmc =
+            std::make_shared<FCIQMC>(ref_wfn, options, ints_, mo_space_info);
         fciqmc->compute_energy();
     }
-    if ((options.get_str("JOB_TYPE") == "ACI") or (options.get_str("JOB_TYPE") == "ACI_SPARSE")){
-        auto aci = std::make_shared<AdaptiveCI>(ref_wfn,options,ints_,mo_space_info);
+    if ((options.get_str("JOB_TYPE") == "ACI") or
+        (options.get_str("JOB_TYPE") == "ACI_SPARSE")) {
+        auto aci = std::make_shared<AdaptiveCI>(ref_wfn, options, ints_,
+                                                mo_space_info);
         aci->compute_energy();
     }
-    if (options.get_str("JOB_TYPE") == "PCI"){
-        auto pci = std::make_shared<ProjectorCI>(ref_wfn,options,ints_, mo_space_info);
-        for (int n = 0; n < options.get_int("NROOT"); ++n){
+    if (options.get_str("JOB_TYPE") == "PCI") {
+        auto pci = std::make_shared<ProjectorCI>(ref_wfn, options, ints_,
+                                                 mo_space_info);
+        for (int n = 0; n < options.get_int("NROOT"); ++n) {
             pci->compute_energy();
         }
     }
-    if (options.get_str("JOB_TYPE") == "FCI"){
-        auto fci = std::make_shared<FCI>(ref_wfn,options,ints_,mo_space_info);
+    if (options.get_str("JOB_TYPE") == "FCI") {
+        auto fci =
+            std::make_shared<FCI>(ref_wfn, options, ints_, mo_space_info);
         fci->compute_energy();
     }
-    if (options.get_bool("USE_DMRGSCF"))
-    {
+    if (options.get_bool("USE_DMRGSCF")) {
 #ifdef HAVE_CHEMPS2
-        auto dmrg = std::make_shared<DMRGSCF>(ref_wfn, options, mo_space_info, ints_);
+        auto dmrg =
+            std::make_shared<DMRGSCF>(ref_wfn, options, mo_space_info, ints_);
         dmrg->set_iterations(options.get_int("DMRGSCF_MAX_ITER"));
         dmrg->compute_energy();
 #else
-        throw PSIEXCEPTION("Did not compile with CHEMPS2 so DMRG will not work");
+        throw PSIEXCEPTION(
+            "Did not compile with CHEMPS2 so DMRG will not work");
 #endif
-
     }
-    if(options.get_str("JOB_TYPE") == "DMRG")
-    {
+    if (options.get_str("JOB_TYPE") == "DMRG") {
 #ifdef HAVE_CHEMPS2
         DMRGSolver dmrg(ref_wfn, options, mo_space_info, ints_);
         dmrg.set_max_rdm(2);
         dmrg.compute_energy();
 #else
-        throw PSIEXCEPTION("Did not compile with CHEMPS2 so DMRG will not work");
+        throw PSIEXCEPTION(
+            "Did not compile with CHEMPS2 so DMRG will not work");
 #endif
     }
     if(options.get_str("JOB_TYPE")=="CAS")
@@ -1011,10 +1080,10 @@ extern "C" SharedWavefunction forte(SharedWavefunction ref_wfn, Options &options
             fci_mo.compute_energy();
         }
     }
-    if(options.get_str("JOB_TYPE") == "MRDSRG"){
+    if (options.get_str("JOB_TYPE") == "MRDSRG") {
         std::string cas_type = options.get_str("CAS_TYPE");
         if (cas_type == "CAS") {
-            FCI_MO fci_mo(ref_wfn,options,ints_,mo_space_info);
+            FCI_MO fci_mo(ref_wfn, options, ints_, mo_space_info);
 
             if(options["AVG_STATE"].has_changed()){
                 options.set_str("FORTE","RELAX_REF","ITERATE");
@@ -1036,40 +1105,48 @@ extern "C" SharedWavefunction forte(SharedWavefunction ref_wfn, Options &options
                 }
                 Reference reference = fci_mo.reference();
 
-                std::shared_ptr<MRDSRG> mrdsrg(new MRDSRG(reference,ref_wfn,options,ints_,mo_space_info));
-                if(options.get_str("RELAX_REF") == "NONE"){
+                std::shared_ptr<MRDSRG> mrdsrg(new MRDSRG(
+                    reference, ref_wfn, options, ints_, mo_space_info));
+                if (options.get_str("RELAX_REF") == "NONE") {
                     mrdsrg->compute_energy();
-                }else{
-                    if(options.get_str("DSRG_TRANS_TYPE") == "CC"){
-                        throw PSIEXCEPTION("Reference relaxation for CC-type DSRG transformation is not implemented yet.");
+                } else {
+                    if (options.get_str("DSRG_TRANS_TYPE") == "CC") {
+                        throw PSIEXCEPTION(
+                            "Reference relaxation for CC-type DSRG "
+                            "transformation is not implemented yet.");
                     }
                     mrdsrg->compute_energy_relaxed();
                 }
             }
         } else if (cas_type == "FCI") {
             if (options.get_bool("SEMI_CANONICAL")) {
-                std::shared_ptr<FCI> fci(new FCI(ref_wfn,options,ints_,mo_space_info));
+                std::shared_ptr<FCI> fci(
+                    new FCI(ref_wfn, options, ints_, mo_space_info));
                 fci->set_max_rdm_level(1);
                 fci->compute_energy();
                 Reference reference2 = fci->reference();
-                SemiCanonical semi(ref_wfn,options,ints_,mo_space_info,reference2);
+                SemiCanonical semi(ref_wfn, options, ints_, mo_space_info,
+                                   reference2);
             }
-            std::shared_ptr<FCI> fci(new FCI(ref_wfn,options,ints_,mo_space_info));
+            std::shared_ptr<FCI> fci(
+                new FCI(ref_wfn, options, ints_, mo_space_info));
             fci->set_max_rdm_level(3);
             fci->compute_energy();
             Reference reference = fci->reference();
 
-            std::shared_ptr<MRDSRG> mrdsrg(new MRDSRG(reference,ref_wfn,options,ints_,mo_space_info));
-            if(options.get_str("RELAX_REF") == "NONE"){
+            std::shared_ptr<MRDSRG> mrdsrg(
+                new MRDSRG(reference, ref_wfn, options, ints_, mo_space_info));
+            if (options.get_str("RELAX_REF") == "NONE") {
                 mrdsrg->compute_energy();
-            }else{
-                if(options.get_str("DSRG_TRANS_TYPE") == "CC"){
-                    throw PSIEXCEPTION("Reference relaxation for CC-type DSRG transformation is not implemented yet.");
+            } else {
+                if (options.get_str("DSRG_TRANS_TYPE") == "CC") {
+                    throw PSIEXCEPTION(
+                        "Reference relaxation for CC-type DSRG transformation "
+                        "is not implemented yet.");
                 }
                 mrdsrg->compute_energy_relaxed();
             }
         }
-
     }
     if(options.get_str("JOB_TYPE") == "MRDSRG_SO"){
         FCI_MO fci_mo(ref_wfn,options,ints_,mo_space_info);
@@ -1079,14 +1156,15 @@ extern "C" SharedWavefunction forte(SharedWavefunction ref_wfn, Options &options
             fci_mo.compute_energy();
         }
         Reference reference = fci_mo.reference();
-        std::shared_ptr<MRDSRG_SO> mrdsrg(new MRDSRG_SO(reference,options,ints_,mo_space_info));
+        std::shared_ptr<MRDSRG_SO> mrdsrg(
+            new MRDSRG_SO(reference, options, ints_, mo_space_info));
         mrdsrg->compute_energy();
     }
-    if (options.get_str("JOB_TYPE") == "ACTIVE-DSRGPT2"){
-        ACTIVE_DSRGPT2 pt(ref_wfn,options,ints_,mo_space_info);
+    if (options.get_str("JOB_TYPE") == "ACTIVE-DSRGPT2") {
+        ACTIVE_DSRGPT2 pt(ref_wfn, options, ints_, mo_space_info);
         pt.compute_energy();
     }
-    if(options.get_str("JOB_TYPE") == "DSRG_MRPT"){
+    if (options.get_str("JOB_TYPE") == "DSRG_MRPT") {
         std::string cas_type = options.get_str("CAS_TYPE");
         if (cas_type == "CAS") {
             FCI_MO fci_mo(ref_wfn,options,ints_,mo_space_info);
@@ -1097,35 +1175,39 @@ extern "C" SharedWavefunction forte(SharedWavefunction ref_wfn, Options &options
             }
             Reference reference = fci_mo.reference();
 
-            std::shared_ptr<DSRG_MRPT> dsrg(new DSRG_MRPT(reference,ref_wfn,options,ints_,mo_space_info));
-            if(options.get_str("RELAX_REF") == "NONE"){
+            std::shared_ptr<DSRG_MRPT> dsrg(new DSRG_MRPT(
+                reference, ref_wfn, options, ints_, mo_space_info));
+            if (options.get_str("RELAX_REF") == "NONE") {
                 dsrg->compute_energy();
             }else{
 //                dsrg->compute_energy_relaxed();
             }
         } else if (cas_type == "FCI") {
             if (options.get_bool("SEMI_CANONICAL")) {
-                std::shared_ptr<FCI> fci(new FCI(ref_wfn,options,ints_,mo_space_info));
+                std::shared_ptr<FCI> fci(
+                    new FCI(ref_wfn, options, ints_, mo_space_info));
                 fci->set_max_rdm_level(1);
                 fci->compute_energy();
                 Reference reference2 = fci->reference();
-                SemiCanonical semi(ref_wfn,options,ints_,mo_space_info,reference2);
+                SemiCanonical semi(ref_wfn, options, ints_, mo_space_info,
+                                   reference2);
             }
-            std::shared_ptr<FCI> fci(new FCI(ref_wfn,options,ints_,mo_space_info));
+            std::shared_ptr<FCI> fci(
+                new FCI(ref_wfn, options, ints_, mo_space_info));
             fci->set_max_rdm_level(3);
             fci->compute_energy();
             Reference reference = fci->reference();
 
-            std::shared_ptr<DSRG_MRPT> dsrg(new DSRG_MRPT(reference,ref_wfn,options,ints_,mo_space_info));
-            if(options.get_str("RELAX_REF") == "NONE"){
+            std::shared_ptr<DSRG_MRPT> dsrg(new DSRG_MRPT(
+                reference, ref_wfn, options, ints_, mo_space_info));
+            if (options.get_str("RELAX_REF") == "NONE") {
                 dsrg->compute_energy();
             }else{
 //                dsrg->compute_energy_relaxed();
             }
         }
-
     }
-    if (options.get_str("JOB_TYPE") == "DSRG-MRPT2"){
+    if (options.get_str("JOB_TYPE") == "DSRG-MRPT2") {
         std::string cas_type = options.get_str("CAS_TYPE");
         if(cas_type == "CAS")
         {
@@ -1153,92 +1235,101 @@ extern "C" SharedWavefunction forte(SharedWavefunction ref_wfn, Options &options
                     fci_mo->compute_energy();
                 }
                 Reference reference = fci_mo->reference();
-                std::shared_ptr<DSRG_MRPT2> dsrg_mrpt2(new DSRG_MRPT2(reference,ref_wfn,options,ints_,mo_space_info));
-                if(options.get_str("RELAX_REF") != "NONE"){
+                std::shared_ptr<DSRG_MRPT2> dsrg_mrpt2(new DSRG_MRPT2(
+                    reference, ref_wfn, options, ints_, mo_space_info));
+                if (options.get_str("RELAX_REF") != "NONE") {
                     dsrg_mrpt2->compute_energy_relaxed();
-                }else{
+                } else {
                     dsrg_mrpt2->compute_energy();
                 }
             }
         }
 
-        if(cas_type == "FCI")
-        {
-            if (options.get_bool("SEMI_CANONICAL"))
-            {
-                std::shared_ptr<FCI> fci(new FCI(ref_wfn,options,ints_,mo_space_info));
+        if (cas_type == "FCI") {
+            if (options.get_bool("SEMI_CANONICAL")) {
+                std::shared_ptr<FCI> fci(
+                    new FCI(ref_wfn, options, ints_, mo_space_info));
                 fci->set_max_rdm_level(1);
                 fci->compute_energy();
                 Reference reference2 = fci->reference();
-                SemiCanonical semi(ref_wfn,options,ints_,mo_space_info,reference2);
+                SemiCanonical semi(ref_wfn, options, ints_, mo_space_info,
+                                   reference2);
             }
-            std::shared_ptr<FCI> fci(new FCI(ref_wfn,options,ints_,mo_space_info));
+            std::shared_ptr<FCI> fci(
+                new FCI(ref_wfn, options, ints_, mo_space_info));
             fci->set_max_rdm_level(3);
             fci->compute_energy();
             Reference reference = fci->reference();
-            std::shared_ptr<DSRG_MRPT2> dsrg_mrpt2(new DSRG_MRPT2(reference,ref_wfn,options,ints_,mo_space_info));
-            if(options.get_str("RELAX_REF") != "NONE"){
+            std::shared_ptr<DSRG_MRPT2> dsrg_mrpt2(new DSRG_MRPT2(
+                reference, ref_wfn, options, ints_, mo_space_info));
+            if (options.get_str("RELAX_REF") != "NONE") {
                 dsrg_mrpt2->compute_energy_relaxed();
-            }else{
+            } else {
                 dsrg_mrpt2->compute_energy();
             }
         }
 
-        if(cas_type == "V2RDM")
-        {
-            std::shared_ptr<V2RDM> v2rdm = std::make_shared<V2RDM>(ref_wfn,options,ints_,mo_space_info);
+        if (cas_type == "V2RDM") {
+            std::shared_ptr<V2RDM> v2rdm =
+                std::make_shared<V2RDM>(ref_wfn, options, ints_, mo_space_info);
             Reference reference = v2rdm->reference();
-            std::shared_ptr<DSRG_MRPT2> dsrg_mrpt2 = std::make_shared<DSRG_MRPT2>(reference,ref_wfn,options,ints_,mo_space_info);
+            std::shared_ptr<DSRG_MRPT2> dsrg_mrpt2 =
+                std::make_shared<DSRG_MRPT2>(reference, ref_wfn, options, ints_,
+                                             mo_space_info);
             dsrg_mrpt2->compute_energy();
         }
 
-        if(cas_type == "ACI"){
-            if(options.get_bool("SEMI_CANONICAL") and !options.get_bool("CASSCF_REFERENCE")){
-                auto aci = std::make_shared<AdaptiveCI>(ref_wfn,options,ints_,mo_space_info);
+        if (cas_type == "ACI") {
+            if (options.get_bool("SEMI_CANONICAL") and
+                !options.get_bool("CASSCF_REFERENCE")) {
+                auto aci = std::make_shared<AdaptiveCI>(ref_wfn, options, ints_,
+                                                        mo_space_info);
                 aci->set_quiet(true);
                 aci->set_max_rdm(2);
                 aci->compute_energy();
                 Reference aci_reference = aci->reference();
-                SemiCanonical semi(ref_wfn,options,ints_,mo_space_info,aci_reference);
+                SemiCanonical semi(ref_wfn, options, ints_, mo_space_info,
+                                   aci_reference);
             }
-            auto aci = std::make_shared<AdaptiveCI>(ref_wfn,options,ints_,mo_space_info);
+            auto aci = std::make_shared<AdaptiveCI>(ref_wfn, options, ints_,
+                                                    mo_space_info);
             aci->set_quiet(true);
             aci->set_max_rdm(3);
             aci->compute_energy();
             Reference aci_reference = aci->reference();
-            std::shared_ptr<DSRG_MRPT2> dsrg_mrpt2(new DSRG_MRPT2(aci_reference,ref_wfn,options,ints_,mo_space_info));
+            std::shared_ptr<DSRG_MRPT2> dsrg_mrpt2(new DSRG_MRPT2(
+                aci_reference, ref_wfn, options, ints_, mo_space_info));
             dsrg_mrpt2->compute_energy();
 
-        }
-        else if(cas_type == "DMRG")
-        {
+        } else if (cas_type == "DMRG") {
 #ifdef HAVE_CHEMPS2
-            if(options.get_bool("SEMI_CANONICAL") and !options.get_bool("CASSCF_REFERENCE")){
-
+            if (options.get_bool("SEMI_CANONICAL") and
+                !options.get_bool("CASSCF_REFERENCE")) {
                 DMRGSolver dmrg(ref_wfn, options, mo_space_info, ints_);
                 dmrg.set_max_rdm(2);
                 dmrg.compute_energy();
                 Reference dmrg_reference = dmrg.reference();
-                SemiCanonical semi(ref_wfn,options,ints_,mo_space_info,dmrg_reference);
+                SemiCanonical semi(ref_wfn, options, ints_, mo_space_info,
+                                   dmrg_reference);
             }
             DMRGSolver dmrg(ref_wfn, options, mo_space_info, ints_);
             dmrg.set_max_rdm(3);
             dmrg.compute_energy();
             Reference dmrg_reference = dmrg.reference();
-            std::shared_ptr<DSRG_MRPT2> dsrg_mrpt2(new DSRG_MRPT2(dmrg_reference,ref_wfn,options,ints_,mo_space_info));
+            std::shared_ptr<DSRG_MRPT2> dsrg_mrpt2(new DSRG_MRPT2(
+                dmrg_reference, ref_wfn, options, ints_, mo_space_info));
             dsrg_mrpt2->compute_energy();
 #endif
         }
-
     }
-    if (options.get_str("JOB_TYPE") == "THREE-DSRG-MRPT2")
-    {
+    if (options.get_str("JOB_TYPE") == "THREE-DSRG-MRPT2") {
         Timer all_three_dsrg_mrpt2;
 
-        if(options.get_str("INT_TYPE")=="CONVENTIONAL")
-        {
-            outfile->Printf("\n THREE-DSRG-MRPT2 is designed for DF/CD integrals");
-            throw PSIEXCEPTION("Please set INT_TYPE  DF/CHOLESKY for THREE_DSRG");
+        if (options.get_str("INT_TYPE") == "CONVENTIONAL") {
+            outfile->Printf(
+                "\n THREE-DSRG-MRPT2 is designed for DF/CD integrals");
+            throw PSIEXCEPTION(
+                "Please set INT_TYPE  DF/CHOLESKY for THREE_DSRG");
         }
 
         if(options.get_str("CAS_TYPE")=="CAS")
@@ -1250,114 +1341,137 @@ extern "C" SharedWavefunction forte(SharedWavefunction ref_wfn, Options &options
                 fci_mo.compute_energy();
             }
             Reference reference = fci_mo.reference();
-            std::shared_ptr<THREE_DSRG_MRPT2> three_dsrg_mrpt2(new THREE_DSRG_MRPT2(reference,ref_wfn,options,ints_, mo_space_info));
+            std::shared_ptr<THREE_DSRG_MRPT2> three_dsrg_mrpt2(
+                new THREE_DSRG_MRPT2(reference, ref_wfn, options, ints_,
+                                     mo_space_info));
             three_dsrg_mrpt2->compute_energy();
         }
 
-        if(options.get_str("CAS_TYPE") == "V2RDM")
-        {
-            std::shared_ptr<V2RDM> v2rdm = std::make_shared<V2RDM>(ref_wfn,options,ints_,mo_space_info);
+        if (options.get_str("CAS_TYPE") == "V2RDM") {
+            std::shared_ptr<V2RDM> v2rdm =
+                std::make_shared<V2RDM>(ref_wfn, options, ints_, mo_space_info);
             Reference reference = v2rdm->reference();
-            std::shared_ptr<THREE_DSRG_MRPT2> dsrg_mrpt2 = std::make_shared<THREE_DSRG_MRPT2>(reference,ref_wfn,options,ints_,mo_space_info);
+            std::shared_ptr<THREE_DSRG_MRPT2> dsrg_mrpt2 =
+                std::make_shared<THREE_DSRG_MRPT2>(reference, ref_wfn, options,
+                                                   ints_, mo_space_info);
             dsrg_mrpt2->compute_energy();
         }
 
-        if(options.get_str("CAS_TYPE")=="ACI"){
-            if(options.get_bool("SEMI_CANONICAL") and !options.get_bool("CASSCF_REFERENCE")){
-                auto aci = std::make_shared<AdaptiveCI>(ref_wfn,options,ints_,mo_space_info);
-                aci->set_quiet( true );
+        if (options.get_str("CAS_TYPE") == "ACI") {
+            if (options.get_bool("SEMI_CANONICAL") and
+                !options.get_bool("CASSCF_REFERENCE")) {
+                auto aci = std::make_shared<AdaptiveCI>(ref_wfn, options, ints_,
+                                                        mo_space_info);
+                aci->set_quiet(true);
                 aci->set_max_rdm(2);
                 aci->compute_energy();
                 Reference aci_reference = aci->reference();
-                SemiCanonical semi(ref_wfn,options,ints_,mo_space_info,aci_reference);
+                SemiCanonical semi(ref_wfn, options, ints_, mo_space_info,
+                                   aci_reference);
             }
-            auto aci = std::make_shared<AdaptiveCI>(ref_wfn,options,ints_,mo_space_info);
+            auto aci = std::make_shared<AdaptiveCI>(ref_wfn, options, ints_,
+                                                    mo_space_info);
             aci->set_max_rdm(3);
             aci->set_quiet(true);
             aci->compute_energy();
             Reference aci_reference = aci->reference();
-            std::shared_ptr<THREE_DSRG_MRPT2> three_dsrg_mrpt2(new THREE_DSRG_MRPT2(aci_reference,ref_wfn,options,ints_,mo_space_info));
+            std::shared_ptr<THREE_DSRG_MRPT2> three_dsrg_mrpt2(
+                new THREE_DSRG_MRPT2(aci_reference, ref_wfn, options, ints_,
+                                     mo_space_info));
             three_dsrg_mrpt2->compute_energy();
         }
 
-        else if(options.get_str("CAS_TYPE")=="FCI")
-        {
-            if(options.get_bool("SEMI_CANONICAL") and !options.get_bool("CASSCF_REFERENCE")){
-                std::shared_ptr<FCI> fci(new FCI(ref_wfn,options,ints_,mo_space_info));
-                if(my_proc == 0)
-                {
+        else if (options.get_str("CAS_TYPE") == "FCI") {
+            if (options.get_bool("SEMI_CANONICAL") and
+                !options.get_bool("CASSCF_REFERENCE")) {
+                std::shared_ptr<FCI> fci(
+                    new FCI(ref_wfn, options, ints_, mo_space_info));
+                if (my_proc == 0) {
                     fci->set_max_rdm_level(1);
                     fci->compute_energy();
                     Reference reference2 = fci->reference();
-                    SemiCanonical semi(ref_wfn,options,ints_,mo_space_info,reference2);
+                    SemiCanonical semi(ref_wfn, options, ints_, mo_space_info,
+                                       reference2);
                 }
             }
-            std::shared_ptr<FCI> fci(new FCI(ref_wfn,options,ints_,mo_space_info));
+            std::shared_ptr<FCI> fci(
+                new FCI(ref_wfn, options, ints_, mo_space_info));
             Reference reference;
-            if(my_proc == 0)
-            {
+            if (my_proc == 0) {
                 fci->set_max_rdm_level(3);
                 fci->compute_energy();
                 reference = fci->reference();
             }
 
-            std::shared_ptr<THREE_DSRG_MRPT2> three_dsrg_mrpt2(new THREE_DSRG_MRPT2(reference,ref_wfn,options,ints_, mo_space_info));
+            std::shared_ptr<THREE_DSRG_MRPT2> three_dsrg_mrpt2(
+                new THREE_DSRG_MRPT2(reference, ref_wfn, options, ints_,
+                                     mo_space_info));
             three_dsrg_mrpt2->compute_energy();
         }
 
-        else if(options.get_str("CAS_TYPE")=="DMRG")
+        else if (options.get_str("CAS_TYPE") == "DMRG")
 
         {
 #ifdef HAVE_CHEMPS2
-            if(options.get_bool("SEMI_CANONICAL") and !options.get_bool("CASSCF_REFERENCE")){
-
+            if (options.get_bool("SEMI_CANONICAL") and
+                !options.get_bool("CASSCF_REFERENCE")) {
                 DMRGSolver dmrg(ref_wfn, options, mo_space_info, ints_);
                 dmrg.set_max_rdm(2);
                 dmrg.compute_energy();
 
                 Reference dmrg_reference = dmrg.reference();
-                SemiCanonical semi(ref_wfn,options,ints_,mo_space_info,dmrg_reference);
+                SemiCanonical semi(ref_wfn, options, ints_, mo_space_info,
+                                   dmrg_reference);
             }
 
             DMRGSolver dmrg(ref_wfn, options, mo_space_info, ints_);
             dmrg.set_max_rdm(3);
             dmrg.compute_energy();
             Reference dmrg_reference = dmrg.reference();
-            std::shared_ptr<THREE_DSRG_MRPT2> three_dsrg_mrpt2(new THREE_DSRG_MRPT2(dmrg_reference,ref_wfn,options,ints_,mo_space_info));
+            std::shared_ptr<THREE_DSRG_MRPT2> three_dsrg_mrpt2(
+                new THREE_DSRG_MRPT2(dmrg_reference, ref_wfn, options, ints_,
+                                     mo_space_info));
             three_dsrg_mrpt2->compute_energy();
 #endif
         }
 
-        outfile->Printf("\n CD/DF DSRG-MRPT2 took %8.5f s.", all_three_dsrg_mrpt2.get());
+        outfile->Printf("\n CD/DF DSRG-MRPT2 took %8.5f s.",
+                        all_three_dsrg_mrpt2.get());
     }
-    if ((options.get_str("JOB_TYPE") == "TENSORSRG") or (options.get_str("JOB_TYPE") == "SR-DSRG")){
-        auto srg = std::make_shared<TensorSRG>(ref_wfn, options, ints_, mo_space_info);
+    if ((options.get_str("JOB_TYPE") == "TENSORSRG") or
+        (options.get_str("JOB_TYPE") == "SR-DSRG")) {
+        auto srg =
+            std::make_shared<TensorSRG>(ref_wfn, options, ints_, mo_space_info);
         srg->compute_energy();
     }
-    if (options.get_str("JOB_TYPE") == "SR-DSRG-ACI"){
+    if (options.get_str("JOB_TYPE") == "SR-DSRG-ACI") {
         {
-            auto dsrg = std::make_shared<TensorSRG>(ref_wfn,options,ints_, mo_space_info);
+            auto dsrg = std::make_shared<TensorSRG>(ref_wfn, options, ints_,
+                                                    mo_space_info);
             dsrg->compute_energy();
             dsrg->transfer_integrals();
         }
         {
-            auto aci = std::make_shared<AdaptiveCI>(ref_wfn,options,ints_,mo_space_info);
+            auto aci = std::make_shared<AdaptiveCI>(ref_wfn, options, ints_,
+                                                    mo_space_info);
             aci->compute_energy();
         }
     }
-    if (options.get_str("JOB_TYPE") == "SR-DSRG-PCI"){
+    if (options.get_str("JOB_TYPE") == "SR-DSRG-PCI") {
         {
-            auto dsrg = std::make_shared<TensorSRG>(ref_wfn,options,ints_, mo_space_info);
+            auto dsrg = std::make_shared<TensorSRG>(ref_wfn, options, ints_,
+                                                    mo_space_info);
             dsrg->compute_energy();
             dsrg->transfer_integrals();
         }
         {
-            auto pci = std::make_shared<ProjectorCI>(ref_wfn,options,ints_, mo_space_info);
+            auto pci = std::make_shared<ProjectorCI>(ref_wfn, options, ints_,
+                                                     mo_space_info);
             pci->compute_energy();
         }
     }
 
-    if (options.get_str("JOB_TYPE") == "DSRG-MRPT3"){
+    if (options.get_str("JOB_TYPE") == "DSRG-MRPT3") {
         std::string cas_type = options.get_str("CAS_TYPE");
         if(cas_type == "CAS")
         {
@@ -1377,37 +1491,40 @@ extern "C" SharedWavefunction forte(SharedWavefunction ref_wfn, Options &options
             } else {
                 fci_mo->compute_energy();
                 Reference reference = fci_mo->reference();
-                std::shared_ptr<DSRG_MRPT3> dsrg_mrpt3(new DSRG_MRPT3(reference,ref_wfn,options,ints_,mo_space_info));
-                if(options.get_str("RELAX_REF") != "NONE"){
+                std::shared_ptr<DSRG_MRPT3> dsrg_mrpt3(new DSRG_MRPT3(
+                    reference, ref_wfn, options, ints_, mo_space_info));
+                if (options.get_str("RELAX_REF") != "NONE") {
                     dsrg_mrpt3->compute_energy_relaxed();
-                }else{
+                } else {
                     dsrg_mrpt3->compute_energy();
                 }
             }
         }
 
-        if(cas_type == "FCI")
-        {
-            if (options.get_bool("SEMI_CANONICAL"))
-            {
-                std::shared_ptr<FCI> fci(new FCI(ref_wfn,options,ints_,mo_space_info));
+        if (cas_type == "FCI") {
+            if (options.get_bool("SEMI_CANONICAL")) {
+                std::shared_ptr<FCI> fci(
+                    new FCI(ref_wfn, options, ints_, mo_space_info));
                 fci->set_max_rdm_level(1);
                 fci->compute_energy();
                 Reference reference2 = fci->reference();
-                SemiCanonical semi(ref_wfn,options,ints_,mo_space_info,reference2);
+                SemiCanonical semi(ref_wfn, options, ints_, mo_space_info,
+                                   reference2);
             }
 
-            std::shared_ptr<FCI> fci(new FCI(ref_wfn,options,ints_,mo_space_info));
+            std::shared_ptr<FCI> fci(
+                new FCI(ref_wfn, options, ints_, mo_space_info));
             fci->set_max_rdm_level(3);
             fci->compute_energy();
             Reference reference = fci->reference();
             std::shared_ptr<FCIWfn> fciwfn_ref = fci->get_FCIWfn();
 
-            std::shared_ptr<DSRG_MRPT3> dsrg_mrpt3(new DSRG_MRPT3(reference,ref_wfn,options,ints_,mo_space_info));
+            std::shared_ptr<DSRG_MRPT3> dsrg_mrpt3(new DSRG_MRPT3(
+                reference, ref_wfn, options, ints_, mo_space_info));
             dsrg_mrpt3->set_fciwfn0(fciwfn_ref);
-            if(options.get_str("RELAX_REF") != "NONE"){
+            if (options.get_str("RELAX_REF") != "NONE") {
                 dsrg_mrpt3->compute_energy_relaxed();
-            }else{
+            } else {
                 dsrg_mrpt3->compute_energy();
             }
         }
@@ -1423,44 +1540,54 @@ extern "C" SharedWavefunction forte(SharedWavefunction ref_wfn, Options &options
                 fci_mo.compute_energy();
             }
             Reference reference = fci_mo.reference();
-            std::shared_ptr<SOMRDSRG> somrdsrg(new SOMRDSRG(reference,ref_wfn,options,ints_,mo_space_info));
+            std::shared_ptr<SOMRDSRG> somrdsrg(new SOMRDSRG(
+                reference, ref_wfn, options, ints_, mo_space_info));
             somrdsrg->compute_energy();
         }
-        if(options.get_str("CAS_TYPE")=="FCI")
-        {
-            if (options.get_bool("SEMI_CANONICAL")){
-                std::shared_ptr<FCI> fci(new FCI(ref_wfn,options,ints_,mo_space_info));
+        if (options.get_str("CAS_TYPE") == "FCI") {
+            if (options.get_bool("SEMI_CANONICAL")) {
+                std::shared_ptr<FCI> fci(
+                    new FCI(ref_wfn, options, ints_, mo_space_info));
                 fci->set_max_rdm_level(3);
                 fci->compute_energy();
                 Reference reference2 = fci->reference();
-                SemiCanonical semi(ref_wfn,options,ints_,mo_space_info,reference2);
+                SemiCanonical semi(ref_wfn, options, ints_, mo_space_info,
+                                   reference2);
             }
-            std::shared_ptr<FCI> fci(new FCI(ref_wfn,options,ints_,mo_space_info));
+            std::shared_ptr<FCI> fci(
+                new FCI(ref_wfn, options, ints_, mo_space_info));
             fci->set_max_rdm_level(3);
             fci->compute_energy();
             Reference reference = fci->reference();
-            std::shared_ptr<SOMRDSRG> somrdsrg(new SOMRDSRG(reference,ref_wfn,options,ints_,mo_space_info));
+            std::shared_ptr<SOMRDSRG> somrdsrg(new SOMRDSRG(
+                reference, ref_wfn, options, ints_, mo_space_info));
             somrdsrg->compute_energy();
         }
-
     }
-    if (options.get_str("JOB_TYPE") == "SQ"){
+    if (options.get_str("JOB_TYPE") == "SQ") {
         SqTest sqtest;
     }
+
+    if (options.get_str("JOB_TYPE") == "CC") {
+        auto cc = std::make_shared<CC>(ref_wfn, options, ints_, mo_space_info);
+        cc->compute_energy();
+    }
+
     DynamicBitsetDeterminant::reset_ints();
     STLBitsetDeterminant::reset_ints();
 
-    outfile->Printf("\n\n  Your calculation took %.8f seconds\n", overall_time.get());
-    #ifdef HAVE_GA
+    outfile->Printf("\n\n  Your calculation took %.8f seconds\n",
+                    overall_time.get());
+#ifdef HAVE_GA
     GA_Terminate();
-    #endif
+#endif
     ambit::finalize();
 
-    #ifdef HAVE_MPI
+#ifdef HAVE_MPI
     MPI_Finalize();
-    #endif
+#endif
 
     return ref_wfn;
 }
-
-}} // End Namespaces
+}
+}  // End Namespaces
