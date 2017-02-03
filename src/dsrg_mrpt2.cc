@@ -27,6 +27,7 @@
  */
 
 #include <numeric>
+#include <algorithm>
 #include <math.h>
 #include "mini-boost/boost/format.hpp"
 
@@ -169,13 +170,17 @@ void DSRG_MRPT2::startup()
             relax_ref_ = "ONCE";
         }
 
-        Hbar1_ = BTF_->build(tensor_type_,"One-body Hbar",spin_cases({"aa"}));
-        Hbar2_ = BTF_->build(tensor_type_,"Two-body Hbar",spin_cases({"aaaa"}));
+        Hbar1_ = BTF_->build(tensor_type_,"1-body Hbar",spin_cases({"aa"}));
+        Hbar2_ = BTF_->build(tensor_type_,"2-body Hbar",spin_cases({"aaaa"}));
         Hbar1_["uv"] = F_["uv"];
         Hbar1_["UV"] = F_["UV"];
         Hbar2_["uvxy"] = V_["uvxy"];
         Hbar2_["uVxY"] = V_["uVxY"];
         Hbar2_["UVXY"] = V_["UVXY"];
+
+        if(options_.get_bool("FORM_HBAR3")){
+            Hbar3_ = BTF_->build(tensor_type_,"3-body Hbar",spin_cases({"aaaaaa"}));
+        }
     }
 
     // initialize timer for commutator
@@ -1955,7 +1960,7 @@ void DSRG_MRPT2::H2_T2_C2(BlockedTensor& H2, BlockedTensor& T2, const double& al
     C2["KLUV"] -= alpha * Eta1_["XY"] * T2["YJUV"] * H2["KLXJ"];
 
     // hole-particle contractions
-    BlockedTensor temp = ambit::BlockedTensor::build(tensor_type_,"temp",{"hhha"});
+    BlockedTensor temp = ambit::BlockedTensor::build(tensor_type_,"temp",{"aaaa"});
     temp["kjlu"] += alpha * H2["akml"] * T2["mjau"];
     temp["kjlu"] += alpha * H2["kAlM"] * T2["jMuA"];
     temp["kjlu"] += alpha * Gamma1_["xy"] * T2["yjau"] * H2["akxl"];
@@ -1967,7 +1972,7 @@ void DSRG_MRPT2::H2_T2_C2(BlockedTensor& H2, BlockedTensor& T2, const double& al
     C2["kjul"] -= temp["kjlu"];
     C2["jkul"] += temp["kjlu"];
 
-    temp = ambit::BlockedTensor::build(tensor_type_,"temp",{"HHHA"});
+    temp = ambit::BlockedTensor::build(tensor_type_,"temp",{"AAAA"});
     temp["KJLU"] += alpha * H2["AKML"] * T2["MJAU"];
     temp["KJLU"] += alpha * H2["aKmL"] * T2["mJaU"];
     temp["KJLU"] += alpha * Gamma1_["XY"] * T2["YJAU"] * H2["AKXL"];
@@ -2005,6 +2010,44 @@ void DSRG_MRPT2::H2_T2_C2(BlockedTensor& H2, BlockedTensor& T2, const double& al
         outfile->Printf("\n    Time for [H2, T2] -> C2 : %12.3f",timer.get());
     }
     dsrg_time_.add("222",timer.get());
+}
+
+void DSRG_MRPT2::H2_T2_C3(BlockedTensor& H2, BlockedTensor& T2, const double& alpha, BlockedTensor& C3){
+    dsrg_time_.create_code("223");
+    Timer timer;
+
+    // compute only all active !
+
+    // aaa
+    BlockedTensor temp = ambit::BlockedTensor::build(tensor_type_,"temp",{"aaaaaa"});
+    temp["xyzuvw"] += alpha * H2["xymw"] * T2["mzuv"];
+    temp["xyzuvw"] -= alpha * H2["ezuv"] * T2["xyew"];
+    std::vector<std::string> label {"xyzuvw", "xyzwvu", "zyxwvu", "xyzuwv",
+                                    "zyxuwv", "xzyuvw", "xzywvu", "zyxuwv", "xzyuwv"}; // ordering matters
+    for(int i = 0, sign = 1; i < 9; ++i){
+        C3[label[i]] += sign * temp["xyzuvw"];
+        sign *= -1;
+    }
+
+    // bbb
+    temp = ambit::BlockedTensor::build(tensor_type_,"temp",{"AAAAAA"});
+    temp["XYZUVW"] += alpha * H2["XYMW"] * T2["MZUV"];
+    temp["XYZUVW"] -= alpha * H2["EZUV"] * T2["XYEW"];
+    for(int i = 0, sign = 1; i < 9; ++i){
+        std::string this_label = label[i];
+        std::transform(this_label.begin(),this_label.end(),this_label.begin(),toupper);
+        C3[this_label] += sign * temp["XYZUVW"];
+        sign *= -1;
+    }
+
+    // aab
+
+
+
+    if(print_ > 2){
+        outfile->Printf("\n    Time for [H2, T2] -> C3 : %12.3f",timer.get());
+    }
+    dsrg_time_.add("223",timer.get());
 }
 
 std::vector<std::vector<double>> DSRG_MRPT2::diagonalize_Fock_diagblocks(BlockedTensor& U){
