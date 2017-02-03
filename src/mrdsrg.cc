@@ -840,7 +840,6 @@ double MRDSRG::compute_energy_sa(){
         // diagonalize the Hamiltonian
         std::shared_ptr<FCI_MO> fci_mo = std::make_shared<FCI_MO>(reference_wavefunction_,options_,ints_,mo_space_info_);
         Etemp = Erelax_sa;
-        fci_mo->set_semicanonical(false);
         fci_mo->set_form_Fock(false);
         Erelax_sa = fci_mo->compute_sa_energy();
         Erelax_sa_vec.push_back(Erelax_sa);
@@ -942,7 +941,6 @@ double MRDSRG::compute_energy_sa(){
             // diagonalize the Hamiltonian
             fci_mo = std::make_shared<FCI_MO> (reference_wavefunction_,options_,ints_,mo_space_info_);
             fci_mo->set_form_Fock(false);
-            fci_mo->set_semicanonical(false);
             Erelax_sa = fci_mo->compute_sa_energy();
             if(fabs(Erelax_sa - Erelax_sa_vec.back()) > 100.0 * e_conv){
                 throw PSIEXCEPTION("Semi-canonicalization failed.");
