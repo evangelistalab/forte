@@ -73,14 +73,14 @@ public:
     /// Compute the DSRG-MRPT3 energy with relaxed reference (once)
     double compute_energy_relaxed();
 
-    /// Compute the multi-state DSRG-MRPT2 energies
-    double compute_energy_multi_state();
+    /// Compute the state-averaged DSRG-MRPT3 energies
+    double compute_energy_sa();
 
     /// Set CASCI eigen values and eigen vectors for state averaging
     void set_eigens(std::vector<std::vector<std::pair<SharedVector,double>>> eigens) {eigens_ = eigens;}
 
     /// Set determinants in the model space
-    void set_p_space(std::vector<psi::forte::STLBitsetDeterminant> p_space) {p_space_ = p_space;}
+    void set_p_spaces(std::vector<std::vector<psi::forte::STLBitsetDeterminant>> p_spaces) {p_spaces_ = p_spaces;}
 
     /// Ignore semi-canonical testing in DSRG-MRPT3
     void ignore_semicanonical(bool ignore) {ignore_semicanonical_ = ignore;}
@@ -115,7 +115,7 @@ protected:
     /// CASCI eigen values and eigen vectors for state averaging
     std::vector<std::vector<std::pair<SharedVector,double>>> eigens_;
     /// Determinants in the model space
-    std::vector<psi::forte::STLBitsetDeterminant> p_space_;
+    std::vector<std::vector<psi::forte::STLBitsetDeterminant>> p_spaces_;
 
     /// The reference object
     Reference reference_;

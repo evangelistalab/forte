@@ -48,7 +48,7 @@ MCSRGPT2_MO::MCSRGPT2_MO(SharedWavefunction ref_wfn, Options &options,
                          std::shared_ptr<ForteIntegrals> ints, std::shared_ptr<MOSpaceInfo> mo_space_info)
     : FCI_MO(ref_wfn, options, ints, mo_space_info)
 {
-    compute_energy();
+    compute_canonical_energy();
     reference();
 
     print_method_banner({"Driven Similarity Renormalization Group", "Second-Order Perturbative Analysis", "Chenyang Li"});

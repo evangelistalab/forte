@@ -33,6 +33,13 @@
 namespace psi{ namespace forte{
 
 double DSRG_MRPT2::compute_energy_multi_state(){
+    // throw a waring if states with different symmetry
+    int nentry = eigens_.size();
+    if(nentry > 1){
+        outfile->Printf("\n\n  Warning: States with different symmetry are found in the list of AVG_STATES.");
+        outfile->Printf("\n             Each symmetry will be considered separately here.");
+    }
+
     // get character table
     CharacterTable ct = Process::environment.molecule()->point_group()->char_table();
     std::vector<std::string> irrep_symbol;
@@ -42,11 +49,12 @@ double DSRG_MRPT2::compute_energy_multi_state(){
 
     // multi-state calculation
     std::vector<std::vector<double>> Edsrg_ms;
+    std::string dsrg_multi_state = options_.get_str("DSRG_MULTI_STATE");
 
-    if(options_.get_str("DSRG_SA_HEFF") == "XMS"){
-        Edsrg_ms = compute_energy_xms();
-    }else{
+    if(dsrg_multi_state.find("SA") != std::string::npos){
         Edsrg_ms = compute_energy_sa();
+    }else{
+        Edsrg_ms = compute_energy_xms();
     }
 
     // energy summuary
@@ -56,7 +64,6 @@ double DSRG_MRPT2::compute_energy_multi_state(){
     std::string dash(41, '-');
     outfile->Printf("\n    %s", dash.c_str());
 
-    int nentry = eigens_.size();
     for(int n = 0; n < nentry; ++n){
         int irrep = options_["AVG_STATE"][n][0].to_integer();
         int multi = options_["AVG_STATE"][n][1].to_integer();
@@ -74,7 +81,7 @@ double DSRG_MRPT2::compute_energy_multi_state(){
 }
 
 std::vector<std::vector<double>> DSRG_MRPT2::compute_energy_sa(){
-    // compute DSRG-MRPT2 energy
+    // compute DSRG-MRPT2 energy using SA densities
     compute_energy();
 
     // transfer integrals
@@ -112,8 +119,6 @@ std::vector<std::vector<double>> DSRG_MRPT2::compute_energy_sa(){
     double Enuc = molecule->nuclear_repulsion_energy();
 
     // loop over entries of AVG_STATE
-    print_h2("Diagonalize Effective Hamiltonian");
-    outfile->Printf("\n");
     int nentry = eigens_.size();
     std::vector<std::vector<double>> Edsrg_sa (nentry, std::vector<double> ());
 
@@ -121,13 +126,20 @@ std::vector<std::vector<double>> DSRG_MRPT2::compute_energy_sa(){
         int irrep = options_["AVG_STATE"][n][0].to_integer();
         int multi = options_["AVG_STATE"][n][1].to_integer();
         int nstates = options_["AVG_STATE"][n][2].to_integer();
+        std::vector<psi::forte::STLBitsetDeterminant> p_space = p_spaces_[n];
+
+        // print current symmetry
+        std::stringstream ss;
+        ss << "Diagonalize Effective Hamiltonian (" << multi_label[multi - 1] << " "
+           << irrep_symbol[irrep] << ")";
+        print_h2(ss.str());
 
         // diagonalize which the second-order effective Hamiltonian
         // FULL: CASCI using determinants
         // AVG_STATES: H_AB = <A|H|B> where A and B are SA-CAS states
-        if(options_.get_str("DSRG_SA_HEFF") == "FULL") {
+        if(options_.get_str("DSRG_MULTI_STATE") == "SA_FULL") {
 
-            outfile->Printf("    Use string FCI code.");
+            outfile->Printf("\n    Use string FCI code.");
 
             // prepare FCISolver
             int charge = Process::environment.molecule()->molecular_charge();
@@ -166,6 +178,8 @@ std::vector<std::vector<double>> DSRG_MRPT2::compute_energy_sa(){
 
         } else {
 
+            outfile->Printf("\n    Use the sub-space of CASCI.");
+
             int dim = (eigens_[n][0].first)->dim();
             SharedMatrix evecs (new Matrix("evecs",dim,dim));
             for(int i = 0; i < eigens_[n].size(); ++i){
@@ -178,7 +192,7 @@ std::vector<std::vector<double>> DSRG_MRPT2::compute_energy_sa(){
                 for(int B = A; B < nstates; ++B){
 
                     // compute rdms
-                    CI_RDMS ci_rdms (options_,fci_ints,p_space_,evecs,A,B);
+                    CI_RDMS ci_rdms (options_,fci_ints,p_space,evecs,A,B);
                     ci_rdms.set_symmetry(irrep);
 
                     std::vector<double> opdm_a (nele1, 0.0);
@@ -218,12 +232,13 @@ std::vector<std::vector<double>> DSRG_MRPT2::compute_energy_sa(){
                 }
             } // end forming effective Hamiltonian
 
+            print_h2("Effective Hamiltonian Summary");
+            outfile->Printf("\n");
+            Heff->print();
             SharedMatrix U (new Matrix("U of Heff", nstates, nstates));
             SharedVector Ems (new Vector("MS Energies", nstates));
             Heff->diagonalize(U, Ems);
-
-            Heff->print();
-            //        U->eivprint(Ems);
+            U->eivprint(Ems);
 
             // fill in Edsrg_sa
             for(int i = 0; i < nstates; ++i){
@@ -249,22 +264,32 @@ std::vector<std::vector<double>> DSRG_MRPT2::compute_energy_xms(){
                                   "Nonet","Decaet","11-et","12-et","13-et","14-et","15-et","16-et","17-et","18-et",
                                   "19-et","20-et","21-et","22-et","23-et","24-et"};
 
+    // prepare FCI integrals
+    std::shared_ptr<FCIIntegrals> fci_ints = std::make_shared<FCIIntegrals>(ints_, aactv_mos_, acore_mos_);
+//    ambit::Tensor actv_aa = ints_->aptei_aa_block(aactv_mos_, aactv_mos_, aactv_mos_, aactv_mos_);
+//    ambit::Tensor actv_ab = ints_->aptei_ab_block(aactv_mos_, aactv_mos_, aactv_mos_, aactv_mos_);
+//    ambit::Tensor actv_bb = ints_->aptei_bb_block(aactv_mos_, aactv_mos_, aactv_mos_, aactv_mos_);
+//    fci_ints->set_active_integrals(actv_aa, actv_ab, actv_bb);
+//    fci_ints->compute_restricted_one_body_operator();
+
+    // allocate space for one-electron integrals
+    Hoei_ = BTF_->build(tensor_type_,"OEI",spin_cases({"ph","cc"}));
+
     // obtain zeroth-order states
     int nentry = eigens_.size();
     std::vector<std::vector<double>> Edsrg_ms (nentry, std::vector<double> ());
-
-    // prepare FCI integrals
-    std::shared_ptr<FCIIntegrals> fci_ints = std::make_shared<FCIIntegrals>(ints_, aactv_mos_, acore_mos_);
-    ambit::Tensor actv_aa = ints_->aptei_aa_block(aactv_mos_, aactv_mos_, aactv_mos_, aactv_mos_);
-    ambit::Tensor actv_ab = ints_->aptei_ab_block(aactv_mos_, aactv_mos_, aactv_mos_, aactv_mos_);
-    ambit::Tensor actv_bb = ints_->aptei_bb_block(aactv_mos_, aactv_mos_, aactv_mos_, aactv_mos_);
-    fci_ints->set_active_integrals(actv_aa, actv_ab, actv_bb);
-    fci_ints->compute_restricted_one_body_operator();
 
     for(int n = 0; n < nentry; ++n){
         int irrep = options_["AVG_STATE"][n][0].to_integer();
         int multi = options_["AVG_STATE"][n][1].to_integer();
         int nstates = eigens_[n].size();
+        std::vector<psi::forte::STLBitsetDeterminant> p_space = p_spaces_[n];
+
+        // print current status
+        std::stringstream ss;
+        ss << multi_label[multi - 1] << " " << irrep_symbol[irrep];
+        print_h2("Build Effective Hamiltonian (" + ss.str() + ")");
+        outfile->Printf("\n");
 
         // fill in ci vectors
         int dim = (eigens_[n][0].first)->dim();
@@ -273,126 +298,122 @@ std::vector<std::vector<double>> DSRG_MRPT2::compute_energy_xms(){
             civecs->set_column(0,i,(eigens_[n][i]).first);
         }
 
-        // build Fock matrix
-        SharedMatrix Fock (new Matrix("Fock", nstates, nstates));
+        // XMS rotaion if needed
+        if(options_.get_str("DSRG_MULTI_STATE") == "XMS"){
+            if(nentry > 1){
+                // recompute state-averaged density
+                outfile->Printf("\n    Recompute SA density matrix of %s with equal weights.", ss.str().c_str());
+                size_t na = aactv_mos_.size();
+                size_t na2 = na * na;
+                vector<double> sa_opdm_a (na2, 0.0);
+                vector<double> sa_opdm_b (na2, 0.0);
 
+                for(int M = 0; M < nstates; ++M){
+                    CI_RDMS ci_rdms (options_,fci_ints,p_space,civecs,M,M);
+                    ci_rdms.set_symmetry(irrep);
+                    vector<double> opdm_a (na2, 0.0);
+                    vector<double> opdm_b (na2, 0.0);
+                    ci_rdms.compute_1rdm(opdm_a,opdm_b);
+
+                    std::transform (sa_opdm_a.begin(), sa_opdm_a.end(), opdm_a.begin(), sa_opdm_a.begin(), std::plus<double>());
+                    std::transform (sa_opdm_b.begin(), sa_opdm_b.end(), opdm_b.begin(), sa_opdm_b.begin(), std::plus<double>());
+                }
+                std::for_each(sa_opdm_a.begin(), sa_opdm_a.end(), [&](double& v) {v /= nstates;});
+                std::for_each(sa_opdm_b.begin(), sa_opdm_b.end(), [&](double& v) {v /= nstates;});
+
+                Gamma1_.block("aa").data() = sa_opdm_a;
+                Gamma1_.block("AA").data() = sa_opdm_b;
+
+                // rebuild Fock matrix
+                build_fock();
+            }
+
+            // XMS rotation
+            civecs = xms_rotation(fci_ints,p_space,civecs,irrep);
+        }
+
+        // prepare Heff
+        SharedMatrix Heff (new Matrix("Heff " + multi_label[multi - 1]
+                           + " " + irrep_symbol[irrep], nstates, nstates));
+        SharedMatrix Heff_sym (new Matrix("Heff (Symmetrized) " + multi_label[multi - 1]
+                               + " " + irrep_symbol[irrep], nstates, nstates));
+
+        // loop over states
         for(int M = 0; M < nstates; ++M){
-            for(int N = M; N < nstates; ++N){
 
-                // compute transition density
-                CI_RDMS ci_rdms (options_,fci_ints,p_space_,civecs,M,N);
-                ci_rdms.set_symmetry(irrep);
+            print_h2("Compute DSRG-MRPT2 Energy of State " + std::to_string(M));
 
-                std::vector<double> opdm_a,opdm_b;
-                ci_rdms.compute_1rdm(opdm_a,opdm_b);
+            // compute the densities
+            compute_cumulants(fci_ints, p_space, civecs, M, M, irrep);
 
-                // put rdms in tensor format
-                BlockedTensor D1 = BTF_->build(tensor_type_,"D1",spin_cases({"aa"}),true);
-                D1.block("aa").data() = opdm_a;
-                D1.block("AA").data() = opdm_b;
+            // compute Fock
+            build_fock();
 
-                // compute Fock elements
-                double F_MN = 0.0;
-                F_MN += D1["uv"] * F_["vu"];
-                F_MN += D1["UV"] * F_["VU"];
-                Fock->set(M,N,F_MN);
-                if(M != N){
-                    Fock->set(N,M,F_MN);
+            // reset one-electron integral
+            build_oei();
+
+            // recompute reference energy
+            Eref_ = compute_ref();
+
+            // compute DSRG-MRPT2 energy
+            double Ept2 = compute_energy();
+
+            // set diagonal elements of Heff
+            Heff->set(M, M, Ept2);
+            Heff_sym->set(M, M, Ept2);
+
+
+            // reset two-electron integrals because it is renormalized
+            build_ints();
+
+            // set Hoei to effective oei for coupling computations
+            build_eff_oei();
+
+            // build effective singles resulting from de-normal-ordering
+            build_eff_t1();
+
+            // compute couplings between states
+            print_h2("Compute Couplings with State " + std::to_string(M));
+            for(int N = 0; N < nstates; ++N){
+                if(N == M){
+                    continue;
+                }else{
+                    // compute transition densities
+                    compute_densities(fci_ints, p_space, civecs, M, N, irrep);
+
+                    // compute coupling of <N|H|M>
+                    std::stringstream ss;
+                    if(N > M){
+                        ss << "<" << N << "|H|" << M << ">";
+                        double c1 = compute_ms_1st_coupling(ss.str());
+                        Heff->add(M, N, c1);
+                        Heff->add(N, M, c1);
+                        Heff_sym->add(M, N, c1);
+                        Heff_sym->add(N, M, c1);
+                    }
+
+                    // compute coupling of <N|HT|M>
+                    ss.str(std::string());
+                    ss.clear();
+                    ss << "<" << N << "|HT|" << M << ">";
+                    double c2 = compute_ms_2nd_coupling(ss.str());
+                    Heff->add(N, M, c2);
+                    Heff_sym->add(N, M, 0.5 * c2);
+                    Heff_sym->add(M, N, 0.5 * c2);
                 }
             }
         }
 
-        SharedMatrix Fevec (new Matrix("Fock Evec", nstates, nstates));
-        SharedVector Feval (new Vector("Fock Eval", nstates));
-        Fock->diagonalize(Fevec, Feval);
-        Fock->print();
-        Fevec->eivprint(Feval);
-
-        // Rotate ci vecs
-        SharedMatrix rcivecs (new Matrix("rotated ci vecs",dim,nstates));
-        rcivecs->gemm(false,false,1.0,civecs,Fevec,1.0);
-
-
-        // prepare effective Hamiltonian
-        SharedMatrix Heff (new Matrix("Heff " + multi_label[multi - 1] + " "
-                           + irrep_symbol[irrep], nstates, nstates));
-
-        // loop over nstates (with the same irrep and multi)
-        for(int N = 0; N < nstates; ++N){
-
-            // compute rdm and fill into cumulants
-            compute_cumulants(fci_ints,rcivecs,N,N,irrep);
-
-            // rebuild Fock matrix
-            build_fock();
-
-            // compute DSRG-MRPT2 energy
-            // need to turn off semicanonical
-            // TODO: solve amplitudes iteratively due to Factv off-diagonal elements
-//            set_ignore_semicanonical(true);
-            Eref_ = eigens_[n][N].second;
-            double Edsrg = compute_energy();
-
-            // TODO: save a copy of amplitudes
-
-            // fill in diagonal Heff
-            Heff->set(N,N,Edsrg);
-
-            // rebuild integrals (because V is now renormalized)
-            build_ints();
-        }
-
-        // get one-electron integrals
-        BlockedTensor oei = BTF_->build(tensor_type_,"oei",spin_cases({"aa"}));
-        oei.block("aa").data() = fci_ints->oei_a_vector();
-        oei.block("AA").data() = fci_ints->oei_b_vector();
-
-        // compute off-diagonal Heff
-        for(int M = 0; M < nstates; ++M){
-            for(int N = M + 1; N < nstates; ++N){
-
-                // compute transition density
-                CI_RDMS ci_rdms (options_,fci_ints,p_space_,rcivecs,M,N);
-                ci_rdms.set_symmetry(irrep);
-
-                std::vector<double> opdm_a,opdm_b;
-                std::vector<double> tpdm_aa,tpdm_ab,tpdm_bb;
-
-                ci_rdms.compute_1rdm(opdm_a,opdm_b);
-                ci_rdms.compute_2rdm(tpdm_aa,tpdm_ab,tpdm_bb);
-
-                // put rdms in tensor format
-                BlockedTensor D1 = BTF_->build(tensor_type_,"D1",spin_cases({"aa"}),true);
-                D1.block("aa").data() = opdm_a;
-                D1.block("AA").data() = opdm_b;
-
-                BlockedTensor D2 = BTF_->build(tensor_type_,"D2",spin_cases({"aaaa"}),true);
-                D2.block("aaaa").data() = tpdm_aa;
-                D2.block("aAaA").data() = tpdm_ab;
-                D2.block("AAAA").data() = tpdm_bb;
-
-                // first-order off-diagonal elements
-                double H_MN = 0.0;
-                H_MN += oei["uv"] * D1["uv"];
-                H_MN += oei["UV"] * D1["UV"];
-                H_MN += 0.25 * actv_aa("uvxy") * D2.block("aaaa")("xyuv");
-                H_MN += 0.25 * actv_bb("UVXY") * D2.block("AAAA")("XYUV");
-                H_MN += actv_ab("uVxY") * D2.block("aAaA")("xYuV");
-
-                // TODO: compute second-order off-diagonal elements
-
-                // fill in to Heff
-                Heff->set(M,N,H_MN);
-                Heff->set(N,M,H_MN);
-            }
-        }
-
-        SharedMatrix U (new Matrix("U of Heff", nstates, nstates));
-        SharedVector Ems (new Vector("MS Energies", nstates));
-        Heff->diagonalize(U, Ems);
+        print_h2("Effective Hamiltonian Summary");
+        outfile->Printf("\n");
 
         Heff->print();
-//        U->eivprint(Ems);
+        Heff_sym->print();
+
+        SharedMatrix U (new Matrix("U of Heff (Symmetrized)", nstates, nstates));
+        SharedVector Ems (new Vector("MS Energies", nstates));
+        Heff_sym->diagonalize(U, Ems);
+        U->eivprint(Ems);
 
         // fill in Edsrg_ms
         for(int i = 0; i < nstates; ++i){
@@ -403,22 +424,252 @@ std::vector<std::vector<double>> DSRG_MRPT2::compute_energy_xms(){
     return Edsrg_ms;
 }
 
+void DSRG_MRPT2::build_oei(){
+    Hoei_.iterate([&](const std::vector<size_t>& i,const std::vector<SpinType>& spin,double& value){
+        if (spin[0] == AlphaSpin) {
+            value = ints_->oei_a(i[0],i[1]);
+        } else {
+            value = ints_->oei_b(i[0],i[1]);
+        }
+    });
+}
+
+void DSRG_MRPT2::build_eff_oei(){
+    for(const auto& block: Hoei_.block_labels()){
+        // lowercase: alpha spin
+        if(islower(block[0])){
+            Hoei_.block(block).iterate([&](const std::vector<size_t>& i,double& value){
+                size_t np = label_to_spacemo_[block[0]][i[0]];
+                size_t nq = label_to_spacemo_[block[1]][i[1]];
+                value = ints_->oei_a(np,nq);
+
+                for(const size_t& nm: acore_mos_) {
+                    value += ints_->aptei_aa(np,nm,nq,nm);
+                    value += ints_->aptei_ab(np,nm,nq,nm);
+                }
+            });
+        } else {
+            Hoei_.block(block).iterate([&](const std::vector<size_t>& i,double& value){
+                size_t np = label_to_spacemo_[block[0]][i[0]];
+                size_t nq = label_to_spacemo_[block[1]][i[1]];
+                value = ints_->oei_b(np,nq);
+
+                for(const size_t& nm: bcore_mos_) {
+                    value += ints_->aptei_bb(np,nm,nq,nm);
+                    value += ints_->aptei_ab(nm,np,nm,nq);
+                }
+            });
+        }
+    }
+}
+
+SharedMatrix DSRG_MRPT2::xms_rotation(std::shared_ptr<FCIIntegrals> fci_ints,
+                                      std::vector<psi::forte::STLBitsetDeterminant>& p_space,
+                                      SharedMatrix civecs, const int& irrep)
+{
+    print_h2("Perform XMS Rotation to Reference States");
+    outfile->Printf("\n");
+
+    // build Fock matrix
+    int nstates = civecs->ncol();
+    SharedMatrix Fock (new Matrix("Fock", nstates, nstates));
+
+    for(int M = 0; M < nstates; ++M){
+        for(int N = M; N < nstates; ++N){
+
+            // compute transition density
+            CI_RDMS ci_rdms (options_,fci_ints,p_space,civecs,M,N);
+            ci_rdms.set_symmetry(irrep);
+
+            std::vector<double> opdm_a,opdm_b;
+            ci_rdms.compute_1rdm(opdm_a,opdm_b);
+
+            // put rdms in tensor format
+            BlockedTensor D1 = BTF_->build(tensor_type_,"D1",spin_cases({"aa"}),true);
+            D1.block("aa").data() = opdm_a;
+            D1.block("AA").data() = opdm_b;
+
+            // compute Fock elements
+            double F_MN = 0.0;
+            F_MN += D1["uv"] * F_["vu"];
+            F_MN += D1["UV"] * F_["VU"];
+            Fock->set(M,N,F_MN);
+            if(M != N){
+                Fock->set(N,M,F_MN);
+            }
+        }
+    }
+    Fock->print();
+
+    // diagonalize Fock
+    SharedMatrix Fevec (new Matrix("Fock Evec", nstates, nstates));
+    SharedVector Feval (new Vector("Fock Eval", nstates));
+    Fock->diagonalize(Fevec, Feval);
+    Fevec->print();
+//    Fevec->eivprint(Feval);
+
+    // Rotate ci vecs
+    SharedMatrix rcivecs (civecs->clone());
+    rcivecs->zero();
+    rcivecs->gemm(false,false,1.0,civecs,Fevec,0.0);
+
+    return rcivecs;
+}
+
+void DSRG_MRPT2::build_eff_t1(){
+    T1_["ia"] -= T2_["iuav"] * Gamma1_["vu"];
+    T1_["ia"] -= T2_["iUaV"] * Gamma1_["VU"];
+    T1_["IA"] -= T2_["uIvA"] * Gamma1_["vu"];
+    T1_["IA"] -= T2_["IUAV"] * Gamma1_["VU"];
+}
+
+double DSRG_MRPT2::compute_ms_1st_coupling(const std::string& name){
+    Timer timer;
+    std::string str = "Computing coupling of " + name;
+    outfile->Printf("\n    %-40s ...", str.c_str());
+
+    double coupling = 0.0;
+    coupling += Hoei_["uv"] * Gamma1_["vu"];
+    coupling += Hoei_["UV"] * Gamma1_["VU"];
+
+    coupling += 0.25 * V_["xyuv"] * Lambda2_["uvxy"];
+    coupling += 0.25 * V_["XYUV"] * Lambda2_["UVXY"];
+    coupling += V_["xYuV"] * Lambda2_["uVxY"];
+
+    outfile->Printf("  Done. Timing %15.6f s", timer.get());
+    return coupling;
+}
+
+double DSRG_MRPT2::compute_ms_2nd_coupling(const std::string& name){
+    Timer timer;
+    std::string str = "Computing coupling of " + name;
+    outfile->Printf("\n    %-40s ...", str.c_str());
+
+    double coupling = 0.0;
+
+    // temp contract with D1
+    BlockedTensor temp = BTF_->build(tensor_type_,"temp", spin_cases({"aa"}), true);
+    temp["vu"] += Hoei_["eu"] * T1_["ve"];
+    temp["VU"] += Hoei_["EU"] * T1_["VE"];
+
+    temp["vu"] -= Hoei_["vm"] * T1_["mu"];
+    temp["VU"] -= Hoei_["VM"] * T1_["MU"];
+
+    temp["vu"] += V_["avmu"] * T1_["ma"];
+    temp["vu"] += V_["vAuM"] * T1_["MA"];
+    temp["VU"] += V_["aVmU"] * T1_["ma"];
+    temp["VU"] += V_["AVMU"] * T1_["MA"];
+
+    temp["vu"] += Hoei_["am"] * T2_["mvau"];
+    temp["vu"] += Hoei_["AM"] * T2_["vMuA"];
+    temp["VU"] += Hoei_["am"] * T2_["mVaU"];
+    temp["VU"] += Hoei_["AM"] * T2_["MVAU"];
+
+    temp["vu"] += 0.5 * V_["abum"] * T2_["vmab"];
+    temp["vu"] += V_["aBuM"] * T2_["vMaB"];
+    temp["VU"] += 0.5 * V_["ABUM"] * T2_["VMAB"];
+    temp["VU"] += V_["aBmU"] * T2_["mVaB"];
+
+    temp["vu"] -= 0.5 * V_["avmn"] * T2_["mnau"];
+    temp["vu"] -= V_["vAmN"] * T2_["mNuA"];
+    temp["VU"] -= 0.5 * V_["AVMN"] * T2_["MNAU"];
+    temp["VU"] -= V_["aVmN"] * T2_["mNaU"];
+
+    coupling += temp["vu"] * Gamma1_["uv"];
+    coupling += temp["VU"] * Gamma1_["UV"];
+
+    // temp contract with D2
+    temp = BTF_->build(tensor_type_,"temp", spin_cases({"aaaa"}), true);
+    temp["xyuv"] += 0.5 * V_["eyuv"] * T1_["xe"];
+    temp["xYuV"] += V_["eYuV"] * T1_["xe"];
+    temp["xYuV"] += V_["xEuV"] * T1_["YE"];
+    temp["XYUV"] += 0.5 * V_["EYUV"] * T1_["XE"];
+
+    temp["xyuv"] += 0.5 * V_["xyvm"] * T1_["mu"];
+    temp["xYuV"] -= V_["xYmV"] * T1_["mu"];
+    temp["xYuV"] -= V_["xYuM"] * T1_["MV"];
+    temp["XYUV"] += 0.5 * V_["XYVM"] * T1_["MU"];
+
+    temp["xyuv"] += 0.5 * Hoei_["eu"] * T2_["xyev"];
+    temp["xYuV"] += Hoei_["eu"] * T2_["xYeV"];
+    temp["xYuV"] += Hoei_["EV"] * T2_["xYuE"];
+    temp["XYUV"] += 0.5 * Hoei_["EU"] * T2_["XYEV"];
+
+    temp["xyuv"] -= 0.5 * Hoei_["xm"] * T2_["myuv"];
+    temp["xYuV"] -= Hoei_["xm"] * T2_["mYuV"];
+    temp["xYuV"] -= Hoei_["YM"] * T2_["xMuV"];
+    temp["XYUV"] -= 0.5 * Hoei_["XM"] * T2_["MYUV"];
+
+    temp["xyuv"] -= V_["aymu"] * T2_["mxav"];
+    temp["xyuv"] -= V_["yAuM"] * T2_["xMvA"];
+    temp["xYuV"] -= V_["aYuM"] * T2_["xMaV"];
+    temp["xYuV"] -= V_["xAmV"] * T2_["mYuA"];
+    temp["xYuV"] += V_["axmu"] * T2_["mYaV"];
+    temp["xYuV"] += V_["xAuM"] * T2_["MYAV"];
+    temp["xYuV"] += V_["aYmV"] * T2_["mxau"];
+    temp["xYuV"] += V_["AYMV"] * T2_["xMuA"];
+    temp["XYUV"] -= V_["aYmU"] * T2_["mXaV"];
+    temp["XYUV"] -= V_["AYMU"] * T2_["XMAV"];
+
+    temp["xyuv"] += 0.125 * V_["xymn"] * T2_["mnuv"];
+    temp["xYuV"] += V_["xYmN"] * T2_["mNuV"];
+    temp["XYUV"] += 0.125 * V_["XYMN"] * T2_["MNUV"];
+
+    temp["xyuv"] += 0.125 * V_["abuv"] * T2_["xyab"];
+    temp["xYuV"] += V_["aBuV"] * T2_["xYaB"];
+    temp["XYUV"] += 0.125 * V_["ABUV"] * T2_["XYAB"];
+
+    coupling += temp["xyuv"] * Lambda2_["uvxy"];
+    coupling += temp["xYuV"] * Lambda2_["uVxY"];
+    coupling += temp["XYUV"] * Lambda2_["UVXY"];
+
+    // temp contract with D3
+    temp = BTF_->build(tensor_type_,"temp", {"aaaaaa"}, true);
+    temp["xyzuvw"] += 0.25 * V_["yzmu"] * T2_["mxvw"];
+    temp["xyzuvw"] -= 0.25 * V_["ezuv"] * T2_["xyew"];
+    coupling += temp["xyzuvw"] * Lambda3_["uvwxyz"];
+
+    temp = BTF_->build(tensor_type_,"temp", {"AAAAAA"}, true);
+    temp["XYZUVW"] += 0.25 * V_["YZMU"] * T2_["MXVW"];
+    temp["XYZUVW"] -= 0.25 * V_["EZUV"] * T2_["XYEW"];
+    coupling += temp["XYZUVW"] * Lambda3_["UVWXYZ"];
+
+    temp = BTF_->build(tensor_type_,"temp", {"aaAaaA"}, true);
+    temp["xyZuvW"] += 0.5 * V_["yZmW"] * T2_["mxuv"];
+    temp["xyZuvW"] += 0.5 * V_["xymu"] * T2_["mZvW"];
+    temp["xyZuvW"] += V_["yZuM"] * T2_["xMvW"];
+
+    temp["xyZuvW"] += 0.5 * V_["eZuW"] * T2_["xyev"];
+    temp["xyZuvW"] += 0.5 * V_["eyuv"] * T2_["xZeW"];
+    temp["xyZuvW"] -= V_["yEuW"] * T2_["xZvE"];
+    coupling += temp["xyZuvW"] * Lambda3_["uvWxyZ"];
+
+    temp = BTF_->build(tensor_type_,"temp", {"aAAaAA"}, true);
+    temp["xYZuVW"] += 0.5 * V_["YZMV"] * T2_["xMuW"];
+    temp["xYZuVW"] += 0.5 * V_["xZuM"] * T2_["MYVW"];
+    temp["xYZuVW"] += V_["xZmV"] * T2_["mYuW"];
+
+    temp["xYZuVW"] += 0.5 * V_["EZVW"] * T2_["xYuE"];
+    temp["xYZuVW"] += 0.5 * V_["xEuV"] * T2_["YZEW"];
+    temp["xYZuVW"] -= V_["eZuV"] * T2_["xYeW"];
+    coupling += temp["xYZuVW"] * Lambda3_["uVWxYZ"];
+
+    outfile->Printf("  Done. Timing %15.6f s", timer.get());
+    return coupling;
+}
+
 void DSRG_MRPT2::compute_cumulants(std::shared_ptr<FCIIntegrals> fci_ints,
+                                   std::vector<STLBitsetDeterminant>& p_space,
                                    SharedMatrix evecs, const int& root1, const int& root2,
                                    const int& irrep)
 {
-    CI_RDMS ci_rdms (options_,fci_ints,p_space_,evecs,root1,root2);
+    CI_RDMS ci_rdms (options_,fci_ints,p_space,evecs,root1,root2);
     ci_rdms.set_symmetry(irrep);
 
-    std::vector<double> opdm_a, opdm_b;
-    std::vector<double> tpdm_aa,tpdm_ab,tpdm_bb;
-    std::vector<double> tpdm_aaa,tpdm_aab,tpdm_abb,tpdm_bbb;
-
-    ci_rdms.compute_1rdm(opdm_a,opdm_b);
-    ci_rdms.compute_2rdm(tpdm_aa,tpdm_ab,tpdm_bb);
-    ci_rdms.compute_3rdm(tpdm_aaa,tpdm_aab,tpdm_abb,tpdm_bbb);
-
     // 1 cumulant
+    std::vector<double> opdm_a, opdm_b;
+    ci_rdms.compute_1rdm(opdm_a,opdm_b);
+
     ambit::Tensor L1a = Gamma1_.block("aa");
     ambit::Tensor L1b = Gamma1_.block("AA");
 
@@ -435,6 +686,9 @@ void DSRG_MRPT2::compute_cumulants(std::shared_ptr<FCIIntegrals> fci_ints,
     Eta1_.block("AA")("pq") -= Gamma1_.block("AA")("pq");
 
     // 2 cumulant
+    std::vector<double> tpdm_aa,tpdm_ab,tpdm_bb;
+    ci_rdms.compute_2rdm(tpdm_aa,tpdm_ab,tpdm_bb);
+
     ambit::Tensor L2aa = Lambda2_.block("aaaa");
     ambit::Tensor L2ab = Lambda2_.block("aAaA");
     ambit::Tensor L2bb = Lambda2_.block("AAAA");
@@ -452,6 +706,131 @@ void DSRG_MRPT2::compute_cumulants(std::shared_ptr<FCIIntegrals> fci_ints,
     L2ab("pqrs") -= L1a("pr") * L1b("qs");
 
     // 3 cumulant
+    if(options_.get_str("THREEPDC") != "ZERO"){
+        std::vector<double> tpdm_aaa,tpdm_aab,tpdm_abb,tpdm_bbb;
+        ci_rdms.compute_3rdm(tpdm_aaa,tpdm_aab,tpdm_abb,tpdm_bbb);
+
+        ambit::Tensor L3aaa = Lambda3_.block("aaaaaa");
+        ambit::Tensor L3aab = Lambda3_.block("aaAaaA");
+        ambit::Tensor L3abb = Lambda3_.block("aAAaAA");
+        ambit::Tensor L3bbb = Lambda3_.block("AAAAAA");
+
+        L3aaa.data() = tpdm_aaa;
+        L3aab.data() = tpdm_aab;
+        L3abb.data() = tpdm_abb;
+        L3bbb.data() = tpdm_bbb;
+
+        // - step 1: aaa
+        L3aaa("pqrstu") -= L1a("ps") * L2aa("qrtu");
+        L3aaa("pqrstu") += L1a("pt") * L2aa("qrsu");
+        L3aaa("pqrstu") += L1a("pu") * L2aa("qrts");
+
+        L3aaa("pqrstu") -= L1a("qt") * L2aa("prsu");
+        L3aaa("pqrstu") += L1a("qs") * L2aa("prtu");
+        L3aaa("pqrstu") += L1a("qu") * L2aa("prst");
+
+        L3aaa("pqrstu") -= L1a("ru") * L2aa("pqst");
+        L3aaa("pqrstu") += L1a("rs") * L2aa("pqut");
+        L3aaa("pqrstu") += L1a("rt") * L2aa("pqsu");
+
+        L3aaa("pqrstu") -= L1a("ps") * L1a("qt") * L1a("ru");
+        L3aaa("pqrstu") -= L1a("pt") * L1a("qu") * L1a("rs");
+        L3aaa("pqrstu") -= L1a("pu") * L1a("qs") * L1a("rt");
+
+        L3aaa("pqrstu") += L1a("ps") * L1a("qu") * L1a("rt");
+        L3aaa("pqrstu") += L1a("pu") * L1a("qt") * L1a("rs");
+        L3aaa("pqrstu") += L1a("pt") * L1a("qs") * L1a("ru");
+
+        // - step 2: aab
+        L3aab("pqRstU") -= L1a("ps") * L2ab("qRtU");
+        L3aab("pqRstU") += L1a("pt") * L2ab("qRsU");
+
+        L3aab("pqRstU") -= L1a("qt") * L2ab("pRsU");
+        L3aab("pqRstU") += L1a("qs") * L2ab("pRtU");
+
+        L3aab("pqRstU") -= L1b("RU") * L2aa("pqst");
+
+        L3aab("pqRstU") -= L1a("ps") * L1a("qt") * L1b("RU");
+        L3aab("pqRstU") += L1a("pt") * L1a("qs") * L1b("RU");
+
+        // - step 3: abb
+        L3abb("pQRsTU") -= L1a("ps") * L2bb("QRTU");
+
+        L3abb("pQRsTU") -= L1b("QT") * L2ab("pRsU");
+        L3abb("pQRsTU") += L1b("QU") * L2ab("pRsT");
+
+        L3abb("pQRsTU") -= L1b("RU") * L2ab("pQsT");
+        L3abb("pQRsTU") += L1b("RT") * L2ab("pQsU");
+
+        L3abb("pQRsTU") -= L1a("ps") * L1b("QT") * L1b("RU");
+        L3abb("pQRsTU") += L1a("ps") * L1b("QU") * L1b("RT");
+
+        // - step 4: bbb
+        L3bbb("pqrstu") -= L1b("ps") * L2bb("qrtu");
+        L3bbb("pqrstu") += L1b("pt") * L2bb("qrsu");
+        L3bbb("pqrstu") += L1b("pu") * L2bb("qrts");
+
+        L3bbb("pqrstu") -= L1b("qt") * L2bb("prsu");
+        L3bbb("pqrstu") += L1b("qs") * L2bb("prtu");
+        L3bbb("pqrstu") += L1b("qu") * L2bb("prst");
+
+        L3bbb("pqrstu") -= L1b("ru") * L2bb("pqst");
+        L3bbb("pqrstu") += L1b("rs") * L2bb("pqut");
+        L3bbb("pqrstu") += L1b("rt") * L2bb("pqsu");
+
+        L3bbb("pqrstu") -= L1b("ps") * L1b("qt") * L1b("ru");
+        L3bbb("pqrstu") -= L1b("pt") * L1b("qu") * L1b("rs");
+        L3bbb("pqrstu") -= L1b("pu") * L1b("qs") * L1b("rt");
+
+        L3bbb("pqrstu") += L1b("ps") * L1b("qu") * L1b("rt");
+        L3bbb("pqrstu") += L1b("pu") * L1b("qt") * L1b("rs");
+        L3bbb("pqrstu") += L1b("pt") * L1b("qs") * L1b("ru");
+    }
+}
+
+void DSRG_MRPT2::compute_densities(std::shared_ptr<FCIIntegrals> fci_ints,
+                                   std::vector<psi::forte::STLBitsetDeterminant>& p_space,
+                                   SharedMatrix evecs, const int& root1, const int& root2,
+                                   const int& irrep)
+{
+    CI_RDMS ci_rdms (options_,fci_ints,p_space,evecs,root1,root2);
+    ci_rdms.set_symmetry(irrep);
+
+    // 1 density
+    std::vector<double> opdm_a, opdm_b;
+    ci_rdms.compute_1rdm(opdm_a,opdm_b);
+
+    ambit::Tensor L1a = Gamma1_.block("aa");
+    ambit::Tensor L1b = Gamma1_.block("AA");
+
+    L1a.data() = opdm_a;
+    L1b.data() = opdm_b;
+
+//    (Eta1_.block("aa")).iterate([&](const std::vector<size_t>& i,double& value){
+//        value = i[0] == i[1] ? 1.0 : 0.0;
+//    });
+//    (Eta1_.block("AA")).iterate([&](const std::vector<size_t>& i,double& value){
+//        value = i[0] == i[1] ? 1.0 : 0.0;
+//    });
+//    Eta1_.block("aa")("pq") -= Gamma1_.block("aa")("pq");
+//    Eta1_.block("AA")("pq") -= Gamma1_.block("AA")("pq");
+
+    // 2 density
+    std::vector<double> tpdm_aa,tpdm_ab,tpdm_bb;
+    ci_rdms.compute_2rdm(tpdm_aa,tpdm_ab,tpdm_bb);
+
+    ambit::Tensor L2aa = Lambda2_.block("aaaa");
+    ambit::Tensor L2ab = Lambda2_.block("aAaA");
+    ambit::Tensor L2bb = Lambda2_.block("AAAA");
+
+    L2aa.data() = tpdm_aa;
+    L2ab.data() = tpdm_ab;
+    L2bb.data() = tpdm_bb;
+
+    // 3 density
+    std::vector<double> tpdm_aaa,tpdm_aab,tpdm_abb,tpdm_bbb;
+    ci_rdms.compute_3rdm(tpdm_aaa,tpdm_aab,tpdm_abb,tpdm_bbb);
+
     ambit::Tensor L3aaa = Lambda3_.block("aaaaaa");
     ambit::Tensor L3aab = Lambda3_.block("aaAaaA");
     ambit::Tensor L3abb = Lambda3_.block("aAAaAA");
@@ -461,72 +840,6 @@ void DSRG_MRPT2::compute_cumulants(std::shared_ptr<FCIIntegrals> fci_ints,
     L3aab.data() = tpdm_aab;
     L3abb.data() = tpdm_abb;
     L3bbb.data() = tpdm_bbb;
-
-    // - step 1: aaa
-    L3aaa("pqrstu") -= L1a("ps") * L2aa("qrtu");
-    L3aaa("pqrstu") += L1a("pt") * L2aa("qrsu");
-    L3aaa("pqrstu") += L1a("pu") * L2aa("qrts");
-
-    L3aaa("pqrstu") -= L1a("qt") * L2aa("prsu");
-    L3aaa("pqrstu") += L1a("qs") * L2aa("prtu");
-    L3aaa("pqrstu") += L1a("qu") * L2aa("prst");
-
-    L3aaa("pqrstu") -= L1a("ru") * L2aa("pqst");
-    L3aaa("pqrstu") += L1a("rs") * L2aa("pqut");
-    L3aaa("pqrstu") += L1a("rt") * L2aa("pqsu");
-
-    L3aaa("pqrstu") -= L1a("ps") * L1a("qt") * L1a("ru");
-    L3aaa("pqrstu") -= L1a("pt") * L1a("qu") * L1a("rs");
-    L3aaa("pqrstu") -= L1a("pu") * L1a("qs") * L1a("rt");
-
-    L3aaa("pqrstu") += L1a("ps") * L1a("qu") * L1a("rt");
-    L3aaa("pqrstu") += L1a("pu") * L1a("qt") * L1a("rs");
-    L3aaa("pqrstu") += L1a("pt") * L1a("qs") * L1a("ru");
-
-    // - step 2: aab
-    L3aab("pqRstU") -= L1a("ps") * L2ab("qRtU");
-    L3aab("pqRstU") += L1a("pt") * L2ab("qRsU");
-
-    L3aab("pqRstU") -= L1a("qt") * L2ab("pRsU");
-    L3aab("pqRstU") += L1a("qs") * L2ab("pRtU");
-
-    L3aab("pqRstU") -= L1b("RU") * L2aa("pqst");
-
-    L3aab("pqRstU") -= L1a("ps") * L1a("qt") * L1b("RU");
-    L3aab("pqRstU") += L1a("pt") * L1a("qs") * L1b("RU");
-
-    // - step 3: abb
-    L3abb("pQRsTU") -= L1a("ps") * L2bb("QRTU");
-
-    L3abb("pQRsTU") -= L1b("QT") * L2ab("pRsU");
-    L3abb("pQRsTU") += L1b("QU") * L2ab("pRsT");
-
-    L3abb("pQRsTU") -= L1b("RU") * L2ab("pQsT");
-    L3abb("pQRsTU") += L1b("RT") * L2ab("pQsU");
-
-    L3abb("pQRsTU") -= L1a("ps") * L1b("QT") * L1b("RU");
-    L3abb("pQRsTU") += L1a("ps") * L1b("QU") * L1b("RT");
-
-    // - step 4: bbb
-    L3bbb("pqrstu") -= L1b("ps") * L2bb("qrtu");
-    L3bbb("pqrstu") += L1b("pt") * L2bb("qrsu");
-    L3bbb("pqrstu") += L1b("pu") * L2bb("qrts");
-
-    L3bbb("pqrstu") -= L1b("qt") * L2bb("prsu");
-    L3bbb("pqrstu") += L1b("qs") * L2bb("prtu");
-    L3bbb("pqrstu") += L1b("qu") * L2bb("prst");
-
-    L3bbb("pqrstu") -= L1b("ru") * L2bb("pqst");
-    L3bbb("pqrstu") += L1b("rs") * L2bb("pqut");
-    L3bbb("pqrstu") += L1b("rt") * L2bb("pqsu");
-
-    L3bbb("pqrstu") -= L1b("ps") * L1b("qt") * L1b("ru");
-    L3bbb("pqrstu") -= L1b("pt") * L1b("qu") * L1b("rs");
-    L3bbb("pqrstu") -= L1b("pu") * L1b("qs") * L1b("rt");
-
-    L3bbb("pqrstu") += L1b("ps") * L1b("qu") * L1b("rt");
-    L3bbb("pqrstu") += L1b("pu") * L1b("qt") * L1b("rs");
-    L3bbb("pqrstu") += L1b("pt") * L1b("qs") * L1b("ru");
 }
 
 }}
