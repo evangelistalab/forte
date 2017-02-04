@@ -35,13 +35,13 @@
 #include "fci_solver.h"
 #include "fci_vector.h"
 
-namespace psi{ namespace forte{
+namespace psi {
+namespace forte {
 
-/// SA_FCISolver seeks to call multiple instances of CAS-CI and combine all the RDMS and average them
-class SA_FCISolver
-{
-public:
-
+/// SA_FCISolver seeks to call multiple instances of CAS-CI and combine all the
+/// RDMS and average them
+class SA_FCISolver {
+  public:
     SA_FCISolver(Options& options, std::shared_ptr<Wavefunction> wfn);
 
     /// E_{sa-casscf} = gamma_{avg} h_{pq} + Gamma_{avg} g_{pqrs}
@@ -49,15 +49,21 @@ public:
 
     Reference reference() { return sa_ref_; }
 
-    void set_integral_pointer(std::shared_ptr<FCIIntegrals> fci_ints) { fci_ints_ = fci_ints; }
+    void set_integral_pointer(std::shared_ptr<FCIIntegrals> fci_ints) {
+        fci_ints_ = fci_ints;
+    }
 
-    void set_mo_space_info(std::shared_ptr<MOSpaceInfo> mo_space_info){ mo_space_info_ = mo_space_info; }
+    void set_mo_space_info(std::shared_ptr<MOSpaceInfo> mo_space_info) {
+        mo_space_info_ = mo_space_info;
+    }
 
-    void set_integrals(std::shared_ptr<ForteIntegrals> ints){ ints_ = ints; }
+    void set_integrals(std::shared_ptr<ForteIntegrals> ints) { ints_ = ints; }
 
-    std::vector<std::shared_ptr<FCIWfn>> StateAveragedCISolution(){ return SA_C_; }
+    std::vector<std::shared_ptr<FCIWfn>> StateAveragedCISolution() {
+        return SA_C_;
+    }
 
-private:
+  private:
     /// Options from Psi4
     Options options_;
     /// The wavefunction object of Psi4
@@ -83,7 +89,7 @@ private:
     /// Read options and fill in parsed_options_
     void read_options();
 };
-
-}}
+}
+}
 
 #endif // SA_FCISOLVER_H

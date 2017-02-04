@@ -49,11 +49,11 @@
 #include "stl_bitset_determinant.h"
 
 using namespace ambit;
-namespace psi{ namespace forte{
+namespace psi {
+namespace forte {
 
-class DSRG_MRPT3 : public Wavefunction
-{
-public:
+class DSRG_MRPT3 : public Wavefunction {
+  public:
     /**
      * DSRG_MRPT3 Constructor
      * @param ref_wfn The reference wavefunction object
@@ -61,8 +61,9 @@ public:
      * @param ints A pointer to an allocated integral object
      * @param mo_space_info The MOSpaceInfo object
      */
-    DSRG_MRPT3(Reference reference, SharedWavefunction ref_wfn, Options &options,
-               std::shared_ptr<ForteIntegrals> ints, std::shared_ptr<MOSpaceInfo> mo_space_info);
+    DSRG_MRPT3(Reference reference, SharedWavefunction ref_wfn,
+               Options& options, std::shared_ptr<ForteIntegrals> ints,
+               std::shared_ptr<MOSpaceInfo> mo_space_info);
 
     /// Destructor
     ~DSRG_MRPT3();
@@ -77,18 +78,24 @@ public:
     double compute_energy_sa();
 
     /// Set CASCI eigen values and eigen vectors for state averaging
-    void set_eigens(std::vector<std::vector<std::pair<SharedVector,double>>> eigens) {eigens_ = eigens;}
+    void set_eigens(
+        std::vector<std::vector<std::pair<SharedVector, double>>> eigens) {
+        eigens_ = eigens;
+    }
 
     /// Set determinants in the model space
-    void set_p_spaces(std::vector<std::vector<psi::forte::STLBitsetDeterminant>> p_spaces) {p_spaces_ = p_spaces;}
+    void set_p_spaces(
+        std::vector<std::vector<psi::forte::STLBitsetDeterminant>> p_spaces) {
+        p_spaces_ = p_spaces;
+    }
 
     /// Ignore semi-canonical testing in DSRG-MRPT3
-    void ignore_semicanonical(bool ignore) {ignore_semicanonical_ = ignore;}
+    void ignore_semicanonical(bool ignore) { ignore_semicanonical_ = ignore; }
 
     /// Set FCIWfn before reference relaxation
-    void set_fciwfn0(std::shared_ptr<FCIWfn> fciwfn) {fciwfn0_ = fciwfn;}
+    void set_fciwfn0(std::shared_ptr<FCIWfn> fciwfn) { fciwfn0_ = fciwfn; }
 
-protected:
+  protected:
     // => Class initialization and termination <= //
 
     /// Called in the constructor
@@ -105,15 +112,16 @@ protected:
     std::chrono::time_point<std::chrono::system_clock> start_, end_;
     std::time_t tt1_, tt2_;
     /// Compute elapsed time
-    std::chrono::duration<double> compute_elapsed_time(std::chrono::time_point<std::chrono::system_clock> t1,
-                                                       std::chrono::time_point<std::chrono::system_clock> t2){
+    std::chrono::duration<double> compute_elapsed_time(
+        std::chrono::time_point<std::chrono::system_clock> t1,
+        std::chrono::time_point<std::chrono::system_clock> t2) {
         return t2 - t1;
     }
 
     /// Multi-state or not
     bool multi_state_;
     /// CASCI eigen values and eigen vectors for state averaging
-    std::vector<std::vector<std::pair<SharedVector,double>>> eigens_;
+    std::vector<std::vector<std::pair<SharedVector, double>>> eigens_;
     /// Determinants in the model space
     std::vector<std::vector<psi::forte::STLBitsetDeterminant>> p_spaces_;
 
@@ -125,7 +133,7 @@ protected:
     double frozen_core_energy_;
 
     /// The molecular integrals required by MethodBase
-    std::shared_ptr<ForteIntegrals>  ints_;
+    std::shared_ptr<ForteIntegrals> ints_;
 
     /// Total memory left
     long long int mem_total_;
@@ -253,7 +261,6 @@ protected:
     /// Unitary matrix to block diagonal Fock
     ambit::BlockedTensor U_;
 
-
     // => Amplitude <= //
 
     /// Compute T2 amplitudes
@@ -277,9 +284,10 @@ protected:
     /// Number of amplitudes will be printed in amplitude summary
     int ntamp_;
     /// Print amplitudes summary
-    void print_amp_summary(const std::string& name,
-                           const std::vector<std::pair<std::vector<size_t>, double>>& list, const double &norm,
-                           const size_t& number_nonzero);
+    void print_amp_summary(
+        const std::string& name,
+        const std::vector<std::pair<std::vector<size_t>, double>>& list,
+        const double& norm, const size_t& number_nonzero);
 
     /// Threshold for amplitudes considered as intruders
     double intruder_tamp_;
@@ -290,17 +298,19 @@ protected:
     std::vector<std::pair<std::vector<size_t>, double>> lt2ab_;
     std::vector<std::pair<std::vector<size_t>, double>> lt2bb_;
     /// Print intruder analysis
-    void print_intruder(const std::string& name,
-                        const std::vector<std::pair<std::vector<size_t>, double>>& list);
-
+    void print_intruder(
+        const std::string& name,
+        const std::vector<std::pair<std::vector<size_t>, double>>& list);
 
     // => Energy terms <= //
 
     /// compute second-order energy and transformed Hamiltonian
     double compute_energy_pt2();
-    /// compute third-order energy contribution 1.0 / 12.0 * [[[H0th,A1st],A1st],A1st], computed before pt2
+    /// compute third-order energy contribution 1.0 / 12.0 *
+    /// [[[H0th,A1st],A1st],A1st], computed before pt2
     double compute_energy_pt3_1();
-    /// compute third-order energy contribution 1.0 / 2.0  * [H1st + Hbar1st,A2nd]
+    /// compute third-order energy contribution 1.0 / 2.0  * [H1st +
+    /// Hbar1st,A2nd]
     double compute_energy_pt3_2();
     /// compute third-order energy contribution 1.0 / 2.0  * [Hbar2nd,A1st]
     double compute_energy_pt3_3();
@@ -312,55 +322,95 @@ protected:
     double Hbar0_;
 
     /// Compute zero-body term of commutator [H1, T1]
-    void H1_T1_C0(BlockedTensor& H1, BlockedTensor& T1, const double& alpha, double& C0);
+    void H1_T1_C0(BlockedTensor& H1, BlockedTensor& T1, const double& alpha,
+                  double& C0);
     /// Compute zero-body term of commutator [H1, T2]
-    void H1_T2_C0(BlockedTensor& H1, BlockedTensor& T2, const double& alpha, double& C0);
+    void H1_T2_C0(BlockedTensor& H1, BlockedTensor& T2, const double& alpha,
+                  double& C0);
     /// Compute zero-body term of commutator [H2, T1]
-    void H2_T1_C0(BlockedTensor& H2, BlockedTensor& T1, const double& alpha, double& C0);
+    void H2_T1_C0(BlockedTensor& H2, BlockedTensor& T1, const double& alpha,
+                  double& C0);
     /// Compute zero-body term of commutator [H2, T2]
-    void H2_T2_C0(BlockedTensor& H2, BlockedTensor& T2, const double& alpha, double& C0);
+    void H2_T2_C0(BlockedTensor& H2, BlockedTensor& T2, const double& alpha,
+                  double& C0);
 
     /// Compute one-body term of commutator [H1, T1]
-    void H1_T1_C1(BlockedTensor& H1, BlockedTensor& T1, const double& alpha, BlockedTensor& C1);
+    void H1_T1_C1(BlockedTensor& H1, BlockedTensor& T1, const double& alpha,
+                  BlockedTensor& C1);
     /// Compute one-body term of commutator [H1, T2]
-    void H1_T2_C1(BlockedTensor& H1, BlockedTensor& T2, const double& alpha, BlockedTensor& C1);
+    void H1_T2_C1(BlockedTensor& H1, BlockedTensor& T2, const double& alpha,
+                  BlockedTensor& C1);
     /// Compute one-body term of commutator [H2, T1]
-    void H2_T1_C1(BlockedTensor& H2, BlockedTensor& T1, const double& alpha, BlockedTensor& C1);
+    void H2_T1_C1(BlockedTensor& H2, BlockedTensor& T1, const double& alpha,
+                  BlockedTensor& C1);
     /// Compute one-body term of commutator [H2, T2]
-    void H2_T2_C1(BlockedTensor& H2, BlockedTensor& T2, const double& alpha, BlockedTensor& C1);
+    void H2_T2_C1(BlockedTensor& H2, BlockedTensor& T2, const double& alpha,
+                  BlockedTensor& C1);
 
     /// Compute two-body term of commutator [H2, T1]
-    void H2_T1_C2(BlockedTensor& H2, BlockedTensor& T1, const double& alpha, BlockedTensor& C2);
+    void H2_T1_C2(BlockedTensor& H2, BlockedTensor& T1, const double& alpha,
+                  BlockedTensor& C2);
     /// Compute two-body term of commutator [H1, T2]
-    void H1_T2_C2(BlockedTensor& H1, BlockedTensor& T2, const double& alpha, BlockedTensor& C2);
+    void H1_T2_C2(BlockedTensor& H1, BlockedTensor& T2, const double& alpha,
+                  BlockedTensor& C2);
     /// Compute two-body term of commutator [H2, T2]
-    void H2_T2_C2(BlockedTensor& H2, BlockedTensor& T2, const double& alpha, BlockedTensor& C2);
+    void H2_T2_C2(BlockedTensor& H2, BlockedTensor& T2, const double& alpha,
+                  BlockedTensor& C2);
 
-    /// Compute one-body term of commutator [V, T1], V is constructed from B (DF / CD)
-    void V_T1_C1_DF(BlockedTensor& B, BlockedTensor& T1, const double& alpha, BlockedTensor& C1);
-    /// Compute one-body term of commutator [V, T2], V is constructed from B (DF / CD)
-    void V_T2_C1_DF(BlockedTensor& B, BlockedTensor& T2, const double& alpha, BlockedTensor& C1);
-    /// Compute two-body term of commutator [V, T1], V is constructed from B (DF / CD)
-    void V_T1_C2_DF(BlockedTensor& B, BlockedTensor& T1, const double& alpha, BlockedTensor& C2);
-    /// Compute two-body term of commutator [V, T2], V is constructed from B (DF / CD)
-    void V_T2_C2_DF(BlockedTensor& B, BlockedTensor& T2, const double& alpha, BlockedTensor& C2);
+    /// Compute one-body term of commutator [V, T1], V is constructed from B (DF
+    /// / CD)
+    void V_T1_C1_DF(BlockedTensor& B, BlockedTensor& T1, const double& alpha,
+                    BlockedTensor& C1);
+    /// Compute one-body term of commutator [V, T2], V is constructed from B (DF
+    /// / CD)
+    void V_T2_C1_DF(BlockedTensor& B, BlockedTensor& T2, const double& alpha,
+                    BlockedTensor& C1);
+    /// Compute two-body term of commutator [V, T1], V is constructed from B (DF
+    /// / CD)
+    void V_T1_C2_DF(BlockedTensor& B, BlockedTensor& T1, const double& alpha,
+                    BlockedTensor& C2);
+    /// Compute two-body term of commutator [V, T2], V is constructed from B (DF
+    /// / CD)
+    void V_T2_C2_DF(BlockedTensor& B, BlockedTensor& T2, const double& alpha,
+                    BlockedTensor& C2);
 
-    /// Compute two-body term of commutator [V, T2], particle-particle contraction when "ab" in T2 are actives
-    void V_T2_C2_DF_AA(BlockedTensor& B, BlockedTensor& T2, const double& alpha, BlockedTensor& C2);
-    /// Compute two-body term of commutator [V, T2] (batch), particle-particle contraction when "ab" in T2 are active and virtual
-    void V_T2_C2_DF_AV(BlockedTensor& B, BlockedTensor& T2, const double& alpha, BlockedTensor& C2);
-    /// Compute two-body term of commutator [V, T2] (batch), particle-particle contraction when "ab" in T2 are virtuals
-    void V_T2_C2_DF_VV(BlockedTensor& B, BlockedTensor& T2, const double& alpha, BlockedTensor& C2);
-    /// Compute two-body term of commutator [V, T2], particle-hole contraction (exchange part), contracted particle index is active
-    void V_T2_C2_DF_AH_EX(BlockedTensor& B, BlockedTensor& T2, const double& alpha, BlockedTensor& C2, const std::vector<std::vector<std::string>>& qs, const std::vector<std::vector<std::string>>& jb);
-    /// Compute two-body term of commutator [V, T2], particle-hole contraction (exchange part), contracted particle index is virtual
-    void V_T2_C2_DF_VA_EX(BlockedTensor& B, BlockedTensor& T2, const double& alpha, BlockedTensor& C2, const std::vector<std::string>& qs_lower, const std::vector<std::string>& jb_lower);
-    /// Compute two-body term of commutator [V, T2], particle-hole contraction (exchange part), contracted particle index is virtual
-    void V_T2_C2_DF_VC_EX(BlockedTensor& B, BlockedTensor& T2, const double& alpha, BlockedTensor& C2, const std::vector<std::string>& qs_lower, const std::vector<std::string>& jb_lower);
+    /// Compute two-body term of commutator [V, T2], particle-particle
+    /// contraction when "ab" in T2 are actives
+    void V_T2_C2_DF_AA(BlockedTensor& B, BlockedTensor& T2, const double& alpha,
+                       BlockedTensor& C2);
+    /// Compute two-body term of commutator [V, T2] (batch), particle-particle
+    /// contraction when "ab" in T2 are active and virtual
+    void V_T2_C2_DF_AV(BlockedTensor& B, BlockedTensor& T2, const double& alpha,
+                       BlockedTensor& C2);
+    /// Compute two-body term of commutator [V, T2] (batch), particle-particle
+    /// contraction when "ab" in T2 are virtuals
+    void V_T2_C2_DF_VV(BlockedTensor& B, BlockedTensor& T2, const double& alpha,
+                       BlockedTensor& C2);
+    /// Compute two-body term of commutator [V, T2], particle-hole contraction
+    /// (exchange part), contracted particle index is active
+    void V_T2_C2_DF_AH_EX(BlockedTensor& B, BlockedTensor& T2,
+                          const double& alpha, BlockedTensor& C2,
+                          const std::vector<std::vector<std::string>>& qs,
+                          const std::vector<std::vector<std::string>>& jb);
+    /// Compute two-body term of commutator [V, T2], particle-hole contraction
+    /// (exchange part), contracted particle index is virtual
+    void V_T2_C2_DF_VA_EX(BlockedTensor& B, BlockedTensor& T2,
+                          const double& alpha, BlockedTensor& C2,
+                          const std::vector<std::string>& qs_lower,
+                          const std::vector<std::string>& jb_lower);
+    /// Compute two-body term of commutator [V, T2], particle-hole contraction
+    /// (exchange part), contracted particle index is virtual
+    void V_T2_C2_DF_VC_EX(BlockedTensor& B, BlockedTensor& T2,
+                          const double& alpha, BlockedTensor& C2,
+                          const std::vector<std::string>& qs_lower,
+                          const std::vector<std::string>& jb_lower);
 
-    /// Compute two-body term of commutator [V, T2], particle-hole contraction (exchange part), contracted particle index is virtual
-    void V_T2_C2_DF_VH_EX(BlockedTensor& B, BlockedTensor& T2, const double& alpha, BlockedTensor& C2, const std::vector<std::vector<std::string>>& qs, const std::vector<std::vector<std::string>>& jb);
-
+    /// Compute two-body term of commutator [V, T2], particle-hole contraction
+    /// (exchange part), contracted particle index is virtual
+    void V_T2_C2_DF_VH_EX(BlockedTensor& B, BlockedTensor& T2,
+                          const double& alpha, BlockedTensor& C2,
+                          const std::vector<std::vector<std::string>>& qs,
+                          const std::vector<std::vector<std::string>>& jb);
 
     // => Reference relaxation <= //
 
@@ -375,22 +425,28 @@ protected:
     /// Transfer integrals for FCI
     void transfer_integrals();
     /// Diagonalize the diagonal blocks of the Fock matrix
-    std::vector<std::vector<double>> diagonalize_Fock_diagblocks(BlockedTensor& U);
+    std::vector<std::vector<double>>
+    diagonalize_Fock_diagblocks(BlockedTensor& U);
     /// Separate an 2D ambit::Tensor according to its irrep
-    ambit::Tensor separate_tensor(ambit::Tensor& tens, const Dimension& irrep, const int& h);
+    ambit::Tensor separate_tensor(ambit::Tensor& tens, const Dimension& irrep,
+                                  const int& h);
     /// Combine a separated 2D ambit::Tensor
-    void combine_tensor(ambit::Tensor& tens, ambit::Tensor& tens_h, const Dimension& irrep, const int& h);
+    void combine_tensor(ambit::Tensor& tens, ambit::Tensor& tens_h,
+                        const Dimension& irrep, const int& h);
 
     /**
      * Get a sub block of tensor T
      * @param T The big tensor
-     * @param P The map of <partitioned dimension index, its absolute indices in T>
+     * @param P The map of <partitioned dimension index, its absolute indices in
+     * T>
      * @param name The name of the returned sub tensor
      * @return A sub tensor of T with the same dimension
      */
-    ambit::Tensor sub_block(ambit::Tensor& T, const std::map<size_t, std::vector<size_t> >& P, const std::string& name);
+    ambit::Tensor sub_block(ambit::Tensor& T,
+                            const std::map<size_t, std::vector<size_t>>& P,
+                            const std::string& name);
 };
-
-}} // End Namespaces
+}
+} // End Namespaces
 
 #endif // _dsrg_mrpt3_h_

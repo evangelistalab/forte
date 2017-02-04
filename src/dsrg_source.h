@@ -31,10 +31,11 @@
 
 #include <cmath>
 
-namespace psi{ namespace forte{
+namespace psi {
+namespace forte {
 
 class DSRG_SOURCE {
-public:
+  public:
     /**
      * DSRG_SOURCE Constructor
      * @param s The flow parameter
@@ -47,7 +48,7 @@ public:
     /// Renormalize denominator
     virtual double compute_renormalized_denominator(const double& D) = 0;
 
-protected:
+  protected:
     /// Flow parameter
     double s_;
     /// Smaller than which we will do Taylor expansion
@@ -56,7 +57,7 @@ protected:
 
 /// Standard source
 class STD_SOURCE : public DSRG_SOURCE {
-public:
+  public:
     /// Constructor
     STD_SOURCE(double s, double taylor_threshold);
 
@@ -68,33 +69,36 @@ public:
     /// Return [1 - exp(-s * D^2)] / D
     virtual double compute_renormalized_denominator(const double& D) {
         double Z = std::sqrt(s_) * D;
-        if(std::fabs(Z) < std::pow(0.1, taylor_threshold_)){
+        if (std::fabs(Z) < std::pow(0.1, taylor_threshold_)) {
             return Taylor_Exp(Z, taylor_order_) * std::sqrt(s_);
-        }else{
+        } else {
             return (1.0 - std::exp(-s_ * std::pow(D, 2.0))) / D;
         }
     }
 
-private:
+  private:
     /// Order of the Taylor expansion
-    int taylor_order_ = static_cast<int>(0.5 * (15.0 / taylor_threshold_ + 1)) + 1;
+    int taylor_order_ =
+        static_cast<int>(0.5 * (15.0 / taylor_threshold_ + 1)) + 1;
 
     /// Taylor Expansion of [1 - exp(- Z^2)] / Z
-    double Taylor_Exp(const double& Z, const int& n){
-        if(n > 0){
+    double Taylor_Exp(const double& Z, const int& n) {
+        if (n > 0) {
             double value = Z, tmp = Z;
-            for(int x = 0; x < n - 1; ++x){
+            for (int x = 0; x < n - 1; ++x) {
                 tmp *= -1.0 * std::pow(Z, 2.0) / (x + 2);
                 value += tmp;
             }
             return value;
-        }else{return 0.0;}
+        } else {
+            return 0.0;
+        }
     }
 };
 
 /// Linear absolute exponential source
 class LABS_SOURCE : public DSRG_SOURCE {
-public:
+  public:
     /// Constructor
     LABS_SOURCE(double s, double taylor_threshold);
 
@@ -106,38 +110,40 @@ public:
     /// Return [1 - exp(-s * |D|)] / D
     virtual double compute_renormalized_denominator(const double& D) {
         double Z = s_ * D;
-        if(std::fabs(Z) < std::pow(0.1, taylor_threshold_)){
+        if (std::fabs(Z) < std::pow(0.1, taylor_threshold_)) {
             return Taylor_Exp_Linear(Z, taylor_order_ * 2) * s_;
-        }else{
+        } else {
             return (1.0 - std::exp(-s_ * std::fabs(D))) / D;
         }
     }
 
-private:
+  private:
     /// Order of the Taylor expansion
     int taylor_order_ = static_cast<int>(15.0 / taylor_threshold_ + 1) + 1;
 
     /// Taylor Expansion of [1 - exp(-|Z|)] / Z
-    double Taylor_Exp_Linear(const double& Z, const int& n){
+    double Taylor_Exp_Linear(const double& Z, const int& n) {
         double Zabs = std::fabs(Z);
-        if(n > 0){
+        if (n > 0) {
             double value = 1.0, tmp = 1.0;
-            for(int x = 0; x < n - 1; ++x){
+            for (int x = 0; x < n - 1; ++x) {
                 tmp *= -1.0 * Zabs / (x + 2);
                 value += tmp;
             }
-            if(Z >= 0.0){
+            if (Z >= 0.0) {
                 return value;
-            }else{
+            } else {
                 return -value;
             }
-        }else{return 0.0;}
+        } else {
+            return 0.0;
+        }
     }
 };
 
 /// Dyson source
 class DYSON_SOURCE : public DSRG_SOURCE {
-public:
+  public:
     /// Constructor
     DYSON_SOURCE(double s, double taylor_threshold);
 
@@ -152,19 +158,16 @@ public:
     }
 };
 class MP2_SOURCE : public DSRG_SOURCE {
-public:
+  public:
     MP2_SOURCE(double s, double taylor_threshold);
-    
 
-    virtual double compute_renormalized(const double& D) {
-        return 1.0;
-    }
-    
+    virtual double compute_renormalized(const double& D) { return 1.0; }
+
     virtual double compute_renormalized_denominator(const double& D) {
-        return 1.0 / D ;
+        return 1.0 / D;
     }
 };
-
-}}
+}
+}
 
 #endif // DSRG_SOURCE_H

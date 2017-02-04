@@ -33,13 +33,14 @@
 
 #include <ambit/tensor.h>
 
-namespace psi{
-namespace forte{
+namespace psi {
+namespace forte {
 
 class Reference // : public Wavefunction
-{
-protected:
-    /// Reference energy = FCI_energy + frozen_core_energy + restricted_docc + nuclear_replusion
+    {
+  protected:
+    /// Reference energy = FCI_energy + frozen_core_energy + restricted_docc +
+    /// nuclear_replusion
     double Eref_;
     /// Frozen_core_energy
 
@@ -61,7 +62,7 @@ protected:
     /// The Spin-free 2-RDM
     ambit::Tensor SFg2_;
 
-public:
+  public:
     /// Default constructor
     Reference();
 
@@ -69,45 +70,45 @@ public:
     ~Reference();
 
     /// Obtain reference energy
-    double get_Eref() {return Eref_;}
+    double get_Eref() { return Eref_; }
 
     /// Obtain density cumulants
-    ambit::Tensor L1a() {return L1a_;}
-    ambit::Tensor L1b() {return L1b_;}
-    ambit::Tensor L2aa() {return L2aa_;}
-    ambit::Tensor L2ab() {return L2ab_;}
-    ambit::Tensor L2bb() {return L2bb_;}
-    ambit::Tensor L3aaa() {return L3aaa_;}
-    ambit::Tensor L3aab() {return L3aab_;}
-    ambit::Tensor L3abb() {return L3abb_;}
-    ambit::Tensor L3bbb() {return L3bbb_;}
+    ambit::Tensor L1a() { return L1a_; }
+    ambit::Tensor L1b() { return L1b_; }
+    ambit::Tensor L2aa() { return L2aa_; }
+    ambit::Tensor L2ab() { return L2ab_; }
+    ambit::Tensor L2bb() { return L2bb_; }
+    ambit::Tensor L3aaa() { return L3aaa_; }
+    ambit::Tensor L3aab() { return L3aab_; }
+    ambit::Tensor L3abb() { return L3abb_; }
+    ambit::Tensor L3bbb() { return L3bbb_; }
 
     /// Obtain 2-RDMs
-    ambit::Tensor g2aa() {return g2aa_;}
-    ambit::Tensor g2ab() {return g2ab_;}
-    ambit::Tensor g2bb() {return g2bb_;}
-    ambit::Tensor SFg2() {return SFg2_;}
+    ambit::Tensor g2aa() { return g2aa_; }
+    ambit::Tensor g2ab() { return g2ab_; }
+    ambit::Tensor g2bb() { return g2bb_; }
+    ambit::Tensor SFg2() { return SFg2_; }
 
     /// Set functions
-    void set_Eref(double value) {Eref_ = value;}
-    void set_L1a(ambit::Tensor L1a) {L1a_ = L1a;}
-    void set_L1b(ambit::Tensor L1b) {L1b_ = L1b;}
-    void set_L2aa(ambit::Tensor L2aa) {L2aa_ = L2aa;}
-    void set_L2ab(ambit::Tensor L2ab) {L2ab_ = L2ab;}
-    void set_L2bb(ambit::Tensor L2bb) {L2bb_ = L2bb;}
-    void set_L3aaa(ambit::Tensor L3aaa) {L3aaa_ = L3aaa;}
-    void set_L3aab(ambit::Tensor L3aab) {L3aab_ = L3aab;}
-    void set_L3abb(ambit::Tensor L3abb) {L3abb_ = L3abb;}
-    void set_L3bbb(ambit::Tensor L3bbb) {L3bbb_ = L3bbb;}
+    void set_Eref(double value) { Eref_ = value; }
+    void set_L1a(ambit::Tensor L1a) { L1a_ = L1a; }
+    void set_L1b(ambit::Tensor L1b) { L1b_ = L1b; }
+    void set_L2aa(ambit::Tensor L2aa) { L2aa_ = L2aa; }
+    void set_L2ab(ambit::Tensor L2ab) { L2ab_ = L2ab; }
+    void set_L2bb(ambit::Tensor L2bb) { L2bb_ = L2bb; }
+    void set_L3aaa(ambit::Tensor L3aaa) { L3aaa_ = L3aaa; }
+    void set_L3aab(ambit::Tensor L3aab) { L3aab_ = L3aab; }
+    void set_L3abb(ambit::Tensor L3abb) { L3abb_ = L3abb; }
+    void set_L3bbb(ambit::Tensor L3bbb) { L3bbb_ = L3bbb; }
 
     /// Set the 2-RDMs
-    void set_g2aa(ambit::Tensor g2aa) {g2aa_ = g2aa;}
-    void set_g2ab(ambit::Tensor g2ab) {g2ab_ = g2ab;}
-    void set_g2bb(ambit::Tensor g2bb) {g2bb_ = g2bb;}
+    void set_g2aa(ambit::Tensor g2aa) { g2aa_ = g2aa; }
+    void set_g2ab(ambit::Tensor g2ab) { g2ab_ = g2ab; }
+    void set_g2bb(ambit::Tensor g2bb) { g2bb_ = g2bb; }
     /// Spin-free 2-RDM
-    void set_SFg2(ambit::Tensor SFg2) {SFg2_ = SFg2;}
+    void set_SFg2(ambit::Tensor SFg2) { SFg2_ = SFg2; }
 };
-
-}} // End Namespaces
+}
+} // End Namespaces
 
 #endif // _reference_h_

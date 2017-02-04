@@ -37,21 +37,21 @@
 #include "integrals.h"
 #include "reference.h"
 
-namespace psi{
+namespace psi {
 
-namespace forte{
+namespace forte {
 
-class LOCALIZE
-{
-public:
-    LOCALIZE(std::shared_ptr<Wavefunction> wfn, Options &options, std::shared_ptr<ForteIntegrals> ints, std::shared_ptr<MOSpaceInfo> mo_space_info);
+class LOCALIZE {
+  public:
+    LOCALIZE(std::shared_ptr<Wavefunction> wfn, Options& options,
+             std::shared_ptr<ForteIntegrals> ints,
+             std::shared_ptr<MOSpaceInfo> mo_space_info);
 
     ~LOCALIZE();
-    
+
     void localize_orbitals();
 
-private:
-
+  private:
     std::shared_ptr<Wavefunction> wfn_;
 
     std::shared_ptr<ForteIntegrals> ints_;
@@ -65,13 +65,11 @@ private:
     int multiplicity_;
 
     std::vector<size_t> abs_act_;
-        
+
     std::string local_type_;
     std::string local_method_;
-
 };
-
-
-}} // End Namespaces
+}
+} // End Namespaces
 
 #endif

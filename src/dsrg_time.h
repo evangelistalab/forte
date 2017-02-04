@@ -35,11 +35,11 @@
 
 #include "psi4/libtrans/integraltransform.h"
 
-namespace psi{ namespace forte{
+namespace psi {
+namespace forte {
 
-class DSRG_TIME
-{
-public:
+class DSRG_TIME {
+  public:
     /// Constructor
     DSRG_TIME();
 
@@ -50,8 +50,8 @@ public:
     void subtract(const std::string& code, const double& t);
 
     /// Reset timings
-    void reset();                           // reset all timings to zero
-    void reset(const std::string& code);    // reset timing of the code
+    void reset();                        // reset all timings to zero
+    void reset(const std::string& code); // reset timing of the code
 
     /// Create info of a code
     void create_code(const std::string& code);
@@ -67,13 +67,13 @@ public:
     void print(const std::string& code);
 
     /// Clear all the private variables
-    void clear(){
+    void clear() {
         code_.clear();
         code_to_tidx_.clear();
         timing_.clear();
     }
 
-private:
+  private:
     /**
      * commutator: [ H, T ] = C
      * time code: 1st digit: rank of H
@@ -91,7 +91,7 @@ private:
     /// Test code
     bool test_code(const std::string& code);
 };
-
-}}
+}
+}
 
 #endif // DSRG_TIME_H

@@ -37,23 +37,21 @@
 #include "integrals.h"
 #include "ambit/blocked_tensor.h"
 
-namespace psi{
+namespace psi {
 
-namespace forte{
+namespace forte {
 
 /**
  * @brief The MethodBase class
  * This class provides basic functions to write electronic structure
  * pilot codes using the Tensor classes
  */
-class MethodBase : public Wavefunction
-{
-protected:
-
+class MethodBase : public Wavefunction {
+  protected:
     // => Class data <= //
 
     /// The molecular integrals required by MethodBase
-    std::shared_ptr<ForteIntegrals>  ints_;
+    std::shared_ptr<ForteIntegrals> ints_;
 
     /// List of alpha occupied MOs
     std::vector<size_t> a_occ_mos;
@@ -65,13 +63,13 @@ protected:
     std::vector<size_t> b_vir_mos;
 
     /// Map from all the MOs to the alpha occupied
-    std::map<size_t,size_t> mos_to_aocc;
+    std::map<size_t, size_t> mos_to_aocc;
     /// Map from all the MOs to the beta occupied
-    std::map<size_t,size_t> mos_to_bocc;
+    std::map<size_t, size_t> mos_to_bocc;
     /// Map from all the MOs to the alpha virtual
-    std::map<size_t,size_t> mos_to_avir;
+    std::map<size_t, size_t> mos_to_avir;
     /// Map from all the MOs to the beta virtual
-    std::map<size_t,size_t> mos_to_bvir;
+    std::map<size_t, size_t> mos_to_bvir;
 
     ambit::TensorType tensor_type_;
 
@@ -104,11 +102,11 @@ protected:
     void cleanup();
     /// The MOSpaceInfo object
     std::shared_ptr<MOSpaceInfo> mo_space_info_;
-public:
 
+  public:
     // => Constructors <= //
 
-    MethodBase(SharedWavefunction ref_wfn, Options &options,
+    MethodBase(SharedWavefunction ref_wfn, Options& options,
                std::shared_ptr<ForteIntegrals> ints,
                std::shared_ptr<MOSpaceInfo> mo_space_info);
     ~MethodBase();
@@ -119,7 +117,7 @@ public:
     /// The frozen-core energy
     double frozen_core_energy_;
 };
-
-}} // End Namespaces
+}
+} // End Namespaces
 
 #endif // _methodbase_h_

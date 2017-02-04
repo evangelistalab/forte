@@ -37,25 +37,24 @@
 #include "psi4/libmints/wavefunction.h"
 #include <random>
 
-
 #include "integrals.h"
 #include "dynamic_bitset_determinant.h"
 #include "stl_bitset_determinant.h"
 #include "fci_vector.h"
 
-namespace psi{ namespace forte{
+namespace psi {
+namespace forte {
 
-enum SpawnType {random, all, ground_and_random};
+enum SpawnType { random, all, ground_and_random };
 
-typedef std::map<Determinant,double> walker_map;
+typedef std::map<Determinant, double> walker_map;
 
 struct ObtCount {
     std::vector<int> naocc, nbocc, navir, nbvir;
 };
 
-class FCIQMC : public Wavefunction
-{
-public:
+class FCIQMC : public Wavefunction {
+  public:
     // ==> Class Constructor and Destructor <==
 
     /**
@@ -64,7 +63,9 @@ public:
      * @param options The main options object
      * @param ints A pointer to an allocated integral object
      */
-    FCIQMC(SharedWavefunction ref_wfn, Options &options, std::shared_ptr<ForteIntegrals>  ints, std::shared_ptr<MOSpaceInfo> mo_space_info);
+    FCIQMC(SharedWavefunction ref_wfn, Options& options,
+           std::shared_ptr<ForteIntegrals> ints,
+           std::shared_ptr<MOSpaceInfo> mo_space_info);
 
     /// Destructor
     ~FCIQMC();
@@ -74,23 +75,21 @@ public:
     /// Compute the energy
     double compute_energy();
 
-private:
-//    /// The wave function symmetry
-//    int wavefunction_symmetry_;
-//    /// The symmetry of each orbital in Pitzer ordering
-//    std::vector<int> mo_symmetry_;
-//    /// The symmetry of each orbital in the qt ordering
-//    std::vector<int> mo_symmetry_qt_;
-//    /// A vector that contains all the frozen core
-//    std::vector<int> frzc_;
-//    /// A vector that contains all the frozen virtual
-//    std::vector<int> frzv_;
-//    /// The nuclear repulsion energy
-//    double nuclear_repulsion_energy_;
+  private:
+    //    /// The wave function symmetry
+    //    int wavefunction_symmetry_;
+    //    /// The symmetry of each orbital in Pitzer ordering
+    //    std::vector<int> mo_symmetry_;
+    //    /// The symmetry of each orbital in the qt ordering
+    //    std::vector<int> mo_symmetry_qt_;
+    //    /// A vector that contains all the frozen core
+    //    std::vector<int> frzc_;
+    //    /// A vector that contains all the frozen virtual
+    //    std::vector<int> frzv_;
+    //    /// The nuclear repulsion energy
+    //    double nuclear_repulsion_energy_;
 
-
-
-//    int compute_pgen(Determinant& detI);
+    //    int compute_pgen(Determinant& detI);
     /// The reference determinant
     Determinant reference_;
     /// The maximum number of threads
@@ -98,7 +97,7 @@ private:
     /// Do we have OpenMP?
     static bool have_omp_;
     /// The molecular integrals required by fcimc
-    std::shared_ptr<ForteIntegrals>  ints_;
+    std::shared_ptr<ForteIntegrals> ints_;
     /// The information of mo space
     std::shared_ptr<MOSpaceInfo> mo_space_info_;
     /// Store all the integrals locally
@@ -114,12 +113,13 @@ private:
     Dimension ncmopi_;
     /// The cumulative number of correlated molecular orbitals per irrep
     std::vector<int> cume_ncmopi_;
-    /// cume number of irrep combination catagories per alpha beta combination: ab->ab, aiai->ajaj, aiaj->akal, bibi->bjbj, bibj->bkbl, a->a, b->b
+    /// cume number of irrep combination catagories per alpha beta combination:
+    /// ab->ab, aiai->ajaj, aiaj->akal, bibi->bjbj, bibj->bkbl, a->a, b->b
     size_t cume_excit_irrep_[7];
     /// Nuclear repulsion energy
     double nuclear_repulsion_energy_;
     /// number of excitations by category
-    size_t nsa_,nsb_,ndaa_,ndab_,ndbb_;
+    size_t nsa_, nsb_, ndaa_, ndab_, ndbb_;
     size_t sumgen_;
     size_t cume_sumgen_[5];
 
@@ -169,30 +169,65 @@ private:
 
     // Spawning step
     void spawn(walker_map& walkers, walker_map& new_walkers);
-    void spawn_generative(walker_map& walkers,walker_map& new_walkers);
-    void singleWalkerSpawn(Determinant & new_det, const Determinant &det, std::tuple<size_t,size_t,size_t,size_t,size_t> pgen, size_t sumgen);
+    void spawn_generative(walker_map& walkers, walker_map& new_walkers);
+    void
+    singleWalkerSpawn(Determinant& new_det, const Determinant& det,
+                      std::tuple<size_t, size_t, size_t, size_t, size_t> pgen,
+                      size_t sumgen);
     // Death/Clone step
     void death_clone(walker_map& walkers, double shift);
-    void detClone(walker_map& walkers, const Determinant& det, double coef, double pDeathClone);
-    void detDeath(walker_map& walkers, const Determinant& det, double coef, double pDeathClone);
+    void detClone(walker_map& walkers, const Determinant& det, double coef,
+                  double pDeathClone);
+    void detDeath(walker_map& walkers, const Determinant& det, double coef,
+                  double pDeathClone);
     // Merge step
-    void merge(walker_map& walkers,walker_map& new_walkers);
+    void merge(walker_map& walkers, walker_map& new_walkers);
     // Annihilation step
     void annihilate(walker_map& walkers, walker_map& new_walkers);
 
     // Count the number of allowed single and double excitations
-    std::tuple<size_t,size_t,size_t,size_t,size_t> compute_pgen(const Determinant &det);
-    std::tuple<size_t,size_t,size_t,size_t,size_t> compute_pgen_C1(const Determinant &det);
-    void compute_excitations(const Determinant &det, std::vector<std::tuple<size_t, size_t> > &singleExcitations, std::vector<std::tuple<size_t,size_t,size_t,size_t>>& doubleExcitations);
-    void compute_single_excitations(const Determinant &det, std::vector<std::tuple<size_t,size_t>>& singleExcitations);
-    void compute_double_excitations(const Determinant &det, std::vector<std::tuple<size_t,size_t,size_t,size_t>>& doubleExcitations);
-    size_t compute_irrep_divided_excitations(const Determinant &det, std::vector<size_t> &excitationDivides, std::vector<std::tuple<int, int, int, int> > &excitationType, ObtCount &obtCount);
-    bool detSingleRandomExcitation(Determinant &new_det, const std::vector<int> &occ, const std::vector<int> &vir, bool isAlpha);
-    void detSingleExcitation(Determinant &new_det, std::tuple<size_t,size_t>& rand_ext);
-    void detDoubleExcitation(Determinant &new_det, std::tuple<size_t,size_t,size_t,size_t>& rand_ext);
-    bool detDoubleSoloSpinRandomExcitation(Determinant &new_det, const std::vector<int> &occ, const std::vector<int> &vir, bool isAlpha);
-    bool detDoubleMixSpinRandomExcitation(Determinant &new_det, const std::vector<int> &aocc, const std::vector<int> &bocc, const std::vector<int> &avir, const std::vector<int> &bvir);
-    void detExcitation(Determinant &new_det, size_t rand_ext,  std::vector<size_t> &excitationDivides, std::vector<std::tuple<int, int, int, int> > &excitationType, ObtCount &obtCount);
+    std::tuple<size_t, size_t, size_t, size_t, size_t>
+    compute_pgen(const Determinant& det);
+    std::tuple<size_t, size_t, size_t, size_t, size_t>
+    compute_pgen_C1(const Determinant& det);
+    void compute_excitations(
+        const Determinant& det,
+        std::vector<std::tuple<size_t, size_t>>& singleExcitations,
+        std::vector<std::tuple<size_t, size_t, size_t, size_t>>&
+            doubleExcitations);
+    void compute_single_excitations(
+        const Determinant& det,
+        std::vector<std::tuple<size_t, size_t>>& singleExcitations);
+    void compute_double_excitations(
+        const Determinant& det,
+        std::vector<std::tuple<size_t, size_t, size_t, size_t>>&
+            doubleExcitations);
+    size_t compute_irrep_divided_excitations(
+        const Determinant& det, std::vector<size_t>& excitationDivides,
+        std::vector<std::tuple<int, int, int, int>>& excitationType,
+        ObtCount& obtCount);
+    bool detSingleRandomExcitation(Determinant& new_det,
+                                   const std::vector<int>& occ,
+                                   const std::vector<int>& vir, bool isAlpha);
+    void detSingleExcitation(Determinant& new_det,
+                             std::tuple<size_t, size_t>& rand_ext);
+    void
+    detDoubleExcitation(Determinant& new_det,
+                        std::tuple<size_t, size_t, size_t, size_t>& rand_ext);
+    bool detDoubleSoloSpinRandomExcitation(Determinant& new_det,
+                                           const std::vector<int>& occ,
+                                           const std::vector<int>& vir,
+                                           bool isAlpha);
+    bool detDoubleMixSpinRandomExcitation(Determinant& new_det,
+                                          const std::vector<int>& aocc,
+                                          const std::vector<int>& bocc,
+                                          const std::vector<int>& avir,
+                                          const std::vector<int>& bvir);
+    void
+    detExcitation(Determinant& new_det, size_t rand_ext,
+                  std::vector<size_t>& excitationDivides,
+                  std::vector<std::tuple<int, int, int, int>>& excitationType,
+                  ObtCount& obtCount);
     double count_walkers(walker_map& walkers);
     double compute_proj_energy(Determinant& ref, walker_map& walkers);
     double compute_var_energy(walker_map& walkers);
@@ -202,7 +237,7 @@ private:
     void compute_avg_shift(std::vector<double> shifts);
     void compute_err_shift(std::vector<double> shifts);
 };
-
-}} // End Namespaces
+}
+} // End Namespaces
 
 #endif // _fcimc_h_

@@ -36,34 +36,36 @@
 #include "integrals.h"
 #include "reference.h"
 
-namespace psi{
+namespace psi {
 
-namespace forte{
+namespace forte {
 
 /**
  * @brief The MP2_NOS class
  * Computes MP2 natural orbitals
  */
-class MP2_NOS
-{
-public:
+class MP2_NOS {
+  public:
     // => Constructor <= //
-    MP2_NOS(std::shared_ptr<Wavefunction> wfn, Options &options, std::shared_ptr<ForteIntegrals>  ints, std::shared_ptr<MOSpaceInfo> mo_space_info);
+    MP2_NOS(std::shared_ptr<Wavefunction> wfn, Options& options,
+            std::shared_ptr<ForteIntegrals> ints,
+            std::shared_ptr<MOSpaceInfo> mo_space_info);
     //  => Destructor <= //
 };
-
 
 /**
  * @brief The SemiCanonical class
  * Computes semi-canonical orbitals
  */
-class SemiCanonical
-{
-public:
+class SemiCanonical {
+  public:
     // => Constructor <= //
-    SemiCanonical(std::shared_ptr<Wavefunction> wfn, Options &options, std::shared_ptr<ForteIntegrals>  ints, std::shared_ptr<MOSpaceInfo> mo_space_info, Reference& reference);
+    SemiCanonical(std::shared_ptr<Wavefunction> wfn, Options& options,
+                  std::shared_ptr<ForteIntegrals> ints,
+                  std::shared_ptr<MOSpaceInfo> mo_space_info,
+                  Reference& reference);
 };
-
-}} // End Namespaces
+}
+} // End Namespaces
 
 #endif // _mp2_nos_h_

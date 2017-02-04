@@ -38,11 +38,13 @@
 #include "helpers.h"
 #include "mrdsrg.h"
 
-namespace psi{ namespace forte{
+namespace psi {
+namespace forte {
 
-void MRDSRG::compute_hbar(){
-    if (print_ > 2){
-        outfile->Printf("\n\n  ==> Computing the DSRG Transformed Hamiltonian <==\n");
+void MRDSRG::compute_hbar() {
+    if (print_ > 2) {
+        outfile->Printf(
+            "\n\n  ==> Computing the DSRG Transformed Hamiltonian <==\n");
     }
 
     // copy bare Hamiltonian to Hbar
@@ -67,7 +69,7 @@ void MRDSRG::compute_hbar(){
     std::string dsrg_op = options_.get_str("DSRG_TRANS_TYPE");
 
     // compute Hbar recursively
-    for(int n = 1; n <= maxn; ++n){
+    for (int n = 1; n <= maxn; ++n) {
         // prefactor before n-nested commutator
         double factor = 1.0 / n;
 
@@ -77,42 +79,42 @@ void MRDSRG::compute_hbar(){
         C2_.zero();
 
         // printing level
-        if(print_ > 2){
+        if (print_ > 2) {
             std::string dash(38, '-');
             outfile->Printf("\n    %s", dash.c_str());
         }
 
         // zero-body
-        H1_T1_C0(O1_,T1_,factor,C0);
-        H1_T2_C0(O1_,T2_,factor,C0);
-        H2_T1_C0(O2_,T1_,factor,C0);
-        H2_T2_C0(O2_,T2_,factor,C0);
+        H1_T1_C0(O1_, T1_, factor, C0);
+        H1_T2_C0(O1_, T2_, factor, C0);
+        H2_T1_C0(O2_, T1_, factor, C0);
+        H2_T2_C0(O2_, T2_, factor, C0);
         // one-body
-        H1_T1_C1(O1_,T1_,factor,C1_);
-        H1_T2_C1(O1_,T2_,factor,C1_);
-        H2_T1_C1(O2_,T1_,factor,C1_);
-        H2_T2_C1(O2_,T2_,factor,C1_);
+        H1_T1_C1(O1_, T1_, factor, C1_);
+        H1_T2_C1(O1_, T2_, factor, C1_);
+        H2_T1_C1(O2_, T1_, factor, C1_);
+        H2_T2_C1(O2_, T2_, factor, C1_);
         // two-body
-        H1_T2_C2(O1_,T2_,factor,C2_);
-        H2_T1_C2(O2_,T1_,factor,C2_);
-        H2_T2_C2(O2_,T2_,factor,C2_);
+        H1_T2_C2(O1_, T2_, factor, C2_);
+        H2_T1_C2(O2_, T1_, factor, C2_);
+        H2_T2_C2(O2_, T2_, factor, C2_);
 
         // printing level
-        if(print_ > 2){
+        if (print_ > 2) {
             std::string dash(38, '-');
             outfile->Printf("\n    %s\n", dash.c_str());
         }
 
         // [H, A] = [H, T] + [H, T]^dagger
-        if(dsrg_op == "UNITARY"){
+        if (dsrg_op == "UNITARY") {
             C0 *= 2.0;
-            O1_["pq"]  = C1_["pq"];
-            O1_["PQ"]  = C1_["PQ"];
+            O1_["pq"] = C1_["pq"];
+            O1_["PQ"] = C1_["PQ"];
             C1_["pq"] += O1_["qp"];
             C1_["PQ"] += O1_["QP"];
-            O2_["pqrs"]  = C2_["pqrs"];
-            O2_["pQrS"]  = C2_["pQrS"];
-            O2_["PQRS"]  = C2_["PQRS"];
+            O2_["pqrs"] = C2_["pqrs"];
+            O2_["pQrS"] = C2_["pQrS"];
+            O2_["PQRS"] = C2_["PQRS"];
             C2_["pqrs"] += O2_["rspq"];
             C2_["pQrS"] += O2_["rSpQ"];
             C2_["PQRS"] += O2_["RSPQ"];
@@ -136,38 +138,47 @@ void MRDSRG::compute_hbar(){
         // test convergence of C
         double norm_C1 = C1_.norm();
         double norm_C2 = C2_.norm();
-        if(print_ > 2){
-            outfile->Printf("\n  n = %3d, C1norm = %20.15f, C2norm = %20.15f", n, norm_C1, norm_C2);
+        if (print_ > 2) {
+            outfile->Printf("\n  n = %3d, C1norm = %20.15f, C2norm = %20.15f",
+                            n, norm_C1, norm_C2);
         }
-        if (std::sqrt(norm_C2 * norm_C2 + norm_C1 * norm_C1) < ct_threshold){
+        if (std::sqrt(norm_C2 * norm_C2 + norm_C1 * norm_C1) < ct_threshold) {
             converged = true;
             break;
         }
     }
-    if(!converged){
-        outfile->Printf("\n    Warning! Hbar is not converged in %3d-nested commutators!", maxn);
+    if (!converged) {
+        outfile->Printf(
+            "\n    Warning! Hbar is not converged in %3d-nested commutators!",
+            maxn);
         outfile->Printf("\n    Please increase SRG_RSC_NCOMM.");
         outfile->Flush();
     }
 }
 
-double MRDSRG::compute_energy_ldsrg2(){
+double MRDSRG::compute_energy_ldsrg2() {
     // print title
     outfile->Printf("\n\n  ==> Computing MR-LDSRG(2) Energy <==\n");
     outfile->Printf("\n    Reference:");
     outfile->Printf("\n      J. Chem. Phys. 2016, 144, 164114.\n");
-    if(options_.get_str("THREEPDC") == "ZERO"){
+    if (options_.get_str("THREEPDC") == "ZERO") {
         outfile->Printf("\n    Skip Lambda3 contributions in [Hbar2, T2].");
     }
     std::string indent(4, ' ');
     std::string dash(99, '-');
     std::string title;
-    title += indent + str(boost::format("%5c  %=27s  %=21s  %=21s  %=17s\n")
-                          % ' ' % "Energy (a.u.)" % "Non-Diagonal Norm" % "Amplitude RMS" % "Timings (s)");
-    title += indent + std::string (7, ' ') + std::string (27, '-') + "  " + std::string (21, '-')
-            + "  " + std::string (21, '-') + "  " + std::string (17, '-') + "\n";
-    title += indent + str(boost::format("%5s  %=16s %=10s  %=10s %=10s  %=10s %=10s  %=8s %=8s\n")
-                          % "Iter." % "Corr." % "Delta" % "Hbar1" % "Hbar2" % "T1" % "T2" %"Hbar" % "Amp.");
+    title += indent + str(boost::format("%5c  %=27s  %=21s  %=21s  %=17s\n") %
+                          ' ' % "Energy (a.u.)" % "Non-Diagonal Norm" %
+                          "Amplitude RMS" % "Timings (s)");
+    title += indent + std::string(7, ' ') + std::string(27, '-') + "  " +
+             std::string(21, '-') + "  " + std::string(21, '-') + "  " +
+             std::string(17, '-') + "\n";
+    title +=
+        indent +
+        str(boost::format(
+                "%5s  %=16s %=10s  %=10s %=10s  %=10s %=10s  %=8s %=8s\n") %
+            "Iter." % "Corr." % "Delta" % "Hbar1" % "Hbar2" % "T1" % "T2" %
+            "Hbar" % "Amp.");
     title += indent + dash;
     outfile->Printf("\n%s", title.c_str());
 
@@ -183,29 +194,31 @@ double MRDSRG::compute_energy_ldsrg2(){
     double e_conv = options_.get_double("E_CONVERGENCE");
     double r_conv = options_.get_double("R_CONVERGENCE");
     bool converged = false, failed = false;
-    Hbar1_ = BTF_->build(tensor_type_,"Hbar1",spin_cases({"gg"}));
-    Hbar2_ = BTF_->build(tensor_type_,"Hbar2",spin_cases({"gggg"}));
-    O1_ = BTF_->build(tensor_type_,"O1",spin_cases({"gg"}));
-    O2_ = BTF_->build(tensor_type_,"O2",spin_cases({"gggg"}));
-    C1_ = BTF_->build(tensor_type_,"C1",spin_cases({"gg"}));
-    C2_ = BTF_->build(tensor_type_,"C2",spin_cases({"gggg"}));
-    DT1_ = BTF_->build(tensor_type_,"DT1",spin_cases({"hp"}));
-    DT2_ = BTF_->build(tensor_type_,"DT2",spin_cases({"hhpp"}));
+    Hbar1_ = BTF_->build(tensor_type_, "Hbar1", spin_cases({"gg"}));
+    Hbar2_ = BTF_->build(tensor_type_, "Hbar2", spin_cases({"gggg"}));
+    O1_ = BTF_->build(tensor_type_, "O1", spin_cases({"gg"}));
+    O2_ = BTF_->build(tensor_type_, "O2", spin_cases({"gggg"}));
+    C1_ = BTF_->build(tensor_type_, "C1", spin_cases({"gg"}));
+    C2_ = BTF_->build(tensor_type_, "C2", spin_cases({"gggg"}));
+    DT1_ = BTF_->build(tensor_type_, "DT1", spin_cases({"hp"}));
+    DT2_ = BTF_->build(tensor_type_, "DT2", spin_cases({"hhpp"}));
     std::vector<double> big_T, big_DT;
-    size_t numel = vector_size_diis(T1_,blocks1,T2_,blocks2);
+    size_t numel = vector_size_diis(T1_, blocks1, T2_, blocks2);
 
     // setup DIIS
     std::shared_ptr<DIISManager> diis_manager;
     int max_diis_vectors = options_.get_int("DIIS_MAX_VECS");
     int min_diis_vectors = options_.get_int("DIIS_MIN_VECS");
-    if (max_diis_vectors > 0){
-        diis_manager = std::shared_ptr<DIISManager>(new DIISManager(max_diis_vectors, "LDSRG2 DIIS T", DIISManager::LargestError, DIISManager::InCore));
-        diis_manager->set_error_vector_size(1,DIISEntry::Pointer,numel);
-        diis_manager->set_vector_size(1,DIISEntry::Pointer,numel);
+    if (max_diis_vectors > 0) {
+        diis_manager = std::shared_ptr<DIISManager>(
+            new DIISManager(max_diis_vectors, "LDSRG2 DIIS T",
+                            DIISManager::LargestError, DIISManager::InCore));
+        diis_manager->set_error_vector_size(1, DIISEntry::Pointer, numel);
+        diis_manager->set_vector_size(1, DIISEntry::Pointer, numel);
     }
 
     // start iteration
-    do{
+    do {
         // compute Hbar
         ForteTimer t_hbar;
         compute_hbar();
@@ -223,40 +236,45 @@ double MRDSRG::compute_energy_ldsrg2(){
         double time_amp = t_amp.elapsed();
 
         // copy amplitudes to the big vector
-        big_T = copy_amp_diis(T1_,blocks1,T2_,blocks2);
-        big_DT = copy_amp_diis(DT1_,blocks1,DT2_,blocks2);
+        big_T = copy_amp_diis(T1_, blocks1, T2_, blocks2);
+        big_DT = copy_amp_diis(DT1_, blocks1, DT2_, blocks2);
 
         // DIIS amplitudes
-        if(diis_manager){
-            if(cycle >= min_diis_vectors){
+        if (diis_manager) {
+            if (cycle >= min_diis_vectors) {
                 diis_manager->add_entry(2, &(big_DT[0]), &(big_T[0]));
             }
-            if (cycle > max_diis_vectors){
-                if (diis_manager->subspace_size() >= min_diis_vectors && cycle){
+            if (cycle > max_diis_vectors) {
+                if (diis_manager->subspace_size() >= min_diis_vectors &&
+                    cycle) {
                     outfile->Printf(" -> DIIS");
                     outfile->Flush();
                     diis_manager->extrapolate(1, &(big_T[0]));
-                    return_amp_diis(T1_,blocks1,T2_,blocks2,big_T);
+                    return_amp_diis(T1_, blocks1, T2_, blocks2, big_T);
                 }
             }
         }
 
         // printing
-        outfile->Printf("\n    %5d  %16.12f %10.3e  %10.3e %10.3e  %10.3e %10.3e  %8.3f %8.3f",
-                        cycle, Ecorr, Edelta, Hbar1od, Hbar2od, T1rms_, T2rms_, time_hbar, time_amp);
+        outfile->Printf("\n    %5d  %16.12f %10.3e  %10.3e %10.3e  %10.3e "
+                        "%10.3e  %8.3f %8.3f",
+                        cycle, Ecorr, Edelta, Hbar1od, Hbar2od, T1rms_, T2rms_,
+                        time_hbar, time_amp);
 
         // test convergence
         double rms = T1rms_ > T2rms_ ? T1rms_ : T2rms_;
-        if(fabs(Edelta) < e_conv && rms < r_conv){
+        if (fabs(Edelta) < e_conv && rms < r_conv) {
             converged = true;
 
             // rebuild Hbar because it is destroyed when updating amplitudes
-            if(options_.get_str("RELAX_REF") != "NONE"){
+            if (options_.get_str("RELAX_REF") != "NONE") {
                 compute_hbar();
             }
         }
-        if(cycle > maxiter){
-            outfile->Printf("\n\n    The computation does not converge in %d iterations! Quitting.\n", maxiter);
+        if (cycle > maxiter) {
+            outfile->Printf("\n\n    The computation does not converge in %d "
+                            "iterations! Quitting.\n",
+                            maxiter);
             converged = true;
             failed = true;
         }
@@ -267,19 +285,20 @@ double MRDSRG::compute_energy_ldsrg2(){
     // print summary
     outfile->Printf("\n    %s", dash.c_str());
     outfile->Printf("\n\n  ==> MR-LDSRG(2) Energy Summary <==\n");
-    std::vector<std::pair<std::string,double>> energy;
+    std::vector<std::pair<std::string, double>> energy;
     energy.push_back({"E0 (reference)", Eref_});
     energy.push_back({"MR-LDSRG(2) correlation energy", Ecorr});
     energy.push_back({"MR-LDSRG(2) total energy", Eref_ + Ecorr});
-    for (auto& str_dim: energy){
-        outfile->Printf("\n    %-30s = %23.15f", str_dim.first.c_str(), str_dim.second);
+    for (auto& str_dim : energy) {
+        outfile->Printf("\n    %-30s = %23.15f", str_dim.first.c_str(),
+                        str_dim.second);
     }
 
     // analyze converged amplitudes
-    analyze_amplitudes("Final",T1_,T2_);
+    analyze_amplitudes("Final", T1_, T2_);
 
     // fail to converge
-    if(failed){
+    if (failed) {
         throw PSIEXCEPTION("The MR-LDSRG(2) computation does not converge.");
     }
 
@@ -287,7 +306,7 @@ double MRDSRG::compute_energy_ldsrg2(){
     return Ecorr;
 }
 
-void MRDSRG::compute_hbar_qc(){
+void MRDSRG::compute_hbar_qc() {
     std::string dsrg_op = options_.get_str("DSRG_TRANS_TYPE");
 
     // initialize Hbar with bare H
@@ -299,15 +318,16 @@ void MRDSRG::compute_hbar_qc(){
     Hbar2_["IJAB"] = V_["IJAB"];
 
     // compute S1 = H + 0.5 * [H, A]
-    BlockedTensor S1 = BTF_->build(tensor_type_,"S1",spin_cases({"gg"}),true);
-    H1_T1_C1(F_,T1_,0.5,S1);
-    H1_T2_C1(F_,T2_,0.5,S1);
-    H2_T1_C1(V_,T1_,0.5,S1);
-    H2_T2_C1(V_,T2_,0.5,S1);
+    BlockedTensor S1 =
+        BTF_->build(tensor_type_, "S1", spin_cases({"gg"}), true);
+    H1_T1_C1(F_, T1_, 0.5, S1);
+    H1_T2_C1(F_, T2_, 0.5, S1);
+    H2_T1_C1(V_, T1_, 0.5, S1);
+    H2_T2_C1(V_, T2_, 0.5, S1);
 
     BlockedTensor temp;
-    if(dsrg_op == "UNITARY"){
-        temp = BTF_->build(tensor_type_,"temp",spin_cases({"gg"}),true);
+    if (dsrg_op == "UNITARY") {
+        temp = BTF_->build(tensor_type_, "temp", spin_cases({"gg"}), true);
         temp["pq"] = S1["pq"];
         temp["PQ"] = S1["PQ"];
         S1["pq"] += temp["qp"];
@@ -319,68 +339,68 @@ void MRDSRG::compute_hbar_qc(){
 
     // compute Hbar = [S1, A]
     //   Step 1: [S1, T]_{ab}^{ij}
-    H1_T1_C0(S1,T1_,2.0,Hbar0_);
-    H1_T2_C0(S1,T2_,2.0,Hbar0_);
-    H1_T1_C1(S1,T1_,1.0,Hbar1_);
-    H1_T2_C1(S1,T2_,1.0,Hbar1_);
-    H1_T2_C2(S1,T2_,1.0,Hbar2_);
+    H1_T1_C0(S1, T1_, 2.0, Hbar0_);
+    H1_T2_C0(S1, T2_, 2.0, Hbar0_);
+    H1_T1_C1(S1, T1_, 1.0, Hbar1_);
+    H1_T2_C1(S1, T2_, 1.0, Hbar1_);
+    H1_T2_C2(S1, T2_, 1.0, Hbar2_);
 
     //   Step 2: [S1, T]_{ij}^{ab}
-    if(dsrg_op == "UNITARY"){
-        temp = BTF_->build(tensor_type_,"temp",spin_cases({"ph"}),true);
-        H1_T1_C1(S1,T1_,1.0,temp);
-        H1_T2_C1(S1,T2_,1.0,temp);
+    if (dsrg_op == "UNITARY") {
+        temp = BTF_->build(tensor_type_, "temp", spin_cases({"ph"}), true);
+        H1_T1_C1(S1, T1_, 1.0, temp);
+        H1_T2_C1(S1, T2_, 1.0, temp);
         Hbar1_["ia"] += temp["ai"];
         Hbar1_["IA"] += temp["AI"];
 
-        for(const std::string& block: {"pphh", "pPhH", "PPHH"}){
+        for (const std::string& block : {"pphh", "pPhH", "PPHH"}) {
             // spin cases
-            std::string ijab {"ijab"};
-            std::string abij {"abij"};
-            if(isupper(block[1])){
+            std::string ijab{"ijab"};
+            std::string abij{"abij"};
+            if (isupper(block[1])) {
                 ijab = "iJaB";
                 abij = "aBiJ";
             }
-            if(isupper(block[0])){
+            if (isupper(block[0])) {
                 ijab = "IJAB";
                 abij = "ABIJ";
             }
 
-            temp = BTF_->build(tensor_type_,"temp",{block},true);
-            H1_T2_C2(S1,T2_,1.0,temp);
+            temp = BTF_->build(tensor_type_, "temp", {block}, true);
+            H1_T2_C2(S1, T2_, 1.0, temp);
             Hbar2_[ijab] += temp[abij];
         }
     }
 
     // compute Hbar = [S2, A]
     // compute S2 = H + 0.5 * [H, A] in batches of spin
-    for(const std::string& block: {"gggg", "gGgG", "GGGG"}){
+    for (const std::string& block : {"gggg", "gGgG", "GGGG"}) {
         // spin cases for S2
         int spin = 0;
-        std::string pqrs {"pqrs"};
-        if(isupper(block[1])){
+        std::string pqrs{"pqrs"};
+        if (isupper(block[1])) {
             spin = 1;
             pqrs = "pQrS";
         }
-        if(isupper(block[0])){
+        if (isupper(block[0])) {
             spin = 2;
             pqrs = "PQRS";
         }
 
         // 0.5 * [H, T]
-        BlockedTensor S2 = BTF_->build(tensor_type_,"S2",{block},true);
-        H1_T2_C2(F_,T2_,0.5,S2);
-        H2_T1_C2(V_,T1_,0.5,S2);
-        H2_T2_C2(V_,T2_,0.5,S2);
+        BlockedTensor S2 = BTF_->build(tensor_type_, "S2", {block}, true);
+        H1_T2_C2(F_, T2_, 0.5, S2);
+        H2_T1_C2(V_, T1_, 0.5, S2);
+        H2_T2_C2(V_, T2_, 0.5, S2);
 
         // 0.5 * [H, T]^+
-        if(dsrg_op == "UNITARY"){
+        if (dsrg_op == "UNITARY") {
             if (spin == 0) {
                 tensor_add_HC_aa(S2);
             } else if (spin == 1) {
                 tensor_add_HC_ab(S2);
             } else if (spin == 2) {
-                tensor_add_HC_aa(S2,false);
+                tensor_add_HC_aa(S2, false);
             }
         }
 
@@ -389,58 +409,65 @@ void MRDSRG::compute_hbar_qc(){
 
         // compute Hbar = [S2, A]
         //   Step 1: [S2, T]_{ab}^{ij}
-        H2_T1_C0(S2,T1_,2.0,Hbar0_);
-        H2_T2_C0(S2,T2_,2.0,Hbar0_);
-        H2_T1_C1(S2,T1_,1.0,Hbar1_);
-        H2_T2_C1(S2,T2_,1.0,Hbar1_);
-        H2_T1_C2(S2,T1_,1.0,Hbar2_);
-        H2_T2_C2(S2,T2_,1.0,Hbar2_);
+        H2_T1_C0(S2, T1_, 2.0, Hbar0_);
+        H2_T2_C0(S2, T2_, 2.0, Hbar0_);
+        H2_T1_C1(S2, T1_, 1.0, Hbar1_);
+        H2_T2_C1(S2, T2_, 1.0, Hbar1_);
+        H2_T1_C2(S2, T1_, 1.0, Hbar2_);
+        H2_T2_C2(S2, T2_, 1.0, Hbar2_);
 
         //   Step 2: [S2, T]_{ij}^{ab}
-        if(dsrg_op == "UNITARY"){
-            temp = BTF_->build(tensor_type_,"temp",spin_cases({"ph"}),true);
-            H2_T1_C1(S2,T1_,1.0,temp);
-            H2_T2_C1(S2,T2_,1.0,temp);
+        if (dsrg_op == "UNITARY") {
+            temp = BTF_->build(tensor_type_, "temp", spin_cases({"ph"}), true);
+            H2_T1_C1(S2, T1_, 1.0, temp);
+            H2_T2_C1(S2, T2_, 1.0, temp);
             Hbar1_["ia"] += temp["ai"];
             Hbar1_["IA"] += temp["AI"];
 
-            for(const std::string& block: {"pphh", "pPhH", "PPHH"}){
+            for (const std::string& block : {"pphh", "pPhH", "PPHH"}) {
                 // spin cases
-                std::string ijab {"ijab"};
-                std::string abij {"abij"};
-                if(isupper(block[1])){
+                std::string ijab{"ijab"};
+                std::string abij{"abij"};
+                if (isupper(block[1])) {
                     ijab = "iJaB";
                     abij = "aBiJ";
                 }
-                if(isupper(block[0])){
+                if (isupper(block[0])) {
                     ijab = "IJAB";
                     abij = "ABIJ";
                 }
 
-                temp = BTF_->build(tensor_type_,"temp",{block},true);
-                H2_T1_C2(S2,T1_,1.0,temp);
-                H2_T2_C2(S2,T2_,1.0,temp);
+                temp = BTF_->build(tensor_type_, "temp", {block}, true);
+                H2_T1_C2(S2, T1_, 1.0, temp);
+                H2_T2_C2(S2, T2_, 1.0, temp);
                 Hbar2_[ijab] += temp[abij];
             }
         }
     }
 }
 
-double MRDSRG::compute_energy_ldsrg2_qc(){
+double MRDSRG::compute_energy_ldsrg2_qc() {
     // print title
     outfile->Printf("\n\n  ==> Computing MR-LDSRG(2)-QC Energy <==\n");
-    outfile->Printf("\n    DSRG transformed Hamiltonian is truncated to quadratic nested commutator.");
+    outfile->Printf("\n    DSRG transformed Hamiltonian is truncated to "
+                    "quadratic nested commutator.");
     outfile->Printf("\n    Reference:");
     outfile->Printf("\n      J. Chem. Phys. (in preparation)\n");
     std::string indent(4, ' ');
     std::string dash(99, '-');
     std::string title;
-    title += indent + str(boost::format("%5c  %=27s  %=21s  %=21s  %=17s\n")
-                          % ' ' % "Energy (a.u.)" % "Non-Diagonal Norm" % "Amplitude RMS" % "Timings (s)");
-    title += indent + std::string (7, ' ') + std::string (27, '-') + "  " + std::string (21, '-')
-            + "  " + std::string (21, '-') + "  " + std::string (17, '-') + "\n";
-    title += indent + str(boost::format("%5s  %=16s %=10s  %=10s %=10s  %=10s %=10s  %=8s %=8s\n")
-                          % "Iter." % "Corr." % "Delta" % "Hbar1" % "Hbar2" % "T1" % "T2" %"Hbar" % "Amp.");
+    title += indent + str(boost::format("%5c  %=27s  %=21s  %=21s  %=17s\n") %
+                          ' ' % "Energy (a.u.)" % "Non-Diagonal Norm" %
+                          "Amplitude RMS" % "Timings (s)");
+    title += indent + std::string(7, ' ') + std::string(27, '-') + "  " +
+             std::string(21, '-') + "  " + std::string(21, '-') + "  " +
+             std::string(17, '-') + "\n";
+    title +=
+        indent +
+        str(boost::format(
+                "%5s  %=16s %=10s  %=10s %=10s  %=10s %=10s  %=8s %=8s\n") %
+            "Iter." % "Corr." % "Delta" % "Hbar1" % "Hbar2" % "T1" % "T2" %
+            "Hbar" % "Amp.");
     title += indent + dash;
     outfile->Printf("\n%s", title.c_str());
 
@@ -454,27 +481,29 @@ double MRDSRG::compute_energy_ldsrg2_qc(){
     double e_conv = options_.get_double("E_CONVERGENCE");
     double r_conv = options_.get_double("R_CONVERGENCE");
     bool converged = false, failed = false;
-    Hbar1_ = BTF_->build(tensor_type_,"Hbar1",spin_cases({"hp"}));
-    Hbar2_ = BTF_->build(tensor_type_,"Hbar2",spin_cases({"hhpp"}));
-    O1_ = BTF_->build(tensor_type_,"O1",spin_cases({"aa"}));
-    DT1_ = BTF_->build(tensor_type_,"DT1",spin_cases({"hp"}));
-    DT2_ = BTF_->build(tensor_type_,"DT2",spin_cases({"hhpp"}));
+    Hbar1_ = BTF_->build(tensor_type_, "Hbar1", spin_cases({"hp"}));
+    Hbar2_ = BTF_->build(tensor_type_, "Hbar2", spin_cases({"hhpp"}));
+    O1_ = BTF_->build(tensor_type_, "O1", spin_cases({"aa"}));
+    DT1_ = BTF_->build(tensor_type_, "DT1", spin_cases({"hp"}));
+    DT2_ = BTF_->build(tensor_type_, "DT2", spin_cases({"hhpp"}));
     std::vector<double> big_T, big_DT;
-    size_t numel = vector_size_diis(T1_,blocks1,T2_,blocks2);
+    size_t numel = vector_size_diis(T1_, blocks1, T2_, blocks2);
     BlockedTensor::set_expert_mode(true);
 
     // setup DIIS
     std::shared_ptr<DIISManager> diis_manager;
     int max_diis_vectors = options_.get_int("DIIS_MAX_VECS");
     int min_diis_vectors = options_.get_int("DIIS_MIN_VECS");
-    if (max_diis_vectors > 0){
-        diis_manager = std::shared_ptr<DIISManager>(new DIISManager(max_diis_vectors, "LDSRG2 DIIS T", DIISManager::LargestError, DIISManager::InCore));
-        diis_manager->set_error_vector_size(1,DIISEntry::Pointer,numel);
-        diis_manager->set_vector_size(1,DIISEntry::Pointer,numel);
+    if (max_diis_vectors > 0) {
+        diis_manager = std::shared_ptr<DIISManager>(
+            new DIISManager(max_diis_vectors, "LDSRG2 DIIS T",
+                            DIISManager::LargestError, DIISManager::InCore));
+        diis_manager->set_error_vector_size(1, DIISEntry::Pointer, numel);
+        diis_manager->set_vector_size(1, DIISEntry::Pointer, numel);
     }
 
     // start iteration
-    do{
+    do {
         // compute Hbar
         ForteTimer t_hbar;
         compute_hbar_qc();
@@ -492,40 +521,45 @@ double MRDSRG::compute_energy_ldsrg2_qc(){
         double time_amp = t_amp.elapsed();
 
         // copy amplitudes to the big vector
-        big_T = copy_amp_diis(T1_,blocks1,T2_,blocks2);
-        big_DT = copy_amp_diis(DT1_,blocks1,DT2_,blocks2);
+        big_T = copy_amp_diis(T1_, blocks1, T2_, blocks2);
+        big_DT = copy_amp_diis(DT1_, blocks1, DT2_, blocks2);
 
         // DIIS amplitudes
-        if(diis_manager){
-            if(cycle >= min_diis_vectors){
+        if (diis_manager) {
+            if (cycle >= min_diis_vectors) {
                 diis_manager->add_entry(2, &(big_DT[0]), &(big_T[0]));
             }
-            if (cycle > max_diis_vectors){
-                if (diis_manager->subspace_size() >= min_diis_vectors && cycle){
+            if (cycle > max_diis_vectors) {
+                if (diis_manager->subspace_size() >= min_diis_vectors &&
+                    cycle) {
                     outfile->Printf(" -> DIIS");
                     outfile->Flush();
                     diis_manager->extrapolate(1, &(big_T[0]));
-                    return_amp_diis(T1_,blocks1,T2_,blocks2,big_T);
+                    return_amp_diis(T1_, blocks1, T2_, blocks2, big_T);
                 }
             }
         }
 
         // printing
-        outfile->Printf("\n    %5d  %16.12f %10.3e  %10.3e %10.3e  %10.3e %10.3e  %8.3f %8.3f",
-                        cycle, Ecorr, Edelta, Hbar1od, Hbar2od, T1rms_, T2rms_, time_hbar, time_amp);
+        outfile->Printf("\n    %5d  %16.12f %10.3e  %10.3e %10.3e  %10.3e "
+                        "%10.3e  %8.3f %8.3f",
+                        cycle, Ecorr, Edelta, Hbar1od, Hbar2od, T1rms_, T2rms_,
+                        time_hbar, time_amp);
 
         // test convergence
         double rms = T1rms_ > T2rms_ ? T1rms_ : T2rms_;
-        if(fabs(Edelta) < e_conv && rms < r_conv){
+        if (fabs(Edelta) < e_conv && rms < r_conv) {
             converged = true;
 
             // rebuild Hbar because it is destroyed when updating amplitudes
-            if(options_.get_str("RELAX_REF") != "NONE"){
+            if (options_.get_str("RELAX_REF") != "NONE") {
                 compute_hbar_qc();
             }
         }
-        if(cycle > maxiter){
-            outfile->Printf("\n\n    The computation does not converge in %d iterations! Quitting.\n", maxiter);
+        if (cycle > maxiter) {
+            outfile->Printf("\n\n    The computation does not converge in %d "
+                            "iterations! Quitting.\n",
+                            maxiter);
             converged = true;
             failed = true;
         }
@@ -536,19 +570,20 @@ double MRDSRG::compute_energy_ldsrg2_qc(){
     // print summary
     outfile->Printf("\n    %s", dash.c_str());
     outfile->Printf("\n\n  ==> MR-LDSRG(2)-QC Energy Summary <==\n");
-    std::vector<std::pair<std::string,double>> energy;
+    std::vector<std::pair<std::string, double>> energy;
     energy.push_back({"E0 (reference)", Eref_});
     energy.push_back({"MR-LDSRG(2)-QC correlation energy", Ecorr});
     energy.push_back({"MR-LDSRG(2)-QC total energy", Eref_ + Ecorr});
-    for (auto& str_dim: energy){
-        outfile->Printf("\n    %-35s = %23.15f", str_dim.first.c_str(), str_dim.second);
+    for (auto& str_dim : energy) {
+        outfile->Printf("\n    %-35s = %23.15f", str_dim.first.c_str(),
+                        str_dim.second);
     }
 
     // analyze converged amplitudes
-    analyze_amplitudes("Final",T1_,T2_);
+    analyze_amplitudes("Final", T1_, T2_);
 
     // fail to converge
-    if(failed){
+    if (failed) {
         throw PSIEXCEPTION("The MR-LDSRG(2)-QC computation does not converge.");
     }
 
@@ -556,22 +591,21 @@ double MRDSRG::compute_energy_ldsrg2_qc(){
     return Ecorr;
 }
 
-void MRDSRG::tensor_add_HC_aa(BlockedTensor& H2, const bool& spin_alpha){
+void MRDSRG::tensor_add_HC_aa(BlockedTensor& H2, const bool& spin_alpha) {
     // unique blocks
-    std::vector<std::string> diag_blocks {"cccc", "caca", "cvcv", "aaaa", "avav", "vvvv"};
-    std::vector<std::string>   od_blocks {"ccca", "cccv", "ccaa", "ccav", "ccvv",
-                                                  "cacv", "caaa", "caav", "cavv",
-                                                          "cvaa", "cvav", "cvvv",
-                                                                  "aaav", "aavv",
-                                                                          "avvv"};
-    if(!spin_alpha){
-        for(std::string& block: diag_blocks){
-            for(int i = 0; i < 4; ++i){
+    std::vector<std::string> diag_blocks{"cccc", "caca", "cvcv",
+                                         "aaaa", "avav", "vvvv"};
+    std::vector<std::string> od_blocks{"ccca", "cccv", "ccaa", "ccav", "ccvv",
+                                       "cacv", "caaa", "caav", "cavv", "cvaa",
+                                       "cvav", "cvvv", "aaav", "aavv", "avvv"};
+    if (!spin_alpha) {
+        for (std::string& block : diag_blocks) {
+            for (int i = 0; i < 4; ++i) {
                 block[i] = std::toupper(block[i]);
             }
         }
-        for(std::string& block: od_blocks){
-            for(int i = 0; i < 4; ++i){
+        for (std::string& block : od_blocks) {
+            for (int i = 0; i < 4; ++i) {
                 block[i] = std::toupper(block[i]);
             }
         }
@@ -579,24 +613,24 @@ void MRDSRG::tensor_add_HC_aa(BlockedTensor& H2, const bool& spin_alpha){
 
     // figure out if permutations needed
     std::vector<std::vector<int>> diag_blocks_permutation;
-    std::vector<std::vector<int>>   od_blocks_permutation;
-    for(const std::string& block: diag_blocks){
+    std::vector<std::vector<int>> od_blocks_permutation;
+    for (const std::string& block : diag_blocks) {
         int m = block[0] == block[1] ? 0 : 1;
         int n = block[2] == block[3] ? 0 : 1;
         diag_blocks_permutation.push_back({m, n});
     }
-    for(const std::string& block: od_blocks){
+    for (const std::string& block : od_blocks) {
         int m = block[0] == block[1] ? 0 : 1;
         int n = block[2] == block[3] ? 0 : 1;
         od_blocks_permutation.push_back({m, n});
     }
 
     // add Hermitian conjugate to itself for diagonal blocks (square matrix)
-    for(const std::string& block: diag_blocks){
+    for (const std::string& block : diag_blocks) {
         const std::vector<size_t> dims = H2.block(block).dims();
         size_t half = dims[0] * dims[1];
-        for(size_t i = 0; i < half; ++i){
-            for(size_t j = i; j < half; ++j){
+        for (size_t i = 0; i < half; ++i) {
+            for (size_t j = i; j < half; ++j) {
                 size_t idx = i * half + j;
                 size_t idx_hc = j * half + i;
                 H2.block(block).data()[idx] += H2.block(block).data()[idx_hc];
@@ -605,9 +639,9 @@ void MRDSRG::tensor_add_HC_aa(BlockedTensor& H2, const bool& spin_alpha){
         }
 
         // consider permutations
-        if(block[0] != block[1]){
-            std::string p (1, block[0]);
-            std::string q (1, block[1]);
+        if (block[0] != block[1]) {
+            std::string p(1, block[0]);
+            std::string q(1, block[1]);
             std::string block1 = q + p + p + q;
             std::string block2 = p + q + q + p;
             std::string block3 = q + p + q + p;
@@ -618,12 +652,12 @@ void MRDSRG::tensor_add_HC_aa(BlockedTensor& H2, const bool& spin_alpha){
     }
 
     // add Hermitian conjugate to itself for off-diagonal blocks
-    for(const std::string& block: od_blocks){
+    for (const std::string& block : od_blocks) {
         // figure out Hermitian conjugate block label
-        std::string p (1, block[0]);
-        std::string q (1, block[1]);
-        std::string r (1, block[2]);
-        std::string s (1, block[3]);
+        std::string p(1, block[0]);
+        std::string q(1, block[1]);
+        std::string r(1, block[2]);
+        std::string s(1, block[3]);
         std::string block_hc = r + s + p + q;
 
         // add Hermitian conjugate
@@ -634,53 +668,54 @@ void MRDSRG::tensor_add_HC_aa(BlockedTensor& H2, const bool& spin_alpha){
         bool permute_1st_half = (block[0] == block[1]) ? false : true;
         bool permute_2nd_half = (block[2] == block[3]) ? false : true;
 
-        if(permute_1st_half){
+        if (permute_1st_half) {
             std::string block1 = q + p + r + s;
-            std::string block1_hc =  r + s + q + p;
+            std::string block1_hc = r + s + q + p;
             H2.block(block1)("qprs") = -1.0 * H2.block(block)("pqrs");
             H2.block(block1_hc)("rsqp") = -1.0 * H2.block(block_hc)("rspq");
         }
 
-        if(permute_2nd_half){
+        if (permute_2nd_half) {
             std::string block2 = p + q + s + r;
-            std::string block2_hc =  s + r + p + q;
+            std::string block2_hc = s + r + p + q;
             H2.block(block2)("pqsr") = -1.0 * H2.block(block)("pqrs");
             H2.block(block2_hc)("srpq") = -1.0 * H2.block(block_hc)("rspq");
         }
 
-        if(permute_1st_half && permute_2nd_half){
+        if (permute_1st_half && permute_2nd_half) {
             std::string block3 = q + p + s + r;
-            std::string block3_hc =  s + r + q + p;
+            std::string block3_hc = s + r + q + p;
             H2.block(block3)("qpsr") = H2.block(block)("pqrs");
             H2.block(block3_hc)("srqp") = H2.block(block_hc)("rspq");
         }
     }
 }
 
-void MRDSRG::tensor_add_HC_ab(BlockedTensor& H2){
+void MRDSRG::tensor_add_HC_ab(BlockedTensor& H2) {
     // labels for half of tensor
-    std::vector<std::string> labels_half {"cC", "cA", "cV", "aC", "aA", "aV", "vC", "vA", "vV"};
+    std::vector<std::string> labels_half{"cC", "cA", "cV", "aC", "aA",
+                                         "aV", "vC", "vA", "vV"};
     std::vector<std::string> diag_blocks;
     std::vector<std::string> od_blocks;
 
     // figure out diagonal blocks labels
-    for(const std::string& label: labels_half){
+    for (const std::string& label : labels_half) {
         diag_blocks.push_back(label + label);
     }
 
     // figure out off-diagonal blocks labels
-    for(int i = 0; i < 9; ++i){
-        for(int j = i + 1; j < 9; ++j){
+    for (int i = 0; i < 9; ++i) {
+        for (int j = i + 1; j < 9; ++j) {
             od_blocks.push_back(labels_half[i] + labels_half[j]);
         }
     }
 
     // add Hermitian conjugate to itself for diagonal blocks (square matrix)
-    for(const std::string& block: diag_blocks){
+    for (const std::string& block : diag_blocks) {
         const std::vector<size_t> dims = H2.block(block).dims();
         size_t half = dims[0] * dims[1];
-        for(size_t i = 0; i < half; ++i){
-            for(size_t j = i; j < half; ++j){
+        for (size_t i = 0; i < half; ++i) {
+            for (size_t j = i; j < half; ++j) {
                 size_t idx = i * half + j;
                 size_t idx_hc = j * half + i;
                 H2.block(block).data()[idx] += H2.block(block).data()[idx_hc];
@@ -690,12 +725,12 @@ void MRDSRG::tensor_add_HC_ab(BlockedTensor& H2){
     }
 
     // add Hermitian conjugate to itself for off-diagonal blocks
-    for(const std::string& block: od_blocks){
+    for (const std::string& block : od_blocks) {
         // figure out Hermitian conjugate block label
-        std::string p (1, block[0]);
-        std::string q (1, block[1]);
-        std::string r (1, block[2]);
-        std::string s (1, block[3]);
+        std::string p(1, block[0]);
+        std::string q(1, block[1]);
+        std::string r(1, block[2]);
+        std::string s(1, block[3]);
         std::string block_hc = r + s + p + q;
 
         // add Hermitian conjugate
@@ -704,10 +739,10 @@ void MRDSRG::tensor_add_HC_ab(BlockedTensor& H2){
     }
 }
 
-double MRDSRG::Hbar1od_norm(const std::vector<std::string>& blocks){
+double MRDSRG::Hbar1od_norm(const std::vector<std::string>& blocks) {
     double norm = 0.0;
 
-    for(auto& block: blocks){
+    for (auto& block : blocks) {
         double norm_block = Hbar1_.block(block).norm();
         norm += 2.0 * norm_block * norm_block;
     }
@@ -716,10 +751,10 @@ double MRDSRG::Hbar1od_norm(const std::vector<std::string>& blocks){
     return norm;
 }
 
-double MRDSRG::Hbar2od_norm(const std::vector<std::string>& blocks){
+double MRDSRG::Hbar2od_norm(const std::vector<std::string>& blocks) {
     double norm = 0.0;
 
-    for(auto& block: blocks){
+    for (auto& block : blocks) {
         double norm_block = Hbar2_.block(block).norm();
         norm += 2.0 * norm_block * norm_block;
     }
@@ -728,67 +763,80 @@ double MRDSRG::Hbar2od_norm(const std::vector<std::string>& blocks){
     return norm;
 }
 
-std::vector<double> MRDSRG::copy_amp_diis(BlockedTensor& T1, const std::vector<std::string>& label1,
-                                          BlockedTensor& T2, const std::vector<std::string>& label2){
+std::vector<double>
+MRDSRG::copy_amp_diis(BlockedTensor& T1, const std::vector<std::string>& label1,
+                      BlockedTensor& T2,
+                      const std::vector<std::string>& label2) {
     std::vector<double> out;
 
-    for(const auto& block: label1){
-        out.insert(out.end(), T1.block(block).data().begin(), T1.block(block).data().end());
+    for (const auto& block : label1) {
+        out.insert(out.end(), T1.block(block).data().begin(),
+                   T1.block(block).data().end());
     }
-    for(const auto& block: label2){
-        out.insert(out.end(), T2.block(block).data().begin(), T2.block(block).data().end());
+    for (const auto& block : label2) {
+        out.insert(out.end(), T2.block(block).data().begin(),
+                   T2.block(block).data().end());
     }
 
     return out;
 }
 
-size_t MRDSRG::vector_size_diis(BlockedTensor& T1, const std::vector<std::string>& label1,
-                                BlockedTensor& T2, const std::vector<std::string>& label2){
+size_t MRDSRG::vector_size_diis(BlockedTensor& T1,
+                                const std::vector<std::string>& label1,
+                                BlockedTensor& T2,
+                                const std::vector<std::string>& label2) {
     size_t total_elements = 0;
-    for(const auto& block: label1){
+    for (const auto& block : label1) {
         total_elements += T1.block(block).numel();
     }
-    for(const auto& block: label2){
+    for (const auto& block : label2) {
         total_elements += T2.block(block).numel();
     }
     return total_elements;
 }
 
-void MRDSRG::return_amp_diis(BlockedTensor& T1, const std::vector<std::string>& label1,
-                             BlockedTensor& T2, const std::vector<std::string>& label2,
-                             const std::vector<double> &data){
+void MRDSRG::return_amp_diis(BlockedTensor& T1,
+                             const std::vector<std::string>& label1,
+                             BlockedTensor& T2,
+                             const std::vector<std::string>& label2,
+                             const std::vector<double>& data) {
     // test data
     std::map<std::string, size_t> num_elements;
     size_t total_elements = 0;
 
-    for(const auto& block: label1){
+    for (const auto& block : label1) {
         size_t numel = T1.block(block).numel();
         num_elements[block] = total_elements;
         total_elements += numel;
     }
-    for(const auto& block: label2){
+    for (const auto& block : label2) {
         size_t numel = T2.block(block).numel();
         num_elements[block] = total_elements;
         total_elements += numel;
     }
 
-    if(data.size() != total_elements){
-        throw PSIEXCEPTION("Number of elements in T1 and T2 do not match the bid data vector");
+    if (data.size() != total_elements) {
+        throw PSIEXCEPTION(
+            "Number of elements in T1 and T2 do not match the bid data vector");
     }
 
     // transfer data
-    for(const auto& block: label1){
-        std::vector<double>::const_iterator start = data.begin() + num_elements[block];
-        std::vector<double>::const_iterator end = start + T1.block(block).numel();
+    for (const auto& block : label1) {
+        std::vector<double>::const_iterator start =
+            data.begin() + num_elements[block];
+        std::vector<double>::const_iterator end =
+            start + T1.block(block).numel();
         std::vector<double> T1_this_block(start, end);
         T1.block(block).data() = T1_this_block;
     }
-    for(const auto& block: label2){
-        std::vector<double>::const_iterator start = data.begin() + num_elements[block];
-        std::vector<double>::const_iterator end = start + T2.block(block).numel();
+    for (const auto& block : label2) {
+        std::vector<double>::const_iterator start =
+            data.begin() + num_elements[block];
+        std::vector<double>::const_iterator end =
+            start + T2.block(block).numel();
         std::vector<double> T2_this_block(start, end);
         T2.block(block).data() = T2_this_block;
     }
 }
-
-}}
+}
+}

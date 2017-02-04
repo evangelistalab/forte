@@ -67,54 +67,52 @@
 ** \ingroup QT
 */
 
-
-
 using namespace psi;
 using namespace std;
 
+int david2(double** A, int N, int M, double* eps, double** v, double cutoff,
+           int print);
 
-int david2(double **A, int N, int M, double *eps, double **v,
-           double cutoff, int print);
-
-void test_davidson()
-{
+void test_davidson() {
     // BEGIN DEBUGGING
     // Write the Hamiltonian to disk
     outfile->Printf("\n\n  READING FILE FROM DISK...");
     outfile->Flush();
     ifstream ifs("ham.dat", ios::binary | ios::in);
     int ndets;
-    ifs.read(reinterpret_cast<char*>(&ndets),sizeof(int));
-    Matrix H(ndets,ndets);
+    ifs.read(reinterpret_cast<char*>(&ndets), sizeof(int));
+    Matrix H(ndets, ndets);
     double** H_mat = H.pointer();
-    ifs.read(reinterpret_cast<char*>(&(H_mat[0][0])),ndets * ndets * sizeof(double));
+    ifs.read(reinterpret_cast<char*>(&(H_mat[0][0])),
+             ndets * ndets * sizeof(double));
     ifs.close();
     outfile->Printf(" DONE.");
     outfile->Flush();
 
     int nroots = 4;
 
-    SharedMatrix evecs(new Matrix("U",ndets,nroots));
-    SharedVector evals(new Vector("e",nroots));
+    SharedMatrix evecs(new Matrix("U", ndets, nroots));
+    SharedVector evals(new Vector("e", nroots));
 
-    david2(H.pointer(),H.nrow(),nroots,evals->pointer(),evecs->pointer(),1.0e-10,1);
+    david2(H.pointer(), H.nrow(), nroots, evals->pointer(), evecs->pointer(),
+           1.0e-10, 1);
 
-
-    int nroots_print = std::min(nroots,25);
-    for (int i = 0; i < nroots_print; ++ i){
-        outfile->Printf("\n  Adaptive CI Energy Root %3d = %.12f Eh = %8.4f eV",i + 1,evals->get(i),pc_hartree2ev * (evals->get(i) - evals->get(0)));
+    int nroots_print = std::min(nroots, 25);
+    for (int i = 0; i < nroots_print; ++i) {
+        outfile->Printf("\n  Adaptive CI Energy Root %3d = %.12f Eh = %8.4f eV",
+                        i + 1, evals->get(i),
+                        pc_hartree2ev * (evals->get(i) - evals->get(0)));
         outfile->Flush();
     }
     // END DEBUGGING
 }
 
-int david2(double **A, int N, int M, double *eps, double **v,
-           double cutoff, int print)
-{
+int david2(double** A, int N, int M, double* eps, double** v, double cutoff,
+           int print) {
     int i, j, k, L, I;
     double minimum;
     int min_pos, numf, iter, *conv, converged, maxdim, skip_check;
-    int *small2big;
+    int* small2big;
     int init_dim = 0;
     int smart_guess = 1;
     double *Adiag, **b, **bnew, **sigma, **G;
@@ -123,27 +121,34 @@ int david2(double **A, int N, int M, double *eps, double **v,
 
     maxdim = 8 * M;
 
-    b = block_matrix(maxdim, N);  /* current set of guess vectors, stored by row */
-    bnew = block_matrix(M, N); /* guess vectors formed from old vectors, stored by row*/
-    sigma = block_matrix(N, maxdim); /* sigma vectors, stored by column */
+    b = block_matrix(maxdim,
+                     N); /* current set of guess vectors, stored by row */
+    bnew = block_matrix(
+        M, N); /* guess vectors formed from old vectors, stored by row*/
+    sigma = block_matrix(N, maxdim);  /* sigma vectors, stored by column */
     G = block_matrix(maxdim, maxdim); /* Davidson mini-Hamitonian */
-    f = block_matrix(maxdim, N); /* residual eigenvectors, stored by row */
+    f = block_matrix(maxdim, N);      /* residual eigenvectors, stored by row */
     alpha = block_matrix(maxdim, maxdim); /* eigenvectors of G */
-    lambda = init_array(maxdim); /* eigenvalues of G */
-    lambda_old = init_array(maxdim); /* approximate roots from previous iteration */
+    lambda = init_array(maxdim);          /* eigenvalues of G */
+    lambda_old =
+        init_array(maxdim); /* approximate roots from previous iteration */
 
-    if(smart_guess) { /* Use eigenvectors of a sub-matrix as initial guesses */
+    if (smart_guess) { /* Use eigenvectors of a sub-matrix as initial guesses */
 
-        if(N > 7*M) init_dim = 7*M;
-        else init_dim = M;
+        if (N > 7 * M)
+            init_dim = 7 * M;
+        else
+            init_dim = M;
         Adiag = init_array(N);
-        small2big = init_int_array(7*M);
-        for(i=0; i < N; i++) { Adiag[i] = A[i][i]; }
-        for(i=0; i < init_dim; i++) {
+        small2big = init_int_array(7 * M);
+        for (i = 0; i < N; i++) {
+            Adiag[i] = A[i][i];
+        }
+        for (i = 0; i < init_dim; i++) {
             minimum = Adiag[0];
             min_pos = 0;
-            for(j=1; j < N; j++)
-                if(Adiag[j] < minimum) {
+            for (j = 1; j < N; j++)
+                if (Adiag[j] < minimum) {
                     minimum = Adiag[j];
                     min_pos = j;
                     small2big[i] = j;
@@ -152,29 +157,33 @@ int david2(double **A, int N, int M, double *eps, double **v,
             Adiag[min_pos] = BIGNUM;
             lambda_old[i] = minimum;
         }
-        for(i=0; i < init_dim; i++) {
-            for(j=0; j < init_dim; j++)
+        for (i = 0; i < init_dim; i++) {
+            for (j = 0; j < init_dim; j++)
                 G[i][j] = A[small2big[i]][small2big[j]];
         }
 
         sq_rsp(init_dim, init_dim, G, lambda, 1, alpha, 1e-12);
 
-        for(i=0; i < init_dim; i++) {
-            for(j=0; j < init_dim; j++)
+        for (i = 0; i < init_dim; i++) {
+            for (j = 0; j < init_dim; j++)
                 b[i][small2big[j]] = alpha[j][i];
         }
 
         free(Adiag);
         free(small2big);
-    }
-    else { /* Use unit vectors as initial guesses */
+    } else { /* Use unit vectors as initial guesses */
         Adiag = init_array(N);
-        for(i=0; i < N; i++) { Adiag[i] = A[i][i]; }
-        for(i=0; i < M; i++) {
+        for (i = 0; i < N; i++) {
+            Adiag[i] = A[i][i];
+        }
+        for (i = 0; i < M; i++) {
             minimum = Adiag[0];
             min_pos = 0;
-            for(j=1; j < N; j++)
-                if(Adiag[j] < minimum) { minimum = Adiag[j]; min_pos = j; }
+            for (j = 1; j < N; j++)
+                if (Adiag[j] < minimum) {
+                    minimum = Adiag[j];
+                    min_pos = j;
+                }
 
             b[i][min_pos] = 1.0;
             Adiag[min_pos] = BIGNUM;
@@ -183,88 +192,97 @@ int david2(double **A, int N, int M, double *eps, double **v,
         free(Adiag);
     }
 
-    //L = init_dim;
-    iter =0;
+    // L = init_dim;
+    iter = 0;
     converged = 0;
     conv = init_int_array(M); /* boolean array for convergence of each
                    root */
-    while(converged < M && iter < MAXIT) {
+    while (converged < M && iter < MAXIT) {
 
         skip_check = 0;
-        if(print) printf("\niter = %d\n", iter);
+        if (print)
+            printf("\niter = %d\n", iter);
 
         /* form mini-matrix */
-        C_DGEMM('n','t', N, L, N, 1.0, &(A[0][0]), N, &(b[0][0]), N,
-                0.0, &(sigma[0][0]), maxdim);
-        C_DGEMM('n','n', L, L, N, 1.0, &(b[0][0]), N,
-                &(sigma[0][0]), maxdim, 0.0, &(G[0][0]), maxdim);
+        C_DGEMM('n', 't', N, L, N, 1.0, &(A[0][0]), N, &(b[0][0]), N, 0.0,
+                &(sigma[0][0]), maxdim);
+        C_DGEMM('n', 'n', L, L, N, 1.0, &(b[0][0]), N, &(sigma[0][0]), maxdim,
+                0.0, &(G[0][0]), maxdim);
 
         /* diagonalize mini-matrix */
         sq_rsp(L, L, G, lambda, 1, alpha, 1e-12);
 
         /* form preconditioned residue vectors */
-        for(k=0; k < M; k++)
-            for(I=0; I < N; I++) {
+        for (k = 0; k < M; k++)
+            for (I = 0; I < N; I++) {
                 f[k][I] = 0.0;
-                for(i=0; i < L; i++) {
-                    f[k][I] += alpha[i][k] * (sigma[I][i] - lambda[k] * b[i][I]);
+                for (i = 0; i < L; i++) {
+                    f[k][I] +=
+                        alpha[i][k] * (sigma[I][i] - lambda[k] * b[i][I]);
                 }
                 denom = lambda[k] - A[I][I];
-                if(std::fabs(denom) > 1e-6) f[k][I] /= denom;
-                else f[k][I] = 0.0;
+                if (std::fabs(denom) > 1e-6)
+                    f[k][I] /= denom;
+                else
+                    f[k][I] = 0.0;
             }
 
         /* normalize each residual */
-        for(k=0; k < M; k++) {
+        for (k = 0; k < M; k++) {
             norm = 0.0;
-            for(I=0; I < N; I++) {
+            for (I = 0; I < N; I++) {
                 norm += f[k][I] * f[k][I];
             }
             norm = std::sqrt(norm);
-            for(I=0; I < N; I++) {
-                if(norm > 1e-6) f[k][I] /= norm;
-                else f[k][I] = 0.0;
+            for (I = 0; I < N; I++) {
+                if (norm > 1e-6)
+                    f[k][I] /= norm;
+                else
+                    f[k][I] = 0.0;
             }
         }
 
         /* schmidt orthogonalize the f[k] against the set of b[i] and add
        new vectors */
-        for(k=0,numf=0; k < M; k++)
-            if(schmidt_add(b, L, N, f[k])) { L++; numf++; }
+        for (k = 0, numf = 0; k < M; k++)
+            if (schmidt_add(b, L, N, f[k])) {
+                L++;
+                numf++;
+            }
 
         /* If L is close to maxdim, collapse to one guess per root */
-        if(maxdim - L < M) {
-            if(print) {
+        if (maxdim - L < M) {
+            if (print) {
                 printf("Subspace too large: maxdim = %d, L = %d\n", maxdim, L);
                 printf("Collapsing eigenvectors.\n");
             }
-            for(i=0; i < M; i++) {
-                memset((void *) bnew[i], 0, N*sizeof(double));
-                for(j=0; j < L; j++) {
-                    for(k=0; k < N; k++) {
+            for (i = 0; i < M; i++) {
+                memset((void*)bnew[i], 0, N * sizeof(double));
+                for (j = 0; j < L; j++) {
+                    for (k = 0; k < N; k++) {
                         bnew[i][k] += alpha[j][i] * b[j][k];
                     }
                 }
             }
             /* orthonormalize the new vectors */
             /* copy new vectors into place */
-            for(i=0; i < M; i++){
+            for (i = 0; i < M; i++) {
                 norm = 0.0;
                 // Project out the orthonormal vectors
-                for (j = 0; j < i; ++j){
+                for (j = 0; j < i; ++j) {
                     double proj = 0.0;
-                    for(k=0; k < N; k++){
+                    for (k = 0; k < N; k++) {
                         proj += b[j][k] * bnew[i][k];
                     }
-                    for(k=0; k < N; k++){
+                    for (k = 0; k < N; k++) {
                         bnew[i][k] -= proj * b[j][k];
                     }
                 }
-                for(k=0; k < N; k++){
+                for (k = 0; k < N; k++) {
                     norm += bnew[i][k] * bnew[i][k];
                 }
                 norm = std::sqrt(norm);
-                for(k=0; k < N; k++){
+                for (k = 0; k < N; k++) {
                     b[i][k] = bnew[i][k] / norm;
                 }
             }
@@ -275,23 +293,23 @@ int david2(double **A, int N, int M, double *eps, double **v,
         }
 
         /* check convergence on all roots */
-        if(!skip_check) {
+        if (!skip_check) {
             converged = 0;
             zero_int_array(conv, M);
-            if(print) {
+            if (print) {
                 printf("Root      Eigenvalue       Delta  Converged?\n");
                 printf("---- -------------------- ------- ----------\n");
             }
-            for(k=0; k < M; k++) {
+            for (k = 0; k < M; k++) {
                 diff = std::fabs(lambda[k] - lambda_old[k]);
-                if(diff < cutoff) {
+                if (diff < cutoff) {
                     conv[k] = 1;
                     converged++;
                 }
                 lambda_old[k] = lambda[k];
 
                 norm = 0.0;
-                if(print) {
+                if (print) {
                     printf("%3d  %20.14f %4.3e    %1s\n", k, lambda[k], diff,
                            conv[k] == 1 ? "Y" : "N");
                 }
@@ -302,25 +320,26 @@ int david2(double **A, int N, int M, double *eps, double **v,
     }
 
     /* generate final eigenvalues and eigenvectors */
-    //if(converged == M) {
-    for(i=0; i < M; i++) {
+    // if(converged == M) {
+    for (i = 0; i < M; i++) {
         eps[i] = lambda[i];
-        for(j=0; j < L; j++) {
-            for(I=0; I < N; I++) {
+        for (j = 0; j < L; j++) {
+            for (I = 0; I < N; I++) {
                 v[I][i] += alpha[j][i] * b[j][I];
             }
         }
         // Normalize v
         norm = 0.0;
-        for(I=0; I < N; I++) {
+        for (I = 0; I < N; I++) {
             norm += v[I][i] * v[I][i];
         }
         norm = std::sqrt(norm);
-        for(I=0; I < N; I++) {
+        for (I = 0; I < N; I++) {
             v[I][i] /= norm;
         }
     }
-    if(print) printf("Davidson algorithm converged in %d iterations.\n", iter);
+    if (print)
+        printf("Davidson algorithm converged in %d iterations.\n", iter);
     //    }
 
     free(conv);

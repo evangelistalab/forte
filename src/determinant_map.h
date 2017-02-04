@@ -31,7 +31,8 @@
 
 #include "stl_bitset_determinant.h"
 
-namespace psi{ namespace forte{
+namespace psi {
+namespace forte {
 
 /**
  * @brief A class to store sparse configuration interaction wave functions
@@ -40,21 +41,19 @@ namespace psi{ namespace forte{
 
 using detmap = det_hash<size_t>;
 
-class DeterminantMap
-{
-public:
+class DeterminantMap {
+  public:
+    /// Default constructor
+    DeterminantMap(std::vector<STLBitsetDeterminant>& dets);
 
     /// Default constructor
-    DeterminantMap( std::vector<STLBitsetDeterminant>& dets );
-
-    /// Default constructor
-    DeterminantMap( STLBitsetDeterminant& det );
+    DeterminantMap(STLBitsetDeterminant& det);
 
     /// Empty constructor
     DeterminantMap();
 
     /// Copy constructor
-    DeterminantMap( detmap& wfn_ );
+    DeterminantMap(detmap& wfn_);
 
     /// @return The hash
     const detmap& wfn_hash() const;
@@ -63,7 +62,7 @@ public:
     detmap& wfn_hash();
 
     /// Add a determinant
-    void add( const STLBitsetDeterminant& det );
+    void add(const STLBitsetDeterminant& det);
 
     /// Return the number of determinants
     size_t size() const;
@@ -72,10 +71,10 @@ public:
     void clear();
 
     // Return a specific determinant by value
-    STLBitsetDeterminant get_det( const size_t value ) const;
+    STLBitsetDeterminant get_det(const size_t value) const;
 
     // Return the index of a determinant
-    size_t get_idx( const STLBitsetDeterminant& det ) const;
+    size_t get_idx(const STLBitsetDeterminant& det) const;
 
     // Return a vector of the determinants
     std::vector<STLBitsetDeterminant> determinants() const;
@@ -84,22 +83,24 @@ public:
     void make_spin_complete();
 
     // Check if a determinant is in the wavefunction
-    bool has_det( const STLBitsetDeterminant& det ) const;
+    bool has_det(const STLBitsetDeterminant& det) const;
 
     // Compute overlap between this and input wfn
-    double overlap( std::vector<double>& det1_evecs, DeterminantMap& det2, SharedMatrix det2_evecs, int root );
+    double overlap(std::vector<double>& det1_evecs, DeterminantMap& det2,
+                   SharedMatrix det2_evecs, int root);
 
     // Compute overlap between this and input wfn
-    double overlap( SharedMatrix det1_evecs, int root1,  DeterminantMap& det2, SharedMatrix det2_evecs, int root2);
+    double overlap(SharedMatrix det1_evecs, int root1, DeterminantMap& det2,
+                   SharedMatrix det2_evecs, int root2);
 
     // Save most important subspace as this
-    void subspace( DeterminantMap& dets, SharedMatrix evecs, std::vector<double>& new_evecs, int dim, int root);
+    void subspace(DeterminantMap& dets, SharedMatrix evecs,
+                  std::vector<double>& new_evecs, int dim, int root);
 
     // Merge a wavefunction into this
-    void merge( DeterminantMap& dets);
+    void merge(DeterminantMap& dets);
 
-protected:
-
+  protected:
     /// The dimension of the hash
     size_t wfn_size_;
 
@@ -107,12 +108,12 @@ protected:
     int nroot_;
 
     /// The multiplicity
-    int multiplicity_;    
+    int multiplicity_;
 
     /// A hash of (determinants,coefficients)
     detmap wfn_;
 };
-
-}}
+}
+}
 
 #endif // _determinant_map_h_
