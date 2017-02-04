@@ -93,6 +93,8 @@ void DSRG_MRPT2::startup()
 
     ntamp_ = options_.get_int("NTAMP");
     intruder_tamp_ = options_.get_double("INTRUDER_TAMP");
+    internal_amp_ = options_.get_str("INTERNAL_AMP") != "NONE";
+    internal_amp_select_ = options_.get_str("INTERNAL_AMP_SELECT");
 
     multi_state_ = options_["AVG_STATE"].has_changed();
 
@@ -387,6 +389,11 @@ void DSRG_MRPT2::print_summary()
         calculation_info_string.push_back({"state_type", "STATE-SPECIFIC"});
     }
 
+    if(internal_amp_){
+        calculation_info_string.push_back({"internal_amp", options_.get_str("INTERNAL_AMP")});
+        calculation_info_string.push_back({"internal_amp_select", internal_amp_select_});
+    }
+
     // Print some information
     outfile->Printf("\n\n  ==> Calculation Information <==\n");
     for (auto& str_dim : calculation_info){
@@ -519,7 +526,11 @@ double DSRG_MRPT2::compute_energy()
     EVT2 += Etemp;
     energy.push_back({"<[V, T2]> C_4 (C_2)^2 PH", Etemp});
 
-    Etemp  = E_VT2_6();
+    if(options_.get_str("THREEPDC") != "ZERO"){
+        Etemp  = E_VT2_6();
+    } else {
+        Etemp = 0.0;
+    }
     EVT2 += Etemp;
     energy.push_back({"<[V, T2]> C_6 C_2", Etemp});
 
@@ -640,7 +651,6 @@ void DSRG_MRPT2::compute_t2()
 
     // internal amplitudes (AA->AA)
     std::string internal_amp = options_.get_str("INTERNAL_AMP");
-    std::string internal_amp_select = options_.get_str("INTERNAL_AMP_SELECT");
     if(internal_amp.find("DOUBLES") != string::npos){
         size_t nactv1 = mo_space_info_->size("ACTIVE");
         size_t nactv2 = nactv1 * nactv1;
@@ -648,7 +658,7 @@ void DSRG_MRPT2::compute_t2()
         size_t nactv_occ = actv_occ_mos_.size();
         size_t nactv_uocc = actv_uocc_mos_.size();
 
-        if(internal_amp_select == "ALL"){
+        if(internal_amp_select_ == "ALL"){
             for(size_t i = 0; i < nactv1; ++i){
                 for(size_t j = 0; j < nactv1; ++j){
                     size_t c = i * nactv1 + j;
@@ -669,7 +679,7 @@ void DSRG_MRPT2::compute_t2()
 
                 }
             }
-        } else if (internal_amp_select == "OOVV"){
+        } else if (internal_amp_select_ == "OOVV"){
             for(const std::string& block: {"aaaa", "aAaA", "AAAA"}){
                 // copy original data
                 std::vector<double> data (T2_.block(block).data());
@@ -850,7 +860,6 @@ void DSRG_MRPT2::compute_t1()
 
     // internal amplitudes (A->A)
     std::string internal_amp = options_.get_str("INTERNAL_AMP");
-    std::string internal_amp_select = options_.get_str("INTERNAL_AMP_SELECT");
     if(internal_amp.find("SINGLES") != std::string::npos){
         size_t nactv = mo_space_info_->size("ACTIVE");
 
@@ -866,7 +875,7 @@ void DSRG_MRPT2::compute_t1()
             }
         }
 
-        if(internal_amp_select != "ALL"){
+        if(internal_amp_select_ != "ALL"){
             size_t nactv_occ = actv_occ_mos_.size();
             size_t nactv_uocc = actv_uocc_mos_.size();
 
@@ -1042,7 +1051,7 @@ double DSRG_MRPT2::E_FT1()
     E += F_["EX"] * T1_["YE"] * Gamma1_["XY"];
     E += F_["XM"] * T1_["MY"] * Eta1_["YX"];
 
-    if(options_.get_str("INTERNAL_AMP") != "NONE"){
+    if(internal_amp_){
         E += F_["xv"] * T1_["ux"] * Gamma1_["vu"];
         E -= F_["yu"] * T1_["ux"] * Gamma1_["xy"];
 
@@ -1079,7 +1088,7 @@ double DSRG_MRPT2::E_VT1()
     E += 0.5 * temp["UVXY"] * Lambda2_["XYUV"];
     E += temp["uVxY"] * Lambda2_["xYuV"];
 
-    if(options_.get_str("INTERNAL_AMP") != "NONE"){
+    if(internal_amp_){
         temp.zero();
 
         temp["uvxy"] += V_["wvxy"] * T1_["uw"];
@@ -1127,7 +1136,7 @@ double DSRG_MRPT2::E_FT2()
     E += 0.5 * temp["UVXY"] * Lambda2_["XYUV"];
     E += temp["uVxY"] * Lambda2_["xYuV"];
 
-    if(options_.get_str("INTERNAL_AMP") != "NONE"){
+    if(internal_amp_){
         temp.zero();
 
         temp["uvxy"] += F_["wx"] * T2_["uvwy"];
@@ -1219,7 +1228,7 @@ double DSRG_MRPT2::E_VT2_2()
     temp["YVXU"] += Eta1_["wz"] * V_["zVmX"] * T2_["mYwU"];
     E += temp["YVXU"] * Gamma1_["XY"] * Eta1_["UV"];
 
-    if(options_.get_str("INTERNAL_AMP") != "NONE"){
+    if(internal_amp_){
         temp.zero();
         temp["uvxy"] += 0.25 * V_["uvwz"] * Gamma1_["wx"] * Gamma1_["zy"];
         temp["uVxY"] += V_["uVwZ"] * Gamma1_["wx"] * Gamma1_["ZY"];
@@ -1270,7 +1279,7 @@ double DSRG_MRPT2::E_VT2_4HH()
     E += Lambda2_["xYuV"] * temp["uVxY"];
     E += Lambda2_["XYUV"] * temp["UVXY"];
 
-    if(options_.get_str("INTERNAL_AMP") != "NONE"){
+    if(internal_amp_){
         temp.zero();
         temp["uvxy"] -= 0.125 * V_["uvwz"] * T2_["wzxy"];
         temp["uVxY"] -= V_["uVwZ"] * T2_["wZxY"];
@@ -1312,7 +1321,7 @@ double DSRG_MRPT2::E_VT2_4PP()
     E += Lambda2_["xYuV"] * temp["uVxY"];
     E += Lambda2_["XYUV"] * temp["UVXY"];
 
-    if(options_.get_str("INTERNAL_AMP") != "NONE"){
+    if(internal_amp_){
         temp.zero();
         temp["uvxy"] += 0.125 * V_["wzxy"] * T2_["uvwz"];
         temp["uVxY"] += V_["wZxY"] * T2_["uVwZ"];
@@ -1380,7 +1389,7 @@ double DSRG_MRPT2::E_VT2_4PH()
     temp["uVxY"] += Eta1_["ZW"] * V_["WVMY"] * T2_["uMxZ"];
     E += temp["uVxY"] * Lambda2_["xYuV"];
 
-    if(options_.get_str("INTERNAL_AMP") != "NONE"){
+    if(internal_amp_){
         temp.zero();
         temp["uvxy"] -= V_["v1xw"] * T2_["zu1y"] * Gamma1_["wz"];
         temp["uvxy"] -= V_["v!xW"] * T2_["uZy!"] * Gamma1_["WZ"];
@@ -1422,63 +1431,70 @@ double DSRG_MRPT2::E_VT2_6()
     outfile->Printf("\n    %-40s ...", str.c_str());
 
     double E = 0.0;
-    if(options_.get_str("THREEPDC") != "ZERO"){
-        BlockedTensor temp;
-        temp = BTF_->build(tensor_type_,"temp", spin_cases({"aaaaaa"}));
 
-        temp["uvwxyz"] += V_["uvmz"] * T2_["mwxy"];      //  aaaaaa from hole
-        temp["uvwxyz"] += V_["wexy"] * T2_["uvez"];      //  aaaaaa from particle
-        temp["UVWXYZ"] += V_["UVMZ"] * T2_["MWXY"];      //  AAAAAA from hole
-        temp["UVWXYZ"] += V_["WEXY"] * T2_["UVEZ"];      //  AAAAAA from particle
-        E += 0.25 * temp["uvwxyz"] * Lambda3_["xyzuvw"];
-        E += 0.25 * temp["UVWXYZ"] * Lambda3_["XYZUVW"];
+    // aaa
+    BlockedTensor temp = ambit::BlockedTensor::build(tensor_type_,"temp",{"aaaaaa"});
+    temp["uvwxyz"] += V_["uvmz"] * T2_["mwxy"];
+    temp["uvwxyz"] += V_["wexy"] * T2_["uvez"];
 
-        temp["uvWxyZ"] -= V_["uvmy"] * T2_["mWxZ"];      //  aaAaaA from hole
-        temp["uvWxyZ"] -= V_["uWmZ"] * T2_["mvxy"];      //  aaAaaA from hole
-        temp["uvWxyZ"] += 2.0 * V_["uWyM"] * T2_["vMxZ"];//  aaAaaA from hole
-
-        temp["uvWxyZ"] += V_["eWxZ"] * T2_["uvey"];      //  aaAaaA from particle
-        temp["uvWxyZ"] -= V_["vexy"] * T2_["uWeZ"];      //  aaAaaA from particle
-        temp["uvWxyZ"] -= 2.0 * V_["vExZ"] * T2_["uWyE"];//  aaAaaA from particle
-        E += 0.50 * temp["uvWxyZ"] * Lambda3_["xyZuvW"];
-
-        temp["uVWxYZ"] -= V_["VWMZ"] * T2_["uMxY"];      //  aAAaAA from hole
-        temp["uVWxYZ"] -= V_["uVxM"] * T2_["MWYZ"];      //  aAAaAA from hole
-        temp["uVWxYZ"] += 2.0 * V_["uVmZ"] * T2_["mWxY"];//  aAAaAA from hole
-
-        temp["uVWxYZ"] += V_["uExY"] * T2_["VWEZ"];      //  aAAaAA from particle
-        temp["uVWxYZ"] -= V_["WEYZ"] * T2_["uVxE"];      //  aAAaAA from particle
-        temp["uVWxYZ"] -= 2.0 * V_["eWxY"] * T2_["uVeZ"];//  aAAaAA from particle
-        E += 0.5 * temp["uVWxYZ"] * Lambda3_["xYZuVW"];
-
-        if(options_.get_str("INTERNAL_AMP") != "NONE"){
-            temp.zero();
-            temp["uvwxyz"] += V_["uv1z"] * T2_["1wxy"];
-            temp["uvwxyz"] += V_["w1xy"] * T2_["uv1z"];
-            temp["UVWXYZ"] += V_["UV!Z"] * T2_["!WXY"];
-            temp["UVWXYZ"] += V_["W!XY"] * T2_["UV!Z"];
-            E += 0.25 * temp["uvwxyz"] * Lambda3_["xyzuvw"];
-            E += 0.25 * temp["UVWXYZ"] * Lambda3_["XYZUVW"];
-
-            temp["uvWxyZ"] -= V_["uv1y"] * T2_["1WxZ"];
-            temp["uvWxyZ"] -= V_["uW1Z"] * T2_["1vxy"];
-            temp["uvWxyZ"] += 2.0 * V_["uWy!"] * T2_["v!xZ"];
-
-            temp["uvWxyZ"] += V_["1WxZ"] * T2_["uv1y"];
-            temp["uvWxyZ"] -= V_["v1xy"] * T2_["uW1Z"];
-            temp["uvWxyZ"] -= 2.0 * V_["v!xZ"] * T2_["uWy!"];
-            E += 0.50 * temp["uvWxyZ"] * Lambda3_["xyZuvW"];
-
-            temp["uVWxYZ"] -= V_["VW!Z"] * T2_["u!xY"];
-            temp["uVWxYZ"] -= V_["uVx!"] * T2_["!WYZ"];
-            temp["uVWxYZ"] += 2.0 * V_["uV1Z"] * T2_["1WxY"];
-
-            temp["uVWxYZ"] += V_["u!xY"] * T2_["VW!Z"];
-            temp["uVWxYZ"] -= V_["W!YZ"] * T2_["uVx!"];
-            temp["uVWxYZ"] -= 2.0 * V_["1WxY"] * T2_["uV1Z"];
-            E += 0.5 * temp["uVWxYZ"] * Lambda3_["xYZuVW"];
-        }
+    if(internal_amp_){
+        temp["uvwxyz"] += V_["uv1z"] * T2_["1wxy"];
+        temp["uvwxyz"] += V_["w1xy"] * T2_["uv1z"];
     }
+    E += 0.25 * temp["uvwxyz"] * Lambda3_["xyzuvw"];
+
+    // bbb
+    temp = ambit::BlockedTensor::build(tensor_type_,"temp",{"AAAAAA"});
+    temp["UVWXYZ"] += V_["UVMZ"] * T2_["MWXY"];
+    temp["UVWXYZ"] += V_["WEXY"] * T2_["UVEZ"];
+
+    if(internal_amp_){
+        temp["UVWXYZ"] += V_["UV!Z"] * T2_["!WXY"];
+        temp["UVWXYZ"] += V_["W!XY"] * T2_["UV!Z"];
+    }
+    E += 0.25 * temp["UVWXYZ"] * Lambda3_["XYZUVW"];
+
+    // aab
+    temp = ambit::BlockedTensor::build(tensor_type_,"temp",{"aaAaaA"});
+    temp["uvWxyZ"] -= V_["uvmy"] * T2_["mWxZ"];
+    temp["uvWxyZ"] -= V_["uWmZ"] * T2_["mvxy"];
+    temp["uvWxyZ"] += 2.0 * V_["uWyM"] * T2_["vMxZ"];
+
+    temp["uvWxyZ"] += V_["eWxZ"] * T2_["uvey"];
+    temp["uvWxyZ"] -= V_["vexy"] * T2_["uWeZ"];
+    temp["uvWxyZ"] -= 2.0 * V_["vExZ"] * T2_["uWyE"];
+
+    if(internal_amp_){
+        temp["uvWxyZ"] -= V_["uv1y"] * T2_["1WxZ"];
+        temp["uvWxyZ"] -= V_["uW1Z"] * T2_["1vxy"];
+        temp["uvWxyZ"] += 2.0 * V_["uWy!"] * T2_["v!xZ"];
+
+        temp["uvWxyZ"] += V_["1WxZ"] * T2_["uv1y"];
+        temp["uvWxyZ"] -= V_["v1xy"] * T2_["uW1Z"];
+        temp["uvWxyZ"] -= 2.0 * V_["v!xZ"] * T2_["uWy!"];
+    }
+    E += 0.50 * temp["uvWxyZ"] * Lambda3_["xyZuvW"];
+
+    // abb
+    temp = ambit::BlockedTensor::build(tensor_type_,"temp",{"aAAaAA"});
+    temp["uVWxYZ"] -= V_["VWMZ"] * T2_["uMxY"];
+    temp["uVWxYZ"] -= V_["uVxM"] * T2_["MWYZ"];
+    temp["uVWxYZ"] += 2.0 * V_["uVmZ"] * T2_["mWxY"];
+
+    temp["uVWxYZ"] += V_["uExY"] * T2_["VWEZ"];
+    temp["uVWxYZ"] -= V_["WEYZ"] * T2_["uVxE"];
+    temp["uVWxYZ"] -= 2.0 * V_["eWxY"] * T2_["uVeZ"];
+
+    if(internal_amp_){
+        temp["uVWxYZ"] -= V_["VW!Z"] * T2_["u!xY"];
+        temp["uVWxYZ"] -= V_["uVx!"] * T2_["!WYZ"];
+        temp["uVWxYZ"] += 2.0 * V_["uV1Z"] * T2_["1WxY"];
+
+        temp["uVWxYZ"] += V_["u!xY"] * T2_["VW!Z"];
+        temp["uVWxYZ"] -= V_["W!YZ"] * T2_["uVx!"];
+        temp["uVWxYZ"] -= 2.0 * V_["1WxY"] * T2_["uV1Z"];
+    }
+    E += 0.5 * temp["uVWxYZ"] * Lambda3_["xYZuVW"];
 
     outfile->Printf("  Done. Timing %15.6f s", timer.get());
     dsrg_time_.add("220",timer.get());
@@ -2023,7 +2039,8 @@ void DSRG_MRPT2::H2_T2_C3(BlockedTensor& H2, BlockedTensor& T2, const double& al
     temp["xyzuvw"] += alpha * H2["xymw"] * T2["mzuv"];
     temp["xyzuvw"] -= alpha * H2["ezuv"] * T2["xyew"];
     std::vector<std::string> label {"xyzuvw", "xyzwvu", "zyxwvu", "xyzuwv",
-                                    "zyxuwv", "xzyuvw", "xzywvu", "zyxuwv", "xzyuwv"}; // ordering matters
+                                    "zyxuwv", "xzyuvw", "xzywvu", "zyxuvw",
+                                    "xzyuwv"}; // ordering matters
     for(int i = 0, sign = 1; i < 9; ++i){
         C3[label[i]] += sign * temp["xyzuvw"];
         sign *= -1;
@@ -2041,8 +2058,46 @@ void DSRG_MRPT2::H2_T2_C3(BlockedTensor& H2, BlockedTensor& T2, const double& al
     }
 
     // aab
+    temp = ambit::BlockedTensor::build(tensor_type_,"temp",{"aaAaaA"});
+    temp["xyZwuV"] += alpha * H2["xymw"] * T2["mZuV"];
+    temp["xyZwuV"] -= alpha * H2["eZuV"] * T2["xyew"];
+    C3["xyZwuV"] += temp["xyZwuV"];
+    C3["xyZuwV"] -= temp["xyZwuV"];
 
+    temp.zero();
+    temp["zxYuvW"] += alpha * H2["xYmW"] * T2["mzuv"];
+    temp["zxYuvW"] -= alpha * H2["ezuv"] * T2["xYeW"];
+    C3["zxYuvW"] += temp["zxYuvW"];
+    C3["xzYuvW"] -= temp["zxYuvW"];
 
+    temp.zero();
+    temp["zxYwuV"] += alpha * H2["xYwM"] * T2["zMuV"];
+    temp["zxYwuV"] -= alpha * H2["zEuV"] * T2["xYwE"];
+    C3["zxYwuV"] += temp["zxYwuV"];
+    C3["xzYwuV"] -= temp["zxYwuV"];
+    C3["zxYuwV"] -= temp["zxYwuV"];
+    C3["xzYuwV"] += temp["zxYwuV"];
+
+    // abb
+    temp = ambit::BlockedTensor::build(tensor_type_,"temp",{"aAAaAA"});
+    temp["zYXuVW"] += alpha * H2["XYMW"] * T2["zMuV"];
+    temp["zYXuVW"] -= alpha * H2["zEuV"] * T2["XYEW"];
+    C3["zYXuVW"] += temp["zYXuVW"];
+    C3["zYXuWV"] -= temp["zYXuVW"];
+
+    temp.zero();
+    temp["xYZwVU"] += alpha * H2["xYwM"] * T2["MZUV"];
+    temp["xYZwVU"] -= alpha * H2["EZUV"] * T2["xYwE"];
+    C3["xYZwVU"] += temp["xYZwVU"];
+    C3["xZYwVU"] -= temp["xYZwVU"];
+
+    temp.zero();
+    temp["xYZuVW"] += alpha * H2["xYmW"] * T2["mZuV"];
+    temp["xYZuVW"] -= alpha * H2["eZuV"] * T2["xYeW"];
+    C3["xYZuVW"] += temp["xYZuVW"];
+    C3["xZYuVW"] -= temp["xYZuVW"];
+    C3["xYZuWV"] -= temp["xYZuVW"];
+    C3["xZYuWV"] += temp["xYZuVW"];
 
     if(print_ > 2){
         outfile->Printf("\n    Time for [H2, T2] -> C3 : %12.3f",timer.get());
