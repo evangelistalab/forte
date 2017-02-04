@@ -252,6 +252,11 @@ protected:
     /// Max (with sign) of T1
     double T1max_;
 
+    /// Include internal amplitude?
+    bool internal_amp_;
+    /// Include which part of internal amplitudes?
+    std::string internal_amp_select_;
+
     /// Number of amplitudes will be printed in amplitude summary
     int ntamp_;
     /// Print amplitudes summary
