@@ -37,13 +37,18 @@
 
 using namespace psi;
 
-namespace psi{ namespace forte{
+namespace psi {
+namespace forte {
 
 /**
-* @brief OrbitalOptimizer does an orbital optimization given an RDM-1, RDM-2, and the integrals
-* Forms an orbital gradient:  g_{pq} =[ h_{pq} gamma_{pq} + Gamma_{pq}^{rs} <pq || rs> - A(p->q)]
-* Right now, Only forms a diagonal hessian of orbitals:  Look at  Hohenstein J.Chem.Phys, 142, 224103.
-* Diagonal Hessian only requires (p u | x y) integrals (many are built in JK library)
+* @brief OrbitalOptimizer does an orbital optimization given an RDM-1, RDM-2,
+and the integrals
+* Forms an orbital gradient:  g_{pq} =[ h_{pq} gamma_{pq} + Gamma_{pq}^{rs} <pq
+|| rs> - A(p->q)]
+* Right now, Only forms a diagonal hessian of orbitals:  Look at  Hohenstein
+J.Chem.Phys, 142, 224103.
+* Diagonal Hessian only requires (p u | x y) integrals (many are built in JK
+library)
 * Daniel Smith's CASSCF code in PSI4 was integral in debugging.
 *
 * Usage of this class:  Contructor will just set_up the basic values
@@ -51,7 +56,8 @@ namespace psi{ namespace forte{
 * Note:  If you are not freezing core, you do not need F_froze
 *         OrbitalOptimizer orbital_optimizer(gamma1_,
                                            gamma2_,
-                                           ints_->aptei_ab_block(nmo_abs_, active_abs_, active_abs_, active_abs_) ,
+                                           ints_->aptei_ab_block(nmo_abs_,
+active_abs_, active_abs_, active_abs_) ,
                                            options_,
                                            mo_space_info_);
         orbital_optimizer.set_one_body(OneBody)
@@ -61,66 +67,67 @@ namespace psi{ namespace forte{
 
         orbital_optimizer.update()
         S = orbital_optimizer.approx_solve()
-        C_new = orbital_optimizer.rotate(Ca, S) -> Right now, if this is an iterative procedure, you should
-        use the Ca that was previously updated, ie (C_new  = Cold(exp(S_previous)) * exp(S))
+        C_new = orbital_optimizer.rotate(Ca, S) -> Right now, if this is an
+iterative procedure, you should
+        use the Ca that was previously updated, ie (C_new  =
+Cold(exp(S_previous)) * exp(S))
 */
-class OrbitalOptimizer
-{
-public:
+class OrbitalOptimizer {
+  public:
     OrbitalOptimizer();
 
     /**
-     * @brief Given 1RDM, 2RDM, (pu|xy) integrals, and space information, do an orbital optimization
-     * OrbitalOptimizer returns a orbital rotation parameter that allows you to update your orbitals
+     * @brief Given 1RDM, 2RDM, (pu|xy) integrals, and space information, do an
+     * orbital optimization
+     * OrbitalOptimizer returns a orbital rotation parameter that allows you to
+     * update your orbitals
      * @param Gamma1 The SYMMETRIZED 1-RDM:  gamma1_a + gamma2_b
-     * @param Gamma2 The SYMMETRIZED 2-RDM:  Look at code ( Gamma = rdm_2aa + rdm_2ab) with prefactors
-     * @param two_body_ab (pu|xy) integrals(NOTE:  This is only valid if you are doing an orbital optimization at the level of CASSCF
+     * @param Gamma2 The SYMMETRIZED 2-RDM:  Look at code ( Gamma = rdm_2aa +
+     * rdm_2ab) with prefactors
+     * @param two_body_ab (pu|xy) integrals(NOTE:  This is only valid if you are
+     * doing an orbital optimization at the level of CASSCF
      * @param options The options object
      * @param mo_space_info MOSpace object for handling active/rdocc/ruocc
      */
 
-    OrbitalOptimizer( ambit::Tensor Gamma1,
-                      ambit::Tensor Gamma2,
-                      ambit::Tensor two_body_ab,
-                      Options& options,
-                      std::shared_ptr<MOSpaceInfo> mo_space_info);
+    OrbitalOptimizer(ambit::Tensor Gamma1, ambit::Tensor Gamma2,
+                     ambit::Tensor two_body_ab, Options& options,
+                     std::shared_ptr<MOSpaceInfo> mo_space_info);
 
-    ///You have to set these at the start of the computation
+    /// You have to set these at the start of the computation
     /// The MO Coefficient you get from wfn_->Ca()
-    void set_symmmetry_mo(SharedMatrix C)  {Ca_sym_ = C;}
+    void set_symmmetry_mo(SharedMatrix C) { Ca_sym_ = C; }
     /// The MO Coefficient in pitzer ordering (symmetry-aware)
     /// The workhouse of the program:  Computes gradient, hessian.
     void update();
     /// Solution of g + Hx = 0 (with diagonal H), so x = - g / H
     SharedMatrix approx_solve();
-    /// Exponentiate the orbital rotation parameter and use this to update your MOCoefficient
+    /// Exponentiate the orbital rotation parameter and use this to update your
+    /// MOCoefficient
     SharedMatrix rotate_orbitals(SharedMatrix C, SharedMatrix S);
     /// The norm of the orbital gradient
-    double orbital_gradient_norm(){return (g_->rms());}
+    double orbital_gradient_norm() { return (g_->rms()); }
     /// Must compute the frozen_one_body fock matrix
-    void set_frozen_one_body(SharedMatrix F_froze){F_froze_ = F_froze;}
+    void set_frozen_one_body(SharedMatrix F_froze) { F_froze_ = F_froze; }
     /// Give the AO one electron integrals (H = T + V)
-    void one_body(SharedMatrix H){H_ = H;}
+    void one_body(SharedMatrix H) { H_ = H; }
     /// Print a summary of timings
-    void set_print_timings(bool timing){timings_ = timing;}
-    void set_wavefunction(SharedWavefunction wfn){ wfn_ = wfn; }
-    void set_jk(std::shared_ptr<JK>& JK)
-    {
-        JK_ = JK;
-    }
-protected:
-    ///The 1-RDM (usually of size na_^2)
+    void set_print_timings(bool timing) { timings_ = timing; }
+    void set_wavefunction(SharedWavefunction wfn) { wfn_ = wfn; }
+    void set_jk(std::shared_ptr<JK>& JK) { JK_ = JK; }
+
+  protected:
+    /// The 1-RDM (usually of size na_^2)
     ambit::Tensor gamma1_;
-    ///The 1-RDM SharedMatrix
+    /// The 1-RDM SharedMatrix
     SharedMatrix gamma1M_;
-    ///The 2-RDM (usually of size na^4)
+    /// The 2-RDM (usually of size na^4)
     ambit::Tensor gamma2_;
-    ///The 2-RDM SharedMatrix
+    /// The 2-RDM SharedMatrix
     SharedMatrix gamma2M_;
     ambit::Tensor integral_;
     std::shared_ptr<MOSpaceInfo> mo_space_info_;
     std::shared_ptr<JK> JK_;
-
 
     Options options_;
     /// The ForteIntegrals pointer
@@ -134,7 +141,8 @@ protected:
 
     /// The dimension for number of molecular orbitals (CORRELATED or ALL)
     Dimension nmopi_;
-    /// The number of correlated molecular orbitals (Restricted Core + Active + Restricted_UOCC + Frozen_Virt
+    /// The number of correlated molecular orbitals (Restricted Core + Active +
+    /// Restricted_UOCC + Frozen_Virt
     size_t nmo_;
     /// The number of active orbitals
     size_t na_;
@@ -160,20 +168,21 @@ protected:
     SharedMatrix F_froze_;
     /// The core Fock Matrix
     SharedMatrix F_core_;
-    /// The F_act_ -> ie the fock matrix of nmo by nmo generated using the all active portion of the OPM
+    /// The F_act_ -> ie the fock matrix of nmo by nmo generated using the all
+    /// active portion of the OPM
     /// Equation 10
     SharedMatrix F_act_;
-    ///The JK object 
+    /// The JK object
     SharedMatrix JK_fock_;
     /// Intermediate in forming orbital gradient matrix
     SharedMatrix Y_;
     /// Z intermediate
     SharedMatrix Z_;
-    ///The Orbital Gradient
+    /// The Orbital Gradient
     SharedMatrix g_;
-    ///The Orbital Hessian
+    /// The Orbital Hessian
     SharedMatrix d_;
-    ///Solution of g + HS = 0
+    /// Solution of g + HS = 0
     SharedMatrix S_;
 
     /// private functions
@@ -188,7 +197,8 @@ protected:
     void orbital_rotation_parameter();
     /// Perform the exponential of x
     SharedMatrix matrix_exp(const SharedMatrix&);
-    ///form SharedMatrices of Gamma1 and Gamma2 (Tensor library not great for non contractions)
+    /// form SharedMatrices of Gamma1 and Gamma2 (Tensor library not great for
+    /// non contractions)
     void fill_shared_density_matrices();
     /// Diagonalize an augmented Hessian and take lowest eigenvector as solution
     SharedMatrix AugmentedHessianSolve();
@@ -225,61 +235,51 @@ protected:
     std::map<size_t, size_t> nhole_map_;
     std::map<size_t, size_t> npart_map_;
     bool cas_;
-    enum MATRIX_EXP {PSI4, TAYLOR};
+    enum MATRIX_EXP { PSI4, TAYLOR };
     void zero_redunant(SharedMatrix& matrix);
-
-
 };
-/// A Class for use in CASSCFOrbitalOptimizer (computes FockCore and FockActive using JK builders)
-class CASSCFOrbitalOptimizer : public OrbitalOptimizer
-{
-public:
-    CASSCFOrbitalOptimizer(ambit::Tensor Gamma1,
-                           ambit::Tensor Gamma2,
-                           ambit::Tensor two_body_ab,
-                           Options& options,
+/// A Class for use in CASSCFOrbitalOptimizer (computes FockCore and FockActive
+/// using JK builders)
+class CASSCFOrbitalOptimizer : public OrbitalOptimizer {
+  public:
+    CASSCFOrbitalOptimizer(ambit::Tensor Gamma1, ambit::Tensor Gamma2,
+                           ambit::Tensor two_body_ab, Options& options,
                            std::shared_ptr<MOSpaceInfo> mo_space_info);
     virtual ~CASSCFOrbitalOptimizer();
-private:
-    virtual void form_fock_intermediates();
 
+  private:
+    virtual void form_fock_intermediates();
 };
-/// A Class for OrbitalOptimization in PostCASSCF methods through use of renormalized integrals
+/// A Class for OrbitalOptimization in PostCASSCF methods through use of
+/// renormalized integrals
 /// Pass (pq | ij) and (pj | iq) type integrals
-class PostCASSCFOrbitalOptimizer : public OrbitalOptimizer
-{
-public:
-    PostCASSCFOrbitalOptimizer(ambit::Tensor Gamma1,
-                               ambit::Tensor Gamma2,
-                               ambit::Tensor two_body_ab,
-                               Options& options,
+class PostCASSCFOrbitalOptimizer : public OrbitalOptimizer {
+  public:
+    PostCASSCFOrbitalOptimizer(ambit::Tensor Gamma1, ambit::Tensor Gamma2,
+                               ambit::Tensor two_body_ab, Options& options,
                                std::shared_ptr<MOSpaceInfo> mo_space_info);
     virtual ~PostCASSCFOrbitalOptimizer();
 
-    void set_fock_integrals_pq_mm(const ambit::Tensor& pq_mm)
-    {
+    void set_fock_integrals_pq_mm(const ambit::Tensor& pq_mm) {
         pq_mm_ = pq_mm;
     }
-    void set_fock_integrals_pm_qm(const ambit::Tensor& pm_qm)
-    {
+    void set_fock_integrals_pm_qm(const ambit::Tensor& pm_qm) {
         pm_qm_ = pm_qm;
     }
-    void set_fock_integrals_pq_uv(const ambit::Tensor& pq_uv)
-    {
+    void set_fock_integrals_pq_uv(const ambit::Tensor& pq_uv) {
         pq_uv_ = pq_uv;
     }
-    void set_fock_integrals_pu_qv(const ambit::Tensor& pu_qv)
-    {
+    void set_fock_integrals_pu_qv(const ambit::Tensor& pu_qv) {
         pu_qv_ = pu_qv;
     }
 
-private:
-        ambit::Tensor pq_mm_;
-        ambit::Tensor pm_qm_;
-        ambit::Tensor pq_uv_;
-        ambit::Tensor pu_qv_;
-        virtual void form_fock_intermediates();
+  private:
+    ambit::Tensor pq_mm_;
+    ambit::Tensor pm_qm_;
+    ambit::Tensor pq_uv_;
+    ambit::Tensor pu_qv_;
+    virtual void form_fock_intermediates();
 };
-
-}}
+}
+}
 #endif // ORBITALOPTIMIZER_H

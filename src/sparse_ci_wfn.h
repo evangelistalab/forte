@@ -31,8 +31,8 @@
 
 #include "stl_bitset_determinant.h"
 
-
-namespace psi{ namespace forte{
+namespace psi {
+namespace forte {
 
 /**
  * @brief A class to store sparse configuration interaction wave functions
@@ -41,12 +41,11 @@ namespace psi{ namespace forte{
 
 using wfn_hash = det_hash<double>;
 
-class SparseCIWavefunction
-{
-public:
-
+class SparseCIWavefunction {
+  public:
     /// Default constructor
-    SparseCIWavefunction( std::vector<STLBitsetDeterminant>& dets, std::vector<double>& cI );
+    SparseCIWavefunction(std::vector<STLBitsetDeterminant>& dets,
+                         std::vector<double>& cI);
 
     /// Copy constructor
     SparseCIWavefunction(const wfn_hash& wfn_);
@@ -58,7 +57,7 @@ public:
     size_t wfn_size();
 
     /// Scale the wavefunction
-    void scale( double value );
+    void scale(double value);
 
     /// Return the norm of the wavefunction
     double wfn_norm();
@@ -67,22 +66,23 @@ public:
     void normalize();
 
     /// Add a determinant
-    void add( STLBitsetDeterminant& det, double value );
+    void add(STLBitsetDeterminant& det, double value);
 
-    /// Merge two wavefunctions, overwriting the original in the case of conflicts
-    void merge( SparseCIWavefunction& wfn ); 
+    /// Merge two wavefunctions, overwriting the original in the case of
+    /// conflicts
+    void merge(SparseCIWavefunction& wfn);
 
     /// Print the most important determinants
     void print();
-protected:
 
+  protected:
     /// The dimension of the hash
     size_t wfn_size_;
 
     /// A hash of (determinants,coefficients)
     wfn_hash wfn_;
 };
-
-}}
+}
+}
 
 #endif // _sparse_ci_wfn_h_

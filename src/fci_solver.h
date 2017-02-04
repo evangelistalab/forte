@@ -26,7 +26,6 @@
  * @END LICENSE
  */
 
-
 #ifndef _fci_solver_h_
 #define _fci_solver_h_
 
@@ -41,16 +40,15 @@
 #include "string_lists.h"
 #include "reference.h"
 
-
-namespace psi{ namespace forte{
+namespace psi {
+namespace forte {
 
 /**
  * @brief The FCISolver class
  * This class performs Full CI calculations.
  */
-class FCISolver
-{
-public:
+class FCISolver {
+  public:
     // ==> Class Constructor and Destructor <==
 
     /**
@@ -60,7 +58,8 @@ public:
      * @param active_mo A vector of active orbitals
      * @param na Number of alpha electrons
      * @param nb Number of beta electrons
-     * @param multiplicity The spin multiplicity (2S + 1).  1 = singlet, 2 = doublet, ...
+     * @param multiplicity The spin multiplicity (2S + 1).  1 = singlet, 2 =
+     * doublet, ...
      * @param symmetry The irrep of the FCI wave function
      * @param ints An integral object
      * @param mo_space_info -> MOSpaceInfo
@@ -69,7 +68,9 @@ public:
      */
     FCISolver(Dimension active_dim, std::vector<size_t> core_mo,
               std::vector<size_t> active_mo, size_t na, size_t nb,
-              size_t multiplicity, size_t symmetry, std::shared_ptr<ForteIntegrals> ints, std::shared_ptr<MOSpaceInfo> mo_space_info,
+              size_t multiplicity, size_t symmetry,
+              std::shared_ptr<ForteIntegrals> ints,
+              std::shared_ptr<MOSpaceInfo> mo_space_info,
               size_t initial_guess_per_root, int print, Options& options);
     /**
      * @brief FCISolver
@@ -86,8 +87,9 @@ public:
      */
     FCISolver(Dimension active_dim, std::vector<size_t> core_mo,
               std::vector<size_t> active_mo, size_t na, size_t nb,
-              size_t multiplicity, size_t symmetry, std::shared_ptr<ForteIntegrals>  ints, std::shared_ptr<MOSpaceInfo> mo_space_info,
-              Options& options);
+              size_t multiplicity, size_t symmetry,
+              std::shared_ptr<ForteIntegrals> ints,
+              std::shared_ptr<MOSpaceInfo> mo_space_info, Options& options);
 
     ~FCISolver() {}
 
@@ -110,32 +112,35 @@ public:
     /// Set the maximum subspace size for each root
     void set_subspace_per_root(int value);
 
-    /// If you actually change the integrals in your code, you should set this to false.
-    void use_user_integrals_and_restricted_docc(bool user_provide_integrals){
+    /// If you actually change the integrals in your code, you should set this
+    /// to false.
+    void use_user_integrals_and_restricted_docc(bool user_provide_integrals) {
         provide_integrals_and_restricted_docc_ = user_provide_integrals;
     }
-    /// If you want to use your own integrals need to set FCIIntegrals (This is normally not set)
-    void set_integral_pointer(std::shared_ptr<FCIIntegrals> fci_ints){fci_ints_ = fci_ints;}
+    /// If you want to use your own integrals need to set FCIIntegrals (This is
+    /// normally not set)
+    void set_integral_pointer(std::shared_ptr<FCIIntegrals> fci_ints) {
+        fci_ints_ = fci_ints;
+    }
 
     /// When set to true before calling compute_energy(), it will test the
     /// reduce density matrices.  Watch out, this function is very slow!
-    void set_test_rdms(bool value) {test_rdms_ = value;}
+    void set_test_rdms(bool value) { test_rdms_ = value; }
     /// Print the Natural Orbitals
-    void set_print_no(bool value){print_no_ = value;}
+    void set_print_no(bool value) { print_no_ = value; }
     /// Return a FCIWfn
-    std::shared_ptr<FCIWfn> get_FCIWFN() {return C_;}
+    std::shared_ptr<FCIWfn> get_FCIWFN() { return C_; }
 
     /// Return eigen vectors
-    SharedMatrix eigen_vecs() {return eigen_vecs_;}
+    SharedMatrix eigen_vecs() { return eigen_vecs_; }
     /// Return eigen values
-    SharedVector eigen_vals() {return eigen_vals_;}
+    SharedVector eigen_vals() { return eigen_vals_; }
     /// Return string lists
-    std::shared_ptr<StringLists> lists() {return lists_;}
+    std::shared_ptr<StringLists> lists() { return lists_; }
     /// Return symmetry
-    int symmetry() {return symmetry_;}
+    int symmetry() { return symmetry_; }
 
-private:
-
+  private:
     // ==> Class Data <==
 
     /// The Dimension object for the active space
@@ -151,7 +156,7 @@ private:
     std::shared_ptr<StringLists> lists_;
 
     /// The molecular integrals
-    std::shared_ptr<ForteIntegrals>  ints_;
+    std::shared_ptr<ForteIntegrals> ints_;
 
     std::shared_ptr<FCIIntegrals> fci_ints_;
 
@@ -182,7 +187,7 @@ private:
     /// The root used to compute properties (zero based, default = 0)
     int root_ = 0;
     /// The number of trial guess vectors to generate per root
-    size_t ntrial_per_root_; 
+    size_t ntrial_per_root_;
     /// The number of collapse vectors for each root
     size_t collapse_per_root_ = 2;
     /// The maximum subspace size for each root
@@ -208,22 +213,20 @@ private:
     std::shared_ptr<MOSpaceInfo> mo_space_info_;
 
     /// Initial CI wave function guess
-    std::vector<std::pair<int,std::vector<std::tuple<size_t,size_t,size_t,double>>>>
-    initial_guess(FCIWfn& diag,size_t n,size_t multiplicity,
+    std::vector<
+        std::pair<int, std::vector<std::tuple<size_t, size_t, size_t, double>>>>
+    initial_guess(FCIWfn& diag, size_t n, size_t multiplicity,
                   std::shared_ptr<FCIIntegrals> fci_ints);
     /// The options object
     Options& options_;
 };
 
-
 /**
  * @brief The FCI class
  * This class implements a FCI wave function and calls FCISolver
  */
-class FCI : public Wavefunction
-{
-public:
-
+class FCI : public Wavefunction {
+  public:
     // ==> Class Constructor and Destructor <==
 
     /**
@@ -233,7 +236,7 @@ public:
      * @param ints A pointer to an allocated integral object
      * @param mo_space_info A pointer to the MOSpaceInfo object
      */
-    FCI(SharedWavefunction ref_wfn, Options &options,
+    FCI(SharedWavefunction ref_wfn, Options& options,
         std::shared_ptr<ForteIntegrals> ints,
         std::shared_ptr<MOSpaceInfo> mo_space_info);
 
@@ -246,7 +249,7 @@ public:
     /// Return a reference object
     Reference reference();
     /// Set the print level
-    void set_print(int value) {print_ = value;}
+    void set_print(int value) { print_ = value; }
     /// Set the maximum RDM computed (0 - 3)
     void set_max_rdm_level(int value);
     /// FCI  iterations
@@ -256,14 +259,13 @@ public:
     /// Set Ms value
     void set_ms(int ms);
     /// Get the pointer of FCIWfn
-    std::shared_ptr<FCIWfn> get_FCIWfn() {return fcisolver_->get_FCIWFN();}
+    std::shared_ptr<FCIWfn> get_FCIWfn() { return fcisolver_->get_FCIWFN(); }
 
-private:
-
+  private:
     // ==> Class data <==
 
     /// The molecular integrals
-    std::shared_ptr<ForteIntegrals>  ints_;
+    std::shared_ptr<ForteIntegrals> ints_;
     /// The information about the molecular orbital spaces
     std::shared_ptr<MOSpaceInfo> mo_space_info_;
     /// A pointer to the FCISolver object
@@ -271,7 +273,7 @@ private:
     /// Print level
     /// 0 : silent mode (no printing)
     /// 1 : default printing
-    int print_  = 1;
+    int print_ = 1;
 
     /// Set the maximum RDM computed (0 - 3)
     int max_rdm_level_;
@@ -289,7 +291,7 @@ private:
     /// All that happens before we compute the energy
     void startup();
 };
-
-}}
+}
+}
 
 #endif // _fci_solver_h_

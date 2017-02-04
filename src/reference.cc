@@ -28,12 +28,11 @@
 
 #include "reference.h"
 
-namespace psi{ namespace forte{
+namespace psi {
+namespace forte {
 
-Reference::Reference()
-{}
+Reference::Reference() {}
 
-Reference::~Reference()
-{}
-
-}}
+Reference::~Reference() {}
+}
+}

@@ -36,7 +36,8 @@
 #include "fci_vector.h"
 //#include "stl_bitset_determinant.h"
 
-namespace psi{ namespace forte{
+namespace psi {
+namespace forte {
 
 /**
  * A class to store a Slater determinant using the STL bitset container.
@@ -52,20 +53,19 @@ namespace psi{ namespace forte{
  * true <-> 1
  * false <-> 0
  */
-class STLBitsetString{
-public:
+class STLBitsetString {
+  public:
     using bit_t = std::bitset<128>;
 
     // Class Constructor and Destructor
-    /// Construct an empty occupation string 
+    /// Construct an empty occupation string
     STLBitsetString();
-    
+
     /// Construct String from an occupation vector, spin unspecified
     explicit STLBitsetString(const std::vector<int>& occupation);
     explicit STLBitsetString(const std::vector<bool>& occupation);
     /// Construnct a determinant from a bitset object
     explicit STLBitsetString(const std::bitset<128>& bits);
-
 
     /// Equal operator
     bool operator==(const STLBitsetString& lhs) const;
@@ -75,8 +75,8 @@ public:
     STLBitsetString operator^(const STLBitsetString& lhs) const;
 
     /// Set the dimension
-    void set_nmo( int nmo );
-    
+    void set_nmo(int nmo);
+
     /// Get a pointer to the alpha bits
     const std::bitset<128>& bits() const;
 
@@ -94,14 +94,14 @@ public:
     /// Return a vector of virtual orbitals
     std::vector<int> get_vir();
 
-    /// Print the occupation string 
+    /// Print the occupation string
     void print() const;
     /// Save the occupation string  as a std::string
     std::string str() const;
     /// Return the sign of a_n applied to string I
     double SlaterSign(int n);
 
-public:
+  public:
     // Object Data
     /// The occupation vector (does not include the frozen orbitals)
     bit_t bits_;
@@ -113,19 +113,20 @@ public:
     /// Number of non-zero bits
     double get_nocc();
 
-    struct Hash
-    {
-        std::size_t operator()(const psi::forte::STLBitsetString& bs) const
-        {
+    struct Hash {
+        std::size_t operator()(const psi::forte::STLBitsetString& bs) const {
             return std::hash<bit_t>()(bs.bits_);
         }
     };
 };
 
 using string_vec = std::vector<STLBitsetString>;
-template <typename T = double> using string_hash = std::unordered_map<STLBitsetString, T, STLBitsetString::Hash>;
-using string_hash_it = std::unordered_map<STLBitsetString, double, STLBitsetString::Hash>::iterator;
-}} // End Namespaces
-
+template <typename T = double>
+using string_hash =
+    std::unordered_map<STLBitsetString, T, STLBitsetString::Hash>;
+using string_hash_it = std::unordered_map<STLBitsetString, double,
+                                          STLBitsetString::Hash>::iterator;
+}
+} // End Namespaces
 
 #endif // _bitset_string_h_

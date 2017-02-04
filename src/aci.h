@@ -30,7 +30,7 @@
 #define _adaptive_ci_h_
 
 #include <fstream>
-#include <iomanip> 
+#include <iomanip>
 
 #include "psi4/libmints/wavefunction.h"
 #include "psi4/liboptions/liboptions.h"
@@ -47,15 +47,15 @@
 #include "determinant_map.h"
 #include "operator.h"
 
-namespace psi{ namespace forte{
+namespace psi {
+namespace forte {
 
 /**
  * @brief The AdaptiveCI class
  * This class implements an adaptive CI algorithm
  */
-class AdaptiveCI : public Wavefunction
-{
-public:
+class AdaptiveCI : public Wavefunction {
+  public:
     // ==> Class Constructor and Destructor <==
 
     /**
@@ -65,9 +65,9 @@ public:
      * @param ints A pointer to an allocated integral object
      * @param mo_space_info A pointer to the MOSpaceInfo object
      */
-    AdaptiveCI(SharedWavefunction ref_wfn, Options &options,
-                           std::shared_ptr<ForteIntegrals>  ints,
-                           std::shared_ptr<MOSpaceInfo> mo_space_info);
+    AdaptiveCI(SharedWavefunction ref_wfn, Options& options,
+               std::shared_ptr<ForteIntegrals> ints,
+               std::shared_ptr<MOSpaceInfo> mo_space_info);
 
     /// Destructor
     ~AdaptiveCI();
@@ -77,17 +77,15 @@ public:
     /// Compute the energy
     double compute_energy();
 
-	/// Update the reference file
+    /// Update the reference file
     Reference reference();
 
-	/// Set the RDM
-	void set_max_rdm( int rdm );
-	/// Set the printing level
-    void set_quiet(bool quiet){quiet_mode_ = quiet;}
+    /// Set the RDM
+    void set_max_rdm(int rdm);
+    /// Set the printing level
+    void set_quiet(bool quiet) { quiet_mode_ = quiet; }
 
-
-private:
-
+  private:
     // ==> Class data <==
 
     DeterminantMap final_wfn_;
@@ -95,8 +93,8 @@ private:
     WFNOperator op_;
 
     /// The molecular integrals required by Explorer
-    std::shared_ptr<ForteIntegrals>  ints_;
-	///Pointer to FCI integrals
+    std::shared_ptr<ForteIntegrals> ints_;
+    /// Pointer to FCI integrals
     std::shared_ptr<FCIIntegrals> fci_ints_;
     /// The MOSpaceInfo object
     std::shared_ptr<MOSpaceInfo> mo_space_info_;
@@ -106,30 +104,30 @@ private:
     std::vector<int> mo_symmetry_;
     /// The number of correlated molecular orbitals
     int ncmo_;
-	/// The multiplicity of the reference
-	int wavefunction_multiplicity_;
-	/// The number of active electrons
-	int nactel_;
-	/// The number of correlated alpha electrons
-	int nalpha_;
-	/// The number of correlated beta electrons
-	int nbeta_;
-	///The number of frozen core orbitals
-	int nfrzc_;
+    /// The multiplicity of the reference
+    int wavefunction_multiplicity_;
+    /// The number of active electrons
+    int nactel_;
+    /// The number of correlated alpha electrons
+    int nalpha_;
+    /// The number of correlated beta electrons
+    int nbeta_;
+    /// The number of frozen core orbitals
+    int nfrzc_;
     /// The number of correlated molecular orbitals per irrep
     Dimension ncmopi_;
-	/// The number of restricted docc orbitals per irrep
-	Dimension rdoccpi_;
-	/// The number of active orbitals per irrep
-	Dimension nactpi_;
-	/// The number of active orbitals
-	size_t nact_;
-	/// The number of restricted docc
-	size_t rdocc_;
-	/// The number of restricted virtual
-	size_t rvir_;
-	/// The number of frozen virtual
-	size_t fvir_;	
+    /// The number of restricted docc orbitals per irrep
+    Dimension rdoccpi_;
+    /// The number of active orbitals per irrep
+    Dimension nactpi_;
+    /// The number of active orbitals
+    size_t nact_;
+    /// The number of restricted docc
+    size_t rdocc_;
+    /// The number of restricted virtual
+    size_t rvir_;
+    /// The number of frozen virtual
+    size_t fvir_;
 
     /// The nuclear repulsion energy
     double nuclear_repulsion_energy_;
@@ -137,10 +135,10 @@ private:
     STLBitsetDeterminant reference_determinant_;
     /// The PT2 energy correction
     std::vector<double> multistate_pt2_energy_correction_;
-	/// The current iteration
-	int cycle_;
-	/// The last iteration
-	int max_cycle_;
+    /// The current iteration
+    int cycle_;
+    /// The last iteration
+    int max_cycle_;
     int pre_iter_;
 
     // ==> ACI Options <==
@@ -151,31 +149,31 @@ private:
     /// The threshold applied to the secondary space
     double gamma_;
     /// The prescreening threshold
-	double screen_thresh_;
+    double screen_thresh_;
     /// The number of roots computed
     int nroot_;
-	/// Use threshold from perturbation theory?
-	bool perturb_select_;
+    /// Use threshold from perturbation theory?
+    bool perturb_select_;
 
     /// Add missing degenerate determinants excluded from the aimed selection?
     bool add_aimed_degenerate_;
     /// Add missing degenerate determinants excluded from the aimed selection?
     bool project_out_spin_contaminants_;
 
-	/// The function of the q-space criteria per root
-	std::string pq_function_;
-	/// The type of q criteria
-	bool q_rel_;
-	/// the q reference
-	std::string q_reference_;
-	/// Algorithm for computing excited states
-	std::string ex_alg_;
+    /// The function of the q-space criteria per root
+    std::string pq_function_;
+    /// The type of q criteria
+    bool q_rel_;
+    /// the q reference
+    std::string q_reference_;
+    /// Algorithm for computing excited states
+    std::string ex_alg_;
     /// The eigensolver type
     DiagonalizationMethod diag_method_ = DLString;
-	/// The reference root
-	int ref_root_;
-	/// The reference root
-	int root_;
+    /// The reference root
+    int ref_root_;
+    /// The reference root
+    int root_;
     /// Enable aimed selection
     bool aimed_selection_;
     /// If true select by energy, if false use first-order coefficient
@@ -184,82 +182,84 @@ private:
     bool do_smooth_;
     /// The threshold for smoothing elements of the Hamiltonian
     double smooth_threshold_;
-	/// Number of roots to calculate for final excited state
-	int post_root_;
-	/// Rediagonalize H?
-	bool post_diagonalize_;
-	/// Print warning?
-	bool print_warning_;
-	/// Spin tolerance
-	double spin_tol_;
-	/// Compute 1-RDM?
-	bool compute_rdms_;
-	/// Enforce spin completeness?
-	bool spin_complete_;
-	/// Print a determinant analysis?
-	bool det_hist_;
-	/// Save dets to file?
-	bool det_save_;
-	/// Order of RDM to compute
-	int rdm_level_;
+    /// Number of roots to calculate for final excited state
+    int post_root_;
+    /// Rediagonalize H?
+    bool post_diagonalize_;
+    /// Print warning?
+    bool print_warning_;
+    /// Spin tolerance
+    double spin_tol_;
+    /// Compute 1-RDM?
+    bool compute_rdms_;
+    /// Enforce spin completeness?
+    bool spin_complete_;
+    /// Print a determinant analysis?
+    bool det_hist_;
+    /// Save dets to file?
+    bool det_save_;
+    /// Order of RDM to compute
+    int rdm_level_;
     /// Control amount of printing
-	bool quiet_mode_;
+    bool quiet_mode_;
     /// Control streamlining
     bool streamline_qspace_;
 
     /// A vector of determinants in the P space
-//    std::vector<STLBitsetDeterminant> P_space_;
+    //    std::vector<STLBitsetDeterminant> P_space_;
     /// A vector of determinants in the P + Q space
-//    std::vector<STLBitsetDeterminant> PQ_space_;
-	/// The CI coeffiecients
-	SharedMatrix evecs_;
-
+    //    std::vector<STLBitsetDeterminant> PQ_space_;
+    /// The CI coeffiecients
+    SharedMatrix evecs_;
 
     /// Vector of alpha strings
     std::vector<STLBitsetString> alfa_list_;
     /// Vector of beta strings
     std::vector<STLBitsetString> beta_list_;
     /// Map from alpha to beta
-    std::vector<std::vector<size_t>> a_to_b_; 
+    std::vector<std::vector<size_t>> a_to_b_;
     /// Map from beta to alpha
-    std::vector<std::vector<size_t>> b_to_a_; 
+    std::vector<std::vector<size_t>> b_to_a_;
 
     /// A map of determinants in the P space
-    std::unordered_map<STLBitsetDeterminant,int, STLBitsetDeterminant::Hash> P_space_map_;
-	/// A History of Determinants
-	std::unordered_map<STLBitsetDeterminant, std::vector< std::pair<size_t, std::string>>, STLBitsetDeterminant::Hash > det_history_;
-	/// Stream for printing determinant coefficients
-	std::ofstream det_list_;
+    std::unordered_map<STLBitsetDeterminant, int, STLBitsetDeterminant::Hash>
+        P_space_map_;
+    /// A History of Determinants
+    std::unordered_map<STLBitsetDeterminant,
+                       std::vector<std::pair<size_t, std::string>>,
+                       STLBitsetDeterminant::Hash> det_history_;
+    /// Stream for printing determinant coefficients
+    std::ofstream det_list_;
     /// Roots to project out
-    std::vector<std::vector<std::pair<size_t,double>>> bad_roots_;
+    std::vector<std::vector<std::pair<size_t, double>>> bad_roots_;
     /// Storage of past roots
-    std::vector<std::vector<std::pair<STLBitsetDeterminant,double>>> old_roots_;
+    std::vector<std::vector<std::pair<STLBitsetDeterminant, double>>>
+        old_roots_;
 
-	/// A Vector to store spin of each root
-	std::vector<std::pair<double,double> > root_spin_vec_;
-	/// Form initial guess space with correct spin? ****OBSOLETE?*****
-	bool do_guess_;
-	///Spin-symmetrized evecs
+    /// A Vector to store spin of each root
+    std::vector<std::pair<double, double>> root_spin_vec_;
+    /// Form initial guess space with correct spin? ****OBSOLETE?*****
+    bool do_guess_;
+    /// Spin-symmetrized evecs
     SharedMatrix PQ_spin_evecs_;
-	
-	///Timing variables
-	double build_H_;
-	double diag_H_;
-	double build_space_;
-	double screen_space_;	
-	double spin_trans_;
 
-	// The RMDS
-	std::vector<double> ordm_a_;
-	std::vector<double> ordm_b_;
-	std::vector<double> trdm_aa_;
-	std::vector<double> trdm_ab_;
-	std::vector<double> trdm_bb_;
-	std::vector<double> trdm_aaa_;
-	std::vector<double> trdm_aab_;
-	std::vector<double> trdm_abb_;
-	std::vector<double> trdm_bbb_;
+    /// Timing variables
+    double build_H_;
+    double diag_H_;
+    double build_space_;
+    double screen_space_;
+    double spin_trans_;
 
+    // The RMDS
+    std::vector<double> ordm_a_;
+    std::vector<double> ordm_b_;
+    std::vector<double> trdm_aa_;
+    std::vector<double> trdm_ab_;
+    std::vector<double> trdm_bb_;
+    std::vector<double> trdm_aaa_;
+    std::vector<double> trdm_aab_;
+    std::vector<double> trdm_abb_;
+    std::vector<double> trdm_bbb_;
 
     // ==> Class functions <==
 
@@ -267,10 +267,11 @@ private:
     void startup();
 
     /// Compute an aci wavefunction
-    void compute_aci( DeterminantMap& PQ_space, SharedMatrix& PQ_evecs, SharedVector& PQ_evals );
+    void compute_aci(DeterminantMap& PQ_space, SharedMatrix& PQ_evecs,
+                     SharedVector& PQ_evals);
 
-	/// Get the reference occupation
-	std::vector<int> get_occupation();
+    /// Get the reference occupation
+    std::vector<int> get_occupation();
 
     /// Print information about this calculation
     void print_info();
@@ -279,106 +280,134 @@ private:
     void print_wfn(DeterminantMap& space, SharedMatrix evecs, int nroot);
 
     /// Streamlined version of find q space
-    void default_find_q_space( DeterminantMap& P_space, DeterminantMap& PQ_space, SharedVector evals, SharedMatrix evecs );
+    void default_find_q_space(DeterminantMap& P_space, DeterminantMap& PQ_space,
+                              SharedVector evals, SharedMatrix evecs);
 
     /// Find all the relevant excitations out of the P space
-    void find_q_space(  DeterminantMap& P_space, DeterminantMap& PQ_space, int nroot, SharedVector evals, SharedMatrix evecs);
+    void find_q_space(DeterminantMap& P_space, DeterminantMap& PQ_space,
+                      int nroot, SharedVector evals, SharedMatrix evecs);
 
-	/// Generate set of state-averaged q-criteria and determinants
-	double average_q_values(int nroot, std::vector<double>& C1, std::vector<double>& E2);
+    /// Generate set of state-averaged q-criteria and determinants
+    double average_q_values(int nroot, std::vector<double>& C1,
+                            std::vector<double>& E2);
 
-	/// Get criteria for a specific root
-	double root_select(int nroot, std::vector<double>& C1, std::vector<double>& E2);
+    /// Get criteria for a specific root
+    double root_select(int nroot, std::vector<double>& C1,
+                       std::vector<double>& E2);
 
-    /// Find all the relevant excitations out of the P space - single root version
-    void find_q_space_single_root(int nroot, SharedVector evals, SharedMatrix evecs);
+    /// Find all the relevant excitations out of the P space - single root
+    /// version
+    void find_q_space_single_root(int nroot, SharedVector evals,
+                                  SharedMatrix evecs);
 
     /// Alternate/experimental determinant generator
-    void get_excited_determinants( int nroot, SharedMatrix evecs, DeterminantMap& P_space, det_hash<std::vector<double>>& V_hash ); 
-
+    void get_excited_determinants(int nroot, SharedMatrix evecs,
+                                  DeterminantMap& P_space,
+                                  det_hash<std::vector<double>>& V_hash);
 
     /// Prune the space of determinants
-    void prune_q_space(DeterminantMap& PQ_space, DeterminantMap& P_space, SharedMatrix evecs,int nroot);
+    void prune_q_space(DeterminantMap& PQ_space, DeterminantMap& P_space,
+                       SharedMatrix evecs, int nroot);
 
     /// Check if the procedure has converged
-    bool check_convergence(std::vector<std::vector<double>>& energy_history,SharedVector new_energies);
+    bool check_convergence(std::vector<std::vector<double>>& energy_history,
+                           SharedVector new_energies);
 
-	/// Check if the procedure is stuck
-	bool check_stuck(std::vector<std::vector<double>>& energy_history, SharedVector evals);
+    /// Check if the procedure is stuck
+    bool check_stuck(std::vector<std::vector<double>>& energy_history,
+                     SharedVector evals);
 
-	/// Analyze the wavefunction
-	void wfn_analyzer(DeterminantMap& det_space, SharedMatrix evecs, int nroot);
+    /// Analyze the wavefunction
+    void wfn_analyzer(DeterminantMap& det_space, SharedMatrix evecs, int nroot);
 
-	/// Returns a vector of orbital energy, sym label pairs
-	std::vector<std::tuple<double, int, int> > sym_labeled_orbitals(std::string type);
+    /// Returns a vector of orbital energy, sym label pairs
+    std::vector<std::tuple<double, int, int>>
+    sym_labeled_orbitals(std::string type);
 
-	/// Computes spin
-	std::vector<std::pair<double,double>> compute_spin(DeterminantMap& space, SharedMatrix evecs, int nroot);
+    /// Computes spin
+    std::vector<std::pair<double, double>>
+    compute_spin(DeterminantMap& space, SharedMatrix evecs, int nroot);
 
-	/// Compute 1-RDM
-	void compute_1rdm(SharedMatrix A, SharedMatrix B, std::vector<STLBitsetDeterminant>& det_space, SharedMatrix evecs, int nroot);
+    /// Compute 1-RDM
+    void compute_1rdm(SharedMatrix A, SharedMatrix B,
+                      std::vector<STLBitsetDeterminant>& det_space,
+                      SharedMatrix evecs, int nroot);
 
-	/// Compute full S^2 matrix and diagonalize it
-	void full_spin_transform(DeterminantMap& det_space, SharedMatrix cI, int nroot);
+    /// Compute full S^2 matrix and diagonalize it
+    void full_spin_transform(DeterminantMap& det_space, SharedMatrix cI,
+                             int nroot);
 
-	/// Check for spin contamination
-	double compute_spin_contamination(DeterminantMap& space, SharedMatrix evecs, int nroot);
-	
-	/// Save coefficients of lowest-root determinant	
-	void save_dets_to_file( DeterminantMap& space, SharedMatrix evecs );
-	/// Compute the Davidson correction
-	std::vector<double> davidson_correction( std::vector<STLBitsetDeterminant>& P_dets, SharedVector P_evals, SharedMatrix PQ_evecs, std::vector<STLBitsetDeterminant>& PQ_dets, SharedVector PQ_evals );   
+    /// Check for spin contamination
+    double compute_spin_contamination(DeterminantMap& space, SharedMatrix evecs,
+                                      int nroot);
 
-//    void compute_H_expectation_val(const std::vector<STLBitsetDeterminant>& space,
-//                                    SharedVector& evals,
-//                                    const SharedMatrix evecs,
-//                                    int nroot,
-//                                    DiagonalizationMethod diag_method);
-//
+    /// Save coefficients of lowest-root determinant
+    void save_dets_to_file(DeterminantMap& space, SharedMatrix evecs);
+    /// Compute the Davidson correction
+    std::vector<double>
+    davidson_correction(std::vector<STLBitsetDeterminant>& P_dets,
+                        SharedVector P_evals, SharedMatrix PQ_evecs,
+                        std::vector<STLBitsetDeterminant>& PQ_dets,
+                        SharedVector PQ_evals);
 
-	/// Print natural orbitals
-	void print_nos();
+    //    void compute_H_expectation_val(const
+    //    std::vector<STLBitsetDeterminant>& space,
+    //                                    SharedVector& evals,
+    //                                    const SharedMatrix evecs,
+    //                                    int nroot,
+    //                                    DiagonalizationMethod diag_method);
+    //
+
+    /// Print natural orbitals
+    void print_nos();
 
     /// Convert from determinant to string representation
-    void convert_to_string( const std::vector<STLBitsetDeterminant>& space );
+    void convert_to_string(const std::vector<STLBitsetDeterminant>& space);
 
     /// Build initial reference
-    void build_initial_reference( DeterminantMap& space );
+    void build_initial_reference(DeterminantMap& space);
 
     /// Compute overlap for root following
-    int root_follow( DeterminantMap& P_ref,
-                     std::vector<double>& P_ref_evecs,
-                     DeterminantMap& P_space,
-                     SharedMatrix P_evecs,
-                     int num_ref_roots);
+    int root_follow(DeterminantMap& P_ref, std::vector<double>& P_ref_evecs,
+                    DeterminantMap& P_space, SharedMatrix P_evecs,
+                    int num_ref_roots);
 
     /// Project ACI wavefunction
-    void project_determinant_space( DeterminantMap& space, SharedMatrix evecs, SharedVector evals, int nroot );
-
+    void project_determinant_space(DeterminantMap& space, SharedMatrix evecs,
+                                   SharedVector evals, int nroot);
 
     /// Compute the RDMs
-    void compute_rdms( DeterminantMap& dets, SharedMatrix& PQ_evecs, int root1, int root2 );
+    void compute_rdms(DeterminantMap& dets, SharedMatrix& PQ_evecs, int root1,
+                      int root2);
 
     /// Save older roots
-    void save_old_root( DeterminantMap& dets, SharedMatrix& PQ_evecs, int root );
+    void save_old_root(DeterminantMap& dets, SharedMatrix& PQ_evecs, int root);
 
     /// Add roots to be projected out in DL
-    void add_bad_roots( DeterminantMap& dets);
+    void add_bad_roots(DeterminantMap& dets);
 
     /// Print Summary
-    void print_final( DeterminantMap& dets,  SharedMatrix& PQ_evecs, SharedVector& PQ_evals );
+    void print_final(DeterminantMap& dets, SharedMatrix& PQ_evecs,
+                     SharedVector& PQ_evals);
 
     void compute_multistate(SharedVector& PQ_evals);
 
-    std::vector<std::pair<size_t,double>> dl_initial_guess( std::vector<STLBitsetDeterminant>& old_dets, std::vector<STLBitsetDeterminant>& dets, SharedMatrix& evecs, int nroot );
-//    int david2(double **A, int N, int M, double *eps, double **v,double cutoff, int print);
-//    /// Perform a Davidson-Liu diagonalization
-//    void davidson_liu(SharedMatrix H,SharedVector Eigenvalues,SharedMatrix Eigenvectors,int nroots);
+    std::vector<std::pair<size_t, double>>
+    dl_initial_guess(std::vector<STLBitsetDeterminant>& old_dets,
+                     std::vector<STLBitsetDeterminant>& dets,
+                     SharedMatrix& evecs, int nroot);
+    //    int david2(double **A, int N, int M, double *eps, double **v,double
+    //    cutoff, int print);
+    //    /// Perform a Davidson-Liu diagonalization
+    //    void davidson_liu(SharedMatrix H,SharedVector Eigenvalues,SharedMatrix
+    //    Eigenvectors,int nroots);
 
-//    /// Perform a Davidson-Liu diagonalization on a sparse matrix
-//    bool davidson_liu_sparse(std::vector<std::vector<std::pair<int,double> > > H_sparse,SharedVector Eigenvalues,SharedMatrix Eigenvectors,int nroots);
+    //    /// Perform a Davidson-Liu diagonalization on a sparse matrix
+    //    bool davidson_liu_sparse(std::vector<std::vector<std::pair<int,double>
+    //    > > H_sparse,SharedVector Eigenvalues,SharedMatrix Eigenvectors,int
+    //    nroots);
 };
-
-}} // End Namespaces
+}
+} // End Namespaces
 
 #endif // _adaptive_ci_h_

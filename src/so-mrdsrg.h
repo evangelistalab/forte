@@ -41,30 +41,29 @@
 #include "reference.h"
 #include "blockedtensorfactory.h"
 
-namespace psi{
+namespace psi {
 
-namespace forte{
+namespace forte {
 
 /**
  * @brief The SOMRDSRG class
  * This class implements the MR-DSRG(2) using a spin orbital formalism
  */
-class SOMRDSRG : public Wavefunction
-{
-protected:
-
+class SOMRDSRG : public Wavefunction {
+  protected:
     // => Class data <= //
 
     /// The reference object
     Reference reference_;
 
     /// The molecular integrals required by MethodBase
-    std::shared_ptr<ForteIntegrals>  ints_;
+    std::shared_ptr<ForteIntegrals> ints_;
 
     /// The MOSpaceInfo object
     std::shared_ptr<MOSpaceInfo> mo_space_info_;
 
-    /// The number of correlated orbitals per irrep (excluding frozen core and virtuals)
+    /// The number of correlated orbitals per irrep (excluding frozen core and
+    /// virtuals)
     Dimension ncmopi_;
     /// The number of restricted doubly occupied orbitals per irrep (core)
     Dimension rdoccpi_;
@@ -81,18 +80,18 @@ protected:
     std::vector<size_t> virt_mos;
 
     /// Map from all the MOs to the alpha core
-    std::map<size_t,size_t> mos_to_acore;
+    std::map<size_t, size_t> mos_to_acore;
     /// Map from all the MOs to the alpha active
-    std::map<size_t,size_t> mos_to_aactv;
+    std::map<size_t, size_t> mos_to_aactv;
     /// Map from all the MOs to the alpha virtual
-    std::map<size_t,size_t> mos_to_avirt;
+    std::map<size_t, size_t> mos_to_avirt;
 
     /// Map from all the MOs to the beta core
-    std::map<size_t,size_t> mos_to_bcore;
+    std::map<size_t, size_t> mos_to_bcore;
     /// Map from all the MOs to the beta active
-    std::map<size_t,size_t> mos_to_bactv;
+    std::map<size_t, size_t> mos_to_bactv;
     /// Map from all the MOs to the beta virtual
-    std::map<size_t,size_t> mos_to_bvirt;
+    std::map<size_t, size_t> mos_to_bvirt;
 
     /// The flow parameter
     double s_;
@@ -106,11 +105,12 @@ protected:
     int taylor_order_;
     /// Robust routine to compute (1 - exp(-s D * D) / D
     double renormalized_denominator(double D);
-    /// Taylor Expansion of [1 - exp(-s * D^2)] / D = sqrt(s) * (\sum_{n=1} \frac{1}{n!} (-1)^{n+1} Z^{2n-1})
-    double Taylor_Exp(const double& Z, const int& n){
-        if(n > 0){
+    /// Taylor Expansion of [1 - exp(-s * D^2)] / D = sqrt(s) * (\sum_{n=1}
+    /// \frac{1}{n!} (-1)^{n+1} Z^{2n-1})
+    double Taylor_Exp(const double& Z, const int& n) {
+        if (n > 0) {
             double value = Z, tmp = Z;
-            for(int i = 0; i < n - 1; ++i){
+            for (int i = 0; i < n - 1; ++i) {
                 tmp *= -1.0 * pow(Z, 2.0) / (static_cast<double>(i) + 2.0);
                 value += tmp;
             }
@@ -150,10 +150,12 @@ protected:
     ambit::BlockedTensor C2;
     ambit::BlockedTensor O1;
     ambit::BlockedTensor O2;
-    ambit::BlockedTensor RExp1;  // < one-particle exponential for renormalized Fock matrix
-    ambit::BlockedTensor RExp2;  // < two-particle exponential for renormalized integral
-    ambit::BlockedTensor Hbar1;  // < one-body term of effective Hamiltonian
-    ambit::BlockedTensor Hbar2;  // < two-body term of effective Hamiltonian
+    ambit::BlockedTensor
+        RExp1; // < one-particle exponential for renormalized Fock matrix
+    ambit::BlockedTensor
+        RExp2; // < two-particle exponential for renormalized integral
+    ambit::BlockedTensor Hbar1; // < one-body term of effective Hamiltonian
+    ambit::BlockedTensor Hbar2; // < two-body term of effective Hamiltonian
 
     // => Class initialization and termination <= //
 
@@ -170,14 +172,10 @@ protected:
     /// Compute Hbar
     double compute_hbar();
     /// Compute the commutator H <- [C,T]
-    void H_eq_commutator_C_T(double factor,
-                             ambit::BlockedTensor& F,
-                             ambit::BlockedTensor& V,
-                             ambit::BlockedTensor& T1,
-                             ambit::BlockedTensor& T2,
-                             double& H0,
-                             ambit::BlockedTensor& H1,
-                             ambit::BlockedTensor& H2,
+    void H_eq_commutator_C_T(double factor, ambit::BlockedTensor& F,
+                             ambit::BlockedTensor& V, ambit::BlockedTensor& T1,
+                             ambit::BlockedTensor& T2, double& H0,
+                             ambit::BlockedTensor& H1, ambit::BlockedTensor& H2,
                              int order);
 
     /// T1 amplitude update
@@ -185,35 +183,33 @@ protected:
     /// T2 amplitude update
     void update_T2();
 
-//    /// Renormalized denominator
-//    double renormalized_denominator(double D);
-//    double renormalized_denominator_amp(double V,double D);
-//    double renormalized_denominator_emp2(double V,double D);
-//    double renormalized_denominator_lamp(double V,double D);
-//    double renormalized_denominator_lemp2(double V,double D);
+    //    /// Renormalized denominator
+    //    double renormalized_denominator(double D);
+    //    double renormalized_denominator_amp(double V,double D);
+    //    double renormalized_denominator_emp2(double V,double D);
+    //    double renormalized_denominator_lamp(double V,double D);
+    //    double renormalized_denominator_lemp2(double V,double D);
 
-//    /// Computes the t2 amplitudes for three different cases of spin (alpha all, beta all, and alpha beta)
-//    void compute_t2();
-//    void check_t2();
-//    double T2norm;
-//    double T2max;
+    //    /// Computes the t2 amplitudes for three different cases of spin
+    //    (alpha all, beta all, and alpha beta)
+    //    void compute_t2();
+    //    void check_t2();
+    //    double T2norm;
+    //    double T2max;
 
-//    /// Computes the t1 amplitudes for three different cases of spin (alpha all, beta all, and alpha beta)
-//    void compute_t1();
-//    void check_t1();
-//    double T1norm;
-//    double T1max;
+    //    /// Computes the t1 amplitudes for three different cases of spin
+    //    (alpha all, beta all, and alpha beta)
+    //    void compute_t1();
+    //    void check_t1();
+    //    double T1norm;
+    //    double T1max;
 
-
-public:
-
+  public:
     // => Constructors <= //
 
-    SOMRDSRG(Reference reference,
-           SharedWavefunction ref_wfn,
-           Options &options,
-           std::shared_ptr<ForteIntegrals>  ints,
-           std::shared_ptr<MOSpaceInfo> mo_space_info);
+    SOMRDSRG(Reference reference, SharedWavefunction ref_wfn, Options& options,
+             std::shared_ptr<ForteIntegrals> ints,
+             std::shared_ptr<MOSpaceInfo> mo_space_info);
 
     ~SOMRDSRG();
 
@@ -226,7 +222,7 @@ public:
     /// The frozen-core energy
     double frozen_core_energy;
 };
-
-}} // End Namespaces
+}
+} // End Namespaces
 
 #endif // _so_mrdsrg_h_

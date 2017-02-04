@@ -36,20 +36,20 @@
 #include "helpers.h"
 #include "reference.h"
 
-#define PSIF_V2RDM_D2AA       270
-#define PSIF_V2RDM_D2AB       271
-#define PSIF_V2RDM_D2BB       272
-#define PSIF_V2RDM_D3AAA      273
-#define PSIF_V2RDM_D3AAB      274
-#define PSIF_V2RDM_D3BBA      275
-#define PSIF_V2RDM_D3BBB      276
+#define PSIF_V2RDM_D2AA 270
+#define PSIF_V2RDM_D2AB 271
+#define PSIF_V2RDM_D2BB 272
+#define PSIF_V2RDM_D3AAA 273
+#define PSIF_V2RDM_D3AAB 274
+#define PSIF_V2RDM_D3BBA 275
+#define PSIF_V2RDM_D3BBB 276
 
 using namespace ambit;
-namespace psi{ namespace forte{
+namespace psi {
+namespace forte {
 
-class V2RDM : public Wavefunction
-{
-public:
+class V2RDM : public Wavefunction {
+  public:
     /**
      * V2RDM Constructor
      * @param ref_wfn The reference wavefunction object
@@ -58,7 +58,8 @@ public:
      * @param mo_space_info The MOSpaceInfo object
      */
     V2RDM(SharedWavefunction ref_wfn, Options& options,
-          std::shared_ptr<ForteIntegrals> ints, std::shared_ptr<MOSpaceInfo> mo_space_info);
+          std::shared_ptr<ForteIntegrals> ints,
+          std::shared_ptr<MOSpaceInfo> mo_space_info);
 
     /// Destructor
     ~V2RDM();
@@ -66,12 +67,12 @@ public:
     /// Returns the reference object of forte
     Reference reference();
 
-protected:
+  protected:
     /// Start-up function called in the constructor
     void startup();
 
     /// The molecular integrals
-    std::shared_ptr<ForteIntegrals>  ints_;
+    std::shared_ptr<ForteIntegrals> ints_;
 
     /// The frozen-core energy
     double frozen_core_energy_;
@@ -123,6 +124,6 @@ protected:
     /// 3PDM: file_3pdm_aaa, file_3pdm_aab, file_3pdm_abb, file_3pdm_bbb
     void write_density_to_file();
 };
-
-}}
+}
+}
 #endif // V2RDM_H

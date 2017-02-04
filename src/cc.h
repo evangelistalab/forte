@@ -50,7 +50,7 @@ namespace psi {
 namespace forte {
 
 class CC : public Wavefunction {
-   public:
+  public:
     /**
      * CC Constructor
      * @param ref_wfn The reference wavefunction object
@@ -68,7 +68,7 @@ class CC : public Wavefunction {
     /// Compute the corr_level energy with fixed reference
     double compute_energy();
 
-   protected:
+  protected:
     // => Class initialization and termination <= //
 
     /// Start-up function called in the constructor
@@ -146,4 +146,4 @@ class CC : public Wavefunction {
 };
 }
 }
-#endif  // _cc_h_
+#endif // _cc_h_

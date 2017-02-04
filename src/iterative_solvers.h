@@ -33,10 +33,11 @@
 #include "psi4/libmints/vector.h"
 #include "psi4/libmints/matrix.h"
 
-namespace psi{ namespace forte{
+namespace psi {
+namespace forte {
 
 /// Result of the update step
-enum class SolverStatus {Converged,NotConverged,Collapse};
+enum class SolverStatus { Converged, NotConverged, Collapse };
 
 /**
  * @brief The DavidsonLiuSolver class
@@ -46,7 +47,8 @@ enum class SolverStatus {Converged,NotConverged,Collapse};
  * Example use:
  *
  *     DavidsonLiuSolver dls(nbasis,nroots);      // create solver
- *     dls.startup(diagonal);                     // initialize solver with diagonal of Matrix
+ *     dls.startup(diagonal);                     // initialize solver with
+ * diagonal of Matrix
  *     size_t guess_size = dls.collapse_size();   // get the size of the guess
  *
  *     for (size_t n = 0; n < guess_size; ++n){
@@ -58,21 +60,21 @@ enum class SolverStatus {Converged,NotConverged,Collapse};
  *         do{
  *             dls.get_b(b);                      // solver provides a vector b
  *             ...                                // code to compute sigma = Hb
- *             add_sigma = dls.add_sigma(sigma);  // return sigma vector to solver
+ *             add_sigma = dls.add_sigma(sigma);  // return sigma vector to
+ * solver
  *         } while (add_sigma);
  *         converged = dls.update();              // check convergence
  *         if (converged == Converged) break;
  *     }
  */
-class DavidsonLiuSolver
-{
-    using sparse_vec = std::vector<std::pair<size_t,double>>;
-public:
+class DavidsonLiuSolver {
+    using sparse_vec = std::vector<std::pair<size_t, double>>;
 
+  public:
     // ==> Class Constructor and Destructor <==
 
     /// Constructor
-    DavidsonLiuSolver(size_t size,size_t nroot);
+    DavidsonLiuSolver(size_t size, size_t nroot);
 
     /// Destructor
     ~DavidsonLiuSolver();
@@ -118,8 +120,7 @@ public:
     /// Produce the final eigenvectors and eigenvalues
     void get_results();
 
-private:
-
+  private:
     // ==> Class Private Functions <==
 
     /// Check that the eigenvectors are orthogonal
@@ -195,7 +196,7 @@ private:
     /// Approximate eigenstates to project out
     std::vector<sparse_vec> project_out_;
 };
-
-}}
+}
+}
 
 #endif // _iterative_solvers_h_

@@ -33,10 +33,12 @@
 
 #include "integrals.h"
 
-namespace psi{ namespace forte{
+namespace psi {
+namespace forte {
 
 /**
- * A class to store a configuration state function (CSF) using Boost's dynamic_bitset.
+ * A class to store a configuration state function (CSF) using Boost's
+ * dynamic_bitset.
  *
  * The CSF is represented by a pair of strings that specify the occupation
  * of the doubly and singly occupied molecular orbitals.
@@ -49,8 +51,8 @@ namespace psi{ namespace forte{
  * true <-> 1 or 2
  * false <-> 0
  */
-class BitsetCSF{
-public:
+class BitsetCSF {
+  public:
     /// Define the bit type (bit_t)
     using bit_t = boost::dynamic_bitset<>;
 
@@ -63,19 +65,20 @@ public:
     /// Construct the determinant from two occupation vectors that
     /// specifies the alpha and beta strings.  occupation = [Ia,Ib]
     explicit BitsetCSF(const std::vector<bool>& occupation_a,
-                       const std::vector<bool>& occupation_b,
-                       short s, short ms, short index = 0);
+                       const std::vector<bool>& occupation_b, short s, short ms,
+                       short index = 0);
 
     void print() const;
     std::string str() const;
 
-private:
-
+  private:
     // ==> Private Class Data <==
 
-    /// The occupation vector for the doubly occupied MOs (does not include the frozen orbitals)
+    /// The occupation vector for the doubly occupied MOs (does not include the
+    /// frozen orbitals)
     bit_t docc_;
-    /// The occupation vector for the singly occupied MOs (does not include the frozen orbitals)
+    /// The occupation vector for the singly occupied MOs (does not include the
+    /// frozen orbitals)
     bit_t socc_;
     /// The S value
     short s_;
@@ -84,7 +87,7 @@ private:
     /// The index of this CSF
     short index_;
 };
-
-}} // End Namespaces
+}
+} // End Namespaces
 
 #endif // _bitset_csf_h_

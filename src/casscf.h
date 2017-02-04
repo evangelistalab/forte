@@ -33,7 +33,6 @@
 #include "psi4/libmints/wavefunction.h"
 #include "psi4/libfock/jk.h"
 
-
 #include "integrals.h"
 #include "ambit/blocked_tensor.h"
 #include "reference.h"
@@ -41,34 +40,37 @@
 #include "blockedtensorfactory.h"
 #include "fci_vector.h"
 
+namespace psi {
+namespace forte {
 
-namespace psi{ namespace forte{
-
-class CASSCF : public Wavefunction
-{
-public:
+class CASSCF : public Wavefunction {
+  public:
     /**
      * @brief CASSCF::CASSCF
      * @param options -> Options object
-     * @param ints    -> The integral object.  I may not use this as I need the AO based integrals
-     * @param mo_space_info -> The MOSpaceInfo object for getting active space information
+     * @param ints    -> The integral object.  I may not use this as I need the
+     * AO based integrals
+     * @param mo_space_info -> The MOSpaceInfo object for getting active space
+     * information
      * This class will implement the AO based CASSCF by Hohenstein and Martinez.
      * Ref is .  Hohenstein J.Chem.Phys, 142, 224103.
      * This reference has a nice algorithmic flowchart.  Look it up
      *
      */
-    CASSCF(SharedWavefunction ref_wfn, Options &options,
-           std::shared_ptr<ForteIntegrals> ints, std::shared_ptr<MOSpaceInfo> mo_space_info);
+    CASSCF(SharedWavefunction ref_wfn, Options& options,
+           std::shared_ptr<ForteIntegrals> ints,
+           std::shared_ptr<MOSpaceInfo> mo_space_info);
     /// Compute CASSCF given a 1RDM and 2RDM
     void compute_casscf();
     /// Use daniels code to compute Orbital optimization
-    //void compute_casscf_soscf();
-    ///Return the final gamma1
-    ambit::Tensor gamma1(){return gamma1_;}
-    ///Return the final gamma2;
-    ambit::Tensor gamma2(){return gamma2_;}
-    double compute_energy(){return E_casscf_;}
-private:
+    // void compute_casscf_soscf();
+    /// Return the final gamma1
+    ambit::Tensor gamma1() { return gamma1_; }
+    /// Return the final gamma2;
+    ambit::Tensor gamma2() { return gamma2_; }
+    double compute_energy() { return E_casscf_; }
+
+  private:
     /// The active one RDM in the MO basis
     ambit::Tensor gamma1_;
 
@@ -86,7 +88,8 @@ private:
 
     /// The dimension for number of molecular orbitals (CORRELATED or ALL)
     Dimension nmopi_;
-    /// The number of correlated molecular orbitals (Restricted Core + Active + Restricted_UOCC + Frozen_Virt
+    /// The number of correlated molecular orbitals (Restricted Core + Active +
+    /// Restricted_UOCC + Frozen_Virt
     size_t nmo_;
     /// The number of active orbitals
     size_t na_;
@@ -134,9 +137,10 @@ private:
     /// Freeze the core and leave them unchanged
     /// set frozen_core_orbitals
     std::shared_ptr<Matrix> set_frozen_core_orbitals();
-    /// Compute the restricted_one_body operator for FCI(done also in OrbitalOptimizer)
+    /// Compute the restricted_one_body operator for FCI(done also in
+    /// OrbitalOptimizer)
 
-    std::vector<std::vector<double>  > compute_restricted_docc_operator();
+    std::vector<std::vector<double>> compute_restricted_docc_operator();
 
     double scalar_energy_ = 0.0;
     /// The Dimensions for the major orbitals spaces involved in CASSCF
@@ -154,19 +158,16 @@ private:
     std::vector<size_t> restricted_uocc_abs_;
     std::vector<size_t> inactive_docc_abs_;
     std::vector<size_t> nmo_abs_;
-    ///Transform the active integrals
+    /// Transform the active integrals
     ambit::Tensor transform_integrals();
-    std::pair<ambit::Tensor, std::vector<double> > CI_Integrals();
+    std::pair<ambit::Tensor, std::vector<double>> CI_Integrals();
     /// The transform integrals computed from transform_integrals
     ambit::Tensor tei_paaa_;
     int print_;
     /// The CISolutions per iteration
-    std::vector<std::vector<std::shared_ptr<FCIWfn> > > CISolutions_;
-
-
-
+    std::vector<std::vector<std::shared_ptr<FCIWfn>>> CISolutions_;
 };
-
-}}
+}
+}
 
 #endif // CASSCF_H

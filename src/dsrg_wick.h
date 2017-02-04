@@ -38,15 +38,16 @@ typedef std::vector<d1> d2;
 typedef std::vector<d2> d3;
 typedef std::vector<d3> d4;
 
-namespace psi { namespace forte {
+namespace psi {
+namespace forte {
 
-class DSRG_WICK
-{
-public:
+class DSRG_WICK {
+  public:
     DSRG_WICK(std::shared_ptr<MOSpaceInfo> mo_space_info,
               ambit::BlockedTensor Fock, ambit::BlockedTensor RTEI,
               ambit::BlockedTensor T1, ambit::BlockedTensor T2);
-private:
+
+  private:
     // MO space info
     std::shared_ptr<MOSpaceInfo> mo_space_info_;
     // Fock operator
@@ -95,7 +96,7 @@ private:
     void setup(ambit::BlockedTensor Fock, ambit::BlockedTensor RTEI,
                ambit::BlockedTensor T1, ambit::BlockedTensor T2);
 };
-
-}}
+}
+}
 
 #endif // DSRG_WICK_H

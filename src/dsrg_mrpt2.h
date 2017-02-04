@@ -50,11 +50,11 @@
 #include "stl_bitset_determinant.h"
 
 using namespace ambit;
-namespace psi{ namespace forte{
+namespace psi {
+namespace forte {
 
-class DSRG_MRPT2 : public Wavefunction
-{
-public:
+class DSRG_MRPT2 : public Wavefunction {
+  public:
     /**
      * DSRG_MRPT2 Constructor
      * @param reference The reference object of FORTE
@@ -63,8 +63,9 @@ public:
      * @param ints A pointer to an allocated integral object
      * @param mo_space_info The MOSpaceInfo object
      */
-    DSRG_MRPT2(Reference reference, SharedWavefunction ref_wfn, Options &options,
-               std::shared_ptr<ForteIntegrals> ints, std::shared_ptr<MOSpaceInfo> mo_space_info);
+    DSRG_MRPT2(Reference reference, SharedWavefunction ref_wfn,
+               Options& options, std::shared_ptr<ForteIntegrals> ints,
+               std::shared_ptr<MOSpaceInfo> mo_space_info);
 
     /// Destructor
     ~DSRG_MRPT2();
@@ -79,20 +80,32 @@ public:
     double compute_energy_multi_state();
 
     /// Set CASCI eigen values and eigen vectors for state averaging
-    void set_eigens(std::vector<std::vector<std::pair<SharedVector,double>>> eigens) {eigens_ = eigens;}
+    void set_eigens(
+        std::vector<std::vector<std::pair<SharedVector, double>>> eigens) {
+        eigens_ = eigens;
+    }
 
     /// Set determinants in the model space
-    void set_p_spaces(std::vector<std::vector<psi::forte::STLBitsetDeterminant>> p_spaces) {p_spaces_ = p_spaces;}
+    void set_p_spaces(
+        std::vector<std::vector<psi::forte::STLBitsetDeterminant>> p_spaces) {
+        p_spaces_ = p_spaces;
+    }
 
     /// Ignore semi-canonical testing in DSRG-MRPT2
-    void set_ignore_semicanonical(bool ignore) {ignore_semicanonical_ = ignore;}
+    void set_ignore_semicanonical(bool ignore) {
+        ignore_semicanonical_ = ignore;
+    }
 
     /// Set active active occupied MOs (relative to active)
-    void set_actv_occ(std::vector<size_t> actv_occ) {actv_occ_mos_ = std::vector<size_t>(actv_occ);}
+    void set_actv_occ(std::vector<size_t> actv_occ) {
+        actv_occ_mos_ = std::vector<size_t>(actv_occ);
+    }
     /// Set active active unoccupied MOs (relative to active)
-    void set_actv_uocc(std::vector<size_t> actv_uocc) {actv_uocc_mos_ = std::vector<size_t>(actv_uocc);}
+    void set_actv_uocc(std::vector<size_t> actv_uocc) {
+        actv_uocc_mos_ = std::vector<size_t>(actv_uocc);
+    }
 
-protected:
+  protected:
     // => Class initialization and termination <= //
 
     /// Called in the constructor
@@ -107,7 +120,7 @@ protected:
     /// Do multi-state computation?
     bool multi_state_;
     /// CASCI eigen values and eigen vectors for state averaging
-    std::vector<std::vector<std::pair<SharedVector,double>>> eigens_;
+    std::vector<std::vector<std::pair<SharedVector, double>>> eigens_;
     /// Determinants with different symmetries in the model space
     std::vector<std::vector<psi::forte::STLBitsetDeterminant>> p_spaces_;
 
@@ -119,7 +132,7 @@ protected:
     double frozen_core_energy_;
 
     /// The molecular integrals required by MethodBase
-    std::shared_ptr<ForteIntegrals>  ints_;
+    std::shared_ptr<ForteIntegrals> ints_;
 
     /// MO space info
     std::shared_ptr<MOSpaceInfo> mo_space_info_;
@@ -231,7 +244,6 @@ protected:
     /// Unitary matrix to block diagonal Fock
     ambit::BlockedTensor U_;
 
-
     // => Amplitude <= //
 
     /// Compute T2 amplitudes
@@ -260,9 +272,10 @@ protected:
     /// Number of amplitudes will be printed in amplitude summary
     int ntamp_;
     /// Print amplitudes summary
-    void print_amp_summary(const std::string& name,
-                           const std::vector<std::pair<std::vector<size_t>, double>>& list, const double &norm,
-                           const size_t& number_nonzero);
+    void print_amp_summary(
+        const std::string& name,
+        const std::vector<std::pair<std::vector<size_t>, double>>& list,
+        const double& norm, const size_t& number_nonzero);
 
     /// Threshold for amplitudes considered as intruders
     double intruder_tamp_;
@@ -273,15 +286,16 @@ protected:
     std::vector<std::pair<std::vector<size_t>, double>> lt2ab_;
     std::vector<std::pair<std::vector<size_t>, double>> lt2bb_;
     /// Print intruder analysis
-    void print_intruder(const std::string& name,
-                        const std::vector<std::pair<std::vector<size_t>, double>>& list);
-
+    void print_intruder(
+        const std::string& name,
+        const std::vector<std::pair<std::vector<size_t>, double>>& list);
 
     // => Energy terms <= //
 
     /// Compute reference energy
     double compute_ref();
-    /// Compute DSRG-PT2 correlation energy - Group of functions to calculate individual pieces of energy
+    /// Compute DSRG-PT2 correlation energy - Group of functions to calculate
+    /// individual pieces of energy
     double E_FT1();
     double E_VT1();
     double E_FT2();
@@ -290,7 +304,6 @@ protected:
     double E_VT2_4HH();
     double E_VT2_4PH();
     double E_VT2_6();
-
 
     // => Reference relaxation <= //
 
@@ -303,33 +316,43 @@ protected:
     /// Compute zero-body Hbar truncated to 2nd-order
     double Hbar0_;
     /// Compute one-body term of commutator [H1, T1]
-    void H1_T1_C1(BlockedTensor& H1, BlockedTensor& T1, const double& alpha, BlockedTensor& C1);
+    void H1_T1_C1(BlockedTensor& H1, BlockedTensor& T1, const double& alpha,
+                  BlockedTensor& C1);
     /// Compute one-body term of commutator [H1, T2]
-    void H1_T2_C1(BlockedTensor& H1, BlockedTensor& T2, const double& alpha, BlockedTensor& C1);
+    void H1_T2_C1(BlockedTensor& H1, BlockedTensor& T2, const double& alpha,
+                  BlockedTensor& C1);
     /// Compute one-body term of commutator [H2, T1]
-    void H2_T1_C1(BlockedTensor& H2, BlockedTensor& T1, const double& alpha, BlockedTensor& C1);
+    void H2_T1_C1(BlockedTensor& H2, BlockedTensor& T1, const double& alpha,
+                  BlockedTensor& C1);
     /// Compute one-body term of commutator [H2, T2]
-    void H2_T2_C1(BlockedTensor& H2, BlockedTensor& T2, const double& alpha, BlockedTensor& C1);
+    void H2_T2_C1(BlockedTensor& H2, BlockedTensor& T2, const double& alpha,
+                  BlockedTensor& C1);
 
     /// Compute two-body term of commutator [H2, T1]
-    void H2_T1_C2(BlockedTensor& H2, BlockedTensor& T1, const double& alpha, BlockedTensor& C2);
+    void H2_T1_C2(BlockedTensor& H2, BlockedTensor& T1, const double& alpha,
+                  BlockedTensor& C2);
     /// Compute two-body term of commutator [H1, T2]
-    void H1_T2_C2(BlockedTensor& H1, BlockedTensor& T2, const double& alpha, BlockedTensor& C2);
+    void H1_T2_C2(BlockedTensor& H1, BlockedTensor& T2, const double& alpha,
+                  BlockedTensor& C2);
     /// Compute two-body term of commutator [H2, T2]
-    void H2_T2_C2(BlockedTensor& H2, BlockedTensor& T2, const double& alpha, BlockedTensor& C2);
+    void H2_T2_C2(BlockedTensor& H2, BlockedTensor& T2, const double& alpha,
+                  BlockedTensor& C2);
 
     /// Compute three-body term of commutator [H2, T2]
-    void H2_T2_C3(BlockedTensor& H2, BlockedTensor& T2, const double& alpha, BlockedTensor& C3);
+    void H2_T2_C3(BlockedTensor& H2, BlockedTensor& T2, const double& alpha,
+                  BlockedTensor& C3);
 
     /// Transfer integrals for FCI
     void transfer_integrals();
     /// Diagonalize the diagonal blocks of the Fock matrix
-    std::vector<std::vector<double>> diagonalize_Fock_diagblocks(BlockedTensor& U);
+    std::vector<std::vector<double>>
+    diagonalize_Fock_diagblocks(BlockedTensor& U);
     /// Separate an 2D ambit::Tensor according to its irrep
-    ambit::Tensor separate_tensor(ambit::Tensor& tens, const Dimension& irrep, const int& h);
+    ambit::Tensor separate_tensor(ambit::Tensor& tens, const Dimension& irrep,
+                                  const int& h);
     /// Combine a separated 2D ambit::Tensor
-    void combine_tensor(ambit::Tensor& tens, ambit::Tensor& tens_h, const Dimension& irrep, const int& h);
-
+    void combine_tensor(ambit::Tensor& tens, ambit::Tensor& tens_h,
+                        const Dimension& irrep, const int& h);
 
     // => Multi-state energy <= //
 
@@ -346,22 +369,23 @@ protected:
     void build_eff_t1();
 
     /// Compute density cumulants
-    void compute_cumulants(std::shared_ptr<FCIIntegrals> fci_ints,
-                           std::vector<psi::forte::STLBitsetDeterminant>& p_space,
-                           SharedMatrix evecs, const int& root1, const int& root2,
-                           const int& irrep);
+    void
+    compute_cumulants(std::shared_ptr<FCIIntegrals> fci_ints,
+                      std::vector<psi::forte::STLBitsetDeterminant>& p_space,
+                      SharedMatrix evecs, const int& root1, const int& root2,
+                      const int& irrep);
     /// Compute denisty matrices and puts in Gamma1_, Lambda2_, and Lambda3_
     void compute_densities(std::shared_ptr<FCIIntegrals> fci_ints,
                            std::vector<STLBitsetDeterminant>& p_space,
-                           SharedMatrix evecs, const int& root1, const int& root2,
-                           const int& irrep);
+                           SharedMatrix evecs, const int& root1,
+                           const int& root2, const int& irrep);
 
     /// Compute MS coupling <M|H|N>
     double compute_ms_1st_coupling(const std::string& name);
     /// Compute MS coupling <M|HT|N>
     double compute_ms_2nd_coupling(const std::string& name);
 };
-
-}} // End Namespaces
+}
+} // End Namespaces
 
 #endif // _dsrg_mrpt2_h_

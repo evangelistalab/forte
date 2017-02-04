@@ -37,7 +37,8 @@
 #include "dynamic_bitset_determinant.h"
 #include "stl_bitset_string.h"
 
-namespace psi{ namespace forte{
+namespace psi {
+namespace forte {
 
 /**
  * A class to store a Slater determinant using the STL bitset container.
@@ -53,8 +54,8 @@ namespace psi{ namespace forte{
  * true <-> 1
  * false <-> 0
  */
-class STLBitsetDeterminant{
-public:
+class STLBitsetDeterminant {
+  public:
     using bit_t = std::bitset<256>;
 
     // Class Constructor and Destructor
@@ -69,12 +70,13 @@ public:
     /// Construct an excited determinant of a given reference
     /// Construct the determinant from two occupation vectors that
     /// specifies the alpha and beta strings.  occupation = [Ia,Ib]
-    explicit STLBitsetDeterminant(const std::vector<bool>& occupation_a, const std::vector<bool>& occupation_b);
+    explicit STLBitsetDeterminant(const std::vector<bool>& occupation_a,
+                                  const std::vector<bool>& occupation_b);
     /// Construct a determinant from a bitset object
     explicit STLBitsetDeterminant(const std::bitset<256>& bits);
     /// Construct a determinant from two STLBitsetStrings
-    explicit STLBitsetDeterminant(const STLBitsetString& alpha,const STLBitsetString& beta);
-
+    explicit STLBitsetDeterminant(const STLBitsetString& alpha,
+                                  const STLBitsetString& beta);
 
     /// Equal operator
     bool operator==(const STLBitsetDeterminant& lhs) const;
@@ -151,25 +153,32 @@ public:
     /// Compute the energy of a Slater determinant
     double energy() const;
     double fast_energy();
-    /// Compute the matrix element of the Hamiltonian between this determinant and a given one
+    /// Compute the matrix element of the Hamiltonian between this determinant
+    /// and a given one
     double slater_rules(const STLBitsetDeterminant& rhs) const;
-    /// Compute the matrix element of the Hamiltonian between this determinant and a given one
+    /// Compute the matrix element of the Hamiltonian between this determinant
+    /// and a given one
     double slater_rules_single_alpha(int i, int a) const;
-    /// Compute the matrix element of the Hamiltonian between this determinant and a given one
+    /// Compute the matrix element of the Hamiltonian between this determinant
+    /// and a given one
     double slater_rules_single_beta(int i, int a) const;
-    /// Compute the matrix element of the Hamiltonian between this determinant and a given one
+    /// Compute the matrix element of the Hamiltonian between this determinant
+    /// and a given one
     double slater_rules_single_alpha_abs(int i, int a) const;
-    /// Compute the matrix element of the Hamiltonian between this determinant and a given one
+    /// Compute the matrix element of the Hamiltonian between this determinant
+    /// and a given one
     double slater_rules_single_beta_abs(int i, int a) const;
     /// Apply S+ to this determinant
-    std::vector<std::pair<STLBitsetDeterminant,double>> spin_plus() const;
+    std::vector<std::pair<STLBitsetDeterminant, double>> spin_plus() const;
     /// Apply S- to this determinant
-    std::vector<std::pair<STLBitsetDeterminant,double>> spin_minus() const;
-    /// Compute the matrix element of the S^2 operator between this determinant and a given one
+    std::vector<std::pair<STLBitsetDeterminant, double>> spin_minus() const;
+    /// Compute the matrix element of the S^2 operator between this determinant
+    /// and a given one
     double spin2_slow(const STLBitsetDeterminant& rhs) const;
     /// Return the eigenvalue of Sz
     double spin_z() const;
-    /// Compute the matrix element of the S^2 operator between this determinant and a given one
+    /// Compute the matrix element of the S^2 operator between this determinant
+    /// and a given one
     double spin2(const STLBitsetDeterminant& rhs) const;
     /// Return the sign of a_n applied to this determinant
     double slater_sign_alpha(int n) const;
@@ -187,7 +196,7 @@ public:
     /// Resets the pointer to the integral object
     static void reset_ints();
 
-public:
+  public:
     // Object Data
     /// The occupation vector (does not include the frozen orbitals)
     bit_t bits_;
@@ -198,15 +207,15 @@ public:
     /// A pointer to the integral object
     static std::shared_ptr<FCIIntegrals> fci_ints_;
     /// Return the sign of a_n applied to string I
-    static double SlaterSign(const bit_t& I,int n);
+    static double SlaterSign(const bit_t& I, int n);
     /// Given a set of determinant adds new elements necessary to have a spin
     /// complete set
-    static void enforce_spin_completeness(std::vector<STLBitsetDeterminant>& det_space);
+    static void
+    enforce_spin_completeness(std::vector<STLBitsetDeterminant>& det_space);
 
-    struct Hash
-    {
-        std::size_t operator()(const psi::forte::STLBitsetDeterminant& bs) const
-        {
+    struct Hash {
+        std::size_t
+        operator()(const psi::forte::STLBitsetDeterminant& bs) const {
             return std::hash<bit_t>()(bs.bits_);
         }
     };
@@ -214,9 +223,11 @@ public:
 
 using Determinant = STLBitsetDeterminant;
 using det_vec = std::vector<Determinant>;
-template <typename T = double> using det_hash = std::unordered_map<Determinant, T, Determinant::Hash>;
-using det_hash_it = std::unordered_map<STLBitsetDeterminant, double, STLBitsetDeterminant::Hash>::iterator;
-}} // End Namespaces
-
+template <typename T = double>
+using det_hash = std::unordered_map<Determinant, T, Determinant::Hash>;
+using det_hash_it = std::unordered_map<STLBitsetDeterminant, double,
+                                       STLBitsetDeterminant::Hash>::iterator;
+}
+} // End Namespaces
 
 #endif // _bitset_determinant_h_

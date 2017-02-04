@@ -39,76 +39,92 @@
 #define CAPRICCIO_USE_DAXPY 1
 #define CAPRICCIO_USE_UNROLL 0
 
-namespace psi{ namespace forte{
+namespace psi {
+namespace forte {
 
-enum FCIIntegralsType {Active,Correlated};
+enum FCIIntegralsType { Active, Correlated };
 /**
  * @brief The FCIIntegrals class stores integrals necessary for FCI calculations
  */
-class FCIIntegrals
-{
-public:
-
+class FCIIntegrals {
+  public:
     // ==> Class Constructors <==
 
-    ///Generating a contructor to create the active integrals
-    FCIIntegrals(std::shared_ptr<ForteIntegrals> ints, std::vector<size_t> active_mo, std::vector<size_t> rdocc_mo);
+    /// Generating a contructor to create the active integrals
+    FCIIntegrals(std::shared_ptr<ForteIntegrals> ints,
+                 std::vector<size_t> active_mo, std::vector<size_t> rdocc_mo);
 
-    ///Constructor that needs to be deleted
-    FCIIntegrals(std::shared_ptr<ForteIntegrals> ints, std::shared_ptr<MOSpaceInfo> mospace_info, FCIIntegralsType type = Active);
-
+    /// Constructor that needs to be deleted
+    FCIIntegrals(std::shared_ptr<ForteIntegrals> ints,
+                 std::shared_ptr<MOSpaceInfo> mospace_info,
+                 FCIIntegralsType type = Active);
 
     // ==> Class Interface <==
 
     /// Return the number of MOs
-    size_t nmo() const {return nmo_;}
+    size_t nmo() const { return nmo_; }
     /// Return the frozen core energy (contribution from FROZEN_DOCC)
-    double frozen_core_energy() const {return frozen_core_energy_;}
+    double frozen_core_energy() const { return frozen_core_energy_; }
     /// Return the scalar_energy energy (contribution from RESTRICTED_DOCC)
-    double scalar_energy() const {return scalar_energy_;}
+    double scalar_energy() const { return scalar_energy_; }
     /// Set scalar_energy();
-    void set_scalar_energy(double scalar_energy){scalar_energy_ = scalar_energy;}
+    void set_scalar_energy(double scalar_energy) {
+        scalar_energy_ = scalar_energy;
+    }
 
     /// Return the alpha effective one-electron integral
-    double oei_a(size_t p,size_t q) const {return oei_a_[p * nmo_ + q];}
+    double oei_a(size_t p, size_t q) const { return oei_a_[p * nmo_ + q]; }
     /// Return the beta effective one-electron integral
-    double oei_b(size_t p,size_t q) const {return oei_b_[p * nmo_ + q];}
-    std::vector<double> oei_a_vector() {return oei_a_;}
-    std::vector<double> oei_b_vector() {return oei_b_;}
+    double oei_b(size_t p, size_t q) const { return oei_b_[p * nmo_ + q]; }
+    std::vector<double> oei_a_vector() { return oei_a_; }
+    std::vector<double> oei_b_vector() { return oei_b_; }
 
     /// Return the alpha-alpha antisymmetrized two-electron integral <pq||rs>
-    double tei_aa(size_t p,size_t q,size_t r,size_t s) const {return tei_aa_[nmo3_ * p + nmo2_ * q + nmo_ * r + s];}
+    double tei_aa(size_t p, size_t q, size_t r, size_t s) const {
+        return tei_aa_[nmo3_ * p + nmo2_ * q + nmo_ * r + s];
+    }
     /// Return the alpha-beta two-electron integral <pq|rs>
-    double tei_ab(size_t p,size_t q,size_t r,size_t s) const {return tei_ab_[nmo3_ * p + nmo2_ * q + nmo_ * r + s];}
+    double tei_ab(size_t p, size_t q, size_t r, size_t s) const {
+        return tei_ab_[nmo3_ * p + nmo2_ * q + nmo_ * r + s];
+    }
     /// Return the beta-beta antisymmetrized two-electron integral <pq||rs>
-    double tei_bb(size_t p,size_t q,size_t r,size_t s) const {return tei_bb_[nmo3_ * p + nmo2_ * q + nmo_ * r + s];}
+    double tei_bb(size_t p, size_t q, size_t r, size_t s) const {
+        return tei_bb_[nmo3_ * p + nmo2_ * q + nmo_ * r + s];
+    }
 
     /// Return the alpha-alpha antisymmetrized two-electron integral <pq||pq>
-    double diag_tei_aa(size_t p,size_t q) const {return tei_aa_[p * nmo3_ + q * nmo2_ + p * nmo_ + q];}
+    double diag_tei_aa(size_t p, size_t q) const {
+        return tei_aa_[p * nmo3_ + q * nmo2_ + p * nmo_ + q];
+    }
     /// Return the alpha-beta two-electron integral <pq|rs>
-    double diag_tei_ab(size_t p,size_t q) const {return tei_ab_[p * nmo3_ + q * nmo2_ + p * nmo_ + q];}
+    double diag_tei_ab(size_t p, size_t q) const {
+        return tei_ab_[p * nmo3_ + q * nmo2_ + p * nmo_ + q];
+    }
     /// Return the beta-beta antisymmetrized two-electron integral <pq||rs>
-    double diag_tei_bb(size_t p,size_t q) const {return tei_bb_[p * nmo3_ + q * nmo2_ + p * nmo_ + q];}
-    IntegralType get_integral_type(){return integral_type_;}
-    ///Set the active integrals
-    void set_active_integrals(const ambit::Tensor& tei_aa, const ambit::Tensor& tei_ab, const ambit::Tensor& tei_bb);
-    ///Compute the restricted_docc operator
+    double diag_tei_bb(size_t p, size_t q) const {
+        return tei_bb_[p * nmo3_ + q * nmo2_ + p * nmo_ + q];
+    }
+    IntegralType get_integral_type() { return integral_type_; }
+    /// Set the active integrals
+    void set_active_integrals(const ambit::Tensor& tei_aa,
+                              const ambit::Tensor& tei_ab,
+                              const ambit::Tensor& tei_bb);
+    /// Compute the restricted_docc operator
     void compute_restricted_one_body_operator();
-    ///Set the restricted_one_body_operator
-    void set_restricted_one_body_operator(const std::vector<double>& oei_a, const std::vector<double>& oei_b)
-    {
+    /// Set the restricted_one_body_operator
+    void set_restricted_one_body_operator(const std::vector<double>& oei_a,
+                                          const std::vector<double>& oei_b) {
         oei_a_ = oei_a;
         oei_b_ = oei_b;
     }
 
-    /// Streamline the process of setting up active integrals and restricted_docc
+    /// Streamline the process of setting up active integrals and
+    /// restricted_docc
     /// Sets active integrals based on active space and restricted_docc
     /// If you want more control, don't use this function.
     void set_active_integrals_and_restricted_docc();
 
-
-private:
-
+  private:
     // ==> Class Private Data <==
 
     /// The number of MOs
@@ -131,17 +147,23 @@ private:
     std::vector<double> oei_a_;
     /// The beta one-electron integrals
     std::vector<double> oei_b_;
-    /// The alpha-alpha antisymmetrized two-electron integrals in physicist notation
+    /// The alpha-alpha antisymmetrized two-electron integrals in physicist
+    /// notation
     std::vector<double> tei_aa_;
-    /// The alpha-beta antisymmetrized two-electron integrals in physicist notation
+    /// The alpha-beta antisymmetrized two-electron integrals in physicist
+    /// notation
     std::vector<double> tei_ab_;
-    /// The beta-beta antisymmetrized two-electron integrals in physicist notation
+    /// The beta-beta antisymmetrized two-electron integrals in physicist
+    /// notation
     std::vector<double> tei_bb_;
-    /// The diagonal alpha-alpha antisymmetrized two-electron integrals in physicist notation
+    /// The diagonal alpha-alpha antisymmetrized two-electron integrals in
+    /// physicist notation
     std::vector<double> diag_tei_aa_;
-    /// The diagonal alpha-beta antisymmetrized two-electron integrals in physicist notation
+    /// The diagonal alpha-beta antisymmetrized two-electron integrals in
+    /// physicist notation
     std::vector<double> diag_tei_ab_;
-    /// The diagonal beta-beta antisymmetrized two-electron integrals in physicist notation
+    /// The diagonal beta-beta antisymmetrized two-electron integrals in
+    /// physicist notation
     std::vector<double> diag_tei_bb_;
     /// Printing information
     int print_ = 0;
@@ -150,26 +172,28 @@ private:
     /// A Vector of indices for the restricted_docc molecular orbitals
     std::vector<size_t> restricted_docc_mo_;
 
-
     // ==> Class Private Functions <==
 
-    inline size_t tei_index(size_t p, size_t q, size_t r, size_t s) const {return nmo3_ * p + nmo2_ * q + nmo_ * r + s;}
-    /// F^{Restricted}_{uv} = h_{uv} + \sum_{i = frozen_core}^{restricted_core} 2(uv | ii) - (ui|vi)
-    void RestrictedOneBodyOperator(std::vector<double>& oei_a, std::vector<double>& oei_b);
+    inline size_t tei_index(size_t p, size_t q, size_t r, size_t s) const {
+        return nmo3_ * p + nmo2_ * q + nmo_ * r + s;
+    }
+    /// F^{Restricted}_{uv} = h_{uv} + \sum_{i = frozen_core}^{restricted_core}
+    /// 2(uv | ii) - (ui|vi)
+    void RestrictedOneBodyOperator(std::vector<double>& oei_a,
+                                   std::vector<double>& oei_b);
     void startup();
 };
 
-
-class FCIWfn{
-public:
+class FCIWfn {
+  public:
     FCIWfn(std::shared_ptr<StringLists> lists, size_t symmetry);
     ~FCIWfn();
-    
-//    // Simple operation
+
+    //    // Simple operation
     void print();
     void zero();
     /// The size of the CI basis
-    size_t size() const {return ndet_;}
+    size_t size() const { return ndet_; }
 
     /// Copy the wave function object
     void copy(FCIWfn& wfn);
@@ -181,46 +205,45 @@ public:
     /// Form the diagonal part of the Hamiltonian
     void form_H_diagonal(std::shared_ptr<FCIIntegrals> fci_ints);
 
-//    double approximate_spin(double )
+    //    double approximate_spin(double )
 
-//    /// Initial guess
-//    void initial_guess(FCIWfn& diag, size_t num_dets = 100);
+    //    /// Initial guess
+    //    void initial_guess(FCIWfn& diag, size_t num_dets = 100);
 
-////    void set_to(Determinant& det);
-    void set(std::vector<std::tuple<size_t,size_t,size_t,double>>& sparse_vec);
-//    double get(int n);
-//    void plus_equal(double factor,FCIWfn& wfn);
-//    void scale(double factor);
+    ////    void set_to(Determinant& det);
+    void
+    set(std::vector<std::tuple<size_t, size_t, size_t, double>>& sparse_vec);
+    //    double get(int n);
+    //    void plus_equal(double factor,FCIWfn& wfn);
+    //    void scale(double factor);
     double norm(double power = 2.0);
-////    void normalize_wrt(Determinant& det);
+    ////    void normalize_wrt(Determinant& det);
     void normalize();
     double dot(FCIWfn& wfn);
     double dot(std::shared_ptr<FCIWfn>& wfn);
 
+    std::vector<double>& opdm_a() { return opdm_a_; }
+    std::vector<double>& opdm_b() { return opdm_b_; }
+    std::vector<double>& tpdm_aa() { return tpdm_aa_; }
+    std::vector<double>& tpdm_ab() { return tpdm_ab_; }
+    std::vector<double>& tpdm_bb() { return tpdm_bb_; }
+    std::vector<double>& tpdm_aaa() { return tpdm_aaa_; }
+    std::vector<double>& tpdm_aab() { return tpdm_aab_; }
+    std::vector<double>& tpdm_abb() { return tpdm_abb_; }
+    std::vector<double>& tpdm_bbb() { return tpdm_bbb_; }
 
-    std::vector<double>& opdm_a() {return opdm_a_;}
-    std::vector<double>& opdm_b() {return opdm_b_;}
-    std::vector<double>& tpdm_aa() {return tpdm_aa_;}
-    std::vector<double>& tpdm_ab() {return tpdm_ab_;}
-    std::vector<double>& tpdm_bb() {return tpdm_bb_;}
-    std::vector<double>& tpdm_aaa() {return tpdm_aaa_;}
-    std::vector<double>& tpdm_aab() {return tpdm_aab_;}
-    std::vector<double>& tpdm_abb() {return tpdm_abb_;}
-    std::vector<double>& tpdm_bbb() {return tpdm_bbb_;}
+    //    void randomize();
+    ////    double get_coefficient(Determinant& det);
+    //    double norm2();
+    //    double min_element();
+    //    double max_element();
+    //    std::vector<int> get_important(double alpha);
 
-
-//    void randomize();
-////    double get_coefficient(Determinant& det);
-//    double norm2();
-//    double min_element();
-//    double max_element();
-//    std::vector<int> get_important(double alpha);
-    
     // Operations on the wave function
-    void Hamiltonian(FCIWfn& result, std::shared_ptr<FCIIntegrals> fci_ints, RequiredLists required_lists);
-    
-    double energy_from_rdms(std::shared_ptr<FCIIntegrals> fci_ints);
+    void Hamiltonian(FCIWfn& result, std::shared_ptr<FCIIntegrals> fci_ints,
+                     RequiredLists required_lists);
 
+    double energy_from_rdms(std::shared_ptr<FCIIntegrals> fci_ints);
 
     void compute_rdms(int max_order = 2);
     void rdm_test();
@@ -230,17 +253,20 @@ public:
 
     /// Return the elements with the smallest value
     /// This function returns the tuple (C_I,irrep,Ia,Ib)
-    std::vector<std::tuple<double,size_t,size_t,size_t>> min_elements(size_t num_dets);
+    std::vector<std::tuple<double, size_t, size_t, size_t>>
+    min_elements(size_t num_dets);
     /// Return the elements with the largest absolute value
     /// This function returns the tuple (|C_I|,C_I,irrep,Ia,Ib)
-    std::vector<std::tuple<double, double, size_t, size_t, size_t> > max_abs_elements(size_t num_dets);
+    std::vector<std::tuple<double, double, size_t, size_t, size_t>>
+    max_abs_elements(size_t num_dets);
 
     // Temporary memory allocation
-    static void allocate_temp_space(std::shared_ptr<StringLists> lists_, int print_);
+    static void allocate_temp_space(std::shared_ptr<StringLists> lists_,
+                                    int print_);
     static void release_temp_space();
-    void set_print(int print){print_ = print;}
-private:
+    void set_print(int print) { print_ = print; }
 
+  private:
     // ==> Class Data <==
 
     /// The number of irreps
@@ -250,11 +276,11 @@ private:
     /// The total number of correlated molecular orbitals
     size_t ncmo_;
     /// The number of correlated molecular orbitals per irrep
-    Dimension  cmopi_;
+    Dimension cmopi_;
     /// The offset array for cmopi_
     std::vector<size_t> cmopi_offset_;
-//    /// The mapping between correlated molecular orbitals and all orbitals
-//    std::vector<size_t> cmo_to_mo_;
+    //    /// The mapping between correlated molecular orbitals and all orbitals
+    //    std::vector<size_t> cmo_to_mo_;
     /// The number of determinants
     size_t ndet_;
     /// The number of determinants per irrep
@@ -266,9 +292,9 @@ private:
     std::shared_ptr<StringLists> lists_;
     // Graphs
     /// The alpha string graph
-    GraphPtr  alfa_graph_;
+    GraphPtr alfa_graph_;
     /// The beta string graph
-    GraphPtr  beta_graph_;
+    GraphPtr beta_graph_;
     /// Coefficient matrix stored in block-matrix form
     std::vector<SharedMatrix> C_;
     std::vector<double> opdm_a_;
@@ -281,14 +307,13 @@ private:
     std::vector<double> tpdm_abb_;
     std::vector<double> tpdm_bbb_;
 
-
     // ==> Class Static Data <==
 
     static SharedMatrix C1;
     static SharedMatrix Y1;
-    static size_t   sizeC1;
-//    static FCIWfn* tmp_wfn1;
-//    static FCIWfn* tmp_wfn2;
+    static size_t sizeC1;
+    //    static FCIWfn* tmp_wfn1;
+    //    static FCIWfn* tmp_wfn2;
 
     // Timers
     static double hdiag_timer;
@@ -298,49 +323,57 @@ private:
     static double h2_aabb_timer;
     static double h2_bbbb_timer;
 
-
     // ==> Class Public Functions <==
 
     void startup();
     void cleanup();
 
     /// Compute the energy of a determinant
-    double determinant_energy(bool*& Ia,bool*& Ib,int n, std::shared_ptr<FCIIntegrals> fci_ints);
-
+    double determinant_energy(bool*& Ia, bool*& Ib, int n,
+                              std::shared_ptr<FCIIntegrals> fci_ints);
 
     // ==> Class Private Functions <==
 
-    size_t oei_index(size_t p, size_t q) const {return ncmo_ * p + q;}
-    size_t tei_index(size_t p, size_t q, size_t r, size_t s) const {return ncmo_ * ncmo_ * ncmo_ * p + ncmo_ * ncmo_ * q + ncmo_ * r + s;}
-    size_t six_index(size_t p, size_t q, size_t r, size_t s, size_t t, size_t u) const {
-        return (ncmo_ * ncmo_ * ncmo_ * ncmo_ * ncmo_ * p + ncmo_ * ncmo_ * ncmo_ * ncmo_ * q + ncmo_ * ncmo_ * ncmo_ * r + ncmo_ * ncmo_ * s + ncmo_ * t + u);
+    size_t oei_index(size_t p, size_t q) const { return ncmo_ * p + q; }
+    size_t tei_index(size_t p, size_t q, size_t r, size_t s) const {
+        return ncmo_ * ncmo_ * ncmo_ * p + ncmo_ * ncmo_ * q + ncmo_ * r + s;
+    }
+    size_t six_index(size_t p, size_t q, size_t r, size_t s, size_t t,
+                     size_t u) const {
+        return (ncmo_ * ncmo_ * ncmo_ * ncmo_ * ncmo_ * p +
+                ncmo_ * ncmo_ * ncmo_ * ncmo_ * q + ncmo_ * ncmo_ * ncmo_ * r +
+                ncmo_ * ncmo_ * s + ncmo_ * t + u);
     }
 
-//    double oei_aa(size_t p, size_t q) const {return fci_ints_->oei_a(ncmo_ * p + q);}
-//    double oei_bb(size_t p, size_t q) const {return fci_ints_->oei_b(ncmo_ * p + q);}
+    //    double oei_aa(size_t p, size_t q) const {return fci_ints_->oei_a(ncmo_
+    //    * p + q);}
+    //    double oei_bb(size_t p, size_t q) const {return fci_ints_->oei_b(ncmo_
+    //    * p + q);}
 
-//    double tei_aaaa(size_t p, size_t q, size_t r, size_t s) const {return fci_ints_->tei_aa(tei_index(p,q,r,s));}
-//    double tei_aabb(size_t p, size_t q, size_t r, size_t s) const {return fci_ints_->tei_ab(tei_index(p,q,r,s));}
-//    double tei_bbbb(size_t p, size_t q, size_t r, size_t s) const {return fci_ints_->tei_ab(tei_index(p,q,r,s));}
+    //    double tei_aaaa(size_t p, size_t q, size_t r, size_t s) const {return
+    //    fci_ints_->tei_aa(tei_index(p,q,r,s));}
+    //    double tei_aabb(size_t p, size_t q, size_t r, size_t s) const {return
+    //    fci_ints_->tei_ab(tei_index(p,q,r,s));}
+    //    double tei_bbbb(size_t p, size_t q, size_t r, size_t s) const {return
+    //    fci_ints_->tei_ab(tei_index(p,q,r,s));}
 
     void H0(FCIWfn& result, std::shared_ptr<FCIIntegrals> fci_ints);
     void H1(FCIWfn& result, std::shared_ptr<FCIIntegrals> fci_ints, bool alfa);
     void H2_aabb(FCIWfn& result, std::shared_ptr<FCIIntegrals> fci_ints);
-    void H2_aaaa2(FCIWfn& result, std::shared_ptr<FCIIntegrals> fci_ints, bool alfa);
+    void H2_aaaa2(FCIWfn& result, std::shared_ptr<FCIIntegrals> fci_ints,
+                  bool alfa);
 
-    void compute_1rdm(std::vector<double> &rdm, bool alfa);
+    void compute_1rdm(std::vector<double>& rdm, bool alfa);
     void compute_2rdm_aa(std::vector<double>& rdm, bool alfa);
     void compute_2rdm_ab(std::vector<double>& rdm);
     void compute_3rdm_aaa(std::vector<double>& rdm, bool alfa);
     void compute_3rdm_aab(std::vector<double>& rdm);
     void compute_3rdm_abb(std::vector<double>& rdm);
 };
-
-}}
+}
+}
 
 #endif // _fci_vector_
-
-
 
 ////    DetAddress get_det_address(Determinant& det) {
 ////        int sym = alfa_graph_->sym(det.get_alfa_bits());

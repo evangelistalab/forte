@@ -40,21 +40,25 @@
 #include "boost/dynamic_bitset.hpp"
 #include "binary_graph.hpp"
 
-namespace psi{ namespace forte{
+namespace psi {
+namespace forte {
 
 struct DetAddress {
     int alfa_sym;
     size_t alfa_string;
     size_t beta_string;
-    DetAddress(const int& alfa_sym_, const size_t& alfa_string_, const size_t& beta_string_)
-        : alfa_sym(alfa_sym_), alfa_string(alfa_string_), beta_string(beta_string_) {}
+    DetAddress(const int& alfa_sym_, const size_t& alfa_string_,
+               const size_t& beta_string_)
+        : alfa_sym(alfa_sym_), alfa_string(alfa_string_),
+          beta_string(beta_string_) {}
 };
 
 struct StringSubstitution {
     short sign;
     size_t I;
     size_t J;
-    StringSubstitution(const int& sign_, const size_t& I_, const size_t& J_) : sign(sign_), I(I_), J(J_) {}
+    StringSubstitution(const int& sign_, const size_t& I_, const size_t& J_)
+        : sign(sign_), I(I_), J(J_) {}
 };
 
 /// Knowles-Handy string substitution
@@ -63,7 +67,9 @@ struct KHStringSubstitution {
     short p;
     short q;
     size_t J;
-    KHStringSubstitution(const short sign_,const short p_,const short q_,const size_t J_) : sign(sign_), p(p_), q(q_), J(J_) {}
+    KHStringSubstitution(const short sign_, const short p_, const short q_,
+                         const size_t J_)
+        : sign(sign_), p(p_), q(q_), J(J_) {}
 };
 
 /// 1-hole string substitution
@@ -71,7 +77,8 @@ struct H1StringSubstitution {
     short sign;
     short p;
     size_t J;
-    H1StringSubstitution(short sign_,short p_,size_t J_) : sign(sign_), p(p_), J(J_) {}
+    H1StringSubstitution(short sign_, short p_, size_t J_)
+        : sign(sign_), p(p_), J(J_) {}
 };
 
 /// 2-hole string substitution
@@ -80,7 +87,8 @@ struct H2StringSubstitution {
     short p;
     short q;
     size_t J;
-    H2StringSubstitution(short sign_,short p_,short q_,size_t J_) : sign(sign_), p(p_), q(q_), J(J_) {}
+    H2StringSubstitution(short sign_, short p_, short q_, size_t J_)
+        : sign(sign_), p(p_), q(q_), J(J_) {}
 };
 
 /// 3-hole string substitution
@@ -90,32 +98,43 @@ struct H3StringSubstitution {
     short q;
     short r;
     size_t J;
-    H3StringSubstitution(short sign_,short p_,short q_,short r_,size_t J_) : sign(sign_), p(p_), q(q_), r(r_), J(J_) {}
+    H3StringSubstitution(short sign_, short p_, short q_, short r_, size_t J_)
+        : sign(sign_), p(p_), q(q_), r(r_), J(J_) {}
 };
 
 typedef std::shared_ptr<BinaryGraph> GraphPtr;
 typedef std::vector<std::vector<boost::dynamic_bitset<>>> StringList;
-typedef std::map<boost::tuple<size_t,size_t,int>,std::vector<StringSubstitution> > VOList;
-typedef std::map<boost::tuple<size_t,size_t,size_t,size_t,int>,std::vector<StringSubstitution> > VOVOList;
-typedef std::map<boost::tuple<size_t,size_t,size_t,size_t,int>,std::vector<StringSubstitution> > VVOOList;
-typedef std::map<boost::tuple<int,size_t,int>,std::vector<StringSubstitution> > OOList;
+typedef std::map<boost::tuple<size_t, size_t, int>,
+                 std::vector<StringSubstitution>> VOList;
+typedef std::map<boost::tuple<size_t, size_t, size_t, size_t, int>,
+                 std::vector<StringSubstitution>> VOVOList;
+typedef std::map<boost::tuple<size_t, size_t, size_t, size_t, int>,
+                 std::vector<StringSubstitution>> VVOOList;
+typedef std::map<boost::tuple<int, size_t, int>,
+                 std::vector<StringSubstitution>> OOList;
 
 /// Knowles-Handy list (irrep,I,irrep J) -> list of sgn,p,q,J
-typedef std::map<std::tuple<int,size_t,int>,std::vector<KHStringSubstitution> > KHList;
+typedef std::map<std::tuple<int, size_t, int>,
+                 std::vector<KHStringSubstitution>> KHList;
 /// 1-hole list
-typedef std::map<std::tuple<int,size_t,int>,std::vector<H1StringSubstitution> > H1List;
+typedef std::map<std::tuple<int, size_t, int>,
+                 std::vector<H1StringSubstitution>> H1List;
 /// 2-hole list
-typedef std::map<std::tuple<int,size_t,int>,std::vector<H2StringSubstitution> > H2List;
+typedef std::map<std::tuple<int, size_t, int>,
+                 std::vector<H2StringSubstitution>> H2List;
 /// 3-hole list
-typedef std::map<std::tuple<int,size_t,int>,std::vector<H3StringSubstitution> > H3List;
+typedef std::map<std::tuple<int, size_t, int>,
+                 std::vector<H3StringSubstitution>> H3List;
 
-typedef std::pair<int,int>          Pair;
-typedef std::vector<Pair>           PairList;
-typedef std::vector<PairList>       NNList;
+typedef std::pair<int, int> Pair;
+typedef std::vector<Pair> PairList;
+typedef std::vector<PairList> NNList;
 
 // Enum for selecting substitution lists with one or one and two substitutions
 enum RequiredLists {
-    oneSubstituition,twoSubstituitionVVOO,twoSubstituitionVOVO
+    oneSubstituition,
+    twoSubstituitionVVOO,
+    twoSubstituitionVOVO
 };
 
 /**
@@ -124,80 +143,99 @@ enum RequiredLists {
  * This class computes mappings between alpha/beta strings
  */
 class StringLists {
-public:
-
+  public:
     // ==> Constructor and Destructor <==
 
-    StringLists(RequiredLists required_lists, Dimension cmopi, std::vector<size_t> core_mo, std::vector<size_t> cmo_to_mo, size_t na, size_t nb, int print);
+    StringLists(RequiredLists required_lists, Dimension cmopi,
+                std::vector<size_t> core_mo, std::vector<size_t> cmo_to_mo,
+                size_t na, size_t nb, int print);
     ~StringLists() {}
 
     // ==> Class Public Functions <==
 
-    size_t na() const {return na_;}
-    int nirrep() const {return nirrep_;}
-    size_t ncmo() const {return ncmo_;}
-    std::vector<size_t> cmo_to_mo() const {return cmo_to_mo_;}
-    std::vector<size_t> fomo_to_mo() const {return fomo_to_mo_;}
-    Dimension cmopi() const {return cmopi_;}
-    std::vector<size_t> cmopi_offset() const {return cmopi_offset_;}
-    size_t nb() const {return nb_;}
-    size_t pairpi(int h) const {return pairpi_[h];}
+    size_t na() const { return na_; }
+    int nirrep() const { return nirrep_; }
+    size_t ncmo() const { return ncmo_; }
+    std::vector<size_t> cmo_to_mo() const { return cmo_to_mo_; }
+    std::vector<size_t> fomo_to_mo() const { return fomo_to_mo_; }
+    Dimension cmopi() const { return cmopi_; }
+    std::vector<size_t> cmopi_offset() const { return cmopi_offset_; }
+    size_t nb() const { return nb_; }
+    size_t pairpi(int h) const { return pairpi_[h]; }
 
-    GraphPtr alfa_graph() {return alfa_graph_;}
-    GraphPtr beta_graph() {return beta_graph_;}
-    GraphPtr alfa_graph_1h() {return alfa_graph_1h_;}
-    GraphPtr beta_graph_1h() {return beta_graph_1h_;}
-    GraphPtr alfa_graph_2h() {return alfa_graph_2h_;}
-    GraphPtr beta_graph_2h() {return beta_graph_2h_;}
-    GraphPtr alfa_graph_3h() {return alfa_graph_3h_;}
-    GraphPtr beta_graph_3h() {return beta_graph_3h_;}
+    GraphPtr alfa_graph() { return alfa_graph_; }
+    GraphPtr beta_graph() { return beta_graph_; }
+    GraphPtr alfa_graph_1h() { return alfa_graph_1h_; }
+    GraphPtr beta_graph_1h() { return beta_graph_1h_; }
+    GraphPtr alfa_graph_2h() { return alfa_graph_2h_; }
+    GraphPtr beta_graph_2h() { return beta_graph_2h_; }
+    GraphPtr alfa_graph_3h() { return alfa_graph_3h_; }
+    GraphPtr beta_graph_3h() { return beta_graph_3h_; }
 
-    boost::dynamic_bitset<> alfa_str(size_t h, size_t I) const {return alfa_list_[h][I];}
-    boost::dynamic_bitset<> beta_str(size_t h, size_t I) const {return beta_list_[h][I];}
+    boost::dynamic_bitset<> alfa_str(size_t h, size_t I) const {
+        return alfa_list_[h][I];
+    }
+    boost::dynamic_bitset<> beta_str(size_t h, size_t I) const {
+        return beta_list_[h][I];
+    }
 
-    std::vector<StringSubstitution>& get_alfa_vo_list(size_t p, size_t q,int h);
-    std::vector<StringSubstitution>& get_beta_vo_list(size_t p, size_t q,int h);
+    std::vector<StringSubstitution>& get_alfa_vo_list(size_t p, size_t q,
+                                                      int h);
+    std::vector<StringSubstitution>& get_beta_vo_list(size_t p, size_t q,
+                                                      int h);
 
     /// Return the Knowles-Handy alpha list
-    std::vector<KHStringSubstitution>& get_alfa_kh_list(int h_I,size_t add_I,int h_J);
+    std::vector<KHStringSubstitution>& get_alfa_kh_list(int h_I, size_t add_I,
+                                                        int h_J);
     /// Return the Knowles-Handy beta list
-    std::vector<KHStringSubstitution>& get_beta_kh_list(int h_I,size_t add_I,int h_J);
+    std::vector<KHStringSubstitution>& get_beta_kh_list(int h_I, size_t add_I,
+                                                        int h_J);
 
-    std::vector<H1StringSubstitution>& get_alfa_1h_list(int h_I,size_t add_I,int h_J);
-    std::vector<H1StringSubstitution>& get_beta_1h_list(int h_I,size_t add_I,int h_J);
+    std::vector<H1StringSubstitution>& get_alfa_1h_list(int h_I, size_t add_I,
+                                                        int h_J);
+    std::vector<H1StringSubstitution>& get_beta_1h_list(int h_I, size_t add_I,
+                                                        int h_J);
 
-    std::vector<H2StringSubstitution>& get_alfa_2h_list(int h_I,size_t add_I,int h_J);
-    std::vector<H2StringSubstitution>& get_beta_2h_list(int h_I,size_t add_I,int h_J);
+    std::vector<H2StringSubstitution>& get_alfa_2h_list(int h_I, size_t add_I,
+                                                        int h_J);
+    std::vector<H2StringSubstitution>& get_beta_2h_list(int h_I, size_t add_I,
+                                                        int h_J);
 
-    std::vector<H3StringSubstitution>& get_alfa_3h_list(int h_I,size_t add_I,int h_J);
-    std::vector<H3StringSubstitution>& get_beta_3h_list(int h_I,size_t add_I,int h_J);
+    std::vector<H3StringSubstitution>& get_alfa_3h_list(int h_I, size_t add_I,
+                                                        int h_J);
+    std::vector<H3StringSubstitution>& get_beta_3h_list(int h_I, size_t add_I,
+                                                        int h_J);
 
-    std::vector<StringSubstitution>& get_alfa_vovo_list(size_t p, size_t q,size_t r, size_t s,int h);
-    std::vector<StringSubstitution>& get_beta_vovo_list(size_t p, size_t q,size_t r, size_t s,int h);
+    std::vector<StringSubstitution>&
+    get_alfa_vovo_list(size_t p, size_t q, size_t r, size_t s, int h);
+    std::vector<StringSubstitution>&
+    get_beta_vovo_list(size_t p, size_t q, size_t r, size_t s, int h);
 
-    std::vector<StringSubstitution>& get_alfa_oo_list(int pq_sym, size_t pq, int h);
-    std::vector<StringSubstitution>& get_beta_oo_list(int pq_sym, size_t pq, int h);
+    std::vector<StringSubstitution>& get_alfa_oo_list(int pq_sym, size_t pq,
+                                                      int h);
+    std::vector<StringSubstitution>& get_beta_oo_list(int pq_sym, size_t pq,
+                                                      int h);
 
-    std::vector<StringSubstitution>& get_alfa_vvoo_list(size_t p, size_t q, size_t r, size_t s, int h);
-    std::vector<StringSubstitution>& get_beta_vvoo_list(size_t p, size_t q, size_t r, size_t s, int h);
+    std::vector<StringSubstitution>&
+    get_alfa_vvoo_list(size_t p, size_t q, size_t r, size_t s, int h);
+    std::vector<StringSubstitution>&
+    get_beta_vvoo_list(size_t p, size_t q, size_t r, size_t s, int h);
 
-    Pair get_nn_list_pair(int h,int n) const {return nn_list[h][n];}
+    Pair get_nn_list_pair(int h, int n) const { return nn_list[h][n]; }
 
     //  size_t get_nalfa_strings() const {return nas;}
     //  size_t get_nbeta_strings() const {return nbs;}
-private:
-
-
+  private:
     // ==> Class Data <==
 
     /// Flag for the type of list required
-    RequiredLists  required_lists_;
+    RequiredLists required_lists_;
     /// The number of irreps
     int nirrep_;
     /// The total number of correlated molecular orbitals
     size_t ncmo_;
     /// The number of correlated molecular orbitals per irrep
-    Dimension  cmopi_;
+    Dimension cmopi_;
     /// The offset array for cmopi_
     std::vector<size_t> cmopi_offset_;
     /// The mapping between correlated molecular orbitals and all orbitals
@@ -226,22 +264,22 @@ private:
     StringList alfa_list_;
     StringList beta_list_;
     /// The pair string list
-    NNList    nn_list;
+    NNList nn_list;
     /// The VO string lists
-    VOList    alfa_vo_list;
-    VOList    beta_vo_list;
+    VOList alfa_vo_list;
+    VOList beta_vo_list;
     /// The OO string lists
-    OOList    alfa_oo_list;
-    OOList    beta_oo_list;
+    OOList alfa_oo_list;
+    OOList beta_oo_list;
     /// The Knowles-Handy string lists
-    KHList    alfa_kh_list;
-    KHList    beta_kh_list;
+    KHList alfa_kh_list;
+    KHList beta_kh_list;
     /// The VOVO string lists
-    VOVOList  alfa_vovo_list;
-    VOVOList  beta_vovo_list;
+    VOVOList alfa_vovo_list;
+    VOVOList beta_vovo_list;
     /// The VVOO string lists
-    VVOOList  alfa_vvoo_list;
-    VVOOList  beta_vvoo_list;
+    VVOOList alfa_vvoo_list;
+    VVOOList beta_vvoo_list;
     /// The 1-hole lists
     H1List alfa_1h_list;
     H1List beta_1h_list;
@@ -251,60 +289,60 @@ private:
     /// The 3-hole lists
     H3List alfa_3h_list;
     H3List beta_3h_list;
-    
+
     // Graphs
     /// The alpha string graph
-    GraphPtr  alfa_graph_;
+    GraphPtr alfa_graph_;
     /// The beta string graph
-    GraphPtr  beta_graph_;
+    GraphPtr beta_graph_;
     /// The orbital pair graph
-    GraphPtr  pair_graph_;
+    GraphPtr pair_graph_;
     /// The alpha string graph for N - 1 electrons
-    GraphPtr  alfa_graph_1h_;
+    GraphPtr alfa_graph_1h_;
     /// The beta string graph for N - 1 electrons
-    GraphPtr  beta_graph_1h_;
+    GraphPtr beta_graph_1h_;
     /// The alpha string graph for N - 2 electrons
-    GraphPtr  alfa_graph_2h_;
+    GraphPtr alfa_graph_2h_;
     /// The beta string graph for N - 2 electrons
-    GraphPtr  beta_graph_2h_;
+    GraphPtr beta_graph_2h_;
     /// The alpha string graph for N - 3 electrons
-    GraphPtr  alfa_graph_3h_;
+    GraphPtr alfa_graph_3h_;
     /// The beta string graph for N - 3 electrons
-    GraphPtr  beta_graph_3h_;
+    GraphPtr beta_graph_3h_;
     // ==> Class Functions <==
 
     void startup();
 
-    void make_strings(GraphPtr graph,StringList& list);
+    void make_strings(GraphPtr graph, StringList& list);
 
     void make_pair_list(NNList& list);
 
-    void make_vo_list(GraphPtr graph,VOList& list);
-    void make_vo(GraphPtr graph,VOList& list,int p, int q);
+    void make_vo_list(GraphPtr graph, VOList& list);
+    void make_vo(GraphPtr graph, VOList& list, int p, int q);
 
-    void make_oo_list(GraphPtr graph,OOList& list);
-    void make_oo(GraphPtr graph,OOList& list,int pq_sym,size_t pq);
+    void make_oo_list(GraphPtr graph, OOList& list);
+    void make_oo(GraphPtr graph, OOList& list, int pq_sym, size_t pq);
 
     /// Make the Knowles-Handy lists (I -> a^{+}_p a_q I = sgn J)
-    void make_kh_list(GraphPtr graph,KHList& list);
+    void make_kh_list(GraphPtr graph, KHList& list);
 
     /// Make 1-hole lists (I -> a_p I = sgn J)
-    void make_1h_list(GraphPtr graph,GraphPtr graph_1h,H1List& list);
+    void make_1h_list(GraphPtr graph, GraphPtr graph_1h, H1List& list);
     /// Make 2-hole lists (I -> a_p a_q I = sgn J)
-    void make_2h_list(GraphPtr graph,GraphPtr graph_2h,H2List& list);
+    void make_2h_list(GraphPtr graph, GraphPtr graph_2h, H2List& list);
     /// Make 3-hole lists (I -> a_p a_q a_r I = sgn J)
-    void make_3h_list(GraphPtr graph,GraphPtr graph_3h,H3List& list);
+    void make_3h_list(GraphPtr graph, GraphPtr graph_3h, H3List& list);
 
-    void make_vovo_list(GraphPtr graph,VOVOList& list);
-    void make_VOVO(GraphPtr graph,VOVOList& list,int p, int q,int r, int s);
+    void make_vovo_list(GraphPtr graph, VOVOList& list);
+    void make_VOVO(GraphPtr graph, VOVOList& list, int p, int q, int r, int s);
 
-    void make_vvoo_list(GraphPtr graph,VVOOList& list);
-    void make_vvoo(GraphPtr graph,VVOOList& list,int p, int q,int r, int s);
+    void make_vvoo_list(GraphPtr graph, VVOOList& list);
+    void make_vvoo(GraphPtr graph, VVOOList& list, int p, int q, int r, int s);
 
-    short string_sign(const bool *I, size_t n);
+    short string_sign(const bool* I, size_t n);
 
-    void print_string(bool* I,size_t n);
+    void print_string(bool* I, size_t n);
 };
-
-}}
-#endif  // _capriccio_string_lists_
+}
+}
+#endif // _capriccio_string_lists_

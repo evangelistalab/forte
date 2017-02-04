@@ -42,12 +42,11 @@
 #include "blockedtensorfactory.h"
 
 using namespace ambit;
-namespace psi{ namespace forte{
+namespace psi {
+namespace forte {
 
-class MRDSRG_SO : public Wavefunction
-{
-protected:
-
+class MRDSRG_SO : public Wavefunction {
+  protected:
     // => Class initialization and termination <= //
 
     /// Called in the constructor
@@ -64,7 +63,7 @@ protected:
     Reference reference_;
 
     /// The molecular integrals required by MethodBase
-    std::shared_ptr<ForteIntegrals>  ints_;
+    std::shared_ptr<ForteIntegrals> ints_;
 
     /// MO space info
     std::shared_ptr<MOSpaceInfo> mo_space_info_;
@@ -103,18 +102,18 @@ protected:
     size_t np_;
 
     /// Map from all the MOs to the alpha core
-    std::map<size_t,size_t> mos_to_acore;
+    std::map<size_t, size_t> mos_to_acore;
     /// Map from all the MOs to the alpha active
-    std::map<size_t,size_t> mos_to_aactv;
+    std::map<size_t, size_t> mos_to_aactv;
     /// Map from all the MOs to the alpha virtual
-    std::map<size_t,size_t> mos_to_avirt;
+    std::map<size_t, size_t> mos_to_avirt;
 
     /// Map from all the MOs to the beta core
-    std::map<size_t,size_t> mos_to_bcore;
+    std::map<size_t, size_t> mos_to_bcore;
     /// Map from all the MOs to the beta active
-    std::map<size_t,size_t> mos_to_bactv;
+    std::map<size_t, size_t> mos_to_bactv;
     /// Map from all the MOs to the beta virtual
-    std::map<size_t,size_t> mos_to_bvirt;
+    std::map<size_t, size_t> mos_to_bvirt;
 
     /// Map from space label to list of MOs
     std::map<char, std::vector<size_t>> label_to_spacemo;
@@ -148,8 +147,10 @@ protected:
     ambit::BlockedTensor RDelta2;
     ambit::BlockedTensor T1;
     ambit::BlockedTensor T2;
-    ambit::BlockedTensor RExp1;  // < one-particle exponential for renormalized Fock matrix
-    ambit::BlockedTensor RExp2;  // < two-particle exponential for renormalized integral
+    ambit::BlockedTensor
+        RExp1; // < one-particle exponential for renormalized Fock matrix
+    ambit::BlockedTensor
+        RExp2; // < two-particle exponential for renormalized integral
 
     /// Diagonal elements of Fock matrix
     std::vector<double> Fd;
@@ -159,17 +160,18 @@ protected:
 
     /// Renormalized denominator
     double renormalized_denominator(double D);
-    double renormalized_denominator_amp(double V,double D);
-    double renormalized_denominator_emp2(double V,double D);
-    double renormalized_denominator_lamp(double V,double D);
-    double renormalized_denominator_lemp2(double V,double D);
+    double renormalized_denominator_amp(double V, double D);
+    double renormalized_denominator_emp2(double V, double D);
+    double renormalized_denominator_lamp(double V, double D);
+    double renormalized_denominator_lemp2(double V, double D);
 
     /// Number of amplitudes will be printed in amplitude summary
     int ntamp_;
     /// Print amplitudes summary
-    void print_amp_summary(const std::string& name,
-                           const std::vector<std::pair<std::vector<size_t>, double>>& list, const double &norm,
-                           const size_t& number_nonzero);
+    void print_amp_summary(
+        const std::string& name,
+        const std::vector<std::pair<std::vector<size_t>, double>>& list,
+        const double& norm, const size_t& number_nonzero);
 
     /// Threshold for amplitudes considered as intruders
     double intruder_tamp_;
@@ -180,10 +182,12 @@ protected:
     std::vector<std::pair<std::vector<size_t>, double>> lt2ab;
     std::vector<std::pair<std::vector<size_t>, double>> lt2bb;
     /// Print intruder analysis
-    void print_intruder(const std::string& name,
-                        const std::vector<std::pair<std::vector<size_t>, double>>& list);
+    void print_intruder(
+        const std::string& name,
+        const std::vector<std::pair<std::vector<size_t>, double>>& list);
 
-    /// Computes the t2 amplitudes for three different cases of spin (alpha all, beta all, and alpha beta)
+    /// Computes the t2 amplitudes for three different cases of spin (alpha all,
+    /// beta all, and alpha beta)
     void guess_t2();
     void update_t2();
     void check_t2();
@@ -191,7 +195,8 @@ protected:
     double T2norm;
     double T2max;
 
-    /// Computes the t1 amplitudes for three different cases of spin (alpha all, beta all, and alpha beta)
+    /// Computes the t1 amplitudes for three different cases of spin (alpha all,
+    /// beta all, and alpha beta)
     void guess_t1();
     void update_t1();
     void check_t1();
@@ -202,8 +207,8 @@ protected:
     /// Renormalize Fock matrix and two-electron integral
     void renormalize_F();
     void renormalize_V();
-    double renormalized_exp(double D) {return std::exp(-s_ * pow(D, 2.0));}
-    double renormalized_exp_linear(double D) {return std::exp(-s_ * fabs(D));}
+    double renormalized_exp(double D) { return std::exp(-s_ * pow(D, 2.0)); }
+    double renormalized_exp_linear(double D) { return std::exp(-s_ * fabs(D)); }
 
     /// Effective Hamiltonian Hbar
     double Hbar0;
@@ -213,66 +218,87 @@ protected:
     void compute_qhbar();
 
     /// Compute zero-term term of commutator [H, T]
-    void H1_T1_C0(BlockedTensor& H1, BlockedTensor& T1, const double& alpha, double& C0);
-    void H2_T1_C0(BlockedTensor& H2, BlockedTensor& T1, const double& alpha, double& C0);
-    void H1_T2_C0(BlockedTensor& H1, BlockedTensor& T2, const double& alpha, double& C0);
-    void H2_T2_C0(BlockedTensor& H2, BlockedTensor& T2, const double& alpha, double& C0);
+    void H1_T1_C0(BlockedTensor& H1, BlockedTensor& T1, const double& alpha,
+                  double& C0);
+    void H2_T1_C0(BlockedTensor& H2, BlockedTensor& T1, const double& alpha,
+                  double& C0);
+    void H1_T2_C0(BlockedTensor& H1, BlockedTensor& T2, const double& alpha,
+                  double& C0);
+    void H2_T2_C0(BlockedTensor& H2, BlockedTensor& T2, const double& alpha,
+                  double& C0);
 
     /// Compute one-body term of commutator [H, T]
-    void H1_T1_C1(BlockedTensor& H1, BlockedTensor& T1, const double& alpha, BlockedTensor& C1);
-    void H1_T2_C1(BlockedTensor& H1, BlockedTensor& T2, const double& alpha, BlockedTensor& C1);
-    void H2_T1_C1(BlockedTensor& H2, BlockedTensor& T1, const double& alpha, BlockedTensor& C1);
-    void H2_T2_C1(BlockedTensor& H2, BlockedTensor& T2, const double& alpha, BlockedTensor& C1);
-    void H3_T1_C1(BlockedTensor& H3, BlockedTensor& T1, const double& alpha, BlockedTensor& C1);
-    void H3_T2_C1(BlockedTensor& H3, BlockedTensor& T2, const double& alpha, BlockedTensor& C1);
+    void H1_T1_C1(BlockedTensor& H1, BlockedTensor& T1, const double& alpha,
+                  BlockedTensor& C1);
+    void H1_T2_C1(BlockedTensor& H1, BlockedTensor& T2, const double& alpha,
+                  BlockedTensor& C1);
+    void H2_T1_C1(BlockedTensor& H2, BlockedTensor& T1, const double& alpha,
+                  BlockedTensor& C1);
+    void H2_T2_C1(BlockedTensor& H2, BlockedTensor& T2, const double& alpha,
+                  BlockedTensor& C1);
+    void H3_T1_C1(BlockedTensor& H3, BlockedTensor& T1, const double& alpha,
+                  BlockedTensor& C1);
+    void H3_T2_C1(BlockedTensor& H3, BlockedTensor& T2, const double& alpha,
+                  BlockedTensor& C1);
 
     /// Compute two-body term of commutator [H, T]
-    void H2_T1_C2(BlockedTensor& H2, BlockedTensor& T1, const double& alpha, BlockedTensor& C2);
-    void H1_T2_C2(BlockedTensor& H1, BlockedTensor& T2, const double& alpha, BlockedTensor& C2);
-    void H2_T2_C2(BlockedTensor& H2, BlockedTensor& T2, const double& alpha, BlockedTensor& C2);
-    void H3_T1_C2(BlockedTensor& H3, BlockedTensor& T1, const double& alpha, BlockedTensor& C2);
-    void H3_T2_C2(BlockedTensor& H3, BlockedTensor& T2, const double& alpha, BlockedTensor& C2);
+    void H2_T1_C2(BlockedTensor& H2, BlockedTensor& T1, const double& alpha,
+                  BlockedTensor& C2);
+    void H1_T2_C2(BlockedTensor& H1, BlockedTensor& T2, const double& alpha,
+                  BlockedTensor& C2);
+    void H2_T2_C2(BlockedTensor& H2, BlockedTensor& T2, const double& alpha,
+                  BlockedTensor& C2);
+    void H3_T1_C2(BlockedTensor& H3, BlockedTensor& T1, const double& alpha,
+                  BlockedTensor& C2);
+    void H3_T2_C2(BlockedTensor& H3, BlockedTensor& T2, const double& alpha,
+                  BlockedTensor& C2);
 
     /// Compute three-body term of commutator [H, T]
-    void H2_T2_C3(BlockedTensor& H2, BlockedTensor& T2, const double& alpha, BlockedTensor& C3);
+    void H2_T2_C3(BlockedTensor& H2, BlockedTensor& T2, const double& alpha,
+                  BlockedTensor& C3);
 
-    // Taylor Expansion of [1 - exp(-s * D^2)] / D = sqrt(s) * (\sum_{n=1} \frac{1}{n!} (-1)^{n+1} Z^{2n-1})
-    double Taylor_Exp(const double& Z, const int& n){
-        if(n > 0){
+    // Taylor Expansion of [1 - exp(-s * D^2)] / D = sqrt(s) * (\sum_{n=1}
+    // \frac{1}{n!} (-1)^{n+1} Z^{2n-1})
+    double Taylor_Exp(const double& Z, const int& n) {
+        if (n > 0) {
             double value = Z, tmp = Z;
-            for(int x=0; x<(n-1); ++x){
-                tmp *= -1.0 * pow(Z, 2.0) / (x+2);
+            for (int x = 0; x < (n - 1); ++x) {
+                tmp *= -1.0 * pow(Z, 2.0) / (x + 2);
                 value += tmp;
             }
             return value;
-        }else{return 0.0;}
+        } else {
+            return 0.0;
+        }
     }
 
     // Taylor Expansion of [1 - exp(-s * |Z|)] / Z
-    double Taylor_Exp_Linear(const double& Z, const int& n){
+    double Taylor_Exp_Linear(const double& Z, const int& n) {
         bool Zabs = Z > 0.0 ? 1 : 0;
-        if(n > 0){
+        if (n > 0) {
             double value = 1, tmp = 1;
-            for(int x=0; x<(n-1); ++x){
-                tmp *= pow(-1.0, Zabs) * Z / (x+2);
+            for (int x = 0; x < (n - 1); ++x) {
+                tmp *= pow(-1.0, Zabs) * Z / (x + 2);
                 value += tmp;
             }
             return value * pow(-1.0, Zabs + 1);
-        }else{return 0.0;}
+        } else {
+            return 0.0;
+        }
     }
 
     // Non-Negative Integer Exponential
-    size_t myPow(size_t x, size_t p){
-      size_t i = 1;
-      for (size_t j = 1; j <= p; j++)  i *= x;
-      return i;
+    size_t myPow(size_t x, size_t p) {
+        size_t i = 1;
+        for (size_t j = 1; j <= p; j++)
+            i *= x;
+        return i;
     }
 
-public:
-
+  public:
     // => Constructors <= //
 
-    MRDSRG_SO(Reference reference,Options &options,
+    MRDSRG_SO(Reference reference, Options& options,
               std::shared_ptr<ForteIntegrals> ints,
               std::shared_ptr<MOSpaceInfo> mo_space_info);
 
@@ -287,6 +313,6 @@ public:
     /// The frozen-core energy
     double frozen_core_energy;
 };
-
-}}
+}
+}
 #endif // _mrdsrg_so_h_
