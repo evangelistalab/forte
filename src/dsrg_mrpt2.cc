@@ -26,19 +26,19 @@
  * @END LICENSE
  */
 
-#include <numeric>
+#include "mini-boost/boost/format.hpp"
 #include <algorithm>
 #include <math.h>
-#include "mini-boost/boost/format.hpp"
+#include <numeric>
 
-#include "psi4/libpsio/psio.hpp"
 #include "psi4/libpsio/psio.h"
+#include "psi4/libpsio/psio.hpp"
 #include "psi4/libqt/qt.h"
 
-#include "dsrg_mrpt2.h"
 #include "blockedtensorfactory.h"
-#include "fci_solver.h"
 #include "ci_rdms.h"
+#include "dsrg_mrpt2.h"
+#include "fci_solver.h"
 
 using namespace ambit;
 
@@ -259,8 +259,8 @@ void DSRG_MRPT2::build_fock() {
     for (const auto& block : F_.block_labels()) {
         // lowercase: alpha spin
         if (islower(block[0])) {
-            F_.block(block)
-                .iterate([&](const std::vector<size_t>& i, double& value) {
+            F_.block(block).iterate(
+                [&](const std::vector<size_t>& i, double& value) {
                     size_t np = label_to_spacemo_[block[0]][i[0]];
                     size_t nq = label_to_spacemo_[block[1]][i[1]];
                     value = ints_->oei_a(np, nq);
@@ -271,8 +271,8 @@ void DSRG_MRPT2::build_fock() {
                     }
                 });
         } else {
-            F_.block(block)
-                .iterate([&](const std::vector<size_t>& i, double& value) {
+            F_.block(block).iterate(
+                [&](const std::vector<size_t>& i, double& value) {
                     size_t np = label_to_spacemo_[block[0]][i[0]];
                     size_t nq = label_to_spacemo_[block[1]][i[1]];
                     value = ints_->oei_b(np, nq);
@@ -433,6 +433,12 @@ void DSRG_MRPT2::print_summary() {
             {"internal_amp_select", internal_amp_select_});
     }
 
+    if (options_.get_bool("FORM_HBAR3")) {
+        calculation_info_string.push_back({"form Hbar3", "TRUE"});
+    } else {
+        calculation_info_string.push_back({"form Hbar3", "FALSE"});
+    }
+
     // Print some information
     outfile->Printf("\n\n  ==> Calculation Information <==\n");
     for (auto& str_dim : calculation_info) {
@@ -463,14 +469,14 @@ double DSRG_MRPT2::compute_ref() {
     double E = 0.0;
 
     for (const std::string block : {"cc", "CC"}) {
-        F_.block(block)
-            .iterate([&](const std::vector<size_t>& i, double& value) {
+        F_.block(block).iterate(
+            [&](const std::vector<size_t>& i, double& value) {
                 if (i[0] == i[1]) {
                     E += 0.5 * value;
                 }
             });
-        Hoei_.block(block)
-            .iterate([&](const std::vector<size_t>& i, double& value) {
+        Hoei_.block(block).iterate(
+            [&](const std::vector<size_t>& i, double& value) {
                 if (i[0] == i[1]) {
                     E += 0.5 * value;
                 }
@@ -643,6 +649,21 @@ double DSRG_MRPT2::compute_energy() {
         Hbar2_["iJkL"] += C2["kLiJ"];
         Hbar2_["IJKL"] += C2["IJKL"];
         Hbar2_["IJKL"] += C2["KLIJ"];
+
+        if (options_.get_bool("FORM_HBAR3")) {
+            BlockedTensor C3 =
+                BTF_->build(tensor_type_, "C3", spin_cases({"aaaaaa"}));
+            H2_T2_C3(V_, T2_, 0.5, C3);
+
+            Hbar3_["uvwxyz"] += C3["uvwxyz"];
+            Hbar3_["uvwxyz"] += C3["xyzuvw"];
+            Hbar3_["uvWxyZ"] += C3["uvWxyZ"];
+            Hbar3_["uvWxyZ"] += C3["xyZuvW"];
+            Hbar3_["uVWxYZ"] += C3["uVWxYZ"];
+            Hbar3_["uVWxYZ"] += C3["xYZuVW"];
+            Hbar3_["UVWXYZ"] += C3["UVWXYZ"];
+            Hbar3_["UVWXYZ"] += C3["XYZUVW"];
+        }
     }
 
     return Etotal;
@@ -1681,6 +1702,34 @@ void DSRG_MRPT2::transfer_integrals() {
     scalar2 -= Hbar2_["xYuV"] * Lambda2_["uVxY"];
 
     double scalar = scalar0 + scalar1 + scalar2;
+
+    bool form_hbar3 = options_.get_bool("FORM_HBAR3");
+    double scalar3 = 0.0;
+    if (form_hbar3) {
+        scalar3 -= (1.0 / 36) * Hbar3_["xyzuvw"] * Lambda3_["uvwxyz"];
+        scalar3 -= (1.0 / 36) * Hbar3_["XYZUVW"] * Lambda3_["UVWXYZ"];
+        scalar3 -= 0.25 * Hbar3_["xyZuvW"] * Lambda3_["uvWxyZ"];
+        scalar3 -= 0.25 * Hbar3_["xYZuVW"] * Lambda3_["uVWxYZ"];
+
+        scalar3 += 0.25 * Hbar3_["xyzuvw"] * Gamma1_["wz"] * Lambda2_["uvxy"];
+        scalar3 += 0.25 * Hbar3_["XYZUVW"] * Gamma1_["WZ"] * Lambda2_["UVXY"];
+        scalar3 += 0.25 * Hbar3_["xyZuvW"] * Gamma1_["WZ"] * Lambda2_["uvxy"];
+        scalar3 += Hbar3_["xzYuwV"] * Gamma1_["wz"] * Lambda2_["uVxY"];
+        scalar3 += 0.25 * Hbar3_["zXYwUV"] * Gamma1_["wz"] * Lambda2_["UVXY"];
+        scalar3 += Hbar3_["xZYuWV"] * Gamma1_["WZ"] * Lambda2_["uVxY"];
+
+        scalar3 -= (1.0 / 6) * Hbar3_["xyzuvw"] * Gamma1_["ux"] *
+                   Gamma1_["vy"] * Gamma1_["wz"];
+        scalar3 -= (1.0 / 6) * Hbar3_["XYZUVW"] * Gamma1_["UX"] *
+                   Gamma1_["VY"] * Gamma1_["WZ"];
+        scalar3 -= 0.5 * Hbar3_["xyZuvW"] * Gamma1_["ux"] * Gamma1_["vy"] *
+                   Gamma1_["WZ"];
+        scalar3 -= 0.5 * Hbar3_["xYZuVW"] * Gamma1_["ux"] * Gamma1_["VY"] *
+                   Gamma1_["WZ"];
+
+        scalar += scalar3;
+    }
+
     outfile->Printf("  Done. Timing %10.3f s", t_scalar.get());
 
     // compute one-body term
@@ -1695,7 +1744,47 @@ void DSRG_MRPT2::transfer_integrals() {
     temp1["uv"] -= Hbar2_["uXvY"] * Gamma1_["YX"];
     temp1["UV"] -= Hbar2_["xUyV"] * Gamma1_["yx"];
     temp1["UV"] -= Hbar2_["UXVY"] * Gamma1_["YX"];
+
+    if (form_hbar3) {
+        temp1["uv"] += 0.5 * Hbar3_["uyzvxw"] * Gamma1_["xy"] * Gamma1_["wz"];
+        temp1["uv"] += 0.5 * Hbar3_["uYZvXW"] * Gamma1_["XY"] * Gamma1_["WZ"];
+        temp1["uv"] += Hbar3_["uyZvxW"] * Gamma1_["xy"] * Gamma1_["WZ"];
+
+        temp1["UV"] += 0.5 * Hbar3_["UYZVXW"] * Gamma1_["XY"] * Gamma1_["WZ"];
+        temp1["UV"] += 0.5 * Hbar3_["yzUxwV"] * Gamma1_["xy"] * Gamma1_["wz"];
+        temp1["UV"] += Hbar3_["yUZxVW"] * Gamma1_["xy"] * Gamma1_["WZ"];
+
+        temp1["uv"] -= 0.25 * Hbar3_["uxyvwz"] * Lambda2_["wzxy"];
+        temp1["uv"] -= 0.25 * Hbar3_["uXYvWZ"] * Lambda2_["WZXY"];
+        temp1["uv"] -= Hbar3_["uxYvwZ"] * Lambda2_["wZxY"];
+
+        temp1["UV"] -= 0.25 * Hbar3_["UXYVWZ"] * Lambda2_["WZXY"];
+        temp1["UV"] -= 0.25 * Hbar3_["xyUwzV"] * Lambda2_["wzxy"];
+        temp1["UV"] -= Hbar3_["xUYwVZ"] * Lambda2_["wZxY"];
+    }
+
     outfile->Printf("  Done. Timing %10.3f s", t_one.get());
+
+    // compute two-body term
+    BlockedTensor temp2;
+    if (form_hbar3) {
+        temp2 = BTF_->build(tensor_type_, "temp2", spin_cases({"aaaa"}));
+        str = "Computing the two-body term ...";
+        outfile->Printf("\n    %-35s", str.c_str());
+
+        temp2["uvxy"] = Hbar2_["uvxy"];
+        temp2["uVxY"] = Hbar2_["uVxY"];
+        temp2["UVXY"] = Hbar2_["UVXY"];
+
+        temp2["xyuv"] -= Hbar3_["xyzuvw"] * Gamma1_["wz"];
+        temp2["xyuv"] -= Hbar3_["xyZuvW"] * Gamma1_["WZ"];
+        temp2["xYuV"] -= Hbar3_["xYZuVW"] * Gamma1_["WZ"];
+        temp2["xYuV"] -= Hbar3_["xzYuwV"] * Gamma1_["wz"];
+        temp2["XYUV"] -= Hbar3_["XYZUVW"] * Gamma1_["WZ"];
+        temp2["XYUV"] -= Hbar3_["zXYwUV"] * Gamma1_["wz"];
+
+        outfile->Printf("  Done. Timing %10.3f s", t_one.get());
+    }
 
     // update integrals
     Timer t_int;
@@ -1730,17 +1819,32 @@ void DSRG_MRPT2::transfer_integrals() {
         }
     });
 
-    Hbar2_.citerate([&](const std::vector<size_t>& i,
-                        const std::vector<SpinType>& spin,
-                        const double& value) {
-        if ((spin[0] == AlphaSpin) && (spin[1] == AlphaSpin)) {
-            ints_->set_tei(i[0], i[1], i[2], i[3], value, true, true);
-        } else if ((spin[0] == AlphaSpin) && (spin[1] == BetaSpin)) {
-            ints_->set_tei(i[0], i[1], i[2], i[3], value, true, false);
-        } else if ((spin[0] == BetaSpin) && (spin[1] == BetaSpin)) {
-            ints_->set_tei(i[0], i[1], i[2], i[3], value, false, false);
-        }
-    });
+    if (!form_hbar3) {
+        Hbar2_.citerate([&](const std::vector<size_t>& i,
+                            const std::vector<SpinType>& spin,
+                            const double& value) {
+            if ((spin[0] == AlphaSpin) && (spin[1] == AlphaSpin)) {
+                ints_->set_tei(i[0], i[1], i[2], i[3], value, true, true);
+            } else if ((spin[0] == AlphaSpin) && (spin[1] == BetaSpin)) {
+                ints_->set_tei(i[0], i[1], i[2], i[3], value, true, false);
+            } else if ((spin[0] == BetaSpin) && (spin[1] == BetaSpin)) {
+                ints_->set_tei(i[0], i[1], i[2], i[3], value, false, false);
+            }
+        });
+    } else {
+        temp2.citerate([&](const std::vector<size_t>& i,
+                           const std::vector<SpinType>& spin,
+                           const double& value) {
+            if ((spin[0] == AlphaSpin) && (spin[1] == AlphaSpin)) {
+                ints_->set_tei(i[0], i[1], i[2], i[3], value, true, true);
+            } else if ((spin[0] == AlphaSpin) && (spin[1] == BetaSpin)) {
+                ints_->set_tei(i[0], i[1], i[2], i[3], value, true, false);
+            } else if ((spin[0] == BetaSpin) && (spin[1] == BetaSpin)) {
+                ints_->set_tei(i[0], i[1], i[2], i[3], value, false, false);
+            }
+        });
+    }
+
     outfile->Printf("  Done. Timing %10.3f s", t_int.get());
 
     // print scalar
@@ -1749,6 +1853,9 @@ void DSRG_MRPT2::transfer_integrals() {
     outfile->Printf("\n    %-30s = %22.15f", "Scalar0", scalar0);
     outfile->Printf("\n    %-30s = %22.15f", "Scalar1", scalar1);
     outfile->Printf("\n    %-30s = %22.15f", "Scalar2", scalar2);
+    if (form_hbar3) {
+        outfile->Printf("\n    %-30s = %22.15f", "Scalar3", scalar3);
+    }
     outfile->Printf("\n    %-30s = %22.15f", "Total Scalar W/O Frozen-Core",
                     scalar);
     outfile->Printf("\n    %-30s = %22.15f", "Total Scalar W/  Frozen-Core",
@@ -1759,21 +1866,54 @@ void DSRG_MRPT2::transfer_integrals() {
     double Etest = scalar_include_fc + molecule_->nuclear_repulsion_energy();
 
     double Etest1 = 0.0;
-    Etest1 += temp1["uv"] * Gamma1_["vu"];
-    Etest1 += temp1["UV"] * Gamma1_["VU"];
+    if (!form_hbar3) {
+        Etest1 += temp1["uv"] * Gamma1_["vu"];
+        Etest1 += temp1["UV"] * Gamma1_["VU"];
 
-    Etest1 += Hbar1_["uv"] * Gamma1_["vu"];
-    Etest1 += Hbar1_["UV"] * Gamma1_["VU"];
-    Etest1 *= 0.5;
+        Etest1 += Hbar1_["uv"] * Gamma1_["vu"];
+        Etest1 += Hbar1_["UV"] * Gamma1_["VU"];
+        Etest1 *= 0.5;
+    } else {
+        Etest1 += temp1["uv"] * Gamma1_["vu"];
+        Etest1 += temp1["UV"] * Gamma1_["VU"];
+    }
 
     double Etest2 = 0.0;
     Etest2 += 0.25 * Hbar2_["uvxy"] * Lambda2_["xyuv"];
     Etest2 += 0.25 * Hbar2_["UVXY"] * Lambda2_["XYUV"];
     Etest2 += Hbar2_["uVxY"] * Lambda2_["xYuV"];
 
+    if (form_hbar3) {
+        Etest2 += 0.5 * temp2["xyuv"] * Gamma1_["ux"] * Gamma1_["vy"];
+        Etest2 += 0.5 * temp2["XYUV"] * Gamma1_["UX"] * Gamma1_["VY"];
+        Etest2 += temp2["xYuV"] * Gamma1_["ux"] * Gamma1_["VY"];
+    }
+
     Etest += Etest1 + Etest2;
     outfile->Printf("\n    %-30s = %22.15f", "One-Body Energy (after)", Etest1);
     outfile->Printf("\n    %-30s = %22.15f", "Two-Body Energy (after)", Etest2);
+
+    if (form_hbar3) {
+        double Etest3 = 0.0;
+        Etest3 += (1.0 / 6) * Hbar3_["xyzuvw"] * Gamma1_["ux"] * Gamma1_["vy"] *
+                  Gamma1_["wz"];
+        Etest3 += (1.0 / 6) * Hbar3_["XYZUVW"] * Gamma1_["UX"] * Gamma1_["VY"] *
+                  Gamma1_["WZ"];
+        Etest3 += 0.5 * Hbar3_["xyZuvW"] * Gamma1_["ux"] * Gamma1_["vy"] *
+                  Gamma1_["WZ"];
+        Etest3 += 0.5 * Hbar3_["xYZuVW"] * Gamma1_["ux"] * Gamma1_["VY"] *
+                  Gamma1_["WZ"];
+
+        Etest3 += (1.0 / 36) * Hbar3_["xyzuvw"] * Lambda3_["uvwxyz"];
+        Etest3 += (1.0 / 36) * Hbar3_["XYZUVW"] * Lambda3_["UVWXYZ"];
+        Etest3 += 0.25 * Hbar3_["xyZuvW"] * Lambda3_["uvWxyZ"];
+        Etest3 += 0.25 * Hbar3_["xYZuVW"] * Lambda3_["uVWxYZ"];
+
+        outfile->Printf("\n    %-30s = %22.15f", "Three-Body Energy (after)",
+                        Etest3);
+        Etest += Etest3;
+    }
+
     outfile->Printf("\n    %-30s = %22.15f", "Total Energy (after)", Etest);
     outfile->Printf("\n    %-30s = %22.15f", "Total Energy (before)",
                     Eref_ + Hbar0_);
@@ -2504,8 +2644,8 @@ void DSRG_MRPT2::check_t1() {
         std::vector<std::pair<std::vector<size_t>, double>>& temp_lt1 =
             spin_to_lt1[spin_alpha];
 
-        T1_.block(block)
-            .citerate([&](const std::vector<size_t>& i, const double& value) {
+        T1_.block(block).citerate(
+            [&](const std::vector<size_t>& i, const double& value) {
                 if (fabs(value) != 0.0) {
                     size_t idx0 = label_to_spacemo_[block[0]][i[0]];
                     size_t idx1 = label_to_spacemo_[block[1]][i[1]];

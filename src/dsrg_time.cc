@@ -182,8 +182,9 @@ void DSRG_TIME::print_comm_time() {
         output += indent + dash + "\n";
         outfile->Printf("\n%s", output.c_str());
     } else {
-        print_h2("Echo from DSRG_TIME", "!!!", "!!!");
-        outfile->Printf("  Wrong size of \"timing\". Print nothing.");
+//        print_h2("Echo from DSRG_TIME", "!!!", "!!!");
+//        outfile->Printf("  Wrong size of \"timing\". Print nothing.");
+        print();
     }
 }
 

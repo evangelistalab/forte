@@ -801,8 +801,7 @@ extern "C" int read_options(std::string name, Options& options) {
         /*- DSRG Transformation Type -*/
         options.add_str("DSRG_TRANS_TYPE", "UNITARY", "UNITARY CC");
         /*- Automatic Adjusting Flow Parameter -*/
-        options.add_str(
-            "SMART_DSRG_S", "DSRG_S",
+        options.add_str("SMART_DSRG_S", "DSRG_S",
             "DSRG_S MIN_DELTA1 MAX_DELTA1 DAVG_MIN_DELTA1 DAVG_MAX_DELTA1");
         /*- Print DSRG-MRPT3 Timing Profile -*/
         options.add_bool("PRINT_TIME_PROFILE", false);

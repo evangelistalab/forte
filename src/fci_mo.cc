@@ -2727,7 +2727,7 @@ void FCI_MO::compute_permanent_dipole() {
         Process::environment.molecule()->point_group()->char_table();
     std::string irrep_symbol = ct.gamma(root_sym_).symbol();
     std::string title =
-        "Computing Permanent Dipole Moments (" + irrep_symbol + ")";
+        "Permanent Dipole Moments (" + irrep_symbol + ")";
     print_h2(title);
 
     // obtain AO dipole from libmints
@@ -2845,7 +2845,7 @@ void FCI_MO::compute_trans_dipole() {
         Process::environment.molecule()->point_group()->char_table();
     std::string irrep_symbol = ct.gamma(root_sym_).symbol();
     std::stringstream title;
-    title << "Computing Transition Dipole Moments (" << irrep_symbol << " -> "
+    title << "Transition Dipole Moments (" << irrep_symbol << " -> "
           << irrep_symbol << ")";
     print_h2(title.str());
 
@@ -2997,7 +2997,7 @@ void FCI_MO::compute_oscillator_strength() {
         Process::environment.molecule()->point_group()->char_table();
     std::string irrep_symbol = ct.gamma(root_sym_).symbol();
     std::stringstream title;
-    title << "Computing Oscillator Strength (" << irrep_symbol << " -> "
+    title << "Oscillator Strength (" << irrep_symbol << " -> "
           << irrep_symbol << ")";
     print_h2(title.str());
 
