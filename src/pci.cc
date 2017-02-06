@@ -43,10 +43,6 @@
 #include "psi4/libmints/vector.h"
 
 #include "pci.h"
-#include "sparse_ci_solver.h"
-#include "helpers.h"
-#include "dynamic_bitset_determinant.h"
-#include "fci_vector.h"
 
 using namespace std;
 using namespace psi;

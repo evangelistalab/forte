@@ -48,7 +48,6 @@
 #include "psi4/libmints/mintshelper.h"
 
 #include "integrals.h"
-#include "dynamic_bitset_determinant.h"
 #include "stl_bitset_determinant.h"
 #include "sparse_ci_solver.h"
 #include "ambit/tensor.h"

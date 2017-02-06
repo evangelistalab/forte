@@ -38,7 +38,6 @@
 
 #include "integrals.h"
 #include "helpers.h"
-#include "dynamic_bitset_determinant.h"
 #include "stl_bitset_determinant.h"
 #include "sparse_ci_solver.h"
 #include "fci_vector.h"
