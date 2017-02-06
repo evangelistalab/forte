@@ -38,7 +38,6 @@
 #include <random>
 
 #include "integrals.h"
-#include "dynamic_bitset_determinant.h"
 #include "stl_bitset_determinant.h"
 #include "fci_vector.h"
 

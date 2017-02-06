@@ -78,9 +78,6 @@ void FCI_MO::startup() {
                                     tei_active_bb);
     fci_ints_->compute_restricted_one_body_operator();
     STLBitsetDeterminant::set_ints(fci_ints_);
-    DynamicBitsetDeterminant::set_ints(fci_ints_);
-    //    tei_active_aa.print();
-    //    tei_active_ab.print();
 
     // compute so quadrupole for orbital extents
     compute_SOquadrupole();

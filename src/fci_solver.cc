@@ -323,7 +323,6 @@ double FCISolver::compute_energy() {
         }
     }
 
-    DynamicBitsetDeterminant::set_ints(fci_ints);
     STLBitsetDeterminant::set_ints(fci_ints);
 
     FCIWfn::allocate_temp_space(lists_, print_);

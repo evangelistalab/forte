@@ -30,7 +30,6 @@
 #include <vector>
 
 #include "helpers.h"
-#include "dynamic_bitset_determinant.h"
 #include "fci_vector.h"
 
 namespace psi {

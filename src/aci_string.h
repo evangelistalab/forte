@@ -37,7 +37,6 @@
 
 #include "integrals.h"
 #include "helpers.h"
-#include "dynamic_bitset_determinant.h"
 #include "stl_bitset_determinant.h"
 #include "stl_bitset_string.h"
 #include "sparse_ci_solver.h"

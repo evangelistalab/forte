@@ -29,7 +29,6 @@
 #ifndef _sparse_ci_h_
 #define _sparse_ci_h_
 
-#include "dynamic_bitset_determinant.h"
 #include "stl_bitset_determinant.h"
 #include "stl_bitset_string.h"
 #include "determinant_map.h"
