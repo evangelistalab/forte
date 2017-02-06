@@ -26,8 +26,8 @@
  * @END LICENSE
  */
 
-#include "dsrg_mrpt2.h"
 #include "ci_rdms.h"
+#include "dsrg_mrpt2.h"
 #include "fci_solver.h"
 
 namespace psi {
@@ -117,6 +117,7 @@ std::vector<std::vector<double>> DSRG_MRPT2::compute_energy_sa() {
     size_t na = mo_space_info_->size("ACTIVE");
     size_t nele1 = na * na;
     size_t nele2 = nele1 * nele1;
+    size_t nele3 = nele1 * nele2;
 
     // get effective one-electron integral (DSRG transformed)
     BlockedTensor oei = BTF_->build(tensor_type_, "temp1", spin_cases({"aa"}));
@@ -233,9 +234,53 @@ std::vector<std::vector<double>> DSRG_MRPT2::compute_energy_sa() {
                     double H_AB = 0.0;
                     H_AB += oei["uv"] * D1["uv"];
                     H_AB += oei["UV"] * D1["UV"];
-                    H_AB += 0.25 * Hbar2_["uvxy"] * D2["xyuv"];
-                    H_AB += 0.25 * Hbar2_["UVXY"] * D2["XYUV"];
-                    H_AB += Hbar2_["uVxY"] * D2["xYuV"];
+
+                    if (!options_.get_bool("FORM_HBAR3")) {
+                        H_AB += 0.25 * Hbar2_["uvxy"] * D2["xyuv"];
+                        H_AB += 0.25 * Hbar2_["UVXY"] * D2["XYUV"];
+                        H_AB += Hbar2_["uVxY"] * D2["xYuV"];
+                    } else {
+                        BlockedTensor temp2 = BTF_->build(
+                            tensor_type_, "temp2", spin_cases({"aaaa"}), true);
+                        temp2.iterate([&](const std::vector<size_t>& i,
+                                          const std::vector<SpinType>& spin,
+                                          double& value) {
+                            if ((spin[0] == AlphaSpin) &&
+                                (spin[1] == AlphaSpin)) {
+                                value = ints_->aptei_aa(i[0], i[1], i[2], i[3]);
+                            } else if ((spin[0] == AlphaSpin) &&
+                                       (spin[1] == BetaSpin)) {
+                                value = ints_->aptei_ab(i[0], i[1], i[2], i[3]);
+                            } else if ((spin[0] == BetaSpin) &&
+                                       (spin[1] == BetaSpin)) {
+                                value = ints_->aptei_bb(i[0], i[1], i[2], i[3]);
+                            }
+                        });
+
+                        H_AB += 0.25 * temp2["uvxy"] * D2["xyuv"];
+                        H_AB += 0.25 * temp2["UVXY"] * D2["XYUV"];
+                        H_AB += temp2["uVxY"] * D2["xYuV"];
+
+                        // 3-RDM
+                        std::vector<double> tpdm_aaa(nele3, 0.0);
+                        std::vector<double> tpdm_aab(nele3, 0.0);
+                        std::vector<double> tpdm_abb(nele3, 0.0);
+                        std::vector<double> tpdm_bbb(nele3, 0.0);
+                        ci_rdms.compute_3rdm(tpdm_aaa, tpdm_aab, tpdm_abb,
+                                             tpdm_bbb);
+
+                        BlockedTensor D3 = BTF_->build(
+                            tensor_type_, "D3", spin_cases({"aaaaaa"}), true);
+                        D3.block("aaaaaa").data() = tpdm_aaa;
+                        D3.block("aaAaaA").data() = tpdm_aab;
+                        D3.block("aAAaAA").data() = tpdm_abb;
+                        D3.block("AAAAAA").data() = tpdm_bbb;
+
+                        H_AB += (1.0 / 36) * Hbar3_["xyzuvw"] * D3["uvwxyz"];
+                        H_AB += (1.0 / 36) * Hbar3_["XYZUVW"] * D3["UVWXYZ"];
+                        H_AB += 0.25 * Hbar3_["xyZuvW"] * D3["uvWxyZ"];
+                        H_AB += 0.25 * Hbar3_["xYZuVW"] * D3["uVWxYZ"];
+                    }
 
                     if (A == B) {
                         H_AB += ints_->frozen_core_energy() +
@@ -472,8 +517,8 @@ void DSRG_MRPT2::build_eff_oei() {
     for (const auto& block : Hoei_.block_labels()) {
         // lowercase: alpha spin
         if (islower(block[0])) {
-            Hoei_.block(block)
-                .iterate([&](const std::vector<size_t>& i, double& value) {
+            Hoei_.block(block).iterate(
+                [&](const std::vector<size_t>& i, double& value) {
                     size_t np = label_to_spacemo_[block[0]][i[0]];
                     size_t nq = label_to_spacemo_[block[1]][i[1]];
                     value = ints_->oei_a(np, nq);
@@ -484,8 +529,8 @@ void DSRG_MRPT2::build_eff_oei() {
                     }
                 });
         } else {
-            Hoei_.block(block)
-                .iterate([&](const std::vector<size_t>& i, double& value) {
+            Hoei_.block(block).iterate(
+                [&](const std::vector<size_t>& i, double& value) {
                     size_t np = label_to_spacemo_[block[0]][i[0]];
                     size_t nq = label_to_spacemo_[block[1]][i[1]];
                     value = ints_->oei_b(np, nq);
