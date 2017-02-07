@@ -557,6 +557,7 @@ double AdaptiveCI::compute_energy() {
         PQ_evals = energies;
     }
 
+    WFNOperator op_c(mo_space_info_);
     if (ex_alg_ == "ROOT_COMBINE") {
         outfile->Printf("\n\n  ==> Diagonalizing Final Space <==");
         dim = full_space.size();
@@ -567,9 +568,8 @@ double AdaptiveCI::compute_energy() {
 
         outfile->Printf("\n  Size of combined space: %zu", dim);
 
-        WFNOperator op(mo_space_info_);
-        op.op_lists(full_space);
-        op.tp_lists(full_space);
+        op_c.op_lists(full_space);
+        op_c.tp_lists(full_space);
 
         SparseCISolver sparse_solver;
         sparse_solver.set_parallel(true);
@@ -580,7 +580,7 @@ double AdaptiveCI::compute_energy() {
         sparse_solver.set_force_diag(options_.get_bool("FORCE_DIAG_METHOD"));
         sparse_solver.set_guess_dimension(options_.get_int("DL_GUESS_SIZE"));
         sparse_solver.diagonalize_hamiltonian_map(
-            full_space, op, PQ_evals, PQ_evecs, nroot_,
+            full_space, op_c, PQ_evals, PQ_evecs, nroot_,
             wavefunction_multiplicity_, diag_method_);
     }
 
@@ -594,9 +594,9 @@ double AdaptiveCI::compute_energy() {
 
     // Compute the RDMs
     if (ex_alg_ == "ROOT_COMBINE") {
-        compute_rdms(full_space, PQ_evecs, 0, 0);
+        compute_rdms(full_space, op_c, PQ_evecs, 0, 0);
     } else if (!multi_state) {
-        compute_rdms(PQ_space, PQ_evecs, 0, 0);
+        compute_rdms(PQ_space, op_, PQ_evecs, 0, 0);
     }
 
     if (!quiet_mode_) {
@@ -2532,12 +2532,12 @@ AdaptiveCI::dl_initial_guess(std::vector<STLBitsetDeterminant>& old_dets,
     return guess;
 }
 
-void AdaptiveCI::compute_rdms(DeterminantMap& dets, SharedMatrix& PQ_evecs,
+void AdaptiveCI::compute_rdms(DeterminantMap& dets, WFNOperator& op, SharedMatrix& PQ_evecs,
                               int root1, int root2) {
 
     std::vector<STLBitsetDeterminant> det_vec = dets.determinants();
 
-    CI_RDMS ci_rdms_(options_, fci_ints_, det_vec, PQ_evecs, root1, root2);
+    CI_RDMS ci_rdms_(options_, fci_ints_, PQ_evecs, root1, root2);
     ci_rdms_.set_max_rdm(rdm_level_);
     // ci_rdms_.convert_to_string(PQ_space_);
     if (rdm_level_ >= 1) {
@@ -2546,7 +2546,7 @@ void AdaptiveCI::compute_rdms(DeterminantMap& dets, SharedMatrix& PQ_evecs,
         //	if(!quiet_mode_) outfile->Printf("\n  1-RDMs took %2.6f s
         //(string)", one_rdm.get());
         Timer one_r;
-        ci_rdms_.compute_1rdm(ordm_a_, ordm_b_);
+        ci_rdms_.compute_1rdm(ordm_a_, ordm_b_, op);
         if (!quiet_mode_)
             outfile->Printf("\n  1-RDM  took %2.6f s (determinant)",
                             one_r.get());
@@ -2561,7 +2561,7 @@ void AdaptiveCI::compute_rdms(DeterminantMap& dets, SharedMatrix& PQ_evecs,
         // if(!quiet_mode_) outfile->Printf("\n  2-RDMs took %2.6f s (string)",
         // two_rdm.get());
         Timer two_r;
-        ci_rdms_.compute_2rdm(trdm_aa_, trdm_ab_, trdm_bb_);
+        ci_rdms_.compute_2rdm(trdm_aa_, trdm_ab_, trdm_bb_, op);
         if (!quiet_mode_)
             outfile->Printf("\n  2-RDMS took %2.6f s (determinant)",
                             two_r.get());
@@ -2572,8 +2572,10 @@ void AdaptiveCI::compute_rdms(DeterminantMap& dets, SharedMatrix& PQ_evecs,
         //trdm_bbb_);
         //	if(!quiet_mode_) outfile->Printf("\n  3-RDMs took %2.6f s
         //(string)", three.get());
+        CI_RDMS ci_three(options_, fci_ints_, det_vec, PQ_evecs, root1, root2); 
+        ci_three.set_max_rdm(rdm_level_);
         Timer tr;
-        ci_rdms_.compute_3rdm(trdm_aaa_, trdm_aab_, trdm_abb_, trdm_bbb_);
+        ci_three.compute_3rdm(trdm_aaa_, trdm_aab_, trdm_abb_, trdm_bbb_);
         if (!quiet_mode_)
             outfile->Printf("\n  3-RDMs took %2.6f s (determinant)", tr.get());
 

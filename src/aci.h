@@ -377,7 +377,7 @@ class AdaptiveCI : public Wavefunction {
                                    SharedVector evals, int nroot);
 
     /// Compute the RDMs
-    void compute_rdms(DeterminantMap& dets, SharedMatrix& PQ_evecs, int root1,
+    void compute_rdms(DeterminantMap& dets, WFNOperator& op, SharedMatrix& PQ_evecs, int root1,
                       int root2);
 
     /// Save older roots
