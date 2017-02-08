@@ -32,16 +32,16 @@
 #include <cmath>
 #include <numeric>
 
-#include "psi4/liboptions/liboptions.h"
 #include "psi4/libmints/wavefunction.h"
+#include "psi4/liboptions/liboptions.h"
 
+#include "determinant_map.h"
 #include "helpers.h"
+#include "operator.h"
+#include "reference.h"
 #include "stl_bitset_determinant.h"
 #include "stl_bitset_string.h"
-#include "reference.h"
 #include "string_lists.h"
-#include "determinant_map.h"
-#include "operator.h"
 
 namespace psi {
 namespace forte {
@@ -57,15 +57,8 @@ class CI_RDMS {
             const std::vector<STLBitsetDeterminant>& det_space,
             SharedMatrix evecs, int root1, int root2);
 
-    CI_RDMS(Options& options, std::shared_ptr<FCIIntegrals> fci_ints,
-            std::vector<STLBitsetString> alfa_strings,
-            std::vector<STLBitsetString> beta_strings,
-            std::vector<std::vector<size_t>> a_to_b,
-            std::vector<std::vector<size_t>> b_to_a, SharedMatrix evecs,
-            int root1, int root2);
-
-    CI_RDMS(Options& options, std::shared_ptr<FCIIntegrals> fci_ints,
-            DeterminantMap& det_space, WFNOperator& op, SharedMatrix evecs,
+    CI_RDMS(Options& options, DeterminantMap& wfn,
+            std::shared_ptr<FCIIntegrals> fci_ints, SharedMatrix evecs,
             int root1, int root2);
 
     ~CI_RDMS();
@@ -81,22 +74,34 @@ class CI_RDMS {
     // Compute rdms
     void compute_1rdm(std::vector<double>& oprdm_a,
                       std::vector<double>& oprdm_b);
-    void compute_1rdm_str(std::vector<double>& oprdm_a,
-                          std::vector<double>& oprdm_b);
+
+    void compute_1rdm(std::vector<double>& oprdm_a,
+                      std::vector<double>& oprdm_b, WFNOperator& op);
+    //    void compute_1rdm_str(std::vector<double>& oprdm_a,
+    //                          std::vector<double>& oprdm_b);
     void compute_2rdm(std::vector<double>& tprdm_aa,
                       std::vector<double>& tprdm_ab,
                       std::vector<double>& tprdm_bb);
-    void compute_2rdm_str(std::vector<double>& tprdm_aa,
-                          std::vector<double>& tprdm_ab,
-                          std::vector<double>& tprdm_bb);
+
+    void compute_2rdm(std::vector<double>& tprdm_aa,
+                      std::vector<double>& tprdm_ab,
+                      std::vector<double>& tprdm_bb, WFNOperator& op);
+    //    void compute_2rdm_str(std::vector<double>& tprdm_aa,
+    //                          std::vector<double>& tprdm_ab,
+    //                          std::vector<double>& tprdm_bb);
     void compute_3rdm(std::vector<double>& tprdm_aaa,
                       std::vector<double>& tprdm_aab,
                       std::vector<double>& tprdm_abb,
                       std::vector<double>& tprdm_bbb);
-    void compute_3rdm_str(std::vector<double>& tprdm_aaa,
-                          std::vector<double>& tprdm_aab,
-                          std::vector<double>& tprdm_abb,
-                          std::vector<double>& tprdm_bbb);
+
+    void compute_3rdm(std::vector<double>& tprdm_aaa,
+                      std::vector<double>& tprdm_aab,
+                      std::vector<double>& tprdm_abb,
+                      std::vector<double>& tprdm_bbb, WFNOperator& op);
+    //    void compute_3rdm_str(std::vector<double>& tprdm_aaa,
+    //                          std::vector<double>& tprdm_aab,
+    //                          std::vector<double>& tprdm_abb,
+    //                          std::vector<double>& tprdm_bbb);
 
     double get_energy(std::vector<double>& oprdm_a,
                       std::vector<double>& oprdm_b,
@@ -130,26 +135,14 @@ class CI_RDMS {
     // The MOSpaceInfo object
     std::shared_ptr<MOSpaceInfo> mo_space_info_;
 
+    // The Wavefunction
+    DeterminantMap wfn_;
+
     // The Determinant Space
     const std::vector<STLBitsetDeterminant> det_space_;
 
     // The CI coefficients
     SharedMatrix evecs_;
-
-    // The alpha strings
-    std::vector<STLBitsetString> alfa_strings_;
-
-    // The beta strings
-    std::vector<STLBitsetString> beta_strings_;
-
-    // Alpha to beta map
-    std::vector<std::vector<size_t>> a_to_b_;
-
-    // beta to alpha map
-    std::vector<std::vector<size_t>> b_to_a_;
-
-    // Map strings to coefficients
-    std::vector<double> c_map_;
 
     // Buffer to access cre_list
     std::vector<std::vector<size_t>> cre_list_buffer_;
@@ -202,8 +195,8 @@ class CI_RDMS {
     std::vector<std::vector<std::pair<size_t, short>>> b_cre_list_;
 
     // The list of a^(+)_q |N-1>
-    std::vector<std::pair<size_t, short>> a_cre_list_s_;
-    std::vector<std::pair<size_t, short>> b_cre_list_s_;
+    //    std::vector<std::pair<size_t, short>> a_cre_list_s_;
+    //    std::vector<std::pair<size_t, short>> b_cre_list_s_;
 
     // The list of a_q a_p|N>
     std::vector<std::vector<std::tuple<size_t, short, short>>> aa_ann_list_;
@@ -221,9 +214,9 @@ class CI_RDMS {
     std::vector<std::vector<std::tuple<size_t, short, short>>> bb_cre_list_;
 
     // The list of a_q^(+) a_p^(+)|N-2>
-    std::vector<std::tuple<size_t, short, short>> aa_cre_list_s_;
-    std::vector<std::tuple<size_t, size_t, short, short>> ab_cre_list_s_;
-    std::vector<std::tuple<size_t, short, short>> bb_cre_list_s_;
+    //    std::vector<std::tuple<size_t, short, short>> aa_cre_list_s_;
+    //    std::vector<std::tuple<size_t, size_t, short, short>> ab_cre_list_s_;
+    //    std::vector<std::tuple<size_t, short, short>> bb_cre_list_s_;
 
     // The list of a_r a_q a_p |N>
     std::vector<std::vector<std::tuple<size_t, short, short, short>>>
@@ -252,12 +245,12 @@ class CI_RDMS {
     std::vector<std::tuple<size_t, short, short, short>> bbb_ann_list_s_;
 
     // The list of a^(+)_r a^(+)_q a^(+)_p |N-3>
-    std::vector<std::tuple<size_t, short, short, short>> aaa_cre_list_s_;
-    std::vector<std::tuple<size_t, size_t, short, short, short>>
-        aab_cre_list_s_;
-    std::vector<std::tuple<size_t, size_t, short, short, short>>
-        abb_cre_list_s_;
-    std::vector<std::tuple<size_t, short, short, short>> bbb_cre_list_s_;
+    //    std::vector<std::tuple<size_t, short, short, short>> aaa_cre_list_s_;
+    //    std::vector<std::tuple<size_t, size_t, short, short, short>>
+    //        aab_cre_list_s_;
+    //    std::vector<std::tuple<size_t, size_t, short, short, short>>
+    //        abb_cre_list_s_;
+    //    std::vector<std::tuple<size_t, short, short, short>> bbb_cre_list_s_;
 
     /* Class functions*/
 
@@ -266,15 +259,12 @@ class CI_RDMS {
 
     // Generate one-particle map
     void get_one_map();
-    void get_one_map_str();
 
     // Generate two-particle map
     void get_two_map();
-    void get_two_map_str();
 
     // Generate three-particle map
     void get_three_map();
-    void get_three_map_str();
 };
 }
 } // End namepaces

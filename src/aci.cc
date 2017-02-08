@@ -32,15 +32,15 @@
 //#include <unordered_map>
 //#include <numeric>
 
-#include "psi4/libpsio/psio.hpp"
-#include "psi4/libmints/pointgrp.h"
 #include "psi4/libmints/molecule.h"
+#include "psi4/libmints/pointgrp.h"
+#include "psi4/libpsio/psio.hpp"
 
 #include "aci.h"
+#include "ci_rdms.h"
+#include "fci_vector.h"
 #include "sparse_ci_solver.h"
 #include "stl_bitset_determinant.h"
-#include "fci_vector.h"
-#include "ci_rdms.h"
 
 using namespace std;
 using namespace psi;
@@ -465,7 +465,7 @@ std::vector<int> AdaptiveCI::get_occupation() {
                 }
 
             } // End loop over k
-        } // End if nalpha_ < nbeta_
+        }     // End if nalpha_ < nbeta_
     }
     return occupation;
 }
@@ -533,7 +533,7 @@ double AdaptiveCI::compute_energy() {
             // Combine selected determinants into total space
             full_space.merge(PQ_space);
             PQ_space.clear();
-        } else if ((ex_alg_ == "ROOT_ORTHOGONALIZE")) { // and i != (nrun - 1)){
+        } else if ((ex_alg_ == "ROOT_ORTHOGONALIZE")) { // and i != (nrun - 1))
             // orthogonalize
             save_old_root(PQ_space, PQ_evecs, i);
             energies->set(i, PQ_evals->get(0));
@@ -549,6 +549,7 @@ double AdaptiveCI::compute_energy() {
         }
     }
     dim = PQ_space.size();
+    final_wfn_.merge(PQ_space);
 
     int froot = options_.get_int("ROOT");
     if (ex_alg_ == "ROOT_ORTHOGONALIZE") {
@@ -557,6 +558,7 @@ double AdaptiveCI::compute_energy() {
         PQ_evals = energies;
     }
 
+    WFNOperator op_c(mo_space_info_);
     if (ex_alg_ == "ROOT_COMBINE") {
         outfile->Printf("\n\n  ==> Diagonalizing Final Space <==");
         dim = full_space.size();
@@ -567,9 +569,8 @@ double AdaptiveCI::compute_energy() {
 
         outfile->Printf("\n  Size of combined space: %zu", dim);
 
-        WFNOperator op(mo_space_info_);
-        op.op_lists(full_space);
-        op.tp_lists(full_space);
+        op_c.op_lists(full_space);
+        op_c.tp_lists(full_space);
 
         SparseCISolver sparse_solver;
         sparse_solver.set_parallel(true);
@@ -580,7 +581,7 @@ double AdaptiveCI::compute_energy() {
         sparse_solver.set_force_diag(options_.get_bool("FORCE_DIAG_METHOD"));
         sparse_solver.set_guess_dimension(options_.get_int("DL_GUESS_SIZE"));
         sparse_solver.diagonalize_hamiltonian_map(
-            full_space, op, PQ_evals, PQ_evecs, nroot_,
+            full_space, op_c, PQ_evals, PQ_evecs, nroot_,
             wavefunction_multiplicity_, diag_method_);
     }
 
@@ -593,10 +594,14 @@ double AdaptiveCI::compute_energy() {
     }
 
     // Compute the RDMs
+    if (options_.get_int("ACI_MAX_RDM") >= 3 or (rdm_level_ >= 3)) {
+        op_.three_lists(final_wfn_);
+    }
+
     if (ex_alg_ == "ROOT_COMBINE") {
-        compute_rdms(full_space, PQ_evecs, 0, 0);
-    } else if (!multi_state) {
-        compute_rdms(PQ_space, PQ_evecs, 0, 0);
+        compute_rdms(full_space, op_c, PQ_evecs, 0, 0);
+    } else {
+        compute_rdms(final_wfn_, op_, PQ_evecs, 0, 0);
     }
 
     if (!quiet_mode_) {
@@ -613,7 +618,7 @@ double AdaptiveCI::compute_energy() {
     //	std::vector<double> davidson;
     //	if(options_.get_str("SIZE_CORRECTION") == "DAVIDSON" ){
     //		davidson = davidson_correction( P_space_ , P_evals, PQ_evecs,
-    //PQ_space_, PQ_evals );
+    // PQ_space_, PQ_evals );
     //	for( auto& i : davidson ){
     //		outfile->Printf("\n Davidson corr: %1.9f", i);
     //	}}
@@ -631,7 +636,6 @@ double AdaptiveCI::compute_energy() {
                     options_.get_int("ROOT"));
 
     // printf( "\n%1.5f\n", aci_elapse.get());
-    final_wfn_.merge(PQ_space);
     return PQ_evals->get(options_.get_int("ROOT")) + nuclear_repulsion_energy_ +
            fci_ints_->scalar_energy();
 }
@@ -689,7 +693,8 @@ void AdaptiveCI::print_final(DeterminantMap& dets, SharedMatrix& PQ_evecs,
 
         print_wfn(dets, PQ_evecs, nroot_);
 
-        //    outfile->Printf("\n\n     Order		 # of Dets        Total |c^2|
+        //    outfile->Printf("\n\n     Order		 # of Dets        Total
+        //    |c^2|
         //    ");
         //    outfile->Printf(  "\n  __________ 	____________
         //    ________________ ");
@@ -848,13 +853,13 @@ void AdaptiveCI::find_q_space(DeterminantMap& P_space, DeterminantMap& PQ_space,
     std::vector<std::pair<double, STLBitsetDeterminant>> sorted_dets;
 
     // Define coupling out of loop, assume perturb_select_ = false
-    std::function<double(double A, double B, double C)> C1_eq = [](
-        double A, double B, double C) -> double {
+    std::function<double(double A, double B, double C)> C1_eq =
+        [](double A, double B, double C) -> double {
         return 0.5 * ((B - C) - sqrt((B - C) * (B - C) + 4.0 * A * A)) / A;
     };
 
-    std::function<double(double A, double B, double C)> E2_eq = [](
-        double A, double B, double C) -> double {
+    std::function<double(double A, double B, double C)> E2_eq =
+        [](double A, double B, double C) -> double {
         return 0.5 * ((B - C) - sqrt((B - C) * (B - C) + 4.0 * A * A));
     };
 
@@ -1456,7 +1461,8 @@ bool AdaptiveCI::check_stuck(std::vector<std::vector<double>>& energy_history,
 
         if (std::fabs(av_energies[cycle_ - 1] - av_energies[cycle_ - 3]) <
             options_.get_double("ACI_CONVERGENCE")) { // and
-            //			std::fabs( av_energies[cycle_-2] - av_energies[cycle_ - 4] )
+            //			std::fabs( av_energies[cycle_-2] - av_energies[cycle_ - 4]
+            //)
             //< options_.get_double("ACI_CONVERGENCE") ){
             stuck = true;
         }
@@ -1680,9 +1686,9 @@ void AdaptiveCI::full_spin_transform(DeterminantMap& det_space, SharedMatrix cI,
     //	size_t csf_num = 0;
     //	size_t csf_idx = 0;
     //	double criteria = (0.25 * (wavefunction_multiplicity_ *
-    //wavefunction_multiplicity_ - 1.0));
+    // wavefunction_multiplicity_ - 1.0));
     //	//double criteria = static_cast<double>(wavefunction_multiplicity_) -
-    //1.0;
+    // 1.0;
     //	for(size_t l = 0; l < det_size; ++l){
     //		if( std::fabs(evals->get(l) - criteria) <= 0.01 ){
     //			csf_num++;
@@ -1700,7 +1706,7 @@ void AdaptiveCI::full_spin_transform(DeterminantMap& det_space, SharedMatrix cI,
     //	SharedMatrix C(new Matrix("C", det_size, nroot));
     //	C->gemm('t','n',csf_num,nroot,det_size,1.0,T,det_size,cI,nroot,0.0,nroot);
     //	C_trans->gemm('n','n',det_size,nroot, csf_num,
-    //1.0,T,det_size,C,nroot,0.0,nroot);
+    // 1.0,T,det_size,C,nroot,0.0,nroot);
     //
     //	//Normalize transformed vectors
     //	for( int n = 0; n < nroot; ++n ){
@@ -1715,7 +1721,7 @@ void AdaptiveCI::full_spin_transform(DeterminantMap& det_space, SharedMatrix cI,
     //	PQ_spin_evecs_ = C_trans->clone();
     //
     //	outfile->Printf("\n  Time spent performing spin transformation: %6.6f",
-    //timer.get());
+    // timer.get());
     //	outfile->Flush();
 }
 
@@ -1784,9 +1790,9 @@ AdaptiveCI::davidson_correction(std::vector<STLBitsetDeterminant>& P_dets,
 void AdaptiveCI::set_max_rdm(int rdm) { rdm_level_ = rdm; }
 
 Reference AdaptiveCI::reference() {
-    const std::vector<STLBitsetDeterminant>& final_wfn =
-        final_wfn_.determinants();
-    CI_RDMS ci_rdms(options_, fci_ints_, final_wfn, evecs_, 0, 0);
+    // const std::vector<STLBitsetDeterminant>& final_wfn =
+    //     final_wfn_.determinants();
+    CI_RDMS ci_rdms(options_, final_wfn_, fci_ints_, evecs_, 0, 0);
     ci_rdms.set_max_rdm(rdm_level_);
     Reference aci_ref =
         ci_rdms.reference(ordm_a_, ordm_b_, trdm_aa_, trdm_ab_, trdm_bb_,
@@ -2144,17 +2150,19 @@ void AdaptiveCI::project_determinant_space(DeterminantMap& space,
                                            SharedMatrix evecs,
                                            SharedVector evals, int nroot) {
     //	double spin_contamination = compute_spin_contamination(space, evecs,
-    //nroot);
+    // nroot);
     //	if(spin_contamination >= spin_tol_){
-    //		if( !quiet_mode_ ) outfile->Printf("\n  Average spin contamination per
-    //root is %1.5f", spin_contamination);
+    //		if( !quiet_mode_ ) outfile->Printf("\n  Average spin contamination
+    //per
+    // root is %1.5f", spin_contamination);
     //		full_spin_transform(space, evecs, nroot);
     //		evecs->zero();
     //		evecs = PQ_spin_evecs_->clone();
     //        compute_H_expectation_val(space,evals,evecs,nroot,diag_method_);
     //	}else if (!quiet_mode_){
-    //		outfile->Printf("\n  Average spin contamination (%1.5f) is less than
-    //tolerance (%1.5f)", spin_contamination, spin_tol_);
+    //		outfile->Printf("\n  Average spin contamination (%1.5f) is less
+    //than
+    // tolerance (%1.5f)", spin_contamination, spin_tol_);
     //		outfile->Printf("\n  No need to perform spin projection.");
     //	}
 }
@@ -2532,21 +2540,16 @@ AdaptiveCI::dl_initial_guess(std::vector<STLBitsetDeterminant>& old_dets,
     return guess;
 }
 
-void AdaptiveCI::compute_rdms(DeterminantMap& dets, SharedMatrix& PQ_evecs,
-                              int root1, int root2) {
+void AdaptiveCI::compute_rdms(DeterminantMap& dets, WFNOperator& op,
+                              SharedMatrix& PQ_evecs, int root1, int root2) {
 
-    std::vector<STLBitsetDeterminant> det_vec = dets.determinants();
+    // std::vector<STLBitsetDeterminant> det_vec = dets.determinants();
 
-    CI_RDMS ci_rdms_(options_, fci_ints_, det_vec, PQ_evecs, root1, root2);
+    CI_RDMS ci_rdms_(options_, dets, fci_ints_, PQ_evecs, root1, root2);
     ci_rdms_.set_max_rdm(rdm_level_);
-    // ci_rdms_.convert_to_string(PQ_space_);
     if (rdm_level_ >= 1) {
-        //	Timer one_rdm;
-        //	ci_rdms_.compute_1rdm_str(ordm_a_,ordm_b_);
-        //	if(!quiet_mode_) outfile->Printf("\n  1-RDMs took %2.6f s
-        //(string)", one_rdm.get());
         Timer one_r;
-        ci_rdms_.compute_1rdm(ordm_a_, ordm_b_);
+        ci_rdms_.compute_1rdm(ordm_a_, ordm_b_, op);
         if (!quiet_mode_)
             outfile->Printf("\n  1-RDM  took %2.6f s (determinant)",
                             one_r.get());
@@ -2556,24 +2559,15 @@ void AdaptiveCI::compute_rdms(DeterminantMap& dets, SharedMatrix& PQ_evecs,
         }
     }
     if (rdm_level_ >= 2) {
-        // Timer two_rdm;
-        // ci_rdms_.compute_2rdm_str( trdm_aa_, trdm_ab_, trdm_bb_);
-        // if(!quiet_mode_) outfile->Printf("\n  2-RDMs took %2.6f s (string)",
-        // two_rdm.get());
         Timer two_r;
-        ci_rdms_.compute_2rdm(trdm_aa_, trdm_ab_, trdm_bb_);
+        ci_rdms_.compute_2rdm(trdm_aa_, trdm_ab_, trdm_bb_, op);
         if (!quiet_mode_)
             outfile->Printf("\n  2-RDMS took %2.6f s (determinant)",
                             two_r.get());
     }
     if (rdm_level_ >= 3) {
-        //	Timer three;
-        //	ci_rdms_.compute_3rdm_str(trdm_aaa_, trdm_aab_, trdm_abb_,
-        //trdm_bbb_);
-        //	if(!quiet_mode_) outfile->Printf("\n  3-RDMs took %2.6f s
-        //(string)", three.get());
         Timer tr;
-        ci_rdms_.compute_3rdm(trdm_aaa_, trdm_aab_, trdm_abb_, trdm_bbb_);
+        ci_rdms_.compute_3rdm(trdm_aaa_, trdm_aab_, trdm_abb_, trdm_bbb_, op);
         if (!quiet_mode_)
             outfile->Printf("\n  3-RDMs took %2.6f s (determinant)", tr.get());
 

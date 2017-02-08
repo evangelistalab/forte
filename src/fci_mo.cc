@@ -26,18 +26,18 @@
  * @END LICENSE
  */
 
-#include <cmath>
-#include <numeric>
 #include <algorithm>
+#include <cmath>
 #include <iomanip>
+#include <numeric>
 #include <sstream>
 
+#include "fci_mo.h"
+#include "fci_vector.h"
+#include "mini-boost/boost/algorithm/string/predicate.hpp"
+#include "psi4/libmints/dipole.h"
 #include "psi4/libmints/oeprop.h"
 #include "psi4/libmints/petitelist.h"
-#include "psi4/libmints/dipole.h"
-#include "mini-boost/boost/algorithm/string/predicate.hpp"
-#include "fci_vector.h"
-#include "fci_mo.h"
 
 using namespace std;
 
@@ -1309,10 +1309,13 @@ void FCI_MO::semi_canonicalize() {
         }
 
         // remove the swapped orbitals from the vector of orginal orbitals
-        idx_0.erase(std::remove_if(idx_0.begin(), idx_0.end(), [&](int i) {
-                        return std::find(idx_swap.begin(), idx_swap.end(), i) !=
-                               idx_swap.end();
-                    }), idx_0.end());
+        idx_0.erase(std::remove_if(idx_0.begin(), idx_0.end(),
+                                   [&](int i) {
+                                       return std::find(idx_swap.begin(),
+                                                        idx_swap.end(),
+                                                        i) != idx_swap.end();
+                                   }),
+                    idx_0.end());
 
         // swap orbitals
         for (const int& x : idx_swap) {
@@ -2723,8 +2726,7 @@ void FCI_MO::compute_permanent_dipole() {
     CharacterTable ct =
         Process::environment.molecule()->point_group()->char_table();
     std::string irrep_symbol = ct.gamma(root_sym_).symbol();
-    std::string title =
-        "Computing Permanent Dipole Moments (" + irrep_symbol + ")";
+    std::string title = "Permanent Dipole Moments (" + irrep_symbol + ")";
     print_h2(title);
 
     // obtain AO dipole from libmints
@@ -2842,7 +2844,7 @@ void FCI_MO::compute_trans_dipole() {
         Process::environment.molecule()->point_group()->char_table();
     std::string irrep_symbol = ct.gamma(root_sym_).symbol();
     std::stringstream title;
-    title << "Computing Transition Dipole Moments (" << irrep_symbol << " -> "
+    title << "Transition Dipole Moments (" << irrep_symbol << " -> "
           << irrep_symbol << ")";
     print_h2(title.str());
 
@@ -2994,8 +2996,8 @@ void FCI_MO::compute_oscillator_strength() {
         Process::environment.molecule()->point_group()->char_table();
     std::string irrep_symbol = ct.gamma(root_sym_).symbol();
     std::stringstream title;
-    title << "Computing Oscillator Strength (" << irrep_symbol << " -> "
-          << irrep_symbol << ")";
+    title << "Oscillator Strength (" << irrep_symbol << " -> " << irrep_symbol
+          << ")";
     print_h2(title.str());
 
     // obtain the excitation energies map

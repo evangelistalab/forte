@@ -36,15 +36,15 @@
 #include "psi4/liboptions/liboptions.h"
 #include "psi4/physconst.h"
 
-#include "integrals.h"
-#include "helpers.h"
-#include "stl_bitset_determinant.h"
-#include "sparse_ci_solver.h"
-#include "fci_vector.h"
 #include "ci_rdms.h"
-#include "sparse_ci_wfn.h"
 #include "determinant_map.h"
+#include "fci_vector.h"
+#include "helpers.h"
+#include "integrals.h"
 #include "operator.h"
+#include "sparse_ci_solver.h"
+#include "sparse_ci_wfn.h"
+#include "stl_bitset_determinant.h"
 
 namespace psi {
 namespace forte {
@@ -226,7 +226,8 @@ class AdaptiveCI : public Wavefunction {
     /// A History of Determinants
     std::unordered_map<STLBitsetDeterminant,
                        std::vector<std::pair<size_t, std::string>>,
-                       STLBitsetDeterminant::Hash> det_history_;
+                       STLBitsetDeterminant::Hash>
+        det_history_;
     /// Stream for printing determinant coefficients
     std::ofstream det_list_;
     /// Roots to project out
@@ -376,8 +377,8 @@ class AdaptiveCI : public Wavefunction {
                                    SharedVector evals, int nroot);
 
     /// Compute the RDMs
-    void compute_rdms(DeterminantMap& dets, SharedMatrix& PQ_evecs, int root1,
-                      int root2);
+    void compute_rdms(DeterminantMap& dets, WFNOperator& op,
+                      SharedMatrix& PQ_evecs, int root1, int root2);
 
     /// Save older roots
     void save_old_root(DeterminantMap& dets, SharedMatrix& PQ_evecs, int root);
