@@ -121,8 +121,7 @@ void forte_old_methods(SharedWavefunction ref_wfn, Options& options,
             std::make_shared<FCIQMC>(ref_wfn, options, ints, mo_space_info);
         fciqmc->compute_energy();
     }
-    if ((options.get_str("JOB_TYPE") == "ACI") or
-        (options.get_str("JOB_TYPE") == "ACI_SPARSE")) {
+    if (options.get_str("JOB_TYPE") == "ACI") {
         auto aci =
             std::make_shared<AdaptiveCI>(ref_wfn, options, ints, mo_space_info);
         aci->compute_energy();
