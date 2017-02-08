@@ -594,7 +594,7 @@ double AdaptiveCI::compute_energy() {
     }
 
     // Compute the RDMs
-    if( options_.get_int("ACI_MAX_RDM") >= 2 ){
+    if( options_.get_int("ACI_MAX_RDM") >= 3  or (rdm_level_ >= 3 ) ){
         op_.three_lists( final_wfn_ );
     }
 
@@ -1791,7 +1791,6 @@ void AdaptiveCI::set_max_rdm(int rdm) { rdm_level_ = rdm; }
 Reference AdaptiveCI::reference() {
    // const std::vector<STLBitsetDeterminant>& final_wfn =
    //     final_wfn_.determinants();
-    //outfile->Printf("\n  here");
     CI_RDMS ci_rdms(options_, final_wfn_, fci_ints_, evecs_, 0, 0);
     ci_rdms.set_max_rdm(rdm_level_);
     Reference aci_ref =
