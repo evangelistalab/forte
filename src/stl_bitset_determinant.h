@@ -77,6 +77,8 @@ class STLBitsetDeterminant {
     explicit STLBitsetDeterminant(const STLBitsetString& alpha,
                                   const STLBitsetString& beta);
 
+    void copy(const STLBitsetDeterminant& rhs);
+
     /// Equal operator
     bool operator==(const STLBitsetDeterminant& lhs) const;
     /// Less than operator

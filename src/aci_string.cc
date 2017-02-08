@@ -1061,7 +1061,7 @@ void ACIString::find_q_space(int nroot, SharedVector evals,
 
     for (size_t I = 0, max_I = P_space_.size(); I < max_I; ++I) {
         STLBitsetDeterminant& det = P_space_[I];
-        generate_excited_determinants(nroot, I, evecs, det, V_hash);
+//        generate_excited_determinants(nroot, I, evecs, det, V_hash);
     }
 
     if (!quiet_mode_) {

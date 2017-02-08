@@ -290,11 +290,11 @@ class ACIString : public Wavefunction {
     /// Generate beta-beta excitations
     void add_double_sub_beta(std::vector<std::vector<STLBitsetString>> str);
 
-    /// Generate excited determinants
-    void generate_excited_determinants(
-        int nroot, int I, SharedMatrix evecs, STLBitsetDeterminant& det,
-        std::unordered_map<STLBitsetDeterminant, std::vector<double>,
-                           STLBitsetDeterminant::Hash>& V_hash);
+//    /// Generate excited determinants
+//    void generate_excited_determinants(
+//        int nroot, int I, SharedMatrix evecs, STLBitsetDeterminant& det,
+//        std::unordered_map<STLBitsetDeterminant, std::vector<double>,
+//                           STLBitsetDeterminant::Hash>& V_hash);
 
     /// Prune the space of determinants
     void prune_q_space(

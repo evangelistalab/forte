@@ -33,9 +33,9 @@ from psi4.driver.procedures import proc_util
 
 def run_forte(name, **kwargs):
     r"""Function encoding sequence of PSI module and plugin calls so that
-    forte_inversion can be called via :py:func:`~driver.energy`. For post-scf plugins.
+    forte can be called via :py:func:`~driver.energy`. For post-scf plugins.
 
-    >>> energy('forte_inversion')
+    >>> energy('forte')
 
     """
     lowername = name.lower()
@@ -62,9 +62,9 @@ def run_forte(name, **kwargs):
 
     # Call the Psi4 plugin
     # Please note that setting the reference wavefunction in this way is ONLY for plugins
-    forte_inversion_wfn = psi4.core.plugin('forte.so', ref_wfn)
+    forte_wfn = psi4.core.plugin('forte.so', ref_wfn)
 
-    return forte_inversion_wfn
+    return forte_wfn
 
 
 # Integration with driver routines

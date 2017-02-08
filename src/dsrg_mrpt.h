@@ -324,8 +324,8 @@ class DSRG_MRPT : public Wavefunction {
 
     // => DSRG-MRPT3 <= //
 
-    /// Compute DSRG-MRPT3 energy
-    double compute_energy_pt3();
+//    /// Compute DSRG-MRPT3 energy
+//    double compute_energy_pt3();
 
     // => Reference relaxation <= //
 
