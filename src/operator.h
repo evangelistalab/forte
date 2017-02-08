@@ -59,6 +59,9 @@ class WFNOperator {
     /// Build the coupling lists for two-particle operators
     void tp_lists(DeterminantMap& wfn);
 
+    /// Build the coupling lists for three-particle operators
+    void three_lists(DeterminantMap& wfn);
+
     void clear_op_lists();
     void clear_tp_lists();
 
@@ -92,6 +95,17 @@ class WFNOperator {
     /// The alfa-beta single-annihilation/creation list
     std::vector<std::vector<std::tuple<size_t, short, short>>> ab_ann_list_;
     std::vector<std::vector<std::tuple<size_t, short, short>>> ab_cre_list_;
+
+    /// Three particle lists
+    std::vector<std::vector<std::tuple<size_t,short,short,short>>> aaa_ann_list_;
+    std::vector<std::vector<std::tuple<size_t,short,short,short>>> aab_ann_list_;
+    std::vector<std::vector<std::tuple<size_t,short,short,short>>> abb_ann_list_;
+    std::vector<std::vector<std::tuple<size_t,short,short,short>>> bbb_ann_list_;
+
+    std::vector<std::vector<std::tuple<size_t,short,short,short>>> aaa_cre_list_;
+    std::vector<std::vector<std::tuple<size_t,short,short,short>>> aab_cre_list_;
+    std::vector<std::vector<std::tuple<size_t,short,short,short>>> abb_cre_list_;
+    std::vector<std::vector<std::tuple<size_t,short,short,short>>> bbb_cre_list_;
 
   protected:
     /// Initialize important variables on construction

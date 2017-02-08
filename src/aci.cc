@@ -533,7 +533,7 @@ double AdaptiveCI::compute_energy() {
             // Combine selected determinants into total space
             full_space.merge(PQ_space);
             PQ_space.clear();
-        } else if ((ex_alg_ == "ROOT_ORTHOGONALIZE")) { // and i != (nrun - 1)){
+        } else if ((ex_alg_ == "ROOT_ORTHOGONALIZE")) { // and i != (nrun - 1))
             // orthogonalize
             save_old_root(PQ_space, PQ_evecs, i);
             energies->set(i, PQ_evals->get(0));
@@ -549,6 +549,7 @@ double AdaptiveCI::compute_energy() {
         }
     }
     dim = PQ_space.size();
+    final_wfn_.merge(PQ_space);
 
     int froot = options_.get_int("ROOT");
     if (ex_alg_ == "ROOT_ORTHOGONALIZE") {
@@ -593,10 +594,15 @@ double AdaptiveCI::compute_energy() {
     }
 
     // Compute the RDMs
+    if( options_.get_int("ACI_MAX_RDM") >= 2 ){
+        op_.three_lists( final_wfn_ );
+    }
+
+
     if (ex_alg_ == "ROOT_COMBINE") {
         compute_rdms(full_space, op_c, PQ_evecs, 0, 0);
-    } else if (!multi_state) {
-        compute_rdms(PQ_space, op_, PQ_evecs, 0, 0);
+    } else {
+        compute_rdms(final_wfn_, op_, PQ_evecs, 0, 0);
     }
 
     if (!quiet_mode_) {
@@ -631,7 +637,6 @@ double AdaptiveCI::compute_energy() {
                     options_.get_int("ROOT"));
 
     // printf( "\n%1.5f\n", aci_elapse.get());
-    final_wfn_.merge(PQ_space);
     return PQ_evals->get(options_.get_int("ROOT")) + nuclear_repulsion_energy_ +
            fci_ints_->scalar_energy();
 }
@@ -1784,9 +1789,10 @@ AdaptiveCI::davidson_correction(std::vector<STLBitsetDeterminant>& P_dets,
 void AdaptiveCI::set_max_rdm(int rdm) { rdm_level_ = rdm; }
 
 Reference AdaptiveCI::reference() {
-    const std::vector<STLBitsetDeterminant>& final_wfn =
-        final_wfn_.determinants();
-    CI_RDMS ci_rdms(options_, fci_ints_, final_wfn, evecs_, 0, 0);
+   // const std::vector<STLBitsetDeterminant>& final_wfn =
+   //     final_wfn_.determinants();
+    //outfile->Printf("\n  here");
+    CI_RDMS ci_rdms(options_, final_wfn_, fci_ints_, evecs_, 0, 0);
     ci_rdms.set_max_rdm(rdm_level_);
     Reference aci_ref =
         ci_rdms.reference(ordm_a_, ordm_b_, trdm_aa_, trdm_ab_, trdm_bb_,
@@ -2535,16 +2541,11 @@ AdaptiveCI::dl_initial_guess(std::vector<STLBitsetDeterminant>& old_dets,
 void AdaptiveCI::compute_rdms(DeterminantMap& dets, WFNOperator& op, SharedMatrix& PQ_evecs,
                               int root1, int root2) {
 
-    std::vector<STLBitsetDeterminant> det_vec = dets.determinants();
+    //std::vector<STLBitsetDeterminant> det_vec = dets.determinants();
 
-    CI_RDMS ci_rdms_(options_, fci_ints_, PQ_evecs, root1, root2);
+    CI_RDMS ci_rdms_(options_, dets, fci_ints_, PQ_evecs, root1, root2);
     ci_rdms_.set_max_rdm(rdm_level_);
-    // ci_rdms_.convert_to_string(PQ_space_);
     if (rdm_level_ >= 1) {
-        //	Timer one_rdm;
-        //	ci_rdms_.compute_1rdm_str(ordm_a_,ordm_b_);
-        //	if(!quiet_mode_) outfile->Printf("\n  1-RDMs took %2.6f s
-        //(string)", one_rdm.get());
         Timer one_r;
         ci_rdms_.compute_1rdm(ordm_a_, ordm_b_, op);
         if (!quiet_mode_)
@@ -2556,10 +2557,6 @@ void AdaptiveCI::compute_rdms(DeterminantMap& dets, WFNOperator& op, SharedMatri
         }
     }
     if (rdm_level_ >= 2) {
-        // Timer two_rdm;
-        // ci_rdms_.compute_2rdm_str( trdm_aa_, trdm_ab_, trdm_bb_);
-        // if(!quiet_mode_) outfile->Printf("\n  2-RDMs took %2.6f s (string)",
-        // two_rdm.get());
         Timer two_r;
         ci_rdms_.compute_2rdm(trdm_aa_, trdm_ab_, trdm_bb_, op);
         if (!quiet_mode_)
@@ -2567,15 +2564,8 @@ void AdaptiveCI::compute_rdms(DeterminantMap& dets, WFNOperator& op, SharedMatri
                             two_r.get());
     }
     if (rdm_level_ >= 3) {
-        //	Timer three;
-        //	ci_rdms_.compute_3rdm_str(trdm_aaa_, trdm_aab_, trdm_abb_,
-        //trdm_bbb_);
-        //	if(!quiet_mode_) outfile->Printf("\n  3-RDMs took %2.6f s
-        //(string)", three.get());
-        CI_RDMS ci_three(options_, fci_ints_, det_vec, PQ_evecs, root1, root2); 
-        ci_three.set_max_rdm(rdm_level_);
         Timer tr;
-        ci_three.compute_3rdm(trdm_aaa_, trdm_aab_, trdm_abb_, trdm_bbb_);
+        ci_rdms_.compute_3rdm(trdm_aaa_, trdm_aab_, trdm_abb_, trdm_bbb_, op);
         if (!quiet_mode_)
             outfile->Printf("\n  3-RDMs took %2.6f s (determinant)", tr.get());
 

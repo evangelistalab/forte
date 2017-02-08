@@ -57,7 +57,7 @@ class CI_RDMS {
             const std::vector<STLBitsetDeterminant>& det_space,
             SharedMatrix evecs, int root1, int root2);
 
-    CI_RDMS(Options& options, std::shared_ptr<FCIIntegrals> fci_ints,
+    CI_RDMS(Options& options, DeterminantMap& wfn, std::shared_ptr<FCIIntegrals> fci_ints,
             SharedMatrix evecs, int root1, int root2);
 
     ~CI_RDMS();
@@ -94,6 +94,12 @@ class CI_RDMS {
                       std::vector<double>& tprdm_aab,
                       std::vector<double>& tprdm_abb,
                       std::vector<double>& tprdm_bbb);
+
+    void compute_3rdm(std::vector<double>& tprdm_aaa,
+                      std::vector<double>& tprdm_aab,
+                      std::vector<double>& tprdm_abb,
+                      std::vector<double>& tprdm_bbb,
+                      WFNOperator& op);
 //    void compute_3rdm_str(std::vector<double>& tprdm_aaa,
 //                          std::vector<double>& tprdm_aab,
 //                          std::vector<double>& tprdm_abb,
@@ -130,6 +136,9 @@ class CI_RDMS {
     std::shared_ptr<FCIIntegrals> fci_ints_;
     // The MOSpaceInfo object
     std::shared_ptr<MOSpaceInfo> mo_space_info_;
+
+    // The Wavefunction
+    DeterminantMap wfn_;
 
     // The Determinant Space
     const std::vector<STLBitsetDeterminant> det_space_;

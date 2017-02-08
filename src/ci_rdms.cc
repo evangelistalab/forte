@@ -50,18 +50,26 @@ CI_RDMS::CI_RDMS(Options& options, std::shared_ptr<FCIIntegrals>& fci_ints,
 }
 
 
-CI_RDMS::CI_RDMS(Options& options, std::shared_ptr<FCIIntegrals> fci_ints,
+CI_RDMS::CI_RDMS(Options& options, DeterminantMap& wfn, std::shared_ptr<FCIIntegrals> fci_ints,
                  SharedMatrix evecs, int root1, int root2)
-    : options_(options), fci_ints_(fci_ints), 
+    : options_(options), wfn_(wfn), fci_ints_(fci_ints), 
       evecs_(evecs), root1_(root1), root2_(root2) {
 
-    ncmo_ = STLBitsetDeterminant::nmo_;
+    STLBitsetDeterminant det = wfn_.get_det(0);
+    ncmo_ = det.nmo_ ;
     ncmo2_ = ncmo_ * ncmo_;
     ncmo3_ = ncmo2_ * ncmo_;
     ncmo4_ = ncmo3_ * ncmo_;
     ncmo5_ = ncmo3_ * ncmo2_;
     print_ = false;
-    dim_space_ = evecs_->coldim();
+    dim_space_ = wfn.size();
+    
+    na_ = det.get_alfa_occ().size();
+    nb_ = det.get_beta_occ().size();
+    symmetry_ = 0;
+    if (options_["ROOT_SYM"].has_changed()) {
+        symmetry_ = options_.get_int("ROOT_SYM");
+    }
 }
 
 CI_RDMS::~CI_RDMS() {}
@@ -1280,6 +1288,299 @@ void CI_RDMS::compute_3rdm(std::vector<double>& tprdm_aaa,
                 std::get<1>(bbbJ_mo_sign) > 0.0 ? 1.0 : -1.0;
 
             for (auto& b6J : bbb_cre_list_[bbbJ_add]) {
+                const size_t s = std::abs(std::get<1>(b6J)) - 1;
+                const size_t t = std::get<2>(b6J);
+                const size_t u = std::get<3>(b6J);
+                const double sign_stu = std::get<1>(b6J) > 0.0 ? 1.0 : -1.0;
+                const size_t I = std::get<0>(b6J);
+
+                double rdm_element = evecs_->get(I, root1_) *
+                                     evecs_->get(J, root2_) * sign_pqr *
+                                     sign_stu;
+
+                tprdm_bbb[p * ncmo5 + q * ncmo4_ + r * ncmo3_ + s * ncmo2_ +
+                          t * ncmo_ + u] += rdm_element;
+                tprdm_bbb[p * ncmo5 + q * ncmo4_ + r * ncmo3_ + s * ncmo2_ +
+                          u * ncmo_ + t] -= rdm_element;
+                tprdm_bbb[p * ncmo5 + q * ncmo4_ + r * ncmo3_ + u * ncmo2_ +
+                          t * ncmo_ + s] -= rdm_element;
+                tprdm_bbb[p * ncmo5 + q * ncmo4_ + r * ncmo3_ + u * ncmo2_ +
+                          s * ncmo_ + t] += rdm_element;
+                tprdm_bbb[p * ncmo5 + q * ncmo4_ + r * ncmo3_ + t * ncmo2_ +
+                          s * ncmo_ + u] -= rdm_element;
+                tprdm_bbb[p * ncmo5 + q * ncmo4_ + r * ncmo3_ + t * ncmo2_ +
+                          u * ncmo_ + s] += rdm_element;
+
+                tprdm_bbb[p * ncmo5 + r * ncmo4_ + q * ncmo3_ + s * ncmo2_ +
+                          t * ncmo_ + u] -= rdm_element;
+                tprdm_bbb[p * ncmo5 + r * ncmo4_ + q * ncmo3_ + s * ncmo2_ +
+                          u * ncmo_ + t] += rdm_element;
+                tprdm_bbb[p * ncmo5 + r * ncmo4_ + q * ncmo3_ + u * ncmo2_ +
+                          t * ncmo_ + s] += rdm_element;
+                tprdm_bbb[p * ncmo5 + r * ncmo4_ + q * ncmo3_ + u * ncmo2_ +
+                          s * ncmo_ + t] -= rdm_element;
+                tprdm_bbb[p * ncmo5 + r * ncmo4_ + q * ncmo3_ + t * ncmo2_ +
+                          s * ncmo_ + u] += rdm_element;
+                tprdm_bbb[p * ncmo5 + r * ncmo4_ + q * ncmo3_ + t * ncmo2_ +
+                          u * ncmo_ + s] -= rdm_element;
+
+                tprdm_bbb[q * ncmo5 + p * ncmo4_ + r * ncmo3_ + s * ncmo2_ +
+                          t * ncmo_ + u] -= rdm_element;
+                tprdm_bbb[q * ncmo5 + p * ncmo4_ + r * ncmo3_ + s * ncmo2_ +
+                          u * ncmo_ + t] += rdm_element;
+                tprdm_bbb[q * ncmo5 + p * ncmo4_ + r * ncmo3_ + u * ncmo2_ +
+                          t * ncmo_ + s] += rdm_element;
+                tprdm_bbb[q * ncmo5 + p * ncmo4_ + r * ncmo3_ + u * ncmo2_ +
+                          s * ncmo_ + t] -= rdm_element;
+                tprdm_bbb[q * ncmo5 + p * ncmo4_ + r * ncmo3_ + t * ncmo2_ +
+                          s * ncmo_ + u] += rdm_element;
+                tprdm_bbb[q * ncmo5 + p * ncmo4_ + r * ncmo3_ + t * ncmo2_ +
+                          u * ncmo_ + s] -= rdm_element;
+
+                tprdm_bbb[q * ncmo5 + r * ncmo4_ + p * ncmo3_ + s * ncmo2_ +
+                          t * ncmo_ + u] += rdm_element;
+                tprdm_bbb[q * ncmo5 + r * ncmo4_ + p * ncmo3_ + s * ncmo2_ +
+                          u * ncmo_ + t] -= rdm_element;
+                tprdm_bbb[q * ncmo5 + r * ncmo4_ + p * ncmo3_ + u * ncmo2_ +
+                          t * ncmo_ + s] -= rdm_element;
+                tprdm_bbb[q * ncmo5 + r * ncmo4_ + p * ncmo3_ + u * ncmo2_ +
+                          s * ncmo_ + t] += rdm_element;
+                tprdm_bbb[q * ncmo5 + r * ncmo4_ + p * ncmo3_ + t * ncmo2_ +
+                          s * ncmo_ + u] -= rdm_element;
+                tprdm_bbb[q * ncmo5 + r * ncmo4_ + p * ncmo3_ + t * ncmo2_ +
+                          u * ncmo_ + s] += rdm_element;
+
+                tprdm_bbb[r * ncmo5 + p * ncmo4_ + q * ncmo3_ + s * ncmo2_ +
+                          t * ncmo_ + u] += rdm_element;
+                tprdm_bbb[r * ncmo5 + p * ncmo4_ + q * ncmo3_ + s * ncmo2_ +
+                          u * ncmo_ + t] -= rdm_element;
+                tprdm_bbb[r * ncmo5 + p * ncmo4_ + q * ncmo3_ + u * ncmo2_ +
+                          t * ncmo_ + s] -= rdm_element;
+                tprdm_bbb[r * ncmo5 + p * ncmo4_ + q * ncmo3_ + u * ncmo2_ +
+                          s * ncmo_ + t] += rdm_element;
+                tprdm_bbb[r * ncmo5 + p * ncmo4_ + q * ncmo3_ + t * ncmo2_ +
+                          s * ncmo_ + u] -= rdm_element;
+                tprdm_bbb[r * ncmo5 + p * ncmo4_ + q * ncmo3_ + t * ncmo2_ +
+                          u * ncmo_ + s] += rdm_element;
+
+                tprdm_bbb[r * ncmo5 + q * ncmo4_ + p * ncmo3_ + s * ncmo2_ +
+                          t * ncmo_ + u] -= rdm_element;
+                tprdm_bbb[r * ncmo5 + q * ncmo4_ + p * ncmo3_ + s * ncmo2_ +
+                          u * ncmo_ + t] += rdm_element;
+                tprdm_bbb[r * ncmo5 + q * ncmo4_ + p * ncmo3_ + u * ncmo2_ +
+                          t * ncmo_ + s] += rdm_element;
+                tprdm_bbb[r * ncmo5 + q * ncmo4_ + p * ncmo3_ + u * ncmo2_ +
+                          s * ncmo_ + t] -= rdm_element;
+                tprdm_bbb[r * ncmo5 + q * ncmo4_ + p * ncmo3_ + t * ncmo2_ +
+                          s * ncmo_ + u] += rdm_element;
+                tprdm_bbb[r * ncmo5 + q * ncmo4_ + p * ncmo3_ + t * ncmo2_ +
+                          u * ncmo_ + s] -= rdm_element;
+            }
+        }
+    }
+
+    if (print_)
+        outfile->Printf("\n  Time spent building 3-rdm:   %1.6f", build.get());
+}
+
+void CI_RDMS::compute_3rdm(std::vector<double>& tprdm_aaa,
+                           std::vector<double>& tprdm_aab,
+                           std::vector<double>& tprdm_abb,
+                           std::vector<double>& tprdm_bbb,
+                           WFNOperator& op) {
+    size_t ncmo5 = ncmo4_ * ncmo_;
+    size_t ncmo6 = ncmo3_ * ncmo3_;
+
+    tprdm_aaa.resize(ncmo6, 0.0);
+    tprdm_aab.resize(ncmo6, 0.0);
+    tprdm_abb.resize(ncmo6, 0.0);
+    tprdm_bbb.resize(ncmo6, 0.0);
+
+    std::vector<std::vector<std::tuple<size_t,short,short,short>>>& aaa_ann_list = op.aaa_ann_list_;
+    std::vector<std::vector<std::tuple<size_t,short,short,short>>>& aab_ann_list = op.aab_ann_list_;
+    std::vector<std::vector<std::tuple<size_t,short,short,short>>>& abb_ann_list = op.abb_ann_list_;
+    std::vector<std::vector<std::tuple<size_t,short,short,short>>>& bbb_ann_list = op.bbb_ann_list_;
+
+    std::vector<std::vector<std::tuple<size_t,short,short,short>>>& aaa_cre_list = op.aaa_cre_list_;
+    std::vector<std::vector<std::tuple<size_t,short,short,short>>>& aab_cre_list = op.aab_cre_list_;
+    std::vector<std::vector<std::tuple<size_t,short,short,short>>>& abb_cre_list = op.abb_cre_list_;
+    std::vector<std::vector<std::tuple<size_t,short,short,short>>>& bbb_cre_list = op.bbb_cre_list_;
+
+    Timer build;
+    for (size_t J = 0; J < dim_space_; ++J) {
+        // aaa aaa
+        for (auto& aaaJ_mo_sign : aaa_ann_list[J]) {
+            const size_t aaaJ_add = std::get<0>(aaaJ_mo_sign);
+
+            const size_t p = std::abs(std::get<1>(aaaJ_mo_sign)) - 1;
+            const size_t q = std::get<2>(aaaJ_mo_sign);
+            const size_t r = std::get<3>(aaaJ_mo_sign);
+            const double sign_pqr =
+                std::get<1>(aaaJ_mo_sign) > 0.0 ? 1.0 : -1.0;
+
+            for (auto& a6J : aaa_cre_list[aaaJ_add]) {
+                const size_t s = std::abs(std::get<1>(a6J)) - 1;
+                const size_t t = std::get<2>(a6J);
+                const size_t u = std::get<3>(a6J);
+                const double sign_stu = std::get<1>(a6J) > 0.0 ? 1.0 : -1.0;
+                const size_t I = std::get<0>(a6J);
+
+                double rdm_element = evecs_->get(I, root1_) *
+                                     evecs_->get(J, root2_) * sign_pqr *
+                                     sign_stu;
+
+                tprdm_aaa[p * ncmo5 + q * ncmo4_ + r * ncmo3_ + s * ncmo2_ +
+                          t * ncmo_ + u] += rdm_element;
+                tprdm_aaa[p * ncmo5 + q * ncmo4_ + r * ncmo3_ + s * ncmo2_ +
+                          u * ncmo_ + t] -= rdm_element;
+                tprdm_aaa[p * ncmo5 + q * ncmo4_ + r * ncmo3_ + u * ncmo2_ +
+                          t * ncmo_ + s] -= rdm_element;
+                tprdm_aaa[p * ncmo5 + q * ncmo4_ + r * ncmo3_ + u * ncmo2_ +
+                          s * ncmo_ + t] += rdm_element;
+                tprdm_aaa[p * ncmo5 + q * ncmo4_ + r * ncmo3_ + t * ncmo2_ +
+                          s * ncmo_ + u] -= rdm_element;
+                tprdm_aaa[p * ncmo5 + q * ncmo4_ + r * ncmo3_ + t * ncmo2_ +
+                          u * ncmo_ + s] += rdm_element;
+
+                tprdm_aaa[p * ncmo5 + r * ncmo4_ + q * ncmo3_ + s * ncmo2_ +
+                          t * ncmo_ + u] -= rdm_element;
+                tprdm_aaa[p * ncmo5 + r * ncmo4_ + q * ncmo3_ + s * ncmo2_ +
+                          u * ncmo_ + t] += rdm_element;
+                tprdm_aaa[p * ncmo5 + r * ncmo4_ + q * ncmo3_ + u * ncmo2_ +
+                          t * ncmo_ + s] += rdm_element;
+                tprdm_aaa[p * ncmo5 + r * ncmo4_ + q * ncmo3_ + u * ncmo2_ +
+                          s * ncmo_ + t] -= rdm_element;
+                tprdm_aaa[p * ncmo5 + r * ncmo4_ + q * ncmo3_ + t * ncmo2_ +
+                          s * ncmo_ + u] += rdm_element;
+                tprdm_aaa[p * ncmo5 + r * ncmo4_ + q * ncmo3_ + t * ncmo2_ +
+                          u * ncmo_ + s] -= rdm_element;
+
+                tprdm_aaa[q * ncmo5 + p * ncmo4_ + r * ncmo3_ + s * ncmo2_ +
+                          t * ncmo_ + u] -= rdm_element;
+                tprdm_aaa[q * ncmo5 + p * ncmo4_ + r * ncmo3_ + s * ncmo2_ +
+                          u * ncmo_ + t] += rdm_element;
+                tprdm_aaa[q * ncmo5 + p * ncmo4_ + r * ncmo3_ + u * ncmo2_ +
+                          t * ncmo_ + s] += rdm_element;
+                tprdm_aaa[q * ncmo5 + p * ncmo4_ + r * ncmo3_ + u * ncmo2_ +
+                          s * ncmo_ + t] -= rdm_element;
+                tprdm_aaa[q * ncmo5 + p * ncmo4_ + r * ncmo3_ + t * ncmo2_ +
+                          s * ncmo_ + u] += rdm_element;
+                tprdm_aaa[q * ncmo5 + p * ncmo4_ + r * ncmo3_ + t * ncmo2_ +
+                          u * ncmo_ + s] -= rdm_element;
+
+                tprdm_aaa[q * ncmo5 + r * ncmo4_ + p * ncmo3_ + s * ncmo2_ +
+                          t * ncmo_ + u] += rdm_element;
+                tprdm_aaa[q * ncmo5 + r * ncmo4_ + p * ncmo3_ + s * ncmo2_ +
+                          u * ncmo_ + t] -= rdm_element;
+                tprdm_aaa[q * ncmo5 + r * ncmo4_ + p * ncmo3_ + u * ncmo2_ +
+                          t * ncmo_ + s] -= rdm_element;
+                tprdm_aaa[q * ncmo5 + r * ncmo4_ + p * ncmo3_ + u * ncmo2_ +
+                          s * ncmo_ + t] += rdm_element;
+                tprdm_aaa[q * ncmo5 + r * ncmo4_ + p * ncmo3_ + t * ncmo2_ +
+                          s * ncmo_ + u] -= rdm_element;
+                tprdm_aaa[q * ncmo5 + r * ncmo4_ + p * ncmo3_ + t * ncmo2_ +
+                          u * ncmo_ + s] += rdm_element;
+
+                tprdm_aaa[r * ncmo5 + p * ncmo4_ + q * ncmo3_ + s * ncmo2_ +
+                          t * ncmo_ + u] += rdm_element;
+                tprdm_aaa[r * ncmo5 + p * ncmo4_ + q * ncmo3_ + s * ncmo2_ +
+                          u * ncmo_ + t] -= rdm_element;
+                tprdm_aaa[r * ncmo5 + p * ncmo4_ + q * ncmo3_ + u * ncmo2_ +
+                          t * ncmo_ + s] -= rdm_element;
+                tprdm_aaa[r * ncmo5 + p * ncmo4_ + q * ncmo3_ + u * ncmo2_ +
+                          s * ncmo_ + t] += rdm_element;
+                tprdm_aaa[r * ncmo5 + p * ncmo4_ + q * ncmo3_ + t * ncmo2_ +
+                          s * ncmo_ + u] -= rdm_element;
+                tprdm_aaa[r * ncmo5 + p * ncmo4_ + q * ncmo3_ + t * ncmo2_ +
+                          u * ncmo_ + s] += rdm_element;
+
+                tprdm_aaa[r * ncmo5 + q * ncmo4_ + p * ncmo3_ + s * ncmo2_ +
+                          t * ncmo_ + u] -= rdm_element;
+                tprdm_aaa[r * ncmo5 + q * ncmo4_ + p * ncmo3_ + s * ncmo2_ +
+                          u * ncmo_ + t] += rdm_element;
+                tprdm_aaa[r * ncmo5 + q * ncmo4_ + p * ncmo3_ + u * ncmo2_ +
+                          t * ncmo_ + s] += rdm_element;
+                tprdm_aaa[r * ncmo5 + q * ncmo4_ + p * ncmo3_ + u * ncmo2_ +
+                          s * ncmo_ + t] -= rdm_element;
+                tprdm_aaa[r * ncmo5 + q * ncmo4_ + p * ncmo3_ + t * ncmo2_ +
+                          s * ncmo_ + u] += rdm_element;
+                tprdm_aaa[r * ncmo5 + q * ncmo4_ + p * ncmo3_ + t * ncmo2_ +
+                          u * ncmo_ + s] -= rdm_element;
+            }
+        }
+        // aab aab
+        for (auto& aabJ_mo_sign : aab_ann_list[J]) {
+            const size_t aabJ_add = std::get<0>(aabJ_mo_sign);
+
+            const size_t p = std::abs(std::get<1>(aabJ_mo_sign)) - 1;
+            const size_t q = std::get<2>(aabJ_mo_sign);
+            const size_t r = std::get<3>(aabJ_mo_sign);
+            const double sign_pqr =
+                std::get<1>(aabJ_mo_sign) > 0.0 ? 1.0 : -1.0;
+
+            for (auto& aabJ : aab_cre_list[aabJ_add]) {
+                const size_t s = std::abs(std::get<1>(aabJ)) - 1;
+                const size_t t = std::get<2>(aabJ);
+                const size_t u = std::get<3>(aabJ);
+                const double sign_stu = std::get<1>(aabJ) > 0.0 ? 1.0 : -1.0;
+                const size_t I = std::get<0>(aabJ);
+
+                double rdm_element = evecs_->get(I, root1_) *
+                                     evecs_->get(J, root2_) * sign_pqr *
+                                     sign_stu;
+
+                tprdm_aab[p * ncmo5 + q * ncmo4_ + r * ncmo3_ + s * ncmo2_ +
+                          t * ncmo_ + u] += rdm_element;
+                tprdm_aab[p * ncmo5 + q * ncmo4_ + r * ncmo3_ + t * ncmo2_ +
+                          s * ncmo_ + u] -= rdm_element;
+                tprdm_aab[q * ncmo5 + p * ncmo4_ + r * ncmo3_ + s * ncmo2_ +
+                          t * ncmo_ + u] -= rdm_element;
+                tprdm_aab[q * ncmo5 + p * ncmo4_ + r * ncmo3_ + t * ncmo2_ +
+                          s * ncmo_ + u] += rdm_element;
+            }
+        }
+        // abb abb
+        for (auto& abbJ_mo_sign : abb_ann_list[J]) {
+            const size_t abbJ_add = std::get<0>(abbJ_mo_sign);
+
+            const size_t p = std::abs(std::get<1>(abbJ_mo_sign)) - 1;
+            const size_t q = std::get<2>(abbJ_mo_sign);
+            const size_t r = std::get<3>(abbJ_mo_sign);
+            const double sign_pqr =
+                std::get<1>(abbJ_mo_sign) > 0.0 ? 1.0 : -1.0;
+
+            for (auto& abbJ : abb_cre_list[abbJ_add]) {
+                const size_t s = std::abs(std::get<1>(abbJ)) - 1;
+                const size_t t = std::get<2>(abbJ);
+                const size_t u = std::get<3>(abbJ);
+                const double sign_stu = std::get<1>(abbJ) > 0.0 ? 1.0 : -1.0;
+                const size_t I = std::get<0>(abbJ);
+
+                double rdm_element = evecs_->get(I, root1_) *
+                                     evecs_->get(J, root2_) * sign_pqr *
+                                     sign_stu;
+
+                tprdm_abb[p * ncmo5 + q * ncmo4_ + r * ncmo3_ + s * ncmo2_ +
+                          t * ncmo_ + u] += rdm_element;
+                tprdm_abb[p * ncmo5 + q * ncmo4_ + r * ncmo3_ + s * ncmo2_ +
+                          u * ncmo_ + t] -= rdm_element;
+                tprdm_abb[p * ncmo5 + r * ncmo4_ + q * ncmo3_ + s * ncmo2_ +
+                          t * ncmo_ + u] -= rdm_element;
+                tprdm_abb[p * ncmo5 + r * ncmo4_ + q * ncmo3_ + s * ncmo2_ +
+                          u * ncmo_ + t] += rdm_element;
+            }
+        }
+        // bbb bbb
+        for (auto& bbbJ_mo_sign : bbb_ann_list[J]) {
+            const size_t bbbJ_add = std::get<0>(bbbJ_mo_sign);
+
+            const size_t p = std::abs(std::get<1>(bbbJ_mo_sign)) - 1;
+            const size_t q = std::get<2>(bbbJ_mo_sign);
+            const size_t r = std::get<3>(bbbJ_mo_sign);
+            const double sign_pqr =
+                std::get<1>(bbbJ_mo_sign) > 0.0 ? 1.0 : -1.0;
+
+            for (auto& b6J : bbb_cre_list[bbbJ_add]) {
                 const size_t s = std::abs(std::get<1>(b6J)) - 1;
                 const size_t t = std::get<2>(b6J);
                 const size_t u = std::get<3>(b6J);
