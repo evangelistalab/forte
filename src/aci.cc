@@ -1162,14 +1162,7 @@ void AdaptiveCI::get_excited_determinants(
                                          evecs->get_row(0, P)->norm() >=
                                      screen_thresh_)) {
                                     new_det = det;
-                                    new_det.set_alfa_bit(ii, false);
-                                    new_det.set_alfa_bit(jj, false);
-                                    new_det.set_alfa_bit(aa, true);
-                                    new_det.set_alfa_bit(bb, true);
-                                    HIJ *= det.slater_sign_alpha(ii) *
-                                           det.slater_sign_alpha(jj) *
-                                           new_det.slater_sign_alpha(aa) *
-                                           new_det.slater_sign_alpha(bb);
+                                    HIJ *= new_det.double_excitation_aa(ii,jj,aa,bb);
 
                                     if (!(P_space.has_det(new_det))) {
                                         std::vector<double> coupling(nroot,
@@ -1208,15 +1201,7 @@ void AdaptiveCI::get_excited_determinants(
                                          evecs->get_row(0, P)->norm() >=
                                      screen_thresh_)) {
                                     new_det = det;
-                                    new_det.set_alfa_bit(ii, false);
-                                    new_det.set_beta_bit(jj, false);
-                                    new_det.set_alfa_bit(aa, true);
-                                    new_det.set_beta_bit(bb, true);
-
-                                    HIJ *= det.slater_sign_alpha(ii) *
-                                           det.slater_sign_beta(jj) *
-                                           new_det.slater_sign_alpha(aa) *
-                                           new_det.slater_sign_beta(bb);
+                                    HIJ *= new_det.double_excitation_ab(ii,jj,aa,bb);
 
                                     if (!(P_space.has_det(new_det))) {
                                         std::vector<double> coupling(nroot,
@@ -1256,15 +1241,8 @@ void AdaptiveCI::get_excited_determinants(
                                          evecs->get_row(0, P)->norm() >=
                                      screen_thresh_)) {
                                     new_det = det;
-                                    new_det.set_beta_bit(ii, false);
-                                    new_det.set_beta_bit(jj, false);
-                                    new_det.set_beta_bit(aa, true);
-                                    new_det.set_beta_bit(bb, true);
+                                    HIJ *= new_det.double_excitation_bb(ii,jj,aa,bb);
 
-                                    HIJ *= det.slater_sign_beta(ii) *
-                                           det.slater_sign_beta(jj) *
-                                           new_det.slater_sign_beta(aa) *
-                                           new_det.slater_sign_beta(bb);
                                     if (!(P_space.has_det(new_det))) {
                                         std::vector<double> coupling(nroot,
                                                                      0.0);
