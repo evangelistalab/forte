@@ -38,13 +38,14 @@
 
 #include "ci_rdms.h"
 #include "determinant_map.h"
-#include "fci_vector.h"
+#include "fci/fci_integrals.h"
 #include "helpers.h"
 #include "integrals.h"
 #include "operator.h"
 #include "sparse_ci_solver.h"
 #include "sparse_ci_wfn.h"
 #include "stl_bitset_determinant.h"
+#include "stl_bitset_string.h"
 
 namespace psi {
 namespace forte {

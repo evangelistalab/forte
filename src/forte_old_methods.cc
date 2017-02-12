@@ -55,7 +55,7 @@
 #include "three_dsrg_mrpt2.h"
 #include "tensorsrg.h"
 #include "mcsrgpt2_mo.h"
-#include "fci_solver.h"
+#include "fci/fci.h"
 #include "blockedtensorfactory.h"
 #include "sq.h"
 #include "so-mrdsrg.h"

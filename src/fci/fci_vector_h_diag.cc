@@ -29,7 +29,7 @@
 #include <numeric>
 #include <vector>
 
-#include "helpers.h"
+#include "../helpers.h"
 #include "fci_vector.h"
 
 namespace psi {
