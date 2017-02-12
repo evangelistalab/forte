@@ -174,7 +174,6 @@ void AdaptiveCI::startup() {
     ex_alg_ = options_.get_str("EXCITED_ALGORITHM");
     post_root_ = max(nroot_, options_.get_int("POST_ROOT"));
     post_diagonalize_ = options_.get_bool("POST_DIAGONALIZE");
-    do_guess_ = options_.get_bool("LAMBDA_GUESS");
     det_save_ = options_.get_bool("SAVE_DET_FILE");
     ref_root_ = options_.get_int("ROOT");
     root_ = options_.get_int("ROOT");
@@ -1163,14 +1162,7 @@ void AdaptiveCI::get_excited_determinants(
                                          evecs->get_row(0, P)->norm() >=
                                      screen_thresh_)) {
                                     new_det = det;
-                                    new_det.set_alfa_bit(ii, false);
-                                    new_det.set_alfa_bit(jj, false);
-                                    new_det.set_alfa_bit(aa, true);
-                                    new_det.set_alfa_bit(bb, true);
-                                    HIJ *= det.slater_sign_alpha(ii) *
-                                           det.slater_sign_alpha(jj) *
-                                           new_det.slater_sign_alpha(aa) *
-                                           new_det.slater_sign_alpha(bb);
+                                    HIJ *= new_det.double_excitation_aa(ii,jj,aa,bb);
 
                                     if (!(P_space.has_det(new_det))) {
                                         std::vector<double> coupling(nroot,
@@ -1209,15 +1201,7 @@ void AdaptiveCI::get_excited_determinants(
                                          evecs->get_row(0, P)->norm() >=
                                      screen_thresh_)) {
                                     new_det = det;
-                                    new_det.set_alfa_bit(ii, false);
-                                    new_det.set_beta_bit(jj, false);
-                                    new_det.set_alfa_bit(aa, true);
-                                    new_det.set_beta_bit(bb, true);
-
-                                    HIJ *= det.slater_sign_alpha(ii) *
-                                           det.slater_sign_beta(jj) *
-                                           new_det.slater_sign_alpha(aa) *
-                                           new_det.slater_sign_beta(bb);
+                                    HIJ *= new_det.double_excitation_ab(ii,jj,aa,bb);
 
                                     if (!(P_space.has_det(new_det))) {
                                         std::vector<double> coupling(nroot,
@@ -1257,15 +1241,8 @@ void AdaptiveCI::get_excited_determinants(
                                          evecs->get_row(0, P)->norm() >=
                                      screen_thresh_)) {
                                     new_det = det;
-                                    new_det.set_beta_bit(ii, false);
-                                    new_det.set_beta_bit(jj, false);
-                                    new_det.set_beta_bit(aa, true);
-                                    new_det.set_beta_bit(bb, true);
+                                    HIJ *= new_det.double_excitation_bb(ii,jj,aa,bb);
 
-                                    HIJ *= det.slater_sign_beta(ii) *
-                                           det.slater_sign_beta(jj) *
-                                           new_det.slater_sign_beta(aa) *
-                                           new_det.slater_sign_beta(bb);
                                     if (!(P_space.has_det(new_det))) {
                                         std::vector<double> coupling(nroot,
                                                                      0.0);
@@ -2115,6 +2092,20 @@ int AdaptiveCI::root_follow(DeterminantMap& P_ref,
     DeterminantMap P_int;
     std::vector<double> P_int_evecs;
 
+   // std::vector<std::pair<double, size_t>> det_weights;
+   // detmap map = P_ref.wfn_hash();
+   // for (detmap::iterator it = map.begin(), endit = map.end(); it != endit;
+   //      ++it) {
+   //     det_weights.push_back(
+   //         std::make_pair(std::abs(P_ref_evecs[it->second]), it->second));
+   // }
+   // std::sort(det_weights.begin(), det_weights.end());
+   // std::reverse(det_weights.begin(), det_weights.end() );
+
+   // for (size_t I = 0; I < 10; ++I) {
+   //     outfile->Printf("\n %1.8f   %s", det_weights[I].first, P_ref.get_det(det_weights[I].second).str().c_str());
+   // }
+
     for (int n = 0; n < num_ref_roots; ++n) {
         if (!quiet_mode_)
             outfile->Printf("\n\n  Computing overlap for root %d", n);
@@ -2447,13 +2438,8 @@ void AdaptiveCI::compute_aci(DeterminantMap& PQ_space, SharedMatrix& PQ_evecs,
             if (options_.get_str("EXCITED_ALGORITHM") == "ROOT_SELECT") {
                 ref_root_ = options_.get_int("ROOT");
             }
-
-            P_ref_evecs.resize(PQ_space.size());
-            det_hash<size_t> detmap = PQ_space.wfn_hash();
-            for (auto& det : detmap) {
-                P_ref.add(det.first);
-                P_ref_evecs[det.second] = PQ_evecs->get(det.second, ref_root_);
-            }
+            size_t dim = std::min( static_cast<int>(PQ_space.size()) , 1000 );
+            P_ref.subspace( PQ_space, PQ_evecs, P_ref_evecs, dim, ref_root_ );
         }
 
         // if( follow and num_ref_roots > 0 and (cycle >= (pre_iter_ - 1)) ){
