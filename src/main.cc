@@ -69,11 +69,11 @@ extern "C" int read_options(std::string name, Options& options) {
  */
 extern "C" SharedWavefunction forte(SharedWavefunction ref_wfn,
                                     Options& options) {
-    auto my_proc_n_nodes = forte_startup();
-    int my_proc = my_proc_n_nodes.first;
-
     // Start a timer
     Timer total_time;
+
+    auto my_proc_n_nodes = forte_startup();
+    int my_proc = my_proc_n_nodes.first;
 
     // Make a MOSpaceInfo object
     auto mo_space_info = make_mo_space_info(ref_wfn, options);

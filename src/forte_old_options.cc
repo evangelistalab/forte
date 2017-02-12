@@ -462,8 +462,6 @@ void forte_old_options(Options& options) {
     options.add_double("SPIN_TOL", 0.01);
     /*- Compute 1-RDM? -*/
     options.add_int("ACI_MAX_RDM", 1);
-    /*- Form initial space with based on energy */
-    options.add_bool("LAMBDA_GUESS", false);
     /*- Type of spin projection
      * 0 - None
      * 1 - Project initial P spaces at each iteration
