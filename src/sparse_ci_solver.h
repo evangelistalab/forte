@@ -30,7 +30,6 @@
 #define _sparse_ci_h_
 
 #include "stl_bitset_determinant.h"
-#include "stl_bitset_string.h"
 #include "determinant_map.h"
 #include "operator.h"
 

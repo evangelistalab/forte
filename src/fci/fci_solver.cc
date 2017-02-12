@@ -26,35 +26,28 @@
  * @END LICENSE
  */
 
-/*
- *  fci_davidson_liu.cc
- *  Capriccio
- *
- *  Created by Francesco Evangelista on 3/21/09.
- *  Copyright 2009 __MyCompanyName__. All rights reserved.
- *
- */
+//#include <cmath>
+//#include <numeric>
 
-#include <cmath>
-#include <numeric>
-
-#include "mini-boost/boost/format.hpp"
-
-#include "psi4/libciomr/libciomr.h"
-#include "psi4/liboptions/liboptions.h"
+//#include "psi4/libciomr/libciomr.h"
+//#include "psi4/liboptions/liboptions.h"
 #include "psi4/libmints/molecule.h"
-#include "psi4/libpsio/psio.h"
-#include "psi4/libpsio/psio.hpp"
-#include "psi4/libmints/matrix.h"
-#include "psi4/libmints/vector.h"
+//#include "psi4/libpsio/psio.h"
+//#include "psi4/libpsio/psio.hpp"
+//#include "psi4/libmints/matrix.h"
+//#include "psi4/libmints/vector.h"
 
-#include "stl_bitset_determinant.h"
-#include "integrals.h"
-#include "iterative_solvers.h"
+#include "../mini-boost/boost/format.hpp"
+
+#include "../stl_bitset_determinant.h"
+//#include "../integrals.h"
+#include "../iterative_solvers.h"
+//#include "../string_lists.h"
+//#include "../helpers.h"
+//#include "../reference.h"
+
 #include "fci_solver.h"
-#include "string_lists.h"
-#include "helpers.h"
-#include "reference.h"
+
 #ifdef HAVE_GA
 #include <ga.h>
 #include <macdecls.h>
@@ -66,15 +59,15 @@ using namespace std;
 using namespace psi;
 using namespace boost;
 
-extern double h1_aa_timer;
-extern double h1_bb_timer;
-extern double h2_aaaa_timer;
-extern double h2_aabb_timer;
-extern double h2_bbbb_timer;
-extern double oo_list_timer;
-extern double vo_list_timer;
-extern double vovo_list_timer;
-extern double vvoo_list_timer;
+//extern double h1_aa_timer;
+//extern double h1_bb_timer;
+//extern double h2_aaaa_timer;
+//extern double h2_aabb_timer;
+//extern double h2_bbbb_timer;
+//extern double oo_list_timer;
+//extern double vo_list_timer;
+//extern double vovo_list_timer;
+//extern double vvoo_list_timer;
 
 int fci_debug_level = 4;
 
@@ -82,142 +75,6 @@ namespace psi {
 namespace forte {
 
 class MOSpaceInfo;
-
-FCI::FCI(SharedWavefunction ref_wfn, Options& options,
-         std::shared_ptr<ForteIntegrals> ints,
-         std::shared_ptr<MOSpaceInfo> mo_space_info)
-    : Wavefunction(options), ints_(ints), mo_space_info_(mo_space_info) {
-    // Copy the wavefunction information
-    shallow_copy(ref_wfn);
-    reference_wavefunction_ = ref_wfn;
-
-    print_ = options_.get_int("PRINT");
-
-    startup();
-}
-
-FCI::~FCI() {
-    if (fcisolver_ != nullptr)
-        delete fcisolver_;
-}
-
-void FCI::set_max_rdm_level(int value) { max_rdm_level_ = value; }
-
-void FCI::set_fci_iterations(int value) { fci_iterations_ = value; }
-
-void FCI::print_no(bool value) { print_no_ = value; }
-
-void FCI::set_ms(int ms) {
-    set_ms_ = true;
-    ms_ = ms;
-}
-
-void FCI::startup() {
-    if (print_)
-        print_method_banner({"String-based Full Configuration Interaction",
-                             "by Francesco A. Evangelista"});
-
-    max_rdm_level_ = options_.get_int("FCI_MAX_RDM");
-    fci_iterations_ = options_.get_int("FCI_ITERATIONS");
-    print_no_ = options_.get_bool("PRINT_NO");
-}
-
-double FCI::compute_energy() {
-    Dimension active_dim = mo_space_info_->get_dimension("ACTIVE");
-    size_t nfdocc = mo_space_info_->size("FROZEN_DOCC");
-    std::vector<size_t> rdocc =
-        mo_space_info_->get_corr_abs_mo("RESTRICTED_DOCC");
-    std::vector<size_t> active = mo_space_info_->get_corr_abs_mo("ACTIVE");
-
-    int charge = Process::environment.molecule()->molecular_charge();
-    if (options_["CHARGE"].has_changed()) {
-        charge = options_.get_int("CHARGE");
-    }
-
-    int nel = 0;
-    int natom = Process::environment.molecule()->natom();
-    for (int i = 0; i < natom; i++) {
-        nel += static_cast<int>(Process::environment.molecule()->Z(i));
-    }
-    // If the charge has changed, recompute the number of electrons
-    // Or if you cannot find the number of electrons
-    nel -= charge;
-
-    int multiplicity = Process::environment.molecule()->multiplicity();
-    if (options_["MULTIPLICITY"].has_changed()) {
-        multiplicity = options_.get_int("MULTIPLICITY");
-    }
-
-    // If the user did not specify ms determine the value from the input or
-    // take the lowest value consistent with the value of "MULTIPLICITY"
-    if (not set_ms_) {
-        if (options_["MS"].has_changed()) {
-            ms_ = options_.get_int("MS");
-        } else {
-            // Default: lowest spin solution
-            ms_ = (multiplicity + 1) % 2;
-        }
-    }
-
-    //    if(ms < 0){
-    //        outfile->Printf("\n  Ms must be no less than 0.");
-    //        outfile->Printf("\n  Ms = %2d, MULTIPLICITY = %2d", ms,
-    //        multiplicity);
-    //        outfile->Printf("\n  Check (specify) Ms value (component of
-    //        multiplicity)! \n");
-    //        throw PSIEXCEPTION("Ms must be no less than 0. Check output for
-    //        details.");
-    //    }
-
-    if (print_) {
-        outfile->Printf("\n  Number of electrons: %d", nel);
-        outfile->Printf("\n  Charge: %d", charge);
-        outfile->Printf("\n  Multiplicity: %d", multiplicity);
-        outfile->Printf("\n  Davidson subspace max dim: %d",
-                        options_.get_int("DAVIDSON_SUBSPACE_PER_ROOT"));
-        outfile->Printf("\n  Davidson subspace min dim: %d",
-                        options_.get_int("DAVIDSON_COLLAPSE_PER_ROOT"));
-        if (ms_ % 2 == 0) {
-            outfile->Printf("\n  M_s: %d", ms_ / 2);
-        } else {
-            outfile->Printf("\n  M_s: %d/2", ms_);
-        }
-    }
-
-    if (((nel - ms_) % 2) != 0)
-        throw PSIEXCEPTION("\n\n  FCI: Wrong value of M_s.\n\n");
-
-    // Adjust the number of for frozen and restricted doubly occupied
-    size_t nactel = nel - 2 * nfdocc - 2 * rdocc.size();
-
-    size_t na = (nactel + ms_) / 2;
-    size_t nb = nactel - na;
-
-    fcisolver_ =
-        new FCISolver(active_dim, rdocc, active, na, nb, multiplicity,
-                      options_.get_int("ROOT_SYM"), ints_, mo_space_info_,
-                      options_.get_int("NTRIAL_PER_ROOT"), print_, options_);
-    // tweak some options
-    fcisolver_->set_max_rdm_level(max_rdm_level_);
-    fcisolver_->set_nroot(options_.get_int("NROOT"));
-    fcisolver_->set_root(options_.get_int("ROOT"));
-    fcisolver_->set_test_rdms(options_.get_bool("TEST_RDMS"));
-    fcisolver_->set_fci_iterations(options_.get_int("FCI_ITERATIONS"));
-    fcisolver_->set_collapse_per_root(
-        options_.get_int("DAVIDSON_COLLAPSE_PER_ROOT"));
-    fcisolver_->set_subspace_per_root(
-        options_.get_int("DAVIDSON_SUBSPACE_PER_ROOT"));
-    fcisolver_->set_print_no(print_no_);
-
-    double fci_energy = fcisolver_->compute_energy();
-
-    Process::environment.globals["CURRENT ENERGY"] = fci_energy;
-    Process::environment.globals["FCI ENERGY"] = fci_energy;
-
-    return fci_energy;
-}
-
-Reference FCI::reference() { return fcisolver_->reference(); }
 
 FCISolver::FCISolver(Dimension active_dim, std::vector<size_t> core_mo,
                      std::vector<size_t> active_mo, size_t na, size_t nb,

@@ -35,7 +35,7 @@
 #include "psi4/libqt/qt.h"
 #include "psi4/libmints/matrix.h"
 #include "helpers.h"
-#include "fci_solver.h"
+#include "fci/fci_solver.h"
 #include "psi4/psifiles.h"
 #include "psi4/lib3index/cholesky.h"
 using namespace psi;

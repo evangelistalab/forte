@@ -33,7 +33,7 @@
 #include <sstream>
 
 #include "fci_mo.h"
-#include "fci_vector.h"
+#include "fci/fci_vector.h"
 #include "mini-boost/boost/algorithm/string/predicate.hpp"
 #include "psi4/libmints/dipole.h"
 #include "psi4/libmints/oeprop.h"
