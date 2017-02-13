@@ -40,7 +40,7 @@
 #include "stl_bitset_determinant.h"
 #include "stl_bitset_string.h"
 #include "sparse_ci_solver.h"
-#include "fci_vector.h"
+#include "fci/fci_integrals.h"
 #include "ci_rdms.h"
 
 namespace psi {

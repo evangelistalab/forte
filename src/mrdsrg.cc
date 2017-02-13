@@ -37,7 +37,7 @@
 
 #include "helpers.h"
 #include "mrdsrg.h"
-#include "fci_solver.h"
+#include "fci/fci_solver.h"
 #include "mp2_nos.h"
 #include "fci_mo.h"
 

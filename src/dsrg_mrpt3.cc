@@ -41,7 +41,7 @@
 
 #include "dsrg_mrpt3.h"
 #include "blockedtensorfactory.h"
-#include "fci_solver.h"
+#include "fci/fci_solver.h"
 #include "fci_mo.h"
 
 using namespace ambit;

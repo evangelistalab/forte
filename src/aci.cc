@@ -38,7 +38,7 @@
 
 #include "aci.h"
 #include "ci_rdms.h"
-#include "fci_vector.h"
+#include "fci/fci_integrals.h"
 #include "sparse_ci_solver.h"
 #include "stl_bitset_determinant.h"
 
