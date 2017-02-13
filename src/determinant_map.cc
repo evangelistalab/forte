@@ -258,5 +258,12 @@ void DeterminantMap::merge(DeterminantMap& dets) {
         }
     }
 }
+
+void DeterminantMap::copy( DeterminantMap& dets ){
+    this->clear();
+    wfn_ = dets.wfn_;   
+    wfn_size_ = dets.size();
+}   
+
 }
 }
