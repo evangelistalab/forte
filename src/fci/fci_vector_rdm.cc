@@ -31,8 +31,9 @@
 #include "psi4/libmints/molecule.h"
 #include "psi4/libqt/qt.h"
 
-#include "helpers.h"
-#include "dynamic_bitset_determinant.h"
+#include "../helpers.h"
+#include "../dynamic_bitset_determinant.h"
+
 #include "fci_vector.h"
 
 extern int fci_debug_level;

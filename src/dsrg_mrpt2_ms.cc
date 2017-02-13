@@ -28,7 +28,7 @@
 
 #include "ci_rdms.h"
 #include "dsrg_mrpt2.h"
-#include "fci_solver.h"
+#include "fci/fci_solver.h"
 
 namespace psi {
 namespace forte {
