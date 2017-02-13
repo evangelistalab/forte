@@ -36,8 +36,8 @@
 #include "psi4/lib3index/dftensor.h"
 #include "psi4/libqt/qt.h"
 #include "blockedtensorfactory.h"
-#include "fci_solver.h"
-#include "fci_vector.h"
+#include "fci/fci_solver.h"
+#include "fci/fci_vector.h"
 
 #include "three_dsrg_mrpt2.h"
 #include <vector>

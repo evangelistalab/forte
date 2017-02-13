@@ -33,7 +33,7 @@
 #include <bitset>
 
 #include "integrals.h"
-#include "fci_vector.h"
+#include "fci/fci_integrals.h"
 //#include "stl_bitset_determinant.h"
 
 namespace psi {

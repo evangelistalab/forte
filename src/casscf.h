@@ -38,7 +38,8 @@
 #include "reference.h"
 #include "helpers.h"
 #include "blockedtensorfactory.h"
-#include "fci_vector.h"
+#include "fci/fci_vector.h"
+#include "fci/fci_integrals.h"
 
 namespace psi {
 namespace forte {
