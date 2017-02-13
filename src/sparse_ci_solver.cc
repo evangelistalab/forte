@@ -1621,9 +1621,17 @@ void SparseCISolver::diagonalize_hamiltonian_map(
     if ((space.size() <= 200 && !force_diag_method_) or diag_method == Full) {
         const std::vector<STLBitsetDeterminant> dets = space.determinants();
         diagonalize_full(dets, evals, evecs, nroot, multiplicity);
+    } else if ( diag_method == MPI ){
+        diagonalize_mpi(space, op, evals, evecs, nroot, multiplicity);
     } else {
         diagonalize_dl(space, op, evals, evecs, nroot, multiplicity);
     }
+}
+
+void SparseCISolver::diagonalize_mpi( 
+    const DeterminantMap& space, WFNOperator& op, SharedVector& evals,
+    SharedMatrix& evecs, int nroot, int multiplicity){
+
 }
 
 void SparseCISolver::diagonalize_dl(const DeterminantMap& space,
@@ -1677,6 +1685,7 @@ void SparseCISolver::diagonalize_davidson_liu_solver(
     davidson_liu_solver(space, sigma_vector, evals, evecs, nroot, multiplicity);
 }
 
+    
 void SparseCISolver::diagonalize_davidson_liu_string(
     const std::vector<STLBitsetDeterminant>& space, SharedVector& evals,
     SharedMatrix& evecs, int nroot, int multiplicity, bool disk) {
