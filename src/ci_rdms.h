@@ -40,7 +40,6 @@
 #include "operator.h"
 #include "reference.h"
 #include "stl_bitset_determinant.h"
-#include "stl_bitset_string.h"
 #include "string_lists.h"
 
 namespace psi {

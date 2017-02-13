@@ -32,8 +32,8 @@
 #include "psi4/liboptions/liboptions.h"
 #include "psi4/libmints/wavefunction.h"
 #include "psi4/libmints/wavefunction.h"
-#include "fci_solver.h"
-#include "fci_vector.h"
+#include "fci/fci_solver.h"
+#include "fci/fci_vector.h"
 
 namespace psi {
 namespace forte {

@@ -38,7 +38,7 @@
 
 #include "helpers.h"
 
-#include "fci_solver.h"
+#include "fci/fci_solver.h"
 #include "aci.h"
 
 #include "fci_mo.h"

@@ -42,7 +42,7 @@
 #include <unordered_map>
 
 #include "integrals.h"
-#include "fci_vector.h"
+#include "fci/fci_vector.h"
 
 namespace psi {
 namespace forte {
