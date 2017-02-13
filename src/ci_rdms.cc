@@ -2710,8 +2710,8 @@ void CI_RDMS::get_three_map() {
     for (size_t I = 0; I < dim_space_; ++I) {
         STLBitsetDeterminant detI = det_space_[I];
 
-        std::vector<int> aocc = detI.get_alfa_occ();
-        std::vector<int> bocc = detI.get_beta_occ();
+        const std::vector<int>& aocc = detI.get_alfa_occ();
+        const std::vector<int>& bocc = detI.get_beta_occ();
 
         int noalfa = aocc.size();
         int nobeta = bocc.size();
