@@ -535,7 +535,6 @@ void WFNOperator::clear_tp_lists() {
 
 void WFNOperator::three_lists(DeterminantMap& wfn) {
     size_t ndets = wfn.size();
-    outfile->Printf("\n  ndets: %zu", ndets);
     const det_hash<size_t>& wfn_map = wfn.wfn_hash();
 
     /// Compute aaa coupling
