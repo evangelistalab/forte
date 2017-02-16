@@ -41,7 +41,6 @@
 #include "psi4/libmints/molecule.h"
 
 #include "helpers.h"
-#include "aosubspace.h"
 #include "multidimensional_arrays.h"
 #include "mp2_nos.h"
 #include "aci.h"

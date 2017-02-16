@@ -32,7 +32,6 @@
 #include <regex>
 
 #include "psi4/masses.h"
-//#include "psi4/libmints/Z_to_element.h"
 #include "psi4/libmints/element_to_Z.h"
 #include "psi4/libmints/integral.h"
 #include "psi4/libmints/matrix.h"
@@ -43,8 +42,6 @@
 #include "boost/format.hpp"
 
 #include "aosubspace.h"
-
-using namespace psi;
 
 std::vector<std::string> mysplit(const std::string& input,
                                  const std::string& regex);
@@ -64,26 +61,23 @@ SharedMatrix create_aosubspace_projector(SharedWavefunction wfn,
                                          Options& options) {
     SharedMatrix Ps;
 
-    /* PORTTODO: re-enable this block
     // Run this code only if user specified a subspace
     if (options["SUBSPACE"].size() > 0){
         std::vector<std::string> subspace_str;
         for (int entry = 0; entry < (int)options["SUBSPACE"].size(); ++entry){
             std::string s = options["SUBSPACE"][entry].to_string();
+            // convert to upper case
             subspace_str.push_back(s);
         }
 
         // Create a basis set parser object and read the minimal basis
         std::shared_ptr<Molecule> molecule = wfn->molecule();
-        std::shared_ptr<BasisSetParser> parser(new Gaussian94BasisSetParser());
-        std::shared_ptr<BasisSet> min_basis =
-    BasisSet::pyconstruct_orbital(molecule,"BASIS",options.get_str("MIN_BASIS"));
+        std::shared_ptr<BasisSet> min_basis = wfn->get_basisset("MINAO_BASIS");
 
         // Create an AOSubspace object
         AOSubspace aosub(subspace_str,molecule,min_basis);
 
-        // Compute the subspaces (right now this is required before any other
-    call)
+        // Compute the subspaces (right now this is required before any other call)
         aosub.find_subspace();
 
         // Show minimal basis using custom formatting
@@ -92,8 +86,7 @@ SharedMatrix create_aosubspace_projector(SharedWavefunction wfn,
         outfile->Printf("       AO    Atom    Label  AO type   \n");
         outfile->Printf("    ----------------------------------\n");
         {
-            std::vector<std::string> aolabels = aosub.aolabels("%1$4d
-    %2$-2s %3$-4d  %4$d%5$s");
+            std::vector<std::string> aolabels = aosub.aolabels("%1$4d%2$-2s %3$-4d  %4$d%5$s");
 
             int nbf = 0;
             for (const auto& s : aolabels){
@@ -107,7 +100,6 @@ SharedMatrix create_aosubspace_projector(SharedWavefunction wfn,
 
         Ps = aosub.build_projector(subspace,molecule,min_basis,wfn->basisset());
     }
-    */
     return Ps;
 }
 
