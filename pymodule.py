@@ -57,6 +57,11 @@ def run_forte(name, **kwargs):
                                          'RIFIT', psi4.core.get_global_option('BASIS'))
         ref_wfn.set_basisset('DF_BASIS_MP2', aux_basis)
 
+    if (psi4.core.get_option('FORTE','MINAO_BASIS')):
+        minao_basis = psi4.core.BasisSet.build(ref_wfn.molecule(), 'MINAO_BASIS',
+                                               psi4.core.get_option('FORTE','MINAO_BASIS'))
+        ref_wfn.set_basisset('MINAO_BASIS', minao_basis)
+
     # Ensure IWL files have been written when not using DF/CD
     proc_util.check_iwl_file_from_scf_type(psi4.core.get_option('SCF', 'SCF_TYPE'), ref_wfn)
 

@@ -26,17 +26,6 @@
  * @END LICENSE
  */
 
-//#include <cmath>
-//#include <algorithm>
-
-//#include "psi4/libmints/vector.h"
-//#include "psi4/libmints/matrix.h"
-//#include "psi4/libfock/jk.h"
-//#include "psi4/libmints/mintshelper.h"
-//#include "psi4/libmints/pointgrp.h"
-//#include "psi4/libmints/wavefunction.h"
-//#include "psi4/libmints/molecule.h"
-
 #include "../helpers.h"
 
 #include "fci_vector.h"
