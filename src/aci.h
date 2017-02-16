@@ -243,6 +243,10 @@ class AdaptiveCI : public Wavefunction {
     bool do_guess_;
     /// Spin-symmetrized evecs
     SharedMatrix PQ_spin_evecs_;
+    /// The unselected part of the SD space
+    det_hash<double> external_wfn_;
+    /// Do approximate RDM?
+    bool approx_rdm_ = false;
 
     /// Timing variables
     double build_H_;
@@ -392,6 +396,8 @@ class AdaptiveCI : public Wavefunction {
                      SharedVector& PQ_evals);
 
     void compute_multistate(SharedVector& PQ_evals);
+
+    DeterminantMap approximate_wfn( DeterminantMap& PQ_space, SharedMatrix evecs, det_hash<double>& external_space, SharedMatrix new_evecs );
 
     std::vector<std::pair<size_t, double>>
     dl_initial_guess(std::vector<STLBitsetDeterminant>& old_dets,
