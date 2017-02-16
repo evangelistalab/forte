@@ -777,6 +777,12 @@ void AdaptiveCI::default_find_q_space(DeterminantMap& P_space,
             sum += energy;
             ept2[0] -= energy;
             last_excluded = I;
+
+            // Optionally save an approximate external wfn
+            if( approx_rdm_ ){
+                external_wfn_[sorted_dets[I].second] = 
+                     V_hash[sorted_dets[I].second][0]/(energy - evals->get(0));
+            }
         } else {
             PQ_space.add(sorted_dets[I].second);
         }
@@ -2695,5 +2701,36 @@ void AdaptiveCI::compute_multistate(SharedVector& PQ_evals) {
 
     //    PQ_evals->print();
 }
+
+DeterminantMap AdaptiveCI::approximate_wfn( DeterminantMap& PQ_space, SharedMatrix evecs, det_hash<double>& external_space, SharedMatrix new_evecs )
+{
+    DeterminantMap new_wfn;
+    new_wfn.copy(PQ_space);    
+
+    size_t n_ref = PQ_space.size();
+    size_t n_external = external_space.size();
+    size_t total_size = n_ref + n_external;
+
+    new_evecs.reset( new Matrix("U", total_size, 1));
+    double sum = 0.0;
+    
+    for( size_t I = 0; I < n_ref; ++I ){
+        double val = evecs->get(I,0);
+        new_evecs->set( I,0, val); 
+        sum += val*val;
+    } 
+
+    for( auto& I : external_space ){
+        new_wfn.add(I.first);
+        new_evecs->set( new_wfn.get_idx(I.first), 0, I.second);
+        sum += I.second*I.second;
+    }
+
+    // Normalize new evecs
+    sum = 1.0/std::sqrt(sum);
+    new_evecs->scale_column(0,0,sum); 
+
+    return new_wfn;
 }
-} // EndNamespaces
+
+}} // EndNamespaces
