@@ -100,6 +100,9 @@ class DeterminantMap {
     // Merge a wavefunction into this
     void merge(DeterminantMap& dets);
 
+    // Copy a wavefunctions
+    void copy(DeterminantMap& dets);
+
   protected:
     /// The dimension of the hash
     size_t wfn_size_;

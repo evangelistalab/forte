@@ -1,0 +1,22 @@
+import forte
+molecule h2o {
+  O 
+  H 1 0.96
+  H 1 0.96 2 104.5
+}
+
+set {
+  basis sto-3g
+  relativistic X2C
+  scf_type pk
+  reference rhf
+  e_convergence 10
+  d_convergence 10
+  r_convergence 10
+}
+set forte {
+  job_type fci
+}
+
+E, wfn = energy('scf', return_wfn=True)
+E, wfn = energy('forte', ref_wfn=wfn, return_wfn=True)
