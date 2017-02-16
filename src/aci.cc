@@ -177,6 +177,7 @@ void AdaptiveCI::startup() {
     det_save_ = options_.get_bool("SAVE_DET_FILE");
     ref_root_ = options_.get_int("ROOT");
     root_ = options_.get_int("ROOT");
+    approx_rdm_ = options_.get_bool("APPROXIMATE_RDM");
 
     reference_type_ = "SR";
     if (options_["ACI_INITIAL_SPACE"].has_changed()) {
@@ -593,17 +594,6 @@ double AdaptiveCI::compute_energy() {
         //    PQ_evals->print();
     }
 
-    // Compute the RDMs
-    if (options_.get_int("ACI_MAX_RDM") >= 3 or (rdm_level_ >= 3)) {
-        op_.three_lists(final_wfn_);
-    }
-
-    if (ex_alg_ == "ROOT_COMBINE") {
-        compute_rdms(full_space, op_c, PQ_evecs, 0, 0);
-    } else {
-        compute_rdms(final_wfn_, op_, PQ_evecs, 0, 0);
-    }
-
     if (!quiet_mode_) {
         if (ex_alg_ == "ROOT_COMBINE") {
             print_final(full_space, PQ_evecs, PQ_evals);
@@ -612,6 +602,24 @@ double AdaptiveCI::compute_energy() {
         } else {
             print_final(final_wfn_, PQ_evecs, PQ_evals);
         }
+    }
+    
+    // Compute the RDMs
+    if (options_.get_int("ACI_MAX_RDM") >= 3 or (rdm_level_ >= 3)) {
+        op_.three_lists(final_wfn_);
+    }
+    
+    SharedMatrix new_evecs;
+    if (ex_alg_ == "ROOT_COMBINE") {
+        compute_rdms(full_space, op_c, PQ_evecs, 0, 0);
+    } else if ( approx_rdm_ ){
+        DeterminantMap approx = approximate_wfn( final_wfn_, PQ_evecs, external_wfn_, new_evecs );  
+        WFNOperator op1(mo_space_info_);
+        op1.op_lists(approx); 
+        outfile->Printf("\n  Size of approx: %zu  size of var: %zu", approx.size(), final_wfn_.size());
+        compute_rdms(approx, op1, new_evecs, 0,0); 
+    } else {
+        compute_rdms(final_wfn_, op_, PQ_evecs, 0, 0);
     }
 
     outfile->Flush();
@@ -728,7 +736,7 @@ void AdaptiveCI::default_find_q_space(DeterminantMap& P_space,
 
     // This will contain all the determinants
     PQ_space.clear();
-
+    external_wfn_.clear();
     // Add the P-space determinants and zero the hash
     det_hash<size_t> detmap = P_space.wfn_hash();
     for (det_hash<size_t>::iterator it = detmap.begin(), endit = detmap.end();
@@ -781,8 +789,8 @@ void AdaptiveCI::default_find_q_space(DeterminantMap& P_space,
 
             // Optionally save an approximate external wfn
             if( approx_rdm_ ){
-                external_wfn_[sorted_dets[I].second] = 
-                     V_hash[sorted_dets[I].second][0]/(energy - evals->get(0));
+                external_wfn_[sorted_dets[I].second] = -1.0 * 
+                     V_hash[sorted_dets[I].second][0] / double((sorted_dets[I].second.energy() - evals->get(0)));
             }
         } else {
             PQ_space.add(sorted_dets[I].second);
@@ -2703,7 +2711,7 @@ void AdaptiveCI::compute_multistate(SharedVector& PQ_evals) {
     //    PQ_evals->print();
 }
 
-DeterminantMap AdaptiveCI::approximate_wfn( DeterminantMap& PQ_space, SharedMatrix evecs, det_hash<double>& external_space, SharedMatrix new_evecs )
+DeterminantMap AdaptiveCI::approximate_wfn( DeterminantMap& PQ_space, SharedMatrix& evecs, det_hash<double>& external_space, SharedMatrix& new_evecs )
 {
     DeterminantMap new_wfn;
     new_wfn.copy(PQ_space);    
@@ -2712,6 +2720,7 @@ DeterminantMap AdaptiveCI::approximate_wfn( DeterminantMap& PQ_space, SharedMatr
     size_t n_external = external_space.size();
     size_t total_size = n_ref + n_external;
 
+    outfile->Printf("\n  Size of external space: %zu", n_external);
     new_evecs.reset( new Matrix("U", total_size, 1));
     double sum = 0.0;
     
@@ -2727,6 +2736,7 @@ DeterminantMap AdaptiveCI::approximate_wfn( DeterminantMap& PQ_space, SharedMatr
         sum += I.second*I.second;
     }
 
+    outfile->Printf("\n  Norm of approximate wfn: %1.12f", std::sqrt(sum));
     // Normalize new evecs
     sum = 1.0/std::sqrt(sum);
     new_evecs->scale_column(0,0,sum); 
