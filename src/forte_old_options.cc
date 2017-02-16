@@ -9,6 +9,10 @@ void forte_old_options(Options& options) {
     /*- SUBSECTION Job Type */
 
     /*- Compute natural orbitals using MP2 -*/
+    options.add_str("MINAO_BASIS","STO-3G");
+
+
+    /*- Compute natural orbitals using MP2 -*/
     options.add_bool("MP2_NOS", false);
     /*- View the natural orbitals with their symmetry information -*/
     options.add_bool("NAT_ORBS_PRINT", false);
@@ -62,8 +66,8 @@ void forte_old_options(Options& options) {
      *  - CASSCF A AO based CASSCF code by Kevin Hannon
     -*/
     options.add_str(
-        "JOB_TYPE", "EXPLORER",
-        "EXPLORER ACI ACI_SPARSE FCIQMC PCI FCI CAS DMRG"
+        "JOB_TYPE", "NONE",
+        "NONE ACI ACI_SPARSE FCIQMC PCI FCI CAS DMRG"
         " SR-DSRG SR-DSRG-ACI SR-DSRG-PCI TENSORSRG TENSORSRG-CI"
         " DSRG-MRPT2 DSRG-MRPT3 MR-DSRG-PT2 THREE-DSRG-MRPT2 SQ NONE"
         " SOMRDSRG MRDSRG MRDSRG_SO CASSCF"
