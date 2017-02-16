@@ -504,6 +504,9 @@ void forte_old_options(Options& options) {
     options.add_int("N_GUESS_VEC", 10);
     options.add_double("NO_THRESHOLD", 0.02);
 
+    /*- Approximate 1RDM? -*/
+    options.add_bool("APPROXIMATE_RDM", false);
+
     /*- Do compute nroots on first cycle? -*/
     options.add_bool("FIRST_ITER_ROOTS", false);
 
