@@ -27,8 +27,8 @@
  */
 
 #include "helpers.h"
-#include "aosubspace.h"
 #include "integrals.h"
+#include "aosubspace/aosubspace.h"
 #include "stl_bitset_determinant.h"
 
 #ifdef HAVE_CHEMPS2

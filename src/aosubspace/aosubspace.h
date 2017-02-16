@@ -29,7 +29,6 @@
 #ifndef _aosubspace_h_
 #define _aosubspace_h_
 
-#include "mini-boost/boost/shared_ptr.hpp"
 #include "psi4/libmints/molecule.h"
 #include "psi4/libmints/basisset.h"
 #include "psi4/liboptions/liboptions.h"
