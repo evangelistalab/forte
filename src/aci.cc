@@ -548,7 +548,8 @@ double AdaptiveCI::compute_energy() {
         }
     }
     dim = PQ_space.size();
-    final_wfn_.merge(PQ_space);
+    final_wfn_.copy(PQ_space);
+    PQ_space.clear();
 
     int froot = options_.get_int("ROOT");
     if (ex_alg_ == "ROOT_ORTHOGONALIZE") {
@@ -607,9 +608,9 @@ double AdaptiveCI::compute_energy() {
         if (ex_alg_ == "ROOT_COMBINE") {
             print_final(full_space, PQ_evecs, PQ_evals);
         } else if (ex_alg_ == "ROOT_ORTHOGONALIZE") {
-            print_final(PQ_space, PQ_evecs, energies);
+            print_final(final_wfn_, PQ_evecs, energies);
         } else {
-            print_final(PQ_space, PQ_evecs, PQ_evals);
+            print_final(final_wfn_, PQ_evecs, PQ_evals);
         }
     }
 
@@ -1076,7 +1077,7 @@ void AdaptiveCI::get_excited_determinants(
 // Loop over reference determinants
 #pragma omp parallel
     {
-        if (omp_get_thread_num() == 0) {
+        if (omp_get_thread_num() == 0 and !quiet_mode_) {
             outfile->Printf("\n  Using %d threads.", omp_get_max_threads());
         }
         // This will store the excited determinant info for each thread
@@ -2268,7 +2269,7 @@ void AdaptiveCI::compute_aci(DeterminantMap& PQ_space, SharedMatrix& PQ_evecs,
                                 "Spin-complete dimension of the P space",
                                 P_space.size());
         } else if (!quiet_mode_) {
-            outfile->Printf("\n Not checking for spin-completeness.");
+            outfile->Printf("\n  Not checking for spin-completeness.");
         }
         // Diagonalize H in the P space
         if (ex_alg_ == "ROOT_ORTHOGONALIZE" and root_ > 0 and
@@ -2491,7 +2492,7 @@ void AdaptiveCI::compute_aci(DeterminantMap& PQ_space, SharedMatrix& PQ_evecs,
         // Print information about the wave function
         if (!quiet_mode_) {
             print_wfn(PQ_space, PQ_evecs, num_ref_roots);
-            outfile->Printf("\n Cycle %d took: %1.6f s", cycle,
+            outfile->Printf("\n  Cycle %d took: %1.6f s", cycle,
                             cycle_time.get());
         }
 
