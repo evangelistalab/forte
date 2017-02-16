@@ -1627,19 +1627,33 @@ void SparseCISolver::diagonalize_hamiltonian_map(
         diagonalize_dl(space, op, evals, evecs, nroot, multiplicity);
     }
 }
-
+#ifdef HAVE_MPI
 void SparseCISolver::diagonalize_mpi( 
     const DeterminantMap& space, WFNOperator& op, SharedVector& evals,
     SharedMatrix& evecs, int nroot, int multiplicity){
 
+    if ( print_details_ ){
+        outfile->Printf("\n\n  Distributed Davidson-Liu algorithm");
+    }
+
+    size_t dim_space = space.size();
+    evecs.reset(new Matrix("U",dim_space, nroot));
+    evals.reset(new Vector("e", nroot));
+
+    SigmaVectorMPI sv(space, op);
+    SigmaVector* sigma_vector = &sv;
+    sigma_vector->add_bad_roots(bad_states_);
+    davidson_liu_solver_map(space, sigma_vector, evals, evecs, nroot,
+                            multiplicity);
 }
+#endif
 
 void SparseCISolver::diagonalize_dl(const DeterminantMap& space,
                                     WFNOperator& op, SharedVector& evals,
                                     SharedMatrix& evecs, int nroot,
                                     int multiplicity) {
     if (print_details_) {
-        outfile->Printf("\n\n Davidson-liu solver algorithm");
+        outfile->Printf("\n\n Davidson-Liu solver algorithm");
     }
     size_t dim_space = space.size();
     evecs.reset(new Matrix("U", dim_space, nroot));
