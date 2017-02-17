@@ -615,10 +615,13 @@ double AdaptiveCI::compute_energy() {
         compute_rdms(full_space, op_c, PQ_evecs, 0, 0);
     } else if ( approx_rdm_ ){
         DeterminantMap approx = approximate_wfn( final_wfn_, PQ_evecs, external_wfn_, new_evecs );  
-        WFNOperator op1(mo_space_info_);
-        op1.op_lists(approx); 
+    //    WFNOperator op1(mo_space_info_);
+    //    op1.op_lists(approx); 
+        op_.clear_op_lists();
+        op_.clear_tp_lists();
+        op_.op_lists(approx);
         outfile->Printf("\n  Size of approx: %zu  size of var: %zu", approx.size(), final_wfn_.size());
-        compute_rdms(approx, op1, new_evecs, 0,0); 
+        compute_rdms(approx, op_, new_evecs, 0,0); 
     } else {
         compute_rdms(final_wfn_, op_, PQ_evecs, 0, 0);
     }
@@ -791,8 +794,7 @@ void AdaptiveCI::default_find_q_space(DeterminantMap& P_space,
 
             // Optionally save an approximate external wfn
             if( approx_rdm_ ){
-                external_wfn_[det] = -1.0 * 
-                     V_hash[det][0] / (det.energy() - evals->get(0) );
+                external_wfn_[det] = V_hash[det][0] / (evals->get(0) - det.energy() );
             }
         } else {
             PQ_space.add(det);
@@ -1822,14 +1824,20 @@ void AdaptiveCI::print_nos() {
     opdm_a->diagonalize(NO_A, OCC_A, descending);
     opdm_b->diagonalize(NO_B, OCC_B, descending);
 
+   // ofstream file;
+   // file.open("nos.txt",std::ios_base::app);
     std::vector<std::pair<double, std::pair<int, int>>> vec_irrep_occupation;
     for (int h = 0; h < nirrep_; h++) {
         for (int u = 0; u < nactpi_[h]; u++) {
             auto irrep_occ = std::make_pair(OCC_A->get(h, u) + OCC_B->get(h, u),
                                             std::make_pair(h, u + 1));
             vec_irrep_occupation.push_back(irrep_occ);
+  //          file << OCC_A->get(h, u) + OCC_B->get(h, u) << "  ";
         }
     }
+   // file << endl;
+   // file.close();
+
     CharacterTable ct =
         Process::environment.molecule()->point_group()->char_table();
     std::sort(vec_irrep_occupation.begin(), vec_irrep_occupation.end(),
@@ -1844,6 +1852,7 @@ void AdaptiveCI::print_nos() {
             outfile->Printf("\n    ");
     }
     outfile->Printf("\n\n");
+
 
     // Compute active space weights
     if( print_weights_ ){
@@ -2728,6 +2737,7 @@ DeterminantMap AdaptiveCI::approximate_wfn( DeterminantMap& PQ_space, SharedMatr
     new_evecs.reset( new Matrix("U", total_size, 1));
     double sum = 0.0;
     
+#pragma omp parallel for reduction(+:sum)
     for( size_t I = 0; I < n_ref; ++I ){
         double val = evecs->get(I,0);
         new_evecs->set( I,0, val); 
