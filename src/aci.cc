@@ -178,6 +178,7 @@ void AdaptiveCI::startup() {
     ref_root_ = options_.get_int("ROOT");
     root_ = options_.get_int("ROOT");
     approx_rdm_ = options_.get_bool("APPROXIMATE_RDM");
+    print_weights_ = options_.get_bool("PRINT_WEIGHTS");
 
     reference_type_ = "SR";
     if (options_["ACI_INITIAL_SPACE"].has_changed()) {
@@ -781,7 +782,8 @@ void AdaptiveCI::default_find_q_space(DeterminantMap& P_space,
     double sum = 0.0;
     size_t last_excluded = 0;
     for (size_t I = 0, max_I = sorted_dets.size(); I < max_I; ++I) {
-        double energy = sorted_dets[I].first;
+        double& energy = sorted_dets[I].first;
+        STLBitsetDeterminant& det = sorted_dets[I].second;
         if (sum + energy < sigma_) {
             sum += energy;
             ept2[0] -= energy;
@@ -789,11 +791,11 @@ void AdaptiveCI::default_find_q_space(DeterminantMap& P_space,
 
             // Optionally save an approximate external wfn
             if( approx_rdm_ ){
-                external_wfn_[sorted_dets[I].second] = -1.0 * 
-                     V_hash[sorted_dets[I].second][0] / double((sorted_dets[I].second.energy() - evals->get(0)));
+                external_wfn_[det] = -1.0 * 
+                     V_hash[det][0] / (det.energy() - evals->get(0) );
             }
         } else {
-            PQ_space.add(sorted_dets[I].second);
+            PQ_space.add(det);
         }
     }
     // printf( "\n last excluded : %zu \n", last_excluded );
@@ -1844,38 +1846,40 @@ void AdaptiveCI::print_nos() {
     outfile->Printf("\n\n");
 
     // Compute active space weights
-    double no_thresh = options_.get_double("NO_THRESHOLD");
+    if( print_weights_ ){
+        double no_thresh = options_.get_double("NO_THRESHOLD");
 
-    std::vector<int> active(nirrep_, 0);
-    std::vector<std::vector<int>> active_idx(nirrep_);
-    std::vector<int> docc(nirrep_, 0);
+        std::vector<int> active(nirrep_, 0);
+        std::vector<std::vector<int>> active_idx(nirrep_);
+        std::vector<int> docc(nirrep_, 0);
 
-    print_h2("Active Space Weights");
-    for (int h = 0; h < nirrep_; ++h) {
-        std::vector<double> weights(nactpi_[h], 0.0);
-        std::vector<double> oshell(nactpi_[h], 0.0);
-        for (int p = 0; p < nactpi_[h]; ++p) {
-            for (int q = 0; q < nactpi_[h]; ++q) {
-                double occ = OCC_A->get(h, q) + OCC_B->get(h, q);
-                if ((occ >= no_thresh) and (occ <= (2.0 - no_thresh))) {
-                    weights[p] += (NO_A->get(h, p, q)) * (NO_A->get(h, p, q));
-                    oshell[p] += (NO_A->get(h, p, q)) * (NO_A->get(h, p, q)) *
-                                 (2 - occ) * occ;
+        print_h2("Active Space Weights");
+        for (int h = 0; h < nirrep_; ++h) {
+            std::vector<double> weights(nactpi_[h], 0.0);
+            std::vector<double> oshell(nactpi_[h], 0.0);
+            for (int p = 0; p < nactpi_[h]; ++p) {
+                for (int q = 0; q < nactpi_[h]; ++q) {
+                    double occ = OCC_A->get(h, q) + OCC_B->get(h, q);
+                    if ((occ >= no_thresh) and (occ <= (2.0 - no_thresh))) {
+                        weights[p] += (NO_A->get(h, p, q)) * (NO_A->get(h, p, q));
+                        oshell[p] += (NO_A->get(h, p, q)) * (NO_A->get(h, p, q)) *
+                                     (2 - occ) * occ;
+                    }
                 }
             }
-        }
 
-        outfile->Printf("\n  Irrep %d:", h);
-        outfile->Printf(
-            "\n  Active idx     MO idx        Weight         OS-Weight");
-        outfile->Printf(
-            "\n ------------   --------   -------------    -------------");
-        for (int w = 0; w < nactpi_[h]; ++w) {
-            outfile->Printf("\n      %0.2d           %d       %1.9f      %1.9f",
-                            w + 1, w + frzcpi_[h] + 1, weights[w], oshell[w]);
-            if (weights[w] >= 0.9) {
-                active[h]++;
-                active_idx[h].push_back(w + frzcpi_[h] + 1);
+            outfile->Printf("\n  Irrep %d:", h);
+            outfile->Printf(
+                "\n  Active idx     MO idx        Weight         OS-Weight");
+            outfile->Printf(
+                "\n ------------   --------   -------------    -------------");
+            for (int w = 0; w < nactpi_[h]; ++w) {
+                outfile->Printf("\n      %0.2d           %d       %1.9f      %1.9f",
+                                w + 1, w + frzcpi_[h] + 1, weights[w], oshell[w]);
+                if (weights[w] >= 0.9) {
+                    active[h]++;
+                    active_idx[h].push_back(w + frzcpi_[h] + 1);
+                }
             }
         }
     }
