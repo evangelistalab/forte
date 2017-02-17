@@ -248,6 +248,8 @@ class AdaptiveCI : public Wavefunction {
     /// Do approximate RDM?
     bool approx_rdm_ = false;
 
+    bool print_weights_;
+
     /// Timing variables
     double build_H_;
     double diag_H_;

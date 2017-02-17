@@ -513,6 +513,7 @@ void forte_old_options(Options& options) {
 
     /*- Do compute nroots on first cycle? -*/
     options.add_bool("FIRST_ITER_ROOTS", false);
+    options.add_bool("PRINT_WEIGHTS", false);
 
     //////////////////////////////////////////////////////////////
     ///         OPTIONS FOR THE PROJECTOR CI
