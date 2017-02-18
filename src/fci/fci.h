@@ -43,6 +43,7 @@
 namespace psi {
 namespace forte {
 
+/// Set the options for the FCI method
 void set_FCI_options(Options& options);
 
 /**
