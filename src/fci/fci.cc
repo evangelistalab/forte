@@ -41,7 +41,6 @@ void set_FCI_options(Options& options)
     options.add_int("FCI_ROOT", 0);
     /*- Maximum number of iterations for FCI code -*/
     options.add_int("FCI_MAXITER", 30);
-
     /*- The number of trial guess vectors to generate per root -*/
     options.add_int("FCI_MAX_RDM", 1);
     /*- Test the FCI reduced density matrices? -*/
@@ -50,7 +49,6 @@ void set_FCI_options(Options& options)
     options.add_bool("FCI_PRINT_NO", false);
     /*- The number of trial guess vectors to generate per root -*/
     options.add_int("FCI_NTRIAL_PER_ROOT", 10);
-
 }
 
 FCI::FCI(SharedWavefunction ref_wfn, Options& options,

@@ -62,7 +62,7 @@ class ForteOptions {
      * @param value Default value of the option
      * @param description Description of the option
      */
-    void explicit add_bool(const std::string& label, bool value,
+    void add_bool(const std::string& label, bool value,
                            const std::string& description);
 
     /**
@@ -71,7 +71,7 @@ class ForteOptions {
      * @param value Default value of the option
      * @param description Description of the option
      */
-    void explicit add_int(const std::string& label, int value,
+    void add_int(const std::string& label, int value,
                           const std::string& description);
 
     /**
@@ -80,7 +80,7 @@ class ForteOptions {
      * @param value Default value of the option
      * @param description Description of the option
      */
-    void explicit add_double(const std::string& label, double value,
+    void add_double(const std::string& label, double value,
                              const std::string& description);
 
     /**
@@ -90,7 +90,7 @@ class ForteOptions {
      * @param description Description of the option
      * @param allowed_values An array of allowed option values
      */
-    void explicit add_str(const std::string& label, std::string value,
+    void add_str(const std::string& label, std::string value,
                           const std::string& description,
                           const std::vector<std::string>& allowed_values = {});
 
@@ -99,7 +99,7 @@ class ForteOptions {
      * @param label Option label
      * @param description Description of the option
      */
-    void explicit add_array(const std::string& label,
+    void add_array(const std::string& label,
                             const std::string& description);
 
     /// Add the options to psi4's options class
