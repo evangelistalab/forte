@@ -154,6 +154,7 @@ std::shared_ptr<MOSpaceInfo> make_mo_space_info(SharedWavefunction ref_wfn,
 
 SharedMatrix make_aosubspace_projector(SharedWavefunction ref_wfn,
                                        Options& options) {
+    // Ps is a SharedMatrix Ps = S^{BA} X X^+ S^{AB}
     auto Ps = create_aosubspace_projector(ref_wfn, options);
     if (Ps) {
         SharedMatrix CPsC = Ps->clone();

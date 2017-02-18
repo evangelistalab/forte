@@ -46,10 +46,7 @@ FCI::FCI(SharedWavefunction ref_wfn, Options& options,
     startup();
 }
 
-FCI::~FCI() {
-    if (fcisolver_ != nullptr)
-        delete fcisolver_;
-}
+FCI::~FCI() {}
 
 void FCI::set_max_rdm_level(int value) { max_rdm_level_ = value; }
 
@@ -143,10 +140,10 @@ double FCI::compute_energy() {
     size_t na = (nactel + ms_) / 2;
     size_t nb = nactel - na;
 
-    fcisolver_ =
+    fcisolver_ = std::unique_ptr<FCISolver>(
         new FCISolver(active_dim, rdocc, active, na, nb, multiplicity,
                       options_.get_int("ROOT_SYM"), ints_, mo_space_info_,
-                      options_.get_int("NTRIAL_PER_ROOT"), print_, options_);
+                      options_.get_int("NTRIAL_PER_ROOT"), print_, options_));
     // tweak some options
     fcisolver_->set_max_rdm_level(max_rdm_level_);
     fcisolver_->set_nroot(options_.get_int("NROOT"));
@@ -168,6 +165,5 @@ double FCI::compute_energy() {
 }
 
 Reference FCI::reference() { return fcisolver_->reference(); }
-
 }
 }
