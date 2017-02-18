@@ -34,7 +34,7 @@ set forte {
   root_sym 0
   ACI_INITIAL_SPACE CISD
   aci_preiterations 2
-  maxiter_davidson 1000
+  dl_maxiter 100
   diag_algorithm dlstring
 }
 

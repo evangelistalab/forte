@@ -583,7 +583,7 @@ double ACIString::compute_energy() {
         sparse_solver.set_print_details(false);
     sparse_solver.set_parallel(true);
     sparse_solver.set_e_convergence(options_.get_double("E_CONVERGENCE"));
-    sparse_solver.set_maxiter_davidson(options_.get_int("MAXITER_DAVIDSON"));
+    sparse_solver.set_maxiter_davidson(options_.get_int("DL_MAXITER"));
     sparse_solver.set_spin_project(project_out_spin_contaminants_);
 
     int spin_projection = options_.get_int("SPIN_PROJECTION");
@@ -835,7 +835,7 @@ double ACIString::compute_energy() {
         if (!quiet_mode_)
             outfile->Printf("\n  3-RDMs took %2.6f s", three.get());
 
-        if (options_.get_bool("TEST_RDMS")) {
+        if (options_.get_bool("FCI_TEST_RDMS")) {
             ci_rdms_.rdm_test(ordm_a_, ordm_b_, trdm_aa_, trdm_bb_, trdm_ab_,
                               trdm_aaa_, trdm_aab_, trdm_abb_, trdm_bbb_);
         }

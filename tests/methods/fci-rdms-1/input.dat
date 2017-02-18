@@ -14,7 +14,6 @@ units bohr
 set {
   basis sto-3g
   reference rhf
-  test_rdms true
   scf_type pk
   e_convergence 12
 }
@@ -22,6 +21,7 @@ set {
 set forte {
   job_type fci
   fci_max_rdm 3
+  fci_test_rdms true
 }
 
 energy('scf')

@@ -1,15 +1,17 @@
 #include "psi4/liboptions/liboptions.h"
 
+#include "fci/fci.h"
+
 namespace psi {
 namespace forte {
 
 void forte_old_options(Options& options) {
+
+    set_FCI_options(options);
+
     /*- MODULEDESCRIPTION Forte */
 
     /*- SUBSECTION Job Type */
-
-    /*- Compute natural orbitals using MP2 -*/
-    options.add_str("MINAO_BASIS","STO-3G");
 
 
     /*- Compute natural orbitals using MP2 -*/
@@ -248,27 +250,21 @@ void forte_old_options(Options& options) {
     options.add_str("ALTERNATIVE_CASSCF", "NONE", "IVO FTHF NONE");
     options.add_double("TEMPERATURE", 50000);
 
-    //////////////////////////////////////////////////////////////
-    ///         OPTIONS FOR THE FULL CI CODE
-    //////////////////////////////////////////////////////////////
-
-    /*- The number of trial guess vectors to generate per root -*/
-    options.add_int("FCI_MAX_RDM", 1);
-    /*- Test the FCI reduced density matrices? -*/
-    options.add_bool("TEST_RDMS", false);
-    /*- Print the NO from the rdm of FCI -*/
+    /*- Print the NOs -*/
     options.add_bool("PRINT_NO", false);
-
     /*- The number of trial guess vectors to generate per root -*/
     options.add_int("NTRIAL_PER_ROOT", 10);
+
+    //////////////////////////////////////////////////////////////
+    ///         OPTIONS FOR THE DAVIDSON-LIU SOLVER
+    //////////////////////////////////////////////////////////////
+
     /*- The maximum number of iterations -*/
-    options.add_int("MAXITER_DAVIDSON", 100);
+    options.add_int("DL_MAXITER", 100);
     /*- The number of trial vector to retain after collapsing -*/
-    options.add_int("DAVIDSON_COLLAPSE_PER_ROOT", 2);
+    options.add_int("DL_COLLAPSE_PER_ROOT", 2);
     /*- The maxim number of trial vectors -*/
-    options.add_int("DAVIDSON_SUBSPACE_PER_ROOT", 8);
-    /*- Number of iterations for FCI code -*/
-    options.add_int("FCI_ITERATIONS", 30);
+    options.add_int("DL_SUBSPACE_PER_ROOT", 8);
 
     //////////////////////////////////////////////////////////////
     ///         OPTIONS FOR THE CASSCF CODE

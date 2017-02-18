@@ -1584,11 +1584,11 @@ double DSRG_MRPT3::compute_energy_sa() {
             fcisolver.set_max_rdm_level(1);
             fcisolver.set_nroot(nstates);
             fcisolver.set_root(nstates - 1);
-            fcisolver.set_fci_iterations(options_.get_int("FCI_ITERATIONS"));
+            fcisolver.set_fci_iterations(options_.get_int("FCI_MAXITER"));
             fcisolver.set_collapse_per_root(
-                options_.get_int("DAVIDSON_COLLAPSE_PER_ROOT"));
+                options_.get_int("DL_COLLAPSE_PER_ROOT"));
             fcisolver.set_subspace_per_root(
-                options_.get_int("DAVIDSON_SUBSPACE_PER_ROOT"));
+                options_.get_int("DL_SUBSPACE_PER_ROOT"));
 
             if (eri_df_) {
                 fcisolver.use_user_integrals_and_restricted_docc(true);
@@ -1746,11 +1746,11 @@ double DSRG_MRPT3::compute_energy_relaxed() {
         fcisolver.set_max_rdm_level(1);
         fcisolver.set_nroot(nroot);
         fcisolver.set_root(root);
-        fcisolver.set_fci_iterations(options_.get_int("FCI_ITERATIONS"));
+        fcisolver.set_fci_iterations(options_.get_int("FCI_MAXITER"));
         fcisolver.set_collapse_per_root(
-            options_.get_int("DAVIDSON_COLLAPSE_PER_ROOT"));
+            options_.get_int("DL_COLLAPSE_PER_ROOT"));
         fcisolver.set_subspace_per_root(
-            options_.get_int("DAVIDSON_SUBSPACE_PER_ROOT"));
+            options_.get_int("DL_SUBSPACE_PER_ROOT"));
 
         // create FCIIntegrals manually
         if (eri_df_) {

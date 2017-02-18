@@ -222,9 +222,9 @@ void ProjectorCI::startup() {
     maxiter_ = options_.get_int("MAXBETA") / time_step_;
     max_Davidson_iter_ = options_.get_int("MAX_DAVIDSON_ITER");
     davidson_collapse_per_root_ =
-        options_.get_int("DAVIDSON_COLLAPSE_PER_ROOT");
+        options_.get_int("DL_COLLAPSE_PER_ROOT");
     davidson_subspace_per_root_ =
-        options_.get_int("DAVIDSON_SUBSPACE_PER_ROOT");
+        options_.get_int("DL_SUBSPACE_PER_ROOT");
     e_convergence_ = options_.get_double("E_CONVERGENCE");
     energy_estimate_threshold_ =
         options_.get_double("ENERGY_ESTIMATE_THRESHOLD");
@@ -819,7 +819,7 @@ double ProjectorCI::compute_energy() {
     SparseCISolver sparse_solver;
     sparse_solver.set_parallel(true);
     sparse_solver.set_e_convergence(options_.get_double("E_CONVERGENCE"));
-    sparse_solver.set_maxiter_davidson(options_.get_int("MAXITER_DAVIDSON"));
+    sparse_solver.set_maxiter_davidson(options_.get_int("DL_MAXITER"));
     sparse_solver.set_spin_project(true);
 
     pqpq_aa_ = new double[ncmo_ * ncmo_];
@@ -1204,7 +1204,7 @@ double ProjectorCI::initial_guess(det_vec& dets, std::vector<double>& C) {
     SparseCISolver sparse_solver;
     sparse_solver.set_parallel(true);
     sparse_solver.set_e_convergence(options_.get_double("E_CONVERGENCE"));
-    sparse_solver.set_maxiter_davidson(options_.get_int("MAXITER_DAVIDSON"));
+    sparse_solver.set_maxiter_davidson(options_.get_int("DL_MAXITER"));
     sparse_solver.set_spin_project(true);
 
     SharedMatrix evecs(new Matrix("Eigenvectors", guess_size, nroot_));
