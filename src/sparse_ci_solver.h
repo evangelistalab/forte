@@ -33,13 +33,17 @@
 #include "determinant_map.h"
 #include "operator.h"
 
+#ifdef HAVE_MPI
+#include <mpi.h>
+#endif
+
 #define BIGNUM 1E100
 #define MAXIT 100
 
 namespace psi {
 namespace forte {
 
-enum DiagonalizationMethod { Full, DLSolver, DLString, DLDisk };
+enum DiagonalizationMethod { Full, DLSolver, DLString, DLDisk, MPI };
 
 /**
  * @brief The SigmaVector class
@@ -196,6 +200,21 @@ class SigmaVectorWfn : public SigmaVector {
     std::vector<double> diag_;
 };
 
+#ifdef HAVE_MPI
+class SigmaVectorMPI : public SigmaVector {
+  public:
+    SigmaVectorMPI(const DeterminantMap& space, WFNOperator& op);
+
+    void compute_sigma(SharedVector sigma, SharedVector b);
+    void compute_sigma( Matrix& sigma, Matrix& b, int nroot);
+    void get_diagonal(Vector& diag);
+    void add_bad_roots(
+        std::vector<std::vector<std::pair<size_t, double>>>& bad_states_);  
+
+    std::vector<std::vector<std::pair<size_t, double>>> bad_states_;  
+};
+#endif
+
 /**
  * @brief The SparseCISolver class
  * This class diagonalizes the Hamiltonian in a basis
@@ -274,6 +293,10 @@ class SparseCISolver {
     void diagonalize_full(const std::vector<STLBitsetDeterminant>& space,
                           SharedVector& evals, SharedMatrix& evecs, int nroot,
                           int multiplicity);
+
+    void diagonalize_mpi(const DeterminantMap& space, WFNOperator& op,
+                        SharedVector& evals, SharedMatrix& evecs, int nroot,
+                        int multiplicity);
 
     void diagonalize_dl(const DeterminantMap& space, WFNOperator& op,
                         SharedVector& evals, SharedMatrix& evecs, int nroot,

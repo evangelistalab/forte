@@ -241,7 +241,7 @@ void forte_old_options(Options& options) {
 
     // Options for the Genetic Algorithm CI //
     /*- The size of the population -*/
-    options.add_int("NPOP", 100);
+//    options.add_int("NPOP", 100);
 
     //////////////////////////////////////////////////////////////
     ///         OPTIONS FOR ALTERNATIVES FOR CASSCF ORBITALS
@@ -438,8 +438,6 @@ void forte_old_options(Options& options) {
     options.add_double("GAMMA", 1.0);
     /*- The SD-space prescreening threshold -*/
     options.add_double("PRESCREEN_THRESHOLD", 1e-9);
-    /*- The threshold for smoothing the Hamiltonian. -*/
-    options.add_double("SMOOTH_THRESHOLD", 0.01);
     /*- The type of selection parameters to use*/
     options.add_bool("PERTURB_SELECT", false);
     /*Function of q-space criteria, per root*/
@@ -456,8 +454,6 @@ void forte_old_options(Options& options) {
     options.add_int("POST_ROOT", 1);
     /*Diagonalize after ACI procedure with higher number of roots*/
     options.add_bool("POST_DIAGONALIZE", false);
-    /*Maximum number of determinants*/
-    options.add_int("MAX_DET", 1e6);
     /*Threshold value for defining multiplicity from S^2*/
     options.add_double("SPIN_TOL", 0.01);
     /*- Compute 1-RDM? -*/
@@ -468,8 +464,6 @@ void forte_old_options(Options& options) {
      * 2 - Project only after converged PQ space
      * 3 - Do 1 and 2 -*/
     options.add_int("SPIN_PROJECTION", 0);
-    /*- Threshold for Lambda guess -*/
-    options.add_double("LAMBDA_THRESH", 1.0);
     /*- Add determinants to enforce spin-complete set? -*/
     options.add_bool("ENFORCE_SPIN_COMPLETE", true);
     /*- Project out spin contaminants in Davidson-Liu's algorithm? -*/
@@ -510,8 +504,12 @@ void forte_old_options(Options& options) {
     options.add_int("N_GUESS_VEC", 10);
     options.add_double("NO_THRESHOLD", 0.02);
 
+    /*- Approximate 1RDM? -*/
+    options.add_bool("APPROXIMATE_RDM", false);
+
     /*- Do compute nroots on first cycle? -*/
     options.add_bool("FIRST_ITER_ROOTS", false);
+    options.add_bool("PRINT_WEIGHTS", false);
 
     //////////////////////////////////////////////////////////////
     ///         OPTIONS FOR THE PROJECTOR CI
