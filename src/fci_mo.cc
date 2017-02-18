@@ -1509,7 +1509,7 @@ void FCI_MO::Diagonalize_H(const vecdet& det,
     SharedMatrix vec_tmp;
     SharedVector val_tmp;
     DiagonalizationMethod diag_method = DLSolver;
-    sparse_solver.set_maxiter_davidson(options_.get_int("MAXITER_DAVIDSON"));
+    sparse_solver.set_maxiter_davidson(options_.get_int("DL_MAXITER"));
     if (diag_algorithm_ == "FULL") {
         diag_method = Full;
     }

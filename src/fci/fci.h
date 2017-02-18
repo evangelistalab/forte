@@ -43,6 +43,8 @@
 namespace psi {
 namespace forte {
 
+void set_FCI_options(Options& options);
+
 /**
  * @brief The FCI class
  * This class implements a FCI wave function and calls FCISolver
@@ -113,6 +115,7 @@ class FCI : public Wavefunction {
     /// All that happens before we compute the energy
     void startup();
 };
+
 }
 }
 

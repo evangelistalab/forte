@@ -28,6 +28,7 @@
 
 #include "helpers.h"
 #include "integrals.h"
+#include "forte_options.h"
 #include "aosubspace/aosubspace.h"
 #include "stl_bitset_determinant.h"
 
@@ -55,10 +56,15 @@ namespace forte {
  * else.
  */
 extern "C" int read_options(std::string name, Options& options) {
-    forte_options(name, options);
+    ForteOptions foptions;
+
+    forte_options(name, foptions);
 
     if (name == "FORTE" || options.read_globals()) {
+        // Old way (deprecated) to pass options to Psi4
         forte_old_options(options);
+        // New way to pass options to Psi4
+        foptions.add_psi4_options(options);
     }
 
     return true;
