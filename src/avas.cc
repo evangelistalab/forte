@@ -91,7 +91,11 @@ void make_avas(SharedWavefunction ref_wfn, Options& options, SharedMatrix Ps) {
 
         auto Ca_tilde = Matrix::doublet(ref_wfn->Ca(),U);
 
+        // Update both the alpha and beta orbitals
+        // This assumes a restricted MO set
+        // TODO: generalize to unrestricted references
         ref_wfn->Ca()->copy(Ca_tilde);
+        ref_wfn->Cb()->copy(Ca_tilde);
     }
 }
 }
