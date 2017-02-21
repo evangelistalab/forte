@@ -54,6 +54,9 @@ using str_opt_t =
 // ("OPTION_LABEL", "Description")
 using array_opt_t = std::tuple<std::string, std::string>;
 
+/**
+ * @brief The ForteOptions class
+ */
 class ForteOptions {
   public:
     /**
