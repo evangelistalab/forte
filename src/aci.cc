@@ -925,6 +925,10 @@ void AdaptiveCI::find_q_space(DeterminantMap& P_space, DeterminantMap& PQ_space,
                 for (int n = 0; n < nroot; ++n) {
                     ept2[n] += e2[n];
                 }
+                // Optionally save an approximate external wfn
+                if( approx_rdm_ ){
+                    external_wfn_[it.first] = it.second[0] / (evals->get(0) - EI );
+                }
             }
         }
     } // end loop over determinants
@@ -948,6 +952,10 @@ void AdaptiveCI::find_q_space(DeterminantMap& P_space, DeterminantMap& PQ_space,
                     ept2[n] += E2_I;
                 }
                 last_excluded = I;
+                // Optionally save an approximate external wfn
+                if( approx_rdm_ ){
+                    external_wfn_[det] = V_hash[det][0] / (evals->get(0) - det.energy() );
+                }
             } else {
                 PQ_space.add(sorted_dets[I].second);
             }
@@ -2210,18 +2218,9 @@ void AdaptiveCI::compute_aci(DeterminantMap& PQ_space, SharedMatrix& PQ_evecs,
     SharedMatrix P_evecs;
     SharedVector P_evals;
 
-    // This will store part of the wavefunction for computing an overlap
-    //    std::vector<std::pair<STLBitsetDeterminant,double>> P_ref;
-
     DeterminantMap P_ref;
     std::vector<double> P_ref_evecs;
     DeterminantMap P_space(reference_determinant_);
-
-    // Use the reference determinant as a starting point
-    //    P_space_map_[reference_determinant_] = 1;
-    //    P_space.add(reference_determinant_);
-
-    // det_history_[reference_determinant_].push_back(std::make_pair(0, "I"));
 
     if (reference_type_ != "SR") {
         build_initial_reference(P_space);
@@ -2233,8 +2232,9 @@ void AdaptiveCI::compute_aci(DeterminantMap& PQ_space, SharedMatrix& PQ_evecs,
 
     std::vector<std::vector<double>> energy_history;
     SparseCISolver sparse_solver;
-    if (quiet_mode_)
+    if (quiet_mode_){
         sparse_solver.set_print_details(false);
+    }
     sparse_solver.set_parallel(true);
     sparse_solver.set_e_convergence(options_.get_double("E_CONVERGENCE"));
     sparse_solver.set_maxiter_davidson(options_.get_int("MAXITER_DAVIDSON"));
@@ -2258,6 +2258,10 @@ void AdaptiveCI::compute_aci(DeterminantMap& PQ_space, SharedMatrix& PQ_evecs,
     if (options_.get_str("EXCITED_ALGORITHM") == "ROOT_SELECT") {
         ref_root_ = options_.get_int("ROOT");
     }
+    
+    // Save the P_space energies to predict convergence
+    std::vector<double> P_energies;
+    approx_rdm_ = false;
 
     int cycle;
     for (cycle = 0; cycle < max_cycle_; ++cycle) {
@@ -2323,30 +2327,29 @@ void AdaptiveCI::compute_aci(DeterminantMap& PQ_space, SharedMatrix& PQ_evecs,
             outfile->Printf("\n  Time spent diagonalizing H:   %1.6f s",
                             diag.get());
 
+        //Save ground state energy
+        P_energies.push_back( P_evals->get(0));
+
+        if ( (cycle > 1) and options_.get_bool("APPROXIMATE_RDM") ){
+            double diff = std::abs( P_energies[cycle] - P_energies[cycle - 1] );
+            if( diff <= 1e-5 ){
+                approx_rdm_ = true;
+            }
+        } 
+
+
         if (cycle < pre_iter_) {
             ex_alg_ = "AVERAGE";
         } else if (cycle == pre_iter_ and follow) {
             ex_alg_ = options_.get_str("EXCITED_ALGORITHM");
         }
-        // If doing root-following, grab the initial root
-        //   if( follow and pre_iter_ == 0 ){
-        //       P_ref_evecs.resize( P_space.size() );
-        //       det_hash<size_t> detmap = P_space.wfn_hash();
-        //       for( auto& det : detmap ){
-        //           P_ref.add( det.first );
-        //           P_ref_evecs[det.second] = P_evecs->get(det.second,
-        //           ref_root_) ;
-        //       }
-        //   }
 
+        // Update the reference root if root following
         if (follow and num_ref_roots > 1 and (cycle >= pre_iter_) and
             cycle > 0) {
             ref_root_ = root_follow(P_ref, P_ref_evecs, P_space, P_evecs,
                                     num_ref_roots);
         }
-
-        // Save the dimension of the previous PQ space
-        // size_t PQ_space_prev = PQ_space_.size();
 
         // Use spin projection to ensure the P space is spin pure
         if ((spin_projection == 1 or spin_projection == 3) and
@@ -2451,12 +2454,7 @@ void AdaptiveCI::compute_aci(DeterminantMap& PQ_space, SharedMatrix& PQ_evecs,
             outfile->Printf("\n");
             outfile->Flush();
         }
-        // if(quiet_mode_){
-        // 	double abs_energy = PQ_evals->get(0) + nuclear_repulsion_energy_
-        // + fci_ints_->scalar_energy();
-        //     outfile->Printf("\n    %2d               %zu
-        //     %1.12f", cycle_, PQ_space_.size(), abs_energy );
-        // }
+
         num_ref_roots = std::min(nroot_, int(PQ_space.size()));
 
         // If doing root-following, grab the initial root
