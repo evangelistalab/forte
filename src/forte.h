@@ -26,63 +26,14 @@
  * @END LICENSE
  */
 
-//#include <cmath>
-//#include <memory>
+#include "forte_options.h"
 
-//#include "mini-boost/boost/format.hpp"
-//#include <ambit/tensor.h>
+namespace psi {
+namespace forte {
 
-//#include "psi4/psi4-dec.h"
-//#include "psi4/psifiles.h"
-//#include "psi4/libdpd/dpd.h"
-//#include "psi4/libpsio/psio.hpp"
-//#include "psi4/libtrans/integraltransform.h"
-//#include "psi4/libmints/wavefunction.h"
-//#include "psi4/libmints/molecule.h"
-
-//#include "helpers.h"
-//#include "aosubspace.h"
-//#include "multidimensional_arrays.h"
-//#include "mp2_nos.h"
-//#include "aci.h"
-//#include "pci.h"
-//#include "fcimc.h"
-//#include "fci_mo.h"
-//#include "mrdsrg.h"
-//#include "mrdsrg_so.h"
-//#include "dsrg_mrpt2.h"
-//#include "dsrg_mrpt3.h"
-//#include "three_dsrg_mrpt2.h"
-//#include "tensorsrg.h"
-//#include "mcsrgpt2_mo.h"
-//#include "fci/fci_solver.h"
-//#include "blockedtensorfactory.h"
-//#include "sq.h"
-//#include "so-mrdsrg.h"
-//#include "dsrg_wick.h"
-//#include "casscf.h"
-//#include "finite_temperature.h"
-//#include "active_dsrgpt2.h"
-//#include "dsrg_mrpt.h"
-//#include "v2rdm.h"
-//#include "localize.h"
-//#include "cc.h"
-
-//#ifdef HAVE_CHEMPS2
-//#include "dmrgscf.h"
-//#include "dmrgsolver.h"
-//#endif
-
-//#ifdef HAVE_GA
-//#include <ga.h>
-//#include <macdecls.h>
-//#endif
-
-//#ifdef HAVE_MPI
-//#include <mpi.h>
-//#endif
-
-void forte_options(std::string name, psi::Options& options);
+void forte_options(std::string name, ForteOptions& options);
+}
+}
 
 /// These functions replace the Memory Allocator in GA with C/C++ allocator.
 void* replace_malloc(size_t bytes, int align, char* name) {

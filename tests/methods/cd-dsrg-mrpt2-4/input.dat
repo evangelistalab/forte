@@ -31,13 +31,13 @@ set forte{
    restricted_docc        [2,0,0,0,0,2,0,0]
    active                 [1,0,1,1,0,1,1,1]
    root_sym               0
-   nroot                  1
+   fci_nroot              1
    dsrg_s                 1.0
    semi_canonical         true
    int_type               cholesky
    cholesky_tolerance     1e-12
-   NTRIAL_PER_ROOT        100
-   FCI_ITERATIONS          100
+   ntrial_per_root        100
+   fci_maxiter            100
 }
 
 energy('scf')

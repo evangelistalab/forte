@@ -28,8 +28,10 @@
 
 #include "helpers.h"
 #include "integrals.h"
+#include "forte_options.h"
 #include "aosubspace/aosubspace.h"
 #include "stl_bitset_determinant.h"
+#include "avas.h"
 
 #ifdef HAVE_CHEMPS2
 #include "dmrgscf.h"
@@ -55,10 +57,15 @@ namespace forte {
  * else.
  */
 extern "C" int read_options(std::string name, Options& options) {
-    forte_options(name, options);
+    ForteOptions foptions;
+
+    forte_options(name, foptions);
 
     if (name == "FORTE" || options.read_globals()) {
+        // Old way (deprecated) to pass options to Psi4
         forte_old_options(options);
+        // New way to pass options to Psi4
+        foptions.add_psi4_options(options);
     }
 
     return true;
@@ -80,6 +87,9 @@ extern "C" SharedWavefunction forte(SharedWavefunction ref_wfn,
 
     // Make a subspace object
     SharedMatrix Ps = make_aosubspace_projector(ref_wfn, options);
+
+    // Transform the orbitals
+    make_avas(ref_wfn,options,Ps);
 
     // Make an integral object
     auto ints = make_forte_integrals(ref_wfn, options, mo_space_info);
@@ -154,11 +164,12 @@ std::shared_ptr<MOSpaceInfo> make_mo_space_info(SharedWavefunction ref_wfn,
 
 SharedMatrix make_aosubspace_projector(SharedWavefunction ref_wfn,
                                        Options& options) {
+    // Ps is a SharedMatrix Ps = S^{BA} X X^+ S^{AB}
     auto Ps = create_aosubspace_projector(ref_wfn, options);
     if (Ps) {
+
         SharedMatrix CPsC = Ps->clone();
         CPsC->transform(ref_wfn->Ca());
-
         outfile->Printf("\n  Orbital overlap with ao subspace:\n");
         outfile->Printf("    ========================\n");
         outfile->Printf("    Irrep   MO   <phi|P|phi>\n");

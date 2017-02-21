@@ -87,7 +87,6 @@ def generate_cmakelist(args):
         return False    
 
     # put together forte's CMakeLists.txt file
-#    ccfiles = glob.glob('src/*.cc')
     ccfiles = []
     for root, dirnames, filenames in os.walk('src'):
         for filename in fnmatch.filter(filenames, '*.cc'):

@@ -43,6 +43,9 @@
 namespace psi {
 namespace forte {
 
+/// Set the options for the FCI method
+void set_FCI_options(Options& options);
+
 /**
  * @brief The FCI class
  * This class implements a FCI wave function and calls FCISolver
@@ -91,7 +94,7 @@ class FCI : public Wavefunction {
     /// The information about the molecular orbital spaces
     std::shared_ptr<MOSpaceInfo> mo_space_info_;
     /// A pointer to the FCISolver object
-    FCISolver* fcisolver_ = nullptr;
+    std::unique_ptr<FCISolver> fcisolver_;
     /// Print level
     /// 0 : silent mode (no printing)
     /// 1 : default printing
@@ -113,6 +116,7 @@ class FCI : public Wavefunction {
     /// All that happens before we compute the energy
     void startup();
 };
+
 }
 }
 
