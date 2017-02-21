@@ -31,6 +31,7 @@
 #include "forte_options.h"
 #include "aosubspace/aosubspace.h"
 #include "stl_bitset_determinant.h"
+#include "avas.h"
 
 #ifdef HAVE_CHEMPS2
 #include "dmrgscf.h"
@@ -86,6 +87,9 @@ extern "C" SharedWavefunction forte(SharedWavefunction ref_wfn,
 
     // Make a subspace object
     SharedMatrix Ps = make_aosubspace_projector(ref_wfn, options);
+
+    // Transform the orbitals
+    make_avas(ref_wfn,options,Ps);
 
     // Make an integral object
     auto ints = make_forte_integrals(ref_wfn, options, mo_space_info);
@@ -163,9 +167,9 @@ SharedMatrix make_aosubspace_projector(SharedWavefunction ref_wfn,
     // Ps is a SharedMatrix Ps = S^{BA} X X^+ S^{AB}
     auto Ps = create_aosubspace_projector(ref_wfn, options);
     if (Ps) {
+
         SharedMatrix CPsC = Ps->clone();
         CPsC->transform(ref_wfn->Ca());
-
         outfile->Printf("\n  Orbital overlap with ao subspace:\n");
         outfile->Printf("    ========================\n");
         outfile->Printf("    Irrep   MO   <phi|P|phi>\n");
