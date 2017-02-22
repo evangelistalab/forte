@@ -35,7 +35,7 @@
 #include "psi4/psi4-dec.h"
 #include "psi4/libmints/mintshelper.h"
 
-#include "blockedtensorfactory.h"
+#include "../blockedtensorfactory.h"
 #include "integrals.h"
 
 #define ID(x) ints_->DPD_ID(x)

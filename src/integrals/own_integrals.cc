@@ -35,7 +35,7 @@
 #include "psi4/libthce/lreri.h"
 #include "psi4/libqt/qt.h"
 
-#include "blockedtensorfactory.h"
+#include "../blockedtensorfactory.h"
 
 namespace psi {
 namespace forte {

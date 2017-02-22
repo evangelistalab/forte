@@ -36,7 +36,7 @@
 #include "psi4/libmints/wavefunction.h"
 
 #include "ambit/blocked_tensor.h"
-#include "integrals.h"
+#include "integrals/integrals.h"
 #include "reference.h"
 #include "blockedtensorfactory.h"
 #include "dsrg_source.h"

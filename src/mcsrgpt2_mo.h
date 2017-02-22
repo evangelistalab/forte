@@ -36,7 +36,7 @@
 #include <vector>
 #include <cmath>
 #include "fci_mo.h"
-#include "integrals.h"
+#include "integrals/integrals.h"
 #include "dsrg_source.h"
 
 using namespace std;

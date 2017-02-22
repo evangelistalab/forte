@@ -37,7 +37,7 @@
 #include "psi4/libmints/wavefunction.h"
 #include <random>
 
-#include "integrals.h"
+#include "integrals/integrals.h"
 #include "stl_bitset_determinant.h"
 #include "fci/fci_vector.h"
 

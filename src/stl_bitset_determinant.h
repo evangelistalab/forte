@@ -32,7 +32,7 @@
 #include <unordered_map>
 #include <bitset>
 
-#include "integrals.h"
+#include "integrals/integrals.h"
 #include "fci/fci_integrals.h"
 #include "stl_bitset_string.h"
 
