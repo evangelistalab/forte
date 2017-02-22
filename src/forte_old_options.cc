@@ -1,6 +1,7 @@
 #include "psi4/liboptions/liboptions.h"
 
 #include "fci/fci.h"
+#include "aci/aci.h"
 
 namespace psi {
 namespace forte {
@@ -8,6 +9,7 @@ namespace forte {
 void forte_old_options(Options& options) {
 
     set_FCI_options(options);
+    set_ACI_options(options);
 
     /*- MODULEDESCRIPTION Forte */
 
@@ -423,95 +425,6 @@ void forte_old_options(Options& options) {
     options.add_bool("USE_DMRGSCF", false);
 
     //////////////////////////////////////////////////////////////
-    ///         OPTIONS FOR THE ADAPTIVE CI
-    //////////////////////////////////////////////////////////////
-
-    /* Convergence Threshold -*/
-    options.add_double("ACI_CONVERGENCE", 1e-9);
-
-    /*- The selection type for the Q-space-*/
-    options.add_str("SELECT_TYPE", "AIMED_ENERGY",
-                    "ENERGY AMP AIMED_AMP AIMED_ENERGY");
-    /*-Threshold for the selection of the P space -*/
-    options.add_double("SIGMA", 0.01);
-    /*- The threshold for the selection of the Q space -*/
-    options.add_double("GAMMA", 1.0);
-    /*- The SD-space prescreening threshold -*/
-    options.add_double("PRESCREEN_THRESHOLD", 1e-9);
-    /*- The type of selection parameters to use*/
-    options.add_bool("PERTURB_SELECT", false);
-    /*Function of q-space criteria, per root*/
-    options.add_str("PQ_FUNCTION", "AVERAGE", "MAX");
-    /*Type of  q-space criteria to use (only change for excited states)*/
-    options.add_bool("Q_REL", false);
-    /*Reference to be used in calculating ∆e (q_rel has to be true)*/
-    options.add_str("Q_REFERENCE", "GS", "ADJACENT");
-    /* Method to calculate excited state */
-    options.add_str("EXCITED_ALGORITHM", "AVERAGE",
-                    "ROOT_SELECT AVERAGE COMPOSITE ROOT_COMBINE "
-                    "ROOT_ORTHOGONALIZE MULTISTATE");
-    /*Number of roots to compute on final re-diagonalization*/
-    options.add_int("POST_ROOT", 1);
-    /*Diagonalize after ACI procedure with higher number of roots*/
-    options.add_bool("POST_DIAGONALIZE", false);
-    /*Threshold value for defining multiplicity from S^2*/
-    options.add_double("SPIN_TOL", 0.01);
-    /*- Compute 1-RDM? -*/
-    options.add_int("ACI_MAX_RDM", 1);
-    /*- Type of spin projection
-     * 0 - None
-     * 1 - Project initial P spaces at each iteration
-     * 2 - Project only after converged PQ space
-     * 3 - Do 1 and 2 -*/
-    options.add_int("SPIN_PROJECTION", 0);
-    /*- Add determinants to enforce spin-complete set? -*/
-    options.add_bool("ENFORCE_SPIN_COMPLETE", true);
-    /*- Project out spin contaminants in Davidson-Liu's algorithm? -*/
-    options.add_bool("PROJECT_OUT_SPIN_CONTAMINANTS", true);
-    /*- Add "degenerate" determinants not included in the aimed selection?
-     * -*/
-    options.add_bool("ACI_ADD_AIMED_DEGENERATE", true);
-
-    /*- Print an analysis of determinant history? -*/
-    options.add_bool("DETERMINANT_HISTORY", false);
-    /*- Save determinants to file? -*/
-    options.add_bool("SAVE_DET_FILE", false);
-    /*- Screen Virtuals? -*/
-    options.add_bool("SCREEN_VIRTUALS", false);
-    /*- Perform size extensivity correction -*/
-    options.add_str("SIZE_CORRECTION", "", "DAVIDSON");
-    /*- Sets the maximum cycle -*/
-    options.add_int("MAX_ACI_CYCLE", 20);
-    /*- Control print level -*/
-    options.add_bool("QUIET_MODE", false);
-    /*- Control streamlining -*/
-    options.add_bool("STREAMLINE_Q", false);
-    /*- Initial reference wavefunction -*/
-    options.add_str("ACI_INITIAL_SPACE", "SR", "SR CIS CISD CID");
-    /*- Number of iterations to run SA-ACI before SS-ACI -*/
-    options.add_int("ACI_PREITERATIONS", 0);
-    /*- Number of roots to average -*/
-    options.add_int("N_AVERAGE", 1);
-    /*- Offset for state averaging -*/
-    options.add_int("AVERAGE_OFFSET", 0);
-    /*- Print final wavefunction to file? -*/
-    options.add_bool("SAVE_FINAL_WFN", false);
-    /*- Print the P space? -*/
-    options.add_bool("PRINT_REFS", false);
-    /*- Set the initial guess space size for DL solver -*/
-    options.add_int("DL_GUESS_SIZE", 100);
-    /*- Number of guess vectors for Sparse CI solver -*/
-    options.add_int("N_GUESS_VEC", 10);
-    options.add_double("NO_THRESHOLD", 0.02);
-
-    /*- Approximate 1RDM? -*/
-    options.add_bool("APPROXIMATE_RDM", false);
-
-    /*- Do compute nroots on first cycle? -*/
-    options.add_bool("FIRST_ITER_ROOTS", false);
-    options.add_bool("PRINT_WEIGHTS", false);
-
-    //////////////////////////////////////////////////////////////
     ///         OPTIONS FOR THE PROJECTOR CI
     //////////////////////////////////////////////////////////////
     /*- The propagation algorithm -*/
@@ -575,6 +488,8 @@ void forte_old_options(Options& options) {
     options.add_double("COLINEAR_THRESHOLD", 1.0e-6);
     /*- Do spawning according to reference -*/
     options.add_bool("REFERENCE_SPAWNING", false);
+    /*- Do a post diagonalization? -*/
+    options.add_bool("POST_DIAGONALIZE", false);
 
     //////////////////////////////////////////////////////////////
     ///         OPTIONS FOR THE FULL CI QUANTUM MONTE-CARLO

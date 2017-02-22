@@ -28,13 +28,13 @@ set scf {
 
 set forte {
   job_type = aci
-  SELECT_TYPE energy
+  ACI_SELECT_TYPE energy
   sigma 0.00001000
   gamma 100.0
-  nroot 1
+  aci_nroot 1
   charge 0
-  perturb_select true
-  enforce_spin_complete false
+  aci_perturb_select true
+  aci_enforce_spin_complete false
 }
 
 energy('scf')

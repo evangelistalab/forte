@@ -37,10 +37,10 @@
 #include "psi4/libpsio/psio.hpp"
 
 #include "aci.h"
-#include "ci_rdms.h"
-#include "fci/fci_integrals.h"
-#include "sparse_ci_solver.h"
-#include "stl_bitset_determinant.h"
+#include "../ci_rdms.h"
+#include "../fci/fci_integrals.h"
+#include "../sparse_ci_solver.h"
+#include "../stl_bitset_determinant.h"
 
 using namespace std;
 using namespace psi;
@@ -55,6 +55,90 @@ namespace forte {
 #define omp_get_thread_num() 0
 #define omp_get_num_threads() 1
 #endif
+
+void set_ACI_options(Options& options)
+{
+    /* Convergence Threshold -*/
+    options.add_double("ACI_CONVERGENCE", 1e-9);
+
+    /*- The selection type for the Q-space-*/
+    options.add_str("ACI_SELECT_TYPE", "AIMED_ENERGY",
+                    "ENERGY AMP AIMED_AMP AIMED_ENERGY");
+    /*-Threshold for the selection of the P space -*/
+    options.add_double("SIGMA", 0.01);
+    /*- The threshold for the selection of the Q space -*/
+    options.add_double("GAMMA", 1.0);
+    /*- The SD-space prescreening threshold -*/
+    options.add_double("ACI_PRESCREEN_THRESHOLD", 1e-9);
+    /*- The type of selection parameters to use*/
+    options.add_bool("ACI_PERTURB_SELECT", false);
+    /*Function of q-space criteria, per root*/
+    options.add_str("ACI_PQ_FUNCTION", "AVERAGE", "MAX");
+    /* Method to calculate excited state */
+    options.add_str("ACI_EXCITED_ALGORITHM", "AVERAGE",
+                    "ROOT_SELECT AVERAGE COMPOSITE ROOT_COMBINE "
+                    "ROOT_ORTHOGONALIZE MULTISTATE");
+    /*Number of roots to compute*/
+    options.add_int("ACI_NROOT", 1);
+    /*Roots to compute*/
+    options.add_int("ACI_ROOT", 0);
+    /*Threshold value for defining multiplicity from S^2*/
+    options.add_double("ACI_SPIN_TOL", 0.01);
+    /*- Compute 1-RDM? -*/
+    options.add_int("ACI_MAX_RDM", 1);
+    /*- Type of spin projection
+     * 0 - None
+     * 1 - Project initial P spaces at each iteration
+     * 2 - Project only after converged PQ space
+     * 3 - Do 1 and 2 -*/
+    options.add_int("ACI_SPIN_PROJECTION", 0);
+    /*- Add determinants to enforce spin-complete set? -*/
+    options.add_bool("ACI_ENFORCE_SPIN_COMPLETE", true);
+    /*- Project out spin contaminants in Davidson-Liu's algorithm? -*/
+    options.add_bool("ACI_PROJECT_OUT_SPIN_CONTAMINANTS", true);
+    /*- Add "degenerate" determinants not included in the aimed selection?
+     * -*/
+    options.add_bool("ACI_ADD_AIMED_DEGENERATE", true);
+    /*- Perform size extensivity correction -*/
+    options.add_str("ACI_SIZE_CORRECTION", "", "DAVIDSON");
+    /*- Sets the maximum cycle -*/
+    options.add_int("ACI_MAX_CYCLE", 20);
+    /*- Control print level -*/
+    options.add_bool("ACI_QUIET_MODE", false);
+    /*- Control streamlining -*/
+    options.add_bool("ACI_STREAMLINE_Q", false);
+    /*- Initial reference wavefunction -*/
+    options.add_str("ACI_INITIAL_SPACE", "SR", "SR CIS CISD CID");
+    /*- Number of iterations to run SA-ACI before SS-ACI -*/
+    options.add_int("ACI_PREITERATIONS", 0);
+    /*- Number of roots to average -*/
+    options.add_int("ACI_N_AVERAGE", 1);
+    /*- Offset for state averaging -*/
+    options.add_int("ACI_AVERAGE_OFFSET", 0);
+    /*- Print final wavefunction to file? -*/
+    options.add_bool("ACI_SAVE_FINAL_WFN", false);
+    /*- Print the P space? -*/
+    options.add_bool("ACI_PRINT_REFS", false);
+    /*- Set the initial guess space size for DL solver -*/
+    options.add_int("DL_GUESS_SIZE", 100);
+    /*- Number of guess vectors for Sparse CI solver -*/
+    options.add_int("N_GUESS_VEC", 10);
+    options.add_double("ACI_NO_THRESHOLD", 0.02);
+
+    /*- Approximate 1RDM? -*/
+    options.add_bool("ACI_APPROXIMATE_RDM", false);
+    /*- Test RDMs -*/
+    options.add_bool("ACI_TEST_RDMS", false);
+
+    /*- Do compute nroots on first cycle? -*/
+    options.add_bool("ACI_FIRST_ITER_ROOTS", false);
+    options.add_bool("ACI_PRINT_WEIGHTS", false);
+
+    /*- Print Natural orbitals -*/
+    options.add_bool("ACI_PRINT_NO", true);
+
+}
+
 
 bool pairComp(const std::pair<double, STLBitsetDeterminant> E1,
               const std::pair<double, STLBitsetDeterminant> E2) {
@@ -77,8 +161,8 @@ AdaptiveCI::~AdaptiveCI() {}
 
 void AdaptiveCI::startup() {
     quiet_mode_ = false;
-    if (options_["QUIET_MODE"].has_changed()) {
-        quiet_mode_ = options_.get_bool("QUIET_MODE");
+    if (options_["ACI_QUIET_MODE"].has_changed()) {
+        quiet_mode_ = options_.get_bool("ACI_QUIET_MODE");
     }
 
     fci_ints_ = std::make_shared<FCIIntegrals>(
@@ -139,26 +223,26 @@ void AdaptiveCI::startup() {
     reference_determinant_ = STLBitsetDeterminant(get_occupation());
 
     // Read options
-    nroot_ = options_.get_int("NROOT");
+    nroot_ = options_.get_int("ACI_NROOT");
     sigma_ = options_.get_double("SIGMA");
     gamma_ = options_.get_double("GAMMA");
-    screen_thresh_ = options_.get_double("PRESCREEN_THRESHOLD");
+    screen_thresh_ = options_.get_double("ACI_PRESCREEN_THRESHOLD");
     add_aimed_degenerate_ = options_.get_bool("ACI_ADD_AIMED_DEGENERATE");
     project_out_spin_contaminants_ =
-        options_.get_bool("PROJECT_OUT_SPIN_CONTAMINANTS");
-    spin_complete_ = options_.get_bool("ENFORCE_SPIN_COMPLETE");
+        options_.get_bool("ACI_PROJECT_OUT_SPIN_CONTAMINANTS");
+    spin_complete_ = options_.get_bool("ACI_ENFORCE_SPIN_COMPLETE");
     rdm_level_ = options_.get_int("ACI_MAX_RDM");
 
     max_cycle_ = 20;
-    if (options_["MAX_ACI_CYCLE"].has_changed()) {
-        max_cycle_ = options_.get_int("MAX_ACI_CYCLE");
+    if (options_["ACI_MAX_CYCLE"].has_changed()) {
+        max_cycle_ = options_.get_int("ACI_MAX_CYCLE");
     }
     pre_iter_ = 0;
     if (options_["ACI_PREITERATIONS"].has_changed()) {
         pre_iter_ = options_.get_int("ACI_PREITERATIONS");
     }
 
-    spin_tol_ = options_.get_double("SPIN_TOL");
+    spin_tol_ = options_.get_double("ACI_SPIN_TOL");
     // set the initial S^@ guess as input multiplicity
     int S = (wavefunction_multiplicity_ - 1.0) / 2.0;
     int S2 = wavefunction_multiplicity_ - 1.0;
@@ -167,18 +251,13 @@ void AdaptiveCI::startup() {
     }
 
     // get options for algorithm
-    perturb_select_ = options_.get_bool("PERTURB_SELECT");
-    pq_function_ = options_.get_str("PQ_FUNCTION");
-    q_rel_ = options_.get_bool("Q_REL");
-    q_reference_ = options_.get_str("Q_REFERENCE");
-    ex_alg_ = options_.get_str("EXCITED_ALGORITHM");
-    post_root_ = max(nroot_, options_.get_int("POST_ROOT"));
-    post_diagonalize_ = options_.get_bool("POST_DIAGONALIZE");
-    det_save_ = options_.get_bool("SAVE_DET_FILE");
-    ref_root_ = options_.get_int("ROOT");
-    root_ = options_.get_int("ROOT");
-    approx_rdm_ = options_.get_bool("APPROXIMATE_RDM");
-    print_weights_ = options_.get_bool("PRINT_WEIGHTS");
+    perturb_select_ = options_.get_bool("ACI_PERTURB_SELECT");
+    pq_function_ = options_.get_str("ACI_PQ_FUNCTION");
+    ex_alg_ = options_.get_str("ACI_EXCITED_ALGORITHM");
+    ref_root_ = options_.get_int("ACI_ROOT");
+    root_ = options_.get_int("ACI_ROOT");
+    approx_rdm_ = options_.get_bool("ACI_APPROXIMATE_RDM");
+    print_weights_ = options_.get_bool("ACI_PRINT_WEIGHTS");
 
     reference_type_ = "SR";
     if (options_["ACI_INITIAL_SPACE"].has_changed()) {
@@ -197,21 +276,21 @@ void AdaptiveCI::startup() {
     }
     aimed_selection_ = false;
     energy_selection_ = false;
-    if (options_.get_str("SELECT_TYPE") == "AIMED_AMP") {
+    if (options_.get_str("ACI_SELECT_TYPE") == "AIMED_AMP") {
         aimed_selection_ = true;
         energy_selection_ = false;
-    } else if (options_.get_str("SELECT_TYPE") == "AIMED_ENERGY") {
+    } else if (options_.get_str("ACI_SELECT_TYPE") == "AIMED_ENERGY") {
         aimed_selection_ = true;
         energy_selection_ = true;
-    } else if (options_.get_str("SELECT_TYPE") == "ENERGY") {
+    } else if (options_.get_str("ACI_SELECT_TYPE") == "ENERGY") {
         aimed_selection_ = false;
         energy_selection_ = true;
-    } else if (options_.get_str("SELECT_TYPE") == "AMP") {
+    } else if (options_.get_str("ACI_SELECT_TYPE") == "AMP") {
         aimed_selection_ = false;
         energy_selection_ = false;
     }
 
-    if (options_.get_bool("STREAMLINE_Q") == true) {
+    if (options_.get_bool("ACI_STREAMLINE_Q") == true) {
         streamline_qspace_ = true;
     } else {
         streamline_qspace_ = false;
@@ -232,12 +311,12 @@ void AdaptiveCI::print_info() {
         {"Multiplicity", wavefunction_multiplicity_},
         {"Symmetry", wavefunction_symmetry_},
         {"Number of roots", nroot_},
-        {"Root used for properties", options_.get_int("ROOT")}};
+        {"Root used for properties", options_.get_int("ACI_ROOT")}};
 
     std::vector<std::pair<std::string, double>> calculation_info_double{
         {"Sigma", sigma_},
         {"Gamma", gamma_},
-        {"Convergence threshold", options_.get_double("E_CONVERGENCE")}};
+        {"Convergence threshold", options_.get_double("ACI_CONVERGENCE")}};
 
     std::vector<std::pair<std::string, std::string>> calculation_info_string{
         {"Determinant selection criterion", energy_selection_
@@ -245,7 +324,7 @@ void AdaptiveCI::print_info() {
                                                 : "First-order Coefficients"},
         {"Selection criterion",
          aimed_selection_ ? "Aimed selection" : "Threshold"},
-        {"Excited Algorithm", options_.get_str("EXCITED_ALGORITHM")},
+        {"Excited Algorithm", options_.get_str("ACI_EXCITED_ALGORITHM")},
         //        {"Q Type", q_rel_ ? "Relative Energy" : "Absolute Energy"},
         //        {"PT2 Parameters", options_.get_bool("PERTURB_SELECT") ?
         //        "True" : "False"},
@@ -501,9 +580,9 @@ double AdaptiveCI::compute_energy() {
     int nrun = 1;
     bool multi_state = false;
 
-    if (options_.get_str("EXCITED_ALGORITHM") == "ROOT_COMBINE" or
-        options_.get_str("EXCITED_ALGORITHM") == "MULTISTATE" or
-        options_.get_str("EXCITED_ALGORITHM") == "ROOT_ORTHOGONALIZE") {
+    if (options_.get_str("ACI_EXCITED_ALGORITHM") == "ROOT_COMBINE" or
+        options_.get_str("ACI_EXCITED_ALGORITHM") == "MULTISTATE" or
+        options_.get_str("ACI_EXCITED_ALGORITHM") == "ROOT_ORTHOGONALIZE") {
         nrun = nroot_;
         multi_state = true;
     }
@@ -516,7 +595,7 @@ double AdaptiveCI::compute_energy() {
     DeterminantMap PQ_space;
 
     for (int i = 0; i < nrun; ++i) {
-        nroot_ = options_.get_int("NROOT");
+        nroot_ = options_.get_int("ACI_NROOT");
         if (!quiet_mode_)
             outfile->Printf("\n  Computing wavefunction for root %d", i);
 
@@ -553,7 +632,7 @@ double AdaptiveCI::compute_energy() {
     final_wfn_.copy(PQ_space);
     PQ_space.clear();
 
-    int froot = options_.get_int("ROOT");
+    int froot = options_.get_int("ACI_ROOT");
     if (ex_alg_ == "ROOT_ORTHOGONALIZE") {
         froot = nroot_ - 1;
         multistate_pt2_energy_correction_ = pt2_energies;
@@ -645,10 +724,10 @@ double AdaptiveCI::compute_energy() {
     outfile->Printf("\n\n  %s: %f s", "Adaptive-CI (bitset) ran in ",
                     aci_elapse.get());
     outfile->Printf("\n\n  %s: %d", "Saving information for root",
-                    options_.get_int("ROOT"));
+                    options_.get_int("ACI_ROOT"));
 
     // printf( "\n%1.5f\n", aci_elapse.get());
-    return PQ_evals->get(options_.get_int("ROOT")) + nuclear_repulsion_energy_ +
+    return PQ_evals->get(options_.get_int("ACI_ROOT")) + nuclear_repulsion_energy_ +
            fci_ints_->scalar_energy();
 }
 
@@ -925,6 +1004,10 @@ void AdaptiveCI::find_q_space(DeterminantMap& P_space, DeterminantMap& PQ_space,
                 for (int n = 0; n < nroot; ++n) {
                     ept2[n] += e2[n];
                 }
+                // Optionally save an approximate external wfn
+                if( approx_rdm_ ){
+                    external_wfn_[it.first] = it.second[0] / (evals->get(0) - EI );
+                }
             }
         }
     } // end loop over determinants
@@ -948,6 +1031,10 @@ void AdaptiveCI::find_q_space(DeterminantMap& P_space, DeterminantMap& PQ_space,
                     ept2[n] += E2_I;
                 }
                 last_excluded = I;
+                // Optionally save an approximate external wfn
+                if( approx_rdm_ ){
+                    external_wfn_[det] = V_hash[det][0] / (evals->get(0) - det.energy() );
+                }
             } else {
                 PQ_space.add(sorted_dets[I].second);
             }
@@ -991,8 +1078,8 @@ double AdaptiveCI::average_q_values(int nroot, std::vector<double>& C1,
     // f_E2 and f_C1 will store the selected function of the chosen q criteria
     // This functions should only be called when nroot_ > 1
 
-    int nav = options_.get_int("N_AVERAGE");
-    int off = options_.get_int("AVERAGE_OFFSET");
+    int nav = options_.get_int("ACI_N_AVERAGE");
+    int off = options_.get_int("ACI_AVERAGE_OFFSET");
     if (nav == 0)
         nav = nroot;
     if ((off + nav) > nroot)
@@ -1003,49 +1090,23 @@ double AdaptiveCI::average_q_values(int nroot, std::vector<double>& C1,
     double f_C1 = 0.0;
     double f_E2 = 0.0;
 
-    std::vector<double> dE2(nroot, 0.0);
-
-    q_rel_ = options_.get_bool("Q_REL");
-
-    if (q_rel_ == true and nroot > 1) {
-        if (q_reference_ == "ADJACENT") {
-            for (int n = 1; n < nroot; ++n) {
-                dE2[n] = std::fabs(E2[n - 1] - E2[n]);
-            }
-        } else { // Default to "GS"
-            for (int n = 1; n < nroot; ++n) {
-                dE2[n] = std::fabs(E2[n] - E2[0]);
-            }
-        }
-    } else if (q_rel_ == true and nroot == 1) {
-        q_rel_ = false;
-    }
-
     // Choose the function of the couplings for each root
     // If nroot = 1, choose the max
 
     if (pq_function_ == "MAX" or nroot == 1) {
         f_C1 = *std::max_element(C1.begin(), C1.end());
-        f_E2 = (q_rel_ and (nroot != 1))
-                   ? *std::max_element(dE2.begin(), dE2.end())
-                   : *std::max_element(E2.begin(), E2.end());
+        f_E2 = *std::max_element(E2.begin(), E2.end());
     } else if (pq_function_ == "AVERAGE") {
         double C1_average = 0.0;
         double E2_average = 0.0;
-        double dE2_average = 0.0;
         double dim_inv = 1.0 / nav;
         for (int n = 0; n < nav; ++n) {
             C1_average += C1[n + off] * dim_inv;
             E2_average += E2[n + off] * dim_inv;
         }
-        if (q_rel_) {
-            double inv = 1.0 / (nroot - 1.0);
-            for (int n = 1; n < nroot; ++n) {
-                dE2_average += dE2[n] * inv;
-            }
-        }
+         
         f_C1 = C1_average;
-        f_E2 = q_rel_ ? dE2_average : E2_average;
+        f_E2 = E2_average;
     }
 
     double select_value = 0.0;
@@ -1348,8 +1409,8 @@ void AdaptiveCI::prune_q_space(DeterminantMap& PQ_space,
 
     double tau_p = sigma_ * gamma_;
 
-    int nav = options_.get_int("N_AVERAGE");
-    int off = options_.get_int("AVERAGE_OFFSET");
+    int nav = options_.get_int("ACI_N_AVERAGE");
+    int off = options_.get_int("ACI_AVERAGE_OFFSET");
     if (nav == 0)
         nav = nroot;
 
@@ -1856,7 +1917,7 @@ void AdaptiveCI::print_nos() {
 
     // Compute active space weights
     if( print_weights_ ){
-        double no_thresh = options_.get_double("NO_THRESHOLD");
+        double no_thresh = options_.get_double("ACI_NO_THRESHOLD");
 
         std::vector<int> active(nirrep_, 0);
         std::vector<std::vector<int>> active_idx(nirrep_);
@@ -2192,17 +2253,17 @@ void AdaptiveCI::compute_aci(DeterminantMap& PQ_space, SharedMatrix& PQ_evecs,
     bool print_refs = false;
     bool multi_root = false;
 
-    if (options_["FIRST_ITER_ROOTS"].has_changed()) {
-        multi_root = options_.get_bool("FIRST_ITER_ROOTS");
+    if (options_["ACI_FIRST_ITER_ROOTS"].has_changed()) {
+        multi_root = options_.get_bool("ACI_FIRST_ITER_ROOTS");
     }
 
-    if (options_["PRINT_REFS"].has_changed()) {
-        print_refs = options_.get_bool("PRINT_REFS");
+    if (options_["ACI_PRINT_REFS"].has_changed()) {
+        print_refs = options_.get_bool("ACI_PRINT_REFS");
     }
 
-    if ((options_.get_str("EXCITED_ALGORITHM") == "ROOT_ORTHOGONALIZE" or
-         options_.get_str("EXCITED_ALGORITHM") == "MULTISTATE" or
-         options_.get_str("EXCITED_ALGORITHM") == "ROOT_COMBINE") and
+    if ((options_.get_str("ACI_EXCITED_ALGORITHM") == "ROOT_ORTHOGONALIZE" or
+         options_.get_str("ACI_EXCITED_ALGORITHM") == "MULTISTATE" or
+         options_.get_str("ACI_EXCITED_ALGORITHM") == "ROOT_COMBINE") and
         root_ == 0 and !multi_root) {
         nroot_ = 1;
     }
@@ -2210,18 +2271,9 @@ void AdaptiveCI::compute_aci(DeterminantMap& PQ_space, SharedMatrix& PQ_evecs,
     SharedMatrix P_evecs;
     SharedVector P_evals;
 
-    // This will store part of the wavefunction for computing an overlap
-    //    std::vector<std::pair<STLBitsetDeterminant,double>> P_ref;
-
     DeterminantMap P_ref;
     std::vector<double> P_ref_evecs;
     DeterminantMap P_space(reference_determinant_);
-
-    // Use the reference determinant as a starting point
-    //    P_space_map_[reference_determinant_] = 1;
-    //    P_space.add(reference_determinant_);
-
-    // det_history_[reference_determinant_].push_back(std::make_pair(0, "I"));
 
     if (reference_type_ != "SR") {
         build_initial_reference(P_space);
@@ -2233,8 +2285,9 @@ void AdaptiveCI::compute_aci(DeterminantMap& PQ_space, SharedMatrix& PQ_evecs,
 
     std::vector<std::vector<double>> energy_history;
     SparseCISolver sparse_solver;
-    if (quiet_mode_)
+    if (quiet_mode_){
         sparse_solver.set_print_details(false);
+    }
     sparse_solver.set_parallel(true);
     sparse_solver.set_e_convergence(options_.get_double("E_CONVERGENCE"));
     sparse_solver.set_maxiter_davidson(options_.get_int("DL_MAXITER"));
@@ -2242,7 +2295,7 @@ void AdaptiveCI::compute_aci(DeterminantMap& PQ_space, SharedMatrix& PQ_evecs,
     sparse_solver.set_force_diag(options_.get_bool("FORCE_DIAG_METHOD"));
     sparse_solver.set_guess_dimension(options_.get_int("DL_GUESS_SIZE"));
     sparse_solver.set_num_vecs(nvec);
-    int spin_projection = options_.get_int("SPIN_PROJECTION");
+    int spin_projection = options_.get_int("ACI_SPIN_PROJECTION");
 
     if (det_save_)
         det_list_.open("det_list.txt");
@@ -2250,14 +2303,18 @@ void AdaptiveCI::compute_aci(DeterminantMap& PQ_space, SharedMatrix& PQ_evecs,
     if (streamline_qspace_ and !quiet_mode_)
         outfile->Printf("\n  Using streamlined Q-space builder.");
 
-    ex_alg_ = options_.get_str("EXCITED_ALGORITHM");
+    ex_alg_ = options_.get_str("ACI_EXCITED_ALGORITHM");
 
     std::vector<STLBitsetDeterminant> old_dets;
     SharedMatrix old_evecs;
 
-    if (options_.get_str("EXCITED_ALGORITHM") == "ROOT_SELECT") {
-        ref_root_ = options_.get_int("ROOT");
+    if (options_.get_str("ACI_EXCITED_ALGORITHM") == "ROOT_SELECT") {
+        ref_root_ = options_.get_int("ACI_ROOT");
     }
+    
+    // Save the P_space energies to predict convergence
+    std::vector<double> P_energies;
+    approx_rdm_ = false;
 
     int cycle;
     for (cycle = 0; cycle < max_cycle_; ++cycle) {
@@ -2268,10 +2325,10 @@ void AdaptiveCI::compute_aci(DeterminantMap& PQ_space, SharedMatrix& PQ_evecs,
         std::string cycle_h = "Cycle " + std::to_string(cycle_);
 
         bool follow = false;
-        if (options_.get_str("EXCITED_ALGORITHM") == "ROOT_SELECT" or
-            options_.get_str("EXCITED_ALGORITHM") == "ROOT_COMBINE" or
-            options_.get_str("EXCITED_ALGORITHM") == "MULTISTATE" or
-            options_.get_str("EXCITED_ALGORITHM") == "ROOT_ORTHOGONALIZE") {
+        if (options_.get_str("ACI_EXCITED_ALGORITHM") == "ROOT_SELECT" or
+            options_.get_str("ACI_EXCITED_ALGORITHM") == "ROOT_COMBINE" or
+            options_.get_str("ACI_EXCITED_ALGORITHM") == "MULTISTATE" or
+            options_.get_str("ACI_EXCITED_ALGORITHM") == "ROOT_ORTHOGONALIZE") {
 
             follow = true;
         }
@@ -2323,30 +2380,29 @@ void AdaptiveCI::compute_aci(DeterminantMap& PQ_space, SharedMatrix& PQ_evecs,
             outfile->Printf("\n  Time spent diagonalizing H:   %1.6f s",
                             diag.get());
 
+        //Save ground state energy
+        P_energies.push_back( P_evals->get(0));
+
+        if ( (cycle > 1) and options_.get_bool("ACI_APPROXIMATE_RDM") ){
+            double diff = std::abs( P_energies[cycle] - P_energies[cycle - 1] );
+            if( diff <= 1e-5 ){
+                approx_rdm_ = true;
+            }
+        } 
+
+
         if (cycle < pre_iter_) {
             ex_alg_ = "AVERAGE";
         } else if (cycle == pre_iter_ and follow) {
-            ex_alg_ = options_.get_str("EXCITED_ALGORITHM");
+            ex_alg_ = options_.get_str("ACI_EXCITED_ALGORITHM");
         }
-        // If doing root-following, grab the initial root
-        //   if( follow and pre_iter_ == 0 ){
-        //       P_ref_evecs.resize( P_space.size() );
-        //       det_hash<size_t> detmap = P_space.wfn_hash();
-        //       for( auto& det : detmap ){
-        //           P_ref.add( det.first );
-        //           P_ref_evecs[det.second] = P_evecs->get(det.second,
-        //           ref_root_) ;
-        //       }
-        //   }
 
+        // Update the reference root if root following
         if (follow and num_ref_roots > 1 and (cycle >= pre_iter_) and
             cycle > 0) {
             ref_root_ = root_follow(P_ref, P_ref_evecs, P_space, P_evecs,
                                     num_ref_roots);
         }
-
-        // Save the dimension of the previous PQ space
-        // size_t PQ_space_prev = PQ_space_.size();
 
         // Use spin projection to ensure the P space is spin pure
         if ((spin_projection == 1 or spin_projection == 3) and
@@ -2392,7 +2448,7 @@ void AdaptiveCI::compute_aci(DeterminantMap& PQ_space, SharedMatrix& PQ_evecs,
                     PQ_space.size());
         }
 
-        if ((options_.get_str("EXCITED_ALGORITHM") == "ROOT_ORTHOGONALIZE") and
+        if ((options_.get_str("ACI_EXCITED_ALGORITHM") == "ROOT_ORTHOGONALIZE") and
             (root_ > 0) and cycle >= pre_iter_) {
             sparse_solver.set_root_project(true);
             add_bad_roots(PQ_space);
@@ -2451,20 +2507,15 @@ void AdaptiveCI::compute_aci(DeterminantMap& PQ_space, SharedMatrix& PQ_evecs,
             outfile->Printf("\n");
             outfile->Flush();
         }
-        // if(quiet_mode_){
-        // 	double abs_energy = PQ_evals->get(0) + nuclear_repulsion_energy_
-        // + fci_ints_->scalar_energy();
-        //     outfile->Printf("\n    %2d               %zu
-        //     %1.12f", cycle_, PQ_space_.size(), abs_energy );
-        // }
+
         num_ref_roots = std::min(nroot_, int(PQ_space.size()));
 
         // If doing root-following, grab the initial root
         if (follow and
             (cycle == (pre_iter_ - 1) or (pre_iter_ == 0 and cycle == 0))) {
 
-            if (options_.get_str("EXCITED_ALGORITHM") == "ROOT_SELECT") {
-                ref_root_ = options_.get_int("ROOT");
+            if (options_.get_str("ACI_EXCITED_ALGORITHM") == "ROOT_SELECT") {
+                ref_root_ = options_.get_int("ACI_ROOT");
             }
             size_t dim = std::min( static_cast<int>(PQ_space.size()) , 1000 );
             P_ref.subspace( PQ_space, PQ_evecs, P_ref_evecs, dim, ref_root_ );
@@ -2477,27 +2528,27 @@ void AdaptiveCI::compute_aci(DeterminantMap& PQ_space, SharedMatrix& PQ_evecs,
         }
 
         bool stuck = check_stuck(energy_history, PQ_evals);
-        if (stuck and (options_.get_str("EXCITED_ALGORITHM") != "COMPOSITE")) {
+        if (stuck and (options_.get_str("ACI_EXCITED_ALGORITHM") != "COMPOSITE")) {
             outfile->Printf("\n  Procedure is stuck! Quitting...");
             break;
         } else if (stuck and
-                   (options_.get_str("EXCITED_ALGORITHM") == "COMPOSITE") and
+                   (options_.get_str("ACI_EXCITED_ALGORITHM") == "COMPOSITE") and
                    ex_alg_ == "AVERAGE") {
             outfile->Printf("\n  Root averaging algorithm converged.");
             outfile->Printf("\n  Now optimizing PQ Space for root %d",
-                            options_.get_int("ROOT"));
-            ex_alg_ = options_.get_str("EXCITED_ALGORITHM");
+                            options_.get_int("ACI_ROOT"));
+            ex_alg_ = options_.get_str("ACI_EXCITED_ALGORITHM");
             pre_iter_ = cycle + 1;
         }
 
         // Step 4. Check convergence and break if needed
         bool converged = check_convergence(energy_history, PQ_evals);
         if (converged and (ex_alg_ == "AVERAGE") and
-            options_.get_str("EXCITED_ALGORITHM") == "COMPOSITE") {
+            options_.get_str("ACI_EXCITED_ALGORITHM") == "COMPOSITE") {
             outfile->Printf("\n  Root averaging algorithm converged.");
             outfile->Printf("\n  Now optimizing PQ Space for root %d",
-                            options_.get_int("ROOT"));
-            ex_alg_ = options_.get_str("EXCITED_ALGORITHM");
+                            options_.get_int("ACI_ROOT"));
+            ex_alg_ = options_.get_str("ACI_EXCITED_ALGORITHM");
             pre_iter_ = cycle + 1;
         } else if (converged) {
             // if(quiet_mode_) outfile->Printf(
@@ -2517,7 +2568,7 @@ void AdaptiveCI::compute_aci(DeterminantMap& PQ_space, SharedMatrix& PQ_evecs,
                             cycle_time.get());
         }
 
-        ex_alg_ = options_.get_str("EXCITED_ALGORITHM");
+        ex_alg_ = options_.get_str("ACI_EXCITED_ALGORITHM");
     } // end iterations
 
     if (det_save_)
@@ -2568,7 +2619,7 @@ void AdaptiveCI::compute_rdms(DeterminantMap& dets, WFNOperator& op,
             outfile->Printf("\n  1-RDM  took %2.6f s (determinant)",
                             one_r.get());
 
-        if (options_.get_bool("PRINT_NO")) {
+        if (options_.get_bool("ACI_PRINT_NO")) {
             print_nos();
         }
     }
@@ -2585,7 +2636,7 @@ void AdaptiveCI::compute_rdms(DeterminantMap& dets, WFNOperator& op,
         if (!quiet_mode_)
             outfile->Printf("\n  3-RDMs took %2.6f s (determinant)", tr.get());
 
-        if (options_.get_bool("FCI_TEST_RDMS")) {
+        if (options_.get_bool("ACI_TEST_RDMS")) {
             ci_rdms_.rdm_test(ordm_a_, ordm_b_, trdm_aa_, trdm_bb_, trdm_ab_,
                               trdm_aaa_, trdm_aab_, trdm_abb_, trdm_bbb_);
         }

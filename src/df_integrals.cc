@@ -255,7 +255,7 @@ void DFIntegrals::gather_integrals() {
     Timer timer;
     std::string str = "Computing DF Integrals";
     if (print_ > 0) {
-        outfile->Printf("\n    %-36s ...", str.c_str());
+        outfile->Printf("\n  %-36s ...", str.c_str());
     }
     df->compute();
     if (print_ > 0) {
@@ -273,7 +273,7 @@ void DFIntegrals::gather_integrals() {
 
     std::string str_seek = "Seeking DF Integrals";
     if (print_ > 0) {
-        outfile->Printf("\n    %-36s ...", str_seek.c_str());
+        outfile->Printf("\n  %-36s ...", str_seek.c_str());
     }
     fseek(Bf, 0L, SEEK_SET);
     if (print_ > 0) {
@@ -282,7 +282,7 @@ void DFIntegrals::gather_integrals() {
 
     std::string str_read = "Reading DF Integrals";
     if (print_ > 0) {
-        outfile->Printf("\n   %-36s . . .", str_read.c_str());
+        outfile->Printf("\n  %-36s . . .", str_read.c_str());
     }
     fread(&(Bpq->pointer()[0][0]), sizeof(double), naux * (nmo_) * (nmo_), Bf);
     if (print_ > 0) {

@@ -39,7 +39,7 @@
 #include "helpers.h"
 
 #include "fci/fci_solver.h"
-#include "aci.h"
+#include "aci/aci.h"
 
 #include "fci_mo.h"
 #include "orbitaloptimizer.h"
