@@ -367,7 +367,7 @@ void ForteIntegrals::freeze_core_orbitals() {
 }
 void ForteIntegrals::rotate_mos() {
     int size_mo_rotate = options_["ROTATE_MOS"].size();
-    outfile->Printf("\n\n\n ROTATING MOS");
+    outfile->Printf("\n\n\n  ==> ROTATING MOS <==");
     if (size_mo_rotate % 3 != 0) {
         outfile->Printf("\n Check ROTATE_MOS array");
         outfile->Printf("\nFormat should be in group of 3s");
@@ -378,7 +378,7 @@ void ForteIntegrals::rotate_mos() {
     }
     int orbital_rotate_group = (size_mo_rotate / 3);
     std::vector<std::vector<int>> rotate_mo_list;
-    outfile->Printf("\n\n ROTATION:  IRREP  MO_1  MO_2\n");
+    outfile->Printf("\n\n  IRREP  MO_1  MO_2\n");
     for (int a = 0; a < orbital_rotate_group; a++) {
         std::vector<int> rotate_mo_group(3);
         int offset_a = 3 * a;
@@ -394,7 +394,7 @@ void ForteIntegrals::rotate_mos() {
             options_["ROTATE_MOS"][offset_a + 2].to_integer() - 1;
         rotate_mo_list.push_back(rotate_mo_group);
 
-        outfile->Printf(" %d   %d   %d\n", rotate_mo_group[0],
+        outfile->Printf("   %d   %d   %d\n", rotate_mo_group[0],
                         rotate_mo_group[1], rotate_mo_group[2]);
     }
     SharedMatrix C_old = wfn_->Ca();
