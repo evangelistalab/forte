@@ -34,10 +34,10 @@
 #include "psi4/libciomr/libciomr.h"
 #include "psi4/libqt/qt.h"
 
-#include "forte-def.h"
-#include "iterative_solvers.h"
-#include "direct_ci.h"
-#include "fci/fci_vector.h"
+#include "../forte-def.h"
+#include "../iterative_solvers.h"
+#include "../direct_ci.h"
+#include "../fci/fci_vector.h"
 
 namespace psi {
 namespace forte {
