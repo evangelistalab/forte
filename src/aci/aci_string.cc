@@ -36,7 +36,7 @@
 #include "psi4/libmints/pointgrp.h"
 #include "psi4/libmints/molecule.h"
 
-#include "../aci_string.h"
+#include "aci_string.h"
 #include "../sparse_ci_solver.h"
 #include "../stl_bitset_determinant.h"
 #include "../stl_bitset_string.h"
