@@ -31,8 +31,8 @@
 #include <algorithm>
 #include <unordered_map>
 
-#include "mini-boost/boost/format.hpp"
-#include "mini-boost/boost/math/special_functions/bessel.hpp"
+#include "../mini-boost/boost/format.hpp"
+#include "../mini-boost/boost/math/special_functions/bessel.hpp"
 
 #include "psi4/libciomr/libciomr.h"
 #include "psi4/libpsio/psio.h"
