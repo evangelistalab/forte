@@ -36,19 +36,20 @@
 #include "psi4/liboptions/liboptions.h"
 #include "psi4/physconst.h"
 
-#include "ci_rdms.h"
-#include "determinant_map.h"
-#include "fci/fci_integrals.h"
-#include "helpers.h"
-#include "integrals.h"
-#include "operator.h"
-#include "sparse_ci_solver.h"
-#include "sparse_ci_wfn.h"
-#include "stl_bitset_determinant.h"
-#include "stl_bitset_string.h"
+#include "../ci_rdms.h"
+#include "../determinant_map.h"
+#include "../fci/fci_integrals.h"
+#include "../helpers.h"
+#include "../integrals.h"
+#include "../operator.h"
+#include "../sparse_ci_solver.h"
+#include "../stl_bitset_determinant.h"
 
 namespace psi {
 namespace forte {
+
+/// Set the ACI options
+void set_ACI_options(Options& options);
 
 /**
  * @brief The AdaptiveCI class

@@ -32,15 +32,15 @@ set {
 set forte {
   job_type = aci
   multiplicity 1
-  select_type amp
-  perturb_select false
+  aci_select_type amp
+  aci_perturb_select false
   frozen_docc [1,0,0,0,0,1,0,0]
   root_sym 0
   sigma 0.01
-  nroot 1
+  aci_nroot 1
   charge 0
-  enforce_spin_complete true
-  prescreen_threshold 0.0
+  aci_enforce_spin_complete true
+  aci_prescreen_threshold 0.0
 #  diag_algorithm dlstring
 }
 

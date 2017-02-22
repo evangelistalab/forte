@@ -29,9 +29,9 @@
 #ifndef _sparse_ci_h_
 #define _sparse_ci_h_
 
-#include "stl_bitset_determinant.h"
-#include "operator.h"
-#include "determinant_map.h"
+#include "../stl_bitset_determinant.h"
+#include "../operator.h"
+#include "../determinant_map.h"
 
 #define BIGNUM 1E100
 #define MAXIT 100
