@@ -41,16 +41,16 @@ set forte {
   restricted_docc	  [3,2,0,0,0,0,2,3]
   active                 [1,0,1,2,1,2,1,0]
   root_sym               0
-  nroot                  1
+  aci_nroot                  1
   job_type               aci
   sigma	                  0.001
-  select_type            aimed_energy	 
-  spin_projection        1
-  enforce_spin_complete  true
+  aci_select_type            aimed_energy	 
+  aci_spin_projection        1
+  aci_enforce_spin_complete  true
   aci_add_aimed_degenerate false
-  project_out_spin_contaminants false
+  aci_project_out_spin_contaminants false
   diag_algorithm full
-  quiet_mode true
+  aci_quiet_mode true
 }
 
 scf = energy('scf')
