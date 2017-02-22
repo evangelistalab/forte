@@ -35,12 +35,12 @@
 #include "psi4/liboptions/liboptions.h"
 #include "psi4/physconst.h"
 
-#include "forte-def.h"
-#include "integrals.h"
-#include "stl_bitset_determinant.h"
-#include "sparse_ci_solver.h"
-#include "helpers.h"
-#include "fci/fci_vector.h"
+#include "../forte-def.h"
+#include "../integrals.h"
+#include "../stl_bitset_determinant.h"
+#include "../sparse_ci_solver.h"
+#include "../helpers.h"
+#include "../fci/fci_vector.h"
 
 namespace psi {
 namespace forte {

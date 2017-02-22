@@ -44,7 +44,7 @@
 #include "multidimensional_arrays.h"
 #include "mp2_nos.h"
 #include "aci.h"
-#include "pci.h"
+#include "pci/pci.h"
 #include "fcimc.h"
 #include "fci_mo.h"
 #include "mrdsrg.h"
