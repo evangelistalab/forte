@@ -48,6 +48,9 @@
 namespace psi {
 namespace forte {
 
+/// Set the ACI options
+void set_ACI_options(Options& options);
+
 /**
  * @brief The AdaptiveCI class
  * This class implements an adaptive CI algorithm

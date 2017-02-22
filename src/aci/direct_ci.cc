@@ -36,7 +36,7 @@
 
 #include "../forte-def.h"
 #include "../iterative_solvers.h"
-#include "../direct_ci.h"
+#include "direct_ci.h"
 #include "../fci/fci_vector.h"
 
 namespace psi {
