@@ -42,7 +42,7 @@
 #include <mpi.h>
 #endif
 
-#include "blockedtensorfactory.h"
+#include "../blockedtensorfactory.h"
 
 using namespace ambit;
 namespace psi {

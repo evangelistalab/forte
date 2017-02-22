@@ -40,7 +40,7 @@
 #include "../determinant_map.h"
 #include "../fci/fci_integrals.h"
 #include "../helpers.h"
-#include "../integrals.h"
+#include "../integrals/integrals.h"
 #include "../operator.h"
 #include "../sparse_ci_solver.h"
 #include "../stl_bitset_determinant.h"

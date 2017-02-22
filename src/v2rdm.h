@@ -32,7 +32,7 @@
 #include <map>
 #include "psi4/libiwl/iwl.h"
 #include "psi4/libpsio/psio.hpp"
-#include "integrals.h"
+#include "integrals/integrals.h"
 #include "helpers.h"
 #include "reference.h"
 

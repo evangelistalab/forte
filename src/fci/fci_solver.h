@@ -36,7 +36,7 @@
 #include "fci_vector.h"
 
 #include "../helpers.h"
-#include "../integrals.h"
+#include "../integrals/integrals.h"
 #include "../string_lists.h"
 #include "../reference.h"
 

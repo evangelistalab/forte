@@ -34,7 +34,7 @@
 #include "psi4/libmints/local.h"
 
 #include "helpers.h"
-#include "integrals.h"
+#include "integrals/integrals.h"
 #include "reference.h"
 
 namespace psi {

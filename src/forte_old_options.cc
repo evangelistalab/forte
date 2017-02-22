@@ -156,8 +156,8 @@ void forte_old_options(Options& options) {
      *  - FIXED diagonalizes a matrix of fixed dimension
      *  - SMOOTH forms a matrix with smoothed matrix elements -*/
 
-    options.add_int("IMRCISD_TEST_SIZE", 0);
-    options.add_int("IMRCISD_SIZE", 0);
+//    options.add_int("IMRCISD_TEST_SIZE", 0);
+//    options.add_int("IMRCISD_SIZE", 0);
 
     /*- The number of determinants used to build the Hamiltonian -*/
     options.add_int("NDETS", 100);

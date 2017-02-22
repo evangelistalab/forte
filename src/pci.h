@@ -36,7 +36,7 @@
 #include "psi4/physconst.h"
 
 #include "forte-def.h"
-#include "integrals.h"
+#include "integrals/integrals.h"
 #include "stl_bitset_determinant.h"
 #include "sparse_ci_solver.h"
 #include "helpers.h"

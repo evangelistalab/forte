@@ -36,7 +36,7 @@
 #include "psi4/libmints/wavefunction.h"
 
 #include "helpers.h"
-#include "integrals.h"
+#include "integrals/integrals.h"
 #include "ambit/blocked_tensor.h"
 #include "reference.h"
 #include "blockedtensorfactory.h"

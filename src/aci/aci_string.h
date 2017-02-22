@@ -35,7 +35,7 @@
 #include "psi4/liboptions/liboptions.h"
 #include "psi4/physconst.h"
 
-#include "../integrals.h"
+#include "../integrals/integrals.h"
 #include "../helpers.h"
 #include "../stl_bitset_determinant.h"
 #include "../stl_bitset_string.h"

@@ -42,7 +42,7 @@
 #include "psi4/libmints/mintshelper.h"
 #include "psi4/libqt/qt.h"
 #include "psi4/libfock/jk.h"
-#include "blockedtensorfactory.h"
+#include "../blockedtensorfactory.h"
 
 #include "integrals.h"
 #include "memory.h"

@@ -36,11 +36,11 @@
 #include "psi4/libmints/matrix.h"
 #include "psi4/libmints/vector.h"
 #include "psi4/libqt/qt.h"
-#include "blockedtensorfactory.h"
-#include "fci/fci_solver.h"
-#include "fci/fci_vector.h"
+#include "../blockedtensorfactory.h"
+#include "../fci/fci_solver.h"
+#include "../fci/fci_vector.h"
 
-#include "three_dsrg_mrpt2.h"
+#include "../three_dsrg_mrpt2.h"
 #include <vector>
 #include <string>
 #include <algorithm>

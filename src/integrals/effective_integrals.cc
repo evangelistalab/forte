@@ -33,7 +33,7 @@
 #include "psi4/libmints/integralparameters.h"
 
 #include "integrals.h"
-#include "blockedtensorfactory.h"
+#include "../blockedtensorfactory.h"
 
 namespace psi {
 namespace forte {

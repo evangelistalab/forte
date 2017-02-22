@@ -37,7 +37,7 @@
 #include "psi4/libpsio/psio.h"
 #include "ambit/blocked_tensor.h"
 
-#include "integrals.h"
+#include "integrals/integrals.h"
 #include "reference.h"
 #include "blockedtensorfactory.h"
 

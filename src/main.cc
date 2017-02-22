@@ -27,7 +27,7 @@
  */
 
 #include "helpers.h"
-#include "integrals.h"
+#include "integrals/integrals.h"
 #include "forte_options.h"
 #include "aosubspace/aosubspace.h"
 #include "stl_bitset_determinant.h"

@@ -28,7 +28,7 @@
 
 #include "casscf.h"
 #include "reference.h"
-#include "integrals.h"
+#include "integrals/integrals.h"
 
 #include "psi4/psifiles.h"
 #include "psi4/libqt/qt.h"
