@@ -488,6 +488,8 @@ void forte_old_options(Options& options) {
     options.add_double("COLINEAR_THRESHOLD", 1.0e-6);
     /*- Do spawning according to reference -*/
     options.add_bool("REFERENCE_SPAWNING", false);
+    /*- Do a post diagonalization? -*/
+    options.add_bool("POST_DIAGONALIZE", false);
 
     //////////////////////////////////////////////////////////////
     ///         OPTIONS FOR THE FULL CI QUANTUM MONTE-CARLO
