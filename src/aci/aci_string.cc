@@ -36,11 +36,11 @@
 #include "psi4/libmints/pointgrp.h"
 #include "psi4/libmints/molecule.h"
 
-#include "aci_string.h"
-#include "sparse_ci_solver.h"
-#include "stl_bitset_determinant.h"
-#include "stl_bitset_string.h"
-#include "fci/fci_integrals.h"
+#include "../aci_string.h"
+#include "../sparse_ci_solver.h"
+#include "../stl_bitset_determinant.h"
+#include "../stl_bitset_string.h"
+#include "../fci/fci_integrals.h"
 //#include "ci_rdms.h"
 
 using namespace std;
