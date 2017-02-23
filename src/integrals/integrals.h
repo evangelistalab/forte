@@ -66,6 +66,9 @@ enum IntegralType {
 // The integrals implementation is in a cc file for each class.
 // DFIntegrals->df_integrals.cc
 
+/// Set integrals options
+void set_INT_options(Options& options);
+
 /**
  * Integrals: transforms and stores the integrals in Pitzer ordering
  */

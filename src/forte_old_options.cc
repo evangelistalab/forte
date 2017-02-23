@@ -2,6 +2,7 @@
 
 #include "fci/fci.h"
 #include "aci/aci.h"
+#include "integrals/integrals.h"
 
 namespace psi {
 namespace forte {
@@ -10,6 +11,7 @@ void forte_old_options(Options& options) {
 
     set_FCI_options(options);
     set_ACI_options(options);
+    set_INT_options(options);
 
     /*- MODULEDESCRIPTION Forte */
 
@@ -39,26 +41,6 @@ void forte_old_options(Options& options) {
     options.add_int("PRINT", 0);
     /*- Print summary of memory -*/
     options.add_bool("MEMORY_SUMMARY", false);
-
-    /*- The algorithm used to screen the determinant
-     *  - CONVENTIONAL Conventional two-electron integrals
-     *  - DF Density fitted two-electron integrals
-     *  - CHOLESKY Cholesky decomposed two-electron integrals -*/
-    options.add_str("INT_TYPE", "CONVENTIONAL",
-                    "CONVENTIONAL DF CHOLESKY DISKDF DISTDF ALL EFFECTIVE "
-                    "OWNINTEGRALS");
-
-    /*- The damping factor in the erf(x omega)/x integrals -*/
-    options.add_double("EFFECTIVE_COULOMB_OMEGA", 1.0);
-    /*- The coefficient of the effective Coulomb interaction -*/
-    options.add_double("EFFECTIVE_COULOMB_FACTOR", 1.0);
-    options.add_double("EFFECTIVE_COULOMB_EXPONENT", 1.0);
-
-    /*- The screening for JK builds and DF libraries -*/
-    options.add_double("INTEGRAL_SCREENING", 1e-12);
-
-    /* - The tolerance for cholesky integrals */
-    options.add_double("CHOLESKY_TOLERANCE", 1e-6);
 
     /*- The job type
      *  - FCI Full configuration interaction (Francesco's code)
