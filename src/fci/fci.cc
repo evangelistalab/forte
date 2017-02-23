@@ -33,22 +33,20 @@
 namespace psi {
 namespace forte {
 
-void set_FCI_options(Options& options)
-{
-    /*- The number of roots computed -*/
-    options.add_int("FCI_NROOT", 1);
-    /*- The root selected for state-specific computations -*/
-    options.add_int("FCI_ROOT", 0);
-    /*- Maximum number of iterations for FCI code -*/
-    options.add_int("FCI_MAXITER", 30);
-    /*- The number of trial guess vectors to generate per root -*/
-    options.add_int("FCI_MAX_RDM", 1);
-    /*- Test the FCI reduced density matrices? -*/
-    options.add_bool("FCI_TEST_RDMS", false);
-    /*- Print the NO from the rdm of FCI -*/
-    options.add_bool("FCI_PRINT_NO", false);
-    /*- The number of trial guess vectors to generate per root -*/
-    options.add_int("FCI_NTRIAL_PER_ROOT", 10);
+void set_FCI_options(ForteOptions& foptions) {
+    foptions.add_int("FCI_NROOT", 1, "The number of roots computed");
+    foptions.add_int("FCI_ROOT", 0,
+                     "The root selected for state-specific computations");
+    foptions.add_int("FCI_MAXITER", 30,
+                     "Maximum number of iterations for FCI code");
+    foptions.add_int("FCI_MAX_RDM", 1,
+                     "The number of trial guess vectors to generate per root");
+    foptions.add_bool("FCI_TEST_RDMS", false,
+                      "Test the FCI reduced density matrices?");
+    foptions.add_bool("FCI_PRINT_NO", false,
+                      "Print the NO from the rdm of FCI");
+    foptions.add_int("FCI_NTRIAL_PER_ROOT", 10,
+                     "The number of trial guess vectors to generate per root");
 }
 
 FCI::FCI(SharedWavefunction ref_wfn, Options& options,
@@ -158,20 +156,18 @@ double FCI::compute_energy() {
     size_t na = (nactel + ms_) / 2;
     size_t nb = nactel - na;
 
-    fcisolver_ = std::unique_ptr<FCISolver>(
-        new FCISolver(active_dim, rdocc, active, na, nb, multiplicity,
-                      options_.get_int("ROOT_SYM"), ints_, mo_space_info_,
-                      options_.get_int("FCI_NTRIAL_PER_ROOT"), print_, options_));
+    fcisolver_ = std::unique_ptr<FCISolver>(new FCISolver(
+        active_dim, rdocc, active, na, nb, multiplicity,
+        options_.get_int("ROOT_SYM"), ints_, mo_space_info_,
+        options_.get_int("FCI_NTRIAL_PER_ROOT"), print_, options_));
     // tweak some options
     fcisolver_->set_max_rdm_level(max_rdm_level_);
     fcisolver_->set_nroot(options_.get_int("FCI_NROOT"));
     fcisolver_->set_root(options_.get_int("FCI_ROOT"));
     fcisolver_->set_test_rdms(options_.get_bool("FCI_TEST_RDMS"));
     fcisolver_->set_fci_iterations(options_.get_int("FCI_MAXITER"));
-    fcisolver_->set_collapse_per_root(
-        options_.get_int("DL_COLLAPSE_PER_ROOT"));
-    fcisolver_->set_subspace_per_root(
-        options_.get_int("DL_SUBSPACE_PER_ROOT"));
+    fcisolver_->set_collapse_per_root(options_.get_int("DL_COLLAPSE_PER_ROOT"));
+    fcisolver_->set_subspace_per_root(options_.get_int("DL_SUBSPACE_PER_ROOT"));
     fcisolver_->set_print_no(print_no_);
 
     double fci_energy = fcisolver_->compute_energy();

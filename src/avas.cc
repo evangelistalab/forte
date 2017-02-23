@@ -31,15 +31,15 @@ void make_avas(SharedWavefunction ref_wfn, Options& options, SharedMatrix Ps) {
                 Socc->set(i, j, value);
             }
         }
-//        Socc->print();
+        //        Socc->print();
 
         auto Uocc = std::make_shared<Matrix>("U occupied block", nocc, nocc);
         auto sigmaocc = std::make_shared<Vector>("sigma occupied block", nocc);
 
         Socc->diagonalize(Uocc, sigmaocc, descending);
 
-//        Uocc->print();
-//        sigmaocc->print();
+        //        Uocc->print();
+        //        sigmaocc->print();
 
         // Grab the virtual block and diagonalize it
         for (int a = 0; a < nvir; a++) {
@@ -48,29 +48,50 @@ void make_avas(SharedWavefunction ref_wfn, Options& options, SharedMatrix Ps) {
                 Svir->set(a, b, value);
             }
         }
-//        Svir->print();
+        //        Svir->print();
 
         auto Uvir = std::make_shared<Matrix>("U virtual block", nvir, nvir);
         auto sigmavir = std::make_shared<Vector>("sigma virtual block", nvir);
 
         Svir->diagonalize(Uvir, sigmavir, descending);
 
-//        Uvir->print();
-//        sigmavir->print();
+        // sum of the eigenvalues (occ + vir)
+        double s_sum = 0.0;
+        for (int i = 0; i < nocc; i++) {
+            s_sum += sigmaocc->get(i);
+        }
+        for (int a = 0; a < nvir; a++) {
+            s_sum += sigmavir->get(a);
+        }
+        outfile->Printf("\n  Sum of eigenvalues: %f\n", s_sum);
 
+        std::vector<std::tuple<double, bool, int>> sorted_mos;
+        for (int i = 0; i < nocc; i++) {
+            sorted_mos.push_back(std::make_tuple(sigmaocc->get(i), true, i));
+        }
+        for (int a = 0; a < nvir; a++) {
+            sorted_mos.push_back(std::make_tuple(sigmavir->get(a), false, a));
+        }
+        std::sort(sorted_mos.rbegin(), sorted_mos.rend());
+//        for ()
+
+        for (const auto& mo_tuple : sorted_mos) {
+            outfile->Printf("\n %f %d %d", std::get<0>(mo_tuple),
+                            std::get<1>(mo_tuple), std::get<2>(mo_tuple));
+        }
 
         outfile->Printf("\n  Orbital overlap with ao subspace:\n");
         outfile->Printf("    ========================\n");
         outfile->Printf("    Irrep   MO   <phi|P|phi>\n");
         outfile->Printf("    ------------------------\n");
-            for (int i = 0; i < nocc; i++) {
-                outfile->Printf("      %1d   %4d    %.6f\n", 2, i + 1,
-                                sigmaocc->get(i));
-            }
-            for (int i = 0; i < nvir; i++) {
-                outfile->Printf("      %1d   %4d    %.6f\n", 0, nocc + i + 1,
-                                sigmavir->get(i));
-            }
+        for (int i = 0; i < nocc; i++) {
+            outfile->Printf("      %1d   %4d    %.6f\n", 2, i + 1,
+                            sigmaocc->get(i));
+        }
+        for (int i = 0; i < nvir; i++) {
+            outfile->Printf("      %1d   %4d    %.6f\n", 0, nocc + i + 1,
+                            sigmavir->get(i));
+        }
         outfile->Printf("    ========================\n");
 
         // Form the full matrix U
@@ -89,13 +110,22 @@ void make_avas(SharedWavefunction ref_wfn, Options& options, SharedMatrix Ps) {
             }
         }
 
-        auto Ca_tilde = Matrix::doublet(ref_wfn->Ca(),U);
+        auto Ca_tilde = Matrix::doublet(ref_wfn->Ca(), U);
+
+        SharedMatrix Fa = ref_wfn->Fa(); // get Fock matrix
+        SharedMatrix Fa_mo = Fa->clone();
+        Fa_mo->transform(ref_wfn->Ca());
+//        Fa_mo->print();
 
         // Update both the alpha and beta orbitals
         // This assumes a restricted MO set
         // TODO: generalize to unrestricted references
         ref_wfn->Ca()->copy(Ca_tilde);
         ref_wfn->Cb()->copy(Ca_tilde);
+
+        SharedMatrix Fa_tilde = Fa->clone();
+        Fa_tilde->transform(Ca_tilde);
+//        Fa_tilde->print();
     }
 }
 }
