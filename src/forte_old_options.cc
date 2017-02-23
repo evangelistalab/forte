@@ -7,8 +7,6 @@ namespace forte {
 
 void forte_old_options(Options& options) {
 
-    set_FCI_options(options);
-
     /*- MODULEDESCRIPTION Forte */
 
     /*- SUBSECTION Job Type */
