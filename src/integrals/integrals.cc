@@ -68,6 +68,32 @@ bool ForteIntegrals::have_omp_ = true;
 bool ForteIntegrals::have_omp_ = false;
 #endif
 
+void set_INT_options( Options& options )
+{
+    /*- The algorithm used to screen the determinant
+     *  - CONVENTIONAL Conventional two-electron integrals
+     *  - DF Density fitted two-electron integrals
+     *  - CHOLESKY Cholesky decomposed two-electron integrals -*/
+    options.add_str("INT_TYPE", "CONVENTIONAL",
+                    "CONVENTIONAL DF CHOLESKY DISKDF DISTDF ALL EFFECTIVE "
+                    "OWNINTEGRALS");
+
+    /*- The damping factor in the erf(x omega)/x integrals -*/
+    options.add_double("EFFECTIVE_COULOMB_OMEGA", 1.0);
+    /*- The coefficient of the effective Coulomb interaction -*/
+    options.add_double("EFFECTIVE_COULOMB_FACTOR", 1.0);
+    options.add_double("EFFECTIVE_COULOMB_EXPONENT", 1.0);
+
+    /*- The screening for JK builds and DF libraries -*/
+    options.add_double("INTEGRAL_SCREENING", 1e-12);
+
+    /* - The tolerance for cholesky integrals */
+    options.add_double("CHOLESKY_TOLERANCE", 1e-6);
+
+}
+
+
+
 ForteIntegrals::ForteIntegrals(psi::Options& options,
                                SharedWavefunction ref_wfn,
                                IntegralSpinRestriction restricted,
