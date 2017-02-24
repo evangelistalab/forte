@@ -27,19 +27,6 @@
  */
 
 #include <numeric>
-
-#include "psi4/libpsio/psio.hpp"
-#include "psi4/libpsio/psio.h"
-#include "psi4/libmints/molecule.h"
-#include "psi4/libmints/matrix.h"
-#include "psi4/libmints/vector.h"
-#include "psi4/lib3index/dftensor.h"
-#include "psi4/libqt/qt.h"
-#include "blockedtensorfactory.h"
-#include "fci/fci_solver.h"
-#include "fci/fci_vector.h"
-
-#include "three_dsrg_mrpt2.h"
 #include <vector>
 #include <string>
 #include <algorithm>
@@ -53,7 +40,21 @@
 #define GA_Nnodes() 1
 #define GA_Nodeid() 0
 #endif
-#include "ao_helper.h"
+
+#include "psi4/libpsio/psio.hpp"
+#include "psi4/libpsio/psio.h"
+#include "psi4/libmints/molecule.h"
+#include "psi4/libmints/matrix.h"
+#include "psi4/libmints/vector.h"
+#include "psi4/lib3index/dftensor.h"
+#include "psi4/libqt/qt.h"
+
+#include "../blockedtensorfactory.h"
+#include "../fci/fci_solver.h"
+#include "../fci/fci_vector.h"
+#include "../ao_helper.h"
+#include "three_dsrg_mrpt2.h"
+
 using namespace ambit;
 
 namespace psi {

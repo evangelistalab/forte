@@ -29,10 +29,10 @@
 #include <map>
 #include <algorithm>
 
-#include "mini-boost/boost/format.hpp"
 #include "psi4/physconst.h"
 #include "psi4/libmints/pointgrp.h"
 
+#include "mini-boost/boost/format.hpp"
 #include "active_dsrgpt2.h"
 
 namespace psi {

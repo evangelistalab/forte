@@ -46,9 +46,9 @@
 #include "helpers.h"
 #include "fci_mo.h"
 #include "stl_bitset_determinant.h"
-#include "dsrg_mrpt2.h"
-#include "dsrg_mrpt3.h"
-#include "three_dsrg_mrpt2.h"
+#include "mrdsrg-spin-free/dsrg_mrpt2.h"
+#include "mrdsrg-spin-free/dsrg_mrpt3.h"
+#include "mrdsrg-spin-free/three_dsrg_mrpt2.h"
 
 namespace psi {
 namespace forte {

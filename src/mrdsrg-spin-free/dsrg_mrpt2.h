@@ -26,56 +26,58 @@
  * @END LICENSE
  */
 
-#ifndef _dsrg_mrpt3_h_
-#define _dsrg_mrpt3_h_
+#ifndef _dsrg_mrpt2_h_
+#define _dsrg_mrpt2_h_
 
-#include <chrono>
-#include <ctime>
+#include <iostream>
 #include <fstream>
-#include <utility>
-#include "mini-boost/boost/assign.hpp"
+#include <sstream>
+#include <tuple>
 
 #include "psi4/liboptions/liboptions.h"
 #include "psi4/libmints/wavefunction.h"
-
-#include "integrals/integrals.h"
+#include "psi4/libmints/molecule.h"
+#include "psi4/libmints/pointgrp.h"
 #include "ambit/blocked_tensor.h"
-#include "reference.h"
-#include "helpers.h"
-#include "blockedtensorfactory.h"
-#include "dsrg_time.h"
-#include "dsrg_source.h"
-#include "fci/fci_vector.h"
-#include "stl_bitset_determinant.h"
+
+#include "../mini-boost/boost/assign.hpp"
+#include "../integrals/integrals.h"
+#include "../reference.h"
+#include "../helpers.h"
+#include "../blockedtensorfactory.h"
+#include "../mrdsrg-helper/dsrg_time.h"
+#include "../mrdsrg-helper/dsrg_source.h"
+#include "../stl_bitset_determinant.h"
 
 using namespace ambit;
 namespace psi {
 namespace forte {
 
-class DSRG_MRPT3 : public Wavefunction {
+class DSRG_MRPT2 : public Wavefunction {
   public:
     /**
-     * DSRG_MRPT3 Constructor
+     * DSRG_MRPT2 Constructor
+     * @param reference The reference object of FORTE
      * @param ref_wfn The reference wavefunction object
      * @param options The main options object
      * @param ints A pointer to an allocated integral object
      * @param mo_space_info The MOSpaceInfo object
      */
-    DSRG_MRPT3(Reference reference, SharedWavefunction ref_wfn,
+    DSRG_MRPT2(Reference reference, SharedWavefunction ref_wfn,
                Options& options, std::shared_ptr<ForteIntegrals> ints,
                std::shared_ptr<MOSpaceInfo> mo_space_info);
 
     /// Destructor
-    ~DSRG_MRPT3();
+    ~DSRG_MRPT2();
 
-    /// Compute the DSRG-MRPT3 energy
+    /// Compute the DSRG-MRPT2 energy
     double compute_energy();
 
-    /// Compute the DSRG-MRPT3 energy with relaxed reference (once)
+    /// Compute the DSRG-MRPT2 energy with relaxed reference (once)
     double compute_energy_relaxed();
 
-    /// Compute the state-averaged DSRG-MRPT3 energies
-    double compute_energy_sa();
+    /// Compute the multi-state DSRG-MRPT2 energies
+    double compute_energy_multi_state();
 
     /// Set CASCI eigen values and eigen vectors for state averaging
     void set_eigens(
@@ -89,11 +91,19 @@ class DSRG_MRPT3 : public Wavefunction {
         p_spaces_ = p_spaces;
     }
 
-    /// Ignore semi-canonical testing in DSRG-MRPT3
-    void ignore_semicanonical(bool ignore) { ignore_semicanonical_ = ignore; }
+    /// Ignore semi-canonical testing in DSRG-MRPT2
+    void set_ignore_semicanonical(bool ignore) {
+        ignore_semicanonical_ = ignore;
+    }
 
-    /// Set FCIWfn before reference relaxation
-    void set_fciwfn0(std::shared_ptr<FCIWfn> fciwfn) { fciwfn0_ = fciwfn; }
+    /// Set active active occupied MOs (relative to active)
+    void set_actv_occ(std::vector<size_t> actv_occ) {
+        actv_occ_mos_ = std::vector<size_t>(actv_occ);
+    }
+    /// Set active active unoccupied MOs (relative to active)
+    void set_actv_uocc(std::vector<size_t> actv_uocc) {
+        actv_uocc_mos_ = std::vector<size_t>(actv_uocc);
+    }
 
   protected:
     // => Class initialization and termination <= //
@@ -106,23 +116,12 @@ class DSRG_MRPT3 : public Wavefunction {
     void print_summary();
     /// Print levels
     int print_;
-    /// Profile printing for DF
-    bool profile_print_;
-    /// Time variable
-    std::chrono::time_point<std::chrono::system_clock> start_, end_;
-    std::time_t tt1_, tt2_;
-    /// Compute elapsed time
-    std::chrono::duration<double> compute_elapsed_time(
-        std::chrono::time_point<std::chrono::system_clock> t1,
-        std::chrono::time_point<std::chrono::system_clock> t2) {
-        return t2 - t1;
-    }
 
-    /// Multi-state or not
+    /// Do multi-state computation?
     bool multi_state_;
     /// CASCI eigen values and eigen vectors for state averaging
     std::vector<std::vector<std::pair<SharedVector, double>>> eigens_;
-    /// Determinants in the model space
+    /// Determinants with different symmetries in the model space
     std::vector<std::vector<psi::forte::STLBitsetDeterminant>> p_spaces_;
 
     /// The reference object
@@ -134,9 +133,6 @@ class DSRG_MRPT3 : public Wavefunction {
 
     /// The molecular integrals required by MethodBase
     std::shared_ptr<ForteIntegrals> ints_;
-
-    /// Total memory left
-    long long int mem_total_;
 
     /// MO space info
     std::shared_ptr<MOSpaceInfo> mo_space_info_;
@@ -154,6 +150,11 @@ class DSRG_MRPT3 : public Wavefunction {
     /// List of beta virtual MOs
     std::vector<size_t> bvirt_mos_;
 
+    /// List of active active occupied MOs (relative to active)
+    std::vector<size_t> actv_occ_mos_;
+    /// List of active active unoccupied MOs (relative to active)
+    std::vector<size_t> actv_uocc_mos_;
+
     /// Alpha core label
     std::string acore_label_;
     /// Alpha active label
@@ -170,28 +171,23 @@ class DSRG_MRPT3 : public Wavefunction {
     /// Map from space label to list of MOs
     std::map<char, std::vector<size_t>> label_to_spacemo_;
 
-    /// If ERI density fitted or Cholesky decomposed
-    bool eri_df_;
-    /// Auxiliary MOs
-    std::vector<size_t> aux_mos_;
-    /// Auxiliary space label
-    std::string aux_label_;
-
     /// Fill up two-electron integrals
-    void build_tei(BlockedTensor& V);
+    void build_ints();
     /// Fill up density matrix and density cumulants
     void build_density();
     /// Build Fock matrix and diagonal Fock matrix elements
-    void build_fock_half();
-    /// Build Fock matrix when two-electron integrals are fully stored
-    void build_fock_full();
+    void build_fock();
+    /// Fill up one-electron integrals from FORTE integral class
+    void build_oei();
+    /// Build effective OEI: hbar_{pq} = h_{pq} + sum_{m} V_{pm,qm}
+    void build_eff_oei();
 
     /// Are orbitals semi-canonicalized?
     bool semi_canonical_;
-    /// Ignore semi-canonical testing result
-    bool ignore_semicanonical_ = false;
     /// Check if orbitals are semi-canonicalized
     bool check_semicanonical();
+    /// Ignore semi-canonical testing
+    bool ignore_semicanonical_ = false;
     /// Diagonal elements of Fock matrices
     std::vector<double> Fa_;
     std::vector<double> Fb_;
@@ -207,15 +203,10 @@ class DSRG_MRPT3 : public Wavefunction {
     /// Threshold for the Taylor expansion of f(z) = (1-exp(-z^2))/z
     double taylor_threshold_;
 
-    /// Effective alpha one-electron integrals (used in denormal ordering)
-    std::vector<double> aone_eff_;
-    /// Effective beta one-electron integrals (used in denormal ordering)
-    std::vector<double> bone_eff_;
-
     /// Renormalize Fock matrix
-    void renormalize_F(const bool& plusone = true);
+    void renormalize_F();
     /// Renormalize two-electron integrals
-    void renormalize_V(const bool& plusone = true);
+    void renormalize_V();
 
     // => Tensors <= //
 
@@ -233,16 +224,12 @@ class DSRG_MRPT3 : public Wavefunction {
     /// Three-body density cumulant
     ambit::BlockedTensor Lambda3_;
 
+    /// One-eletron integral
+    ambit::BlockedTensor Hoei_;
     /// Generalized Fock matrix (bare or renormalized)
     ambit::BlockedTensor F_;
-    /// Zeroth-order Hamiltonian (bare diagonal blocks of Fock)
-    ambit::BlockedTensor F0th_;
-    /// Generalized Fock matrix (bare off-diagonal blocks)
-    ambit::BlockedTensor F1st_;
-    /// Two-electron integrals (bare or renormalized)
+    /// Two-electron integral (bare or renormalized)
     ambit::BlockedTensor V_;
-    /// Three-index integrals
-    ambit::BlockedTensor B_;
     /// Single excitation amplitude
     ambit::BlockedTensor T1_;
     /// Double excitation amplitude
@@ -251,13 +238,9 @@ class DSRG_MRPT3 : public Wavefunction {
     ambit::BlockedTensor Hbar1_;
     /// Two-body transformed Hamiltonian (active only)
     ambit::BlockedTensor Hbar2_;
-    /// One-body temp tensor ([[H0th,A1st],A1st] or 1st-order amplitudes)
-    ambit::BlockedTensor O1_;
-    /// Two-body temp tensor ([[H0th,A1st],A1st] or 1st-order amplitudes)
-    ambit::BlockedTensor O2_;
+    /// Three-body transformed Hamiltonian (active only)
+    ambit::BlockedTensor Hbar3_;
 
-    /// Diagonal blocks of Fock matrix
-    ambit::BlockedTensor Fdiag_;
     /// Unitary matrix to block diagonal Fock
     ambit::BlockedTensor U_;
 
@@ -280,6 +263,11 @@ class DSRG_MRPT3 : public Wavefunction {
     double T1norm_;
     /// Max (with sign) of T1
     double T1max_;
+
+    /// Include internal amplitude?
+    bool internal_amp_;
+    /// Include which part of internal amplitudes?
+    std::string internal_amp_select_;
 
     /// Number of amplitudes will be printed in amplitude summary
     int ntamp_;
@@ -304,36 +292,29 @@ class DSRG_MRPT3 : public Wavefunction {
 
     // => Energy terms <= //
 
-    /// compute second-order energy and transformed Hamiltonian
-    double compute_energy_pt2();
-    /// compute third-order energy contribution 1.0 / 12.0 *
-    /// [[[H0th,A1st],A1st],A1st], computed before pt2
-    double compute_energy_pt3_1();
-    /// compute third-order energy contribution 1.0 / 2.0  * [H1st +
-    /// Hbar1st,A2nd]
-    double compute_energy_pt3_2();
-    /// compute third-order energy contribution 1.0 / 2.0  * [Hbar2nd,A1st]
-    double compute_energy_pt3_3();
+    /// Compute reference energy
+    double compute_ref();
+    /// Compute DSRG-PT2 correlation energy - Group of functions to calculate
+    /// individual pieces of energy
+    double E_FT1();
+    double E_VT1();
+    double E_FT2();
+    double E_VT2_2();
+    double E_VT2_4PP();
+    double E_VT2_4HH();
+    double E_VT2_4PH();
+    double E_VT2_6();
+
+    // => Reference relaxation <= //
+
+    /// Relaxation type
+    std::string relax_ref_;
 
     /// Timings for computing the commutators
     DSRG_TIME dsrg_time_;
 
     /// Compute zero-body Hbar truncated to 2nd-order
     double Hbar0_;
-
-    /// Compute zero-body term of commutator [H1, T1]
-    void H1_T1_C0(BlockedTensor& H1, BlockedTensor& T1, const double& alpha,
-                  double& C0);
-    /// Compute zero-body term of commutator [H1, T2]
-    void H1_T2_C0(BlockedTensor& H1, BlockedTensor& T2, const double& alpha,
-                  double& C0);
-    /// Compute zero-body term of commutator [H2, T1]
-    void H2_T1_C0(BlockedTensor& H2, BlockedTensor& T1, const double& alpha,
-                  double& C0);
-    /// Compute zero-body term of commutator [H2, T2]
-    void H2_T2_C0(BlockedTensor& H2, BlockedTensor& T2, const double& alpha,
-                  double& C0);
-
     /// Compute one-body term of commutator [H1, T1]
     void H1_T1_C1(BlockedTensor& H1, BlockedTensor& T1, const double& alpha,
                   BlockedTensor& C1);
@@ -357,70 +338,9 @@ class DSRG_MRPT3 : public Wavefunction {
     void H2_T2_C2(BlockedTensor& H2, BlockedTensor& T2, const double& alpha,
                   BlockedTensor& C2);
 
-    /// Compute one-body term of commutator [V, T1], V is constructed from B (DF
-    /// / CD)
-    void V_T1_C1_DF(BlockedTensor& B, BlockedTensor& T1, const double& alpha,
-                    BlockedTensor& C1);
-    /// Compute one-body term of commutator [V, T2], V is constructed from B (DF
-    /// / CD)
-    void V_T2_C1_DF(BlockedTensor& B, BlockedTensor& T2, const double& alpha,
-                    BlockedTensor& C1);
-    /// Compute two-body term of commutator [V, T1], V is constructed from B (DF
-    /// / CD)
-    void V_T1_C2_DF(BlockedTensor& B, BlockedTensor& T1, const double& alpha,
-                    BlockedTensor& C2);
-    /// Compute two-body term of commutator [V, T2], V is constructed from B (DF
-    /// / CD)
-    void V_T2_C2_DF(BlockedTensor& B, BlockedTensor& T2, const double& alpha,
-                    BlockedTensor& C2);
-
-    /// Compute two-body term of commutator [V, T2], particle-particle
-    /// contraction when "ab" in T2 are actives
-    void V_T2_C2_DF_AA(BlockedTensor& B, BlockedTensor& T2, const double& alpha,
-                       BlockedTensor& C2);
-    /// Compute two-body term of commutator [V, T2] (batch), particle-particle
-    /// contraction when "ab" in T2 are active and virtual
-    void V_T2_C2_DF_AV(BlockedTensor& B, BlockedTensor& T2, const double& alpha,
-                       BlockedTensor& C2);
-    /// Compute two-body term of commutator [V, T2] (batch), particle-particle
-    /// contraction when "ab" in T2 are virtuals
-    void V_T2_C2_DF_VV(BlockedTensor& B, BlockedTensor& T2, const double& alpha,
-                       BlockedTensor& C2);
-    /// Compute two-body term of commutator [V, T2], particle-hole contraction
-    /// (exchange part), contracted particle index is active
-    void V_T2_C2_DF_AH_EX(BlockedTensor& B, BlockedTensor& T2,
-                          const double& alpha, BlockedTensor& C2,
-                          const std::vector<std::vector<std::string>>& qs,
-                          const std::vector<std::vector<std::string>>& jb);
-    /// Compute two-body term of commutator [V, T2], particle-hole contraction
-    /// (exchange part), contracted particle index is virtual
-    void V_T2_C2_DF_VA_EX(BlockedTensor& B, BlockedTensor& T2,
-                          const double& alpha, BlockedTensor& C2,
-                          const std::vector<std::string>& qs_lower,
-                          const std::vector<std::string>& jb_lower);
-    /// Compute two-body term of commutator [V, T2], particle-hole contraction
-    /// (exchange part), contracted particle index is virtual
-    void V_T2_C2_DF_VC_EX(BlockedTensor& B, BlockedTensor& T2,
-                          const double& alpha, BlockedTensor& C2,
-                          const std::vector<std::string>& qs_lower,
-                          const std::vector<std::string>& jb_lower);
-
-    /// Compute two-body term of commutator [V, T2], particle-hole contraction
-    /// (exchange part), contracted particle index is virtual
-    void V_T2_C2_DF_VH_EX(BlockedTensor& B, BlockedTensor& T2,
-                          const double& alpha, BlockedTensor& C2,
-                          const std::vector<std::vector<std::string>>& qs,
-                          const std::vector<std::vector<std::string>>& jb);
-
-    // => Reference relaxation <= //
-
-    /// Relaxation type
-    std::string relax_ref_;
-
-    /// FCI wavefunction before reference relaxation
-    std::shared_ptr<FCIWfn> fciwfn0_;
-    /// FCI wavefunction after reference relaxation
-    std::shared_ptr<FCIWfn> fciwfn_;
+    /// Compute three-body term of commutator [H2, T2]
+    void H2_T2_C3(BlockedTensor& H2, BlockedTensor& T2, const double& alpha,
+                  BlockedTensor& C3);
 
     /// Transfer integrals for FCI
     void transfer_integrals();
@@ -434,19 +354,38 @@ class DSRG_MRPT3 : public Wavefunction {
     void combine_tensor(ambit::Tensor& tens, ambit::Tensor& tens_h,
                         const Dimension& irrep, const int& h);
 
-    /**
-     * Get a sub block of tensor T
-     * @param T The big tensor
-     * @param P The map of <partitioned dimension index, its absolute indices in
-     * T>
-     * @param name The name of the returned sub tensor
-     * @return A sub tensor of T with the same dimension
-     */
-    ambit::Tensor sub_block(ambit::Tensor& T,
-                            const std::map<size_t, std::vector<size_t>>& P,
-                            const std::string& name);
+    // => Multi-state energy <= //
+
+    /// Compute multi-state energy in the state-average way
+    std::vector<std::vector<double>> compute_energy_sa();
+    /// Compute multi-state energy in the MS/XMS way
+    std::vector<std::vector<double>> compute_energy_xms();
+    /// XMS rotation for the reference states
+    SharedMatrix xms_rotation(std::shared_ptr<FCIIntegrals> fci_ints,
+                              std::vector<STLBitsetDeterminant>& p_space,
+                              SharedMatrix civecs, const int& irrep);
+
+    /// Build effective singles: T_{ia} -= T_{iu,av} * Gamma_{vu}
+    void build_eff_t1();
+
+    /// Compute density cumulants
+    void
+    compute_cumulants(std::shared_ptr<FCIIntegrals> fci_ints,
+                      std::vector<psi::forte::STLBitsetDeterminant>& p_space,
+                      SharedMatrix evecs, const int& root1, const int& root2,
+                      const int& irrep);
+    /// Compute denisty matrices and puts in Gamma1_, Lambda2_, and Lambda3_
+    void compute_densities(std::shared_ptr<FCIIntegrals> fci_ints,
+                           std::vector<STLBitsetDeterminant>& p_space,
+                           SharedMatrix evecs, const int& root1,
+                           const int& root2, const int& irrep);
+
+    /// Compute MS coupling <M|H|N>
+    double compute_ms_1st_coupling(const std::string& name);
+    /// Compute MS coupling <M|HT|N>
+    double compute_ms_2nd_coupling(const std::string& name);
 };
 }
 } // End Namespaces
 
-#endif // _dsrg_mrpt3_h_
+#endif // _dsrg_mrpt2_h_
