@@ -45,6 +45,9 @@
 namespace psi {
 namespace forte {
 
+/// Set the options for the PCI method
+void set_PCI_options(Options& options);
+
 enum GeneratorType {
     LinearGenerator,
     TrotterLinear,
