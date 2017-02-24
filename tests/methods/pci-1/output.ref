@@ -21,9 +21,9 @@
     -----------------------------------------------------------------------
 
 
-    Psi4 started on: Saturday, 21 January 2017 10:43AM
+    Psi4 started on: Friday, 24 February 2017 12:01PM
 
-    Process ID:  69771
+    Process ID:  26974
     PSIDATADIR: /Users/tianyuanzhang/Documents/Source/psi4-bin-clang-debug/share/psi4
     Memory:     500.0 MiB
     Threads:    1
@@ -53,10 +53,11 @@ set {
 
 set forte {
   job_type pci
-  tau 0.1
-  spawning_threshold 0.0001
-  post_diagonalize true
+  pci_tau 0.1
+  pci_spawning_threshold 0.0001
+  pci_post_diagonalize true
   DIAG_ALGORITHM DLSOLVER
+  pci_e_convergence 12
 }
 energy('scf')
 compare_values(refscf, get_variable("CURRENT ENERGY"), 11, "SCF energy") #TEST
@@ -68,8 +69,8 @@ compare_values(refpostdiag, get_variable("PCI POST DIAG ENERGY"), 10, "PCI POST 
 --------------------------------------------------------------------------
 /Users/tianyuanzhang/Documents/Source/forte/forte.so loaded.
 
-*** tstart() called on Tianyuans-MacBook-Air.local
-*** at Sat Jan 21 10:43:30 2017
+*** tstart() called on n-ac-91-106.wireless.emory.edu
+*** at Fri Feb 24 12:01:25 2017
 
     There are an even number of electrons - assuming singlet.
     Specify the multiplicity in the molecule input block.
@@ -184,7 +185,7 @@ compare_values(refpostdiag, get_variable("PCI POST DIAG ENERGY"), 10, "PCI POST 
    @RHF iter   3:   -14.60974068519981   -1.72881e-04   2.15662e-04 DIIS
    @RHF iter   4:   -14.60974473694129   -4.05174e-06   4.32612e-06 DIIS
    @RHF iter   5:   -14.60974473887197   -1.93068e-09   1.41353e-07 DIIS
-   @RHF iter   6:   -14.60974473887410   -2.12808e-12   3.63226e-09 DIIS
+   @RHF iter   6:   -14.60974473887410   -2.12630e-12   3.63226e-09 DIIS
    @RHF iter   7:   -14.60974473887410   -5.32907e-15   1.73385e-11 DIIS
 
   ==> Post-Iterations <==
@@ -199,7 +200,7 @@ compare_values(refpostdiag, get_variable("PCI POST DIAG ENERGY"), 10, "PCI POST 
     Virtual:                                                              
 
        2B1u    0.093646     1B2u    0.108933     1B3u    0.108933  
-       3Ag     0.176245     1B2g    0.275579     1B3g    0.275579  
+       3Ag     0.176245     1B3g    0.275579     1B2g    0.275579  
        3B1u    0.645556  
 
     Final Occupation by Irrep:
@@ -213,13 +214,13 @@ compare_values(refpostdiag, get_variable("PCI POST DIAG ENERGY"), 10, "PCI POST 
    => Energetics <=
 
     Nuclear Repulsion Energy =              2.3812974386549994
-    One-Electron Energy =                 -24.3030864505908824
+    One-Electron Energy =                 -24.3030864505908859
     Two-Electron Energy =                   7.3120442730617814
     DFT Exchange-Correlation Energy =       0.0000000000000000
     Empirical Dispersion Energy =           0.0000000000000000
     PCM Polarization Energy =               0.0000000000000000
     EFP Energy =                            0.0000000000000000
-    Total Energy =                        -14.6097447388741006
+    Total Energy =                        -14.6097447388741042
 
 
 
@@ -240,15 +241,15 @@ Properties computed using the SCF density matrix
      X:     0.0000      Y:     0.0000      Z:     0.0000     Total:     0.0000
 
 
-*** tstop() called on Tianyuans-MacBook-Air.local at Sat Jan 21 10:43:31 2017
+*** tstop() called on n-ac-91-106.wireless.emory.edu at Fri Feb 24 12:01:25 2017
 Module time:
 	user time   =       0.47 seconds =       0.01 minutes
 	system time =       0.02 seconds =       0.00 minutes
-	total time  =          1 seconds =       0.02 minutes
+	total time  =          0 seconds =       0.00 minutes
 Total time:
 	user time   =       0.47 seconds =       0.01 minutes
 	system time =       0.02 seconds =       0.00 minutes
-	total time  =          1 seconds =       0.02 minutes
+	total time  =          0 seconds =       0.00 minutes
 	SCF energy........................................................PASSED
 
          ---------------------------------------------------------
@@ -358,10 +359,10 @@ Total time:
    @RHF iter   1:   -14.60879129784489   -2.30528e-02   3.90853e-03 
    @RHF iter   2:   -14.60956780431854   -7.76506e-04   1.49380e-03 DIIS
    @RHF iter   3:   -14.60974068519980   -1.72881e-04   2.15662e-04 DIIS
-   @RHF iter   4:   -14.60974473694129   -4.05174e-06   4.32612e-06 DIIS
-   @RHF iter   5:   -14.60974473887196   -1.93068e-09   1.41353e-07 DIIS
-   @RHF iter   6:   -14.60974473887411   -2.14229e-12   3.63226e-09 DIIS
-   @RHF iter   7:   -14.60974473887410    7.10543e-15   1.73385e-11 DIIS
+   @RHF iter   4:   -14.60974473694128   -4.05174e-06   4.32612e-06 DIIS
+   @RHF iter   5:   -14.60974473887197   -1.93068e-09   1.41353e-07 DIIS
+   @RHF iter   6:   -14.60974473887410   -2.13340e-12   3.63226e-09 DIIS
+   @RHF iter   7:   -14.60974473887410   -3.55271e-15   1.73385e-11 DIIS
 
   ==> Post-Iterations <==
 
@@ -374,7 +375,7 @@ Total time:
 
     Virtual:                                                              
 
-       2B1u    0.093646     1B3u    0.108933     1B2u    0.108933  
+       2B1u    0.093646     1B2u    0.108933     1B3u    0.108933  
        3Ag     0.176245     1B3g    0.275579     1B2g    0.275579  
        3B1u    0.645556  
 
@@ -389,13 +390,13 @@ Total time:
    => Energetics <=
 
     Nuclear Repulsion Energy =              2.3812974386549994
-    One-Electron Energy =                 -24.3030864505908717
-    Two-Electron Energy =                   7.3120442730617725
+    One-Electron Energy =                 -24.3030864505908895
+    Two-Electron Energy =                   7.3120442730617849
     DFT Exchange-Correlation Energy =       0.0000000000000000
     Empirical Dispersion Energy =           0.0000000000000000
     PCM Polarization Energy =               0.0000000000000000
     EFP Energy =                            0.0000000000000000
-    Total Energy =                        -14.6097447388740989
+    Total Energy =                        -14.6097447388741042
 
 
 
@@ -521,10 +522,10 @@ Calling plugin forte.so.
 	Starting second half-transformation.
 	Two-electron integral transformation complete.
 
-  Integral transformation done. 0.01773300 s
+  Integral transformation done. 0.02282600 s
   Reading the two-electron integrals from disk
   Size of two-electron integrals:   0.000224 GB
-  Conventional integrals take 0.05354000 s
+  Conventional integrals take 0.05943400 s
 
 	  ---------------------------------------------------------
 	      Adaptive Path-Integral Full Configuration Interaction
@@ -573,8 +574,8 @@ Calling plugin forte.so.
     2       0.231506     0.0535952          23 |2000020002>    -16.844531934967
     3       0.113961      0.012987          63 |2000022000>    -16.780684415184
     4      0.0799872    0.00639795          26 |2020020000>    -16.722588670729
-    5      0.0250225   0.000626128          40 |200002+-00>    -16.358845129061
-    6      0.0250225   0.000626128          24 |200002-+00>    -16.358845129061
+    5      0.0250225   0.000626128          24 |200002-+00>    -16.358845129061
+    6      0.0250225   0.000626128          40 |200002+-00>    -16.358845129061
     7     0.00824492   6.79786e-05          47 |2000020200>    -15.877818674644
     8    -0.00468371   2.19372e-05          69 |2000220000>    -16.542435840226
     9    -0.00468371   2.19372e-05          25 |2002020000>    -16.542435840226
@@ -653,28 +654,28 @@ Calling plugin forte.so.
        52    52.00        422     -14.646228964037  7.648e-10     -14.645385650908  1.527e-10
        53    53.00        422     -14.646228963415  6.217e-10     -14.645385650784  1.245e-10
        54    54.00        422     -14.646228962910  5.056e-10     -14.645385650683  1.013e-10
-       55    55.00        422     -14.646228962498  4.114e-10     -14.645385650600  8.268e-11
-       56    56.00        422     -14.646228962164  3.348e-10     -14.645385650533  6.736e-11
+       55    55.00        422     -14.646228962498  4.114e-10     -14.645385650600  8.269e-11
+       56    56.00        422     -14.646228962164  3.348e-10     -14.645385650533  6.735e-11
        57    57.00        422     -14.646228961891  2.726e-10     -14.645385650478  5.491e-11
-       58    58.00        422     -14.646228961669  2.220e-10     -14.645385650433  4.483e-11
-       59    59.00        422     -14.646228961488  1.809e-10     -14.645385650396  3.654e-11
+       58    58.00        422     -14.646228961669  2.220e-10     -14.645385650433  4.484e-11
+       59    59.00        422     -14.646228961488  1.809e-10     -14.645385650396  3.653e-11
        60    60.00        422     -14.646228961341  1.474e-10     -14.645385650366  2.982e-11
-       61    61.00        422     -14.646228961221  1.202e-10     -14.645385650342  2.429e-11
-       62    62.00        422     -14.646228961123  9.792e-11     -14.645385650322  1.987e-11
+       61    61.00        422     -14.646228961221  1.202e-10     -14.645385650342  2.430e-11
+       62    62.00        422     -14.646228961123  9.792e-11     -14.645385650322  1.986e-11
        63    63.00        422     -14.646228961043  7.990e-11     -14.645385650306  1.619e-11
        64    64.00        422     -14.646228960978  6.514e-11     -14.645385650293  1.323e-11
-       65    65.00        422     -14.646228960924  5.312e-11     -14.645385650282  1.075e-11
-       66    66.00        422     -14.646228960881  4.336e-11     -14.645385650273  8.814e-12
+       65    65.00        422     -14.646228960924  5.312e-11     -14.645385650282  1.076e-11
+       66    66.00        422     -14.646228960881  4.336e-11     -14.645385650273  8.811e-12
        67    67.00        422     -14.646228960846  3.537e-11     -14.645385650266  7.198e-12
-       68    68.00        422     -14.646228960817  2.886e-11     -14.645385650260  5.883e-12
-       69    69.00        422     -14.646228960793  2.354e-11     -14.645385650255  4.789e-12
+       68    68.00        422     -14.646228960817  2.886e-11     -14.645385650260  5.880e-12
+       69    69.00        422     -14.646228960793  2.354e-11     -14.645385650255  4.793e-12
        70    70.00        422     -14.646228960774  1.922e-11     -14.645385650252  3.894e-12
-       71    71.00        422     -14.646228960758  1.570e-11     -14.645385650248  3.194e-12
-       72    72.00        422     -14.646228960746  1.279e-11     -14.645385650246  2.597e-12
+       71    71.00        422     -14.646228960758  1.570e-11     -14.645385650248  3.190e-12
+       72    72.00        422     -14.646228960746  1.279e-11     -14.645385650246  2.601e-12
        73    73.00        422     -14.646228960735  1.045e-11     -14.645385650244  2.146e-12
-       74    74.00        422     -14.646228960727  8.562e-12     -14.645385650242  1.734e-12
-       75    75.00        422     -14.646228960720  6.946e-12     -14.645385650240  1.400e-12
-       76    76.00        422     -14.646228960714  5.684e-12     -14.645385650239  1.194e-12
+       74    74.00        422     -14.646228960727  8.562e-12     -14.645385650242  1.727e-12
+       75    75.00        422     -14.646228960720  6.946e-12     -14.645385650240  1.410e-12
+       76    76.00        422     -14.646228960714  5.684e-12     -14.645385650239  1.190e-12
        77    77.00        422     -14.646228960709  4.640e-12     -14.645385650238  9.237e-13
        78    78.00        422     -14.646228960706  3.794e-12
   ------------------------------------------------------------------------------------------------
@@ -692,7 +693,7 @@ Calling plugin forte.so.
 
   * Size of CI space                    = 422
 
-  Projector-CI (bitset) ran in  : 3.448302 s
+  Projector-CI (bitset) ran in  : 3.471064 s
 
   Most important contributions to the wave function:
 
@@ -701,10 +702,10 @@ Calling plugin forte.so.
     2       0.230884     0.0533076         219 |2000020002>    -16.844531934967
     3       0.120006     0.0144015         278 |2000022000>    -16.780684415184
     4      0.0811428    0.00658416         225 |2020020000>    -16.722588670729
-    5      0.0241159   0.000581575         289 |200002+-00>    -16.358845129061
-    6      0.0241159   0.000581575         223 |200002-+00>    -16.358845129061
-    7      0.0144446   0.000208646         228 |2+-0020000>    -16.872775649558
-    8      0.0144446   0.000208646         227 |2-+0020000>    -16.872775649558
+    5      0.0241159   0.000581575         223 |200002-+00>    -16.358845129061
+    6      0.0241159   0.000581575         289 |200002+-00>    -16.358845129061
+    7      0.0144446   0.000208646         227 |2-+0020000>    -16.872775649558
+    8      0.0144446   0.000208646         228 |2+-0020000>    -16.872775649558
     9     0.00767978   5.89791e-05         284 |2000020200>    -15.877818674644
 
   Spin State: S^2 = 0.000, S = 0.000, singlet (from 3 determinants,97.70)
@@ -715,7 +716,7 @@ Calling plugin forte.so.
   Davidson-liu solver algorithm
   Generating determinants with N-1 electrons.
 
-  Time spent building single lists: 0.003929 s
+  Time spent building single lists: 0.004020 s
   Memory for single-hole lists: 0.018215 MB
   Memory for single-hole maps:  0.072861 MB
   Generating determinants with N-2 electrons.
@@ -767,7 +768,7 @@ Calling plugin forte.so.
 
   Spin State: S^2 = 0.000, S = 0.000, singlet (from 3 determinants,97.69)
 
-  Your calculation took 3.69436000 seconds
+  Your calculation took 3.72222600 seconds
 	PCI energy........................................................PASSED
 	PCI POST DIAG ENERGY..............................................PASSED
 
