@@ -26,18 +26,18 @@
  * @END LICENSE
  */
 
-#include <cmath>
-#include <numeric>
 #include <algorithm>
+#include <cmath>
 #include <iomanip>
+#include <numeric>
 #include <sstream>
 
+#include "fci_mo.h"
+#include "fci/fci_vector.h"
+#include "mini-boost/boost/algorithm/string/predicate.hpp"
+#include "psi4/libmints/dipole.h"
 #include "psi4/libmints/oeprop.h"
 #include "psi4/libmints/petitelist.h"
-#include "psi4/libmints/dipole.h"
-#include "mini-boost/boost/algorithm/string/predicate.hpp"
-#include "fci_vector.h"
-#include "fci_mo.h"
 
 using namespace std;
 
@@ -78,9 +78,6 @@ void FCI_MO::startup() {
                                     tei_active_bb);
     fci_ints_->compute_restricted_one_body_operator();
     STLBitsetDeterminant::set_ints(fci_ints_);
-    DynamicBitsetDeterminant::set_ints(fci_ints_);
-    //    tei_active_aa.print();
-    //    tei_active_ab.print();
 
     // compute so quadrupole for orbital extents
     compute_SOquadrupole();
@@ -1312,10 +1309,13 @@ void FCI_MO::semi_canonicalize() {
         }
 
         // remove the swapped orbitals from the vector of orginal orbitals
-        idx_0.erase(std::remove_if(idx_0.begin(), idx_0.end(), [&](int i) {
-                        return std::find(idx_swap.begin(), idx_swap.end(), i) !=
-                               idx_swap.end();
-                    }), idx_0.end());
+        idx_0.erase(std::remove_if(idx_0.begin(), idx_0.end(),
+                                   [&](int i) {
+                                       return std::find(idx_swap.begin(),
+                                                        idx_swap.end(),
+                                                        i) != idx_swap.end();
+                                   }),
+                    idx_0.end());
 
         // swap orbitals
         for (const int& x : idx_swap) {
@@ -1509,7 +1509,7 @@ void FCI_MO::Diagonalize_H(const vecdet& det,
     SharedMatrix vec_tmp;
     SharedVector val_tmp;
     DiagonalizationMethod diag_method = DLSolver;
-    sparse_solver.set_maxiter_davidson(options_.get_int("MAXITER_DAVIDSON"));
+    sparse_solver.set_maxiter_davidson(options_.get_int("DL_MAXITER"));
     if (diag_algorithm_ == "FULL") {
         diag_method = Full;
     }
@@ -2726,8 +2726,7 @@ void FCI_MO::compute_permanent_dipole() {
     CharacterTable ct =
         Process::environment.molecule()->point_group()->char_table();
     std::string irrep_symbol = ct.gamma(root_sym_).symbol();
-    std::string title =
-        "Permanent Dipole Moments (" + irrep_symbol + ")";
+    std::string title = "Permanent Dipole Moments (" + irrep_symbol + ")";
     print_h2(title);
 
     // obtain AO dipole from libmints
@@ -2997,8 +2996,8 @@ void FCI_MO::compute_oscillator_strength() {
         Process::environment.molecule()->point_group()->char_table();
     std::string irrep_symbol = ct.gamma(root_sym_).symbol();
     std::stringstream title;
-    title << "Oscillator Strength (" << irrep_symbol << " -> "
-          << irrep_symbol << ")";
+    title << "Oscillator Strength (" << irrep_symbol << " -> " << irrep_symbol
+          << ")";
     print_h2(title.str());
 
     // obtain the excitation energies map

@@ -18,6 +18,7 @@ import subprocess
 import shutil
 import datetime
 import time
+import fnmatch
 
 sys.path.append('cmake')
 import argparse
@@ -86,7 +87,10 @@ def generate_cmakelist(args):
         return False    
 
     # put together forte's CMakeLists.txt file
-    ccfiles =  glob.glob('src/*.cc')
+    ccfiles = []
+    for root, dirnames, filenames in os.walk('src'):
+        for filename in fnmatch.filter(filenames, '*.cc'):
+            ccfiles.append(os.path.join(root, filename))
 
     forte_cmakelists = "\n".join(cmakelists[:-1])
 
@@ -162,8 +166,8 @@ def save_setup_command(argv, build_path):
 
 
 def main(argv):
-#    if len(argv) == 1:
-#        argv.append("--help")
+    if len(argv) == 1:
+        argv.append("--help")
     args = parse_input()
     save_setup_command(argv,root_directory)
     configure_psi4(args)

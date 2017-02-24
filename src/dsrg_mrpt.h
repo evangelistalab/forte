@@ -38,7 +38,7 @@
 #include "psi4/libpsio/psio.h"
 #include "ambit/blocked_tensor.h"
 
-#include "integrals.h"
+#include "integrals/integrals.h"
 #include "reference.h"
 #include "dsrg_source.h"
 #include "dsrg_time.h"
@@ -324,8 +324,8 @@ class DSRG_MRPT : public Wavefunction {
 
     // => DSRG-MRPT3 <= //
 
-    /// Compute DSRG-MRPT3 energy
-    double compute_energy_pt3();
+//    /// Compute DSRG-MRPT3 energy
+//    double compute_energy_pt3();
 
     // => Reference relaxation <= //
 

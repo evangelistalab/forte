@@ -37,10 +37,9 @@
 #include "psi4/libmints/wavefunction.h"
 #include <random>
 
-#include "integrals.h"
-#include "dynamic_bitset_determinant.h"
+#include "integrals/integrals.h"
 #include "stl_bitset_determinant.h"
-#include "fci_vector.h"
+#include "fci/fci_vector.h"
 
 namespace psi {
 namespace forte {

@@ -48,7 +48,7 @@ set forte{
   active             [3,0,2,2]
   dsrg_s             0.5
   maxiter            500
-  maxiter_davidson   1000
+  dl_maxiter         1000
   e_convergence      10
   cas_type           cas
   avg_state          [[0,1,2]]

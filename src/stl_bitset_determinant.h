@@ -32,9 +32,8 @@
 #include <unordered_map>
 #include <bitset>
 
-#include "integrals.h"
-#include "fci_vector.h"
-#include "dynamic_bitset_determinant.h"
+#include "integrals/integrals.h"
+#include "fci/fci_integrals.h"
 #include "stl_bitset_string.h"
 
 namespace psi {
@@ -78,6 +77,8 @@ class STLBitsetDeterminant {
     explicit STLBitsetDeterminant(const STLBitsetString& alpha,
                                   const STLBitsetString& beta);
 
+    void copy(const STLBitsetDeterminant& rhs);
+
     /// Equal operator
     bool operator==(const STLBitsetDeterminant& lhs) const;
     /// Less than operator
@@ -103,9 +104,6 @@ class STLBitsetDeterminant {
 
     /// Return determinant with one spin zeroed, alpha == 0
     void zero_spin(bool spin);
-
-    /// Convert to DynamicBitsetDeterminant
-    DynamicBitsetDeterminant to_dynamic_bitset() const;
 
     /// Get the alpha bits
     std::vector<bool> get_alfa_bits_vector_bool();

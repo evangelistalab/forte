@@ -32,13 +32,13 @@ set {
 set forte {
   JOB_TYPE aci
   multiplicity 1
-  SELECT_TYPE aimed_energy
+  aci_SELECT_TYPE aimed_energy
   sigma 0.07
-  nroot 1
+  aci_nroot 1
   charge 0
-  enforce_spin_complete true
+  aci_enforce_spin_complete true
   aci_add_aimed_degenerate true
-  project_out_spin_contaminants true
+  aci_project_out_spin_contaminants true
 }
 
 energy('scf')

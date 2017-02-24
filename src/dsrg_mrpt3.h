@@ -38,14 +38,14 @@
 #include "psi4/liboptions/liboptions.h"
 #include "psi4/libmints/wavefunction.h"
 
-#include "integrals.h"
+#include "integrals/integrals.h"
 #include "ambit/blocked_tensor.h"
 #include "reference.h"
 #include "helpers.h"
 #include "blockedtensorfactory.h"
 #include "dsrg_time.h"
 #include "dsrg_source.h"
-#include "fci_vector.h"
+#include "fci/fci_vector.h"
 #include "stl_bitset_determinant.h"
 
 using namespace ambit;

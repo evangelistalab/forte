@@ -31,11 +31,11 @@
 #include "ambit/blocked_tensor.h"
 #include "psi4/libfock/jk.h"
 #include "reference.h"
-#include "integrals.h"
+#include "integrals/integrals.h"
 #include "psi4/libqt/qt.h"
 #include "psi4/libmints/matrix.h"
 #include "helpers.h"
-#include "fci_solver.h"
+#include "fci/fci_solver.h"
 #include "psi4/psifiles.h"
 #include "psi4/lib3index/cholesky.h"
 using namespace psi;

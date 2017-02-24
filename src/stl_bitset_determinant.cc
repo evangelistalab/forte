@@ -31,7 +31,7 @@
 
 #include "stl_bitset_determinant.h"
 #include "stl_bitset_string.h"
-#include "fci_vector.h"
+#include "fci/fci_vector.h"
 
 using namespace std;
 using namespace psi;
@@ -85,6 +85,10 @@ STLBitsetDeterminant::STLBitsetDeterminant(const STLBitsetString& alpha,
         bits_[p] = alpha.get_bit(p);
         bits_[p + nmo_] = beta.get_bit(p);
     }
+}
+
+void STLBitsetDeterminant::copy(const STLBitsetDeterminant& rhs) {
+    bits_ = rhs.bits_;
 }
 
 bool STLBitsetDeterminant::operator==(const STLBitsetDeterminant& lhs) const {
@@ -268,15 +272,6 @@ void STLBitsetDeterminant::zero_spin(bool spin) {
     for (int p = 0; p < nmo_; ++p) {
         bits_[p + (spin * nmo_)] = false;
     }
-}
-
-DynamicBitsetDeterminant STLBitsetDeterminant::to_dynamic_bitset() const {
-    DynamicBitsetDeterminant dbs(nmo_);
-    for (int p = 0; p < nmo_; ++p) {
-        dbs.set_alfa_bit(p, bits_[p]);
-        dbs.set_beta_bit(p, bits_[nmo_ + p]);
-    }
-    return dbs;
 }
 
 void STLBitsetDeterminant::print() const {
@@ -605,42 +600,81 @@ double STLBitsetDeterminant::slater_sign_beta(int n) const {
     return (sign);
 }
 
+//double STLBitsetDeterminant::double_excitation_aa(int i, int j, int a, int b) {
+//    double sign = 1.0;
+//    sign *= slater_sign_alpha(i);
+//    sign *= slater_sign_alpha(j);
+//    bits_[i] = false;
+//    bits_[j] = false;
+//    bits_[a] = true;
+//    bits_[b] = true;
+//    sign *= slater_sign_alpha(a);
+//    sign *= slater_sign_alpha(b);
+//    return sign;
+//}
+
+//double STLBitsetDeterminant::double_excitation_ab(int i, int j, int a, int b) {
+//    double sign = 1.0;
+//    sign *= slater_sign_alpha(i);
+//    sign *= slater_sign_beta(j);
+//    bits_[i] = false;
+//    bits_[nmo_ + j] = false;
+//    bits_[a] = true;
+//    bits_[nmo_ + b] = true;
+//    sign *= slater_sign_alpha(a);
+//    sign *= slater_sign_beta(b);
+//    return sign;
+//}
+
+//double STLBitsetDeterminant::double_excitation_bb(int i, int j, int a, int b) {
+//    double sign = 1.0;
+//    sign *= slater_sign_beta(i);
+//    sign *= slater_sign_beta(j);
+//    bits_[nmo_ + i] = false;
+//    bits_[nmo_ + j] = false;
+//    bits_[nmo_ + a] = true;
+//    bits_[nmo_ + b] = true;
+//    sign *= slater_sign_beta(a);
+//    sign *= slater_sign_beta(b);
+//    return sign;
+//}
+
 double STLBitsetDeterminant::double_excitation_aa(int i, int j, int a, int b) {
     double sign = 1.0;
     sign *= slater_sign_alpha(i);
-    sign *= slater_sign_alpha(j);
     bits_[i] = false;
+    sign *= slater_sign_alpha(j);
     bits_[j] = false;
-    bits_[a] = true;
+    sign *= slater_sign_alpha(b);
     bits_[b] = true;
     sign *= slater_sign_alpha(a);
-    sign *= slater_sign_alpha(b);
+    bits_[a] = true;
     return sign;
 }
 
 double STLBitsetDeterminant::double_excitation_ab(int i, int j, int a, int b) {
     double sign = 1.0;
     sign *= slater_sign_alpha(i);
-    sign *= slater_sign_beta(j);
     bits_[i] = false;
+    sign *= slater_sign_beta(j);
     bits_[nmo_ + j] = false;
-    bits_[a] = true;
+    sign *= slater_sign_beta(b);
     bits_[nmo_ + b] = true;
     sign *= slater_sign_alpha(a);
-    sign *= slater_sign_beta(b);
+    bits_[a] = true;
     return sign;
 }
 
 double STLBitsetDeterminant::double_excitation_bb(int i, int j, int a, int b) {
     double sign = 1.0;
     sign *= slater_sign_beta(i);
-    sign *= slater_sign_beta(j);
     bits_[nmo_ + i] = false;
+    sign *= slater_sign_beta(j);
     bits_[nmo_ + j] = false;
-    bits_[nmo_ + a] = true;
+    sign *= slater_sign_beta(b);
     bits_[nmo_ + b] = true;
     sign *= slater_sign_beta(a);
-    sign *= slater_sign_beta(b);
+    bits_[nmo_ + a] = true;
     return sign;
 }
 
