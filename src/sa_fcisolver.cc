@@ -258,9 +258,9 @@ double SA_FCISolver::compute_energy() {
             outfile->Printf("\n  Charge: %d", charge);
             outfile->Printf("\n  Multiplicity: %d", multiplicity);
             outfile->Printf("\n  Davidson subspace max dim: %d",
-                            options_.get_int("DAVIDSON_SUBSPACE_PER_ROOT"));
+                            options_.get_int("DL_SUBSPACE_PER_ROOT"));
             outfile->Printf("\n  Davidson subspace min dim: %d",
-                            options_.get_int("DAVIDSON_COLLAPSE_PER_ROOT"));
+                            options_.get_int("DL_COLLAPSE_PER_ROOT"));
             if (ms % 2 == 0) {
                 outfile->Printf("\n  M_s: %d", ms / 2);
             } else {
@@ -281,12 +281,12 @@ double SA_FCISolver::compute_energy() {
                             options_.get_int("NTRIAL_PER_ROOT"),
                             options_.get_int("PRINT"), options_);
         fcisolver.set_max_rdm_level(2);
-        fcisolver.set_test_rdms(options_.get_bool("TEST_RDMS"));
-        fcisolver.set_fci_iterations(options_.get_int("FCI_ITERATIONS"));
+        fcisolver.set_test_rdms(options_.get_bool("FCI_TEST_RDMS"));
+        fcisolver.set_fci_iterations(options_.get_int("FCI_MAXITER"));
         fcisolver.set_collapse_per_root(
-            options_.get_int("DAVIDSON_COLLAPSE_PER_ROOT"));
+            options_.get_int("DL_COLLAPSE_PER_ROOT"));
         fcisolver.set_subspace_per_root(
-            options_.get_int("DAVIDSON_SUBSPACE_PER_ROOT"));
+            options_.get_int("DL_SUBSPACE_PER_ROOT"));
         fcisolver.set_print_no(false);
         fcisolver.use_user_integrals_and_restricted_docc(true);
         if (fci_ints_ == nullptr) {

@@ -35,7 +35,7 @@
 #include "psi4/libqt/qt.h"
 
 #include "fcimc.h"
-#include "fci_vector.h"
+#include "fci/fci_vector.h"
 
 using namespace psi;
 

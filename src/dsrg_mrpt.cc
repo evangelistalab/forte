@@ -230,7 +230,7 @@ double DSRG_MRPT::compute_energy() {
     if (corr_lv_ == "PT2") {
         Etotal += compute_energy_pt2();
     } else if (corr_lv_ == "PT3") {
-        Etotal += compute_energy_pt3();
+//        Etotal += compute_energy_pt3();
     }
 
     Process::environment.globals["CURRENT ENERGY"] = Etotal;

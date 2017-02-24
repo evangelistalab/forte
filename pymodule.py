@@ -33,9 +33,9 @@ from psi4.driver.procedures import proc_util
 
 def run_forte(name, **kwargs):
     r"""Function encoding sequence of PSI module and plugin calls so that
-    forte_inversion can be called via :py:func:`~driver.energy`. For post-scf plugins.
+    forte can be called via :py:func:`~driver.energy`. For post-scf plugins.
 
-    >>> energy('forte_inversion')
+    >>> energy('forte')
 
     """
     lowername = name.lower()
@@ -57,14 +57,19 @@ def run_forte(name, **kwargs):
                                          'RIFIT', psi4.core.get_global_option('BASIS'))
         ref_wfn.set_basisset('DF_BASIS_MP2', aux_basis)
 
+    if (psi4.core.get_option('FORTE','MINAO_BASIS')):
+        minao_basis = psi4.core.BasisSet.build(ref_wfn.molecule(), 'MINAO_BASIS',
+                                               psi4.core.get_option('FORTE','MINAO_BASIS'))
+        ref_wfn.set_basisset('MINAO_BASIS', minao_basis)
+
     # Ensure IWL files have been written when not using DF/CD
     proc_util.check_iwl_file_from_scf_type(psi4.core.get_option('SCF', 'SCF_TYPE'), ref_wfn)
 
     # Call the Psi4 plugin
     # Please note that setting the reference wavefunction in this way is ONLY for plugins
-    forte_inversion_wfn = psi4.core.plugin('forte.so', ref_wfn)
+    forte_wfn = psi4.core.plugin('forte.so', ref_wfn)
 
-    return forte_inversion_wfn
+    return forte_wfn
 
 
 # Integration with driver routines

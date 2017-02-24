@@ -61,8 +61,8 @@
 #include "ambit/blocked_tensor.h"
 #include "dmrgsolver.h"
 #include "helpers.h"
-#include "integrals.h"
-#include "fci_vector.h"
+#include "integrals/integrals.h"
+#include "fci/fci_vector.h"
 
 using namespace std;
 

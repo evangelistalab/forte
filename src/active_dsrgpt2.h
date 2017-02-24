@@ -41,7 +41,7 @@
 #include "psi4/libmints/wavefunction.h"
 #include "psi4/libmints/molecule.h"
 
-#include "integrals.h"
+#include "integrals/integrals.h"
 #include "reference.h"
 #include "helpers.h"
 #include "fci_mo.h"

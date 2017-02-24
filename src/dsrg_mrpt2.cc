@@ -38,7 +38,7 @@
 #include "blockedtensorfactory.h"
 #include "ci_rdms.h"
 #include "dsrg_mrpt2.h"
-#include "fci_solver.h"
+#include "fci/fci_solver.h"
 
 using namespace ambit;
 
@@ -1655,11 +1655,11 @@ double DSRG_MRPT2::compute_energy_relaxed() {
         fcisolver.set_max_rdm_level(1);
         fcisolver.set_nroot(options_.get_int("NROOT"));
         fcisolver.set_root(options_.get_int("ROOT"));
-        fcisolver.set_fci_iterations(options_.get_int("FCI_ITERATIONS"));
+        fcisolver.set_fci_iterations(options_.get_int("FCI_MAXITER"));
         fcisolver.set_collapse_per_root(
-            options_.get_int("DAVIDSON_COLLAPSE_PER_ROOT"));
+            options_.get_int("DL_COLLAPSE_PER_ROOT"));
         fcisolver.set_subspace_per_root(
-            options_.get_int("DAVIDSON_SUBSPACE_PER_ROOT"));
+            options_.get_int("DL_SUBSPACE_PER_ROOT"));
         Erelax = fcisolver.compute_energy();
 
         // printing

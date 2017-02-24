@@ -40,7 +40,7 @@
 #include "psi4/libmints/molecule.h"
 #include "psi4/libmints/pointgrp.h"
 
-#include "integrals.h"
+#include "integrals/integrals.h"
 #include "ambit/blocked_tensor.h"
 #include "reference.h"
 #include "helpers.h"

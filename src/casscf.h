@@ -33,12 +33,13 @@
 #include "psi4/libmints/wavefunction.h"
 #include "psi4/libfock/jk.h"
 
-#include "integrals.h"
+#include "integrals/integrals.h"
 #include "ambit/blocked_tensor.h"
 #include "reference.h"
 #include "helpers.h"
 #include "blockedtensorfactory.h"
-#include "fci_vector.h"
+#include "fci/fci_vector.h"
+#include "fci/fci_integrals.h"
 
 namespace psi {
 namespace forte {

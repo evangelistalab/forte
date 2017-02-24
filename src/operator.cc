@@ -532,5 +532,290 @@ void WFNOperator::clear_tp_lists() {
     ab_ann_list_.clear();
     ab_cre_list_.clear();
 }
+
+void WFNOperator::three_lists(DeterminantMap& wfn) {
+    size_t ndets = wfn.size();
+    const det_hash<size_t>& wfn_map = wfn.wfn_hash();
+
+    /// Compute aaa coupling
+    {
+        aaa_ann_list_.resize(ndets);
+        size_t naaa_ann = 0;
+        det_hash<int> aaa_ann_map;
+        for (auto& I : wfn_map) {
+            STLBitsetDeterminant detI = I.first;
+
+            std::vector<int> aocc = detI.get_alfa_occ();
+            std::vector<int> bocc = detI.get_beta_occ();
+
+            int noalfa = aocc.size();
+            int nobeta = bocc.size();
+
+            std::vector<std::tuple<size_t, short, short, short>> aaa_ann(
+                noalfa * (noalfa - 1) * (noalfa - 2) / 6);
+
+            // aaa
+            for (int i = 0, ijk = 0; i < noalfa; ++i) {
+                for (int j = i + 1; j < noalfa; ++j) {
+                    for (int k = j + 1; k < noalfa; ++k, ++ijk) {
+
+                        int ii = aocc[i];
+                        int jj = aocc[j];
+                        int kk = aocc[k];
+
+                        STLBitsetDeterminant detJ(detI);
+                        detJ.set_alfa_bit(ii, false);
+                        detJ.set_alfa_bit(jj, false);
+                        detJ.set_alfa_bit(kk, false);
+
+                        double sign = detI.slater_sign_alpha(ii) *
+                                      detI.slater_sign_alpha(jj) *
+                                      detI.slater_sign_alpha(kk);
+
+                        det_hash<int>::iterator hash_it =
+                            aaa_ann_map.find(detJ);
+                        size_t detJ_add;
+
+                        if (hash_it == aaa_ann_map.end()) {
+                            detJ_add = naaa_ann;
+                            aaa_ann_map[detJ] = naaa_ann;
+                            naaa_ann++;
+                        } else {
+                            detJ_add = hash_it->second;
+                        }
+                        aaa_ann[ijk] = std::make_tuple(
+                            detJ_add, (sign > 0.5) ? (ii + 1) : (-ii - 1), jj,
+                            kk);
+                    }
+                }
+            }
+            aaa_ann_list_[I.second] = aaa_ann;
+        }
+        aaa_cre_list_.resize(aaa_ann_map.size());
+    }
+    aaa_ann_list_.shrink_to_fit();
+
+    /// AAB coupling
+    {
+        aab_ann_list_.resize(ndets);
+        size_t naab_ann = 0;
+        det_hash<int> aab_ann_map;
+        for (auto& I : wfn_map) {
+            STLBitsetDeterminant detI = I.first;
+
+            std::vector<int> aocc = detI.get_alfa_occ();
+            std::vector<int> bocc = detI.get_beta_occ();
+
+            int noalfa = aocc.size();
+            int nobeta = bocc.size();
+
+            std::vector<std::tuple<size_t, short, short, short>> aab_ann(
+                noalfa * (noalfa - 1) * nobeta / 2);
+
+            for (int i = 0, ijk = 0; i < noalfa; ++i) {
+                for (int j = i + 1; j < noalfa; ++j) {
+                    for (int k = 0; k < nobeta; ++k, ++ijk) {
+
+                        int ii = aocc[i];
+                        int jj = aocc[j];
+                        int kk = bocc[k];
+
+                        STLBitsetDeterminant detJ(detI);
+                        detJ.set_alfa_bit(ii, false);
+                        detJ.set_alfa_bit(jj, false);
+                        detJ.set_beta_bit(kk, false);
+
+                        double sign = detI.slater_sign_alpha(ii) *
+                                      detI.slater_sign_alpha(jj) *
+                                      detI.slater_sign_beta(kk);
+
+                        det_hash<int>::iterator hash_it =
+                            aab_ann_map.find(detJ);
+                        size_t detJ_add;
+
+                        if (hash_it == aab_ann_map.end()) {
+                            detJ_add = naab_ann;
+                            aab_ann_map[detJ] = naab_ann;
+                            naab_ann++;
+                        } else {
+                            detJ_add = hash_it->second;
+                        }
+                        aab_ann[ijk] = std::make_tuple(
+                            detJ_add, (sign > 0.5) ? (ii + 1) : (-ii - 1), jj,
+                            kk);
+                    }
+                }
+            }
+            aab_ann_list_[I.second] = aab_ann;
+        }
+        aab_cre_list_.resize(aab_ann_map.size());
+    }
+    aab_ann_list_.shrink_to_fit();
+
+    /// ABB coupling
+    {
+        det_hash<int> abb_ann_map;
+        abb_ann_list_.resize(ndets);
+        size_t nabb_ann = 0;
+        for (auto& I : wfn_map) {
+            STLBitsetDeterminant detI = I.first;
+
+            std::vector<int> aocc = detI.get_alfa_occ();
+            std::vector<int> bocc = detI.get_beta_occ();
+
+            int noalfa = aocc.size();
+            int nobeta = bocc.size();
+
+            std::vector<std::tuple<size_t, short, short, short>> abb_ann(
+                noalfa * nobeta * (nobeta - 1) / 2);
+
+            for (int i = 0, ijk = 0; i < noalfa; ++i) {
+                for (int j = 0; j < nobeta; ++j) {
+                    for (int k = j + 1; k < nobeta; ++k, ++ijk) {
+
+                        int ii = aocc[i];
+                        int jj = bocc[j];
+                        int kk = bocc[k];
+
+                        STLBitsetDeterminant detJ(detI);
+                        detJ.set_alfa_bit(ii, false);
+                        detJ.set_beta_bit(jj, false);
+                        detJ.set_beta_bit(kk, false);
+
+                        double sign = detI.slater_sign_alpha(ii) *
+                                      detI.slater_sign_beta(jj) *
+                                      detI.slater_sign_beta(kk);
+
+                        det_hash<int>::iterator hash_it =
+                            abb_ann_map.find(detJ);
+                        size_t detJ_add;
+
+                        if (hash_it == abb_ann_map.end()) {
+                            detJ_add = nabb_ann;
+                            abb_ann_map[detJ] = nabb_ann;
+                            nabb_ann++;
+                        } else {
+                            detJ_add = hash_it->second;
+                        }
+                        abb_ann[ijk] = std::make_tuple(
+                            detJ_add, (sign > 0.5) ? (ii + 1) : (-ii - 1), jj,
+                            kk);
+                    }
+                }
+            }
+            abb_ann_list_[I.second] = abb_ann;
+        }
+        abb_cre_list_.resize(abb_ann_map.size());
+    }
+    abb_ann_list_.shrink_to_fit();
+
+    /// BBB coupling
+    {
+        size_t nbbb_ann = 0;
+        bbb_ann_list_.resize(ndets);
+        det_hash<int> bbb_ann_map;
+        for (auto& I : wfn_map) {
+            STLBitsetDeterminant detI = I.first;
+
+            std::vector<int> aocc = detI.get_alfa_occ();
+            std::vector<int> bocc = detI.get_beta_occ();
+
+            int noalfa = aocc.size();
+            int nobeta = bocc.size();
+
+            std::vector<std::tuple<size_t, short, short, short>> bbb_ann(
+                nobeta * (nobeta - 1) * (nobeta - 2) / 6);
+            // bbb
+            for (int i = 0, ijk = 0; i < nobeta; ++i) {
+                for (int j = i + 1; j < nobeta; ++j) {
+                    for (int k = j + 1; k < nobeta; ++k, ++ijk) {
+
+                        int ii = bocc[i];
+                        int jj = bocc[j];
+                        int kk = bocc[k];
+
+                        STLBitsetDeterminant detJ(detI);
+                        detJ.set_beta_bit(ii, false);
+                        detJ.set_beta_bit(jj, false);
+                        detJ.set_beta_bit(kk, false);
+
+                        double sign = detI.slater_sign_beta(ii) *
+                                      detI.slater_sign_beta(jj) *
+                                      detI.slater_sign_beta(kk);
+
+                        det_hash<int>::iterator hash_it =
+                            bbb_ann_map.find(detJ);
+                        size_t detJ_add;
+
+                        if (hash_it == bbb_ann_map.end()) {
+                            detJ_add = nbbb_ann;
+                            bbb_ann_map[detJ] = nbbb_ann;
+                            nbbb_ann++;
+                        } else {
+                            detJ_add = hash_it->second;
+                        }
+                        bbb_ann[ijk] = std::make_tuple(
+                            detJ_add, (sign > 0.5) ? (ii + 1) : (-ii - 1), jj,
+                            kk);
+                    }
+                }
+            }
+            bbb_ann_list_[I.second] = bbb_ann;
+        }
+        bbb_cre_list_.resize(bbb_ann_map.size());
+    }
+    bbb_ann_list_.shrink_to_fit();
+
+    // Make the creation lists
+
+    // aaa
+    for (size_t I = 0, max_size = aaa_ann_list_.size(); I < max_size; ++I) {
+        const std::vector<std::tuple<size_t, short, short, short>>& aaa_ann =
+            aaa_ann_list_[I];
+        for (const std::tuple<size_t, short, short, short>& Jsign : aaa_ann) {
+            size_t J = std::get<0>(Jsign);
+            short i = std::get<1>(Jsign);
+            short j = std::get<2>(Jsign);
+            short k = std::get<3>(Jsign);
+            aaa_cre_list_[J].push_back(std::make_tuple(I, i, j, k));
+        }
+    }
+    // aab
+    for (size_t I = 0, max_size = aab_ann_list_.size(); I < max_size; ++I) {
+        const std::vector<std::tuple<size_t, short, short, short>>& aab_ann =
+            aab_ann_list_[I];
+        for (const std::tuple<size_t, short, short, short>& Jsign : aab_ann) {
+            size_t J = std::get<0>(Jsign);
+            short i = std::get<1>(Jsign);
+            short j = std::get<2>(Jsign);
+            short k = std::get<3>(Jsign);
+            aab_cre_list_[J].push_back(std::make_tuple(I, i, j, k));
+        }
+    }
+    // abb
+    for (size_t I = 0, max_size = abb_ann_list_.size(); I < max_size; ++I) {
+        const std::vector<std::tuple<size_t, short, short, short>>& abb_ann =
+            abb_ann_list_[I];
+        for (const std::tuple<size_t, short, short, short>& Jsign : abb_ann) {
+            size_t J = std::get<0>(Jsign);
+            short i = std::get<1>(Jsign);
+            short j = std::get<2>(Jsign);
+            short k = std::get<3>(Jsign);
+            abb_cre_list_[J].push_back(std::make_tuple(I, i, j, k));
+        }
+    }
+    // bbb
+    for (size_t I = 0, max_size = bbb_ann_list_.size(); I < max_size; ++I) {
+        const std::vector<std::tuple<size_t, short, short, short>>& bbb_ann =
+            bbb_ann_list_[I];
+        for (const std::tuple<size_t, short, short, short>& Jsign : bbb_ann) {
+            size_t J = std::get<0>(Jsign);
+            short i = std::get<1>(Jsign);
+            short j = std::get<2>(Jsign);
+            short k = std::get<3>(Jsign);
+            bbb_cre_list_[J].push_back(std::make_tuple(I, i, j, k));
+        }
+    }
+}
 }
 }

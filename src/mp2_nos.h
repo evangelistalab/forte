@@ -33,7 +33,7 @@
 #include "psi4/libmints/wavefunction.h"
 
 #include "helpers.h"
-#include "integrals.h"
+#include "integrals/integrals.h"
 #include "reference.h"
 
 namespace psi {

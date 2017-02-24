@@ -28,16 +28,16 @@ energy('scf')
 set scf_type direct
 set forte {
     casscf_reference true
-    frozen_docc     [1, 0, 0, 0]
-    active          [3, 0, 1, 2]
-    int_type        conventional
-    FCI_ITERATIONS        40
+    frozen_docc           [1, 0, 0, 0]
+    active                [3, 0, 1, 2]
+    int_type              conventional
+    fci_maxiter           40
     CASSCF_E_CONVERGENCE  1e-10
     CASSCF_G_CONVERGENCE  1e-6
-    CAS_TYPE             FCI
-    CASSCF_ITERATIONS    25
-    print                0
-    CASSCF_DO_DIIS       true
+    CAS_TYPE              FCI
+    CASSCF_ITERATIONS     25
+    print                 0
+    CASSCF_DO_DIIS        true
 }
 
 

@@ -120,6 +120,9 @@ print " " * 8 + "-" * 72
 print "\n".join(summary)
 print " " * 8 + "-" * 72
 
+test_result_log = open("test_results","w+")
+test_result_log.write("\n".join(summary))
+
 nfailed = len(failed)
 nnomatch = len(nomatch)
 if nnomatch + nfailed == 0:
