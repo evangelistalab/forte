@@ -5021,14 +5021,20 @@ ProjectorCI::estimate_perturbation(det_vec& dets, std::vector<double>& C,
         double current_V = 0.0;
         for (size_t J = 0; J < size; ++J) {
             double HIJ = dets[J].slater_rules(dets[I]);
-            if (std::fabs(C[J] * HIJ) < spawning_threshold && J != I) {
-                current_V += HIJ * C[J];
+            if (symm_approx_H_) {
+                if (std::fabs(C[J] * HIJ) < spawning_threshold && std::fabs(C[I] * HIJ) < spawning_threshold && J != I) {
+                    current_V += HIJ * C[J];
+                }
+            } else {
+                if (std::fabs(C[J] * HIJ) < spawning_threshold && J != I) {
+                    current_V += HIJ * C[J];
+                }
             }
         }
         current_V *= C[I];
-        double delta = dets[I].energy() - variational_energy_estimator;
-        perturbation_2nd_energy_estimator_sub +=
-            0.5 * (delta - sqrt(delta * delta + 4 * current_V * current_V));
+        double delta = variational_energy_estimator - dets[I].energy();
+        perturbation_2nd_energy_estimator_sub += current_V * current_V / delta;
+//            0.5 * (delta - sqrt(delta * delta + 4 * current_V * current_V));
     }
     return std::make_tuple(perturbation_2nd_energy_estimator_sub, 0.0);
 }
