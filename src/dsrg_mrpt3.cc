@@ -586,7 +586,6 @@ void DSRG_MRPT3::print_summary() {
     std::vector<std::pair<std::string, std::string>> calculation_info_string{
         {"int_type", options_.get_str("INT_TYPE")},
         {"source operator", source_},
-        {"state_type", multi_state_ ? "MULTI_STATE" : "STATE_SPECIFIC"},
         {"reference relaxation", relax_ref_}};
 
     if (multi_state_) {
