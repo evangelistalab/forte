@@ -31,15 +31,14 @@
 #include <map>
 #include <cmath>
 
-#include "mini-boost/boost/format.hpp"
-
 #include "psi4/libmints/molecule.h"
 
-#include "helpers.h"
+#include "../mini-boost/boost/format.hpp"
+#include "../helpers.h"
+#include "../fci/fci_solver.h"
+#include "../mp2_nos.h"
+#include "../fci_mo.h"
 #include "mrdsrg.h"
-#include "fci/fci_solver.h"
-#include "mp2_nos.h"
-#include "fci_mo.h"
 
 namespace psi {
 namespace forte {

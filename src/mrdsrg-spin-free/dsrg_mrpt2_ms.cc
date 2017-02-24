@@ -26,9 +26,9 @@
  * @END LICENSE
  */
 
-#include "ci_rdms.h"
+#include "../ci_rdms.h"
+#include "../fci/fci_solver.h"
 #include "dsrg_mrpt2.h"
-#include "fci/fci_solver.h"
 
 namespace psi {
 namespace forte {

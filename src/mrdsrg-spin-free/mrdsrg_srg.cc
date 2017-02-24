@@ -26,10 +26,9 @@
  * @END LICENSE
  */
 
-#include "mini-boost/boost/format.hpp"
-#include "mini-boost/boost/numeric/odeint.hpp"
-
-#include "helpers.h"
+#include "../mini-boost/boost/format.hpp"
+#include "../mini-boost/boost/numeric/odeint.hpp"
+#include "../helpers.h"
 #include "mrdsrg.h"
 
 using namespace boost::numeric::odeint;

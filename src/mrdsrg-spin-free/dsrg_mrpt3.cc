@@ -30,7 +30,6 @@
 #include <algorithm>
 #include <tuple>
 #include <math.h>
-#include "mini-boost/boost/format.hpp"
 
 #include "psi4/libpsio/psio.hpp"
 #include "psi4/libpsio/psio.h"
@@ -39,10 +38,11 @@
 #include <iostream>
 #include <fstream>
 
+#include "../mini-boost/boost/format.hpp"
+#include "../blockedtensorfactory.h"
+#include "../fci/fci_solver.h"
+#include "../fci_mo.h"
 #include "dsrg_mrpt3.h"
-#include "blockedtensorfactory.h"
-#include "fci/fci_solver.h"
-#include "fci_mo.h"
 
 using namespace ambit;
 

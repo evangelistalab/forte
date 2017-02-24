@@ -29,11 +29,10 @@
 #include <algorithm>
 #include <vector>
 #include <map>
-#include "mini-boost/boost/format.hpp"
-
 #include "psi4/libdiis/diismanager.h"
 
-#include "helpers.h"
+#include "../mini-boost/boost/format.hpp"
+#include "../helpers.h"
 #include "mrdsrg.h"
 
 namespace psi {

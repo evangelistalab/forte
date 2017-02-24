@@ -26,11 +26,11 @@
  * @END LICENSE
  */
 
-#include "mini-boost/boost/format.hpp"
 #include <algorithm>
 
 #include "dsrg_time.h"
-#include "helpers.h"
+#include "../mini-boost/boost/format.hpp"
+#include "../helpers.h"
 
 namespace psi {
 namespace forte {
