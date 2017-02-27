@@ -66,6 +66,7 @@
 #include "v2rdm.h"
 #include "localize.h"
 #include "cc.h"
+#include "mrci.h"
 
 #ifdef HAVE_CHEMPS2
 #include "dmrgscf.h"
@@ -658,6 +659,17 @@ void forte_old_methods(SharedWavefunction ref_wfn, Options& options,
         auto cc = std::make_shared<CC>(ref_wfn, options, ints, mo_space_info);
         cc->compute_energy();
     }
+
+    if (options.get_str("JOB_TYPE") == "MRCISD") {
+        auto aci = std::make_shared<AdaptiveCI>(ref_wfn, options, ints, mo_space_info);
+        aci->compute_energy();
+
+        DeterminantMap reference = aci->get_wavefunction();
+        auto mrci = std::make_shared<MRCI>(ref_wfn,options,ints,mo_space_info,reference);
+        mrci->compute_energy();
+
+    }
+
 }
 }
 } // End Namespaces

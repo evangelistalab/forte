@@ -86,6 +86,9 @@ class AdaptiveCI : public Wavefunction {
     /// Set the printing level
     void set_quiet(bool quiet) { quiet_mode_ = quiet; }
 
+    /// Get the wavefunction
+    DeterminantMap get_wavefunction();
+
   private:
     // ==> Class data <==
 

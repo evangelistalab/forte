@@ -137,6 +137,9 @@ void set_ACI_options(Options& options)
     /*- Print Natural orbitals -*/
     options.add_bool("ACI_PRINT_NO", true);
 
+    /*- Save the final wavefunction -*/
+    options.add_bool("SAVE_FINAL_WFN", false);
+
 }
 
 
@@ -153,7 +156,7 @@ AdaptiveCI::AdaptiveCI(SharedWavefunction ref_wfn, Options& options,
     shallow_copy(ref_wfn);
     reference_wavefunction_ = ref_wfn;
 
-    op_.initialize(mo_space_info_);
+    op_.initialize(mo_symmetry_);
     startup();
 }
 
@@ -639,7 +642,7 @@ double AdaptiveCI::compute_energy() {
         PQ_evals = energies;
     }
 
-    WFNOperator op_c(mo_space_info_);
+    WFNOperator op_c(mo_symmetry_);
     if (ex_alg_ == "ROOT_COMBINE") {
         outfile->Printf("\n\n  ==> Diagonalizing Final Space <==");
         dim = full_space.size();
@@ -731,6 +734,11 @@ double AdaptiveCI::compute_energy() {
            fci_ints_->scalar_energy();
 }
 
+DeterminantMap AdaptiveCI::get_wavefunction()
+{
+    return final_wfn_;
+}
+
 void AdaptiveCI::print_final(DeterminantMap& dets, SharedMatrix& PQ_evecs,
                              SharedVector& PQ_evals) {
     size_t dim = dets.size();
@@ -784,12 +792,9 @@ void AdaptiveCI::print_final(DeterminantMap& dets, SharedMatrix& PQ_evecs,
 
         print_wfn(dets, PQ_evecs, nroot_);
 
-        //    outfile->Printf("\n\n     Order		 # of Dets        Total
-        //    |c^2|
-        //    ");
-        //    outfile->Printf(  "\n  __________ 	____________
-        //    ________________ ");
-        //    wfn_analyzer(dets, PQ_evecs, nroot_);
+            outfile->Printf("\n\n     Order		 # of Dets        Total |c^2|");
+            outfile->Printf(  "\n  __________ 	____________    ________________ ");
+            wfn_analyzer(dets, PQ_evecs, nroot_);
     }
 
     //   if(options_.get_bool("DETERMINANT_HISTORY")){
@@ -1529,7 +1534,7 @@ bool AdaptiveCI::check_stuck(std::vector<std::vector<double>>& energy_history,
 
 std::vector<std::pair<double, double>>
 AdaptiveCI::compute_spin(DeterminantMap& space, SharedMatrix evecs, int nroot) {
-    WFNOperator op(mo_space_info_);
+    WFNOperator op(mo_symmetry_);
 
     op.op_lists(space);
     op.tp_lists(space);
@@ -1557,14 +1562,14 @@ void AdaptiveCI::wfn_analyzer(DeterminantMap& det_space, SharedMatrix evecs,
         occ[nact_ + std::get<2>(labeled_orb_en[i])] = 1;
     }
 
-    // bool print_final_wfn = options_.get_bool("SAVE_FINAL_WFN");
+     bool print_final_wfn = options_.get_bool("SAVE_FINAL_WFN");
 
-    // std::ofstream final_wfn;
-    // if( print_final_wfn ){
-    //     final_wfn.open("final_wfn_"+ std::to_string(root_) +  ".txt");
-    //     final_wfn << det_space.size() << "  " << nact_ << "  " << nalpha_ <<
-    //     "  " << nbeta_ << endl;
-    // }
+     std::ofstream final_wfn;
+     if( print_final_wfn ){
+         final_wfn.open("final_wfn_"+ std::to_string(root_) +  ".txt");
+         final_wfn << det_space.size() << "  " << nact_ << "  " << nalpha_ <<
+         "  " << nbeta_ << endl;
+     }
 
     STLBitsetDeterminant rdet(occ);
     auto ref_bits = rdet.bits();
@@ -1594,25 +1599,24 @@ void AdaptiveCI::wfn_analyzer(DeterminantMap& det_space, SharedMatrix evecs,
                 std::make_pair(excitation_counter[ndiff].first + 1,
                                excitation_counter[ndiff].second + coeff);
 
-            //         if( print_final_wfn and (n == ref_root_) ){
+            if( print_final_wfn and (n == root_) ){
 
-            //             auto abits =
-            //             det_space[I].get_alfa_bits_vector_bool();
-            //             auto bbits =
-            //             det_space[I].get_beta_bits_vector_bool();
+                auto abits =
+                it->first.get_alfa_bits_vector_bool();
+                auto bbits =
+                it->first.get_beta_bits_vector_bool();
 
-            //             final_wfn << std::setw(18) << std::setprecision(12)
-            //             <<  evecs->get(I,n) << "  ";// <<  abits << "  " <<
-            //             bbits << det_space[I].str().c_str() << endl;
-            //             for( size_t i = 0; i < nact_; ++i ){
-            //                 final_wfn << abits[i];
-            //             }
-            //             final_wfn << "   ";
-            //             for( size_t i = 0; i < nact_; ++i ){
-            //                 final_wfn << bbits[i];
-            //             }
-            //             final_wfn << endl;
-            //         }
+                final_wfn << std::setw(18) << std::setprecision(12)
+                <<  evecs->get(it->second,n) << "  ";// <<  abits << "  " << bbits << it->first.str().c_str() << endl;
+                for( size_t i = 0; i < nact_; ++i ){
+                    final_wfn << abits[i];
+                }
+                final_wfn << "   ";
+                for( size_t i = 0; i < nact_; ++i ){
+                    final_wfn << bbits[i];
+                }
+                final_wfn << endl;
+            }
         }
         int order = 0;
         size_t det = 0;

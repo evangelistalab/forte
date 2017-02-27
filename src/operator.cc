@@ -31,16 +31,15 @@
 namespace psi {
 namespace forte {
 
-WFNOperator::WFNOperator(std::shared_ptr<MOSpaceInfo> mo_space_info)
-    : mo_space_info_(mo_space_info) {
-    mo_symmetry_ = mo_space_info_->symmetry("ACTIVE");
+WFNOperator::WFNOperator(std::vector<int> symmetry)
+{
+    mo_symmetry_ = symmetry;
 }
 
 WFNOperator::WFNOperator() {}
 
-void WFNOperator::initialize(std::shared_ptr<MOSpaceInfo>& mo_space_info) {
-    mo_space_info_ = mo_space_info;
-    mo_symmetry_ = mo_space_info_->symmetry("ACTIVE");
+void WFNOperator::initialize(std::vector<int>& symmetry) {
+    mo_symmetry_ = symmetry;
 }
 
 double WFNOperator::s2(DeterminantMap& wfn, SharedMatrix& evecs, int root) {
@@ -91,6 +90,7 @@ double WFNOperator::s2(DeterminantMap& wfn, SharedMatrix& evecs, int root) {
 void WFNOperator::add_singles(DeterminantMap& wfn) {
     det_hash<size_t>& wfn_map = wfn.wfn_hash();
 
+    DeterminantMap external;
     // Loop through determinants, generate singles and add them to the wfn
     // Alpha excitations
     for (auto& I : wfn_map) {
@@ -103,11 +103,10 @@ void WFNOperator::add_singles(DeterminantMap& wfn) {
             for (int a = 0, nvalpha = avir.size(); a < nvalpha; ++a) {
                 int aa = avir[a];
                 if ((mo_symmetry_[ii] ^ mo_symmetry_[aa]) == 0) {
-                    det.set_alfa_bit(ii, false);
-                    det.set_alfa_bit(aa, true);
-                    wfn.add(det);
-                    det.set_alfa_bit(ii, true);
-                    det.set_alfa_bit(aa, false);
+                    auto new_det = det;
+                    new_det.set_alfa_bit(ii, false);
+                    new_det.set_alfa_bit(aa, true);
+                    external.add(det);
                 }
             }
         }
@@ -126,17 +125,20 @@ void WFNOperator::add_singles(DeterminantMap& wfn) {
                 if ((mo_symmetry_[ii] ^ mo_symmetry_[aa]) == 0) {
                     det.set_beta_bit(ii, false);
                     det.set_beta_bit(aa, true);
-                    wfn.add(det);
+                    external.add(det);
                     det.set_beta_bit(ii, true);
                     det.set_beta_bit(aa, false);
                 }
             }
         }
     }
+    wfn.merge(external);
 }
 
 void WFNOperator::add_doubles(DeterminantMap& wfn) {
     const det_hash<size_t>& wfn_map = wfn.wfn_hash();
+
+    DeterminantMap external;    
 
     for (auto& I : wfn_map) {
         STLBitsetDeterminant det = I.first;
@@ -165,7 +167,7 @@ void WFNOperator::add_doubles(DeterminantMap& wfn) {
                             det.set_alfa_bit(jj, false);
                             det.set_alfa_bit(aa, true);
                             det.set_alfa_bit(bb, true);
-                            wfn.add(det);
+                            external.add(det);
                             det.set_alfa_bit(aa, false);
                             det.set_alfa_bit(bb, false);
                             det.set_alfa_bit(ii, true);
@@ -191,7 +193,7 @@ void WFNOperator::add_doubles(DeterminantMap& wfn) {
                             det.set_beta_bit(jj, false);
                             det.set_beta_bit(aa, true);
                             det.set_beta_bit(bb, true);
-                            wfn.add(det);
+                            external.add(det);
                             det.set_beta_bit(aa, false);
                             det.set_beta_bit(bb, false);
                             det.set_beta_bit(ii, true);
@@ -217,7 +219,7 @@ void WFNOperator::add_doubles(DeterminantMap& wfn) {
                             det.set_beta_bit(jj, false);
                             det.set_alfa_bit(aa, true);
                             det.set_beta_bit(bb, true);
-                            wfn.add(det);
+                            external.add(det);
                             det.set_alfa_bit(aa, false);
                             det.set_beta_bit(bb, false);
                             det.set_alfa_bit(ii, true);
@@ -228,6 +230,7 @@ void WFNOperator::add_doubles(DeterminantMap& wfn) {
             }
         }
     }
+    wfn.merge(external);
 }
 
 void WFNOperator::op_lists(DeterminantMap& wfn) {
