@@ -34,7 +34,7 @@
 /// All blockedTensor functions with strings should be placed here
 /// Creates MO SPACES
 #include "ambit/blocked_tensor.h"
-#include "integrals.h"
+#include "integrals/integrals.h"
 #include <vector>
 #include <tuple>
 

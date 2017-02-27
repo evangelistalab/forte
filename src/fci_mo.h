@@ -46,11 +46,11 @@
 #include "psi4/libmints/integral.h"
 #include "psi4/libmints/sointegral_onebody.h"
 #include "psi4/libmints/mintshelper.h"
+#include "ambit/tensor.h"
 
-#include "integrals.h"
+#include "integrals/integrals.h"
 #include "stl_bitset_determinant.h"
 #include "sparse_ci_solver.h"
-#include "ambit/tensor.h"
 #include "reference.h"
 #include "helpers.h"
 #include "ci_rdms.h"

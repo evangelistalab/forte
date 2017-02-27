@@ -33,7 +33,7 @@
 #include "psi4/libmints/wavefunction.h"
 #include "psi4/libfock/jk.h"
 
-#include "integrals.h"
+#include "integrals/integrals.h"
 #include "ambit/blocked_tensor.h"
 #include "reference.h"
 #include "helpers.h"

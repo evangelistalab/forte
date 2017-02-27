@@ -31,16 +31,15 @@ set {
 set forte {
   job_type = aci
   multiplicity 1
-  perturb_select false
-  SELECT_TYPE aimed_energy
+  aci_SELECT_TYPE aimed_energy
 #  DIAG_ALGORITHM dlstring
   frozen_docc [1,0,0,0,0,1,0,0]
   sigma 0.05
-  nroot 3
+  aci_nroot 3
   charge 0
-  enforce_spin_complete true
-  n_average 3
-  average_offset 0
+  aci_enforce_spin_complete true
+  aci_n_average 3
+  aci_average_offset 0
 }
 
 energy('scf')

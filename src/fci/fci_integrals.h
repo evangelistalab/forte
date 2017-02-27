@@ -32,7 +32,7 @@
 //#include <vector>
 
 //#include "psi4/libmints/matrix.h"
-#include "../integrals.h"
+#include "../integrals/integrals.h"
 //#include "string_lists.h"
 
 namespace psi {
