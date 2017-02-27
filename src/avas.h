@@ -33,8 +33,12 @@
 #include "psi4/libmints/wavefunction.h"
 #include "psi4/liboptions/liboptions.h"
 
+#include "forte_options.h"
+
 namespace psi {
 namespace forte {
+
+void set_AVAS_options(ForteOptions& foptions);
 
 void make_avas(SharedWavefunction ref_wfn, Options& options, SharedMatrix Ps);
 
