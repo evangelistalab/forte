@@ -28,6 +28,7 @@
 
 #include "forte_options.h"
 #include "fci/fci.h"
+#include "avas.h"
 
 namespace psi { namespace forte {
 
@@ -37,6 +38,7 @@ void forte_options(std::string name, ForteOptions& foptions) {
     // set_ACI_options(foptions);
     // set_PCI_options(foptions);
     // ..
+    set_AVAS_options(foptions);
 
     foptions.add_str("MINAO_BASIS", "STO-3G",
                      "The basis used to define an orbital subspace");
