@@ -1,11 +1,19 @@
 #include "psi4/liboptions/liboptions.h"
 
 #include "fci/fci.h"
+#include "aci/aci.h"
+#include "pci/pci.h"
+#include "integrals/integrals.h"
 
 namespace psi {
 namespace forte {
 
 void forte_old_options(Options& options) {
+
+    set_FCI_options(options);
+    set_ACI_options(options);
+    set_INT_options(options);
+    set_PCI_options(options);
 
     /*- MODULEDESCRIPTION Forte */
 
@@ -35,26 +43,6 @@ void forte_old_options(Options& options) {
     options.add_int("PRINT", 0);
     /*- Print summary of memory -*/
     options.add_bool("MEMORY_SUMMARY", false);
-
-    /*- The algorithm used to screen the determinant
-     *  - CONVENTIONAL Conventional two-electron integrals
-     *  - DF Density fitted two-electron integrals
-     *  - CHOLESKY Cholesky decomposed two-electron integrals -*/
-    options.add_str("INT_TYPE", "CONVENTIONAL",
-                    "CONVENTIONAL DF CHOLESKY DISKDF DISTDF ALL EFFECTIVE "
-                    "OWNINTEGRALS");
-
-    /*- The damping factor in the erf(x omega)/x integrals -*/
-    options.add_double("EFFECTIVE_COULOMB_OMEGA", 1.0);
-    /*- The coefficient of the effective Coulomb interaction -*/
-    options.add_double("EFFECTIVE_COULOMB_FACTOR", 1.0);
-    options.add_double("EFFECTIVE_COULOMB_EXPONENT", 1.0);
-
-    /*- The screening for JK builds and DF libraries -*/
-    options.add_double("INTEGRAL_SCREENING", 1e-12);
-
-    /* - The tolerance for cholesky integrals */
-    options.add_double("CHOLESKY_TOLERANCE", 1e-6);
 
     /*- The job type
      *  - FCI Full configuration interaction (Francesco's code)
@@ -152,8 +140,8 @@ void forte_old_options(Options& options) {
      *  - FIXED diagonalizes a matrix of fixed dimension
      *  - SMOOTH forms a matrix with smoothed matrix elements -*/
 
-    options.add_int("IMRCISD_TEST_SIZE", 0);
-    options.add_int("IMRCISD_SIZE", 0);
+//    options.add_int("IMRCISD_TEST_SIZE", 0);
+//    options.add_int("IMRCISD_SIZE", 0);
 
     /*- The number of determinants used to build the Hamiltonian -*/
     options.add_int("NDETS", 100);
@@ -198,6 +186,9 @@ void forte_old_options(Options& options) {
 
     /*- Force the diagonalization procedure?  -*/
     options.add_bool("FORCE_DIAG_METHOD", false);
+
+    /*- The energy convergence criterion -*/
+    options.add_double("E_CONVERGENCE", 1.0e-8);
 
     /*- The number of roots computed -*/
     options.add_int("NROOT", 1);
@@ -420,159 +411,7 @@ void forte_old_options(Options& options) {
     /*- Use the older DMRGSCF algorithm -*/
     options.add_bool("USE_DMRGSCF", false);
 
-    //////////////////////////////////////////////////////////////
-    ///         OPTIONS FOR THE ADAPTIVE CI
-    //////////////////////////////////////////////////////////////
 
-    /* Convergence Threshold -*/
-    options.add_double("ACI_CONVERGENCE", 1e-9);
-
-    /*- The selection type for the Q-space-*/
-    options.add_str("SELECT_TYPE", "AIMED_ENERGY",
-                    "ENERGY AMP AIMED_AMP AIMED_ENERGY");
-    /*-Threshold for the selection of the P space -*/
-    options.add_double("SIGMA", 0.01);
-    /*- The threshold for the selection of the Q space -*/
-    options.add_double("GAMMA", 1.0);
-    /*- The SD-space prescreening threshold -*/
-    options.add_double("PRESCREEN_THRESHOLD", 1e-9);
-    /*- The type of selection parameters to use*/
-    options.add_bool("PERTURB_SELECT", false);
-    /*Function of q-space criteria, per root*/
-    options.add_str("PQ_FUNCTION", "AVERAGE", "MAX");
-    /*Type of  q-space criteria to use (only change for excited states)*/
-    options.add_bool("Q_REL", false);
-    /*Reference to be used in calculating ∆e (q_rel has to be true)*/
-    options.add_str("Q_REFERENCE", "GS", "ADJACENT");
-    /* Method to calculate excited state */
-    options.add_str("EXCITED_ALGORITHM", "AVERAGE",
-                    "ROOT_SELECT AVERAGE COMPOSITE ROOT_COMBINE "
-                    "ROOT_ORTHOGONALIZE MULTISTATE");
-    /*Number of roots to compute on final re-diagonalization*/
-    options.add_int("POST_ROOT", 1);
-    /*Diagonalize after ACI procedure with higher number of roots*/
-    options.add_bool("POST_DIAGONALIZE", false);
-    /*Threshold value for defining multiplicity from S^2*/
-    options.add_double("SPIN_TOL", 0.01);
-    /*- Compute 1-RDM? -*/
-    options.add_int("ACI_MAX_RDM", 1);
-    /*- Type of spin projection
-     * 0 - None
-     * 1 - Project initial P spaces at each iteration
-     * 2 - Project only after converged PQ space
-     * 3 - Do 1 and 2 -*/
-    options.add_int("SPIN_PROJECTION", 0);
-    /*- Add determinants to enforce spin-complete set? -*/
-    options.add_bool("ENFORCE_SPIN_COMPLETE", true);
-    /*- Project out spin contaminants in Davidson-Liu's algorithm? -*/
-    options.add_bool("PROJECT_OUT_SPIN_CONTAMINANTS", true);
-    /*- Add "degenerate" determinants not included in the aimed selection?
-     * -*/
-    options.add_bool("ACI_ADD_AIMED_DEGENERATE", true);
-
-    /*- Print an analysis of determinant history? -*/
-    options.add_bool("DETERMINANT_HISTORY", false);
-    /*- Save determinants to file? -*/
-    options.add_bool("SAVE_DET_FILE", false);
-    /*- Screen Virtuals? -*/
-    options.add_bool("SCREEN_VIRTUALS", false);
-    /*- Perform size extensivity correction -*/
-    options.add_str("SIZE_CORRECTION", "", "DAVIDSON");
-    /*- Sets the maximum cycle -*/
-    options.add_int("MAX_ACI_CYCLE", 20);
-    /*- Control print level -*/
-    options.add_bool("QUIET_MODE", false);
-    /*- Control streamlining -*/
-    options.add_bool("STREAMLINE_Q", false);
-    /*- Initial reference wavefunction -*/
-    options.add_str("ACI_INITIAL_SPACE", "SR", "SR CIS CISD CID");
-    /*- Number of iterations to run SA-ACI before SS-ACI -*/
-    options.add_int("ACI_PREITERATIONS", 0);
-    /*- Number of roots to average -*/
-    options.add_int("N_AVERAGE", 1);
-    /*- Offset for state averaging -*/
-    options.add_int("AVERAGE_OFFSET", 0);
-    /*- Print final wavefunction to file? -*/
-    options.add_bool("SAVE_FINAL_WFN", false);
-    /*- Print the P space? -*/
-    options.add_bool("PRINT_REFS", false);
-    /*- Set the initial guess space size for DL solver -*/
-    options.add_int("DL_GUESS_SIZE", 100);
-    /*- Number of guess vectors for Sparse CI solver -*/
-    options.add_int("N_GUESS_VEC", 10);
-    options.add_double("NO_THRESHOLD", 0.02);
-
-    /*- Approximate 1RDM? -*/
-    options.add_bool("APPROXIMATE_RDM", false);
-
-    /*- Do compute nroots on first cycle? -*/
-    options.add_bool("FIRST_ITER_ROOTS", false);
-    options.add_bool("PRINT_WEIGHTS", false);
-
-    //////////////////////////////////////////////////////////////
-    ///         OPTIONS FOR THE PROJECTOR CI
-    //////////////////////////////////////////////////////////////
-    /*- The propagation algorithm -*/
-    options.add_str("GENERATOR", "WALL-CHEBYSHEV",
-                    "LINEAR QUADRATIC CUBIC QUARTIC POWER TROTTER OLSEN "
-                    "DAVIDSON MITRUSHENKOV EXP-CHEBYSHEV WALL-CHEBYSHEV "
-                    "CHEBYSHEV LANCZOS DL");
-    /*- The determinant importance threshold -*/
-    options.add_double("SPAWNING_THRESHOLD", 0.001);
-    /*- The maximum number of determinants used to form the guess wave
-     * function -*/
-    options.add_double("MAX_GUESS_SIZE", 10000);
-    /*- The determinant importance threshold -*/
-    options.add_double("GUESS_SPAWNING_THRESHOLD", -1);
-    /*- The threshold with which we estimate the variational energy.
-        Note that the final energy is always estimated exactly. -*/
-    options.add_double("ENERGY_ESTIMATE_THRESHOLD", 1.0e-6);
-    /*- The time step in imaginary time (a.u.) -*/
-    options.add_double("TAU", 1.0);
-    /*- The energy convergence criterion -*/
-    options.add_double("E_CONVERGENCE", 1.0e-8);
-    /*- Use a fast (sparse) estimate of the energy -*/
-    options.add_bool("FAST_EVAR", false);
-    /*- Iterations in between variational estimation of the energy -*/
-    options.add_int("ENERGY_ESTIMATE_FREQ", 1);
-    /*- Use an adaptive time step? -*/
-    options.add_bool("ADAPTIVE_BETA", false);
-    /*- Use intermediate normalization -*/
-    options.add_bool("USE_INTER_NORM", false);
-    /*- Use a shift in the exponential -*/
-    options.add_bool("USE_SHIFT", false);
-    /*- Estimate variational energy during calculation -*/
-    options.add_bool("VAR_ESTIMATE", false);
-    /*- Print full wavefunction when finish -*/
-    options.add_bool("PRINT_FULL_WAVEFUNCTION", false);
-    /*- Prescreen the spawning of excitations -*/
-    options.add_bool("SIMPLE_PRESCREENING", false);
-    /*- Use dynamic prescreening -*/
-    options.add_bool("DYNAMIC_PRESCREENING", false);
-    /*- Use schwarz prescreening -*/
-    options.add_bool("SCHWARZ_PRESCREENING", false);
-    /*- Use initiator approximation -*/
-    options.add_bool("INITIATOR_APPROX", false);
-    /*- The initiator approximation factor -*/
-    options.add_double("INITIATOR_APPROX_FACTOR", 1.0);
-    /*- Do result perturbation analysis -*/
-    options.add_bool("PERTURB_ANALYSIS", false);
-    /*- Use Symmetric Approximate Hamiltonian -*/
-    options.add_bool("SYMM_APPROX_H", false);
-    /*- Stop iteration when higher new low detected -*/
-    options.add_bool("STOP_HIGHER_NEW_LOW", false);
-    /*- The maximum value of beta -*/
-    options.add_double("MAXBETA", 1000.0);
-    /*- The maximum value of Davidson generator iteration -*/
-    options.add_int("MAX_DAVIDSON_ITER", 12);
-    /*- The order of Chebyshev truncation -*/
-    options.add_int("CHEBYSHEV_ORDER", 5);
-    /*- The order of Krylov truncation -*/
-    options.add_int("KRYLOV_ORDER", 5);
-    /*- The minimum norm of orthogonal vector -*/
-    options.add_double("COLINEAR_THRESHOLD", 1.0e-6);
-    /*- Do spawning according to reference -*/
-    options.add_bool("REFERENCE_SPAWNING", false);
 
     //////////////////////////////////////////////////////////////
     ///         OPTIONS FOR THE FULL CI QUANTUM MONTE-CARLO

@@ -39,11 +39,12 @@ set forte {
    active                 [5,0,1,2]
    root_sym                0
    nroot                   1
+   aci_nroot                   1
    dsrg_s                  1.0
    int_type                df
    job_type                three-dsrg-mrpt2
    cas_type                ACI
-   select_type             amp
+   aci_select_type             amp
    sigma					   0.001
 }
 

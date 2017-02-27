@@ -24,6 +24,7 @@ Makefile
 /tests/*/timer.dat
 /tests/methods/*/timer.dat
 /tests/methods/*/*.txt
+/tests/methods/*/*.npz
 
 doc/doxygen/html
 doc/doxygen/latex

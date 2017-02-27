@@ -27,13 +27,13 @@ set {
 
 set forte {
   job_type aci
-  SELECT_TYPE aimed_energy
+  aci_SELECT_TYPE aimed_energy
   sigma 0.001000
-  nroot 1
+  aci_nroot 1
   charge 0
   aci_add_aimed_degenerate false
-  project_out_spin_contaminants false
-  enforce_spin_complete false
+  aci_project_out_spin_contaminants false
+  aci_enforce_spin_complete false
   diag_algorithm full
 }
 

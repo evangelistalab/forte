@@ -37,7 +37,7 @@
 #include "forte-def.h"
 #include "iterative_solvers.h"
 #include "sparse_ci_solver.h"
-#include "fci/fci_vector.h"
+//#include "fci/fci_vector.h"
 
 struct PairHash {
     size_t operator()(const std::pair<size_t, size_t>& p) const {
@@ -55,6 +55,20 @@ namespace forte {
 #define omp_get_thread_num() 0
 #define omp_get_num_threads() 1
 #endif
+
+#ifdef HAVE_MPI
+SigmaVectorMPI::SigmaVectorMPI( const DeterminantMap& space, WFNOperator& op)
+    : SigmaVector(space.size()), space_(space) {
+
+}
+
+void SigmaVectorMPI::compute_sigma( SharedVector sigma, SharedVector b)
+{
+    
+}
+
+#endif
+
 
 SigmaVectorWfn::SigmaVectorWfn(const DeterminantMap& space, WFNOperator& op)
     : SigmaVector(space.size()), space_(space), a_ann_list_(op.a_ann_list_),

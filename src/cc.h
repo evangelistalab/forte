@@ -38,11 +38,11 @@
 #include "psi4/libpsio/psio.h"
 #include "ambit/blocked_tensor.h"
 
-#include "integrals.h"
+#include "integrals/integrals.h"
 #include "reference.h"
 #include "blockedtensorfactory.h"
-#include "dsrg_source.h"
-#include "dsrg_time.h"
+#include "./mrdsrg-helper/dsrg_source.h"
+#include "./mrdsrg-helper/dsrg_time.h"
 #include "stl_bitset_determinant.h"
 
 using namespace ambit;

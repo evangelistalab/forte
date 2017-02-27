@@ -58,7 +58,7 @@
 #include "ambit/blocked_tensor.h"
 #include "dmrgscf.h"
 #include "helpers.h"
-#include "integrals.h"
+#include "integrals/integrals.h"
 
 using namespace std;
 
