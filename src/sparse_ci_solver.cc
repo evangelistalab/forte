@@ -124,7 +124,7 @@ SigmaVectorString::SigmaVectorString(
     std::vector<std::vector<size_t>> alfa_to_det;
     std::vector<std::vector<size_t>> beta_to_det;
 
-    std::vector<std::vector<std::pair<size_t, short>>> a_str_list(max_I * 10);
+    std::vector<std::vector<std::pair<size_t, short>>> a_str_list(max_I * noalfa_);
     // Fill maps and list
     det_hash a_ann;
     size_t nadd = 0;
@@ -561,76 +561,6 @@ SigmaVectorString::SigmaVectorString(
     outfile->Printf("\n  Time spent building doubles lists:   %7.6f s \n",
                     doubles.get());
     outfile->Flush();
-}
-
-/*  Single/double creation/annihilaton are labeled as follows
- *  a_ann_list:  0
- *  b_ann_list:  1
- *
- *  a_cre_list:  2
- *  b_cre_list:  3
- *
- *  aa_ann_list: 4
- *  bb_ann_list: 5
- *  ab_ann_list: 6
- *
- *  aa_cre_list: 7
- *  bb_cre_list: 8
- *  ab_cre_list: 9
- */
-
-void SigmaVectorString::write_single_to_disk(
-    std::vector<std::vector<std::pair<size_t, short>>>& s_list, int i) {
-    size_t dim = s_list.size();
-    std::string path = PSIOManager::shared_object()->get_default_path();
-
-    FILE* fh = fopen(
-        (path + "forte.slist." + std::to_string(i) + ".bin").c_str(), "w+");
-
-    if (s_list.size() > 0) {
-        fwrite(&s_list[0], sizeof(std::pair<size_t, short>), dim, fh);
-    }
-    fclose(fh);
-}
-
-void SigmaVectorString::write_double_to_disk(
-    std::vector<std::vector<std::tuple<size_t, short, short>>>& d_list, int i) {
-    size_t dim = d_list.size();
-    std::string path = PSIOManager::shared_object()->get_default_path();
-    FILE* fh = fopen(
-        (path + "forte.dlist." + std::to_string(i) + ".bin").c_str(), "w+");
-
-    if (d_list.size() > 0) {
-        fwrite(&d_list[0], sizeof(std::tuple<size_t, short, short>), dim, fh);
-    }
-
-    fclose(fh);
-}
-
-void SigmaVectorString::read_single_from_disk(
-    std::vector<std::vector<std::pair<size_t, short>>>& s_list, int i) {
-    size_t size = s_list.size();
-    std::string path = PSIOManager::shared_object()->get_default_path();
-    FILE* fh = fopen(
-        (path + "forte.slist." + std::to_string(i) + ".bin").c_str(), "r");
-
-    fseek(fh, 0, SEEK_SET);
-    fread(&(s_list)[0], sizeof(std::pair<size_t, short>), size, fh);
-
-    fclose(fh);
-}
-
-void SigmaVectorString::read_double_from_disk(
-    std::vector<std::vector<std::tuple<size_t, short, short>>>& d_list, int i) {
-    size_t maxI = d_list.size();
-    std::string path = PSIOManager::shared_object()->get_default_path();
-    FILE* fh = fopen(
-        (path + "forte.dlist." + std::to_string(i) + ".bin").c_str(), "r");
-
-    fseek(fh, 0, SEEK_SET);
-    fread(&(d_list)[0], sizeof(std::tuple<size_t, short, short>), maxI, fh);
-
-    fclose(fh);
 }
 
 void SigmaVectorString::compute_sigma(Matrix&, Matrix&, int) {
