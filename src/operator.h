@@ -45,13 +45,13 @@ using wfn_hash = det_hash<double>;
 class WFNOperator {
   public:
     /// Default constructor
-    WFNOperator(std::shared_ptr<MOSpaceInfo> mo_space_info);
+    WFNOperator(std::vector<int> symmetry);
 
     /// Empty constructor
     WFNOperator();
 
     /// Initializer
-    void initialize(std::shared_ptr<MOSpaceInfo>& mo_space_info);
+    void initialize(std::vector<int>& symmetry);
 
     /// Build the coupling lists for one-particle operators
     void op_lists(DeterminantMap& wfn);
@@ -118,9 +118,6 @@ class WFNOperator {
   protected:
     /// Initialize important variables on construction
     void startup();
-
-    /// The MOSpaceInfo object
-    std::shared_ptr<MOSpaceInfo> mo_space_info_;
 
     /// Active space symmetry
     std::vector<int> mo_symmetry_;
