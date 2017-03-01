@@ -26,21 +26,21 @@
  * @END LICENSE
  */
 
+#include <algorithm>
 #include <cmath>
 #include <functional>
-#include <algorithm>
 #include <unordered_map>
 
 #include "../mini-boost/boost/format.hpp"
 #include "../mini-boost/boost/math/special_functions/bessel.hpp"
 
 #include "psi4/libciomr/libciomr.h"
+#include "psi4/libmints/matrix.h"
+#include "psi4/libmints/molecule.h"
+#include "psi4/libmints/vector.h"
 #include "psi4/libpsio/psio.h"
 #include "psi4/libpsio/psio.hpp"
 #include "psi4/libqt/qt.h"
-#include "psi4/libmints/molecule.h"
-#include "psi4/libmints/matrix.h"
-#include "psi4/libmints/vector.h"
 
 #include "pci.h"
 
@@ -61,81 +61,114 @@ bool ProjectorCI::have_omp_ = true;
 #define omp_get_thread_num() 0
 bool ProjectorCI::have_omp_ = false;
 #endif
-
-void set_PCI_options(Options& options)
-{
+/// Set the forte style options for the FCI method
+void set_PCI_options(ForteOptions& foptions) {
     //////////////////////////////////////////////////////////////
     ///         OPTIONS FOR THE PROJECTOR CI
     //////////////////////////////////////////////////////////////
+
+    foptions.add_int("PCI_NROOT", 1, "The number of roots computed");
+
+    foptions.add_double("PCI_SPAWNING_THRESHOLD", 0.001,
+                        "The determinant importance threshold");
+
+    foptions.add_double("PCI_MAX_GUESS_SIZE", 10000,
+                        "The maximum number of determinants used to form the "
+                        "guess wave function");
+
+    foptions.add_double("PCI_GUESS_SPAWNING_THRESHOLD", -1,
+                        "The determinant importance threshold");
+
+    foptions.add_double("PCI_ENERGY_ESTIMATE_THRESHOLD", 1.0e-6,
+                        "The threshold with which we estimate the variational "
+                        "energy. Note that the final energy is always "
+                        "estimated exactly.");
+
+    foptions.add_double("PCI_TAU", 1.0,
+                        "The time step in imaginary time (a.u.)");
+
+    foptions.add_double("PCI_E_CONVERGENCE", 1.0e-8,
+                        "The energy convergence criterion");
+
+    foptions.add_bool("PCI_FAST_EVAR", false,
+                      "Use a fast (sparse) estimate of the energy");
+
+    foptions.add_int(
+        "PCI_ENERGY_ESTIMATE_FREQ", 1,
+        "Iterations in between variational estimation of the energy");
+
+    foptions.add_bool("PCI_ADAPTIVE_BETA", false, "Use an adaptive time step?");
+
+    foptions.add_bool("PCI_USE_INTER_NORM", false,
+                      "Use intermediate normalization");
+
+    foptions.add_bool("PCI_USE_SHIFT", false, "Use a shift in the exponential");
+
+    foptions.add_bool("PCI_VAR_ESTIMATE", false,
+                      "Estimate variational energy during calculation");
+
+    foptions.add_bool("PCI_PRINT_FULL_WAVEFUNCTION", false,
+                      "Print full wavefunction when finish");
+
+    foptions.add_bool("PCI_SIMPLE_PRESCREENING", false,
+                      "Prescreen the spawning of excitations");
+
+    foptions.add_bool("PCI_DYNAMIC_PRESCREENING", false,
+                      "Use dynamic prescreening");
+
+    foptions.add_bool("PCI_SCHWARZ_PRESCREENING", false,
+                      "Use schwarz prescreening");
+
+    foptions.add_bool("PCI_INITIATOR_APPROX", false,
+                      "Use initiator approximation");
+
+    foptions.add_double("PCI_INITIATOR_APPROX_FACTOR", 1.0,
+                        "The initiator approximation factor");
+
+    foptions.add_bool("PCI_PERTURB_ANALYSIS", false,
+                      "Do result perturbation analysis");
+
+    foptions.add_bool("PCI_SYMM_APPROX_H", false,
+                      "Use Symmetric Approximate Hamiltonian");
+
+    foptions.add_bool("PCI_STOP_HIGHER_NEW_LOW", false,
+                      "Stop iteration when higher new low detected");
+
+    foptions.add_double("PCI_MAXBETA", 1000.0, "The maximum value of beta");
+
+    foptions.add_int("PCI_MAX_DAVIDSON_ITER", 12,
+                     "The maximum value of Davidson generator iteration");
+
+    foptions.add_int(
+        "PCI_DL_COLLAPSE_PER_ROOT", 2,
+        "The number of trial vector to retain after Davidson-Liu collapsing");
+
+    foptions.add_int("PCI_DL_SUBSPACE_PER_ROOT", 8,
+                     "The maxim number of trial Davidson-Liu vectors");
+
+    foptions.add_int("PCI_CHEBYSHEV_ORDER", 5,
+                     "The order of Chebyshev truncation");
+
+    foptions.add_int("PCI_KRYLOV_ORDER", 5, "The order of Krylov truncation");
+
+    foptions.add_double("PCI_COLINEAR_THRESHOLD", 1.0e-6,
+                        "The minimum norm of orthogonal vector");
+
+    foptions.add_bool("PCI_REFERENCE_SPAWNING", false,
+                      "Do spawning according to reference");
+
+    foptions.add_bool("PCI_POST_DIAGONALIZE", false,
+                      "Do a post diagonalization?");
+}
+
+/// Set the old style options for the PCI method
+void set_PCI_options(Options& options) {
+
     /*- The propagation algorithm -*/
     options.add_str("PCI_GENERATOR", "WALL-CHEBYSHEV",
                     "LINEAR QUADRATIC CUBIC QUARTIC POWER TROTTER OLSEN "
                     "DAVIDSON MITRUSHENKOV EXP-CHEBYSHEV WALL-CHEBYSHEV "
                     "CHEBYSHEV LANCZOS DL");
-    /*- The number of roots computed -*/
-    options.add_int("PCI_NROOT", 1);
-    /*- The determinant importance threshold -*/
-    options.add_double("PCI_SPAWNING_THRESHOLD", 0.001);
-    /*- The maximum number of determinants used to form the guess wave
-     * function -*/
-    options.add_double("PCI_MAX_GUESS_SIZE", 10000);
-    /*- The determinant importance threshold -*/
-    options.add_double("PCI_GUESS_SPAWNING_THRESHOLD", -1);
-    /*- The threshold with which we estimate the variational energy.
-        Note that the final energy is always estimated exactly. -*/
-    options.add_double("PCI_ENERGY_ESTIMATE_THRESHOLD", 1.0e-6);
-    /*- The time step in imaginary time (a.u.) -*/
-    options.add_double("PCI_TAU", 1.0);
-    /*- The energy convergence criterion -*/
-    options.add_double("PCI_E_CONVERGENCE", 1.0e-8);
-    /*- Use a fast (sparse) estimate of the energy -*/
-    options.add_bool("PCI_FAST_EVAR", false);
-    /*- Iterations in between variational estimation of the energy -*/
-    options.add_int("PCI_ENERGY_ESTIMATE_FREQ", 1);
-    /*- Use an adaptive time step? -*/
-    options.add_bool("PCI_ADAPTIVE_BETA", false);
-    /*- Use intermediate normalization -*/
-    options.add_bool("PCI_USE_INTER_NORM", false);
-    /*- Use a shift in the exponential -*/
-    options.add_bool("PCI_USE_SHIFT", false);
-    /*- Estimate variational energy during calculation -*/
-    options.add_bool("PCI_VAR_ESTIMATE", false);
-    /*- Print full wavefunction when finish -*/
-    options.add_bool("PCI_PRINT_FULL_WAVEFUNCTION", false);
-    /*- Prescreen the spawning of excitations -*/
-    options.add_bool("PCI_SIMPLE_PRESCREENING", false);
-    /*- Use dynamic prescreening -*/
-    options.add_bool("PCI_DYNAMIC_PRESCREENING", false);
-    /*- Use schwarz prescreening -*/
-    options.add_bool("PCI_SCHWARZ_PRESCREENING", false);
-    /*- Use initiator approximation -*/
-    options.add_bool("PCI_INITIATOR_APPROX", false);
-    /*- The initiator approximation factor -*/
-    options.add_double("PCI_INITIATOR_APPROX_FACTOR", 1.0);
-    /*- Do result perturbation analysis -*/
-    options.add_bool("PCI_PERTURB_ANALYSIS", false);
-    /*- Use Symmetric Approximate Hamiltonian -*/
-    options.add_bool("PCI_SYMM_APPROX_H", false);
-    /*- Stop iteration when higher new low detected -*/
-    options.add_bool("PCI_STOP_HIGHER_NEW_LOW", false);
-    /*- The maximum value of beta -*/
-    options.add_double("PCI_MAXBETA", 1000.0);
-    /*- The maximum value of Davidson generator iteration -*/
-    options.add_int("PCI_MAX_DAVIDSON_ITER", 12);
-    /*- The number of trial vector to retain after Davidson-Liu collapsing -*/
-    options.add_int("PCI_DL_COLLAPSE_PER_ROOT", 2);
-    /*- The maxim number of trial Davidson-Liu vectors -*/
-    options.add_int("PCI_DL_SUBSPACE_PER_ROOT", 8);
-    /*- The order of Chebyshev truncation -*/
-    options.add_int("PCI_CHEBYSHEV_ORDER", 5);
-    /*- The order of Krylov truncation -*/
-    options.add_int("PCI_KRYLOV_ORDER", 5);
-    /*- The minimum norm of orthogonal vector -*/
-    options.add_double("PCI_COLINEAR_THRESHOLD", 1.0e-6);
-    /*- Do spawning according to reference -*/
-    options.add_bool("PCI_REFERENCE_SPAWNING", false);
-    /*- Do a post diagonalization? -*/
-    options.add_bool("PCI_POST_DIAGONALIZE", false);
 }
 
 void combine_hashes(std::vector<det_hash<>>& thread_det_C_map,
@@ -297,14 +330,13 @@ void ProjectorCI::startup() {
     time_step_ = options_.get_double("PCI_TAU");
     maxiter_ = options_.get_int("PCI_MAXBETA") / time_step_;
     max_Davidson_iter_ = options_.get_int("PCI_MAX_DAVIDSON_ITER");
-    davidson_collapse_per_root_ =
-        options_.get_int("PCI_DL_COLLAPSE_PER_ROOT");
-    davidson_subspace_per_root_ =
-        options_.get_int("PCI_DL_SUBSPACE_PER_ROOT");
+    davidson_collapse_per_root_ = options_.get_int("PCI_DL_COLLAPSE_PER_ROOT");
+    davidson_subspace_per_root_ = options_.get_int("PCI_DL_SUBSPACE_PER_ROOT");
     e_convergence_ = options_.get_double("PCI_E_CONVERGENCE");
     energy_estimate_threshold_ =
         options_.get_double("PCI_ENERGY_ESTIMATE_THRESHOLD");
-    initiator_approx_factor_ = options_.get_double("PCI_INITIATOR_APPROX_FACTOR");
+    initiator_approx_factor_ =
+        options_.get_double("PCI_INITIATOR_APPROX_FACTOR");
     colinear_threshold_ = options_.get_double("PCI_COLINEAR_THRESHOLD");
 
     max_guess_size_ = options_.get_int("PCI_MAX_GUESS_SIZE");
@@ -1628,7 +1660,7 @@ void ProjectorCI::propagate_Lanczos(det_vec& dets, std::vector<double>& C,
     ////    S_evecs.print();
     ////    S_eigs.print();
     ////    outfile->Printf("\n E-value of overlap matrix : %.2e",
-    ///S_eigs.get(0));
+    /// S_eigs.get(0));
     ////    for (int i = 1; i < krylov_order; i++) {
     ////        outfile->Printf(" %.2e", S_eigs.get(i));
     ////    }
@@ -2785,7 +2817,7 @@ void ProjectorCI::apply_tau_H_ref_C_symm(double tau, double spawning_threshold,
 // std::pair<double,double>& max_coupling)
 //{
 ////    outfile -> Printf("\napply_tau_H_ref_C_symm_det_dynamic : Beginning
-///args:");
+/// args:");
 ////    outfile -> Printf("\n CI: %lf, ref_CI: %lf\n", CI, ref_CI);
 
 //    bool do_singles = (max_coupling.first == 0.0) or
@@ -5080,7 +5112,7 @@ ProjectorCI::estimate_perturbation(det_vec& dets, std::vector<double>& C,
     double variational_energy_estimator =
         approx_energy_ - nuclear_repulsion_energy_;
     //#pragma omp parallel for reduction(+:variational_energy_estimator,
-    //perturbation_1st_energy_estimator)
+    // perturbation_1st_energy_estimator)
     //    for (size_t I = 0; I < size; ++I){
     //        for (size_t J = 0; J < size; ++J){
     //            double HIJ = dets[I].slater_rules(dets[J]);
@@ -5098,7 +5130,8 @@ ProjectorCI::estimate_perturbation(det_vec& dets, std::vector<double>& C,
         for (size_t J = 0; J < size; ++J) {
             double HIJ = dets[J].slater_rules(dets[I]);
             if (symm_approx_H_) {
-                if (std::fabs(C[J] * HIJ) < spawning_threshold && std::fabs(C[I] * HIJ) < spawning_threshold && J != I) {
+                if (std::fabs(C[J] * HIJ) < spawning_threshold &&
+                    std::fabs(C[I] * HIJ) < spawning_threshold && J != I) {
                     current_V += HIJ * C[J];
                 }
             } else {
@@ -5110,7 +5143,8 @@ ProjectorCI::estimate_perturbation(det_vec& dets, std::vector<double>& C,
         current_V *= C[I];
         double delta = variational_energy_estimator - dets[I].energy();
         perturbation_2nd_energy_estimator_sub += current_V * current_V / delta;
-//            0.5 * (delta - sqrt(delta * delta + 4 * current_V * current_V));
+        //            0.5 * (delta - sqrt(delta * delta + 4 * current_V *
+        //            current_V));
     }
     return std::make_tuple(perturbation_2nd_energy_estimator_sub, 0.0);
 }
