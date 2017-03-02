@@ -30,7 +30,6 @@
 #include <algorithm>
 #include <tuple>
 #include <math.h>
-#include "mini-boost/boost/format.hpp"
 
 #include "psi4/libpsio/psio.hpp"
 #include "psi4/libpsio/psio.h"
@@ -39,10 +38,11 @@
 #include <iostream>
 #include <fstream>
 
+#include "../mini-boost/boost/format.hpp"
+#include "../blockedtensorfactory.h"
+#include "../fci/fci_solver.h"
+#include "../fci_mo.h"
 #include "dsrg_mrpt3.h"
-#include "blockedtensorfactory.h"
-#include "fci/fci_solver.h"
-#include "fci_mo.h"
 
 using namespace ambit;
 
@@ -586,7 +586,6 @@ void DSRG_MRPT3::print_summary() {
     std::vector<std::pair<std::string, std::string>> calculation_info_string{
         {"int_type", options_.get_str("INT_TYPE")},
         {"source operator", source_},
-        {"state_type", multi_state_ ? "MULTI_STATE" : "STATE_SPECIFIC"},
         {"reference relaxation", relax_ref_}};
 
     if (multi_state_) {

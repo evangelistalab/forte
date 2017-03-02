@@ -19,16 +19,17 @@ set {
 
 set forte {
   job_type pci
-  nroot 1
+  pci_nroot 1
   charge 0
-  tau 1.0
-  spawning_threshold 0.0001
-  GUESS_SPAWNING_THRESHOLD 1.
-  ENERGY_ESTIMATE_FREQ 25
-  FAST_EVAR true
-  ENERGY_ESTIMATE_THRESHOLD 0.001
-  GENERATOR POWER
-  maxbeta 100000.00
+  pci_tau 1.0
+  pci_spawning_threshold 0.0001
+  pci_GUESS_SPAWNING_THRESHOLD 1.
+  pci_ENERGY_ESTIMATE_FREQ 25
+  pci_FAST_EVAR true
+  pci_ENERGY_ESTIMATE_THRESHOLD 0.001
+  pci_GENERATOR POWER
+  pci_maxbeta 100000.00
+  pci_e_convergence 12
 }
 
 energy('scf')

@@ -26,21 +26,21 @@
  * @END LICENSE
  */
 
+#include <algorithm>
 #include <cmath>
 #include <functional>
-#include <algorithm>
 #include <unordered_map>
 
 #include "../mini-boost/boost/format.hpp"
 #include "../mini-boost/boost/math/special_functions/bessel.hpp"
 
 #include "psi4/libciomr/libciomr.h"
+#include "psi4/libmints/matrix.h"
+#include "psi4/libmints/molecule.h"
+#include "psi4/libmints/vector.h"
 #include "psi4/libpsio/psio.h"
 #include "psi4/libpsio/psio.hpp"
 #include "psi4/libqt/qt.h"
-#include "psi4/libmints/molecule.h"
-#include "psi4/libmints/matrix.h"
-#include "psi4/libmints/vector.h"
 
 #include "pci.h"
 
@@ -61,6 +61,115 @@ bool ProjectorCI::have_omp_ = true;
 #define omp_get_thread_num() 0
 bool ProjectorCI::have_omp_ = false;
 #endif
+/// Set the forte style options for the FCI method
+void set_PCI_options(ForteOptions& foptions) {
+    //////////////////////////////////////////////////////////////
+    ///         OPTIONS FOR THE PROJECTOR CI
+    //////////////////////////////////////////////////////////////
+
+    foptions.add_int("PCI_NROOT", 1, "The number of roots computed");
+
+    foptions.add_double("PCI_SPAWNING_THRESHOLD", 0.001,
+                        "The determinant importance threshold");
+
+    foptions.add_double("PCI_MAX_GUESS_SIZE", 10000,
+                        "The maximum number of determinants used to form the "
+                        "guess wave function");
+
+    foptions.add_double("PCI_GUESS_SPAWNING_THRESHOLD", -1,
+                        "The determinant importance threshold");
+
+    foptions.add_double("PCI_ENERGY_ESTIMATE_THRESHOLD", 1.0e-6,
+                        "The threshold with which we estimate the variational "
+                        "energy. Note that the final energy is always "
+                        "estimated exactly.");
+
+    foptions.add_double("PCI_TAU", 1.0,
+                        "The time step in imaginary time (a.u.)");
+
+    foptions.add_double("PCI_E_CONVERGENCE", 1.0e-8,
+                        "The energy convergence criterion");
+
+    foptions.add_bool("PCI_FAST_EVAR", false,
+                      "Use a fast (sparse) estimate of the energy");
+
+    foptions.add_int(
+        "PCI_ENERGY_ESTIMATE_FREQ", 1,
+        "Iterations in between variational estimation of the energy");
+
+    foptions.add_bool("PCI_ADAPTIVE_BETA", false, "Use an adaptive time step?");
+
+    foptions.add_bool("PCI_USE_INTER_NORM", false,
+                      "Use intermediate normalization");
+
+    foptions.add_bool("PCI_USE_SHIFT", false, "Use a shift in the exponential");
+
+    foptions.add_bool("PCI_VAR_ESTIMATE", false,
+                      "Estimate variational energy during calculation");
+
+    foptions.add_bool("PCI_PRINT_FULL_WAVEFUNCTION", false,
+                      "Print full wavefunction when finish");
+
+    foptions.add_bool("PCI_SIMPLE_PRESCREENING", false,
+                      "Prescreen the spawning of excitations");
+
+    foptions.add_bool("PCI_DYNAMIC_PRESCREENING", false,
+                      "Use dynamic prescreening");
+
+    foptions.add_bool("PCI_SCHWARZ_PRESCREENING", false,
+                      "Use schwarz prescreening");
+
+    foptions.add_bool("PCI_INITIATOR_APPROX", false,
+                      "Use initiator approximation");
+
+    foptions.add_double("PCI_INITIATOR_APPROX_FACTOR", 1.0,
+                        "The initiator approximation factor");
+
+    foptions.add_bool("PCI_PERTURB_ANALYSIS", false,
+                      "Do result perturbation analysis");
+
+    foptions.add_bool("PCI_SYMM_APPROX_H", false,
+                      "Use Symmetric Approximate Hamiltonian");
+
+    foptions.add_bool("PCI_STOP_HIGHER_NEW_LOW", false,
+                      "Stop iteration when higher new low detected");
+
+    foptions.add_double("PCI_MAXBETA", 1000.0, "The maximum value of beta");
+
+    foptions.add_int("PCI_MAX_DAVIDSON_ITER", 12,
+                     "The maximum value of Davidson generator iteration");
+
+    foptions.add_int(
+        "PCI_DL_COLLAPSE_PER_ROOT", 2,
+        "The number of trial vector to retain after Davidson-Liu collapsing");
+
+    foptions.add_int("PCI_DL_SUBSPACE_PER_ROOT", 8,
+                     "The maxim number of trial Davidson-Liu vectors");
+
+    foptions.add_int("PCI_CHEBYSHEV_ORDER", 5,
+                     "The order of Chebyshev truncation");
+
+    foptions.add_int("PCI_KRYLOV_ORDER", 5, "The order of Krylov truncation");
+
+    foptions.add_double("PCI_COLINEAR_THRESHOLD", 1.0e-6,
+                        "The minimum norm of orthogonal vector");
+
+    foptions.add_bool("PCI_REFERENCE_SPAWNING", false,
+                      "Do spawning according to reference");
+
+    foptions.add_bool("PCI_POST_DIAGONALIZE", false,
+                      "Do a post diagonalization?");
+}
+
+/// Set the old style options for the PCI method
+void set_PCI_options(Options& options) {
+
+    /*- The propagation algorithm -*/
+    options.add_str("PCI_GENERATOR", "WALL-CHEBYSHEV",
+                    "LINEAR QUADRATIC CUBIC QUARTIC POWER TROTTER OLSEN "
+                    "DAVIDSON MITRUSHENKOV EXP-CHEBYSHEV WALL-CHEBYSHEV "
+                    "CHEBYSHEV LANCZOS DL");
+}
 
 void combine_hashes(std::vector<det_hash<>>& thread_det_C_map,
                     det_hash<>& dets_C_hash);
@@ -197,9 +306,9 @@ void ProjectorCI::startup() {
     if (options_["MULTIPLICITY"].has_changed()) {
         wavefunction_multiplicity_ = options_.get_int("MULTIPLICITY");
     }
-    nroot_ = options_.get_int("NROOT");
+    nroot_ = options_.get_int("PCI_NROOT");
     current_root_ = -1;
-    post_diagonalization_ = options_.get_bool("POST_DIAGONALIZE");
+    post_diagonalization_ = options_.get_bool("PCI_POST_DIAGONALIZE");
     diag_method_ = DLSolver;
     if (options_["DIAG_ALGORITHM"].has_changed()) {
         if (options_.get_str("DIAG_ALGORITHM") == "FULL") {
@@ -213,83 +322,82 @@ void ProjectorCI::startup() {
     //    /-> Define appropriate variable: post_diagonalization_ =
     //    options_.get_bool("EX_ALGORITHM");
 
-    spawning_threshold_ = options_.get_double("SPAWNING_THRESHOLD");
+    spawning_threshold_ = options_.get_double("PCI_SPAWNING_THRESHOLD");
     initial_guess_spawning_threshold_ =
-        options_.get_double("GUESS_SPAWNING_THRESHOLD");
+        options_.get_double("PCI_GUESS_SPAWNING_THRESHOLD");
     if (initial_guess_spawning_threshold_ < 0.0)
         initial_guess_spawning_threshold_ = 10.0 * spawning_threshold_;
-    time_step_ = options_.get_double("TAU");
-    maxiter_ = options_.get_int("MAXBETA") / time_step_;
-    max_Davidson_iter_ = options_.get_int("MAX_DAVIDSON_ITER");
-    davidson_collapse_per_root_ =
-        options_.get_int("DL_COLLAPSE_PER_ROOT");
-    davidson_subspace_per_root_ =
-        options_.get_int("DL_SUBSPACE_PER_ROOT");
-    e_convergence_ = options_.get_double("E_CONVERGENCE");
+    time_step_ = options_.get_double("PCI_TAU");
+    maxiter_ = options_.get_int("PCI_MAXBETA") / time_step_;
+    max_Davidson_iter_ = options_.get_int("PCI_MAX_DAVIDSON_ITER");
+    davidson_collapse_per_root_ = options_.get_int("PCI_DL_COLLAPSE_PER_ROOT");
+    davidson_subspace_per_root_ = options_.get_int("PCI_DL_SUBSPACE_PER_ROOT");
+    e_convergence_ = options_.get_double("PCI_E_CONVERGENCE");
     energy_estimate_threshold_ =
-        options_.get_double("ENERGY_ESTIMATE_THRESHOLD");
-    initiator_approx_factor_ = options_.get_double("INITIATOR_APPROX_FACTOR");
-    colinear_threshold_ = options_.get_double("COLINEAR_THRESHOLD");
+        options_.get_double("PCI_ENERGY_ESTIMATE_THRESHOLD");
+    initiator_approx_factor_ =
+        options_.get_double("PCI_INITIATOR_APPROX_FACTOR");
+    colinear_threshold_ = options_.get_double("PCI_COLINEAR_THRESHOLD");
 
-    max_guess_size_ = options_.get_int("MAX_GUESS_SIZE");
-    energy_estimate_freq_ = options_.get_int("ENERGY_ESTIMATE_FREQ");
+    max_guess_size_ = options_.get_int("PCI_MAX_GUESS_SIZE");
+    energy_estimate_freq_ = options_.get_int("PCI_ENERGY_ESTIMATE_FREQ");
 
-    adaptive_beta_ = options_.get_bool("ADAPTIVE_BETA");
-    fast_variational_estimate_ = options_.get_bool("FAST_EVAR");
-    do_shift_ = options_.get_bool("USE_SHIFT");
-    use_inter_norm_ = options_.get_bool("USE_INTER_NORM");
-    do_simple_prescreening_ = options_.get_bool("SIMPLE_PRESCREENING");
-    do_dynamic_prescreening_ = options_.get_bool("DYNAMIC_PRESCREENING");
-    do_schwarz_prescreening_ = options_.get_bool("SCHWARZ_PRESCREENING");
-    do_initiator_approx_ = options_.get_bool("INITIATOR_APPROX");
-    do_perturb_analysis_ = options_.get_bool("PERTURB_ANALYSIS");
-    stop_higher_new_low_ = options_.get_bool("STOP_HIGHER_NEW_LOW");
-    chebyshev_order_ = options_.get_int("CHEBYSHEV_ORDER");
-    krylov_order_ = options_.get_int("KRYLOV_ORDER");
-    symm_approx_H_ = options_.get_bool("SYMM_APPROX_H");
-    reference_spawning_ = options_.get_bool("REFERENCE_SPAWNING");
+    adaptive_beta_ = options_.get_bool("PCI_ADAPTIVE_BETA");
+    fast_variational_estimate_ = options_.get_bool("PCI_FAST_EVAR");
+    do_shift_ = options_.get_bool("PCI_USE_SHIFT");
+    use_inter_norm_ = options_.get_bool("PCI_USE_INTER_NORM");
+    do_simple_prescreening_ = options_.get_bool("PCI_SIMPLE_PRESCREENING");
+    do_dynamic_prescreening_ = options_.get_bool("PCI_DYNAMIC_PRESCREENING");
+    do_schwarz_prescreening_ = options_.get_bool("PCI_SCHWARZ_PRESCREENING");
+    do_initiator_approx_ = options_.get_bool("PCI_INITIATOR_APPROX");
+    do_perturb_analysis_ = options_.get_bool("PCI_PERTURB_ANALYSIS");
+    stop_higher_new_low_ = options_.get_bool("PCI_STOP_HIGHER_NEW_LOW");
+    chebyshev_order_ = options_.get_int("PCI_CHEBYSHEV_ORDER");
+    krylov_order_ = options_.get_int("PCI_KRYLOV_ORDER");
+    symm_approx_H_ = options_.get_bool("PCI_SYMM_APPROX_H");
+    reference_spawning_ = options_.get_bool("PCI_REFERENCE_SPAWNING");
     if (reference_spawning_ && !symm_approx_H_) {
         symm_approx_H_ = true;
         outfile->Printf("\n\n  Warning! Use of symmetric approximated "
                         "Hamiltonian is enforced by using reference spawning.");
     }
 
-    variational_estimate_ = options_.get_bool("VAR_ESTIMATE");
-    print_full_wavefunction_ = options_.get_bool("PRINT_FULL_WAVEFUNCTION");
+    variational_estimate_ = options_.get_bool("PCI_VAR_ESTIMATE");
+    print_full_wavefunction_ = options_.get_bool("PCI_PRINT_FULL_WAVEFUNCTION");
 
     approx_E_tau_ = 1.0;
     approx_E_S_ = 0.0;
 
-    if (options_.get_str("GENERATOR") == "LINEAR") {
+    if (options_.get_str("PCI_GENERATOR") == "LINEAR") {
         generator_ = LinearGenerator;
         generator_description_ = "Linear";
-    } else if (options_.get_str("GENERATOR") == "TROTTER") {
+    } else if (options_.get_str("PCI_GENERATOR") == "TROTTER") {
         generator_ = TrotterLinear;
         generator_description_ = "Trotter";
-    } else if (options_.get_str("GENERATOR") == "QUADRATIC") {
+    } else if (options_.get_str("PCI_GENERATOR") == "QUADRATIC") {
         generator_ = QuadraticGenerator;
         generator_description_ = "Quadratic";
-    } else if (options_.get_str("GENERATOR") == "CUBIC") {
+    } else if (options_.get_str("PCI_GENERATOR") == "CUBIC") {
         generator_ = CubicGenerator;
         generator_description_ = "Cubic";
-    } else if (options_.get_str("GENERATOR") == "QUARTIC") {
+    } else if (options_.get_str("PCI_GENERATOR") == "QUARTIC") {
         generator_ = QuarticGenerator;
         generator_description_ = "Quartic";
-    } else if (options_.get_str("GENERATOR") == "POWER") {
+    } else if (options_.get_str("PCI_GENERATOR") == "POWER") {
         generator_ = PowerGenerator;
         generator_description_ = "Power";
         time_step_ = 1.0;
-    } else if (options_.get_str("GENERATOR") == "OLSEN") {
+    } else if (options_.get_str("PCI_GENERATOR") == "OLSEN") {
         generator_ = OlsenGenerator;
         generator_description_ = "Olsen";
         // Make sure that do_shift_ is set to true
         do_shift_ = true;
-    } else if (options_.get_str("GENERATOR") == "DAVIDSON") {
+    } else if (options_.get_str("PCI_GENERATOR") == "DAVIDSON") {
         generator_ = DavidsonLiuGenerator;
         generator_description_ = "Davidson-Liu";
         // Make sure that do_shift_ is set to true
         do_shift_ = true;
-    } else if (options_.get_str("GENERATOR") == "EXP-CHEBYSHEV") {
+    } else if (options_.get_str("PCI_GENERATOR") == "EXP-CHEBYSHEV") {
         generator_ = ExpChebyshevGenerator;
         generator_description_ = "Exp-Chebyshev";
         if (chebyshev_order_ <= 0) {
@@ -298,7 +406,7 @@ void ProjectorCI::startup() {
                             chebyshev_order_);
             chebyshev_order_ = 5;
         }
-    } else if (options_.get_str("GENERATOR") == "CHEBYSHEV") {
+    } else if (options_.get_str("PCI_GENERATOR") == "CHEBYSHEV") {
         generator_ = ChebyshevGenerator;
         generator_description_ = "Chebyshev";
         time_step_ = 1.0;
@@ -308,7 +416,7 @@ void ProjectorCI::startup() {
                             chebyshev_order_);
             chebyshev_order_ = 5;
         }
-    } else if (options_.get_str("GENERATOR") == "WALL-CHEBYSHEV") {
+    } else if (options_.get_str("PCI_GENERATOR") == "WALL-CHEBYSHEV") {
         generator_ = WallChebyshevGenerator;
         generator_description_ = "Wall-Chebyshev";
         time_step_ = 1.0;
@@ -318,7 +426,7 @@ void ProjectorCI::startup() {
                             chebyshev_order_);
             chebyshev_order_ = 5;
         }
-    } else if (options_.get_str("GENERATOR") == "LANCZOS") {
+    } else if (options_.get_str("PCI_GENERATOR") == "LANCZOS") {
         generator_ = LanczosGenerator;
         generator_description_ = "Lanczos";
         time_step_ = 1.0;
@@ -328,7 +436,7 @@ void ProjectorCI::startup() {
                             krylov_order_);
             krylov_order_ = 5;
         }
-    } else if (options_.get_str("GENERATOR") == "DL") {
+    } else if (options_.get_str("PCI_GENERATOR") == "DL") {
         generator_ = DLGenerator;
         generator_description_ = "Davidson-Liu by Tianyuan";
         time_step_ = 1.0;
@@ -1552,7 +1660,7 @@ void ProjectorCI::propagate_Lanczos(det_vec& dets, std::vector<double>& C,
     ////    S_evecs.print();
     ////    S_eigs.print();
     ////    outfile->Printf("\n E-value of overlap matrix : %.2e",
-    ///S_eigs.get(0));
+    /// S_eigs.get(0));
     ////    for (int i = 1; i < krylov_order; i++) {
     ////        outfile->Printf(" %.2e", S_eigs.get(i));
     ////    }
@@ -2709,7 +2817,7 @@ void ProjectorCI::apply_tau_H_ref_C_symm(double tau, double spawning_threshold,
 // std::pair<double,double>& max_coupling)
 //{
 ////    outfile -> Printf("\napply_tau_H_ref_C_symm_det_dynamic : Beginning
-///args:");
+/// args:");
 ////    outfile -> Printf("\n CI: %lf, ref_CI: %lf\n", CI, ref_CI);
 
 //    bool do_singles = (max_coupling.first == 0.0) or
@@ -5004,7 +5112,7 @@ ProjectorCI::estimate_perturbation(det_vec& dets, std::vector<double>& C,
     double variational_energy_estimator =
         approx_energy_ - nuclear_repulsion_energy_;
     //#pragma omp parallel for reduction(+:variational_energy_estimator,
-    //perturbation_1st_energy_estimator)
+    // perturbation_1st_energy_estimator)
     //    for (size_t I = 0; I < size; ++I){
     //        for (size_t J = 0; J < size; ++J){
     //            double HIJ = dets[I].slater_rules(dets[J]);
@@ -5021,14 +5129,22 @@ ProjectorCI::estimate_perturbation(det_vec& dets, std::vector<double>& C,
         double current_V = 0.0;
         for (size_t J = 0; J < size; ++J) {
             double HIJ = dets[J].slater_rules(dets[I]);
-            if (std::fabs(C[J] * HIJ) < spawning_threshold && J != I) {
-                current_V += HIJ * C[J];
+            if (symm_approx_H_) {
+                if (std::fabs(C[J] * HIJ) < spawning_threshold &&
+                    std::fabs(C[I] * HIJ) < spawning_threshold && J != I) {
+                    current_V += HIJ * C[J];
+                }
+            } else {
+                if (std::fabs(C[J] * HIJ) < spawning_threshold && J != I) {
+                    current_V += HIJ * C[J];
+                }
             }
         }
         current_V *= C[I];
-        double delta = dets[I].energy() - variational_energy_estimator;
-        perturbation_2nd_energy_estimator_sub +=
-            0.5 * (delta - sqrt(delta * delta + 4 * current_V * current_V));
+        double delta = variational_energy_estimator - dets[I].energy();
+        perturbation_2nd_energy_estimator_sub += current_V * current_V / delta;
+        //            0.5 * (delta - sqrt(delta * delta + 4 * current_V *
+        //            current_V));
     }
     return std::make_tuple(perturbation_2nd_energy_estimator_sub, 0.0);
 }

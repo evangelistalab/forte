@@ -30,21 +30,20 @@
 #define _fci_h_
 
 #include "psi4/libmints/wavefunction.h"
-#include "psi4/liboptions/liboptions.h"
 #include "psi4/physconst.h"
 
 #include "../helpers.h"
 #include "../integrals/integrals.h"
 #include "../string_lists.h"
 #include "../reference.h"
-
+#include "../forte_options.h"
 #include "fci_solver.h"
 
 namespace psi {
 namespace forte {
 
 /// Set the options for the FCI method
-void set_FCI_options(Options& options);
+void set_FCI_options(ForteOptions& foptions);
 
 /**
  * @brief The FCI class

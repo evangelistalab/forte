@@ -35,9 +35,6 @@
 
 #include <iostream>
 
-#include "../mini-boost/boost/shared_ptr.hpp"
-#include "../mini-boost/boost/dynamic_bitset.hpp"
-
 #include "psi4/libmints/wavefunction.h"
 #include "psi4/liboptions/liboptions.h"
 #include "psi4/libtrans/integraltransform.h"

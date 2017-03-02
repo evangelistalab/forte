@@ -39,19 +39,18 @@ namespace forte {
 // Types to store options
 
 // For the bool, int, and double types store:
-// ("OPTION_LABEL", default value, "Description")
+// ("label", default value, "description")
 using bool_opt_t = std::tuple<std::string, bool, std::string>;
 using int_opt_t = std::tuple<std::string, int, std::string>;
 using double_opt_t = std::tuple<std::string, double, std::string>;
 
 // For the string type stores:
-// ("OPTION_LABEL", default value, "Description","Space-separated list of
-// allowed options")
+// ("label", default value, "description",vector<"allowed values">)
 using str_opt_t =
     std::tuple<std::string, std::string, std::string, std::vector<std::string>>;
 
 // For the attay type stores:
-// ("OPTION_LABEL", "Description")
+// ("label", "description")
 using array_opt_t = std::tuple<std::string, std::string>;
 
 /**
@@ -66,7 +65,7 @@ class ForteOptions {
      * @param description Description of the option
      */
     void add_bool(const std::string& label, bool value,
-                           const std::string& description);
+                  const std::string& description);
 
     /**
      * @brief Add a integer option
@@ -75,7 +74,7 @@ class ForteOptions {
      * @param description Description of the option
      */
     void add_int(const std::string& label, int value,
-                          const std::string& description);
+                 const std::string& description);
 
     /**
      * @brief Add a double option
@@ -84,26 +83,34 @@ class ForteOptions {
      * @param description Description of the option
      */
     void add_double(const std::string& label, double value,
-                             const std::string& description);
+                    const std::string& description);
 
     /**
      * @brief Add a string option
      * @param label Option label
      * @param value Default value of the option
      * @param description Description of the option
+     */
+    void add_str(const std::string& label, const std::string& value,
+                 const std::string& description);
+
+    /**
+     * @brief Add a string option and provide a list of allowed option values
+     * @param label Option label
+     * @param value Default value of the option
+     * @param description Description of the option
      * @param allowed_values An array of allowed option values
      */
-    void add_str(const std::string& label, std::string value,
-                          const std::string& description,
-                          const std::vector<std::string>& allowed_values = {});
+    void add_str(const std::string& label, const std::string& value,
+                 const std::vector<std::string>& allowed_values,
+                 const std::string& description);
 
     /**
      * @brief Add an array option
      * @param label Option label
      * @param description Description of the option
      */
-    void add_array(const std::string& label,
-                            const std::string& description);
+    void add_array(const std::string& label, const std::string& description);
 
     /// Add the options to psi4's options class
     void add_psi4_options(Options& options);

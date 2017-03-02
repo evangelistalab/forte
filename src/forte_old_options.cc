@@ -2,16 +2,16 @@
 
 #include "fci/fci.h"
 #include "aci/aci.h"
+#include "pci/pci.h"
 #include "integrals/integrals.h"
 
 namespace psi {
 namespace forte {
 
 void forte_old_options(Options& options) {
-
-    set_FCI_options(options);
     set_ACI_options(options);
     set_INT_options(options);
+    set_PCI_options(options);
 
     /*- MODULEDESCRIPTION Forte */
 
@@ -184,6 +184,9 @@ void forte_old_options(Options& options) {
 
     /*- Force the diagonalization procedure?  -*/
     options.add_bool("FORCE_DIAG_METHOD", false);
+
+    /*- The energy convergence criterion -*/
+    options.add_double("E_CONVERGENCE", 1.0e-8);
 
     /*- The number of roots computed -*/
     options.add_int("NROOT", 1);
@@ -406,72 +409,7 @@ void forte_old_options(Options& options) {
     /*- Use the older DMRGSCF algorithm -*/
     options.add_bool("USE_DMRGSCF", false);
 
-    //////////////////////////////////////////////////////////////
-    ///         OPTIONS FOR THE PROJECTOR CI
-    //////////////////////////////////////////////////////////////
-    /*- The propagation algorithm -*/
-    options.add_str("GENERATOR", "WALL-CHEBYSHEV",
-                    "LINEAR QUADRATIC CUBIC QUARTIC POWER TROTTER OLSEN "
-                    "DAVIDSON MITRUSHENKOV EXP-CHEBYSHEV WALL-CHEBYSHEV "
-                    "CHEBYSHEV LANCZOS DL");
-    /*- The determinant importance threshold -*/
-    options.add_double("SPAWNING_THRESHOLD", 0.001);
-    /*- The maximum number of determinants used to form the guess wave
-     * function -*/
-    options.add_double("MAX_GUESS_SIZE", 10000);
-    /*- The determinant importance threshold -*/
-    options.add_double("GUESS_SPAWNING_THRESHOLD", -1);
-    /*- The threshold with which we estimate the variational energy.
-        Note that the final energy is always estimated exactly. -*/
-    options.add_double("ENERGY_ESTIMATE_THRESHOLD", 1.0e-6);
-    /*- The time step in imaginary time (a.u.) -*/
-    options.add_double("TAU", 1.0);
-    /*- The energy convergence criterion -*/
-    options.add_double("E_CONVERGENCE", 1.0e-8);
-    /*- Use a fast (sparse) estimate of the energy -*/
-    options.add_bool("FAST_EVAR", false);
-    /*- Iterations in between variational estimation of the energy -*/
-    options.add_int("ENERGY_ESTIMATE_FREQ", 1);
-    /*- Use an adaptive time step? -*/
-    options.add_bool("ADAPTIVE_BETA", false);
-    /*- Use intermediate normalization -*/
-    options.add_bool("USE_INTER_NORM", false);
-    /*- Use a shift in the exponential -*/
-    options.add_bool("USE_SHIFT", false);
-    /*- Estimate variational energy during calculation -*/
-    options.add_bool("VAR_ESTIMATE", false);
-    /*- Print full wavefunction when finish -*/
-    options.add_bool("PRINT_FULL_WAVEFUNCTION", false);
-    /*- Prescreen the spawning of excitations -*/
-    options.add_bool("SIMPLE_PRESCREENING", false);
-    /*- Use dynamic prescreening -*/
-    options.add_bool("DYNAMIC_PRESCREENING", false);
-    /*- Use schwarz prescreening -*/
-    options.add_bool("SCHWARZ_PRESCREENING", false);
-    /*- Use initiator approximation -*/
-    options.add_bool("INITIATOR_APPROX", false);
-    /*- The initiator approximation factor -*/
-    options.add_double("INITIATOR_APPROX_FACTOR", 1.0);
-    /*- Do result perturbation analysis -*/
-    options.add_bool("PERTURB_ANALYSIS", false);
-    /*- Use Symmetric Approximate Hamiltonian -*/
-    options.add_bool("SYMM_APPROX_H", false);
-    /*- Stop iteration when higher new low detected -*/
-    options.add_bool("STOP_HIGHER_NEW_LOW", false);
-    /*- The maximum value of beta -*/
-    options.add_double("MAXBETA", 1000.0);
-    /*- The maximum value of Davidson generator iteration -*/
-    options.add_int("MAX_DAVIDSON_ITER", 12);
-    /*- The order of Chebyshev truncation -*/
-    options.add_int("CHEBYSHEV_ORDER", 5);
-    /*- The order of Krylov truncation -*/
-    options.add_int("KRYLOV_ORDER", 5);
-    /*- The minimum norm of orthogonal vector -*/
-    options.add_double("COLINEAR_THRESHOLD", 1.0e-6);
-    /*- Do spawning according to reference -*/
-    options.add_bool("REFERENCE_SPAWNING", false);
-    /*- Do a post diagonalization? -*/
-    options.add_bool("POST_DIAGONALIZE", false);
+
 
     //////////////////////////////////////////////////////////////
     ///         OPTIONS FOR THE FULL CI QUANTUM MONTE-CARLO
