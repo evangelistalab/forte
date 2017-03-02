@@ -1562,7 +1562,7 @@ void SparseCISolver::diagonalize_hamiltonian_map(
     const DeterminantMap& space, WFNOperator& op, SharedVector& evals,
     SharedMatrix& evecs, int nroot, int multiplicity,
     DiagonalizationMethod diag_method) {
-    if ((space.size() <= 400 && !force_diag_method_) or diag_method == Full) {
+    if ((space.size() <= 200 && !force_diag_method_) or diag_method == Full) {
         const std::vector<STLBitsetDeterminant> dets = space.determinants();
         diagonalize_full(dets, evals, evecs, nroot, multiplicity);
     } else if ( diag_method == MPI ){
