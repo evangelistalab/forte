@@ -46,7 +46,7 @@ MRCI::MRCI( SharedWavefunction ref_wfn, Options& options,
 {
     shallow_copy(ref_wfn);
     print_method_banner(
-        {"Multireference CISD", "Jeff Schriber"});
+        {"Uncontracted MR-CISD", "Jeff Schriber"});
    startup();
 }
 
@@ -54,11 +54,14 @@ MRCI::~MRCI() {}
 
 void MRCI::startup()
 {
+    mo_symmetry_ = mo_space_info_->symmetry("GENERALIZED PARTICLE");
+
     // Define the correlated space
     auto correlated_mo = mo_space_info_->get_corr_abs_mo("GENERALIZED PARTICLE");
+    std::sort( correlated_mo.begin(),correlated_mo.end()); 
 
     fci_ints_ = std::make_shared<FCIIntegrals>(
-        ints_,mo_space_info_->get_corr_abs_mo("GENERALIZED PARTICLE"), 
+        ints_,correlated_mo, 
         mo_space_info_->get_corr_abs_mo("RESTRICTED_DOCC"));
 
     // Set the integrals
@@ -66,6 +69,8 @@ void MRCI::startup()
     ambit::Tensor tei_active_ab = ints_->aptei_ab_block(correlated_mo, correlated_mo, correlated_mo, correlated_mo); 
     ambit::Tensor tei_active_bb = ints_->aptei_bb_block(correlated_mo, correlated_mo, correlated_mo, correlated_mo); 
 
+    fci_ints_->set_active_integrals(tei_active_aa, tei_active_ab, tei_active_bb);
+    
     fci_ints_->compute_restricted_one_body_operator();
 
     STLBitsetDeterminant::set_ints(fci_ints_);
@@ -80,14 +85,12 @@ void MRCI::startup()
 double MRCI::compute_energy()
 {
 
-    std::vector<int> mo_symmetry = mo_space_info_->symmetry("GENERALIZED PARTICLE");
-
-    WFNOperator op(mo_symmetry);
+    upcast_reference();
+    WFNOperator op(mo_symmetry_);
 
     outfile->Printf("\n  Adding single and double excitations ...");
     Timer add;
-    op.add_singles(reference_);    
-    op.add_doubles(reference_);    
+    get_excited_determinants();
     outfile->Printf("\n  Excitations took %1.5f s", add.get());
     outfile->Printf("\n  Dimension of model space: %zu", reference_.size());
 
@@ -106,10 +109,76 @@ double MRCI::compute_energy()
 
     for( int n = 0; n < nroot_; ++n ){
         energy[n] = scalar + evals->get(n);
-        outfile->Printf("\n  MR-CISD energy root %d: %1.13f eh", n, energy[n]);
+        outfile->Printf("\n  MR-CISD energy root %d: %1.13f Eh", n, energy[n]);
     }
 
     return energy[0];
+}
+
+void MRCI::get_excited_determinants()
+{
+    // Only excite into the restricted uocc
+
+
+
+
+}
+
+void MRCI::upcast_reference()
+{
+    auto mo_sym = mo_space_info_->symmetry("GENERALIZED PARTICLE");
+
+    std::vector<size_t> old_nmo = mo_space_info_->get_corr_abs_mo("ACTIVE");
+    std::vector<size_t> new_nmo = mo_space_info_->get_corr_abs_mo("GENERALIZED PARTICLE");
+    Dimension old_dim = mo_space_info_->get_dimension("ACTIVE");
+    Dimension new_dim = mo_space_info_->get_dimension("GENERALIZED PARTICLE");
+    std::vector<std::pair<size_t,size_t>> rel_mos = mo_space_info_->get_relative_mo("GENERALIZED PARTICLE");
+    size_t nact = mo_space_info_->size("ACTIVE");
+    size_t ncorr = mo_space_info_->size("GENERALIZED PARTICLE");
+    int n_irrep = old_dim.n(); 
+    std::vector<STLBitsetDeterminant> ref_dets = reference_.determinants();
+    reference_.clear();
+
+    // Compute shifts
+    std::vector<int> shift(n_irrep, 0);
+    if( n_irrep > 1){
+        for( int n = 1; n < n_irrep; ++n ){
+            shift[n] += new_dim[n-1] - old_dim[n-1] + shift[n-1];
+        }
+    }
+    int b_shift = ncorr - nact; 
+
+    for( size_t I = 0, max = ref_dets.size(); I < max; ++I){
+        STLBitsetDeterminant det = ref_dets[I];        
+        
+        // First beta
+        for( int n = n_irrep - 1; n >= 0; --n){
+            //int min = ( n == 0 ) ? 0 : old_dim[n-1];
+            int min = 0;
+            for( int m = 0; m < n; ++m){
+                min += old_dim[m];
+            }
+            for( int pos = nact + min + old_dim[n]-1; pos >= min + nact; --pos){ 
+                det.bits_[pos + b_shift + shift[n] ] = det.bits_[pos]; 
+                det.bits_[pos] = 0;
+            }
+        }
+         
+        for( int n = n_irrep-1; n >= 0; --n){
+            int min = 0;
+            for( int m = 0; m < n; ++m){
+                min += old_dim[m];
+            }
+            for( int pos = min + old_dim[n] - 1; pos >= min; --pos){ 
+                det.bits_[pos + shift[n]] = det.bits_[pos]; 
+                
+               if( n > 0) det.bits_[pos] = 0;
+            }
+        }
+
+        reference_.add(det);
+    }
+
 }
 
 }}

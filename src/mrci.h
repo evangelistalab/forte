@@ -57,17 +57,23 @@ class MRCI : public Wavefunction {
 
     std::shared_ptr<ForteIntegrals> ints_;
     DeterminantMap& reference_;
-    std::shared_ptr<MOSpaceInfo> mo_space_info_; 
 
     double compute_energy(); 
 
   private:
     std::shared_ptr<FCIIntegrals> fci_ints_;
+    std::shared_ptr<MOSpaceInfo> mo_space_info_; 
 
     void startup();
+
+    std::vector<int> mo_symmetry_;
 
     int nroot_;
     int multiplicity_;
     DiagonalizationMethod diag_method_;
+
+    void get_excited_determinants();
+    void upcast_reference();
+
 };
 }}
