@@ -30,7 +30,6 @@
 #define _mrdsrg_h_
 
 #include <cmath>
-#include "mini-boost/boost/assign.hpp"
 
 #include "psi4/liboptions/liboptions.h"
 #include "psi4/libmints/wavefunction.h"
@@ -38,12 +37,13 @@
 #include "psi4/libpsio/psio.h"
 #include "ambit/blocked_tensor.h"
 
-#include "integrals/integrals.h"
-#include "reference.h"
-#include "blockedtensorfactory.h"
-#include "dsrg_source.h"
-#include "dsrg_time.h"
-#include "stl_bitset_determinant.h"
+#include "../mini-boost/boost/assign.hpp"
+#include "../integrals/integrals.h"
+#include "../reference.h"
+#include "../blockedtensorfactory.h"
+#include "../mrdsrg-helper/dsrg_source.h"
+#include "../mrdsrg-helper/dsrg_time.h"
+#include "../stl_bitset_determinant.h"
 
 using namespace ambit;
 namespace psi {

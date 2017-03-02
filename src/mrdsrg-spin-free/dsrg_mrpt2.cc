@@ -26,7 +26,6 @@
  * @END LICENSE
  */
 
-#include "mini-boost/boost/format.hpp"
 #include <algorithm>
 #include <math.h>
 #include <numeric>
@@ -35,10 +34,10 @@
 #include "psi4/libpsio/psio.hpp"
 #include "psi4/libqt/qt.h"
 
-#include "blockedtensorfactory.h"
-#include "ci_rdms.h"
+#include "../mini-boost/boost/format.hpp"
+#include "../ci_rdms.h"
+#include "../fci/fci_solver.h"
 #include "dsrg_mrpt2.h"
-#include "fci/fci_solver.h"
 
 using namespace ambit;
 

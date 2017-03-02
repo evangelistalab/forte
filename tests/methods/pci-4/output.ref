@@ -21,9 +21,9 @@
     -----------------------------------------------------------------------
 
 
-    Psi4 started on: Saturday, 21 January 2017 10:43AM
+    Psi4 started on: Friday, 24 February 2017 12:06PM
 
-    Process ID:  69775
+    Process ID:  27044
     PSIDATADIR: /Users/tianyuanzhang/Documents/Source/psi4-bin-clang-debug/share/psi4
     Memory:     500.0 MiB
     Threads:    1
@@ -52,18 +52,19 @@ set {
 
 set forte {
   job_type pci
-  nroot 1
+  pci_nroot 1
   charge 0
-  tau 1.0
-  spawning_threshold 0.0001
-  ENERGY_ESTIMATE_FREQ 100
-  FAST_EVAR true
-  USE_INTER_NORM true
-  ENERGY_ESTIMATE_THRESHOLD 1e-5
-  DYNAMIC_PRESCREENING true
-  GENERATOR POWER
+  pci_tau 1.0
+  pci_spawning_threshold 0.0001
+  pci_ENERGY_ESTIMATE_FREQ 100
+  pci_FAST_EVAR true
+  pci_USE_INTER_NORM true
+  pci_ENERGY_ESTIMATE_THRESHOLD 1e-5
+  pci_DYNAMIC_PRESCREENING true
+  pci_GENERATOR POWER
   MP2_NOS true
-  maxbeta 100000.00
+  pci_maxbeta 100000.00
+  pci_e_convergence 12
 }
 
 energy('scf')
@@ -74,8 +75,8 @@ compare_values(refpci, get_variable("PCI ENERGY"), 10, "PCI energy") #TEST
 --------------------------------------------------------------------------
 /Users/tianyuanzhang/Documents/Source/forte/forte.so loaded.
 
-*** tstart() called on Tianyuans-MacBook-Air.local
-*** at Sat Jan 21 10:43:43 2017
+*** tstart() called on n-ac-91-106.wireless.emory.edu
+*** at Fri Feb 24 12:06:29 2017
 
     There are an even number of electrons - assuming singlet.
     Specify the multiplicity in the molecule input block.
@@ -184,14 +185,14 @@ compare_values(refpci, get_variable("PCI ENERGY"), 10, "PCI energy") #TEST
 
                         Total Energy        Delta E     RMS |[F,P]|
 
-   @RHF iter   0:   -14.58573852603513   -1.45857e+01   6.38128e-02 
+   @RHF iter   0:   -14.58573852603512   -1.45857e+01   6.38128e-02 
    @RHF iter   1:   -14.60879129784490   -2.30528e-02   3.90853e-03 
    @RHF iter   2:   -14.60956780431854   -7.76506e-04   1.49380e-03 DIIS
    @RHF iter   3:   -14.60974068519981   -1.72881e-04   2.15662e-04 DIIS
    @RHF iter   4:   -14.60974473694129   -4.05174e-06   4.32612e-06 DIIS
-   @RHF iter   5:   -14.60974473887198   -1.93069e-09   1.41353e-07 DIIS
-   @RHF iter   6:   -14.60974473887410   -2.12630e-12   3.63226e-09 DIIS
-   @RHF iter   7:   -14.60974473887411   -7.10543e-15   1.73384e-11 DIIS
+   @RHF iter   5:   -14.60974473887196   -1.93068e-09   1.41353e-07 DIIS
+   @RHF iter   6:   -14.60974473887410   -2.13873e-12   3.63226e-09 DIIS
+   @RHF iter   7:   -14.60974473887410    0.00000e+00   1.73385e-11 DIIS
 
   ==> Post-Iterations <==
 
@@ -214,18 +215,18 @@ compare_values(refpci, get_variable("PCI ENERGY"), 10, "PCI energy") #TEST
 
   Energy converged.
 
-  @RHF Final Energy:   -14.60974473887411
+  @RHF Final Energy:   -14.60974473887410
 
    => Energetics <=
 
     Nuclear Repulsion Energy =              2.3812974386549994
-    One-Electron Energy =                 -24.3030864505908895
-    Two-Electron Energy =                   7.3120442730617796
+    One-Electron Energy =                 -24.3030864505908859
+    Two-Electron Energy =                   7.3120442730617841
     DFT Exchange-Correlation Energy =       0.0000000000000000
     Empirical Dispersion Energy =           0.0000000000000000
     PCM Polarization Energy =               0.0000000000000000
     EFP Energy =                            0.0000000000000000
-    Total Energy =                        -14.6097447388741095
+    Total Energy =                        -14.6097447388741024
 
 
 
@@ -246,15 +247,15 @@ Properties computed using the SCF density matrix
      X:     0.0000      Y:     0.0000      Z:     0.0000     Total:     0.0000
 
 
-*** tstop() called on Tianyuans-MacBook-Air.local at Sat Jan 21 10:43:44 2017
+*** tstop() called on n-ac-91-106.wireless.emory.edu at Fri Feb 24 12:06:29 2017
 Module time:
-	user time   =       0.49 seconds =       0.01 minutes
+	user time   =       0.47 seconds =       0.01 minutes
 	system time =       0.02 seconds =       0.00 minutes
-	total time  =          1 seconds =       0.02 minutes
+	total time  =          0 seconds =       0.00 minutes
 Total time:
-	user time   =       0.49 seconds =       0.01 minutes
+	user time   =       0.47 seconds =       0.01 minutes
 	system time =       0.02 seconds =       0.00 minutes
-	total time  =          1 seconds =       0.02 minutes
+	total time  =          0 seconds =       0.00 minutes
 	SCF energy........................................................PASSED
 
          ---------------------------------------------------------
@@ -364,10 +365,10 @@ Total time:
    @RHF iter   1:   -14.60879129784489   -2.30528e-02   3.90853e-03 
    @RHF iter   2:   -14.60956780431854   -7.76506e-04   1.49380e-03 DIIS
    @RHF iter   3:   -14.60974068519980   -1.72881e-04   2.15662e-04 DIIS
-   @RHF iter   4:   -14.60974473694128   -4.05174e-06   4.32612e-06 DIIS
-   @RHF iter   5:   -14.60974473887197   -1.93069e-09   1.41353e-07 DIIS
-   @RHF iter   6:   -14.60974473887410   -2.13163e-12   3.63226e-09 DIIS
-   @RHF iter   7:   -14.60974473887411   -5.32907e-15   1.73383e-11 DIIS
+   @RHF iter   4:   -14.60974473694129   -4.05174e-06   4.32612e-06 DIIS
+   @RHF iter   5:   -14.60974473887196   -1.93068e-09   1.41353e-07 DIIS
+   @RHF iter   6:   -14.60974473887411   -2.14406e-12   3.63226e-09 DIIS
+   @RHF iter   7:   -14.60974473887410    7.10543e-15   1.73385e-11 DIIS
 
   ==> Post-Iterations <==
 
@@ -390,18 +391,18 @@ Total time:
 
   Energy converged.
 
-  @RHF Final Energy:   -14.60974473887411
+  @RHF Final Energy:   -14.60974473887410
 
    => Energetics <=
 
     Nuclear Repulsion Energy =              2.3812974386549994
-    One-Electron Energy =                 -24.3030864505908859
-    Two-Electron Energy =                   7.3120442730617778
+    One-Electron Energy =                 -24.3030864505908752
+    Two-Electron Energy =                   7.3120442730617743
     DFT Exchange-Correlation Energy =       0.0000000000000000
     Empirical Dispersion Energy =           0.0000000000000000
     PCM Polarization Energy =               0.0000000000000000
     EFP Energy =                            0.0000000000000000
-    Total Energy =                        -14.6097447388741077
+    Total Energy =                        -14.6097447388741006
 
 
 
@@ -527,10 +528,10 @@ Calling plugin forte.so.
 	Starting second half-transformation.
 	Two-electron integral transformation complete.
 
-  Integral transformation done. 0.00642700 s
+  Integral transformation done. 0.01938000 s
   Reading the two-electron integrals from disk
   Size of two-electron integrals:   0.000224 GB
-  Conventional integrals take 0.04512300 s
+  Conventional integrals take 0.05692800 s
 
                 ------------------------------------------------
                   Second-Order Moller-Plesset Natural Orbitals
@@ -538,54 +539,9 @@ Calling plugin forte.so.
                 ------------------------------------------------
 
 
-    SCF energy                            =  -14.609744738874108
+    SCF energy                            =  -14.609744738874101
     MP2 correlation energy                =   -0.018767063805292
-  * MP2 total energy                      =  -14.628511802679400
-
-    Molecular point group: d2h
-    Full point group: D_inf_h
-
-    Geometry (in Angstrom), charge = 0, multiplicity = 1:
-
-       Center              X                  Y                   Z               Mass       
-    ------------   -----------------  -----------------  -----------------  -----------------
-          LI          0.000000000000     0.000000000000    -1.000000000000     7.016004548000
-          LI          0.000000000000     0.000000000000     1.000000000000     7.016004548000
-
-  -AO BASIS SET INFORMATION:
-    Name                   = file /Users/tianyuanzhang/Documents/Source/psi4-bin-clang-debug/share/psi4/basis/sto-3g.gbs
-    Total number of shells = 6
-    Number of primitives   = 18
-    Number of AO           = 10
-    Number of SO           = 10
-    Maximum AM             = 1
-    Spherical Harmonics    = TRUE
-
-  -Contraction Scheme:
-    Atom   Type   All Primitives // Shells:
-   ------ ------ --------------------------
-       1    LI     6s 3p // 2s 1p 
-       2    LI     6s 3p // 2s 1p 
-
-  ==> AO Basis Functions <==
-
-    [ file /Users/tianyuanzhang/Documents/Source/psi4-bin-clang-debug/share/psi4/basis/sto-3g.gbs ]
-    spherical
-    ****
-   LI   1
-    S   3 1.00
-                        16.11957500           0.15432897
-                         2.93620070           0.53532814
-                         0.79465050           0.44463454
-    S   3 1.00
-                         0.63628970          -0.09996723
-                         0.14786010           0.39951283
-                         0.04808870           0.70011547
-    P   3 1.00
-                         0.63628970           0.15591627
-                         0.14786010           0.60768372
-                         0.04808870           0.39195739
-    ****
+  * MP2 total energy                      =  -14.628511802679393
 
 
  Integrals are about to be computed.	Presorting SO-basis two-electron integrals.
@@ -597,7 +553,7 @@ Calling plugin forte.so.
 	Starting second half-transformation.
 	Two-electron integral transformation complete.
 
-  Integral transformation done. 0.00571400 s
+  Integral transformation done. 0.00552400 s
   Reading the two-electron integrals from disk
   Size of two-electron integrals:   0.000224 GB
  Integrals are about to be updated.
@@ -637,7 +593,7 @@ Calling plugin forte.so.
     Result perturbation analysis                    NO
     Using OpenMP                                    NO
 
-  ==> Initial Guess <==     -14.609744738874 -1.461e-01
+  ==> Initial Guess <==
 
   Initial guess size = 88
 
@@ -646,12 +602,12 @@ Calling plugin forte.so.
   Most important contributions to the wave function:
 
     0      -0.933702      0.871799          70 |2200020000>    -16.991042177529
-    1       0.231475     0.0535807          52 |0200020020>    -16.839359192615
-    2       0.231475     0.0535807          47 |0200020002>    -16.839359192615
+    1       0.231475     0.0535807          47 |0200020002>    -16.839359192615
+    2       0.231475     0.0535807          52 |0200020020>    -16.839359192615
     3       0.119343     0.0142428          54 |0200020200>    -16.757530753052
     4      0.0801599    0.00642561          55 |0220020000>    -16.716835515994
-    5    -0.00514585   2.64798e-05          71 |+-00020200>    -14.679187176280
-    6    -0.00514585   2.64798e-05          42 |-+00020200>    -14.679187176280
+    5    -0.00514585   2.64798e-05          42 |-+00020200>    -14.679187176280
+    6    -0.00514585   2.64798e-05          71 |+-00020200>    -14.679187176280
     7     -0.0045129   2.03663e-05          62 |0200220000>    -16.536973029979
     8     -0.0045129   2.03663e-05          74 |0202020000>    -16.536973029979
     9     -0.0040925   1.67486e-05          79 |-+00020002>    -14.744117523934
@@ -689,7 +645,7 @@ Calling plugin forte.so.
      1100  1100.00        392     -14.646212464350  3.651e-10     -14.645404031550  6.378e-12
      1200  1200.00        392     -14.646212448960  1.539e-10     -14.645404031282  2.679e-12
      1300  1300.00        392     -14.646212442479  6.481e-11     -14.645404031169  1.124e-12
-     1400  1400.00        392     -14.646212439752  2.727e-11     -14.645404031122  4.721e-13
+     1400  1400.00        392     -14.646212439752  2.727e-11     -14.645404031122  4.722e-13
      1500  1500.00        392     -14.646212438605  1.147e-11
   ------------------------------------------------------------------------------------------------
 
@@ -706,7 +662,7 @@ Calling plugin forte.so.
 
   * Size of CI space                    = 392
 
-  Projector-CI (bitset) ran in  : 8.246159 s
+  Projector-CI (bitset) ran in  : 8.085970 s
 
   Most important contributions to the wave function:
 
@@ -715,15 +671,15 @@ Calling plugin forte.so.
     2       0.230625     0.0531877         268 |0200020002>    -16.839359192615
     3       0.125484     0.0157462         306 |0200020200>    -16.757530753052
     4      0.0807606    0.00652227         304 |0220020000>    -16.716835515994
-    5      0.0143057   0.000204654         196 |-2+0020000>    -16.869832696882
-    6      0.0143057   0.000204654         181 |+2-0020000>    -16.869832696882
-    7    -0.00545008   2.97033e-05         293 |-+00020200>    -14.679187176280
-    8    -0.00545008   2.97033e-05         267 |+-00020200>    -14.679187176280
+    5      0.0143057   0.000204654         181 |+2-0020000>    -16.869832696882
+    6      0.0143057   0.000204654         196 |-2+0020000>    -16.869832696882
+    7    -0.00545008   2.97033e-05         267 |+-00020200>    -14.679187176280
+    8    -0.00545008   2.97033e-05         293 |-+00020200>    -14.679187176280
     9     -0.0042391   1.79699e-05         284 |0200220000>    -16.536973029979
 
   Spin State: S^2 = 0.000, S = 0.000, singlet (from 3 determinants,97.69)
 
-  Your calculation took 8.37783000 seconds
+  Your calculation took 8.22515600 seconds
 	PCI energy........................................................PASSED
 
 *** Psi4 exiting successfully. Buy a developer a beer!

@@ -30,16 +30,16 @@
 #define _so_mrdsrg_h_
 
 #include <fstream>
-#include "mini-boost/boost/assign.hpp"
 
 #include "psi4/liboptions/liboptions.h"
 #include "psi4/libmints/wavefunction.h"
-
-#include "helpers.h"
-#include "integrals/integrals.h"
 #include "ambit/blocked_tensor.h"
-#include "reference.h"
-#include "blockedtensorfactory.h"
+
+#include "../mini-boost/boost/assign.hpp"
+#include "../helpers.h"
+#include "../integrals/integrals.h"
+#include "../reference.h"
+#include "../blockedtensorfactory.h"
 
 namespace psi {
 

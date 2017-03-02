@@ -32,7 +32,7 @@
 
 #include "psi4/libmints/molecule.h"
 
-#include "helpers.h"
+#include "../helpers.h"
 #include "mrdsrg_so.h"
 
 namespace psi {

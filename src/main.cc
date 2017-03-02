@@ -57,7 +57,8 @@ namespace forte {
  * else.
  */
 extern "C" int read_options(std::string name, Options& options) {
-    ForteOptions foptions;
+
+    ForteOptions foptions; // <<
 
     forte_options(name, foptions);
 

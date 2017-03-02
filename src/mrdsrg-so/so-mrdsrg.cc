@@ -35,7 +35,7 @@
 #include "psi4/libqt/qt.h"
 
 #include "so-mrdsrg.h"
-#include "blockedtensorfactory.h"
+#include "../blockedtensorfactory.h"
 
 #define ISA(x) (x < nactv)
 #define ISB(x) (x >= nactv)

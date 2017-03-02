@@ -37,7 +37,7 @@
 #include <cmath>
 #include "fci_mo.h"
 #include "integrals/integrals.h"
-#include "dsrg_source.h"
+#include "./mrdsrg-helper/dsrg_source.h"
 
 using namespace std;
 

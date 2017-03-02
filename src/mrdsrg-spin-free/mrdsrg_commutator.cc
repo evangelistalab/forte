@@ -29,9 +29,9 @@
 #include <algorithm>
 #include <vector>
 #include <map>
-#include "mini-boost/boost/format.hpp"
 
-#include "helpers.h"
+#include "../mini-boost/boost/format.hpp"
+#include "../helpers.h"
 #include "mrdsrg.h"
 
 namespace psi {
