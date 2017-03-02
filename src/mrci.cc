@@ -102,15 +102,27 @@ double MRCI::compute_energy()
     SharedVector evals;    
 
     SparseCISolver sparse_solver;
+
+    //set options
+    sparse_solver.set_parallel(true);
+    sparse_solver.set_e_convergence(options_.get_double("E_CONVERGENCE"));
+    sparse_solver.set_maxiter_davidson(options_.get_int("DL_MAXITER"));
+    sparse_solver.set_spin_project(true);
+    sparse_solver.set_force_diag(options_.get_bool("FORCE_DIAG_METHOD"));
+    sparse_solver.set_guess_dimension(options_.get_int("DL_GUESS_SIZE"));
+
     sparse_solver.diagonalize_hamiltonian_map(reference_,op,evals,evecs,nroot_,multiplicity_,diag_method_ ); 
 
     std::vector<double> energy(nroot_);
     double scalar = fci_ints_->scalar_energy() + molecule_->nuclear_repulsion_energy();
 
+    outfile->Printf("\n");
     for( int n = 0; n < nroot_; ++n ){
         energy[n] = scalar + evals->get(n);
         outfile->Printf("\n  MR-CISD energy root %d: %1.13f Eh", n, energy[n]);
     }
+
+    Process::environment.globals["MRCISD ENERGY"] = energy[0];
 
     return energy[0];
 }
@@ -119,23 +131,132 @@ void MRCI::get_excited_determinants()
 {
     // Only excite into the restricted uocc
 
+    auto external_mo = mo_space_info_->get_corr_abs_mo("RESTRICTED_UOCC");
 
+    DeterminantMap external;
+    external.clear();
 
+    int n_ext = external_mo.size();
 
+    const auto& internal = reference_.determinants(); 
+    for( const auto& det : internal ){ 
+
+        std::vector<int> aocc = det.get_alfa_occ();
+        std::vector<int> bocc = det.get_beta_occ();
+
+        int noalfa = aocc.size();
+        int nobeta = bocc.size();
+
+        STLBitsetDeterminant new_det(det);
+
+        // Single Alpha
+        for( int i = 0; i < noalfa; ++i ){
+            int ii = aocc[i];
+            for( int a = 0; a < n_ext; ++a ){
+                int aa = external_mo[a];
+                if( (mo_symmetry_[ii] ^ mo_symmetry_[aa]) == 0 ){
+                    new_det = det;
+                    new_det.set_alfa_bit(ii, false);
+                    new_det.set_alfa_bit(aa, true); 
+                    external.add(new_det);
+                }
+            }
+        }        
+        // Single Beta
+        for( int i = 0; i < nobeta; ++i ){
+            int ii = bocc[i];
+            for( int a = 0; a < n_ext; ++a ){
+                int aa = external_mo[a];
+                if( (mo_symmetry_[ii] ^ mo_symmetry_[aa]) == 0 ){
+                    new_det = det;
+                    new_det.set_beta_bit(ii, false);
+                    new_det.set_beta_bit(aa, true); 
+                    external.add(new_det);
+                }
+            }
+        }        
+        // Double Alpha
+        for( int i = 0; i < noalfa; ++i ){
+            int ii = aocc[i];
+            for( int j = i + 1; j < noalfa; ++j){
+                int jj = aocc[j];
+                for( int a = 0; a < n_ext; ++a ){
+                    int aa = external_mo[a];
+                    for( int b = a + 1; b < n_ext; ++b ){
+                        int bb = external_mo[b];
+                        if( (mo_symmetry_[ii] ^ mo_symmetry_[aa] ^ mo_symmetry_[jj] ^ mo_symmetry_[bb]) == 0 ){
+                            new_det = det;
+                            new_det.set_alfa_bit(ii, false);
+                            new_det.set_alfa_bit(jj, false);
+                            new_det.set_alfa_bit(aa, true); 
+                            new_det.set_alfa_bit(bb, true); 
+                            external.add(new_det);
+                        }
+                    }
+                }
+            }
+        }        
+        // Double Beta
+        for( int i = 0; i < nobeta; ++i ){
+            int ii = bocc[i];
+            for( int j = i + 1; j < nobeta; ++j){
+                int jj = bocc[j];
+                for( int a = 0; a < n_ext; ++a ){
+                    int aa = external_mo[a];
+                    for( int b = a + 1; b < n_ext; ++b ){
+                        int bb = external_mo[b];
+                        if( (mo_symmetry_[ii] ^ mo_symmetry_[aa] ^ mo_symmetry_[jj] ^ mo_symmetry_[bb]) == 0 ){
+                            new_det = det;
+                            new_det.set_beta_bit(ii, false);
+                            new_det.set_beta_bit(jj, false);
+                            new_det.set_beta_bit(aa, true); 
+                            new_det.set_beta_bit(bb, true); 
+                            external.add(new_det);
+                        }
+                    }
+                }
+            }
+        }        
+        // Alpha/Beta
+        for( int i = 0; i < noalfa; ++i ){
+            int ii = aocc[i];
+            for( int j = 0; j < nobeta; ++j){
+                int jj = bocc[j];
+                for( int a = 0; a < n_ext; ++a ){
+                    int aa = external_mo[a];
+                    for( int b = 0; b < n_ext; ++b ){
+                        int bb = external_mo[b];
+                        if( (mo_symmetry_[ii] ^ mo_symmetry_[aa] ^ mo_symmetry_[jj] ^ mo_symmetry_[bb]) == 0 ){
+                            new_det = det;
+                            new_det.set_alfa_bit(ii, false);
+                            new_det.set_beta_bit(jj, false);
+                            new_det.set_alfa_bit(aa, true); 
+                            new_det.set_beta_bit(bb, true); 
+                            external.add(new_det);
+                        }
+                    }
+                }
+            }
+        }        
+    }
+
+//const auto dets = external.determinants();
+//    for( auto& det : dets) outfile->Printf("\n  %s", det.str().c_str());
+
+    outfile->Printf("\n  Added %zu determinants from external space", external.size());
+    reference_.merge(external);
 }
 
 void MRCI::upcast_reference()
 {
     auto mo_sym = mo_space_info_->symmetry("GENERALIZED PARTICLE");
 
-    std::vector<size_t> old_nmo = mo_space_info_->get_corr_abs_mo("ACTIVE");
-    std::vector<size_t> new_nmo = mo_space_info_->get_corr_abs_mo("GENERALIZED PARTICLE");
     Dimension old_dim = mo_space_info_->get_dimension("ACTIVE");
     Dimension new_dim = mo_space_info_->get_dimension("GENERALIZED PARTICLE");
-    std::vector<std::pair<size_t,size_t>> rel_mos = mo_space_info_->get_relative_mo("GENERALIZED PARTICLE");
     size_t nact = mo_space_info_->size("ACTIVE");
     size_t ncorr = mo_space_info_->size("GENERALIZED PARTICLE");
     int n_irrep = old_dim.n(); 
+
     std::vector<STLBitsetDeterminant> ref_dets = reference_.determinants();
     reference_.clear();
 
@@ -153,7 +274,6 @@ void MRCI::upcast_reference()
         
         // First beta
         for( int n = n_irrep - 1; n >= 0; --n){
-            //int min = ( n == 0 ) ? 0 : old_dim[n-1];
             int min = 0;
             for( int m = 0; m < n; ++m){
                 min += old_dim[m];
@@ -163,7 +283,7 @@ void MRCI::upcast_reference()
                 det.bits_[pos] = 0;
             }
         }
-         
+        // Then alpha         
         for( int n = n_irrep-1; n >= 0; --n){
             int min = 0;
             for( int m = 0; m < n; ++m){
