@@ -1,4 +1,5 @@
 #include "forte_options.h"
+#include "helpers.h"
 
 namespace psi {
 namespace forte {
@@ -18,9 +19,15 @@ void ForteOptions::add_double(const std::string& label, double value,
     double_opts_.push_back(std::make_tuple(label, value, description));
 }
 
-void ForteOptions::add_str(const std::string& label, std::string value,
-                           const std::string& description,
-                           const std::vector<std::string>& allowed_values) {
+void ForteOptions::add_str(const std::string& label, const std::string& value,
+                           const std::string& description) {
+    str_opts_.push_back(
+        std::make_tuple(label, value, description, std::vector<std::string>()));
+}
+
+void ForteOptions::add_str(const std::string& label, const std::string& value,
+                           const std::vector<std::string>& allowed_values,
+                           const std::string& description) {
     str_opts_.push_back(
         std::make_tuple(label, value, description, allowed_values));
 }
@@ -44,9 +51,10 @@ void ForteOptions::add_psi4_options(Options& options) {
     }
 
     for (const auto& opt : str_opts_) {
-        if (std::get<2>(opt).size() > 0) {
-            options.add_str(std::get<0>(opt), std::get<1>(opt),
-                            std::get<2>(opt));
+        if (std::get<3>(opt).size() > 0) {
+            const std::vector<std::string>& str_vec = std::get<3>(opt);
+            std::string allowed = to_string(str_vec, " ");
+            options.add_str(std::get<0>(opt), std::get<1>(opt), allowed);
         } else {
             options.add_str(std::get<0>(opt), std::get<1>(opt));
         }
