@@ -2301,8 +2301,8 @@ void AdaptiveCI::compute_aci(DeterminantMap& PQ_space, SharedMatrix& PQ_evecs,
     sparse_solver.set_num_vecs(nvec);
     int spin_projection = options_.get_int("ACI_SPIN_PROJECTION");
 
-    if (det_save_)
-        det_list_.open("det_list.txt");
+   // if (det_save_)
+   //     det_list_.open("det_list.txt");
 
     if (streamline_qspace_ and !quiet_mode_)
         outfile->Printf("\n  Using streamlined Q-space builder.");
@@ -2473,8 +2473,8 @@ void AdaptiveCI::compute_aci(DeterminantMap& PQ_space, SharedMatrix& PQ_evecs,
         if (!quiet_mode_)
             outfile->Printf("\n  Time spent diagonalizing H:   %1.6f s",
                             diag_pq.get());
-        if (det_save_)
-            save_dets_to_file(PQ_space, PQ_evecs);
+      //  if (det_save_)
+      //      save_dets_to_file(PQ_space, PQ_evecs);
 
         // Save the solutions for the next iteration
         //        old_dets.clear();
@@ -2575,8 +2575,8 @@ void AdaptiveCI::compute_aci(DeterminantMap& PQ_space, SharedMatrix& PQ_evecs,
         ex_alg_ = options_.get_str("ACI_EXCITED_ALGORITHM");
     } // end iterations
 
-    if (det_save_)
-        det_list_.close();
+   // if (det_save_)
+   //     det_list_.close();
 
     // Ensure the solutions are spin-pure
     if ((spin_projection == 2 or spin_projection == 3) and
