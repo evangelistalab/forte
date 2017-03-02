@@ -31,6 +31,7 @@ set forte {
   aci_nroot 2
   aci_n_average 2
   ACI_INITIAL_SPACE CIS
+  aci_excited_algorithm average
 }
 
 energy('scf')
