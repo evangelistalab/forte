@@ -111,7 +111,7 @@ operator^(const STLBitsetDeterminant& lhs) const {
     return ndet;
 }
 
-const std::bitset<256>& STLBitsetDeterminant::bits() const { return bits_; }
+const STLBitsetDeterminant::bit_t& STLBitsetDeterminant::bits() const { return bits_; }
 
 bool STLBitsetDeterminant::get_alfa_bit(int n) const { return bits_[n]; }
 
@@ -124,35 +124,35 @@ void STLBitsetDeterminant::set_beta_bit(int n, bool value) {
 }
 
 std::vector<bool> STLBitsetDeterminant::get_alfa_bits_vector_bool() {
-    std::vector<bool> result;
+    std::vector<bool> result(nmo_);
     for (int n = 0; n < nmo_; ++n) {
-        result.push_back(bits_[n]);
+        result[n] = bits_[n];
     }
     return result;
 }
 
 std::vector<bool> STLBitsetDeterminant::get_beta_bits_vector_bool() {
-    std::vector<bool> result;
+    std::vector<bool> result(nmo_);
     for (int n = 0; n < nmo_; ++n) {
-        result.push_back(bits_[nmo_ + n]);
+        result[n] = bits_[nmo_ + n];
     }
     return result;
 }
 
 const std::vector<bool>
 STLBitsetDeterminant::get_alfa_bits_vector_bool() const {
-    std::vector<bool> result;
+    std::vector<bool> result(nmo_);
     for (int n = 0; n < nmo_; ++n) {
-        result.push_back(bits_[n]);
+        result[n] = bits_[n];
     }
     return result;
 }
 
 const std::vector<bool>
 STLBitsetDeterminant::get_beta_bits_vector_bool() const {
-    std::vector<bool> result;
+    std::vector<bool> result(nmo_);
     for (int n = 0; n < nmo_; ++n) {
-        result.push_back(bits_[nmo_ + n]);
+        result[n] = bits_[nmo_ + n];
     }
     return result;
 }
@@ -261,9 +261,10 @@ double STLBitsetDeterminant::destroy_beta_bit(int n) {
 /// Switch alfa and beta bits
 void STLBitsetDeterminant::spin_flip() {
     for (int p = 0; p < nmo_; ++p) {
-        bool temp = bits_[p];
-        bits_[p] = bits_[nmo_ + p];
-        bits_[nmo_ + p] = temp;
+        std::swap(bits_[p],bits_[nmo_ + p]);
+//        bool temp = bits_[p];
+//        bits_[p] = bits_[nmo_ + p];
+//        bits_[nmo_ + p] = temp;
     }
 }
 
@@ -342,7 +343,7 @@ double STLBitsetDeterminant::energy() const {
             }
         }
     }
-    return (matrix_element);
+    return matrix_element;
 }
 
 /**
@@ -722,7 +723,7 @@ double STLBitsetDeterminant::spin_z() const {
 int STLBitsetDeterminant::npair() {
     int npair = 0;
     for (int n = 0; n < nmo_; ++n) {
-        if ((bits_[n] == 1) and (bits_[nmo_ + n] == 1)) {
+        if (bits_[n] and bits_[nmo_ + n]) {
             npair++;
         }
     }
