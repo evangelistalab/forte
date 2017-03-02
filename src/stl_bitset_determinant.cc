@@ -96,7 +96,7 @@ bool STLBitsetDeterminant::operator==(const STLBitsetDeterminant& lhs) const {
 }
 
 bool STLBitsetDeterminant::operator<(const STLBitsetDeterminant& lhs) const {
-    for (int p = nmo_ - 1; p >= 0; --p) {
+    for (int p = 2 * nmo_ - 1; p >= 0; --p) {
         if ((bits_[p] == false) and (lhs.bits_[p] == true))
             return true;
         if ((bits_[p] == true) and (lhs.bits_[p] == false))
