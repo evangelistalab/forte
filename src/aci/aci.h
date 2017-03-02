@@ -36,6 +36,7 @@
 #include "psi4/liboptions/liboptions.h"
 #include "psi4/physconst.h"
 
+#include "../forte_options.h"
 #include "../ci_rdms.h"
 #include "../determinant_map.h"
 #include "../fci/fci_integrals.h"
