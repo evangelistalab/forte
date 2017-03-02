@@ -56,89 +56,86 @@ namespace forte {
 #define omp_get_num_threads() 1
 #endif
 
-void set_ACI_options(Options& options)
+void set_ACI_options(ForteOptions& foptions)
 {
     /* Convergence Threshold -*/
-    options.add_double("ACI_CONVERGENCE", 1e-9);
+    foptions.add_double("ACI_CONVERGENCE", 1e-9, "ACI Convergence threshold");
 
     /*- The selection type for the Q-space-*/
-    options.add_str("ACI_SELECT_TYPE", "AIMED_ENERGY",
-                    "ENERGY AMP AIMED_AMP AIMED_ENERGY");
+    foptions.add_str("ACI_SELECT_TYPE", "AIMED_ENERGY",
+                    "ENERGY AMP AIMED_AMP AIMED_ENERGY",
+                    "The energy selection criteria");
     /*-Threshold for the selection of the P space -*/
-    options.add_double("SIGMA", 0.01);
+    foptions.add_double("SIGMA", 0.01, "The energy selection threshold");
     /*- The threshold for the selection of the Q space -*/
-    options.add_double("GAMMA", 1.0);
+    foptions.add_double("GAMMA", 1.0, "The reference space selection threshold");
     /*- The SD-space prescreening threshold -*/
-    options.add_double("ACI_PRESCREEN_THRESHOLD", 1e-9);
+    foptions.add_double("ACI_PRESCREEN_THRESHOLD", 1e-9, "The SD space prescreening threshold");
     /*- The type of selection parameters to use*/
-    options.add_bool("ACI_PERTURB_SELECT", false);
+    foptions.add_bool("ACI_PERTURB_SELECT", false, "Type of energy selection");
     /*Function of q-space criteria, per root*/
-    options.add_str("ACI_PQ_FUNCTION", "AVERAGE", "MAX");
+    foptions.add_str("ACI_PQ_FUNCTION", "AVERAGE",  "Function for SA-ACI");
     /* Method to calculate excited state */
-    options.add_str("ACI_EXCITED_ALGORITHM", "AVERAGE",
-                    "ROOT_SELECT AVERAGE COMPOSITE ROOT_COMBINE "
-                    "ROOT_ORTHOGONALIZE MULTISTATE");
+    foptions.add_str("ACI_EXCITED_ALGORITHM", "ROOT_ORTHOGONALIZE", "The excited state algorithm");
     /*Number of roots to compute*/
-    options.add_int("ACI_NROOT", 1);
+    foptions.add_int("ACI_NROOT", 1, "Number of roots for ACI computation");
     /*Roots to compute*/
-    options.add_int("ACI_ROOT", 0);
-    /*Threshold value for defining multiplicity from S^2*/
-    options.add_double("ACI_SPIN_TOL", 0.01);
+    foptions.add_int("ACI_ROOT", 0, "Root for single-state computations");
     /*- Compute 1-RDM? -*/
-    options.add_int("ACI_MAX_RDM", 1);
+    foptions.add_int("ACI_MAX_RDM", 1, "Order of RDM to compute");
     /*- Type of spin projection
      * 0 - None
      * 1 - Project initial P spaces at each iteration
      * 2 - Project only after converged PQ space
      * 3 - Do 1 and 2 -*/
-    options.add_int("ACI_SPIN_PROJECTION", 0);
+    foptions.add_int("ACI_SPIN_PROJECTION", 0, "Type of spin projection");
     /*- Add determinants to enforce spin-complete set? -*/
-    options.add_bool("ACI_ENFORCE_SPIN_COMPLETE", true);
+    foptions.add_bool("ACI_ENFORCE_SPIN_COMPLETE", true, "Enforce determinant spaces to be spin-complete");
     /*- Project out spin contaminants in Davidson-Liu's algorithm? -*/
-    options.add_bool("ACI_PROJECT_OUT_SPIN_CONTAMINANTS", true);
+    foptions.add_bool("ACI_PROJECT_OUT_SPIN_CONTAMINANTS", true, "Project out spin contaminants in Davidson-Liu's algorithm");
     /*- Add "degenerate" determinants not included in the aimed selection?
      * -*/
-    options.add_bool("ACI_ADD_AIMED_DEGENERATE", true);
+    foptions.add_bool("ACI_ADD_AIMED_DEGENERATE", true, "Add degenerate determinants not included in the aimed selection");
     /*- Perform size extensivity correction -*/
-    options.add_str("ACI_SIZE_CORRECTION", "", "DAVIDSON");
+    foptions.add_str("ACI_SIZE_CORRECTION", "", "Perform size extensivity correction");
     /*- Sets the maximum cycle -*/
-    options.add_int("ACI_MAX_CYCLE", 20);
+    foptions.add_int("ACI_MAX_CYCLE", 20, "Maximum number of cycles");
     /*- Control print level -*/
-    options.add_bool("ACI_QUIET_MODE", false);
+    foptions.add_bool("ACI_QUIET_MODE", false, "Print during ACI procedure");
     /*- Control streamlining -*/
-    options.add_bool("ACI_STREAMLINE_Q", false);
+    foptions.add_bool("ACI_STREAMLINE_Q", false, "Do streamlined algorithm");
     /*- Initial reference wavefunction -*/
-    options.add_str("ACI_INITIAL_SPACE", "SR", "SR CIS CISD CID");
+    foptions.add_str("ACI_INITIAL_SPACE", "SR", "The initial reference space");
     /*- Number of iterations to run SA-ACI before SS-ACI -*/
-    options.add_int("ACI_PREITERATIONS", 0);
+    foptions.add_int("ACI_PREITERATIONS", 0, "Number of iterations to run SA-ACI before SS-ACI");
     /*- Number of roots to average -*/
-    options.add_int("ACI_N_AVERAGE", 1);
+    foptions.add_int("ACI_N_AVERAGE", 1, "Number of roots to averag");
     /*- Offset for state averaging -*/
-    options.add_int("ACI_AVERAGE_OFFSET", 0);
+    foptions.add_int("ACI_AVERAGE_OFFSET", 0, "Offset for state averaging");
     /*- Print final wavefunction to file? -*/
-    options.add_bool("ACI_SAVE_FINAL_WFN", false);
+    foptions.add_bool("ACI_SAVE_FINAL_WFN", false, "Print final wavefunction to file" );
     /*- Print the P space? -*/
-    options.add_bool("ACI_PRINT_REFS", false);
+    foptions.add_bool("ACI_PRINT_REFS", false, "Print the P space");
     /*- Set the initial guess space size for DL solver -*/
-    options.add_int("DL_GUESS_SIZE", 100);
+    foptions.add_int("DL_GUESS_SIZE", 100, "Set the initial guess space size for DL solver");
     /*- Number of guess vectors for Sparse CI solver -*/
-    options.add_int("N_GUESS_VEC", 10);
-    options.add_double("ACI_NO_THRESHOLD", 0.02);
+    foptions.add_int("N_GUESS_VEC", 10, "Number of guess vectors for Sparse CI solver");
+    foptions.add_double("ACI_NO_THRESHOLD", 0.02, "Threshold for active space prediction");
 
     /*- Approximate 1RDM? -*/
-    options.add_bool("ACI_APPROXIMATE_RDM", false);
+    foptions.add_bool("ACI_APPROXIMATE_RDM", false, "Approximate the RDMs");
     /*- Test RDMs -*/
-    options.add_bool("ACI_TEST_RDMS", false);
+    foptions.add_bool("ACI_TEST_RDMS", false, "Run test for the RDMs");
 
     /*- Do compute nroots on first cycle? -*/
-    options.add_bool("ACI_FIRST_ITER_ROOTS", false);
-    options.add_bool("ACI_PRINT_WEIGHTS", false);
+    foptions.add_bool("ACI_FIRST_ITER_ROOTS", false, "Compute all roots on first iteration?");
+    foptions.add_bool("ACI_PRINT_WEIGHTS", false, "Print weights for active space prediction");
 
     /*- Print Natural orbitals -*/
-    options.add_bool("ACI_PRINT_NO", true);
+    foptions.add_bool("ACI_PRINT_NO", true, "Print the natural orbitals");
 
     /*- Save the final wavefunction -*/
-    options.add_bool("SAVE_FINAL_WFN", false);
+    foptions.add_bool("SAVE_FINAL_WFN", false, "Save the final wavefunction to a file");
 
 }
 
