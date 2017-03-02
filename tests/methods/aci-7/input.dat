@@ -34,6 +34,8 @@ set forte {
   aci_select_type aimed_energy
   frozen_docc [1,0,0,0,0,1,0,0]
   sigma 0.08
+  aci_excited_algorithm average
+  aci_pq_function average
   aci_nroot 3
   mp2_nos true
   aci_average_offset 0

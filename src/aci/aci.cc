@@ -63,7 +63,6 @@ void set_ACI_options(ForteOptions& foptions)
 
     /*- The selection type for the Q-space-*/
     foptions.add_str("ACI_SELECT_TYPE", "AIMED_ENERGY",
-                    "ENERGY AMP AIMED_AMP AIMED_ENERGY",
                     "The energy selection criteria");
     /*-Threshold for the selection of the P space -*/
     foptions.add_double("SIGMA", 0.01, "The energy selection threshold");
@@ -121,6 +120,7 @@ void set_ACI_options(ForteOptions& foptions)
     /*- Number of guess vectors for Sparse CI solver -*/
     foptions.add_int("N_GUESS_VEC", 10, "Number of guess vectors for Sparse CI solver");
     foptions.add_double("ACI_NO_THRESHOLD", 0.02, "Threshold for active space prediction");
+    foptions.add_double("ACI_SPIN_TOL",0.02, "Tolerance for S^2 value");
 
     /*- Approximate 1RDM? -*/
     foptions.add_bool("ACI_APPROXIMATE_RDM", false, "Approximate the RDMs");
