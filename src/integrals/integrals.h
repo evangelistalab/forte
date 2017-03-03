@@ -41,6 +41,7 @@
 #include "psi4/libmints/matrix.h"
 #include "ambit/blocked_tensor.h"
 #include "../helpers.h"
+#include "../forte_options.h"
 
 namespace psi {
 
@@ -64,7 +65,7 @@ enum IntegralType {
 // DFIntegrals->df_integrals.cc
 
 /// Set integrals options
-void set_INT_options(Options& options);
+void set_INT_options(ForteOptions& foptions);
 
 /**
  * Integrals: transforms and stores the integrals in Pitzer ordering

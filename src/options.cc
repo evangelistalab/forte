@@ -30,6 +30,7 @@
 #include "fci/fci.h"
 #include "pci/pci.h"
 #include "aci/aci.h"
+#include "integrals/integrals.h"
 #include "avas.h"
 
 namespace psi { namespace forte {
@@ -39,6 +40,7 @@ void forte_options(std::string name, ForteOptions& foptions) {
     set_FCI_options(foptions);
     set_ACI_options(foptions);
     set_PCI_options(foptions);
+    set_INT_options(foptions);
     // ..
     set_AVAS_options(foptions);
 
