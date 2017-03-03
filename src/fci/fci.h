@@ -34,7 +34,6 @@
 
 #include "../helpers.h"
 #include "../integrals/integrals.h"
-#include "../string_lists.h"
 #include "../reference.h"
 #include "../forte_options.h"
 #include "fci_solver.h"

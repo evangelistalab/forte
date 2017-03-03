@@ -28,7 +28,7 @@
 
 #include "psi4/psi4-dec.h"
 
-#include "helpers.h"
+#include "../helpers.h"
 #include "string_lists.h"
 
 namespace psi {

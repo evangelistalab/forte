@@ -34,7 +34,7 @@
 #include "psi4/libmints/matrix.h"
 #include "fci_integrals.h"
 #include "../integrals/integrals.h"
-#include "../string_lists.h"
+#include "string_lists.h"
 
 #define CAPRICCIO_USE_DAXPY 1
 #define CAPRICCIO_USE_UNROLL 0
