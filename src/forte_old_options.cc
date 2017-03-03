@@ -9,8 +9,6 @@ namespace psi {
 namespace forte {
 
 void forte_old_options(Options& options) {
-//    set_ACI_options(options);
-    set_INT_options(options);
     set_PCI_options(options);
 
     /*- MODULEDESCRIPTION Forte */
