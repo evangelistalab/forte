@@ -37,7 +37,7 @@
 
 #include "../helpers.h"
 #include "../integrals/integrals.h"
-#include "../string_lists.h"
+#include "string_lists.h"
 #include "../reference.h"
 
 namespace psi {
