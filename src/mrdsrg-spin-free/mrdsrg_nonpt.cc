@@ -30,6 +30,7 @@
 #include <vector>
 #include <map>
 #include <cctype>
+#include <memory>
 
 #include "psi4/libdiis/diismanager.h"
 

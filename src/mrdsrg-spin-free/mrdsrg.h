@@ -30,6 +30,7 @@
 #define _mrdsrg_h_
 
 #include <cmath>
+#include <memory>
 
 #include "psi4/liboptions/liboptions.h"
 #include "psi4/libmints/wavefunction.h"

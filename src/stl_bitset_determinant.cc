@@ -261,10 +261,10 @@ double STLBitsetDeterminant::destroy_beta_bit(int n) {
 /// Switch alfa and beta bits
 void STLBitsetDeterminant::spin_flip() {
     for (int p = 0; p < nmo_; ++p) {
-        std::swap(bits_[p],bits_[nmo_ + p]);
-//        bool temp = bits_[p];
-//        bits_[p] = bits_[nmo_ + p];
-//        bits_[nmo_ + p] = temp;
+//        std::swap(bits_[p],bits_[nmo_ + p]);
+        bool temp = bits_[p];
+        bits_[p] = bits_[nmo_ + p];
+        bits_[nmo_ + p] = temp;
     }
 }
 
