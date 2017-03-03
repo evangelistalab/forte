@@ -29,6 +29,7 @@
 #include <algorithm>
 #include <vector>
 #include <map>
+#include <memory>
 #include "psi4/libdiis/diismanager.h"
 
 #include "../mini-boost/boost/format.hpp"
