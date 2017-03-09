@@ -11,12 +11,22 @@ SharedMatrix semicanonicalize_block(SharedWavefunction ref_wfn,
                                     int offset);
 
 void set_AVAS_options(ForteOptions& foptions) {
-    foptions.add_double("AVAS_SIGMA", 0.90,
+    foptions.add_double("AVAS_SIGMA", 0.98,
                         "Threshold that controls the size of the active space");
     foptions.add_int("AVAS_NUM_ACTIVE", 0, "Allows the user to specify the "
                                            "total number of active orbitals. "
                                            "It takes priority over the "
                                            "threshold based selection.");
+    foptions.add_int("AVAS_NUM_ACTIVE_OCC", 0,
+                     "Allows the user to specify the "
+                     "number of active occupied orbitals. "
+                     "It takes priority over the "
+                     "threshold based selection.");
+    foptions.add_int("AVAS_NUM_ACTIVE_VIR", 0,
+                     "Allows the user to specify the "
+                     "number of active occupied orbitals. "
+                     "It takes priority over the "
+                     "threshold based selection.");
 }
 
 void make_avas(SharedWavefunction ref_wfn, Options& options, SharedMatrix Ps) {
@@ -51,9 +61,6 @@ void make_avas(SharedWavefunction ref_wfn, Options& options, SharedMatrix Ps) {
 
         Socc->diagonalize(Uocc, sigmaocc, descending);
 
-        //        Uocc->print();
-        //        sigmaocc->print();
-
         // Grab the virtual block and diagonalize it
         for (int a = 0; a < nvir; a++) {
             for (int b = 0; b < nvir; b++) {
@@ -61,7 +68,6 @@ void make_avas(SharedWavefunction ref_wfn, Options& options, SharedMatrix Ps) {
                 Svir->set(a, b, value);
             }
         }
-        //        Svir->print();
 
         auto Uvir = std::make_shared<Matrix>("U virtual block", nvir, nvir);
         auto sigmavir = std::make_shared<Vector>("sigma virtual block", nvir);
@@ -108,10 +114,30 @@ void make_avas(SharedWavefunction ref_wfn, Options& options, SharedMatrix Ps) {
         std::vector<int> occ_inact, occ_act, vir_inact, vir_act;
 
         int avas_num_active = options.get_int("AVAS_NUM_ACTIVE");
+        int avas_num_active_occ = options.get_int("AVAS_NUM_ACTIVE_OCC");
+        int avas_num_active_vir = options.get_int("AVAS_NUM_ACTIVE_VIR");
         double avas_sigma = options.get_double("AVAS_SIGMA");
 
-        if (avas_num_active > 0) {
-            for (int n = 0; n < avas_num_active; ++n){
+        if (avas_num_active_occ + avas_num_active_vir > 0) {
+            for (const auto& mo_tuple : sorted_mos) {
+                bool is_occ = std::get<1>(mo_tuple);
+                int p = std::get<2>(mo_tuple);
+                if (is_occ) {
+                    if (occ_act.size() < avas_num_active_occ) {
+                        occ_act.push_back(p);
+                    } else {
+                        occ_inact.push_back(p);
+                    }
+                } else {
+                    if (vir_act.size() < avas_num_active_vir) {
+                        vir_act.push_back(p);
+                    } else {
+                        vir_inact.push_back(p);
+                    }
+                }
+            }
+        } else if (avas_num_active > 0) {
+            for (int n = 0; n < avas_num_active; ++n) {
                 bool is_occ = std::get<1>(sorted_mos[n]);
                 int p = std::get<2>(sorted_mos[n]);
                 if (is_occ) {
@@ -120,7 +146,7 @@ void make_avas(SharedWavefunction ref_wfn, Options& options, SharedMatrix Ps) {
                     vir_act.push_back(p);
                 }
             }
-            for (int n = avas_num_active; n < nmo; ++n){
+            for (int n = avas_num_active; n < nmo; ++n) {
                 bool is_occ = std::get<1>(sorted_mos[n]);
                 int p = std::get<2>(sorted_mos[n]);
                 if (is_occ) {
