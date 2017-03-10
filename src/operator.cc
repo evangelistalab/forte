@@ -1,5 +1,5 @@
 /*
- * @BEGIN LICENSE
+ *@BEGIN LICENSE
  *
  * Forte: an open-source plugin to Psi4 (https://github.com/psi4/psi4)
  * that implements a variety of quantum chemistry methods for strongly
@@ -233,84 +233,139 @@ void WFNOperator::add_doubles(DeterminantMap& wfn) {
     wfn.merge(external);
 }
 
+void WFNOperator::build_strings(DeterminantMap& wfn)
+{
+    beta_strings_.clear();
+    alpha_strings_.clear();
+    
+    // First build a map from beta strings to determinants
+    const det_hash<size_t>& wfn_map = wfn.wfn_hash();
+    det_hash<size_t> beta_str_hash;
+    size_t nbeta = 0;
+    for( auto& I : wfn_map ){
+        // Grab mutable copy of determinant
+        STLBitsetDeterminant detI = I.first;
+        detI.zero_spin(0);
+
+        det_hash<size_t>::iterator it = beta_str_hash.find(detI);
+        size_t b_add;
+        if( it == beta_str_hash.end() ){
+            b_add = nbeta;
+            beta_str_hash[detI] = b_add;
+            nbeta++;
+        }else{
+            b_add = it->second;
+        }
+        beta_strings_.resize(nbeta);
+        beta_strings_[b_add].push_back(I.second);
+    }
+    // Next build a map from annihilated alpha strings to determinants
+    det_hash<size_t> alfa_str_hash;
+    size_t naalpha = 0;
+    for( auto& I : wfn_map ){
+        // Grab mutable copy of determinant
+        STLBitsetDeterminant detI = I.first;
+        detI.zero_spin(1);
+        std::vector<int> aocc = detI.get_alfa_occ();
+        for( int i = 0, nalfa = aocc.size(); i < nalfa; ++i ){
+            int ii = aocc[i];
+            STLBitsetDeterminant ann_det(detI);
+            ann_det.set_alfa_bit(ii,false);
+            
+            size_t a_add;
+            det_hash<size_t>::iterator it = alfa_str_hash.find(ann_det);
+            if( it == alfa_str_hash.end() ){
+                a_add = naalpha;
+                alfa_str_hash[ann_det] = a_add;
+                naalpha++;
+            } else {
+                a_add = it->second;
+            }
+            alpha_strings_.resize(naalpha);
+            alpha_strings_[a_add].push_back(std::make_pair(ii,I.second));
+        }
+    } 
+}
+
 void WFNOperator::op_lists(DeterminantMap& wfn) {
     size_t ndets = wfn.size();
     a_ann_list_.resize(ndets);
     b_ann_list_.resize(ndets);
-    const det_hash<size_t>& wfn_map = wfn.wfn_hash();
+    const std::vector<STLBitsetDeterminant>& dets = wfn.determinants();
     // Generate alpha coupling list
     {
         size_t na_ann = 0;
-        det_hash<int> map_a_ann;
-        for (auto& I : wfn_map) {
-            STLBitsetDeterminant detI = I.first;
-            std::vector<int> aocc = detI.get_alfa_occ();
-            int noalfa = aocc.size();
+        for( size_t b = 0, max_b = beta_strings_.size(); b < max_b; ++b){
+            std::vector<size_t>& c_dets = beta_strings_[b];
+            size_t max_I = c_dets.size();
+            det_hash<int> map_a_ann;
+            for( size_t I = 0; I < max_I; ++I){
+                const STLBitsetDeterminant& detI = dets[c_dets[I]];
+                std::vector<int> aocc = detI.get_alfa_occ();
+                int noalfa = aocc.size(); 
+                
+                a_ann_list_[c_dets[I]].resize(noalfa);
+                for( int i = 0; i < noalfa; ++i ){
+                    int ii = aocc[i];
+                    STLBitsetDeterminant detJ(detI);
+                    detJ.set_alfa_bit(ii,false);
+                    double sign = detI.slater_sign_alpha(ii);
 
-            std::vector<std::pair<size_t, short>> a_ann(noalfa);
+                    det_hash<int>::iterator it = map_a_ann.find(detJ);
+                    size_t detJ_add;
+                    if (it == map_a_ann.end()) {
+                        detJ_add = na_ann;
+                        map_a_ann[detJ] = na_ann;
+                        na_ann++;
+                    } else {
+                        detJ_add = it->second;
+                    }
 
-            for (int i = 0; i < noalfa; ++i) {
-                int ii = aocc[i];
-                STLBitsetDeterminant detJ(detI);
-                detJ.set_alfa_bit(ii, false);
-
-                double sign = detI.slater_sign_alpha(ii);
-
-                det_hash<int>::iterator it = map_a_ann.find(detJ);
-                size_t detJ_add;
-                // Add detJ to map if it isn't there
-                if (it == map_a_ann.end()) {
-                    detJ_add = na_ann;
-                    map_a_ann[detJ] = na_ann;
-                    na_ann++;
-                } else {
-                    detJ_add = it->second;
+                    a_ann_list_[c_dets[I]][i] = std::make_pair(detJ_add,
+                                              (sign > 0.0) ? (ii + 1) : (-ii - 1));
                 }
-
-                a_ann[i] = std::make_pair(detJ_add,
-                                          (sign > 0.0) ? (ii + 1) : (-ii - 1));
-            }
-            a_ann.shrink_to_fit();
-            a_ann_list_[I.second] = a_ann;
-        }
+            }    
+        } 
         a_ann_list_.shrink_to_fit();
         a_cre_list_.resize(na_ann);
     }
-
     // Generate beta coupling list
     {
         size_t nb_ann = 0;
-        det_hash<int> map_b_ann;
-        for (auto& I : wfn_map) {
-            STLBitsetDeterminant detI = I.first;
-            std::vector<int> bocc = detI.get_beta_occ();
-            int nobeta = bocc.size();
+        for( size_t a = 0, max_a = alpha_strings_.size(); a < max_a; ++a ){
+            std::vector<std::pair<int,size_t>>& c_dets = alpha_strings_[a];
+            size_t max_I = c_dets.size();
+            det_hash<int> map_b_ann;
+            for( size_t I = 0; I < max_I; ++I){
+                int idx = c_dets[I].second;
+                const STLBitsetDeterminant& detI = dets[idx];
+                std::vector<int> bocc = detI.get_beta_occ();
+                int nobeta = bocc.size(); 
 
-            std::vector<std::pair<size_t, short>> b_ann(nobeta);
+                b_ann_list_[idx].resize(nobeta);
 
-            for (int i = 0; i < nobeta; ++i) {
-                int ii = bocc[i];
-                STLBitsetDeterminant detJ(detI);
-                detJ.set_beta_bit(ii, false);
+                for (int i = 0; i < nobeta; ++i) {
+                    int ii = bocc[i];
+                    STLBitsetDeterminant detJ(detI);
+                    detJ.set_beta_bit(ii, false);
 
-                double sign = detI.slater_sign_beta(ii);
+                    double sign = detI.slater_sign_beta(ii);
 
-                det_hash<int>::iterator it = map_b_ann.find(detJ);
-                size_t detJ_add;
-                // Add detJ to map if it isn't there
-                if (it == map_b_ann.end()) {
-                    detJ_add = nb_ann;
-                    map_b_ann[detJ] = nb_ann;
-                    nb_ann++;
-                } else {
-                    detJ_add = it->second;
+                    det_hash<int>::iterator it = map_b_ann.find(detJ);
+                    size_t detJ_add;
+                    // Add detJ to map if it isn't there
+                    if (it == map_b_ann.end()) {
+                        detJ_add = nb_ann;
+                        map_b_ann[detJ] = nb_ann;
+                        nb_ann++;
+                    } else {
+                        detJ_add = it->second;
+                    }
+
+                    b_ann_list_[idx][i] = std::make_pair(detJ_add,
+                                              (sign > 0.0) ? (ii + 1) : (-ii - 1));
                 }
-
-                b_ann[i] = std::make_pair(detJ_add,
-                                          (sign > 0.0) ? (ii + 1) : (-ii - 1));
             }
-            b_ann.shrink_to_fit();
-            b_ann_list_[I.second] = b_ann;
         }
         b_ann_list_.shrink_to_fit();
         b_cre_list_.resize(nb_ann);
@@ -334,12 +389,6 @@ void WFNOperator::op_lists(DeterminantMap& wfn) {
     }
     a_cre_list_.shrink_to_fit();
     b_cre_list_.shrink_to_fit();
-
-    // for( size_t I = 0; I < b_cre_list_.size(); ++I ){
-    // for( auto& det : a_cre_list_[I] ){
-    // outfile->Printf("\n  detadd: %zu, det: %zu, idx: %d", I, det.first,
-    // det.second);
-    //}}
 }
 
 void WFNOperator::tp_lists(DeterminantMap& wfn) {
@@ -347,123 +396,125 @@ void WFNOperator::tp_lists(DeterminantMap& wfn) {
     aa_ann_list_.resize(ndets);
     ab_ann_list_.resize(ndets);
     bb_ann_list_.resize(ndets);
-    const det_hash<size_t>& wfn_map = wfn.wfn_hash();
+    const std::vector<STLBitsetDeterminant>& dets = wfn.determinants();
     // Generate alpha-alpha coupling list
     {
         size_t naa_ann = 0;
-        det_hash<int> map_aa_ann;
-        for (auto& I : wfn_map) {
-            STLBitsetDeterminant detI = I.first;
-            std::vector<int> aocc = detI.get_alfa_occ();
-            int noalfa = aocc.size();
+        for( size_t b = 0, max_b = beta_strings_.size(); b < max_b; ++b ){
+            det_hash<int> map_aa_ann;
+            std::vector<size_t>& c_dets = beta_strings_[b];
+            size_t max_I = c_dets.size();
+            
+            for( size_t I = 0; I < max_I; ++I ){
+                size_t idx = c_dets[I];
+                STLBitsetDeterminant detI = dets[idx];
+                std::vector<int> aocc = detI.get_alfa_occ();
+                int noalfa = aocc.size();
 
-            std::vector<std::tuple<size_t, short, short>> aa_ann(
-                noalfa * (noalfa - 1) / 2);
+                aa_ann_list_[idx].resize(noalfa * (noalfa-1) / 2);
+                for (int i = 0, ij = 0; i < noalfa; ++i) {
+                    for (int j = i + 1; j < noalfa; ++j, ++ij) {
+                        int ii = aocc[i];
+                        int jj = aocc[j];
+                        STLBitsetDeterminant detJ(detI);
+                        detJ.set_alfa_bit(ii, false);
+                        detJ.set_alfa_bit(jj, false);
 
-            for (int i = 0, ij = 0; i < noalfa; ++i) {
-                for (int j = i + 1; j < noalfa; ++j, ++ij) {
-                    int ii = aocc[i];
-                    int jj = aocc[j];
-                    STLBitsetDeterminant detJ(detI);
-                    detJ.set_alfa_bit(ii, false);
-                    detJ.set_alfa_bit(jj, false);
+                        double sign =
+                            detI.slater_sign_alpha(ii) * detI.slater_sign_alpha(jj);
 
-                    double sign =
-                        detI.slater_sign_alpha(ii) * detI.slater_sign_alpha(jj);
+                        det_hash<int>::iterator it = map_aa_ann.find(detJ);
+                        size_t detJ_add;
+                        // Add detJ to map if it isn't there
+                        if (it == map_aa_ann.end()) {
+                            detJ_add = naa_ann;
+                            map_aa_ann[detJ] = naa_ann;
+                            naa_ann++;
+                        } else {
+                            detJ_add = it->second;
+                        }
 
-                    det_hash<int>::iterator it = map_aa_ann.find(detJ);
-                    size_t detJ_add;
-                    // Add detJ to map if it isn't there
-                    if (it == map_aa_ann.end()) {
-                        detJ_add = naa_ann;
-                        map_aa_ann[detJ] = naa_ann;
-                        naa_ann++;
-                    } else {
-                        detJ_add = it->second;
+                        aa_ann_list_[idx][ij] = std::make_tuple(
+                            detJ_add, (sign > 0.0) ? (ii + 1) : (-ii - 1), jj);
                     }
-
-                    aa_ann[ij] = std::make_tuple(
-                        detJ_add, (sign > 0.0) ? (ii + 1) : (-ii - 1), jj);
                 }
             }
-            aa_ann.shrink_to_fit();
-            aa_ann_list_[I.second] = aa_ann;
         }
-        aa_cre_list_.resize(map_aa_ann.size());
+        aa_cre_list_.resize(naa_ann);
     }
     aa_ann_list_.shrink_to_fit();
-
     // Generate beta-beta coupling list
     {
         size_t nbb_ann = 0;
-        det_hash<int> map_bb_ann;
-        for (auto& I : wfn_map) {
-            STLBitsetDeterminant detI = I.first;
-            std::vector<int> bocc = detI.get_beta_occ();
-            int nobeta = bocc.size();
+        for( size_t a = 0, max_a = alpha_strings_.size(); a < max_a; ++a ){
+            det_hash<int> map_bb_ann;
+            std::vector<std::pair<int,size_t>>& c_dets = alpha_strings_[a];
+            size_t max_I = c_dets.size();
+            
+            for( size_t I = 0; I < max_I; ++I ){    
+                size_t idx = c_dets[I].second;                
 
-            std::vector<std::tuple<size_t, short, short>> bb_ann(
-                nobeta * (nobeta - 1) / 2);
+                STLBitsetDeterminant detI = dets[idx];
+                std::vector<int> bocc = detI.get_beta_occ();
+                int nobeta = bocc.size();
 
-            for (int i = 0, ij = 0; i < nobeta; ++i) {
-                for (int j = i + 1; j < nobeta; ++j, ++ij) {
-                    int ii = bocc[i];
-                    int jj = bocc[j];
-                    STLBitsetDeterminant detJ(detI);
-                    detJ.set_beta_bit(ii, false);
-                    detJ.set_beta_bit(jj, false);
+                bb_ann_list_[idx].resize(nobeta * (nobeta - 1) / 2);
 
-                    double sign =
-                        detI.slater_sign_beta(ii) * detI.slater_sign_beta(jj);
+                for (int i = 0, ij = 0; i < nobeta; ++i) {
+                    for (int j = i + 1; j < nobeta; ++j, ++ij) {
+                        int ii = bocc[i];
+                        int jj = bocc[j];
+                        STLBitsetDeterminant detJ(detI);
+                        detJ.set_beta_bit(ii, false);
+                        detJ.set_beta_bit(jj, false);
 
-                    det_hash<int>::iterator it = map_bb_ann.find(detJ);
-                    size_t detJ_add;
-                    // Add detJ to map if it isn't there
-                    if (it == map_bb_ann.end()) {
-                        detJ_add = nbb_ann;
-                        map_bb_ann[detJ] = nbb_ann;
-                        nbb_ann++;
-                    } else {
-                        detJ_add = it->second;
+                        double sign =
+                            detI.slater_sign_beta(ii) * detI.slater_sign_beta(jj);
+
+                        det_hash<int>::iterator it = map_bb_ann.find(detJ);
+                        size_t detJ_add;
+                        // Add detJ to map if it isn't there
+                        if (it == map_bb_ann.end()) {
+                            detJ_add = nbb_ann;
+                            map_bb_ann[detJ] = nbb_ann;
+                            nbb_ann++;
+                        } else {
+                            detJ_add = it->second;
+                        }
+
+                        bb_ann_list_[idx][ij] = std::make_tuple(
+                            detJ_add, (sign > 0.0) ? (ii + 1) : (-ii - 1), jj);
                     }
-
-                    bb_ann[ij] = std::make_tuple(
-                        detJ_add, (sign > 0.0) ? (ii + 1) : (-ii - 1), jj);
                 }
             }
-            bb_ann.shrink_to_fit();
-            bb_ann_list_[I.second] = bb_ann;
         }
-        bb_cre_list_.resize(map_bb_ann.size());
+        bb_cre_list_.resize(nbb_ann);
     }
     bb_ann_list_.shrink_to_fit();
+
 
     // Generate alfa-beta coupling list
     {
         size_t nab_ann = 0;
-        det_hash<int> map_ab_ann;
-        for (auto& I : wfn_map) {
-            STLBitsetDeterminant detI = I.first;
-            std::vector<int> aocc = detI.get_alfa_occ();
-            std::vector<int> bocc = detI.get_beta_occ();
+        for( size_t a = 0, max_a = alpha_strings_.size(); a < max_a; ++a ){
+            det_hash<int> map_ab_ann;
+            std::vector<std::pair<int,size_t>>& c_dets = alpha_strings_[a];
+            size_t max_I = c_dets.size();
+            for( size_t I = 0; I < max_I; ++I ){        
+                size_t idx = c_dets[I].second;
+                int ii = c_dets[I].first;
+                STLBitsetDeterminant detI = dets[idx];
+                detI.set_alfa_bit(ii, false);
+                std::vector<int> bocc = detI.get_beta_occ();
+                size_t nobeta = bocc.size();
 
-            size_t noalfa = aocc.size();
-            size_t nobeta = bocc.size();
-
-            std::vector<std::tuple<size_t, short, short>> ab_ann(noalfa *
-                                                                 nobeta);
-
-            for (size_t i = 0, ij = 0; i < noalfa; ++i) {
-                for (size_t j = 0; j < nobeta; ++j, ++ij) {
-                    int ii = aocc[i];
+                for (size_t j = 0; j < nobeta; ++j) {
                     int jj = bocc[j];
 
                     STLBitsetDeterminant detJ(detI);
-                    detJ.set_alfa_bit(ii, false);
                     detJ.set_beta_bit(jj, false);
 
-                    double sign =
-                        detI.slater_sign_alpha(ii) * detI.slater_sign_beta(jj);
+                    double sign = detI.slater_sign_alpha(ii) * detI.slater_sign_beta(jj);
                     det_hash<int>::iterator it = map_ab_ann.find(detJ);
                     size_t detJ_add;
 
@@ -474,17 +525,14 @@ void WFNOperator::tp_lists(DeterminantMap& wfn) {
                     } else {
                         detJ_add = it->second;
                     }
-                    ab_ann[ij] = std::make_tuple(
-                        detJ_add, (sign > 0.0) ? (ii + 1) : (-ii - 1), jj);
+                    ab_ann_list_[idx].push_back(std::make_tuple(
+                        detJ_add, (sign > 0.0) ? (ii + 1) : (-ii - 1), jj));
                 }
             }
-            ab_ann.shrink_to_fit();
-            ab_ann_list_[I.second] = ab_ann;
         }
-        ab_cre_list_.resize(map_ab_ann.size());
+        ab_cre_list_.resize(nab_ann);
     }
     ab_ann_list_.shrink_to_fit();
-
     for (size_t I = 0, max_I = aa_ann_list_.size(); I < max_I; ++I) {
         const std::vector<std::tuple<size_t, short, short>>& aa_ann =
             aa_ann_list_[I];
