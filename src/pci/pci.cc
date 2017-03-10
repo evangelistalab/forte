@@ -67,6 +67,13 @@ void set_PCI_options(ForteOptions& foptions) {
     ///         OPTIONS FOR THE PROJECTOR CI
     //////////////////////////////////////////////////////////////
 
+    foptions.add_str("PCI_GENERATOR", "WALL-CHEBYSHEV",
+                     {"LINEAR", "QUADRATIC", "CUBIC", "QUARTIC", "POWER",
+                      "TROTTER", "OLSEN", "DAVIDSON", "MITRUSHENKOV",
+                      "EXP-CHEBYSHEV", "WALL-CHEBYSHEV", "CHEBYSHEV", "LANCZOS",
+                      "DL"},
+                     "The propagation algorithm");
+
     foptions.add_int("PCI_NROOT", 1, "The number of roots computed");
 
     foptions.add_double("PCI_SPAWNING_THRESHOLD", 0.001,
@@ -159,16 +166,6 @@ void set_PCI_options(ForteOptions& foptions) {
 
     foptions.add_bool("PCI_POST_DIAGONALIZE", false,
                       "Do a post diagonalization?");
-}
-
-/// Set the old style options for the PCI method
-void set_PCI_options(Options& options) {
-
-    /*- The propagation algorithm -*/
-    options.add_str("PCI_GENERATOR", "WALL-CHEBYSHEV",
-                    "LINEAR QUADRATIC CUBIC QUARTIC POWER TROTTER OLSEN "
-                    "DAVIDSON MITRUSHENKOV EXP-CHEBYSHEV WALL-CHEBYSHEV "
-                    "CHEBYSHEV LANCZOS DL");
 }
 
 void combine_hashes(std::vector<det_hash<>>& thread_det_C_map,
