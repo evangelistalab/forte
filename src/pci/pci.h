@@ -46,8 +46,6 @@
 namespace psi {
 namespace forte {
 
-/// Set the old style options for the PCI method
-void set_PCI_options(Options& options);
 /// Set the forte style options for the FCI method
 void set_PCI_options(ForteOptions& foptions);
 
