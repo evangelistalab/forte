@@ -26,12 +26,12 @@
  * @END LICENSE
  */
 
+#include "aosubspace/aosubspace.h"
+#include "avas.h"
+#include "forte_options.h"
 #include "helpers.h"
 #include "integrals/integrals.h"
-#include "forte_options.h"
-#include "aosubspace/aosubspace.h"
 #include "stl_bitset_determinant.h"
-#include "avas.h"
 
 #ifdef HAVE_CHEMPS2
 #include "dmrgscf.h"
@@ -90,16 +90,19 @@ extern "C" SharedWavefunction forte(SharedWavefunction ref_wfn,
     SharedMatrix Ps = make_aosubspace_projector(ref_wfn, options);
 
     // Transform the orbitals
-    make_avas(ref_wfn,options,Ps);
+    make_avas(ref_wfn, options, Ps);
 
-    // Make an integral object
-    auto ints = make_forte_integrals(ref_wfn, options, mo_space_info);
+    // Transform integrals and run forte only if necessary
+    if (options.get_str("JOB_TYPE") != "NONE") {
+        // Make an integral object
+        auto ints = make_forte_integrals(ref_wfn, options, mo_space_info);
 
-    // Compute
-    forte_old_methods(ref_wfn, options, ints, mo_space_info, my_proc);
+        // Compute
+        forte_old_methods(ref_wfn, options, ints, mo_space_info, my_proc);
 
-    outfile->Printf("\n\n  Your calculation took %.8f seconds\n",
-                    total_time.get());
+        outfile->Printf("\n\n  Your calculation took %.8f seconds\n",
+                        total_time.get());
+    }
 
     forte_cleanup();
 
