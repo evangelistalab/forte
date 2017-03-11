@@ -649,7 +649,8 @@ double AdaptiveCI::compute_energy() {
         }
 
         outfile->Printf("\n  Size of combined space: %zu", dim);
-
+        
+        op_c.build_strings(full_space);
         op_c.op_lists(full_space);
         op_c.tp_lists(full_space);
 
@@ -698,6 +699,7 @@ double AdaptiveCI::compute_energy() {
     //    op1.op_lists(approx); 
         op_.clear_op_lists();
         op_.clear_tp_lists();
+        op_.build_strings(approx);
         op_.op_lists(approx);
         outfile->Printf("\n  Size of approx: %zu  size of var: %zu", approx.size(), final_wfn_.size());
         compute_rdms(approx, op_, new_evecs, 0,0); 
@@ -1531,14 +1533,15 @@ bool AdaptiveCI::check_stuck(std::vector<std::vector<double>>& energy_history,
 
 std::vector<std::pair<double, double>>
 AdaptiveCI::compute_spin(DeterminantMap& space, SharedMatrix evecs, int nroot) {
-    WFNOperator op(mo_symmetry_);
+    //WFNOperator op(mo_symmetry_);
 
-    op.op_lists(space);
-    op.tp_lists(space);
+    //op.build_strings(space);
+    //op.op_lists(space);
+    //op.tp_lists(space);
 
     std::vector<std::pair<double, double>> spin_vec(nroot);
     for (int n = 0; n < nroot_; ++n) {
-        double S2 = op.s2(space, evecs, n);
+        double S2 = op_.s2(space, evecs, n);
         double S = std::fabs(0.5 * (std::sqrt(1.0 + 4.0 * S2) - 1.0));
         spin_vec[n] = make_pair(S, S2);
     }
@@ -2370,6 +2373,7 @@ void AdaptiveCI::compute_aci(DeterminantMap& PQ_space, SharedMatrix& PQ_evecs,
 
         op_.clear_op_lists();
         op_.clear_tp_lists();
+        op_.build_strings(P_space);
         op_.op_lists(P_space);
         op_.tp_lists(P_space);
         sparse_solver.manual_guess(false);
@@ -2459,6 +2463,7 @@ void AdaptiveCI::compute_aci(DeterminantMap& PQ_space, SharedMatrix& PQ_evecs,
         // Step 3. Diagonalize the Hamiltonian in the P + Q space
         op_.clear_op_lists();
         op_.clear_tp_lists();
+        op_.build_strings(PQ_space);
         op_.op_lists(PQ_space);
         op_.tp_lists(PQ_space);
         Timer diag_pq;
@@ -2523,7 +2528,7 @@ void AdaptiveCI::compute_aci(DeterminantMap& PQ_space, SharedMatrix& PQ_evecs,
         }
 
         // if( follow and num_ref_roots > 0 and (cycle >= (pre_iter_ - 1)) ){
-        if (follow and num_ref_roots > 0 and (cycle >= pre_iter_)) {
+        if (follow and (num_ref_roots > 1) and (cycle >= pre_iter_)) {
             ref_root_ = root_follow(P_ref, P_ref_evecs, PQ_space, PQ_evecs,
                                     num_ref_roots);
         }

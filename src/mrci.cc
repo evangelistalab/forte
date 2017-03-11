@@ -94,6 +94,7 @@ double MRCI::compute_energy()
     outfile->Printf("\n  Excitations took %1.5f s", add.get());
     outfile->Printf("\n  Dimension of model space: %zu", reference_.size());
 
+    op.build_strings(reference_);
     op.op_lists(reference_);
     op.tp_lists(reference_);
 
