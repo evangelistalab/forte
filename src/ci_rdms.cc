@@ -3144,17 +3144,19 @@ void CI_RDMS::rdm_test(
     std::vector<double>& tprdm_aab, std::vector<double>& tprdm_abb,
     std::vector<double>& tprdm_bbb) {
 
+    const std::vector<STLBitsetDeterminant>& det_space = wfn_.determinants();
+
     double error_1rdm_a = 0.0;
     for (size_t p = 0; p < ncmo_; ++p) {
         for (size_t q = 0; q < ncmo_; ++q) {
             double rdm = 0.0;
             for (size_t i = 0; i < dim_space_; ++i) {
-                STLBitsetDeterminant I(det_space_[i]);
+                STLBitsetDeterminant I(det_space[i]);
                 double sign = 1.0;
                 sign *= I.destroy_alfa_bit(q);
                 sign *= I.create_alfa_bit(p);
                 for (size_t j = 0; j < dim_space_; ++j) {
-                    if (I == det_space_[j]) {
+                    if (I == det_space[j]) {
                         rdm += sign * evecs_->get(i, root1_) *
                                evecs_->get(j, root2_);
                     }
@@ -3175,12 +3177,12 @@ void CI_RDMS::rdm_test(
         for (size_t q = 0; q < ncmo_; ++q) {
             double rdm = 0.0;
             for (size_t i = 0; i < dim_space_; ++i) {
-                STLBitsetDeterminant I(det_space_[i]);
+                STLBitsetDeterminant I(det_space[i]);
                 double sign = 1.0;
                 sign *= I.destroy_beta_bit(q);
                 sign *= I.create_beta_bit(p);
                 for (size_t j = 0; j < dim_space_; ++j) {
-                    if (I == det_space_[j]) {
+                    if (I == det_space[j]) {
                         rdm += sign * evecs_->get(i, root1_) *
                                evecs_->get(j, root2_);
                     }
@@ -3203,14 +3205,14 @@ void CI_RDMS::rdm_test(
                 for (size_t s = 0; s < ncmo_; ++s) {
                     double rdm = 0.0;
                     for (size_t i = 0; i < dim_space_; ++i) {
-                        STLBitsetDeterminant I(det_space_[i]);
+                        STLBitsetDeterminant I(det_space[i]);
                         double sign = 1.0;
                         sign *= I.destroy_alfa_bit(r);
                         sign *= I.destroy_alfa_bit(s);
                         sign *= I.create_alfa_bit(q);
                         sign *= I.create_alfa_bit(p);
                         for (size_t j = 0; j < dim_space_; ++j) {
-                            if (I == det_space_[j]) {
+                            if (I == det_space[j]) {
                                 rdm += sign * evecs_->get(i, root1_) *
                                        evecs_->get(j, root2_);
                             }
@@ -3237,14 +3239,14 @@ void CI_RDMS::rdm_test(
                 for (size_t s = 0; s < ncmo_; ++s) {
                     double rdm = 0.0;
                     for (size_t i = 0; i < dim_space_; ++i) {
-                        STLBitsetDeterminant I(det_space_[i]);
+                        STLBitsetDeterminant I(det_space[i]);
                         double sign = 1.0;
                         sign *= I.destroy_beta_bit(r);
                         sign *= I.destroy_beta_bit(s);
                         sign *= I.create_beta_bit(q);
                         sign *= I.create_beta_bit(p);
                         for (size_t j = 0; j < dim_space_; ++j) {
-                            if (I == det_space_[j]) {
+                            if (I == det_space[j]) {
                                 rdm += sign * evecs_->get(i, root1_) *
                                        evecs_->get(j, root2_);
                             }
@@ -3271,14 +3273,14 @@ void CI_RDMS::rdm_test(
                 for (size_t s = 0; s < ncmo_; ++s) {
                     double rdm = 0.0;
                     for (size_t i = 0; i < dim_space_; ++i) {
-                        STLBitsetDeterminant I(det_space_[i]);
+                        STLBitsetDeterminant I(det_space[i]);
                         double sign = 1.0;
                         sign *= I.destroy_alfa_bit(r);
                         sign *= I.destroy_beta_bit(s);
                         sign *= I.create_beta_bit(q);
                         sign *= I.create_alfa_bit(p);
                         for (size_t j = 0; j < dim_space_; ++j) {
-                            if (I == det_space_[j]) {
+                            if (I == det_space[j]) {
                                 rdm += sign * evecs_->get(i, root1_) *
                                        evecs_->get(j, root2_);
                             }
@@ -3297,7 +3299,7 @@ void CI_RDMS::rdm_test(
         }
     }
     outfile->Printf("\n    ABAB 2-RDM Error :   %2.15f", error_2rdm_ab);
-
+/*
     // aaa aaa
     // SharedMatrix three_rdm(new Matrix("three", dim_space_, dim_space_));
     // three_rdm->zero();
@@ -3311,7 +3313,7 @@ void CI_RDMS::rdm_test(
                         for (size_t a = 0; a < ncmo_; ++a) {
                             double rdm = 0.0;
                             for (size_t i = 0; i < dim_space_; ++i) {
-                                STLBitsetDeterminant I(det_space_[i]);
+                                STLBitsetDeterminant I(det_space[i]);
                                 double sign = 1.0;
                                 sign *= I.destroy_alfa_bit(s);
                                 sign *= I.destroy_alfa_bit(t);
@@ -3320,7 +3322,7 @@ void CI_RDMS::rdm_test(
                                 sign *= I.create_alfa_bit(q);
                                 sign *= I.create_alfa_bit(p);
                                 for (size_t j = 0; j < dim_space_; ++j) {
-                                    if (I == det_space_[j]) {
+                                    if (I == det_space[j]) {
                                         rdm += sign * evecs_->get(i, root1_) *
                                                evecs_->get(j, root2_);
                                         // three_rdm->set(i,j,three_rdm->get(i,j)
@@ -3359,7 +3361,7 @@ void CI_RDMS::rdm_test(
                         for (size_t a = 0; a < ncmo_; ++a) {
                             double rdm = 0.0;
                             for (size_t i = 0; i < dim_space_; ++i) {
-                                STLBitsetDeterminant I(det_space_[i]);
+                                STLBitsetDeterminant I(det_space[i]);
                                 double sign = 1.0;
                                 sign *= I.destroy_alfa_bit(s);
                                 sign *= I.destroy_alfa_bit(t);
@@ -3407,7 +3409,7 @@ void CI_RDMS::rdm_test(
                         for (size_t a = 0; a < ncmo_; ++a) {
                             double rdm = 0.0;
                             for (size_t i = 0; i < dim_space_; ++i) {
-                                STLBitsetDeterminant I(det_space_[i]);
+                                STLBitsetDeterminant I(det_space[i]);
                                 double sign = 1.0;
                                 sign *= I.destroy_alfa_bit(s);
                                 sign *= I.destroy_beta_bit(t);
@@ -3416,7 +3418,7 @@ void CI_RDMS::rdm_test(
                                 sign *= I.create_beta_bit(q);
                                 sign *= I.create_alfa_bit(p);
                                 for (size_t j = 0; j < dim_space_; ++j) {
-                                    if (I == det_space_[j]) {
+                                    if (I == det_space[j]) {
                                         rdm += sign * evecs_->get(i, root1_) *
                                                evecs_->get(j, root2_);
                                         // three_rdm->set(i,j,three_rdm->get(i,j)
@@ -3456,7 +3458,7 @@ void CI_RDMS::rdm_test(
                         for (size_t a = 0; a < ncmo_; ++a) {
                             double rdm = 0.0;
                             for (size_t i = 0; i < dim_space_; ++i) {
-                                STLBitsetDeterminant I(det_space_[i]);
+                                STLBitsetDeterminant I(det_space[i]);
                                 double sign = 1.0;
                                 sign *= I.destroy_beta_bit(s);
                                 sign *= I.destroy_beta_bit(t);
@@ -3465,7 +3467,7 @@ void CI_RDMS::rdm_test(
                                 sign *= I.create_beta_bit(q);
                                 sign *= I.create_beta_bit(p);
                                 for (size_t j = 0; j < dim_space_; ++j) {
-                                    if (I == det_space_[j]) {
+                                    if (I == det_space[j]) {
                                         rdm += sign * evecs_->get(i, root1_) *
                                                evecs_->get(j, root2_);
                                         // three_rdm->set(i,j,three_rdm->get(i,j)
@@ -3494,7 +3496,7 @@ void CI_RDMS::rdm_test(
     }
     Process::environment.globals["BBBBBB 3-RDM ERROR"] = error_3rdm_bbb;
     outfile->Printf("\n    BBBBBB 3-RDM Error : %2.15f", error_3rdm_bbb);
-    // three_rdm->print_to_mathematica();
+*/    // three_rdm->print_to_mathematica();
 }
 }
 } // End Namespaces

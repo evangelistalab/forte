@@ -76,6 +76,8 @@ class WFNOperator {
     /// Compute total spin expectation value <|S^2|>
     double s2(DeterminantMap& wfn, SharedMatrix& evecs, int root);
 
+    void build_strings(DeterminantMap& wfn);    
+
     /// The alpha single-annihilation/creation list
     std::vector<std::vector<std::pair<size_t, short>>> a_ann_list_;
     std::vector<std::vector<std::pair<size_t, short>>> a_cre_list_;
@@ -118,6 +120,10 @@ class WFNOperator {
   protected:
     /// Initialize important variables on construction
     void startup();
+
+    std::vector<std::vector<size_t>> beta_strings_;
+    std::vector<std::vector<std::pair<int,size_t>>> alpha_strings_;
+    
 
     /// Active space symmetry
     std::vector<int> mo_symmetry_;
