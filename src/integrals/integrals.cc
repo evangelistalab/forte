@@ -227,7 +227,6 @@ void ForteIntegrals::transform_one_electron_integrals() {
     V = mints.so_potential();
 
     SharedMatrix Ca = wfn_->Ca();
-    SharedMatrix Cb = wfn_->Cb();
 
     T->add(V);
     V->copy(T);
@@ -235,7 +234,7 @@ void ForteIntegrals::transform_one_electron_integrals() {
     OneIntsAO_ = OneIntAO;
 
     T->transform(Ca);
-    V->transform(Cb);
+    V->transform(Ca);
     OneInt = T;
     OneBody_symm_ = OneInt;
 
