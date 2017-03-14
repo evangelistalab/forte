@@ -44,6 +44,7 @@
 #include "multidimensional_arrays.h"
 #include "mp2_nos.h"
 #include "pci/pci.h"
+#include "pci/pci_cihash.h"
 #include "aci/aci.h"
 #include "fcimc.h"
 #include "fci_mo.h"
@@ -130,6 +131,13 @@ void forte_old_methods(SharedWavefunction ref_wfn, Options& options,
                                                  mo_space_info);
         for (int n = 0; n < options.get_int("NROOT"); ++n) {
             pci->compute_energy();
+        }
+    }
+    if (options.get_str("JOB_TYPE") == "PCI_CIHASH") {
+        auto pci_cihash = std::make_shared<ProjectorCI_CIHash>(ref_wfn, options, ints,
+                                                 mo_space_info);
+        for (int n = 0; n < options.get_int("NROOT"); ++n) {
+            pci_cihash->compute_energy();
         }
     }
     if (options.get_str("JOB_TYPE") == "FCI") {
