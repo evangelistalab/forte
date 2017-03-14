@@ -260,6 +260,9 @@ class ForteIntegrals {
 
     virtual int ga_handle() { return 0; }
 
+    /// Print the one- and two-electron integrals to the output
+    void print_ints();
+
   protected:
     // ==> Class data <==
 
