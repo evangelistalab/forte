@@ -42,11 +42,11 @@
 #include "psi4/libpsio/psio.hpp"
 #include "psi4/libqt/qt.h"
 
-#include "pci.h"
+#include "pci_cihash.h"
 
 using namespace std;
 using namespace psi;
-using namespace psi::forte::GeneratorType_;
+using namespace psi::forte::GeneratorType_CIHash;
 
 #define USE_HASH 1
 #define DO_STATS 0
@@ -56,118 +56,118 @@ namespace psi {
 namespace forte {
 #ifdef _OPENMP
 #include <omp.h>
-bool ProjectorCI::have_omp_ = true;
+bool ProjectorCI_CIHash::have_omp_ = true;
 #else
 #define omp_get_max_threads() 1
 #define omp_get_thread_num() 0
-bool ProjectorCI::have_omp_ = false;
+bool ProjectorCI_CIHash::have_omp_ = false;
 #endif
 /// Set the forte style options for the FCI method
-void set_PCI_options(ForteOptions& foptions) {
-    //////////////////////////////////////////////////////////////
-    ///         OPTIONS FOR THE PROJECTOR CI
-    //////////////////////////////////////////////////////////////
+//void set_PCI_options(ForteOptions& foptions) {
+//    //////////////////////////////////////////////////////////////
+//    ///         OPTIONS FOR THE PROJECTOR CI
+//    //////////////////////////////////////////////////////////////
 
-    foptions.add_str("PCI_GENERATOR", "WALL-CHEBYSHEV",
-                     {"LINEAR", "QUADRATIC", "CUBIC", "QUARTIC", "POWER",
-                      "TROTTER", "OLSEN", "DAVIDSON", "MITRUSHENKOV",
-                      "EXP-CHEBYSHEV", "WALL-CHEBYSHEV", "CHEBYSHEV", "LANCZOS",
-                      "DL"},
-                     "The propagation algorithm");
+//    foptions.add_str("PCI_GENERATOR", "WALL-CHEBYSHEV",
+//                     {"LINEAR", "QUADRATIC", "CUBIC", "QUARTIC", "POWER",
+//                      "TROTTER", "OLSEN", "DAVIDSON", "MITRUSHENKOV",
+//                      "EXP-CHEBYSHEV", "WALL-CHEBYSHEV", "CHEBYSHEV", "LANCZOS",
+//                      "DL"},
+//                     "The propagation algorithm");
 
-    foptions.add_int("PCI_NROOT", 1, "The number of roots computed");
+//    foptions.add_int("PCI_NROOT", 1, "The number of roots computed");
 
-    foptions.add_double("PCI_SPAWNING_THRESHOLD", 0.001,
-                        "The determinant importance threshold");
+//    foptions.add_double("PCI_SPAWNING_THRESHOLD", 0.001,
+//                        "The determinant importance threshold");
 
-    foptions.add_double("PCI_MAX_GUESS_SIZE", 10000,
-                        "The maximum number of determinants used to form the "
-                        "guess wave function");
+//    foptions.add_double("PCI_MAX_GUESS_SIZE", 10000,
+//                        "The maximum number of determinants used to form the "
+//                        "guess wave function");
 
-    foptions.add_double("PCI_GUESS_SPAWNING_THRESHOLD", -1,
-                        "The determinant importance threshold");
+//    foptions.add_double("PCI_GUESS_SPAWNING_THRESHOLD", -1,
+//                        "The determinant importance threshold");
 
-    foptions.add_double("PCI_ENERGY_ESTIMATE_THRESHOLD", 1.0e-6,
-                        "The threshold with which we estimate the variational "
-                        "energy. Note that the final energy is always "
-                        "estimated exactly.");
+//    foptions.add_double("PCI_ENERGY_ESTIMATE_THRESHOLD", 1.0e-6,
+//                        "The threshold with which we estimate the variational "
+//                        "energy. Note that the final energy is always "
+//                        "estimated exactly.");
 
-    foptions.add_double("PCI_TAU", 1.0,
-                        "The time step in imaginary time (a.u.)");
+//    foptions.add_double("PCI_TAU", 1.0,
+//                        "The time step in imaginary time (a.u.)");
 
-    foptions.add_double("PCI_E_CONVERGENCE", 1.0e-8,
-                        "The energy convergence criterion");
+//    foptions.add_double("PCI_E_CONVERGENCE", 1.0e-8,
+//                        "The energy convergence criterion");
 
-    foptions.add_bool("PCI_FAST_EVAR", false,
-                      "Use a fast (sparse) estimate of the energy");
+//    foptions.add_bool("PCI_FAST_EVAR", false,
+//                      "Use a fast (sparse) estimate of the energy");
 
-    foptions.add_int(
-        "PCI_ENERGY_ESTIMATE_FREQ", 1,
-        "Iterations in between variational estimation of the energy");
+//    foptions.add_int(
+//        "PCI_ENERGY_ESTIMATE_FREQ", 1,
+//        "Iterations in between variational estimation of the energy");
 
-    foptions.add_bool("PCI_ADAPTIVE_BETA", false, "Use an adaptive time step?");
+//    foptions.add_bool("PCI_ADAPTIVE_BETA", false, "Use an adaptive time step?");
 
-    foptions.add_bool("PCI_USE_INTER_NORM", false,
-                      "Use intermediate normalization");
+//    foptions.add_bool("PCI_USE_INTER_NORM", false,
+//                      "Use intermediate normalization");
 
-    foptions.add_bool("PCI_USE_SHIFT", false, "Use a shift in the exponential");
+//    foptions.add_bool("PCI_USE_SHIFT", false, "Use a shift in the exponential");
 
-    foptions.add_bool("PCI_VAR_ESTIMATE", false,
-                      "Estimate variational energy during calculation");
+//    foptions.add_bool("PCI_VAR_ESTIMATE", false,
+//                      "Estimate variational energy during calculation");
 
-    foptions.add_bool("PCI_PRINT_FULL_WAVEFUNCTION", false,
-                      "Print full wavefunction when finish");
+//    foptions.add_bool("PCI_PRINT_FULL_WAVEFUNCTION", false,
+//                      "Print full wavefunction when finish");
 
-    foptions.add_bool("PCI_SIMPLE_PRESCREENING", false,
-                      "Prescreen the spawning of excitations");
+//    foptions.add_bool("PCI_SIMPLE_PRESCREENING", false,
+//                      "Prescreen the spawning of excitations");
 
-    foptions.add_bool("PCI_DYNAMIC_PRESCREENING", false,
-                      "Use dynamic prescreening");
+//    foptions.add_bool("PCI_DYNAMIC_PRESCREENING", false,
+//                      "Use dynamic prescreening");
 
-    foptions.add_bool("PCI_SCHWARZ_PRESCREENING", false,
-                      "Use schwarz prescreening");
+//    foptions.add_bool("PCI_SCHWARZ_PRESCREENING", false,
+//                      "Use schwarz prescreening");
 
-    foptions.add_bool("PCI_INITIATOR_APPROX", false,
-                      "Use initiator approximation");
+//    foptions.add_bool("PCI_INITIATOR_APPROX", false,
+//                      "Use initiator approximation");
 
-    foptions.add_double("PCI_INITIATOR_APPROX_FACTOR", 1.0,
-                        "The initiator approximation factor");
+//    foptions.add_double("PCI_INITIATOR_APPROX_FACTOR", 1.0,
+//                        "The initiator approximation factor");
 
-    foptions.add_bool("PCI_PERTURB_ANALYSIS", false,
-                      "Do result perturbation analysis");
+//    foptions.add_bool("PCI_PERTURB_ANALYSIS", false,
+//                      "Do result perturbation analysis");
 
-    foptions.add_bool("PCI_SYMM_APPROX_H", false,
-                      "Use Symmetric Approximate Hamiltonian");
+//    foptions.add_bool("PCI_SYMM_APPROX_H", false,
+//                      "Use Symmetric Approximate Hamiltonian");
 
-    foptions.add_bool("PCI_STOP_HIGHER_NEW_LOW", false,
-                      "Stop iteration when higher new low detected");
+//    foptions.add_bool("PCI_STOP_HIGHER_NEW_LOW", false,
+//                      "Stop iteration when higher new low detected");
 
-    foptions.add_double("PCI_MAXBETA", 1000.0, "The maximum value of beta");
+//    foptions.add_double("PCI_MAXBETA", 1000.0, "The maximum value of beta");
 
-    foptions.add_int("PCI_MAX_DAVIDSON_ITER", 12,
-                     "The maximum value of Davidson generator iteration");
+//    foptions.add_int("PCI_MAX_DAVIDSON_ITER", 12,
+//                     "The maximum value of Davidson generator iteration");
 
-    foptions.add_int(
-        "PCI_DL_COLLAPSE_PER_ROOT", 2,
-        "The number of trial vector to retain after Davidson-Liu collapsing");
+//    foptions.add_int(
+//        "PCI_DL_COLLAPSE_PER_ROOT", 2,
+//        "The number of trial vector to retain after Davidson-Liu collapsing");
 
-    foptions.add_int("PCI_DL_SUBSPACE_PER_ROOT", 8,
-                     "The maxim number of trial Davidson-Liu vectors");
+//    foptions.add_int("PCI_DL_SUBSPACE_PER_ROOT", 8,
+//                     "The maxim number of trial Davidson-Liu vectors");
 
-    foptions.add_int("PCI_CHEBYSHEV_ORDER", 5,
-                     "The order of Chebyshev truncation");
+//    foptions.add_int("PCI_CHEBYSHEV_ORDER", 5,
+//                     "The order of Chebyshev truncation");
 
-    foptions.add_int("PCI_KRYLOV_ORDER", 5, "The order of Krylov truncation");
+//    foptions.add_int("PCI_KRYLOV_ORDER", 5, "The order of Krylov truncation");
 
-    foptions.add_double("PCI_COLINEAR_THRESHOLD", 1.0e-6,
-                        "The minimum norm of orthogonal vector");
+//    foptions.add_double("PCI_COLINEAR_THRESHOLD", 1.0e-6,
+//                        "The minimum norm of orthogonal vector");
 
-    foptions.add_bool("PCI_REFERENCE_SPAWNING", false,
-                      "Do spawning according to reference");
+//    foptions.add_bool("PCI_REFERENCE_SPAWNING", false,
+//                      "Do spawning according to reference");
 
-    foptions.add_bool("PCI_POST_DIAGONALIZE", false,
-                      "Do a post diagonalization?");
-}
+//    foptions.add_bool("PCI_POST_DIAGONALIZE", false,
+//                      "Do a post diagonalization?");
+//}
 
 void combine_hashes(std::vector<det_hash<>>& thread_det_C_map,
                     det_hash<>& dets_C_hash);
@@ -207,26 +207,12 @@ void Wall_Chebyshev_generator_coefs(std::vector<double>& coefs, int order,
                                     double tau, double S, double range);
 void print_polynomial(std::vector<double>& coefs);
 
-void print_vector(const std::vector<double>& C, std::string description) {
-    outfile->Printf("\n%s :", description.c_str());
-    for (int i = 0; i < C.size(); i++) {
-        outfile->Printf(" %.12lf ", C[i]);
-    }
-    outfile->Printf("\n");
-}
+void print_vector(const std::vector<double>& C, std::string description);
 
 void print_hash(det_hash<>& C, std::string description,
-                bool print_det = false) {
-    outfile->Printf("\n%s :", description.c_str());
-    for (det_hash_it it = C.begin(); it != C.end(); it++) {
-        if (print_det)
-            it->first.print();
-        outfile->Printf(" %.12lf ", it->second);
-    }
-    outfile->Printf("\n");
-}
+                bool print_det = false);
 
-ProjectorCI::ProjectorCI(SharedWavefunction ref_wfn, Options& options,
+ProjectorCI_CIHash::ProjectorCI_CIHash(SharedWavefunction ref_wfn, Options& options,
                          std::shared_ptr<ForteIntegrals> ints,
                          std::shared_ptr<MOSpaceInfo> mo_space_info)
     : Wavefunction(options), ints_(ints), mo_space_info_(mo_space_info),
@@ -237,9 +223,9 @@ ProjectorCI::ProjectorCI(SharedWavefunction ref_wfn, Options& options,
     startup();
 }
 
-std::shared_ptr<FCIIntegrals> ProjectorCI::fci_ints_ = 0;
+std::shared_ptr<FCIIntegrals> ProjectorCI_CIHash::fci_ints_ = 0;
 
-void ProjectorCI::startup() {
+void ProjectorCI_CIHash::startup() {
     // Connect the integrals to the determinant class
     fci_ints_ = std::make_shared<FCIIntegrals>(
         ints_, mo_space_info_->get_corr_abs_mo("ACTIVE"),
@@ -449,7 +435,7 @@ void ProjectorCI::startup() {
     num_threads_ = omp_get_max_threads();
 }
 
-void ProjectorCI::print_info() {
+void ProjectorCI_CIHash::print_info() {
     // Print a summary
     std::vector<std::pair<std::string, int>> calculation_info{
         {"Symmetry", wavefunction_symmetry_},
@@ -506,25 +492,7 @@ void ProjectorCI::print_info() {
     outfile->Flush();
 }
 
-void print_polynomial(std::vector<double>& coefs) {
-    outfile->Printf("\n    f(x) = ");
-    for (int i = coefs.size() - 1; i >= 0; i--) {
-        switch (i) {
-        case 0:
-            outfile->Printf("%s%e", coefs[i] >= 0 ? "+" : "", coefs[i]);
-            break;
-        case 1:
-            outfile->Printf("%s%e * x ", coefs[i] >= 0 ? "+" : "", coefs[i]);
-            break;
-        default:
-            outfile->Printf("%s%e * x^%d ", coefs[i] >= 0 ? "+" : "", coefs[i],
-                            i);
-            break;
-        }
-    }
-}
-
-double ProjectorCI::estimate_high_energy() {
+double ProjectorCI_CIHash::estimate_high_energy() {
     double high_obt_energy = 0.0;
     int nea = 0, neb = 0;
     std::vector<std::pair<double, int>> obt_energies;
@@ -694,13 +662,13 @@ double ProjectorCI::estimate_high_energy() {
     return lambda_h_;
 }
 
-void ProjectorCI::convergence_analysis() {
+void ProjectorCI_CIHash::convergence_analysis() {
     estimate_high_energy();
     compute_characteristic_function();
     print_characteristic_function();
 }
 
-void ProjectorCI::compute_characteristic_function() {
+void ProjectorCI_CIHash::compute_characteristic_function() {
     shift_ = (lambda_h_ + lambda_1_) / 2.0;
     range_ = (lambda_h_ - lambda_1_) / 2.0;
     switch (generator_) {
@@ -737,7 +705,7 @@ void ProjectorCI::compute_characteristic_function() {
     }
 }
 
-void ProjectorCI::print_characteristic_function() {
+void ProjectorCI_CIHash::print_characteristic_function() {
     outfile->Printf("\n\n  ==> Characteristic Function <==");
     print_polynomial(cha_func_coefs_);
     outfile->Printf("\n    with tau = %e, shift = %.12f, range = %.12f",
@@ -750,147 +718,7 @@ void ProjectorCI::print_characteristic_function() {
                     lambda_h_ + nuclear_repulsion_energy_);
 }
 
-double factorial(int n) {
-    return (n == 1 || n == 0) ? 1.0 : factorial(n - 1) * n;
-}
-
-void binomial_coefs(std::vector<double>& coefs, int order, double a, double b) {
-    coefs.clear();
-    for (int i = 0; i <= order; i++) {
-        coefs.push_back(factorial(order) /
-                        (factorial(i) * factorial(order - i)) * pow(a, i) *
-                        pow(b, order - i));
-    }
-}
-
-void Polynomial_generator_coefs(std::vector<double>& coefs,
-                                std::vector<double>& poly_coefs, double a,
-                                double b) {
-    coefs.clear();
-    int order = poly_coefs.size() - 1;
-    for (int i = 0; i <= order; i++) {
-        coefs.push_back(0.0);
-    }
-    for (int i = 0; i <= order; i++) {
-        std::vector<double> bino_coefs;
-        binomial_coefs(bino_coefs, i, a, b);
-        for (int j = 0; j <= i; j++) {
-            coefs[j] += poly_coefs[i] * bino_coefs[j];
-        }
-    }
-}
-
-void Taylor_polynomial_coefs(std::vector<double>& coefs, int order) {
-    coefs.clear();
-    for (int i = 0; i <= order; i++) {
-        coefs.push_back(1.0 / factorial(i));
-    }
-}
-
-void Taylor_generator_coefs(std::vector<double>& coefs, int order, double tau,
-                            double S) {
-    coefs.clear();
-    std::vector<double> poly_coefs;
-    Taylor_polynomial_coefs(poly_coefs, order);
-    Polynomial_generator_coefs(coefs, poly_coefs, -tau, -tau * S);
-    //    coefs.clear();
-    //    for (int i=0; i <= order; i++) {
-    //        coefs.push_back(0.0);
-    //        for (int j=0; j <= i; j++) {
-    //            coefs[j] += 1.0/(factorial(j)*factorial(i-j))*pow(-tau,
-    //            i)*pow(-S, i-j);
-    //        }
-    //    }
-}
-
-void Chebyshev_polynomial_coefs(std::vector<double>& coefs, int order) {
-    coefs.clear();
-    std::vector<double> coefs_0, coefs_1;
-    if (order == 0) {
-        coefs.push_back(1.0);
-        return;
-    } else
-        coefs_0.push_back(1.0);
-    if (order == 1) {
-        coefs.push_back(0.0);
-        coefs.push_back(1.0);
-        return;
-    } else {
-        coefs_1.push_back(0.0);
-        coefs_1.push_back(1.0);
-    }
-    for (int i = 2; i <= order; i++) {
-        coefs.clear();
-        for (int j = 0; j <= i; j++) {
-            coefs.push_back(0.0);
-        }
-        for (int j = 0; j <= i - 2; j++) {
-            coefs[j] -= coefs_0[j];
-        }
-        for (int j = 0; j <= i - 1; j++) {
-            coefs[j + 1] += 2.0 * coefs_1[j];
-        }
-        coefs_0 = coefs_1;
-        coefs_1 = coefs;
-    }
-}
-
-void Exp_Chebyshev_generator_coefs(std::vector<double>& coefs, int order,
-                                   double tau, double S, double range) {
-    coefs.clear();
-    std::vector<double> poly_coefs;
-    for (int i = 0; i <= order; i++) {
-        poly_coefs.push_back(0.0);
-    }
-
-    for (int i = 0; i <= order; i++) {
-        std::vector<double> chbv_poly_coefs;
-        Chebyshev_polynomial_coefs(chbv_poly_coefs, i);
-        //        outfile->Printf("\n\n  chebyshev poly in step %d", i);
-        //        print_polynomial(chbv_poly_coefs);
-        for (int j = 0; j <= i; j++) {
-            poly_coefs[j] += (i == 0 ? 1.0 : 2.0) *
-                             boost::math::cyl_bessel_i(i, tau * range) *
-                             chbv_poly_coefs[j];
-        }
-        //        outfile->Printf("\n\n  propagate poly in step %d", i);
-        //        print_polynomial(poly_coefs);
-    }
-    Polynomial_generator_coefs(coefs, poly_coefs, -1.0 / range, 0.0);
-}
-
-void Chebyshev_generator_coefs(std::vector<double>& coefs, int order,
-                               double tau, double S, double range) {
-    coefs.clear();
-    std::vector<double> poly_coefs;
-    Chebyshev_polynomial_coefs(poly_coefs, order);
-
-    Polynomial_generator_coefs(coefs, poly_coefs, -1.0 / range, 0.0);
-}
-
-void Wall_Chebyshev_generator_coefs(std::vector<double>& coefs, int order,
-                                    double tau, double S, double range) {
-    coefs.clear();
-    std::vector<double> poly_coefs;
-    for (int i = 0; i <= order; i++) {
-        poly_coefs.push_back(0.0);
-    }
-
-    for (int i = 0; i <= order; i++) {
-        std::vector<double> chbv_poly_coefs;
-        Chebyshev_polynomial_coefs(chbv_poly_coefs, i);
-        //        outfile->Printf("\n\n  chebyshev poly in step %d", i);
-        //        print_polynomial(chbv_poly_coefs);
-        for (int j = 0; j <= i; j++) {
-            poly_coefs[j] += (i == 0 ? 1.0 : 2.0) * chbv_poly_coefs[j];
-        }
-        //        outfile->Printf("\n\n  propagate poly in step %d", i);
-        //        print_polynomial(poly_coefs);
-    }
-    Polynomial_generator_coefs(coefs, poly_coefs, -1.0 / range, 0.0);
-}
-
-double ProjectorCI::compute_energy() {
+double ProjectorCI_CIHash::compute_energy() {
     timer_on("PIFCI:Energy");
     ForteTimer t_apici;
     old_max_one_HJI_ = 1e100;
@@ -1248,7 +1076,7 @@ double ProjectorCI::compute_energy() {
     return var_energy;
 }
 
-bool ProjectorCI::converge_test() {
+bool ProjectorCI_CIHash::converge_test() {
     if (!stop_higher_new_low_) {
         return false;
     }
@@ -1266,7 +1094,7 @@ bool ProjectorCI::converge_test() {
     return false;
 }
 
-double ProjectorCI::initial_guess(det_vec& dets, std::vector<double>& C) {
+double ProjectorCI_CIHash::initial_guess(det_vec& dets, std::vector<double>& C) {
     // Use the reference determinant as a starting point
     std::vector<bool> alfa_bits =
         reference_determinant_.get_alfa_bits_vector_bool();
@@ -1335,7 +1163,7 @@ double ProjectorCI::initial_guess(det_vec& dets, std::vector<double>& C) {
     return var_energy;
 }
 
-void ProjectorCI::propagate(GeneratorType generator, det_vec& dets,
+void ProjectorCI_CIHash::propagate(GeneratorType generator, det_vec& dets,
                             std::vector<double>& C, double tau,
                             double spawning_threshold, double S) {
     // Reset prescreening boundary
@@ -1396,7 +1224,7 @@ void ProjectorCI::propagate(GeneratorType generator, det_vec& dets,
     normalize(C);
 }
 
-void ProjectorCI::propagate_wallCh(det_vec& dets, std::vector<double>& C,
+void ProjectorCI_CIHash::propagate_wallCh(det_vec& dets, std::vector<double>& C,
                                    double spawning_threshold, double S) {
 
     // A map that contains the pair (determinant,coefficient)
@@ -1432,7 +1260,7 @@ void ProjectorCI::propagate_wallCh(det_vec& dets, std::vector<double>& C,
     }
 }
 
-void ProjectorCI::propagate_Lanczos(det_vec& dets, std::vector<double>& C,
+void ProjectorCI_CIHash::propagate_Lanczos(det_vec& dets, std::vector<double>& C,
                                     double spawning_threshold, double S) {
     size_t ref_size = C.size();
     int krylov_order =
@@ -1702,7 +1530,7 @@ void ProjectorCI::propagate_Lanczos(det_vec& dets, std::vector<double>& C,
     //// Generalized eigenvalue problem solver END
 }
 
-void ProjectorCI::propagate_DL(det_vec& dets, std::vector<double>& C,
+void ProjectorCI_CIHash::propagate_DL(det_vec& dets, std::vector<double>& C,
                                double spawning_threshold, double S) {
     size_t ref_size = C.size();
     std::vector<std::vector<double>> b_vec(davidson_subspace_per_root_);
@@ -1891,7 +1719,7 @@ void ProjectorCI::propagate_DL(det_vec& dets, std::vector<double>& C,
     //    outfile->Printf("\nC2 norm %10.3e", norm(C2));
 }
 
-void ProjectorCI::propagate_Chebyshev(det_vec& dets, std::vector<double>& C,
+void ProjectorCI_CIHash::propagate_Chebyshev(det_vec& dets, std::vector<double>& C,
                                       double spawning_threshold) {
     // A map that contains the pair (determinant,coefficient)
     const double PI = 2 * acos(0.0);
@@ -1912,7 +1740,7 @@ void ProjectorCI::propagate_Chebyshev(det_vec& dets, std::vector<double>& C,
     }
 }
 
-void ProjectorCI::propagate_Linear(det_vec& dets, std::vector<double>& C,
+void ProjectorCI_CIHash::propagate_Linear(det_vec& dets, std::vector<double>& C,
                                    double tau, double spawning_threshold,
                                    double S) {
     // A map that contains the pair (determinant,coefficient)
@@ -1924,7 +1752,7 @@ void ProjectorCI::propagate_Linear(det_vec& dets, std::vector<double>& C,
     copy_hash_to_vec(dets_C_hash, dets, C);
 }
 
-void ProjectorCI::propagate_Taylor(int order, det_vec& dets,
+void ProjectorCI_CIHash::propagate_Taylor(int order, det_vec& dets,
                                    std::vector<double>& C, double tau,
                                    double spawning_threshold, double S) {
     // A map that contains the pair (determinant,coefficient)
@@ -1962,7 +1790,7 @@ void ProjectorCI::propagate_Taylor(int order, det_vec& dets,
     copy_hash_to_vec(dets_sum_map, dets, C);
 }
 
-void ProjectorCI::propagate_power(det_vec& dets, std::vector<double>& C,
+void ProjectorCI_CIHash::propagate_power(det_vec& dets, std::vector<double>& C,
                                   double spawning_threshold, double S) {
     // A map that contains the pair (determinant,coefficient)
     det_hash<> dets_C_hash;
@@ -1973,7 +1801,7 @@ void ProjectorCI::propagate_power(det_vec& dets, std::vector<double>& C,
     copy_hash_to_vec(dets_C_hash, dets, C);
 }
 
-void ProjectorCI::propagate_Polynomial(det_vec& dets, std::vector<double>& C,
+void ProjectorCI_CIHash::propagate_Polynomial(det_vec& dets, std::vector<double>& C,
                                        std::vector<double>& coef,
                                        double spawning_threshold) {
     int order = coef.size() - 1;
@@ -2013,7 +1841,7 @@ void ProjectorCI::propagate_Polynomial(det_vec& dets, std::vector<double>& C,
     copy_hash_to_vec(dets_sum_map, dets, C);
 }
 
-void ProjectorCI::propagate_Trotter_linear(det_vec& dets,
+void ProjectorCI_CIHash::propagate_Trotter_linear(det_vec& dets,
                                            std::vector<double>& C, double tau,
                                            double spawning_threshold,
                                            double S) {
@@ -2039,7 +1867,7 @@ void ProjectorCI::propagate_Trotter_linear(det_vec& dets,
     copy_hash_to_vec(dets_C_hash, dets, C);
 }
 
-void ProjectorCI::propagate_Olsen(det_vec& dets, std::vector<double>& C,
+void ProjectorCI_CIHash::propagate_Olsen(det_vec& dets, std::vector<double>& C,
                                   double spawning_threshold, double S) {
     // A map that contains the pair (determinant,coefficient)
     det_hash<> dets_C_hash;
@@ -2100,7 +1928,7 @@ void ProjectorCI::propagate_Olsen(det_vec& dets, std::vector<double>& C,
     copy_hash_to_vec(dets_C_hash, dets, C);
 }
 
-void ProjectorCI::propagate_DavidsonLiu(det_vec& dets, std::vector<double>& C,
+void ProjectorCI_CIHash::propagate_DavidsonLiu(det_vec& dets, std::vector<double>& C,
                                         double spawning_threshold) {
     throw PSIEXCEPTION(
         "\n\n  propagate_DavidsonLiu is not implemented yet.\n\n");
@@ -2419,7 +2247,7 @@ void ProjectorCI::propagate_DavidsonLiu(det_vec& dets, std::vector<double>& C,
     //    H",t_davidson.elapsed());
 }
 
-void ProjectorCI::apply_tau_H_symm_det_dynamic(
+void ProjectorCI_CIHash::apply_tau_H_symm_det_dynamic(
     double tau, double spawning_threshold, det_hash<>& pre_dets_C_hash,
     const Determinant& detI, double CI,
     std::vector<std::pair<Determinant, double>>& new_space_C_vec, double E0,
@@ -2617,7 +2445,7 @@ void ProjectorCI::apply_tau_H_symm_det_dynamic(
     }
 }
 
-void ProjectorCI::apply_tau_H_symm(double tau, double spawning_threshold,
+void ProjectorCI_CIHash::apply_tau_H_symm(double tau, double spawning_threshold,
                                    det_vec& dets, const std::vector<double>& C,
                                    det_hash<>& dets_C_hash, double S) {
     // A vector of maps that hold (determinant,coefficient)
@@ -2692,7 +2520,7 @@ void ProjectorCI::apply_tau_H_symm(double tau, double spawning_threshold,
     }
 }
 
-void ProjectorCI::apply_tau_H_ref_C_symm(double tau, double spawning_threshold,
+void ProjectorCI_CIHash::apply_tau_H_ref_C_symm(double tau, double spawning_threshold,
                                          det_vec& dets,
                                          const std::vector<double>& C,
                                          const std::vector<double>& ref_C,
@@ -2808,7 +2636,7 @@ void ProjectorCI::apply_tau_H_ref_C_symm(double tau, double spawning_threshold,
     //    print_hash(dets_C_hash, "dets_C_hash", true);
 }
 
-// void ProjectorCI::apply_tau_H_ref_C_symm_det_dynamic_stat(double tau, double
+// void ProjectorCI_CIHash::apply_tau_H_ref_C_symm_det_dynamic_stat(double tau, double
 // spawning_threshold, det_hash<> &pre_dets_C_hash, det_hash<> &ref_dets_C_hash,
 // const Determinant &detI, double CI, double ref_CI,
 // std::vector<std::pair<Determinant, double> > &new_space_C_vec, double E0,
@@ -3094,7 +2922,7 @@ inline double polynomial_smoother(double edge0, double edge1, double x) {
     return x * x * x * (x * (x * 6. - 15.) + 10.);
 }
 
-void ProjectorCI::apply_tau_H_ref_C_symm_det_dynamic_smooth(
+void ProjectorCI_CIHash::apply_tau_H_ref_C_symm_det_dynamic_smooth(
     double tau, double spawning_threshold, det_hash<>& pre_dets_C_hash,
     det_hash<>& ref_dets_C_hash, const Determinant& detI, double CI,
     double ref_CI, std::vector<std::pair<Determinant, double>>& new_space_C_vec,
@@ -3405,7 +3233,7 @@ void ProjectorCI::apply_tau_H_ref_C_symm_det_dynamic_smooth(
     }
 }
 
-void ProjectorCI::apply_tau_H_ref_C_symm_det_dynamic(
+void ProjectorCI_CIHash::apply_tau_H_ref_C_symm_det_dynamic(
     double tau, double spawning_threshold, det_hash<>& pre_dets_C_hash,
     det_hash<>& ref_dets_C_hash, const Determinant& detI, double CI,
     double ref_CI, std::vector<std::pair<Determinant, double>>& new_space_C_vec,
@@ -3694,7 +3522,7 @@ void ProjectorCI::apply_tau_H_ref_C_symm_det_dynamic(
     }
 }
 
-void ProjectorCI::apply_tau_H(double tau, double spawning_threshold,
+void ProjectorCI_CIHash::apply_tau_H(double tau, double spawning_threshold,
                               det_vec& dets, const std::vector<double>& C,
                               det_hash<>& dets_C_hash, double S) {
     // A vector of maps that hold (determinant,coefficient)
@@ -3867,7 +3695,7 @@ void ProjectorCI::apply_tau_H(double tau, double spawning_threshold,
     }
 }
 
-void ProjectorCI::apply_tau_H_det_subset(
+void ProjectorCI_CIHash::apply_tau_H_det_subset(
     double tau, Determinant& detI, double CI, det_hash<>& dets_sum_map,
     std::vector<std::pair<Determinant, double>>& new_space_C_vec, double E0) {
     // Diagonal contributions
@@ -4016,7 +3844,7 @@ void ProjectorCI::apply_tau_H_det_subset(
     }
 }
 
-void ProjectorCI::apply_tau_H_det_subset_prescreening(
+void ProjectorCI_CIHash::apply_tau_H_det_subset_prescreening(
     double tau, double spawning_threshold, Determinant& detI, double CI,
     det_hash<>& dets_sum_map,
     std::vector<std::pair<Determinant, double>>& new_space_C_vec, double E0) {
@@ -4238,7 +4066,7 @@ void ProjectorCI::apply_tau_H_det_subset_prescreening(
     }
 }
 
-void ProjectorCI::apply_tau_H_subset(double tau, double spawning_threshold,
+void ProjectorCI_CIHash::apply_tau_H_subset(double tau, double spawning_threshold,
                                      det_vec& dets,
                                      const std::vector<double>& C,
                                      det_hash<>& dets_sum_map,
@@ -4274,7 +4102,7 @@ void ProjectorCI::apply_tau_H_subset(double tau, double spawning_threshold,
     }
 }
 
-std::pair<double, double> ProjectorCI::apply_tau_H_det_prescreening(
+std::pair<double, double> ProjectorCI_CIHash::apply_tau_H_det_prescreening(
     double tau, double spawning_threshold, Determinant& detI, double CI,
     std::vector<std::pair<Determinant, double>>& new_space_C_vec, double E0) {
     bool do_singles = std::fabs(prescreening_tollerance_factor_ *
@@ -4637,7 +4465,7 @@ std::pair<double, double> ProjectorCI::apply_tau_H_det_prescreening(
     return std::make_pair(0.0, 0.0);
 }
 
-void ProjectorCI::apply_tau_H_det_schwarz(
+void ProjectorCI_CIHash::apply_tau_H_det_schwarz(
     double tau, double spawning_threshold, const Determinant& detI, double CI,
     std::vector<std::pair<Determinant, double>>& new_space_C_vec, double E0) {
     std::vector<int> aocc = detI.get_alfa_occ();
@@ -4805,7 +4633,7 @@ void ProjectorCI::apply_tau_H_det_schwarz(
     }
 }
 
-void ProjectorCI::apply_tau_H_det_dynamic(
+void ProjectorCI_CIHash::apply_tau_H_det_dynamic(
     double tau, double spawning_threshold, const Determinant& detI, double CI,
     std::vector<std::pair<Determinant, double>>& new_space_C_vec, double E0,
     std::pair<double, double>& max_coupling) {
@@ -4959,7 +4787,7 @@ void ProjectorCI::apply_tau_H_det_dynamic(
 }
 
 std::map<std::string, double>
-ProjectorCI::estimate_energy(det_vec& dets, std::vector<double>& C) {
+ProjectorCI_CIHash::estimate_energy(det_vec& dets, std::vector<double>& C) {
     std::map<std::string, double> results;
 
     timer_on("PIFCI:<E>p");
@@ -4986,7 +4814,7 @@ static bool abs_compare(double a, double b) {
     return (std::abs(a) < std::abs(b));
 }
 
-double ProjectorCI::estimate_proj_energy(det_vec& dets,
+double ProjectorCI_CIHash::estimate_proj_energy(det_vec& dets,
                                          std::vector<double>& C) {
     // Find the determinant with the largest value of C
     auto result = std::max_element(C.begin(), C.end(), abs_compare);
@@ -5002,7 +4830,7 @@ double ProjectorCI::estimate_proj_energy(det_vec& dets,
     return projective_energy_estimator + nuclear_repulsion_energy_;
 }
 
-double ProjectorCI::estimate_var_energy(det_vec& dets, std::vector<double>& C,
+double ProjectorCI_CIHash::estimate_var_energy(det_vec& dets, std::vector<double>& C,
                                         double tollerance) {
     // Compute a variational estimator of the energy
     size_t size = dets.size();
@@ -5021,7 +4849,7 @@ double ProjectorCI::estimate_var_energy(det_vec& dets, std::vector<double>& C,
     return variational_energy_estimator + nuclear_repulsion_energy_;
 }
 
-double ProjectorCI::estimate_var_energy_sparse(det_vec& dets,
+double ProjectorCI_CIHash::estimate_var_energy_sparse(det_vec& dets,
                                                std::vector<double>& C,
                                                double tollerance) {
     // A map that contains the pair (determinant,coefficient)
@@ -5063,7 +4891,7 @@ double ProjectorCI::estimate_var_energy_sparse(det_vec& dets,
     return variational_energy_estimator + nuclear_repulsion_energy_;
 }
 
-double ProjectorCI::estimate_1st_order_perturbation(det_vec& dets,
+double ProjectorCI_CIHash::estimate_1st_order_perturbation(det_vec& dets,
                                                     std::vector<double>& C,
                                                     double spawning_threshold) {
     // Compute a variational estimator of the energy
@@ -5081,7 +4909,7 @@ double ProjectorCI::estimate_1st_order_perturbation(det_vec& dets,
     return perturbation_energy_estimator;
 }
 
-double ProjectorCI::estimate_2nd_order_perturbation_sub(
+double ProjectorCI_CIHash::estimate_2nd_order_perturbation_sub(
     det_vec& dets, std::vector<double>& C, double spawning_threshold) {
     // Compute a variational estimator of the energy
     size_t size = dets.size();
@@ -5100,7 +4928,7 @@ double ProjectorCI::estimate_2nd_order_perturbation_sub(
 }
 
 std::tuple<double, double>
-ProjectorCI::estimate_perturbation(det_vec& dets, std::vector<double>& C,
+ProjectorCI_CIHash::estimate_perturbation(det_vec& dets, std::vector<double>& C,
                                    double spawning_threshold) {
     //    double first_order_perturb = estimate_1st_order_perturbation(dets, C,
     //    spawning_threshold);
@@ -5147,7 +4975,7 @@ ProjectorCI::estimate_perturbation(det_vec& dets, std::vector<double>& C,
     return std::make_tuple(perturbation_2nd_energy_estimator_sub, 0.0);
 }
 
-double ProjectorCI::estimate_path_filtering_error(det_vec& dets,
+double ProjectorCI_CIHash::estimate_path_filtering_error(det_vec& dets,
                                                   std::vector<double>& C,
                                                   double spawning_threshold) {
     size_t size = dets.size();
@@ -5167,7 +4995,7 @@ double ProjectorCI::estimate_path_filtering_error(det_vec& dets,
     return pfError;
 }
 
-void ProjectorCI::print_wfn(det_vec& space, std::vector<double>& C,
+void ProjectorCI_CIHash::print_wfn(det_vec& space, std::vector<double>& C,
                             size_t max_output) {
     outfile->Printf(
         "\n\n  Most important contributions to the wave function:\n");
@@ -5233,7 +5061,7 @@ void ProjectorCI::print_wfn(det_vec& space, std::vector<double>& C,
     outfile->Flush();
 }
 
-void ProjectorCI::save_wfn(det_vec& space, std::vector<double>& C,
+void ProjectorCI_CIHash::save_wfn(det_vec& space, std::vector<double>& C,
                            std::vector<det_hash<>>& solutions) {
     outfile->Printf("\n\n  Saving the wave function:\n");
 
@@ -5244,7 +5072,7 @@ void ProjectorCI::save_wfn(det_vec& space, std::vector<double>& C,
     solutions.push_back(std::move(solution));
 }
 
-void ProjectorCI::orthogonalize(det_vec& space, std::vector<double>& C,
+void ProjectorCI_CIHash::orthogonalize(det_vec& space, std::vector<double>& C,
                                 std::vector<det_hash<>>& solutions) {
     det_hash<> det_C;
     for (size_t I = 0; I < space.size(); ++I) {
@@ -5258,569 +5086,7 @@ void ProjectorCI::orthogonalize(det_vec& space, std::vector<double>& C,
     copy_hash_to_vec(det_C, space, C);
 }
 
-void combine_hashes(std::vector<det_hash<>>& thread_det_C_map,
-                    det_hash<>& dets_C_hash) {
-    // Combine the content of varius wave functions stored as maps
-    for (size_t t = 0; t < thread_det_C_map.size(); ++t) {
-        for (det_hash_it it = thread_det_C_map[t].begin(),
-                         endit = thread_det_C_map[t].end();
-             it != endit; ++it) {
-            dets_C_hash[it->first] += it->second;
-        }
-    }
-}
-
-void combine_hashes(det_hash<>& dets_C_hash_A, det_hash<>& dets_C_hash_B) {
-    // Combine the content of varius wave functions stored as maps
-    for (det_hash_it it = dets_C_hash_A.begin(), endit = dets_C_hash_A.end();
-         it != endit; ++it) {
-        dets_C_hash_B[it->first] += it->second;
-    }
-}
-
-void combine_hashes_into_hash(std::vector<det_hash<>>& thread_det_C_hash,
-                              det_hash<>& dets_C_hash) {
-    // Combine the content of varius wave functions stored as maps
-    for (size_t t = 0; t < thread_det_C_hash.size(); ++t) {
-        for (auto& kv : thread_det_C_hash[t]) {
-            dets_C_hash[kv.first] += kv.second;
-        }
-    }
-}
-
-void copy_hash_to_vec(det_hash<>& dets_C_hash, det_vec& dets,
-                      std::vector<double>& C) {
-    size_t size = dets_C_hash.size();
-    dets.resize(size);
-    C.resize(size);
-
-    size_t I = 0;
-    for (det_hash_it it = dets_C_hash.begin(), endit = dets_C_hash.end();
-         it != endit; ++it) {
-        dets[I] = it->first;
-        C[I] = it->second;
-        I++;
-    }
-}
-
-void copy_hash_to_vec_order_ref(det_hash<>& dets_C_hash, det_vec& dets,
-                                std::vector<double>& C) {
-    size_t hash_size = dets_C_hash.size();
-    size_t size = dets.size();
-    dets.resize(hash_size);
-    C.resize(hash_size);
-
-    for (size_t I = 0; I < size; ++I) {
-        C[I] = dets_C_hash[dets[I]];
-        dets_C_hash.erase(dets[I]);
-    }
-    size_t I = size;
-    for (det_hash_it it = dets_C_hash.begin(), endit = dets_C_hash.end();
-         it != endit; ++it) {
-        dets[I] = it->first;
-        C[I] = it->second;
-        I++;
-    }
-}
-
-void copy_vec_to_hash(det_vec& dets, const std::vector<double>& C,
-                      det_hash<>& dets_C_hash) {
-    size_t size = C.size();
-    for (size_t I = 0; I < size; ++I) {
-        dets_C_hash[dets[I]] = C[I];
-    }
-}
-
-double normalize(std::vector<double>& C) {
-    size_t size = C.size();
-    double norm = 0.0;
-    for (size_t I = 0; I < size; ++I) {
-        norm += C[I] * C[I];
-    }
-    norm = std::sqrt(norm);
-    for (size_t I = 0; I < size; ++I) {
-        C[I] /= norm;
-    }
-    return norm;
-}
-
-double normalize(det_hash<>& dets_C) {
-    double norm = 0.0;
-    for (auto& det_C : dets_C) {
-        norm += det_C.second * det_C.second;
-    }
-    norm = std::sqrt(norm);
-    for (auto& det_C : dets_C) {
-        det_C.second /= norm;
-    }
-    return norm;
-}
-
-double norm(std::vector<double>& C) {
-    size_t size = C.size();
-    double norm = 0.0;
-    for (size_t I = 0; I < size; ++I) {
-        norm += C[I] * C[I];
-    }
-    norm = std::sqrt(norm);
-    return norm;
-}
-
-double norm(det_hash<>& dets_C) {
-    double norm = 0.0;
-    for (auto& det_C : dets_C) {
-        norm += det_C.second * det_C.second;
-    }
-    norm = std::sqrt(norm);
-    return norm;
-}
-
-double dot(det_hash<>& A, det_hash<>& B) {
-    double res = 0.0;
-    for (auto& det_C : A) {
-        res += det_C.second * B[det_C.first];
-    }
-    return res;
-}
-
-double dot(std::vector<double>& C1, std::vector<double>& C2) {
-    size_t size1 = C1.size(), size2 = C2.size();
-    size1 = size1 < size2 ? size1 : size2;
-    double result = 0.0;
-    for (int i = 0; i < size1; i++) {
-        result += C1[i] * C2[i];
-    }
-    return result;
-}
-
-size_t ortho_norm(std::vector<std::vector<double>>& H_n_C,
-                  std::vector<double>& norms, Matrix& A,
-                  double colinear_threshold) {
-    size_t order = H_n_C.size() - 1;
-    Vector N(order);
-    Matrix QC(order, order), QHC(order, order);
-
-    N.set(0, 1.0);
-    QC.set(0, 0, 1.0);
-    QHC.set(0, 0, A.get(0, 0));
-
-    for (size_t n = 1; n < order; n++) {
-        for (size_t m = 0; m < n; m++) {
-            double qm_dot_Cn = dot(H_n_C[m], H_n_C[n]);
-            QC.set(m, n, qm_dot_Cn);
-            add(H_n_C[n], -qm_dot_Cn, H_n_C[m]);
-        }
-        double norm = normalize(H_n_C[n]);
-        //        outfile->Printf("\nCorrect norm order %d: %e", n, norm);
-        if (norm < colinear_threshold && n > 1)
-            return n;
-        N.set(n, 1.0 / norm);
-        for (size_t m = 0; m < n; m++) {
-            double correction = 0.0;
-            for (size_t i = 0; i < n; i++) {
-                correction += QC.get(i, n) * A.get(i, m);
-            }
-            double QmHCn = norms[n] * dot(H_n_C[m], H_n_C[n + 1]);
-            QHC.set(m, n, QmHCn);
-            double Anm = N.get(n) * (QmHCn - correction);
-            A.set(m, n, Anm);
-            A.set(n, m, Anm);
-        }
-        double QCQHC_correction = 0.0, QCAQC_correction = 0.0;
-        for (size_t i = 0; i < n; i++) {
-            QCQHC_correction += QC.get(i, n) * QHC.get(i, n);
-            for (size_t j = 0; j < n; j++) {
-                QCAQC_correction += QC.get(i, n) * A.get(i, j) * QC.get(j, n);
-            }
-        }
-        double Ann = N.get(n) * N.get(n) *
-                     (A.get(n, n) - 2.0 * QCQHC_correction + QCAQC_correction);
-        A.set(n, n, Ann);
-    }
-
-    //    outfile -> Printf("\n  QC:");
-    //    QC.print();
-    //    outfile -> Printf("\n  QHC:");
-    //    QHC.print();
-    //    outfile -> Printf("\n  N:");
-    //    N.print();
-
-    return order;
-}
-
-void add(det_hash<>& A, double beta, det_hash<>& B) {
-    // A += beta B
-    for (auto& det_C : B) {
-        A[det_C.first] += beta * det_C.second;
-    }
-}
-
-void add(std::vector<double>& a, double k, std::vector<double>& b) {
-    size_t sizeA = a.size(), sizeB = b.size();
-    if (sizeA < sizeB)
-        a.resize(sizeB);
-    for (int i = 0; i < sizeB; i++) {
-        a[i] += k * b[i];
-    }
-}
-
-void scale(std::vector<double>& A, double alpha) {
-    size_t size = A.size();
-    for (size_t I = 0; I < size; ++I) {
-        A[I] *= alpha;
-    }
-}
-
-void scale(det_hash<>& A, double alpha) {
-    for (auto& det_C : A) {
-        A[det_C.first] *= alpha;
-    }
-}
-
-/*
-double ProjectorCI::form_H_C_sym(double tau,double
-spawning_threshold,Determinant& detI, double CI, bit_hash&
-det_C,std::pair<double,double>& max_coupling)
-{
-    double result = 0.0;
-
-    if ((max_coupling.second != 0.0) and (std::fabs(max_coupling.second  * CI) <
-spawning_threshold) and (std::fabs(max_coupling.first * CI) <
-spawning_threshold)){
-        return result;
-    }
-
-    std::vector<std::vector<int>> naoccs(nirrep_), navirs(nirrep_),
-nboccs(nirrep_), nbvirs(nirrep_);
-
-    for (int i = 0; i<ncmo_; i++) {
-        if (detI.get_alfa_bit(i)) {
-            naoccs[mo_symmetry_[i]].push_back(i);
-        } else {
-            navirs[mo_symmetry_[i]].push_back(i);
-        }
-        if (detI.get_beta_bit(i)) {
-            nboccs[mo_symmetry_[i]].push_back(i);
-        } else {
-            nbvirs[mo_symmetry_[i]].push_back(i);
-        }
-    }
-
-    size_t spawned = 0;
-
-    // No diagonal contributions
-
-    if ((std::fabs(max_coupling.first * CI) >= spawning_threshold)){
-        for (int i = 0; i<nirrep_; i++) {
-            for (int ix=0; ix<naoccs[i].size(); ix++) {
-                int ii = naoccs[i][ix];
-                for (int ax=0; ax<navirs[i].size(); ax++) {
-                    int aa = navirs[i][ax];
-                    Determinant detJ(detI);
-                    detJ.set_alfa_bit(ii,false);
-                    detJ.set_alfa_bit(aa,true);
-                    det_hash_it it = det_C.find(detJ);
-                    if (it != det_C.end()){
-                        double HJI = detJ.slater_rules(detI);
-                        if (std::fabs(HJI * CI) >= spawning_threshold){
-                            result += tau * HJI * CI * it->second;
-                            spawned++;
-                        }
-                    }
-                    ndet_visited_++;
-                }
-            }
-        }
-        for (int i = 0; i<nirrep_; i++) {
-            for (int ix=0; ix<nboccs[i].size(); ix++) {
-                int ii = nboccs[i][ix];
-                for (int ax=0; ax<nbvirs[i].size(); ax++) {
-                    int aa = nbvirs[i][ax];
-                    Determinant detJ(detI);
-                    detJ.set_beta_bit(ii,false);
-                    detJ.set_beta_bit(aa,true);
-                    det_hash_it it = det_C.find(detJ);
-                    if (it != det_C.end()){
-                        double HJI = detJ.slater_rules(detI);
-                        if (std::fabs(HJI * CI) >= spawning_threshold){
-                            result += tau * HJI * CI * it->second;
-                            spawned++;
-                        }
-                    }
-                    ndet_visited_++;
-                }
-            }
-        }
-    }
-
-    if ((max_coupling.second == 0.0) or (std::fabs(max_coupling.second  * CI) >=
-spawning_threshold)){
-        for (int i = 0; i<nirrep_; i++) {
-            for (int j = 0; j<nirrep_; j++) {
-                for (int a = 0; a<nirrep_; a++){
-                    int b = i^j^a;
-                    for (int ix=0; ix<naoccs[i].size(); ix++) {
-                        int ii = naoccs[i][ix];
-                        for (int jx=0; jx<nboccs[j].size(); jx++) {
-                            int jj = nboccs[j][jx];
-                            for (int ax=0; ax<navirs[a].size(); ax++) {
-                                int aa = navirs[a][ax];
-                                for (int bx=0; bx<nbvirs[b].size(); bx++) {
-                                    int bb = nbvirs[b][bx];
-                                    double HJI = fci_ints_->tei_ab(ii,jj,aa,bb);
-
-                                    if (std::fabs(HJI * CI) >=
-spawning_threshold){
-                                        Determinant detJ(detI);
-                                        double sign =
-detJ.double_excitation_ab(ii,jj,aa,bb);
-//                                        detJ.set_alfa_bit(ii,false);
-//                                        detJ.set_beta_bit(jj,false);
-//                                        detJ.set_alfa_bit(aa,true);
-//                                        detJ.set_beta_bit(bb,true);
-
-                                        det_hash_it it = det_C.find(detJ);
-                                        if (it != det_C.end()){
-//                                            // grap the alpha bits of both
-determinants
-//                                            const Determinant::bit_t& Ia =
-detI.alfa_bits();
-//                                            const Determinant::bit_t& Ib =
-detI.beta_bits();
-//                                            const Determinant::bit_t& Ja =
-detJ.alfa_bits();
-//                                            const Determinant::bit_t& Jb =
-detJ.beta_bits();
-
-                                            // compute the sign of the matrix
-element
-//                                            HJI *=
-Determinant::SlaterSign(Ia,ii) * Determinant::SlaterSign(Ib,jj) *
-Determinant::SlaterSign(Ja,aa) * Determinant::SlaterSign(Jb,bb);
-
-                                            result += sign * tau * HJI * CI *
-it->second;
-
-                                        }
-                                    }
-                                    ndet_visited_++;
-
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-        }
-        for (int i = 0; i<nirrep_; i++) {
-            for (int a = 0; a<nirrep_; a++) {
-                for (int ix=0; ix<naoccs[i].size(); ix++) {
-                    int ii = naoccs[i][ix];
-                    for (int jx=ix+1; jx<naoccs[i].size(); jx++) {
-                        int jj = naoccs[i][jx];
-                        for (int ax=0; ax<navirs[a].size(); ax++) {
-                            int aa = navirs[a][ax];
-                            for (int bx=ax+1; bx<navirs[a].size(); bx++) {
-                                int bb = navirs[a][bx];
-                                double HJI = fci_ints_->tei_aa(ii,jj,aa,bb);
-
-                                if (std::fabs(HJI * CI) >= spawning_threshold){
-                                    Determinant detJ(detI);
-                                    double sign =
-detJ.double_excitation_aa(ii,jj,aa,bb);
-
-//                                    detJ.set_alfa_bit(ii,false);
-//                                    detJ.set_alfa_bit(jj,false);
-//                                    detJ.set_alfa_bit(aa,true);
-//                                    detJ.set_alfa_bit(bb,true);
-
-                                    det_hash_it it = det_C.find(detJ);
-                                    if (it != det_C.end()){
-//                                        // grap the alpha bits of both
-determinants
-//                                        const Determinant::bit_t& Ia =
-detI.alfa_bits();
-//                                        const Determinant::bit_t& Ja =
-detJ.alfa_bits();
-
-//                                        // compute the sign of the matrix
-element
-//                                        HJI *= Determinant::SlaterSign(Ia,ii)
-* Determinant::SlaterSign(Ia,jj) * Determinant::SlaterSign(Ja,aa) *
-Determinant::SlaterSign(Ja,bb);
-
-                                        result += sign * tau * HJI * CI *
-it->second;
-
-                                    }
-                                }
-                                ndet_visited_++;
-                            }
-                        }
-                    }
-                }
-            }
-        }
-        for (int i = 0; i<nirrep_; i++) {
-            for (int j = i+1; j<nirrep_; j++) {
-                for (int a = 0; a<nirrep_; a++){
-                    int b = i^j^a;
-                    if (b > a) {
-                        for (int ix=0; ix<naoccs[i].size(); ix++) {
-                            int ii = naoccs[i][ix];
-                            for (int jx=0; jx<naoccs[j].size(); jx++) {
-                                int jj = naoccs[j][jx];
-                                for (int ax=0; ax<navirs[a].size(); ax++) {
-                                    int aa = navirs[a][ax];
-                                    for (int bx=0; bx<navirs[b].size(); bx++) {
-                                        int bb = navirs[b][bx];
-                                        double HJI =
-fci_ints_->tei_aa(ii,jj,aa,bb);
-
-                                        if (std::fabs(HJI * CI) >=
-spawning_threshold){
-                                            Determinant detJ(detI);
-                                            detJ.set_alfa_bit(ii,false);
-                                            detJ.set_alfa_bit(jj,false);
-                                            detJ.set_alfa_bit(aa,true);
-                                            detJ.set_alfa_bit(bb,true);
-
-                                            det_hash_it it = det_C.find(detJ);
-                                            if (it != det_C.end()){
-                                                // grap the alpha bits of both
-determinants
-                                                const Determinant::bit_t& Ia =
-detI.alfa_bits();
-                                                const Determinant::bit_t& Ja =
-detJ.alfa_bits();
-
-                                                // compute the sign of the
-matrix element
-                                                HJI *=
-Determinant::SlaterSign(Ia,ii) * Determinant::SlaterSign(Ia,jj) *
-Determinant::SlaterSign(Ja,aa) * Determinant::SlaterSign(Ja,bb);
-
-                                                result += tau * HJI * CI *
-it->second;
-
-                                            }
-                                        }
-                                        ndet_visited_++;
-                                    }
-                                }
-                            }
-                        }
-                    }
-
-                }
-            }
-        }
-        for (int i = 0; i<nirrep_; i++) {
-            for (int a = 0; a<nirrep_; a++) {
-                for (int ix=0; ix<nboccs[i].size(); ix++) {
-                    int ii = nboccs[i][ix];
-                    for (int jx=ix+1; jx<nboccs[i].size(); jx++) {
-                        int jj = nboccs[i][jx];
-                        for (int ax=0; ax<nbvirs[a].size(); ax++) {
-                            int aa = nbvirs[a][ax];
-                            for (int bx=ax+1; bx<nbvirs[a].size(); bx++) {
-                                int bb = nbvirs[a][bx];
-                                double HJI = fci_ints_->tei_bb(ii,jj,aa,bb);
-
-                                if (std::fabs(HJI * CI) >= spawning_threshold){
-                                    Determinant detJ(detI);
-                                    detJ.set_beta_bit(ii,false);
-                                    detJ.set_beta_bit(jj,false);
-                                    detJ.set_beta_bit(aa,true);
-                                    detJ.set_beta_bit(bb,true);
-
-                                    det_hash_it it = det_C.find(detJ);
-                                    if (it != det_C.end()){
-                                        // grap the alpha bits of both
-determinants
-                                        const Determinant::bit_t& Ib =
-detI.beta_bits();
-                                        const Determinant::bit_t& Jb =
-detJ.beta_bits();
-
-                                        // compute the sign of the matrix
-element
-                                        HJI *= Determinant::SlaterSign(Ib,ii) *
-Determinant::SlaterSign(Ib,jj) * Determinant::SlaterSign(Jb,aa) *
-Determinant::SlaterSign(Jb,bb);
-
-                                        result += tau * HJI * CI * it->second;
-
-                                    }
-                                }
-                                ndet_visited_++;
-                            }
-                        }
-                    }
-                }
-            }
-        }
-        for (int i = 0; i<nirrep_; i++) {
-            for (int j = i+1; j<nirrep_; j++) {
-                for (int a = 0; a<nirrep_; a++){
-                    int b = i^j^a;
-                    if (b > a) {
-                        for (int ix=0; ix<nboccs[i].size(); ix++) {
-                            int ii = nboccs[i][ix];
-                            for (int jx=0; jx<nboccs[j].size(); jx++) {
-                                int jj = nboccs[j][jx];
-                                for (int ax=0; ax<nbvirs[a].size(); ax++) {
-                                    int aa = nbvirs[a][ax];
-                                    for (int bx=0; bx<nbvirs[b].size(); bx++) {
-                                        int bb = nbvirs[b][bx];
-                                        double HJI =
-fci_ints_->tei_bb(ii,jj,aa,bb);
-
-                                        if (std::fabs(HJI * CI) >=
-spawning_threshold){
-                                            Determinant detJ(detI);
-                                            detJ.set_beta_bit(ii,false);
-                                            detJ.set_beta_bit(jj,false);
-                                            detJ.set_beta_bit(aa,true);
-                                            detJ.set_beta_bit(bb,true);
-
-                                            det_hash_it it = det_C.find(detJ);
-                                            if (it != det_C.end()){
-                                                // grap the alpha bits of both
-determinants
-                                                const Determinant::bit_t& Ib =
-detI.beta_bits();
-                                                const Determinant::bit_t& Jb =
-detJ.beta_bits();
-
-                                                // compute the sign of the
-matrix element
-                                                HJI *=
-Determinant::SlaterSign(Ib,ii) * Determinant::SlaterSign(Ib,jj) *
-Determinant::SlaterSign(Jb,aa) * Determinant::SlaterSign(Jb,bb);
-
-                                                result += tau * HJI * CI *
-it->second;
-
-                                            }
-                                        }
-                                        ndet_visited_++;
-                                    }
-                                }
-                            }
-                        }
-                    }
-
-                }
-            }
-        }
-    }
-
-    return result;
-}
-*/
-
-double ProjectorCI::form_H_C(double tau, double spawning_threshold,
+double ProjectorCI_CIHash::form_H_C(double tau, double spawning_threshold,
                              Determinant& detI, double CI, det_hash<>& det_C,
                              std::pair<double, double>& max_coupling) {
     double result = 0.0;
