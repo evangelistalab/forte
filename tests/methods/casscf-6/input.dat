@@ -33,6 +33,7 @@ energy('scf')
 
 set scf_type direct
 set forte{
+   job_type                casscf
    frozen_docc             [1,0,0,0]
    restricted_docc         [1,0,1,1]
    active                  [2,0,0,0]

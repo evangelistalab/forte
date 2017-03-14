@@ -27,6 +27,7 @@ casscf_psi4 = energy('casscf')
 energy('scf')
 set scf_type direct
 set forte {
+    job_type              casscf
     casscf_reference true
     frozen_docc           [1, 0, 0, 0]
     active                [3, 0, 1, 2]
