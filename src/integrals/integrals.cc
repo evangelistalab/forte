@@ -27,22 +27,22 @@
  */
 
 //[forte-public]
-#include <cmath>
 #include <algorithm>
+#include <cmath>
 #include <numeric>
 
-#include "psi4/psi4-dec.h"
-#include "psi4/psifiles.h"
-#include "psi4/libtrans/integraltransform.h"
-#include "psi4/libpsio/psio.hpp"
+#include "../blockedtensorfactory.h"
+#include "psi4/libfock/jk.h"
+#include "psi4/libmints/basisset.h"
 #include "psi4/libmints/factory.h"
 #include "psi4/libmints/matrix.h"
-#include "psi4/libmints/basisset.h"
-#include "psi4/libmints/wavefunction.h"
 #include "psi4/libmints/mintshelper.h"
+#include "psi4/libmints/wavefunction.h"
+#include "psi4/libpsio/psio.hpp"
 #include "psi4/libqt/qt.h"
-#include "psi4/libfock/jk.h"
-#include "../blockedtensorfactory.h"
+#include "psi4/libtrans/integraltransform.h"
+#include "psi4/psi4-dec.h"
+#include "psi4/psifiles.h"
 
 #include "integrals.h"
 #include "memory.h"
@@ -68,31 +68,36 @@ bool ForteIntegrals::have_omp_ = true;
 bool ForteIntegrals::have_omp_ = false;
 #endif
 
-void set_INT_options( ForteOptions& foptions )
-{
+void set_INT_options(ForteOptions& foptions) {
     /*- The algorithm used to screen the determinant
      *  - CONVENTIONAL Conventional two-electron integrals
      *  - DF Density fitted two-electron integrals
      *  - CHOLESKY Cholesky decomposed two-electron integrals -*/
-    foptions.add_str("INT_TYPE", "CONVENTIONAL",{"CONVENTIONAL", "DF", "CHOLESKY", 
-                        "DISKDF", "DISTDF", "ALL", "EFFECTIVE", "OWNINTEGRALS"},
-                        "The integral type");
+    foptions.add_str("INT_TYPE", "CONVENTIONAL",
+                     {"CONVENTIONAL", "DF", "CHOLESKY", "DISKDF", "DISTDF",
+                      "ALL", "EFFECTIVE", "OWNINTEGRALS"},
+                     "The integral type");
 
     /*- The damping factor in the erf(x omega)/x integrals -*/
-    foptions.add_double("EFFECTIVE_COULOMB_OMEGA", 1.0, "The damping factor in the erf(x omega)/x integrals");
+    foptions.add_double("EFFECTIVE_COULOMB_OMEGA", 1.0,
+                        "The damping factor in the erf(x omega)/x integrals");
     /*- The coefficient of the effective Coulomb interaction -*/
-    foptions.add_double("EFFECTIVE_COULOMB_FACTOR", 1.0, "The coefficient of the effective Coulomb interaction");
-    foptions.add_double("EFFECTIVE_COULOMB_EXPONENT", 1.0,"The exponent of the effective Coulomb interaction");
+    foptions.add_double("EFFECTIVE_COULOMB_FACTOR", 1.0,
+                        "The coefficient of the effective Coulomb interaction");
+    foptions.add_double("EFFECTIVE_COULOMB_EXPONENT", 1.0,
+                        "The exponent of the effective Coulomb interaction");
 
     /*- The screening for JK builds and DF libraries -*/
-    foptions.add_double("INTEGRAL_SCREENING", 1e-12, "The screening for JK builds and DF libraries");
+    foptions.add_double("INTEGRAL_SCREENING", 1e-12,
+                        "The screening for JK builds and DF libraries");
 
     /* - The tolerance for cholesky integrals */
-    foptions.add_double("CHOLESKY_TOLERANCE", 1e-6, "The tolerance for cholesky integrals");
+    foptions.add_double("CHOLESKY_TOLERANCE", 1e-6,
+                        "The tolerance for cholesky integrals");
 
+    foptions.add_bool("PRINT_INTS", false,
+                      "Print the one- and two-electron integrals?");
 }
-
-
 
 ForteIntegrals::ForteIntegrals(psi::Options& options,
                                SharedWavefunction ref_wfn,
@@ -219,8 +224,6 @@ void ForteIntegrals::transform_one_electron_integrals() {
         SharedMatrix(wfn_->matrix_factory()->create_matrix(PSIF_SO_T));
     SharedMatrix V =
         SharedMatrix(wfn_->matrix_factory()->create_matrix(PSIF_SO_V));
-    SharedMatrix OneInt = T;
-    OneInt->zero();
 
     MintsHelper mints(wfn_);
     T = mints.so_kinetic();
@@ -229,15 +232,17 @@ void ForteIntegrals::transform_one_electron_integrals() {
     SharedMatrix Ca = wfn_->Ca();
     SharedMatrix Cb = wfn_->Cb();
 
-    T->add(V);
-    V->copy(T);
-    SharedMatrix OneIntAO(V->clone());
-    OneIntsAO_ = OneIntAO;
+    SharedMatrix Ha = T->clone();
+    SharedMatrix Hb = T->clone();
+    Ha->add(V);
+    Hb->add(V);
 
-    T->transform(Ca);
-    V->transform(Cb);
-    OneInt = T;
-    OneBody_symm_ = OneInt;
+    OneIntsAO_ = Ha->clone();
+
+    Ha->transform(Ca);
+    Hb->transform(Cb);
+
+    OneBody_symm_ = Ha;
 
     for (size_t pq = 0; pq < nmo_ * nmo_; ++pq)
         one_electron_integrals_a[pq] = 0.0;
@@ -250,9 +255,9 @@ void ForteIntegrals::transform_one_electron_integrals() {
         for (int p = 0; p < nmopi_[h]; ++p) {
             for (int q = 0; q < nmopi_[h]; ++q) {
                 one_electron_integrals_a[(p + offset) * nmo_ + q + offset] =
-                    T->get(h, p, q);
+                    Ha->get(h, p, q);
                 one_electron_integrals_b[(p + offset) * nmo_ + q + offset] =
-                    V->get(h, p, q);
+                    Hb->get(h, p, q);
             }
         }
         offset += nmopi_[h];
@@ -385,12 +390,14 @@ void ForteIntegrals::retransform_integrals() {
         update_integrals();
     }
 }
+
 void ForteIntegrals::freeze_core_orbitals() {
     compute_frozen_one_body_operator();
     if (resort_frozen_core_ == RemoveFrozenMOs) {
         resort_integrals_after_freezing();
     }
 }
+
 void ForteIntegrals::rotate_mos() {
     int size_mo_rotate = options_["ROTATE_MOS"].size();
     outfile->Printf("\n\n\n  ==> ROTATING MOS <==");
@@ -433,6 +440,61 @@ void ForteIntegrals::rotate_mos() {
         C_new->set_column(mo_group[0], mo_group[1], C_mo2);
     }
     C_old->copy(C_new);
+}
+
+void ForteIntegrals::print_ints() {
+
+    wfn_->Ca()->print();
+    wfn_->Cb()->print();
+
+    outfile->Printf("\n  Alpha one-electron integrals (T + V_{en})");
+    for (size_t p = 0; p < nmo_; ++p) {
+        for (size_t q = 0; q < nmo_; ++q) {
+            outfile->Printf("\n  h[%6d][%6d] = %20.12f", p, q, oei_a(p, q));
+        }
+    }
+
+    outfile->Printf("\n  Beta one-electron integrals (T + V_{en})");
+    for (size_t p = 0; p < nmo_; ++p) {
+        for (size_t q = 0; q < nmo_; ++q) {
+            outfile->Printf("\n  h[%6d][%6d] = %20.12f", p, q, oei_b(p, q));
+        }
+    }
+
+    outfile->Printf("\n  Alpha-alpha two-electron integrals <pq||rs>");
+    for (size_t p = 0; p < nmo_; ++p) {
+        for (size_t q = 0; q < nmo_; ++q) {
+            for (size_t r = 0; r < nmo_; ++r) {
+                for (size_t s = 0; s < nmo_; ++s) {
+                    outfile->Printf("\n  v[%6d][%6d][%6d][%6d] = %20.12f", p, q,
+                                    r, s, aptei_aa(p, q, r, s));
+                }
+            }
+        }
+    }
+
+    outfile->Printf("\n  Alpha-beta two-electron integrals <pq||rs>");
+    for (size_t p = 0; p < nmo_; ++p) {
+        for (size_t q = 0; q < nmo_; ++q) {
+            for (size_t r = 0; r < nmo_; ++r) {
+                for (size_t s = 0; s < nmo_; ++s) {
+                    outfile->Printf("\n  v[%6d][%6d][%6d][%6d] = %20.12f", p, q,
+                                    r, s, aptei_ab(p, q, r, s));
+                }
+            }
+        }
+    }
+    outfile->Printf("\n  Beta-beta two-electron integrals <pq||rs>");
+    for (size_t p = 0; p < nmo_; ++p) {
+        for (size_t q = 0; q < nmo_; ++q) {
+            for (size_t r = 0; r < nmo_; ++r) {
+                for (size_t s = 0; s < nmo_; ++s) {
+                    outfile->Printf("\n  v[%6d][%6d][%6d][%6d] = %20.12f", p, q,
+                                    r, s, aptei_bb(p, q, r, s));
+                }
+            }
+        }
+    }
 }
 }
 }
