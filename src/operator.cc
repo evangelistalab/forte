@@ -601,7 +601,6 @@ outfile->Printf("\n  Time spent building ab_ann_list  %1.6f s", ab.get());
     aa_cre_list_.shrink_to_fit();
     ab_cre_list_.shrink_to_fit();
     bb_cre_list_.shrink_to_fit();
-exit(1);
 }
 
 void WFNOperator::clear_op_lists() {
