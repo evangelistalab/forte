@@ -33,6 +33,7 @@ scf = energy('scf')
 
 set scf_type direct
 set forte{
+   job_type             casscf
    CASSCF_REFERENCE    true
    CASSCF_ITERATIONS   25
    restricted_docc      [2,0,0,0]

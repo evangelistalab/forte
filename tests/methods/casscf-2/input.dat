@@ -34,6 +34,7 @@ scf,scfwfn = energy('scf', return_wfn=True)
 
 set scf_type direct
 set forte{
+   job_type                casscf
    CASSCF_REFERENCE        true
    int_type                conventional
    CASSCF_ITERATIONS       36
