@@ -230,6 +230,7 @@ void ForteIntegrals::transform_one_electron_integrals() {
     V = mints.so_potential();
 
     SharedMatrix Ca = wfn_->Ca();
+    SharedMatrix Cb = wfn_->Cb();
 
     SharedMatrix Ha = T->clone();
     SharedMatrix Hb = T->clone();
