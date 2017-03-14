@@ -28,20 +28,15 @@
 
 #include "cihash.h"
 
-template<class Key, class Hash>
-CIHash<Key, Hash>::CIHash()
-{
-    this->clear();
-}
+template <class Key, class Hash> CIHash<Key, Hash>::CIHash() { this->clear(); }
 
-template<class Key, class Hash>
-CIHash<Key, Hash>::CIHash( size_t count ) {
+template <class Key, class Hash> CIHash<Key, Hash>::CIHash(size_t count) {
     this->clear();
     this->reserve(count);
 }
 
-template<class Key, class Hash>
-CIHash<Key, Hash>::CIHash( const std::vector<Key> &other ) {
+template <class Key, class Hash>
+CIHash<Key, Hash>::CIHash(const std::vector<Key>& other) {
     this->clear();
     this->reserve(other.size());
     for (Key k : other) {
@@ -49,8 +44,8 @@ CIHash<Key, Hash>::CIHash( const std::vector<Key> &other ) {
     }
 }
 
-template<class Key, class Hash>
-CIHash<Key, Hash>::CIHash( size_t count, const std::vector<Key> &other ) {
+template <class Key, class Hash>
+CIHash<Key, Hash>::CIHash(size_t count, const std::vector<Key>& other) {
     this->clear();
     this->reserve(other.size());
     this->reserve(count);
@@ -59,18 +54,14 @@ CIHash<Key, Hash>::CIHash( size_t count, const std::vector<Key> &other ) {
     }
 }
 
-template<class Key, class Hash>
-CIHash<Key, Hash>::CIHash( const CIHash<Key, Hash>& other ) :
-    vec(other.vec),
-    begin_index(other.begin_index),
-    max_load(other.max_load),
-    num_bucket(other.num_bucket),
-    current_size(other.current_size)
-{
-}
+template <class Key, class Hash>
+CIHash<Key, Hash>::CIHash(const CIHash<Key, Hash>& other)
+    : vec(other.vec), begin_index(other.begin_index), max_load(other.max_load),
+      num_bucket(other.num_bucket), current_size(other.current_size) {}
 
-template<class Key, class Hash>
-std::tuple<size_t, size_t, size_t> CIHash<Key, Hash>::find_detail_by_key( const Key& key ) const {
+template <class Key, class Hash>
+std::tuple<size_t, size_t, size_t>
+CIHash<Key, Hash>::find_detail_by_key(const Key& key) const {
     size_t bucket_index = Hash()(key) % num_bucket;
     if (this->begin_index[bucket_index] != MAX_SIZE) {
         size_t pre_index = MAX_SIZE;
@@ -87,8 +78,7 @@ std::tuple<size_t, size_t, size_t> CIHash<Key, Hash>::find_detail_by_key( const 
     return std::make_tuple(bucket_index, MAX_SIZE, MAX_SIZE);
 }
 
-template<class Key, class Hash>
-void CIHash<Key, Hash>::double_buckets() {
+template <class Key, class Hash> void CIHash<Key, Hash>::double_buckets() {
     size_t new_num_bucket = num_bucket << 1;
     if (begin_index.capacity() < new_num_bucket)
         begin_index.reserve(new_num_bucket);
@@ -99,7 +89,8 @@ void CIHash<Key, Hash>::double_buckets() {
         size_t new_bucket_index = bucket_index + num_bucket;
         size_t new_temp_index = MAX_SIZE;
         while (temp_index != MAX_SIZE) {
-            size_t temp_bucket_index = Hash()(this->vec[temp_index].value) % new_num_bucket;
+            size_t temp_bucket_index =
+                Hash()(this->vec[temp_index].value) % new_num_bucket;
             size_t next_index = this->vec[temp_index].next;
             if (temp_bucket_index != bucket_index) {
                 if (new_temp_index == MAX_SIZE) {
@@ -123,11 +114,12 @@ void CIHash<Key, Hash>::double_buckets() {
     this->num_bucket = new_num_bucket;
 }
 
-template<class Key, class Hash>
-void CIHash<Key, Hash>::half_buckets() {
+template <class Key, class Hash> void CIHash<Key, Hash>::half_buckets() {
     size_t new_num_bucket = num_bucket >> 1;
-    for (size_t bucket_index = 0; bucket_index < new_num_bucket; ++bucket_index) {
-        size_t appending_index = this->begin_index[bucket_index + new_num_bucket];
+    for (size_t bucket_index = 0; bucket_index < new_num_bucket;
+         ++bucket_index) {
+        size_t appending_index =
+            this->begin_index[bucket_index + new_num_bucket];
         if (appending_index == MAX_SIZE)
             continue;
         size_t temp_index = this->begin_index[bucket_index];
@@ -141,16 +133,17 @@ void CIHash<Key, Hash>::half_buckets() {
         this->vec[temp_index].next = appending_index;
     }
     this->num_bucket = new_num_bucket;
-    this->begin_index.erase(begin_index.begin() + num_bucket, begin_index.end());
+    this->begin_index.erase(begin_index.begin() + num_bucket,
+                            begin_index.end());
 }
 
-template<class Key, class Hash>
-const Key& CIHash<Key, Hash>::operator[]( size_t pos ) const {
+template <class Key, class Hash>
+const Key& CIHash<Key, Hash>::operator[](size_t pos) const {
     return this->vec[pos].value;
 }
 
-template<class Key, class Hash>
-size_t CIHash<Key, Hash>::find( const Key& key ) const {
+template <class Key, class Hash>
+size_t CIHash<Key, Hash>::find(const Key& key) const {
     size_t bucket_index = Hash()(key) % num_bucket;
     if (this->begin_index[bucket_index] != MAX_SIZE) {
         size_t temp_index = this->begin_index[bucket_index];
@@ -164,23 +157,19 @@ size_t CIHash<Key, Hash>::find( const Key& key ) const {
     return MAX_SIZE;
 }
 
-template<class Key, class Hash>
-size_t CIHash<Key, Hash>::size() const {
+template <class Key, class Hash> size_t CIHash<Key, Hash>::size() const {
     return this->vec.size();
 }
 
-template<class Key, class Hash>
-size_t CIHash<Key, Hash>::max_size() const {
+template <class Key, class Hash> size_t CIHash<Key, Hash>::max_size() const {
     return MAX_SIZE - 1;
 }
 
-template<class Key, class Hash>
-size_t CIHash<Key, Hash>::capacity() const {
+template <class Key, class Hash> size_t CIHash<Key, Hash>::capacity() const {
     return this->vec.capacity();
 }
 
-template<class Key, class Hash>
-void CIHash<Key, Hash>::clear() {
+template <class Key, class Hash> void CIHash<Key, Hash>::clear() {
     this->vec.clear();
     this->begin_index.clear();
     this->current_size = 0;
@@ -189,10 +178,10 @@ void CIHash<Key, Hash>::clear() {
     begin_index.insert(begin_index.begin(), num_bucket, MAX_SIZE);
 }
 
-template<class Key, class Hash>
-size_t CIHash<Key, Hash>::add(const Key &key ) {
+template <class Key, class Hash> size_t CIHash<Key, Hash>::add(const Key& key) {
     size_t key_bucket_index, key_pre_index, key_index;
-    std::tie(key_bucket_index, key_pre_index, key_index) = find_detail_by_key(key);
+    std::tie(key_bucket_index, key_pre_index, key_index) =
+        find_detail_by_key(key);
     if (key_index != MAX_SIZE)
         return key_index;
     this->vec.push_back({key, MAX_SIZE});
@@ -206,13 +195,16 @@ size_t CIHash<Key, Hash>::add(const Key &key ) {
     return current_size - 1;
 }
 
-template<class Key, class Hash>
-std::pair<size_t, size_t> CIHash<Key, Hash>::erase_by_key( const Key& key ) {
+template <class Key, class Hash>
+std::pair<size_t, size_t> CIHash<Key, Hash>::erase_by_key(const Key& key) {
     size_t key_bucket_index, key_pre_index, key_index;
     size_t last_bucket_index, last_pre_index, last_index;
-    std::tie(key_bucket_index, key_pre_index, key_index) = find_detail_by_key(key);
-    if (key_index == MAX_SIZE) return std::make_pair(MAX_SIZE, MAX_SIZE);
-    std::tie(last_bucket_index, last_pre_index, last_index) = find_detail_by_key(this->operator [](current_size -1));
+    std::tie(key_bucket_index, key_pre_index, key_index) =
+        find_detail_by_key(key);
+    if (key_index == MAX_SIZE)
+        return std::make_pair(MAX_SIZE, MAX_SIZE);
+    std::tie(last_bucket_index, last_pre_index, last_index) =
+        find_detail_by_key(this->operator[](current_size - 1));
     if (key_pre_index == MAX_SIZE) {
         this->begin_index[key_bucket_index] = this->vec[key_index].next;
     } else {
@@ -237,13 +229,13 @@ std::pair<size_t, size_t> CIHash<Key, Hash>::erase_by_key( const Key& key ) {
     return std::make_pair(last_index, key_index);
 }
 
-template<class Key, class Hash>
-std::pair<size_t, size_t> CIHash<Key, Hash>::erase_by_index( size_t index ) {
-    return erase_by_key(this->vec.operator [](index).value);
+template <class Key, class Hash>
+std::pair<size_t, size_t> CIHash<Key, Hash>::erase_by_index(size_t index) {
+    return erase_by_key(this->vec.operator[](index).value);
 }
 
-template<class Key, class Hash>
-std::vector<size_t> CIHash<Key, Hash>::merge( const CIHash<Key, Hash>& source ) {
+template <class Key, class Hash>
+std::vector<size_t> CIHash<Key, Hash>::merge(const CIHash<Key, Hash>& source) {
     std::vector<size_t> cur_index;
     size_t merge_size = source.size();
     cur_index.reserve(merge_size);
@@ -253,8 +245,8 @@ std::vector<size_t> CIHash<Key, Hash>::merge( const CIHash<Key, Hash>& source ) 
     return cur_index;
 }
 
-template<class Key, class Hash>
-std::vector<size_t> CIHash<Key, Hash>::merge( const std::vector<Key>& source ) {
+template <class Key, class Hash>
+std::vector<size_t> CIHash<Key, Hash>::merge(const std::vector<Key>& source) {
     std::vector<size_t> cur_index;
     size_t merge_size = source.size();
     cur_index.reserve(merge_size);
@@ -264,22 +256,22 @@ std::vector<size_t> CIHash<Key, Hash>::merge( const std::vector<Key>& source ) {
     return cur_index;
 }
 
-template<class Key, class Hash>
+template <class Key, class Hash>
 size_t CIHash<Key, Hash>::bucket_count() const {
     return this->num_bucket;
 }
 
-template<class Key, class Hash>
+template <class Key, class Hash>
 size_t CIHash<Key, Hash>::max_bucket_count() const {
     return MAX_SIZE - 1;
 }
 
-template<class Key, class Hash>
-size_t CIHash<Key, Hash>::bucket_size( size_t n ) const {
+template <class Key, class Hash>
+size_t CIHash<Key, Hash>::bucket_size(size_t n) const {
     if (n >= this->num_bucket)
         return MAX_SIZE;
-//    if (this->begin_index[n] == MAX_SIZE)
-//        return 0;
+    //    if (this->begin_index[n] == MAX_SIZE)
+    //        return 0;
     size_t temp_index = this->begin_index[n];
     size_t count = 0;
     while (temp_index != MAX_SIZE) {
@@ -289,53 +281,51 @@ size_t CIHash<Key, Hash>::bucket_size( size_t n ) const {
     return count;
 }
 
-template<class Key, class Hash>
-size_t CIHash<Key, Hash>::bucket( const Key& key ) const {
+template <class Key, class Hash>
+size_t CIHash<Key, Hash>::bucket(const Key& key) const {
     size_t key_bucket_index, key_pre_index, key_index;
-    std::tie(key_bucket_index, key_pre_index, key_index) = find_detail_by_key(key);
+    std::tie(key_bucket_index, key_pre_index, key_index) =
+        find_detail_by_key(key);
     if (key_index == MAX_SIZE)
         return MAX_SIZE;
     else
         return key_bucket_index;
 }
 
-template<class Key, class Hash>
-float CIHash<Key, Hash>::load_factor() const {
-    return ((float) current_size)/num_bucket;
+template <class Key, class Hash> float CIHash<Key, Hash>::load_factor() const {
+    return ((float)current_size) / num_bucket;
 }
 
-template<class Key, class Hash>
+template <class Key, class Hash>
 float CIHash<Key, Hash>::max_load_factor() const {
     return this->max_load;
 }
 
-template<class Key, class Hash>
-void CIHash<Key, Hash>::max_load_factor( float ml ) {
+template <class Key, class Hash>
+void CIHash<Key, Hash>::max_load_factor(float ml) {
     this->max_load = ml;
     while (load_factor() > max_load)
         double_buckets();
 }
 
-template<class Key, class Hash>
-void CIHash<Key, Hash>::reserve( size_t count ) {
+template <class Key, class Hash> void CIHash<Key, Hash>::reserve(size_t count) {
     if (count <= current_size)
         return;
     this->vec.reserve(count);
-    while (((float) count)/num_bucket > max_load)
+    while (((float)count) / num_bucket > max_load)
         double_buckets();
 }
 
-template<class Key, class Hash>
-void CIHash<Key, Hash>::shrink_to_fit() {
+template <class Key, class Hash> void CIHash<Key, Hash>::shrink_to_fit() {
     this->vec.shrink_to_fit();
-    while (((float) current_size)/num_bucket <= 0.5 * max_load)
+    while (((float)current_size) / num_bucket <= 0.5 * max_load)
         half_buckets();
 }
 
-template<class Key, class Hash>
+template <class Key, class Hash>
 std::vector<size_t> CIHash<Key, Hash>::optimize() {
     std::vector<size_t> cur_index(current_size, MAX_SIZE);
-    std::vector<CINode<Key> > old_vec;
+    std::vector<CINode<Key>> old_vec;
     this->vec.swap(old_vec);
     this->vec.reserve(old_vec.capacity());
     size_t temp_index = 0;
@@ -352,13 +342,13 @@ std::vector<size_t> CIHash<Key, Hash>::optimize() {
     for (size_t i = 1; i < current_size; ++i) {
         size_t temp_bucket_index = Hash()(this->vec[i].value) % num_bucket;
         if (temp_bucket_index != pre_bucket_index) {
-            this->vec[i-1].next = MAX_SIZE;
+            this->vec[i - 1].next = MAX_SIZE;
             this->begin_index[temp_bucket_index] = i;
             pre_bucket_index = temp_bucket_index;
         } else {
-            this->vec[i-1].next = i;
+            this->vec[i - 1].next = i;
         }
     }
-    this->vec[current_size-1].next = MAX_SIZE;
+    this->vec[current_size - 1].next = MAX_SIZE;
     return cur_index;
 }
