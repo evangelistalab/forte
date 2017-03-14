@@ -122,7 +122,9 @@ class WFNOperator {
     void startup();
 
     std::vector<std::vector<size_t>> beta_strings_;
-    std::vector<std::vector<std::pair<int,size_t>>> alpha_strings_;
+    std::vector<std::vector<size_t>> alpha_strings_;
+    std::vector<std::vector<std::pair<int,size_t>>> alpha_a_strings_;
+    std::vector<std::vector<std::pair<int,size_t>>> beta_a_strings_;
     
 
     /// Active space symmetry

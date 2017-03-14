@@ -2463,7 +2463,9 @@ void AdaptiveCI::compute_aci(DeterminantMap& PQ_space, SharedMatrix& PQ_evecs,
         // Step 3. Diagonalize the Hamiltonian in the P + Q space
         op_.clear_op_lists();
         op_.clear_tp_lists();
+    Timer str;
         op_.build_strings(PQ_space);
+    outfile->Printf("\n  Time spent building strings      %1.6f s", str.get());
         op_.op_lists(PQ_space);
         op_.tp_lists(PQ_space);
         Timer diag_pq;
