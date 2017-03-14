@@ -26,8 +26,8 @@
  * @END LICENSE
  */
 
-#ifndef _pci_h_
-#define _pci_h_
+#ifndef _pci_cihash_h_
+#define _pci_cihash_h_
 
 #include <fstream>
 
@@ -47,9 +47,9 @@ namespace psi {
 namespace forte {
 
 /// Set the forte style options for the FCI method
-void set_PCI_options(ForteOptions& foptions);
+//void set_PCI_CIHash_options(ForteOptions& foptions);
 
-namespace GeneratorType_{
+namespace GeneratorType_CIHash{
 enum GeneratorType {
     LinearGenerator,
     TrotterLinear,
@@ -71,7 +71,7 @@ enum GeneratorType {
  * @brief The SparsePathIntegralCI class
  * This class implements an a sparse path-integral FCI algorithm
  */
-class ProjectorCI : public Wavefunction {
+class ProjectorCI_CIHash : public Wavefunction {
   public:
     // ==> Class Constructor and Destructor <==
 
@@ -81,7 +81,7 @@ class ProjectorCI : public Wavefunction {
      * @param options The main options object
      * @param ints A pointer to an allocated integral object
      */
-    ProjectorCI(SharedWavefunction ref_wfn, Options& options,
+    ProjectorCI_CIHash(SharedWavefunction ref_wfn, Options& options,
                 std::shared_ptr<ForteIntegrals> ints,
                 std::shared_ptr<MOSpaceInfo> mo_space_info);
 
@@ -101,7 +101,7 @@ class ProjectorCI : public Wavefunction {
     /// The maximum number of threads
     int num_threads_;
     /// The type of Generator used
-    GeneratorType_::GeneratorType generator_;
+    GeneratorType_CIHash::GeneratorType generator_;
     /// A string that describes the Generator type
     std::string generator_description_;
     /// The wave function symmetry
@@ -308,7 +308,7 @@ class ProjectorCI : public Wavefunction {
     * events
     * @param S An energy shift subtracted from the Hamiltonian
     */
-    void propagate(GeneratorType_::GeneratorType generator, det_vec& dets,
+    void propagate(GeneratorType_CIHash::GeneratorType generator, det_vec& dets,
                    std::vector<double>& C, double tau,
                    double spawning_threshold, double S);
     /// A Delta projector fitted by 10th order chebyshev polynomial
