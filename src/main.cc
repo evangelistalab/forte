@@ -222,6 +222,11 @@ make_forte_integrals(SharedWavefunction ref_wfn, Options& options,
             "DISTRIBUTEDDF Effective, CONVENTIONAL or OwnIntegrals");
         throw PSIEXCEPTION("INT_TYPE is not correct.  Check options");
     }
+
+    if(options.get_bool("PRINT_INTS")){
+        ints->print_ints();
+    }
+
     return ints;
 }
 }
