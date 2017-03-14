@@ -39,22 +39,6 @@ void forte_old_options(Options& options) {
     /*- Print summary of memory -*/
     options.add_bool("MEMORY_SUMMARY", false);
 
-    /*- The job type
-     *  - FCI Full configuration interaction (Francesco's code)
-     *  - CAS Full configuration interaction (York's code)
-     *  - ACI Adaptive configuration interaction
-     *  - PCI Projector CI
-     *  - DSRG-MRPT2 Tensor-based DSRG-MRPT2 code
-     *  - THREE-DSRG-MRPT2 A DF/CD based DSRG-MRPT2 code.  Very fast
-     *  - CASSCF A AO based CASSCF code by Kevin Hannon
-    -*/
-    options.add_str(
-        "JOB_TYPE", "NONE",
-        "NONE ACI ACI_SPARSE FCIQMC PCI FCI CAS DMRG"
-        " SR-DSRG SR-DSRG-ACI SR-DSRG-PCI TENSORSRG TENSORSRG-CI"
-        " DSRG-MRPT2 DSRG-MRPT3 MR-DSRG-PT2 THREE-DSRG-MRPT2 SQ NONE"
-        " SOMRDSRG MRDSRG MRDSRG_SO CASSCF"
-        " ACTIVE-DSRGPT2 DSRG_MRPT TASKS CC");
 
     /*- The symmetry of the electronic state. (zero based) -*/
     options.add_int("ROOT_SYM", 0);
