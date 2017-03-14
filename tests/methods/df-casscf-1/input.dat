@@ -36,6 +36,7 @@ compare_values(psi4_casscf_computed,psi4_casscf,6,"CASSCF energy")
 
 set scf_type df
 set forte{
+   job_type                CASSCF
    frozen_docc             [1,0,0,0]
    restricted_docc         [1,0,1,1]
    active                  [2,0,0,0]
