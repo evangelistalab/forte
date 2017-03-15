@@ -42,11 +42,11 @@
 #include "psi4/libpsio/psio.hpp"
 #include "psi4/libqt/qt.h"
 
-#include "pci_cihash.h"
+#include "pci_simple.h"
 
 using namespace std;
 using namespace psi;
-using namespace psi::forte::GeneratorType_CIHash;
+using namespace psi::forte::GeneratorType_Simple;
 
 #define USE_HASH 1
 #define DO_STATS 0
@@ -56,12 +56,118 @@ namespace psi {
 namespace forte {
 #ifdef _OPENMP
 #include <omp.h>
-bool ProjectorCI_CIHash::have_omp_ = true;
+bool ProjectorCI_Simple::have_omp_ = true;
 #else
 #define omp_get_max_threads() 1
 #define omp_get_thread_num() 0
-bool ProjectorCI_CIHash::have_omp_ = false;
+bool ProjectorCI_Simple::have_omp_ = false;
 #endif
+/// Set the forte style options for the FCI method
+//void set_PCI_options(ForteOptions& foptions) {
+//    //////////////////////////////////////////////////////////////
+//    ///         OPTIONS FOR THE PROJECTOR CI
+//    //////////////////////////////////////////////////////////////
+
+//    foptions.add_str("PCI_GENERATOR", "WALL-CHEBYSHEV",
+//                     {"LINEAR", "QUADRATIC", "CUBIC", "QUARTIC", "POWER",
+//                      "TROTTER", "OLSEN", "DAVIDSON", "MITRUSHENKOV",
+//                      "EXP-CHEBYSHEV", "WALL-CHEBYSHEV", "CHEBYSHEV", "LANCZOS",
+//                      "DL"},
+//                     "The propagation algorithm");
+
+//    foptions.add_int("PCI_NROOT", 1, "The number of roots computed");
+
+//    foptions.add_double("PCI_SPAWNING_THRESHOLD", 0.001,
+//                        "The determinant importance threshold");
+
+//    foptions.add_double("PCI_MAX_GUESS_SIZE", 10000,
+//                        "The maximum number of determinants used to form the "
+//                        "guess wave function");
+
+//    foptions.add_double("PCI_GUESS_SPAWNING_THRESHOLD", -1,
+//                        "The determinant importance threshold");
+
+//    foptions.add_double("PCI_ENERGY_ESTIMATE_THRESHOLD", 1.0e-6,
+//                        "The threshold with which we estimate the variational "
+//                        "energy. Note that the final energy is always "
+//                        "estimated exactly.");
+
+//    foptions.add_double("PCI_TAU", 1.0,
+//                        "The time step in imaginary time (a.u.)");
+
+//    foptions.add_double("PCI_E_CONVERGENCE", 1.0e-8,
+//                        "The energy convergence criterion");
+
+//    foptions.add_bool("PCI_FAST_EVAR", false,
+//                      "Use a fast (sparse) estimate of the energy");
+
+//    foptions.add_int(
+//        "PCI_ENERGY_ESTIMATE_FREQ", 1,
+//        "Iterations in between variational estimation of the energy");
+
+//    foptions.add_bool("PCI_ADAPTIVE_BETA", false, "Use an adaptive time step?");
+
+//    foptions.add_bool("PCI_USE_INTER_NORM", false,
+//                      "Use intermediate normalization");
+
+//    foptions.add_bool("PCI_USE_SHIFT", false, "Use a shift in the exponential");
+
+//    foptions.add_bool("PCI_VAR_ESTIMATE", false,
+//                      "Estimate variational energy during calculation");
+
+//    foptions.add_bool("PCI_PRINT_FULL_WAVEFUNCTION", false,
+//                      "Print full wavefunction when finish");
+
+//    foptions.add_bool("PCI_SIMPLE_PRESCREENING", false,
+//                      "Prescreen the spawning of excitations");
+
+//    foptions.add_bool("PCI_DYNAMIC_PRESCREENING", false,
+//                      "Use dynamic prescreening");
+
+//    foptions.add_bool("PCI_SCHWARZ_PRESCREENING", false,
+//                      "Use schwarz prescreening");
+
+//    foptions.add_bool("PCI_INITIATOR_APPROX", false,
+//                      "Use initiator approximation");
+
+//    foptions.add_double("PCI_INITIATOR_APPROX_FACTOR", 1.0,
+//                        "The initiator approximation factor");
+
+//    foptions.add_bool("PCI_PERTURB_ANALYSIS", false,
+//                      "Do result perturbation analysis");
+
+//    foptions.add_bool("PCI_SYMM_APPROX_H", false,
+//                      "Use Symmetric Approximate Hamiltonian");
+
+//    foptions.add_bool("PCI_STOP_HIGHER_NEW_LOW", false,
+//                      "Stop iteration when higher new low detected");
+
+//    foptions.add_double("PCI_MAXBETA", 1000.0, "The maximum value of beta");
+
+//    foptions.add_int("PCI_MAX_DAVIDSON_ITER", 12,
+//                     "The maximum value of Davidson generator iteration");
+
+//    foptions.add_int(
+//        "PCI_DL_COLLAPSE_PER_ROOT", 2,
+//        "The number of trial vector to retain after Davidson-Liu collapsing");
+
+//    foptions.add_int("PCI_DL_SUBSPACE_PER_ROOT", 8,
+//                     "The maxim number of trial Davidson-Liu vectors");
+
+//    foptions.add_int("PCI_CHEBYSHEV_ORDER", 5,
+//                     "The order of Chebyshev truncation");
+
+//    foptions.add_int("PCI_KRYLOV_ORDER", 5, "The order of Krylov truncation");
+
+//    foptions.add_double("PCI_COLINEAR_THRESHOLD", 1.0e-6,
+//                        "The minimum norm of orthogonal vector");
+
+//    foptions.add_bool("PCI_REFERENCE_SPAWNING", false,
+//                      "Do spawning according to reference");
+
+//    foptions.add_bool("PCI_POST_DIAGONALIZE", false,
+//                      "Do a post diagonalization?");
+//}
 
 void combine_hashes(std::vector<det_hash<>>& thread_det_C_map,
                     det_hash<>& dets_C_hash);
@@ -106,7 +212,7 @@ void print_vector(const std::vector<double>& C, std::string description);
 void print_hash(det_hash<>& C, std::string description,
                 bool print_det = false);
 
-ProjectorCI_CIHash::ProjectorCI_CIHash(SharedWavefunction ref_wfn, Options& options,
+ProjectorCI_Simple::ProjectorCI_Simple(SharedWavefunction ref_wfn, Options& options,
                          std::shared_ptr<ForteIntegrals> ints,
                          std::shared_ptr<MOSpaceInfo> mo_space_info)
     : Wavefunction(options), ints_(ints), mo_space_info_(mo_space_info),
@@ -117,9 +223,9 @@ ProjectorCI_CIHash::ProjectorCI_CIHash(SharedWavefunction ref_wfn, Options& opti
     startup();
 }
 
-std::shared_ptr<FCIIntegrals> ProjectorCI_CIHash::fci_ints_ = 0;
+std::shared_ptr<FCIIntegrals> ProjectorCI_Simple::fci_ints_ = 0;
 
-void ProjectorCI_CIHash::startup() {
+void ProjectorCI_Simple::startup() {
     // Connect the integrals to the determinant class
     fci_ints_ = std::make_shared<FCIIntegrals>(
         ints_, mo_space_info_->get_corr_abs_mo("ACTIVE"),
@@ -329,7 +435,7 @@ void ProjectorCI_CIHash::startup() {
     num_threads_ = omp_get_max_threads();
 }
 
-void ProjectorCI_CIHash::print_info() {
+void ProjectorCI_Simple::print_info() {
     // Print a summary
     std::vector<std::pair<std::string, int>> calculation_info{
         {"Symmetry", wavefunction_symmetry_},
@@ -386,7 +492,7 @@ void ProjectorCI_CIHash::print_info() {
     outfile->Flush();
 }
 
-double ProjectorCI_CIHash::estimate_high_energy() {
+double ProjectorCI_Simple::estimate_high_energy() {
     double high_obt_energy = 0.0;
     int nea = 0, neb = 0;
     std::vector<std::pair<double, int>> obt_energies;
@@ -556,13 +662,13 @@ double ProjectorCI_CIHash::estimate_high_energy() {
     return lambda_h_;
 }
 
-void ProjectorCI_CIHash::convergence_analysis() {
+void ProjectorCI_Simple::convergence_analysis() {
     estimate_high_energy();
     compute_characteristic_function();
     print_characteristic_function();
 }
 
-void ProjectorCI_CIHash::compute_characteristic_function() {
+void ProjectorCI_Simple::compute_characteristic_function() {
     shift_ = (lambda_h_ + lambda_1_) / 2.0;
     range_ = (lambda_h_ - lambda_1_) / 2.0;
     switch (generator_) {
@@ -599,7 +705,7 @@ void ProjectorCI_CIHash::compute_characteristic_function() {
     }
 }
 
-void ProjectorCI_CIHash::print_characteristic_function() {
+void ProjectorCI_Simple::print_characteristic_function() {
     outfile->Printf("\n\n  ==> Characteristic Function <==");
     print_polynomial(cha_func_coefs_);
     outfile->Printf("\n    with tau = %e, shift = %.12f, range = %.12f",
@@ -612,7 +718,7 @@ void ProjectorCI_CIHash::print_characteristic_function() {
                     lambda_h_ + nuclear_repulsion_energy_);
 }
 
-double ProjectorCI_CIHash::compute_energy() {
+double ProjectorCI_Simple::compute_energy() {
     timer_on("PIFCI:Energy");
     ForteTimer t_apici;
     old_max_one_HJI_ = 1e100;
@@ -628,7 +734,7 @@ double ProjectorCI_CIHash::compute_energy() {
     outfile->Printf(
         "\n\n\t  ---------------------------------------------------------");
     outfile->Printf(
-        "\n\t    Projector Configuration Interaction CIHash implementation");
+        "\n\t    Projector Configuration Interaction Simple implementation");
     outfile->Printf(
         "\n\t         by Francesco A. Evangelista and Tianyuan Zhang");
     outfile->Printf("\n\t                      version Mar. 15 2017");
@@ -970,7 +1076,7 @@ double ProjectorCI_CIHash::compute_energy() {
     return var_energy;
 }
 
-bool ProjectorCI_CIHash::converge_test() {
+bool ProjectorCI_Simple::converge_test() {
     if (!stop_higher_new_low_) {
         return false;
     }
@@ -988,7 +1094,7 @@ bool ProjectorCI_CIHash::converge_test() {
     return false;
 }
 
-double ProjectorCI_CIHash::initial_guess(det_vec& dets, std::vector<double>& C) {
+double ProjectorCI_Simple::initial_guess(det_vec& dets, std::vector<double>& C) {
     // Use the reference determinant as a starting point
     std::vector<bool> alfa_bits =
         reference_determinant_.get_alfa_bits_vector_bool();
@@ -1057,7 +1163,7 @@ double ProjectorCI_CIHash::initial_guess(det_vec& dets, std::vector<double>& C) 
     return var_energy;
 }
 
-void ProjectorCI_CIHash::propagate(GeneratorType generator, det_vec& dets,
+void ProjectorCI_Simple::propagate(GeneratorType generator, det_vec& dets,
                             std::vector<double>& C, double tau,
                             double spawning_threshold, double S) {
     // Reset prescreening boundary
@@ -1118,7 +1224,7 @@ void ProjectorCI_CIHash::propagate(GeneratorType generator, det_vec& dets,
     normalize(C);
 }
 
-void ProjectorCI_CIHash::propagate_wallCh(det_vec& dets, std::vector<double>& C,
+void ProjectorCI_Simple::propagate_wallCh(det_vec& dets, std::vector<double>& C,
                                    double spawning_threshold, double S) {
 
     // A map that contains the pair (determinant,coefficient)
@@ -1154,7 +1260,7 @@ void ProjectorCI_CIHash::propagate_wallCh(det_vec& dets, std::vector<double>& C,
     }
 }
 
-void ProjectorCI_CIHash::propagate_Lanczos(det_vec& dets, std::vector<double>& C,
+void ProjectorCI_Simple::propagate_Lanczos(det_vec& dets, std::vector<double>& C,
                                     double spawning_threshold, double S) {
     size_t ref_size = C.size();
     int krylov_order =
@@ -1424,7 +1530,7 @@ void ProjectorCI_CIHash::propagate_Lanczos(det_vec& dets, std::vector<double>& C
     //// Generalized eigenvalue problem solver END
 }
 
-void ProjectorCI_CIHash::propagate_DL(det_vec& dets, std::vector<double>& C,
+void ProjectorCI_Simple::propagate_DL(det_vec& dets, std::vector<double>& C,
                                double spawning_threshold, double S) {
     size_t ref_size = C.size();
     std::vector<std::vector<double>> b_vec(davidson_subspace_per_root_);
@@ -1613,7 +1719,7 @@ void ProjectorCI_CIHash::propagate_DL(det_vec& dets, std::vector<double>& C,
     //    outfile->Printf("\nC2 norm %10.3e", norm(C2));
 }
 
-void ProjectorCI_CIHash::propagate_Chebyshev(det_vec& dets, std::vector<double>& C,
+void ProjectorCI_Simple::propagate_Chebyshev(det_vec& dets, std::vector<double>& C,
                                       double spawning_threshold) {
     // A map that contains the pair (determinant,coefficient)
     const double PI = 2 * acos(0.0);
@@ -1634,7 +1740,7 @@ void ProjectorCI_CIHash::propagate_Chebyshev(det_vec& dets, std::vector<double>&
     }
 }
 
-void ProjectorCI_CIHash::propagate_Linear(det_vec& dets, std::vector<double>& C,
+void ProjectorCI_Simple::propagate_Linear(det_vec& dets, std::vector<double>& C,
                                    double tau, double spawning_threshold,
                                    double S) {
     // A map that contains the pair (determinant,coefficient)
@@ -1646,7 +1752,7 @@ void ProjectorCI_CIHash::propagate_Linear(det_vec& dets, std::vector<double>& C,
     copy_hash_to_vec(dets_C_hash, dets, C);
 }
 
-void ProjectorCI_CIHash::propagate_Taylor(int order, det_vec& dets,
+void ProjectorCI_Simple::propagate_Taylor(int order, det_vec& dets,
                                    std::vector<double>& C, double tau,
                                    double spawning_threshold, double S) {
     // A map that contains the pair (determinant,coefficient)
@@ -1684,7 +1790,7 @@ void ProjectorCI_CIHash::propagate_Taylor(int order, det_vec& dets,
     copy_hash_to_vec(dets_sum_map, dets, C);
 }
 
-void ProjectorCI_CIHash::propagate_power(det_vec& dets, std::vector<double>& C,
+void ProjectorCI_Simple::propagate_power(det_vec& dets, std::vector<double>& C,
                                   double spawning_threshold, double S) {
     // A map that contains the pair (determinant,coefficient)
     det_hash<> dets_C_hash;
@@ -1695,7 +1801,7 @@ void ProjectorCI_CIHash::propagate_power(det_vec& dets, std::vector<double>& C,
     copy_hash_to_vec(dets_C_hash, dets, C);
 }
 
-void ProjectorCI_CIHash::propagate_Polynomial(det_vec& dets, std::vector<double>& C,
+void ProjectorCI_Simple::propagate_Polynomial(det_vec& dets, std::vector<double>& C,
                                        std::vector<double>& coef,
                                        double spawning_threshold) {
     int order = coef.size() - 1;
@@ -1735,7 +1841,7 @@ void ProjectorCI_CIHash::propagate_Polynomial(det_vec& dets, std::vector<double>
     copy_hash_to_vec(dets_sum_map, dets, C);
 }
 
-void ProjectorCI_CIHash::propagate_Trotter_linear(det_vec& dets,
+void ProjectorCI_Simple::propagate_Trotter_linear(det_vec& dets,
                                            std::vector<double>& C, double tau,
                                            double spawning_threshold,
                                            double S) {
@@ -1761,7 +1867,7 @@ void ProjectorCI_CIHash::propagate_Trotter_linear(det_vec& dets,
     copy_hash_to_vec(dets_C_hash, dets, C);
 }
 
-void ProjectorCI_CIHash::propagate_Olsen(det_vec& dets, std::vector<double>& C,
+void ProjectorCI_Simple::propagate_Olsen(det_vec& dets, std::vector<double>& C,
                                   double spawning_threshold, double S) {
     // A map that contains the pair (determinant,coefficient)
     det_hash<> dets_C_hash;
@@ -1822,7 +1928,7 @@ void ProjectorCI_CIHash::propagate_Olsen(det_vec& dets, std::vector<double>& C,
     copy_hash_to_vec(dets_C_hash, dets, C);
 }
 
-void ProjectorCI_CIHash::propagate_DavidsonLiu(det_vec& dets, std::vector<double>& C,
+void ProjectorCI_Simple::propagate_DavidsonLiu(det_vec& dets, std::vector<double>& C,
                                         double spawning_threshold) {
     throw PSIEXCEPTION(
         "\n\n  propagate_DavidsonLiu is not implemented yet.\n\n");
@@ -2141,7 +2247,7 @@ void ProjectorCI_CIHash::propagate_DavidsonLiu(det_vec& dets, std::vector<double
     //    H",t_davidson.elapsed());
 }
 
-void ProjectorCI_CIHash::apply_tau_H_symm_det_dynamic(
+void ProjectorCI_Simple::apply_tau_H_symm_det_dynamic(
     double tau, double spawning_threshold, det_hash<>& pre_dets_C_hash,
     const Determinant& detI, double CI,
     std::vector<std::pair<Determinant, double>>& new_space_C_vec, double E0,
@@ -2339,7 +2445,7 @@ void ProjectorCI_CIHash::apply_tau_H_symm_det_dynamic(
     }
 }
 
-void ProjectorCI_CIHash::apply_tau_H_symm(double tau, double spawning_threshold,
+void ProjectorCI_Simple::apply_tau_H_symm(double tau, double spawning_threshold,
                                    det_vec& dets, const std::vector<double>& C,
                                    det_hash<>& dets_C_hash, double S) {
     // A vector of maps that hold (determinant,coefficient)
@@ -2414,7 +2520,7 @@ void ProjectorCI_CIHash::apply_tau_H_symm(double tau, double spawning_threshold,
     }
 }
 
-void ProjectorCI_CIHash::apply_tau_H_ref_C_symm(double tau, double spawning_threshold,
+void ProjectorCI_Simple::apply_tau_H_ref_C_symm(double tau, double spawning_threshold,
                                          det_vec& dets,
                                          const std::vector<double>& C,
                                          const std::vector<double>& ref_C,
@@ -2530,7 +2636,7 @@ void ProjectorCI_CIHash::apply_tau_H_ref_C_symm(double tau, double spawning_thre
     //    print_hash(dets_C_hash, "dets_C_hash", true);
 }
 
-// void ProjectorCI_CIHash::apply_tau_H_ref_C_symm_det_dynamic_stat(double tau, double
+// void ProjectorCI_Simple::apply_tau_H_ref_C_symm_det_dynamic_stat(double tau, double
 // spawning_threshold, det_hash<> &pre_dets_C_hash, det_hash<> &ref_dets_C_hash,
 // const Determinant &detI, double CI, double ref_CI,
 // std::vector<std::pair<Determinant, double> > &new_space_C_vec, double E0,
@@ -2816,7 +2922,7 @@ inline double polynomial_smoother(double edge0, double edge1, double x) {
     return x * x * x * (x * (x * 6. - 15.) + 10.);
 }
 
-void ProjectorCI_CIHash::apply_tau_H_ref_C_symm_det_dynamic_smooth(
+void ProjectorCI_Simple::apply_tau_H_ref_C_symm_det_dynamic_smooth(
     double tau, double spawning_threshold, det_hash<>& pre_dets_C_hash,
     det_hash<>& ref_dets_C_hash, const Determinant& detI, double CI,
     double ref_CI, std::vector<std::pair<Determinant, double>>& new_space_C_vec,
@@ -3127,7 +3233,7 @@ void ProjectorCI_CIHash::apply_tau_H_ref_C_symm_det_dynamic_smooth(
     }
 }
 
-void ProjectorCI_CIHash::apply_tau_H_ref_C_symm_det_dynamic(
+void ProjectorCI_Simple::apply_tau_H_ref_C_symm_det_dynamic(
     double tau, double spawning_threshold, det_hash<>& pre_dets_C_hash,
     det_hash<>& ref_dets_C_hash, const Determinant& detI, double CI,
     double ref_CI, std::vector<std::pair<Determinant, double>>& new_space_C_vec,
@@ -3416,7 +3522,7 @@ void ProjectorCI_CIHash::apply_tau_H_ref_C_symm_det_dynamic(
     }
 }
 
-void ProjectorCI_CIHash::apply_tau_H(double tau, double spawning_threshold,
+void ProjectorCI_Simple::apply_tau_H(double tau, double spawning_threshold,
                               det_vec& dets, const std::vector<double>& C,
                               det_hash<>& dets_C_hash, double S) {
     // A vector of maps that hold (determinant,coefficient)
@@ -3589,7 +3695,7 @@ void ProjectorCI_CIHash::apply_tau_H(double tau, double spawning_threshold,
     }
 }
 
-void ProjectorCI_CIHash::apply_tau_H_det_subset(
+void ProjectorCI_Simple::apply_tau_H_det_subset(
     double tau, Determinant& detI, double CI, det_hash<>& dets_sum_map,
     std::vector<std::pair<Determinant, double>>& new_space_C_vec, double E0) {
     // Diagonal contributions
@@ -3738,7 +3844,7 @@ void ProjectorCI_CIHash::apply_tau_H_det_subset(
     }
 }
 
-void ProjectorCI_CIHash::apply_tau_H_det_subset_prescreening(
+void ProjectorCI_Simple::apply_tau_H_det_subset_prescreening(
     double tau, double spawning_threshold, Determinant& detI, double CI,
     det_hash<>& dets_sum_map,
     std::vector<std::pair<Determinant, double>>& new_space_C_vec, double E0) {
@@ -3960,7 +4066,7 @@ void ProjectorCI_CIHash::apply_tau_H_det_subset_prescreening(
     }
 }
 
-void ProjectorCI_CIHash::apply_tau_H_subset(double tau, double spawning_threshold,
+void ProjectorCI_Simple::apply_tau_H_subset(double tau, double spawning_threshold,
                                      det_vec& dets,
                                      const std::vector<double>& C,
                                      det_hash<>& dets_sum_map,
@@ -3996,7 +4102,7 @@ void ProjectorCI_CIHash::apply_tau_H_subset(double tau, double spawning_threshol
     }
 }
 
-std::pair<double, double> ProjectorCI_CIHash::apply_tau_H_det_prescreening(
+std::pair<double, double> ProjectorCI_Simple::apply_tau_H_det_prescreening(
     double tau, double spawning_threshold, Determinant& detI, double CI,
     std::vector<std::pair<Determinant, double>>& new_space_C_vec, double E0) {
     bool do_singles = std::fabs(prescreening_tollerance_factor_ *
@@ -4359,7 +4465,7 @@ std::pair<double, double> ProjectorCI_CIHash::apply_tau_H_det_prescreening(
     return std::make_pair(0.0, 0.0);
 }
 
-void ProjectorCI_CIHash::apply_tau_H_det_schwarz(
+void ProjectorCI_Simple::apply_tau_H_det_schwarz(
     double tau, double spawning_threshold, const Determinant& detI, double CI,
     std::vector<std::pair<Determinant, double>>& new_space_C_vec, double E0) {
     std::vector<int> aocc = detI.get_alfa_occ();
@@ -4527,7 +4633,7 @@ void ProjectorCI_CIHash::apply_tau_H_det_schwarz(
     }
 }
 
-void ProjectorCI_CIHash::apply_tau_H_det_dynamic(
+void ProjectorCI_Simple::apply_tau_H_det_dynamic(
     double tau, double spawning_threshold, const Determinant& detI, double CI,
     std::vector<std::pair<Determinant, double>>& new_space_C_vec, double E0,
     std::pair<double, double>& max_coupling) {
@@ -4681,7 +4787,7 @@ void ProjectorCI_CIHash::apply_tau_H_det_dynamic(
 }
 
 std::map<std::string, double>
-ProjectorCI_CIHash::estimate_energy(det_vec& dets, std::vector<double>& C) {
+ProjectorCI_Simple::estimate_energy(det_vec& dets, std::vector<double>& C) {
     std::map<std::string, double> results;
 
     timer_on("PIFCI:<E>p");
@@ -4708,7 +4814,7 @@ static bool abs_compare(double a, double b) {
     return (std::abs(a) < std::abs(b));
 }
 
-double ProjectorCI_CIHash::estimate_proj_energy(det_vec& dets,
+double ProjectorCI_Simple::estimate_proj_energy(det_vec& dets,
                                          std::vector<double>& C) {
     // Find the determinant with the largest value of C
     auto result = std::max_element(C.begin(), C.end(), abs_compare);
@@ -4724,7 +4830,7 @@ double ProjectorCI_CIHash::estimate_proj_energy(det_vec& dets,
     return projective_energy_estimator + nuclear_repulsion_energy_;
 }
 
-double ProjectorCI_CIHash::estimate_var_energy(det_vec& dets, std::vector<double>& C,
+double ProjectorCI_Simple::estimate_var_energy(det_vec& dets, std::vector<double>& C,
                                         double tollerance) {
     // Compute a variational estimator of the energy
     size_t size = dets.size();
@@ -4743,7 +4849,7 @@ double ProjectorCI_CIHash::estimate_var_energy(det_vec& dets, std::vector<double
     return variational_energy_estimator + nuclear_repulsion_energy_;
 }
 
-double ProjectorCI_CIHash::estimate_var_energy_sparse(det_vec& dets,
+double ProjectorCI_Simple::estimate_var_energy_sparse(det_vec& dets,
                                                std::vector<double>& C,
                                                double tollerance) {
     // A map that contains the pair (determinant,coefficient)
@@ -4785,7 +4891,7 @@ double ProjectorCI_CIHash::estimate_var_energy_sparse(det_vec& dets,
     return variational_energy_estimator + nuclear_repulsion_energy_;
 }
 
-double ProjectorCI_CIHash::estimate_1st_order_perturbation(det_vec& dets,
+double ProjectorCI_Simple::estimate_1st_order_perturbation(det_vec& dets,
                                                     std::vector<double>& C,
                                                     double spawning_threshold) {
     // Compute a variational estimator of the energy
@@ -4803,7 +4909,7 @@ double ProjectorCI_CIHash::estimate_1st_order_perturbation(det_vec& dets,
     return perturbation_energy_estimator;
 }
 
-double ProjectorCI_CIHash::estimate_2nd_order_perturbation_sub(
+double ProjectorCI_Simple::estimate_2nd_order_perturbation_sub(
     det_vec& dets, std::vector<double>& C, double spawning_threshold) {
     // Compute a variational estimator of the energy
     size_t size = dets.size();
@@ -4822,7 +4928,7 @@ double ProjectorCI_CIHash::estimate_2nd_order_perturbation_sub(
 }
 
 std::tuple<double, double>
-ProjectorCI_CIHash::estimate_perturbation(det_vec& dets, std::vector<double>& C,
+ProjectorCI_Simple::estimate_perturbation(det_vec& dets, std::vector<double>& C,
                                    double spawning_threshold) {
     //    double first_order_perturb = estimate_1st_order_perturbation(dets, C,
     //    spawning_threshold);
@@ -4869,7 +4975,7 @@ ProjectorCI_CIHash::estimate_perturbation(det_vec& dets, std::vector<double>& C,
     return std::make_tuple(perturbation_2nd_energy_estimator_sub, 0.0);
 }
 
-double ProjectorCI_CIHash::estimate_path_filtering_error(det_vec& dets,
+double ProjectorCI_Simple::estimate_path_filtering_error(det_vec& dets,
                                                   std::vector<double>& C,
                                                   double spawning_threshold) {
     size_t size = dets.size();
@@ -4889,7 +4995,7 @@ double ProjectorCI_CIHash::estimate_path_filtering_error(det_vec& dets,
     return pfError;
 }
 
-void ProjectorCI_CIHash::print_wfn(det_vec& space, std::vector<double>& C,
+void ProjectorCI_Simple::print_wfn(det_vec& space, std::vector<double>& C,
                             size_t max_output) {
     outfile->Printf(
         "\n\n  Most important contributions to the wave function:\n");
@@ -4955,7 +5061,7 @@ void ProjectorCI_CIHash::print_wfn(det_vec& space, std::vector<double>& C,
     outfile->Flush();
 }
 
-void ProjectorCI_CIHash::save_wfn(det_vec& space, std::vector<double>& C,
+void ProjectorCI_Simple::save_wfn(det_vec& space, std::vector<double>& C,
                            std::vector<det_hash<>>& solutions) {
     outfile->Printf("\n\n  Saving the wave function:\n");
 
@@ -4966,7 +5072,7 @@ void ProjectorCI_CIHash::save_wfn(det_vec& space, std::vector<double>& C,
     solutions.push_back(std::move(solution));
 }
 
-void ProjectorCI_CIHash::orthogonalize(det_vec& space, std::vector<double>& C,
+void ProjectorCI_Simple::orthogonalize(det_vec& space, std::vector<double>& C,
                                 std::vector<det_hash<>>& solutions) {
     det_hash<> det_C;
     for (size_t I = 0; I < space.size(); ++I) {
@@ -4980,7 +5086,7 @@ void ProjectorCI_CIHash::orthogonalize(det_vec& space, std::vector<double>& C,
     copy_hash_to_vec(det_C, space, C);
 }
 
-double ProjectorCI_CIHash::form_H_C(double tau, double spawning_threshold,
+double ProjectorCI_Simple::form_H_C(double tau, double spawning_threshold,
                              Determinant& detI, double CI, det_hash<>& det_C,
                              std::pair<double, double>& max_coupling) {
     double result = 0.0;
