@@ -126,6 +126,9 @@ void forte_old_methods(SharedWavefunction ref_wfn, Options& options,
         auto aci =
             std::make_shared<AdaptiveCI>(ref_wfn, options, ints, mo_space_info);
         aci->compute_energy();
+        if (options.get_bool("ACI_NO")) {
+            aci->compute_nos();
+        }
     }
     if (options.get_str("JOB_TYPE") == "PCI") {
         auto pci = std::make_shared<ProjectorCI>(ref_wfn, options, ints,
@@ -384,7 +387,8 @@ void forte_old_methods(SharedWavefunction ref_wfn, Options& options,
 
         if (cas_type == "ACI") {
             if (options.get_bool("SEMI_CANONICAL") and
-                !options.get_bool("CASSCF_REFERENCE")) {
+                !options.get_bool("CASSCF_REFERENCE") and 
+                !options.get_bool("ACI_NO")) {
                 auto aci = std::make_shared<AdaptiveCI>(ref_wfn, options, ints,
                                                         mo_space_info);
                 aci->set_quiet(true);
@@ -399,6 +403,9 @@ void forte_old_methods(SharedWavefunction ref_wfn, Options& options,
             aci->set_quiet(true);
             aci->set_max_rdm(3);
             aci->compute_energy();
+            if (options.get_bool("ACI_NO")) {
+                aci->compute_nos();
+            }
             Reference aci_reference = aci->reference();
             std::shared_ptr<DSRG_MRPT2> dsrg_mrpt2(new DSRG_MRPT2(
                 aci_reference, ref_wfn, options, ints, mo_space_info));
@@ -461,7 +468,8 @@ void forte_old_methods(SharedWavefunction ref_wfn, Options& options,
 
         if (options.get_str("CAS_TYPE") == "ACI") {
             if (options.get_bool("SEMI_CANONICAL") and
-                !options.get_bool("CASSCF_REFERENCE")) {
+                !options.get_bool("CASSCF_REFERENCE") and
+                !options.get_bool("ACI_NO")) {
                 auto aci = std::make_shared<AdaptiveCI>(ref_wfn, options, ints,
                                                         mo_space_info);
                 aci->set_quiet(true);
@@ -476,6 +484,9 @@ void forte_old_methods(SharedWavefunction ref_wfn, Options& options,
             aci->set_max_rdm(3);
             aci->set_quiet(true);
             aci->compute_energy();
+            if( options.get_bool("ACI_NO")) {
+                aci->compute_nos();
+            }
             Reference aci_reference = aci->reference();
             std::shared_ptr<THREE_DSRG_MRPT2> three_dsrg_mrpt2(
                 new THREE_DSRG_MRPT2(aci_reference, ref_wfn, options, ints,

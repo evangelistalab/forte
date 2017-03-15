@@ -137,6 +137,9 @@ void set_ACI_options(ForteOptions& foptions)
     /*- Save the final wavefunction -*/
     foptions.add_bool("SAVE_FINAL_WFN", false, "Save the final wavefunction to a file");
 
+    /*- Compute ACI-NOs -*/
+    foptions.add_bool("ACI_NO", false, "Computes ACI natural orbitals");
+
 }
 
 
@@ -2816,5 +2819,79 @@ DeterminantMap AdaptiveCI::approximate_wfn( DeterminantMap& PQ_space, SharedMatr
 
     return new_wfn;
 }
+
+void AdaptiveCI::compute_nos()
+{
+
+    Dimension nmopi = reference_wavefunction_->nmopi();
+    Dimension ncmopi = mo_space_info_->get_dimension("CORRELATED");
+    Dimension fdocc = mo_space_info_->get_dimension("FROZEN_DOCC");
+    Dimension rdocc = mo_space_info_->get_dimension("RESTRICTED_DOCC");
+    Dimension actv = mo_space_info_->get_dimension("ACTIVE");
+    Dimension ruocc = mo_space_info_->get_dimension("RESTRICTED_UOCC");
+
+    std::shared_ptr<Matrix> opdm_a(
+        new Matrix("OPDM_A", nirrep_, nactpi_, nactpi_));
+    std::shared_ptr<Matrix> opdm_b(
+        new Matrix("OPDM_B", nirrep_, nactpi_, nactpi_));
+
+    int offset = 0;
+    for (int h = 0; h < nirrep_; h++) {
+        for (int u = 0; u < nactpi_[h]; u++) {
+            for (int v = 0; v < nactpi_[h]; v++) {
+                opdm_a->set(h, u, v,
+                            ordm_a_[(u + offset) * nact_ + v + offset]);
+                opdm_b->set(h, u, v,
+                            ordm_b_[(u + offset) * nact_ + v + offset]);
+            }
+        }
+        offset += nactpi_[h];
+    }
+    SharedVector OCC_A(new Vector("ALPHA OCCUPATION", nirrep_, nactpi_));
+    SharedVector OCC_B(new Vector("BETA OCCUPATION", nirrep_, nactpi_));
+    SharedMatrix NO_A(new Matrix(nirrep_, nactpi_, nactpi_));
+    SharedMatrix NO_B(new Matrix(nirrep_, nactpi_, nactpi_));
+
+    opdm_a->diagonalize(NO_A, OCC_A, descending);
+    opdm_b->diagonalize(NO_B, OCC_B, descending);
+
+    // Build full transformation matrices from e-vecs
+    Matrix Ua("Ua", nmopi, nmopi);
+    Matrix Ub("Ub", nmopi, nmopi);
+
+    Ua.identity();
+    Ub.identity();
+
+    for( int h = 0; h < nirrep_; ++h ){
+        size_t irrep_offset = 0;
+
+        // Frozen core and Restricted docc are unchanged 
+        irrep_offset += fdocc[h] + rdocc[h]; ;
+        // Only change the active block
+        for( int p = 0; p < actv[h]; ++p ){
+            for( int q = 0; q < actv[h]; ++q ){
+                Ua.set(h, p + irrep_offset, q + irrep_offset,NO_A->get(h,p,q)); 
+                Ub.set(h, p + irrep_offset, q + irrep_offset,NO_B->get(h,p,q)); 
+            }
+        }
+    }
+
+    // Transform the orbital coefficients
+    SharedMatrix Ca = reference_wavefunction_->Ca();
+    SharedMatrix Cb = reference_wavefunction_->Cb();
+    SharedMatrix Ca_new(Ca->clone());
+    SharedMatrix Cb_new(Cb->clone());
+
+    Ca_new->gemm(false, false, 1.0, Ca, Ua, 0.0);
+    Cb_new->gemm(false, false, 1.0, Cb, Ub, 0.0);
+
+    Ca->copy(Ca_new);
+    Cb->copy(Cb_new);
+
+    // Retransform the integarms in the new basis
+    ints_->retransform_integrals();
+
+}
+
 
 }} // EndNamespaces
