@@ -621,7 +621,6 @@ void WFNOperator::clear_tp_lists() {
 
 void WFNOperator::three_lists(DeterminantMap& wfn) {
     size_t ndets = wfn.size();
-    const det_hash<size_t>& wfn_map = wfn.wfn_hash();
     const std::vector<STLBitsetDeterminant>& dets = wfn.determinants();
     /// Compute aaa coupling
     {
@@ -688,6 +687,7 @@ void WFNOperator::three_lists(DeterminantMap& wfn) {
     /// AAB coupling
     {
         // We need the beta-1 list:
+        const det_hash<size_t>& wfn_map = wfn.wfn_hash();
         std::vector<std::vector<std::pair<int,size_t>>> beta_string;
         det_hash<size_t> beta_str_hash;
         size_t nabeta = 0;
