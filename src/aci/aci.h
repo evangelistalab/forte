@@ -90,6 +90,9 @@ class AdaptiveCI : public Wavefunction {
     /// Get the wavefunction
     DeterminantMap get_wavefunction();
 
+    /// Compute the ACI-NOs
+    void compute_nos();
+
   private:
     // ==> Class data <==
 
@@ -410,6 +413,8 @@ class AdaptiveCI : public Wavefunction {
     dl_initial_guess(std::vector<STLBitsetDeterminant>& old_dets,
                      std::vector<STLBitsetDeterminant>& dets,
                      SharedMatrix& evecs, int nroot);
+
+
     //    int david2(double **A, int N, int M, double *eps, double **v,double
     //    cutoff, int print);
     //    /// Perform a Davidson-Liu diagonalization

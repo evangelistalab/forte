@@ -30,6 +30,7 @@
 #define _determinant_map_h_
 
 #include "stl_bitset_determinant.h"
+#include "cihash.h"
 
 namespace psi {
 namespace forte {
