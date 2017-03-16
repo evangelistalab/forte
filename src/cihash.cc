@@ -424,3 +424,13 @@ std::vector<size_t> CIHash<Key, Hash>::optimize() {
     this->vec[current_size - 1].next = MAX_SIZE;
     return cur_index;
 }
+
+template<class Key, class Hash>
+std::vector<Key> CIHash<Key, Hash>::toVector() {
+    std::vector<Key> keys;
+    keys.reserve(current_size);
+    for (Key k : (*this)) {
+        keys.push_back(k);
+    }
+    return keys;
+}
