@@ -57,7 +57,9 @@ CIHash<Key, Hash>::CIHash(size_t count, const std::vector<Key>& other) {
 template <class Key, class Hash>
 CIHash<Key, Hash>::CIHash(const CIHash<Key, Hash>& other)
     : vec(other.vec), begin_index(other.begin_index), max_load(other.max_load),
-      num_bucket(other.num_bucket), current_size(other.current_size) {}
+      num_bucket(other.num_bucket), current_size(other.current_size) {
+    update_current_max_load_size();
+}
 
 template <class Key, class Hash>
 std::tuple<size_t, size_t, size_t>
@@ -83,58 +85,124 @@ template <class Key, class Hash> void CIHash<Key, Hash>::double_buckets() {
     if (begin_index.capacity() < new_num_bucket)
         begin_index.reserve(new_num_bucket);
     begin_index.insert(begin_index.end(), num_bucket, MAX_SIZE);
-    for (size_t bucket_index = 0; bucket_index < num_bucket; ++bucket_index) {
-        size_t pre_index = MAX_SIZE;
-        size_t temp_index = this->begin_index[bucket_index];
-        size_t new_bucket_index = bucket_index + num_bucket;
-        size_t new_temp_index = MAX_SIZE;
-        while (temp_index != MAX_SIZE) {
-            size_t temp_bucket_index =
-                Hash()(this->vec[temp_index].value) % new_num_bucket;
-            size_t next_index = this->vec[temp_index].next;
-            if (temp_bucket_index != bucket_index) {
-                if (new_temp_index == MAX_SIZE) {
-                    this->begin_index[new_bucket_index] = temp_index;
-                    new_temp_index = temp_index;
+    if (current_size >= num_bucket) {
+        for (size_t bucket_index = 0; bucket_index < num_bucket;
+             ++bucket_index) {
+            size_t pre_index = MAX_SIZE;
+            size_t temp_index = this->begin_index[bucket_index];
+            size_t new_bucket_index = bucket_index + num_bucket;
+            size_t new_temp_index = MAX_SIZE;
+            while (temp_index != MAX_SIZE) {
+                size_t temp_bucket_index =
+                    Hash()(this->vec[temp_index].value) % new_num_bucket;
+                size_t next_index = this->vec[temp_index].next;
+                if (temp_bucket_index != bucket_index) {
+                    if (new_temp_index == MAX_SIZE) {
+                        this->begin_index[new_bucket_index] = temp_index;
+                        new_temp_index = temp_index;
+                    } else {
+                        this->vec[new_temp_index].next = temp_index;
+                    }
+                    this->vec[temp_index].next = MAX_SIZE;
+                    if (pre_index == MAX_SIZE) {
+                        this->begin_index[bucket_index] = next_index;
+                    } else {
+                        this->vec[pre_index].next = next_index;
+                    }
                 } else {
-                    this->vec[new_temp_index].next = temp_index;
+                    pre_index = temp_index;
                 }
-                this->vec[temp_index].next = MAX_SIZE;
-                if (pre_index == MAX_SIZE) {
-                    this->begin_index[bucket_index] = next_index;
-                } else {
-                    this->vec[pre_index].next = next_index;
-                }
-            } else {
-                pre_index = temp_index;
+                temp_index = next_index;
             }
-            temp_index = next_index;
+        }
+    } else {
+        for (size_t i = 0; i < current_size; ++i) {
+            size_t hash_value = Hash()(this->vec[i].value);
+            size_t old_bucket_index = hash_value % num_bucket;
+            size_t new_bucket_index = hash_value % new_num_bucket;
+            if (new_bucket_index != old_bucket_index &&
+                this->begin_index[new_bucket_index] == MAX_SIZE) {
+                size_t pre_index = MAX_SIZE;
+                size_t temp_index = this->begin_index[old_bucket_index];
+                //                size_t new_bucket_index = bucket_index +
+                //                num_bucket;
+                size_t new_temp_index = MAX_SIZE;
+                while (temp_index != MAX_SIZE) {
+                    size_t temp_bucket_index =
+                        Hash()(this->vec[temp_index].value) % new_num_bucket;
+                    size_t next_index = this->vec[temp_index].next;
+                    if (temp_bucket_index != old_bucket_index) {
+                        if (new_temp_index == MAX_SIZE) {
+                            this->begin_index[new_bucket_index] = temp_index;
+                            new_temp_index = temp_index;
+                        } else {
+                            this->vec[new_temp_index].next = temp_index;
+                        }
+                        this->vec[temp_index].next = MAX_SIZE;
+                        if (pre_index == MAX_SIZE) {
+                            this->begin_index[old_bucket_index] = next_index;
+                        } else {
+                            this->vec[pre_index].next = next_index;
+                        }
+                    } else {
+                        pre_index = temp_index;
+                    }
+                    temp_index = next_index;
+                }
+            }
         }
     }
     this->num_bucket = new_num_bucket;
+    update_current_max_load_size();
 }
 
 template <class Key, class Hash> void CIHash<Key, Hash>::half_buckets() {
     size_t new_num_bucket = num_bucket >> 1;
-    for (size_t bucket_index = 0; bucket_index < new_num_bucket;
-         ++bucket_index) {
-        size_t appending_index =
-            this->begin_index[bucket_index + new_num_bucket];
-        if (appending_index == MAX_SIZE)
-            continue;
-        size_t temp_index = this->begin_index[bucket_index];
-        if (temp_index == MAX_SIZE) {
-            this->begin_index[bucket_index] = appending_index;
-            continue;
+    if (current_size >= new_num_bucket) {
+        for (size_t bucket_index = 0; bucket_index < new_num_bucket;
+             ++bucket_index) {
+            size_t appending_index =
+                this->begin_index[bucket_index + new_num_bucket];
+            if (appending_index == MAX_SIZE)
+                continue;
+            size_t temp_index = this->begin_index[bucket_index];
+            if (temp_index == MAX_SIZE) {
+                this->begin_index[bucket_index] = appending_index;
+                continue;
+            }
+            while (this->vec[temp_index].next != MAX_SIZE) {
+                temp_index = this->vec[temp_index].next;
+            }
+            this->vec[temp_index].next = appending_index;
         }
-        while (this->vec[temp_index].next != MAX_SIZE) {
-            temp_index = this->vec[temp_index].next;
+    } else {
+        for (size_t i = 0; i < current_size; ++i) {
+            size_t old_bucket_index = Hash()(this->vec[i].value) % num_bucket;
+            if (old_bucket_index >= new_num_bucket &&
+                this->begin_index[old_bucket_index] != MAX_SIZE) {
+                size_t appending_index = this->begin_index[old_bucket_index];
+                this->begin_index[old_bucket_index] = MAX_SIZE;
+                size_t new_bucket_index = old_bucket_index - new_num_bucket;
+                size_t temp_index = this->begin_index[new_bucket_index];
+                if (temp_index == MAX_SIZE) {
+                    this->begin_index[new_bucket_index] = appending_index;
+                    continue;
+                }
+                while (this->vec[temp_index].next != MAX_SIZE) {
+                    temp_index = this->vec[temp_index].next;
+                }
+                this->vec[temp_index].next = appending_index;
+            }
         }
-        this->vec[temp_index].next = appending_index;
     }
     this->num_bucket = new_num_bucket;
-    this->begin_index.erase(begin_index.begin() + num_bucket,
-                            begin_index.end());
+    update_current_max_load_size();
+    this->begin_index.resize(num_bucket);
+}
+
+template <class Key, class Hash>
+inline void CIHash<Key, Hash>::update_current_max_load_size() {
+    this->current_max_load_size = max_load * num_bucket;
 }
 
 template <class Key, class Hash>
@@ -174,6 +242,7 @@ template <class Key, class Hash> void CIHash<Key, Hash>::clear() {
     this->begin_index.clear();
     this->current_size = 0;
     this->num_bucket = MIN_NUM_BUCKET;
+    update_current_max_load_size();
     begin_index.reserve(num_bucket);
     begin_index.insert(begin_index.begin(), num_bucket, MAX_SIZE);
 }
@@ -190,7 +259,8 @@ template <class Key, class Hash> size_t CIHash<Key, Hash>::add(const Key& key) {
     else
         this->begin_index[key_bucket_index] = current_size;
     ++current_size;
-    if (load_factor() > max_load)
+    //    if (load_factor() > max_load)
+    if (current_size > current_max_load_size)
         double_buckets();
     return current_size - 1;
 }
@@ -304,7 +374,8 @@ float CIHash<Key, Hash>::max_load_factor() const {
 template <class Key, class Hash>
 void CIHash<Key, Hash>::max_load_factor(float ml) {
     this->max_load = ml;
-    while (load_factor() > max_load)
+    update_current_max_load_size();
+    while (current_size > current_max_load_size)
         double_buckets();
 }
 
@@ -312,14 +383,15 @@ template <class Key, class Hash> void CIHash<Key, Hash>::reserve(size_t count) {
     if (count <= current_size)
         return;
     this->vec.reserve(count);
-    while (((float)count) / num_bucket > max_load)
+    while (count > current_max_load_size)
         double_buckets();
 }
 
 template <class Key, class Hash> void CIHash<Key, Hash>::shrink_to_fit() {
     this->vec.shrink_to_fit();
-    while (((float)current_size) / num_bucket <= 0.5 * max_load)
+    while (current_size <= (current_max_load_size >> 1))
         half_buckets();
+    this->begin_index.shrink_to_fit();
 }
 
 template <class Key, class Hash>
