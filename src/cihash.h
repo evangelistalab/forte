@@ -29,6 +29,8 @@
 #ifndef _cihash_h_
 #define _cihash_h_
 #include <tuple>
+#include <unordered_map>
+#include <unordered_set>
 #include <vector>
 
 template <class Key, class Hash = std::hash<Key>> class CIHash {
@@ -56,7 +58,12 @@ template <class Key, class Hash = std::hash<Key>> class CIHash {
     explicit CIHash();
     explicit CIHash(size_t count);
     explicit CIHash(const std::vector<Key>& other);
-    explicit CIHash(size_t count, const std::vector<Key>& other);
+    explicit CIHash(const std::unordered_set<Key, Hash>& other);
+    template <class Value>
+    explicit CIHash(const std::unordered_map<Key, Value, Hash>& other);
+    template <class Value>
+    explicit CIHash(const std::unordered_map<Key, Value, Hash>& other,
+                    std::vector<Value>& values);
     explicit CIHash(const CIHash<Key, Hash>& other);
     /*- Element access -*/
     const Key& operator[](size_t pos) const;
@@ -89,6 +96,10 @@ template <class Key, class Hash = std::hash<Key>> class CIHash {
     std::vector<size_t> optimize();
     /*- Convertors -*/
     std::vector<Key> toVector();
+    std::unordered_set<Key, Hash> toUnordered_set();
+    template <class Value>
+    std::unordered_map<Key, Value, Hash>
+    toUnordered_map(const std::vector<Value>& values);
 
     class iterator : public std::vector<CINode<Key>>::iterator {
       public:

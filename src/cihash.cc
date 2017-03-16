@@ -45,12 +45,34 @@ CIHash<Key, Hash>::CIHash(const std::vector<Key>& other) {
 }
 
 template <class Key, class Hash>
-CIHash<Key, Hash>::CIHash(size_t count, const std::vector<Key>& other) {
+CIHash<Key, Hash>::CIHash(const std::unordered_set<Key, Hash>& other) {
     this->clear();
     this->reserve(other.size());
-    this->reserve(count);
     for (Key k : other) {
         this->add(k);
+    }
+}
+
+template <class Key, class Hash>
+template <class Value>
+CIHash<Key, Hash>::CIHash(const std::unordered_map<Key, Value, Hash>& other) {
+    this->clear();
+    this->reserve(other.size());
+    for (auto kv : other) {
+        this->add(kv.first);
+    }
+}
+
+template <class Key, class Hash>
+template <class Value>
+CIHash<Key, Hash>::CIHash(const std::unordered_map<Key, Value, Hash>& other,
+                          std::vector<Value>& values) {
+    this->clear();
+    this->reserve(other.size());
+    values.reserve(other.size());
+    for (auto kv : other) {
+        this->add(kv.first);
+        values.push_back(kv.second);
     }
 }
 
@@ -425,7 +447,7 @@ std::vector<size_t> CIHash<Key, Hash>::optimize() {
     return cur_index;
 }
 
-template<class Key, class Hash>
+template <class Key, class Hash>
 std::vector<Key> CIHash<Key, Hash>::toVector() {
     std::vector<Key> keys;
     keys.reserve(current_size);
@@ -433,4 +455,26 @@ std::vector<Key> CIHash<Key, Hash>::toVector() {
         keys.push_back(k);
     }
     return keys;
+}
+
+template <class Key, class Hash>
+std::unordered_set<Key, Hash> CIHash<Key, Hash>::toUnordered_set() {
+    std::unordered_set<Key, Hash> uSet;
+    uSet.reserve(current_size);
+    for (Key k : (*this)) {
+        uSet.insert(k);
+    }
+    return uSet;
+}
+
+template <class Key, class Hash>
+template <class Value>
+std::unordered_map<Key, Value, Hash>
+CIHash<Key, Hash>::toUnordered_map(const std::vector<Value>& values) {
+    std::unordered_map<Key, Value, Hash> uMap;
+    uMap.reserve(current_size);
+    for (size_t i = 0; i < current_size; ++i) {
+        uMap[this->vec[i]] = values[i];
+    }
+    return uMap;
 }

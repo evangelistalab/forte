@@ -42,6 +42,7 @@
 #include "../helpers.h"
 #include "../fci/fci_vector.h"
 #include "../forte_options.h"
+#include "../cihash.cc"
 
 namespace psi {
 namespace forte {

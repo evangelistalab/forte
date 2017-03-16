@@ -903,8 +903,9 @@ bool ProjectorCI_CIHash::converge_test() {
     return false;
 }
 
-double ProjectorCI_CIHash::initial_guess(det_vec& dets,
+double ProjectorCI_CIHash::initial_guess(det_vec& dets_vec,
                                          std::vector<double>& C) {
+    CIHash<Determinant, Determinant::Hash> dets_cihash(dets_vec);
     // Use the reference determinant as a starting point
     std::vector<bool> alfa_bits =
         reference_determinant_.get_alfa_bits_vector_bool();
@@ -920,10 +921,10 @@ double ProjectorCI_CIHash::initial_guess(det_vec& dets,
                            guess_dets, {1.0}, {1.0}, dets_C, 0.0);
 
     // Save the list of determinants
-    copy_hash_to_vec(dets_C, dets, C);
+    copy_hash_to_vec(dets_C, dets_vec, C);
 
 
-    size_t guess_size = dets.size();
+    size_t guess_size = dets_vec.size();
     if (guess_size > max_guess_size_) {
         // Consider the 1000 largest contributions
         std::vector<std::pair<double, size_t>> det_weight;
@@ -937,11 +938,11 @@ double ProjectorCI_CIHash::initial_guess(det_vec& dets,
         det_vec new_dets;
         for (size_t sI = 0; sI < max_guess_size_; ++sI) {
             size_t I = det_weight[sI].second;
-            new_dets.push_back(dets[I]);
+            new_dets.push_back(dets_vec[I]);
         }
-        dets = new_dets;
+        dets_vec = new_dets;
         C.resize(guess_size);
-        guess_size = dets.size();
+        guess_size = dets_vec.size();
     }
 
     outfile->Printf("\n\n  Initial guess size = %zu", guess_size);
@@ -959,7 +960,7 @@ double ProjectorCI_CIHash::initial_guess(det_vec& dets,
     //   DynamicBitsetDeterminant dbs = d.to_dynamic_bitset();
     //  dyn_dets.push_back(dbs);
     // }
-    sparse_solver.diagonalize_hamiltonian(dets, evals, evecs, nroot_,
+    sparse_solver.diagonalize_hamiltonian(dets_vec, evals, evecs, nroot_,
                                           wavefunction_multiplicity_, DLSolver);
     double var_energy = evals->get(current_root_) + nuclear_repulsion_energy_;
     outfile->Printf(
