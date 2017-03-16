@@ -681,6 +681,9 @@ void forte_old_methods(SharedWavefunction ref_wfn, Options& options,
     if (options.get_str("JOB_TYPE") == "MRCISD") {
         auto aci = std::make_shared<AdaptiveCI>(ref_wfn, options, ints, mo_space_info);
         aci->compute_energy();
+        if( options.get_bool("ACI_NO")){
+            aci->compute_nos();
+        }
 
         DeterminantMap reference = aci->get_wavefunction();
         auto mrci = std::make_shared<MRCI>(ref_wfn,options,ints,mo_space_info,reference);
