@@ -87,6 +87,8 @@ template <class Key, class Hash = std::hash<Key>> class CIHash {
     void reserve(size_t count);
     void shrink_to_fit();
     std::vector<size_t> optimize();
+    /*- Convertors -*/
+    std::vector<Key> toVector();
 
     class iterator : public std::vector<CINode<Key>>::iterator {
       public:

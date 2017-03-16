@@ -910,23 +910,18 @@ double ProjectorCI_CIHash::initial_guess(det_vec& dets,
         reference_determinant_.get_alfa_bits_vector_bool();
     std::vector<bool> beta_bits =
         reference_determinant_.get_beta_bits_vector_bool();
-    det_hash<> dets_C;
 
     // Do one time step starting from the reference determinant
     Determinant bs_det(alfa_bits, beta_bits);
     det_vec guess_dets{bs_det};
 
-    //    apply_tau_H(time_step_, initial_guess_spawning_threshold_, guess_dets,
-    //                {1.0}, dets_C, 0.0);
-    //    apply_tau_H_ref_C_symm(
-    //        double tau, double spawning_threshold, det_vec& dets,
-    //        const std::vector<double>& C, const std::vector<double>& ref_C,
-    //        det_hash<>& dets_C_hash, double S) {
+    det_hash<> dets_C;
     apply_tau_H_ref_C_symm(time_step_, initial_guess_spawning_threshold_,
                            guess_dets, {1.0}, {1.0}, dets_C, 0.0);
 
     // Save the list of determinants
     copy_hash_to_vec(dets_C, dets, C);
+
 
     size_t guess_size = dets.size();
     if (guess_size > max_guess_size_) {
