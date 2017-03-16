@@ -29,6 +29,8 @@
 #ifndef _cihash_h_
 #define _cihash_h_
 #include <tuple>
+#include <unordered_map>
+#include <unordered_set>
 #include <vector>
 
 template <class Key, class Hash = std::hash<Key>> class CIHash {
@@ -41,6 +43,7 @@ template <class Key, class Hash = std::hash<Key>> class CIHash {
     std::vector<size_t> begin_index;
     const size_t MIN_NUM_BUCKET = 1 << 0;
     float max_load = 1.0;
+    size_t current_max_load_size = 1;
     const size_t MAX_SIZE = std::min(vec.max_size(), begin_index.max_size());
     size_t num_bucket;
     size_t current_size;
@@ -48,13 +51,19 @@ template <class Key, class Hash = std::hash<Key>> class CIHash {
     std::tuple<size_t, size_t, size_t> find_detail_by_key(const Key& key) const;
     void double_buckets();
     void half_buckets();
+    inline void update_current_max_load_size();
 
   public:
     class iterator;
     explicit CIHash();
     explicit CIHash(size_t count);
     explicit CIHash(const std::vector<Key>& other);
-    explicit CIHash(size_t count, const std::vector<Key>& other);
+    explicit CIHash(const std::unordered_set<Key, Hash>& other);
+    template <class Value>
+    explicit CIHash(const std::unordered_map<Key, Value, Hash>& other);
+    template <class Value>
+    explicit CIHash(const std::unordered_map<Key, Value, Hash>& other,
+                    std::vector<Value>& values);
     explicit CIHash(const CIHash<Key, Hash>& other);
     /*- Element access -*/
     const Key& operator[](size_t pos) const;
@@ -85,6 +94,12 @@ template <class Key, class Hash = std::hash<Key>> class CIHash {
     void reserve(size_t count);
     void shrink_to_fit();
     std::vector<size_t> optimize();
+    /*- Convertors -*/
+    std::vector<Key> toVector();
+    std::unordered_set<Key, Hash> toUnordered_set();
+    template <class Value>
+    std::unordered_map<Key, Value, Hash>
+    toUnordered_map(const std::vector<Value>& values);
 
     class iterator : public std::vector<CINode<Key>>::iterator {
       public:
@@ -101,4 +116,4 @@ template <class Key, class Hash = std::hash<Key>> class CIHash {
     };
 };
 
-#endif // CIHASH_H
+#endif // _cihash_h_
