@@ -2827,7 +2827,6 @@ void AdaptiveCI::compute_nos()
     Dimension ncmopi = mo_space_info_->get_dimension("CORRELATED");
     Dimension fdocc = mo_space_info_->get_dimension("FROZEN_DOCC");
     Dimension rdocc = mo_space_info_->get_dimension("RESTRICTED_DOCC");
-    Dimension actv = mo_space_info_->get_dimension("ACTIVE");
     Dimension ruocc = mo_space_info_->get_dimension("RESTRICTED_UOCC");
 
     std::shared_ptr<Matrix> opdm_a(
@@ -2847,6 +2846,7 @@ void AdaptiveCI::compute_nos()
         }
         offset += nactpi_[h];
     }
+
     SharedVector OCC_A(new Vector("ALPHA OCCUPATION", nirrep_, nactpi_));
     SharedVector OCC_B(new Vector("BETA OCCUPATION", nirrep_, nactpi_));
     SharedMatrix NO_A(new Matrix(nirrep_, nactpi_, nactpi_));
@@ -2868,8 +2868,8 @@ void AdaptiveCI::compute_nos()
         // Frozen core and Restricted docc are unchanged 
         irrep_offset += fdocc[h] + rdocc[h]; ;
         // Only change the active block
-        for( int p = 0; p < actv[h]; ++p ){
-            for( int q = 0; q < actv[h]; ++q ){
+        for( int p = 0; p < nactpi_[h]; ++p ){
+            for( int q = 0; q < nactpi_[h]; ++q ){
                 Ua.set(h, p + irrep_offset, q + irrep_offset,NO_A->get(h,p,q)); 
                 Ub.set(h, p + irrep_offset, q + irrep_offset,NO_B->get(h,p,q)); 
             }
