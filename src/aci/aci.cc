@@ -846,10 +846,11 @@ void AdaptiveCI::default_find_q_space(DeterminantMap& P_space,
     Timer screen;
 
     // Compute criteria for all dets, store them all
-    std::vector<std::pair<double, STLBitsetDeterminant>> sorted_dets;
+    std::vector<std::pair<double, STLBitsetDeterminant>> sorted_dets(V_hash.size());
     //    int ithread = omp_get_thread_num();
     //    int nthreads = omp_get_num_threads();
 
+    size_t N = 0;
     for (const auto& I : V_hash) {
         // outfile->Printf("\n  %s     %1.8f", I.first.str().c_str(),
         // I.second[0]);
@@ -863,8 +864,10 @@ void AdaptiveCI::default_find_q_space(DeterminantMap& P_space,
         double V = I.second[0];
 
         double criteria = 0.5 * (delta - sqrt(delta * delta + V * V * 4.0));
-        sorted_dets.push_back(std::make_pair(std::fabs(criteria), I.first));
+        sorted_dets[N] = std::make_pair(std::fabs(criteria), I.first);
+        N++;
     }
+
     std::sort(sorted_dets.begin(), sorted_dets.end(), pairComp);
     std::vector<double> ept2(nroot_, 0.0);
 
