@@ -35,22 +35,22 @@
 #include "psi4/liboptions/liboptions.h"
 #include "psi4/physconst.h"
 
-#include "../forte-def.h"
-#include "../integrals/integrals.h"
-#include "../stl_bitset_determinant.h"
-#include "../sparse_ci_solver.h"
-#include "../helpers.h"
-#include "../fci/fci_vector.h"
-#include "../forte_options.h"
 #include "../cihash.cc"
+#include "../fci/fci_vector.h"
+#include "../forte-def.h"
+#include "../forte_options.h"
+#include "../helpers.h"
+#include "../integrals/integrals.h"
+#include "../sparse_ci_solver.h"
+#include "../stl_bitset_determinant.h"
 
 namespace psi {
 namespace forte {
 
 /// Set the forte style options for the FCI method
-//void set_PCI_CIHash_options(ForteOptions& foptions);
+// void set_PCI_CIHash_options(ForteOptions& foptions);
 
-namespace GeneratorType_CIHash{
+namespace GeneratorType_CIHash {
 enum GeneratorType {
     LinearGenerator,
     TrotterLinear,
@@ -68,6 +68,8 @@ enum GeneratorType {
 };
 }
 
+using det_cihash = CIHash<Determinant, Determinant::Hash>;
+
 /**
  * @brief The SparsePathIntegralCI class
  * This class implements an a sparse path-integral FCI algorithm
@@ -83,8 +85,8 @@ class ProjectorCI_CIHash : public Wavefunction {
      * @param ints A pointer to an allocated integral object
      */
     ProjectorCI_CIHash(SharedWavefunction ref_wfn, Options& options,
-                std::shared_ptr<ForteIntegrals> ints,
-                std::shared_ptr<MOSpaceInfo> mo_space_info);
+                       std::shared_ptr<ForteIntegrals> ints,
+                       std::shared_ptr<MOSpaceInfo> mo_space_info);
 
     // ==> Class Interface <==
 
@@ -201,7 +203,8 @@ class ProjectorCI_CIHash : public Wavefunction {
     /// Bounds are stored as a pair (f_max,v_max) where f_max and v_max are
     /// the couplings to the singles and doubles, respectively.
     std::unordered_map<Determinant, std::pair<double, double>,
-                       Determinant::Hash> dets_max_couplings_;
+                       Determinant::Hash>
+        dets_max_couplings_;
 
     // * Energy estimation
     /// Estimate the variational energy?
@@ -285,7 +288,7 @@ class ProjectorCI_CIHash : public Wavefunction {
     void print_info();
 
     /// Print a wave function
-    void print_wfn(det_vec& space, std::vector<double>& C,
+    void print_wfn(det_cihash& space_cihash, std::vector<double>& C,
                    size_t max_output = 10);
 
     /// Save a wave function
@@ -297,7 +300,7 @@ class ProjectorCI_CIHash : public Wavefunction {
                        std::vector<det_hash<>>& solutions);
 
     /// Initial wave function guess
-    double initial_guess(det_vec& dets, std::vector<double>& C);
+    double initial_guess(det_cihash& dets, std::vector<double>& C);
 
     /**
     * Propagate the wave function by a step of length tau
@@ -321,15 +324,17 @@ class ProjectorCI_CIHash : public Wavefunction {
     /// Apply symmetric approx tau H to a set of determinants with selection
     /// according to reference coefficients
     void apply_tau_H_ref_C_symm(double tau, double spawning_threshold,
-                                det_vec& dets, const std::vector<double>& C,
+                                det_cihash& dets_cihash,
+                                const std::vector<double>& C,
                                 const std::vector<double>& ref_C,
-                                det_hash<>& dets_C_hash, double S);
+                                std::vector<double>& result_C, double S);
+
     /// Apply symmetric approx tau H to a determinant using dynamic screening
     /// with selection according to a reference coefficient
     void apply_tau_H_ref_C_symm_det_dynamic(
-        double tau, double spawning_threshold, det_hash<>& pre_dets_C_hash,
-        det_hash<>& ref_dets_C_hash, const Determinant& detI, double CI,
-        double ref_CI,
+        double tau, double spawning_threshold, const det_cihash& dets_cihash,
+        const std::vector<double>& pre_C, const std::vector<double>& ref_C,
+        const Determinant& detI, double CI, double ref_CI,
         std::vector<std::pair<Determinant, double>>& new_space_C_vec, double E0,
         std::pair<double, double>& max_coupling);
 
