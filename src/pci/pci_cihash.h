@@ -292,11 +292,11 @@ class ProjectorCI_CIHash : public Wavefunction {
                    size_t max_output = 10);
 
     /// Save a wave function
-    void save_wfn(det_vec& space, std::vector<double>& C,
+    void save_wfn(det_cihash& space, std::vector<double>& C,
                   std::vector<det_hash<>>& solutions);
 
     /// Orthogonalize the wave function to previous solutions
-    void orthogonalize(det_vec& space, std::vector<double>& C,
+    void orthogonalize(det_cihash &space, std::vector<double>& C,
                        std::vector<det_hash<>>& solutions);
 
     /// Initial wave function guess
