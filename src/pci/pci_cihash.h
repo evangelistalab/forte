@@ -355,7 +355,8 @@ class ProjectorCI_CIHash : public Wavefunction {
     /// @param C The wave function coefficients
     /// @param tollerance The accuracy of the estimate.  Used to impose |C_I
     /// C_J| < tollerance
-    double estimate_var_energy_sparse(det_vec& dets, std::vector<double>& C,
+    double estimate_var_energy_sparse(det_cihash& dets_cihash,
+                                      std::vector<double>& C,
                                       double tollerance = 1.0e-14);
     /// Estimate the pertubation energy for the result
     std::tuple<double, double> estimate_perturbation(det_vec& dets,
@@ -374,9 +375,9 @@ class ProjectorCI_CIHash : public Wavefunction {
                                          double spawning_threshold);
 
     /// Form the product H c
-    double form_H_C(double tau, double spawning_threshold, Determinant& detI,
-                    double CI, det_hash<>& det_C,
-                    std::pair<double, double>& max_coupling);
+    double form_H_C(double tau, double spawning_threshold,
+                    const det_cihash& dets_cihash, std::vector<double>& C,
+                    size_t I, std::pair<double, double>& max_coupling);
     /// Do we have OpenMP?
     static bool have_omp_;
 
