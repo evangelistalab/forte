@@ -312,11 +312,11 @@ class ProjectorCI_CIHash : public Wavefunction {
     * events
     * @param S An energy shift subtracted from the Hamiltonian
     */
-    void propagate(GeneratorType_CIHash::GeneratorType generator, det_vec& dets,
-                   std::vector<double>& C, double tau,
+    void propagate(GeneratorType_CIHash::GeneratorType generator,
+                   det_cihash& dets_cihash, std::vector<double>& C, double tau,
                    double spawning_threshold, double S);
     /// A Delta projector fitted by 10th order chebyshev polynomial
-    void propagate_wallCh(det_vec& dets, std::vector<double>& C,
+    void propagate_wallCh(det_cihash& dets_cihash, std::vector<double>& C,
                           double spawning_threshold, double S);
     /// The DL Generator
     void propagate_DL(det_vec& dets, std::vector<double>& C,

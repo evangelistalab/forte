@@ -676,15 +676,15 @@ double ProjectorCI_CIHash::compute_energy() {
             double min_C_abs = fabs(*minmax_C.first);
             double max_C = *minmax_C.second;
             max_C = max_C > min_C_abs ? max_C : min_C_abs;
-            dets = dets_cihash.toVector();
-            propagate(generator_, dets, C, time_step_,
+            //            dets = dets_cihash.toVector();
+            propagate(generator_, dets_cihash, C, time_step_,
                       spawning_threshold_ * max_C, shift_);
-            dets_cihash = det_cihash(dets);
+            //            dets_cihash = det_cihash(dets);
         } else {
-            dets = dets_cihash.toVector();
-            propagate(generator_, dets, C, time_step_, spawning_threshold_,
-                      shift_);
-            dets_cihash = det_cihash(dets);
+            //            dets = dets_cihash.toVector();
+            propagate(generator_, dets_cihash, C, time_step_,
+                      spawning_threshold_, shift_);
+            //            dets_cihash = det_cihash(dets);
         }
         timer_off("PIFCI:Step");
 
@@ -843,10 +843,10 @@ double ProjectorCI_CIHash::compute_energy() {
     outfile->Flush();
 
     if (print_full_wavefunction_) {
-        dets_cihash = det_cihash(dets);
+        //        dets_cihash = det_cihash(dets);
         print_wfn(dets_cihash, C, C.size());
     } else {
-        dets_cihash = det_cihash(dets);
+        //        dets_cihash = det_cihash(dets);
         print_wfn(dets_cihash, C);
     }
 
@@ -890,10 +890,10 @@ double ProjectorCI_CIHash::compute_energy() {
         }
 
         if (print_full_wavefunction_) {
-            dets_cihash = det_cihash(dets);
+            //            dets_cihash = det_cihash(dets);
             print_wfn(dets_cihash, diag_C, diag_C.size());
         } else {
-            dets_cihash = det_cihash(dets);
+            //            dets_cihash = det_cihash(dets);
             print_wfn(dets_cihash, diag_C);
         }
     }
@@ -936,17 +936,19 @@ double ProjectorCI_CIHash::initial_guess(det_cihash& dets_cihash,
 
     // Do one time step starting from the reference determinant
     Determinant bs_det(alfa_bits, beta_bits);
-    det_vec guess_dets{bs_det};
-    dets_cihash = det_cihash(guess_dets);
+    //    det_vec guess_dets{bs_det};
+    //    dets_cihash = det_cihash(guess_dets);
+    dets_cihash.clear();
+    dets_cihash.add(bs_det);
 
-//    det_hash<> dets_C;
+    //    det_hash<> dets_C;
     apply_tau_H_ref_C_symm(time_step_, initial_guess_spawning_threshold_,
                            dets_cihash, {1.0}, {1.0}, C, 0.0);
-//    outfile->Printf("\n\n  Reached here, C.size(): %zu", C.size());
+    //    outfile->Printf("\n\n  Reached here, C.size(): %zu", C.size());
 
     // Save the list of determinants
     //    copy_hash_to_vec(dets_C, dets_vec, C);
-//    dets_cihash = det_cihash(dets_C, C);
+    //    dets_cihash = det_cihash(dets_C, C);
 
     //    size_t guess_size = dets_vec.size();
     size_t guess_size = dets_cihash.size();
@@ -967,7 +969,7 @@ double ProjectorCI_CIHash::initial_guess(det_cihash& dets_cihash,
             //            new_dets.push_back(dets_cihash[I]);
             new_dets.add(dets_cihash[I]);
         }
-        dets_cihash = new_dets;
+        dets_cihash.swap(new_dets);
         guess_size = dets_cihash.size();
         C.resize(guess_size);
     }
@@ -1000,19 +1002,24 @@ double ProjectorCI_CIHash::initial_guess(det_cihash& dets_cihash,
     for (size_t I = 0; I < guess_size; ++I) {
         C[I] = evecs->get(I, current_root_);
     }
-//    outfile->Printf("\n\n  Reached here");
+    //    outfile->Printf("\n\n  Reached here");
     return var_energy;
 }
 
-void ProjectorCI_CIHash::propagate(GeneratorType generator, det_vec& dets,
+void ProjectorCI_CIHash::propagate(GeneratorType generator,
+                                   det_cihash& dets_cihash,
                                    std::vector<double>& C, double tau,
                                    double spawning_threshold, double S) {
+    //    det_cihash dets_cihash(dets);
+    det_vec dets;
     switch (generator) {
     case WallChebyshevGenerator:
-        propagate_wallCh(dets, C, spawning_threshold, S);
+        propagate_wallCh(dets_cihash, C, spawning_threshold, S);
         break;
     case DLGenerator:
+        dets = dets_cihash.toVector();
         propagate_DL(dets, C, spawning_threshold, S);
+        dets_cihash = det_cihash(dets);
         break;
     default:
         outfile->Printf(
@@ -1021,14 +1028,16 @@ void ProjectorCI_CIHash::propagate(GeneratorType generator, det_vec& dets,
         break;
     }
     normalize(C);
+    //    dets = dets_cihash.toVector();
 }
 
-void ProjectorCI_CIHash::propagate_wallCh(det_vec& dets, std::vector<double>& C,
+void ProjectorCI_CIHash::propagate_wallCh(det_cihash& dets_cihash,
+                                          std::vector<double>& C,
                                           double spawning_threshold, double S) {
-    det_cihash dets_cihash(dets);
+    //    det_cihash dets_cihash(dets);
     // A map that contains the pair (determinant,coefficient)
     const double PI = 2 * acos(0.0);
-    det_hash<> dets_C_hash;
+    //    det_hash<> dets_C_hash;
     std::vector<double> ref_C;
     ref_C = C;
 
@@ -1038,18 +1047,18 @@ void ProjectorCI_CIHash::propagate_wallCh(det_vec& dets, std::vector<double>& C,
         //        apply_tau_H(-1.0/range_,spawning_threshold,dets,C,dets_C_hash,
         //        range_ * root + shift_);
         double root = -cos(((double)i) * PI / (chebyshev_order_ + 0.5));
-//        dets = dets_cihash.toVector();
+        //        dets = dets_cihash.toVector();
         apply_tau_H_ref_C_symm(-1.0, spawning_threshold, dets_cihash, C, ref_C,
                                C, range_ * root + shift_);
-//        copy_hash_to_vec_order_ref(dets_C_hash, dets, C);
+        //        copy_hash_to_vec_order_ref(dets_C_hash, dets, C);
         //        dets_cihash = det_cihash(dets_C_hash, C);
         //        dets = dets_cihash.toVector();
-//        dets_cihash = det_cihash(dets);
+        //        dets_cihash = det_cihash(dets);
 
-        dets_C_hash.clear();
+        //        dets_C_hash.clear();
         normalize(C);
     }
-    dets = dets_cihash.toVector();
+    //    dets = dets_cihash.toVector();
 }
 
 void ProjectorCI_CIHash::propagate_DL(det_vec& dets, std::vector<double>& C,
@@ -1061,10 +1070,10 @@ void ProjectorCI_CIHash::propagate_DL(det_vec& dets, std::vector<double>& C,
     SharedMatrix A(
         new Matrix(davidson_subspace_per_root_, davidson_subspace_per_root_));
     b_vec[0] = C;
-//    det_hash<> dets_C_hash;
-//    apply_tau_H_ref_C_symm(1.0, spawning_threshold, dets, b_vec[0], C,
-//                           dets_C_hash, 0.0);
-//    copy_hash_to_vec_order_ref(dets_C_hash, dets, sigma_vec[0]);
+    //    det_hash<> dets_C_hash;
+    //    apply_tau_H_ref_C_symm(1.0, spawning_threshold, dets, b_vec[0], C,
+    //                           dets_C_hash, 0.0);
+    //    copy_hash_to_vec_order_ref(dets_C_hash, dets, sigma_vec[0]);
     det_cihash dets_cihash(dets);
     apply_tau_H_ref_C_symm(1.0, spawning_threshold, dets_cihash, b_vec[0], C,
                            sigma_vec[0], 0.0);
@@ -1124,13 +1133,16 @@ void ProjectorCI_CIHash::propagate_DL(det_vec& dets, std::vector<double>& C,
         //        print_vector(delta_vec, "delta_vec");
         b_vec[current_order] = delta_vec;
 
-//        dets_C_hash.clear();
-//        apply_tau_H_ref_C_symm(1.0, spawning_threshold, dets,
-//                               b_vec[current_order], C, dets_C_hash, 0.0);
-//        copy_hash_to_vec_order_ref(dets_C_hash, dets, sigma_vec[current_order]);
+        //        dets_C_hash.clear();
+        //        apply_tau_H_ref_C_symm(1.0, spawning_threshold, dets,
+        //                               b_vec[current_order], C, dets_C_hash,
+        //                               0.0);
+        //        copy_hash_to_vec_order_ref(dets_C_hash, dets,
+        //        sigma_vec[current_order]);
         dets_cihash = det_cihash(dets);
         apply_tau_H_ref_C_symm(1.0, spawning_threshold, dets_cihash,
-                               b_vec[current_order], C, sigma_vec[current_order], 0.0);
+                               b_vec[current_order], C,
+                               sigma_vec[current_order], 0.0);
         dets = dets_cihash.toVector();
         for (int m = 0; m < current_order; m++) {
             double b_dot_sigma_m = dot(b_vec[current_order], sigma_vec[m]);
@@ -1334,7 +1346,8 @@ void ProjectorCI_CIHash::apply_tau_H_ref_C_symm(
 
     result_C.swap(C_merge);
 
-//    outfile->Printf("\n\n  Reached here, result_C.size(): %zu", result_C.size());
+    //    outfile->Printf("\n\n  Reached here, result_C.size(): %zu",
+    //    result_C.size());
 
     //    outfile -> Printf("\napply_tau_H_ref_C_symm : End:");
     //    print_hash(dets_C_hash, "dets_C_hash", true);
