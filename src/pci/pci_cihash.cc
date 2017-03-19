@@ -863,11 +863,11 @@ double ProjectorCI_CIHash::compute_energy() {
         SharedMatrix apfci_evecs(new Matrix("Eigenvectors", C.size(), nroot_));
         SharedVector apfci_evals(new Vector("Eigenvalues", nroot_));
 
-        dets = dets_cihash.toVector();
+//        dets = dets_cihash.toVector();
         sparse_solver.diagonalize_hamiltonian(
-            dets, apfci_evals, apfci_evecs, nroot_, wavefunction_multiplicity_,
+            dets_cihash.toVector(), apfci_evals, apfci_evecs, nroot_, wavefunction_multiplicity_,
             diag_method_);
-        dets_cihash = det_cihash(dets);
+//        dets_cihash = det_cihash(dets);
 
         timer_off("PIFCI:Post_Diag");
 
@@ -1652,9 +1652,10 @@ void ProjectorCI_CIHash::apply_tau_H_ref_C_symm_det_dynamic(
 std::map<std::string, double>
 ProjectorCI_CIHash::estimate_energy(det_vec& dets, std::vector<double>& C) {
     std::map<std::string, double> results;
-
+    det_cihash dets_cihash(dets);
+    dets = dets_cihash.toVector();
     timer_on("PIFCI:<E>p");
-    results["PROJECTIVE ENERGY"] = estimate_proj_energy(dets, C);
+    results["PROJECTIVE ENERGY"] = estimate_proj_energy(dets_cihash, C);
     timer_off("PIFCI:<E>p");
 
     if (variational_estimate_) {
@@ -1670,6 +1671,8 @@ ProjectorCI_CIHash::estimate_energy(det_vec& dets, std::vector<double>& C) {
             timer_off("PIFCI:<E>v");
         }
     }
+    dets_cihash = det_cihash(dets);
+    dets = dets_cihash.toVector();
     return results;
 }
 
@@ -1677,7 +1680,7 @@ static bool abs_compare(double a, double b) {
     return (std::abs(a) < std::abs(b));
 }
 
-double ProjectorCI_CIHash::estimate_proj_energy(det_vec& dets,
+double ProjectorCI_CIHash::estimate_proj_energy(const det_cihash& dets_cihash,
                                                 std::vector<double>& C) {
     // Find the determinant with the largest value of C
     auto result = std::max_element(C.begin(), C.end(), abs_compare);
@@ -1686,8 +1689,8 @@ double ProjectorCI_CIHash::estimate_proj_energy(det_vec& dets,
 
     // Compute the projective energy
     double projective_energy_estimator = 0.0;
-    for (int I = 0, max_I = dets.size(); I < max_I; ++I) {
-        double HIJ = dets[I].slater_rules(dets[J]);
+    for (int I = 0, max_I = dets_cihash.size(); I < max_I; ++I) {
+        double HIJ = dets_cihash[I].slater_rules(dets_cihash[J]);
         projective_energy_estimator += HIJ * C[I] / CJ;
     }
     return projective_energy_estimator + nuclear_repulsion_energy_;
