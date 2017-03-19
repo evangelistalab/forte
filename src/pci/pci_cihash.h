@@ -288,7 +288,7 @@ class ProjectorCI_CIHash : public Wavefunction {
     void print_info();
 
     /// Print a wave function
-    void print_wfn(det_cihash& space_cihash, std::vector<double>& C,
+    void print_wfn(const det_cihash& space_cihash, std::vector<double>& C,
                    size_t max_output = 10);
 
     /// Save a wave function
@@ -339,7 +339,7 @@ class ProjectorCI_CIHash : public Wavefunction {
         std::pair<double, double>& max_coupling);
 
     /// Estimates the energy give a wave function
-    std::map<std::string, double> estimate_energy(det_vec& dets,
+    std::map<std::string, double> estimate_energy(const det_cihash& dets_cihash,
                                                   std::vector<double>& C);
     /// Estimates the projective energy
     double estimate_proj_energy(const det_cihash& dets, std::vector<double>& C);
@@ -348,32 +348,17 @@ class ProjectorCI_CIHash : public Wavefunction {
     /// @param C The wave function coefficients
     /// @param tollerance The accuracy of the estimate.  Used to impose |C_I
     /// C_J| < tollerance
-    double estimate_var_energy(det_vec& dets, std::vector<double>& C,
+    double estimate_var_energy(const det_cihash& dets_cihash,
+                               std::vector<double>& C,
                                double tollerance = 1.0e-14);
     /// Estimates the variational energy using a sparse algorithm
     /// @param dets The set of determinants that form the wave function
     /// @param C The wave function coefficients
     /// @param tollerance The accuracy of the estimate.  Used to impose |C_I
     /// C_J| < tollerance
-    double estimate_var_energy_sparse(det_cihash& dets_cihash,
+    double estimate_var_energy_sparse(const det_cihash& dets_cihash,
                                       std::vector<double>& C,
                                       double tollerance = 1.0e-14);
-    /// Estimate the pertubation energy for the result
-    std::tuple<double, double> estimate_perturbation(det_vec& dets,
-                                                     std::vector<double>& C,
-                                                     double spawning_threshold);
-    /// Estimate the 1st order pertubation energy for the result.
-    double estimate_1st_order_perturbation(det_vec& dets,
-                                           std::vector<double>& C,
-                                           double spawning_threshold);
-    /// Estimate the 2nd order pertubation energy for the result within subspace
-    double estimate_2nd_order_perturbation_sub(det_vec& dets,
-                                               std::vector<double>& C,
-                                               double spawning_threshold);
-    /// Estimate the path-filtering error
-    double estimate_path_filtering_error(det_vec& dets, std::vector<double>& C,
-                                         double spawning_threshold);
-
     /// Form the product H c
     double form_H_C(double tau, double spawning_threshold,
                     const det_cihash& dets_cihash, std::vector<double>& C,
