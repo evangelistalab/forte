@@ -620,7 +620,7 @@ double ProjectorCI_CIHash::compute_energy() {
     // Compute the initial guess
     outfile->Printf("\n\n  ==> Initial Guess <==");
     double var_energy = initial_guess(dets_cihash, C);
-    dets = dets_cihash.toVector();
+//    dets = dets_cihash.toVector();
     double proj_energy = var_energy;
     print_wfn(dets_cihash, C);
     det_hash<> old_space_map;
@@ -701,9 +701,10 @@ double ProjectorCI_CIHash::compute_energy() {
         if (cycle % energy_estimate_freq_ == 0) {
             approx_E_flag_ = true;
             timer_on("PIFCI:<E>");
-            dets = dets_cihash.toVector();
-            std::map<std::string, double> results = estimate_energy(dets, C);
-            dets_cihash = det_cihash(dets);
+            //            dets = dets_cihash.toVector();
+            std::map<std::string, double> results =
+                estimate_energy(dets_cihash, C);
+            //            dets_cihash = det_cihash(dets);
             timer_off("PIFCI:<E>");
 
             proj_energy = results["PROJECTIVE ENERGY"];
@@ -812,9 +813,9 @@ double ProjectorCI_CIHash::compute_energy() {
         var_energy = estimate_var_energy_sparse(dets_cihash, C, 1.0e-14);
         //        dets_cihash = det_cihash(dets);
     } else {
-        dets = dets_cihash.toVector();
-        var_energy = estimate_var_energy(dets, C, 1.0e-14);
-        dets_cihash = det_cihash(dets);
+        //        dets = dets_cihash.toVector();
+        var_energy = estimate_var_energy(dets_cihash, C, 1.0e-14);
+        //        dets_cihash = det_cihash(dets);
     }
     timer_off("PIFCI:<E>end_v");
 
@@ -1650,10 +1651,11 @@ void ProjectorCI_CIHash::apply_tau_H_ref_C_symm_det_dynamic(
 }
 
 std::map<std::string, double>
-ProjectorCI_CIHash::estimate_energy(det_vec& dets, std::vector<double>& C) {
+ProjectorCI_CIHash::estimate_energy(const det_cihash& dets_cihash,
+                                    std::vector<double>& C) {
     std::map<std::string, double> results;
-    det_cihash dets_cihash(dets);
-    dets = dets_cihash.toVector();
+    //    det_cihash dets_cihash(dets);
+    //    dets = dets_cihash.toVector();
     timer_on("PIFCI:<E>p");
     results["PROJECTIVE ENERGY"] = estimate_proj_energy(dets_cihash, C);
     timer_off("PIFCI:<E>p");
@@ -1667,12 +1669,12 @@ ProjectorCI_CIHash::estimate_energy(det_vec& dets, std::vector<double>& C) {
         } else {
             timer_on("PIFCI:<E>v");
             results["VARIATIONAL ENERGY"] =
-                estimate_var_energy(dets, C, energy_estimate_threshold_);
+                estimate_var_energy(dets_cihash, C, energy_estimate_threshold_);
             timer_off("PIFCI:<E>v");
         }
     }
-    dets_cihash = det_cihash(dets);
-    dets = dets_cihash.toVector();
+    //    dets_cihash = det_cihash(dets);
+    //    dets = dets_cihash.toVector();
     return results;
 }
 
@@ -1696,19 +1698,19 @@ double ProjectorCI_CIHash::estimate_proj_energy(const det_cihash& dets_cihash,
     return projective_energy_estimator + nuclear_repulsion_energy_;
 }
 
-double ProjectorCI_CIHash::estimate_var_energy(det_vec& dets,
+double ProjectorCI_CIHash::estimate_var_energy(const det_cihash& dets_cihash,
                                                std::vector<double>& C,
                                                double tollerance) {
     // Compute a variational estimator of the energy
-    size_t size = dets.size();
+    size_t size = dets_cihash.size();
     double variational_energy_estimator = 0.0;
 #pragma omp parallel for reduction(+ : variational_energy_estimator)
     for (size_t I = 0; I < size; ++I) {
-        const Determinant& detI = dets[I];
+        const Determinant& detI = dets_cihash[I];
         variational_energy_estimator += C[I] * C[I] * detI.energy();
         for (size_t J = I + 1; J < size; ++J) {
             if (std::fabs(C[I] * C[J]) > tollerance) {
-                double HIJ = dets[I].slater_rules(dets[J]);
+                double HIJ = dets_cihash[I].slater_rules(dets_cihash[J]);
                 variational_energy_estimator += 2.0 * C[I] * HIJ * C[J];
             }
         }
@@ -1716,9 +1718,8 @@ double ProjectorCI_CIHash::estimate_var_energy(det_vec& dets,
     return variational_energy_estimator + nuclear_repulsion_energy_;
 }
 
-double ProjectorCI_CIHash::estimate_var_energy_sparse(det_cihash& dets_cihash,
-                                                      std::vector<double>& C,
-                                                      double tollerance) {
+double ProjectorCI_CIHash::estimate_var_energy_sparse(
+    const det_cihash& dets_cihash, std::vector<double>& C, double tollerance) {
     // A map that contains the pair (determinant,coefficient)
     //    det_hash<> dets_C_hash;
 
@@ -1744,8 +1745,8 @@ double ProjectorCI_CIHash::estimate_var_energy_sparse(det_cihash& dets_cihash,
         }
         //        energy[thread_id] +=
         //        form_H_C_sym(1.0,tollerance,dets[I],C[I],dets_C_hash,max_coupling);
-        energy[thread_id] += form_H_C(1.0, tollerance,
-                                      dets_cihash, C, I, max_coupling);
+        energy[thread_id] +=
+            form_H_C(1.0, tollerance, dets_cihash, C, I, max_coupling);
     }
 
     for (size_t I = 0; I < max_I; ++I) {
@@ -1758,109 +1759,7 @@ double ProjectorCI_CIHash::estimate_var_energy_sparse(det_cihash& dets_cihash,
     return variational_energy_estimator + nuclear_repulsion_energy_;
 }
 
-double ProjectorCI_CIHash::estimate_1st_order_perturbation(
-    det_vec& dets, std::vector<double>& C, double spawning_threshold) {
-    // Compute a variational estimator of the energy
-    size_t size = dets.size();
-    double perturbation_energy_estimator = 0.0;
-#pragma omp parallel for reduction(+ : perturbation_energy_estimator)
-    for (size_t I = 0; I < size; ++I) {
-        for (size_t J = 0; J < size; ++J) {
-            double HIJ = dets[I].slater_rules(dets[J]);
-            if (std::fabs(C[I] * HIJ) < spawning_threshold && J != I) {
-                perturbation_energy_estimator += C[I] * HIJ * C[J];
-            }
-        }
-    }
-    return perturbation_energy_estimator;
-}
-
-double ProjectorCI_CIHash::estimate_2nd_order_perturbation_sub(
-    det_vec& dets, std::vector<double>& C, double spawning_threshold) {
-    // Compute a variational estimator of the energy
-    size_t size = dets.size();
-    double perturbation_energy_estimator = 0.0;
-#pragma omp parallel for reduction(+ : perturbation_energy_estimator)
-    for (size_t I = 0; I < size; ++I) {
-        double current_V = 0.0;
-        for (size_t J = 0; J < size; ++J) {
-            double HIJ = dets[I].slater_rules(dets[J]);
-            if (std::fabs(C[I] * HIJ) < spawning_threshold && J != I) {
-                perturbation_energy_estimator += C[I] * HIJ * C[J];
-            }
-        }
-    }
-    return perturbation_energy_estimator;
-}
-
-std::tuple<double, double>
-ProjectorCI_CIHash::estimate_perturbation(det_vec& dets, std::vector<double>& C,
-                                          double spawning_threshold) {
-    //    double first_order_perturb = estimate_1st_order_perturbation(dets, C,
-    //    spawning_threshold);
-    //    return std::make_tuple(first_order_perturb, 0.0, 0.0);
-    // Compute a variational estimator of the energy
-    size_t size = dets.size();
-    double variational_energy_estimator =
-        approx_energy_ - nuclear_repulsion_energy_;
-    //#pragma omp parallel for reduction(+:variational_energy_estimator,
-    // perturbation_1st_energy_estimator)
-    //    for (size_t I = 0; I < size; ++I){
-    //        for (size_t J = 0; J < size; ++J){
-    //            double HIJ = dets[I].slater_rules(dets[J]);
-    //            if (std::fabs(C[I] * HIJ) < spawning_threshold && J != I){
-    //                perturbation_1st_energy_estimator += C[I] * HIJ * C[J];
-    //            } else {
-    //                variational_energy_estimator += C[I] * HIJ * C[J];
-    //            }
-    //        }
-    //    }
-    double perturbation_2nd_energy_estimator_sub = 0.0;
-#pragma omp parallel for reduction(+ : perturbation_2nd_energy_estimator_sub)
-    for (size_t I = 0; I < size; ++I) {
-        double current_V = 0.0;
-        for (size_t J = 0; J < size; ++J) {
-            double HIJ = dets[J].slater_rules(dets[I]);
-            if (symm_approx_H_) {
-                if (std::fabs(C[J] * HIJ) < spawning_threshold &&
-                    std::fabs(C[I] * HIJ) < spawning_threshold && J != I) {
-                    current_V += HIJ * C[J];
-                }
-            } else {
-                if (std::fabs(C[J] * HIJ) < spawning_threshold && J != I) {
-                    current_V += HIJ * C[J];
-                }
-            }
-        }
-        current_V *= C[I];
-        double delta = variational_energy_estimator - dets[I].energy();
-        perturbation_2nd_energy_estimator_sub += current_V * current_V / delta;
-        //            0.5 * (delta - sqrt(delta * delta + 4 * current_V *
-        //            current_V));
-    }
-    return std::make_tuple(perturbation_2nd_energy_estimator_sub, 0.0);
-}
-
-double ProjectorCI_CIHash::estimate_path_filtering_error(
-    det_vec& dets, std::vector<double>& C, double spawning_threshold) {
-    size_t size = dets.size();
-    double pfError = 0.0;
-#pragma omp parallel for reduction(max : pfError)
-    for (size_t I = 0; I < size; ++I) {
-        double current_pf = 0.0;
-        for (size_t J = 0; J < size; ++J) {
-            double HIJ = dets[J].slater_rules(dets[I]);
-            if (std::fabs(C[J] * HIJ) < spawning_threshold && J != I) {
-                current_pf += std::fabs(HIJ * C[J]);
-            }
-        }
-        if (current_pf > pfError)
-            pfError = current_pf;
-    }
-    return pfError;
-}
-
-void ProjectorCI_CIHash::print_wfn(det_cihash& space_cihash,
+void ProjectorCI_CIHash::print_wfn(const det_cihash& space_cihash,
                                    std::vector<double>& C, size_t max_output) {
     outfile->Printf(
         "\n\n  Most important contributions to the wave function:\n");
@@ -1954,8 +1853,7 @@ void ProjectorCI_CIHash::orthogonalize(det_vec& space, std::vector<double>& C,
 
 double ProjectorCI_CIHash::form_H_C(double tau, double spawning_threshold,
                                     const det_cihash& dets_cihash,
-                                    std::vector<double>& C,
-                                    size_t I,
+                                    std::vector<double>& C, size_t I,
                                     std::pair<double, double>& max_coupling) {
     const Determinant& detI = dets_cihash[I];
     double CI = C[I];
