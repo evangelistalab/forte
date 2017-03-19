@@ -1011,15 +1011,15 @@ void ProjectorCI_CIHash::propagate(GeneratorType generator,
                                    std::vector<double>& C, double tau,
                                    double spawning_threshold, double S) {
     //    det_cihash dets_cihash(dets);
-    det_vec dets;
+//    det_vec dets;
     switch (generator) {
     case WallChebyshevGenerator:
         propagate_wallCh(dets_cihash, C, spawning_threshold, S);
         break;
     case DLGenerator:
-        dets = dets_cihash.toVector();
-        propagate_DL(dets, C, spawning_threshold, S);
-        dets_cihash = det_cihash(dets);
+//        dets = dets_cihash.toVector();
+        propagate_DL(dets_cihash, C, spawning_threshold, S);
+//        dets_cihash = det_cihash(dets);
         break;
     default:
         outfile->Printf(
@@ -1061,7 +1061,8 @@ void ProjectorCI_CIHash::propagate_wallCh(det_cihash& dets_cihash,
     //    dets = dets_cihash.toVector();
 }
 
-void ProjectorCI_CIHash::propagate_DL(det_vec& dets, std::vector<double>& C,
+void ProjectorCI_CIHash::propagate_DL(det_cihash& dets_cihash,
+                                      std::vector<double>& C,
                                       double spawning_threshold, double S) {
     size_t ref_size = C.size();
     std::vector<std::vector<double>> b_vec(davidson_subspace_per_root_);
@@ -1074,10 +1075,10 @@ void ProjectorCI_CIHash::propagate_DL(det_vec& dets, std::vector<double>& C,
     //    apply_tau_H_ref_C_symm(1.0, spawning_threshold, dets, b_vec[0], C,
     //                           dets_C_hash, 0.0);
     //    copy_hash_to_vec_order_ref(dets_C_hash, dets, sigma_vec[0]);
-    det_cihash dets_cihash(dets);
+//    det_cihash dets_cihash(dets);
     apply_tau_H_ref_C_symm(1.0, spawning_threshold, dets_cihash, b_vec[0], C,
                            sigma_vec[0], 0.0);
-    dets = dets_cihash.toVector();
+    //    dets = dets_cihash.toVector();
     if (ref_size <= 1) {
         C = sigma_vec[0];
         outfile->Printf("\nDavidson break because the reference space have "
@@ -1088,10 +1089,10 @@ void ProjectorCI_CIHash::propagate_DL(det_vec& dets, std::vector<double>& C,
 
     A->set(0, 0, dot(b_vec[0], sigma_vec[0]));
 
-    size_t dets_size = dets.size();
+    size_t dets_size = dets_cihash.size();
     std::vector<double> diag_vec(dets_size);
     for (int i = 0; i < dets_size; i++) {
-        diag_vec[i] = dets[i].energy();
+        diag_vec[i] = dets_cihash[i].energy();
     }
 
     double lambda = A->get(0, 0);
@@ -1139,11 +1140,11 @@ void ProjectorCI_CIHash::propagate_DL(det_vec& dets, std::vector<double>& C,
         //                               0.0);
         //        copy_hash_to_vec_order_ref(dets_C_hash, dets,
         //        sigma_vec[current_order]);
-        dets_cihash = det_cihash(dets);
+        //        dets_cihash = det_cihash(dets);
         apply_tau_H_ref_C_symm(1.0, spawning_threshold, dets_cihash,
                                b_vec[current_order], C,
                                sigma_vec[current_order], 0.0);
-        dets = dets_cihash.toVector();
+        //        dets = dets_cihash.toVector();
         for (int m = 0; m < current_order; m++) {
             double b_dot_sigma_m = dot(b_vec[current_order], sigma_vec[m]);
             A->set(current_order, m, b_dot_sigma_m);
@@ -1180,7 +1181,7 @@ void ProjectorCI_CIHash::propagate_DL(det_vec& dets, std::vector<double>& C,
         }
         if (current_order >= davidson_subspace_per_root_) {
             b_vec[0].resize(dets_size, 0.0);
-            for (int j = 0, jmax = dets.size(); j < jmax; j++) {
+            for (int j = 0, jmax = dets_cihash.size(); j < jmax; j++) {
                 std::vector<double> b_j(davidson_collapse_per_root_, 0.0);
                 std::vector<double> sigma_j(davidson_collapse_per_root_, 0.0);
                 for (int l = 0; l < davidson_collapse_per_root_; l++) {
@@ -1227,13 +1228,14 @@ void ProjectorCI_CIHash::propagate_DL(det_vec& dets, std::vector<double>& C,
     //    C.clear();
     C = b_vec[0];
     scale(C, alpha_vec[0]);
-    C.resize(dets.size(), 0.0);
+    C.resize(dets_cihash.size(), 0.0);
     //    b_vec[0].resize(dets.size(), 0.0);
     for (int i = 1; i < current_order; i++) {
         for (int j = 0, jmax = b_vec[i].size(); j < jmax; j++) {
             C[j] += alpha_vec[i] * b_vec[i][j];
         }
     }
+//    dets = dets_cihash.toVector();
 
     //    std::vector<double> C2;
     //    C2.resize(dets.size(), 0.0);

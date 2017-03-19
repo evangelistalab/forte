@@ -319,7 +319,7 @@ class ProjectorCI_CIHash : public Wavefunction {
     void propagate_wallCh(det_cihash& dets_cihash, std::vector<double>& C,
                           double spawning_threshold, double S);
     /// The DL Generator
-    void propagate_DL(det_vec& dets, std::vector<double>& C,
+    void propagate_DL(det_cihash& dets_cihash, std::vector<double>& C,
                       double spawning_threshold, double S);
     /// Apply symmetric approx tau H to a set of determinants with selection
     /// according to reference coefficients
