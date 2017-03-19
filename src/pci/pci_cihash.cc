@@ -691,9 +691,9 @@ double ProjectorCI_CIHash::compute_energy() {
         // Orthogonalize this solution with respect to the previous ones
         timer_on("PIFCI:Ortho");
         if (current_root_ > 0) {
-            dets = dets_cihash.toVector();
-            orthogonalize(dets, C, solutions_);
-            dets_cihash = det_cihash(dets);
+//            dets = dets_cihash.toVector();
+            orthogonalize(dets_cihash, C, solutions_);
+//            dets_cihash = det_cihash(dets);
         }
         timer_off("PIFCI:Ortho");
 
@@ -852,9 +852,9 @@ double ProjectorCI_CIHash::compute_energy() {
     }
 
     if (current_root_ < nroot_ - 1) {
-        dets = dets_cihash.toVector();
-        save_wfn(dets, C, solutions_);
-        dets_cihash = det_cihash(dets);
+//        dets = dets_cihash.toVector();
+        save_wfn(dets_cihash, C, solutions_);
+//        dets_cihash = det_cihash(dets);
     }
 
     if (post_diagonalization_) {
@@ -1826,7 +1826,7 @@ void ProjectorCI_CIHash::print_wfn(const det_cihash& space_cihash,
     outfile->Flush();
 }
 
-void ProjectorCI_CIHash::save_wfn(det_vec& space, std::vector<double>& C,
+void ProjectorCI_CIHash::save_wfn(det_cihash& space, std::vector<double>& C,
                                   std::vector<det_hash<>>& solutions) {
     outfile->Printf("\n\n  Saving the wave function:\n");
 
@@ -1837,18 +1837,20 @@ void ProjectorCI_CIHash::save_wfn(det_vec& space, std::vector<double>& C,
     solutions.push_back(std::move(solution));
 }
 
-void ProjectorCI_CIHash::orthogonalize(det_vec& space, std::vector<double>& C,
+void ProjectorCI_CIHash::orthogonalize(det_cihash& space, std::vector<double>& C,
                                        std::vector<det_hash<>>& solutions) {
     det_hash<> det_C;
-    for (size_t I = 0; I < space.size(); ++I) {
-        det_C[space[I]] = C[I];
-    }
+//    for (size_t I = 0; I < space.size(); ++I) {
+//        det_C[space[I]] = C[I];
+//    }
+    det_C = space.toUnordered_map(C);
     for (size_t n = 0; n < solutions.size(); ++n) {
         double dot_prod = dot(det_C, solutions[n]);
         add(det_C, -dot_prod, solutions[n]);
     }
     normalize(det_C);
-    copy_hash_to_vec(det_C, space, C);
+//    copy_hash_to_vec(det_C, space, C);
+    space = det_cihash(det_C, C);
 }
 
 double ProjectorCI_CIHash::form_H_C(double tau, double spawning_threshold,
