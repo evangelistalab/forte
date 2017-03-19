@@ -342,7 +342,7 @@ class ProjectorCI_CIHash : public Wavefunction {
     std::map<std::string, double> estimate_energy(det_vec& dets,
                                                   std::vector<double>& C);
     /// Estimates the projective energy
-    double estimate_proj_energy(det_vec& dets, std::vector<double>& C);
+    double estimate_proj_energy(const det_cihash& dets, std::vector<double>& C);
     /// Estimates the variational energy
     /// @param dets The set of determinants that form the wave function
     /// @param C The wave function coefficients
