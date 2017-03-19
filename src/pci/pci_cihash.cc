@@ -808,9 +808,9 @@ double ProjectorCI_CIHash::compute_energy() {
     timer_on("PIFCI:<E>end_v");
 
     if (fast_variational_estimate_) {
-        dets = dets_cihash.toVector();
-        var_energy = estimate_var_energy_sparse(dets, C, 1.0e-14);
-        dets_cihash = det_cihash(dets);
+        //        dets = dets_cihash.toVector();
+        var_energy = estimate_var_energy_sparse(dets_cihash, C, 1.0e-14);
+        //        dets_cihash = det_cihash(dets);
     } else {
         dets = dets_cihash.toVector();
         var_energy = estimate_var_energy(dets, C, 1.0e-14);
@@ -863,11 +863,11 @@ double ProjectorCI_CIHash::compute_energy() {
         SharedMatrix apfci_evecs(new Matrix("Eigenvectors", C.size(), nroot_));
         SharedVector apfci_evals(new Vector("Eigenvalues", nroot_));
 
-//        dets = dets_cihash.toVector();
+        //        dets = dets_cihash.toVector();
         sparse_solver.diagonalize_hamiltonian(
-            dets_cihash.toVector(), apfci_evals, apfci_evecs, nroot_, wavefunction_multiplicity_,
-            diag_method_);
-//        dets_cihash = det_cihash(dets);
+            dets_cihash.toVector(), apfci_evals, apfci_evecs, nroot_,
+            wavefunction_multiplicity_, diag_method_);
+        //        dets_cihash = det_cihash(dets);
 
         timer_off("PIFCI:Post_Diag");
 
@@ -1011,15 +1011,15 @@ void ProjectorCI_CIHash::propagate(GeneratorType generator,
                                    std::vector<double>& C, double tau,
                                    double spawning_threshold, double S) {
     //    det_cihash dets_cihash(dets);
-//    det_vec dets;
+    //    det_vec dets;
     switch (generator) {
     case WallChebyshevGenerator:
         propagate_wallCh(dets_cihash, C, spawning_threshold, S);
         break;
     case DLGenerator:
-//        dets = dets_cihash.toVector();
+        //        dets = dets_cihash.toVector();
         propagate_DL(dets_cihash, C, spawning_threshold, S);
-//        dets_cihash = det_cihash(dets);
+        //        dets_cihash = det_cihash(dets);
         break;
     default:
         outfile->Printf(
@@ -1075,7 +1075,7 @@ void ProjectorCI_CIHash::propagate_DL(det_cihash& dets_cihash,
     //    apply_tau_H_ref_C_symm(1.0, spawning_threshold, dets, b_vec[0], C,
     //                           dets_C_hash, 0.0);
     //    copy_hash_to_vec_order_ref(dets_C_hash, dets, sigma_vec[0]);
-//    det_cihash dets_cihash(dets);
+    //    det_cihash dets_cihash(dets);
     apply_tau_H_ref_C_symm(1.0, spawning_threshold, dets_cihash, b_vec[0], C,
                            sigma_vec[0], 0.0);
     //    dets = dets_cihash.toVector();
@@ -1235,7 +1235,7 @@ void ProjectorCI_CIHash::propagate_DL(det_cihash& dets_cihash,
             C[j] += alpha_vec[i] * b_vec[i][j];
         }
     }
-//    dets = dets_cihash.toVector();
+    //    dets = dets_cihash.toVector();
 
     //    std::vector<double> C2;
     //    C2.resize(dets.size(), 0.0);
@@ -1661,8 +1661,8 @@ ProjectorCI_CIHash::estimate_energy(det_vec& dets, std::vector<double>& C) {
     if (variational_estimate_) {
         if (fast_variational_estimate_) {
             timer_on("PIFCI:<E>vs");
-            results["VARIATIONAL ENERGY"] =
-                estimate_var_energy_sparse(dets, C, energy_estimate_threshold_);
+            results["VARIATIONAL ENERGY"] = estimate_var_energy_sparse(
+                dets_cihash, C, energy_estimate_threshold_);
             timer_off("PIFCI:<E>vs");
         } else {
             timer_on("PIFCI:<E>v");
@@ -1716,20 +1716,20 @@ double ProjectorCI_CIHash::estimate_var_energy(det_vec& dets,
     return variational_energy_estimator + nuclear_repulsion_energy_;
 }
 
-double ProjectorCI_CIHash::estimate_var_energy_sparse(det_vec& dets,
+double ProjectorCI_CIHash::estimate_var_energy_sparse(det_cihash& dets_cihash,
                                                       std::vector<double>& C,
                                                       double tollerance) {
     // A map that contains the pair (determinant,coefficient)
-    det_hash<> dets_C_hash;
+    //    det_hash<> dets_C_hash;
 
     // double tau = time_step_;
     double variational_energy_estimator = 0.0;
     std::vector<double> energy(num_threads_, 0.0);
 
-    size_t max_I = dets.size();
-    for (size_t I = 0; I < max_I; ++I) {
-        dets_C_hash[dets[I]] = C[I];
-    }
+    size_t max_I = dets_cihash.size();
+    //    for (size_t I = 0; I < max_I; ++I) {
+    //        dets_C_hash[dets[I]] = C[I];
+    //    }
 
     std::pair<double, double> zero(0.0, 0.0);
 #pragma omp parallel for
@@ -1738,18 +1738,18 @@ double ProjectorCI_CIHash::estimate_var_energy_sparse(det_vec& dets,
         // Update the list of couplings
         std::pair<double, double> max_coupling;
 #pragma omp critical
-        { max_coupling = dets_max_couplings_[dets[I]]; }
+        { max_coupling = dets_max_couplings_[dets_cihash[I]]; }
         if (max_coupling == zero) {
             max_coupling = {1.0, 1.0};
         }
         //        energy[thread_id] +=
         //        form_H_C_sym(1.0,tollerance,dets[I],C[I],dets_C_hash,max_coupling);
-        energy[thread_id] +=
-            form_H_C(1.0, tollerance, dets[I], C[I], dets_C_hash, max_coupling);
+        energy[thread_id] += form_H_C(1.0, tollerance,
+                                      dets_cihash, C, I, max_coupling);
     }
 
     for (size_t I = 0; I < max_I; ++I) {
-        variational_energy_estimator += C[I] * C[I] * dets[I].energy();
+        variational_energy_estimator += C[I] * C[I] * dets_cihash[I].energy();
     }
     for (int t = 0; t < num_threads_; ++t) {
         variational_energy_estimator += energy[t];
@@ -1953,10 +1953,14 @@ void ProjectorCI_CIHash::orthogonalize(det_vec& space, std::vector<double>& C,
 }
 
 double ProjectorCI_CIHash::form_H_C(double tau, double spawning_threshold,
-                                    Determinant& detI, double CI,
-                                    det_hash<>& det_C,
+                                    const det_cihash& dets_cihash,
+                                    std::vector<double>& C,
+                                    size_t I,
                                     std::pair<double, double>& max_coupling) {
+    const Determinant& detI = dets_cihash[I];
+    double CI = C[I];
     double result = 0.0;
+    const size_t dets_size = dets_cihash.size();
 
     std::vector<int> aocc = detI.get_alfa_occ();
     std::vector<int> bocc = detI.get_beta_occ();
@@ -1980,11 +1984,11 @@ double ProjectorCI_CIHash::form_H_C(double tau, double spawning_threshold,
                     Determinant detJ(detI);
                     detJ.set_alfa_bit(ii, false);
                     detJ.set_alfa_bit(aa, true);
-                    det_hash_it it = det_C.find(detJ);
-                    if (it != det_C.end()) {
+                    size_t index = dets_cihash.find(detJ);
+                    if (index < dets_size) {
                         double HJI = detJ.slater_rules(detI);
                         if (std::fabs(HJI * CI) >= spawning_threshold) {
-                            result += tau * HJI * CI * it->second;
+                            result += tau * HJI * CI * C[index];
                         }
                     }
                 }
@@ -1999,11 +2003,11 @@ double ProjectorCI_CIHash::form_H_C(double tau, double spawning_threshold,
                     Determinant detJ(detI);
                     detJ.set_beta_bit(ii, false);
                     detJ.set_beta_bit(aa, true);
-                    det_hash_it it = det_C.find(detJ);
-                    if (it != det_C.end()) {
+                    size_t index = dets_cihash.find(detJ);
+                    if (index < dets_size) {
                         double HJI = detJ.slater_rules(detI);
                         if (std::fabs(HJI * CI) >= spawning_threshold) {
-                            result += tau * HJI * CI * it->second;
+                            result += tau * HJI * CI * C[index];
                         }
                     }
                 }
@@ -2030,10 +2034,9 @@ double ProjectorCI_CIHash::form_H_C(double tau, double spawning_threshold,
                                 Determinant detJ(detI);
                                 double sign =
                                     detJ.double_excitation_aa(ii, jj, aa, bb);
-                                det_hash_it it = det_C.find(detJ);
-                                if (it != det_C.end()) {
-                                    result +=
-                                        sign * tau * HJI * CI * it->second;
+                                size_t index = dets_cihash.find(detJ);
+                                if (index < dets_size) {
+                                    result += sign * tau * HJI * CI * C[index];
                                 }
                             }
                         }
@@ -2058,10 +2061,9 @@ double ProjectorCI_CIHash::form_H_C(double tau, double spawning_threshold,
                                 Determinant detJ(detI);
                                 double sign =
                                     detJ.double_excitation_ab(ii, jj, aa, bb);
-                                det_hash_it it = det_C.find(detJ);
-                                if (it != det_C.end()) {
-                                    result +=
-                                        sign * tau * HJI * CI * it->second;
+                                size_t index = dets_cihash.find(detJ);
+                                if (index < dets_size) {
+                                    result += sign * tau * HJI * CI * C[index];
                                 }
                             }
                         }
@@ -2085,10 +2087,9 @@ double ProjectorCI_CIHash::form_H_C(double tau, double spawning_threshold,
                                 Determinant detJ(detI);
                                 double sign =
                                     detJ.double_excitation_bb(ii, jj, aa, bb);
-                                det_hash_it it = det_C.find(detJ);
-                                if (it != det_C.end()) {
-                                    result +=
-                                        sign * tau * HJI * CI * it->second;
+                                size_t index = dets_cihash.find(detJ);
+                                if (index < dets_size) {
+                                    result += sign * tau * HJI * CI * C[index];
                                 }
                             }
                         }
