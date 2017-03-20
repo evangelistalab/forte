@@ -96,7 +96,7 @@ template <class Key, class Hash = std::hash<Key>> class CIHash {
     void merge(const CIHash<Key, Hash_2>& source,
                const std::vector<Value>& src_values, std::vector<Value>& values,
                const std::function<Value(Value, Value)>& f,
-               const Value& default_value);
+               const Value& default_value, bool change_this = true);
     std::vector<size_t> merge(const std::vector<Key>& source);
     template <class Value>
     void merge(const std::vector<Key>& source,
@@ -106,7 +106,7 @@ template <class Key, class Hash = std::hash<Key>> class CIHash {
     void merge(const std::vector<Key>& source,
                const std::vector<Value>& src_values, std::vector<Value>& values,
                const std::function<Value(Value, Value)>& f,
-               const Value& default_value);
+               const Value& default_value, bool change_this = true);
     template <class Value>
     void merge(const std::vector<std::pair<Key, Value>>& source,
                std::vector<Value>& values);
@@ -114,7 +114,7 @@ template <class Key, class Hash = std::hash<Key>> class CIHash {
     void merge(const std::vector<std::pair<Key, Value>>& source,
                std::vector<Value>& values,
                const std::function<Value(Value, Value)>& f,
-               const Value& default_value);
+               const Value& default_value, bool change_this = true);
     template <class Hash_2>
     void merge(const std::unordered_set<Key, Hash_2>& source);
     template <class Value, class Hash_2>
@@ -124,7 +124,7 @@ template <class Key, class Hash = std::hash<Key>> class CIHash {
     void merge(const std::unordered_map<Key, Value, Hash_2>& source,
                std::vector<Value>& values,
                const std::function<Value(Value, Value)>& f,
-               const Value& default_value);
+               const Value& default_value, bool change_this = true);
     void swap(CIHash<Key, Hash>& other);
 
     /*- Bucket interface -*/

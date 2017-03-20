@@ -365,22 +365,33 @@ void CIHash<Key, Hash>::merge(const CIHash<Key, Hash_2>& source,
                               const std::vector<Value>& src_values,
                               std::vector<Value>& values,
                               const std::function<Value(Value, Value)>& f,
-                              const Value& default_value) {
+                              const Value& default_value, bool change_this) {
     size_t original_size = current_size;
-    std::vector<bool> intersects(original_size, false);
     size_t merge_size = source.size();
-    for (size_t i = 0; i < merge_size; ++i) {
-        size_t index = this->add(source[i]);
-        if (index < original_size) {
-            values[index] = f(values[index], src_values[i]);
-            intersects[index] = true;
-        } else {
-            values.push_back(f(default_value, src_values[i]));
+    if (change_this) {
+        std::vector<bool> intersects(original_size, false);
+        for (size_t i = 0; i < merge_size; ++i) {
+            size_t index = this->add(source[i]);
+            if (index < original_size) {
+                values[index] = f(values[index], src_values[i]);
+                intersects[index] = true;
+            } else {
+                values.push_back(f(default_value, src_values[i]));
+            }
         }
-    }
-    for (size_t i = 0; i < original_size; ++i) {
-        if (!intersects[i])
-            values[i] = f(values[i], default_value);
+        for (size_t i = 0; i < original_size; ++i) {
+            if (!intersects[i])
+                values[i] = f(values[i], default_value);
+        }
+    } else {
+        for (size_t i = 0; i < merge_size; ++i) {
+            size_t index = this->add(source[i]);
+            if (index < original_size) {
+                values[index] = f(values[index], src_values[i]);
+            } else {
+                values.push_back(f(default_value, src_values[i]));
+            }
+        }
     }
 }
 
@@ -418,22 +429,33 @@ void CIHash<Key, Hash>::merge(const std::vector<Key>& source,
                               const std::vector<Value>& src_values,
                               std::vector<Value>& values,
                               const std::function<Value(Value, Value)>& f,
-                              const Value& default_value) {
+                              const Value& default_value, bool change_this) {
     size_t original_size = current_size;
-    std::vector<bool> intersects(original_size, false);
     size_t merge_size = source.size();
-    for (size_t i = 0; i < merge_size; ++i) {
-        size_t index = this->add(source[i]);
-        if (index < original_size) {
-            values[index] = f(values[index], src_values[i]);
-            intersects[index] = true;
-        } else {
-            values.push_back(f(default_value, src_values[i]));
+    if (change_this) {
+        std::vector<bool> intersects(original_size, false);
+        for (size_t i = 0; i < merge_size; ++i) {
+            size_t index = this->add(source[i]);
+            if (index < original_size) {
+                values[index] = f(values[index], src_values[i]);
+                intersects[index] = true;
+            } else {
+                values.push_back(f(default_value, src_values[i]));
+            }
         }
-    }
-    for (size_t i = 0; i < original_size; ++i) {
-        if (!intersects[i])
-            values[i] = f(values[i], default_value);
+        for (size_t i = 0; i < original_size; ++i) {
+            if (!intersects[i])
+                values[i] = f(values[i], default_value);
+        }
+    } else {
+        for (size_t i = 0; i < merge_size; ++i) {
+            size_t index = this->add(source[i]);
+            if (index < original_size) {
+                values[index] = f(values[index], src_values[i]);
+            } else {
+                values.push_back(f(default_value, src_values[i]));
+            }
+        }
     }
 }
 
@@ -457,21 +479,32 @@ template <class Value>
 void CIHash<Key, Hash>::merge(const std::vector<std::pair<Key, Value>>& source,
                               std::vector<Value>& values,
                               const std::function<Value(Value, Value)>& f,
-                              const Value& default_value) {
+                              const Value& default_value, bool change_this) {
     size_t original_size = current_size;
-    std::vector<bool> intersects(original_size, false);
-    for (std::pair<Key, Value> kv : source) {
-        size_t index = this->add(kv.first);
-        if (index < original_size) {
-            values[index] = f(values[index], kv.second);
-            intersects[index] = true;
-        } else {
-            values.push_back(f(default_value, kv.second));
+    if (change_this) {
+        std::vector<bool> intersects(original_size, false);
+        for (std::pair<Key, Value> kv : source) {
+            size_t index = this->add(kv.first);
+            if (index < original_size) {
+                values[index] = f(values[index], kv.second);
+                intersects[index] = true;
+            } else {
+                values.push_back(f(default_value, kv.second));
+            }
         }
-    }
-    for (size_t i = 0; i < original_size; ++i) {
-        if (!intersects[i])
-            values[i] = f(values[i], default_value);
+        for (size_t i = 0; i < original_size; ++i) {
+            if (!intersects[i])
+                values[i] = f(values[i], default_value);
+        }
+    } else {
+        for (std::pair<Key, Value> kv : source) {
+            size_t index = this->add(kv.first);
+            if (index < original_size) {
+                values[index] = f(values[index], kv.second);
+            } else {
+                values.push_back(f(default_value, kv.second));
+            }
+        }
     }
 }
 
@@ -504,21 +537,32 @@ template <class Value, class Hash_2>
 void CIHash<Key, Hash>::merge(
     const std::unordered_map<Key, Value, Hash_2>& source,
     std::vector<Value>& values, const std::function<Value(Value, Value)>& f,
-    const Value& default_value) {
+    const Value& default_value, bool change_this) {
     size_t original_size = current_size;
-    std::vector<bool> intersects(original_size, false);
-    for (std::pair<Key, Value> kv : source) {
-        size_t index = this->add(kv.first);
-        if (index < original_size) {
-            values[index] = f(values[index], kv.second);
-            intersects[index] = true;
-        } else {
-            values.push_back(f(default_value, kv.second));
+    if (change_this) {
+        std::vector<bool> intersects(original_size, false);
+        for (std::pair<Key, Value> kv : source) {
+            size_t index = this->add(kv.first);
+            if (index < original_size) {
+                values[index] = f(values[index], kv.second);
+                intersects[index] = true;
+            } else {
+                values.push_back(f(default_value, kv.second));
+            }
         }
-    }
-    for (size_t i = 0; i < original_size; ++i) {
-        if (!intersects[i])
-            values[i] = f(values[i], default_value);
+        for (size_t i = 0; i < original_size; ++i) {
+            if (!intersects[i])
+                values[i] = f(values[i], default_value);
+        }
+    } else {
+        for (std::pair<Key, Value> kv : source) {
+            size_t index = this->add(kv.first);
+            if (index < original_size) {
+                values[index] = f(values[index], kv.second);
+            } else {
+                values.push_back(f(default_value, kv.second));
+            }
+        }
     }
 }
 
