@@ -105,6 +105,28 @@ void print_vector(const std::vector<double>& C, std::string description);
 
 void print_hash(det_hash<>& C, std::string description, bool print_det = false);
 
+void add(const det_cihash& A, std::vector<double> Ca, double beta,
+         const det_cihash& B, const std::vector<double> Cb) {
+    size_t A_size = A.size(), B_size = B.size();
+    for (size_t i = 0; i < A_size; ++i) {
+        size_t B_index = B.find(A[i]);
+        if (B_index < B_size)
+            Ca[i] += beta * Cb[B_index];
+    }
+}
+
+double dot(const det_cihash& A, const std::vector<double> Ca,
+           const det_cihash& B, const std::vector<double> Cb) {
+    double res = 0.0;
+    size_t A_size = A.size(), B_size = B.size();
+    for (size_t i = 0; i < A_size; ++i) {
+        size_t B_index = B.find(A[i]);
+        if (B_index < B_size)
+            res += Ca[i] * Cb[B_index];
+    }
+    return res;
+}
+
 ProjectorCI_CIHash::ProjectorCI_CIHash(
     SharedWavefunction ref_wfn, Options& options,
     std::shared_ptr<ForteIntegrals> ints,
@@ -1778,32 +1800,40 @@ void ProjectorCI_CIHash::print_wfn(const det_cihash& space_cihash,
     outfile->Flush();
 }
 
-void ProjectorCI_CIHash::save_wfn(det_cihash& space, std::vector<double>& C,
-                                  std::vector<det_hash<>>& solutions) {
+void ProjectorCI_CIHash::save_wfn(
+    det_cihash& space, std::vector<double>& C,
+    std::vector<std::pair<det_cihash, std::vector<double>>>& solutions) {
     outfile->Printf("\n\n  Saving the wave function:\n");
 
-    det_hash<> solution;
-    for (size_t I = 0; I < space.size(); ++I) {
-        solution[space[I]] = C[I];
-    }
-    solutions.push_back(std::move(solution));
+    //    det_hash<> solution;
+    //    for (size_t I = 0; I < space.size(); ++I) {
+    //        solution[space[I]] = C[I];
+    //    }
+    //    solutions.push_back(std::move(solution));
+    solutions.push_back(std::make_pair(space, C));
 }
 
-void ProjectorCI_CIHash::orthogonalize(det_cihash& space,
-                                       std::vector<double>& C,
-                                       std::vector<det_hash<>>& solutions) {
-    det_hash<> det_C;
-    //    for (size_t I = 0; I < space.size(); ++I) {
-    //        det_C[space[I]] = C[I];
+void ProjectorCI_CIHash::orthogonalize(
+    det_cihash& space, std::vector<double>& C,
+    std::vector<std::pair<det_cihash, std::vector<double>>>& solutions) {
+    //    det_hash<> det_C;
+    //    //    for (size_t I = 0; I < space.size(); ++I) {
+    //    //        det_C[space[I]] = C[I];
+    //    //    }
+    //    det_C = space.toUnordered_map(C);
+    //    for (size_t n = 0; n < solutions.size(); ++n) {
+    //        double dot_prod = dot(det_C, solutions[n]);
+    //        add(det_C, -dot_prod, solutions[n]);
     //    }
-    det_C = space.toUnordered_map(C);
+    //    normalize(det_C);
+    //    //    copy_hash_to_vec(det_C, space, C);
+    //    space = det_cihash(det_C, C);
     for (size_t n = 0; n < solutions.size(); ++n) {
-        double dot_prod = dot(det_C, solutions[n]);
-        add(det_C, -dot_prod, solutions[n]);
+        double dot_prod =
+            dot(space, C, solutions[n].first, solutions[n].second);
+        add(space, C, -dot_prod, solutions[n].first, solutions[n].second);
     }
-    normalize(det_C);
-    //    copy_hash_to_vec(det_C, space, C);
-    space = det_cihash(det_C, C);
+    normalize(C);
 }
 
 double ProjectorCI_CIHash::form_H_C(double tau, double spawning_threshold,

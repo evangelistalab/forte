@@ -121,7 +121,8 @@ class ProjectorCI_CIHash : public Wavefunction {
     double nuclear_repulsion_energy_;
     /// The reference determinant
     Determinant reference_determinant_;
-    std::vector<det_hash<>> solutions_;
+    //    std::vector<det_hash<>> solutions_;
+    std::vector<std::pair<det_cihash, std::vector<double>>> solutions_;
     /// The information of mo space
     std::shared_ptr<MOSpaceInfo> mo_space_info_;
     /// (pq|pq) matrix for prescreening
@@ -292,12 +293,14 @@ class ProjectorCI_CIHash : public Wavefunction {
                    size_t max_output = 10);
 
     /// Save a wave function
-    void save_wfn(det_cihash& space, std::vector<double>& C,
-                  std::vector<det_hash<>>& solutions);
+    void save_wfn(
+        det_cihash& space, std::vector<double>& C,
+        std::vector<std::pair<det_cihash, std::vector<double>>>& solutions);
 
     /// Orthogonalize the wave function to previous solutions
-    void orthogonalize(det_cihash &space, std::vector<double>& C,
-                       std::vector<det_hash<>>& solutions);
+    void orthogonalize(
+        det_cihash& space, std::vector<double>& C,
+        std::vector<std::pair<det_cihash, std::vector<double>>>& solutions);
 
     /// Initial wave function guess
     double initial_guess(det_cihash& dets, std::vector<double>& C);
