@@ -1242,7 +1242,7 @@ void ProjectorCI_CIHash::apply_tau_H_ref_C_symm(
                 dets_cihash_merge.merge(
                     thread_det_C_vec, C_merge,
                     std::function<double(double, double)>(std::plus<double>()),
-                    0.0);
+                    0.0, false);
             }
 #pragma omp critical
             { dets_max_couplings_[dets_cihash[I]] = max_coupling; }
@@ -1256,7 +1256,7 @@ void ProjectorCI_CIHash::apply_tau_H_ref_C_symm(
                 dets_cihash_merge.merge(
                     thread_det_C_vec, C_merge,
                     std::function<double(double, double)>(std::plus<double>()),
-                    0.0);
+                    0.0, false);
             }
         }
     }
