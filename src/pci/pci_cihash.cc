@@ -586,7 +586,6 @@ double ProjectorCI_CIHash::compute_energy() {
     print_info();
 
     /// A vector of determinants in the P space
-    det_vec dets;
     det_cihash dets_cihash;
     std::vector<double> C;
 
@@ -620,7 +619,6 @@ double ProjectorCI_CIHash::compute_energy() {
     // Compute the initial guess
     outfile->Printf("\n\n  ==> Initial Guess <==");
     double var_energy = initial_guess(dets_cihash, C);
-//    dets = dets_cihash.toVector();
     double proj_energy = var_energy;
     print_wfn(dets_cihash, C);
     det_hash<> old_space_map;
@@ -676,24 +674,18 @@ double ProjectorCI_CIHash::compute_energy() {
             double min_C_abs = fabs(*minmax_C.first);
             double max_C = *minmax_C.second;
             max_C = max_C > min_C_abs ? max_C : min_C_abs;
-            //            dets = dets_cihash.toVector();
             propagate(generator_, dets_cihash, C, time_step_,
                       spawning_threshold_ * max_C, shift_);
-            //            dets_cihash = det_cihash(dets);
         } else {
-            //            dets = dets_cihash.toVector();
             propagate(generator_, dets_cihash, C, time_step_,
                       spawning_threshold_, shift_);
-            //            dets_cihash = det_cihash(dets);
         }
         timer_off("PIFCI:Step");
 
         // Orthogonalize this solution with respect to the previous ones
         timer_on("PIFCI:Ortho");
         if (current_root_ > 0) {
-//            dets = dets_cihash.toVector();
             orthogonalize(dets_cihash, C, solutions_);
-//            dets_cihash = det_cihash(dets);
         }
         timer_off("PIFCI:Ortho");
 
@@ -701,10 +693,8 @@ double ProjectorCI_CIHash::compute_energy() {
         if (cycle % energy_estimate_freq_ == 0) {
             approx_E_flag_ = true;
             timer_on("PIFCI:<E>");
-            //            dets = dets_cihash.toVector();
             std::map<std::string, double> results =
                 estimate_energy(dets_cihash, C);
-            //            dets_cihash = det_cihash(dets);
             timer_off("PIFCI:<E>");
 
             proj_energy = results["PROJECTIVE ENERGY"];
@@ -728,16 +718,6 @@ double ProjectorCI_CIHash::compute_energy() {
                                 C.size(), proj_energy, proj_energy_gradient);
                 break;
             }
-
-            //            if (generator_ != LanczosGenerator) {
-            //                outfile->Printf("\n%9d %8.2f %10zu %20.12f
-            //                %10.3e",cycle,beta,C.size(),
-            //                                proj_energy,proj_energy_gradient);
-            //            } else {
-            //                outfile->Printf("\n%9d %8d %10zu %20.12f
-            //                %10.3e",cycle,krylov_order_,C.size(),
-            //                                proj_energy,proj_energy_gradient);
-            //            }
 
             if (variational_estimate_) {
                 var_energy = results["VARIATIONAL ENERGY"];
@@ -770,15 +750,6 @@ double ProjectorCI_CIHash::compute_energy() {
         outfile->Flush();
     }
 
-    //    det_hash<> dets_C_hash;
-    //    if (symm_approx_H_) {
-    //        apply_tau_H_symm(approx_E_tau_,spawning_threshold_,dets,C,dets_C_hash,
-    //        approx_E_S_);
-    //    } else {
-    //        apply_tau_H(approx_E_tau_,spawning_threshold_,dets,C,dets_C_hash,
-    //        approx_E_S_);
-    //    }
-    //    dets_C_hash.clear();
     if (variational_estimate_) {
         outfile->Printf("\n  "
                         "------------------------------------------------------"
@@ -800,22 +771,12 @@ double ProjectorCI_CIHash::compute_energy() {
         print_characteristic_function();
     }
 
-    //    for (size_t i = 0, i_max = statistic_vec.size(); i < i_max; i++) {
-    //        statistic_vec[i].print();
-    //        outfile->Printf(",%zu,%zu", statistic_hash[statistic_vec[i]],
-    //        Determinant::Hash()(statistic_vec[i]));
-    //    }
-
     timer_on("PIFCI:<E>end_v");
 
     if (fast_variational_estimate_) {
-        //        dets = dets_cihash.toVector();
         var_energy = estimate_var_energy_sparse(dets_cihash, C, 1.0e-14);
-        //        dets_cihash = det_cihash(dets);
     } else {
-        //        dets = dets_cihash.toVector();
         var_energy = estimate_var_energy(dets_cihash, C, 1.0e-14);
-        //        dets_cihash = det_cihash(dets);
     }
     timer_off("PIFCI:<E>end_v");
 
@@ -844,31 +805,24 @@ double ProjectorCI_CIHash::compute_energy() {
     outfile->Flush();
 
     if (print_full_wavefunction_) {
-        //        dets_cihash = det_cihash(dets);
         print_wfn(dets_cihash, C, C.size());
     } else {
-        //        dets_cihash = det_cihash(dets);
         print_wfn(dets_cihash, C);
     }
 
     if (current_root_ < nroot_ - 1) {
-//        dets = dets_cihash.toVector();
         save_wfn(dets_cihash, C, solutions_);
-//        dets_cihash = det_cihash(dets);
     }
 
     if (post_diagonalization_) {
         outfile->Printf("\n\n  ==> Post-Diagonalization <==\n");
         timer_on("PIFCI:Post_Diag");
-        //        sparse_solver.diagonalize_hamiltonian(dets,apfci_evals,apfci_evecs,nroot_,DavidsonLiuList);
         SharedMatrix apfci_evecs(new Matrix("Eigenvectors", C.size(), nroot_));
         SharedVector apfci_evals(new Vector("Eigenvalues", nroot_));
 
-        //        dets = dets_cihash.toVector();
         sparse_solver.diagonalize_hamiltonian(
             dets_cihash.toVector(), apfci_evals, apfci_evecs, nroot_,
             wavefunction_multiplicity_, diag_method_);
-        //        dets_cihash = det_cihash(dets);
 
         timer_off("PIFCI:Post_Diag");
 
@@ -891,10 +845,8 @@ double ProjectorCI_CIHash::compute_energy() {
         }
 
         if (print_full_wavefunction_) {
-            //            dets_cihash = det_cihash(dets);
             print_wfn(dets_cihash, diag_C, diag_C.size());
         } else {
-            //            dets_cihash = det_cihash(dets);
             print_wfn(dets_cihash, diag_C);
         }
     }
@@ -1837,19 +1789,20 @@ void ProjectorCI_CIHash::save_wfn(det_cihash& space, std::vector<double>& C,
     solutions.push_back(std::move(solution));
 }
 
-void ProjectorCI_CIHash::orthogonalize(det_cihash& space, std::vector<double>& C,
+void ProjectorCI_CIHash::orthogonalize(det_cihash& space,
+                                       std::vector<double>& C,
                                        std::vector<det_hash<>>& solutions) {
     det_hash<> det_C;
-//    for (size_t I = 0; I < space.size(); ++I) {
-//        det_C[space[I]] = C[I];
-//    }
+    //    for (size_t I = 0; I < space.size(); ++I) {
+    //        det_C[space[I]] = C[I];
+    //    }
     det_C = space.toUnordered_map(C);
     for (size_t n = 0; n < solutions.size(); ++n) {
         double dot_prod = dot(det_C, solutions[n]);
         add(det_C, -dot_prod, solutions[n]);
     }
     normalize(det_C);
-//    copy_hash_to_vec(det_C, space, C);
+    //    copy_hash_to_vec(det_C, space, C);
     space = det_cihash(det_C, C);
 }
 
