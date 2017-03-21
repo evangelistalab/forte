@@ -2488,7 +2488,7 @@ void AdaptiveCI::compute_aci(DeterminantMap& PQ_space, SharedMatrix& PQ_evecs,
             wavefunction_multiplicity_, diag_method_);
 
         if (!quiet_mode_)
-            outfile->Printf("\n  Time spent diagonalizing H:   %1.6f s",
+            outfile->Printf("\n  Total time spent diagonalizing H:   %1.6f s",
                             diag_pq.get());
       //  if (det_save_)
       //      save_dets_to_file(PQ_space, PQ_evecs);

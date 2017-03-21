@@ -47,8 +47,9 @@ std::vector<std::pair<std::vector<size_t>, std::vector<double>>> WFNOperator::bu
 Timer build;
     size_t size = wfn.size();
     std::vector<std::pair<std::vector<size_t>, std::vector<double>>> H_sparse(size);
+    size_t n_nonzero = 0;
 
-#pragma omp parallel
+#pragma omp parallel reduction(+:n_nonzero)
 {
         int num_thread = omp_get_max_threads();
         int tid = omp_get_thread_num();
@@ -59,10 +60,9 @@ Timer build;
                             : (size % num_thread) * (bin_size +1) +
                                 (tid - (size % num_thread)) * bin_size;
         size_t end_idx = start_idx + bin_size;
-      const std::vector<STLBitsetDeterminant>& dets = wfn.determinants();
+        const std::vector<STLBitsetDeterminant>& dets = wfn.determinants();
 
         for(size_t J = start_idx; J < end_idx; ++J ){
-//        for(size_t J = 0; J < size; ++J ){
             size_t id = 0;
             std::vector<size_t> ids(1);           
             std::vector<double> H_vals(1);            
@@ -219,10 +219,14 @@ Timer build;
                     }
                 }
             }
+            ids.shrink_to_fit();
+            H_vals.shrink_to_fit();
+            n_nonzero += ids.size();
             H_sparse[J] = std::make_pair( ids, H_vals );
         }
     }
-    outfile->Printf("\n  Time spent building H:   %1.6f", build.get());
+    outfile->Printf("\n  Time spent building H:   %1.6f s", build.get());
+    outfile->Printf("\n  H contains %zu nonzero elements (%1.3f MB)", n_nonzero, (n_nonzero * 8.0)/(1024*1024) );
 
 
 //    for( size_t J = 0; J < size; ++J){
