@@ -69,7 +69,7 @@ void set_ACI_options(ForteOptions& foptions)
     /*- The threshold for the selection of the Q space -*/
     foptions.add_double("GAMMA", 1.0, "The reference space selection threshold");
     /*- The SD-space prescreening threshold -*/
-    foptions.add_double("ACI_PRESCREEN_THRESHOLD", 1e-9, "The SD space prescreening threshold");
+    foptions.add_double("ACI_PRESCREEN_THRESHOLD", 1e-12, "The SD space prescreening threshold");
     /*- The type of selection parameters to use*/
     foptions.add_bool("ACI_PERTURB_SELECT", false, "Type of energy selection");
     /*Function of q-space criteria, per root*/
@@ -1191,9 +1191,9 @@ void AdaptiveCI::get_excited_determinants(
                     int aa = avir[a];
                     if ((mo_symmetry_[ii] ^ mo_symmetry_[aa]) == 0) {
                         double HIJ = det.slater_rules_single_alpha(ii, aa);
-                       // if ((std::fabs(HIJ) * evecs->get_row(0, P)->norm() >=
-                       //      screen_thresh_)) {
-                        if( std::abs(HIJ * evecs->get(0, P)) > screen_thresh_ ){
+                        if ((std::fabs(HIJ) * evecs->get_row(0, P)->norm() >=
+                             screen_thresh_)) {
+                  //      if( std::abs(HIJ * evecs->get(0, P)) > screen_thresh_ ){
                             new_det = det;
                             new_det.set_alfa_bit(ii, false);
                             new_det.set_alfa_bit(aa, true);
@@ -1219,9 +1219,9 @@ void AdaptiveCI::get_excited_determinants(
                     int aa = bvir[a];
                     if ((mo_symmetry_[ii] ^ mo_symmetry_[aa]) == 0) {
                         double HIJ = det.slater_rules_single_beta(ii, aa);
-                       // if ((std::fabs(HIJ) * evecs->get_row(0, P)->norm() >=
-                       //      screen_thresh_)) {
-                        if( std::abs(HIJ * evecs->get(0, P)) > screen_thresh_ ){
+                        if ((std::fabs(HIJ) * evecs->get_row(0, P)->norm() >=
+                             screen_thresh_)) {
+                       // if( std::abs(HIJ * evecs->get(0, P)) > screen_thresh_ ){
                             new_det = det;
                             new_det.set_beta_bit(ii, false);
                             new_det.set_beta_bit(aa, true);
@@ -1252,12 +1252,12 @@ void AdaptiveCI::get_excited_determinants(
                             if ((mo_symmetry_[ii] ^ mo_symmetry_[jj] ^
                                  mo_symmetry_[aa] ^ mo_symmetry_[bb]) == 0) {
                                 double HIJ = fci_ints_->tei_aa(ii, jj, aa, bb);
-                        //        if ((std::fabs(HIJ) *
-                        //                 evecs->get_row(0, P)->norm() >=
-                        //             screen_thresh_)) {
+                                if ((std::fabs(HIJ) *
+                                         evecs->get_row(0, P)->norm() >=
+                                     screen_thresh_)) {
                                     new_det = det;
                                     HIJ *= new_det.double_excitation_aa(ii,jj,aa,bb);
-                        if( std::abs(HIJ * evecs->get(0, P)) > screen_thresh_ ){
+                        //if( std::abs(HIJ * evecs->get(0, P)) > screen_thresh_ ){
 
                                     if (!(P_space.has_det(new_det))) {
                                         std::vector<double> coupling(nroot,
@@ -1292,12 +1292,12 @@ void AdaptiveCI::get_excited_determinants(
                             if ((mo_symmetry_[ii] ^ mo_symmetry_[jj] ^
                                  mo_symmetry_[aa] ^ mo_symmetry_[bb]) == 0) {
                                 double HIJ = fci_ints_->tei_ab(ii, jj, aa, bb);
-                        //        if ((std::fabs(HIJ) *
-                        //                 evecs->get_row(0, P)->norm() >=
-                        //             screen_thresh_)) {
+                                if ((std::fabs(HIJ) *
+                                         evecs->get_row(0, P)->norm() >=
+                                     screen_thresh_)) {
                                     new_det = det;
                                     HIJ *= new_det.double_excitation_ab(ii,jj,aa,bb);
-                        if( std::abs(HIJ * evecs->get(0, P)) > screen_thresh_ ){
+                        //if( std::abs(HIJ * evecs->get(0, P)) > screen_thresh_ ){
 
                                     if (!(P_space.has_det(new_det))) {
                                         std::vector<double> coupling(nroot,
@@ -1333,10 +1333,10 @@ void AdaptiveCI::get_excited_determinants(
                                   (mo_symmetry_[aa] ^ mo_symmetry_[bb]))) ==
                                 0) {
                                 double HIJ = fci_ints_->tei_bb(ii, jj, aa, bb);
-                        //        if ((std::fabs(HIJ) *
-                        //                 evecs->get_row(0, P)->norm() >=
-                        //             screen_thresh_)) {
-                        if( std::abs(HIJ * evecs->get(0, P)) >= screen_thresh_ ){
+                                if ((std::fabs(HIJ) *
+                                         evecs->get_row(0, P)->norm() >=
+                                     screen_thresh_)) {
+                        //if( std::abs(HIJ * evecs->get(0, P)) >= screen_thresh_ ){
                                     new_det = det;
                                     HIJ *= new_det.double_excitation_bb(ii,jj,aa,bb);
 
