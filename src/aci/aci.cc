@@ -1162,15 +1162,24 @@ void AdaptiveCI::get_excited_determinants(
 // Loop over reference determinants
 #pragma omp parallel
     {
+        int num_thread = omp_get_max_threads();
+        int tid = omp_get_thread_num();
+        size_t bin_size = max_P / num_thread;
+        bin_size += (tid < (max_P % num_thread)) ? 1 : 0;
+        size_t start_idx = (tid < (max_P % num_thread))
+                            ? tid * bin_size
+                            : (max_P % num_thread) * (bin_size +1) +
+                                (tid - (max_P % num_thread)) * bin_size;
+        size_t end_idx = start_idx + bin_size;
+
         if (omp_get_thread_num() == 0 and !quiet_mode_) {
-            outfile->Printf("\n  Using %d threads.", omp_get_num_threads());
+            outfile->Printf("\n  Using %d threads.", num_thread);
         }
         // This will store the excited determinant info for each thread
         std::vector<std::pair<STLBitsetDeterminant, std::vector<double>>>
             thread_ex_dets; //( noalpha * nvalpha  );
 
-#pragma omp for schedule(guided)
-        for (size_t P = 0; P < max_P; ++P) {
+        for (size_t P = start_idx; P < end_idx; ++P) {
             STLBitsetDeterminant& det(P_dets[P]);
 
             std::vector<int> aocc = det.get_alfa_occ();
