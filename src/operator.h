@@ -31,6 +31,7 @@
 
 #include "determinant_map.h"
 #include "stl_bitset_determinant.h"
+#include <omp.h>
 
 namespace psi {
 namespace forte {
@@ -77,6 +78,10 @@ class WFNOperator {
     double s2(DeterminantMap& wfn, SharedMatrix& evecs, int root);
 
     void build_strings(DeterminantMap& wfn);    
+
+    /// Build the sparse Hamiltonian
+    std::vector<std::pair<std::vector<size_t>, std::vector<double>>> build_H_sparse( const DeterminantMap& wfn);
+
 
     /// The alpha single-annihilation/creation list
     std::vector<std::vector<std::pair<size_t, short>>> a_ann_list_;

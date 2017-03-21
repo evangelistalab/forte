@@ -1562,9 +1562,11 @@ void SparseCISolver::diagonalize_hamiltonian_map(
     const DeterminantMap& space, WFNOperator& op, SharedVector& evals,
     SharedMatrix& evecs, int nroot, int multiplicity,
     DiagonalizationMethod diag_method) {
-    if ((space.size() <= 200 && !force_diag_method_) or diag_method == Full) {
+    if ((space.size() <= 200 && !force_diag_method_) or diag_method == Full or (space.size() == 1)) {
         const std::vector<STLBitsetDeterminant> dets = space.determinants();
         diagonalize_full(dets, evals, evecs, nroot, multiplicity);
+    } else if( diag_method == Sparse ){
+        diagonalize_dl_sparse(space, op, evals, evecs, nroot, multiplicity);
     } else if ( diag_method == MPI ){
         diagonalize_mpi(space, op, evals, evecs, nroot, multiplicity);
     } else {
@@ -1711,18 +1713,16 @@ SharedMatrix SparseCISolver::build_full_hamiltonian(
     return H;
 }
 
-std::vector<std::pair<std::vector<int>, std::vector<double>>>
-SparseCISolver::build_sparse_hamiltonian(
-    const std::vector<STLBitsetDeterminant>& space) {
+std::vector<std::pair<std::vector<int>, std::vector<double>>> SparseCISolver::build_sparse_hamiltonian(const std::vector<STLBitsetDeterminant>& space) {
+//std::vector<std::pair<std::vector<int>, std::vector<double>>> SparseCISolver::build_sparse_hamiltonian(const DeterminantMap& space) {
     Timer t_h_build2;
     // Allocate as many elements as we need
     size_t dim_space = space.size();
-    std::vector<std::pair<std::vector<int>, std::vector<double>>> H_sparse(
-        dim_space);
+    std::vector<std::pair<std::vector<int>, std::vector<double>>> H_sparse(dim_space);
 
     size_t num_nonzero = 0;
 
-    outfile->Printf("\n  Building H using OpenMP-take2");
+    outfile->Printf("\n  Building H using OpenMP");
     outfile->Flush();
 
 // Form the Hamiltonian matrix
@@ -2357,5 +2357,49 @@ bool SparseCISolver::davidson_liu_solver_map(const DeterminantMap& space,
     }
     return true;
 }
+
+/*  Sigma Vector Sparse functions */
+
+
+void SigmaVectorSparse::compute_sigma(SharedVector sigma, SharedVector b){
+    sigma->zero();
+    double* sigma_p = sigma->pointer();
+    double* b_p = b->pointer();
+    for (size_t J = 0; J < size_; ++J){
+        std::vector<double>& H_row = H_[J].second;
+        std::vector<size_t>& index_row = H_[J].first;
+        size_t maxc = index_row.size();
+        for (size_t c = 0; c < maxc; ++c){
+            int K = index_row[c];
+            double HJK = H_row[c];
+            sigma_p[J] +=  HJK * b_p[K];
+        }
+    }
+}
+void SigmaVectorSparse::get_diagonal(Vector& diag){
+    for (size_t I = 0; I < size_; ++I){
+        diag.set(I,H_[I].second[0]);
+    }
+}
+void SparseCISolver::diagonalize_dl_sparse(const DeterminantMap& space, WFNOperator& op, SharedVector& evals, SharedMatrix& evecs, int nroot, int multiplicity)
+{
+    outfile->Printf("\n\n  Davidson-liu sparse algorithm");
+    outfile->Flush();
+    // Find all the eigenvalues and eigenvectors of the Hamiltonian
+    std::vector<std::pair<std::vector<size_t>,std::vector<double>>> H = op.build_H_sparse(space);
+
+    size_t dim_space = space.size();
+    evecs.reset(new Matrix("U",dim_space,nroot));
+    evals.reset(new Vector("e",nroot));
+
+    // Diagonalize H
+    SigmaVectorSparse svs (H);
+    SigmaVector* sigma_vector = &svs;
+    sigma_vector->add_bad_roots(bad_states_);
+    davidson_liu_solver_map(space, sigma_vector, evals, evecs, nroot,
+                            multiplicity);
+}
+
 }
 }
+
