@@ -628,7 +628,7 @@ double AdaptiveCI::compute_energy() {
             save_old_root(PQ_space, PQ_evecs, i);
             // compute_rdms( PQ_space_, PQ_evecs, i,i);
         }
-        if (ex_alg_ == "ROOT_ORTHOGONALIZE") {
+        if (ex_alg_ == "ROOT_ORTHOGONALIZE" and (nroot_ > 1)) {
             root_ = i;
             wfn_analyzer(PQ_space, PQ_evecs, nroot_);
         }
@@ -1162,7 +1162,7 @@ void AdaptiveCI::get_excited_determinants(
 // Loop over reference determinants
 #pragma omp parallel
     {
-        int num_thread = omp_get_max_threads();
+        int num_thread = omp_get_num_threads();
         int tid = omp_get_thread_num();
         size_t bin_size = max_P / num_thread;
         bin_size += (tid < (max_P % num_thread)) ? 1 : 0;
