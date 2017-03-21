@@ -33,6 +33,7 @@
 #include "integrals/integrals.h"
 #include "pci/pci.h"
 #include "pci/pci_cihash.h"
+#include "ci-no/ci-no.h"
 
 namespace psi {
 namespace forte {
@@ -43,8 +44,8 @@ void forte_options(std::string name, ForteOptions& foptions) {
     set_ACI_options(foptions);
     set_PCI_options(foptions);
     set_INT_options(foptions);
-    // ..
     set_AVAS_options(foptions);
+    set_CINO_options(foptions);
 
     /*- The job type
      *  - NONE Do not run methods (may transform orbitals)
