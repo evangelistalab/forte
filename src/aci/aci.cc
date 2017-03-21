@@ -1163,7 +1163,7 @@ void AdaptiveCI::get_excited_determinants(
 #pragma omp parallel
     {
         if (omp_get_thread_num() == 0 and !quiet_mode_) {
-            outfile->Printf("\n  Using %d threads.", omp_get_max_threads());
+            outfile->Printf("\n  Using %d threads.", omp_get_num_threads());
         }
         // This will store the excited determinant info for each thread
         std::vector<std::pair<STLBitsetDeterminant, std::vector<double>>>
