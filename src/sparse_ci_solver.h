@@ -43,7 +43,7 @@
 namespace psi {
 namespace forte {
 
-enum DiagonalizationMethod { Full, DLSolver, DLString, DLDisk, MPI };
+enum DiagonalizationMethod { Full, DLSolver, DLString, DLDisk, MPI, Sparse };
 
 /**
  * @brief The SigmaVector class
@@ -64,6 +64,24 @@ class SigmaVector {
   protected:
     size_t size_;
 };
+
+/**
+ * @brief The SigmaVectorSparse class
+ * Computes the sigma vector from a sparse Hamiltonian.
+ */
+class SigmaVectorSparse : public SigmaVector
+{
+ public:
+    SigmaVectorSparse(std::vector<std::pair<std::vector<size_t>,std::vector<double>>>& H) : SigmaVector(H.size()), H_(H) {};
+
+    void compute_sigma(SharedVector sigma, SharedVector b);
+    void compute_sigma(Matrix& sigma, Matrix& b, int nroot) {}
+    void get_diagonal(Vector& diag);
+    void add_bad_roots( std::vector<std::vector<std::pair<size_t, double>>>& bad_states) {}
+ protected:
+    std::vector<std::pair<std::vector<size_t>,std::vector<double>>>& H_;
+};
+
 
 /**
  * @brief The SigmaVectorList class
@@ -299,6 +317,10 @@ class SparseCISolver {
                         int multiplicity);
 
     void diagonalize_dl(const DeterminantMap& space, WFNOperator& op,
+                        SharedVector& evals, SharedMatrix& evecs, int nroot,
+                        int multiplicity);
+
+    void diagonalize_dl_sparse(const DeterminantMap& space, WFNOperator& op,
                         SharedVector& evals, SharedMatrix& evecs, int nroot,
                         int multiplicity);
 

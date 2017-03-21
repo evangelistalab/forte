@@ -42,6 +42,203 @@ void WFNOperator::initialize(std::vector<int>& symmetry) {
     mo_symmetry_ = symmetry;
 }
 
+std::vector<std::pair<std::vector<size_t>, std::vector<double>>> WFNOperator::build_H_sparse( const DeterminantMap& wfn )
+{
+Timer build;
+    size_t size = wfn.size();
+    std::vector<std::pair<std::vector<size_t>, std::vector<double>>> H_sparse(size);
+
+#pragma omp parallel
+{
+        int num_thread = omp_get_max_threads();
+        int tid = omp_get_thread_num();
+        size_t bin_size = size / num_thread;
+        bin_size += (tid < (size % num_thread)) ? 1 : 0;
+        size_t start_idx = (tid < (size % num_thread))
+                            ? tid * bin_size
+                            : (size % num_thread) * (bin_size +1) +
+                                (tid - (size % num_thread)) * bin_size;
+        size_t end_idx = start_idx + bin_size;
+      const std::vector<STLBitsetDeterminant>& dets = wfn.determinants();
+
+        for(size_t J = start_idx; J < end_idx; ++J ){
+//        for(size_t J = 0; J < size; ++J ){
+            size_t id = 0;
+            std::vector<size_t> ids(1);           
+            std::vector<double> H_vals(1);            
+            std::unordered_map<size_t,size_t> det_to_id;
+
+            //Diagonal term first
+            H_vals[id] = dets[J].energy();
+            ids[id] = J;
+            det_to_id[J] = id; 
+            id++;
+
+            for( auto& aJ_mo_sign : a_ann_list_[J]){
+                const size_t aJ_add = aJ_mo_sign.first;
+                const size_t p = std::abs( aJ_mo_sign.second ) - 1;
+                double sign_p = aJ_mo_sign.second > 0.0 ? 1.0 : -1.0;
+                for( auto& aaJ_mo_sign : a_cre_list_[aJ_add] ){
+
+                    const size_t q = std::abs( aaJ_mo_sign.second ) - 1;
+                    if( p != q ){
+                        const size_t I = aaJ_mo_sign.first;
+                        double sign_q = aaJ_mo_sign.second > 0.0 ? 1.0 : -1.0;
+                        
+                        const double HIJ = dets[I].slater_rules_single_alpha_abs(p,q) *
+                                            sign_p * sign_q;
+                        
+                        auto search = det_to_id.find(I);
+                        if( search != det_to_id.end() ){
+                           // ids[search->second] = I;
+                            H_vals[search->second] += HIJ; 
+                        }else{
+                            ids.resize( id+1 );
+                            H_vals.resize( id+1 );
+                            ids[id] = I;
+                            H_vals[id] = HIJ; 
+                            det_to_id[I] = id;
+                            id++;
+                        }
+                    }
+                }
+            }
+ 
+            for( auto& bJ_mo_sign : b_ann_list_[J]){
+                const size_t bJ_add = bJ_mo_sign.first;
+                const size_t p = std::abs( bJ_mo_sign.second ) - 1;
+                double sign_p = bJ_mo_sign.second > 0.0 ? 1.0 : -1.0;
+                for( auto& bbJ_mo_sign : b_cre_list_[bJ_add] ){
+
+                    const size_t q = std::abs( bbJ_mo_sign.second ) - 1;
+                    if( p != q ){
+                        const size_t I = bbJ_mo_sign.first;
+                        double sign_q = bbJ_mo_sign.second > 0.0 ? 1.0 : -1.0;
+                        
+                        const double HIJ = dets[I].slater_rules_single_beta_abs(p,q) *
+                                            sign_p * sign_q;
+                        
+                        auto search = det_to_id.find(I);
+                        if( search != det_to_id.end() ){
+                            H_vals[search->second] += HIJ; 
+                        }else{
+                            ids.resize( id+1 );
+                            H_vals.resize( id+1 );
+                            ids[id] = I;
+                            H_vals[id] = HIJ; 
+                            det_to_id[I] = id;
+                            id++;
+                        }
+                    }
+                }
+            }
+           for( auto& aaJ_mo_sign : aa_ann_list_[J] ){
+                const size_t aaJ_add = std::get<0>(aaJ_mo_sign);
+                const double sign_pq = std::get<1>(aaJ_mo_sign) > 0.0 ? 1.0 : -1.0;
+                const size_t p = std::abs(std::get<1>(aaJ_mo_sign)) - 1;
+                const size_t q = std::get<2>(aaJ_mo_sign);
+                for( auto& aaaJ_mo : aa_cre_list_[aaJ_add] ){
+
+                    const size_t r = std::abs(std::get<1>(aaaJ_mo)) - 1;
+                    const size_t s = std::get<2>(aaaJ_mo);
+                    if ((p != r) and (q != s) and (p != s) and (q != r)){
+                        const size_t I = std::get<0>(aaaJ_mo);
+                        const double sign_rs = std::get<1>(aaaJ_mo) > 0.0 ? 1.0 : -1.0;
+                        const double HIJ = sign_pq * sign_rs * 
+                            STLBitsetDeterminant::fci_ints_->tei_aa(p,q,r,s);
+
+                        auto search = det_to_id.find(I);
+                        if( search != det_to_id.end() ){
+                            H_vals[search->second] += HIJ;
+                        }else{
+                            ids.resize( id+1 );
+                            H_vals.resize( id+1 );
+                            ids[id] = I;
+                            det_to_id[I] = id;
+                            H_vals[id] = HIJ; 
+                            id++;
+                        }
+                    }
+                }
+            }
+
+            for( auto& bbJ_mo_sign : bb_ann_list_[J] ){
+                const size_t bbJ_add = std::get<0>(bbJ_mo_sign);
+                const double sign_pq = std::get<1>(bbJ_mo_sign) > 0.0 ? 1.0 : -1.0;
+                const size_t p = std::abs(std::get<1>(bbJ_mo_sign)) - 1;
+                const size_t q = std::get<2>(bbJ_mo_sign);
+                for( auto& bbbJ_mo : bb_cre_list_[bbJ_add] ){
+
+                    const size_t r = std::abs(std::get<1>(bbbJ_mo)) - 1;
+                    const size_t s = std::get<2>(bbbJ_mo);
+                    if ((p != r) and (q != s) and (p != s) and (q != r)){
+                        const size_t I = std::get<0>(bbbJ_mo);
+                        const double sign_rs = std::get<1>(bbbJ_mo) > 0.0 ? 1.0 : -1.0;
+                        const double HIJ = sign_pq * sign_rs * 
+                            STLBitsetDeterminant::fci_ints_->tei_bb(p,q,r,s);
+
+                        auto search = det_to_id.find(I);
+                        if( search != det_to_id.end() ){
+                            H_vals[search->second] += HIJ;
+                        }else{
+                            ids.resize( id+1 );
+                            H_vals.resize( id+1 );
+                            ids[id] = I;
+                            det_to_id[I] = id;
+                            H_vals[id] = HIJ; 
+                            id++;
+                        }
+                    }
+                }
+            }
+            for( auto& abJ_mo_sign : ab_ann_list_[J] ){
+                const size_t abJ_add = std::get<0>(abJ_mo_sign);
+                const double sign_pq = std::get<1>(abJ_mo_sign) > 0.0 ? 1.0 : -1.0;
+                const size_t p = std::abs(std::get<1>(abJ_mo_sign)) - 1;
+                const size_t q = std::get<2>(abJ_mo_sign);
+                for( auto& abbJ_mo : ab_cre_list_[abJ_add] ){
+
+                    const size_t r = std::abs(std::get<1>(abbJ_mo)) - 1;
+                    const size_t s = std::get<2>(abbJ_mo);
+                    if ( (p != r) and (q != s) ){
+                        const size_t I = std::get<0>(abbJ_mo);
+                        const double sign_rs = std::get<1>(abbJ_mo) > 0.0 ? 1.0 : -1.0;
+                        const double HIJ = sign_pq * sign_rs * 
+                            STLBitsetDeterminant::fci_ints_->tei_ab(p,q,r,s);
+                        auto search = det_to_id.find(I);
+                        if( search != det_to_id.end() ){
+                            H_vals[search->second] += HIJ;
+                        }else{
+                            ids.resize( id+1 );
+                            H_vals.resize( id+1 );
+                            ids[id] = I;
+                            det_to_id[I] = id;
+                            H_vals[id] = HIJ; 
+                            id++;
+                        }
+                    }
+                }
+            }
+            H_sparse[J] = std::make_pair( ids, H_vals );
+        }
+    }
+    outfile->Printf("\n  Time spent building H:   %1.6f", build.get());
+
+
+//    for( size_t J = 0; J < size; ++J){
+//   // for( size_t J = 0; J < 2; ++J){
+//        auto& idx = H_sparse[J].first;
+//        auto& val = H_sparse[J].second;
+//        for(int i = 0; i < idx.size(); ++i ){
+//            outfile->Printf("\n  (%zu, %zu) : %1.8f", J, idx[i], val[i]);
+//        } 
+//    }
+
+
+    return H_sparse;
+}
+
+
 double WFNOperator::s2(DeterminantMap& wfn, SharedMatrix& evecs, int root) {
     double S2 = 0.0;
     const det_hash<size_t>& wfn_map = wfn.wfn_hash();
