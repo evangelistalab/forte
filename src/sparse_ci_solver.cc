@@ -2227,6 +2227,7 @@ bool SparseCISolver::davidson_liu_solver_map(const DeterminantMap& space,
                                              SharedMatrix Eigenvectors,
                                              int nroot, int multiplicity) {
     //    print_details_ = true;
+    Timer dl;
     size_t fci_size = sigma_vector->size();
     DavidsonLiuSolver dls(fci_size, nroot);
     dls.set_e_convergence(e_convergence_);
@@ -2355,6 +2356,10 @@ bool SparseCISolver::davidson_liu_solver_map(const DeterminantMap& space,
             Eigenvectors->set(I, r, evecs->get(r, I));
         }
     }
+    if( print_details_ ){
+        outfile->Printf("\n  Davidson-Liu procedure took  %1.6f s", dl.get());
+    }
+
     return true;
 }
 
@@ -2365,14 +2370,28 @@ void SigmaVectorSparse::compute_sigma(SharedVector sigma, SharedVector b){
     sigma->zero();
     double* sigma_p = sigma->pointer();
     double* b_p = b->pointer();
-    for (size_t J = 0; J < size_; ++J){
-        std::vector<double>& H_row = H_[J].second;
-        std::vector<size_t>& index_row = H_[J].first;
-        size_t maxc = index_row.size();
-        for (size_t c = 0; c < maxc; ++c){
-            int K = index_row[c];
-            double HJK = H_row[c];
-            sigma_p[J] +=  HJK * b_p[K];
+
+#pragma omp parallel
+    {
+        int num_thread = omp_get_max_threads();
+        int tid = omp_get_thread_num();
+        size_t bin_size = size_ / num_thread;
+        bin_size += (tid < (size_ % num_thread)) ? 1 : 0;
+        size_t start_idx = (tid < (size_ % num_thread))
+                            ? tid * bin_size
+                            : (size_ % num_thread) * (bin_size +1) +
+                                (tid - (size_ % num_thread)) * bin_size;
+        size_t end_idx = start_idx + bin_size;
+    
+        for (size_t J = start_idx; J < end_idx; ++J){
+            std::vector<double>& H_row = H_[J].second;
+            std::vector<size_t>& index_row = H_[J].first;
+            size_t maxc = index_row.size();
+            for (size_t c = 0; c < maxc; ++c){
+                int K = index_row[c];
+                double HJK = H_row[c];
+                sigma_p[J] +=  HJK * b_p[K];
+            }
         }
     }
 }
