@@ -35,22 +35,22 @@
 #include "psi4/liboptions/liboptions.h"
 #include "psi4/physconst.h"
 
-#include "../forte-def.h"
-#include "../integrals/integrals.h"
-#include "../stl_bitset_determinant.h"
-#include "../sparse_ci_solver.h"
-#include "../helpers.h"
-#include "../fci/fci_vector.h"
-#include "../forte_options.h"
 #include "../cihash.cc"
+#include "../fci/fci_vector.h"
+#include "../forte-def.h"
+#include "../forte_options.h"
+#include "../helpers.h"
+#include "../integrals/integrals.h"
+#include "../sparse_ci_solver.h"
+#include "../stl_bitset_determinant.h"
 
 namespace psi {
 namespace forte {
 
 /// Set the forte style options for the FCI method
-//void set_PCI_CIHash_options(ForteOptions& foptions);
+// void set_PCI_CIHash_options(ForteOptions& foptions);
 
-namespace GeneratorType_CIHash{
+namespace GeneratorType_CIHash {
 enum GeneratorType {
     LinearGenerator,
     TrotterLinear,
@@ -68,6 +68,8 @@ enum GeneratorType {
 };
 }
 
+using det_cihash = CIHash<Determinant, Determinant::Hash>;
+
 /**
  * @brief The SparsePathIntegralCI class
  * This class implements an a sparse path-integral FCI algorithm
@@ -83,8 +85,8 @@ class ProjectorCI_CIHash : public Wavefunction {
      * @param ints A pointer to an allocated integral object
      */
     ProjectorCI_CIHash(SharedWavefunction ref_wfn, Options& options,
-                std::shared_ptr<ForteIntegrals> ints,
-                std::shared_ptr<MOSpaceInfo> mo_space_info);
+                       std::shared_ptr<ForteIntegrals> ints,
+                       std::shared_ptr<MOSpaceInfo> mo_space_info);
 
     // ==> Class Interface <==
 
@@ -119,7 +121,8 @@ class ProjectorCI_CIHash : public Wavefunction {
     double nuclear_repulsion_energy_;
     /// The reference determinant
     Determinant reference_determinant_;
-    std::vector<det_hash<>> solutions_;
+    //    std::vector<det_hash<>> solutions_;
+    std::vector<std::pair<det_cihash, std::vector<double>>> solutions_;
     /// The information of mo space
     std::shared_ptr<MOSpaceInfo> mo_space_info_;
     /// (pq|pq) matrix for prescreening
@@ -201,7 +204,8 @@ class ProjectorCI_CIHash : public Wavefunction {
     /// Bounds are stored as a pair (f_max,v_max) where f_max and v_max are
     /// the couplings to the singles and doubles, respectively.
     std::unordered_map<Determinant, std::pair<double, double>,
-                       Determinant::Hash> dets_max_couplings_;
+                       Determinant::Hash>
+        dets_max_couplings_;
 
     // * Energy estimation
     /// Estimate the variational energy?
@@ -285,19 +289,21 @@ class ProjectorCI_CIHash : public Wavefunction {
     void print_info();
 
     /// Print a wave function
-    void print_wfn(det_vec& space, std::vector<double>& C,
+    void print_wfn(const det_cihash& space_cihash, std::vector<double>& C,
                    size_t max_output = 10);
 
     /// Save a wave function
-    void save_wfn(det_vec& space, std::vector<double>& C,
-                  std::vector<det_hash<>>& solutions);
+    void save_wfn(
+        det_cihash& space, std::vector<double>& C,
+        std::vector<std::pair<det_cihash, std::vector<double>>>& solutions);
 
     /// Orthogonalize the wave function to previous solutions
-    void orthogonalize(det_vec& space, std::vector<double>& C,
-                       std::vector<det_hash<>>& solutions);
+    void orthogonalize(
+        det_cihash& space, std::vector<double>& C,
+        std::vector<std::pair<det_cihash, std::vector<double>>>& solutions);
 
     /// Initial wave function guess
-    double initial_guess(det_vec& dets, std::vector<double>& C);
+    double initial_guess(det_cihash& dets, std::vector<double>& C);
 
     /**
     * Propagate the wave function by a step of length tau
@@ -309,69 +315,57 @@ class ProjectorCI_CIHash : public Wavefunction {
     * events
     * @param S An energy shift subtracted from the Hamiltonian
     */
-    void propagate(GeneratorType_CIHash::GeneratorType generator, det_vec& dets,
-                   std::vector<double>& C, double tau,
+    void propagate(GeneratorType_CIHash::GeneratorType generator,
+                   det_cihash& dets_cihash, std::vector<double>& C, double tau,
                    double spawning_threshold, double S);
     /// A Delta projector fitted by 10th order chebyshev polynomial
-    void propagate_wallCh(det_vec& dets, std::vector<double>& C,
+    void propagate_wallCh(det_cihash& dets_cihash, std::vector<double>& C,
                           double spawning_threshold, double S);
     /// The DL Generator
-    void propagate_DL(det_vec& dets, std::vector<double>& C,
+    void propagate_DL(det_cihash& dets_cihash, std::vector<double>& C,
                       double spawning_threshold, double S);
     /// Apply symmetric approx tau H to a set of determinants with selection
     /// according to reference coefficients
     void apply_tau_H_ref_C_symm(double tau, double spawning_threshold,
-                                det_vec& dets, const std::vector<double>& C,
+                                det_cihash& dets_cihash,
+                                const std::vector<double>& C,
                                 const std::vector<double>& ref_C,
-                                det_hash<>& dets_C_hash, double S);
+                                std::vector<double>& result_C, double S);
+
     /// Apply symmetric approx tau H to a determinant using dynamic screening
     /// with selection according to a reference coefficient
     void apply_tau_H_ref_C_symm_det_dynamic(
-        double tau, double spawning_threshold, det_hash<>& pre_dets_C_hash,
-        det_hash<>& ref_dets_C_hash, const Determinant& detI, double CI,
-        double ref_CI,
+        double tau, double spawning_threshold, const det_cihash& dets_cihash,
+        const std::vector<double>& pre_C, const std::vector<double>& ref_C,
+        const Determinant& detI, double CI, double ref_CI,
         std::vector<std::pair<Determinant, double>>& new_space_C_vec, double E0,
         std::pair<double, double>& max_coupling);
 
     /// Estimates the energy give a wave function
-    std::map<std::string, double> estimate_energy(det_vec& dets,
+    std::map<std::string, double> estimate_energy(const det_cihash& dets_cihash,
                                                   std::vector<double>& C);
     /// Estimates the projective energy
-    double estimate_proj_energy(det_vec& dets, std::vector<double>& C);
+    double estimate_proj_energy(const det_cihash& dets, std::vector<double>& C);
     /// Estimates the variational energy
     /// @param dets The set of determinants that form the wave function
     /// @param C The wave function coefficients
     /// @param tollerance The accuracy of the estimate.  Used to impose |C_I
     /// C_J| < tollerance
-    double estimate_var_energy(det_vec& dets, std::vector<double>& C,
+    double estimate_var_energy(const det_cihash& dets_cihash,
+                               std::vector<double>& C,
                                double tollerance = 1.0e-14);
     /// Estimates the variational energy using a sparse algorithm
     /// @param dets The set of determinants that form the wave function
     /// @param C The wave function coefficients
     /// @param tollerance The accuracy of the estimate.  Used to impose |C_I
     /// C_J| < tollerance
-    double estimate_var_energy_sparse(det_vec& dets, std::vector<double>& C,
+    double estimate_var_energy_sparse(const det_cihash& dets_cihash,
+                                      std::vector<double>& C,
                                       double tollerance = 1.0e-14);
-    /// Estimate the pertubation energy for the result
-    std::tuple<double, double> estimate_perturbation(det_vec& dets,
-                                                     std::vector<double>& C,
-                                                     double spawning_threshold);
-    /// Estimate the 1st order pertubation energy for the result.
-    double estimate_1st_order_perturbation(det_vec& dets,
-                                           std::vector<double>& C,
-                                           double spawning_threshold);
-    /// Estimate the 2nd order pertubation energy for the result within subspace
-    double estimate_2nd_order_perturbation_sub(det_vec& dets,
-                                               std::vector<double>& C,
-                                               double spawning_threshold);
-    /// Estimate the path-filtering error
-    double estimate_path_filtering_error(det_vec& dets, std::vector<double>& C,
-                                         double spawning_threshold);
-
     /// Form the product H c
-    double form_H_C(double tau, double spawning_threshold, Determinant& detI,
-                    double CI, det_hash<>& det_C,
-                    std::pair<double, double>& max_coupling);
+    double form_H_C(double tau, double spawning_threshold,
+                    const det_cihash& dets_cihash, std::vector<double>& C,
+                    size_t I, std::pair<double, double>& max_coupling);
     /// Do we have OpenMP?
     static bool have_omp_;
 

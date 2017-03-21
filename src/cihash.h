@@ -28,6 +28,7 @@
 
 #ifndef _cihash_h_
 #define _cihash_h_
+#include <functional>
 #include <tuple>
 #include <unordered_map>
 #include <unordered_set>
@@ -41,10 +42,10 @@ template <class Key, class Hash = std::hash<Key>> class CIHash {
     };
     std::vector<CINode<Key>> vec;
     std::vector<size_t> begin_index;
-    const size_t MIN_NUM_BUCKET = 1 << 0;
+    static const size_t MIN_NUM_BUCKET = 1 << 0;
     float max_load = 1.0;
     size_t current_max_load_size = 1;
-    const size_t MAX_SIZE = std::min(vec.max_size(), begin_index.max_size());
+    size_t MAX_SIZE = std::min(vec.max_size(), begin_index.max_size());
     size_t num_bucket;
     size_t current_size;
 
@@ -58,35 +59,80 @@ template <class Key, class Hash = std::hash<Key>> class CIHash {
     explicit CIHash();
     explicit CIHash(size_t count);
     explicit CIHash(const std::vector<Key>& other);
-    explicit CIHash(const std::unordered_set<Key, Hash>& other);
-    template <class Value>
-    explicit CIHash(const std::unordered_map<Key, Value, Hash>& other);
-    template <class Value>
-    explicit CIHash(const std::unordered_map<Key, Value, Hash>& other,
+    template <class Hash_2>
+    explicit CIHash(const std::unordered_set<Key, Hash_2>& other);
+    template <class Value, class Hash_2>
+    explicit CIHash(const std::unordered_map<Key, Value, Hash_2>& other);
+    template <class Value, class Hash_2>
+    explicit CIHash(const std::unordered_map<Key, Value, Hash_2>& other,
                     std::vector<Value>& values);
-    explicit CIHash(const CIHash<Key, Hash>& other);
+    CIHash(const CIHash<Key, Hash>& other);
+
     /*- Element access -*/
     const Key& operator[](size_t pos) const;
     size_t find(const Key& key) const;
+
     /*- Iterators -*/
     const iterator begin() { return this->vec.begin(); }
     const iterator end() { return this->vec.end(); }
+
     /*- Capacity -*/
     size_t size() const;
     size_t max_size() const;
     size_t capacity() const;
+
     /*- Modifiers -*/
     void clear();
     size_t add(const Key& key);
     std::pair<size_t, size_t> erase_by_key(const Key& key);
     std::pair<size_t, size_t> erase_by_index(size_t index);
-    std::vector<size_t> merge(const CIHash<Key, Hash>& source);
+    template <class Hash_2>
+    std::vector<size_t> merge(const CIHash<Key, Hash_2>& source);
+    template <class Value, class Hash_2>
+    void merge(const CIHash<Key, Hash_2>& source,
+               const std::vector<Value>& src_values,
+               std::vector<Value>& values);
+    template <class Value, class Hash_2>
+    void merge(const CIHash<Key, Hash_2>& source,
+               const std::vector<Value>& src_values, std::vector<Value>& values,
+               const std::function<Value(Value, Value)>& f,
+               const Value& default_value, bool change_this = true);
     std::vector<size_t> merge(const std::vector<Key>& source);
+    template <class Value>
+    void merge(const std::vector<Key>& source,
+               const std::vector<Value>& src_values,
+               std::vector<Value>& values);
+    template <class Value>
+    void merge(const std::vector<Key>& source,
+               const std::vector<Value>& src_values, std::vector<Value>& values,
+               const std::function<Value(Value, Value)>& f,
+               const Value& default_value, bool change_this = true);
+    template <class Value>
+    void merge(const std::vector<std::pair<Key, Value>>& source,
+               std::vector<Value>& values);
+    template <class Value>
+    void merge(const std::vector<std::pair<Key, Value>>& source,
+               std::vector<Value>& values,
+               const std::function<Value(Value, Value)>& f,
+               const Value& default_value, bool change_this = true);
+    template <class Hash_2>
+    void merge(const std::unordered_set<Key, Hash_2>& source);
+    template <class Value, class Hash_2>
+    void merge(const std::unordered_map<Key, Value, Hash_2>& source,
+               std::vector<Value>& values);
+    template <class Value, class Hash_2>
+    void merge(const std::unordered_map<Key, Value, Hash_2>& source,
+               std::vector<Value>& values,
+               const std::function<Value(Value, Value)>& f,
+               const Value& default_value, bool change_this = true);
+    void swap(CIHash<Key, Hash>& other);
+
     /*- Bucket interface -*/
     size_t bucket_count() const;
     size_t max_bucket_count() const;
     size_t bucket_size(size_t n) const;
     size_t bucket(const Key& key) const;
+
     /*- Hash policy -*/
     float load_factor() const;
     float max_load_factor() const;
@@ -94,6 +140,7 @@ template <class Key, class Hash = std::hash<Key>> class CIHash {
     void reserve(size_t count);
     void shrink_to_fit();
     std::vector<size_t> optimize();
+
     /*- Convertors -*/
     std::vector<Key> toVector();
     std::unordered_set<Key, Hash> toUnordered_set();
@@ -115,5 +162,12 @@ template <class Key, class Hash = std::hash<Key>> class CIHash {
         }
     };
 };
+
+namespace std {
+template <class Key, class Hash>
+void swap(CIHash<Key, Hash>& a, CIHash<Key, Hash>& b) {
+    a.swap(b);
+}
+}
 
 #endif // _cihash_h_
