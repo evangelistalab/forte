@@ -45,7 +45,8 @@ CIHash<Key, Hash>::CIHash(const std::vector<Key>& other) {
 }
 
 template <class Key, class Hash>
-CIHash<Key, Hash>::CIHash(const std::unordered_set<Key, Hash>& other) {
+template <class Hash_2>
+CIHash<Key, Hash>::CIHash(const std::unordered_set<Key, Hash_2>& other) {
     this->clear();
     this->reserve(other.size());
     for (Key k : other) {
@@ -54,23 +55,24 @@ CIHash<Key, Hash>::CIHash(const std::unordered_set<Key, Hash>& other) {
 }
 
 template <class Key, class Hash>
-template <class Value>
-CIHash<Key, Hash>::CIHash(const std::unordered_map<Key, Value, Hash>& other) {
+template <class Value, class Hash_2>
+CIHash<Key, Hash>::CIHash(const std::unordered_map<Key, Value, Hash_2>& other) {
     this->clear();
     this->reserve(other.size());
-    for (auto kv : other) {
+    for (std::pair<Key, Value> kv : other) {
         this->add(kv.first);
     }
 }
 
 template <class Key, class Hash>
-template <class Value>
-CIHash<Key, Hash>::CIHash(const std::unordered_map<Key, Value, Hash>& other,
+template <class Value, class Hash_2>
+CIHash<Key, Hash>::CIHash(const std::unordered_map<Key, Value, Hash_2>& other,
                           std::vector<Value>& values) {
     this->clear();
     this->reserve(other.size());
+    values.clear();
     values.reserve(other.size());
-    for (auto kv : other) {
+    for (std::pair<Key, Value> kv : other) {
         this->add(kv.first);
         values.push_back(kv.second);
     }
@@ -79,7 +81,8 @@ CIHash<Key, Hash>::CIHash(const std::unordered_map<Key, Value, Hash>& other,
 template <class Key, class Hash>
 CIHash<Key, Hash>::CIHash(const CIHash<Key, Hash>& other)
     : vec(other.vec), begin_index(other.begin_index), max_load(other.max_load),
-      num_bucket(other.num_bucket), current_size(other.current_size) {
+      num_bucket(other.num_bucket), current_size(other.current_size),
+      MAX_SIZE(other.MAX_SIZE) {
     update_current_max_load_size();
 }
 
@@ -121,10 +124,10 @@ template <class Key, class Hash> void CIHash<Key, Hash>::double_buckets() {
                 if (temp_bucket_index != bucket_index) {
                     if (new_temp_index == MAX_SIZE) {
                         this->begin_index[new_bucket_index] = temp_index;
-                        new_temp_index = temp_index;
                     } else {
                         this->vec[new_temp_index].next = temp_index;
                     }
+                    new_temp_index = temp_index;
                     this->vec[temp_index].next = MAX_SIZE;
                     if (pre_index == MAX_SIZE) {
                         this->begin_index[bucket_index] = next_index;
@@ -146,8 +149,6 @@ template <class Key, class Hash> void CIHash<Key, Hash>::double_buckets() {
                 this->begin_index[new_bucket_index] == MAX_SIZE) {
                 size_t pre_index = MAX_SIZE;
                 size_t temp_index = this->begin_index[old_bucket_index];
-                //                size_t new_bucket_index = bucket_index +
-                //                num_bucket;
                 size_t new_temp_index = MAX_SIZE;
                 while (temp_index != MAX_SIZE) {
                     size_t temp_bucket_index =
@@ -156,10 +157,10 @@ template <class Key, class Hash> void CIHash<Key, Hash>::double_buckets() {
                     if (temp_bucket_index != old_bucket_index) {
                         if (new_temp_index == MAX_SIZE) {
                             this->begin_index[new_bucket_index] = temp_index;
-                            new_temp_index = temp_index;
                         } else {
                             this->vec[new_temp_index].next = temp_index;
                         }
+                        new_temp_index = temp_index;
                         this->vec[temp_index].next = MAX_SIZE;
                         if (pre_index == MAX_SIZE) {
                             this->begin_index[old_bucket_index] = next_index;
@@ -180,6 +181,8 @@ template <class Key, class Hash> void CIHash<Key, Hash>::double_buckets() {
 
 template <class Key, class Hash> void CIHash<Key, Hash>::half_buckets() {
     size_t new_num_bucket = num_bucket >> 1;
+    if (new_num_bucket < MIN_NUM_BUCKET)
+        return;
     if (current_size >= new_num_bucket) {
         for (size_t bucket_index = 0; bucket_index < new_num_bucket;
              ++bucket_index) {
@@ -327,7 +330,9 @@ std::pair<size_t, size_t> CIHash<Key, Hash>::erase_by_index(size_t index) {
 }
 
 template <class Key, class Hash>
-std::vector<size_t> CIHash<Key, Hash>::merge(const CIHash<Key, Hash>& source) {
+template <class Hash_2>
+std::vector<size_t>
+CIHash<Key, Hash>::merge(const CIHash<Key, Hash_2>& source) {
     std::vector<size_t> cur_index;
     size_t merge_size = source.size();
     cur_index.reserve(merge_size);
@@ -335,6 +340,59 @@ std::vector<size_t> CIHash<Key, Hash>::merge(const CIHash<Key, Hash>& source) {
         cur_index.push_back(this->add(source[i]));
     }
     return cur_index;
+}
+
+template <class Key, class Hash>
+template <class Value, class Hash_2>
+void CIHash<Key, Hash>::merge(const CIHash<Key, Hash_2>& source,
+                              const std::vector<Value>& src_values,
+                              std::vector<Value>& values) {
+    size_t original_size = current_size;
+    size_t merge_size = source.size();
+    for (size_t i = 0; i < merge_size; ++i) {
+        size_t index = this->add(source[i]);
+        if (index < original_size) {
+            values[index] = src_values[i];
+        } else {
+            values.push_back(src_values[i]);
+        }
+    }
+}
+
+template <class Key, class Hash>
+template <class Value, class Hash_2>
+void CIHash<Key, Hash>::merge(const CIHash<Key, Hash_2>& source,
+                              const std::vector<Value>& src_values,
+                              std::vector<Value>& values,
+                              const std::function<Value(Value, Value)>& f,
+                              const Value& default_value, bool change_this) {
+    size_t original_size = current_size;
+    size_t merge_size = source.size();
+    if (change_this) {
+        std::vector<bool> intersects(original_size, false);
+        for (size_t i = 0; i < merge_size; ++i) {
+            size_t index = this->add(source[i]);
+            if (index < original_size) {
+                values[index] = f(values[index], src_values[i]);
+                intersects[index] = true;
+            } else {
+                values.push_back(f(default_value, src_values[i]));
+            }
+        }
+        for (size_t i = 0; i < original_size; ++i) {
+            if (!intersects[i])
+                values[i] = f(values[i], default_value);
+        }
+    } else {
+        for (size_t i = 0; i < merge_size; ++i) {
+            size_t index = this->add(source[i]);
+            if (index < original_size) {
+                values[index] = f(values[index], src_values[i]);
+            } else {
+                values.push_back(f(default_value, src_values[i]));
+            }
+        }
+    }
 }
 
 template <class Key, class Hash>
@@ -346,6 +404,177 @@ std::vector<size_t> CIHash<Key, Hash>::merge(const std::vector<Key>& source) {
         cur_index.push_back(this->add(source[i]));
     }
     return cur_index;
+}
+
+template <class Key, class Hash>
+template <class Value>
+void CIHash<Key, Hash>::merge(const std::vector<Key>& source,
+                              const std::vector<Value>& src_values,
+                              std::vector<Value>& values) {
+    size_t original_size = current_size;
+    size_t merge_size = source.size();
+    for (size_t i = 0; i < merge_size; ++i) {
+        size_t index = this->add(source[i]);
+        if (index < original_size) {
+            values[index] = src_values[i];
+        } else {
+            values.push_back(src_values[i]);
+        }
+    }
+}
+
+template <class Key, class Hash>
+template <class Value>
+void CIHash<Key, Hash>::merge(const std::vector<Key>& source,
+                              const std::vector<Value>& src_values,
+                              std::vector<Value>& values,
+                              const std::function<Value(Value, Value)>& f,
+                              const Value& default_value, bool change_this) {
+    size_t original_size = current_size;
+    size_t merge_size = source.size();
+    if (change_this) {
+        std::vector<bool> intersects(original_size, false);
+        for (size_t i = 0; i < merge_size; ++i) {
+            size_t index = this->add(source[i]);
+            if (index < original_size) {
+                values[index] = f(values[index], src_values[i]);
+                intersects[index] = true;
+            } else {
+                values.push_back(f(default_value, src_values[i]));
+            }
+        }
+        for (size_t i = 0; i < original_size; ++i) {
+            if (!intersects[i])
+                values[i] = f(values[i], default_value);
+        }
+    } else {
+        for (size_t i = 0; i < merge_size; ++i) {
+            size_t index = this->add(source[i]);
+            if (index < original_size) {
+                values[index] = f(values[index], src_values[i]);
+            } else {
+                values.push_back(f(default_value, src_values[i]));
+            }
+        }
+    }
+}
+
+template <class Key, class Hash>
+template <class Value>
+void CIHash<Key, Hash>::merge(const std::vector<std::pair<Key, Value>>& source,
+                              std::vector<Value>& values) {
+    size_t original_size = current_size;
+    for (std::pair<Key, Value> kv : source) {
+        size_t index = this->add(kv.first);
+        if (index < original_size) {
+            values[index] = kv.second;
+        } else {
+            values.push_back(kv.second);
+        }
+    }
+}
+
+template <class Key, class Hash>
+template <class Value>
+void CIHash<Key, Hash>::merge(const std::vector<std::pair<Key, Value>>& source,
+                              std::vector<Value>& values,
+                              const std::function<Value(Value, Value)>& f,
+                              const Value& default_value, bool change_this) {
+    size_t original_size = current_size;
+    if (change_this) {
+        std::vector<bool> intersects(original_size, false);
+        for (std::pair<Key, Value> kv : source) {
+            size_t index = this->add(kv.first);
+            if (index < original_size) {
+                values[index] = f(values[index], kv.second);
+                intersects[index] = true;
+            } else {
+                values.push_back(f(default_value, kv.second));
+            }
+        }
+        for (size_t i = 0; i < original_size; ++i) {
+            if (!intersects[i])
+                values[i] = f(values[i], default_value);
+        }
+    } else {
+        for (std::pair<Key, Value> kv : source) {
+            size_t index = this->add(kv.first);
+            if (index < original_size) {
+                values[index] = f(values[index], kv.second);
+            } else {
+                values.push_back(f(default_value, kv.second));
+            }
+        }
+    }
+}
+
+template <class Key, class Hash>
+template <class Hash_2>
+void CIHash<Key, Hash>::merge(const std::unordered_set<Key, Hash_2>& source) {
+    for (Key k : source) {
+        this->add(k);
+    }
+}
+
+template <class Key, class Hash>
+template <class Value, class Hash_2>
+void CIHash<Key, Hash>::merge(
+    const std::unordered_map<Key, Value, Hash_2>& source,
+    std::vector<Value>& values) {
+    size_t original_size = current_size;
+    for (std::pair<Key, Value> kv : source) {
+        size_t index = this->add(kv.first);
+        if (index < original_size) {
+            values[index] = kv.second;
+        } else {
+            values.push_back(kv.second);
+        }
+    }
+}
+
+template <class Key, class Hash>
+template <class Value, class Hash_2>
+void CIHash<Key, Hash>::merge(
+    const std::unordered_map<Key, Value, Hash_2>& source,
+    std::vector<Value>& values, const std::function<Value(Value, Value)>& f,
+    const Value& default_value, bool change_this) {
+    size_t original_size = current_size;
+    if (change_this) {
+        std::vector<bool> intersects(original_size, false);
+        for (std::pair<Key, Value> kv : source) {
+            size_t index = this->add(kv.first);
+            if (index < original_size) {
+                values[index] = f(values[index], kv.second);
+                intersects[index] = true;
+            } else {
+                values.push_back(f(default_value, kv.second));
+            }
+        }
+        for (size_t i = 0; i < original_size; ++i) {
+            if (!intersects[i])
+                values[i] = f(values[i], default_value);
+        }
+    } else {
+        for (std::pair<Key, Value> kv : source) {
+            size_t index = this->add(kv.first);
+            if (index < original_size) {
+                values[index] = f(values[index], kv.second);
+            } else {
+                values.push_back(f(default_value, kv.second));
+            }
+        }
+    }
+}
+
+template <class Key, class Hash>
+void CIHash<Key, Hash>::swap(CIHash<Key, Hash>& other) {
+    vec.swap(other.vec);
+    begin_index.swap(other.begin_index);
+    std::swap(this->max_load, other.max_load);
+    std::swap(this->current_max_load_size, other.current_max_load_size);
+    std::swap(this->MAX_SIZE, other.MAX_SIZE);
+    std::swap(this->num_bucket, other.num_bucket);
+    std::swap(this->current_size, other.current_size);
 }
 
 template <class Key, class Hash>
@@ -411,7 +640,8 @@ template <class Key, class Hash> void CIHash<Key, Hash>::reserve(size_t count) {
 
 template <class Key, class Hash> void CIHash<Key, Hash>::shrink_to_fit() {
     this->vec.shrink_to_fit();
-    while (current_size <= (current_max_load_size >> 1))
+    while ((num_bucket >> 1) >= MIN_NUM_BUCKET &&
+           current_size <= (current_max_load_size >> 1))
         half_buckets();
     this->begin_index.shrink_to_fit();
 }
@@ -474,7 +704,7 @@ CIHash<Key, Hash>::toUnordered_map(const std::vector<Value>& values) {
     std::unordered_map<Key, Value, Hash> uMap;
     uMap.reserve(current_size);
     for (size_t i = 0; i < current_size; ++i) {
-        uMap[this->vec[i]] = values[i];
+        uMap[this->vec[i].value] = values[i];
     }
     return uMap;
 }
