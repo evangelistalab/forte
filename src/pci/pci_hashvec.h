@@ -26,8 +26,8 @@
  * @END LICENSE
  */
 
-#ifndef _pci_cihash_h_
-#define _pci_cihash_h_
+#ifndef _pci_hashvec_h_
+#define _pci_hashvec_h_
 
 #include <fstream>
 
@@ -35,7 +35,7 @@
 #include "psi4/liboptions/liboptions.h"
 #include "psi4/physconst.h"
 
-#include "../cihash.cc"
+#include "../hash_vector.h"
 #include "../fci/fci_vector.h"
 #include "../forte-def.h"
 #include "../forte_options.h"
@@ -48,9 +48,9 @@ namespace psi {
 namespace forte {
 
 /// Set the forte style options for the FCI method
-// void set_PCI_CIHash_options(ForteOptions& foptions);
+// void set_PCI_HashVec_options(ForteOptions& foptions);
 
-namespace GeneratorType_CIHash {
+namespace GeneratorType_HashVec {
 enum GeneratorType {
     LinearGenerator,
     TrotterLinear,
@@ -68,13 +68,13 @@ enum GeneratorType {
 };
 }
 
-using det_cihash = CIHash<Determinant, Determinant::Hash>;
+using det_hashvec = HashVector<Determinant, Determinant::Hash>;
 
 /**
  * @brief The SparsePathIntegralCI class
  * This class implements an a sparse path-integral FCI algorithm
  */
-class ProjectorCI_CIHash : public Wavefunction {
+class ProjectorCI_HashVec : public Wavefunction {
   public:
     // ==> Class Constructor and Destructor <==
 
@@ -84,7 +84,7 @@ class ProjectorCI_CIHash : public Wavefunction {
      * @param options The main options object
      * @param ints A pointer to an allocated integral object
      */
-    ProjectorCI_CIHash(SharedWavefunction ref_wfn, Options& options,
+    ProjectorCI_HashVec(SharedWavefunction ref_wfn, Options& options,
                        std::shared_ptr<ForteIntegrals> ints,
                        std::shared_ptr<MOSpaceInfo> mo_space_info);
 
@@ -104,7 +104,7 @@ class ProjectorCI_CIHash : public Wavefunction {
     /// The maximum number of threads
     int num_threads_;
     /// The type of Generator used
-    GeneratorType_CIHash::GeneratorType generator_;
+    GeneratorType_HashVec::GeneratorType generator_;
     /// A string that describes the Generator type
     std::string generator_description_;
     /// The wave function symmetry
@@ -122,7 +122,7 @@ class ProjectorCI_CIHash : public Wavefunction {
     /// The reference determinant
     Determinant reference_determinant_;
     //    std::vector<det_hash<>> solutions_;
-    std::vector<std::pair<det_cihash, std::vector<double>>> solutions_;
+    std::vector<std::pair<det_hashvec, std::vector<double>>> solutions_;
     /// The information of mo space
     std::shared_ptr<MOSpaceInfo> mo_space_info_;
     /// (pq|pq) matrix for prescreening
@@ -289,21 +289,21 @@ class ProjectorCI_CIHash : public Wavefunction {
     void print_info();
 
     /// Print a wave function
-    void print_wfn(const det_cihash& space_cihash, std::vector<double>& C,
+    void print_wfn(const det_hashvec& space_hashvec, std::vector<double>& C,
                    size_t max_output = 10);
 
     /// Save a wave function
     void save_wfn(
-        det_cihash& space, std::vector<double>& C,
-        std::vector<std::pair<det_cihash, std::vector<double>>>& solutions);
+        det_hashvec& space, std::vector<double>& C,
+        std::vector<std::pair<det_hashvec, std::vector<double>>>& solutions);
 
     /// Orthogonalize the wave function to previous solutions
     void orthogonalize(
-        det_cihash& space, std::vector<double>& C,
-        std::vector<std::pair<det_cihash, std::vector<double>>>& solutions);
+        det_hashvec& space, std::vector<double>& C,
+        std::vector<std::pair<det_hashvec, std::vector<double>>>& solutions);
 
     /// Initial wave function guess
-    double initial_guess(det_cihash& dets, std::vector<double>& C);
+    double initial_guess(det_hashvec& dets, std::vector<double>& C);
 
     /**
     * Propagate the wave function by a step of length tau
@@ -315,19 +315,19 @@ class ProjectorCI_CIHash : public Wavefunction {
     * events
     * @param S An energy shift subtracted from the Hamiltonian
     */
-    void propagate(GeneratorType_CIHash::GeneratorType generator,
-                   det_cihash& dets_cihash, std::vector<double>& C, double tau,
+    void propagate(GeneratorType_HashVec::GeneratorType generator,
+                   det_hashvec& dets_hashvec, std::vector<double>& C, double tau,
                    double spawning_threshold, double S);
     /// A Delta projector fitted by 10th order chebyshev polynomial
-    void propagate_wallCh(det_cihash& dets_cihash, std::vector<double>& C,
+    void propagate_wallCh(det_hashvec& dets_hashvec, std::vector<double>& C,
                           double spawning_threshold, double S);
     /// The DL Generator
-    void propagate_DL(det_cihash& dets_cihash, std::vector<double>& C,
+    void propagate_DL(det_hashvec& dets_hashvec, std::vector<double>& C,
                       double spawning_threshold, double S);
     /// Apply symmetric approx tau H to a set of determinants with selection
     /// according to reference coefficients
     void apply_tau_H_ref_C_symm(double tau, double spawning_threshold,
-                                det_cihash& dets_cihash,
+                                det_hashvec& dets_hashvec,
                                 const std::vector<double>& C,
                                 const std::vector<double>& ref_C,
                                 std::vector<double>& result_C, double S);
@@ -335,23 +335,23 @@ class ProjectorCI_CIHash : public Wavefunction {
     /// Apply symmetric approx tau H to a determinant using dynamic screening
     /// with selection according to a reference coefficient
     void apply_tau_H_ref_C_symm_det_dynamic(
-        double tau, double spawning_threshold, const det_cihash& dets_cihash,
+        double tau, double spawning_threshold, const det_hashvec& dets_hashvec,
         const std::vector<double>& pre_C, const std::vector<double>& ref_C,
         const Determinant& detI, double CI, double ref_CI,
         std::vector<std::pair<Determinant, double>>& new_space_C_vec, double E0,
         std::pair<double, double>& max_coupling);
 
     /// Estimates the energy give a wave function
-    std::map<std::string, double> estimate_energy(const det_cihash& dets_cihash,
+    std::map<std::string, double> estimate_energy(const det_hashvec& dets_hashvec,
                                                   std::vector<double>& C);
     /// Estimates the projective energy
-    double estimate_proj_energy(const det_cihash& dets, std::vector<double>& C);
+    double estimate_proj_energy(const det_hashvec& dets, std::vector<double>& C);
     /// Estimates the variational energy
     /// @param dets The set of determinants that form the wave function
     /// @param C The wave function coefficients
     /// @param tollerance The accuracy of the estimate.  Used to impose |C_I
     /// C_J| < tollerance
-    double estimate_var_energy(const det_cihash& dets_cihash,
+    double estimate_var_energy(const det_hashvec& dets_hashvec,
                                std::vector<double>& C,
                                double tollerance = 1.0e-14);
     /// Estimates the variational energy using a sparse algorithm
@@ -359,12 +359,12 @@ class ProjectorCI_CIHash : public Wavefunction {
     /// @param C The wave function coefficients
     /// @param tollerance The accuracy of the estimate.  Used to impose |C_I
     /// C_J| < tollerance
-    double estimate_var_energy_sparse(const det_cihash& dets_cihash,
+    double estimate_var_energy_sparse(const det_hashvec& dets_hashvec,
                                       std::vector<double>& C,
                                       double tollerance = 1.0e-14);
     /// Form the product H c
     double form_H_C(double tau, double spawning_threshold,
-                    const det_cihash& dets_cihash, std::vector<double>& C,
+                    const det_hashvec& dets_hashvec, std::vector<double>& C,
                     size_t I, std::pair<double, double>& max_coupling);
     /// Do we have OpenMP?
     static bool have_omp_;
