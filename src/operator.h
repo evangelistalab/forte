@@ -31,7 +31,6 @@
 
 #include "determinant_map.h"
 #include "stl_bitset_determinant.h"
-#include <omp.h>
 
 namespace psi {
 namespace forte {
