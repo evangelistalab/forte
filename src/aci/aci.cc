@@ -852,15 +852,20 @@ void AdaptiveCI::default_find_q_space(DeterminantMap& P_space,
     //    int ithread = omp_get_thread_num();
     //    int nthreads = omp_get_num_threads();
 
+
+    size_t max = V_hash.size();
+#pragma omp parallel
+{
+    int num_thread = omp_get_max_threads();
+    int tid = omp_get_thread_num();
+
     size_t N = 0;
     for (const auto& I : V_hash) {
-        // outfile->Printf("\n  %s     %1.8f", I.first.str().c_str(),
-        // I.second[0]);
 
-        //    if( (count % nthreads) != ithread ){
-        //        count++;
-        //        continue;
-        //    }
+        if( (N % num_thread) != tid ){
+            N++;
+            continue;
+        }
 
         double delta = I.first.energy() - evals->get(0);
         double V = I.second[0];
@@ -869,7 +874,7 @@ void AdaptiveCI::default_find_q_space(DeterminantMap& P_space,
         sorted_dets[N] = std::make_pair(std::fabs(criteria), I.first);
         N++;
     }
-
+}
     std::sort(sorted_dets.begin(), sorted_dets.end(), pairComp);
     std::vector<double> ept2(nroot_, 0.0);
 
