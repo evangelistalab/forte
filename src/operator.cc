@@ -74,12 +74,10 @@ Timer build;
             size_t id = 0;
             std::vector<size_t> ids(1);           
             std::vector<double> H_vals(1);            
-            std::unordered_map<size_t,size_t> det_to_id;
 
             //Diagonal term first
             H_vals[id] = dets[J].energy();
             ids[id] = J;
-            det_to_id[J] = id; 
             id++;
 
             for( auto& aJ_mo_sign : a_ann_list_[J]){
@@ -96,18 +94,11 @@ Timer build;
                         const double HIJ = dets[I].slater_rules_single_alpha_abs(p,q) *
                                             sign_p * sign_q;
                         
-                        auto search = det_to_id.find(I);
-                        if( search != det_to_id.end() ){
-                           // ids[search->second] = I;
-                            H_vals[search->second] += HIJ; 
-                        }else{
-                            ids.resize( id+1 );
-                            H_vals.resize( id+1 );
-                            ids[id] = I;
-                            H_vals[id] = HIJ; 
-                            det_to_id[I] = id;
-                            id++;
-                        }
+                        ids.resize( id+1 );
+                        H_vals.resize( id+1 );
+                        ids[id] = I;
+                        H_vals[id] = HIJ; 
+                        id++;
                     }
                 }
             }
@@ -126,17 +117,11 @@ Timer build;
                         const double HIJ = dets[I].slater_rules_single_beta_abs(p,q) *
                                             sign_p * sign_q;
                         
-                        auto search = det_to_id.find(I);
-                        if( search != det_to_id.end() ){
-                            H_vals[search->second] += HIJ; 
-                        }else{
-                            ids.resize( id+1 );
-                            H_vals.resize( id+1 );
-                            ids[id] = I;
-                            H_vals[id] = HIJ; 
-                            det_to_id[I] = id;
-                            id++;
-                        }
+                        ids.resize( id+1 );
+                        H_vals.resize( id+1 );
+                        ids[id] = I;
+                        H_vals[id] = HIJ; 
+                        id++;
                     }
                 }
             }
@@ -155,17 +140,11 @@ Timer build;
                         const double HIJ = sign_pq * sign_rs * 
                             STLBitsetDeterminant::fci_ints_->tei_aa(p,q,r,s);
 
-                        auto search = det_to_id.find(I);
-                        if( search != det_to_id.end() ){
-                            H_vals[search->second] += HIJ;
-                        }else{
-                            ids.resize( id+1 );
-                            H_vals.resize( id+1 );
-                            ids[id] = I;
-                            det_to_id[I] = id;
-                            H_vals[id] = HIJ; 
-                            id++;
-                        }
+                        ids.resize( id+1 );
+                        H_vals.resize( id+1 );
+                        ids[id] = I;
+                        H_vals[id] = HIJ; 
+                        id++;
                     }
                 }
             }
@@ -185,17 +164,11 @@ Timer build;
                         const double HIJ = sign_pq * sign_rs * 
                             STLBitsetDeterminant::fci_ints_->tei_bb(p,q,r,s);
 
-                        auto search = det_to_id.find(I);
-                        if( search != det_to_id.end() ){
-                            H_vals[search->second] += HIJ;
-                        }else{
-                            ids.resize( id+1 );
-                            H_vals.resize( id+1 );
-                            ids[id] = I;
-                            det_to_id[I] = id;
-                            H_vals[id] = HIJ; 
-                            id++;
-                        }
+                        ids.resize( id+1 );
+                        H_vals.resize( id+1 );
+                        ids[id] = I;
+                        H_vals[id] = HIJ; 
+                        id++;
                     }
                 }
             }
@@ -213,17 +186,12 @@ Timer build;
                         const double sign_rs = std::get<1>(abbJ_mo) > 0.0 ? 1.0 : -1.0;
                         const double HIJ = sign_pq * sign_rs * 
                             STLBitsetDeterminant::fci_ints_->tei_ab(p,q,r,s);
-                        auto search = det_to_id.find(I);
-                        if( search != det_to_id.end() ){
-                            H_vals[search->second] += HIJ;
-                        }else{
-                            ids.resize( id+1 );
-                            H_vals.resize( id+1 );
-                            ids[id] = I;
-                            det_to_id[I] = id;
-                            H_vals[id] = HIJ; 
-                            id++;
-                        }
+                        ids.resize( id+1 );
+                        H_vals.resize( id+1 );
+                        ids[id] = I;
+                        H_vals[id] = HIJ; 
+                        id++;
+                        
                     }
                 }
             }
@@ -1153,5 +1121,11 @@ void WFNOperator::three_lists(DeterminantMap& wfn) {
         }
     }
 }
-}
-}
+
+//std::vector<std::pair<std::vector<size_t>, std::vector<double>>> WFNOperator::build_H_sparse2( const DeterminantMap& wfn )
+//{
+//    
+//}
+
+}}
+
