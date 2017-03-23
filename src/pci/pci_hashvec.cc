@@ -1230,28 +1230,28 @@ void ProjectorCI_HashVec::apply_tau_H_ref_C_symm(
         std::pair<double, double> zero_pair(0.0, 0.0);
         // Update the list of couplings
         std::pair<double, double> max_coupling;
-#pragma omp critical
+#pragma omp critical (couplings)
         { max_coupling = dets_max_couplings_[dets_hashvec[I]]; }
         if (max_coupling == zero_pair) {
             std::vector<std::pair<Determinant, double>> thread_det_C_vec;
             apply_tau_H_ref_C_symm_det_dynamic(
                 tau, spawning_threshold, dets_hashvec, C, ref_C, dets_hashvec[I],
                 C[I], ref_C[I], thread_det_C_vec, S, max_coupling);
-#pragma omp critical
+#pragma omp critical (dets)
             {
                 dets_hashvec_merge.merge(
                     thread_det_C_vec, C_merge,
                     std::function<double(double, double)>(std::plus<double>()),
                     0.0, false);
             }
-#pragma omp critical
+#pragma omp critical (couplings)
             { dets_max_couplings_[dets_hashvec[I]] = max_coupling; }
         } else {
             std::vector<std::pair<Determinant, double>> thread_det_C_vec;
             apply_tau_H_ref_C_symm_det_dynamic(
                 tau, spawning_threshold, dets_hashvec, C, ref_C, dets_hashvec[I],
                 C[I], ref_C[I], thread_det_C_vec, S, max_coupling);
-#pragma omp critical
+#pragma omp critical (dets)
             {
                 dets_hashvec_merge.merge(
                     thread_det_C_vec, C_merge,
@@ -1261,12 +1261,12 @@ void ProjectorCI_HashVec::apply_tau_H_ref_C_symm(
         }
     }
     size_t max_I = C.size();
+#pragma omp parallel for
     for (size_t I = ref_max_I; I < max_I; ++I) {
         // Diagonal contribution
         double det_energy = dets_hashvec[I].energy();
 // Diagonal contributions
-#pragma omp critical
-        { C_merge[I] += tau * (det_energy - S) * C[I]; }
+        C_merge[I] += tau * (det_energy - S) * C[I];
     }
     if (approx_E_flag_) {
         timer_on("PIFCI:<E>a");
