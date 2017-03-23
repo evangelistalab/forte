@@ -32,7 +32,6 @@
 #include "forte_options.h"
 #include "integrals/integrals.h"
 #include "pci/pci.h"
-#include "pci/pci_cihash.h"
 
 namespace psi {
 namespace forte {
