@@ -28,6 +28,7 @@
 
 #include "../ci_rdms.h"
 #include "../fci/fci_solver.h"
+#include "../fci_mo.h"
 #include "dsrg_mrpt2.h"
 
 namespace psi {
