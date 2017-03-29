@@ -695,6 +695,14 @@ double AdaptiveCI::compute_energy() {
         op_.three_lists(final_wfn_);
     }
     
+    if( options_.get_str("SIGMA_BUILD_TYPE") == "HZ" ){
+        op_.clear_op_lists();
+        op_.clear_tp_lists();
+        op_.build_strings(final_wfn_);
+        op_.op_s_lists(final_wfn_);
+        op_.tp_s_lists(final_wfn_);
+    }
+
     SharedMatrix new_evecs;
     if (ex_alg_ == "ROOT_COMBINE") {
         compute_rdms(full_space, op_c, PQ_evecs, 0, 0);
@@ -1565,6 +1573,13 @@ AdaptiveCI::compute_spin(DeterminantMap& space, SharedMatrix evecs, int nroot) {
     //op.build_strings(space);
     //op.op_lists(space);
     //op.tp_lists(space);
+    if( options_.get_str("SIGMA_BUILD_TYPE") == "HZ" ){
+        op_.clear_op_lists();
+        op_.clear_tp_lists();
+        op_.build_strings(space);
+        op_.op_s_lists(space);
+        op_.tp_s_lists(space);
+    }
 
     std::vector<std::pair<double, double>> spin_vec(nroot);
     for (int n = 0; n < nroot_; ++n) {
@@ -2313,6 +2328,7 @@ void AdaptiveCI::compute_aci(DeterminantMap& PQ_space, SharedMatrix& PQ_evecs,
     outfile->Flush();
 
     size_t nvec = options_.get_int("N_GUESS_VEC");
+    std::string sigma_method = options_.get_str("SIGMA_BUILD_TYPE");
 
     std::vector<std::vector<double>> energy_history;
     SparseCISolver sparse_solver;
@@ -2326,6 +2342,7 @@ void AdaptiveCI::compute_aci(DeterminantMap& PQ_space, SharedMatrix& PQ_evecs,
     sparse_solver.set_force_diag(options_.get_bool("FORCE_DIAG_METHOD"));
     sparse_solver.set_guess_dimension(options_.get_int("DL_GUESS_SIZE"));
     sparse_solver.set_num_vecs(nvec);
+    sparse_solver.set_sigma_method( sigma_method );
     int spin_projection = options_.get_int("ACI_SPIN_PROJECTION");
 
    // if (det_save_)
@@ -2346,6 +2363,8 @@ void AdaptiveCI::compute_aci(DeterminantMap& PQ_space, SharedMatrix& PQ_evecs,
     // Save the P_space energies to predict convergence
     std::vector<double> P_energies;
     approx_rdm_ = false;
+
+
 
     int cycle;
     for (cycle = 0; cycle < max_cycle_; ++cycle) {
@@ -2398,11 +2417,20 @@ void AdaptiveCI::compute_aci(DeterminantMap& PQ_space, SharedMatrix& PQ_evecs,
         //        }
         //    }
 
-        op_.clear_op_lists();
-        op_.clear_tp_lists();
-        op_.build_strings(P_space);
-        op_.op_lists(P_space);
-        op_.tp_lists(P_space);
+        if( sigma_method == "HZ" ){
+            op_.clear_op_lists();
+            op_.clear_tp_lists();
+            op_.build_strings(P_space);
+            op_.op_lists(P_space);
+            op_.tp_lists(P_space);
+        }else{
+            op_.clear_op_s_lists();
+            op_.clear_tp_s_lists();
+            op_.build_strings(P_space);
+            op_.op_s_lists(P_space);
+            op_.tp_s_lists(P_space);
+        }
+
         sparse_solver.manual_guess(false);
         Timer diag;
         sparse_solver.diagonalize_hamiltonian_map(
@@ -2488,13 +2516,21 @@ void AdaptiveCI::compute_aci(DeterminantMap& PQ_space, SharedMatrix& PQ_evecs,
         }
 
         // Step 3. Diagonalize the Hamiltonian in the P + Q space
-        op_.clear_op_lists();
-        op_.clear_tp_lists();
-    Timer str;
-        op_.build_strings(PQ_space);
-    outfile->Printf("\n  Time spent building strings      %1.6f s", str.get());
-        op_.op_lists(PQ_space);
-        op_.tp_lists(PQ_space);
+        if( sigma_method == "HZ" ){
+            op_.clear_op_lists();
+            op_.clear_tp_lists();
+            Timer str;
+            op_.build_strings(PQ_space);
+            outfile->Printf("\n  Time spent building strings      %1.6f s", str.get());
+            op_.op_lists(PQ_space);
+            op_.tp_lists(PQ_space);
+        }else{
+            op_.clear_op_s_lists();
+            op_.clear_tp_s_lists();
+            op_.build_strings(PQ_space);
+            op_.op_s_lists(PQ_space);
+            op_.tp_s_lists(PQ_space);
+        }
         Timer diag_pq;
 
         sparse_solver.diagonalize_hamiltonian_map(
