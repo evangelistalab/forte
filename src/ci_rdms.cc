@@ -355,46 +355,50 @@ void CI_RDMS::compute_1rdm(std::vector<double>& oprdm_a,
                            std::vector<double>& oprdm_b, WFNOperator& op) {
 
     // Get the references to the coupling lists
-    std::vector<std::vector<std::pair<size_t, short>>>& a_ann_list =
-        op.a_ann_list_;
-    std::vector<std::vector<std::pair<size_t, short>>>& b_ann_list =
-        op.b_ann_list_;
-    std::vector<std::vector<std::pair<size_t, short>>>& a_cre_list =
-        op.a_cre_list_;
-    std::vector<std::vector<std::pair<size_t, short>>>& b_cre_list =
-        op.b_cre_list_;
+    std::vector<std::vector<std::pair<size_t, short>>>& a_list =
+        op.a_list_;
+    std::vector<std::vector<std::pair<size_t, short>>>& b_list =
+        op.b_list_;
 
     Timer build;
     oprdm_a.resize(ncmo2_, 0.0);
     oprdm_b.resize(ncmo2_, 0.0);
-    for (size_t J = 0; J < dim_space_; ++J) {
-        for (auto& aJ_mo_sign : a_ann_list[J]) {
-            const size_t& aJ_add = aJ_mo_sign.first;
-            const size_t& p = std::abs(aJ_mo_sign.second) - 1;
-            const double& sign_p = aJ_mo_sign.second > 0 ? 1.0 : -1.0;
-            for (auto& aaJ_mo_sign : a_cre_list[aJ_add]) {
-                const size_t& q = std::abs(aaJ_mo_sign.second) - 1;
-                const double& sign_q = aaJ_mo_sign.second > 0 ? 1.0 : -1.0;
-                const size_t& I = aaJ_mo_sign.first;
+
+    //// Do something about diagonal
+    //for (size_t J = 0; J < dim_space_; ++J) {
+    //}
+
+    for( size_t K = 0, max_K = a_list.size(); K < max_K; ++K ){
+        for (auto& detI : a_list[K]) {
+            const size_t& I = detI.first;
+            const size_t& p = std::abs(detI.second) - 1;
+            const double& sign_p = detI.second > 0 ? 1.0 : -1.0;
+            for (auto& detJ : a_list[K]) {
+                const size_t& q = std::abs(detJ.second) - 1;
+                const double& sign_q = detJ.second > 0 ? 1.0 : -1.0;
+                const size_t& J = detJ.first;
                 oprdm_a[q * ncmo_ + p] += evecs_->get(J, root1_) *
                                           evecs_->get(I, root2_) * sign_p *
                                           sign_q;
             }
         }
-        for (auto& bJ_mo_sign : b_ann_list[J]) {
-            const size_t& bJ_add = bJ_mo_sign.first;
-            const size_t& p = std::abs(bJ_mo_sign.second) - 1;
-            const double& sign_p = bJ_mo_sign.second > 0 ? 1.0 : -1.0;
-            for (auto& bbJ_mo_sign : b_cre_list[bJ_add]) {
-                const size_t& q = std::abs(bbJ_mo_sign.second) - 1;
-                const double& sign_q = bbJ_mo_sign.second > 0 ? 1.0 : -1.0;
-                const size_t& I = bbJ_mo_sign.first;
-                oprdm_b[q * ncmo_ + p] += evecs_->get(J, root1_) *
+    }
+    for( size_t K = 0, max_K = b_list.size(); K < max_K; ++K ){
+        for (auto& detI : b_list[K]) {
+            const size_t& I = detI.first;
+            const size_t& p = std::abs(detI.second) - 1;
+            const double& sign_p = detI.second > 0 ? 1.0 : -1.0;
+            for (auto& detJ : b_list[K]) {
+                const size_t& q = std::abs(detJ.second) - 1;
+                const double& sign_q = detJ.second > 0 ? 1.0 : -1.0;
+                const size_t& J = detJ.first;
+                oprdm_a[q * ncmo_ + p] += evecs_->get(J, root1_) *
                                           evecs_->get(I, root2_) * sign_p *
                                           sign_q;
             }
         }
     }
+
     if (print_) {
         outfile->Printf("\n  Time spent building 1-rdm:   %1.6f", build.get());
     }
