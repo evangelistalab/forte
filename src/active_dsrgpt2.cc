@@ -107,9 +107,9 @@ double ACTIVE_DSRGPT2::compute_energy() {
         FCI_MO fci_mo(reference_wavefunction_, options_, ints_, mo_space_info_);
         int nirrep = nrootpi_.size();
 
-        //        // save HF orbitals
-        //        SharedMatrix Ca_hf (this->Ca()->clone());
-        //        SharedMatrix Cb_hf (this->Cb()->clone());
+//        // save HF orbitals
+//        SharedMatrix Ca_hf (this->Ca()->clone());
+//        SharedMatrix Cb_hf (this->Cb()->clone());
 
         // before real computation, we will do CI over all states to determine
         // the excitation type
@@ -280,8 +280,8 @@ double ACTIVE_DSRGPT2::compute_energy() {
                     }
                     pt_energies_[h].push_back(Ept);
 
-                    //                    // set back to HF orbitals
-                    //                    fci_mo.set_orbs(Ca_hf, Cb_hf);
+//                    // set back to HF orbitals
+//                    fci_mo.set_orbs(Ca_hf, Cb_hf);
                 }
             }
         }
