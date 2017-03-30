@@ -32,9 +32,11 @@
 #include <numeric>
 #include <sstream>
 
-#include "fci_mo.h"
+#include "determinant_map.h"
 #include "fci/fci_vector.h"
+#include "fci_mo.h"
 #include "mini-boost/boost/algorithm/string/predicate.hpp"
+#include "operator.h"
 #include "psi4/libmints/dipole.h"
 #include "psi4/libmints/oeprop.h"
 #include "psi4/libmints/petitelist.h"
@@ -79,11 +81,10 @@ void FCI_MO::startup() {
     fci_ints_->compute_restricted_one_body_operator();
     STLBitsetDeterminant::set_ints(fci_ints_);
 
-    // compute so quadrupole for orbital extents
-    compute_SOquadrupole();
-
-    // compute orbital extents
-    compute_orbital_extents();
+    // compute orbital extents if CIS/CISD IPEA
+    if (active_space_type_ == "CIS" || active_space_type_ == "CISD") {
+        compute_orbital_extents();
+    }
 }
 
 void FCI_MO::read_options() {
@@ -573,7 +574,11 @@ double FCI_MO::compute_energy() {
 
 double FCI_MO::compute_canonical_energy() {
     // compute energy
+    int root = root_;
+    int nroot = nroot_;
     double Eref = compute_energy();
+    root_ = root;
+    nroot_ = nroot;
 
     // check Fock matrix
     size_t count = 0;
@@ -809,7 +814,7 @@ void FCI_MO::form_det_cis() {
             outfile->Printf("\n    %-35s = %5zu", str_dim.first.c_str(),
                             str_dim.second);
         }
-        print_det(determinant_);
+        //        print_det(determinant_);
         outfile->Printf("\n");
         outfile->Flush();
     }
@@ -944,7 +949,7 @@ void FCI_MO::form_det_cisd() {
             outfile->Printf("\n    %-35s = %5zu", str_dim.first.c_str(),
                             str_dim.second);
         }
-        print_det(determinant_);
+        //        print_det(determinant_);
         outfile->Printf("\n");
         outfile->Flush();
     }
@@ -1269,8 +1274,9 @@ void FCI_MO::semi_canonicalize() {
             if (ii != i) {
                 indexmap[i] = ii;
                 idx_0.push_back(i);
-                outfile->Printf("\n  i = %3d, ii = %3d, smax = %.15f", i, ii,
-                                smax);
+                //                outfile->Printf("\n  i = %3d, ii = %3d, smax =
+                //                %.15f",
+                //                                i, ii, smax);
             }
         }
 
@@ -1495,6 +1501,7 @@ void FCI_MO::Diagonalize_H(const vecdet& det,
     size_t det_size = det.size();
     eigen.clear();
 
+    // use bitset determinants
     STLBitsetDeterminant::set_ints(fci_ints_);
     std::vector<STLBitsetDeterminant> P_space;
     for (size_t x = 0; x != det_size; ++x) {
@@ -1502,23 +1509,41 @@ void FCI_MO::Diagonalize_H(const vecdet& det,
         std::vector<bool> beta_bits = det[x].get_beta_bits_vector_bool();
         STLBitsetDeterminant bs_det(alfa_bits, beta_bits);
         P_space.push_back(bs_det);
+        //        bs_det.print();
     }
 
+    // use determinant map
+    DeterminantMap detmap(P_space);
+    WFNOperator op(mo_space_info_->symmetry("ACTIVE"));
+    op.build_strings(detmap);
+    op.op_lists(detmap);
+    op.tp_lists(detmap);
+
+    // diagonalization solver
     SparseCISolver sparse_solver;
-    int nroot = det_size < 20 * nroot_ ? det_size : 20 * nroot_;
+    int nroot = nroot_;
+    if (det_size < 200) {
+        // This will do full diagonalization (multiplicity)
+        nroot = det_size;
+    }
     SharedMatrix vec_tmp;
     SharedVector val_tmp;
     DiagonalizationMethod diag_method = DLSolver;
+    sparse_solver.set_e_convergence(econv_);
     sparse_solver.set_maxiter_davidson(options_.get_int("DL_MAXITER"));
-    if (diag_algorithm_ == "FULL") {
-        diag_method = Full;
-    }
+    sparse_solver.set_guess_dimension(options_.get_int("DL_GUESS_SIZE"));
+    sparse_solver.set_spin_project(true);
+    sparse_solver.set_print_details(true);
     if (ipea_ != "NONE") {
-        //        sparse_solver.set_print_details(true);
         sparse_solver.set_force_diag_method(true);
+
+        if (diag_algorithm_ == "FULL") {
+            diag_method = Full;
+            nroot = det_size < 15 * nroot_ ? det_size : 15 * nroot_;
+        }
     }
-    sparse_solver.diagonalize_hamiltonian(P_space, val_tmp, vec_tmp, nroot,
-                                          multi_, diag_method);
+    sparse_solver.diagonalize_hamiltonian_map(detmap, op, val_tmp, vec_tmp,
+                                              nroot, multi_, diag_method);
 
     // add doubly occupied energy
     double vdocc = fci_ints_->scalar_energy();
@@ -1527,32 +1552,17 @@ void FCI_MO::Diagonalize_H(const vecdet& det,
         val_tmp->set(i, value + vdocc);
     }
 
-    // check spin
-    int count = 0;
-    if (!quiet_) {
-        outfile->Printf("\n\n  Reference type: %s", ref_type_.c_str());
-    }
-    double threshold = 0.1;
-    if (ref_type_ == "UHF" || ref_type_ == "UKS" || ref_type_ == "CUHF") {
-        threshold =
-            0.20 *
-            multi_; // 20% off from the multiplicity of the spin eigen state
-    }
-    if (!quiet_) {
-        outfile->Printf("\n  Threshold for spin check: %.2f", threshold);
-    }
+    // spin
+    std::vector<string> s2_labels({"singlet", "doublet", "triplet", "quartet",
+                                   "quintet", "sextet", "septet", "octet",
+                                   "nonet", "decaet"});
 
-    for (int i = 0; i != nroot; ++i) {
-        double S2 = 0.0;
-        for (int I = 0; I < det_size; ++I) {
-            for (int J = 0; J < det_size; ++J) {
-                double S2IJ = P_space[I].spin2(P_space[J]);
-                S2 += S2IJ * vec_tmp->get(I, i) * vec_tmp->get(J, i);
-            }
-        }
+    for (int n = 0, count = 0; n < nroot; ++n) {
+        double S2 = op.s2(detmap, vec_tmp, n);
         double S = std::fabs(0.5 * (std::sqrt(1.0 + 4.0 * S2) - 1.0));
-        double multi_real = 2.0 * S + 1;
 
+        double threshold = 0.1;
+        double multi_real = 2.0 * S + 1;
         if (std::fabs(multi_ - multi_real) > threshold) {
             if (!quiet_) {
                 outfile->Printf("\n\n  Ask for S^2 = %.4f, this S^2 = %.4f, "
@@ -1561,22 +1571,76 @@ void FCI_MO::Diagonalize_H(const vecdet& det,
             }
             continue;
         } else {
-            std::vector<string> s2_labels(
-                {"singlet", "doublet", "triplet", "quartet", "quintet",
-                 "sextet", "septet", "octet", "nonet", "decaet"});
             std::string state_label = s2_labels[std::round(S * 2.0)];
-            if (!quiet_) {
-                outfile->Printf("\n\n  Spin State: S^2 = %5.3f, S = %5.3f, %s "
-                                "(from %zu determinants)",
-                                S2, S, state_label.c_str(), det_size);
-            }
-            ++count;
+            outfile->Printf(
+                "\n\n  Spin State Root %d: S^2 = %5.3f, S = %5.3f, %s "
+                "(from %zu determinants)",
+                n, S2, S, state_label.c_str(), det_size);
+
             eigen.push_back(
-                make_pair(vec_tmp->get_column(0, i), val_tmp->get(i) + e_nuc_));
+                make_pair(vec_tmp->get_column(0, n), val_tmp->get(n) + e_nuc_));
+            ++count;
+            if (count == nroot_)
+                break;
         }
-        if (count == nroot_)
-            break;
     }
+
+    //    // check spin
+    //    int count = 0;
+    //    if (!quiet_) {
+    //        outfile->Printf("\n\n  Reference type: %s", ref_type_.c_str());
+    //    }
+    //    double threshold = 0.1;
+    //    if (ref_type_ == "UHF" || ref_type_ == "UKS" || ref_type_ == "CUHF") {
+    //        threshold =
+    //            0.20 *
+    //            multi_; // 20% off from the multiplicity of the spin eigen
+    //            state
+    //    }
+    //    if (!quiet_) {
+    //        outfile->Printf("\n  Threshold for spin check: %.2f", threshold);
+    //    }
+
+    //    for (int i = 0; i != nroot_; ++i) {
+    //        double S2 = 0.0;
+    //        outfile->Printf("\n  1551");
+    //        for (int I = 0; I < det_size; ++I) {
+    //            outfile->Printf("\n  1553");
+    //            for (int J = 0; J < det_size; ++J) {
+    //                double S2IJ = P_space[I].spin2(P_space[J]);
+    //                S2 += S2IJ * vec_tmp->get(I, i) * vec_tmp->get(J, i);
+    //            }
+    //        }
+    //        double S = std::fabs(0.5 * (std::sqrt(1.0 + 4.0 * S2) - 1.0));
+    //        double multi_real = 2.0 * S + 1;
+
+    //        if (std::fabs(multi_ - multi_real) > threshold) {
+    //            if (!quiet_) {
+    //                outfile->Printf("\n\n  Ask for S^2 = %.4f, this S^2 =
+    //                %.4f, "
+    //                                "continue searching...",
+    //                                0.25 * (multi_ * multi_ - 1.0), S2);
+    //            }
+    //            continue;
+    //        } else {
+    //            std::vector<string> s2_labels(
+    //                {"singlet", "doublet", "triplet", "quartet", "quintet",
+    //                 "sextet", "septet", "octet", "nonet", "decaet"});
+    //            std::string state_label = s2_labels[std::round(S * 2.0)];
+    //            if (!quiet_) {
+    //                outfile->Printf("\n\n  Spin State: S^2 = %5.3f, S = %5.3f,
+    //                %s "
+    //                                "(from %zu determinants)",
+    //                                S2, S, state_label.c_str(), det_size);
+    //            }
+    //            ++count;
+    //            eigen.push_back(
+    //                make_pair(vec_tmp->get_column(0, i), val_tmp->get(i) +
+    //                e_nuc_));
+    //        }
+    //        if (count == nroot_)
+    //            break;
+    //    }
     if (!quiet_) {
         outfile->Printf("  Done. Timing %15.6f s", tdiagH.get());
     }
@@ -2590,6 +2654,36 @@ void FCI_MO::BD_Fock(const d2& Fa, const d2& Fb, SharedMatrix& Ua,
         offset += frzvpi_[h];
     }
 
+    //    // Test density in C1
+    //    SharedMatrix M(new Matrix(str.c_str(), Da_.size() + frzcpi_[0],
+    //    Da_[0].size() + frzcpi_[0]));
+    //    for (size_t i = 0; i != frzcpi_[0]; ++i){
+    //        M->set(i,i,1.0);
+    //    }
+
+    //    for (size_t i = 0; i != Da_.size(); ++i) {
+    //        for (size_t j = 0; j != Da_[i].size(); ++j) {
+    //            M->set(i+frzcpi_[0],j+frzcpi_[0],Da_[i][j]);
+    //        }
+    //    }
+    //    SharedMatrix test = Matrix::triplet(Ua,M,Ua,true,false,false);
+    //    test->print();
+
+    //    // Test Fock in C1
+    //    SharedMatrix M(new Matrix(str.c_str(), Fa_.size() + frzcpi_[0],
+    //    Fa_[0].size() + frzcpi_[0]));
+    //    for (size_t i = 0; i != frzcpi_[0]; ++i){
+    //        M->set(i,i,1.0);
+    //    }
+
+    //    for (size_t i = 0; i != Fa_.size(); ++i) {
+    //        for (size_t j = 0; j != Fa_[i].size(); ++j) {
+    //            M->set(i+frzcpi_[0],j+frzcpi_[0],Fa_[i][j]);
+    //        }
+    //    }
+    //    SharedMatrix test = Matrix::triplet(Ua,M,Ua,true,false,false);
+    //    test->print();
+
     outfile->Printf("  Done. Timing %15.6f s\n", tbdfock.get());
     timer_off("Block Diagonal 2D Matrix");
 }
@@ -2808,7 +2902,7 @@ void FCI_MO::compute_permanent_dipole() {
         symmetrize_density(opdm_a, SOtransD);
         SOtransD->back_transform(this->Ca());
 
-        SharedMatrix AOtransD(new Matrix("SO transition density " + trans_name,
+        SharedMatrix AOtransD(new Matrix("AO transition density " + trans_name,
                                          basisset->nbf(), basisset->nbf()));
         AOtransD->remove_symmetry(SOtransD, sotoao);
 
@@ -2944,7 +3038,7 @@ void FCI_MO::compute_trans_dipole() {
             SOtransD->back_transform(this->Ca());
 
             SharedMatrix AOtransD(
-                new Matrix("SO transition density " + trans_name,
+                new Matrix("AO transition density " + trans_name,
                            basisset->nbf(), basisset->nbf()));
             AOtransD->remove_symmetry(SOtransD, sotoao);
 
@@ -2953,9 +3047,8 @@ void FCI_MO::compute_trans_dipole() {
                 de[i] =
                     2.0 *
                     AOtransD->vector_dot(aodipole_ints[i]); // 2.0 for beta spin
-                //                de[i]  = 2.0 *
-                //                MOtransD->vector_dot(dipole_ints[i]); // 2.0
-                //                for beta spin
+                //                de[i] = 2.0 *
+                //                        MOtransD->vector_dot(dipole_ints[i]);
                 de[3] += de[i] * de[i];
             }
             de[3] = sqrt(de[3]);
@@ -3027,56 +3120,80 @@ void FCI_MO::compute_oscillator_strength() {
     outfile->Printf("\n");
 }
 
-void FCI_MO::compute_SOquadrupole() {
-    so_Qpole_.clear();
-    for (const auto& name : {"XX", "XY", "XZ", "YY", "YZ", "ZZ"}) {
-        so_Qpole_.push_back(
-            SharedMatrix(new Matrix(name, this->nsopi(), this->nsopi())));
-    }
+void FCI_MO::compute_orbital_extents() {
 
+    // compute AO quadrupole integrals
     std::shared_ptr<BasisSet> basisset = this->basisset();
     std::shared_ptr<IntegralFactory> ints = std::shared_ptr<IntegralFactory>(
         new IntegralFactory(basisset, basisset, basisset, basisset));
-    std::shared_ptr<OneBodySOInt> soqOBI(ints->so_quadrupole());
 
-    soqOBI->compute(so_Qpole_);
-    soqOBI.reset();
-}
+    vector<SharedMatrix> ao_Qpole;
+    for (const std::string& direction : {"XX", "XY", "XZ", "YY", "YZ", "ZZ"}) {
+        std::string name = "AO Quadrupole" + direction;
+        ao_Qpole.push_back(
+            SharedMatrix(new Matrix(name, basisset->nbf(), basisset->nbf())));
+    }
+    std::shared_ptr<OneBodyAOInt> aoqOBI(ints->ao_quadrupole());
+    aoqOBI->compute(ao_Qpole);
 
-void FCI_MO::compute_orbital_extents() {
-    // absolute indices of active orbitals before frozen core
-    vector<size_t> abs_mo_a = mo_space_info_->get_absolute_mo("ACTIVE");
+    // orbital coefficients arranged by orbital energies
+    SharedMatrix Ca_ao = this->Ca_subset("AO");
+    int nao = Ca_ao->nrow();
+    int nmo = Ca_ao->ncol();
 
-    // orbital coefficients
-    SharedMatrix Ca = this->Ca();
+    std::vector<SharedVector> quadrupole;
+    quadrupole.push_back(
+        SharedVector(new Vector("Orbital Quadrupole XX", nmo)));
+    quadrupole.push_back(
+        SharedVector(new Vector("Orbital Quadrupole YY", nmo)));
+    quadrupole.push_back(
+        SharedVector(new Vector("Orbital Quadrupole ZZ", nmo)));
+
+    for (int i = 0; i < nmo; ++i) {
+        double sumx = 0.0, sumy = 0.0, sumz = 0.0;
+        for (int k = 0; k < nao; ++k) {
+            for (int l = 0; l < nao; ++l) {
+                double tmp = Ca_ao->get(0, k, i) * Ca_ao->get(0, l, i);
+                sumx += ao_Qpole[0]->get(0, k, l) * tmp;
+                sumy += ao_Qpole[3]->get(0, k, l) * tmp;
+                sumz += ao_Qpole[5]->get(0, k, l) * tmp;
+            }
+        }
+
+        quadrupole[0]->set(0, i, fabs(sumx));
+        quadrupole[1]->set(0, i, fabs(sumy));
+        quadrupole[2]->set(0, i, fabs(sumz));
+    }
+
+    SharedVector epsilon_a = this->epsilon_a();
+    std::vector<std::tuple<double, int, int>> metric;
+    for (int h = 0; h < epsilon_a->nirrep(); ++h) {
+        for (int i = 0; i < epsilon_a->dimpi()[h]; ++i) {
+            metric.push_back(
+                std::tuple<double, int, int>(epsilon_a->get(h, i), i, h));
+        }
+    }
+    std::sort(metric.begin(), metric.end());
 
     // initialize vector saving current orbital extents
     orb_extents_ = vector<d2>(nirrep_, d2());
-
-    // compute active orbital extents
-    size_t offset = 0;
     for (int h = 0; h < nirrep_; ++h) {
         size_t na = active_[h];
-        size_t nsopi = this->nsopi()[h];
-        d2 orb_extents_pi(na, d1());
+        if (na == 0)
+            continue;
+        orb_extents_[h] = d2(na, d1());
+    }
 
-        for (size_t u = 0; u < na; ++u) {
-            size_t u_abs = abs_mo_a[u + offset];
-
-            double sumx = 0.0, sumy = 0.0, sumz = 0.0;
-            for (size_t k = 0; k < nsopi; ++k) {
-                for (size_t l = 0; l < nsopi; ++l) {
-                    double tmp = Ca->get(h, k, u_abs) * Ca->get(h, l, u_abs);
-                    sumx += so_Qpole_[0]->get(h, k, l) * tmp;
-                    sumy += so_Qpole_[3]->get(h, k, l) * tmp;
-                    sumz += so_Qpole_[5]->get(h, k, l) * tmp;
-                }
-            }
-            orb_extents_pi[u] = {fabs(sumx), fabs(sumy), fabs(sumz)};
-        }
-
-        orb_extents_[h] = orb_extents_pi;
-        offset += na;
+    for (const auto& x : metric) {
+        double epsilon;
+        int i, h;
+        std::tie(epsilon, i, h) = x;
+        double xx = quadrupole[0]->get(0, i), yy = quadrupole[1]->get(0, i),
+               zz = quadrupole[2]->get(0, i);
+        int offset = frzcpi_[h] + core_[h];
+        if (i < offset || i >= offset + active_[h])
+            continue;
+        orb_extents_[h][i - offset] = {xx, yy, zz};
     }
 
     // find the diffused orbital index (active zero based)
@@ -3091,7 +3208,7 @@ void FCI_MO::compute_orbital_extents() {
                 double orbext = orb_extents_[h][i][0] + orb_extents_[h][i][1] +
                                 orb_extents_[h][i][2];
 
-                if (orbext > 1.0e6) {
+                if (orbext > 1.0e5) {
                     diffused_orbs_.push_back(i + offset);
 
                     if (h == 0) {
