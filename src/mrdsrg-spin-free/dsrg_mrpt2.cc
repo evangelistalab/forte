@@ -192,10 +192,16 @@ void DSRG_MRPT2::startup() {
         }
     }
 
+    // ignore semicanonical test
+    std::string actv_type = options_.get_str("ACTIVE_SPACE_TYPE");
+    if(actv_type != "COMPLETE" && actv_type != "DOCI"){
+        ignore_semicanonical_ = true;
+    }
+
     // initialize timer for commutator
     dsrg_time_ = DSRG_TIME();
 
-    // Print levels
+    // print levels
     print_ = options_.get_int("PRINT");
     if (print_ > 1) {
         Gamma1_.print(stdout);
