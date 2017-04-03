@@ -2246,6 +2246,33 @@ void SigmaVectorSparse::compute_sigma(SharedVector sigma, SharedVector b){
     double* sigma_p = sigma->pointer();
     double* b_p = b->pointer();
 
+
+    // Compute the overlap with each root
+    int nbad = bad_states_.size();
+    std::vector<double> overlap(nbad);
+    if (nbad != 0) {
+        for (int n = 0; n < nbad; ++n) {
+            std::vector<std::pair<size_t, double>>& bad_state = bad_states_[n];
+            double dprd = 0.0;
+            for (size_t det = 0, ndet = bad_state.size(); det < ndet; ++det) {
+                dprd += bad_state[det].second * b_p[bad_state[det].first];
+            }
+            overlap[n] = dprd;
+        }
+        // outfile->Printf("\n Overlap: %1.6f", overlap[0]);
+
+        for (int n = 0; n < nbad; ++n) {
+            std::vector<std::pair<size_t, double>>& bad_state = bad_states_[n];
+            size_t ndet = bad_state.size();
+
+            #pragma omp parallel for
+            for (size_t det = 0; det < ndet; ++det) {
+                b_p[bad_state[det].first] -= bad_state[det].second * overlap[n];
+            }
+        }
+    }
+
+
 #pragma omp parallel
     {
         int num_thread = omp_get_max_threads();
@@ -2275,6 +2302,16 @@ void SigmaVectorSparse::get_diagonal(Vector& diag){
         diag.set(I,H_[I].second[0]);
     }
 }
+
+void SigmaVectorSparse::add_bad_roots(
+    std::vector<std::vector<std::pair<size_t, double>>>& roots) {
+    bad_states_.clear();
+    for (int i = 0, max_i = roots.size(); i < max_i; ++i) {
+        bad_states_.push_back(roots[i]);
+    }
+}
+
+
 void SparseCISolver::diagonalize_dl_sparse(const DeterminantMap& space, WFNOperator& op, SharedVector& evals, SharedMatrix& evecs, int nroot, int multiplicity)
 {
     outfile->Printf("\n\n  Davidson-liu sparse algorithm");
