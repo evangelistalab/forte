@@ -77,7 +77,10 @@ class SigmaVectorSparse : public SigmaVector
     void compute_sigma(SharedVector sigma, SharedVector b);
  //   void compute_sigma(Matrix& sigma, Matrix& b, int nroot) {}
     void get_diagonal(Vector& diag);
-    void add_bad_roots( std::vector<std::vector<std::pair<size_t, double>>>& bad_states) {}
+    void add_bad_roots(
+        std::vector<std::vector<std::pair<size_t, double>>>& bad_states);
+
+    std::vector<std::vector<std::pair<size_t, double>>> bad_states_;
  protected:
     std::vector<std::pair<std::vector<size_t>,std::vector<double>>>& H_;
 };

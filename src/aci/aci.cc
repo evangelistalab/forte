@@ -558,7 +558,7 @@ std::vector<int> AdaptiveCI::get_occupation() {
 double AdaptiveCI::compute_energy() {
     if (!quiet_mode_) {
         print_method_banner({"Adaptive Configuration Interaction",
-                             "written by Francesco A. Evangelista"});
+                             "written by Jeffrey B. Schriber and Francesco A. Evangelista"});
         outfile->Printf("\n  ==> Reference Information <==\n");
         outfile->Printf("\n  There are %d frozen orbitals.", nfrzc_);
         outfile->Printf("\n  There are %zu active orbitals.\n", nact_);
