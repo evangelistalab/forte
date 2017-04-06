@@ -70,6 +70,7 @@ class MRPT2 : public Wavefunction {
     void startup();
 
     double compute_pt2_energy();
+    double compute_pt2_energy2();
 
     std::vector<int> mo_symmetry_;
 
