@@ -140,6 +140,8 @@ void set_ACI_options(ForteOptions& foptions)
     /*- Compute ACI-NOs -*/
     foptions.add_bool("ACI_NO", false, "Computes ACI natural orbitals");
 
+    /*- Compute full PT2 energy -*/
+    foptions.add_bool("MRPT2", false, "Compute full PT2 energy");
 }
 
 
@@ -680,6 +682,15 @@ double AdaptiveCI::compute_energy() {
         //    PQ_evals->print();
     }
 
+    //** Optionally compute full PT2 energy **//
+    if( options_.get_bool( "MRPT2" )) {
+        MRPT2 pt( reference_wavefunction_, options_, ints_, mo_space_info_, final_wfn_, PQ_evecs, PQ_evals);
+
+        multistate_pt2_energy_correction_[0] = pt.compute_energy(); 
+    }
+
+
+
     if (!quiet_mode_) {
         if (ex_alg_ == "ROOT_COMBINE") {
             print_final(full_space, PQ_evecs, PQ_evals);
@@ -690,11 +701,11 @@ double AdaptiveCI::compute_energy() {
         }
     }
     
-    // Compute the RDMs
+    //** Compute the RDMs **//
+
     if (options_.get_int("ACI_MAX_RDM") >= 3 or (rdm_level_ >= 3)) {
         op_.three_lists(final_wfn_);
     }
-    
     if( options_.get_str("SIGMA_BUILD_TYPE") == "HZ" ){
         op_.clear_op_lists();
         op_.clear_tp_lists();
@@ -702,7 +713,6 @@ double AdaptiveCI::compute_energy() {
         op_.op_s_lists(final_wfn_);
         op_.tp_s_lists(final_wfn_);
     }
-
     SharedMatrix new_evecs;
     if (ex_alg_ == "ROOT_COMBINE") {
         compute_rdms(full_space, op_c, PQ_evecs, 0, 0);
@@ -736,8 +746,10 @@ double AdaptiveCI::compute_energy() {
 
     double root_energy = PQ_evals->get(froot) + nuclear_repulsion_energy_ +
                          fci_ints_->scalar_energy();
-    double root_energy_pt2 =
-        root_energy + multistate_pt2_energy_correction_[froot];
+    double root_energy_pt2 = root_energy + multistate_pt2_energy_correction_[froot];
+
+    
+
     Process::environment.globals["CURRENT ENERGY"] = root_energy;
     Process::environment.globals["ACI ENERGY"] = root_energy;
     Process::environment.globals["ACI+PT2 ENERGY"] = root_energy_pt2;
