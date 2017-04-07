@@ -28,12 +28,12 @@
 
 #include "aci/aci.h"
 #include "avas.h"
+#include "ci-no/ci-no.h"
 #include "fci/fci.h"
 #include "forte_options.h"
 #include "integrals/integrals.h"
 #include "pci/pci.h"
 #include "pci/pci_cihash.h"
-#include "ci-no/ci-no.h"
 
 namespace psi {
 namespace forte {
@@ -57,29 +57,18 @@ void forte_options(std::string name, ForteOptions& foptions) {
      *  - THREE-DSRG-MRPT2 A DF/CD based DSRG-MRPT2 code.  Very fast
      *  - CASSCF A AO based CASSCF code by Kevin Hannon
     -*/
-    foptions.add_str("JOB_TYPE", "NONE", {"NONE",
-                                          "ACI",
-                                          "PCI",
-                                          "CAS",
-                                          "DMRG",
-                                          "SR-DSRG",
-                                          "SR-DSRG-ACI",
-                                          "SR-DSRG-PCI",
-                                          "TENSORSRG",
-                                          "TENSORSRG-CI",
-                                          "DSRG-MRPT2",
-                                          "DSRG-MRPT3",
-                                          "MR-DSRG-PT2",
-                                          "THREE-DSRG-MRPT2",
-                                          "SQ",
-                                          "SOMRDSRG",
-                                          "MRDSRG",
-                                          "MRDSRG_SO",
-                                          "CASSCF",
-                                          "ACTIVE-DSRGPT2",
-                                          "DSRG_MRPT",
-                                          "TASKS",
-                                          "CC"},
+    foptions.add_str("JOB_TYPE", "NONE", {"NONE",        "ACI",
+                                          "PCI",         "CAS",
+                                          "DMRG",        "SR-DSRG",
+                                          "SR-DSRG-ACI", "SR-DSRG-PCI",
+                                          "TENSORSRG",   "TENSORSRG-CI",
+                                          "DSRG-MRPT2",  "DSRG-MRPT3",
+                                          "MR-DSRG-PT2", "THREE-DSRG-MRPT2",
+                                          "SQ",          "SOMRDSRG",
+                                          "MRDSRG",      "MRDSRG_SO",
+                                          "CASSCF",      "ACTIVE-DSRGPT2",
+                                          "DSRG_MRPT",   "TASKS",
+                                          "CC",          "NOJOB"},
                      "Specify the job type");
 
     foptions.add_str("MINAO_BASIS", "STO-3G",

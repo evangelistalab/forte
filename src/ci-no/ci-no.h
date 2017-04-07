@@ -45,7 +45,7 @@
 //#include "../fci/fci_integrals.h"
 //#include "../operator.h"
 //#include "../sparse_ci_solver.h"
-//#include "../stl_bitset_determinant.h"
+#include "../stl_bitset_determinant.h"
 
 namespace psi {
 namespace forte {
@@ -87,11 +87,26 @@ class CINO : public Wavefunction {
     std::shared_ptr<ForteIntegrals> ints_;
     /// The MOSpaceInfo object
     std::shared_ptr<MOSpaceInfo> mo_space_info_;
-//    /// Pointer to FCI integrals
-//    std::shared_ptr<FCIIntegrals> fci_ints_;
+    //    /// Pointer to FCI integrals
+    //    std::shared_ptr<FCIIntegrals> fci_ints_;
 
     // ==> Class functions <==
 
+    std::vector<Determinant> build_dets();
+
+    std::pair<SharedVector, SharedMatrix>
+    diagonalize_hamiltonian(const std::vector<Determinant>& dets);
+
+    SharedMatrix build_density_matrix(const std::vector<Determinant>& dets,
+                                      SharedMatrix evecs);
+
+    /// Diagonalize the density matrix
+    std::pair<SharedVector, SharedMatrix>
+    diagonalize_density_matrix(SharedMatrix gamma);
+
+    /// Find optimal active space and transform the orbitals
+    void
+    find_active_space_and_transform(std::pair<SharedVector, SharedMatrix> no_U);
 };
 }
 } // End Namespaces
