@@ -41,8 +41,12 @@
 #include "determinant_map.h"
 #include "operator.h"
 #include "sparse_ci_solver.h"
+//#include "forte_options.h"
 
 namespace psi { namespace forte {
+
+    
+void set_PT2_options(ForteOptions& foptions);
 
 class MRPT2 : public Wavefunction {
   public:
@@ -60,6 +64,7 @@ class MRPT2 : public Wavefunction {
     DeterminantMap& reference_;
 
     double compute_energy(); 
+    
 
   private:
     std::shared_ptr<FCIIntegrals> fci_ints_;
