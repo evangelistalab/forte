@@ -390,10 +390,6 @@ class FCI_MO : public Wavefunction {
     void compute_ref();
     void compute_sa_ref();
 
-    /// Compute AO quadrupole for orbital extents
-    void compute_SOquadrupole();
-    vector<SharedMatrix> so_Qpole_;
-
     /// Orbital Extents
     void compute_orbital_extents();
     d3 orb_extents_; // irrep BY number of active orbitals in current irrep BY

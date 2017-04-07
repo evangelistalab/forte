@@ -40,6 +40,12 @@
 #include "psi4/psi4-dec.h"
 #include "psi4/psifiles.h"
 
+#include "helpers.h"
+#include "multidimensional_arrays.h"
+#include "mp2_nos.h"
+#include "pci/pci.h"
+#include "pci/pci_hashvec.h"
+#include "pci/pci_simple.h"
 #include "aci/aci.h"
 #include "active_dsrgpt2.h"
 #include "blockedtensorfactory.h"
@@ -142,11 +148,11 @@ void forte_old_methods(SharedWavefunction ref_wfn, Options& options,
             pci->compute_energy();
         }
     }
-    if (options.get_str("JOB_TYPE") == "PCI_CIHASH") {
-        auto pci_cihash = std::make_shared<ProjectorCI_CIHash>(
-            ref_wfn, options, ints, mo_space_info);
+    if (options.get_str("JOB_TYPE") == "PCI_HASHVEC") {
+        auto pci_hashvec = std::make_shared<ProjectorCI_HashVec>(ref_wfn, options, ints,
+                                                 mo_space_info);
         for (int n = 0; n < options.get_int("NROOT"); ++n) {
-            pci_cihash->compute_energy();
+            pci_hashvec->compute_energy();
         }
     }
     if (options.get_str("JOB_TYPE") == "PCI_SIMPLE") {

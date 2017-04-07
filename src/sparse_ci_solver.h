@@ -56,7 +56,7 @@ class SigmaVector {
     size_t size() { return size_; }
 
     virtual void compute_sigma(SharedVector sigma, SharedVector b) = 0;
-    virtual void compute_sigma(Matrix& sigma, Matrix& b, int nroot) = 0;
+//    virtual void compute_sigma(Matrix& sigma, Matrix& b, int nroot) = 0;
     virtual void get_diagonal(Vector& diag) = 0;
     virtual void add_bad_roots(
         std::vector<std::vector<std::pair<size_t, double>>>& bad_states) = 0;
@@ -75,9 +75,12 @@ class SigmaVectorSparse : public SigmaVector
     SigmaVectorSparse(std::vector<std::pair<std::vector<size_t>,std::vector<double>>>& H) : SigmaVector(H.size()), H_(H) {};
 
     void compute_sigma(SharedVector sigma, SharedVector b);
-    void compute_sigma(Matrix& sigma, Matrix& b, int nroot) {}
+ //   void compute_sigma(Matrix& sigma, Matrix& b, int nroot) {}
     void get_diagonal(Vector& diag);
-    void add_bad_roots( std::vector<std::vector<std::pair<size_t, double>>>& bad_states) {}
+    void add_bad_roots(
+        std::vector<std::vector<std::pair<size_t, double>>>& bad_states);
+
+    std::vector<std::vector<std::pair<size_t, double>>> bad_states_;
  protected:
     std::vector<std::pair<std::vector<size_t>,std::vector<double>>>& H_;
 };
@@ -93,7 +96,7 @@ class SigmaVectorList : public SigmaVector {
                     bool print_detail);
 
     void compute_sigma(SharedVector sigma, SharedVector b);
-    void compute_sigma(Matrix& sigma, Matrix& b, int nroot);
+  //  void compute_sigma(Matrix& sigma, Matrix& b, int nroot);
     void get_diagonal(Vector& diag);
     void get_hamiltonian(Matrix& H);
     std::vector<std::pair<std::vector<int>, std::vector<double>>>
@@ -126,63 +129,18 @@ class SigmaVectorList : public SigmaVector {
     bool print_details_ = true;
 };
 
-class SigmaVectorString : public SigmaVector {
-  public:
-    SigmaVectorString(const std::vector<STLBitsetDeterminant>& space,
-                      bool print_detail, bool disk);
-
-    // Create the list of a_p|N>
-    std::vector<std::vector<std::pair<size_t, short>>> a_ann_list_;
-    std::vector<std::vector<std::pair<size_t, short>>> b_ann_list_;
-    // Create the list of a+_q |N-1>
-    std::vector<std::vector<std::pair<size_t, short>>> a_cre_list_;
-    std::vector<std::vector<std::pair<size_t, short>>> b_cre_list_;
-
-    // Create the list of a_q a_p|N>
-    std::vector<std::vector<std::tuple<size_t, short, short>>> aa_ann_list_;
-    std::vector<std::vector<std::tuple<size_t, short, short>>> ab_ann_list_;
-    std::vector<std::vector<std::tuple<size_t, short, short>>> bb_ann_list_;
-    // Create the list of a+_s a+_r |N-2>
-    std::vector<std::vector<std::tuple<size_t, short, short>>> aa_cre_list_;
-    std::vector<std::vector<std::tuple<size_t, short, short>>> ab_cre_list_;
-    std::vector<std::vector<std::tuple<size_t, short, short>>> bb_cre_list_;
+/* Uses ann/cre lists in sigma builds (Harrison and Zarrabian method) */
+class SigmaVectorWfn1 : public SigmaVector
+{
+ public:
+    SigmaVectorWfn1(const DeterminantMap& space, WFNOperator& op);
 
     void compute_sigma(SharedVector sigma, SharedVector b);
-    void compute_sigma(Matrix& sigma, Matrix& b, int nroot);
+ //   void compute_sigma(Matrix& sigma, Matrix& b, int nroot) {}
     void get_diagonal(Vector& diag);
-    void add_bad_roots(
-        std::vector<std::vector<std::pair<size_t, double>>>& bad_states_);
-
+    void add_bad_roots( std::vector<std::vector<std::pair<size_t, double>>>& bad_states); 
     std::vector<std::vector<std::pair<size_t, double>>> bad_states_;
-
-  protected:
-    bool print_;
-    bool use_disk_ = false;
-
-    const std::vector<STLBitsetDeterminant>& space_;
-
-    size_t noalfa_;
-    size_t nobeta_;
-
-    std::vector<double> diag_;
-    std::vector<std::vector<size_t>> cre_list_buffer_;
-
-    void write_single_to_disk(
-        std::vector<std::vector<std::pair<size_t, short>>>& s_list, int i);
-    void write_double_to_disk(
-        std::vector<std::vector<std::tuple<size_t, short, short>>>& s_list,
-        int i);
-
-    void read_single_from_disk(
-        std::vector<std::vector<std::pair<size_t, short>>>& s_list, int i);
-    void read_double_from_disk(
-        std::vector<std::vector<std::tuple<size_t, short, short>>>& d_list,
-        int i);
-};
-
-class SigmaVectorWfn : public SigmaVector {
-  public:
-    SigmaVectorWfn(const DeterminantMap& space, WFNOperator& op);
+ protected:
     // Create the list of a_p|N>
     std::vector<std::vector<std::pair<size_t, short>>>& a_ann_list_;
     std::vector<std::vector<std::pair<size_t, short>>>& b_ann_list_;
@@ -198,9 +156,22 @@ class SigmaVectorWfn : public SigmaVector {
     std::vector<std::vector<std::tuple<size_t, short, short>>>& aa_cre_list_;
     std::vector<std::vector<std::tuple<size_t, short, short>>>& ab_cre_list_;
     std::vector<std::vector<std::tuple<size_t, short, short>>>& bb_cre_list_;
+    std::vector<double> diag_;
+    const DeterminantMap& space_;
+};
+
+/* Uses only cre lists, sparse sigma build */
+class SigmaVectorWfn2: public SigmaVector {
+  public:
+    SigmaVectorWfn2(const DeterminantMap& space, WFNOperator& op);
+    std::vector<std::vector<std::pair<size_t, short>>>& a_list_;
+    std::vector<std::vector<std::pair<size_t, short>>>& b_list_;
+    std::vector<std::vector<std::tuple<size_t, short, short>>>& aa_list_;
+    std::vector<std::vector<std::tuple<size_t, short, short>>>& ab_list_;
+    std::vector<std::vector<std::tuple<size_t, short, short>>>& bb_list_;
 
     void compute_sigma(SharedVector sigma, SharedVector b);
-    void compute_sigma(Matrix& sigma, Matrix& b, int nroot);
+   // void compute_sigma(Matrix& sigma, Matrix& b, int nroot);
     void get_diagonal(Vector& diag);
     void add_bad_roots(
         std::vector<std::vector<std::pair<size_t, double>>>& bad_states_);
@@ -216,6 +187,39 @@ class SigmaVectorWfn : public SigmaVector {
     // size_t nobeta_;
 
     std::vector<double> diag_;
+};
+/* Uses only cre lists, DGEMM sigma build */
+class SigmaVectorWfn3: public SigmaVector {
+  public:
+    SigmaVectorWfn3(const DeterminantMap& space, WFNOperator& op);
+    std::vector<std::vector<std::pair<size_t, short>>>& a_list_;
+    std::vector<std::vector<std::pair<size_t, short>>>& b_list_;
+    std::vector<std::vector<std::tuple<size_t, short, short>>>& aa_list_;
+    std::vector<std::vector<std::tuple<size_t, short, short>>>& ab_list_;
+    std::vector<std::vector<std::tuple<size_t, short, short>>>& bb_list_;
+
+    void compute_sigma(SharedVector sigma, SharedVector b);
+   // void compute_sigma(Matrix& sigma, Matrix& b, int nroot);
+    void get_diagonal(Vector& diag);
+    void add_bad_roots(
+        std::vector<std::vector<std::pair<size_t, double>>>& bad_states_);
+
+    std::vector<std::vector<std::pair<size_t, double>>> bad_states_;
+
+  protected:
+    bool print_;
+    bool use_disk_ = false;
+
+    const DeterminantMap& space_;
+    // size_t noalfa_;
+    // size_t nobeta_;
+
+    std::vector<double> diag_;
+
+    SharedMatrix aa_tei_;
+    SharedMatrix ab_tei_;
+    SharedMatrix bb_tei_;
+
 };
 
 #ifdef HAVE_MPI
@@ -305,8 +309,10 @@ class SparseCISolver {
     void set_initial_guess(std::vector<std::pair<size_t, double>>& guess);
     void manual_guess(bool value);
     void set_num_vecs(size_t value);
-
+    void set_sigma_method( std::string value );
+    std::string sigma_method_ = "SPARSE";
   private:
+
     /// Form the full Hamiltonian and diagonalize it (for debugging)
     void diagonalize_full(const std::vector<STLBitsetDeterminant>& space,
                           SharedVector& evals, SharedMatrix& evecs, int nroot,
@@ -328,9 +334,9 @@ class SparseCISolver {
         const std::vector<STLBitsetDeterminant>& space, SharedVector& evals,
         SharedMatrix& evecs, int nroot, int multiplicity);
 
-    void diagonalize_davidson_liu_string(
-        const std::vector<STLBitsetDeterminant>& space, SharedVector& evals,
-        SharedMatrix& evecs, int nroot, int multiplicity, bool disk);
+ //   void diagonalize_davidson_liu_string(
+ //       const std::vector<STLBitsetDeterminant>& space, SharedVector& evals,
+ //       SharedMatrix& evecs, int nroot, int multiplicity, bool disk);
     /// Build the full Hamiltonian matrix
 
     std::vector<std::pair<double, std::vector<std::pair<size_t, double>>>>

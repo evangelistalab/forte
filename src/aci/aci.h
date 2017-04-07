@@ -45,6 +45,7 @@
 #include "../operator.h"
 #include "../sparse_ci_solver.h"
 #include "../stl_bitset_determinant.h"
+#include "../mrpt2.h"
 
 namespace psi {
 namespace forte {
