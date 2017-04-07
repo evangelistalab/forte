@@ -86,8 +86,8 @@ double MRPT2::compute_energy()
     outfile->Printf("\n\n  Computing PT2 correction from %zu reference determinants", reference_.size()); 
 
     Timer en;
-//    double pt2_energy = compute_pt2_energy();
-    double pt2_energy = compute_pt2_energy2();
+    double pt2_energy = compute_pt2_energy();
+//    double pt2_energy = compute_pt2_energy2();
   //  double scalar = fci_ints_->scalar_energy() + molecule_->nuclear_repulsion_energy();
   //  double energy = pt2_energy + scalar + evals_->get(0);
     outfile->Printf("\n  PT2 computation took %1.6f s", en.get());
@@ -102,14 +102,21 @@ double MRPT2::compute_pt2_energy()
 {
     double energy = 0.0;
     double E_0 = evals_->get(0);
-    size_t n_dets = reference_.size();
-    det_hash<bool> A_I;
+    const size_t n_dets = reference_.size();
+//    int nmo = STLBitsetDeterminant::nmo_;
+//
+//    size_t guess_size = n_dets * nmo * nmo;
+//
+//    int nbin = static_cast<int>(std::ceil(guess_size / (std::pow(10,9)*3.3)));
+//    outfile->Printf("\n  Number of bins for exitation space:  %d", nbin);
+
+    det_hash<double> A_I;
 
     const std::vector<STLBitsetDeterminant>& dets = reference_.determinants();
 
     int count = 0;
     for( size_t I = 0; I < n_dets; ++I ){
-
+        double c_I = evecs_->get(I,0);
         const STLBitsetDeterminant& det = dets[I];
         std::vector<int> aocc = det.get_alfa_occ();
         std::vector<int> bocc = det.get_beta_occ();
@@ -131,16 +138,12 @@ double MRPT2::compute_pt2_energy()
                     new_det = det;
                     new_det.set_alfa_bit(ii, false);
                     new_det.set_alfa_bit(aa, true);
-                    if ( (A_I.count(new_det) == 0) and (reference_.has_det(new_det) == false ) ) {
-                        A_I[new_det] = true;
-                        double coupling = 0.0;
-                        #pragma omp parallel for reduction(+:coupling)
-                        for( size_t J = I; J < n_dets; ++J ){
-                            auto detJ = dets[J];
-                            coupling += detJ.slater_rules(new_det) * evecs_->get(J,0);    
-                        }
-                        energy += coupling*coupling / ( E_0 - new_det.energy());
+                    if( reference_.has_det(new_det) ) continue;
+                    double coupling = new_det.slater_rules_single_alpha(ii,aa) * c_I;    
+                    if ( A_I.find(new_det) != A_I.end() ) {
+                        coupling += A_I[new_det];
                     }
+                    A_I[new_det] = coupling;
                 }
             }
         }
@@ -153,16 +156,12 @@ double MRPT2::compute_pt2_energy()
                     new_det = det;
                     new_det.set_beta_bit(ii, false);
                     new_det.set_beta_bit(aa, true);
-                    if ( (A_I.count(new_det) == 0 ) and (!reference_.has_det(new_det)) ) {
-                        A_I[new_det] = true;
-                        double coupling = 0.0;
-                        #pragma omp parallel for reduction(+:coupling)
-                        for( size_t J = I; J < n_dets; ++J ){
-                            auto detJ = dets[J];
-                            coupling += detJ.slater_rules(new_det) * evecs_->get(J,0);    
-                        }
-                        energy += coupling*coupling / ( E_0 - new_det.energy());
+                    if( reference_.has_det(new_det) ) continue;
+                    double coupling = new_det.slater_rules_single_beta(ii,aa) * c_I;    
+                    if ( A_I.find(new_det) != A_I.end() ) {
+                        coupling += A_I[new_det];
                     }
+                    A_I[new_det] = coupling;
                 }
             }
         }
@@ -179,16 +178,13 @@ double MRPT2::compute_pt2_energy()
                              mo_symmetry_[aa] ^ mo_symmetry_[bb]) == 0) {
                             new_det = det;
                             double sign = new_det.double_excitation_ab(ii,jj,aa,bb); 
-                            if ( (A_I.count(new_det) == 0 ) and (!reference_.has_det(new_det)) ) {
-                                A_I[new_det] = true;
-                                double coupling = 0.0;
-                                #pragma omp parallel for reduction(+:coupling)
-                                for( size_t J = I; J < n_dets; ++J ){
-                                    STLBitsetDeterminant detJ = dets[J];
-                                    coupling += evecs_->get(J,0) * detJ.slater_rules(new_det);
-                                }
-                                energy += coupling*coupling / ( E_0 - new_det.energy());
+
+                            if( reference_.has_det(new_det) ) continue;
+                            double coupling = sign * c_I * STLBitsetDeterminant::fci_ints_->tei_ab(ii,jj,aa,bb);    
+                            if ( A_I.find(new_det) != A_I.end() ) {
+                                coupling += A_I[new_det];
                             }
+                            A_I[new_det] = coupling;
                         }
                     }
                 }
@@ -206,16 +202,12 @@ double MRPT2::compute_pt2_energy()
                         if ((mo_symmetry_[ii] ^ mo_symmetry_[jj] ^ mo_symmetry_[aa] ^ mo_symmetry_[bb]) == 0) {
                             new_det = det;
                             double sign = new_det.double_excitation_aa(ii,jj,aa,bb); 
-                            if ( (A_I.count(new_det) == 0 ) and (!reference_.has_det(new_det)) ) {
-                                A_I[new_det] = true;
-                                double coupling = 0.0;
-                                #pragma omp parallel for reduction(+:coupling)
-                                for( size_t J = I; J < n_dets; ++J ){
-                                    STLBitsetDeterminant detJ = dets[J];
-                                    coupling += (evecs_->get(J,0) * new_det.slater_rules(detJ));
-                                }
-                                energy += coupling*coupling / ( E_0 - new_det.energy());
+                            if( reference_.has_det(new_det) ) continue;
+                            double coupling = sign * c_I * STLBitsetDeterminant::fci_ints_->tei_aa(ii,jj,aa,bb);    
+                            if ( A_I.find(new_det) != A_I.end() ) {
+                                coupling += A_I[new_det];
                             }
+                            A_I[new_det] = coupling;
                         }
                     }
                 }
@@ -234,21 +226,21 @@ double MRPT2::compute_pt2_energy()
                              mo_symmetry_[aa] ^ mo_symmetry_[bb]) == 0) {
                             new_det = det;
                             double sign = new_det.double_excitation_bb(ii,jj,aa,bb); 
-                            if ( (A_I.count(new_det) == 0 ) and (!reference_.has_det(new_det)) ) {
-                                A_I[new_det] = true;
-                                double coupling = 0.0;
-                                #pragma omp parallel for reduction(+:coupling)
-                                for( size_t J = I; J < n_dets; ++J ){
-                                    STLBitsetDeterminant detJ = dets[J];
-                                    coupling += evecs_->get(J,0) * detJ.slater_rules(new_det);
-                                }
-                                energy += coupling*coupling / ( E_0 - new_det.energy());
+                            if( reference_.has_det(new_det) ) continue;
+                            double coupling = sign * c_I * STLBitsetDeterminant::fci_ints_->tei_bb(ii,jj,aa,bb);    
+                            if ( A_I.find(new_det) != A_I.end() ) {
+                                coupling += A_I[new_det];
                             }
+                            A_I[new_det] = coupling;
                         }
                     }
                 }
             }
         }
+    }
+    
+    for( auto& det : A_I ){
+        energy += ( det.second*det.second ) / ( E_0 - det.first.energy() );
     }
     return energy;
 }
