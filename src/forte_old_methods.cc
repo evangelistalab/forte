@@ -32,13 +32,13 @@
 #include "mini-boost/boost/format.hpp"
 #include <ambit/tensor.h>
 
-#include "psi4/psi4-dec.h"
-#include "psi4/psifiles.h"
 #include "psi4/libdpd/dpd.h"
+#include "psi4/libmints/molecule.h"
+#include "psi4/libmints/wavefunction.h"
 #include "psi4/libpsio/psio.hpp"
 #include "psi4/libtrans/integraltransform.h"
-#include "psi4/libmints/wavefunction.h"
-#include "psi4/libmints/molecule.h"
+#include "psi4/psi4-dec.h"
+#include "psi4/psifiles.h"
 
 #include "helpers.h"
 #include "multidimensional_arrays.h"
@@ -47,27 +47,31 @@
 #include "pci/pci_hashvec.h"
 #include "pci/pci_simple.h"
 #include "aci/aci.h"
-#include "fcimc.h"
+#include "active_dsrgpt2.h"
+#include "blockedtensorfactory.h"
+#include "casscf.h"
+#include "ci-no/ci-no.h"
+#include "cc.h"
+#include "fci/fci.h"
 #include "fci_mo.h"
+#include "fcimc.h"
+#include "finite_temperature.h"
+#include "helpers.h"
+#include "localize.h"
+#include "mcsrgpt2_mo.h"
+#include "mp2_nos.h"
+#include "mrci.h"
 #include "mrdsrg-so/mrdsrg_so.h"
-#include "mrdsrg-spin-free/mrdsrg.h"
+#include "mrdsrg-so/so-mrdsrg.h"
+#include "mrdsrg-spin-adapted/dsrg_mrpt.h"
 #include "mrdsrg-spin-free/dsrg_mrpt2.h"
 #include "mrdsrg-spin-free/dsrg_mrpt3.h"
+#include "mrdsrg-spin-free/mrdsrg.h"
 #include "mrdsrg-spin-free/three_dsrg_mrpt2.h"
-#include "tensorsrg.h"
-#include "mcsrgpt2_mo.h"
-#include "fci/fci.h"
-#include "blockedtensorfactory.h"
+#include "multidimensional_arrays.h"
 #include "sq.h"
-#include "mrdsrg-so/so-mrdsrg.h"
-#include "casscf.h"
-#include "finite_temperature.h"
-#include "active_dsrgpt2.h"
-#include "mrdsrg-spin-adapted/dsrg_mrpt.h"
+#include "tensorsrg.h"
 #include "v2rdm.h"
-#include "localize.h"
-#include "cc.h"
-#include "mrci.h"
 
 #ifdef HAVE_CHEMPS2
 #include "dmrgscf.h"
@@ -107,7 +111,11 @@ void forte_old_methods(SharedWavefunction ref_wfn, Options& options,
         auto mp2_nos =
             std::make_shared<MP2_NOS>(ref_wfn, options, ints, mo_space_info);
     }
-
+    if (options.get_bool("CINO")) {
+        auto cino =
+            std::make_shared<CINO>(ref_wfn, options, ints, mo_space_info);
+        cino->compute_energy();
+    }
     if (options.get_bool("LOCALIZE")) {
         auto localize =
             std::make_shared<LOCALIZE>(ref_wfn, options, ints, mo_space_info);
@@ -145,8 +153,8 @@ void forte_old_methods(SharedWavefunction ref_wfn, Options& options,
         }
     }
     if (options.get_str("JOB_TYPE") == "PCI_SIMPLE") {
-        auto pci_simple = std::make_shared<ProjectorCI_Simple>(ref_wfn, options, ints,
-                                                 mo_space_info);
+        auto pci_simple = std::make_shared<ProjectorCI_Simple>(
+            ref_wfn, options, ints, mo_space_info);
         for (int n = 0; n < options.get_int("NROOT"); ++n) {
             pci_simple->compute_energy();
         }
@@ -387,7 +395,7 @@ void forte_old_methods(SharedWavefunction ref_wfn, Options& options,
 
         if (cas_type == "ACI") {
             if (options.get_bool("SEMI_CANONICAL") and
-                !options.get_bool("CASSCF_REFERENCE") and 
+                !options.get_bool("CASSCF_REFERENCE") and
                 !options.get_bool("ACI_NO")) {
                 auto aci = std::make_shared<AdaptiveCI>(ref_wfn, options, ints,
                                                         mo_space_info);
@@ -484,7 +492,7 @@ void forte_old_methods(SharedWavefunction ref_wfn, Options& options,
             aci->set_max_rdm(3);
             aci->set_quiet(true);
             aci->compute_energy();
-            if( options.get_bool("ACI_NO")) {
+            if (options.get_bool("ACI_NO")) {
                 aci->compute_nos();
             }
             Reference aci_reference = aci->reference();
@@ -687,20 +695,21 @@ void forte_old_methods(SharedWavefunction ref_wfn, Options& options,
     }
 
     if (options.get_str("JOB_TYPE") == "MRCISD") {
-        if( options.get_bool("ACI_NO")){
-            auto aci = std::make_shared<AdaptiveCI>(ref_wfn, options, ints, mo_space_info);
+        if (options.get_bool("ACI_NO")) {
+            auto aci = std::make_shared<AdaptiveCI>(ref_wfn, options, ints,
+                                                    mo_space_info);
             aci->compute_energy();
             aci->compute_nos();
         }
-        auto aci = std::make_shared<AdaptiveCI>(ref_wfn, options, ints, mo_space_info);
+        auto aci =
+            std::make_shared<AdaptiveCI>(ref_wfn, options, ints, mo_space_info);
         aci->compute_energy();
 
         DeterminantMap reference = aci->get_wavefunction();
-        auto mrci = std::make_shared<MRCI>(ref_wfn,options,ints,mo_space_info,reference);
+        auto mrci = std::make_shared<MRCI>(ref_wfn, options, ints,
+                                           mo_space_info, reference);
         mrci->compute_energy();
-
     }
-
 }
 }
 } // End Namespaces

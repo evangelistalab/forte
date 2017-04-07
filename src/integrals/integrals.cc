@@ -448,11 +448,14 @@ void ForteIntegrals::print_ints() {
     wfn_->Cb()->print();
 
     outfile->Printf("\n  Alpha one-electron integrals (T + V_{en})");
+    Matrix ha(" Alpha one-electron integrals (T + V_{en})",nmo_,nmo_);
     for (size_t p = 0; p < nmo_; ++p) {
         for (size_t q = 0; q < nmo_; ++q) {
-            outfile->Printf("\n  h[%6d][%6d] = %20.12f", p, q, oei_a(p, q));
+            ha.set(p,q,oei_a(p, q));
+//            outfile->Printf("\n  h[%6d][%6d] = %20.12f", p, q, oei_a(p, q));
         }
     }
+    ha.print();
 
     outfile->Printf("\n  Beta one-electron integrals (T + V_{en})");
     for (size_t p = 0; p < nmo_; ++p) {
