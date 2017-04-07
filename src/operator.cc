@@ -27,6 +27,7 @@
  */
 
 #include "operator.h"
+#include "forte-def.h"
 
 #ifdef _OPENMP
 #include <omp.h>
@@ -57,7 +58,133 @@ Timer build;
     std::vector<std::pair<std::vector<size_t>, std::vector<double>>> H_sparse(size);
     size_t n_nonzero = 0;
 
-#pragma omp parallel reduction(+:n_nonzero)
+    const std::vector<STLBitsetDeterminant>& dets = wfn.determinants();
+
+    // Add diagonal
+    for( size_t I = 0; I < size; ++I ){
+        H_sparse[I].first.push_back(I);
+        H_sparse[I].second.push_back(dets[I].energy());
+        n_nonzero++;
+    }
+
+    for( size_t K = 0, max_K = a_list_.size(); K < max_K; ++K ){
+            
+        const std::vector<std::pair<size_t,short>>& c_dets = a_list_[K];
+        for( auto& detI : c_dets ){
+            size_t idx = detI.first;
+            short p = std::abs(detI.second) - 1;
+            double sign_p = detI.second > 0.0 ? 1.0 : -1.0;
+            H_sparse[idx].first.reserve(c_dets.size());
+            H_sparse[idx].second.reserve(c_dets.size());
+            for( auto& detJ : c_dets ){
+                short q = std::abs(detJ.second) - 1;
+                if( p != q ){
+                    size_t J = detJ.first;
+                    double sign_q = detJ.second > 0.0 ? 1.0 : -1.0;
+                    double HIJ = sign_p * sign_q * dets[J].slater_rules_single_alpha_abs(p,q);
+                    H_sparse[idx].first.push_back(J);
+                    H_sparse[idx].second.push_back(HIJ);
+                    n_nonzero++;
+                }
+            }        
+        }
+    }
+    for( size_t K = 0, max_K = b_list_.size(); K < max_K; ++K ){
+            
+        const std::vector<std::pair<size_t,short>>& c_dets = b_list_[K];
+        for( auto& detI : c_dets ){
+            size_t idx = detI.first;
+            short p = std::abs(detI.second) - 1;
+            double sign_p = detI.second > 0.0 ? 1.0 : -1.0;
+            H_sparse[idx].first.reserve(c_dets.size());
+            H_sparse[idx].second.reserve(c_dets.size());
+            for( auto& detJ : c_dets ){
+                short q = std::abs(detJ.second) - 1;
+                if( p != q ){
+                    size_t J = detJ.first;
+                    double sign_q = detJ.second > 0.0 ? 1.0 : -1.0;
+                    double HIJ = sign_p * sign_q * dets[J].slater_rules_single_beta_abs(p,q);
+                    H_sparse[idx].first.push_back(J);
+                    H_sparse[idx].second.push_back(HIJ);
+                    n_nonzero++;
+                }
+            }        
+        }
+    }
+    for( size_t K = 0, max_K = aa_list_.size(); K < max_K; ++K ){
+            
+        const std::vector<std::tuple<size_t,short,short>>& c_dets = aa_list_[K];
+        for( auto& detI : c_dets ){
+            size_t idx = std::get<0>(detI);
+            short p = std::abs(std::get<1>(detI)) - 1;
+            short q = std::get<2>(detI);
+            double sign_p = std::get<1>(detI) > 0.0 ? 1.0 : -1.0;
+            H_sparse[idx].first.reserve(c_dets.size());
+            H_sparse[idx].second.reserve(c_dets.size());
+            for( auto& detJ : c_dets ){
+                short r = std::abs(std::get<1>(detJ)) - 1;
+                short s = std::get<2>(detJ);
+                if ((p != r) and (q != s) and (p != s) and (q != r)){
+                    size_t J = std::get<0>(detJ);
+                    double sign_q = std::get<1>(detJ) > 0.0 ? 1.0 : -1.0;
+                    double HIJ = sign_p * sign_q * STLBitsetDeterminant::fci_ints_->tei_aa(p,q,r,s);
+                    H_sparse[idx].first.push_back(J);
+                    H_sparse[idx].second.push_back(HIJ);
+                    n_nonzero++;
+                }
+            }        
+        }
+    }
+    for( size_t K = 0, max_K = bb_list_.size(); K < max_K; ++K ){
+            
+        const std::vector<std::tuple<size_t,short,short>>& c_dets = bb_list_[K];
+        for( auto& detI : c_dets ){
+            size_t idx = std::get<0>(detI);
+            short p = std::abs(std::get<1>(detI)) - 1;
+            short q = std::get<2>(detI);
+            double sign_p = std::get<1>(detI) > 0.0 ? 1.0 : -1.0;
+            H_sparse[idx].first.reserve(c_dets.size());
+            H_sparse[idx].second.reserve(c_dets.size());
+            for( auto& detJ : c_dets ){
+                short r = std::abs(std::get<1>(detJ)) - 1;
+                short s = std::get<2>(detJ);
+                if ((p != r) and (q != s) and (p != s) and (q != r)){
+                    size_t J = std::get<0>(detJ);
+                    double sign_q = std::get<1>(detJ) > 0.0 ? 1.0 : -1.0;
+                    double HIJ = sign_p * sign_q * STLBitsetDeterminant::fci_ints_->tei_bb(p,q,r,s);
+                    H_sparse[idx].first.push_back(J);
+                    H_sparse[idx].second.push_back(HIJ);
+                    n_nonzero++;
+                }
+            }        
+        }
+    }
+    for( size_t K = 0, max_K = ab_list_.size(); K < max_K; ++K ){
+            
+        const std::vector<std::tuple<size_t,short,short>>& c_dets = ab_list_[K];
+        for( auto& detI : c_dets ){
+            size_t idx = std::get<0>(detI);
+            short p = std::abs(std::get<1>(detI)) - 1;
+            short q = std::get<2>(detI);
+            double sign_p = std::get<1>(detI) > 0.0 ? 1.0 : -1.0;
+            H_sparse[idx].first.reserve(c_dets.size());
+            H_sparse[idx].second.reserve(c_dets.size());
+            for( auto& detJ : c_dets ){
+                short r = std::abs(std::get<1>(detJ)) - 1;
+                short s = std::get<2>(detJ);
+                if ( (p != r) and (q != s) ){
+                    size_t J = std::get<0>(detJ);
+                    double sign_q = std::get<1>(detJ) > 0.0 ? 1.0 : -1.0;
+                    double HIJ = sign_p * sign_q * STLBitsetDeterminant::fci_ints_->tei_ab(p,q,r,s);
+                    H_sparse[idx].first.push_back(J);
+                    H_sparse[idx].second.push_back(HIJ);
+                    n_nonzero++;
+                }
+            }        
+        }
+    }
+
+/*#pragma omp parallel reduction(+:n_nonzero)
 {
         int num_thread = omp_get_max_threads();
         int tid = omp_get_thread_num();
@@ -74,12 +201,10 @@ Timer build;
             size_t id = 0;
             std::vector<size_t> ids(1);           
             std::vector<double> H_vals(1);            
-            std::unordered_map<size_t,size_t> det_to_id;
 
             //Diagonal term first
             H_vals[id] = dets[J].energy();
             ids[id] = J;
-            det_to_id[J] = id; 
             id++;
 
             for( auto& aJ_mo_sign : a_ann_list_[J]){
@@ -96,18 +221,11 @@ Timer build;
                         const double HIJ = dets[I].slater_rules_single_alpha_abs(p,q) *
                                             sign_p * sign_q;
                         
-                        auto search = det_to_id.find(I);
-                        if( search != det_to_id.end() ){
-                           // ids[search->second] = I;
-                            H_vals[search->second] += HIJ; 
-                        }else{
-                            ids.resize( id+1 );
-                            H_vals.resize( id+1 );
-                            ids[id] = I;
-                            H_vals[id] = HIJ; 
-                            det_to_id[I] = id;
-                            id++;
-                        }
+                        ids.resize( id+1 );
+                        H_vals.resize( id+1 );
+                        ids[id] = I;
+                        H_vals[id] = HIJ; 
+                        id++;
                     }
                 }
             }
@@ -126,17 +244,11 @@ Timer build;
                         const double HIJ = dets[I].slater_rules_single_beta_abs(p,q) *
                                             sign_p * sign_q;
                         
-                        auto search = det_to_id.find(I);
-                        if( search != det_to_id.end() ){
-                            H_vals[search->second] += HIJ; 
-                        }else{
-                            ids.resize( id+1 );
-                            H_vals.resize( id+1 );
-                            ids[id] = I;
-                            H_vals[id] = HIJ; 
-                            det_to_id[I] = id;
-                            id++;
-                        }
+                        ids.resize( id+1 );
+                        H_vals.resize( id+1 );
+                        ids[id] = I;
+                        H_vals[id] = HIJ; 
+                        id++;
                     }
                 }
             }
@@ -155,17 +267,11 @@ Timer build;
                         const double HIJ = sign_pq * sign_rs * 
                             STLBitsetDeterminant::fci_ints_->tei_aa(p,q,r,s);
 
-                        auto search = det_to_id.find(I);
-                        if( search != det_to_id.end() ){
-                            H_vals[search->second] += HIJ;
-                        }else{
-                            ids.resize( id+1 );
-                            H_vals.resize( id+1 );
-                            ids[id] = I;
-                            det_to_id[I] = id;
-                            H_vals[id] = HIJ; 
-                            id++;
-                        }
+                        ids.resize( id+1 );
+                        H_vals.resize( id+1 );
+                        ids[id] = I;
+                        H_vals[id] = HIJ; 
+                        id++;
                     }
                 }
             }
@@ -185,17 +291,11 @@ Timer build;
                         const double HIJ = sign_pq * sign_rs * 
                             STLBitsetDeterminant::fci_ints_->tei_bb(p,q,r,s);
 
-                        auto search = det_to_id.find(I);
-                        if( search != det_to_id.end() ){
-                            H_vals[search->second] += HIJ;
-                        }else{
-                            ids.resize( id+1 );
-                            H_vals.resize( id+1 );
-                            ids[id] = I;
-                            det_to_id[I] = id;
-                            H_vals[id] = HIJ; 
-                            id++;
-                        }
+                        ids.resize( id+1 );
+                        H_vals.resize( id+1 );
+                        ids[id] = I;
+                        H_vals[id] = HIJ; 
+                        id++;
                     }
                 }
             }
@@ -213,17 +313,12 @@ Timer build;
                         const double sign_rs = std::get<1>(abbJ_mo) > 0.0 ? 1.0 : -1.0;
                         const double HIJ = sign_pq * sign_rs * 
                             STLBitsetDeterminant::fci_ints_->tei_ab(p,q,r,s);
-                        auto search = det_to_id.find(I);
-                        if( search != det_to_id.end() ){
-                            H_vals[search->second] += HIJ;
-                        }else{
-                            ids.resize( id+1 );
-                            H_vals.resize( id+1 );
-                            ids[id] = I;
-                            det_to_id[I] = id;
-                            H_vals[id] = HIJ; 
-                            id++;
-                        }
+                        ids.resize( id+1 );
+                        H_vals.resize( id+1 );
+                        ids[id] = I;
+                        H_vals[id] = HIJ; 
+                        id++;
+                        
                     }
                 }
             }
@@ -233,8 +328,9 @@ Timer build;
             H_sparse[J] = std::make_pair( ids, H_vals );
         }
     }
+*/
     outfile->Printf("\n  Time spent building H:   %1.6f s", build.get());
-    outfile->Printf("\n  H contains %zu nonzero elements (%1.3f MB)", n_nonzero, (n_nonzero * 8.0)/(1024*1024) );
+    outfile->Printf("\n  H contains %zu nonzero elements (%1.3f MB)", n_nonzero, (n_nonzero * 16.0)/(1024*1024) );
 
 
 //    for( size_t J = 0; J < size; ++J){
@@ -268,25 +364,31 @@ double WFNOperator::s2(DeterminantMap& wfn, SharedMatrix& evecs, int root) {
               evecs->get(det.second, root) * evecs->get(det.second, root);
         if ((npair == nb) or (npair == na))
             continue;
+    }
 
         // Loop directly through all determinants with
         // spin-coupled electrons, i.e:
         // |PhiI> = a+(qa) a+(pb) a-(qb) a-(pa) |PhiJ>
-        for (auto& abJ_mo_sign : ab_ann_list_[det.second]) {
-            const size_t abJ_add = std::get<0>(abJ_mo_sign);
-            double sign_pq = std::get<1>(abJ_mo_sign) > 0.0 ? 1.0 : -1.0;
-            short p = std::fabs(std::get<1>(abJ_mo_sign)) - 1;
-            short q = std::get<2>(abJ_mo_sign);
+
+    for( size_t K = 0, max_K = ab_list_.size(); K < max_K; ++K ){ 
+        const std::vector<std::tuple<size_t, short,short>>& c_dets = ab_list_[K];
+        for (auto& detI : c_dets) {
+            const size_t I = std::get<0>(detI);
+            double sign_pq = std::get<1>(detI) > 0.0 ? 1.0 : -1.0;
+            short p = std::fabs(std::get<1>(detI)) - 1;
+            short q = std::get<2>(detI);
             if (p == q)
                 continue;
-            for (auto& ababJ_mo_sign : ab_cre_list_[abJ_add]) {
-                double sign_rs = std::get<1>(ababJ_mo_sign) > 0.0 ? 1.0 : -1.0;
-                short r = std::fabs(std::get<1>(ababJ_mo_sign)) - 1;
-                short s = std::get<2>(ababJ_mo_sign);
+            for (auto& detJ : c_dets) {
+                const size_t J = std::get<0>(detJ);
+                if( I == J ) continue;
+                double sign_rs = std::get<1>(detJ) > 0.0 ? 1.0 : -1.0;
+                short r = std::fabs(std::get<1>(detJ)) - 1;
+                short s = std::get<2>(detJ);
                 if ((r != s) and (p == s) and (q == r)) {
                     sign_pq *= sign_rs;
-                    S2 -= sign_pq * evecs->get(det.second, root) *
-                          evecs->get(std::get<0>(ababJ_mo_sign), root);
+                    S2 -= sign_pq * evecs->get(J, root) *
+                          evecs->get(J, root);
                 }
             }
         }
@@ -521,6 +623,90 @@ void WFNOperator::build_strings(DeterminantMap& wfn)
     } 
 }
 
+void WFNOperator::op_s_lists(DeterminantMap& wfn) {
+
+    // Get a reference to the determinants
+    const std::vector<STLBitsetDeterminant>& dets = wfn.determinants();
+Timer ann;
+    for( size_t b = 0, max_b = beta_strings_.size(); b < max_b; ++b ){
+        size_t na_ann = 0; 
+        std::vector<std::vector<std::pair<size_t,short>>> tmp;
+        std::vector<size_t>& c_dets = beta_strings_[b];
+        det_hash<int> map_a_ann;
+        for( size_t I = 0, maxI=c_dets.size(); I < maxI; ++I ){
+            size_t index = c_dets[I];
+            const STLBitsetDeterminant& detI = dets[index];
+            const std::vector<int>& aocc = detI.get_alfa_occ(); 
+            int noalfa = aocc.size();
+               
+            for( int i = 0; i < noalfa; ++i ){
+                int ii = aocc[i];
+                STLBitsetDeterminant detJ(detI);
+                detJ.set_alfa_bit(ii, false);
+                double sign = detI.slater_sign_alpha(ii);
+                size_t detJ_add;
+                auto search = map_a_ann.find(detJ);
+                if( search == map_a_ann.end() ){
+                    detJ_add = na_ann;
+                    map_a_ann[detJ] = na_ann;
+                    na_ann++;
+                    tmp.resize(na_ann);
+                }else{
+                    detJ_add = search->second;
+                }
+                tmp[detJ_add].push_back(std::make_pair( index, sign > 0.0 ? (ii+1) : (-ii-1) )) ;
+            }
+        }
+        //size_t idx = 0;
+        for( auto& vec : tmp ){
+            if( vec.size() > 1 ){
+                a_list_.push_back(vec);
+              //  a_list_[idx] = vec;
+              //  idx++;
+            }
+        } 
+    }
+
+outfile->Printf("\n  Time spent building a_list   %1.6f s", ann.get());
+Timer bnn;
+    for( size_t a = 0, max_a = alpha_strings_.size(); a < max_a; ++a ){
+        size_t nb_ann = 0; 
+        std::vector<std::vector<std::pair<size_t,short>>> tmp;
+        std::vector<size_t>& c_dets = alpha_strings_[a];
+        det_hash<int> map_b_ann;
+        for( size_t I = 0, maxI=c_dets.size(); I < maxI; ++I ){
+            size_t index = c_dets[I];
+            const STLBitsetDeterminant& detI = dets[index];
+            const std::vector<int>& bocc = detI.get_beta_occ(); 
+            int nobeta = bocc.size();
+               
+            for( int i = 0; i < nobeta; ++i ){
+                int ii = bocc[i];
+                STLBitsetDeterminant detJ(detI);
+                detJ.set_beta_bit(ii, false);
+                double sign = detI.slater_sign_beta(ii);
+                size_t detJ_add;
+                auto search = map_b_ann.find(detJ);
+                if( search == map_b_ann.end() ){
+                    detJ_add = nb_ann;
+                    map_b_ann[detJ] = nb_ann;
+                    nb_ann++;
+                    tmp.resize(nb_ann);
+                }else{
+                    detJ_add = search->second;
+                }
+                tmp[detJ_add].push_back( std::make_pair( index, sign > 0.0 ? (ii+1) : (-ii-1) ) );
+            }
+        }
+        for( auto& vec : tmp ){
+            if( vec.size() > 1 ){
+                b_list_.push_back(vec);
+            }
+        } 
+    }
+outfile->Printf("\n  Time spent building b_list   %1.6f s", bnn.get());
+}
+
 void WFNOperator::op_lists(DeterminantMap& wfn) {
     size_t ndets = wfn.size();
     a_ann_list_.resize(ndets);
@@ -625,9 +811,166 @@ outfile->Printf("\n  Time spent building b_ann_list   %1.6f s", bnn.get());
     }
     a_cre_list_.shrink_to_fit();
     b_cre_list_.shrink_to_fit();
+
 }
 
+void WFNOperator::tp_s_lists(DeterminantMap& wfn) {
+    
+    const std::vector<STLBitsetDeterminant>& dets = wfn.determinants();
+    // Generate alpha-alpha coupling list
+Timer aa;
+    {
+        for( size_t b = 0, max_b = beta_strings_.size(); b < max_b; ++b ){
+            size_t naa_ann = 0;
+            std::vector<std::vector<std::tuple<size_t,short,short>>> tmp;
+            det_hash<int> map_aa_ann;
+            std::vector<size_t> c_dets = beta_strings_[b];
+            size_t max_I = c_dets.size();
+            for( size_t I = 0; I < max_I; ++I ){
+                size_t idx = c_dets[I];
+                STLBitsetDeterminant detI = dets[idx];
+                std::vector<int> aocc = detI.get_alfa_occ();
+                int noalfa = aocc.size();
+
+                for (int i = 0; i < noalfa; ++i) {
+                    for (int j = i + 1; j < noalfa; ++j) {
+                        int ii = aocc[i];
+                        int jj = aocc[j];
+                        STLBitsetDeterminant detJ(detI);
+                        detJ.set_alfa_bit(ii, false);
+                        detJ.set_alfa_bit(jj, false);
+
+                        double sign =
+                            detI.slater_sign_alpha(ii) * detI.slater_sign_alpha(jj);
+
+                        det_hash<int>::iterator it = map_aa_ann.find(detJ);
+                        size_t detJ_add;
+                        // Add detJ to map if it isn't there
+                        if (it == map_aa_ann.end()) {
+                            detJ_add = naa_ann;
+                            map_aa_ann[detJ] = naa_ann;
+                            naa_ann++;
+                            tmp.resize(naa_ann);
+                        } else {
+                            detJ_add = it->second;
+                        }
+                        tmp[detJ_add].push_back( std::make_tuple(idx, (sign > 0.0) ? (ii + 1) : (-ii - 1), jj) );
+                    }
+                }
+            }
+            for( auto& vec : tmp ){
+                if( vec.size() > 1 ){
+                    aa_list_.push_back(vec);
+                }
+            } 
+        }
+    }
+outfile->Printf("\n  Time spent building aa_list  %1.6f s", aa.get());
+    // Generate beta-beta coupling list
+Timer bb;
+    {
+        for( size_t a = 0, max_a = alpha_strings_.size(); a < max_a; ++a ){
+            size_t nbb_ann = 0;
+            std::vector<std::vector<std::tuple<size_t,short,short>>> tmp;
+            det_hash<int> map_bb_ann;
+            std::vector<size_t>& c_dets = alpha_strings_[a];
+            size_t max_I = c_dets.size();
+            
+            for( size_t I = 0; I < max_I; ++I ){    
+                size_t idx = c_dets[I];                
+
+                STLBitsetDeterminant detI = dets[idx];
+                std::vector<int> bocc = detI.get_beta_occ();
+                int nobeta = bocc.size();
+
+                for (int i = 0, ij = 0; i < nobeta; ++i) {
+                    for (int j = i + 1; j < nobeta; ++j, ++ij) {
+                        int ii = bocc[i];
+                        int jj = bocc[j];
+                        STLBitsetDeterminant detJ(detI);
+                        detJ.set_beta_bit(ii, false);
+                        detJ.set_beta_bit(jj, false);
+
+                        double sign =
+                            detI.slater_sign_beta(ii) * detI.slater_sign_beta(jj);
+
+                        det_hash<int>::iterator it = map_bb_ann.find(detJ);
+                        size_t detJ_add;
+                        // Add detJ to map if it isn't there
+                        if (it == map_bb_ann.end()) {
+                            detJ_add = nbb_ann;
+                            map_bb_ann[detJ] = nbb_ann;
+                            nbb_ann++;
+                            tmp.resize(nbb_ann);
+                        } else {
+                            detJ_add = it->second;
+                        }
+
+                        tmp[detJ_add].push_back( std::make_tuple(
+                            idx, (sign > 0.0) ? (ii + 1) : (-ii - 1), jj));
+                    }
+                }
+            }
+            for( auto& vec : tmp ){
+                if( vec.size() > 1 ){
+                    bb_list_.push_back(vec);
+                }
+            } 
+        }
+    }
+outfile->Printf("\n  Time spent building bb_list  %1.6f s", bb.get());
+
+Timer ab;
+    // Generate alfa-beta coupling list
+    {
+        for( size_t a = 0, max_a = alpha_a_strings_.size(); a < max_a; ++a ){
+            size_t nab_ann = 0;
+            std::vector<std::vector<std::tuple<size_t,short,short>>> tmp;
+            det_hash<int> map_ab_ann;
+            std::vector<std::pair<int,size_t>>& c_dets = alpha_a_strings_[a];
+            size_t max_I = c_dets.size();
+            for( size_t I = 0; I < max_I; ++I ){        
+                size_t idx = c_dets[I].second;
+                int ii = c_dets[I].first;
+                STLBitsetDeterminant detI = dets[idx];
+                detI.set_alfa_bit(ii, false);
+                std::vector<int> bocc = detI.get_beta_occ();
+                size_t nobeta = bocc.size();
+
+                for (size_t j = 0; j < nobeta; ++j) {
+                    int jj = bocc[j];
+
+                    STLBitsetDeterminant detJ(detI);
+                    detJ.set_beta_bit(jj, false);
+
+                    double sign = detI.slater_sign_alpha(ii) * detI.slater_sign_beta(jj);
+                    det_hash<int>::iterator it = map_ab_ann.find(detJ);
+                    size_t detJ_add;
+
+                    if (it == map_ab_ann.end()) {
+                        detJ_add = nab_ann;
+                        map_ab_ann[detJ] = nab_ann;
+                        nab_ann++;
+                        tmp.resize(nab_ann);
+                    } else {
+                        detJ_add = it->second;
+                    }
+                    tmp[detJ_add].push_back( std::make_tuple(
+                        idx, (sign > 0.0) ? (ii + 1) : (-ii - 1), jj));
+                }
+            }
+            for( auto& vec : tmp ){
+                if( vec.size() > 1 ){
+                    ab_list_.push_back(vec);
+                }
+            } 
+        }
+    }
+outfile->Printf("\n  Time spent building ab_list  %1.6f s", ab.get());
+}
+ 
 void WFNOperator::tp_lists(DeterminantMap& wfn) {
+
     size_t ndets = wfn.size();
     aa_ann_list_.resize(ndets);
     ab_ann_list_.resize(ndets);
@@ -819,6 +1162,10 @@ void WFNOperator::clear_op_lists() {
     b_cre_list_.clear();
 }
 
+void WFNOperator::clear_op_s_lists() {
+    a_list_.clear();
+    b_list_.clear();
+}
 void WFNOperator::clear_tp_lists() {
     aa_ann_list_.clear();
     bb_ann_list_.clear();
@@ -826,6 +1173,12 @@ void WFNOperator::clear_tp_lists() {
     bb_cre_list_.clear();
     ab_ann_list_.clear();
     ab_cre_list_.clear();
+}
+
+void WFNOperator::clear_tp_s_lists() {
+    aa_list_.clear();
+    bb_list_.clear();
+    ab_list_.clear();
 }
 
 void WFNOperator::three_lists(DeterminantMap& wfn) {
@@ -1153,5 +1506,13 @@ void WFNOperator::three_lists(DeterminantMap& wfn) {
         }
     }
 }
-}
-}
+
+//std::vector<std::pair<std::vector<size_t>, std::vector<double>>> WFNOperator::build_H_sparse2( const DeterminantMap& wfn )
+//{
+//    /*- Build the Hamiltonian without the coupling lists, but with the string lists -*/    
+//        
+//    
+//}
+
+}}
+

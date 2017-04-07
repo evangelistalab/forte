@@ -55,9 +55,11 @@ class WFNOperator {
 
     /// Build the coupling lists for one-particle operators
     void op_lists(DeterminantMap& wfn);
+    void op_s_lists(DeterminantMap& wfn);
 
     /// Build the coupling lists for two-particle operators
     void tp_lists(DeterminantMap& wfn);
+    void tp_s_lists(DeterminantMap& wfn);
 
     /// Build the coupling lists for three-particle operators
     void three_lists(DeterminantMap& wfn);
@@ -65,6 +67,8 @@ class WFNOperator {
     void clear_op_lists();
     void clear_tp_lists();
 
+    void clear_op_s_lists();
+    void clear_tp_s_lists();
     /*- Operators -*/
 
     /// Single excitations, a_p^(+) a_q|>
@@ -81,6 +85,14 @@ class WFNOperator {
     /// Build the sparse Hamiltonian
     std::vector<std::pair<std::vector<size_t>, std::vector<double>>> build_H_sparse( const DeterminantMap& wfn);
 
+    /// Build the sparse Hamiltonian -v2
+    std::vector<std::pair<std::vector<size_t>, std::vector<double>>> build_H_sparse2( const DeterminantMap& wfn);
+
+    std::vector<std::vector<std::pair<size_t, short>>> a_list_;
+    std::vector<std::vector<std::pair<size_t, short>>> b_list_;
+    std::vector<std::vector<std::tuple<size_t, short, short>>> aa_list_;
+    std::vector<std::vector<std::tuple<size_t, short, short>>> bb_list_;
+    std::vector<std::vector<std::tuple<size_t, short, short>>> ab_list_;
 
     /// The alpha single-annihilation/creation list
     std::vector<std::vector<std::pair<size_t, short>>> a_ann_list_;
