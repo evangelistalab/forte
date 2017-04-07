@@ -26,6 +26,7 @@
  * @END LICENSE
  */
 
+#include "psi4/psi4-dec.h"
 //#include "psi4/libmints/molecule.h"
 //#include "psi4/libmints/pointgrp.h"
 //#include "psi4/libpsio/psio.hpp"
@@ -51,6 +52,7 @@ namespace forte {
 #endif
 
 void set_CINO_options(ForteOptions& foptions) {
+    foptions.add_bool("CINO", false, "Do a CINO computation?");
     foptions.add_str("CINO_TYPE", "CIS", {"CIS", "CISD"},
                      "The type of wave function.");
 }
@@ -66,6 +68,55 @@ CINO::CINO(SharedWavefunction ref_wfn, Options& options,
 
 CINO::~CINO() {}
 
-double CINO::compute_energy() {}
+double CINO::compute_energy() {
+    outfile->Printf("\n\n  Computing CIS natural orbitals\n");
+
+    // 1. Build the space of determinants
+    std::vector<Determinant> dets = build_dets();
+
+    // 2. Diagonalize the Hamiltonian in this basis
+    std::pair<SharedVector, SharedMatrix> evals_evecs =
+        diagonalize_hamiltonian(dets);
+
+    // 3. Build the density matrix
+    SharedMatrix gamma = build_density_matrix(dets, evals_evecs.second);
+
+    // 4. Diagonalize the density matrix
+    std::pair<SharedVector, SharedMatrix> no_U =
+        diagonalize_density_matrix(gamma);
+
+    // 5. Find optimal active space and transform the orbitals
+    find_active_space_and_transform(no_U);
+
+    return 0.0;
+}
+
+std::vector<Determinant> CINO::build_dets() {
+    std::vector<Determinant> dets;
+    return dets;
+}
+
+std::pair<SharedVector, SharedMatrix>
+CINO::diagonalize_hamiltonian(const std::vector<Determinant>& dets) {
+    std::pair<SharedVector, SharedMatrix> evals_evecs;
+    return evals_evecs;
+}
+
+SharedMatrix CINO::build_density_matrix(const std::vector<Determinant>& dets,
+                                        SharedMatrix evecs) {
+    SharedMatrix gamma;
+    return gamma;
+}
+
+/// Diagonalize the density matrix
+std::pair<SharedVector, SharedMatrix>
+CINO::diagonalize_density_matrix(SharedMatrix gamma) {
+    std::pair<SharedVector, SharedMatrix> no_U;
+    return no_U;
+}
+
+/// Find optimal active space and transform the orbitals
+void CINO::find_active_space_and_transform(
+    std::pair<SharedVector, SharedMatrix> no_U) {}
 }
 } // EndNamespaces
