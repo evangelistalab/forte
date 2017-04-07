@@ -32,7 +32,14 @@
 #include "psi4/liboptions/liboptions.h"
 
 #include "mrpt2.h"
-#include "hash_vector.h"
+
+#ifdef _OPENMP
+#include <omp.h>
+#else
+#define omp_get_max_threads() 1
+#define omp_get_thread_num() 0
+#define omp_get_num_threads() 1
+#endif
 
 namespace psi {
 namespace forte {
@@ -95,7 +102,6 @@ double MRPT2::compute_energy()
 
     Timer en;
     double pt2_energy = compute_pt2_energy();
-//    double pt2_energy = compute_pt2_energy2();
   //  double scalar = fci_ints_->scalar_energy() + molecule_->nuclear_repulsion_energy();
   //  double energy = pt2_energy + scalar + evals_->get(0);
     outfile->Printf("\n  PT2 computation took %1.6f s", en.get());
@@ -118,10 +124,24 @@ double MRPT2::compute_pt2_energy()
     double nbyte = (1073741824 * max_mem) / (sizeof(double));
 
     int nbin = static_cast<int>(std::ceil(guess_size / (nbyte)));
-    outfile->Printf("\n  Number of bins for exitation space:  %d", nbin);
 
 
     const std::vector<STLBitsetDeterminant>& dets = reference_.determinants();
+
+#pragma omp parallel
+{
+    if( (omp_get_max_threads() > nbin) ){
+        nbin = omp_get_max_threads();
+    }else{
+
+    }
+    
+    if( omp_get_thread_num() == 0 ){
+        outfile->Printf("\n  Number of bins for exitation space:  %d", nbin);
+        outfile->Printf("\n  Number of threads: %d", omp_get_max_threads());
+    }
+
+    #pragma omp for reduction(+:energy)
     for( int bin = 0; bin < nbin; ++bin ){
         det_hash<double> A_I;
         for( size_t I = 0; I < n_dets; ++I ){
@@ -276,147 +296,7 @@ double MRPT2::compute_pt2_energy()
             energy += ( det.second*det.second ) / ( E_0 - det.first.energy() );
         }
     }
-    outfile->Printf("\n  skip: %zu", skip);
-    return energy;
 }
-
-double MRPT2::compute_pt2_energy2()
-{
-    double energy = 0.0;
-    double E_0 = evals_->get(0);
-    size_t n_dets = reference_.size();
-    det_hash<double> A_I;
-
-    const std::vector<STLBitsetDeterminant>& dets = reference_.determinants();
-
-    int count = 0;
-    for( size_t I = 0; I < n_dets; ++I ){
-        double c_I = evecs_->get(I,0);
-        const STLBitsetDeterminant& det = dets[I];
-        std::vector<int> aocc = det.get_alfa_occ();
-        std::vector<int> bocc = det.get_beta_occ();
-        std::vector<int> avir = det.get_alfa_vir();
-        std::vector<int> bvir = det.get_beta_vir();
-
-        int noalpha = aocc.size();
-        int nobeta = bocc.size();
-        int nvalpha = avir.size();
-        int nvbeta = bvir.size();
-        STLBitsetDeterminant new_det(det);
-
-        // Generate alpha excitations
-        for (int i = 0; i < noalpha; ++i) {
-            int ii = aocc[i];
-            for (int a = 0; a < nvalpha; ++a) {
-                int aa = avir[a];
-                if ((mo_symmetry_[ii] ^ mo_symmetry_[aa]) == 0) {
-                    new_det = det;
-                    new_det.set_alfa_bit(ii, false);
-                    new_det.set_alfa_bit(aa, true);
-                    if( reference_.has_det(new_det) ) continue;
-                    double coupling = new_det.slater_rules_single_alpha(ii,aa) * c_I;    
-                    if ( A_I.find(new_det) != A_I.end() ) {
-                        coupling += A_I[new_det];
-                    }
-                    A_I[new_det] = coupling;
-                }
-            }
-        }
-        // Generate beta excitations
-        for (int i = 0; i < nobeta; ++i) {
-            int ii = bocc[i];
-            for (int a = 0; a < nvbeta; ++a) {
-                int aa = bvir[a];
-                if ((mo_symmetry_[ii] ^ mo_symmetry_[aa]) == 0) {
-                    new_det = det;
-                    new_det.set_beta_bit(ii, false);
-                    new_det.set_beta_bit(aa, true);
-                    if( reference_.has_det(new_det) ) continue;
-                    double coupling = new_det.slater_rules_single_beta(ii,aa) * c_I;    
-                    if ( A_I.find(new_det) != A_I.end() ) {
-                        coupling += A_I[new_det];
-                    }
-                    A_I[new_det] = coupling;
-                }
-            }
-        }
-        // Generate ab excitations
-        for (int i = 0; i < noalpha; ++i) {
-            int ii = aocc[i];
-            for (int j = 0; j < nobeta; ++j) {
-                int jj = bocc[j];
-                for (int a = 0; a < nvalpha; ++a) {
-                    int aa = avir[a];
-                    for (int b = 0; b < nvbeta; ++b) {
-                        int bb = bvir[b];
-                        if ((mo_symmetry_[ii] ^ mo_symmetry_[jj] ^
-                             mo_symmetry_[aa] ^ mo_symmetry_[bb]) == 0) {
-                            new_det = det;
-                            double sign = new_det.double_excitation_ab(ii,jj,aa,bb); 
-
-                            if( reference_.has_det(new_det) ) continue;
-                            double coupling = sign * c_I * STLBitsetDeterminant::fci_ints_->tei_ab(ii,jj,aa,bb);    
-                            if ( A_I.find(new_det) != A_I.end() ) {
-                                coupling += A_I[new_det];
-                            }
-                            A_I[new_det] = coupling;
-                        }
-                    }
-                }
-            }
-        }
-        // Generate aa excitations
-        for (int i = 0; i < noalpha; ++i) {
-            int ii = aocc[i];
-            for (int j = i + 1; j < noalpha; ++j) {
-                int jj = aocc[j];
-                for (int a = 0; a < nvalpha; ++a) {
-                    int aa = avir[a];
-                    for (int b = a + 1; b < nvalpha; ++b) {
-                        int bb = avir[b];
-                        if ((mo_symmetry_[ii] ^ mo_symmetry_[jj] ^ mo_symmetry_[aa] ^ mo_symmetry_[bb]) == 0) {
-                            new_det = det;
-                            double sign = new_det.double_excitation_aa(ii,jj,aa,bb); 
-                            if( reference_.has_det(new_det) ) continue;
-                            double coupling = sign * c_I * STLBitsetDeterminant::fci_ints_->tei_aa(ii,jj,aa,bb);    
-                            if ( A_I.find(new_det) != A_I.end() ) {
-                                coupling += A_I[new_det];
-                            }
-                            A_I[new_det] = coupling;
-                        }
-                    }
-                }
-            }
-        }
-        // Generate bb excitations
-        for (int i = 0; i < nobeta; ++i) {
-            int ii = bocc[i];
-            for (int j = i + 1; j < nobeta; ++j) {
-                int jj = bocc[j];
-                for (int a = 0; a < nvbeta; ++a) {
-                    int aa = bvir[a];
-                    for (int b = a + 1; b < nvbeta; ++b) {
-                        int bb = bvir[b];
-                        if ((mo_symmetry_[ii] ^ mo_symmetry_[jj] ^
-                             mo_symmetry_[aa] ^ mo_symmetry_[bb]) == 0) {
-                            new_det = det;
-                            double sign = new_det.double_excitation_bb(ii,jj,aa,bb); 
-                            if( reference_.has_det(new_det) ) continue;
-                            double coupling = sign * c_I * STLBitsetDeterminant::fci_ints_->tei_bb(ii,jj,aa,bb);    
-                            if ( A_I.find(new_det) != A_I.end() ) {
-                                coupling += A_I[new_det];
-                            }
-                            A_I[new_det] = coupling;
-                        }
-                    }
-                }
-            }
-        }
-    }
-    
-    for( auto& det : A_I ){
-        energy += ( det.second*det.second ) / ( E_0 - det.first.energy() );
-    }
     return energy;
 }
 
