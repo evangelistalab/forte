@@ -24,6 +24,7 @@ install:
   - conda config --add channels http://conda.anaconda.org/psi4
   - conda install --yes psi4
   - source activate test-environment
-
+  - pwd
+  - ls
 script:
   # Your test script goes here
