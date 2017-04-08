@@ -62,15 +62,11 @@ def run_forte(name, **kwargs):
                                                psi4.core.get_option('FORTE','MINAO_BASIS'))
         ref_wfn.set_basisset('MINAO_BASIS', minao_basis)
 
-    # Ensure IWL files have been written when not using DF/CD
-    proc_util.check_iwl_file_from_scf_type(psi4.core.get_option('SCF', 'SCF_TYPE'), ref_wfn)
-
     # Call the Psi4 plugin
     # Please note that setting the reference wavefunction in this way is ONLY for plugins
     forte_wfn = psi4.core.plugin('forte.so', ref_wfn)
 
     return forte_wfn
-
 
 # Integration with driver routines
 psi4.driver.procedures['energy']['forte'] = run_forte
