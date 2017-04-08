@@ -115,7 +115,6 @@ double MRPT2::compute_energy()
 double MRPT2::compute_pt2_energy()
 {
     double energy = 0.0;
-    double E_0 = evals_->get(0);
     const size_t n_dets = reference_.size();
     int nmo = STLBitsetDeterminant::nmo_;
     double max_mem = options_.get_double("PT2_MAX_MEM");
@@ -125,178 +124,193 @@ double MRPT2::compute_pt2_energy()
 
     int nbin = static_cast<int>(std::ceil(guess_size / (nbyte)));
 
+    #pragma omp parallel reduction(+:energy)
+    {
+        int tid = omp_get_thread_num();
+        int ntds = omp_get_num_threads();
 
-    const std::vector<STLBitsetDeterminant>& dets = reference_.determinants();
-
-#pragma omp parallel
-{
-    if( (omp_get_max_threads() > nbin) ){
-        nbin = omp_get_max_threads();
-    }else{
-
-    }
-    
-    if( omp_get_thread_num() == 0 ){
-        outfile->Printf("\n  Number of bins for exitation space:  %d", nbin);
-        outfile->Printf("\n  Number of threads: %d", omp_get_max_threads());
-    }
-
-    #pragma omp for reduction(+:energy)
-    for( int bin = 0; bin < nbin; ++bin ){
-        det_hash<double> A_I;
-        for( size_t I = 0; I < n_dets; ++I ){
-            double c_I = evecs_->get(I,0);
-            const STLBitsetDeterminant& det = dets[I];
-            std::vector<int> aocc = det.get_alfa_occ();
-            std::vector<int> bocc = det.get_beta_occ();
-            std::vector<int> avir = det.get_alfa_vir();
-            std::vector<int> bvir = det.get_beta_vir();
-
-            int noalpha = aocc.size();
-            int nobeta = bocc.size();
-            int nvalpha = avir.size();
-            int nvbeta = bvir.size();
-            STLBitsetDeterminant new_det(det);
-
-            // Generate alpha excitations
-            for (int i = 0; i < noalpha; ++i) {
-                int ii = aocc[i];
-                for (int a = 0; a < nvalpha; ++a) {
-                    int aa = avir[a];
-                    if ((mo_symmetry_[ii] ^ mo_symmetry_[aa]) == 0) {
-                        new_det = det;
-                        new_det.set_alfa_bit(ii, false);
-                        new_det.set_alfa_bit(aa, true);
-                
-                        // Check if the determinant goes in this bin
-                        size_t hash_val = std::hash<std::bitset<256>>()(new_det.bits_);
-                        if( (hash_val % nbin) == bin){
-                            if( reference_.has_det(new_det) ) continue;
-                            double coupling = new_det.slater_rules_single_alpha(ii,aa) * c_I;    
-                            if ( A_I.find(new_det) != A_I.end() ) {
-                                coupling += A_I[new_det];
-                            }
-                            A_I[new_det] = coupling;
-                        }
-                    }
-                }
-            }
-            // Generate beta excitations
-            for (int i = 0; i < nobeta; ++i) {
-                int ii = bocc[i];
-                for (int a = 0; a < nvbeta; ++a) {
-                    int aa = bvir[a];
-                    if ((mo_symmetry_[ii] ^ mo_symmetry_[aa]) == 0) {
-                        new_det = det;
-                        new_det.set_beta_bit(ii, false);
-                        new_det.set_beta_bit(aa, true);
-                        // Check if the determinant goes in this bin
-                        if( reference_.has_det(new_det) ) continue;
-                        size_t hash_val = std::hash<std::bitset<256>>()(new_det.bits_);
-                        if( (hash_val % nbin) == bin){
-                            double coupling = new_det.slater_rules_single_beta(ii,aa) * c_I;    
-                            if ( A_I.find(new_det) != A_I.end() ) {
-                                coupling += A_I[new_det];
-                            }
-                            A_I[new_det] = coupling;
-                        }
-                    }
-                }
-            }
-            // Generate ab excitations
-            for (int i = 0; i < noalpha; ++i) {
-                int ii = aocc[i];
-                for (int j = 0; j < nobeta; ++j) {
-                    int jj = bocc[j];
-                    for (int a = 0; a < nvalpha; ++a) {
-                        int aa = avir[a];
-                        for (int b = 0; b < nvbeta; ++b) {
-                            int bb = bvir[b];
-                            if ((mo_symmetry_[ii] ^ mo_symmetry_[jj] ^
-                                 mo_symmetry_[aa] ^ mo_symmetry_[bb]) == 0) {
-                                new_det = det;
-                                double sign = new_det.double_excitation_ab(ii,jj,aa,bb); 
-                                if( reference_.has_det(new_det) ) continue;
-
-                                // Check if the determinant goes in this bin
-                                size_t hash_val = std::hash<std::bitset<256>>()(new_det.bits_);
-                                if( (hash_val % nbin) == bin){
-
-                                    double coupling = sign * c_I * STLBitsetDeterminant::fci_ints_->tei_ab(ii,jj,aa,bb);    
-                                    if ( A_I.find(new_det) != A_I.end() ) {
-                                        coupling += A_I[new_det];
-                                    }
-                                    A_I[new_det] = coupling;
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-            // Generate aa excitations
-            for (int i = 0; i < noalpha; ++i) {
-                int ii = aocc[i];
-                for (int j = i + 1; j < noalpha; ++j) {
-                    int jj = aocc[j];
-                    for (int a = 0; a < nvalpha; ++a) {
-                        int aa = avir[a];
-                        for (int b = a + 1; b < nvalpha; ++b) {
-                            int bb = avir[b];
-                            if ((mo_symmetry_[ii] ^ mo_symmetry_[jj] ^ mo_symmetry_[aa] ^ mo_symmetry_[bb]) == 0) {
-                                new_det = det;
-                                double sign = new_det.double_excitation_aa(ii,jj,aa,bb); 
-                                if( reference_.has_det(new_det) ) continue;
-
-                                // Check if the determinant goes in this bin
-                                size_t hash_val = std::hash<std::bitset<256>>()(new_det.bits_);
-                                if( (hash_val % nbin) == bin){
-                                    double coupling = sign * c_I * STLBitsetDeterminant::fci_ints_->tei_aa(ii,jj,aa,bb);    
-                                    if ( A_I.find(new_det) != A_I.end() ) {
-                                        coupling += A_I[new_det];
-                                    }
-                                    A_I[new_det] = coupling;
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-            // Generate bb excitations
-            for (int i = 0; i < nobeta; ++i) {
-                int ii = bocc[i];
-                for (int j = i + 1; j < nobeta; ++j) {
-                    int jj = bocc[j];
-                    for (int a = 0; a < nvbeta; ++a) {
-                        int aa = bvir[a];
-                        for (int b = a + 1; b < nvbeta; ++b) {
-                            int bb = bvir[b];
-                            if ((mo_symmetry_[ii] ^ mo_symmetry_[jj] ^
-                                 mo_symmetry_[aa] ^ mo_symmetry_[bb]) == 0) {
-                                new_det = det;
-                                double sign = new_det.double_excitation_bb(ii,jj,aa,bb); 
-                                if( reference_.has_det(new_det) ) continue;
-
-                                // Check if the determinant goes in this bin
-                                size_t hash_val = std::hash<std::bitset<256>>()(new_det.bits_);
-                                if( (hash_val % nbin) == bin){
-                                    double coupling = sign * c_I * STLBitsetDeterminant::fci_ints_->tei_bb(ii,jj,aa,bb);    
-                                    if ( A_I.find(new_det) != A_I.end() ) {
-                                        coupling += A_I[new_det];
-                                    }
-                                    A_I[new_det] = coupling;
-                                }
-                            }
-                        }
-                    }
-                }
-            }
+        if( (ntds > nbin) ){
+            nbin = ntds;
         }
         
-        for( auto& det : A_I ){
-            energy += ( det.second*det.second ) / ( E_0 - det.first.energy() );
+        if( tid == 0 ){
+            outfile->Printf("\n  Number of bins for exitation space:  %d", nbin);
+            outfile->Printf("\n  Number of threads: %d", ntds);
+        }
+        int batch_size = nbin / ntds;
+        batch_size += (tid < (nbin % ntds)) ? 1 : 0;
+
+        int start_idx = (tid < (nbin % ntds)) 
+                            ? tid * batch_size 
+                            : (nbin % ntds) * (batch_size + 1) + 
+                                (tid - (nbin % ntds )) * batch_size;
+        int end_idx = start_idx + batch_size;
+    
+        for( int bin = start_idx; bin < end_idx; ++bin ){
+            energy += energy_kernel(bin, nbin);
         }
     }
+    return energy;
 }
+
+double MRPT2::energy_kernel( int bin, int nbin )
+{
+    double E_0 = evals_->get(0);
+    double energy = 0.0;
+    const size_t n_dets = reference_.size();
+    const std::vector<STLBitsetDeterminant>& dets = reference_.determinants();
+    det_hash<double> A_I;
+    for( size_t I = 0; I < n_dets; ++I ){
+        double c_I = evecs_->get(I,0);
+        const STLBitsetDeterminant& det = dets[I];
+        std::vector<int> aocc = det.get_alfa_occ();
+        std::vector<int> bocc = det.get_beta_occ();
+        std::vector<int> avir = det.get_alfa_vir();
+        std::vector<int> bvir = det.get_beta_vir();
+
+        int noalpha = aocc.size();
+        int nobeta = bocc.size();
+        int nvalpha = avir.size();
+        int nvbeta = bvir.size();
+        STLBitsetDeterminant new_det(det);
+
+        // Generate alpha excitations
+        for (int i = 0; i < noalpha; ++i) {
+            int ii = aocc[i];
+            for (int a = 0; a < nvalpha; ++a) {
+                int aa = avir[a];
+                if ((mo_symmetry_[ii] ^ mo_symmetry_[aa]) == 0) {
+                    new_det = det;
+                    new_det.set_alfa_bit(ii, false);
+                    new_det.set_alfa_bit(aa, true);
+                    if( reference_.has_det(new_det) ) continue;
+            
+                    // Check if the determinant goes in this bin
+                    size_t hash_val = std::hash<std::bitset<256>>()(new_det.bits_);
+                    if( (hash_val % nbin) == bin){
+                        double coupling = new_det.slater_rules_single_alpha(ii,aa) * c_I;    
+                        if ( A_I.find(new_det) != A_I.end() ) {
+                            coupling += A_I[new_det];
+                        }
+                        A_I[new_det] = coupling;
+                    }
+                }
+            }
+        }
+        // Generate beta excitations
+        for (int i = 0; i < nobeta; ++i) {
+            int ii = bocc[i];
+            for (int a = 0; a < nvbeta; ++a) {
+                int aa = bvir[a];
+                if ((mo_symmetry_[ii] ^ mo_symmetry_[aa]) == 0) {
+                    new_det = det;
+                    new_det.set_beta_bit(ii, false);
+                    new_det.set_beta_bit(aa, true);
+                    if( reference_.has_det(new_det) ) continue;
+                    // Check if the determinant goes in this bin
+                    size_t hash_val = std::hash<std::bitset<256>>()(new_det.bits_);
+                    if( (hash_val % nbin) == bin){
+                        double coupling = new_det.slater_rules_single_beta(ii,aa) * c_I;    
+                        if ( A_I.find(new_det) != A_I.end() ) {
+                            coupling += A_I[new_det];
+                        }
+                        A_I[new_det] = coupling;
+                    }
+                }
+            }
+        }
+        // Generate ab excitations
+        for (int i = 0; i < noalpha; ++i) {
+            int ii = aocc[i];
+            for (int j = 0; j < nobeta; ++j) {
+                int jj = bocc[j];
+                for (int a = 0; a < nvalpha; ++a) {
+                    int aa = avir[a];
+                    for (int b = 0; b < nvbeta; ++b) {
+                        int bb = bvir[b];
+                        if ((mo_symmetry_[ii] ^ mo_symmetry_[jj] ^
+                             mo_symmetry_[aa] ^ mo_symmetry_[bb]) == 0) {
+                            new_det = det;
+                            double sign = new_det.double_excitation_ab(ii,jj,aa,bb); 
+                            if( reference_.has_det(new_det) ) continue;
+
+                            // Check if the determinant goes in this bin
+                            size_t hash_val = std::hash<std::bitset<256>>()(new_det.bits_);
+                            if( (hash_val % nbin) == bin){
+
+                                double coupling = sign * c_I * STLBitsetDeterminant::fci_ints_->tei_ab(ii,jj,aa,bb);    
+                                if ( A_I.find(new_det) != A_I.end() ) {
+                                    coupling += A_I[new_det];
+                                }
+                                A_I[new_det] = coupling;
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        // Generate aa excitations
+        for (int i = 0; i < noalpha; ++i) {
+            int ii = aocc[i];
+            for (int j = i + 1; j < noalpha; ++j) {
+                int jj = aocc[j];
+                for (int a = 0; a < nvalpha; ++a) {
+                    int aa = avir[a];
+                    for (int b = a + 1; b < nvalpha; ++b) {
+                        int bb = avir[b];
+                        if ((mo_symmetry_[ii] ^ mo_symmetry_[jj] ^ mo_symmetry_[aa] ^ mo_symmetry_[bb]) == 0) {
+                            new_det = det;
+                            double sign = new_det.double_excitation_aa(ii,jj,aa,bb); 
+                            if( reference_.has_det(new_det) ) continue;
+
+                            // Check if the determinant goes in this bin
+                            size_t hash_val = std::hash<std::bitset<256>>()(new_det.bits_);
+                            if( (hash_val % nbin) == bin){
+                                double coupling = sign * c_I * STLBitsetDeterminant::fci_ints_->tei_aa(ii,jj,aa,bb);    
+                                if ( A_I.find(new_det) != A_I.end() ) {
+                                    coupling += A_I[new_det];
+                                }
+                                A_I[new_det] = coupling;
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        // Generate bb excitations
+        for (int i = 0; i < nobeta; ++i) {
+            int ii = bocc[i];
+            for (int j = i + 1; j < nobeta; ++j) {
+                int jj = bocc[j];
+                for (int a = 0; a < nvbeta; ++a) {
+                    int aa = bvir[a];
+                    for (int b = a + 1; b < nvbeta; ++b) {
+                        int bb = bvir[b];
+                        if ((mo_symmetry_[ii] ^ mo_symmetry_[jj] ^
+                             mo_symmetry_[aa] ^ mo_symmetry_[bb]) == 0) {
+                            new_det = det;
+                            double sign = new_det.double_excitation_bb(ii,jj,aa,bb); 
+                            if( reference_.has_det(new_det) ) continue;
+
+                            // Check if the determinant goes in this bin
+                            size_t hash_val = std::hash<std::bitset<256>>()(new_det.bits_);
+                            if( (hash_val % nbin) == bin){
+                                double coupling = sign * c_I * STLBitsetDeterminant::fci_ints_->tei_bb(ii,jj,aa,bb);    
+                                if ( A_I.find(new_det) != A_I.end() ) {
+                                    coupling += A_I[new_det];
+                                }
+                                A_I[new_det] = coupling;
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+    
+    for( auto& det : A_I ){
+        energy += ( det.second*det.second ) / ( E_0 - det.first.energy() );
+    }
     return energy;
 }
 
