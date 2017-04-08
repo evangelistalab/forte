@@ -1,10 +1,7 @@
 language: python
 python:
   # We don't actually use the Travis Python, but this keeps it organized.
-  - "2.6"
   - "2.7"
-  - "3.3"
-  - "3.4"
 install:
   - sudo apt-get update
   # We do this conditionally because it saves us some downloading if the
@@ -26,6 +23,8 @@ install:
   - conda create -q -n test-environment python=$TRAVIS_PYTHON_VERSION
   - source activate test-environment
   - python setup.py install
+  - conda config --add channels http://conda.anaconda.org/psi4
+  - conda install --yes psi4
 
 script:
   # Your test script goes here
