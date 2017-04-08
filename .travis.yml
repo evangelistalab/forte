@@ -24,7 +24,11 @@ install:
   - conda config --add channels http://conda.anaconda.org/psi4
   - conda install --yes psi4
   - source activate test-environment
-  - pwd
-  - ls
+  - git clone https://github.com/jturney/ambit.git ambit
+  - mkdir ambit-obj
+  - cd ambit-obj
+  - ../ambit/setup --type=debug --prefix=/home/travis/build/evangelistalab/ambit-bin
+  - make; make install
 script:
   # Your test script goes here
+  ls
