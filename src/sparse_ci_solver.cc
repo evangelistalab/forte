@@ -407,127 +407,6 @@ SigmaVectorList::SigmaVectorList(const std::vector<STLBitsetDeterminant>& space,
                         d_map_size / (1024. * 1024.));
     }
 }
-/*
-void SigmaVectorList::compute_sigma(Matrix& sigma, Matrix& b, int nroot) {
-    sigma.zero();
-    double** sigma_p = sigma.pointer();
-    double** b_p = b.pointer();
-    for (size_t J = 0; J < size_; ++J) {
-        // reference
-        for (int a = 0; a < nroot; ++a) {
-            sigma_p[J][a] += diag_[J] * b_p[a][J];
-        }
-
-        // aa singles
-        for (auto& aJ_mo_sign : a_ann_list[J]) {
-            const size_t aJ_add = aJ_mo_sign.first;
-            const size_t p = std::abs(aJ_mo_sign.second) - 1;
-            for (auto& aaJ_mo_sign : a_cre_list[aJ_add]) {
-                const size_t q = std::abs(aaJ_mo_sign.second) - 1;
-                if (p != q) {
-                    const double HIJ =
-                        space_[aaJ_mo_sign.first].slater_rules_single_alpha(p,
-                                                                            q);
-                    const size_t I = aaJ_mo_sign.first;
-                    for (int a = 0; a < nroot; ++a) {
-                        sigma_p[I][a] += HIJ * b_p[a][J];
-                    }
-                }
-            }
-        }
-
-        // bb singles
-        for (auto& bJ_mo_sign : b_ann_list[J]) {
-            const size_t bJ_add = bJ_mo_sign.first;
-            const size_t p = std::abs(bJ_mo_sign.second) - 1;
-            for (auto& bbJ_mo_sign : b_cre_list[bJ_add]) {
-                const size_t q = std::abs(bbJ_mo_sign.second) - 1;
-                if (p != q) {
-                    const double HIJ =
-                        space_[bbJ_mo_sign.first].slater_rules_single_beta(p,
-                                                                           q);
-                    const size_t I = bbJ_mo_sign.first;
-                    for (int a = 0; a < nroot; ++a) {
-                        sigma_p[I][a] += HIJ * b_p[a][J];
-                    }
-                }
-            }
-        }
-
-        // aaaa doubles
-        for (auto& aaJ_mo_sign : aa_ann_list[J]) {
-            const size_t aaJ_add = std::get<0>(aaJ_mo_sign);
-            const double sign_pq = std::get<1>(aaJ_mo_sign) > 0.0 ? 1.0 : -1.0;
-            const size_t p = std::abs(std::get<1>(aaJ_mo_sign)) - 1;
-            const size_t q = std::get<2>(aaJ_mo_sign);
-            for (auto& aaaaJ_mo_sign : aa_cre_list[aaJ_add]) {
-                const size_t r = std::abs(std::get<1>(aaaaJ_mo_sign)) - 1;
-                const size_t s = std::get<2>(aaaaJ_mo_sign);
-                if ((p != r) and (q != s) and (p != s) and (q != r)) {
-                    const size_t aaaaJ_add = std::get<0>(aaaaJ_mo_sign);
-                    const double sign_rs =
-                        std::get<1>(aaaaJ_mo_sign) > 0.0 ? 1.0 : -1.0;
-                    const size_t I = aaaaJ_add;
-                    const double HIJ =
-                        sign_pq * sign_rs *
-                        STLBitsetDeterminant::fci_ints_->tei_aa(p, q, r, s);
-                    for (int a = 0; a < nroot; ++a) {
-                        sigma_p[I][a] += HIJ * b_p[a][J];
-                    }
-                }
-            }
-        }
-
-        // aabb singles
-        for (auto& abJ_mo_sign : ab_ann_list[J]) {
-            const size_t abJ_add = std::get<0>(abJ_mo_sign);
-            const double sign_pq = std::get<1>(abJ_mo_sign) > 0.0 ? 1.0 : -1.0;
-            const size_t p = std::abs(std::get<1>(abJ_mo_sign)) - 1;
-            const size_t q = std::get<2>(abJ_mo_sign);
-            for (auto& ababJ_mo_sign : ab_cre_list[abJ_add]) {
-                const size_t r = std::abs(std::get<1>(ababJ_mo_sign)) - 1;
-                const size_t s = std::get<2>(ababJ_mo_sign);
-                if ((p != r) and (q != s)) {
-                    const size_t ababJ_add = std::get<0>(ababJ_mo_sign);
-                    const double sign_rs =
-                        std::get<1>(ababJ_mo_sign) > 0.0 ? 1.0 : -1.0;
-                    const size_t I = ababJ_add;
-                    const double HIJ =
-                        sign_pq * sign_rs *
-                        STLBitsetDeterminant::fci_ints_->tei_ab(p, q, r, s);
-                    for (int a = 0; a < nroot; ++a) {
-                        sigma_p[I][a] += HIJ * b_p[a][J];
-                    }
-                }
-            }
-        }
-
-        // bbbb singles
-        for (auto& bbJ_mo_sign : bb_ann_list[J]) {
-            const size_t bbJ_add = std::get<0>(bbJ_mo_sign);
-            const double sign_pq = std::get<1>(bbJ_mo_sign) > 0.0 ? 1.0 : -1.0;
-            const size_t p = std::abs(std::get<1>(bbJ_mo_sign)) - 1;
-            const size_t q = std::get<2>(bbJ_mo_sign);
-            for (auto& bbbbJ_mo_sign : bb_cre_list[bbJ_add]) {
-                const size_t r = std::abs(std::get<1>(bbbbJ_mo_sign)) - 1;
-                const size_t s = std::get<2>(bbbbJ_mo_sign);
-                if ((p != r) and (q != s) and (p != s) and (q != r)) {
-                    const size_t bbbbJ_add = std::get<0>(bbbbJ_mo_sign);
-                    const double sign_rs =
-                        std::get<1>(bbbbJ_mo_sign) > 0.0 ? 1.0 : -1.0;
-                    const size_t I = bbbbJ_add;
-                    const double HIJ =
-                        sign_pq * sign_rs *
-                        STLBitsetDeterminant::fci_ints_->tei_bb(p, q, r, s);
-                    for (int a = 0; a < nroot; ++a) {
-                        sigma_p[I][a] += HIJ * b_p[a][J];
-                    }
-                }
-            }
-        }
-    }
-}
-*/
 
 void SigmaVectorList::compute_sigma(SharedVector sigma, SharedVector b) {
     sigma->zero();
@@ -945,13 +824,16 @@ void SigmaVectorWfn2::compute_sigma(SharedVector sigma, SharedVector b) {
             std::vector<std::pair<size_t, double>>& bad_state = bad_states_[n];
             size_t ndet = bad_state.size();
 
-#pragma omp parallel for
+            #pragma omp parallel for
             for (size_t det = 0; det < ndet; ++det) {
                 b_p[bad_state[det].first] -= bad_state[det].second * overlap[n];
             }
         }
     }
-#pragma omp parallel
+    const std::vector<STLBitsetDeterminant>& dets =
+        space_.determinants();
+
+    #pragma omp parallel
     {
         int num_thread = omp_get_max_threads();
         int tid = omp_get_thread_num();
@@ -967,139 +849,143 @@ void SigmaVectorWfn2::compute_sigma(SharedVector sigma, SharedVector b) {
         for( size_t J = start_idx; J < end_idx; ++J ){
             sigma_p[J] += diag_[J] * b_p[J];// Make DDOT
         }
-    }
-    
-    // Each thread gets local copy of sigma
-    const std::vector<STLBitsetDeterminant>& dets =
-        space_.determinants();
 
-    // a singles
-    size_t end_a_idx = a_list_.size();
-    size_t start_a_idx = 0;
-    //size_t bin_a_size = a_size / num_thread;
-    //bin_a_size += (tid < (a_size % num_thread)) ? 1 : 0;
-    //size_t start_a_idx = (tid < (a_size % num_thread))
-    //                       ? tid * bin_a_size
-    //                       : (a_size % num_thread) * (bin_a_size + 1) +
-    //                             (tid - (a_size % num_thread)) * bin_a_size;
-    //size_t end_a_idx = start_a_idx + bin_a_size;
-    for (size_t K = start_a_idx, max_K = end_a_idx; K < max_K; ++K) {
-        for (auto& detJ : a_list_[K]) { // Each gives unique J
-            const size_t J = detJ.first;
-            const size_t p = std::abs(detJ.second) - 1;
-            double sign_p = detJ.second > 0.0 ? 1.0 : -1.0;
-            for (auto& detI : a_list_[K]) {
-                const size_t q = std::abs(detI.second) - 1;
-                if (p != q) {
-                    const size_t I = detI.first;
-                    double sign_q =
-                        detI.second > 0.0 ? 1.0 : -1.0;
-                    const double HIJ =
-                        dets[J].slater_rules_single_alpha_abs(p, q) *
-                        sign_p * sign_q;
-                    sigma_p[I] += HIJ * b_p[J];
+        // Each thread gets local copy of sigma
+        std::vector<double> sigma_t(size_);
+
+        // a singles
+        size_t end_a_idx = a_list_.size();
+        size_t start_a_idx = 0;
+        for (size_t K = start_a_idx, max_K = end_a_idx; K < max_K; ++K) {
+            if( (K % num_thread) == tid ){ 
+                for (auto& detJ : a_list_[K]) { // Each gives unique J
+                    const size_t J = detJ.first;
+                    const size_t p = std::abs(detJ.second) - 1;
+                    double sign_p = detJ.second > 0.0 ? 1.0 : -1.0;
+                    for (auto& detI : a_list_[K]) {
+                        const size_t q = std::abs(detI.second) - 1;
+                        if (p != q) {
+                            const size_t I = detI.first;
+                            double sign_q =
+                                detI.second > 0.0 ? 1.0 : -1.0;
+                            const double HIJ =
+                                dets[J].slater_rules_single_alpha_abs(p, q) *
+                                sign_p * sign_q;
+                            sigma_t[I] += HIJ * b_p[J];
+                        }
+                    }
                 }
             }
         }
-    }
 
-    // b singles
-    size_t end_b_idx = b_list_.size();
-    size_t start_b_idx = 0;
- //   size_t bin_b_size = b_size / num_thread;
- //   bin_b_size += (tid < (b_size % num_thread)) ? 1 : 0;
- //   size_t start_b_idx = (tid < (b_size % num_thread))
- //                          ? tid * bin_b_size
- //                          : (b_size % num_thread) * (bin_b_size + 1) +
- //                                (tid - (b_size % num_thread)) * bin_b_size;
- //   size_t end_b_idx = start_b_idx + bin_b_size;
-    for (size_t K = start_b_idx, max_K = end_b_idx; K < max_K; ++K) {
-        // aa singles
-        for (auto& detJ : b_list_[K]) {
-            const size_t J = detJ.first;
-            const size_t p = std::abs(detJ.second) - 1;
-            double sign_p = detJ.second > 0.0 ? 1.0 : -1.0;
-            for (auto& detI : b_list_[K]) {
-                const size_t q = std::abs(detI.second) - 1;
-                if (p != q) {
-                    const size_t I = detI.first;
-                    double sign_q =
-                        detI.second > 0.0 ? 1.0 : -1.0;
-                    const double HIJ =
-                        dets[J].slater_rules_single_beta_abs(p, q) *
-                        sign_p * sign_q;
-                    sigma_p[I] += HIJ * b_p[J];
+        // b singles
+        size_t end_b_idx = b_list_.size();
+        size_t start_b_idx = 0;
+        for (size_t K = start_b_idx, max_K = end_b_idx; K < max_K; ++K) {
+            // aa singles
+            if( (K % num_thread) == tid ){ 
+                for (auto& detJ : b_list_[K]) {
+                    const size_t J = detJ.first;
+                    const size_t p = std::abs(detJ.second) - 1;
+                    double sign_p = detJ.second > 0.0 ? 1.0 : -1.0;
+                    for (auto& detI : b_list_[K]) {
+                        const size_t q = std::abs(detI.second) - 1;
+                        if (p != q) {
+                            const size_t I = detI.first;
+                            double sign_q =
+                                detI.second > 0.0 ? 1.0 : -1.0;
+                            const double HIJ =
+                                dets[J].slater_rules_single_beta_abs(p, q) *
+                                sign_p * sign_q;
+                            sigma_t[I] += HIJ * b_p[J];
+                        }
+                    }
                 }
             }
         }
-    }
 
-    // AA doubles 
-    size_t aa_size = aa_list_.size();
-  //  size_t bin_aa_size = aa_size / num_thread;
-  //  bin_aa_size += (tid < (aa_size % num_thread)) ? 1 : 0;
-  //  size_t start_aa_idx = (tid < (aa_size % num_thread))
-  //                         ? tid * bin_aa_size
-  //                         : (aa_size % num_thread) * (bin_aa_size + 1) +
-  //                               (tid - (aa_size % num_thread)) * bin_aa_size;
-  //  size_t end_aa_idx = start_aa_idx + bin_aa_size;
-    for( size_t K = 0, max_K = aa_size; K < max_K; ++K ){ 
-        const std::vector<std::tuple<size_t,short,short>>& c_dets = aa_list_[K];
-        for( auto& detJ : c_dets ){
-            size_t J = std::get<0>(detJ);
-            short p = std::abs(std::get<1>(detJ)) - 1;
-            short q = std::get<2>(detJ);
-            double sign_p = std::get<1>(detJ) > 0.0 ? 1.0 : -1.0;
-            for( auto& detI : c_dets ){
-                short r = std::abs(std::get<1>(detI)) - 1;
-                short s = std::get<2>(detI);
-                if( (p != r) and (q!=s) and (p!=s) and (q!=r) ){
-                    size_t I = std::get<0>(detI);
-                    double sign_q = std::get<1>(detI) > 0.0 ? 1.0 : -1.0;
-                    double HIJ = sign_p * sign_q * STLBitsetDeterminant::fci_ints_->tei_aa(p,q,r,s);
-                    sigma_p[I] += HIJ * b_p[J];
-                } 
-            }    
+        // AA doubles 
+        size_t aa_size = aa_list_.size();
+  //      size_t bin_aa_size = aa_size / num_thread;
+  //      bin_aa_size += (tid < (aa_size % num_thread)) ? 1 : 0;
+  //      size_t start_aa_idx = (tid < (aa_size % num_thread))
+  //                             ? tid * bin_aa_size
+  //                             : (aa_size % num_thread) * (bin_aa_size + 1) +
+  //                                   (tid - (aa_size % num_thread)) * bin_aa_size;
+  //      size_t end_aa_idx = start_aa_idx + bin_aa_size;
+        for( size_t K = 0, max_K = aa_size; K < max_K; ++K ){ 
+            if( (K % num_thread) == tid ){ 
+                const std::vector<std::tuple<size_t,short,short>>& c_dets = aa_list_[K];
+                for( auto& detJ : c_dets ){
+                    size_t J = std::get<0>(detJ);
+                    short p = std::abs(std::get<1>(detJ)) - 1;
+                    short q = std::get<2>(detJ);
+                    double sign_p = std::get<1>(detJ) > 0.0 ? 1.0 : -1.0;
+                    for( auto& detI : c_dets ){
+                        short r = std::abs(std::get<1>(detI)) - 1;
+                        short s = std::get<2>(detI);
+                        if( (p != r) and (q!=s) and (p!=s) and (q!=r) ){
+                            size_t I = std::get<0>(detI);
+                            double sign_q = std::get<1>(detI) > 0.0 ? 1.0 : -1.0;
+                            double HIJ = sign_p * sign_q * STLBitsetDeterminant::fci_ints_->tei_aa(p,q,r,s);
+                            sigma_t[I] += HIJ * b_p[J];
+                        } 
+                    }    
+                }
+            }
         }
-    }
 
-    // BB doubles
-    for( size_t K = 0, max_K = bb_list_.size(); K < max_K; ++K ){ 
-        const std::vector<std::tuple<size_t,short,short>>& c_dets = bb_list_[K];
-        for( auto& detJ : c_dets ){
-            size_t J = std::get<0>(detJ);
-            short p = std::abs(std::get<1>(detJ)) - 1;
-            short q = std::get<2>(detJ);
-            double sign_p = std::get<1>(detJ) > 0.0 ? 1.0 : -1.0;
-            for( auto& detI : c_dets ){
-                short r = std::abs(std::get<1>(detI)) - 1;
-                short s = std::get<2>(detI);
-                if( (p != r) and (q!=s) and (p!=s) and (q!=r) ){
-                    size_t I = std::get<0>(detI);
-                    double sign_q = std::get<1>(detI) > 0.0 ? 1.0 : -1.0;
-                    double HIJ = sign_p * sign_q * STLBitsetDeterminant::fci_ints_->tei_bb(p,q,r,s);
-                    sigma_p[I] += HIJ * b_p[J];
-                } 
-            }    
+        // BB doubles
+        for( size_t K = 0, max_K = bb_list_.size(); K < max_K; ++K ){ 
+            const std::vector<std::tuple<size_t,short,short>>& c_dets = bb_list_[K];
+            if( (K % num_thread) == tid ){ 
+                for( auto& detJ : c_dets ){
+                    size_t J = std::get<0>(detJ);
+                    short p = std::abs(std::get<1>(detJ)) - 1;
+                    short q = std::get<2>(detJ);
+                    double sign_p = std::get<1>(detJ) > 0.0 ? 1.0 : -1.0;
+                    for( auto& detI : c_dets ){
+                        short r = std::abs(std::get<1>(detI)) - 1;
+                        short s = std::get<2>(detI);
+                        if( (p != r) and (q!=s) and (p!=s) and (q!=r) ){
+                            size_t I = std::get<0>(detI);
+                            double sign_q = std::get<1>(detI) > 0.0 ? 1.0 : -1.0;
+                            double HIJ = sign_p * sign_q * STLBitsetDeterminant::fci_ints_->tei_bb(p,q,r,s);
+                            sigma_t[I] += HIJ * b_p[J];
+                        } 
+                    }    
+                }
+            }
         }
-    }
-    for( size_t K = 0, max_K = ab_list_.size(); K < max_K; ++K ){ 
-        const std::vector<std::tuple<size_t,short,short>>& c_dets = ab_list_[K];
-        for( auto& detJ : c_dets ){
-            size_t J = std::get<0>(detJ);
-            short p = std::abs(std::get<1>(detJ)) - 1;
-            short q = std::get<2>(detJ);
-            double sign_p = std::get<1>(detJ) > 0.0 ? 1.0 : -1.0;
-            for( auto& detI : c_dets ){
-                short r = std::abs(std::get<1>(detI)) - 1;
-                short s = std::get<2>(detI);
-                if( (p != r) and (q!=s)){
-                    size_t I = std::get<0>(detI);
-                    double sign_q = std::get<1>(detI) > 0.0 ? 1.0 : -1.0;
-                    double HIJ = sign_p * sign_q * STLBitsetDeterminant::fci_ints_->tei_ab(p,q,r,s);
-                    sigma_p[I] += HIJ * b_p[J];
-                } 
-            }    
+        for( size_t K = 0, max_K = ab_list_.size(); K < max_K; ++K ){ 
+            if( (K % num_thread) == tid ){ 
+                const std::vector<std::tuple<size_t,short,short>>& c_dets = ab_list_[K];
+                size_t max_det = c_dets.size();
+                for( size_t det = 0; det < max_det; ++det ){
+                    auto detJ = c_dets[det];
+                    size_t J = std::get<0>(detJ);
+                    short p = std::abs(std::get<1>(detJ)) - 1;
+                    short q = std::get<2>(detJ);
+                    double sign_p = std::get<1>(detJ) > 0.0 ? 1.0 : -1.0;
+                    for( auto& detI : c_dets ){
+                        short r = std::abs(std::get<1>(detI)) - 1;
+                        short s = std::get<2>(detI);
+                        if( (p != r) and (q!=s)){
+                            size_t I = std::get<0>(detI);
+                            double sign_q = std::get<1>(detI) > 0.0 ? 1.0 : -1.0;
+                            double HIJ = sign_p * sign_q * STLBitsetDeterminant::fci_ints_->tei_ab(p,q,r,s);
+                            sigma_t[J] += HIJ * b_p[I];
+                        } 
+                    }    
+                }
+            }
+        }
+
+        #pragma omp critical
+        {
+            for( size_t I =0; I < size_; ++I ){
+                sigma_p[I] += sigma_t[I];
+            }
         }
     }
 }
