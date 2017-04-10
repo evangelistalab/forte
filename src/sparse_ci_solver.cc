@@ -838,6 +838,9 @@ void SigmaVectorWfn2::compute_sigma(SharedVector sigma, SharedVector b) {
         int num_thread = omp_get_max_threads();
         int tid = omp_get_thread_num();
 
+        // Each thread gets local copy of sigma
+        std::vector<double> sigma_t(size_);
+
         size_t bin_size = size_ / num_thread;
         bin_size += (tid < (size_ % num_thread)) ? 1 : 0;
         size_t start_idx = (tid < (size_ % num_thread))
@@ -847,11 +850,9 @@ void SigmaVectorWfn2::compute_sigma(SharedVector sigma, SharedVector b) {
         size_t end_idx = start_idx + bin_size;
 
         for( size_t J = start_idx; J < end_idx; ++J ){
-            sigma_p[J] += diag_[J] * b_p[J];// Make DDOT
+            sigma_t[J] += diag_[J] * b_p[J];// Make DDOT
         }
 
-        // Each thread gets local copy of sigma
-        std::vector<double> sigma_t(size_);
 
         // a singles
         size_t end_a_idx = a_list_.size();
@@ -974,7 +975,7 @@ void SigmaVectorWfn2::compute_sigma(SharedVector sigma, SharedVector b) {
                             size_t I = std::get<0>(detI);
                             double sign_q = std::get<1>(detI) > 0.0 ? 1.0 : -1.0;
                             double HIJ = sign_p * sign_q * STLBitsetDeterminant::fci_ints_->tei_ab(p,q,r,s);
-                            sigma_t[J] += HIJ * b_p[I];
+                            sigma_t[I] += HIJ * b_p[J];
                         } 
                     }    
                 }
