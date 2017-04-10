@@ -32,7 +32,6 @@ set forte {
   job_type = aci
   multiplicity 1
   aci_SELECT_TYPE aimed_energy
-#  DIAG_ALGORITHM dlstring
   frozen_docc [1,0,0,0,0,1,0,0]
   aci_excited_algorithm average
   sigma 0.05
@@ -41,6 +40,7 @@ set forte {
   aci_enforce_spin_complete true
   aci_n_average 3
   aci_average_offset 0
+  diag_algorithm sparse
 }
 
 energy('scf')

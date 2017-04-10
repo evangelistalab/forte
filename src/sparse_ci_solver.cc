@@ -981,12 +981,13 @@ void SigmaVectorWfn2::compute_sigma(SharedVector sigma, SharedVector b) {
             }
         }
 
-        #pragma omp critical
-        {
+//        #pragma omp critical
+//        {
             for( size_t I =0; I < size_; ++I ){
+                #pragma omp atomic update
                 sigma_p[I] += sigma_t[I];
             }
-        }
+//        }
     }
 }
 

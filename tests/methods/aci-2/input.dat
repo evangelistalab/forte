@@ -35,7 +35,6 @@ set forte {
   aci_enforce_spin_complete false
   aci_nroot 1
   charge 0
-#  diag_algorithm dlstring
   diag_algorithm  full
 }
 
