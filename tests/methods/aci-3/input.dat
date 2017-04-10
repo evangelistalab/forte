@@ -5,8 +5,8 @@
 import forte
 
 refscf = -2.03108138291133 #TEST
-refaci = -2.115356497830 #TEST
-refacipt2 = -2.116356354872 #TEST
+refaci = -2.115455550510 #TEST
+refacipt2 = -2.116454724164 #TEST
 
 molecule li2{
 0 1
@@ -31,10 +31,7 @@ set forte {
   sigma 0.001000
   aci_nroot 1
   charge 0
-  aci_add_aimed_degenerate false
-  aci_project_out_spin_contaminants false
-  aci_enforce_spin_complete false
-  diag_algorithm full
+  diag_algorithm sparse
 }
 
 energy('scf')
