@@ -320,6 +320,10 @@ class AdaptiveCI : public Wavefunction {
     void get_excited_determinants(int nroot, SharedMatrix evecs,
                                   DeterminantMap& P_space,
                                   det_hash<std::vector<double>>& V_hash);
+    /// Alternate/experimental determinant generator
+    void get_excited_determinants2(int nroot, SharedMatrix evecs,
+                                  DeterminantMap& P_space,
+                                  det_hash<std::vector<double>>& V_hash);
 
     /// Prune the space of determinants
     void prune_q_space(DeterminantMap& PQ_space, DeterminantMap& P_space,
