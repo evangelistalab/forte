@@ -34,9 +34,9 @@ set forte {
    semi_canonical          true
    int_type                df
    job_type                three-dsrg-mrpt2
-   NTRIAL_PER_ROOT         100
-   RELAX_REF               ONCE
-   FCI_ITERATIONS          50
+   ntrial_per_root         100
+   relax_ref               once
+   fci_maxiter             50
 }
 
 scf = energy('scf')
