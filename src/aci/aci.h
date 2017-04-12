@@ -45,6 +45,7 @@
 #include "../operator.h"
 #include "../sparse_ci_solver.h"
 #include "../stl_bitset_determinant.h"
+#include "../mrpt2.h"
 
 namespace psi {
 namespace forte {
@@ -317,6 +318,10 @@ class AdaptiveCI : public Wavefunction {
 
     /// Alternate/experimental determinant generator
     void get_excited_determinants(int nroot, SharedMatrix evecs,
+                                  DeterminantMap& P_space,
+                                  det_hash<std::vector<double>>& V_hash);
+    /// Alternate/experimental determinant generator
+    void get_excited_determinants2(int nroot, SharedMatrix evecs,
                                   DeterminantMap& P_space,
                                   det_hash<std::vector<double>>& V_hash);
 

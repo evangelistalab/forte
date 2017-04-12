@@ -28,6 +28,7 @@ set forte {
   aci_SELECT_TYPE aimed_energy
   aci_excited_algorithm root_orthogonalize
   sigma 0.001
+  nroot 2
   aci_nroot 2
   aci_n_average 2
   charge 0
@@ -35,7 +36,8 @@ set forte {
   ACI_INITIAL_SPACE CISD
   aci_preiterations 2
   dl_maxiter 100
-  diag_algorithm dlstring
+  diag_algorithm solver
+  sigma_build_type sparse
 }
 
 set_num_threads(8)
