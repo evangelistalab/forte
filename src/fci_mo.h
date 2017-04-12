@@ -318,6 +318,8 @@ class FCI_MO : public Wavefunction {
     void print2PDC(const string& str, const d4& TwoPDC, const int& PRINT);
     void print3PDC(const string& str, const d6& ThreePDC, const int& PRINT);
 
+    /// Print Density Matrix (Active ONLY)
+    void print_density(const string& spin, const d2& density);
     /// Form Density Matrix
     void FormDensity(CI_RDMS& ci_rdms, d2& A, d2& B);
     /// Check Density Matrix
@@ -382,6 +384,8 @@ class FCI_MO : public Wavefunction {
                          const vector<size_t>& idx, const string& str);
     void BD_Fock(const d2& Fa, const d2& Fb, SharedMatrix& Ua, SharedMatrix& Ub,
                  const string& name);
+    /// Print Fock Matrix in Blocks
+    void print_Fock(const string& spin, const d2& Fock);
 
     /// Reference Energy
     double Eref_;
