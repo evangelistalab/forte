@@ -170,6 +170,8 @@ void AdaptiveCI::startup() {
         quiet_mode_ = options_.get_bool("ACI_QUIET_MODE");
     }
 
+    op_.set_quiet_mode(quiet_mode_);
+
     fci_ints_ = std::make_shared<FCIIntegrals>(
         ints_, mo_space_info_->get_corr_abs_mo("ACTIVE"),
         mo_space_info_->get_corr_abs_mo("RESTRICTED_DOCC"));
@@ -558,7 +560,7 @@ std::vector<int> AdaptiveCI::get_occupation() {
 }
 
 double AdaptiveCI::compute_energy() {
-    if (!quiet_mode_) {
+ //   if (!quiet_mode_) {
         print_method_banner({"Adaptive Configuration Interaction",
                              "written by Jeffrey B. Schriber and Francesco A. Evangelista"});
         outfile->Printf("\n  ==> Reference Information <==\n");
@@ -570,7 +572,7 @@ double AdaptiveCI::compute_energy() {
                             nuclear_repulsion_energy_ +
                             fci_ints_->scalar_energy());
         print_info();
-    }
+ //   }
 
     if (ex_alg_ == "COMPOSITE") {
         ex_alg_ = "AVERAGE";
@@ -691,7 +693,7 @@ double AdaptiveCI::compute_energy() {
 
 
 
-    if (!quiet_mode_) {
+   // if (!quiet_mode_) {
         if (ex_alg_ == "ROOT_COMBINE") {
             print_final(full_space, PQ_evecs, PQ_evals);
         } else if (ex_alg_ == "ROOT_ORTHOGONALIZE") {
@@ -699,7 +701,7 @@ double AdaptiveCI::compute_energy() {
         } else {
             print_final(final_wfn_, PQ_evecs, PQ_evals);
         }
-    }
+  //  }
     
     //** Compute the RDMs **//
 
@@ -746,10 +748,12 @@ double AdaptiveCI::compute_energy() {
     Process::environment.globals["CURRENT ENERGY"] = root_energy;
     Process::environment.globals["ACI ENERGY"] = root_energy;
     Process::environment.globals["ACI+PT2 ENERGY"] = root_energy_pt2;
-    outfile->Printf("\n\n  %s: %f s", "Adaptive-CI (bitset) ran in ",
-                    aci_elapse.get());
-    outfile->Printf("\n\n  %s: %d", "Saving information for root",
-                    options_.get_int("ACI_ROOT"));
+  //  if(!quiet_mode_){
+        outfile->Printf("\n\n  %s: %f s", "Adaptive-CI (bitset) ran in ",
+                        aci_elapse.get());
+        outfile->Printf("\n\n  %s: %d", "Saving information for root",
+                        options_.get_int("ACI_ROOT"));
+  //  }
 
     // printf( "\n%1.5f\n", aci_elapse.get());
     return PQ_evals->get(options_.get_int("ACI_ROOT")) + nuclear_repulsion_energy_ +
@@ -2497,12 +2501,16 @@ int AdaptiveCI::root_follow(DeterminantMap& P_ref,
         double new_overlap = P_ref.overlap(P_ref_evecs, P_space, P_evecs, n);
 
         new_overlap = std::fabs(new_overlap);
-        outfile->Printf("\n  Root %d has overlap %f", n, new_overlap);
+        if(!quiet_mode_){
+            outfile->Printf("\n  Root %d has overlap %f", n, new_overlap);
+        }
         // If the overlap is larger, set it as the new root and reference, for
         // now
         if (new_overlap > old_overlap) {
 
-            outfile->Printf("\n  Saving reference for root %d", n);
+            if(!quiet_mode_){
+                outfile->Printf("\n  Saving reference for root %d", n);
+            }
             // Save most important subspace
             new_root = n;
             P_int.subspace(P_space, P_evecs, P_int_evecs, max_dim, n);
@@ -2987,21 +2995,29 @@ void AdaptiveCI::add_bad_roots(DeterminantMap& dets) {
             }
         }
         bad_roots_.push_back(bad_root);
-        outfile->Printf("\n  Added %zu determinants from root %zu", nadd, i);
+
+        if( !quiet_mode_ ){
+            outfile->Printf("\n  Added %zu determinants from root %zu", nadd, i);
+        }
     }
 }
 
 void AdaptiveCI::save_old_root(DeterminantMap& dets, SharedMatrix& PQ_evecs,
                                int root) {
     std::vector<std::pair<STLBitsetDeterminant, double>> vec;
-    outfile->Printf("\n  Saving root %d, ref_root is %d", root, ref_root_);
+
+    if( !quiet_mode_ and nroot_ > 0 ){
+        outfile->Printf("\n  Saving root %d, ref_root is %d", root, ref_root_);
+    }
     det_hash<size_t> detmap = dets.wfn_hash();
     for (auto it = detmap.begin(), endit = detmap.end(); it != endit; ++it) {
         vec.push_back(
             std::make_pair(it->first, PQ_evecs->get(it->second, ref_root_)));
     }
     old_roots_.push_back(vec);
-    outfile->Printf("\n  Number of old roots: %zu", old_roots_.size());
+    if( !quiet_mode_ and nroot_ > 0 ){
+        outfile->Printf("\n  Number of old roots: %zu", old_roots_.size());
+    }
 }
 
 void AdaptiveCI::compute_multistate(SharedVector& PQ_evals) {
