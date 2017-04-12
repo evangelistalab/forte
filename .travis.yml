@@ -15,15 +15,15 @@ matrix:
         - cmake
         - cmake-data
         - liblapack-dev
-        - g++-4.7
-        - gcc-4.7
+        - g++-4.8
+        - gcc-4.8
         - libboost-filesystem1.55-dev
         - libboost-chrono1.55-dev
         - libboost-system1.55-dev
         - libboost-timer1.55-dev
         - libboost-python1.55-dev
         - gfortran-4.7
-    env: CXX_COMPILER='g++-4.7' C_COMPILER='gcc-4.7' Fortran_COMPILER='gfortran-4.7' BUILD_TYPE='release'
+    env: CXX_COMPILER='g++-4.8' C_COMPILER='gcc-4.8' Fortran_COMPILER='gfortran-4.7' BUILD_TYPE='release'
 
 python:
   # We don't actually use the Travis Python, but this keeps it organized.
