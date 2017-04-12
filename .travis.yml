@@ -1,4 +1,6 @@
 language: python
+packages:
+  - liblapack-dev
 python:
   # We don't actually use the Travis Python, but this keeps it organized.
   - "2.7"
@@ -13,7 +15,7 @@ install:
     fi
   - bash miniconda.sh -b -p $HOME/miniconda
   - export PATH="$HOME/miniconda/bin:$PATH"
-  - export MATH_ROOT="$HOME/miniconda/pkgs/mkl-2017.0.1-0/lib"
+#  - export MATH_ROOT="$HOME/miniconda/pkgs/mkl-2017.0.1-0/lib"
   - hash -r
   - conda config --set always_yes yes --set changeps1 no
   - conda update -q conda
