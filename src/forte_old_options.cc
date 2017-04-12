@@ -160,8 +160,10 @@ void forte_old_options(Options& options) {
     options.add_bool("SELECT", false);
 
     /*- The diagonalization method -*/
-    options.add_str("DIAG_ALGORITHM", "DLSTRING",
-                    "DAVIDSON FULL DAVIDSONLIST SPARSE SOLVER DLSTRING");
+    options.add_str("DIAG_ALGORITHM", "SOLVER",
+                    "DAVIDSON FULL DAVIDSONLIST SPARSE SOLVER");
+    
+    options.add_str("SIGMA_BUILD_TYPE", "SPARSE", "SPARSE HZ MMULT"); 
 
     /*- Force the diagonalization procedure?  -*/
     options.add_bool("FORCE_DIAG_METHOD", false);

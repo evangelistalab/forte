@@ -94,9 +94,16 @@ double MRCI::compute_energy()
     outfile->Printf("\n  Excitations took %1.5f s", add.get());
     outfile->Printf("\n  Dimension of model space: %zu", reference_.size());
 
-    op.build_strings(reference_);
-    op.op_lists(reference_);
-    op.tp_lists(reference_);
+    std::string sigma_alg = options_.get_str("SIGMA_BUILD_TYPE");
+    
+    if( sigma_alg == "HZ" ){
+        op.op_lists(reference_);
+        op.tp_lists(reference_);
+    }else{
+        op.build_strings(reference_);
+        op.op_s_lists(reference_);
+        op.tp_s_lists(reference_);
+    }
 
     // Diagonalize MR-CISD Hamiltonian
     SharedMatrix evecs;
@@ -105,6 +112,7 @@ double MRCI::compute_energy()
     SparseCISolver sparse_solver;
 
     //set options
+    sparse_solver.set_sigma_method(sigma_alg);
     sparse_solver.set_parallel(true);
     sparse_solver.set_e_convergence(options_.get_double("E_CONVERGENCE"));
     sparse_solver.set_maxiter_davidson(options_.get_int("DL_MAXITER"));

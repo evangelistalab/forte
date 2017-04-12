@@ -69,665 +69,6 @@ void SigmaVectorMPI::compute_sigma( SharedVector sigma, SharedVector b)
 
 #endif
 
-
-SigmaVectorWfn::SigmaVectorWfn(const DeterminantMap& space, WFNOperator& op)
-    : SigmaVector(space.size()), space_(space), a_ann_list_(op.a_ann_list_),
-      a_cre_list_(op.a_cre_list_), b_ann_list_(op.b_ann_list_),
-      b_cre_list_(op.b_cre_list_), aa_ann_list_(op.aa_ann_list_),
-      aa_cre_list_(op.aa_cre_list_), ab_ann_list_(op.ab_ann_list_),
-      ab_cre_list_(op.ab_cre_list_), bb_ann_list_(op.bb_ann_list_),
-      bb_cre_list_(op.bb_cre_list_) {
-
-    det_hash<size_t> detmap = space_.wfn_hash();
-    diag_.resize(space_.size());
-    for (det_hash<size_t>::const_iterator it = detmap.begin(),
-                                          endit = detmap.end();
-         it != endit; ++it) {
-        diag_[it->second] = it->first.energy();
-    }
-}
-
-SigmaVectorString::SigmaVectorString(
-    const std::vector<STLBitsetDeterminant>& space, bool print_details,
-    bool disk)
-    : SigmaVector(space.size()), space_(space) {
-    //    for( auto& I : space) I.print();
-    using det_hash = std::unordered_map<STLBitsetDeterminant, size_t,
-                                        STLBitsetDeterminant::Hash>;
-    using bstmap_it = det_hash::iterator;
-
-    int ntd = omp_get_max_threads();
-    outfile->Printf("\n  Using %d threads.", ntd);
-
-    print_ = print_details;
-
-    size_t max_I = space.size();
-
-    use_disk_ = false;
-    //    if( max_I > 2.3e6 ){
-    //        use_disk_ = true;
-    //        if( print_ ) outfile->Printf("\n  Determinant space exceeds 2.3 x
-    //        10^6. Switching to disk algorithm");
-    //    }
-    noalfa_ = space[0].get_alfa_occ().size();
-    nobeta_ = space[0].get_beta_occ().size();
-
-    // Maps alpha and beta strings to counter
-    det_hash alfa_map;
-    det_hash beta_map;
-
-    // Number of alpha and beta strings
-    size_t n_alfa_strings = 0;
-    size_t n_beta_strings = 0;
-
-    // Vector that links alpha/beta strings back to original determinant
-    std::vector<std::vector<size_t>> alfa_to_det;
-    std::vector<std::vector<size_t>> beta_to_det;
-
-    std::vector<std::vector<std::pair<size_t, short>>> a_str_list(max_I * noalfa_);
-    // Fill maps and list
-    det_hash a_ann;
-    size_t nadd = 0;
-    for (size_t I = 0; I < max_I; ++I) {
-        STLBitsetDeterminant adet = space[I];
-        STLBitsetDeterminant bdet = space[I];
-        double EI = adet.energy();
-        diag_.push_back(EI);
-
-        adet.zero_spin(1);
-        bdet.zero_spin(0);
-
-        size_t a_add;
-        size_t b_add;
-        bstmap_it a_it = alfa_map.find(adet);
-        if (a_it == alfa_map.end()) {
-            a_add = n_alfa_strings;
-            alfa_map[adet] = a_add;
-            n_alfa_strings++;
-        } else {
-            a_add = a_it->second;
-        }
-
-        bstmap_it b_it = beta_map.find(bdet);
-        if (b_it == beta_map.end()) {
-            b_add = n_beta_strings;
-            beta_map[bdet] = b_add;
-            n_beta_strings++;
-        } else {
-            b_add = b_it->second;
-        }
-
-        alfa_to_det.resize(n_alfa_strings);
-        beta_to_det.resize(n_beta_strings);
-
-        alfa_to_det[a_add].push_back(I);
-        beta_to_det[b_add].push_back(I);
-
-        // Build a vector linking a_ann dets to dets
-        std::vector<int> aocc = adet.get_alfa_occ();
-        for (size_t i = 0; i < noalfa_; ++i) {
-            size_t nstr;
-            int ii = aocc[i];
-            adet.set_alfa_bit(ii, false);
-            bstmap_it it = a_ann.find(adet);
-            if (it == a_ann.end()) {
-                nstr = nadd;
-                a_ann[adet] = nstr;
-                nadd++;
-            } else {
-                nstr = it->second;
-            }
-            a_str_list[nstr].push_back(std::make_pair(I, i));
-            adet.set_alfa_bit(ii, true);
-        }
-    }
-    a_str_list.resize(nadd);
-    a_str_list.shrink_to_fit();
-
-    outfile->Printf("\n  Number of alpha strings:  %zu", n_alfa_strings);
-    outfile->Printf("\n  Number of beta strings:   %zu", n_beta_strings);
-
-    Timer single;
-    // Build alpha annihilation list
-    {
-        a_ann_list_.resize(max_I);
-        outfile->Printf("\n\n  Building alpha annihilation list");
-        size_t na_ann = 0;
-
-        for (size_t B = 0; B < n_beta_strings; ++B) {
-            det_hash map_a_ann;
-            std::vector<size_t> a_list = beta_to_det[B];
-            size_t max_A = a_list.size();
-
-            if (max_A < 2)
-                continue;
-
-            for (size_t A = 0; A < max_A; ++A) {
-                size_t I = a_list[A];
-                STLBitsetDeterminant detA(space_[I]);
-                detA.zero_spin(1);
-                std::vector<int> aocc = detA.get_alfa_occ();
-                a_ann_list_[I].resize(noalfa_);
-                for (size_t a = 0; a < noalfa_; ++a) {
-                    int aa = aocc[a];
-                    detA.set_alfa_bit(aa, false);
-                    const double sign = detA.slater_sign_alpha(aa);
-
-                    size_t detA_add;
-                    bstmap_it it = map_a_ann.find(detA);
-                    if (it == map_a_ann.end()) {
-                        detA_add = na_ann;
-                        map_a_ann[detA] = na_ann;
-                        na_ann++;
-                    } else {
-                        detA_add = it->second;
-                    }
-                    a_ann_list_[I][a] = std::make_pair(
-                        detA_add, (sign > 0.0) ? (aa + 1) : (-aa - 1));
-                    detA.set_alfa_bit(aa, true);
-                }
-            }
-        }
-
-        a_ann_list_.shrink_to_fit();
-
-        outfile->Printf("      ...done");
-        outfile->Printf("\n  Building alpha creation list");
-        a_cre_list_.resize(na_ann);
-        for (size_t I = 0; I < max_I; ++I) {
-            const std::vector<std::pair<size_t, short>>& a_ann = a_ann_list_[I];
-            for (size_t a = 0, max_a = a_ann.size(); a < max_a; ++a) {
-                const std::pair<size_t, short>& apair = a_ann[a];
-                size_t J = apair.first;
-                a_cre_list_[J].push_back(std::make_pair(I, apair.second));
-            }
-        }
-        if (use_disk_) {
-            write_single_to_disk(a_ann_list_, 0);
-            a_ann_list_.clear();
-            a_ann_list_.shrink_to_fit();
-            write_single_to_disk(a_cre_list_, 2);
-            a_cre_list_.clear();
-            a_cre_list_.shrink_to_fit();
-        }
-        outfile->Printf("          ...done");
-    }
-
-    // Compute the beta annihilation lists
-    {
-        outfile->Printf("\n  Building beta annihilation list");
-        b_ann_list_.resize(max_I);
-        size_t nb_ann = 0;
-        for (size_t A = 0; A < n_alfa_strings; ++A) {
-            det_hash map_b_ann;
-            std::vector<size_t> b_list = alfa_to_det[A];
-            size_t max_B = b_list.size();
-
-            if (max_B < 2)
-                continue;
-
-            for (size_t B = 0; B < max_B; ++B) {
-                size_t I = b_list[B];
-                STLBitsetDeterminant detB(space_[I]);
-                detB.zero_spin(0);
-
-                std::vector<int> bocc = detB.get_beta_occ();
-                b_ann_list_[I].resize(nobeta_);
-                for (size_t a = 0; a < nobeta_; ++a) {
-                    int aa = bocc[a];
-                    detB.set_beta_bit(aa, false);
-                    const double sign = detB.slater_sign_beta(aa);
-                    size_t detB_add;
-                    bstmap_it it = map_b_ann.find(detB);
-                    if (it == map_b_ann.end()) {
-                        detB_add = nb_ann;
-                        map_b_ann[detB] = nb_ann;
-                        nb_ann++;
-                    } else {
-                        detB_add = it->second;
-                    }
-                    b_ann_list_[I][a] = std::make_pair(
-                        detB_add, (sign > 0.0) ? (aa + 1) : (-aa - 1));
-                    detB.set_beta_bit(aa, true);
-                }
-                //  b_ann_list_[I] = b_ann;
-            }
-        }
-
-        b_ann_list_.shrink_to_fit();
-        outfile->Printf("       ...done");
-        outfile->Printf("\n  Building beta creation list");
-        b_cre_list_.resize(nb_ann);
-        for (size_t I = 0; I < max_I; ++I) {
-            const std::vector<std::pair<size_t, short>>& b_ann = b_ann_list_[I];
-            for (size_t b = 0, max_b = b_ann.size(); b < max_b; ++b) {
-                const std::pair<size_t, short>& bpair = b_ann[b];
-                size_t J = bpair.first;
-                b_cre_list_[J].push_back(std::make_pair(I, bpair.second));
-            }
-        }
-
-        if (use_disk_) {
-            write_single_to_disk(b_ann_list_, 1);
-            b_ann_list_.clear();
-            b_ann_list_.shrink_to_fit();
-            write_single_to_disk(b_cre_list_, 3);
-            b_cre_list_.clear();
-            b_cre_list_.shrink_to_fit();
-        }
-        outfile->Printf("           ...done");
-    }
-    outfile->Printf("\n  Time spent building single lists:    %7.6f s \n",
-                    single.get());
-
-    Timer doubles;
-    // Compute alpha-alpha coupling list
-    outfile->Printf("\n  Building alpha-alpha annihilation lists");
-    {
-        size_t naa_ann = 0;
-        aa_ann_list_.resize(max_I);
-        for (size_t B = 0; B < n_beta_strings; ++B) {
-            det_hash map_aa_ann;
-            std::vector<size_t> a_list = beta_to_det[B];
-            size_t max_A = a_list.size();
-
-            if (max_A < 2)
-                continue;
-
-            for (size_t A = 0; A < max_A; ++A) {
-                const size_t I = a_list[A];
-                STLBitsetDeterminant detA(space_[I]);
-                detA.zero_spin(1);
-
-                std::vector<int> aocc = detA.get_alfa_occ();
-
-                std::vector<std::tuple<size_t, short, short>> aa_ann(
-                    noalfa_ * (noalfa_ - 1) / 2);
-
-                for (size_t i = 0, ij = 0; i < noalfa_; ++i) {
-                    for (size_t j = i + 1; j < noalfa_; ++j, ++ij) {
-                        int ii = aocc[i];
-                        int jj = aocc[j];
-                        double sign = detA.slater_sign_alpha(ii) *
-                                      detA.slater_sign_alpha(jj);
-                        detA.set_alfa_bit(jj, false);
-                        detA.set_alfa_bit(ii, false);
-
-                        bstmap_it it = map_aa_ann.find(detA);
-                        size_t detA_add;
-                        // detJ is not in the map, add it
-                        if (it == map_aa_ann.end()) {
-                            detA_add = naa_ann;
-                            map_aa_ann[detA] = naa_ann;
-                            naa_ann++;
-                        } else {
-                            detA_add = it->second;
-                        }
-                        aa_ann[ij] = std::make_tuple(
-                            detA_add, (sign > 0.5) ? (ii + 1) : (-ii - 1), jj);
-                        detA.set_alfa_bit(jj, true);
-                        detA.set_alfa_bit(ii, true);
-                    }
-                }
-                aa_ann_list_[I] = aa_ann;
-            }
-        }
-
-        outfile->Printf("     ...done");
-        outfile->Printf("\n  Building alpha-alpha creation lists");
-        aa_cre_list_.resize(naa_ann);
-        for (size_t I = 0; I < max_I; ++I) {
-            const std::vector<std::tuple<size_t, short, short>>& aa_ann =
-                aa_ann_list_[I];
-            for (size_t a = 0, max_a = aa_ann.size(); a < max_a; ++a) {
-                auto& J_sign = aa_ann[a];
-                size_t J = std::get<0>(J_sign);
-                short i = std::get<1>(J_sign);
-                short j = std::get<2>(J_sign);
-                aa_cre_list_[J].push_back(std::make_tuple(I, i, j));
-            }
-        }
-        aa_cre_list_.shrink_to_fit();
-        if (use_disk_) {
-            write_double_to_disk(aa_cre_list_, 7);
-            aa_cre_list_.clear();
-            aa_cre_list_.shrink_to_fit();
-            write_double_to_disk(aa_ann_list_, 4);
-            aa_ann_list_.clear();
-            aa_ann_list_.shrink_to_fit();
-        }
-    }
-    outfile->Printf("         ...done");
-
-    // Compute beta-beta coupling list
-    outfile->Printf("\n  Building beta-beta annihilation lists");
-    {
-        size_t nbb_ann = 0;
-        bb_ann_list_.resize(max_I);
-        for (size_t A = 0; A < n_alfa_strings; ++A) {
-            det_hash map_bb_ann;
-            std::vector<size_t> b_list = alfa_to_det[A];
-            size_t max_B = b_list.size();
-
-            if (max_B < 2)
-                continue;
-
-            for (size_t B = 0; B < max_B; ++B) {
-                size_t I = b_list[B];
-
-                STLBitsetDeterminant detB(space_[I]);
-                detB.zero_spin(0);
-
-                std::vector<int> bocc = detB.get_beta_occ();
-
-                std::vector<std::tuple<size_t, short, short>> bb_ann(
-                    nobeta_ * (nobeta_ - 1) / 2);
-
-                for (size_t i = 0, ij = 0; i < nobeta_; ++i) {
-                    for (size_t j = i + 1; j < nobeta_; ++j, ++ij) {
-                        int ii = bocc[i];
-                        int jj = bocc[j];
-                        double sign = detB.slater_sign_beta(ii) *
-                                      detB.slater_sign_beta(jj);
-                        detB.set_beta_bit(jj, false);
-                        detB.set_beta_bit(ii, false);
-
-                        bstmap_it it = map_bb_ann.find(detB);
-                        size_t detB_add;
-                        // detJ is not in the map, add it
-                        if (it == map_bb_ann.end()) {
-                            detB_add = nbb_ann;
-                            map_bb_ann[detB] = nbb_ann;
-                            nbb_ann++;
-                        } else {
-                            detB_add = it->second;
-                        }
-                        bb_ann[ij] = std::make_tuple(
-                            detB_add, (sign > 0.5) ? (ii + 1) : (-ii - 1), jj);
-                        detB.set_beta_bit(jj, true);
-                        detB.set_beta_bit(ii, true);
-                    }
-                }
-                bb_ann_list_[I] = bb_ann;
-            }
-        }
-        outfile->Printf("       ...done");
-        outfile->Printf("\n  Building beta-beta creation lists");
-
-        bb_cre_list_.resize(nbb_ann);
-        for (size_t I = 0; I < max_I; ++I) {
-            const std::vector<std::tuple<size_t, short, short>>& bb_ann =
-                bb_ann_list_[I];
-            for (size_t a = 0, max_a = bb_ann.size(); a < max_a; ++a) {
-                auto& J_sign = bb_ann[a];
-                size_t J = std::get<0>(J_sign);
-                short i = std::get<1>(J_sign);
-                short j = std::get<2>(J_sign);
-                bb_cre_list_[J].push_back(std::make_tuple(I, i, j));
-            }
-        }
-        bb_cre_list_.shrink_to_fit();
-        if (use_disk_) {
-            write_double_to_disk(bb_cre_list_, 8);
-            bb_cre_list_.clear();
-            bb_cre_list_.shrink_to_fit();
-            write_double_to_disk(bb_ann_list_, 5);
-            bb_ann_list_.clear();
-            bb_ann_list_.shrink_to_fit();
-        }
-    }
-    outfile->Printf("           ...done");
-
-    // Form alpha-beta annihilation list
-    outfile->Printf("\n  Building alpha-beta annihilation lists");
-
-    {
-        size_t nab_ann = 0;
-        ab_ann_list_.resize(max_I);
-
-        // Loop through a_str_list to get all n-1(a) determinants
-        size_t nastr = a_str_list.size();
-        for (size_t adet = 0; adet < nastr; ++adet) {
-            det_hash map_ab_ann;
-            std::vector<std::pair<size_t, short>>& a_list = a_str_list[adet];
-
-            for (size_t a = 0, maxa = a_list.size(); a < maxa; ++a) {
-                size_t I = a_list[a].first;
-                int i = a_list[a].second;
-                STLBitsetDeterminant detA = space_[I];
-                detA.zero_spin(1);
-                std::vector<int> aocc = detA.get_alfa_occ();
-                int ii = aocc[i];
-
-                STLBitsetDeterminant detB = space[I];
-                detB.zero_spin(0);
-                std::vector<int> bocc = detB.get_beta_occ();
-
-                std::vector<std::tuple<size_t, short, short>>
-                    ab_ann; //(noalfa_*nobeta_);
-
-                for (size_t j = 0; j < nobeta_; ++j) {
-                    int jj = bocc[j];
-                    double sign =
-                        detA.slater_sign_alpha(ii) * detB.slater_sign_beta(jj);
-                    detB.set_beta_bit(jj, false);
-                    bstmap_it it = map_ab_ann.find(detB);
-                    size_t detJ_add;
-                    // detJ is not in the map, add it
-                    if (it == map_ab_ann.end()) {
-                        detJ_add = nab_ann;
-                        map_ab_ann[detB] = nab_ann;
-                        nab_ann++;
-                    } else {
-                        detJ_add = it->second;
-                    }
-
-                    ab_ann_list_[I].push_back(std::make_tuple(
-                        detJ_add, (sign > 0.5) ? (ii + 1) : (-ii - 1), jj));
-                    detB.set_beta_bit(jj, true);
-                }
-                //  ab_ann_list_[I] = ab_ann;
-            }
-        }
-        outfile->Printf("      ...done");
-
-        outfile->Printf("\n  Building alpha-beta creation lists");
-        ab_cre_list_.resize(nab_ann);
-        for (size_t I = 0; I < max_I; ++I) {
-            const std::vector<std::tuple<size_t, short, short>>& ab_ann =
-                ab_ann_list_[I];
-            for (size_t a = 0, max_a = ab_ann.size(); a < max_a; ++a) {
-                auto J_sign = ab_ann[a];
-                size_t J = std::get<0>(J_sign);
-                short i = std::get<1>(J_sign);
-                short j = std::get<2>(J_sign);
-                ab_cre_list_[J].push_back(std::make_tuple(I, i, j));
-                //               outfile->Printf("\n  I, i, j : %zu, %d, %d", J,
-                //               i, j);
-            }
-        }
-        ab_cre_list_.shrink_to_fit();
-        if (use_disk_) {
-            write_double_to_disk(ab_ann_list_, 6);
-            ab_ann_list_.clear();
-            ab_ann_list_.shrink_to_fit();
-            write_double_to_disk(ab_cre_list_, 9);
-            ab_cre_list_.clear();
-            ab_cre_list_.shrink_to_fit();
-        }
-        outfile->Printf("          ...done");
-    }
-
-    outfile->Printf("\n  Time spent building doubles lists:   %7.6f s \n",
-                    doubles.get());
-    outfile->Flush();
-}
-
-void SigmaVectorString::compute_sigma(Matrix&, Matrix&, int) {
-    outfile->Printf("\n Implement me. Maybe.");
-}
-
-void SigmaVectorString::compute_sigma(SharedVector sigma, SharedVector b) {
-    sigma->zero();
-    double* sigma_p = sigma->pointer();
-    double* b_p = b->pointer();
-
-    // Compute the overlap with each root
-    int nbad = bad_states_.size();
-    std::vector<double> overlap(nbad);
-    if (nbad != 0) {
-        for (int n = 0; n < nbad; ++n) {
-            std::vector<std::pair<size_t, double>>& bad_state = bad_states_[n];
-            double dprd = 0.0;
-            for (size_t det = 0, ndet = bad_state.size(); det < ndet; ++det) {
-                dprd += bad_state[det].second * b_p[bad_state[det].first];
-            }
-            overlap[n] = dprd;
-        }
-        // outfile->Printf("\n Overlap: %1.6f", overlap[0]);
-
-        for (int n = 0; n < nbad; ++n) {
-            std::vector<std::pair<size_t, double>>& bad_state = bad_states_[n];
-            size_t ndet = bad_state.size();
-
-#pragma omp parallel for
-            for (size_t det = 0; det < ndet; ++det) {
-                b_p[bad_state[det].first] -= bad_state[det].second * overlap[n];
-            }
-        }
-    }
-// outfile->Printf("\n  size: %zu", size_);
-
-#pragma omp parallel
-    {
-        int num_thread = omp_get_max_threads();
-        int tid = omp_get_thread_num();
-
-        size_t bin_size = size_ / num_thread;
-        bin_size += (tid < (size_ % num_thread)) ? 1 : 0;
-
-        size_t start_idx = (tid < (size_ % num_thread))
-                               ? tid * bin_size
-                               : (size_ % num_thread) * (bin_size + 1) +
-                                     (tid - (size_ % num_thread)) * bin_size;
-        size_t end_idx = start_idx + bin_size;
-
-        for (size_t J = start_idx; J < end_idx; ++J) {
-            // reference
-            sigma_p[J] += diag_[J] * b_p[J];
-
-            // aa singles
-            for (auto& aJ_mo_sign : a_ann_list_[J]) {
-                const size_t aJ_add = aJ_mo_sign.first;
-                const size_t p = std::abs(aJ_mo_sign.second) - 1;
-                const double sign_p = (aJ_mo_sign.second > 0.0) ? 1.0 : -1.0;
-                for (auto& aaJ_mo : a_cre_list_[aJ_add]) {
-                    const size_t q = std::abs(aaJ_mo.second) - 1;
-                    if (p != q) {
-                        const size_t I = aaJ_mo.first;
-                        const double sign_q =
-                            (aaJ_mo.second > 0.0) ? 1.0 : -1.0;
-                        const double HIJ =
-                            space_[I].slater_rules_single_alpha_abs(p, q) *
-                            sign_p * sign_q;
-                        sigma_p[J] += HIJ * b_p[I];
-                    }
-                }
-            }
-            // bb singles
-            for (auto& bpair : b_ann_list_[J]) {
-                const size_t bJ_add = bpair.first;
-                const size_t p = std::abs(bpair.second) - 1;
-                const double sign_p = bpair.second > 0.0 ? 1.0 : -1.0;
-                for (auto& bbJ_mo : b_cre_list_[bJ_add]) {
-                    const size_t q = std::abs(bbJ_mo.second) - 1;
-                    if (p != q) {
-                        const double sign_q = bbJ_mo.second > 0.0 ? 1.0 : -1.0;
-                        const size_t I = bbJ_mo.first;
-                        const double HIJ =
-                            space_[I].slater_rules_single_beta_abs(p, q) *
-                            sign_p * sign_q;
-                        sigma_p[J] += HIJ * b_p[I];
-                    }
-                }
-            }
-            // aaaa doubles
-            for (auto& aaJ_mo_sign : aa_ann_list_[J]) {
-                const size_t aaJ_add = std::get<0>(aaJ_mo_sign);
-                double sign_pq = std::get<1>(aaJ_mo_sign) > 0.0 ? 1.0 : -1.0;
-                const size_t p = std::abs(std::get<1>(aaJ_mo_sign)) - 1;
-                const size_t q = std::get<2>(aaJ_mo_sign);
-                for (auto& aaaaJ_mo_sign : aa_cre_list_[aaJ_add]) {
-                    const size_t r = std::abs(std::get<1>(aaaaJ_mo_sign)) - 1;
-                    const size_t s = std::get<2>(aaaaJ_mo_sign);
-                    if ((p != r) and (q != s) and (p != s) and (q != r)) {
-                        const size_t I = std::get<0>(aaaaJ_mo_sign);
-                        const double sign_rs =
-                            std::get<1>(aaaaJ_mo_sign) > 0.0 ? 1.0 : -1.0;
-                        const double HIJ =
-                            sign_pq * sign_rs *
-                            STLBitsetDeterminant::fci_ints_->tei_aa(p, q, r, s);
-                        sigma_p[J] += HIJ * b_p[I];
-                    }
-                }
-            }
-            // bbbb singles
-            for (auto& bbJ_mo_sign : bb_ann_list_[J]) {
-                const size_t bbJ_add = std::get<0>(bbJ_mo_sign);
-                const double sign_pq =
-                    std::get<1>(bbJ_mo_sign) > 0.0 ? 1.0 : -1.0;
-                const size_t p = std::abs(std::get<1>(bbJ_mo_sign)) - 1;
-                const size_t q = std::get<2>(bbJ_mo_sign);
-                for (auto& bbbbJ_mo_sign : bb_cre_list_[bbJ_add]) {
-                    const size_t r = std::abs(std::get<1>(bbbbJ_mo_sign)) - 1;
-                    const size_t s = std::get<2>(bbbbJ_mo_sign);
-                    if ((p != r) and (q != s) and (p != s) and (q != r)) {
-                        const size_t I = std::get<0>(bbbbJ_mo_sign);
-                        const double sign_rs =
-                            std::get<1>(bbbbJ_mo_sign) > 0.0 ? 1.0 : -1.0;
-                        const double HIJ =
-                            sign_pq * sign_rs *
-                            STLBitsetDeterminant::fci_ints_->tei_bb(p, q, r, s);
-                        sigma_p[J] += HIJ * b_p[I];
-                    }
-                }
-            }
-            for (auto& abJ_mo_sign : ab_ann_list_[J]) {
-                const size_t abJ_add = std::get<0>(abJ_mo_sign);
-                double sign_pq = std::get<1>(abJ_mo_sign) > 0.0 ? 1.0 : -1.0;
-                const size_t p = std::abs(std::get<1>(abJ_mo_sign)) - 1;
-                const size_t q = std::get<2>(abJ_mo_sign);
-                for (auto& ababJ_mo_sign : ab_cre_list_[abJ_add]) {
-                    const size_t r = std::abs(std::get<1>(ababJ_mo_sign)) - 1;
-                    const size_t s = std::get<2>(ababJ_mo_sign);
-                    if ((p != r) and (q != s)) {
-                        const size_t I = std::get<0>(ababJ_mo_sign);
-                        double sign_rs =
-                            std::get<1>(ababJ_mo_sign) > 0.0 ? 1.0 : -1.0;
-                        const double HIJ =
-                            sign_pq * sign_rs *
-                            STLBitsetDeterminant::fci_ints_->tei_ab(p, q, r, s);
-                        sigma_p[J] += HIJ * b_p[I];
-                    }
-                }
-            }
-        }
-    }
-}
-void SigmaVectorString::add_bad_roots(
-    std::vector<std::vector<std::pair<size_t, double>>>& roots) {
-    bad_states_.clear();
-    for (int i = 0, max_i = roots.size(); i < max_i; ++i) {
-        bad_states_.push_back(roots[i]);
-    }
-}
-
-void SigmaVectorString::get_diagonal(Vector& diag) {
-    for (size_t I = 0; I < diag_.size(); ++I) {
-        diag.set(I, diag_[I]);
-    }
-}
-
 SigmaVectorList::SigmaVectorList(const std::vector<STLBitsetDeterminant>& space,
                                  bool print_details)
     : SigmaVector(space.size()), space_(space) {
@@ -1067,126 +408,6 @@ SigmaVectorList::SigmaVectorList(const std::vector<STLBitsetDeterminant>& space,
     }
 }
 
-void SigmaVectorList::compute_sigma(Matrix& sigma, Matrix& b, int nroot) {
-    sigma.zero();
-    double** sigma_p = sigma.pointer();
-    double** b_p = b.pointer();
-    for (size_t J = 0; J < size_; ++J) {
-        // reference
-        for (int a = 0; a < nroot; ++a) {
-            sigma_p[J][a] += diag_[J] * b_p[a][J];
-        }
-
-        // aa singles
-        for (auto& aJ_mo_sign : a_ann_list[J]) {
-            const size_t aJ_add = aJ_mo_sign.first;
-            const size_t p = std::abs(aJ_mo_sign.second) - 1;
-            for (auto& aaJ_mo_sign : a_cre_list[aJ_add]) {
-                const size_t q = std::abs(aaJ_mo_sign.second) - 1;
-                if (p != q) {
-                    const double HIJ =
-                        space_[aaJ_mo_sign.first].slater_rules_single_alpha(p,
-                                                                            q);
-                    const size_t I = aaJ_mo_sign.first;
-                    for (int a = 0; a < nroot; ++a) {
-                        sigma_p[I][a] += HIJ * b_p[a][J];
-                    }
-                }
-            }
-        }
-
-        // bb singles
-        for (auto& bJ_mo_sign : b_ann_list[J]) {
-            const size_t bJ_add = bJ_mo_sign.first;
-            const size_t p = std::abs(bJ_mo_sign.second) - 1;
-            for (auto& bbJ_mo_sign : b_cre_list[bJ_add]) {
-                const size_t q = std::abs(bbJ_mo_sign.second) - 1;
-                if (p != q) {
-                    const double HIJ =
-                        space_[bbJ_mo_sign.first].slater_rules_single_beta(p,
-                                                                           q);
-                    const size_t I = bbJ_mo_sign.first;
-                    for (int a = 0; a < nroot; ++a) {
-                        sigma_p[I][a] += HIJ * b_p[a][J];
-                    }
-                }
-            }
-        }
-
-        // aaaa doubles
-        for (auto& aaJ_mo_sign : aa_ann_list[J]) {
-            const size_t aaJ_add = std::get<0>(aaJ_mo_sign);
-            const double sign_pq = std::get<1>(aaJ_mo_sign) > 0.0 ? 1.0 : -1.0;
-            const size_t p = std::abs(std::get<1>(aaJ_mo_sign)) - 1;
-            const size_t q = std::get<2>(aaJ_mo_sign);
-            for (auto& aaaaJ_mo_sign : aa_cre_list[aaJ_add]) {
-                const size_t r = std::abs(std::get<1>(aaaaJ_mo_sign)) - 1;
-                const size_t s = std::get<2>(aaaaJ_mo_sign);
-                if ((p != r) and (q != s) and (p != s) and (q != r)) {
-                    const size_t aaaaJ_add = std::get<0>(aaaaJ_mo_sign);
-                    const double sign_rs =
-                        std::get<1>(aaaaJ_mo_sign) > 0.0 ? 1.0 : -1.0;
-                    const size_t I = aaaaJ_add;
-                    const double HIJ =
-                        sign_pq * sign_rs *
-                        STLBitsetDeterminant::fci_ints_->tei_aa(p, q, r, s);
-                    for (int a = 0; a < nroot; ++a) {
-                        sigma_p[I][a] += HIJ * b_p[a][J];
-                    }
-                }
-            }
-        }
-
-        // aabb singles
-        for (auto& abJ_mo_sign : ab_ann_list[J]) {
-            const size_t abJ_add = std::get<0>(abJ_mo_sign);
-            const double sign_pq = std::get<1>(abJ_mo_sign) > 0.0 ? 1.0 : -1.0;
-            const size_t p = std::abs(std::get<1>(abJ_mo_sign)) - 1;
-            const size_t q = std::get<2>(abJ_mo_sign);
-            for (auto& ababJ_mo_sign : ab_cre_list[abJ_add]) {
-                const size_t r = std::abs(std::get<1>(ababJ_mo_sign)) - 1;
-                const size_t s = std::get<2>(ababJ_mo_sign);
-                if ((p != r) and (q != s)) {
-                    const size_t ababJ_add = std::get<0>(ababJ_mo_sign);
-                    const double sign_rs =
-                        std::get<1>(ababJ_mo_sign) > 0.0 ? 1.0 : -1.0;
-                    const size_t I = ababJ_add;
-                    const double HIJ =
-                        sign_pq * sign_rs *
-                        STLBitsetDeterminant::fci_ints_->tei_ab(p, q, r, s);
-                    for (int a = 0; a < nroot; ++a) {
-                        sigma_p[I][a] += HIJ * b_p[a][J];
-                    }
-                }
-            }
-        }
-
-        // bbbb singles
-        for (auto& bbJ_mo_sign : bb_ann_list[J]) {
-            const size_t bbJ_add = std::get<0>(bbJ_mo_sign);
-            const double sign_pq = std::get<1>(bbJ_mo_sign) > 0.0 ? 1.0 : -1.0;
-            const size_t p = std::abs(std::get<1>(bbJ_mo_sign)) - 1;
-            const size_t q = std::get<2>(bbJ_mo_sign);
-            for (auto& bbbbJ_mo_sign : bb_cre_list[bbJ_add]) {
-                const size_t r = std::abs(std::get<1>(bbbbJ_mo_sign)) - 1;
-                const size_t s = std::get<2>(bbbbJ_mo_sign);
-                if ((p != r) and (q != s) and (p != s) and (q != r)) {
-                    const size_t bbbbJ_add = std::get<0>(bbbbJ_mo_sign);
-                    const double sign_rs =
-                        std::get<1>(bbbbJ_mo_sign) > 0.0 ? 1.0 : -1.0;
-                    const size_t I = bbbbJ_add;
-                    const double HIJ =
-                        sign_pq * sign_rs *
-                        STLBitsetDeterminant::fci_ints_->tei_bb(p, q, r, s);
-                    for (int a = 0; a < nroot; ++a) {
-                        sigma_p[I][a] += HIJ * b_p[a][J];
-                    }
-                }
-            }
-        }
-    }
-}
-
 void SigmaVectorList::compute_sigma(SharedVector sigma, SharedVector b) {
     sigma->zero();
     double* sigma_p = sigma->pointer();
@@ -1353,7 +574,25 @@ void SigmaVectorList::get_diagonal(Vector& diag) {
     }
 }
 
-void SigmaVectorWfn::add_bad_roots(
+
+SigmaVectorWfn1::SigmaVectorWfn1(const DeterminantMap& space, WFNOperator& op)
+    : SigmaVector(space.size()), space_(space), a_ann_list_(op.a_ann_list_),
+      a_cre_list_(op.a_cre_list_), b_ann_list_(op.b_ann_list_),
+      b_cre_list_(op.b_cre_list_), aa_ann_list_(op.aa_ann_list_),
+      aa_cre_list_(op.aa_cre_list_), ab_ann_list_(op.ab_ann_list_),
+      ab_cre_list_(op.ab_cre_list_), bb_ann_list_(op.bb_ann_list_),
+      bb_cre_list_(op.bb_cre_list_) {
+
+    det_hash<size_t> detmap = space_.wfn_hash();
+    diag_.resize(space_.size());
+    for (det_hash<size_t>::const_iterator it = detmap.begin(),
+                                          endit = detmap.end();
+         it != endit; ++it) {
+        diag_[it->second] = it->first.energy();
+    }
+}
+
+void SigmaVectorWfn1::add_bad_roots(
     std::vector<std::vector<std::pair<size_t, double>>>& roots) {
     bad_states_.clear();
     for (int i = 0, max_i = roots.size(); i < max_i; ++i) {
@@ -1361,15 +600,14 @@ void SigmaVectorWfn::add_bad_roots(
     }
 }
 
-void SigmaVectorWfn::get_diagonal(Vector& diag) {
+void SigmaVectorWfn1::get_diagonal(Vector& diag) {
     for (size_t I = 0; I < diag_.size(); ++I) {
         diag.set(I, diag_[I]);
     }
 }
 
-void SigmaVectorWfn::compute_sigma(Matrix& sigma, Matrix& b, int nroot) {}
 
-void SigmaVectorWfn::compute_sigma(SharedVector sigma, SharedVector b) {
+void SigmaVectorWfn1::compute_sigma(SharedVector sigma, SharedVector b) {
     sigma->zero();
     double* sigma_p = sigma->pointer();
     double* b_p = b->pointer();
@@ -1526,12 +764,541 @@ void SigmaVectorWfn::compute_sigma(SharedVector sigma, SharedVector b) {
         // outfile->Printf("\n  Time spent on doubles: %1.5f", cycl2.get());
     }
 }
+
+
+SigmaVectorWfn2::SigmaVectorWfn2(const DeterminantMap& space, WFNOperator& op)
+    : SigmaVector(space.size()), space_(space), 
+      a_list_(op.a_list_),
+      b_list_(op.b_list_),
+      aa_list_(op.aa_list_),
+      ab_list_(op.ab_list_),
+      bb_list_(op.bb_list_){
+
+    det_hash<size_t> detmap = space_.wfn_hash();
+    diag_.resize(space_.size());
+    for (det_hash<size_t>::const_iterator it = detmap.begin(),
+                                          endit = detmap.end();
+         it != endit; ++it) {
+        diag_[it->second] = it->first.energy();
+    }
+}
+
+void SigmaVectorWfn2::add_bad_roots(
+    std::vector<std::vector<std::pair<size_t, double>>>& roots) {
+    bad_states_.clear();
+    for (int i = 0, max_i = roots.size(); i < max_i; ++i) {
+        bad_states_.push_back(roots[i]);
+    }
+}
+
+void SigmaVectorWfn2::get_diagonal(Vector& diag) {
+    for (size_t I = 0; I < diag_.size(); ++I) {
+        diag.set(I, diag_[I]);
+    }
+}
+
+
+void SigmaVectorWfn2::compute_sigma(SharedVector sigma, SharedVector b) {
+    sigma->zero();
+
+    size_t ncmo = STLBitsetDeterminant::nmo_;
+
+    double* sigma_p = sigma->pointer();
+    double* b_p = b->pointer();
+
+    // Compute the overlap with each root
+    int nbad = bad_states_.size();
+    std::vector<double> overlap(nbad);
+    if (nbad != 0) {
+        for (int n = 0; n < nbad; ++n) {
+            std::vector<std::pair<size_t, double>>& bad_state = bad_states_[n];
+            double dprd = 0.0;
+            for (size_t det = 0, ndet = bad_state.size(); det < ndet; ++det) {
+                dprd += bad_state[det].second * b_p[bad_state[det].first];
+            }
+            overlap[n] = dprd;
+        }
+        // outfile->Printf("\n Overlap: %1.6f", overlap[0]);
+
+        for (int n = 0; n < nbad; ++n) {
+            std::vector<std::pair<size_t, double>>& bad_state = bad_states_[n];
+            size_t ndet = bad_state.size();
+
+            #pragma omp parallel for
+            for (size_t det = 0; det < ndet; ++det) {
+                b_p[bad_state[det].first] -= bad_state[det].second * overlap[n];
+            }
+        }
+    }
+    const std::vector<STLBitsetDeterminant>& dets =
+        space_.determinants();
+
+    #pragma omp parallel
+    {
+        int num_thread = omp_get_max_threads();
+        int tid = omp_get_thread_num();
+
+        // Each thread gets local copy of sigma
+        std::vector<double> sigma_t(size_);
+
+        size_t bin_size = size_ / num_thread;
+        bin_size += (tid < (size_ % num_thread)) ? 1 : 0;
+        size_t start_idx = (tid < (size_ % num_thread))
+                               ? tid * bin_size
+                               : (size_ % num_thread) * (bin_size + 1) +
+                                     (tid - (size_ % num_thread)) * bin_size;
+        size_t end_idx = start_idx + bin_size;
+
+        for( size_t J = start_idx; J < end_idx; ++J ){
+            sigma_t[J] += diag_[J] * b_p[J];// Make DDOT
+        }
+
+
+        // a singles
+        size_t end_a_idx = a_list_.size();
+        size_t start_a_idx = 0;
+        for (size_t K = start_a_idx, max_K = end_a_idx; K < max_K; ++K) {
+            if( (K % num_thread) == tid ){ 
+                for (auto& detJ : a_list_[K]) { // Each gives unique J
+                    const size_t J = detJ.first;
+                    const size_t p = std::abs(detJ.second) - 1;
+                    double sign_p = detJ.second > 0.0 ? 1.0 : -1.0;
+                    for (auto& detI : a_list_[K]) {
+                        const size_t q = std::abs(detI.second) - 1;
+                        if (p != q) {
+                            const size_t I = detI.first;
+                            double sign_q =
+                                detI.second > 0.0 ? 1.0 : -1.0;
+                            const double HIJ =
+                                dets[J].slater_rules_single_alpha_abs(p, q) *
+                                sign_p * sign_q;
+                            sigma_t[I] += HIJ * b_p[J];
+                        }
+                    }
+                }
+            }
+        }
+
+        // b singles
+        size_t end_b_idx = b_list_.size();
+        size_t start_b_idx = 0;
+        for (size_t K = start_b_idx, max_K = end_b_idx; K < max_K; ++K) {
+            // aa singles
+            if( (K % num_thread) == tid ){ 
+                for (auto& detJ : b_list_[K]) {
+                    const size_t J = detJ.first;
+                    const size_t p = std::abs(detJ.second) - 1;
+                    double sign_p = detJ.second > 0.0 ? 1.0 : -1.0;
+                    for (auto& detI : b_list_[K]) {
+                        const size_t q = std::abs(detI.second) - 1;
+                        if (p != q) {
+                            const size_t I = detI.first;
+                            double sign_q =
+                                detI.second > 0.0 ? 1.0 : -1.0;
+                            const double HIJ =
+                                dets[J].slater_rules_single_beta_abs(p, q) *
+                                sign_p * sign_q;
+                            sigma_t[I] += HIJ * b_p[J];
+                        }
+                    }
+                }
+            }
+        }
+
+        // AA doubles 
+        size_t aa_size = aa_list_.size();
+  //      size_t bin_aa_size = aa_size / num_thread;
+  //      bin_aa_size += (tid < (aa_size % num_thread)) ? 1 : 0;
+  //      size_t start_aa_idx = (tid < (aa_size % num_thread))
+  //                             ? tid * bin_aa_size
+  //                             : (aa_size % num_thread) * (bin_aa_size + 1) +
+  //                                   (tid - (aa_size % num_thread)) * bin_aa_size;
+  //      size_t end_aa_idx = start_aa_idx + bin_aa_size;
+        for( size_t K = 0, max_K = aa_size; K < max_K; ++K ){ 
+            if( (K % num_thread) == tid ){ 
+                const std::vector<std::tuple<size_t,short,short>>& c_dets = aa_list_[K];
+                for( auto& detJ : c_dets ){
+                    size_t J = std::get<0>(detJ);
+                    short p = std::abs(std::get<1>(detJ)) - 1;
+                    short q = std::get<2>(detJ);
+                    double sign_p = std::get<1>(detJ) > 0.0 ? 1.0 : -1.0;
+                    for( auto& detI : c_dets ){
+                        short r = std::abs(std::get<1>(detI)) - 1;
+                        short s = std::get<2>(detI);
+                        if( (p != r) and (q!=s) and (p!=s) and (q!=r) ){
+                            size_t I = std::get<0>(detI);
+                            double sign_q = std::get<1>(detI) > 0.0 ? 1.0 : -1.0;
+                            double HIJ = sign_p * sign_q * STLBitsetDeterminant::fci_ints_->tei_aa(p,q,r,s);
+                            sigma_t[I] += HIJ * b_p[J];
+                        } 
+                    }    
+                }
+            }
+        }
+
+        // BB doubles
+        for( size_t K = 0, max_K = bb_list_.size(); K < max_K; ++K ){ 
+            const std::vector<std::tuple<size_t,short,short>>& c_dets = bb_list_[K];
+            if( (K % num_thread) == tid ){ 
+                for( auto& detJ : c_dets ){
+                    size_t J = std::get<0>(detJ);
+                    short p = std::abs(std::get<1>(detJ)) - 1;
+                    short q = std::get<2>(detJ);
+                    double sign_p = std::get<1>(detJ) > 0.0 ? 1.0 : -1.0;
+                    for( auto& detI : c_dets ){
+                        short r = std::abs(std::get<1>(detI)) - 1;
+                        short s = std::get<2>(detI);
+                        if( (p != r) and (q!=s) and (p!=s) and (q!=r) ){
+                            size_t I = std::get<0>(detI);
+                            double sign_q = std::get<1>(detI) > 0.0 ? 1.0 : -1.0;
+                            double HIJ = sign_p * sign_q * STLBitsetDeterminant::fci_ints_->tei_bb(p,q,r,s);
+                            sigma_t[I] += HIJ * b_p[J];
+                        } 
+                    }    
+                }
+            }
+        }
+        for( size_t K = 0, max_K = ab_list_.size(); K < max_K; ++K ){ 
+            if( (K % num_thread) == tid ){ 
+                const std::vector<std::tuple<size_t,short,short>>& c_dets = ab_list_[K];
+                size_t max_det = c_dets.size();
+                for( size_t det = 0; det < max_det; ++det ){
+                    auto detJ = c_dets[det];
+                    size_t J = std::get<0>(detJ);
+                    short p = std::abs(std::get<1>(detJ)) - 1;
+                    short q = std::get<2>(detJ);
+                    double sign_p = std::get<1>(detJ) > 0.0 ? 1.0 : -1.0;
+                    for( auto& detI : c_dets ){
+                        short r = std::abs(std::get<1>(detI)) - 1;
+                        short s = std::get<2>(detI);
+                        if( (p != r) and (q!=s)){
+                            size_t I = std::get<0>(detI);
+                            double sign_q = std::get<1>(detI) > 0.0 ? 1.0 : -1.0;
+                            double HIJ = sign_p * sign_q * STLBitsetDeterminant::fci_ints_->tei_ab(p,q,r,s);
+                            sigma_t[I] += HIJ * b_p[J];
+                        } 
+                    }    
+                }
+            }
+        }
+
+//        #pragma omp critical
+//        {
+            for( size_t I =0; I < size_; ++I ){
+                #pragma omp atomic update
+                sigma_p[I] += sigma_t[I];
+            }
+//        }
+    }
+}
+
+SigmaVectorWfn3::SigmaVectorWfn3(const DeterminantMap& space, WFNOperator& op)
+    : SigmaVector(space.size()), space_(space), 
+      a_list_(op.a_list_),
+      b_list_(op.b_list_),
+      aa_list_(op.aa_list_),
+      ab_list_(op.ab_list_),
+      bb_list_(op.bb_list_){
+
+    det_hash<size_t> detmap = space_.wfn_hash();
+    diag_.resize(space_.size());
+    for (det_hash<size_t>::const_iterator it = detmap.begin(),
+                                          endit = detmap.end();
+         it != endit; ++it) {
+        diag_[it->second] = it->first.energy();
+    }
+
+    size_t nact = STLBitsetDeterminant::nmo_;
+    size_t nact2 = nact*nact;
+    aa_tei_ = SharedMatrix(new Matrix("aa",nact2, nact2));
+    bb_tei_ = SharedMatrix(new Matrix("aa",nact2, nact2));
+    ab_tei_ = SharedMatrix(new Matrix("aa",nact2, nact2));
+
+    outfile->Printf("\n  Building integral matrices");
+Timer build;
+    aa_tei_->zero();
+    ab_tei_->zero();
+    bb_tei_->zero();
+    for(int p = 0; p < nact; ++p ){
+        for(int q = 0; q < nact; ++q ){
+            for(int r = 0; r < nact; ++r ){
+                for(int s = 0; s < nact; ++s ){
+                    if( (p!=r) and (q!=s) and (p!=s) and (q!=r) ){
+                        aa_tei_->set(p*nact + q, r*nact + s, STLBitsetDeterminant::fci_ints_->tei_aa(p,q,r,s));
+                    }
+                    if( (p!=r) and (q!=s) ){
+                        ab_tei_->set(p*nact + q, r*nact + s, STLBitsetDeterminant::fci_ints_->tei_ab(p,q,r,s));
+                    }
+                    if( (p!=r) and (q!=s) and (p!=s) and (q!=r) ){
+                        bb_tei_->set(p*nact + q, r*nact + s, STLBitsetDeterminant::fci_ints_->tei_bb(p,q,r,s));
+                    }
+                } 
+            } 
+        } 
+    }
+    outfile->Printf(" took %1.6f s", build.get()); 
+
+    size_t nnon = 0;
+    size_t maxK = ab_list_.size();
+    for( size_t K = 0; K < maxK; ++K ){
+        nnon += ab_list_[K].size();
+    }
+
+    outfile->Printf("\n  C(rs,K) contains %zu non-zero elements out of %zu (%1.3f %%)", nnon, maxK*nact2, (static_cast<double>(nnon)/(maxK*nact2))*100);
+}
+
+void SigmaVectorWfn3::add_bad_roots(
+    std::vector<std::vector<std::pair<size_t, double>>>& roots) {
+    bad_states_.clear();
+    for (int i = 0, max_i = roots.size(); i < max_i; ++i) {
+        bad_states_.push_back(roots[i]);
+    }
+}
+
+void SigmaVectorWfn3::get_diagonal(Vector& diag) {
+    for (size_t I = 0; I < diag_.size(); ++I) {
+        diag.set(I, diag_[I]);
+    }
+}
+
+
+void SigmaVectorWfn3::compute_sigma(SharedVector sigma, SharedVector b) {
+    sigma->zero();
+
+    size_t ncmo = STLBitsetDeterminant::nmo_;
+    size_t ncmo2 = ncmo*ncmo;
+
+    double* sigma_p = sigma->pointer();
+    double* b_p = b->pointer();
+
+    // Compute the overlap with each root
+    int nbad = bad_states_.size();
+    std::vector<double> overlap(nbad);
+    if (nbad != 0) {
+        for (int n = 0; n < nbad; ++n) {
+            std::vector<std::pair<size_t, double>>& bad_state = bad_states_[n];
+            double dprd = 0.0;
+            for (size_t det = 0, ndet = bad_state.size(); det < ndet; ++det) {
+                dprd += bad_state[det].second * b_p[bad_state[det].first];
+            }
+            overlap[n] = dprd;
+        }
+        // outfile->Printf("\n Overlap: %1.6f", overlap[0]);
+
+        for (int n = 0; n < nbad; ++n) {
+            std::vector<std::pair<size_t, double>>& bad_state = bad_states_[n];
+            size_t ndet = bad_state.size();
+
+#pragma omp parallel for
+            for (size_t det = 0; det < ndet; ++det) {
+                b_p[bad_state[det].first] -= bad_state[det].second * overlap[n];
+            }
+        }
+    }
+#pragma omp parallel
+    {
+        int num_thread = omp_get_max_threads();
+        int tid = omp_get_thread_num();
+
+        size_t bin_size = size_ / num_thread;
+        bin_size += (tid < (size_ % num_thread)) ? 1 : 0;
+        size_t start_idx = (tid < (size_ % num_thread))
+                               ? tid * bin_size
+                               : (size_ % num_thread) * (bin_size + 1) +
+                                     (tid - (size_ % num_thread)) * bin_size;
+        size_t end_idx = start_idx + bin_size;
+
+        for( size_t J = start_idx; J < end_idx; ++J ){
+            sigma_p[J] += diag_[J] * b_p[J];// Make DDOT
+        }
+    }
+    
+        // Each thread gets local copy of sigma
+        const std::vector<STLBitsetDeterminant>& dets =
+            space_.determinants();
+
+        // a singles
+        size_t end_a_idx = a_list_.size();
+        size_t start_a_idx = 0;
+        for (size_t K = start_a_idx, max_K = end_a_idx; K < max_K; ++K) {
+            for (auto& detJ : a_list_[K]) { // Each gives unique J
+                const size_t J = detJ.first;
+                const size_t p = std::abs(detJ.second) - 1;
+                double sign_p = detJ.second > 0.0 ? 1.0 : -1.0;
+                for (auto& detI : a_list_[K]) {
+                    const size_t q = std::abs(detI.second) - 1;
+                    if (p != q) {
+                        const size_t I = detI.first;
+                        double sign_q =
+                            detI.second > 0.0 ? 1.0 : -1.0;
+                        const double HIJ =
+                            dets[J].slater_rules_single_alpha_abs(p, q) *
+                            sign_p * sign_q;
+                        sigma_p[I] += HIJ * b_p[J];
+                    }
+                }
+            }
+        }
+
+        // b singles
+        size_t end_b_idx = b_list_.size();
+        size_t start_b_idx = 0;
+     //   size_t bin_b_size = b_size / num_thread;
+     //   bin_b_size += (tid < (b_size % num_thread)) ? 1 : 0;
+     //   size_t start_b_idx = (tid < (b_size % num_thread))
+     //                          ? tid * bin_b_size
+     //                          : (b_size % num_thread) * (bin_b_size + 1) +
+     //                                (tid - (b_size % num_thread)) * bin_b_size;
+     //   size_t end_b_idx = start_b_idx + bin_b_size;
+        for (size_t K = start_b_idx, max_K = end_b_idx; K < max_K; ++K) {
+            // aa singles
+            for (auto& detJ : b_list_[K]) {
+                const size_t J = detJ.first;
+                const size_t p = std::abs(detJ.second) - 1;
+                double sign_p = detJ.second > 0.0 ? 1.0 : -1.0;
+                for (auto& detI : b_list_[K]) {
+                    const size_t q = std::abs(detI.second) - 1;
+                    if (p != q) {
+                        const size_t I = detI.first;
+                        double sign_q =
+                            detI.second > 0.0 ? 1.0 : -1.0;
+                        const double HIJ =
+                            dets[J].slater_rules_single_beta_abs(p, q) *
+                            sign_p * sign_q;
+                        sigma_p[I] += HIJ * b_p[J];
+                    }
+                }
+            }
+        }
+
+    // AA doubles
+    {
+        size_t max_K = aa_list_.size();
+        SharedMatrix B_pq = SharedMatrix(new Matrix("B_pq", ncmo2, max_K));
+        SharedMatrix C_rs = SharedMatrix(new Matrix("C_rs",max_K, ncmo2));
+        for( size_t K = 0; K < max_K; ++K ){ 
+            const std::vector<std::tuple<size_t,short,short>>& c_dets = aa_list_[K];
+            size_t maxI = c_dets.size();
+            for (size_t det = 0; det < maxI; ++det) {
+                auto& detJ = c_dets[det];
+                const size_t J = std::get<0>(detJ);
+                const double sign_rs =
+                    std::get<1>(detJ) > 0.0 ? 1.0 : -1.0;
+                const size_t r = std::abs(std::get<1>(detJ)) - 1;
+                const size_t s = std::get<2>(detJ);
+                C_rs->set(K,r*ncmo + s, sign_rs * b_p[J] );
+            }
+        }
+        //Timer mult;
+        B_pq->gemm(false,true,1.0,aa_tei_,C_rs,0.0); 
+        //C_DGEMV('N',ncmo2,ncmo2,1.0, &(ab_tei_->pointer()[0][0]),ncmo2, &(C_rs->pointer()[0]),1,0.0,&(B_pq->pointer()[0]),1); 
+    //outfile->Printf("\n  Time spent on GEMV: %1.6f", mult.get());
+        for( size_t K = 0; K < max_K; ++K ){
+            auto& c_dets = aa_list_[K];
+            size_t maxI = c_dets.size();
+            for (size_t det = 0; det < maxI; ++det) {
+                auto& detI = c_dets[det];
+                const size_t p = std::abs(std::get<1>(detI)) - 1;
+                const size_t q = std::get<2>(detI);
+                const size_t I = std::get<0>(detI);
+                const double sign_pq =
+                    std::get<1>(detI) > 0.0 ? 1.0 : -1.0;
+                sigma_p[I] += sign_pq * B_pq->get(p*ncmo + q, K);
+            }
+        }
+    }
+
+        // BB doubles
+    {
+        size_t max_K = bb_list_.size();
+        SharedMatrix B_pq = SharedMatrix(new Matrix("B_pq", ncmo2, max_K));
+        SharedMatrix C_rs = SharedMatrix(new Matrix("C_rs",max_K, ncmo2));
+        for( size_t K = 0; K < max_K; ++K ){ 
+            const std::vector<std::tuple<size_t,short,short>>& c_dets = bb_list_[K];
+            size_t maxI = c_dets.size();
+            for (size_t det = 0; det < maxI; ++det) {
+                auto& detJ = c_dets[det];
+                const size_t J = std::get<0>(detJ);
+                const double sign_rs =
+                    std::get<1>(detJ) > 0.0 ? 1.0 : -1.0;
+                const size_t r = std::abs(std::get<1>(detJ)) - 1;
+                const size_t s = std::get<2>(detJ);
+                C_rs->set(K,r*ncmo + s, sign_rs * b_p[J] );
+            }
+        }
+        //Timer mult;
+        B_pq->gemm(false,true,1.0,bb_tei_,C_rs,0.0); 
+        //C_DGEMV('N',ncmo2,ncmo2,1.0, &(ab_tei_->pointer()[0][0]),ncmo2, &(C_rs->pointer()[0]),1,0.0,&(B_pq->pointer()[0]),1); 
+    //outfile->Printf("\n  Time spent on GEMV: %1.6f", mult.get());
+        for( size_t K = 0; K < max_K; ++K ){
+            auto& c_dets = bb_list_[K];
+            size_t maxI = c_dets.size();
+            for (size_t det = 0; det < maxI; ++det) {
+                auto& detI = c_dets[det];
+                const size_t p = std::abs(std::get<1>(detI)) - 1;
+                const size_t q = std::get<2>(detI);
+                const size_t I = std::get<0>(detI);
+                const double sign_pq =
+                    std::get<1>(detI) > 0.0 ? 1.0 : -1.0;
+                sigma_p[I] += sign_pq * B_pq->get(p*ncmo + q, K);
+            }
+        }
+    }
+        // AB doubles
+    {
+        size_t max_K = ab_list_.size();
+        SharedMatrix B_pq = SharedMatrix(new Matrix("B_pq", ncmo2, max_K));
+        SharedMatrix C_rs = SharedMatrix(new Matrix("C_rs",max_K, ncmo2));
+
+        //Timer AB;
+        B_pq->zero();
+        C_rs->zero();
+        for (size_t K = 0; K < max_K; ++K) {
+            auto& c_dets = ab_list_[K];
+            size_t maxI = c_dets.size();
+            for (size_t det = 0; det < maxI; ++det) {
+                auto& detJ = c_dets[det];
+                const size_t J = std::get<0>(detJ);
+                const double sign_rs =
+                    std::get<1>(detJ) > 0.0 ? 1.0 : -1.0;
+                const size_t r = std::abs(std::get<1>(detJ)) - 1;
+                const size_t s = std::get<2>(detJ);
+                C_rs->set(K,r*ncmo + s, sign_rs * b_p[J] );
+            }
+        }
+        //Timer mult;
+        B_pq->gemm(false,true,1.0,ab_tei_,C_rs,0.0); 
+        //C_DGEMV('N',ncmo2,ncmo2,1.0, &(ab_tei_->pointer()[0][0]),ncmo2, &(C_rs->pointer()[0]),1,0.0,&(B_pq->pointer()[0]),1); 
+    //outfile->Printf("\n  Time spent on GEMV: %1.6f", mult.get());
+        for( size_t K = 0; K < max_K; ++K ){
+            auto& c_dets = ab_list_[K];
+            size_t maxI = c_dets.size();
+            for (size_t det = 0; det < maxI; ++det) {
+                auto& detI = c_dets[det];
+                const size_t p = std::abs(std::get<1>(detI)) - 1;
+                const size_t q = std::get<2>(detI);
+                const size_t I = std::get<0>(detI);
+                const double sign_pq =
+                    std::get<1>(detI) > 0.0 ? 1.0 : -1.0;
+                sigma_p[I] += sign_pq * B_pq->get(p*ncmo + q, K);
+            }
+        }
+    }
+//outfile->Printf("\n  Time spent on AB: %1.6f", AB.get());
+//exit(1);
+}
+
 void SparseCISolver::set_spin_project(bool value) { spin_project_ = value; }
 
 void SparseCISolver::set_e_convergence(double value) { e_convergence_ = value; }
 
 void SparseCISolver::set_maxiter_davidson(int value) {
     maxiter_davidson_ = value;
+}
+
+void SparseCISolver::set_sigma_method(std::string value)
+{
+    sigma_method_ = value;
 }
 
 void SparseCISolver::set_force_diag(int value) { force_diag_method_ = value; }
@@ -1548,12 +1315,12 @@ void SparseCISolver::diagonalize_hamiltonian(
         } else if (diag_method == DLSolver) {
             diagonalize_davidson_liu_solver(space, evals, evecs, nroot,
                                             multiplicity);
-        } else if (diag_method == DLString) {
-            diagonalize_davidson_liu_string(space, evals, evecs, nroot,
-                                            multiplicity, false);
-        } else if (diag_method == DLDisk) {
-            diagonalize_davidson_liu_string(space, evals, evecs, nroot,
-                                            multiplicity, true);
+       // } else if (diag_method == DLString) {
+       //     diagonalize_davidson_liu_string(space, evals, evecs, nroot,
+       //                                     multiplicity, false);
+       // } else if (diag_method == DLDisk) {
+       //     diagonalize_davidson_liu_string(space, evals, evecs, nroot,
+       //                                     multiplicity, true);
         }
     }
 }
@@ -1599,17 +1366,35 @@ void SparseCISolver::diagonalize_dl(const DeterminantMap& space,
                                     SharedMatrix& evecs, int nroot,
                                     int multiplicity) {
     if (print_details_) {
-        outfile->Printf("\n\n Davidson-Liu solver algorithm");
+        outfile->Printf("\n\n  Davidson-Liu solver algorithm");
+        outfile->Printf(  "\n  Using %s sigma builder", sigma_method_.c_str() );
     }
     size_t dim_space = space.size();
     evecs.reset(new Matrix("U", dim_space, nroot));
     evals.reset(new Vector("e", nroot));
+    SigmaVector* sigma_vector = 0;
 
-    SigmaVectorWfn svw(space, op);
-    SigmaVector* sigma_vector = &svw;
-    sigma_vector->add_bad_roots(bad_states_);
-    davidson_liu_solver_map(space, sigma_vector, evals, evecs, nroot,
-                            multiplicity);
+
+    if( sigma_method_ == "HZ" ){
+        SigmaVectorWfn1 svw(space, op);
+        sigma_vector = &svw;
+        sigma_vector->add_bad_roots(bad_states_);
+        davidson_liu_solver_map(space, sigma_vector, evals, evecs, nroot,
+                                multiplicity);
+    }else if( sigma_method_ == "SPARSE" ){
+        SigmaVectorWfn2 svw(space, op);
+        sigma_vector = &svw;
+        sigma_vector->add_bad_roots(bad_states_);
+        davidson_liu_solver_map(space, sigma_vector, evals, evecs, nroot,
+                                multiplicity);
+    }else if( sigma_method_ == "MMULT" ){
+        SigmaVectorWfn3 svw(space, op);
+        sigma_vector = &svw;
+        sigma_vector->add_bad_roots(bad_states_);
+        davidson_liu_solver_map(space, sigma_vector, evals, evecs, nroot,
+                                multiplicity);
+    }
+
 }
 
 void SparseCISolver::diagonalize_full(
@@ -1640,28 +1425,6 @@ void SparseCISolver::diagonalize_davidson_liu_solver(
 
     // Diagonalize H
     SigmaVectorList svl(space, print_details_);
-    SigmaVector* sigma_vector = &svl;
-    sigma_vector->add_bad_roots(bad_states_);
-    davidson_liu_solver(space, sigma_vector, evals, evecs, nroot, multiplicity);
-}
-
-    
-void SparseCISolver::diagonalize_davidson_liu_string(
-    const std::vector<STLBitsetDeterminant>& space, SharedVector& evals,
-    SharedMatrix& evecs, int nroot, int multiplicity, bool disk) {
-    if (print_details_ and !disk) {
-        outfile->Printf("\n\n  Davidson-Liu String algorithm");
-        outfile->Flush();
-    } else if (print_details_ and disk) {
-        outfile->Printf("\n\n  Disk-based Davidson-Liu String Algorithm");
-    }
-
-    size_t dim_space = space.size();
-    evecs.reset(new Matrix("U", dim_space, nroot));
-    evals.reset(new Vector("e", nroot));
-
-    // Diagonalize H
-    SigmaVectorString svl(space, print_details_, disk);
     SigmaVector* sigma_vector = &svl;
     sigma_vector->add_bad_roots(bad_states_);
     davidson_liu_solver(space, sigma_vector, evals, evecs, nroot, multiplicity);
@@ -2371,6 +2134,33 @@ void SigmaVectorSparse::compute_sigma(SharedVector sigma, SharedVector b){
     double* sigma_p = sigma->pointer();
     double* b_p = b->pointer();
 
+
+    // Compute the overlap with each root
+    int nbad = bad_states_.size();
+    std::vector<double> overlap(nbad);
+    if (nbad != 0) {
+        for (int n = 0; n < nbad; ++n) {
+            std::vector<std::pair<size_t, double>>& bad_state = bad_states_[n];
+            double dprd = 0.0;
+            for (size_t det = 0, ndet = bad_state.size(); det < ndet; ++det) {
+                dprd += bad_state[det].second * b_p[bad_state[det].first];
+            }
+            overlap[n] = dprd;
+        }
+        // outfile->Printf("\n Overlap: %1.6f", overlap[0]);
+
+        for (int n = 0; n < nbad; ++n) {
+            std::vector<std::pair<size_t, double>>& bad_state = bad_states_[n];
+            size_t ndet = bad_state.size();
+
+            #pragma omp parallel for
+            for (size_t det = 0; det < ndet; ++det) {
+                b_p[bad_state[det].first] -= bad_state[det].second * overlap[n];
+            }
+        }
+    }
+
+
 #pragma omp parallel
     {
         int num_thread = omp_get_max_threads();
@@ -2400,6 +2190,16 @@ void SigmaVectorSparse::get_diagonal(Vector& diag){
         diag.set(I,H_[I].second[0]);
     }
 }
+
+void SigmaVectorSparse::add_bad_roots(
+    std::vector<std::vector<std::pair<size_t, double>>>& roots) {
+    bad_states_.clear();
+    for (int i = 0, max_i = roots.size(); i < max_i; ++i) {
+        bad_states_.push_back(roots[i]);
+    }
+}
+
+
 void SparseCISolver::diagonalize_dl_sparse(const DeterminantMap& space, WFNOperator& op, SharedVector& evals, SharedMatrix& evecs, int nroot, int multiplicity)
 {
     outfile->Printf("\n\n  Davidson-liu sparse algorithm");

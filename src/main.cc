@@ -97,7 +97,7 @@ extern "C" SharedWavefunction forte(SharedWavefunction ref_wfn,
         // Make an integral object
         auto ints = make_forte_integrals(ref_wfn, options, mo_space_info);
 
-        // Compute
+        // Compute energy
         forte_old_methods(ref_wfn, options, ints, mo_space_info, my_proc);
 
         outfile->Printf("\n\n  Your calculation took %.8f seconds\n",
@@ -223,11 +223,12 @@ make_forte_integrals(SharedWavefunction ref_wfn, Options& options,
         throw PSIEXCEPTION("INT_TYPE is not correct.  Check options");
     }
 
-    if(options.get_bool("PRINT_INTS")){
+    if (options.get_bool("PRINT_INTS")) {
         ints->print_ints();
     }
 
     return ints;
 }
+
 }
 } // End Namespaces
