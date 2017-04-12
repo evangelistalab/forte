@@ -7,6 +7,13 @@ python:
 install:
   - sudo apt-get update
   - sudo apt-get install -y liblapack-dev
+
+  - git clone https://github.com/jturney/ambit.git ambit
+  - mkdir ambit-obj
+  - cd ambit-obj
+  - ../ambit/setup --type=debug --prefix=/home/travis/build/evangelistalab/ambit-bin
+  - make; make install
+
   # We do this conditionally because it saves us some downloading if the
   # version is the same.
   - if [[ "$TRAVIS_PYTHON_VERSION" == "2.7" ]]; then
@@ -16,7 +23,6 @@ install:
     fi
   - bash miniconda.sh -b -p $HOME/miniconda
   - export PATH="$HOME/miniconda/bin:$PATH"
-#  - export MATH_ROOT="$HOME/miniconda/pkgs/mkl-2017.0.1-0/lib"
   - hash -r
   - conda config --set always_yes yes --set changeps1 no
   - conda update -q conda
@@ -28,12 +34,6 @@ install:
   - conda config --add channels http://conda.anaconda.org/psi4
   - conda install --yes psi4
   - source activate test-environment
-  - ls /home/travis/miniconda
-  - git clone https://github.com/jturney/ambit.git ambit
-  - mkdir ambit-obj
-  - cd ambit-obj
-  - ../ambit/setup --type=debug --prefix=/home/travis/build/evangelistalab/ambit-bin
-  - make; make install
 script:
   # Your test script goes here
   ls
