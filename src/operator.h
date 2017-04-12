@@ -53,6 +53,10 @@ class WFNOperator {
     /// Initializer
     void initialize(std::vector<int>& symmetry);
 
+
+    /// Set print level
+    void set_quiet_mode( bool mode );
+
     /// Build the coupling lists for one-particle operators
     void op_lists(DeterminantMap& wfn);
     void op_s_lists(DeterminantMap& wfn);
@@ -145,6 +149,9 @@ class WFNOperator {
 
     /// Active space symmetry
     std::vector<int> mo_symmetry_;
+
+    /// Print level
+    bool quiet_ = false;
 };
 }
 }

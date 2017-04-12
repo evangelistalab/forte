@@ -41,7 +41,8 @@ set forte {
   dsrg_s             0.5
   ntrial_per_root    56
   relax_ref          once
-# semi_canonical     false
+  semi_canonical     false
+# print              4
 }
 
 Ecasscf, wfn_cas = energy('casscf', return_wfn=True)
