@@ -1,63 +1,24 @@
-language: cpp
-sudo: false
+language: cpp python
+
 matrix:
   include:
-  - os: linux
-    compiler: gcc
-    addons: &6
-      apt:
-        sources:
-        - ubuntu-toolchain-r-test
-        - boost-latest
-        - george-edison55-precise-backports
-        packages:
-        - libhdf5-serial-dev
-        - cmake
-        - cmake-data
-        - liblapack-dev
-        - g++-4.8
-        - gcc-4.8
-        - libboost-filesystem1.55-dev
-        - libboost-chrono1.55-dev
-        - libboost-system1.55-dev
-        - libboost-timer1.55-dev
-        - libboost-python1.55-dev
-        - gfortran-4.7
-    env: CXX_COMPILER='g++-4.8' C_COMPILER='gcc-4.8' Fortran_COMPILER='gfortran-4.7' BUILD_TYPE='release'
+    - compiler: gcc
+      addons:
+        apt:
+          sources:
+            - ubuntu-toolchain-r-test
+            - george-edison55-precise-backports
+          packages:
+            - liblapack-dev
+            - g++-4.9
+            - cmake
+            - cmake-data
+      env: COMPILER=g++-4.9
 
-python:
-  # We don't actually use the Travis Python, but this keeps it organized.
-  - "2.7"
 install:
-#  - sudo apt-get update
-#  - sudo apt-get install -y liblapack-dev
-#  - sudo apt-get install -y cmake
   - git clone https://github.com/jturney/ambit.git ambit
   - mkdir ambit-obj
   - cd ambit-obj
   - ../ambit/setup --type=debug --prefix=/home/travis/build/evangelistalab/ambit-bin
   - make; make install
 
-  # We do this conditionally because it saves us some downloading if the
-  # version is the same.
-  - if [[ "$TRAVIS_PYTHON_VERSION" == "2.7" ]]; then
-      wget https://repo.continuum.io/miniconda/Miniconda2-latest-Linux-x86_64.sh -O miniconda.sh;
-    else
-      wget https://repo.continuum.io/miniconda/Miniconda3-latest-Linux-x86_64.sh -O miniconda.sh;
-    fi
-  - bash miniconda.sh -b -p $HOME/miniconda
-  - export PATH="$HOME/miniconda/bin:$PATH"
-  - hash -r
-  - conda config --set always_yes yes --set changeps1 no
-  - conda update -q conda
-  # Useful for debugging any issues with conda
-  - conda info -a
-
-  # Replace dep1 dep2 ... with your dependencies
-  - conda create -q -n test-environment python=$TRAVIS_PYTHON_VERSION cmake
-  - conda config --add channels http://conda.anaconda.org/psi4
-  - conda install --yes psi4
-  - source activate test-environment
-script:
-  # Your test script goes here
-  ls
