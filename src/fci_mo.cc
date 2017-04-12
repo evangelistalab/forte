@@ -1512,78 +1512,98 @@ void FCI_MO::Diagonalize_H(const vecdet& det,
         //        bs_det.print();
     }
 
-    // use determinant map
-    DeterminantMap detmap(P_space);
-    WFNOperator op(mo_space_info_->symmetry("ACTIVE"));
-    op.build_strings(detmap);
-    op.op_lists(detmap);
-    op.tp_lists(detmap);
-
-    // diagonalization solver
+    // DL solver
     SparseCISolver sparse_solver;
-    int nroot = nroot_;
-    if (det_size < 200) {
-        // This will do full diagonalization (multiplicity)
-        nroot = det_size;
-    }
-    SharedMatrix vec_tmp;
-    SharedVector val_tmp;
     DiagonalizationMethod diag_method = DLSolver;
     sparse_solver.set_e_convergence(econv_);
     sparse_solver.set_maxiter_davidson(options_.get_int("DL_MAXITER"));
     sparse_solver.set_guess_dimension(options_.get_int("DL_GUESS_SIZE"));
     sparse_solver.set_spin_project(true);
-    sparse_solver.set_print_details(true);
-    if (ipea_ != "NONE") {
-        sparse_solver.set_force_diag_method(true);
+    if(!quiet_){
+        sparse_solver.set_print_details(true);
+    }
 
-        if (diag_algorithm_ == "FULL") {
-            diag_method = Full;
-            nroot = det_size < 15 * nroot_ ? det_size : 15 * nroot_;
+//    // force a full diagnolization in IPEA
+//    // temporarily turned off
+//    if (ipea_ != "NONE") {
+//        sparse_solver.set_force_diag_method(true);
+//    }
+
+    // setup eigen values and vectors
+    SharedMatrix vec_tmp;
+    SharedVector val_tmp;
+
+    // diagnoalize the Hamiltonian
+    if (det_size <= 200){
+        // full Hamiltonian if detsize <= 200
+        diag_method = Full;
+
+        sparse_solver.diagonalize_hamiltonian(P_space, val_tmp, vec_tmp,
+                                              det_size, multi_, diag_method);
+
+        // select spin and fill in eigen
+        double energy_offset = fci_ints_->scalar_energy() + e_nuc_;
+        double spin_threshold = 0.1;
+        if (!quiet_) {
+            outfile->Printf("\n  Threshold for spin check: %.2f", spin_threshold);
         }
-    }
-    sparse_solver.diagonalize_hamiltonian_map(detmap, op, val_tmp, vec_tmp,
-                                              nroot, multi_, diag_method);
 
-    // add doubly occupied energy
-    double vdocc = fci_ints_->scalar_energy();
-    for (int i = 0; i != nroot; ++i) {
-        double value = val_tmp->get(i);
-        val_tmp->set(i, value + vdocc);
-    }
-
-    // spin
-    std::vector<string> s2_labels({"singlet", "doublet", "triplet", "quartet",
-                                   "quintet", "sextet", "septet", "octet",
-                                   "nonet", "decaet"});
-
-    for (int n = 0, count = 0; n < nroot; ++n) {
-        double S2 = op.s2(detmap, vec_tmp, n);
-        double S = std::fabs(0.5 * (std::sqrt(1.0 + 4.0 * S2) - 1.0));
-
-        double threshold = 0.1;
-        double multi_real = 2.0 * S + 1;
-        if (std::fabs(multi_ - multi_real) > threshold) {
-            if (!quiet_) {
-                outfile->Printf("\n\n  Ask for S^2 = %.4f, this S^2 = %.4f, "
-                                "continue searching...",
-                                0.25 * (multi_ * multi_ - 1.0), S2);
+        for (int i = 0, count = 0; i != det_size; ++i) {
+            double S2 = 0.0;
+            for (int I = 0; I < det_size; ++I) {
+                for (int J = 0; J < det_size; ++J) {
+                    double S2IJ = P_space[I].spin2(P_space[J]);
+                    S2 += S2IJ * vec_tmp->get(I, i) * vec_tmp->get(J, i);
+                }
             }
-            continue;
-        } else {
-            std::string state_label = s2_labels[std::round(S * 2.0)];
-            outfile->Printf(
-                "\n\n  Spin State Root %d: S^2 = %5.3f, S = %5.3f, %s "
-                "(from %zu determinants)",
-                n, S2, S, state_label.c_str(), det_size);
+            double S = std::fabs(0.5 * (std::sqrt(1.0 + 4.0 * S2) - 1.0));
+            double multi_real = 2.0 * S + 1;
 
-            eigen.push_back(
-                make_pair(vec_tmp->get_column(0, n), val_tmp->get(n) + e_nuc_));
-            ++count;
+            if (std::fabs(multi_ - multi_real) > spin_threshold) {
+                if (!quiet_) {
+                    outfile->Printf("\n\n  Ask for S^2 = %.4f, this S^2 = %.4f, continue searching...",
+                                    0.25 * (multi_ * multi_ - 1.0), S2);
+                }
+                continue;
+            } else {
+                std::vector<string> s2_labels(
+                {"singlet", "doublet", "triplet", "quartet", "quintet",
+                 "sextet", "septet", "octet", "nonet", "decaet"});
+                std::string state_label = s2_labels[std::round(S * 2.0)];
+                if (!quiet_) {
+                    outfile->Printf("\n\n  Spin State: S^2 = %5.3f, S = %5.3f, %s (from %zu determinants)",
+                                    S2, S, state_label.c_str(), det_size);
+                }
+                ++count;
+                eigen.push_back(
+                            make_pair(vec_tmp->get_column(0, i), val_tmp->get(i) + energy_offset));
+            }
             if (count == nroot_)
                 break;
         }
+
+    } else {
+        // use determinant map
+        DeterminantMap detmap(P_space);
+        WFNOperator op(mo_space_info_->symmetry("ACTIVE"));
+        op.build_strings(detmap);
+        op.op_lists(detmap);
+        op.tp_lists(detmap);
+
+        sparse_solver.diagonalize_hamiltonian_map(detmap, op, val_tmp, vec_tmp,
+                                                  nroot_, multi_, diag_method);
+
+        // add doubly occupied energy and nuclear repulsion
+        // fill in eigen (no need to test spin)
+        double energy_offset = fci_ints_->scalar_energy() + e_nuc_;
+        for (int i = 0; i != nroot_; ++i) {
+            double value = val_tmp->get(i);
+
+            eigen.push_back(
+                make_pair(vec_tmp->get_column(0, i), value + energy_offset));
+        }
     }
+
 
     //    // check spin
     //    int count = 0;
@@ -1794,6 +1814,24 @@ double FCI_MO::OneOP(const STLBitsetDeterminant& J, STLBitsetDeterminant& Jnew,
         timer_off("1PO");
         return 0.0;
     }
+}
+
+void FCI_MO::print_density(const string& spin, const d2& density) {
+    string name = spin + " Density";
+    SharedMatrix dens(new Matrix(name, active_, active_));
+
+    for (size_t h = 0, offset = 0; h < nirrep_; ++h) {
+        h = static_cast<int>(h);
+        offset += core_[h];
+        for (int u = 0; u < active_[h]; ++u) {
+            for (int v = 0; v < active_[h]; ++v) {
+                dens->set(h, u, v, density[offset + u][offset + v]);
+            }
+        }
+        offset += active_[h] + virtual_[h];
+    }
+
+    dens->print();
 }
 
 void FCI_MO::print_d2(const string& str, const d2& OnePD) {
@@ -2322,6 +2360,10 @@ double FCI_MO::ThreeOP(const STLBitsetDeterminant& J,
         timer_off("3PO");
         return 0.0;
     }
+}
+
+void FCI_MO::print_Fock(const string& spin, const d2& Fock){
+
 }
 
 void FCI_MO::Form_Fock(d2& A, d2& B) {
@@ -3184,15 +3226,18 @@ void FCI_MO::compute_orbital_extents() {
         orb_extents_[h] = d2(na, d1());
     }
 
-    for (const auto& x : metric) {
+    for (int n = 0, size = metric.size(); n < size; ++n){
         double epsilon;
         int i, h;
-        std::tie(epsilon, i, h) = x;
-        double xx = quadrupole[0]->get(0, i), yy = quadrupole[1]->get(0, i),
-               zz = quadrupole[2]->get(0, i);
+        std::tie(epsilon, i, h) = metric[n];
+
         int offset = frzcpi_[h] + core_[h];
         if (i < offset || i >= offset + active_[h])
             continue;
+
+        double xx = quadrupole[0]->get(0, n),
+               yy = quadrupole[1]->get(0, n),
+               zz = quadrupole[2]->get(0, n);
         orb_extents_[h][i - offset] = {xx, yy, zz};
     }
 
@@ -3208,7 +3253,7 @@ void FCI_MO::compute_orbital_extents() {
                 double orbext = orb_extents_[h][i][0] + orb_extents_[h][i][1] +
                                 orb_extents_[h][i][2];
 
-                if (orbext > 1.0e5) {
+                if (orbext > 1.0e6) {
                     diffused_orbs_.push_back(i + offset);
 
                     if (h == 0) {
