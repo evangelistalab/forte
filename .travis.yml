@@ -21,6 +21,6 @@ install:
   - git clone https://github.com/jturney/ambit.git ambit
   - mkdir ambit-obj
   - cd ambit-obj
-  - ../ambit/setup --type=debug --prefix=/home/travis/build/evangelistalab/ambit-bin --cxx=${CXX_COMPILER} --cc=${C_COMPILER} --fc=${Fortran_COMPITER} --type=${BUILD_TYPE} objdir
+  - ../ambit/setup --type=debug --prefix=/home/travis/build/evangelistalab/ambit-bin --cxx=${CXX_COMPILER} --cc=${C_COMPILER} --fc=${Fortran_COMPITER} --type=${BUILD_TYPE}
   - make; make install
 
