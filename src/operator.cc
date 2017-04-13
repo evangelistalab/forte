@@ -47,6 +47,12 @@ WFNOperator::WFNOperator(std::vector<int> symmetry)
 
 WFNOperator::WFNOperator() {}
 
+void WFNOperator::set_quiet_mode( bool mode )
+{
+    quiet_ = mode;
+}
+
+
 void WFNOperator::initialize(std::vector<int>& symmetry) {
     mo_symmetry_ = symmetry;
 }
@@ -329,8 +335,10 @@ Timer build;
         }
     }
 */
-    outfile->Printf("\n  Time spent building H:   %1.6f s", build.get());
-    outfile->Printf("\n  H contains %zu nonzero elements (%1.3f MB)", n_nonzero, (n_nonzero * 16.0)/(1024*1024) );
+    if( !quiet_ ){
+        outfile->Printf("\n  Time spent building H:   %1.6f s", build.get());
+        outfile->Printf("\n  H contains %zu nonzero elements (%1.3f MB)", n_nonzero, (n_nonzero * 16.0)/(1024*1024) );
+    }
 
 
 //    for( size_t J = 0; J < size; ++J){
@@ -667,7 +675,9 @@ Timer ann;
         } 
     }
 
-outfile->Printf("\n  Time spent building a_list   %1.6f s", ann.get());
+    if( !quiet_ ){
+        outfile->Printf("\n  Time spent building a_list   %1.6f s", ann.get());
+    }
 Timer bnn;
     for( size_t a = 0, max_a = alpha_strings_.size(); a < max_a; ++a ){
         size_t nb_ann = 0; 
@@ -704,7 +714,9 @@ Timer bnn;
             }
         } 
     }
-outfile->Printf("\n  Time spent building b_list   %1.6f s", bnn.get());
+    if( !quiet_ ){
+        outfile->Printf("\n  Time spent building b_list   %1.6f s", bnn.get());
+    }
 }
 
 void WFNOperator::op_lists(DeterminantMap& wfn) {
@@ -749,7 +761,9 @@ Timer ann;
         a_ann_list_.shrink_to_fit();
         a_cre_list_.resize(na_ann);
     }
-outfile->Printf("\n  Time spent building a_ann_list   %1.6f s", ann.get());
+    if( !quiet_ ){
+        outfile->Printf("\n  Time spent building a_ann_list   %1.6f s", ann.get());
+    }
     // Generate beta coupling list
 Timer bnn;
     {
@@ -791,7 +805,9 @@ Timer bnn;
         b_ann_list_.shrink_to_fit();
         b_cre_list_.resize(nb_ann);
     }
-outfile->Printf("\n  Time spent building b_ann_list   %1.6f s", bnn.get());
+    if( !quiet_ ){
+        outfile->Printf("\n  Time spent building b_ann_list   %1.6f s", bnn.get());
+    }
 
     for (size_t I = 0, max_I = a_ann_list_.size(); I < max_I; ++I) {
         const std::vector<std::pair<size_t, short>>& a_ann = a_ann_list_[I];
@@ -865,7 +881,9 @@ Timer aa;
             } 
         }
     }
-outfile->Printf("\n  Time spent building aa_list  %1.6f s", aa.get());
+    if( !quiet_ ){
+        outfile->Printf("\n  Time spent building aa_list  %1.6f s", aa.get());
+    }
     // Generate beta-beta coupling list
 Timer bb;
     {
@@ -918,7 +936,9 @@ Timer bb;
             } 
         }
     }
-outfile->Printf("\n  Time spent building bb_list  %1.6f s", bb.get());
+    if( !quiet_ ){
+        outfile->Printf("\n  Time spent building bb_list  %1.6f s", bb.get());
+    }
 
 Timer ab;
     // Generate alfa-beta coupling list
@@ -966,7 +986,9 @@ Timer ab;
             } 
         }
     }
-outfile->Printf("\n  Time spent building ab_list  %1.6f s", ab.get());
+    if( !quiet_ ){
+        outfile->Printf("\n  Time spent building ab_list  %1.6f s", ab.get());
+    }
 }
  
 void WFNOperator::tp_lists(DeterminantMap& wfn) {
@@ -1021,7 +1043,9 @@ Timer aa;
         aa_cre_list_.resize(naa_ann);
     }
     aa_ann_list_.shrink_to_fit();
-outfile->Printf("\n  Time spent building aa_ann_list  %1.6f s", aa.get());
+    if( !quiet_ ){
+        outfile->Printf("\n  Time spent building aa_ann_list  %1.6f s", aa.get());
+    }
     // Generate beta-beta coupling list
 Timer bb;
     {
@@ -1072,8 +1096,10 @@ Timer bb;
     }
     bb_ann_list_.shrink_to_fit();
 
-outfile->Printf("\n  Time spent building bb_ann_list  %1.6f s", bb.get());
-
+    if( !quiet_ ){
+        outfile->Printf("\n  Time spent building bb_ann_list  %1.6f s", bb.get());
+    }
+    
 Timer ab;
     // Generate alfa-beta coupling list
     {
@@ -1118,7 +1144,9 @@ Timer ab;
         ab_cre_list_.resize(nab_ann);
     }
     ab_ann_list_.shrink_to_fit();
-outfile->Printf("\n  Time spent building ab_ann_list  %1.6f s", ab.get());
+    if( !quiet_ ){
+        outfile->Printf("\n  Time spent building ab_ann_list  %1.6f s", ab.get());
+    }
 
     for (size_t I = 0, max_I = aa_ann_list_.size(); I < max_I; ++I) {
         const std::vector<std::tuple<size_t, short, short>>& aa_ann =
