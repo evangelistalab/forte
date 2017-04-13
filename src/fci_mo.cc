@@ -1515,19 +1515,15 @@ void FCI_MO::Diagonalize_H(const vecdet& det,
     // DL solver
     SparseCISolver sparse_solver;
     DiagonalizationMethod diag_method = DLSolver;
+    string sigma_method = options_.get_str("SIGMA_BUILD_TYPE");
     sparse_solver.set_e_convergence(econv_);
+    sparse_solver.set_spin_project(true);
     sparse_solver.set_maxiter_davidson(options_.get_int("DL_MAXITER"));
     sparse_solver.set_guess_dimension(options_.get_int("DL_GUESS_SIZE"));
-    sparse_solver.set_spin_project(true);
+    sparse_solver.set_sigma_method(sigma_method);
     if(!quiet_){
         sparse_solver.set_print_details(true);
     }
-
-//    // force a full diagnolization in IPEA
-//    // temporarily turned off
-//    if (ipea_ != "NONE") {
-//        sparse_solver.set_force_diag_method(true);
-//    }
 
     // setup eigen values and vectors
     SharedMatrix evecs;
@@ -1537,7 +1533,6 @@ void FCI_MO::Diagonalize_H(const vecdet& det,
     if (det_size <= 200){
         // full Hamiltonian if detsize <= 200
         diag_method = Full;
-
         sparse_solver.diagonalize_hamiltonian(P_space, evals, evecs,
                                               nroot_, multi_, diag_method);
 
@@ -1555,8 +1550,13 @@ void FCI_MO::Diagonalize_H(const vecdet& det,
         DeterminantMap detmap(P_space);
         WFNOperator op(mo_space_info_->symmetry("ACTIVE"));
         op.build_strings(detmap);
-        op.op_lists(detmap);
-        op.tp_lists(detmap);
+        if (sigma_method == "HZ") {
+            op.op_lists(detmap);
+            op.tp_lists(detmap);
+        }else{
+            op.op_s_lists(detmap);
+            op.tp_s_lists(detmap);
+        }
 
         sparse_solver.diagonalize_hamiltonian_map(detmap, op, evals, evecs,
                                                   nroot_, multi_, diag_method);
@@ -1571,7 +1571,6 @@ void FCI_MO::Diagonalize_H(const vecdet& det,
                 make_pair(evecs->get_column(0, i), value + energy_offset));
         }
     }
-
 
     //    // check spin
     //    int count = 0;
