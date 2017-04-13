@@ -278,16 +278,16 @@ void FCI_MO::read_options() {
     }
 
     // print orbital indices
-    if (print_ > 0) {
-        print_h2("Correlated Subspace Indices");
-        print_idx("CORE", idx_c_);
-        print_idx("ACTIVE", idx_a_);
-        print_idx("HOLE", idx_h_);
-        print_idx("VIRTUAL", idx_v_);
-        print_idx("PARTICLE", idx_p_);
-        outfile->Printf("\n");
-        outfile->Flush();
-    }
+//    if (print_ > 0) {
+//        print_h2("Correlated Subspace Indices");
+//        print_idx("CORE", idx_c_);
+//        print_idx("ACTIVE", idx_a_);
+//        print_idx("HOLE", idx_h_);
+//        print_idx("VIRTUAL", idx_v_);
+//        print_idx("PARTICLE", idx_p_);
+//        outfile->Printf("\n");
+//        outfile->Flush();
+//    }
 
     // state averaging
     if (options_["AVG_STATE"].has_changed()) {
@@ -497,15 +497,19 @@ double FCI_MO::compute_energy() {
     // form density
     FormDensity(ci_rdms, Da_, Db_);
     if (print_ > 1) {
-        print_d2("Da", Da_);
-        print_d2("Db", Db_);
+//        print_d2("Da", Da_);
+//        print_d2("Db", Db_);
+        print_density("Alpha", Da_);
+        print_density("Beta", Db_);
     }
 
     // build Fock Matrix
     Form_Fock(Fa_, Fb_);
     if (print_ > 1) {
-        print_d2("Fa", Fa_);
-        print_d2("Fb", Fb_);
+//        print_d2("Fa", Fa_);
+//        print_d2("Fb", Fb_);
+        print_Fock("Alpha", Fa_);
+        print_Fock("Beta", Fb_);
     }
 
     //    // Orbitals. If use Kevin's CASSCF, this part is ignored.
@@ -607,12 +611,12 @@ void FCI_MO::form_p_space() {
     determinant_.clear();
 
     // form determinants
-    if (active_space_type_ == "COMPLETE" || active_space_type_ == "DOCI") {
-        form_det();
-    } else if (active_space_type_ == "CIS") {
+    if (active_space_type_ == "CIS") {
         form_det_cis();
     } else if (active_space_type_ == "CISD") {
         form_det_cisd();
+    } else {
+        form_det();
     }
 }
 
@@ -640,7 +644,7 @@ void FCI_MO::form_det() {
     if (!quiet_) {
         outfile->Printf("\n  %-35s ...", str.c_str());
     }
-    if (options_.get_str("ACTIVE_SPACE_TYPE") == "DOCI") {
+    if (active_space_type_ == "DOCI") {
         if (root_sym_ != 0 || multi_ != 1) {
             outfile->Printf("\n  State must be totally symmetric for DOCI.");
             throw PSIEXCEPTION("State must be totally symmetric for DOCI.");
@@ -977,11 +981,11 @@ vector<bool> FCI_MO::Form_String_Ref(const bool& print) {
             String.push_back(i < act_docc);
         }
     }
-    active_o_ = doccpi - frzcpi_ - core_;
-    active_v_ = active_ - active_o_;
+    active_h_ = doccpi - frzcpi_ - core_;
+    active_p_ = active_ - active_h_;
 
-    ao_.clear();
-    av_.clear();
+    ah_.clear();
+    ap_.clear();
     for (int h = 0; h < nirrep_; ++h) {
         int h_local = h;
         size_t offset = 0;
@@ -990,10 +994,10 @@ vector<bool> FCI_MO::Form_String_Ref(const bool& print) {
         }
 
         for (size_t i = 0; i < active_[h]; ++i) {
-            if (i < active_o_[h]) {
-                ao_.push_back(i + offset);
+            if (i < active_h_[h]) {
+                ah_.push_back(i + offset);
             } else {
-                av_.push_back(i + offset);
+                ap_.push_back(i + offset);
             }
         }
     }
@@ -1784,18 +1788,16 @@ double FCI_MO::OneOP(const STLBitsetDeterminant& J, STLBitsetDeterminant& Jnew,
 }
 
 void FCI_MO::print_density(const string& spin, const d2& density) {
-    string name = spin + " Density";
-    SharedMatrix dens(new Matrix(name, active_, active_));
+    string name = "Density " + spin;
+    outfile->Printf("  ==> %s <==\n\n", name.c_str());
 
-    for (size_t h = 0, offset = 0; h < nirrep_; ++h) {
-        h = static_cast<int>(h);
-        offset += core_[h];
-        for (int u = 0; u < active_[h]; ++u) {
-            for (int v = 0; v < active_[h]; ++v) {
-                dens->set(h, u, v, density[offset + u][offset + v]);
-            }
+    SharedMatrix dens(new Matrix("A-A", na_, na_));
+    for (size_t u = 0; u < na_; ++u) {
+        size_t nu = idx_a_[u];
+        for (size_t v = 0; v < na_; ++v) {
+            size_t nv = idx_a_[v];
+            dens->set(u, v, density[nu][nv]);
         }
-        offset += active_[h] + virtual_[h];
     }
 
     dens->print();
@@ -2330,7 +2332,78 @@ double FCI_MO::ThreeOP(const STLBitsetDeterminant& J,
 }
 
 void FCI_MO::print_Fock(const string& spin, const d2& Fock){
+    string name = "Fock " + spin;
+    outfile->Printf("  ==> %s <==\n\n", name.c_str());
 
+    // print Fock block
+    auto print_Fock_block = [&](const string& name1, const string& name2,
+            const vector<size_t>& idx1, const vector<size_t>& idx2) {
+        size_t dim1 = idx1.size();
+        size_t dim2 = idx2.size();
+        string bname = name1 + "-" + name2;
+
+        Matrix F (bname, dim1, dim2);
+        for(size_t i = 0; i < dim1; ++i){
+            size_t ni = idx1[i];
+            for(size_t j = 0; j < dim2; ++j){
+                size_t nj = idx2[j];
+                F.set(i, j, Fock[ni][nj]);
+            }
+        }
+
+        F.print();
+
+        if (dim1 != dim2){
+            string bnamer = name2 + "-" + name1;
+            Matrix Fr (bnamer, dim2, dim1);
+            for(size_t i = 0; i < dim2; ++i){
+                size_t ni = idx2[i];
+                for(size_t j = 0; j < dim1; ++j){
+                    size_t nj = idx1[j];
+                    Fr.set(i, j, Fock[ni][nj]);
+                }
+            }
+
+            SharedMatrix FT = Fr.transpose();
+            for(size_t i = 0; i < dim1; ++i){
+                for(size_t j = 0; j < dim2; ++j){
+                    double diff = FT->get(i, j) - F.get(i, j);
+                    FT->set(i, j, diff);
+                }
+            }
+            if (FT->rms() > dconv_) {
+                outfile->Printf("  Warning: %s not symmetric for %s and %s blocks\n",
+                                name.c_str(), bname.c_str(), bnamer.c_str());
+                Fr.print();
+            }
+        }
+    };
+
+    // diagonal blocks
+    print_Fock_block("C", "C", idx_c_, idx_c_);
+    print_Fock_block("V", "V", idx_v_, idx_v_);
+
+    vector<size_t> idx_ah, idx_ap;
+    if (active_space_type_ == "CIS" || active_space_type_ == "CISD") {
+        for (int i = 0; i < ah_.size(); ++i) {
+            idx_ah.push_back(idx_a_[ah_[i]]);
+        }
+        for (int i = 0; i < ap_.size(); ++i) {
+            idx_ap.push_back(idx_a_[ap_[i]]);
+        }
+        print_Fock_block("AH", "AH", idx_ah, idx_ah);
+        print_Fock_block("AP", "AP", idx_ap, idx_ap);
+    } else {
+        print_Fock_block("A", "A", idx_a_, idx_a_);
+    }
+
+    // off-diagonal blocks
+    print_Fock_block("C", "A", idx_c_, idx_a_);
+    print_Fock_block("C", "V", idx_c_, idx_v_);
+    print_Fock_block("A", "V", idx_a_, idx_v_);
+    if (active_space_type_ == "CIS" || active_space_type_ == "CISD") {
+        print_Fock_block("AH", "AP", idx_ah, idx_ap);
+    }
 }
 
 void FCI_MO::Form_Fock(d2& A, d2& B) {
@@ -2427,19 +2500,18 @@ void FCI_MO::Check_Fock(const d2& A, const d2& B, const double& E,
         outfile->Printf("\n  Nonzero criteria: > %.2E", E);
     }
     Check_FockBlock(A, B, E, count, nc_, idx_c_, "CORE");
-    if (options_.get_str("ACTIVE_SPACE_TYPE") == "COMPLETE" ||
-        options_.get_str("ACTIVE_SPACE_TYPE") == "DOCI") {
-        Check_FockBlock(A, B, E, count, na_, idx_a_, "ACTIVE");
+    if (active_space_type_ == "CIS" || active_space_type_ == "CISD") {
+        vector<size_t> idx_ah, idx_ap;
+        for (int i = 0; i < ah_.size(); ++i) {
+            idx_ah.push_back(idx_a_[ah_[i]]);
+        }
+        for (int i = 0; i < ap_.size(); ++i) {
+            idx_ap.push_back(idx_a_[ap_[i]]);
+        }
+        Check_FockBlock(A, B, E, count, ah_.size(), idx_ah, "ACT_H");
+        Check_FockBlock(A, B, E, count, ap_.size(), idx_ap, "ACT_P");
     } else {
-        vector<size_t> idx_a_o, idx_a_v;
-        for (int i = 0; i < ao_.size(); ++i) {
-            idx_a_o.push_back(idx_a_[ao_[i]]);
-        }
-        for (int i = 0; i < av_.size(); ++i) {
-            idx_a_v.push_back(idx_a_[av_[i]]);
-        }
-        Check_FockBlock(A, B, E, count, ao_.size(), idx_a_o, "ACT_O");
-        Check_FockBlock(A, B, E, count, av_.size(), idx_a_v, "ACT_V");
+        Check_FockBlock(A, B, E, count, na_, idx_a_, "ACTIVE");
     }
     Check_FockBlock(A, B, E, count, nv_, idx_v_, "VIRTUAL");
     str = "Done checking Fock matrices.";
@@ -2528,8 +2600,37 @@ void FCI_MO::BD_Fock(const d2& Fa, const d2& Fb, SharedMatrix& Ua,
     }
     // active
     SharedMatrix Fa_a, Fa_b, Fao_a, Fao_b, Fav_a, Fav_b;
-    std::string active_type = options_.get_str("ACTIVE_SPACE_TYPE");
-    if (active_type == "COMPLETE" || active_type == "DOCI") {
+    if (active_space_type_ == "CIS" || active_space_type_ == "CISD") {
+        Fao_a = SharedMatrix(
+            new Matrix("Fock active hole alpha", active_h_, active_h_));
+        Fao_b = SharedMatrix(
+            new Matrix("Fock active hole beta", active_h_, active_h_));
+        Fav_a = SharedMatrix(
+            new Matrix("Fock active particle alpha", active_p_, active_p_));
+        Fav_b = SharedMatrix(
+            new Matrix("Fock active particle beta", active_p_, active_p_));
+        for (size_t h = 0, offset = 0; h < nirrep_; ++h) {
+            h = static_cast<int>(h);
+            offset += core_[h];
+            // active occupied
+            for (int u = 0; u < active_h_[h]; ++u) {
+                for (int v = 0; v < active_h_[h]; ++v) {
+                    Fao_a->set(h, u, v, Fa[offset + u][offset + v]);
+                    Fao_b->set(h, u, v, Fb[offset + u][offset + v]);
+                }
+            }
+            // active virtual
+            for (int u = active_h_[h]; u < active_[h]; ++u) {
+                int nu = u - active_h_[h];
+                for (int v = active_h_[h]; v < active_[h]; ++v) {
+                    int nv = v - active_h_[h];
+                    Fav_a->set(h, nu, nv, Fa[offset + u][offset + v]);
+                    Fav_b->set(h, nu, nv, Fb[offset + u][offset + v]);
+                }
+            }
+            offset += active_[h] + virtual_[h];
+        }
+    } else {
         Fa_a = SharedMatrix(new Matrix("Fock active alpha", active_, active_));
         Fa_b = SharedMatrix(new Matrix("Fock active beta", active_, active_));
         for (size_t h = 0, offset = 0; h < nirrep_; ++h) {
@@ -2543,46 +2644,16 @@ void FCI_MO::BD_Fock(const d2& Fa, const d2& Fb, SharedMatrix& Ua,
             }
             offset += active_[h] + virtual_[h];
         }
-    } else {
-        Fao_a = SharedMatrix(
-            new Matrix("Fock active occupied alpha", active_o_, active_o_));
-        Fao_b = SharedMatrix(
-            new Matrix("Fock active occupied beta", active_o_, active_o_));
-        Fav_a = SharedMatrix(
-            new Matrix("Fock active virtual alpha", active_v_, active_v_));
-        Fav_b = SharedMatrix(
-            new Matrix("Fock active virtual beta", active_v_, active_v_));
-        for (size_t h = 0, offset = 0; h < nirrep_; ++h) {
-            h = static_cast<int>(h);
-            offset += core_[h];
-            // active occupied
-            for (int u = 0; u < active_o_[h]; ++u) {
-                for (int v = 0; v < active_o_[h]; ++v) {
-                    Fao_a->set(h, u, v, Fa[offset + u][offset + v]);
-                    Fao_b->set(h, u, v, Fb[offset + u][offset + v]);
-                }
-            }
-            // active virtual
-            for (int u = active_o_[h]; u < active_[h]; ++u) {
-                int nu = u - active_o_[h];
-                for (int v = active_o_[h]; v < active_[h]; ++v) {
-                    int nv = v - active_o_[h];
-                    Fav_a->set(h, nu, nv, Fa[offset + u][offset + v]);
-                    Fav_b->set(h, nu, nv, Fb[offset + u][offset + v]);
-                }
-            }
-            offset += active_[h] + virtual_[h];
-        }
     }
 
     // diagonalize Fock blocks
     std::vector<SharedMatrix> blocks;
     std::vector<SharedMatrix> evecs;
     std::vector<SharedVector> evals;
-    if (active_type == "COMPLETE" || active_type == "DOCI") {
-        blocks = {Fc_a, Fc_b, Fv_a, Fv_b, Fa_a, Fa_b};
-    } else {
+    if (active_space_type_ == "CIS" || active_space_type_ == "CISD") {
         blocks = {Fc_a, Fc_b, Fv_a, Fv_b, Fao_a, Fao_b, Fav_a, Fav_b};
+    } else {
+        blocks = {Fc_a, Fc_b, Fv_a, Fv_b, Fa_a, Fa_b};
     }
     for (auto F : blocks) {
         std::string name = "U for " + F->name();
@@ -2618,28 +2689,28 @@ void FCI_MO::BD_Fock(const d2& Fa, const d2& Fb, SharedMatrix& Ua,
         offset += core_[h];
 
         // active
-        if (active_type == "COMPLETE" || active_type == "DOCI") {
-            for (int u = 0; u < active_[h]; ++u) {
-                for (int v = 0; v < active_[h]; ++v) {
+        if (active_space_type_ == "CIS" || active_space_type_ == "CISD") {
+            for (int u = 0; u < active_h_[h]; ++u) {
+                for (int v = 0; v < active_h_[h]; ++v) {
                     Ua->set(h, offset + u, offset + v, evecs[4]->get(h, u, v));
                     Ub->set(h, offset + u, offset + v, evecs[5]->get(h, u, v));
                 }
             }
-        } else {
-            for (int u = 0; u < active_o_[h]; ++u) {
-                for (int v = 0; v < active_o_[h]; ++v) {
-                    Ua->set(h, offset + u, offset + v, evecs[4]->get(h, u, v));
-                    Ub->set(h, offset + u, offset + v, evecs[5]->get(h, u, v));
-                }
-            }
-            for (int u = active_o_[h]; u < active_[h]; ++u) {
-                int nu = u - active_o_[h];
-                for (int v = active_o_[h]; v < active_[h]; ++v) {
-                    int nv = v - active_o_[h];
+            for (int u = active_h_[h]; u < active_[h]; ++u) {
+                int nu = u - active_h_[h];
+                for (int v = active_h_[h]; v < active_[h]; ++v) {
+                    int nv = v - active_h_[h];
                     Ua->set(h, offset + u, offset + v,
                             evecs[6]->get(h, nu, nv));
                     Ub->set(h, offset + u, offset + v,
                             evecs[7]->get(h, nu, nv));
+                }
+            }
+        } else {
+            for (int u = 0; u < active_[h]; ++u) {
+                for (int v = 0; v < active_[h]; ++v) {
+                    Ua->set(h, offset + u, offset + v, evecs[4]->get(h, u, v));
+                    Ub->set(h, offset + u, offset + v, evecs[5]->get(h, u, v));
                 }
             }
         }
@@ -3518,16 +3589,16 @@ double FCI_MO::compute_sa_energy() {
     // fill in Da_, Db_, L1a, L1b
     fill_density(sa_opdm_a, sa_opdm_b);
     if (print_ > 1) {
-        print_d2("Da", Da_);
-        print_d2("Db", Db_);
+        print_density("Alpha", Da_);
+        print_density("Beta", Db_);
     }
 
     // form Fock matrix
     if (form_Fock_) {
         Form_Fock(Fa_, Fb_);
         if (print_ > 1) {
-            print_d2("Fa", Fa_);
-            print_d2("Fb", Fb_);
+            print_Fock("Alpha", Fa_);
+            print_Fock("Beta", Fb_);
         }
     } else {
         outfile->Printf("\n  Skip Fock matrix build in FCI_MO.");

@@ -149,11 +149,11 @@ class FCI_MO : public Wavefunction {
 
     /// Return indices (relative to active, not absolute) of active occupied
     /// orbitals
-    vector<size_t> actv_occ() { return ao_; }
+    vector<size_t> actv_occ() { return ah_; }
 
     /// Return indices (relative to active, not absolute) of active virtual
     /// orbitals
-    vector<size_t> actv_uocc() { return av_; }
+    vector<size_t> actv_uocc() { return ap_; }
 
   protected:
     /// Basic Preparation
@@ -216,10 +216,10 @@ class FCI_MO : public Wavefunction {
     vector<size_t> idx_h_;
     size_t npt_; // particle MOs
     vector<size_t> idx_p_;
-    Dimension active_o_; // active occupied for incomplete active space
-    vector<size_t> ao_;
-    Dimension active_v_; // active virtual for incomplete active space
-    vector<size_t> av_;
+    Dimension active_h_; // active hole for incomplete active space
+    vector<size_t> ah_;
+    Dimension active_p_; // active particle for incomplete active space
+    vector<size_t> ap_;
 
     /// Compute IP or EA
     std::string ipea_;
