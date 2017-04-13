@@ -22,5 +22,6 @@ install:
   - mkdir ambit-obj
   - cd ambit-obj
   - ../ambit/setup --type=debug --prefix=/home/travis/build/evangelistalab/ambit-bin --cxx=${CXX_COMPILER} --cc=${C_COMPILER} --fc=${Fortran_COMPITER} --type=${BUILD_TYPE}
-  - make; make install
+  - make
+  - make install
 
