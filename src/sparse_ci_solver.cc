@@ -1399,16 +1399,100 @@ void SparseCISolver::diagonalize_dl(const DeterminantMap& space,
 
 void SparseCISolver::diagonalize_full(
     const std::vector<STLBitsetDeterminant>& space, SharedVector& evals,
-    SharedMatrix& evecs, int, int) {
-    // Find all the eigenvalues and eigenvectors of the Hamiltonian
-    SharedMatrix H = build_full_hamiltonian(space);
+    SharedMatrix& evecs, int nroot, int multiplicity) {
 
     size_t dim_space = space.size();
-    evecs.reset(new Matrix("U", dim_space, dim_space));
-    evals.reset(new Vector("e", dim_space));
+    evecs.reset(new Matrix("U", dim_space, nroot));
+    evals.reset(new Vector("e", nroot));
 
-    // Diagonalize H
-    H->diagonalize(evecs, evals);
+    // Diagonalize S^2 matrix
+    Matrix S2("S^2", dim_space, dim_space);
+    for (size_t I = 0; I < dim_space; ++I) {
+        for(size_t J = 0; J < dim_space; ++J) {
+            double S2IJ = space[I].spin2(space[J]);
+            S2.set(I, J, S2IJ);
+        }
+    }
+    Vector S2vals("S^2 Eigen Values", dim_space);
+    Matrix S2vecs("S^2 Eigen Vectors", dim_space, dim_space);
+    S2.diagonalize(S2vecs, S2vals);
+
+    // Map multiplcity to index
+    double Stollerance = 1.0e-4;
+    std::map<int, std::vector<int>> multi_list;
+    for (size_t i = 0; i < dim_space; ++i) {
+        double multi = std::sqrt(1.0 + 4.0 * S2vals.get(i));
+        double error = std::round(multi) - multi;
+        if (fabs(error) < Stollerance) {
+            int multi_round = std::round(multi);
+            multi_list[multi_round].push_back(i);
+        } else {
+            if (print_details_) {
+                outfile->Printf("\n  Spin multiplicity of root %zu not close to integer (%.4f)",
+                                i, multi);
+            }
+        }
+    }
+
+    // Test S^2 eigen values
+    int nfound = 0;
+    for (const auto& mi: multi_list) {
+        int multi = mi.first;
+        size_t multi_size = mi.second.size();
+        std::string mark = " *";
+        if (multi == multiplicity) {
+            nfound = static_cast<int>(multi_size);
+        } else {
+            mark = "";
+        }
+        if (print_details_) {
+            outfile->Printf("\n  Found %zu roots with 2S+1 = %d%s",
+                            multi_size, multi, mark.c_str());
+        }
+    }
+    if (nfound < nroot) {
+        outfile->Printf("\n  Error: ask for %d roots with 2S+1 = %d but only "
+                        "%d were found!",
+                        nroot, multiplicity, nfound);
+        throw PSIEXCEPTION("Too many roots of interest in full diag. of sparce_ci_solver.");
+    }
+
+    // Select sub eigen vectors of S^2 with correct multiplicity
+    SharedMatrix S2vecs_sub (new Matrix("Spin Selected S^2 Eigen Vectors", dim_space, nfound));
+    for (size_t i = 0; i < nfound; ++i) {
+        SharedVector vec = S2vecs.get_column(0, multi_list[multiplicity][i]);
+        S2vecs_sub->set_column(0, i, vec);
+    }
+
+    // Build spin selected Hamiltonian
+    SharedMatrix H = build_full_hamiltonian(space);
+    SharedMatrix Hss = Matrix::triplet(S2vecs_sub, H, S2vecs_sub, true, false, false);
+    Hss->set_name("Hss");
+
+    // Obtain spin selected eigen values and vectors
+    SharedVector Hss_vals (new Vector("Hss Eigen Values", nfound));
+    SharedMatrix Hss_vecs (new Matrix("Hss Eigen Vectors", nfound, nfound));
+    Hss->diagonalize(Hss_vecs, Hss_vals);
+
+    // Project Hss_vecs back to original manifold
+    SharedMatrix H_vecs = Matrix::doublet(S2vecs_sub, Hss_vecs);
+    H_vecs->set_name("H Eigen Vectors");
+
+    // Fill in results
+    for (int i = 0; i < nroot; ++i){
+        evals->set(i, Hss_vals->get(i));
+        evecs->set_column(0, i, H_vecs->get_column(0, i));
+    }
+
+
+//    // Find all the eigenvalues and eigenvectors of the Hamiltonian
+//    SharedMatrix H = build_full_hamiltonian(space);
+
+//    evecs.reset(new Matrix("U", dim_space, dim_space));
+//    evals.reset(new Vector("e", dim_space));
+
+//    // Diagonalize H
+//    H->diagonalize(evecs, evals);
 }
 
 void SparseCISolver::diagonalize_davidson_liu_solver(
