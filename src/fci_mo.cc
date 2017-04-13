@@ -1530,56 +1530,24 @@ void FCI_MO::Diagonalize_H(const vecdet& det,
 //    }
 
     // setup eigen values and vectors
-    SharedMatrix vec_tmp;
-    SharedVector val_tmp;
+    SharedMatrix evecs;
+    SharedVector evals;
 
     // diagnoalize the Hamiltonian
     if (det_size <= 200){
         // full Hamiltonian if detsize <= 200
         diag_method = Full;
 
-        sparse_solver.diagonalize_hamiltonian(P_space, val_tmp, vec_tmp,
-                                              det_size, multi_, diag_method);
+        sparse_solver.diagonalize_hamiltonian(P_space, evals, evecs,
+                                              nroot_, multi_, diag_method);
 
-        // select spin and fill in eigen
+        // fill in eigen
         double energy_offset = fci_ints_->scalar_energy() + e_nuc_;
-        double spin_threshold = 0.1;
-        if (!quiet_) {
-            outfile->Printf("\n  Threshold for spin check: %.2f", spin_threshold);
-        }
+        for (int i = 0; i != nroot_; ++i) {
+            double value = evals->get(i);
 
-        for (int i = 0, count = 0; i != det_size; ++i) {
-            double S2 = 0.0;
-            for (int I = 0; I < det_size; ++I) {
-                for (int J = 0; J < det_size; ++J) {
-                    double S2IJ = P_space[I].spin2(P_space[J]);
-                    S2 += S2IJ * vec_tmp->get(I, i) * vec_tmp->get(J, i);
-                }
-            }
-            double S = std::fabs(0.5 * (std::sqrt(1.0 + 4.0 * S2) - 1.0));
-            double multi_real = 2.0 * S + 1;
-
-            if (std::fabs(multi_ - multi_real) > spin_threshold) {
-                if (!quiet_) {
-                    outfile->Printf("\n\n  Ask for S^2 = %.4f, this S^2 = %.4f, continue searching...",
-                                    0.25 * (multi_ * multi_ - 1.0), S2);
-                }
-                continue;
-            } else {
-                std::vector<string> s2_labels(
-                {"singlet", "doublet", "triplet", "quartet", "quintet",
-                 "sextet", "septet", "octet", "nonet", "decaet"});
-                std::string state_label = s2_labels[std::round(S * 2.0)];
-                if (!quiet_) {
-                    outfile->Printf("\n\n  Spin State: S^2 = %5.3f, S = %5.3f, %s (from %zu determinants)",
-                                    S2, S, state_label.c_str(), det_size);
-                }
-                ++count;
-                eigen.push_back(
-                            make_pair(vec_tmp->get_column(0, i), val_tmp->get(i) + energy_offset));
-            }
-            if (count == nroot_)
-                break;
+            eigen.push_back(
+                make_pair(evecs->get_column(0, i), value + energy_offset));
         }
 
     } else {
@@ -1590,17 +1558,17 @@ void FCI_MO::Diagonalize_H(const vecdet& det,
         op.op_lists(detmap);
         op.tp_lists(detmap);
 
-        sparse_solver.diagonalize_hamiltonian_map(detmap, op, val_tmp, vec_tmp,
+        sparse_solver.diagonalize_hamiltonian_map(detmap, op, evals, evecs,
                                                   nroot_, multi_, diag_method);
 
         // add doubly occupied energy and nuclear repulsion
         // fill in eigen (no need to test spin)
         double energy_offset = fci_ints_->scalar_energy() + e_nuc_;
         for (int i = 0; i != nroot_; ++i) {
-            double value = val_tmp->get(i);
+            double value = evals->get(i);
 
             eigen.push_back(
-                make_pair(vec_tmp->get_column(0, i), value + energy_offset));
+                make_pair(evecs->get_column(0, i), value + energy_offset));
         }
     }
 
