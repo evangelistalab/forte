@@ -142,6 +142,9 @@ void set_ACI_options(ForteOptions& foptions)
 
     /*- Compute full PT2 energy -*/
     foptions.add_bool("MRPT2", false, "Compute full PT2 energy");
+
+    /*- Compute unpaired electron density -*/
+    foptions.add_bool("UNPAIRED_DENSITY", false, "Compute unpaired electron density");
 }
 
 
@@ -170,7 +173,6 @@ void AdaptiveCI::startup() {
         quiet_mode_ = options_.get_bool("ACI_QUIET_MODE");
     }
 
-    op_.set_quiet_mode(quiet_mode_);
 
     fci_ints_ = std::make_shared<FCIIntegrals>(
         ints_, mo_space_info_->get_corr_abs_mo("ACTIVE"),
@@ -578,6 +580,7 @@ double AdaptiveCI::compute_energy() {
         ex_alg_ = "AVERAGE";
     }
 
+    op_.set_quiet_mode(quiet_mode_);
     Timer aci_elapse;
 
     // The eigenvalues and eigenvectors
@@ -756,6 +759,12 @@ double AdaptiveCI::compute_energy() {
   //  }
 
     // printf( "\n%1.5f\n", aci_elapse.get());
+
+    if( options_.get_bool("UNPAIRED_DENSITY")){
+        UPDensity density(reference_wavefunction_, mo_space_info_) ;
+        density.compute_unpaired_density( ordm_a_, ordm_b_ );
+    }
+
     return PQ_evals->get(options_.get_int("ACI_ROOT")) + nuclear_repulsion_energy_ +
            fci_ints_->scalar_energy();
 }
@@ -1777,7 +1786,7 @@ void AdaptiveCI::prune_q_space(DeterminantMap& PQ_space,
                     break;
                 }
             }
-            if (num_extra > 0) {
+            if (num_extra > 0 and !quiet_mode_) {
                 outfile->Printf(
                     "\n  Added %zu missing determinants in aimed selection.",
                     num_extra);
@@ -3185,8 +3194,10 @@ void AdaptiveCI::compute_nos()
     Matrix Ua("Ua", nmopi, nmopi);
     Matrix Ub("Ub", nmopi, nmopi);
 
-    Ua.identity();
-    Ub.identity();
+//    Ua.identity();
+//    Ub.identity();
+    Ua.zero(); 
+    Ua.zero(); 
 
     for( int h = 0; h < nirrep_; ++h ){
         size_t irrep_offset = 0;
@@ -3211,9 +3222,35 @@ void AdaptiveCI::compute_nos()
     Ca_new->gemm(false, false, 1.0, Ca, Ua, 0.0);
     Cb_new->gemm(false, false, 1.0, Cb, Ub, 0.0);
 
+    // Compute unpaired-spin scaled NOs
+//    for( int h = 0; h < nirrep_; ++h ){
+//        int offset = fdocc[h] + rdocc[h];
+//        for( int p = 0; p < nactpi_[h]; ++p ){
+//            double n_p = OCC_A->get(p) + OCC_B->get(p);
+//            //double up_el = std::sqrt( n_p * (2.0 - n_p)); 
+//            double up_el = n_p * (2.0 - n_p); 
+//            //double up_el = n_p*n_p * (2.0 - n_p) * (2.0 - n_p); 
+//            outfile->Printf("\n  %d,%d: %1.5f", h,p,up_el); 
+//            Ca_new->scale_column(h, offset + p, up_el);
+//            Cb_new->scale_column(h, offset + p, up_el);
+//        }
+//    }
+//
     Ca->copy(Ca_new);
     Cb->copy(Cb_new);
+/*
+    SharedMatrix Da = reference_wavefunction_->Da();
+    SharedMatrix Db = reference_wavefunction_->Db();
 
+    SharedMatrix Da_new(new Matrix("dan", nmopi, nmopi));
+    SharedMatrix Db_new(new Matrix("dbn", nmopi, nmopi));
+
+    Da_new->gemm(false, true, 1.0, Ca, Ca, 0.0);
+    Db_new->gemm(false, true, 1.0, Cb, Cb, 0.0);
+
+    Da->copy(Da_new);
+    Db->copy(Db_new);
+*/
     // Retransform the integarms in the new basis
     ints_->retransform_integrals();
 
