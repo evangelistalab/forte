@@ -1,9 +1,29 @@
-language: python
-python:
-  # We don't actually use the Travis Python, but this keeps it organized.
-  - "2.7"
+language: cpp python
+
+matrix:
+  include:
+    - compiler: gcc
+      addons:
+        apt:
+          sources:
+            - ubuntu-toolchain-r-test
+            - george-edison55-precise-backports
+          packages:
+            - libhdf5-serial-dev
+            - liblapack-dev
+            - g++-4.9
+            - gfortran-4.9
+            - cmake
+            - cmake-data
+      env: CXX_COMPILER='g++-4.9' C_COMPILER='gcc-4.9' Fortran_COMPILER='gfortran-4.9' BUILD_TYPE='debug'
+
 install:
-  - sudo apt-get update
+  - git clone https://github.com/jturney/ambit.git ambit
+  - mkdir ambit-obj
+  - cd ambit-obj
+  - ../ambit/setup --type=debug --prefix=/home/travis/build/evangelistalab/ambit-bin --cxx=${CXX_COMPILER} --cc=${C_COMPILER} --fc=${Fortran_COMPITER} --type=${BUILD_TYPE}
+  - make
+  - make install
   # We do this conditionally because it saves us some downloading if the
   # version is the same.
   - if [[ "$TRAVIS_PYTHON_VERSION" == "2.7" ]]; then
@@ -18,18 +38,11 @@ install:
   - conda update -q conda
   # Useful for debugging any issues with conda
   - conda info -a
-
   # Replace dep1 dep2 ... with your dependencies
   - conda create -q -n test-environment python=$TRAVIS_PYTHON_VERSION cmake
   - conda config --add channels http://conda.anaconda.org/psi4
   - conda install --yes psi4
   - source activate test-environment
-  - ls /home/travis/miniconda
-  - git clone https://github.com/jturney/ambit.git ambit
-  - mkdir ambit-obj
-  - cd ambit-obj
-  - ../ambit/setup --type=debug --prefix=/home/travis/build/evangelistalab/ambit-bin
-  - make; make install
+
 script:
-  # Your test script goes here
-  ls
+  - psi4 --version

@@ -43,6 +43,7 @@ set forte {
   relax_ref          once
   semi_canonical     false
 # print              4
+  cas_type           cas
 }
 
 Ecasscf, wfn_cas = energy('casscf', return_wfn=True)
