@@ -92,6 +92,8 @@ void set_ACI_options(ForteOptions& foptions)
     foptions.add_bool("ACI_ENFORCE_SPIN_COMPLETE", true, "Enforce determinant spaces to be spin-complete");
     /*- Project out spin contaminants in Davidson-Liu's algorithm? -*/
     foptions.add_bool("ACI_PROJECT_OUT_SPIN_CONTAMINANTS", true, "Project out spin contaminants in Davidson-Liu's algorithm");
+    /*- Project solution in full diagonalization algorithm -*/
+    foptions.add_bool("SPIN_PROJECT_FULL", false, "Project solution in full diagonalization algorithm");
     /*- Add "degenerate" determinants not included in the aimed selection?
      * -*/
     foptions.add_bool("ACI_ADD_AIMED_DEGENERATE", true, "Add degenerate determinants not included in the aimed selection");
@@ -672,8 +674,8 @@ double AdaptiveCI::compute_energy() {
         sparse_solver.set_maxiter_davidson(
             options_.get_int("DL_MAXITER"));
         sparse_solver.set_spin_project(project_out_spin_contaminants_);
-        sparse_solver.set_force_diag(options_.get_bool("FORCE_DIAG_METHOD"));
         sparse_solver.set_guess_dimension(options_.get_int("DL_GUESS_SIZE"));
+        sparse_solver.set_spin_project_full(false);
         sparse_solver.diagonalize_hamiltonian_map(
             full_space, op_c, PQ_evals, PQ_evecs, nroot_,
             wavefunction_multiplicity_, diag_method_);
@@ -2606,10 +2608,10 @@ void AdaptiveCI::compute_aci(DeterminantMap& PQ_space, SharedMatrix& PQ_evecs,
     sparse_solver.set_e_convergence(options_.get_double("E_CONVERGENCE"));
     sparse_solver.set_maxiter_davidson(options_.get_int("DL_MAXITER"));
     sparse_solver.set_spin_project(project_out_spin_contaminants_);
-    sparse_solver.set_force_diag(options_.get_bool("FORCE_DIAG_METHOD"));
     sparse_solver.set_guess_dimension(options_.get_int("DL_GUESS_SIZE"));
     sparse_solver.set_num_vecs(nvec);
     sparse_solver.set_sigma_method( sigma_method );
+    sparse_solver.set_spin_project_full(false);
     int spin_projection = options_.get_int("ACI_SPIN_PROJECTION");
 
    // if (det_save_)
