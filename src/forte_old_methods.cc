@@ -57,7 +57,7 @@
 #include "fcimc.h"
 #include "finite_temperature.h"
 #include "helpers.h"
-#include "localize.h"
+#include "orbital-helper/localize.h"
 #include "mcsrgpt2_mo.h"
 #include "mp2_nos.h"
 #include "mrci.h"
