@@ -1,7 +1,7 @@
 ![forte](lib/logos/forte_logo_github2.png)
 
-#####Code Authors: Evangelistalab
-#####Web: evangelistalab.org
+#### Code Authors: Evangelistalab
+#### Web: evangelistalab.org
 
 Forte is an open-source plugin to Psi4 (https://github.com/psi4/psi4) that implements a variety of quantum chemistry methods
 for strongly correlated electrons.
