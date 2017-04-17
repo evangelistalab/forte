@@ -117,8 +117,8 @@ double MRCI::compute_energy()
     sparse_solver.set_e_convergence(options_.get_double("E_CONVERGENCE"));
     sparse_solver.set_maxiter_davidson(options_.get_int("DL_MAXITER"));
     sparse_solver.set_spin_project(true);
-    sparse_solver.set_force_diag(options_.get_bool("FORCE_DIAG_METHOD"));
     sparse_solver.set_guess_dimension(options_.get_int("DL_GUESS_SIZE"));
+    sparse_solver.set_spin_project_full(false);
 
     sparse_solver.diagonalize_hamiltonian_map(reference_,op,evals,evecs,nroot_,multiplicity_,diag_method_ ); 
 
