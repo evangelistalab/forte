@@ -46,6 +46,7 @@
 #include "../sparse_ci_solver.h"
 #include "../stl_bitset_determinant.h"
 #include "../mrpt2.h"
+#include "../orbital-helper/unpaired_density.h"
 
 namespace psi {
 namespace forte {

@@ -1,48 +1,131 @@
-language: cpp python
-
+language: cpp
+sudo: false
 matrix:
   include:
-    - compiler: gcc
-      addons:
-        apt:
-          sources:
-            - ubuntu-toolchain-r-test
-            - george-edison55-precise-backports
-          packages:
-            - libhdf5-serial-dev
-            - liblapack-dev
-            - g++-4.9
-            - gfortran-4.9
-            - cmake
-            - cmake-data
-      env: CXX_COMPILER='g++-4.9' C_COMPILER='gcc-4.9' Fortran_COMPILER='gfortran-4.9' BUILD_TYPE='debug'
+#  - os: linux
+#    compiler: gcc
+#    addons: &3
+#      apt:
+#        sources:
+#        - ubuntu-toolchain-r-test
+#        - george-edison55-precise-backports
+#        packages:
+#        - python-numpy
+#        - cmake
+#        - cmake-data
+#        - liblapack-dev
+#        - libhdf5-serial-dev
+#        - g++-4.9
+#        - gcc-4.9
+#        - gfortran-4.9
+#    env:
+#      - CXX_COMPILER='g++-4.9'
+#      - PYTHON_VER='2.7'
+#      - C_COMPILER='gcc-4.9'
+#      - Fortran_COMPILER='gfortran-4.9'
+#      - BUILD_TYPE='release'
+#      - NAME='gcc'
+#      - VERSION='4.9'
+  - os: linux
+    compiler: clang
+    addons: &1
+      apt:
+        sources:
+        - llvm-toolchain-precise-3.6
+        - ubuntu-toolchain-r-test
+        - george-edison55-precise-backports
+        packages:
+        - liblapack-dev
+        - clang-3.6
+        - libhdf5-serial-dev
+        - gfortran
+    env:
+      - CXX_COMPILER='clang++-3.6'
+      - PYTHON_VER='2.7'
+      - C_COMPILER='clang-3.6'
+      - Fortran_COMPILER='gfortran'
+      - BUILD_TYPE='debug'
+      - NAME='clang'
+      - VERSION='3.6'
+
+before_install:
+  - uname -a
+  - free -m
+  - df -h
+  - ulimit -a
 
 install:
-  - git clone https://github.com/jturney/ambit.git ambit
-  - mkdir ambit-obj
-  - cd ambit-obj
-  - ../ambit/setup --type=debug --prefix=/home/travis/build/evangelistalab/ambit-bin --cxx=${CXX_COMPILER} --cc=${C_COMPILER} --fc=${Fortran_COMPITER} --type=${BUILD_TYPE}
-  - make
-  - make install
-  # We do this conditionally because it saves us some downloading if the
-  # version is the same.
-  - if [[ "$TRAVIS_PYTHON_VERSION" == "2.7" ]]; then
-      wget https://repo.continuum.io/miniconda/Miniconda2-latest-Linux-x86_64.sh -O miniconda.sh;
-    else
-      wget https://repo.continuum.io/miniconda/Miniconda3-latest-Linux-x86_64.sh -O miniconda.sh;
-    fi
-  - bash miniconda.sh -b -p $HOME/miniconda
-  - export PATH="$HOME/miniconda/bin:$PATH"
-  - hash -r
-  - conda config --set always_yes yes --set changeps1 no
-  - conda update -q conda
-  # Useful for debugging any issues with conda
-  - conda info -a
-  # Replace dep1 dep2 ... with your dependencies
-  - conda create -q -n test-environment python=$TRAVIS_PYTHON_VERSION cmake
-  - conda config --add channels http://conda.anaconda.org/psi4
-  - conda install --yes psi4
-  - source activate test-environment
-
+- if [[ "$PYTHON_VER" == "2.7" ]]; then
+    wget https://repo.continuum.io/miniconda/Miniconda2-latest-Linux-x86_64.sh -O miniconda.sh;
+  else
+    wget https://repo.continuum.io/miniconda/Miniconda3-latest-Linux-x86_64.sh -O miniconda.sh;
+  fi
+- bash miniconda.sh -b -p $HOME/miniconda
+- export PATH="$HOME/miniconda/bin:$PATH"
+- hash -r
+- conda config --set always_yes yes --set changeps1 no
+- conda update -q conda
+- conda info -a
+- conda create -q -n p4env python=$PYTHON_VER numpy cmake dftd3 libint libxc gdma libefp -c psi4/label/test -c psi4
+- source activate p4env
+- conda list
+- python -V
+- python -c 'import numpy; print(numpy.version.version)'
+- cd ${TRAVIS_BUILD_DIR}
+- export CXX=${CXX_COMPILER}
+- export CC=${C_COMPILER}
+- export FC=${Fortran_COMPILER}
+- export CTEST_OUTPUT_ON_FAILURE=1
+- ${CXX_COMPILER} --version
+- ${Fortran_COMPILER} --version
+- ${C_COMPILER} --version
+# Compile Psi4
+- cd ${HOME}/build
+- git clone https://github.com/psi4/psi4.git psi4
+#- git clone -b minipsi4 https://github.com/evangelistalab/psi4.git psi4
+- cd psi4
+- > 
+    cmake -Bbuild -H. 
+    -DCMAKE_CXX_COMPILER=${CXX_COMPILER} 
+    -DCMAKE_C_COMPILER=${C_COMPILER} 
+    -DCMAKE_BUILD_TYPE=${BUILD_TYPE} 
+    -DCMAKE_PREFIX_PATH=${HOME}/miniconda/envs/p4env
+    -DPYTHON_EXECUTABLE="${HOME}/miniconda/envs/p4env/bin/python"
+    -DENABLE_gdma=ON
+    -DENABLE_PLUGIN_TESTING=ON
+    -DCMAKE_INSTALL_PREFIX=${HOME}/build/psi4-bin
+- cd build
+- make -j2
+- make install >& psi4_install.log
+- export PATH="$HOME/build/psi4-bin/bin:$PATH"
+- hash -r
+- which psi4
+# Compile ambit
+- cd ${HOME}/build
+- pwd
+- git clone https://github.com/jturney/ambit.git ambit
+- mkdir ambit-obj
+- cd ambit-obj
+- ../ambit/setup --type=debug --prefix=/home/travis/build/ambit-bin --cxx=${CXX_COMPILER} --cc=${C_COMPILER} --fc=${Fortran_COMPITER} --type=${BUILD_TYPE}
+- make -j2
+- make install
+# Compile forte
+- cd ${HOME}/build/evangelistalab/forte
+- ./cmake_setup --ambit-bindir=/home/travis/build/ambit-bin
+- bash cmake_commands
+- make -j2
+- export PYTHONPATH="${HOME}/build/evangelistalab:$PYTHONPATH"
+- hash -r
+- cd tests/methods
+- python run_forte_tests.py 
+#- ../.scripts/travis_build.sh
 script:
-  - psi4 --version
+- psi4 --version
+#- python ../.scripts/travis_run_test.py
+#- python ../.scripts/travis_print_failing.py
+
+# safelist
+branches:
+  only:
+  - master
+  - travis
