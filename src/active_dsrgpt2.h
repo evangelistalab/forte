@@ -29,29 +29,32 @@
 #ifndef _active_dsrgpt2_h_
 #define _active_dsrgpt2_h_
 
-#include <vector>
 #include <string>
+#include <vector>
 
-#include "psi4/libqt/qt.h"
-#include "psi4/libpsio/psio.hpp"
-#include "psi4/libpsio/psio.h"
-#include "psi4/liboptions/liboptions.h"
-#include "psi4/libmints/vector.h"
 #include "psi4/libmints/matrix.h"
-#include "psi4/libmints/wavefunction.h"
 #include "psi4/libmints/molecule.h"
+#include "psi4/libmints/vector.h"
+#include "psi4/libmints/wavefunction.h"
+#include "psi4/liboptions/liboptions.h"
+#include "psi4/libpsio/psio.h"
+#include "psi4/libpsio/psio.hpp"
+#include "psi4/libqt/qt.h"
 
-#include "integrals/integrals.h"
-#include "reference.h"
-#include "helpers.h"
 #include "fci_mo.h"
-#include "stl_bitset_determinant.h"
+#include "helpers.h"
+#include "integrals/integrals.h"
 #include "mrdsrg-spin-free/dsrg_mrpt2.h"
 #include "mrdsrg-spin-free/dsrg_mrpt3.h"
 #include "mrdsrg-spin-free/three_dsrg_mrpt2.h"
+#include "reference.h"
+#include "stl_bitset_determinant.h"
 
 namespace psi {
 namespace forte {
+
+class FCI_MO;
+
 class ACTIVE_DSRGPT2 : public Wavefunction {
   public:
     /**
@@ -84,6 +87,9 @@ class ACTIVE_DSRGPT2 : public Wavefunction {
     /// Name of the code
     std::string code_name_;
 
+    /// Multiplicity
+    int multiplicity_;
+
     /// Total number of roots
     int total_nroots_;
 
@@ -93,14 +99,20 @@ class ACTIVE_DSRGPT2 : public Wavefunction {
     /// Irrep symbol
     std::vector<std::string> irrep_symbol_;
 
+    /// The FCI_MO object
+    std::shared_ptr<FCI_MO> fci_mo_;
+
+    /// Reference type (CIS/CISD/COMPLETE)
+    std::string ref_type_;
+
     /// Reference energies
     std::vector<std::vector<double>> ref_energies_;
 
     /// DSRGPT2 energies
     std::vector<std::vector<double>> pt_energies_;
 
-    /// Singles (T1) percentage
-    std::vector<std::vector<std::pair<int, double>>> t1_percentage_;
+    /// Singles (T1) percentage in VCISD
+    std::vector<std::vector<double>> t1_percentage_;
 
     /// Dominant determinants
     std::vector<std::vector<STLBitsetDeterminant>> dominant_dets_;
@@ -109,14 +121,27 @@ class ACTIVE_DSRGPT2 : public Wavefunction {
     std::string compute_ex_type(const STLBitsetDeterminant& det1,
                                 const STLBitsetDeterminant& ref_det);
 
+    /** Precompute all energies to
+     *  1) determine excitation type
+     *  2) obtain original orbital extent
+     *  3) determine %T1 in CISD
+     *  4) obtain unitary matrices that semicanonicalize the orbitals
+     */
+    void precompute_energy();
+
+    /// Unitary matrices that semicanonicalize orbitals of each state
+    std::vector<std::vector<SharedMatrix>> Uaorbs_;
+    std::vector<std::vector<SharedMatrix>> Uborbs_;
+
+    /// Rotate to semicanonical orbitals and pass to this
+    void rotate_orbs(SharedMatrix Ca0, SharedMatrix Cb0, SharedMatrix Ua,
+                     SharedMatrix Ub);
+
     /// Print summary
     void print_summary();
 
-    /// Orbital extents of current state
-    std::vector<double> current_orb_extents_;
-
-    /// Orbital extents (nirrep BY nrootpi BY <r^2>)
-    std::vector<std::vector<std::vector<double>>> orb_extents_;
+    /// Orbital extents of original orbitals
+    std::vector<double> orb_extents_;
 
     /// Flatten the structure of orbital extents in fci_mo and return a vector
     /// of <r^2>

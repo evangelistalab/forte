@@ -31,9 +31,10 @@ set forte{
   nrootpi            [1,0,1,0]
   dsrg_s             0.5
   cas_type           cas
-  active_space_type  cisd
   multiplicity       1
-  ipea               ip
+  fcimo_actv_type    cisd
+  fcimo_cisd_nohf    false
+  fcimo_ipea         ip
 # diag_algorithm     full    # full may not work when diffused orbital is added
 }
 Edsrg, wfn = energy('forte', ref_wfn=wfn, return_wfn=True)

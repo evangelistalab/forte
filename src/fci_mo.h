@@ -29,32 +29,32 @@
 #ifndef _fci_mo_h_
 #define _fci_mo_h_
 
-#include <vector>
-#include <tuple>
 #include <string>
+#include <tuple>
+#include <vector>
 
-#include "psi4/physconst.h"
-#include "psi4/libqt/qt.h"
-#include "psi4/libpsio/psio.hpp"
-#include "psi4/libpsio/psio.h"
-#include "psi4/liboptions/liboptions.h"
-#include "psi4/libmints/vector.h"
-#include "psi4/libmints/matrix.h"
-#include "psi4/libmints/wavefunction.h"
-#include "psi4/libmints/molecule.h"
+#include "ambit/tensor.h"
 #include "psi4/libmints/basisset.h"
 #include "psi4/libmints/integral.h"
-#include "psi4/libmints/sointegral_onebody.h"
+#include "psi4/libmints/matrix.h"
 #include "psi4/libmints/mintshelper.h"
-#include "ambit/tensor.h"
+#include "psi4/libmints/molecule.h"
+#include "psi4/libmints/sointegral_onebody.h"
+#include "psi4/libmints/vector.h"
+#include "psi4/libmints/wavefunction.h"
+#include "psi4/liboptions/liboptions.h"
+#include "psi4/libpsio/psio.h"
+#include "psi4/libpsio/psio.hpp"
+#include "psi4/libqt/qt.h"
+#include "psi4/physconst.h"
 
-#include "integrals/integrals.h"
-#include "stl_bitset_determinant.h"
-#include "sparse_ci_solver.h"
-#include "reference.h"
-#include "helpers.h"
-#include "ci_rdms.h"
 #include "active_dsrgpt2.h"
+#include "ci_rdms.h"
+#include "helpers.h"
+#include "integrals/integrals.h"
+#include "reference.h"
+#include "sparse_ci_solver.h"
+#include "stl_bitset_determinant.h"
 
 using namespace std;
 
@@ -68,6 +68,10 @@ using vecdet = vector<psi::forte::STLBitsetDeterminant>;
 
 namespace psi {
 namespace forte {
+
+/// Set the FCI_MO options
+void set_FCI_MO_options(ForteOptions& foptions);
+
 class FCI_MO : public Wavefunction {
     friend class ACTIVE_DSRGPT2;
 
@@ -104,6 +108,9 @@ class FCI_MO : public Wavefunction {
      */
     void xms_rotate(const int& irrep);
 
+    /// Set multiplicity
+    void set_multiplicity(int multiplicity) { multi_ = multiplicity; }
+
     /// Set symmetry of the root
     void set_root_sym(int root_sym) { root_sym_ = root_sym; }
 
@@ -127,8 +134,7 @@ class FCI_MO : public Wavefunction {
 
     /// Return the orbital extents of the current state
     vector<vector<vector<double>>> orb_extents() {
-        compute_orbital_extents();
-        return orb_extents_;
+        return compute_orbital_extents();
     }
 
     /// Return the vector of eigen vectors and eigen values
@@ -154,6 +160,9 @@ class FCI_MO : public Wavefunction {
     /// Return indices (relative to active, not absolute) of active virtual
     /// orbitals
     vector<size_t> actv_uocc() { return ap_; }
+
+    /// Return the T1 percentage in CISD computations
+    vector<double> compute_T1_percentage();
 
   protected:
     /// Basic Preparation
@@ -242,9 +251,8 @@ class FCI_MO : public Wavefunction {
     vector<STLBitsetDeterminant> dominant_dets_;
     vector<vecdet> p_spaces_;
 
-    /// Exclude ground-state HF in CISD space or not for excited states
-    /// If it is excluded, ground state will use HF energy
-    bool cisd_ex_no_hf_;
+    /// Size of Singles Determinants
+    size_t singles_size_;
 
     /// Orbital Strings
     vector<vector<vector<bool>>> Form_String(const int& active_elec,
@@ -275,8 +283,13 @@ class FCI_MO : public Wavefunction {
     /// The algorithm for diagonalization
     std::string diag_algorithm_;
 
-    void Diagonalize_H(const vecdet& det,
+    /// Diagonalize the Hamiltonian
+    void Diagonalize_H(const vecdet& P_space, const int& multi, const int& nroot,
                        vector<pair<SharedVector, double>>& eigen);
+    /// Diagonalize the Hamiltonian without the HF determinant
+    void Diagonalize_H_noHF(const vecdet& p_space, const int& multi,
+                            const int& nroot,
+                            vector<pair<SharedVector, double>>& eigen);
 
     /// Print the CI Vectors and Configurations (figure out the dominant
     /// determinants)
@@ -395,9 +408,9 @@ class FCI_MO : public Wavefunction {
     void compute_sa_ref();
 
     /// Orbital Extents
-    void compute_orbital_extents();
-    d3 orb_extents_; // irrep BY number of active orbitals in current irrep BY
-                     // orbital extents in x, y, z directions
+    /// returns a vector of irrep by # active orbitals in current irrep
+    /// by orbital extents {xx, yy, zz}
+    d3 compute_orbital_extents();
     size_t idx_diffused_;
     vector<size_t> diffused_orbs_;
 
@@ -487,7 +500,7 @@ class FCI_MO : public Wavefunction {
     /// Print Determinants
     void print_det(const vecdet& dets) {
         outfile->Printf("\n\n  ==> Determinants |alpha|beta> <==\n");
-        for (STLBitsetDeterminant x : dets) {
+        for (const STLBitsetDeterminant& x : dets) {
             outfile->Printf("  ");
             x.print();
         }
