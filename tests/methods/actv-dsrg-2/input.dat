@@ -36,14 +36,16 @@ set forte{
   active               [1,0,1,1,0,1,1,1]
   dsrg_s               0.5
   cas_type             cas
-  active_space_type    cisd
+  fcimo_actv_type      cisd
+  fcimo_cisd_nohf      true
   nrootpi              [1,0,0,0,0,1,0,0]
   d_convergence        10
-  cisd_ex_no_hf        true
   internal_amp         singles_doubles
   internal_amp_select  oovv
 }
 Esd_oovv = energy('forte', ref_wfn = wfn)
+compare_values(Eoovv,Esd_oovv,10,"VCISD-DSRG-MRPT2 INTERNAL: SD OOVV")
+
 C = wfn.Ca()
 C = Ca_hf
 
@@ -51,6 +53,8 @@ set forte{
   internal_amp_select  all
 }
 Esd_all = energy('forte', ref_wfn = wfn)
+compare_values(Eall ,Esd_all ,10,"VCISD-DSRG-MRPT2 INTERNAL: SD ALL")
+
 C = wfn.Ca()
 C = Ca_hf
 
@@ -58,7 +62,4 @@ set forte{
   internal_amp_select  auto
 }
 Esd_auto = energy('forte', ref_wfn = wfn)
-
-compare_values(Eoovv,Esd_oovv,10,"VCISD-DSRG-MRPT2 INTERNAL: SD OOVV")
 compare_values(Eauto,Esd_auto,10,"VCISD-DSRG-MRPT2 INTERNAL: SD AUTO")
-compare_values(Eall ,Esd_all ,10,"VCISD-DSRG-MRPT2 INTERNAL: SD ALL")

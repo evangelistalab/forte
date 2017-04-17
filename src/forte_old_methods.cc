@@ -356,7 +356,7 @@ void forte_old_methods(SharedWavefunction ref_wfn, Options& options,
                     dsrg_mrpt2->compute_energy_relaxed();
                 } else {
                     std::string actv_type =
-                        options.get_str("ACTIVE_SPACE_TYPE");
+                        options.get_str("FCIMO_ACTV_TYPE");
                     if (actv_type == "CIS" || actv_type == "CISD") {
                         dsrg_mrpt2->set_actv_occ(fci_mo->actv_occ());
                         dsrg_mrpt2->set_actv_uocc(fci_mo->actv_uocc());
@@ -470,7 +470,7 @@ void forte_old_methods(SharedWavefunction ref_wfn, Options& options,
                 new THREE_DSRG_MRPT2(reference, ref_wfn, options, ints,
                                      mo_space_info));
 
-            std::string actv_type = options.get_str("ACTIVE_SPACE_TYPE");
+            std::string actv_type = options.get_str("FCIMO_ACTV_TYPE");
             if (actv_type == "CIS" || actv_type == "CISD") {
                 three_dsrg_mrpt2->set_actv_occ(fci_mo.actv_occ());
                 three_dsrg_mrpt2->set_actv_uocc(fci_mo.actv_uocc());

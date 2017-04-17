@@ -193,7 +193,7 @@ void DSRG_MRPT2::startup() {
     }
 
     // ignore semicanonical test
-    std::string actv_type = options_.get_str("ACTIVE_SPACE_TYPE");
+    std::string actv_type = options_.get_str("FCIMO_ACTV_TYPE");
     if(actv_type != "COMPLETE" && actv_type != "DOCI"){
         ignore_semicanonical_ = true;
     }
