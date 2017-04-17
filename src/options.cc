@@ -33,6 +33,7 @@
 #include "forte_options.h"
 #include "integrals/integrals.h"
 #include "pci/pci.h"
+#include "fci_mo.h"
 //#include "mrpt2.h"
 
 namespace psi {
@@ -47,6 +48,7 @@ void forte_options(std::string name, ForteOptions& foptions) {
     set_PT2_options(foptions);
     set_AVAS_options(foptions);
     set_CINO_options(foptions);
+    set_FCI_MO_options(foptions);
 
     /*- The job type
      *  - NONE Do not run methods (may transform orbitals)

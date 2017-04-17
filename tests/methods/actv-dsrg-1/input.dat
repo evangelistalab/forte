@@ -30,7 +30,7 @@ set forte{
   active               [1,0,1,1,0,1,1,1]
   dsrg_s               0.5
   cas_type             cas
-  active_space_type    cis
+  fcimo_actv_type      cis
   nrootpi              [1,0,0,0,0,1,0,0]
   d_convergence        10
   internal_amp         singles_doubles
@@ -43,4 +43,4 @@ set forte{
   cholesky_tolerance   10
 }
 Ecd = energy('forte', ref_wfn = wfn)
-compare_values(Econv,Ecd,8,"DSRG-MRPT2 vs CD-DSRG-MRPT2")
+compare_values(Econv, Ecd, 8, "DSRG-MRPT2 vs CD-DSRG-MRPT2")
