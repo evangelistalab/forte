@@ -39,10 +39,10 @@ fciqmc_tests = ["fciqmc"]
 ct_tests = ["ct-1","ct-2","ct-3","ct-4","ct-5","ct-6","ct-7-fc"]
 dsrg_tests = ["dsrg-1","dsrg-2"]
 mrdsrg_tests = ["mrdsrg-pt2-1","mrdsrg-pt2-2","mrdsrg-pt2-4"]
-dsrg_mrpt3_tests = ["dsrg-mrpt3-1","dsrg-mrpt3-2","dsrg-mrpt3-3","dsrg-mrpt3-4","dsrg-mrpt3-5"]
+dsrg_mrpt3_tests = ["dsrg-mrpt3-1","dsrg-mrpt3-2","dsrg-mrpt3-3","dsrg-mrpt3-5"]
 dsrg_mrpt2_tests = ["mr-dsrg-pt2-1","mr-dsrg-pt2-2","mr-dsrg-pt2-4",
-                    "dsrg-mrpt2-1","dsrg-mrpt2-2","dsrg-mrpt2-3","dsrg-mrpt2-4","dsrg-mrpt2-5","dsrg-mrpt2-6",
-                    "dsrg-mrpt2-7","dsrg-mrpt2-8-sa","dsrg-mrpt2-9-xms",
+                    "dsrg-mrpt2-1","dsrg-mrpt2-2","dsrg-mrpt2-3","dsrg-mrpt2-4","dsrg-mrpt2-5",
+                    "dsrg-mrpt2-7","dsrg-mrpt2-8-sa",
                     "cd-dsrg-mrpt2-1","cd-dsrg-mrpt2-2","cd-dsrg-mrpt2-3","cd-dsrg-mrpt2-4","cd-dsrg-mrpt2-5",
                     "df-dsrg-mrpt2-1", "df-dsrg-mrpt2-2", "df-dsrg-mrpt2-3", "df-dsrg-mrpt2-4", "df-dsrg-mrpt2-5",
                     "df-dsrg-mrpt2-threading1", "df-dsrg-mrpt2-threading2", "df-dsrg-mrpt2-threading4",
@@ -86,7 +86,7 @@ for d in tests:
     except:
         # something went wrong
         successful = False
-        test_results[d] = "DOES NOT MATCH"
+        test_results[d] = "FAILED"
 
     if successful:
         # Check if FORTE ended successfully
@@ -102,16 +102,12 @@ for d in tests:
 
 summary = []
 failed = []
-nomatch = []
 for d in tests:
     if test_results[d] == "PASSED":
         msg = bcolors.OKGREEN + "PASSED" + bcolors.ENDC
     elif test_results[d] == "FAILED":
         msg = bcolors.FAIL + "FAILED" + bcolors.ENDC
         failed.append(d)
-    elif test_results[d] == "DOES NOT MATCH":
-        msg = bcolors.FAIL + "DOES NOT MATCH" + bcolors.ENDC
-        nomatch.append(d)
 
     filler = "." * (81 - len(d + msg))
     summary.append("        %s%s%s" % (d.upper(),filler,msg))
@@ -125,11 +121,10 @@ test_result_log = open("test_results","w+")
 test_result_log.write("\n".join(summary))
 
 nfailed = len(failed)
-nnomatch = len(nomatch)
-if nnomatch + nfailed == 0:
+if nfailed == 0:
     print "Tests: All passed\n"
 else:
-    print "Tests: %d passed, %d failed, %d did not match\n" % (len(tests) -  nnomatch - nfailed,nfailed,nnomatch)
+    print "Tests: %d passed and %d failed\n" % (len(tests) -  nfailed,nfailed)
     # Get the current date and time
     dt = datetime.datetime.now()
     now = dt.strftime("%Y-%m-%d-%H:%M")
@@ -137,7 +132,5 @@ else:
         failed_log = open("failed_tests","w+")
         failed_log.write("# %s\n" % now)
         failed_log.write("\n".join(failed))
-    if nnomatch > 0:
-        nomatch_log = open("nomatch_tests","w+")
-        nomatch_log.write("# %s\n" % now)
-        nomatch_log.write("\n".join(nomatch))
+        failed_log.close()
+        exit(1)
