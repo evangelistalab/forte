@@ -21,7 +21,7 @@ psi4command = ""
 
 print "Running forte tests using the psi4 executable found in:\n  %s\n" % psi4command
 
-fci_tests = ["fci-1","fci-2","fci-3","fci-4","fci-5","fci-6","fci-rdms-1","fci-rdms-2","fci-rdms-3","fci-ex-1"]
+fci_tests = ["fci-1","fci-2","fci-3","fci-4","fci-5","fci-rdms-1","fci-rdms-2","fci-rdms-3","fci-ex-1"]
 
 lambda_ci_tests = ["casci-1","casci-2","casci-3","casci-4",
                      "casci-5-fc","casci-6-fc","casci-7-fc","casci-8-fc",
@@ -38,7 +38,7 @@ pci_tests = ["pci-1","pci-2","pci-3","pci-4","pci-5", "pci-6", "pci-7", "pci-8",
 fciqmc_tests = ["fciqmc"]
 ct_tests = ["ct-1","ct-2","ct-3","ct-4","ct-5","ct-6","ct-7-fc"]
 dsrg_tests = ["dsrg-1","dsrg-2"]
-mrdsrg_tests = ["mrdsrg-pt2-1","mrdsrg-pt2-2","mrdsrg-pt2-3","mrdsrg-pt2-4"]
+mrdsrg_tests = ["mrdsrg-pt2-1","mrdsrg-pt2-2","mrdsrg-pt2-4"]
 dsrg_mrpt3_tests = ["dsrg-mrpt3-1","dsrg-mrpt3-2","dsrg-mrpt3-3","dsrg-mrpt3-4","dsrg-mrpt3-5"]
 dsrg_mrpt2_tests = ["mr-dsrg-pt2-1","mr-dsrg-pt2-2","mr-dsrg-pt2-4",
                     "dsrg-mrpt2-1","dsrg-mrpt2-2","dsrg-mrpt2-3","dsrg-mrpt2-4","dsrg-mrpt2-5","dsrg-mrpt2-6",
