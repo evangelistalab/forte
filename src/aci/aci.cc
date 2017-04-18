@@ -2955,8 +2955,7 @@ void AdaptiveCI::compute_rdms(DeterminantMap& dets, WFNOperator& op,
     if (rdm_level_ >= 1) {
         Timer one_r;
         ci_rdms_.compute_1rdm(ordm_a_, ordm_b_, op);
-        if (!quiet_mode_)
-            outfile->Printf("\n  1-RDM  took %2.6f s (determinant)",
+        outfile->Printf("\n  1-RDM  took %2.6f s (determinant)",
                             one_r.get());
 
         if (options_.get_bool("ACI_PRINT_NO")) {
@@ -2966,15 +2965,13 @@ void AdaptiveCI::compute_rdms(DeterminantMap& dets, WFNOperator& op,
     if (rdm_level_ >= 2) {
         Timer two_r;
         ci_rdms_.compute_2rdm(trdm_aa_, trdm_ab_, trdm_bb_, op);
-        if (!quiet_mode_)
-            outfile->Printf("\n  2-RDMS took %2.6f s (determinant)",
+        outfile->Printf("\n  2-RDMS took %2.6f s (determinant)",
                             two_r.get());
     }
     if (rdm_level_ >= 3) {
         Timer tr;
         ci_rdms_.compute_3rdm(trdm_aaa_, trdm_aab_, trdm_abb_, trdm_bbb_, op);
-        if (!quiet_mode_)
-            outfile->Printf("\n  3-RDMs took %2.6f s (determinant)", tr.get());
+        outfile->Printf("\n  3-RDMs took %2.6f s (determinant)", tr.get());
 
         if (options_.get_bool("ACI_TEST_RDMS")) {
             ci_rdms_.rdm_test(ordm_a_, ordm_b_, trdm_aa_, trdm_bb_, trdm_ab_,

@@ -464,7 +464,7 @@ void forte_old_options(Options& options) {
     /*- Two-particle density cumulant -*/
     options.add_str("TWOPDC", "MK", "MK ZERO");
     /*- Three-particle density cumulant -*/
-    options.add_str("THREEPDC", "MK", "MK MK_DECOMP ZERO DIAG");
+    options.add_str("THREEPDC", "MK", "MK MK_DECOMP ZERO");
     /*- Number of roots per irrep (in Cotton order) -*/
     options.add("NROOTPI", new ArrayType());
     /*- The density convergence criterion -*/
