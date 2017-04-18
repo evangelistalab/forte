@@ -282,7 +282,7 @@ void DFIntegrals::gather_integrals() {
 
     std::string str_read = "Reading DF Integrals";
     if (print_ > 0) {
-        outfile->Printf("\n  %-36s . . .", str_read.c_str());
+        outfile->Printf("\n  %-36s ...", str_read.c_str());
     }
     fread(&(Bpq->pointer()[0][0]), sizeof(double), naux * (nmo_) * (nmo_), Bf);
     if (print_ > 0) {
