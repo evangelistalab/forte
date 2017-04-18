@@ -112,7 +112,7 @@ install:
 - hash -r
 script:
 - cd ${HOME}/build/evangelistalab/forte/tests/methods
-- python run_forte_tests.py 
+- python run_forte_tests_travis.py 
 
 # safelist
 branches:
