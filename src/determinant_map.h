@@ -48,6 +48,9 @@ class DeterminantMap {
     DeterminantMap(std::vector<STLBitsetDeterminant>& dets);
 
     /// Default constructor
+    DeterminantMap(const std::vector<STLBitsetDeterminant>& dets);
+
+    /// Default constructor
     DeterminantMap(STLBitsetDeterminant& det);
 
     /// Empty constructor

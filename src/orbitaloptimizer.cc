@@ -123,7 +123,7 @@ void OrbitalOptimizer::startup() {
     if (options_.get_str("CAS_TYPE") == "FCI") {
         cas_ = true;
     } else if (options_.get_str("CAS_TYPE") == "CAS") {
-        if (options_.get_str("ACTIVE_SPACE_TYPE") != "COMPLETE") {
+        if (options_.get_str("FCIMO_ACTV_TYPE") != "COMPLETE") {
             cas_ = false;
         } else {
             cas_ = true;

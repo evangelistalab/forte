@@ -238,6 +238,24 @@ void make_avas(SharedWavefunction ref_wfn, Options& options, SharedMatrix Ps) {
         SharedMatrix Fa_mo = Fa->clone();
         Fa_mo->transform(Ca_tilde_prime);
 
+        SharedMatrix S_mo = ref_wfn->S()->clone();
+        S_mo->transform(Ca_tilde_prime);
+        double sum_diag = 0.0;
+        double sum_abs_diag = 0.0;
+        double sum_off_diag = 0.0;
+        for (int p = 0; p < nmo; p++) {
+            sum_abs_diag += std::fabs(S_mo->get(p, p));
+            sum_diag += S_mo->get(p, p);
+            for (int q = 0; q < nmo; q++) {
+                if (q != p) {
+                    sum_off_diag += std::fabs(S_mo->get(p, q));
+                }
+            }
+        }
+        outfile->Printf("\n\n  => Orthogonality test of AVAS orbitals <=");
+        outfile->Printf("\n  sum diag(S) = %f, sum off_diag(S) = %f", sum_diag,
+                        sum_off_diag);
+
         // Update both the alpha and beta orbitals
         // This assumes a restricted MO set
         // TODO: generalize to unrestricted references
