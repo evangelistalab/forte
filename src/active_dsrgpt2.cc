@@ -254,7 +254,7 @@ void ACTIVE_DSRGPT2::precompute_energy() {
             }
 
             int dim = (eigen[0].first)->dim();
-            SharedMatrix evecs(new Matrix("evecs", dim, dim));
+            SharedMatrix evecs(new Matrix("evecs", dim, eigen_size));
             for (int i = 0; i < eigen_size; ++i) {
                 evecs->set_column(0, i, (eigen[i]).first);
             }
