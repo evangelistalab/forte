@@ -193,7 +193,7 @@ void DSRG_MRPT2::startup() {
     }
 
     // ignore semicanonical test
-    std::string actv_type = options_.get_str("ACTIVE_SPACE_TYPE");
+    std::string actv_type = options_.get_str("FCIMO_ACTV_TYPE");
     if(actv_type != "COMPLETE" && actv_type != "DOCI"){
         ignore_semicanonical_ = true;
     }
@@ -526,7 +526,7 @@ double DSRG_MRPT2::compute_energy() {
         outfile->Printf("\n    Orbitals are semi-canonicalized.");
     }
 
-    //    Timer DSRG_energy;
+    Timer DSRG_energy;
     outfile->Printf("\n\n  ==> Computing DSRG-MRPT2 ... <==\n");
 
     // Compute T2 and T1
@@ -628,7 +628,7 @@ double DSRG_MRPT2::compute_energy() {
     }
 
     Process::environment.globals["CURRENT ENERGY"] = Etotal;
-    //    outfile->Printf("\n\n  Energy took %8.8f s", DSRG_energy.get());
+    outfile->Printf("\n\n  Energy took %10.3f s", DSRG_energy.get());
     outfile->Printf("\n");
 
     // relax reference
