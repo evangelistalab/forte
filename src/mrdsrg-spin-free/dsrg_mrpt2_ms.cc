@@ -196,8 +196,9 @@ std::vector<std::vector<double>> DSRG_MRPT2::compute_energy_sa() {
             outfile->Printf("\n    Use the sub-space of CASCI.");
 
             int dim = (eigens_[n][0].first)->dim();
-            SharedMatrix evecs(new Matrix("evecs", dim, dim));
-            for (int i = 0; i < eigens_[n].size(); ++i) {
+            size_t eigen_size = eigens_[n].size();
+            SharedMatrix evecs(new Matrix("evecs", dim, eigen_size));
+            for (int i = 0; i < eigen_size; ++i) {
                 evecs->set_column(0, i, (eigens_[n][i]).first);
             }
 

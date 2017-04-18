@@ -481,8 +481,9 @@ double FCI_MO::compute_energy() {
 
     // diagonalize the CASCI Hamiltonian
     bool noHF = options_.get_bool("FCIMO_CISD_NOHF");
-    if (root_sym_ == 0 && (active_space_type_ == "CIS" ||
-                           (active_space_type_ == "CISD" && noHF))) {
+    if (multi_ == 1 && root_sym_ == 0 &&
+        (active_space_type_ == "CIS" ||
+         (active_space_type_ == "CISD" && noHF))) {
         Diagonalize_H_noHF(determinant_, multi_, nroot_, eigen_);
     } else {
         Diagonalize_H(determinant_, multi_, nroot_, eigen_);
@@ -505,7 +506,7 @@ double FCI_MO::compute_energy() {
 
     // prepare ci_rdms for one density
     int dim = (eigen_[0].first)->dim();
-    SharedMatrix evecs(new Matrix("evecs", dim, dim));
+    SharedMatrix evecs(new Matrix("evecs", dim, eigen_size));
     for (int i = 0; i < eigen_size; ++i) {
         evecs->set_column(0, i, (eigen_[i]).first);
     }
@@ -698,9 +699,9 @@ void FCI_MO::form_det() {
     for (auto& str_dim : info) {
         outfile->Printf("\n    %-35s = %5zu", str_dim.first.c_str(),
                         str_dim.second);
-        outfile->Printf("\n");
-        outfile->Flush();
     }
+    outfile->Printf("\n");
+    outfile->Flush();
 
     if (print_ > 1) {
         print_det(determinant_);
@@ -1931,7 +1932,7 @@ void FCI_MO::FormCumulant2(CI_RDMS& ci_rdms, d4& AA, d4& AB, d4& BB) {
 
     FormCumulant2AA(tpdm_aa, tpdm_bb, AA, BB);
     FormCumulant2AB(tpdm_ab, AB);
-    fill_cumulant2();
+    //    fill_cumulant2();
 
     outfile->Printf("  Done. Timing %15.6f s", tL2.get());
     timer_off("FORM 2-Cumulant");
@@ -2094,7 +2095,7 @@ void FCI_MO::FormCumulant3(CI_RDMS& ci_rdms, d6& AAA, d6& AAB, d6& ABB, d6& BBB,
 
     FormCumulant3AAA(tpdm_aaa, tpdm_bbb, AAA, BBB, DC);
     FormCumulant3AAB(tpdm_aab, tpdm_abb, AAB, ABB, DC);
-    fill_cumulant3();
+    //    fill_cumulant3();
 
     outfile->Printf("  Done. Timing %15.6f s", tL3.get());
     timer_off("FORM 3-Cumulant");
@@ -2596,8 +2597,6 @@ void FCI_MO::Check_Fock(const d2& A, const d2& B, const double& E,
     std::string str = "Checking Fock matrices (Fa, Fb)";
     if (!quiet_) {
         outfile->Printf("\n  %-35s ...", str.c_str());
-    }
-    if (!quiet_) {
         outfile->Printf("\n  Nonzero criteria: > %.2E", E);
     }
     Check_FockBlock(A, B, E, count, nc_, idx_c_, "CORE");
@@ -3065,8 +3064,9 @@ void FCI_MO::compute_permanent_dipole() {
 
     // prepare eigen vectors for ci_rdm
     int dim = (eigen_[0].first)->dim();
-    SharedMatrix evecs(new Matrix("evecs", dim, dim));
-    for (int i = 0; i < eigen_.size(); ++i) {
+    size_t eigen_size = eigen_.size();
+    SharedMatrix evecs(new Matrix("evecs", dim, eigen_size));
+    for (int i = 0; i < eigen_size; ++i) {
         evecs->set_column(0, i, (eigen_[i]).first);
     }
 
@@ -3197,8 +3197,9 @@ void FCI_MO::compute_trans_dipole() {
 
     // prepare eigen vectors for ci_rdm
     int dim = (eigen_[0].first)->dim();
-    SharedMatrix evecs(new Matrix("evecs", dim, dim));
-    for (int i = 0; i < eigen_.size(); ++i) {
+    size_t eigen_size = eigen_.size();
+    SharedMatrix evecs(new Matrix("evecs", dim, eigen_size));
+    for (int i = 0; i < eigen_size; ++i) {
         evecs->set_column(0, i, (eigen_[i]).first);
     }
 
@@ -3503,65 +3504,89 @@ void FCI_MO::fill_density(vector<double>& opdm_a, vector<double>& opdm_b) {
 
 void FCI_MO::compute_ref() {
     timer_on("Compute Ref");
+    outfile->Printf("\n  Computing 2- and 3-cumulants ... ");
 
     // prepare ci_rdms
     int dim = (eigen_[0].first)->dim();
-    SharedMatrix evecs(new Matrix("evecs", dim, dim));
-    for (int i = 0; i < eigen_.size(); ++i) {
+    size_t eigen_size = eigen_.size();
+    SharedMatrix evecs(new Matrix("evecs", dim, eigen_size));
+    for (int i = 0; i < eigen_size; ++i) {
         evecs->set_column(0, i, (eigen_[i]).first);
     }
     CI_RDMS ci_rdms(options_, fci_ints_, determinant_, evecs, root_, root_);
 
-    // 2-PDC
-    L2aa_ = d4(na_, d3(na_, d2(na_, d1(na_))));
-    L2ab_ = d4(na_, d3(na_, d2(na_, d1(na_))));
-    L2bb_ = d4(na_, d3(na_, d2(na_, d1(na_))));
-    L2aa =
-        ambit::Tensor::build(ambit::CoreTensor, "L2aa", {na_, na_, na_, na_});
-    L2ab =
-        ambit::Tensor::build(ambit::CoreTensor, "L2ab", {na_, na_, na_, na_});
-    L2bb =
-        ambit::Tensor::build(ambit::CoreTensor, "L2bb", {na_, na_, na_, na_});
-
-    FormCumulant2(ci_rdms, L2aa_, L2ab_, L2bb_);
-    if (print_ > 2) {
-        print2PDC("L2aa", L2aa_, print_);
-        print2PDC("L2ab", L2ab_, print_);
-        print2PDC("L2bb", L2bb_, print_);
-    }
-
-    // 3-PDC
     string threepdc = options_.get_str("THREEPDC");
     string t_algorithm = options_.get_str("T_ALGORITHM");
-    if (threepdc != "ZERO") {
-        L3aaa_ = d6(na_, d5(na_, d4(na_, d3(na_, d2(na_, d1(na_))))));
-        L3aab_ = d6(na_, d5(na_, d4(na_, d3(na_, d2(na_, d1(na_))))));
-        L3abb_ = d6(na_, d5(na_, d4(na_, d3(na_, d2(na_, d1(na_))))));
-        L3bbb_ = d6(na_, d5(na_, d4(na_, d3(na_, d2(na_, d1(na_))))));
-        L3aaa = ambit::Tensor::build(ambit::CoreTensor, "L3aaa",
-                                     {na_, na_, na_, na_, na_, na_});
-        L3aab = ambit::Tensor::build(ambit::CoreTensor, "L3aab",
-                                     {na_, na_, na_, na_, na_, na_});
-        L3abb = ambit::Tensor::build(ambit::CoreTensor, "L3abb",
-                                     {na_, na_, na_, na_, na_, na_});
-        L3bbb = ambit::Tensor::build(ambit::CoreTensor, "L3bbb",
-                                     {na_, na_, na_, na_, na_, na_});
 
-        if (boost::starts_with(threepdc, "MK") &&
-            t_algorithm != "DSRG_NOSEMI") {
-            FormCumulant3(ci_rdms, L3aaa_, L3aab_, L3abb_, L3bbb_, threepdc);
-        } else if (threepdc == "DIAG") {
-            FormCumulant3_DIAG(determinant_, root_, L3aaa_, L3aab_, L3abb_,
-                               L3bbb_);
+    // fill in L2aa_, L3aaa_, ... if use old non-tensor dsrg code
+    if (options_.get_str("JOB_TYPE") == "MR-DSRG-PT2") {
+        L2aa_ = d4(na_, d3(na_, d2(na_, d1(na_))));
+        L2ab_ = d4(na_, d3(na_, d2(na_, d1(na_))));
+        L2bb_ = d4(na_, d3(na_, d2(na_, d1(na_))));
+
+        FormCumulant2(ci_rdms, L2aa_, L2ab_, L2bb_);
+
+        if (print_ > 2) {
+            print2PDC("L2aa", L2aa_, print_);
+            print2PDC("L2ab", L2ab_, print_);
+            print2PDC("L2bb", L2bb_, print_);
         }
-        if (print_ > 3) {
-            print3PDC("L3aaa", L3aaa_, print_);
-            print3PDC("L3aab", L3aab_, print_);
-            print3PDC("L3abb", L3abb_, print_);
-            print3PDC("L3bbb", L3bbb_, print_);
+
+        if (threepdc != "ZERO") {
+            L3aaa_ = d6(na_, d5(na_, d4(na_, d3(na_, d2(na_, d1(na_))))));
+            L3aab_ = d6(na_, d5(na_, d4(na_, d3(na_, d2(na_, d1(na_))))));
+            L3abb_ = d6(na_, d5(na_, d4(na_, d3(na_, d2(na_, d1(na_))))));
+            L3bbb_ = d6(na_, d5(na_, d4(na_, d3(na_, d2(na_, d1(na_))))));
+
+            if (t_algorithm != "DSRG_NOSEMI") {
+                FormCumulant3(ci_rdms, L3aaa_, L3aab_, L3abb_, L3bbb_,
+                              threepdc);
+            }
+            //            else if (threepdc == "DIAG") {
+            //                FormCumulant3_DIAG(determinant_, root_, L3aaa_,
+            //                L3aab_, L3abb_,
+            //                                   L3bbb_);
+            //            }
+
+            if (print_ > 3) {
+                print3PDC("L3aaa", L3aaa_, print_);
+                print3PDC("L3aab", L3aab_, print_);
+                print3PDC("L3abb", L3abb_, print_);
+                print3PDC("L3bbb", L3bbb_, print_);
+            }
+        }
+
+    } else {
+        size_t nelement2 = na_ * na_ * na_ * na_;
+        vector<double> tpdm_aa(nelement2, 0.0);
+        vector<double> tpdm_ab(nelement2, 0.0);
+        vector<double> tpdm_bb(nelement2, 0.0);
+
+        // compute 2RDM
+        ci_rdms.compute_2rdm(tpdm_aa, tpdm_ab, tpdm_bb);
+
+        // fill in L2aa, L2ab, L2bb tensors
+        compute_cumulant2(tpdm_aa, tpdm_ab, tpdm_bb);
+
+        size_t nelement3 = na_ * na_ * nelement2;
+        vector<double> tpdm_aaa, tpdm_aab, tpdm_abb, tpdm_bbb;
+        if (threepdc != "ZERO") {
+            tpdm_aaa = vector<double>(nelement3, 0.0);
+            tpdm_aab = vector<double>(nelement3, 0.0);
+            tpdm_abb = vector<double>(nelement3, 0.0);
+            tpdm_bbb = vector<double>(nelement3, 0.0);
+
+            // compute 3RDM
+            if (threepdc == "MK") {
+                ci_rdms.compute_3rdm(tpdm_aaa, tpdm_aab, tpdm_abb, tpdm_bbb);
+            }
+
+            // fill in L3aaa, L3aab, L3abb, L3bbb tensors
+            compute_cumulant3(tpdm_aaa, tpdm_aab, tpdm_abb, tpdm_bbb);
         }
     }
 
+    outfile->Printf("Done.\n");
     timer_off("Compute Ref");
 }
 
@@ -3663,7 +3688,7 @@ double FCI_MO::compute_sa_energy() {
 
         // compute one density using ci_rdms
         int dim = (eigen_[0].first)->dim();
-        SharedMatrix evecs(new Matrix("evecs", dim, dim));
+        SharedMatrix evecs(new Matrix("evecs", dim, eigen_size));
         for (int i = 0; i < eigen_size; ++i) {
             evecs->set_column(0, i, (eigen_[i]).first);
         }
@@ -3941,7 +3966,7 @@ void FCI_MO::xms_rotate(const int& irrep) {
             SharedMatrix Fock_MN(new Matrix("Fock_MN", nroots, nroots));
 
             int dim = (eigen[0].first)->dim();
-            SharedMatrix evecs(new Matrix("evecs", dim, dim));
+            SharedMatrix evecs(new Matrix("evecs", dim, nroots));
             for (int M = 0; M < nroots; ++M) {
                 evecs->set_column(0, M, (eigen[M]).first);
             }
@@ -4039,8 +4064,9 @@ void FCI_MO::compute_sa_ref() {
 
         // compute 2rdms and 3rdms
         int dim = (eigens_[n][0].first)->dim();
-        SharedMatrix evecs(new Matrix("evecs", dim, dim));
-        for (int i = 0; i < eigens_[n].size(); ++i) {
+        size_t eigen_size = eigens_[n].size();
+        SharedMatrix evecs(new Matrix("evecs", dim, eigen_size));
+        for (int i = 0; i < eigen_size; ++i) {
             evecs->set_column(0, i, (eigens_[n][i]).first);
         }
 
