@@ -1,5 +1,7 @@
 ![forte](lib/logos/forte_logo_github2.png)
 
+[![Build Status](https://travis-ci.org/evangelistalab/forte.svg?branch=master)](https://travis-ci.org/evangelistalab/forte)
+
 #### Code Authors: Evangelistalab
 #### Web: evangelistalab.org
 

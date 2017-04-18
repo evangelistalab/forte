@@ -48,12 +48,6 @@ matrix:
       - NAME='clang'
       - VERSION='3.6'
 
-before_install:
-  - uname -a
-  - free -m
-  - df -h
-  - ulimit -a
-
 install:
 - if [[ "$PYTHON_VER" == "2.7" ]]; then
     wget https://repo.continuum.io/miniconda/Miniconda2-latest-Linux-x86_64.sh -O miniconda.sh;
@@ -66,11 +60,11 @@ install:
 - conda config --set always_yes yes --set changeps1 no
 - conda update -q conda
 - conda info -a
-- conda create -q -n p4env python=$PYTHON_VER numpy cmake dftd3 libint libxc gdma libefp -c psi4/label/test -c psi4
+- conda create -q -n p4env python=$PYTHON_VER numpy cmake gdma libint libxc -c psi4/label/test -c psi4
 - source activate p4env
-- conda list
-- python -V
-- python -c 'import numpy; print(numpy.version.version)'
+#- conda list
+#- python -V
+#- python -c 'import numpy; print(numpy.version.version)'
 - cd ${TRAVIS_BUILD_DIR}
 - export CXX=${CXX_COMPILER}
 - export CC=${C_COMPILER}
@@ -116,13 +110,9 @@ install:
 - make -j2
 - export PYTHONPATH="${HOME}/build/evangelistalab:$PYTHONPATH"
 - hash -r
-- cd tests/methods
-- python run_forte_tests.py 
-#- ../.scripts/travis_build.sh
 script:
-- psi4 --version
-#- python ../.scripts/travis_run_test.py
-#- python ../.scripts/travis_print_failing.py
+- cd ${HOME}/build/evangelistalab/forte/tests/methods
+- python run_forte_tests_travis.py 
 
 # safelist
 branches:
