@@ -40,25 +40,20 @@
 #include "psi4/psi4-dec.h"
 #include "psi4/psifiles.h"
 
-#include "helpers.h"
-#include "multidimensional_arrays.h"
-#include "mp2_nos.h"
-#include "pci/pci.h"
-#include "pci/pci_hashvec.h"
-#include "pci/pci_simple.h"
 #include "aci/aci.h"
 #include "active_dsrgpt2.h"
 #include "blockedtensorfactory.h"
 #include "casscf.h"
-#include "ci-no/ci-no.h"
 #include "cc.h"
+#include "ci-no/ci-no.h"
 #include "fci/fci.h"
 #include "fci_mo.h"
 #include "fcimc.h"
 #include "finite_temperature.h"
 #include "helpers.h"
-#include "localize.h"
+#include "orbital-helper/localize.h"
 #include "mcsrgpt2_mo.h"
+#include "mp2_nos.h"
 #include "mp2_nos.h"
 #include "mrci.h"
 #include "mrdsrg-so/mrdsrg_so.h"
@@ -69,6 +64,10 @@
 #include "mrdsrg-spin-free/mrdsrg.h"
 #include "mrdsrg-spin-free/three_dsrg_mrpt2.h"
 #include "multidimensional_arrays.h"
+#include "multidimensional_arrays.h"
+#include "pci/pci.h"
+#include "pci/pci_hashvec.h"
+#include "pci/pci_simple.h"
 #include "sq.h"
 #include "tensorsrg.h"
 #include "v2rdm.h"
@@ -146,8 +145,8 @@ void forte_old_methods(SharedWavefunction ref_wfn, Options& options,
         }
     }
     if (options.get_str("JOB_TYPE") == "PCI_HASHVEC") {
-        auto pci_hashvec = std::make_shared<ProjectorCI_HashVec>(ref_wfn, options, ints,
-                                                 mo_space_info);
+        auto pci_hashvec = std::make_shared<ProjectorCI_HashVec>(
+            ref_wfn, options, ints, mo_space_info);
         for (int n = 0; n < options.get_int("NROOT"); ++n) {
             pci_hashvec->compute_energy();
         }
@@ -323,8 +322,8 @@ void forte_old_methods(SharedWavefunction ref_wfn, Options& options,
     if (options.get_str("JOB_TYPE") == "DSRG-MRPT2") {
         std::string cas_type = options.get_str("CAS_TYPE");
         if (cas_type == "CAS") {
-            std::shared_ptr<FCI_MO> fci_mo(
-                new FCI_MO(ref_wfn, options, ints, mo_space_info));
+            std::shared_ptr<FCI_MO> fci_mo =
+                std::make_shared<FCI_MO>(ref_wfn, options, ints, mo_space_info);
             if (options["AVG_STATE"].has_changed()) {
                 std::string ms_type = options.get_str("DSRG_MULTI_STATE");
                 if (ms_type.find("SA") != std::string::npos) {
@@ -337,8 +336,9 @@ void forte_old_methods(SharedWavefunction ref_wfn, Options& options,
                     fci_mo->compute_sa_energy();
                 }
                 Reference reference = fci_mo->reference();
-                std::shared_ptr<DSRG_MRPT2> dsrg_mrpt2(new DSRG_MRPT2(
-                    reference, ref_wfn, options, ints, mo_space_info));
+                std::shared_ptr<DSRG_MRPT2> dsrg_mrpt2 =
+                    std::make_shared<DSRG_MRPT2>(reference, ref_wfn, options,
+                                                 ints, mo_space_info);
                 dsrg_mrpt2->set_p_spaces(fci_mo->p_spaces());
                 dsrg_mrpt2->set_eigens(fci_mo->eigens());
                 dsrg_mrpt2->compute_energy_multi_state();
@@ -349,11 +349,18 @@ void forte_old_methods(SharedWavefunction ref_wfn, Options& options,
                     fci_mo->compute_energy();
                 }
                 Reference reference = fci_mo->reference();
-                std::shared_ptr<DSRG_MRPT2> dsrg_mrpt2(new DSRG_MRPT2(
-                    reference, ref_wfn, options, ints, mo_space_info));
+                std::shared_ptr<DSRG_MRPT2> dsrg_mrpt2 =
+                    std::make_shared<DSRG_MRPT2>(reference, ref_wfn, options,
+                                                 ints, mo_space_info);
                 if (options.get_str("RELAX_REF") != "NONE") {
                     dsrg_mrpt2->compute_energy_relaxed();
                 } else {
+                    std::string actv_type =
+                        options.get_str("FCIMO_ACTV_TYPE");
+                    if (actv_type == "CIS" || actv_type == "CISD") {
+                        dsrg_mrpt2->set_actv_occ(fci_mo->actv_occ());
+                        dsrg_mrpt2->set_actv_uocc(fci_mo->actv_uocc());
+                    }
                     dsrg_mrpt2->compute_energy();
                 }
             }
@@ -361,21 +368,22 @@ void forte_old_methods(SharedWavefunction ref_wfn, Options& options,
 
         if (cas_type == "FCI") {
             if (options.get_bool("SEMI_CANONICAL")) {
-                std::shared_ptr<FCI> fci(
-                    new FCI(ref_wfn, options, ints, mo_space_info));
+                std::shared_ptr<FCI> fci = std::make_shared<FCI>(
+                    ref_wfn, options, ints, mo_space_info);
                 fci->set_max_rdm_level(1);
                 fci->compute_energy();
                 Reference reference2 = fci->reference();
                 SemiCanonical semi(ref_wfn, options, ints, mo_space_info,
                                    reference2);
             }
-            std::shared_ptr<FCI> fci(
-                new FCI(ref_wfn, options, ints, mo_space_info));
+            std::shared_ptr<FCI> fci =
+                std::make_shared<FCI>(ref_wfn, options, ints, mo_space_info);
             fci->set_max_rdm_level(3);
             fci->compute_energy();
             Reference reference = fci->reference();
-            std::shared_ptr<DSRG_MRPT2> dsrg_mrpt2(new DSRG_MRPT2(
-                reference, ref_wfn, options, ints, mo_space_info));
+            std::shared_ptr<DSRG_MRPT2> dsrg_mrpt2 =
+                std::make_shared<DSRG_MRPT2>(reference, ref_wfn, options, ints,
+                                             mo_space_info);
             if (options.get_str("RELAX_REF") != "NONE") {
                 dsrg_mrpt2->compute_energy_relaxed();
             } else {
@@ -461,6 +469,12 @@ void forte_old_methods(SharedWavefunction ref_wfn, Options& options,
             std::shared_ptr<THREE_DSRG_MRPT2> three_dsrg_mrpt2(
                 new THREE_DSRG_MRPT2(reference, ref_wfn, options, ints,
                                      mo_space_info));
+
+            std::string actv_type = options.get_str("FCIMO_ACTV_TYPE");
+            if (actv_type == "CIS" || actv_type == "CISD") {
+                three_dsrg_mrpt2->set_actv_occ(fci_mo.actv_occ());
+                three_dsrg_mrpt2->set_actv_uocc(fci_mo.actv_uocc());
+            }
             three_dsrg_mrpt2->compute_energy();
         }
 

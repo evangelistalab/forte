@@ -277,16 +277,14 @@ class SparseCISolver {
     /// Enable/disable spin projection
     void set_spin_project(bool value);
 
+    /// Enable/disable spin projection in full algorithm
+    void set_spin_project_full(bool value);
+
     /// Enable/disable root projection
     void set_root_project(bool value);
 
     /// Set convergence threshold
     void set_e_convergence(double value);
-
-    /// Set true to ignore the size test of the space in diagonalize_hamiltonian
-    void set_force_diag_method(bool force_diag_method) {
-        force_diag_method_ = force_diag_method;
-    }
 
     /// The maximum number of iterations for the Davidson algorithm
     void set_maxiter_davidson(int value);
@@ -364,6 +362,8 @@ class SparseCISolver {
     bool print_details_ = true;
     /// Project solutions onto given multiplicity?
     bool spin_project_ = false;
+    /// Project solutions onto given multiplicity in full algorithm?
+    bool spin_project_full_ = true;
     /// Project solutions onto given root?
     bool root_project_ = false;
     /// The energy convergence threshold
@@ -374,8 +374,6 @@ class SparseCISolver {
     int nsubspace_per_root_ = 4;
     /// Maximum number of iterations in the Davidson-Liu algorithm
     int maxiter_davidson_ = 100;
-    /// Force to use diag_method no matter how small the space is
-    bool force_diag_method_ = false;
     /// Initial guess size per root
     size_t dl_guess_ = 200;
 

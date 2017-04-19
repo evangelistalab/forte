@@ -2,6 +2,11 @@
 
 import forte
 
+Eoovv = -77.995170959945227
+Eauto = -77.995168905999904
+Eall  = -77.995164435596493
+
+
 molecule C2H4{
 0 1
 H  0.000000  0.923274  1.238289
@@ -22,6 +27,7 @@ set {
   maxiter       100
 }
 Escf, wfn = energy('scf', return_wfn=True)
+Ca_hf = wfn.Ca().clone()
 
 set forte{
   job_type             active-dsrgpt2
@@ -30,17 +36,30 @@ set forte{
   active               [1,0,1,1,0,1,1,1]
   dsrg_s               0.5
   cas_type             cas
-  active_space_type    cis
+  fcimo_actv_type      cisd
+  fcimo_cisd_nohf      true
   nrootpi              [1,0,0,0,0,1,0,0]
   d_convergence        10
   internal_amp         singles_doubles
-  internal_amp_select  auto
+  internal_amp_select  oovv
 }
-Econv = energy('forte', ref_wfn = wfn)
+Esd_oovv = energy('forte', ref_wfn = wfn)
+compare_values(Eoovv,Esd_oovv,10,"VCISD-DSRG-MRPT2 INTERNAL: SD OOVV")
+
+C = wfn.Ca()
+C = Ca_hf
 
 set forte{
-  int_type             cholesky
-  cholesky_tolerance   10
+  internal_amp_select  all
 }
-Ecd = energy('forte', ref_wfn = wfn)
-compare_values(Econv,Ecd,8,"DSRG-MRPT2 vs CD-DSRG-MRPT2")
+Esd_all = energy('forte', ref_wfn = wfn)
+compare_values(Eall ,Esd_all ,10,"VCISD-DSRG-MRPT2 INTERNAL: SD ALL")
+
+C = wfn.Ca()
+C = Ca_hf
+
+set forte{
+  internal_amp_select  auto
+}
+Esd_auto = energy('forte', ref_wfn = wfn)
+compare_values(Eauto,Esd_auto,10,"VCISD-DSRG-MRPT2 INTERNAL: SD AUTO")
