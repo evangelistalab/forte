@@ -155,7 +155,8 @@ def print_build_help(build_path, args):
     print('   now you need to compile the sources:')
     print('   >>> %s' % generate_cmake_command(args) )
     print('   >>> make')
-
+    cmake_commands_file = open('cmake_commands','w+')
+    cmake_commands_file.write(generate_cmake_command(args))
 
 def save_setup_command(argv, build_path):
     file_name = os.path.join(build_path, 'setup_command')

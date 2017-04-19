@@ -7,12 +7,12 @@ import re
 import datetime
 
 class bcolors:
-    HEADER = '\033[95m'
-    OKBLUE = '\033[94m'
-    OKGREEN = '\033[92m'
-    WARNING = '\033[93m'
-    FAIL = '\033[91m'
-    ENDC = '\033[0m'
+    HEADER = ''
+    OKBLUE = ''
+    OKGREEN = ''
+    WARNING = ''
+    FAIL = ''
+    ENDC = ''
 
 timing_re = re.compile(r"Your calculation took (\d+.\d+) seconds")
 
@@ -21,14 +21,14 @@ psi4command = ""
 
 print "Running forte tests using the psi4 executable found in:\n  %s\n" % psi4command
 
-fci_tests = ["fci-1","fci-2","fci-3","fci-4","fci-5","fci-6","fci-rdms-1","fci-rdms-2","fci-rdms-3","fci-ex-1"]
+fci_tests = ["fci-1","fci-2","fci-3","fci-4","fci-5","fci-rdms-1","fci-rdms-2","fci-rdms-3","fci-ex-1"]
 
 lambda_ci_tests = ["casci-1","casci-2","casci-3","casci-4",
                      "casci-5-fc","casci-6-fc","casci-7-fc","casci-8-fc",
                      "lambda+sd-ci-1","lambda+sd-ci-2"]
 
 adaptive_ci_tests = ["aci-1","aci-2","aci-3",
-                     "aci-4","aci-5","aci-6",
+                     "aci-4","aci-5",
                      "aci-7","aci-8","aci-9",
                      "aci-10","aci-11","aci-12",
                      "aci-13","aci-14","aci-15","aci_scf-1","cis-aci-1",
@@ -38,26 +38,24 @@ pci_tests = ["pci-1","pci-2","pci-3","pci-4","pci-5", "pci-6", "pci-7", "pci-8",
 fciqmc_tests = ["fciqmc"]
 ct_tests = ["ct-1","ct-2","ct-3","ct-4","ct-5","ct-6","ct-7-fc"]
 dsrg_tests = ["dsrg-1","dsrg-2"]
-mrdsrg_tests = ["mrdsrg-pt2-1","mrdsrg-pt2-2","mrdsrg-pt2-3","mrdsrg-pt2-4"]
-dsrg_mrpt3_tests = ["dsrg-mrpt3-1","dsrg-mrpt3-2","dsrg-mrpt3-3","dsrg-mrpt3-4","dsrg-mrpt3-5"]
-dsrg_mrpt2_tests = ["mr-dsrg-pt2-1","mr-dsrg-pt2-2","mr-dsrg-pt2-3","mr-dsrg-pt2-4",
-                    "dsrg-mrpt2-1","dsrg-mrpt2-2","dsrg-mrpt2-3","dsrg-mrpt2-4","dsrg-mrpt2-5","dsrg-mrpt2-6",
-                    "dsrg-mrpt2-7","dsrg-mrpt2-8-sa","dsrg-mrpt2-9-xms",
+mrdsrg_tests = ["mrdsrg-pt2-1","mrdsrg-pt2-2","mrdsrg-pt2-4"]
+dsrg_mrpt3_tests = ["dsrg-mrpt3-1","dsrg-mrpt3-2","dsrg-mrpt3-5"]
+dsrg_mrpt2_tests = ["mr-dsrg-pt2-1","mr-dsrg-pt2-2","mr-dsrg-pt2-4",
+                    "dsrg-mrpt2-1","dsrg-mrpt2-2","dsrg-mrpt2-3","dsrg-mrpt2-4","dsrg-mrpt2-5",
+                    "dsrg-mrpt2-7","dsrg-mrpt2-8-sa",
                     "cd-dsrg-mrpt2-1","cd-dsrg-mrpt2-2","cd-dsrg-mrpt2-3","cd-dsrg-mrpt2-4","cd-dsrg-mrpt2-5",
                     "df-dsrg-mrpt2-1", "df-dsrg-mrpt2-2", "df-dsrg-mrpt2-3", "df-dsrg-mrpt2-4", "df-dsrg-mrpt2-5",
                     "df-dsrg-mrpt2-threading1", "df-dsrg-mrpt2-threading2", "df-dsrg-mrpt2-threading4",
                     "diskdf-dsrg-mrpt2-threading1", "diskdf-dsrg-mrpt2-threading4",
                     "diskdf-dsrg-mrpt2-1", "diskdf-dsrg-mrpt2-2", "diskdf-dsrg-mrpt2-3", "diskdf-dsrg-mrpt2-4", "diskdf-dsrg-mrpt2-5",
                     "aci-dsrg-mrpt2-1","aci-dsrg-mrpt2-2","df-aci-dsrg-mrpt2-1", "df-aci-dsrg-mrpt2-2", "cd-dsrg-mrpt2-8"]
-active_dsrgpt2_tests = ["actv-dsrg-1-C2H4-cis", "actv-dsrg-2-C2H4-cisd", "actv-dsrg-ipea-1", "actv-dsrg-ipea-2",
-                        "actv-dsrg-size-intensive", "actv-dsrg-3-C4H6-cisd", "actv-dsrg-4-C4H6-triplet"]
 
 casscf_tests = ["casscf", "casscf-2","casscf-3", "casscf-4", "casscf-5", "casscf-6", "casscf-7", "df-casscf-1"]
 dmrg_tests = ["dmrgscf-1", "df-dmrgscf-1", "cd-dmrgscf-1", "dmrg-dsrg-mrpt2-1", "dmrg-dsrg-mrpt2-2"]
 
 #tests =  fci_tests + casscf_tests + dsrg_mrpt2_tests + adaptive_ci_tests + pci_tests + fciqmc_tests + ct_tests + dsrg_tests
 #tests =  fci_tests + casscf_tests + dsrg_mrpt2_tests + dmrg_tests + mrdsrg_tests + adaptive_ci_tests + pci_tests
-tests = fci_tests + casscf_tests + dsrg_mrpt2_tests + active_dsrgpt2_tests + dsrg_mrpt3_tests + mrdsrg_tests + adaptive_ci_tests + pci_tests
+tests = fci_tests + casscf_tests + dsrg_mrpt2_tests + dsrg_mrpt3_tests + mrdsrg_tests + adaptive_ci_tests + pci_tests
 
 maindir = os.getcwd()
 if len(sys.argv) == 1:
@@ -88,7 +86,7 @@ for d in tests:
     except:
         # something went wrong
         successful = False
-        test_results[d] = "DOES NOT MATCH"
+        test_results[d] = "FAILED"
 
     if successful:
         # Check if FORTE ended successfully
@@ -104,16 +102,12 @@ for d in tests:
 
 summary = []
 failed = []
-nomatch = []
 for d in tests:
     if test_results[d] == "PASSED":
         msg = bcolors.OKGREEN + "PASSED" + bcolors.ENDC
     elif test_results[d] == "FAILED":
         msg = bcolors.FAIL + "FAILED" + bcolors.ENDC
         failed.append(d)
-    elif test_results[d] == "DOES NOT MATCH":
-        msg = bcolors.FAIL + "DOES NOT MATCH" + bcolors.ENDC
-        nomatch.append(d)
 
     filler = "." * (81 - len(d + msg))
     summary.append("        %s%s%s" % (d.upper(),filler,msg))
@@ -127,11 +121,10 @@ test_result_log = open("test_results","w+")
 test_result_log.write("\n".join(summary))
 
 nfailed = len(failed)
-nnomatch = len(nomatch)
-if nnomatch + nfailed == 0:
+if nfailed == 0:
     print "Tests: All passed\n"
 else:
-    print "Tests: %d passed, %d failed, %d did not match\n" % (len(tests) -  nnomatch - nfailed,nfailed,nnomatch)
+    print "Tests: %d passed and %d failed\n" % (len(tests) -  nfailed,nfailed)
     # Get the current date and time
     dt = datetime.datetime.now()
     now = dt.strftime("%Y-%m-%d-%H:%M")
@@ -139,7 +132,5 @@ else:
         failed_log = open("failed_tests","w+")
         failed_log.write("# %s\n" % now)
         failed_log.write("\n".join(failed))
-    if nnomatch > 0:
-        nomatch_log = open("nomatch_tests","w+")
-        nomatch_log.write("# %s\n" % now)
-        nomatch_log.write("\n".join(nomatch))
+        failed_log.close()
+        exit(1)

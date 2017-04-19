@@ -47,6 +47,16 @@ DeterminantMap::DeterminantMap(std::vector<STLBitsetDeterminant>& dets) {
     }
 }
 
+DeterminantMap::DeterminantMap(const std::vector<STLBitsetDeterminant>& dets) {
+    // The dimension of the wavefunction
+    wfn_size_ = dets.size();
+
+    // Take the determinants and coefficients and build the hash
+    for (size_t I = 0; I < wfn_size_; ++I) {
+        wfn_[dets[I]] = I;
+    }
+}
+
 DeterminantMap::DeterminantMap(STLBitsetDeterminant& det) {
     wfn_[det] = 0;
     wfn_size_ = wfn_.size();
@@ -261,9 +271,9 @@ void DeterminantMap::merge(DeterminantMap& dets) {
 
 void DeterminantMap::copy( DeterminantMap& dets ){
     this->clear();
-    wfn_ = dets.wfn_;   
+    wfn_ = dets.wfn_;
     wfn_size_ = dets.size();
-}   
+}
 
 }
 }

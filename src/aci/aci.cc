@@ -92,6 +92,8 @@ void set_ACI_options(ForteOptions& foptions)
     foptions.add_bool("ACI_ENFORCE_SPIN_COMPLETE", true, "Enforce determinant spaces to be spin-complete");
     /*- Project out spin contaminants in Davidson-Liu's algorithm? -*/
     foptions.add_bool("ACI_PROJECT_OUT_SPIN_CONTAMINANTS", true, "Project out spin contaminants in Davidson-Liu's algorithm");
+    /*- Project solution in full diagonalization algorithm -*/
+    foptions.add_bool("SPIN_PROJECT_FULL", false, "Project solution in full diagonalization algorithm");
     /*- Add "degenerate" determinants not included in the aimed selection?
      * -*/
     foptions.add_bool("ACI_ADD_AIMED_DEGENERATE", true, "Add degenerate determinants not included in the aimed selection");
@@ -142,6 +144,9 @@ void set_ACI_options(ForteOptions& foptions)
 
     /*- Compute full PT2 energy -*/
     foptions.add_bool("MRPT2", false, "Compute full PT2 energy");
+
+    /*- Compute unpaired electron density -*/
+    foptions.add_bool("UNPAIRED_DENSITY", false, "Compute unpaired electron density");
 }
 
 
@@ -170,7 +175,6 @@ void AdaptiveCI::startup() {
         quiet_mode_ = options_.get_bool("ACI_QUIET_MODE");
     }
 
-    op_.set_quiet_mode(quiet_mode_);
 
     fci_ints_ = std::make_shared<FCIIntegrals>(
         ints_, mo_space_info_->get_corr_abs_mo("ACTIVE"),
@@ -578,6 +582,7 @@ double AdaptiveCI::compute_energy() {
         ex_alg_ = "AVERAGE";
     }
 
+    op_.set_quiet_mode(quiet_mode_);
     Timer aci_elapse;
 
     // The eigenvalues and eigenvectors
@@ -669,8 +674,8 @@ double AdaptiveCI::compute_energy() {
         sparse_solver.set_maxiter_davidson(
             options_.get_int("DL_MAXITER"));
         sparse_solver.set_spin_project(project_out_spin_contaminants_);
-        sparse_solver.set_force_diag(options_.get_bool("FORCE_DIAG_METHOD"));
         sparse_solver.set_guess_dimension(options_.get_int("DL_GUESS_SIZE"));
+        sparse_solver.set_spin_project_full(false);
         sparse_solver.diagonalize_hamiltonian_map(
             full_space, op_c, PQ_evals, PQ_evecs, nroot_,
             wavefunction_multiplicity_, diag_method_);
@@ -756,6 +761,12 @@ double AdaptiveCI::compute_energy() {
   //  }
 
     // printf( "\n%1.5f\n", aci_elapse.get());
+
+    if( options_.get_bool("UNPAIRED_DENSITY")){
+        UPDensity density(reference_wavefunction_, mo_space_info_) ;
+        density.compute_unpaired_density( ordm_a_, ordm_b_ );
+    }
+
     return PQ_evals->get(options_.get_int("ACI_ROOT")) + nuclear_repulsion_energy_ +
            fci_ints_->scalar_energy();
 }
@@ -1777,7 +1788,7 @@ void AdaptiveCI::prune_q_space(DeterminantMap& PQ_space,
                     break;
                 }
             }
-            if (num_extra > 0) {
+            if (num_extra > 0 and !quiet_mode_) {
                 outfile->Printf(
                     "\n  Added %zu missing determinants in aimed selection.",
                     num_extra);
@@ -2597,10 +2608,10 @@ void AdaptiveCI::compute_aci(DeterminantMap& PQ_space, SharedMatrix& PQ_evecs,
     sparse_solver.set_e_convergence(options_.get_double("E_CONVERGENCE"));
     sparse_solver.set_maxiter_davidson(options_.get_int("DL_MAXITER"));
     sparse_solver.set_spin_project(project_out_spin_contaminants_);
-    sparse_solver.set_force_diag(options_.get_bool("FORCE_DIAG_METHOD"));
     sparse_solver.set_guess_dimension(options_.get_int("DL_GUESS_SIZE"));
     sparse_solver.set_num_vecs(nvec);
     sparse_solver.set_sigma_method( sigma_method );
+    sparse_solver.set_spin_project_full(false);
     int spin_projection = options_.get_int("ACI_SPIN_PROJECTION");
 
    // if (det_save_)
@@ -2944,8 +2955,7 @@ void AdaptiveCI::compute_rdms(DeterminantMap& dets, WFNOperator& op,
     if (rdm_level_ >= 1) {
         Timer one_r;
         ci_rdms_.compute_1rdm(ordm_a_, ordm_b_, op);
-        if (!quiet_mode_)
-            outfile->Printf("\n  1-RDM  took %2.6f s (determinant)",
+        outfile->Printf("\n  1-RDM  took %2.6f s (determinant)",
                             one_r.get());
 
         if (options_.get_bool("ACI_PRINT_NO")) {
@@ -2955,15 +2965,13 @@ void AdaptiveCI::compute_rdms(DeterminantMap& dets, WFNOperator& op,
     if (rdm_level_ >= 2) {
         Timer two_r;
         ci_rdms_.compute_2rdm(trdm_aa_, trdm_ab_, trdm_bb_, op);
-        if (!quiet_mode_)
-            outfile->Printf("\n  2-RDMS took %2.6f s (determinant)",
+        outfile->Printf("\n  2-RDMS took %2.6f s (determinant)",
                             two_r.get());
     }
     if (rdm_level_ >= 3) {
         Timer tr;
         ci_rdms_.compute_3rdm(trdm_aaa_, trdm_aab_, trdm_abb_, trdm_bbb_, op);
-        if (!quiet_mode_)
-            outfile->Printf("\n  3-RDMs took %2.6f s (determinant)", tr.get());
+        outfile->Printf("\n  3-RDMs took %2.6f s (determinant)", tr.get());
 
         if (options_.get_bool("ACI_TEST_RDMS")) {
             ci_rdms_.rdm_test(ordm_a_, ordm_b_, trdm_aa_, trdm_bb_, trdm_ab_,
@@ -3185,8 +3193,10 @@ void AdaptiveCI::compute_nos()
     Matrix Ua("Ua", nmopi, nmopi);
     Matrix Ub("Ub", nmopi, nmopi);
 
-    Ua.identity();
-    Ub.identity();
+//    Ua.identity();
+//    Ub.identity();
+    Ua.zero(); 
+    Ua.zero(); 
 
     for( int h = 0; h < nirrep_; ++h ){
         size_t irrep_offset = 0;
@@ -3211,9 +3221,35 @@ void AdaptiveCI::compute_nos()
     Ca_new->gemm(false, false, 1.0, Ca, Ua, 0.0);
     Cb_new->gemm(false, false, 1.0, Cb, Ub, 0.0);
 
+    // Compute unpaired-spin scaled NOs
+//    for( int h = 0; h < nirrep_; ++h ){
+//        int offset = fdocc[h] + rdocc[h];
+//        for( int p = 0; p < nactpi_[h]; ++p ){
+//            double n_p = OCC_A->get(p) + OCC_B->get(p);
+//            //double up_el = std::sqrt( n_p * (2.0 - n_p)); 
+//            double up_el = n_p * (2.0 - n_p); 
+//            //double up_el = n_p*n_p * (2.0 - n_p) * (2.0 - n_p); 
+//            outfile->Printf("\n  %d,%d: %1.5f", h,p,up_el); 
+//            Ca_new->scale_column(h, offset + p, up_el);
+//            Cb_new->scale_column(h, offset + p, up_el);
+//        }
+//    }
+//
     Ca->copy(Ca_new);
     Cb->copy(Cb_new);
+/*
+    SharedMatrix Da = reference_wavefunction_->Da();
+    SharedMatrix Db = reference_wavefunction_->Db();
 
+    SharedMatrix Da_new(new Matrix("dan", nmopi, nmopi));
+    SharedMatrix Db_new(new Matrix("dbn", nmopi, nmopi));
+
+    Da_new->gemm(false, true, 1.0, Ca, Ca, 0.0);
+    Db_new->gemm(false, true, 1.0, Cb, Cb, 0.0);
+
+    Da->copy(Da_new);
+    Db->copy(Db_new);
+*/
     // Retransform the integarms in the new basis
     ints_->retransform_integrals();
 

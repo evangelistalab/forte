@@ -282,7 +282,7 @@ void DFIntegrals::gather_integrals() {
 
     std::string str_read = "Reading DF Integrals";
     if (print_ > 0) {
-        outfile->Printf("\n  %-36s . . .", str_read.c_str());
+        outfile->Printf("\n  %-36s ...", str_read.c_str());
     }
     fread(&(Bpq->pointer()[0][0]), sizeof(double), naux * (nmo_) * (nmo_), Bf);
     if (print_ > 0) {
@@ -385,7 +385,7 @@ void DFIntegrals::make_fock_matrix(SharedMatrix gamma_aM,
 void DFIntegrals::resort_three(SharedMatrix& threeint,
                                std::vector<size_t>& map) {
     // Create a temperature threeint matrix
-    SharedMatrix temp_threeint(threeint->clone());
+    SharedMatrix temp_threeint(new Matrix("tmp", ncmo_*ncmo_, nthree_));
     temp_threeint->zero();
 
     // Borrwed from resort_four.
