@@ -27,6 +27,12 @@ void set_AVAS_options(ForteOptions& foptions) {
                      "number of active occupied orbitals. "
                      "It takes priority over the "
                      "threshold based selection.");
+    //add options of diagonalizing S
+    foptions.add_bool("AVAS_DIAGONALIZE",true,
+                      "Allow the users to specify"
+                      "diagonalization of Socc and Svir"
+                      "It takes priority over the"
+                      "threshold based selection.");
 }
 
 void make_avas(SharedWavefunction ref_wfn, Options& options, SharedMatrix Ps) {
@@ -47,48 +53,85 @@ void make_avas(SharedWavefunction ref_wfn, Options& options, SharedMatrix Ps) {
 
         SharedMatrix CPsC = Ps->clone();
         CPsC->transform(ref_wfn->Ca());
-
-        // Grab the occupied block and diagonalize it
-        for (int i = 0; i < nocc; i++) {
-            for (int j = 0; j < nocc; j++) {
-                double value = CPsC->get(i, j);
-                Socc->set(i, j, value);
-            }
-        }
+        //No diagonalization Socc and Svir
+        bool diagonalize_s = options.get_bool("AVAS_DIAGONALIZE");
 
         auto Uocc = std::make_shared<Matrix>("U occupied block", nocc, nocc);
         auto sigmaocc = std::make_shared<Vector>("sigma occupied block", nocc);
 
-        Socc->diagonalize(Uocc, sigmaocc, descending);
-
-        // Grab the virtual block and diagonalize it
-        for (int a = 0; a < nvir; a++) {
-            for (int b = 0; b < nvir; b++) {
-                double value = CPsC->get(nocc + a, nocc + b);
-                Svir->set(a, b, value);
-            }
-        }
-
         auto Uvir = std::make_shared<Matrix>("U virtual block", nvir, nvir);
         auto sigmavir = std::make_shared<Vector>("sigma virtual block", nvir);
 
-        Svir->diagonalize(Uvir, sigmavir, descending);
-
-        // Form the full matrix U
         auto U = std::make_shared<Matrix>("U", nmo, nmo);
 
-        for (int i = 0; i < nocc; i++) {
-            for (int j = 0; j < nocc; j++) {
-                double value = Uocc->get(i, j);
-                U->set(i, j, value);
+        // diagnolize S
+        if(diagonalize_s){
+            // Grab the occupied block and diagonalize it
+            for (int i = 0; i < nocc; i++) {
+                for (int j = 0; j < nocc; j++) {
+                    double value = CPsC->get(i, j);
+                    Socc->set(i, j, value);
+                }
+            }
+
+            int i = 9;
+            Socc->diagonalize(Uocc, sigmaocc, descending);
+
+            // Grab the virtual block and diagonalize it
+            for (int a = 0; a < nvir; a++) {
+                for (int b = 0; b < nvir; b++) {
+                    double value = CPsC->get(nocc + a, nocc + b);
+                    Svir->set(a, b, value);
+                }
+            }
+
+            Svir->diagonalize(Uvir, sigmavir, descending);
+
+            // Form the full matrix U
+            for (int i = 0; i < nocc; i++) {
+                for (int j = 0; j < nocc; j++) {
+                    double value = Uocc->get(i, j);
+                    U->set(i, j, value);
+                }
+            }
+            for (int a = 0; a < nvir; a++) {
+                for (int b = 0; b < nvir; b++) {
+                    double value = Uvir->get(a, b);
+                    U->set(a + nocc, b + nocc, value);
+                }
             }
         }
-        for (int a = 0; a < nvir; a++) {
-            for (int b = 0; b < nvir; b++) {
-                double value = Uvir->get(a, b);
-                U->set(a + nocc, b + nocc, value);
+        else{
+            //Socc
+            for (int i = 0; i < nocc; i++) {
+                for (int j = 0; j < nocc; j++) {
+                    double value = CPsC->get(i, j);
+                    Socc->set(i, j, value);
+                }
             }
-        }
+            auto sigmaocc = std::make_shared<Vector>("sigma occupied block", nocc);
+            for (int i = 0; i < nocc; i++){
+                double value =Socc->get(i, i);
+                sigmaocc->set(i,value);
+            }
+            //Svir
+            for (int a = 0; a < nvir; a++) {
+                for (int b = 0; b < nvir; b++) {
+                    double value = CPsC->get(nocc + a, nocc + b);
+                    Svir->set(a, b, value);
+                }
+            }
+            auto sigmavir = std::make_shared<Vector>("sigma virtual block", nvir);
+            for (int a = 0; a < nvir; a++){
+                double value =Svir->get(a, a);
+                sigmavir->set(a,value);
+            }
+            for (int p = 0; p < nmo; p++) {
+                for (int q = 0; q < nmo; q++) {
+                    U->set(p,q, p == q ? 1.0 : 0.0);
+                }
+            }
+        }//end options of dia
 
         auto Ca_tilde = Matrix::doublet(ref_wfn->Ca(), U);
 
@@ -220,7 +263,7 @@ void make_avas(SharedWavefunction ref_wfn, Options& options, SharedMatrix Ps) {
         auto Cva = semicanonicalize_block(ref_wfn, Ca_tilde, vir_act, nocc);
 
         auto Ca_tilde_prime =
-            std::make_shared<Matrix>("C tilde prime", nso, nmo);
+                std::make_shared<Matrix>("C tilde prime", nso, nmo);
 
         int offset = 0;
         for (auto& C_block : {Coi, Coa, Cva, Cvi}) {
@@ -263,7 +306,7 @@ SharedMatrix semicanonicalize_block(SharedWavefunction ref_wfn,
     }
     // compute (C_block)^T F C_block
     auto Foi =
-        Matrix::triplet(C_block, ref_wfn->Fa(), C_block, true, false, false);
+            Matrix::triplet(C_block, ref_wfn->Fa(), C_block, true, false, false);
 
     auto U_block = std::make_shared<Matrix>("U block", nmo_block, nmo_block);
     auto epsilon_block = std::make_shared<Vector>("epsilon block", nmo_block);
