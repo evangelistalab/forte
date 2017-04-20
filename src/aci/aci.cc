@@ -565,6 +565,9 @@ std::vector<int> AdaptiveCI::get_occupation() {
 
 double AdaptiveCI::compute_energy() {
  //   if (!quiet_mode_) {
+    if (options_["ACI_QUIET_MODE"].has_changed()) {
+        quiet_mode_ = options_.get_bool("ACI_QUIET_MODE");
+    }
         print_method_banner({"Adaptive Configuration Interaction",
                              "written by Jeffrey B. Schriber and Francesco A. Evangelista"});
         outfile->Printf("\n  ==> Reference Information <==\n");
