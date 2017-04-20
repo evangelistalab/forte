@@ -109,7 +109,6 @@ void make_avas(SharedWavefunction ref_wfn, Options& options, SharedMatrix Ps) {
                     Socc->set(i, j, value);
                 }
             }
-            auto sigmaocc = std::make_shared<Vector>("sigma occupied block", nocc);
             for (int i = 0; i < nocc; i++){
                 double value =Socc->get(i, i);
                 sigmaocc->set(i,value);
@@ -121,7 +120,6 @@ void make_avas(SharedWavefunction ref_wfn, Options& options, SharedMatrix Ps) {
                     Svir->set(a, b, value);
                 }
             }
-            auto sigmavir = std::make_shared<Vector>("sigma virtual block", nvir);
             for (int a = 0; a < nvir; a++){
                 double value =Svir->get(a, a);
                 sigmavir->set(a,value);
