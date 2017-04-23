@@ -32,7 +32,7 @@ set {
   maxiter        100
 }
 Escf, wfn = energy('scf', return_wfn=True)
-compare_values(r_scf, Escf, 10, "SCF energy")
+compare_values(r_scf, Escf, 8, "SCF energy")
 
 set forte{
   job_type           active-dsrgpt2
