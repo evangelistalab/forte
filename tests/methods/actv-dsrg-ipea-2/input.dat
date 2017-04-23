@@ -3,7 +3,7 @@ import forte
 refscf     = -460.09810235902489
 refdsrg_b1 = -459.82835337288083
 
-memory 200 mb
+memory 500 mb
 
 molecule {
 0 1

@@ -32,7 +32,7 @@ set {
   maxiter        100
 }
 Escf, wfn = energy('scf', return_wfn=True)
-compare_values(r_scf, Escf, 10, "SCF energy")
+compare_values(r_scf, Escf, 8, "SCF energy")
 
 set forte{
   job_type           active-dsrgpt2
@@ -49,4 +49,4 @@ set forte{
   multiplicity       3
 }
 E0bu = energy('forte', ref_wfn=wfn)
-#compare_values(r_0bu, E0bu, 8, "abs. energy of triplet 0Bu")
+compare_values(r_0bu, E0bu, 8, "abs. energy of triplet 0Bu")
