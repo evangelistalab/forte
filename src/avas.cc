@@ -109,7 +109,7 @@ void make_avas(SharedWavefunction ref_wfn, Options& options, SharedMatrix Ps) {
                     Socc->set(i, j, value);
                 }
             }
-            auto sigmaocc = std::make_shared<Vector>("sigma occupied block", nocc);
+            //auto sigmaocc = std::make_shared<Vector>("sigma occupied block", nocc);
             for (int i = 0; i < nocc; i++){
                 double value =Socc->get(i, i);
                 sigmaocc->set(i,value);
@@ -121,7 +121,7 @@ void make_avas(SharedWavefunction ref_wfn, Options& options, SharedMatrix Ps) {
                     Svir->set(a, b, value);
                 }
             }
-            auto sigmavir = std::make_shared<Vector>("sigma virtual block", nvir);
+            //auto sigmavir = std::make_shared<Vector>("sigma virtual block", nvir);
             for (int a = 0; a < nvir; a++){
                 double value =Svir->get(a, a);
                 sigmavir->set(a,value);
@@ -280,24 +280,6 @@ void make_avas(SharedWavefunction ref_wfn, Options& options, SharedMatrix Ps) {
         SharedMatrix Fa = ref_wfn->Fa(); // get Fock matrix
         SharedMatrix Fa_mo = Fa->clone();
         Fa_mo->transform(Ca_tilde_prime);
-
-        SharedMatrix S_mo = ref_wfn->S()->clone();
-        S_mo->transform(Ca_tilde_prime);
-        double sum_diag = 0.0;
-        double sum_abs_diag = 0.0;
-        double sum_off_diag = 0.0;
-        for (int p = 0; p < nmo; p++) {
-            sum_abs_diag += std::fabs(S_mo->get(p, p));
-            sum_diag += S_mo->get(p, p);
-            for (int q = 0; q < nmo; q++) {
-                if (q != p) {
-                    sum_off_diag += std::fabs(S_mo->get(p, q));
-                }
-            }
-        }
-        outfile->Printf("\n\n  => Orthogonality test of AVAS orbitals <=");
-        outfile->Printf("\n  sum diag(S) = %f, sum off_diag(S) = %f", sum_diag,
-                        sum_off_diag);
 
         // Update both the alpha and beta orbitals
         // This assumes a restricted MO set
