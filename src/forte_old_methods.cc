@@ -54,7 +54,7 @@
 #include "orbital-helper/localize.h"
 #include "mcsrgpt2_mo.h"
 #include "mp2_nos.h"
-#include "mp2_nos.h"
+#include "semi_canonicalize.h"
 #include "mrci.h"
 #include "mrdsrg-so/mrdsrg_so.h"
 #include "mrdsrg-so/so-mrdsrg.h"
@@ -402,27 +402,18 @@ void forte_old_methods(SharedWavefunction ref_wfn, Options& options,
         }
 
         if (cas_type == "ACI") {
-            if (options.get_bool("SEMI_CANONICAL") and
-                !options.get_bool("CASSCF_REFERENCE") and
-                !options.get_bool("ACI_NO")) {
-                auto aci = std::make_shared<AdaptiveCI>(ref_wfn, options, ints,
-                                                        mo_space_info);
-                aci->set_quiet(true);
-                aci->set_max_rdm(2);
-                aci->compute_energy();
-                Reference aci_reference = aci->reference();
-                SemiCanonical semi(ref_wfn, options, ints, mo_space_info,
-                                   aci_reference);
-            }
+            // Compute ACI wfn
             auto aci = std::make_shared<AdaptiveCI>(ref_wfn, options, ints,
-                                                    mo_space_info);
+                                                      mo_space_info);
             aci->set_quiet(true);
             aci->set_max_rdm(3);
             aci->compute_energy();
-            if (options.get_bool("ACI_NO")) {
-                aci->compute_nos();
-            }
             Reference aci_reference = aci->reference();
+
+            // Transform integrals to semicanonical basis
+            SemiCanonical semi(ref_wfn, options, ints, mo_space_info,
+                               aci_reference);
+
             std::shared_ptr<DSRG_MRPT2> dsrg_mrpt2(new DSRG_MRPT2(
                 aci_reference, ref_wfn, options, ints, mo_space_info));
             dsrg_mrpt2->compute_energy();
@@ -489,27 +480,14 @@ void forte_old_methods(SharedWavefunction ref_wfn, Options& options,
         }
 
         if (options.get_str("CAS_TYPE") == "ACI") {
-            if (options.get_bool("SEMI_CANONICAL") and
-                !options.get_bool("CASSCF_REFERENCE") and
-                !options.get_bool("ACI_NO")) {
-                auto aci = std::make_shared<AdaptiveCI>(ref_wfn, options, ints,
-                                                        mo_space_info);
-                aci->set_quiet(true);
-                aci->set_max_rdm(2);
-                aci->compute_energy();
-                Reference aci_reference = aci->reference();
-                SemiCanonical semi(ref_wfn, options, ints, mo_space_info,
-                                   aci_reference);
-            }
             auto aci = std::make_shared<AdaptiveCI>(ref_wfn, options, ints,
                                                     mo_space_info);
-            aci->set_max_rdm(3);
             aci->set_quiet(true);
+            aci->set_max_rdm(3);
             aci->compute_energy();
-            if (options.get_bool("ACI_NO")) {
-                aci->compute_nos();
-            }
             Reference aci_reference = aci->reference();
+            SemiCanonical semi(ref_wfn, options, ints, mo_space_info,
+                                   aci_reference);
             std::shared_ptr<THREE_DSRG_MRPT2> three_dsrg_mrpt2(
                 new THREE_DSRG_MRPT2(aci_reference, ref_wfn, options, ints,
                                      mo_space_info));
