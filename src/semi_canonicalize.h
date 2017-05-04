@@ -26,8 +26,8 @@
  * @END LICENSE
  */
 
-#ifndef _mp2_nos_h_
-#define _mp2_nos_h_
+#ifndef _semi_canonicalize_h_
+#define _semi_canonicalize_h_
 
 #include "psi4/liboptions/liboptions.h"
 #include "psi4/libmints/wavefunction.h"
@@ -42,18 +42,17 @@ namespace psi {
 namespace forte {
 
 /**
- * @brief The MP2_NOS class
- * Computes MP2 natural orbitals
+ * @brief The SemiCanonical class
+ * Computes semi-canonical orbitals
  */
-class MP2_NOS {
+class SemiCanonical {
   public:
     // => Constructor <= //
-    MP2_NOS(std::shared_ptr<Wavefunction> wfn, Options& options,
-            std::shared_ptr<ForteIntegrals> ints,
-            std::shared_ptr<MOSpaceInfo> mo_space_info);
-    //  => Destructor <= //
+    SemiCanonical(std::shared_ptr<Wavefunction> wfn, Options& options,
+                  std::shared_ptr<ForteIntegrals> ints,
+                  std::shared_ptr<MOSpaceInfo> mo_space_info,
+                  Reference& reference);
 };
-
 }
 } // End Namespaces
 
