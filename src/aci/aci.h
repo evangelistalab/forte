@@ -47,6 +47,10 @@
 #include "../stl_bitset_determinant.h"
 #include "../mrpt2.h"
 #include "../orbital-helper/unpaired_density.h"
+#include "../semi_canonicalize.h"
+
+using d1 = std::vector<double>;
+using d2 = std::vector<d1>;
 
 namespace psi {
 namespace forte {
@@ -95,6 +99,11 @@ class AdaptiveCI : public Wavefunction {
     /// Compute the ACI-NOs
     void compute_nos();
 
+    void diagonalize_final_and_compute_rdms();
+
+    void set_aci_ints( SharedWavefunction ref_Wfn, std::shared_ptr<ForteIntegrals> ints );
+
+    void semi_canonicalize();
   private:
     // ==> Class data <==
 
@@ -412,6 +421,8 @@ class AdaptiveCI : public Wavefunction {
                      SharedVector& PQ_evals);
 
     void compute_multistate(SharedVector& PQ_evals);
+
+    void block_diagonalize_fock( const d2& Fa, const d2& Fb, SharedMatrix& Ua, SharedMatrix& Ub, const std::string& name); 
 
     DeterminantMap approximate_wfn( DeterminantMap& PQ_space, SharedMatrix& evecs, det_hash<double>& external_space, SharedMatrix& new_evecs );
 
