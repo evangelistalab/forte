@@ -52,6 +52,51 @@ class SemiCanonical {
                   std::shared_ptr<ForteIntegrals> ints,
                   std::shared_ptr<MOSpaceInfo> mo_space_info,
                   Reference& reference);
+
+    // Transforms integrals and reference
+    void semicanonicalize( Reference& reference );
+
+  private:
+    std::shared_ptr<MOSpaceInfo> mo_space_info_;
+
+    std::shared_ptr<ForteIntegrals> ints_;
+
+    std::shared_ptr<Wavefunction> wfn_;
+
+    // All orbitals
+    Dimension nmopi_;
+    // Correlated MOs
+    Dimension ncmopi_;
+    // Frozen core
+    Dimension fdocc_;
+    // Restricted DOCC
+    Dimension rdocc_;
+    // Active MOs
+    Dimension actv_;
+    // Restricted virtuals
+    Dimension ruocc_;
+
+    // Total active MOs
+    size_t nact_;    
+    // Total correlated MOs
+    size_t ncmo_;   
+    // Number of irreps 
+    size_t nirrep_;    
+
+    // Builds the generalized fock matrix 
+    void build_fock_matrix(Reference& reference);
+
+    /* Builds unitary matrices used to diagonalize diagonal blocks of F
+     * Ua, Ub span all MOs
+     * U spans active MOs */   
+    void build_transformation_matrices( SharedMatrix& Ua, SharedMatrix& Ub, 
+                                        ambit::BlockedTensor& U);
+
+    // Transforms integrals
+    void transform_ints( SharedMatrix& Ua, SharedMatrix& Ub ); 
+
+    // Transforms all RDMS/cumulants
+    void transform_reference( ambit::BlockedTensor& U, Reference& reference );
 };
 }
 } // End Namespaces
