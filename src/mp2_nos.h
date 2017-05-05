@@ -35,6 +35,7 @@
 #include "helpers.h"
 #include "integrals/integrals.h"
 #include "reference.h"
+#include "../blockedtensorfactory.h"
 
 namespace psi {
 
@@ -53,18 +54,6 @@ class MP2_NOS {
     //  => Destructor <= //
 };
 
-/**
- * @brief The SemiCanonical class
- * Computes semi-canonical orbitals
- */
-class SemiCanonical {
-  public:
-    // => Constructor <= //
-    SemiCanonical(std::shared_ptr<Wavefunction> wfn, Options& options,
-                  std::shared_ptr<ForteIntegrals> ints,
-                  std::shared_ptr<MOSpaceInfo> mo_space_info,
-                  Reference& reference);
-};
 }
 } // End Namespaces
 

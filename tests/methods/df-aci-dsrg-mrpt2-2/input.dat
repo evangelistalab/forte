@@ -4,7 +4,7 @@
 import forte
 
 refmcscf     = -99.939316381644 #cc-pvdz
-refdsrgpt2_jk_rd = -100.104931519788110
+refdsrgpt2_jk_rd = -100.105012600765463
 
 memory 500 mb
 
@@ -39,13 +39,12 @@ set forte {
    active                 [5,0,1,2]
    root_sym                0
    nroot                   1
-   aci_nroot                   1
+   aci_nroot               1
    dsrg_s                  1.0
    int_type                df
    job_type                three-dsrg-mrpt2
-   cas_type                ACI
-   aci_select_type             amp
-   sigma					   0.001
+   cas_type                aci
+   sigma				   0.0001
 }
 
 scf, wfn = energy('mcscf', return_wfn=True)
