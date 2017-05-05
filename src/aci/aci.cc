@@ -579,12 +579,15 @@ double AdaptiveCI::compute_energy() {
                             nuclear_repulsion_energy_ +
                             fci_ints_->scalar_energy());
         print_info();
+        if( !quiet_mode_ ){
+            outfile->Printf("\n Using %d threads", omp_get_max_threads());
+        }
  //   }
 
     if (ex_alg_ == "COMPOSITE") {
         ex_alg_ = "AVERAGE";
     }
-
+      
     op_.set_quiet_mode(quiet_mode_);
     Timer aci_elapse;
 

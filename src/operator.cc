@@ -985,6 +985,8 @@ Timer ab;
                 }
             } 
         }
+        double map_size = (32. + sizeof(size_t)) * ab_list_.size();
+        outfile->Printf("\n Memory for AB_ann: %1.3f MB", map_size / (1024. * 1024.));
     }
     if( !quiet_ ){
         outfile->Printf("\n  Time spent building ab_list  %1.6f s", ab.get());
@@ -1142,6 +1144,8 @@ Timer ab;
             }
         }
         ab_cre_list_.resize(nab_ann);
+        double map_size = (32. + sizeof(size_t)) * nab_ann;
+        outfile->Printf("\n Memory for AB_ann: %1.3f MB", map_size / (1024. * 1024.));
     }
     ab_ann_list_.shrink_to_fit();
     if( !quiet_ ){
