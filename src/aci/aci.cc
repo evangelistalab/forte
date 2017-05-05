@@ -169,24 +169,23 @@ AdaptiveCI::AdaptiveCI(SharedWavefunction ref_wfn, Options& options,
 
 AdaptiveCI::~AdaptiveCI() {}
 
-void AdaptiveCI::startup() {
-    quiet_mode_ = false;
-    if (options_["ACI_QUIET_MODE"].has_changed()) {
-        quiet_mode_ = options_.get_bool("ACI_QUIET_MODE");
-    }
-
+void AdaptiveCI::set_aci_ints( SharedWavefunction ref_wfn, std::shared_ptr<ForteIntegrals> ints  )
+{
+    ints_ = ints;
+    shallow_copy(ref_wfn);
+    reference_wavefunction_ = ref_wfn;
 
     fci_ints_ = std::make_shared<FCIIntegrals>(
-        ints_, mo_space_info_->get_corr_abs_mo("ACTIVE"),
+        ints, mo_space_info_->get_corr_abs_mo("ACTIVE"),
         mo_space_info_->get_corr_abs_mo("RESTRICTED_DOCC"));
 
     auto active_mo = mo_space_info_->get_corr_abs_mo("ACTIVE");
     ambit::Tensor tei_active_aa =
-        ints_->aptei_aa_block(active_mo, active_mo, active_mo, active_mo);
+        ints->aptei_aa_block(active_mo, active_mo, active_mo, active_mo);
     ambit::Tensor tei_active_ab =
-        ints_->aptei_ab_block(active_mo, active_mo, active_mo, active_mo);
+        ints->aptei_ab_block(active_mo, active_mo, active_mo, active_mo);
     ambit::Tensor tei_active_bb =
-        ints_->aptei_bb_block(active_mo, active_mo, active_mo, active_mo);
+        ints->aptei_bb_block(active_mo, active_mo, active_mo, active_mo);
     fci_ints_->set_active_integrals(tei_active_aa, tei_active_ab,
                                     tei_active_bb);
     fci_ints_->compute_restricted_one_body_operator();
@@ -194,6 +193,33 @@ void AdaptiveCI::startup() {
     STLBitsetDeterminant::set_ints(fci_ints_);
 
     nuclear_repulsion_energy_ = molecule_->nuclear_repulsion_energy();
+}
+
+void AdaptiveCI::startup() {
+    quiet_mode_ = false;
+    if (options_["ACI_QUIET_MODE"].has_changed()) {
+        quiet_mode_ = options_.get_bool("ACI_QUIET_MODE");
+    }
+
+    set_aci_ints(reference_wavefunction_, ints_ );
+
+   // fci_ints_ = std::make_shared<FCIIntegrals>(
+   //     ints_, mo_space_info_->get_corr_abs_mo("ACTIVE"),
+   //     mo_space_info_->get_corr_abs_mo("RESTRICTED_DOCC"));
+
+   // auto active_mo = mo_space_info_->get_corr_abs_mo("ACTIVE");
+   // ambit::Tensor tei_active_aa =
+   //     ints_->aptei_aa_block(active_mo, active_mo, active_mo, active_mo);
+   // ambit::Tensor tei_active_ab =
+   //     ints_->aptei_ab_block(active_mo, active_mo, active_mo, active_mo);
+   // ambit::Tensor tei_active_bb =
+   //     ints_->aptei_bb_block(active_mo, active_mo, active_mo, active_mo);
+   // fci_ints_->set_active_integrals(tei_active_aa, tei_active_ab,
+   //                                 tei_active_bb);
+   // fci_ints_->compute_restricted_one_body_operator();
+
+   // STLBitsetDeterminant::set_ints(fci_ints_);
+
     // Get wfn info
     wavefunction_symmetry_ = 0;
     if (options_["ROOT_SYM"].has_changed()) {
@@ -777,11 +803,54 @@ double AdaptiveCI::compute_energy() {
            fci_ints_->scalar_energy();
 }
 
-DeterminantMap AdaptiveCI::get_wavefunction()
+void AdaptiveCI::diagonalize_final_and_compute_rdms()
 {
-    return final_wfn_;
-}
+    print_h2("Diagonalizing ACI Hamiltonian");
+        reference_determinant_.print();
+        outfile->Printf("\n  REFERENCE ENERGY:         %1.12f",
+                        reference_determinant_.energy() +
+                            nuclear_repulsion_energy_ +
+                            fci_ints_->scalar_energy());
 
+
+    SharedMatrix final_evecs;
+    SharedVector final_evals;
+
+    op_.clear_op_s_lists();
+    op_.clear_tp_s_lists();
+    op_.build_strings(final_wfn_);
+    op_.op_s_lists(final_wfn_);
+    op_.tp_s_lists(final_wfn_);
+            
+    SparseCISolver sparse_solver;
+    sparse_solver.set_parallel(true);
+    sparse_solver.set_e_convergence(options_.get_double("E_CONVERGENCE"));
+    sparse_solver.set_maxiter_davidson(
+        options_.get_int("DL_MAXITER"));
+    sparse_solver.set_spin_project(project_out_spin_contaminants_);
+    sparse_solver.set_guess_dimension(options_.get_int("DL_GUESS_SIZE"));
+    sparse_solver.set_spin_project_full(false);
+    sparse_solver.diagonalize_hamiltonian_map(
+        final_wfn_, op_, final_evals,final_evecs, nroot_,
+        wavefunction_multiplicity_, diag_method_);
+
+    print_final( final_wfn_, final_evecs, final_evals ); 
+
+    op_.clear_op_s_lists();
+    op_.clear_tp_s_lists();
+    op_.op_lists(final_wfn_);
+    op_.tp_lists(final_wfn_);
+    op_.three_lists(final_wfn_);
+
+    compute_rdms(final_wfn_, op_,final_evecs, 0, 0);
+}           
+            
+            
+DeterminantMap AdaptiveCI::get_wavefunction()
+{   
+    return final_wfn_;
+}   
+    
 void AdaptiveCI::print_final(DeterminantMap& dets, SharedMatrix& PQ_evecs,
                              SharedVector& PQ_evals) {
     size_t dim = dets.size();
@@ -2955,6 +3024,17 @@ void AdaptiveCI::compute_rdms(DeterminantMap& dets, WFNOperator& op,
                               SharedMatrix& PQ_evecs, int root1, int root2) {
 
     // std::vector<STLBitsetDeterminant> det_vec = dets.determinants();
+    ordm_a_.clear();
+    ordm_b_.clear();
+
+    trdm_aa_.clear();
+    trdm_ab_.clear();
+    trdm_bb_.clear();
+
+    trdm_aaa_.clear();
+    trdm_aab_.clear();
+    trdm_abb_.clear();
+    trdm_bbb_.clear();
 
     CI_RDMS ci_rdms_(options_, dets, fci_ints_, PQ_evecs, root1, root2);
     ci_rdms_.set_max_rdm(rdm_level_);
@@ -3261,5 +3341,5 @@ void AdaptiveCI::compute_nos()
 
 }
 
-
 }} // EndNamespaces
+
