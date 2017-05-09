@@ -185,10 +185,18 @@ void forte_old_methods(SharedWavefunction ref_wfn, Options& options,
     }
     if (options.get_str("JOB_TYPE") == "CAS") {
         FCI_MO fci_mo(ref_wfn, options, ints, mo_space_info);
-        if (options.get_bool("SEMI_CANONICAL")) {
-            fci_mo.compute_canonical_energy();
+        if (options["AVG_STATE"].has_changed()) {
+            if (options.get_bool("SEMI_CANONICAL")) {
+                fci_mo.compute_canonical_sa_energy();
+            } else {
+                fci_mo.compute_sa_energy();
+            }
         } else {
-            fci_mo.compute_energy();
+            if (options.get_bool("SEMI_CANONICAL")) {
+                fci_mo.compute_canonical_energy();
+            } else {
+                fci_mo.compute_energy();
+            }
         }
     }
     if (options.get_str("JOB_TYPE") == "MRDSRG") {

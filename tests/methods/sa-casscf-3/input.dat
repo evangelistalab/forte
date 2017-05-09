@@ -1,11 +1,11 @@
 #! Generated using commit GITCOMMIT
 #! A SA-CASSCF test of H-He-H with averaged singlet and triplet.
 
-import forte 
+import forte
 
 #The triplet ROHF energy
-ref_rohf = -3.85103041668458
-ref_casscf=-3.851129343128
+ref_rohf   = -3.85103041668458
+ref_casscf = -3.851129343128
 #Reference value in wavenumbers
 #ref_split = (-3.851214594496629 - -3.851030416685039) * 219474.63
 
@@ -24,17 +24,15 @@ set global{
   basis          def2-tzvp
   reference      rohf
 }
-scf_first = energy('scf')
-mints()
 
 set forte {
+  job_type         casscf
   restricted_docc  [1,0,0,0,0,0,0,0]
   active           [1,0,0,0,0,1,0,0]
-  #job_type        fci
   multiplicity     3
   root_sym         5
   ms               0
-  cas_type         fci
+  cas_type         cas
   e_convergence    1e-10
   int_type         conventional
   avg_state        [[5, 3, 1], [0, 1, 1]]
