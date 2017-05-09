@@ -3717,9 +3717,10 @@ double FCI_MO::compute_sa_energy() {
         compute_permanent_dipole();
 
         // compute oscillator strength
-        compute_trans_dipole();
-        compute_oscillator_strength();
-
+        if (nroot_ > 1) {
+            compute_trans_dipole();
+            compute_oscillator_strength();
+        }
     }               // end looping over all averaged states
     eigen_.clear(); // make sure other code use eigens_ for state average
     outfile->Printf("\n  Total Energy (averaged over %d states): %20.15f\n",

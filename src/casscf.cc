@@ -354,7 +354,7 @@ void CASSCF::cas_ci() {
     }
     if (options_.get_str("CAS_TYPE") == "FCI") {
         // Used to grab the computed energy and RDMs.
-        if (options_["AVG_STATES"].size() == 0) {
+        if (options_["AVG_STATE"].size() == 0) {
             set_up_fci();
         } else {
             set_up_sa_fci();
@@ -363,7 +363,11 @@ void CASSCF::cas_ci() {
         ints_->retransform_integrals();
         FCI_MO cas(reference_wavefunction_, options_, ints_, mo_space_info_);
         cas.set_quite_mode(quiet);
-        cas.compute_energy();
+        if (options_["AVG_STATE"].size() == 0) {
+            cas.compute_energy();
+        } else {
+            cas.compute_sa_energy();
+        }
         cas_ref_ = cas.reference();
         E_casscf_ = cas_ref_.get_Eref();
     } else if (options_.get_str("CAS_TYPE") == "ACI") {
