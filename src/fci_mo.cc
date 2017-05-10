@@ -312,7 +312,7 @@ void FCI_MO::read_options() {
     //    }
 
     // state averaging
-    if (options_["AVG_STATE"].has_changed()) {
+    if (options_["AVG_STATE"].size() != 0) {
 
         CharacterTable ct =
             Process::environment.molecule()->point_group()->char_table();
@@ -3597,7 +3597,7 @@ Reference FCI_MO::reference(const int& level) {
     ref.set_L1b(L1b);
 
     if (level > 1) {
-        if (options_["AVG_STATE"].has_changed()) {
+        if (options_["AVG_STATE"].size() != 0) {
             compute_sa_ref();
         } else {
             compute_ref();
