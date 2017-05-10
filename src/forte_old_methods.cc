@@ -185,7 +185,7 @@ void forte_old_methods(SharedWavefunction ref_wfn, Options& options,
     }
     if (options.get_str("JOB_TYPE") == "CAS") {
         FCI_MO fci_mo(ref_wfn, options, ints, mo_space_info);
-        if (options["AVG_STATE"].has_changed()) {
+        if (options["AVG_STATE"].size() != 0) {
             if (options.get_bool("SEMI_CANONICAL")) {
                 fci_mo.compute_canonical_sa_energy();
             } else {
@@ -204,7 +204,7 @@ void forte_old_methods(SharedWavefunction ref_wfn, Options& options,
         if (cas_type == "CAS") {
             FCI_MO fci_mo(ref_wfn, options, ints, mo_space_info);
 
-            if (options["AVG_STATE"].has_changed()) {
+            if (options["AVG_STATE"].size() != 0) {
                 options.set_str("FORTE", "RELAX_REF", "ITERATE");
                 if (options.get_bool("SEMI_CANONICAL")) {
                     fci_mo.compute_canonical_sa_energy();
@@ -323,7 +323,7 @@ void forte_old_methods(SharedWavefunction ref_wfn, Options& options,
         if (cas_type == "CAS") {
             std::shared_ptr<FCI_MO> fci_mo =
                 std::make_shared<FCI_MO>(ref_wfn, options, ints, mo_space_info);
-            if (options["AVG_STATE"].has_changed()) {
+            if (options["AVG_STATE"].size() != 0) {
                 std::string ms_type = options.get_str("DSRG_MULTI_STATE");
                 if (ms_type.find("SA") != std::string::npos) {
                     options.set_str("FORTE", "RELAX_REF", "ONCE");
@@ -571,7 +571,7 @@ void forte_old_methods(SharedWavefunction ref_wfn, Options& options,
         if (cas_type == "CAS") {
             std::shared_ptr<FCI_MO> fci_mo(
                 new FCI_MO(ref_wfn, options, ints, mo_space_info));
-            if (options["AVG_STATE"].has_changed()) {
+            if (options["AVG_STATE"].size() != 0) {
                 std::string ms_type = options.get_str("DSRG_MULTI_STATE");
                 if (ms_type.find("SA") != std::string::npos) {
                     options.set_str("FORTE", "RELAX_REF", "ONCE");
