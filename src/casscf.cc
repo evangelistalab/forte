@@ -529,7 +529,7 @@ std::shared_ptr<Matrix> CASSCF::set_frozen_core_orbitals() {
         }
     }
 
-    JK_->set_allow_desymmetrization(true);
+//    JK_->set_allow_desymmetrization(true);
     JK_->set_do_K(true);
     std::vector<std::shared_ptr<Matrix>>& Cl = JK_->C_left();
     std::vector<std::shared_ptr<Matrix>>& Cr = JK_->C_right();
@@ -633,7 +633,7 @@ ambit::Tensor CASSCF::transform_integrals() {
         outfile->Printf("\n C_DGER takes %8.5f", c_dger.get());
     }
     JK_->set_memory(Process::environment.get_memory() * 0.8);
-    JK_->set_allow_desymmetrization(false);
+//    JK_->set_allow_desymmetrization(false);
     JK_->set_do_K(false);
     // JK_->initialize();
     std::vector<std::shared_ptr<Matrix>>& Cl = JK_->C_left();
@@ -865,7 +865,7 @@ std::vector<std::vector<double>> CASSCF::compute_restricted_docc_operator() {
     //
     std::vector<std::shared_ptr<Matrix>>& Cl = JK_->C_left();
     std::vector<std::shared_ptr<Matrix>>& Cr = JK_->C_right();
-    JK_->set_allow_desymmetrization(true);
+//    JK_->set_allow_desymmetrization(true);
     JK_->set_do_K(true);
     Cl.clear();
     Cl.push_back(Cdocc);
