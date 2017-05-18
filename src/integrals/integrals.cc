@@ -307,7 +307,7 @@ void ForteIntegrals::compute_frozen_one_body_operator() {
     JK_core->set_cutoff(options_.get_double("INTEGRAL_SCREENING"));
     JK_core->initialize();
     JK_core->set_do_J(true);
-    JK_core->set_allow_desymmetrization(true);
+    //JK_core->set_allow_desymmetrization(true);
     JK_core->set_do_K(true);
 
     std::vector<std::shared_ptr<Matrix>>& Cl = JK_core->C_left();
