@@ -1,0 +1,248 @@
+#!/usr/bin/env python
+# vim:ft=python
+#
+# primitive frontend to cmake
+# (c) Radovan Bast <radovan.bast@irsamc.ups-tlse.fr>
+# (c) Jonas Juselius <jonas.juselius@uit.no>
+# licensed under the GNU Lesser General Public License
+# Ported to Psi4 by Roberto Di Remigio Oct. 2014
+# based on initial work by Andy Simmonett (May 2013)
+
+import os
+import os.path
+import glob
+import sys
+import string
+import re
+import subprocess
+import shutil
+import datetime
+import time
+import fnmatch
+
+sys.path.append('cmake')
+import argparse
+
+root_directory = os.path.dirname(os.path.realpath(__file__))
+default_path = os.path.join(root_directory, 'src')
+if root_directory != os.getcwd():
+    default_path = os.getcwd()
+
+def parse_input():
+
+    parser = argparse.ArgumentParser(description="Configure FORTE",
+                            formatter_class=argparse.ArgumentDefaultsHelpFormatter)
+
+    group = parser.add_argument_group('PSI4 and CheMPS2 options')
+    group.add_argument('--psi4',
+            action='store',
+            default=None,
+            help="""The PSI4 executable.
+            If this is left blank this script will attempt to find PSI4 on your system.
+            Failing that it will not be able to compile FORTE.""",
+            metavar='PATH')
+    group.add_argument('--ambit-bindir',
+            action='store',
+            default=None,
+            help="""The ambit binary installation directory.""",
+            metavar='PATH')
+    group.add_argument('--chemps2-bindir',
+            action='store',
+            default=None,
+            help="""The chemps2 binary installation directory.""",
+            metavar='PATH')
+    group.add_argument('--mpi',
+            action='store_true',
+            default=False,
+            help="""Whether to build the MPI part of code""")
+    group.add_argument('--ga-bindir',
+            action='store',
+            default=None,
+            help="""The GA install directory.""",
+            metavar='PATH')
+
+    return parser.parse_args()
+
+def generate_cmake_command(args):
+    call = [args.psi4,"--plugin-compile"]
+    p = subprocess.check_output(call)
+    p = str(p)[2:]
+    p = p[:-3]
+    return p
+
+def generate_cmakelist(args):
+    print( "   root directory: %s" % root_directory)
+    print( "   psi4 executable: %s" % args.psi4)
+    print( "   ambit binary installation directory: %s" % args.ambit_bindir)
+    print( "   chemps2 binary installation directory: %s" % args.chemps2_bindir)
+    print( "\n   is PSI4 compiled with MPI: %s" % args.mpi)
+    print( "   global arrays install directory: %s" % args.ga_bindir)
+
+    # create a psi4 plugin and grab its CMakeLists.txt file
+    command = [args.psi4,"--plugin-name","forte_template"]
+    p = subprocess.call(command, stdout=subprocess.PIPE)
+
+    with open(os.path.join('forte_template','CMakeLists.txt'),'r') as f:
+        cmakelists = f.read().splitlines()
+    
+    if not cmakelists:
+        return False    
+
+    # put together forte's CMakeLists.txt file
+    ccfiles = []
+    for root, dirnames, filenames in os.walk('src'):
+        for filename in fnmatch.filter(filenames, '*.cc'):
+            ccfiles.append(os.path.join(root, filename))
+
+    forte_cmakelists = "\n".join(cmakelists[:-1])
+
+    #check for OpenMP and add flags
+    forte_cmakelists += '\nfind_package(OpenMP)'
+    forte_cmakelists += '\nif (OPENMP_FOUND)'
+    forte_cmakelists += '\n    set (CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${OpenMP_C_FLAGS}")'
+    forte_cmakelists += '\n    set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${OpenMP_CXX_FLAGS}")'
+    forte_cmakelists += '\nendif()\n'
+    
+    #Check for MPI
+    if(args.mpi):
+        forte_cmakelists += '\nfind_package(MPI)'
+        forte_cmakelists += '\nif (MPI_FOUND)'
+        forte_cmakelists += '\n    add_definitions(-DHAVE_MPI)'
+        forte_cmakelists += '\n    include_directories(${MPI_INCLUDE_PATH})'
+        forte_cmakelists += '\n    set (CMAKE_CXX_COMPILE_FLAGS ${CMAKE_CXX_COMPILE_FLAGS} ${MPI_COMPILE_FLAGS})'
+        forte_cmakelists += '\n    set (CMAKE_CXX_LINK_FLAGS ${CMAKE_CXX_LINK_FLAGS} ${MPI_LINK_FLAGS})'
+        forte_cmakelists += '\n    set(HAVE_MPI ${MPI_FOUND})'
+        forte_cmakelists += '\n    include_directories(MPI_INCLUDE_PATH)'
+#        forte_cmakelists += '\n    target_link_libraries(forte ${MPI_LIBRARIES})'
+        forte_cmakelists += '\nendif()\n'
+
+    if(args.ga_bindir):
+        forte_cmakelists += '\nadd_definitions(-DHAVE_GA)'
+        forte_cmakelists += '\nset(GA_FOUND True)'
+        forte_cmakelists += '\nlink_directories(%s)' % os.path.join(args.ga_bindir,'lib64')
+        forte_cmakelists += '\ninclude_directories(%s)' % os.path.join(args.ga_bindir,'include')
+#        forte_cmakelists += '\nendif()\n'
+
+    forte_cmakelists += '\nlink_directories(%s)' % os.path.join(args.ambit_bindir,'lib')
+    forte_cmakelists += '\ninclude_directories(%s)' % os.path.join(args.ambit_bindir,'include')
+    forte_cmakelists += '\ninclude_directories(src/mini-boost)'
+    forte_cmakelists += '\n\nadd_psi4_plugin(forte\n' + "\n".join(ccfiles) + "\n)"
+
+    forte_cmakelists += '\n    target_link_libraries(forte PRIVATE ambit)'
+    
+    if( args.ga_bindir ):
+        ga_dir_path = os.path.join(args.ga_bindir, 'lib64')
+        forte_cmakelists += '\n if (GA_FOUND)'
+        forte_cmakelists += '\n target_link_libraries(forte PRIVATE'
+        forte_cmakelists += '\n "%s"' % os.path.join(ga_dir_path, 'libga.a')
+        forte_cmakelists += '\n "%s")' % os.path.join(ga_dir_path, 'libarmci.a')
+        forte_cmakelists += '\nendif()\n'
+    
+    forte_cmakelists += '\nif (MPI_FOUND)'
+    forte_cmakelists += '\n    target_link_libraries(forte PRIVATE ${MPI_LIBRARIES})'
+    forte_cmakelists += '\nendif()\n'
+
+    # write forte's CMakeLists.txt file
+    cmakelist_file = open('CMakeLists.txt','w')
+    cmakelist_file.write(forte_cmakelists)
+    cmakelist_file.close()
+
+    # remove the plugin created by psi4
+    shutil.rmtree('forte_template')
+    return True
+
+def print_build_help(build_path, args):
+    print('\n')
+    print('   configure step is done')
+    print('   now you need to compile the sources:')
+    p = generate_cmake_command(args)
+    print("""   >>> {}""".format( p ))
+    print('   >>> make')
+    cmake_commands_file = open('cmake_commands','w+')
+    cmake_commands_file.write(str(generate_cmake_command(args)))
+
+def save_setup_command(argv, build_path):
+    file_name = os.path.join(build_path, 'setup_command')
+    f = open(file_name, 'w')
+    f.write('# setup command was executed '+datetime.datetime.now().strftime("%d-%B-%Y %H:%M:%S"+"\n"))
+    f.write(" ".join(argv[:])+"\n")
+    f.close()
+
+
+def main(argv):
+    if len(argv) == 1:
+        argv.append("--help")
+    args = parse_input()
+    save_setup_command(argv,root_directory)
+    configure_psi4(args)
+    configure_ambit(args)
+#    configure_chemps2(args)
+    status = generate_cmakelist(args)
+
+    if status:
+        # configuration was successful
+        print_build_help(root_directory, args)
+    else:
+        # configuration was not successful
+        print ("Sorry, something went wrong :(")
+
+
+def configure_psi4(args):
+    if not args.psi4:
+        # no --psi4 provided
+        command = ["which","psi4"]
+        p = subprocess.Popen(command, stdout=subprocess.PIPE)
+        result = p.stdout.readlines()
+        if len(result) == 0:
+            print ("Could not detect your PSI4 executable.  Please specify its location.")
+            exit(1)
+        args.psi4 = result[0][:-1]
+
+    # check if psi4 executable exists
+    if os.path.isfile(args.psi4):
+        command = [args.psi4,"--version"]
+        p = subprocess.Popen(command, stdout=subprocess.PIPE)
+        result = p.stdout.readlines()
+    else:
+        print ("The psi4 executable \"%s\" could not be found" % args.psi4)
+        exit(1)
+
+
+def configure_ambit(args):
+    if not args.ambit_bindir:
+        # no --ambit-bindir provided
+        print ("Please specify the location of the AMBIT installation directory.\nThis directory is created after compiling and installing AMBIT (make; make install)")
+        exit(1)
+
+    # check if psi4 executable exists
+    if os.path.isfile(args.psi4):
+        command = [args.psi4,"--version"]
+        p = subprocess.Popen(command, stdout=subprocess.PIPE)
+        result = p.stdout.readlines()
+    else:
+        print ("The psi4 executable \"%s\" could not be found" % args.psi4)
+        exit(1)
+
+
+def configure_chemps2(args):
+    if not args.chemps2_bindir:
+        print( "Please specify the location of the CHEMPS2 installation directory.\nThis directory is created after compiling and installing CheMPS2 (make; make install)")
+        print( "\nI will assume that you do not want to use CHEMPS2")
+    #    exit(1)
+    else:
+        # check if psi4 executable exists
+        chemps2_libdir = args.chemps2_bindir + "/lib/"
+        if os.path.isdir(chemps2_libdir):
+            # check for lib/libchemps2.*
+            found = False
+            for file in os.listdir(chemps2_libdir):
+                if 'libchemps2.' in file:
+                    found = True
+
+            if not found:
+                print ("The chemps2 directory \"%s\" does not contain a library file." % chemps2_libdir)
+                exit(1)
+        else:
+            print ("The chemps2 directory \"%s\" does not contain a libchemps2 file.\nCheck the argument passed via --chemps2-bindir." % chemps2_libdir)
+if __name__ == '__main__':
+    main(sys.argv)
