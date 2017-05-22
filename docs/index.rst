@@ -10,7 +10,7 @@ Welcome to Forte's documentation!
    :maxdepth: 2
    :caption: Contents:
 
-
+   aci
 
 Indices and tables
 ==================
