@@ -106,7 +106,7 @@ install:
 - which psi4
 - psi4 --test
 # Compile forte
-- cd ${HOME}/build/evangelistalab/forte
+#- cd ${HOME}/build/evangelistalab/forte
 - ./cmake_setup --ambit-bindir=/home/travis/build/ambit-bin
 - bash cmake_commands
 - make -j2
