@@ -86,9 +86,10 @@ install:
 - conda info -a
 - conda create -q -n p4env python=$PYTHON_VER psi4 cmake -c psi4
 - source activate p4env
+- export LD_LIBRARY_PATH=$HOME/miniconda/envs/p4env/lib:$LD_LIBRARY_PATH
 - rm -rf $HOME/miniconda/envs/p4env/share/cmake/Target*
 - conda list
-#- python -V
+- python -V
 #- python -c 'import numpy; print(numpy.version.version)'
 - cd ${TRAVIS_BUILD_DIR}
 #- export CXX=${CXX_COMPILER}
@@ -112,7 +113,6 @@ install:
 # Compile Psi4
 #- cd ${HOME}/build
 #- git clone https://github.com/psi4/psi4.git psi4
-#- git clone -b minipsi4 https://github.com/evangelistalab/psi4.git psi4
 #- cd psi4
 #- > 
 #    cmake -Bbuild -H. 
@@ -130,7 +130,8 @@ install:
 #- export PATH="$HOME/build/psi4-bin/bin:$PATH"
 - hash -r
 - which psi4
-# takes time - psi4 --test
+- psi4 --version
+#- psi4 --test  # good, but takes time
 # Compile forte
 - cd ${TRAVIS_BUILD_DIR}
 - ./cmake_setup --ambit-bindir=/home/travis/build/ambit-bin
