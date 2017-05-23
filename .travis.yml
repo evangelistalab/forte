@@ -109,7 +109,8 @@ install:
 #- cd ${HOME}/build/evangelistalab/forte
 - cd
 - ls */*
-- cd ${HOME}/build
+- echo ${TRAVIS_BUILD_DIR}
+- cd ${TRAVIS_BUILD_DIR}
 - ls
 - ./cmake_setup --ambit-bindir=/home/travis/build/ambit-bin
 - bash cmake_commands
