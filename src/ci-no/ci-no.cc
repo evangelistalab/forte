@@ -64,6 +64,12 @@ CINO::CINO(SharedWavefunction ref_wfn, Options& options,
     // Copy the wavefunction information
     shallow_copy(ref_wfn);
     reference_wavefunction_ = ref_wfn;
+
+    auto fci_ints_ = std::make_shared<FCIIntegrals>(
+        ints, mo_space_info_->get_corr_abs_mo("ACTIVE"),
+        mo_space_info_->get_corr_abs_mo("RESTRICTED_DOCC"));
+
+    STLBitsetDeterminant::set_ints(fci_ints_);
 }
 
 CINO::~CINO() {}
@@ -93,12 +99,49 @@ double CINO::compute_energy() {
 
 std::vector<Determinant> CINO::build_dets() {
     std::vector<Determinant> dets;
+
+    // build the reference determinant
+    size_t nactv = mo_space_info_->size("ACTIVE");
+    size_t nrdocc = mo_space_info_->size("RESTRICTED_DOCC");
+    int naocc = nalpha_ - nrdocc;
+    int nbocc = nbeta_ - nrdocc;
+    int navir = nactv - naocc;
+    int nbvir = nactv - nbocc;
+    std::vector<bool> occupation_a(nactv);
+    std::vector<bool> occupation_b(nactv);
+    for (int i = 0; i < naocc; i++) {
+        occupation_a[i] = true;
+    }
+    for (int i = 0; i < nbocc; i++) {
+        occupation_b[i] = true;
+    }
+    Determinant ref(occupation_a, occupation_b);
+    ref.print();
+
+    // add the reference determinant
+    dets.push_back(ref);
+
+    // alpha-alpha single excitation
+    for (int i = 0; i < naocc; ++i){
+        for (int a = naocc; a < nactv; ++a){
+            Determinant single_ia(ref);
+            single_ia.set_alfa_bit(i,false);
+            single_ia.set_alfa_bit(a,true);
+            single_ia.print();
+        }
+    }
+
+    // CiCi: add beta/beta singles and put determinants in the vector
     return dets;
 }
 
 std::pair<SharedVector, SharedMatrix>
 CINO::diagonalize_hamiltonian(const std::vector<Determinant>& dets) {
     std::pair<SharedVector, SharedMatrix> evals_evecs;
+
+    // CiCi: talk to Jeff about connecting his code to diagonalize the Hamiltonian
+
+    // CiCi: print first 10 excited state energies and check with CIS results (York?)
     return evals_evecs;
 }
 
