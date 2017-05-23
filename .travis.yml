@@ -106,19 +106,14 @@ install:
 - which psi4
 # takes time - psi4 --test
 # Compile forte
-#- cd ${HOME}/build/evangelistalab/forte
-- cd
-- ls */*
-- echo ${TRAVIS_BUILD_DIR}
 - cd ${TRAVIS_BUILD_DIR}
-- ls
 - ./cmake_setup --ambit-bindir=/home/travis/build/ambit-bin
 - bash cmake_commands
 - make -j2
-- export PYTHONPATH="${HOME}/build/evangelistalab:$PYTHONPATH"
+- export PYTHONPATH="${TRAVIS_BUILD_DIR}/../:$PYTHONPATH"
 - hash -r
 script:
-- cd ${HOME}/build/evangelistalab/forte/tests/methods
+- cd ${TRAVIS_BUILD_DIR}/tests/methods
 - python run_forte_tests_travis.py 
 
 # safelist
