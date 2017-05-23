@@ -58,19 +58,19 @@ matrix:
         #- python-numpy
         #- cmake
         #- cmake-data
-        - libhdf5-serial-dev
+        #- libhdf5-serial-dev
         - liblapack-dev
-        - g++-6
-        - gcc-6
-        - gfortran-6
+        #- g++-6
+        #- gcc-6
+        #- gfortran-6
     env:
-      - CXX_COMPILER='g++-6'
+      #- CXX_COMPILER='g++-6'
       - PYTHON_VER='2.7'
-      - C_COMPILER='gcc-6'
-      - Fortran_COMPILER='gfortran-6'
+      #- C_COMPILER='gcc-6'
+      #- Fortran_COMPILER='gfortran-6'
       - BUILD_TYPE='debug'
       - NAME='gcc'
-      - VERSION=6
+      - VERSION=5.2
 
 install:
 - if [[ "$PYTHON_VER" == "2.7" ]]; then
@@ -91,19 +91,21 @@ install:
 #- python -V
 #- python -c 'import numpy; print(numpy.version.version)'
 - cd ${TRAVIS_BUILD_DIR}
-- export CXX=${CXX_COMPILER}
-- export CC=${C_COMPILER}
-- export FC=${Fortran_COMPILER}
+#- export CXX=${CXX_COMPILER}
+#- export CC=${C_COMPILER}
+#- export FC=${Fortran_COMPILER}
 - export CTEST_OUTPUT_ON_FAILURE=1
-- ${CXX_COMPILER} --version
-- ${Fortran_COMPILER} --version
-- ${C_COMPILER} --version
+#- ${CXX_COMPILER} --version
+#- ${Fortran_COMPILER} --version
+#- ${C_COMPILER} --version
+- gcc --version
+- g++ --version
+- gfortran --version
 # Compile ambit
 - cd ${HOME}/build
 - git clone https://github.com/jturney/ambit.git ambit
 - cd ambit
 - cmake -H. -Bobjdir -C${HOME}/miniconda/envs/p4env/share/cmake/psi4/psi4PluginCache.cmake -DCMAKE_BUILD_TYPE=Debug -DCMAKE_INSTALL_PREFIX=/home/travis/build/ambit-bin
-#- cmake -H. -Bobjdir -DCMAKE_C_COMPILER=${C_COMPILER} -DCMAKE_CXX_COMPILER=${CXX_COMPILER} -DCMAKE_BUILD_TYPE=Debug -DCMAKE_INSTALL_PREFIX=/home/travis/build/ambit-bin
 - cd objdir
 - make -j2
 - make install
@@ -147,3 +149,4 @@ branches:
   - master
   - travis
   - psitravis
+  - psitravis2
