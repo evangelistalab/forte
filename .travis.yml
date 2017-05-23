@@ -104,9 +104,11 @@ install:
 #- export PATH="$HOME/build/psi4-bin/bin:$PATH"
 - hash -r
 - which psi4
-- psi4 --test
+# takes time - psi4 --test
 # Compile forte
 #- cd ${HOME}/build/evangelistalab/forte
+- cd
+- ls
 - ./cmake_setup --ambit-bindir=/home/travis/build/ambit-bin
 - bash cmake_commands
 - make -j2
