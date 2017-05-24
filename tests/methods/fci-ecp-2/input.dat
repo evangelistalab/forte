@@ -1,0 +1,30 @@
+#! Water-Argon complex with ECP present; CASCI(6,6).
+
+import forte
+
+nucenergy =   23.253113522963400  #TEST
+refenergy =  -96.68319147222      #TEST
+
+molecule arwater {
+    Ar  0.000000000000     0.000000000000     3.000000000000
+    O   0.000000000000     0.000000000000    -0.071143036192
+    H   0.000000000000    -0.758215806856     0.564545805801
+    H   0.000000000000     0.758215806856     0.564545805801
+}
+
+set = {
+    scf_type       pk
+    basis          lanl2dz
+    df_scf_guess   false
+    d_convergence  10
+}
+
+set forte {
+  job_type fci
+  restricted_docc  [4,0,1,1]
+  active           [2,0,2,2]
+}
+
+e = energy('forte')
+compare_values(nucenergy, arwater.nuclear_repulsion_energy(), 10, "Nuclear repulsion energy")   #TEST
+compare_values(refenergy, e,10, "FCI energy with ECP")                                          #TEST

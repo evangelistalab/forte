@@ -1,21 +1,16 @@
-.. Adaptive documentation master file, created by
-   sphinx-quickstart on Sat Jan 31 19:57:33 2015.
+.. Forte documentation master file, created by
+   sphinx-quickstart on Mon May 22 15:23:25 2017.
    You can adapt this file completely to your liking, but it should at least
    contain the root `toctree` directive.
 
-Welcome to Adaptive's documentation!
-====================================
-
-Contents:
+Welcome to Forte's documentation!
+=================================
 
 .. toctree::
    :maxdepth: 2
+   :caption: Contents:
 
-   apfci
-   adaptive
-   three-dsrg-mrpt2
-
-
+   aci
 
 Indices and tables
 ==================
@@ -23,4 +18,3 @@ Indices and tables
 * :ref:`genindex`
 * :ref:`modindex`
 * :ref:`search`
-
