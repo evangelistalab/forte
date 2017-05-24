@@ -20,7 +20,7 @@ Prior to the compilation of Forte you must first check to make sure you have the
 
 Once you have the current versions of Psi4, CMake, and Ambit, follow the following instructions to install Forte:
 
-1. Run the setup script found in the forte folder:
+1. Run the setup script found in the Forte folder:
   ```
    python cmake_setup --psi4=<psi4 executable> --ambit-bindir=<Ambit binary installation dir>
   ```
@@ -42,10 +42,35 @@ PSI4 and CheMPS2 options:
   --ga-bindir PATH      The GA install directory. (default: None)
    ```
 
-2. Follow the instructions provided in the output of the `cmake_setup` script to compile forte:
+2. Follow the instructions provided in the output of the `cmake_setup` script to compile Forte:
   ```
    configure step is done
    now you need to compile the sources:
    >>> cmake .
    >>> make
   ```
+
+Forte may also be compiled by directly invoking CMake by following these instructions:
+
+1. Run psi4 in the Forte folder
+  ```
+  psi4 --plugin-compile
+  ```
+ Psi4 will generate a CMake command for building Forte that looks like:
+  ```
+  cmake -C /usr/local/psi4/stage/usr/local/psi4/share/cmake/psi4/psi4PluginCache.cmake
+        -DCMAKE_PREFIX_PATH=/usr/local/psi4/stage/usr/local/psi4 .
+  ```
+ 
+ 2. Run the cmake command generated in 1. appending the location of Ambit's cmake files (via the `-Dambit_DIR option`):
+ ```
+  cmake -C /usr/local/psi4/stage/usr/local/psi4/share/cmake/psi4/psi4PluginCache.cmake
+        -DCMAKE_PREFIX_PATH=/usr/local/psi4/stage/usr/local/psi4 .
+        -Dambit_DIR=<ambit-bin-dir>/share/cmake/ambit
+ ```
+ 
+ 3. Run make
+ ```
+  make
+ ```
+ 

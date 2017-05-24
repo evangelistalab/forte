@@ -1,7 +1,7 @@
 cmake_policy(SET CMP0048 NEW)  # project_VERSION* variables populated from project(... VERSION x.x.x) string
 project(forte
         VERSION 0.1
-        LANGUAGES CXX)
+        LANGUAGES CXX C)
 set(forte_AUTHORS      "Francesco A. Evangelista and Group")
 set(forte_DESCRIPTION  "Quantum Chemistry Methods for Strongly Correlated Electrons plugin to Psi4")
 set(forte_URL          "https://github.com/evangelistalab/forte")
@@ -23,7 +23,7 @@ include(autocmake_mpi)  # MPI option A
 
 
 #find_package(psi4 1.1 REQUIRED COMPONENTS ambit chemps2)
-find_package(psi4 1.1 REQUIRED)
+find_package(psi4 1.0 REQUIRED)
 
 find_package(TargetLAPACK REQUIRED)
 find_package(ambit REQUIRED)
