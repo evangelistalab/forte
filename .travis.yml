@@ -134,8 +134,8 @@ install:
 #- psi4 --test  # good, but takes time
 # Compile forte
 - cd ${TRAVIS_BUILD_DIR}
-- ./cmake_setup --ambit-bindir=/home/travis/build/ambit-bin
-- bash cmake_commands
+- OUTPUT="$(psi4 --plugin-compile)"
+- $(echo $OUTPUT -Dambit_DIR=i/home/travis/build/ambit-bin/share/cmake/ambit)
 - make -j2
 - export PYTHONPATH="${TRAVIS_BUILD_DIR}/../:$PYTHONPATH"
 - hash -r
@@ -149,5 +149,6 @@ branches:
   only:
   - master
   - travis
+  - travis2
   - psitravis
   - psitravis2
