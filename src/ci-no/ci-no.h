@@ -44,7 +44,7 @@
 //#include "../determinant_map.h"
 //#include "../fci/fci_integrals.h"
 //#include "../operator.h"
-//#include "../sparse_ci_solver.h"
+#include "../sparse_ci_solver.h"
 #include "../stl_bitset_determinant.h"
 
 namespace psi {
@@ -88,10 +88,21 @@ class CINO : public Wavefunction {
     /// The MOSpaceInfo object
     std::shared_ptr<MOSpaceInfo> mo_space_info_;
     //    /// Pointer to FCI integrals
-    //    std::shared_ptr<FCIIntegrals> fci_ints_;
+     //std::shared_ptr<FCIIntegrals> fci_ints_;
 
+    // ==> CINO Options <==
+    /// The number of roots computed
+    int nroot_;
+    /// Add missing degenerate determinants excluded from the aimed selection?
+    bool project_out_spin_contaminants_;
+    /// The eigensolver type
+    DiagonalizationMethod diag_method_;
+    /// The multiplicity of the reference
+    int wavefunction_multiplicity_;
     // ==> Class functions <==
 
+    /// All that happens before we compute the energy
+    void startup();
     std::vector<Determinant> build_dets();
 
     std::pair<SharedVector, SharedMatrix>

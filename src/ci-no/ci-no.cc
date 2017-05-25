@@ -34,7 +34,7 @@
 #include "ci-no.h"
 //#include "../ci_rdms.h"
 //#include "../fci/fci_integrals.h"
-//#include "../sparse_ci_solver.h"
+#include "../sparse_ci_solver.h"
 #include "../stl_bitset_determinant.h"
 
 using namespace std;
@@ -55,6 +55,8 @@ void set_CINO_options(ForteOptions& foptions) {
     foptions.add_bool("CINO", false, "Do a CINO computation?");
     foptions.add_str("CINO_TYPE", "CIS", {"CIS", "CISD"},
                      "The type of wave function.");
+    foptions.add_int("CINO_NROOT", 1, "The number of roots computed");
+
 }
 
 CINO::CINO(SharedWavefunction ref_wfn, Options& options,
@@ -70,6 +72,7 @@ CINO::CINO(SharedWavefunction ref_wfn, Options& options,
         mo_space_info_->get_corr_abs_mo("RESTRICTED_DOCC"));
 
     STLBitsetDeterminant::set_ints(fci_ints_);
+    startup();
 }
 
 CINO::~CINO() {}
@@ -95,6 +98,24 @@ double CINO::compute_energy() {
     find_active_space_and_transform(no_U);
 
     return 0.0;
+}
+
+void CINO::startup(){
+    wavefunction_multiplicity_ = 1;
+    if (options_["MULTIPLICITY"].has_changed()) {
+        wavefunction_multiplicity_ = options_.get_int("MULTIPLICITY");
+    }
+    diag_method_ = DLSolver;
+    if (options_["DIAG_ALGORITHM"].has_changed()) {
+        if (options_.get_str("DIAG_ALGORITHM") == "FULL") {
+            diag_method_ = Full;
+        } else if (options_.get_str("DIAG_ALGORITHM") == "DLSTRING") {
+            diag_method_ = DLString;
+        } else if (options_.get_str("DIAG_ALGORITHM") == "DLDISK") {
+            diag_method_ = DLDisk;
+        }
+    }
+    nroot_ = options_.get_int("CINO_NROOT");
 }
 
 std::vector<Determinant> CINO::build_dets() {
@@ -128,6 +149,17 @@ std::vector<Determinant> CINO::build_dets() {
             single_ia.set_alfa_bit(i,false);
             single_ia.set_alfa_bit(a,true);
             single_ia.print();
+            dets.push_back(single_ia);
+        }
+    }
+    // beta-beta single excitation
+    for(int i = 0; i < nbocc; ++i){
+        for(int b = nbocc; b < nactv; ++b){
+            Determinant single_ib(ref);
+            single_ib.set_beta_bit(i,false);
+            single_ib.set_beta_bit(b,true);
+            single_ib.print();
+            dets.push_back(single_ib);
         }
     }
 
@@ -138,10 +170,31 @@ std::vector<Determinant> CINO::build_dets() {
 std::pair<SharedVector, SharedMatrix>
 CINO::diagonalize_hamiltonian(const std::vector<Determinant>& dets) {
     std::pair<SharedVector, SharedMatrix> evals_evecs;
-
     // CiCi: talk to Jeff about connecting his code to diagonalize the Hamiltonian
+    SparseCISolver sparse_solver;
+    sparse_solver.set_parallel(true);
+    sparse_solver.set_e_convergence(options_.get_double("E_CONVERGENCE"));
+    sparse_solver.set_maxiter_davidson(options_.get_int("DL_MAXITER"));
+    sparse_solver.set_spin_project(project_out_spin_contaminants_);
+    sparse_solver.set_guess_dimension(options_.get_int("DL_GUESS_SIZE"));
+    sparse_solver.set_spin_project_full(false);
+    sparse_solver.set_print_details(true);
+
+    SharedMatrix evecs;
+    SharedVector evals;
+
+    sparse_solver.diagonalize_hamiltonian(dets, evals, evecs, nroot_,
+                                          wavefunction_multiplicity_, DLSolver);
 
     // CiCi: print first 10 excited state energies and check with CIS results (York?)
+    //for(int i = 0; i < 10; ++i){
+     // outfile->Printf("\n%12f",evals_evecs.first->get(i));
+//     }
+//    for(auto d:dets){
+//    d.print();
+//    }
+    evals->print();
+
     return evals_evecs;
 }
 

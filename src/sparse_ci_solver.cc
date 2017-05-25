@@ -1310,7 +1310,7 @@ void SparseCISolver::diagonalize_hamiltonian(
     if (space.size() <= 200 or diag_method == Full) {
         diagonalize_full(space, evals, evecs, nroot, multiplicity);
     } else {
-        if (diag_method == DLSolver) {
+//        if (diag_method == DLSolver) {
             diagonalize_davidson_liu_solver(space, evals, evecs, nroot,
                                             multiplicity);
        // } else if (diag_method == DLString) {
@@ -1319,7 +1319,7 @@ void SparseCISolver::diagonalize_hamiltonian(
        // } else if (diag_method == DLDisk) {
        //     diagonalize_davidson_liu_string(space, evals, evecs, nroot,
        //                                     multiplicity, true);
-        }
+//        }
     }
 }
 
