@@ -27,7 +27,7 @@
  */
 
 #include "psi4/psi4-dec.h"
-//#include "psi4/libmints/molecule.h"
+#include "psi4/libmints/molecule.h"
 //#include "psi4/libmints/pointgrp.h"
 //#include "psi4/libpsio/psio.hpp"
 
@@ -67,7 +67,7 @@ CINO::CINO(SharedWavefunction ref_wfn, Options& options,
     shallow_copy(ref_wfn);
     reference_wavefunction_ = ref_wfn;
 
-    auto fci_ints_ = std::make_shared<FCIIntegrals>(
+    fci_ints_ = std::make_shared<FCIIntegrals>(
         ints, mo_space_info_->get_corr_abs_mo("ACTIVE"),
         mo_space_info_->get_corr_abs_mo("RESTRICTED_DOCC"));
 
@@ -200,10 +200,10 @@ CINO::diagonalize_hamiltonian(const std::vector<Determinant>& dets) {
                                           wavefunction_multiplicity_, DLSolver);
 
     // CiCi: print first 10 excited state energies and check with CIS results (York?)
-    //for(int i = 0; i < 10; ++i){
-     // outfile->Printf("\n%12f",evals_evecs.first->get(i));
-//     }
-//    for(auto d:dets){
+    for(int i = 0; i < 10; ++i){
+        outfile->Printf("\n%12f",evals->get(i) + fci_ints_->scalar_energy() +  molecule_->nuclear_repulsion_energy());
+    }
+    //    for(auto d:dets){
 //    d.print();
 //    }
     evals->print();
