@@ -1312,12 +1312,6 @@ void SparseCISolver::diagonalize_hamiltonian(
     } else {
         diagonalize_davidson_liu_solver(space, evals, evecs, nroot,
                                         multiplicity);
-       // } else if (diag_method == DLString) {
-       //     diagonalize_davidson_liu_string(space, evals, evecs, nroot,
-       //                                     multiplicity, false);
-       // } else if (diag_method == DLDisk) {
-       //     diagonalize_davidson_liu_string(space, evals, evecs, nroot,
-       //                                     multiplicity, true);
     }
 }
 

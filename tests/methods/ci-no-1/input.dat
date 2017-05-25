@@ -22,6 +22,7 @@ set forte {
   cino true
   restricted_docc [2]
   active [12]
+  CINO_NROOT   10
 }
 
 energy('scf')

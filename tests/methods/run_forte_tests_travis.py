@@ -21,7 +21,7 @@ psi4command = ""
 
 print "Running forte tests using the psi4 executable found in:\n  %s\n" % psi4command
 
-fci_tests = ["fci-1","fci-2","fci-3","fci-4","fci-5","fci-rdms-1","fci-rdms-2","fci-rdms-3","fci-ex-1",
+fci_tests = ["fci-1","fci-2","fci-3","fci-4","fci-5","fci-rdms-1","fci-rdms-2","fci-one-electron","fci-ex-1",
              "fci-ecp-1","fci-ecp-2"]
 
 lambda_ci_tests = ["casci-1","casci-2","casci-3","casci-4",
