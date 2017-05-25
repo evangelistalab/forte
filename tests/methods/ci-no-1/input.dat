@@ -21,10 +21,10 @@ set forte {
   job_type nojob
   cino true
   restricted_docc [2]
-  active [12]
+  active [25]
   CINO_NROOT   10
 }
 
-energy('scf')
-energy,wfn = energy('forte',return_wfn=True)
+scf_e, scf_wfn = energy('scf', return_wfn=True)
+energy,wfn = energy('forte',return_wfn=True, ref_wfn=scf_wfn)
 #cubeprop(wfn)
