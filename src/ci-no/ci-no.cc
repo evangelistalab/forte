@@ -71,6 +71,18 @@ CINO::CINO(SharedWavefunction ref_wfn, Options& options,
         ints, mo_space_info_->get_corr_abs_mo("ACTIVE"),
         mo_space_info_->get_corr_abs_mo("RESTRICTED_DOCC"));
 
+    auto active_mo = mo_space_info_->get_corr_abs_mo("ACTIVE");
+    ambit::Tensor tei_active_aa =
+        ints->aptei_aa_block(active_mo, active_mo, active_mo, active_mo);
+    ambit::Tensor tei_active_ab =
+        ints->aptei_ab_block(active_mo, active_mo, active_mo, active_mo);
+    ambit::Tensor tei_active_bb =
+        ints->aptei_bb_block(active_mo, active_mo, active_mo, active_mo);
+
+    fci_ints_->set_active_integrals(tei_active_aa, tei_active_ab, 
+                                    tei_active_bb);
+    fci_ints_->compute_restricted_one_body_operator();
+
     STLBitsetDeterminant::set_ints(fci_ints_);
     startup();
 }
@@ -171,6 +183,7 @@ std::pair<SharedVector, SharedMatrix>
 CINO::diagonalize_hamiltonian(const std::vector<Determinant>& dets) {
     std::pair<SharedVector, SharedMatrix> evals_evecs;
     // CiCi: talk to Jeff about connecting his code to diagonalize the Hamiltonian
+
     SparseCISolver sparse_solver;
     sparse_solver.set_parallel(true);
     sparse_solver.set_e_convergence(options_.get_double("E_CONVERGENCE"));
