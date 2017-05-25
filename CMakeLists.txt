@@ -27,7 +27,7 @@ find_package(psi4 1.0 REQUIRED)
 
 find_package(TargetLAPACK REQUIRED)
 find_package(ambit REQUIRED)
-find_package(CheMPS2 REQUIRED)
+#find_package(CheMPS2 REQUIRED)
 
 
 add_psi4_plugin(forte
@@ -132,7 +132,7 @@ src/pci/pci_simple.cc
 )
 
 target_link_libraries(forte PRIVATE ambit::ambit)
-target_link_libraries(forte PRIVATE CheMPS2::chemps2)
+#target_link_libraries(forte PRIVATE CheMPS2::chemps2)
 
 target_include_directories(forte PRIVATE src/mini-boost)
 
