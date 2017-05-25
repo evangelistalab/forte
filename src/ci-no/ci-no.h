@@ -83,12 +83,12 @@ class CINO : public Wavefunction {
   private:
     // ==> Class data <==
 
-    /// The molecular integrals required by Explorer
+    /// The molecular integrals
     std::shared_ptr<ForteIntegrals> ints_;
     /// The MOSpaceInfo object
     std::shared_ptr<MOSpaceInfo> mo_space_info_;
-    //    /// Pointer to FCI integrals
-     //std::shared_ptr<FCIIntegrals> fci_ints_;
+    /// Pointer to FCI integrals
+    std::shared_ptr<FCIIntegrals> fci_ints_;
 
     // ==> CINO Options <==
     /// The number of roots computed
