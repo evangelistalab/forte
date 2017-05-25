@@ -80,6 +80,7 @@ src/aci/aci.cc
 src/aci/aci_string.cc
 src/aci/direct_ci.cc
 src/aosubspace/aosubspace.cc
+src/api/api_forte.cc
 src/ci-no/ci-no.cc
 src/fci/fci.cc
 src/fci/fci_integrals.cc
