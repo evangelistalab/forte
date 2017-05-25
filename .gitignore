@@ -29,5 +29,7 @@ Makefile
 doc/doxygen/html
 doc/doxygen/latex
 
-setup_command
-CMake*
+CMakeCache.txt
+CMakeFiles/
+cmake_install.cmake
+
