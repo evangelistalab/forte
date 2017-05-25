@@ -71,12 +71,12 @@ def generate_cmake_command(args):
     return p
 
 def generate_cmakelist(args):
-    print("   root directory: %s" % root_directory)
-    print("   psi4 executable: %s" % args.psi4)
-    print("   ambit binary installation directory: %s" % args.ambit_bindir)
-    print("   chemps2 binary installation directory: %s" % args.chemps2_bindir)
-    print("\n   is PSI4 compiled with MPI: %s" % args.mpi)
-    print("   global arrays install directory: %s" % args.ga_bindir)
+    print( "   root directory: %s" % root_directory)
+    print( "   psi4 executable: %s" % args.psi4)
+    print( "   ambit binary installation directory: %s" % args.ambit_bindir)
+    print( "   chemps2 binary installation directory: %s" % args.chemps2_bindir)
+    print( "\n   is PSI4 compiled with MPI: %s" % args.mpi)
+    print( "   global arrays install directory: %s" % args.ga_bindir)
 
     # create a psi4 plugin and grab its CMakeLists.txt file
     command = [args.psi4,"--plugin-name","forte_template"]
@@ -225,8 +225,8 @@ def configure_ambit(args):
 
 def configure_chemps2(args):
     if not args.chemps2_bindir:
-        print("Please specify the location of the CHEMPS2 installation directory.\nThis directory is created after compiling and installing CheMPS2 (make; make install)")
-        print("\nI will assume that you do not want to use CHEMPS2")
+        print( "Please specify the location of the CHEMPS2 installation directory.\nThis directory is created after compiling and installing CheMPS2 (make; make install)")
+        print( "\nI will assume that you do not want to use CHEMPS2")
     #    exit(1)
     else:
         # check if psi4 executable exists
@@ -239,9 +239,9 @@ def configure_chemps2(args):
                     found = True
 
             if not found:
-                print("The chemps2 directory \"%s\" does not contain a library file." % chemps2_libdir)
+                print ("The chemps2 directory \"%s\" does not contain a library file." % chemps2_libdir)
                 exit(1)
         else:
-            print("The chemps2 directory \"%s\" does not contain a libchemps2 file.\nCheck the argument passed via --chemps2-bindir." % chemps2_libdir)
+            print ("The chemps2 directory \"%s\" does not contain a libchemps2 file.\nCheck the argument passed via --chemps2-bindir." % chemps2_libdir)
 if __name__ == '__main__':
     main(sys.argv)
