@@ -14,11 +14,11 @@ include(psi4OptionsTools)
 
 option_with_print(ENABLE_OPENMP "Enable threadsafe linking to OpenMP parallelized programs." ON)
 option_with_print(ENABLE_MPI "Enable MPI parallelization" OFF)
+option_with_print(ENABLE_GA "Enable Global Arrays" OFF)
 #option_with_print(ENABLE_GENERIC "Enable mostly static linking in shared library" OFF)
 
 include(autocmake_omp)
 include(autocmake_mpi)  # MPI option A
-#include(custom_cxxstandard)
 #include(custom_static_library)
 
 
@@ -140,5 +140,9 @@ if(ENABLE_MPI)
     target_link_libraries(forte PRIVATE ${MPI_CXX_LIBRARIES})  # MPI option A
     #target_link_libraries(forte PRIVATE MPI::MPI_CXX)  # MPI option B
     #target_add_definitions(forte PRIVATE HAVE_MPI)  # MPI option B
+endif()
+
+if(ENABLE_GA)
+    target_link_libraries(forte PRIVATE GlobalArrays::ga)
 endif()
 
