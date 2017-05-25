@@ -2,6 +2,9 @@
 
 import forte
 
+refscf = -0.60048054565798
+reffci = -0.60048054565798
+
 molecule hh {
 1 2
 H
@@ -14,7 +17,7 @@ set {
   scf_type         pk
   df_scf_guess     false
   guess            gwh
-  e_convergence    6
+  e_convergence    12
 }
 
 set forte{
@@ -29,4 +32,8 @@ set forte{
   job_type          fci
 }
 
+energy('scf')
+compare_values(refscf, get_variable("CURRENT ENERGY"),10, "SCF energy") #TEST
+
 energy('forte')
+compare_values(reffci, get_variable("CURRENT ENERGY"),10, "FCI energy") #TEST
