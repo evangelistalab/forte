@@ -14,6 +14,7 @@ include(psi4OptionsTools)
 
 option_with_print(ENABLE_OPENMP "Enable threadsafe linking to OpenMP parallelized programs." ON)
 option_with_print(ENABLE_MPI "Enable MPI parallelization" OFF)
+option_with_print("ENABLE_CheMPS2" "Enable CheMPS2" OFF)
 #option_with_print(ENABLE_GENERIC "Enable mostly static linking in shared library" OFF)
 
 include(autocmake_omp)
@@ -27,7 +28,7 @@ find_package(psi4 1.0 REQUIRED)
 
 find_package(TargetLAPACK REQUIRED)
 find_package(ambit REQUIRED)
-find_package(CheMPS2 REQUIRED)
+#find_package(CheMPS2 REQUIRED)
 
 
 add_psi4_plugin(forte
@@ -133,7 +134,7 @@ src/pci/pci_simple.cc
 )
 
 target_link_libraries(forte PRIVATE ambit::ambit)
-target_link_libraries(forte PRIVATE CheMPS2::chemps2)
+#target_link_libraries(forte PRIVATE CheMPS2::chemps2)
 
 target_include_directories(forte PRIVATE src/mini-boost)
 

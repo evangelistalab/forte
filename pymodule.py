@@ -31,7 +31,7 @@ import psi4
 import psi4.driver.p4util as p4util
 from psi4.driver.procrouting import proc_util
 
-def run_forte(name, **kwargs):
+def run_forte_plugin(name, **kwargs):
     r"""Function encoding sequence of PSI module and plugin calls so that
     forte can be called via :py:func:`~driver.energy`. For post-scf plugins.
 
@@ -68,4 +68,4 @@ def run_forte(name, **kwargs):
     return forte_wfn
 
 # Integration with driver routines
-psi4.driver.procedures['energy']['forte'] = run_forte
+psi4.driver.procedures['energy']['forte'] = run_forte_plugin

@@ -41,23 +41,43 @@
 #ifdef HAVE_GA
 #include <ga.h>
 #include <macdecls.h>
+
+/// These functions replace the Memory Allocator in GA with C/C++ allocator.
+void* replace_malloc(size_t bytes, int align, char* name) {
+    return malloc(bytes);
+}
+void replace_free(void* ptr) { free(ptr); }
 #endif
 
 #ifdef HAVE_MPI
 #include <mpi.h>
 #endif
 
-#include "forte.h"
+#include "main.h"
 
 namespace psi {
 namespace forte {
 
 /**
- * @brief Read options from the input file. Called by psi4 before everything
- * else.
+ * @brief Wrapper of the read option function for the psi4 plugin interface.
+ * Read options from the input file. Called by psi4 before everything else.
  */
 extern "C" int read_options(std::string name, Options& options) {
+    return forte_read_options(name,options);
+}
 
+/**
+ * @brief Wrapper of the main forte function for the psi4 plugin interface
+ */
+extern "C" SharedWavefunction forte(SharedWavefunction ref_wfn,
+                                    Options& options) {
+    return run_forte(ref_wfn,options);
+}
+
+/**
+ * @brief Read options from the input file.
+ */
+int forte_read_options(std::string name, Options& options) {
     ForteOptions foptions; // <<
 
     forte_options(name, foptions);
@@ -67,16 +87,35 @@ extern "C" int read_options(std::string name, Options& options) {
         forte_old_options(options);
         // New way to pass options to Psi4
         foptions.add_psi4_options(options);
+        options.add_str("JOB_TYPE", "FCI");
     }
 
     return true;
 }
 
 /**
+ * @brief Wrapper of the main forte function for the pybind11 interface
+ */
+int api_forte_read_options(Options& options) {
+    Process::environment.options.set_read_globals(true);
+    int value = forte_read_options("FORTE",options); // options are not read by default
+    Process::environment.options.set_read_globals(false);
+    return value;
+}
+
+/**
+ * @brief Wrapper of the main forte function for the pybind11 interface
+ */
+SharedWavefunction api_run_forte(SharedWavefunction ref_wfn,
+                                 Options& options) {
+    return run_forte(ref_wfn,options);
+}
+
+/**
  * @brief The main forte function.
  */
-extern "C" SharedWavefunction forte(SharedWavefunction ref_wfn,
-                                    Options& options) {
+SharedWavefunction run_forte(SharedWavefunction ref_wfn,
+                             Options& options) {
     // Start a timer
     Timer total_time;
 
@@ -195,31 +234,31 @@ make_forte_integrals(SharedWavefunction ref_wfn, Options& options,
     std::shared_ptr<ForteIntegrals> ints;
     if (options.get_str("INT_TYPE") == "CHOLESKY") {
         ints = std::make_shared<CholeskyIntegrals>(
-            options, ref_wfn, UnrestrictedMOs, RemoveFrozenMOs, mo_space_info);
+                    options, ref_wfn, UnrestrictedMOs, RemoveFrozenMOs, mo_space_info);
     } else if (options.get_str("INT_TYPE") == "DF") {
         ints = std::make_shared<DFIntegrals>(options, ref_wfn, UnrestrictedMOs,
                                              RemoveFrozenMOs, mo_space_info);
     } else if (options.get_str("INT_TYPE") == "DISKDF") {
         ints = std::make_shared<DISKDFIntegrals>(
-            options, ref_wfn, UnrestrictedMOs, RemoveFrozenMOs, mo_space_info);
+                    options, ref_wfn, UnrestrictedMOs, RemoveFrozenMOs, mo_space_info);
     } else if (options.get_str("INT_TYPE") == "CONVENTIONAL") {
         ints = std::make_shared<ConventionalIntegrals>(
-            options, ref_wfn, UnrestrictedMOs, RemoveFrozenMOs, mo_space_info);
+                    options, ref_wfn, UnrestrictedMOs, RemoveFrozenMOs, mo_space_info);
     } else if (options.get_str("INT_TYPE") == "EFFECTIVE") {
         ints = std::make_shared<EffectiveIntegrals>(
-            options, ref_wfn, UnrestrictedMOs, RemoveFrozenMOs, mo_space_info);
+                    options, ref_wfn, UnrestrictedMOs, RemoveFrozenMOs, mo_space_info);
     } else if (options.get_str("INT_TYPE") == "DISTDF") {
 #ifdef HAVE_GA
         ints = std::make_shared<DistDFIntegrals>(
-            options, ref_wfn, UnrestrictedMOs, RemoveFrozenMOs, mo_space_info);
+                    options, ref_wfn, UnrestrictedMOs, RemoveFrozenMOs, mo_space_info);
 #endif
     } else if (options.get_str("INT_TYPE") == "OWNINTEGRALS") {
         ints = std::make_shared<OwnIntegrals>(options, ref_wfn, UnrestrictedMOs,
                                               RemoveFrozenMOs, mo_space_info);
     } else {
         outfile->Printf(
-            "\n Please check your int_type. Choices are CHOLESKY, DF, DISKDF , "
-            "DISTRIBUTEDDF Effective, CONVENTIONAL or OwnIntegrals");
+                    "\n Please check your int_type. Choices are CHOLESKY, DF, DISKDF , "
+                    "DISTRIBUTEDDF Effective, CONVENTIONAL or OwnIntegrals");
         throw PSIEXCEPTION("INT_TYPE is not correct.  Check options");
     }
 

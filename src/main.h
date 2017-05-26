@@ -1,0 +1,78 @@
+/*
+ * @BEGIN LICENSE
+ *
+ * Forte: an open-source plugin to Psi4 (https://github.com/psi4/psi4)
+ * that implements a variety of quantum chemistry methods for strongly
+ * correlated electrons.
+ *
+ * Copyright (c) 2012-2017 by its authors (see LICENSE, AUTHORS).
+ *
+ * The copyrights for code used from other parties are included in
+ * the corresponding files.
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see http://www.gnu.org/licenses/.
+ *
+ * @END LICENSE
+ */
+
+#ifndef _main_h_
+#define _main_h_
+
+#include "forte_options.h"
+
+namespace psi {
+namespace forte {
+
+void forte_options(std::string name, ForteOptions& options);
+
+SharedWavefunction run_forte(SharedWavefunction ref_wfn, Options& options);
+
+int forte_read_options(std::string name, Options& options);
+
+int api_forte_read_options(Options& options);
+SharedWavefunction api_run_forte(SharedWavefunction ref_wfn, Options& options);
+
+}
+}
+
+namespace psi {
+namespace forte {
+
+std::pair<int, int> forte_startup();
+
+void forte_cleanup();
+
+std::shared_ptr<MOSpaceInfo> make_mo_space_info(SharedWavefunction ref_wfn,
+                                                Options& options);
+
+SharedMatrix make_aosubspace_projector(SharedWavefunction ref_wfn,
+                                       Options& options);
+
+std::shared_ptr<ForteIntegrals>
+make_forte_integrals(SharedWavefunction ref_wfn, Options& options,
+                     std::shared_ptr<MOSpaceInfo> mo_space_info);
+
+void make_ci_nos(SharedWavefunction ref_wfn, Options& options,
+                 std::shared_ptr<ForteIntegrals> ints,
+                 std::shared_ptr<MOSpaceInfo> mo_space_info);
+
+void forte_old_methods(SharedWavefunction ref_wfn, Options& options,
+                       std::shared_ptr<ForteIntegrals> ints,
+                       std::shared_ptr<MOSpaceInfo> mo_space_info, int my_proc);
+
+void forte_old_options(Options& options);
+}
+} // End Namespaces
+
+#endif // _main_h_

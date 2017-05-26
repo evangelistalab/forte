@@ -720,7 +720,6 @@ void CASSCFOrbitalOptimizer::form_fock_intermediates() {
     // JK_fock->set_memory(Process::environment.get_memory() * 0.8);
     // JK_fock->set_cutoff(options_.get_double("INTEGRAL_SCREENING"));
     // JK_fock->initialize();
-    // JK_->set_allow_desymmetrization(true);
     JK_->set_do_K(true);
     std::vector<std::shared_ptr<Matrix>>& Cl = JK_->C_left();
     std::vector<std::shared_ptr<Matrix>>& Cr = JK_->C_right();
