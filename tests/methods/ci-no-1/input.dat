@@ -1,0 +1,30 @@
+import forte
+
+molecule {
+0 1
+C           -0.616215322479    -0.254614064117     0.000000000000
+C            0.616215312140     0.254614066079     0.000000000000
+H           -0.791215360970    -1.334695323098     0.000000000000
+H           -1.502571841305     0.386925041636     0.000000000000
+H            1.502571936788    -0.386925102402     0.000000000000
+H            0.791215388593     1.334695360498     0.000000000000
+symmetry C1
+}
+
+set {
+  basis cc-pVDZ
+  scf_type pk
+  e_convergence 12
+}
+
+set forte {
+  job_type nojob
+  cino true
+  restricted_docc [2]
+  active [25]
+  CINO_NROOT   10
+}
+
+scf_e, scf_wfn = energy('scf', return_wfn=True)
+energy,wfn = energy('forte',return_wfn=True, ref_wfn=scf_wfn)
+#cubeprop(wfn)

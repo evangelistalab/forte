@@ -27,14 +27,14 @@
  */
 
 #include "psi4/psi4-dec.h"
-//#include "psi4/libmints/molecule.h"
+#include "psi4/libmints/molecule.h"
 //#include "psi4/libmints/pointgrp.h"
 //#include "psi4/libpsio/psio.hpp"
 
 #include "ci-no.h"
 //#include "../ci_rdms.h"
 //#include "../fci/fci_integrals.h"
-//#include "../sparse_ci_solver.h"
+#include "../sparse_ci_solver.h"
 #include "../stl_bitset_determinant.h"
 
 using namespace std;
@@ -55,6 +55,8 @@ void set_CINO_options(ForteOptions& foptions) {
     foptions.add_bool("CINO", false, "Do a CINO computation?");
     foptions.add_str("CINO_TYPE", "CIS", {"CIS", "CISD"},
                      "The type of wave function.");
+    foptions.add_int("CINO_NROOT", 1, "The number of roots computed");
+
 }
 
 CINO::CINO(SharedWavefunction ref_wfn, Options& options,
@@ -64,6 +66,25 @@ CINO::CINO(SharedWavefunction ref_wfn, Options& options,
     // Copy the wavefunction information
     shallow_copy(ref_wfn);
     reference_wavefunction_ = ref_wfn;
+
+    fci_ints_ = std::make_shared<FCIIntegrals>(
+        ints, mo_space_info_->get_corr_abs_mo("ACTIVE"),
+        mo_space_info_->get_corr_abs_mo("RESTRICTED_DOCC"));
+
+    auto active_mo = mo_space_info_->get_corr_abs_mo("ACTIVE");
+    ambit::Tensor tei_active_aa =
+        ints->aptei_aa_block(active_mo, active_mo, active_mo, active_mo);
+    ambit::Tensor tei_active_ab =
+        ints->aptei_ab_block(active_mo, active_mo, active_mo, active_mo);
+    ambit::Tensor tei_active_bb =
+        ints->aptei_bb_block(active_mo, active_mo, active_mo, active_mo);
+
+    fci_ints_->set_active_integrals(tei_active_aa, tei_active_ab, 
+                                    tei_active_bb);
+    fci_ints_->compute_restricted_one_body_operator();
+
+    STLBitsetDeterminant::set_ints(fci_ints_);
+    startup();
 }
 
 CINO::~CINO() {}
@@ -91,14 +112,102 @@ double CINO::compute_energy() {
     return 0.0;
 }
 
+void CINO::startup(){
+    wavefunction_multiplicity_ = 1;
+    if (options_["MULTIPLICITY"].has_changed()) {
+        wavefunction_multiplicity_ = options_.get_int("MULTIPLICITY");
+    }
+    diag_method_ = DLSolver;
+    if (options_["DIAG_ALGORITHM"].has_changed()) {
+        if (options_.get_str("DIAG_ALGORITHM") == "FULL") {
+            diag_method_ = Full;
+        } else if (options_.get_str("DIAG_ALGORITHM") == "DLSTRING") {
+            diag_method_ = DLString;
+        } else if (options_.get_str("DIAG_ALGORITHM") == "DLDISK") {
+            diag_method_ = DLDisk;
+        }
+    }
+    nroot_ = options_.get_int("CINO_NROOT");
+}
+
 std::vector<Determinant> CINO::build_dets() {
     std::vector<Determinant> dets;
+
+    // build the reference determinant
+    size_t nactv = mo_space_info_->size("ACTIVE");
+    size_t nrdocc = mo_space_info_->size("RESTRICTED_DOCC");
+    int naocc = nalpha_ - nrdocc;
+    int nbocc = nbeta_ - nrdocc;
+    int navir = nactv - naocc;
+    int nbvir = nactv - nbocc;
+    std::vector<bool> occupation_a(nactv);
+    std::vector<bool> occupation_b(nactv);
+    for (int i = 0; i < naocc; i++) {
+        occupation_a[i] = true;
+    }
+    for (int i = 0; i < nbocc; i++) {
+        occupation_b[i] = true;
+    }
+    Determinant ref(occupation_a, occupation_b);
+    ref.print();
+
+    // add the reference determinant
+    dets.push_back(ref);
+
+    // alpha-alpha single excitation
+    for (int i = 0; i < naocc; ++i){
+        for (int a = naocc; a < nactv; ++a){
+            Determinant single_ia(ref);
+            single_ia.set_alfa_bit(i,false);
+            single_ia.set_alfa_bit(a,true);
+            single_ia.print();
+            dets.push_back(single_ia);
+        }
+    }
+    // beta-beta single excitation
+    for(int i = 0; i < nbocc; ++i){
+        for(int b = nbocc; b < nactv; ++b){
+            Determinant single_ib(ref);
+            single_ib.set_beta_bit(i,false);
+            single_ib.set_beta_bit(b,true);
+            single_ib.print();
+            dets.push_back(single_ib);
+        }
+    }
+
+    // CiCi: add beta/beta singles and put determinants in the vector
     return dets;
 }
 
 std::pair<SharedVector, SharedMatrix>
 CINO::diagonalize_hamiltonian(const std::vector<Determinant>& dets) {
     std::pair<SharedVector, SharedMatrix> evals_evecs;
+    // CiCi: talk to Jeff about connecting his code to diagonalize the Hamiltonian
+
+    SparseCISolver sparse_solver;
+    sparse_solver.set_parallel(true);
+    sparse_solver.set_e_convergence(options_.get_double("E_CONVERGENCE"));
+    sparse_solver.set_maxiter_davidson(options_.get_int("DL_MAXITER"));
+    sparse_solver.set_spin_project(project_out_spin_contaminants_);
+    sparse_solver.set_guess_dimension(options_.get_int("DL_GUESS_SIZE"));
+    sparse_solver.set_spin_project_full(false);
+    sparse_solver.set_print_details(true);
+
+    SharedMatrix evecs;
+    SharedVector evals;
+
+    sparse_solver.diagonalize_hamiltonian(dets, evals, evecs, nroot_,
+                                          wavefunction_multiplicity_, DLSolver);
+
+    // CiCi: print first 10 excited state energies and check with CIS results (York?)
+    for(int i = 0; i < 10; ++i){
+        outfile->Printf("\n%12f",evals->get(i) + fci_ints_->scalar_energy() +  molecule_->nuclear_repulsion_energy());
+    }
+    //    for(auto d:dets){
+//    d.print();
+//    }
+    evals->print();
+
     return evals_evecs;
 }
 
