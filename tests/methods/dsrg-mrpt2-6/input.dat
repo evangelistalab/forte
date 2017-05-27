@@ -3,8 +3,8 @@
 import forte
 
 refcasscf    = -109.090719613072
-refpt2       = -109.245619577567339
-refpt2_relax = -109.246126613789983
+refpt2       = -109.245583534390491
+refpt2_relax = -109.246090954577227
 
 molecule N2{
   0 1
@@ -30,6 +30,20 @@ set {
   mcscf_diis_start       6
 }
 
+Ecasscf, wfn_cas = energy('casscf', return_wfn=True)
+compare_values(refcasscf,get_variable("CURRENT ENERGY"),10,"CASSCF energy") #TEST
+
+# Semicanonicalize CASSCF orbitals
+set forte {
+  job_type           cas
+  frozen_docc        [0,0,0,0,0,0,0,0]
+  frozen_uocc        [0,0,0,0,0,0,0,0]
+  restricted_docc    [2,0,0,0,0,2,0,0]
+  active             [1,0,1,1,0,1,1,1]
+}
+Ecas_forte, wfn_cas = energy('forte', ref_wfn=wfn_cas, return_wfn=True)
+
+# DSRG-MRPT2 computation (Note different frozen_docc)
 set forte {
   job_type           dsrg-mrpt2
   frozen_docc        [1,0,0,0,0,1,0,0]
@@ -45,9 +59,6 @@ set forte {
 # print              4
   cas_type           cas
 }
-
-Ecasscf, wfn_cas = energy('casscf', return_wfn=True)
-compare_values(refcasscf,get_variable("CURRENT ENERGY"),10,"CASSCF energy") #TEST
 
 Eforte, wfn_cas = energy('forte', ref_wfn=wfn_cas, return_wfn=True)
 compare_values(refpt2_relax,get_variable("CURRENT ENERGY"),10,"DSRG-MRPT2 relaxed energy") #TEST
