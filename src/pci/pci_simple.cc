@@ -578,7 +578,7 @@ double ProjectorCI_Simple::compute_energy() {
         "\n\t    Projector Configuration Interaction Simple implementation");
     outfile->Printf(
         "\n\t         by Francesco A. Evangelista and Tianyuan Zhang");
-    outfile->Printf("\n\t                      version Mar. 15 2017");
+    outfile->Printf("\n\t                      version May. 30 2017");
     outfile->Printf("\n\t                    %4d thread(s) %s", num_threads_,
                     have_omp_ ? "(OMP)" : "");
     outfile->Printf(
@@ -1357,8 +1357,8 @@ void ProjectorCI_Simple::apply_tau_H_ref_C_symm_det_dynamic(
         (std::fabs(max_coupling.first * ref_CI) >= spawning_threshold);
     bool do_doubles =
         (max_coupling.second == 0.0 and
-         std::fabs(dets_double_max_coupling_ * CI) >= spawning_threshold) or
-        (std::fabs(max_coupling.second * CI) >= spawning_threshold);
+         std::fabs(dets_double_max_coupling_ * ref_CI) >= spawning_threshold) or
+        (std::fabs(max_coupling.second * ref_CI) >= spawning_threshold);
 
     // Diagonal contributions
     double det_energy = detI.energy();
