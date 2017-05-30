@@ -206,6 +206,7 @@ class ProjectorCI_HashVec : public Wavefunction {
     std::unordered_map<Determinant, std::pair<double, double>,
                        Determinant::Hash>
         dets_max_couplings_;
+    double dets_double_max_coupling_;
 
     // * Energy estimation
     /// Estimate the variational energy?
@@ -380,6 +381,9 @@ class ProjectorCI_HashVec : public Wavefunction {
 
     /// Test the convergence of calculation
     bool converge_test();
+
+    /// Compute the maximum absolute double excitation coupling
+    double compute_max_double_coupling();
 };
 }
 } // End Namespaces
