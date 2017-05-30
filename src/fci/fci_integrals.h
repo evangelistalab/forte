@@ -87,9 +87,13 @@ class FCIIntegrals {
     double tei_bb(size_t p, size_t q, size_t r, size_t s) const {
         return tei_bb_[nmo3_ * p + nmo2_ * q + nmo_ * r + s];
     }
-    std::vector<double> tei_aa_vector() { return tei_aa_; }
-    std::vector<double> tei_ab_vector() { return tei_ab_; }
-    std::vector<double> tei_bb_vector() { return tei_bb_; }
+
+    /// Return a vector of alpha-alpha antisymmetrized two-electron integrals
+    const std::vector<double>& tei_aa_vector() const { return tei_aa_; }
+    /// Return a vector of alpha-beta antisymmetrized two-electron integrals
+    const std::vector<double>& tei_ab_vector() const { return tei_ab_; }
+    /// Return a vector of beta-beta antisymmetrized two-electron integrals
+    const std::vector<double>& tei_bb_vector() const { return tei_bb_; }
 
     /// Return the alpha-alpha antisymmetrized two-electron integral <pq||pq>
     double diag_tei_aa(size_t p, size_t q) const {

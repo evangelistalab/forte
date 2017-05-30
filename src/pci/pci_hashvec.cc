@@ -1875,9 +1875,9 @@ double ProjectorCI_HashVec::form_H_C(double tau, double spawning_threshold,
 }
 
 double ProjectorCI_HashVec::compute_max_double_coupling() {
-    std::vector<double> tei_aa = fci_ints_->tei_aa_vector();
-    std::vector<double> tei_ab = fci_ints_->tei_ab_vector();
-    std::vector<double> tei_bb = fci_ints_->tei_bb_vector();
+    const std::vector<double>& tei_aa = fci_ints_->tei_aa_vector();
+    const std::vector<double>& tei_ab = fci_ints_->tei_ab_vector();
+    const std::vector<double>& tei_bb = fci_ints_->tei_bb_vector();
     auto minmax_aa_iter = std::minmax_element(tei_aa.begin(), tei_aa.end());
     dets_double_max_coupling_ = fabs(*(minmax_aa_iter.first));
     if (fabs(*(minmax_aa_iter.second)) > dets_double_max_coupling_)
