@@ -201,6 +201,7 @@ class ProjectorCI_Simple : public Wavefunction {
     /// the couplings to the singles and doubles, respectively.
     std::unordered_map<Determinant, std::pair<double, double>,
                        Determinant::Hash> dets_max_couplings_;
+    double dets_double_max_coupling_;
 
     // * Energy estimation
     /// Estimate the variational energy?
@@ -385,6 +386,9 @@ class ProjectorCI_Simple : public Wavefunction {
 
     /// Test the convergence of calculation
     bool converge_test();
+
+    /// Compute the maximum absolute double excitation coupling
+    double compute_max_double_coupling();
 };
 }
 } // End Namespaces

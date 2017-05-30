@@ -5,7 +5,8 @@
  * that implements a variety of quantum chemistry methods for strongly
  * correlated electrons.
  *
- * Copyright (c) 2012-2017 by its authors (see COPYING, COPYING.LESSER, AUTHORS).
+ * Copyright (c) 2012-2017 by its authors (see COPYING, COPYING.LESSER,
+ * AUTHORS).
  *
  * The copyrights for code used from other parties are included in
  * the corresponding files.
@@ -346,6 +347,8 @@ void ProjectorCI::startup() {
     use_inter_norm_ = options_.get_bool("PCI_USE_INTER_NORM");
     do_simple_prescreening_ = options_.get_bool("PCI_SIMPLE_PRESCREENING");
     do_dynamic_prescreening_ = options_.get_bool("PCI_DYNAMIC_PRESCREENING");
+    if (do_dynamic_prescreening_)
+        compute_max_double_coupling();
     do_schwarz_prescreening_ = options_.get_bool("PCI_SCHWARZ_PRESCREENING");
     do_initiator_approx_ = options_.get_bool("PCI_INITIATOR_APPROX");
     do_perturb_analysis_ = options_.get_bool("PCI_PERTURB_ANALYSIS");
@@ -2428,7 +2431,8 @@ void ProjectorCI::apply_tau_H_symm_det_dynamic(
         (max_coupling.first == 0.0) or
         (std::fabs(max_coupling.first * CI) >= spawning_threshold);
     bool do_doubles =
-        (max_coupling.second == 0.0) or
+        (max_coupling.second == 0.0 and
+         std::fabs(dets_double_max_coupling_ * CI) >= spawning_threshold) or
         (std::fabs(max_coupling.second * CI) >= spawning_threshold);
 
     // Diagonal contributions
@@ -3107,8 +3111,9 @@ void ProjectorCI::apply_tau_H_ref_C_symm_det_dynamic_smooth(
         (max_coupling.first == 0.0) or
         (std::fabs(max_coupling.first * ref_CI) >= spawning_threshold);
     bool do_doubles =
-        (max_coupling.second == 0.0) or
-        (std::fabs(max_coupling.second * ref_CI) >= spawning_threshold);
+        (max_coupling.second == 0.0 and
+         std::fabs(dets_double_max_coupling_ * CI) >= spawning_threshold) or
+        (std::fabs(max_coupling.second * CI) >= spawning_threshold);
 
     // Diagonal contributions
     double det_energy = detI.energy();
@@ -3417,8 +3422,9 @@ void ProjectorCI::apply_tau_H_ref_C_symm_det_dynamic(
         (max_coupling.first == 0.0) or
         (std::fabs(max_coupling.first * ref_CI) >= spawning_threshold);
     bool do_doubles =
-        (max_coupling.second == 0.0) or
-        (std::fabs(max_coupling.second * ref_CI) >= spawning_threshold);
+        (max_coupling.second == 0.0 and
+         std::fabs(dets_double_max_coupling_ * CI) >= spawning_threshold) or
+        (std::fabs(max_coupling.second * CI) >= spawning_threshold);
 
     // Diagonal contributions
     double det_energy = detI.energy();
@@ -4813,7 +4819,8 @@ void ProjectorCI::apply_tau_H_det_dynamic(
         (max_coupling.first == 0.0) or
         (std::fabs(max_coupling.first * CI) >= spawning_threshold);
     bool do_doubles =
-        (max_coupling.second == 0.0) or
+        (max_coupling.second == 0.0 and
+         std::fabs(dets_double_max_coupling_ * CI) >= spawning_threshold) or
         (std::fabs(max_coupling.second * CI) >= spawning_threshold);
 
     // Diagonal contributions
@@ -5965,6 +5972,27 @@ double ProjectorCI::form_H_C(double tau, double spawning_threshold,
         }
     }
     return result;
+}
+
+double ProjectorCI::compute_max_double_coupling() {
+    std::vector<double> tei_aa = fci_ints_->tei_aa_vector();
+    std::vector<double> tei_ab = fci_ints_->tei_ab_vector();
+    std::vector<double> tei_bb = fci_ints_->tei_bb_vector();
+    auto minmax_aa_iter = std::minmax_element(tei_aa.begin(), tei_aa.end());
+    dets_double_max_coupling_ = fabs(*(minmax_aa_iter.first));
+    if (fabs(*(minmax_aa_iter.second)) > dets_double_max_coupling_)
+        dets_double_max_coupling_ = fabs(*(minmax_aa_iter.second));
+    auto minmax_ab_iter = std::minmax_element(tei_ab.begin(), tei_ab.end());
+    if (fabs(*(minmax_ab_iter.first)) > dets_double_max_coupling_)
+        dets_double_max_coupling_ = fabs(*(minmax_ab_iter.first));
+    if (fabs(*(minmax_ab_iter.second)) > dets_double_max_coupling_)
+        dets_double_max_coupling_ = fabs(*(minmax_ab_iter.second));
+    auto minmax_bb_iter = std::minmax_element(tei_bb.begin(), tei_bb.end());
+    if (fabs(*(minmax_bb_iter.first)) > dets_double_max_coupling_)
+        dets_double_max_coupling_ = fabs(*(minmax_bb_iter.first));
+    if (fabs(*(minmax_bb_iter.second)) > dets_double_max_coupling_)
+        dets_double_max_coupling_ = fabs(*(minmax_bb_iter.second));
+    return dets_double_max_coupling_;
 }
 }
 } // EndNamespaces
