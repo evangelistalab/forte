@@ -39,7 +39,7 @@ from .pymodule import *
 # Load C++ plugin
 import os
 import psi4
-import forte
+from forte import *
 
 forte.read_forte_options(psi4.core.get_options())
 plugdir = os.path.split(os.path.abspath(__file__))[0]

@@ -87,7 +87,6 @@ int forte_read_options(std::string name, Options& options) {
         forte_old_options(options);
         // New way to pass options to Psi4
         foptions.add_psi4_options(options);
-        options.add_str("JOB_TYPE", "FCI");
     }
 
     return true;
@@ -108,6 +107,7 @@ int api_forte_read_options(Options& options) {
  */
 SharedWavefunction api_run_forte(SharedWavefunction ref_wfn,
                                  Options& options) {
+    options.set_current_module("FORTE");
     return run_forte(ref_wfn,options);
 }
 
