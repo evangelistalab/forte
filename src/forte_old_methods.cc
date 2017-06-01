@@ -68,6 +68,7 @@
 #include "pci/pci.h"
 #include "pci/pci_hashvec.h"
 #include "pci/pci_simple.h"
+#include "pci/ewci.h"
 #include "sq.h"
 #include "tensorsrg.h"
 #include "v2rdm.h"
@@ -156,6 +157,13 @@ void forte_old_methods(SharedWavefunction ref_wfn, Options& options,
             ref_wfn, options, ints, mo_space_info);
         for (int n = 0; n < options.get_int("NROOT"); ++n) {
             pci_simple->compute_energy();
+        }
+    }
+    if (options.get_str("JOB_TYPE") == "EWCI") {
+        auto ewci = std::make_shared<ElementwiseCI>(
+            ref_wfn, options, ints, mo_space_info);
+        for (int n = 0; n < options.get_int("NROOT"); ++n) {
+            ewci->compute_energy();
         }
     }
     if (options.get_str("JOB_TYPE") == "FCI") {
