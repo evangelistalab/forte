@@ -5,22 +5,22 @@
  * that implements a variety of quantum chemistry methods for strongly
  * correlated electrons.
  *
- * Copyright (c) 2012-2017 by its authors (see LICENSE, AUTHORS).
+ * Copyright (c) 2012-2017 by its authors (see COPYING, COPYING.LESSER, AUTHORS).
  *
  * The copyrights for code used from other parties are included in
  * the corresponding files.
  *
  * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
+ * it under the terms of the GNU Lesser General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
+ * GNU Lesser General Public License for more details.
  *
- * You should have received a copy of the GNU General Public License
+ * You should have received a copy of the GNU Lesser General Public License
  * along with this program.  If not, see http://www.gnu.org/licenses/.
  *
  * @END LICENSE
@@ -201,6 +201,7 @@ class ProjectorCI_Simple : public Wavefunction {
     /// the couplings to the singles and doubles, respectively.
     std::unordered_map<Determinant, std::pair<double, double>,
                        Determinant::Hash> dets_max_couplings_;
+    double dets_double_max_coupling_;
 
     // * Energy estimation
     /// Estimate the variational energy?
@@ -385,6 +386,9 @@ class ProjectorCI_Simple : public Wavefunction {
 
     /// Test the convergence of calculation
     bool converge_test();
+
+    /// Compute the maximum absolute double excitation coupling
+    double compute_max_double_coupling();
 };
 }
 } // End Namespaces
