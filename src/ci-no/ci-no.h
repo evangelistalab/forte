@@ -40,7 +40,7 @@
 #include "../helpers.h"
 #include "../integrals/integrals.h"
 
-//#include "../ci_rdms.h"
+#include "../ci_rdms.h"
 //#include "../determinant_map.h"
 //#include "../fci/fci_integrals.h"
 //#include "../operator.h"
@@ -89,6 +89,10 @@ class CINO : public Wavefunction {
     std::shared_ptr<MOSpaceInfo> mo_space_info_;
     /// Pointer to FCI integrals
     std::shared_ptr<FCIIntegrals> fci_ints_;
+    /// The number of active orbitals per irrep
+    Dimension nactpi_;
+    /// The number of active orbitals
+    size_t nact_;
 
     // ==> CINO Options <==
     /// The number of roots computed
@@ -99,25 +103,34 @@ class CINO : public Wavefunction {
     DiagonalizationMethod diag_method_;
     /// The multiplicity of the reference
     int wavefunction_multiplicity_;
-    // ==> Class functions <==
+    // The number of correlated mos
+    size_t ncmo_;
+    size_t ncmo2_;
 
+    //The RDMS
+    std::vector<double> ordm_a_;
+    std::vector<double> ordm_b_;
+    /// Order of RDM to compute
+    int rdm_level_;
+
+    // ==> Class functions <==
     /// All that happens before we compute the energy
     void startup();
+
     std::vector<Determinant> build_dets();
 
     std::pair<SharedVector, SharedMatrix>
     diagonalize_hamiltonian(const std::vector<Determinant>& dets);
 
-    SharedMatrix build_density_matrix(const std::vector<Determinant>& dets,
-                                      SharedMatrix evecs);
+    std::pair<SharedMatrix, SharedMatrix> build_density_matrix(const std::vector<Determinant>& dets,
+                                      SharedMatrix evecs, int nroot_);
 
     /// Diagonalize the density matrix
-    std::pair<SharedVector, SharedMatrix>
-    diagonalize_density_matrix(SharedMatrix gamma);
+    std::tuple<SharedVector, SharedMatrix, SharedVector, SharedMatrix> diagonalize_density_matrix(std::pair<SharedMatrix, SharedMatrix> gamma);
 
     /// Find optimal active space and transform the orbitals
     void
-    find_active_space_and_transform(std::pair<SharedVector, SharedMatrix> no_U);
+    find_active_space_and_transform(std::tuple<SharedVector, SharedMatrix, SharedVector, SharedMatrix> no_U);
 };
 }
 } // End Namespaces

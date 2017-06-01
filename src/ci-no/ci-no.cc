@@ -32,8 +32,8 @@
 //#include "psi4/libpsio/psio.hpp"
 
 #include "ci-no.h"
-//#include "../ci_rdms.h"
-//#include "../fci/fci_integrals.h"
+#include "../ci_rdms.h"
+#include "../fci/fci_integrals.h"
 #include "../sparse_ci_solver.h"
 #include "../stl_bitset_determinant.h"
 
@@ -56,7 +56,12 @@ void set_CINO_options(ForteOptions& foptions) {
     foptions.add_str("CINO_TYPE", "CIS", {"CIS", "CISD"},
                      "The type of wave function.");
     foptions.add_int("CINO_NROOT", 1, "The number of roots computed");
-
+    foptions.add_int("ACI_MAX_RDM", 1, "Order of RDM to compute");
+    /*- Type of spin projection
+     * 0 - None
+     * 1 - Project initial P spaces at each iteration
+     * 2 - Project only after converged PQ space
+     * 3 - Do 1 and 2 -*/
 }
 
 CINO::CINO(SharedWavefunction ref_wfn, Options& options,
@@ -100,10 +105,10 @@ double CINO::compute_energy() {
         diagonalize_hamiltonian(dets);
 
     // 3. Build the density matrix
-    SharedMatrix gamma = build_density_matrix(dets, evals_evecs.second);
+    std::pair<SharedMatrix,SharedMatrix> gamma = build_density_matrix(dets, evals_evecs.second,nroot_);
 
     // 4. Diagonalize the density matrix
-    std::pair<SharedVector, SharedMatrix> no_U =
+    std::tuple<SharedVector, SharedMatrix,SharedVector,SharedMatrix> no_U =
         diagonalize_density_matrix(gamma);
 
     // 5. Find optimal active space and transform the orbitals
@@ -127,7 +132,13 @@ void CINO::startup(){
             diag_method_ = DLDisk;
         }
     }
+    //Read Options
     nroot_ = options_.get_int("CINO_NROOT");
+    rdm_level_ = options_.get_int("ACI_MAX_RDM");
+    ncmo_ = mo_space_info_->size("ACTIVE");
+    ncmo2_ = ncmo_ * ncmo_;
+    nact_ = mo_space_info_->size("ACTIVE");
+    nactpi_ = mo_space_info_->get_dimension("ACTIVE");
 }
 
 std::vector<Determinant> CINO::build_dets() {
@@ -174,15 +185,12 @@ std::vector<Determinant> CINO::build_dets() {
             dets.push_back(single_ib);
         }
     }
-
-    // CiCi: add beta/beta singles and put determinants in the vector
     return dets;
 }
 
 std::pair<SharedVector, SharedMatrix>
 CINO::diagonalize_hamiltonian(const std::vector<Determinant>& dets) {
     std::pair<SharedVector, SharedMatrix> evals_evecs;
-    // CiCi: talk to Jeff about connecting his code to diagonalize the Hamiltonian
 
     SparseCISolver sparse_solver;
     sparse_solver.set_parallel(true);
@@ -193,39 +201,101 @@ CINO::diagonalize_hamiltonian(const std::vector<Determinant>& dets) {
     sparse_solver.set_spin_project_full(false);
     sparse_solver.set_print_details(true);
 
-    SharedMatrix evecs;
-    SharedVector evals;
-
-    sparse_solver.diagonalize_hamiltonian(dets, evals, evecs, nroot_,
+    sparse_solver.diagonalize_hamiltonian(dets, evals_evecs.first, evals_evecs.second, nroot_,
                                           wavefunction_multiplicity_, DLSolver);
 
     // CiCi: print first 10 excited state energies and check with CIS results (York?)
-    for(int i = 0; i < 10; ++i){
-        outfile->Printf("\n%12f",evals->get(i) + fci_ints_->scalar_energy() +  molecule_->nuclear_repulsion_energy());
+    for(int i = 0; i < nroot_; ++i){
+        outfile->Printf("\n%12f",evals_evecs.first->get(i) + fci_ints_->scalar_energy() +  molecule_->nuclear_repulsion_energy());
     }
-    //    for(auto d:dets){
-//    d.print();
-//    }
-    evals->print();
 
     return evals_evecs;
 }
 
-SharedMatrix CINO::build_density_matrix(const std::vector<Determinant>& dets,
-                                        SharedMatrix evecs) {
-    SharedMatrix gamma;
-    return gamma;
+std::pair<SharedMatrix, SharedMatrix> CINO::build_density_matrix(const std::vector<Determinant>& dets,
+                                        SharedMatrix evecs,int n) {
+    std::vector<double> average_a_(ncmo2_);
+    std::vector<double> average_b_(ncmo2_);
+    std::vector<double> template_a_;
+    std::vector<double> template_b_;
+    std::vector<double> ordm_a_(ncmo2_);
+    std::vector<double> ordm_b_(ncmo2_);
+
+    for( int i = 0; i < n; ++i){
+        template_a_.clear();
+        template_b_.clear();
+
+        CI_RDMS ci_rdms_(options_, fci_ints_, dets, evecs, i, i);
+        ci_rdms_.set_max_rdm(rdm_level_);
+        if (rdm_level_ >= 1) {
+            Timer one_r;
+            ci_rdms_.compute_1rdm(template_a_, template_b_);
+            outfile->Printf("\n  1-RDM  took %2.6f s (determinant)",
+                                one_r.get());
+        }
+        //Add template value to average vector
+        for (int i = 0; i < ncmo2_; ++i){
+                   average_a_[i] += template_a_[i];
+               }
+        for (int i = 0; i < ncmo2_; ++i){
+                   average_b_[i] += template_b_[i];
+               }
+    }
+    //Divided by the number of root
+      for(int i = 0; i < ncmo2_; ++i){
+            ordm_a_[i]=average_a_[i]/n;
+        }
+      for(int i = 0; i < ncmo2_; ++i){
+            ordm_b_[i]=average_b_[i]/n;
+        }
+    //Invert vector to matrix
+      Dimension nmopi = reference_wavefunction_->nmopi();
+      Dimension ncmopi = mo_space_info_->get_dimension("CORRELATED");
+      Dimension fdocc = mo_space_info_->get_dimension("FROZEN_DOCC");
+      Dimension rdocc = mo_space_info_->get_dimension("RESTRICTED_DOCC");
+      Dimension ruocc = mo_space_info_->get_dimension("RESTRICTED_UOCC");
+
+      std::shared_ptr<Matrix> opdm_a(
+          new Matrix("OPDM_A", nirrep_, nactpi_, nactpi_));
+      std::shared_ptr<Matrix> opdm_b(
+          new Matrix("OPDM_B", nirrep_, nactpi_, nactpi_));
+
+      int offset = 0;
+      for (int h = 0; h < nirrep_; h++) {
+          for (int u = 0; u < nactpi_[h]; u++) {
+              for (int v = 0; v < nactpi_[h]; v++) {
+                  opdm_a->set(h, u, v,
+                              ordm_a_[(u + offset) * nact_ + v + offset]);
+                  opdm_b->set(h, u, v,
+                              ordm_b_[(u + offset) * nact_ + v + offset]);
+              }
+          }
+          offset += nactpi_[h];
+      }
+    return std::make_pair(opdm_a,opdm_b);
 }
 
 /// Diagonalize the density matrix
-std::pair<SharedVector, SharedMatrix>
-CINO::diagonalize_density_matrix(SharedMatrix gamma) {
+std::tuple<SharedVector, SharedMatrix, SharedVector,SharedMatrix>
+CINO::diagonalize_density_matrix(std::pair<SharedMatrix,SharedMatrix> gamma) {
     std::pair<SharedVector, SharedMatrix> no_U;
-    return no_U;
+
+    SharedVector OCC_A(new Vector("ALPHA OCCUPATION", nactpi_));
+    SharedVector OCC_B(new Vector("BETA OCCUPATION", nactpi_));
+    SharedMatrix NO_A(new Matrix(nactpi_, nactpi_));
+    SharedMatrix NO_B(new Matrix(nactpi_, nactpi_));
+
+    gamma.first->diagonalize(NO_A, OCC_A, descending);
+    gamma.second->diagonalize(NO_B, OCC_B, descending);
+    OCC_A->print();
+    OCC_B->print();
+    return std::make_tuple(OCC_A,NO_A,OCC_B,NO_B);
 }
 
 /// Find optimal active space and transform the orbitals
 void CINO::find_active_space_and_transform(
-    std::pair<SharedVector, SharedMatrix> no_U) {}
+    std::tuple<SharedVector, SharedMatrix,SharedVector,SharedMatrix> no_U) {
+
+}
 }
 } // EndNamespaces
