@@ -104,7 +104,6 @@ class CINO : public Wavefunction {
     /// The multiplicity of the reference
     int wavefunction_multiplicity_;
     // The number of correlated mos
-    size_t ncmo_;
     size_t ncmo2_;
 
     //The RDMS

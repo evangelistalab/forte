@@ -135,9 +135,8 @@ void CINO::startup(){
     //Read Options
     nroot_ = options_.get_int("CINO_NROOT");
     rdm_level_ = options_.get_int("ACI_MAX_RDM");
-    ncmo_ = mo_space_info_->size("ACTIVE");
-    ncmo2_ = ncmo_ * ncmo_;
     nact_ = mo_space_info_->size("ACTIVE");
+    ncmo2_ = nact_*nact_;
     nactpi_ = mo_space_info_->get_dimension("ACTIVE");
 }
 

@@ -22,7 +22,7 @@ set forte {
   cino true
   restricted_docc [2]
   active [12]
-  CINO_NROOT   1
+  CINO_NROOT   4
 }
 
 scf_e, scf_wfn = energy('scf', return_wfn=True)
