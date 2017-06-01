@@ -5,22 +5,22 @@
  * that implements a variety of quantum chemistry methods for strongly
  * correlated electrons.
  *
- * Copyright (c) 2012-2017 by its authors (see LICENSE, AUTHORS).
+ * Copyright (c) 2012-2017 by its authors (see COPYING, COPYING.LESSER, AUTHORS).
  *
  * The copyrights for code used from other parties are included in
  * the corresponding files.
  *
  * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
+ * it under the terms of the GNU Lesser General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
+ * GNU Lesser General Public License for more details.
  *
- * You should have received a copy of the GNU General Public License
+ * You should have received a copy of the GNU Lesser General Public License
  * along with this program.  If not, see http://www.gnu.org/licenses/.
  *
  * @END LICENSE
@@ -248,6 +248,8 @@ void ProjectorCI_HashVec::startup() {
     use_inter_norm_ = options_.get_bool("PCI_USE_INTER_NORM");
     do_simple_prescreening_ = options_.get_bool("PCI_SIMPLE_PRESCREENING");
     do_dynamic_prescreening_ = options_.get_bool("PCI_DYNAMIC_PRESCREENING");
+    if (do_dynamic_prescreening_)
+        compute_max_double_coupling();
     do_schwarz_prescreening_ = options_.get_bool("PCI_SCHWARZ_PRESCREENING");
     do_initiator_approx_ = options_.get_bool("PCI_INITIATOR_APPROX");
     do_perturb_analysis_ = options_.get_bool("PCI_PERTURB_ANALYSIS");
@@ -598,7 +600,7 @@ double ProjectorCI_HashVec::compute_energy() {
         "\n\t    Projector Configuration Interaction HashVector implementation");
     outfile->Printf(
         "\n\t         by Francesco A. Evangelista and Tianyuan Zhang");
-    outfile->Printf("\n\t                      version Mar. 15 2017");
+    outfile->Printf("\n\t                      version May. 30 2017");
     outfile->Printf("\n\t                    %4d thread(s) %s", num_threads_,
                     have_omp_ ? "(OMP)" : "");
     outfile->Printf(
@@ -1317,7 +1319,8 @@ void ProjectorCI_HashVec::apply_tau_H_ref_C_symm_det_dynamic(
         (max_coupling.first == 0.0) or
         (std::fabs(max_coupling.first * ref_CI) >= spawning_threshold);
     bool do_doubles =
-        (max_coupling.second == 0.0) or
+        (max_coupling.second == 0.0 and
+         std::fabs(dets_double_max_coupling_ * ref_CI) >= spawning_threshold) or
         (std::fabs(max_coupling.second * ref_CI) >= spawning_threshold);
 
     // Diagonal contributions
@@ -1870,5 +1873,27 @@ double ProjectorCI_HashVec::form_H_C(double tau, double spawning_threshold,
     }
     return result;
 }
+
+double ProjectorCI_HashVec::compute_max_double_coupling() {
+    const std::vector<double>& tei_aa = fci_ints_->tei_aa_vector();
+    const std::vector<double>& tei_ab = fci_ints_->tei_ab_vector();
+    const std::vector<double>& tei_bb = fci_ints_->tei_bb_vector();
+    auto minmax_aa_iter = std::minmax_element(tei_aa.begin(), tei_aa.end());
+    dets_double_max_coupling_ = fabs(*(minmax_aa_iter.first));
+    if (fabs(*(minmax_aa_iter.second)) > dets_double_max_coupling_)
+        dets_double_max_coupling_ = fabs(*(minmax_aa_iter.second));
+    auto minmax_ab_iter = std::minmax_element(tei_ab.begin(), tei_ab.end());
+    if (fabs(*(minmax_ab_iter.first)) > dets_double_max_coupling_)
+        dets_double_max_coupling_ = fabs(*(minmax_ab_iter.first));
+    if (fabs(*(minmax_ab_iter.second)) > dets_double_max_coupling_)
+        dets_double_max_coupling_ = fabs(*(minmax_ab_iter.second));
+    auto minmax_bb_iter = std::minmax_element(tei_bb.begin(), tei_bb.end());
+    if (fabs(*(minmax_bb_iter.first)) > dets_double_max_coupling_)
+        dets_double_max_coupling_ = fabs(*(minmax_bb_iter.first));
+    if (fabs(*(minmax_bb_iter.second)) > dets_double_max_coupling_)
+        dets_double_max_coupling_ = fabs(*(minmax_bb_iter.second));
+    return dets_double_max_coupling_;
+}
+
 }
 } // EndNamespaces
