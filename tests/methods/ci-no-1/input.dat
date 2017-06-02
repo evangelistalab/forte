@@ -27,8 +27,7 @@ set forte {
   CINO_NROOT 2
 }
 
-scf_e, scf_wfn = energy('scf', return_wfn=True)
-E,wfn = energy('forte',return_wfn=True, ref_wfn=scf_wfn)
+E,wfn = energy('forte',return_wfn=True)
 set {
   scf_type      df
   df_basis_scf  cc-pVDZ-JKFIT
