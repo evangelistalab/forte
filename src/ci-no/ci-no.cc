@@ -324,7 +324,7 @@ void CINO::find_active_space_and_transform(
         }
     }
     SharedMatrix Ca_new = Matrix::doublet(Ca_, Ua);
-    Ca_ = Ca_new;
+    Ca_->copy(Ca_new);
     Cb_ = Ca_; // Fix this for unrestricted case
 
     size_t nactv = mo_space_info_->size("ACTIVE");
