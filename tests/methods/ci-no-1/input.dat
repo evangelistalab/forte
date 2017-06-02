@@ -37,6 +37,7 @@ set {
   e_convergence 12
 }
 set forte{
+  cino                 false
   job_type             active-dsrgpt2
   frozen_docc          [2]
   restricted_docc      [1]
@@ -47,7 +48,7 @@ set forte{
   nrootpi              [2]
   d_convergence        10
   internal_amp         singles_doubles
-  #int_type             df
+  int_type             df
   #cholesky_tolerance   6
 }
 energy('forte',ref_wfn=wfn)
