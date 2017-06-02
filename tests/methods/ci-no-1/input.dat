@@ -24,7 +24,7 @@ set forte {
   cino true
   #restricted_docc [2]
   #active [12]
-  CINO_NROOT 2
+  CINO_NROOT 3
 }
 
 E,wfn = energy('forte',return_wfn=True)
@@ -44,7 +44,7 @@ set forte{
   dsrg_s               0.5
   cas_type             cas
   fcimo_actv_type      cis
-  nrootpi              [2]
+  nrootpi              [3]
   d_convergence        10
   internal_amp         singles_doubles
   int_type             df
