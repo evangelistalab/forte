@@ -335,21 +335,24 @@ void CINO::find_active_space_and_transform(
     int nbvir = nactv - nbocc;
 
     SharedVector OCC_A = std::get<0>(no_U);
+    SharedVector OCC_B = std::get<2>(no_U);
 
     double sum_o = 0.0;
     for (int i = 0; i < naocc; i++) {
         sum_o += 1.0 - OCC_A->get(i);
+        sum_o += 1.0 - OCC_B->get(i);
     }
     double sum_v = 0.0;
     for (int a = naocc; a < nactv; a++) {
         sum_v += OCC_A->get(a);
+        sum_v += OCC_B->get(a);
     }
 
     double cino_threshold = options_.get_double("CINO_THRESHOLD");
     int nactv_o = 0;
     double partial_sum_o = 0.0;
     for (int i = 0; i < naocc; i++) {
-        double w = 1.0 - OCC_A->get(naocc - 1 - i);
+        double w = 2.0 - OCC_A->get(naocc - 1 - i)-OCC_B->get(naocc - 1 - i);
         partial_sum_o += w;
         nactv_o += 1;
         if (partial_sum_o / sum_o > cino_threshold)
@@ -359,14 +362,13 @@ void CINO::find_active_space_and_transform(
     int nactv_v = 0;
     double partial_sum_v = 0.0;
     for (int a = naocc; a < nactv; a++) {
-        double w = OCC_A->get(a);
+        double w = OCC_A->get(a)+OCC_B->get(a);
         partial_sum_v += w;
         nactv_v += 1;
         if (partial_sum_v / sum_v > cino_threshold)
             break;
     }
 
-    // CiCi : use both alpha and beta occupation numbers to determine the number of active orbitals
     outfile->Printf("\n  Number of active occupied MOs: %d",nactv_o);
     outfile->Printf("\n  Number of active virtual MOs:   %d",nactv_v);
 }
