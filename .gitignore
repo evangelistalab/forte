@@ -4,6 +4,7 @@
 *.pyc
 Makefile.*
 Makefile
+timer.dat
 *~
 
 # Qt Creator project files
@@ -25,6 +26,7 @@ Makefile
 /tests/methods/*/timer.dat
 /tests/methods/*/*.txt
 /tests/methods/*/*.npz
+tests/pytest/.cache/
 
 doc/doxygen/html
 doc/doxygen/latex
