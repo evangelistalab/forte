@@ -288,15 +288,57 @@ std::tuple<SharedVector, SharedMatrix, SharedVector, SharedMatrix>
 CINO::diagonalize_density_matrix(std::pair<SharedMatrix, SharedMatrix> gamma) {
     std::pair<SharedVector, SharedMatrix> no_U;
 
+    size_t nactv = mo_space_info_->size("ACTIVE");
+    size_t nrdocc = mo_space_info_->size("RESTRICTED_DOCC");
+    int naocc = nalpha_ - nrdocc;
+    int nbocc = nbeta_ - nrdocc;
+    int navir = nactv - naocc;
+    int nbvir = nactv - nbocc;
+
     SharedVector OCC_A(new Vector("ALPHA OCCUPATION", nactpi_));
     SharedVector OCC_B(new Vector("BETA OCCUPATION", nactpi_));
     SharedMatrix NO_A(new Matrix(nactpi_, nactpi_));
     SharedMatrix NO_B(new Matrix(nactpi_, nactpi_));
 
-    gamma.first->diagonalize(NO_A, OCC_A, descending);
-    gamma.second->diagonalize(NO_B, OCC_B, descending);
-    OCC_A->print();
-    OCC_B->print();
+    SharedMatrix gamma_a_occ(new Matrix("Gamma alpha occupied",naocc,naocc));
+    SharedMatrix gamma_a_vir(new Matrix("Gamma alpha occupied",navir,navir));
+    for (int i = 0; i < naocc; i++){
+        for (int j = 0; j < naocc; j++){
+            gamma_a_occ->set(i,j,gamma.first->get(i,j));
+        }
+    }
+    for (int a = 0; a < navir; a++){
+        for (int b = 0; b < navir; b++){
+            gamma_a_vir->set(a,b,gamma.first->get(a + naocc,b + naocc));
+        }
+    }
+
+    SharedMatrix NO_A_occ(new Matrix(naocc, naocc));
+    SharedMatrix NO_A_vir(new Matrix(navir,navir));
+    SharedVector OCC_A_occ(new Vector("ALPHA OCCUPATION", naocc));
+    SharedVector OCC_A_vir(new Vector("ALPHA OCCUPATION", navir));
+    gamma_a_occ->diagonalize(NO_A_occ,OCC_A_occ, descending);
+    gamma_a_vir->diagonalize(NO_A_vir,OCC_A_vir, descending);
+    OCC_A_occ->print();
+    OCC_A_vir->print();
+
+    for (int i = 0; i < naocc; i++){
+        OCC_A->set(i,OCC_A_occ->get(i));
+        for (int j = 0; j < naocc; j++){
+            NO_A->set(i,j,NO_A_occ->get(i,j));
+        }
+    }
+    for (int a = 0; a < navir; a++){
+        OCC_A->set(a + naocc,OCC_A_vir->get(a));
+        for (int b = 0; b < navir; b++){
+            NO_A->set(a + naocc,b + naocc,NO_A_vir->get(a,b));
+        }
+    }
+
+//    gamma.first->diagonalize(NO_A, OCC_A, descending);
+//    gamma.second->diagonalize(NO_B, OCC_B, descending);
+//    OCC_A->print();
+//    OCC_B->print();
     return std::make_tuple(OCC_A, NO_A, OCC_B, NO_B);
 }
 
@@ -324,7 +366,7 @@ void CINO::find_active_space_and_transform(
         }
     }
     SharedMatrix Ca_new = Matrix::doublet(Ca_, Ua);
-    Ca_ = Ca_new;
+    Ca_->copy(Ca_new);
     Cb_ = Ca_; // Fix this for unrestricted case
 
     size_t nactv = mo_space_info_->size("ACTIVE");
@@ -335,20 +377,24 @@ void CINO::find_active_space_and_transform(
     int nbvir = nactv - nbocc;
 
     SharedVector OCC_A = std::get<0>(no_U);
+    SharedVector OCC_B = std::get<2>(no_U);
 
     double sum_o = 0.0;
     for (int i = 0; i < naocc; i++) {
         sum_o += 1.0 - OCC_A->get(i);
+//        sum_o += 1.0 - OCC_B->get(i);
     }
     double sum_v = 0.0;
     for (int a = naocc; a < nactv; a++) {
         sum_v += OCC_A->get(a);
+//        sum_v += OCC_B->get(a);
     }
 
     double cino_threshold = options_.get_double("CINO_THRESHOLD");
     int nactv_o = 0;
     double partial_sum_o = 0.0;
     for (int i = 0; i < naocc; i++) {
+//        double w = 2.0 - OCC_A->get(naocc - 1 - i)-OCC_B->get(naocc - 1 - i);
         double w = 1.0 - OCC_A->get(naocc - 1 - i);
         partial_sum_o += w;
         nactv_o += 1;
@@ -359,14 +405,13 @@ void CINO::find_active_space_and_transform(
     int nactv_v = 0;
     double partial_sum_v = 0.0;
     for (int a = naocc; a < nactv; a++) {
-        double w = OCC_A->get(a);
+        double w = OCC_A->get(a); // +OCC_B->get(a);
         partial_sum_v += w;
         nactv_v += 1;
         if (partial_sum_v / sum_v > cino_threshold)
             break;
     }
 
-    // CiCi : use both alpha and beta occupation numbers to determine the number of active orbitals
     outfile->Printf("\n  Number of active occupied MOs: %d",nactv_o);
     outfile->Printf("\n  Number of active virtual MOs:   %d",nactv_v);
 }
