@@ -573,7 +573,7 @@ double ProjectorCI_Simple::compute_energy() {
         "\n\t    Projector Configuration Interaction Simple implementation");
     outfile->Printf(
         "\n\t         by Francesco A. Evangelista and Tianyuan Zhang");
-    outfile->Printf("\n\t                      version May. 30 2017");
+    outfile->Printf("\n\t                      version Jun. 4 2017");
     outfile->Printf("\n\t                    %4d thread(s) %s", num_threads_,
                     have_omp_ ? "(OMP)" : "");
     outfile->Printf(
