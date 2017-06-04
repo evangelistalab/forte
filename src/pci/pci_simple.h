@@ -110,8 +110,20 @@ class ProjectorCI_Simple : public Wavefunction {
     std::vector<int> mo_symmetry_;
     /// The number of correlated molecular orbitals
     int ncmo_;
+    /// The number of active electrons
+    int nactel_;
+    /// The number of correlated alpha electrons
+    int nalpha_;
+    /// The number of correlated beta electrons
+    int nbeta_;
+    /// The number of frozen core orbitals
+    int nfrzc_;
     /// The number of correlated molecular orbitals per irrep
     Dimension ncmopi_;
+    /// The number of active orbitals
+    size_t nact_;
+    /// The number of active orbitals per irrep
+    Dimension nactpi_;
     /// The multiplicity of the wave function
     int wavefunction_multiplicity_;
     /// The nuclear repulsion energy
@@ -387,8 +399,12 @@ class ProjectorCI_Simple : public Wavefunction {
     /// Test the convergence of calculation
     bool converge_test();
 
-    /// Compute the maximum absolute double excitation coupling
-    double compute_max_double_coupling();
+    /// Returns a vector of orbital energy, sym label pairs
+    std::vector<std::tuple<double, int, int>>
+    sym_labeled_orbitals(std::string type);
+
+    /// Get the reference occupation
+    std::vector<int> get_occupation();
 };
 }
 } // End Namespaces
