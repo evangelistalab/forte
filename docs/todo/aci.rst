@@ -1,6 +1,3 @@
-
-.. include:: autodoc_abbr_options_c.rst
-
 .. index::
    single: ACI
    pair: ACI; theory
