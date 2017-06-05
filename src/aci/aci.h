@@ -124,7 +124,9 @@ class AdaptiveCI : public Wavefunction {
     /// The number of correlated molecular orbitals
     int ncmo_;
     /// The multiplicity of the reference
-    int wavefunction_multiplicity_;
+    int multiplicity_;
+    /// M_s of the reference
+    int ms_;
     /// The number of active electrons
     int nactel_;
     /// The number of correlated alpha electrons
