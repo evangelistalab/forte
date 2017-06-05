@@ -3,14 +3,18 @@
    You can adapt this file completely to your liking, but it should at least
    contain the root `toctree` directive.
 
-Welcome to Forte's documentation!
-=================================
+Forte's documentation
+=====================
+
+Forte is an open-source suite of quantum chemistry methods for strongly
+correlated electrons.
 
 .. toctree::
    :maxdepth: 2
    :caption: Contents:
 
-   aci
+   mospaceinfo
+   fci
 
 Indices and tables
 ==================

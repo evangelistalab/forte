@@ -5,22 +5,22 @@
  * that implements a variety of quantum chemistry methods for strongly
  * correlated electrons.
  *
- * Copyright (c) 2012-2017 by its authors (see LICENSE, AUTHORS).
+ * Copyright (c) 2012-2017 by its authors (see COPYING, COPYING.LESSER, AUTHORS).
  *
  * The copyrights for code used from other parties are included in
  * the corresponding files.
  *
  * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
+ * it under the terms of the GNU Lesser General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
+ * GNU Lesser General Public License for more details.
  *
- * You should have received a copy of the GNU General Public License
+ * You should have received a copy of the GNU Lesser General Public License
  * along with this program.  If not, see http://www.gnu.org/licenses/.
  *
  * @END LICENSE
@@ -87,6 +87,13 @@ class FCIIntegrals {
     double tei_bb(size_t p, size_t q, size_t r, size_t s) const {
         return tei_bb_[nmo3_ * p + nmo2_ * q + nmo_ * r + s];
     }
+
+    /// Return a vector of alpha-alpha antisymmetrized two-electron integrals
+    const std::vector<double>& tei_aa_vector() const { return tei_aa_; }
+    /// Return a vector of alpha-beta antisymmetrized two-electron integrals
+    const std::vector<double>& tei_ab_vector() const { return tei_ab_; }
+    /// Return a vector of beta-beta antisymmetrized two-electron integrals
+    const std::vector<double>& tei_bb_vector() const { return tei_bb_; }
 
     /// Return the alpha-alpha antisymmetrized two-electron integral <pq||pq>
     double diag_tei_aa(size_t p, size_t q) const {

@@ -12,13 +12,14 @@ list(APPEND CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/cmake)
 
 include(psi4OptionsTools)
 
+option_with_print(ENABLE_CheMPS2 "Enable CheMPS2 solver." OFF)
 option_with_print(ENABLE_OPENMP "Enable threadsafe linking to OpenMP parallelized programs." ON)
 option_with_print(ENABLE_MPI "Enable MPI parallelization" OFF)
+option_with_print(ENABLE_GA "Enable Global Arrays" OFF)
 #option_with_print(ENABLE_GENERIC "Enable mostly static linking in shared library" OFF)
 
 include(autocmake_omp)
 include(autocmake_mpi)  # MPI option A
-#include(custom_cxxstandard)
 #include(custom_static_library)
 
 
@@ -27,8 +28,9 @@ find_package(psi4 1.0 REQUIRED)
 
 find_package(TargetLAPACK REQUIRED)
 find_package(ambit REQUIRED)
-#find_package(CheMPS2 REQUIRED)
-
+if(ENABLE_CheMPS2)
+    find_package(CheMPS2 1.8.3 CONFIG REQUIRED)
+endif()
 
 add_psi4_plugin(forte
 src/active_dsrgpt2.cc
@@ -129,10 +131,13 @@ src/orbital-helper/unpaired_density.cc
 src/pci/pci.cc
 src/pci/pci_hashvec.cc
 src/pci/pci_simple.cc
+src/pci/ewci.cc
 )
 
 target_link_libraries(forte PRIVATE ambit::ambit)
-#target_link_libraries(forte PRIVATE CheMPS2::chemps2)
+if(TARGET CheMPS2::chemps2)
+    target_link_libraries(forte PRIVATE CheMPS2::chemps2)
+endif()
 
 target_include_directories(forte PRIVATE src/mini-boost)
 
@@ -142,3 +147,6 @@ if(ENABLE_MPI)
     #target_add_definitions(forte PRIVATE HAVE_MPI)  # MPI option B
 endif()
 
+if(ENABLE_GA)
+    target_link_libraries(forte PRIVATE GlobalArrays::ga)
+endif()

@@ -12,19 +12,43 @@ symmetry C1
 }
 
 set {
+  scf_type      df
+  df_basis_scf  cc-pVDZ-JKFIT
+  df_basis_mp2  cc-pVDZ-JKFIT
   basis cc-pVDZ
-  scf_type pk
   e_convergence 12
 }
 
 set forte {
   job_type nojob
   cino true
-  restricted_docc [2]
-  active [25]
-  CINO_NROOT   10
+  #restricted_docc [2]
+  #active [12]
+  CINO_NROOT 3
 }
 
-scf_e, scf_wfn = energy('scf', return_wfn=True)
-energy,wfn = energy('forte',return_wfn=True, ref_wfn=scf_wfn)
+E,wfn = energy('forte',return_wfn=True)
+set {
+  scf_type      df
+  df_basis_scf  cc-pVDZ-JKFIT
+  df_basis_mp2  cc-pVDZ-JKFIT
+  basis cc-pVDZ
+  e_convergence 12
+}
+set forte{
+  cino                 false
+  job_type             active-dsrgpt2
+  frozen_docc          [2]
+  restricted_docc      [1]
+  active               [10]
+  dsrg_s               0.5
+  cas_type             cas
+  fcimo_actv_type      cis
+  nrootpi              [3]
+  d_convergence        10
+  internal_amp         singles_doubles
+  int_type             df
+  #cholesky_tolerance   6
+}
+energy('forte',ref_wfn=wfn)
 #cubeprop(wfn)
