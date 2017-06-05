@@ -5,22 +5,23 @@
  * that implements a variety of quantum chemistry methods for strongly
  * correlated electrons.
  *
- * Copyright (c) 2012-2017 by its authors (see LICENSE, AUTHORS).
+ * Copyright (c) 2012-2017 by its authors (see COPYING, COPYING.LESSER,
+ * AUTHORS).
  *
  * The copyrights for code used from other parties are included in
  * the corresponding files.
  *
  * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
+ * it under the terms of the GNU Lesser General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
+ * GNU Lesser General Public License for more details.
  *
- * You should have received a copy of the GNU General Public License
+ * You should have received a copy of the GNU Lesser General Public License
  * along with this program.  If not, see http://www.gnu.org/licenses/.
  *
  * @END LICENSE
@@ -35,10 +36,10 @@
 #include "psi4/liboptions/liboptions.h"
 #include "psi4/physconst.h"
 
-#include "../hash_vector.h"
 #include "../fci/fci_vector.h"
 #include "../forte-def.h"
 #include "../forte_options.h"
+#include "../hash_vector.h"
 #include "../helpers.h"
 #include "../integrals/integrals.h"
 #include "../sparse_ci_solver.h"
@@ -85,8 +86,8 @@ class ProjectorCI_HashVec : public Wavefunction {
      * @param ints A pointer to an allocated integral object
      */
     ProjectorCI_HashVec(SharedWavefunction ref_wfn, Options& options,
-                       std::shared_ptr<ForteIntegrals> ints,
-                       std::shared_ptr<MOSpaceInfo> mo_space_info);
+                        std::shared_ptr<ForteIntegrals> ints,
+                        std::shared_ptr<MOSpaceInfo> mo_space_info);
 
     // ==> Class Interface <==
 
@@ -113,8 +114,20 @@ class ProjectorCI_HashVec : public Wavefunction {
     std::vector<int> mo_symmetry_;
     /// The number of correlated molecular orbitals
     int ncmo_;
+    /// The number of active electrons
+    int nactel_;
+    /// The number of correlated alpha electrons
+    int nalpha_;
+    /// The number of correlated beta electrons
+    int nbeta_;
+    /// The number of frozen core orbitals
+    int nfrzc_;
     /// The number of correlated molecular orbitals per irrep
     Dimension ncmopi_;
+    /// The number of active orbitals
+    size_t nact_;
+    /// The number of active orbitals per irrep
+    Dimension nactpi_;
     /// The multiplicity of the wave function
     int wavefunction_multiplicity_;
     /// The nuclear repulsion energy
@@ -206,6 +219,12 @@ class ProjectorCI_HashVec : public Wavefunction {
     std::unordered_map<Determinant, std::pair<double, double>,
                        Determinant::Hash>
         dets_max_couplings_;
+    double dets_double_max_coupling_;
+    std::vector<
+        std::tuple<int, int, double, std::vector<std::tuple<int, int, double>>>>
+        aa_couplings_, ab_couplings_, bb_couplings_;
+    double max_aa_coupling_, max_ab_coupling_, max_bb_coupling_;
+    size_t aa_couplings_size_, ab_couplings_size_, bb_couplings_size_;
 
     // * Energy estimation
     /// Estimate the variational energy?
@@ -316,8 +335,8 @@ class ProjectorCI_HashVec : public Wavefunction {
     * @param S An energy shift subtracted from the Hamiltonian
     */
     void propagate(GeneratorType_HashVec::GeneratorType generator,
-                   det_hashvec& dets_hashvec, std::vector<double>& C, double tau,
-                   double spawning_threshold, double S);
+                   det_hashvec& dets_hashvec, std::vector<double>& C,
+                   double tau, double spawning_threshold, double S);
     /// A Delta projector fitted by 10th order chebyshev polynomial
     void propagate_wallCh(det_hashvec& dets_hashvec, std::vector<double>& C,
                           double spawning_threshold, double S);
@@ -341,11 +360,22 @@ class ProjectorCI_HashVec : public Wavefunction {
         std::vector<std::pair<Determinant, double>>& new_space_C_vec, double E0,
         std::pair<double, double>& max_coupling);
 
+    /// Apply symmetric approx tau H to a determinant using dynamic screening
+    /// with selection according to a reference coefficient
+    /// and with HBCI sorting scheme
+    void apply_tau_H_ref_C_symm_det_dynamic_HBCI(
+        double tau, double spawning_threshold, const det_hashvec& dets_hashvec,
+        const std::vector<double>& pre_C, const std::vector<double>& ref_C,
+        const Determinant& detI, double CI, double ref_CI,
+        std::vector<std::pair<Determinant, double>>& new_space_C_vec, double E0,
+        std::pair<double, double>& max_coupling);
+
     /// Estimates the energy give a wave function
-    std::map<std::string, double> estimate_energy(const det_hashvec& dets_hashvec,
-                                                  std::vector<double>& C);
+    std::map<std::string, double>
+    estimate_energy(const det_hashvec& dets_hashvec, std::vector<double>& C);
     /// Estimates the projective energy
-    double estimate_proj_energy(const det_hashvec& dets, std::vector<double>& C);
+    double estimate_proj_energy(const det_hashvec& dets,
+                                std::vector<double>& C);
     /// Estimates the variational energy
     /// @param dets The set of determinants that form the wave function
     /// @param C The wave function coefficients
@@ -380,6 +410,16 @@ class ProjectorCI_HashVec : public Wavefunction {
 
     /// Test the convergence of calculation
     bool converge_test();
+
+    /// Compute the double excitation couplings
+    void compute_double_couplings(double double_coupling_threshold);
+
+    /// Returns a vector of orbital energy, sym label pairs
+    std::vector<std::tuple<double, int, int>>
+    sym_labeled_orbitals(std::string type);
+
+    /// Get the reference occupation
+    std::vector<int> get_occupation();
 };
 }
 } // End Namespaces

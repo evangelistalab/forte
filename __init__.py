@@ -1,31 +1,31 @@
 #
 # @BEGIN LICENSE
 #
-# forte_inversion by Psi4 Developer, a plugin to:
+# Forte: an open-source plugin to Psi4 (https://github.com/psi4/psi4)
+# that implements a variety of quantum chemistry methods for strongly
+# correlated electrons.
 #
-# Psi4: an open-source quantum chemistry software package
-#
-# Copyright (c) 2007-2016 The Psi4 Developers.
+# Copyright (c) 2012-2017 by its authors (see COPYING, COPYING.LESSER, AUTHORS).
 #
 # The copyrights for code used from other parties are included in
 # the corresponding files.
 #
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU General Public License as published by
-# the Free Software Foundation; either version 2 of the License, or
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU Lesser General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
 # (at your option) any later version.
 #
 # This program is distributed in the hope that it will be useful,
 # but WITHOUT ANY WARRANTY; without even the implied warranty of
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-# GNU General Public License for more details.
+# GNU Lesser General Public License for more details.
 #
-# You should have received a copy of the GNU General Public License along
-# with this program; if not, write to the Free Software Foundation, Inc.,
-# 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
+# You should have received a copy of the GNU Lesser General Public License
+# along with this program.  If not, see http://www.gnu.org/licenses/.
 #
 # @END LICENSE
 #
+
 
 """Plugin docstring.
 
@@ -40,6 +40,5 @@ from .pymodule import *
 import os
 import psi4
 plugdir = os.path.split(os.path.abspath(__file__))[0]
-sofile = plugdir + '/' + os.path.split(plugdir)[1] + '.so'
-psi4.core.plugin_load(sofile)
-
+PLUGIN_SOFILE = plugdir + '/' + os.path.split(plugdir)[1] + '.so'
+psi4.core.plugin_load(PLUGIN_SOFILE)

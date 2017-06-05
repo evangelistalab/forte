@@ -5,22 +5,23 @@
  * that implements a variety of quantum chemistry methods for strongly
  * correlated electrons.
  *
- * Copyright (c) 2012-2017 by its authors (see LICENSE, AUTHORS).
+ * Copyright (c) 2012-2017 by its authors (see COPYING, COPYING.LESSER,
+ * AUTHORS).
  *
  * The copyrights for code used from other parties are included in
  * the corresponding files.
  *
  * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
+ * it under the terms of the GNU Lesser General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
+ * GNU Lesser General Public License for more details.
  *
- * You should have received a copy of the GNU General Public License
+ * You should have received a copy of the GNU Lesser General Public License
  * along with this program.  If not, see http://www.gnu.org/licenses/.
  *
  * @END LICENSE
@@ -162,50 +163,49 @@ void ProjectorCI_HashVec::startup() {
     //   DynamicBitsetDeterminant::set_ints(fci_ints_);
 
     // The number of correlated molecular orbitals
-    ncmo_ = mo_space_info_->get_corr_abs_mo("ACTIVE").size();
-    ncmopi_ = mo_space_info_->get_dimension("ACTIVE");
+    nact_ = mo_space_info_->get_corr_abs_mo("ACTIVE").size();
+    nactpi_ = mo_space_info_->get_dimension("ACTIVE");
 
-    // Overwrite the frozen orbitals arrays
-    frzcpi_ = mo_space_info_->get_dimension("FROZEN_DOCC");
-    frzvpi_ = mo_space_info_->get_dimension("FROZEN_UOCC");
+    // Include frozen_docc and restricted_docc
+    frzcpi_ = mo_space_info_->get_dimension("INACTIVE_DOCC");
+    nfrzc_ = mo_space_info_->size("INACTIVE_DOCC");
 
     nuclear_repulsion_energy_ = molecule_->nuclear_repulsion_energy();
 
-    // Create the array with mo symmetry
-    for (int h = 0; h < nirrep_; ++h) {
-        for (int p = 0; p < ncmopi_[h]; ++p) {
-            mo_symmetry_.push_back(h);
-        }
-    }
+    mo_symmetry_ = mo_space_info_->symmetry("ACTIVE");
 
     wavefunction_symmetry_ = 0;
     if (options_["ROOT_SYM"].has_changed()) {
         wavefunction_symmetry_ = options_.get_int("ROOT_SYM");
     }
-
-    // Build the reference determinant and compute its energy
-    std::vector<int> occupation(2 * ncmo_, 0);
-    int cumidx = 0;
-    for (int h = 0; h < nirrep_; ++h) {
-        for (int i = 0; i < doccpi_[h] - frzcpi_[h]; ++i) {
-            occupation[i + cumidx] = 1;
-            occupation[ncmo_ + i + cumidx] = 1;
-        }
-        for (int i = 0; i < soccpi_[h]; ++i) {
-            occupation[i + cumidx + doccpi_[h] - frzcpi_[h]] = 1;
-        }
-        cumidx += ncmopi_[h];
-    }
-    reference_determinant_ = Determinant(occupation);
-
-    //    outfile->Printf("\n  The reference determinant is:\n");
-    //    reference_determinant_.print();
-
     // Read options
     wavefunction_multiplicity_ = 1;
     if (options_["MULTIPLICITY"].has_changed()) {
         wavefunction_multiplicity_ = options_.get_int("MULTIPLICITY");
     }
+
+    // Number of correlated electrons
+    nactel_ = 0;
+    nalpha_ = 0;
+    nbeta_ = 0;
+    int nel = 0;
+    for (int h = 0; h < nirrep_; ++h) {
+        nel += 2 * doccpi_[h] + soccpi_[h];
+    }
+
+    int ms = wavefunction_multiplicity_ - 1;
+    nactel_ = nel - 2 * nfrzc_;
+    nalpha_ = (nactel_ + ms) / 2;
+    nbeta_ = nactel_ - nalpha_;
+
+
+    // Build the reference determinant and compute its energy
+    reference_determinant_ = Determinant(get_occupation());
+
+    //    outfile->Printf("\n  The reference determinant is:\n");
+    //    reference_determinant_.print();
+
+
     nroot_ = options_.get_int("PCI_NROOT");
     current_root_ = -1;
     post_diagonalization_ = options_.get_bool("PCI_POST_DIAGONALIZE");
@@ -248,6 +248,8 @@ void ProjectorCI_HashVec::startup() {
     use_inter_norm_ = options_.get_bool("PCI_USE_INTER_NORM");
     do_simple_prescreening_ = options_.get_bool("PCI_SIMPLE_PRESCREENING");
     do_dynamic_prescreening_ = options_.get_bool("PCI_DYNAMIC_PRESCREENING");
+    //    if (do_dynamic_prescreening_)
+    //        compute_max_double_coupling();
     do_schwarz_prescreening_ = options_.get_bool("PCI_SCHWARZ_PRESCREENING");
     do_initiator_approx_ = options_.get_bool("PCI_INITIATOR_APPROX");
     do_perturb_analysis_ = options_.get_bool("PCI_PERTURB_ANALYSIS");
@@ -359,33 +361,30 @@ double ProjectorCI_HashVec::estimate_high_energy() {
     std::vector<std::pair<double, int>> obt_energies;
     auto bits_ = reference_determinant_.bits_;
     Determinant high_det(reference_determinant_);
-    for (int i = 0; i < ncmo_; i++) {
+    for (int i = 0; i < nact_; i++) {
         if (bits_[i]) {
             ++nea;
             high_det.destroy_alfa_bit(i);
         }
-        if (bits_[ncmo_ + i]) {
+        if (bits_[nact_ + i]) {
             ++neb;
             high_det.destroy_beta_bit(i);
         }
 
         double temp = fci_ints_->oei_a(i, i);
-        for (int p = 0; p < ncmo_; ++p) {
+        for (int p = 0; p < nact_; ++p) {
             if (bits_[p]) {
                 temp += fci_ints_->tei_aa(i, p, i, p);
             }
-            if (bits_[ncmo_ + p]) {
+            if (bits_[nact_ + p]) {
                 temp += fci_ints_->tei_ab(i, p, i, p);
             }
         }
         obt_energies.push_back(std::make_pair(temp, i));
     }
     std::sort(obt_energies.begin(), obt_energies.end());
-    //    outfile->Printf("\n\n  Estimating high energy, size of obt_energies:
-    //    %d", obt_energies.size());
-    //    for (auto item : obt_energies)
-    //        outfile -> Printf("  %lf", item);
-    //    int Ndocc = ne/2;
+
+
     for (int i = 1; i <= nea; i++) {
         high_obt_energy += obt_energies[obt_energies.size() - i].first;
         high_det.create_alfa_bit(obt_energies[obt_energies.size() - i].second);
@@ -403,7 +402,7 @@ double ProjectorCI_HashVec::estimate_high_energy() {
     lambda_h_ = high_obt_energy + fci_ints_->frozen_core_energy() +
                 fci_ints_->scalar_energy();
 
-    double lambda_h_G = high_det.energy();
+    double lambda_h_G = high_det.energy() + fci_ints_->scalar_energy();
     std::vector<int> aocc = high_det.get_alfa_occ();
     std::vector<int> bocc = high_det.get_beta_occ();
     std::vector<int> avir = high_det.get_alfa_vir();
@@ -516,7 +515,8 @@ double ProjectorCI_HashVec::estimate_high_energy() {
     outfile->Printf("\n  Highest Excited determinant:");
     high_det.print();
     outfile->Printf("\n  Determinant Energy                    :  %.12f",
-                    high_det.energy() + nuclear_repulsion_energy_);
+                    high_det.energy() + nuclear_repulsion_energy_ +
+                    fci_ints_->scalar_energy());
     outfile->Printf("\n  Highest Energy Gershgorin circle Est. :  %.12f",
                     lambda_h_G + nuclear_repulsion_energy_);
     lambda_h_ = lambda_h_G;
@@ -594,11 +594,11 @@ double ProjectorCI_HashVec::compute_energy() {
 
     outfile->Printf(
         "\n\n\t  ---------------------------------------------------------");
-    outfile->Printf(
-        "\n\t    Projector Configuration Interaction HashVector implementation");
+    outfile->Printf("\n\t    Projector Configuration Interaction HashVector "
+                    "implementation");
     outfile->Printf(
         "\n\t         by Francesco A. Evangelista and Tianyuan Zhang");
-    outfile->Printf("\n\t                      version Mar. 15 2017");
+    outfile->Printf("\n\t                      version Jun. 4 2017");
     outfile->Printf("\n\t                    %4d thread(s) %s", num_threads_,
                     have_omp_ ? "(OMP)" : "");
     outfile->Printf(
@@ -617,26 +617,30 @@ double ProjectorCI_HashVec::compute_energy() {
     sparse_solver.set_maxiter_davidson(options_.get_int("DL_MAXITER"));
     sparse_solver.set_spin_project(true);
 
-    pqpq_aa_ = new double[ncmo_ * ncmo_];
-    pqpq_ab_ = new double[ncmo_ * ncmo_];
-    pqpq_bb_ = new double[ncmo_ * ncmo_];
+    pqpq_aa_ = new double[nact_ * nact_];
+    pqpq_ab_ = new double[nact_ * nact_];
+    pqpq_bb_ = new double[nact_ * nact_];
 
-    for (size_t i = 0; i < (size_t)ncmo_; ++i) {
-        for (size_t j = 0; j < (size_t)ncmo_; ++j) {
+    for (size_t i = 0; i < (size_t)nact_; ++i) {
+        for (size_t j = 0; j < (size_t)nact_; ++j) {
             double temp_aa = sqrt(fabs(fci_ints_->tei_aa(i, j, i, j)));
-            pqpq_aa_[i * ncmo_ + j] = temp_aa;
+            pqpq_aa_[i * nact_ + j] = temp_aa;
             if (temp_aa > pqpq_max_aa_)
                 pqpq_max_aa_ = temp_aa;
             double temp_ab = sqrt(fabs(fci_ints_->tei_ab(i, j, i, j)));
-            pqpq_ab_[i * ncmo_ + j] = temp_ab;
+            pqpq_ab_[i * nact_ + j] = temp_ab;
             if (temp_ab > pqpq_max_ab_)
                 pqpq_max_ab_ = temp_ab;
             double temp_bb = sqrt(fabs(fci_ints_->tei_bb(i, j, i, j)));
-            pqpq_bb_[i * ncmo_ + j] = temp_bb;
+            pqpq_bb_[i * nact_ + j] = temp_bb;
             if (temp_bb > pqpq_max_bb_)
                 pqpq_max_bb_ = temp_bb;
         }
     }
+
+    timer_on("PIFCI:Couplings");
+    compute_double_couplings(spawning_threshold_);
+    timer_off("PIFCI:Couplings");
 
     // Compute the initial guess
     outfile->Printf("\n\n  ==> Initial Guess <==");
@@ -817,7 +821,8 @@ double ProjectorCI_HashVec::compute_energy() {
 
     outfile->Printf("\n  * Projector-CI Var. Corr.  Energy     = %18.12f Eh", 1,
                     var_energy - reference_determinant_.energy() -
-                        nuclear_repulsion_energy_);
+                        nuclear_repulsion_energy_ -
+                    fci_ints_->scalar_energy());
 
     outfile->Printf("\n\n  * Size of CI space                    = %zu",
                     C.size());
@@ -849,7 +854,8 @@ double ProjectorCI_HashVec::compute_energy() {
         timer_off("PIFCI:Post_Diag");
 
         double post_diag_energy =
-            apfci_evals->get(current_root_) + nuclear_repulsion_energy_;
+            apfci_evals->get(current_root_) + nuclear_repulsion_energy_ +
+                fci_ints_->scalar_energy();
         Process::environment.globals["PCI POST DIAG ENERGY"] = post_diag_energy;
 
         outfile->Printf(
@@ -858,7 +864,8 @@ double ProjectorCI_HashVec::compute_energy() {
         outfile->Printf(
             "\n  * Projector-CI Var. Corr.  Energy     = %18.12f Eh", 1,
             post_diag_energy - reference_determinant_.energy() -
-                nuclear_repulsion_energy_);
+                nuclear_repulsion_energy_ -
+                    fci_ints_->scalar_energy());
 
         std::vector<double> diag_C(C.size());
 
@@ -900,7 +907,7 @@ bool ProjectorCI_HashVec::converge_test() {
 }
 
 double ProjectorCI_HashVec::initial_guess(det_hashvec& dets_hashvec,
-                                         std::vector<double>& C) {
+                                          std::vector<double>& C) {
 
     // Use the reference determinant as a starting point
     std::vector<bool> alfa_bits =
@@ -956,11 +963,12 @@ double ProjectorCI_HashVec::initial_guess(det_hashvec& dets_hashvec,
     sparse_solver.diagonalize_hamiltonian(dets_hashvec.toVector(), evals, evecs,
                                           nroot_, wavefunction_multiplicity_,
                                           DLSolver);
-    double var_energy = evals->get(current_root_) + nuclear_repulsion_energy_;
+    double var_energy = evals->get(current_root_) + nuclear_repulsion_energy_ +
+            fci_ints_->scalar_energy();
     outfile->Printf(
         "\n\n  Initial guess energy (variational) = %20.12f Eh (root = %d)",
         var_energy, current_root_ + 1);
-    lambda_1_ = evals->get(current_root_);
+    lambda_1_ = evals->get(current_root_) + fci_ints_->scalar_energy();
 
     // Copy the ground state eigenvector
     for (size_t I = 0; I < guess_size; ++I) {
@@ -971,9 +979,9 @@ double ProjectorCI_HashVec::initial_guess(det_hashvec& dets_hashvec,
 }
 
 void ProjectorCI_HashVec::propagate(GeneratorType generator,
-                                   det_hashvec& dets_hashvec,
-                                   std::vector<double>& C, double tau,
-                                   double spawning_threshold, double S) {
+                                    det_hashvec& dets_hashvec,
+                                    std::vector<double>& C, double tau,
+                                    double spawning_threshold, double S) {
     //    det_hashvec dets_hashvec(dets);
     //    det_vec dets;
     switch (generator) {
@@ -996,8 +1004,9 @@ void ProjectorCI_HashVec::propagate(GeneratorType generator,
 }
 
 void ProjectorCI_HashVec::propagate_wallCh(det_hashvec& dets_hashvec,
-                                          std::vector<double>& C,
-                                          double spawning_threshold, double S) {
+                                           std::vector<double>& C,
+                                           double spawning_threshold,
+                                           double S) {
     //    det_hashvec dets_hashvec(dets);
     // A map that contains the pair (determinant,coefficient)
     const double PI = 2 * acos(0.0);
@@ -1026,8 +1035,8 @@ void ProjectorCI_HashVec::propagate_wallCh(det_hashvec& dets_hashvec,
 }
 
 void ProjectorCI_HashVec::propagate_DL(det_hashvec& dets_hashvec,
-                                      std::vector<double>& C,
-                                      double spawning_threshold, double S) {
+                                       std::vector<double>& C,
+                                       double spawning_threshold, double S) {
     size_t ref_size = C.size();
     std::vector<std::vector<double>> b_vec(davidson_subspace_per_root_);
     std::vector<std::vector<double>> sigma_vec(davidson_subspace_per_root_);
@@ -1056,7 +1065,7 @@ void ProjectorCI_HashVec::propagate_DL(det_hashvec& dets_hashvec,
     size_t dets_size = dets_hashvec.size();
     std::vector<double> diag_vec(dets_size);
     for (int i = 0; i < dets_size; i++) {
-        diag_vec[i] = dets_hashvec[i].energy();
+        diag_vec[i] = dets_hashvec[i].energy() + fci_ints_->scalar_energy();
     }
 
     double lambda = A->get(0, 0);
@@ -1230,28 +1239,40 @@ void ProjectorCI_HashVec::apply_tau_H_ref_C_symm(
         std::pair<double, double> zero_pair(0.0, 0.0);
         // Update the list of couplings
         std::pair<double, double> max_coupling;
-#pragma omp critical (couplings)
+#pragma omp critical(couplings)
         { max_coupling = dets_max_couplings_[dets_hashvec[I]]; }
         if (max_coupling == zero_pair) {
             std::vector<std::pair<Determinant, double>> thread_det_C_vec;
-            apply_tau_H_ref_C_symm_det_dynamic(
-                tau, spawning_threshold, dets_hashvec, C, ref_C, dets_hashvec[I],
-                C[I], ref_C[I], thread_det_C_vec, S, max_coupling);
-#pragma omp critical (dets)
+            //            apply_tau_H_ref_C_symm_det_dynamic(
+            //                tau, spawning_threshold, dets_hashvec, C, ref_C,
+            //                dets_hashvec[I],
+            //                C[I], ref_C[I], thread_det_C_vec, S,
+            //                max_coupling);
+            apply_tau_H_ref_C_symm_det_dynamic_HBCI(
+                tau, spawning_threshold, dets_hashvec, C, ref_C,
+                dets_hashvec[I], C[I], ref_C[I], thread_det_C_vec, S,
+                max_coupling);
+#pragma omp critical(dets)
             {
                 dets_hashvec_merge.merge(
                     thread_det_C_vec, C_merge,
                     std::function<double(double, double)>(std::plus<double>()),
                     0.0, false);
             }
-#pragma omp critical (couplings)
+#pragma omp critical(couplings)
             { dets_max_couplings_[dets_hashvec[I]] = max_coupling; }
         } else {
             std::vector<std::pair<Determinant, double>> thread_det_C_vec;
-            apply_tau_H_ref_C_symm_det_dynamic(
-                tau, spawning_threshold, dets_hashvec, C, ref_C, dets_hashvec[I],
-                C[I], ref_C[I], thread_det_C_vec, S, max_coupling);
-#pragma omp critical (dets)
+            //            apply_tau_H_ref_C_symm_det_dynamic(
+            //                tau, spawning_threshold, dets_hashvec, C, ref_C,
+            //                dets_hashvec[I],
+            //                C[I], ref_C[I], thread_det_C_vec, S,
+            //                max_coupling);
+            apply_tau_H_ref_C_symm_det_dynamic_HBCI(
+                tau, spawning_threshold, dets_hashvec, C, ref_C,
+                dets_hashvec[I], C[I], ref_C[I], thread_det_C_vec, S,
+                max_coupling);
+#pragma omp critical(dets)
             {
                 dets_hashvec_merge.merge(
                     thread_det_C_vec, C_merge,
@@ -1264,8 +1285,8 @@ void ProjectorCI_HashVec::apply_tau_H_ref_C_symm(
 #pragma omp parallel for
     for (size_t I = ref_max_I; I < max_I; ++I) {
         // Diagonal contribution
-        double det_energy = dets_hashvec[I].energy();
-// Diagonal contributions
+        double det_energy = dets_hashvec[I].energy() + fci_ints_->scalar_energy();
+        // Diagonal contributions
         C_merge[I] += tau * (det_energy - S) * C[I];
     }
     if (approx_E_flag_) {
@@ -1321,7 +1342,7 @@ void ProjectorCI_HashVec::apply_tau_H_ref_C_symm_det_dynamic(
         (std::fabs(max_coupling.second * ref_CI) >= spawning_threshold);
 
     // Diagonal contributions
-    double det_energy = detI.energy();
+    double det_energy = detI.energy() + fci_ints_->scalar_energy();
     new_space_C_vec.push_back(
         std::make_pair(detI, tau * (det_energy - E0) * CI));
 
@@ -1511,9 +1532,334 @@ void ProjectorCI_HashVec::apply_tau_H_ref_C_symm_det_dynamic(
     }
 }
 
+void ProjectorCI_HashVec::apply_tau_H_ref_C_symm_det_dynamic_HBCI(
+    double tau, double spawning_threshold, const det_hashvec& dets_hashvec,
+    const std::vector<double>& pre_C, const std::vector<double>& ref_C,
+    const Determinant& detI, double CI, double ref_CI,
+    std::vector<std::pair<Determinant, double>>& new_space_C_vec, double E0,
+    std::pair<double, double>& max_coupling) {
+
+    size_t pre_C_size = pre_C.size(), ref_C_size = ref_C.size();
+
+    bool do_singles =
+        (max_coupling.first == 0.0) or
+        (std::fabs(max_coupling.first * ref_CI) >= spawning_threshold);
+    bool do_doubles_1 =
+        max_coupling.second == 0.0 and
+        std::fabs(dets_double_max_coupling_ * ref_CI) >= spawning_threshold;
+    bool do_doubles =
+        std::fabs(max_coupling.second * ref_CI) >= spawning_threshold;
+
+    // Diagonal contributions
+    double det_energy = detI.energy() + fci_ints_->scalar_energy();
+    new_space_C_vec.push_back(
+        std::make_pair(detI, tau * (det_energy - E0) * CI));
+
+    if (do_singles) {
+        std::vector<int> aocc = detI.get_alfa_occ();
+        std::vector<int> bocc = detI.get_beta_occ();
+        std::vector<int> avir = detI.get_alfa_vir();
+        std::vector<int> bvir = detI.get_beta_vir();
+
+        int noalpha = aocc.size();
+        int nobeta = bocc.size();
+        int nvalpha = avir.size();
+        int nvbeta = bvir.size();
+
+        // Generate alpha excitations
+        for (int i = 0; i < noalpha; ++i) {
+            int ii = aocc[i];
+            for (int a = 0; a < nvalpha; ++a) {
+                int aa = avir[a];
+                if ((mo_symmetry_[ii] ^ mo_symmetry_[aa]) == 0) {
+                    Determinant detJ(detI);
+                    detJ.set_alfa_bit(ii, false);
+                    detJ.set_alfa_bit(aa, true);
+                    double HJI = detJ.slater_rules(detI);
+                    max_coupling.first =
+                        std::max(max_coupling.first, std::fabs(HJI));
+                    if (std::fabs(HJI * ref_CI) >= spawning_threshold) {
+                        new_space_C_vec.push_back(
+                            std::make_pair(detJ, tau * HJI * CI));
+
+                        size_t index = dets_hashvec.find(detJ);
+                        if ((index < pre_C_size) &&
+                            (std::fabs(HJI * ref_C[index]) <
+                                 spawning_threshold ||
+                             index >= ref_C_size)) {
+                            new_space_C_vec[0].second +=
+                                tau * HJI * pre_C[index];
+                        }
+                    }
+                }
+            }
+        }
+        // Generate beta excitations
+        for (int i = 0; i < nobeta; ++i) {
+            int ii = bocc[i];
+            for (int a = 0; a < nvbeta; ++a) {
+                int aa = bvir[a];
+                if ((mo_symmetry_[ii] ^ mo_symmetry_[aa]) == 0) {
+                    Determinant detJ(detI);
+                    detJ.set_beta_bit(ii, false);
+                    detJ.set_beta_bit(aa, true);
+                    double HJI = detJ.slater_rules(detI);
+                    max_coupling.first =
+                        std::max(max_coupling.first, std::fabs(HJI));
+                    if (std::fabs(HJI * ref_CI) >= spawning_threshold) {
+                        new_space_C_vec.push_back(
+                            std::make_pair(detJ, tau * HJI * CI));
+
+                        size_t index = dets_hashvec.find(detJ);
+                        if ((index < pre_C_size) &&
+                            (std::fabs(HJI * ref_C[index]) <
+                                 spawning_threshold ||
+                             index >= ref_C_size)) {
+                            new_space_C_vec[0].second +=
+                                tau * HJI * pre_C[index];
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    if (do_doubles) {
+        // Generate alpha-alpha excitations
+        for (size_t x = 0; x < aa_couplings_size_; ++x) {
+            double HJI_max = std::get<2>(aa_couplings_[x]);
+            if (fabs(HJI_max * ref_CI) < spawning_threshold) {
+                break;
+            }
+            int i = std::get<0>(aa_couplings_[x]);
+            int j = std::get<1>(aa_couplings_[x]);
+            if (detI.get_alfa_bit(i) and detI.get_alfa_bit(j)) {
+                std::vector<std::tuple<int, int, double>>& sub_couplings =
+                    std::get<3>(aa_couplings_[x]);
+                size_t sub_couplings_size = sub_couplings.size();
+                for (size_t y = 0; y < sub_couplings_size; ++y) {
+                    int a, b;
+                    double HJI;
+                    std::tie(a, b, HJI) = sub_couplings[y];
+                    if (fabs(HJI * ref_CI) < spawning_threshold) {
+                        break;
+                    }
+                    if (!(detI.get_alfa_bit(a) or detI.get_alfa_bit(b))) {
+                        Determinant detJ(detI);
+                        HJI *= detJ.double_excitation_aa(i, j, a, b);
+                        new_space_C_vec.push_back(
+                            std::make_pair(detJ, tau * HJI * CI));
+
+                        size_t index = dets_hashvec.find(detJ);
+                        if ((index < pre_C_size) &&
+                            (std::fabs(HJI * ref_C[index]) <
+                                 spawning_threshold ||
+                             index >= ref_C_size)) {
+                            new_space_C_vec[0].second +=
+                                tau * HJI * pre_C[index];
+                        }
+                    }
+                }
+            }
+        }
+        // Generate alpha-beta excitations
+        for (size_t x = 0; x < ab_couplings_size_; ++x) {
+            double HJI_max = std::get<2>(ab_couplings_[x]);
+            if (fabs(HJI_max * ref_CI) < spawning_threshold) {
+                break;
+            }
+            int i = std::get<0>(ab_couplings_[x]);
+            int j = std::get<1>(ab_couplings_[x]);
+            if (detI.get_alfa_bit(i) and detI.get_beta_bit(j)) {
+                std::vector<std::tuple<int, int, double>>& sub_couplings =
+                    std::get<3>(ab_couplings_[x]);
+                size_t sub_couplings_size = sub_couplings.size();
+                for (size_t y = 0; y < sub_couplings_size; ++y) {
+                    int a, b;
+                    double HJI;
+                    std::tie(a, b, HJI) = sub_couplings[y];
+                    if (fabs(HJI * ref_CI) < spawning_threshold) {
+                        break;
+                    }
+                    if (!(detI.get_alfa_bit(a) or detI.get_beta_bit(b))) {
+                        Determinant detJ(detI);
+                        HJI *= detJ.double_excitation_ab(i, j, a, b);
+                        new_space_C_vec.push_back(
+                            std::make_pair(detJ, tau * HJI * CI));
+
+                        size_t index = dets_hashvec.find(detJ);
+                        if ((index < pre_C_size) &&
+                            (std::fabs(HJI * ref_C[index]) <
+                                 spawning_threshold ||
+                             index >= ref_C_size)) {
+                            new_space_C_vec[0].second +=
+                                tau * HJI * pre_C[index];
+                        }
+                    }
+                }
+            }
+        }
+        // Generate beta-beta excitations
+        for (size_t x = 0; x < bb_couplings_size_; ++x) {
+            double HJI_max = std::get<2>(bb_couplings_[x]);
+            if (fabs(HJI_max * ref_CI) < spawning_threshold) {
+                break;
+            }
+            int i = std::get<0>(bb_couplings_[x]);
+            int j = std::get<1>(bb_couplings_[x]);
+            if (detI.get_beta_bit(i) and detI.get_beta_bit(j)) {
+                std::vector<std::tuple<int, int, double>>& sub_couplings =
+                    std::get<3>(bb_couplings_[x]);
+                size_t sub_couplings_size = sub_couplings.size();
+                for (size_t y = 0; y < sub_couplings_size; ++y) {
+                    int a, b;
+                    double HJI;
+                    std::tie(a, b, HJI) = sub_couplings[y];
+                    if (fabs(HJI * ref_CI) < spawning_threshold) {
+                        break;
+                    }
+                    if (!(detI.get_beta_bit(a) or detI.get_beta_bit(b))) {
+                        Determinant detJ(detI);
+                        HJI *= detJ.double_excitation_bb(i, j, a, b);
+                        new_space_C_vec.push_back(
+                            std::make_pair(detJ, tau * HJI * CI));
+
+                        size_t index = dets_hashvec.find(detJ);
+                        if ((index < pre_C_size) &&
+                            (std::fabs(HJI * ref_C[index]) <
+                                 spawning_threshold ||
+                             index >= ref_C_size)) {
+                            new_space_C_vec[0].second +=
+                                tau * HJI * pre_C[index];
+                        }
+                    }
+                }
+            }
+        }
+    } else if (do_doubles_1) {
+        // Generate alpha-alpha excitations
+        for (size_t x = 0; x < aa_couplings_size_; ++x) {
+            double HJI_max = std::get<2>(aa_couplings_[x]);
+            if (fabs(HJI_max * ref_CI) < spawning_threshold) {
+                break;
+            }
+            int i = std::get<0>(aa_couplings_[x]);
+            int j = std::get<1>(aa_couplings_[x]);
+            if (detI.get_alfa_bit(i) and detI.get_alfa_bit(j)) {
+                std::vector<std::tuple<int, int, double>>& sub_couplings =
+                    std::get<3>(aa_couplings_[x]);
+                size_t sub_couplings_size = sub_couplings.size();
+                for (size_t y = 0; y < sub_couplings_size; ++y) {
+                    int a, b;
+                    double HJI;
+                    std::tie(a, b, HJI) = sub_couplings[y];
+                    if (fabs(HJI * ref_CI) < spawning_threshold) {
+                        break;
+                    }
+                    if (!(detI.get_alfa_bit(a) or detI.get_alfa_bit(b))) {
+                        max_coupling.second =
+                            std::max(max_coupling.second, std::fabs(HJI));
+                        Determinant detJ(detI);
+                        HJI *= detJ.double_excitation_aa(i, j, a, b);
+                        new_space_C_vec.push_back(
+                            std::make_pair(detJ, tau * HJI * CI));
+
+                        size_t index = dets_hashvec.find(detJ);
+                        if ((index < pre_C_size) &&
+                            (std::fabs(HJI * ref_C[index]) <
+                                 spawning_threshold ||
+                             index >= ref_C_size)) {
+                            new_space_C_vec[0].second +=
+                                tau * HJI * pre_C[index];
+                        }
+                    }
+                }
+            }
+        }
+        // Generate alpha-beta excitations
+        for (size_t x = 0; x < ab_couplings_size_; ++x) {
+            double HJI_max = std::get<2>(ab_couplings_[x]);
+            if (fabs(HJI_max * ref_CI) < spawning_threshold) {
+                break;
+            }
+            int i = std::get<0>(ab_couplings_[x]);
+            int j = std::get<1>(ab_couplings_[x]);
+            if (detI.get_alfa_bit(i) and detI.get_beta_bit(j)) {
+                std::vector<std::tuple<int, int, double>>& sub_couplings =
+                    std::get<3>(ab_couplings_[x]);
+                size_t sub_couplings_size = sub_couplings.size();
+                for (size_t y = 0; y < sub_couplings_size; ++y) {
+                    int a, b;
+                    double HJI;
+                    std::tie(a, b, HJI) = sub_couplings[y];
+                    if (fabs(HJI * ref_CI) < spawning_threshold) {
+                        break;
+                    }
+                    if (!(detI.get_alfa_bit(a) or detI.get_beta_bit(b))) {
+                        max_coupling.second =
+                            std::max(max_coupling.second, std::fabs(HJI));
+                        Determinant detJ(detI);
+                        HJI *= detJ.double_excitation_ab(i, j, a, b);
+                        new_space_C_vec.push_back(
+                            std::make_pair(detJ, tau * HJI * CI));
+
+                        size_t index = dets_hashvec.find(detJ);
+                        if ((index < pre_C_size) &&
+                            (std::fabs(HJI * ref_C[index]) <
+                                 spawning_threshold ||
+                             index >= ref_C_size)) {
+                            new_space_C_vec[0].second +=
+                                tau * HJI * pre_C[index];
+                        }
+                    }
+                }
+            }
+        }
+        // Generate beta-beta excitations
+        for (size_t x = 0; x < bb_couplings_size_; ++x) {
+            double HJI_max = std::get<2>(bb_couplings_[x]);
+            if (fabs(HJI_max * ref_CI) < spawning_threshold) {
+                break;
+            }
+            int i = std::get<0>(bb_couplings_[x]);
+            int j = std::get<1>(bb_couplings_[x]);
+            if (detI.get_beta_bit(i) and detI.get_beta_bit(j)) {
+                std::vector<std::tuple<int, int, double>>& sub_couplings =
+                    std::get<3>(bb_couplings_[x]);
+                size_t sub_couplings_size = sub_couplings.size();
+                for (size_t y = 0; y < sub_couplings_size; ++y) {
+                    int a, b;
+                    double HJI;
+                    std::tie(a, b, HJI) = sub_couplings[y];
+                    if (fabs(HJI * ref_CI) < spawning_threshold) {
+                        break;
+                    }
+                    if (!(detI.get_beta_bit(a) or detI.get_beta_bit(b))) {
+                        max_coupling.second =
+                            std::max(max_coupling.second, std::fabs(HJI));
+                        Determinant detJ(detI);
+                        HJI *= detJ.double_excitation_bb(i, j, a, b);
+                        new_space_C_vec.push_back(
+                            std::make_pair(detJ, tau * HJI * CI));
+
+                        size_t index = dets_hashvec.find(detJ);
+                        if ((index < pre_C_size) &&
+                            (std::fabs(HJI * ref_C[index]) <
+                                 spawning_threshold ||
+                             index >= ref_C_size)) {
+                            new_space_C_vec[0].second +=
+                                tau * HJI * pre_C[index];
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
 std::map<std::string, double>
 ProjectorCI_HashVec::estimate_energy(const det_hashvec& dets_hashvec,
-                                    std::vector<double>& C) {
+                                     std::vector<double>& C) {
     std::map<std::string, double> results;
     //    det_hashvec dets_hashvec(dets);
     //    dets = dets_hashvec.toVector();
@@ -1529,8 +1875,8 @@ ProjectorCI_HashVec::estimate_energy(const det_hashvec& dets_hashvec,
             timer_off("PIFCI:<E>vs");
         } else {
             timer_on("PIFCI:<E>v");
-            results["VARIATIONAL ENERGY"] =
-                estimate_var_energy(dets_hashvec, C, energy_estimate_threshold_);
+            results["VARIATIONAL ENERGY"] = estimate_var_energy(
+                dets_hashvec, C, energy_estimate_threshold_);
             timer_off("PIFCI:<E>v");
         }
     }
@@ -1543,8 +1889,9 @@ static bool abs_compare(double a, double b) {
     return (std::abs(a) < std::abs(b));
 }
 
-double ProjectorCI_HashVec::estimate_proj_energy(const det_hashvec& dets_hashvec,
-                                                std::vector<double>& C) {
+double
+ProjectorCI_HashVec::estimate_proj_energy(const det_hashvec& dets_hashvec,
+                                          std::vector<double>& C) {
     // Find the determinant with the largest value of C
     auto result = std::max_element(C.begin(), C.end(), abs_compare);
     size_t J = std::distance(C.begin(), result);
@@ -1556,12 +1903,13 @@ double ProjectorCI_HashVec::estimate_proj_energy(const det_hashvec& dets_hashvec
         double HIJ = dets_hashvec[I].slater_rules(dets_hashvec[J]);
         projective_energy_estimator += HIJ * C[I] / CJ;
     }
-    return projective_energy_estimator + nuclear_repulsion_energy_;
+    return projective_energy_estimator + nuclear_repulsion_energy_ +
+            fci_ints_->scalar_energy();
 }
 
 double ProjectorCI_HashVec::estimate_var_energy(const det_hashvec& dets_hashvec,
-                                               std::vector<double>& C,
-                                               double tollerance) {
+                                                std::vector<double>& C,
+                                                double tollerance) {
     // Compute a variational estimator of the energy
     size_t size = dets_hashvec.size();
     double variational_energy_estimator = 0.0;
@@ -1576,11 +1924,14 @@ double ProjectorCI_HashVec::estimate_var_energy(const det_hashvec& dets_hashvec,
             }
         }
     }
-    return variational_energy_estimator + nuclear_repulsion_energy_;
+    return variational_energy_estimator + nuclear_repulsion_energy_ +
+            fci_ints_->scalar_energy();
 }
 
-double ProjectorCI_HashVec::estimate_var_energy_sparse(
-    const det_hashvec& dets_hashvec, std::vector<double>& C, double tollerance) {
+double
+ProjectorCI_HashVec::estimate_var_energy_sparse(const det_hashvec& dets_hashvec,
+                                                std::vector<double>& C,
+                                                double tollerance) {
     // A map that contains the pair (determinant,coefficient)
     //    det_hash<> dets_C_hash;
 
@@ -1617,11 +1968,12 @@ double ProjectorCI_HashVec::estimate_var_energy_sparse(
         variational_energy_estimator += energy[t];
     }
 
-    return variational_energy_estimator + nuclear_repulsion_energy_;
+    return variational_energy_estimator + nuclear_repulsion_energy_ +
+            fci_ints_->scalar_energy();
 }
 
 void ProjectorCI_HashVec::print_wfn(const det_hashvec& space_hashvec,
-                                   std::vector<double>& C, size_t max_output) {
+                                    std::vector<double>& C, size_t max_output) {
     outfile->Printf(
         "\n\n  Most important contributions to the wave function:\n");
 
@@ -1638,7 +1990,7 @@ void ProjectorCI_HashVec::print_wfn(const det_hashvec& space_hashvec,
                         det_weight[I].first * det_weight[I].first,
                         det_weight[I].second,
                         space_hashvec[det_weight[I].second].str().c_str(),
-                        space_hashvec[det_weight[I].second].energy());
+                        space_hashvec[det_weight[I].second].energy() + fci_ints_->scalar_energy());
     }
 
     // Compute the expectation value of the spin
@@ -1724,9 +2076,9 @@ void ProjectorCI_HashVec::orthogonalize(
 }
 
 double ProjectorCI_HashVec::form_H_C(double tau, double spawning_threshold,
-                                    const det_hashvec& dets_hashvec,
-                                    std::vector<double>& C, size_t I,
-                                    std::pair<double, double>& max_coupling) {
+                                     const det_hashvec& dets_hashvec,
+                                     std::vector<double>& C, size_t I,
+                                     std::pair<double, double>& max_coupling) {
     const Determinant& detI = dets_hashvec[I];
     double CI = C[I];
     double result = 0.0;
@@ -1870,5 +2222,394 @@ double ProjectorCI_HashVec::form_H_C(double tau, double spawning_threshold,
     }
     return result;
 }
+
+void ProjectorCI_HashVec::compute_double_couplings(
+    double double_coupling_threshold) {
+    struct {
+        bool operator()(std::tuple<int, int, double> first,
+                        std::tuple<int, int, double> second) const {
+            double H1 = std::get<2>(first);
+            double H2 = std::get<2>(second);
+            return fabs(H1) > fabs(H2);
+        }
+    } ComplingCompare;
+
+    struct {
+        bool operator()(std::tuple<int, int, double,
+                                   std::vector<std::tuple<int, int, double>>>
+                            first,
+                        std::tuple<int, int, double,
+                                   std::vector<std::tuple<int, int, double>>>
+                            second) const {
+            double H1 = std::get<2>(first);
+            double H2 = std::get<2>(second);
+            return H1 > H2;
+        }
+    } MaxComplingCompare;
+
+    dets_double_max_coupling_ = 0.0;
+
+    aa_couplings_.clear();
+    for (int i = 0; i < nact_; ++i) {
+        for (int j = i + 1; j < nact_; ++j) {
+            std::vector<std::tuple<int, int, double>> ij_couplings;
+            for (int a = 0; a < nact_; ++a) {
+                if (a == i or a == j)
+                    continue;
+                for (int b = a + 1; b < nact_; ++b) {
+                    if (b == i or b == j)
+                        continue;
+                    if ((mo_symmetry_[i] ^ mo_symmetry_[j] ^ mo_symmetry_[a] ^
+                         mo_symmetry_[b]) == 0) {
+                        double Hijab = fci_ints_->tei_aa(i, j, a, b);
+                        if (fabs(Hijab) >= double_coupling_threshold) {
+                            ij_couplings.push_back(
+                                std::make_tuple(a, b, Hijab));
+                        }
+                    }
+                }
+            }
+            double max_ij_coupling = 0;
+            if (ij_couplings.size() != 0) {
+                std::sort(ij_couplings.begin(), ij_couplings.end(),
+                          ComplingCompare);
+                max_ij_coupling = std::get<2>(ij_couplings[0]);
+                aa_couplings_.push_back(
+                    std::make_tuple(i, j, fabs(max_ij_coupling), ij_couplings));
+            }
+        }
+    }
+    aa_couplings_size_ = aa_couplings_.size();
+    if (aa_couplings_size_ != 0) {
+        std::sort(aa_couplings_.begin(), aa_couplings_.end(),
+                  MaxComplingCompare);
+        max_aa_coupling_ = std::get<2>(aa_couplings_[0]);
+        dets_double_max_coupling_ = max_aa_coupling_;
+    }
+
+    ab_couplings_.clear();
+    for (int i = 0; i < nact_; ++i) {
+        for (int j = 0; j < nact_; ++j) {
+            std::vector<std::tuple<int, int, double>> ij_couplings;
+            for (int a = 0; a < nact_; ++a) {
+                if (a == i)
+                    continue;
+                for (int b = 0; b < nact_; ++b) {
+                    if (b == j)
+                        continue;
+                    if ((mo_symmetry_[i] ^ mo_symmetry_[j] ^ mo_symmetry_[a] ^
+                         mo_symmetry_[b]) == 0) {
+                        double Hijab = fci_ints_->tei_ab(i, j, a, b);
+                        if (fabs(Hijab) >= double_coupling_threshold) {
+                            ij_couplings.push_back(
+                                std::make_tuple(a, b, Hijab));
+                        }
+                    }
+                }
+            }
+            double max_ij_coupling = 0;
+            if (ij_couplings.size() != 0) {
+                std::sort(ij_couplings.begin(), ij_couplings.end(),
+                          ComplingCompare);
+                max_ij_coupling = std::get<2>(ij_couplings[0]);
+                ab_couplings_.push_back(
+                    std::make_tuple(i, j, fabs(max_ij_coupling), ij_couplings));
+            }
+        }
+    }
+    ab_couplings_size_ = ab_couplings_.size();
+    if (ab_couplings_size_ != 0) {
+        std::sort(ab_couplings_.begin(), ab_couplings_.end(),
+                  MaxComplingCompare);
+        max_ab_coupling_ = std::get<2>(ab_couplings_[0]);
+        dets_double_max_coupling_ = dets_double_max_coupling_ > max_ab_coupling_
+                                        ? dets_double_max_coupling_
+                                        : max_ab_coupling_;
+    }
+
+    bb_couplings_.clear();
+    for (int i = 0; i < nact_; ++i) {
+        for (int j = i + 1; j < nact_; ++j) {
+            std::vector<std::tuple<int, int, double>> ij_couplings;
+            for (int a = 0; a < nact_; ++a) {
+                if (a == i or a == j)
+                    continue;
+                for (int b = a + 1; b < nact_; ++b) {
+                    if (b == i or b == j)
+                        continue;
+                    if ((mo_symmetry_[i] ^ mo_symmetry_[j] ^ mo_symmetry_[a] ^
+                         mo_symmetry_[b]) == 0) {
+                        double Hijab = fci_ints_->tei_bb(i, j, a, b);
+                        if (fabs(Hijab) >= double_coupling_threshold) {
+                            ij_couplings.push_back(
+                                std::make_tuple(a, b, Hijab));
+                        }
+                    }
+                }
+            }
+            double max_ij_coupling = 0;
+            if (ij_couplings.size() != 0) {
+                std::sort(ij_couplings.begin(), ij_couplings.end(),
+                          ComplingCompare);
+                max_ij_coupling = std::get<2>(ij_couplings[0]);
+                bb_couplings_.push_back(
+                    std::make_tuple(i, j, fabs(max_ij_coupling), ij_couplings));
+            }
+        }
+    }
+    bb_couplings_size_ = bb_couplings_.size();
+    if (bb_couplings_size_ != 0) {
+        std::sort(bb_couplings_.begin(), bb_couplings_.end(),
+                  MaxComplingCompare);
+        max_bb_coupling_ = std::get<2>(bb_couplings_[0]);
+        dets_double_max_coupling_ = dets_double_max_coupling_ > max_bb_coupling_
+                                        ? dets_double_max_coupling_
+                                        : max_bb_coupling_;
+    }
+}
+
+std::vector<std::tuple<double, int, int>>
+ProjectorCI_HashVec::sym_labeled_orbitals(std::string type) {
+    std::vector<std::tuple<double, int, int>> labeled_orb;
+
+    if (type == "RHF" or type == "ROHF" or type == "ALFA") {
+
+        // Create a vector of orbital energy and index pairs
+        std::vector<std::pair<double, int>> orb_e;
+        int cumidx = 0;
+        for (int h = 0; h < nirrep_; ++h) {
+            for (int a = 0; a < nactpi_[h]; ++a) {
+                orb_e.push_back(
+                    make_pair(epsilon_a_->get(h, frzcpi_[h] + a), a + cumidx));
+            }
+            cumidx += nactpi_[h];
+        }
+
+        // Create a vector that stores the orbital energy, symmetry, and idx
+        for (size_t a = 0; a < nact_; ++a) {
+            labeled_orb.push_back(
+                make_tuple(orb_e[a].first, mo_symmetry_[a], orb_e[a].second));
+        }
+        // Order by energy, low to high
+        std::sort(labeled_orb.begin(), labeled_orb.end());
+    }
+    if (type == "BETA") {
+        // Create a vector of orbital energies and index pairs
+        std::vector<std::pair<double, int>> orb_e;
+        int cumidx = 0;
+        for (int h = 0; h < nirrep_; ++h) {
+            for (size_t a = 0, max = nactpi_[h]; a < max; ++a) {
+                orb_e.push_back(
+                    make_pair(epsilon_b_->get(h, frzcpi_[h] + a), a + cumidx));
+            }
+            cumidx += nactpi_[h];
+        }
+
+        // Create a vector that stores the orbital energy, sym, and idx
+        for (size_t a = 0; a < nact_; ++a) {
+            labeled_orb.push_back(
+                make_tuple(orb_e[a].first, mo_symmetry_[a], orb_e[a].second));
+        }
+        std::sort(labeled_orb.begin(), labeled_orb.end());
+    }
+    return labeled_orb;
+}
+
+std::vector<int> ProjectorCI_HashVec::get_occupation() {
+
+    std::vector<int> occupation(2 * nact_, 0);
+
+    // Get reference type
+    std::string ref_type = options_.get_str("REFERENCE");
+    // if(!quiet_mode_) outfile->Printf("\n  Using %s reference.\n",
+    // ref_type.c_str());
+
+    // nyms denotes the number of electrons needed to assign symmetry and
+    // multiplicity
+    int nsym = wavefunction_multiplicity_ - 1;
+    int orb_sym = wavefunction_symmetry_;
+
+    if (wavefunction_multiplicity_ == 1) {
+        nsym = 2;
+    }
+
+    // Grab an ordered list of orbital energies, sym labels, and idxs
+    std::vector<std::tuple<double, int, int>> labeled_orb_en;
+    std::vector<std::tuple<double, int, int>> labeled_orb_en_alfa;
+    std::vector<std::tuple<double, int, int>> labeled_orb_en_beta;
+
+    // For a restricted reference
+    if (ref_type == "RHF" or ref_type == "RKS" or ref_type == "ROHF") {
+        labeled_orb_en = sym_labeled_orbitals("RHF");
+
+        // Build initial reference determinant from restricted reference
+        for (int i = 0; i < nalpha_; ++i) {
+            occupation[std::get<2>(labeled_orb_en[i])] = 1;
+        }
+        for (int i = 0; i < nbeta_; ++i) {
+            occupation[nact_ + std::get<2>(labeled_orb_en[i])] = 1;
+        }
+
+        // Loop over as many outer-shell electrons as needed to get correct sym
+        for (int k = 1; k <= nsym;) {
+
+            bool add = false;
+            // Remove electron from highest energy docc
+            occupation[std::get<2>(labeled_orb_en[nalpha_ - k])] = 0;
+
+            // Determine proper symmetry for new occupation
+            orb_sym = wavefunction_symmetry_;
+
+            if (wavefunction_multiplicity_ == 1) {
+                orb_sym = std::get<1>(labeled_orb_en[nalpha_ - 1]) ^ orb_sym;
+            } else {
+                for (int i = 1; i <= nsym; ++i) {
+                    orb_sym =
+                        std::get<1>(labeled_orb_en[nalpha_ - i]) ^ orb_sym;
+                }
+                orb_sym = std::get<1>(labeled_orb_en[nalpha_ - k]) ^ orb_sym;
+            }
+
+            // Add electron to lowest-energy orbital of proper symmetry
+            // Loop from current occupation to max MO until correct orbital is
+            // reached
+            for (int i = nalpha_ - k, maxi = nact_; i < maxi; ++i) {
+                if (orb_sym == std::get<1>(labeled_orb_en[i]) and
+                    occupation[std::get<2>(labeled_orb_en[i])] != 1) {
+                    occupation[std::get<2>(labeled_orb_en[i])] = 1;
+                    add = true;
+                    break;
+                } else {
+                    continue;
+                }
+            }
+            // If a new occupation could not be created, put electron back and
+            // remove a different one
+            if (!add) {
+                occupation[std::get<2>(labeled_orb_en[nalpha_ - k])] = 1;
+                ++k;
+            } else {
+                break;
+            }
+
+        } // End loop over k
+
+    } else {
+        labeled_orb_en_alfa = sym_labeled_orbitals("ALFA");
+        labeled_orb_en_beta = sym_labeled_orbitals("BETA");
+
+        // For an unrestricted reference
+        // Make the reference
+        // For singlets, this will be closed-shell
+
+        for (int i = 0; i < nalpha_; ++i) {
+            occupation[std::get<2>(labeled_orb_en_alfa[i])] = 1;
+        }
+        for (int i = 0; i < nbeta_; ++i) {
+            occupation[std::get<2>(labeled_orb_en_beta[i]) + nact_] = 1;
+        }
+
+        if (nalpha_ >= nbeta_) {
+
+            // Loop over k
+            for (int k = 1; k < nsym;) {
+
+                bool add = false;
+                // Remove highest energy alpha electron
+                occupation[std::get<2>(labeled_orb_en_alfa[nalpha_ - k])] = 0;
+
+                // Determine proper symmetry for new electron
+
+                orb_sym = wavefunction_symmetry_;
+
+                if (wavefunction_multiplicity_ == 1) {
+                    orb_sym =
+                        std::get<1>(labeled_orb_en_alfa[nalpha_ - 1]) ^ orb_sym;
+                } else {
+                    for (int i = 1; i <= nsym; ++i) {
+                        orb_sym =
+                            std::get<1>(labeled_orb_en_alfa[nalpha_ - i]) ^
+                            orb_sym;
+                    }
+                    orb_sym =
+                        std::get<1>(labeled_orb_en_alfa[nalpha_ - k]) ^ orb_sym;
+                }
+
+                // Add electron to lowest-energy orbital of proper symmetry
+                for (int i = nalpha_ - k; i < nactel_; ++i) {
+                    if (orb_sym == std::get<1>(labeled_orb_en_alfa[i]) and
+                        occupation[std::get<2>(labeled_orb_en_alfa[i])] != 1) {
+                        occupation[std::get<2>(labeled_orb_en_alfa[i])] = 1;
+                        add = true;
+                        break;
+                    } else {
+                        continue;
+                    }
+                }
+
+                // If a new occupation could not be made,
+                // add electron back and try a different one
+
+                if (!add) {
+                    occupation[std::get<2>(labeled_orb_en_alfa[nalpha_ - k])] =
+                        1;
+                    ++k;
+                } else {
+                    break;
+                }
+
+            }    //	End loop over k
+        } else { // End if(nalpha_ >= nbeta_ )
+
+            for (int k = 1; k < nsym;) {
+
+                bool add = false;
+
+                // Remove highest-energy beta electron
+                occupation[std::get<2>(labeled_orb_en_beta[nbeta_ - k])] = 0;
+
+                // Determine proper symetry for new occupation
+                orb_sym = wavefunction_symmetry_;
+
+                if (wavefunction_multiplicity_ == 1) {
+                    orb_sym =
+                        std::get<1>(labeled_orb_en_beta[nbeta_ - 1]) ^ orb_sym;
+                } else {
+                    for (int i = 1; i <= nsym; ++i) {
+                        orb_sym = std::get<1>(labeled_orb_en_beta[nbeta_ - i]) ^
+                                  orb_sym;
+                    }
+                    orb_sym =
+                        std::get<1>(labeled_orb_en_beta[nbeta_ - k]) ^ orb_sym;
+                }
+
+                // Add electron to lowest-energy beta orbital
+
+                for (int i = nbeta_ - k; i < nactel_; ++i) {
+                    if (orb_sym == std::get<1>(labeled_orb_en_beta[i]) and
+                        occupation[std::get<2>(labeled_orb_en_beta[i])] != 1) {
+                        occupation[std::get<2>(labeled_orb_en_beta[i])] = 1;
+                        add = true;
+                        break;
+                    }
+                }
+
+                // If a new occupation could not be made,
+                // replace the electron and try again
+
+                if (!add) {
+                    occupation[std::get<2>(labeled_orb_en_beta[nbeta_ - k])] =
+                        1;
+                    ++k;
+                } else {
+                    break;
+                }
+
+            } // End loop over k
+        }     // End if nalpha_ < nbeta_
+    }
+    return occupation;
+}
+
 }
 } // EndNamespaces
