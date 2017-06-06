@@ -194,23 +194,23 @@ void FCI_MO::read_options() {
         throw PSIEXCEPTION(
             "MULTIPLICITY must be no less than 1. Check output for details.");
     }
-    ms_ = options_.get_int("MS");
-    if (ms_ < 0) {
+    twice_ms_ = std::round(2.0 * options_.get_double("MS"));
+    if (twice_ms_ < 0) {
         outfile->Printf("\n  Ms must be no less than 0.");
-        outfile->Printf("\n  Ms = %2d, MULTIPLICITY = %2d", ms_, multi_);
+        outfile->Printf("\n  Ms = %2d, MULTIPLICITY = %2d", twice_ms_, multi_);
         outfile->Printf(
             "\n  Check (specify) Ms value (component of multiplicity)! \n");
         throw PSIEXCEPTION(
             "Ms must be no less than 0. Check output for details.");
     }
-    nalfa_ = (nelec + ms_) / 2;
-    nbeta_ = (nelec - ms_) / 2;
+    nalfa_ = (nelec + twice_ms_) / 2;
+    nbeta_ = (nelec - twice_ms_) / 2;
     if (nalfa_ < 0 || nbeta_ < 0 || (nalfa_ + nbeta_) != nelec) {
         outfile->Printf(
             "\n  Number of alpha electrons or beta electrons is negative.");
         outfile->Printf("\n  Nalpha = %5ld, Nbeta = %5ld", nalfa_, nbeta_);
         outfile->Printf("\n  Charge = %3d, Multiplicity = %3d, Ms = %.1f",
-                        charge, multi_, ms_);
+                        charge, multi_, twice_ms_);
         outfile->Printf("\n  Check the Charge, Multiplicity, and Ms! \n");
         outfile->Printf("\n  Note that Ms is 2 * Sz \n");
         throw PSIEXCEPTION("Negative number of alpha electrons or beta "
@@ -274,7 +274,7 @@ void FCI_MO::read_options() {
     info.push_back({"number of alpha electrons", nalfa_});
     info.push_back({"number of beta electrons", nbeta_});
     info.push_back({"multiplicity", multi_});
-    info.push_back({"ms (2 * Sz)", ms_});
+    info.push_back({"ms (2 * Sz)", twice_ms_});
     info.push_back({"number of molecular orbitals", nmo_});
 
     if (print_ > 0) {

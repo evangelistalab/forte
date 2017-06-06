@@ -457,8 +457,6 @@ void forte_old_options(Options& options) {
     //////////////////////////////////////////////////////////////
     ///         OPTIONS FOR THE PILOT FULL CI CODE
     //////////////////////////////////////////////////////////////
-    /*- 2 * <Sz> -*/
-    options.add_int("MS", 0);
     /*- Semicanonicalize orbitals -*/
     options.add_bool("SEMI_CANONICAL", true);
     /*- Two-particle density cumulant -*/
