@@ -598,7 +598,7 @@ double ProjectorCI_HashVec::compute_energy() {
                     "implementation");
     outfile->Printf(
         "\n\t         by Francesco A. Evangelista and Tianyuan Zhang");
-    outfile->Printf("\n\t                      version Jun. 4 2017");
+    outfile->Printf("\n\t                      version Jun. 6 2017");
     outfile->Printf("\n\t                    %4d thread(s) %s", num_threads_,
                     have_omp_ ? "(OMP)" : "");
     outfile->Printf(
@@ -919,6 +919,7 @@ double ProjectorCI_HashVec::initial_guess(det_hashvec& dets_hashvec,
     Determinant bs_det(alfa_bits, beta_bits);
     dets_hashvec.clear();
     dets_hashvec.add(bs_det);
+    dets_max_couplings_.resize(dets_hashvec.size());
 
     apply_tau_H_ref_C_symm(time_step_, initial_guess_spawning_threshold_,
                            dets_hashvec, {1.0}, {1.0}, C, 0.0);
@@ -936,11 +937,15 @@ double ProjectorCI_HashVec::initial_guess(det_hashvec& dets_hashvec,
 
         //        det_vec new_dets;
         det_hashvec new_dets;
+        std::vector<std::pair<double, double> > new_dets_max_couplings;
+        new_dets_max_couplings.reserve(max_guess_size_);
         for (size_t sI = 0; sI < max_guess_size_; ++sI) {
             size_t I = det_weight[sI].second;
             new_dets.add(dets_hashvec[I]);
+            new_dets_max_couplings.push_back(dets_max_couplings_[I]);
         }
         dets_hashvec.swap(new_dets);
+        dets_max_couplings_.swap(new_dets_max_couplings);
         guess_size = dets_hashvec.size();
         C.resize(guess_size);
     }
@@ -1238,13 +1243,13 @@ void ProjectorCI_HashVec::apply_tau_H_ref_C_symm(
     size_t ref_max_I = ref_C.size();
 #pragma omp parallel for
     for (size_t I = 0; I < ref_max_I; ++I) {
-        std::pair<double, double> zero_pair(0.0, 0.0);
+//        std::pair<double, double> zero_pair(0.0, 0.0);
         // Update the list of couplings
         std::pair<double, double> max_coupling;
         size_t current_rank = omp_get_thread_num();
-#pragma omp critical(couplings)
-        { max_coupling = dets_max_couplings_[dets_hashvec[I]]; }
-        if (max_coupling == zero_pair) {
+#pragma omp critical
+        { max_coupling = dets_max_couplings_[I]; }
+        if (max_coupling.second == 0.0) {
 //            std::vector<std::pair<Determinant, double>> thread_det_C_vec;
             thread_det_C_vecs[current_rank].clear();
             //            apply_tau_H_ref_C_symm_det_dynamic(
@@ -1256,15 +1261,18 @@ void ProjectorCI_HashVec::apply_tau_H_ref_C_symm(
                 tau, spawning_threshold, dets_hashvec, C, ref_C,
                 dets_hashvec[I], C[I], ref_C[I], thread_det_C_vecs[current_rank], S,
                 max_coupling);
-#pragma omp critical(dets)
+#pragma omp critical
             {
                 dets_hashvec_merge.merge(
                     thread_det_C_vecs[current_rank], C_merge,
                     std::function<double(double, double)>(std::plus<double>()),
                     0.0, false);
+                dets_max_couplings_.resize(dets_hashvec_merge.size());
             }
-#pragma omp critical(couplings)
-            { dets_max_couplings_[dets_hashvec[I]] = max_coupling; }
+#pragma omp critical
+            {
+                dets_max_couplings_[I] = max_coupling;
+            }
         } else {
 //            std::vector<std::pair<Determinant, double>> thread_det_C_vec;
             thread_det_C_vecs[current_rank].clear();
@@ -1277,7 +1285,7 @@ void ProjectorCI_HashVec::apply_tau_H_ref_C_symm(
                 tau, spawning_threshold, dets_hashvec, C, ref_C,
                 dets_hashvec[I], C[I], ref_C[I], thread_det_C_vecs[current_rank], S,
                 max_coupling);
-#pragma omp critical(dets)
+#pragma omp critical
             {
                 dets_hashvec_merge.merge(
                     thread_det_C_vecs[current_rank], C_merge,
@@ -1986,7 +1994,7 @@ ProjectorCI_HashVec::estimate_var_energy_sparse(const det_hashvec& dets_hashvec,
         // Update the list of couplings
         std::pair<double, double> max_coupling;
 #pragma omp critical
-        { max_coupling = dets_max_couplings_[dets_hashvec[I]]; }
+        { max_coupling = dets_max_couplings_[I]; }
         if (max_coupling == zero) {
             max_coupling = {1.0, 1.0};
         }
