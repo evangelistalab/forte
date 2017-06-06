@@ -104,28 +104,33 @@ double CINO::compute_energy() {
     outfile->Printf("\n\n  Computing CIS natural orbitals\n");
 
     CharacterTable ct = molecule_->point_group()->char_table();
+
+    std::pair<SharedMatrix,SharedMatrix> avg_gamma; // allocate matrix (actvpi_ x actvpi_)
     for (int h = 0; h < nirrep_; ++h) {
         int nsolutions = options_["CINO_ROOTS_PER_IRREP"][h].to_integer();
         outfile->Printf("\n Requested %d solutions of irrep %s", nsolutions,
                         ct.gamma(h).symbol());
-        // 1. Build the space of determinants
-        std::vector<Determinant> dets = build_dets(h);
+        if (nsolutions > 0) {
+            // 1. Build the space of determinants
+            std::vector<Determinant> dets = build_dets(h);
 
-//        // 2. Diagonalize the Hamiltonian in this basis
-//        std::pair<SharedVector, SharedMatrix> evals_evecs =
-//            diagonalize_hamiltonian(dets);
+//            // 2. Diagonalize the Hamiltonian in this basis
+//            std::pair<SharedVector, SharedMatrix> evals_evecs =
+//                diagonalize_hamiltonian(dets, nsolutions); // <- Modify to accept # of solutions for this irrep
 
-//        // 3. Build the density matrix
-//        std::pair<SharedMatrix, SharedMatrix> gamma =
-//            build_density_matrix(dets, evals_evecs.second, nroot_);
+//            // 3. Build the density matrix
+//            std::pair<SharedMatrix, SharedMatrix> gamma =
+//                build_density_matrix(dets, evals_evecs.second, nsolutions);
+        }
     }
 
-//    // 4. Diagonalize the density matrix
-//    std::tuple<SharedVector, SharedMatrix, SharedVector, SharedMatrix> no_U =
-//        diagonalize_density_matrix(gamma);
+    //    // 4. Diagonalize the density matrix
+    //    std::tuple<SharedVector, SharedMatrix, SharedVector, SharedMatrix>
+    //    no_U =
+    //        diagonalize_density_matrix(gamma);
 
-//    // 5. Find optimal active space and transform the orbitals
-//    find_active_space_and_transform(no_U);
+    //    // 5. Find optimal active space and transform the orbitals
+    //    find_active_space_and_transform(no_U);
 
     return 0.0;
 }
@@ -165,19 +170,19 @@ void CINO::startup() {
 std::vector<Determinant> CINO::build_dets(int irrep) {
     std::vector<Determinant> dets;
 
-    // build the reference determinant 
+    // build the reference determinant
 
     std::vector<bool> occupation_a(nactv_);
     std::vector<bool> occupation_b(nactv_);
 
     int offset = 0;
-    for (int h = 0; h < nirrep_; h++){
+    for (int h = 0; h < nirrep_; h++) {
         int aocc_h = nalphapi_[h] - rdoccpi_[h] - fdoccpi_[h];
-        for (int i = 0; i < aocc_h; i++){
+        for (int i = 0; i < aocc_h; i++) {
             occupation_a[i + offset] = true;
         }
         int bocc_h = nbetapi_[h] - rdoccpi_[h] - fdoccpi_[h];
-        for (int i = 0; i < bocc_h; i++){
+        for (int i = 0; i < bocc_h; i++) {
             occupation_b[i + offset] = true;
         }
         offset += actvpi_[h];
@@ -190,35 +195,35 @@ std::vector<Determinant> CINO::build_dets(int irrep) {
     dets.push_back(ref);
 
     // alpha single excitation
-    for (int irrep_i = 0; irrep_i < nirrep_; irrep_i++){
+    for (int irrep_i = 0; irrep_i < nirrep_; irrep_i++) {
         // loop over i in irrep h
         int irrep_a = irrep_i ^ irrep;
         // loop over occupied orbitals in irrep_i
-            // loop over virtual orbitals in irrep_a
+        // loop over virtual orbitals in irrep_a
         // CiCi: work on this
-//        Determinant single_ia(ref);
-//        single_ia.set_alfa_bit(i, false);
-//        single_ia.set_alfa_bit(a, true);
-//        dets.push_back(single_ia);
+        //        Determinant single_ia(ref);
+        //        single_ia.set_alfa_bit(i, false);
+        //        single_ia.set_alfa_bit(a, true);
+        //        dets.push_back(single_ia);
     }
 
-//    for (int i = 0; i < naocc_; ++i) {
-//        for (int a = naocc_; a < nactv_; ++a) {
-//            Determinant single_ia(ref);
-//            single_ia.set_alfa_bit(i, false);
-//            single_ia.set_alfa_bit(a, true);
-//            dets.push_back(single_ia);
-//        }
-//    }
-//    // beta single excitation
-//    for (int i = 0; i < nbocc_; ++i) {
-//        for (int b = nbocc_; b < nactv_; ++b) {
-//            Determinant single_ib(ref);
-//            single_ib.set_beta_bit(i, false);
-//            single_ib.set_beta_bit(b, true);
-//            dets.push_back(single_ib);
-//        }
-//    }
+    //    for (int i = 0; i < naocc_; ++i) {
+    //        for (int a = naocc_; a < nactv_; ++a) {
+    //            Determinant single_ia(ref);
+    //            single_ia.set_alfa_bit(i, false);
+    //            single_ia.set_alfa_bit(a, true);
+    //            dets.push_back(single_ia);
+    //        }
+    //    }
+    //    // beta single excitation
+    //    for (int i = 0; i < nbocc_; ++i) {
+    //        for (int b = nbocc_; b < nactv_; ++b) {
+    //            Determinant single_ib(ref);
+    //            single_ib.set_beta_bit(i, false);
+    //            single_ib.set_beta_bit(b, true);
+    //            dets.push_back(single_ib);
+    //        }
+    //    }
     if (options_.get_str("CINO_TYPE") == "CISD") {
         // alpha-alpha double excitation
         for (int i = 0; i < naocc_; ++i) {
@@ -284,7 +289,7 @@ CINO::diagonalize_hamiltonian(const std::vector<Determinant>& dets) {
     sparse_solver.set_print_details(true);
 
     sparse_solver.diagonalize_hamiltonian(dets, evals_evecs.first,
-                                          evals_evecs.second, nroot_,
+                                          evals_evecs.second, nroot_, // <-change her
                                           wavefunction_multiplicity_, DLSolver);
 
     for (int i = 0; i < nroot_; ++i) {
