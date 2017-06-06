@@ -110,7 +110,11 @@ frozen::
         frozen_uocc      [0 ,0 ,0 ,0]
     }
 
-Writing this much information for each computation is tedious.
+
+Partial specification of orbital spaces and orbital spaces priority
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Specifying all five orbital spaces for each computation is tedious and error prone.
 Forte can help reduced the number of orbital spaces that the user needs to
 specify by making certain assumptions.
 The class that controls orbital spaces (``MOSpaceInfo``) assumes that orbital
