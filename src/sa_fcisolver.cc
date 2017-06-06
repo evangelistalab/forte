@@ -236,15 +236,15 @@ double SA_FCISolver::compute_energy() {
         nel -= charge;
 
         // Default: lowest spin solution
-        int ms = (multiplicity + 1) % 2;
+        int twice_ms = (multiplicity + 1) % 2;
 
         if (options_["MS"].has_changed()) {
-            ms = options_.get_int("MS");
+            twice_ms = std::round(2.0 * options_.get_double("MS"));
         }
 
-        if (ms < 0) {
+        if (twice_ms < 0) {
             outfile->Printf("\n  Ms must be no less than 0.");
-            outfile->Printf("\n  Ms = %2d, MULTIPLICITY = %2d", ms,
+            outfile->Printf("\n  Ms = %2d, MULTIPLICITY = %2d", twice_ms,
                             multiplicity);
             outfile->Printf(
                 "\n  Check (specify) Ms value (component of multiplicity)! \n");
@@ -261,20 +261,20 @@ double SA_FCISolver::compute_energy() {
                             options_.get_int("DL_SUBSPACE_PER_ROOT"));
             outfile->Printf("\n  Davidson subspace min dim: %d",
                             options_.get_int("DL_COLLAPSE_PER_ROOT"));
-            if (ms % 2 == 0) {
-                outfile->Printf("\n  M_s: %d", ms / 2);
+            if (twice_ms % 2 == 0) {
+                outfile->Printf("\n  M_s: %d", twice_ms / 2);
             } else {
-                outfile->Printf("\n  M_s: %d/2", ms);
+                outfile->Printf("\n  M_s: %d/2", twice_ms);
             }
         }
 
-        if (((nel - ms) % 2) != 0)
+        if (((nel - twice_ms) % 2) != 0)
             throw PSIEXCEPTION("\n\n  FCI: Wrong value of M_s.\n\n");
 
         // Adjust the number of for frozen and restricted doubly occupied
         size_t nactel = nel - 2 * nfdocc - 2 * rdocc.size();
 
-        size_t na = (nactel + ms) / 2;
+        size_t na = (nactel + twice_ms) / 2;
         size_t nb = nactel - na;
         FCISolver fcisolver(active_dim, rdocc, active, na, nb, multiplicity,
                             symmetry, ints_, mo_space_info_,

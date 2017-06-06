@@ -1,8 +1,8 @@
 #! Generated using commit GITCOMMIT
 
 refmcscf     = -108.789661408880420
-refdsrgpt3   = -108.970087322670949 # no relaxation
-refdsrgpt3   = -108.971256160589476 # relaxed once
+refdsrgpt3   = -108.970050068674198 # no relaxation
+refdsrgpt3   = -108.971218810214850 # relaxed once
 
 import forte
 

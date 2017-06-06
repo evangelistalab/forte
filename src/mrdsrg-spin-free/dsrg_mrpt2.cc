@@ -1632,13 +1632,13 @@ double DSRG_MRPT2::compute_energy_relaxed() {
     if (options_["MULTIPLICITY"].has_changed()) {
         multi = options_.get_int("MULTIPLICITY");
     }
-    int ms = (multi + 1) % 2;
+    int twice_ms = (multi + 1) % 2;
     if (options_["MS"].has_changed()) {
-        ms = options_.get_int("MS");
+        twice_ms = std::round(2.0 * options_.get_double("MS"));
     }
     auto nelec_actv =
         nelec - 2 * mo_space_info_->size("FROZEN_DOCC") - 2 * acore_mos_.size();
-    auto na = (nelec_actv + ms) / 2;
+    auto na = (nelec_actv + twice_ms) / 2;
     auto nb = nelec_actv - na;
 
     // reference relaxation

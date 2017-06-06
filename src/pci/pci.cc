@@ -247,6 +247,15 @@ void ProjectorCI::startup() {
         mo_space_info_->get_corr_abs_mo("RESTRICTED_DOCC"));
 
     auto active_mo = mo_space_info_->get_corr_abs_mo("ACTIVE");
+    //Begin debug
+//    outfile->Printf("\nActive mo abs:");
+//    for (size_t i = 0; i < active_mo.size(); ++i)
+//        outfile->Printf("%4d",active_mo[i]);
+//    outfile->Printf("\nRdocc mo abs:");
+//    auto rdocc_mo = mo_space_info_->get_corr_abs_mo("RESTRICTED_DOCC");
+//    for (size_t i = 0; i < rdocc_mo.size(); ++i)
+//        outfile->Printf("%4d",rdocc_mo[i]);
+    //End debug
     ambit::Tensor tei_active_aa =
         ints_->aptei_aa_block(active_mo, active_mo, active_mo, active_mo);
     ambit::Tensor tei_active_ab =
@@ -261,50 +270,49 @@ void ProjectorCI::startup() {
     //   DynamicBitsetDeterminant::set_ints(fci_ints_);
 
     // The number of correlated molecular orbitals
-    ncmo_ = mo_space_info_->get_corr_abs_mo("ACTIVE").size();
-    ncmopi_ = mo_space_info_->get_dimension("ACTIVE");
+    nact_ = mo_space_info_->get_corr_abs_mo("ACTIVE").size();
+    nactpi_ = mo_space_info_->get_dimension("ACTIVE");
 
-    // Overwrite the frozen orbitals arrays
-    frzcpi_ = mo_space_info_->get_dimension("FROZEN_DOCC");
-    frzvpi_ = mo_space_info_->get_dimension("FROZEN_UOCC");
+    // Include frozen_docc and restricted_docc
+    frzcpi_ = mo_space_info_->get_dimension("INACTIVE_DOCC");
+    nfrzc_ = mo_space_info_->size("INACTIVE_DOCC");
 
     nuclear_repulsion_energy_ = molecule_->nuclear_repulsion_energy();
 
-    // Create the array with mo symmetry
-    for (int h = 0; h < nirrep_; ++h) {
-        for (int p = 0; p < ncmopi_[h]; ++p) {
-            mo_symmetry_.push_back(h);
-        }
-    }
+    mo_symmetry_ = mo_space_info_->symmetry("ACTIVE");
 
     wavefunction_symmetry_ = 0;
     if (options_["ROOT_SYM"].has_changed()) {
         wavefunction_symmetry_ = options_.get_int("ROOT_SYM");
     }
-
-    // Build the reference determinant and compute its energy
-    std::vector<int> occupation(2 * ncmo_, 0);
-    int cumidx = 0;
-    for (int h = 0; h < nirrep_; ++h) {
-        for (int i = 0; i < doccpi_[h] - frzcpi_[h]; ++i) {
-            occupation[i + cumidx] = 1;
-            occupation[ncmo_ + i + cumidx] = 1;
-        }
-        for (int i = 0; i < soccpi_[h]; ++i) {
-            occupation[i + cumidx + doccpi_[h] - frzcpi_[h]] = 1;
-        }
-        cumidx += ncmopi_[h];
-    }
-    reference_determinant_ = Determinant(occupation);
-
-    //    outfile->Printf("\n  The reference determinant is:\n");
-    //    reference_determinant_.print();
-
     // Read options
     wavefunction_multiplicity_ = 1;
     if (options_["MULTIPLICITY"].has_changed()) {
         wavefunction_multiplicity_ = options_.get_int("MULTIPLICITY");
     }
+
+    // Number of correlated electrons
+    nactel_ = 0;
+    nalpha_ = 0;
+    nbeta_ = 0;
+    int nel = 0;
+    for (int h = 0; h < nirrep_; ++h) {
+        nel += 2 * doccpi_[h] + soccpi_[h];
+    }
+
+    int ms = wavefunction_multiplicity_ - 1;
+    nactel_ = nel - 2 * nfrzc_;
+    nalpha_ = (nactel_ + ms) / 2;
+    nbeta_ = nactel_ - nalpha_;
+
+
+    // Build the reference determinant and compute its energy
+    reference_determinant_ = Determinant(get_occupation());
+
+//    outfile->Printf("\n  The reference determinant is:\n");
+//    reference_determinant_.print();
+
+
     nroot_ = options_.get_int("PCI_NROOT");
     current_root_ = -1;
     post_diagonalization_ = options_.get_bool("PCI_POST_DIAGONALIZE");
@@ -347,8 +355,6 @@ void ProjectorCI::startup() {
     use_inter_norm_ = options_.get_bool("PCI_USE_INTER_NORM");
     do_simple_prescreening_ = options_.get_bool("PCI_SIMPLE_PRESCREENING");
     do_dynamic_prescreening_ = options_.get_bool("PCI_DYNAMIC_PRESCREENING");
-    if (do_dynamic_prescreening_)
-        compute_max_double_coupling();
     do_schwarz_prescreening_ = options_.get_bool("PCI_SCHWARZ_PRESCREENING");
     do_initiator_approx_ = options_.get_bool("PCI_INITIATOR_APPROX");
     do_perturb_analysis_ = options_.get_bool("PCI_PERTURB_ANALYSIS");
@@ -533,33 +539,48 @@ double ProjectorCI::estimate_high_energy() {
     std::vector<std::pair<double, int>> obt_energies;
     auto bits_ = reference_determinant_.bits_;
     Determinant high_det(reference_determinant_);
-    for (int i = 0; i < ncmo_; i++) {
+    for (int i = 0; i < nact_; i++) {
         if (bits_[i]) {
             ++nea;
             high_det.destroy_alfa_bit(i);
         }
-        if (bits_[ncmo_ + i]) {
+        if (bits_[nact_ + i]) {
             ++neb;
             high_det.destroy_beta_bit(i);
         }
 
         double temp = fci_ints_->oei_a(i, i);
-        for (int p = 0; p < ncmo_; ++p) {
+        for (int p = 0; p < nact_; ++p) {
             if (bits_[p]) {
                 temp += fci_ints_->tei_aa(i, p, i, p);
             }
-            if (bits_[ncmo_ + p]) {
+            if (bits_[nact_ + p]) {
                 temp += fci_ints_->tei_ab(i, p, i, p);
             }
         }
         obt_energies.push_back(std::make_pair(temp, i));
     }
+
+    //Begin debug
+//    outfile->Printf("\n\n  Estimating high energy, size of obt_energies:%d", obt_energies.size());
+//    for (auto item : obt_energies)
+//        outfile -> Printf("  %lf", item);
+//    outfile->Printf("\n  Printing oei and tei_aa tei_ab for obtI = 4:");
+//    int obtI = 4;
+//    outfile->Printf("\n  oei_a(%d,%d) = %lf", obtI, obtI,fci_ints_->oei_a(obtI, obtI));
+//    for (int p = 0; p < nact_; ++p) {
+//        if (bits_[p]) {
+//            outfile->Printf("\n  tei_aa(%d,%d,%d,%d) = %lf",obtI, p, obtI, p, fci_ints_->tei_aa(obtI, p, obtI, p));
+//        }
+//        if (bits_[nact_ + p]) {
+//            outfile->Printf("\n  tei_ab(%d,%d,%d,%d) = %lf",obtI, p, obtI, p, fci_ints_->tei_ab(obtI, p, obtI, p));
+//        }
+//    }
+    //End debug
+
     std::sort(obt_energies.begin(), obt_energies.end());
-    //    outfile->Printf("\n\n  Estimating high energy, size of obt_energies:
-    //    %d", obt_energies.size());
-    //    for (auto item : obt_energies)
-    //        outfile -> Printf("  %lf", item);
-    //    int Ndocc = ne/2;
+
+
     for (int i = 1; i <= nea; i++) {
         high_obt_energy += obt_energies[obt_energies.size() - i].first;
         high_det.create_alfa_bit(obt_energies[obt_energies.size() - i].second);
@@ -577,7 +598,7 @@ double ProjectorCI::estimate_high_energy() {
     lambda_h_ = high_obt_energy + fci_ints_->frozen_core_energy() +
                 fci_ints_->scalar_energy();
 
-    double lambda_h_G = high_det.energy();
+    double lambda_h_G = high_det.energy() + fci_ints_->scalar_energy();
     std::vector<int> aocc = high_det.get_alfa_occ();
     std::vector<int> bocc = high_det.get_beta_occ();
     std::vector<int> avir = high_det.get_alfa_vir();
@@ -690,7 +711,8 @@ double ProjectorCI::estimate_high_energy() {
     outfile->Printf("\n  Highest Excited determinant:");
     high_det.print();
     outfile->Printf("\n  Determinant Energy                    :  %.12f",
-                    high_det.energy() + nuclear_repulsion_energy_);
+                    high_det.energy() + nuclear_repulsion_energy_ +
+                    fci_ints_->scalar_energy());
     outfile->Printf("\n  Highest Energy Gershgorin circle Est. :  %.12f",
                     lambda_h_G + nuclear_repulsion_energy_);
     lambda_h_ = lambda_h_G;
@@ -912,7 +934,7 @@ double ProjectorCI::compute_energy() {
         "\n\t      Adaptive Path-Integral Full Configuration Interaction");
     outfile->Printf(
         "\n\t         by Francesco A. Evangelista and Tianyuan Zhang");
-    outfile->Printf("\n\t                      version May. 30 2017");
+    outfile->Printf("\n\t                      version Jun. 4 2017");
     outfile->Printf("\n\t                    %4d thread(s) %s", num_threads_,
                     have_omp_ ? "(OMP)" : "");
     outfile->Printf(
@@ -931,22 +953,22 @@ double ProjectorCI::compute_energy() {
     sparse_solver.set_maxiter_davidson(options_.get_int("DL_MAXITER"));
     sparse_solver.set_spin_project(true);
 
-    pqpq_aa_ = new double[ncmo_ * ncmo_];
-    pqpq_ab_ = new double[ncmo_ * ncmo_];
-    pqpq_bb_ = new double[ncmo_ * ncmo_];
+    pqpq_aa_ = new double[nact_ * nact_];
+    pqpq_ab_ = new double[nact_ * nact_];
+    pqpq_bb_ = new double[nact_ * nact_];
 
-    for (size_t i = 0; i < (size_t)ncmo_; ++i) {
-        for (size_t j = 0; j < (size_t)ncmo_; ++j) {
+    for (size_t i = 0; i < (size_t)nact_; ++i) {
+        for (size_t j = 0; j < (size_t)nact_; ++j) {
             double temp_aa = sqrt(fabs(fci_ints_->tei_aa(i, j, i, j)));
-            pqpq_aa_[i * ncmo_ + j] = temp_aa;
+            pqpq_aa_[i * nact_ + j] = temp_aa;
             if (temp_aa > pqpq_max_aa_)
                 pqpq_max_aa_ = temp_aa;
             double temp_ab = sqrt(fabs(fci_ints_->tei_ab(i, j, i, j)));
-            pqpq_ab_[i * ncmo_ + j] = temp_ab;
+            pqpq_ab_[i * nact_ + j] = temp_ab;
             if (temp_ab > pqpq_max_ab_)
                 pqpq_max_ab_ = temp_ab;
             double temp_bb = sqrt(fabs(fci_ints_->tei_bb(i, j, i, j)));
-            pqpq_bb_[i * ncmo_ + j] = temp_bb;
+            pqpq_bb_[i * nact_ + j] = temp_bb;
             if (temp_bb > pqpq_max_bb_)
                 pqpq_max_bb_ = temp_bb;
         }
@@ -1166,7 +1188,8 @@ double ProjectorCI::compute_energy() {
 
     outfile->Printf("\n  * Projector-CI Var. Corr.  Energy     = %18.12f Eh", 1,
                     var_energy - reference_determinant_.energy() -
-                        nuclear_repulsion_energy_);
+                        nuclear_repulsion_energy_ -
+                    fci_ints_->scalar_energy());
 
     //    double pfError = estimate_path_filtering_error(dets, C,
     //    spawning_threshold_);
@@ -1219,7 +1242,8 @@ double ProjectorCI::compute_energy() {
         timer_off("PIFCI:Post_Diag");
 
         double post_diag_energy =
-            apfci_evals->get(current_root_) + nuclear_repulsion_energy_;
+            apfci_evals->get(current_root_) + nuclear_repulsion_energy_ +
+                fci_ints_->scalar_energy();
         Process::environment.globals["PCI POST DIAG ENERGY"] = post_diag_energy;
 
         outfile->Printf(
@@ -1228,7 +1252,8 @@ double ProjectorCI::compute_energy() {
         outfile->Printf(
             "\n  * Projector-CI Var. Corr.  Energy     = %18.12f Eh", 1,
             post_diag_energy - reference_determinant_.energy() -
-                nuclear_repulsion_energy_);
+                nuclear_repulsion_energy_ -
+                    fci_ints_->scalar_energy());
 
         std::vector<double> diag_C(C.size());
 
@@ -1325,11 +1350,12 @@ double ProjectorCI::initial_guess(det_vec& dets, std::vector<double>& C) {
     // }
     sparse_solver.diagonalize_hamiltonian(dets, evals, evecs, nroot_,
                                           wavefunction_multiplicity_, DLSolver);
-    double var_energy = evals->get(current_root_) + nuclear_repulsion_energy_;
+    double var_energy = evals->get(current_root_) + nuclear_repulsion_energy_ +
+                        fci_ints_->scalar_energy();
     outfile->Printf(
         "\n\n  Initial guess energy (variational) = %20.12f Eh (root = %d)",
         var_energy, current_root_ + 1);
-    lambda_1_ = evals->get(current_root_);
+    lambda_1_ = evals->get(current_root_) + fci_ints_->scalar_energy();
 
     // Copy the ground state eigenvector
     for (size_t I = 0; I < guess_size; ++I) {
@@ -1738,7 +1764,7 @@ void ProjectorCI::propagate_DL(det_vec& dets, std::vector<double>& C,
     size_t dets_size = dets.size();
     std::vector<double> diag_vec(dets_size);
     for (int i = 0; i < dets_size; i++) {
-        diag_vec[i] = dets[i].energy();
+        diag_vec[i] = dets[i].energy() + fci_ints_->scalar_energy();
     }
 
     double lambda = A->get(0, 0);
@@ -2032,7 +2058,7 @@ void ProjectorCI::propagate_Trotter_linear(det_vec& dets,
 
     // Correct the diagonals
     for (size_t I = 0, max_I = dets.size(); I < max_I; ++I) {
-        double det_energy = dets[I].energy();
+        double det_energy = dets[I].energy() + fci_ints_->scalar_energy();
         double CI = dets_C_hash[dets[I]];
         dets_C_hash[dets[I]] += tau * (det_energy - S) * CI;
         dets_C_hash[dets[I]] += exp(-tau * (det_energy - S)) * CI;
@@ -2054,7 +2080,7 @@ void ProjectorCI::propagate_Olsen(det_vec& dets, std::vector<double>& C,
     double delta_E_den = 0.0;
     for (size_t I = 0, max_I = dets.size(); I < max_I; ++I) {
         double CI = C[I];
-        double EI = dets[I].energy();
+        double EI = dets[I].energy() + fci_ints_->scalar_energy();
         double sigma_I = dets_C_hash[dets[I]];
         delta_E_num += CI * sigma_I / (EI - S);
         delta_E_den += CI * CI / (EI - S);
@@ -2067,7 +2093,7 @@ void ProjectorCI::propagate_Olsen(det_vec& dets, std::vector<double>& C,
 
     double step_norm = 0.0;
     for (auto& det_C : dets_C_hash) {
-        double EI = det_C.first.energy();
+        double EI = det_C.first.energy() + fci_ints_->scalar_energy();
         det_C.second /= -(EI - S);
         step_norm += det_C.second * det_C.second;
     }
@@ -2299,7 +2325,7 @@ void ProjectorCI::propagate_DavidsonLiu(det_vec& dets, std::vector<double>& C,
             }
 
             for (auto& det_r_k : r_k) {
-                double denom = lambda_p[k] - det_r_k.first.energy();
+                double denom = lambda_p[k] - det_r_k.first.energy() + fci_ints_->scalar_energy();
                 if (fabs(denom) > 1e-6) {
                     det_r_k.second /= denom;
                 } else {
@@ -2431,12 +2457,11 @@ void ProjectorCI::apply_tau_H_symm_det_dynamic(
         (max_coupling.first == 0.0) or
         (std::fabs(max_coupling.first * CI) >= spawning_threshold);
     bool do_doubles =
-        (max_coupling.second == 0.0 and
-         std::fabs(dets_double_max_coupling_ * CI) >= spawning_threshold) or
+        (max_coupling.second == 0.0) or
         (std::fabs(max_coupling.second * CI) >= spawning_threshold);
 
     // Diagonal contributions
-    double det_energy = detI.energy();
+    double det_energy = detI.energy() + fci_ints_->scalar_energy();
     new_space_C_vec.push_back(
         std::make_pair(detI, tau * (det_energy - E0) * CI));
 
@@ -2773,7 +2798,7 @@ void ProjectorCI::apply_tau_H_ref_C_symm(double tau, double spawning_threshold,
         size_t max_I = C.size();
         for (size_t I = ref_max_I; I < max_I; ++I) {
             // Diagonal contribution
-            double det_energy = dets[I].energy();
+            double det_energy = dets[I].energy() + fci_ints_->scalar_energy();
 // Diagonal contributions
 #pragma omp critical
             {
@@ -3111,12 +3136,11 @@ void ProjectorCI::apply_tau_H_ref_C_symm_det_dynamic_smooth(
         (max_coupling.first == 0.0) or
         (std::fabs(max_coupling.first * ref_CI) >= spawning_threshold);
     bool do_doubles =
-        (max_coupling.second == 0.0 and
-         std::fabs(dets_double_max_coupling_ * ref_CI) >= spawning_threshold) or
+        (max_coupling.second == 0.0) or
         (std::fabs(max_coupling.second * ref_CI) >= spawning_threshold);
 
     // Diagonal contributions
-    double det_energy = detI.energy();
+    double det_energy = detI.energy() + fci_ints_->scalar_energy();
     new_space_C_vec.push_back(
         std::make_pair(detI, tau * (det_energy - E0) * CI));
 
@@ -3422,12 +3446,11 @@ void ProjectorCI::apply_tau_H_ref_C_symm_det_dynamic(
         (max_coupling.first == 0.0) or
         (std::fabs(max_coupling.first * ref_CI) >= spawning_threshold);
     bool do_doubles =
-        (max_coupling.second == 0.0 and
-         std::fabs(dets_double_max_coupling_ * ref_CI) >= spawning_threshold) or
+        (max_coupling.second == 0.0) or
         (std::fabs(max_coupling.second * ref_CI) >= spawning_threshold);
 
     // Diagonal contributions
-    double det_energy = detI.energy();
+    double det_energy = detI.energy() + fci_ints_->scalar_energy();
     new_space_C_vec.push_back(
         std::make_pair(detI, tau * (det_energy - E0) * CI));
 
@@ -3760,7 +3783,7 @@ void ProjectorCI::apply_tau_H(double tau, double spawning_threshold,
                     }
                 } else {
                     // Diagonal contribution
-                    double det_energy = dets[I].energy();
+                    double det_energy = dets[I].energy() + fci_ints_->scalar_energy();
 // Diagonal contributions
 #pragma omp critical
                     { dets_C_hash[dets[I]] += tau * (det_energy - S) * C[I]; }
@@ -3807,7 +3830,7 @@ void ProjectorCI::apply_tau_H(double tau, double spawning_threshold,
                     std::max(thread_max_HJI[thread_id].second,
                              max_HJI.second); // to avoid race condition
             } else {
-                double det_energy = dets[I].energy();
+                double det_energy = dets[I].energy() + fci_ints_->scalar_energy();
 // Diagonal contributions
 #pragma omp critical
                 { dets_C_hash[dets[I]] += tau * (det_energy - S) * C[I]; }
@@ -3877,7 +3900,7 @@ void ProjectorCI::apply_tau_H_det_subset(
     double tau, Determinant& detI, double CI, det_hash<>& dets_sum_map,
     std::vector<std::pair<Determinant, double>>& new_space_C_vec, double E0) {
     // Diagonal contributions
-    double det_energy = detI.energy();
+    double det_energy = detI.energy() + fci_ints_->scalar_energy();
     //    new_space_C[detI] += tau * (det_energy - E0) * CI;
     new_space_C_vec.push_back(
         std::make_pair(detI, tau * (det_energy - E0) * CI));
@@ -4027,7 +4050,7 @@ void ProjectorCI::apply_tau_H_det_subset_prescreening(
     det_hash<>& dets_sum_map,
     std::vector<std::pair<Determinant, double>>& new_space_C_vec, double E0) {
     // Diagonal contributions
-    double det_energy = detI.energy();
+    double det_energy = detI.energy() + fci_ints_->scalar_energy();
     //    new_space_C[detI] += tau * (det_energy - E0) * CI;
     new_space_C_vec.push_back(
         std::make_pair(detI, tau * (det_energy - E0) * CI));
@@ -4289,7 +4312,7 @@ std::pair<double, double> ProjectorCI::apply_tau_H_det_prescreening(
                                 old_max_two_HJI_ * CI) >= spawning_threshold;
 
     // Diagonal contributions
-    double det_energy = detI.energy();
+    double det_energy = detI.energy() + fci_ints_->scalar_energy();
     //    new_space_C[detI] += tau * (det_energy - E0) * CI;
     new_space_C_vec.push_back(
         std::make_pair(detI, tau * (det_energy - E0) * CI));
@@ -4657,7 +4680,7 @@ void ProjectorCI::apply_tau_H_det_schwarz(
     int nvbeta = bvir.size();
 
     // Diagonal contributions
-    double det_energy = detI.energy();
+    double det_energy = detI.energy() + fci_ints_->scalar_energy();
     new_space_C_vec.push_back(
         std::make_pair(detI, tau * (det_energy - E0) * CI));
 
@@ -4702,7 +4725,7 @@ void ProjectorCI::apply_tau_H_det_schwarz(
         int aa = avir[a];
         for (int b = a + 1; b < nvalpha; ++b) {
             int bb = avir[b];
-            pqpq_max_ab = std::max(pqpq_aa_[aa * ncmo_ + bb], pqpq_max_ab);
+            pqpq_max_ab = std::max(pqpq_aa_[aa * nact_ + bb], pqpq_max_ab);
         }
     }
     for (int i = 0; i < noalpha; ++i) {
@@ -4710,7 +4733,7 @@ void ProjectorCI::apply_tau_H_det_schwarz(
         for (int j = i + 1; j < noalpha; ++j) {
             int jj = aocc[j];
             ++schwarz_total_;
-            if (fabs(pqpq_aa_[ii * ncmo_ + jj] * pqpq_max_ab * CI) <
+            if (fabs(pqpq_aa_[ii * nact_ + jj] * pqpq_max_ab * CI) <
                 spawning_threshold) {
                 ++schwarz_succ_;
                 continue;
@@ -4740,7 +4763,7 @@ void ProjectorCI::apply_tau_H_det_schwarz(
         int aa = avir[a];
         for (int b = 0; b < nvbeta; ++b) {
             int bb = bvir[b];
-            pqpq_max_ab = std::max(pqpq_ab_[aa * ncmo_ + bb], pqpq_max_ab);
+            pqpq_max_ab = std::max(pqpq_ab_[aa * nact_ + bb], pqpq_max_ab);
         }
     }
     for (int i = 0; i < noalpha; ++i) {
@@ -4748,7 +4771,7 @@ void ProjectorCI::apply_tau_H_det_schwarz(
         for (int j = 0; j < nobeta; ++j) {
             int jj = bocc[j];
             ++schwarz_total_;
-            if (fabs(pqpq_ab_[ii * ncmo_ + jj] * pqpq_max_ab * CI) <
+            if (fabs(pqpq_ab_[ii * nact_ + jj] * pqpq_max_ab * CI) <
                 spawning_threshold) {
                 ++schwarz_succ_;
                 continue;
@@ -4777,7 +4800,7 @@ void ProjectorCI::apply_tau_H_det_schwarz(
         int aa = bvir[a];
         for (int b = a + 1; b < nvbeta; ++b) {
             int bb = bvir[b];
-            pqpq_max_ab = std::max(pqpq_bb_[aa * ncmo_ + bb], pqpq_max_ab);
+            pqpq_max_ab = std::max(pqpq_bb_[aa * nact_ + bb], pqpq_max_ab);
         }
     }
     for (int i = 0; i < nobeta; ++i) {
@@ -4785,7 +4808,7 @@ void ProjectorCI::apply_tau_H_det_schwarz(
         for (int j = i + 1; j < nobeta; ++j) {
             int jj = bocc[j];
             ++schwarz_total_;
-            if (fabs(pqpq_bb_[ii * ncmo_ + jj] * pqpq_max_ab * CI) <
+            if (fabs(pqpq_bb_[ii * nact_ + jj] * pqpq_max_ab * CI) <
                 spawning_threshold) {
                 ++schwarz_succ_;
                 continue;
@@ -4819,12 +4842,11 @@ void ProjectorCI::apply_tau_H_det_dynamic(
         (max_coupling.first == 0.0) or
         (std::fabs(max_coupling.first * CI) >= spawning_threshold);
     bool do_doubles =
-        (max_coupling.second == 0.0 and
-         std::fabs(dets_double_max_coupling_ * CI) >= spawning_threshold) or
+        (max_coupling.second == 0.0) or
         (std::fabs(max_coupling.second * CI) >= spawning_threshold);
 
     // Diagonal contributions
-    double det_energy = detI.energy();
+    double det_energy = detI.energy() + fci_ints_->scalar_energy();
     new_space_C_vec.push_back(
         std::make_pair(detI, tau * (det_energy - E0) * CI));
 
@@ -5006,7 +5028,8 @@ double ProjectorCI::estimate_proj_energy(det_vec& dets,
         double HIJ = dets[I].slater_rules(dets[J]);
         projective_energy_estimator += HIJ * C[I] / CJ;
     }
-    return projective_energy_estimator + nuclear_repulsion_energy_;
+    return projective_energy_estimator + nuclear_repulsion_energy_ +
+            fci_ints_->scalar_energy();
 }
 
 double ProjectorCI::estimate_var_energy(det_vec& dets, std::vector<double>& C,
@@ -5025,7 +5048,8 @@ double ProjectorCI::estimate_var_energy(det_vec& dets, std::vector<double>& C,
             }
         }
     }
-    return variational_energy_estimator + nuclear_repulsion_energy_;
+    return variational_energy_estimator + nuclear_repulsion_energy_ +
+            fci_ints_->scalar_energy();
 }
 
 double ProjectorCI::estimate_var_energy_sparse(det_vec& dets,
@@ -5067,7 +5091,8 @@ double ProjectorCI::estimate_var_energy_sparse(det_vec& dets,
         variational_energy_estimator += energy[t];
     }
 
-    return variational_energy_estimator + nuclear_repulsion_energy_;
+    return variational_energy_estimator + nuclear_repulsion_energy_ +
+            fci_ints_->scalar_energy();
 }
 
 double ProjectorCI::estimate_1st_order_perturbation(det_vec& dets,
@@ -5146,7 +5171,8 @@ ProjectorCI::estimate_perturbation(det_vec& dets, std::vector<double>& C,
             }
         }
         current_V *= C[I];
-        double delta = variational_energy_estimator - dets[I].energy();
+        double delta = variational_energy_estimator - dets[I].energy() -
+                fci_ints_->scalar_energy();
         perturbation_2nd_energy_estimator_sub += current_V * current_V / delta;
         //            0.5 * (delta - sqrt(delta * delta + 4 * current_V *
         //            current_V));
@@ -5191,7 +5217,7 @@ void ProjectorCI::print_wfn(det_vec& space, std::vector<double>& C,
             "\n  %3zu  %13.6g %13.6g  %10zu %s  %18.12f", I,
             C[det_weight[I].second], det_weight[I].first * det_weight[I].first,
             det_weight[I].second, space[det_weight[I].second].str().c_str(),
-            space[det_weight[I].second].energy());
+            space[det_weight[I].second].energy() + fci_ints_->scalar_energy());
     }
 
     // Compute the expectation value of the spin
@@ -5500,7 +5526,7 @@ spawning_threshold)){
     std::vector<std::vector<int>> naoccs(nirrep_), navirs(nirrep_),
 nboccs(nirrep_), nbvirs(nirrep_);
 
-    for (int i = 0; i<ncmo_; i++) {
+    for (int i = 0; i<nact_; i++) {
         if (detI.get_alfa_bit(i)) {
             naoccs[mo_symmetry_[i]].push_back(i);
         } else {
@@ -5974,25 +6000,248 @@ double ProjectorCI::form_H_C(double tau, double spawning_threshold,
     return result;
 }
 
-double ProjectorCI::compute_max_double_coupling() {
-    const std::vector<double>& tei_aa = fci_ints_->tei_aa_vector();
-    const std::vector<double>& tei_ab = fci_ints_->tei_ab_vector();
-    const std::vector<double>& tei_bb = fci_ints_->tei_bb_vector();
-    auto minmax_aa_iter = std::minmax_element(tei_aa.begin(), tei_aa.end());
-    dets_double_max_coupling_ = fabs(*(minmax_aa_iter.first));
-    if (fabs(*(minmax_aa_iter.second)) > dets_double_max_coupling_)
-        dets_double_max_coupling_ = fabs(*(minmax_aa_iter.second));
-    auto minmax_ab_iter = std::minmax_element(tei_ab.begin(), tei_ab.end());
-    if (fabs(*(minmax_ab_iter.first)) > dets_double_max_coupling_)
-        dets_double_max_coupling_ = fabs(*(minmax_ab_iter.first));
-    if (fabs(*(minmax_ab_iter.second)) > dets_double_max_coupling_)
-        dets_double_max_coupling_ = fabs(*(minmax_ab_iter.second));
-    auto minmax_bb_iter = std::minmax_element(tei_bb.begin(), tei_bb.end());
-    if (fabs(*(minmax_bb_iter.first)) > dets_double_max_coupling_)
-        dets_double_max_coupling_ = fabs(*(minmax_bb_iter.first));
-    if (fabs(*(minmax_bb_iter.second)) > dets_double_max_coupling_)
-        dets_double_max_coupling_ = fabs(*(minmax_bb_iter.second));
-    return dets_double_max_coupling_;
+std::vector<std::tuple<double, int, int>>
+ProjectorCI::sym_labeled_orbitals(std::string type) {
+    std::vector<std::tuple<double, int, int>> labeled_orb;
+
+    if (type == "RHF" or type == "ROHF" or type == "ALFA") {
+
+        // Create a vector of orbital energy and index pairs
+        std::vector<std::pair<double, int>> orb_e;
+        int cumidx = 0;
+        for (int h = 0; h < nirrep_; ++h) {
+            for (int a = 0; a < nactpi_[h]; ++a) {
+                orb_e.push_back(
+                    make_pair(epsilon_a_->get(h, frzcpi_[h] + a), a + cumidx));
+            }
+            cumidx += nactpi_[h];
+        }
+
+        // Create a vector that stores the orbital energy, symmetry, and idx
+        for (size_t a = 0; a < nact_; ++a) {
+            labeled_orb.push_back(
+                make_tuple(orb_e[a].first, mo_symmetry_[a], orb_e[a].second));
+        }
+        // Order by energy, low to high
+        std::sort(labeled_orb.begin(), labeled_orb.end());
+    }
+    if (type == "BETA") {
+        // Create a vector of orbital energies and index pairs
+        std::vector<std::pair<double, int>> orb_e;
+        int cumidx = 0;
+        for (int h = 0; h < nirrep_; ++h) {
+            for (size_t a = 0, max = nactpi_[h]; a < max; ++a) {
+                orb_e.push_back(
+                    make_pair(epsilon_b_->get(h, frzcpi_[h] + a), a + cumidx));
+            }
+            cumidx += nactpi_[h];
+        }
+
+        // Create a vector that stores the orbital energy, sym, and idx
+        for (size_t a = 0; a < nact_; ++a) {
+            labeled_orb.push_back(
+                make_tuple(orb_e[a].first, mo_symmetry_[a], orb_e[a].second));
+        }
+        std::sort(labeled_orb.begin(), labeled_orb.end());
+    }
+    return labeled_orb;
 }
+
+std::vector<int> ProjectorCI::get_occupation() {
+
+    std::vector<int> occupation(2 * nact_, 0);
+
+    // Get reference type
+    std::string ref_type = options_.get_str("REFERENCE");
+    // if(!quiet_mode_) outfile->Printf("\n  Using %s reference.\n",
+    // ref_type.c_str());
+
+    // nyms denotes the number of electrons needed to assign symmetry and
+    // multiplicity
+    int nsym = wavefunction_multiplicity_ - 1;
+    int orb_sym = wavefunction_symmetry_;
+
+    if (wavefunction_multiplicity_ == 1) {
+        nsym = 2;
+    }
+
+    // Grab an ordered list of orbital energies, sym labels, and idxs
+    std::vector<std::tuple<double, int, int>> labeled_orb_en;
+    std::vector<std::tuple<double, int, int>> labeled_orb_en_alfa;
+    std::vector<std::tuple<double, int, int>> labeled_orb_en_beta;
+
+    // For a restricted reference
+    if (ref_type == "RHF" or ref_type == "RKS" or ref_type == "ROHF") {
+        labeled_orb_en = sym_labeled_orbitals("RHF");
+
+        // Build initial reference determinant from restricted reference
+        for (int i = 0; i < nalpha_; ++i) {
+            occupation[std::get<2>(labeled_orb_en[i])] = 1;
+        }
+        for (int i = 0; i < nbeta_; ++i) {
+            occupation[nact_ + std::get<2>(labeled_orb_en[i])] = 1;
+        }
+
+        // Loop over as many outer-shell electrons as needed to get correct sym
+        for (int k = 1; k <= nsym;) {
+
+            bool add = false;
+            // Remove electron from highest energy docc
+            occupation[std::get<2>(labeled_orb_en[nalpha_ - k])] = 0;
+
+            // Determine proper symmetry for new occupation
+            orb_sym = wavefunction_symmetry_;
+
+            if (wavefunction_multiplicity_ == 1) {
+                orb_sym = std::get<1>(labeled_orb_en[nalpha_ - 1]) ^ orb_sym;
+            } else {
+                for (int i = 1; i <= nsym; ++i) {
+                    orb_sym =
+                        std::get<1>(labeled_orb_en[nalpha_ - i]) ^ orb_sym;
+                }
+                orb_sym = std::get<1>(labeled_orb_en[nalpha_ - k]) ^ orb_sym;
+            }
+
+            // Add electron to lowest-energy orbital of proper symmetry
+            // Loop from current occupation to max MO until correct orbital is
+            // reached
+            for (int i = nalpha_ - k, maxi = nact_; i < maxi; ++i) {
+                if (orb_sym == std::get<1>(labeled_orb_en[i]) and
+                    occupation[std::get<2>(labeled_orb_en[i])] != 1) {
+                    occupation[std::get<2>(labeled_orb_en[i])] = 1;
+                    add = true;
+                    break;
+                } else {
+                    continue;
+                }
+            }
+            // If a new occupation could not be created, put electron back and
+            // remove a different one
+            if (!add) {
+                occupation[std::get<2>(labeled_orb_en[nalpha_ - k])] = 1;
+                ++k;
+            } else {
+                break;
+            }
+
+        } // End loop over k
+
+    } else {
+        labeled_orb_en_alfa = sym_labeled_orbitals("ALFA");
+        labeled_orb_en_beta = sym_labeled_orbitals("BETA");
+
+        // For an unrestricted reference
+        // Make the reference
+        // For singlets, this will be closed-shell
+
+        for (int i = 0; i < nalpha_; ++i) {
+            occupation[std::get<2>(labeled_orb_en_alfa[i])] = 1;
+        }
+        for (int i = 0; i < nbeta_; ++i) {
+            occupation[std::get<2>(labeled_orb_en_beta[i]) + nact_] = 1;
+        }
+
+        if (nalpha_ >= nbeta_) {
+
+            // Loop over k
+            for (int k = 1; k < nsym;) {
+
+                bool add = false;
+                // Remove highest energy alpha electron
+                occupation[std::get<2>(labeled_orb_en_alfa[nalpha_ - k])] = 0;
+
+                // Determine proper symmetry for new electron
+
+                orb_sym = wavefunction_symmetry_;
+
+                if (wavefunction_multiplicity_ == 1) {
+                    orb_sym =
+                        std::get<1>(labeled_orb_en_alfa[nalpha_ - 1]) ^ orb_sym;
+                } else {
+                    for (int i = 1; i <= nsym; ++i) {
+                        orb_sym =
+                            std::get<1>(labeled_orb_en_alfa[nalpha_ - i]) ^
+                            orb_sym;
+                    }
+                    orb_sym =
+                        std::get<1>(labeled_orb_en_alfa[nalpha_ - k]) ^ orb_sym;
+                }
+
+                // Add electron to lowest-energy orbital of proper symmetry
+                for (int i = nalpha_ - k; i < nactel_; ++i) {
+                    if (orb_sym == std::get<1>(labeled_orb_en_alfa[i]) and
+                        occupation[std::get<2>(labeled_orb_en_alfa[i])] != 1) {
+                        occupation[std::get<2>(labeled_orb_en_alfa[i])] = 1;
+                        add = true;
+                        break;
+                    } else {
+                        continue;
+                    }
+                }
+
+                // If a new occupation could not be made,
+                // add electron back and try a different one
+
+                if (!add) {
+                    occupation[std::get<2>(labeled_orb_en_alfa[nalpha_ - k])] =
+                        1;
+                    ++k;
+                } else {
+                    break;
+                }
+
+            }    //	End loop over k
+        } else { // End if(nalpha_ >= nbeta_ )
+
+            for (int k = 1; k < nsym;) {
+
+                bool add = false;
+
+                // Remove highest-energy beta electron
+                occupation[std::get<2>(labeled_orb_en_beta[nbeta_ - k])] = 0;
+
+                // Determine proper symetry for new occupation
+                orb_sym = wavefunction_symmetry_;
+
+                if (wavefunction_multiplicity_ == 1) {
+                    orb_sym =
+                        std::get<1>(labeled_orb_en_beta[nbeta_ - 1]) ^ orb_sym;
+                } else {
+                    for (int i = 1; i <= nsym; ++i) {
+                        orb_sym = std::get<1>(labeled_orb_en_beta[nbeta_ - i]) ^
+                                  orb_sym;
+                    }
+                    orb_sym =
+                        std::get<1>(labeled_orb_en_beta[nbeta_ - k]) ^ orb_sym;
+                }
+
+                // Add electron to lowest-energy beta orbital
+
+                for (int i = nbeta_ - k; i < nactel_; ++i) {
+                    if (orb_sym == std::get<1>(labeled_orb_en_beta[i]) and
+                        occupation[std::get<2>(labeled_orb_en_beta[i])] != 1) {
+                        occupation[std::get<2>(labeled_orb_en_beta[i])] = 1;
+                        add = true;
+                        break;
+                    }
+                }
+
+                // If a new occupation could not be made,
+                // replace the electron and try again
+
+                if (!add) {
+                    occupation[std::get<2>(labeled_orb_en_beta[nbeta_ - k])] =
+                        1;
+                    ++k;
+                } else {
+                    break;
+                }
+
+            } // End loop over k
+        }     // End if nalpha_ < nbeta_
+    }
+    return occupation;
+}
+
 }
 } // EndNamespaces
