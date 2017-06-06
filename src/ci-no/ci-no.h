@@ -89,12 +89,16 @@ class CINO : public Wavefunction {
     std::shared_ptr<MOSpaceInfo> mo_space_info_;
     /// Pointer to FCI integrals
     std::shared_ptr<FCIIntegrals> fci_ints_;
-    /// The number of active orbitals per irrep
-    Dimension nactpi_;
     /// The number of active orbitals
     size_t nactv_;
     /// The number of restricted orbitals
     size_t nrdocc_;
+    /// The number of active orbitals per irrep
+    Dimension actvpi_;
+    /// The number of restricted doubly occupied orbitals per irrep
+    Dimension rdoccpi_;
+    /// The number of frozen doubly occupied orbitals per irrep
+    Dimension fdoccpi_;
     ///The number of alpha occupied orbitals
     int naocc_;
     ///The number of beta occupied orbitals
@@ -126,7 +130,7 @@ class CINO : public Wavefunction {
     /// All that happens before we compute the energy
     void startup();
 
-    std::vector<Determinant> build_dets();
+    std::vector<Determinant> build_dets(int irrep);
 
     std::pair<SharedVector, SharedMatrix>
     diagonalize_hamiltonian(const std::vector<Determinant>& dets);
