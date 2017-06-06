@@ -35,7 +35,7 @@ set forte {
   root_sym              0
   nroot                 1
   root                  0
-  ms                    0
+  ms                    0.0
   dsrg_s                1.0
   maxiter               100
   int_type              cholesky

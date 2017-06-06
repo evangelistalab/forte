@@ -29,7 +29,7 @@ set forte {
   restricted_docc [0,0,0,0]
   root_sym 2
   multiplicity 3
-  ms 0
+  ms 0.0
 }
 
 

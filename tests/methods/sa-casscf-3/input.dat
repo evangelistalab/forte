@@ -31,7 +31,7 @@ set forte {
   active           [1,0,0,0,0,1,0,0]
   multiplicity     3
   root_sym         5
-  ms               0
+  ms               0.0
   cas_type         fci
   e_convergence    1e-10
   int_type         conventional
@@ -42,4 +42,4 @@ set forte {
 triplet = energy('forte')
 compare_values(ref_casscf, triplet, 6, "FCI splitting")
 
-
+0.
