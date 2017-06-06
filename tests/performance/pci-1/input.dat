@@ -14,24 +14,19 @@ molecule li2{
 set {
   basis cc-pVDZ
   scf_type pk
-  e_convergence 8
+  e_convergence 10
 }
 
 set forte {
-  job_type pci
+  job_type pci_hashvec
   nroot 1
   charge 0
-  tau 1.0
-  spawning_threshold 0.00001
-  ENERGY_ESTIMATE_FREQ 100
-  FAST_EVAR true
-  USE_INTER_NORM true
-  ENERGY_ESTIMATE_THRESHOLD 1e-5
-  INITIATOR_APPROX true
-  INITIATOR_APPROX_FACTOR 10.
-  PROPAGATOR POWER
-  MP2_NOS true
-  maxbeta 100000.00
+  PCI_tau 1.0
+  PCI_spawning_threshold 0.00001
+  PCI_ENERGY_ESTIMATE_FREQ 1
+  PCI_GENERATOR wall-chebyshev
+  PCI_maxbeta 100000.00
+  PCI_e_convergence 7
 }
 
 energy('scf')
