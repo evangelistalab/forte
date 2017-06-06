@@ -37,7 +37,8 @@ set {
 }
 set forte{
   cino                 false
-  job_type             active-dsrgpt2
+  #job_type             active-dsrgpt2
+  job_type             nojob
   frozen_docc          [2]
   restricted_docc      [1]
   active               [10]
@@ -50,5 +51,5 @@ set forte{
   int_type             df
   #cholesky_tolerance   6
 }
-energy('forte',ref_wfn=wfn)
+#energy('forte',ref_wfn=wfn)
 #cubeprop(wfn)

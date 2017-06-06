@@ -92,7 +92,17 @@ class CINO : public Wavefunction {
     /// The number of active orbitals per irrep
     Dimension nactpi_;
     /// The number of active orbitals
-    size_t nact_;
+    size_t nactv_;
+    /// The number of restricted orbitals
+    size_t nrdocc_;
+    ///The number of alpha occupied orbitals
+    int naocc_;
+    ///The number of beta occupied orbitals
+    int nbocc_;
+    ///The number of alpha virtual orbitals
+    int navir_;
+    ///The number of beta virtual orbitals
+    int nbvir_;
 
     // ==> CINO Options <==
     /// The number of roots computed
