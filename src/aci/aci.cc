@@ -225,9 +225,9 @@ void AdaptiveCI::startup() {
     if (options_["ROOT_SYM"].has_changed()) {
         wavefunction_symmetry_ = options_.get_int("ROOT_SYM");
     }
-    wavefunction_multiplicity_ = 1;
+    multiplicity_ = 1;
     if (options_["MULTIPLICITY"].has_changed()) {
-        wavefunction_multiplicity_ = options_.get_int("MULTIPLICITY");
+        multiplicity_ = options_.get_int("MULTIPLICITY");
     }
 
     nact_ = mo_space_info_->size("ACTIVE");
@@ -249,9 +249,13 @@ void AdaptiveCI::startup() {
         nel += 2 * doccpi_[h] + soccpi_[h];
     }
 
-    int ms = wavefunction_multiplicity_ - 1;
+    twice_ms_ = multiplicity_ - 1;
+    if( options_["MS"].has_changed()) {
+        twice_ms_ = std::round(2.0 * options_.get_double("MS"));
+    }
+
     nactel_ = nel - 2 * nfrzc_;
-    nalpha_ = (nactel_ + ms) / 2;
+    nalpha_ = (nactel_ + twice_ms_) / 2;
     nbeta_ = nactel_ - nalpha_;
 
     mo_symmetry_ = mo_space_info_->symmetry("ACTIVE");
@@ -281,8 +285,8 @@ void AdaptiveCI::startup() {
 
     spin_tol_ = options_.get_double("ACI_SPIN_TOL");
     // set the initial S^@ guess as input multiplicity
-    int S = (wavefunction_multiplicity_ - 1.0) / 2.0;
-    int S2 = wavefunction_multiplicity_ - 1.0;
+    int S = (multiplicity_ - 1.0) / 2.0;
+    int S2 = multiplicity_ - 1.0;
     for (int n = 0; n < nroot_; ++n) {
         root_spin_vec_.push_back(make_pair(S, S2));
     }
@@ -347,7 +351,8 @@ void AdaptiveCI::print_info() {
 
     // Print a summary
     std::vector<std::pair<std::string, int>> calculation_info{
-        {"Multiplicity", wavefunction_multiplicity_},
+        {"Multiplicity", multiplicity_},
+        {"Ms", twice_ms_},
         {"Symmetry", wavefunction_symmetry_},
         {"Number of roots", nroot_},
         {"Root used for properties", options_.get_int("ACI_ROOT")}};
@@ -404,10 +409,10 @@ std::vector<int> AdaptiveCI::get_occupation() {
 
     // nyms denotes the number of electrons needed to assign symmetry and
     // multiplicity
-    int nsym = wavefunction_multiplicity_ - 1;
+    int nsym = twice_ms_ * 2;
     int orb_sym = wavefunction_symmetry_;
 
-    if (wavefunction_multiplicity_ == 1) {
+    if (twice_ms_ == 0) {
         nsym = 2;
     }
 
@@ -436,9 +441,9 @@ std::vector<int> AdaptiveCI::get_occupation() {
             occupation[std::get<2>(labeled_orb_en[nalpha_ - k])] = 0;
 
             // Determine proper symmetry for new occupation
-            orb_sym = wavefunction_symmetry_;
+            //orb_sym = ms_;
 
-            if (wavefunction_multiplicity_ == 1) {
+            if (twice_ms_ == 0) {
                 orb_sym = std::get<1>(labeled_orb_en[nalpha_ - 1]) ^ orb_sym;
             } else {
                 for (int i = 1; i <= nsym; ++i) {
@@ -500,7 +505,7 @@ std::vector<int> AdaptiveCI::get_occupation() {
 
                 orb_sym = wavefunction_symmetry_;
 
-                if (wavefunction_multiplicity_ == 1) {
+                if (twice_ms_ == 0) {
                     orb_sym =
                         std::get<1>(labeled_orb_en_alfa[nalpha_ - 1]) ^ orb_sym;
                 } else {
@@ -549,7 +554,7 @@ std::vector<int> AdaptiveCI::get_occupation() {
                 // Determine proper symetry for new occupation
                 orb_sym = wavefunction_symmetry_;
 
-                if (wavefunction_multiplicity_ == 1) {
+                if (multiplicity_ == 1) {
                     orb_sym =
                         std::get<1>(labeled_orb_en_beta[nbeta_ - 1]) ^ orb_sym;
                 } else {
@@ -705,12 +710,12 @@ double AdaptiveCI::compute_energy() {
         sparse_solver.set_e_convergence(options_.get_double("E_CONVERGENCE"));
         sparse_solver.set_maxiter_davidson(
             options_.get_int("DL_MAXITER"));
-        sparse_solver.set_spin_project(project_out_spin_contaminants_);
+        sparse_solver.set_spin_project_full(project_out_spin_contaminants_);
         sparse_solver.set_guess_dimension(options_.get_int("DL_GUESS_SIZE"));
-        sparse_solver.set_spin_project_full(false);
+       // sparse_solver.set_spin_project_full(false);
         sparse_solver.diagonalize_hamiltonian_map(
             full_space, op_c, PQ_evals, PQ_evecs, nroot_,
-            wavefunction_multiplicity_, diag_method_);
+            multiplicity_, diag_method_);
     }
 
     if (ex_alg_ == "MULTISTATE") {
@@ -828,11 +833,12 @@ void AdaptiveCI::diagonalize_final_and_compute_rdms()
     sparse_solver.set_maxiter_davidson(
         options_.get_int("DL_MAXITER"));
     sparse_solver.set_spin_project(project_out_spin_contaminants_);
+ //   sparse_solver.set_spin_project_full(project_out_spin_contaminants_);
     sparse_solver.set_guess_dimension(options_.get_int("DL_GUESS_SIZE"));
     sparse_solver.set_spin_project_full(false);
     sparse_solver.diagonalize_hamiltonian_map(
         final_wfn_, op_, final_evals,final_evecs, nroot_,
-        wavefunction_multiplicity_, diag_method_);
+        multiplicity_, diag_method_);
 
     print_final( final_wfn_, final_evecs, final_evals ); 
 
@@ -899,7 +905,7 @@ void AdaptiveCI::print_final(DeterminantMap& dets, SharedMatrix& PQ_evecs,
                             multistate_pt2_energy_correction_[ref_root_]);
     }
 
-    if (ex_alg_ != "ROOT_ORTHOGONALIZE") {
+    if ((ex_alg_ != "ROOT_ORTHOGONALIZE") or (nroot_ == 1 )) {
         outfile->Printf("\n\n  ==> Wavefunction Information <==");
 
         print_wfn(dets, PQ_evecs, nroot_);
@@ -2130,7 +2136,7 @@ void AdaptiveCI::full_spin_transform(DeterminantMap& det_space, SharedMatrix cI,
     //	size_t csf_idx = 0;
     //	double criteria = (0.25 * (wavefunction_multiplicity_ *
     // wavefunction_multiplicity_ - 1.0));
-    //	//double criteria = static_cast<double>(wavefunction_multiplicity_) -
+    //	//double criteria = static_cast<double>(vefunction_multiplicity_) -
     // 1.0;
     //	for(size_t l = 0; l < det_size; ++l){
     //		if( std::fabs(evals->get(l) - criteria) <= 0.01 ){
@@ -2178,7 +2184,7 @@ double AdaptiveCI::compute_spin_contamination(DeterminantMap& space,
     spin_contam /= static_cast<double>(nroot);
     spin_contam -=
         (0.25 *
-         (wavefunction_multiplicity_ * wavefunction_multiplicity_ - 1.0));
+         (multiplicity_ * multiplicity_ - 1.0));
 
     return spin_contam;
 }
@@ -2683,6 +2689,7 @@ void AdaptiveCI::compute_aci(DeterminantMap& PQ_space, SharedMatrix& PQ_evecs,
     sparse_solver.set_e_convergence(options_.get_double("E_CONVERGENCE"));
     sparse_solver.set_maxiter_davidson(options_.get_int("DL_MAXITER"));
     sparse_solver.set_spin_project(project_out_spin_contaminants_);
+//    sparse_solver.set_spin_project_full(project_out_spin_contaminants_);
     sparse_solver.set_guess_dimension(options_.get_int("DL_GUESS_SIZE"));
     sparse_solver.set_num_vecs(nvec);
     sparse_solver.set_sigma_method( sigma_method );
@@ -2779,7 +2786,7 @@ void AdaptiveCI::compute_aci(DeterminantMap& PQ_space, SharedMatrix& PQ_evecs,
         Timer diag;
         sparse_solver.diagonalize_hamiltonian_map(
             P_space, op_, P_evals, P_evecs, num_ref_roots,
-            wavefunction_multiplicity_, diag_method_);
+            multiplicity_, diag_method_);
         if (!quiet_mode_)
             outfile->Printf("\n  Time spent diagonalizing H:   %1.6f s",
                             diag.get());
@@ -2879,7 +2886,7 @@ void AdaptiveCI::compute_aci(DeterminantMap& PQ_space, SharedMatrix& PQ_evecs,
 
         sparse_solver.diagonalize_hamiltonian_map(
             PQ_space, op_, PQ_evals, PQ_evecs, num_ref_roots,
-            wavefunction_multiplicity_, diag_method_);
+            multiplicity_, diag_method_);
 
         if (!quiet_mode_)
             outfile->Printf("\n  Total time spent diagonalizing H:   %1.6f s",

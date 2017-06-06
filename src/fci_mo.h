@@ -195,7 +195,7 @@ class FCI_MO : public Wavefunction {
 
     /// Multiplicity
     int multi_;
-    int ms_;
+    int twice_ms_;
 
     /// Symmetry
     int nirrep_;             // number of irrep

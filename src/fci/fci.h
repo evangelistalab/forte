@@ -104,8 +104,8 @@ class FCI : public Wavefunction {
     int fci_iterations_;
     /// Print the Natural Orbitals from the 1-RDM
     bool print_no_;
-    /// Z component of spin times 2 (i.e. 2 * Sz)
-    int ms_;
+    /// twice the z component of spin (i.e. 2 * M_S)
+    int twice_ms_;
     /// Did the user set ms?
     bool set_ms_ = false;
 
