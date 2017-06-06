@@ -41,6 +41,7 @@ namespace forte {
 
 void forte_options(std::string name, ForteOptions& foptions) {
 
+    // Method-specific options
     set_FCI_options(foptions);
     set_ACI_options(foptions);
     set_PCI_options(foptions);
@@ -49,6 +50,8 @@ void forte_options(std::string name, ForteOptions& foptions) {
     set_AVAS_options(foptions);
     set_CINO_options(foptions);
     set_FCI_MO_options(foptions);
+
+    // General options
 
     /*- The job type
      *  - NONE Do not run methods (may transform orbitals)
@@ -78,6 +81,8 @@ void forte_options(std::string name, ForteOptions& foptions) {
                      "The basis used to define an orbital subspace");
 
     foptions.add_array("SUBSPACE", "A list of orbital subspaces");
+
+    foptions.add_double("MS", 0.0, "Projection of spin onto the z axis");
 }
 }
 }
