@@ -127,7 +127,7 @@ class AdaptiveCI : public Wavefunction {
     /// The multiplicity of the reference
     int multiplicity_;
     /// M_s of the reference
-    int ms_;
+    int twice_ms_;
     /// The number of active electrons
     int nactel_;
     /// The number of correlated alpha electrons

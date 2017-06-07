@@ -39,11 +39,11 @@ namespace forte {
 
 CI_Reference::CI_Reference( std::shared_ptr<Wavefunction> wfn, Options& options, 
                             std::shared_ptr<MOSpaceInfo> mo_space_info, STLBitsetDeterminant det, 
-                            int multiplicity, double ms )
+                            int multiplicity, double twice_ms )
                         : wfn_(wfn), mo_space_info_(mo_space_info)
 {
     multiplicity_ = multiplicity;
-    ms_ = ms;
+    twice_ms_ = twice_ms;
 
     root_sym_ = options.get_int("ROOT_SYM");
 
@@ -65,7 +65,7 @@ CI_Reference::CI_Reference( std::shared_ptr<Wavefunction> wfn, Options& options,
    
     nel -= 2 * ninact;
      
-    nalpha_ = 0.5 * (nel + 2 * ms_ ); 
+    nalpha_ = 0.5 * (nel + twice_ms_ ); 
     nbeta_ = nel - nalpha_;
         
     outfile->Printf("\n  Number of active orbitals: %d", STLBitsetDeterminant::nmo_);
