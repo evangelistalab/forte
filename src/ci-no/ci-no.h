@@ -133,7 +133,7 @@ class CINO : public Wavefunction {
     std::vector<Determinant> build_dets(int irrep);
 
     std::pair<SharedVector, SharedMatrix>
-    diagonalize_hamiltonian(const std::vector<Determinant>& dets);
+    diagonalize_hamiltonian(const std::vector<Determinant>& dets, int nsolutions);
 
     std::pair<SharedMatrix, SharedMatrix> build_density_matrix(const std::vector<Determinant>& dets,
                                       SharedMatrix evecs, int nroot_);
