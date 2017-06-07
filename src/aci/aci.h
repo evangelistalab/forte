@@ -48,6 +48,7 @@
 #include "../mrpt2.h"
 #include "../orbital-helper/unpaired_density.h"
 #include "../semi_canonicalize.h"
+#include "../ci_reference.h"
 
 using d1 = std::vector<double>;
 using d2 = std::vector<d1>;
@@ -153,7 +154,7 @@ class AdaptiveCI : public Wavefunction {
     /// The nuclear repulsion energy
     double nuclear_repulsion_energy_;
     /// The reference determinant
-    STLBitsetDeterminant reference_determinant_;
+    std::vector<STLBitsetDeterminant> initial_reference_;
     /// The PT2 energy correction
     std::vector<double> multistate_pt2_energy_correction_;
     /// The current iteration

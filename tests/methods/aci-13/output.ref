@@ -1,29 +1,26 @@
 
     -----------------------------------------------------------------------
           Psi4: An Open-Source Ab Initio Electronic Structure Package
-                               Psi4 1.1a2.dev169 
+                               Psi4 1.2a1.dev263 
 
-                         Git: Rev {master} b2d0904 
-
-
-    J. M. Turney, A. C. Simmonett, R. M. Parrish, E. G. Hohenstein,
-    F. A. Evangelista, J. T. Fermann, B. J. Mintz, L. A. Burns, J. J. Wilke,
-    M. L. Abrams, N. J. Russ, M. L. Leininger, C. L. Janssen, E. T. Seidl,
-    W. D. Allen, H. F. Schaefer, R. A. King, E. F. Valeev, C. D. Sherrill,
-    and T. D. Crawford, WIREs Comput. Mol. Sci. 2, 556-565 (2012)
-    (doi: 10.1002/wcms.93)
+                         Git: Rev {master} ae466b2 
 
 
-                         Additional Contributions by
-    A. E. DePrince, U. Bozkaya, A. Yu. Sokolov, D. G. A. Smith, R. Di Remigio,
-    R. M. Richard, J. F. Gonthier, H. R. McAlexander, M. Saitow, and
-    B. P. Pritchard
+    R. M. Parrish, L. A. Burns, D. G. A. Smith, A. C. Simmonett,
+    A. E. DePrince III, E. G. Hohenstein, U. Bozkaya, A. Yu. Sokolov,
+    R. Di Remigio, R. M. Richard, J. F. Gonthier, A. M. James,
+    H. R. McAlexander, A. Kumar, M. Saitow, X. Wang, B. P. Pritchard,
+    P. Verma, H. F. Schaefer III, K. Patkowski, R. A. King, E. F. Valeev,
+    F. A. Evangelista, J. M. Turney, T. D. Crawford, and C. D. Sherrill,
+    J. Chem. Theory Comput. in press (2017).
+    (doi: 10.1021/acs.jctc.7b00174)
+
     -----------------------------------------------------------------------
 
 
-    Psi4 started on: Thursday, 09 February 2017 03:05PM
+    Psi4 started on: Tuesday, 06 June 2017 11:13PM
 
-    Process ID:  24677
+    Process ID:  89182
     PSIDATADIR: /Users/jeffschriber/src/psi4_debug_install/share/psi4
     Memory:     500.0 MiB
     Threads:    1
@@ -65,15 +62,14 @@ set {
 set forte {
   job_type = aci
   multiplicity 1
-  perturb_select false
-  select_type amp
+  aci_select_type amp
   frozen_docc [1,0,0,0,0,1,0,0]
   root_sym 0
   sigma 0.01
-  nroot 1
+  aci_nroot 1
   charge 0
-  enforce_spin_complete true
-  prescreen_threshold 0.0
+  aci_enforce_spin_complete true
+  aci_prescreen_threshold 0.0
   diag_algorithm solver
 }
 
@@ -87,15 +83,23 @@ compare_values(refacipt2, get_variable("ACI+PT2 ENERGY"),7, "ACI+PT2 energy") #T
 --------------------------------------------------------------------------
 /Users/jeffschriber/src/forte/forte.so loaded.
 
-*** tstart() called on Jeffs-MacBook-Pro-2.local
-*** at Thu Feb  9 15:05:52 2017
+*** tstart() called on Jeffs-MBP-2.attlocal.net
+*** at Tue Jun  6 23:13:22 2017
+
+   => Loading Basis Set <=
+
+    Name: DZ
+    Role: ORBITAL
+    Keyword: BASIS
+    atoms 1-2 entry C          line    63 file /Users/jeffschriber/src/psi4_debug_install/share/psi4/basis/dz.gbs 
 
 
          ---------------------------------------------------------
                                    SCF
-            by Justin Turney, Rob Parrish, and Andy Simmonett
+            by Justin Turney, Rob Parrish, Andy Simmonett
+                             and Daniel Smith
                              ROHF Reference
-                        1 Threads,    524 MiB Core
+                        1 Threads,    500 MiB Core
          ---------------------------------------------------------
 
   ==> Geometry <==
@@ -135,7 +139,8 @@ compare_values(refacipt2, get_variable("ACI+PT2 ENERGY"),7, "ACI+PT2 energy") #T
 
   ==> Primary Basis <==
 
-  Basis Set: file /Users/jeffschriber/src/psi4_debug_install/share/psi4/basis/dz.gbs
+  Basis Set: DZ
+    Blend: DZ
     Number of shells: 12
     Number of basis function: 20
     Number of Cartesian functions: 20
@@ -194,17 +199,237 @@ compare_values(refacipt2, get_variable("ACI+PT2 ENERGY"),7, "ACI+PT2 energy") #T
 
                         Total Energy        Delta E     RMS |[F,P]|
 
-   @ROHF iter   1:   -74.80224379578486   -7.48022e+01   1.43353e-01 
+  Zero Dim (n = 8): 0  0  0  0  0  0  0  0  
+  SOs per irrep (n = 8): 6  0  2  2  0  6  2  2  
+  Zero Dim (n = 8): 0  0  0  0  0  0  0  0  
+  Doubly occupied orbitals per irrep (n = 8): 2  0  0  0  0  2  1  1  
+  Zero Dim (n = 8): 0  0  0  0  0  0  0  0  
+  SOs per irrep (n = 8): 6  0  2  2  0  6  2  2  
+  Doubly occupied orbitals per irrep (n = 8): 2  0  0  0  0  2  1  1  
+  Doubly occupied orbitals per irrep (n = 8): 2  0  0  0  0  2  1  1  
+  Zero Dim (n = 8): 0  0  0  0  0  0  0  0  
+  Doubly occupied orbitals per irrep (n = 8): 2  0  0  0  0  2  1  1  
+  Doubly occupied orbitals per irrep (n = 8): 2  0  0  0  0  2  1  1  
+  Doubly occupied orbitals per irrep (n = 8): 6  0  2  2  0  6  2  2  
+  Zero Dim (n = 8): 0  0  0  0  0  0  0  0  
+  MOs per irrep (n = 8): 6  0  2  2  0  6  2  2  
+  Zero Dim (n = 8): 0  0  0  0  0  0  0  0  
+  Doubly occupied orbitals per irrep (n = 8): 2  0  0  0  0  2  1  1  
+  Zero Dim (n = 8): 0  0  0  0  0  0  0  0  
+  MOs per irrep (n = 8): 6  0  2  2  0  6  2  2  
+  Doubly occupied orbitals per irrep (n = 8): 2  0  0  0  0  2  1  1  
+  Doubly occupied orbitals per irrep (n = 8): 6  0  2  2  0  6  2  2  
+   @ROHF iter   1:   -74.80224379578483   -7.48022e+01   1.43353e-01 
+  Zero Dim (n = 8): 0  0  0  0  0  0  0  0  
+  SOs per irrep (n = 8): 6  0  2  2  0  6  2  2  
+  Zero Dim (n = 8): 0  0  0  0  0  0  0  0  
+  Doubly occupied orbitals per irrep (n = 8): 2  0  0  0  0  2  1  1  
+  Zero Dim (n = 8): 0  0  0  0  0  0  0  0  
+  SOs per irrep (n = 8): 6  0  2  2  0  6  2  2  
+  Doubly occupied orbitals per irrep (n = 8): 2  0  0  0  0  2  1  1  
+  Doubly occupied orbitals per irrep (n = 8): 2  0  0  0  0  2  1  1  
+  Zero Dim (n = 8): 0  0  0  0  0  0  0  0  
+  Doubly occupied orbitals per irrep (n = 8): 2  0  0  0  0  2  1  1  
+  Doubly occupied orbitals per irrep (n = 8): 2  0  0  0  0  2  1  1  
+  Doubly occupied orbitals per irrep (n = 8): 6  0  2  2  0  6  2  2  
+  Zero Dim (n = 8): 0  0  0  0  0  0  0  0  
+  MOs per irrep (n = 8): 6  0  2  2  0  6  2  2  
+  Zero Dim (n = 8): 0  0  0  0  0  0  0  0  
+  Doubly occupied orbitals per irrep (n = 8): 2  0  0  0  0  2  1  1  
+  Zero Dim (n = 8): 0  0  0  0  0  0  0  0  
+  MOs per irrep (n = 8): 6  0  2  2  0  6  2  2  
+  Doubly occupied orbitals per irrep (n = 8): 2  0  0  0  0  2  1  1  
+  Doubly occupied orbitals per irrep (n = 8): 6  0  2  2  0  6  2  2  
    @ROHF iter   2:   -75.04695491481591   -2.44711e-01   6.82550e-03 DIIS
-   @ROHF iter   3:   -75.05228323019581   -5.32832e-03   1.10526e-03 DIIS
-   @ROHF iter   4:   -75.05257450701882   -2.91277e-04   2.61490e-04 DIIS
-   @ROHF iter   5:   -75.05258967621279   -1.51692e-05   2.49399e-05 DIIS
-   @ROHF iter   6:   -75.05258982519398   -1.48981e-07   3.40521e-06 DIIS
-   @ROHF iter   7:   -75.05258982713954   -1.94557e-09   3.76655e-07 DIIS
-   @ROHF iter   8:   -75.05258982716589   -2.63469e-11   1.83938e-08 DIIS
-   @ROHF iter   9:   -75.05258982716589    0.00000e+00   1.32141e-09 DIIS
-   @ROHF iter  10:   -75.05258982716595   -5.68434e-14   1.21548e-10 DIIS
-   @ROHF iter  11:   -75.05258982716596   -1.42109e-14   8.65847e-12 DIIS
+  Zero Dim (n = 8): 0  0  0  0  0  0  0  0  
+  SOs per irrep (n = 8): 6  0  2  2  0  6  2  2  
+  Zero Dim (n = 8): 0  0  0  0  0  0  0  0  
+  Doubly occupied orbitals per irrep (n = 8): 2  0  0  0  0  2  1  1  
+  Zero Dim (n = 8): 0  0  0  0  0  0  0  0  
+  SOs per irrep (n = 8): 6  0  2  2  0  6  2  2  
+  Doubly occupied orbitals per irrep (n = 8): 2  0  0  0  0  2  1  1  
+  Doubly occupied orbitals per irrep (n = 8): 2  0  0  0  0  2  1  1  
+  Zero Dim (n = 8): 0  0  0  0  0  0  0  0  
+  Doubly occupied orbitals per irrep (n = 8): 2  0  0  0  0  2  1  1  
+  Doubly occupied orbitals per irrep (n = 8): 2  0  0  0  0  2  1  1  
+  Doubly occupied orbitals per irrep (n = 8): 6  0  2  2  0  6  2  2  
+  Zero Dim (n = 8): 0  0  0  0  0  0  0  0  
+  MOs per irrep (n = 8): 6  0  2  2  0  6  2  2  
+  Zero Dim (n = 8): 0  0  0  0  0  0  0  0  
+  Doubly occupied orbitals per irrep (n = 8): 2  0  0  0  0  2  1  1  
+  Zero Dim (n = 8): 0  0  0  0  0  0  0  0  
+  MOs per irrep (n = 8): 6  0  2  2  0  6  2  2  
+  Doubly occupied orbitals per irrep (n = 8): 2  0  0  0  0  2  1  1  
+  Doubly occupied orbitals per irrep (n = 8): 6  0  2  2  0  6  2  2  
+   @ROHF iter   3:   -75.05228323019583   -5.32832e-03   1.10526e-03 DIIS
+  Zero Dim (n = 8): 0  0  0  0  0  0  0  0  
+  SOs per irrep (n = 8): 6  0  2  2  0  6  2  2  
+  Zero Dim (n = 8): 0  0  0  0  0  0  0  0  
+  Doubly occupied orbitals per irrep (n = 8): 2  0  0  0  0  2  1  1  
+  Zero Dim (n = 8): 0  0  0  0  0  0  0  0  
+  SOs per irrep (n = 8): 6  0  2  2  0  6  2  2  
+  Doubly occupied orbitals per irrep (n = 8): 2  0  0  0  0  2  1  1  
+  Doubly occupied orbitals per irrep (n = 8): 2  0  0  0  0  2  1  1  
+  Zero Dim (n = 8): 0  0  0  0  0  0  0  0  
+  Doubly occupied orbitals per irrep (n = 8): 2  0  0  0  0  2  1  1  
+  Doubly occupied orbitals per irrep (n = 8): 2  0  0  0  0  2  1  1  
+  Doubly occupied orbitals per irrep (n = 8): 6  0  2  2  0  6  2  2  
+  Zero Dim (n = 8): 0  0  0  0  0  0  0  0  
+  MOs per irrep (n = 8): 6  0  2  2  0  6  2  2  
+  Zero Dim (n = 8): 0  0  0  0  0  0  0  0  
+  Doubly occupied orbitals per irrep (n = 8): 2  0  0  0  0  2  1  1  
+  Zero Dim (n = 8): 0  0  0  0  0  0  0  0  
+  MOs per irrep (n = 8): 6  0  2  2  0  6  2  2  
+  Doubly occupied orbitals per irrep (n = 8): 2  0  0  0  0  2  1  1  
+  Doubly occupied orbitals per irrep (n = 8): 6  0  2  2  0  6  2  2  
+   @ROHF iter   4:   -75.05257450701885   -2.91277e-04   2.61490e-04 DIIS
+  Zero Dim (n = 8): 0  0  0  0  0  0  0  0  
+  SOs per irrep (n = 8): 6  0  2  2  0  6  2  2  
+  Zero Dim (n = 8): 0  0  0  0  0  0  0  0  
+  Doubly occupied orbitals per irrep (n = 8): 2  0  0  0  0  2  1  1  
+  Zero Dim (n = 8): 0  0  0  0  0  0  0  0  
+  SOs per irrep (n = 8): 6  0  2  2  0  6  2  2  
+  Doubly occupied orbitals per irrep (n = 8): 2  0  0  0  0  2  1  1  
+  Doubly occupied orbitals per irrep (n = 8): 2  0  0  0  0  2  1  1  
+  Zero Dim (n = 8): 0  0  0  0  0  0  0  0  
+  Doubly occupied orbitals per irrep (n = 8): 2  0  0  0  0  2  1  1  
+  Doubly occupied orbitals per irrep (n = 8): 2  0  0  0  0  2  1  1  
+  Doubly occupied orbitals per irrep (n = 8): 6  0  2  2  0  6  2  2  
+  Zero Dim (n = 8): 0  0  0  0  0  0  0  0  
+  MOs per irrep (n = 8): 6  0  2  2  0  6  2  2  
+  Zero Dim (n = 8): 0  0  0  0  0  0  0  0  
+  Doubly occupied orbitals per irrep (n = 8): 2  0  0  0  0  2  1  1  
+  Zero Dim (n = 8): 0  0  0  0  0  0  0  0  
+  MOs per irrep (n = 8): 6  0  2  2  0  6  2  2  
+  Doubly occupied orbitals per irrep (n = 8): 2  0  0  0  0  2  1  1  
+  Doubly occupied orbitals per irrep (n = 8): 6  0  2  2  0  6  2  2  
+   @ROHF iter   5:   -75.05258967621282   -1.51692e-05   2.49399e-05 DIIS
+  Zero Dim (n = 8): 0  0  0  0  0  0  0  0  
+  SOs per irrep (n = 8): 6  0  2  2  0  6  2  2  
+  Zero Dim (n = 8): 0  0  0  0  0  0  0  0  
+  Doubly occupied orbitals per irrep (n = 8): 2  0  0  0  0  2  1  1  
+  Zero Dim (n = 8): 0  0  0  0  0  0  0  0  
+  SOs per irrep (n = 8): 6  0  2  2  0  6  2  2  
+  Doubly occupied orbitals per irrep (n = 8): 2  0  0  0  0  2  1  1  
+  Doubly occupied orbitals per irrep (n = 8): 2  0  0  0  0  2  1  1  
+  Zero Dim (n = 8): 0  0  0  0  0  0  0  0  
+  Doubly occupied orbitals per irrep (n = 8): 2  0  0  0  0  2  1  1  
+  Doubly occupied orbitals per irrep (n = 8): 2  0  0  0  0  2  1  1  
+  Doubly occupied orbitals per irrep (n = 8): 6  0  2  2  0  6  2  2  
+  Zero Dim (n = 8): 0  0  0  0  0  0  0  0  
+  MOs per irrep (n = 8): 6  0  2  2  0  6  2  2  
+  Zero Dim (n = 8): 0  0  0  0  0  0  0  0  
+  Doubly occupied orbitals per irrep (n = 8): 2  0  0  0  0  2  1  1  
+  Zero Dim (n = 8): 0  0  0  0  0  0  0  0  
+  MOs per irrep (n = 8): 6  0  2  2  0  6  2  2  
+  Doubly occupied orbitals per irrep (n = 8): 2  0  0  0  0  2  1  1  
+  Doubly occupied orbitals per irrep (n = 8): 6  0  2  2  0  6  2  2  
+   @ROHF iter   6:   -75.05258982519396   -1.48981e-07   3.40521e-06 DIIS
+  Zero Dim (n = 8): 0  0  0  0  0  0  0  0  
+  SOs per irrep (n = 8): 6  0  2  2  0  6  2  2  
+  Zero Dim (n = 8): 0  0  0  0  0  0  0  0  
+  Doubly occupied orbitals per irrep (n = 8): 2  0  0  0  0  2  1  1  
+  Zero Dim (n = 8): 0  0  0  0  0  0  0  0  
+  SOs per irrep (n = 8): 6  0  2  2  0  6  2  2  
+  Doubly occupied orbitals per irrep (n = 8): 2  0  0  0  0  2  1  1  
+  Doubly occupied orbitals per irrep (n = 8): 2  0  0  0  0  2  1  1  
+  Zero Dim (n = 8): 0  0  0  0  0  0  0  0  
+  Doubly occupied orbitals per irrep (n = 8): 2  0  0  0  0  2  1  1  
+  Doubly occupied orbitals per irrep (n = 8): 2  0  0  0  0  2  1  1  
+  Doubly occupied orbitals per irrep (n = 8): 6  0  2  2  0  6  2  2  
+  Zero Dim (n = 8): 0  0  0  0  0  0  0  0  
+  MOs per irrep (n = 8): 6  0  2  2  0  6  2  2  
+  Zero Dim (n = 8): 0  0  0  0  0  0  0  0  
+  Doubly occupied orbitals per irrep (n = 8): 2  0  0  0  0  2  1  1  
+  Zero Dim (n = 8): 0  0  0  0  0  0  0  0  
+  MOs per irrep (n = 8): 6  0  2  2  0  6  2  2  
+  Doubly occupied orbitals per irrep (n = 8): 2  0  0  0  0  2  1  1  
+  Doubly occupied orbitals per irrep (n = 8): 6  0  2  2  0  6  2  2  
+   @ROHF iter   7:   -75.05258982713954   -1.94558e-09   3.76655e-07 DIIS
+  Zero Dim (n = 8): 0  0  0  0  0  0  0  0  
+  SOs per irrep (n = 8): 6  0  2  2  0  6  2  2  
+  Zero Dim (n = 8): 0  0  0  0  0  0  0  0  
+  Doubly occupied orbitals per irrep (n = 8): 2  0  0  0  0  2  1  1  
+  Zero Dim (n = 8): 0  0  0  0  0  0  0  0  
+  SOs per irrep (n = 8): 6  0  2  2  0  6  2  2  
+  Doubly occupied orbitals per irrep (n = 8): 2  0  0  0  0  2  1  1  
+  Doubly occupied orbitals per irrep (n = 8): 2  0  0  0  0  2  1  1  
+  Zero Dim (n = 8): 0  0  0  0  0  0  0  0  
+  Doubly occupied orbitals per irrep (n = 8): 2  0  0  0  0  2  1  1  
+  Doubly occupied orbitals per irrep (n = 8): 2  0  0  0  0  2  1  1  
+  Doubly occupied orbitals per irrep (n = 8): 6  0  2  2  0  6  2  2  
+  Zero Dim (n = 8): 0  0  0  0  0  0  0  0  
+  MOs per irrep (n = 8): 6  0  2  2  0  6  2  2  
+  Zero Dim (n = 8): 0  0  0  0  0  0  0  0  
+  Doubly occupied orbitals per irrep (n = 8): 2  0  0  0  0  2  1  1  
+  Zero Dim (n = 8): 0  0  0  0  0  0  0  0  
+  MOs per irrep (n = 8): 6  0  2  2  0  6  2  2  
+  Doubly occupied orbitals per irrep (n = 8): 2  0  0  0  0  2  1  1  
+  Doubly occupied orbitals per irrep (n = 8): 6  0  2  2  0  6  2  2  
+   @ROHF iter   8:   -75.05258982716586   -2.63185e-11   1.83938e-08 DIIS
+  Zero Dim (n = 8): 0  0  0  0  0  0  0  0  
+  SOs per irrep (n = 8): 6  0  2  2  0  6  2  2  
+  Zero Dim (n = 8): 0  0  0  0  0  0  0  0  
+  Doubly occupied orbitals per irrep (n = 8): 2  0  0  0  0  2  1  1  
+  Zero Dim (n = 8): 0  0  0  0  0  0  0  0  
+  SOs per irrep (n = 8): 6  0  2  2  0  6  2  2  
+  Doubly occupied orbitals per irrep (n = 8): 2  0  0  0  0  2  1  1  
+  Doubly occupied orbitals per irrep (n = 8): 2  0  0  0  0  2  1  1  
+  Zero Dim (n = 8): 0  0  0  0  0  0  0  0  
+  Doubly occupied orbitals per irrep (n = 8): 2  0  0  0  0  2  1  1  
+  Doubly occupied orbitals per irrep (n = 8): 2  0  0  0  0  2  1  1  
+  Doubly occupied orbitals per irrep (n = 8): 6  0  2  2  0  6  2  2  
+  Zero Dim (n = 8): 0  0  0  0  0  0  0  0  
+  MOs per irrep (n = 8): 6  0  2  2  0  6  2  2  
+  Zero Dim (n = 8): 0  0  0  0  0  0  0  0  
+  Doubly occupied orbitals per irrep (n = 8): 2  0  0  0  0  2  1  1  
+  Zero Dim (n = 8): 0  0  0  0  0  0  0  0  
+  MOs per irrep (n = 8): 6  0  2  2  0  6  2  2  
+  Doubly occupied orbitals per irrep (n = 8): 2  0  0  0  0  2  1  1  
+  Doubly occupied orbitals per irrep (n = 8): 6  0  2  2  0  6  2  2  
+   @ROHF iter   9:   -75.05258982716589   -2.84217e-14   1.32141e-09 DIIS
+  Zero Dim (n = 8): 0  0  0  0  0  0  0  0  
+  SOs per irrep (n = 8): 6  0  2  2  0  6  2  2  
+  Zero Dim (n = 8): 0  0  0  0  0  0  0  0  
+  Doubly occupied orbitals per irrep (n = 8): 2  0  0  0  0  2  1  1  
+  Zero Dim (n = 8): 0  0  0  0  0  0  0  0  
+  SOs per irrep (n = 8): 6  0  2  2  0  6  2  2  
+  Doubly occupied orbitals per irrep (n = 8): 2  0  0  0  0  2  1  1  
+  Doubly occupied orbitals per irrep (n = 8): 2  0  0  0  0  2  1  1  
+  Zero Dim (n = 8): 0  0  0  0  0  0  0  0  
+  Doubly occupied orbitals per irrep (n = 8): 2  0  0  0  0  2  1  1  
+  Doubly occupied orbitals per irrep (n = 8): 2  0  0  0  0  2  1  1  
+  Doubly occupied orbitals per irrep (n = 8): 6  0  2  2  0  6  2  2  
+  Zero Dim (n = 8): 0  0  0  0  0  0  0  0  
+  MOs per irrep (n = 8): 6  0  2  2  0  6  2  2  
+  Zero Dim (n = 8): 0  0  0  0  0  0  0  0  
+  Doubly occupied orbitals per irrep (n = 8): 2  0  0  0  0  2  1  1  
+  Zero Dim (n = 8): 0  0  0  0  0  0  0  0  
+  MOs per irrep (n = 8): 6  0  2  2  0  6  2  2  
+  Doubly occupied orbitals per irrep (n = 8): 2  0  0  0  0  2  1  1  
+  Doubly occupied orbitals per irrep (n = 8): 6  0  2  2  0  6  2  2  
+   @ROHF iter  10:   -75.05258982716596   -7.10543e-14   1.21547e-10 DIIS
+  Zero Dim (n = 8): 0  0  0  0  0  0  0  0  
+  SOs per irrep (n = 8): 6  0  2  2  0  6  2  2  
+  Zero Dim (n = 8): 0  0  0  0  0  0  0  0  
+  Doubly occupied orbitals per irrep (n = 8): 2  0  0  0  0  2  1  1  
+  Zero Dim (n = 8): 0  0  0  0  0  0  0  0  
+  SOs per irrep (n = 8): 6  0  2  2  0  6  2  2  
+  Doubly occupied orbitals per irrep (n = 8): 2  0  0  0  0  2  1  1  
+  Doubly occupied orbitals per irrep (n = 8): 2  0  0  0  0  2  1  1  
+  Zero Dim (n = 8): 0  0  0  0  0  0  0  0  
+  Doubly occupied orbitals per irrep (n = 8): 2  0  0  0  0  2  1  1  
+  Doubly occupied orbitals per irrep (n = 8): 2  0  0  0  0  2  1  1  
+  Doubly occupied orbitals per irrep (n = 8): 6  0  2  2  0  6  2  2  
+  Zero Dim (n = 8): 0  0  0  0  0  0  0  0  
+  MOs per irrep (n = 8): 6  0  2  2  0  6  2  2  
+  Zero Dim (n = 8): 0  0  0  0  0  0  0  0  
+  Doubly occupied orbitals per irrep (n = 8): 2  0  0  0  0  2  1  1  
+  Zero Dim (n = 8): 0  0  0  0  0  0  0  0  
+  MOs per irrep (n = 8): 6  0  2  2  0  6  2  2  
+  Doubly occupied orbitals per irrep (n = 8): 2  0  0  0  0  2  1  1  
+  Doubly occupied orbitals per irrep (n = 8): 6  0  2  2  0  6  2  2  
+   @ROHF iter  11:   -75.05258982716595    1.42109e-14   8.65866e-12 DIIS
 
   ==> Post-Iterations <==
 
@@ -235,17 +460,13 @@ compare_values(refacipt2, get_variable("ACI+PT2 ENERGY"),7, "ACI+PT2 energy") #T
 
   Energy converged.
 
-  @ROHF Final Energy:   -75.05258982716596
+  @ROHF Final Energy:   -75.05258982716595
 
    => Energetics <=
 
     Nuclear Repulsion Energy =              7.3270690420153830
     One-Electron Energy =                -114.5630793887433754
-    Two-Electron Energy =                  32.1834205195620413
-    DFT Exchange-Correlation Energy =       0.0000000000000000
-    Empirical Dispersion Energy =           0.0000000000000000
-    PCM Polarization Energy =               0.0000000000000000
-    EFP Energy =                            0.0000000000000000
+    Two-Electron Energy =                  32.1834205195620484
     Total Energy =                        -75.0525898271659457
 
 
@@ -267,22 +488,34 @@ Properties computed using the SCF density matrix
      X:     0.0000      Y:     0.0000      Z:     0.0000     Total:     0.0000
 
 
-*** tstop() called on Jeffs-MacBook-Pro-2.local at Thu Feb  9 15:05:53 2017
+*** tstop() called on Jeffs-MBP-2.attlocal.net at Tue Jun  6 23:13:22 2017
 Module time:
-	user time   =       0.17 seconds =       0.00 minutes
-	system time =       0.02 seconds =       0.00 minutes
-	total time  =          1 seconds =       0.02 minutes
+	user time   =       0.14 seconds =       0.00 minutes
+	system time =       0.01 seconds =       0.00 minutes
+	total time  =          0 seconds =       0.00 minutes
 Total time:
-	user time   =       0.17 seconds =       0.00 minutes
-	system time =       0.02 seconds =       0.00 minutes
-	total time  =          1 seconds =       0.02 minutes
+	user time   =       0.14 seconds =       0.00 minutes
+	system time =       0.01 seconds =       0.00 minutes
+	total time  =          0 seconds =       0.00 minutes
 	SCF energy........................................................PASSED
+
+*** tstart() called on Jeffs-MBP-2.attlocal.net
+*** at Tue Jun  6 23:13:22 2017
+
+   => Loading Basis Set <=
+
+    Name: DZ
+    Role: ORBITAL
+    Keyword: BASIS
+    atoms 1-2 entry C          line    63 file /Users/jeffschriber/src/psi4_debug_install/share/psi4/basis/dz.gbs 
+
 
          ---------------------------------------------------------
                                    SCF
-            by Justin Turney, Rob Parrish, and Andy Simmonett
+            by Justin Turney, Rob Parrish, Andy Simmonett
+                             and Daniel Smith
                              ROHF Reference
-                        1 Threads,    524 MiB Core
+                        1 Threads,    500 MiB Core
          ---------------------------------------------------------
 
   ==> Geometry <==
@@ -322,7 +555,8 @@ Total time:
 
   ==> Primary Basis <==
 
-  Basis Set: file /Users/jeffschriber/src/psi4_debug_install/share/psi4/basis/dz.gbs
+  Basis Set: DZ
+    Blend: DZ
     Number of shells: 12
     Number of basis function: 20
     Number of Cartesian functions: 20
@@ -381,17 +615,237 @@ Total time:
 
                         Total Energy        Delta E     RMS |[F,P]|
 
-   @ROHF iter   1:   -74.80224379578486   -7.48022e+01   1.43353e-01 
+  Zero Dim (n = 8): 0  0  0  0  0  0  0  0  
+  SOs per irrep (n = 8): 6  0  2  2  0  6  2  2  
+  Zero Dim (n = 8): 0  0  0  0  0  0  0  0  
+  Doubly occupied orbitals per irrep (n = 8): 2  0  0  0  0  2  1  1  
+  Zero Dim (n = 8): 0  0  0  0  0  0  0  0  
+  SOs per irrep (n = 8): 6  0  2  2  0  6  2  2  
+  Doubly occupied orbitals per irrep (n = 8): 2  0  0  0  0  2  1  1  
+  Doubly occupied orbitals per irrep (n = 8): 2  0  0  0  0  2  1  1  
+  Zero Dim (n = 8): 0  0  0  0  0  0  0  0  
+  Doubly occupied orbitals per irrep (n = 8): 2  0  0  0  0  2  1  1  
+  Doubly occupied orbitals per irrep (n = 8): 2  0  0  0  0  2  1  1  
+  Doubly occupied orbitals per irrep (n = 8): 6  0  2  2  0  6  2  2  
+  Zero Dim (n = 8): 0  0  0  0  0  0  0  0  
+  MOs per irrep (n = 8): 6  0  2  2  0  6  2  2  
+  Zero Dim (n = 8): 0  0  0  0  0  0  0  0  
+  Doubly occupied orbitals per irrep (n = 8): 2  0  0  0  0  2  1  1  
+  Zero Dim (n = 8): 0  0  0  0  0  0  0  0  
+  MOs per irrep (n = 8): 6  0  2  2  0  6  2  2  
+  Doubly occupied orbitals per irrep (n = 8): 2  0  0  0  0  2  1  1  
+  Doubly occupied orbitals per irrep (n = 8): 6  0  2  2  0  6  2  2  
+   @ROHF iter   1:   -74.80224379578483   -7.48022e+01   1.43353e-01 
+  Zero Dim (n = 8): 0  0  0  0  0  0  0  0  
+  SOs per irrep (n = 8): 6  0  2  2  0  6  2  2  
+  Zero Dim (n = 8): 0  0  0  0  0  0  0  0  
+  Doubly occupied orbitals per irrep (n = 8): 2  0  0  0  0  2  1  1  
+  Zero Dim (n = 8): 0  0  0  0  0  0  0  0  
+  SOs per irrep (n = 8): 6  0  2  2  0  6  2  2  
+  Doubly occupied orbitals per irrep (n = 8): 2  0  0  0  0  2  1  1  
+  Doubly occupied orbitals per irrep (n = 8): 2  0  0  0  0  2  1  1  
+  Zero Dim (n = 8): 0  0  0  0  0  0  0  0  
+  Doubly occupied orbitals per irrep (n = 8): 2  0  0  0  0  2  1  1  
+  Doubly occupied orbitals per irrep (n = 8): 2  0  0  0  0  2  1  1  
+  Doubly occupied orbitals per irrep (n = 8): 6  0  2  2  0  6  2  2  
+  Zero Dim (n = 8): 0  0  0  0  0  0  0  0  
+  MOs per irrep (n = 8): 6  0  2  2  0  6  2  2  
+  Zero Dim (n = 8): 0  0  0  0  0  0  0  0  
+  Doubly occupied orbitals per irrep (n = 8): 2  0  0  0  0  2  1  1  
+  Zero Dim (n = 8): 0  0  0  0  0  0  0  0  
+  MOs per irrep (n = 8): 6  0  2  2  0  6  2  2  
+  Doubly occupied orbitals per irrep (n = 8): 2  0  0  0  0  2  1  1  
+  Doubly occupied orbitals per irrep (n = 8): 6  0  2  2  0  6  2  2  
    @ROHF iter   2:   -75.04695491481591   -2.44711e-01   6.82550e-03 DIIS
-   @ROHF iter   3:   -75.05228323019581   -5.32832e-03   1.10526e-03 DIIS
+  Zero Dim (n = 8): 0  0  0  0  0  0  0  0  
+  SOs per irrep (n = 8): 6  0  2  2  0  6  2  2  
+  Zero Dim (n = 8): 0  0  0  0  0  0  0  0  
+  Doubly occupied orbitals per irrep (n = 8): 2  0  0  0  0  2  1  1  
+  Zero Dim (n = 8): 0  0  0  0  0  0  0  0  
+  SOs per irrep (n = 8): 6  0  2  2  0  6  2  2  
+  Doubly occupied orbitals per irrep (n = 8): 2  0  0  0  0  2  1  1  
+  Doubly occupied orbitals per irrep (n = 8): 2  0  0  0  0  2  1  1  
+  Zero Dim (n = 8): 0  0  0  0  0  0  0  0  
+  Doubly occupied orbitals per irrep (n = 8): 2  0  0  0  0  2  1  1  
+  Doubly occupied orbitals per irrep (n = 8): 2  0  0  0  0  2  1  1  
+  Doubly occupied orbitals per irrep (n = 8): 6  0  2  2  0  6  2  2  
+  Zero Dim (n = 8): 0  0  0  0  0  0  0  0  
+  MOs per irrep (n = 8): 6  0  2  2  0  6  2  2  
+  Zero Dim (n = 8): 0  0  0  0  0  0  0  0  
+  Doubly occupied orbitals per irrep (n = 8): 2  0  0  0  0  2  1  1  
+  Zero Dim (n = 8): 0  0  0  0  0  0  0  0  
+  MOs per irrep (n = 8): 6  0  2  2  0  6  2  2  
+  Doubly occupied orbitals per irrep (n = 8): 2  0  0  0  0  2  1  1  
+  Doubly occupied orbitals per irrep (n = 8): 6  0  2  2  0  6  2  2  
+   @ROHF iter   3:   -75.05228323019583   -5.32832e-03   1.10526e-03 DIIS
+  Zero Dim (n = 8): 0  0  0  0  0  0  0  0  
+  SOs per irrep (n = 8): 6  0  2  2  0  6  2  2  
+  Zero Dim (n = 8): 0  0  0  0  0  0  0  0  
+  Doubly occupied orbitals per irrep (n = 8): 2  0  0  0  0  2  1  1  
+  Zero Dim (n = 8): 0  0  0  0  0  0  0  0  
+  SOs per irrep (n = 8): 6  0  2  2  0  6  2  2  
+  Doubly occupied orbitals per irrep (n = 8): 2  0  0  0  0  2  1  1  
+  Doubly occupied orbitals per irrep (n = 8): 2  0  0  0  0  2  1  1  
+  Zero Dim (n = 8): 0  0  0  0  0  0  0  0  
+  Doubly occupied orbitals per irrep (n = 8): 2  0  0  0  0  2  1  1  
+  Doubly occupied orbitals per irrep (n = 8): 2  0  0  0  0  2  1  1  
+  Doubly occupied orbitals per irrep (n = 8): 6  0  2  2  0  6  2  2  
+  Zero Dim (n = 8): 0  0  0  0  0  0  0  0  
+  MOs per irrep (n = 8): 6  0  2  2  0  6  2  2  
+  Zero Dim (n = 8): 0  0  0  0  0  0  0  0  
+  Doubly occupied orbitals per irrep (n = 8): 2  0  0  0  0  2  1  1  
+  Zero Dim (n = 8): 0  0  0  0  0  0  0  0  
+  MOs per irrep (n = 8): 6  0  2  2  0  6  2  2  
+  Doubly occupied orbitals per irrep (n = 8): 2  0  0  0  0  2  1  1  
+  Doubly occupied orbitals per irrep (n = 8): 6  0  2  2  0  6  2  2  
    @ROHF iter   4:   -75.05257450701882   -2.91277e-04   2.61490e-04 DIIS
-   @ROHF iter   5:   -75.05258967621280   -1.51692e-05   2.49399e-05 DIIS
-   @ROHF iter   6:   -75.05258982519393   -1.48981e-07   3.40521e-06 DIIS
-   @ROHF iter   7:   -75.05258982713953   -1.94559e-09   3.76655e-07 DIIS
-   @ROHF iter   8:   -75.05258982716590   -2.63753e-11   1.83938e-08 DIIS
-   @ROHF iter   9:   -75.05258982716592   -1.42109e-14   1.32141e-09 DIIS
-   @ROHF iter  10:   -75.05258982716597   -5.68434e-14   1.21547e-10 DIIS
-   @ROHF iter  11:   -75.05258982716597    0.00000e+00   8.65873e-12 DIIS
+  Zero Dim (n = 8): 0  0  0  0  0  0  0  0  
+  SOs per irrep (n = 8): 6  0  2  2  0  6  2  2  
+  Zero Dim (n = 8): 0  0  0  0  0  0  0  0  
+  Doubly occupied orbitals per irrep (n = 8): 2  0  0  0  0  2  1  1  
+  Zero Dim (n = 8): 0  0  0  0  0  0  0  0  
+  SOs per irrep (n = 8): 6  0  2  2  0  6  2  2  
+  Doubly occupied orbitals per irrep (n = 8): 2  0  0  0  0  2  1  1  
+  Doubly occupied orbitals per irrep (n = 8): 2  0  0  0  0  2  1  1  
+  Zero Dim (n = 8): 0  0  0  0  0  0  0  0  
+  Doubly occupied orbitals per irrep (n = 8): 2  0  0  0  0  2  1  1  
+  Doubly occupied orbitals per irrep (n = 8): 2  0  0  0  0  2  1  1  
+  Doubly occupied orbitals per irrep (n = 8): 6  0  2  2  0  6  2  2  
+  Zero Dim (n = 8): 0  0  0  0  0  0  0  0  
+  MOs per irrep (n = 8): 6  0  2  2  0  6  2  2  
+  Zero Dim (n = 8): 0  0  0  0  0  0  0  0  
+  Doubly occupied orbitals per irrep (n = 8): 2  0  0  0  0  2  1  1  
+  Zero Dim (n = 8): 0  0  0  0  0  0  0  0  
+  MOs per irrep (n = 8): 6  0  2  2  0  6  2  2  
+  Doubly occupied orbitals per irrep (n = 8): 2  0  0  0  0  2  1  1  
+  Doubly occupied orbitals per irrep (n = 8): 6  0  2  2  0  6  2  2  
+   @ROHF iter   5:   -75.05258967621279   -1.51692e-05   2.49399e-05 DIIS
+  Zero Dim (n = 8): 0  0  0  0  0  0  0  0  
+  SOs per irrep (n = 8): 6  0  2  2  0  6  2  2  
+  Zero Dim (n = 8): 0  0  0  0  0  0  0  0  
+  Doubly occupied orbitals per irrep (n = 8): 2  0  0  0  0  2  1  1  
+  Zero Dim (n = 8): 0  0  0  0  0  0  0  0  
+  SOs per irrep (n = 8): 6  0  2  2  0  6  2  2  
+  Doubly occupied orbitals per irrep (n = 8): 2  0  0  0  0  2  1  1  
+  Doubly occupied orbitals per irrep (n = 8): 2  0  0  0  0  2  1  1  
+  Zero Dim (n = 8): 0  0  0  0  0  0  0  0  
+  Doubly occupied orbitals per irrep (n = 8): 2  0  0  0  0  2  1  1  
+  Doubly occupied orbitals per irrep (n = 8): 2  0  0  0  0  2  1  1  
+  Doubly occupied orbitals per irrep (n = 8): 6  0  2  2  0  6  2  2  
+  Zero Dim (n = 8): 0  0  0  0  0  0  0  0  
+  MOs per irrep (n = 8): 6  0  2  2  0  6  2  2  
+  Zero Dim (n = 8): 0  0  0  0  0  0  0  0  
+  Doubly occupied orbitals per irrep (n = 8): 2  0  0  0  0  2  1  1  
+  Zero Dim (n = 8): 0  0  0  0  0  0  0  0  
+  MOs per irrep (n = 8): 6  0  2  2  0  6  2  2  
+  Doubly occupied orbitals per irrep (n = 8): 2  0  0  0  0  2  1  1  
+  Doubly occupied orbitals per irrep (n = 8): 6  0  2  2  0  6  2  2  
+   @ROHF iter   6:   -75.05258982519395   -1.48981e-07   3.40521e-06 DIIS
+  Zero Dim (n = 8): 0  0  0  0  0  0  0  0  
+  SOs per irrep (n = 8): 6  0  2  2  0  6  2  2  
+  Zero Dim (n = 8): 0  0  0  0  0  0  0  0  
+  Doubly occupied orbitals per irrep (n = 8): 2  0  0  0  0  2  1  1  
+  Zero Dim (n = 8): 0  0  0  0  0  0  0  0  
+  SOs per irrep (n = 8): 6  0  2  2  0  6  2  2  
+  Doubly occupied orbitals per irrep (n = 8): 2  0  0  0  0  2  1  1  
+  Doubly occupied orbitals per irrep (n = 8): 2  0  0  0  0  2  1  1  
+  Zero Dim (n = 8): 0  0  0  0  0  0  0  0  
+  Doubly occupied orbitals per irrep (n = 8): 2  0  0  0  0  2  1  1  
+  Doubly occupied orbitals per irrep (n = 8): 2  0  0  0  0  2  1  1  
+  Doubly occupied orbitals per irrep (n = 8): 6  0  2  2  0  6  2  2  
+  Zero Dim (n = 8): 0  0  0  0  0  0  0  0  
+  MOs per irrep (n = 8): 6  0  2  2  0  6  2  2  
+  Zero Dim (n = 8): 0  0  0  0  0  0  0  0  
+  Doubly occupied orbitals per irrep (n = 8): 2  0  0  0  0  2  1  1  
+  Zero Dim (n = 8): 0  0  0  0  0  0  0  0  
+  MOs per irrep (n = 8): 6  0  2  2  0  6  2  2  
+  Doubly occupied orbitals per irrep (n = 8): 2  0  0  0  0  2  1  1  
+  Doubly occupied orbitals per irrep (n = 8): 6  0  2  2  0  6  2  2  
+   @ROHF iter   7:   -75.05258982713947   -1.94552e-09   3.76655e-07 DIIS
+  Zero Dim (n = 8): 0  0  0  0  0  0  0  0  
+  SOs per irrep (n = 8): 6  0  2  2  0  6  2  2  
+  Zero Dim (n = 8): 0  0  0  0  0  0  0  0  
+  Doubly occupied orbitals per irrep (n = 8): 2  0  0  0  0  2  1  1  
+  Zero Dim (n = 8): 0  0  0  0  0  0  0  0  
+  SOs per irrep (n = 8): 6  0  2  2  0  6  2  2  
+  Doubly occupied orbitals per irrep (n = 8): 2  0  0  0  0  2  1  1  
+  Doubly occupied orbitals per irrep (n = 8): 2  0  0  0  0  2  1  1  
+  Zero Dim (n = 8): 0  0  0  0  0  0  0  0  
+  Doubly occupied orbitals per irrep (n = 8): 2  0  0  0  0  2  1  1  
+  Doubly occupied orbitals per irrep (n = 8): 2  0  0  0  0  2  1  1  
+  Doubly occupied orbitals per irrep (n = 8): 6  0  2  2  0  6  2  2  
+  Zero Dim (n = 8): 0  0  0  0  0  0  0  0  
+  MOs per irrep (n = 8): 6  0  2  2  0  6  2  2  
+  Zero Dim (n = 8): 0  0  0  0  0  0  0  0  
+  Doubly occupied orbitals per irrep (n = 8): 2  0  0  0  0  2  1  1  
+  Zero Dim (n = 8): 0  0  0  0  0  0  0  0  
+  MOs per irrep (n = 8): 6  0  2  2  0  6  2  2  
+  Doubly occupied orbitals per irrep (n = 8): 2  0  0  0  0  2  1  1  
+  Doubly occupied orbitals per irrep (n = 8): 6  0  2  2  0  6  2  2  
+   @ROHF iter   8:   -75.05258982716585   -2.63753e-11   1.83938e-08 DIIS
+  Zero Dim (n = 8): 0  0  0  0  0  0  0  0  
+  SOs per irrep (n = 8): 6  0  2  2  0  6  2  2  
+  Zero Dim (n = 8): 0  0  0  0  0  0  0  0  
+  Doubly occupied orbitals per irrep (n = 8): 2  0  0  0  0  2  1  1  
+  Zero Dim (n = 8): 0  0  0  0  0  0  0  0  
+  SOs per irrep (n = 8): 6  0  2  2  0  6  2  2  
+  Doubly occupied orbitals per irrep (n = 8): 2  0  0  0  0  2  1  1  
+  Doubly occupied orbitals per irrep (n = 8): 2  0  0  0  0  2  1  1  
+  Zero Dim (n = 8): 0  0  0  0  0  0  0  0  
+  Doubly occupied orbitals per irrep (n = 8): 2  0  0  0  0  2  1  1  
+  Doubly occupied orbitals per irrep (n = 8): 2  0  0  0  0  2  1  1  
+  Doubly occupied orbitals per irrep (n = 8): 6  0  2  2  0  6  2  2  
+  Zero Dim (n = 8): 0  0  0  0  0  0  0  0  
+  MOs per irrep (n = 8): 6  0  2  2  0  6  2  2  
+  Zero Dim (n = 8): 0  0  0  0  0  0  0  0  
+  Doubly occupied orbitals per irrep (n = 8): 2  0  0  0  0  2  1  1  
+  Zero Dim (n = 8): 0  0  0  0  0  0  0  0  
+  MOs per irrep (n = 8): 6  0  2  2  0  6  2  2  
+  Doubly occupied orbitals per irrep (n = 8): 2  0  0  0  0  2  1  1  
+  Doubly occupied orbitals per irrep (n = 8): 6  0  2  2  0  6  2  2  
+   @ROHF iter   9:   -75.05258982716595   -9.94760e-14   1.32141e-09 DIIS
+  Zero Dim (n = 8): 0  0  0  0  0  0  0  0  
+  SOs per irrep (n = 8): 6  0  2  2  0  6  2  2  
+  Zero Dim (n = 8): 0  0  0  0  0  0  0  0  
+  Doubly occupied orbitals per irrep (n = 8): 2  0  0  0  0  2  1  1  
+  Zero Dim (n = 8): 0  0  0  0  0  0  0  0  
+  SOs per irrep (n = 8): 6  0  2  2  0  6  2  2  
+  Doubly occupied orbitals per irrep (n = 8): 2  0  0  0  0  2  1  1  
+  Doubly occupied orbitals per irrep (n = 8): 2  0  0  0  0  2  1  1  
+  Zero Dim (n = 8): 0  0  0  0  0  0  0  0  
+  Doubly occupied orbitals per irrep (n = 8): 2  0  0  0  0  2  1  1  
+  Doubly occupied orbitals per irrep (n = 8): 2  0  0  0  0  2  1  1  
+  Doubly occupied orbitals per irrep (n = 8): 6  0  2  2  0  6  2  2  
+  Zero Dim (n = 8): 0  0  0  0  0  0  0  0  
+  MOs per irrep (n = 8): 6  0  2  2  0  6  2  2  
+  Zero Dim (n = 8): 0  0  0  0  0  0  0  0  
+  Doubly occupied orbitals per irrep (n = 8): 2  0  0  0  0  2  1  1  
+  Zero Dim (n = 8): 0  0  0  0  0  0  0  0  
+  MOs per irrep (n = 8): 6  0  2  2  0  6  2  2  
+  Doubly occupied orbitals per irrep (n = 8): 2  0  0  0  0  2  1  1  
+  Doubly occupied orbitals per irrep (n = 8): 6  0  2  2  0  6  2  2  
+   @ROHF iter  10:   -75.05258982716597   -2.84217e-14   1.21548e-10 DIIS
+  Zero Dim (n = 8): 0  0  0  0  0  0  0  0  
+  SOs per irrep (n = 8): 6  0  2  2  0  6  2  2  
+  Zero Dim (n = 8): 0  0  0  0  0  0  0  0  
+  Doubly occupied orbitals per irrep (n = 8): 2  0  0  0  0  2  1  1  
+  Zero Dim (n = 8): 0  0  0  0  0  0  0  0  
+  SOs per irrep (n = 8): 6  0  2  2  0  6  2  2  
+  Doubly occupied orbitals per irrep (n = 8): 2  0  0  0  0  2  1  1  
+  Doubly occupied orbitals per irrep (n = 8): 2  0  0  0  0  2  1  1  
+  Zero Dim (n = 8): 0  0  0  0  0  0  0  0  
+  Doubly occupied orbitals per irrep (n = 8): 2  0  0  0  0  2  1  1  
+  Doubly occupied orbitals per irrep (n = 8): 2  0  0  0  0  2  1  1  
+  Doubly occupied orbitals per irrep (n = 8): 6  0  2  2  0  6  2  2  
+  Zero Dim (n = 8): 0  0  0  0  0  0  0  0  
+  MOs per irrep (n = 8): 6  0  2  2  0  6  2  2  
+  Zero Dim (n = 8): 0  0  0  0  0  0  0  0  
+  Doubly occupied orbitals per irrep (n = 8): 2  0  0  0  0  2  1  1  
+  Zero Dim (n = 8): 0  0  0  0  0  0  0  0  
+  MOs per irrep (n = 8): 6  0  2  2  0  6  2  2  
+  Doubly occupied orbitals per irrep (n = 8): 2  0  0  0  0  2  1  1  
+  Doubly occupied orbitals per irrep (n = 8): 6  0  2  2  0  6  2  2  
+   @ROHF iter  11:   -75.05258982716592    5.68434e-14   8.65842e-12 DIIS
 
   ==> Post-Iterations <==
 
@@ -422,18 +876,14 @@ Total time:
 
   Energy converged.
 
-  @ROHF Final Energy:   -75.05258982716597
+  @ROHF Final Energy:   -75.05258982716592
 
    => Energetics <=
 
     Nuclear Repulsion Energy =              7.3270690420153830
-    One-Electron Energy =                -114.5630793887434038
-    Two-Electron Energy =                  32.1834205195620555
-    DFT Exchange-Correlation Energy =       0.0000000000000000
-    Empirical Dispersion Energy =           0.0000000000000000
-    PCM Polarization Energy =               0.0000000000000000
-    EFP Energy =                            0.0000000000000000
-    Total Energy =                        -75.0525898271659742
+    One-Electron Energy =                -114.5630793887433470
+    Two-Electron Energy =                  32.1834205195620413
+    Total Energy =                        -75.0525898271659173
 
 
 
@@ -453,27 +903,22 @@ Properties computed using the SCF density matrix
   Dipole Moment: (Debye)
      X:     0.0000      Y:     0.0000      Z:     0.0000     Total:     0.0000
 
- MINTS: Wrapper to libmints.
-   by Justin Turney
 
-   Calculation information:
-      Number of atoms:                   2
-      Number of AO shells:              12
-      Number of SO shells:               6
-      Number of primitives:             28
-      Number of atomic orbitals:        20
-      Number of basis functions:        20
+*** tstop() called on Jeffs-MBP-2.attlocal.net at Tue Jun  6 23:13:22 2017
+Module time:
+	user time   =       0.14 seconds =       0.00 minutes
+	system time =       0.02 seconds =       0.00 minutes
+	total time  =          0 seconds =       0.00 minutes
+Total time:
+	user time   =       0.30 seconds =       0.01 minutes
+	system time =       0.03 seconds =       0.00 minutes
+	total time  =          0 seconds =       0.00 minutes
+   => Loading Basis Set <=
 
-      Number of irreps:                  8
-      Integral cutoff                 0.00e+00
-      Number of functions per irrep: [   6    0    2    2    0    6    2    2 ]
-
- OEINTS: Overlap, kinetic, potential, dipole, and quadrupole integrals
-         stored in file 35.
-
-      Computing two-electron integrals...done
-      Computed 3747 non-zero two-electron integrals.
-        Stored in file 33.
+    Name: STO-3G
+    Role: ORBITAL
+    Keyword: MINAO_BASIS
+    atoms 1-2 entry C          line    61 file /Users/jeffschriber/src/psi4_debug_install/share/psi4/basis/sto-3g.gbs 
 
 
 Reading options from the FORTE block
@@ -516,7 +961,8 @@ Calling plugin forte.so.
            C          0.000000000000     0.000000000000     1.300000000000    12.000000000000
 
   -AO BASIS SET INFORMATION:
-    Name                   = file /Users/jeffschriber/src/psi4_debug_install/share/psi4/basis/dz.gbs
+    Name                   = DZ
+    Blend                  = DZ
     Total number of shells = 12
     Number of primitives   = 28
     Number of AO           = 20
@@ -532,7 +978,7 @@ Calling plugin forte.so.
 
   ==> AO Basis Functions <==
 
-    [ file /Users/jeffschriber/src/psi4_debug_install/share/psi4/basis/dz.gbs ]
+    [ DZ ]
     cartesian
     ****
     C   1
@@ -561,6 +1007,10 @@ Calling plugin forte.so.
 
   Overall Conventional Integrals timings
 
+   (n = 8): 0  0  0  0  0  0  0  0  
+  SOs per irrep (n = 8): 6  0  2  2  0  6  2  2  
+  Frozen core orbitals per irrep (n = 8): 0  0  0  0  0  0  0  0  
+  Frozen core orbitals per irrep (n = 8): 6  0  2  2  0  6  2  2  
 	Presorting SO-basis two-electron integrals.
 	Sorting File: SO Ints (nn|nn) nbuckets = 1
 	Transforming the one-electron integrals and constructing Fock matrices
@@ -570,7 +1020,7 @@ Calling plugin forte.so.
 	Starting second half-transformation.
 	Two-electron integral transformation complete.
 
-  Integral transformation done. 0.00973100 s
+  Integral transformation done. 0.00828300 s
   Reading the two-electron integrals from disk
   Size of two-electron integrals:   0.003576 GB  Using in-core PK algorithm.
    Calculation information:
@@ -590,58 +1040,85 @@ Calling plugin forte.so.
 
   Frozen-core energy            -68.788158058678 a.u.
 
-  FrozenOneBody Operator takes  0.06298800 s
+  FrozenOneBody Operator takes  0.05187400 s
   Resorting integrals after freezing core.
-  Conventional integrals take 0.13043500 s
+  Conventional integrals take 0.11395800 s
+  Number of active orbitals: 18
+  Number of active alpha electrons: 4
+  Number of active beta electrons: 4
+  0  0  -0.810058
+  9  5  -0.745371
+  16  7  -0.300980
+  14  6  -0.300980
+  5  2  -0.073394
+  7  3  -0.073394
+  1  0  -0.047958
+  10  5  0.077537
+ start mo: 4
+ number alpha sub: 0
+ number beta sub: 0
+ The reference space contains 1 determinants
 
-                    ---------------------------------------
+        ---------------------------------------------------------------
                       Adaptive Configuration Interaction
-                      written by Francesco A. Evangelista
-                    ---------------------------------------
+          written by Jeffrey B. Schriber and Francesco A. Evangelista
+        ---------------------------------------------------------------
 
   ==> Reference Information <==
 
   There are 2 frozen orbitals.
   There are 18 active orbitals.
 
-  |200000000200002020>
-  REFERENCE ENERGY:         -75.052589827166
   ==> Calculation Information <==
 
   -----------------------------------------------------------------
     Multiplicity                             1    
+    Ms                                       0    
     Symmetry                                 0    
     Number of roots                          1    
     Root used for properties                 0    
     Sigma                                    1.00e-02
     Gamma                                    1.00e+00
-    Convergence threshold                    1.00e-10
+    Convergence threshold                    1.00e-09
     Determinant selection criterion          First-order Coefficients
     Selection criterion                      Threshold
-    Excited Algorithm                        AVERAGE
+    Excited Algorithm                        ROOT_ORTHOGONALIZE
     Project out spin contaminants            True
     Enforce spin completeness of basis       True
     Enforce complete aimed selection         True
   -----------------------------------------------------------------
+ Using 1 threads
   Computing wavefunction for root 0
 
   ==> Cycle 0 <==
 
   Initial P space dimension: 1
   Spin-complete dimension of the P space: 1 determinants
-  Time spent diagonalizing H:   0.000074 s
+  Time spent building a_list   0.000024 s
+  Time spent building b_list   0.000010 s
+  Time spent building aa_list  0.000018 s
+  Time spent building bb_list  0.000014 s
+ Memory for AB_ann: 0.000 MB
+  Time spent building ab_list  0.000034 s
+  Time spent diagonalizing H:   0.000066 s
 
     P-space  CI Energy Root   0        = -75.052589827166 Eh =   0.0000 eV
 
-  Using 1 threads.
   Dimension of the SD space: 626 determinants
-  Time spent building the model space: 0.002066 s
+  Time spent building the model space: 0.002343 s
 
   Dimension of the P + Q space: 202 determinants
-  Time spent screening the model space: 0.001605 s
+  Time spent screening the model space: 0.001460 s
   Spin-complete dimension of the PQ space: 286
+  Time spent building a_list   0.001531 s
+  Time spent building b_list   0.001520 s
+  Time spent building aa_list  0.002237 s
+  Time spent building bb_list  0.002233 s
+ Memory for AB_ann: 0.022 MB
+  Time spent building ab_list  0.006236 s
 
- Davidson-liu solver algorithm
+  Davidson-Liu solver algorithm
+  Using SPARSE sigma builder
   Initial guess space is incomplete.
   Trying to add 11 determinant(s).  11 determinant(s) added.
   Initial guess found 49 solutions with 2S+1 = 1 *
@@ -660,7 +1137,7 @@ Calling plugin forte.so.
       3      -82.654376477840  -1.266e-03
       4      -82.655077872108  -7.014e-04
       5      -82.656189204034  -1.111e-03
-      6      -82.656436134441  -2.469e-04
+      6      -82.656436134442  -2.469e-04
       7      -82.656460183724  -2.405e-05
       8      -82.656474574650  -1.439e-05
       9      -82.656499148322  -2.457e-05
@@ -668,18 +1145,19 @@ Calling plugin forte.so.
      11      -82.656505595261  -6.227e-07
      12      -82.656505981365  -3.861e-07
      13      -82.656506632585  -6.512e-07
-     14      -82.656506785860  -1.533e-07
+     14      -82.656506785859  -1.533e-07
      15      -82.656506802719  -1.686e-08
      16      -82.656506813041  -1.032e-08
      17      -82.656506829241  -1.620e-08
      18      -82.656506832820  -3.579e-09
      19      -82.656506833209  -3.888e-10
-     20      -82.656506833439  -2.307e-10
-     21      -82.656506833767  -3.275e-10
-     22      -82.656506833834  -6.673e-11
+     20      -82.656506833440  -2.307e-10
+     21      -82.656506833767  -3.274e-10
+     22      -82.656506833834  -6.672e-11
   ----------------------------------------
   The Davidson-Liu algorithm converged in 23 iterations.
-  Time spent diagonalizing H:   0.125140 s
+  Davidson-Liu procedure took  0.067481 s
+  Total time spent diagonalizing H:   0.068514 s
 
     PQ-space CI Energy Root   0        = -75.329437791818 Eh =   0.0000 eV
     PQ-space CI Energy + EPT2 Root   0 = -75.339318564075 Eh =   0.0000 eV
@@ -687,36 +1165,48 @@ Calling plugin forte.so.
 
   Most important contributions to root   0:
     0  -0.641283 0.411243267           0 |200000000200002020>
-    1   0.372208 0.138538740          19 |200002000200002000>
-    2   0.372208 0.138538740          65 |200000020200000020>
-    3  -0.298972 0.089384124          75 |20000-0+020000+0-0>
-    4  -0.298972 0.089384124          44 |20000+0-020000-0+0>
-    5   0.185058 0.034246537         131 |20000-0-020000+0+0>
-    6   0.185058 0.034246537         145 |20000+0+020000-0-0>
-    7  -0.113914 0.012976303         177 |20000+0-020000+0-0>
-    8  -0.113914 0.012976303          43 |20000-0+020000-0+0>
-    9   0.045116 0.002035435          21 |20000-+00200002000>
+    1   0.372208 0.138538740         129 |200000020200000020>
+    2   0.372208 0.138538740         190 |200002000200002000>
+    3  -0.298972 0.089384124         173 |20000+0-020000-0+0>
+    4  -0.298972 0.089384124         114 |20000-0+020000+0-0>
+    5   0.185058 0.034246537          57 |20000+0+020000-0-0>
+    6   0.185058 0.034246537          71 |20000-0-020000+0+0>
+    7  -0.113914 0.012976303         175 |20000-0+020000-0+0>
+    8  -0.113914 0.012976303          25 |20000+0-020000+0-0>
+    9   0.045116 0.002035435          13 |2000000+-200000020>
 
-  Spin state for root 0: S^2 = 0.000000, S = 0.000, singlet
- Cycle 0 took: 0.164413 s
+  Spin state for root 0: S^2 = 0.346058, S = 0.466, doublet
+  Cycle 0 took: 0.090398 s
 
   ==> Cycle 1 <==
 
   Initial P space dimension: 83
   Spin-complete dimension of the P space: 131 determinants
-  Time spent diagonalizing H:   0.018207 s
+  Time spent building a_list   0.000838 s
+  Time spent building b_list   0.000838 s
+  Time spent building aa_list  0.001261 s
+  Time spent building bb_list  0.001241 s
+ Memory for AB_ann: 0.012 MB
+  Time spent building ab_list  0.003209 s
+  Time spent diagonalizing H:   0.014188 s
 
     P-space  CI Energy Root   0        = -75.347640791938 Eh =   0.0000 eV
 
-  Using 1 threads.
   Dimension of the SD space: 33220 determinants
-  Time spent building the model space: 0.985846 s
+  Time spent building the model space: 0.581507 s
 
   Dimension of the P + Q space: 203 determinants
-  Time spent screening the model space: 0.089159 s
+  Time spent screening the model space: 0.077963 s
   Spin-complete dimension of the PQ space: 309
+  Time spent building a_list   0.001716 s
+  Time spent building b_list   0.001699 s
+  Time spent building aa_list  0.002600 s
+  Time spent building bb_list  0.002501 s
+ Memory for AB_ann: 0.049 MB
+  Time spent building ab_list  0.006196 s
 
- Davidson-liu solver algorithm
+  Davidson-Liu solver algorithm
+  Using SPARSE sigma builder
   Initial guess space is incomplete.
   Trying to add 67 determinant(s).  67 determinant(s) added.
   Initial guess found 50 solutions with 2S+1 = 1 *
@@ -738,7 +1228,7 @@ Calling plugin forte.so.
       4      -82.668961143033  -3.789e-04
       5      -82.669568055281  -6.069e-04
       6      -82.669700126050  -1.321e-04
-      7      -82.669718027030  -1.790e-05
+      7      -82.669718027029  -1.790e-05
       8      -82.669726421859  -8.395e-06
       9      -82.669737466607  -1.104e-05
      10      -82.669740287332  -2.821e-06
@@ -750,13 +1240,14 @@ Calling plugin forte.so.
      16      -82.669741487160  -7.925e-09
      17      -82.669741496216  -9.056e-09
      18      -82.669741498771  -2.555e-09
-     19      -82.669741499227  -4.558e-10
-     20      -82.669741499477  -2.501e-10
-     21      -82.669741499763  -2.859e-10
-     22      -82.669741499848  -8.524e-11
+     19      -82.669741499227  -4.560e-10
+     20      -82.669741499477  -2.502e-10
+     21      -82.669741499762  -2.858e-10
+     22      -82.669741499848  -8.527e-11
   ----------------------------------------
   The Davidson-Liu algorithm converged in 23 iterations.
-  Time spent diagonalizing H:   0.197129 s
+  Davidson-Liu procedure took  0.090149 s
+  Total time spent diagonalizing H:   0.091297 s
 
     PQ-space CI Energy Root   0        = -75.342672457832 Eh =   0.0000 eV
     PQ-space CI Energy + EPT2 Root   0 = -75.386412788096 Eh =   0.0000 eV
@@ -764,25 +1255,32 @@ Calling plugin forte.so.
 
   Most important contributions to root   0:
     0   0.490481 0.240571702           0 |200000000200002020>
-    1   0.398384 0.158709935          67 |20000+0-020000-0+0>
-    2   0.398384 0.158709935          25 |20000-0+020000+0-0>
-    3  -0.333272 0.111070164          99 |200002000200002000>
-    4  -0.333272 0.111070164          54 |200000020200000020>
-    5  -0.238507 0.056885668          74 |20000-0-020000+0+0>
-    6  -0.238507 0.056885668          53 |20000+0+020000-0-0>
-    7   0.159877 0.025560652          40 |20000+0-020000+0-0>
-    8   0.159877 0.025560652           5 |20000-0+020000-0+0>
-    9  -0.042959 0.001845501          50 |2000000-+200000020>
+    1   0.398384 0.158709935          62 |20000+0-020000-0+0>
+    2   0.398384 0.158709935          33 |20000-0+020000+0-0>
+    3  -0.333272 0.111070164          52 |200000020200000020>
+    4  -0.333272 0.111070164          36 |200002000200002000>
+    5  -0.238507 0.056885668          28 |20000+0+020000-0-0>
+    6  -0.238507 0.056885668          31 |20000-0-020000+0+0>
+    7   0.159877 0.025560652          69 |20000-0+020000-0+0>
+    8   0.159877 0.025560652          55 |20000+0-020000+0-0>
+    9  -0.042959 0.001845501          64 |2000000-+200000020>
 
-  Spin state for root 0: S^2 = 0.000000, S = 0.000, singlet
- Cycle 1 took: 1.343825 s
+  Spin state for root 0: S^2 = 0.536133, S = 0.824, doublet
+  Cycle 1 took: 0.801875 s
 
   ==> Cycle 2 <==
 
   Initial P space dimension: 113
   Spin-complete dimension of the P space: 205 determinants
+  Time spent building a_list   0.001134 s
+  Time spent building b_list   0.001128 s
+  Time spent building aa_list  0.001702 s
+  Time spent building bb_list  0.001689 s
+ Memory for AB_ann: 0.035 MB
+  Time spent building ab_list  0.004185 s
 
- Davidson-liu solver algorithm
+  Davidson-Liu solver algorithm
+  Using SPARSE sigma builder
   Initial guess space is incomplete.
   Trying to add 53 determinant(s).  53 determinant(s) added.
   Initial guess found 47 solutions with 2S+1 = 1 *
@@ -816,26 +1314,33 @@ Calling plugin forte.so.
      16      -82.665313750988  -1.079e-08
      17      -82.665313758804  -7.816e-09
      18      -82.665313761836  -3.033e-09
-     19      -82.665313762787  -9.504e-10
-     20      -82.665313763285  -4.977e-10
+     19      -82.665313762787  -9.506e-10
+     20      -82.665313763285  -4.976e-10
      21      -82.665313763640  -3.552e-10
      22      -82.665313763779  -1.394e-10
-     23      -82.665313763823  -4.363e-11
+     23      -82.665313763823  -4.364e-11
   ----------------------------------------
   The Davidson-Liu algorithm converged in 24 iterations.
-  Time spent diagonalizing H:   0.099941 s
+  Davidson-Liu procedure took  0.065038 s
+  Time spent diagonalizing H:   0.065889 s
 
     P-space  CI Energy Root   0        = -75.338244721807 Eh =   0.0000 eV
 
-  Using 1 threads.
   Dimension of the SD space: 49084 determinants
-  Time spent building the model space: 0.422072 s
+  Time spent building the model space: 0.407690 s
 
   Dimension of the P + Q space: 268 determinants
-  Time spent screening the model space: 0.120943 s
+  Time spent screening the model space: 0.116413 s
   Spin-complete dimension of the PQ space: 366
+  Time spent building a_list   0.002004 s
+  Time spent building b_list   0.001986 s
+  Time spent building aa_list  0.002934 s
+  Time spent building bb_list  0.002892 s
+ Memory for AB_ann: 0.065 MB
+  Time spent building ab_list  0.007165 s
 
- Davidson-liu solver algorithm
+  Davidson-Liu solver algorithm
+  Using SPARSE sigma builder
   Initial guess space is incomplete.
   Trying to add 70 determinant(s).  70 determinant(s) added.
   Initial guess found 56 solutions with 2S+1 = 1 *
@@ -852,55 +1357,63 @@ Calling plugin forte.so.
     Iter.      Avg. Energy       Delta_E
   ----------------------------------------
       1      -82.693857346129  -8.269e+01
-      2      -82.715882873978  -2.203e-02
+      2      -82.715882873977  -2.203e-02
       3      -82.717278430060  -1.396e-03
       4      -82.717417996257  -1.396e-04
       5      -82.717450115442  -3.212e-05
       6      -82.717460031678  -9.916e-06
       7      -82.717467710970  -7.679e-06
       8      -82.717470262549  -2.552e-06
-      9      -82.717471038576  -7.760e-07
+      9      -82.717471038575  -7.760e-07
      10      -82.717471430562  -3.920e-07
      11      -82.717471722436  -2.919e-07
-     12      -82.717471834984  -1.125e-07
+     12      -82.717471834983  -1.125e-07
      13      -82.717471869549  -3.457e-08
      14      -82.717471887880  -1.833e-08
      15      -82.717471901118  -1.324e-08
      16      -82.717471906300  -5.182e-09
-     17      -82.717471907894  -1.594e-09
+     17      -82.717471907894  -1.593e-09
      18      -82.717471908741  -8.470e-10
      19      -82.717471909344  -6.035e-10
      20      -82.717471909582  -2.375e-10
-     21      -82.717471909654  -7.296e-11
+     21      -82.717471909655  -7.296e-11
   ----------------------------------------
   The Davidson-Liu algorithm converged in 22 iterations.
-  Time spent diagonalizing H:   0.135961 s
+  Davidson-Liu procedure took  0.096406 s
+  Total time spent diagonalizing H:   0.097731 s
 
     PQ-space CI Energy Root   0        = -75.390402867639 Eh =   0.0000 eV
     PQ-space CI Energy + EPT2 Root   0 = -75.435030709862 Eh =   0.0000 eV
 
 
   Most important contributions to root   0:
-    0  -0.555048 0.308077851           0 |200000000200002020>
-    1   0.399045 0.159236929          54 |200000020200000020>
-    2   0.399045 0.159236929          77 |200002000200002000>
-    3  -0.296305 0.087796383         260 |200002020200000000>
-    4  -0.273369 0.074730669         145 |20000-0+020000+0-0>
-    5  -0.273369 0.074730669          64 |20000+0-020000-0+0>
-    6  -0.151375 0.022914478          41 |20000+0-020000+0-0>
-    7  -0.151375 0.022914478           4 |20000-0+020000-0+0>
-    8   0.121994 0.014882492          52 |20000+0+020000-0-0>
-    9   0.121994 0.014882492         115 |20000-0-020000+0+0>
+    0  -0.555048 0.308077851          73 |200000000200002020>
+    1   0.399045 0.159236929          65 |200000020200000020>
+    2   0.399045 0.159236929          31 |200002000200002000>
+    3  -0.296305 0.087796383         230 |200002020200000000>
+    4  -0.273369 0.074730669          50 |20000-0+020000+0-0>
+    5  -0.273369 0.074730669          37 |20000+0-020000-0+0>
+    6  -0.151375 0.022914478          47 |20000+0-020000+0-0>
+    7  -0.151375 0.022914478          17 |20000-0+020000-0+0>
+    8   0.121994 0.014882492          62 |20000+0+020000-0-0>
+    9   0.121994 0.014882492           3 |20000-0-020000+0+0>
 
-  Spin state for root 0: S^2 = 0.000000, S = 0.000, singlet
- Cycle 2 took: 0.842399 s
+  Spin state for root 0: S^2 = 0.245414, S = 0.306, singlet
+  Cycle 2 took: 0.734381 s
 
   ==> Cycle 3 <==
 
   Initial P space dimension: 108
   Spin-complete dimension of the P space: 244 determinants
+  Time spent building a_list   0.001325 s
+  Time spent building b_list   0.001321 s
+  Time spent building aa_list  0.001967 s
+  Time spent building bb_list  0.003755 s
+ Memory for AB_ann: 0.042 MB
+  Time spent building ab_list  0.005866 s
 
- Davidson-liu solver algorithm
+  Davidson-Liu solver algorithm
+  Using SPARSE sigma builder
   Initial guess space is incomplete.
   Trying to add 60 determinant(s).  60 determinant(s) added.
   Initial guess found 50 solutions with 2S+1 = 1 *
@@ -924,33 +1437,40 @@ Calling plugin forte.so.
       6      -82.714322563689  -1.434e-05
       7      -82.714333928125  -1.136e-05
       8      -82.714336788192  -2.860e-06
-      9      -82.714337653652  -8.655e-07
-     10      -82.714337983170  -3.295e-07
+      9      -82.714337653651  -8.655e-07
+     10      -82.714337983169  -3.295e-07
      11      -82.714338229724  -2.466e-07
      12      -82.714338309149  -7.943e-08
      13      -82.714338330377  -2.123e-08
      14      -82.714338340781  -1.040e-08
      15      -82.714338348220  -7.439e-09
      16      -82.714338350722  -2.502e-09
-     17      -82.714338351393  -6.707e-10
+     17      -82.714338351393  -6.706e-10
      18      -82.714338351726  -3.334e-10
      19      -82.714338351960  -2.337e-10
-     20      -82.714338352040  -7.991e-11
+     20      -82.714338352040  -7.992e-11
   ----------------------------------------
   The Davidson-Liu algorithm converged in 21 iterations.
-  Time spent diagonalizing H:   0.097904 s
+  Davidson-Liu procedure took  0.073735 s
+  Time spent diagonalizing H:   0.074792 s
 
     P-space  CI Energy Root   0        = -75.387269310025 Eh =   0.0000 eV
 
-  Using 1 threads.
   Dimension of the SD space: 57218 determinants
-  Time spent building the model space: 0.828766 s
+  Time spent building the model space: 0.499023 s
 
   Dimension of the P + Q space: 264 determinants
-  Time spent screening the model space: 0.154272 s
+  Time spent screening the model space: 0.138345 s
   Spin-complete dimension of the PQ space: 274
+  Time spent building a_list   0.001480 s
+  Time spent building b_list   0.001469 s
+  Time spent building aa_list  0.002180 s
+  Time spent building bb_list  0.002164 s
+ Memory for AB_ann: 0.047 MB
+  Time spent building ab_list  0.005477 s
 
- Davidson-liu solver algorithm
+  Davidson-Liu solver algorithm
+  Using SPARSE sigma builder
   Initial guess space is incomplete.
   Trying to add 70 determinant(s).  70 determinant(s) added.
   Initial guess found 54 solutions with 2S+1 = 1 *
@@ -967,164 +1487,59 @@ Calling plugin forte.so.
     Iter.      Avg. Energy       Delta_E
   ----------------------------------------
       1      -82.698387075568  -8.270e+01
-      2      -82.721396208138  -2.301e-02
+      2      -82.721396208137  -2.301e-02
       3      -82.722741629864  -1.345e-03
       4      -82.722870337834  -1.287e-04
       5      -82.722897943092  -2.761e-05
       6      -82.722904194071  -6.251e-06
-      7      -82.722905961132  -1.767e-06
-      8      -82.722906441688  -4.806e-07
+      7      -82.722905961131  -1.767e-06
+      8      -82.722906441687  -4.806e-07
       9      -82.722906589016  -1.473e-07
      10      -82.722906636514  -4.750e-08
      11      -82.722906654227  -1.771e-08
      12      -82.722906660543  -6.316e-09
      13      -82.722906663006  -2.463e-09
      14      -82.722906663980  -9.743e-10
-     15      -82.722906664397  -4.171e-10
+     15      -82.722906664397  -4.170e-10
      16      -82.722906664567  -1.696e-10
      17      -82.722906664638  -7.132e-11
   ----------------------------------------
   The Davidson-Liu algorithm converged in 18 iterations.
-  Time spent diagonalizing H:   0.099501 s
+  Davidson-Liu procedure took  0.078844 s
+  Total time spent diagonalizing H:   0.079926 s
 
     PQ-space CI Energy Root   0        = -75.395837622623 Eh =   0.0000 eV
     PQ-space CI Energy + EPT2 Root   0 = -75.437776341176 Eh =   0.0000 eV
 
 
   Most important contributions to root   0:
-    0   0.540823 0.292490047           0 |200000000200002020>
-    1  -0.406994 0.165644519          37 |200000020200000020>
-    2  -0.406994 0.165644519          51 |200002000200002000>
-    3   0.333257 0.111060321         118 |200002020200000000>
-    4   0.255332 0.065194656          87 |20000-0+020000+0-0>
-    5   0.255332 0.065194656          44 |20000+0-020000-0+0>
-    6   0.140467 0.019730875          29 |20000+0-020000+0-0>
-    7   0.140467 0.019730875           2 |20000-0+020000-0+0>
-    8  -0.114866 0.013194154          36 |20000+0+020000-0-0>
-    9  -0.114866 0.013194154          74 |20000-0-020000+0+0>
+    0  -0.540823 0.292490047          28 |200000000200002020>
+    1   0.406994 0.165644519          62 |200002000200002000>
+    2   0.406994 0.165644519          35 |200000020200000020>
+    3  -0.333257 0.111060321          95 |200002020200000000>
+    4  -0.255332 0.065194656          57 |20000+0-020000-0+0>
+    5  -0.255332 0.065194656           9 |20000-0+020000+0-0>
+    6  -0.140467 0.019730875          75 |20000+0-020000+0-0>
+    7  -0.140467 0.019730875          72 |20000-0+020000-0+0>
+    8   0.114866 0.013194154          38 |20000+0+020000-0-0>
+    9   0.114866 0.013194154          11 |20000-0-020000+0+0>
 
-  Spin state for root 0: S^2 = 0.000000, S = 0.000, singlet
- Cycle 3 took: 1.239956 s
+  Spin state for root 0: S^2 = 0.224922, S = 0.276, singlet
+  Cycle 3 took: 0.840342 s
 
   ==> Cycle 4 <==
 
   Initial P space dimension: 118
   Spin-complete dimension of the P space: 236 determinants
+  Time spent building a_list   0.001280 s
+  Time spent building b_list   0.001268 s
+  Time spent building aa_list  0.001941 s
+  Time spent building bb_list  0.001916 s
+ Memory for AB_ann: 0.040 MB
+  Time spent building ab_list  0.004737 s
 
- Davidson-liu solver algorithm
-  Initial guess space is incomplete.
-  Trying to add 52 determinant(s).  52 determinant(s) added.
-  Initial guess found 48 solutions with 2S+1 = 1 *
-  Initial guess found 66 solutions with 2S+1 = 3  
-  Initial guess found 30 solutions with 2S+1 = 5  
-  Initial guess found 7 solutions with 2S+1 = 7  
-  Initial guess found 1 solutions with 2S+1 = 9  
-  Adding guess 0 (multiplicity = 1.000000)
-  Adding guess 1 (multiplicity = 1.000000)
-
-  ==> Diagonalizing Hamiltonian <==
-
-  ----------------------------------------
-    Iter.      Avg. Energy       Delta_E
-  ----------------------------------------
-      1      -82.699085042168  -8.270e+01
-      2      -82.718307875221  -1.922e-02
-      3      -82.720601510759  -2.294e-03
-      4      -82.720822237327  -2.207e-04
-      5      -82.720875661586  -5.342e-05
-      6      -82.720884798643  -9.137e-06
-      7      -82.720889297288  -4.499e-06
-      8      -82.720890292963  -9.957e-07
-      9      -82.720890700801  -4.078e-07
-     10      -82.720890843521  -1.427e-07
-     11      -82.720890923225  -7.970e-08
-     12      -82.720890950500  -2.727e-08
-     13      -82.720890962065  -1.157e-08
-     14      -82.720890966402  -4.337e-09
-     15      -82.720890969010  -2.607e-09
-     16      -82.720890969933  -9.237e-10
-     17      -82.720890970304  -3.702e-10
-     18      -82.720890970455  -1.512e-10
-     19      -82.720890970548  -9.315e-11
-  ----------------------------------------
-  The Davidson-Liu algorithm converged in 20 iterations.
-  Time spent diagonalizing H:   0.101423 s
-
-    P-space  CI Energy Root   0        = -75.393821928533 Eh =   0.0000 eV
-
-  Using 1 threads.
-  Dimension of the SD space: 55817 determinants
-  Time spent building the model space: 0.503105 s
-
-  Dimension of the P + Q space: 240 determinants
-  Time spent screening the model space: 0.187067 s
-  Spin-complete dimension of the PQ space: 248
-
- Davidson-liu solver algorithm
-  Initial guess space is incomplete.
-  Trying to add 64 determinant(s).  64 determinant(s) added.
-  Initial guess found 52 solutions with 2S+1 = 1 *
-  Initial guess found 72 solutions with 2S+1 = 3  
-  Initial guess found 32 solutions with 2S+1 = 5  
-  Initial guess found 7 solutions with 2S+1 = 7  
-  Initial guess found 1 solutions with 2S+1 = 9  
-  Adding guess 0 (multiplicity = 1.000000)
-  Adding guess 1 (multiplicity = 1.000000)
-
-  ==> Diagonalizing Hamiltonian <==
-
-  ----------------------------------------
-    Iter.      Avg. Energy       Delta_E
-  ----------------------------------------
-      1      -82.699720425729  -8.270e+01
-      2      -82.718891642391  -1.917e-02
-      3      -82.721173591966  -2.282e-03
-      4      -82.721394360246  -2.208e-04
-      5      -82.721448687306  -5.433e-05
-      6      -82.721458875294  -1.019e-05
-      7      -82.721463757880  -4.883e-06
-      8      -82.721464966707  -1.209e-06
-      9      -82.721465448737  -4.820e-07
-     10      -82.721465633804  -1.851e-07
-     11      -82.721465735079  -1.013e-07
-     12      -82.721465773265  -3.819e-08
-     13      -82.721465788973  -1.571e-08
-     14      -82.721465795582  -6.608e-09
-     15      -82.721465799267  -3.685e-09
-     16      -82.721465800686  -1.419e-09
-     17      -82.721465801271  -5.856e-10
-     18      -82.721465801522  -2.509e-10
-     19      -82.721465801665  -1.425e-10
-     20      -82.721465801720  -5.539e-11
-  ----------------------------------------
-  The Davidson-Liu algorithm converged in 21 iterations.
-  Time spent diagonalizing H:   0.093242 s
-
-    PQ-space CI Energy Root   0        = -75.394396759705 Eh =   0.0000 eV
-    PQ-space CI Energy + EPT2 Root   0 = -75.437282586909 Eh =   0.0000 eV
-
-
-  Most important contributions to root   0:
-    0  -0.539738 0.291317600           0 |200000000200002020>
-    1   0.407892 0.166375955          45 |200002000200002000>
-    2   0.407892 0.166375955          34 |200000020200000020>
-    3  -0.334691 0.112018086         111 |200002020200000000>
-    4  -0.254436 0.064737507          80 |20000-0+020000+0-0>
-    5  -0.254436 0.064737507          40 |20000+0-020000-0+0>
-    6  -0.139520 0.019465868          28 |20000+0-020000+0-0>
-    7  -0.139520 0.019465868           2 |20000-0+020000-0+0>
-    8   0.114916 0.013205579          33 |20000+0+020000-0-0>
-    9   0.114916 0.013205579          68 |20000-0-020000+0+0>
-
-  Spin state for root 0: S^2 = 0.000000, S = 0.000, singlet
- Cycle 4 took: 0.941364 s
-
-  ==> Cycle 5 <==
-
-  Initial P space dimension: 118
-  Spin-complete dimension of the P space: 236 determinants
-
- Davidson-liu solver algorithm
+  Davidson-Liu solver algorithm
+  Using SPARSE sigma builder
   Initial guess space is incomplete.
   Trying to add 52 determinant(s).  52 determinant(s) added.
   Initial guess found 48 solutions with 2S+1 = 1 *
@@ -1158,22 +1573,29 @@ Calling plugin forte.so.
      16      -82.720890969933  -9.236e-10
      17      -82.720890970304  -3.702e-10
      18      -82.720890970455  -1.512e-10
-     19      -82.720890970548  -9.315e-11
+     19      -82.720890970548  -9.314e-11
   ----------------------------------------
   The Davidson-Liu algorithm converged in 20 iterations.
-  Time spent diagonalizing H:   0.081569 s
+  Davidson-Liu procedure took  0.068528 s
+  Time spent diagonalizing H:   0.069465 s
 
     P-space  CI Energy Root   0        = -75.393821928533 Eh =   0.0000 eV
 
-  Using 1 threads.
   Dimension of the SD space: 55817 determinants
-  Time spent building the model space: 0.454080 s
+  Time spent building the model space: 0.485599 s
 
   Dimension of the P + Q space: 240 determinants
-  Time spent screening the model space: 0.141789 s
+  Time spent screening the model space: 0.139763 s
   Spin-complete dimension of the PQ space: 248
+  Time spent building a_list   0.001338 s
+  Time spent building b_list   0.001326 s
+  Time spent building aa_list  0.002004 s
+  Time spent building bb_list  0.001980 s
+ Memory for AB_ann: 0.043 MB
+  Time spent building ab_list  0.004976 s
 
- Davidson-liu solver algorithm
+  Davidson-Liu solver algorithm
+  Using SPARSE sigma builder
   Initial guess space is incomplete.
   Trying to add 64 determinant(s).  64 determinant(s) added.
   Initial guess found 52 solutions with 2S+1 = 1 *
@@ -1196,7 +1618,7 @@ Calling plugin forte.so.
       5      -82.721448687306  -5.433e-05
       6      -82.721458875294  -1.019e-05
       7      -82.721463757880  -4.883e-06
-      8      -82.721464966707  -1.209e-06
+      8      -82.721464966706  -1.209e-06
       9      -82.721465448737  -4.820e-07
      10      -82.721465633804  -1.851e-07
      11      -82.721465735078  -1.013e-07
@@ -1205,51 +1627,198 @@ Calling plugin forte.so.
      14      -82.721465795582  -6.608e-09
      15      -82.721465799267  -3.686e-09
      16      -82.721465800686  -1.419e-09
-     17      -82.721465801272  -5.857e-10
+     17      -82.721465801271  -5.856e-10
      18      -82.721465801522  -2.509e-10
      19      -82.721465801665  -1.424e-10
      20      -82.721465801720  -5.539e-11
   ----------------------------------------
   The Davidson-Liu algorithm converged in 21 iterations.
-  Time spent diagonalizing H:   0.118102 s
+  Davidson-Liu procedure took  0.076725 s
+  Total time spent diagonalizing H:   0.077714 s
 
     PQ-space CI Energy Root   0        = -75.394396759705 Eh =   0.0000 eV
     PQ-space CI Energy + EPT2 Root   0 = -75.437282586909 Eh =   0.0000 eV
 
+
+  Most important contributions to root   0:
+    0   0.539738 0.291317600          85 |200000000200002020>
+    1  -0.407892 0.166375955          81 |200000020200000020>
+    2  -0.407892 0.166375955          57 |200002000200002000>
+    3   0.334691 0.112018086          20 |200002020200000000>
+    4   0.254436 0.064737507          60 |20000+0-020000-0+0>
+    5   0.254436 0.064737507         103 |20000-0+020000+0-0>
+    6   0.139520 0.019465868          44 |20000-0+020000-0+0>
+    7   0.139520 0.019465868          40 |20000+0-020000+0-0>
+    8  -0.114916 0.013205579         101 |20000-0-020000+0+0>
+    9  -0.114916 0.013205579          78 |20000+0+020000-0-0>
+
+  Spin state for root 0: S^2 = 0.224616, S = 0.275, singlet
+  Cycle 4 took: 0.816777 s
+
+  ==> Cycle 5 <==
+
+  Initial P space dimension: 118
+  Spin-complete dimension of the P space: 236 determinants
+  Time spent building a_list   0.001286 s
+  Time spent building b_list   0.001271 s
+  Time spent building aa_list  0.001919 s
+  Time spent building bb_list  0.001930 s
+ Memory for AB_ann: 0.040 MB
+  Time spent building ab_list  0.004962 s
+
+  Davidson-Liu solver algorithm
+  Using SPARSE sigma builder
+  Initial guess space is incomplete.
+  Trying to add 52 determinant(s).  52 determinant(s) added.
+  Initial guess found 48 solutions with 2S+1 = 1 *
+  Initial guess found 66 solutions with 2S+1 = 3  
+  Initial guess found 30 solutions with 2S+1 = 5  
+  Initial guess found 7 solutions with 2S+1 = 7  
+  Initial guess found 1 solutions with 2S+1 = 9  
+  Adding guess 0 (multiplicity = 1.000000)
+  Adding guess 1 (multiplicity = 1.000000)
+
+  ==> Diagonalizing Hamiltonian <==
+
+  ----------------------------------------
+    Iter.      Avg. Energy       Delta_E
+  ----------------------------------------
+      1      -82.699085042168  -8.270e+01
+      2      -82.718307875221  -1.922e-02
+      3      -82.720601510759  -2.294e-03
+      4      -82.720822237327  -2.207e-04
+      5      -82.720875661586  -5.342e-05
+      6      -82.720884798643  -9.137e-06
+      7      -82.720889297288  -4.499e-06
+      8      -82.720890292963  -9.957e-07
+      9      -82.720890700801  -4.078e-07
+     10      -82.720890843521  -1.427e-07
+     11      -82.720890923225  -7.970e-08
+     12      -82.720890950500  -2.727e-08
+     13      -82.720890962065  -1.157e-08
+     14      -82.720890966402  -4.337e-09
+     15      -82.720890969010  -2.608e-09
+     16      -82.720890969933  -9.236e-10
+     17      -82.720890970304  -3.701e-10
+     18      -82.720890970455  -1.512e-10
+     19      -82.720890970548  -9.314e-11
+  ----------------------------------------
+  The Davidson-Liu algorithm converged in 20 iterations.
+  Davidson-Liu procedure took  0.069067 s
+  Time spent diagonalizing H:   0.069976 s
+
+    P-space  CI Energy Root   0        = -75.393821928533 Eh =   0.0000 eV
+
+  Dimension of the SD space: 55817 determinants
+  Time spent building the model space: 0.480093 s
+
+  Dimension of the P + Q space: 240 determinants
+  Time spent screening the model space: 0.134712 s
+  Spin-complete dimension of the PQ space: 248
+  Time spent building a_list   0.001388 s
+  Time spent building b_list   0.001332 s
+  Time spent building aa_list  0.002003 s
+  Time spent building bb_list  0.001985 s
+ Memory for AB_ann: 0.043 MB
+  Time spent building ab_list  0.004957 s
+
+  Davidson-Liu solver algorithm
+  Using SPARSE sigma builder
+  Initial guess space is incomplete.
+  Trying to add 64 determinant(s).  64 determinant(s) added.
+  Initial guess found 52 solutions with 2S+1 = 1 *
+  Initial guess found 72 solutions with 2S+1 = 3  
+  Initial guess found 32 solutions with 2S+1 = 5  
+  Initial guess found 7 solutions with 2S+1 = 7  
+  Initial guess found 1 solutions with 2S+1 = 9  
+  Adding guess 0 (multiplicity = 1.000000)
+  Adding guess 1 (multiplicity = 1.000000)
+
+  ==> Diagonalizing Hamiltonian <==
+
+  ----------------------------------------
+    Iter.      Avg. Energy       Delta_E
+  ----------------------------------------
+      1      -82.699720425729  -8.270e+01
+      2      -82.718891642391  -1.917e-02
+      3      -82.721173591966  -2.282e-03
+      4      -82.721394360246  -2.208e-04
+      5      -82.721448687306  -5.433e-05
+      6      -82.721458875294  -1.019e-05
+      7      -82.721463757880  -4.883e-06
+      8      -82.721464966706  -1.209e-06
+      9      -82.721465448737  -4.820e-07
+     10      -82.721465633804  -1.851e-07
+     11      -82.721465735078  -1.013e-07
+     12      -82.721465773265  -3.819e-08
+     13      -82.721465788973  -1.571e-08
+     14      -82.721465795582  -6.608e-09
+     15      -82.721465799267  -3.685e-09
+     16      -82.721465800686  -1.419e-09
+     17      -82.721465801272  -5.857e-10
+     18      -82.721465801522  -2.509e-10
+     19      -82.721465801665  -1.424e-10
+     20      -82.721465801720  -5.537e-11
+  ----------------------------------------
+  The Davidson-Liu algorithm converged in 21 iterations.
+  Davidson-Liu procedure took  0.078555 s
+  Total time spent diagonalizing H:   0.079576 s
+
+    PQ-space CI Energy Root   0        = -75.394396759705 Eh =   0.0000 eV
+    PQ-space CI Energy + EPT2 Root   0 = -75.437282586910 Eh =   0.0000 eV
+
   ***** Calculation Converged *****
   Not performing spin projection.
-  1-RDM  took 0.000161 s (determinant)
+  Saving root 0, ref_root is 0
+  Number of old roots: 1
 
   ==> ACI Summary <==
 
   Iterations required:                         5
   Dimension of optimized determinant space:    248
 
-  ACI(0.010) Correlation energy: 0.341806932539 Eh
   * Adaptive-CI Energy Root   0        = -75.394396759705 Eh =   0.0000 eV
-  * Adaptive-CI Energy Root   0 + EPT2 = -75.437282586909 Eh =   0.0000 eV
+  * Adaptive-CI Energy Root   0 + EPT2 = -75.437282586910 Eh =   0.0000 eV
 
   ==> Wavefunction Information <==
 
   Most important contributions to root   0:
-    0  -0.539738 0.291317600           0 |200000000200002020>
-    1   0.407892 0.166375955          34 |200000020200000020>
-    2   0.407892 0.166375955          45 |200002000200002000>
-    3  -0.334691 0.112018086         111 |200002020200000000>
-    4  -0.254436 0.064737507          80 |20000-0+020000+0-0>
-    5  -0.254436 0.064737507          40 |20000+0-020000-0+0>
-    6  -0.139520 0.019465868          28 |20000+0-020000+0-0>
-    7  -0.139520 0.019465868           2 |20000-0+020000-0+0>
-    8   0.114916 0.013205579          68 |20000-0-020000+0+0>
-    9   0.114916 0.013205579          33 |20000+0+020000-0-0>
+    0   0.539738 0.291317600          32 |200000000200002020>
+    1  -0.407892 0.166375955          61 |200002000200002000>
+    2  -0.407892 0.166375955          36 |200000020200000020>
+    3   0.334691 0.112018086          96 |200002020200000000>
+    4   0.254436 0.064737507          57 |20000+0-020000-0+0>
+    5   0.254436 0.064737507          14 |20000-0+020000+0-0>
+    6   0.139520 0.019465868          77 |20000+0-020000+0-0>
+    7   0.139520 0.019465868          73 |20000-0+020000-0+0>
+    8  -0.114916 0.013205579          16 |20000-0-020000+0+0>
+    9  -0.114916 0.013205579          39 |20000+0+020000-0-0>
 
-  Spin state for root 0: S^2 = 0.000000, S = 0.000, singlet
+  Spin state for root 0: S^2 = 0.224616, S = 0.275, singlet
+  Time spent building a_ann_list   0.001129 s
+  Time spent building b_ann_list   0.001066 s
+  Time spent building aa_ann_list  0.001538 s
+  Time spent building bb_ann_list  0.001418 s
+ Memory for AB_ann: 0.087 MB
+  Time spent building ab_ann_list  0.003609 s
+  1-RDM  took 0.000121 s (determinant)
 
-  Adaptive-CI (bitset) ran in : 5.390314 s
+  ==> NATURAL ORBITALS <==
+
+        1Ag     1.974565      1B1u    1.968453      1B2u    1.188703  
+        1B3u    1.188703      1B2g    0.807144      1B3g    0.807144  
+        2Ag     0.033861      2B1u    0.022043      2B2u    0.002701  
+        2B3u    0.002701      2B3g    0.001678      2B2g    0.001678  
+        3B1u    0.000391      3Ag     0.000236      5B1u    0.000000  
+        4B1u    0.000000      5Ag     0.000000      4Ag     0.000000  
+
+
+
+  Adaptive-CI (bitset) ran in : 4.103611 s
 
   Saving information for root: 0
 
-  Your calculation took 5.56711400 seconds
+  Your calculation took 4.24504500 seconds
 	ACI energy........................................................PASSED
 	ACI+PT2 energy....................................................PASSED
 
