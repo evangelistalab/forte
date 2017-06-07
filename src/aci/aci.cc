@@ -249,13 +249,13 @@ void AdaptiveCI::startup() {
         nel += 2 * doccpi_[h] + soccpi_[h];
     }
 
-    ms_ = multiplicity_ - 1;
+    twice_ms_ = multiplicity_ - 1;
     if( options_["MS"].has_changed()) {
-        ms_ = options_.get_int("MS");
+        twice_ms_ = std::round(2.0 * options_.get_double("MS"));
     }
 
     nactel_ = nel - 2 * nfrzc_;
-    nalpha_ = (nactel_ + ms_ + 1) / 2;
+    nalpha_ = (nactel_ + twice_ms_) / 2;
     nbeta_ = nactel_ - nalpha_;
 
     mo_symmetry_ = mo_space_info_->symmetry("ACTIVE");
@@ -363,7 +363,7 @@ void AdaptiveCI::print_info() {
     // Print a summary
     std::vector<std::pair<std::string, int>> calculation_info{
         {"Multiplicity", multiplicity_},
-        {"Ms", ms_},
+        {"Ms", twice_ms_},
         {"Symmetry", wavefunction_symmetry_},
         {"Number of roots", nroot_},
         {"Root used for properties", options_.get_int("ACI_ROOT")}};
@@ -420,10 +420,10 @@ std::vector<int> AdaptiveCI::get_occupation() {
 
     // nyms denotes the number of electrons needed to assign symmetry and
     // multiplicity
-    int nsym = ms_ * 2;
+    int nsym = twice_ms_ * 2;
     int orb_sym = wavefunction_symmetry_;
 
-    if (ms_ == 0) {
+    if (twice_ms_ == 0) {
         nsym = 2;
     }
 
@@ -454,7 +454,7 @@ std::vector<int> AdaptiveCI::get_occupation() {
             // Determine proper symmetry for new occupation
             //orb_sym = ms_;
 
-            if (ms_ == 0) {
+            if (twice_ms_ == 0) {
                 orb_sym = std::get<1>(labeled_orb_en[nalpha_ - 1]) ^ orb_sym;
             } else {
                 for (int i = 1; i <= nsym; ++i) {
@@ -516,7 +516,7 @@ std::vector<int> AdaptiveCI::get_occupation() {
 
                 orb_sym = wavefunction_symmetry_;
 
-                if (ms_ == 0) {
+                if (twice_ms_ == 0) {
                     orb_sym =
                         std::get<1>(labeled_orb_en_alfa[nalpha_ - 1]) ^ orb_sym;
                 } else {

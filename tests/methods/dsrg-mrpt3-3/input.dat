@@ -4,7 +4,7 @@ import forte
 memory 500 mb
 
 refcasscf    = -108.951281238972939
-refdsrgpt3   = -109.195157173350140
+refdsrgpt3   = -109.195144606677843
 
 molecule N2{
   0 1

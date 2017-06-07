@@ -29,12 +29,14 @@ If the input file does not specify the option ``MULTIPLICITY``, Forte will read
 the multiplicity from the ``Wavefunction`` object passed by Psi4.
 
 The projection of spin onto the z axis is controlled by the option ``MS``.
-This **is an integer variable that is twice** the value of the spin z-projection
-quantum number, ``MS`` = :math:`2 M_S`.
-If the user does not specify the option ``MS``, Forte determines the **lowest**
-value consistent with the value of ``MULTIPLICITY``.
-For example, if ``MULTIPLICITY = 3`` and ``MS`` is not specified, Forte will
-assume that the user is interested in the solution with :math:`M_S = 0`.
+This option is of type ``double``, so it should be specified as ``0.0``, ``-1.5``, etc.
+If the user does not specify the option ``MS``, Forte deduces a
+value consistent with the option ``MULTIPLICITY``.
+Modules will select either the lowest or highest value of ``MS`` compatible with
+``MULTIPLICITY``, depending on internal details of the implementation.
+For example, if ``MULTIPLICITY = 3`` and ``MS`` is not specified, the FCI code
+in Forte will assume that the user is interested in the solution with
+:math:`M_S = 0`.
 
 For example, the following input requests the :math:`M_S = 0` component of a
 triplet state::
@@ -42,15 +44,15 @@ triplet state::
     # triplet, m_s = 0
     set forte{
         multiplicity = 3
-        ms = 0
+        ms = 0.0
     }
 
-while the following gives the :math:`M_S = 1` component::
+while the following gives the :math:`M_S = -1` component::
 
     # triplet, m_s = 1
     set forte{
         multiplicity = 3
-        ms = 2
+        ms = -1.0
     }
 
 
@@ -108,7 +110,11 @@ frozen::
         frozen_uocc      [0 ,0 ,0 ,0]
     }
 
-Writing this much information for each computation is tedious.
+
+Partial specification of orbital spaces and orbital spaces priority
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Specifying all five orbital spaces for each computation is tedious and error prone.
 Forte can help reduced the number of orbital spaces that the user needs to
 specify by making certain assumptions.
 The class that controls orbital spaces (``MOSpaceInfo``) assumes that orbital
