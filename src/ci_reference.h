@@ -46,7 +46,7 @@ class CI_Reference // : public Wavefunction
     SharedWavefunction wfn_;
 
     int multiplicity_;
-    int ms_;
+    double ms_;
 
     int nalpha_;
     int nbeta_; 
