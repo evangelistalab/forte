@@ -41,6 +41,7 @@ src/blockedtensorfactory.cc
 src/casscf.cc
 src/cc.cc
 src/ci_rdms.cc
+src/ci_reference.cc
 src/davidson.cc
 src/determinant_map.cc
 src/dmrgscf.cc
