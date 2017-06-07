@@ -216,9 +216,7 @@ class ProjectorCI_HashVec : public Wavefunction {
     /// determinant to all of its singly and doubly excited states.
     /// Bounds are stored as a pair (f_max,v_max) where f_max and v_max are
     /// the couplings to the singles and doubles, respectively.
-    std::unordered_map<Determinant, std::pair<double, double>,
-                       Determinant::Hash>
-        dets_max_couplings_;
+    std::vector<std::pair<double, double> > dets_max_couplings_;
     double dets_double_max_coupling_;
     std::vector<
         std::tuple<int, int, double, std::vector<std::tuple<int, int, double>>>>

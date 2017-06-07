@@ -72,7 +72,7 @@ void FCI::print_no(bool value) { print_no_ = value; }
 
 void FCI::set_ms(int ms) {
     set_ms_ = true;
-    ms_ = ms;
+    twice_ms_ = ms;
 }
 
 void FCI::startup() {
@@ -115,10 +115,10 @@ double FCI::compute_energy() {
     // take the lowest value consistent with the value of "MULTIPLICITY"
     if (not set_ms_) {
         if (options_["MS"].has_changed()) {
-            ms_ = options_.get_int("MS");
+            twice_ms_ = std::round(2.0 * options_.get_double("MS"));
         } else {
             // Default: lowest spin solution
-            ms_ = (multiplicity + 1) % 2;
+            twice_ms_ = (multiplicity + 1) % 2;
         }
     }
 
@@ -140,20 +140,20 @@ double FCI::compute_energy() {
                         options_.get_int("DL_SUBSPACE_PER_ROOT"));
         outfile->Printf("\n  Davidson subspace min dim: %d",
                         options_.get_int("DL_COLLAPSE_PER_ROOT"));
-        if (ms_ % 2 == 0) {
-            outfile->Printf("\n  M_s: %d", ms_ / 2);
+        if (twice_ms_ % 2 == 0) {
+            outfile->Printf("\n  M_s: %d", twice_ms_ / 2);
         } else {
-            outfile->Printf("\n  M_s: %d/2", ms_);
+            outfile->Printf("\n  M_s: %d/2", twice_ms_);
         }
     }
 
-    if (((nel - ms_) % 2) != 0)
+    if (((nel - twice_ms_) % 2) != 0)
         throw PSIEXCEPTION("\n\n  FCI: Wrong value of M_s.\n\n");
 
     // Adjust the number of for frozen and restricted doubly occupied
     size_t nactel = nel - 2 * nfdocc - 2 * rdocc.size();
 
-    size_t na = (nactel + ms_) / 2;
+    size_t na = (nactel + twice_ms_) / 2;
     size_t nb = nactel - na;
 
     fcisolver_ = std::unique_ptr<FCISolver>(new FCISolver(
