@@ -1,29 +1,26 @@
 
     -----------------------------------------------------------------------
           Psi4: An Open-Source Ab Initio Electronic Structure Package
-                               Psi4 1.1a2.dev169 
+                               Psi4 1.2a1.dev263 
 
-                         Git: Rev {master} b2d0904 
-
-
-    J. M. Turney, A. C. Simmonett, R. M. Parrish, E. G. Hohenstein,
-    F. A. Evangelista, J. T. Fermann, B. J. Mintz, L. A. Burns, J. J. Wilke,
-    M. L. Abrams, N. J. Russ, M. L. Leininger, C. L. Janssen, E. T. Seidl,
-    W. D. Allen, H. F. Schaefer, R. A. King, E. F. Valeev, C. D. Sherrill,
-    and T. D. Crawford, WIREs Comput. Mol. Sci. 2, 556-565 (2012)
-    (doi: 10.1002/wcms.93)
+                         Git: Rev {master} ae466b2 
 
 
-                         Additional Contributions by
-    A. E. DePrince, U. Bozkaya, A. Yu. Sokolov, D. G. A. Smith, R. Di Remigio,
-    R. M. Richard, J. F. Gonthier, H. R. McAlexander, M. Saitow, and
-    B. P. Pritchard
+    R. M. Parrish, L. A. Burns, D. G. A. Smith, A. C. Simmonett,
+    A. E. DePrince III, E. G. Hohenstein, U. Bozkaya, A. Yu. Sokolov,
+    R. Di Remigio, R. M. Richard, J. F. Gonthier, A. M. James,
+    H. R. McAlexander, A. Kumar, M. Saitow, X. Wang, B. P. Pritchard,
+    P. Verma, H. F. Schaefer III, K. Patkowski, R. A. King, E. F. Valeev,
+    F. A. Evangelista, J. M. Turney, T. D. Crawford, and C. D. Sherrill,
+    J. Chem. Theory Comput. in press (2017).
+    (doi: 10.1021/acs.jctc.7b00174)
+
     -----------------------------------------------------------------------
 
 
-    Psi4 started on: Thursday, 09 February 2017 03:05PM
+    Psi4 started on: Tuesday, 06 June 2017 11:12PM
 
-    Process ID:  24636
+    Process ID:  89118
     PSIDATADIR: /Users/jeffschriber/src/psi4_debug_install/share/psi4
     Memory:     500.0 MiB
     Threads:    1
@@ -58,15 +55,15 @@ set {
 
 set forte {
   job_type aci
-  select_type aimed_energy
+  aci_select_type aimed_energy
   aci_add_aimed_degenerate false
-  enforce_spin_complete false
+  aci_enforce_spin_complete false
   frozen_docc [1,0,0,0,0,1,0,0]
   restricted_docc [1,0,0,0,0,0,1,0]
   active [1,0,1,1,0,2,0,1]
   sigma 0.0001
   charge 0
-  nroot 1
+  aci_nroot 1
 }
 
 energy('scf')
@@ -77,8 +74,15 @@ compare_values(refacipt2, get_variable("ACI+PT2 ENERGY"),10, "ACI+PT2 energy") #
 --------------------------------------------------------------------------
 /Users/jeffschriber/src/forte/forte.so loaded.
 
-*** tstart() called on Jeffs-MacBook-Pro-2.local
-*** at Thu Feb  9 15:05:23 2017
+*** tstart() called on Jeffs-MBP-2.attlocal.net
+*** at Tue Jun  6 23:12:56 2017
+
+   => Loading Basis Set <=
+
+    Name: DZ
+    Role: ORBITAL
+    Keyword: BASIS
+    atoms 1-2 entry N          line    85 file /Users/jeffschriber/src/psi4_debug_install/share/psi4/basis/dz.gbs 
 
     There are an even number of electrons - assuming singlet.
     Specify the multiplicity in the molecule input block.
@@ -86,9 +90,10 @@ compare_values(refacipt2, get_variable("ACI+PT2 ENERGY"),10, "ACI+PT2 energy") #
 
          ---------------------------------------------------------
                                    SCF
-            by Justin Turney, Rob Parrish, and Andy Simmonett
+            by Justin Turney, Rob Parrish, Andy Simmonett
+                             and Daniel Smith
                               RHF Reference
-                        1 Threads,    524 MiB Core
+                        1 Threads,    500 MiB Core
          ---------------------------------------------------------
 
   ==> Geometry <==
@@ -128,7 +133,8 @@ compare_values(refacipt2, get_variable("ACI+PT2 ENERGY"),10, "ACI+PT2 energy") #
 
   ==> Primary Basis <==
 
-  Basis Set: file /Users/jeffschriber/src/psi4_debug_install/share/psi4/basis/dz.gbs
+  Basis Set: DZ
+    Blend: DZ
     Number of shells: 12
     Number of basis function: 20
     Number of Cartesian functions: 20
@@ -191,18 +197,18 @@ compare_values(refacipt2, get_variable("ACI+PT2 ENERGY"),10, "ACI+PT2 energy") #
              Ag   B1g   B2g   B3g    Au   B1u   B2u   B3u 
     DOCC [     3,    0,    0,    0,    0,    2,    1,    1 ]
 
-   @RHF iter   1:  -104.11854603656106   -1.04119e+02   4.08446e-01 
-   @RHF iter   2:  -108.65464119028297   -4.53610e+00   3.37227e-02 DIIS
-   @RHF iter   3:  -108.71201057308917   -5.73694e-02   6.29319e-03 DIIS
-   @RHF iter   4:  -108.71413703482662   -2.12646e-03   9.27479e-04 DIIS
-   @RHF iter   5:  -108.71420077048849   -6.37357e-05   1.56832e-04 DIIS
+   @RHF iter   1:  -104.11854603656111   -1.04119e+02   4.08446e-01 
+   @RHF iter   2:  -108.65464119028304   -4.53610e+00   3.37227e-02 DIIS
+   @RHF iter   3:  -108.71201057308916   -5.73694e-02   6.29319e-03 DIIS
+   @RHF iter   4:  -108.71413703482671   -2.12646e-03   9.27479e-04 DIIS
+   @RHF iter   5:  -108.71420077048852   -6.37357e-05   1.56832e-04 DIIS
    @RHF iter   6:  -108.71420302745696   -2.25697e-06   1.48984e-05 DIIS
-   @RHF iter   7:  -108.71420304870435   -2.12474e-08   2.05178e-06 DIIS
-   @RHF iter   8:  -108.71420304902074   -3.16390e-10   1.24029e-07 DIIS
-   @RHF iter   9:  -108.71420304902175   -1.00897e-12   1.56305e-08 DIIS
-   @RHF iter  10:  -108.71420304902173    1.42109e-14   1.75585e-09 DIIS
-   @RHF iter  11:  -108.71420304902169    4.26326e-14   1.55991e-10 DIIS
-   @RHF iter  12:  -108.71420304902166    2.84217e-14   1.45535e-11 DIIS
+   @RHF iter   7:  -108.71420304870432   -2.12474e-08   2.05178e-06 DIIS
+   @RHF iter   8:  -108.71420304902071   -3.16390e-10   1.24029e-07 DIIS
+   @RHF iter   9:  -108.71420304902176   -1.05160e-12   1.56305e-08 DIIS
+   @RHF iter  10:  -108.71420304902179   -2.84217e-14   1.75585e-09 DIIS
+   @RHF iter  11:  -108.71420304902178    1.42109e-14   1.55992e-10 DIIS
+   @RHF iter  12:  -108.71420304902178    0.00000e+00   1.45536e-11 DIIS
 
   ==> Post-Iterations <==
 
@@ -229,18 +235,14 @@ compare_values(refacipt2, get_variable("ACI+PT2 ENERGY"),10, "ACI+PT2 energy") #
 
   Energy converged.
 
-  @RHF Final Energy:  -108.71420304902166
+  @RHF Final Energy:  -108.71420304902178
 
    => Energetics <=
 
     Nuclear Repulsion Energy =             28.2766468931276904
-    One-Electron Energy =                -202.3239087291285045
-    Two-Electron Energy =                  65.3330587869791515
-    DFT Exchange-Correlation Energy =       0.0000000000000000
-    Empirical Dispersion Energy =           0.0000000000000000
-    PCM Polarization Energy =               0.0000000000000000
-    EFP Energy =                            0.0000000000000000
-    Total Energy =                       -108.7142030490216627
+    One-Electron Energy =                -202.3239087291287035
+    Two-Electron Energy =                  65.3330587869792367
+    Total Energy =                       -108.7142030490217763
 
 
 
@@ -261,22 +263,34 @@ Properties computed using the SCF density matrix
      X:     0.0000      Y:     0.0000      Z:     0.0000     Total:     0.0000
 
 
-*** tstop() called on Jeffs-MacBook-Pro-2.local at Thu Feb  9 15:05:23 2017
+*** tstop() called on Jeffs-MBP-2.attlocal.net at Tue Jun  6 23:12:57 2017
 Module time:
-	user time   =       0.16 seconds =       0.00 minutes
+	user time   =       0.14 seconds =       0.00 minutes
 	system time =       0.02 seconds =       0.00 minutes
-	total time  =          0 seconds =       0.00 minutes
+	total time  =          1 seconds =       0.02 minutes
 Total time:
-	user time   =       0.16 seconds =       0.00 minutes
+	user time   =       0.14 seconds =       0.00 minutes
 	system time =       0.02 seconds =       0.00 minutes
-	total time  =          0 seconds =       0.00 minutes
+	total time  =          1 seconds =       0.02 minutes
 	SCF energy........................................................PASSED
+
+*** tstart() called on Jeffs-MBP-2.attlocal.net
+*** at Tue Jun  6 23:12:57 2017
+
+   => Loading Basis Set <=
+
+    Name: DZ
+    Role: ORBITAL
+    Keyword: BASIS
+    atoms 1-2 entry N          line    85 file /Users/jeffschriber/src/psi4_debug_install/share/psi4/basis/dz.gbs 
+
 
          ---------------------------------------------------------
                                    SCF
-            by Justin Turney, Rob Parrish, and Andy Simmonett
+            by Justin Turney, Rob Parrish, Andy Simmonett
+                             and Daniel Smith
                               RHF Reference
-                        1 Threads,    524 MiB Core
+                        1 Threads,    500 MiB Core
          ---------------------------------------------------------
 
   ==> Geometry <==
@@ -316,7 +330,8 @@ Total time:
 
   ==> Primary Basis <==
 
-  Basis Set: file /Users/jeffschriber/src/psi4_debug_install/share/psi4/basis/dz.gbs
+  Basis Set: DZ
+    Blend: DZ
     Number of shells: 12
     Number of basis function: 20
     Number of Cartesian functions: 20
@@ -379,18 +394,18 @@ Total time:
              Ag   B1g   B2g   B3g    Au   B1u   B2u   B3u 
     DOCC [     3,    0,    0,    0,    0,    2,    1,    1 ]
 
-   @RHF iter   1:  -104.11854603656104   -1.04119e+02   4.08446e-01 
-   @RHF iter   2:  -108.65464119028294   -4.53610e+00   3.37227e-02 DIIS
-   @RHF iter   3:  -108.71201057308920   -5.73694e-02   6.29319e-03 DIIS
-   @RHF iter   4:  -108.71413703482662   -2.12646e-03   9.27479e-04 DIIS
-   @RHF iter   5:  -108.71420077048850   -6.37357e-05   1.56832e-04 DIIS
-   @RHF iter   6:  -108.71420302745696   -2.25697e-06   1.48984e-05 DIIS
-   @RHF iter   7:  -108.71420304870442   -2.12475e-08   2.05178e-06 DIIS
-   @RHF iter   8:  -108.71420304902080   -3.16376e-10   1.24029e-07 DIIS
-   @RHF iter   9:  -108.71420304902168   -8.81073e-13   1.56305e-08 DIIS
-   @RHF iter  10:  -108.71420304902169   -1.42109e-14   1.75585e-09 DIIS
-   @RHF iter  11:  -108.71420304902175   -5.68434e-14   1.55991e-10 DIIS
-   @RHF iter  12:  -108.71420304902172    2.84217e-14   1.45531e-11 DIIS
+   @RHF iter   1:  -104.11854603656114   -1.04119e+02   4.08446e-01 
+   @RHF iter   2:  -108.65464119028304   -4.53610e+00   3.37227e-02 DIIS
+   @RHF iter   3:  -108.71201057308916   -5.73694e-02   6.29319e-03 DIIS
+   @RHF iter   4:  -108.71413703482671   -2.12646e-03   9.27479e-04 DIIS
+   @RHF iter   5:  -108.71420077048856   -6.37357e-05   1.56832e-04 DIIS
+   @RHF iter   6:  -108.71420302745700   -2.25697e-06   1.48984e-05 DIIS
+   @RHF iter   7:  -108.71420304870439   -2.12474e-08   2.05178e-06 DIIS
+   @RHF iter   8:  -108.71420304902071   -3.16319e-10   1.24029e-07 DIIS
+   @RHF iter   9:  -108.71420304902173   -1.02318e-12   1.56305e-08 DIIS
+   @RHF iter  10:  -108.71420304902175   -1.42109e-14   1.75585e-09 DIIS
+   @RHF iter  11:  -108.71420304902176   -1.42109e-14   1.55992e-10 DIIS
+   @RHF iter  12:  -108.71420304902175    1.42109e-14   1.45518e-11 DIIS
 
   ==> Post-Iterations <==
 
@@ -417,20 +432,17 @@ Total time:
 
   Energy converged.
 
-  @RHF Final Energy:  -108.71420304902172
+  @RHF Final Energy:  -108.71420304902175
 
    => Energetics <=
 
     Nuclear Repulsion Energy =             28.2766468931276904
-    One-Electron Energy =                -202.3239087291285330
+    One-Electron Energy =                -202.3239087291285614
     Two-Electron Energy =                  65.3330587869791231
-    DFT Exchange-Correlation Energy =       0.0000000000000000
-    Empirical Dispersion Energy =           0.0000000000000000
     PCM Polarization Energy =               0.0000000000000000
-    EFP Energy =                            0.0000000000000000
-    Total Energy =                       -108.7142030490217195
+    Total Energy =                       -108.7142030490217479
 
-
+    Alert: EFP and PCM quantities not currently incorporated into SCF psivars.
 
 Properties will be evaluated at   0.000000,   0.000000,   0.000000 Bohr
 
@@ -448,27 +460,22 @@ Properties computed using the SCF density matrix
   Dipole Moment: (Debye)
      X:     0.0000      Y:     0.0000      Z:     0.0000     Total:     0.0000
 
- MINTS: Wrapper to libmints.
-   by Justin Turney
 
-   Calculation information:
-      Number of atoms:                   2
-      Number of AO shells:              12
-      Number of SO shells:               6
-      Number of primitives:             28
-      Number of atomic orbitals:        20
-      Number of basis functions:        20
+*** tstop() called on Jeffs-MBP-2.attlocal.net at Tue Jun  6 23:12:57 2017
+Module time:
+	user time   =       0.13 seconds =       0.00 minutes
+	system time =       0.01 seconds =       0.00 minutes
+	total time  =          0 seconds =       0.00 minutes
+Total time:
+	user time   =       0.29 seconds =       0.00 minutes
+	system time =       0.03 seconds =       0.00 minutes
+	total time  =          1 seconds =       0.02 minutes
+   => Loading Basis Set <=
 
-      Number of irreps:                  8
-      Integral cutoff                 0.00e+00
-      Number of functions per irrep: [   6    0    2    2    0    6    2    2 ]
-
- OEINTS: Overlap, kinetic, potential, dipole, and quadrupole integrals
-         stored in file 35.
-
-      Computing two-electron integrals...done
-      Computed 3747 non-zero two-electron integrals.
-        Stored in file 33.
+    Name: STO-3G
+    Role: ORBITAL
+    Keyword: MINAO_BASIS
+    atoms 1-2 entry N          line    71 file /Users/jeffschriber/src/psi4_debug_install/share/psi4/basis/sto-3g.gbs 
 
 
 Reading options from the FORTE block
@@ -513,7 +520,8 @@ Calling plugin forte.so.
            N          0.000000000000     0.000000000000     0.866439365764    14.003074004780
 
   -AO BASIS SET INFORMATION:
-    Name                   = file /Users/jeffschriber/src/psi4_debug_install/share/psi4/basis/dz.gbs
+    Name                   = DZ
+    Blend                  = DZ
     Total number of shells = 12
     Number of primitives   = 28
     Number of AO           = 20
@@ -529,7 +537,7 @@ Calling plugin forte.so.
 
   ==> AO Basis Functions <==
 
-    [ file /Users/jeffschriber/src/psi4_debug_install/share/psi4/basis/dz.gbs ]
+    [ DZ ]
     cartesian
     ****
     N   1
@@ -558,6 +566,10 @@ Calling plugin forte.so.
 
   Overall Conventional Integrals timings
 
+   (n = 8): 0  0  0  0  0  0  0  0  
+  SOs per irrep (n = 8): 6  0  2  2  0  6  2  2  
+  Frozen core orbitals per irrep (n = 8): 0  0  0  0  0  0  0  0  
+  Frozen core orbitals per irrep (n = 8): 6  0  2  2  0  6  2  2  
 	Presorting SO-basis two-electron integrals.
 	Sorting File: SO Ints (nn|nn) nbuckets = 1
 	Transforming the one-electron integrals and constructing Fock matrices
@@ -567,7 +579,7 @@ Calling plugin forte.so.
 	Starting second half-transformation.
 	Two-electron integral transformation complete.
 
-  Integral transformation done. 0.00963900 s
+  Integral transformation done. 0.00851200 s
   Reading the two-electron integrals from disk
   Size of two-electron integrals:   0.003576 GB  Using in-core PK algorithm.
    Calculation information:
@@ -587,141 +599,185 @@ Calling plugin forte.so.
 
   Frozen-core energy           -103.314890096814 a.u.
 
-  FrozenOneBody Operator takes  0.06899300 s
+  FrozenOneBody Operator takes  0.05712500 s
   Resorting integrals after freezing core.
-  Conventional integrals take 0.14440900 s
+  Conventional integrals take 0.12189800 s
+  Number of active orbitals: 6
+  Number of active alpha electrons: 3
+  Number of active beta electrons: 3
+  5  7  -0.722145
+  3  5  -0.709986
+  0  0  -0.635807
+  2  3  0.243293
+ start mo: 0
+ number alpha sub: 3
+ number beta sub: 3
+ The reference space contains 56 determinants
 
-                    ---------------------------------------
+        ---------------------------------------------------------------
                       Adaptive Configuration Interaction
-                      written by Francesco A. Evangelista
-                    ---------------------------------------
+          written by Jeffrey B. Schriber and Francesco A. Evangelista
+        ---------------------------------------------------------------
 
   ==> Reference Information <==
 
   There are 4 frozen orbitals.
   There are 6 active orbitals.
 
-  |200202>
-  REFERENCE ENERGY:         -108.714203049022
   ==> Calculation Information <==
 
   -----------------------------------------------------------------
     Multiplicity                             1    
+    Ms                                       0    
     Symmetry                                 0    
     Number of roots                          1    
     Root used for properties                 0    
     Sigma                                    1.00e-04
     Gamma                                    1.00e+00
-    Convergence threshold                    1.00e-10
+    Convergence threshold                    1.00e-09
     Determinant selection criterion          Second-order Energy
     Selection criterion                      Aimed selection
-    Excited Algorithm                        AVERAGE
+    Excited Algorithm                        ROOT_ORTHOGONALIZE
     Project out spin contaminants            True
     Enforce spin completeness of basis       False
     Enforce complete aimed selection         False
   -----------------------------------------------------------------
+ Using 1 threads
   Computing wavefunction for root 0
   Using streamlined Q-space builder.
 
   ==> Cycle 0 <==
 
-  Initial P space dimension: 1
- Not checking for spin-completeness.
-  Time spent diagonalizing H:   0.000061 s
+  Initial P space dimension: 56
+  Not checking for spin-completeness.
+  Time spent building a_list   0.000265 s
+  Time spent building b_list   0.000235 s
+  Time spent building aa_list  0.000246 s
+  Time spent building bb_list  0.000240 s
+ Memory for AB_ann: 0.005 MB
+  Time spent building ab_list  0.000582 s
+  Time spent diagonalizing H:   0.001618 s
 
-    P-space  CI Energy Root   0        = -108.714203049022 Eh =   0.0000 eV
+    P-space  CI Energy Root   0        = -108.732287515344 Eh =   0.0000 eV
 
-  Using 1 threads.
-  Dimension of the SD space: 15 determinants
-  Time spent building the model space: 0.000141 s
+  Dimension of the SD space: 0 determinants
+  Time spent building the model space (default): 0.004221 s
 
-  Dimension of the P + Q space: 14 determinants
-  Time spent screening the model space: 0.000042 s
-  Time spent diagonalizing H:   0.000236 s
+  Dimension of the P + Q space: 56 determinants
+  Time spent screening the model space: 0.000013 s
+  Time spent building a_list   0.000252 s
+  Time spent building b_list   0.000250 s
+  Time spent building aa_list  0.000258 s
+  Time spent building bb_list  0.000228 s
+ Memory for AB_ann: 0.005 MB
+  Time spent building ab_list  0.000562 s
+  Total time spent diagonalizing H:   0.001605 s
 
-    PQ-space CI Energy Root   0        = -108.732032933826 Eh =   0.0000 eV
-    PQ-space CI Energy + EPT2 Root   0 = -108.732100328676 Eh =   0.0000 eV
+    PQ-space CI Energy Root   0        = -108.732287515344 Eh =   0.0000 eV
+    PQ-space CI Energy + EPT2 Root   0 = -108.732287515344 Eh =   0.0000 eV
 
 
   Most important contributions to root   0:
-    0   0.993591 0.987222479           0 |200202>
-    1  -0.085843 0.007369028          13 |220200>
-    2  -0.045367 0.002058183          12 |202002>
-    3  -0.042805 0.001832297          11 |220002>
-    4  -0.022960 0.000527152          10 |002202>
-    5  -0.021170 0.000448166           9 |020202>
-    6  -0.012333 0.000152092           8 |200022>
-    7  -0.010561 0.000111534           7 |--02++>
-    8  -0.010290 0.000105891           6 |++02-->
-    9  -0.006335 0.000040135           5 |000222>
+    0   0.993386 0.986816280          55 |200202>
+    1  -0.086105 0.007413998          26 |220200>
+    2  -0.046825 0.002192560          48 |202002>
+    3  -0.042821 0.001833595          38 |220002>
+    4  -0.024359 0.000593341          53 |002202>
+    5  -0.021350 0.000455820           4 |020202>
+    6  -0.012741 0.000162337          51 |200022>
+    7  -0.010680 0.000114062          50 |--02++>
+    8  -0.010680 0.000114062          27 |++02-->
+    9  -0.006549 0.000042889          46 |000222>
 
-  Spin state for root 0: S^2 = 0.000036, S = 0.000, singlet
- Cycle 0 took: 0.001712 s
+  Spin state for root 0: S^2 = 0.000471, S = 0.000, singlet
+  Cycle 0 took: 0.012149 s
 
   ==> Cycle 1 <==
 
-  Initial P space dimension: 11
- Not checking for spin-completeness.
-  Time spent diagonalizing H:   0.000120 s
+  Initial P space dimension: 16
+  Not checking for spin-completeness.
+  Time spent building a_list   0.000076 s
+  Time spent building b_list   0.000074 s
+  Time spent building aa_list  0.000078 s
+  Time spent building bb_list  0.000075 s
+ Memory for AB_ann: 0.001 MB
+  Time spent building ab_list  0.000199 s
+  Time spent diagonalizing H:   0.000196 s
 
-    P-space  CI Energy Root   0        = -108.731907688090 Eh =   0.0000 eV
+    P-space  CI Energy Root   0        = -108.732106539193 Eh =   0.0000 eV
 
-  Using 1 threads.
-  Dimension of the SD space: 42 determinants
-  Time spent building the model space: 0.000806 s
+  Dimension of the SD space: 40 determinants
+  Time spent building the model space (default): 0.001114 s
 
   Dimension of the P + Q space: 20 determinants
-  Time spent screening the model space: 0.000110 s
-  Time spent diagonalizing H:   0.000286 s
+  Time spent screening the model space: 0.000063 s
+  Time spent building a_list   0.000099 s
+  Time spent building b_list   0.000098 s
+  Time spent building aa_list  0.000102 s
+  Time spent building bb_list  0.000099 s
+ Memory for AB_ann: 0.001 MB
+  Time spent building ab_list  0.000263 s
+  Total time spent diagonalizing H:   0.000293 s
 
     PQ-space CI Energy Root   0        = -108.732198294369 Eh =   0.0000 eV
-    PQ-space CI Energy + EPT2 Root   0 = -108.732289868213 Eh =   0.0000 eV
+    PQ-space CI Energy + EPT2 Root   0 = -108.732294525962 Eh =   0.0000 eV
 
 
   Most important contributions to root   0:
-    0  -0.993455 0.986953044          10 |200202>
-    1   0.085967 0.007390306           8 |220200>
-    2   0.046769 0.002187337           9 |202002>
-    3   0.042808 0.001832520           3 |220002>
-    4   0.024061 0.000578950           7 |002202>
-    5   0.021173 0.000448317           6 |020202>
-    6   0.012325 0.000151904           5 |200022>
-    7   0.010234 0.000104733           4 |--02++>
-    8   0.010234 0.000104733           1 |++02-->
-    9   0.006292 0.000039586           0 |000222>
+    0  -0.993455 0.986953044          15 |200202>
+    1   0.085967 0.007390306          14 |220200>
+    2   0.046769 0.002187337          13 |202002>
+    3   0.042808 0.001832520          12 |220002>
+    4   0.024061 0.000578950          11 |002202>
+    5   0.021173 0.000448317          10 |020202>
+    6   0.012325 0.000151904           9 |200022>
+    7   0.010234 0.000104733           8 |--02++>
+    8   0.010234 0.000104733           7 |++02-->
+    9   0.006292 0.000039586           6 |000222>
 
-  Spin state for root 0: S^2 = 0.000001, S = 0.000, singlet
- Cycle 1 took: 0.003295 s
+  Spin state for root 0: S^2 = 0.000509, S = 0.001, singlet
+  Cycle 1 took: 0.003403 s
 
   ==> Cycle 2 <==
 
   Initial P space dimension: 13
- Not checking for spin-completeness.
-  Time spent diagonalizing H:   0.000144 s
+  Not checking for spin-completeness.
+  Time spent building a_list   0.000067 s
+  Time spent building b_list   0.000065 s
+  Time spent building aa_list  0.000070 s
+  Time spent building bb_list  0.000066 s
+ Memory for AB_ann: 0.001 MB
+  Time spent building ab_list  0.000178 s
+  Time spent diagonalizing H:   0.000147 s
 
     P-space  CI Energy Root   0        = -108.732010478954 Eh =   0.0000 eV
 
-  Using 1 threads.
   Dimension of the SD space: 40 determinants
-  Time spent building the model space: 0.000866 s
+  Time spent building the model space (default): 0.000877 s
 
   Dimension of the P + Q space: 20 determinants
-  Time spent screening the model space: 0.000060 s
-  Time spent diagonalizing H:   0.000274 s
+  Time spent screening the model space: 0.000056 s
+  Time spent building a_list   0.000100 s
+  Time spent building b_list   0.000098 s
+  Time spent building aa_list  0.000102 s
+  Time spent building bb_list  0.000098 s
+ Memory for AB_ann: 0.001 MB
+  Time spent building ab_list  0.000264 s
+  Total time spent diagonalizing H:   0.000292 s
 
     PQ-space CI Energy Root   0        = -108.732198294369 Eh =   0.0000 eV
     PQ-space CI Energy + EPT2 Root   0 = -108.732290101933 Eh =   0.0000 eV
 
   ***** Calculation Converged *****
   Not performing spin projection.
-  1-RDM  took 0.000022 s (determinant)
+  Saving root 0, ref_root is 0
+  Number of old roots: 1
 
   ==> ACI Summary <==
 
   Iterations required:                         2
   Dimension of optimized determinant space:    20
 
-  ACI(0.000) Correlation energy: 0.017995245347 Eh
   * Adaptive-CI Energy Root   0        = -108.732198294369 Eh =   0.0000 eV
   * Adaptive-CI Energy Root   0 + EPT2 = -108.732290101933 Eh =   0.0000 eV
 
@@ -730,22 +786,36 @@ Calling plugin forte.so.
   Most important contributions to root   0:
     0   0.993455 0.986953044          12 |200202>
     1  -0.085967 0.007390306          11 |220200>
-    2  -0.046769 0.002187337           5 |202002>
-    3  -0.042808 0.001832520           2 |220002>
-    4  -0.024061 0.000578950          10 |002202>
-    5  -0.021173 0.000448317           9 |020202>
-    6  -0.012325 0.000151904           8 |200022>
-    7  -0.010234 0.000104733           1 |++02-->
-    8  -0.010234 0.000104733           7 |--02++>
-    9  -0.006292 0.000039586           6 |000222>
+    2  -0.046769 0.002187337          10 |202002>
+    3  -0.042808 0.001832520           9 |220002>
+    4  -0.024061 0.000578950           8 |002202>
+    5  -0.021173 0.000448317           7 |020202>
+    6  -0.012325 0.000151904           6 |200022>
+    7  -0.010234 0.000104733           4 |++02-->
+    8  -0.010234 0.000104733           5 |--02++>
+    9  -0.006292 0.000039586           3 |000222>
 
-  Spin state for root 0: S^2 = 0.000001, S = 0.000, singlet
+  Spin state for root 0: S^2 = 0.000509, S = 0.001, singlet
+  Time spent building a_ann_list   0.000074 s
+  Time spent building b_ann_list   0.000074 s
+  Time spent building aa_ann_list  0.000078 s
+  Time spent building bb_ann_list  0.000072 s
+ Memory for AB_ann: 0.005 MB
+  Time spent building ab_ann_list  0.000201 s
+  1-RDM  took 0.000019 s (determinant)
 
-  Adaptive-CI (bitset) ran in : 0.008555 s
+  ==> NATURAL ORBITALS <==
+
+        1Ag     1.997500      1B1u    1.991579      1B3u    1.984749  
+        1B2g    0.019740      1B3g    0.005729      2B1u    0.000703  
+
+
+
+  Adaptive-CI (bitset) ran in : 0.019680 s
 
   Saving information for root: 0
 
-  Your calculation took 0.15895800 seconds
+  Your calculation took 0.14708500 seconds
 	ACI energy........................................................PASSED
 	ACI+PT2 energy....................................................PASSED
 
