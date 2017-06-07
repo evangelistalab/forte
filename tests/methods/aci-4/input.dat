@@ -39,7 +39,7 @@ set forte {
   aci_nroot 3
   aci_root 1 
   charge 0
-  aci_initial_space cis
+ # aci_initial_space cis
   aci_enforce_spin_complete true
 }
 
