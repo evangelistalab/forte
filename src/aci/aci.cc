@@ -106,7 +106,7 @@ void set_ACI_options(ForteOptions& foptions)
     /*- Control streamlining -*/
     foptions.add_bool("ACI_STREAMLINE_Q", false, "Do streamlined algorithm");
     /*- Initial reference wavefunction -*/
-    foptions.add_str("ACI_INITIAL_SPACE", "SR", "The initial reference space");
+    foptions.add_str("ACI_INITIAL_SPACE", "CAS", "The initial reference space");
     /*- Number of iterations to run SA-ACI before SS-ACI -*/
     foptions.add_int("ACI_PREITERATIONS", 0, "Number of iterations to run SA-ACI before SS-ACI");
     /*- Number of roots to average -*/
@@ -260,8 +260,19 @@ void AdaptiveCI::startup() {
 
     mo_symmetry_ = mo_space_info_->symmetry("ACTIVE");
 
+    STLBitsetDeterminant det;
+
     // Build the reference determinant and compute its energy
-    reference_determinant_ = STLBitsetDeterminant(get_occupation());
+
+    if( options_.get_str("ACI_INITIAL_SPACE") == "HF" or 
+        options_.get_str("ACI_INITIAL_SPACE") == "CIS" or
+        options_.get_str("ACI_INITIAL_SPACE") == "CISD"){
+        det = STLBitsetDeterminant(get_occupation());
+        initial_reference_.push_back(det);
+    } else {
+        CI_Reference ref( reference_wavefunction_, options_, mo_space_info_, det, multiplicity_, static_cast<double>(ms_)); 
+        ref.build_reference( initial_reference_ );
+    }
 
     // Read options
     nroot_ = options_.get_int("ACI_NROOT");
@@ -604,11 +615,11 @@ double AdaptiveCI::compute_energy() {
         outfile->Printf("\n  ==> Reference Information <==\n");
         outfile->Printf("\n  There are %d frozen orbitals.", nfrzc_);
         outfile->Printf("\n  There are %zu active orbitals.\n", nact_);
-        reference_determinant_.print();
-        outfile->Printf("\n  REFERENCE ENERGY:         %1.12f",
-                        reference_determinant_.energy() +
-                            nuclear_repulsion_energy_ +
-                            fci_ints_->scalar_energy());
+ //       reference_determinant_.print();
+//        outfile->Printf("\n  REFERENCE ENERGY:         %1.12f",
+//                        reference_determinant_.energy() +
+//                            nuclear_repulsion_energy_ +
+//                            fci_ints_->scalar_energy());
         print_info();
         if( !quiet_mode_ ){
             outfile->Printf("\n Using %d threads", omp_get_max_threads());
@@ -811,11 +822,11 @@ double AdaptiveCI::compute_energy() {
 void AdaptiveCI::diagonalize_final_and_compute_rdms()
 {
     print_h2("Diagonalizing ACI Hamiltonian");
-        reference_determinant_.print();
-        outfile->Printf("\n  REFERENCE ENERGY:         %1.12f",
-                        reference_determinant_.energy() +
-                            nuclear_repulsion_energy_ +
-                            fci_ints_->scalar_energy());
+    //    reference_determinant_.print();
+    //    outfile->Printf("\n  REFERENCE ENERGY:         %1.12f",
+    //                    reference_determinant_.energy() +
+    //                        nuclear_repulsion_energy_ +
+    //                        fci_ints_->scalar_energy());
 
 
     SharedMatrix final_evecs;
@@ -867,11 +878,11 @@ void AdaptiveCI::print_final(DeterminantMap& dets, SharedMatrix& PQ_evecs,
                     cycle_);
     outfile->Printf("\n  Dimension of optimized determinant space:    %zu\n",
                     dim);
-    if (nroot_ == 1) {
-        outfile->Printf("\n  ACI(%.3f) Correlation energy: %.12f Eh", sigma_,
-                        reference_determinant_.energy() -
-                            PQ_evals->get(ref_root_));
-    }
+   // if (nroot_ == 1) {
+   //     outfile->Printf("\n  ACI(%.3f) Correlation energy: %.12f Eh", sigma_,
+   //                     reference_determinant_.energy() -
+   //                         PQ_evals->get(ref_root_));
+   // }
 
     for (int i = 0; i < nroot_; ++i) {
         double abs_energy = PQ_evals->get(i) + nuclear_repulsion_energy_ +
@@ -2669,9 +2680,9 @@ void AdaptiveCI::compute_aci(DeterminantMap& PQ_space, SharedMatrix& PQ_evecs,
 
     DeterminantMap P_ref;
     std::vector<double> P_ref_evecs;
-    DeterminantMap P_space(reference_determinant_);
+    DeterminantMap P_space(initial_reference_);
 
-    if (reference_type_ != "SR") {
+    if (reference_type_ == "CIS") {
         build_initial_reference(P_space);
     }
 
