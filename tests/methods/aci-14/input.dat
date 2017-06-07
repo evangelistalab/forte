@@ -33,7 +33,7 @@ set forte {
   aci_n_average 2
   charge 0
   root_sym 0
-  ACI_INITIAL_SPACE CISD
+#  ACI_INITIAL_SPACE CISD
   aci_preiterations 2
   dl_maxiter 100
   diag_algorithm solver
