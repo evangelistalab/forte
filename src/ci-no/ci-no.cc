@@ -466,7 +466,54 @@ CINO::diagonalize_density_matrix(std::pair<SharedMatrix, SharedMatrix> gamma) {
         }
     }
     /// Diagonalize Beta density matrix
-    // CiCi: Add symmetry
+    Dimension boccpi = nbetapi_ - rdoccpi_ - fdoccpi_;
+    Dimension bvirpi = actvpi_ - boccpi;
+
+    SharedMatrix gamma_b_occ(
+        new Matrix("Gamma beta occupied", boccpi, boccpi));
+    SharedMatrix gamma_b_vir(new Matrix("Gamma beta virtual", bvirpi, bvirpi));
+    for (int h = 0; h < nirrep_; h++) {
+        for (int i = 0; i < boccpi[h]; i++) {
+            for (int j = 0; j < boccpi[h]; j++) {
+                gamma_b_occ->set(h, i, j, gamma.second->get(h, i, j));
+            }
+        }
+    }
+    for (int h = 0; h < nirrep_; h++) {
+        for (int a = 0; a < bvirpi[h]; a++) {
+            for (int b = 0; b < bvirpi[h]; b++) {
+                gamma_b_vir->set(
+                    h, a, b, gamma.second->get(h, a + boccpi[h], b + boccpi[h]));
+            }
+        }
+    }
+
+    SharedMatrix NO_B_occ(new Matrix(boccpi, boccpi));
+    SharedMatrix NO_B_vir(new Matrix(bvirpi, bvirpi));
+    SharedVector OCC_B_occ(new Vector("BETA OCCUPATION", boccpi));
+    SharedVector OCC_B_vir(new Vector("BETA OCCUPATION", bvirpi));
+    gamma_b_occ->diagonalize(NO_B_occ, OCC_B_occ, descending);
+    gamma_b_vir->diagonalize(NO_B_vir, OCC_B_vir, descending);
+    OCC_B_occ->print();
+    OCC_B_vir->print();
+
+    for (int h = 0; h < nirrep_; h++) {
+        for (int i = 0; i < boccpi[h]; i++) {
+            OCC_B->set(h, i, OCC_B_occ->get(h, i));
+            for (int j = 0; j < boccpi[h]; j++) {
+                NO_B->set(h, i, j, NO_B_occ->get(h, i, j));
+            }
+        }
+    }
+    for (int h = 0; h < nirrep_; h++) {
+        for (int a = 0; a < bvirpi[h]; a++) {
+            OCC_B->set(h, a + boccpi[h], OCC_B_vir->get(h, a));
+            for (int b = 0; b < bvirpi[h]; b++) {
+                NO_B->set(h, a + boccpi[h], b + boccpi[h], NO_B_vir->get(h, a, b));
+            }
+        }
+    }
+
 //    SharedMatrix gamma_b_occ(new Matrix("Gamma beta occupied", nbocc_, nbocc_));
 //    SharedMatrix gamma_b_vir(new Matrix("Gamma beta virtual", nbvir_, nbvir_));
 //    for (int i = 0; i < nbocc_; i++) {
@@ -479,11 +526,6 @@ CINO::diagonalize_density_matrix(std::pair<SharedMatrix, SharedMatrix> gamma) {
 //            gamma_b_vir->set(a, b, gamma.second->get(a + nbocc_, b + nbocc_));
 //        }
 //    }
-
-    SharedMatrix NO_B_occ(new Matrix(nbocc_, nbocc_));
-    SharedMatrix NO_B_vir(new Matrix(nbvir_, nbvir_));
-    SharedVector OCC_B_occ(new Vector("BETA OCCUPATION", nbocc_));
-    SharedVector OCC_B_vir(new Vector("BETA OCCUPATION", nbvir_));
 //    gamma_b_occ->diagonalize(NO_B_occ, OCC_B_occ, descending);
 //    gamma_b_vir->diagonalize(NO_B_vir, OCC_B_vir, descending);
 //    OCC_B_occ->print();
