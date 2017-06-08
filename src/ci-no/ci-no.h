@@ -99,6 +99,14 @@ class CINO : public Wavefunction {
     Dimension rdoccpi_;
     /// The number of frozen doubly occupied orbitals per irrep
     Dimension fdoccpi_;
+    /// The number of alpha occupied active orbitals per irrep
+    Dimension aoccpi_;
+    /// The number of alpha unoccupied active orbitals per irrep
+    Dimension avirpi_;
+    /// The number of beta occupied active orbitals per irrep
+    Dimension boccpi_;
+    /// The number of beta unoccupied active orbitals per irrep
+    Dimension bvirpi_;
     ///The number of alpha occupied orbitals
     int naocc_;
     ///The number of beta occupied orbitals
@@ -116,7 +124,7 @@ class CINO : public Wavefunction {
     /// The eigensolver type
     DiagonalizationMethod diag_method_;
     /// The multiplicity of the reference
-    int wavefunction_multiplicity_;
+    int wavefunction_multiplicity_ = 0;
     // The number of correlated mos
     size_t ncmo2_;
 
