@@ -122,9 +122,10 @@ double CINO::compute_energy() {
     for (int h = 0; h < nirrep_; ++h) {
         int nsolutions = options_["CINO_ROOTS_PER_IRREP"][h].to_integer();
         sum += nsolutions;
-        outfile->Printf("\n Requested %d solutions of irrep %s", nsolutions,
-                        ct.gamma(h).symbol());
         if (nsolutions > 0) {
+            outfile->Printf("\n  ==> Irrep %s: %d solutions <==\n", ct.gamma(h).symbol(),
+                            nsolutions);
+
             // 1. Build the space of determinants
             std::vector<Determinant> dets = build_dets(h);
 
@@ -135,8 +136,8 @@ double CINO::compute_energy() {
             // 3. Build the density matrix
             std::pair<SharedMatrix, SharedMatrix> gamma =
                 build_density_matrix(dets, evals_evecs.second, nsolutions);
+
             // Add density matrix to avg_gamma;
-            gamma.first->print();
             gamma.first->scale(static_cast<double>(nsolutions));
             gamma.second->scale(static_cast<double>(nsolutions));
             Density_a->add(gamma.first);
@@ -149,7 +150,7 @@ double CINO::compute_energy() {
 
     std::pair<SharedMatrix, SharedMatrix> avg_gamma =
         std::make_pair(Density_a, Density_b);
-    //    avg_gamma.first->print();
+
     // 4. Diagonalize the density matrix
     std::tuple<SharedVector, SharedMatrix, SharedVector, SharedMatrix> no_U =
         diagonalize_density_matrix(avg_gamma);
@@ -179,17 +180,12 @@ void CINO::startup() {
     nroot_ = options_.get_int("CINO_NROOT");
     rdm_level_ = options_.get_int("ACI_MAX_RDM");
     nactv_ = mo_space_info_->size("ACTIVE");
-    nrdocc_ = mo_space_info_->size("RESTRICTED_DOCC");
 
     actvpi_ = mo_space_info_->get_dimension("ACTIVE");
     fdoccpi_ = mo_space_info_->get_dimension("FROZEN_DOCC");
     rdoccpi_ = mo_space_info_->get_dimension("RESTRICTED_DOCC");
 
     ncmo2_ = nactv_ * nactv_;
-    naocc_ = nalpha_ - nrdocc_;
-    nbocc_ = nbeta_ - nrdocc_;
-    navir_ = nactv_ - naocc_;
-    nbvir_ = nactv_ - nbocc_;
 
     aoccpi_ = nalphapi_ - rdoccpi_ - fdoccpi_;
     avirpi_ = actvpi_ - aoccpi_;
@@ -218,7 +214,6 @@ std::vector<Determinant> CINO::build_dets(int irrep) {
     }
 
     Determinant ref(occupation_a, occupation_b);
-    ref.print();
 
     // add the reference only to the total symmetric irrep
     if (irrep == 0) {
@@ -242,12 +237,12 @@ std::vector<Determinant> CINO::build_dets(int irrep) {
             nalphapi_[irrep_a] - rdoccpi_[irrep_a] - fdoccpi_[irrep_a];
         int vir_irrep_a = actvpi_[irrep_a] - occ_irrep_a;
         for (int i = 0; i < occ_irrep_i; ++i) {
-            for (int a = occ_irrep_a; a < vir_irrep_a; ++a) {
+            for (int a = occ_irrep_a; a < actvpi_[irrep_a]; ++a) {
                 Determinant single_ia(ref);
                 single_ia.set_alfa_bit(i + offset, false);
                 single_ia.set_alfa_bit(a + offset_vir, true);
                 dets.push_back(single_ia);
-//                single_ia.print();
+                //                single_ia.print();
             }
         }
         offset += actvpi_[irrep_i];
@@ -270,12 +265,12 @@ std::vector<Determinant> CINO::build_dets(int irrep) {
             nbetapi_[irrep_a] - rdoccpi_[irrep_a] - fdoccpi_[irrep_a];
         int vir_irrep_a = actvpi_[irrep_a] - occ_irrep_a;
         for (int i = 0; i < occ_irrep_i; ++i) {
-            for (int a = occ_irrep_a; a < vir_irrep_a; ++a) {
+            for (int a = occ_irrep_a; a < actvpi_[irrep_a]; ++a) {
                 Determinant single_ib(ref);
                 single_ib.set_beta_bit(i + offset, false);
                 single_ib.set_beta_bit(a + offset_vir, true);
                 dets.push_back(single_ib);
-//                single_ib.print();
+                //                single_ib.print();
             }
         }
         offset += actvpi_[irrep_i];
@@ -283,50 +278,50 @@ std::vector<Determinant> CINO::build_dets(int irrep) {
 
     if (options_.get_str("CINO_TYPE") == "CISD") {
         // alpha-alpha double excitation
-        for (int i = 0; i < naocc_; ++i) {
-            for (int j = i + 1; j < naocc_; ++j) {
-                for (int a = naocc_; a < navir_; ++a) {
-                    for (int b = a + 1; b < navir_; ++b) {
-                        Determinant double_ia(ref);
-                        double_ia.set_alfa_bit(i, false);
-                        double_ia.set_alfa_bit(j, false);
-                        double_ia.set_alfa_bit(a, true);
-                        double_ia.set_alfa_bit(b, true);
-                        dets.push_back(double_ia);
-                    }
-                }
-            }
-        }
+//        for (int i = 0; i < naocc_; ++i) {
+//            for (int j = i + 1; j < naocc_; ++j) {
+//                for (int a = naocc_; a < navir_; ++a) {
+//                    for (int b = a + 1; b < navir_; ++b) {
+//                        Determinant double_ia(ref);
+//                        double_ia.set_alfa_bit(i, false);
+//                        double_ia.set_alfa_bit(j, false);
+//                        double_ia.set_alfa_bit(a, true);
+//                        double_ia.set_alfa_bit(b, true);
+//                        dets.push_back(double_ia);
+//                    }
+//                }
+//            }
+//        }
         // beta-beta double excitation
-        for (int i = 0; i < nbocc_; ++i) {
-            for (int j = i + 1; j < nbocc_; ++j) {
-                for (int a = nbocc_; a < nbvir_; ++a) {
-                    for (int b = a + 1; b < nbvir_; ++b) {
-                        Determinant double_ib(ref);
-                        double_ib.set_beta_bit(i, false);
-                        double_ib.set_beta_bit(j, false);
-                        double_ib.set_beta_bit(a, true);
-                        double_ib.set_beta_bit(b, true);
-                        dets.push_back(double_ib);
-                    }
-                }
-            }
-        }
+//        for (int i = 0; i < nbocc_; ++i) {
+//            for (int j = i + 1; j < nbocc_; ++j) {
+//                for (int a = nbocc_; a < nbvir_; ++a) {
+//                    for (int b = a + 1; b < nbvir_; ++b) {
+//                        Determinant double_ib(ref);
+//                        double_ib.set_beta_bit(i, false);
+//                        double_ib.set_beta_bit(j, false);
+//                        double_ib.set_beta_bit(a, true);
+//                        double_ib.set_beta_bit(b, true);
+//                        dets.push_back(double_ib);
+//                    }
+//                }
+//            }
+//        }
         // alpha-beta double excitation
-        for (int i = 0; i < naocc_; ++i) {
-            for (int j = 0; j < nbocc_; ++j) {
-                for (int a = naocc_; a < navir_; ++a) {
-                    for (int b = nbocc_; b < nbvir_; ++b) {
-                        Determinant double_iab(ref);
-                        double_iab.set_alfa_bit(i, false);
-                        double_iab.set_beta_bit(j, false);
-                        double_iab.set_alfa_bit(a, true);
-                        double_iab.set_beta_bit(b, true);
-                        dets.push_back(double_iab);
-                    }
-                }
-            }
-        }
+//        for (int i = 0; i < naocc_; ++i) {
+//            for (int j = 0; j < nbocc_; ++j) {
+//                for (int a = naocc_; a < navir_; ++a) {
+//                    for (int b = nbocc_; b < nbvir_; ++b) {
+//                        Determinant double_iab(ref);
+//                        double_iab.set_alfa_bit(i, false);
+//                        double_iab.set_beta_bit(j, false);
+//                        double_iab.set_alfa_bit(a, true);
+//                        double_iab.set_beta_bit(b, true);
+//                        dets.push_back(double_iab);
+//                    }
+//                }
+//            }
+//        }
     }
 
     return dets;
@@ -343,19 +338,21 @@ CINO::diagonalize_hamiltonian(const std::vector<Determinant>& dets,
     sparse_solver.set_maxiter_davidson(options_.get_int("DL_MAXITER"));
     sparse_solver.set_spin_project(project_out_spin_contaminants_);
     sparse_solver.set_guess_dimension(options_.get_int("DL_GUESS_SIZE"));
-    sparse_solver.set_spin_project_full(false);
+    sparse_solver.set_spin_project_full(true);
     sparse_solver.set_print_details(true);
 
     sparse_solver.diagonalize_hamiltonian(dets, evals_evecs.first,
                                           evals_evecs.second, nsolutions,
                                           wavefunction_multiplicity_, DLSolver);
 
+    outfile->Printf("\n\n    STATE      CI ENERGY");
+    outfile->Printf("\n  ----------------------------");
     for (int i = 0; i < nsolutions; ++i) {
-        outfile->Printf("\n%12f", evals_evecs.first->get(i) +
-                                      fci_ints_->scalar_energy() +
-                                      molecule_->nuclear_repulsion_energy());
+        double energy = evals_evecs.first->get(i) + fci_ints_->scalar_energy() +
+                        molecule_->nuclear_repulsion_energy();
+        outfile->Printf("\n    %3d %20.10f", i, energy);
     }
-
+    outfile->Printf("\n  -----------------:q-----------\n");
     return evals_evecs;
 }
 /// Build the density matrix
@@ -451,8 +448,8 @@ CINO::diagonalize_density_matrix(std::pair<SharedMatrix, SharedMatrix> gamma) {
     SharedVector OCC_A_vir(new Vector("Virtual ALPHA OCCUPATION", avirpi));
     gamma_a_occ->diagonalize(NO_A_occ, OCC_A_occ, descending);
     gamma_a_vir->diagonalize(NO_A_vir, OCC_A_vir, descending);
-//    OCC_A_occ->print();
-//    OCC_A_vir->print();
+    //    OCC_A_occ->print();
+    //    OCC_A_vir->print();
 
     OCC_A->set_block(aocc_slice, OCC_A_occ);
     NO_A->set_block(aocc_slice, aocc_slice, NO_A_occ);
@@ -487,8 +484,8 @@ CINO::diagonalize_density_matrix(std::pair<SharedMatrix, SharedMatrix> gamma) {
     SharedVector OCC_B_vir(new Vector("BETA OCCUPATION", bvirpi));
     gamma_b_occ->diagonalize(NO_B_occ, OCC_B_occ, descending);
     gamma_b_vir->diagonalize(NO_B_vir, OCC_B_vir, descending);
-//    OCC_B_occ->print();
-//    OCC_B_vir->print();
+    //    OCC_B_occ->print();
+    //    OCC_B_vir->print();
 
     for (int h = 0; h < nirrep_; h++) {
         for (int i = 0; i < boccpi[h]; i++) {

@@ -91,8 +91,6 @@ class CINO : public Wavefunction {
     std::shared_ptr<FCIIntegrals> fci_ints_;
     /// The number of active orbitals
     size_t nactv_;
-    /// The number of restricted orbitals
-    size_t nrdocc_;
     /// The number of active orbitals per irrep
     Dimension actvpi_;
     /// The number of restricted doubly occupied orbitals per irrep
@@ -107,20 +105,12 @@ class CINO : public Wavefunction {
     Dimension boccpi_;
     /// The number of beta unoccupied active orbitals per irrep
     Dimension bvirpi_;
-    ///The number of alpha occupied orbitals
-    int naocc_;
-    ///The number of beta occupied orbitals
-    int nbocc_;
-    ///The number of alpha virtual orbitals
-    int navir_;
-    ///The number of beta virtual orbitals
-    int nbvir_;
 
     // ==> CINO Options <==
     /// The number of roots computed
-    int nroot_;
+    int nroot_; // CiCi remove
     /// Add missing degenerate determinants excluded from the aimed selection?
-    bool project_out_spin_contaminants_;
+    bool project_out_spin_contaminants_ = true;
     /// The eigensolver type
     DiagonalizationMethod diag_method_;
     /// The multiplicity of the reference
