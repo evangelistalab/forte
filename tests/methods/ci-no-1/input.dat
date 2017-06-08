@@ -22,11 +22,9 @@ set {
 set forte {
   job_type nojob
   cino true
-  #restricted_docc [2]
-  #active [12]
   CINO_NROOT 3
   CINO_THRESHOLD 0.99
-  cino_roots_per_irrep [1,0,0,0,0,2,0,0]
+  cino_roots_per_irrep [1,0,0,0,0,1,0,0]
 }
 
 E,wfn = energy('forte',return_wfn=True)
