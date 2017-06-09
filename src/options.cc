@@ -34,7 +34,7 @@
 #include "integrals/integrals.h"
 #include "pci/pci.h"
 #include "fci_mo.h"
-//#include "mrpt2.h"
+#include "mrpt2.h"
 
 namespace psi {
 namespace forte {
