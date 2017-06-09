@@ -63,8 +63,6 @@
 #include "mrdsrg-spin-free/dsrg_mrpt3.h"
 #include "mrdsrg-spin-free/mrdsrg.h"
 #include "mrdsrg-spin-free/three_dsrg_mrpt2.h"
-#include "multidimensional_arrays.h"
-#include "multidimensional_arrays.h"
 #include "pci/pci.h"
 #include "pci/pci_hashvec.h"
 #include "pci/pci_simple.h"
