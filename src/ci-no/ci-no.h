@@ -29,23 +29,8 @@
 #ifndef _ci_no_h_
 #define _ci_no_h_
 
-//#include <fstream>
-//#include <iomanip>
-
 #include "psi4/libmints/wavefunction.h"
-#include "psi4/liboptions/liboptions.h"
-//#include "psi4/physconst.h"
-
 #include "../forte_options.h"
-#include "../helpers.h"
-#include "../integrals/integrals.h"
-
-#include "../ci_rdms.h"
-//#include "../determinant_map.h"
-//#include "../fci/fci_integrals.h"
-//#include "../operator.h"
-#include "../sparse_ci_solver.h"
-#include "../stl_bitset_determinant.h"
 
 namespace psi {
 namespace forte {
@@ -91,32 +76,30 @@ class CINO : public Wavefunction {
     std::shared_ptr<FCIIntegrals> fci_ints_;
     /// The number of active orbitals
     size_t nactv_;
-    /// The number of restricted orbitals
-    size_t nrdocc_;
     /// The number of active orbitals per irrep
     Dimension actvpi_;
     /// The number of restricted doubly occupied orbitals per irrep
     Dimension rdoccpi_;
     /// The number of frozen doubly occupied orbitals per irrep
     Dimension fdoccpi_;
-    ///The number of alpha occupied orbitals
-    int naocc_;
-    ///The number of beta occupied orbitals
-    int nbocc_;
-    ///The number of alpha virtual orbitals
-    int navir_;
-    ///The number of beta virtual orbitals
-    int nbvir_;
+    /// The number of alpha occupied active orbitals per irrep
+    Dimension aoccpi_;
+    /// The number of alpha unoccupied active orbitals per irrep
+    Dimension avirpi_;
+    /// The number of beta occupied active orbitals per irrep
+    Dimension boccpi_;
+    /// The number of beta unoccupied active orbitals per irrep
+    Dimension bvirpi_;
 
     // ==> CINO Options <==
     /// The number of roots computed
-    int nroot_;
+    int nroot_; // CiCi remove
     /// Add missing degenerate determinants excluded from the aimed selection?
-    bool project_out_spin_contaminants_;
+    bool project_out_spin_contaminants_ = true;
     /// The eigensolver type
     DiagonalizationMethod diag_method_;
     /// The multiplicity of the reference
-    int wavefunction_multiplicity_;
+    int wavefunction_multiplicity_ = 0;
     // The number of correlated mos
     size_t ncmo2_;
 
@@ -133,7 +116,7 @@ class CINO : public Wavefunction {
     std::vector<Determinant> build_dets(int irrep);
 
     std::pair<SharedVector, SharedMatrix>
-    diagonalize_hamiltonian(const std::vector<Determinant>& dets);
+    diagonalize_hamiltonian(const std::vector<Determinant>& dets, int nsolutions);
 
     std::pair<SharedMatrix, SharedMatrix> build_density_matrix(const std::vector<Determinant>& dets,
                                       SharedMatrix evecs, int nroot_);
