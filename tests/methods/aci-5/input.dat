@@ -38,6 +38,7 @@ set forte {
   aci_nroot 2
   charge 0
   aci_enforce_spin_complete false
+  active_guess_size 56
 }
 
 energy('scf')
