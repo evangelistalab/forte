@@ -26,21 +26,19 @@
  * @END LICENSE
  */
 
-//#include <cmath>
-//#include <functional>
-//#include <algorithm>
-//#include <unordered_map>
-//#include <numeric>
-
 #include "psi4/libmints/molecule.h"
 #include "psi4/libmints/pointgrp.h"
 #include "psi4/libpsio/psio.hpp"
 
 #include "aci.h"
 #include "../ci_rdms.h"
+#include "../ci_reference.h"
 #include "../fci/fci_integrals.h"
 #include "../sparse_ci_solver.h"
 #include "../stl_bitset_determinant.h"
+#include "../mrpt2.h"
+#include "../forte_options.h"
+#include "../orbital-helper/unpaired_density.h"
 
 using namespace std;
 using namespace psi;
