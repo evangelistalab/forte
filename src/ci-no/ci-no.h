@@ -29,23 +29,8 @@
 #ifndef _ci_no_h_
 #define _ci_no_h_
 
-//#include <fstream>
-//#include <iomanip>
-
 #include "psi4/libmints/wavefunction.h"
-#include "psi4/liboptions/liboptions.h"
-//#include "psi4/physconst.h"
-
 #include "../forte_options.h"
-#include "../helpers.h"
-#include "../integrals/integrals.h"
-
-#include "../ci_rdms.h"
-//#include "../determinant_map.h"
-//#include "../fci/fci_integrals.h"
-//#include "../operator.h"
-#include "../sparse_ci_solver.h"
-#include "../stl_bitset_determinant.h"
 
 namespace psi {
 namespace forte {
