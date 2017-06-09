@@ -39,25 +39,38 @@ namespace forte {
 
 CI_Reference::CI_Reference( std::shared_ptr<Wavefunction> wfn, Options& options, 
                             std::shared_ptr<MOSpaceInfo> mo_space_info, STLBitsetDeterminant det, 
-                            int multiplicity, double twice_ms )
+                            int multiplicity, double twice_ms, int symmetry)
                         : wfn_(wfn), mo_space_info_(mo_space_info)
 {
+    // Get the mutlilicity and twice M_s
     multiplicity_ = multiplicity;
     twice_ms_ = twice_ms;
 
-    root_sym_ = options.get_int("ROOT_SYM");
+    // State symmetry
+    root_sym_ = symmetry;
 
+    // Number of irreps
     nirrep_ = wfn_->nirrep();
+
+    // Double and singly occupied MOs
     Dimension doccpi = wfn_->doccpi();
     Dimension soccpi = wfn_->soccpi();
-    size_t ninact = mo_space_info_->size("INACTIVE_DOCC");
-    mo_symmetry_ = mo_space_info_->symmetry("ACTIVE");
-    nactpi_ = mo_space_info_->get_dimension("ACTIVE");
 
+    // Frozen DOCC + RDOCC
+    size_t ninact = mo_space_info_->size("INACTIVE_DOCC");
     frzcpi_ = mo_space_info_->get_dimension("INACTIVE_DOCC");
 
+    // Symmetry of each MO
+    mo_symmetry_ = mo_space_info_->symmetry("ACTIVE");
+
+    // Size of total active space
+    nactpi_ = mo_space_info_->get_dimension("ACTIVE");
+
+    // Size of subspace
+    subspace_size_ = options.get_int("ACTIVE_GUESS_SIZE"); 
+
     // First determine number of alpha and beta electrons
-    // Assume ms = 0.5 * ( Na - Nb ) 
+    // Assume twice_ms =( Na - Nb ) 
     int nel = 0;
     for (int h = 0; h < nirrep_; ++h) {    
         nel += 2 * doccpi[h] + soccpi[h];
@@ -71,106 +84,128 @@ CI_Reference::CI_Reference( std::shared_ptr<Wavefunction> wfn, Options& options,
     outfile->Printf("\n  Number of active orbitals: %d", STLBitsetDeterminant::nmo_);
     outfile->Printf("\n  Number of active alpha electrons: %d", nalpha_);
     outfile->Printf("\n  Number of active beta electrons: %d", nbeta_);
+    outfile->Printf("\n  Maximum reference space size: %zu", subspace_size_ );
 }
 
 CI_Reference::~CI_Reference() {}   
 
 void CI_Reference::build_reference( std::vector<STLBitsetDeterminant>& ref_space )
 {
-    ref_space.clear();
     int nact = mo_space_info_->size("ACTIVE");
 
     // Get the active mos
     auto active_mos = sym_labeled_orbitals("RHF");
-    int homo = 0;
+
+    // The active subspace
+    int na = twice_ms_;
+
+    // The frozen subspace
+    int nf = std::min( nalpha_, nbeta_ );
     
-    for( int i = 0; i < active_mos.size(); ++i ){
-        outfile->Printf("\n  %d  %d  %1.6f", std::get<2>(active_mos[i]), std::get<1>(active_mos[i]), std::get<0>(active_mos[i]));
-        if( std::get<0>(active_mos[i]) > 0.0 ){
-            homo = i;
-            break;
+    // Control when to add mos
+    bool add_mo = true;
+    bool reverse = false;
+    bool nf_zero = (nf == 0) ? true : false;
+    
+    while ( add_mo ) {
+        ref_space.clear();
+        // Indices of subspace
+        std::vector<int> active_subspace;
+
+        // Compute number of subspace electrons
+        int alpha_el = nalpha_ - nf;
+        int beta_el = nbeta_ - nf;
+
+        for( int i = nf, max_i = nf + na; i < max_i; ++i ){
+            active_subspace.push_back( std::get<2>(active_mos[i]) ); 
+        }
+
+        // Compute subspace vectors
+        std::vector<bool> tmp_det_a(na,false);
+        std::vector<bool> tmp_det_b(na,false);
+        for( int i = 0; i < alpha_el; ++i ){
+            tmp_det_a[i] = true; 
         } 
-    }
+        for( int i = 0; i < beta_el; ++i ){
+            tmp_det_b[i] = true; 
+        } 
+        // Make sure we start with the first permutation
+        std::sort( begin(tmp_det_a), end(tmp_det_a));
+        std::sort( begin(tmp_det_b), end(tmp_det_b));
 
-    // Pick the active subspace around the HOMO/LUMO gap
-    std::vector<int> active_subspace;
-
-    // Find a better way to pick the size
-    int subspace_size = 6;
-    if( subspace_size > nact ){
-        subspace_size = nact;
-    }
-
-
-    int start_mo = homo - static_cast<int>(subspace_size/2.0);
-    
-    // Check against small calculations
-    if( start_mo < 0 ){
-        start_mo = 0;
-    }
-
-    outfile->Printf("\n start mo: %d", start_mo);
-    for( int i = start_mo, max_i = start_mo + subspace_size; i < max_i; ++i ){
-        active_subspace.push_back( std::get<2>(active_mos[i]) ); 
-    }
-
-    // Get number of electrons in subspace
-    int nalpha_sub = nalpha_ - start_mo; 
-    int nbeta_sub = nbeta_ - start_mo; 
-    outfile->Printf("\n number alpha sub: %d", nalpha_sub); 
-    outfile->Printf("\n number beta sub: %d", nbeta_sub); 
-
-    // Fill a subspace determinant with initial permutation
-    std::vector<bool> tmp_det_a(subspace_size,false);
-    std::vector<bool> tmp_det_b(subspace_size,false);
-    for( int i = 0; i < nalpha_sub; ++i ){
-        tmp_det_a[i] = true; 
-    } 
-    for( int i = 0; i < nbeta_sub; ++i ){
-        tmp_det_b[i] = true; 
-    } 
-
-    // Set the frozen part of a determinat
-    STLBitsetDeterminant core_det;
-    for( int i = 0; i < start_mo; ++i ){
-        core_det.set_alfa_bit( std::get<2>(active_mos[i]), true );
-        core_det.set_beta_bit( std::get<2>(active_mos[i]), true );
-    }
-
-    // Make sure we start with the first permutation
-    std::sort( begin(tmp_det_a), end(tmp_det_a));
-    std::sort( begin(tmp_det_b), end(tmp_det_b));
-
-    // Generate all permutations, add the correct ones
-    do {
+        // Build the core det
+        STLBitsetDeterminant core_det;
+        for( int i = 0; i < nf; ++i ){
+            core_det.set_alfa_bit( std::get<2>(active_mos[i]), true );
+            core_det.set_beta_bit( std::get<2>(active_mos[i]), true );
+        }
+        // Generate all permutations, add the correct ones
         do {
-            // Build determinant
-            STLBitsetDeterminant det(core_det);     
-            int sym = 0;
-            for( int p = 0; p < subspace_size; ++p ){
-                det.set_alfa_bit( active_subspace[p], tmp_det_a[p]);
-                det.set_beta_bit( active_subspace[p], tmp_det_b[p]);
-                if ( tmp_det_a[p] ){
-                    sym ^= mo_symmetry_[active_subspace[p]];
+            do {
+                // Build determinant
+                STLBitsetDeterminant det(core_det);     
+                int sym = 0;
+                for( int p = 0; p < na; ++p ){
+                    det.set_alfa_bit( active_subspace[p], tmp_det_a[p]);
+                    det.set_beta_bit( active_subspace[p], tmp_det_b[p]);
+                    if ( tmp_det_a[p] ){
+                        sym ^= mo_symmetry_[active_subspace[p]];
+                    }
+                    if (tmp_det_b[p]) {
+                        sym ^= mo_symmetry_[active_subspace[p]];
+                    }
                 }
-                if (tmp_det_b[p]) {
-                    sym ^= mo_symmetry_[active_subspace[p]];
-                }
+                // Check symmetry
+                if( sym == root_sym_ ){
+                    ref_space.push_back(det);               
+//                    det.print();
+                }            
+
+            } while( std::next_permutation( tmp_det_b.begin(), tmp_det_b.begin() + na  ) );
+        } while( std::next_permutation( tmp_det_a.begin(), tmp_det_a.begin() + na ) );
+//        outfile->Printf("\n na: %d, nf: %d, ref size: %zu", na, nf, ref_space.size());
+
+        if( reverse  and (ref_space.size() < subspace_size_ ) ){
+            add_mo = false;
+        }
+
+        if( ref_space.size() < subspace_size_ ) {
+
+            if( na == nact ){
+                add_mo = false;
             }
-            // Check symmetry
-            if( sym == root_sym_ ){
-                ref_space.push_back(det);               
-            }            
+    
+            na += 2;
+            nf -= 1;
+            
+            // No negative indices
+            if( nf < 0 ){
+                nf = 0;
+                nf_zero = true;
+            }
 
-        } while( std::next_permutation( tmp_det_b.begin(), tmp_det_b.begin() + subspace_size  ) );
-    } while( std::next_permutation( tmp_det_a.begin(), tmp_det_a.begin() + subspace_size ) );
 
-    // Diagonalize the reference space Hamiltonian
-    outfile->Printf("\n The reference space contains %zu determinants", ref_space.size());
-    //SparseCISolver solver;
-    //solver.set_spin_project_full(true);
-    //solver.diagonalize_hamiltonian( ref
+            while( (na + nf) > nact ){
+                na -= 1;
+            }
 
+        }else if ( ref_space.size() > subspace_size_) {
+            na -= 1;
+            
+            if( !nf_zero ){ 
+                nf += 1;
+            }
+            reverse = true;
+//            outfile->Printf("  reverse = true");
+        }else{
+            add_mo = false;
+        }
+
+
+    }
+
+    outfile->Printf("\n  Number of reference determinants: %zu", ref_space.size());
+    outfile->Printf("\n  Reference generated from %d MOs", na); 
 }
 
 std::vector<std::tuple<double, int, int>> CI_Reference::sym_labeled_orbitals(std::string type) 

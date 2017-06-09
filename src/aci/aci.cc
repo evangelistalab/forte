@@ -270,7 +270,7 @@ void AdaptiveCI::startup() {
         det = STLBitsetDeterminant(get_occupation());
         initial_reference_.push_back(det);
     } else {
-        CI_Reference ref( reference_wavefunction_, options_, mo_space_info_, det, multiplicity_, twice_ms_); 
+        CI_Reference ref( reference_wavefunction_, options_, mo_space_info_, det, multiplicity_, twice_ms_, wavefunction_symmetry_); 
         ref.build_reference( initial_reference_ );
     }
 
