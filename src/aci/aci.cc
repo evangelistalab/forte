@@ -26,21 +26,19 @@
  * @END LICENSE
  */
 
-//#include <cmath>
-//#include <functional>
-//#include <algorithm>
-//#include <unordered_map>
-//#include <numeric>
-
 #include "psi4/libmints/molecule.h"
 #include "psi4/libmints/pointgrp.h"
 #include "psi4/libpsio/psio.hpp"
 
 #include "aci.h"
 #include "../ci_rdms.h"
+#include "../ci_reference.h"
 #include "../fci/fci_integrals.h"
 #include "../sparse_ci_solver.h"
 #include "../stl_bitset_determinant.h"
+#include "../mrpt2.h"
+#include "../forte_options.h"
+#include "../orbital-helper/unpaired_density.h"
 
 using namespace std;
 using namespace psi;
@@ -270,7 +268,7 @@ void AdaptiveCI::startup() {
         det = STLBitsetDeterminant(get_occupation());
         initial_reference_.push_back(det);
     } else {
-        CI_Reference ref( reference_wavefunction_, options_, mo_space_info_, det, multiplicity_, twice_ms_); 
+        CI_Reference ref( reference_wavefunction_, options_, mo_space_info_, det, multiplicity_, twice_ms_, wavefunction_symmetry_); 
         ref.build_reference( initial_reference_ );
     }
 

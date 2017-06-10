@@ -45,6 +45,7 @@ set forte {
    job_type                three-dsrg-mrpt2
    cas_type                aci
    sigma				   0.0001
+   active_guess_size       1
 }
 
 scf, wfn = energy('mcscf', return_wfn=True)

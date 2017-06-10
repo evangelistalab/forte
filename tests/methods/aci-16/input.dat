@@ -30,6 +30,7 @@ set forte {
   multiplicity 3
 #  aci_initial_space cis
   ms 0.0
+  active_guess_size 4
 }
 
 

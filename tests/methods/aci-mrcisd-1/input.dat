@@ -41,6 +41,7 @@ set forte {
   aci_max_cycle 1
   nroot 1
   charge 0
+  active_guess_size 1
 }
 
 energy('scf')

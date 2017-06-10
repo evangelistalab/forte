@@ -209,6 +209,9 @@ void forte_old_options(Options& options) {
     /*- Type of localization -*/
     options.add_str("LOCALIZE_TYPE", "PIPEK_MEZEY", "BOYS");
 
+    /*- Number of orbitals for CI guess  -*/
+    options.add_int("ACTIVE_GUESS_SIZE", 1000);
+
     // Options for the Genetic Algorithm CI //
     /*- The size of the population -*/
 //    options.add_int("NPOP", 100);
