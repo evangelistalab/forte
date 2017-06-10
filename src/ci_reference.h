@@ -39,35 +39,49 @@ namespace forte {
 class CI_Reference // : public Wavefunction
 {
   protected:
-    /// Reference energy = FCI_energy + frozen_core_energy + restricted_docc +
-    /// nuclear_replusion
-    double Eref_;
 
+    // The wavefunction object
     SharedWavefunction wfn_;
 
+    // Multiplicity of the reference
     int multiplicity_;
+
+    // Twice the Ms
     double twice_ms_;
 
+    // Number of active alpha electrons
     int nalpha_;
+
+    // Number of active beta electrons
     int nbeta_; 
 
+    // Symmetry of the reference
     int root_sym_;
 
+    // Number of irreps
     int nirrep_;
 
+    // Maximum number of determinants
+    int subspace_size_;
+
+    // Pointer to the MOSpaceInfo object
     std::shared_ptr<MOSpaceInfo> mo_space_info_;
 
+    // Symmetry of each active MO
     Dimension mo_symmetry_;
 
+    // Number of active MOs per irrep
     Dimension nactpi_;
 
+    // Number of frozen_docc + restriced_docc MOs
     Dimension frzcpi_;
 
+    // Returns MO energies, symmetries, and indicies, sorted
     std::vector<std::tuple<double, int, int>> sym_labeled_orbitals(std::string type);
 
   public:
     /// Default constructor
-    CI_Reference(std::shared_ptr<Wavefunction> wfn, Options& options, std::shared_ptr<MOSpaceInfo> mo_space_info, STLBitsetDeterminant det, int multiplicity, double ms );
+    CI_Reference(std::shared_ptr<Wavefunction> wfn, Options& options, std::shared_ptr<MOSpaceInfo> mo_space_info, STLBitsetDeterminant det, int multiplicity, double ms, int symmetry );
 
     /// Destructor
     ~CI_Reference();
