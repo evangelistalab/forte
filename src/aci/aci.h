@@ -38,18 +38,14 @@
 
 #include "../determinant_map.h"
 #include "../sparse_ci_solver.h"
-#include "../reference.h"
-//#include "../helpers.h"
-//#include "../integrals/integrals.h"
-//#include "../mrpt2.h"
-//#include "../orbital-helper/unpaired_density.h"
-//#include "../semi_canonicalize.h"
 
 using d1 = std::vector<double>;
 using d2 = std::vector<d1>;
 
 namespace psi {
 namespace forte {
+
+class Reference;
 
 /// Set the ACI options
 void set_ACI_options(ForteOptions& foptions);

@@ -31,6 +31,7 @@
 #include "psi4/libmints/wavefunction.h"
 #include "psi4/liboptions/liboptions.h"
 
+#include "forte_options.h"
 #include "mrpt2.h"
 
 #ifdef _OPENMP
@@ -208,7 +209,7 @@ double MRPT2::energy_kernel( int bin, int nbin )
                     new_det.set_beta_bit(aa, true);
                     if( reference_.has_det(new_det) ) continue;
                     // Check if the determinant goes in this bin
-                    size_t hash_val = std::hash<std::bitset<256>>()(new_det.bits_);
+                    size_t hash_val = std::hash<bit_t>()(new_det.bits_);
                     if( (hash_val % nbin) == bin){
                         double coupling = new_det.slater_rules_single_beta(ii,aa) * c_I;    
                         if ( A_I.find(new_det) != A_I.end() ) {
@@ -235,7 +236,7 @@ double MRPT2::energy_kernel( int bin, int nbin )
                             if( reference_.has_det(new_det) ) continue;
 
                             // Check if the determinant goes in this bin
-                            size_t hash_val = std::hash<std::bitset<256>>()(new_det.bits_);
+                            size_t hash_val = std::hash<bit_t>()(new_det.bits_);
                             if( (hash_val % nbin) == bin){
 
                                 double coupling = sign * c_I * STLBitsetDeterminant::fci_ints_->tei_ab(ii,jj,aa,bb);    
@@ -264,7 +265,7 @@ double MRPT2::energy_kernel( int bin, int nbin )
                             if( reference_.has_det(new_det) ) continue;
 
                             // Check if the determinant goes in this bin
-                            size_t hash_val = std::hash<std::bitset<256>>()(new_det.bits_);
+                            size_t hash_val = std::hash<bit_t>()(new_det.bits_);
                             if( (hash_val % nbin) == bin){
                                 double coupling = sign * c_I * STLBitsetDeterminant::fci_ints_->tei_aa(ii,jj,aa,bb);    
                                 if ( A_I.find(new_det) != A_I.end() ) {
@@ -293,7 +294,7 @@ double MRPT2::energy_kernel( int bin, int nbin )
                             if( reference_.has_det(new_det) ) continue;
 
                             // Check if the determinant goes in this bin
-                            size_t hash_val = std::hash<std::bitset<256>>()(new_det.bits_);
+                            size_t hash_val = std::hash<bit_t>()(new_det.bits_);
                             if( (hash_val % nbin) == bin){
                                 double coupling = sign * c_I * STLBitsetDeterminant::fci_ints_->tei_bb(ii,jj,aa,bb);    
                                 if ( A_I.find(new_det) != A_I.end() ) {

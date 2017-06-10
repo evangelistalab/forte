@@ -30,6 +30,7 @@
 
 #include "psi4/libpsio/psio.h"
 #include "psi4/libpsio/psio.hpp"
+#include "helpers.h"
 
 namespace psi {
 namespace forte {

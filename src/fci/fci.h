@@ -32,14 +32,16 @@
 #include "psi4/libmints/wavefunction.h"
 #include "psi4/physconst.h"
 
-#include "../helpers.h"
-#include "../integrals/integrals.h"
-#include "../reference.h"
-#include "../forte_options.h"
-#include "fci_solver.h"
-
 namespace psi {
 namespace forte {
+
+class ForteOptions;
+class ForteIntegrals;
+class FCISolver;
+class MOSpaceInfo;
+class Reference;
+class FCIWfn;
+class FCISolver;
 
 /// Set the options for the FCI method
 void set_FCI_options(ForteOptions& foptions);

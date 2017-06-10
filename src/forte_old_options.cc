@@ -1,5 +1,6 @@
 #include "psi4/liboptions/liboptions.h"
 
+#include "fci/fci_solver.h"
 #include "fci/fci.h"
 #include "aci/aci.h"
 #include "pci/pci.h"

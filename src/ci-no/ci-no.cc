@@ -30,8 +30,8 @@
 #include "psi4/libmints/molecule.h"
 #include "psi4/libmints/pointgrp.h"
 #include "psi4/psi4-dec.h"
-//#include "psi4/libpsio/psio.hpp"
 
+#include "../forte_options.h"
 #include "../ci_rdms.h"
 #include "../fci/fci_integrals.h"
 #include "../sparse_ci_solver.h"

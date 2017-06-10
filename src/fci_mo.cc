@@ -40,6 +40,7 @@
 #include "psi4/libmints/dipole.h"
 #include "psi4/libmints/oeprop.h"
 #include "psi4/libmints/petitelist.h"
+#include "forte_options.h"
 
 using namespace std;
 
