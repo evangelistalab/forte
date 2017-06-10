@@ -30,10 +30,11 @@
 #define _ci_no_h_
 
 #include "psi4/libmints/wavefunction.h"
-#include "../forte_options.h"
 
 namespace psi {
 namespace forte {
+
+class ForteOptions;
 
 /// Set the CI-NO options
 void set_CINO_options(ForteOptions& foptions);

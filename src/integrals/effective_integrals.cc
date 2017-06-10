@@ -34,6 +34,7 @@
 
 #include "integrals.h"
 #include "../blockedtensorfactory.h"
+#include "psi4/libmints/vector.h"
 
 namespace psi {
 namespace forte {

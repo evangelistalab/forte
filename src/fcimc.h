@@ -52,6 +52,8 @@ struct ObtCount {
     std::vector<int> naocc, nbocc, navir, nbvir;
 };
 
+class MOSpaceInfo;
+
 class FCIQMC : public Wavefunction {
   public:
     // ==> Class Constructor and Destructor <==

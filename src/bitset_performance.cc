@@ -95,8 +95,8 @@
 //    return I;
 //}
 
-//std::bitset<256> random_bitset_256(int nmo, int nset) {
-//    std::bitset<256> I(2 * nmo);
+//bit_t random_bitset_256(int nmo, int nset) {
+//    bit_t I(2 * nmo);
 //    for (int k = 0; k < nset; ++k) {
 //        I[rand() % nmo] = true;
 //        I[nmo + rand() % nmo] = true;
@@ -326,8 +326,8 @@
 //}
 
 //double test_bitset_256_place_in_hash(int nmo, int nset, int repeat) {
-//    std::vector<std::bitset<256>> det_vec;
-//    std::unordered_map<std::bitset<256>, double> det_hash;
+//    std::vector<bit_t> det_vec;
+//    std::unordered_map<bit_t, double> det_hash;
 //    for (int n = 0; n < repeat; ++n) {
 //        det_vec.push_back(random_bitset_256(nmo, nset));
 //    }
@@ -363,7 +363,7 @@
 //}
 
 //double test_bitset_256_place_in_vector(int nmo, int nset, int repeat) {
-//    std::vector<std::bitset<256>> det_vec;
+//    std::vector<bit_t> det_vec;
 //    auto start = chrono::steady_clock::now();
 //    for (int n = 0; n < repeat; ++n) {
 //        det_vec.push_back(random_bitset_256(nmo, nset));
