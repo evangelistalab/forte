@@ -186,7 +186,7 @@ double MRPT2::energy_kernel( int bin, int nbin )
                     if( reference_.has_det(new_det) ) continue;
             
                     // Check if the determinant goes in this bin
-                    size_t hash_val = std::hash<std::bitset<256>>()(new_det.bits_);
+                    size_t hash_val = std::hash<bit_t>()(new_det.bits_);
                     if( (hash_val % nbin) == bin){
                         double coupling = new_det.slater_rules_single_alpha(ii,aa) * c_I;    
                         if ( A_I.find(new_det) != A_I.end() ) {
