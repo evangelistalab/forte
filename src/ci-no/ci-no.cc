@@ -116,8 +116,8 @@ double CINO::compute_energy() {
 
     CharacterTable ct = molecule_->point_group()->char_table();
 
-    SharedMatrix Density_a(new Matrix(nirrep_, actvpi_, actvpi_));
-    SharedMatrix Density_b(new Matrix(nirrep_, actvpi_, actvpi_));
+    SharedMatrix Density_a(new Matrix(actvpi_, actvpi_));
+    SharedMatrix Density_b(new Matrix(actvpi_, actvpi_));
     int sum = 0;
     for (int h = 0; h < nirrep_; ++h) {
         int nsolutions = options_["CINO_ROOTS_PER_IRREP"][h].to_integer();
@@ -177,7 +177,6 @@ void CINO::startup() {
         }
     }
     // Read Options
-    nroot_ = options_.get_int("CINO_NROOT");
     rdm_level_ = options_.get_int("ACI_MAX_RDM");
     nactv_ = mo_space_info_->size("ACTIVE");
 
@@ -188,7 +187,6 @@ void CINO::startup() {
     ncmo2_ = nactv_ * nactv_;
 
     aoccpi_ = nalphapi_ - rdoccpi_ - fdoccpi_;
-    avirpi_ = actvpi_ - aoccpi_;
 }
 
 std::vector<Determinant> CINO::build_dets(int irrep) {
@@ -235,7 +233,6 @@ std::vector<Determinant> CINO::build_dets(int irrep) {
             nalphapi_[irrep_i] - rdoccpi_[irrep_i] - fdoccpi_[irrep_i];
         int occ_irrep_a =
             nalphapi_[irrep_a] - rdoccpi_[irrep_a] - fdoccpi_[irrep_a];
-        int vir_irrep_a = actvpi_[irrep_a] - occ_irrep_a;
         for (int i = 0; i < occ_irrep_i; ++i) {
             for (int a = occ_irrep_a; a < actvpi_[irrep_a]; ++a) {
                 Determinant single_ia(ref);
@@ -263,7 +260,6 @@ std::vector<Determinant> CINO::build_dets(int irrep) {
             nbetapi_[irrep_i] - rdoccpi_[irrep_i] - fdoccpi_[irrep_i];
         int occ_irrep_a =
             nbetapi_[irrep_a] - rdoccpi_[irrep_a] - fdoccpi_[irrep_a];
-        int vir_irrep_a = actvpi_[irrep_a] - occ_irrep_a;
         for (int i = 0; i < occ_irrep_i; ++i) {
             for (int a = occ_irrep_a; a < actvpi_[irrep_a]; ++a) {
                 Determinant single_ib(ref);
@@ -352,7 +348,7 @@ CINO::diagonalize_hamiltonian(const std::vector<Determinant>& dets,
                         molecule_->nuclear_repulsion_energy();
         outfile->Printf("\n    %3d %20.10f", i, energy);
     }
-    outfile->Printf("\n  -----------------:q-----------\n");
+    outfile->Printf("\n  ------------------------------\n");
     return evals_evecs;
 }
 /// Build the density matrix
@@ -377,7 +373,6 @@ CINO::build_density_matrix(const std::vector<Determinant>& dets,
             ci_rdms_.compute_1rdm(template_a_, template_b_);
             outfile->Printf("\n  1-RDM  took %2.6f s (determinant)",
                             one_r.get());
-            outfile->Printf("size of template is %2d", template_a_.size());
         }
         // Add template value to average vector
         for (int i = 0; i < ncmo2_; ++i) {
@@ -399,9 +394,9 @@ CINO::build_density_matrix(const std::vector<Determinant>& dets,
     //    Dimension ncmopi = mo_space_info_->get_dimension("CORRELATED");
 
     std::shared_ptr<Matrix> opdm_a(
-        new Matrix("OPDM_A", nirrep_, actvpi_, actvpi_));
+        new Matrix("OPDM_A", actvpi_, actvpi_));
     std::shared_ptr<Matrix> opdm_b(
-        new Matrix("OPDM_B", nirrep_, actvpi_, actvpi_));
+        new Matrix("OPDM_B", actvpi_, actvpi_));
 
     int offset = 0;
     for (int h = 0; h < nirrep_; h++) {
