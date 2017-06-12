@@ -916,7 +916,7 @@ void Wall_Chebyshev_generator_coefs(std::vector<double>& coefs, int order,
 }
 
 double ProjectorCI::compute_energy() {
-    timer_on("PIFCI:Energy");
+    timer_on("PCI:Energy");
     ForteTimer t_apici;
     old_max_one_HJI_ = 1e100;
     new_max_one_HJI_ = 1e100;
@@ -992,7 +992,7 @@ double ProjectorCI::compute_energy() {
     //    }
 
     // Main iterations
-    outfile->Printf("\n\n  ==> APIFCI Iterations <==");
+    outfile->Printf("\n\n  ==> PCI Iterations <==");
     if (variational_estimate_) {
         outfile->Printf("\n\n  "
                         "------------------------------------------------------"
@@ -1030,7 +1030,7 @@ double ProjectorCI::compute_energy() {
     for (int cycle = 0; cycle < maxcycle; ++cycle) {
         iter_ = cycle;
 
-        timer_on("PIFCI:Step");
+        timer_on("PCI:Step");
         if (use_inter_norm_) {
             auto minmax_C = std::minmax_element(C.begin(), C.end());
             double min_C_abs = fabs(*minmax_C.first);
@@ -1042,23 +1042,23 @@ double ProjectorCI::compute_energy() {
             propagate(generator_, dets, C, time_step_, spawning_threshold_,
                       shift_);
         }
-        timer_off("PIFCI:Step");
+        timer_off("PCI:Step");
         if (generator_ == DavidsonLiuGenerator)
             break;
 
         // Orthogonalize this solution with respect to the previous ones
-        timer_on("PIFCI:Ortho");
+        timer_on("PCI:Ortho");
         if (current_root_ > 0) {
             orthogonalize(dets, C, solutions_);
         }
-        timer_off("PIFCI:Ortho");
+        timer_off("PCI:Ortho");
 
         // Compute the energy and check for convergence
         if (cycle % energy_estimate_freq_ == 0) {
             approx_E_flag_ = true;
-            timer_on("PIFCI:<E>");
+            timer_on("PCI:<E>");
             std::map<std::string, double> results = estimate_energy(dets, C);
-            timer_off("PIFCI:<E>");
+            timer_off("PCI:<E>");
 
             proj_energy = results["PROJECTIVE ENERGY"];
 
@@ -1164,14 +1164,14 @@ double ProjectorCI::compute_energy() {
     //        Determinant::Hash()(statistic_vec[i]));
     //    }
 
-    timer_on("PIFCI:<E>end_v");
+    timer_on("PCI:<E>end_v");
 
     if (fast_variational_estimate_) {
         var_energy = estimate_var_energy_sparse(dets, C, 1.0e-14);
     } else {
         var_energy = estimate_var_energy(dets, C, 1.0e-14);
     }
-    timer_off("PIFCI:<E>end_v");
+    timer_off("PCI:<E>end_v");
 
     Process::environment.globals["PCI ENERGY"] = var_energy;
 
@@ -1230,7 +1230,7 @@ double ProjectorCI::compute_energy() {
 
     if (post_diagonalization_) {
         outfile->Printf("\n\n  ==> Post-Diagonalization <==\n");
-        timer_on("PIFCI:Post_Diag");
+        timer_on("PCI:Post_Diag");
         //        sparse_solver.diagonalize_hamiltonian(dets,apfci_evals,apfci_evecs,nroot_,DavidsonLiuList);
         SharedMatrix apfci_evecs(new Matrix("Eigenvectors", C.size(), nroot_));
         SharedVector apfci_evals(new Vector("Eigenvalues", nroot_));
@@ -1239,7 +1239,7 @@ double ProjectorCI::compute_energy() {
             dets, apfci_evals, apfci_evecs, nroot_, wavefunction_multiplicity_,
             diag_method_);
 
-        timer_off("PIFCI:Post_Diag");
+        timer_off("PCI:Post_Diag");
 
         double post_diag_energy =
             apfci_evals->get(current_root_) + nuclear_repulsion_energy_ +
@@ -1272,7 +1272,7 @@ double ProjectorCI::compute_energy() {
     delete[] pqpq_ab_;
     delete[] pqpq_bb_;
 
-    timer_off("PIFCI:Energy");
+    timer_off("PCI:Energy");
     return var_energy;
 }
 
@@ -2699,7 +2699,7 @@ void ProjectorCI::apply_tau_H_symm(double tau, double spawning_threshold,
                         "on dynamic prescreening.");
     }
     if (approx_E_flag_) {
-        timer_on("PIFCI:<E>a");
+        timer_on("PCI:<E>a");
         size_t max_I = dets.size();
         double CHC_energy = 0.0;
 #pragma omp parallel for reduction(+ : CHC_energy)
@@ -2707,7 +2707,7 @@ void ProjectorCI::apply_tau_H_symm(double tau, double spawning_threshold,
             CHC_energy += C[I] * dets_C_hash[dets[I]];
         }
         CHC_energy = CHC_energy / tau + S + nuclear_repulsion_energy_;
-        timer_off("PIFCI:<E>a");
+        timer_off("PCI:<E>a");
         double CHC_energy_gradient = (CHC_energy - approx_energy_) /
                                      (time_step_ * energy_estimate_freq_);
         old_approx_energy_ = approx_energy_;
@@ -2811,7 +2811,7 @@ void ProjectorCI::apply_tau_H_ref_C_symm(double tau, double spawning_threshold,
                         "on dynamic prescreening.");
     }
     if (approx_E_flag_) {
-        timer_on("PIFCI:<E>a");
+        timer_on("PCI:<E>a");
         size_t max_I = dets.size();
         double CHC_energy = 0.0;
 #pragma omp parallel for reduction(+ : CHC_energy)
@@ -2820,7 +2820,7 @@ void ProjectorCI::apply_tau_H_ref_C_symm(double tau, double spawning_threshold,
             //            count_hash(dets[I]);
         }
         CHC_energy = CHC_energy / tau + S + nuclear_repulsion_energy_;
-        timer_off("PIFCI:<E>a");
+        timer_off("PCI:<E>a");
         double CHC_energy_gradient = (CHC_energy - approx_energy_) /
                                      (time_step_ * energy_estimate_freq_);
         old_approx_energy_ = approx_energy_;
@@ -3874,7 +3874,7 @@ void ProjectorCI::apply_tau_H(double tau, double spawning_threshold,
         }
     }
     if (approx_E_flag_) {
-        timer_on("PIFCI:<E>a");
+        timer_on("PCI:<E>a");
         size_t max_I = dets.size();
         double CHC_energy = 0.0;
 #pragma omp parallel for reduction(+ : CHC_energy)
@@ -3882,7 +3882,7 @@ void ProjectorCI::apply_tau_H(double tau, double spawning_threshold,
             CHC_energy += C[I] * dets_C_hash[dets[I]];
         }
         CHC_energy = CHC_energy / tau + S + nuclear_repulsion_energy_;
-        timer_off("PIFCI:<E>a");
+        timer_off("PCI:<E>a");
         double CHC_energy_gradient = (CHC_energy - approx_energy_) /
                                      (time_step_ * energy_estimate_freq_);
         old_approx_energy_ = approx_energy_;
@@ -4991,21 +4991,21 @@ std::map<std::string, double>
 ProjectorCI::estimate_energy(det_vec& dets, std::vector<double>& C) {
     std::map<std::string, double> results;
 
-    timer_on("PIFCI:<E>p");
+    timer_on("PCI:<E>p");
     results["PROJECTIVE ENERGY"] = estimate_proj_energy(dets, C);
-    timer_off("PIFCI:<E>p");
+    timer_off("PCI:<E>p");
 
     if (variational_estimate_) {
         if (fast_variational_estimate_) {
-            timer_on("PIFCI:<E>vs");
+            timer_on("PCI:<E>vs");
             results["VARIATIONAL ENERGY"] =
                 estimate_var_energy_sparse(dets, C, energy_estimate_threshold_);
-            timer_off("PIFCI:<E>vs");
+            timer_off("PCI:<E>vs");
         } else {
-            timer_on("PIFCI:<E>v");
+            timer_on("PCI:<E>v");
             results["VARIATIONAL ENERGY"] =
                 estimate_var_energy(dets, C, energy_estimate_threshold_);
-            timer_off("PIFCI:<E>v");
+            timer_off("PCI:<E>v");
         }
     }
     return results;
