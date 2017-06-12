@@ -26,7 +26,6 @@
  * @END LICENSE
  */
 
-//[forte-public]
 #include <algorithm>
 #include <cmath>
 #include <numeric>
@@ -35,7 +34,6 @@
 #include "psi4/libfock/jk.h"
 #include "psi4/libmints/basisset.h"
 #include "psi4/libmints/factory.h"
-#include "psi4/libmints/matrix.h"
 #include "psi4/libmints/mintshelper.h"
 #include "psi4/libmints/wavefunction.h"
 #include "psi4/libpsio/psio.hpp"
@@ -44,6 +42,8 @@
 #include "psi4/psi4-dec.h"
 #include "psi4/psifiles.h"
 
+#include "../helpers.h"
+#include "../forte_options.h"
 #include "integrals.h"
 #include "memory.h"
 

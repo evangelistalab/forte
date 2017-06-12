@@ -75,7 +75,7 @@ STLBitsetDeterminant::STLBitsetDeterminant(
     }
 }
 
-STLBitsetDeterminant::STLBitsetDeterminant(const std::bitset<256>& bits) {
+STLBitsetDeterminant::STLBitsetDeterminant(const bit_t& bits) {
     bits_ = bits;
 }
 
@@ -111,7 +111,7 @@ operator^(const STLBitsetDeterminant& lhs) const {
     return ndet;
 }
 
-const STLBitsetDeterminant::bit_t& STLBitsetDeterminant::bits() const { return bits_; }
+const bit_t& STLBitsetDeterminant::bits() const { return bits_; }
 
 bool STLBitsetDeterminant::get_alfa_bit(int n) const { return bits_[n]; }
 

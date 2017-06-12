@@ -36,6 +36,7 @@
 
 #include "fcimc.h"
 #include "fci/fci_vector.h"
+#include "helpers.h"
 
 using namespace psi;
 

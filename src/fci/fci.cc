@@ -28,6 +28,10 @@
 
 #include "psi4/libmints/molecule.h"
 
+#include "../forte_options.h"
+#include "../helpers.h"
+#include "fci_solver.h"
+
 #include "fci.h"
 
 namespace psi {

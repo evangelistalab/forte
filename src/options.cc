@@ -26,9 +26,11 @@
  * @END LICENSE
  */
 
+#include "reference.h"
 #include "aci/aci.h"
 #include "avas.h"
 #include "ci-no/ci-no.h"
+#include "fci/fci_solver.h"
 #include "fci/fci.h"
 #include "forte_options.h"
 #include "integrals/integrals.h"

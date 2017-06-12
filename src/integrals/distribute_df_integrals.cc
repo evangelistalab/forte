@@ -26,8 +26,6 @@
  * @END LICENSE
  */
 
-//[forte-public]
-
 #ifdef HAVE_GA
 
 #include <cmath>

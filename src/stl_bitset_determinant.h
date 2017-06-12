@@ -53,10 +53,11 @@ namespace forte {
  * true <-> 1
  * false <-> 0
  */
+
+using bit_t =std::bitset<256>;
+
 class STLBitsetDeterminant {
   public:
-    using bit_t = std::bitset<256>;
-
     // Class Constructor and Destructor
     /// Construct an empty determinant
     STLBitsetDeterminant();
@@ -72,7 +73,7 @@ class STLBitsetDeterminant {
     explicit STLBitsetDeterminant(const std::vector<bool>& occupation_a,
                                   const std::vector<bool>& occupation_b);
     /// Construct a determinant from a bitset object
-    explicit STLBitsetDeterminant(const std::bitset<256>& bits);
+    explicit STLBitsetDeterminant(const bit_t &bits);
     /// Construct a determinant from two STLBitsetStrings
     explicit STLBitsetDeterminant(const STLBitsetString& alpha,
                                   const STLBitsetString& beta);
@@ -87,7 +88,7 @@ class STLBitsetDeterminant {
     STLBitsetDeterminant operator^(const STLBitsetDeterminant& lhs) const;
 
     /// Get a pointer to the bits
-    const std::bitset<256>& bits() const;
+    const bit_t& bits() const;
 
     /// Return the value of an alpha bit
     bool get_alfa_bit(int n) const;

@@ -26,7 +26,6 @@
  * @END LICENSE
  */
 
-//[forte-public]
 #include <cmath>
 
 #include "psi4/libmints/wavefunction.h"

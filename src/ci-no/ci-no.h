@@ -30,10 +30,11 @@
 #define _ci_no_h_
 
 #include "psi4/libmints/wavefunction.h"
-#include "../forte_options.h"
 
 namespace psi {
 namespace forte {
+
+class ForteOptions;
 
 /// Set the CI-NO options
 void set_CINO_options(ForteOptions& foptions);
@@ -84,16 +85,14 @@ class CINO : public Wavefunction {
     Dimension fdoccpi_;
     /// The number of alpha occupied active orbitals per irrep
     Dimension aoccpi_;
-    /// The number of alpha unoccupied active orbitals per irrep
-    Dimension avirpi_;
-    /// The number of beta occupied active orbitals per irrep
-    Dimension boccpi_;
-    /// The number of beta unoccupied active orbitals per irrep
-    Dimension bvirpi_;
+//    /// The number of alpha unoccupied active orbitals per irrep
+//    Dimension avirpi_;
+//    /// The number of beta occupied active orbitals per irrep
+//    Dimension boccpi_;
+//    /// The number of beta unoccupied active orbitals per irrep
+//    Dimension bvirpi_;
 
     // ==> CINO Options <==
-    /// The number of roots computed
-    int nroot_; // CiCi remove
     /// Add missing degenerate determinants excluded from the aimed selection?
     bool project_out_spin_contaminants_ = true;
     /// The eigensolver type
