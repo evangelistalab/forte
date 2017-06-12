@@ -31,6 +31,7 @@
 #include "psi4/libpsio/psio.hpp"
 
 #include "aci.h"
+#include "../reference.h"
 #include "../ci_rdms.h"
 #include "../ci_reference.h"
 #include "../fci/fci_integrals.h"

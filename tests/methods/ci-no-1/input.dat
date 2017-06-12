@@ -17,12 +17,12 @@ set {
   df_basis_mp2  cc-pVDZ-JKFIT
   basis         cc-pVDZ
   e_convergence 12
+  cubeprop_orbitals [6,7,8,9,10,11,12]
 }
 
 set forte {
   job_type nojob
   cino true
-  CINO_NROOT 3
   CINO_THRESHOLD 0.99
   cino_roots_per_irrep [1,0,0,0,0,1,0,0]
 }
@@ -40,8 +40,8 @@ set forte{
   job_type             active-dsrgpt2
   #job_type             nojob
   FROZEN_DOCC          [0,0,0,0,0,0,0,0]
-  RESTRICTED_DOCC      [3,0,0,1,0,2,1,0]
-  ACTIVE               [0,0,1,0,0,0,0,1]
+  RESTRICTED_DOCC      [2,0,0,0,0,1,0,0]
+  ACTIVE               [2,0,1,2,0,2,2,1]
   dsrg_s               0.5
   cas_type             cas
   fcimo_actv_type      cis

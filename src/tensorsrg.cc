@@ -35,6 +35,7 @@
 #include "psi4/libmints/molecule.h"
 #include "psi4/libmints/wavefunction.h"
 
+#include "helpers.h"
 #include "tensorsrg.h"
 
 using namespace std;

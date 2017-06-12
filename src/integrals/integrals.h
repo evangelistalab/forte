@@ -26,7 +26,6 @@
  * @END LICENSE
  */
 
-//[forte-public]
 #ifndef _integrals_h_
 #define _integrals_h_
 
@@ -35,19 +34,20 @@
 
 #include <iostream>
 
-#include "psi4/libmints/wavefunction.h"
+//#include "psi4/libmints/wavefunction.h"
 #include "psi4/liboptions/liboptions.h"
 #include "psi4/libtrans/integraltransform.h"
 #include "psi4/libmints/matrix.h"
 #include "ambit/blocked_tensor.h"
-#include "../helpers.h"
-#include "../forte_options.h"
 
 namespace psi {
 
 class Tensor;
 
 namespace forte {
+
+class ForteOptions;
+class MOSpaceInfo;
 
 /// This decides the type of transformation: resticted vs. unrestricted
 enum IntegralSpinRestriction { RestrictedMOs, UnrestrictedMOs };

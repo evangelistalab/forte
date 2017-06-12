@@ -26,7 +26,6 @@
  * @END LICENSE
  */
 
-//[forte-public]
 #include <cmath>
 #include <numeric>
 
@@ -34,6 +33,10 @@
 #include "psi4/libthce/thce.h"
 #include "psi4/libthce/lreri.h"
 #include "psi4/libqt/qt.h"
+#include "psi4/libmints/wavefunction.h"
+#include "psi4/libmints/basisset.h"
+
+
 #ifdef HAVE_GA
 #include <ga.h>
 #include <macdecls.h>
