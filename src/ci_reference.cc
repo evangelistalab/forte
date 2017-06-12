@@ -158,12 +158,12 @@ void CI_Reference::build_reference( std::vector<STLBitsetDeterminant>& ref_space
                 // Check symmetry
                 if( sym == root_sym_ ){
                     ref_space.push_back(det);               
-                    det.print();
+//                    det.print();
                 }            
 
             } while( std::next_permutation( tmp_det_b.begin(), tmp_det_b.begin() + na  ) );
         } while( std::next_permutation( tmp_det_a.begin(), tmp_det_a.begin() + na ) );
-        outfile->Printf("\n na: %d, nf: %d, ref size: %zu", na, nf, ref_space.size());
+//        outfile->Printf("\n na: %d, nf: %d, ref size: %zu", na, nf, ref_space.size());
 
         if( reverse  and (ref_space.size() < subspace_size_ ) ){
             add_mo = false;
@@ -196,7 +196,7 @@ void CI_Reference::build_reference( std::vector<STLBitsetDeterminant>& ref_space
                 nf += 1;
             }
             reverse = true;
-            outfile->Printf("  reverse = true");
+//            outfile->Printf("  reverse = true");
         }else{
             add_mo = false;
         }
