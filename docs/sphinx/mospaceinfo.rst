@@ -111,8 +111,8 @@ frozen::
     }
 
 
-Partial specification of orbital spaces and orbital spaces priority
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Partial specification of orbital spaces and space priority
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 Specifying all five orbital spaces for each computation is tedious and error prone.
 Forte can help reduced the number of orbital spaces that the user needs to
