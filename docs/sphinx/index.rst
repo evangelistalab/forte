@@ -3,8 +3,10 @@
    You can adapt this file completely to your liking, but it should at least
    contain the root `toctree` directive.
 
-Forte's documentation
-=====================
+.. image:: forte_logotype.pdf
+   :width: 200 px
+   :alt: alternate text
+   :align: center
 
 Forte is an open-source suite of quantum chemistry methods for strongly
 correlated electrons.
@@ -13,6 +15,8 @@ correlated electrons.
    :maxdepth: 2
    :caption: Contents:
 
+   running_forte
+   basics
    mospaceinfo
    fci
 
