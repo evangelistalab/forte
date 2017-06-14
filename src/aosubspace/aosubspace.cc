@@ -37,7 +37,6 @@
 #include "psi4/libmints/matrix.h"
 #include "psi4/libmints/petitelist.h"
 #include "psi4/libmints/wavefunction.h"
-#include "psi4/libmints/basisset_parser.h"
 
 #include "boost/format.hpp"
 
