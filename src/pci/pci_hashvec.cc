@@ -580,7 +580,7 @@ void ProjectorCI_HashVec::print_characteristic_function() {
 }
 
 double ProjectorCI_HashVec::compute_energy() {
-    timer_on("PIFCI:Energy");
+    timer_on("PCI:Energy");
     ForteTimer t_apici;
     old_max_one_HJI_ = 1e100;
     new_max_one_HJI_ = 1e100;
@@ -598,7 +598,7 @@ double ProjectorCI_HashVec::compute_energy() {
                     "implementation");
     outfile->Printf(
         "\n\t         by Francesco A. Evangelista and Tianyuan Zhang");
-    outfile->Printf("\n\t                      version Jun. 6 2017");
+    outfile->Printf("\n\t                      version Jun. 12 2017");
     outfile->Printf("\n\t                    %4d thread(s) %s", num_threads_,
                     have_omp_ ? "(OMP)" : "");
     outfile->Printf(
@@ -638,9 +638,9 @@ double ProjectorCI_HashVec::compute_energy() {
         }
     }
 
-    timer_on("PIFCI:Couplings");
+    timer_on("PCI:Couplings");
     compute_double_couplings(spawning_threshold_);
-    timer_off("PIFCI:Couplings");
+    timer_off("PCI:Couplings");
 
     // Compute the initial guess
     outfile->Printf("\n\n  ==> Initial Guess <==");
@@ -659,7 +659,7 @@ double ProjectorCI_HashVec::compute_energy() {
     //    }
 
     // Main iterations
-    outfile->Printf("\n\n  ==> APIFCI Iterations <==");
+    outfile->Printf("\n\n  ==> PCI Iterations <==");
     if (variational_estimate_) {
         outfile->Printf("\n\n  "
                         "------------------------------------------------------"
@@ -694,7 +694,7 @@ double ProjectorCI_HashVec::compute_energy() {
     for (int cycle = 0; cycle < maxcycle; ++cycle) {
         iter_ = cycle;
 
-        timer_on("PIFCI:Step");
+        timer_on("PCI:Step");
         if (use_inter_norm_) {
             auto minmax_C = std::minmax_element(C.begin(), C.end());
             double min_C_abs = fabs(*minmax_C.first);
@@ -706,22 +706,22 @@ double ProjectorCI_HashVec::compute_energy() {
             propagate(generator_, dets_hashvec, C, time_step_,
                       spawning_threshold_, shift_);
         }
-        timer_off("PIFCI:Step");
+        timer_off("PCI:Step");
 
         // Orthogonalize this solution with respect to the previous ones
-        timer_on("PIFCI:Ortho");
+        timer_on("PCI:Ortho");
         if (current_root_ > 0) {
             orthogonalize(dets_hashvec, C, solutions_);
         }
-        timer_off("PIFCI:Ortho");
+        timer_off("PCI:Ortho");
 
         // Compute the energy and check for convergence
         if (cycle % energy_estimate_freq_ == 0) {
             approx_E_flag_ = true;
-            timer_on("PIFCI:<E>");
+            timer_on("PCI:<E>");
             std::map<std::string, double> results =
                 estimate_energy(dets_hashvec, C);
-            timer_off("PIFCI:<E>");
+            timer_off("PCI:<E>");
 
             proj_energy = results["PROJECTIVE ENERGY"];
 
@@ -797,35 +797,34 @@ double ProjectorCI_HashVec::compute_energy() {
         print_characteristic_function();
     }
 
-    timer_on("PIFCI:<E>end_v");
+    outfile->Printf("\n\n  ==> Post-Iterations <==\n");
+    outfile->Printf("\n  * Size of CI space                    = %zu",
+                    C.size());
+    outfile->Printf("\n  * Projector-CI Approximate Energy     = %18.12f Eh",
+                    1, approx_energy_);
+
+    timer_on("PCI:<E>end_v");
 
     if (fast_variational_estimate_) {
         var_energy = estimate_var_energy_sparse(dets_hashvec, C, 1.0e-14);
     } else {
         var_energy = estimate_var_energy(dets_hashvec, C, 1.0e-14);
     }
-    timer_off("PIFCI:<E>end_v");
+    timer_off("PCI:<E>end_v");
 
     Process::environment.globals["PCI ENERGY"] = var_energy;
 
-    outfile->Printf("\n\n  ==> Post-Iterations <==\n");
-    outfile->Printf("\n  * Projector-CI Variational Energy     = %18.12f Eh", 1,
-                    var_energy);
     outfile->Printf("\n  * Projector-CI Projective  Energy     = %18.12f Eh", 1,
                     proj_energy);
-
-    outfile->Printf("\n\n  * Projector-CI Approximate Energy     = %18.12f Eh",
-                    1, approx_energy_);
-    outfile->Printf("\n  * 1st order perturbation   Energy     = %18.12f Eh", 1,
-                    var_energy - approx_energy_);
-
+    outfile->Printf("\n\n  * Projector-CI Variational Energy     = %18.12f Eh", 1,
+                    var_energy);
     outfile->Printf("\n  * Projector-CI Var. Corr.  Energy     = %18.12f Eh", 1,
                     var_energy - reference_determinant_.energy() -
                         nuclear_repulsion_energy_ -
                     fci_ints_->scalar_energy());
 
-    outfile->Printf("\n\n  * Size of CI space                    = %zu",
-                    C.size());
+    outfile->Printf("\n  * 1st order perturbation   Energy     = %18.12f Eh", 1,
+                    var_energy - approx_energy_);
 
     outfile->Printf("\n\n  %s: %f s", "Projector-CI (bitset) ran in  ",
                     t_apici.elapsed());
@@ -843,7 +842,7 @@ double ProjectorCI_HashVec::compute_energy() {
 
     if (post_diagonalization_) {
         outfile->Printf("\n\n  ==> Post-Diagonalization <==\n");
-        timer_on("PIFCI:Post_Diag");
+        timer_on("PCI:Post_Diag");
         SharedMatrix apfci_evecs(new Matrix("Eigenvectors", C.size(), nroot_));
         SharedVector apfci_evals(new Vector("Eigenvalues", nroot_));
 
@@ -851,7 +850,7 @@ double ProjectorCI_HashVec::compute_energy() {
             dets_hashvec.toVector(), apfci_evals, apfci_evecs, nroot_,
             wavefunction_multiplicity_, diag_method_);
 
-        timer_off("PIFCI:Post_Diag");
+        timer_off("PCI:Post_Diag");
 
         double post_diag_energy =
             apfci_evals->get(current_root_) + nuclear_repulsion_energy_ +
@@ -884,7 +883,7 @@ double ProjectorCI_HashVec::compute_energy() {
     delete[] pqpq_ab_;
     delete[] pqpq_bb_;
 
-    timer_off("PIFCI:Energy");
+    timer_off("PCI:Energy");
     return var_energy;
 }
 
@@ -1303,7 +1302,7 @@ void ProjectorCI_HashVec::apply_tau_H_ref_C_symm(
         C_merge[I] += tau * (det_energy - S) * C[I];
     }
     if (approx_E_flag_) {
-        timer_on("PIFCI:<E>a");
+        timer_on("PCI:<E>a");
         size_t max_I = C.size();
         double CHC_energy = 0.0;
 #pragma omp parallel for reduction(+ : CHC_energy)
@@ -1313,7 +1312,7 @@ void ProjectorCI_HashVec::apply_tau_H_ref_C_symm(
             //            count_hash(dets[I]);
         }
         CHC_energy = CHC_energy / tau + S + nuclear_repulsion_energy_;
-        timer_off("PIFCI:<E>a");
+        timer_off("PCI:<E>a");
         double CHC_energy_gradient = (CHC_energy - approx_energy_) /
                                      (time_step_ * energy_estimate_freq_);
         old_approx_energy_ = approx_energy_;
@@ -1570,6 +1569,7 @@ void ProjectorCI_HashVec::apply_tau_H_ref_C_symm_det_dynamic_HBCI(
 
     Determinant detJ(detI);
     if (do_singles) {
+        timer_on("PCI:singles");
         std::vector<int> aocc = detI.get_alfa_occ();
         std::vector<int> bocc = detI.get_beta_occ();
         std::vector<int> avir = detI.get_alfa_vir();
@@ -1641,9 +1641,11 @@ void ProjectorCI_HashVec::apply_tau_H_ref_C_symm_det_dynamic_HBCI(
                 }
             }
         }
+        timer_off("PCI:singles");
     }
 
     if (do_doubles) {
+        timer_on("PCI:doubles");
         // Generate alpha-alpha excitations
         for (size_t x = 0; x < aa_couplings_size_; ++x) {
             double HJI_max = std::get<2>(aa_couplings_[x]);
@@ -1767,7 +1769,9 @@ void ProjectorCI_HashVec::apply_tau_H_ref_C_symm_det_dynamic_HBCI(
                 }
             }
         }
+        timer_off("PCI:doubles");
     } else if (do_doubles_1) {
+        timer_on("PCI:doubles");
         // Generate alpha-alpha excitations
         for (size_t x = 0; x < aa_couplings_size_; ++x) {
             double HJI_max = std::get<2>(aa_couplings_[x]);
@@ -1897,6 +1901,7 @@ void ProjectorCI_HashVec::apply_tau_H_ref_C_symm_det_dynamic_HBCI(
                 }
             }
         }
+        timer_off("PCI:doubles");
     }
 }
 
@@ -1906,21 +1911,21 @@ ProjectorCI_HashVec::estimate_energy(const det_hashvec& dets_hashvec,
     std::map<std::string, double> results;
     //    det_hashvec dets_hashvec(dets);
     //    dets = dets_hashvec.toVector();
-    timer_on("PIFCI:<E>p");
+    timer_on("PCI:<E>p");
     results["PROJECTIVE ENERGY"] = estimate_proj_energy(dets_hashvec, C);
-    timer_off("PIFCI:<E>p");
+    timer_off("PCI:<E>p");
 
     if (variational_estimate_) {
         if (fast_variational_estimate_) {
-            timer_on("PIFCI:<E>vs");
+            timer_on("PCI:<E>vs");
             results["VARIATIONAL ENERGY"] = estimate_var_energy_sparse(
                 dets_hashvec, C, energy_estimate_threshold_);
-            timer_off("PIFCI:<E>vs");
+            timer_off("PCI:<E>vs");
         } else {
-            timer_on("PIFCI:<E>v");
+            timer_on("PCI:<E>v");
             results["VARIATIONAL ENERGY"] = estimate_var_energy(
                 dets_hashvec, C, energy_estimate_threshold_);
-            timer_off("PIFCI:<E>v");
+            timer_off("PCI:<E>v");
         }
     }
     //    dets_hashvec = det_hashvec(dets);
