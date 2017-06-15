@@ -207,6 +207,8 @@ class STLBitsetDeterminant {
     static std::shared_ptr<FCIIntegrals> fci_ints_;
     /// Return the sign of a_n applied to string I
     static double SlaterSign(const bit_t& I, int n);
+    /// Return the sign of a_m^+ a_n applied to string I
+    static double SlaterSign(const bit_t& I, int m, int n);
     /// Given a set of determinant adds new elements necessary to have a spin
     /// complete set
     static void

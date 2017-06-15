@@ -612,7 +612,7 @@ double ProjectorCI_HashVec::compute_energy() {
                     "implementation");
     outfile->Printf(
         "\n\t         by Francesco A. Evangelista and Tianyuan Zhang");
-    outfile->Printf("\n\t                      version Jun. 15_1 2017");
+    outfile->Printf("\n\t                      version Jun. 15_2 2017");
     outfile->Printf("\n\t                    %4d thread(s) %s", num_threads_,
                     have_omp_ ? "(OMP)" : "");
     outfile->Printf(
@@ -819,7 +819,9 @@ double ProjectorCI_HashVec::compute_energy() {
 
     timer_on("PCI:<E>end_v");
 
-    sortHashVecByCoefficient(dets_hashvec, C);
+//    timer_on("PCI:sort");
+//    sortHashVecByCoefficient(dets_hashvec, C);
+//    timer_off("PCI:sort");
 
     if (fast_variational_estimate_) {
         var_energy = estimate_var_energy_sparse(dets_hashvec, C, 1.0e-14);
@@ -1895,6 +1897,231 @@ void ProjectorCI_HashVec::apply_tau_H_ref_C_symm_det_dynamic_HBCI(
                     if (!(detI.get_beta_bit(a) or detI.get_beta_bit(b))) {
                         max_coupling.second =
                             std::max(max_coupling.second, std::fabs(HJI));
+                        //                        Determinant detJ(detI);
+                        HJI *= detJ.double_excitation_bb(i, j, a, b);
+                        new_space_C_vec.push_back(
+                            std::make_pair(detJ, tau * HJI * CI));
+
+                        size_t index = dets_hashvec.find(detJ);
+                        if ((index < pre_C_size) &&
+                            (std::fabs(HJI * ref_C[index]) <
+                                 spawning_threshold ||
+                             index >= ref_C_size)) {
+                            new_space_C_vec[0].second +=
+                                tau * HJI * pre_C[index];
+                        }
+                        detJ.set_beta_bit(i, true);
+                        detJ.set_beta_bit(j, true);
+                        detJ.set_beta_bit(a, false);
+                        detJ.set_beta_bit(b, false);
+                    }
+                }
+            }
+        }
+        timer_off("PCI:doubles");
+    }
+}
+
+void ProjectorCI_HashVec::apply_tau_H_ref_C_symm_det_dynamic_HBCI_only(
+    double tau, double spawning_threshold, const det_hashvec& dets_hashvec,
+    const std::vector<double>& pre_C, const std::vector<double>& ref_C,
+    const Determinant& detI, double CI, double ref_CI,
+    std::vector<std::pair<Determinant, double>>& new_space_C_vec, double E0,
+    std::pair<double, double>& max_coupling) {
+
+    size_t pre_C_size = pre_C.size(), ref_C_size = ref_C.size();
+
+    bool do_singles =
+        (max_coupling.first == 0.0) or
+        (std::fabs(max_coupling.first * ref_CI) >= spawning_threshold);
+    bool do_doubles =
+        std::fabs(dets_double_max_coupling_ * ref_CI) >= spawning_threshold;
+
+    // Diagonal contributions
+    double det_energy = detI.energy() + fci_ints_->scalar_energy();
+    new_space_C_vec.push_back(
+        std::make_pair(detI, tau * (det_energy - E0) * CI));
+
+    Determinant detJ(detI);
+    if (do_singles) {
+        timer_on("PCI:singles");
+        std::vector<int> aocc = detI.get_alfa_occ();
+        std::vector<int> bocc = detI.get_beta_occ();
+        std::vector<int> avir = detI.get_alfa_vir();
+        std::vector<int> bvir = detI.get_beta_vir();
+
+        int noalpha = aocc.size();
+        int nobeta = bocc.size();
+        int nvalpha = avir.size();
+        int nvbeta = bvir.size();
+
+        // Generate alpha excitations
+        for (int i = 0; i < noalpha; ++i) {
+            int ii = aocc[i];
+            for (int a = 0; a < nvalpha; ++a) {
+                int aa = avir[a];
+                if ((mo_symmetry_[ii] ^ mo_symmetry_[aa]) == 0) {
+                    //                    Determinant detJ(detI);
+                    detJ.set_alfa_bit(ii, false);
+                    detJ.set_alfa_bit(aa, true);
+                    double HJI = detJ.slater_rules(detI);
+                    max_coupling.first =
+                        std::max(max_coupling.first, std::fabs(HJI));
+                    if (std::fabs(HJI * ref_CI) >= spawning_threshold) {
+                        new_space_C_vec.push_back(
+                            std::make_pair(detJ, tau * HJI * CI));
+
+                        size_t index = dets_hashvec.find(detJ);
+                        if ((index < pre_C_size) &&
+                            (std::fabs(HJI * ref_C[index]) <
+                                 spawning_threshold ||
+                             index >= ref_C_size)) {
+                            new_space_C_vec[0].second +=
+                                tau * HJI * pre_C[index];
+                        }
+                    }
+                    detJ.set_alfa_bit(ii, true);
+                    detJ.set_alfa_bit(aa, false);
+                }
+            }
+        }
+        // Generate beta excitations
+        for (int i = 0; i < nobeta; ++i) {
+            int ii = bocc[i];
+            for (int a = 0; a < nvbeta; ++a) {
+                int aa = bvir[a];
+                if ((mo_symmetry_[ii] ^ mo_symmetry_[aa]) == 0) {
+                    //                    Determinant detJ(detI);
+                    detJ.set_beta_bit(ii, false);
+                    detJ.set_beta_bit(aa, true);
+                    double HJI = detJ.slater_rules(detI);
+                    max_coupling.first =
+                        std::max(max_coupling.first, std::fabs(HJI));
+                    if (std::fabs(HJI * ref_CI) >= spawning_threshold) {
+                        new_space_C_vec.push_back(
+                            std::make_pair(detJ, tau * HJI * CI));
+
+                        size_t index = dets_hashvec.find(detJ);
+                        if ((index < pre_C_size) &&
+                            (std::fabs(HJI * ref_C[index]) <
+                                 spawning_threshold ||
+                             index >= ref_C_size)) {
+                            new_space_C_vec[0].second +=
+                                tau * HJI * pre_C[index];
+                        }
+                    }
+                    detJ.set_beta_bit(ii, true);
+                    detJ.set_beta_bit(aa, false);
+                }
+            }
+        }
+        timer_off("PCI:singles");
+    }
+
+    if (do_doubles) {
+        timer_on("PCI:doubles");
+        // Generate alpha-alpha excitations
+        for (size_t x = 0; x < aa_couplings_size_; ++x) {
+            double HJI_max = std::get<2>(aa_couplings_[x]);
+            if (fabs(HJI_max * ref_CI) < spawning_threshold) {
+                break;
+            }
+            int i = std::get<0>(aa_couplings_[x]);
+            int j = std::get<1>(aa_couplings_[x]);
+            if (detI.get_alfa_bit(i) and detI.get_alfa_bit(j)) {
+                std::vector<std::tuple<int, int, double>>& sub_couplings =
+                    std::get<3>(aa_couplings_[x]);
+                size_t sub_couplings_size = sub_couplings.size();
+                for (size_t y = 0; y < sub_couplings_size; ++y) {
+                    int a, b;
+                    double HJI;
+                    std::tie(a, b, HJI) = sub_couplings[y];
+                    if (fabs(HJI * ref_CI) < spawning_threshold) {
+                        break;
+                    }
+                    if (!(detI.get_alfa_bit(a) or detI.get_alfa_bit(b))) {
+                        //                        Determinant detJ(detI);
+                        HJI *= detJ.double_excitation_aa(i, j, a, b);
+                        new_space_C_vec.push_back(
+                            std::make_pair(detJ, tau * HJI * CI));
+
+                        size_t index = dets_hashvec.find(detJ);
+                        if ((index < pre_C_size) &&
+                            (std::fabs(HJI * ref_C[index]) <
+                                 spawning_threshold ||
+                             index >= ref_C_size)) {
+                            new_space_C_vec[0].second +=
+                                tau * HJI * pre_C[index];
+                        }
+                        detJ.set_alfa_bit(i, true);
+                        detJ.set_alfa_bit(j, true);
+                        detJ.set_alfa_bit(a, false);
+                        detJ.set_alfa_bit(b, false);
+                    }
+                }
+            }
+        }
+        // Generate alpha-beta excitations
+        for (size_t x = 0; x < ab_couplings_size_; ++x) {
+            double HJI_max = std::get<2>(ab_couplings_[x]);
+            if (fabs(HJI_max * ref_CI) < spawning_threshold) {
+                break;
+            }
+            int i = std::get<0>(ab_couplings_[x]);
+            int j = std::get<1>(ab_couplings_[x]);
+            if (detI.get_alfa_bit(i) and detI.get_beta_bit(j)) {
+                std::vector<std::tuple<int, int, double>>& sub_couplings =
+                    std::get<3>(ab_couplings_[x]);
+                size_t sub_couplings_size = sub_couplings.size();
+                for (size_t y = 0; y < sub_couplings_size; ++y) {
+                    int a, b;
+                    double HJI;
+                    std::tie(a, b, HJI) = sub_couplings[y];
+                    if (fabs(HJI * ref_CI) < spawning_threshold) {
+                        break;
+                    }
+                    if (!(detI.get_alfa_bit(a) or detI.get_beta_bit(b))) {
+                        //                        Determinant detJ(detI);
+                        HJI *= detJ.double_excitation_ab(i, j, a, b);
+                        new_space_C_vec.push_back(
+                            std::make_pair(detJ, tau * HJI * CI));
+
+                        size_t index = dets_hashvec.find(detJ);
+                        if ((index < pre_C_size) &&
+                            (std::fabs(HJI * ref_C[index]) <
+                                 spawning_threshold ||
+                             index >= ref_C_size)) {
+                            new_space_C_vec[0].second +=
+                                tau * HJI * pre_C[index];
+                        }
+                        detJ.set_alfa_bit(i, true);
+                        detJ.set_beta_bit(j, true);
+                        detJ.set_alfa_bit(a, false);
+                        detJ.set_beta_bit(b, false);
+                    }
+                }
+            }
+        }
+        // Generate beta-beta excitations
+        for (size_t x = 0; x < bb_couplings_size_; ++x) {
+            double HJI_max = std::get<2>(bb_couplings_[x]);
+            if (fabs(HJI_max * ref_CI) < spawning_threshold) {
+                break;
+            }
+            int i = std::get<0>(bb_couplings_[x]);
+            int j = std::get<1>(bb_couplings_[x]);
+            if (detI.get_beta_bit(i) and detI.get_beta_bit(j)) {
+                std::vector<std::tuple<int, int, double>>& sub_couplings =
+                    std::get<3>(bb_couplings_[x]);
+                size_t sub_couplings_size = sub_couplings.size();
+                for (size_t y = 0; y < sub_couplings_size; ++y) {
+                    int a, b;
+                    double HJI;
+                    std::tie(a, b, HJI) = sub_couplings[y];
+                    if (fabs(HJI * ref_CI) < spawning_threshold) {
+                        break;
+                    }
+                    if (!(detI.get_beta_bit(a) or detI.get_beta_bit(b))) {
                         //                        Determinant detJ(detI);
                         HJI *= detJ.double_excitation_bb(i, j, a, b);
                         new_space_C_vec.push_back(
