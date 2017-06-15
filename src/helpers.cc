@@ -342,6 +342,21 @@ std::string to_string(const std::vector<std::string>& vec_str,
     return ss;
 }
 
+std::string get_ms_string( double twice_ms )
+{
+    std::string ms_str;
+    double ms = twice_ms / 2.0;
+    if( (static_cast<int>(twice_ms) % 2) == 0 ){
+        ms_str = std::to_string(static_cast<int>(ms));
+    }else{
+        int n = static_cast<int>( ms / 0.5 );
+        ms_str.append(std::to_string(n));
+        ms_str += "/";
+        ms_str += "2";
+    }
+    return ms_str;
+}
+
 Matrix tensor_to_matrix(ambit::Tensor t, Dimension dims) {
     // Copy the tensor to a plain matrix
     size_t size = dims.sum();
