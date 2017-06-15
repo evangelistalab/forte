@@ -370,8 +370,8 @@ double WFNOperator::s2(DeterminantMap& wfn, SharedMatrix& evecs, int root) {
         S2 += (ms * ms + ms + static_cast<double>(nb) -
                static_cast<double>(npair)) *
               evecs->get(det.second, root) * evecs->get(det.second, root);
-        if ((npair == nb) or (npair == na))
-            continue;
+       // if ((npair == nb) or (npair == na))
+       //     continue;
     }
 
         // Loop directly through all determinants with
@@ -395,7 +395,7 @@ double WFNOperator::s2(DeterminantMap& wfn, SharedMatrix& evecs, int root) {
                 short s = std::get<2>(detJ);
                 if ((r != s) and (p == s) and (q == r)) {
                     sign_pq *= sign_rs;
-                    S2 -= sign_pq * evecs->get(J, root) *
+                    S2 -= sign_pq * evecs->get(I, root) *
                           evecs->get(J, root);
                 }
             }

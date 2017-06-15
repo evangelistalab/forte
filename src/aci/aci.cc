@@ -362,7 +362,6 @@ void AdaptiveCI::print_info() {
     // Print a summary
     std::vector<std::pair<std::string, int>> calculation_info{
         {"Multiplicity", multiplicity_},
-        {"Ms", twice_ms_},
         {"Symmetry", wavefunction_symmetry_},
         {"Number of roots", nroot_},
         {"Root used for properties", options_.get_int("ACI_ROOT")}};
@@ -373,6 +372,7 @@ void AdaptiveCI::print_info() {
         {"Convergence threshold", options_.get_double("ACI_CONVERGENCE")}};
 
     std::vector<std::pair<std::string, std::string>> calculation_info_string{
+        {"Ms", get_ms_string(twice_ms_)},
         {"Determinant selection criterion", energy_selection_
                                                 ? "Second-order Energy"
                                                 : "First-order Coefficients"},
