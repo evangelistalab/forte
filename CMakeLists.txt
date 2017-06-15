@@ -32,6 +32,9 @@ if(ENABLE_CheMPS2)
     find_package(CheMPS2 1.8.3 CONFIG REQUIRED)
 endif()
 
+# Including custom cmake rules
+include(cmake/clang-cxx-dev-tools.cmake)
+
 add_psi4_plugin(forte
 src/active_dsrgpt2.cc
 src/ao_helper.cc
