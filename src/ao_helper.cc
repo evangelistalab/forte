@@ -32,6 +32,7 @@
 #include "psi4/libmints/matrix.h"
 #include "psi4/libmints/sieve.h"
 #include "psi4/libmints/vector.h"
+#include "psi4/libmints/basisset.h"
 
 namespace psi {
 namespace forte {

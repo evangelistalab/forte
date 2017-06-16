@@ -33,6 +33,9 @@
 #include "psi4/lib3index/denominator.h"
 
 namespace psi {
+
+class BasisSet;
+
 namespace forte {
 
 class AtomicOrbitalHelper {
