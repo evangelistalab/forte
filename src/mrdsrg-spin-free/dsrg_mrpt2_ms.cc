@@ -92,13 +92,6 @@ std::vector<std::vector<double>> DSRG_MRPT2::compute_energy_sa() {
     // transfer integrals
     transfer_integrals();
 
-    // prepare FCI integrals
-    std::shared_ptr<FCIIntegrals> fci_ints =
-        std::make_shared<FCIIntegrals>(ints_, aactv_mos_, acore_mos_);
-    fci_ints->set_active_integrals(Hbar2_.block("aaaa"), Hbar2_.block("aAaA"),
-                                   Hbar2_.block("AAAA"));
-    fci_ints->compute_restricted_one_body_operator();
-
     // get character table
     CharacterTable ct =
         Process::environment.molecule()->point_group()->char_table();
@@ -120,6 +113,13 @@ std::vector<std::vector<double>> DSRG_MRPT2::compute_energy_sa() {
     size_t nele2 = nele1 * nele1;
     size_t nele3 = nele1 * nele2;
 
+    // prepare FCI integrals
+    std::shared_ptr<FCIIntegrals> fci_ints =
+        std::make_shared<FCIIntegrals>(ints_, aactv_mos_, acore_mos_);
+    fci_ints->set_active_integrals(Hbar2_.block("aaaa"), Hbar2_.block("aAaA"),
+                                   Hbar2_.block("AAAA"));
+    fci_ints->compute_restricted_one_body_operator();
+
     // get effective one-electron integral (DSRG transformed)
     BlockedTensor oei = BTF_->build(tensor_type_, "temp1", spin_cases({"aa"}));
     oei.block("aa").data() = fci_ints->oei_a_vector();
@@ -133,183 +133,200 @@ std::vector<std::vector<double>> DSRG_MRPT2::compute_energy_sa() {
     int nentry = eigens_.size();
     std::vector<std::vector<double>> Edsrg_sa(nentry, std::vector<double>());
 
-    for (int n = 0; n < nentry; ++n) {
-        int irrep = options_["AVG_STATE"][n][0].to_integer();
-        int multi = options_["AVG_STATE"][n][1].to_integer();
-        int nstates = options_["AVG_STATE"][n][2].to_integer();
-        std::vector<psi::forte::STLBitsetDeterminant> p_space = p_spaces_[n];
-
-        // print current symmetry
-        std::stringstream ss;
-        ss << "Diagonalize Effective Hamiltonian (" << multi_label[multi - 1]
-           << " " << irrep_symbol[irrep] << ")";
-        print_h2(ss.str());
-
-        // diagonalize which the second-order effective Hamiltonian
-        // FULL: CASCI using determinants
-        // AVG_STATES: H_AB = <A|H|B> where A and B are SA-CAS states
-        if (options_.get_str("DSRG_MULTI_STATE") == "SA_FULL") {
-
-            outfile->Printf("\n    Use string FCI code.");
-
-            // prepare FCISolver
-            int charge = Process::environment.molecule()->molecular_charge();
-            if (options_["CHARGE"].has_changed()) {
-                charge = options_.get_int("CHARGE");
+    // call FCI_MO if SA_FULL and CAS_TYPE == CAS
+    if(options_.get_str("DSRG_MULTI_STATE") == "SA_FULL" &&
+            options_.get_str("CAS_TYPE") == "CAS") {
+        FCI_MO fci_mo(reference_wavefunction_, options_, ints_, mo_space_info_);
+        fci_mo.set_form_Fock(false);
+        fci_mo.compute_energy();
+        auto eigens = fci_mo.eigens();
+        for (int n = 0; n < nentry; ++n) {
+            auto eigen = eigens[n];
+            int ni = eigen.size();
+            for (int i = 0; i < ni; ++i) {
+                Edsrg_sa[n].push_back(eigen[i].second);
             }
-            auto nelec = 0;
-            int natom = Process::environment.molecule()->natom();
-            for (int i = 0; i < natom; ++i) {
-                nelec += Process::environment.molecule()->fZ(i);
-            }
-            nelec -= charge;
-            int ms = (multi + 1) % 2;
-            auto nelec_actv = nelec - 2 * mo_space_info_->size("FROZEN_DOCC") -
-                              2 * acore_mos_.size();
-            auto na = (nelec_actv + ms) / 2;
-            auto nb = nelec_actv - na;
+        }
+    } else {
 
-            Dimension active_dim = mo_space_info_->get_dimension("ACTIVE");
-            int ntrial_per_root = options_.get_int("NTRIAL_PER_ROOT");
+        for (int n = 0; n < nentry; ++n) {
+            int irrep = options_["AVG_STATE"][n][0].to_integer();
+            int multi = options_["AVG_STATE"][n][1].to_integer();
+            int nstates = options_["AVG_STATE"][n][2].to_integer();
+            std::vector<psi::forte::STLBitsetDeterminant> p_space = p_spaces_[n];
 
-            FCISolver fcisolver(active_dim, acore_mos_, aactv_mos_, na, nb,
-                                multi, irrep, ints_, mo_space_info_,
-                                ntrial_per_root, print_, options_);
-            fcisolver.set_max_rdm_level(1);
-            fcisolver.set_nroot(nstates);
-            fcisolver.set_root(nstates - 1);
-            fcisolver.set_fci_iterations(options_.get_int("FCI_MAXITER"));
-            fcisolver.set_collapse_per_root(
-                options_.get_int("DL_COLLAPSE_PER_ROOT"));
-            fcisolver.set_subspace_per_root(
-                options_.get_int("DL_SUBSPACE_PER_ROOT"));
+            // print current symmetry
+            std::stringstream ss;
+            ss << "Diagonalize Effective Hamiltonian (" << multi_label[multi - 1]
+               << " " << irrep_symbol[irrep] << ")";
+            print_h2(ss.str());
 
-            // compute energy and fill in results
-            fcisolver.compute_energy();
-            SharedVector Ems = fcisolver.eigen_vals();
-            for (int i = 0; i < nstates; ++i) {
-                Edsrg_sa[n].push_back(Ems->get(i) + Enuc);
-            }
+            // diagonalize which the second-order effective Hamiltonian
+            // FULL: CASCI using determinants
+            // AVG_STATES: H_AB = <A|H|B> where A and B are SA-CAS states
+            if (options_.get_str("DSRG_MULTI_STATE") == "SA_FULL") {
 
-        } else {
+                outfile->Printf("\n    Use string FCI code.");
 
-            outfile->Printf("\n    Use the sub-space of CASCI.");
+                // prepare FCISolver
+                int charge = Process::environment.molecule()->molecular_charge();
+                if (options_["CHARGE"].has_changed()) {
+                    charge = options_.get_int("CHARGE");
+                }
+                auto nelec = 0;
+                int natom = Process::environment.molecule()->natom();
+                for (int i = 0; i < natom; ++i) {
+                    nelec += Process::environment.molecule()->fZ(i);
+                }
+                nelec -= charge;
+                int ms = (multi + 1) % 2;
+                auto nelec_actv = nelec - 2 * mo_space_info_->size("FROZEN_DOCC") -
+                        2 * acore_mos_.size();
+                auto na = (nelec_actv + ms) / 2;
+                auto nb = nelec_actv - na;
 
-            int dim = (eigens_[n][0].first)->dim();
-            size_t eigen_size = eigens_[n].size();
-            SharedMatrix evecs(new Matrix("evecs", dim, eigen_size));
-            for (int i = 0; i < eigen_size; ++i) {
-                evecs->set_column(0, i, (eigens_[n][i]).first);
-            }
+                Dimension active_dim = mo_space_info_->get_dimension("ACTIVE");
+                int ntrial_per_root = options_.get_int("NTRIAL_PER_ROOT");
 
-            SharedMatrix Heff(new Matrix("Heff " + multi_label[multi - 1] +
-                                             " " + irrep_symbol[irrep],
-                                         nstates, nstates));
-            for (int A = 0; A < nstates; ++A) {
-                for (int B = A; B < nstates; ++B) {
+                FCISolver fcisolver(active_dim, acore_mos_, aactv_mos_, na, nb,
+                                    multi, irrep, ints_, mo_space_info_,
+                                    ntrial_per_root, print_, options_);
+                fcisolver.set_max_rdm_level(1);
+                fcisolver.set_nroot(nstates);
+                fcisolver.set_root(nstates - 1);
+                fcisolver.set_fci_iterations(options_.get_int("FCI_MAXITER"));
+                fcisolver.set_collapse_per_root(
+                            options_.get_int("DL_COLLAPSE_PER_ROOT"));
+                fcisolver.set_subspace_per_root(
+                            options_.get_int("DL_SUBSPACE_PER_ROOT"));
 
-                    // compute rdms
-                    CI_RDMS ci_rdms(options_, fci_ints, p_space, evecs, A, B);
-                    ci_rdms.set_symmetry(irrep);
+                // compute energy and fill in results
+                fcisolver.compute_energy();
+                SharedVector Ems = fcisolver.eigen_vals();
+                for (int i = 0; i < nstates; ++i) {
+                    Edsrg_sa[n].push_back(Ems->get(i) + Enuc);
+                }
 
-                    std::vector<double> opdm_a(nele1, 0.0);
-                    std::vector<double> opdm_b(nele1, 0.0);
-                    ci_rdms.compute_1rdm(opdm_a, opdm_b);
+            } else {
 
-                    std::vector<double> tpdm_aa(nele2, 0.0);
-                    std::vector<double> tpdm_ab(nele2, 0.0);
-                    std::vector<double> tpdm_bb(nele2, 0.0);
-                    ci_rdms.compute_2rdm(tpdm_aa, tpdm_ab, tpdm_bb);
+                outfile->Printf("\n    Use the sub-space of CASCI.");
 
-                    // put rdms in tensor format
-                    BlockedTensor D1 = BTF_->build(tensor_type_, "D1",
-                                                   spin_cases({"aa"}), true);
-                    D1.block("aa").data() = opdm_a;
-                    D1.block("AA").data() = opdm_b;
+                int dim = (eigens_[n][0].first)->dim();
+                size_t eigen_size = eigens_[n].size();
+                SharedMatrix evecs(new Matrix("evecs", dim, eigen_size));
+                for (int i = 0; i < eigen_size; ++i) {
+                    evecs->set_column(0, i, (eigens_[n][i]).first);
+                }
 
-                    BlockedTensor D2 = BTF_->build(tensor_type_, "D2",
-                                                   spin_cases({"aaaa"}), true);
-                    D2.block("aaaa").data() = tpdm_aa;
-                    D2.block("aAaA").data() = tpdm_ab;
-                    D2.block("AAAA").data() = tpdm_bb;
+                SharedMatrix Heff(new Matrix("Heff " + multi_label[multi - 1] +
+                                  " " + irrep_symbol[irrep],
+                                  nstates, nstates));
+                for (int A = 0; A < nstates; ++A) {
+                    for (int B = A; B < nstates; ++B) {
 
-                    double H_AB = 0.0;
-                    H_AB += oei["uv"] * D1["uv"];
-                    H_AB += oei["UV"] * D1["UV"];
+                        // compute rdms
+                        CI_RDMS ci_rdms(options_, fci_ints, p_space, evecs, A, B);
+                        ci_rdms.set_symmetry(irrep);
 
-                    if (!options_.get_bool("FORM_HBAR3")) {
-                        H_AB += 0.25 * Hbar2_["uvxy"] * D2["xyuv"];
-                        H_AB += 0.25 * Hbar2_["UVXY"] * D2["XYUV"];
-                        H_AB += Hbar2_["uVxY"] * D2["xYuV"];
-                    } else {
-                        BlockedTensor temp2 = BTF_->build(
-                            tensor_type_, "temp2", spin_cases({"aaaa"}), true);
-                        temp2.iterate([&](const std::vector<size_t>& i,
+                        std::vector<double> opdm_a(nele1, 0.0);
+                        std::vector<double> opdm_b(nele1, 0.0);
+                        ci_rdms.compute_1rdm(opdm_a, opdm_b);
+
+                        std::vector<double> tpdm_aa(nele2, 0.0);
+                        std::vector<double> tpdm_ab(nele2, 0.0);
+                        std::vector<double> tpdm_bb(nele2, 0.0);
+                        ci_rdms.compute_2rdm(tpdm_aa, tpdm_ab, tpdm_bb);
+
+                        // put rdms in tensor format
+                        BlockedTensor D1 = BTF_->build(tensor_type_, "D1",
+                                                       spin_cases({"aa"}), true);
+                        D1.block("aa").data() = opdm_a;
+                        D1.block("AA").data() = opdm_b;
+
+                        BlockedTensor D2 = BTF_->build(tensor_type_, "D2",
+                                                       spin_cases({"aaaa"}), true);
+                        D2.block("aaaa").data() = tpdm_aa;
+                        D2.block("aAaA").data() = tpdm_ab;
+                        D2.block("AAAA").data() = tpdm_bb;
+
+                        double H_AB = 0.0;
+                        H_AB += oei["uv"] * D1["uv"];
+                        H_AB += oei["UV"] * D1["UV"];
+
+                        if (!options_.get_bool("FORM_HBAR3")) {
+                            H_AB += 0.25 * Hbar2_["uvxy"] * D2["xyuv"];
+                            H_AB += 0.25 * Hbar2_["UVXY"] * D2["XYUV"];
+                            H_AB += Hbar2_["uVxY"] * D2["xYuV"];
+                        } else {
+                            BlockedTensor temp2 = BTF_->build(
+                                        tensor_type_, "temp2", spin_cases({"aaaa"}), true);
+                            temp2.iterate([&](const std::vector<size_t>& i,
                                           const std::vector<SpinType>& spin,
                                           double& value) {
-                            if ((spin[0] == AlphaSpin) &&
-                                (spin[1] == AlphaSpin)) {
-                                value = ints_->aptei_aa(i[0], i[1], i[2], i[3]);
-                            } else if ((spin[0] == AlphaSpin) &&
-                                       (spin[1] == BetaSpin)) {
-                                value = ints_->aptei_ab(i[0], i[1], i[2], i[3]);
-                            } else if ((spin[0] == BetaSpin) &&
-                                       (spin[1] == BetaSpin)) {
-                                value = ints_->aptei_bb(i[0], i[1], i[2], i[3]);
-                            }
-                        });
+                                if ((spin[0] == AlphaSpin) &&
+                                        (spin[1] == AlphaSpin)) {
+                                    value = ints_->aptei_aa(i[0], i[1], i[2], i[3]);
+                                } else if ((spin[0] == AlphaSpin) &&
+                                           (spin[1] == BetaSpin)) {
+                                    value = ints_->aptei_ab(i[0], i[1], i[2], i[3]);
+                                } else if ((spin[0] == BetaSpin) &&
+                                           (spin[1] == BetaSpin)) {
+                                    value = ints_->aptei_bb(i[0], i[1], i[2], i[3]);
+                                }
+                            });
 
-                        H_AB += 0.25 * temp2["uvxy"] * D2["xyuv"];
-                        H_AB += 0.25 * temp2["UVXY"] * D2["XYUV"];
-                        H_AB += temp2["uVxY"] * D2["xYuV"];
+                            H_AB += 0.25 * temp2["uvxy"] * D2["xyuv"];
+                            H_AB += 0.25 * temp2["UVXY"] * D2["XYUV"];
+                            H_AB += temp2["uVxY"] * D2["xYuV"];
 
-                        // 3-RDM
-                        std::vector<double> tpdm_aaa(nele3, 0.0);
-                        std::vector<double> tpdm_aab(nele3, 0.0);
-                        std::vector<double> tpdm_abb(nele3, 0.0);
-                        std::vector<double> tpdm_bbb(nele3, 0.0);
-                        ci_rdms.compute_3rdm(tpdm_aaa, tpdm_aab, tpdm_abb,
-                                             tpdm_bbb);
+                            // 3-RDM
+                            std::vector<double> tpdm_aaa(nele3, 0.0);
+                            std::vector<double> tpdm_aab(nele3, 0.0);
+                            std::vector<double> tpdm_abb(nele3, 0.0);
+                            std::vector<double> tpdm_bbb(nele3, 0.0);
+                            ci_rdms.compute_3rdm(tpdm_aaa, tpdm_aab, tpdm_abb,
+                                                 tpdm_bbb);
 
-                        BlockedTensor D3 = BTF_->build(
-                            tensor_type_, "D3", spin_cases({"aaaaaa"}), true);
-                        D3.block("aaaaaa").data() = tpdm_aaa;
-                        D3.block("aaAaaA").data() = tpdm_aab;
-                        D3.block("aAAaAA").data() = tpdm_abb;
-                        D3.block("AAAAAA").data() = tpdm_bbb;
+                            BlockedTensor D3 = BTF_->build(
+                                        tensor_type_, "D3", spin_cases({"aaaaaa"}), true);
+                            D3.block("aaaaaa").data() = tpdm_aaa;
+                            D3.block("aaAaaA").data() = tpdm_aab;
+                            D3.block("aAAaAA").data() = tpdm_abb;
+                            D3.block("AAAAAA").data() = tpdm_bbb;
 
-                        H_AB += (1.0 / 36) * Hbar3_["xyzuvw"] * D3["uvwxyz"];
-                        H_AB += (1.0 / 36) * Hbar3_["XYZUVW"] * D3["UVWXYZ"];
-                        H_AB += 0.25 * Hbar3_["xyZuvW"] * D3["uvWxyZ"];
-                        H_AB += 0.25 * Hbar3_["xYZuVW"] * D3["uVWxYZ"];
+                            H_AB += (1.0 / 36) * Hbar3_["xyzuvw"] * D3["uvwxyz"];
+                            H_AB += (1.0 / 36) * Hbar3_["XYZUVW"] * D3["UVWXYZ"];
+                            H_AB += 0.25 * Hbar3_["xyZuvW"] * D3["uvWxyZ"];
+                            H_AB += 0.25 * Hbar3_["xYZuVW"] * D3["uVWxYZ"];
+                        }
+
+                        if (A == B) {
+                            H_AB += ints_->frozen_core_energy() +
+                                    fci_ints->scalar_energy() + Enuc;
+                            Heff->set(A, B, H_AB);
+                        } else {
+                            Heff->set(A, B, H_AB);
+                            Heff->set(B, A, H_AB);
+                        }
                     }
+                } // end forming effective Hamiltonian
 
-                    if (A == B) {
-                        H_AB += ints_->frozen_core_energy() +
-                                fci_ints->scalar_energy() + Enuc;
-                        Heff->set(A, B, H_AB);
-                    } else {
-                        Heff->set(A, B, H_AB);
-                        Heff->set(B, A, H_AB);
-                    }
+                print_h2("Effective Hamiltonian Summary");
+                outfile->Printf("\n");
+                Heff->print();
+                SharedMatrix U(new Matrix("U of Heff", nstates, nstates));
+                SharedVector Ems(new Vector("MS Energies", nstates));
+                Heff->diagonalize(U, Ems);
+                U->eivprint(Ems);
+
+                // fill in Edsrg_sa
+                for (int i = 0; i < nstates; ++i) {
+                    Edsrg_sa[n].push_back(Ems->get(i));
                 }
-            } // end forming effective Hamiltonian
+            } // end if DSRG_AVG_DIAG
 
-            print_h2("Effective Hamiltonian Summary");
-            outfile->Printf("\n");
-            Heff->print();
-            SharedMatrix U(new Matrix("U of Heff", nstates, nstates));
-            SharedVector Ems(new Vector("MS Energies", nstates));
-            Heff->diagonalize(U, Ems);
-            U->eivprint(Ems);
-
-            // fill in Edsrg_sa
-            for (int i = 0; i < nstates; ++i) {
-                Edsrg_sa[n].push_back(Ems->get(i));
-            }
-        } // end if DSRG_AVG_DIAG
-
-    } // end looping averaged states
+        } // end looping averaged states
+    }
 
     return Edsrg_sa;
 }

@@ -466,6 +466,25 @@ void FCI_MO::read_options() {
 }
 
 double FCI_MO::compute_energy() {
+    if (options_["AVG_STATE"].size() != 0) {
+        if (options_.get_bool("SEMI_CANONICAL")) {
+            Eref_ = compute_canonical_sa_energy();
+        } else {
+            Eref_ = compute_sa_energy();
+        }
+    } else {
+        if (options_.get_bool("SEMI_CANONICAL")) {
+            Eref_ = compute_canonical_ss_energy();
+        } else {
+            Eref_ = compute_ss_energy();
+        }
+    }
+
+    Process::environment.globals["CURRENT ENERGY"] = Eref_;
+    return Eref_;
+}
+
+double FCI_MO::compute_ss_energy() {
 
     // allocate density
     Da_ = d2(ncmo_, d1(ncmo_));
@@ -531,56 +550,6 @@ double FCI_MO::compute_energy() {
         print_Fock("Beta", Fb_);
     }
 
-    //    // Orbitals. If use Kevin's CASSCF, this part is ignored.
-    //    if(!default_orbitals_){
-    //        if(semi_ && count != 0){
-    //            // Semi-canonicalize orbitals
-    //            outfile->Printf("\n  Use semi-canonical orbitals.\n");
-    //            semi_canonicalize();
-
-    //            // Form and Diagonalize the CASCI Hamiltonian
-    //            Diagonalize_H(determinant_, eigen_);
-    //            if(print_ > 2){
-    //                for(pair<SharedVector, double> x: eigen_){
-    //                    outfile->Printf("\n\n  Spin selected CI vectors\n");
-    //                    (x.first)->print();
-    //                    outfile->Printf("  Energy  =  %20.15lf\n", x.second);
-    //                }
-    //            }
-
-    //            // Store CI Vectors in eigen_
-    //            print_CI(nroot_, options_.get_double("FCIMO_PRINT_CIVEC"),
-    //            eigen_, determinant_);
-
-    //            // prepare ci_rdms for one density
-    //            int dim = (eigen_[0].first)->dim();
-    //            SharedMatrix evecs (new Matrix("evecs",dim,dim));
-    //            for(int i = 0; i < eigen_.size(); ++i){
-    //                evecs->set_column(0,i,(eigen_[i]).first);
-    //            }
-    //            CI_RDMS ci_rdms
-    //            (options_,fci_ints_,determinant_,evecs,root_,root_);
-
-    //            // Form Density
-    //            FormDensity(ci_rdms, Da_, Db_);
-    //            if(print_ > 1){
-    //                print_d2("Da", Da_);
-    //                print_d2("Db", Db_);
-    //            }
-
-    //            // Fock Matrix
-    //            count = 0;
-    //            Form_Fock(Fa_,Fb_);
-    //            Check_Fock(Fa_,Fb_,dconv_,count);
-    //            if(print_ > 1){
-    //                print_d2("Fa", Fa_);
-    //                print_d2("Fb", Fb_);
-    //            }
-    //        }else{
-    ////            nat_orbs();
-    //        }
-    //    }
-
     // compute dipole moments
     compute_permanent_dipole();
 
@@ -590,14 +559,15 @@ double FCI_MO::compute_energy() {
         compute_oscillator_strength();
     }
 
-    Eref_ = eigen_[root_].second;
-    Process::environment.globals["CURRENT ENERGY"] = Eref_;
-    return Eref_;
+    double Eref = eigen_[root_].second;
+    Eref_ = Eref;
+    Process::environment.globals["CURRENT ENERGY"] = Eref;
+    return Eref;
 }
 
-double FCI_MO::compute_canonical_energy() {
+double FCI_MO::compute_canonical_ss_energy() {
     // compute energy
-    double Eref = compute_energy();
+    double Eref = compute_ss_energy();
 
     // check Fock matrix
     size_t count = 0;
@@ -611,13 +581,15 @@ double FCI_MO::compute_canonical_energy() {
         semi_canonicalize();
 
         // recompute energy
-        Eref = compute_energy();
+        Eref = compute_ss_energy();
 
         // recheck Fock matrix
         count = 0;
         Check_Fock(Fa_, Fb_, dconv_, count);
     }
 
+    Eref_ = Eref;
+    Process::environment.globals["CURRENT ENERGY"] = Eref;
     return Eref;
 }
 
@@ -3920,13 +3892,13 @@ double FCI_MO::compute_sa_energy() {
     //    }
 
     Eref_ = Ecas_sa;
-    Process::environment.globals["CURRENT ENERGY"] = Eref_;
-    return Eref_;
+    Process::environment.globals["CURRENT ENERGY"] = Ecas_sa;
+    return Ecas_sa;
 }
 
 double FCI_MO::compute_canonical_sa_energy() {
     // compute state-averaged energy
-    double Eref = compute_sa_energy();
+    double Esa = compute_sa_energy();
 
     // check Fock matrix
     size_t count = 0;
@@ -3942,7 +3914,7 @@ double FCI_MO::compute_canonical_sa_energy() {
         semi_canonicalize();
 
         // recompute energy
-        Eref = compute_sa_energy();
+        Esa = compute_sa_energy();
 
         // recheck Fock matrix
         count = 0;
@@ -3951,7 +3923,9 @@ double FCI_MO::compute_canonical_sa_energy() {
         }
     }
 
-    return Eref;
+    Eref_ = Esa;
+    Process::environment.globals["CURRENT ENERGY"] = Esa;
+    return Esa;
 }
 
 // TODO this function probably should not be here.

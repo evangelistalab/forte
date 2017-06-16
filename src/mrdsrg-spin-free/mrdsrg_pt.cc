@@ -5,7 +5,8 @@
  * that implements a variety of quantum chemistry methods for strongly
  * correlated electrons.
  *
- * Copyright (c) 2012-2017 by its authors (see COPYING, COPYING.LESSER, AUTHORS).
+ * Copyright (c) 2012-2017 by its authors (see COPYING, COPYING.LESSER,
+ * AUTHORS).
  *
  * The copyrights for code used from other parties are included in
  * the corresponding files.
@@ -26,14 +27,14 @@
  * @END LICENSE
  */
 
+#include "psi4/libdiis/diismanager.h"
 #include <algorithm>
-#include <vector>
 #include <map>
 #include <memory>
-#include "psi4/libdiis/diismanager.h"
+#include <vector>
 
-#include "../mini-boost/boost/format.hpp"
 #include "../helpers.h"
+#include "../mini-boost/boost/format.hpp"
 #include "mrdsrg.h"
 
 namespace psi {
@@ -44,7 +45,7 @@ double MRDSRG::compute_energy_pt2() {
     outfile->Printf("\n\n  ==> Second-Order Perturbation DSRG-MRPT2 <==\n");
     outfile->Printf("\n    Reference:");
     outfile->Printf("\n      J. Chem. Theory Comput. 2015, 11, 2097-2108.");
-    outfile->Printf("\n      J. Chem. Phys. 2016 (in preparation)\n");
+    outfile->Printf("\n      J. Chem. Phys. 2017, 146, 124132.\n");
 
     // create zeroth-order Hamiltonian
     H0th_ = BTF_->build(tensor_type_, "Zeroth-order H", spin_cases({"gg"}));
@@ -153,7 +154,8 @@ std::vector<std::pair<std::string, double>> MRDSRG::compute_energy_pt2_Fdiag() {
     energy.push_back({"DSRG-MRPT2 total energy", Eref_ + Ecorr});
 
     // reference relaxation
-    if (options_.get_str("RELAX_REF") != "NONE") {
+    if (options_.get_str("RELAX_REF") != "NONE" ||
+        options_["AVG_STATE"].size() != 0) {
         O1_.zero();
         O2_.zero();
 
@@ -413,7 +415,8 @@ MRDSRG::compute_energy_pt2_FdiagV() {
     energy.push_back({"DSRG-MRPT2 total energy", Eref_ + Ecorr});
 
     // reference relaxation
-    if (options_.get_str("RELAX_REF") != "NONE") {
+    if (options_.get_str("RELAX_REF") != "NONE" ||
+        options_["AVG_STATE"].size() != 0) {
         O1_ = BTF_->build(tensor_type_, "O1", spin_cases({"hh"}));
         O2_ = BTF_->build(tensor_type_, "O2", spin_cases({"hhhh"}));
 
@@ -659,7 +662,8 @@ MRDSRG::compute_energy_pt2_FdiagVdiag() {
     energy.push_back({"DSRG-MRPT2 total energy", Eref_ + Ecorr});
 
     // reference relaxation
-    if (options_.get_str("RELAX_REF") != "NONE") {
+    if (options_.get_str("RELAX_REF") != "NONE" ||
+        options_["AVG_STATE"].size() != 0) {
         // save the hole part of [H^0th, A^1st]
         BlockedTensor H0A1_1 =
             BTF_->build(tensor_type_, "H0A1_1", spin_cases({"gg"}));
@@ -1175,7 +1179,8 @@ std::vector<std::pair<std::string, double>> MRDSRG::compute_energy_pt2_Ffull() {
     energy.push_back({"DSRG-MRPT2 total energy", Eref_ + Ecorr});
 
     // reference relaxation
-    if (options_.get_str("RELAX_REF") != "NONE") {
+    if (options_.get_str("RELAX_REF") != "NONE" ||
+        options_["AVG_STATE"].size() != 0) {
         Hbar1_["pq"] += F_["pq"];
         Hbar1_["PQ"] += F_["PQ"];
         Hbar2_["pqrs"] += V_["pqrs"];
@@ -1208,7 +1213,7 @@ double MRDSRG::compute_energy_pt3() {
     // print title
     outfile->Printf("\n\n  ==> Third-Order Perturbation DSRG-MRPT3 <==\n");
     outfile->Printf("\n    Reference:");
-    outfile->Printf("\n      J. Chem. Phys. 2016 (in preparation)\n");
+    outfile->Printf("\n      J. Chem. Phys. 2017, 146, 124132.\n");
     std::vector<std::pair<std::string, double>> energy;
     energy.push_back({"E0 (reference)", Eref_});
 
@@ -1398,7 +1403,8 @@ double MRDSRG::compute_energy_pt3() {
                         str_dim.second);
     }
 
-    if (options_.get_str("RELAX_REF") != "NONE") {
+    if (options_.get_str("RELAX_REF") != "NONE" ||
+        options_["AVG_STATE"].size() != 0) {
         O1_.zero();
         O2_.zero();
 

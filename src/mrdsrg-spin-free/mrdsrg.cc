@@ -930,7 +930,7 @@ double MRDSRG::compute_energy_sa() {
             reference_wavefunction_, options_, ints_, mo_space_info_);
         Etemp = Erelax_sa;
         fci_mo->set_form_Fock(false);
-        Erelax_sa = fci_mo->compute_sa_energy();
+        Erelax_sa = fci_mo->compute_energy();
         Erelax_sa_vec.push_back(Erelax_sa);
         double Edelta_relax = Erelax_sa - Etemp;
         Edelta_relax_sa_vec.push_back(Edelta_relax);

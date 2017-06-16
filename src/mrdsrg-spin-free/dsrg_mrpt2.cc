@@ -5,7 +5,8 @@
  * that implements a variety of quantum chemistry methods for strongly
  * correlated electrons.
  *
- * Copyright (c) 2012-2017 by its authors (see COPYING, COPYING.LESSER, AUTHORS).
+ * Copyright (c) 2012-2017 by its authors (see COPYING, COPYING.LESSER,
+ * AUTHORS).
  *
  * The copyrights for code used from other parties are included in
  * the corresponding files.
@@ -34,9 +35,10 @@
 #include "psi4/libpsio/psio.hpp"
 #include "psi4/libqt/qt.h"
 
-#include "../mini-boost/boost/format.hpp"
 #include "../ci_rdms.h"
-#include "../fci/fci_solver.h"
+#include "../fci/fci.h"
+#include "../mini-boost/boost/format.hpp"
+#include "../fci_mo.h"
 #include "dsrg_mrpt2.h"
 
 using namespace ambit;
@@ -51,12 +53,14 @@ DSRG_MRPT2::DSRG_MRPT2(Reference reference, SharedWavefunction ref_wfn,
       mo_space_info_(mo_space_info), tensor_type_(ambit::CoreTensor),
       BTF_(new BlockedTensorFactory(options)) {
     // Copy the wavefunction information
+    reference_wavefunction_ = ref_wfn;
     shallow_copy(ref_wfn);
 
     print_method_banner({"Driven Similarity Renormalization Group MBPT2",
                          "Chenyang Li, Kevin Hannon, Francesco Evangelista"});
-    outfile->Printf("\n    Reference:");
-    outfile->Printf("\n      J. Chem. Theory Comput. 2015, 11, 2097-2108.");
+    outfile->Printf("\n    References:");
+    outfile->Printf("\n      u-DSRG-MRPT2:    J. Chem. Theory Comput. 2015, 11, 2097.");
+    outfile->Printf("\n      (pr-)DSRG-MRPT2: J. Chem. Phys. 2017, 146, 124132.");
 
     startup();
     print_summary();
@@ -97,8 +101,6 @@ void DSRG_MRPT2::startup() {
     intruder_tamp_ = options_.get_double("INTRUDER_TAMP");
     internal_amp_ = options_.get_str("INTERNAL_AMP") != "NONE";
     internal_amp_select_ = options_.get_str("INTERNAL_AMP_SELECT");
-
-    multi_state_ = options_["AVG_STATE"].has_changed();
 
     // get frozen core energy
     frozen_core_energy_ = ints_->frozen_core_energy();
@@ -168,16 +170,17 @@ void DSRG_MRPT2::startup() {
     F_ = BTF_->build(tensor_type_, "Fock", spin_cases({"gc", "pa", "vv"}));
     build_fock();
 
-    // Prepare Hbar
+    multi_state_ = options_["AVG_STATE"].size() != 0;
     relax_ref_ = options_.get_str("RELAX_REF");
-    if (relax_ref_ != "NONE") {
-        if (relax_ref_ != "ONCE" && !multi_state_) {
-            outfile->Printf("\n\n  Warning: RELAX_REF option \"%s\" is not "
-                            "supported. Change to ONCE",
-                            relax_ref_.c_str());
-            relax_ref_ = "ONCE";
-        }
+    if (relax_ref_ != "NONE" && relax_ref_ != "ONCE") {
+        outfile->Printf("\n\n  Warning: RELAX_REF option \"%s\" is not "
+                        "supported. Change to ONCE",
+                        relax_ref_.c_str());
+        relax_ref_ = "ONCE";
+    }
 
+    // Prepare Hbar
+    if (relax_ref_ != "NONE" || multi_state_) {
         Hbar1_ = BTF_->build(tensor_type_, "1-body Hbar", spin_cases({"aa"}));
         Hbar2_ = BTF_->build(tensor_type_, "2-body Hbar", spin_cases({"aaaa"}));
         Hbar1_["uv"] = F_["uv"];
@@ -194,7 +197,7 @@ void DSRG_MRPT2::startup() {
 
     // ignore semicanonical test
     std::string actv_type = options_.get_str("FCIMO_ACTV_TYPE");
-    if(actv_type != "COMPLETE" && actv_type != "DOCI"){
+    if (actv_type != "COMPLETE" && actv_type != "DOCI") {
         ignore_semicanonical_ = true;
     }
 
@@ -632,7 +635,7 @@ double DSRG_MRPT2::compute_energy() {
     outfile->Printf("\n");
 
     // relax reference
-    if (relax_ref_ != "NONE") {
+    if (relax_ref_ != "NONE" || multi_state_) {
         BlockedTensor C1 = BTF_->build(tensor_type_, "C1", spin_cases({"aa"}));
         BlockedTensor C2 =
             BTF_->build(tensor_type_, "C2", spin_cases({"aaaa"}));
@@ -1616,65 +1619,83 @@ double DSRG_MRPT2::E_VT2_6() {
 }
 
 double DSRG_MRPT2::compute_energy_relaxed() {
-    // setup for FCISolver
-    Dimension active_dim = mo_space_info_->get_dimension("ACTIVE");
-    int charge = Process::environment.molecule()->molecular_charge();
-    if (options_["CHARGE"].has_changed()) {
-        charge = options_.get_int("CHARGE");
-    }
-    auto nelec = 0;
-    int natom = Process::environment.molecule()->natom();
-    for (int i = 0; i < natom; ++i) {
-        nelec += Process::environment.molecule()->fZ(i);
-    }
-    nelec -= charge;
-    int multi = Process::environment.molecule()->multiplicity();
-    if (options_["MULTIPLICITY"].has_changed()) {
-        multi = options_.get_int("MULTIPLICITY");
-    }
-    int twice_ms = (multi + 1) % 2;
-    if (options_["MS"].has_changed()) {
-        twice_ms = std::round(2.0 * options_.get_double("MS"));
-    }
-    auto nelec_actv =
-        nelec - 2 * mo_space_info_->size("FROZEN_DOCC") - 2 * acore_mos_.size();
-    auto na = (nelec_actv + twice_ms) / 2;
-    auto nb = nelec_actv - na;
 
     // reference relaxation
     double Edsrg = 0.0, Erelax = 0.0;
 
-    // only relax once, otherwise we have to store another
-    if (relax_ref_ != "NONE") {
-        // compute energy with fixed ref.
-        Edsrg = compute_energy();
+    // compute energy with fixed ref.
+    Edsrg = compute_energy();
 
-        // transfer integrals
-        transfer_integrals();
+    // transfer integrals
+    transfer_integrals();
 
-        // diagonalize the Hamiltonian
-        FCISolver fcisolver(active_dim, acore_mos_, aactv_mos_, na, nb, multi,
-                            options_.get_int("ROOT_SYM"), ints_, mo_space_info_,
-                            options_.get_int("NTRIAL_PER_ROOT"), print_,
-                            options_);
-        fcisolver.set_max_rdm_level(1);
-        fcisolver.set_nroot(options_.get_int("NROOT"));
-        fcisolver.set_root(options_.get_int("ROOT"));
-        fcisolver.set_fci_iterations(options_.get_int("FCI_MAXITER"));
-        fcisolver.set_collapse_per_root(
-            options_.get_int("DL_COLLAPSE_PER_ROOT"));
-        fcisolver.set_subspace_per_root(
-            options_.get_int("DL_SUBSPACE_PER_ROOT"));
-        Erelax = fcisolver.compute_energy();
+    // diagonalize Hbar depending on CAS_TYPE
+    if (options_.get_str("CAS_TYPE") == "CAS") {
 
-        // printing
-        print_h2("DSRG-MRPT2 Energy Summary");
-        outfile->Printf("\n    %-30s = %22.15f",
-                        "DSRG-MRPT2 Total Energy (fixed)  ", Edsrg);
-        outfile->Printf("\n    %-30s = %22.15f",
-                        "DSRG-MRPT2 Total Energy (relaxed)", Erelax);
-        outfile->Printf("\n");
+        FCI_MO fci_mo(reference_wavefunction_, options_, ints_, mo_space_info_);
+        fci_mo.set_form_Fock(false);
+        Erelax = fci_mo.compute_energy();
+
+    } else {
+
+        // it is simpler here to call FCI instead of FCISolver
+        FCI fci(reference_wavefunction_, options_, ints_, mo_space_info_);
+        fci.set_max_rdm_level(1);
+        Erelax = fci.compute_energy();
+
+
+//        // setup for FCISolver
+//        Dimension active_dim = mo_space_info_->get_dimension("ACTIVE");
+//        int charge = Process::environment.molecule()->molecular_charge();
+//        if (options_["CHARGE"].has_changed()) {
+//            charge = options_.get_int("CHARGE");
+//        }
+//        auto nelec = 0;
+//        int natom = Process::environment.molecule()->natom();
+//        for (int i = 0; i < natom; ++i) {
+//            nelec += Process::environment.molecule()->fZ(i);
+//        }
+//        nelec -= charge;
+//        int multi = Process::environment.molecule()->multiplicity();
+//        if (options_["MULTIPLICITY"].has_changed()) {
+//            multi = options_.get_int("MULTIPLICITY");
+//        }
+//        int twice_ms = (multi + 1) % 2;
+//        if (options_["MS"].has_changed()) {
+//            twice_ms = std::round(2.0 * options_.get_double("MS"));
+//        }
+//        auto nelec_actv =
+//            nelec - 2 * mo_space_info_->size("FROZEN_DOCC") - 2 *
+//            acore_mos_.size();
+//        auto na = (nelec_actv + twice_ms) / 2;
+//        auto nb = nelec_actv - na;
+
+//        // diagonalize the Hamiltonian
+//        FCISolver fcisolver(active_dim, acore_mos_, aactv_mos_, na,
+//                            nb, multi,
+//                            options_.get_int("ROOT_SYM"), ints_,
+//                            mo_space_info_,
+//                            options_.get_int("NTRIAL_PER_ROOT"),
+//                            print_,
+//                            options_);
+//        fcisolver.set_max_rdm_level(1);
+//        fcisolver.set_nroot(options_.get_int("FCI_NROOT"));
+//        fcisolver.set_root(options_.get_int("FCI_ROOT"));
+//        fcisolver.set_fci_iterations(options_.get_int("FCI_MAXITER"));
+//        fcisolver.set_collapse_per_root(
+//                    options_.get_int("DL_COLLAPSE_PER_ROOT"));
+//        fcisolver.set_subspace_per_root(
+//                    options_.get_int("DL_SUBSPACE_PER_ROOT"));
+//        Erelax = fcisolver.compute_energy();
     }
+
+    // printing
+    print_h2("DSRG-MRPT2 Energy Summary");
+    outfile->Printf("\n    %-30s = %22.15f",
+                    "DSRG-MRPT2 Total Energy (fixed)  ", Edsrg);
+    outfile->Printf("\n    %-30s = %22.15f",
+                    "DSRG-MRPT2 Total Energy (relaxed)", Erelax);
+    outfile->Printf("\n");
 
     Process::environment.globals["CURRENT ENERGY"] = Erelax;
     return Erelax;
@@ -2315,7 +2336,7 @@ void DSRG_MRPT2::H2_T2_C3(BlockedTensor& H2, BlockedTensor& T2,
     for (int i = 0, sign = 1; i < 9; ++i) {
         std::string this_label = label[i];
         std::transform(this_label.begin(), this_label.end(), this_label.begin(),
-                       toupper);
+                       (int (*)(int))toupper);
         C3[this_label] += sign * temp["XYZUVW"];
         sign *= -1;
     }
