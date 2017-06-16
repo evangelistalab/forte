@@ -49,8 +49,7 @@
 
 #include "forte.h"
 
-namespace psi {
-namespace forte {
+namespace psi { namespace forte {
 
 /**
  * @brief Read options from the input file. Called by psi4 before everything
