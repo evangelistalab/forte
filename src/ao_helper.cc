@@ -29,10 +29,10 @@
 #include "ao_helper.h"
 #include "psi4/lib3index/denominator.h"
 #include "psi4/libfock/jk.h"
+#include "psi4/libmints/basisset.h"
 #include "psi4/libmints/matrix.h"
 #include "psi4/libmints/sieve.h"
 #include "psi4/libmints/vector.h"
-#include "psi4/libmints/basisset.h"
 
 namespace psi {
 namespace forte {
