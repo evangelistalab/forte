@@ -74,17 +74,8 @@ void set_INT_options(ForteOptions& foptions) {
      *  - DF Density fitted two-electron integrals
      *  - CHOLESKY Cholesky decomposed two-electron integrals -*/
     foptions.add_str("INT_TYPE", "CONVENTIONAL", {"CONVENTIONAL", "DF", "CHOLESKY", "DISKDF",
-                                                  "DISTDF", "ALL", "EFFECTIVE", "OWNINTEGRALS"},
+                                                  "DISTDF", "ALL", "OWNINTEGRALS"},
                      "The integral type");
-
-    /*- The damping factor in the erf(x omega)/x integrals -*/
-    foptions.add_double("EFFECTIVE_COULOMB_OMEGA", 1.0,
-                        "The damping factor in the erf(x omega)/x integrals");
-    /*- The coefficient of the effective Coulomb interaction -*/
-    foptions.add_double("EFFECTIVE_COULOMB_FACTOR", 1.0,
-                        "The coefficient of the effective Coulomb interaction");
-    foptions.add_double("EFFECTIVE_COULOMB_EXPONENT", 1.0,
-                        "The exponent of the effective Coulomb interaction");
 
     /*- The screening for JK builds and DF libraries -*/
     foptions.add_double("INTEGRAL_SCREENING", 1e-12,

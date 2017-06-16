@@ -199,9 +199,6 @@ std::shared_ptr<ForteIntegrals> make_forte_integrals(SharedWavefunction ref_wfn,
     } else if (options.get_str("INT_TYPE") == "CONVENTIONAL") {
         ints = std::make_shared<ConventionalIntegrals>(options, ref_wfn, UnrestrictedMOs,
                                                        RemoveFrozenMOs, mo_space_info);
-    } else if (options.get_str("INT_TYPE") == "EFFECTIVE") {
-        ints = std::make_shared<EffectiveIntegrals>(options, ref_wfn, UnrestrictedMOs,
-                                                    RemoveFrozenMOs, mo_space_info);
     } else if (options.get_str("INT_TYPE") == "DISTDF") {
 #ifdef HAVE_GA
         ints = std::make_shared<DistDFIntegrals>(options, ref_wfn, UnrestrictedMOs, RemoveFrozenMOs,

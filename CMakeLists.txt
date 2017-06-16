@@ -104,7 +104,6 @@ src/integrals/conventional_integrals.cc
 src/integrals/df_integrals.cc
 src/integrals/diskdf_integrals.cc
 src/integrals/distribute_df_integrals.cc
-src/integrals/effective_integrals.cc
 src/integrals/integrals.cc
 src/integrals/own_integrals.cc
 src/integrals/parallel_ccvv_algorithms.cc
