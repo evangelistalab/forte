@@ -2,4 +2,4 @@ Language: Cpp
 IndentWidth: 4
 PointerAlignment: Left
 ColumnLimit: 100
-SortIncludes: False
+SortIncludes: true

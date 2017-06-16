@@ -30,8 +30,9 @@ tests/pytest/.cache/
 
 doc/doxygen/html
 doc/doxygen/latex
+docs/sphinx/_*
 
 CMakeCache.txt
 CMakeFiles/
 cmake_install.cmake
-
+*.DS_Store
