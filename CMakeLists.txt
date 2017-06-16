@@ -37,6 +37,7 @@ include(cmake/clang-cxx-dev-tools.cmake)
 
 add_psi4_plugin(forte
 src/active_dsrgpt2.cc
+src/active_space_solver.cc
 src/ao_helper.cc
 src/avas.cc
 src/bitset_performance.cc
