@@ -26,14 +26,14 @@
  * @END LICENSE
  */
 
+#include "psi4/libdiis/diismanager.h"
 #include <algorithm>
 #include <map>
 #include <memory>
 #include <vector>
-#include "psi4/libdiis/diismanager.h"
 
-#include "../mini-boost/boost/format.hpp"
 #include "../helpers.h"
+#include "../mini-boost/boost/format.hpp"
 #include "mrdsrg.h"
 
 namespace psi {
