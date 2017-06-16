@@ -1657,7 +1657,7 @@ double DSRG_MRPT3::compute_energy_relaxed() {
         // nroot and root
         int root = 0;
         int nroot = 1;
-        if (options_.get_str("CAS_TYPE") == "CAS"){
+        if (options_.get_str("CAS_TYPE") == "CAS") {
             root = options_.get_int("ROOT");
             nroot = options_.get_int("NROOT");
         } else {

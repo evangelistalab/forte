@@ -257,8 +257,7 @@ double MRDSRG::compute_energy_ldsrg2() {
             converged = true;
 
             // rebuild Hbar because it is destroyed when updating amplitudes
-            if (options_.get_str("RELAX_REF") != "NONE" ||
-                options_["AVG_STATE"].size() != 0) {
+            if (options_.get_str("RELAX_REF") != "NONE" || options_["AVG_STATE"].size() != 0) {
                 compute_hbar();
             }
         }
@@ -534,8 +533,7 @@ double MRDSRG::compute_energy_ldsrg2_qc() {
             converged = true;
 
             // rebuild Hbar because it is destroyed when updating amplitudes
-            if (options_.get_str("RELAX_REF") != "NONE" ||
-                options_["AVG_STATE"].size() != 0) {
+            if (options_.get_str("RELAX_REF") != "NONE" || options_["AVG_STATE"].size() != 0) {
                 compute_hbar_qc();
             }
         }

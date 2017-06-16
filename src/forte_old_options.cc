@@ -482,7 +482,6 @@ void forte_old_options(Options& options) {
      *  - DMRG  DMRG code
      *  - V2RDM V2RDM interface -*/
     options.add_str("CAS_TYPE", "FCI", "CAS FCI ACI DMRG V2RDM");
-
 }
 }
 } // End Namespaces

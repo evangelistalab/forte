@@ -1322,7 +1322,7 @@ void ProjectorCI_HashVec::apply_tau_H_ref_C_symm_det_dynamic_HBCI(
             for (int a = 0; a < nvalpha; ++a) {
                 int aa = avir[a];
                 if ((mo_symmetry_[ii] ^ mo_symmetry_[aa]) == 0) {
-                    double HJI = detJ.slater_rules_single_alpha_abs(ii,aa);
+                    double HJI = detJ.slater_rules_single_alpha_abs(ii, aa);
                     if (std::fabs(HJI * ref_CI) >= spawning_threshold) {
                         HJI *= detJ.single_excitation_a(ii, aa);
                         new_space_C_vec.push_back(std::make_pair(detJ, tau * HJI * CI));
@@ -1345,7 +1345,7 @@ void ProjectorCI_HashVec::apply_tau_H_ref_C_symm_det_dynamic_HBCI(
             for (int a = 0; a < nvbeta; ++a) {
                 int aa = bvir[a];
                 if ((mo_symmetry_[ii] ^ mo_symmetry_[aa]) == 0) {
-                    double HJI = detJ.slater_rules_single_beta_abs(ii,aa);
+                    double HJI = detJ.slater_rules_single_beta_abs(ii, aa);
                     if (std::fabs(HJI * ref_CI) >= spawning_threshold) {
                         HJI *= detJ.single_excitation_b(ii, aa);
                         new_space_C_vec.push_back(std::make_pair(detJ, tau * HJI * CI));
@@ -1381,7 +1381,7 @@ void ProjectorCI_HashVec::apply_tau_H_ref_C_symm_det_dynamic_HBCI(
             for (int a = 0; a < nvalpha; ++a) {
                 int aa = avir[a];
                 if ((mo_symmetry_[ii] ^ mo_symmetry_[aa]) == 0) {
-                    double HJI = detJ.slater_rules_single_alpha_abs(ii,aa);
+                    double HJI = detJ.slater_rules_single_alpha_abs(ii, aa);
                     max_coupling.first = std::max(max_coupling.first, std::fabs(HJI));
                     if (std::fabs(HJI * ref_CI) >= spawning_threshold) {
                         HJI *= detJ.single_excitation_a(ii, aa);
@@ -1405,7 +1405,7 @@ void ProjectorCI_HashVec::apply_tau_H_ref_C_symm_det_dynamic_HBCI(
             for (int a = 0; a < nvbeta; ++a) {
                 int aa = bvir[a];
                 if ((mo_symmetry_[ii] ^ mo_symmetry_[aa]) == 0) {
-                    double HJI = detJ.slater_rules_single_beta_abs(ii,aa);
+                    double HJI = detJ.slater_rules_single_beta_abs(ii, aa);
                     max_coupling.first = std::max(max_coupling.first, std::fabs(HJI));
                     if (std::fabs(HJI * ref_CI) >= spawning_threshold) {
                         HJI *= detJ.single_excitation_b(ii, aa);

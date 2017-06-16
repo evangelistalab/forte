@@ -130,8 +130,8 @@ std::vector<std::vector<double>> DSRG_MRPT2::compute_energy_sa() {
     std::vector<std::vector<double>> Edsrg_sa(nentry, std::vector<double>());
 
     // call FCI_MO if SA_FULL and CAS_TYPE == CAS
-    if(options_.get_str("DSRG_MULTI_STATE") == "SA_FULL" &&
-            options_.get_str("CAS_TYPE") == "CAS") {
+    if (options_.get_str("DSRG_MULTI_STATE") == "SA_FULL" &&
+        options_.get_str("CAS_TYPE") == "CAS") {
         FCI_MO fci_mo(reference_wavefunction_, options_, ints_, mo_space_info_);
         fci_mo.set_form_Fock(false);
         fci_mo.compute_energy();
@@ -153,8 +153,8 @@ std::vector<std::vector<double>> DSRG_MRPT2::compute_energy_sa() {
 
             // print current symmetry
             std::stringstream ss;
-            ss << "Diagonalize Effective Hamiltonian (" << multi_label[multi - 1]
-               << " " << irrep_symbol[irrep] << ")";
+            ss << "Diagonalize Effective Hamiltonian (" << multi_label[multi - 1] << " "
+               << irrep_symbol[irrep] << ")";
             print_h2(ss.str());
 
             // diagonalize which the second-order effective Hamiltonian
@@ -176,25 +176,22 @@ std::vector<std::vector<double>> DSRG_MRPT2::compute_energy_sa() {
                 }
                 nelec -= charge;
                 int ms = (multi + 1) % 2;
-                auto nelec_actv = nelec - 2 * mo_space_info_->size("FROZEN_DOCC") -
-                        2 * acore_mos_.size();
+                auto nelec_actv =
+                    nelec - 2 * mo_space_info_->size("FROZEN_DOCC") - 2 * acore_mos_.size();
                 auto na = (nelec_actv + ms) / 2;
                 auto nb = nelec_actv - na;
 
                 Dimension active_dim = mo_space_info_->get_dimension("ACTIVE");
                 int ntrial_per_root = options_.get_int("NTRIAL_PER_ROOT");
 
-                FCISolver fcisolver(active_dim, acore_mos_, aactv_mos_, na, nb,
-                                    multi, irrep, ints_, mo_space_info_,
-                                    ntrial_per_root, print_, options_);
+                FCISolver fcisolver(active_dim, acore_mos_, aactv_mos_, na, nb, multi, irrep, ints_,
+                                    mo_space_info_, ntrial_per_root, print_, options_);
                 fcisolver.set_max_rdm_level(1);
                 fcisolver.set_nroot(nstates);
                 fcisolver.set_root(nstates - 1);
                 fcisolver.set_fci_iterations(options_.get_int("FCI_MAXITER"));
-                fcisolver.set_collapse_per_root(
-                            options_.get_int("DL_COLLAPSE_PER_ROOT"));
-                fcisolver.set_subspace_per_root(
-                            options_.get_int("DL_SUBSPACE_PER_ROOT"));
+                fcisolver.set_collapse_per_root(options_.get_int("DL_COLLAPSE_PER_ROOT"));
+                fcisolver.set_subspace_per_root(options_.get_int("DL_SUBSPACE_PER_ROOT"));
 
                 // compute energy and fill in results
                 fcisolver.compute_energy();
@@ -214,9 +211,9 @@ std::vector<std::vector<double>> DSRG_MRPT2::compute_energy_sa() {
                     evecs->set_column(0, i, (eigens_[n][i]).first);
                 }
 
-                SharedMatrix Heff(new Matrix("Heff " + multi_label[multi - 1] +
-                                  " " + irrep_symbol[irrep],
-                                  nstates, nstates));
+                SharedMatrix Heff(
+                    new Matrix("Heff " + multi_label[multi - 1] + " " + irrep_symbol[irrep],
+                               nstates, nstates));
                 for (int A = 0; A < nstates; ++A) {
                     for (int B = A; B < nstates; ++B) {
 
@@ -234,13 +231,13 @@ std::vector<std::vector<double>> DSRG_MRPT2::compute_energy_sa() {
                         ci_rdms.compute_2rdm(tpdm_aa, tpdm_ab, tpdm_bb);
 
                         // put rdms in tensor format
-                        BlockedTensor D1 = BTF_->build(tensor_type_, "D1",
-                                                       spin_cases({"aa"}), true);
+                        BlockedTensor D1 =
+                            BTF_->build(tensor_type_, "D1", spin_cases({"aa"}), true);
                         D1.block("aa").data() = opdm_a;
                         D1.block("AA").data() = opdm_b;
 
-                        BlockedTensor D2 = BTF_->build(tensor_type_, "D2",
-                                                       spin_cases({"aaaa"}), true);
+                        BlockedTensor D2 =
+                            BTF_->build(tensor_type_, "D2", spin_cases({"aaaa"}), true);
                         D2.block("aaaa").data() = tpdm_aa;
                         D2.block("aAaA").data() = tpdm_ab;
                         D2.block("AAAA").data() = tpdm_bb;
@@ -254,19 +251,15 @@ std::vector<std::vector<double>> DSRG_MRPT2::compute_energy_sa() {
                             H_AB += 0.25 * Hbar2_["UVXY"] * D2["XYUV"];
                             H_AB += Hbar2_["uVxY"] * D2["xYuV"];
                         } else {
-                            BlockedTensor temp2 = BTF_->build(
-                                        tensor_type_, "temp2", spin_cases({"aaaa"}), true);
+                            BlockedTensor temp2 =
+                                BTF_->build(tensor_type_, "temp2", spin_cases({"aaaa"}), true);
                             temp2.iterate([&](const std::vector<size_t>& i,
-                                          const std::vector<SpinType>& spin,
-                                          double& value) {
-                                if ((spin[0] == AlphaSpin) &&
-                                        (spin[1] == AlphaSpin)) {
+                                              const std::vector<SpinType>& spin, double& value) {
+                                if ((spin[0] == AlphaSpin) && (spin[1] == AlphaSpin)) {
                                     value = ints_->aptei_aa(i[0], i[1], i[2], i[3]);
-                                } else if ((spin[0] == AlphaSpin) &&
-                                           (spin[1] == BetaSpin)) {
+                                } else if ((spin[0] == AlphaSpin) && (spin[1] == BetaSpin)) {
                                     value = ints_->aptei_ab(i[0], i[1], i[2], i[3]);
-                                } else if ((spin[0] == BetaSpin) &&
-                                           (spin[1] == BetaSpin)) {
+                                } else if ((spin[0] == BetaSpin) && (spin[1] == BetaSpin)) {
                                     value = ints_->aptei_bb(i[0], i[1], i[2], i[3]);
                                 }
                             });
@@ -280,11 +273,10 @@ std::vector<std::vector<double>> DSRG_MRPT2::compute_energy_sa() {
                             std::vector<double> tpdm_aab(nele3, 0.0);
                             std::vector<double> tpdm_abb(nele3, 0.0);
                             std::vector<double> tpdm_bbb(nele3, 0.0);
-                            ci_rdms.compute_3rdm(tpdm_aaa, tpdm_aab, tpdm_abb,
-                                                 tpdm_bbb);
+                            ci_rdms.compute_3rdm(tpdm_aaa, tpdm_aab, tpdm_abb, tpdm_bbb);
 
-                            BlockedTensor D3 = BTF_->build(
-                                        tensor_type_, "D3", spin_cases({"aaaaaa"}), true);
+                            BlockedTensor D3 =
+                                BTF_->build(tensor_type_, "D3", spin_cases({"aaaaaa"}), true);
                             D3.block("aaaaaa").data() = tpdm_aaa;
                             D3.block("aaAaaA").data() = tpdm_aab;
                             D3.block("aAAaAA").data() = tpdm_abb;
@@ -297,8 +289,7 @@ std::vector<std::vector<double>> DSRG_MRPT2::compute_energy_sa() {
                         }
 
                         if (A == B) {
-                            H_AB += ints_->frozen_core_energy() +
-                                    fci_ints->scalar_energy() + Enuc;
+                            H_AB += ints_->frozen_core_energy() + fci_ints->scalar_energy() + Enuc;
                             Heff->set(A, B, H_AB);
                         } else {
                             Heff->set(A, B, H_AB);
