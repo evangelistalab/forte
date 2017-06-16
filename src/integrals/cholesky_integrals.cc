@@ -26,7 +26,6 @@
  * @END LICENSE
  */
 
-// clang-format off
 #include <cmath>
 
 #include "psi4/libmints/wavefunction.h"
@@ -39,7 +38,6 @@
 #include "psi4/psifiles.h"
 
 #include "integrals.h"
-// clang-format on
 
 using namespace ambit;
 

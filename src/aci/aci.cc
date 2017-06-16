@@ -5,7 +5,8 @@
  * that implements a variety of quantum chemistry methods for strongly
  * correlated electrons.
  *
- * Copyright (c) 2012-2017 by its authors (see COPYING, COPYING.LESSER, AUTHORS).
+ * Copyright (c) 2012-2017 by its authors (see COPYING, COPYING.LESSER,
+ * AUTHORS).
  *
  * The copyrights for code used from other parties are included in
  * the corresponding files.
@@ -875,8 +876,10 @@ void AdaptiveCI::print_final(DeterminantMap& dets, SharedMatrix& PQ_evecs, Share
 
         print_wfn(dets, PQ_evecs, nroot_);
 
-        //         outfile->Printf("\n\n     Order		 # of Dets        Total |c^2|");
-        //         outfile->Printf(  "\n  __________ 	____________    ________________ ");
+        //         outfile->Printf("\n\n     Order		 # of Dets        Total
+        //         |c^2|");
+        //         outfile->Printf(  "\n  __________ 	____________
+        //         ________________ ");
         //         wfn_analyzer(dets, PQ_evecs, nroot_);
     }
 
@@ -1806,7 +1809,8 @@ bool AdaptiveCI::check_stuck(std::vector<std::vector<double>>& energy_history, S
 
         if (std::fabs(av_energies[cycle_ - 1] - av_energies[cycle_ - 3]) <
             options_.get_double("ACI_CONVERGENCE")) { // and
-            //			std::fabs( av_energies[cycle_-2] - av_energies[cycle_ - 4]
+            //			std::fabs( av_energies[cycle_-2] -
+            // av_energies[cycle_ - 4]
             //)
             //< options_.get_double("ACI_CONVERGENCE") ){
             stuck = true;
@@ -1901,7 +1905,8 @@ void AdaptiveCI::wfn_analyzer(DeterminantMap& det_space, SharedMatrix evecs, int
             //             it->first.get_beta_bits_vector_bool();
 
             //             final_wfn << std::setw(18) << std::setprecision(12)
-            //             <<  evecs->get(it->second,n) << "  ";// <<  abits << "  " << bbits <<
+            //             <<  evecs->get(it->second,n) << "  ";// <<  abits << "  "
+            //             << bbits <<
             //             it->first.str().c_str() << endl;
             //             for( size_t i = 0; i < nact_; ++i ){
             //                 final_wfn << abits[i];
@@ -2494,7 +2499,8 @@ void AdaptiveCI::project_determinant_space(DeterminantMap& space, SharedMatrix e
     //	double spin_contamination = compute_spin_contamination(space, evecs,
     // nroot);
     //	if(spin_contamination >= spin_tol_){
-    //		if( !quiet_mode_ ) outfile->Printf("\n  Average spin contamination
+    //		if( !quiet_mode_ ) outfile->Printf("\n  Average spin
+    // contamination
     // per
     // root is %1.5f", spin_contamination);
     //		full_spin_transform(space, evecs, nroot);

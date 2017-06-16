@@ -26,7 +26,6 @@
  * @END LICENSE
  */
 
-// clang-format off
 #include <algorithm>
 #include <cmath>
 #include <numeric>
@@ -52,8 +51,6 @@
 #include <ga.h>
 #include <macdecls.h>
 #endif
-
-// clang-format on
 
 using namespace std;
 using namespace psi;
