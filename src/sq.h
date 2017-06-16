@@ -120,7 +120,7 @@ class WickTheorem {
  * @brief The SqTest class
  */
 class SqTest {
-  public:
+      public:
     /// Default constructor
     SqTest();
 
