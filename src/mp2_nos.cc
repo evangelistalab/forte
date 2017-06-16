@@ -34,9 +34,9 @@
 #include "psi4/libmints/matrix.h"
 #include "psi4/libmints/vector.h"
 
+#include "../blockedtensorfactory.h"
 #include "helpers.h"
 #include "mp2_nos.h"
-#include "../blockedtensorfactory.h"
 
 using namespace ambit;
 
@@ -44,10 +44,9 @@ namespace psi {
 namespace forte {
 
 MP2_NOS::MP2_NOS(std::shared_ptr<Wavefunction> wfn, Options& options,
-                 std::shared_ptr<ForteIntegrals> ints,
-                 std::shared_ptr<MOSpaceInfo> mo_space_info) {
-    print_method_banner({"Second-Order Moller-Plesset Natural Orbitals",
-                         "written by Francesco A. Evangelista"});
+                 std::shared_ptr<ForteIntegrals> ints, std::shared_ptr<MOSpaceInfo> mo_space_info) {
+    print_method_banner(
+        {"Second-Order Moller-Plesset Natural Orbitals", "written by Francesco A. Evangelista"});
 
     BlockedTensor::set_expert_mode(true);
     BlockedTensor::reset_mo_spaces();
@@ -118,22 +117,16 @@ MP2_NOS::MP2_NOS(std::shared_ptr<Wavefunction> wfn, Options& options,
     BlockedTensor::add_composite_mo_space("i", "pqrstuvwxyz", {"o", "v"});
     BlockedTensor::add_composite_mo_space("I", "PQRSTUVWXYZ", {"O", "V"});
 
-    BlockedTensor G1 =
-        BlockedTensor::build(CoreTensor, "G1", spin_cases({"oo"}));
-    BlockedTensor D1 =
-        BlockedTensor::build(CoreTensor, "D1", spin_cases({"oo", "vv"}));
+    BlockedTensor G1 = BlockedTensor::build(CoreTensor, "G1", spin_cases({"oo"}));
+    BlockedTensor D1 = BlockedTensor::build(CoreTensor, "D1", spin_cases({"oo", "vv"}));
     BlockedTensor H = BlockedTensor::build(CoreTensor, "H", spin_cases({"ii"}));
     BlockedTensor F = BlockedTensor::build(CoreTensor, "F", spin_cases({"ii"}));
-    BlockedTensor V =
-        BlockedTensor::build(CoreTensor, "V", spin_cases({"iiii"}));
-    BlockedTensor T2 =
-        BlockedTensor::build(CoreTensor, "T2", spin_cases({"oovv"}));
-    BlockedTensor InvD2 =
-        BlockedTensor::build(CoreTensor, "Inverse D2", spin_cases({"oovv"}));
+    BlockedTensor V = BlockedTensor::build(CoreTensor, "V", spin_cases({"iiii"}));
+    BlockedTensor T2 = BlockedTensor::build(CoreTensor, "T2", spin_cases({"oovv"}));
+    BlockedTensor InvD2 = BlockedTensor::build(CoreTensor, "Inverse D2", spin_cases({"oovv"}));
 
     // Fill in the one-electron operator (H)
-    H.iterate([&](const std::vector<size_t>& i,
-                  const std::vector<SpinType>& spin, double& value) {
+    H.iterate([&](const std::vector<size_t>& i, const std::vector<SpinType>& spin, double& value) {
         if (spin[0] == AlphaSpin)
             value = ints->oei_a(i[0], i[1]);
         else
@@ -141,8 +134,7 @@ MP2_NOS::MP2_NOS(std::shared_ptr<Wavefunction> wfn, Options& options,
     });
 
     // Fill in the two-electron operator (V)
-    V.iterate([&](const std::vector<size_t>& i,
-                  const std::vector<SpinType>& spin, double& value) {
+    V.iterate([&](const std::vector<size_t>& i, const std::vector<SpinType>& spin, double& value) {
         if ((spin[0] == AlphaSpin) and (spin[1] == AlphaSpin))
             value = ints->aptei_aa(i[0], i[1], i[2], i[3]);
         if ((spin[0] == AlphaSpin) and (spin[1] == BetaSpin))
@@ -151,25 +143,22 @@ MP2_NOS::MP2_NOS(std::shared_ptr<Wavefunction> wfn, Options& options,
             value = ints->aptei_bb(i[0], i[1], i[2], i[3]);
     });
 
-    H.iterate([&](const std::vector<size_t>& i,
-                  const std::vector<SpinType>& spin, double& value) {
+    H.iterate([&](const std::vector<size_t>& i, const std::vector<SpinType>& spin, double& value) {
         if (spin[0] == AlphaSpin)
             value = ints->oei_a(i[0], i[1]);
         else
             value = ints->oei_b(i[0], i[1]);
     });
 
-    G1.iterate([&](const std::vector<size_t>& i,
-                   const std::vector<SpinType>& spin,
-                   double& value) { value = i[0] == i[1] ? 1.0 : 0.0; });
-
-    D1.block("oo").iterate([&](const std::vector<size_t>& i, double& value) {
+    G1.iterate([&](const std::vector<size_t>& i, const std::vector<SpinType>& spin, double& value) {
         value = i[0] == i[1] ? 1.0 : 0.0;
     });
 
-    D1.block("OO").iterate([&](const std::vector<size_t>& i, double& value) {
-        value = i[0] == i[1] ? 1.0 : 0.0;
-    });
+    D1.block("oo").iterate(
+        [&](const std::vector<size_t>& i, double& value) { value = i[0] == i[1] ? 1.0 : 0.0; });
+
+    D1.block("OO").iterate(
+        [&](const std::vector<size_t>& i, double& value) { value = i[0] == i[1] ? 1.0 : 0.0; });
 
     // Form the Fock matrix
     F["ij"] = H["ij"];
@@ -186,8 +175,7 @@ MP2_NOS::MP2_NOS(std::shared_ptr<Wavefunction> wfn, Options& options,
     std::vector<double> Fa(ncmo_);
     std::vector<double> Fb(ncmo_);
 
-    F.iterate([&](const std::vector<size_t>& i,
-                  const std::vector<SpinType>& spin, double& value) {
+    F.iterate([&](const std::vector<size_t>& i, const std::vector<SpinType>& spin, double& value) {
         if (spin[0] == AlphaSpin and (i[0] == i[1])) {
             Fa[i[0]] = value;
         }
@@ -196,16 +184,16 @@ MP2_NOS::MP2_NOS(std::shared_ptr<Wavefunction> wfn, Options& options,
         }
     });
 
-    InvD2.iterate([&](const std::vector<size_t>& i,
-                      const std::vector<SpinType>& spin, double& value) {
-        if ((spin[0] == AlphaSpin) and (spin[1] == AlphaSpin)) {
-            value = 1.0 / (Fa[i[0]] + Fa[i[1]] - Fa[i[2]] - Fa[i[3]]);
-        } else if ((spin[0] == AlphaSpin) and (spin[1] == BetaSpin)) {
-            value = 1.0 / (Fa[i[0]] + Fb[i[1]] - Fa[i[2]] - Fb[i[3]]);
-        } else if ((spin[0] == BetaSpin) and (spin[1] == BetaSpin)) {
-            value = 1.0 / (Fb[i[0]] + Fb[i[1]] - Fb[i[2]] - Fb[i[3]]);
-        }
-    });
+    InvD2.iterate(
+        [&](const std::vector<size_t>& i, const std::vector<SpinType>& spin, double& value) {
+            if ((spin[0] == AlphaSpin) and (spin[1] == AlphaSpin)) {
+                value = 1.0 / (Fa[i[0]] + Fa[i[1]] - Fa[i[2]] - Fa[i[3]]);
+            } else if ((spin[0] == AlphaSpin) and (spin[1] == BetaSpin)) {
+                value = 1.0 / (Fa[i[0]] + Fb[i[1]] - Fa[i[2]] - Fb[i[3]]);
+            } else if ((spin[0] == BetaSpin) and (spin[1] == BetaSpin)) {
+                value = 1.0 / (Fb[i[0]] + Fb[i[1]] - Fb[i[2]] - Fb[i[3]]);
+            }
+        });
 
     T2["ijab"] = V["ijab"] * InvD2["ijab"];
     T2["iJaB"] = V["iJaB"] * InvD2["iJaB"];
@@ -217,8 +205,7 @@ MP2_NOS::MP2_NOS(std::shared_ptr<Wavefunction> wfn, Options& options,
 
     double mp2_correlation_energy = Eaa + Eab + Ebb;
     double ref_energy = wfn->reference_energy();
-    outfile->Printf("\n\n    SCF energy                            = %20.15f",
-                    ref_energy);
+    outfile->Printf("\n\n    SCF energy                            = %20.15f", ref_energy);
     outfile->Printf("\n    MP2 correlation energy                = %20.15f",
                     mp2_correlation_energy);
     outfile->Printf("\n  * MP2 total energy                      = %20.15f\n\n",
@@ -293,9 +280,8 @@ MP2_NOS::MP2_NOS(std::shared_ptr<Wavefunction> wfn, Options& options,
                     active[h] = active_number;
                 } else if (D1oo_evals.get(h, i) >= occupied) {
                     restricted_docc_number++;
-                    outfile->Printf(
-                        "\n In %u, orbital occupation %u = %8.6f  RDOCC", h, i,
-                        D1oo_evals.get(h, i));
+                    outfile->Printf("\n In %u, orbital occupation %u = %8.6f  RDOCC", h, i,
+                                    D1oo_evals.get(h, i));
                     restricted_docc[h] = restricted_docc_number;
                 }
             }
@@ -309,8 +295,7 @@ MP2_NOS::MP2_NOS(std::shared_ptr<Wavefunction> wfn, Options& options,
                 }
             }
         }
-        outfile->Printf(
-            "\n By occupation analysis, your restricted docc should be\n");
+        outfile->Printf("\n By occupation analysis, your restricted docc should be\n");
         outfile->Printf("\n Restricted_docc = [");
         for (auto& rocc : restricted_docc) {
             outfile->Printf("%u, ", rocc);
@@ -411,5 +396,5 @@ MP2_NOS::MP2_NOS(std::shared_ptr<Wavefunction> wfn, Options& options,
     // Erase all mo_space information
     BlockedTensor::reset_mo_spaces();
 }
-
-}}
+}
+}

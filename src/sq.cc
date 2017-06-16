@@ -31,8 +31,8 @@
 
 #include "psi4/psi4-dec.h"
 
-#include "sq.h"
 #include "helpers.h"
+#include "sq.h"
 
 using namespace psi;
 
@@ -183,8 +183,7 @@ void SqOperator::test_sort() {
     double signc = sort(cre_);
     double signa = sort(ann_);
     double sign = signc * signa;
-    outfile->Printf("\nAfter sort: %f %f %f %s", sign, signc, signa,
-                    str().c_str());
+    outfile->Printf("\nAfter sort: %f %f %f %s", sign, signc, signa, str().c_str());
 }
 
 // => Operator class function <=
@@ -228,8 +227,7 @@ Operator WickTheorem::evaluate(Operator& lhs, Operator& rhs) {
     return res;
 }
 
-void WickTheorem::contract(const SqOperator& lhs, const SqOperator& rhs,
-                           Operator& res) {
+void WickTheorem::contract(const SqOperator& lhs, const SqOperator& rhs, Operator& res) {
     //    outfile->Printf("\n  Contracting:");
     //    outfile->Printf("\n  { %s } { %s
     //    }",lhs.str().c_str(),rhs.str().c_str());
@@ -276,8 +274,7 @@ WickTheorem::simple_contract(const SqOperator& lhs, const SqOperator& rhs,
     //    (0,2)   (1,1)
 
     // (lcre)(lann)(rcre)(rann)
-    std::vector<std::vector<int>> op_groups{lhs.cre(), lhs.ann(), rhs.cre(),
-                                            rhs.ann()};
+    std::vector<std::vector<int>> op_groups{lhs.cre(), lhs.ann(), rhs.cre(), rhs.ann()};
 
     std::vector<int> lc = lhs.cre();
     std::vector<int> la = lhs.ann();
@@ -305,8 +302,7 @@ WickTheorem::simple_contract(const SqOperator& lhs, const SqOperator& rhs,
     for (std::pair<int, int> leg : pattern) {
         int group = leg.first;
         int op = leg.second;
-        contr_indices.push_back(
-            std::make_pair(op_groups[group][op], group % 2 == 0));
+        contr_indices.push_back(std::make_pair(op_groups[group][op], group % 2 == 0));
         op_mask[group][op] = true;
     }
 

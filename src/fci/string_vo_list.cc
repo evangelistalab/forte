@@ -52,8 +52,7 @@ namespace forte {
  * that is: J = ± a^{+}_p a_q I. p and q are absolute indices and I belongs to
  * the irrep h.
  */
-std::vector<StringSubstitution>&
-StringLists::get_alfa_vo_list(size_t p, size_t q, int h) {
+std::vector<StringSubstitution>& StringLists::get_alfa_vo_list(size_t p, size_t q, int h) {
     boost::tuple<size_t, size_t, int> pq_pair(p, q, h);
     return alfa_vo_list[pq_pair];
 }
@@ -64,8 +63,7 @@ StringLists::get_alfa_vo_list(size_t p, size_t q, int h) {
  * that is: J = ± a^{+}_p a_q I. p and q are absolute indices and I belongs to
  * the irrep h.
  */
-std::vector<StringSubstitution>&
-StringLists::get_beta_vo_list(size_t p, size_t q, int h) {
+std::vector<StringSubstitution>& StringLists::get_beta_vo_list(size_t p, size_t q, int h) {
     boost::tuple<size_t, size_t, int> pq_pair(p, q, h);
     return beta_vo_list[pq_pair];
 }
@@ -133,8 +131,8 @@ void StringLists::make_vo(GraphPtr graph, VOList& list, int p, int q) {
 
                 // Add the sting only of irrep(I) is h
                 if (graph->sym(I) == h)
-                    list[pq_pair].push_back(StringSubstitution(
-                        sign, graph->rel_add(I), graph->rel_add(J)));
+                    list[pq_pair].push_back(
+                        StringSubstitution(sign, graph->rel_add(I), graph->rel_add(J)));
             } while (std::next_permutation(b, b + n));
 
         } // End loop over h
@@ -151,8 +149,7 @@ void StringLists::make_vo(GraphPtr graph, VOList& list, int p, int q) {
  * that is: J = ± a^{+}_p a_q I. p and q are absolute indices and I belongs to
  * the irrep h.
  */
-std::vector<KHStringSubstitution>&
-StringLists::get_alfa_kh_list(int h_I, size_t add_I, int h_J) {
+std::vector<KHStringSubstitution>& StringLists::get_alfa_kh_list(int h_I, size_t add_I, int h_J) {
     std::tuple<int, size_t, int> I_tuple(h_I, add_I, h_J);
     return alfa_kh_list[I_tuple];
 }
@@ -163,8 +160,7 @@ StringLists::get_alfa_kh_list(int h_I, size_t add_I, int h_J) {
  * that is: J = ± a^{+}_p a_q I. p and q are absolute indices and I belongs to
  * the irrep h.
  */
-std::vector<KHStringSubstitution>&
-StringLists::get_beta_kh_list(int h_I, size_t add_I, int h_J) {
+std::vector<KHStringSubstitution>& StringLists::get_beta_kh_list(int h_I, size_t add_I, int h_J) {
     std::tuple<int, size_t, int> I_tuple(h_I, add_I, h_J);
     return beta_kh_list[I_tuple];
 }
@@ -208,12 +204,10 @@ void StringLists::make_kh_list(GraphPtr graph, KHList& list) {
                                     int h_J = graph->sym(J);
                                     size_t add_J = graph->rel_add(J);
 
-                                    std::tuple<int, size_t, int> I_tuple(
-                                        h_I, add_I, h_J);
+                                    std::tuple<int, size_t, int> I_tuple(h_I, add_I, h_J);
 
                                     list[I_tuple].push_back(
-                                        KHStringSubstitution(pq_sign, p, q,
-                                                             add_J));
+                                        KHStringSubstitution(pq_sign, p, q, add_J));
                                 }
                             }
                         }

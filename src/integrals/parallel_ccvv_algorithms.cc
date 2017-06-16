@@ -30,20 +30,20 @@
 
 #include <numeric>
 
-#include "psi4/libpsio/psio.hpp"
-#include "psi4/libpsio/psio.h"
-#include "psi4/libmints/molecule.h"
-#include "psi4/libmints/matrix.h"
-#include "psi4/libmints/vector.h"
-#include "psi4/libqt/qt.h"
 #include "../blockedtensorfactory.h"
 #include "../fci/fci_solver.h"
 #include "../fci/fci_vector.h"
+#include "psi4/libmints/matrix.h"
+#include "psi4/libmints/molecule.h"
+#include "psi4/libmints/vector.h"
+#include "psi4/libpsio/psio.h"
+#include "psi4/libpsio/psio.hpp"
+#include "psi4/libqt/qt.h"
 
 #include "../three_dsrg_mrpt2.h"
-#include <vector>
-#include <string>
 #include <algorithm>
+#include <string>
+#include <vector>
 #ifdef HAVE_MPI
 #include "mpi.h"
 #endif
@@ -99,11 +99,9 @@ double THREE_DSRG_MRPT2::E_VT2_2_batch_core_ga() {
     if (my_proc == 0)
         int_mem_int = (nthree_ * core_ * virtual_) * sizeof(double);
     if (my_proc == 0)
-        memory_input =
-            Process::environment.get_memory() * 0.75 * 1.0 / num_proc;
+        memory_input = Process::environment.get_memory() * 0.75 * 1.0 / num_proc;
     if (my_proc == 0)
-        num_block =
-            int_mem_int / memory_input < 1 ? 1 : int_mem_int / memory_input;
+        num_block = int_mem_int / memory_input < 1 ? 1 : int_mem_int / memory_input;
     if (my_proc == 0)
         block_size = core_ / num_block;
     MPI_Bcast(&int_mem_int, 1, MPI_INT, 0, MPI_COMM_WORLD);
@@ -125,8 +123,8 @@ double THREE_DSRG_MRPT2::E_VT2_2_batch_core_ga() {
     if (debug_print)
         printf("\n P%d done with F_BCAST: %8.8f s", my_proc, F_BCAST.get());
     if (debug_print)
-        printf("\n P%d ncmo_: %d nthree_: %d virtual_: %d core_: %d", my_proc,
-               ncmo_, nthree_, virtual_, core_);
+        printf("\n P%d ncmo_: %d nthree_: %d virtual_: %d core_: %d", my_proc, ncmo_, nthree_,
+               virtual_, core_);
 
     if (memory_input > int_mem_int) {
         if (my_proc == 0) {
@@ -149,30 +147,24 @@ double THREE_DSRG_MRPT2::E_VT2_2_batch_core_ga() {
         printf("\n P%d found this", my_proc);
         printf("\n\n Block size is FUBAR.");
         printf("\n Block size is %d with P%d", block_size, my_proc);
-        throw PSIEXCEPTION(
-            "Block size is either 0 or negative.  Fix this problem");
+        throw PSIEXCEPTION("Block size is either 0 or negative.  Fix this problem");
     }
     if (num_block > core_) {
-        printf("\n Number of blocks can not be larger than core_ on P%d",
-               my_proc);
+        printf("\n Number of blocks can not be larger than core_ on P%d", my_proc);
         printf("\n num_block: %d core_: %d on P%d", num_block, core_, my_proc);
         throw PSIEXCEPTION("Number of blocks is larger than core.  Fix "
                            "num_block or check source code");
     }
     if (num_block < num_proc) {
         outfile->Printf("\n Set number of processors larger");
-        outfile->Printf(
-            "\n This algorithm uses P processors to block DF tensors");
-        printf("\n num_block = %d and num_proc = %d with P%d", num_block,
-               num_proc, my_proc);
-        throw PSIEXCEPTION(
-            "Set number of processors larger.  See output for details.");
+        outfile->Printf("\n This algorithm uses P processors to block DF tensors");
+        printf("\n num_block = %d and num_proc = %d with P%d", num_block, num_proc, my_proc);
+        throw PSIEXCEPTION("Set number of processors larger.  See output for details.");
     }
     if (num_block >= 1) {
         outfile->Printf("\n  %lu / %lu = %lu", int_mem_int, memory_input,
                         int_mem_int / memory_input);
-        outfile->Printf("\n  Block_size = %lu num_block = %lu", block_size,
-                        num_block);
+        outfile->Printf("\n  Block_size = %lu num_block = %lu", block_size, num_block);
         outfile->Printf("\n core_: %d num_proc: %d", core_, num_proc);
     }
     /// Create a Global Array with B_{me}^{Q}
@@ -197,8 +189,7 @@ double THREE_DSRG_MRPT2::E_VT2_2_batch_core_ga() {
     }
     map[num_block] = 0;
     if (debug_print) {
-        outfile->Printf("\n dim_chunk[0]: %d dim_chunk[1]: %d", dim_chunk[0],
-                        dim_chunk[1]);
+        outfile->Printf("\n dim_chunk[0]: %d dim_chunk[1]: %d", dim_chunk[0], dim_chunk[1]);
         for (int i = 0; i < num_block + 1; i++)
             outfile->Printf("\n map[%d] = %d", i, map[i]);
     }
@@ -212,18 +203,16 @@ double THREE_DSRG_MRPT2::E_VT2_2_batch_core_ga() {
     if (my_proc == 0 && debug_print)
         printf("Created mBe tensor");
     /// Take m_blocks and split it up between processors
-    std::pair<std::vector<int>, std::vector<int>> my_tasks =
-        split_up_tasks(num_block, num_proc);
+    std::pair<std::vector<int>, std::vector<int>> my_tasks = split_up_tasks(num_block, num_proc);
     /// Since B is stored on disk on processor 0, only read from p0
     for (int iproc = 0; iproc < num_proc; iproc++) {
         if (my_proc == 0) {
             /// Really only need this tensors for
             std::vector<size_t> naux(nthree_);
             std::iota(naux.begin(), naux.end(), 0);
-            std::vector<size_t> virt_mos =
-                mo_space_info_->get_corr_abs_mo("RESTRICTED_UOCC");
-            for (int m_blocks = my_tasks.first[iproc];
-                 m_blocks < my_tasks.second[iproc]; m_blocks++) {
+            std::vector<size_t> virt_mos = mo_space_info_->get_corr_abs_mo("RESTRICTED_UOCC");
+            for (int m_blocks = my_tasks.first[iproc]; m_blocks < my_tasks.second[iproc];
+                 m_blocks++) {
                 std::vector<size_t> m_batch;
                 if (core_ % num_block == 0) {
                     /// Fill the mbatch from block_begin to block_end
@@ -232,27 +221,21 @@ double THREE_DSRG_MRPT2::E_VT2_2_batch_core_ga() {
                     m_batch.resize(block_size);
                     /// copy used to get correct indices for B.
                     std::copy(acore_mos_.begin() + (m_blocks * block_size),
-                              acore_mos_.begin() +
-                                  ((m_blocks + 1) * block_size),
-                              m_batch.begin());
+                              acore_mos_.begin() + ((m_blocks + 1) * block_size), m_batch.begin());
                 } else {
                     /// If last_block is shorter or long, fill the rest
                     size_t gimp_block_size =
-                        m_blocks == (num_block - 1)
-                            ? block_size + core_ % num_block
-                            : block_size;
+                        m_blocks == (num_block - 1) ? block_size + core_ % num_block : block_size;
                     m_batch.resize(gimp_block_size);
                     // std::iota(m_batch.begin(), m_batch.end(), m_blocks *
                     // (core_ / num_block));
                     std::copy(acore_mos_.begin() + (m_blocks)*block_size,
-                              acore_mos_.begin() + (m_blocks)*block_size +
-                                  gimp_block_size,
+                              acore_mos_.begin() + (m_blocks)*block_size + gimp_block_size,
                               m_batch.begin());
                 }
-                ambit::Tensor BmQe = ambit::Tensor::build(
-                    tensor_type_, "BmQE", {m_batch.size(), nthree_, virtual_});
-                ambit::Tensor B =
-                    ints_->three_integral_block(naux, m_batch, virt_mos);
+                ambit::Tensor BmQe =
+                    ambit::Tensor::build(tensor_type_, "BmQE", {m_batch.size(), nthree_, virtual_});
+                ambit::Tensor B = ints_->three_integral_block(naux, m_batch, virt_mos);
                 BmQe("mQe") = B("Qme");
 
                 int begin_offset[2];
@@ -260,8 +243,8 @@ double THREE_DSRG_MRPT2::E_VT2_2_batch_core_ga() {
                 NGA_Distribution(mBe, iproc, begin_offset, end_offset);
                 NGA_Put(mBe, begin_offset, end_offset, &BmQe.data()[0], ld);
                 for (int i = 0; i < 2; i++) {
-                    outfile->Printf("\n my_proc: %d offsets[%d] = (%d, %d)",
-                                    iproc, i, begin_offset[i], end_offset[i]);
+                    outfile->Printf("\n my_proc: %d offsets[%d] = (%d, %d)", iproc, i,
+                                    begin_offset[i], end_offset[i]);
                 }
 
                 //#ifdef HAVE_GA
@@ -286,21 +269,18 @@ double THREE_DSRG_MRPT2::E_VT2_2_batch_core_ga() {
         printf("\n P%d going to NGA_GET", my_proc);
         outfile->Printf("\n");
         if (my_proc == 0) {
-            ambit::Tensor B_global = ambit::Tensor::build(
-                tensor_type_, "BGlobal", {core_, nthree_, virtual_});
+            ambit::Tensor B_global =
+                ambit::Tensor::build(tensor_type_, "BGlobal", {core_, nthree_, virtual_});
             for (int iproc = 0; iproc < num_proc; iproc++) {
                 int begin_offset_get[2];
                 int end_offset_get[2];
                 NGA_Distribution(mBe, iproc, begin_offset_get, end_offset_get);
                 for (int i = 0; i < 2; i++) {
-                    outfile->Printf("\n my_proc: %d offsets[%d] = (%d, %d)",
-                                    iproc, i, begin_offset_get[i],
-                                    end_offset_get[i]);
+                    outfile->Printf("\n my_proc: %d offsets[%d] = (%d, %d)", iproc, i,
+                                    begin_offset_get[i], end_offset_get[i]);
                 }
                 NGA_Get(mBe, begin_offset_get, end_offset_get,
-                        &(B_global.data()[begin_offset_get[0] * nthree_ *
-                                          virtual_]),
-                        ld);
+                        &(B_global.data()[begin_offset_get[0] * nthree_ * virtual_]), ld);
             }
             if (debug_print)
                 printf("\n B_Global 1norm: %8.8f", B_global.norm(1.0));
@@ -329,20 +309,13 @@ double THREE_DSRG_MRPT2::E_VT2_2_batch_core_ga() {
     // printf("\n Proc%d about to allocate tensors", my_proc);
     // printf("\n nthree_: %d virtual_: %d", nthree_, virtual_);
     for (int i = 0; i < nthread; i++) {
-        BmaVec.push_back(
-            ambit::Tensor::build(tensor_type_, "Bma", {nthree_, virtual_}));
-        BnaVec.push_back(
-            ambit::Tensor::build(tensor_type_, "Bna", {nthree_, virtual_}));
-        BmbVec.push_back(
-            ambit::Tensor::build(tensor_type_, "Bmb", {nthree_, virtual_}));
-        BnbVec.push_back(
-            ambit::Tensor::build(tensor_type_, "Bnb", {nthree_, virtual_}));
-        BefVec.push_back(
-            ambit::Tensor::build(tensor_type_, "Bef", {virtual_, virtual_}));
-        BefJKVec.push_back(
-            ambit::Tensor::build(tensor_type_, "BefJK", {virtual_, virtual_}));
-        RDVec.push_back(
-            ambit::Tensor::build(tensor_type_, "RDVec", {virtual_, virtual_}));
+        BmaVec.push_back(ambit::Tensor::build(tensor_type_, "Bma", {nthree_, virtual_}));
+        BnaVec.push_back(ambit::Tensor::build(tensor_type_, "Bna", {nthree_, virtual_}));
+        BmbVec.push_back(ambit::Tensor::build(tensor_type_, "Bmb", {nthree_, virtual_}));
+        BnbVec.push_back(ambit::Tensor::build(tensor_type_, "Bnb", {nthree_, virtual_}));
+        BefVec.push_back(ambit::Tensor::build(tensor_type_, "Bef", {virtual_, virtual_}));
+        BefJKVec.push_back(ambit::Tensor::build(tensor_type_, "BefJK", {virtual_, virtual_}));
+        RDVec.push_back(ambit::Tensor::build(tensor_type_, "RDVec", {virtual_, virtual_}));
     }
 
     std::vector<std::pair<int, int>> mn_tasks(num_block * (num_block + 1) / 2);
@@ -358,13 +331,12 @@ double THREE_DSRG_MRPT2::E_VT2_2_batch_core_ga() {
     }
     /// Step 2:  Loop over memory allowed blocks of m and n
     /// Get batch sizes and create vectors of mblock length
-    for (size_t tasks = my_mn_tasks.first[my_proc];
-         tasks < my_mn_tasks.second[my_proc]; tasks++) {
+    for (size_t tasks = my_mn_tasks.first[my_proc]; tasks < my_mn_tasks.second[my_proc]; tasks++) {
         int m_blocks = mn_tasks[tasks].first;
         int n_blocks = mn_tasks[tasks].second;
         if (debug_print)
-            printf("\n my_proc: %d tasks: %d m_blocks: %d n_blocks: %d",
-                   my_proc, tasks, m_blocks, n_blocks);
+            printf("\n my_proc: %d tasks: %d m_blocks: %d n_blocks: %d", my_proc, tasks, m_blocks,
+                   n_blocks);
         std::vector<size_t> m_batch;
         size_t gimp_block_size = 0;
         /// If core_ goes into num_block equally, all blocks are equal
@@ -375,35 +347,30 @@ double THREE_DSRG_MRPT2::E_VT2_2_batch_core_ga() {
             m_batch.resize(block_size);
             /// copy used to get correct indices for B.
             std::copy(acore_mos_.begin() + (m_blocks * block_size),
-                      acore_mos_.begin() + ((m_blocks + 1) * block_size),
-                      m_batch.begin());
+                      acore_mos_.begin() + ((m_blocks + 1) * block_size), m_batch.begin());
             gimp_block_size = block_size;
         } else {
             /// If last_block is shorter or long, fill the rest
-            gimp_block_size = m_blocks == (num_block - 1)
-                                  ? block_size + core_ % num_block
-                                  : block_size;
+            gimp_block_size =
+                m_blocks == (num_block - 1) ? block_size + core_ % num_block : block_size;
             m_batch.resize(gimp_block_size);
             // std::iota(m_batch.begin(), m_batch.end(), m_blocks * (core_ /
             // num_block));
             std::copy(acore_mos_.begin() + (m_blocks)*block_size,
-                      acore_mos_.begin() + (m_blocks)*block_size +
-                          gimp_block_size,
+                      acore_mos_.begin() + (m_blocks)*block_size + gimp_block_size,
                       m_batch.begin());
         }
 
         /// Get the correct chunk for m_batch
         /// Since every processor has different chunk (I can't assume locality)
         if (debug_print)
-            printf("\n Allocatating matrix version of BmQe on %d proc",
-                   my_proc);
+            printf("\n Allocatating matrix version of BmQe on %d proc", my_proc);
         if (debug_print)
             printf("\n Matrix version of BmQe alloocated on %d", my_proc);
         if (debug_print)
             printf("\n %d proc about to allocate BmQe tensor", my_proc);
         if (debug_print)
-            printf("\n m_batch size: %d nthree: %d virtual: %d", m_batch.size(),
-                   nthree_, virtual_);
+            printf("\n m_batch size: %d nthree: %d virtual: %d", m_batch.size(), nthree_, virtual_);
         if (debug_print)
             printf("\n %d proc allocated BmQe tensor", my_proc);
 
@@ -430,22 +397,20 @@ double THREE_DSRG_MRPT2::E_VT2_2_batch_core_ga() {
         subscript[1] = 0;
         int NGA_INFO = NGA_Locate(mBe, subscript);
         if (debug_print)
-            printf("\n P%d M subscript[0] = %d NGA_INFO: %d", my_proc,
-                   subscript[0], NGA_INFO);
+            printf("\n P%d M subscript[0] = %d NGA_INFO: %d", my_proc, subscript[0], NGA_INFO);
 
         if (NGA_INFO == -1) {
             printf("\n NGA_INFO: %d", NGA_INFO);
             printf("\n Found multiple blocks that hold this region");
             printf("\n Could not locate block of mBe");
-            printf("\n my_proc: %d block_size: %d m_blocks: %d", my_proc,
-                   block_size, m_blocks);
+            printf("\n my_proc: %d block_size: %d m_blocks: %d", my_proc, block_size, m_blocks);
             // for(int i = 0; i < num_proc; i++)
             //    printf("\n PL[%d] = %d", i, proc_list[i]);
             throw PSIEXCEPTION("GA could not locate region of B_m^{Qe}");
         }
 
-        ambit::Tensor BmQe = ambit::Tensor::build(
-            tensor_type_, "BmQE", {m_batch.size(), nthree_, virtual_});
+        ambit::Tensor BmQe =
+            ambit::Tensor::build(tensor_type_, "BmQE", {m_batch.size(), nthree_, virtual_});
         // SharedMatrix BmQe_mat(new Matrix("BmQe_mat", m_batch.size() *
         // nthree_, virtual_));
         int begin_offset[2];
@@ -463,23 +428,20 @@ double THREE_DSRG_MRPT2::E_VT2_2_batch_core_ga() {
             /// chunk
             n_batch.resize(block_size);
             std::copy(acore_mos_.begin() + n_blocks * block_size,
-                      acore_mos_.begin() + ((n_blocks + 1) * block_size),
-                      n_batch.begin());
+                      acore_mos_.begin() + ((n_blocks + 1) * block_size), n_batch.begin());
             gimp_block_size = block_size;
         } else {
             /// If last_block is longer, block_size + remainder
-            gimp_block_size = n_blocks == (num_block - 1)
-                                  ? block_size + core_ % num_block
-                                  : block_size;
+            gimp_block_size =
+                n_blocks == (num_block - 1) ? block_size + core_ % num_block : block_size;
             n_batch.resize(gimp_block_size);
             std::copy(acore_mos_.begin() + (n_blocks)*block_size,
-                      acore_mos_.begin() + (n_blocks * block_size) +
-                          gimp_block_size,
+                      acore_mos_.begin() + (n_blocks * block_size) + gimp_block_size,
                       n_batch.begin());
         }
 
-        ambit::Tensor BnQf = ambit::Tensor::build(
-            tensor_type_, "BnQf", {n_batch.size(), nthree_, virtual_});
+        ambit::Tensor BnQf =
+            ambit::Tensor::build(tensor_type_, "BnQf", {n_batch.size(), nthree_, virtual_});
         // ambit::Tensor BnQf;
         // SharedMatrix BnQf_mat(new Matrix("BnQf", n_batch.size() * nthree_,
         // virtual_));
@@ -494,8 +456,8 @@ double THREE_DSRG_MRPT2::E_VT2_2_batch_core_ga() {
             locate_offset[1] = 0;
             NGA_INFO = NGA_Locate(mBe, locate_offset);
             if (debug_print)
-                printf("\n P%d N locate_offset[0] = %d NGA_INFO: %d", my_proc,
-                       locate_offset[0], NGA_INFO);
+                printf("\n P%d N locate_offset[0] = %d NGA_INFO: %d", my_proc, locate_offset[0],
+                       NGA_INFO);
             if (NGA_INFO == -1) {
                 printf("\n Could not locate block of mBe");
                 printf("\n locate_offset[0]: %d", locate_offset[0]);
@@ -515,8 +477,7 @@ double THREE_DSRG_MRPT2::E_VT2_2_batch_core_ga() {
         size_t n_size = n_batch.size();
         if (debug_print)
             printf("\n Proc%d multiple tensor allocations", my_proc);
-#pragma omp parallel for num_threads(num_threads_) schedule(runtime)           \
-    reduction(+ : Ealpha, Emixed)
+#pragma omp parallel for num_threads(num_threads_) schedule(runtime) reduction(+ : Ealpha, Emixed)
         for (size_t mn = 0; mn < m_size * n_size; ++mn) {
             int thread = 0;
             size_t m = mn / n_size + m_batch[0];
@@ -540,15 +501,12 @@ double THREE_DSRG_MRPT2::E_VT2_2_batch_core_ga() {
             size_t nb = n_batch[n_in_loop];
 
             std::copy(BmQe.data().begin() + (m_in_loop)*dim,
-                      BmQe.data().begin() + (m_in_loop)*dim + dim,
-                      BmaVec[thread].data().begin());
+                      BmQe.data().begin() + (m_in_loop)*dim + dim, BmaVec[thread].data().begin());
 
             std::copy(BnQf.data().begin() + (mn % n_size) * dim,
-                      BnQf.data().begin() + (n_in_loop)*dim + dim,
-                      BnaVec[thread].data().begin());
+                      BnQf.data().begin() + (n_in_loop)*dim + dim, BnaVec[thread].data().begin());
             std::copy(BnQf.data().begin() + (mn % n_size) * dim,
-                      BnQf.data().begin() + (n_in_loop)*dim + dim,
-                      BnbVec[thread].data().begin());
+                      BnQf.data().begin() + (n_in_loop)*dim + dim, BnbVec[thread].data().begin());
             // std::copy(BmQe.begin() + (m_in_loop) * dim, BmQe.begin() +
             // (m_in_loop) * dim + dim, BmaVec.begin());
 
@@ -559,19 +517,14 @@ double THREE_DSRG_MRPT2::E_VT2_2_batch_core_ga() {
 
             ////// alpha-aplha
             BefVec[thread]("ef") = BmaVec[thread]("ge") * BnaVec[thread]("gf");
-            BefJKVec[thread]("ef") =
-                BefVec[thread]("ef") * BefVec[thread]("ef");
-            BefJKVec[thread]("ef") -=
-                BefVec[thread]("ef") * BefVec[thread]("fe");
-            RDVec[thread].iterate(
-                [&](const std::vector<size_t>& i, double& value) {
-                    double D = Fa_[ma] + Fa_[na] - Fa_[avirt_mos_[i[0]]] -
-                               Fa_[avirt_mos_[i[1]]];
-                    value = dsrg_source_->compute_renormalized_denominator(D) *
-                            (1.0 + dsrg_source_->compute_renormalized(D));
-                });
-            Ealpha +=
-                factor * 1.0 * BefJKVec[thread]("ef") * RDVec[thread]("ef");
+            BefJKVec[thread]("ef") = BefVec[thread]("ef") * BefVec[thread]("ef");
+            BefJKVec[thread]("ef") -= BefVec[thread]("ef") * BefVec[thread]("fe");
+            RDVec[thread].iterate([&](const std::vector<size_t>& i, double& value) {
+                double D = Fa_[ma] + Fa_[na] - Fa_[avirt_mos_[i[0]]] - Fa_[avirt_mos_[i[1]]];
+                value = dsrg_source_->compute_renormalized_denominator(D) *
+                        (1.0 + dsrg_source_->compute_renormalized(D));
+            });
+            Ealpha += factor * 1.0 * BefJKVec[thread]("ef") * RDVec[thread]("ef");
 
             //// beta-beta
             ////BefVec("EF") = BmbVec("gE") * BnbVec("gF");
@@ -579,26 +532,23 @@ double THREE_DSRG_MRPT2::E_VT2_2_batch_core_ga() {
             ////BefJKVec("EF") -= BefVec("EF") * BefVec("FE");
             ////RDVec.iterate([&](const std::vector<size_t>& i,double& value){
             ////    double D = Fb_[mb] + Fb_[nb] - Fb_[bvirt_mos_[i[0]]] -
-            ///Fb_[bvirt_mos_[i[1]]];
+            /// Fb_[bvirt_mos_[i[1]]];
             ////    value = renormalized_denominator(D) * (1.0 +
-            ///renormalized_exp(D));});
+            /// renormalized_exp(D));});
             ////Ebeta += 0.5 * BefJKVec("EF") * RDVec("EF");
 
             //// alpha-beta
             BefVec[thread]("eF") = BmaVec[thread]("ge") * BnbVec[thread]("gF");
-            BefJKVec[thread]("eF") =
-                BefVec[thread]("eF") * BefVec[thread]("eF");
-            RDVec[thread].iterate(
-                [&](const std::vector<size_t>& i, double& value) {
-                    double D = Fa_[ma] + Fb_[nb] - Fa_[avirt_mos_[i[0]]] -
-                               Fb_[bvirt_mos_[i[1]]];
-                    value = dsrg_source_->compute_renormalized_denominator(D) *
-                            (1.0 + dsrg_source_->compute_renormalized(D));
-                });
+            BefJKVec[thread]("eF") = BefVec[thread]("eF") * BefVec[thread]("eF");
+            RDVec[thread].iterate([&](const std::vector<size_t>& i, double& value) {
+                double D = Fa_[ma] + Fb_[nb] - Fa_[avirt_mos_[i[0]]] - Fb_[bvirt_mos_[i[1]]];
+                value = dsrg_source_->compute_renormalized_denominator(D) *
+                        (1.0 + dsrg_source_->compute_renormalized(D));
+            });
             Emixed += factor * BefJKVec[thread]("eF") * RDVec[thread]("eF");
             if (debug_print) {
-                printf("\n my_proc: %d m_size: %d n_size: %d m: %d n:%d",
-                       my_proc, m_size, n_size, m, n);
+                printf("\n my_proc: %d m_size: %d n_size: %d m: %d n:%d", my_proc, m_size, n_size,
+                       m, n);
                 printf("\n my_proc: %d m: %d n:%d Ealpha = %8.8f Emixed = "
                        "%8.8f Sum = %8.8f",
                        my_proc, m, n, Ealpha, Emixed, Ealpha + Emixed);
@@ -607,8 +557,7 @@ double THREE_DSRG_MRPT2::E_VT2_2_batch_core_ga() {
     }
     double local_sum = Ealpha + Emixed;
     double total_sum;
-    MPI_Reduce(&local_sum, &total_sum, 1, MPI_DOUBLE, MPI_SUM, 0,
-               MPI_COMM_WORLD);
+    MPI_Reduce(&local_sum, &total_sum, 1, MPI_DOUBLE, MPI_SUM, 0, MPI_COMM_WORLD);
     return total_sum;
 }
 #endif
@@ -639,8 +588,7 @@ double THREE_DSRG_MRPT2::E_VT2_2_batch_core_rep() {
 #ifdef _OPENMP
     nthread = omp_get_max_threads();
 #endif
-    outfile->Printf("\n Algorithm uses %d processors and %d threads", num_proc,
-                    nthread);
+    outfile->Printf("\n Algorithm uses %d processors and %d threads", num_proc, nthread);
 
     /// Step 1:  Figure out the largest chunk of B_{me}^{Q} and B_{nf}^{Q} can
     /// be stored in core.
@@ -651,10 +599,8 @@ double THREE_DSRG_MRPT2::E_VT2_2_batch_core_rep() {
     size_t block_size = 0;
     if (my_proc == 0) {
         int_mem_int = (nthree_ * core_ * virtual_) * sizeof(double);
-        memory_input =
-            Process::environment.get_memory() * 0.75 * 1.0 / num_proc;
-        num_block =
-            int_mem_int / memory_input < 1 ? 1 : int_mem_int / memory_input;
+        memory_input = Process::environment.get_memory() * 0.75 * 1.0 / num_proc;
+        num_block = int_mem_int / memory_input < 1 ? 1 : int_mem_int / memory_input;
         block_size = core_ / num_block;
     }
     MPI_Bcast(&int_mem_int, 1, MPI_INT, 0, MPI_COMM_WORLD);
@@ -679,22 +625,18 @@ double THREE_DSRG_MRPT2::E_VT2_2_batch_core_rep() {
         outfile->Printf("\n Block Information");
         outfile->Printf("\n  %lu / %lu = %lu", int_mem_int, memory_input,
                         int_mem_int / memory_input);
-        outfile->Printf("\n  Block_size = %lu num_block = %lu P%d", block_size,
-                        num_block);
+        outfile->Printf("\n  Block_size = %lu num_block = %lu P%d", block_size, num_block);
     }
 
     if (block_size < 1) {
         printf("\n\n Block size is FUBAR on P%d.", my_proc);
         printf("\n Block size is %d", block_size);
         printf("\n Block Information for P%d\n", my_proc);
-        printf("\n  %lu / %lu = %lu P%d", int_mem_int, memory_input,
-               int_mem_int / memory_input, my_proc);
-        printf("\n  Block_size = %lu num_block = %lu P%d", block_size,
-               num_block, my_proc);
-        printf("\n Core_: %d virtual_: %d nthree_: %d", core_, virtual_,
-               nthree_);
-        throw PSIEXCEPTION(
-            "Block size is either 0 or negative.  Fix this problem");
+        printf("\n  %lu / %lu = %lu P%d", int_mem_int, memory_input, int_mem_int / memory_input,
+               my_proc);
+        printf("\n  Block_size = %lu num_block = %lu P%d", block_size, num_block, my_proc);
+        printf("\n Core_: %d virtual_: %d nthree_: %d", core_, virtual_, nthree_);
+        throw PSIEXCEPTION("Block size is either 0 or negative.  Fix this problem");
     }
     if (num_block > core_) {
         printf("\n P%d says that num_block is %d", my_proc, num_block);
@@ -705,19 +647,15 @@ double THREE_DSRG_MRPT2::E_VT2_2_batch_core_rep() {
 
     if (num_block < num_proc) {
         outfile->Printf("\n Set number of processors larger");
-        outfile->Printf(
-            "\n This algorithm uses P processors to block DF tensors");
-        outfile->Printf("\n num_block = %d and num_proc = %d", num_block,
-                        num_proc);
-        throw PSIEXCEPTION(
-            "Set number of processors larger.  See output for details.");
+        outfile->Printf("\n This algorithm uses P processors to block DF tensors");
+        outfile->Printf("\n num_block = %d and num_proc = %d", num_block, num_proc);
+        throw PSIEXCEPTION("Set number of processors larger.  See output for details.");
     }
     if (debug_print) {
         printf("\n P%d is complete with all block information", my_proc);
         printf("\n P%d num_block: %d core_: %d virtual_: %d nthree_: %d ncmo_: "
                "%d num_proc: %d block_size: %d",
-               my_proc, num_block, core_, virtual_, nthree_, ncmo_, num_proc,
-               block_size);
+               my_proc, num_block, core_, virtual_, nthree_, ncmo_, num_proc, block_size);
     }
 
     /// Race condition if each thread access ambit tensors
@@ -740,20 +678,13 @@ double THREE_DSRG_MRPT2::E_VT2_2_batch_core_rep() {
     // ambit::Tensor BmbVec;
     // ambit::Tensor BnbVec;
     for (int i = 0; i < nthread; i++) {
-        BmaVec[i] =
-            ambit::Tensor::build(tensor_type_, "B", {nthree_, virtual_});
-        BnaVec[i] =
-            ambit::Tensor::build(tensor_type_, "B", {nthree_, virtual_});
-        BmbVec[i] =
-            ambit::Tensor::build(tensor_type_, "B", {nthree_, virtual_});
-        BnbVec[i] =
-            ambit::Tensor::build(tensor_type_, "B", {nthree_, virtual_});
-        BefVec[i] =
-            ambit::Tensor::build(tensor_type_, "B", {virtual_, virtual_});
-        BefJKVec[i] =
-            ambit::Tensor::build(tensor_type_, "B", {virtual_, virtual_});
-        RDVec[i] =
-            ambit::Tensor::build(tensor_type_, "B", {virtual_, virtual_});
+        BmaVec[i] = ambit::Tensor::build(tensor_type_, "B", {nthree_, virtual_});
+        BnaVec[i] = ambit::Tensor::build(tensor_type_, "B", {nthree_, virtual_});
+        BmbVec[i] = ambit::Tensor::build(tensor_type_, "B", {nthree_, virtual_});
+        BnbVec[i] = ambit::Tensor::build(tensor_type_, "B", {nthree_, virtual_});
+        BefVec[i] = ambit::Tensor::build(tensor_type_, "B", {virtual_, virtual_});
+        BefJKVec[i] = ambit::Tensor::build(tensor_type_, "B", {virtual_, virtual_});
+        RDVec[i] = ambit::Tensor::build(tensor_type_, "B", {virtual_, virtual_});
     }
     // for (int i = 0; i < nthread; i++)
     //{
@@ -785,8 +716,7 @@ double THREE_DSRG_MRPT2::E_VT2_2_batch_core_rep() {
     /// F matrix will be broadcasted to all processors (N^2)
     if (debug_print)
         printf("\n P%d going to allocate tensor", my_proc);
-    ambit::Tensor BmQe =
-        ambit::Tensor::build(tensor_type_, "BmQE", {core_, nthree_, virtual_});
+    ambit::Tensor BmQe = ambit::Tensor::build(tensor_type_, "BmQE", {core_, nthree_, virtual_});
     if (debug_print)
         printf("\n P%d done with allocatating tensor", my_proc);
     if (my_proc != 0) {
@@ -794,12 +724,10 @@ double THREE_DSRG_MRPT2::E_VT2_2_batch_core_rep() {
         Fb_.resize(ncmo_);
     }
     if (my_proc == 0) {
-        std::vector<size_t> virt_mos =
-            mo_space_info_->get_corr_abs_mo("RESTRICTED_UOCC");
+        std::vector<size_t> virt_mos = mo_space_info_->get_corr_abs_mo("RESTRICTED_UOCC");
         std::vector<size_t> naux(nthree_);
         std::iota(naux.begin(), naux.end(), 0);
-        ambit::Tensor B =
-            ints_->three_integral_block(naux, acore_mos_, avirt_mos_);
+        ambit::Tensor B = ints_->three_integral_block(naux, acore_mos_, avirt_mos_);
         BmQe("mQe") = B("Qme");
     }
     Timer F_Bcast;
@@ -814,8 +742,7 @@ double THREE_DSRG_MRPT2::E_VT2_2_batch_core_rep() {
     if (debug_print)
         printf("\n B_Bcast for B about to start on P%d", my_proc);
     Timer B_Bcast;
-    MPI_Bcast(&BmQe.data()[0], nthree_ * virtual_ * core_, MPI_DOUBLE, 0,
-              MPI_COMM_WORLD);
+    MPI_Bcast(&BmQe.data()[0], nthree_ * virtual_ * core_, MPI_DOUBLE, 0, MPI_COMM_WORLD);
     if (debug_print)
         printf("\n B_Bcast took %8.8f on P%d", B_Bcast.get(), my_proc);
     if (debug_print)
@@ -823,12 +750,10 @@ double THREE_DSRG_MRPT2::E_VT2_2_batch_core_rep() {
     /// Step 2:  Loop over memory allowed blocks of m and n
     /// Get batch sizes and create vectors of mblock length
 
-    for (int tasks = my_tasks.first[my_proc]; tasks < my_tasks.second[my_proc];
-         tasks++) {
+    for (int tasks = my_tasks.first[my_proc]; tasks < my_tasks.second[my_proc]; tasks++) {
         if (debug_print)
-            printf("\n tasks: %d my-tasks.first[%d] = %d my_tasks.second = %d",
-                   tasks, my_proc, my_tasks.first[my_proc],
-                   my_tasks.second[my_proc]);
+            printf("\n tasks: %d my-tasks.first[%d] = %d my_tasks.second = %d", tasks, my_proc,
+                   my_tasks.first[my_proc], my_tasks.second[my_proc]);
         int m_blocks = mn_tasks[tasks].first;
         int n_blocks = mn_tasks[tasks].second;
         if (debug_print)
@@ -843,30 +768,26 @@ double THREE_DSRG_MRPT2::E_VT2_2_batch_core_rep() {
             m_batch.resize(block_size);
             /// copy used to get correct indices for B.
             std::copy(acore_mos_.begin() + (m_blocks * block_size),
-                      acore_mos_.begin() + ((m_blocks + 1) * block_size),
-                      m_batch.begin());
+                      acore_mos_.begin() + ((m_blocks + 1) * block_size), m_batch.begin());
             gimp_block_size = block_size;
         } else {
             /// If last_block is shorter or long, fill the rest
-            gimp_block_size = m_blocks == (num_block - 1)
-                                  ? block_size + core_ % num_block
-                                  : block_size;
+            gimp_block_size =
+                m_blocks == (num_block - 1) ? block_size + core_ % num_block : block_size;
             m_batch.resize(gimp_block_size);
             // std::iota(m_batch.begin(), m_batch.end(), m_blocks * (core_ /
             // num_block));
             std::copy(acore_mos_.begin() + (m_blocks)*block_size,
-                      acore_mos_.begin() + (m_blocks)*block_size +
-                          gimp_block_size,
+                      acore_mos_.begin() + (m_blocks)*block_size + gimp_block_size,
                       m_batch.begin());
         }
 
-        ambit::Tensor BmQe_batch = ambit::Tensor::build(
-            tensor_type_, "BmQE", {m_batch.size(), nthree_, virtual_});
-        std::copy(
-            BmQe.data().begin() + (m_blocks * block_size) * nthree_ * virtual_,
-            BmQe.data().begin() + (m_blocks * block_size) * nthree_ * virtual_ +
-                gimp_block_size * nthree_ * virtual_,
-            BmQe_batch.data().begin());
+        ambit::Tensor BmQe_batch =
+            ambit::Tensor::build(tensor_type_, "BmQE", {m_batch.size(), nthree_, virtual_});
+        std::copy(BmQe.data().begin() + (m_blocks * block_size) * nthree_ * virtual_,
+                  BmQe.data().begin() + (m_blocks * block_size) * nthree_ * virtual_ +
+                      gimp_block_size * nthree_ * virtual_,
+                  BmQe_batch.data().begin());
         if (debug_print) {
             printf("\n BmQe norm: %8.8f", BmQe_batch.norm(2.0));
             printf("\n m_block: %d", m_blocks);
@@ -889,31 +810,26 @@ double THREE_DSRG_MRPT2::E_VT2_2_batch_core_rep() {
             /// chunk
             n_batch.resize(block_size);
             std::copy(acore_mos_.begin() + n_blocks * block_size,
-                      acore_mos_.begin() + ((n_blocks + 1) * block_size),
-                      n_batch.begin());
+                      acore_mos_.begin() + ((n_blocks + 1) * block_size), n_batch.begin());
             gimp_block_size = block_size;
         } else {
             /// If last_block is longer, block_size + remainder
-            gimp_block_size = n_blocks == (num_block - 1)
-                                  ? block_size + core_ % num_block
-                                  : block_size;
+            gimp_block_size =
+                n_blocks == (num_block - 1) ? block_size + core_ % num_block : block_size;
             n_batch.resize(gimp_block_size);
             std::copy(acore_mos_.begin() + (n_blocks)*block_size,
-                      acore_mos_.begin() + (n_blocks * block_size) +
-                          gimp_block_size,
+                      acore_mos_.begin() + (n_blocks * block_size) + gimp_block_size,
                       n_batch.begin());
         }
 
-        ambit::Tensor BnQf_batch = ambit::Tensor::build(
-            tensor_type_, "BnQf", {n_batch.size(), nthree_, virtual_});
+        ambit::Tensor BnQf_batch =
+            ambit::Tensor::build(tensor_type_, "BnQf", {n_batch.size(), nthree_, virtual_});
 
         if (n_blocks == m_blocks) {
             BnQf_batch.copy(BmQe_batch);
         } else {
-            std::copy(BmQe.data().begin() +
-                          (n_blocks * block_size) * nthree_ * virtual_,
-                      BmQe.data().begin() +
-                          (n_blocks * block_size) * nthree_ * virtual_ +
+            std::copy(BmQe.data().begin() + (n_blocks * block_size) * nthree_ * virtual_,
+                      BmQe.data().begin() + (n_blocks * block_size) * nthree_ * virtual_ +
                           gimp_block_size * nthree_ * virtual_,
                       BnQf_batch.data().begin());
         }
@@ -928,8 +844,7 @@ double THREE_DSRG_MRPT2::E_VT2_2_batch_core_rep() {
         }
         size_t m_size = m_batch.size();
         size_t n_size = n_batch.size();
-#pragma omp parallel for num_threads(num_threads_) schedule(runtime)           \
-    reduction(+ : Ealpha, Emixed)
+#pragma omp parallel for num_threads(num_threads_) schedule(runtime) reduction(+ : Ealpha, Emixed)
         for (size_t mn = 0; mn < m_size * n_size; ++mn) {
             int thread = 0;
             size_t m = mn / n_size + m_batch[0];
@@ -965,50 +880,42 @@ double THREE_DSRG_MRPT2::E_VT2_2_batch_core_rep() {
 
             //// alpha-aplha
             BefVec[thread]("ef") = BmaVec[thread]("ge") * BnaVec[thread]("gf");
-            BefJKVec[thread]("ef") =
-                BefVec[thread]("ef") * BefVec[thread]("ef");
-            BefJKVec[thread]("ef") -=
-                BefVec[thread]("ef") * BefVec[thread]("fe");
-            RDVec[thread].iterate(
-                [&](const std::vector<size_t>& i, double& value) {
-                    double D = Fa_[ma] + Fa_[na] - Fa_[avirt_mos_[i[0]]] -
-                               Fa_[avirt_mos_[i[1]]];
-                    value = dsrg_source_->compute_renormalized_denominator(D) *
-                            (1.0 + dsrg_source_->compute_renormalized(D));
-                });
-            Ealpha +=
-                factor * 1.0 * BefJKVec[thread]("ef") * RDVec[thread]("ef");
+            BefJKVec[thread]("ef") = BefVec[thread]("ef") * BefVec[thread]("ef");
+            BefJKVec[thread]("ef") -= BefVec[thread]("ef") * BefVec[thread]("fe");
+            RDVec[thread].iterate([&](const std::vector<size_t>& i, double& value) {
+                double D = Fa_[ma] + Fa_[na] - Fa_[avirt_mos_[i[0]]] - Fa_[avirt_mos_[i[1]]];
+                value = dsrg_source_->compute_renormalized_denominator(D) *
+                        (1.0 + dsrg_source_->compute_renormalized(D));
+            });
+            Ealpha += factor * 1.0 * BefJKVec[thread]("ef") * RDVec[thread]("ef");
 
             //// beta-beta
             ////BefVec[thread]("EF") = BmbVec[thread]("gE") *
-            ///BnbVec[thread]("gF");
+            /// BnbVec[thread]("gF");
             ////BefJKVec[thread]("EF")  = BefVec[thread]("EF") *
-            ///BefVec[thread]("EF");
+            /// BefVec[thread]("EF");
             ////BefJKVec[thread]("EF") -= BefVec[thread]("EF") *
-            ///BefVec[thread]("FE");
+            /// BefVec[thread]("FE");
             ////RDVec[thread].iterate([&](const std::vector<size_t>& i,double&
-            ///value){
+            /// value){
             ////    double D = Fb_[mb] + Fb_[nb] - Fb_[bvirt_mos_[i[0]]] -
-            ///Fb_[bvirt_mos_[i[1]]];
+            /// Fb_[bvirt_mos_[i[1]]];
             ////    value = renormalized_denominator(D) * (1.0 +
-            ///renormalized_exp(D));});
+            /// renormalized_exp(D));});
             ////Ebeta += 0.5 * BefJKVec[thread]("EF") * RDVec[thread]("EF");
 
             // alpha-beta
             BefVec[thread]("eF") = BmaVec[thread]("ge") * BnbVec[thread]("gF");
-            BefJKVec[thread]("eF") =
-                BefVec[thread]("eF") * BefVec[thread]("eF");
-            RDVec[thread].iterate(
-                [&](const std::vector<size_t>& i, double& value) {
-                    double D = Fa_[ma] + Fb_[nb] - Fa_[avirt_mos_[i[0]]] -
-                               Fb_[bvirt_mos_[i[1]]];
-                    value = dsrg_source_->compute_renormalized_denominator(D) *
-                            (1.0 + dsrg_source_->compute_renormalized(D));
-                });
+            BefJKVec[thread]("eF") = BefVec[thread]("eF") * BefVec[thread]("eF");
+            RDVec[thread].iterate([&](const std::vector<size_t>& i, double& value) {
+                double D = Fa_[ma] + Fb_[nb] - Fa_[avirt_mos_[i[0]]] - Fb_[bvirt_mos_[i[1]]];
+                value = dsrg_source_->compute_renormalized_denominator(D) *
+                        (1.0 + dsrg_source_->compute_renormalized(D));
+            });
             Emixed += factor * BefJKVec[thread]("eF") * RDVec[thread]("eF");
             if (debug_print) {
-                printf("\n my_proc: %d m_size: %d n_size: %d m: %d n:%d",
-                       my_proc, m_size, n_size, m, n);
+                printf("\n my_proc: %d m_size: %d n_size: %d m: %d n:%d", my_proc, m_size, n_size,
+                       m, n);
                 printf("\n my_proc: %d m: %d n:%d Ealpha = %8.8f Emixed = "
                        "%8.8f Sum = %8.8f",
                        my_proc, m, n, Ealpha, Emixed, Ealpha + Emixed);
@@ -1017,8 +924,7 @@ double THREE_DSRG_MRPT2::E_VT2_2_batch_core_rep() {
     }
     double local_sum = Ealpha + Emixed;
     double total_sum;
-    MPI_Reduce(&local_sum, &total_sum, 1, MPI_DOUBLE, MPI_SUM, 0,
-               MPI_COMM_WORLD);
+    MPI_Reduce(&local_sum, &total_sum, 1, MPI_DOUBLE, MPI_SUM, 0, MPI_COMM_WORLD);
     // return (Ealpha + Ebeta + Emixed);
 
     return (total_sum);
@@ -1046,8 +952,7 @@ double THREE_DSRG_MRPT2::E_VT2_2_batch_virtual_ga() {
     outfile->Printf("\n\n====Blocking information==========\n");
     size_t int_mem_int = (nthree_ * core_ * virtual_) * sizeof(double);
     size_t memory_input = Process::environment.get_memory() * 0.75;
-    size_t num_block =
-        int_mem_int / memory_input < 1 ? 1 : int_mem_int / memory_input;
+    size_t num_block = int_mem_int / memory_input < 1 ? 1 : int_mem_int / memory_input;
 
     if (options_.get_int("CCVV_BATCH_NUMBER") != -1) {
         num_block = options_.get_int("CCVV_BATCH_NUMBER");
@@ -1057,8 +962,7 @@ double THREE_DSRG_MRPT2::E_VT2_2_batch_virtual_ga() {
     if (block_size < 1) {
         outfile->Printf("\n\n Block size is FUBAR.");
         outfile->Printf("\n Block size is %d", block_size);
-        throw PSIEXCEPTION(
-            "Block size is either 0 or negative.  Fix this problem");
+        throw PSIEXCEPTION("Block size is either 0 or negative.  Fix this problem");
     }
     if (num_block > virtual_) {
         outfile->Printf("\n Number of blocks can not be larger than core_");
@@ -1069,12 +973,10 @@ double THREE_DSRG_MRPT2::E_VT2_2_batch_virtual_ga() {
     if (num_block >= 1) {
         outfile->Printf("\n  %lu / %lu = %lu", int_mem_int, memory_input,
                         int_mem_int / memory_input);
-        outfile->Printf("\n  Block_size = %lu num_block = %lu", block_size,
-                        num_block);
+        outfile->Printf("\n  Block_size = %lu num_block = %lu", block_size, num_block);
     }
 
-    std::vector<size_t> virt_mos =
-        mo_space_info_->get_corr_abs_mo("RESTRICTED_UOCC");
+    std::vector<size_t> virt_mos = mo_space_info_->get_corr_abs_mo("RESTRICTED_UOCC");
     std::vector<size_t> naux(nthree_);
     std::iota(naux.begin(), naux.end(), 0);
 
@@ -1089,20 +991,13 @@ double THREE_DSRG_MRPT2::E_VT2_2_batch_virtual_ga() {
     std::vector<ambit::Tensor> BnbVec;
 
     for (int i = 0; i < nthread; i++) {
-        BmaVec.push_back(
-            ambit::Tensor::build(tensor_type_, "Bma", {nthree_, core_}));
-        BnaVec.push_back(
-            ambit::Tensor::build(tensor_type_, "Bna", {nthree_, core_}));
-        BmbVec.push_back(
-            ambit::Tensor::build(tensor_type_, "Bmb", {nthree_, core_}));
-        BnbVec.push_back(
-            ambit::Tensor::build(tensor_type_, "Bnb", {nthree_, core_}));
-        BmnVec.push_back(
-            ambit::Tensor::build(tensor_type_, "Bmn", {core_, core_}));
-        BmnJKVec.push_back(
-            ambit::Tensor::build(tensor_type_, "BmnJK", {core_, core_}));
-        RDVec.push_back(
-            ambit::Tensor::build(tensor_type_, "RDVec", {core_, core_}));
+        BmaVec.push_back(ambit::Tensor::build(tensor_type_, "Bma", {nthree_, core_}));
+        BnaVec.push_back(ambit::Tensor::build(tensor_type_, "Bna", {nthree_, core_}));
+        BmbVec.push_back(ambit::Tensor::build(tensor_type_, "Bmb", {nthree_, core_}));
+        BnbVec.push_back(ambit::Tensor::build(tensor_type_, "Bnb", {nthree_, core_}));
+        BmnVec.push_back(ambit::Tensor::build(tensor_type_, "Bmn", {core_, core_}));
+        BmnJKVec.push_back(ambit::Tensor::build(tensor_type_, "BmnJK", {core_, core_}));
+        RDVec.push_back(ambit::Tensor::build(tensor_type_, "RDVec", {core_, core_}));
     }
 
     /// Step 2:  Loop over memory allowed blocks of m and n
@@ -1117,26 +1012,21 @@ double THREE_DSRG_MRPT2::E_VT2_2_batch_virtual_ga() {
             e_batch.resize(block_size);
             /// copy used to get correct indices for B.
             std::copy(virt_mos.begin() + (e_blocks * block_size),
-                      virt_mos.begin() + ((e_blocks + 1) * block_size),
-                      e_batch.begin());
+                      virt_mos.begin() + ((e_blocks + 1) * block_size), e_batch.begin());
         } else {
             /// If last_block is shorter or long, fill the rest
-            size_t gimp_block_size = e_blocks == (num_block - 1)
-                                         ? block_size + virtual_ % num_block
-                                         : block_size;
+            size_t gimp_block_size =
+                e_blocks == (num_block - 1) ? block_size + virtual_ % num_block : block_size;
             e_batch.resize(gimp_block_size);
             // std::iota(m_batch.begin(), m_batch.end(), m_blocks * (core_ /
             // num_block));
             std::copy(virt_mos.begin() + (e_blocks)*block_size,
-                      virt_mos.begin() + (e_blocks)*block_size +
-                          gimp_block_size,
-                      e_batch.begin());
+                      virt_mos.begin() + (e_blocks)*block_size + gimp_block_size, e_batch.begin());
         }
 
-        ambit::Tensor B =
-            ints_->three_integral_block(naux, e_batch, acore_mos_);
-        ambit::Tensor BeQm = ambit::Tensor::build(
-            tensor_type_, "BmQE", {e_batch.size(), nthree_, core_});
+        ambit::Tensor B = ints_->three_integral_block(naux, e_batch, acore_mos_);
+        ambit::Tensor BeQm =
+            ambit::Tensor::build(tensor_type_, "BmQE", {e_batch.size(), nthree_, core_});
         BeQm("eQm") = B("Qem");
         B.reset();
 
@@ -1163,21 +1053,18 @@ double THREE_DSRG_MRPT2::E_VT2_2_batch_virtual_ga() {
                 /// chunk
                 f_batch.resize(block_size);
                 std::copy(virt_mos.begin() + f_blocks * block_size,
-                          virt_mos.begin() + ((f_blocks + 1) * block_size),
-                          f_batch.begin());
+                          virt_mos.begin() + ((f_blocks + 1) * block_size), f_batch.begin());
             } else {
                 /// If last_block is longer, block_size + remainder
-                size_t gimp_block_size = f_blocks == (num_block - 1)
-                                             ? block_size + virtual_ % num_block
-                                             : block_size;
+                size_t gimp_block_size =
+                    f_blocks == (num_block - 1) ? block_size + virtual_ % num_block : block_size;
                 f_batch.resize(gimp_block_size);
                 std::copy(virt_mos.begin() + (f_blocks)*block_size,
-                          virt_mos.begin() + (f_blocks * block_size) +
-                              gimp_block_size,
+                          virt_mos.begin() + (f_blocks * block_size) + gimp_block_size,
                           f_batch.begin());
             }
-            ambit::Tensor BfQn = ambit::Tensor::build(
-                tensor_type_, "BnQf", {f_batch.size(), nthree_, core_});
+            ambit::Tensor BfQn =
+                ambit::Tensor::build(tensor_type_, "BnQf", {f_batch.size(), nthree_, core_});
             if (f_blocks == e_blocks) {
                 BfQn.copy(BeQm);
             } else {
@@ -1231,38 +1118,25 @@ double THREE_DSRG_MRPT2::E_VT2_2_batch_virtual_ga() {
                           BnbVec[thread].data().begin());
 
                 //// alpha-aplha
-                BmnVec[thread]("mn") =
-                    BmaVec[thread]("gm") * BnaVec[thread]("gn");
-                BmnJKVec[thread]("mn") =
-                    BmnVec[thread]("mn") * BmnVec[thread]("mn");
-                BmnJKVec[thread]("mn") -=
-                    BmnVec[thread]("mn") * BmnVec[thread]("nm");
-                RDVec[thread].iterate(
-                    [&](const std::vector<size_t>& i, double& value) {
-                        double D = Fa_[acore_mos_[i[0]]] +
-                                   Fa_[acore_mos_[i[1]]] - Fa_[ea] - Fa_[fa];
-                        value = renormalized_denominator(D) *
-                                (1.0 + renormalized_exp(D));
-                    });
-                Ealpha +=
-                    factor * 1.0 * BmnJKVec[thread]("mn") * RDVec[thread]("mn");
+                BmnVec[thread]("mn") = BmaVec[thread]("gm") * BnaVec[thread]("gn");
+                BmnJKVec[thread]("mn") = BmnVec[thread]("mn") * BmnVec[thread]("mn");
+                BmnJKVec[thread]("mn") -= BmnVec[thread]("mn") * BmnVec[thread]("nm");
+                RDVec[thread].iterate([&](const std::vector<size_t>& i, double& value) {
+                    double D = Fa_[acore_mos_[i[0]]] + Fa_[acore_mos_[i[1]]] - Fa_[ea] - Fa_[fa];
+                    value = renormalized_denominator(D) * (1.0 + renormalized_exp(D));
+                });
+                Ealpha += factor * 1.0 * BmnJKVec[thread]("mn") * RDVec[thread]("mn");
 
                 //// alpha-beta
-                BmnVec[thread]("mN") =
-                    BmaVec[thread]("gm") * BnbVec[thread]("gN");
-                BmnJKVec[thread]("mN") =
-                    BmnVec[thread]("mN") * BmnVec[thread]("mN");
-                RDVec[thread].iterate(
-                    [&](const std::vector<size_t>& i, double& value) {
-                        double D = Fa_[acore_mos_[i[0]]] +
-                                   Fa_[acore_mos_[i[1]]] - Fa_[ea] - Fa_[fb];
-                        value = renormalized_denominator(D) *
-                                (1.0 + renormalized_exp(D));
-                    });
+                BmnVec[thread]("mN") = BmaVec[thread]("gm") * BnbVec[thread]("gN");
+                BmnJKVec[thread]("mN") = BmnVec[thread]("mN") * BmnVec[thread]("mN");
+                RDVec[thread].iterate([&](const std::vector<size_t>& i, double& value) {
+                    double D = Fa_[acore_mos_[i[0]]] + Fa_[acore_mos_[i[1]]] - Fa_[ea] - Fa_[fb];
+                    value = renormalized_denominator(D) * (1.0 + renormalized_exp(D));
+                });
                 Emixed += factor * BmnJKVec[thread]("mN") * RDVec[thread]("mN");
                 if (debug_print) {
-                    outfile->Printf("\n e_size: %d f_size: %d e: %d f:%d",
-                                    e_size, f_size, e, f);
+                    outfile->Printf("\n e_size: %d f_size: %d e: %d f:%d", e_size, f_size, e, f);
                     outfile->Printf("\n e: %d f:%d Ealpha = %8.8f Emixed = "
                                     "%8.8f Sum = %8.8f",
                                     e, f, Ealpha, Emixed, Ealpha + Emixed);

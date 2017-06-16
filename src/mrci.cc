@@ -36,41 +36,36 @@
 namespace psi {
 namespace forte {
 
-MRCI::MRCI( SharedWavefunction ref_wfn, Options& options,
-            std::shared_ptr<ForteIntegrals> ints, 
-            std::shared_ptr<MOSpaceInfo> mo_space_info,
-            DeterminantMap& reference)
-    : Wavefunction(options), ints_(ints), 
-      mo_space_info_(mo_space_info), 
-      reference_(reference)
-{
+MRCI::MRCI(SharedWavefunction ref_wfn, Options& options, std::shared_ptr<ForteIntegrals> ints,
+           std::shared_ptr<MOSpaceInfo> mo_space_info, DeterminantMap& reference)
+    : Wavefunction(options), ints_(ints), mo_space_info_(mo_space_info), reference_(reference) {
     shallow_copy(ref_wfn);
-    print_method_banner(
-        {"Uncontracted MR-CISD", "Jeff Schriber"});
-   startup();
+    print_method_banner({"Uncontracted MR-CISD", "Jeff Schriber"});
+    startup();
 }
 
 MRCI::~MRCI() {}
 
-void MRCI::startup()
-{
+void MRCI::startup() {
     mo_symmetry_ = mo_space_info_->symmetry("GENERALIZED PARTICLE");
 
     // Define the correlated space
     auto correlated_mo = mo_space_info_->get_corr_abs_mo("GENERALIZED PARTICLE");
-    std::sort( correlated_mo.begin(),correlated_mo.end()); 
+    std::sort(correlated_mo.begin(), correlated_mo.end());
 
-    fci_ints_ = std::make_shared<FCIIntegrals>(
-        ints_,correlated_mo, 
-        mo_space_info_->get_corr_abs_mo("RESTRICTED_DOCC"));
+    fci_ints_ = std::make_shared<FCIIntegrals>(ints_, correlated_mo,
+                                               mo_space_info_->get_corr_abs_mo("RESTRICTED_DOCC"));
 
     // Set the integrals
-    ambit::Tensor tei_active_aa = ints_->aptei_aa_block(correlated_mo, correlated_mo, correlated_mo, correlated_mo); 
-    ambit::Tensor tei_active_ab = ints_->aptei_ab_block(correlated_mo, correlated_mo, correlated_mo, correlated_mo); 
-    ambit::Tensor tei_active_bb = ints_->aptei_bb_block(correlated_mo, correlated_mo, correlated_mo, correlated_mo); 
+    ambit::Tensor tei_active_aa =
+        ints_->aptei_aa_block(correlated_mo, correlated_mo, correlated_mo, correlated_mo);
+    ambit::Tensor tei_active_ab =
+        ints_->aptei_ab_block(correlated_mo, correlated_mo, correlated_mo, correlated_mo);
+    ambit::Tensor tei_active_bb =
+        ints_->aptei_bb_block(correlated_mo, correlated_mo, correlated_mo, correlated_mo);
 
     fci_ints_->set_active_integrals(tei_active_aa, tei_active_ab, tei_active_bb);
-    
+
     fci_ints_->compute_restricted_one_body_operator();
 
     STLBitsetDeterminant::set_ints(fci_ints_);
@@ -79,11 +74,9 @@ void MRCI::startup()
     multiplicity_ = options_.get_int("MULTIPLICITY");
 
     diag_method_ = DLSolver;
-
 }
 
-double MRCI::compute_energy()
-{
+double MRCI::compute_energy() {
 
     upcast_reference();
     WFNOperator op(mo_symmetry_);
@@ -95,11 +88,11 @@ double MRCI::compute_energy()
     outfile->Printf("\n  Dimension of model space: %zu", reference_.size());
 
     std::string sigma_alg = options_.get_str("SIGMA_BUILD_TYPE");
-    
-    if( sigma_alg == "HZ" ){
+
+    if (sigma_alg == "HZ") {
         op.op_lists(reference_);
         op.tp_lists(reference_);
-    }else{
+    } else {
         op.build_strings(reference_);
         op.op_s_lists(reference_);
         op.tp_s_lists(reference_);
@@ -107,11 +100,11 @@ double MRCI::compute_energy()
 
     // Diagonalize MR-CISD Hamiltonian
     SharedMatrix evecs;
-    SharedVector evals;    
+    SharedVector evals;
 
     SparseCISolver sparse_solver;
 
-    //set options
+    // set options
     sparse_solver.set_sigma_method(sigma_alg);
     sparse_solver.set_parallel(true);
     sparse_solver.set_e_convergence(options_.get_double("E_CONVERGENCE"));
@@ -120,13 +113,14 @@ double MRCI::compute_energy()
     sparse_solver.set_guess_dimension(options_.get_int("DL_GUESS_SIZE"));
     sparse_solver.set_spin_project_full(false);
 
-    sparse_solver.diagonalize_hamiltonian_map(reference_,op,evals,evecs,nroot_,multiplicity_,diag_method_ ); 
+    sparse_solver.diagonalize_hamiltonian_map(reference_, op, evals, evecs, nroot_, multiplicity_,
+                                              diag_method_);
 
     std::vector<double> energy(nroot_);
     double scalar = fci_ints_->scalar_energy() + molecule_->nuclear_repulsion_energy();
 
     outfile->Printf("\n");
-    for( int n = 0; n < nroot_; ++n ){
+    for (int n = 0; n < nroot_; ++n) {
         energy[n] = scalar + evals->get(n);
         outfile->Printf("\n  MR-CISD energy root %d: %1.13f Eh", n, energy[n]);
     }
@@ -136,8 +130,7 @@ double MRCI::compute_energy()
     return energy[0];
 }
 
-void MRCI::get_excited_determinants()
-{
+void MRCI::get_excited_determinants() {
     // Only excite into the restricted uocc
 
     auto external_mo = mo_space_info_->get_corr_abs_mo("RESTRICTED_UOCC");
@@ -147,8 +140,8 @@ void MRCI::get_excited_determinants()
 
     int n_ext = external_mo.size();
 
-    const auto& internal = reference_.determinants(); 
-    for( const auto& det : internal ){ 
+    const auto& internal = reference_.determinants();
+    for (const auto& det : internal) {
 
         std::vector<int> aocc = det.get_alfa_occ();
         std::vector<int> bocc = det.get_beta_occ();
@@ -159,155 +152,157 @@ void MRCI::get_excited_determinants()
         STLBitsetDeterminant new_det(det);
 
         // Single Alpha
-        for( int i = 0; i < noalfa; ++i ){
+        for (int i = 0; i < noalfa; ++i) {
             int ii = aocc[i];
-            for( int a = 0; a < n_ext; ++a ){
+            for (int a = 0; a < n_ext; ++a) {
                 int aa = external_mo[a];
-                if( (mo_symmetry_[ii] ^ mo_symmetry_[aa]) == 0 ){
+                if ((mo_symmetry_[ii] ^ mo_symmetry_[aa]) == 0) {
                     new_det = det;
                     new_det.set_alfa_bit(ii, false);
-                    new_det.set_alfa_bit(aa, true); 
+                    new_det.set_alfa_bit(aa, true);
                     external.add(new_det);
                 }
             }
-        }        
+        }
         // Single Beta
-        for( int i = 0; i < nobeta; ++i ){
+        for (int i = 0; i < nobeta; ++i) {
             int ii = bocc[i];
-            for( int a = 0; a < n_ext; ++a ){
+            for (int a = 0; a < n_ext; ++a) {
                 int aa = external_mo[a];
-                if( (mo_symmetry_[ii] ^ mo_symmetry_[aa]) == 0 ){
+                if ((mo_symmetry_[ii] ^ mo_symmetry_[aa]) == 0) {
                     new_det = det;
                     new_det.set_beta_bit(ii, false);
-                    new_det.set_beta_bit(aa, true); 
+                    new_det.set_beta_bit(aa, true);
                     external.add(new_det);
                 }
             }
-        }        
+        }
         // Double Alpha
-        for( int i = 0; i < noalfa; ++i ){
+        for (int i = 0; i < noalfa; ++i) {
             int ii = aocc[i];
-            for( int j = i + 1; j < noalfa; ++j){
+            for (int j = i + 1; j < noalfa; ++j) {
                 int jj = aocc[j];
-                for( int a = 0; a < n_ext; ++a ){
+                for (int a = 0; a < n_ext; ++a) {
                     int aa = external_mo[a];
-                    for( int b = a + 1; b < n_ext; ++b ){
+                    for (int b = a + 1; b < n_ext; ++b) {
                         int bb = external_mo[b];
-                        if( (mo_symmetry_[ii] ^ mo_symmetry_[aa] ^ mo_symmetry_[jj] ^ mo_symmetry_[bb]) == 0 ){
+                        if ((mo_symmetry_[ii] ^ mo_symmetry_[aa] ^ mo_symmetry_[jj] ^
+                             mo_symmetry_[bb]) == 0) {
                             new_det = det;
                             new_det.set_alfa_bit(ii, false);
                             new_det.set_alfa_bit(jj, false);
-                            new_det.set_alfa_bit(aa, true); 
-                            new_det.set_alfa_bit(bb, true); 
+                            new_det.set_alfa_bit(aa, true);
+                            new_det.set_alfa_bit(bb, true);
                             external.add(new_det);
                         }
                     }
                 }
             }
-        }        
+        }
         // Double Beta
-        for( int i = 0; i < nobeta; ++i ){
+        for (int i = 0; i < nobeta; ++i) {
             int ii = bocc[i];
-            for( int j = i + 1; j < nobeta; ++j){
+            for (int j = i + 1; j < nobeta; ++j) {
                 int jj = bocc[j];
-                for( int a = 0; a < n_ext; ++a ){
+                for (int a = 0; a < n_ext; ++a) {
                     int aa = external_mo[a];
-                    for( int b = a + 1; b < n_ext; ++b ){
+                    for (int b = a + 1; b < n_ext; ++b) {
                         int bb = external_mo[b];
-                        if( (mo_symmetry_[ii] ^ mo_symmetry_[aa] ^ mo_symmetry_[jj] ^ mo_symmetry_[bb]) == 0 ){
+                        if ((mo_symmetry_[ii] ^ mo_symmetry_[aa] ^ mo_symmetry_[jj] ^
+                             mo_symmetry_[bb]) == 0) {
                             new_det = det;
                             new_det.set_beta_bit(ii, false);
                             new_det.set_beta_bit(jj, false);
-                            new_det.set_beta_bit(aa, true); 
-                            new_det.set_beta_bit(bb, true); 
+                            new_det.set_beta_bit(aa, true);
+                            new_det.set_beta_bit(bb, true);
                             external.add(new_det);
                         }
                     }
                 }
             }
-        }        
+        }
         // Alpha/Beta
-        for( int i = 0; i < noalfa; ++i ){
+        for (int i = 0; i < noalfa; ++i) {
             int ii = aocc[i];
-            for( int j = 0; j < nobeta; ++j){
+            for (int j = 0; j < nobeta; ++j) {
                 int jj = bocc[j];
-                for( int a = 0; a < n_ext; ++a ){
+                for (int a = 0; a < n_ext; ++a) {
                     int aa = external_mo[a];
-                    for( int b = 0; b < n_ext; ++b ){
+                    for (int b = 0; b < n_ext; ++b) {
                         int bb = external_mo[b];
-                        if( (mo_symmetry_[ii] ^ mo_symmetry_[aa] ^ mo_symmetry_[jj] ^ mo_symmetry_[bb]) == 0 ){
+                        if ((mo_symmetry_[ii] ^ mo_symmetry_[aa] ^ mo_symmetry_[jj] ^
+                             mo_symmetry_[bb]) == 0) {
                             new_det = det;
                             new_det.set_alfa_bit(ii, false);
                             new_det.set_beta_bit(jj, false);
-                            new_det.set_alfa_bit(aa, true); 
-                            new_det.set_beta_bit(bb, true); 
+                            new_det.set_alfa_bit(aa, true);
+                            new_det.set_beta_bit(bb, true);
                             external.add(new_det);
                         }
                     }
                 }
             }
-        }        
+        }
     }
 
-//const auto dets = external.determinants();
-//    for( auto& det : dets) outfile->Printf("\n  %s", det.str().c_str());
+    // const auto dets = external.determinants();
+    //    for( auto& det : dets) outfile->Printf("\n  %s", det.str().c_str());
 
     outfile->Printf("\n  Added %zu determinants from external space", external.size());
     reference_.merge(external);
 }
 
-void MRCI::upcast_reference()
-{
+void MRCI::upcast_reference() {
     auto mo_sym = mo_space_info_->symmetry("GENERALIZED PARTICLE");
 
     Dimension old_dim = mo_space_info_->get_dimension("ACTIVE");
     Dimension new_dim = mo_space_info_->get_dimension("GENERALIZED PARTICLE");
     size_t nact = mo_space_info_->size("ACTIVE");
     size_t ncorr = mo_space_info_->size("GENERALIZED PARTICLE");
-    int n_irrep = old_dim.n(); 
+    int n_irrep = old_dim.n();
 
     std::vector<STLBitsetDeterminant> ref_dets = reference_.determinants();
     reference_.clear();
 
     // Compute shifts
     std::vector<int> shift(n_irrep, 0);
-    if( n_irrep > 1){
-        for( int n = 1; n < n_irrep; ++n ){
-            shift[n] += new_dim[n-1] - old_dim[n-1] + shift[n-1];
+    if (n_irrep > 1) {
+        for (int n = 1; n < n_irrep; ++n) {
+            shift[n] += new_dim[n - 1] - old_dim[n - 1] + shift[n - 1];
         }
     }
-    int b_shift = ncorr - nact; 
+    int b_shift = ncorr - nact;
 
-    for( size_t I = 0, max = ref_dets.size(); I < max; ++I){
-        STLBitsetDeterminant det = ref_dets[I];        
-        
+    for (size_t I = 0, max = ref_dets.size(); I < max; ++I) {
+        STLBitsetDeterminant det = ref_dets[I];
+
         // First beta
-        for( int n = n_irrep - 1; n >= 0; --n){
+        for (int n = n_irrep - 1; n >= 0; --n) {
             int min = 0;
-            for( int m = 0; m < n; ++m){
+            for (int m = 0; m < n; ++m) {
                 min += old_dim[m];
             }
-            for( int pos = nact + min + old_dim[n]-1; pos >= min + nact; --pos){ 
-                det.bits_[pos + b_shift + shift[n] ] = det.bits_[pos]; 
+            for (int pos = nact + min + old_dim[n] - 1; pos >= min + nact; --pos) {
+                det.bits_[pos + b_shift + shift[n]] = det.bits_[pos];
                 det.bits_[pos] = 0;
             }
         }
-        // Then alpha         
-        for( int n = n_irrep-1; n >= 0; --n){
+        // Then alpha
+        for (int n = n_irrep - 1; n >= 0; --n) {
             int min = 0;
-            for( int m = 0; m < n; ++m){
+            for (int m = 0; m < n; ++m) {
                 min += old_dim[m];
             }
-            for( int pos = min + old_dim[n] - 1; pos >= min; --pos){ 
-                det.bits_[pos + shift[n]] = det.bits_[pos]; 
-                
-               if( n > 0) det.bits_[pos] = 0;
+            for (int pos = min + old_dim[n] - 1; pos >= min; --pos) {
+                det.bits_[pos + shift[n]] = det.bits_[pos];
+
+                if (n > 0)
+                    det.bits_[pos] = 0;
             }
         }
 
         reference_.add(det);
     }
-
 }
-
-}}
+}
+}

@@ -6,33 +6,28 @@
 namespace psi {
 namespace forte {
 
-SharedMatrix semicanonicalize_block(SharedWavefunction ref_wfn,
-                                    SharedMatrix C_tilde, std::vector<int>& mos,
-                                    int offset);
+SharedMatrix semicanonicalize_block(SharedWavefunction ref_wfn, SharedMatrix C_tilde,
+                                    std::vector<int>& mos, int offset);
 
 void set_AVAS_options(ForteOptions& foptions) {
-    foptions.add_double("AVAS_SIGMA", 0.98,
-                        "Threshold that controls the size of the active space");
+    foptions.add_double("AVAS_SIGMA", 0.98, "Threshold that controls the size of the active space");
     foptions.add_int("AVAS_NUM_ACTIVE", 0, "Allows the user to specify the "
                                            "total number of active orbitals. "
                                            "It takes priority over the "
                                            "threshold based selection.");
-    foptions.add_int("AVAS_NUM_ACTIVE_OCC", 0,
-                     "Allows the user to specify the "
-                     "number of active occupied orbitals. "
-                     "It takes priority over the "
-                     "threshold based selection.");
-    foptions.add_int("AVAS_NUM_ACTIVE_VIR", 0,
-                     "Allows the user to specify the "
-                     "number of active occupied orbitals. "
-                     "It takes priority over the "
-                     "threshold based selection.");
-    //add options of diagonalizing S
-    foptions.add_bool("AVAS_DIAGONALIZE",true,
-                      "Allow the users to specify"
-                      "diagonalization of Socc and Svir"
-                      "It takes priority over the"
-                      "threshold based selection.");
+    foptions.add_int("AVAS_NUM_ACTIVE_OCC", 0, "Allows the user to specify the "
+                                               "number of active occupied orbitals. "
+                                               "It takes priority over the "
+                                               "threshold based selection.");
+    foptions.add_int("AVAS_NUM_ACTIVE_VIR", 0, "Allows the user to specify the "
+                                               "number of active occupied orbitals. "
+                                               "It takes priority over the "
+                                               "threshold based selection.");
+    // add options of diagonalizing S
+    foptions.add_bool("AVAS_DIAGONALIZE", true, "Allow the users to specify"
+                                                "diagonalization of Socc and Svir"
+                                                "It takes priority over the"
+                                                "threshold based selection.");
 }
 
 void make_avas(SharedWavefunction ref_wfn, Options& options, SharedMatrix Ps) {
@@ -53,7 +48,7 @@ void make_avas(SharedWavefunction ref_wfn, Options& options, SharedMatrix Ps) {
 
         SharedMatrix CPsC = Ps->clone();
         CPsC->transform(ref_wfn->Ca());
-        //No diagonalization Socc and Svir
+        // No diagonalization Socc and Svir
         bool diagonalize_s = options.get_bool("AVAS_DIAGONALIZE");
 
         auto Uocc = std::make_shared<Matrix>("U occupied block", nocc, nocc);
@@ -65,7 +60,7 @@ void make_avas(SharedWavefunction ref_wfn, Options& options, SharedMatrix Ps) {
         auto U = std::make_shared<Matrix>("U", nmo, nmo);
 
         // diagnolize S
-        if(diagonalize_s){
+        if (diagonalize_s) {
             // Grab the occupied block and diagonalize it
             for (int i = 0; i < nocc; i++) {
                 for (int j = 0; j < nocc; j++) {
@@ -100,9 +95,8 @@ void make_avas(SharedWavefunction ref_wfn, Options& options, SharedMatrix Ps) {
                     U->set(a + nocc, b + nocc, value);
                 }
             }
-        }
-        else{
-            //Socc
+        } else {
+            // Socc
             for (int i = 0; i < nocc; i++) {
                 for (int j = 0; j < nocc; j++) {
                     double value = CPsC->get(i, j);
@@ -110,11 +104,11 @@ void make_avas(SharedWavefunction ref_wfn, Options& options, SharedMatrix Ps) {
                 }
             }
 
-            for (int i = 0; i < nocc; i++){
-                double value =Socc->get(i, i);
-                sigmaocc->set(i,value);
+            for (int i = 0; i < nocc; i++) {
+                double value = Socc->get(i, i);
+                sigmaocc->set(i, value);
             }
-            //Svir
+            // Svir
             for (int a = 0; a < nvir; a++) {
                 for (int b = 0; b < nvir; b++) {
                     double value = CPsC->get(nocc + a, nocc + b);
@@ -122,16 +116,16 @@ void make_avas(SharedWavefunction ref_wfn, Options& options, SharedMatrix Ps) {
                 }
             }
 
-            for (int a = 0; a < nvir; a++){
-                double value =Svir->get(a, a);
-                sigmavir->set(a,value);
+            for (int a = 0; a < nvir; a++) {
+                double value = Svir->get(a, a);
+                sigmavir->set(a, value);
             }
             for (int p = 0; p < nmo; p++) {
                 for (int q = 0; q < nmo; q++) {
-                    U->set(p,q, p == q ? 1.0 : 0.0);
+                    U->set(p, q, p == q ? 1.0 : 0.0);
                 }
             }
-        }//end options of dia
+        } // end options of dia
 
         auto Ca_tilde = Matrix::doublet(ref_wfn->Ca(), U);
 
@@ -228,18 +222,13 @@ void make_avas(SharedWavefunction ref_wfn, Options& options, SharedMatrix Ps) {
             }
         }
 
-        outfile->Printf("\n  Number of inactive occupied MOs: %6d",
-                        occ_inact.size());
-        outfile->Printf("\n  Number of active occupied MOs:   %6d",
-                        occ_act.size());
-        outfile->Printf("\n  Number of active virtual MOs:    %6d",
-                        vir_act.size());
-        outfile->Printf("\n  Number of inactive virtual MOs:  %6d",
-                        vir_inact.size());
+        outfile->Printf("\n  Number of inactive occupied MOs: %6d", occ_inact.size());
+        outfile->Printf("\n  Number of active occupied MOs:   %6d", occ_act.size());
+        outfile->Printf("\n  Number of active virtual MOs:    %6d", vir_act.size());
+        outfile->Printf("\n  Number of inactive virtual MOs:  %6d", vir_inact.size());
         outfile->Printf("\n");
         outfile->Printf("\n  restricted_docc = [%d]", occ_inact.size());
-        outfile->Printf("\n  active          = [%d]",
-                        occ_act.size() + vir_act.size());
+        outfile->Printf("\n  active          = [%d]", occ_act.size() + vir_act.size());
         outfile->Printf("\n");
 
         outfile->Printf("\n  Atomic Valence MOs:\n");
@@ -247,12 +236,10 @@ void make_avas(SharedWavefunction ref_wfn, Options& options, SharedMatrix Ps) {
         outfile->Printf("    Occupation  MO   <phi|P|phi>\n");
         outfile->Printf("    ----------------------------\n");
         for (int i : occ_act) {
-            outfile->Printf("      %1d       %4d    %.6f\n", 2, i + 1,
-                            sigmaocc->get(i));
+            outfile->Printf("      %1d       %4d    %.6f\n", 2, i + 1, sigmaocc->get(i));
         }
         for (int i : vir_act) {
-            outfile->Printf("      %1d       %4d    %.6f\n", 0, nocc + i + 1,
-                            sigmavir->get(i));
+            outfile->Printf("      %1d       %4d    %.6f\n", 0, nocc + i + 1, sigmavir->get(i));
         }
         outfile->Printf("    ============================\n");
 
@@ -262,8 +249,7 @@ void make_avas(SharedWavefunction ref_wfn, Options& options, SharedMatrix Ps) {
         auto Cvi = semicanonicalize_block(ref_wfn, Ca_tilde, vir_inact, nocc);
         auto Cva = semicanonicalize_block(ref_wfn, Ca_tilde, vir_act, nocc);
 
-        auto Ca_tilde_prime =
-                std::make_shared<Matrix>("C tilde prime", nso, nmo);
+        auto Ca_tilde_prime = std::make_shared<Matrix>("C tilde prime", nso, nmo);
 
         int offset = 0;
         for (auto& C_block : {Coi, Coa, Cva, Cvi}) {
@@ -289,9 +275,8 @@ void make_avas(SharedWavefunction ref_wfn, Options& options, SharedMatrix Ps) {
     }
 }
 
-SharedMatrix semicanonicalize_block(SharedWavefunction ref_wfn,
-                                    SharedMatrix C_tilde, std::vector<int>& mos,
-                                    int offset) {
+SharedMatrix semicanonicalize_block(SharedWavefunction ref_wfn, SharedMatrix C_tilde,
+                                    std::vector<int>& mos, int offset) {
     int nso = ref_wfn->nso();
     int nmo_block = mos.size();
     auto C_block = std::make_shared<Matrix>("C block", nso, nmo_block);
@@ -305,8 +290,7 @@ SharedMatrix semicanonicalize_block(SharedWavefunction ref_wfn,
         mo_count += 1;
     }
     // compute (C_block)^T F C_block
-    auto Foi =
-            Matrix::triplet(C_block, ref_wfn->Fa(), C_block, true, false, false);
+    auto Foi = Matrix::triplet(C_block, ref_wfn->Fa(), C_block, true, false, false);
 
     auto U_block = std::make_shared<Matrix>("U block", nmo_block, nmo_block);
     auto epsilon_block = std::make_shared<Vector>("epsilon block", nmo_block);

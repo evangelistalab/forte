@@ -26,21 +26,20 @@
  * @END LICENSE
  */
 
-#include "psi4/libmints/matrix.h"
-#include "psi4/libmints/vector.h"
-#include "psi4/libmints/sieve.h"
 #include "ao_helper.h"
 #include "psi4/lib3index/denominator.h"
 #include "psi4/libfock/jk.h"
+#include "psi4/libmints/basisset.h"
+#include "psi4/libmints/matrix.h"
+#include "psi4/libmints/sieve.h"
+#include "psi4/libmints/vector.h"
 
 namespace psi {
 namespace forte {
 
 AtomicOrbitalHelper::AtomicOrbitalHelper(SharedMatrix CMO, SharedVector eps_occ,
-                                         SharedVector eps_vir,
-                                         double laplace_tolerance)
-    : CMO_(CMO), eps_rdocc_(eps_occ), eps_virtual_(eps_vir),
-      laplace_tolerance_(laplace_tolerance) {
+                                         SharedVector eps_vir, double laplace_tolerance)
+    : CMO_(CMO), eps_rdocc_(eps_occ), eps_virtual_(eps_vir), laplace_tolerance_(laplace_tolerance) {
     LaplaceDenominator laplace(eps_rdocc_, eps_virtual_, laplace_tolerance_);
     Occupied_Laplace_ = laplace.denominator_occ();
     Virtual_Laplace_ = laplace.denominator_vir();
@@ -51,10 +50,9 @@ AtomicOrbitalHelper::AtomicOrbitalHelper(SharedMatrix CMO, SharedVector eps_occ,
     shift_ = 0;
 }
 AtomicOrbitalHelper::AtomicOrbitalHelper(SharedMatrix CMO, SharedVector eps_occ,
-                                         SharedVector eps_vir,
-                                         double laplace_tolerance, int shift)
-    : CMO_(CMO), eps_rdocc_(eps_occ), eps_virtual_(eps_vir),
-      laplace_tolerance_(laplace_tolerance), shift_(shift) {
+                                         SharedVector eps_vir, double laplace_tolerance, int shift)
+    : CMO_(CMO), eps_rdocc_(eps_occ), eps_virtual_(eps_vir), laplace_tolerance_(laplace_tolerance),
+      shift_(shift) {
     LaplaceDenominator laplace(eps_rdocc_, eps_virtual_, laplace_tolerance_);
     Occupied_Laplace_ = laplace.denominator_occ();
     Virtual_Laplace_ = laplace.denominator_vir();
@@ -63,9 +61,7 @@ AtomicOrbitalHelper::AtomicOrbitalHelper(SharedMatrix CMO, SharedVector eps_occ,
     nvir_ = eps_virtual_->dim();
     nbf_ = CMO_->rowspi()[0];
 }
-AtomicOrbitalHelper::~AtomicOrbitalHelper() {
-    outfile->Printf("\n Done with AO helper class");
-}
+AtomicOrbitalHelper::~AtomicOrbitalHelper() { outfile->Printf("\n Done with AO helper class"); }
 void AtomicOrbitalHelper::Compute_Psuedo_Density() {
     int nmo_ = nbf_;
     SharedMatrix Xocc(new Matrix("DensityOccupied", weights_, nbf_ * nbf_));
@@ -76,14 +72,12 @@ void AtomicOrbitalHelper::Compute_Psuedo_Density() {
         for (size_t mu = 0; mu < nbf_; mu++) {
             for (size_t nu = 0; nu < nbf_; nu++) {
                 for (size_t i = 0; i < nrdocc_; i++) {
-                    value_occ += CMO_->get(mu, i) * CMO_->get(nu, i) *
-                                 Occupied_Laplace_->get(w, i);
+                    value_occ += CMO_->get(mu, i) * CMO_->get(nu, i) * Occupied_Laplace_->get(w, i);
                 }
                 Xocc->set(w, mu * nmo_ + nu, value_occ);
                 for (size_t a = 0; a < nvir_; a++) {
                     value_vir += CMO_->get(mu, nrdocc_ + shift_ + a) *
-                                 CMO_->get(nu, nrdocc_ + shift_ + a) *
-                                 Virtual_Laplace_->get(w, a);
+                                 CMO_->get(nu, nrdocc_ + shift_ + a) * Virtual_Laplace_->get(w, a);
                 }
                 Yvir->set(w, mu * nmo_ + nu, value_vir);
                 value_occ = 0.0;
@@ -94,8 +88,7 @@ void AtomicOrbitalHelper::Compute_Psuedo_Density() {
     POcc_ = Xocc->clone();
     PVir_ = Yvir->clone();
 }
-void AtomicOrbitalHelper::Compute_AO_Screen(
-    std::shared_ptr<BasisSet>& primary) {
+void AtomicOrbitalHelper::Compute_AO_Screen(std::shared_ptr<BasisSet>& primary) {
     ERISieve sieve(primary, 1e-10);
     std::vector<double> my_function_pair_values = sieve.function_pair_values();
     SharedMatrix AO_Screen(new Matrix("Z", nbf_, nbf_));
@@ -106,8 +99,8 @@ void AtomicOrbitalHelper::Compute_AO_Screen(
     AO_Screen_ = AO_Screen;
     AO_Screen_->set_name("ScwartzAOInts");
 }
-void AtomicOrbitalHelper::Estimate_TransAO_Screen(
-    std::shared_ptr<BasisSet>& primary, std::shared_ptr<BasisSet>& auxiliary) {
+void AtomicOrbitalHelper::Estimate_TransAO_Screen(std::shared_ptr<BasisSet>& primary,
+                                                  std::shared_ptr<BasisSet>& auxiliary) {
     Compute_Psuedo_Density();
     std::shared_ptr<JK> jk(new DFJK(primary, auxiliary));
     jk->initialize();
@@ -126,8 +119,7 @@ void AtomicOrbitalHelper::Estimate_TransAO_Screen(
         SharedVector iaia_w = jk->iaia(COcc, CVir);
         for (int mu = 0; mu < nbf_; mu++)
             for (int nu = 0; nu < nbf_; nu++)
-                AO_Trans_Screen->set(w, mu * nbf_ + nu,
-                                     iaia_w->get(mu * nbf_ + nu));
+                AO_Trans_Screen->set(w, mu * nbf_ + nu, iaia_w->get(mu * nbf_ + nu));
     }
     TransAO_Screen_ = AO_Trans_Screen;
     TransAO_Screen_->set_name("(u_b {b}^v | u_b {b}^v)");
