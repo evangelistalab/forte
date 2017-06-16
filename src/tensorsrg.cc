@@ -71,8 +71,7 @@ void TensorSRG::startup() {
 
     dsrg_power_ = options_.get_double("DSRG_POWER");
 
-    outfile->Printf("\n      Energy convergence = %e\n",
-                    options_.get_double("E_CONVERGENCE"));
+    outfile->Printf("\n      Energy convergence = %e\n", options_.get_double("E_CONVERGENCE"));
 
     S1 = BlockedTensor::build(tensor_type_, "S1", spin_cases({"ov"}));
     S2 = BlockedTensor::build(tensor_type_, "S2", spin_cases({"oovv"}));
@@ -100,8 +99,7 @@ void TensorSRG::startup() {
     std::vector<double> Fa(ncmo_);
     std::vector<double> Fb(ncmo_);
 
-    F.iterate([&](const std::vector<size_t>& i,
-                  const std::vector<SpinType>& spin, double& value) {
+    F.iterate([&](const std::vector<size_t>& i, const std::vector<SpinType>& spin, double& value) {
         if (spin[0] == AlphaSpin and (i[0] == i[1]))
             Fa[i[0]] = value;
         if (spin[0] == BetaSpin and (i[0] == i[1]))
@@ -110,8 +108,7 @@ void TensorSRG::startup() {
 
     double srg_s = options_.get_double("DSRG_S");
 
-    D1.iterate([&](const std::vector<size_t>& i,
-                   const std::vector<SpinType>& spin, double& value) {
+    D1.iterate([&](const std::vector<size_t>& i, const std::vector<SpinType>& spin, double& value) {
         if (spin[0] == AlphaSpin) {
             value = Fa[i[0]] - Fa[i[1]];
         } else if (spin[0] == BetaSpin) {
@@ -119,8 +116,7 @@ void TensorSRG::startup() {
         }
     });
 
-    D2.iterate([&](const std::vector<size_t>& i,
-                   const std::vector<SpinType>& spin, double& value) {
+    D2.iterate([&](const std::vector<size_t>& i, const std::vector<SpinType>& spin, double& value) {
         if ((spin[0] == AlphaSpin) and (spin[1] == AlphaSpin)) {
             value = Fa[i[0]] + Fa[i[1]] - Fa[i[2]] - Fa[i[3]];
         } else if ((spin[0] == AlphaSpin) and (spin[1] == BetaSpin)) {
@@ -130,28 +126,26 @@ void TensorSRG::startup() {
         }
     });
 
-    RInvD1.iterate([&](const std::vector<size_t>& i,
-                       const std::vector<SpinType>& spin, double& value) {
-        if (spin[0] == AlphaSpin) {
-            value =
-                one_minus_exp_div_x(srg_s, Fa[i[0]] - Fa[i[1]], dsrg_power_);
-        } else if (spin[0] == BetaSpin) {
-            value =
-                one_minus_exp_div_x(srg_s, Fb[i[0]] - Fb[i[1]], dsrg_power_);
-        }
-    });
+    RInvD1.iterate(
+        [&](const std::vector<size_t>& i, const std::vector<SpinType>& spin, double& value) {
+            if (spin[0] == AlphaSpin) {
+                value = one_minus_exp_div_x(srg_s, Fa[i[0]] - Fa[i[1]], dsrg_power_);
+            } else if (spin[0] == BetaSpin) {
+                value = one_minus_exp_div_x(srg_s, Fb[i[0]] - Fb[i[1]], dsrg_power_);
+            }
+        });
 
-    RInvD2.iterate([&](const std::vector<size_t>& i,
-                       const std::vector<SpinType>& spin, double& value) {
+    RInvD2.iterate([&](const std::vector<size_t>& i, const std::vector<SpinType>& spin,
+                       double& value) {
         if ((spin[0] == AlphaSpin) and (spin[1] == AlphaSpin)) {
-            value = one_minus_exp_div_x(
-                srg_s, Fa[i[0]] + Fa[i[1]] - Fa[i[2]] - Fa[i[3]], dsrg_power_);
+            value =
+                one_minus_exp_div_x(srg_s, Fa[i[0]] + Fa[i[1]] - Fa[i[2]] - Fa[i[3]], dsrg_power_);
         } else if ((spin[0] == AlphaSpin) and (spin[1] == BetaSpin)) {
-            value = one_minus_exp_div_x(
-                srg_s, Fa[i[0]] + Fb[i[1]] - Fa[i[2]] - Fb[i[3]], dsrg_power_);
+            value =
+                one_minus_exp_div_x(srg_s, Fa[i[0]] + Fb[i[1]] - Fa[i[2]] - Fb[i[3]], dsrg_power_);
         } else if ((spin[0] == BetaSpin) and (spin[1] == BetaSpin)) {
-            value = one_minus_exp_div_x(
-                srg_s, Fb[i[0]] + Fb[i[1]] - Fb[i[2]] - Fb[i[3]], dsrg_power_);
+            value =
+                one_minus_exp_div_x(srg_s, Fb[i[0]] + Fb[i[1]] - Fb[i[2]] - Fb[i[3]], dsrg_power_);
         }
     });
 }
@@ -169,8 +163,7 @@ double TensorSRG::compute_mp2_guess() {
 
     double mp2_correlation_energy = Eaa + Eab + Ebb;
     double ref_energy = reference_energy();
-    outfile->Printf("\n\n    SCF energy                            = %20.15f",
-                    ref_energy);
+    outfile->Printf("\n\n    SCF energy                            = %20.15f", ref_energy);
     outfile->Printf("\n    SRG-PT2 correlation energy            = %20.15f",
                     mp2_correlation_energy);
     outfile->Printf("\n  * SRG-PT2 total energy                  = %20.15f\n",
@@ -200,8 +193,7 @@ double TensorSRG::compute_mp2_guess_driven_srg() {
 
     double mp2_correlation_energy = Eaa + Eab + Ebb;
     double ref_energy = reference_energy();
-    outfile->Printf("\n\n    SCF energy                            = %20.15f",
-                    ref_energy);
+    outfile->Printf("\n\n    SCF energy                            = %20.15f", ref_energy);
     outfile->Printf("\n    SRG-PT2 correlation energy            = %20.15f",
                     mp2_correlation_energy);
     outfile->Printf("\n  * SRG-PT2 total energy                  = %20.15f\n",
@@ -231,38 +223,32 @@ void TensorSRG::transfer_integrals() {
     double scalar1 = 0.0;
     double scalar2 = 0.0;
 
-    Hbar1.block("oo")
-        .citerate([&](const std::vector<size_t>& i, const double& value) {
-            if (i[0] == i[1])
-                scalar1 -= value;
-        });
+    Hbar1.block("oo").citerate([&](const std::vector<size_t>& i, const double& value) {
+        if (i[0] == i[1])
+            scalar1 -= value;
+    });
 
-    Hbar1.block("OO")
-        .citerate([&](const std::vector<size_t>& i, const double& value) {
-            if (i[0] == i[1])
-                scalar1 -= value;
-        });
+    Hbar1.block("OO").citerate([&](const std::vector<size_t>& i, const double& value) {
+        if (i[0] == i[1])
+            scalar1 -= value;
+    });
 
-    Hbar2.block("oooo")
-        .citerate([&](const std::vector<size_t>& i, const double& value) {
-            if ((i[0] == i[2]) and (i[1] == i[3]))
-                scalar2 += 0.5 * value;
-        });
+    Hbar2.block("oooo").citerate([&](const std::vector<size_t>& i, const double& value) {
+        if ((i[0] == i[2]) and (i[1] == i[3]))
+            scalar2 += 0.5 * value;
+    });
 
-    Hbar2.block("oOoO")
-        .citerate([&](const std::vector<size_t>& i, const double& value) {
-            if ((i[0] == i[2]) and (i[1] == i[3]))
-                scalar2 += value;
-        });
+    Hbar2.block("oOoO").citerate([&](const std::vector<size_t>& i, const double& value) {
+        if ((i[0] == i[2]) and (i[1] == i[3]))
+            scalar2 += value;
+    });
 
-    Hbar2.block("OOOO")
-        .citerate([&](const std::vector<size_t>& i, const double& value) {
-            if ((i[0] == i[2]) and (i[1] == i[3]))
-                scalar2 += 0.5 * value;
-        });
+    Hbar2.block("OOOO").citerate([&](const std::vector<size_t>& i, const double& value) {
+        if ((i[0] == i[2]) and (i[1] == i[3]))
+            scalar2 += 0.5 * value;
+    });
 
-    double scalar =
-        scalar0 + scalar1 + scalar2 - molecule_->nuclear_repulsion_energy();
+    double scalar = scalar0 + scalar1 + scalar2 - molecule_->nuclear_repulsion_energy();
     outfile->Printf("\n  The Hamiltonian electronic scalar term (normal "
                     "ordered wrt the true vacuum");
     outfile->Printf("\n  E0 = %20.12f", scalar);
@@ -276,61 +262,55 @@ void TensorSRG::transfer_integrals() {
 
     outfile->Printf("\n  Updating all the integrals");
     ints_->set_scalar(scalar);
-    O1.citerate([&](const std::vector<size_t>& i,
-                    const std::vector<SpinType>& spin, const double& value) {
-        if ((spin[0] == AlphaSpin) and (spin[1] == AlphaSpin)) {
-            ints_->set_oei(i[0], i[1], value, true);
-        }
-        if ((spin[0] == BetaSpin) and (spin[1] == BetaSpin)) {
-            ints_->set_oei(i[0], i[1], value, false);
-        }
-    });
-    Hbar2.citerate([&](const std::vector<size_t>& i,
-                       const std::vector<SpinType>& spin, const double& value) {
-        if ((spin[0] == AlphaSpin) and (spin[1] == AlphaSpin) and
-            (spin[2] == AlphaSpin) and (spin[3] == AlphaSpin)) {
-            ints_->set_tei(i[0], i[1], i[2], i[3], value, true, true);
-        }
-        if ((spin[0] == AlphaSpin) and (spin[1] == BetaSpin) and
-            (spin[2] == AlphaSpin) and (spin[3] == BetaSpin)) {
-            ints_->set_tei(i[0], i[1], i[2], i[3], value, true, false);
-        }
-        if ((spin[0] == BetaSpin) and (spin[1] == BetaSpin) and
-            (spin[2] == BetaSpin) and (spin[3] == BetaSpin)) {
-            ints_->set_tei(i[0], i[1], i[2], i[3], value, false, false);
-        }
-    });
+    O1.citerate(
+        [&](const std::vector<size_t>& i, const std::vector<SpinType>& spin, const double& value) {
+            if ((spin[0] == AlphaSpin) and (spin[1] == AlphaSpin)) {
+                ints_->set_oei(i[0], i[1], value, true);
+            }
+            if ((spin[0] == BetaSpin) and (spin[1] == BetaSpin)) {
+                ints_->set_oei(i[0], i[1], value, false);
+            }
+        });
+    Hbar2.citerate(
+        [&](const std::vector<size_t>& i, const std::vector<SpinType>& spin, const double& value) {
+            if ((spin[0] == AlphaSpin) and (spin[1] == AlphaSpin) and (spin[2] == AlphaSpin) and
+                (spin[3] == AlphaSpin)) {
+                ints_->set_tei(i[0], i[1], i[2], i[3], value, true, true);
+            }
+            if ((spin[0] == AlphaSpin) and (spin[1] == BetaSpin) and (spin[2] == AlphaSpin) and
+                (spin[3] == BetaSpin)) {
+                ints_->set_tei(i[0], i[1], i[2], i[3], value, true, false);
+            }
+            if ((spin[0] == BetaSpin) and (spin[1] == BetaSpin) and (spin[2] == BetaSpin) and
+                (spin[3] == BetaSpin)) {
+                ints_->set_tei(i[0], i[1], i[2], i[3], value, false, false);
+            }
+        });
 
     // As a test compute the current CT energy
     double Esth = scalar;
-    O1.block("oo")
-        .citerate([&](const std::vector<size_t>& i, const double& value) {
-            if (i[0] == i[1])
-                Esth += value;
-        });
-    O1.block("OO")
-        .citerate([&](const std::vector<size_t>& i, const double& value) {
-            if (i[0] == i[1])
-                Esth += value;
-        });
-    Hbar2.block("oooo")
-        .citerate([&](const std::vector<size_t>& i, const double& value) {
-            if (i[0] == i[1])
-                Esth += 0.5 * value;
-        });
-    Hbar2.block("oOoO")
-        .citerate([&](const std::vector<size_t>& i, const double& value) {
-            if (i[0] == i[1])
-                Esth += value;
-        });
-    Hbar2.block("OOOO")
-        .citerate([&](const std::vector<size_t>& i, const double& value) {
-            if (i[0] == i[1])
-                Esth += 0.5 * value;
-        });
+    O1.block("oo").citerate([&](const std::vector<size_t>& i, const double& value) {
+        if (i[0] == i[1])
+            Esth += value;
+    });
+    O1.block("OO").citerate([&](const std::vector<size_t>& i, const double& value) {
+        if (i[0] == i[1])
+            Esth += value;
+    });
+    Hbar2.block("oooo").citerate([&](const std::vector<size_t>& i, const double& value) {
+        if (i[0] == i[1])
+            Esth += 0.5 * value;
+    });
+    Hbar2.block("oOoO").citerate([&](const std::vector<size_t>& i, const double& value) {
+        if (i[0] == i[1])
+            Esth += value;
+    });
+    Hbar2.block("OOOO").citerate([&](const std::vector<size_t>& i, const double& value) {
+        if (i[0] == i[1])
+            Esth += 0.5 * value;
+    });
 
-    outfile->Printf("\n  <H> = %24.12f",
-                    Esth + molecule()->nuclear_repulsion_energy());
+    outfile->Printf("\n  <H> = %24.12f", Esth + molecule()->nuclear_repulsion_energy());
 
     ints_->update_integrals(false);
     outfile->Flush();

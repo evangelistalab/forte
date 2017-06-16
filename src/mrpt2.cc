@@ -45,48 +45,40 @@
 namespace psi {
 namespace forte {
 
-void set_PT2_options(ForteOptions& foptions)
-{
+void set_PT2_options(ForteOptions& foptions) {
     /*- Maximum size of the determinant hash (GB)-*/
     foptions.add_double("PT2_MAX_MEM", 1.0, " Maximum size of the determinant hash (GB)");
 }
 
-MRPT2::MRPT2( SharedWavefunction ref_wfn, Options& options,
-            std::shared_ptr<ForteIntegrals> ints, 
-            std::shared_ptr<MOSpaceInfo> mo_space_info,
-            DeterminantMap& reference, SharedMatrix evecs,
-            SharedVector evals)
-    : Wavefunction(options), ints_(ints), 
-      mo_space_info_(mo_space_info), 
-      reference_(reference), evecs_(evecs), evals_(evals)
-{
+MRPT2::MRPT2(SharedWavefunction ref_wfn, Options& options, std::shared_ptr<ForteIntegrals> ints,
+             std::shared_ptr<MOSpaceInfo> mo_space_info, DeterminantMap& reference,
+             SharedMatrix evecs, SharedVector evals)
+    : Wavefunction(options), ints_(ints), mo_space_info_(mo_space_info), reference_(reference),
+      evecs_(evecs), evals_(evals) {
     shallow_copy(ref_wfn);
-//    print_method_banner(
-//        {"Deterministic MR-PT2", "Jeff Schriber"});
-   startup();
+    //    print_method_banner(
+    //        {"Deterministic MR-PT2", "Jeff Schriber"});
+    startup();
 }
 
 MRPT2::~MRPT2() {}
 
-
-void MRPT2::startup()
-{
+void MRPT2::startup() {
     mo_symmetry_ = mo_space_info_->symmetry("ACTIVE");
 
     // Define the correlated space
     auto active_mo = mo_space_info_->get_corr_abs_mo("ACTIVE");
 
-    fci_ints_ = std::make_shared<FCIIntegrals>(
-        ints_,active_mo, 
-        mo_space_info_->get_corr_abs_mo("RESTRICTED_DOCC"));
+    fci_ints_ = std::make_shared<FCIIntegrals>(ints_, active_mo,
+                                               mo_space_info_->get_corr_abs_mo("RESTRICTED_DOCC"));
 
     // Set the integrals
-    ambit::Tensor tei_active_aa = ints_->aptei_aa_block(active_mo, active_mo, active_mo, active_mo); 
-    ambit::Tensor tei_active_ab = ints_->aptei_ab_block(active_mo, active_mo, active_mo, active_mo); 
-    ambit::Tensor tei_active_bb = ints_->aptei_bb_block(active_mo, active_mo, active_mo, active_mo); 
+    ambit::Tensor tei_active_aa = ints_->aptei_aa_block(active_mo, active_mo, active_mo, active_mo);
+    ambit::Tensor tei_active_ab = ints_->aptei_ab_block(active_mo, active_mo, active_mo, active_mo);
+    ambit::Tensor tei_active_bb = ints_->aptei_bb_block(active_mo, active_mo, active_mo, active_mo);
 
     fci_ints_->set_active_integrals(tei_active_aa, tei_active_ab, tei_active_bb);
-    
+
     fci_ints_->compute_restricted_one_body_operator();
 
     STLBitsetDeterminant::set_ints(fci_ints_);
@@ -94,27 +86,24 @@ void MRPT2::startup()
     nroot_ = options_.get_int("NROOT");
     multiplicity_ = options_.get_int("MULTIPLICITY");
     screen_thresh_ = options_.get_double("ACI_PRESCREEN_THRESHOLD");
-
 }
 
-double MRPT2::compute_energy()
-{
-    outfile->Printf("\n\n  Computing PT2 correction from %zu reference determinants", reference_.size()); 
+double MRPT2::compute_energy() {
+    outfile->Printf("\n\n  Computing PT2 correction from %zu reference determinants",
+                    reference_.size());
 
     Timer en;
     double pt2_energy = compute_pt2_energy();
-  //  double scalar = fci_ints_->scalar_energy() + molecule_->nuclear_repulsion_energy();
-  //  double energy = pt2_energy + scalar + evals_->get(0);
+    //  double scalar = fci_ints_->scalar_energy() + molecule_->nuclear_repulsion_energy();
+    //  double energy = pt2_energy + scalar + evals_->get(0);
     outfile->Printf("\n  PT2 computation took %1.6f s", en.get());
     outfile->Printf("\n  PT2 energy:  %1.12f", pt2_energy);
-  //  outfile->Printf("\n  Total energy:  %1.12f", energy);
+    //  outfile->Printf("\n  Total energy:  %1.12f", energy);
 
     return pt2_energy;
-
 }
 
-double MRPT2::compute_pt2_energy()
-{
+double MRPT2::compute_pt2_energy() {
     double energy = 0.0;
     const size_t n_dets = reference_.size();
     int nmo = STLBitsetDeterminant::nmo_;
@@ -125,44 +114,42 @@ double MRPT2::compute_pt2_energy()
 
     int nbin = static_cast<int>(std::ceil(guess_size / (nbyte)));
 
-    #pragma omp parallel reduction(+:energy)
+#pragma omp parallel reduction(+ : energy)
     {
         int tid = omp_get_thread_num();
         int ntds = omp_get_num_threads();
 
-        if( (ntds > nbin) ){
+        if ((ntds > nbin)) {
             nbin = ntds;
         }
-        
-        if( tid == 0 ){
+
+        if (tid == 0) {
             outfile->Printf("\n  Number of bins for exitation space:  %d", nbin);
             outfile->Printf("\n  Number of threads: %d", ntds);
         }
         int batch_size = nbin / ntds;
         batch_size += (tid < (nbin % ntds)) ? 1 : 0;
 
-        int start_idx = (tid < (nbin % ntds)) 
-                            ? tid * batch_size 
-                            : (nbin % ntds) * (batch_size + 1) + 
-                                (tid - (nbin % ntds )) * batch_size;
+        int start_idx = (tid < (nbin % ntds))
+                            ? tid * batch_size
+                            : (nbin % ntds) * (batch_size + 1) + (tid - (nbin % ntds)) * batch_size;
         int end_idx = start_idx + batch_size;
-    
-        for( int bin = start_idx; bin < end_idx; ++bin ){
+
+        for (int bin = start_idx; bin < end_idx; ++bin) {
             energy += energy_kernel(bin, nbin);
         }
     }
     return energy;
 }
 
-double MRPT2::energy_kernel( int bin, int nbin )
-{
+double MRPT2::energy_kernel(int bin, int nbin) {
     double E_0 = evals_->get(0);
     double energy = 0.0;
     const size_t n_dets = reference_.size();
     const std::vector<STLBitsetDeterminant>& dets = reference_.determinants();
     det_hash<double> A_I;
-    for( size_t I = 0; I < n_dets; ++I ){
-        double c_I = evecs_->get(I,0);
+    for (size_t I = 0; I < n_dets; ++I) {
+        double c_I = evecs_->get(I, 0);
         const STLBitsetDeterminant& det = dets[I];
         std::vector<int> aocc = det.get_alfa_occ();
         std::vector<int> bocc = det.get_beta_occ();
@@ -184,13 +171,14 @@ double MRPT2::energy_kernel( int bin, int nbin )
                     new_det = det;
                     new_det.set_alfa_bit(ii, false);
                     new_det.set_alfa_bit(aa, true);
-                    if( reference_.has_det(new_det) ) continue;
-            
+                    if (reference_.has_det(new_det))
+                        continue;
+
                     // Check if the determinant goes in this bin
                     size_t hash_val = std::hash<bit_t>()(new_det.bits_);
-                    if( (hash_val % nbin) == bin){
-                        double coupling = new_det.slater_rules_single_alpha(ii,aa) * c_I;    
-                        if ( A_I.find(new_det) != A_I.end() ) {
+                    if ((hash_val % nbin) == bin) {
+                        double coupling = new_det.slater_rules_single_alpha(ii, aa) * c_I;
+                        if (A_I.find(new_det) != A_I.end()) {
                             coupling += A_I[new_det];
                         }
                         A_I[new_det] = coupling;
@@ -207,12 +195,13 @@ double MRPT2::energy_kernel( int bin, int nbin )
                     new_det = det;
                     new_det.set_beta_bit(ii, false);
                     new_det.set_beta_bit(aa, true);
-                    if( reference_.has_det(new_det) ) continue;
+                    if (reference_.has_det(new_det))
+                        continue;
                     // Check if the determinant goes in this bin
                     size_t hash_val = std::hash<bit_t>()(new_det.bits_);
-                    if( (hash_val % nbin) == bin){
-                        double coupling = new_det.slater_rules_single_beta(ii,aa) * c_I;    
-                        if ( A_I.find(new_det) != A_I.end() ) {
+                    if ((hash_val % nbin) == bin) {
+                        double coupling = new_det.slater_rules_single_beta(ii, aa) * c_I;
+                        if (A_I.find(new_det) != A_I.end()) {
                             coupling += A_I[new_det];
                         }
                         A_I[new_det] = coupling;
@@ -229,18 +218,21 @@ double MRPT2::energy_kernel( int bin, int nbin )
                     int aa = avir[a];
                     for (int b = 0; b < nvbeta; ++b) {
                         int bb = bvir[b];
-                        if ((mo_symmetry_[ii] ^ mo_symmetry_[jj] ^
-                             mo_symmetry_[aa] ^ mo_symmetry_[bb]) == 0) {
+                        if ((mo_symmetry_[ii] ^ mo_symmetry_[jj] ^ mo_symmetry_[aa] ^
+                             mo_symmetry_[bb]) == 0) {
                             new_det = det;
-                            double sign = new_det.double_excitation_ab(ii,jj,aa,bb); 
-                            if( reference_.has_det(new_det) ) continue;
+                            double sign = new_det.double_excitation_ab(ii, jj, aa, bb);
+                            if (reference_.has_det(new_det))
+                                continue;
 
                             // Check if the determinant goes in this bin
                             size_t hash_val = std::hash<bit_t>()(new_det.bits_);
-                            if( (hash_val % nbin) == bin){
+                            if ((hash_val % nbin) == bin) {
 
-                                double coupling = sign * c_I * STLBitsetDeterminant::fci_ints_->tei_ab(ii,jj,aa,bb);    
-                                if ( A_I.find(new_det) != A_I.end() ) {
+                                double coupling =
+                                    sign * c_I *
+                                    STLBitsetDeterminant::fci_ints_->tei_ab(ii, jj, aa, bb);
+                                if (A_I.find(new_det) != A_I.end()) {
                                     coupling += A_I[new_det];
                                 }
                                 A_I[new_det] = coupling;
@@ -259,16 +251,20 @@ double MRPT2::energy_kernel( int bin, int nbin )
                     int aa = avir[a];
                     for (int b = a + 1; b < nvalpha; ++b) {
                         int bb = avir[b];
-                        if ((mo_symmetry_[ii] ^ mo_symmetry_[jj] ^ mo_symmetry_[aa] ^ mo_symmetry_[bb]) == 0) {
+                        if ((mo_symmetry_[ii] ^ mo_symmetry_[jj] ^ mo_symmetry_[aa] ^
+                             mo_symmetry_[bb]) == 0) {
                             new_det = det;
-                            double sign = new_det.double_excitation_aa(ii,jj,aa,bb); 
-                            if( reference_.has_det(new_det) ) continue;
+                            double sign = new_det.double_excitation_aa(ii, jj, aa, bb);
+                            if (reference_.has_det(new_det))
+                                continue;
 
                             // Check if the determinant goes in this bin
                             size_t hash_val = std::hash<bit_t>()(new_det.bits_);
-                            if( (hash_val % nbin) == bin){
-                                double coupling = sign * c_I * STLBitsetDeterminant::fci_ints_->tei_aa(ii,jj,aa,bb);    
-                                if ( A_I.find(new_det) != A_I.end() ) {
+                            if ((hash_val % nbin) == bin) {
+                                double coupling =
+                                    sign * c_I *
+                                    STLBitsetDeterminant::fci_ints_->tei_aa(ii, jj, aa, bb);
+                                if (A_I.find(new_det) != A_I.end()) {
                                     coupling += A_I[new_det];
                                 }
                                 A_I[new_det] = coupling;
@@ -287,17 +283,20 @@ double MRPT2::energy_kernel( int bin, int nbin )
                     int aa = bvir[a];
                     for (int b = a + 1; b < nvbeta; ++b) {
                         int bb = bvir[b];
-                        if ((mo_symmetry_[ii] ^ mo_symmetry_[jj] ^
-                             mo_symmetry_[aa] ^ mo_symmetry_[bb]) == 0) {
+                        if ((mo_symmetry_[ii] ^ mo_symmetry_[jj] ^ mo_symmetry_[aa] ^
+                             mo_symmetry_[bb]) == 0) {
                             new_det = det;
-                            double sign = new_det.double_excitation_bb(ii,jj,aa,bb); 
-                            if( reference_.has_det(new_det) ) continue;
+                            double sign = new_det.double_excitation_bb(ii, jj, aa, bb);
+                            if (reference_.has_det(new_det))
+                                continue;
 
                             // Check if the determinant goes in this bin
                             size_t hash_val = std::hash<bit_t>()(new_det.bits_);
-                            if( (hash_val % nbin) == bin){
-                                double coupling = sign * c_I * STLBitsetDeterminant::fci_ints_->tei_bb(ii,jj,aa,bb);    
-                                if ( A_I.find(new_det) != A_I.end() ) {
+                            if ((hash_val % nbin) == bin) {
+                                double coupling =
+                                    sign * c_I *
+                                    STLBitsetDeterminant::fci_ints_->tei_bb(ii, jj, aa, bb);
+                                if (A_I.find(new_det) != A_I.end()) {
                                     coupling += A_I[new_det];
                                 }
                                 A_I[new_det] = coupling;
@@ -308,11 +307,11 @@ double MRPT2::energy_kernel( int bin, int nbin )
             }
         }
     }
-    
-    for( auto& det : A_I ){
-        energy += ( det.second*det.second ) / ( E_0 - det.first.energy() );
+
+    for (auto& det : A_I) {
+        energy += (det.second * det.second) / (E_0 - det.first.energy());
     }
     return energy;
 }
-
-}}
+}
+}

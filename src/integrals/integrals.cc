@@ -42,8 +42,8 @@
 #include "psi4/psi4-dec.h"
 #include "psi4/psifiles.h"
 
-#include "../helpers.h"
 #include "../forte_options.h"
+#include "../helpers.h"
 #include "integrals.h"
 #include "memory.h"
 
@@ -73,9 +73,8 @@ void set_INT_options(ForteOptions& foptions) {
      *  - CONVENTIONAL Conventional two-electron integrals
      *  - DF Density fitted two-electron integrals
      *  - CHOLESKY Cholesky decomposed two-electron integrals -*/
-    foptions.add_str("INT_TYPE", "CONVENTIONAL",
-                     {"CONVENTIONAL", "DF", "CHOLESKY", "DISKDF", "DISTDF",
-                      "ALL", "EFFECTIVE", "OWNINTEGRALS"},
+    foptions.add_str("INT_TYPE", "CONVENTIONAL", {"CONVENTIONAL", "DF", "CHOLESKY", "DISKDF",
+                                                  "DISTDF", "ALL", "EFFECTIVE", "OWNINTEGRALS"},
                      "The integral type");
 
     /*- The damping factor in the erf(x omega)/x integrals -*/
@@ -92,21 +91,18 @@ void set_INT_options(ForteOptions& foptions) {
                         "The screening for JK builds and DF libraries");
 
     /* - The tolerance for cholesky integrals */
-    foptions.add_double("CHOLESKY_TOLERANCE", 1e-6,
-                        "The tolerance for cholesky integrals");
+    foptions.add_double("CHOLESKY_TOLERANCE", 1e-6, "The tolerance for cholesky integrals");
 
-    foptions.add_bool("PRINT_INTS", false,
-                      "Print the one- and two-electron integrals?");
+    foptions.add_bool("PRINT_INTS", false, "Print the one- and two-electron integrals?");
 }
 
-ForteIntegrals::ForteIntegrals(psi::Options& options,
-                               SharedWavefunction ref_wfn,
+ForteIntegrals::ForteIntegrals(psi::Options& options, SharedWavefunction ref_wfn,
                                IntegralSpinRestriction restricted,
                                IntegralFrozenCore resort_frozen_core,
                                std::shared_ptr<MOSpaceInfo> mo_space_info)
     : options_(options), wfn_(ref_wfn), restricted_(restricted),
-      resort_frozen_core_(resort_frozen_core), frozen_core_energy_(0.0),
-      scalar_(0.0), mo_space_info_(mo_space_info) {
+      resort_frozen_core_(resort_frozen_core), frozen_core_energy_(0.0), scalar_(0.0),
+      mo_space_info_(mo_space_info) {
     // Copy the Wavefunction object
 
     startup();
@@ -141,13 +137,10 @@ void ForteIntegrals::startup() {
     ncmo_ = ncmopi_.sum();
 
     outfile->Printf("\n\n  ==> Integral Transformation <==\n");
-    outfile->Printf("\n  Number of molecular orbitals:            %5d",
-                    nmopi_.sum());
+    outfile->Printf("\n  Number of molecular orbitals:            %5d", nmopi_.sum());
     outfile->Printf("\n  Number of correlated molecular orbitals: %5zu", ncmo_);
-    outfile->Printf("\n  Number of frozen occupied orbitals:      %5d",
-                    frzcpi_.sum());
-    outfile->Printf("\n  Number of frozen unoccupied orbitals:    %5d\n\n",
-                    frzvpi_.sum());
+    outfile->Printf("\n  Number of frozen occupied orbitals:      %5d", frzcpi_.sum());
+    outfile->Printf("\n  Number of frozen unoccupied orbitals:    %5d\n\n", frzvpi_.sum());
 
     // Indexing
     // This is important!  Set the indexing to work using the number of
@@ -185,8 +178,7 @@ void ForteIntegrals::ForteIntegrals::deallocate() {
     delete[] fock_matrix_b;
 }
 
-void ForteIntegrals::ForteIntegrals::resort_two(double*& ints,
-                                                std::vector<size_t>& map) {
+void ForteIntegrals::ForteIntegrals::resort_two(double*& ints, std::vector<size_t>& map) {
     // Store the integrals in a temporary array of dimension nmo x nmo
     double* temp_ints = new double[nmo_ * nmo_];
     for (size_t p = 0; p < nmo_ * nmo_; ++p) {
@@ -220,10 +212,8 @@ void ForteIntegrals::transform_one_electron_integrals() {
     // Now we want the reference (SCF) wavefunction
     std::shared_ptr<PSIO> psio_ = PSIO::shared_object();
 
-    SharedMatrix T =
-        SharedMatrix(wfn_->matrix_factory()->create_matrix(PSIF_SO_T));
-    SharedMatrix V =
-        SharedMatrix(wfn_->matrix_factory()->create_matrix(PSIF_SO_V));
+    SharedMatrix T = SharedMatrix(wfn_->matrix_factory()->create_matrix(PSIF_SO_T));
+    SharedMatrix V = SharedMatrix(wfn_->matrix_factory()->create_matrix(PSIF_SO_V));
 
     MintsHelper mints(wfn_);
     T = mints.so_kinetic();
@@ -254,10 +244,8 @@ void ForteIntegrals::transform_one_electron_integrals() {
     for (int h = 0; h < nirrep_; ++h) {
         for (int p = 0; p < nmopi_[h]; ++p) {
             for (int q = 0; q < nmopi_[h]; ++q) {
-                one_electron_integrals_a[(p + offset) * nmo_ + q + offset] =
-                    Ha->get(h, p, q);
-                one_electron_integrals_b[(p + offset) * nmo_ + q + offset] =
-                    Hb->get(h, p, q);
+                one_electron_integrals_a[(p + offset) * nmo_ + q + offset] = Ha->get(h, p, q);
+                one_electron_integrals_b[(p + offset) * nmo_ + q + offset] = Hb->get(h, p, q);
             }
         }
         offset += nmopi_[h];
@@ -292,11 +280,9 @@ void ForteIntegrals::compute_frozen_one_body_operator() {
 #endif
     } else {
         if (options_.get_str("SCF_TYPE") == "DF") {
-            JK_core = JK::build_JK(
-                wfn_->basisset(), wfn_->get_basisset("DF_BASIS_MP2"), options_);
+            JK_core = JK::build_JK(wfn_->basisset(), wfn_->get_basisset("DF_BASIS_MP2"), options_);
         } else {
-            JK_core = JK::build_JK(wfn_->basisset(),
-                                   BasisSet::zero_ao_basis_set(), options_);
+            JK_core = JK::build_JK(wfn_->basisset(), BasisSet::zero_ao_basis_set(), options_);
         }
     }
 
@@ -307,7 +293,7 @@ void ForteIntegrals::compute_frozen_one_body_operator() {
     JK_core->set_cutoff(options_.get_double("INTEGRAL_SCREENING"));
     JK_core->initialize();
     JK_core->set_do_J(true);
-    //JK_core->set_allow_desymmetrization(true);
+    // JK_core->set_allow_desymmetrization(true);
     JK_core->set_do_K(true);
 
     std::vector<std::shared_ptr<Matrix>>& Cl = JK_core->C_left();
@@ -352,11 +338,9 @@ void ForteIntegrals::compute_frozen_one_body_operator() {
     frozen_core_energy_ = E_frozen;
 
     if (print_ > 0) {
-        outfile->Printf("\n  Frozen-core energy        %20.12f a.u.",
-                        frozen_core_energy_);
+        outfile->Printf("\n  Frozen-core energy        %20.12f a.u.", frozen_core_energy_);
 
-        outfile->Printf("\n\n  FrozenOneBody Operator takes  %8.8f s",
-                        FrozenOneBody.get());
+        outfile->Printf("\n\n  FrozenOneBody Operator takes  %8.8f s", FrozenOneBody.get());
     }
 }
 
@@ -404,10 +388,8 @@ void ForteIntegrals::rotate_mos() {
     if (size_mo_rotate % 3 != 0) {
         outfile->Printf("\n Check ROTATE_MOS array");
         outfile->Printf("\nFormat should be in group of 3s");
-        outfile->Printf(
-            "\n Irrep, rotate_1, rotate_2, irrep, rotate_3, rotate_4");
-        throw PSIEXCEPTION(
-            "User specifed ROTATE_MOS incorrectly.  Check output for notes");
+        outfile->Printf("\n Irrep, rotate_1, rotate_2, irrep, rotate_3, rotate_4");
+        throw PSIEXCEPTION("User specifed ROTATE_MOS incorrectly.  Check output for notes");
     }
     int orbital_rotate_group = (size_mo_rotate / 3);
     std::vector<std::vector<int>> rotate_mo_list;
@@ -417,18 +399,16 @@ void ForteIntegrals::rotate_mos() {
         int offset_a = 3 * a;
         rotate_mo_group[0] = options_["ROTATE_MOS"][offset_a].to_integer() - 1;
         if (rotate_mo_group[0] > nirrep_) {
-            outfile->Printf("\n Irrep:%d does not match wfn_ symmetry:%d",
-                            rotate_mo_group[0], nirrep_);
+            outfile->Printf("\n Irrep:%d does not match wfn_ symmetry:%d", rotate_mo_group[0],
+                            nirrep_);
             throw PSIEXCEPTION("Irrep does not match wavefunction symmetry");
         }
-        rotate_mo_group[1] =
-            options_["ROTATE_MOS"][offset_a + 1].to_integer() - 1;
-        rotate_mo_group[2] =
-            options_["ROTATE_MOS"][offset_a + 2].to_integer() - 1;
+        rotate_mo_group[1] = options_["ROTATE_MOS"][offset_a + 1].to_integer() - 1;
+        rotate_mo_group[2] = options_["ROTATE_MOS"][offset_a + 2].to_integer() - 1;
         rotate_mo_list.push_back(rotate_mo_group);
 
-        outfile->Printf("   %d   %d   %d\n", rotate_mo_group[0],
-                        rotate_mo_group[1], rotate_mo_group[2]);
+        outfile->Printf("   %d   %d   %d\n", rotate_mo_group[0], rotate_mo_group[1],
+                        rotate_mo_group[2]);
     }
     SharedMatrix C_old = wfn_->Ca();
     SharedMatrix C_new(C_old->clone());
@@ -448,11 +428,11 @@ void ForteIntegrals::print_ints() {
     wfn_->Cb()->print();
 
     outfile->Printf("\n  Alpha one-electron integrals (T + V_{en})");
-    Matrix ha(" Alpha one-electron integrals (T + V_{en})",nmo_,nmo_);
+    Matrix ha(" Alpha one-electron integrals (T + V_{en})", nmo_, nmo_);
     for (size_t p = 0; p < nmo_; ++p) {
         for (size_t q = 0; q < nmo_; ++q) {
-            ha.set(p,q,oei_a(p, q));
-//            outfile->Printf("\n  h[%6d][%6d] = %20.12f", p, q, oei_a(p, q));
+            ha.set(p, q, oei_a(p, q));
+            //            outfile->Printf("\n  h[%6d][%6d] = %20.12f", p, q, oei_a(p, q));
         }
     }
     ha.print();
@@ -469,8 +449,8 @@ void ForteIntegrals::print_ints() {
         for (size_t q = 0; q < nmo_; ++q) {
             for (size_t r = 0; r < nmo_; ++r) {
                 for (size_t s = 0; s < nmo_; ++s) {
-                    outfile->Printf("\n  v[%6d][%6d][%6d][%6d] = %20.12f", p, q,
-                                    r, s, aptei_aa(p, q, r, s));
+                    outfile->Printf("\n  v[%6d][%6d][%6d][%6d] = %20.12f", p, q, r, s,
+                                    aptei_aa(p, q, r, s));
                 }
             }
         }
@@ -481,8 +461,8 @@ void ForteIntegrals::print_ints() {
         for (size_t q = 0; q < nmo_; ++q) {
             for (size_t r = 0; r < nmo_; ++r) {
                 for (size_t s = 0; s < nmo_; ++s) {
-                    outfile->Printf("\n  v[%6d][%6d][%6d][%6d] = %20.12f", p, q,
-                                    r, s, aptei_ab(p, q, r, s));
+                    outfile->Printf("\n  v[%6d][%6d][%6d][%6d] = %20.12f", p, q, r, s,
+                                    aptei_ab(p, q, r, s));
                 }
             }
         }
@@ -492,8 +472,8 @@ void ForteIntegrals::print_ints() {
         for (size_t q = 0; q < nmo_; ++q) {
             for (size_t r = 0; r < nmo_; ++r) {
                 for (size_t s = 0; s < nmo_; ++s) {
-                    outfile->Printf("\n  v[%6d][%6d][%6d][%6d] = %20.12f", p, q,
-                                    r, s, aptei_bb(p, q, r, s));
+                    outfile->Printf("\n  v[%6d][%6d][%6d][%6d] = %20.12f", p, q, r, s,
+                                    aptei_bb(p, q, r, s));
                 }
             }
         }

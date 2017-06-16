@@ -31,9 +31,9 @@
 #include "psi4/libmints/pointgrp.h"
 #include "psi4/psi4-dec.h"
 
-#include "../forte_options.h"
 #include "../ci_rdms.h"
 #include "../fci/fci_integrals.h"
+#include "../forte_options.h"
 #include "../sparse_ci_solver.h"
 #include "../stl_bitset_determinant.h"
 #include "ci-no.h"
@@ -65,12 +65,10 @@ std::string dimension_to_string(Dimension dim) {
 
 void set_CINO_options(ForteOptions& foptions) {
     foptions.add_bool("CINO", false, "Do a CINO computation?");
-    foptions.add_str("CINO_TYPE", "CIS", {"CIS", "CISD"},
-                     "The type of wave function.");
+    foptions.add_str("CINO_TYPE", "CIS", {"CIS", "CISD"}, "The type of wave function.");
     foptions.add_int("CINO_NROOT", 1, "The number of roots computed");
-    foptions.add_array(
-        "CINO_ROOTS_PER_IRREP",
-        "The number of excited states per irreducible representation");
+    foptions.add_array("CINO_ROOTS_PER_IRREP",
+                       "The number of excited states per irreducible representation");
     foptions.add_double("CINO_THRESHOLD", 0.99,
                         "The fraction of NOs to include in the active space");
     foptions.add_int("ACI_MAX_RDM", 1, "Order of RDM to compute");
@@ -81,28 +79,22 @@ void set_CINO_options(ForteOptions& foptions) {
      * 3 - Do 1 and 2 -*/
 }
 
-CINO::CINO(SharedWavefunction ref_wfn, Options& options,
-           std::shared_ptr<ForteIntegrals> ints,
+CINO::CINO(SharedWavefunction ref_wfn, Options& options, std::shared_ptr<ForteIntegrals> ints,
            std::shared_ptr<MOSpaceInfo> mo_space_info)
     : Wavefunction(options), ints_(ints), mo_space_info_(mo_space_info) {
     // Copy the wavefunction information
     shallow_copy(ref_wfn);
     reference_wavefunction_ = ref_wfn;
 
-    fci_ints_ = std::make_shared<FCIIntegrals>(
-        ints, mo_space_info_->get_corr_abs_mo("ACTIVE"),
-        mo_space_info_->get_corr_abs_mo("RESTRICTED_DOCC"));
+    fci_ints_ = std::make_shared<FCIIntegrals>(ints, mo_space_info_->get_corr_abs_mo("ACTIVE"),
+                                               mo_space_info_->get_corr_abs_mo("RESTRICTED_DOCC"));
 
     auto active_mo = mo_space_info_->get_corr_abs_mo("ACTIVE");
-    ambit::Tensor tei_active_aa =
-        ints->aptei_aa_block(active_mo, active_mo, active_mo, active_mo);
-    ambit::Tensor tei_active_ab =
-        ints->aptei_ab_block(active_mo, active_mo, active_mo, active_mo);
-    ambit::Tensor tei_active_bb =
-        ints->aptei_bb_block(active_mo, active_mo, active_mo, active_mo);
+    ambit::Tensor tei_active_aa = ints->aptei_aa_block(active_mo, active_mo, active_mo, active_mo);
+    ambit::Tensor tei_active_ab = ints->aptei_ab_block(active_mo, active_mo, active_mo, active_mo);
+    ambit::Tensor tei_active_bb = ints->aptei_bb_block(active_mo, active_mo, active_mo, active_mo);
 
-    fci_ints_->set_active_integrals(tei_active_aa, tei_active_ab,
-                                    tei_active_bb);
+    fci_ints_->set_active_integrals(tei_active_aa, tei_active_ab, tei_active_bb);
     fci_ints_->compute_restricted_one_body_operator();
 
     STLBitsetDeterminant::set_ints(fci_ints_);
@@ -148,8 +140,7 @@ double CINO::compute_energy() {
     Density_a->scale(1.0 / static_cast<double>(sum));
     Density_b->scale(1.0 / static_cast<double>(sum));
 
-    std::pair<SharedMatrix, SharedMatrix> avg_gamma =
-        std::make_pair(Density_a, Density_b);
+    std::pair<SharedMatrix, SharedMatrix> avg_gamma = std::make_pair(Density_a, Density_b);
 
     // 4. Diagonalize the density matrix
     std::tuple<SharedVector, SharedMatrix, SharedVector, SharedMatrix> no_U =
@@ -229,10 +220,8 @@ std::vector<Determinant> CINO::build_dets(int irrep) {
         }
         // loop over occupied orbitals in irrep_i
         // loop over virtual orbitals in irrep_a
-        int occ_irrep_i =
-            nalphapi_[irrep_i] - rdoccpi_[irrep_i] - fdoccpi_[irrep_i];
-        int occ_irrep_a =
-            nalphapi_[irrep_a] - rdoccpi_[irrep_a] - fdoccpi_[irrep_a];
+        int occ_irrep_i = nalphapi_[irrep_i] - rdoccpi_[irrep_i] - fdoccpi_[irrep_i];
+        int occ_irrep_a = nalphapi_[irrep_a] - rdoccpi_[irrep_a] - fdoccpi_[irrep_a];
         for (int i = 0; i < occ_irrep_i; ++i) {
             for (int a = occ_irrep_a; a < actvpi_[irrep_a]; ++a) {
                 Determinant single_ia(ref);
@@ -256,10 +245,8 @@ std::vector<Determinant> CINO::build_dets(int irrep) {
         }
         // loop over occupied orbitals in irrep_i
         // loop over virtual orbitals in irrep_a
-        int occ_irrep_i =
-            nbetapi_[irrep_i] - rdoccpi_[irrep_i] - fdoccpi_[irrep_i];
-        int occ_irrep_a =
-            nbetapi_[irrep_a] - rdoccpi_[irrep_a] - fdoccpi_[irrep_a];
+        int occ_irrep_i = nbetapi_[irrep_i] - rdoccpi_[irrep_i] - fdoccpi_[irrep_i];
+        int occ_irrep_a = nbetapi_[irrep_a] - rdoccpi_[irrep_a] - fdoccpi_[irrep_a];
         for (int i = 0; i < occ_irrep_i; ++i) {
             for (int a = occ_irrep_a; a < actvpi_[irrep_a]; ++a) {
                 Determinant single_ib(ref);
@@ -274,58 +261,57 @@ std::vector<Determinant> CINO::build_dets(int irrep) {
 
     if (options_.get_str("CINO_TYPE") == "CISD") {
         // alpha-alpha double excitation
-//        for (int i = 0; i < naocc_; ++i) {
-//            for (int j = i + 1; j < naocc_; ++j) {
-//                for (int a = naocc_; a < navir_; ++a) {
-//                    for (int b = a + 1; b < navir_; ++b) {
-//                        Determinant double_ia(ref);
-//                        double_ia.set_alfa_bit(i, false);
-//                        double_ia.set_alfa_bit(j, false);
-//                        double_ia.set_alfa_bit(a, true);
-//                        double_ia.set_alfa_bit(b, true);
-//                        dets.push_back(double_ia);
-//                    }
-//                }
-//            }
-//        }
+        //        for (int i = 0; i < naocc_; ++i) {
+        //            for (int j = i + 1; j < naocc_; ++j) {
+        //                for (int a = naocc_; a < navir_; ++a) {
+        //                    for (int b = a + 1; b < navir_; ++b) {
+        //                        Determinant double_ia(ref);
+        //                        double_ia.set_alfa_bit(i, false);
+        //                        double_ia.set_alfa_bit(j, false);
+        //                        double_ia.set_alfa_bit(a, true);
+        //                        double_ia.set_alfa_bit(b, true);
+        //                        dets.push_back(double_ia);
+        //                    }
+        //                }
+        //            }
+        //        }
         // beta-beta double excitation
-//        for (int i = 0; i < nbocc_; ++i) {
-//            for (int j = i + 1; j < nbocc_; ++j) {
-//                for (int a = nbocc_; a < nbvir_; ++a) {
-//                    for (int b = a + 1; b < nbvir_; ++b) {
-//                        Determinant double_ib(ref);
-//                        double_ib.set_beta_bit(i, false);
-//                        double_ib.set_beta_bit(j, false);
-//                        double_ib.set_beta_bit(a, true);
-//                        double_ib.set_beta_bit(b, true);
-//                        dets.push_back(double_ib);
-//                    }
-//                }
-//            }
-//        }
+        //        for (int i = 0; i < nbocc_; ++i) {
+        //            for (int j = i + 1; j < nbocc_; ++j) {
+        //                for (int a = nbocc_; a < nbvir_; ++a) {
+        //                    for (int b = a + 1; b < nbvir_; ++b) {
+        //                        Determinant double_ib(ref);
+        //                        double_ib.set_beta_bit(i, false);
+        //                        double_ib.set_beta_bit(j, false);
+        //                        double_ib.set_beta_bit(a, true);
+        //                        double_ib.set_beta_bit(b, true);
+        //                        dets.push_back(double_ib);
+        //                    }
+        //                }
+        //            }
+        //        }
         // alpha-beta double excitation
-//        for (int i = 0; i < naocc_; ++i) {
-//            for (int j = 0; j < nbocc_; ++j) {
-//                for (int a = naocc_; a < navir_; ++a) {
-//                    for (int b = nbocc_; b < nbvir_; ++b) {
-//                        Determinant double_iab(ref);
-//                        double_iab.set_alfa_bit(i, false);
-//                        double_iab.set_beta_bit(j, false);
-//                        double_iab.set_alfa_bit(a, true);
-//                        double_iab.set_beta_bit(b, true);
-//                        dets.push_back(double_iab);
-//                    }
-//                }
-//            }
-//        }
+        //        for (int i = 0; i < naocc_; ++i) {
+        //            for (int j = 0; j < nbocc_; ++j) {
+        //                for (int a = naocc_; a < navir_; ++a) {
+        //                    for (int b = nbocc_; b < nbvir_; ++b) {
+        //                        Determinant double_iab(ref);
+        //                        double_iab.set_alfa_bit(i, false);
+        //                        double_iab.set_beta_bit(j, false);
+        //                        double_iab.set_alfa_bit(a, true);
+        //                        double_iab.set_beta_bit(b, true);
+        //                        dets.push_back(double_iab);
+        //                    }
+        //                }
+        //            }
+        //        }
     }
 
     return dets;
 }
 /// Diagonalize the Hamiltonian in this basis
 std::pair<SharedVector, SharedMatrix>
-CINO::diagonalize_hamiltonian(const std::vector<Determinant>& dets,
-                              int nsolutions) {
+CINO::diagonalize_hamiltonian(const std::vector<Determinant>& dets, int nsolutions) {
     std::pair<SharedVector, SharedMatrix> evals_evecs;
 
     SparseCISolver sparse_solver;
@@ -337,8 +323,7 @@ CINO::diagonalize_hamiltonian(const std::vector<Determinant>& dets,
     sparse_solver.set_spin_project_full(true);
     sparse_solver.set_print_details(true);
 
-    sparse_solver.diagonalize_hamiltonian(dets, evals_evecs.first,
-                                          evals_evecs.second, nsolutions,
+    sparse_solver.diagonalize_hamiltonian(dets, evals_evecs.first, evals_evecs.second, nsolutions,
                                           wavefunction_multiplicity_, DLSolver);
 
     outfile->Printf("\n\n    STATE      CI ENERGY");
@@ -353,8 +338,7 @@ CINO::diagonalize_hamiltonian(const std::vector<Determinant>& dets,
 }
 /// Build the density matrix
 std::pair<SharedMatrix, SharedMatrix>
-CINO::build_density_matrix(const std::vector<Determinant>& dets,
-                           SharedMatrix evecs, int n) {
+CINO::build_density_matrix(const std::vector<Determinant>& dets, SharedMatrix evecs, int n) {
     std::vector<double> average_a_(ncmo2_);
     std::vector<double> average_b_(ncmo2_);
     std::vector<double> template_a_;
@@ -371,8 +355,7 @@ CINO::build_density_matrix(const std::vector<Determinant>& dets,
         if (rdm_level_ >= 1) {
             Timer one_r;
             ci_rdms_.compute_1rdm(template_a_, template_b_);
-            outfile->Printf("\n  1-RDM  took %2.6f s (determinant)",
-                            one_r.get());
+            outfile->Printf("\n  1-RDM  took %2.6f s (determinant)", one_r.get());
         }
         // Add template value to average vector
         for (int i = 0; i < ncmo2_; ++i) {
@@ -393,19 +376,15 @@ CINO::build_density_matrix(const std::vector<Determinant>& dets,
     //    Dimension nmopi = reference_wavefunction_->nmopi();
     //    Dimension ncmopi = mo_space_info_->get_dimension("CORRELATED");
 
-    std::shared_ptr<Matrix> opdm_a(
-        new Matrix("OPDM_A", actvpi_, actvpi_));
-    std::shared_ptr<Matrix> opdm_b(
-        new Matrix("OPDM_B", actvpi_, actvpi_));
+    std::shared_ptr<Matrix> opdm_a(new Matrix("OPDM_A", actvpi_, actvpi_));
+    std::shared_ptr<Matrix> opdm_b(new Matrix("OPDM_B", actvpi_, actvpi_));
 
     int offset = 0;
     for (int h = 0; h < nirrep_; h++) {
         for (int u = 0; u < actvpi_[h]; u++) {
             for (int v = 0; v < actvpi_[h]; v++) {
-                opdm_a->set(h, u, v,
-                            ordm_a_[(u + offset) * nactv_ + v + offset]);
-                opdm_b->set(h, u, v,
-                            ordm_b_[(u + offset) * nactv_ + v + offset]);
+                opdm_a->set(h, u, v, ordm_a_[(u + offset) * nactv_ + v + offset]);
+                opdm_b->set(h, u, v, ordm_b_[(u + offset) * nactv_ + v + offset]);
             }
         }
         offset += actvpi_[h];
@@ -467,8 +446,7 @@ CINO::diagonalize_density_matrix(std::pair<SharedMatrix, SharedMatrix> gamma) {
     for (int h = 0; h < nirrep_; h++) {
         for (int a = 0; a < bvirpi[h]; a++) {
             for (int b = 0; b < bvirpi[h]; b++) {
-                gamma_b_vir->set(h, a, b, gamma.second->get(h, a + boccpi[h],
-                                                            b + boccpi[h]));
+                gamma_b_vir->set(h, a, b, gamma.second->get(h, a + boccpi[h], b + boccpi[h]));
             }
         }
     }
@@ -494,8 +472,7 @@ CINO::diagonalize_density_matrix(std::pair<SharedMatrix, SharedMatrix> gamma) {
         for (int a = 0; a < bvirpi[h]; a++) {
             OCC_B->set(h, a + boccpi[h], OCC_B_vir->get(h, a));
             for (int b = 0; b < bvirpi[h]; b++) {
-                NO_B->set(h, a + boccpi[h], b + boccpi[h],
-                          NO_B_vir->get(h, a, b));
+                NO_B->set(h, a + boccpi[h], b + boccpi[h], NO_B_vir->get(h, a, b));
             }
         }
     }
@@ -533,8 +510,7 @@ void CINO::find_active_space_and_transform(
     for (int h = 0; h < nirrep_; h++) {
         for (int i = 0; i < aoccpi_[h]; i++) {
             sum_o += 1.0 - OCC_A->get(h, i);
-            sorted_aocc.push_back(
-                std::make_tuple(1.0 - OCC_A->get(h, i), h, i));
+            sorted_aocc.push_back(std::make_tuple(1.0 - OCC_A->get(h, i), h, i));
         }
     }
 
@@ -584,12 +560,9 @@ void CINO::find_active_space_and_transform(
     Dimension noci_actv = nactv_occ + nactv_vir;
     Dimension noci_rdocc = rdoccpi_ + aoccpi_ - nactv_occ;
 
-    outfile->Printf("\n  FROZEN_DOCC     = %s",
-                    dimension_to_string(noci_fdocc).c_str());
-    outfile->Printf("\n  RESTRICTED_DOCC = %s",
-                    dimension_to_string(noci_rdocc).c_str());
-    outfile->Printf("\n  ACTIVE          = %s",
-                    dimension_to_string(noci_actv).c_str());
+    outfile->Printf("\n  FROZEN_DOCC     = %s", dimension_to_string(noci_fdocc).c_str());
+    outfile->Printf("\n  RESTRICTED_DOCC = %s", dimension_to_string(noci_rdocc).c_str());
+    outfile->Printf("\n  ACTIVE          = %s", dimension_to_string(noci_actv).c_str());
 }
 }
 } // EndNamespaces

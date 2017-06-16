@@ -36,19 +36,19 @@
 //#include "stl_bitset_determinant.h"
 //#include "fci/fci_vector.h"
 
-//using namespace std;
-//using namespace psi;
+// using namespace std;
+// using namespace psi;
 
-//namespace psi {
-//namespace forte {
+// namespace psi {
+// namespace forte {
 
-//template <size_t sz> struct bitset_comparer {
+// template <size_t sz> struct bitset_comparer {
 //    bool operator()(const bitset<sz>& b1, const bitset<sz>& b2) const {
 //        return b1.to_ulong() < b2.to_ulong();
 //    }
 //};
 
-//DynamicBitsetDeterminant random_bitset_determinant(int nmo, int nset) {
+// DynamicBitsetDeterminant random_bitset_determinant(int nmo, int nset) {
 //    DynamicBitsetDeterminant I(nmo);
 //    for (int k = 0; k < nset; ++k) {
 //        int a = rand() % nmo;
@@ -59,7 +59,7 @@
 //    return I;
 //}
 
-//STLBitsetDeterminant random_bitset_determinant2(int nmo, int nset) {
+// STLBitsetDeterminant random_bitset_determinant2(int nmo, int nset) {
 //    STLBitsetDeterminant I;
 //    for (int k = 0; k < nset; ++k) {
 //        I.set_alfa_bit(rand() % nmo, true);
@@ -68,7 +68,7 @@
 //    return I;
 //}
 
-//boost::dynamic_bitset<> random_dynamic_bitset(int nmo, int nset) {
+// boost::dynamic_bitset<> random_dynamic_bitset(int nmo, int nset) {
 //    boost::dynamic_bitset<> I(2 * nmo);
 //    for (int k = 0; k < nset; ++k) {
 //        I[rand() % nmo] = true;
@@ -77,7 +77,7 @@
 //    return I;
 //}
 
-//std::bitset<64> random_bitset_64(int nmo, int nset) {
+// std::bitset<64> random_bitset_64(int nmo, int nset) {
 //    std::bitset<64> I(2 * nmo);
 //    for (int k = 0; k < nset; ++k) {
 //        I[rand() % nmo] = true;
@@ -86,7 +86,7 @@
 //    return I;
 //}
 
-//std::bitset<128> random_bitset_128(int nmo, int nset) {
+// std::bitset<128> random_bitset_128(int nmo, int nset) {
 //    std::bitset<128> I(2 * nmo);
 //    for (int k = 0; k < nset; ++k) {
 //        I[rand() % nmo] = true;
@@ -95,7 +95,7 @@
 //    return I;
 //}
 
-//bit_t random_bitset_256(int nmo, int nset) {
+// bit_t random_bitset_256(int nmo, int nset) {
 //    bit_t I(2 * nmo);
 //    for (int k = 0; k < nset; ++k) {
 //        I[rand() % nmo] = true;
@@ -104,7 +104,7 @@
 //    return I;
 //}
 
-//double test_bitset_determinant_copy_constructor(int nmo, int nset, int repeat) {
+// double test_bitset_determinant_copy_constructor(int nmo, int nset, int repeat) {
 //    DynamicBitsetDeterminant I = random_bitset_determinant(nmo, nset);
 //    I.print();
 //    auto start = chrono::steady_clock::now();
@@ -116,7 +116,7 @@
 //    return chrono::duration<double, nano>(diff).count();
 //}
 
-//double test_bitset_determinant2_copy_constructor(int nmo, int nset,
+// double test_bitset_determinant2_copy_constructor(int nmo, int nset,
 //                                                 int repeat) {
 //    STLBitsetDeterminant I = random_bitset_determinant2(nmo, nset);
 //    I.print();
@@ -126,7 +126,7 @@
 //    return chrono::duration<double, nano>(diff).count();
 //}
 
-//double test_dynamic_bitset_copy_constructor(int nmo, int nset, int repeat) {
+// double test_dynamic_bitset_copy_constructor(int nmo, int nset, int repeat) {
 //    boost::dynamic_bitset<> I = random_dynamic_bitset(nmo, nset);
 //    // Converting dynamic_bitset to a string
 //    string buffer;
@@ -141,7 +141,7 @@
 //    return chrono::duration<double, nano>(diff).count();
 //}
 
-//double test_bitset_64_copy_constructor(int nmo, int nset, int repeat) {
+// double test_bitset_64_copy_constructor(int nmo, int nset, int repeat) {
 //    std::bitset<64> I = random_bitset_64(nmo, nset);
 //    // Converting dynamic_bitset to a string
 //    //    string buffer;
@@ -158,7 +158,7 @@
 //    return chrono::duration<double, nano>(diff).count();
 //}
 
-//double test_bitset_determinant_place_in_map(int nmo, int nset, int repeat) {
+// double test_bitset_determinant_place_in_map(int nmo, int nset, int repeat) {
 //    std::vector<DynamicBitsetDeterminant> det_vec;
 //    std::map<DynamicBitsetDeterminant, double> det_map;
 //    for (int n = 0; n < repeat; ++n) {
@@ -173,7 +173,7 @@
 //    return chrono::duration<double, nano>(diff).count();
 //}
 
-//double test_bitset_determinant2_place_in_map(int nmo, int nset, int repeat) {
+// double test_bitset_determinant2_place_in_map(int nmo, int nset, int repeat) {
 //    //    std::vector<STLBitsetDeterminant> det_vec;
 //    //    std::map<STLBitsetDeterminant,double> det_map;
 //    //    for (int n = 0; n < repeat; ++n){
@@ -188,7 +188,7 @@
 //    return chrono::duration<double, nano>(diff).count();
 //}
 
-//double test_dynamic_bitset_place_in_map(int nmo, int nset, int repeat) {
+// double test_dynamic_bitset_place_in_map(int nmo, int nset, int repeat) {
 //    std::vector<boost::dynamic_bitset<>> det_vec;
 //    std::map<boost::dynamic_bitset<>, double> det_map;
 //    for (int n = 0; n < repeat; ++n) {
@@ -203,7 +203,7 @@
 //    return chrono::duration<double, nano>(diff).count();
 //}
 
-//double test_bitset_64_place_in_map(int nmo, int nset, int repeat) {
+// double test_bitset_64_place_in_map(int nmo, int nset, int repeat) {
 //    std::vector<std::bitset<64>> det_vec;
 //    std::map<std::bitset<64>, double, bitset_comparer<64>> det_map;
 //    for (int n = 0; n < repeat; ++n) {
@@ -218,7 +218,7 @@
 //    return chrono::duration<double, nano>(diff).count();
 //}
 
-//double test_bitset_128_place_in_map(int nmo, int nset, int repeat) {
+// double test_bitset_128_place_in_map(int nmo, int nset, int repeat) {
 //    std::vector<std::bitset<128>> det_vec;
 //    std::map<std::bitset<128>, double, bitset_comparer<128>> det_map;
 //    for (int n = 0; n < repeat; ++n) {
@@ -233,7 +233,7 @@
 //    return chrono::duration<double, nano>(diff).count();
 //}
 
-//double test_size_t_place_in_map(int nmo, int nset, int repeat) {
+// double test_size_t_place_in_map(int nmo, int nset, int repeat) {
 //    std::vector<size_t> det_vec;
 //    std::map<size_t, double> det_map;
 //    for (int n = 0; n < repeat; ++n) {
@@ -248,7 +248,7 @@
 //    return chrono::duration<double, nano>(diff).count();
 //}
 
-//double test___int128_place_in_map(int nmo, int nset, int repeat) {
+// double test___int128_place_in_map(int nmo, int nset, int repeat) {
 //    std::vector<__int128> det_vec;
 //    std::map<__int128, double> det_map;
 //    for (int n = 0; n < repeat; ++n) {
@@ -263,7 +263,7 @@
 //    return chrono::duration<double, nano>(diff).count();
 //}
 
-//double test_bitset_determinant_place_in_hash(int nmo, int nset, int repeat) {
+// double test_bitset_determinant_place_in_hash(int nmo, int nset, int repeat) {
 //    std::vector<DynamicBitsetDeterminant> det_vec;
 //    std::unordered_map<DynamicBitsetDeterminant, double,
 //                       DynamicBitsetDeterminant::Hash> det_hash;
@@ -279,7 +279,7 @@
 //    return chrono::duration<double, nano>(diff).count();
 //}
 
-//double test_bitset_determinant2_place_in_hash(int nmo, int nset, int repeat) {
+// double test_bitset_determinant2_place_in_hash(int nmo, int nset, int repeat) {
 //    std::vector<STLBitsetDeterminant> det_vec;
 //    std::unordered_map<STLBitsetDeterminant, double, STLBitsetDeterminant::Hash>
 //        det_hash;
@@ -295,7 +295,7 @@
 //    return chrono::duration<double, nano>(diff).count();
 //}
 
-//double test_bitset_64_place_in_hash(int nmo, int nset, int repeat) {
+// double test_bitset_64_place_in_hash(int nmo, int nset, int repeat) {
 //    std::vector<std::bitset<64>> det_vec;
 //    std::unordered_map<std::bitset<64>, double> det_hash;
 //    for (int n = 0; n < repeat; ++n) {
@@ -310,7 +310,7 @@
 //    return chrono::duration<double, nano>(diff).count();
 //}
 
-//double test_bitset_128_place_in_hash(int nmo, int nset, int repeat) {
+// double test_bitset_128_place_in_hash(int nmo, int nset, int repeat) {
 //    std::vector<std::bitset<128>> det_vec;
 //    std::unordered_map<std::bitset<128>, double> det_hash;
 //    for (int n = 0; n < repeat; ++n) {
@@ -325,7 +325,7 @@
 //    return chrono::duration<double, nano>(diff).count();
 //}
 
-//double test_bitset_256_place_in_hash(int nmo, int nset, int repeat) {
+// double test_bitset_256_place_in_hash(int nmo, int nset, int repeat) {
 //    std::vector<bit_t> det_vec;
 //    std::unordered_map<bit_t, double> det_hash;
 //    for (int n = 0; n < repeat; ++n) {
@@ -340,7 +340,7 @@
 //    return chrono::duration<double, nano>(diff).count();
 //}
 
-//double test_bitset_determinant_place_in_vector(int nmo, int nset, int repeat) {
+// double test_bitset_determinant_place_in_vector(int nmo, int nset, int repeat) {
 //    std::vector<DynamicBitsetDeterminant> det_vec;
 //    auto start = chrono::steady_clock::now();
 //    for (int n = 0; n < repeat; ++n) {
@@ -351,7 +351,7 @@
 //    return chrono::duration<double, nano>(diff).count();
 //}
 
-//double test_bitset_determinant2_place_in_vector(int nmo, int nset, int repeat) {
+// double test_bitset_determinant2_place_in_vector(int nmo, int nset, int repeat) {
 //    std::vector<STLBitsetDeterminant> det_vec;
 //    auto start = chrono::steady_clock::now();
 //    for (int n = 0; n < repeat; ++n) {
@@ -362,7 +362,7 @@
 //    return chrono::duration<double, nano>(diff).count();
 //}
 
-//double test_bitset_256_place_in_vector(int nmo, int nset, int repeat) {
+// double test_bitset_256_place_in_vector(int nmo, int nset, int repeat) {
 //    std::vector<bit_t> det_vec;
 //    auto start = chrono::steady_clock::now();
 //    for (int n = 0; n < repeat; ++n) {
@@ -373,7 +373,7 @@
 //    return chrono::duration<double, nano>(diff).count();
 //}
 
-//double test_bitset_determinant_generate(int nmo, int nset, int repeat) {
+// double test_bitset_determinant_generate(int nmo, int nset, int repeat) {
 //    std::vector<DynamicBitsetDeterminant> det_vec;
 //    auto start = chrono::steady_clock::now();
 //    for (int n = 0; n < repeat; ++n) {
@@ -384,7 +384,7 @@
 //    return chrono::duration<double, nano>(diff).count();
 //}
 
-//double test_bitset_determinant2_generate(int nmo, int nset, int repeat) {
+// double test_bitset_determinant2_generate(int nmo, int nset, int repeat) {
 //    std::vector<STLBitsetDeterminant> det_vec;
 //    auto start = chrono::steady_clock::now();
 //    for (int n = 0; n < repeat; ++n) {
@@ -395,7 +395,7 @@
 //    return chrono::duration<double, nano>(diff).count();
 //}
 
-//std::vector<std::pair<std::string, double>> run_tests(int nmo, int nset,
+// std::vector<std::pair<std::string, double>> run_tests(int nmo, int nset,
 //                                                      int nrepeat) {
 //    std::vector<std::pair<std::string, double>> test_results;
 
@@ -457,7 +457,7 @@
 //    return test_results;
 //}
 
-//void test_bitset_performance() {
+// void test_bitset_performance() {
 //    outfile->Printf("\nTesting performance of bitset");
 
 //    int nrepeat = 1000000;

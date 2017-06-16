@@ -46,16 +46,16 @@ namespace forte {
 
 /**
  */
-std::vector<StringSubstitution>&
-StringLists::get_alfa_vvoo_list(size_t p, size_t q, size_t r, size_t s, int h) {
+std::vector<StringSubstitution>& StringLists::get_alfa_vvoo_list(size_t p, size_t q, size_t r,
+                                                                 size_t s, int h) {
     boost::tuple<size_t, size_t, size_t, size_t, int> pqrs_pair(p, q, r, s, h);
     return alfa_vvoo_list[pqrs_pair];
 }
 
 /**
  */
-std::vector<StringSubstitution>&
-StringLists::get_beta_vvoo_list(size_t p, size_t q, size_t r, size_t s, int h) {
+std::vector<StringSubstitution>& StringLists::get_beta_vvoo_list(size_t p, size_t q, size_t r,
+                                                                 size_t s, int h) {
     boost::tuple<size_t, size_t, size_t, size_t, int> pqrs_pair(p, q, r, s, h);
     return beta_vvoo_list[pqrs_pair];
 }
@@ -72,15 +72,13 @@ void StringLists::make_vvoo_list(GraphPtr graph, VVOOList& list) {
                 for (int p_rel = 0; p_rel < cmopi_[p_sym]; ++p_rel) {
                     for (int q_rel = 0; q_rel < cmopi_[q_sym]; ++q_rel) {
                         for (int r_rel = 0; r_rel < cmopi_[r_sym]; ++r_rel) {
-                            for (int s_rel = 0; s_rel < cmopi_[s_sym];
-                                 ++s_rel) {
+                            for (int s_rel = 0; s_rel < cmopi_[s_sym]; ++s_rel) {
                                 int p_abs = p_rel + cmopi_offset_[p_sym];
                                 int q_abs = q_rel + cmopi_offset_[q_sym];
                                 int r_abs = r_rel + cmopi_offset_[r_sym];
                                 int s_abs = s_rel + cmopi_offset_[s_sym];
                                 if ((p_abs > q_abs) && (r_abs > s_abs))
-                                    make_vvoo(graph, list, p_abs, q_abs, r_abs,
-                                              s_abs);
+                                    make_vvoo(graph, list, p_abs, q_abs, r_abs, s_abs);
                             }
                         }
                     }
@@ -96,8 +94,7 @@ void StringLists::make_vvoo_list(GraphPtr graph, VVOOList& list) {
  * indices.
  * assumes that p > q and r > s.
  */
-void StringLists::make_vvoo(GraphPtr graph, VVOOList& list, int p, int q, int r,
-                            int s) {
+void StringLists::make_vvoo(GraphPtr graph, VVOOList& list, int p, int q, int r, int s) {
     // Sort pqrs
     int a[4];
     a[0] = s;
@@ -137,8 +134,7 @@ void StringLists::make_vvoo(GraphPtr graph, VVOOList& list, int p, int q, int r,
 
         for (int h = 0; h < nirrep_; ++h) {
             // Create the key to the map
-            boost::tuple<size_t, size_t, size_t, size_t, int> pqrs_pair(p, q, r,
-                                                                        s, h);
+            boost::tuple<size_t, size_t, size_t, size_t, int> pqrs_pair(p, q, r, s, h);
 
             // Generate the strings 1111100000
             //                      { k }{n-k}
@@ -195,8 +191,8 @@ void StringLists::make_vvoo(GraphPtr graph, VVOOList& list, int p, int q, int r,
                                 if (J[i])
                                     sign *= -1;
                             // Add the sting only of irrep(I) is h
-                            list[pqrs_pair].push_back(StringSubstitution(
-                                sign, graph->rel_add(I), graph->rel_add(J)));
+                            list[pqrs_pair].push_back(
+                                StringSubstitution(sign, graph->rel_add(I), graph->rel_add(J)));
                         }
                     }
                 }
@@ -220,14 +216,12 @@ void StringLists::make_vovo_list(GraphPtr graph, VOVOList& list) {
                 for (int p_rel = 0; p_rel < cmopi_[p_sym]; ++p_rel) {
                     for (int q_rel = 0; q_rel < cmopi_[q_sym]; ++q_rel) {
                         for (int r_rel = 0; r_rel < cmopi_[r_sym]; ++r_rel) {
-                            for (int s_rel = 0; s_rel < cmopi_[s_sym];
-                                 ++s_rel) {
+                            for (int s_rel = 0; s_rel < cmopi_[s_sym]; ++s_rel) {
                                 int p_abs = p_rel + cmopi_offset_[p_sym];
                                 int q_abs = q_rel + cmopi_offset_[q_sym];
                                 int r_abs = r_rel + cmopi_offset_[r_sym];
                                 int s_abs = s_rel + cmopi_offset_[s_sym];
-                                make_VOVO(graph, list, p_abs, q_abs, r_abs,
-                                          s_abs);
+                                make_VOVO(graph, list, p_abs, q_abs, r_abs, s_abs);
                             }
                         }
                     }
@@ -242,8 +236,7 @@ void StringLists::make_vovo_list(GraphPtr graph, VOVOList& list) {
  * that is: |J> = ± a^{+}_p a_q a^{+}_r a_s |I>. p,q,r, and s are absolute
  * indices.
  */
-void StringLists::make_VOVO(GraphPtr graph, VOVOList& list, int p, int q, int r,
-                            int s) {
+void StringLists::make_VOVO(GraphPtr graph, VOVOList& list, int p, int q, int r, int s) {
     int n = graph->nbits();
     int k = graph->nones();
     bool* I = new bool[ncmo_];
@@ -251,8 +244,7 @@ void StringLists::make_VOVO(GraphPtr graph, VOVOList& list, int p, int q, int r,
 
     for (int h = 0; h < nirrep_; ++h) {
         // Create the key to the map
-        boost::tuple<size_t, size_t, size_t, size_t, int> pqrs_pair(p, q, r, s,
-                                                                    h);
+        boost::tuple<size_t, size_t, size_t, size_t, int> pqrs_pair(p, q, r, s, h);
 
         // Generate the strings 1111100000
         //                      { k }{n-k}
@@ -290,8 +282,7 @@ void StringLists::make_VOVO(GraphPtr graph, VOVOList& list, int p, int q, int r,
                                         sign *= -1;
                                 // Add the sting only of irrep(I) is h
                                 list[pqrs_pair].push_back(
-                                    StringSubstitution(sign, graph->rel_add(I),
-                                                       graph->rel_add(J)));
+                                    StringSubstitution(sign, graph->rel_add(I), graph->rel_add(J)));
                             }
                         }
                     }
@@ -309,8 +300,8 @@ void StringLists::make_VOVO(GraphPtr graph, VOVOList& list, int p, int q, int r,
  * a_q
  * that is: J = ± a^{+}_p a_q I. p and q are absolute indices.
  */
-std::vector<StringSubstitution>&
-StringLists::get_alfa_vovo_list(size_t p, size_t q, size_t r, size_t s, int h) {
+std::vector<StringSubstitution>& StringLists::get_alfa_vovo_list(size_t p, size_t q, size_t r,
+                                                                 size_t s, int h) {
     boost::tuple<size_t, size_t, size_t, size_t, int> pqrs_pair(p, q, r, s, h);
     return alfa_vovo_list[pqrs_pair];
 }
@@ -320,8 +311,8 @@ StringLists::get_alfa_vovo_list(size_t p, size_t q, size_t r, size_t s, int h) {
  * a_q
  * that is: J = ± a^{+}_p a_q I. p and q are absolute indices.
  */
-std::vector<StringSubstitution>&
-StringLists::get_beta_vovo_list(size_t p, size_t q, size_t r, size_t s, int h) {
+std::vector<StringSubstitution>& StringLists::get_beta_vovo_list(size_t p, size_t q, size_t r,
+                                                                 size_t s, int h) {
     boost::tuple<size_t, size_t, size_t, size_t, int> pqrs_pair(p, q, r, s, h);
     return beta_vovo_list[pqrs_pair];
 }

@@ -39,22 +39,16 @@ namespace forte {
 
 void set_FCI_options(ForteOptions& foptions) {
     foptions.add_int("FCI_NROOT", 1, "The number of roots computed");
-    foptions.add_int("FCI_ROOT", 0,
-                     "The root selected for state-specific computations");
-    foptions.add_int("FCI_MAXITER", 30,
-                     "Maximum number of iterations for FCI code");
-    foptions.add_int("FCI_MAX_RDM", 1,
-                     "The number of trial guess vectors to generate per root");
-    foptions.add_bool("FCI_TEST_RDMS", false,
-                      "Test the FCI reduced density matrices?");
-    foptions.add_bool("FCI_PRINT_NO", false,
-                      "Print the NO from the rdm of FCI");
+    foptions.add_int("FCI_ROOT", 0, "The root selected for state-specific computations");
+    foptions.add_int("FCI_MAXITER", 30, "Maximum number of iterations for FCI code");
+    foptions.add_int("FCI_MAX_RDM", 1, "The number of trial guess vectors to generate per root");
+    foptions.add_bool("FCI_TEST_RDMS", false, "Test the FCI reduced density matrices?");
+    foptions.add_bool("FCI_PRINT_NO", false, "Print the NO from the rdm of FCI");
     foptions.add_int("FCI_NTRIAL_PER_ROOT", 10,
                      "The number of trial guess vectors to generate per root");
 }
 
-FCI::FCI(SharedWavefunction ref_wfn, Options& options,
-         std::shared_ptr<ForteIntegrals> ints,
+FCI::FCI(SharedWavefunction ref_wfn, Options& options, std::shared_ptr<ForteIntegrals> ints,
          std::shared_ptr<MOSpaceInfo> mo_space_info)
     : Wavefunction(options), ints_(ints), mo_space_info_(mo_space_info) {
     // Copy the wavefunction information
@@ -81,8 +75,8 @@ void FCI::set_ms(int ms) {
 
 void FCI::startup() {
     if (print_)
-        print_method_banner({"String-based Full Configuration Interaction",
-                             "by Francesco A. Evangelista"});
+        print_method_banner(
+            {"String-based Full Configuration Interaction", "by Francesco A. Evangelista"});
 
     max_rdm_level_ = options_.get_int("FCI_MAX_RDM");
     fci_iterations_ = options_.get_int("FCI_MAXITER");
@@ -92,8 +86,7 @@ void FCI::startup() {
 double FCI::compute_energy() {
     Dimension active_dim = mo_space_info_->get_dimension("ACTIVE");
     size_t nfdocc = mo_space_info_->size("FROZEN_DOCC");
-    std::vector<size_t> rdocc =
-        mo_space_info_->get_corr_abs_mo("RESTRICTED_DOCC");
+    std::vector<size_t> rdocc = mo_space_info_->get_corr_abs_mo("RESTRICTED_DOCC");
     std::vector<size_t> active = mo_space_info_->get_corr_abs_mo("ACTIVE");
 
     int charge = Process::environment.molecule()->molecular_charge();
@@ -161,9 +154,8 @@ double FCI::compute_energy() {
     size_t nb = nactel - na;
 
     fcisolver_ = std::unique_ptr<FCISolver>(new FCISolver(
-        active_dim, rdocc, active, na, nb, multiplicity,
-        options_.get_int("ROOT_SYM"), ints_, mo_space_info_,
-        options_.get_int("FCI_NTRIAL_PER_ROOT"), print_, options_));
+        active_dim, rdocc, active, na, nb, multiplicity, options_.get_int("ROOT_SYM"), ints_,
+        mo_space_info_, options_.get_int("FCI_NTRIAL_PER_ROOT"), print_, options_));
     // tweak some options
     fcisolver_->set_max_rdm_level(max_rdm_level_);
     fcisolver_->set_nroot(options_.get_int("FCI_NROOT"));

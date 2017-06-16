@@ -28,9 +28,9 @@
 
 #include "methodbase.h"
 
+#include "helpers.h"
 #include "psi4/libpsio/psio.h"
 #include "psi4/libpsio/psio.hpp"
-#include "helpers.h"
 
 namespace psi {
 namespace forte {
@@ -40,8 +40,7 @@ using namespace ambit;
 MethodBase::MethodBase(SharedWavefunction ref_wfn, Options& options,
                        std::shared_ptr<ForteIntegrals> ints,
                        std::shared_ptr<MOSpaceInfo> mo_space_info)
-    : Wavefunction(options), ints_(ints), tensor_type_(CoreTensor),
-      mo_space_info_(mo_space_info) {
+    : Wavefunction(options), ints_(ints), tensor_type_(CoreTensor), mo_space_info_(mo_space_info) {
     // Copy the wavefunction information
     shallow_copy(ref_wfn);
     //    Tensor::set_print_level(debug_);
@@ -98,14 +97,11 @@ void MethodBase::startup() {
     CG1 = BlockedTensor::build(tensor_type_, "CG1", spin_cases({"vv"}));
     F = BlockedTensor::build(tensor_type_, "F", spin_cases({"ii"}));
     V = BlockedTensor::build(tensor_type_, "V", spin_cases({"iiii"}));
-    InvD1 =
-        BlockedTensor::build(tensor_type_, "Inverse D1", spin_cases({"ov"}));
-    InvD2 =
-        BlockedTensor::build(tensor_type_, "Inverse D2", spin_cases({"oovv"}));
+    InvD1 = BlockedTensor::build(tensor_type_, "Inverse D1", spin_cases({"ov"}));
+    InvD2 = BlockedTensor::build(tensor_type_, "Inverse D2", spin_cases({"oovv"}));
 
     // Fill in the one-electron operator (H)
-    H.iterate([&](const std::vector<size_t>& i,
-                  const std::vector<SpinType>& spin, double& value) {
+    H.iterate([&](const std::vector<size_t>& i, const std::vector<SpinType>& spin, double& value) {
         if (spin[0] == AlphaSpin)
             value = ints_->oei_a(i[0], i[1]);
         else
@@ -113,8 +109,7 @@ void MethodBase::startup() {
     });
 
     // Fill in the two-electron operator (V)
-    V.iterate([&](const std::vector<size_t>& i,
-                  const std::vector<SpinType>& spin, double& value) {
+    V.iterate([&](const std::vector<size_t>& i, const std::vector<SpinType>& spin, double& value) {
         if ((spin[0] == AlphaSpin) and (spin[1] == AlphaSpin))
             value = ints_->aptei_aa(i[0], i[1], i[2], i[3]);
         if ((spin[0] == AlphaSpin) and (spin[1] == BetaSpin))
@@ -123,12 +118,11 @@ void MethodBase::startup() {
             value = ints_->aptei_bb(i[0], i[1], i[2], i[3]);
     });
 
-    G1.iterate([&](const std::vector<size_t>& i,
-                   const std::vector<SpinType>& spin,
-                   double& value) { value = i[0] == i[1] ? 1.0 : 0.0; });
+    G1.iterate([&](const std::vector<size_t>& i, const std::vector<SpinType>& spin, double& value) {
+        value = i[0] == i[1] ? 1.0 : 0.0;
+    });
 
-    CG1.iterate([&](const std::vector<size_t>& i,
-                    const std::vector<SpinType>& spin,
+    CG1.iterate([&](const std::vector<size_t>& i, const std::vector<SpinType>& spin,
                     double& value) { value = i[0] == i[1] ? 1.0 : 0.0; });
 
     // Form the Fock matrix
@@ -150,8 +144,7 @@ void MethodBase::startup() {
     std::vector<double> Fa(ncmo_);
     std::vector<double> Fb(ncmo_);
 
-    F.iterate([&](const std::vector<size_t>& i,
-                  const std::vector<SpinType>& spin, double& value) {
+    F.iterate([&](const std::vector<size_t>& i, const std::vector<SpinType>& spin, double& value) {
         if (spin[0] == AlphaSpin and (i[0] == i[1])) {
             Fa[i[0]] = value;
         }
@@ -160,25 +153,25 @@ void MethodBase::startup() {
         }
     });
 
-    InvD1.iterate([&](const std::vector<size_t>& i,
-                      const std::vector<SpinType>& spin, double& value) {
-        if (spin[0] == AlphaSpin) {
-            value = 1.0 / (Fa[i[0]] - Fa[i[1]]);
-        } else if (spin[0] == BetaSpin) {
-            value = 1.0 / (Fb[i[0]] - Fb[i[1]]);
-        }
-    });
+    InvD1.iterate(
+        [&](const std::vector<size_t>& i, const std::vector<SpinType>& spin, double& value) {
+            if (spin[0] == AlphaSpin) {
+                value = 1.0 / (Fa[i[0]] - Fa[i[1]]);
+            } else if (spin[0] == BetaSpin) {
+                value = 1.0 / (Fb[i[0]] - Fb[i[1]]);
+            }
+        });
 
-    InvD2.iterate([&](const std::vector<size_t>& i,
-                      const std::vector<SpinType>& spin, double& value) {
-        if ((spin[0] == AlphaSpin) and (spin[1] == AlphaSpin)) {
-            value = 1.0 / (Fa[i[0]] + Fa[i[1]] - Fa[i[2]] - Fa[i[3]]);
-        } else if ((spin[0] == AlphaSpin) and (spin[1] == BetaSpin)) {
-            value = 1.0 / (Fa[i[0]] + Fb[i[1]] - Fa[i[2]] - Fb[i[3]]);
-        } else if ((spin[0] == BetaSpin) and (spin[1] == BetaSpin)) {
-            value = 1.0 / (Fb[i[0]] + Fb[i[1]] - Fb[i[2]] - Fb[i[3]]);
-        }
-    });
+    InvD2.iterate(
+        [&](const std::vector<size_t>& i, const std::vector<SpinType>& spin, double& value) {
+            if ((spin[0] == AlphaSpin) and (spin[1] == AlphaSpin)) {
+                value = 1.0 / (Fa[i[0]] + Fa[i[1]] - Fa[i[2]] - Fa[i[3]]);
+            } else if ((spin[0] == AlphaSpin) and (spin[1] == BetaSpin)) {
+                value = 1.0 / (Fa[i[0]] + Fb[i[1]] - Fa[i[2]] - Fb[i[3]]);
+            } else if ((spin[0] == BetaSpin) and (spin[1] == BetaSpin)) {
+                value = 1.0 / (Fb[i[0]] + Fb[i[1]] - Fb[i[2]] - Fb[i[3]]);
+            }
+        });
 }
 
 void MethodBase::cleanup() { BlockedTensor::set_expert_mode(false); }
