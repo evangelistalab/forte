@@ -36,8 +36,6 @@
 #include "ao_helper.h"
 // clang-format on
 
-
-
 namespace psi {
 namespace forte {
 

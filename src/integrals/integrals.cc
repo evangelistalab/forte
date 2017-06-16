@@ -26,7 +26,6 @@
  * @END LICENSE
  */
 
-
 // clang-format off
 #include <algorithm>
 #include <cmath>

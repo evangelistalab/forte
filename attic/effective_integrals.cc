@@ -26,7 +26,6 @@
  * @END LICENSE
  */
 
-
 /**
  * @brief The EffectiveIntegrals class is an interface to calculate the
  * conventional integrals
@@ -41,16 +40,16 @@ class EffectiveIntegrals : public ForteIntegrals {
             ints_.resize(num_aptei);
         }
         size_t aptei_index(size_t p, size_t q, size_t r, size_t s) {
-            return aptei_idx_ * aptei_idx_ * aptei_idx_ * p +
-                   aptei_idx_ * aptei_idx_ * q + aptei_idx_ * r + s;
+            return aptei_idx_ * aptei_idx_ * aptei_idx_ * p + aptei_idx_ * aptei_idx_ * q +
+                   aptei_idx_ * r + s;
         }
 
         double get(size_t p, size_t q, size_t r, size_t s) {
             return ints_[aptei_index(p, q, r, s)];
         }
 
-        void operator()(int pabs, int qabs, int rabs, int sabs, int, int, int,
-                        int, int, int, int, int, double value) {
+        void operator()(int pabs, int qabs, int rabs, int sabs, int, int, int, int, int, int, int,
+                        int, double value) {
             ints_[aptei_index(pabs, qabs, rabs, sabs)] = value;
             ints_[aptei_index(qabs, pabs, rabs, sabs)] = value;
             ints_[aptei_index(pabs, qabs, sabs, rabs)] = value;
@@ -69,8 +68,7 @@ class EffectiveIntegrals : public ForteIntegrals {
     /// Contructor of the class.  Calls std::shared_ptr<ForteIntegrals> ints
     /// constructor
     EffectiveIntegrals(psi::Options& options, SharedWavefunction ref_wfn,
-                       IntegralSpinRestriction restricted,
-                       IntegralFrozenCore resort_frozen_core,
+                       IntegralSpinRestriction restricted, IntegralFrozenCore resort_frozen_core,
                        std::shared_ptr<MOSpaceInfo> mo_space_info);
     virtual ~EffectiveIntegrals();
 
@@ -80,16 +78,13 @@ class EffectiveIntegrals : public ForteIntegrals {
     virtual double aptei_bb(size_t p, size_t q, size_t r, size_t s);
 
     /// Grabs the antisymmetrized TEI - assumes storage of ambit tensor
-    virtual ambit::Tensor aptei_aa_block(const std::vector<size_t>& p,
-                                         const std::vector<size_t>& q,
+    virtual ambit::Tensor aptei_aa_block(const std::vector<size_t>& p, const std::vector<size_t>& q,
                                          const std::vector<size_t>& r,
                                          const std::vector<size_t>& s);
-    virtual ambit::Tensor aptei_ab_block(const std::vector<size_t>& p,
-                                         const std::vector<size_t>& q,
+    virtual ambit::Tensor aptei_ab_block(const std::vector<size_t>& p, const std::vector<size_t>& q,
                                          const std::vector<size_t>& r,
                                          const std::vector<size_t>& s);
-    virtual ambit::Tensor aptei_bb_block(const std::vector<size_t>& p,
-                                         const std::vector<size_t>& q,
+    virtual ambit::Tensor aptei_bb_block(const std::vector<size_t>& p, const std::vector<size_t>& q,
                                          const std::vector<size_t>& r,
                                          const std::vector<size_t>& s);
 
@@ -114,9 +109,8 @@ class EffectiveIntegrals : public ForteIntegrals {
                         "is not there!!");
         throw PSIEXCEPTION("INT_TYPE=DF/CHOLESKY to use ThreeIntegral");
     }
-    virtual ambit::Tensor
-    three_integral_block_two_index(const std::vector<size_t>&, size_t,
-                                   const std::vector<size_t>&) {
+    virtual ambit::Tensor three_integral_block_two_index(const std::vector<size_t>&, size_t,
+                                                         const std::vector<size_t>&) {
         outfile->Printf("\n Oh no! this isn't here");
         throw PSIEXCEPTION("INT_TYPE=DISKDF");
     }
@@ -148,13 +142,13 @@ class EffectiveIntegrals : public ForteIntegrals {
     virtual void resort_integrals_after_freezing();
     virtual void resort_four(double*& tei, std::vector<size_t>& map);
     virtual void resort_three(std::shared_ptr<Matrix>&, std::vector<size_t>&) {}
-    virtual void set_tei(size_t p, size_t q, size_t r, size_t s, double value,
-                         bool alpha1, bool alpha2);
+    virtual void set_tei(size_t p, size_t q, size_t r, size_t s, double value, bool alpha1,
+                         bool alpha2);
 
     /// An addressing function to retrieve the two-electron integrals
     size_t aptei_index(size_t p, size_t q, size_t r, size_t s) {
-        return aptei_idx_ * aptei_idx_ * aptei_idx_ * p +
-               aptei_idx_ * aptei_idx_ * q + aptei_idx_ * r + s;
+        return aptei_idx_ * aptei_idx_ * aptei_idx_ * p + aptei_idx_ * aptei_idx_ * q +
+               aptei_idx_ * r + s;
     }
 
     /// The IntegralTransform object used by this class
