@@ -31,7 +31,7 @@
 #include "helpers.h"
 #include "iterative_solvers.h"
 
-#define PRINT_VARS(msg)                                                        \
+#define PRINT_VARS(msg)                                                                            \
 //    std::vector<std::pair<size_t,std::string>> v = \
 //        {{collapse_size_,"collapse_size_"}, \
 //        {subspace_size_,"subspace_size_"}, \
@@ -46,11 +46,9 @@
 namespace psi {
 namespace forte {
 
-DavidsonLiuSolver::DavidsonLiuSolver(size_t size, size_t nroot)
-    : size_(size), nroot_(nroot) {
+DavidsonLiuSolver::DavidsonLiuSolver(size_t size, size_t nroot) : size_(size), nroot_(nroot) {
     if (size_ == 0)
-        throw std::runtime_error(
-            "DavidsonLiuSolver called with space of dimension zero.");
+        throw std::runtime_error("DavidsonLiuSolver called with space of dimension zero.");
 }
 
 void DavidsonLiuSolver::startup(SharedVector diagonal) {
@@ -84,21 +82,13 @@ DavidsonLiuSolver::~DavidsonLiuSolver() {}
 
 void DavidsonLiuSolver::set_print_level(size_t n) { print_level_ = n; }
 
-void DavidsonLiuSolver::set_e_convergence(double value) {
-    e_convergence_ = value;
-}
+void DavidsonLiuSolver::set_e_convergence(double value) { e_convergence_ = value; }
 
-void DavidsonLiuSolver::set_r_convergence(double value) {
-    r_convergence_ = value;
-}
+void DavidsonLiuSolver::set_r_convergence(double value) { r_convergence_ = value; }
 
-void DavidsonLiuSolver::set_collapse_per_root(int value) {
-    collapse_per_root_ = value;
-}
+void DavidsonLiuSolver::set_collapse_per_root(int value) { collapse_per_root_ = value; }
 
-void DavidsonLiuSolver::set_subspace_per_root(int value) {
-    subspace_per_root_ = value;
-}
+void DavidsonLiuSolver::set_subspace_per_root(int value) { subspace_per_root_ = value; }
 
 size_t DavidsonLiuSolver::collapse_size() const { return collapse_size_; }
 
@@ -202,8 +192,7 @@ SolverStatus DavidsonLiuSolver::update() {
         if (basis_size_ < subspace_size_) {
             double norm_bnew_k = std::fabs(f->get_row(0, k)->norm());
             if (norm_bnew_k > schmidt_threshold_) {
-                if (schmidt_add(b_->pointer(), basis_size_, size_,
-                                f->pointer()[k])) {
+                if (schmidt_add(b_->pointer(), basis_size_, size_, f->pointer()[k])) {
                     basis_size_++; // <- Increase L if we add one more basis
                                    // vector
                 } else {
@@ -231,8 +220,7 @@ void DavidsonLiuSolver::form_correction_vectors() {
     for (size_t k = 0; k < nroot_; k++) {    // loop over roots
         for (size_t I = 0; I < size_; I++) { // loop over elements
             for (size_t i = 0; i < basis_size_; i++) {
-                f_p[k][I] +=
-                    alpha_p[i][k] * (sigma_p[I][i] - lambda_p[k] * b_p[i][I]);
+                f_p[k][I] += alpha_p[i][k] * (sigma_p[I][i] - lambda_p[k] * b_p[i][I]);
             }
             double denom = lambda_p[k] - Adiag_p[I];
             if (fabs(denom) > 1e-6) {
@@ -368,8 +356,8 @@ bool DavidsonLiuSolver::check_convergence() {
         }
         lambda_old->set(k, lambda->get(k));
         if (print_level_ > 1) {
-            outfile->Printf("  %3d  %20.14f %4.3e      %1s\n", k,
-                            lambda->get(k), diff, this_converged ? "Y" : "N");
+            outfile->Printf("  %3d  %20.14f %4.3e      %1s\n", k, lambda->get(k), diff,
+                            this_converged ? "Y" : "N");
         }
     }
 
@@ -431,8 +419,7 @@ bool DavidsonLiuSolver::check_orthogonality() {
         }
         if ((not zero) and (not one)) {
             if (is_orthonormal) {
-                outfile->Printf(
-                    "\n  WARNING: Vector %d is not normalized or zero", i);
+                outfile->Printf("\n  WARNING: Vector %d is not normalized or zero", i);
                 is_orthonormal = false;
             }
         }

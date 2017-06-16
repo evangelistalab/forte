@@ -27,8 +27,8 @@
  */
 
 #include <algorithm>
-#include <vector>
 #include <map>
+#include <vector>
 
 #include "psi4/libmints/molecule.h"
 
@@ -38,18 +38,15 @@
 namespace psi {
 namespace forte {
 
-MRDSRG_SO::MRDSRG_SO(Reference reference, Options& options,
-                     std::shared_ptr<ForteIntegrals> ints,
+MRDSRG_SO::MRDSRG_SO(Reference reference, Options& options, std::shared_ptr<ForteIntegrals> ints,
                      std::shared_ptr<MOSpaceInfo> mo_space_info)
-    : Wavefunction(options), reference_(reference), ints_(ints),
-      mo_space_info_(mo_space_info), tensor_type_(CoreTensor),
-      BTF(new BlockedTensorFactory(options)) {
+    : Wavefunction(options), reference_(reference), ints_(ints), mo_space_info_(mo_space_info),
+      tensor_type_(CoreTensor), BTF(new BlockedTensorFactory(options)) {
     // Copy the wavefunction information
     //    shallow_copy(ref_wfn);
 
     print_method_banner(
-        {"SO-Based Multireference Driven Similarity Renormalization Group",
-         "Chenyang Li"});
+        {"SO-Based Multireference Driven Similarity Renormalization Group", "Chenyang Li"});
     startup();
     print_summary();
 }
@@ -87,8 +84,7 @@ void MRDSRG_SO::startup() {
     avirt_sos = mo_space_info_->get_corr_abs_mo("RESTRICTED_UOCC");
 
     // put all beta behind alpha
-    size_t mo_shift = mo_space_info_->size("RESTRICTED_DOCC") +
-                      mo_space_info_->size("ACTIVE") +
+    size_t mo_shift = mo_space_info_->size("RESTRICTED_DOCC") + mo_space_info_->size("ACTIVE") +
                       mo_space_info_->size("RESTRICTED_UOCC");
 
     for (size_t idx : acore_sos)
@@ -134,8 +130,7 @@ void MRDSRG_SO::startup() {
 
     // prepare one-electron integrals
     H = BTF->build(tensor_type_, "H", {"gg"});
-    H.iterate([&](const std::vector<size_t>& i,
-                  const std::vector<SpinType>& spin, double& value) {
+    H.iterate([&](const std::vector<size_t>& i, const std::vector<SpinType>& spin, double& value) {
         if (i[0] < nmo && i[1] < nmo) {
             value = ints_->oei_a(i[0], i[1]);
         }
@@ -146,8 +141,7 @@ void MRDSRG_SO::startup() {
 
     // prepare two-electron integrals
     V = BTF->build(tensor_type_, "V", {"gggg"});
-    V.iterate([&](const std::vector<size_t>& i,
-                  const std::vector<SpinType>& spin, double& value) {
+    V.iterate([&](const std::vector<size_t>& i, const std::vector<SpinType>& spin, double& value) {
         bool spin0 = i[0] < nmo;
         bool spin1 = i[1] < nmo;
         bool spin2 = i[2] < nmo;
@@ -156,8 +150,7 @@ void MRDSRG_SO::startup() {
             value = ints_->aptei_aa(i[0], i[1], i[2], i[3]);
         }
         if ((!spin0) && (!spin1) && (!spin2) && (!spin3)) {
-            value =
-                ints_->aptei_bb(i[0] - nmo, i[1] - nmo, i[2] - nmo, i[3] - nmo);
+            value = ints_->aptei_bb(i[0] - nmo, i[1] - nmo, i[2] - nmo, i[3] - nmo);
         }
         if (spin0 && (!spin1) && spin2 && (!spin3)) {
             value = ints_->aptei_ab(i[0], i[1] - nmo, i[2], i[3] - nmo);
@@ -176,195 +169,178 @@ void MRDSRG_SO::startup() {
     // prepare density matrices
     Gamma1 = BTF->build(tensor_type_, "Gamma1", {"hh"});
     Eta1 = BTF->build(tensor_type_, "Eta1", {"pp"});
-    (Gamma1.block("cc"))
-        .iterate([&](const std::vector<size_t>& i, double& value) {
-            value = (i[0] == i[1] ? 1.0 : 0.0);
-        });
-    Eta1.iterate([&](const std::vector<size_t>& i,
-                     const std::vector<SpinType>& spin,
+    (Gamma1.block("cc")).iterate([&](const std::vector<size_t>& i, double& value) {
+        value = (i[0] == i[1] ? 1.0 : 0.0);
+    });
+    Eta1.iterate([&](const std::vector<size_t>& i, const std::vector<SpinType>& spin,
                      double& value) { value = (i[0] == i[1] ? 1.0 : 0.0); });
-    (reference_.L1a())
-        .citerate([&](const std::vector<size_t>& i, const double& value) {
-            size_t index = i[0] * na_ + i[1];
-            (Gamma1.block("aa")).data()[index] = value;
-            (Eta1.block("aa")).data()[index] -= value;
-        });
-    (reference_.L1b())
-        .citerate([&](const std::vector<size_t>& i, const double& value) {
-            size_t index = (i[0] + na_mo) * na_ + (i[1] + na_mo);
-            (Gamma1.block("aa")).data()[index] = value;
-            (Eta1.block("aa")).data()[index] -= value;
-        });
+    (reference_.L1a()).citerate([&](const std::vector<size_t>& i, const double& value) {
+        size_t index = i[0] * na_ + i[1];
+        (Gamma1.block("aa")).data()[index] = value;
+        (Eta1.block("aa")).data()[index] -= value;
+    });
+    (reference_.L1b()).citerate([&](const std::vector<size_t>& i, const double& value) {
+        size_t index = (i[0] + na_mo) * na_ + (i[1] + na_mo);
+        (Gamma1.block("aa")).data()[index] = value;
+        (Eta1.block("aa")).data()[index] -= value;
+    });
 
     // prepare two-body density cumulant
     Lambda2 = BTF->build(tensor_type_, "Lambda2", {"aaaa"});
-    (reference_.L2aa())
-        .citerate([&](const std::vector<size_t>& i, const double& value) {
-            if (std::fabs(value) > 1.0e-15) {
-                size_t index = 0;
-                for (int m = 0; m < 4; ++m) {
-                    index += i[m] * myPow(na_, 3 - m);
-                }
-                (Lambda2.block("aaaa")).data()[index] = value;
+    (reference_.L2aa()).citerate([&](const std::vector<size_t>& i, const double& value) {
+        if (std::fabs(value) > 1.0e-15) {
+            size_t index = 0;
+            for (int m = 0; m < 4; ++m) {
+                index += i[m] * myPow(na_, 3 - m);
             }
-        });
-    (reference_.L2bb())
-        .citerate([&](const std::vector<size_t>& i, const double& value) {
-            if (std::fabs(value) > 1.0e-15) {
-                size_t index = 0;
-                for (int m = 0; m < 4; ++m) {
-                    index += (i[m] + na_mo) * myPow(na_, 3 - m);
-                }
-                (Lambda2.block("aaaa")).data()[index] = value;
+            (Lambda2.block("aaaa")).data()[index] = value;
+        }
+    });
+    (reference_.L2bb()).citerate([&](const std::vector<size_t>& i, const double& value) {
+        if (std::fabs(value) > 1.0e-15) {
+            size_t index = 0;
+            for (int m = 0; m < 4; ++m) {
+                index += (i[m] + na_mo) * myPow(na_, 3 - m);
             }
-        });
-    (reference_.L2ab())
-        .citerate([&](const std::vector<size_t>& i, const double& value) {
-            if (std::fabs(value) > 1.0e-15) {
-                size_t i0 = i[0];
-                size_t i1 = i[1] + na_mo;
-                size_t i2 = i[2];
-                size_t i3 = i[3] + na_mo;
-                size_t index = 0;
-                index = i0 * myPow(na_, 3) + i1 * myPow(na_, 2) +
-                        i2 * myPow(na_, 1) + i3;
-                (Lambda2.block("aaaa")).data()[index] = value;
-                index = i1 * myPow(na_, 3) + i0 * myPow(na_, 2) +
-                        i3 * myPow(na_, 1) + i2;
-                (Lambda2.block("aaaa")).data()[index] = value;
-                index = i1 * myPow(na_, 3) + i0 * myPow(na_, 2) +
-                        i2 * myPow(na_, 1) + i3;
-                (Lambda2.block("aaaa")).data()[index] = -value;
-                index = i0 * myPow(na_, 3) + i1 * myPow(na_, 2) +
-                        i3 * myPow(na_, 1) + i2;
-                (Lambda2.block("aaaa")).data()[index] = -value;
-            }
-        });
+            (Lambda2.block("aaaa")).data()[index] = value;
+        }
+    });
+    (reference_.L2ab()).citerate([&](const std::vector<size_t>& i, const double& value) {
+        if (std::fabs(value) > 1.0e-15) {
+            size_t i0 = i[0];
+            size_t i1 = i[1] + na_mo;
+            size_t i2 = i[2];
+            size_t i3 = i[3] + na_mo;
+            size_t index = 0;
+            index = i0 * myPow(na_, 3) + i1 * myPow(na_, 2) + i2 * myPow(na_, 1) + i3;
+            (Lambda2.block("aaaa")).data()[index] = value;
+            index = i1 * myPow(na_, 3) + i0 * myPow(na_, 2) + i3 * myPow(na_, 1) + i2;
+            (Lambda2.block("aaaa")).data()[index] = value;
+            index = i1 * myPow(na_, 3) + i0 * myPow(na_, 2) + i2 * myPow(na_, 1) + i3;
+            (Lambda2.block("aaaa")).data()[index] = -value;
+            index = i0 * myPow(na_, 3) + i1 * myPow(na_, 2) + i3 * myPow(na_, 1) + i2;
+            (Lambda2.block("aaaa")).data()[index] = -value;
+        }
+    });
     outfile->Printf("\n    Norm of L2: %12.8f.", Lambda2.norm());
 
     // prepare three-body density cumulant
     if (options_.get_str("THREEPDC") != "ZERO") {
         Lambda3 = BTF->build(tensor_type_, "Lambda3", {"aaaaaa"});
-        (reference_.L3aaa())
-            .citerate([&](const std::vector<size_t>& i, const double& value) {
-                if (std::fabs(value) > 1.0e-15) {
-                    size_t index = 0;
-                    for (int m = 0; m < 6; ++m) {
-                        index += i[m] * myPow(na_, 5 - m);
-                    }
-                    (Lambda3.block("aaaaaa")).data()[index] = value;
+        (reference_.L3aaa()).citerate([&](const std::vector<size_t>& i, const double& value) {
+            if (std::fabs(value) > 1.0e-15) {
+                size_t index = 0;
+                for (int m = 0; m < 6; ++m) {
+                    index += i[m] * myPow(na_, 5 - m);
                 }
-            });
-        (reference_.L3bbb())
-            .citerate([&](const std::vector<size_t>& i, const double& value) {
-                if (std::fabs(value) > 1.0e-15) {
-                    size_t index = 0;
-                    for (int m = 0; m < 6; ++m) {
-                        index += (i[m] + na_mo) * myPow(na_, 5 - m);
-                    }
-                    (Lambda3.block("aaaaaa")).data()[index] = value;
+                (Lambda3.block("aaaaaa")).data()[index] = value;
+            }
+        });
+        (reference_.L3bbb()).citerate([&](const std::vector<size_t>& i, const double& value) {
+            if (std::fabs(value) > 1.0e-15) {
+                size_t index = 0;
+                for (int m = 0; m < 6; ++m) {
+                    index += (i[m] + na_mo) * myPow(na_, 5 - m);
                 }
-            });
-        (reference_.L3aab())
-            .citerate([&](const std::vector<size_t>& i, const double& value) {
-                if (std::fabs(value) > 1.0e-15) {
-                    // original: a[0]a[1]b[2]; permutation: a[0]b[2]a[1] (-1),
-                    // b[2]a[0]a[1] (+1)
-                    std::vector<size_t> upper(3);
-                    std::vector<std::vector<size_t>> uppers;
-                    upper[0] = i[0];
-                    upper[1] = i[1];
-                    upper[2] = i[2] + na_mo;
-                    uppers.push_back(upper);
-                    upper[0] = i[0];
-                    upper[2] = i[1];
-                    upper[1] = i[2] + na_mo;
-                    uppers.push_back(upper);
-                    upper[1] = i[0];
-                    upper[2] = i[1];
-                    upper[0] = i[2] + na_mo;
-                    uppers.push_back(upper);
-                    std::vector<size_t> lower(3);
-                    std::vector<std::vector<size_t>> lowers;
-                    lower[0] = i[3];
-                    lower[1] = i[4];
-                    lower[2] = i[5] + na_mo;
-                    lowers.push_back(lower);
-                    lower[0] = i[3];
-                    lower[2] = i[4];
-                    lower[1] = i[5] + na_mo;
-                    lowers.push_back(lower);
-                    lower[1] = i[3];
-                    lower[2] = i[4];
-                    lower[0] = i[5] + na_mo;
-                    lowers.push_back(lower);
+                (Lambda3.block("aaaaaa")).data()[index] = value;
+            }
+        });
+        (reference_.L3aab()).citerate([&](const std::vector<size_t>& i, const double& value) {
+            if (std::fabs(value) > 1.0e-15) {
+                // original: a[0]a[1]b[2]; permutation: a[0]b[2]a[1] (-1),
+                // b[2]a[0]a[1] (+1)
+                std::vector<size_t> upper(3);
+                std::vector<std::vector<size_t>> uppers;
+                upper[0] = i[0];
+                upper[1] = i[1];
+                upper[2] = i[2] + na_mo;
+                uppers.push_back(upper);
+                upper[0] = i[0];
+                upper[2] = i[1];
+                upper[1] = i[2] + na_mo;
+                uppers.push_back(upper);
+                upper[1] = i[0];
+                upper[2] = i[1];
+                upper[0] = i[2] + na_mo;
+                uppers.push_back(upper);
+                std::vector<size_t> lower(3);
+                std::vector<std::vector<size_t>> lowers;
+                lower[0] = i[3];
+                lower[1] = i[4];
+                lower[2] = i[5] + na_mo;
+                lowers.push_back(lower);
+                lower[0] = i[3];
+                lower[2] = i[4];
+                lower[1] = i[5] + na_mo;
+                lowers.push_back(lower);
+                lower[1] = i[3];
+                lower[2] = i[4];
+                lower[0] = i[5] + na_mo;
+                lowers.push_back(lower);
 
-                    for (int m = 0; m < 3; ++m) {
-                        std::vector<size_t> u = uppers[m];
-                        size_t iu = 0;
-                        for (int mi = 0; mi < 3; ++mi)
-                            iu += u[mi] * myPow(na_, 5 - mi);
-                        for (int n = 0; n < 3; ++n) {
-                            std::vector<size_t> l = lowers[n];
-                            size_t index = iu;
-                            for (int ni = 0; ni < 3; ++ni)
-                                index += l[ni] * myPow(na_, 2 - ni);
-                            (Lambda3.block("aaaaaa")).data()[index] =
-                                value * pow(-1.0, m + n);
-                        }
+                for (int m = 0; m < 3; ++m) {
+                    std::vector<size_t> u = uppers[m];
+                    size_t iu = 0;
+                    for (int mi = 0; mi < 3; ++mi)
+                        iu += u[mi] * myPow(na_, 5 - mi);
+                    for (int n = 0; n < 3; ++n) {
+                        std::vector<size_t> l = lowers[n];
+                        size_t index = iu;
+                        for (int ni = 0; ni < 3; ++ni)
+                            index += l[ni] * myPow(na_, 2 - ni);
+                        (Lambda3.block("aaaaaa")).data()[index] = value * pow(-1.0, m + n);
                     }
                 }
-            });
-        (reference_.L3abb())
-            .citerate([&](const std::vector<size_t>& i, const double& value) {
-                if (std::fabs(value) > 1.0e-15) {
-                    // original: a[0]b[1]b[2]; permutation: b[1]a[0]b[2] (-1),
-                    // b[1]b[2]a[0] (+1)
-                    std::vector<size_t> upper(3);
-                    std::vector<std::vector<size_t>> uppers;
-                    upper[0] = i[0];
-                    upper[1] = i[1] + na_mo;
-                    upper[2] = i[2] + na_mo;
-                    uppers.push_back(upper);
-                    upper[1] = i[0];
-                    upper[0] = i[1] + na_mo;
-                    upper[2] = i[2] + na_mo;
-                    uppers.push_back(upper);
-                    upper[2] = i[0];
-                    upper[0] = i[1] + na_mo;
-                    upper[1] = i[2] + na_mo;
-                    uppers.push_back(upper);
-                    std::vector<size_t> lower(3);
-                    std::vector<std::vector<size_t>> lowers;
-                    lower[0] = i[3];
-                    lower[1] = i[4] + na_mo;
-                    lower[2] = i[5] + na_mo;
-                    lowers.push_back(lower);
-                    lower[1] = i[3];
-                    lower[0] = i[4] + na_mo;
-                    lower[2] = i[5] + na_mo;
-                    lowers.push_back(lower);
-                    lower[2] = i[3];
-                    lower[0] = i[4] + na_mo;
-                    lower[1] = i[5] + na_mo;
-                    lowers.push_back(lower);
+            }
+        });
+        (reference_.L3abb()).citerate([&](const std::vector<size_t>& i, const double& value) {
+            if (std::fabs(value) > 1.0e-15) {
+                // original: a[0]b[1]b[2]; permutation: b[1]a[0]b[2] (-1),
+                // b[1]b[2]a[0] (+1)
+                std::vector<size_t> upper(3);
+                std::vector<std::vector<size_t>> uppers;
+                upper[0] = i[0];
+                upper[1] = i[1] + na_mo;
+                upper[2] = i[2] + na_mo;
+                uppers.push_back(upper);
+                upper[1] = i[0];
+                upper[0] = i[1] + na_mo;
+                upper[2] = i[2] + na_mo;
+                uppers.push_back(upper);
+                upper[2] = i[0];
+                upper[0] = i[1] + na_mo;
+                upper[1] = i[2] + na_mo;
+                uppers.push_back(upper);
+                std::vector<size_t> lower(3);
+                std::vector<std::vector<size_t>> lowers;
+                lower[0] = i[3];
+                lower[1] = i[4] + na_mo;
+                lower[2] = i[5] + na_mo;
+                lowers.push_back(lower);
+                lower[1] = i[3];
+                lower[0] = i[4] + na_mo;
+                lower[2] = i[5] + na_mo;
+                lowers.push_back(lower);
+                lower[2] = i[3];
+                lower[0] = i[4] + na_mo;
+                lower[1] = i[5] + na_mo;
+                lowers.push_back(lower);
 
-                    for (int m = 0; m < 3; ++m) {
-                        std::vector<size_t> u = uppers[m];
-                        size_t iu = 0;
-                        for (int mi = 0; mi < 3; ++mi)
-                            iu += u[mi] * myPow(na_, 5 - mi);
-                        for (int n = 0; n < 3; ++n) {
-                            std::vector<size_t> l = lowers[n];
-                            size_t index = iu;
-                            for (int ni = 0; ni < 3; ++ni)
-                                index += l[ni] * myPow(na_, 2 - ni);
-                            (Lambda3.block("aaaaaa")).data()[index] =
-                                value * pow(-1.0, m + n);
-                        }
+                for (int m = 0; m < 3; ++m) {
+                    std::vector<size_t> u = uppers[m];
+                    size_t iu = 0;
+                    for (int mi = 0; mi < 3; ++mi)
+                        iu += u[mi] * myPow(na_, 5 - mi);
+                    for (int n = 0; n < 3; ++n) {
+                        std::vector<size_t> l = lowers[n];
+                        size_t index = iu;
+                        for (int ni = 0; ni < 3; ++ni)
+                            index += l[ni] * myPow(na_, 2 - ni);
+                        (Lambda3.block("aaaaaa")).data()[index] = value * pow(-1.0, m + n);
                     }
                 }
-            });
+            }
+        });
         outfile->Printf("\n    Norm of L3: %12.8f.", Lambda3.norm());
     }
 
@@ -375,18 +351,17 @@ void MRDSRG_SO::startup() {
 
     // obtain diagonal elements of Fock matrix
     Fd = std::vector<double>(nso_);
-    F.citerate([&](const std::vector<size_t>& i,
-                   const std::vector<SpinType>& spin, const double& value) {
-        if (i[0] == i[1]) {
-            Fd[i[0]] = value;
-        }
-    });
+    F.citerate(
+        [&](const std::vector<size_t>& i, const std::vector<SpinType>& spin, const double& value) {
+            if (i[0] == i[1]) {
+                Fd[i[0]] = value;
+            }
+        });
 }
 
 void MRDSRG_SO::print_summary() {
     // Print a summary
-    std::vector<std::pair<std::string, int>> calculation_info{
-        {"ntamp", ntamp_}};
+    std::vector<std::pair<std::string, int>> calculation_info{{"ntamp", ntamp_}};
 
     std::vector<std::pair<std::string, double>> calculation_info_double{
         {"flow parameter", s_},
@@ -394,22 +369,18 @@ void MRDSRG_SO::print_summary() {
         {"intruder_tamp", intruder_tamp_}};
 
     std::vector<std::pair<std::string, std::string>> calculation_info_string{
-        {"int_type", options_.get_str("INT_TYPE")},
-        {"source operator", source_}};
+        {"int_type", options_.get_str("INT_TYPE")}, {"source operator", source_}};
 
     // Print some information
     outfile->Printf("\n\n  ==> Calculation Information <==\n");
     for (auto& str_dim : calculation_info) {
-        outfile->Printf("\n    %-39s %10d", str_dim.first.c_str(),
-                        str_dim.second);
+        outfile->Printf("\n    %-39s %10d", str_dim.first.c_str(), str_dim.second);
     }
     for (auto& str_dim : calculation_info_double) {
-        outfile->Printf("\n    %-39s %10.3e", str_dim.first.c_str(),
-                        str_dim.second);
+        outfile->Printf("\n    %-39s %10.3e", str_dim.first.c_str(), str_dim.second);
     }
     for (auto& str_dim : calculation_info_string) {
-        outfile->Printf("\n    %-39s %10s", str_dim.first.c_str(),
-                        str_dim.second.c_str());
+        outfile->Printf("\n    %-39s %10s", str_dim.first.c_str(), str_dim.second.c_str());
     }
     outfile->Flush();
 }
@@ -421,10 +392,8 @@ void MRDSRG_SO::guess_t2() {
 
     T2["ijab"] = V["ijab"];
 
-    T2.iterate([&](const std::vector<size_t>& i,
-                   const std::vector<SpinType>& spin, double& value) {
-        value *=
-            renormalized_denominator(Fd[i[0]] + Fd[i[1]] - Fd[i[2]] - Fd[i[3]]);
+    T2.iterate([&](const std::vector<size_t>& i, const std::vector<SpinType>& spin, double& value) {
+        value *= renormalized_denominator(Fd[i[0]] + Fd[i[1]] - Fd[i[2]] - Fd[i[3]]);
     });
 
     // zero internal amplitudes
@@ -432,11 +401,11 @@ void MRDSRG_SO::guess_t2() {
 
     // norm and max
     T2max = 0.0, T2norm = T2.norm();
-    T2.citerate([&](const std::vector<size_t>& i,
-                    const std::vector<SpinType>& spin, const double& value) {
-        if (std::fabs(value) > std::fabs(T2max))
-            T2max = value;
-    });
+    T2.citerate(
+        [&](const std::vector<size_t>& i, const std::vector<SpinType>& spin, const double& value) {
+            if (std::fabs(value) > std::fabs(T2max))
+                T2max = value;
+        });
 
     outfile->Printf("  Done. Timing %10.3f s", timer.get());
 }
@@ -455,8 +424,7 @@ void MRDSRG_SO::guess_t1() {
 
     T1["ia"] = F["ia"];
     //    T1["ia"] += temp["xu"] * T2["iuax"];
-    T1.iterate([&](const std::vector<size_t>& i,
-                   const std::vector<SpinType>& spin, double& value) {
+    T1.iterate([&](const std::vector<size_t>& i, const std::vector<SpinType>& spin, double& value) {
         value *= renormalized_denominator(Fd[i[0]] - Fd[i[1]]);
     });
 
@@ -465,11 +433,11 @@ void MRDSRG_SO::guess_t1() {
 
     // norm and max
     T1max = 0.0, T1norm = T1.norm();
-    T1.citerate([&](const std::vector<size_t>& i,
-                    const std::vector<SpinType>& spin, const double& value) {
-        if (std::fabs(value) > std::fabs(T1max))
-            T1max = value;
-    });
+    T1.citerate(
+        [&](const std::vector<size_t>& i, const std::vector<SpinType>& spin, const double& value) {
+            if (std::fabs(value) > std::fabs(T1max))
+                T1max = value;
+        });
 
     outfile->Printf("  Done. Timing %10.3f s", timer.get());
 }
@@ -484,25 +452,20 @@ double MRDSRG_SO::renormalized_denominator(double D) {
 }
 
 void MRDSRG_SO::update_t2() {
-    BlockedTensor R2 =
-        ambit::BlockedTensor::build(tensor_type_, "R2", {"hhpp"});
+    BlockedTensor R2 = ambit::BlockedTensor::build(tensor_type_, "R2", {"hhpp"});
     R2["ijab"] = T2["ijab"];
-    R2.iterate([&](const std::vector<size_t>& i,
-                   const std::vector<SpinType>& spin, double& value) {
+    R2.iterate([&](const std::vector<size_t>& i, const std::vector<SpinType>& spin, double& value) {
         value *= (Fd[i[0]] + Fd[i[1]] - Fd[i[2]] - Fd[i[3]]);
     });
     R2["ijab"] += Hbar2["ijab"];
-    R2.iterate([&](const std::vector<size_t>& i,
-                   const std::vector<SpinType>& spin, double& value) {
-        value *=
-            renormalized_denominator(Fd[i[0]] + Fd[i[1]] - Fd[i[2]] - Fd[i[3]]);
+    R2.iterate([&](const std::vector<size_t>& i, const std::vector<SpinType>& spin, double& value) {
+        value *= renormalized_denominator(Fd[i[0]] + Fd[i[1]] - Fd[i[2]] - Fd[i[3]]);
     });
 
     // zero internal amplitudes
     R2.block("aaaa").zero();
 
-    BlockedTensor D2 =
-        ambit::BlockedTensor::build(tensor_type_, "DT2", {"hhpp"});
+    BlockedTensor D2 = ambit::BlockedTensor::build(tensor_type_, "DT2", {"hhpp"});
     D2["ijab"] = R2["ijab"] - T2["ijab"];
     rms_t2 = D2.norm();
 
@@ -510,22 +473,21 @@ void MRDSRG_SO::update_t2() {
 
     // norm and max
     T2max = 0.0, T2norm = T2.norm();
-    T2.citerate([&](const std::vector<size_t>& i,
-                    const std::vector<SpinType>& spin, const double& value) {
-        if (std::fabs(value) > std::fabs(T2max))
-            T2max = value;
-    });
+    T2.citerate(
+        [&](const std::vector<size_t>& i, const std::vector<SpinType>& spin, const double& value) {
+            if (std::fabs(value) > std::fabs(T2max))
+                T2max = value;
+        });
 }
 
 void MRDSRG_SO::update_t1() {
     BlockedTensor R1 = ambit::BlockedTensor::build(tensor_type_, "R1", {"hp"});
     R1["ia"] = T1["ia"];
-    R1.iterate([&](const std::vector<size_t>& i,
-                   const std::vector<SpinType>& spin,
-                   double& value) { value *= (Fd[i[0]] - Fd[i[1]]); });
+    R1.iterate([&](const std::vector<size_t>& i, const std::vector<SpinType>& spin, double& value) {
+        value *= (Fd[i[0]] - Fd[i[1]]);
+    });
     R1["ia"] += Hbar1["ia"];
-    R1.iterate([&](const std::vector<size_t>& i,
-                   const std::vector<SpinType>& spin, double& value) {
+    R1.iterate([&](const std::vector<size_t>& i, const std::vector<SpinType>& spin, double& value) {
         value *= renormalized_denominator(Fd[i[0]] - Fd[i[1]]);
     });
 
@@ -540,11 +502,11 @@ void MRDSRG_SO::update_t1() {
 
     // norm and max
     T1max = 0.0, T1norm = T1.norm();
-    T1.citerate([&](const std::vector<size_t>& i,
-                    const std::vector<SpinType>& spin, const double& value) {
-        if (std::fabs(value) > std::fabs(T1max))
-            T1max = value;
-    });
+    T1.citerate(
+        [&](const std::vector<size_t>& i, const std::vector<SpinType>& spin, const double& value) {
+            if (std::fabs(value) > std::fabs(T1max))
+                T1max = value;
+        });
 }
 
 double MRDSRG_SO::compute_energy() {
@@ -623,8 +585,8 @@ double MRDSRG_SO::compute_energy() {
 
         outfile->Printf("\n      @CT %4d %20.12f %11.3e %10.3e %10.3e %7.4f "
                         "%7.4f %7.4f %7.4f",
-                        cycle, Etotal, Edelta, Hbar1Nnorm, Hbar2Nnorm, T1norm,
-                        T2norm, T1max, T2max);
+                        cycle, Etotal, Edelta, Hbar1Nnorm, Hbar2Nnorm, T1norm, T2norm, T1max,
+                        T2max);
 
         // update amplitudes
         update_t2();
@@ -649,10 +611,8 @@ double MRDSRG_SO::compute_energy() {
     outfile->Printf("\n    "
                     "----------------------------------------------------------"
                     "----------------------------------------");
-    outfile->Printf("\n\n\n    MR-DSRG(2) correlation energy      = %25.15f",
-                    Etotal - Eref);
-    outfile->Printf("\n  * MR-DSRG(2) total energy            = %25.15f\n",
-                    Etotal);
+    outfile->Printf("\n\n\n    MR-DSRG(2) correlation energy      = %25.15f", Etotal - Eref);
+    outfile->Printf("\n  * MR-DSRG(2) total energy            = %25.15f\n", Etotal);
 
     Process::environment.globals["CURRENT ENERGY"] = Etotal;
 
@@ -675,8 +635,7 @@ void MRDSRG_SO::compute_hbar() {
     Hbar2["pqrs"] = V["pqrs"];
 
     BlockedTensor O1 = ambit::BlockedTensor::build(tensor_type_, "O1", {"gg"});
-    BlockedTensor O2 =
-        ambit::BlockedTensor::build(tensor_type_, "O2", {"gggg"});
+    BlockedTensor O2 = ambit::BlockedTensor::build(tensor_type_, "O2", {"gggg"});
     O1["pq"] = F["pq"];
     O2["pqrs"] = V["pqrs"];
 
@@ -687,8 +646,7 @@ void MRDSRG_SO::compute_hbar() {
     int maxn = options_.get_int("SRG_RSC_NCOMM");
     double ct_threshold = options_.get_double("SRG_RSC_THRESHOLD");
     BlockedTensor C1 = ambit::BlockedTensor::build(tensor_type_, "C1", {"gg"});
-    BlockedTensor C2 =
-        ambit::BlockedTensor::build(tensor_type_, "C2", {"gggg"});
+    BlockedTensor C2 = ambit::BlockedTensor::build(tensor_type_, "C2", {"gggg"});
 
     // compute Hbar recursively
     for (int n = 1; n <= maxn; ++n) {
@@ -767,10 +725,8 @@ void MRDSRG_SO::compute_qhbar() {
     Hbar2["pqrs"] = V["pqrs"];
 
     BlockedTensor O1 = ambit::BlockedTensor::build(tensor_type_, "O1", {"gg"});
-    BlockedTensor O2 =
-        ambit::BlockedTensor::build(tensor_type_, "O2", {"gggg"});
-    BlockedTensor O3 =
-        ambit::BlockedTensor::build(tensor_type_, "O3", {"gggggg"});
+    BlockedTensor O2 = ambit::BlockedTensor::build(tensor_type_, "O2", {"gggg"});
+    BlockedTensor O3 = ambit::BlockedTensor::build(tensor_type_, "O3", {"gggggg"});
     O1["pq"] = F["pq"];
     O2["pqrs"] = V["pqrs"];
 
@@ -781,10 +737,8 @@ void MRDSRG_SO::compute_qhbar() {
     int maxn = options_.get_int("SRG_RSC_NCOMM");
     double ct_threshold = options_.get_double("SRG_RSC_THRESHOLD");
     BlockedTensor C1 = ambit::BlockedTensor::build(tensor_type_, "C1", {"gg"});
-    BlockedTensor C2 =
-        ambit::BlockedTensor::build(tensor_type_, "C2", {"gggg"});
-    BlockedTensor C3 =
-        ambit::BlockedTensor::build(tensor_type_, "C3", {"gggggg"});
+    BlockedTensor C2 = ambit::BlockedTensor::build(tensor_type_, "C2", {"gggg"});
+    BlockedTensor C3 = ambit::BlockedTensor::build(tensor_type_, "C3", {"gggggg"});
 
     // compute Hbar recursively
     for (int n = 1; n <= maxn; ++n) {
@@ -863,8 +817,7 @@ void MRDSRG_SO::compute_qhbar() {
     //    -----------------------------------------------------------------");
 }
 
-void MRDSRG_SO::H1_T1_C0(BlockedTensor& H1, BlockedTensor& T1,
-                         const double& alpha, double& C0) {
+void MRDSRG_SO::H1_T1_C0(BlockedTensor& H1, BlockedTensor& T1, const double& alpha, double& C0) {
     //    Timer timer;
     //    std::string str = "Computing [Hbar1, T1] -> C0 ...";
     //    outfile->Printf("\n    %-35s", str.c_str());
@@ -880,8 +833,7 @@ void MRDSRG_SO::H1_T1_C0(BlockedTensor& H1, BlockedTensor& T1,
     //    timer.get(), E);
 }
 
-void MRDSRG_SO::H2_T1_C0(BlockedTensor& H2, BlockedTensor& T1,
-                         const double& alpha, double& C0) {
+void MRDSRG_SO::H2_T1_C0(BlockedTensor& H2, BlockedTensor& T1, const double& alpha, double& C0) {
     //    Timer timer;
     //    std::string str = "Computing [Hbar2, T1] -> C0 ...";
     //    outfile->Printf("\n    %-35s", str.c_str());
@@ -898,8 +850,7 @@ void MRDSRG_SO::H2_T1_C0(BlockedTensor& H2, BlockedTensor& T1,
     //    timer.get(), E);
 }
 
-void MRDSRG_SO::H1_T2_C0(BlockedTensor& H1, BlockedTensor& T2,
-                         const double& alpha, double& C0) {
+void MRDSRG_SO::H1_T2_C0(BlockedTensor& H1, BlockedTensor& T2, const double& alpha, double& C0) {
     //    Timer timer;
     //    std::string str = "Computing [Hbar1, T2] -> C0 ...";
     //    outfile->Printf("\n    %-35s", str.c_str());
@@ -916,8 +867,7 @@ void MRDSRG_SO::H1_T2_C0(BlockedTensor& H1, BlockedTensor& T2,
     //    timer.get(), E);
 }
 
-void MRDSRG_SO::H2_T2_C0(BlockedTensor& H2, BlockedTensor& T2,
-                         const double& alpha, double& C0) {
+void MRDSRG_SO::H2_T2_C0(BlockedTensor& H2, BlockedTensor& T2, const double& alpha, double& C0) {
     //    Timer timer;
     //    std::string str = "Computing [Hbar2, T2] -> C0 ...";
     //    outfile->Printf("\n    %-35s", str.c_str());
@@ -925,10 +875,8 @@ void MRDSRG_SO::H2_T2_C0(BlockedTensor& H2, BlockedTensor& T2,
     // <[Hbar2, T2]> (C_2)^4
     double E = 0.25 * H2["efmn"] * T2["mnef"];
 
-    BlockedTensor temp1 =
-        ambit::BlockedTensor::build(tensor_type_, "temp1", {"hhaa"});
-    BlockedTensor temp2 =
-        ambit::BlockedTensor::build(tensor_type_, "temp2", {"hhaa"});
+    BlockedTensor temp1 = ambit::BlockedTensor::build(tensor_type_, "temp1", {"hhaa"});
+    BlockedTensor temp2 = ambit::BlockedTensor::build(tensor_type_, "temp2", {"hhaa"});
     temp1["klux"] = T2["ijux"] * Gamma1["ki"] * Gamma1["lj"];
     temp2["klvy"] = temp1["klux"] * Eta1["uv"] * Eta1["xy"];
     E += 0.25 * H2["vykl"] * temp2["klvy"];
@@ -978,8 +926,8 @@ void MRDSRG_SO::H2_T2_C0(BlockedTensor& H2, BlockedTensor& T2,
     //    timer.get(), E);
 }
 
-void MRDSRG_SO::H1_T1_C1(BlockedTensor& H1, BlockedTensor& T1,
-                         const double& alpha, BlockedTensor& C1) {
+void MRDSRG_SO::H1_T1_C1(BlockedTensor& H1, BlockedTensor& T1, const double& alpha,
+                         BlockedTensor& C1) {
     //    Timer timer;
     //    std::string str = "Computing [Hbar1, T1] -> C1 ...";
     //    outfile->Printf("\n    %-35s", str.c_str());
@@ -990,8 +938,8 @@ void MRDSRG_SO::H1_T1_C1(BlockedTensor& H1, BlockedTensor& T1,
     //    outfile->Printf("  Done. Timing %10.3f s", timer.get());
 }
 
-void MRDSRG_SO::H2_T1_C1(BlockedTensor& H2, BlockedTensor& T1,
-                         const double& alpha, BlockedTensor& C1) {
+void MRDSRG_SO::H2_T1_C1(BlockedTensor& H2, BlockedTensor& T1, const double& alpha,
+                         BlockedTensor& C1) {
     //    Timer timer;
     //    std::string str = "Computing [Hbar2, T1] -> C1 ...";
     //    outfile->Printf("\n    %-35s", str.c_str());
@@ -1002,8 +950,8 @@ void MRDSRG_SO::H2_T1_C1(BlockedTensor& H2, BlockedTensor& T1,
     //    outfile->Printf("  Done. Timing %10.3f s", timer.get());
 }
 
-void MRDSRG_SO::H1_T2_C1(BlockedTensor& H1, BlockedTensor& T2,
-                         const double& alpha, BlockedTensor& C1) {
+void MRDSRG_SO::H1_T2_C1(BlockedTensor& H1, BlockedTensor& T2, const double& alpha,
+                         BlockedTensor& C1) {
     //    Timer timer;
     //    std::string str = "Computing [Hbar1, T2] -> C1 ...";
     //    outfile->Printf("\n    %-35s", str.c_str());
@@ -1014,15 +962,14 @@ void MRDSRG_SO::H1_T2_C1(BlockedTensor& H1, BlockedTensor& T2,
     //    outfile->Printf("  Done. Timing %10.3f s", timer.get());
 }
 
-void MRDSRG_SO::H2_T2_C1(BlockedTensor& H2, BlockedTensor& T2,
-                         const double& alpha, BlockedTensor& C1) {
+void MRDSRG_SO::H2_T2_C1(BlockedTensor& H2, BlockedTensor& T2, const double& alpha,
+                         BlockedTensor& C1) {
     //    Timer timer;
     //    std::string str = "Computing [Hbar2, T2] -> C1 ...";
     //    outfile->Printf("\n    %-35s", str.c_str());
 
     // [Hbar2, T2] (C_2)^3 -> C1
-    BlockedTensor temp1 =
-        ambit::BlockedTensor::build(tensor_type_, "temp1", {"hhgh"});
+    BlockedTensor temp1 = ambit::BlockedTensor::build(tensor_type_, "temp1", {"hhgh"});
     temp1["ijrk"] = H2["abrk"] * T2["ijab"];
     C1["ir"] += 0.5 * alpha * temp1["ijrk"] * Gamma1["kj"];
 
@@ -1080,8 +1027,8 @@ void MRDSRG_SO::H2_T2_C1(BlockedTensor& H2, BlockedTensor& T2,
     //    outfile->Printf("  Done. Timing %10.3f s", timer.get());
 }
 
-void MRDSRG_SO::H1_T2_C2(BlockedTensor& H1, BlockedTensor& T2,
-                         const double& alpha, BlockedTensor& C2) {
+void MRDSRG_SO::H1_T2_C2(BlockedTensor& H1, BlockedTensor& T2, const double& alpha,
+                         BlockedTensor& C2) {
     //    Timer timer;
     //    std::string str = "Computing [Hbar1, T2] -> C2 ...";
     //    outfile->Printf("\n    %-35s", str.c_str());
@@ -1094,8 +1041,8 @@ void MRDSRG_SO::H1_T2_C2(BlockedTensor& H1, BlockedTensor& T2,
     //    outfile->Printf("  Done. Timing %10.3f s", timer.get());
 }
 
-void MRDSRG_SO::H2_T1_C2(BlockedTensor& H2, BlockedTensor& T1,
-                         const double& alpha, BlockedTensor& C2) {
+void MRDSRG_SO::H2_T1_C2(BlockedTensor& H2, BlockedTensor& T1, const double& alpha,
+                         BlockedTensor& C2) {
     //    Timer timer;
     //    std::string str = "Computing [Hbar2, T1] -> C2 ...";
     //    outfile->Printf("\n    %-35s", str.c_str());
@@ -1108,8 +1055,8 @@ void MRDSRG_SO::H2_T1_C2(BlockedTensor& H2, BlockedTensor& T1,
     //    outfile->Printf("  Done. Timing %10.3f s", timer.get());
 }
 
-void MRDSRG_SO::H2_T2_C2(BlockedTensor& H2, BlockedTensor& T2,
-                         const double& alpha, BlockedTensor& C2) {
+void MRDSRG_SO::H2_T2_C2(BlockedTensor& H2, BlockedTensor& T2, const double& alpha,
+                         BlockedTensor& C2) {
     //    Timer timer;
     //    std::string str = "Computing [Hbar2, T2] -> C2 ...";
     //    outfile->Printf("\n    %-35s", str.c_str());
@@ -1117,8 +1064,7 @@ void MRDSRG_SO::H2_T2_C2(BlockedTensor& H2, BlockedTensor& T2,
     // particle-particle contractions
     C2["ijrs"] += 0.5 * alpha * H2["abrs"] * T2["ijab"];
 
-    BlockedTensor temp =
-        ambit::BlockedTensor::build(tensor_type_, "temp", {"hhpa"});
+    BlockedTensor temp = ambit::BlockedTensor::build(tensor_type_, "temp", {"hhpa"});
     temp["ijby"] = T2["ijbx"] * Gamma1["xy"];
     C2["ijrs"] -= alpha * temp["ijby"] * H2["byrs"];
 
@@ -1149,10 +1095,9 @@ void MRDSRG_SO::H2_T2_C2(BlockedTensor& H2, BlockedTensor& T2,
     //    outfile->Printf("  Done. Timing %10.3f s", timer.get());
 }
 
-void MRDSRG_SO::H2_T2_C3(BlockedTensor& H2, BlockedTensor& T2,
-                         const double& alpha, BlockedTensor& C3) {
-    BlockedTensor temp =
-        ambit::BlockedTensor::build(tensor_type_, "temp", {"gggggg"});
+void MRDSRG_SO::H2_T2_C3(BlockedTensor& H2, BlockedTensor& T2, const double& alpha,
+                         BlockedTensor& C3) {
+    BlockedTensor temp = ambit::BlockedTensor::build(tensor_type_, "temp", {"gggggg"});
     temp["rsjabq"] -= H2["rsqi"] * T2["ijab"];
     C3["rsjabq"] += alpha * temp["rsjabq"];
     C3["rjsabq"] -= alpha * temp["rsjabq"];
@@ -1177,27 +1122,25 @@ void MRDSRG_SO::H2_T2_C3(BlockedTensor& H2, BlockedTensor& T2,
     C3["sijbpq"] += alpha * temp["ijspqb"];
 }
 
-void MRDSRG_SO::H3_T1_C1(BlockedTensor& H3, BlockedTensor& T1,
-                         const double& alpha, BlockedTensor& C1) {
-    BlockedTensor temp =
-        ambit::BlockedTensor::build(tensor_type_, "temp", {"gaagaa"});
+void MRDSRG_SO::H3_T1_C1(BlockedTensor& H3, BlockedTensor& T1, const double& alpha,
+                         BlockedTensor& C1) {
+    BlockedTensor temp = ambit::BlockedTensor::build(tensor_type_, "temp", {"gaagaa"});
     temp["qxypuv"] += 0.5 * H3["qeypuv"] * T1["xe"];
     temp["qxypuv"] -= 0.5 * H3["qxypmv"] * T1["mu"];
 
     C1["qp"] += alpha * temp["qxypuv"] * Lambda2["uvxy"];
 }
 
-void MRDSRG_SO::H3_T1_C2(BlockedTensor& H3, BlockedTensor& T1,
-                         const double& alpha, BlockedTensor& C2) {
+void MRDSRG_SO::H3_T1_C2(BlockedTensor& H3, BlockedTensor& T1, const double& alpha,
+                         BlockedTensor& C2) {
     C2["toqr"] += alpha * H3["atojqr"] * T1["ia"] * Gamma1["ji"];
     C2["toqr"] -= alpha * H3["ytomqr"] * T1["mx"] * Gamma1["xy"];
 }
 
-void MRDSRG_SO::H3_T2_C1(BlockedTensor& H3, BlockedTensor& T2,
-                         const double& alpha, BlockedTensor& C1) {
+void MRDSRG_SO::H3_T2_C1(BlockedTensor& H3, BlockedTensor& T2, const double& alpha,
+                         BlockedTensor& C1) {
     // (6:2)
-    BlockedTensor temp =
-        ambit::BlockedTensor::build(tensor_type_, "temp", {"pa"});
+    BlockedTensor temp = ambit::BlockedTensor::build(tensor_type_, "temp", {"pa"});
     temp["ax"] += (1.0 / 12.0) * H3["ayzuvw"] * Lambda3["uvwxyz"];
     C1["jb"] += alpha * temp["ax"] * T2["xjab"];
 
@@ -1265,14 +1208,12 @@ void MRDSRG_SO::H3_T2_C1(BlockedTensor& H3, BlockedTensor& T2,
     // (4:4)
     temp = ambit::BlockedTensor::build(tensor_type_, "temp", {"hhpp"});
     temp["klab"] += 0.25 * T2["ijab"] * Gamma1["ki"] * Gamma1["lj"];
-    temp["klav"] -=
-        0.5 * T2["ijau"] * Gamma1["ki"] * Gamma1["uv"] * Gamma1["lj"];
+    temp["klav"] -= 0.5 * T2["ijau"] * Gamma1["ki"] * Gamma1["uv"] * Gamma1["lj"];
     C1["or"] += alpha * H3["aboklr"] * temp["klab"];
 
     temp = ambit::BlockedTensor::build(tensor_type_, "temp", {"hhaa"});
     temp["ijvy"] -= 0.25 * T2["ijux"] * Gamma1["uv"] * Gamma1["xy"];
-    temp["ikvy"] +=
-        0.5 * T2["ijux"] * Gamma1["xy"] * Gamma1["kj"] * Gamma1["uv"];
+    temp["ikvy"] += 0.5 * T2["ijux"] * Gamma1["xy"] * Gamma1["kj"] * Gamma1["uv"];
     C1["or"] += alpha * H3["vyoijr"] * temp["ijvy"];
 
     temp = ambit::BlockedTensor::build(tensor_type_, "temp", {"aapp"});
@@ -1306,13 +1247,11 @@ void MRDSRG_SO::H3_T2_C1(BlockedTensor& H3, BlockedTensor& T2,
     C1["or"] += alpha * H3["zxomur"] * temp["muzx"];
 }
 
-void MRDSRG_SO::H3_T2_C2(BlockedTensor& H3, BlockedTensor& T2,
-                         const double& alpha, BlockedTensor& C2) {
+void MRDSRG_SO::H3_T2_C2(BlockedTensor& H3, BlockedTensor& T2, const double& alpha,
+                         BlockedTensor& C2) {
     // (4:2)
-    BlockedTensor temp =
-        ambit::BlockedTensor::build(tensor_type_, "temp", {"hhapaa"});
-    BlockedTensor temp2 =
-        ambit::BlockedTensor::build(tensor_type_, "temp2", {"ghpg"});
+    BlockedTensor temp = ambit::BlockedTensor::build(tensor_type_, "temp", {"hhapaa"});
+    BlockedTensor temp2 = ambit::BlockedTensor::build(tensor_type_, "temp2", {"ghpg"});
     temp["ijuaxy"] += 0.5 * T2["ijav"] * Lambda2["uvxy"];
     C2["ijpq"] += alpha * temp["ijuaxy"] * H3["axypqu"];
     temp2["ojar"] += alpha * temp["ijvaxy"] * H3["xyoivr"];

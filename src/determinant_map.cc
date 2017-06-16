@@ -32,8 +32,7 @@
 namespace psi {
 namespace forte {
 
-bool descending_pair(const std::pair<double, size_t> p1,
-                     const std::pair<double, size_t> p2) {
+bool descending_pair(const std::pair<double, size_t> p1, const std::pair<double, size_t> p2) {
     return p1 > p2;
 }
 
@@ -64,9 +63,7 @@ DeterminantMap::DeterminantMap(STLBitsetDeterminant& det) {
 
 DeterminantMap::DeterminantMap() { wfn_size_ = wfn_.size(); }
 
-DeterminantMap::DeterminantMap(detmap& wfn) : wfn_(wfn) {
-    wfn_size_ = wfn.size();
-}
+DeterminantMap::DeterminantMap(detmap& wfn) : wfn_(wfn) { wfn_size_ = wfn.size(); }
 
 const detmap& DeterminantMap::wfn_hash() const { return wfn_; }
 
@@ -98,8 +95,7 @@ STLBitsetDeterminant DeterminantMap::get_det(const size_t value) const {
     // Possibly a faster way to do this?
     STLBitsetDeterminant det;
 
-    for (detmap::const_iterator it = wfn_.begin(), endit = wfn_.end();
-         it != endit; ++it) {
+    for (detmap::const_iterator it = wfn_.begin(), endit = wfn_.end(); it != endit; ++it) {
         if (it->second == value) {
             det = it->first;
             break;
@@ -122,8 +118,7 @@ void DeterminantMap::make_spin_complete() {
     std::vector<size_t> open_bits(nmo, 0);
     DeterminantMap new_dets;
 
-    for (det_hash<size_t>::iterator it = wfn_.begin(), endit = wfn_.end();
-         it != endit; ++it) {
+    for (det_hash<size_t>::iterator it = wfn_.begin(), endit = wfn_.end(); it != endit; ++it) {
         const STLBitsetDeterminant& det = it->first;
         //        outfile->Printf("\n  Original determinant: %s",
         //        det.str().c_str());
@@ -175,8 +170,7 @@ void DeterminantMap::make_spin_complete() {
                 //                %s", new_det.str().c_str());
                 ndet_added++;
             }
-        } while (std::next_permutation(open_bits.begin(),
-                                       open_bits.begin() + naopen + nbopen));
+        } while (std::next_permutation(open_bits.begin(), open_bits.begin() + naopen + nbopen));
     }
     // if( ndet_added > 0 ){
     //    outfile->Printf("\n\n  Determinant space is spin incomplete!");
@@ -196,14 +190,12 @@ bool DeterminantMap::has_det(const STLBitsetDeterminant& det) const {
     return has;
 }
 
-double DeterminantMap::overlap(std::vector<double>& det1_evecs,
-                               DeterminantMap& det2, SharedMatrix det2_evecs,
-                               int root) {
+double DeterminantMap::overlap(std::vector<double>& det1_evecs, DeterminantMap& det2,
+                               SharedMatrix det2_evecs, int root) {
 
     double overlap = 0.0;
 
-    for (detmap::iterator it = wfn_.begin(), endit = wfn_.end(); it != endit;
-         ++it) {
+    for (detmap::iterator it = wfn_.begin(), endit = wfn_.end(); it != endit; ++it) {
         if (det2.has_det(it->first)) {
             size_t idx = det2.get_idx(it->first);
             overlap += det1_evecs[it->second] * det2_evecs->get(idx, root);
@@ -213,24 +205,20 @@ double DeterminantMap::overlap(std::vector<double>& det1_evecs,
     return overlap;
 }
 
-double DeterminantMap::overlap(SharedMatrix det1_evecs, int root1,
-                               DeterminantMap& det2, SharedMatrix det2_evecs,
-                               int root2) {
+double DeterminantMap::overlap(SharedMatrix det1_evecs, int root1, DeterminantMap& det2,
+                               SharedMatrix det2_evecs, int root2) {
     double overlap = 0.0;
-    for (detmap::iterator it = wfn_.begin(), endit = wfn_.end(); it != endit;
-         ++it) {
+    for (detmap::iterator it = wfn_.begin(), endit = wfn_.end(); it != endit; ++it) {
         if (det2.has_det(it->first)) {
             size_t idx = det2.get_idx(it->first);
-            overlap += det1_evecs->get(it->second, root1) *
-                       det2_evecs->get(idx, root2);
+            overlap += det1_evecs->get(it->second, root1) * det2_evecs->get(idx, root2);
         }
     }
     return overlap;
 }
 
 void DeterminantMap::subspace(DeterminantMap& dets, SharedMatrix evecs,
-                              std::vector<double>& new_evecs, int dim,
-                              int root) {
+                              std::vector<double>& new_evecs, int dim, int root) {
     // Clear current wfn
     this->clear();
     new_evecs.assign(dim, 0.0);
@@ -238,10 +226,8 @@ void DeterminantMap::subspace(DeterminantMap& dets, SharedMatrix evecs,
     std::vector<std::pair<double, size_t>> det_weights;
     // for( size_t I = 0, maxI = dets.size(); I < maxI; ++I ){
     detmap map = dets.wfn_hash();
-    for (detmap::iterator it = map.begin(), endit = map.end(); it != endit;
-         ++it) {
-        det_weights.push_back(
-            std::make_pair(std::abs(evecs->get(it->second, root)), it->second));
+    for (detmap::iterator it = map.begin(), endit = map.end(); it != endit; ++it) {
+        det_weights.push_back(std::make_pair(std::abs(evecs->get(it->second, root)), it->second));
         //      outfile->Printf("\n %1.6f  %zu  %s", evecs->get(it->second,
         //      root), it->second, it->first.str().c_str());
     }
@@ -261,19 +247,17 @@ void DeterminantMap::subspace(DeterminantMap& dets, SharedMatrix evecs,
 
 void DeterminantMap::merge(DeterminantMap& dets) {
     det_hash<size_t> detmap = dets.wfn_hash();
-    for (det_hash<size_t>::iterator it = detmap.begin(), endit = detmap.end();
-         it != endit; ++it) {
+    for (det_hash<size_t>::iterator it = detmap.begin(), endit = detmap.end(); it != endit; ++it) {
         if (!(this->has_det(it->first))) {
             this->add(it->first);
         }
     }
 }
 
-void DeterminantMap::copy( DeterminantMap& dets ){
+void DeterminantMap::copy(DeterminantMap& dets) {
     this->clear();
     wfn_ = dets.wfn_;
     wfn_size_ = dets.size();
 }
-
 }
 }

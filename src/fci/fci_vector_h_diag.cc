@@ -75,7 +75,8 @@ void FCIWfn::form_H_diagonal(std::shared_ptr<FCIIntegrals> fci_ints) {
                 C_ha[addIa][addIb] = determinant_energy(Ia, Ib, n, fci_ints);
                 //        outfile->Printf("\n |[%1d][%3d][%3d]> energy =
                 //        %20.12f",alfa_sym,static_cast<int> (addIa),
-                //                                                                         static_cast<int> (addIb),coefficients[alfa_sym][addIa][addIb]);
+                //                                                                         static_cast<int>
+                //                                                                         (addIb),coefficients[alfa_sym][addIa][addIb]);
             }
         } while (std::next_permutation(Ib, Ib + n));
 
@@ -83,8 +84,7 @@ void FCIWfn::form_H_diagonal(std::shared_ptr<FCIIntegrals> fci_ints) {
 
     hdiag_timer += t.elapsed();
     if (print_) {
-        outfile->Printf("\n  Timing for Hdiag          = %10.3f s",
-                        hdiag_timer);
+        outfile->Printf("\n  Timing for Hdiag          = %10.3f s", hdiag_timer);
         outfile->Flush();
     }
 }
@@ -110,8 +110,7 @@ double FCIWfn::determinant_energy(bool*& Ia, bool*& Ib, int n,
     return (energy);
 }
 
-std::vector<std::tuple<double, size_t, size_t, size_t>>
-FCIWfn::min_elements(size_t num_dets) {
+std::vector<std::tuple<double, size_t, size_t, size_t>> FCIWfn::min_elements(size_t num_dets) {
     num_dets = std::min(num_dets, ndet_);
 
     double emax = std::numeric_limits<double>::max();
@@ -133,10 +132,11 @@ FCIWfn::min_elements(size_t num_dets) {
                 if ((e < emax) or (added < num_dets)) {
                     // Find where to inser this determinant
                     dets.pop_back();
-                    auto it = std::find_if(
-                        dets.begin(), dets.end(),
-                        [&e](const std::tuple<double, size_t, size_t, size_t>&
-                                 t) { return e < std::get<0>(t); });
+                    auto it =
+                        std::find_if(dets.begin(), dets.end(),
+                                     [&e](const std::tuple<double, size_t, size_t, size_t>& t) {
+                                         return e < std::get<0>(t);
+                                     });
                     dets.insert(it, std::make_tuple(e, alfa_sym, Ia, Ib));
                     emax = std::get<0>(dets.back());
                     added++;
@@ -151,8 +151,7 @@ std::vector<std::tuple<double, double, size_t, size_t, size_t>>
 FCIWfn::max_abs_elements(size_t num_dets) {
     num_dets = std::min(num_dets, ndet_);
 
-    std::vector<std::tuple<double, double, size_t, size_t, size_t>> dets(
-        num_dets);
+    std::vector<std::tuple<double, double, size_t, size_t, size_t>> dets(num_dets);
 
     double emin = 0.0;
 
@@ -169,12 +168,10 @@ FCIWfn::max_abs_elements(size_t num_dets) {
                     dets.pop_back();
                     auto it = std::find_if(
                         dets.begin(), dets.end(),
-                        [&e](const std::tuple<double, double, size_t, size_t,
-                                              size_t>& t) {
+                        [&e](const std::tuple<double, double, size_t, size_t, size_t>& t) {
                             return e > std::get<0>(t);
                         });
-                    dets.insert(
-                        it, std::make_tuple(e, C_ha[Ia][Ib], alfa_sym, Ia, Ib));
+                    dets.insert(it, std::make_tuple(e, C_ha[Ia][Ib], alfa_sym, Ia, Ib));
                     emin = std::get<0>(dets.back());
                 }
             }

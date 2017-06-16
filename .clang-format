@@ -1,3 +1,4 @@
 Language: Cpp
 IndentWidth: 4
 PointerAlignment: Left
+ColumnLimit: 100

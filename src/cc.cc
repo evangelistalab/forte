@@ -27,20 +27,19 @@
  */
 
 #include <algorithm>
-#include <vector>
-#include <map>
 #include <cmath>
+#include <map>
+#include <vector>
 
 #include "psi4/libmints/molecule.h"
 
-#include "helpers.h"
 #include "cc.h"
+#include "helpers.h"
 
 namespace psi {
 namespace forte {
 
-CC::CC(SharedWavefunction ref_wfn, Options& options,
-       std::shared_ptr<ForteIntegrals> ints,
+CC::CC(SharedWavefunction ref_wfn, Options& options, std::shared_ptr<ForteIntegrals> ints,
        std::shared_ptr<MOSpaceInfo> mo_space_info)
     : Wavefunction(options), ints_(ints), mo_space_info_(mo_space_info),
       BTF_(new BlockedTensorFactory(options)), tensor_type_(CoreTensor) {

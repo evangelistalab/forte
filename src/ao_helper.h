@@ -29,10 +29,13 @@
 #ifndef _atomic_orbital_h_
 #define _atomic_orbital_h_
 
-#include "psi4/psi4-dec.h"
 #include "psi4/lib3index/denominator.h"
+#include "psi4/psi4-dec.h"
 
 namespace psi {
+
+class BasisSet;
+
 namespace forte {
 
 class AtomicOrbitalHelper {
@@ -70,11 +73,10 @@ class AtomicOrbitalHelper {
     SharedMatrix PVir() { return PVir_; }
     int Weights() { return weights_; }
 
-    AtomicOrbitalHelper(SharedMatrix CMO, SharedVector eps_occ,
-                        SharedVector eps_vir, double laplace_tolerance);
-    AtomicOrbitalHelper(SharedMatrix CMO, SharedVector eps_occ,
-                        SharedVector eps_vir, double laplace_tolerance,
-                        int shift);
+    AtomicOrbitalHelper(SharedMatrix CMO, SharedVector eps_occ, SharedVector eps_vir,
+                        double laplace_tolerance);
+    AtomicOrbitalHelper(SharedMatrix CMO, SharedVector eps_occ, SharedVector eps_vir,
+                        double laplace_tolerance, int shift);
     /// Compute (mu nu | mu nu)^{(1/2)}
     void Compute_AO_Screen(std::shared_ptr<BasisSet>& primary);
     void Estimate_TransAO_Screen(std::shared_ptr<BasisSet>& primary,

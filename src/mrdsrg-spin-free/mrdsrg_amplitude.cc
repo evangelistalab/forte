@@ -27,18 +27,17 @@
  */
 
 #include <algorithm>
-#include <vector>
 #include <map>
+#include <vector>
 
-#include "../mini-boost/boost/format.hpp"
 #include "../helpers.h"
+#include "../mini-boost/boost/format.hpp"
 #include "mrdsrg.h"
 
 namespace psi {
 namespace forte {
 
-void MRDSRG::guess_t(BlockedTensor& V, BlockedTensor& T2, BlockedTensor& F,
-                     BlockedTensor& T1) {
+void MRDSRG::guess_t(BlockedTensor& V, BlockedTensor& T2, BlockedTensor& F, BlockedTensor& T1) {
     // if fully decouple core-core-virtual-virtual block
     std::string ccvv_source = options_.get_str("CCVV_SOURCE");
 
@@ -75,8 +74,8 @@ void MRDSRG::guess_t2_std(BlockedTensor& V, BlockedTensor& T2) {
 
     // transform to semi-canonical basis
     if (!semi_canonical_) {
-        BlockedTensor tempT2 = ambit::BlockedTensor::build(
-            tensor_type_, "Temp T2", spin_cases({"hhpp"}));
+        BlockedTensor tempT2 =
+            ambit::BlockedTensor::build(tensor_type_, "Temp T2", spin_cases({"hhpp"}));
         tempT2["klab"] = U_["ki"] * U_["lj"] * T2["ijab"];
         tempT2["kLaB"] = U_["ki"] * U_["LJ"] * T2["iJaB"];
         tempT2["KLAB"] = U_["KI"] * U_["LJ"] * T2["IJAB"];
@@ -85,20 +84,19 @@ void MRDSRG::guess_t2_std(BlockedTensor& V, BlockedTensor& T2) {
         T2["IJCD"] = tempT2["IJAB"] * U_["DB"] * U_["CA"];
     }
 
-    T2.iterate([&](const std::vector<size_t>& i,
-                   const std::vector<SpinType>& spin, double& value) {
+    T2.iterate([&](const std::vector<size_t>& i, const std::vector<SpinType>& spin, double& value) {
         if (fabs(value) > 1.0e-15) {
             if ((spin[0] == AlphaSpin) && (spin[1] == AlphaSpin)) {
-                value *= dsrg_source_->compute_renormalized_denominator(
-                    Fa_[i[0]] + Fa_[i[1]] - Fa_[i[2]] - Fa_[i[3]]);
+                value *= dsrg_source_->compute_renormalized_denominator(Fa_[i[0]] + Fa_[i[1]] -
+                                                                        Fa_[i[2]] - Fa_[i[3]]);
                 t2aa_norm_ += value * value;
             } else if ((spin[0] == AlphaSpin) && (spin[1] == BetaSpin)) {
-                value *= dsrg_source_->compute_renormalized_denominator(
-                    Fa_[i[0]] + Fb_[i[1]] - Fa_[i[2]] - Fb_[i[3]]);
+                value *= dsrg_source_->compute_renormalized_denominator(Fa_[i[0]] + Fb_[i[1]] -
+                                                                        Fa_[i[2]] - Fb_[i[3]]);
                 t2ab_norm_ += value * value;
             } else if ((spin[0] == BetaSpin) && (spin[1] == BetaSpin)) {
-                value *= dsrg_source_->compute_renormalized_denominator(
-                    Fb_[i[0]] + Fb_[i[1]] - Fb_[i[2]] - Fb_[i[3]]);
+                value *= dsrg_source_->compute_renormalized_denominator(Fb_[i[0]] + Fb_[i[1]] -
+                                                                        Fb_[i[2]] - Fb_[i[3]]);
                 t2bb_norm_ += value * value;
             }
             if (std::fabs(value) > std::fabs(T2max_))
@@ -108,8 +106,8 @@ void MRDSRG::guess_t2_std(BlockedTensor& V, BlockedTensor& T2) {
 
     // transform back to non-canonical basis
     if (!semi_canonical_) {
-        BlockedTensor tempT2 = ambit::BlockedTensor::build(
-            tensor_type_, "Temp T2", spin_cases({"hhpp"}));
+        BlockedTensor tempT2 =
+            ambit::BlockedTensor::build(tensor_type_, "Temp T2", spin_cases({"hhpp"}));
         tempT2["klab"] = U_["ik"] * U_["jl"] * T2["ijab"];
         tempT2["kLaB"] = U_["ik"] * U_["JL"] * T2["iJaB"];
         tempT2["KLAB"] = U_["IK"] * U_["JL"] * T2["IJAB"];
@@ -142,8 +140,7 @@ void MRDSRG::guess_t2_std(BlockedTensor& V, BlockedTensor& T2) {
     outfile->Printf("  Done. Timing %10.3f s", timer.get());
 }
 
-void MRDSRG::guess_t1_std(BlockedTensor& F, BlockedTensor& T2,
-                          BlockedTensor& T1) {
+void MRDSRG::guess_t1_std(BlockedTensor& F, BlockedTensor& T2, BlockedTensor& T1) {
     Timer timer;
     std::string str = "Computing T1 amplitudes ...";
     outfile->Printf("\n    %-35s", str.c_str());
@@ -154,26 +151,26 @@ void MRDSRG::guess_t1_std(BlockedTensor& F, BlockedTensor& T2,
     temp["XU"] = Gamma1_["XU"];
     // transform to semi-canonical basis
     if (!semi_canonical_) {
-        BlockedTensor tempG = ambit::BlockedTensor::build(
-            tensor_type_, "Temp Gamma", spin_cases({"aa"}));
+        BlockedTensor tempG =
+            ambit::BlockedTensor::build(tensor_type_, "Temp Gamma", spin_cases({"aa"}));
         tempG["uv"] = U_["ux"] * temp["xy"] * U_["vy"];
         tempG["UV"] = U_["UX"] * temp["XY"] * U_["VY"];
         temp["uv"] = tempG["uv"];
         temp["UV"] = tempG["UV"];
     }
     // scale by delta
-    temp.iterate([&](const std::vector<size_t>& i,
-                     const std::vector<SpinType>& spin, double& value) {
-        if (spin[0] == AlphaSpin) {
-            value *= Fa_[i[0]] - Fa_[i[1]];
-        } else {
-            value *= Fb_[i[0]] - Fb_[i[1]];
-        }
-    });
+    temp.iterate(
+        [&](const std::vector<size_t>& i, const std::vector<SpinType>& spin, double& value) {
+            if (spin[0] == AlphaSpin) {
+                value *= Fa_[i[0]] - Fa_[i[1]];
+            } else {
+                value *= Fb_[i[0]] - Fb_[i[1]];
+            }
+        });
     // transform back to non-canonical basis
     if (!semi_canonical_) {
-        BlockedTensor tempG = ambit::BlockedTensor::build(
-            tensor_type_, "Temp Gamma", spin_cases({"aa"}));
+        BlockedTensor tempG =
+            ambit::BlockedTensor::build(tensor_type_, "Temp Gamma", spin_cases({"aa"}));
         tempG["uv"] = U_["xu"] * temp["xy"] * U_["yv"];
         tempG["UV"] = U_["XU"] * temp["XY"] * U_["YV"];
         temp["uv"] = tempG["uv"];
@@ -190,24 +187,21 @@ void MRDSRG::guess_t1_std(BlockedTensor& F, BlockedTensor& T2,
 
     // transform to semi-canonical basis
     if (!semi_canonical_) {
-        BlockedTensor tempT1 = ambit::BlockedTensor::build(
-            tensor_type_, "Temp T1", spin_cases({"hp"}));
+        BlockedTensor tempT1 =
+            ambit::BlockedTensor::build(tensor_type_, "Temp T1", spin_cases({"hp"}));
         tempT1["jb"] = U_["ji"] * T1["ia"] * U_["ba"];
         tempT1["JB"] = U_["JI"] * T1["IA"] * U_["BA"];
         T1["ia"] = tempT1["ia"];
         T1["IA"] = tempT1["IA"];
     }
 
-    T1.iterate([&](const std::vector<size_t>& i,
-                   const std::vector<SpinType>& spin, double& value) {
+    T1.iterate([&](const std::vector<size_t>& i, const std::vector<SpinType>& spin, double& value) {
         if (fabs(value) > 1.0e-15) {
             if (spin[0] == AlphaSpin) {
-                value *= dsrg_source_->compute_renormalized_denominator(
-                    Fa_[i[0]] - Fa_[i[1]]);
+                value *= dsrg_source_->compute_renormalized_denominator(Fa_[i[0]] - Fa_[i[1]]);
                 t1a_norm_ += value * value;
             } else {
-                value *= dsrg_source_->compute_renormalized_denominator(
-                    Fb_[i[0]] - Fb_[i[1]]);
+                value *= dsrg_source_->compute_renormalized_denominator(Fb_[i[0]] - Fb_[i[1]]);
                 t1b_norm_ += value * value;
             }
             if (std::fabs(value) > std::fabs(T1max_))
@@ -217,8 +211,8 @@ void MRDSRG::guess_t1_std(BlockedTensor& F, BlockedTensor& T2,
 
     // transform back to non-canonical basis
     if (!semi_canonical_) {
-        BlockedTensor tempT1 = ambit::BlockedTensor::build(
-            tensor_type_, "Temp T1", spin_cases({"hp"}));
+        BlockedTensor tempT1 =
+            ambit::BlockedTensor::build(tensor_type_, "Temp T1", spin_cases({"hp"}));
         tempT1["jb"] = U_["ij"] * T1["ia"] * U_["ab"];
         tempT1["JB"] = U_["IJ"] * T1["IA"] * U_["AB"];
         T1["ia"] = tempT1["ia"];
@@ -256,8 +250,8 @@ void MRDSRG::guess_t2_noccvv(BlockedTensor& V, BlockedTensor& T2) {
 
     // transform to semi-canonical basis
     if (!semi_canonical_) {
-        BlockedTensor tempT2 = ambit::BlockedTensor::build(
-            tensor_type_, "Temp T2", spin_cases({"hhpp"}));
+        BlockedTensor tempT2 =
+            ambit::BlockedTensor::build(tensor_type_, "Temp T2", spin_cases({"hhpp"}));
         tempT2["klab"] = U_["ki"] * U_["lj"] * T2["ijab"];
         tempT2["kLaB"] = U_["ki"] * U_["LJ"] * T2["iJaB"];
         tempT2["KLAB"] = U_["KI"] * U_["LJ"] * T2["IJAB"];
@@ -267,22 +261,19 @@ void MRDSRG::guess_t2_noccvv(BlockedTensor& V, BlockedTensor& T2) {
     }
 
     // labels for ccvv blocks and the rest blocks
-    std::vector<std::string> cv_blocks{
-        acore_label_ + acore_label_ + avirt_label_ + avirt_label_,
-        acore_label_ + bcore_label_ + avirt_label_ + bvirt_label_,
-        bcore_label_ + bcore_label_ + bvirt_label_ + bvirt_label_};
+    std::vector<std::string> cv_blocks{acore_label_ + acore_label_ + avirt_label_ + avirt_label_,
+                                       acore_label_ + bcore_label_ + avirt_label_ + bvirt_label_,
+                                       bcore_label_ + bcore_label_ + bvirt_label_ + bvirt_label_};
     std::vector<std::string> other_blocks(T2.block_labels());
-    other_blocks.erase(
-        std::remove_if(other_blocks.begin(), other_blocks.end(),
-                       [&](std::string i) {
-                           return std::find(cv_blocks.begin(), cv_blocks.end(),
-                                            i) != cv_blocks.end();
-                       }),
-        other_blocks.end());
+    other_blocks.erase(std::remove_if(other_blocks.begin(), other_blocks.end(),
+                                      [&](std::string i) {
+                                          return std::find(cv_blocks.begin(), cv_blocks.end(), i) !=
+                                                 cv_blocks.end();
+                                      }),
+                       other_blocks.end());
 
     // map spin with Fock matrices
-    std::map<bool, const std::vector<double>> Fock_spin{{true, Fa_},
-                                                        {false, Fb_}};
+    std::map<bool, const std::vector<double>> Fock_spin{{true, Fa_}, {false, Fb_}};
 
     // ccvv blocks
     for (const std::string& block : cv_blocks) {
@@ -294,23 +285,22 @@ void MRDSRG::guess_t2_noccvv(BlockedTensor& V, BlockedTensor& T2) {
         const std::vector<double>& F0 = Fock_spin[spin0];
         const std::vector<double>& F1 = Fock_spin[spin1];
 
-        T2.block(block)
-            .iterate([&](const std::vector<size_t>& i, double& value) {
-                size_t i0 = label_to_spacemo_[block[0]][i[0]];
-                size_t i1 = label_to_spacemo_[block[1]][i[1]];
-                size_t i2 = label_to_spacemo_[block[2]][i[2]];
-                size_t i3 = label_to_spacemo_[block[3]][i[3]];
-                value /= F0[i0] + F1[i1] - F0[i2] - F0[i3];
-                if (spin0 && spin1) {
-                    t2aa_norm_ += value * value;
-                } else if (spin0 && !spin1) {
-                    t2ab_norm_ += value * value;
-                } else if (!spin0 && !spin1) {
-                    t2bb_norm_ += value * value;
-                }
-                if (std::fabs(value) > std::fabs(T2max_))
-                    T2max_ = value;
-            });
+        T2.block(block).iterate([&](const std::vector<size_t>& i, double& value) {
+            size_t i0 = label_to_spacemo_[block[0]][i[0]];
+            size_t i1 = label_to_spacemo_[block[1]][i[1]];
+            size_t i2 = label_to_spacemo_[block[2]][i[2]];
+            size_t i3 = label_to_spacemo_[block[3]][i[3]];
+            value /= F0[i0] + F1[i1] - F0[i2] - F0[i3];
+            if (spin0 && spin1) {
+                t2aa_norm_ += value * value;
+            } else if (spin0 && !spin1) {
+                t2ab_norm_ += value * value;
+            } else if (!spin0 && !spin1) {
+                t2bb_norm_ += value * value;
+            }
+            if (std::fabs(value) > std::fabs(T2max_))
+                T2max_ = value;
+        });
     }
 
     // other blocks
@@ -323,31 +313,30 @@ void MRDSRG::guess_t2_noccvv(BlockedTensor& V, BlockedTensor& T2) {
         const std::vector<double>& F0 = Fock_spin[spin0];
         const std::vector<double>& F1 = Fock_spin[spin1];
 
-        T2.block(block)
-            .iterate([&](const std::vector<size_t>& i, double& value) {
-                size_t i0 = label_to_spacemo_[block[0]][i[0]];
-                size_t i1 = label_to_spacemo_[block[1]][i[1]];
-                size_t i2 = label_to_spacemo_[block[2]][i[2]];
-                size_t i3 = label_to_spacemo_[block[3]][i[3]];
-                value *= dsrg_source_->compute_renormalized_denominator(
-                    F0[i0] + F1[i1] - F0[i2] - F0[i3]);
+        T2.block(block).iterate([&](const std::vector<size_t>& i, double& value) {
+            size_t i0 = label_to_spacemo_[block[0]][i[0]];
+            size_t i1 = label_to_spacemo_[block[1]][i[1]];
+            size_t i2 = label_to_spacemo_[block[2]][i[2]];
+            size_t i3 = label_to_spacemo_[block[3]][i[3]];
+            value *=
+                dsrg_source_->compute_renormalized_denominator(F0[i0] + F1[i1] - F0[i2] - F0[i3]);
 
-                if (spin0 && spin1) {
-                    t2aa_norm_ += value * value;
-                } else if (spin0 && !spin1) {
-                    t2ab_norm_ += value * value;
-                } else if (!spin0 && !spin1) {
-                    t2bb_norm_ += value * value;
-                }
-                if (std::fabs(value) > std::fabs(T2max_))
-                    T2max_ = value;
-            });
+            if (spin0 && spin1) {
+                t2aa_norm_ += value * value;
+            } else if (spin0 && !spin1) {
+                t2ab_norm_ += value * value;
+            } else if (!spin0 && !spin1) {
+                t2bb_norm_ += value * value;
+            }
+            if (std::fabs(value) > std::fabs(T2max_))
+                T2max_ = value;
+        });
     }
 
     // transform back to non-canonical basis
     if (!semi_canonical_) {
-        BlockedTensor tempT2 = ambit::BlockedTensor::build(
-            tensor_type_, "Temp T2", spin_cases({"hhpp"}));
+        BlockedTensor tempT2 =
+            ambit::BlockedTensor::build(tensor_type_, "Temp T2", spin_cases({"hhpp"}));
         tempT2["klab"] = U_["ik"] * U_["jl"] * T2["ijab"];
         tempT2["kLaB"] = U_["ik"] * U_["JL"] * T2["iJaB"];
         tempT2["KLAB"] = U_["IK"] * U_["JL"] * T2["IJAB"];
@@ -380,8 +369,7 @@ void MRDSRG::guess_t2_noccvv(BlockedTensor& V, BlockedTensor& T2) {
     outfile->Printf("  Done. Timing %10.3f s", timer.get());
 }
 
-void MRDSRG::guess_t1_nocv(BlockedTensor& F, BlockedTensor& T2,
-                           BlockedTensor& T1) {
+void MRDSRG::guess_t1_nocv(BlockedTensor& F, BlockedTensor& T2, BlockedTensor& T1) {
     Timer timer;
     std::string str = "Computing T1 amplitudes ...";
     outfile->Printf("\n    %-35s", str.c_str());
@@ -391,24 +379,24 @@ void MRDSRG::guess_t1_nocv(BlockedTensor& F, BlockedTensor& T2,
     temp["xu"] = Gamma1_["xu"];
     temp["XU"] = Gamma1_["XU"];
     if (!semi_canonical_) {
-        BlockedTensor tempG = ambit::BlockedTensor::build(
-            tensor_type_, "Temp Gamma", spin_cases({"aa"}));
+        BlockedTensor tempG =
+            ambit::BlockedTensor::build(tensor_type_, "Temp Gamma", spin_cases({"aa"}));
         tempG["uv"] = U_["ux"] * temp["xy"] * U_["vy"];
         tempG["UV"] = U_["UX"] * temp["XY"] * U_["VY"];
         temp["uv"] = tempG["uv"];
         temp["UV"] = tempG["UV"];
     }
-    temp.iterate([&](const std::vector<size_t>& i,
-                     const std::vector<SpinType>& spin, double& value) {
-        if (spin[0] == AlphaSpin) {
-            value *= Fa_[i[0]] - Fa_[i[1]];
-        } else {
-            value *= Fb_[i[0]] - Fb_[i[1]];
-        }
-    });
+    temp.iterate(
+        [&](const std::vector<size_t>& i, const std::vector<SpinType>& spin, double& value) {
+            if (spin[0] == AlphaSpin) {
+                value *= Fa_[i[0]] - Fa_[i[1]];
+            } else {
+                value *= Fb_[i[0]] - Fb_[i[1]];
+            }
+        });
     if (!semi_canonical_) {
-        BlockedTensor tempG = ambit::BlockedTensor::build(
-            tensor_type_, "Temp Gamma", spin_cases({"aa"}));
+        BlockedTensor tempG =
+            ambit::BlockedTensor::build(tensor_type_, "Temp Gamma", spin_cases({"aa"}));
         tempG["uv"] = U_["xu"] * temp["xy"] * U_["yv"];
         tempG["UV"] = U_["XU"] * temp["XY"] * U_["YV"];
         temp["uv"] = tempG["uv"];
@@ -425,8 +413,8 @@ void MRDSRG::guess_t1_nocv(BlockedTensor& F, BlockedTensor& T2,
 
     // transform to semi-canonical basis
     if (!semi_canonical_) {
-        BlockedTensor tempT1 = ambit::BlockedTensor::build(
-            tensor_type_, "Temp T1", spin_cases({"hp"}));
+        BlockedTensor tempT1 =
+            ambit::BlockedTensor::build(tensor_type_, "Temp T1", spin_cases({"hp"}));
         tempT1["jb"] = U_["ji"] * T1["ia"] * U_["ba"];
         tempT1["JB"] = U_["JI"] * T1["IA"] * U_["BA"];
         T1["ia"] = tempT1["ia"];
@@ -434,39 +422,35 @@ void MRDSRG::guess_t1_nocv(BlockedTensor& F, BlockedTensor& T2,
     }
 
     // labels for ccvv blocks and the rest blocks
-    std::vector<std::string> cv_blocks{acore_label_ + avirt_label_,
-                                       bcore_label_ + bvirt_label_};
+    std::vector<std::string> cv_blocks{acore_label_ + avirt_label_, bcore_label_ + bvirt_label_};
     std::vector<std::string> other_blocks(T1.block_labels());
-    other_blocks.erase(
-        std::remove_if(other_blocks.begin(), other_blocks.end(),
-                       [&](std::string i) {
-                           return std::find(cv_blocks.begin(), cv_blocks.end(),
-                                            i) != cv_blocks.end();
-                       }),
-        other_blocks.end());
+    other_blocks.erase(std::remove_if(other_blocks.begin(), other_blocks.end(),
+                                      [&](std::string i) {
+                                          return std::find(cv_blocks.begin(), cv_blocks.end(), i) !=
+                                                 cv_blocks.end();
+                                      }),
+                       other_blocks.end());
 
     // map spin with Fock matrices
-    std::map<bool, const std::vector<double>> Fock_spin{{true, Fa_},
-                                                        {false, Fb_}};
+    std::map<bool, const std::vector<double>> Fock_spin{{true, Fa_}, {false, Fb_}};
 
     // cv blocks
     for (const std::string& block : cv_blocks) {
         bool spin0 = islower(block[0]);
         const std::vector<double>& F0 = Fock_spin[spin0];
 
-        T1.block(block)
-            .iterate([&](const std::vector<size_t>& i, double& value) {
-                size_t i0 = label_to_spacemo_[block[0]][i[0]];
-                size_t i1 = label_to_spacemo_[block[1]][i[1]];
-                value /= F0[i0] - F0[i1];
-                if (spin0) {
-                    t1a_norm_ += value * value;
-                } else if (!spin0) {
-                    t1b_norm_ += value * value;
-                }
-                if (std::fabs(value) > std::fabs(T1max_))
-                    T1max_ = value;
-            });
+        T1.block(block).iterate([&](const std::vector<size_t>& i, double& value) {
+            size_t i0 = label_to_spacemo_[block[0]][i[0]];
+            size_t i1 = label_to_spacemo_[block[1]][i[1]];
+            value /= F0[i0] - F0[i1];
+            if (spin0) {
+                t1a_norm_ += value * value;
+            } else if (!spin0) {
+                t1b_norm_ += value * value;
+            }
+            if (std::fabs(value) > std::fabs(T1max_))
+                T1max_ = value;
+        });
     }
 
     // other blocks
@@ -474,12 +458,10 @@ void MRDSRG::guess_t1_nocv(BlockedTensor& F, BlockedTensor& T2,
         bool spin0 = islower(block[0]);
         const std::vector<double>& F0 = Fock_spin[spin0];
 
-        T1.block(block).iterate([&](const std::vector<size_t>& i,
-                                    double& value) {
+        T1.block(block).iterate([&](const std::vector<size_t>& i, double& value) {
             size_t i0 = label_to_spacemo_[block[0]][i[0]];
             size_t i1 = label_to_spacemo_[block[1]][i[1]];
-            value *=
-                dsrg_source_->compute_renormalized_denominator(F0[i0] - F0[i1]);
+            value *= dsrg_source_->compute_renormalized_denominator(F0[i0] - F0[i1]);
 
             if (spin0) {
                 t1a_norm_ += value * value;
@@ -493,8 +475,8 @@ void MRDSRG::guess_t1_nocv(BlockedTensor& F, BlockedTensor& T2,
 
     // transform back to non-canonical basis
     if (!semi_canonical_) {
-        BlockedTensor tempT1 = ambit::BlockedTensor::build(
-            tensor_type_, "Temp T1", spin_cases({"hp"}));
+        BlockedTensor tempT1 =
+            ambit::BlockedTensor::build(tensor_type_, "Temp T1", spin_cases({"hp"}));
         tempT1["jb"] = U_["ij"] * T1["ia"] * U_["ab"];
         tempT1["JB"] = U_["IJ"] * T1["IA"] * U_["AB"];
         T1["ia"] = tempT1["ia"];
@@ -537,19 +519,19 @@ void MRDSRG::update_t2_std() {
     }
 
     // scale Hbar2 by renormalized denominator
-    Hbar2_.iterate([&](const std::vector<size_t>& i,
-                       const std::vector<SpinType>& spin, double& value) {
-        if ((spin[0] == AlphaSpin) && (spin[1] == AlphaSpin)) {
-            value *= dsrg_source_->compute_renormalized_denominator(
-                Fa_[i[0]] + Fa_[i[1]] - Fa_[i[2]] - Fa_[i[3]]);
-        } else if ((spin[0] == AlphaSpin) && (spin[1] == BetaSpin)) {
-            value *= dsrg_source_->compute_renormalized_denominator(
-                Fa_[i[0]] + Fb_[i[1]] - Fa_[i[2]] - Fb_[i[3]]);
-        } else if ((spin[0] == BetaSpin) && (spin[1] == BetaSpin)) {
-            value *= dsrg_source_->compute_renormalized_denominator(
-                Fb_[i[0]] + Fb_[i[1]] - Fb_[i[2]] - Fb_[i[3]]);
-        }
-    });
+    Hbar2_.iterate(
+        [&](const std::vector<size_t>& i, const std::vector<SpinType>& spin, double& value) {
+            if ((spin[0] == AlphaSpin) && (spin[1] == AlphaSpin)) {
+                value *= dsrg_source_->compute_renormalized_denominator(Fa_[i[0]] + Fa_[i[1]] -
+                                                                        Fa_[i[2]] - Fa_[i[3]]);
+            } else if ((spin[0] == AlphaSpin) && (spin[1] == BetaSpin)) {
+                value *= dsrg_source_->compute_renormalized_denominator(Fa_[i[0]] + Fb_[i[1]] -
+                                                                        Fa_[i[2]] - Fb_[i[3]]);
+            } else if ((spin[0] == BetaSpin) && (spin[1] == BetaSpin)) {
+                value *= dsrg_source_->compute_renormalized_denominator(Fb_[i[0]] + Fb_[i[1]] -
+                                                                        Fb_[i[2]] - Fb_[i[3]]);
+            }
+        });
 
     // copy renormalized Hbar2 to DT2
     DT2_["ijab"] = Hbar2_["ijab"];
@@ -565,8 +547,8 @@ void MRDSRG::update_t2_std() {
 
     // transform T2 to semi-canonical basis
     if (!semi_canonical_) {
-        BlockedTensor temp = ambit::BlockedTensor::build(
-            tensor_type_, "temp for T2 update", spin_cases({"hhpp"}));
+        BlockedTensor temp =
+            ambit::BlockedTensor::build(tensor_type_, "temp for T2 update", spin_cases({"hhpp"}));
         temp["klab"] = U_["ki"] * U_["lj"] * Hbar2_["ijab"];
         temp["kLaB"] = U_["ki"] * U_["LJ"] * Hbar2_["iJaB"];
         temp["KLAB"] = U_["KI"] * U_["LJ"] * Hbar2_["IJAB"];
@@ -576,17 +558,17 @@ void MRDSRG::update_t2_std() {
     }
 
     // scale T2 by delta exponential
-    Hbar2_.iterate([&](const std::vector<size_t>& i,
-                       const std::vector<SpinType>& spin, double& value) {
+    Hbar2_.iterate([&](const std::vector<size_t>& i, const std::vector<SpinType>& spin,
+                       double& value) {
         if ((spin[0] == AlphaSpin) && (spin[1] == AlphaSpin)) {
-            value *= dsrg_source_->compute_renormalized(Fa_[i[0]] + Fa_[i[1]] -
-                                                        Fa_[i[2]] - Fa_[i[3]]);
+            value *=
+                dsrg_source_->compute_renormalized(Fa_[i[0]] + Fa_[i[1]] - Fa_[i[2]] - Fa_[i[3]]);
         } else if ((spin[0] == AlphaSpin) && (spin[1] == BetaSpin)) {
-            value *= dsrg_source_->compute_renormalized(Fa_[i[0]] + Fb_[i[1]] -
-                                                        Fa_[i[2]] - Fb_[i[3]]);
+            value *=
+                dsrg_source_->compute_renormalized(Fa_[i[0]] + Fb_[i[1]] - Fa_[i[2]] - Fb_[i[3]]);
         } else if ((spin[0] == BetaSpin) && (spin[1] == BetaSpin)) {
-            value *= dsrg_source_->compute_renormalized(Fb_[i[0]] + Fb_[i[1]] -
-                                                        Fb_[i[2]] - Fb_[i[3]]);
+            value *=
+                dsrg_source_->compute_renormalized(Fb_[i[0]] + Fb_[i[1]] - Fb_[i[2]] - Fb_[i[3]]);
         }
     });
 
@@ -597,8 +579,7 @@ void MRDSRG::update_t2_std() {
 
     // zero internal amplitudes
     for (const std::string& block : {"aaaa", "aAaA", "AAAA"}) {
-        DT2_.block(block).iterate(
-            [&](const std::vector<size_t>&, double& value) { value = 0.0; });
+        DT2_.block(block).iterate([&](const std::vector<size_t>&, double& value) { value = 0.0; });
     }
 
     // compute RMS
@@ -620,18 +601,18 @@ void MRDSRG::update_t2_std() {
     T2_["IJAB"] += DT2_["IJAB"];
 
     // compute norm and find maximum
-    T2_.iterate([&](const std::vector<size_t>& i,
-                    const std::vector<SpinType>& spin, double& value) {
-        if ((spin[0] == AlphaSpin) && (spin[1] == AlphaSpin)) {
-            t2aa_norm_ += value * value;
-        } else if ((spin[0] == AlphaSpin) && (spin[1] == BetaSpin)) {
-            t2ab_norm_ += value * value;
-        } else if ((spin[0] == BetaSpin) && (spin[1] == BetaSpin)) {
-            t2bb_norm_ += value * value;
-        }
-        if (std::fabs(value) > std::fabs(T2max_))
-            T2max_ = value;
-    });
+    T2_.iterate(
+        [&](const std::vector<size_t>& i, const std::vector<SpinType>& spin, double& value) {
+            if ((spin[0] == AlphaSpin) && (spin[1] == AlphaSpin)) {
+                t2aa_norm_ += value * value;
+            } else if ((spin[0] == AlphaSpin) && (spin[1] == BetaSpin)) {
+                t2ab_norm_ += value * value;
+            } else if ((spin[0] == BetaSpin) && (spin[1] == BetaSpin)) {
+                t2bb_norm_ += value * value;
+            }
+            if (std::fabs(value) > std::fabs(T2max_))
+                T2max_ = value;
+        });
 
     T2norm_ = std::sqrt(t2aa_norm_ + t2bb_norm_ + 4 * t2ab_norm_);
     t2aa_norm_ = std::sqrt(t2aa_norm_);
@@ -654,16 +635,14 @@ void MRDSRG::update_t1_std() {
     }
 
     // scale Hbar1 by renormalized denominator
-    Hbar1_.iterate([&](const std::vector<size_t>& i,
-                       const std::vector<SpinType>& spin, double& value) {
-        if (spin[0] == AlphaSpin) {
-            value *= dsrg_source_->compute_renormalized_denominator(Fa_[i[0]] -
-                                                                    Fa_[i[1]]);
-        } else {
-            value *= dsrg_source_->compute_renormalized_denominator(Fb_[i[0]] -
-                                                                    Fb_[i[1]]);
-        }
-    });
+    Hbar1_.iterate(
+        [&](const std::vector<size_t>& i, const std::vector<SpinType>& spin, double& value) {
+            if (spin[0] == AlphaSpin) {
+                value *= dsrg_source_->compute_renormalized_denominator(Fa_[i[0]] - Fa_[i[1]]);
+            } else {
+                value *= dsrg_source_->compute_renormalized_denominator(Fb_[i[0]] - Fb_[i[1]]);
+            }
+        });
 
     // copy renormalized Hbar1 to DT1
     DT1_["ia"] = Hbar1_["ia"];
@@ -677,8 +656,8 @@ void MRDSRG::update_t1_std() {
 
     // transform T1 to semi-canonical basis
     if (!semi_canonical_) {
-        BlockedTensor temp = ambit::BlockedTensor::build(
-            tensor_type_, "temp for T1 update", spin_cases({"hp"}));
+        BlockedTensor temp =
+            ambit::BlockedTensor::build(tensor_type_, "temp for T1 update", spin_cases({"hp"}));
         temp["jb"] = U_["ji"] * Hbar1_["ia"] * U_["ba"];
         temp["JB"] = U_["JI"] * Hbar1_["IA"] * U_["BA"];
         Hbar1_["ia"] = temp["ia"];
@@ -686,14 +665,14 @@ void MRDSRG::update_t1_std() {
     }
 
     // scale T1 by delta exponential
-    Hbar1_.iterate([&](const std::vector<size_t>& i,
-                       const std::vector<SpinType>& spin, double& value) {
-        if (spin[0] == AlphaSpin) {
-            value *= dsrg_source_->compute_renormalized(Fa_[i[0]] - Fa_[i[1]]);
-        } else {
-            value *= dsrg_source_->compute_renormalized(Fb_[i[0]] - Fb_[i[1]]);
-        }
-    });
+    Hbar1_.iterate(
+        [&](const std::vector<size_t>& i, const std::vector<SpinType>& spin, double& value) {
+            if (spin[0] == AlphaSpin) {
+                value *= dsrg_source_->compute_renormalized(Fa_[i[0]] - Fa_[i[1]]);
+            } else {
+                value *= dsrg_source_->compute_renormalized(Fb_[i[0]] - Fb_[i[1]]);
+            }
+        });
 
     // minus the renormalized T1 from renormalized Hbar1
     DT1_["ia"] -= Hbar1_["ia"];
@@ -701,8 +680,7 @@ void MRDSRG::update_t1_std() {
 
     // zero internal amplitudes
     for (const std::string& block : {"aa", "AA"}) {
-        DT1_.block(block).iterate(
-            [&](const std::vector<size_t>&, double& value) { value = 0.0; });
+        DT1_.block(block).iterate([&](const std::vector<size_t>&, double& value) { value = 0.0; });
     }
 
     // compute RMS
@@ -721,16 +699,16 @@ void MRDSRG::update_t1_std() {
     T1_["IA"] += DT1_["IA"];
 
     // compute norm and find maximum
-    T1_.iterate([&](const std::vector<size_t>& i,
-                    const std::vector<SpinType>& spin, double& value) {
-        if (spin[0] == AlphaSpin) {
-            t1a_norm_ += value * value;
-        } else {
-            t1b_norm_ += value * value;
-        }
-        if (std::fabs(value) > std::fabs(T1max_))
-            T1max_ = value;
-    });
+    T1_.iterate(
+        [&](const std::vector<size_t>& i, const std::vector<SpinType>& spin, double& value) {
+            if (spin[0] == AlphaSpin) {
+                t1a_norm_ += value * value;
+            } else {
+                t1b_norm_ += value * value;
+            }
+            if (std::fabs(value) > std::fabs(T1max_))
+                T1max_ = value;
+        });
 
     T1norm_ = std::sqrt(t1a_norm_ + t1b_norm_);
     t1a_norm_ = std::sqrt(t1a_norm_);
@@ -741,15 +719,14 @@ void MRDSRG::update_t2_noccvv() {
     T2max_ = 0.0, t2aa_norm_ = 0.0, t2ab_norm_ = 0.0, t2bb_norm_ = 0.0;
 
     // create a temporary tensor
-    BlockedTensor R2 =
-        ambit::BlockedTensor::build(tensor_type_, "R2", spin_cases({"hhpp"}));
+    BlockedTensor R2 = ambit::BlockedTensor::build(tensor_type_, "R2", spin_cases({"hhpp"}));
     R2["ijab"] = T2_["ijab"];
     R2["iJaB"] = T2_["iJaB"];
     R2["IJAB"] = T2_["IJAB"];
     // transform to semi-canonical basis
     if (!semi_canonical_) {
-        BlockedTensor tempR2 = ambit::BlockedTensor::build(
-            tensor_type_, "Temp R2", spin_cases({"hhpp"}));
+        BlockedTensor tempR2 =
+            ambit::BlockedTensor::build(tensor_type_, "Temp R2", spin_cases({"hhpp"}));
         tempR2["klab"] = U_["ki"] * U_["lj"] * R2["ijab"];
         tempR2["kLaB"] = U_["ki"] * U_["LJ"] * R2["iJaB"];
         tempR2["KLAB"] = U_["KI"] * U_["LJ"] * R2["IJAB"];
@@ -757,8 +734,8 @@ void MRDSRG::update_t2_noccvv() {
         R2["iJcD"] = tempR2["iJaB"] * U_["DB"] * U_["ca"];
         R2["IJCD"] = tempR2["IJAB"] * U_["DB"] * U_["CA"];
 
-        BlockedTensor tempH2 = ambit::BlockedTensor::build(
-            tensor_type_, "Temp Hbar2", spin_cases({"hhpp"}));
+        BlockedTensor tempH2 =
+            ambit::BlockedTensor::build(tensor_type_, "Temp Hbar2", spin_cases({"hhpp"}));
         tempH2["klab"] = U_["ki"] * U_["lj"] * Hbar2_["ijab"];
         tempH2["kLaB"] = U_["ki"] * U_["LJ"] * Hbar2_["iJaB"];
         tempH2["KLAB"] = U_["KI"] * U_["LJ"] * Hbar2_["IJAB"];
@@ -766,8 +743,7 @@ void MRDSRG::update_t2_noccvv() {
         Hbar2_["iJcD"] = tempH2["iJaB"] * U_["DB"] * U_["ca"];
         Hbar2_["IJCD"] = tempH2["IJAB"] * U_["DB"] * U_["CA"];
     }
-    R2.iterate([&](const std::vector<size_t>& i,
-                   const std::vector<SpinType>& spin, double& value) {
+    R2.iterate([&](const std::vector<size_t>& i, const std::vector<SpinType>& spin, double& value) {
         if ((spin[0] == AlphaSpin) && (spin[1] == AlphaSpin)) {
             value *= Fa_[i[0]] + Fa_[i[1]] - Fa_[i[2]] - Fa_[i[3]];
         } else if ((spin[0] == AlphaSpin) && (spin[1] == BetaSpin)) {
@@ -781,22 +757,19 @@ void MRDSRG::update_t2_noccvv() {
     R2["IJAB"] += Hbar2_["IJAB"];
 
     // block labels
-    std::vector<std::string> cv_blocks{
-        acore_label_ + acore_label_ + avirt_label_ + avirt_label_,
-        acore_label_ + bcore_label_ + avirt_label_ + bvirt_label_,
-        bcore_label_ + bcore_label_ + bvirt_label_ + bvirt_label_};
+    std::vector<std::string> cv_blocks{acore_label_ + acore_label_ + avirt_label_ + avirt_label_,
+                                       acore_label_ + bcore_label_ + avirt_label_ + bvirt_label_,
+                                       bcore_label_ + bcore_label_ + bvirt_label_ + bvirt_label_};
     std::vector<std::string> other_blocks(R2.block_labels());
-    other_blocks.erase(
-        std::remove_if(other_blocks.begin(), other_blocks.end(),
-                       [&](std::string i) {
-                           return std::find(cv_blocks.begin(), cv_blocks.end(),
-                                            i) != cv_blocks.end();
-                       }),
-        other_blocks.end());
+    other_blocks.erase(std::remove_if(other_blocks.begin(), other_blocks.end(),
+                                      [&](std::string i) {
+                                          return std::find(cv_blocks.begin(), cv_blocks.end(), i) !=
+                                                 cv_blocks.end();
+                                      }),
+                       other_blocks.end());
 
     // map spin with Fock matrices
-    std::map<bool, const std::vector<double>> Fock_spin{{true, Fa_},
-                                                        {false, Fb_}};
+    std::map<bool, const std::vector<double>> Fock_spin{{true, Fa_}, {false, Fb_}};
 
     // ccvv blocks
     for (const std::string& block : cv_blocks) {
@@ -808,23 +781,22 @@ void MRDSRG::update_t2_noccvv() {
         const std::vector<double>& F0 = Fock_spin[spin0];
         const std::vector<double>& F1 = Fock_spin[spin1];
 
-        R2.block(block)
-            .iterate([&](const std::vector<size_t>& i, double& value) {
-                size_t i0 = label_to_spacemo_[block[0]][i[0]];
-                size_t i1 = label_to_spacemo_[block[1]][i[1]];
-                size_t i2 = label_to_spacemo_[block[2]][i[2]];
-                size_t i3 = label_to_spacemo_[block[3]][i[3]];
-                value /= F0[i0] + F1[i1] - F0[i2] - F0[i3];
-                if (spin0 && spin1) {
-                    t2aa_norm_ += value * value;
-                } else if (spin0 && !spin1) {
-                    t2ab_norm_ += value * value;
-                } else if (!spin0 && !spin1) {
-                    t2bb_norm_ += value * value;
-                }
-                if (std::fabs(value) > std::fabs(T2max_))
-                    T2max_ = value;
-            });
+        R2.block(block).iterate([&](const std::vector<size_t>& i, double& value) {
+            size_t i0 = label_to_spacemo_[block[0]][i[0]];
+            size_t i1 = label_to_spacemo_[block[1]][i[1]];
+            size_t i2 = label_to_spacemo_[block[2]][i[2]];
+            size_t i3 = label_to_spacemo_[block[3]][i[3]];
+            value /= F0[i0] + F1[i1] - F0[i2] - F0[i3];
+            if (spin0 && spin1) {
+                t2aa_norm_ += value * value;
+            } else if (spin0 && !spin1) {
+                t2ab_norm_ += value * value;
+            } else if (!spin0 && !spin1) {
+                t2bb_norm_ += value * value;
+            }
+            if (std::fabs(value) > std::fabs(T2max_))
+                T2max_ = value;
+        });
     }
 
     // other blocks
@@ -837,31 +809,30 @@ void MRDSRG::update_t2_noccvv() {
         const std::vector<double>& F0 = Fock_spin[spin0];
         const std::vector<double>& F1 = Fock_spin[spin1];
 
-        R2.block(block)
-            .iterate([&](const std::vector<size_t>& i, double& value) {
-                size_t i0 = label_to_spacemo_[block[0]][i[0]];
-                size_t i1 = label_to_spacemo_[block[1]][i[1]];
-                size_t i2 = label_to_spacemo_[block[2]][i[2]];
-                size_t i3 = label_to_spacemo_[block[3]][i[3]];
-                value *= dsrg_source_->compute_renormalized_denominator(
-                    F0[i0] + F1[i1] - F0[i2] - F0[i3]);
+        R2.block(block).iterate([&](const std::vector<size_t>& i, double& value) {
+            size_t i0 = label_to_spacemo_[block[0]][i[0]];
+            size_t i1 = label_to_spacemo_[block[1]][i[1]];
+            size_t i2 = label_to_spacemo_[block[2]][i[2]];
+            size_t i3 = label_to_spacemo_[block[3]][i[3]];
+            value *=
+                dsrg_source_->compute_renormalized_denominator(F0[i0] + F1[i1] - F0[i2] - F0[i3]);
 
-                if (spin0 && spin1) {
-                    t2aa_norm_ += value * value;
-                } else if (spin0 && !spin1) {
-                    t2ab_norm_ += value * value;
-                } else if (!spin0 && !spin1) {
-                    t2bb_norm_ += value * value;
-                }
-                if (std::fabs(value) > std::fabs(T2max_))
-                    T2max_ = value;
-            });
+            if (spin0 && spin1) {
+                t2aa_norm_ += value * value;
+            } else if (spin0 && !spin1) {
+                t2ab_norm_ += value * value;
+            } else if (!spin0 && !spin1) {
+                t2bb_norm_ += value * value;
+            }
+            if (std::fabs(value) > std::fabs(T2max_))
+                T2max_ = value;
+        });
     }
 
     // transform back to non-canonical basis
     if (!semi_canonical_) {
-        BlockedTensor tempR2 = ambit::BlockedTensor::build(
-            tensor_type_, "Temp R2", spin_cases({"hhpp"}));
+        BlockedTensor tempR2 =
+            ambit::BlockedTensor::build(tensor_type_, "Temp R2", spin_cases({"hhpp"}));
         tempR2["klab"] = U_["ik"] * U_["jl"] * R2["ijab"];
         tempR2["kLaB"] = U_["ik"] * U_["JL"] * R2["iJaB"];
         tempR2["KLAB"] = U_["IK"] * U_["JL"] * R2["IJAB"];
@@ -906,28 +877,26 @@ void MRDSRG::update_t1_nocv() {
     T1max_ = 0.0, t1a_norm_ = 0.0, t1b_norm_ = 0.0;
 
     // create a temporary tensor
-    BlockedTensor R1 =
-        ambit::BlockedTensor::build(tensor_type_, "R1", spin_cases({"hp"}));
+    BlockedTensor R1 = ambit::BlockedTensor::build(tensor_type_, "R1", spin_cases({"hp"}));
     R1["ia"] = T1_["ia"];
     R1["IA"] = T1_["IA"];
     // transform to semi-canonical basis
     if (!semi_canonical_) {
-        BlockedTensor tempR1 = ambit::BlockedTensor::build(
-            tensor_type_, "Temp R1", spin_cases({"hp"}));
+        BlockedTensor tempR1 =
+            ambit::BlockedTensor::build(tensor_type_, "Temp R1", spin_cases({"hp"}));
         tempR1["jb"] = U_["ji"] * R1["ia"] * U_["ba"];
         tempR1["JB"] = U_["JI"] * R1["IA"] * U_["BA"];
         R1["ia"] = tempR1["ia"];
         R1["IA"] = tempR1["IA"];
 
-        BlockedTensor tempH1 = ambit::BlockedTensor::build(
-            tensor_type_, "Temp Hbar1", spin_cases({"hp"}));
+        BlockedTensor tempH1 =
+            ambit::BlockedTensor::build(tensor_type_, "Temp Hbar1", spin_cases({"hp"}));
         tempH1["jb"] = U_["ji"] * Hbar1_["ia"] * U_["ba"];
         tempH1["JB"] = U_["JI"] * Hbar1_["IA"] * U_["BA"];
         Hbar1_["ia"] = tempH1["ia"];
         Hbar1_["IA"] = tempH1["IA"];
     }
-    R1.iterate([&](const std::vector<size_t>& i,
-                   const std::vector<SpinType>& spin, double& value) {
+    R1.iterate([&](const std::vector<size_t>& i, const std::vector<SpinType>& spin, double& value) {
         if (spin[0] == AlphaSpin) {
             value *= Fa_[i[0]] - Fa_[i[1]];
         } else {
@@ -938,39 +907,35 @@ void MRDSRG::update_t1_nocv() {
     R1["IA"] += Hbar1_["IA"];
 
     // block labels
-    std::vector<std::string> cv_blocks{acore_label_ + avirt_label_,
-                                       bcore_label_ + bvirt_label_};
+    std::vector<std::string> cv_blocks{acore_label_ + avirt_label_, bcore_label_ + bvirt_label_};
     std::vector<std::string> other_blocks(R1.block_labels());
-    other_blocks.erase(
-        std::remove_if(other_blocks.begin(), other_blocks.end(),
-                       [&](std::string i) {
-                           return std::find(cv_blocks.begin(), cv_blocks.end(),
-                                            i) != cv_blocks.end();
-                       }),
-        other_blocks.end());
+    other_blocks.erase(std::remove_if(other_blocks.begin(), other_blocks.end(),
+                                      [&](std::string i) {
+                                          return std::find(cv_blocks.begin(), cv_blocks.end(), i) !=
+                                                 cv_blocks.end();
+                                      }),
+                       other_blocks.end());
 
     // map spin with Fock matrices
-    std::map<bool, const std::vector<double>> Fock_spin{{true, Fa_},
-                                                        {false, Fb_}};
+    std::map<bool, const std::vector<double>> Fock_spin{{true, Fa_}, {false, Fb_}};
 
     // cv blocks
     for (const std::string& block : cv_blocks) {
         bool spin0 = islower(block[0]);
         const std::vector<double>& F0 = Fock_spin[spin0];
 
-        R1.block(block)
-            .iterate([&](const std::vector<size_t>& i, double& value) {
-                size_t i0 = label_to_spacemo_[block[0]][i[0]];
-                size_t i1 = label_to_spacemo_[block[1]][i[1]];
-                value /= F0[i0] - F0[i1];
-                if (spin0) {
-                    t1a_norm_ += value * value;
-                } else if (!spin0) {
-                    t1b_norm_ += value * value;
-                }
-                if (std::fabs(value) > std::fabs(T1max_))
-                    T1max_ = value;
-            });
+        R1.block(block).iterate([&](const std::vector<size_t>& i, double& value) {
+            size_t i0 = label_to_spacemo_[block[0]][i[0]];
+            size_t i1 = label_to_spacemo_[block[1]][i[1]];
+            value /= F0[i0] - F0[i1];
+            if (spin0) {
+                t1a_norm_ += value * value;
+            } else if (!spin0) {
+                t1b_norm_ += value * value;
+            }
+            if (std::fabs(value) > std::fabs(T1max_))
+                T1max_ = value;
+        });
     }
 
     // other blocks
@@ -978,12 +943,10 @@ void MRDSRG::update_t1_nocv() {
         bool spin0 = islower(block[0]);
         const std::vector<double>& F0 = Fock_spin[spin0];
 
-        R1.block(block).iterate([&](const std::vector<size_t>& i,
-                                    double& value) {
+        R1.block(block).iterate([&](const std::vector<size_t>& i, double& value) {
             size_t i0 = label_to_spacemo_[block[0]][i[0]];
             size_t i1 = label_to_spacemo_[block[1]][i[1]];
-            value *=
-                dsrg_source_->compute_renormalized_denominator(F0[i0] - F0[i1]);
+            value *= dsrg_source_->compute_renormalized_denominator(F0[i0] - F0[i1]);
 
             if (spin0) {
                 t1a_norm_ += value * value;
@@ -997,8 +960,8 @@ void MRDSRG::update_t1_nocv() {
 
     // transform back to non-canonical basis
     if (!semi_canonical_) {
-        BlockedTensor tempR1 = ambit::BlockedTensor::build(
-            tensor_type_, "Temp R1", spin_cases({"hp"}));
+        BlockedTensor tempR1 =
+            ambit::BlockedTensor::build(tensor_type_, "Temp R1", spin_cases({"hp"}));
         tempR1["jb"] = U_["ij"] * R1["ia"] * U_["ab"];
         tempR1["JB"] = U_["IJ"] * R1["IA"] * U_["AB"];
         R1["ia"] = tempR1["ia"];
@@ -1030,12 +993,10 @@ void MRDSRG::update_t1_nocv() {
     t1b_norm_ = std::sqrt(t1b_norm_);
 }
 
-void MRDSRG::analyze_amplitudes(std::string name, BlockedTensor& T1,
-                                BlockedTensor& T2) {
+void MRDSRG::analyze_amplitudes(std::string name, BlockedTensor& T1, BlockedTensor& T2) {
     if (!name.empty())
         name += " ";
-    outfile->Printf("\n\n  ==> %sExcitation Amplitudes Summary <==\n",
-                    name.c_str());
+    outfile->Printf("\n\n  ==> %sExcitation Amplitudes Summary <==\n", name.c_str());
     outfile->Printf("\n    Active Indices: ");
     int c = 0;
     for (const auto& idx : aactv_mos_) {
@@ -1056,10 +1017,8 @@ void MRDSRG::analyze_amplitudes(std::string name, BlockedTensor& T1,
 
 // Binary function to achieve sorting a vector of pair<vector, double>
 // according to the double value in decending order
-template <class T1, class T2, class G3 = std::greater<T2>>
-struct rsort_pair_second {
-    bool operator()(const std::pair<T1, T2>& left,
-                    const std::pair<T1, T2>& right) {
+template <class T1, class T2, class G3 = std::greater<T2>> struct rsort_pair_second {
+    bool operator()(const std::pair<T1, T2>& left, const std::pair<T1, T2>& right) {
         G3 p;
         return p(fabs(left.second), fabs(right.second));
     }
@@ -1071,23 +1030,17 @@ void MRDSRG::check_t2(BlockedTensor& T2) {
 
     // create all knids of spin maps; 0: aa, 1: ab, 2:bb
     std::map<int, size_t> spin_to_nonzero;
-    std::map<int, std::vector<std::pair<std::vector<size_t>, double>>>
-        spin_to_t2;
-    std::map<int, std::vector<std::pair<std::vector<size_t>, double>>>
-        spin_to_lt2;
+    std::map<int, std::vector<std::pair<std::vector<size_t>, double>>> spin_to_t2;
+    std::map<int, std::vector<std::pair<std::vector<size_t>, double>>> spin_to_lt2;
 
     for (const std::string& block : T2.block_labels()) {
-        int spin = static_cast<bool>(isupper(block[0])) +
-                   static_cast<bool>(isupper(block[1]));
+        int spin = static_cast<bool>(isupper(block[0])) + static_cast<bool>(isupper(block[1]));
 
         // create a reference to simplify the syntax
-        std::vector<std::pair<std::vector<size_t>, double>>& temp_t2 =
-            spin_to_t2[spin];
-        std::vector<std::pair<std::vector<size_t>, double>>& temp_lt2 =
-            spin_to_lt2[spin];
+        std::vector<std::pair<std::vector<size_t>, double>>& temp_t2 = spin_to_t2[spin];
+        std::vector<std::pair<std::vector<size_t>, double>>& temp_lt2 = spin_to_lt2[spin];
 
-        T2.block(block).citerate([&](const std::vector<size_t>& i,
-                                     const double& value) {
+        T2.block(block).citerate([&](const std::vector<size_t>& i, const double& value) {
             if (fabs(value) > 1.0e-15) {
                 size_t idx0 = label_to_spacemo_[block[0]][i[0]];
                 size_t idx1 = label_to_spacemo_[block[1]][i[1]];
@@ -1143,46 +1096,40 @@ void MRDSRG::check_t1(BlockedTensor& T1) {
 
     // create all kinds of spin maps; true: a, false: b
     std::map<bool, size_t> spin_to_nonzero;
-    std::map<bool, std::vector<std::pair<std::vector<size_t>, double>>>
-        spin_to_t1;
-    std::map<bool, std::vector<std::pair<std::vector<size_t>, double>>>
-        spin_to_lt1;
+    std::map<bool, std::vector<std::pair<std::vector<size_t>, double>>> spin_to_t1;
+    std::map<bool, std::vector<std::pair<std::vector<size_t>, double>>> spin_to_lt1;
 
     for (const std::string& block : T1.block_labels()) {
         bool spin_alpha = islower(block[0]) ? true : false;
 
         // create a reference to simplify the syntax
-        std::vector<std::pair<std::vector<size_t>, double>>& temp_t1 =
-            spin_to_t1[spin_alpha];
-        std::vector<std::pair<std::vector<size_t>, double>>& temp_lt1 =
-            spin_to_lt1[spin_alpha];
+        std::vector<std::pair<std::vector<size_t>, double>>& temp_t1 = spin_to_t1[spin_alpha];
+        std::vector<std::pair<std::vector<size_t>, double>>& temp_lt1 = spin_to_lt1[spin_alpha];
 
-        T1.block(block)
-            .citerate([&](const std::vector<size_t>& i, const double& value) {
-                if (fabs(value) > 1.0e-15) {
-                    size_t idx0 = label_to_spacemo_[block[0]][i[0]];
-                    size_t idx1 = label_to_spacemo_[block[1]][i[1]];
+        T1.block(block).citerate([&](const std::vector<size_t>& i, const double& value) {
+            if (fabs(value) > 1.0e-15) {
+                size_t idx0 = label_to_spacemo_[block[0]][i[0]];
+                size_t idx1 = label_to_spacemo_[block[1]][i[1]];
 
-                    std::vector<size_t> indices = {idx0, idx1};
-                    std::pair<std::vector<size_t>, double> idx_value =
-                        std::make_pair(indices, value);
+                std::vector<size_t> indices = {idx0, idx1};
+                std::pair<std::vector<size_t>, double> idx_value = std::make_pair(indices, value);
 
-                    ++spin_to_nonzero[spin_alpha];
+                ++spin_to_nonzero[spin_alpha];
 
-                    temp_t1.push_back(idx_value);
-                    std::sort(temp_t1.begin(), temp_t1.end(),
-                              rsort_pair_second<std::vector<size_t>, double>());
-                    if (temp_t1.size() == ntamp_ + 1) {
-                        temp_t1.pop_back();
-                    }
-
-                    if (fabs(value) > fabs(intruder_tamp_)) {
-                        temp_lt1.push_back(idx_value);
-                    }
-                    std::sort(temp_lt1.begin(), temp_lt1.end(),
-                              rsort_pair_second<std::vector<size_t>, double>());
+                temp_t1.push_back(idx_value);
+                std::sort(temp_t1.begin(), temp_t1.end(),
+                          rsort_pair_second<std::vector<size_t>, double>());
+                if (temp_t1.size() == ntamp_ + 1) {
+                    temp_t1.pop_back();
                 }
-            });
+
+                if (fabs(value) > fabs(intruder_tamp_)) {
+                    temp_lt1.push_back(idx_value);
+                }
+                std::sort(temp_lt1.begin(), temp_lt1.end(),
+                          rsort_pair_second<std::vector<size_t>, double>());
+            }
+        });
     }
 
     // update value
@@ -1200,18 +1147,17 @@ void MRDSRG::check_t1(BlockedTensor& T1) {
     print_amp_summary("B", t1b, t1b_norm_, nonzero_b);
 }
 
-void MRDSRG::print_amp_summary(
-    const std::string& name,
-    const std::vector<std::pair<std::vector<size_t>, double>>& list,
-    const double& norm, const size_t& number_nonzero) {
+void MRDSRG::print_amp_summary(const std::string& name,
+                               const std::vector<std::pair<std::vector<size_t>, double>>& list,
+                               const double& norm, const size_t& number_nonzero) {
     int rank = name.size();
     std::map<char, std::string> spin_case;
     spin_case['A'] = " ";
     spin_case['B'] = "_";
 
     std::string indent(4, ' ');
-    std::string title = indent + "Largest T" + std::to_string(rank) +
-                        " amplitudes for spin case " + name + ":";
+    std::string title =
+        indent + "Largest T" + std::to_string(rank) + " amplitudes for spin case " + name + ":";
     std::string spin_title;
     std::string mo_title;
     std::string line;
@@ -1226,48 +1172,43 @@ void MRDSRG::print_amp_summary(
     };
 
     if (rank == 1) {
-        spin_title +=
-            str(boost::format(" %3c %3c %3c %3c %9c ") % spin_case[name[0]] %
-                ' ' % spin_case[name[0]] % ' ' % ' ');
+        spin_title += str(boost::format(" %3c %3c %3c %3c %9c ") % spin_case[name[0]] % ' ' %
+                          spin_case[name[0]] % ' ' % ' ');
         if (spin_title.find_first_not_of(' ') != std::string::npos) {
             spin_title = "\n" + indent + extendstr(spin_title, 3);
         } else {
             spin_title = "";
         }
-        mo_title += str(boost::format(" %3c %3c %3c %3c %9c ") % 'i' % ' ' %
-                        'a' % ' ' % ' ');
+        mo_title += str(boost::format(" %3c %3c %3c %3c %9c ") % 'i' % ' ' % 'a' % ' ' % ' ');
         mo_title = "\n" + indent + extendstr(mo_title, 3);
         for (size_t n = 0; n != list.size(); ++n) {
             if (n % 3 == 0)
                 output += "\n" + indent;
             const auto& datapair = list[n];
             std::vector<size_t> idx = datapair.first;
-            output += str(boost::format("[%3d %3c %3d %3c]%9.6f ") % idx[0] %
-                          ' ' % idx[1] % ' ' % datapair.second);
+            output += str(boost::format("[%3d %3c %3d %3c]%9.6f ") % idx[0] % ' ' % idx[1] % ' ' %
+                          datapair.second);
         }
     } else if (rank == 2) {
-        spin_title += str(boost::format(" %3c %3c %3c %3c %9c ") %
-                          spin_case[name[0]] % spin_case[name[1]] %
-                          spin_case[name[0]] % spin_case[name[1]] % ' ');
+        spin_title += str(boost::format(" %3c %3c %3c %3c %9c ") % spin_case[name[0]] %
+                          spin_case[name[1]] % spin_case[name[0]] % spin_case[name[1]] % ' ');
         if (spin_title.find_first_not_of(' ') != std::string::npos) {
             spin_title = "\n" + indent + extendstr(spin_title, 3);
         } else {
             spin_title = "";
         }
-        mo_title += str(boost::format(" %3c %3c %3c %3c %9c ") % 'i' % 'j' %
-                        'a' % 'b' % ' ');
+        mo_title += str(boost::format(" %3c %3c %3c %3c %9c ") % 'i' % 'j' % 'a' % 'b' % ' ');
         mo_title = "\n" + indent + extendstr(mo_title, 3);
         for (size_t n = 0; n != list.size(); ++n) {
             if (n % 3 == 0)
                 output += "\n" + indent;
             const auto& datapair = list[n];
             std::vector<size_t> idx = datapair.first;
-            output += str(boost::format("[%3d %3d %3d %3d]%9.6f ") % idx[0] %
-                          idx[1] % idx[2] % idx[3] % datapair.second);
+            output += str(boost::format("[%3d %3d %3d %3d]%9.6f ") % idx[0] % idx[1] % idx[2] %
+                          idx[3] % datapair.second);
         }
     } else {
-        outfile->Printf(
-            "\n    Printing of amplitude is implemented only for T1 and T2!");
+        outfile->Printf("\n    Printing of amplitude is implemented only for T1 and T2!");
         return;
     }
 
@@ -1275,33 +1216,29 @@ void MRDSRG::print_amp_summary(
         int linesize = mo_title.size() - 2;
         line = "\n" + indent + std::string(linesize - indent.size(), '-');
         summary = "\n" + indent + "Norm of T" + std::to_string(rank) + name +
-                  " vector: (nonzero elements: " +
-                  std::to_string(number_nonzero) + ")";
+                  " vector: (nonzero elements: " + std::to_string(number_nonzero) + ")";
         std::string strnorm = str(boost::format("%.15f.") % norm);
         std::string blank(linesize - summary.size() - strnorm.size() + 1, ' ');
         summary += blank + strnorm;
 
-        output = title + spin_title + mo_title + line + output + line +
-                 summary + line;
+        output = title + spin_title + mo_title + line + output + line + summary + line;
     } else {
         output = title + " NULL";
     }
     outfile->Printf("\n%s", output.c_str());
 }
 
-void MRDSRG::print_intruder(
-    const std::string& name,
-    const std::vector<std::pair<std::vector<size_t>, double>>& list) {
+void MRDSRG::print_intruder(const std::string& name,
+                            const std::vector<std::pair<std::vector<size_t>, double>>& list) {
     int rank = name.size();
     std::map<char, std::vector<double>> spin_to_F;
     spin_to_F['A'] = Fa_;
     spin_to_F['B'] = Fb_;
 
     std::string indent(4, ' ');
-    std::string title = indent + "T" + std::to_string(rank) +
-                        " amplitudes larger than " +
-                        str(boost::format("%.4f") % intruder_tamp_) +
-                        " for spin case " + name + ":";
+    std::string title = indent + "T" + std::to_string(rank) + " amplitudes larger than " +
+                        str(boost::format("%.4f") % intruder_tamp_) + " for spin case " + name +
+                        ":";
     std::string col_title;
     std::string line;
     std::string output;
@@ -1309,10 +1246,9 @@ void MRDSRG::print_intruder(
     if (rank == 1) {
         int x = 30 + 2 * 3 + 2 - 11;
         std::string blank(x / 2, ' ');
-        col_title += "\n" + indent + "    Amplitude         Value     " +
-                     blank + "Denominator" + std::string(x - blank.size(), ' ');
-        line = "\n" + indent +
-               std::string(col_title.size() - indent.size() - 1, '-');
+        col_title += "\n" + indent + "    Amplitude         Value     " + blank + "Denominator" +
+                     std::string(x - blank.size(), ' ');
+        line = "\n" + indent + std::string(col_title.size() - indent.size() - 1, '-');
 
         for (size_t n = 0; n != list.size(); ++n) {
             const auto& datapair = list[n];
@@ -1322,19 +1258,16 @@ void MRDSRG::print_intruder(
             double down = fi - fa;
             double v = datapair.second;
 
-            output +=
-                "\n" + indent +
-                str(boost::format(
-                        "[%3d %3c %3d %3c] %13.8f (%10.6f - %10.6f = %10.6f)") %
-                    i % ' ' % a % ' ' % v % fi % fa % down);
+            output += "\n" + indent +
+                      str(boost::format("[%3d %3c %3d %3c] %13.8f (%10.6f - %10.6f = %10.6f)") % i %
+                          ' ' % a % ' ' % v % fi % fa % down);
         }
     } else if (rank == 2) {
         int x = 50 + 4 * 3 + 2 - 11;
         std::string blank(x / 2, ' ');
-        col_title += "\n" + indent + "    Amplitude         Value     " +
-                     blank + "Denominator" + std::string(x - blank.size(), ' ');
-        line = "\n" + indent +
-               std::string(col_title.size() - indent.size() - 1, '-');
+        col_title += "\n" + indent + "    Amplitude         Value     " + blank + "Denominator" +
+                     std::string(x - blank.size(), ' ');
+        line = "\n" + indent + std::string(col_title.size() - indent.size() - 1, '-');
         for (size_t n = 0; n != list.size(); ++n) {
             const auto& datapair = list[n];
             std::vector<size_t> idx = datapair.first;
@@ -1344,14 +1277,12 @@ void MRDSRG::print_intruder(
             double down = fi + fj - fa - fb;
             double v = datapair.second;
 
-            output += "\n" + indent +
-                      str(boost::format("[%3d %3d %3d %3d] %13.8f (%10.6f + "
-                                        "%10.6f - %10.6f - %10.6f = %10.6f)") %
-                          i % j % a % b % v % fi % fj % fa % fb % down);
+            output += "\n" + indent + str(boost::format("[%3d %3d %3d %3d] %13.8f (%10.6f + "
+                                                        "%10.6f - %10.6f - %10.6f = %10.6f)") %
+                                          i % j % a % b % v % fi % fj % fa % fb % down);
         }
     } else {
-        outfile->Printf(
-            "\n    Printing of amplitude is implemented only for T1 and T2!");
+        outfile->Printf("\n    Printing of amplitude is implemented only for T1 and T2!");
         return;
     }
 

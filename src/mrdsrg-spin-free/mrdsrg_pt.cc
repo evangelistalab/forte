@@ -26,14 +26,14 @@
  * @END LICENSE
  */
 
+#include "psi4/libdiis/diismanager.h"
 #include <algorithm>
-#include <vector>
 #include <map>
 #include <memory>
-#include "psi4/libdiis/diismanager.h"
+#include <vector>
 
-#include "../mini-boost/boost/format.hpp"
 #include "../helpers.h"
+#include "../mini-boost/boost/format.hpp"
 #include "mrdsrg.h"
 
 namespace psi {
@@ -48,16 +48,16 @@ double MRDSRG::compute_energy_pt2() {
 
     // create zeroth-order Hamiltonian
     H0th_ = BTF_->build(tensor_type_, "Zeroth-order H", spin_cases({"gg"}));
-    H0th_.iterate([&](const std::vector<size_t>& i,
-                      const std::vector<SpinType>& spin, double& value) {
-        if (i[0] == i[1]) {
-            if (spin[0] == AlphaSpin) {
-                value = Fa_[i[0]];
-            } else {
-                value = Fb_[i[0]];
+    H0th_.iterate(
+        [&](const std::vector<size_t>& i, const std::vector<SpinType>& spin, double& value) {
+            if (i[0] == i[1]) {
+                if (spin[0] == AlphaSpin) {
+                    value = Fa_[i[0]];
+                } else {
+                    value = Fb_[i[0]];
+                }
             }
-        }
-    });
+        });
 
     // test orbitals are semi-canonicalized
     if (!check_semicanonical()) {
@@ -79,8 +79,7 @@ double MRDSRG::compute_energy_pt2() {
 
     outfile->Printf("\n\n  ==> DSRG-MRPT2 Energy Summary <==\n");
     for (auto& str_dim : energy) {
-        outfile->Printf("\n    %-30s = %22.15f", str_dim.first.c_str(),
-                        str_dim.second);
+        outfile->Printf("\n    %-30s = %22.15f", str_dim.first.c_str(), str_dim.second);
     }
 
     // <0>: description, <1>: energy value
@@ -190,8 +189,7 @@ std::vector<std::pair<std::string, double>> MRDSRG::compute_energy_pt2_Fdiag() {
     return energy;
 }
 
-std::vector<std::pair<std::string, double>>
-MRDSRG::compute_energy_pt2_FdiagV() {
+std::vector<std::pair<std::string, double>> MRDSRG::compute_energy_pt2_FdiagV() {
     // figure out off-diagonal block labels
     std::vector<std::string> blocks1 = od_one_labels_hp();
     std::vector<std::string> blocks2 = od_two_labels_hhpp();
@@ -215,9 +213,8 @@ MRDSRG::compute_energy_pt2_FdiagV() {
     int max_diis_vectors = options_.get_int("DIIS_MAX_VECS");
     int min_diis_vectors = options_.get_int("DIIS_MIN_VECS");
     if (max_diis_vectors > 0) {
-        diis_manager = std::shared_ptr<DIISManager>(
-            new DIISManager(max_diis_vectors, "MRPT2 DIIS T",
-                            DIISManager::LargestError, DIISManager::InCore));
+        diis_manager = std::shared_ptr<DIISManager>(new DIISManager(
+            max_diis_vectors, "MRPT2 DIIS T", DIISManager::LargestError, DIISManager::InCore));
         diis_manager->set_error_vector_size(1, DIISEntry::Pointer, numel);
         diis_manager->set_vector_size(1, DIISEntry::Pointer, numel);
     }
@@ -245,16 +242,12 @@ MRDSRG::compute_energy_pt2_FdiagV() {
     std::string indent(4, ' ');
     std::string dash(76, '-');
     std::string title;
-    title += indent +
-             str(boost::format("%5c  %=21s  %=21s  %=17s  %=4s\n") % ' ' %
-                 "Non-Diagonal Norm" % "Amplitude RMS" % "Timings (s)" % " ");
-    title += indent + std::string(7, ' ') + std::string(21, '-') + "  " +
-             std::string(21, '-') + "  " + std::string(17, '-') + "\n";
-    title +=
-        indent +
-        str(boost::format("%5s  %=10s %=10s  %=10s %=10s  %=8s %=8s  %4s\n") %
-            "Iter." % "Hbar1" % "Hbar2" % "T1" % "T2" % "Hbar" % "Amp." %
-            "DIIS");
+    title += indent + str(boost::format("%5c  %=21s  %=21s  %=17s  %=4s\n") % ' ' %
+                          "Non-Diagonal Norm" % "Amplitude RMS" % "Timings (s)" % " ");
+    title += indent + std::string(7, ' ') + std::string(21, '-') + "  " + std::string(21, '-') +
+             "  " + std::string(17, '-') + "\n";
+    title += indent + str(boost::format("%5s  %=10s %=10s  %=10s %=10s  %=8s %=8s  %4s\n") %
+                          "Iter." % "Hbar1" % "Hbar2" % "T1" % "T2" % "Hbar" % "Amp." % "DIIS");
     title += indent + dash;
     outfile->Printf("\n%s", title.c_str());
 
@@ -311,9 +304,8 @@ MRDSRG::compute_energy_pt2_FdiagV() {
         big_DT = copy_amp_diis(DT1_, blocks1, DT2_, blocks2);
 
         // printing
-        outfile->Printf(
-            "\n    %5d  %10.3e %10.3e  %10.3e %10.3e  %8.3f %8.3f  ", cycle,
-            Hbar1od, Hbar2od, T1rms_, T2rms_, time_hbar, time_amp);
+        outfile->Printf("\n    %5d  %10.3e %10.3e  %10.3e %10.3e  %8.3f %8.3f  ", cycle, Hbar1od,
+                        Hbar2od, T1rms_, T2rms_, time_hbar, time_amp);
 
         // DIIS amplitudes
         if (diis_manager) {
@@ -323,8 +315,7 @@ MRDSRG::compute_energy_pt2_FdiagV() {
                 outfile->Flush();
             }
             if (cycle > max_diis_vectors) {
-                if (diis_manager->subspace_size() >= min_diis_vectors &&
-                    cycle) {
+                if (diis_manager->subspace_size() >= min_diis_vectors && cycle) {
                     outfile->Printf("/E");
                     outfile->Flush();
                     diis_manager->extrapolate(1, &(big_T[0]));
@@ -355,8 +346,7 @@ MRDSRG::compute_energy_pt2_FdiagV() {
 
     // fail to converge
     if (failed) {
-        throw PSIEXCEPTION(
-            "First-order amplitudes do not converge in DSRG-MRPT2.");
+        throw PSIEXCEPTION("First-order amplitudes do not converge in DSRG-MRPT2.");
     }
 
     // reset Hbar to 1st-order H
@@ -447,8 +437,7 @@ MRDSRG::compute_energy_pt2_FdiagV() {
     return energy;
 }
 
-std::vector<std::pair<std::string, double>>
-MRDSRG::compute_energy_pt2_FdiagVdiag() {
+std::vector<std::pair<std::string, double>> MRDSRG::compute_energy_pt2_FdiagVdiag() {
     // figure out off-diagonal block labels
     std::vector<std::string> blocks1 = od_one_labels_hp();
     std::vector<std::string> blocks2 = od_two_labels_hhpp();
@@ -475,9 +464,8 @@ MRDSRG::compute_energy_pt2_FdiagVdiag() {
     int max_diis_vectors = options_.get_int("DIIS_MAX_VECS");
     int min_diis_vectors = options_.get_int("DIIS_MIN_VECS");
     if (max_diis_vectors > 0) {
-        diis_manager = std::shared_ptr<DIISManager>(
-            new DIISManager(max_diis_vectors, "MRPT2 DIIS T",
-                            DIISManager::LargestError, DIISManager::InCore));
+        diis_manager = std::shared_ptr<DIISManager>(new DIISManager(
+            max_diis_vectors, "MRPT2 DIIS T", DIISManager::LargestError, DIISManager::InCore));
         diis_manager->set_error_vector_size(1, DIISEntry::Pointer, numel);
         diis_manager->set_vector_size(1, DIISEntry::Pointer, numel);
     }
@@ -496,14 +484,12 @@ MRDSRG::compute_energy_pt2_FdiagVdiag() {
     std::string indent(4, ' ');
     std::string dash(70, '-');
     std::string title;
-    title +=
-        indent + str(boost::format("%5c  %=21s  %=21s  %=17s\n") % ' ' %
-                     "Non-Diagonal Norm" % "Amplitude RMS" % "Timings (s)");
-    title += indent + std::string(7, ' ') + std::string(21, '-') + "  " +
-             std::string(21, '-') + "  " + std::string(17, '-') + "\n";
-    title += indent +
-             str(boost::format("%5s  %=10s %=10s  %=10s %=10s  %=8s %=8s\n") %
-                 "Iter." % "Hbar1" % "Hbar2" % "T1" % "T2" % "Hbar" % "Amp.");
+    title += indent + str(boost::format("%5c  %=21s  %=21s  %=17s\n") % ' ' % "Non-Diagonal Norm" %
+                          "Amplitude RMS" % "Timings (s)");
+    title += indent + std::string(7, ' ') + std::string(21, '-') + "  " + std::string(21, '-') +
+             "  " + std::string(17, '-') + "\n";
+    title += indent + str(boost::format("%5s  %=10s %=10s  %=10s %=10s  %=8s %=8s\n") % "Iter." %
+                          "Hbar1" % "Hbar2" % "T1" % "T2" % "Hbar" % "Amp.");
     title += indent + dash;
     outfile->Printf("\n%s", title.c_str());
 
@@ -565,8 +551,7 @@ MRDSRG::compute_energy_pt2_FdiagVdiag() {
                 diis_manager->add_entry(2, &(big_DT[0]), &(big_T[0]));
             }
             if (cycle > max_diis_vectors) {
-                if (diis_manager->subspace_size() >= min_diis_vectors &&
-                    cycle) {
+                if (diis_manager->subspace_size() >= min_diis_vectors && cycle) {
                     outfile->Printf(" -> DIIS");
                     outfile->Flush();
                     diis_manager->extrapolate(1, &(big_T[0]));
@@ -576,9 +561,8 @@ MRDSRG::compute_energy_pt2_FdiagVdiag() {
         }
 
         // printing
-        outfile->Printf("\n    %5d  %10.3e %10.3e  %10.3e %10.3e  %8.3f %8.3f",
-                        cycle, Hbar1od, Hbar2od, T1rms_, T2rms_, time_hbar,
-                        time_amp);
+        outfile->Printf("\n    %5d  %10.3e %10.3e  %10.3e %10.3e  %8.3f %8.3f", cycle, Hbar1od,
+                        Hbar2od, T1rms_, T2rms_, time_hbar, time_amp);
 
         // test convergence
         double rms = T1rms_ > T2rms_ ? T1rms_ : T2rms_;
@@ -602,8 +586,7 @@ MRDSRG::compute_energy_pt2_FdiagVdiag() {
 
     // fail to converge
     if (failed) {
-        throw PSIEXCEPTION(
-            "First-order amplitudes do not converge in DSRG-MRPT2.");
+        throw PSIEXCEPTION("First-order amplitudes do not converge in DSRG-MRPT2.");
     }
 
     // reset Hbar to 1st-order Hamiltonian
@@ -661,10 +644,8 @@ MRDSRG::compute_energy_pt2_FdiagVdiag() {
     // reference relaxation
     if (options_.get_str("RELAX_REF") != "NONE") {
         // save the hole part of [H^0th, A^1st]
-        BlockedTensor H0A1_1 =
-            BTF_->build(tensor_type_, "H0A1_1", spin_cases({"gg"}));
-        BlockedTensor H0A1_2 =
-            BTF_->build(tensor_type_, "H0A1_2", spin_cases({"gggg"}));
+        BlockedTensor H0A1_1 = BTF_->build(tensor_type_, "H0A1_1", spin_cases({"gg"}));
+        BlockedTensor H0A1_2 = BTF_->build(tensor_type_, "H0A1_2", spin_cases({"gggg"}));
         H0A1_1["pq"] = O1_["pq"];
         H0A1_1["PQ"] = O1_["PQ"];
         H0A1_1["pq"] += O1_["qp"];
@@ -710,8 +691,7 @@ MRDSRG::compute_energy_pt2_FdiagVdiag() {
         T2_.zero();
         if (max_diis_vectors > 0) {
             diis_manager = std::shared_ptr<DIISManager>(new DIISManager(
-                max_diis_vectors, "MRPT2 DIIS T", DIISManager::LargestError,
-                DIISManager::InCore));
+                max_diis_vectors, "MRPT2 DIIS T", DIISManager::LargestError, DIISManager::InCore));
             diis_manager->set_error_vector_size(1, DIISEntry::Pointer, numel);
             diis_manager->set_vector_size(1, DIISEntry::Pointer, numel);
         }
@@ -772,8 +752,7 @@ MRDSRG::compute_energy_pt2_FdiagVdiag() {
                     diis_manager->add_entry(2, &(big_DT[0]), &(big_T[0]));
                 }
                 if (cycle > max_diis_vectors) {
-                    if (diis_manager->subspace_size() >= min_diis_vectors &&
-                        cycle) {
+                    if (diis_manager->subspace_size() >= min_diis_vectors && cycle) {
                         outfile->Printf(" -> DIIS");
                         outfile->Flush();
                         diis_manager->extrapolate(1, &(big_T[0]));
@@ -783,9 +762,8 @@ MRDSRG::compute_energy_pt2_FdiagVdiag() {
             }
 
             // printing
-            outfile->Printf(
-                "\n    %5d  %10.3e %10.3e  %10.3e %10.3e  %8.3f %8.3f", cycle,
-                Hbar1od, Hbar2od, T1rms_, T2rms_, time_hbar, time_amp);
+            outfile->Printf("\n    %5d  %10.3e %10.3e  %10.3e %10.3e  %8.3f %8.3f", cycle, Hbar1od,
+                            Hbar2od, T1rms_, T2rms_, time_hbar, time_amp);
 
             // test convergence
             double rms = T1rms_ > T2rms_ ? T1rms_ : T2rms_;
@@ -809,8 +787,7 @@ MRDSRG::compute_energy_pt2_FdiagVdiag() {
 
         // fail to converge
         if (failed) {
-            throw PSIEXCEPTION(
-                "Second-order amplitudes do not converge in DSRG-MRPT2.");
+            throw PSIEXCEPTION("Second-order amplitudes do not converge in DSRG-MRPT2.");
         }
 
         // build Hbar correct till 2nd order
@@ -875,9 +852,8 @@ std::vector<std::pair<std::string, double>> MRDSRG::compute_energy_pt2_Ffull() {
     int max_diis_vectors = options_.get_int("DIIS_MAX_VECS");
     int min_diis_vectors = options_.get_int("DIIS_MIN_VECS");
     if (max_diis_vectors > 0) {
-        diis_manager = std::shared_ptr<DIISManager>(
-            new DIISManager(max_diis_vectors, "MRPT2 DIIS T",
-                            DIISManager::LargestError, DIISManager::InCore));
+        diis_manager = std::shared_ptr<DIISManager>(new DIISManager(
+            max_diis_vectors, "MRPT2 DIIS T", DIISManager::LargestError, DIISManager::InCore));
         diis_manager->set_error_vector_size(1, DIISEntry::Pointer, numel);
         diis_manager->set_vector_size(1, DIISEntry::Pointer, numel);
     }
@@ -887,18 +863,13 @@ std::vector<std::pair<std::string, double>> MRDSRG::compute_energy_pt2_Ffull() {
     std::string indent(4, ' ');
     std::string dash(99, '-');
     std::string title;
-    title += indent + str(boost::format("%5c  %=27s  %=21s  %=21s  %=17s\n") %
-                          ' ' % "Energy (a.u.)" % "Non-Diagonal Norm" %
-                          "Amplitude RMS" % "Timings (s)");
-    title += indent + std::string(7, ' ') + std::string(27, '-') + "  " +
-             std::string(21, '-') + "  " + std::string(21, '-') + "  " +
-             std::string(17, '-') + "\n";
-    title +=
-        indent +
-        str(boost::format(
-                "%5s  %=16s %=10s  %=10s %=10s  %=10s %=10s  %=8s %=8s\n") %
-            "Iter." % "Corr." % "Delta" % "Hbar1" % "Hbar2" % "T1" % "T2" %
-            "Hbar" % "Amp.");
+    title += indent + str(boost::format("%5c  %=27s  %=21s  %=21s  %=17s\n") % ' ' %
+                          "Energy (a.u.)" % "Non-Diagonal Norm" % "Amplitude RMS" % "Timings (s)");
+    title += indent + std::string(7, ' ') + std::string(27, '-') + "  " + std::string(21, '-') +
+             "  " + std::string(21, '-') + "  " + std::string(17, '-') + "\n";
+    title += indent +
+             str(boost::format("%5s  %=16s %=10s  %=10s %=10s  %=10s %=10s  %=8s %=8s\n") %
+                 "Iter." % "Corr." % "Delta" % "Hbar1" % "Hbar2" % "T1" % "T2" % "Hbar" % "Amp.");
     title += indent + dash;
     outfile->Printf("\n%s", title.c_str());
 
@@ -956,8 +927,7 @@ std::vector<std::pair<std::string, double>> MRDSRG::compute_energy_pt2_Ffull() {
                 diis_manager->add_entry(2, &(big_DT[0]), &(big_T[0]));
             }
             if (cycle > max_diis_vectors) {
-                if (diis_manager->subspace_size() >= min_diis_vectors &&
-                    cycle) {
+                if (diis_manager->subspace_size() >= min_diis_vectors && cycle) {
                     outfile->Printf(" -> DIIS");
                     outfile->Flush();
                     diis_manager->extrapolate(1, &(big_T[0]));
@@ -969,8 +939,8 @@ std::vector<std::pair<std::string, double>> MRDSRG::compute_energy_pt2_Ffull() {
         // printing
         outfile->Printf("\n    %5d  %16.12f %10.3e  %10.3e %10.3e  %10.3e "
                         "%10.3e  %8.3f %8.3f",
-                        cycle, Ecorr, Edelta, Hbar1od, Hbar2od, T1rms_, T2rms_,
-                        time_hbar, time_amp);
+                        cycle, Ecorr, Edelta, Hbar1od, Hbar2od, T1rms_, T2rms_, time_hbar,
+                        time_amp);
 
         // test convergence
         double rms = T1rms_ > T2rms_ ? T1rms_ : T2rms_;
@@ -993,8 +963,7 @@ std::vector<std::pair<std::string, double>> MRDSRG::compute_energy_pt2_Ffull() {
 
     // fail to converge
     if (failed) {
-        throw PSIEXCEPTION(
-            "First-order amplitudes do not converge in DSRG-MRPT2.");
+        throw PSIEXCEPTION("First-order amplitudes do not converge in DSRG-MRPT2.");
     }
 
     E1st = Ecorr;
@@ -1035,10 +1004,8 @@ std::vector<std::pair<std::string, double>> MRDSRG::compute_energy_pt2_Ffull() {
     H2_T2_C2(Hbar2_, T2_, 0.5, O2_);
 
     // save first-order amplitudes
-    BlockedTensor T1_1st =
-        BTF_->build(tensor_type_, "T1_1st", spin_cases({"hp"}));
-    BlockedTensor T2_1st =
-        BTF_->build(tensor_type_, "T2_1st", spin_cases({"hhpp"}));
+    BlockedTensor T1_1st = BTF_->build(tensor_type_, "T1_1st", spin_cases({"hp"}));
+    BlockedTensor T2_1st = BTF_->build(tensor_type_, "T2_1st", spin_cases({"hhpp"}));
     T1_1st["ia"] = T1_["ia"];
     T1_1st["IA"] = T1_["IA"];
     T2_1st["ijab"] = T2_["ijab"];
@@ -1052,9 +1019,8 @@ std::vector<std::pair<std::string, double>> MRDSRG::compute_energy_pt2_Ffull() {
     T1_.zero();
     T2_.zero();
     if (max_diis_vectors > 0) {
-        diis_manager = std::shared_ptr<DIISManager>(
-            new DIISManager(max_diis_vectors, "MRPT2 DIIS T",
-                            DIISManager::LargestError, DIISManager::InCore));
+        diis_manager = std::shared_ptr<DIISManager>(new DIISManager(
+            max_diis_vectors, "MRPT2 DIIS T", DIISManager::LargestError, DIISManager::InCore));
         diis_manager->set_error_vector_size(1, DIISEntry::Pointer, numel);
         diis_manager->set_vector_size(1, DIISEntry::Pointer, numel);
     }
@@ -1125,8 +1091,7 @@ std::vector<std::pair<std::string, double>> MRDSRG::compute_energy_pt2_Ffull() {
                 diis_manager->add_entry(2, &(big_DT[0]), &(big_T[0]));
             }
             if (cycle > max_diis_vectors) {
-                if (diis_manager->subspace_size() >= min_diis_vectors &&
-                    cycle % 4 == 0) {
+                if (diis_manager->subspace_size() >= min_diis_vectors && cycle % 4 == 0) {
                     outfile->Printf(" -> DIIS");
                     outfile->Flush();
                     diis_manager->extrapolate(1, &(big_T[0]));
@@ -1138,8 +1103,8 @@ std::vector<std::pair<std::string, double>> MRDSRG::compute_energy_pt2_Ffull() {
         // printing
         outfile->Printf("\n    %5d  %16.12f %10.3e  %10.3e %10.3e  %10.3e "
                         "%10.3e  %8.3f %8.3f",
-                        cycle, Ecorr, Edelta, Hbar1od, Hbar2od, T1rms_, T2rms_,
-                        time_hbar, time_amp);
+                        cycle, Ecorr, Edelta, Hbar1od, Hbar2od, T1rms_, T2rms_, time_hbar,
+                        time_amp);
 
         // test convergence
         double rms = T1rms_ > T2rms_ ? T1rms_ : T2rms_;
@@ -1162,8 +1127,7 @@ std::vector<std::pair<std::string, double>> MRDSRG::compute_energy_pt2_Ffull() {
 
     // fail to converge
     if (failed) {
-        throw PSIEXCEPTION(
-            "First-order amplitudes do not converge in DSRG-MRPT2.");
+        throw PSIEXCEPTION("First-order amplitudes do not converge in DSRG-MRPT2.");
     }
 
     E2nd += Ecorr;
@@ -1214,16 +1178,16 @@ double MRDSRG::compute_energy_pt3() {
 
     // create zeroth-order Hamiltonian
     H0th_ = BTF_->build(tensor_type_, "Zeroth-order H", spin_cases({"gg"}));
-    H0th_.iterate([&](const std::vector<size_t>& i,
-                      const std::vector<SpinType>& spin, double& value) {
-        if (i[0] == i[1]) {
-            if (spin[0] == AlphaSpin) {
-                value = Fa_[i[0]];
-            } else {
-                value = Fb_[i[0]];
+    H0th_.iterate(
+        [&](const std::vector<size_t>& i, const std::vector<SpinType>& spin, double& value) {
+            if (i[0] == i[1]) {
+                if (spin[0] == AlphaSpin) {
+                    value = Fa_[i[0]];
+                } else {
+                    value = Fb_[i[0]];
+                }
             }
-        }
-    });
+        });
 
     // test orbitals are semi-canonicalized
     if (!check_semicanonical()) {
@@ -1233,10 +1197,8 @@ double MRDSRG::compute_energy_pt3() {
     }
 
     // create first-order bare Hamiltonian
-    BlockedTensor H1st_1 =
-        BTF_->build(tensor_type_, "H1st_1", spin_cases({"gg"}));
-    BlockedTensor H1st_2 =
-        BTF_->build(tensor_type_, "H1st_2", spin_cases({"gggg"}));
+    BlockedTensor H1st_1 = BTF_->build(tensor_type_, "H1st_1", spin_cases({"gg"}));
+    BlockedTensor H1st_2 = BTF_->build(tensor_type_, "H1st_2", spin_cases({"gggg"}));
     H1st_1["pq"] = F_["pq"];
     H1st_1["PQ"] = F_["PQ"];
     for (auto block : {"cc", "aa", "vv", "CC", "AA", "VV"}) {
@@ -1300,10 +1262,8 @@ double MRDSRG::compute_energy_pt3() {
     H2_T2_C2(Hbar2_, T2_, 1.0, O2_);
 
     // compute second-order Hbar
-    BlockedTensor Hbar2nd_1 =
-        BTF_->build(tensor_type_, "Hbar2nd_1", spin_cases({"gg"}));
-    BlockedTensor Hbar2nd_2 =
-        BTF_->build(tensor_type_, "Hbar2nd_2", spin_cases({"gggg"}));
+    BlockedTensor Hbar2nd_1 = BTF_->build(tensor_type_, "Hbar2nd_1", spin_cases({"gg"}));
+    BlockedTensor Hbar2nd_2 = BTF_->build(tensor_type_, "Hbar2nd_2", spin_cases({"gggg"}));
     Hbar2nd_1["pq"] += O1_["pq"];
     Hbar2nd_1["PQ"] += O1_["PQ"];
     Hbar2nd_2["pqrs"] += O2_["pqrs"];
@@ -1319,10 +1279,8 @@ double MRDSRG::compute_energy_pt3() {
     }
 
     // compute second-order amplitudes
-    BlockedTensor T2nd_1 =
-        BTF_->build(tensor_type_, "temp1", spin_cases({"hp"}));
-    BlockedTensor T2nd_2 =
-        BTF_->build(tensor_type_, "temp2", spin_cases({"hhpp"}));
+    BlockedTensor T2nd_1 = BTF_->build(tensor_type_, "temp1", spin_cases({"hp"}));
+    BlockedTensor T2nd_2 = BTF_->build(tensor_type_, "temp2", spin_cases({"hhpp"}));
     guess_t(Hbar2nd_2, T2nd_2, Hbar2nd_1, T2nd_1);
     analyze_amplitudes("Second-Order", T2nd_1, T2nd_2);
 
@@ -1394,8 +1352,7 @@ double MRDSRG::compute_energy_pt3() {
 
     outfile->Printf("\n\n  ==> DSRG-MRPT3 Energy Summary <==\n");
     for (auto& str_dim : energy) {
-        outfile->Printf("\n    %-30s = %22.15f", str_dim.first.c_str(),
-                        str_dim.second);
+        outfile->Printf("\n    %-30s = %22.15f", str_dim.first.c_str(), str_dim.second);
     }
 
     if (options_.get_str("RELAX_REF") != "NONE") {
@@ -1451,24 +1408,24 @@ double MRDSRG::compute_energy_pt3() {
 bool MRDSRG::check_semicanonical() {
     outfile->Printf("\n    Checking if orbitals are semi-canonicalized ...");
 
-    H0th_.iterate([&](const std::vector<size_t>& i,
-                      const std::vector<SpinType>& spin, double& value) {
-        if (i[0] == i[1]) {
-            if (spin[0] == AlphaSpin) {
-                value = Fa_[i[0]];
-            } else {
-                value = Fb_[i[0]];
+    H0th_.iterate(
+        [&](const std::vector<size_t>& i, const std::vector<SpinType>& spin, double& value) {
+            if (i[0] == i[1]) {
+                if (spin[0] == AlphaSpin) {
+                    value = Fa_[i[0]];
+                } else {
+                    value = Fb_[i[0]];
+                }
             }
-        }
-    });
+        });
 
     std::vector<std::string> blocks = diag_one_labels();
     std::vector<double> Foff;
     double Foff_sum = 0.0;
     for (auto& block : blocks) {
         size_t dim = F_.block(block).dim(0);
-        ambit::Tensor diff = ambit::Tensor::build(tensor_type_, "F - H0",
-                                                  std::vector<size_t>(2, dim));
+        ambit::Tensor diff =
+            ambit::Tensor::build(tensor_type_, "F - H0", std::vector<size_t>(2, dim));
         diff("pq") = F_.block(block)("pq");
         diff("pq") -= H0th_.block(block)("pq");
         double value = diff.norm();
@@ -1485,10 +1442,8 @@ bool MRDSRG::check_semicanonical() {
                         "blocks of Fock matrix");
         outfile->Printf("\n       %15s %15s %15s", "core", "active", "virtual");
         outfile->Printf("\n    %s", sep.c_str());
-        outfile->Printf("\n    Fa %15.10f %15.10f %15.10f", Foff[0], Foff[1],
-                        Foff[2]);
-        outfile->Printf("\n    Fb %15.10f %15.10f %15.10f", Foff[3], Foff[4],
-                        Foff[5]);
+        outfile->Printf("\n    Fa %15.10f %15.10f %15.10f", Foff[0], Foff[1], Foff[2]);
+        outfile->Printf("\n    Fb %15.10f %15.10f %15.10f", Foff[3], Foff[4], Foff[5]);
         outfile->Printf("\n    %s\n", sep.c_str());
     } else {
         outfile->Printf("     OK.");

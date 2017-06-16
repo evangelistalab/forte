@@ -28,14 +28,14 @@
 
 #include <cmath>
 
-#include "psi4/libpsio/psio.hpp"
-#include "psi4/libmints/wavefunction.h"
 #include "psi4/libmints/molecule.h"
+#include "psi4/libmints/wavefunction.h"
+#include "psi4/libpsio/psio.hpp"
 
 #include "psi4/libqt/qt.h"
 
-#include "fcimc.h"
 #include "fci/fci_vector.h"
+#include "fcimc.h"
 #include "helpers.h"
 
 using namespace psi;
@@ -66,8 +66,7 @@ bool FCIQMC::have_omp_ = true;
 bool FCIQMC::have_omp_ = false;
 #endif
 
-FCIQMC::FCIQMC(SharedWavefunction ref_wfn, Options& options,
-               std::shared_ptr<ForteIntegrals> ints,
+FCIQMC::FCIQMC(SharedWavefunction ref_wfn, Options& options, std::shared_ptr<ForteIntegrals> ints,
                std::shared_ptr<MOSpaceInfo> mo_space_info)
     : Wavefunction(options), ints_(ints), mo_space_info_(mo_space_info)
 // fciInts_(ints, mo_space_info)
@@ -83,19 +82,14 @@ std::shared_ptr<FCIIntegrals> FCIQMC::fci_ints_ = 0;
 
 void FCIQMC::startup() {
     // Connect the integrals to the determinant class
-    fci_ints_ = std::make_shared<FCIIntegrals>(
-        ints_, mo_space_info_->get_corr_abs_mo("ACTIVE"),
-        mo_space_info_->get_corr_abs_mo("RESTRICTED_DOCC"));
+    fci_ints_ = std::make_shared<FCIIntegrals>(ints_, mo_space_info_->get_corr_abs_mo("ACTIVE"),
+                                               mo_space_info_->get_corr_abs_mo("RESTRICTED_DOCC"));
 
     auto active_mo = mo_space_info_->get_corr_abs_mo("ACTIVE");
-    ambit::Tensor tei_active_aa =
-        ints_->aptei_aa_block(active_mo, active_mo, active_mo, active_mo);
-    ambit::Tensor tei_active_ab =
-        ints_->aptei_ab_block(active_mo, active_mo, active_mo, active_mo);
-    ambit::Tensor tei_active_bb =
-        ints_->aptei_bb_block(active_mo, active_mo, active_mo, active_mo);
-    fci_ints_->set_active_integrals(tei_active_aa, tei_active_ab,
-                                    tei_active_bb);
+    ambit::Tensor tei_active_aa = ints_->aptei_aa_block(active_mo, active_mo, active_mo, active_mo);
+    ambit::Tensor tei_active_ab = ints_->aptei_ab_block(active_mo, active_mo, active_mo, active_mo);
+    ambit::Tensor tei_active_bb = ints_->aptei_bb_block(active_mo, active_mo, active_mo, active_mo);
+    fci_ints_->set_active_integrals(tei_active_aa, tei_active_ab, tei_active_bb);
     fci_ints_->compute_restricted_one_body_operator();
 
     Determinant::set_ints(fci_ints_);
@@ -125,11 +119,9 @@ void FCIQMC::startup() {
     // combination
     cume_excit_irrep_[0] = nirrep_ * nirrep_ * nirrep_;
     cume_excit_irrep_[1] = cume_excit_irrep_[0] + nirrep_ * nirrep_;
-    cume_excit_irrep_[2] =
-        cume_excit_irrep_[1] + nirrep_ * nirrep_ * (nirrep_ - 1) / 2;
+    cume_excit_irrep_[2] = cume_excit_irrep_[1] + nirrep_ * nirrep_ * (nirrep_ - 1) / 2;
     cume_excit_irrep_[3] = cume_excit_irrep_[2] + nirrep_ * nirrep_;
-    cume_excit_irrep_[4] =
-        cume_excit_irrep_[3] + nirrep_ * nirrep_ * (nirrep_ - 1) / 2;
+    cume_excit_irrep_[4] = cume_excit_irrep_[3] + nirrep_ * nirrep_ * (nirrep_ - 1) / 2;
     cume_excit_irrep_[5] = cume_excit_irrep_[4] + nirrep_;
     cume_excit_irrep_[6] = cume_excit_irrep_[5] + nirrep_;
 
@@ -261,32 +253,25 @@ void FCIQMC::print_info() {
     // Print some information
     outfile->Printf("\n\n  ==> Calculation Information <==\n");
     for (auto& str_dim : calculation_info) {
-        outfile->Printf("\n    %-39s %10d", str_dim.first.c_str(),
-                        str_dim.second);
+        outfile->Printf("\n    %-39s %10d", str_dim.first.c_str(), str_dim.second);
     }
     for (auto& str_dim : calculation_info_double) {
-        outfile->Printf("\n    %-39s %10.3e", str_dim.first.c_str(),
-                        str_dim.second);
+        outfile->Printf("\n    %-39s %10.3e", str_dim.first.c_str(), str_dim.second);
     }
     for (auto& str_dim : calculation_info_string) {
-        outfile->Printf("\n    %-39s %10s", str_dim.first.c_str(),
-                        str_dim.second.c_str());
+        outfile->Printf("\n    %-39s %10s", str_dim.first.c_str(), str_dim.second.c_str());
     }
     outfile->Flush();
 }
 
 double FCIQMC::compute_energy() {
     timer_on("FCIQMC:Energy");
-    outfile->Printf(
-        "\n\n\t  ---------------------------------------------------------");
-    outfile->Printf(
-        "\n\t      Full Configuration Interaction QUANTUM MONTE-CARLO");
-    outfile->Printf(
-        "\n\t         by Tianyuan Zhang and Francesco A. Evangelista");
+    outfile->Printf("\n\n\t  ---------------------------------------------------------");
+    outfile->Printf("\n\t      Full Configuration Interaction QUANTUM MONTE-CARLO");
+    outfile->Printf("\n\t         by Tianyuan Zhang and Francesco A. Evangelista");
     outfile->Printf("\n\t                    %4d thread(s) %s", num_threads_,
                     have_omp_ ? "(OMP)" : "");
-    outfile->Printf(
-        "\n\t  ---------------------------------------------------------");
+    outfile->Printf("\n\t  ---------------------------------------------------------");
 
     // Print a summary of the options
     print_info();
@@ -438,10 +423,8 @@ double FCIQMC::compute_energy() {
     outfile->Printf("\n  * FCIQMC Avg shifted Energy        = %.12f Eh    "
                     "Error Estimation = %.12f Eh",
                     AvgShift_ + Ehf_ + nuclear_repulsion_energy_, ErrShift_);
-    outfile->Printf("\n\n  * Numbef of walkers                = %zu",
-                    (size_t)nWalkers_);
-    outfile->Printf("\n\n  * Size of CI space                 = %zu",
-                    (size_t)nDets_);
+    outfile->Printf("\n\n  * Numbef of walkers                = %zu", (size_t)nWalkers_);
+    outfile->Printf("\n\n  * Size of CI space                 = %zu", (size_t)nDets_);
     //    outfile->Printf("\n  * Spawning events/iteration          =
     //    %zu",nspawned_);
     //    outfile->Printf("\n  * Determinants that do not spawn     =
@@ -452,8 +435,7 @@ double FCIQMC::compute_energy() {
     outfile->Flush();
 
     compute_var_energy(walkers);
-    outfile->Printf("\n\n  * FCIQMC Variational Energy        = %.12f Eh",
-                    Evar_);
+    outfile->Printf("\n\n  * FCIQMC Variational Energy        = %.12f Eh", Evar_);
 
     //    outfile->Printf("\n\nFCIQMC calculation ended with:");
     //    outfile->Printf("\nFinal iter:");
@@ -473,8 +455,7 @@ void FCIQMC::adjust_shift(double pre_nWalker, size_t pre_iter) {
     //    shift_ = shift_ -
     //    (shift_damp_/((iter_-pre_iter)*time_step_))*std::log(nWalkers_/shift_num_walkers_);
     shift_ = shift_ -
-             (shift_damp_ / ((iter_ - pre_iter) * time_step_)) *
-                 std::log(nWalkers_ / pre_nWalker);
+             (shift_damp_ / ((iter_ - pre_iter) * time_step_)) * std::log(nWalkers_ / pre_nWalker);
     //    outfile->Printf("\niter=%d,pre_iter=%d,nWalkers=%.0f,
     //    pre_nWalkers=%.0f, Shift adjusted to %.12lf",iter_, pre_iter,
     //    nWalkers_, pre_nWalker,shift_);
@@ -507,25 +488,21 @@ void FCIQMC::spawn_generative(walker_map& walkers, walker_map& new_walkers) {
                     if (rand_ext >= cume_sumgen_[1]) {
                         //                        outfile->Printf("\nreached
                         //                        here 2");
-                        successFlag = detDoubleMixSpinRandomExcitation(
-                            new_det, aocc, bocc, avir, bvir);
+                        successFlag =
+                            detDoubleMixSpinRandomExcitation(new_det, aocc, bocc, avir, bvir);
                     } else {
                         if (rand_ext < cume_sumgen_[0]) {
-                            successFlag = detSingleRandomExcitation(
-                                new_det, aocc, avir, true);
+                            successFlag = detSingleRandomExcitation(new_det, aocc, avir, true);
                         } else {
-                            successFlag = detSingleRandomExcitation(
-                                new_det, bocc, bvir, false);
+                            successFlag = detSingleRandomExcitation(new_det, bocc, bvir, false);
                         }
                     }
 
                 } else {
                     if (rand_ext < cume_sumgen_[3]) {
-                        successFlag = detDoubleSoloSpinRandomExcitation(
-                            new_det, aocc, avir, true);
+                        successFlag = detDoubleSoloSpinRandomExcitation(new_det, aocc, avir, true);
                     } else {
-                        successFlag = detDoubleSoloSpinRandomExcitation(
-                            new_det, bocc, bvir, false);
+                        successFlag = detDoubleSoloSpinRandomExcitation(new_det, bocc, bvir, false);
                     }
                 }
                 //                } while(!successFlag);
@@ -575,8 +552,7 @@ void FCIQMC::spawn(walker_map& walkers, walker_map& new_walkers) {
 
         //        size_t sumgen = nsa + nsb + ndaa + ndbb + ndab;
         std::vector<std::tuple<size_t, size_t>> singleExcitations;
-        std::vector<std::tuple<size_t, size_t, size_t, size_t>>
-            doubleExcitations;
+        std::vector<std::tuple<size_t, size_t, size_t, size_t>> doubleExcitations;
         size_t sumSingle = 0, sumDouble = 0;
         size_t sumgen = 0;
 
@@ -589,8 +565,8 @@ void FCIQMC::spawn(walker_map& walkers, walker_map& new_walkers) {
         switch (spawn_type_) {
         case random:
             timer_on("FCIQMC:Compute_excitations");
-            sumgen = compute_irrep_divided_excitations(
-                det, excitationDivides, excitationType, obtCount);
+            sumgen =
+                compute_irrep_divided_excitations(det, excitationDivides, excitationType, obtCount);
             //            outfile->Printf("\nreached sumgen! sumgen= %d",
             //            sumgen);
 
@@ -611,8 +587,7 @@ void FCIQMC::spawn(walker_map& walkers, walker_map& new_walkers) {
                 //                    singleExcitations[rand_ext-sumDouble]);
                 //                outfile->Printf("\nreached here!");
 
-                detExcitation(new_det, rand_ext, excitationDivides,
-                              excitationType, obtCount);
+                detExcitation(new_det, rand_ext, excitationDivides, excitationType, obtCount);
 
                 //                outfile->Printf("\nreached here 2!");
 
@@ -682,8 +657,7 @@ void FCIQMC::spawn(walker_map& walkers, walker_map& new_walkers) {
                 if (gen < sumDouble)
                     detDoubleExcitation(new_det, doubleExcitations[gen]);
                 else
-                    detSingleExcitation(new_det,
-                                        singleExcitations[gen - sumDouble]);
+                    detSingleExcitation(new_det, singleExcitations[gen - sumDouble]);
 
                 double HIJ = new_det.slater_rules(det);
                 double pspawn = time_step_ * std::fabs(HIJ) * nid;
@@ -704,20 +678,18 @@ void FCIQMC::spawn(walker_map& walkers, walker_map& new_walkers) {
             break;
         case ground_and_random:
             timer_on("FCIQMC:Compute_excitations");
-            sumgen = compute_irrep_divided_excitations(
-                det, excitationDivides, excitationType, obtCount);
+            sumgen =
+                compute_irrep_divided_excitations(det, excitationDivides, excitationType, obtCount);
 
             timer_off("FCIQMC:Compute_excitations");
 
             for (size_t detW = 0; detW < nid; ++detW) {
                 Determinant new_det(det);
                 size_t rand_ext = rand_int() % sumgen;
-                detExcitation(new_det, rand_ext, excitationDivides,
-                              excitationType, obtCount);
+                detExcitation(new_det, rand_ext, excitationDivides, excitationType, obtCount);
                 if (new_det == reference_) {
                     double HIJ = new_det.slater_rules(det);
-                    double pspawn =
-                        time_step_ * std::fabs(HIJ) * double(sumgen);
+                    double pspawn = time_step_ * std::fabs(HIJ) * double(sumgen);
                     int pspawn_floor = std::floor(pspawn);
                     if (rand_real() < pspawn - double(pspawn_floor)) {
                         pspawn_floor++;
@@ -730,8 +702,7 @@ void FCIQMC::spawn(walker_map& walkers, walker_map& new_walkers) {
                     }
                 } else {
                     double HIJ = new_det.slater_rules(det);
-                    double pspawn =
-                        time_step_ * std::fabs(HIJ) * double(sumgen - 1);
+                    double pspawn = time_step_ * std::fabs(HIJ) * double(sumgen - 1);
                     int pspawn_floor = std::floor(pspawn);
                     if (rand_real() < pspawn - double(pspawn_floor)) {
                         pspawn_floor++;
@@ -763,9 +734,9 @@ void FCIQMC::spawn(walker_map& walkers, walker_map& new_walkers) {
     }
 }
 
-void FCIQMC::singleWalkerSpawn(
-    Determinant& new_det, const Determinant& det,
-    std::tuple<size_t, size_t, size_t, size_t, size_t> pgen, size_t sumgen) {
+void FCIQMC::singleWalkerSpawn(Determinant& new_det, const Determinant& det,
+                               std::tuple<size_t, size_t, size_t, size_t, size_t> pgen,
+                               size_t sumgen) {
 
     size_t nsa, nsb, ndaa, ndab, ndbb;
     std::tie(nsa, nsb, ndaa, ndab, ndbb) = pgen;
@@ -843,8 +814,7 @@ void FCIQMC::death_clone(walker_map& walkers, double shift) {
             if (rand_real() > std::fabs(pDeathClone - pDC_trunc)) {
                 coef -= signCoef * pDC_trunc;
             } else {
-                coef -=
-                    signCoef * (pDC_trunc + (pDeathClone >= 0.0 ? 1.0 : -1.0));
+                coef -= signCoef * (pDC_trunc + (pDeathClone >= 0.0 ? 1.0 : -1.0));
             }
         }
         //        det.print();
@@ -938,8 +908,7 @@ void FCIQMC::merge(walker_map& walkers, walker_map& new_walkers) {
 // Step #3.  Annihilation
 void FCIQMC::annihilate(walker_map& walkers, walker_map& new_walkers) {}
 
-std::tuple<size_t, size_t, size_t, size_t, size_t>
-FCIQMC::compute_pgen_C1(const Determinant& det) {
+std::tuple<size_t, size_t, size_t, size_t, size_t> FCIQMC::compute_pgen_C1(const Determinant& det) {
     const std::vector<int> aocc = det.get_alfa_occ();
     const std::vector<int> bocc = det.get_beta_occ();
     const std::vector<int> avir = det.get_alfa_vir();
@@ -958,8 +927,7 @@ FCIQMC::compute_pgen_C1(const Determinant& det) {
     return std::make_tuple(nsa, nsb, ndaa, ndab, ndbb);
 }
 
-std::tuple<size_t, size_t, size_t, size_t, size_t>
-FCIQMC::compute_pgen(const Determinant& det) {
+std::tuple<size_t, size_t, size_t, size_t, size_t> FCIQMC::compute_pgen(const Determinant& det) {
     const std::vector<int> aocc = det.get_alfa_occ();
     const std::vector<int> bocc = det.get_beta_occ();
     const std::vector<int> avir = det.get_alfa_vir();
@@ -975,8 +943,7 @@ FCIQMC::compute_pgen(const Determinant& det) {
         int ii = aocc[i];
         for (int a = 0; a < nvalpha; ++a) {
             int aa = avir[a];
-            if ((mo_symmetry_[ii] ^ mo_symmetry_[aa]) ==
-                wavefunction_symmetry_) {
+            if ((mo_symmetry_[ii] ^ mo_symmetry_[aa]) == wavefunction_symmetry_) {
                 nsa++;
             }
         }
@@ -986,8 +953,7 @@ FCIQMC::compute_pgen(const Determinant& det) {
         int ii = bocc[i];
         for (int a = 0; a < nvbeta; ++a) {
             int aa = bvir[a];
-            if ((mo_symmetry_[ii] ^ mo_symmetry_[aa]) ==
-                wavefunction_symmetry_) {
+            if ((mo_symmetry_[ii] ^ mo_symmetry_[aa]) == wavefunction_symmetry_) {
                 nsb++;
             }
         }
@@ -1002,9 +968,8 @@ FCIQMC::compute_pgen(const Determinant& det) {
                 int aa = avir[a];
                 for (int b = a + 1; b < nvalpha; ++b) {
                     int bb = avir[b];
-                    if ((mo_symmetry_[ii] ^ mo_symmetry_[jj] ^
-                         mo_symmetry_[aa] ^ mo_symmetry_[bb]) ==
-                        wavefunction_symmetry_) {
+                    if ((mo_symmetry_[ii] ^ mo_symmetry_[jj] ^ mo_symmetry_[aa] ^
+                         mo_symmetry_[bb]) == wavefunction_symmetry_) {
                         ndaa++;
                     }
                 }
@@ -1021,9 +986,8 @@ FCIQMC::compute_pgen(const Determinant& det) {
                 int aa = avir[a];
                 for (int b = 0; b < nvbeta; ++b) {
                     int bb = bvir[b];
-                    if ((mo_symmetry_[ii] ^ mo_symmetry_[jj] ^
-                         mo_symmetry_[aa] ^ mo_symmetry_[bb]) ==
-                        wavefunction_symmetry_) {
+                    if ((mo_symmetry_[ii] ^ mo_symmetry_[jj] ^ mo_symmetry_[aa] ^
+                         mo_symmetry_[bb]) == wavefunction_symmetry_) {
                         ndab++;
                     }
                 }
@@ -1041,8 +1005,7 @@ FCIQMC::compute_pgen(const Determinant& det) {
                 for (int b = a + 1; b < nvbeta; ++b) {
                     int bb = bvir[b];
                     if ((mo_symmetry_[ii] ^
-                         (mo_symmetry_[jj] ^
-                          (mo_symmetry_[aa] ^ mo_symmetry_[bb]))) ==
+                         (mo_symmetry_[jj] ^ (mo_symmetry_[aa] ^ mo_symmetry_[bb]))) ==
                         wavefunction_symmetry_) {
                         ndbb++;
                     }
@@ -1054,17 +1017,14 @@ FCIQMC::compute_pgen(const Determinant& det) {
 }
 
 void FCIQMC::compute_excitations(
-    const Determinant& det,
-    std::vector<std::tuple<size_t, size_t>>& singleExcitations,
-    std::vector<std::tuple<size_t, size_t, size_t, size_t>>&
-        doubleExcitations) {
+    const Determinant& det, std::vector<std::tuple<size_t, size_t>>& singleExcitations,
+    std::vector<std::tuple<size_t, size_t, size_t, size_t>>& doubleExcitations) {
     compute_single_excitations(det, singleExcitations);
     compute_double_excitations(det, doubleExcitations);
 }
 
 void FCIQMC::compute_single_excitations(
-    const Determinant& det,
-    std::vector<std::tuple<size_t, size_t>>& singleExcitations) {
+    const Determinant& det, std::vector<std::tuple<size_t, size_t>>& singleExcitations) {
     const std::vector<int> aocc = det.get_alfa_occ();
     const std::vector<int> bocc = det.get_beta_occ();
     const std::vector<int> avir = det.get_alfa_vir();
@@ -1098,8 +1058,7 @@ void FCIQMC::compute_single_excitations(
         for (int a = 0; a < nvbeta; ++a) {
             int aa = bvir[a];
             if ((mo_symmetry_[ii] ^ mo_symmetry_[aa]) == 0) {
-                singleExcitations.push_back(
-                    std::make_tuple(ii + ncmo_, aa + ncmo_));
+                singleExcitations.push_back(std::make_tuple(ii + ncmo_, aa + ncmo_));
             }
         }
     }
@@ -1107,8 +1066,7 @@ void FCIQMC::compute_single_excitations(
 
 void FCIQMC::compute_double_excitations(
     const Determinant& det,
-    std::vector<std::tuple<size_t, size_t, size_t, size_t>>&
-        doubleExcitations) {
+    std::vector<std::tuple<size_t, size_t, size_t, size_t>>& doubleExcitations) {
     const std::vector<int> aocc = det.get_alfa_occ();
     const std::vector<int> bocc = det.get_beta_occ();
     const std::vector<int> avir = det.get_alfa_vir();
@@ -1127,10 +1085,9 @@ void FCIQMC::compute_double_excitations(
                 int aa = avir[a];
                 for (int b = a + 1; b < nvalpha; ++b) {
                     int bb = avir[b];
-                    if ((mo_symmetry_[ii] ^ mo_symmetry_[jj] ^
-                         mo_symmetry_[aa] ^ mo_symmetry_[bb]) == 0) {
-                        doubleExcitations.push_back(
-                            std::make_tuple(ii, aa, jj, bb));
+                    if ((mo_symmetry_[ii] ^ mo_symmetry_[jj] ^ mo_symmetry_[aa] ^
+                         mo_symmetry_[bb]) == 0) {
+                        doubleExcitations.push_back(std::make_tuple(ii, aa, jj, bb));
                     }
                 }
             }
@@ -1145,8 +1102,8 @@ void FCIQMC::compute_double_excitations(
                 int aa = avir[a];
                 for (int b = 0; b < nvbeta; ++b) {
                     int bb = bvir[b];
-                    if ((mo_symmetry_[ii] ^ mo_symmetry_[jj] ^
-                         mo_symmetry_[aa] ^ mo_symmetry_[bb]) == 0) {
+                    if ((mo_symmetry_[ii] ^ mo_symmetry_[jj] ^ mo_symmetry_[aa] ^
+                         mo_symmetry_[bb]) == 0) {
                         doubleExcitations.push_back(
                             std::make_tuple(ii, aa, jj + ncmo_, bb + ncmo_));
                     }
@@ -1163,10 +1120,10 @@ void FCIQMC::compute_double_excitations(
                 int aa = bvir[a];
                 for (int b = a + 1; b < nvbeta; ++b) {
                     int bb = bvir[b];
-                    if ((mo_symmetry_[ii] ^ mo_symmetry_[jj] ^
-                         mo_symmetry_[aa] ^ mo_symmetry_[bb]) == 0) {
-                        doubleExcitations.push_back(std::make_tuple(
-                            ii + ncmo_, aa + ncmo_, jj + ncmo_, bb + ncmo_));
+                    if ((mo_symmetry_[ii] ^ mo_symmetry_[jj] ^ mo_symmetry_[aa] ^
+                         mo_symmetry_[bb]) == 0) {
+                        doubleExcitations.push_back(
+                            std::make_tuple(ii + ncmo_, aa + ncmo_, jj + ncmo_, bb + ncmo_));
                     }
                 }
             }
@@ -1188,8 +1145,7 @@ void FCIQMC::compute_double_excitations(
  */
 size_t FCIQMC::compute_irrep_divided_excitations(
     const Determinant& det, std::vector<size_t>& excitationDivides,
-    std::vector<std::tuple<int, int, int, int>>& excitationType,
-    ObtCount& obtCount) {
+    std::vector<std::tuple<int, int, int, int>>& excitationType, ObtCount& obtCount) {
     const std::vector<int> aocc = det.get_alfa_occ();
     const std::vector<int> bocc = det.get_beta_occ();
     const std::vector<int> avir = det.get_alfa_vir();
@@ -1223,8 +1179,8 @@ size_t FCIQMC::compute_irrep_divided_excitations(
         for (int j = 0; j < nirrep_; j++) {
             for (int k = 0; k < nirrep_; k++) {
                 int l = i ^ j ^ k;
-                totalExcitation += obtCount.naocc[i] * obtCount.nbocc[j] *
-                                   obtCount.navir[k] * obtCount.nbvir[l];
+                totalExcitation +=
+                    obtCount.naocc[i] * obtCount.nbocc[j] * obtCount.navir[k] * obtCount.nbvir[l];
                 excitationDivides.push_back(totalExcitation);
                 excitationType.push_back(std::make_tuple(0, i, j, k));
             }
@@ -1232,8 +1188,8 @@ size_t FCIQMC::compute_irrep_divided_excitations(
     }
     for (int i = 0; i < nirrep_; i++) {
         for (int j = 0; j < nirrep_; j++) {
-            totalExcitation += obtCount.naocc[i] * (obtCount.naocc[i] - 1) *
-                               obtCount.navir[j] * (obtCount.navir[j] - 1) / 4;
+            totalExcitation += obtCount.naocc[i] * (obtCount.naocc[i] - 1) * obtCount.navir[j] *
+                               (obtCount.navir[j] - 1) / 4;
             excitationDivides.push_back(totalExcitation);
             excitationType.push_back(std::make_tuple(1, i, i, j));
         }
@@ -1243,8 +1199,8 @@ size_t FCIQMC::compute_irrep_divided_excitations(
             for (int k = 0; k < nirrep_; k++) {
                 int l = i ^ j ^ k;
                 if (l > k) {
-                    totalExcitation += obtCount.naocc[i] * obtCount.naocc[j] *
-                                       obtCount.navir[k] * obtCount.navir[l];
+                    totalExcitation += obtCount.naocc[i] * obtCount.naocc[j] * obtCount.navir[k] *
+                                       obtCount.navir[l];
                     excitationDivides.push_back(totalExcitation);
                     excitationType.push_back(std::make_tuple(2, i, j, k));
                 }
@@ -1253,8 +1209,8 @@ size_t FCIQMC::compute_irrep_divided_excitations(
     }
     for (int i = 0; i < nirrep_; i++) {
         for (int j = 0; j < nirrep_; j++) {
-            totalExcitation += obtCount.nbocc[i] * (obtCount.nbocc[i] - 1) *
-                               obtCount.nbvir[j] * (obtCount.nbvir[j] - 1) / 4;
+            totalExcitation += obtCount.nbocc[i] * (obtCount.nbocc[i] - 1) * obtCount.nbvir[j] *
+                               (obtCount.nbvir[j] - 1) / 4;
             excitationDivides.push_back(totalExcitation);
             excitationType.push_back(std::make_tuple(3, i, i, j));
         }
@@ -1264,8 +1220,8 @@ size_t FCIQMC::compute_irrep_divided_excitations(
             for (int k = 0; k < nirrep_; k++) {
                 int l = i ^ j ^ k;
                 if (l > k) {
-                    totalExcitation += obtCount.nbocc[i] * obtCount.nbocc[j] *
-                                       obtCount.nbvir[k] * obtCount.nbvir[l];
+                    totalExcitation += obtCount.nbocc[i] * obtCount.nbocc[j] * obtCount.nbvir[k] *
+                                       obtCount.nbvir[l];
                     excitationDivides.push_back(totalExcitation);
                     excitationType.push_back(std::make_tuple(4, i, j, k));
                 }
@@ -1285,10 +1241,8 @@ size_t FCIQMC::compute_irrep_divided_excitations(
     return totalExcitation;
 }
 
-bool FCIQMC::detSingleRandomExcitation(Determinant& new_det,
-                                       const std::vector<int>& occ,
-                                       const std::vector<int>& vir,
-                                       bool isAlpha) {
+bool FCIQMC::detSingleRandomExcitation(Determinant& new_det, const std::vector<int>& occ,
+                                       const std::vector<int>& vir, bool isAlpha) {
     int o = 0, v = 0;
     int randO = 0, randV = 0;
     //    do {
@@ -1312,10 +1266,8 @@ bool FCIQMC::detSingleRandomExcitation(Determinant& new_det,
     return false;
 }
 
-bool FCIQMC::detDoubleSoloSpinRandomExcitation(Determinant& new_det,
-                                               const std::vector<int>& occ,
-                                               const std::vector<int>& vir,
-                                               bool isAlpha) {
+bool FCIQMC::detDoubleSoloSpinRandomExcitation(Determinant& new_det, const std::vector<int>& occ,
+                                               const std::vector<int>& vir, bool isAlpha) {
     int o1 = 0, o2 = 0, v1 = 0, v2 = 0;
     int randO1 = 0, randO2 = 0, randV1 = 0, randV2 = 0;
     //    int count = 0;
@@ -1336,8 +1288,7 @@ bool FCIQMC::detDoubleSoloSpinRandomExcitation(Determinant& new_det,
     v2 = vir[randV2];
     //    }while (mo_symmetry_[o1]^mo_symmetry_[o2]^mo_symmetry_[v1] !=
     //    mo_symmetry_[v2]);
-    if (mo_symmetry_[o1] ^ mo_symmetry_[o2] ^
-        mo_symmetry_[v1] == mo_symmetry_[v2]) {
+    if (mo_symmetry_[o1] ^ mo_symmetry_[o2] ^ mo_symmetry_[v1] == mo_symmetry_[v2]) {
         if (isAlpha) {
             new_det.set_alfa_bit(o1, false);
             new_det.set_alfa_bit(v1, true);
@@ -1354,8 +1305,7 @@ bool FCIQMC::detDoubleSoloSpinRandomExcitation(Determinant& new_det,
     return false;
 }
 
-bool FCIQMC::detDoubleMixSpinRandomExcitation(Determinant& new_det,
-                                              const std::vector<int>& aocc,
+bool FCIQMC::detDoubleMixSpinRandomExcitation(Determinant& new_det, const std::vector<int>& aocc,
                                               const std::vector<int>& bocc,
                                               const std::vector<int>& avir,
                                               const std::vector<int>& bvir) {
@@ -1378,8 +1328,7 @@ bool FCIQMC::detDoubleMixSpinRandomExcitation(Determinant& new_det,
 
     //    outfile->Printf("\nreached here 3 o1%dv1%do2%dv2%d",o1,v1,o2,v2);
     //    new_det.print();
-    if (mo_symmetry_[o1] ^ mo_symmetry_[o2] ^
-        mo_symmetry_[v1] == mo_symmetry_[v2]) {
+    if (mo_symmetry_[o1] ^ mo_symmetry_[o2] ^ mo_symmetry_[v1] == mo_symmetry_[v2]) {
         new_det.set_alfa_bit(o1, false);
         new_det.set_alfa_bit(v1, true);
         new_det.set_beta_bit(o2, false);
@@ -1389,11 +1338,10 @@ bool FCIQMC::detDoubleMixSpinRandomExcitation(Determinant& new_det,
     return false;
 }
 
-void FCIQMC::detExcitation(
-    Determinant& new_det, size_t rand_ext,
-    std::vector<size_t>& excitationDivides,
-    std::vector<std::tuple<int, int, int, int>>& excitationType,
-    ObtCount& obtCount) {
+void FCIQMC::detExcitation(Determinant& new_det, size_t rand_ext,
+                           std::vector<size_t>& excitationDivides,
+                           std::vector<std::tuple<int, int, int, int>>& excitationType,
+                           ObtCount& obtCount) {
     size_t begin = 0, end = excitationDivides.size() - 1;
     size_t middle = (begin + end) / 2;
     rand_ext++;
@@ -1482,8 +1430,7 @@ void FCIQMC::detExcitation(
         }
         if (obtI == cume_ncmopi_[i + 1] || obtJ == cume_ncmopi_[j + 1] ||
             obtK == cume_ncmopi_[k + 1] || obtL == cume_ncmopi_[l + 1]) {
-            outfile->Printf(
-                "\nError in det excitation type 0: orbital out of bond");
+            outfile->Printf("\nError in det excitation type 0: orbital out of bond");
         }
 
         //        if (new_det.get_alfa_bit(cume_ncmopi_[i]+randI) == false){
@@ -1562,8 +1509,7 @@ void FCIQMC::detExcitation(
         }
         if (obtI == -1 || obtJ == cume_ncmopi_[i + 1] || obtK == -1 ||
             obtL == cume_ncmopi_[k + 1]) {
-            outfile->Printf(
-                "\nError in det excitation type 1: orbital out of bond");
+            outfile->Printf("\nError in det excitation type 1: orbital out of bond");
         }
 
         //        if (new_det.get_alfa_bit(cume_ncmopi_[i]+randI) == false){
@@ -1643,8 +1589,7 @@ void FCIQMC::detExcitation(
         }
         if (obtI == cume_ncmopi_[i + 1] || obtJ == cume_ncmopi_[j + 1] ||
             obtK == cume_ncmopi_[k + 1] || obtL == cume_ncmopi_[l + 1]) {
-            outfile->Printf(
-                "\nError in det excitation type 2: orbital out of bond");
+            outfile->Printf("\nError in det excitation type 2: orbital out of bond");
         }
         //        if (new_det.get_alfa_bit(cume_ncmopi_[i]+randI) == false){
         //            outfile->Printf("\nline 1056: Error in det excitation type
@@ -1722,8 +1667,7 @@ void FCIQMC::detExcitation(
         }
         if (obtI == -1 || obtJ == cume_ncmopi_[i + 1] || obtK == -1 ||
             obtL == cume_ncmopi_[k + 1]) {
-            outfile->Printf(
-                "\nError in det excitation type 3: orbital out of bond");
+            outfile->Printf("\nError in det excitation type 3: orbital out of bond");
         }
         //        if (new_det.get_beta_bit(cume_ncmopi_[i]+randI) == false){
         //            outfile->Printf("\nline 1084: Error in det excitation type
@@ -1802,8 +1746,7 @@ void FCIQMC::detExcitation(
         }
         if (obtI == cume_ncmopi_[i + 1] || obtJ == cume_ncmopi_[j + 1] ||
             obtK == cume_ncmopi_[k + 1] || obtL == cume_ncmopi_[l + 1]) {
-            outfile->Printf(
-                "\nError in det excitation type 4: orbital out of bond");
+            outfile->Printf("\nError in det excitation type 4: orbital out of bond");
         }
         //        if (new_det.get_beta_bit(cume_ncmopi_[i]+randI) == false){
         //            outfile->Printf("\nline 1111: Error in det excitation type
@@ -1857,8 +1800,7 @@ void FCIQMC::detExcitation(
             }
         }
         if (obtI == -1 || obtJ == -1) {
-            outfile->Printf(
-                "\nError in det excitation type 5: orbital out of bond");
+            outfile->Printf("\nError in det excitation type 5: orbital out of bond");
         }
         //        if (new_det.get_alfa_bit(cume_ncmopi_[i]+randI) == false){
         //            outfile->Printf("\nline 1135: Error in det excitation type
@@ -1875,8 +1817,7 @@ void FCIQMC::detExcitation(
         new_det.set_alfa_bit(obtI, false);
         new_det.set_alfa_bit(obtJ, true);
         if (k != -1) {
-            outfile->Printf(
-                "Error in spawning excitation:k is not -1 for single ext");
+            outfile->Printf("Error in spawning excitation:k is not -1 for single ext");
         }
         break;
     case 6:
@@ -1902,8 +1843,7 @@ void FCIQMC::detExcitation(
             }
         }
         if (obtI == -1 || obtJ == -1) {
-            outfile->Printf(
-                "\nError in det excitation type 5: orbital out of bond");
+            outfile->Printf("\nError in det excitation type 5: orbital out of bond");
         }
         //        if (new_det.get_beta_bit(cume_ncmopi_[i]+randI) == false){
         //            outfile->Printf("\nline 1135: Error in det excitation type
@@ -1920,8 +1860,7 @@ void FCIQMC::detExcitation(
         new_det.set_beta_bit(obtI, false);
         new_det.set_beta_bit(obtJ, true);
         if (k != -1) {
-            outfile->Printf(
-                "Error in spawning excitation:k is not -1 for single ext");
+            outfile->Printf("Error in spawning excitation:k is not -1 for single ext");
         }
         break;
     default:
@@ -2018,8 +1957,7 @@ void FCIQMC::detExcitation(
     //    outfile->Printf("Error in spawning excitation:end of choice");
 }
 
-void FCIQMC::detSingleExcitation(Determinant& new_det,
-                                 std::tuple<size_t, size_t>& rand_ext) {
+void FCIQMC::detSingleExcitation(Determinant& new_det, std::tuple<size_t, size_t>& rand_ext) {
     size_t ii, aa;
     std::tie(ii, aa) = rand_ext;
     if (ii < ncmo_) {
@@ -2031,9 +1969,8 @@ void FCIQMC::detSingleExcitation(Determinant& new_det,
     }
 }
 
-void FCIQMC::detDoubleExcitation(
-    Determinant& new_det,
-    std::tuple<size_t, size_t, size_t, size_t>& rand_ext) {
+void FCIQMC::detDoubleExcitation(Determinant& new_det,
+                                 std::tuple<size_t, size_t, size_t, size_t>& rand_ext) {
     size_t ii, aa, jj, bb;
     std::tie(ii, aa, jj, bb) = rand_ext;
     if (ii >= ncmo_) {
@@ -2105,9 +2042,8 @@ double FCIQMC::compute_var_energy(walker_map& walkers) {
 void FCIQMC::print_iter_info(size_t iter) {
     outfile->Printf("\n%8zu %8.4lf %10zu %10zu %20.12lf %20.12lf %20.12lf "
                     "%20.12lf %20.12lf %20.12lf",
-                    iter, iter * time_step_, (size_t)nWalkers_, (size_t)nDets_,
-                    Eproj_, AvgEproj_, shift_, AvgShift_,
-                    shift_ + Ehf_ + nuclear_repulsion_energy_,
+                    iter, iter * time_step_, (size_t)nWalkers_, (size_t)nDets_, Eproj_, AvgEproj_,
+                    shift_, AvgShift_, shift_ + Ehf_ + nuclear_repulsion_energy_,
                     AvgShift_ + Ehf_ + nuclear_repulsion_energy_);
     //    outfile->Printf("\niter:%zu ended with %zu dets",iter,
     //    (size_t)nDets_);

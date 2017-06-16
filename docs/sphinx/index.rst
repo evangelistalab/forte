@@ -20,6 +20,11 @@ correlated electrons.
    basics
    mospaceinfo
    fci
+   aci
+   pci
+   aosubspace
+   dsrg-mrpt
+   mr-dsrg
 
 Indices and tables
 ==================

@@ -29,12 +29,12 @@
 #include <cmath>
 #include <fstream>
 
-#include "psi4/psi4-dec.h"
-#include "psi4/physconst.h"
 #include "psi4/libciomr/libciomr.h"
-#include "psi4/libqt/qt.h"
 #include "psi4/libmints/matrix.h"
 #include "psi4/libmints/vector.h"
+#include "psi4/libqt/qt.h"
+#include "psi4/physconst.h"
+#include "psi4/psi4-dec.h"
 
 #define BIGNUM 1E100
 #define MAXIT 500
@@ -70,8 +70,7 @@
 using namespace psi;
 using namespace std;
 
-int david2(double** A, int N, int M, double* eps, double** v, double cutoff,
-           int print);
+int david2(double** A, int N, int M, double* eps, double** v, double cutoff, int print);
 
 void test_davidson() {
     // BEGIN DEBUGGING
@@ -83,8 +82,7 @@ void test_davidson() {
     ifs.read(reinterpret_cast<char*>(&ndets), sizeof(int));
     Matrix H(ndets, ndets);
     double** H_mat = H.pointer();
-    ifs.read(reinterpret_cast<char*>(&(H_mat[0][0])),
-             ndets * ndets * sizeof(double));
+    ifs.read(reinterpret_cast<char*>(&(H_mat[0][0])), ndets * ndets * sizeof(double));
     ifs.close();
     outfile->Printf(" DONE.");
     outfile->Flush();
@@ -94,21 +92,18 @@ void test_davidson() {
     SharedMatrix evecs(new Matrix("U", ndets, nroots));
     SharedVector evals(new Vector("e", nroots));
 
-    david2(H.pointer(), H.nrow(), nroots, evals->pointer(), evecs->pointer(),
-           1.0e-10, 1);
+    david2(H.pointer(), H.nrow(), nroots, evals->pointer(), evecs->pointer(), 1.0e-10, 1);
 
     int nroots_print = std::min(nroots, 25);
     for (int i = 0; i < nroots_print; ++i) {
-        outfile->Printf("\n  Adaptive CI Energy Root %3d = %.12f Eh = %8.4f eV",
-                        i + 1, evals->get(i),
-                        pc_hartree2ev * (evals->get(i) - evals->get(0)));
+        outfile->Printf("\n  Adaptive CI Energy Root %3d = %.12f Eh = %8.4f eV", i + 1,
+                        evals->get(i), pc_hartree2ev * (evals->get(i) - evals->get(0)));
         outfile->Flush();
     }
     // END DEBUGGING
 }
 
-int david2(double** A, int N, int M, double* eps, double** v, double cutoff,
-           int print) {
+int david2(double** A, int N, int M, double* eps, double** v, double cutoff, int print) {
     int i, j, k, L, I;
     double minimum;
     int min_pos, numf, iter, *conv, converged, maxdim, skip_check;
@@ -121,17 +116,14 @@ int david2(double** A, int N, int M, double* eps, double** v, double cutoff,
 
     maxdim = 8 * M;
 
-    b = block_matrix(maxdim,
-                     N); /* current set of guess vectors, stored by row */
-    bnew = block_matrix(
-        M, N); /* guess vectors formed from old vectors, stored by row*/
-    sigma = block_matrix(N, maxdim);  /* sigma vectors, stored by column */
-    G = block_matrix(maxdim, maxdim); /* Davidson mini-Hamitonian */
-    f = block_matrix(maxdim, N);      /* residual eigenvectors, stored by row */
+    b = block_matrix(maxdim, N);          /* current set of guess vectors, stored by row */
+    bnew = block_matrix(M, N);            /* guess vectors formed from old vectors, stored by row*/
+    sigma = block_matrix(N, maxdim);      /* sigma vectors, stored by column */
+    G = block_matrix(maxdim, maxdim);     /* Davidson mini-Hamitonian */
+    f = block_matrix(maxdim, N);          /* residual eigenvectors, stored by row */
     alpha = block_matrix(maxdim, maxdim); /* eigenvectors of G */
     lambda = init_array(maxdim);          /* eigenvalues of G */
-    lambda_old =
-        init_array(maxdim); /* approximate roots from previous iteration */
+    lambda_old = init_array(maxdim);      /* approximate roots from previous iteration */
 
     if (smart_guess) { /* Use eigenvectors of a sub-matrix as initial guesses */
 
@@ -204,10 +196,9 @@ int david2(double** A, int N, int M, double* eps, double** v, double cutoff,
             printf("\niter = %d\n", iter);
 
         /* form mini-matrix */
-        C_DGEMM('n', 't', N, L, N, 1.0, &(A[0][0]), N, &(b[0][0]), N, 0.0,
-                &(sigma[0][0]), maxdim);
-        C_DGEMM('n', 'n', L, L, N, 1.0, &(b[0][0]), N, &(sigma[0][0]), maxdim,
-                0.0, &(G[0][0]), maxdim);
+        C_DGEMM('n', 't', N, L, N, 1.0, &(A[0][0]), N, &(b[0][0]), N, 0.0, &(sigma[0][0]), maxdim);
+        C_DGEMM('n', 'n', L, L, N, 1.0, &(b[0][0]), N, &(sigma[0][0]), maxdim, 0.0, &(G[0][0]),
+                maxdim);
 
         /* diagonalize mini-matrix */
         sq_rsp(L, L, G, lambda, 1, alpha, 1e-12);
@@ -217,8 +208,7 @@ int david2(double** A, int N, int M, double* eps, double** v, double cutoff,
             for (I = 0; I < N; I++) {
                 f[k][I] = 0.0;
                 for (i = 0; i < L; i++) {
-                    f[k][I] +=
-                        alpha[i][k] * (sigma[I][i] - lambda[k] * b[i][I]);
+                    f[k][I] += alpha[i][k] * (sigma[I][i] - lambda[k] * b[i][I]);
                 }
                 denom = lambda[k] - A[I][I];
                 if (std::fabs(denom) > 1e-6)

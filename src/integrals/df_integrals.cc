@@ -30,12 +30,11 @@
 #include <numeric>
 
 #include "psi4/libmints/basisset.h"
-#include "psi4/libthce/thce.h"
-#include "psi4/libthce/lreri.h"
-#include "psi4/libqt/qt.h"
-#include "psi4/libmints/wavefunction.h"
 #include "psi4/libmints/basisset.h"
-
+#include "psi4/libmints/wavefunction.h"
+#include "psi4/libqt/qt.h"
+#include "psi4/libthce/lreri.h"
+#include "psi4/libthce/thce.h"
 
 #ifdef HAVE_GA
 #include <ga.h>
@@ -54,11 +53,9 @@ namespace forte {
 // Generates DF Integrals.  Freezes Core orbitals, computes integrals, and
 // resorts integrals.  Also computes fock matrix
 DFIntegrals::DFIntegrals(psi::Options& options, SharedWavefunction ref_wfn,
-                         IntegralSpinRestriction restricted,
-                         IntegralFrozenCore resort_frozen_core,
+                         IntegralSpinRestriction restricted, IntegralFrozenCore resort_frozen_core,
                          std::shared_ptr<MOSpaceInfo> mo_space_info)
-    : ForteIntegrals(options, ref_wfn, restricted, resort_frozen_core,
-                     mo_space_info) {
+    : ForteIntegrals(options, ref_wfn, restricted, resort_frozen_core, mo_space_info) {
     integral_type_ = DF;
     // If code calls constructor print things
     // But if someone calls retransform integrals do not print it
@@ -100,21 +97,18 @@ void DFIntegrals::allocate() {
 double DFIntegrals::aptei_aa(size_t p, size_t q, size_t r, size_t s) {
     double vpqrsalphaC = 0.0;
     double vpqrsalphaE = 0.0;
-    vpqrsalphaC =
-        C_DDOT(nthree_, &(ThreeIntegral_->pointer()[p * aptei_idx_ + r][0]), 1,
-               &(ThreeIntegral_->pointer()[q * aptei_idx_ + s][0]), 1);
-    vpqrsalphaE =
-        C_DDOT(nthree_, &(ThreeIntegral_->pointer()[p * aptei_idx_ + s][0]), 1,
-               &(ThreeIntegral_->pointer()[q * aptei_idx_ + r][0]), 1);
+    vpqrsalphaC = C_DDOT(nthree_, &(ThreeIntegral_->pointer()[p * aptei_idx_ + r][0]), 1,
+                         &(ThreeIntegral_->pointer()[q * aptei_idx_ + s][0]), 1);
+    vpqrsalphaE = C_DDOT(nthree_, &(ThreeIntegral_->pointer()[p * aptei_idx_ + s][0]), 1,
+                         &(ThreeIntegral_->pointer()[q * aptei_idx_ + r][0]), 1);
 
     return (vpqrsalphaC - vpqrsalphaE);
 }
 
 double DFIntegrals::aptei_ab(size_t p, size_t q, size_t r, size_t s) {
     double vpqrsalphaC = 0.0;
-    vpqrsalphaC =
-        C_DDOT(nthree_, &(ThreeIntegral_->pointer()[p * aptei_idx_ + r][0]), 1,
-               &(ThreeIntegral_->pointer()[q * aptei_idx_ + s][0]), 1);
+    vpqrsalphaC = C_DDOT(nthree_, &(ThreeIntegral_->pointer()[p * aptei_idx_ + r][0]), 1,
+                         &(ThreeIntegral_->pointer()[q * aptei_idx_ + s][0]), 1);
 
     return (vpqrsalphaC);
 }
@@ -122,12 +116,10 @@ double DFIntegrals::aptei_ab(size_t p, size_t q, size_t r, size_t s) {
 double DFIntegrals::aptei_bb(size_t p, size_t q, size_t r, size_t s) {
     double vpqrsalphaC = 0.0;
     double vpqrsalphaE = 0.0;
-    vpqrsalphaC =
-        C_DDOT(nthree_, &(ThreeIntegral_->pointer()[p * aptei_idx_ + r][0]), 1,
-               &(ThreeIntegral_->pointer()[q * aptei_idx_ + s][0]), 1);
-    vpqrsalphaE =
-        C_DDOT(nthree_, &(ThreeIntegral_->pointer()[p * aptei_idx_ + s][0]), 1,
-               &(ThreeIntegral_->pointer()[q * aptei_idx_ + r][0]), 1);
+    vpqrsalphaC = C_DDOT(nthree_, &(ThreeIntegral_->pointer()[p * aptei_idx_ + r][0]), 1,
+                         &(ThreeIntegral_->pointer()[q * aptei_idx_ + s][0]), 1);
+    vpqrsalphaE = C_DDOT(nthree_, &(ThreeIntegral_->pointer()[p * aptei_idx_ + s][0]), 1,
+                         &(ThreeIntegral_->pointer()[q * aptei_idx_ + r][0]), 1);
 
     return (vpqrsalphaC - vpqrsalphaE);
 }
@@ -136,8 +128,8 @@ ambit::Tensor DFIntegrals::aptei_aa_block(const std::vector<size_t>& p,
                                           const std::vector<size_t>& q,
                                           const std::vector<size_t>& r,
                                           const std::vector<size_t>& s) {
-    ambit::Tensor ReturnTensor = ambit::Tensor::build(
-        tensor_type_, "Return", {p.size(), q.size(), r.size(), s.size()});
+    ambit::Tensor ReturnTensor =
+        ambit::Tensor::build(tensor_type_, "Return", {p.size(), q.size(), r.size(), s.size()});
     ReturnTensor.iterate([&](const std::vector<size_t>& i, double& value) {
         value = aptei_aa(p[i[0]], q[i[1]], r[i[2]], s[i[3]]);
     });
@@ -148,8 +140,8 @@ ambit::Tensor DFIntegrals::aptei_ab_block(const std::vector<size_t>& p,
                                           const std::vector<size_t>& q,
                                           const std::vector<size_t>& r,
                                           const std::vector<size_t>& s) {
-    ambit::Tensor ReturnTensor = ambit::Tensor::build(
-        tensor_type_, "Return", {p.size(), q.size(), r.size(), s.size()});
+    ambit::Tensor ReturnTensor =
+        ambit::Tensor::build(tensor_type_, "Return", {p.size(), q.size(), r.size(), s.size()});
     ReturnTensor.iterate([&](const std::vector<size_t>& i, double& value) {
         value = aptei_ab(p[i[0]], q[i[1]], r[i[2]], s[i[3]]);
     });
@@ -160,8 +152,8 @@ ambit::Tensor DFIntegrals::aptei_bb_block(const std::vector<size_t>& p,
                                           const std::vector<size_t>& q,
                                           const std::vector<size_t>& r,
                                           const std::vector<size_t>& s) {
-    ambit::Tensor ReturnTensor = ambit::Tensor::build(
-        tensor_type_, "Return", {p.size(), q.size(), r.size(), s.size()});
+    ambit::Tensor ReturnTensor =
+        ambit::Tensor::build(tensor_type_, "Return", {p.size(), q.size(), r.size(), s.size()});
     ReturnTensor.iterate([&](const std::vector<size_t>& i, double& value) {
         value = aptei_bb(p[i[0]], q[i[1]], r[i[2]], s[i[3]]);
     });
@@ -170,8 +162,8 @@ ambit::Tensor DFIntegrals::aptei_bb_block(const std::vector<size_t>& p,
 ambit::Tensor DFIntegrals::three_integral_block(const std::vector<size_t>& A,
                                                 const std::vector<size_t>& p,
                                                 const std::vector<size_t>& q) {
-    ambit::Tensor ReturnTensor = ambit::Tensor::build(
-        tensor_type_, "Return", {A.size(), p.size(), q.size()});
+    ambit::Tensor ReturnTensor =
+        ambit::Tensor::build(tensor_type_, "Return", {A.size(), p.size(), q.size()});
     ReturnTensor.iterate([&](const std::vector<size_t>& i, double& value) {
         value = three_integral(A[i[0]], p[i[1]], q[i[2]]);
     });
@@ -179,8 +171,7 @@ ambit::Tensor DFIntegrals::three_integral_block(const std::vector<size_t>& A,
 }
 
 void DFIntegrals::set_tei(size_t, size_t, size_t, size_t, double, bool, bool) {
-    outfile->Printf(
-        "\n If you are using this, you are ruining the advantages of DF/CD");
+    outfile->Printf("\n If you are using this, you are ruining the advantages of DF/CD");
     throw PSIEXCEPTION("Don't use DF/CD if you use set_tei");
 }
 
@@ -225,9 +216,8 @@ void DFIntegrals::gather_integrals() {
             if (!nso)
                 continue;
 
-            C_DGEMV('N', nao, nso, 1.0, aotoso->pointer(h)[0], nso,
-                    &Ca->pointer(h)[0][i], nmopi_[h], 0.0,
-                    &Ca_ao->pointer()[0][index], nmopi_.sum());
+            C_DGEMV('N', nao, nso, 1.0, aotoso->pointer(h)[0], nso, &Ca->pointer(h)[0][i],
+                    nmopi_[h], 0.0, &Ca_ao->pointer()[0][index], nmopi_.sum());
 
             index += 1;
         }
@@ -315,19 +305,14 @@ void DFIntegrals::deallocate() {
     delete[] diagonal_aphys_tei_bb;
     // delete[] qt_pitzer_;
 }
-void DFIntegrals::make_fock_matrix(SharedMatrix gamma_aM,
-                                   SharedMatrix gamma_bM) {
+void DFIntegrals::make_fock_matrix(SharedMatrix gamma_aM, SharedMatrix gamma_bM) {
     TensorType tensor_type = ambit::CoreTensor;
-    ambit::Tensor ThreeIntegralTensor = ambit::Tensor::build(
-        tensor_type, "ThreeIndex", {nthree_, ncmo_, ncmo_});
-    ambit::Tensor gamma_a =
-        ambit::Tensor::build(tensor_type, "Gamma_a", {ncmo_, ncmo_});
-    ambit::Tensor gamma_b =
-        ambit::Tensor::build(tensor_type, "Gamma_b", {ncmo_, ncmo_});
-    ambit::Tensor fock_a =
-        ambit::Tensor::build(tensor_type, "Fock_a", {ncmo_, ncmo_});
-    ambit::Tensor fock_b =
-        ambit::Tensor::build(tensor_type, "Fock_b", {ncmo_, ncmo_});
+    ambit::Tensor ThreeIntegralTensor =
+        ambit::Tensor::build(tensor_type, "ThreeIndex", {nthree_, ncmo_, ncmo_});
+    ambit::Tensor gamma_a = ambit::Tensor::build(tensor_type, "Gamma_a", {ncmo_, ncmo_});
+    ambit::Tensor gamma_b = ambit::Tensor::build(tensor_type, "Gamma_b", {ncmo_, ncmo_});
+    ambit::Tensor fock_a = ambit::Tensor::build(tensor_type, "Fock_a", {ncmo_, ncmo_});
+    ambit::Tensor fock_b = ambit::Tensor::build(tensor_type, "Fock_b", {ncmo_, ncmo_});
 
     // ThreeIntegralTensor.iterate([&](const std::vector<size_t>& i,double&
     // value){
@@ -340,12 +325,10 @@ void DFIntegrals::make_fock_matrix(SharedMatrix gamma_aM,
 
     ThreeIntegralTensor = three_integral_block(vQ, vP, vP);
 
-    gamma_a.iterate([&](const std::vector<size_t>& i, double& value) {
-        value = gamma_aM->get(i[0], i[1]);
-    });
-    gamma_b.iterate([&](const std::vector<size_t>& i, double& value) {
-        value = gamma_bM->get(i[0], i[1]);
-    });
+    gamma_a.iterate(
+        [&](const std::vector<size_t>& i, double& value) { value = gamma_aM->get(i[0], i[1]); });
+    gamma_b.iterate(
+        [&](const std::vector<size_t>& i, double& value) { value = gamma_bM->get(i[0], i[1]); });
 
     fock_a.iterate([&](const std::vector<size_t>& i, double& value) {
         value = one_electron_integrals_a[i[0] * aptei_idx_ + i[1]];
@@ -361,19 +344,13 @@ void DFIntegrals::make_fock_matrix(SharedMatrix gamma_aM,
     // "Fock_b",{nthree_});
     // test("Q") = ThreeIntegralTensor("Q,r,s") * gamma_a("r,s");
     // fock_a("p,q") += ThreeIntegralTensor("Q,p,q")*test("Q");
-    fock_a("p,q") += ThreeIntegralTensor("Q,p,q") *
-                     ThreeIntegralTensor("Q,r,s") * gamma_a("r,s");
-    fock_a("p,q") -= ThreeIntegralTensor("Q,r,p") *
-                     ThreeIntegralTensor("Q,s,q") * gamma_a("r,s");
-    fock_a("p,q") += ThreeIntegralTensor("Q,p,q") *
-                     ThreeIntegralTensor("Q,r,s") * gamma_b("r,s");
+    fock_a("p,q") += ThreeIntegralTensor("Q,p,q") * ThreeIntegralTensor("Q,r,s") * gamma_a("r,s");
+    fock_a("p,q") -= ThreeIntegralTensor("Q,r,p") * ThreeIntegralTensor("Q,s,q") * gamma_a("r,s");
+    fock_a("p,q") += ThreeIntegralTensor("Q,p,q") * ThreeIntegralTensor("Q,r,s") * gamma_b("r,s");
 
-    fock_b("p,q") += ThreeIntegralTensor("Q,p,q") *
-                     ThreeIntegralTensor("Q,r,s") * gamma_b("r,s");
-    fock_b("p,q") -= ThreeIntegralTensor("Q,r,p") *
-                     ThreeIntegralTensor("Q,s,q") * gamma_b("r,s");
-    fock_b("p,q") += ThreeIntegralTensor("Q,p,q") *
-                     ThreeIntegralTensor("Q,r,s") * gamma_a("r,s");
+    fock_b("p,q") += ThreeIntegralTensor("Q,p,q") * ThreeIntegralTensor("Q,r,s") * gamma_b("r,s");
+    fock_b("p,q") -= ThreeIntegralTensor("Q,r,p") * ThreeIntegralTensor("Q,s,q") * gamma_b("r,s");
+    fock_b("p,q") += ThreeIntegralTensor("Q,p,q") * ThreeIntegralTensor("Q,r,s") * gamma_a("r,s");
 
     fock_a.iterate([&](const std::vector<size_t>& i, double& value) {
         fock_matrix_a[i[0] * aptei_idx_ + i[1]] = value;
@@ -385,10 +362,9 @@ void DFIntegrals::make_fock_matrix(SharedMatrix gamma_aM,
     /// Form with JK builders
 }
 
-void DFIntegrals::resort_three(SharedMatrix& threeint,
-                               std::vector<size_t>& map) {
+void DFIntegrals::resort_three(SharedMatrix& threeint, std::vector<size_t>& map) {
     // Create a temperature threeint matrix
-    SharedMatrix temp_threeint(new Matrix("tmp", ncmo_*ncmo_, nthree_));
+    SharedMatrix temp_threeint(new Matrix("tmp", ncmo_ * ncmo_, nthree_));
     temp_threeint->zero();
 
     // Borrwed from resort_four.
@@ -440,8 +416,7 @@ void DFIntegrals::resort_integrals_after_freezing() {
     resort_three(ThreeIntegral_, cmo2mo);
 
     if (print_ > 0) {
-        outfile->Printf("\n Resorting integrals takes   %8.8fs",
-                        resort_integrals.get());
+        outfile->Printf("\n Resorting integrals takes   %8.8fs", resort_integrals.get());
     }
 }
 }
