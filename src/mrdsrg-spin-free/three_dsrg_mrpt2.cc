@@ -104,12 +104,9 @@ THREE_DSRG_MRPT2::THREE_DSRG_MRPT2(Reference reference, SharedWavefunction ref_w
     print_method_banner({"DF/CD - Driven Similarity Renormalization Group MBPT2",
                          "Kevin Hannon and Chenyang (York) Li", title_thread});
     outfile->Printf("\n    References:");
-    outfile->Printf(
-        "\n      u-DSRG-MRPT2:    J. Chem. Theory Comput. 2015, 11, 2097.");
-    outfile->Printf(
-        "\n      DF/CD-DSRG-PT2:  J. Chem. Phys. 2016, 144, 204111.");
-    outfile->Printf(
-        "\n      (pr-)DSRG-MRPT2: J. Chem. Phys. 2017, 146, 124132.");
+    outfile->Printf("\n      u-DSRG-MRPT2:    J. Chem. Theory Comput. 2015, 11, 2097.");
+    outfile->Printf("\n      DF/CD-DSRG-PT2:  J. Chem. Phys. 2016, 144, 204111.");
+    outfile->Printf("\n      (pr-)DSRG-MRPT2: J. Chem. Phys. 2017, 146, 124132.");
     outfile->Printf("\n");
 
     if (options_.get_bool("MEMORY_SUMMARY")) {
@@ -349,8 +346,8 @@ void THREE_DSRG_MRPT2::startup() {
     }
 
     // Prepare Hbar
-    bool relaxRef = (options_.get_str("RELAX_REF") != "NONE") ||
-                    (options_["AVG_STATE"].size() != 0);
+    bool relaxRef =
+        (options_.get_str("RELAX_REF") != "NONE") || (options_["AVG_STATE"].size() != 0);
     std::string relax_ref = options_.get_str("RELAX_REF");
     if (relax_ref != "NONE" && relax_ref != "ONCE") {
         if (relax_ref != "ONCE") {
@@ -675,8 +672,8 @@ double THREE_DSRG_MRPT2::compute_energy() {
 #endif
 
     // use relaxation code to do SA_FULL
-    bool relaxRef = (options_.get_str("RELAX_REF") != "NONE") ||
-                    (options_["AVG_STATE"].size() != 0);
+    bool relaxRef =
+        (options_.get_str("RELAX_REF") != "NONE") || (options_["AVG_STATE"].size() != 0);
     if (relaxRef) {
         if (my_proc == 0)
             relax_reference_once();
@@ -1925,16 +1922,14 @@ double THREE_DSRG_MRPT2::E_VT2_6() {
             temp["uvwxyz"] += V_["uviz"] * T2_["iwxy"];
             temp["uvwxyz"] += V_["waxy"] * T2_["uvaz"];
 
-            E += 0.25 * temp.block("aaaaaa")("uvwxyz") *
-                 reference_.L3aaa()("xyzuvw");
+            E += 0.25 * temp.block("aaaaaa")("uvwxyz") * reference_.L3aaa()("xyzuvw");
 
             // bbb
             temp = BTF_->build(tensor_type_, "temp", {"AAAAAA"});
             temp["UVWXYZ"] += V_["UVIZ"] * T2_["IWXY"];
             temp["UVWXYZ"] += V_["WAXY"] * T2_["UVAZ"];
 
-            E += 0.25 * temp.block("AAAAAA")("UVWXYZ") *
-                 reference_.L3bbb()("XYZUVW");
+            E += 0.25 * temp.block("AAAAAA")("UVWXYZ") * reference_.L3bbb()("XYZUVW");
 
             // aab
             temp = BTF_->build(tensor_type_, "temp", {"aaAaaA"});
@@ -1946,8 +1941,7 @@ double THREE_DSRG_MRPT2::E_VT2_6() {
             temp["uvWxyZ"] -= V_["vaxy"] * T2_["uWaZ"];       //  aaAaaA from particle
             temp["uvWxyZ"] -= 2.0 * V_["vAxZ"] * T2_["uWyA"]; //  aaAaaA from particle
 
-            E += 0.50 * temp.block("aaAaaA")("uvWxyZ") *
-                 reference_.L3aab()("xyZuvW");
+            E += 0.50 * temp.block("aaAaaA")("uvWxyZ") * reference_.L3aab()("xyZuvW");
 
             // abb
             temp = BTF_->build(tensor_type_, "temp", {"aAAaAA"});
@@ -1959,8 +1953,7 @@ double THREE_DSRG_MRPT2::E_VT2_6() {
             temp["uVWxYZ"] -= V_["WAYZ"] * T2_["uVxA"];       //  aAAaAA from particle
             temp["uVWxYZ"] -= 2.0 * V_["aWxY"] * T2_["uVaZ"]; //  aAAaAA from particle
 
-            E += 0.50 * temp.block("aAAaAA")("uVWxYZ") *
-                 reference_.L3abb()("xYZuVW");
+            E += 0.50 * temp.block("aAAaAA")("uVWxYZ") * reference_.L3abb()("xYZuVW");
 
         } else if (options_.get_str("THREEPDC_ALGORITHM") == "BATCH") {
 
@@ -3469,17 +3462,14 @@ void THREE_DSRG_MRPT2::relax_reference_once() {
 
         // printing
         print_h2("CD/DF DSRG-MRPT2 Energy Summary");
-        outfile->Printf("\n    %-37s = %22.15f",
-                        "CD/DF DSRG-MRPT2 Total Energy (fixed)  ",
+        outfile->Printf("\n    %-37s = %22.15f", "CD/DF DSRG-MRPT2 Total Energy (fixed)  ",
                         Hbar0_ + Eref_);
-        outfile->Printf("\n    %-37s = %22.15f",
-                        "CD/DF DSRG-MRPT2 Total Energy (relaxed)", Erelax);
+        outfile->Printf("\n    %-37s = %22.15f", "CD/DF DSRG-MRPT2 Total Energy (relaxed)", Erelax);
 
         Process::environment.globals["CURRENT ENERGY"] = Erelax;
     } else {
         // get character table
-        CharacterTable ct =
-            Process::environment.molecule()->point_group()->char_table();
+        CharacterTable ct = Process::environment.molecule()->point_group()->char_table();
         std::vector<std::string> irrep_symbol;
         for (int h = 0; h < this->nirrep(); ++h) {
             irrep_symbol.push_back(std::string(ct.gamma(h).symbol()));
@@ -3501,8 +3491,7 @@ void THREE_DSRG_MRPT2::relax_reference_once() {
 
             for (int i = 0; i < nstates; ++i) {
                 outfile->Printf("\n     %3d     %3s    %2d   %20.12f", multi,
-                                irrep_symbol[irrep].c_str(), i,
-                                E_relaxes[i + offset]);
+                                irrep_symbol[irrep].c_str(), i, E_relaxes[i + offset]);
             }
             outfile->Printf("\n    %s", dash.c_str());
 
@@ -3539,8 +3528,7 @@ std::vector<double> THREE_DSRG_MRPT2::relaxed_energy() {
         } else {
             fci_mo.compute_sa_energy();
 
-            std::vector<std::vector<std::pair<SharedVector, double>>> eigens =
-                fci_mo.eigens();
+            std::vector<std::vector<std::pair<SharedVector, double>>> eigens = fci_mo.eigens();
             size_t nentry = eigens.size();
             for (size_t n = 0; n < nentry; ++n) {
                 std::vector<std::pair<SharedVector, double>> eigen = eigens[n];
@@ -3580,25 +3568,22 @@ std::vector<double> THREE_DSRG_MRPT2::relaxed_energy() {
             if (options_["MS"].has_changed()) {
                 twice_ms = std::round(2.0 * options_.get_double("MS"));
             }
-            auto nelec_actv = nelec - 2 * mo_space_info_->size("FROZEN_DOCC") -
-                              2 * acore_mos_.size();
+            auto nelec_actv =
+                nelec - 2 * mo_space_info_->size("FROZEN_DOCC") - 2 * acore_mos_.size();
             auto na = (nelec_actv + twice_ms) / 2;
             auto nb = nelec_actv - na;
 
             // diagonalize the Hamiltonian
-            FCISolver fcisolver(active_dim, acore_mos_, aactv_mos_, na, nb,
-                                multi, options_.get_int("ROOT_SYM"), ints_,
-                                mo_space_info_, ntrial_per_root, print_,
-                                options_);
+            FCISolver fcisolver(active_dim, acore_mos_, aactv_mos_, na, nb, multi,
+                                options_.get_int("ROOT_SYM"), ints_, mo_space_info_,
+                                ntrial_per_root, print_, options_);
             fcisolver.set_max_rdm_level(1);
             fcisolver.set_nroot(options_.get_int("FCI_NROOT"));
             fcisolver.set_root(options_.get_int("FCI_ROOT"));
             fcisolver.set_test_rdms(options_.get_bool("FCI_TEST_RDMS"));
             fcisolver.set_fci_iterations(options_.get_int("FCI_MAXITER"));
-            fcisolver.set_collapse_per_root(
-                options_.get_int("DL_COLLAPSE_PER_ROOT"));
-            fcisolver.set_subspace_per_root(
-                options_.get_int("DL_SUBSPACE_PER_ROOT"));
+            fcisolver.set_collapse_per_root(options_.get_int("DL_COLLAPSE_PER_ROOT"));
+            fcisolver.set_subspace_per_root(options_.get_int("DL_SUBSPACE_PER_ROOT"));
 
             // set integrals manually
             fcisolver.use_user_integrals_and_restricted_docc(true);
@@ -3615,23 +3600,19 @@ std::vector<double> THREE_DSRG_MRPT2::relaxed_energy() {
 
                 // prepare FCISolver
                 int ms = (multi + 1) % 2;
-                auto nelec_actv = nelec -
-                                  2 * mo_space_info_->size("FROZEN_DOCC") -
-                                  2 * acore_mos_.size();
+                auto nelec_actv =
+                    nelec - 2 * mo_space_info_->size("FROZEN_DOCC") - 2 * acore_mos_.size();
                 auto na = (nelec_actv + ms) / 2;
                 auto nb = nelec_actv - na;
 
-                FCISolver fcisolver(active_dim, acore_mos_, aactv_mos_, na, nb,
-                                    multi, irrep, ints_, mo_space_info_,
-                                    ntrial_per_root, print_, options_);
+                FCISolver fcisolver(active_dim, acore_mos_, aactv_mos_, na, nb, multi, irrep, ints_,
+                                    mo_space_info_, ntrial_per_root, print_, options_);
                 fcisolver.set_max_rdm_level(1);
                 fcisolver.set_nroot(nstates);
                 fcisolver.set_root(nstates - 1);
                 fcisolver.set_fci_iterations(options_.get_int("FCI_MAXITER"));
-                fcisolver.set_collapse_per_root(
-                    options_.get_int("DL_COLLAPSE_PER_ROOT"));
-                fcisolver.set_subspace_per_root(
-                    options_.get_int("DL_SUBSPACE_PER_ROOT"));
+                fcisolver.set_collapse_per_root(options_.get_int("DL_COLLAPSE_PER_ROOT"));
+                fcisolver.set_subspace_per_root(options_.get_int("DL_SUBSPACE_PER_ROOT"));
 
                 // compute energy and fill in results
                 fcisolver.compute_energy();

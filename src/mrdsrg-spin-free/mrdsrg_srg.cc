@@ -408,8 +408,7 @@ double MRDSRG::compute_energy_srgpt2() {
 
     // some options
     std::string Hzero = options_.get_str("H0TH");
-    bool relax_ref = options_.get_str("RELAX_REF") != "NONE" ||
-                     options_["AVG_STATE"].size() != 0;
+    bool relax_ref = options_.get_str("RELAX_REF") != "NONE" || options_["AVG_STATE"].size() != 0;
 
     // initialize tensors
     BlockedTensor::set_expert_mode(true);

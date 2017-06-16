@@ -61,8 +61,7 @@ class FCI : public ActiveSpaceSolver {
      * @param ints A pointer to an allocated integral object
      * @param mo_space_info A pointer to the MOSpaceInfo object
      */
-    FCI(SharedWavefunction ref_wfn, Options& options,
-        std::shared_ptr<ForteIntegrals> ints,
+    FCI(SharedWavefunction ref_wfn, Options& options, std::shared_ptr<ForteIntegrals> ints,
         std::shared_ptr<MOSpaceInfo> mo_space_info);
 
     ~FCI();
@@ -116,7 +115,6 @@ class FCI : public ActiveSpaceSolver {
     /// All that happens before we compute the energy
     void startup();
 };
-
 }
 }
 

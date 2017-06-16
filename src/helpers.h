@@ -108,7 +108,7 @@ class MOSpaceInfo {
     /// @return The Dimension object for space
     Dimension get_dimension(const std::string& space);
     /// @return The Slice object for space in a given composite space
-    Slice get_slice(const std::string& space,const std::string& comp_space);
+    Slice get_slice(const std::string& space, const std::string& comp_space);
     /// @return The symmetry of each orbital
     std::vector<int> symmetry(const std::string& space);
     /// @return The list of the absolute index of the molecular orbitals in a
@@ -120,15 +120,13 @@ class MOSpaceInfo {
     std::vector<size_t> get_corr_abs_mo(const std::string& space);
     /// @return The list of the relative index (h,p_rel) of the molecular
     /// orbitals in space
-    std::vector<std::pair<size_t, size_t>>
-    get_relative_mo(const std::string& space);
+    std::vector<std::pair<size_t, size_t>> get_relative_mo(const std::string& space);
     void read_options(Options& options);
     /// @return The number of irreps
     size_t nirrep() { return nirrep_; }
 
   private:
-    std::pair<SpaceInfo, bool> read_mo_space(const std::string& space,
-                                             Options& options);
+    std::pair<SpaceInfo, bool> read_mo_space(const std::string& space, Options& options);
 
     /// The number of irreducible representations
     size_t nirrep_;
@@ -137,18 +135,14 @@ class MOSpaceInfo {
     /// The mo space info
     std::map<std::string, SpaceInfo> mo_spaces_;
 
-    std::vector<std::string> elementary_spaces_{
-        "FROZEN_DOCC", "RESTRICTED_DOCC", "ACTIVE", "RESTRICTED_UOCC",
-        "FROZEN_UOCC"};
+    std::vector<std::string> elementary_spaces_{"FROZEN_DOCC", "RESTRICTED_DOCC", "ACTIVE",
+                                                "RESTRICTED_UOCC", "FROZEN_UOCC"};
     std::vector<std::string> elementary_spaces_priority_{
-        "ACTIVE", "RESTRICTED_UOCC", "RESTRICTED_DOCC", "FROZEN_DOCC",
-        "FROZEN_UOCC"};
+        "ACTIVE", "RESTRICTED_UOCC", "RESTRICTED_DOCC", "FROZEN_DOCC", "FROZEN_UOCC"};
 
     /// Defines composite orbital spaces
     std::map<std::string, std::vector<std::string>> composite_spaces_{
-        {"ALL",
-         {"FROZEN_DOCC", "RESTRICTED_DOCC", "ACTIVE", "RESTRICTED_UOCC",
-          "FROZEN_UOCC"}},
+        {"ALL", {"FROZEN_DOCC", "RESTRICTED_DOCC", "ACTIVE", "RESTRICTED_UOCC", "FROZEN_UOCC"}},
         {"FROZEN", {"FROZEN_DOCC", "FROZEN_UOCC"}},
         {"CORRELATED", {"RESTRICTED_DOCC", "ACTIVE", "RESTRICTED_UOCC"}},
         {"INACTIVE_DOCC", {"FROZEN_DOCC", "RESTRICTED_DOCC"}},
@@ -180,8 +174,7 @@ SharedMatrix tensor_to_matrix(ambit::Tensor t);
  * line.
  * @param separator A string The separator used in the banner (defalut = "-").
  */
-void print_method_banner(const std::vector<std::string>& text,
-                         const std::string& separator = "-");
+void print_method_banner(const std::vector<std::string>& text, const std::string& separator = "-");
 
 /**
  * @brief view_modified_orbitals Write orbitals using molden
@@ -189,8 +182,7 @@ void print_method_banner(const std::vector<std::string>& text,
  * @param diag_F -> The Orbital energies (diagonal elements of Fock operator)
  * @param occupation -> occupation vector
  */
-void view_modified_orbitals(SharedWavefunction wfn,
-                            const std::shared_ptr<Matrix>& Ca,
+void view_modified_orbitals(SharedWavefunction wfn, const std::shared_ptr<Matrix>& Ca,
                             const std::shared_ptr<Vector>& diag_F,
                             const std::shared_ptr<Vector>& occupation);
 
@@ -200,19 +192,16 @@ void view_modified_orbitals(SharedWavefunction wfn,
  * @param left_separator The left separator (default = "==>")
  * @param right_separator The right separator (default = "<==")
  */
-void print_h2(const std::string& text,
-              const std::string& left_separator = "==>",
+void print_h2(const std::string& text, const std::string& left_separator = "==>",
               const std::string& right_separator = "<==");
 
 /**
  * Returns the Ms as a string, using
  * fractions if needed
  */
-std::string get_ms_string( double twice_ms );
+std::string get_ms_string(double twice_ms);
 
-
-std::string to_string(const std::vector<std::string>& vec_str,
-                      const std::string& sep = ",");
+std::string to_string(const std::vector<std::string>& vec_str, const std::string& sep = ",");
 
 /**
  * @brief Compute the memory (in GB) required to store arrays
@@ -221,8 +210,7 @@ std::string to_string(const std::vector<std::string>& vec_str,
  * @return The size in GB
  */
 template <typename T> double to_gb(T num_el) {
-    return static_cast<double>(num_el) * static_cast<double>(sizeof(T)) /
-           1073741824.0;
+    return static_cast<double>(num_el) * static_cast<double>(sizeof(T)) / 1073741824.0;
 }
 
 /**
@@ -240,8 +228,7 @@ std::pair<double, std::string> to_xb(size_t nele, size_t type_size);
  * @return a pair of vectors -> pair.0 -> start for each processor
  *                           -> pair.1 -> end or each processor
  */
-std::pair<std::vector<int>, std::vector<int>>
-split_up_tasks(size_t size_of_tasks, int nproc);
+std::pair<std::vector<int>, std::vector<int>> split_up_tasks(size_t size_of_tasks, int nproc);
 
 /**
   * @brief A timer class
