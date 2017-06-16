@@ -26,14 +26,14 @@
  * @END LICENSE
  */
 
+#include "psi4/libmints/molecule.h"
 #include "psi4/libpsio/psio.h"
 #include "psi4/libpsio/psio.hpp"
-#include "psi4/libmints/molecule.h"
 
-#include "psi4/liboptions/liboptions.h"
 #include "psi4/libmints/local.h"
 #include "psi4/libmints/matrix.h"
 #include "psi4/libmints/vector.h"
+#include "psi4/liboptions/liboptions.h"
 
 #include "localize.h"
 
@@ -41,8 +41,7 @@ namespace psi {
 namespace forte {
 
 LOCALIZE::LOCALIZE(std::shared_ptr<Wavefunction> wfn, Options& options,
-                   std::shared_ptr<ForteIntegrals> ints,
-                   std::shared_ptr<MOSpaceInfo> mo_space_info)
+                   std::shared_ptr<ForteIntegrals> ints, std::shared_ptr<MOSpaceInfo> mo_space_info)
     : wfn_(wfn), ints_(ints) {
     nfrz_ = mo_space_info->size("FROZEN_DOCC");
     nrst_ = mo_space_info->size("RESTRICTED_DOCC");
@@ -101,8 +100,7 @@ void LOCALIZE::localize_orbitals() {
                 Caocc->set(h, mu, i, Ca->get(h, mu, abs_act_[i]));
             }
             for (int i = 0; i < navir_; ++i) {
-                Cavir->set(h, mu, i,
-                           Ca->get(h, mu, abs_act_[i + naocc_ + off]));
+                Cavir->set(h, mu, i, Ca->get(h, mu, abs_act_[i + naocc_ + off]));
             }
             for (int i = 0; i < off; ++i) {
                 Caact->set(h, mu, i, Ca->get(h, mu, abs_act_[i + naocc_]));
@@ -112,22 +110,19 @@ void LOCALIZE::localize_orbitals() {
 
     std::shared_ptr<BasisSet> primary = wfn_->basisset();
 
-    std::shared_ptr<Localizer> loc_a =
-        Localizer::build(local_type_, primary, Caocc);
+    std::shared_ptr<Localizer> loc_a = Localizer::build(local_type_, primary, Caocc);
     loc_a->localize();
 
     SharedMatrix Laocc = loc_a->L();
 
-    std::shared_ptr<Localizer> loc_v =
-        Localizer::build(local_type_, primary, Cavir);
+    std::shared_ptr<Localizer> loc_v = Localizer::build(local_type_, primary, Cavir);
     loc_v->localize();
 
     SharedMatrix Lvir = loc_v->L();
 
     SharedMatrix Lact;
     if (multiplicity_ == 3) {
-        std::shared_ptr<Localizer> loc_c =
-            Localizer::build(local_type_, primary, Caact);
+        std::shared_ptr<Localizer> loc_c = Localizer::build(local_type_, primary, Caact);
         loc_c->localize();
         Lact = loc_c->L();
     }

@@ -26,17 +26,17 @@
  * @END LICENSE
  */
 
-#include "reference.h"
 #include "aci/aci.h"
 #include "avas.h"
 #include "ci-no/ci-no.h"
 #include "fci/fci_solver.h"
 #include "fci/fci.h"
+#include "fci_mo.h"
 #include "forte_options.h"
 #include "integrals/integrals.h"
-#include "pci/pci.h"
-#include "fci_mo.h"
 #include "mrpt2.h"
+#include "pci/pci.h"
+#include "reference.h"
 #include "../mrdsrg-helper/run_dsrg.h"
 
 namespace psi {
@@ -81,8 +81,7 @@ void forte_options(std::string name, ForteOptions& foptions) {
                                           "CC",          "NOJOB"},
                      "Specify the job type");
 
-    foptions.add_str("MINAO_BASIS", "STO-3G",
-                     "The basis used to define an orbital subspace");
+    foptions.add_str("MINAO_BASIS", "STO-3G", "The basis used to define an orbital subspace");
 
     foptions.add_array("SUBSPACE", "A list of orbital subspaces");
 

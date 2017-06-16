@@ -26,11 +26,11 @@
  * @END LICENSE
  */
 
-#include <fstream>
-#include <iostream>
+#include "v2rdm.h"
 #include "mini-boost/boost/format.hpp"
 #include "psi4/libmints/molecule.h"
-#include "v2rdm.h"
+#include <fstream>
+#include <iostream>
 
 namespace psi {
 namespace forte {
@@ -45,8 +45,7 @@ struct dm3 {
     double val;
 };
 
-V2RDM::V2RDM(SharedWavefunction ref_wfn, Options& options,
-             std::shared_ptr<ForteIntegrals> ints,
+V2RDM::V2RDM(SharedWavefunction ref_wfn, Options& options, std::shared_ptr<ForteIntegrals> ints,
              std::shared_ptr<MOSpaceInfo> mo_space_info)
     : Wavefunction(options), ints_(ints), mo_space_info_(mo_space_info) {
     shallow_copy(ref_wfn);
@@ -112,11 +111,9 @@ void V2RDM::read_2pdm() {
     std::string str = "Testing if 2RDM files exist";
     outfile->Printf("\n  %-45s ...", str.c_str());
     std::shared_ptr<PSIO> psio(new PSIO());
-    for (const auto& file :
-         {PSIF_V2RDM_D2AA, PSIF_V2RDM_D2AB, PSIF_V2RDM_D2BB}) {
+    for (const auto& file : {PSIF_V2RDM_D2AA, PSIF_V2RDM_D2AB, PSIF_V2RDM_D2BB}) {
         if (!psio->exists(file)) {
-            std::string error =
-                "V2RDM file for " + filename[file] + " does not exist";
+            std::string error = "V2RDM file for " + filename[file] + " does not exist";
             throw PSIEXCEPTION(error);
         }
     }
@@ -139,16 +136,14 @@ void V2RDM::read_2pdm() {
     }
     for (size_t n = 0; n < nsymgem; ++n) {
         tpdm d2;
-        psio->read(PSIF_V2RDM_D2AB, "D2ab", (char*)&d2, sizeof(tpdm), addr_ab,
-                   &addr_ab);
+        psio->read(PSIF_V2RDM_D2AB, "D2ab", (char*)&d2, sizeof(tpdm), addr_ab, &addr_ab);
         size_t l = static_cast<size_t>(d2.l);
         if (abs_to_rel_.find(l) == abs_to_rel_.end()) {
             outfile->Printf("\n  The active block of FORTE is different from "
                             "V2RDM-CASSCF.");
             outfile->Printf("\n  Please check the input file and make the "
                             "active block consistent.");
-            throw PSIEXCEPTION(
-                "The active block of FORTE is different from V2RDM-CASSCF.");
+            throw PSIEXCEPTION("The active block of FORTE is different from V2RDM-CASSCF.");
         }
     }
     psio->close(PSIF_V2RDM_D2AB, 1);
@@ -156,10 +151,9 @@ void V2RDM::read_2pdm() {
     // Read 2RDM
     str = "Reading 2RDMs";
     outfile->Printf("\n  %-45s ...", str.c_str());
-    for (const auto& file :
-         {PSIF_V2RDM_D2AA, PSIF_V2RDM_D2AB, PSIF_V2RDM_D2BB}) {
-        ambit::Tensor D2 = ambit::Tensor::build(
-            ambit::CoreTensor, filename[file], {nactv, nactv, nactv, nactv});
+    for (const auto& file : {PSIF_V2RDM_D2AA, PSIF_V2RDM_D2AB, PSIF_V2RDM_D2BB}) {
+        ambit::Tensor D2 =
+            ambit::Tensor::build(ambit::CoreTensor, filename[file], {nactv, nactv, nactv, nactv});
 
         long int nline;
         psio_address addr = PSIO_ZERO;
@@ -168,8 +162,7 @@ void V2RDM::read_2pdm() {
 
         for (int n = 0; n < nline; ++n) {
             tpdm d2;
-            psio->read(file, filename[file].c_str(), (char*)&d2, sizeof(tpdm),
-                       addr, &addr);
+            psio->read(file, filename[file].c_str(), (char*)&d2, sizeof(tpdm), addr, &addr);
             size_t i = abs_to_rel_[static_cast<size_t>(d2.i)];
             size_t j = abs_to_rel_[static_cast<size_t>(d2.j)];
             size_t k = abs_to_rel_[static_cast<size_t>(d2.k)];
@@ -192,8 +185,8 @@ void V2RDM::read_2pdm() {
 
         str = "Averaging 2RDM AA and BB blocks";
         outfile->Printf("\n  %-45s ...", str.c_str());
-        ambit::Tensor D2 = ambit::Tensor::build(ambit::CoreTensor, "D2avg_aa",
-                                                {nactv, nactv, nactv, nactv});
+        ambit::Tensor D2 =
+            ambit::Tensor::build(ambit::CoreTensor, "D2avg_aa", {nactv, nactv, nactv, nactv});
         D2("pqrs") = 0.5 * D2aa("pqrs");
         D2("pqrs") += 0.5 * D2bb("pqrs");
 
@@ -248,8 +241,7 @@ void V2RDM::build_opdm() {
     if (options_.get_bool("AVG_DENS_SPIN")) {
         str = "Averaging 1RDM A and B blocks";
         outfile->Printf("\n  %-45s ...", str.c_str());
-        ambit::Tensor D =
-            ambit::Tensor::build(ambit::CoreTensor, "D1avg", {nactv, nactv});
+        ambit::Tensor D = ambit::Tensor::build(ambit::CoreTensor, "D1avg", {nactv, nactv});
         D("pq") = 0.5 * D1a_("pq");
         D("pq") += 0.5 * D1b_("pq");
 
@@ -271,11 +263,10 @@ void V2RDM::read_3pdm() {
     std::string str = "Testing if 3RDM files exist";
     outfile->Printf("\n  %-45s ...", str.c_str());
     std::shared_ptr<PSIO> psio(new PSIO());
-    for (const auto& file : {PSIF_V2RDM_D3AAA, PSIF_V2RDM_D3AAB,
-                             PSIF_V2RDM_D3BBA, PSIF_V2RDM_D3BBB}) {
+    for (const auto& file :
+         {PSIF_V2RDM_D3AAA, PSIF_V2RDM_D3AAB, PSIF_V2RDM_D3BBA, PSIF_V2RDM_D3BBB}) {
         if (!psio->exists(file)) {
-            std::string error =
-                "V2RDM file for " + filename[file] + " does not exist";
+            std::string error = "V2RDM file for " + filename[file] + " does not exist";
             throw PSIEXCEPTION(error);
         }
     }
@@ -291,11 +282,10 @@ void V2RDM::read_3pdm() {
     // Read 3RDM
     str = "Reading 3RDMs";
     outfile->Printf("\n  %-45s ...", str.c_str());
-    for (const auto& file : {PSIF_V2RDM_D3AAA, PSIF_V2RDM_D3AAB,
-                             PSIF_V2RDM_D3BBA, PSIF_V2RDM_D3BBB}) {
-        ambit::Tensor D3 =
-            ambit::Tensor::build(ambit::CoreTensor, filename[file],
-                                 {nactv, nactv, nactv, nactv, nactv, nactv});
+    for (const auto& file :
+         {PSIF_V2RDM_D3AAA, PSIF_V2RDM_D3AAB, PSIF_V2RDM_D3BBA, PSIF_V2RDM_D3BBB}) {
+        ambit::Tensor D3 = ambit::Tensor::build(ambit::CoreTensor, filename[file],
+                                                {nactv, nactv, nactv, nactv, nactv, nactv});
 
         long int nline;
         psio_address addr = PSIO_ZERO;
@@ -305,8 +295,7 @@ void V2RDM::read_3pdm() {
         if (file != PSIF_V2RDM_D3BBA) {
             for (int nl = 0; nl < nline; ++nl) {
                 dm3 d3;
-                psio->read(file, filename[file].c_str(), (char*)&d3,
-                           sizeof(dm3), addr, &addr);
+                psio->read(file, filename[file].c_str(), (char*)&d3, sizeof(dm3), addr, &addr);
                 size_t i = abs_to_rel_[static_cast<size_t>(d3.i)];
                 size_t j = abs_to_rel_[static_cast<size_t>(d3.j)];
                 size_t k = abs_to_rel_[static_cast<size_t>(d3.k)];
@@ -314,15 +303,13 @@ void V2RDM::read_3pdm() {
                 size_t m = abs_to_rel_[static_cast<size_t>(d3.m)];
                 size_t n = abs_to_rel_[static_cast<size_t>(d3.n)];
 
-                size_t idx = i * nactv5 + j * nactv4 + k * nactv3 + l * nactv2 +
-                             m * nactv + n;
+                size_t idx = i * nactv5 + j * nactv4 + k * nactv3 + l * nactv2 + m * nactv + n;
                 D3.data()[idx] = d3.val;
             }
         } else {
             for (int nl = 0; nl < nline; ++nl) {
                 dm3 d3;
-                psio->read(file, filename[file].c_str(), (char*)&d3,
-                           sizeof(dm3), addr, &addr);
+                psio->read(file, filename[file].c_str(), (char*)&d3, sizeof(dm3), addr, &addr);
                 size_t i = abs_to_rel_[static_cast<size_t>(d3.i)];
                 size_t j = abs_to_rel_[static_cast<size_t>(d3.j)];
                 size_t k = abs_to_rel_[static_cast<size_t>(d3.k)];
@@ -330,8 +317,7 @@ void V2RDM::read_3pdm() {
                 size_t m = abs_to_rel_[static_cast<size_t>(d3.m)];
                 size_t n = abs_to_rel_[static_cast<size_t>(d3.n)];
 
-                size_t idx = k * nactv5 + i * nactv4 + j * nactv3 + n * nactv2 +
-                             l * nactv + m;
+                size_t idx = k * nactv5 + i * nactv4 + j * nactv3 + n * nactv2 + l * nactv + m;
                 D3.data()[idx] = d3.val;
             }
         }
@@ -351,9 +337,8 @@ void V2RDM::read_3pdm() {
 
         str = "Averaging 3RDM AAA & BBB, AAB & ABB blocks";
         outfile->Printf("\n  %-45s ...", str.c_str());
-        ambit::Tensor D3 =
-            ambit::Tensor::build(ambit::CoreTensor, "D3avg_aa",
-                                 {nactv, nactv, nactv, nactv, nactv, nactv});
+        ambit::Tensor D3 = ambit::Tensor::build(ambit::CoreTensor, "D3avg_aa",
+                                                {nactv, nactv, nactv, nactv, nactv, nactv});
         D3("pqrstu") = 0.5 * D3aaa("pqrstu");
         D3("pqrstu") += 0.5 * D3bbb("pqrstu");
         D3aaa("pqrstu") = D3("pqrstu");
@@ -395,8 +380,7 @@ double V2RDM::compute_ref_energy() {
     }
 
     // \sum_{uv} ( h^{u}_{v} + \sum_{m} v^{mu}_{mv} ) * D^{v}_{u}
-    ambit::Tensor sum =
-        ambit::Tensor::build(ambit::CoreTensor, "sum_a", {nactv, nactv});
+    ambit::Tensor sum = ambit::Tensor::build(ambit::CoreTensor, "sum_a", {nactv, nactv});
     sum.iterate([&](const std::vector<size_t>& i, double& value) {
         size_t nu = actv_mos_[i[0]];
         size_t nv = actv_mos_[i[1]];
@@ -428,8 +412,7 @@ double V2RDM::compute_ref_energy() {
     ambit::Tensor& D2aa = D2_[0];
     ambit::Tensor& D2ab = D2_[1];
     ambit::Tensor& D2bb = D2_[2];
-    sum = ambit::Tensor::build(ambit::CoreTensor, "sum_aa",
-                               {nactv, nactv, nactv, nactv});
+    sum = ambit::Tensor::build(ambit::CoreTensor, "sum_aa", {nactv, nactv, nactv, nactv});
     sum.iterate([&](const std::vector<size_t>& i, double& value) {
         size_t nu = actv_mos_[i[0]];
         size_t nv = actv_mos_[i[1]];
@@ -626,8 +609,8 @@ void V2RDM::write_density_to_file() {
 
         ambit::Tensor& D2 = D2_[m];
         D2.iterate([&](const std::vector<size_t>& i, double& value) {
-            outfstr << boost::format("%4d %4d %4d %4d  %20.15f\n") % i[0] %
-                           i[1] % i[2] % i[3] % value;
+            outfstr << boost::format("%4d %4d %4d %4d  %20.15f\n") % i[0] % i[1] % i[2] % i[3] %
+                           value;
         });
 
         outfstr.close();
@@ -640,8 +623,8 @@ void V2RDM::write_density_to_file() {
 
             ambit::Tensor& D3 = D3_[m];
             D3.iterate([&](const std::vector<size_t>& i, double& value) {
-                outfstr << boost::format("%4d %4d %4d %4d %4d %4d  %20.15f\n") %
-                               i[0] % i[1] % i[2] % i[3] % i[4] % i[5] % value;
+                outfstr << boost::format("%4d %4d %4d %4d %4d %4d  %20.15f\n") % i[0] % i[1] %
+                               i[2] % i[3] % i[4] % i[5] % value;
             });
 
             outfstr.close();

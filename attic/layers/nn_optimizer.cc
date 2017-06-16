@@ -1,6 +1,6 @@
 //#include "nn_optimizer.h"
 
-//NeuralNetwork::NeuralNetwork()
+// NeuralNetwork::NeuralNetwork()
 //{
 
 //}

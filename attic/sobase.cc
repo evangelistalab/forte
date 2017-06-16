@@ -28,31 +28,27 @@
 
 #include <cmath>
 
-#include <libpsio/psio.hpp>
-#include <libmints/wavefunction.h>
-#include <libmints/molecule.h>
 #include "multidimensional_arrays.h"
+#include <libmints/molecule.h>
+#include <libmints/wavefunction.h>
+#include <libpsio/psio.hpp>
 
 #include "sobase.h"
 
 using namespace std;
 using namespace psi;
 
-namespace psi{ namespace forte{
+namespace psi {
+namespace forte {
 
-SOBase::SOBase(Options &options, ForteIntegrals* ints, TwoIndex G1):
-    ints_(ints), options_(options)
-{
+SOBase::SOBase(Options& options, ForteIntegrals* ints, TwoIndex G1)
+    : ints_(ints), options_(options) {
     startup(G1);
 }
 
-SOBase::~SOBase()
-{
-    release();
-}
+SOBase::~SOBase() { release(); }
 
-void SOBase::startup(TwoIndex G1)
-{
+void SOBase::startup(TwoIndex G1) {
     // Extract data from the reference (SCF) wavefunction
     boost::shared_ptr<Wavefunction> wfn = Process::environment.wavefunction();
     nirrep_ = wfn->nirrep();
@@ -66,11 +62,11 @@ void SOBase::startup(TwoIndex G1)
     allocate();
     sort_integrals();
 
-    loop_p{
+    loop_p {
         No_[p] = G1[p][p];
         Nv_[p] = 1.0 - G1[p][p];
     }
-    loop_p loop_q{
+    loop_p loop_q {
         G1_[p][q] = G1[p][q];
         E1_[p][q] = (p == q ? 1.0 : 0.0) - G1_[p][q];
     }
@@ -78,8 +74,7 @@ void SOBase::startup(TwoIndex G1)
     build_fock();
 }
 
-void SOBase::allocate()
-{
+void SOBase::allocate() {
     No_ = new double[nso_];
     Nv_ = new double[nso_];
     allocate(G1_);
@@ -91,8 +86,7 @@ void SOBase::allocate()
     allocate(V_);
 }
 
-void SOBase::release()
-{
+void SOBase::release() {
     delete[] No_;
     delete[] Nv_;
     release(G1_);
@@ -104,55 +98,45 @@ void SOBase::release()
     release(V_);
 }
 
-void SOBase::allocate(TwoIndex&  two_index)
-{
-    init_matrix<double>(two_index,nso_,nso_);
+void SOBase::allocate(TwoIndex& two_index) { init_matrix<double>(two_index, nso_, nso_); }
+
+void SOBase::allocate(FourIndex& four_index) {
+    init_matrix<double>(four_index, nso_, nso_, nso_, nso_);
 }
 
-void SOBase::allocate(FourIndex& four_index)
-{
-    init_matrix<double>(four_index,nso_,nso_,nso_,nso_);
+void SOBase::release(TwoIndex& two_index) { free_matrix<double>(two_index, nso_, nso_); }
+
+void SOBase::release(FourIndex& four_index) {
+    free_matrix<double>(four_index, nso_, nso_, nso_, nso_);
 }
 
-void SOBase::release(TwoIndex&  two_index)
-{
-    free_matrix<double>(two_index,nso_,nso_);
-}
-
-void SOBase::release(FourIndex& four_index)
-{
-    free_matrix<double>(four_index,nso_,nso_,nso_,nso_);
-}
-
-void SOBase::sort_integrals()
-{
-    loop_p{
+void SOBase::sort_integrals() {
+    loop_p {
         so_mo.push_back(p % nmo_);
         bool spin = p >= nmo_;
         so_spin.push_back(spin);
-        outfile->Printf("\n  so %3d = mo %3d  spin %s",p,so_mo[p],not so_spin[p] ? "a" : "b");
+        outfile->Printf("\n  so %3d = mo %3d  spin %s", p, so_mo[p], not so_spin[p] ? "a" : "b");
     }
-    loop_p loop_q{
+    loop_p loop_q {
         H1_[p][q] = 0.0;
-        if(so_spin[p] == true and so_spin[q] == true)
-            H1_[p][q] = ints_->oei_a(so_mo[p],so_mo[q]);
-        if(so_spin[p] == false and so_spin[q] == false)
-            H1_[p][q] = ints_->oei_b(so_mo[p],so_mo[q]);
+        if (so_spin[p] == true and so_spin[q] == true)
+            H1_[p][q] = ints_->oei_a(so_mo[p], so_mo[q]);
+        if (so_spin[p] == false and so_spin[q] == false)
+            H1_[p][q] = ints_->oei_b(so_mo[p], so_mo[q]);
     }
-    loop_p loop_q loop_r loop_s{
+    loop_p loop_q loop_r loop_s {
         V_[p][q][r][s] = 0.0;
-//        if((so_spin[p] == so_spin[r]) and (so_spin[q] == so_spin[s]))
-//            V_[p][q][r][s] += ints_->rtei(so_mo[p],so_mo[r],so_mo[q],so_mo[s]);
-//        if((so_spin[p] == so_spin[s]) and (so_spin[q] == so_spin[r]))
-//            V_[p][q][r][s] -= ints_->rtei(so_mo[p],so_mo[s],so_mo[q],so_mo[r]);
+        //        if((so_spin[p] == so_spin[r]) and (so_spin[q] == so_spin[s]))
+        //            V_[p][q][r][s] += ints_->rtei(so_mo[p],so_mo[r],so_mo[q],so_mo[s]);
+        //        if((so_spin[p] == so_spin[s]) and (so_spin[q] == so_spin[r]))
+        //            V_[p][q][r][s] -= ints_->rtei(so_mo[p],so_mo[s],so_mo[q],so_mo[r]);
     }
     outfile->Printf("\n\n  WARNING: I had to temporarily disable the SO code! :(");
     outfile->Flush();
     exit(1);
 }
 
-void SOBase::build_fock()
-{
+void SOBase::build_fock() {
     boost::shared_ptr<Wavefunction> wfn = Process::environment.wavefunction();
 
     boost::shared_ptr<Molecule> molecule_ = wfn->molecule();
@@ -160,74 +144,50 @@ void SOBase::build_fock()
 
     // Compute the reference energy
     E0_ = nuclear_repulsion_energy_;
-    loop_p loop_q{
-        E0_ += H1_[p][q] * G1_[q][p];
-    }
-    loop_p loop_q loop_r loop_s{
+    loop_p loop_q { E0_ += H1_[p][q] * G1_[q][p]; }
+    loop_p loop_q loop_r loop_s {
         E0_ += 0.25 * V_[p][q][r][s] * (G1_[p][r] * G1_[q][s] - G1_[p][s] * G1_[q][r]);
     }
-    loop_p loop_q{
+    loop_p loop_q {
         F_[p][q] = H1_[p][q];
-        loop_r loop_s{
-            F_[p][q] += V_[p][r][q][s] * G1_[s][r];
-        }
+        loop_r loop_s { F_[p][q] += V_[p][r][q][s] * G1_[s][r]; }
     }
 
-//    loop_p loop_q{
-//        outfile->Printf("\nF[%2d][%2d] = %20.12f (ON = %.6f)",p,q,F_[p][q],G1_[p][q]);
-//    }
-    outfile->Printf("\n  The energy of the reference is: %20.12f Eh",E0_);
+    //    loop_p loop_q{
+    //        outfile->Printf("\nF[%2d][%2d] = %20.12f (ON = %.6f)",p,q,F_[p][q],G1_[p][q]);
+    //    }
+    outfile->Printf("\n  The energy of the reference is: %20.12f Eh", E0_);
     outfile->Printf("\n  Diagonal elements of the Fock matrix:");
     outfile->Printf("\n  SO            Epsilon         ON");
-    loop_p {
-        outfile->Printf("\n  %2d  %20.12f   %8.6f",p,F_[p][p],G1_[p][p]);
-    }
+    loop_p { outfile->Printf("\n  %2d  %20.12f   %8.6f", p, F_[p][p], G1_[p][p]); }
 }
 
-void SOBase::add(double fA,TwoIndex& A, double fB, TwoIndex& B)
-{
-    loop_p loop_q{
-        B[p][q] = fA * A[p][q] + fB * B[p][q];
-    }
+void SOBase::add(double fA, TwoIndex& A, double fB, TwoIndex& B) {
+    loop_p loop_q { B[p][q] = fA * A[p][q] + fB * B[p][q]; }
 }
 
-void SOBase::add(double fA,FourIndex& A, double fB, FourIndex& B)
-{
-    loop_p loop_q loop_r loop_s{
-        B[p][q][r][s] = fA * A[p][q][r][s] + fB * B[p][q][r][s];
-    }
+void SOBase::add(double fA, FourIndex& A, double fB, FourIndex& B) {
+    loop_p loop_q loop_r loop_s { B[p][q][r][s] = fA * A[p][q][r][s] + fB * B[p][q][r][s]; }
 }
 
-double SOBase::norm(TwoIndex& A)
-{
+double SOBase::norm(TwoIndex& A) {
     double norm = 0.0;
-    loop_p loop_q{
-        norm += std::pow(A[p][q],2.0);
-    }
+    loop_p loop_q { norm += std::pow(A[p][q], 2.0); }
     return std::sqrt(norm);
 }
 
-double SOBase::norm(FourIndex& A)
-{
+double SOBase::norm(FourIndex& A) {
     double norm = 0.0;
-    loop_p loop_q loop_r loop_s{
-        norm += std::pow(A[p][q][r][s],2.0);
-    }
+    loop_p loop_q loop_r loop_s { norm += std::pow(A[p][q][r][s], 2.0); }
     return std::sqrt(0.25 * norm);
 }
 
-void SOBase::zero(TwoIndex& A)
-{
-    loop_p loop_q{
-        A[p][q] = 0.0;
-    }
+void SOBase::zero(TwoIndex& A) {
+    loop_p loop_q { A[p][q] = 0.0; }
 }
 
-void SOBase::zero(FourIndex& A)
-{
-    loop_p loop_q loop_r loop_s{
-        A[p][q][r][s] = 0.0;
-    }
+void SOBase::zero(FourIndex& A) {
+    loop_p loop_q loop_r loop_s { A[p][q][r][s] = 0.0; }
 }
-
-}} // EndNamespaces
+}
+} // EndNamespaces

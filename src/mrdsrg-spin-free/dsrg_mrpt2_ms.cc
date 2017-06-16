@@ -40,13 +40,11 @@ double DSRG_MRPT2::compute_energy_multi_state() {
     if (nentry > 1) {
         outfile->Printf("\n\n  Warning: States with different symmetry are "
                         "found in the list of AVG_STATES.");
-        outfile->Printf(
-            "\n             Each symmetry will be considered separately here.");
+        outfile->Printf("\n             Each symmetry will be considered separately here.");
     }
 
     // get character table
-    CharacterTable ct =
-        Process::environment.molecule()->point_group()->char_table();
+    CharacterTable ct = Process::environment.molecule()->point_group()->char_table();
     std::vector<std::string> irrep_symbol;
     for (int h = 0; h < this->nirrep(); ++h) {
         irrep_symbol.push_back(std::string(ct.gamma(h).symbol()));
@@ -93,8 +91,7 @@ std::vector<std::vector<double>> DSRG_MRPT2::compute_energy_sa() {
     transfer_integrals();
 
     // get character table
-    CharacterTable ct =
-        Process::environment.molecule()->point_group()->char_table();
+    CharacterTable ct = Process::environment.molecule()->point_group()->char_table();
     std::vector<std::string> irrep_symbol;
     for (int h = 0; h < this->nirrep(); ++h) {
         irrep_symbol.push_back(std::string(ct.gamma(h).symbol()));
@@ -102,10 +99,9 @@ std::vector<std::vector<double>> DSRG_MRPT2::compute_energy_sa() {
 
     // multiplicity table
     std::vector<std::string> multi_label{
-        "Singlet", "Doublet", "Triplet", "Quartet", "Quintet", "Sextet",
-        "Septet",  "Octet",   "Nonet",   "Decaet",  "11-et",   "12-et",
-        "13-et",   "14-et",   "15-et",   "16-et",   "17-et",   "18-et",
-        "19-et",   "20-et",   "21-et",   "22-et",   "23-et",   "24-et"};
+        "Singlet", "Doublet", "Triplet", "Quartet", "Quintet", "Sextet", "Septet", "Octet",
+        "Nonet",   "Decaet",  "11-et",   "12-et",   "13-et",   "14-et",  "15-et",  "16-et",
+        "17-et",   "18-et",   "19-et",   "20-et",   "21-et",   "22-et",  "23-et",  "24-et"};
 
     // size of 1rdm and 2rdm
     size_t na = mo_space_info_->size("ACTIVE");
@@ -333,8 +329,7 @@ std::vector<std::vector<double>> DSRG_MRPT2::compute_energy_sa() {
 
 std::vector<std::vector<double>> DSRG_MRPT2::compute_energy_xms() {
     // get character table
-    CharacterTable ct =
-        Process::environment.molecule()->point_group()->char_table();
+    CharacterTable ct = Process::environment.molecule()->point_group()->char_table();
     std::vector<std::string> irrep_symbol;
     for (int h = 0; h < this->nirrep(); ++h) {
         irrep_symbol.push_back(std::string(ct.gamma(h).symbol()));
@@ -342,10 +337,9 @@ std::vector<std::vector<double>> DSRG_MRPT2::compute_energy_xms() {
 
     // multiplicity table
     std::vector<std::string> multi_label{
-        "Singlet", "Doublet", "Triplet", "Quartet", "Quintet", "Sextet",
-        "Septet",  "Octet",   "Nonet",   "Decaet",  "11-et",   "12-et",
-        "13-et",   "14-et",   "15-et",   "16-et",   "17-et",   "18-et",
-        "19-et",   "20-et",   "21-et",   "22-et",   "23-et",   "24-et"};
+        "Singlet", "Doublet", "Triplet", "Quartet", "Quintet", "Sextet", "Septet", "Octet",
+        "Nonet",   "Decaet",  "11-et",   "12-et",   "13-et",   "14-et",  "15-et",  "16-et",
+        "17-et",   "18-et",   "19-et",   "20-et",   "21-et",   "22-et",  "23-et",  "24-et"};
 
     // prepare FCI integrals
     std::shared_ptr<FCIIntegrals> fci_ints =
@@ -404,17 +398,13 @@ std::vector<std::vector<double>> DSRG_MRPT2::compute_energy_xms() {
                     vector<double> opdm_b(na2, 0.0);
                     ci_rdms.compute_1rdm(opdm_a, opdm_b);
 
-                    std::transform(sa_opdm_a.begin(), sa_opdm_a.end(),
-                                   opdm_a.begin(), sa_opdm_a.begin(),
-                                   std::plus<double>());
-                    std::transform(sa_opdm_b.begin(), sa_opdm_b.end(),
-                                   opdm_b.begin(), sa_opdm_b.begin(),
-                                   std::plus<double>());
+                    std::transform(sa_opdm_a.begin(), sa_opdm_a.end(), opdm_a.begin(),
+                                   sa_opdm_a.begin(), std::plus<double>());
+                    std::transform(sa_opdm_b.begin(), sa_opdm_b.end(), opdm_b.begin(),
+                                   sa_opdm_b.begin(), std::plus<double>());
                 }
-                std::for_each(sa_opdm_a.begin(), sa_opdm_a.end(),
-                              [&](double& v) { v /= nstates; });
-                std::for_each(sa_opdm_b.begin(), sa_opdm_b.end(),
-                              [&](double& v) { v /= nstates; });
+                std::for_each(sa_opdm_a.begin(), sa_opdm_a.end(), [&](double& v) { v /= nstates; });
+                std::for_each(sa_opdm_b.begin(), sa_opdm_b.end(), [&](double& v) { v /= nstates; });
 
                 Gamma1_.block("aa").data() = sa_opdm_a;
                 Gamma1_.block("AA").data() = sa_opdm_b;
@@ -428,13 +418,11 @@ std::vector<std::vector<double>> DSRG_MRPT2::compute_energy_xms() {
         }
 
         // prepare Heff
-        SharedMatrix Heff(new Matrix("Heff " + multi_label[multi - 1] + " " +
-                                         irrep_symbol[irrep],
+        SharedMatrix Heff(new Matrix("Heff " + multi_label[multi - 1] + " " + irrep_symbol[irrep],
                                      nstates, nstates));
-        SharedMatrix Heff_sym(new Matrix("Heff (Symmetrized) " +
-                                             multi_label[multi - 1] + " " +
-                                             irrep_symbol[irrep],
-                                         nstates, nstates));
+        SharedMatrix Heff_sym(
+            new Matrix("Heff (Symmetrized) " + multi_label[multi - 1] + " " + irrep_symbol[irrep],
+                       nstates, nstates));
 
         // loop over states
         for (int M = 0; M < nstates; ++M) {
@@ -522,51 +510,48 @@ std::vector<std::vector<double>> DSRG_MRPT2::compute_energy_xms() {
 }
 
 void DSRG_MRPT2::build_oei() {
-    Hoei_.iterate([&](const std::vector<size_t>& i,
-                      const std::vector<SpinType>& spin, double& value) {
-        if (spin[0] == AlphaSpin) {
-            value = ints_->oei_a(i[0], i[1]);
-        } else {
-            value = ints_->oei_b(i[0], i[1]);
-        }
-    });
+    Hoei_.iterate(
+        [&](const std::vector<size_t>& i, const std::vector<SpinType>& spin, double& value) {
+            if (spin[0] == AlphaSpin) {
+                value = ints_->oei_a(i[0], i[1]);
+            } else {
+                value = ints_->oei_b(i[0], i[1]);
+            }
+        });
 }
 
 void DSRG_MRPT2::build_eff_oei() {
     for (const auto& block : Hoei_.block_labels()) {
         // lowercase: alpha spin
         if (islower(block[0])) {
-            Hoei_.block(block).iterate(
-                [&](const std::vector<size_t>& i, double& value) {
-                    size_t np = label_to_spacemo_[block[0]][i[0]];
-                    size_t nq = label_to_spacemo_[block[1]][i[1]];
-                    value = ints_->oei_a(np, nq);
+            Hoei_.block(block).iterate([&](const std::vector<size_t>& i, double& value) {
+                size_t np = label_to_spacemo_[block[0]][i[0]];
+                size_t nq = label_to_spacemo_[block[1]][i[1]];
+                value = ints_->oei_a(np, nq);
 
-                    for (const size_t& nm : acore_mos_) {
-                        value += ints_->aptei_aa(np, nm, nq, nm);
-                        value += ints_->aptei_ab(np, nm, nq, nm);
-                    }
-                });
+                for (const size_t& nm : acore_mos_) {
+                    value += ints_->aptei_aa(np, nm, nq, nm);
+                    value += ints_->aptei_ab(np, nm, nq, nm);
+                }
+            });
         } else {
-            Hoei_.block(block).iterate(
-                [&](const std::vector<size_t>& i, double& value) {
-                    size_t np = label_to_spacemo_[block[0]][i[0]];
-                    size_t nq = label_to_spacemo_[block[1]][i[1]];
-                    value = ints_->oei_b(np, nq);
+            Hoei_.block(block).iterate([&](const std::vector<size_t>& i, double& value) {
+                size_t np = label_to_spacemo_[block[0]][i[0]];
+                size_t nq = label_to_spacemo_[block[1]][i[1]];
+                value = ints_->oei_b(np, nq);
 
-                    for (const size_t& nm : bcore_mos_) {
-                        value += ints_->aptei_bb(np, nm, nq, nm);
-                        value += ints_->aptei_ab(nm, np, nm, nq);
-                    }
-                });
+                for (const size_t& nm : bcore_mos_) {
+                    value += ints_->aptei_bb(np, nm, nq, nm);
+                    value += ints_->aptei_ab(nm, np, nm, nq);
+                }
+            });
         }
     }
 }
 
-SharedMatrix
-DSRG_MRPT2::xms_rotation(std::shared_ptr<FCIIntegrals> fci_ints,
-                         std::vector<psi::forte::STLBitsetDeterminant>& p_space,
-                         SharedMatrix civecs, const int& irrep) {
+SharedMatrix DSRG_MRPT2::xms_rotation(std::shared_ptr<FCIIntegrals> fci_ints,
+                                      std::vector<psi::forte::STLBitsetDeterminant>& p_space,
+                                      SharedMatrix civecs, const int& irrep) {
     print_h2("Perform XMS Rotation to Reference States");
     outfile->Printf("\n");
 
@@ -585,8 +570,7 @@ DSRG_MRPT2::xms_rotation(std::shared_ptr<FCIIntegrals> fci_ints,
             ci_rdms.compute_1rdm(opdm_a, opdm_b);
 
             // put rdms in tensor format
-            BlockedTensor D1 =
-                BTF_->build(tensor_type_, "D1", spin_cases({"aa"}), true);
+            BlockedTensor D1 = BTF_->build(tensor_type_, "D1", spin_cases({"aa"}), true);
             D1.block("aa").data() = opdm_a;
             D1.block("AA").data() = opdm_b;
 
@@ -649,8 +633,7 @@ double DSRG_MRPT2::compute_ms_2nd_coupling(const std::string& name) {
     double coupling = 0.0;
 
     // temp contract with D1
-    BlockedTensor temp =
-        BTF_->build(tensor_type_, "temp", spin_cases({"aa"}), true);
+    BlockedTensor temp = BTF_->build(tensor_type_, "temp", spin_cases({"aa"}), true);
     temp["vu"] += Hoei_["eu"] * T1_["ve"];
     temp["VU"] += Hoei_["EU"] * T1_["VE"];
 
@@ -761,9 +744,8 @@ double DSRG_MRPT2::compute_ms_2nd_coupling(const std::string& name) {
 }
 
 void DSRG_MRPT2::compute_cumulants(std::shared_ptr<FCIIntegrals> fci_ints,
-                                   std::vector<STLBitsetDeterminant>& p_space,
-                                   SharedMatrix evecs, const int& root1,
-                                   const int& root2, const int& irrep) {
+                                   std::vector<STLBitsetDeterminant>& p_space, SharedMatrix evecs,
+                                   const int& root1, const int& root2, const int& irrep) {
     CI_RDMS ci_rdms(options_, fci_ints, p_space, evecs, root1, root2);
     ci_rdms.set_symmetry(irrep);
 
@@ -777,14 +759,12 @@ void DSRG_MRPT2::compute_cumulants(std::shared_ptr<FCIIntegrals> fci_ints,
     L1a.data() = opdm_a;
     L1b.data() = opdm_b;
 
-    (Eta1_.block("aa"))
-        .iterate([&](const std::vector<size_t>& i, double& value) {
-            value = i[0] == i[1] ? 1.0 : 0.0;
-        });
-    (Eta1_.block("AA"))
-        .iterate([&](const std::vector<size_t>& i, double& value) {
-            value = i[0] == i[1] ? 1.0 : 0.0;
-        });
+    (Eta1_.block("aa")).iterate([&](const std::vector<size_t>& i, double& value) {
+        value = i[0] == i[1] ? 1.0 : 0.0;
+    });
+    (Eta1_.block("AA")).iterate([&](const std::vector<size_t>& i, double& value) {
+        value = i[0] == i[1] ? 1.0 : 0.0;
+    });
     Eta1_.block("aa")("pq") -= Gamma1_.block("aa")("pq");
     Eta1_.block("AA")("pq") -= Gamma1_.block("AA")("pq");
 
@@ -891,10 +871,10 @@ void DSRG_MRPT2::compute_cumulants(std::shared_ptr<FCIIntegrals> fci_ints,
     }
 }
 
-void DSRG_MRPT2::compute_densities(
-    std::shared_ptr<FCIIntegrals> fci_ints,
-    std::vector<psi::forte::STLBitsetDeterminant>& p_space, SharedMatrix evecs,
-    const int& root1, const int& root2, const int& irrep) {
+void DSRG_MRPT2::compute_densities(std::shared_ptr<FCIIntegrals> fci_ints,
+                                   std::vector<psi::forte::STLBitsetDeterminant>& p_space,
+                                   SharedMatrix evecs, const int& root1, const int& root2,
+                                   const int& irrep) {
     CI_RDMS ci_rdms(options_, fci_ints, p_space, evecs, root1, root2);
     ci_rdms.set_symmetry(irrep);
 

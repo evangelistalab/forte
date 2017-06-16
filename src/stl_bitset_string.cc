@@ -26,8 +26,8 @@
  * @END LICENSE
  */
 
-#include "psi4/psi4-dec.h"
 #include "psi4/libmints/matrix.h"
+#include "psi4/psi4-dec.h"
 
 #include "stl_bitset_string.h"
 
@@ -61,9 +61,7 @@ STLBitsetString::STLBitsetString(const std::vector<bool>& occupation) {
 
 STLBitsetString::STLBitsetString(const std::bitset<128>& bits) { bits_ = bits; }
 
-bool STLBitsetString::operator==(const STLBitsetString& lhs) const {
-    return (bits_ == lhs.bits_);
-}
+bool STLBitsetString::operator==(const STLBitsetString& lhs) const { return (bits_ == lhs.bits_); }
 
 bool STLBitsetString::operator<(const STLBitsetString& lhs) const {
     for (int p = nmo_ - 1; p >= 0; --p) {

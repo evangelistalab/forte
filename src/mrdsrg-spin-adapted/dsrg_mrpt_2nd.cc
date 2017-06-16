@@ -26,8 +26,8 @@
  * @END LICENSE
  */
 
-#include <utility>
 #include "dsrg_mrpt.h"
+#include <utility>
 
 namespace psi {
 namespace forte {
@@ -83,8 +83,7 @@ double DSRG_MRPT::compute_energy_pt2() {
                         std::get<1>(str_dim));
     }
 
-    outfile->Printf("\n\n  DSRG-MRPT2 energy took %10.3f s.",
-                    DSRG_energy.get());
+    outfile->Printf("\n\n  DSRG-MRPT2 energy took %10.3f s.", DSRG_energy.get());
     return Etotal;
 }
 
@@ -106,19 +105,18 @@ void DSRG_MRPT::renormalize_F_E2nd() {
 
     // Note: we directly modify the Fock matrix and keep the aa block unchanged.
     // Same strategy when forming T1 amplitudes.
-    ambit::BlockedTensor F1st =
-        ambit::BlockedTensor::build(tensor_type_, "Temp", {"hv", "ca"});
+    ambit::BlockedTensor F1st = ambit::BlockedTensor::build(tensor_type_, "Temp", {"hv", "ca"});
     for (const auto& block : F1st.block_labels()) {
         F1st.block(block)("pq") = F_.block(block)("pq");
     }
 
     // temp BlockedTensor for contraction between L1 and T2
-    ambit::BlockedTensor temp =
-        ambit::BlockedTensor::build(tensor_type_, "Temp", {"aa"});
+    ambit::BlockedTensor temp = ambit::BlockedTensor::build(tensor_type_, "Temp", {"aa"});
     temp["xu"] = 0.5 * L1_["xu"];
 
-    temp.iterate([&](const std::vector<size_t>& i, const std::vector<SpinType>&,
-                     double& value) { value *= Fdiag_[i[0]] - Fdiag_[i[1]]; });
+    temp.iterate([&](const std::vector<size_t>& i, const std::vector<SpinType>&, double& value) {
+        value *= Fdiag_[i[0]] - Fdiag_[i[1]];
+    });
 
     F1st["ie"] += 2.0 * T2_["iuex"] * temp["xu"];
     F1st["ie"] -= T2_["iuxe"] * temp["xu"];
@@ -126,11 +124,9 @@ void DSRG_MRPT::renormalize_F_E2nd() {
     F1st["my"] -= T2_["muxy"] * temp["xu"];
 
     // scale F1st by R
-    F1st.iterate([&](const std::vector<size_t>& i, const std::vector<SpinType>&,
-                     double& value) {
+    F1st.iterate([&](const std::vector<size_t>& i, const std::vector<SpinType>&, double& value) {
         if (std::fabs(value) > 1.0e-15) {
-            value *=
-                dsrg_source_->compute_renormalized(Fdiag_[i[0]] - Fdiag_[i[1]]);
+            value *= dsrg_source_->compute_renormalized(Fdiag_[i[0]] - Fdiag_[i[1]]);
         } else {
             value = 0.0; // ignore all noise
         }
@@ -146,18 +142,15 @@ void DSRG_MRPT::renormalize_F_E2nd() {
 
 void DSRG_MRPT::BT_scaled_by_D(BlockedTensor& BT) {
     if (BT.rank() == 4) {
-        BT.iterate([&](const std::vector<size_t>& i,
-                       const std::vector<SpinType>&, double& value) {
+        BT.iterate([&](const std::vector<size_t>& i, const std::vector<SpinType>&, double& value) {
             if (std::fabs(value) > 1.0e-15) {
-                value *= 1.0 / (Fdiag_[i[0]] + Fdiag_[i[1]] - Fdiag_[i[2]] -
-                                Fdiag_[i[3]]);
+                value *= 1.0 / (Fdiag_[i[0]] + Fdiag_[i[1]] - Fdiag_[i[2]] - Fdiag_[i[3]]);
             } else {
                 value = 0.0; // ignore all noise
             }
         });
     } else if (BT.rank() == 2) {
-        BT.iterate([&](const std::vector<size_t>& i,
-                       const std::vector<SpinType>&, double& value) {
+        BT.iterate([&](const std::vector<size_t>& i, const std::vector<SpinType>&, double& value) {
             if (std::fabs(value) > 1.0e-15) {
                 value *= 1.0 / (Fdiag_[i[0]] - Fdiag_[i[1]]);
             } else {
@@ -174,24 +167,19 @@ void DSRG_MRPT::BT_scaled_by_D(BlockedTensor& BT) {
 
 void DSRG_MRPT::BT_scaled_by_Rplus1(BlockedTensor& BT) {
     if (BT.rank() == 4) {
-        BT.iterate([&](const std::vector<size_t>& i,
-                       const std::vector<SpinType>&, double& value) {
+        BT.iterate([&](const std::vector<size_t>& i, const std::vector<SpinType>&, double& value) {
             if (std::fabs(value) > 1.0e-15) {
                 value *= 1.0 +
-                         dsrg_source_->compute_renormalized(
-                             Fdiag_[i[0]] + Fdiag_[i[1]] - Fdiag_[i[2]] -
-                             Fdiag_[i[3]]);
+                         dsrg_source_->compute_renormalized(Fdiag_[i[0]] + Fdiag_[i[1]] -
+                                                            Fdiag_[i[2]] - Fdiag_[i[3]]);
             } else {
                 value = 0.0; // ignore all noise
             }
         });
     } else if (BT.rank() == 2) {
-        BT.iterate([&](const std::vector<size_t>& i,
-                       const std::vector<SpinType>&, double& value) {
+        BT.iterate([&](const std::vector<size_t>& i, const std::vector<SpinType>&, double& value) {
             if (std::fabs(value) > 1.0e-15) {
-                value *= 1.0 +
-                         dsrg_source_->compute_renormalized(Fdiag_[i[0]] -
-                                                            Fdiag_[i[1]]);
+                value *= 1.0 + dsrg_source_->compute_renormalized(Fdiag_[i[0]] - Fdiag_[i[1]]);
             } else {
                 value = 0.0; // ignore all noise
             }
@@ -206,8 +194,7 @@ void DSRG_MRPT::BT_scaled_by_Rplus1(BlockedTensor& BT) {
 
 void DSRG_MRPT::BT_scaled_by_RD(BlockedTensor& BT) {
     if (BT.rank() == 4) {
-        BT.iterate([&](const std::vector<size_t>& i,
-                       const std::vector<SpinType>&, double& value) {
+        BT.iterate([&](const std::vector<size_t>& i, const std::vector<SpinType>&, double& value) {
             if (std::fabs(value) > 1.0e-15) {
                 value *= dsrg_source_->compute_renormalized_denominator(
                     Fdiag_[i[0]] + Fdiag_[i[1]] - Fdiag_[i[2]] - Fdiag_[i[3]]);
@@ -216,11 +203,10 @@ void DSRG_MRPT::BT_scaled_by_RD(BlockedTensor& BT) {
             }
         });
     } else if (BT.rank() == 2) {
-        BT.iterate([&](const std::vector<size_t>& i,
-                       const std::vector<SpinType>&, double& value) {
+        BT.iterate([&](const std::vector<size_t>& i, const std::vector<SpinType>&, double& value) {
             if (std::fabs(value) > 1.0e-15) {
-                value *= dsrg_source_->compute_renormalized_denominator(
-                    Fdiag_[i[0]] - Fdiag_[i[1]]);
+                value *=
+                    dsrg_source_->compute_renormalized_denominator(Fdiag_[i[0]] - Fdiag_[i[1]]);
             } else {
                 value = 0.0; // ignore all noise
             }

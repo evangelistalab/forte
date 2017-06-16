@@ -37,15 +37,14 @@
 namespace psi {
 namespace forte {
 
-DSRG_MRPT::DSRG_MRPT(Reference reference, SharedWavefunction ref_wfn,
-                     Options& options, std::shared_ptr<ForteIntegrals> ints,
+DSRG_MRPT::DSRG_MRPT(Reference reference, SharedWavefunction ref_wfn, Options& options,
+                     std::shared_ptr<ForteIntegrals> ints,
                      std::shared_ptr<MOSpaceInfo> mo_space_info)
-    : Wavefunction(options), reference_(reference), ints_(ints),
-      mo_space_info_(mo_space_info), tensor_type_(ambit::CoreTensor) {
+    : Wavefunction(options), reference_(reference), ints_(ints), mo_space_info_(mo_space_info),
+      tensor_type_(ambit::CoreTensor) {
     shallow_copy(ref_wfn);
     // wfn_ = ref_wfn;
-    print_method_banner(
-        {"Spin-Adapted 2nd- & 3rd-order DSRG-MRPT", "Chenyang Li"});
+    print_method_banner({"Spin-Adapted 2nd- & 3rd-order DSRG-MRPT", "Chenyang Li"});
     print_citation();
     read_options();
     print_options();
@@ -111,8 +110,7 @@ void DSRG_MRPT::read_options() {
 
 void DSRG_MRPT::print_options() {
     // fill in information
-    std::vector<std::pair<std::string, int>> calculation_info{
-        {"ntamp", ntamp_}};
+    std::vector<std::pair<std::string, int>> calculation_info{{"ntamp", ntamp_}};
 
     std::vector<std::pair<std::string, double>> calculation_info_double{
         {"flow parameter", s_},
@@ -129,16 +127,13 @@ void DSRG_MRPT::print_options() {
     // print some information
     print_h2("Calculation Information");
     for (auto& str_dim : calculation_info) {
-        outfile->Printf("\n    %-35s %15d", str_dim.first.c_str(),
-                        str_dim.second);
+        outfile->Printf("\n    %-35s %15d", str_dim.first.c_str(), str_dim.second);
     }
     for (auto& str_dim : calculation_info_double) {
-        outfile->Printf("\n    %-35s %15.3e", str_dim.first.c_str(),
-                        str_dim.second);
+        outfile->Printf("\n    %-35s %15.3e", str_dim.first.c_str(), str_dim.second);
     }
     for (auto& str_dim : calculation_info_string) {
-        outfile->Printf("\n    %-35s %15s", str_dim.first.c_str(),
-                        str_dim.second.c_str());
+        outfile->Printf("\n    %-35s %15s", str_dim.first.c_str(), str_dim.second.c_str());
     }
     outfile->Printf("\n");
     outfile->Flush();
@@ -173,8 +168,7 @@ void DSRG_MRPT::startup() {
     ambit::BlockedTensor::add_composite_mo_space("g", "pqrs", {"c", "a", "v"});
 
     // test memory
-    test_memory(mo_space_info_->size("RESTRICTED_DOCC"),
-                mo_space_info_->size("ACTIVE"),
+    test_memory(mo_space_info_->size("RESTRICTED_DOCC"), mo_space_info_->size("ACTIVE"),
                 mo_space_info_->size("RESTRICTED_UOCC"));
 
     // prepare density matrix and cumulants
@@ -191,14 +185,11 @@ void DSRG_MRPT::startup() {
     // V does not contain ccvv or aaaa blocks
     H_ = ambit::BlockedTensor::build(tensor_type_, "H", {"cg", "ap", "vv"});
     std::vector<std::string> od_blocks = od_two_labels();
-    std::vector<std::string> throw_blocks{"ccvv", "cavv", "acvv", "ccav",
-                                          "ccva"};
+    std::vector<std::string> throw_blocks{"ccvv", "cavv", "acvv", "ccav", "ccva"};
     od_blocks.erase(std::remove_if(od_blocks.begin(), od_blocks.end(),
                                    [&](std::string i) -> bool {
-                                       return std::find(throw_blocks.begin(),
-                                                        throw_blocks.end(),
-                                                        i) !=
-                                              throw_blocks.end();
+                                       return std::find(throw_blocks.begin(), throw_blocks.end(),
+                                                        i) != throw_blocks.end();
                                    }),
                     od_blocks.end());
     //    od_blocks.erase(std::remove(od_blocks.begin(), od_blocks.end(),
@@ -230,7 +221,7 @@ double DSRG_MRPT::compute_energy() {
     if (corr_lv_ == "PT2") {
         Etotal += compute_energy_pt2();
     } else if (corr_lv_ == "PT3") {
-//        Etotal += compute_energy_pt3();
+        //        Etotal += compute_energy_pt3();
     }
 
     Process::environment.globals["CURRENT ENERGY"] = Etotal;
@@ -239,28 +230,24 @@ double DSRG_MRPT::compute_energy() {
 
 void DSRG_MRPT::build_ints() {
     // fill two-eletron integrals
-    V_.iterate([&](const std::vector<size_t>& i, const std::vector<SpinType>&,
-                   double& value) {
+    V_.iterate([&](const std::vector<size_t>& i, const std::vector<SpinType>&, double& value) {
         value = ints_->aptei_ab(i[0], i[1], i[2], i[3]);
     });
 
     // fill one-electron integrals
-    H_.iterate([&](const std::vector<size_t>& i, const std::vector<SpinType>&,
-                   double& value) { value = ints_->oei_a(i[0], i[1]); });
+    H_.iterate([&](const std::vector<size_t>& i, const std::vector<SpinType>&, double& value) {
+        value = ints_->oei_a(i[0], i[1]);
+    });
 }
 
 void DSRG_MRPT::build_density() {
     // test OPDC
-    ambit::Tensor diff =
-        ambit::Tensor::build(tensor_type_, "diff_L1", reference_.L1a().dims());
+    ambit::Tensor diff = ambit::Tensor::build(tensor_type_, "diff_L1", reference_.L1a().dims());
     diff("pq") = reference_.L1a()("pq") - reference_.L1b()("pq");
     if (diff.norm() > 1.0e-8) {
-        outfile->Printf(
-            "\n  Error: one-particle density cumulant cannot be spin-adapted!");
-        outfile->Printf("\n  |L1a - L1b| = %20.15f  <== This should be 0.0.",
-                        diff.norm());
-        throw PSIEXCEPTION(
-            "One-particle density cumulant cannot be spin-adapted!");
+        outfile->Printf("\n  Error: one-particle density cumulant cannot be spin-adapted!");
+        outfile->Printf("\n  |L1a - L1b| = %20.15f  <== This should be 0.0.", diff.norm());
+        throw PSIEXCEPTION("One-particle density cumulant cannot be spin-adapted!");
     }
 
     // fill spin-summed OPDC
@@ -268,24 +255,20 @@ void DSRG_MRPT::build_density() {
     L1aa("pq") = reference_.L1a()("pq") + reference_.L1b()("pq");
 
     ambit::Tensor E1aa = Eta1_.block("aa");
-    E1aa.iterate([&](const std::vector<size_t>& i, double& value) {
-        value = i[0] == i[1] ? 2.0 : 0.0;
-    });
+    E1aa.iterate(
+        [&](const std::vector<size_t>& i, double& value) { value = i[0] == i[1] ? 2.0 : 0.0; });
     E1aa("pq") -= L1aa("pq");
 
     // test T2PDC
-    diff =
-        ambit::Tensor::build(tensor_type_, "diff_L2", reference_.L2aa().dims());
-    diff("pqrs") = reference_.L2aa()("pqrs") - reference_.L2ab()("pqrs") +
-                   reference_.L2ab()("pqsr");
+    diff = ambit::Tensor::build(tensor_type_, "diff_L2", reference_.L2aa().dims());
+    diff("pqrs") =
+        reference_.L2aa()("pqrs") - reference_.L2ab()("pqrs") + reference_.L2ab()("pqsr");
     if (diff.norm() > 1.0e-8) {
-        outfile->Printf(
-            "\n  Error: two-particle density cumulant cannot be spin-adapted!");
+        outfile->Printf("\n  Error: two-particle density cumulant cannot be spin-adapted!");
         outfile->Printf("\n  |L2[pqrs] - (L2[pQrS] - L2[pQsR])| = %20.15f  <== "
                         "This should be 0.0.",
                         diff.norm());
-        throw PSIEXCEPTION(
-            "Two-particle density cumulant cannot be spin-adapted!");
+        throw PSIEXCEPTION("Two-particle density cumulant cannot be spin-adapted!");
     }
 
     // fill spin-summed T2PDC
@@ -296,16 +279,12 @@ void DSRG_MRPT::build_density() {
     // T3PDC
     if (options_.get_str("THREEPDC") != "ZERO") {
         // test spin adaptation
-        diff = ambit::Tensor::build(tensor_type_, "diff_L3",
-                                    reference_.L3aaa().dims());
-        diff("pqrstu") += reference_.L3aab()("pqrstu") -
-                          reference_.L3aab()("pqrsut") +
+        diff = ambit::Tensor::build(tensor_type_, "diff_L3", reference_.L3aaa().dims());
+        diff("pqrstu") += reference_.L3aab()("pqrstu") - reference_.L3aab()("pqrsut") +
                           reference_.L3aab()("pqrtus");
-        diff("pqrstu") -= reference_.L3aab()("prqstu") -
-                          reference_.L3aab()("prqsut") +
+        diff("pqrstu") -= reference_.L3aab()("prqstu") - reference_.L3aab()("prqsut") +
                           reference_.L3aab()("prqtus");
-        diff("pqrstu") += reference_.L3aab()("qrpstu") -
-                          reference_.L3aab()("qrpsut") +
+        diff("pqrstu") += reference_.L3aab()("qrpstu") - reference_.L3aab()("qrpsut") +
                           reference_.L3aab()("qrptus");
         diff.scale(1.0 / 3.0);
         diff("pqrstu") -= reference_.L3aaa()("pqrstu");
@@ -315,8 +294,7 @@ void DSRG_MRPT::build_density() {
             outfile->Printf("\n  |L3aaa - 1/3 * P(L3aab)| = %20.15f  <== This "
                             "should be 0.0.",
                             diff.norm());
-            throw PSIEXCEPTION(
-                "Three-particle density cumulant cannot be spin-adapted!");
+            throw PSIEXCEPTION("Three-particle density cumulant cannot be spin-adapted!");
         }
 
         // fill spin-summed T3PDC
@@ -336,28 +314,24 @@ void DSRG_MRPT::build_fock() {
     }
 
     // extra work here for not storing ccvv of V
-    F_.iterate([&](const std::vector<size_t>& i, const std::vector<SpinType>&,
-                   double& value) {
+    F_.iterate([&](const std::vector<size_t>& i, const std::vector<SpinType>&, double& value) {
         for (const size_t& m : core_mos_) {
             value += 2.0 * ints_->aptei_ab(i[0], m, i[1], m);
             value -= ints_->aptei_ab(i[0], m, m, i[1]);
         }
     });
 
-    ambit::BlockedTensor VFock = ambit::BlockedTensor::build(
-        tensor_type_, "VFock", {"caga", "aapa", "vava"});
-    VFock.iterate([&](const std::vector<size_t>& i,
-                      const std::vector<SpinType>&, double& value) {
+    ambit::BlockedTensor VFock =
+        ambit::BlockedTensor::build(tensor_type_, "VFock", {"caga", "aapa", "vava"});
+    VFock.iterate([&](const std::vector<size_t>& i, const std::vector<SpinType>&, double& value) {
         value = ints_->aptei_ab(i[0], i[1], i[2], i[3]);
     });
     F_["mq"] += L1_["uv"] * VFock["mvqu"];
     F_["xa"] += L1_["uv"] * VFock["xvau"];
     F_["ef"] += L1_["uv"] * VFock["evfu"];
 
-    VFock = ambit::BlockedTensor::build(tensor_type_, "VFock",
-                                        {"caag", "aaap", "vaav"});
-    VFock.iterate([&](const std::vector<size_t>& i,
-                      const std::vector<SpinType>&, double& value) {
+    VFock = ambit::BlockedTensor::build(tensor_type_, "VFock", {"caag", "aaap", "vaav"});
+    VFock.iterate([&](const std::vector<size_t>& i, const std::vector<SpinType>&, double& value) {
         value = ints_->aptei_ab(i[0], i[1], i[2], i[3]);
     });
     F_["mq"] -= 0.5 * L1_["uv"] * VFock["mvuq"];
@@ -367,12 +341,12 @@ void DSRG_MRPT::build_fock() {
     // obtain diagonal elements of Fock matrix
     size_t ncmo = mo_space_info_->size("CORRELATED");
     Fdiag_ = std::vector<double>(ncmo);
-    F_.citerate([&](const std::vector<size_t>& i, const std::vector<SpinType>&,
-                    const double& value) {
-        if (i[0] == i[1]) {
-            Fdiag_[i[0]] = value;
-        }
-    });
+    F_.citerate(
+        [&](const std::vector<size_t>& i, const std::vector<SpinType>&, const double& value) {
+            if (i[0] == i[1]) {
+                Fdiag_[i[0]] = value;
+            }
+        });
 }
 
 bool DSRG_MRPT::check_semicanonical() {
@@ -385,8 +359,7 @@ bool DSRG_MRPT::check_semicanonical() {
     diff["mn"] = F_["mn"];
     diff["uv"] = F_["uv"];
     diff["ef"] = F_["ef"];
-    diff.iterate([&](const std::vector<size_t>& i, const std::vector<SpinType>&,
-                     double& value) {
+    diff.iterate([&](const std::vector<size_t>& i, const std::vector<SpinType>&, double& value) {
         if (i[0] == i[1]) {
             value -= Fdiag_[i[0]];
         }
@@ -397,15 +370,13 @@ bool DSRG_MRPT::check_semicanonical() {
         ambit::Tensor diff_block = diff.block(block);
         Fd_od_norm.emplace_back(diff_block.norm());
         std::vector<double>& data = diff_block.data();
-        auto iter =
-            std::max_element(data.begin(), data.end(), [&](double x, double y) {
-                return std::fabs(x) < std::fabs(y);
-            });
+        auto iter = std::max_element(data.begin(), data.end(), [&](double x, double y) {
+            return std::fabs(x) < std::fabs(y);
+        });
         Fd_od_max.emplace_back(*iter);
     }
 
-    double Fd_od_sum =
-        std::accumulate(Fd_od_norm.begin(), Fd_od_norm.end(), 0.0);
+    double Fd_od_sum = std::accumulate(Fd_od_norm.begin(), Fd_od_norm.end(), 0.0);
     double threshold = 10.0 * options_.get_double("D_CONVERGENCE");
     bool semi = false;
     if (Fd_od_sum > threshold) {
@@ -414,13 +385,12 @@ bool DSRG_MRPT::check_semicanonical() {
         outfile->Printf("\n    Warning: orbitals are not semi-canonicalized!");
         outfile->Printf("\n    Off-diagonal elements of the core, active, "
                         "virtual blocks of Fock matrix");
-        outfile->Printf("\n         %15s %15s %15s", "core", "active",
-                        "virtual");
+        outfile->Printf("\n         %15s %15s %15s", "core", "active", "virtual");
         outfile->Printf("\n    %s", sep.c_str());
-        outfile->Printf("\n    Max  %15.10f %15.10f %15.10f", Fd_od_max[0],
-                        Fd_od_max[1], Fd_od_max[2]);
-        outfile->Printf("\n    Norm %15.10f %15.10f %15.10f", Fd_od_norm[0],
-                        Fd_od_norm[1], Fd_od_norm[2]);
+        outfile->Printf("\n    Max  %15.10f %15.10f %15.10f", Fd_od_max[0], Fd_od_max[1],
+                        Fd_od_max[2]);
+        outfile->Printf("\n    Norm %15.10f %15.10f %15.10f", Fd_od_norm[0], Fd_od_norm[1],
+                        Fd_od_norm[2]);
         outfile->Printf("\n    %s\n", sep.c_str());
         outfile->Printf("\n    Warning: these elements above will be ignored!");
         outfile->Printf("\n    The DSRG-MRPT energy will make sense only when "
@@ -470,8 +440,7 @@ void DSRG_MRPT::test_memory(const size_t& c, const size_t& a, const size_t& v) {
         required = 2 * gg_half + hp_small + 2 * hhpp_small + 2 * aa + aaaa;
         leftover = total - sizeof(double) * required;
     } else {
-        required =
-            2 * gg_half + hp_small + 2 * hhpp_small + hh + hhhh + 2 * aa + aaaa;
+        required = 2 * gg_half + hp_small + 2 * hhpp_small + hh + hhhh + 2 * aa + aaaa;
         leftover = total - sizeof(double) * required;
     }
 
@@ -528,17 +497,14 @@ void DSRG_MRPT::test_memory(const size_t& c, const size_t& a, const size_t& v) {
         {"memory available", converter(total, true)},
         {"memory leftover", converter(leftover, true)}};
     if (options_.get_str("THREEPDC") != "ZERO") {
-        mem_summary.insert(mem_summary.begin() + 6,
-                           {"L3", converter(aa * aaaa)});
+        mem_summary.insert(mem_summary.begin() + 6, {"L3", converter(aa * aaaa)});
     }
 
     print_h2("Memory Summary");
     for (auto& str_dim : mem_summary) {
-        outfile->Printf("\n    %-35s %15s", str_dim.first.c_str(),
-                        str_dim.second.c_str());
+        outfile->Printf("\n    %-35s %15s", str_dim.first.c_str(), str_dim.second.c_str());
     }
-    outfile->Printf(
-        "\n  Note: Two-index quantities: ONLY upper triangle (hp, cc, vv).");
+    outfile->Printf("\n  Note: Two-index quantities: ONLY upper triangle (hp, cc, vv).");
     outfile->Printf("\n  Four-index quantities: NO aaaa, ccvv, cavv, acvv, "
                     "ccav, ccva blocks.");
     outfile->Flush();
@@ -550,10 +516,8 @@ void DSRG_MRPT::test_memory(const size_t& c, const size_t& a, const size_t& v) {
     }
 
     if (nbatch_ > 1) {
-        outfile->Printf(
-            "\n  Warning: not enough memory to store two ccvv terms.");
-        outfile->Printf("\n  They will be computed using %3d batches.",
-                        nbatch_);
+        outfile->Printf("\n  Warning: not enough memory to store two ccvv terms.");
+        outfile->Printf("\n  They will be computed using %3d batches.", nbatch_);
     }
 }
 
@@ -582,8 +546,7 @@ std::vector<std::string> DSRG_MRPT::od_two_labels() {
             }
         }
     }
-    blocks2.erase(std::remove(blocks2.begin(), blocks2.end(), "aaaa"),
-                  blocks2.end());
+    blocks2.erase(std::remove(blocks2.begin(), blocks2.end(), "aaaa"), blocks2.end());
     return blocks2;
 }
 
@@ -594,8 +557,7 @@ void DSRG_MRPT::print_citation() {
         {"DSRG-MRPT3", "J. Chem. Phys. (in preparation)"}};
 
     for (auto& str_dim : papers) {
-        outfile->Printf("\n    %-20s %-60s", str_dim.first.c_str(),
-                        str_dim.second.c_str());
+        outfile->Printf("\n    %-20s %-60s", str_dim.first.c_str(), str_dim.second.c_str());
     }
     outfile->Printf("\n");
     outfile->Flush();

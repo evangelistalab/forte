@@ -15,10 +15,16 @@ correlated electrons.
    :maxdepth: 2
    :caption: Contents:
 
+   overview
    running_forte
    basics
    mospaceinfo
    fci
+   aci
+   pci
+   aosubspace
+   dsrg-mrpt
+   mr-dsrg
 
 Indices and tables
 ==================

@@ -31,14 +31,12 @@
 namespace psi {
 namespace forte {
 
-void DSRG_MRPT::H1_T1_C0(BlockedTensor& H1, BlockedTensor& T1,
-                         const double& alpha, double& C0) {
+void DSRG_MRPT::H1_T1_C0(BlockedTensor& H1, BlockedTensor& T1, const double& alpha, double& C0) {
     Timer timer;
 
     double E = 0.0;
     E += 2.0 * H1["ma"] * T1["ma"];
-    ambit::BlockedTensor temp =
-        ambit::BlockedTensor::build(tensor_type_, "Temp110", {"aa"});
+    ambit::BlockedTensor temp = ambit::BlockedTensor::build(tensor_type_, "Temp110", {"aa"});
     temp["uv"] += H1["ve"] * T1["ue"];
     temp["uv"] -= H1["mu"] * T1["mv"];
     E += L1_["vu"] * temp["uv"];
@@ -52,13 +50,11 @@ void DSRG_MRPT::H1_T1_C0(BlockedTensor& H1, BlockedTensor& T1,
     dsrg_time_.add("110", timer.get());
 }
 
-void DSRG_MRPT::H1_T2_C0(BlockedTensor& H1, BlockedTensor& T2,
-                         const double& alpha, double& C0) {
+void DSRG_MRPT::H1_T2_C0(BlockedTensor& H1, BlockedTensor& T2, const double& alpha, double& C0) {
     Timer timer;
 
     double E = 0.0;
-    ambit::BlockedTensor temp =
-        ambit::BlockedTensor::build(tensor_type_, "Temp120", {"aaaa"});
+    ambit::BlockedTensor temp = ambit::BlockedTensor::build(tensor_type_, "Temp120", {"aaaa"});
     temp["uvxy"] += H1["xe"] * T2["uvey"];
     temp["uvxy"] -= H1["mv"] * T2["umxy"];
     temp["uvxy"] += H1["ye"] * T2["uvxe"];
@@ -74,13 +70,11 @@ void DSRG_MRPT::H1_T2_C0(BlockedTensor& H1, BlockedTensor& T2,
     dsrg_time_.add("120", timer.get());
 }
 
-void DSRG_MRPT::H2_T1_C0(BlockedTensor& H2, BlockedTensor& T1,
-                         const double& alpha, double& C0) {
+void DSRG_MRPT::H2_T1_C0(BlockedTensor& H2, BlockedTensor& T1, const double& alpha, double& C0) {
     Timer timer;
 
     double E = 0.0;
-    ambit::BlockedTensor temp =
-        ambit::BlockedTensor::build(tensor_type_, "Temp120", {"aaaa"});
+    ambit::BlockedTensor temp = ambit::BlockedTensor::build(tensor_type_, "Temp120", {"aaaa"});
     temp["uvxy"] += H2["xyev"] * T1["ue"];
     temp["uvxy"] -= H2["myuv"] * T1["mx"];
     temp["uvxy"] += H2["xyue"] * T1["ve"];
@@ -96,8 +90,8 @@ void DSRG_MRPT::H2_T1_C0(BlockedTensor& H2, BlockedTensor& T1,
     dsrg_time_.add("210", timer.get());
 }
 
-void DSRG_MRPT::H2_T2_C0(BlockedTensor& H2, BlockedTensor& T2,
-                         const double& alpha, double& C0, const bool& stored) {
+void DSRG_MRPT::H2_T2_C0(BlockedTensor& H2, BlockedTensor& T2, const double& alpha, double& C0,
+                         const bool& stored) {
     Timer timer;
 
     double E = 0.0;
@@ -115,8 +109,7 @@ void DSRG_MRPT::H2_T2_C0(BlockedTensor& H2, BlockedTensor& T2,
     dsrg_time_.add("220", timer.get());
 }
 
-void DSRG_MRPT::H2_T2_C0_L1(BlockedTensor& H2, BlockedTensor& T2,
-                            const double& alpha, double& C0,
+void DSRG_MRPT::H2_T2_C0_L1(BlockedTensor& H2, BlockedTensor& T2, const double& alpha, double& C0,
                             const bool& stored) {
     Timer timer;
     double E = 0.0;
@@ -140,8 +133,7 @@ void DSRG_MRPT::H2_T2_C0_L1(BlockedTensor& H2, BlockedTensor& T2,
             } else {
                 end = start + even;
             }
-            std::vector<size_t> part(core_mos_.begin() + start,
-                                     core_mos_.begin() + end);
+            std::vector<size_t> part(core_mos_.begin() + start, core_mos_.begin() + end);
             nb_core_mos.emplace_back(part);
             start = end;
         }
@@ -160,8 +152,7 @@ void DSRG_MRPT::H2_T2_C0_L1(BlockedTensor& H2, BlockedTensor& T2,
         E -= H2["nmef"] * T2["mnef"];
 
         // [H2, T2] from cavv
-        ambit::BlockedTensor temp =
-            ambit::BlockedTensor::build(tensor_type_, "temp_cavv", {"aa"});
+        ambit::BlockedTensor temp = ambit::BlockedTensor::build(tensor_type_, "temp_cavv", {"aa"});
         temp["vu"] += 2.0 * H2["muef"] * T2["mvef"];
         //        temp["vu"] += H2["umef"] * T2["vmef"];
         temp["vu"] -= H2["muef"] * T2["vmef"];
@@ -185,8 +176,7 @@ void DSRG_MRPT::H2_T2_C0_L1(BlockedTensor& H2, BlockedTensor& T2,
     ambit::BlockedTensor::add_composite_mo_space("g", "pqrs", {"c", "a", "v"});
 
     // rest of the terms from [H2, T2] involving only L1
-    ambit::BlockedTensor temp =
-        ambit::BlockedTensor::build(tensor_type_, "temp_aavv", {"aaaa"});
+    ambit::BlockedTensor temp = ambit::BlockedTensor::build(tensor_type_, "temp_aavv", {"aaaa"});
     temp["yvxu"] += 2.0 * H2["xuef"] * T2["yvef"];
     temp["yvxu"] -= H2["uxef"] * T2["yvef"];
     E += 0.25 * temp["yvxu"] * L1_["uv"] * L1_["xy"];
@@ -218,8 +208,7 @@ void DSRG_MRPT::H2_T2_C0_L1(BlockedTensor& H2, BlockedTensor& T2,
     dsrg_time_.add("220", timer.get());
 }
 
-double DSRG_MRPT::V_T2_C0_L1_ccvv(
-    const std::vector<std::vector<size_t>>& small_core_mo) {
+double DSRG_MRPT::V_T2_C0_L1_ccvv(const std::vector<std::vector<size_t>>& small_core_mo) {
     double E = 0.0;
 
     for (int i = 0; i < small_core_mo.size(); ++i) {
@@ -227,22 +216,16 @@ double DSRG_MRPT::V_T2_C0_L1_ccvv(
 
             // reset the mo_spaces for BlockedTensor
             ambit::BlockedTensor::reset_mo_spaces();
-            ambit::BlockedTensor::add_mo_space("i", "m1,n1", small_core_mo[i],
-                                               NoSpin);
-            ambit::BlockedTensor::add_mo_space("j", "m2,n2", small_core_mo[j],
-                                               NoSpin);
+            ambit::BlockedTensor::add_mo_space("i", "m1,n1", small_core_mo[i], NoSpin);
+            ambit::BlockedTensor::add_mo_space("j", "m2,n2", small_core_mo[j], NoSpin);
             ambit::BlockedTensor::add_mo_space("v", "e,f", virt_mos_, NoSpin);
 
             // fill in V and T
-            ambit::BlockedTensor V =
-                ambit::BlockedTensor::build(tensor_type_, "V_ccvv", {"ijvv"});
-            ambit::BlockedTensor T =
-                ambit::BlockedTensor::build(tensor_type_, "T2_ccvv", {"ijvv"});
+            ambit::BlockedTensor V = ambit::BlockedTensor::build(tensor_type_, "V_ccvv", {"ijvv"});
+            ambit::BlockedTensor T = ambit::BlockedTensor::build(tensor_type_, "T2_ccvv", {"ijvv"});
 
-            V.iterate([&](const std::vector<size_t>& i,
-                          const std::vector<SpinType>&, double& value) {
-                value = ints_->aptei_ab(i[0], i[1], i[2], i[3]);
-            });
+            V.iterate([&](const std::vector<size_t>& i, const std::vector<SpinType>&,
+                          double& value) { value = ints_->aptei_ab(i[0], i[1], i[2], i[3]); });
 
             T["m1,m2,e,f"] = V["m1,m2,e,f"];
             if (ccvv_source_ == "ZERO") {
@@ -258,10 +241,8 @@ double DSRG_MRPT::V_T2_C0_L1_ccvv(
 
             // modify V for the exchange part
             V = ambit::BlockedTensor::build(tensor_type_, "V_ccvv", {"jivv"});
-            V.iterate([&](const std::vector<size_t>& i,
-                          const std::vector<SpinType>&, double& value) {
-                value = ints_->aptei_ab(i[0], i[1], i[2], i[3]);
-            });
+            V.iterate([&](const std::vector<size_t>& i, const std::vector<SpinType>&,
+                          double& value) { value = ints_->aptei_ab(i[0], i[1], i[2], i[3]); });
             if (ccvv_source_ == "NORMAL") {
                 BT_scaled_by_Rplus1(V);
             }
@@ -277,8 +258,7 @@ double DSRG_MRPT::V_T2_C0_L1_ccvv(
     return E;
 }
 
-double DSRG_MRPT::V_T2_C0_L1_cavv(
-    const std::vector<std::vector<size_t>>& small_core_mo) {
+double DSRG_MRPT::V_T2_C0_L1_cavv(const std::vector<std::vector<size_t>>& small_core_mo) {
     double E = 0.0;
 
     for (int i = 0; i < small_core_mo.size(); ++i) {
@@ -289,18 +269,14 @@ double DSRG_MRPT::V_T2_C0_L1_cavv(
         ambit::BlockedTensor::add_mo_space("v", "ef", virt_mos_, NoSpin);
 
         // create a temp for contraction with L1
-        ambit::BlockedTensor temp =
-            ambit::BlockedTensor::build(tensor_type_, "temp_cavv", {"aa"});
+        ambit::BlockedTensor temp = ambit::BlockedTensor::build(tensor_type_, "temp_cavv", {"aa"});
 
         // fill in V and T
-        ambit::BlockedTensor V =
-            ambit::BlockedTensor::build(tensor_type_, "V_cavv", {"cavv"});
-        ambit::BlockedTensor T =
-            ambit::BlockedTensor::build(tensor_type_, "T2_cavv", {"cavv"});
+        ambit::BlockedTensor V = ambit::BlockedTensor::build(tensor_type_, "V_cavv", {"cavv"});
+        ambit::BlockedTensor T = ambit::BlockedTensor::build(tensor_type_, "T2_cavv", {"cavv"});
 
         // compute the first term
-        V.iterate([&](const std::vector<size_t>& i,
-                      const std::vector<SpinType>&, double& value) {
+        V.iterate([&](const std::vector<size_t>& i, const std::vector<SpinType>&, double& value) {
             value = ints_->aptei_ab(i[0], i[1], i[2], i[3]);
         });
 
@@ -315,8 +291,7 @@ double DSRG_MRPT::V_T2_C0_L1_cavv(
 
         // modify T for the third term
         T = ambit::BlockedTensor::build(tensor_type_, "T2_acvv", {"acvv"});
-        T.iterate([&](const std::vector<size_t>& i,
-                      const std::vector<SpinType>&, double& value) {
+        T.iterate([&](const std::vector<size_t>& i, const std::vector<SpinType>&, double& value) {
             value = ints_->aptei_ab(i[0], i[1], i[2], i[3]);
         });
         if (ccvv_source_ == "ZERO") {
@@ -351,18 +326,14 @@ double DSRG_MRPT::V_T2_C0_L1_ccav() {
     ambit::BlockedTensor::add_mo_space("v", "ef", virt_mos_, NoSpin);
 
     // create a temp for contraction with L1
-    ambit::BlockedTensor temp =
-        ambit::BlockedTensor::build(tensor_type_, "temp_cavv", {"aa"});
+    ambit::BlockedTensor temp = ambit::BlockedTensor::build(tensor_type_, "temp_cavv", {"aa"});
 
     // fill in V and T
-    ambit::BlockedTensor V =
-        ambit::BlockedTensor::build(tensor_type_, "V_ccav", {"ccav"});
-    ambit::BlockedTensor T =
-        ambit::BlockedTensor::build(tensor_type_, "T2_ccav", {"ccav"});
+    ambit::BlockedTensor V = ambit::BlockedTensor::build(tensor_type_, "V_ccav", {"ccav"});
+    ambit::BlockedTensor T = ambit::BlockedTensor::build(tensor_type_, "T2_ccav", {"ccav"});
 
     // compute the first term
-    V.iterate([&](const std::vector<size_t>& i, const std::vector<SpinType>&,
-                  double& value) {
+    V.iterate([&](const std::vector<size_t>& i, const std::vector<SpinType>&, double& value) {
         value = ints_->aptei_ab(i[0], i[1], i[2], i[3]);
     });
 
@@ -377,8 +348,7 @@ double DSRG_MRPT::V_T2_C0_L1_ccav() {
 
     // modify T for the third term
     T = ambit::BlockedTensor::build(tensor_type_, "T2_ccva", {"ccva"});
-    T.iterate([&](const std::vector<size_t>& i, const std::vector<SpinType>&,
-                  double& value) {
+    T.iterate([&](const std::vector<size_t>& i, const std::vector<SpinType>&, double& value) {
         value = ints_->aptei_ab(i[0], i[1], i[2], i[3]);
     });
     if (ccvv_source_ == "ZERO") {
@@ -403,12 +373,10 @@ double DSRG_MRPT::V_T2_C0_L1_ccav() {
     return E;
 }
 
-void DSRG_MRPT::H2_T2_C0_L2(BlockedTensor& H2, BlockedTensor& T2,
-                            const double& alpha, double& C0) {
+void DSRG_MRPT::H2_T2_C0_L2(BlockedTensor& H2, BlockedTensor& T2, const double& alpha, double& C0) {
     Timer timer;
     double E = 0.0;
-    ambit::BlockedTensor temp =
-        ambit::BlockedTensor::build(tensor_type_, "temp_ccaa", {"aaaa"});
+    ambit::BlockedTensor temp = ambit::BlockedTensor::build(tensor_type_, "temp_ccaa", {"aaaa"});
 
     // HH
     temp["uvxy"] += 0.5 * H2["mnuv"] * T2["mnxy"];
@@ -443,8 +411,7 @@ void DSRG_MRPT::H2_T2_C0_L2(BlockedTensor& H2, BlockedTensor& T2,
     dsrg_time_.add("220", timer.get());
 }
 
-void DSRG_MRPT::H2_T2_C0_L3(BlockedTensor& H2, BlockedTensor& T2,
-                            const double& alpha, double& C0) {
+void DSRG_MRPT::H2_T2_C0_L3(BlockedTensor& H2, BlockedTensor& T2, const double& alpha, double& C0) {
     Timer timer;
     double E = 0.0;
 

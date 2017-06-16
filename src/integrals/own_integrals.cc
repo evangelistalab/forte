@@ -30,9 +30,9 @@
 #include <numeric>
 
 #include "psi4/libmints/basisset.h"
-#include "psi4/libthce/thce.h"
-#include "psi4/libthce/lreri.h"
 #include "psi4/libqt/qt.h"
+#include "psi4/libthce/lreri.h"
+#include "psi4/libthce/thce.h"
 
 #include "../blockedtensorfactory.h"
 
@@ -43,8 +43,7 @@ OwnIntegrals::OwnIntegrals(psi::Options& options, SharedWavefunction ref_wfn,
                            IntegralSpinRestriction restricted,
                            IntegralFrozenCore resort_frozen_core,
                            std::shared_ptr<MOSpaceInfo> mo_space_info)
-    : ForteIntegrals(options, ref_wfn, restricted, resort_frozen_core,
-                     mo_space_info) {
+    : ForteIntegrals(options, ref_wfn, restricted, resort_frozen_core, mo_space_info) {
     integral_type_ = Own;
     // If code calls constructor print things
     // But if someone calls retransform integrals do not print it

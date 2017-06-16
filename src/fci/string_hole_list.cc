@@ -44,20 +44,17 @@
 namespace psi {
 namespace forte {
 
-std::vector<H1StringSubstitution>&
-StringLists::get_alfa_1h_list(int h_I, size_t add_I, int h_J) {
+std::vector<H1StringSubstitution>& StringLists::get_alfa_1h_list(int h_I, size_t add_I, int h_J) {
     std::tuple<int, size_t, int> I_tuple(h_I, add_I, h_J);
     return alfa_1h_list[I_tuple];
 }
 
-std::vector<H1StringSubstitution>&
-StringLists::get_beta_1h_list(int h_I, size_t add_I, int h_J) {
+std::vector<H1StringSubstitution>& StringLists::get_beta_1h_list(int h_I, size_t add_I, int h_J) {
     std::tuple<int, size_t, int> I_tuple(h_I, add_I, h_J);
     return beta_1h_list[I_tuple];
 }
 
-void StringLists::make_1h_list(GraphPtr graph, GraphPtr graph_1h,
-                               H1List& list) {
+void StringLists::make_1h_list(GraphPtr graph, GraphPtr graph_1h, H1List& list) {
     int n = graph->nbits();
     int k = graph->nones();
     bool* I = new bool[ncmo_];
@@ -85,10 +82,8 @@ void StringLists::make_1h_list(GraphPtr graph, GraphPtr graph_1h,
                             int h_J = graph_1h->sym(J);
                             size_t add_J = graph_1h->rel_add(J);
 
-                            std::tuple<int, size_t, int> I_tuple(h_J, add_J,
-                                                                 h_I);
-                            list[I_tuple].push_back(
-                                H1StringSubstitution(sign, p, add_I));
+                            std::tuple<int, size_t, int> I_tuple(h_J, add_J, h_I);
+                            list[I_tuple].push_back(H1StringSubstitution(sign, p, add_I));
                         }
                     }
                 }
@@ -99,20 +94,17 @@ void StringLists::make_1h_list(GraphPtr graph, GraphPtr graph_1h,
     delete[] I;
 }
 
-std::vector<H2StringSubstitution>&
-StringLists::get_alfa_2h_list(int h_I, size_t add_I, int h_J) {
+std::vector<H2StringSubstitution>& StringLists::get_alfa_2h_list(int h_I, size_t add_I, int h_J) {
     std::tuple<int, size_t, int> I_tuple(h_I, add_I, h_J);
     return alfa_2h_list[I_tuple];
 }
 
-std::vector<H2StringSubstitution>&
-StringLists::get_beta_2h_list(int h_I, size_t add_I, int h_J) {
+std::vector<H2StringSubstitution>& StringLists::get_beta_2h_list(int h_I, size_t add_I, int h_J) {
     std::tuple<int, size_t, int> I_tuple(h_I, add_I, h_J);
     return beta_2h_list[I_tuple];
 }
 
-void StringLists::make_2h_list(GraphPtr graph, GraphPtr graph_2h,
-                               H2List& list) {
+void StringLists::make_2h_list(GraphPtr graph, GraphPtr graph_2h, H2List& list) {
     int n = graph->nbits();
     int k = graph->nones();
     bool* I = new bool[ncmo_];
@@ -146,11 +138,9 @@ void StringLists::make_2h_list(GraphPtr graph, GraphPtr graph_2h,
                                     int h_J = graph_2h->sym(J);
                                     size_t add_J = graph_2h->rel_add(J);
 
-                                    std::tuple<int, size_t, int> I_tuple(
-                                        h_J, add_J, h_I);
+                                    std::tuple<int, size_t, int> I_tuple(h_J, add_J, h_I);
                                     list[I_tuple].push_back(
-                                        H2StringSubstitution(sign, p, q,
-                                                             add_I));
+                                        H2StringSubstitution(sign, p, q, add_I));
                                 }
                             }
                         }
@@ -163,14 +153,12 @@ void StringLists::make_2h_list(GraphPtr graph, GraphPtr graph_2h,
     delete[] I;
 }
 
-std::vector<H3StringSubstitution>&
-StringLists::get_alfa_3h_list(int h_I, size_t add_I, int h_J) {
+std::vector<H3StringSubstitution>& StringLists::get_alfa_3h_list(int h_I, size_t add_I, int h_J) {
     std::tuple<int, size_t, int> I_tuple(h_I, add_I, h_J);
     return alfa_3h_list[I_tuple];
 }
 
-std::vector<H3StringSubstitution>&
-StringLists::get_beta_3h_list(int h_I, size_t add_I, int h_J) {
+std::vector<H3StringSubstitution>& StringLists::get_beta_3h_list(int h_I, size_t add_I, int h_J) {
     std::tuple<int, size_t, int> I_tuple(h_I, add_I, h_J);
     return beta_3h_list[I_tuple];
 }
@@ -181,8 +169,7 @@ StringLists::get_beta_3h_list(int h_I, size_t add_I, int h_J) {
                                * that is: J = ± a^{+}_p a_q I. p and q are
  * absolute indices and I belongs to the irrep h.
                                */
-void StringLists::make_3h_list(GraphPtr graph, GraphPtr graph_3h,
-                               H3List& list) {
+void StringLists::make_3h_list(GraphPtr graph, GraphPtr graph_3h, H3List& list) {
     int n = graph->nbits();
     int k = graph->nones();
     bool* I = new bool[ncmo_];
@@ -217,19 +204,20 @@ void StringLists::make_3h_list(GraphPtr graph, GraphPtr graph_3h,
                                             J[p] = false;
                                             short p_sign = string_sign(J, p);
 
-                                            short sign =
-                                                p_sign * q_sign * r_sign;
+                                            short sign = p_sign * q_sign * r_sign;
 
                                             int h_J = graph_3h->sym(J);
                                             size_t add_J = graph_3h->rel_add(J);
 
-                                            std::tuple<int, size_t, int>
-                                                I_tuple(h_J, add_J, h_I);
+                                            std::tuple<int, size_t, int> I_tuple(h_J, add_J, h_I);
                                             list[I_tuple].push_back(
-                                                H3StringSubstitution(sign, p, q,
-                                                                     r, add_I));
+                                                H3StringSubstitution(sign, p, q, r, add_I));
 
-                                            //                                            outfile->Printf("\n Adding (%d,%zu,%d) -> (%d,%zu,%zu,%zu,%zu)",
+                                            //                                            outfile->Printf("\n
+                                            //                                            Adding
+                                            //                                            (%d,%zu,%d)
+                                            //                                            ->
+                                            //                                            (%d,%zu,%zu,%zu,%zu)",
                                             //                                                            h_J,add_J,h_I,
                                             //                                                            sign,p,q,r,add_I);
                                         }

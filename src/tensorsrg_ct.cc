@@ -59,21 +59,18 @@ double TensorSRG::compute_ct_energy() {
 
     int max_diis_vectors = options_.get_int("DIIS_MAX_VECS");
     if (max_diis_vectors > 0) {
-        diis_manager = std::shared_ptr<DIISManager>(
-            new DIISManager(max_diis_vectors, "L-CTSD DIIS vector",
-                            DIISManager::OldestAdded, DIISManager::InCore));
-        diis_manager->set_error_vector_size(
-            5, DIISEntry::Pointer, S1.block("ov").numel(), DIISEntry::Pointer,
-            S1.block("OV").numel(), DIISEntry::Pointer,
-            S2.block("oovv").numel(), DIISEntry::Pointer,
-            S2.block("oOvV").numel(), DIISEntry::Pointer,
-            S2.block("OOVV").numel());
-        diis_manager->set_vector_size(
-            5, DIISEntry::Pointer, S1.block("ov").numel(), DIISEntry::Pointer,
-            S1.block("OV").numel(), DIISEntry::Pointer,
-            S2.block("oovv").numel(), DIISEntry::Pointer,
-            S2.block("oOvV").numel(), DIISEntry::Pointer,
-            S2.block("OOVV").numel());
+        diis_manager = std::shared_ptr<DIISManager>(new DIISManager(
+            max_diis_vectors, "L-CTSD DIIS vector", DIISManager::OldestAdded, DIISManager::InCore));
+        diis_manager->set_error_vector_size(5, DIISEntry::Pointer, S1.block("ov").numel(),
+                                            DIISEntry::Pointer, S1.block("OV").numel(),
+                                            DIISEntry::Pointer, S2.block("oovv").numel(),
+                                            DIISEntry::Pointer, S2.block("oOvV").numel(),
+                                            DIISEntry::Pointer, S2.block("OOVV").numel());
+        diis_manager->set_vector_size(5, DIISEntry::Pointer, S1.block("ov").numel(),
+                                      DIISEntry::Pointer, S1.block("OV").numel(),
+                                      DIISEntry::Pointer, S2.block("oovv").numel(),
+                                      DIISEntry::Pointer, S2.block("oOvV").numel(),
+                                      DIISEntry::Pointer, S2.block("OOVV").numel());
     }
 
     if (dsrg_s == 0.0) {
@@ -144,34 +141,26 @@ double TensorSRG::compute_ct_energy() {
         if (diis_manager) {
             if (do_dsrg) {
                 diis_manager->add_entry(
-                    10, &(DS1.block("ov").data()[0]),
-                    &(DS1.block("OV").data()[0]),
-                    &(DS2.block("oovv").data()[0]),
-                    &(DS2.block("oOvV").data()[0]),
+                    10, &(DS1.block("ov").data()[0]), &(DS1.block("OV").data()[0]),
+                    &(DS2.block("oovv").data()[0]), &(DS2.block("oOvV").data()[0]),
                     &(DS2.block("OOVV").data()[0]), &(S1.block("ov").data()[0]),
                     &(S1.block("OV").data()[0]), &(S2.block("oovv").data()[0]),
-                    &(S2.block("oOvV").data()[0]),
-                    &(S2.block("OOVV").data()[0]));
+                    &(S2.block("oOvV").data()[0]), &(S2.block("OOVV").data()[0]));
             } else {
-                diis_manager->add_entry(10, &(Hbar1.block("ov").data()[0]),
-                                        &(Hbar1.block("OV").data()[0]),
-                                        &(Hbar2.block("oovv").data()[0]),
-                                        &(Hbar2.block("oOvV").data()[0]),
-                                        &(Hbar2.block("OOVV").data()[0]),
-                                        &(S1.block("ov").data()[0]),
-                                        &(S1.block("OV").data()[0]),
-                                        &(S2.block("oovv").data()[0]),
-                                        &(S2.block("oOvV").data()[0]),
-                                        &(S2.block("OOVV").data()[0]));
+                diis_manager->add_entry(
+                    10, &(Hbar1.block("ov").data()[0]), &(Hbar1.block("OV").data()[0]),
+                    &(Hbar2.block("oovv").data()[0]), &(Hbar2.block("oOvV").data()[0]),
+                    &(Hbar2.block("OOVV").data()[0]), &(S1.block("ov").data()[0]),
+                    &(S1.block("OV").data()[0]), &(S2.block("oovv").data()[0]),
+                    &(S2.block("oOvV").data()[0]), &(S2.block("OOVV").data()[0]));
             }
             if (cycle > max_diis_vectors) {
                 if (cycle % max_diis_vectors == 2) {
                     outfile->Printf(" -> DIIS");
-                    diis_manager->extrapolate(5, &(S1.block("ov").data()[0]),
-                                              &(S1.block("OV").data()[0]),
-                                              &(S2.block("oovv").data()[0]),
-                                              &(S2.block("oOvV").data()[0]),
-                                              &(S2.block("OOVV").data()[0]));
+                    diis_manager->extrapolate(
+                        5, &(S1.block("ov").data()[0]), &(S1.block("OV").data()[0]),
+                        &(S2.block("oovv").data()[0]), &(S2.block("oOvV").data()[0]),
+                        &(S2.block("OOVV").data()[0]));
                 }
             }
         }
@@ -193,17 +182,17 @@ double TensorSRG::compute_ct_energy() {
 
         double max_S1 = 0.0;
         double max_S2 = 0.0;
-        S1.citerate([&](const std::vector<size_t>&,
-                        const std::vector<SpinType>&, const double& value) {
-            if (std::fabs(value) > std::fabs(max_S1))
-                max_S1 = value;
-        });
+        S1.citerate(
+            [&](const std::vector<size_t>&, const std::vector<SpinType>&, const double& value) {
+                if (std::fabs(value) > std::fabs(max_S1))
+                    max_S1 = value;
+            });
 
-        S2.citerate([&](const std::vector<size_t>&,
-                        const std::vector<SpinType>&, const double& value) {
-            if (std::fabs(value) > std::fabs(max_S2))
-                max_S2 = value;
-        });
+        S2.citerate(
+            [&](const std::vector<size_t>&, const std::vector<SpinType>&, const double& value) {
+                if (std::fabs(value) > std::fabs(max_S2))
+                    max_S2 = value;
+            });
 
         double norm_H1a = Hbar1.block("ov").norm();
         double norm_H1b = Hbar1.block("OV").norm();
@@ -211,11 +200,9 @@ double TensorSRG::compute_ct_energy() {
         double norm_H2ab = Hbar2.block("oOvV").norm();
         double norm_H2bb = Hbar2.block("OOVV").norm();
 
-        double norm_Hbar1_ex =
-            std::sqrt(norm_H1a * norm_H1a + norm_H1b * norm_H1b);
-        double norm_Hbar2_ex =
-            std::sqrt(0.25 * norm_H2aa * norm_H2aa + norm_H2ab * norm_H2ab +
-                      0.25 * norm_H2bb * norm_H2bb);
+        double norm_Hbar1_ex = std::sqrt(norm_H1a * norm_H1a + norm_H1b * norm_H1b);
+        double norm_Hbar2_ex = std::sqrt(0.25 * norm_H2aa * norm_H2aa + norm_H2ab * norm_H2ab +
+                                         0.25 * norm_H2bb * norm_H2bb);
 
         double norm_S1a = S1.block("ov").norm();
         double norm_S1b = S1.block("OV").norm();
@@ -224,14 +211,13 @@ double TensorSRG::compute_ct_energy() {
         double norm_S2bb = S2.block("OOVV").norm();
 
         double norm_S1 = std::sqrt(norm_S1a * norm_S1a + norm_S1b * norm_S1b);
-        double norm_S2 =
-            std::sqrt(0.25 * norm_S2aa * norm_S2aa + norm_S2ab * norm_S2ab +
-                      0.25 * norm_S2bb * norm_S2bb);
+        double norm_S2 = std::sqrt(0.25 * norm_S2aa * norm_S2aa + norm_S2ab * norm_S2ab +
+                                   0.25 * norm_S2bb * norm_S2bb);
 
         outfile->Printf("\n    @CT %4d %20.12f %11.3e %10.3e %10.3e %7.4f "
                         "%7.4f %7.4f %7.4f",
-                        cycle, energy, delta_energy, norm_Hbar1_ex,
-                        norm_Hbar2_ex, norm_S1, norm_S2, max_S1, max_S2);
+                        cycle, energy, delta_energy, norm_Hbar1_ex, norm_Hbar2_ex, norm_S1, norm_S2,
+                        max_S1, max_S2);
 
         if (fabs(delta_energy) < options_.get_double("E_CONVERGENCE")) {
             converged = true;
@@ -253,15 +239,11 @@ double TensorSRG::compute_ct_energy() {
                     "----------------------------------------");
 
     if (dsrg_s == 0.0) {
-        outfile->Printf("\n\n\n    L-CTSD correlation energy      = %25.15f",
-                        old_energy - E0_);
-        outfile->Printf("\n  * L-CTSD total energy            = %25.15f\n",
-                        old_energy);
+        outfile->Printf("\n\n\n    L-CTSD correlation energy      = %25.15f", old_energy - E0_);
+        outfile->Printf("\n  * L-CTSD total energy            = %25.15f\n", old_energy);
     } else {
-        outfile->Printf("\n\n\n    DSRG-SD correlation energy      = %25.15f",
-                        old_energy - E0_);
-        outfile->Printf("\n  * DSRG-SD total energy            = %25.15f\n",
-                        old_energy);
+        outfile->Printf("\n\n\n    DSRG-SD correlation energy      = %25.15f", old_energy - E0_);
+        outfile->Printf("\n  * DSRG-SD total energy            = %25.15f\n", old_energy);
     }
     // Set some environment variables
     Process::environment.globals["CURRENT ENERGY"] = old_energy;
@@ -277,8 +259,7 @@ double TensorSRG::compute_ct_energy() {
 
 double TensorSRG::compute_hbar() {
     if (print_ > 1) {
-        outfile->Printf(
-            "\n\n  Computing the similarity-transformed Hamiltonian");
+        outfile->Printf("\n\n  Computing the similarity-transformed Hamiltonian");
         outfile->Printf("\n  "
                         "------------------------------------------------------"
                         "-----------");
@@ -304,8 +285,7 @@ double TensorSRG::compute_hbar() {
     O2["PQRS"] = V["PQRS"];
 
     if (print_ > 1) {
-        outfile->Printf("\n  %2d %20.12f %20e %20e", 0, Hbar0, Hbar1.norm(),
-                        Hbar2.norm());
+        outfile->Printf("\n  %2d %20.12f %20e %20e", 0, Hbar0, Hbar1.norm(), Hbar2.norm());
     }
 
     int maxn = options_.get_int("SRG_RSC_NCOMM");
@@ -340,8 +320,7 @@ double TensorSRG::compute_hbar() {
         double norm_C2 = C2.norm();
 
         if (print_ > 1) {
-            outfile->Printf("\n  %2d %20.12f %20e %20e", n, C0, norm_C1,
-                            norm_C2);
+            outfile->Printf("\n  %2d %20.12f %20e %20e", n, C0, norm_C1, norm_C2);
             outfile->Flush();
         }
         if (std::sqrt(norm_C2 * norm_C2 + norm_C1 * norm_C1) < ct_threshold) {

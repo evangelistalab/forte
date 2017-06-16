@@ -35,12 +35,12 @@
 #include "determinant_map.h"
 #include "fci/fci_vector.h"
 #include "fci_mo.h"
+#include "forte_options.h"
 #include "mini-boost/boost/algorithm/string/predicate.hpp"
 #include "operator.h"
 #include "psi4/libmints/dipole.h"
 #include "psi4/libmints/oeprop.h"
 #include "psi4/libmints/petitelist.h"
-#include "forte_options.h"
 
 using namespace std;
 
@@ -50,33 +50,27 @@ namespace forte {
 void set_FCI_MO_options(ForteOptions& foptions) {
 
     /*- Active space type -*/
-    foptions.add_str("FCIMO_ACTV_TYPE", "COMPLETE",
-                     {"COMPLETE", "CIS", "CISD", "DOCI"},
+    foptions.add_str("FCIMO_ACTV_TYPE", "COMPLETE", {"COMPLETE", "CIS", "CISD", "DOCI"},
                      "The active space type");
 
     /*- Exclude HF to the CISD space for excited state;
      *  Ground state will be HF energy -*/
-    foptions.add_bool(
-        "FCIMO_CISD_NOHF", true,
-        "Ground state: HF; Excited states: no HF determinant in CISD space");
+    foptions.add_bool("FCIMO_CISD_NOHF", true,
+                      "Ground state: HF; Excited states: no HF determinant in CISD space");
 
     /*- Compute IP/EA in active-CI -*/
-    foptions.add_str("FCIMO_IPEA", "NONE", {"NONE", "IP", "EA"},
-                     "Generate IP/EA CIS/CISD space");
+    foptions.add_str("FCIMO_IPEA", "NONE", {"NONE", "IP", "EA"}, "Generate IP/EA CIS/CISD space");
 
     /*- Threshold for printing CI vectors -*/
-    foptions.add_double("FCIMO_PRINT_CIVEC", 0.05,
-                        "The printing threshold for CI vectors");
+    foptions.add_double("FCIMO_PRINT_CIVEC", 0.05, "The printing threshold for CI vectors");
 }
 
-FCI_MO::FCI_MO(SharedWavefunction ref_wfn, Options& options,
-               std::shared_ptr<ForteIntegrals> ints,
+FCI_MO::FCI_MO(SharedWavefunction ref_wfn, Options& options, std::shared_ptr<ForteIntegrals> ints,
                std::shared_ptr<MOSpaceInfo> mo_space_info)
     : Wavefunction(options), integral_(ints), mo_space_info_(mo_space_info) {
     shallow_copy(ref_wfn);
     reference_wavefunction_ = ref_wfn;
-    print_method_banner(
-        {"Complete Active Space Configuration Interaction", "Chenyang Li"});
+    print_method_banner({"Complete Active Space Configuration Interaction", "Chenyang Li"});
     startup();
 }
 
@@ -90,17 +84,12 @@ void FCI_MO::startup() {
     read_options();
 
     // setup integrals
-    fci_ints_ = std::make_shared<FCIIntegrals>(
-        integral_, mo_space_info_->get_corr_abs_mo("ACTIVE"),
-        mo_space_info_->get_corr_abs_mo("RESTRICTED_DOCC"));
-    ambit::Tensor tei_active_aa =
-        integral_->aptei_aa_block(idx_a_, idx_a_, idx_a_, idx_a_);
-    ambit::Tensor tei_active_ab =
-        integral_->aptei_ab_block(idx_a_, idx_a_, idx_a_, idx_a_);
-    ambit::Tensor tei_active_bb =
-        integral_->aptei_bb_block(idx_a_, idx_a_, idx_a_, idx_a_);
-    fci_ints_->set_active_integrals(tei_active_aa, tei_active_ab,
-                                    tei_active_bb);
+    fci_ints_ = std::make_shared<FCIIntegrals>(integral_, mo_space_info_->get_corr_abs_mo("ACTIVE"),
+                                               mo_space_info_->get_corr_abs_mo("RESTRICTED_DOCC"));
+    ambit::Tensor tei_active_aa = integral_->aptei_aa_block(idx_a_, idx_a_, idx_a_, idx_a_);
+    ambit::Tensor tei_active_ab = integral_->aptei_ab_block(idx_a_, idx_a_, idx_a_, idx_a_);
+    ambit::Tensor tei_active_bb = integral_->aptei_bb_block(idx_a_, idx_a_, idx_a_, idx_a_);
+    fci_ints_->set_active_integrals(tei_active_aa, tei_active_ab, tei_active_bb);
     fci_ints_->compute_restricted_one_body_operator();
     STLBitsetDeterminant::set_ints(fci_ints_);
 
@@ -157,12 +146,9 @@ void FCI_MO::read_options() {
     // obtain active orbitals
     if (options_["ACTIVE"].size() == 0) {
         outfile->Printf("\n  Please specify the ACTIVE occupations.");
-        outfile->Printf(
-            "\n  Single-reference computations should set ACTIVE to zeros.");
-        outfile->Printf(
-            "\n  For example, ACTIVE [0,0,0,0] depending on the symmetry. \n");
-        throw PSIEXCEPTION(
-            "Please specify the ACTIVE occupations. Check output for details.");
+        outfile->Printf("\n  Single-reference computations should set ACTIVE to zeros.");
+        outfile->Printf("\n  For example, ACTIVE [0,0,0,0] depending on the symmetry. \n");
+        throw PSIEXCEPTION("Please specify the ACTIVE occupations. Check output for details.");
     }
     active_ = mo_space_info_->get_dimension("ACTIVE");
     na_ = active_.sum();
@@ -192,26 +178,22 @@ void FCI_MO::read_options() {
         outfile->Printf("\n  MULTIPLICITY must be no less than 1.");
         outfile->Printf("\n  MULTIPLICITY = %2d", multi_);
         outfile->Printf("\n  Check (specify) Multiplicity! \n");
-        throw PSIEXCEPTION(
-            "MULTIPLICITY must be no less than 1. Check output for details.");
+        throw PSIEXCEPTION("MULTIPLICITY must be no less than 1. Check output for details.");
     }
     twice_ms_ = std::round(2.0 * options_.get_double("MS"));
     if (twice_ms_ < 0) {
         outfile->Printf("\n  Ms must be no less than 0.");
         outfile->Printf("\n  Ms = %2d, MULTIPLICITY = %2d", twice_ms_, multi_);
-        outfile->Printf(
-            "\n  Check (specify) Ms value (component of multiplicity)! \n");
-        throw PSIEXCEPTION(
-            "Ms must be no less than 0. Check output for details.");
+        outfile->Printf("\n  Check (specify) Ms value (component of multiplicity)! \n");
+        throw PSIEXCEPTION("Ms must be no less than 0. Check output for details.");
     }
     nalfa_ = (nelec + twice_ms_) / 2;
     nbeta_ = (nelec - twice_ms_) / 2;
     if (nalfa_ < 0 || nbeta_ < 0 || (nalfa_ + nbeta_) != nelec) {
-        outfile->Printf(
-            "\n  Number of alpha electrons or beta electrons is negative.");
+        outfile->Printf("\n  Number of alpha electrons or beta electrons is negative.");
         outfile->Printf("\n  Nalpha = %5ld, Nbeta = %5ld", nalfa_, nbeta_);
-        outfile->Printf("\n  Charge = %3d, Multiplicity = %3d, Ms = %.1f",
-                        charge, multi_, twice_ms_);
+        outfile->Printf("\n  Charge = %3d, Multiplicity = %3d, Ms = %.1f", charge, multi_,
+                        twice_ms_);
         outfile->Printf("\n  Check the Charge, Multiplicity, and Ms! \n");
         outfile->Printf("\n  Note that Ms is 2 * Sz \n");
         throw PSIEXCEPTION("Negative number of alpha electrons or beta "
@@ -219,8 +201,7 @@ void FCI_MO::read_options() {
     }
     if (nalfa_ - nc_ - nfrzc_ > na_) {
         outfile->Printf("\n  Not enough active orbitals to arrange electrons!");
-        outfile->Printf("\n  Number of orbitals: active = %5zu, core = %5zu",
-                        na_, nc_);
+        outfile->Printf("\n  Number of orbitals: active = %5zu, core = %5zu", na_, nc_);
         outfile->Printf("\n  Number of alpha electrons: Nalpha = %5ld", nalfa_);
         outfile->Printf("\n  Check core and active orbitals! \n");
         throw PSIEXCEPTION("Not enough active orbitals to arrange electrons! "
@@ -283,8 +264,7 @@ void FCI_MO::read_options() {
     }
     if (print_ > 0) {
         for (auto& str_dim : info) {
-            outfile->Printf("\n    %-30s = %5zu", str_dim.first.c_str(),
-                            str_dim.second);
+            outfile->Printf("\n    %-30s = %5zu", str_dim.first.c_str(), str_dim.second);
         }
     }
 
@@ -315,8 +295,7 @@ void FCI_MO::read_options() {
     // state averaging
     if (options_["AVG_STATE"].size() != 0) {
 
-        CharacterTable ct =
-            Process::environment.molecule()->point_group()->char_table();
+        CharacterTable ct = Process::environment.molecule()->point_group()->char_table();
         std::vector<std::string> irrep_symbol;
         for (int h = 0; h < nirrep_; ++h) {
             irrep_symbol.push_back(std::string(ct.gamma(h).symbol()));
@@ -350,8 +329,7 @@ void FCI_MO::read_options() {
             // multiplicity
             int multi = options_["AVG_STATE"][i][1].to_integer();
             if (multi < 1) {
-                outfile->Printf(
-                    "\n  Error: invalid multiplicity in AVG_STATE.");
+                outfile->Printf("\n  Error: invalid multiplicity in AVG_STATE.");
                 throw PSIEXCEPTION("Invaid multiplicity in AVG_STATE");
             }
             multis.push_back(multi);
@@ -387,16 +365,14 @@ void FCI_MO::read_options() {
                                     "in entry %d of AVG_WEIGHT. Asked for %d "
                                     "states but only %d weights.",
                                     i, nstatespim[i], nw);
-                    throw PSIEXCEPTION(
-                        "Mismatched number of weights in AVG_WEIGHT.");
+                    throw PSIEXCEPTION("Mismatched number of weights in AVG_WEIGHT.");
                 }
 
                 std::vector<double> weight;
                 for (int n = 0; n < nw; ++n) {
                     double w = options_["AVG_WEIGHT"][i][n].to_double();
                     if (w < 0.0) {
-                        outfile->Printf(
-                            "\n  Error: negative weights in AVG_WEIGHT.");
+                        outfile->Printf("\n  Error: negative weights in AVG_WEIGHT.");
                         throw PSIEXCEPTION("Negative weights in AVG_WEIGHT.");
                     }
                     weight.push_back(w);
@@ -423,8 +399,7 @@ void FCI_MO::read_options() {
         // form option parser
         for (int i = 0; i < nentry; ++i) {
             std::tuple<int, int, int, std::vector<double>> avg_info =
-                std::make_tuple(irreps[i], multis[i], nstatespim[i],
-                                weights[i]);
+                std::make_tuple(irreps[i], multis[i], nstatespim[i], weights[i]);
             sa_info_.push_back(avg_info);
         }
 
@@ -440,8 +415,7 @@ void FCI_MO::read_options() {
         int ltotal = 6 + 2 + 6 + 2 + 7 + 2 + lweight;
         std::string blank(lweight - 7, ' ');
         std::string dash(ltotal, '-');
-        outfile->Printf("\n    Irrep.  Multi.  Nstates  %sWeights",
-                        blank.c_str());
+        outfile->Printf("\n    Irrep.  Multi.  Nstates  %sWeights", blank.c_str());
         outfile->Printf("\n    %s", dash.c_str());
         for (int i = 0; i < nentry; ++i) {
             std::string w_str;
@@ -453,10 +427,9 @@ void FCI_MO::read_options() {
             w_str.pop_back(); // delete the last space character
 
             std::stringstream ss;
-            ss << std::setw(4) << std::right << irrep_symbol[irreps[i]]
-               << "    " << std::setw(4) << std::right << multis[i] << "    "
-               << std::setw(5) << std::right << nstatespim[i] << "    "
-               << std::setw(lweight) << w_str;
+            ss << std::setw(4) << std::right << irrep_symbol[irreps[i]] << "    " << std::setw(4)
+               << std::right << multis[i] << "    " << std::setw(5) << std::right << nstatespim[i]
+               << "    " << std::setw(lweight) << w_str;
             outfile->Printf("\n    %s", ss.str().c_str());
         }
         outfile->Printf("\n    %s", dash.c_str());
@@ -502,8 +475,7 @@ double FCI_MO::compute_ss_energy() {
     // diagonalize the CASCI Hamiltonian
     bool noHF = options_.get_bool("FCIMO_CISD_NOHF");
     if (multi_ == 1 && root_sym_ == 0 &&
-        (active_space_type_ == "CIS" ||
-         (active_space_type_ == "CISD" && noHF))) {
+        (active_space_type_ == "CIS" || (active_space_type_ == "CISD" && noHF))) {
         Diagonalize_H_noHF(determinant_, multi_, nroot_, eigen_);
     } else {
         Diagonalize_H(determinant_, multi_, nroot_, eigen_);
@@ -515,14 +487,12 @@ double FCI_MO::compute_ss_energy() {
         outfile->Printf("\n  Too many roots of interest!");
         std::string be = (eigen_size > 1) ? "are" : "is";
         std::string plural = (eigen_size > 1) ? "roots" : "root";
-        outfile->Printf("\n  There %s only %3d %s that satisfy the condition!",
-                        be.c_str(), eigen_size, plural.c_str());
-        outfile->Printf(
-            "\n  Check root_sym, multi, and number of determinants.");
+        outfile->Printf("\n  There %s only %3d %s that satisfy the condition!", be.c_str(),
+                        eigen_size, plural.c_str());
+        outfile->Printf("\n  Check root_sym, multi, and number of determinants.");
         throw PSIEXCEPTION("Too many roots of interest.");
     }
-    print_CI(nroot_, options_.get_double("FCIMO_PRINT_CIVEC"), eigen_,
-             determinant_);
+    print_CI(nroot_, options_.get_double("FCIMO_PRINT_CIVEC"), eigen_, determinant_);
 
     // prepare ci_rdms for one density
     int dim = (eigen_[0].first)->dim();
@@ -639,8 +609,8 @@ void FCI_MO::form_det() {
             for (int i = 0; i != nirrep_; ++i) {
                 size_t sa = a_string[i].size();
                 for (size_t alfa = 0; alfa < sa; ++alfa) {
-                    determinant_.push_back(STLBitsetDeterminant(
-                        a_string[i][alfa], a_string[i][alfa]));
+                    determinant_.push_back(
+                        STLBitsetDeterminant(a_string[i][alfa], a_string[i][alfa]));
                 }
             }
         }
@@ -651,8 +621,8 @@ void FCI_MO::form_det() {
             size_t sb = b_string[j].size();
             for (size_t alfa = 0; alfa < sa; ++alfa) {
                 for (size_t beta = 0; beta < sb; ++beta) {
-                    determinant_.push_back(STLBitsetDeterminant(
-                        a_string[i][alfa], b_string[j][beta]));
+                    determinant_.push_back(
+                        STLBitsetDeterminant(a_string[i][alfa], b_string[j][beta]));
                 }
             }
         }
@@ -670,8 +640,7 @@ void FCI_MO::form_det() {
 
     print_h2("Determinants Summary");
     for (auto& str_dim : info) {
-        outfile->Printf("\n    %-35s = %5zu", str_dim.first.c_str(),
-                        str_dim.second);
+        outfile->Printf("\n    %-35s = %5zu", str_dim.first.c_str(), str_dim.second);
     }
     outfile->Printf("\n");
     outfile->Flush();
@@ -682,14 +651,12 @@ void FCI_MO::form_det() {
 
     if (determinant_.size() == 0) {
         outfile->Printf("\n  There is no determinant matching the conditions!");
-        outfile->Printf(
-            "\n  Check the wavefunction symmetry and multiplicity.");
+        outfile->Printf("\n  Check the wavefunction symmetry and multiplicity.");
         throw PSIEXCEPTION("No determinant matching the conditions!");
     }
 }
 
-vector<vector<vector<bool>>> FCI_MO::Form_String(const int& active_elec,
-                                                 const bool& print) {
+vector<vector<vector<bool>>> FCI_MO::Form_String(const int& active_elec, const bool& print) {
 
     timer_on("FORM String");
     vector<vector<vector<bool>>> String(nirrep_, vector<vector<bool>>());
@@ -766,10 +733,8 @@ void FCI_MO::form_det_cis() {
     int i = symmetry ^ root_sym_;
     size_t single_size = string_singles[i].size();
     for (size_t x = 0; x < single_size; ++x) {
-        determinant_.push_back(
-            STLBitsetDeterminant(string_singles[i][x], string_ref));
-        determinant_.push_back(
-            STLBitsetDeterminant(string_ref, string_singles[i][x]));
+        determinant_.push_back(STLBitsetDeterminant(string_singles[i][x], string_ref));
+        determinant_.push_back(STLBitsetDeterminant(string_ref, string_singles[i][x]));
     }
 
     // add HF determinant at the end if root_sym = 0
@@ -791,8 +756,7 @@ void FCI_MO::form_det_cis() {
     info.push_back({"number of beta active electrons", nb_a});
     info.push_back({"root symmetry (zero based)", root_sym_});
     if (root_sym_ == 0) {
-        info.push_back(
-            {"number of determinants (include RHF)", determinant_.size()});
+        info.push_back({"number of determinants (include RHF)", determinant_.size()});
     } else {
         info.push_back({"number of determinants", determinant_.size()});
     }
@@ -800,8 +764,7 @@ void FCI_MO::form_det_cis() {
     if (!quiet_) {
         print_h2("Determinants Summary");
         for (auto& str_dim : info) {
-            outfile->Printf("\n    %-40s = %5zu", str_dim.first.c_str(),
-                            str_dim.second);
+            outfile->Printf("\n    %-40s = %5zu", str_dim.first.c_str(), str_dim.second);
         }
         outfile->Printf("\n");
         outfile->Flush();
@@ -813,8 +776,7 @@ void FCI_MO::form_det_cis() {
 
     if (determinant_.size() == 0) {
         outfile->Printf("\n  There is no determinant matching the conditions!");
-        outfile->Printf(
-            "\n  Check the wavefunction symmetry and multiplicity.");
+        outfile->Printf("\n  Check the wavefunction symmetry and multiplicity.");
         throw PSIEXCEPTION("No determinant matching the conditions!");
     }
 }
@@ -824,8 +786,7 @@ void FCI_MO::form_det_cisd() {
     vector<bool> string_ref = Form_String_Ref();
 
     // singles string
-    vector<vector<vector<bool>>> string_singles =
-        Form_String_Singles(string_ref);
+    vector<vector<vector<bool>>> string_singles = Form_String_Singles(string_ref);
     vector<vector<vector<bool>>> string_singles_ipea;
     if (ipea_ == "IP") {
         string_singles_ipea = Form_String_IP(string_ref);
@@ -834,8 +795,7 @@ void FCI_MO::form_det_cisd() {
     }
 
     // doubles string
-    vector<vector<vector<bool>>> string_doubles =
-        Form_String_Doubles(string_ref);
+    vector<vector<vector<bool>>> string_doubles = Form_String_Doubles(string_ref);
 
     // symmetry of ref (just active)
     int symmetry = 0;
@@ -858,29 +818,23 @@ void FCI_MO::form_det_cisd() {
         size_t single_size = string_singles[i].size();
         singles_size_ = 2 * single_size;
         for (size_t x = 0; x < single_size; ++x) {
-            determinant_.push_back(
-                STLBitsetDeterminant(string_singles[i][x], string_ref));
-            determinant_.push_back(
-                STLBitsetDeterminant(string_ref, string_singles[i][x]));
+            determinant_.push_back(STLBitsetDeterminant(string_singles[i][x], string_ref));
+            determinant_.push_back(STLBitsetDeterminant(string_ref, string_singles[i][x]));
         }
     } else {
         size_t single_size = string_singles_ipea[i].size();
         singles_size_ = 2 * single_size;
         for (size_t x = 0; x < single_size; ++x) {
-            determinant_.push_back(
-                STLBitsetDeterminant(string_singles_ipea[i][x], string_ref));
-            determinant_.push_back(
-                STLBitsetDeterminant(string_ref, string_singles_ipea[i][x]));
+            determinant_.push_back(STLBitsetDeterminant(string_singles_ipea[i][x], string_ref));
+            determinant_.push_back(STLBitsetDeterminant(string_ref, string_singles_ipea[i][x]));
         }
     }
 
     // doubles
     size_t double_size = string_doubles[i].size();
     for (size_t x = 0; x < double_size; ++x) {
-        determinant_.push_back(
-            STLBitsetDeterminant(string_doubles[i][x], string_ref));
-        determinant_.push_back(
-            STLBitsetDeterminant(string_ref, string_doubles[i][x]));
+        determinant_.push_back(STLBitsetDeterminant(string_doubles[i][x], string_ref));
+        determinant_.push_back(STLBitsetDeterminant(string_ref, string_doubles[i][x]));
     }
 
     for (int h = 0; h < nirrep_; ++h) {
@@ -890,17 +844,17 @@ void FCI_MO::form_det_cisd() {
 
             size_t single_size_b = string_singles[sym].size();
             for (size_t y = 0; y < single_size_b; ++y) {
-                determinant_.push_back(STLBitsetDeterminant(
-                    string_singles[h][x], string_singles[sym][y]));
+                determinant_.push_back(
+                    STLBitsetDeterminant(string_singles[h][x], string_singles[sym][y]));
             }
 
             if (ipea_ != "NONE") {
                 size_t single_ipea_size_b = string_singles_ipea[sym].size();
                 for (size_t y = 0; y < single_ipea_size_b; ++y) {
-                    determinant_.push_back(STLBitsetDeterminant(
-                        string_singles[h][x], string_singles_ipea[sym][y]));
-                    determinant_.push_back(STLBitsetDeterminant(
-                        string_singles_ipea[sym][y], string_singles[h][x]));
+                    determinant_.push_back(
+                        STLBitsetDeterminant(string_singles[h][x], string_singles_ipea[sym][y]));
+                    determinant_.push_back(
+                        STLBitsetDeterminant(string_singles_ipea[sym][y], string_singles[h][x]));
                 }
             }
         }
@@ -925,8 +879,7 @@ void FCI_MO::form_det_cisd() {
     info.push_back({"number of beta active electrons", nb_a});
     info.push_back({"root symmetry (zero based)", root_sym_});
     if (root_sym_ == 0) {
-        info.push_back(
-            {"number of determinants (include RHF)", determinant_.size()});
+        info.push_back({"number of determinants (include RHF)", determinant_.size()});
     } else {
         info.push_back({"number of determinants", determinant_.size()});
     }
@@ -934,8 +887,7 @@ void FCI_MO::form_det_cisd() {
     if (!quiet_) {
         print_h2("Determinants Summary");
         for (auto& str_dim : info) {
-            outfile->Printf("\n    %-40s = %5zu", str_dim.first.c_str(),
-                            str_dim.second);
+            outfile->Printf("\n    %-40s = %5zu", str_dim.first.c_str(), str_dim.second);
         }
         outfile->Printf("\n");
         outfile->Flush();
@@ -947,8 +899,7 @@ void FCI_MO::form_det_cisd() {
 
     if (determinant_.size() == 0) {
         outfile->Printf("\n  There is no determinant matching the conditions!");
-        outfile->Printf(
-            "\n  Check the wavefunction symmetry and multiplicity.");
+        outfile->Printf("\n  Check the wavefunction symmetry and multiplicity.");
         throw PSIEXCEPTION("No determinant matching the conditions!");
     }
 }
@@ -1001,8 +952,8 @@ vector<bool> FCI_MO::Form_String_Ref(const bool& print) {
     return String;
 }
 
-vector<vector<vector<bool>>>
-FCI_MO::Form_String_Singles(const vector<bool>& ref_string, const bool& print) {
+vector<vector<vector<bool>>> FCI_MO::Form_String_Singles(const vector<bool>& ref_string,
+                                                         const bool& print) {
     timer_on("FORM String Singles");
     vector<vector<vector<bool>>> String(nirrep_, vector<vector<bool>>());
 
@@ -1011,8 +962,7 @@ FCI_MO::Form_String_Singles(const vector<bool>& ref_string, const bool& print) {
     vector<int> uocc, occ;
     for (size_t i = 0; i < na_; ++i) {
         if (ipea_ != "NONE" &&
-            std::find(diffused_orbs_.begin(), diffused_orbs_.end(), i) !=
-                diffused_orbs_.end()) {
+            std::find(diffused_orbs_.begin(), diffused_orbs_.end(), i) != diffused_orbs_.end()) {
             continue;
         }
 
@@ -1059,8 +1009,8 @@ FCI_MO::Form_String_Singles(const vector<bool>& ref_string, const bool& print) {
     return String;
 }
 
-vector<vector<vector<bool>>>
-FCI_MO::Form_String_IP(const vector<bool>& ref_string, const bool& print) {
+vector<vector<vector<bool>>> FCI_MO::Form_String_IP(const vector<bool>& ref_string,
+                                                    const bool& print) {
     timer_on("FORM String Singles IP");
     vector<vector<vector<bool>>> String(nirrep_, vector<vector<bool>>());
 
@@ -1104,8 +1054,8 @@ FCI_MO::Form_String_IP(const vector<bool>& ref_string, const bool& print) {
     return String;
 }
 
-vector<vector<vector<bool>>>
-FCI_MO::Form_String_EA(const vector<bool>& ref_string, const bool& print) {
+vector<vector<vector<bool>>> FCI_MO::Form_String_EA(const vector<bool>& ref_string,
+                                                    const bool& print) {
     timer_on("FORM String Singles EA");
     vector<vector<vector<bool>>> String(nirrep_, vector<vector<bool>>());
 
@@ -1150,8 +1100,8 @@ FCI_MO::Form_String_EA(const vector<bool>& ref_string, const bool& print) {
     return String;
 }
 
-vector<vector<vector<bool>>>
-FCI_MO::Form_String_Doubles(const vector<bool>& ref_string, const bool& print) {
+vector<vector<vector<bool>>> FCI_MO::Form_String_Doubles(const vector<bool>& ref_string,
+                                                         const bool& print) {
     timer_on("FORM String Doubles");
     vector<vector<vector<bool>>> String(nirrep_, vector<vector<bool>>());
 
@@ -1160,8 +1110,7 @@ FCI_MO::Form_String_Doubles(const vector<bool>& ref_string, const bool& print) {
     vector<int> uocc, occ;
     for (int i = 0; i < na_; ++i) {
         if (ipea_ != "NONE" && i != idx_diffused_ &&
-            std::find(diffused_orbs_.begin(), diffused_orbs_.end(), i) !=
-                diffused_orbs_.end()) {
+            std::find(diffused_orbs_.begin(), diffused_orbs_.end(), i) != diffused_orbs_.end()) {
             continue;
         }
 
@@ -1258,8 +1207,7 @@ void FCI_MO::semi_canonicalize() {
     Cb_new->gemm(false, false, 1.0, Cb, Ub, 0.0);
 
     // overlap of original and semicanonical orbitals
-    SharedMatrix MOoverlap =
-        Matrix::triplet(Ca, this->S(), Ca_new, true, false, false);
+    SharedMatrix MOoverlap = Matrix::triplet(Ca, this->S(), Ca_new, true, false, false);
     MOoverlap->set_name("MO overlap");
 
     // copy semicanonical orbital to wavefunction
@@ -1298,8 +1246,7 @@ void FCI_MO::semi_canonicalize() {
         std::vector<int> idx_swap;
         for (const int& x : idx_0) {
             // if index x is already in the to-be-swapped index, then continue
-            if (std::find(idx_swap.begin(), idx_swap.end(), x) !=
-                idx_swap.end()) {
+            if (std::find(idx_swap.begin(), idx_swap.end(), x) != idx_swap.end()) {
                 continue;
             }
 
@@ -1321,8 +1268,7 @@ void FCI_MO::semi_canonicalize() {
             // idx_swap
             int pos = std::find(temp.begin(), temp.end(), local) - temp.begin();
             for (int i = pos; i < temp.size(); ++i) {
-                if (std::find(idx_swap.begin(), idx_swap.end(), temp[i]) ==
-                    idx_swap.end()) {
+                if (std::find(idx_swap.begin(), idx_swap.end(), temp[i]) == idx_swap.end()) {
                     idx_swap.push_back(temp[i]);
                 }
             }
@@ -1331,9 +1277,8 @@ void FCI_MO::semi_canonicalize() {
         // remove the swapped orbitals from the vector of orginal orbitals
         idx_0.erase(std::remove_if(idx_0.begin(), idx_0.end(),
                                    [&](int i) {
-                                       return std::find(idx_swap.begin(),
-                                                        idx_swap.end(),
-                                                        i) != idx_swap.end();
+                                       return std::find(idx_swap.begin(), idx_swap.end(), i) !=
+                                              idx_swap.end();
                                    }),
                     idx_0.end());
 
@@ -1451,14 +1396,10 @@ void FCI_MO::semi_canonicalize() {
 
     outfile->Printf("\n\n");
     integral_->retransform_integrals();
-    ambit::Tensor tei_active_aa =
-        integral_->aptei_aa_block(idx_a_, idx_a_, idx_a_, idx_a_);
-    ambit::Tensor tei_active_ab =
-        integral_->aptei_ab_block(idx_a_, idx_a_, idx_a_, idx_a_);
-    ambit::Tensor tei_active_bb =
-        integral_->aptei_bb_block(idx_a_, idx_a_, idx_a_, idx_a_);
-    fci_ints_->set_active_integrals(tei_active_aa, tei_active_ab,
-                                    tei_active_bb);
+    ambit::Tensor tei_active_aa = integral_->aptei_aa_block(idx_a_, idx_a_, idx_a_, idx_a_);
+    ambit::Tensor tei_active_ab = integral_->aptei_ab_block(idx_a_, idx_a_, idx_a_, idx_a_);
+    ambit::Tensor tei_active_bb = integral_->aptei_bb_block(idx_a_, idx_a_, idx_a_, idx_a_);
+    fci_ints_->set_active_integrals(tei_active_aa, tei_active_ab, tei_active_bb);
     fci_ints_->compute_restricted_one_body_operator();
 
     //    Vaa_trans.iterate([&](const std::vector<size_t>& i,double& value){
@@ -1504,8 +1445,7 @@ void FCI_MO::semi_canonicalize() {
     //    }
 }
 
-void FCI_MO::Diagonalize_H_noHF(const vecdet& p_space, const int& multi,
-                                const int& nroot,
+void FCI_MO::Diagonalize_H_noHF(const vecdet& p_space, const int& multi, const int& nroot,
                                 vector<pair<SharedVector, double>>& eigen) {
     // recompute RHF determinant
     vector<bool> string_ref = Form_String_Ref();
@@ -1518,11 +1458,9 @@ void FCI_MO::Diagonalize_H_noHF(const vecdet& p_space, const int& multi,
         size_t det_size = p_space.size();
 
         // compute RHF energy
-        outfile->Printf(
-            "\n  Isolate RHF determinant to the rest determinants.");
+        outfile->Printf("\n  Isolate RHF determinant to the rest determinants.");
         outfile->Printf("\n  Recompute RHF energy ... ");
-        double Erhf =
-            rhf.slater_rules(rhf) + fci_ints_->scalar_energy() + e_nuc_;
+        double Erhf = rhf.slater_rules(rhf) + fci_ints_->scalar_energy() + e_nuc_;
         SharedVector rhf_vec(new Vector("RHF Eigen Vector", det_size));
         rhf_vec->set(det_size - 1, 1.0);
         eigen.push_back(make_pair(rhf_vec, Erhf));
@@ -1530,8 +1468,7 @@ void FCI_MO::Diagonalize_H_noHF(const vecdet& p_space, const int& multi,
 
         // compute the rest of the states
         if (nroot > 1) {
-            outfile->Printf(
-                "\n  The upcoming diagonalization excludes RHF determinant.\n");
+            outfile->Printf("\n  The upcoming diagonalization excludes RHF determinant.\n");
 
             int nroot_noHF = nroot - 1;
             vecdet p_space_noHF(p_space);
@@ -1556,15 +1493,13 @@ void FCI_MO::Diagonalize_H_noHF(const vecdet& p_space, const int& multi,
     } else {
         outfile->Printf("\n  Error: RHF determinant NOT at the end of the "
                         "determinant vector.");
-        outfile->Printf(
-            "\n    Diagonalize_H_noHF only works for root_sym = 0.");
+        outfile->Printf("\n    Diagonalize_H_noHF only works for root_sym = 0.");
         throw PSIEXCEPTION("RHF determinant NOT at the end of determinant "
                            "vector. Problem at Diagonalize_H_noHF of FCI_MO.");
     }
 }
 
-void FCI_MO::Diagonalize_H(const vecdet& p_space, const int& multi,
-                           const int& nroot,
+void FCI_MO::Diagonalize_H(const vecdet& p_space, const int& multi, const int& nroot,
                            vector<pair<SharedVector, double>>& eigen) {
     timer_on("Diagonalize H");
     Timer tdiagH;
@@ -1609,16 +1544,14 @@ void FCI_MO::Diagonalize_H(const vecdet& p_space, const int& multi,
     if (det_size <= 200) {
         // full Hamiltonian if detsize <= 200
         diag_method = Full;
-        sparse_solver.diagonalize_hamiltonian(p_space, evals, evecs, nroot,
-                                              multi, diag_method);
+        sparse_solver.diagonalize_hamiltonian(p_space, evals, evecs, nroot, multi, diag_method);
 
         // fill in eigen
         double energy_offset = fci_ints_->scalar_energy() + e_nuc_;
         for (int i = 0; i != nroot; ++i) {
             double value = evals->get(i);
 
-            eigen.push_back(
-                make_pair(evecs->get_column(0, i), value + energy_offset));
+            eigen.push_back(make_pair(evecs->get_column(0, i), value + energy_offset));
         }
 
     } else {
@@ -1634,8 +1567,8 @@ void FCI_MO::Diagonalize_H(const vecdet& p_space, const int& multi,
             op.tp_s_lists(detmap);
         }
 
-        sparse_solver.diagonalize_hamiltonian_map(detmap, op, evals, evecs,
-                                                  nroot, multi, diag_method);
+        sparse_solver.diagonalize_hamiltonian_map(detmap, op, evals, evecs, nroot, multi,
+                                                  diag_method);
 
         // add doubly occupied energy and nuclear repulsion
         // fill in eigen (no need to test spin)
@@ -1643,8 +1576,7 @@ void FCI_MO::Diagonalize_H(const vecdet& p_space, const int& multi,
         for (int i = 0; i != nroot; ++i) {
             double value = evals->get(i);
 
-            eigen.push_back(
-                make_pair(evecs->get_column(0, i), value + energy_offset));
+            eigen.push_back(make_pair(evecs->get_column(0, i), value + energy_offset));
         }
     }
 
@@ -1710,14 +1642,12 @@ void FCI_MO::Diagonalize_H(const vecdet& p_space, const int& multi,
     timer_off("Diagonalize H");
 }
 
-inline bool ReverseAbsSort(const tuple<double, int>& lhs,
-                           const tuple<double, int>& rhs) {
+inline bool ReverseAbsSort(const tuple<double, int>& lhs, const tuple<double, int>& rhs) {
     return abs(get<0>(rhs)) < abs(get<0>(lhs));
 }
 
 void FCI_MO::print_CI(const int& nroot, const double& CI_threshold,
-                      const vector<pair<SharedVector, double>>& eigen,
-                      const vecdet& det) {
+                      const vector<pair<SharedVector, double>>& eigen, const vecdet& det) {
     timer_on("Print CI Vectors");
     if (!quiet_) {
         outfile->Printf("\n\n  * * * * * * * * * * * * * * * * *");
@@ -1743,8 +1673,7 @@ void FCI_MO::print_CI(const int& nroot, const double& CI_threshold,
         if (!quiet_) {
             outfile->Printf("\n  ==> Root No. %d <==\n", i);
         }
-        for (size_t j = 0, ci_select_size = ci_select.size();
-             j < ci_select_size; ++j) {
+        for (size_t j = 0, ci_select_size = ci_select.size(); j < ci_select_size; ++j) {
             if (!quiet_) {
                 outfile->Printf("\n    ");
             }
@@ -1777,8 +1706,7 @@ void FCI_MO::print_CI(const int& nroot, const double& CI_threshold,
             }
         }
         if (!quiet_) {
-            outfile->Printf("\n\n    Total Energy:   %.15lf\n\n",
-                            eigen[i].second);
+            outfile->Printf("\n\n    Total Energy:   %.15lf\n\n", eigen[i].second);
         }
         outfile->Flush();
     }
@@ -1830,9 +1758,8 @@ void FCI_MO::FormDensity(CI_RDMS& ci_rdms, d2& A, d2& B) {
     timer_off("FORM Density");
 }
 
-double FCI_MO::OneOP(const STLBitsetDeterminant& J, STLBitsetDeterminant& Jnew,
-                     const size_t& p, const bool& sp, const size_t& q,
-                     const bool& sq) {
+double FCI_MO::OneOP(const STLBitsetDeterminant& J, STLBitsetDeterminant& Jnew, const size_t& p,
+                     const bool& sp, const size_t& q, const bool& sq) {
     timer_on("1PO");
     vector<vector<bool>> tmp;
     tmp.push_back(J.get_alfa_bits_vector_bool());
@@ -1911,8 +1838,8 @@ void FCI_MO::FormCumulant2(CI_RDMS& ci_rdms, d4& AA, d4& AB, d4& BB) {
     timer_off("FORM 2-Cumulant");
 }
 
-void FCI_MO::FormCumulant2AA(const vector<double>& tpdm_aa,
-                             const vector<double>& tpdm_bb, d4& AA, d4& BB) {
+void FCI_MO::FormCumulant2AA(const vector<double>& tpdm_aa, const vector<double>& tpdm_bb, d4& AA,
+                             d4& BB) {
     size_t dim2 = na_ * na_;
     size_t dim3 = na_ * dim2;
 
@@ -1925,8 +1852,7 @@ void FCI_MO::FormCumulant2AA(const vector<double>& tpdm_aa,
                 for (size_t s = r + 1; s < na_; ++s) {
                     size_t ns = idx_a_[s];
 
-                    if ((sym_active_[p] ^ sym_active_[q] ^ sym_active_[r] ^
-                         sym_active_[s]) != 0)
+                    if ((sym_active_[p] ^ sym_active_[q] ^ sym_active_[r] ^ sym_active_[s]) != 0)
                         continue;
 
                     size_t index = p * dim3 + q * dim2 + r * na_ + s;
@@ -1964,8 +1890,7 @@ void FCI_MO::FormCumulant2AB(const vector<double>& tpdm_ab, d4& AB) {
                 for (size_t s = 0; s < na_; ++s) {
                     size_t ns = idx_a_[s];
 
-                    if ((sym_active_[p] ^ sym_active_[q] ^ sym_active_[r] ^
-                         sym_active_[s]) != 0)
+                    if ((sym_active_[p] ^ sym_active_[q] ^ sym_active_[r] ^ sym_active_[s]) != 0)
                         continue;
 
                     size_t index = p * dim3 + q * dim2 + r * na_ + s;
@@ -2004,10 +1929,9 @@ void FCI_MO::print2PDC(const string& str, const d4& TwoPDC, const int& PRINT) {
     timer_off("PRINT 2-Cumulant");
 }
 
-double FCI_MO::TwoOP(const STLBitsetDeterminant& J, STLBitsetDeterminant& Jnew,
-                     const size_t& p, const bool& sp, const size_t& q,
-                     const bool& sq, const size_t& r, const bool& sr,
-                     const size_t& s, const bool& ss) {
+double FCI_MO::TwoOP(const STLBitsetDeterminant& J, STLBitsetDeterminant& Jnew, const size_t& p,
+                     const bool& sp, const size_t& q, const bool& sq, const size_t& r,
+                     const bool& sr, const size_t& s, const bool& ss) {
     timer_on("2PO");
     vector<vector<bool>> tmp;
     tmp.push_back(J.get_alfa_bits_vector_bool());
@@ -2051,8 +1975,7 @@ double FCI_MO::TwoOP(const STLBitsetDeterminant& J, STLBitsetDeterminant& Jnew,
     }
 }
 
-void FCI_MO::FormCumulant3(CI_RDMS& ci_rdms, d6& AAA, d6& AAB, d6& ABB, d6& BBB,
-                           string& DC) {
+void FCI_MO::FormCumulant3(CI_RDMS& ci_rdms, d6& AAA, d6& AAB, d6& ABB, d6& BBB, string& DC) {
     timer_on("FORM 3-Cumulant");
     Timer tL3;
     std::string str = "Forming Lambda3";
@@ -2074,9 +1997,8 @@ void FCI_MO::FormCumulant3(CI_RDMS& ci_rdms, d6& AAA, d6& AAB, d6& ABB, d6& BBB,
     timer_off("FORM 3-Cumulant");
 }
 
-void FCI_MO::FormCumulant3AAA(const vector<double>& tpdm_aaa,
-                              const vector<double>& tpdm_bbb, d6& AAA, d6& BBB,
-                              string& DC) {
+void FCI_MO::FormCumulant3AAA(const vector<double>& tpdm_aaa, const vector<double>& tpdm_bbb,
+                              d6& AAA, d6& BBB, string& DC) {
     size_t dim2 = na_ * na_;
     size_t dim3 = na_ * dim2;
     size_t dim4 = na_ * dim3;
@@ -2095,28 +2017,23 @@ void FCI_MO::FormCumulant3AAA(const vector<double>& tpdm_aaa,
                         for (size_t u = t + 1; u != na_; ++u) {
                             size_t nu = idx_a_[u];
 
-                            if ((sym_active_[p] ^ sym_active_[q] ^
-                                 sym_active_[r] ^ sym_active_[s] ^
+                            if ((sym_active_[p] ^ sym_active_[q] ^ sym_active_[r] ^ sym_active_[s] ^
                                  sym_active_[t] ^ sym_active_[u]) != 0)
                                 continue;
 
                             if (DC == "MK") {
-                                size_t index = p * dim5 + q * dim4 + r * dim3 +
-                                               s * dim2 + t * na_ + u;
+                                size_t index =
+                                    p * dim5 + q * dim4 + r * dim3 + s * dim2 + t * na_ + u;
 
                                 AAA[p][q][r][s][t][u] += tpdm_aaa[index];
                                 BBB[p][q][r][s][t][u] += tpdm_bbb[index];
                             }
 
-                            AAA[p][q][r][s][t][u] -=
-                                P3DDD(Da_, np, nq, nr, ns, nt, nu);
-                            AAA[p][q][r][s][t][u] -=
-                                P3DC(Da_, L2aa_, p, q, r, s, t, u);
+                            AAA[p][q][r][s][t][u] -= P3DDD(Da_, np, nq, nr, ns, nt, nu);
+                            AAA[p][q][r][s][t][u] -= P3DC(Da_, L2aa_, p, q, r, s, t, u);
 
-                            BBB[p][q][r][s][t][u] -=
-                                P3DDD(Db_, np, nq, nr, ns, nt, nu);
-                            BBB[p][q][r][s][t][u] -=
-                                P3DC(Db_, L2bb_, p, q, r, s, t, u);
+                            BBB[p][q][r][s][t][u] -= P3DDD(Db_, np, nq, nr, ns, nt, nu);
+                            BBB[p][q][r][s][t][u] -= P3DC(Db_, L2bb_, p, q, r, s, t, u);
 
                             size_t cop[] = {p, q, r};
                             size_t aop[] = {s, t, u};
@@ -2124,12 +2041,11 @@ void FCI_MO::FormCumulant3AAA(const vector<double>& tpdm_aaa,
                             do {
                                 int P2 = 1;
                                 do {
-                                    double sign =
-                                        pow(-1.0, int(P1 / 2) + int(P2 / 2));
-                                    AAA[cop[0]][cop[1]][cop[2]][aop[0]][aop[1]]
-                                       [aop[2]] = sign * AAA[p][q][r][s][t][u];
-                                    BBB[cop[0]][cop[1]][cop[2]][aop[0]][aop[1]]
-                                       [aop[2]] = sign * BBB[p][q][r][s][t][u];
+                                    double sign = pow(-1.0, int(P1 / 2) + int(P2 / 2));
+                                    AAA[cop[0]][cop[1]][cop[2]][aop[0]][aop[1]][aop[2]] =
+                                        sign * AAA[p][q][r][s][t][u];
+                                    BBB[cop[0]][cop[1]][cop[2]][aop[0]][aop[1]][aop[2]] =
+                                        sign * BBB[p][q][r][s][t][u];
                                     ++P2;
                                 } while (std::next_permutation(aop, aop + 3));
                                 ++P1;
@@ -2142,9 +2058,8 @@ void FCI_MO::FormCumulant3AAA(const vector<double>& tpdm_aaa,
     }
 }
 
-void FCI_MO::FormCumulant3AAB(const vector<double>& tpdm_aab,
-                              const vector<double>& tpdm_abb, d6& AAB, d6& ABB,
-                              string& DC) {
+void FCI_MO::FormCumulant3AAB(const vector<double>& tpdm_aab, const vector<double>& tpdm_abb,
+                              d6& AAB, d6& ABB, string& DC) {
     size_t dim2 = na_ * na_;
     size_t dim3 = na_ * dim2;
     size_t dim4 = na_ * dim3;
@@ -2163,47 +2078,37 @@ void FCI_MO::FormCumulant3AAB(const vector<double>& tpdm_aab,
                         for (size_t u = 0; u != na_; ++u) {
                             size_t nu = idx_a_[u];
 
-                            if ((sym_active_[p] ^ sym_active_[q] ^
-                                 sym_active_[r] ^ sym_active_[s] ^
+                            if ((sym_active_[p] ^ sym_active_[q] ^ sym_active_[r] ^ sym_active_[s] ^
                                  sym_active_[t] ^ sym_active_[u]) != 0)
                                 continue;
 
                             if (DC == "MK") {
-                                size_t index = p * dim5 + q * dim4 + r * dim3 +
-                                               s * dim2 + t * na_ + u;
+                                size_t index =
+                                    p * dim5 + q * dim4 + r * dim3 + s * dim2 + t * na_ + u;
                                 AAB[p][q][r][s][t][u] += tpdm_aab[index];
 
-                                index = r * dim5 + p * dim4 + q * dim3 +
-                                        u * dim2 + s * na_ + t;
+                                index = r * dim5 + p * dim4 + q * dim3 + u * dim2 + s * na_ + t;
                                 ABB[r][p][q][u][s][t] += tpdm_abb[index];
                             }
 
+                            AAB[p][q][r][s][t][u] -= (Da_[np][ns] * Da_[nq][nt] * Db_[nr][nu] -
+                                                      Da_[nq][ns] * Da_[np][nt] * Db_[nr][nu]);
                             AAB[p][q][r][s][t][u] -=
-                                (Da_[np][ns] * Da_[nq][nt] * Db_[nr][nu] -
-                                 Da_[nq][ns] * Da_[np][nt] * Db_[nr][nu]);
+                                (Da_[np][ns] * L2ab_[q][r][t][u] - Da_[np][nt] * L2ab_[q][r][s][u]);
                             AAB[p][q][r][s][t][u] -=
-                                (Da_[np][ns] * L2ab_[q][r][t][u] -
-                                 Da_[np][nt] * L2ab_[q][r][s][u]);
-                            AAB[p][q][r][s][t][u] -=
-                                (Da_[nq][nt] * L2ab_[p][r][s][u] -
-                                 Da_[nq][ns] * L2ab_[p][r][t][u]);
-                            AAB[p][q][r][s][t][u] -=
-                                (Db_[nr][nu] * L2aa_[p][q][s][t]);
+                                (Da_[nq][nt] * L2ab_[p][r][s][u] - Da_[nq][ns] * L2ab_[p][r][t][u]);
+                            AAB[p][q][r][s][t][u] -= (Db_[nr][nu] * L2aa_[p][q][s][t]);
                             AAB[q][p][r][s][t][u] -= AAB[p][q][r][s][t][u];
                             AAB[p][q][r][t][s][u] -= AAB[p][q][r][s][t][u];
                             AAB[q][p][r][t][s][u] += AAB[p][q][r][s][t][u];
 
+                            ABB[r][p][q][u][s][t] -= (Db_[np][ns] * Db_[nq][nt] * Da_[nr][nu] -
+                                                      Db_[nq][ns] * Db_[np][nt] * Da_[nr][nu]);
                             ABB[r][p][q][u][s][t] -=
-                                (Db_[np][ns] * Db_[nq][nt] * Da_[nr][nu] -
-                                 Db_[nq][ns] * Db_[np][nt] * Da_[nr][nu]);
+                                (Db_[np][ns] * L2ab_[r][q][u][t] - Db_[np][nt] * L2ab_[r][q][u][s]);
                             ABB[r][p][q][u][s][t] -=
-                                (Db_[np][ns] * L2ab_[r][q][u][t] -
-                                 Db_[np][nt] * L2ab_[r][q][u][s]);
-                            ABB[r][p][q][u][s][t] -=
-                                (Db_[nq][nt] * L2ab_[r][p][u][s] -
-                                 Db_[nq][ns] * L2ab_[r][p][u][t]);
-                            ABB[r][p][q][u][s][t] -=
-                                (Da_[nr][nu] * L2bb_[p][q][s][t]);
+                                (Db_[nq][nt] * L2ab_[r][p][u][s] - Db_[nq][ns] * L2ab_[r][p][u][t]);
+                            ABB[r][p][q][u][s][t] -= (Da_[nr][nu] * L2bb_[p][q][s][t]);
                             ABB[r][q][p][u][s][t] -= ABB[r][p][q][u][s][t];
                             ABB[r][p][q][u][t][s] -= ABB[r][p][q][u][s][t];
                             ABB[r][q][p][u][t][s] += ABB[r][p][q][u][s][t];
@@ -2215,8 +2120,8 @@ void FCI_MO::FormCumulant3AAB(const vector<double>& tpdm_aab,
     }
 }
 
-void FCI_MO::FormCumulant3_DIAG(const vecdet& dets, const int& root, d6& AAA,
-                                d6& AAB, d6& ABB, d6& BBB) {
+void FCI_MO::FormCumulant3_DIAG(const vecdet& dets, const int& root, d6& AAA, d6& AAB, d6& ABB,
+                                d6& BBB) {
     timer_on("FORM 3-Cumulant");
     Timer tL3;
     std::string str = "Forming Lambda3";
@@ -2231,35 +2136,22 @@ void FCI_MO::FormCumulant3_DIAG(const vecdet& dets, const int& root, d6& AAA,
                 size_t size = dets.size();
                 for (size_t ket = 0; ket != size; ++ket) {
                     STLBitsetDeterminant Jaaa(vector<bool>(2 * ncmo_)),
-                        Jaab(vector<bool>(2 * ncmo_)),
-                        Jabb(vector<bool>(2 * ncmo_)),
+                        Jaab(vector<bool>(2 * ncmo_)), Jabb(vector<bool>(2 * ncmo_)),
                         Jbbb(vector<bool>(2 * ncmo_));
                     double aaa = 1.0, aab = 1.0, abb = 1.0, bbb = 1.0,
                            vket = (eigen_[root].first)->get(ket);
                     ;
-                    aaa *= ThreeOP(dets[ket], Jaaa, p, 0, q, 0, r, 0, p, 0, q,
-                                   0, r, 0) *
-                           vket;
-                    aab *= ThreeOP(dets[ket], Jaab, p, 0, q, 0, r, 1, p, 0, q,
-                                   0, r, 1) *
-                           vket;
-                    abb *= ThreeOP(dets[ket], Jabb, p, 0, q, 1, r, 1, p, 0, q,
-                                   1, r, 1) *
-                           vket;
-                    bbb *= ThreeOP(dets[ket], Jbbb, p, 1, q, 1, r, 1, p, 1, q,
-                                   1, r, 1) *
-                           vket;
+                    aaa *= ThreeOP(dets[ket], Jaaa, p, 0, q, 0, r, 0, p, 0, q, 0, r, 0) * vket;
+                    aab *= ThreeOP(dets[ket], Jaab, p, 0, q, 0, r, 1, p, 0, q, 0, r, 1) * vket;
+                    abb *= ThreeOP(dets[ket], Jabb, p, 0, q, 1, r, 1, p, 0, q, 1, r, 1) * vket;
+                    bbb *= ThreeOP(dets[ket], Jbbb, p, 1, q, 1, r, 1, p, 1, q, 1, r, 1) * vket;
 
                     for (size_t bra = 0; bra != size; ++bra) {
                         double vbra = (eigen_[root].first)->get(bra);
-                        AAA[p][q][r][p][q][r] +=
-                            aaa * (dets[bra] == Jaaa) * vbra;
-                        AAB[p][q][r][p][q][r] +=
-                            aab * (dets[bra] == Jaab) * vbra;
-                        ABB[p][q][r][p][q][r] +=
-                            abb * (dets[bra] == Jabb) * vbra;
-                        BBB[p][q][r][p][q][r] +=
-                            bbb * (dets[bra] == Jbbb) * vbra;
+                        AAA[p][q][r][p][q][r] += aaa * (dets[bra] == Jaaa) * vbra;
+                        AAB[p][q][r][p][q][r] += aab * (dets[bra] == Jaab) * vbra;
+                        ABB[p][q][r][p][q][r] += abb * (dets[bra] == Jabb) * vbra;
+                        BBB[p][q][r][p][q][r] += bbb * (dets[bra] == Jbbb) * vbra;
                     }
                 }
 
@@ -2271,23 +2163,21 @@ void FCI_MO::FormCumulant3_DIAG(const vecdet& dets, const int& root, d6& AAA,
                 AAA[p][q][r][r][p][q] = AAA[p][q][r][p][q][r];
                 AAA[p][q][r][r][q][p] -= AAA[p][q][r][p][q][r];
 
+                AAB[p][q][r][p][q][r] -= (Da_[np][np] * Da_[nq][nq] * Db_[nr][nr] -
+                                          Da_[nq][np] * Da_[np][nq] * Db_[nr][nr]);
                 AAB[p][q][r][p][q][r] -=
-                    (Da_[np][np] * Da_[nq][nq] * Db_[nr][nr] -
-                     Da_[nq][np] * Da_[np][nq] * Db_[nr][nr]);
-                AAB[p][q][r][p][q][r] -= (Da_[np][np] * L2ab_[q][r][q][r] -
-                                          Da_[np][nq] * L2ab_[q][r][p][r]);
-                AAB[p][q][r][p][q][r] -= (Da_[nq][nq] * L2ab_[p][r][p][r] -
-                                          Da_[nq][np] * L2ab_[p][r][q][r]);
+                    (Da_[np][np] * L2ab_[q][r][q][r] - Da_[np][nq] * L2ab_[q][r][p][r]);
+                AAB[p][q][r][p][q][r] -=
+                    (Da_[nq][nq] * L2ab_[p][r][p][r] - Da_[nq][np] * L2ab_[p][r][q][r]);
                 AAB[p][q][r][p][q][r] -= (Db_[nr][nr] * L2aa_[p][q][p][q]);
                 AAB[p][q][r][q][p][r] -= AAB[p][q][r][p][q][r];
 
+                ABB[p][q][r][p][q][r] -= (Da_[np][np] * Db_[nq][nq] * Db_[nr][nr] -
+                                          Da_[np][np] * Db_[nr][nq] * Db_[nq][nr]);
                 ABB[p][q][r][p][q][r] -=
-                    (Da_[np][np] * Db_[nq][nq] * Db_[nr][nr] -
-                     Da_[np][np] * Db_[nr][nq] * Db_[nq][nr]);
-                ABB[p][q][r][p][q][r] -= (Db_[nq][nq] * L2ab_[p][r][p][r] -
-                                          Db_[nq][nr] * L2ab_[p][r][p][q]);
-                ABB[p][q][r][p][q][r] -= (Db_[nr][nr] * L2ab_[p][q][p][q] -
-                                          Db_[nr][nq] * L2ab_[p][q][p][r]);
+                    (Db_[nq][nq] * L2ab_[p][r][p][r] - Db_[nq][nr] * L2ab_[p][r][p][q]);
+                ABB[p][q][r][p][q][r] -=
+                    (Db_[nr][nr] * L2ab_[p][q][p][q] - Db_[nr][nq] * L2ab_[p][q][p][r]);
                 ABB[p][q][r][p][q][r] -= (Da_[np][np] * L2bb_[q][r][q][r]);
                 ABB[p][r][q][p][q][r] -= ABB[p][q][r][p][q][r];
 
@@ -2306,8 +2196,7 @@ void FCI_MO::FormCumulant3_DIAG(const vecdet& dets, const int& root, d6& AAA,
     timer_off("FORM 3-Cumulant");
 }
 
-void FCI_MO::print3PDC(const string& str, const d6& ThreePDC,
-                       const int& PRINT) {
+void FCI_MO::print3PDC(const string& str, const d6& ThreePDC, const int& PRINT) {
     timer_on("PRINT 3-Cumulant");
     outfile->Printf("\n  ** %s **", str.c_str());
     size_t count = 0;
@@ -2316,16 +2205,14 @@ void FCI_MO::print3PDC(const string& str, const d6& ThreePDC,
             for (size_t k = 0; k != ThreePDC[i][j].size(); ++k) {
                 for (size_t l = 0; l != ThreePDC[i][j][k].size(); ++l) {
                     for (size_t m = 0; m != ThreePDC[i][j][k][l].size(); ++m) {
-                        for (size_t n = 0; n != ThreePDC[i][j][k][l][m].size();
-                             ++n) {
+                        for (size_t n = 0; n != ThreePDC[i][j][k][l][m].size(); ++n) {
                             if (fabs(ThreePDC[i][j][k][l][m][n]) > 1.0e-15) {
                                 ++count;
                                 if (PRINT > 3)
                                     outfile->Printf("\n  Lambda "
                                                     "[%3lu][%3lu][%3lu][%3lu][%"
                                                     "3lu][%3lu] = %18.15lf",
-                                                    i, j, k, l, m, n,
-                                                    ThreePDC[i][j][k][l][m][n]);
+                                                    i, j, k, l, m, n, ThreePDC[i][j][k][l][m][n]);
                             }
                         }
                     }
@@ -2339,12 +2226,10 @@ void FCI_MO::print3PDC(const string& str, const d6& ThreePDC,
     timer_off("PRINT 3-Cumulant");
 }
 
-double FCI_MO::ThreeOP(const STLBitsetDeterminant& J,
-                       STLBitsetDeterminant& Jnew, const size_t& p,
-                       const bool& sp, const size_t& q, const bool& sq,
-                       const size_t& r, const bool& sr, const size_t& s,
-                       const bool& ss, const size_t& t, const bool& st,
-                       const size_t& u, const bool& su) {
+double FCI_MO::ThreeOP(const STLBitsetDeterminant& J, STLBitsetDeterminant& Jnew, const size_t& p,
+                       const bool& sp, const size_t& q, const bool& sq, const size_t& r,
+                       const bool& sr, const size_t& s, const bool& ss, const size_t& t,
+                       const bool& st, const size_t& u, const bool& su) {
     timer_on("3PO");
     vector<vector<bool>> tmp;
     tmp.push_back(J.get_alfa_bits_vector_bool());
@@ -2410,8 +2295,7 @@ void FCI_MO::print_Fock(const string& spin, const d2& Fock) {
 
     // print Fock block
     auto print_Fock_block = [&](const string& name1, const string& name2,
-                                const vector<size_t>& idx1,
-                                const vector<size_t>& idx2) {
+                                const vector<size_t>& idx1, const vector<size_t>& idx2) {
         size_t dim1 = idx1.size();
         size_t dim2 = idx2.size();
         string bname = name1 + "-" + name2;
@@ -2446,9 +2330,8 @@ void FCI_MO::print_Fock(const string& spin, const d2& Fock) {
                 }
             }
             if (FT->rms() > dconv_) {
-                outfile->Printf(
-                    "  Warning: %s not symmetric for %s and %s blocks\n",
-                    name.c_str(), bname.c_str(), bnamer.c_str());
+                outfile->Printf("  Warning: %s not symmetric for %s and %s blocks\n", name.c_str(),
+                                bname.c_str(), bnamer.c_str());
                 Fr.print();
             }
         }
@@ -2563,8 +2446,7 @@ void FCI_MO::Form_Fock(d2& A, d2& B) {
     timer_off("Form Fock");
 }
 
-void FCI_MO::Check_Fock(const d2& A, const d2& B, const double& E,
-                        size_t& count) {
+void FCI_MO::Check_Fock(const d2& A, const d2& B, const double& E, size_t& count) {
     timer_on("Check Fock");
     Timer tfock;
     std::string str = "Checking Fock matrices (Fa, Fb)";
@@ -2597,9 +2479,8 @@ void FCI_MO::Check_Fock(const d2& A, const d2& B, const double& E,
     timer_off("Check Fock");
 }
 
-void FCI_MO::Check_FockBlock(const d2& A, const d2& B, const double& E,
-                             size_t& count, const size_t& dim,
-                             const vector<size_t>& idx, const string& str) {
+void FCI_MO::Check_FockBlock(const d2& A, const d2& B, const double& E, size_t& count,
+                             const size_t& dim, const vector<size_t>& idx, const string& str) {
     double maxa = 0.0, maxb = 0.0;
     size_t a = 0, b = 0;
     for (size_t p = 0; p < dim; ++p) {
@@ -2624,24 +2505,20 @@ void FCI_MO::Check_FockBlock(const d2& A, const d2& B, const double& E,
             outfile->Printf("\n  Fa_%-7s block is diagonal.", str.c_str());
         } else {
             outfile->Printf("\n  Warning: Fa_%-7s NOT diagonal!", str.c_str());
-            outfile->Printf(
-                "\n  Nonzero off-diagonal: %5zu. Largest value: %18.15lf", a,
-                maxa);
+            outfile->Printf("\n  Nonzero off-diagonal: %5zu. Largest value: %18.15lf", a, maxa);
         }
         if (b == 0) {
             outfile->Printf("\n  Fb_%-7s block is diagonal.", str.c_str());
         } else {
             outfile->Printf("\n  Warning: Fb_%-7s NOT diagonal!", str.c_str());
-            outfile->Printf(
-                "\n  Nonzero off-diagonal: %5zu. Largest value: %18.15lf", b,
-                maxb);
+            outfile->Printf("\n  Nonzero off-diagonal: %5zu. Largest value: %18.15lf", b, maxb);
         }
         outfile->Flush();
     }
 }
 
-void FCI_MO::BD_Fock(const d2& Fa, const d2& Fb, SharedMatrix& Ua,
-                     SharedMatrix& Ub, const string& name) {
+void FCI_MO::BD_Fock(const d2& Fa, const d2& Fb, SharedMatrix& Ua, SharedMatrix& Ub,
+                     const string& name) {
     timer_on("Block Diagonal 2D Matrix");
     Timer tbdfock;
     std::string str = "Diagonalizing " + name;
@@ -2674,14 +2551,10 @@ void FCI_MO::BD_Fock(const d2& Fa, const d2& Fb, SharedMatrix& Ua,
     // active
     SharedMatrix Fa_a, Fa_b, Fao_a, Fao_b, Fav_a, Fav_b;
     if (active_space_type_ == "CIS" || active_space_type_ == "CISD") {
-        Fao_a = SharedMatrix(
-            new Matrix("Fock active hole alpha", active_h_, active_h_));
-        Fao_b = SharedMatrix(
-            new Matrix("Fock active hole beta", active_h_, active_h_));
-        Fav_a = SharedMatrix(
-            new Matrix("Fock active particle alpha", active_p_, active_p_));
-        Fav_b = SharedMatrix(
-            new Matrix("Fock active particle beta", active_p_, active_p_));
+        Fao_a = SharedMatrix(new Matrix("Fock active hole alpha", active_h_, active_h_));
+        Fao_b = SharedMatrix(new Matrix("Fock active hole beta", active_h_, active_h_));
+        Fav_a = SharedMatrix(new Matrix("Fock active particle alpha", active_p_, active_p_));
+        Fav_b = SharedMatrix(new Matrix("Fock active particle beta", active_p_, active_p_));
         for (size_t h = 0, offset = 0; h < nirrep_; ++h) {
             h = static_cast<int>(h);
             offset += core_[h];
@@ -2773,10 +2646,8 @@ void FCI_MO::BD_Fock(const d2& Fa, const d2& Fb, SharedMatrix& Ua,
                 int nu = u - active_h_[h];
                 for (int v = active_h_[h]; v < active_[h]; ++v) {
                     int nv = v - active_h_[h];
-                    Ua->set(h, offset + u, offset + v,
-                            evecs[6]->get(h, nu, nv));
-                    Ub->set(h, offset + u, offset + v,
-                            evecs[7]->get(h, nu, nv));
+                    Ua->set(h, offset + u, offset + v, evecs[6]->get(h, nu, nv));
+                    Ub->set(h, offset + u, offset + v, evecs[7]->get(h, nu, nv));
                 }
             }
         } else {
@@ -2916,8 +2787,7 @@ void FCI_MO::BD_Fock(const d2& Fa, const d2& Fb, SharedMatrix& Ua,
 
 bool FCI_MO::CheckDensity() {
     // check blocks
-    auto checkblocks = [&](const size_t& dim,
-                           const vector<size_t>& idx) -> vector<double> {
+    auto checkblocks = [&](const size_t& dim, const vector<size_t>& idx) -> vector<double> {
         double maxa = 0.0, maxb = 0.0;
         for (size_t p = 0; p < dim; ++p) {
             size_t np = idx[p];
@@ -2956,10 +2826,8 @@ bool FCI_MO::CheckDensity() {
                         "virtual blocks of the density matrix");
         outfile->Printf("\n       %15s %15s %15s", "core", "active", "virtual");
         outfile->Printf("\n    %s", sep.c_str());
-        outfile->Printf("\n    Da %15.10f %15.10f %15.10f", maxes[0], maxes[2],
-                        maxes[4]);
-        outfile->Printf("\n    Db %15.10f %15.10f %15.10f", maxes[1], maxes[3],
-                        maxes[5]);
+        outfile->Printf("\n    Da %15.10f %15.10f %15.10f", maxes[0], maxes[2], maxes[4]);
+        outfile->Printf("\n    Db %15.10f %15.10f %15.10f", maxes[1], maxes[3], maxes[5]);
         outfile->Printf("\n    %s\n", sep.c_str());
     } else {
         outfile->Printf("     OK.");
@@ -2970,8 +2838,7 @@ bool FCI_MO::CheckDensity() {
 
 void FCI_MO::compute_permanent_dipole() {
 
-    CharacterTable ct =
-        Process::environment.molecule()->point_group()->char_table();
+    CharacterTable ct = Process::environment.molecule()->point_group()->char_table();
     std::string irrep_symbol = ct.gamma(root_sym_).symbol();
     std::string title = "Permanent Dipole Moments (" + irrep_symbol + ")";
     print_h2(title);
@@ -2985,23 +2852,21 @@ void FCI_MO::compute_permanent_dipole() {
     std::vector<SharedMatrix> aodipole_ints;
     for (const std::string& direction : {"X", "Y", "Z"}) {
         std::string name = "AO Dipole" + direction;
-        aodipole_ints.push_back(
-            SharedMatrix(new Matrix(name, basisset->nbf(), basisset->nbf())));
+        aodipole_ints.push_back(SharedMatrix(new Matrix(name, basisset->nbf(), basisset->nbf())));
     }
     std::shared_ptr<OneBodyAOInt> aodOBI(ints->ao_dipole());
     aodOBI->compute(aodipole_ints);
 
     // Nuclear dipole contribution
-    SharedVector ndip = DipoleInt::nuclear_contribution(
-        Process::environment.molecule(), Vector3(0.0, 0.0, 0.0));
+    SharedVector ndip =
+        DipoleInt::nuclear_contribution(Process::environment.molecule(), Vector3(0.0, 0.0, 0.0));
 
     // SO to AO transformer
     boost::shared_ptr<PetiteList> pet(new PetiteList(basisset, ints));
     SharedMatrix sotoao = pet->sotoao();
 
     // symmetrize the density according to point group
-    auto symmetrize_density = [&](const vector<double>& vec,
-                                  const SharedMatrix& mat) {
+    auto symmetrize_density = [&](const vector<double>& vec, const SharedMatrix& mat) {
         mat->zero();
         size_t offset = 0;
 
@@ -3052,29 +2917,26 @@ void FCI_MO::compute_permanent_dipole() {
         vector<double> opdm_b(na_ * na_, 0.0);
         ci_rdms.compute_1rdm(opdm_a, opdm_b);
 
-        SharedMatrix SOdens(
-            new Matrix("SO density " + trans_name, nmopi_, nmopi_));
+        SharedMatrix SOdens(new Matrix("SO density " + trans_name, nmopi_, nmopi_));
         symmetrize_density(opdm_a, SOdens);
         SOdens->back_transform(this->Ca());
 
-        SharedMatrix AOdens(new Matrix("AO density " + trans_name,
-                                       basisset->nbf(), basisset->nbf()));
+        SharedMatrix AOdens(
+            new Matrix("AO density " + trans_name, basisset->nbf(), basisset->nbf()));
         AOdens->remove_symmetry(SOdens, sotoao);
 
         vector<double> de(4, 0.0);
         for (int i = 0; i < 3; ++i) {
-            de[i] =
-                2.0 * AOdens->vector_dot(aodipole_ints[i]); // 2.0 for beta spin
-            de[i] += ndip->get(i); // add nuclear contributions
+            de[i] = 2.0 * AOdens->vector_dot(aodipole_ints[i]); // 2.0 for beta spin
+            de[i] += ndip->get(i);                              // add nuclear contributions
             de[3] += de[i] * de[i];
         }
         de[3] = sqrt(de[3]);
 
         if (de[3] > 1.0e-5) {
-            outfile->Printf(
-                "\n  Permanent dipole moments (a.u.) %s:  X: %7.4f  Y: "
-                "%7.4f  Z: %7.4f  Total: %7.4f",
-                trans_name.c_str(), de[0], de[1], de[2], de[3]);
+            outfile->Printf("\n  Permanent dipole moments (a.u.) %s:  X: %7.4f  Y: "
+                            "%7.4f  Z: %7.4f  Total: %7.4f",
+                            trans_name.c_str(), de[0], de[1], de[2], de[3]);
         }
     }
     outfile->Printf("\n");
@@ -3092,12 +2954,10 @@ void FCI_MO::compute_trans_dipole() {
     //        return;
     //    }
 
-    CharacterTable ct =
-        Process::environment.molecule()->point_group()->char_table();
+    CharacterTable ct = Process::environment.molecule()->point_group()->char_table();
     std::string irrep_symbol = ct.gamma(root_sym_).symbol();
     std::stringstream title;
-    title << "Transition Dipole Moments (" << irrep_symbol << " -> "
-          << irrep_symbol << ")";
+    title << "Transition Dipole Moments (" << irrep_symbol << " -> " << irrep_symbol << ")";
     print_h2(title.str());
     outfile->Printf("\n  Only print nonzero (> 1.0e-5) elements.");
 
@@ -3109,8 +2969,7 @@ void FCI_MO::compute_trans_dipole() {
     std::vector<SharedMatrix> aodipole_ints;
     for (const std::string& direction : {"X", "Y", "Z"}) {
         std::string name = "AO Dipole" + direction;
-        aodipole_ints.push_back(
-            SharedMatrix(new Matrix(name, basisset->nbf(), basisset->nbf())));
+        aodipole_ints.push_back(SharedMatrix(new Matrix(name, basisset->nbf(), basisset->nbf())));
     }
     std::shared_ptr<OneBodyAOInt> aodOBI(ints->ao_dipole());
     aodOBI->compute(aodipole_ints);
@@ -3143,8 +3002,7 @@ void FCI_MO::compute_trans_dipole() {
     //    }
 
     // symmetrize the density according to point group
-    auto symmetrize_density = [&](const vector<double>& vec,
-                                  const SharedMatrix& mat) {
+    auto symmetrize_density = [&](const vector<double>& vec, const SharedMatrix& mat) {
 
         size_t offset = 0;
         mat->zero();
@@ -3180,8 +3038,7 @@ void FCI_MO::compute_trans_dipole() {
     trans_dipole_.clear();
     for (int A = 0; A < nroot_; ++A) {
         for (int B = A + 1; B < nroot_; ++B) {
-            std::string trans_name =
-                std::to_string(A) + " -> " + std::to_string(B);
+            std::string trans_name = std::to_string(A) + " -> " + std::to_string(B);
 
             CI_RDMS ci_rdms(options_, fci_ints_, determinant_, evecs, A, B);
             vector<double> opdm_a(na_ * na_, 0.0);
@@ -3192,21 +3049,18 @@ void FCI_MO::compute_trans_dipole() {
             //            density " + trans_name, nmopi_, nmopi_));
             //            symmetrize_density(opdm_a, MOtransD);
 
-            SharedMatrix SOtransD(new Matrix(
-                "SO transition density " + trans_name, nmopi_, nmopi_));
+            SharedMatrix SOtransD(
+                new Matrix("SO transition density " + trans_name, nmopi_, nmopi_));
             symmetrize_density(opdm_a, SOtransD);
             SOtransD->back_transform(this->Ca());
 
-            SharedMatrix AOtransD(
-                new Matrix("AO transition density " + trans_name,
-                           basisset->nbf(), basisset->nbf()));
+            SharedMatrix AOtransD(new Matrix("AO transition density " + trans_name, basisset->nbf(),
+                                             basisset->nbf()));
             AOtransD->remove_symmetry(SOtransD, sotoao);
 
             vector<double> de(4, 0.0);
             for (int i = 0; i < 3; ++i) {
-                de[i] =
-                    2.0 *
-                    AOtransD->vector_dot(aodipole_ints[i]); // 2.0 for beta spin
+                de[i] = 2.0 * AOtransD->vector_dot(aodipole_ints[i]); // 2.0 for beta spin
                 //                de[i] = 2.0 *
                 //                        MOtransD->vector_dot(dipole_ints[i]);
                 de[3] += de[i] * de[i];
@@ -3248,12 +3102,10 @@ void FCI_MO::compute_trans_dipole() {
 
 void FCI_MO::compute_oscillator_strength() {
 
-    CharacterTable ct =
-        Process::environment.molecule()->point_group()->char_table();
+    CharacterTable ct = Process::environment.molecule()->point_group()->char_table();
     std::string irrep_symbol = ct.gamma(root_sym_).symbol();
     std::stringstream title;
-    title << "Oscillator Strength (" << irrep_symbol << " -> " << irrep_symbol
-          << ")";
+    title << "Oscillator Strength (" << irrep_symbol << " -> " << irrep_symbol << ")";
     print_h2(title.str());
     outfile->Printf("\n  Only print nonzero (> 1.0e-5) elements.");
 
@@ -3261,8 +3113,7 @@ void FCI_MO::compute_oscillator_strength() {
     std::map<std::string, double> Exs;
     for (int A = 0; A < nroot_; ++A) {
         for (int B = A + 1; B < nroot_; ++B) {
-            std::string trans_name =
-                std::to_string(A) + " -> " + std::to_string(B);
+            std::string trans_name = std::to_string(A) + " -> " + std::to_string(B);
             Exs[trans_name] = eigen_[B].second - eigen_[A].second;
         }
     }
@@ -3296,8 +3147,7 @@ d3 FCI_MO::compute_orbital_extents() {
     vector<SharedMatrix> ao_Qpole;
     for (const std::string& direction : {"XX", "XY", "XZ", "YY", "YZ", "ZZ"}) {
         std::string name = "AO Quadrupole" + direction;
-        ao_Qpole.push_back(
-            SharedMatrix(new Matrix(name, basisset->nbf(), basisset->nbf())));
+        ao_Qpole.push_back(SharedMatrix(new Matrix(name, basisset->nbf(), basisset->nbf())));
     }
     std::shared_ptr<OneBodyAOInt> aoqOBI(ints->ao_quadrupole());
     aoqOBI->compute(ao_Qpole);
@@ -3308,12 +3158,9 @@ d3 FCI_MO::compute_orbital_extents() {
     int nmo = Ca_ao->ncol();
 
     std::vector<SharedVector> quadrupole;
-    quadrupole.push_back(
-        SharedVector(new Vector("Orbital Quadrupole XX", nmo)));
-    quadrupole.push_back(
-        SharedVector(new Vector("Orbital Quadrupole YY", nmo)));
-    quadrupole.push_back(
-        SharedVector(new Vector("Orbital Quadrupole ZZ", nmo)));
+    quadrupole.push_back(SharedVector(new Vector("Orbital Quadrupole XX", nmo)));
+    quadrupole.push_back(SharedVector(new Vector("Orbital Quadrupole YY", nmo)));
+    quadrupole.push_back(SharedVector(new Vector("Orbital Quadrupole ZZ", nmo)));
 
     for (int i = 0; i < nmo; ++i) {
         double sumx = 0.0, sumy = 0.0, sumz = 0.0;
@@ -3335,8 +3182,7 @@ d3 FCI_MO::compute_orbital_extents() {
     std::vector<std::tuple<double, int, int>> metric;
     for (int h = 0; h < epsilon_a->nirrep(); ++h) {
         for (int i = 0; i < epsilon_a->dimpi()[h]; ++i) {
-            metric.push_back(
-                std::tuple<double, int, int>(epsilon_a->get(h, i), i, h));
+            metric.push_back(std::tuple<double, int, int>(epsilon_a->get(h, i), i, h));
         }
     }
     std::sort(metric.begin(), metric.end());
@@ -3373,8 +3219,7 @@ d3 FCI_MO::compute_orbital_extents() {
         size_t offset = 0;
         for (int h = 0; h < nirrep_; ++h) {
             for (size_t i = 0; i < active_[h]; ++i) {
-                double orbext = orb_extents[h][i][0] + orb_extents[h][i][1] +
-                                orb_extents[h][i][2];
+                double orbext = orb_extents[h][i][0] + orb_extents[h][i][1] + orb_extents[h][i][2];
 
                 if (orbext > 1.0e6) {
                     diffused_orbs_.push_back(i + offset);
@@ -3388,12 +3233,9 @@ d3 FCI_MO::compute_orbital_extents() {
         }
 
         if (idx_diffused_ == wrong) {
-            outfile->Printf(
-                "\n  Totally symmetric diffused orbital is not found.");
-            outfile->Printf(
-                "\n  Make sure a diffused s function is added to the basis.");
-            throw PSIEXCEPTION(
-                "Totally symmetric diffused orbital is not found.");
+            outfile->Printf("\n  Totally symmetric diffused orbital is not found.");
+            outfile->Printf("\n  Make sure a diffused s function is added to the basis.");
+            throw PSIEXCEPTION("Totally symmetric diffused orbital is not found.");
         }
     }
 
@@ -3414,15 +3256,12 @@ void FCI_MO::fill_density() {
 }
 
 void FCI_MO::fill_cumulant2() {
-    L2aa.iterate([&](const ::vector<size_t>& i, double& value) {
-        value = L2aa_[i[0]][i[1]][i[2]][i[3]];
-    });
-    L2ab.iterate([&](const ::vector<size_t>& i, double& value) {
-        value = L2ab_[i[0]][i[1]][i[2]][i[3]];
-    });
-    L2bb.iterate([&](const ::vector<size_t>& i, double& value) {
-        value = L2bb_[i[0]][i[1]][i[2]][i[3]];
-    });
+    L2aa.iterate(
+        [&](const ::vector<size_t>& i, double& value) { value = L2aa_[i[0]][i[1]][i[2]][i[3]]; });
+    L2ab.iterate(
+        [&](const ::vector<size_t>& i, double& value) { value = L2ab_[i[0]][i[1]][i[2]][i[3]]; });
+    L2bb.iterate(
+        [&](const ::vector<size_t>& i, double& value) { value = L2bb_[i[0]][i[1]][i[2]][i[3]]; });
 }
 
 void FCI_MO::fill_cumulant3() {
@@ -3512,8 +3351,7 @@ void FCI_MO::compute_ref() {
             L3bbb_ = d6(na_, d5(na_, d4(na_, d3(na_, d2(na_, d1(na_))))));
 
             if (t_algorithm != "DSRG_NOSEMI") {
-                FormCumulant3(ci_rdms, L3aaa_, L3aab_, L3abb_, L3bbb_,
-                              threepdc);
+                FormCumulant3(ci_rdms, L3aaa_, L3aab_, L3abb_, L3bbb_, threepdc);
             }
             //            else if (threepdc == "DIAG") {
             //                FormCumulant3_DIAG(determinant_, root_, L3aaa_,
@@ -3596,14 +3434,10 @@ void FCI_MO::set_orbs(SharedMatrix Ca, SharedMatrix Cb) {
     Ca_wfn->copy(Ca);
     Cb_wfn->copy(Cb);
     integral_->retransform_integrals();
-    ambit::Tensor tei_active_aa =
-        integral_->aptei_aa_block(idx_a_, idx_a_, idx_a_, idx_a_);
-    ambit::Tensor tei_active_ab =
-        integral_->aptei_ab_block(idx_a_, idx_a_, idx_a_, idx_a_);
-    ambit::Tensor tei_active_bb =
-        integral_->aptei_bb_block(idx_a_, idx_a_, idx_a_, idx_a_);
-    fci_ints_->set_active_integrals(tei_active_aa, tei_active_ab,
-                                    tei_active_bb);
+    ambit::Tensor tei_active_aa = integral_->aptei_aa_block(idx_a_, idx_a_, idx_a_, idx_a_);
+    ambit::Tensor tei_active_ab = integral_->aptei_ab_block(idx_a_, idx_a_, idx_a_, idx_a_);
+    ambit::Tensor tei_active_bb = integral_->aptei_bb_block(idx_a_, idx_a_, idx_a_, idx_a_);
+    fci_ints_->set_active_integrals(tei_active_aa, tei_active_ab, tei_active_bb);
     fci_ints_->compute_restricted_one_body_operator();
 }
 
@@ -3649,15 +3483,12 @@ double FCI_MO::compute_sa_energy() {
             outfile->Printf("\n  Too many roots of interest!");
             std::string be = (eigen_size > 1) ? "are" : "is";
             std::string plural = (eigen_size > 1) ? "roots" : "root";
-            outfile->Printf(
-                "\n  There %s only %3d %s that satisfy the condition!",
-                be.c_str(), eigen_size, plural.c_str());
-            outfile->Printf(
-                "\n  Check root_sym, multi, and number of determinants.");
+            outfile->Printf("\n  There %s only %3d %s that satisfy the condition!", be.c_str(),
+                            eigen_size, plural.c_str());
+            outfile->Printf("\n  Check root_sym, multi, and number of determinants.");
             throw PSIEXCEPTION("Too many roots of interest.");
         }
-        print_CI(nroot_, options_.get_double("FCIMO_PRINT_CIVEC"), eigen_,
-                 determinant_);
+        print_CI(nroot_, options_.get_double("FCIMO_PRINT_CIVEC"), eigen_, determinant_);
 
         // compute one density using ci_rdms
         int dim = (eigen_[0].first)->dim();
@@ -3676,14 +3507,12 @@ double FCI_MO::compute_sa_energy() {
             vector<double> opdm_b(nelement, 0.0);
             ci_rdms.compute_1rdm(opdm_a, opdm_b);
 
-            std::for_each(opdm_a.begin(), opdm_a.end(),
-                          [&](double& v) { v *= weight; });
-            std::for_each(opdm_b.begin(), opdm_b.end(),
-                          [&](double& v) { v *= weight; });
-            std::transform(sa_opdm_a.begin(), sa_opdm_a.end(), opdm_a.begin(),
-                           sa_opdm_a.begin(), std::plus<double>());
-            std::transform(sa_opdm_b.begin(), sa_opdm_b.end(), opdm_b.begin(),
-                           sa_opdm_b.begin(), std::plus<double>());
+            std::for_each(opdm_a.begin(), opdm_a.end(), [&](double& v) { v *= weight; });
+            std::for_each(opdm_b.begin(), opdm_b.end(), [&](double& v) { v *= weight; });
+            std::transform(sa_opdm_a.begin(), sa_opdm_a.end(), opdm_a.begin(), sa_opdm_a.begin(),
+                           std::plus<double>());
+            std::transform(sa_opdm_b.begin(), sa_opdm_b.end(), opdm_b.begin(), sa_opdm_b.begin(),
+                           std::plus<double>());
         }
 
         // compute dipole moments
@@ -3696,8 +3525,7 @@ double FCI_MO::compute_sa_energy() {
         }
     }               // end looping over all averaged states
     eigen_.clear(); // make sure other code use eigens_ for state average
-    outfile->Printf("\n  Total Energy (averaged over %d states): %20.15f\n",
-                    nstates, Ecas_sa);
+    outfile->Printf("\n  Total Energy (averaged over %d states): %20.15f\n", nstates, Ecas_sa);
 
     // fill in Da_, Db_, L1a, L1b
     fill_density(sa_opdm_a, sa_opdm_b);
@@ -3952,8 +3780,7 @@ void FCI_MO::xms_rotate(const int& irrep) {
                 for (int N = M; N < nroots; ++N) {
 
                     // compute density
-                    CI_RDMS ci_rdms(options_, fci_ints_, determinant_, evecs, M,
-                                    N);
+                    CI_RDMS ci_rdms(options_, fci_ints_, determinant_, evecs, M, N);
                     ci_rdms.set_symmetry(irrep);
                     vector<double> opdm_a(nelement, 0.0);
                     vector<double> opdm_b(nelement, 0.0);
@@ -3973,8 +3800,7 @@ void FCI_MO::xms_rotate(const int& irrep) {
                     }
 
                     if (M == N) {
-                        Fock_MN->set(
-                            M, M, fuv); // ignored core part (a constant shift)
+                        Fock_MN->set(M, M, fuv); // ignored core part (a constant shift)
                     } else {
                         Fock_MN->set(M, N, fuv);
                         Fock_MN->set(N, M, fuv);
@@ -4056,21 +3882,15 @@ void FCI_MO::compute_sa_ref() {
             vector<double> tpdm_bb(nelement2, 0.0);
             ci_rdms.compute_2rdm(tpdm_aa, tpdm_ab, tpdm_bb);
 
-            std::for_each(tpdm_aa.begin(), tpdm_aa.end(),
-                          [&](double& v) { v *= weight; });
-            std::for_each(tpdm_ab.begin(), tpdm_ab.end(),
-                          [&](double& v) { v *= weight; });
-            std::for_each(tpdm_bb.begin(), tpdm_bb.end(),
-                          [&](double& v) { v *= weight; });
-            std::transform(sa_tpdm_aa.begin(), sa_tpdm_aa.end(),
-                           tpdm_aa.begin(), sa_tpdm_aa.begin(),
-                           std::plus<double>());
-            std::transform(sa_tpdm_ab.begin(), sa_tpdm_ab.end(),
-                           tpdm_ab.begin(), sa_tpdm_ab.begin(),
-                           std::plus<double>());
-            std::transform(sa_tpdm_bb.begin(), sa_tpdm_bb.end(),
-                           tpdm_bb.begin(), sa_tpdm_bb.begin(),
-                           std::plus<double>());
+            std::for_each(tpdm_aa.begin(), tpdm_aa.end(), [&](double& v) { v *= weight; });
+            std::for_each(tpdm_ab.begin(), tpdm_ab.end(), [&](double& v) { v *= weight; });
+            std::for_each(tpdm_bb.begin(), tpdm_bb.end(), [&](double& v) { v *= weight; });
+            std::transform(sa_tpdm_aa.begin(), sa_tpdm_aa.end(), tpdm_aa.begin(),
+                           sa_tpdm_aa.begin(), std::plus<double>());
+            std::transform(sa_tpdm_ab.begin(), sa_tpdm_ab.end(), tpdm_ab.begin(),
+                           sa_tpdm_ab.begin(), std::plus<double>());
+            std::transform(sa_tpdm_bb.begin(), sa_tpdm_bb.end(), tpdm_bb.begin(),
+                           sa_tpdm_bb.begin(), std::plus<double>());
 
             if (!no_3pdc) {
                 vector<double> tpdm_aaa(nelement3, 0.0);
@@ -4079,26 +3899,18 @@ void FCI_MO::compute_sa_ref() {
                 vector<double> tpdm_bbb(nelement3, 0.0);
                 ci_rdms.compute_3rdm(tpdm_aaa, tpdm_aab, tpdm_abb, tpdm_bbb);
 
-                std::for_each(tpdm_aaa.begin(), tpdm_aaa.end(),
-                              [&](double& v) { v *= weight; });
-                std::for_each(tpdm_aab.begin(), tpdm_aab.end(),
-                              [&](double& v) { v *= weight; });
-                std::for_each(tpdm_abb.begin(), tpdm_abb.end(),
-                              [&](double& v) { v *= weight; });
-                std::for_each(tpdm_bbb.begin(), tpdm_bbb.end(),
-                              [&](double& v) { v *= weight; });
-                std::transform(sa_tpdm_aaa.begin(), sa_tpdm_aaa.end(),
-                               tpdm_aaa.begin(), sa_tpdm_aaa.begin(),
-                               std::plus<double>());
-                std::transform(sa_tpdm_aab.begin(), sa_tpdm_aab.end(),
-                               tpdm_aab.begin(), sa_tpdm_aab.begin(),
-                               std::plus<double>());
-                std::transform(sa_tpdm_abb.begin(), sa_tpdm_abb.end(),
-                               tpdm_abb.begin(), sa_tpdm_abb.begin(),
-                               std::plus<double>());
-                std::transform(sa_tpdm_bbb.begin(), sa_tpdm_bbb.end(),
-                               tpdm_bbb.begin(), sa_tpdm_bbb.begin(),
-                               std::plus<double>());
+                std::for_each(tpdm_aaa.begin(), tpdm_aaa.end(), [&](double& v) { v *= weight; });
+                std::for_each(tpdm_aab.begin(), tpdm_aab.end(), [&](double& v) { v *= weight; });
+                std::for_each(tpdm_abb.begin(), tpdm_abb.end(), [&](double& v) { v *= weight; });
+                std::for_each(tpdm_bbb.begin(), tpdm_bbb.end(), [&](double& v) { v *= weight; });
+                std::transform(sa_tpdm_aaa.begin(), sa_tpdm_aaa.end(), tpdm_aaa.begin(),
+                               sa_tpdm_aaa.begin(), std::plus<double>());
+                std::transform(sa_tpdm_aab.begin(), sa_tpdm_aab.end(), tpdm_aab.begin(),
+                               sa_tpdm_aab.begin(), std::plus<double>());
+                std::transform(sa_tpdm_abb.begin(), sa_tpdm_abb.end(), tpdm_abb.begin(),
+                               sa_tpdm_abb.begin(), std::plus<double>());
+                std::transform(sa_tpdm_bbb.begin(), sa_tpdm_bbb.end(), tpdm_bbb.begin(),
+                               sa_tpdm_bbb.begin(), std::plus<double>());
             }
         }
 
@@ -4116,12 +3928,9 @@ void FCI_MO::compute_sa_ref() {
 
 void FCI_MO::compute_cumulant2(vector<double>& tpdm_aa, vector<double>& tpdm_ab,
                                vector<double>& tpdm_bb) {
-    L2aa =
-        ambit::Tensor::build(ambit::CoreTensor, "L2aa", {na_, na_, na_, na_});
-    L2ab =
-        ambit::Tensor::build(ambit::CoreTensor, "L2ab", {na_, na_, na_, na_});
-    L2bb =
-        ambit::Tensor::build(ambit::CoreTensor, "L2bb", {na_, na_, na_, na_});
+    L2aa = ambit::Tensor::build(ambit::CoreTensor, "L2aa", {na_, na_, na_, na_});
+    L2ab = ambit::Tensor::build(ambit::CoreTensor, "L2ab", {na_, na_, na_, na_});
+    L2bb = ambit::Tensor::build(ambit::CoreTensor, "L2bb", {na_, na_, na_, na_});
 
     // copy incoming 2rdms to 2cumulants
     L2aa.data() = tpdm_aa;
@@ -4138,18 +3947,12 @@ void FCI_MO::compute_cumulant2(vector<double>& tpdm_aa, vector<double>& tpdm_ab,
     L2ab("pqrs") -= L1a("pr") * L1b("qs");
 }
 
-void FCI_MO::compute_cumulant3(vector<double>& tpdm_aaa,
-                               vector<double>& tpdm_aab,
-                               vector<double>& tpdm_abb,
-                               vector<double>& tpdm_bbb) {
-    L3aaa = ambit::Tensor::build(ambit::CoreTensor, "L3aaa",
-                                 {na_, na_, na_, na_, na_, na_});
-    L3aab = ambit::Tensor::build(ambit::CoreTensor, "L3aab",
-                                 {na_, na_, na_, na_, na_, na_});
-    L3abb = ambit::Tensor::build(ambit::CoreTensor, "L3abb",
-                                 {na_, na_, na_, na_, na_, na_});
-    L3bbb = ambit::Tensor::build(ambit::CoreTensor, "L3bbb",
-                                 {na_, na_, na_, na_, na_, na_});
+void FCI_MO::compute_cumulant3(vector<double>& tpdm_aaa, vector<double>& tpdm_aab,
+                               vector<double>& tpdm_abb, vector<double>& tpdm_bbb) {
+    L3aaa = ambit::Tensor::build(ambit::CoreTensor, "L3aaa", {na_, na_, na_, na_, na_, na_});
+    L3aab = ambit::Tensor::build(ambit::CoreTensor, "L3aab", {na_, na_, na_, na_, na_, na_});
+    L3abb = ambit::Tensor::build(ambit::CoreTensor, "L3abb", {na_, na_, na_, na_, na_, na_});
+    L3bbb = ambit::Tensor::build(ambit::CoreTensor, "L3bbb", {na_, na_, na_, na_, na_, na_});
 
     // copy incoming 3rdms to 3cumulants
     L3aaa.data() = tpdm_aaa;

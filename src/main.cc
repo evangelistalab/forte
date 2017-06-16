@@ -75,8 +75,7 @@ extern "C" int read_options(std::string name, Options& options) {
 /**
  * @brief The main forte function.
  */
-extern "C" SharedWavefunction forte(SharedWavefunction ref_wfn,
-                                    Options& options) {
+extern "C" SharedWavefunction forte(SharedWavefunction ref_wfn, Options& options) {
     // Start a timer
     Timer total_time;
 
@@ -100,8 +99,7 @@ extern "C" SharedWavefunction forte(SharedWavefunction ref_wfn,
         // Compute energy
         forte_old_methods(ref_wfn, options, ints, mo_space_info, my_proc);
 
-        outfile->Printf("\n\n  Your calculation took %.8f seconds\n",
-                        total_time.get());
+        outfile->Printf("\n\n  Your calculation took %.8f seconds\n", total_time.get());
     }
 
     forte_cleanup();
@@ -158,16 +156,14 @@ void forte_cleanup() {
 #endif
 }
 
-std::shared_ptr<MOSpaceInfo> make_mo_space_info(SharedWavefunction ref_wfn,
-                                                Options& options) {
+std::shared_ptr<MOSpaceInfo> make_mo_space_info(SharedWavefunction ref_wfn, Options& options) {
     Dimension nmopi = ref_wfn->nmopi();
     auto mo_space_info = std::make_shared<MOSpaceInfo>(nmopi);
     mo_space_info->read_options(options);
     return mo_space_info;
 }
 
-SharedMatrix make_aosubspace_projector(SharedWavefunction ref_wfn,
-                                       Options& options) {
+SharedMatrix make_aosubspace_projector(SharedWavefunction ref_wfn, Options& options) {
     // Ps is a SharedMatrix Ps = S^{BA} X X^+ S^{AB}
     auto Ps = create_aosubspace_projector(ref_wfn, options);
     if (Ps) {
@@ -180,8 +176,7 @@ SharedMatrix make_aosubspace_projector(SharedWavefunction ref_wfn,
         outfile->Printf("    ------------------------\n");
         for (int h = 0; h < CPsC->nirrep(); h++) {
             for (int i = 0; i < CPsC->rowspi(h); i++) {
-                outfile->Printf("      %1d   %4d    %.6f\n", h, i + 1,
-                                CPsC->get(h, i, i));
+                outfile->Printf("      %1d   %4d    %.6f\n", h, i + 1, CPsC->get(h, i, i));
             }
         }
         outfile->Printf("    ========================\n");
@@ -189,37 +184,32 @@ SharedMatrix make_aosubspace_projector(SharedWavefunction ref_wfn,
     return Ps;
 }
 
-std::shared_ptr<ForteIntegrals>
-make_forte_integrals(SharedWavefunction ref_wfn, Options& options,
-                     std::shared_ptr<MOSpaceInfo> mo_space_info) {
+std::shared_ptr<ForteIntegrals> make_forte_integrals(SharedWavefunction ref_wfn, Options& options,
+                                                     std::shared_ptr<MOSpaceInfo> mo_space_info) {
     std::shared_ptr<ForteIntegrals> ints;
     if (options.get_str("INT_TYPE") == "CHOLESKY") {
-        ints = std::make_shared<CholeskyIntegrals>(
-            options, ref_wfn, UnrestrictedMOs, RemoveFrozenMOs, mo_space_info);
+        ints = std::make_shared<CholeskyIntegrals>(options, ref_wfn, UnrestrictedMOs,
+                                                   RemoveFrozenMOs, mo_space_info);
     } else if (options.get_str("INT_TYPE") == "DF") {
-        ints = std::make_shared<DFIntegrals>(options, ref_wfn, UnrestrictedMOs,
-                                             RemoveFrozenMOs, mo_space_info);
+        ints = std::make_shared<DFIntegrals>(options, ref_wfn, UnrestrictedMOs, RemoveFrozenMOs,
+                                             mo_space_info);
     } else if (options.get_str("INT_TYPE") == "DISKDF") {
-        ints = std::make_shared<DISKDFIntegrals>(
-            options, ref_wfn, UnrestrictedMOs, RemoveFrozenMOs, mo_space_info);
+        ints = std::make_shared<DISKDFIntegrals>(options, ref_wfn, UnrestrictedMOs, RemoveFrozenMOs,
+                                                 mo_space_info);
     } else if (options.get_str("INT_TYPE") == "CONVENTIONAL") {
-        ints = std::make_shared<ConventionalIntegrals>(
-            options, ref_wfn, UnrestrictedMOs, RemoveFrozenMOs, mo_space_info);
-    } else if (options.get_str("INT_TYPE") == "EFFECTIVE") {
-        ints = std::make_shared<EffectiveIntegrals>(
-            options, ref_wfn, UnrestrictedMOs, RemoveFrozenMOs, mo_space_info);
+        ints = std::make_shared<ConventionalIntegrals>(options, ref_wfn, UnrestrictedMOs,
+                                                       RemoveFrozenMOs, mo_space_info);
     } else if (options.get_str("INT_TYPE") == "DISTDF") {
 #ifdef HAVE_GA
-        ints = std::make_shared<DistDFIntegrals>(
-            options, ref_wfn, UnrestrictedMOs, RemoveFrozenMOs, mo_space_info);
+        ints = std::make_shared<DistDFIntegrals>(options, ref_wfn, UnrestrictedMOs, RemoveFrozenMOs,
+                                                 mo_space_info);
 #endif
     } else if (options.get_str("INT_TYPE") == "OWNINTEGRALS") {
-        ints = std::make_shared<OwnIntegrals>(options, ref_wfn, UnrestrictedMOs,
-                                              RemoveFrozenMOs, mo_space_info);
+        ints = std::make_shared<OwnIntegrals>(options, ref_wfn, UnrestrictedMOs, RemoveFrozenMOs,
+                                              mo_space_info);
     } else {
-        outfile->Printf(
-            "\n Please check your int_type. Choices are CHOLESKY, DF, DISKDF , "
-            "DISTRIBUTEDDF Effective, CONVENTIONAL or OwnIntegrals");
+        outfile->Printf("\n Please check your int_type. Choices are CHOLESKY, DF, DISKDF , "
+                        "DISTRIBUTEDDF Effective, CONVENTIONAL or OwnIntegrals");
         throw PSIEXCEPTION("INT_TYPE is not correct.  Check options");
     }
 
@@ -229,6 +219,5 @@ make_forte_integrals(SharedWavefunction ref_wfn, Options& options,
 
     return ints;
 }
-
 }
 } // End Namespaces

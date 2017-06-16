@@ -28,26 +28,23 @@
 
 #include <map>
 #include <numeric>
-#include <vector>
 #include <regex>
+#include <vector>
 
-#include "psi4/masses.h"
 #include "psi4/libmints/element_to_Z.h"
 #include "psi4/libmints/integral.h"
 #include "psi4/libmints/matrix.h"
 #include "psi4/libmints/petitelist.h"
 #include "psi4/libmints/wavefunction.h"
-#include "psi4/libmints/basisset_parser.h"
+#include "psi4/masses.h"
 
 #include "boost/format.hpp"
 
 #include "aosubspace.h"
 
-std::vector<std::string> mysplit(const std::string& input,
-                                 const std::string& regex);
+std::vector<std::string> mysplit(const std::string& input, const std::string& regex);
 
-std::vector<std::string> mysplit(const std::string& input,
-                                 const std::string& regex) {
+std::vector<std::string> mysplit(const std::string& input, const std::string& regex) {
     // passing -1 as the submatch index parameter performs splitting
     std::regex re(regex);
     std::sregex_token_iterator first{input.begin(), input.end(), re, -1}, last;
@@ -57,14 +54,13 @@ std::vector<std::string> mysplit(const std::string& input,
 namespace psi {
 namespace forte {
 
-SharedMatrix create_aosubspace_projector(SharedWavefunction wfn,
-                                         Options& options) {
+SharedMatrix create_aosubspace_projector(SharedWavefunction wfn, Options& options) {
     SharedMatrix Ps;
 
     // Run this code only if user specified a subspace
-    if (options["SUBSPACE"].size() > 0){
+    if (options["SUBSPACE"].size() > 0) {
         std::vector<std::string> subspace_str;
-        for (int entry = 0; entry < (int)options["SUBSPACE"].size(); ++entry){
+        for (int entry = 0; entry < (int)options["SUBSPACE"].size(); ++entry) {
             std::string s = options["SUBSPACE"][entry].to_string();
             // convert to upper case
             subspace_str.push_back(s);
@@ -75,7 +71,7 @@ SharedMatrix create_aosubspace_projector(SharedWavefunction wfn,
         std::shared_ptr<BasisSet> min_basis = wfn->get_basisset("MINAO_BASIS");
 
         // Create an AOSubspace object
-        AOSubspace aosub(subspace_str,molecule,min_basis);
+        AOSubspace aosub(subspace_str, molecule, min_basis);
 
         // Compute the subspaces (right now this is required before any other call)
         aosub.find_subspace();
@@ -89,8 +85,8 @@ SharedMatrix create_aosubspace_projector(SharedWavefunction wfn,
             std::vector<std::string> aolabels = aosub.aolabels("%1$4d%2$-2s %3$-4d  %4$d%5$s");
 
             int nbf = 0;
-            for (const auto& s : aolabels){
-                outfile->Printf("    %5d  %s\n",nbf + 1,s.c_str());
+            for (const auto& s : aolabels) {
+                outfile->Printf("    %5d  %s\n", nbf + 1, s.c_str());
                 nbf++;
             }
         }
@@ -98,18 +94,16 @@ SharedMatrix create_aosubspace_projector(SharedWavefunction wfn,
 
         const std::vector<int>& subspace = aosub.subspace();
 
-        Ps = aosub.build_projector(subspace,molecule,min_basis,wfn->basisset());
+        Ps = aosub.build_projector(subspace, molecule, min_basis, wfn->basisset());
     }
     return Ps;
 }
 
-AOSubspace::AOSubspace(std::shared_ptr<Molecule> molecule,
-                       std::shared_ptr<BasisSet> basis) {
+AOSubspace::AOSubspace(std::shared_ptr<Molecule> molecule, std::shared_ptr<BasisSet> basis) {
     startup();
 }
 
-AOSubspace::AOSubspace(std::vector<std::string> subspace_str,
-                       std::shared_ptr<Molecule> molecule,
+AOSubspace::AOSubspace(std::vector<std::string> subspace_str, std::shared_ptr<Molecule> molecule,
                        std::shared_ptr<BasisSet> basis)
     : subspace_str_(subspace_str), molecule_(molecule), basis_(basis) {
     startup();
@@ -126,26 +120,24 @@ void AOSubspace::startup() {
     //    outfile->Printf("    written by Francesco A. Evangelista\n");
     //    outfile->Printf("  ---------------------------------------\n");
 
-    lm_labels_cartesian_ = {{"S"},
-                            {"PX", "PY", "PZ"},
-                            {"DX2", "DXY", "DXZ", "DY2", "DYZ", "DZ2"},
-                            {"FX3", "FX2Y", "FX2Z", "FXY2", "FXYZ", "FXZ2",
-                             "FY3", "FY2Z", "FYZ2", "FZ3"}};
+    lm_labels_cartesian_ = {
+        {"S"},
+        {"PX", "PY", "PZ"},
+        {"DX2", "DXY", "DXZ", "DY2", "DYZ", "DZ2"},
+        {"FX3", "FX2Y", "FX2Z", "FXY2", "FXYZ", "FXZ2", "FY3", "FY2Z", "FYZ2", "FZ3"}};
 
     l_labels_ = {"S", "P", "D", "F", "G", "H", "I", "K", "L", "M"};
 
-    lm_labels_sperical_ = {
-        {"S"},
-        {"PZ", "PX", "PY"},
-        {"DZ2", "DXZ", "DYZ", "DX2Y2", "DXY"},
-        {"FZ3", "FXZ2", "FYZ2", "FZX2-ZY2", "FXYZ", "FX3-3XY2", "F3X2Y-Y3"},
-        {"G1", "G2", "G3", "G4", "G5", "G6", "G7", "G8", "G9"},
-        {"H1", "H2", "H3", "H4", "H5", "H6", "H7", "H8", "H9", "H10", "H11"}};
+    lm_labels_sperical_ = {{"S"},
+                           {"PZ", "PX", "PY"},
+                           {"DZ2", "DXZ", "DYZ", "DX2Y2", "DXY"},
+                           {"FZ3", "FXZ2", "FYZ2", "FZX2-ZY2", "FXYZ", "FX3-3XY2", "F3X2Y-Y3"},
+                           {"G1", "G2", "G3", "G4", "G5", "G6", "G7", "G8", "G9"},
+                           {"H1", "H2", "H3", "H4", "H5", "H6", "H7", "H8", "H9", "H10", "H11"}};
 
     for (int l = 0; l < (int)lm_labels_sperical_.size(); ++l) {
         for (int m = 0; m < (int)lm_labels_sperical_[l].size(); ++m) {
-            labels_sperical_to_lm_[lm_labels_sperical_[l][m]] = {
-                std::make_pair(l, m)};
+            labels_sperical_to_lm_[lm_labels_sperical_[l][m]] = {std::make_pair(l, m)};
         }
     }
     for (int l = 0; l < (int)l_labels_.size(); ++l) {
@@ -157,19 +149,18 @@ void AOSubspace::startup() {
     }
 }
 
-SharedMatrix
-AOSubspace::build_projector(const std::vector<int>& subspace,
-                            std::shared_ptr<Molecule> molecule,
-                            std::shared_ptr<BasisSet> min_basis,
-                            std::shared_ptr<BasisSet> large_basis) {
+SharedMatrix AOSubspace::build_projector(const std::vector<int>& subspace,
+                                         std::shared_ptr<Molecule> molecule,
+                                         std::shared_ptr<BasisSet> min_basis,
+                                         std::shared_ptr<BasisSet> large_basis) {
     bool debug = false;
 
     std::shared_ptr<IntegralFactory> integral_mm(
         new IntegralFactory(min_basis, min_basis, min_basis, min_basis));
     std::shared_ptr<IntegralFactory> integral_ml(
         new IntegralFactory(min_basis, large_basis, large_basis, large_basis));
-    std::shared_ptr<IntegralFactory> integral_ll(new IntegralFactory(
-        large_basis, large_basis, large_basis, large_basis));
+    std::shared_ptr<IntegralFactory> integral_ll(
+        new IntegralFactory(large_basis, large_basis, large_basis, large_basis));
 
     int nbf_s = static_cast<int>(subspace.size());
     int nbf_m = min_basis->nbf();
@@ -245,8 +236,7 @@ AOSubspace::build_projector(const std::vector<int>& subspace,
     std::shared_ptr<PetiteList> plist(new PetiteList(large_basis, integral_ll));
     SharedMatrix AO2SO_ = plist->aotoso();
     Dimension large_basis_so_dim = plist->SO_basisdim();
-    SharedMatrix SXXS_ll_so(
-        new Matrix("SXXS_ll_so", large_basis_so_dim, large_basis_so_dim));
+    SharedMatrix SXXS_ll_so(new Matrix("SXXS_ll_so", large_basis_so_dim, large_basis_so_dim));
     SXXS_ll_so->apply_symmetry(SXXS_ll, AO2SO_);
 #if _DEBUG_AOSUBSPACE_
     SXXS_ll_so->print();
@@ -260,10 +250,9 @@ const std::vector<int>& AOSubspace::subspace() { return subspace_; }
 std::vector<std::string> AOSubspace::aolabels(std::string str_format) const {
     std::vector<std::string> aolbl;
     for (const AOInfo& aoinfo : aoinfo_vec_) {
-        std::string s = boost::str(
-            boost::format(str_format) % (aoinfo.A() + 1) %
-            atomic_labels[aoinfo.Z()] % (aoinfo.element_count() + 1) %
-            aoinfo.n() % lm_labels_sperical_[aoinfo.l()][aoinfo.m()]);
+        std::string s = boost::str(boost::format(str_format) % (aoinfo.A() + 1) %
+                                   atomic_labels[aoinfo.Z()] % (aoinfo.element_count() + 1) %
+                                   aoinfo.n() % lm_labels_sperical_[aoinfo.l()][aoinfo.m()]);
         aolbl.push_back(s);
     }
     return aolbl;
@@ -340,26 +329,21 @@ void AOSubspace::parse_subspace_entry(const std::string& s) {
                         int l = lm.first;
                         int m = lm.second;
                         if (debug_)
-                            outfile->Printf(
-                                "     -> %s (n = %d,l = %d, m = %d)\n",
-                                str.c_str(), n, l, m);
+                            outfile->Printf("     -> %s (n = %d,l = %d, m = %d)\n", str.c_str(), n,
+                                            l, m);
                         for (int A = minA; A < maxA; A++) {
                             for (int pos : atom_to_aos_[Z][A]) {
-                                if ((aoinfo_vec_[pos].n() == n) and
-                                    (aoinfo_vec_[pos].l() == l) and
+                                if ((aoinfo_vec_[pos].n() == n) and (aoinfo_vec_[pos].l() == l) and
                                     (aoinfo_vec_[pos].m() == m)) {
                                     if (debug_)
-                                        outfile->Printf(
-                                            "     + found at position %d\n",
-                                            pos);
+                                        outfile->Printf("     + found at position %d\n", pos);
                                     subspace_.push_back(pos);
                                 }
                             }
                         }
                     }
                 } else {
-                    outfile->Printf("  AO label '%s' is not valid.\n",
-                                    str.c_str());
+                    outfile->Printf("  AO label '%s' is not valid.\n", str.c_str());
                 }
             }
         } else {
@@ -383,8 +367,7 @@ void AOSubspace::parse_basis_set() {
 
     if (debug_) {
         outfile->Printf("\n  Parsing basis set\n");
-        outfile->Printf("  Pure Angular Momentum: %s\n",
-                        pure_am ? "True" : "False");
+        outfile->Printf("  Pure Angular Momentum: %s\n", pure_am ? "True" : "False");
     }
 
     int count = 0;
@@ -402,16 +385,15 @@ void AOSubspace::parse_basis_set() {
         std::vector<int> ao_list;
 
         if (debug_)
-            outfile->Printf("\n  Atom %d (Z = %d) has %d shells\n", A, Z,
-                            n_shell);
+            outfile->Printf("\n  Atom %d (Z = %d) has %d shells\n", A, Z, n_shell);
 
         for (int Q = 0; Q < n_shell; Q++) {
             const GaussianShell& shell = basis_->shell(A, Q);
             int nfunction = shell.nfunction();
             int l = shell.am();
             if (debug_)
-                outfile->Printf("    Shell %d: L = %d, N = %d (%d -> %d)\n", Q,
-                                l, nfunction, count, count + nfunction);
+                outfile->Printf("    Shell %d: L = %d, N = %d (%d -> %d)\n", Q, l, nfunction, count,
+                                count + nfunction);
             for (int m = 0; m < nfunction; ++m) {
                 AOInfo ao(A, Z, element_count[Z], n_count[l], l, m);
                 aoinfo_vec_.push_back(ao);
