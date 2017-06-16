@@ -26,11 +26,11 @@
  * @END LICENSE
  */
 
-#include "psi4/libdiis/diismanager.h"
 #include <algorithm>
 #include <map>
 #include <memory>
 #include <vector>
+#include "psi4/libdiis/diismanager.h"
 
 #include "../helpers.h"
 #include "../mini-boost/boost/format.hpp"
