@@ -50,7 +50,7 @@ void set_FCI_options(ForteOptions& foptions) {
 
 FCI::FCI(SharedWavefunction ref_wfn, Options& options, std::shared_ptr<ForteIntegrals> ints,
          std::shared_ptr<MOSpaceInfo> mo_space_info)
-    : Wavefunction(options), ints_(ints), mo_space_info_(mo_space_info) {
+    : ActiveSpaceSolver(ref_wfn,options,ints,mo_space_info) {
     // Copy the wavefunction information
     shallow_copy(ref_wfn);
     reference_wavefunction_ = ref_wfn;
@@ -59,6 +59,18 @@ FCI::FCI(SharedWavefunction ref_wfn, Options& options, std::shared_ptr<ForteInte
 
     startup();
 }
+
+//FCI::FCI(SharedWavefunction ref_wfn, Options& options, std::shared_ptr<ForteIntegrals> ints,
+//         std::shared_ptr<MOSpaceInfo> mo_space_info)
+//    : Wavefunction(options), ints_(ints), mo_space_info_(mo_space_info) {
+//    // Copy the wavefunction information
+//    shallow_copy(ref_wfn);
+//    reference_wavefunction_ = ref_wfn;
+
+//    print_ = options_.get_int("PRINT");
+
+//    startup();
+//}
 
 FCI::~FCI() {}
 
@@ -83,7 +95,7 @@ void FCI::startup() {
     print_no_ = options_.get_bool("FCI_PRINT_NO");
 }
 
-double FCI::compute_energy() {
+double FCI::solver_compute_energy() {
     Dimension active_dim = mo_space_info_->get_dimension("ACTIVE");
     size_t nfdocc = mo_space_info_->size("FROZEN_DOCC");
     std::vector<size_t> rdocc = mo_space_info_->get_corr_abs_mo("RESTRICTED_DOCC");
