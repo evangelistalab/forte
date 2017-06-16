@@ -26,7 +26,6 @@
  * @END LICENSE
  */
 
-// clang-format off
 #include <algorithm>
 #include <map>
 #include <memory>
@@ -36,7 +35,6 @@
 #include "../mini-boost/boost/format.hpp"
 #include "../helpers.h"
 #include "mrdsrg.h"
-// clang-format on
 
 namespace psi {
 namespace forte {
