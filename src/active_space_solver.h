@@ -38,7 +38,7 @@
 namespace psi {
 namespace forte {
 
-class ActiveSpaceSolver : Wavefunction {
+class ActiveSpaceSolver : public Wavefunction {
   public:
     // non-virtual interface
     ActiveSpaceSolver(SharedWavefunction ref_wfn, Options& options,
@@ -51,7 +51,7 @@ class ActiveSpaceSolver : Wavefunction {
     // enable deletion of a Derived* through a Base*
     virtual ~ActiveSpaceSolver() = default;
 
-  private:
+  protected:
     // pure virtual implementation
     virtual double solver_compute_energy() = 0;
 
