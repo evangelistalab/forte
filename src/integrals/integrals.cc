@@ -26,7 +26,6 @@
  * @END LICENSE
  */
 
-
 #include <algorithm>
 #include <cmath>
 #include <numeric>
@@ -53,7 +52,6 @@
 #include <macdecls.h>
 #endif
 
-
 using namespace std;
 using namespace psi;
 using namespace ambit;
@@ -75,8 +73,8 @@ void set_INT_options(ForteOptions& foptions) {
      *  - CONVENTIONAL Conventional two-electron integrals
      *  - DF Density fitted two-electron integrals
      *  - CHOLESKY Cholesky decomposed two-electron integrals -*/
-    foptions.add_str("INT_TYPE", "CONVENTIONAL", {"CONVENTIONAL", "DF", "CHOLESKY", "DISKDF",
-                                                  "DISTDF", "ALL", "OWNINTEGRALS"},
+    foptions.add_str("INT_TYPE", "CONVENTIONAL",
+                     {"CONVENTIONAL", "DF", "CHOLESKY", "DISKDF", "DISTDF", "ALL", "OWNINTEGRALS"},
                      "The integral type");
 
     /*- The screening for JK builds and DF libraries -*/
