@@ -792,19 +792,18 @@ double STLBitsetDeterminant::SlaterSign(const bit_t& I, int n) {
 
 double STLBitsetDeterminant::SlaterSign(const bit_t& I, int m, int n) {
     double sign = 1.0;
-    for (int i = m+1; i < n; ++i) {
+    for (int i = m + 1; i < n; ++i) {
         if (I[i])
             sign *= -1.0;
     }
-    for (int i = n+1; i < m; ++i) {
+    for (int i = n + 1; i < m; ++i) {
         if (I[i])
             sign *= -1.0;
     }
     return (sign);
 }
 
-void STLBitsetDeterminant::enforce_spin_completeness(
-    std::vector<STLBitsetDeterminant>& det_space) {
+void STLBitsetDeterminant::enforce_spin_completeness(std::vector<STLBitsetDeterminant>& det_space) {
     det_hash<bool> det_map;
 
     // Add all determinants to the map, assume set is mostly spin complete
