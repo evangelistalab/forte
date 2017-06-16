@@ -29,12 +29,10 @@
 #ifndef _atomic_orbital_h_
 #define _atomic_orbital_h_
 
-#include "psi4/lib3index/denominator.h"
 #include "psi4/psi4-dec.h"
+#include "psi4/lib3index/denominator.h"
 
 namespace psi {
-
-class BasisSet;
 
 namespace forte {
 
