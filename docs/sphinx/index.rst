@@ -15,6 +15,7 @@ correlated electrons.
    :maxdepth: 2
    :caption: Contents:
 
+   overview
    running_forte
    basics
    mospaceinfo

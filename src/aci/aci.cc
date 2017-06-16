@@ -362,8 +362,8 @@ void AdaptiveCI::print_info() {
         {"Root used for properties", options_.get_int("ACI_ROOT")}};
 
     std::vector<std::pair<std::string, double>> calculation_info_double{
-        {"Sigma", sigma_},
-        {"Gamma", gamma_},
+        {"Sigma (Eh)", sigma_},
+        {"Gamma (Eh^(-1))", gamma_},
         {"Convergence threshold", options_.get_double("ACI_CONVERGENCE")}};
 
     std::vector<std::pair<std::string, std::string>> calculation_info_string{
@@ -598,9 +598,8 @@ double AdaptiveCI::compute_energy() {
     //                            fci_ints_->scalar_energy());
     print_info();
     if (!quiet_mode_) {
-        outfile->Printf("\n Using %d threads", omp_get_max_threads());
+        outfile->Printf("\n  Using %d threads", omp_get_max_threads());
     }
-    //   }
 
     if (ex_alg_ == "COMPOSITE") {
         ex_alg_ = "AVERAGE";
@@ -706,7 +705,8 @@ double AdaptiveCI::compute_energy() {
     if (ex_alg_ == "MULTISTATE") {
         Timer multi;
         compute_multistate(PQ_evals);
-        outfile->Printf("\n  Time spent computing multistate solution: %1.5f", multi.get());
+        outfile->Printf("\n  Time spent computing multistate solution: %1.5f s",
+                        multi.get());
         //    PQ_evals->print();
     }
 
@@ -862,10 +862,10 @@ void AdaptiveCI::print_final(DeterminantMap& dets, SharedMatrix& PQ_evecs, Share
     }
 
     if (ex_alg_ == "ROOT_SELECT") {
-        outfile->Printf("\n\n  Energy optimized for Root %d: %.12f", ref_root_,
+        outfile->Printf("\n\n  Energy optimized for Root %d: %.12f Eh", ref_root_,
                         PQ_evals->get(ref_root_) + nuclear_repulsion_energy_ +
                             fci_ints_->scalar_energy());
-        outfile->Printf("\n\n  Root %d Energy + PT2:         %.12f", ref_root_,
+        outfile->Printf("\n\n  Root %d Energy + PT2:         %.12f Eh", ref_root_,
                         PQ_evals->get(ref_root_) + nuclear_repulsion_energy_ +
                             fci_ints_->scalar_energy() +
                             multistate_pt2_energy_correction_[ref_root_]);
