@@ -26,7 +26,6 @@
  * @END LICENSE
  */
 
-// clang-format off
 #include "psi4/libmints/matrix.h"
 #include "psi4/libmints/vector.h"
 #include "psi4/libmints/sieve.h"
@@ -34,7 +33,6 @@
 #include "psi4/lib3index/denominator.h"
 #include "psi4/libfock/jk.h"
 #include "ao_helper.h"
-// clang-format on
 
 
 
