@@ -26,18 +26,20 @@
  * @END LICENSE
  */
 
+// clang-format off
 #include <cmath>
 
-#include "psi4/lib3index/cholesky.h"
-#include "psi4/libmints/basisset.h"
+#include "psi4/libmints/wavefunction.h"
 #include "psi4/libmints/integral.h"
 #include "psi4/libmints/sieve.h"
-#include "psi4/libmints/wavefunction.h"
+#include "psi4/lib3index/cholesky.h"
+#include "psi4/libmints/basisset.h"
 #include "psi4/libpsio/psio.hpp"
 #include "psi4/libqt/qt.h"
 #include "psi4/psifiles.h"
 
 #include "integrals.h"
+// clang-format on
 
 using namespace ambit;
 

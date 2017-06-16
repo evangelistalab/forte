@@ -26,15 +26,17 @@
  * @END LICENSE
  */
 
-#include "psi4/libdiis/diismanager.h"
+// clang-format off
 #include <algorithm>
 #include <map>
 #include <memory>
 #include <vector>
+#include "psi4/libdiis/diismanager.h"
 
-#include "../helpers.h"
 #include "../mini-boost/boost/format.hpp"
+#include "../helpers.h"
 #include "mrdsrg.h"
+// clang-format on
 
 namespace psi {
 namespace forte {

@@ -26,11 +26,12 @@
  * @END LICENSE
  */
 
+
+// clang-format off
 #include <algorithm>
 #include <cmath>
 #include <numeric>
 
-#include "../blockedtensorfactory.h"
 #include "psi4/libfock/jk.h"
 #include "psi4/libmints/basisset.h"
 #include "psi4/libmints/factory.h"
@@ -42,6 +43,7 @@
 #include "psi4/psi4-dec.h"
 #include "psi4/psifiles.h"
 
+#include "../blockedtensorfactory.h"
 #include "../forte_options.h"
 #include "../helpers.h"
 #include "integrals.h"
@@ -51,6 +53,8 @@
 #include <ga.h>
 #include <macdecls.h>
 #endif
+
+// clang-format on
 
 using namespace std;
 using namespace psi;
