@@ -477,102 +477,19 @@ void forte_old_options(Options& options) {
     //////////////////////////////////////////////////////////////
     /*- Write Density Matrices or Cumulants to File -*/
     options.add_str("WRITE_DENSITY_TYPE", "NONE", "NONE DENSITY CUMULANT");
+    /*- Average densities of different spins in V2RDM -*/
+    options.add_bool("AVG_DENS_SPIN", false);
 
     //////////////////////////////////////////////////////////////
     ///              OPTIONS FOR THE MR-DSRG MODULE
     //////////////////////////////////////////////////////////////
-    /*- Correlation level -*/
-    options.add_str("CORR_LEVEL", "PT2",
-                    "LDSRG2 QDSRG2 LDSRG2_P3 QDSRG2_P3 PT2 PT3 LDSRG2_QC "
-                    "LSRG2 SRG_PT2");
-    /*- Source Operator -*/
-    options.add_str("SOURCE", "STANDARD",
-                    "STANDARD LABS DYSON AMP EMP2 LAMP LEMP2");
-    /*- The Algorithm to Form T Amplitudes -*/
-    options.add_str("T_ALGORITHM", "DSRG", "DSRG DSRG_NOSEMI SELEC ISA");
-    /*- Different Zeroth-order Hamiltonian -*/
-    options.add_str("H0TH", "FDIAG", "FDIAG FFULL FDIAG_VACTV FDIAG_VDIAG");
-    /*- T1 Amplitudes -*/
-    options.add_str("T1_AMP", "DSRG", "DSRG SRG ZERO");
-    /*- Reference Relaxation -*/
-    options.add_str("RELAX_REF", "NONE", "NONE ONCE ITERATE");
-    /*- Max Iteration for Reference Relaxation -*/
-    options.add_int("MAXITER_RELAX_REF", 10);
-    /*- DSRG Taylor Expansion Threshold -*/
-    options.add_int("TAYLOR_THRESHOLD", 3);
-    /*- Print N Largest T Amplitudes -*/
-    options.add_int("NTAMP", 15);
-    /*- T Threshold for Intruder States -*/
-    options.add_double("INTRUDER_TAMP", 0.10);
-    /*- The residue convergence criterion -*/
-    options.add_double("R_CONVERGENCE", 1.0e-6);
-    /*- DSRG Transformation Type -*/
-    options.add_str("DSRG_TRANS_TYPE", "UNITARY", "UNITARY CC");
-    /*- Automatic Adjusting Flow Parameter -*/
-    options.add_str(
-        "SMART_DSRG_S", "DSRG_S",
-        "DSRG_S MIN_DELTA1 MAX_DELTA1 DAVG_MIN_DELTA1 DAVG_MAX_DELTA1");
-    /*- Print DSRG-MRPT3 Timing Profile -*/
-    options.add_bool("PRINT_TIME_PROFILE", false);
-    /*- Multi-State DSRG options
-     *  - State-average approach
-     *    - SA_SUB:  form H_MN = <M|Hbar|N>; M, N are CAS states of interest
-     *    - SA_FULL: redo a CASCI
-     *  - Multi-state approach (currently only for MRPT2)
-     *    - MS:  form 2nd-order Heff_MN = <M|H|N> + 0.5 * [<M|(T_M)^+ H|N> +
-     * <M|H T_N|N>]
-     *    - XMS: rotate references such that <M|F|N> is diagonal before MS
-     * procedure -*/
-    options.add_str("DSRG_MULTI_STATE", "SA_FULL", "SA_FULL SA_SUB MS XMS");
-    /*- Form 3-Body Hbar (Test for SA_SUB) -*/
-    options.add_bool("FORM_HBAR3", false);
-    /*- DSRG Perturbation -*/
-    options.add_bool("DSRGPT", true);
-    /*- Include internal amplitudes according to excitation level -*/
-    options.add_str("INTERNAL_AMP", "NONE",
-                    "NONE SINGLES_DOUBLES SINGLES DOUBLES");
-    /*- Select only part of the asked internal amplitudes (IAs) in
-     * V-CIS/CISD
-     *  - AUTO: all IAs that changes excitations (O->V; OO->VV, OO->OV,
-     * OV->VV)
-     *  - ALL:  all IAs (O->O, V->V, O->V; OO->OO, OV->OV, VV->VV, OO->VV,
-     * OO->OV, OV->VV)
-     *  - OOVV: pure external (O->V; OO->VV) -*/
-    options.add_str("INTERNAL_AMP_SELECT", "AUTO", "AUTO ALL OOVV");
-    /*- Exponent of Energy Denominator -*/
-    options.add_double("DELTA_EXPONENT", 2.0);
-    /*- Intruder State Avoidance b Parameter -*/
-    options.add_double("ISA_B", 0.02);
     /*- The code used to do CAS-CI.
      *  - CAS   determinant based CI code
      *  - FCI   string based FCI code
      *  - DMRG  DMRG code
      *  - V2RDM V2RDM interface -*/
     options.add_str("CAS_TYPE", "FCI", "CAS FCI ACI DMRG V2RDM");
-    /*- Average densities of different spins in V2RDM -*/
-    options.add_bool("AVG_DENS_SPIN", false);
 
-    /*- Defintion for source operator for ccvv term -*/
-    options.add_str("CCVV_SOURCE", "NORMAL", "ZERO NORMAL");
-    /*- Algorithm for the ccvv term for three-dsrg-mrpt2 -*/
-    options.add_str("CCVV_ALGORITHM", "FLY_AMBIT",
-                    "CORE FLY_AMBIT FLY_LOOP BATCH_CORE BATCH_VIRTUAL "
-                    "BATCH_CORE_GA BATCH_VIRTUAL_GA BATCH_VIRTUAL_MPI "
-                    "BATCH_CORE_MPI BATCH_CORE_REP BATCH_VIRTUAL_REP");
-    /*- Do AO-DSRG-MRPT2 -*/
-    options.add_bool("AO_DSRG_MRPT2", false);
-
-    /*- Batches for CCVV_ALGORITHM -*/
-    options.add_int("CCVV_BATCH_NUMBER", -1);
-    /*- Excessive printing for DF_DSRG_MRPT2 -*/
-    options.add_bool("DSRG_MRPT2_DEBUG", false);
-    /*- Algorithm for evaluating 3Cumulant -*/
-    options.add_str("THREEPDC_ALGORITHM", "CORE", "CORE BATCH");
-    /*- Detailed timing printings -*/
-    options.add_bool("THREE_MRPT2_TIMINGS", false);
-
-    /*- Print (1 - exp(-2*s*D)) / D -*/
-    options.add_bool("PRINT_DENOM2", false);
 }
 }
 } // End Namespaces

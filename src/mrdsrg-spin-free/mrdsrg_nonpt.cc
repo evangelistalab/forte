@@ -5,7 +5,8 @@
  * that implements a variety of quantum chemistry methods for strongly
  * correlated electrons.
  *
- * Copyright (c) 2012-2017 by its authors (see COPYING, COPYING.LESSER, AUTHORS).
+ * Copyright (c) 2012-2017 by its authors (see COPYING, COPYING.LESSER,
+ * AUTHORS).
  *
  * The copyrights for code used from other parties are included in
  * the corresponding files.
@@ -27,15 +28,15 @@
  */
 
 #include <algorithm>
-#include <vector>
-#include <map>
 #include <cctype>
+#include <map>
 #include <memory>
+#include <vector>
 
 #include "psi4/libdiis/diismanager.h"
 
-#include "../mini-boost/boost/format.hpp"
 #include "../helpers.h"
+#include "../mini-boost/boost/format.hpp"
 #include "mrdsrg.h"
 
 namespace psi {
@@ -267,7 +268,8 @@ double MRDSRG::compute_energy_ldsrg2() {
             converged = true;
 
             // rebuild Hbar because it is destroyed when updating amplitudes
-            if (options_.get_str("RELAX_REF") != "NONE") {
+            if (options_.get_str("RELAX_REF") != "NONE" ||
+                options_["AVG_STATE"].size() != 0) {
                 compute_hbar();
             }
         }
@@ -552,7 +554,8 @@ double MRDSRG::compute_energy_ldsrg2_qc() {
             converged = true;
 
             // rebuild Hbar because it is destroyed when updating amplitudes
-            if (options_.get_str("RELAX_REF") != "NONE") {
+            if (options_.get_str("RELAX_REF") != "NONE" ||
+                options_["AVG_STATE"].size() != 0) {
                 compute_hbar_qc();
             }
         }
