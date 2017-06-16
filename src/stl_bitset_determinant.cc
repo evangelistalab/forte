@@ -408,7 +408,7 @@ STLBitsetDeterminant::slater_rules(const STLBitsetDeterminant& rhs) const {
             if ((I[p] != J[p]) and J[p])
                 j = p;
         }
-        double sign = SlaterSign(I, i) * SlaterSign(J, j);
+        double sign = SlaterSign(I, i, j);
         matrix_element = sign * fci_ints_->oei_a(i, j);
         for (int p = 0; p < nmo_; ++p) {
             if (I[p] and J[p]) {
@@ -430,7 +430,7 @@ STLBitsetDeterminant::slater_rules(const STLBitsetDeterminant& rhs) const {
             if ((I[nmo_ + p] != J[nmo_ + p]) and J[nmo_ + p])
                 j = p;
         }
-        double sign = SlaterSign(I, nmo_ + i) * SlaterSign(J, nmo_ + j);
+        double sign = SlaterSign(I, nmo_ + i, nmo_ + j);
         matrix_element = sign * fci_ints_->oei_b(i, j);
         for (int p = 0; p < nmo_; ++p) {
             if (I[p] and J[p]) {
@@ -524,7 +524,7 @@ STLBitsetDeterminant::slater_rules(const STLBitsetDeterminant& rhs) const {
 double STLBitsetDeterminant::slater_rules_single_alpha(int i, int a) const {
     // Slater rule 2 PhiI = j_a^+ i_a PhiJ
     double sign =
-        SlaterSign(bits_, i) * SlaterSign(bits_, a) * (a > i ? -1.0 : 1.0);
+        SlaterSign(bits_, i, a);
     double matrix_element = fci_ints_->oei_a(i, a);
 #pragma omp parallel for reduction(+ : matrix_element)
     for (int p = 0; p < nmo_; ++p) {
@@ -540,8 +540,7 @@ double STLBitsetDeterminant::slater_rules_single_alpha(int i, int a) const {
 
 double STLBitsetDeterminant::slater_rules_single_beta(int i, int a) const {
     // Slater rule 2 PhiI = j_a^+ i_a PhiJ
-    double sign = SlaterSign(bits_, nmo_ + i) * SlaterSign(bits_, nmo_ + a) *
-                  (a > i ? -1.0 : 1.0);
+    double sign = SlaterSign(bits_, nmo_ + i, nmo_ + a);
     double matrix_element = fci_ints_->oei_b(i, a);
 #pragma omp parallel for reduction(+ : matrix_element)
     for (int p = 0; p < nmo_; ++p) {
@@ -801,6 +800,19 @@ double STLBitsetDeterminant::spin2(const STLBitsetDeterminant& rhs) const {
 double STLBitsetDeterminant::SlaterSign(const bit_t& I, int n) {
     double sign = 1.0;
     for (int i = 0; i < n; ++i) { // This runs up to the operator before n
+        if (I[i])
+            sign *= -1.0;
+    }
+    return (sign);
+}
+
+double STLBitsetDeterminant::SlaterSign(const bit_t& I, int m, int n) {
+    double sign = 1.0;
+    for (int i = m+1; i < n; ++i) {
+        if (I[i])
+            sign *= -1.0;
+    }
+    for (int i = n+1; i < m; ++i) {
         if (I[i])
             sign *= -1.0;
     }
