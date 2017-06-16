@@ -34,12 +34,10 @@
 namespace psi {
 namespace forte {
 
-StringLists::StringLists(RequiredLists required_lists, Dimension cmopi,
-                         std::vector<size_t> core_mo,
-                         std::vector<size_t> cmo_to_mo, size_t na, size_t nb,
-                         int print)
-    : required_lists_(required_lists), cmopi_(cmopi), cmo_to_mo_(cmo_to_mo),
-      fomo_to_mo_(core_mo), na_(na), nb_(nb), print_(print) {
+StringLists::StringLists(RequiredLists required_lists, Dimension cmopi, std::vector<size_t> core_mo,
+                         std::vector<size_t> cmo_to_mo, size_t na, size_t nb, int print)
+    : required_lists_(required_lists), cmopi_(cmopi), cmo_to_mo_(cmo_to_mo), fomo_to_mo_(core_mo),
+      na_(na), nb_(nb), print_(print) {
     startup();
 }
 
@@ -59,38 +57,29 @@ void StringLists::startup() {
     }
 
     // Allocate the alfa and beta graphs
-    alfa_graph_ =
-        std::shared_ptr<BinaryGraph>(new BinaryGraph(ncmo_, na_, cmopi_int));
-    beta_graph_ =
-        std::shared_ptr<BinaryGraph>(new BinaryGraph(ncmo_, nb_, cmopi_int));
-    pair_graph_ =
-        std::shared_ptr<BinaryGraph>(new BinaryGraph(ncmo_, 2, cmopi_int));
+    alfa_graph_ = std::shared_ptr<BinaryGraph>(new BinaryGraph(ncmo_, na_, cmopi_int));
+    beta_graph_ = std::shared_ptr<BinaryGraph>(new BinaryGraph(ncmo_, nb_, cmopi_int));
+    pair_graph_ = std::shared_ptr<BinaryGraph>(new BinaryGraph(ncmo_, 2, cmopi_int));
 
     if (na_ >= 1) {
-        alfa_graph_1h_ = std::shared_ptr<BinaryGraph>(
-            new BinaryGraph(ncmo_, na_ - 1, cmopi_int));
+        alfa_graph_1h_ = std::shared_ptr<BinaryGraph>(new BinaryGraph(ncmo_, na_ - 1, cmopi_int));
     }
     if (nb_ >= 1) {
-        beta_graph_1h_ = std::shared_ptr<BinaryGraph>(
-            new BinaryGraph(ncmo_, nb_ - 1, cmopi_int));
+        beta_graph_1h_ = std::shared_ptr<BinaryGraph>(new BinaryGraph(ncmo_, nb_ - 1, cmopi_int));
     }
 
     if (na_ >= 2) {
-        alfa_graph_2h_ = std::shared_ptr<BinaryGraph>(
-            new BinaryGraph(ncmo_, na_ - 2, cmopi_int));
+        alfa_graph_2h_ = std::shared_ptr<BinaryGraph>(new BinaryGraph(ncmo_, na_ - 2, cmopi_int));
     }
     if (nb_ >= 2) {
-        beta_graph_2h_ = std::shared_ptr<BinaryGraph>(
-            new BinaryGraph(ncmo_, nb_ - 2, cmopi_int));
+        beta_graph_2h_ = std::shared_ptr<BinaryGraph>(new BinaryGraph(ncmo_, nb_ - 2, cmopi_int));
     }
 
     if (na_ >= 3) {
-        alfa_graph_3h_ = std::shared_ptr<BinaryGraph>(
-            new BinaryGraph(ncmo_, na_ - 3, cmopi_int));
+        alfa_graph_3h_ = std::shared_ptr<BinaryGraph>(new BinaryGraph(ncmo_, na_ - 3, cmopi_int));
     }
     if (nb_ >= 3) {
-        beta_graph_3h_ = std::shared_ptr<BinaryGraph>(
-            new BinaryGraph(ncmo_, nb_ - 3, cmopi_int));
+        beta_graph_3h_ = std::shared_ptr<BinaryGraph>(new BinaryGraph(ncmo_, nb_ - 3, cmopi_int));
     }
 
     nas_ = 0;
@@ -178,44 +167,31 @@ void StringLists::startup() {
         vovo_list_timer += t.elapsed();
     }
 
-    double total_time = str_list_timer + nn_list_timer + vo_list_timer +
-                        oo_list_timer + vvoo_list_timer + vovo_list_timer;
+    double total_time = str_list_timer + nn_list_timer + vo_list_timer + oo_list_timer +
+                        vvoo_list_timer + vovo_list_timer;
 
     if (print_) {
         outfile->Printf("\n\n  ==> String Lists <==\n");
         outfile->Printf("\n  Number of alpha electrons     = %zu", na_);
         outfile->Printf("\n  Number of beta electrons      = %zu", nb_);
-        outfile->Printf("\n  Number of alpha strings       = %zu",
-                        alfa_graph_->nstr());
+        outfile->Printf("\n  Number of alpha strings       = %zu", alfa_graph_->nstr());
         outfile->Printf("\n  Number of beta strings        = %zu", nbs_);
         if (na_ >= 3) {
-            outfile->Printf("\n  Number of alpha strings (N-3) = %zu",
-                            alfa_graph_3h_->nstr());
+            outfile->Printf("\n  Number of alpha strings (N-3) = %zu", alfa_graph_3h_->nstr());
         }
         if (nb_ >= 3) {
-            outfile->Printf("\n  Number of beta strings (N-3)  = %zu",
-                            beta_graph_3h_->nstr());
+            outfile->Printf("\n  Number of beta strings (N-3)  = %zu", beta_graph_3h_->nstr());
         }
-        outfile->Printf("\n  Timing for strings        = %10.3f s",
-                        str_list_timer);
-        outfile->Printf("\n  Timing for NN strings     = %10.3f s",
-                        nn_list_timer);
-        outfile->Printf("\n  Timing for VO strings     = %10.3f s",
-                        vo_list_timer);
-        outfile->Printf("\n  Timing for OO strings     = %10.3f s",
-                        oo_list_timer);
-        outfile->Printf("\n  Timing for Knowles-Handy  = %10.3f s",
-                        kh_list_timer);
-        outfile->Printf("\n  Timing for VVOO strings   = %10.3f s",
-                        vvoo_list_timer);
-        outfile->Printf("\n  Timing for VOVO strings   = %10.3f s",
-                        vovo_list_timer);
-        outfile->Printf("\n  Timing for 1-hole strings = %10.3f s",
-                        h1_list_timer);
-        outfile->Printf("\n  Timing for 2-hole strings = %10.3f s",
-                        h2_list_timer);
-        outfile->Printf("\n  Timing for 3-hole strings = %10.3f s",
-                        h3_list_timer);
+        outfile->Printf("\n  Timing for strings        = %10.3f s", str_list_timer);
+        outfile->Printf("\n  Timing for NN strings     = %10.3f s", nn_list_timer);
+        outfile->Printf("\n  Timing for VO strings     = %10.3f s", vo_list_timer);
+        outfile->Printf("\n  Timing for OO strings     = %10.3f s", oo_list_timer);
+        outfile->Printf("\n  Timing for Knowles-Handy  = %10.3f s", kh_list_timer);
+        outfile->Printf("\n  Timing for VVOO strings   = %10.3f s", vvoo_list_timer);
+        outfile->Printf("\n  Timing for VOVO strings   = %10.3f s", vovo_list_timer);
+        outfile->Printf("\n  Timing for 1-hole strings = %10.3f s", h1_list_timer);
+        outfile->Printf("\n  Timing for 2-hole strings = %10.3f s", h2_list_timer);
+        outfile->Printf("\n  Timing for 3-hole strings = %10.3f s", h3_list_timer);
         outfile->Printf("\n  Total timing              = %10.3f s", total_time);
         outfile->Flush();
     }

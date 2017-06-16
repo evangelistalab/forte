@@ -29,13 +29,13 @@
 #include <cmath>
 #include <numeric>
 
-#include "psi4/libmints/matrix.h"
-#include "psi4/libthce/lreri.h"
 #include "psi4/libmints/basisset.h"
-#include "psi4/libthce/thce.h"
-#include "psi4/libqt/qt.h"
+#include "psi4/libmints/matrix.h"
 #include "psi4/libmints/vector.h"
 #include "psi4/libmints/wavefunction.h"
+#include "psi4/libqt/qt.h"
+#include "psi4/libthce/lreri.h"
+#include "psi4/libthce/thce.h"
 
 #include "../helpers.h"
 
@@ -50,13 +50,11 @@ using namespace ambit;
 namespace psi {
 namespace forte {
 
-DISKDFIntegrals::DISKDFIntegrals(psi::Options& options,
-                                 SharedWavefunction ref_wfn,
+DISKDFIntegrals::DISKDFIntegrals(psi::Options& options, SharedWavefunction ref_wfn,
                                  IntegralSpinRestriction restricted,
                                  IntegralFrozenCore resort_frozen_core,
                                  std::shared_ptr<MOSpaceInfo> mo_space_info)
-    : ForteIntegrals(options, ref_wfn, restricted, resort_frozen_core,
-                     mo_space_info) {
+    : ForteIntegrals(options, ref_wfn, restricted, resort_frozen_core, mo_space_info) {
 
     wfn_ = ref_wfn;
 
@@ -136,8 +134,7 @@ double DISKDFIntegrals::aptei_aa(size_t p, size_t q, size_t r, size_t s) {
     fseek(B_->file_pointer(), offset2 * sizeof(double), SEEK_SET);
     fread(&(B2->pointer()[0]), sizeof(double), nthree_, B_->file_pointer());
 
-    vpqrsalphaC =
-        C_DDOT(nthree_, &(B1->pointer()[0]), 1, &(B2->pointer()[0]), 1);
+    vpqrsalphaC = C_DDOT(nthree_, &(B1->pointer()[0]), 1, &(B2->pointer()[0]), 1);
 
     B1->zero();
     B2->zero();
@@ -151,8 +148,7 @@ double DISKDFIntegrals::aptei_aa(size_t p, size_t q, size_t r, size_t s) {
     fread(&(B1->pointer()[0]), sizeof(double), nthree_, B_->file_pointer());
     fseek(B_->file_pointer(), offset2 * sizeof(double), SEEK_SET);
     fread(&(B2->pointer()[0]), sizeof(double), nthree_, B_->file_pointer());
-    vpqrsalphaE =
-        C_DDOT(nthree_, &(B1->pointer()[0]), 1, &(B2->pointer()[0]), 1);
+    vpqrsalphaE = C_DDOT(nthree_, &(B1->pointer()[0]), 1, &(B2->pointer()[0]), 1);
 
     return (vpqrsalphaC - vpqrsalphaE);
 }
@@ -185,8 +181,7 @@ double DISKDFIntegrals::aptei_ab(size_t p, size_t q, size_t r, size_t s) {
     fseek(B_->file_pointer(), offset2 * sizeof(double), SEEK_SET);
     fread(&(B2->pointer()[0]), sizeof(double), nthree_, B_->file_pointer());
 
-    vpqrsalphaC =
-        C_DDOT(nthree_, &(B1->pointer()[0]), 1, &(B2->pointer()[0]), 1);
+    vpqrsalphaC = C_DDOT(nthree_, &(B1->pointer()[0]), 1, &(B2->pointer()[0]), 1);
 
     return (vpqrsalphaC);
 }
@@ -220,8 +215,7 @@ double DISKDFIntegrals::aptei_bb(size_t p, size_t q, size_t r, size_t s) {
     fseek(B_->file_pointer(), offset2 * sizeof(double), SEEK_SET);
     fread(&(B2->pointer()[0]), sizeof(double), nthree_, B_->file_pointer());
 
-    vpqrsalphaC =
-        C_DDOT(nthree_, &(B1->pointer()[0]), 1, &(B2->pointer()[0]), 1);
+    vpqrsalphaC = C_DDOT(nthree_, &(B1->pointer()[0]), 1, &(B2->pointer()[0]), 1);
 
     B1->zero();
     B2->zero();
@@ -234,41 +228,38 @@ double DISKDFIntegrals::aptei_bb(size_t p, size_t q, size_t r, size_t s) {
     fread(&(B1->pointer()[0]), sizeof(double), nthree_, B_->file_pointer());
     fseek(B_->file_pointer(), offset2 * sizeof(double), SEEK_SET);
     fread(&(B2->pointer()[0]), sizeof(double), nthree_, B_->file_pointer());
-    vpqrsalphaE =
-        C_DDOT(nthree_, &(B1->pointer()[0]), 1, &(B2->pointer()[0]), 1);
+    vpqrsalphaE = C_DDOT(nthree_, &(B1->pointer()[0]), 1, &(B2->pointer()[0]), 1);
 
     return (vpqrsalphaC - vpqrsalphaE);
 }
-ambit::Tensor DISKDFIntegrals::aptei_aa_block(const std::vector<size_t>& p,
-                                              const std::vector<size_t>& q,
-                                              const std::vector<size_t>& r,
-                                              const std::vector<size_t>& s)
+ambit::Tensor
+DISKDFIntegrals::aptei_aa_block(const std::vector<size_t>& p, const std::vector<size_t>& q,
+                                const std::vector<size_t>& r, const std::vector<size_t>& s)
 
 {
-    ambit::Tensor ThreeIntpr = ambit::Tensor::build(
-        tensor_type_, "ThreeInt", {nthree_, p.size(), r.size()});
-    ambit::Tensor ThreeIntqs = ambit::Tensor::build(
-        tensor_type_, "ThreeInt", {nthree_, q.size(), s.size()});
+    ambit::Tensor ThreeIntpr =
+        ambit::Tensor::build(tensor_type_, "ThreeInt", {nthree_, p.size(), r.size()});
+    ambit::Tensor ThreeIntqs =
+        ambit::Tensor::build(tensor_type_, "ThreeInt", {nthree_, q.size(), s.size()});
     std::vector<size_t> Avec(nthree_);
     std::iota(Avec.begin(), Avec.end(), 0);
 
     ThreeIntpr = three_integral_block(Avec, p, r);
     ThreeIntqs = three_integral_block(Avec, q, s);
 
-    ambit::Tensor ReturnTensor = ambit::Tensor::build(
-        tensor_type_, "Return", {p.size(), q.size(), r.size(), s.size()});
+    ambit::Tensor ReturnTensor =
+        ambit::Tensor::build(tensor_type_, "Return", {p.size(), q.size(), r.size(), s.size()});
     ReturnTensor("p,q,r,s") = ThreeIntpr("A,p,r") * ThreeIntqs("A,q,s");
 
     /// If p != q != r !=s need to form the Exchane part separately
     if (r != s) {
-        ambit::Tensor ThreeIntpsK = ambit::Tensor::build(
-            tensor_type_, "ThreeIntK", {nthree_, p.size(), s.size()});
-        ambit::Tensor ThreeIntqrK = ambit::Tensor::build(
-            tensor_type_, "ThreeIntK", {nthree_, q.size(), r.size()});
+        ambit::Tensor ThreeIntpsK =
+            ambit::Tensor::build(tensor_type_, "ThreeIntK", {nthree_, p.size(), s.size()});
+        ambit::Tensor ThreeIntqrK =
+            ambit::Tensor::build(tensor_type_, "ThreeIntK", {nthree_, q.size(), r.size()});
         ThreeIntpsK = three_integral_block(Avec, p, s);
         ThreeIntqrK = three_integral_block(Avec, q, r);
-        ReturnTensor("p, q, r, s") -=
-            ThreeIntpsK("A, p, s") * ThreeIntqrK("A, q, r");
+        ReturnTensor("p, q, r, s") -= ThreeIntpsK("A, p, s") * ThreeIntqrK("A, q, r");
     } else {
         ReturnTensor("p,q,r,s") -= ThreeIntpr("A,p,s") * ThreeIntqs("A,q,r");
     }
@@ -280,18 +271,18 @@ ambit::Tensor DISKDFIntegrals::aptei_ab_block(const std::vector<size_t>& p,
                                               const std::vector<size_t>& q,
                                               const std::vector<size_t>& r,
                                               const std::vector<size_t>& s) {
-    ambit::Tensor ThreeIntpr = ambit::Tensor::build(
-        tensor_type_, "ThreeInt", {nthree_, p.size(), r.size()});
-    ambit::Tensor ThreeIntqs = ambit::Tensor::build(
-        tensor_type_, "ThreeInt", {nthree_, q.size(), s.size()});
+    ambit::Tensor ThreeIntpr =
+        ambit::Tensor::build(tensor_type_, "ThreeInt", {nthree_, p.size(), r.size()});
+    ambit::Tensor ThreeIntqs =
+        ambit::Tensor::build(tensor_type_, "ThreeInt", {nthree_, q.size(), s.size()});
     std::vector<size_t> Avec(nthree_);
     std::iota(Avec.begin(), Avec.end(), 0);
 
     ThreeIntpr = three_integral_block(Avec, p, r);
     ThreeIntqs = three_integral_block(Avec, q, s);
 
-    ambit::Tensor ReturnTensor = ambit::Tensor::build(
-        tensor_type_, "Return", {p.size(), q.size(), r.size(), s.size()});
+    ambit::Tensor ReturnTensor =
+        ambit::Tensor::build(tensor_type_, "Return", {p.size(), q.size(), r.size(), s.size()});
     ReturnTensor("p,q,r,s") = ThreeIntpr("A,p,r") * ThreeIntqs("A,q,s");
 
     return ReturnTensor;
@@ -301,30 +292,29 @@ ambit::Tensor DISKDFIntegrals::aptei_bb_block(const std::vector<size_t>& p,
                                               const std::vector<size_t>& q,
                                               const std::vector<size_t>& r,
                                               const std::vector<size_t>& s) {
-    ambit::Tensor ThreeIntpr = ambit::Tensor::build(
-        tensor_type_, "ThreeInt", {nthree_, p.size(), r.size()});
-    ambit::Tensor ThreeIntqs = ambit::Tensor::build(
-        tensor_type_, "ThreeInt", {nthree_, q.size(), s.size()});
+    ambit::Tensor ThreeIntpr =
+        ambit::Tensor::build(tensor_type_, "ThreeInt", {nthree_, p.size(), r.size()});
+    ambit::Tensor ThreeIntqs =
+        ambit::Tensor::build(tensor_type_, "ThreeInt", {nthree_, q.size(), s.size()});
     std::vector<size_t> Avec(nthree_);
     std::iota(Avec.begin(), Avec.end(), 0);
 
     ThreeIntpr = three_integral_block(Avec, p, r);
     ThreeIntqs = three_integral_block(Avec, q, s);
 
-    ambit::Tensor ReturnTensor = ambit::Tensor::build(
-        tensor_type_, "Return", {p.size(), q.size(), r.size(), s.size()});
+    ambit::Tensor ReturnTensor =
+        ambit::Tensor::build(tensor_type_, "Return", {p.size(), q.size(), r.size(), s.size()});
     ReturnTensor("p,q,r,s") = ThreeIntpr("A,p,r") * ThreeIntqs("A,q,s");
 
     /// If p != q != r !=s need to form the Exchane part separately
     if (r != s) {
-        ambit::Tensor ThreeIntpsK = ambit::Tensor::build(
-            tensor_type_, "ThreeIntK", {nthree_, p.size(), s.size()});
-        ambit::Tensor ThreeIntqrK = ambit::Tensor::build(
-            tensor_type_, "ThreeIntK", {nthree_, q.size(), r.size()});
+        ambit::Tensor ThreeIntpsK =
+            ambit::Tensor::build(tensor_type_, "ThreeIntK", {nthree_, p.size(), s.size()});
+        ambit::Tensor ThreeIntqrK =
+            ambit::Tensor::build(tensor_type_, "ThreeIntK", {nthree_, q.size(), r.size()});
         ThreeIntpsK = three_integral_block(Avec, p, s);
         ThreeIntqrK = three_integral_block(Avec, q, r);
-        ReturnTensor("p, q, r, s") -=
-            ThreeIntpsK("A, p, s") * ThreeIntqrK("A, q, r");
+        ReturnTensor("p, q, r, s") -= ThreeIntpsK("A, p, s") * ThreeIntqrK("A, q, r");
     } else {
         ReturnTensor("p,q,r,s") -= ThreeIntpr("A,p,s") * ThreeIntqs("A,q,r");
     }
@@ -346,15 +336,14 @@ double DISKDFIntegrals::three_integral(size_t A, size_t p, size_t q) {
     fread(&value, sizeof(double), 1, B_->file_pointer());
     return value;
 }
-ambit::Tensor
-DISKDFIntegrals::three_integral_block(const std::vector<size_t>& A,
-                                      const std::vector<size_t>& p,
-                                      const std::vector<size_t>& q) {
+ambit::Tensor DISKDFIntegrals::three_integral_block(const std::vector<size_t>& A,
+                                                    const std::vector<size_t>& p,
+                                                    const std::vector<size_t>& q) {
     // Since file is formatted as p by A * q
     bool frozen_core = false;
 
-    ambit::Tensor ReturnTensor = ambit::Tensor::build(
-        tensor_type_, "Return", {A.size(), p.size(), q.size()});
+    ambit::Tensor ReturnTensor =
+        ambit::Tensor::build(tensor_type_, "Return", {A.size(), p.size(), q.size()});
     std::vector<double>& ReturnTensorV = ReturnTensor.data();
 
     if (frzcpi_.sum() && aptei_idx_ == ncmo_) {
@@ -373,22 +362,18 @@ DISKDFIntegrals::three_integral_block(const std::vector<size_t>& A,
 
             std::shared_ptr<Matrix> Aq(new Matrix("Aq", nmo_, nthree_));
 
-            fseek(B_->file_pointer(), pn * nthree_ * nmo_ * sizeof(double),
-                  SEEK_SET);
-            fread(&(Aq->pointer()[0][0]), sizeof(double), nmo_ * nthree_,
-                  B_->file_pointer());
+            fseek(B_->file_pointer(), pn * nthree_ * nmo_ * sizeof(double), SEEK_SET);
+            fread(&(Aq->pointer()[0][0]), sizeof(double), nmo_ * nthree_, B_->file_pointer());
             p_by_Aq.push_back(Aq);
         }
         if (frozen_core) {
-            ReturnTensor.iterate(
-                [&](const std::vector<size_t>& i, double& value) {
-                    value = p_by_Aq[i[1]]->get(cmotomo_[q[i[2]]], A[i[0]]);
-                });
+            ReturnTensor.iterate([&](const std::vector<size_t>& i, double& value) {
+                value = p_by_Aq[i[1]]->get(cmotomo_[q[i[2]]], A[i[0]]);
+            });
         } else {
-            ReturnTensor.iterate(
-                [&](const std::vector<size_t>& i, double& value) {
-                    value = p_by_Aq[i[1]]->get(q[i[2]], A[i[0]]);
-                });
+            ReturnTensor.iterate([&](const std::vector<size_t>& i, double& value) {
+                value = p_by_Aq[i[1]]->get(q[i[2]], A[i[0]]);
+            });
         }
     } else {
         // If user wants blocking in A
@@ -420,14 +405,12 @@ DISKDFIntegrals::three_integral_block(const std::vector<size_t>& A,
                 double* A_chunk = new double[A.size()];
                 size_t offset = pn * nthree_ * nmo_ + qn * nthree_ + A[0];
                 fseek(B_->file_pointer(), offset * sizeof(double), SEEK_SET);
-                fread(&(A_chunk[0]), sizeof(double), A.size(),
-                      B_->file_pointer());
+                fread(&(A_chunk[0]), sizeof(double), A.size(), B_->file_pointer());
                 for (size_t a = 0; a < A.size(); a++) {
                     // Weird way the tensor is formatted
                     // Fill the tensor for every chunk of A
-                    ReturnTensorV[a * p.size() * q.size() +
-                                  p_map[p_block] * q.size() + q_map[q_block]] =
-                        A_chunk[a];
+                    ReturnTensorV[a * p.size() * q.size() + p_map[p_block] * q.size() +
+                                  q_map[q_block]] = A_chunk[a];
                 }
                 delete[] A_chunk;
             }
@@ -436,10 +419,8 @@ DISKDFIntegrals::three_integral_block(const std::vector<size_t>& A,
     return ReturnTensor;
 }
 
-void DISKDFIntegrals::set_tei(size_t, size_t, size_t, size_t, double, bool,
-                              bool) {
-    outfile->Printf(
-        "\n If you are using this, you are ruining the advantages of DF/CD");
+void DISKDFIntegrals::set_tei(size_t, size_t, size_t, size_t, double, bool, bool) {
+    outfile->Printf("\n If you are using this, you are ruining the advantages of DF/CD");
     throw PSIEXCEPTION("Don't use DF/CD if you use set_tei");
 }
 
@@ -479,9 +460,8 @@ void DISKDFIntegrals::gather_integrals() {
             if (!nso)
                 continue;
 
-            C_DGEMV('N', nao, nso, 1.0, aotoso->pointer(h)[0], nso,
-                    &Ca->pointer(h)[0][i], nmopi_[h], 0.0,
-                    &Ca_ao->pointer()[0][index], nmopi_.sum());
+            C_DGEMV('N', nao, nso, 1.0, aotoso->pointer(h)[0], nso, &Ca->pointer(h)[0][i],
+                    nmopi_[h], 0.0, &Ca_ao->pointer()[0][index], nmopi_.sum());
 
             index += 1;
         }
@@ -549,8 +529,7 @@ void DISKDFIntegrals::deallocate() {
     delete[] diagonal_aphys_tei_ab;
     delete[] diagonal_aphys_tei_bb;
 }
-void DISKDFIntegrals::make_fock_matrix(SharedMatrix gamma_aM,
-                                       SharedMatrix gamma_bM) {
+void DISKDFIntegrals::make_fock_matrix(SharedMatrix gamma_aM, SharedMatrix gamma_bM) {
     // Efficient calculation of fock matrix from disk
     // Since gamma_aM is very sparse (diagonal elements of core and active
     // block)
@@ -562,15 +541,12 @@ void DISKDFIntegrals::make_fock_matrix(SharedMatrix gamma_aM,
 
     // Create the fock_a and fock_b globally
     // Choose to block over naux rather than ncmo_
-    ambit::Tensor fock_a =
-        ambit::Tensor::build(tensor_type, "Fock_a", {aptei_idx_, aptei_idx_});
-    ambit::Tensor fock_b =
-        ambit::Tensor::build(tensor_type, "Fock_b", {aptei_idx_, aptei_idx_});
+    ambit::Tensor fock_a = ambit::Tensor::build(tensor_type, "Fock_a", {aptei_idx_, aptei_idx_});
+    ambit::Tensor fock_b = ambit::Tensor::build(tensor_type, "Fock_b", {aptei_idx_, aptei_idx_});
 
     ////Figure out exactly what I need to contract the Coloumb term
     /// Only h + a is nonzero for RDM
-    std::vector<size_t> generalized_hole =
-        mo_space_info_->get_corr_abs_mo("GENERALIZED HOLE");
+    std::vector<size_t> generalized_hole = mo_space_info_->get_corr_abs_mo("GENERALIZED HOLE");
 
     fock_a.iterate([&](const std::vector<size_t>& i, double& value) {
         value = one_electron_integrals_a[i[0] * aptei_idx_ + i[1]];
@@ -587,12 +563,10 @@ void DISKDFIntegrals::make_fock_matrix(SharedMatrix gamma_aM,
     std::iota(P.begin(), P.end(), 0);
 
     // Create a gamma that contains only nonzero terms
-    ambit::Tensor gamma_a =
-        ambit::Tensor::build(tensor_type, "Gamma_a", {generalized_hole.size(),
-                                                      generalized_hole.size()});
-    ambit::Tensor gamma_b =
-        ambit::Tensor::build(tensor_type, "Gamma_b", {generalized_hole.size(),
-                                                      generalized_hole.size()});
+    ambit::Tensor gamma_a = ambit::Tensor::build(
+        tensor_type, "Gamma_a", {generalized_hole.size(), generalized_hole.size()});
+    ambit::Tensor gamma_b = ambit::Tensor::build(
+        tensor_type, "Gamma_b", {generalized_hole.size(), generalized_hole.size()});
     // Create the full gamma (K is not nearly as sparse as J)
 
     gamma_a.iterate([&](const std::vector<size_t>& i, double& value) {
@@ -602,8 +576,7 @@ void DISKDFIntegrals::make_fock_matrix(SharedMatrix gamma_aM,
         value = gamma_bM->get(generalized_hole[i[0]], generalized_hole[i[1]]);
     });
     ambit::Tensor ThreeIntC2 = ambit::Tensor::build(
-        tensor_type, "ThreeInkC",
-        {nthree_, generalized_hole.size(), generalized_hole.size()});
+        tensor_type, "ThreeInkC", {nthree_, generalized_hole.size(), generalized_hole.size()});
     ThreeIntC2 = three_integral_block(A, generalized_hole, generalized_hole);
 
     ambit::Tensor BQA = ambit::Tensor::build(tensor_type, "BQ", {nthree_});
@@ -619,22 +592,19 @@ void DISKDFIntegrals::make_fock_matrix(SharedMatrix gamma_aM,
     //====Blocking information==========
     size_t int_mem_int = (nthree_ * ncmo_ * ncmo_) * sizeof(double);
     size_t memory_input = Process::environment.get_memory() * 0.75;
-    size_t num_block =
-        int_mem_int / memory_input < 1 ? 1 : int_mem_int / memory_input;
+    size_t num_block = int_mem_int / memory_input < 1 ? 1 : int_mem_int / memory_input;
 
     int block_size = nthree_ / num_block;
     if (block_size < 1) {
         outfile->Printf("\n\n Block size is FUBAR.");
         outfile->Printf("\n Block size is %d", block_size);
-        throw PSIEXCEPTION(
-            "Block size is either 0 or negative.  Fix this problem");
+        throw PSIEXCEPTION("Block size is either 0 or negative.  Fix this problem");
     }
     if (num_block >= 1) {
         outfile->Printf("\n---------Blocking Information-------\n");
         outfile->Printf("\n  %lu / %lu = %lu", int_mem_int, memory_input,
                         int_mem_int / memory_input);
-        outfile->Printf("\n  Block_size = %lu num_block = %lu", block_size,
-                        num_block);
+        outfile->Printf("\n  Block_size = %lu num_block = %lu", block_size, num_block);
     }
     ambit::Tensor ThreeIntegralTensorK;
     ambit::Tensor ThreeIntegralTensorJ;
@@ -646,49 +616,38 @@ void DISKDFIntegrals::make_fock_matrix(SharedMatrix gamma_aM,
             A_block.resize(block_size);
             std::iota(A_block.begin(), A_block.end(), i * block_size);
         } else {
-            block_size = i == (num_block - 1) ? block_size + nthree_ % num_block
-                                              : block_size;
+            block_size = i == (num_block - 1) ? block_size + nthree_ % num_block : block_size;
             A_block.resize(block_size);
-            std::iota(A_block.begin(), A_block.end(),
-                      i * (nthree_ / num_block));
+            std::iota(A_block.begin(), A_block.end(), i * (nthree_ / num_block));
         }
 
         // Create a tensor of TI("Q,r,p")
-        ambit::Tensor BQA_small =
-            ambit::Tensor::build(tensor_type, "BQ", {A_block.size()});
-        ambit::Tensor BQB_small =
-            ambit::Tensor::build(tensor_type, "BQ", {A_block.size()});
+        ambit::Tensor BQA_small = ambit::Tensor::build(tensor_type, "BQ", {A_block.size()});
+        ambit::Tensor BQB_small = ambit::Tensor::build(tensor_type, "BQ", {A_block.size()});
 
         // Calculate the smaller block of A from the global block of prior Brs *
         // gamma_rs
-        BQA_small.iterate([&](const std::vector<size_t>& i, double& value) {
-            value = BQAv[A_block[i[0]]];
-        });
-        BQB_small.iterate([&](const std::vector<size_t>& i, double& value) {
-            value = BQBv[A_block[i[0]]];
-        });
+        BQA_small.iterate(
+            [&](const std::vector<size_t>& i, double& value) { value = BQAv[A_block[i[0]]]; });
+        BQB_small.iterate(
+            [&](const std::vector<size_t>& i, double& value) { value = BQBv[A_block[i[0]]]; });
 
         ThreeIntegralTensorK = ambit::Tensor::build(
-            tensor_type, "ThreeIndex",
-            {A_block.size(), aptei_idx_, generalized_hole.size()});
-        ThreeIntegralTensorJ =
-            ambit::Tensor::build(tensor_type, "ThreeIndex",
-                                 {A_block.size(), aptei_idx_, aptei_idx_});
+            tensor_type, "ThreeIndex", {A_block.size(), aptei_idx_, generalized_hole.size()});
+        ThreeIntegralTensorJ = ambit::Tensor::build(tensor_type, "ThreeIndex",
+                                                    {A_block.size(), aptei_idx_, aptei_idx_});
 
         ThreeIntegralTensorJ = three_integral_block(A_block, P, P);
         std::vector<double>& dataJ = ThreeIntegralTensorJ.data();
-        ThreeIntegralTensorK.iterate(
-            [&](const std::vector<size_t>& i, double& value) {
-                value = dataJ[i[0] * aptei_idx_ * aptei_idx_ +
-                              i[1] * aptei_idx_ + generalized_hole[i[2]]];
-            });
+        ThreeIntegralTensorK.iterate([&](const std::vector<size_t>& i, double& value) {
+            value =
+                dataJ[i[0] * aptei_idx_ * aptei_idx_ + i[1] * aptei_idx_ + generalized_hole[i[2]]];
+        });
 
         ambit::Tensor KGA = ambit::Tensor::build(
-            tensor_type, "K * G",
-            {A_block.size(), aptei_idx_, generalized_hole.size()});
+            tensor_type, "K * G", {A_block.size(), aptei_idx_, generalized_hole.size()});
         ambit::Tensor KGB = ambit::Tensor::build(
-            tensor_type, "K * G b",
-            {A_block.size(), aptei_idx_, generalized_hole.size()});
+            tensor_type, "K * G b", {A_block.size(), aptei_idx_, generalized_hole.size()});
 
         KGA("Q,q,r") = ThreeIntegralTensorK("Q, q, s") * gamma_a("s, r");
         KGB("Q,q,r") = ThreeIntegralTensorK("Q, q, s") * gamma_b("s, r");
@@ -737,16 +696,15 @@ void DISKDFIntegrals::resort_integrals_after_freezing() {
 
     // resort_three(ThreeIntegral_,cmo2mo);
 
-    outfile->Printf("\n Resorting integrals takes   %8.8fs",
-                    resort_integrals.get());
+    outfile->Printf("\n Resorting integrals takes   %8.8fs", resort_integrals.get());
 }
-ambit::Tensor DISKDFIntegrals::three_integral_block_two_index(
-    const std::vector<size_t>& A, size_t p, const std::vector<size_t>& q) {
+ambit::Tensor DISKDFIntegrals::three_integral_block_two_index(const std::vector<size_t>& A,
+                                                              size_t p,
+                                                              const std::vector<size_t>& q) {
     // Since file is formatted as p by A * q
     bool frozen_core = false;
 
-    ambit::Tensor ReturnTensor =
-        ambit::Tensor::build(tensor_type_, "Return", {A.size(), q.size()});
+    ambit::Tensor ReturnTensor = ambit::Tensor::build(tensor_type_, "Return", {A.size(), q.size()});
 
     if (frzcpi_.sum() && aptei_idx_ == ncmo_) {
         frozen_core = true;
@@ -762,26 +720,21 @@ ambit::Tensor DISKDFIntegrals::three_integral_block_two_index(
 
         std::shared_ptr<Matrix> Aq(new Matrix("Aq", nmo_, nthree_));
 
-        fseek(B_->file_pointer(), pn * nthree_ * nmo_ * sizeof(double),
-              SEEK_SET);
-        fread(&(Aq->pointer()[0][0]), sizeof(double), nmo_ * nthree_,
-              B_->file_pointer());
+        fseek(B_->file_pointer(), pn * nthree_ * nmo_ * sizeof(double), SEEK_SET);
+        fread(&(Aq->pointer()[0][0]), sizeof(double), nmo_ * nthree_, B_->file_pointer());
 
         if (frozen_core) {
-            ReturnTensor.iterate(
-                [&](const std::vector<size_t>& i, double& value) {
-                    value = Aq->get(cmotomo_[q[i[1]]], A[i[0]]);
-                });
+            ReturnTensor.iterate([&](const std::vector<size_t>& i, double& value) {
+                value = Aq->get(cmotomo_[q[i[1]]], A[i[0]]);
+            });
         } else {
-            ReturnTensor.iterate(
-                [&](const std::vector<size_t>& i, double& value) {
-                    value = Aq->get(q[i[1]], A[i[0]]);
-                });
+            ReturnTensor.iterate([&](const std::vector<size_t>& i, double& value) {
+                value = Aq->get(q[i[1]], A[i[0]]);
+            });
         }
     } else {
         outfile->Printf("\n Not implemened for variable size in A");
-        throw PSIEXCEPTION(
-            "Can only use if 2nd parameter is a size_t and A.size==nthree_");
+        throw PSIEXCEPTION("Can only use if 2nd parameter is a size_t and A.size==nthree_");
     }
 
     return ReturnTensor;
@@ -789,23 +742,20 @@ ambit::Tensor DISKDFIntegrals::three_integral_block_two_index(
 double DISKDFIntegrals::diag_aptei_aa(size_t, size_t) {
     outfile->Printf("\n Kevin seemed to find that nobody uses this function.  "
                     "It is quite slow in DISKDF");
-    outfile->Printf(
-        "\n Bribe Kevin with things and he will implement it if it is needed");
+    outfile->Printf("\n Bribe Kevin with things and he will implement it if it is needed");
     throw PSIEXCEPTION("diag_aptei_aa is not implemented for DISKDF");
 }
 
 double DISKDFIntegrals::diag_aptei_ab(size_t, size_t) {
     outfile->Printf("\n Kevin seemed to find that nobody uses this function.  "
                     "It is quite slow in DISKDF");
-    outfile->Printf(
-        "\n Bribe Kevin with things and he will implement it if it is needed");
+    outfile->Printf("\n Bribe Kevin with things and he will implement it if it is needed");
     throw PSIEXCEPTION("diag_aptei_ab is not implemented for DISKDF");
 }
 double DISKDFIntegrals::diag_aptei_bb(size_t, size_t) {
     outfile->Printf("\n Kevin seemed to find that nobody uses this function.  "
                     "It is quite slow in DISKDF");
-    outfile->Printf(
-        "\n Bribe Kevin with things and he will implement it if it is needed");
+    outfile->Printf("\n Bribe Kevin with things and he will implement it if it is needed");
     throw PSIEXCEPTION("diag_aptei_bb is not implemented for DISKDF");
 }
 }

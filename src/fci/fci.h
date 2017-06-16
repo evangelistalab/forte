@@ -29,9 +29,9 @@
 #ifndef _fci_h_
 #define _fci_h_
 
-#include "psi4/libmints/wavefunction.h"
 #include "psi4/physconst.h"
 #include "fci_solver.h"
+#include "../active_space_solver.h"
 
 namespace psi {
 namespace forte {
@@ -50,7 +50,7 @@ void set_FCI_options(ForteOptions& foptions);
  * @brief The FCI class
  * This class implements a FCI wave function and calls FCISolver
  */
-class FCI : public Wavefunction {
+class FCI : public ActiveSpaceSolver {
   public:
     // ==> Class Constructor and Destructor <==
 
@@ -70,7 +70,7 @@ class FCI : public Wavefunction {
     // ==> Class Interface <==
 
     /// Compute the energy
-    virtual double compute_energy();
+    virtual double solver_compute_energy();
     /// Return a reference object
     Reference reference();
     /// Set the print level

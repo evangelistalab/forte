@@ -204,6 +204,13 @@ void print_h2(const std::string& text,
               const std::string& left_separator = "==>",
               const std::string& right_separator = "<==");
 
+/**
+ * Returns the Ms as a string, using
+ * fractions if needed
+ */
+std::string get_ms_string( double twice_ms );
+
+
 std::string to_string(const std::vector<std::string>& vec_str,
                       const std::string& sep = ",");
 

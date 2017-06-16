@@ -26,20 +26,43 @@
  * @END LICENSE
  */
 
-#include "dsrg_source.h"
+#ifndef _active_space_solver_h_
+#define _active_space_solver_h_
+
+#include "psi4/libmints/wavefunction.h"
+#include "psi4/liboptions/liboptions.h"
+
+#include "helpers.h"
+#include "integrals/integrals.h"
 
 namespace psi {
 namespace forte {
 
-DSRG_SOURCE::DSRG_SOURCE(double s, double taylor_threshold)
-    : s_(s), taylor_threshold_(taylor_threshold) {}
+class ActiveSpaceSolver : public Wavefunction {
+  public:
+    // non-virtual interface
+    ActiveSpaceSolver(SharedWavefunction ref_wfn, Options& options,
+                      std::shared_ptr<ForteIntegrals> ints,
+                      std::shared_ptr<MOSpaceInfo> mo_space_info);
 
-STD_SOURCE::STD_SOURCE(double s, double taylor_threshold) : DSRG_SOURCE(s, taylor_threshold) {}
+    // equivalent to "this->solver_compute_energy()"
+    double compute_energy() { return solver_compute_energy(); }
 
-LABS_SOURCE::LABS_SOURCE(double s, double taylor_threshold) : DSRG_SOURCE(s, taylor_threshold) {}
+    // enable deletion of a Derived* through a Base*
+    virtual ~ActiveSpaceSolver() = default;
 
-DYSON_SOURCE::DYSON_SOURCE(double s, double taylor_threshold) : DSRG_SOURCE(s, taylor_threshold) {}
+  protected:
+    // pure virtual implementation
+    virtual double solver_compute_energy() = 0;
 
-MP2_SOURCE::MP2_SOURCE(double s, double taylor_threshold) : DSRG_SOURCE(s, taylor_threshold) {}
+    /// Reference to the options object
+    Options& options_;
+    /// The molecular integrals object
+    std::shared_ptr<ForteIntegrals> ints_;
+    /// The MOSpaceInfo object
+    std::shared_ptr<MOSpaceInfo> mo_space_info_;
+};
 }
 }
+
+#endif // _active_space_solver_h_

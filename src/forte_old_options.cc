@@ -1,10 +1,10 @@
 #include "psi4/liboptions/liboptions.h"
 
+#include "aci/aci.h"
 #include "fci/fci_solver.h"
 #include "fci/fci.h"
-#include "aci/aci.h"
-#include "pci/pci.h"
 #include "integrals/integrals.h"
+#include "pci/pci.h"
 
 namespace psi {
 namespace forte {
@@ -14,7 +14,6 @@ void forte_old_options(Options& options) {
     /*- MODULEDESCRIPTION Forte */
 
     /*- SUBSECTION Job Type */
-
 
     /*- Compute natural orbitals using MP2 -*/
     options.add_bool("MP2_NOS", false);
@@ -39,7 +38,6 @@ void forte_old_options(Options& options) {
     options.add_int("PRINT", 0);
     /*- Print summary of memory -*/
     options.add_bool("MEMORY_SUMMARY", false);
-
 
     /*- The symmetry of the electronic state. (zero based) -*/
     options.add_int("ROOT_SYM", 0);
@@ -88,8 +86,7 @@ void forte_old_options(Options& options) {
     /*- The algorithm used to screen the determinant
      *  - DENOMINATORS uses the MP denominators to screen strings
      *  - SINGLES generates the space by a series of single excitations -*/
-    options.add_str("EXPLORER_ALGORITHM", "DENOMINATORS",
-                    "DENOMINATORS SINGLES");
+    options.add_str("EXPLORER_ALGORITHM", "DENOMINATORS", "DENOMINATORS SINGLES");
 
     /*- The energy threshold for the determinant energy in Hartree -*/
     options.add_double("DET_THRESHOLD", 1.0);
@@ -110,18 +107,17 @@ void forte_old_options(Options& options) {
     options.add_str("H_TYPE", "FIXED_ENERGY", "FIXED_ENERGY FIXED_SIZE");
 
     /*- Determines if this job will compute the energy -*/
-    options.add_str("ENERGY_TYPE", "FULL",
-                    "FULL SELECTED LOWDIN SPARSE RENORMALIZE "
-                    "RENORMALIZE_FIXED LMRCISD LMRCIS IMRCISD "
-                    "IMRCISD_SPARSE LMRCISD_SPARSE LMRCIS_SPARSE "
-                    "FACTORIZED_CI");
+    options.add_str("ENERGY_TYPE", "FULL", "FULL SELECTED LOWDIN SPARSE RENORMALIZE "
+                                           "RENORMALIZE_FIXED LMRCISD LMRCIS IMRCISD "
+                                           "IMRCISD_SPARSE LMRCISD_SPARSE LMRCIS_SPARSE "
+                                           "FACTORIZED_CI");
 
     /*- The form of the Hamiltonian matrix.
      *  - FIXED diagonalizes a matrix of fixed dimension
      *  - SMOOTH forms a matrix with smoothed matrix elements -*/
 
-//    options.add_int("IMRCISD_TEST_SIZE", 0);
-//    options.add_int("IMRCISD_SIZE", 0);
+    //    options.add_int("IMRCISD_TEST_SIZE", 0);
+    //    options.add_int("IMRCISD_SIZE", 0);
 
     /*- The number of determinants used to build the Hamiltonian -*/
     options.add_int("NDETS", 100);
@@ -161,10 +157,9 @@ void forte_old_options(Options& options) {
     options.add_bool("SELECT", false);
 
     /*- The diagonalization method -*/
-    options.add_str("DIAG_ALGORITHM", "SOLVER",
-                    "DAVIDSON FULL DAVIDSONLIST SPARSE SOLVER");
-    
-    options.add_str("SIGMA_BUILD_TYPE", "SPARSE", "SPARSE HZ MMULT"); 
+    options.add_str("DIAG_ALGORITHM", "SOLVER", "DAVIDSON FULL DAVIDSONLIST SPARSE SOLVER");
+
+    options.add_str("SIGMA_BUILD_TYPE", "SPARSE", "SPARSE HZ MMULT");
 
     /*- Force the diagonalization procedure?  -*/
     options.add_bool("FORCE_DIAG_METHOD", false);
@@ -215,7 +210,7 @@ void forte_old_options(Options& options) {
 
     // Options for the Genetic Algorithm CI //
     /*- The size of the population -*/
-//    options.add_int("NPOP", 100);
+    //    options.add_int("NPOP", 100);
 
     //////////////////////////////////////////////////////////////
     ///         OPTIONS FOR ALTERNATIVES FOR CASSCF ORBITALS
@@ -270,8 +265,7 @@ void forte_old_options(Options& options) {
     /*- Use JK builder for restricted docc (EXPERT) -*/
     options.add_bool("RESTRICTED_DOCC_JK", true);
     /*- Orbital rotation algorithm -*/
-    options.add_str("ORB_ROTATION_ALGORITHM", "DIAGONAL",
-                    "DIAGONAL AUGMENTED_HESSIAN");
+    options.add_str("ORB_ROTATION_ALGORITHM", "DIAGONAL", "DIAGONAL AUGMENTED_HESSIAN");
 
     /*- DIIS Options -*/
     options.add_bool("CASSCF_DO_DIIS", true);
@@ -396,8 +390,6 @@ void forte_old_options(Options& options) {
     /*- Use the older DMRGSCF algorithm -*/
     options.add_bool("USE_DMRGSCF", false);
 
-
-
     //////////////////////////////////////////////////////////////
     ///         OPTIONS FOR THE FULL CI QUANTUM MONTE-CARLO
     //////////////////////////////////////////////////////////////
@@ -483,6 +475,7 @@ void forte_old_options(Options& options) {
     //////////////////////////////////////////////////////////////
     ///              OPTIONS FOR THE MR-DSRG MODULE
     //////////////////////////////////////////////////////////////
+
     /*- The code used to do CAS-CI.
      *  - CAS   determinant based CI code
      *  - FCI   string based FCI code

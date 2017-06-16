@@ -26,9 +26,9 @@
  * @END LICENSE
  */
 
-#include <vector>
-#include <numeric>
 #include <algorithm>
+#include <numeric>
+#include <vector>
 
 #include "../helpers.h"
 #include "mrdsrg.h"

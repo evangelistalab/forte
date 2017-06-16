@@ -33,6 +33,7 @@
 #include "psi4/lib3index/denominator.h"
 
 namespace psi {
+
 namespace forte {
 
 class AtomicOrbitalHelper {
@@ -70,11 +71,10 @@ class AtomicOrbitalHelper {
     SharedMatrix PVir() { return PVir_; }
     int Weights() { return weights_; }
 
-    AtomicOrbitalHelper(SharedMatrix CMO, SharedVector eps_occ,
-                        SharedVector eps_vir, double laplace_tolerance);
-    AtomicOrbitalHelper(SharedMatrix CMO, SharedVector eps_occ,
-                        SharedVector eps_vir, double laplace_tolerance,
-                        int shift);
+    AtomicOrbitalHelper(SharedMatrix CMO, SharedVector eps_occ, SharedVector eps_vir,
+                        double laplace_tolerance);
+    AtomicOrbitalHelper(SharedMatrix CMO, SharedVector eps_occ, SharedVector eps_vir,
+                        double laplace_tolerance, int shift);
     /// Compute (mu nu | mu nu)^{(1/2)}
     void Compute_AO_Screen(std::shared_ptr<BasisSet>& primary);
     void Estimate_TransAO_Screen(std::shared_ptr<BasisSet>& primary,

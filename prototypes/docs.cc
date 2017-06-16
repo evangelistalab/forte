@@ -1,15 +1,13 @@
 // Option 1.
 
-class myMethod
-{
-public:
+class myMethod {
+  public:
     myMethod() {}
 
-static void add_options();
+    static void add_options();
 };
 
-void myMethod::add_options(Options& options)
-{
+void myMethod::add_options(Options& options) {
     /*- Compute natural orbitals using MP2 -*/
     options.add_bool("MP2_NOS", false);
 }

@@ -48,8 +48,7 @@ namespace forte {
  * @param pq     relative PAIRINDEX of the pq pair
  * @param h      symmetry of the I strings in the list
  */
-std::vector<StringSubstitution>&
-StringLists::get_alfa_oo_list(int pq_sym, size_t pq, int h) {
+std::vector<StringSubstitution>& StringLists::get_alfa_oo_list(int pq_sym, size_t pq, int h) {
     boost::tuple<int, size_t, int> pq_pair(pq_sym, pq, h);
     return alfa_oo_list[pq_pair];
 }
@@ -60,8 +59,7 @@ StringLists::get_alfa_oo_list(int pq_sym, size_t pq, int h) {
  * @param pq     relative PAIRINDEX of the pq pair
  * @param h      symmetry of the I strings in the list
  */
-std::vector<StringSubstitution>&
-StringLists::get_beta_oo_list(int pq_sym, size_t pq, int h) {
+std::vector<StringSubstitution>& StringLists::get_beta_oo_list(int pq_sym, size_t pq, int h) {
     boost::tuple<int, size_t, int> pq_pair(pq_sym, pq, h);
     return beta_oo_list[pq_pair];
 }
@@ -128,8 +126,8 @@ void StringLists::make_oo(GraphPtr graph, OOList& list, int pq_sym, size_t pq) {
                 J[q] = true;
                 // Add the sting only of irrep(I) is h
                 if (graph->sym(I) == h)
-                    list[pq_pair].push_back(StringSubstitution(
-                        1, graph->rel_add(I), graph->rel_add(J)));
+                    list[pq_pair].push_back(
+                        StringSubstitution(1, graph->rel_add(I), graph->rel_add(J)));
             } while (std::next_permutation(b, b + n));
         } // End loop over h
 

@@ -28,16 +28,16 @@
 
 #include <cmath>
 
+#include "psi4/libciomr/libciomr.h"
 #include "psi4/libmints/matrix.h"
 #include "psi4/libmints/vector.h"
 #include "psi4/libpsio/psio.hpp"
-#include "psi4/libciomr/libciomr.h"
 #include "psi4/libqt/qt.h"
 
+#include "../fci/fci_vector.h"
 #include "../forte-def.h"
 #include "../iterative_solvers.h"
 #include "direct_ci.h"
-#include "../fci/fci_vector.h"
 
 namespace psi {
 namespace forte {
@@ -77,8 +77,7 @@ void SigmaBuilder::compute_sigma(SharedVector sigma, SharedVector b) {
         int ithread = omp_get_thread_num();
         int nthreads = omp_get_num_threads();
 
-        for (det_hash<size_t>::iterator det_pair = wfn_map.begin(),
-                                        it_end = wfn_map.end();
+        for (det_hash<size_t>::iterator det_pair = wfn_map.begin(), it_end = wfn_map.end();
              det_pair != it_end; ++det_pair, count++) {
 
             // Nifty way to thread map iterators
@@ -96,10 +95,8 @@ void SigmaBuilder::compute_sigma(SharedVector sigma, SharedVector b) {
                 const size_t aJ_add = aJ_mo_sign.first;
                 const size_t p = std::abs(aJ_mo_sign.second) - 1;
 
-                std::vector<std::pair<size_t, short>>& a_cre =
-                    a_cre_list[aJ_add];
-                for (int cre = 0, max_cre = a_cre.size(); cre < max_cre;
-                     ++cre) {
+                std::vector<std::pair<size_t, short>>& a_cre = a_cre_list[aJ_add];
+                for (int cre = 0, max_cre = a_cre.size(); cre < max_cre; ++cre) {
                     std::pair<size_t, short>& aaJ_mo_sign = a_cre[cre];
                     const size_t q = std::abs(aaJ_mo_sign.second) - 1;
                     if (p != q) {
@@ -117,10 +114,8 @@ void SigmaBuilder::compute_sigma(SharedVector sigma, SharedVector b) {
                 const size_t bJ_add = bJ_mo_sign.first;
                 const size_t p = std::abs(bJ_mo_sign.second) - 1;
 
-                std::vector<std::pair<size_t, short>>& b_cre =
-                    b_cre_list[bJ_add];
-                for (int cre = 0, max_cre = b_cre.size(); cre < max_cre;
-                     ++cre) {
+                std::vector<std::pair<size_t, short>>& b_cre = b_cre_list[bJ_add];
+                for (int cre = 0, max_cre = b_cre.size(); cre < max_cre; ++cre) {
                     std::pair<size_t, short>& bbJ_mo_sign = b_cre[cre];
                     const size_t q = std::abs(bbJ_mo_sign.second) - 1;
                     if (p != q) {
@@ -157,12 +152,10 @@ void SigmaBuilder::compute_sigma(SharedVector sigma, SharedVector b) {
                 const size_t s = std::get<2>(aaaaJ_mo_sign);
                 if ((p != r) and (q != s) and (p != s) and (q != r)) {
                     const size_t aaaaJ_add = std::get<0>(aaaaJ_mo_sign);
-                    const double sign_rs =
-                        std::get<1>(aaaaJ_mo_sign) > 0.0 ? 1.0 : -1.0;
+                    const double sign_rs = std::get<1>(aaaaJ_mo_sign) > 0.0 ? 1.0 : -1.0;
                     const size_t I = aaaaJ_add;
                     const double HIJ =
-                        sign_pq * sign_rs *
-                        STLBitsetDeterminant::fci_ints_->tei_aa(p, q, r, s);
+                        sign_pq * sign_rs * STLBitsetDeterminant::fci_ints_->tei_aa(p, q, r, s);
                     sigma_p[I] += HIJ * b_p[J];
                 }
             }
@@ -178,12 +171,10 @@ void SigmaBuilder::compute_sigma(SharedVector sigma, SharedVector b) {
                 const size_t s = std::get<2>(ababJ_mo_sign);
                 if ((p != r) and (q != s)) {
                     const size_t ababJ_add = std::get<0>(ababJ_mo_sign);
-                    const double sign_rs =
-                        std::get<1>(ababJ_mo_sign) > 0.0 ? 1.0 : -1.0;
+                    const double sign_rs = std::get<1>(ababJ_mo_sign) > 0.0 ? 1.0 : -1.0;
                     const size_t I = ababJ_add;
                     const double HIJ =
-                        sign_pq * sign_rs *
-                        STLBitsetDeterminant::fci_ints_->tei_ab(p, q, r, s);
+                        sign_pq * sign_rs * STLBitsetDeterminant::fci_ints_->tei_ab(p, q, r, s);
                     sigma_p[I] += HIJ * b_p[J];
                 }
             }
@@ -199,12 +190,10 @@ void SigmaBuilder::compute_sigma(SharedVector sigma, SharedVector b) {
                 const size_t s = std::get<2>(bbbbJ_mo_sign);
                 if ((p != r) and (q != s) and (p != s) and (q != r)) {
                     const size_t bbbbJ_add = std::get<0>(bbbbJ_mo_sign);
-                    const double sign_rs =
-                        std::get<1>(bbbbJ_mo_sign) > 0.0 ? 1.0 : -1.0;
+                    const double sign_rs = std::get<1>(bbbbJ_mo_sign) > 0.0 ? 1.0 : -1.0;
                     const size_t I = bbbbJ_add;
                     const double HIJ =
-                        sign_pq * sign_rs *
-                        STLBitsetDeterminant::fci_ints_->tei_bb(p, q, r, s);
+                        sign_pq * sign_rs * STLBitsetDeterminant::fci_ints_->tei_bb(p, q, r, s);
                     sigma_p[I] += HIJ * b_p[J];
                 }
             }
@@ -224,9 +213,8 @@ void DirectCI::set_e_convergence(double value) { e_convergence_ = value; }
 
 void DirectCI::set_maxiter_davidson(int value) { maxiter_davidson_ = value; }
 
-void DirectCI::diagonalize_hamiltonian(DeterminantMap& wfn, WFNOperator& op,
-                                       SharedMatrix& evecs, SharedVector& evals,
-                                       int nroot, int multiplicity,
+void DirectCI::diagonalize_hamiltonian(DeterminantMap& wfn, WFNOperator& op, SharedMatrix& evecs,
+                                       SharedVector& evals, int nroot, int multiplicity,
                                        DiagonalizationMethod diag_method) {
     if (wfn.size() <= 200 && !force_diag_method_) {
         diagonalize_full(wfn, op, evecs, evals);
@@ -234,14 +222,13 @@ void DirectCI::diagonalize_hamiltonian(DeterminantMap& wfn, WFNOperator& op,
         if (diag_method == Full) {
             diagonalize_full(wfn, op, evecs, evals);
         } else if (diag_method == DLSolver) {
-            diagonalize_davidson_liu(wfn, op, evecs, evals, nroot,
-                                     multiplicity);
+            diagonalize_davidson_liu(wfn, op, evecs, evals, nroot, multiplicity);
         }
     }
 }
 
-void DirectCI::diagonalize_full(DeterminantMap& wfn, WFNOperator& op,
-                                SharedMatrix& evecs, SharedVector& evals) {
+void DirectCI::diagonalize_full(DeterminantMap& wfn, WFNOperator& op, SharedMatrix& evecs,
+                                SharedVector& evals) {
     // Find all the eigenvalues and eigenvectors of the Hamiltonian
     SharedMatrix H = build_full_hamiltonian(wfn, op);
 
@@ -253,10 +240,8 @@ void DirectCI::diagonalize_full(DeterminantMap& wfn, WFNOperator& op,
     H->diagonalize(evecs, evals);
 }
 
-void DirectCI::diagonalize_davidson_liu(DeterminantMap& wfn, WFNOperator& op,
-                                        SharedMatrix& evecs,
-                                        SharedVector& evals, int nroot,
-                                        int multiplicity) {
+void DirectCI::diagonalize_davidson_liu(DeterminantMap& wfn, WFNOperator& op, SharedMatrix& evecs,
+                                        SharedVector& evals, int nroot, int multiplicity) {
     if (print_details_) {
         outfile->Printf("\n\n  Davidson-liu solver algorithm");
         outfile->Flush();
@@ -271,8 +256,7 @@ void DirectCI::diagonalize_davidson_liu(DeterminantMap& wfn, WFNOperator& op,
     davidson_liu_solver(wfn, svl, evecs, evals, nroot, multiplicity);
 }
 
-SharedMatrix DirectCI::build_full_hamiltonian(DeterminantMap& wfn,
-                                              WFNOperator& op) {
+SharedMatrix DirectCI::build_full_hamiltonian(DeterminantMap& wfn, WFNOperator& op) {
     // Build the H matrix
     size_t dim_space = wfn.size();
     SharedMatrix H(new Matrix("H", dim_space, dim_space));
@@ -302,8 +286,7 @@ SharedMatrix DirectCI::build_full_hamiltonian(DeterminantMap& wfn,
         int ithread = omp_get_thread_num();
         int nthreads = omp_get_num_threads();
 
-        for (det_hash<size_t>::iterator det_pair = wfn_map.begin(),
-                                        it_end = wfn_map.end();
+        for (det_hash<size_t>::iterator det_pair = wfn_map.begin(), it_end = wfn_map.end();
              det_pair != it_end; ++det_pair, count++) {
 
             // Nifty way to thread map iterators
@@ -321,10 +304,8 @@ SharedMatrix DirectCI::build_full_hamiltonian(DeterminantMap& wfn,
                 const size_t aJ_add = aJ_mo_sign.first;
                 const size_t p = std::abs(aJ_mo_sign.second) - 1;
 
-                std::vector<std::pair<size_t, short>>& a_cre =
-                    a_cre_list[aJ_add];
-                for (int cre = 0, max_cre = a_cre.size(); cre < max_cre;
-                     ++cre) {
+                std::vector<std::pair<size_t, short>>& a_cre = a_cre_list[aJ_add];
+                for (int cre = 0, max_cre = a_cre.size(); cre < max_cre; ++cre) {
                     std::pair<size_t, short>& aaJ_mo_sign = a_cre[cre];
                     const size_t I = aaJ_mo_sign.first;
                     if (I < J)
@@ -346,10 +327,8 @@ SharedMatrix DirectCI::build_full_hamiltonian(DeterminantMap& wfn,
                 const size_t bJ_add = bJ_mo_sign.first;
                 const size_t p = std::abs(bJ_mo_sign.second) - 1;
 
-                std::vector<std::pair<size_t, short>>& b_cre =
-                    b_cre_list[bJ_add];
-                for (int cre = 0, max_cre = b_cre.size(); cre < max_cre;
-                     ++cre) {
+                std::vector<std::pair<size_t, short>>& b_cre = b_cre_list[bJ_add];
+                for (int cre = 0, max_cre = b_cre.size(); cre < max_cre; ++cre) {
                     std::pair<size_t, short>& bbJ_mo_sign = b_cre[cre];
                     const size_t I = bbJ_mo_sign.first;
                     if (I < J)
@@ -391,11 +370,9 @@ SharedMatrix DirectCI::build_full_hamiltonian(DeterminantMap& wfn,
                 const size_t r = std::abs(std::get<1>(aaaaJ_mo_sign)) - 1;
                 const size_t s = std::get<2>(aaaaJ_mo_sign);
                 if ((p != r) and (q != s) and (p != s) and (q != r)) {
-                    const double sign_rs =
-                        std::get<1>(aaaaJ_mo_sign) > 0.0 ? 1.0 : -1.0;
+                    const double sign_rs = std::get<1>(aaaaJ_mo_sign) > 0.0 ? 1.0 : -1.0;
                     const double value =
-                        sign_pq * sign_rs *
-                        STLBitsetDeterminant::fci_ints_->tei_aa(p, q, r, s);
+                        sign_pq * sign_rs * STLBitsetDeterminant::fci_ints_->tei_aa(p, q, r, s);
                     H->set(I, J, value);
                     H->set(J, I, value);
                 }
@@ -415,11 +392,9 @@ SharedMatrix DirectCI::build_full_hamiltonian(DeterminantMap& wfn,
                 const size_t r = std::abs(std::get<1>(ababJ_mo_sign)) - 1;
                 const size_t s = std::get<2>(ababJ_mo_sign);
                 if ((p != r) and (q != s)) {
-                    const double sign_rs =
-                        std::get<1>(ababJ_mo_sign) > 0.0 ? 1.0 : -1.0;
+                    const double sign_rs = std::get<1>(ababJ_mo_sign) > 0.0 ? 1.0 : -1.0;
                     const double value =
-                        sign_pq * sign_rs *
-                        STLBitsetDeterminant::fci_ints_->tei_ab(p, q, r, s);
+                        sign_pq * sign_rs * STLBitsetDeterminant::fci_ints_->tei_ab(p, q, r, s);
                     H->set(I, J, value);
                     H->set(J, I, value);
                 }
@@ -439,11 +414,9 @@ SharedMatrix DirectCI::build_full_hamiltonian(DeterminantMap& wfn,
                 const size_t r = std::abs(std::get<1>(bbbbJ_mo_sign)) - 1;
                 const size_t s = std::get<2>(bbbbJ_mo_sign);
                 if ((p != r) and (q != s) and (p != s) and (q != r)) {
-                    const double sign_rs =
-                        std::get<1>(bbbbJ_mo_sign) > 0.0 ? 1.0 : -1.0;
+                    const double sign_rs = std::get<1>(bbbbJ_mo_sign) > 0.0 ? 1.0 : -1.0;
                     const double value =
-                        sign_pq * sign_rs *
-                        STLBitsetDeterminant::fci_ints_->tei_bb(p, q, r, s);
+                        sign_pq * sign_rs * STLBitsetDeterminant::fci_ints_->tei_bb(p, q, r, s);
                     H->set(I, J, value);
                     H->set(J, I, value);
                 }
@@ -458,17 +431,15 @@ DirectCI::initial_guess(DeterminantMap& wfn, int nroot, int multiplicity) {
     size_t ndets = wfn.size();
 
     size_t nguess = std::min(static_cast<size_t>(nroot) * 100, ndets);
-    std::vector<std::pair<double, std::vector<std::pair<size_t, double>>>>
-        guess(nguess);
+    std::vector<std::pair<double, std::vector<std::pair<size_t, double>>>> guess(nguess);
 
     // Find the ntrial lowest diagonals
     std::vector<std::pair<double, STLBitsetDeterminant>> smallest(ndets);
 
     det_hash<size_t>& wfn_map = wfn.wfn_hash();
 
-    for (det_hash<size_t>::iterator it = wfn_map.begin(),
-                                    it_end = wfn_map.end();
-         it != it_end; ++it) {
+    for (det_hash<size_t>::iterator it = wfn_map.begin(), it_end = wfn_map.end(); it != it_end;
+         ++it) {
         smallest[it->second] = std::make_pair(it->first.energy(), it->first);
     }
     std::sort(smallest.begin(), smallest.end());
@@ -526,8 +497,7 @@ DirectCI::initial_guess(DeterminantMap& wfn, int nroot, int multiplicity) {
     double Stollerance = 1.0e-6;
     std::map<int, std::vector<int>> mult_list;
     for (size_t i = 0; i < nguess; ++i) {
-        double mult = std::sqrt(
-            1.0 + 4.0 * S2evals.get(i)); // 2S + 1 = Sqrt(1 + 4 S (S + 1))
+        double mult = std::sqrt(1.0 + 4.0 * S2evals.get(i)); // 2S + 1 = Sqrt(1 + 4 S (S + 1))
         int mult_int = std::round(mult);
         double error = mult - static_cast<double>(mult_int);
         if (std::fabs(error) < Stollerance) {
@@ -558,9 +528,8 @@ DirectCI::initial_guess(DeterminantMap& wfn, int nroot, int multiplicity) {
         std::vector<int>& mult_list_s = mult_list[m];
         int nspin_states = mult_list_s.size();
         if (print_details_)
-            outfile->Printf(
-                "\n  Initial guess found %d solutions with 2S+1 = %d %c",
-                nspin_states, m, m == multiplicity ? '*' : ' ');
+            outfile->Printf("\n  Initial guess found %d solutions with 2S+1 = %d %c", nspin_states,
+                            m, m == multiplicity ? '*' : ' ');
         // Extract the spin manifold
         Matrix HS2("HS2", nspin_states, nspin_states);
         Vector HS2evals("HS2", nspin_states);
@@ -607,8 +576,7 @@ DirectCI::initial_guess(DeterminantMap& wfn, int nroot, int multiplicity) {
 }
 
 bool DirectCI::davidson_liu_solver(DeterminantMap& wfn, SigmaBuilder& svl,
-                                   SharedMatrix Eigenvectors,
-                                   SharedVector Eigenvalues, int nroot,
+                                   SharedMatrix Eigenvectors, SharedVector Eigenvalues, int nroot,
                                    int multiplicity) {
     //    print_details_ = true;
     size_t fci_size = wfn.size();
@@ -702,8 +670,8 @@ bool DirectCI::davidson_liu_solver(DeterminantMap& wfn, SigmaBuilder& svl,
                 avg_energy += dls.eigenvalues()->get(r);
             avg_energy /= static_cast<double>(nroot);
             if (print_details_) {
-                outfile->Printf("\n    %3d  %20.12f  %+.3e", real_cycle,
-                                avg_energy, avg_energy - old_avg_energy);
+                outfile->Printf("\n    %3d  %20.12f  %+.3e", real_cycle, avg_energy,
+                                avg_energy - old_avg_energy);
             }
             old_avg_energy = avg_energy;
             real_cycle++;
@@ -716,9 +684,8 @@ bool DirectCI::davidson_liu_solver(DeterminantMap& wfn, SigmaBuilder& svl,
     if (print_details_) {
         outfile->Printf("\n  ----------------------------------------");
         if (converged == SolverStatus::Converged) {
-            outfile->Printf(
-                "\n  The Davidson-Liu algorithm converged in %d iterations.",
-                real_cycle);
+            outfile->Printf("\n  The Davidson-Liu algorithm converged in %d iterations.",
+                            real_cycle);
         }
     }
 

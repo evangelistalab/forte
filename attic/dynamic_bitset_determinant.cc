@@ -26,8 +26,8 @@
  * @END LICENSE
  */
 
-#include "psi4/psi4-dec.h"
 #include "psi4/libmints/matrix.h"
+#include "psi4/psi4-dec.h"
 
 #include "dynamic_bitset_determinant.h"
 #include "fci_vector.h"
@@ -39,13 +39,11 @@ namespace psi {
 namespace forte {
 
 std::size_t hash_value(const DynamicBitsetDeterminant& input) {
-    return (input.alfa_bits_.to_ulong() % 100000 +
-            input.beta_bits_.to_ulong() % 100000);
+    return (input.alfa_bits_.to_ulong() % 100000 + input.beta_bits_.to_ulong() % 100000);
 }
 
 // Static members
-std::vector<DynamicBitsetDeterminant::bit_t>
-    DynamicBitsetDeterminant::bit_mask_;
+std::vector<DynamicBitsetDeterminant::bit_t> DynamicBitsetDeterminant::bit_mask_;
 std::shared_ptr<FCIIntegrals> DynamicBitsetDeterminant::fci_ints_;
 
 void DynamicBitsetDeterminant::set_ints(std::shared_ptr<FCIIntegrals> ints) {
@@ -73,8 +71,8 @@ DynamicBitsetDeterminant::DynamicBitsetDeterminant(int nmo)
 
 /// Construct the determinant from an occupation vector that
 /// specifies the alpha and beta strings.  occupation = [Ia,Ib]
-DynamicBitsetDeterminant::DynamicBitsetDeterminant(
-    const std::vector<int>& occupation, bool print_det)
+DynamicBitsetDeterminant::DynamicBitsetDeterminant(const std::vector<int>& occupation,
+                                                   bool print_det)
     : nmo_(occupation.size() / 2), alfa_bits_(nmo_), beta_bits_(nmo_) {
     for (int p = 0; p < nmo_; ++p) {
         alfa_bits_[p] = occupation[p];
@@ -86,8 +84,8 @@ DynamicBitsetDeterminant::DynamicBitsetDeterminant(
 
 /// Construct the determinant from an occupation vector that
 /// specifies the alpha and beta strings.  occupation = [Ia,Ib]
-DynamicBitsetDeterminant::DynamicBitsetDeterminant(
-    const std::vector<bool>& occupation, bool print_det)
+DynamicBitsetDeterminant::DynamicBitsetDeterminant(const std::vector<bool>& occupation,
+                                                   bool print_det)
     : nmo_(occupation.size() / 2), alfa_bits_(nmo_), beta_bits_(nmo_) {
     for (int p = 0; p < nmo_; ++p) {
         alfa_bits_[p] = occupation[p];
@@ -97,9 +95,9 @@ DynamicBitsetDeterminant::DynamicBitsetDeterminant(
         print();
 }
 
-DynamicBitsetDeterminant::DynamicBitsetDeterminant(
-    const std::vector<bool>& occupation_a,
-    const std::vector<bool>& occupation_b, bool print_det)
+DynamicBitsetDeterminant::DynamicBitsetDeterminant(const std::vector<bool>& occupation_a,
+                                                   const std::vector<bool>& occupation_b,
+                                                   bool print_det)
     : nmo_(occupation_a.size()), alfa_bits_(nmo_), beta_bits_(nmo_) {
     for (int p = 0; p < nmo_; ++p) {
         alfa_bits_[p] = occupation_a[p];
@@ -243,9 +241,7 @@ double DynamicBitsetDeterminant::destroy_beta_bit(int n) {
 }
 
 /// Switch alfa and beta bits
-void DynamicBitsetDeterminant::spin_flip() {
-    std::swap(alfa_bits_, beta_bits_);
-}
+void DynamicBitsetDeterminant::spin_flip() { std::swap(alfa_bits_, beta_bits_); }
 
 /**
  * Print the determinant
@@ -318,8 +314,7 @@ double DynamicBitsetDeterminant::energy() const {
  * @param rhs
  * @return
  */
-double DynamicBitsetDeterminant::slater_rules(
-    const DynamicBitsetDeterminant& rhs) const {
+double DynamicBitsetDeterminant::slater_rules(const DynamicBitsetDeterminant& rhs) const {
     const boost::dynamic_bitset<>& Ia = alfa_bits_;
     const boost::dynamic_bitset<>& Ib = beta_bits_;
     const boost::dynamic_bitset<>& Ja = rhs.alfa_bits_;
@@ -433,8 +428,7 @@ double DynamicBitsetDeterminant::slater_rules(
                 }
             }
         }
-        double sign = SlaterSign(Ia, i) * SlaterSign(Ia, j) *
-                      SlaterSign(Ja, k) * SlaterSign(Ja, l);
+        double sign = SlaterSign(Ia, i) * SlaterSign(Ia, j) * SlaterSign(Ja, k) * SlaterSign(Ja, l);
         matrix_element = sign * fci_ints_->tei_aa(i, j, k, l);
     }
 
@@ -462,8 +456,7 @@ double DynamicBitsetDeterminant::slater_rules(
                 }
             }
         }
-        double sign = SlaterSign(Ib, i) * SlaterSign(Ib, j) *
-                      SlaterSign(Jb, k) * SlaterSign(Jb, l);
+        double sign = SlaterSign(Ib, i) * SlaterSign(Ib, j) * SlaterSign(Jb, k) * SlaterSign(Jb, l);
         matrix_element = sign * fci_ints_->tei_bb(i, j, k, l);
     }
 
@@ -482,8 +475,7 @@ double DynamicBitsetDeterminant::slater_rules(
             if ((Ib[p] != Jb[p]) and Jb[p])
                 l = p;
         }
-        double sign = SlaterSign(Ia, i) * SlaterSign(Ib, j) *
-                      SlaterSign(Ja, k) * SlaterSign(Jb, l);
+        double sign = SlaterSign(Ia, i) * SlaterSign(Ib, j) * SlaterSign(Ja, k) * SlaterSign(Jb, l);
         matrix_element = sign * fci_ints_->tei_ab(i, j, k, l);
     }
     return (matrix_element);
@@ -491,8 +483,7 @@ double DynamicBitsetDeterminant::slater_rules(
 
 double DynamicBitsetDeterminant::slater_rules_single_alpha(int i, int a) const {
     // Slater rule 2 PhiI = j_a^+ i_a PhiJ
-    double sign = SlaterSign(alfa_bits_, i) * SlaterSign(alfa_bits_, a) *
-                  (a > i ? -1.0 : 1.0);
+    double sign = SlaterSign(alfa_bits_, i) * SlaterSign(alfa_bits_, a) * (a > i ? -1.0 : 1.0);
     double matrix_element = fci_ints_->oei_a(i, a);
     for (int p = 0; p < nmo_; ++p) {
         if (alfa_bits_[p]) {
@@ -507,8 +498,7 @@ double DynamicBitsetDeterminant::slater_rules_single_alpha(int i, int a) const {
 
 double DynamicBitsetDeterminant::slater_rules_single_beta(int i, int a) const {
     // Slater rule 2 PhiI = j_a^+ i_a PhiJ
-    double sign = SlaterSign(beta_bits_, i) * SlaterSign(beta_bits_, a) *
-                  (a > i ? -1.0 : 1.0);
+    double sign = SlaterSign(beta_bits_, i) * SlaterSign(beta_bits_, a) * (a > i ? -1.0 : 1.0);
     double matrix_element = fci_ints_->oei_b(i, a);
     for (int p = 0; p < nmo_; ++p) {
         if (alfa_bits_[p]) {
@@ -526,8 +516,7 @@ double DynamicBitsetDeterminant::slater_rules_single_beta(int i, int a) const {
  * specified by the strings (Ia,Ib) and (Ja,Jb)
  * @return S^2
  */
-double
-DynamicBitsetDeterminant::spin2(const DynamicBitsetDeterminant& rhs) const {
+double DynamicBitsetDeterminant::spin2(const DynamicBitsetDeterminant& rhs) const {
     const boost::dynamic_bitset<>& Ia = alfa_bits_;
     const boost::dynamic_bitset<>& Ib = beta_bits_;
     const boost::dynamic_bitset<>& Ja = rhs.alfa_bits_;
@@ -581,8 +570,8 @@ DynamicBitsetDeterminant::spin2(const DynamicBitsetDeterminant& rhs) const {
                 j = p; //(q)
         }
         if (i != j and i >= 0 and j >= 0) {
-            double sign = SlaterSign(Ja, i) * SlaterSign(Jb, j) *
-                          SlaterSign(Ib, i) * SlaterSign(Ia, j);
+            double sign =
+                SlaterSign(Ja, i) * SlaterSign(Jb, j) * SlaterSign(Ib, i) * SlaterSign(Ia, j);
             matrix_element -= sign;
         }
     }
@@ -623,8 +612,7 @@ double DynamicBitsetDeterminant::spin_z() const {
     return 0.5 * static_cast<double>(alfa_bits_.count() - beta_bits_.count());
 }
 
-double DynamicBitsetDeterminant::spin2_slow(
-    const DynamicBitsetDeterminant& rhs) const {
+double DynamicBitsetDeterminant::spin2_slow(const DynamicBitsetDeterminant& rhs) const {
     double s2 = 0.0;
     if (rhs == *this) {
         double sz = spin_z();
@@ -651,8 +639,7 @@ double DynamicBitsetDeterminant::slater_sign_beta(int n) const {
     return (sign);
 }
 
-double DynamicBitsetDeterminant::double_excitation_aa(int i, int j, int a,
-                                                      int b) {
+double DynamicBitsetDeterminant::double_excitation_aa(int i, int j, int a, int b) {
     double sign = 1.0;
     sign *= slater_sign_alpha(i);
     sign *= slater_sign_alpha(j);
@@ -665,8 +652,7 @@ double DynamicBitsetDeterminant::double_excitation_aa(int i, int j, int a,
     return sign;
 }
 
-double DynamicBitsetDeterminant::double_excitation_ab(int i, int j, int a,
-                                                      int b) {
+double DynamicBitsetDeterminant::double_excitation_ab(int i, int j, int a, int b) {
     double sign = 1.0;
     sign *= slater_sign_alpha(i);
     sign *= slater_sign_beta(j);
@@ -679,8 +665,7 @@ double DynamicBitsetDeterminant::double_excitation_ab(int i, int j, int a,
     return sign;
 }
 
-double DynamicBitsetDeterminant::double_excitation_bb(int i, int j, int a,
-                                                      int b) {
+double DynamicBitsetDeterminant::double_excitation_bb(int i, int j, int a, int b) {
     double sign = 1.0;
     sign *= slater_sign_beta(i);
     sign *= slater_sign_beta(j);
@@ -693,8 +678,7 @@ double DynamicBitsetDeterminant::double_excitation_bb(int i, int j, int a,
     return sign;
 }
 
-double DynamicBitsetDeterminant::SlaterSign(const boost::dynamic_bitset<>& I,
-                                            int n) {
+double DynamicBitsetDeterminant::SlaterSign(const boost::dynamic_bitset<>& I, int n) {
     double sign = 1.0;
     for (int i = 0; i < n; ++i) { // This runs up to the operator before n
         if (I[i])
@@ -703,9 +687,7 @@ double DynamicBitsetDeterminant::SlaterSign(const boost::dynamic_bitset<>& I,
     return (sign);
 }
 
-double
-DynamicBitsetDeterminant::FastSlaterSign(const boost::dynamic_bitset<>& I,
-                                         int n) {
+double DynamicBitsetDeterminant::FastSlaterSign(const boost::dynamic_bitset<>& I, int n) {
     return ((bit_mask_[n] & I).count() % 2) ? -1.0 : 1.0;
 }
 
@@ -713,16 +695,15 @@ void DynamicBitsetDeterminant::check_uniqueness(
     const std::vector<DynamicBitsetDeterminant> det_space) {
     size_t duplicates = 0;
     size_t dim = det_space.size();
-    std::unordered_map<DynamicBitsetDeterminant, size_t,
-                       function<decltype(hash_value)>> det_map(dim, hash_value);
+    std::unordered_map<DynamicBitsetDeterminant, size_t, function<decltype(hash_value)>> det_map(
+        dim, hash_value);
 
     for (const auto& i : det_space) {
         ++det_map[i];
     }
     for (const auto& d : det_map) {
         if (d.second > 1) {
-            outfile->Printf("\n  Duplicate determinant! ==> %s",
-                            d.first.str().c_str());
+            outfile->Printf("\n  Duplicate determinant! ==> %s", d.first.str().c_str());
             duplicates += d.second;
         }
     }

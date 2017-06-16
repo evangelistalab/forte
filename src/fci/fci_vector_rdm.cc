@@ -90,8 +90,7 @@ void FCIWfn::compute_rdms(int max_order) {
     // Print RDM timings
     if (print_ > 0) {
         for (size_t n = 0; n < rdm_timing.size(); ++n) {
-            outfile->Printf("\n    Timing for %d-RDM: %.3f s", n + 1,
-                            rdm_timing[n]);
+            outfile->Printf("\n    Timing for %d-RDM: %.3f s", n + 1, rdm_timing[n]);
         }
     }
 }
@@ -101,11 +100,9 @@ double FCIWfn::energy_from_rdms(std::shared_ptr<FCIIntegrals> fci_ints) {
     size_t na = alfa_graph_->nones();
     size_t nb = beta_graph_->nones();
 
-    double nuclear_repulsion_energy =
-        Process::environment.molecule()->nuclear_repulsion_energy();
+    double nuclear_repulsion_energy = Process::environment.molecule()->nuclear_repulsion_energy();
 
-    double scalar_energy =
-        fci_ints->frozen_core_energy() + fci_ints->scalar_energy();
+    double scalar_energy = fci_ints->frozen_core_energy() + fci_ints->scalar_energy();
     double energy_1rdm = 0.0;
     double energy_2rdm = 0.0;
 
@@ -121,26 +118,24 @@ double FCIWfn::energy_from_rdms(std::shared_ptr<FCIIntegrals> fci_ints) {
             for (size_t r = 0; r < ncmo_; ++r) {
                 for (size_t s = 0; s < ncmo_; ++s) {
                     if (na >= 2)
-                        energy_2rdm += 0.25 * tpdm_aa_[tei_index(p, q, r, s)] *
-                                       fci_ints->tei_aa(p, q, r, s);
+                        energy_2rdm +=
+                            0.25 * tpdm_aa_[tei_index(p, q, r, s)] * fci_ints->tei_aa(p, q, r, s);
                     if ((na >= 1) and (nb >= 1))
-                        energy_2rdm += tpdm_ab_[tei_index(p, q, r, s)] *
-                                       fci_ints->tei_ab(p, q, r, s);
+                        energy_2rdm +=
+                            tpdm_ab_[tei_index(p, q, r, s)] * fci_ints->tei_ab(p, q, r, s);
                     if (nb >= 2)
-                        energy_2rdm += 0.25 * tpdm_bb_[tei_index(p, q, r, s)] *
-                                       fci_ints->tei_bb(p, q, r, s);
+                        energy_2rdm +=
+                            0.25 * tpdm_bb_[tei_index(p, q, r, s)] * fci_ints->tei_bb(p, q, r, s);
                 }
             }
         }
     }
-    double total_energy =
-        nuclear_repulsion_energy + scalar_energy + energy_1rdm + energy_2rdm;
+    double total_energy = nuclear_repulsion_energy + scalar_energy + energy_1rdm + energy_2rdm;
     outfile->Printf("\n    Total Energy: %25.15f\n", total_energy);
     outfile->Printf("\n scalar_energy = %8.8f", scalar_energy);
     outfile->Printf("\n energy_1rdm = %8.8f", energy_1rdm);
     outfile->Printf("\n energy_2rdm = %8.8f", energy_2rdm);
-    outfile->Printf("\n nuc_repulsion_energy = %8.8f",
-                    nuclear_repulsion_energy);
+    outfile->Printf("\n nuc_repulsion_energy = %8.8f", nuclear_repulsion_energy);
     return total_energy;
 }
 
@@ -170,8 +165,7 @@ void FCIWfn::compute_1rdm(std::vector<double>& rdm, bool alfa) {
                         Ch[Ib][Ia] = C0h[Ia][Ib];
             }
 
-            size_t maxL = alfa ? beta_graph_->strpi(beta_sym)
-                               : alfa_graph_->strpi(alfa_sym);
+            size_t maxL = alfa ? beta_graph_->strpi(beta_sym) : alfa_graph_->strpi(alfa_sym);
 
             for (int p_sym = 0; p_sym < nirrep_; ++p_sym) {
                 int q_sym = p_sym; // Select the totat symmetric irrep
@@ -180,11 +174,8 @@ void FCIWfn::compute_1rdm(std::vector<double>& rdm, bool alfa) {
                         int p_abs = p_rel + cmopi_offset_[p_sym];
                         int q_abs = q_rel + cmopi_offset_[q_sym];
                         std::vector<StringSubstitution>& vo =
-                            alfa
-                                ? lists_->get_alfa_vo_list(p_abs, q_abs,
-                                                           alfa_sym)
-                                : lists_->get_beta_vo_list(p_abs, q_abs,
-                                                           beta_sym);
+                            alfa ? lists_->get_alfa_vo_list(p_abs, q_abs, alfa_sym)
+                                 : lists_->get_beta_vo_list(p_abs, q_abs, beta_sym);
                         int maxss = vo.size();
                         for (int ss = 0; ss < maxss; ++ss) {
                             double H = static_cast<double>(vo[ss].sign);
@@ -239,8 +230,7 @@ void FCIWfn::compute_2rdm_aa(std::vector<double>& rdm, bool alfa) {
                         Ch[Ib][Ia] = C0h[Ia][Ib];
             }
 
-            size_t maxL =
-                alfa ? beta_graph_->strpi(hb) : alfa_graph_->strpi(ha);
+            size_t maxL = alfa ? beta_graph_->strpi(hb) : alfa_graph_->strpi(ha);
             // Loop over (p>q) == (p>q)
             for (int pq_sym = 0; pq_sym < nirrep_; ++pq_sym) {
                 size_t max_pq = lists_->pairpi(pq_sym);
@@ -277,18 +267,14 @@ void FCIWfn::compute_2rdm_aa(std::vector<double>& rdm, bool alfa) {
                     int p_abs = pq_pair.first;
                     int q_abs = pq_pair.second;
                     for (size_t rs = 0; rs < pq; ++rs) {
-                        const Pair& rs_pair =
-                            lists_->get_nn_list_pair(pq_sym, rs);
+                        const Pair& rs_pair = lists_->get_nn_list_pair(pq_sym, rs);
                         int r_abs = rs_pair.first;
                         int s_abs = rs_pair.second;
 
                         double rdm_element = 0.0;
                         std::vector<StringSubstitution>& VVOO =
-                            alfa
-                                ? lists_->get_alfa_vvoo_list(p_abs, q_abs,
-                                                             r_abs, s_abs, ha)
-                                : lists_->get_beta_vvoo_list(p_abs, q_abs,
-                                                             r_abs, s_abs, hb);
+                            alfa ? lists_->get_alfa_vvoo_list(p_abs, q_abs, r_abs, s_abs, ha)
+                                 : lists_->get_beta_vvoo_list(p_abs, q_abs, r_abs, s_abs, hb);
 
                         // TODO loop in a differen way
                         size_t maxss = VVOO.size();
@@ -301,22 +287,14 @@ void FCIWfn::compute_2rdm_aa(std::vector<double>& rdm, bool alfa) {
                             }
                         }
 
-                        rdm[tei_index(p_abs, q_abs, r_abs, s_abs)] +=
-                            rdm_element;
-                        rdm[tei_index(q_abs, p_abs, r_abs, s_abs)] -=
-                            rdm_element;
-                        rdm[tei_index(p_abs, q_abs, s_abs, r_abs)] -=
-                            rdm_element;
-                        rdm[tei_index(q_abs, p_abs, s_abs, r_abs)] +=
-                            rdm_element;
-                        rdm[tei_index(r_abs, s_abs, p_abs, q_abs)] +=
-                            rdm_element;
-                        rdm[tei_index(r_abs, s_abs, q_abs, p_abs)] -=
-                            rdm_element;
-                        rdm[tei_index(s_abs, r_abs, p_abs, q_abs)] -=
-                            rdm_element;
-                        rdm[tei_index(s_abs, r_abs, q_abs, p_abs)] +=
-                            rdm_element;
+                        rdm[tei_index(p_abs, q_abs, r_abs, s_abs)] += rdm_element;
+                        rdm[tei_index(q_abs, p_abs, r_abs, s_abs)] -= rdm_element;
+                        rdm[tei_index(p_abs, q_abs, s_abs, r_abs)] -= rdm_element;
+                        rdm[tei_index(q_abs, p_abs, s_abs, r_abs)] += rdm_element;
+                        rdm[tei_index(r_abs, s_abs, p_abs, q_abs)] += rdm_element;
+                        rdm[tei_index(r_abs, s_abs, q_abs, p_abs)] -= rdm_element;
+                        rdm[tei_index(s_abs, r_abs, p_abs, q_abs)] -= rdm_element;
+                        rdm[tei_index(s_abs, r_abs, q_abs, p_abs)] += rdm_element;
                     }
                 }
             }
@@ -353,8 +331,8 @@ void FCIWfn::compute_2rdm_ab(std::vector<double>& rdm) {
 
         // Loop over all r,s
         for (int rs_sym = 0; rs_sym < nirrep_; ++rs_sym) {
-            int Jb_sym = Ib_sym ^ rs_sym; // <- Looks like it should fail for
-                                          // states with symmetry != A1  URGENT
+            int Jb_sym = Ib_sym ^ rs_sym;    // <- Looks like it should fail for
+                                             // states with symmetry != A1  URGENT
             int Ja_sym = Jb_sym ^ symmetry_; // <- Looks like it should fail for
                                              // states with symmetry != A1
                                              // URGENT
@@ -377,31 +355,22 @@ void FCIWfn::compute_2rdm_ab(std::vector<double>& rdm) {
                         int pq_sym = rs_sym;
                         for (int p_sym = 0; p_sym < nirrep_; ++p_sym) {
                             int q_sym = pq_sym ^ p_sym;
-                            for (int p_rel = 0; p_rel < cmopi_[p_sym];
-                                 ++p_rel) {
+                            for (int p_rel = 0; p_rel < cmopi_[p_sym]; ++p_rel) {
                                 int p_abs = p_rel + cmopi_offset_[p_sym];
-                                for (int q_rel = 0; q_rel < cmopi_[q_sym];
-                                     ++q_rel) {
+                                for (int q_rel = 0; q_rel < cmopi_[q_sym]; ++q_rel) {
                                     int q_abs = q_rel + cmopi_offset_[q_sym];
 
                                     std::vector<StringSubstitution>& vo_alfa =
-                                        lists_->get_alfa_vo_list(p_abs, q_abs,
-                                                                 Ia_sym);
+                                        lists_->get_alfa_vo_list(p_abs, q_abs, Ia_sym);
 
                                     size_t maxSSa = vo_alfa.size();
                                     for (size_t SSa = 0; SSa < maxSSa; ++SSa) {
-                                        for (size_t SSb = 0; SSb < maxSSb;
-                                             ++SSb) {
-                                            double V = static_cast<double>(
-                                                vo_alfa[SSa].sign *
-                                                vo_beta[SSb].sign);
-                                            rdm[tei_index(p_abs, r_abs, q_abs,
-                                                          s_abs)] +=
-                                                Y[vo_alfa[SSa].J][vo_beta[SSb]
-                                                                      .J] *
-                                                C[vo_alfa[SSa].I][vo_beta[SSb]
-                                                                      .I] *
-                                                V;
+                                        for (size_t SSb = 0; SSb < maxSSb; ++SSb) {
+                                            double V = static_cast<double>(vo_alfa[SSa].sign *
+                                                                           vo_beta[SSb].sign);
+                                            rdm[tei_index(p_abs, r_abs, q_abs, s_abs)] +=
+                                                Y[vo_alfa[SSa].J][vo_beta[SSb].J] *
+                                                C[vo_alfa[SSa].I][vo_beta[SSb].I] * V;
                                         }
                                     }
                                 }
@@ -433,8 +402,8 @@ void FCIWfn::compute_3rdm_aaa(std::vector<double>& rdm, bool alfa) {
     rdm.assign(ncmo_ * ncmo_ * ncmo_ * ncmo_ * ncmo_ * ncmo_, 0.0);
 
     for (int h_K = 0; h_K < nirrep_; ++h_K) {
-        size_t maxK = alfa ? lists_->alfa_graph_3h()->strpi(h_K)
-                           : lists_->beta_graph_3h()->strpi(h_K);
+        size_t maxK =
+            alfa ? lists_->alfa_graph_3h()->strpi(h_K) : lists_->beta_graph_3h()->strpi(h_K);
         for (int h_I = 0; h_I < nirrep_; ++h_I) {
             int h_Ib = h_I ^ symmetry_;
             int h_J = h_I;
@@ -454,8 +423,7 @@ void FCIWfn::compute_3rdm_aaa(std::vector<double>& rdm, bool alfa) {
                         Ch[Ib][Ia] = C0h[Ia][Ib];
             }
 
-            size_t maxL =
-                alfa ? beta_graph_->strpi(h_Ib) : alfa_graph_->strpi(h_I);
+            size_t maxL = alfa ? beta_graph_->strpi(h_Ib) : alfa_graph_->strpi(h_I);
 
             for (size_t K = 0; K < maxK; ++K) {
                 std::vector<H3StringSubstitution>& Klist =
@@ -474,8 +442,7 @@ void FCIWfn::compute_3rdm_aaa(std::vector<double>& rdm, bool alfa) {
                         size_t J = Lel.J;
 
                         double rdm_value = 0.0;
-                        rdm_value =
-                            C_DDOT(maxL, &(Ch[J][0]), 1, &(Ch[I][0]), 1);
+                        rdm_value = C_DDOT(maxL, &(Ch[J][0]), 1, &(Ch[I][0]), 1);
 
                         rdm_value *= sign;
 
@@ -525,11 +492,9 @@ void FCIWfn::compute_3rdm_aab(std::vector<double>& rdm) {
                                         for (const auto& Nel : Nlist) {
                                             size_t a = Nel.p;
                                             size_t N = Nel.J;
-                                            short sign = Iel.sign * Jel.sign *
-                                                         Mel.sign * Nel.sign;
+                                            short sign = Iel.sign * Jel.sign * Mel.sign * Nel.sign;
                                             rdm[six_index(p, q, r, s, t, a)] +=
-                                                sign * C_I_p[I][M] *
-                                                C_J_p[J][N];
+                                                sign * C_I_p[I][M] * C_J_p[J][N];
                                         }
                                     }
                                 }
@@ -585,12 +550,10 @@ void FCIWfn::compute_3rdm_abb(std::vector<double>& rdm) {
                                             size_t t = Nel.p;
                                             size_t a = Nel.q;
                                             size_t N = Nel.J;
-                                            short sign = Ilist[Iel].sign *
-                                                         Jel.sign * Mel.sign *
-                                                         Nel.sign;
+                                            short sign =
+                                                Ilist[Iel].sign * Jel.sign * Mel.sign * Nel.sign;
                                             rdm[six_index(p, q, r, s, t, a)] +=
-                                                sign * C_I_p[I][M] *
-                                                C_J_p[J][N];
+                                                sign * C_I_p[I][M] * C_J_p[J][N];
                                             //}//End of if statement
                                         }
                                     }
@@ -641,8 +604,8 @@ void FCIWfn::rdm_test() {
             if ((alfa_graph_->sym(Ia) ^ beta_graph_->sym(Ib)) == symmetry_) {
                 STLBitsetDeterminant d(a_occ, b_occ);
                 dets.push_back(d);
-                double c = C_[alfa_graph_->sym(Ia)]->get(
-                    alfa_graph_->rel_add(Ia), beta_graph_->rel_add(Ib));
+                double c = C_[alfa_graph_->sym(Ia)]->get(alfa_graph_->rel_add(Ia),
+                                                         beta_graph_->rel_add(Ib));
                 C.push_back(c);
                 dets_map[d] = num_det;
                 num_det++;
@@ -687,8 +650,7 @@ void FCIWfn::rdm_test() {
                             //                            = %18.12lf
                             //                            (%18.12lf,%18.12lf)",
                             //                            p,q,r,s,rdm-tpdm_aa_[tei_index(p,q,r,s)],rdm,tpdm_aa_[tei_index(p,q,r,s)]);
-                            error_2rdm_aa += std::fabs(
-                                rdm - tpdm_aa_[tei_index(p, q, r, s)]);
+                            error_2rdm_aa += std::fabs(rdm - tpdm_aa_[tei_index(p, q, r, s)]);
                         }
                     }
                 }
@@ -724,8 +686,7 @@ void FCIWfn::rdm_test() {
                             //                            = %18.12lf
                             //                            (%18.12lf,%18.12lf)",
                             //                            p,q,r,s,rdm-tpdm_bb_[tei_index(p,q,r,s)],rdm,tpdm_bb_[tei_index(p,q,r,s)]);
-                            error_2rdm_bb += std::fabs(
-                                rdm - tpdm_bb_[tei_index(p, q, r, s)]);
+                            error_2rdm_bb += std::fabs(rdm - tpdm_bb_[tei_index(p, q, r, s)]);
                         }
                     }
                 }
@@ -761,8 +722,7 @@ void FCIWfn::rdm_test() {
                             //                            = %18.12lf
                             //                            (%18.12lf,%18.12lf)",
                             //                            p,q,r,s,rdm-tpdm_ab_[tei_index(p,q,r,s)],rdm,tpdm_ab_[tei_index(p,q,r,s)]);
-                            error_2rdm_ab += std::fabs(
-                                rdm - tpdm_ab_[tei_index(p, q, r, s)]);
+                            error_2rdm_ab += std::fabs(rdm - tpdm_ab_[tei_index(p, q, r, s)]);
                         }
                     }
                 }

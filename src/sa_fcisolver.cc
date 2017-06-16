@@ -26,11 +26,11 @@
  * @END LICENSE
  */
 
-#include <cmath>
-#include <tuple>
 #include <algorithm>
-#include <sstream>
+#include <cmath>
 #include <iomanip>
+#include <sstream>
+#include <tuple>
 
 #include "psi4/libmints/molecule.h"
 #include "psi4/libmints/pointgrp.h"
@@ -48,8 +48,7 @@ SA_FCISolver::SA_FCISolver(Options& options, std::shared_ptr<Wavefunction> wfn)
 void SA_FCISolver::read_options() {
     // irrep symbol
     int nirrep = wfn_->nirrep();
-    CharacterTable ct =
-        Process::environment.molecule()->point_group()->char_table();
+    CharacterTable ct = Process::environment.molecule()->point_group()->char_table();
     std::vector<std::string> irrep_symbol;
     for (int h = 0; h < nirrep; ++h) {
         irrep_symbol.push_back(std::string(ct.gamma(h).symbol()));
@@ -87,8 +86,7 @@ void SA_FCISolver::read_options() {
             // multiplicity
             int multi = options_["AVG_STATE"][i][1].to_integer();
             if (multi < 1) {
-                outfile->Printf(
-                    "\n  Error: invalid multiplicity in AVG_STATE.");
+                outfile->Printf("\n  Error: invalid multiplicity in AVG_STATE.");
                 throw PSIEXCEPTION("Invaid multiplicity in AVG_STATE");
             }
             multis.push_back(multi);
@@ -124,16 +122,14 @@ void SA_FCISolver::read_options() {
                                     "in entry %d of AVG_WEIGHT. Asked for %d "
                                     "states but only %d weights.",
                                     i, nstatespim[i], nw);
-                    throw PSIEXCEPTION(
-                        "Mismatched number of weights in AVG_WEIGHT.");
+                    throw PSIEXCEPTION("Mismatched number of weights in AVG_WEIGHT.");
                 }
 
                 std::vector<double> weight;
                 for (int n = 0; n < nw; ++n) {
                     double w = options_["AVG_WEIGHT"][i][n].to_double();
                     if (w < 0.0) {
-                        outfile->Printf(
-                            "\n  Error: negative weights in AVG_WEIGHT.");
+                        outfile->Printf("\n  Error: negative weights in AVG_WEIGHT.");
                         throw PSIEXCEPTION("Negative weights in AVG_WEIGHT.");
                     }
                     weight.push_back(w);
@@ -160,8 +156,7 @@ void SA_FCISolver::read_options() {
         // form option parser
         for (int i = 0; i < nentry; ++i) {
             std::tuple<int, int, int, std::vector<double>> avg_info =
-                std::make_tuple(irreps[i], multis[i], nstatespim[i],
-                                weights[i]);
+                std::make_tuple(irreps[i], multis[i], nstatespim[i], weights[i]);
             parsed_options_.push_back(avg_info);
         }
 
@@ -177,8 +172,7 @@ void SA_FCISolver::read_options() {
         int ltotal = 6 + 2 + 6 + 2 + 7 + 2 + lweight;
         std::string blank(lweight - 7, ' ');
         std::string dash(ltotal, '-');
-        outfile->Printf("\n    Irrep.  Multi.  Nstates  %sWeights",
-                        blank.c_str());
+        outfile->Printf("\n    Irrep.  Multi.  Nstates  %sWeights", blank.c_str());
         outfile->Printf("\n    %s", dash.c_str());
         for (int i = 0; i < nentry; ++i) {
             std::string w_str;
@@ -190,10 +184,9 @@ void SA_FCISolver::read_options() {
             w_str.pop_back(); // delete the last space character
 
             std::stringstream ss;
-            ss << std::setw(4) << std::right << irrep_symbol[irreps[i]]
-               << "    " << std::setw(4) << std::right << multis[i] << "    "
-               << std::setw(5) << std::right << nstatespim[i] << "    "
-               << std::setw(lweight) << w_str;
+            ss << std::setw(4) << std::right << irrep_symbol[irreps[i]] << "    " << std::setw(4)
+               << std::right << multis[i] << "    " << std::setw(5) << std::right << nstatespim[i]
+               << "    " << std::setw(lweight) << w_str;
             outfile->Printf("\n    %s", ss.str().c_str());
         }
         outfile->Printf("\n    %s", dash.c_str());
@@ -217,8 +210,7 @@ double SA_FCISolver::compute_energy() {
 
         Dimension active_dim = mo_space_info_->get_dimension("ACTIVE");
         size_t nfdocc = mo_space_info_->size("FROZEN_DOCC");
-        std::vector<size_t> rdocc =
-            mo_space_info_->get_corr_abs_mo("RESTRICTED_DOCC");
+        std::vector<size_t> rdocc = mo_space_info_->get_corr_abs_mo("RESTRICTED_DOCC");
         std::vector<size_t> active = mo_space_info_->get_corr_abs_mo("ACTIVE");
 
         int charge = Process::environment.molecule()->molecular_charge();
@@ -244,12 +236,9 @@ double SA_FCISolver::compute_energy() {
 
         if (twice_ms < 0) {
             outfile->Printf("\n  Ms must be no less than 0.");
-            outfile->Printf("\n  Ms = %2d, MULTIPLICITY = %2d", twice_ms,
-                            multiplicity);
-            outfile->Printf(
-                "\n  Check (specify) Ms value (component of multiplicity)! \n");
-            throw PSIEXCEPTION(
-                "Ms must be no less than 0. Check output for details.");
+            outfile->Printf("\n  Ms = %2d, MULTIPLICITY = %2d", twice_ms, multiplicity);
+            outfile->Printf("\n  Check (specify) Ms value (component of multiplicity)! \n");
+            throw PSIEXCEPTION("Ms must be no less than 0. Check output for details.");
         }
 
         if (options_.get_int("PRINT")) {
@@ -276,17 +265,14 @@ double SA_FCISolver::compute_energy() {
 
         size_t na = (nactel + twice_ms) / 2;
         size_t nb = nactel - na;
-        FCISolver fcisolver(active_dim, rdocc, active, na, nb, multiplicity,
-                            symmetry, ints_, mo_space_info_,
-                            options_.get_int("NTRIAL_PER_ROOT"),
+        FCISolver fcisolver(active_dim, rdocc, active, na, nb, multiplicity, symmetry, ints_,
+                            mo_space_info_, options_.get_int("NTRIAL_PER_ROOT"),
                             options_.get_int("PRINT"), options_);
         fcisolver.set_max_rdm_level(2);
         fcisolver.set_test_rdms(options_.get_bool("FCI_TEST_RDMS"));
         fcisolver.set_fci_iterations(options_.get_int("FCI_MAXITER"));
-        fcisolver.set_collapse_per_root(
-            options_.get_int("DL_COLLAPSE_PER_ROOT"));
-        fcisolver.set_subspace_per_root(
-            options_.get_int("DL_SUBSPACE_PER_ROOT"));
+        fcisolver.set_collapse_per_root(options_.get_int("DL_COLLAPSE_PER_ROOT"));
+        fcisolver.set_subspace_per_root(options_.get_int("DL_SUBSPACE_PER_ROOT"));
         fcisolver.set_print_no(false);
         fcisolver.use_user_integrals_and_restricted_docc(true);
         if (fci_ints_ == nullptr) {
@@ -339,16 +325,14 @@ double SA_FCISolver::compute_energy() {
         }
         E_sa_casscf /= casscf_energies.size();
         sa_cas.set_Eref(E_sa_casscf);
-        ambit::Tensor L1a_sa =
-            ambit::Tensor::build(ambit::CoreTensor, "L1a_sa", {na, na});
-        ambit::Tensor L1b_sa =
-            ambit::Tensor::build(ambit::CoreTensor, "L1b_sa", {na, na});
-        ambit::Tensor L2aa_sa = ambit::Tensor::build(
-            ambit::CoreTensor, "L2aa_sa", {na, na, na, na});
-        ambit::Tensor L2ab_sa = ambit::Tensor::build(
-            ambit::CoreTensor, "L2ab_sa", {na, na, na, na});
-        ambit::Tensor L2bb_sa = ambit::Tensor::build(
-            ambit::CoreTensor, "L2bb_sa", {na, na, na, na});
+        ambit::Tensor L1a_sa = ambit::Tensor::build(ambit::CoreTensor, "L1a_sa", {na, na});
+        ambit::Tensor L1b_sa = ambit::Tensor::build(ambit::CoreTensor, "L1b_sa", {na, na});
+        ambit::Tensor L2aa_sa =
+            ambit::Tensor::build(ambit::CoreTensor, "L2aa_sa", {na, na, na, na});
+        ambit::Tensor L2ab_sa =
+            ambit::Tensor::build(ambit::CoreTensor, "L2ab_sa", {na, na, na, na});
+        ambit::Tensor L2bb_sa =
+            ambit::Tensor::build(ambit::CoreTensor, "L2bb_sa", {na, na, na, na});
         for (auto& casscf_ref : sa_cas_ref) {
             L1a_sa("u, v") += casscf_ref.L1a()("u, v");
             L1b_sa("u, v") += casscf_ref.L1b()("u, v");

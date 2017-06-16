@@ -26,29 +26,28 @@
  * @END LICENSE
  */
 
+#include "psi4/libmints/molecule.h"
 #include "psi4/libpsio/psio.h"
 #include "psi4/libpsio/psio.hpp"
-#include "psi4/libmints/molecule.h"
 
-#include "psi4/liboptions/liboptions.h"
 #include "psi4/libmints/local.h"
 #include "psi4/libmints/matrix.h"
 #include "psi4/libmints/vector.h"
+#include "psi4/liboptions/liboptions.h"
 
 #include "unpaired_density.h"
 
 namespace psi {
 namespace forte {
 
-UPDensity::UPDensity(std::shared_ptr<Wavefunction> wfn,
-                   std::shared_ptr<MOSpaceInfo> mo_space_info)
-    : wfn_(wfn), mo_space_info_(mo_space_info) {
-}
+UPDensity::UPDensity(std::shared_ptr<Wavefunction> wfn, std::shared_ptr<MOSpaceInfo> mo_space_info)
+    : wfn_(wfn), mo_space_info_(mo_space_info) {}
 
-void UPDensity::compute_unpaired_density( std::vector<double>& oprdm_a, std::vector<double>& oprdm_b ) {
+void UPDensity::compute_unpaired_density(std::vector<double>& oprdm_a,
+                                         std::vector<double>& oprdm_b) {
 
-    Dimension nactpi = mo_space_info_->get_dimension("ACTIVE"); 
-    Dimension nmopi  = wfn_->nmopi(); 
+    Dimension nactpi = mo_space_info_->get_dimension("ACTIVE");
+    Dimension nmopi = wfn_->nmopi();
     size_t nirrep = wfn_->nirrep();
     Dimension rdocc = mo_space_info_->get_dimension("RESTRICTED_DOCC");
     Dimension fdocc = mo_space_info_->get_dimension("FROZEN_DOCC");
@@ -59,14 +58,13 @@ void UPDensity::compute_unpaired_density( std::vector<double>& oprdm_a, std::vec
     std::shared_ptr<Matrix> opdm_a(new Matrix("OPDM_A", nirrep, nactpi, nactpi));
     std::shared_ptr<Matrix> opdm_b(new Matrix("OPDM_B", nirrep, nactpi, nactpi));
 
-
     int offset = 0;
-    for(int h = 0; h < nirrep; ++h ){
-        for( int u = 0; u < nactpi[h]; ++u ){
-            for( int v = 0; v < nactpi[h]; ++v ){
-                opdm_a->set(h,u,v,oprdm_a[(u+offset) * nact + v + offset]);
-                opdm_b->set(h,u,v,oprdm_b[(u+offset) * nact + v + offset]);
-           }
+    for (int h = 0; h < nirrep; ++h) {
+        for (int u = 0; u < nactpi[h]; ++u) {
+            for (int v = 0; v < nactpi[h]; ++v) {
+                opdm_a->set(h, u, v, oprdm_a[(u + offset) * nact + v + offset]);
+                opdm_b->set(h, u, v, oprdm_b[(u + offset) * nact + v + offset]);
+            }
         }
         offset += nactpi[h];
     }
@@ -87,15 +85,15 @@ void UPDensity::compute_unpaired_density( std::vector<double>& oprdm_a, std::vec
     Ua.zero();
     Ub.zero();
 
-    for( int h = 0; h < nirrep; ++h ){
+    for (int h = 0; h < nirrep; ++h) {
         size_t irrep_offset = fdocc[h] + rdocc[h];
-        
-        for( int p = 0; p < nactpi[h]; ++p ){
-            for( int q = 0; q < nactpi[h]; ++q ){
-                Ua.set(h,p + irrep_offset, q + irrep_offset, NO_A->get(h,p,q));
-                Ub.set(h,p + irrep_offset, q + irrep_offset, NO_B->get(h,p,q));
+
+        for (int p = 0; p < nactpi[h]; ++p) {
+            for (int q = 0; q < nactpi[h]; ++q) {
+                Ua.set(h, p + irrep_offset, q + irrep_offset, NO_A->get(h, p, q));
+                Ub.set(h, p + irrep_offset, q + irrep_offset, NO_B->get(h, p, q));
             }
-        } 
+        }
     }
 
     // Transform the orbital coefficients
@@ -112,16 +110,16 @@ void UPDensity::compute_unpaired_density( std::vector<double>& oprdm_a, std::vec
     Cb_new->gemm(false, false, 1.0, Cb, Ub, 0.0);
 
     // Scale active NOs by unpaired-e criteria
-    for( int h = 0; h < nirrep; ++h ){
+    for (int h = 0; h < nirrep; ++h) {
         int offset = fdocc[h] + rdocc[h];
-        for( int p = 0; p < nactpi[h]; ++p ){
+        for (int p = 0; p < nactpi[h]; ++p) {
             double n_p = OCC_A->get(p) + OCC_B->get(p);
 
             double up_el = n_p * (2.0 - n_p);
-            outfile->Printf("\n  Weight for orbital (%d,%d): %1.5f", h,p,up_el);
-            Ca_new->scale_column(h, offset + p, up_el); 
-            Cb_new->scale_column(h, offset + p, up_el); 
-        } 
+            outfile->Printf("\n  Weight for orbital (%d,%d): %1.5f", h, p, up_el);
+            Ca_new->scale_column(h, offset + p, up_el);
+            Cb_new->scale_column(h, offset + p, up_el);
+        }
     }
 
     // Form the new density
@@ -138,7 +136,6 @@ void UPDensity::compute_unpaired_density( std::vector<double>& oprdm_a, std::vec
     Da->copy(Da_new);
     Db->copy(Db_new);
 }
-
 
 UPDensity::~UPDensity() {}
 }

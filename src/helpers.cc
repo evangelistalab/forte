@@ -53,8 +53,7 @@ MOSpaceInfo::~MOSpaceInfo() {}
 size_t MOSpaceInfo::size(const std::string& space) {
     size_t s = 0;
     if (composite_spaces_.count(space) == 0) {
-        std::string msg = "\n  MOSpaceInfo::size - composite space " + space +
-                          " is not defined.";
+        std::string msg = "\n  MOSpaceInfo::size - composite space " + space + " is not defined.";
         throw PSIEXCEPTION(msg.c_str());
     } else {
         for (const auto& el_space : composite_spaces_[space]) {
@@ -68,8 +67,7 @@ size_t MOSpaceInfo::size(const std::string& space) {
 Dimension MOSpaceInfo::get_dimension(const std::string& space) {
     Dimension result(nirrep_);
     if (composite_spaces_.count(space) == 0) {
-        std::string msg = "\n  MOSpaceInfo::size - composite space " + space +
-                          " is not defined.";
+        std::string msg = "\n  MOSpaceInfo::size - composite space " + space + " is not defined.";
         throw PSIEXCEPTION(msg.c_str());
     } else {
         for (const auto& el_space : composite_spaces_[space]) {
@@ -81,12 +79,11 @@ Dimension MOSpaceInfo::get_dimension(const std::string& space) {
 }
 
 /// @return The Slice object for space in a given composite space
-Slice MOSpaceInfo::get_slice(const std::string& space,const std::string& comp_space)
-{
+Slice MOSpaceInfo::get_slice(const std::string& space, const std::string& comp_space) {
     Dimension begin(nirrep_);
     Dimension end(nirrep_);
 
-    return Slice(begin,end);
+    return Slice(begin, end);
 }
 
 std::vector<int> MOSpaceInfo::symmetry(const std::string& space) {
@@ -103,16 +100,14 @@ std::vector<int> MOSpaceInfo::symmetry(const std::string& space) {
 std::vector<size_t> MOSpaceInfo::get_absolute_mo(const std::string& space) {
     std::vector<size_t> result;
     if (composite_spaces_.count(space) == 0) {
-        std::string msg = "\n  MOSpaceInfo::size - composite space " + space +
-                          " is not defined.";
+        std::string msg = "\n  MOSpaceInfo::size - composite space " + space + " is not defined.";
         throw PSIEXCEPTION(msg.c_str());
     } else {
         for (const auto& el_space : composite_spaces_[space]) {
             if (mo_spaces_.count(el_space)) {
                 auto& vec_mo_info = mo_spaces_[el_space].second;
                 for (auto& mo_info : vec_mo_info) {
-                    result.push_back(
-                        std::get<0>(mo_info)); // <- grab the absolute index
+                    result.push_back(std::get<0>(mo_info)); // <- grab the absolute index
                 }
             }
         }
@@ -123,19 +118,17 @@ std::vector<size_t> MOSpaceInfo::get_absolute_mo(const std::string& space) {
 std::vector<size_t> MOSpaceInfo::get_corr_abs_mo(const std::string& space) {
     std::vector<size_t> result;
     if (composite_spaces_.count(space) == 0) {
-        std::string msg = "\n  MOSpaceInfo::size - composite space " + space +
-                          " is not defined.";
+        std::string msg = "\n  MOSpaceInfo::size - composite space " + space + " is not defined.";
         throw PSIEXCEPTION(msg.c_str());
     } else {
         for (const auto& el_space : composite_spaces_[space]) {
             if (mo_spaces_.count(el_space)) {
                 auto& vec_mo_info = mo_spaces_[el_space].second;
                 for (auto& mo_info : vec_mo_info) {
-                    result.push_back(
-                        mo_to_cmo_[std::get<0>(mo_info)]); // <- grab the
-                                                           // absolute index and
-                                                           // convert to
-                                                           // correlated MOs
+                    result.push_back(mo_to_cmo_[std::get<0>(mo_info)]); // <- grab the
+                                                                        // absolute index and
+                                                                        // convert to
+                                                                        // correlated MOs
                 }
             }
         }
@@ -143,12 +136,10 @@ std::vector<size_t> MOSpaceInfo::get_corr_abs_mo(const std::string& space) {
     return result;
 }
 
-std::vector<std::pair<size_t, size_t>>
-MOSpaceInfo::get_relative_mo(const std::string& space) {
+std::vector<std::pair<size_t, size_t>> MOSpaceInfo::get_relative_mo(const std::string& space) {
     std::vector<std::pair<size_t, size_t>> result;
     if (composite_spaces_.count(space) == 0) {
-        std::string msg = "\n  MOSpaceInfo::size - composite space " + space +
-                          " is not defined.";
+        std::string msg = "\n  MOSpaceInfo::size - composite space " + space + " is not defined.";
         throw PSIEXCEPTION(msg.c_str());
     } else {
         for (const auto& el_space : composite_spaces_[space]) {
@@ -157,8 +148,7 @@ MOSpaceInfo::get_relative_mo(const std::string& space) {
                 for (auto& mo_info : vec_mo_info) {
                     result.push_back(std::make_pair(
                         std::get<1>(mo_info),
-                        std::get<2>(
-                            mo_info))); // <- grab the irrep and relative index
+                        std::get<2>(mo_info))); // <- grab the irrep and relative index
                 }
             }
         }
@@ -218,8 +208,7 @@ void MOSpaceInfo::read_options(Options& options) {
         for (std::string space : elementary_spaces_) {
             size_t n = mo_spaces_[space].first[h];
             for (size_t q = 0; q < n; ++q) {
-                mo_spaces_[space].second.push_back(
-                    std::make_tuple(p_abs, h, p_rel));
+                mo_spaces_[space].second.push_back(std::make_tuple(p_abs, h, p_rel));
                 p_abs += 1;
                 p_rel += 1;
             }
@@ -233,12 +222,10 @@ void MOSpaceInfo::read_options(Options& options) {
     // Remove the frozen core/virtuals
     for (MOInfo& mo_info : mo_spaces_["FROZEN_DOCC"].second) {
         outfile->Printf("\n Removing orbital %d", std::get<0>(mo_info));
-        vec.erase(std::remove(vec.begin(), vec.end(), std::get<0>(mo_info)),
-                  vec.end());
+        vec.erase(std::remove(vec.begin(), vec.end(), std::get<0>(mo_info)), vec.end());
     }
     for (MOInfo& mo_info : mo_spaces_["FROZEN_UOCC"].second) {
-        vec.erase(std::remove(vec.begin(), vec.end(), std::get<0>(mo_info)),
-                  vec.end());
+        vec.erase(std::remove(vec.begin(), vec.end(), std::get<0>(mo_info)), vec.end());
     }
 
     mo_to_cmo_.assign(nmopi_.sum(), 1000000000);
@@ -255,8 +242,7 @@ void MOSpaceInfo::read_options(Options& options) {
     }
 
     int banner_width = label_size + 4 + 6 * (nirrep_ + 1);
-    CharacterTable ct =
-        Process::environment.molecule()->point_group()->char_table();
+    CharacterTable ct = Process::environment.molecule()->point_group()->char_table();
     outfile->Printf("\n  %s", std::string(banner_width, '-').c_str());
     outfile->Printf("\n    %s", std::string(label_size, ' ').c_str());
     for (size_t h = 0; h < nirrep_; ++h)
@@ -280,8 +266,7 @@ void MOSpaceInfo::read_options(Options& options) {
     outfile->Printf("\n  %s", std::string(banner_width, '-').c_str());
 }
 
-std::pair<SpaceInfo, bool> MOSpaceInfo::read_mo_space(const std::string& space,
-                                                      Options& options) {
+std::pair<SpaceInfo, bool> MOSpaceInfo::read_mo_space(const std::string& space, Options& options) {
     bool read = false;
     Dimension space_dim(nirrep_);
     std::vector<MOInfo> vec_mo_info;
@@ -300,8 +285,7 @@ std::pair<SpaceInfo, bool> MOSpaceInfo::read_mo_space(const std::string& space,
     return std::make_pair(space_info, read);
 }
 
-void print_method_banner(const std::vector<std::string>& text,
-                         const std::string& separator) {
+void print_method_banner(const std::vector<std::string>& text, const std::string& separator) {
     size_t max_width = 80;
 
     size_t width = 0;
@@ -328,27 +312,37 @@ void print_h2(const std::string& text, const std::string& left_separator,
                     right_separator.c_str());
 }
 
-std::string to_string(const std::vector<std::string>& vec_str,
-                      const std::string& sep) {
+std::string to_string(const std::vector<std::string>& vec_str, const std::string& sep) {
     if (vec_str.size() == 0)
         return std::string();
 
     std::string ss;
 
-    std::for_each(vec_str.begin(), vec_str.end() - 1,
-                  [&](const std::string& s) { ss += s + sep; });
+    std::for_each(vec_str.begin(), vec_str.end() - 1, [&](const std::string& s) { ss += s + sep; });
     ss += vec_str.back();
 
     return ss;
+}
+
+std::string get_ms_string(double twice_ms) {
+    std::string ms_str;
+    double ms = twice_ms / 2.0;
+    if ((static_cast<int>(twice_ms) % 2) == 0) {
+        ms_str = std::to_string(static_cast<int>(ms));
+    } else {
+        int n = static_cast<int>(ms / 0.5);
+        ms_str.append(std::to_string(n));
+        ms_str += "/";
+        ms_str += "2";
+    }
+    return ms_str;
 }
 
 Matrix tensor_to_matrix(ambit::Tensor t, Dimension dims) {
     // Copy the tensor to a plain matrix
     size_t size = dims.sum();
     Matrix M("M", size, size);
-    t.iterate([&](const std::vector<size_t>& i, double& value) {
-        M.set(i[0], i[1], value);
-    });
+    t.iterate([&](const std::vector<size_t>& i, double& value) { M.set(i[0], i[1], value); });
 
     Matrix M_sym("M", dims, dims);
     size_t offset = 0;
@@ -367,9 +361,7 @@ SharedMatrix tensor_to_matrix(ambit::Tensor t) {
     size_t size1 = t.dim(0);
     size_t size2 = t.dim(1);
     SharedMatrix M(new Matrix("M", size1, size2));
-    t.iterate([&](const std::vector<size_t>& i, double& value) {
-        M->set(i[0], i[1], value);
-    });
+    t.iterate([&](const std::vector<size_t>& i, double& value) { M->set(i[0], i[1], value); });
     return M;
 }
 
@@ -396,25 +388,21 @@ std::pair<double, std::string> to_xb(size_t nele, size_t type_size) {
     return out;
 }
 
-void view_modified_orbitals(SharedWavefunction wfn,
-                            const std::shared_ptr<Matrix>& Ca,
+void view_modified_orbitals(SharedWavefunction wfn, const std::shared_ptr<Matrix>& Ca,
                             const std::shared_ptr<Vector>& diag_F,
                             const std::shared_ptr<Vector>& occupation) {
     std::shared_ptr<MoldenWriter> molden(new MoldenWriter(wfn));
-    std::string filename =
-        get_writer_file_prefix(wfn->molecule()->name()) + ".molden";
+    std::string filename = get_writer_file_prefix(wfn->molecule()->name()) + ".molden";
 
     if (remove(filename.c_str()) == 0) {
-        outfile->Printf("\n  Remove previous molden file named %s.",
-                        filename.c_str());
+        outfile->Printf("\n  Remove previous molden file named %s.", filename.c_str());
     }
     outfile->Printf("\n  Write molden file to %s.", filename.c_str());
     /* PORTTODO: re-enable this block
     molden->write(filename, Ca, Ca, diag_F, diag_F, occupation, occupation);
     */
 }
-std::pair<std::vector<int>, std::vector<int>>
-split_up_tasks(size_t size_of_tasks, int nproc) {
+std::pair<std::vector<int>, std::vector<int>> split_up_tasks(size_t size_of_tasks, int nproc) {
     int mystart = 0;
     int nbatch = 0;
     std::vector<int> mystart_list(nproc, 0);
@@ -439,9 +427,7 @@ split_up_tasks(size_t size_of_tasks, int nproc) {
 
 using namespace std::chrono;
 
-ForteTimer::ForteTimer() {
-    t_start_ = std::chrono::high_resolution_clock::now();
-}
+ForteTimer::ForteTimer() { t_start_ = std::chrono::high_resolution_clock::now(); }
 
 /// Return the elapsed time in seconds
 double ForteTimer::elapsed() {
