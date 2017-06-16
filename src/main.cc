@@ -59,7 +59,7 @@ extern "C" int read_options(std::string name, Options& options) {
 
        ForteOptions foptions; // <<
 
-    forte_options(name, foptions);
+forte_options(name, foptions);
 
     if (name == "FORTE" || options.read_globals()) {
         // Old way (deprecated) to pass options to Psi4
