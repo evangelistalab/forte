@@ -397,6 +397,8 @@ class ProjectorCI_HashVec : public Wavefunction {
 
     /// Get the reference occupation
     std::vector<int> get_occupation();
+    /// Sort the determinants by coefficients
+    void sortHashVecByCoefficient(det_hashvec& dets_hashvec, std::vector<double>& C);
 };
 }
 } // End Namespaces
