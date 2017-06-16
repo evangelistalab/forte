@@ -4,13 +4,11 @@
 namespace psi {
 namespace forte {
 
-void ForteOptions::add_bool(const std::string& label, bool value,
-                            const std::string& description) {
+void ForteOptions::add_bool(const std::string& label, bool value, const std::string& description) {
     bool_opts_.push_back(std::make_tuple(label, value, description));
 }
 
-void ForteOptions::add_int(const std::string& label, int value,
-                           const std::string& description) {
+void ForteOptions::add_int(const std::string& label, int value, const std::string& description) {
     int_opts_.push_back(std::make_tuple(label, value, description));
 }
 
@@ -21,19 +19,16 @@ void ForteOptions::add_double(const std::string& label, double value,
 
 void ForteOptions::add_str(const std::string& label, const std::string& value,
                            const std::string& description) {
-    str_opts_.push_back(
-        std::make_tuple(label, value, description, std::vector<std::string>()));
+    str_opts_.push_back(std::make_tuple(label, value, description, std::vector<std::string>()));
 }
 
 void ForteOptions::add_str(const std::string& label, const std::string& value,
                            const std::vector<std::string>& allowed_values,
                            const std::string& description) {
-    str_opts_.push_back(
-        std::make_tuple(label, value, description, allowed_values));
+    str_opts_.push_back(std::make_tuple(label, value, description, allowed_values));
 }
 
-void ForteOptions::add_array(const std::string& label,
-                             const std::string& description) {
+void ForteOptions::add_array(const std::string& label, const std::string& description) {
     array_opts_.push_back(std::make_tuple(label, description));
 }
 

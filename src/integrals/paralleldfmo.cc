@@ -28,15 +28,15 @@
 
 #ifdef HAVE_GA
 
-#include "psi4/psifiles.h"
 #include "psi4/psi4-dec.h"
+#include "psi4/psifiles.h"
 
 #include "psi4/lib3index/3index.h"
 
 #include "psi4/libqt/qt.h"
 
-#include "psi4/libmints/matrix.h"
 #include "psi4/libmints/integral.h"
+#include "psi4/libmints/matrix.h"
 #include "psi4/libmints/sieve.h"
 
 #include "psi4/libfock/jk.h"
@@ -52,8 +52,7 @@
 namespace psi {
 namespace forte {
 
-ParallelDFMO::ParallelDFMO(std::shared_ptr<BasisSet> primary,
-                           std::shared_ptr<BasisSet> auxiliary)
+ParallelDFMO::ParallelDFMO(std::shared_ptr<BasisSet> primary, std::shared_ptr<BasisSet> auxiliary)
     : primary_(primary), auxiliary_(auxiliary) {
     memory_ = Process::environment.get_memory();
 }
@@ -61,8 +60,7 @@ void ParallelDFMO::compute_integrals() {
     Timer compute_integrals_time;
     timer_on("DFMO: transform_integrals()");
     transform_integrals();
-    printf("\n P%d compute_integrals_time: %8.6f ", GA_Nodeid(),
-           compute_integrals_time.get());
+    printf("\n P%d compute_integrals_time: %8.6f ", GA_Nodeid(), compute_integrals_time.get());
     timer_off("DFMO: transform_integrals()");
 }
 void ParallelDFMO::transform_integrals() {
@@ -121,9 +119,8 @@ void ParallelDFMO::transform_integrals() {
         shell_end = shell_per_process * (my_rank + 1);
     } else {
         shell_start = shell_per_process * my_rank;
-        shell_end = (auxiliary_->nshell() % num_proc == 0
-                         ? shell_per_process * (my_rank + 1)
-                         : auxiliary_->nshell());
+        shell_end = (auxiliary_->nshell() % num_proc == 0 ? shell_per_process * (my_rank + 1)
+                                                          : auxiliary_->nshell());
     }
 
     // printf("\n P%d shell_per_process: %d shell_start:%d  shell_end:%d",
@@ -144,9 +141,9 @@ void ParallelDFMO::transform_integrals() {
     // shell_starts.push_back(auxiliary_->nshell());
 
     int function_start = auxiliary_->shell(shell_start).function_index();
-    int function_end = (shell_end == auxiliary_->nshell()
-                            ? auxiliary_->nbf()
-                            : auxiliary_->shell(shell_end).function_index());
+    int function_end =
+        (shell_end == auxiliary_->nshell() ? auxiliary_->nbf()
+                                           : auxiliary_->shell(shell_end).function_index());
     int dims[2];
     int chunk[2];
     dims[0] = naux;
@@ -162,24 +159,20 @@ void ParallelDFMO::transform_integrals() {
             shell_end = shell_per_process * (iproc + 1);
         } else {
             shell_start = shell_per_process * iproc;
-            shell_end = (auxiliary_->nshell() % num_proc == 0
-                             ? shell_per_process * (iproc + 1)
-                             : auxiliary_->nshell());
+            shell_end = (auxiliary_->nshell() % num_proc == 0 ? shell_per_process * (iproc + 1)
+                                                              : auxiliary_->nshell());
         }
         int function_start = auxiliary_->shell(shell_start).function_index();
         int function_end =
-            (shell_end == auxiliary_->nshell()
-                 ? auxiliary_->nbf()
-                 : auxiliary_->shell(shell_end).function_index());
+            (shell_end == auxiliary_->nshell() ? auxiliary_->nbf()
+                                               : auxiliary_->shell(shell_end).function_index());
         map[iproc] = function_start;
         outfile->Printf("\n  P%d shell_start: %d shell_end: %d function_start: "
                         "%d function_end: %d",
-                        iproc, shell_start, shell_end, function_start,
-                        function_end);
+                        iproc, shell_start, shell_end, function_start, function_end);
     }
     map[GA_Nnodes()] = 0;
-    int Aia_ga =
-        NGA_Create_irreg(C_DBL, 2, dims, (char*)"Aia_temp", chunk, map);
+    int Aia_ga = NGA_Create_irreg(C_DBL, 2, dims, (char*)"Aia_temp", chunk, map);
     if (not Aia_ga) {
         throw PSIEXCEPTION("GA failed on creating Aia_ga");
     }
@@ -190,8 +183,8 @@ void ParallelDFMO::transform_integrals() {
 
     // => ERI Objects <= //
 
-    std::shared_ptr<IntegralFactory> factory(new IntegralFactory(
-        auxiliary_, BasisSet::zero_ao_basis_set(), primary_, primary_));
+    std::shared_ptr<IntegralFactory> factory(
+        new IntegralFactory(auxiliary_, BasisSet::zero_ao_basis_set(), primary_, primary_));
     std::vector<std::shared_ptr<TwoBodyAOInt>> eri;
     for (int thread = 0; thread < nthread; thread++) {
         eri.push_back(std::shared_ptr<TwoBodyAOInt>(factory->eri()));
@@ -206,10 +199,8 @@ void ParallelDFMO::transform_integrals() {
     // => Temporary Tensors <= //
 
     // > Three-index buffers < //
-    std::shared_ptr<Matrix> Amn(
-        new Matrix("(A|mn)", max_rows, nso * (unsigned long int)nso));
-    std::shared_ptr<Matrix> Ami(
-        new Matrix("(A|mi)", max_rows, nso * (unsigned long int)max1));
+    std::shared_ptr<Matrix> Amn(new Matrix("(A|mn)", max_rows, nso * (unsigned long int)nso));
+    std::shared_ptr<Matrix> Ami(new Matrix("(A|mi)", max_rows, nso * (unsigned long int)max1));
     std::shared_ptr<Matrix> Aia(new Matrix("(A|ia)", naux, max12));
     double** Amnp = Amn->pointer();
     double** Amip = Ami->pointer();
@@ -235,9 +226,8 @@ void ParallelDFMO::transform_integrals() {
         int Pstop = shell_end;
         int nPshell = Pstop - Pstart;
         int pstart = auxiliary_->shell(Pstart).function_index();
-        int pstop = (Pstop == auxiliary_->nshell()
-                         ? auxiliary_->nbf()
-                         : auxiliary_->shell(Pstop).function_index());
+        int pstop = (Pstop == auxiliary_->nshell() ? auxiliary_->nbf()
+                                                   : auxiliary_->shell(Pstop).function_index());
         int rows = pstop - pstart;
 
         // > (Q|mn) ERIs < //
@@ -273,8 +263,7 @@ void ParallelDFMO::transform_integrals() {
                 for (int m = 0; m < nm; m++) {
                     for (int n = 0; n < nn; n++) {
                         Amnp[p + op - pstart][(m + om) * nso + (n + on)] =
-                            Amnp[p + op - pstart][(n + on) * nso + (m + om)] =
-                                (*buffer++);
+                            Amnp[p + op - pstart][(n + on) * nso + (m + om)] = (*buffer++);
                     }
                 }
             }
@@ -292,8 +281,7 @@ void ParallelDFMO::transform_integrals() {
         int n1 = end1 - start1;
         double* C1p = &Cp[0][start1];
 
-        C_DGEMM('N', 'N', rows * nso, n1, nso, 1.0, Amnp[0], nso, C1p, lda, 0.0,
-                Amip[0], n1);
+        C_DGEMM('N', 'N', rows * nso, n1, nso, 1.0, Amnp[0], nso, C1p, lda, 0.0, Amip[0], n1);
 
         // for (int ind2 = 0; ind2 < tasks[ind1].size(); ind2++) {
         // std::string space2 = pair_spaces_[tasks[ind1][ind2]].second;
@@ -313,14 +301,14 @@ void ParallelDFMO::transform_integrals() {
         if (transpose12) {
 #pragma omp parallel for num_threads(nthread)
             for (int Q = 0; Q < rows; Q++) {
-                C_DGEMM('T', 'N', n2, n1, nso, 1.0, C2p, lda, Amip[0] + Q * no1,
-                        n1, 0.0, Aiap[0] + Q * n12, n1);
+                C_DGEMM('T', 'N', n2, n1, nso, 1.0, C2p, lda, Amip[0] + Q * no1, n1, 0.0,
+                        Aiap[0] + Q * n12, n1);
             }
         } else {
 #pragma omp parallel for num_threads(nthread)
             for (int Q = 0; Q < rows; Q++) {
-                C_DGEMM('T', 'N', n1, n2, nso, 1.0, Amip[0] + Q * no1, n1, C2p,
-                        lda, 0.0, Aiap[0] + Q * n12, n2);
+                C_DGEMM('T', 'N', n1, n2, nso, 1.0, Amip[0] + Q * no1, n1, C2p, lda, 0.0,
+                        Aiap[0] + Q * n12, n2);
             }
         }
 
@@ -342,12 +330,10 @@ void ParallelDFMO::transform_integrals() {
 
     Timer J_one_half_time;
     J_one_half();
-    printf("\n  P%d J^({-1/2}} took %8.6f s.", GA_Nodeid(),
-           J_one_half_time.get());
+    printf("\n  P%d J^({-1/2}} took %8.6f s.", GA_Nodeid(), J_one_half_time.get());
 
     Timer GA_DGEMM;
-    GA_Dgemm('T', 'N', naux, nmo_ * nmo_, naux, 1.0, GA_J_onehalf_, Aia_ga, 0.0,
-             GA_Q_PQ_);
+    GA_Dgemm('T', 'N', naux, nmo_ * nmo_, naux, 1.0, GA_J_onehalf_, Aia_ga, 0.0, GA_Q_PQ_);
     printf("\n  P%d DGEMM took %8.6f s.", GA_Nodeid(), GA_DGEMM.get());
     GA_Destroy(GA_J_onehalf_);
     GA_Destroy(Aia_ga);
@@ -377,9 +363,8 @@ void ParallelDFMO::J_one_half() {
 
     // if(GA_Nodeid() == 0)
     {
-        std::shared_ptr<IntegralFactory> Jfactory(
-            new IntegralFactory(auxiliary_, BasisSet::zero_ao_basis_set(),
-                                auxiliary_, BasisSet::zero_ao_basis_set()));
+        std::shared_ptr<IntegralFactory> Jfactory(new IntegralFactory(
+            auxiliary_, BasisSet::zero_ao_basis_set(), auxiliary_, BasisSet::zero_ao_basis_set()));
         std::vector<std::shared_ptr<TwoBodyAOInt>> Jeri;
         for (int thread = 0; thread < nthread; thread++) {
             Jeri.push_back(std::shared_ptr<TwoBodyAOInt>(Jfactory->eri()));
@@ -432,8 +417,7 @@ void ParallelDFMO::J_one_half() {
                 int end_offset[2];
                 NGA_Distribution(GA_J_onehalf_, me, begin_offset, end_offset);
                 int offset = begin_offset[0];
-                NGA_Put(GA_J_onehalf_, begin_offset, end_offset,
-                        J->pointer()[offset], &naux);
+                NGA_Put(GA_J_onehalf_, begin_offset, end_offset, J->pointer()[offset], &naux);
             }
         }
     }

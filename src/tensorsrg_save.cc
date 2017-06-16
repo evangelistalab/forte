@@ -28,8 +28,8 @@
 
 #include <cmath>
 
-#include "psi4/libmints/matrix.h"
 #include "mini-boost/boost/numeric/odeint.hpp"
+#include "psi4/libmints/matrix.h"
 
 #include "psi4/libdiis/diismanager.h"
 

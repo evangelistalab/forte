@@ -26,33 +26,31 @@
  * @END LICENSE
  */
 
-#include <vector>
 #include <numeric>
+#include <vector>
 
-#include "psi4/libpsio/psio.h"
-#include "psi4/libmints/wavefunction.h"
-#include "psi4/libmints/matrix.h"
-#include "psi4/libmints/vector.h"
-#include "psi4/liboptions/liboptions.h"
 #include "psi4/libciomr/libciomr.h"
-#include "psi4/liboptions/liboptions.h"
-#include "psi4/libmints/molecule.h"
+#include "psi4/libfock/jk.h"
 #include "psi4/libfunctional/superfunctional.h"
+#include "psi4/libmints/matrix.h"
+#include "psi4/libmints/molecule.h"
+#include "psi4/libmints/vector.h"
+#include "psi4/libmints/wavefunction.h"
+#include "psi4/liboptions/liboptions.h"
+#include "psi4/liboptions/liboptions.h"
+#include "psi4/libpsio/psio.h"
 #include "psi4/libpsio/psio.h"
 #include "psi4/libpsio/psio.hpp"
-#include "psi4/libfock/jk.h"
 
-#include "helpers.h"
 #include "finite_temperature.h"
+#include "helpers.h"
 
 namespace psi {
 namespace forte {
 
-FiniteTemperatureHF::FiniteTemperatureHF(SharedWavefunction ref_wfn,
-                                         Options& options,
+FiniteTemperatureHF::FiniteTemperatureHF(SharedWavefunction ref_wfn, Options& options,
                                          std::shared_ptr<MOSpaceInfo> mo_space)
-    : RHF(ref_wfn, std::make_shared<SuperFunctional>(), options,
-          _default_psio_lib_),
+    : RHF(ref_wfn, std::make_shared<SuperFunctional>(), options, _default_psio_lib_),
       mo_space_info_(mo_space), options_(options) {
     shallow_copy(ref_wfn);
     reference_wavefunction_ = ref_wfn;
@@ -136,10 +134,8 @@ void FiniteTemperatureHF::frac_occupation() {
     SharedMatrix Call(this->Ca()->clone());
 
     Dimension nsopi = this->nsopi();
-    SharedMatrix C_scaled(
-        new Matrix("C_rdocc_active", nirrep_, nsopi, occupation));
-    SharedMatrix C_no_scale(
-        new Matrix("C_nochange", nirrep_, nsopi, occupation));
+    SharedMatrix C_scaled(new Matrix("C_rdocc_active", nirrep_, nsopi, occupation));
+    SharedMatrix C_no_scale(new Matrix("C_nochange", nirrep_, nsopi, occupation));
     /// Scale the columns with the occupation.
     /// This C matrix will be passed to JK object for CLeft
     for (int h = 0; h < nirrep_; h++) {
@@ -152,15 +148,13 @@ void FiniteTemperatureHF::frac_occupation() {
     C_occ_folded_ = C_scaled;
     C_occ_a_ = C_no_scale;
 }
-void FiniteTemperatureHF::initialize_occupation_vector(
-    std::vector<double>& dirac) {
+void FiniteTemperatureHF::initialize_occupation_vector(std::vector<double>& dirac) {
     auto nmo_vector = mo_space_info_->get_absolute_mo("ALL");
     for (auto& active_array : nmo_vector) {
         dirac[active_array] = 1.0;
     }
 }
-std::vector<std::pair<double, int>>
-FiniteTemperatureHF::get_active_orbital_energy() {
+std::vector<std::pair<double, int>> FiniteTemperatureHF::get_active_orbital_energy() {
     int nirrep = this->nirrep();
     Dimension nmopi = mo_space_info_->get_dimension("ALL");
     std::vector<std::pair<double, int>> nmo_vec;
@@ -172,8 +166,7 @@ FiniteTemperatureHF::get_active_orbital_energy() {
         offset += nmopi[h];
     }
     std::sort(nmo_vec.begin(), nmo_vec.end(),
-              [](const std::pair<double, int>& left,
-                 const std::pair<double, int>& right) {
+              [](const std::pair<double, int>& left, const std::pair<double, int>& right) {
                   return left.first < right.first;
               });
 
@@ -196,10 +189,8 @@ double FiniteTemperatureHF::bisection(std::vector<double>& ni, double T) {
     int max_iter = std::ceil(iterations);
 
     if (debug_ > 1) {
-        outfile->Printf("\n In Bisection function HAMO = %6.3f  LAMO = %6.3f\n",
-                        ef1, ef2);
-        outfile->Printf("\n Bisection should converged in %d iterations",
-                        max_iter);
+        outfile->Printf("\n In Bisection function HAMO = %6.3f  LAMO = %6.3f\n", ef1, ef2);
+        outfile->Printf("\n Bisection should converged in %d iterations", max_iter);
         outfile->Printf("\n Iterations NA   ERROR   E_f");
     }
     while (iter < 500) {
@@ -208,13 +199,11 @@ double FiniteTemperatureHF::bisection(std::vector<double>& ni, double T) {
         sum = 0.0;
         sum = occ_vec(nibisect, ef, T);
 
-        if (std::fabs((sum - naelec)) < 1e-2 ||
-            std::fabs(ef2 - ef1) / 2.0 < 1e-6) {
+        if (std::fabs((sum - naelec)) < 1e-2 || std::fabs(ef2 - ef1) / 2.0 < 1e-6) {
             break;
         }
         if (debug_ > 1) {
-            outfile->Printf("\n %d %d %8.8f  %8.8f", iter, naelec,
-                            std::fabs(sum - naelec), ef);
+            outfile->Printf("\n %d %d %8.8f  %8.8f", iter, naelec, std::fabs(sum - naelec), ef);
         }
 
         iter++;
@@ -253,13 +242,11 @@ double FiniteTemperatureHF::bisection(std::vector<double>& ni, double T) {
 
     return ef;
 }
-double FiniteTemperatureHF::occ_vec(std::vector<double>& nibisect, double ef,
-                                    double T) {
+double FiniteTemperatureHF::occ_vec(std::vector<double>& nibisect, double ef, double T) {
     double sum = 0.0;
     for (size_t i = 0; i < nibisect.size(); i++) {
         // Fermi Dirac distribution - 1.0 / (1.0 + exp(\beta (e_i - ef)))
-        double fi = 1.0 / (1.0 + exp(1.0 / (0.99994 * T) *
-                                     (active_orb_energy_[i].first - ef)));
+        double fi = 1.0 / (1.0 + exp(1.0 / (0.99994 * T) * (active_orb_energy_[i].first - ef)));
 
         nibisect[active_orb_energy_[i].second] = fi;
         sum += nibisect[i];
@@ -273,8 +260,7 @@ void FiniteTemperatureHF::form_G() {
     }
     frac_occupation();
     form_D();
-    std::shared_ptr<JK> JK =
-        JK::build_JK(this->basisset(), get_basisset("DF_BASIS_SCF"), options_);
+    std::shared_ptr<JK> JK = JK::build_JK(this->basisset(), get_basisset("DF_BASIS_SCF"), options_);
     JK->set_memory(Process::environment.get_memory() * 0.8);
     JK->set_cutoff(options_.get_double("INTEGRAL_SCREENING"));
     JK->initialize();
@@ -302,8 +288,6 @@ void FiniteTemperatureHF::form_G() {
     F_core->subtract(K_core);
     G_->copy(F_core);
 }
-void FiniteTemperatureHF::form_D() {
-    D_ = Matrix::doublet(C_occ_folded_, C_occ_a_, false, true);
-}
+void FiniteTemperatureHF::form_D() { D_ = Matrix::doublet(C_occ_folded_, C_occ_a_, false, true); }
 }
 }

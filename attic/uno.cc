@@ -26,29 +26,29 @@
  * @END LICENSE
  */
 
-#include <cmath>
-#include <cstdio>
-#include <map>
-#include <vector>
-#include <libmints/matrix.h>
-#include <libmints/vector.h>
-#include <libmints/petitelist.h>
-#include <libmints/wavefunction.h>
-#include <libmints/typedefs.h>
-#include <libmints/basisset.h>
-#include <libmints/multipolesymmetry.h>
-#include <libmints/integralparameters.h>
-#include <libmints/mintshelper.h>
-#include <libqt/qt.h>
 #include "uno.h"
 #include "helpers.h"
+#include <cmath>
+#include <cstdio>
+#include <libmints/basisset.h>
+#include <libmints/integralparameters.h>
+#include <libmints/matrix.h>
+#include <libmints/mintshelper.h>
+#include <libmints/multipolesymmetry.h>
+#include <libmints/petitelist.h>
+#include <libmints/typedefs.h>
+#include <libmints/vector.h>
+#include <libmints/wavefunction.h>
+#include <libqt/qt.h>
+#include <map>
+#include <vector>
 
-namespace psi{
-namespace forte{
+namespace psi {
+namespace forte {
 
-UNO::UNO(Options &options){
+UNO::UNO(Options& options) {
 
-    print_method_banner({"Unrestricted Natural Orbitals (UNO)","Chenyang (York) Li"});
+    print_method_banner({"Unrestricted Natural Orbitals (UNO)", "Chenyang (York) Li"});
 
     // wavefunction from psi
     boost::shared_ptr<Wavefunction> wfn = Process::environment.wavefunction();
@@ -58,7 +58,7 @@ UNO::UNO(Options &options){
     Dimension nsopi = wfn->nsopi();
 
     // total density
-    SharedMatrix Dt ((wfn->Da())->clone());
+    SharedMatrix Dt((wfn->Da())->clone());
     Dt->add(wfn->Db());
 
     // size of basis function
@@ -66,33 +66,33 @@ UNO::UNO(Options &options){
 
     // AO overlap
     SharedMatrix overlap = wfn->S();
-    SharedMatrix Svector (new Matrix("Overlap Eigen Vectors", nsopi, nsopi));
-    SharedVector Svalues (new Vector("Overlap Eigen Values", nsopi));
+    SharedMatrix Svector(new Matrix("Overlap Eigen Vectors", nsopi, nsopi));
+    SharedVector Svalues(new Vector("Overlap Eigen Values", nsopi));
     overlap->diagonalize(Svector, Svalues);
-//    Svector->eivprint(Svalues);
+    //    Svector->eivprint(Svalues);
 
     // AO overlap one half and minus one half
-    SharedMatrix S_onehalf (new Matrix("Overlap One Half", nsopi, nsopi));
-    SharedMatrix S_minus_onehalf (new Matrix("Overlap Minus One Half", nsopi, nsopi));
-    for(int h = 0; h != nirrep; ++h){
+    SharedMatrix S_onehalf(new Matrix("Overlap One Half", nsopi, nsopi));
+    SharedMatrix S_minus_onehalf(new Matrix("Overlap Minus One Half", nsopi, nsopi));
+    for (int h = 0; h != nirrep; ++h) {
         size_t m = nsopi[h];
-        for (size_t i = 0; i != m; ++i){
+        for (size_t i = 0; i != m; ++i) {
             S_onehalf->set(h, i, i, sqrt(Svalues->get(h, i)));
             S_minus_onehalf->set(h, i, i, 1 / sqrt(Svalues->get(h, i)));
         }
     }
     S_onehalf->back_transform(Svector);
     S_minus_onehalf->back_transform(Svector);
-//    S_onehalf->print();
+    //    S_onehalf->print();
 
     // diagonalize S^(1/2) * Dt * S^(1/2)
-//    (wfn->Da())->print();
-//    (wfn->Db())->print();
-//    Dt->print();
+    //    (wfn->Da())->print();
+    //    (wfn->Db())->print();
+    //    Dt->print();
     Dt->transform(S_onehalf); // because S is symmetric
-//    Dt->print();
-    SharedMatrix Xvector (new Matrix("S*Dt Eigen Vectors", nsopi, nsopi));
-    SharedVector occ (new Vector("Occupation Numbers", nsopi));
+                              //    Dt->print();
+    SharedMatrix Xvector(new Matrix("S*Dt Eigen Vectors", nsopi, nsopi));
+    SharedVector occ(new Vector("Occupation Numbers", nsopi));
     Dt->diagonalize(Xvector, occ, descending);
     Xvector->eivprint(occ);
 
@@ -100,20 +100,20 @@ UNO::UNO(Options &options){
     SharedMatrix Ca = wfn->Ca();
     SharedMatrix Cb = wfn->Cb();
     Ca->print();
-    SharedMatrix Cnew (new Matrix("NO Coefficients", nsopi, nsopi));
+    SharedMatrix Cnew(new Matrix("NO Coefficients", nsopi, nsopi));
     Cnew->gemm(false, false, 1.0, S_minus_onehalf, Xvector, 0.0);
     Ca->copy(Cnew);
     Cb->copy(Cnew);
     Cnew->print();
 
     // form new density
-    SharedMatrix Ca_scale (Ca->clone());
-    for(int h = 0; h != nirrep; ++h){
-        for(int i = 0; i != nsopi[h]; ++i){
+    SharedMatrix Ca_scale(Ca->clone());
+    for (int h = 0; h != nirrep; ++h) {
+        for (int i = 0; i != nsopi[h]; ++i) {
             Ca_scale->scale_column(h, i, occ->get(h, i));
         }
     }
-    SharedMatrix Dnew (new Matrix("New Density (SO basis)", nsopi, nsopi));
+    SharedMatrix Dnew(new Matrix("New Density (SO basis)", nsopi, nsopi));
     Dnew->gemm(false, true, 1.0, Ca_scale, Ca, 0.0);
     Dnew->scale(0.5);
 
@@ -122,10 +122,10 @@ UNO::UNO(Options &options){
     PetiteList petite(basisset, wfn->integral(), true);
     SharedMatrix aotoso = petite.aotoso();
     SharedMatrix sotoao = petite.sotoao();
-    SharedMatrix Dao (new Matrix("D (AO basis)", nao, nao));
+    SharedMatrix Dao(new Matrix("D (AO basis)", nao, nao));
     Dao->remove_symmetry(Dnew, sotoao);
-//    Dnew->print();
-//    Dao->print();
+    //    Dnew->print();
+    //    Dao->print();
 
     // get ao eri
     MintsHelper helper;
@@ -137,31 +137,31 @@ UNO::UNO(Options &options){
     outfile->Printf("\n  size of col of eri: %zu", eri->ncol());
 
     // form G
-    SharedMatrix Gao (new Matrix("G (AO basis)", nao, nao));
-    SharedMatrix G (new Matrix("G (SO basis)", nsopi, nsopi));
-    for(size_t m = 0; m < nao; ++m){
-        for(size_t n = 0; n < nao; ++n){
+    SharedMatrix Gao(new Matrix("G (AO basis)", nao, nao));
+    SharedMatrix G(new Matrix("G (SO basis)", nsopi, nsopi));
+    for (size_t m = 0; m < nao; ++m) {
+        for (size_t n = 0; n < nao; ++n) {
             double temp = 0.0;
-            for(size_t r = 0; r < nao; ++r){
-                for(size_t s = 0; s < nao; ++s){
-                    double J = eri->get(m*nao+n, r*nao+s);
-                    double K = eri->get(m*nao+r, n*nao+s);
-                    temp += Dao->get(r,s) * (2 * J - K);
+            for (size_t r = 0; r < nao; ++r) {
+                for (size_t s = 0; s < nao; ++s) {
+                    double J = eri->get(m * nao + n, r * nao + s);
+                    double K = eri->get(m * nao + r, n * nao + s);
+                    temp += Dao->get(r, s) * (2 * J - K);
                 }
             }
-            Gao->set(m,n,temp);
+            Gao->set(m, n, temp);
         }
     }
     G->apply_symmetry(Gao, aotoso);
 
     // form Fock matrix
-    SharedMatrix F ((wfn->H())->clone());
+    SharedMatrix F((wfn->H())->clone());
     F->add(G);
     F->transform(Ca);
-    SharedVector F_diag (new Vector("Fock Diagonal Elements", nsopi));
-    for(int h = 0; h != nirrep; ++h){
-        for(int i = 0; i != nsopi[h]; ++i){
-            F_diag->set(h, i,F->get(h, i, i));
+    SharedVector F_diag(new Vector("Fock Diagonal Elements", nsopi));
+    for (int h = 0; h != nirrep; ++h) {
+        for (int i = 0; i != nsopi[h]; ++i) {
+            F_diag->set(h, i, F->get(h, i, i));
         }
     }
     F_diag->print();
@@ -171,17 +171,18 @@ UNO::UNO(Options &options){
     std::vector<size_t> closed, active;
     double unomin = options.get_double("UNOMIN");
     double unomax = options.get_double("UNOMAX");
-    outfile->Printf("\n  UNO Orbital Spaces for CASSCF/CASCI (Min. Occ.: %.3f, Max. Occ.: %.3f)", unomin, unomax);
+    outfile->Printf("\n  UNO Orbital Spaces for CASSCF/CASCI (Min. Occ.: %.3f, Max. Occ.: %.3f)",
+                    unomin, unomax);
     outfile->Printf("\n");
-    for(int h = 0; h != nirrep; ++h){
+    for (int h = 0; h != nirrep; ++h) {
         size_t closedpi = 0, activepi = 0;
-        for(int i = 0; i != nsopi[h]; ++i){
+        for (int i = 0; i != nsopi[h]; ++i) {
             double occ_num = occ->get(h, i);
-            if(occ_num < unomin){
+            if (occ_num < unomin) {
                 continue;
-            }else if(occ_num >= unomax){
+            } else if (occ_num >= unomax) {
                 ++closedpi;
-            }else{
+            } else {
                 ++activepi;
             }
         }
@@ -189,17 +190,17 @@ UNO::UNO(Options &options){
         active.push_back(activepi);
     }
     outfile->Printf("\n  %-25s ", "CLOSED:");
-    for(auto &rocc: closed){
+    for (auto& rocc : closed) {
         outfile->Printf("%5zu", rocc);
     }
     outfile->Printf("\n  %-25s ", "ACTIVE:");
-    for(auto &aocc: active){
+    for (auto& aocc : active) {
         outfile->Printf("%5zu", aocc);
     }
     outfile->Printf("\n");
 
     // print UNO details
-    if(options.get_bool("UNO_PRINT")){
+    if (options.get_bool("UNO_PRINT")) {
         outfile->Printf("\n  UNO Occupation Number:\n");
         occ->print();
         outfile->Printf("\n  UNO Coefficients:\n");
@@ -207,18 +208,18 @@ UNO::UNO(Options &options){
     }
 
     // write molden
-    if(options.get_bool("MOLDEN_WRITE")){
+    if (options.get_bool("MOLDEN_WRITE")) {
         boost::shared_ptr<MoldenWriter> molden(new MoldenWriter(wfn));
         std::string filename = get_writer_file_prefix() + ".molden";
 
-        SharedVector occ_a (new Vector("Occ. Alpha", nsopi));
-        SharedVector occ_b (new Vector("Occ. Beta", nsopi));
+        SharedVector occ_a(new Vector("Occ. Alpha", nsopi));
+        SharedVector occ_b(new Vector("Occ. Beta", nsopi));
         occ_a->copy(*occ);
         occ_b->copy(*occ);
         occ_a->scale(0.5);
         occ_b->scale(0.5);
 
-        if(remove(filename.c_str()) == 0){
+        if (remove(filename.c_str()) == 0) {
             outfile->Printf("\n  Remove previous molden file named %s.", filename.c_str());
         }
         outfile->Printf("\n  Write molden file to %s.", filename.c_str());
@@ -226,6 +227,6 @@ UNO::UNO(Options &options){
     }
 }
 
-UNO::~UNO(){}
-
-}}
+UNO::~UNO() {}
+}
+}

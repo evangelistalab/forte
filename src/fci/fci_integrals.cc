@@ -33,11 +33,9 @@
 namespace psi {
 namespace forte {
 
-FCIIntegrals::FCIIntegrals(std::shared_ptr<ForteIntegrals> ints,
-                           std::vector<size_t> active_mo,
+FCIIntegrals::FCIIntegrals(std::shared_ptr<ForteIntegrals> ints, std::vector<size_t> active_mo,
                            std::vector<size_t> restricted_docc_mo)
-    : ints_(ints), active_mo_(active_mo),
-      restricted_docc_mo_(restricted_docc_mo) {
+    : ints_(ints), active_mo_(active_mo), restricted_docc_mo_(restricted_docc_mo) {
     nmo_ = active_mo_.size();
     startup();
 }
@@ -57,24 +55,17 @@ void FCIIntegrals::RestrictedOneBodyOperator(std::vector<double>& oei_a,
     std::vector<size_t> cmo_to_mo(active_mo_);
     size_t nfomo = fomo_to_mo.size();
 
-    ambit::Tensor rdocc_aa =
-        ints_->aptei_aa_block(fomo_to_mo, fomo_to_mo, fomo_to_mo, fomo_to_mo);
-    ambit::Tensor rdocc_ab =
-        ints_->aptei_ab_block(fomo_to_mo, fomo_to_mo, fomo_to_mo, fomo_to_mo);
-    ambit::Tensor rdocc_bb =
-        ints_->aptei_bb_block(fomo_to_mo, fomo_to_mo, fomo_to_mo, fomo_to_mo);
+    ambit::Tensor rdocc_aa = ints_->aptei_aa_block(fomo_to_mo, fomo_to_mo, fomo_to_mo, fomo_to_mo);
+    ambit::Tensor rdocc_ab = ints_->aptei_ab_block(fomo_to_mo, fomo_to_mo, fomo_to_mo, fomo_to_mo);
+    ambit::Tensor rdocc_bb = ints_->aptei_bb_block(fomo_to_mo, fomo_to_mo, fomo_to_mo, fomo_to_mo);
     tei_rdocc_aa = rdocc_aa.data();
     tei_rdocc_ab = rdocc_ab.data();
     tei_rdocc_bb = rdocc_bb.data();
 
-    ambit::Tensor gh_aa =
-        ints_->aptei_aa_block(cmo_to_mo, fomo_to_mo, cmo_to_mo, fomo_to_mo);
-    ambit::Tensor gh_ab =
-        ints_->aptei_ab_block(cmo_to_mo, fomo_to_mo, cmo_to_mo, fomo_to_mo);
-    ambit::Tensor gh_bb =
-        ints_->aptei_bb_block(cmo_to_mo, fomo_to_mo, cmo_to_mo, fomo_to_mo);
-    ambit::Tensor gh2_ab =
-        ints_->aptei_ab_block(fomo_to_mo, cmo_to_mo, fomo_to_mo, cmo_to_mo);
+    ambit::Tensor gh_aa = ints_->aptei_aa_block(cmo_to_mo, fomo_to_mo, cmo_to_mo, fomo_to_mo);
+    ambit::Tensor gh_ab = ints_->aptei_ab_block(cmo_to_mo, fomo_to_mo, cmo_to_mo, fomo_to_mo);
+    ambit::Tensor gh_bb = ints_->aptei_bb_block(cmo_to_mo, fomo_to_mo, cmo_to_mo, fomo_to_mo);
+    ambit::Tensor gh2_ab = ints_->aptei_ab_block(fomo_to_mo, cmo_to_mo, fomo_to_mo, cmo_to_mo);
 
     tei_gh_aa = gh_aa.data();
     tei_gh_ab = gh_ab.data();
@@ -89,8 +80,7 @@ void FCIIntegrals::RestrictedOneBodyOperator(std::vector<double>& oei_a,
         scalar_energy_ += ints_->oei_a(ii, ii);
         scalar_energy_ += ints_->oei_b(ii, ii);
         for (size_t j = 0; j < nfomo; ++j) {
-            size_t index =
-                nfomo * nfomo * nfomo * i + nfomo * nfomo * j + nfomo * i + j;
+            size_t index = nfomo * nfomo * nfomo * i + nfomo * nfomo * j + nfomo * i + j;
             scalar_energy_ += 0.5 * tei_rdocc_aa[index];
             scalar_energy_ += 1.0 * tei_rdocc_ab[index];
             scalar_energy_ += 0.5 * tei_rdocc_bb[index];
@@ -107,8 +97,7 @@ void FCIIntegrals::RestrictedOneBodyOperator(std::vector<double>& oei_a,
             // Compute the one-body contribution to the energy that comes from
             // the restricted occupied orbitals
             for (size_t f = 0; f < nfomo; ++f) {
-                size_t index =
-                    nfomo * nmo_ * nfomo * p + nmo_ * nfomo * f + nfomo * q + f;
+                size_t index = nfomo * nmo_ * nfomo * p + nmo_ * nfomo * f + nfomo * q + f;
                 oei_a[idx] += tei_gh_aa[index];
                 oei_a[idx] += tei_gh_ab[index];
                 oei_b[idx] += tei_gh_bb[index];
@@ -119,8 +108,7 @@ void FCIIntegrals::RestrictedOneBodyOperator(std::vector<double>& oei_a,
 }
 
 FCIIntegrals::FCIIntegrals(std::shared_ptr<ForteIntegrals> ints,
-                           std::shared_ptr<MOSpaceInfo> mospace_info,
-                           FCIIntegralsType type)
+                           std::shared_ptr<MOSpaceInfo> mospace_info, FCIIntegralsType type)
     : ints_(ints) {
     std::vector<size_t> cmo_to_mo;
     std::vector<size_t> fomo_to_mo;
@@ -128,8 +116,7 @@ FCIIntegrals::FCIIntegrals(std::shared_ptr<ForteIntegrals> ints,
     nmo_ = mospace_info->size("ACTIVE");
     cmo_to_mo = mospace_info->get_corr_abs_mo("ACTIVE");
     fomo_to_mo = mospace_info->get_corr_abs_mo("RESTRICTED_DOCC");
-    std::vector<size_t> ncmo_to_mo =
-        mospace_info->get_corr_abs_mo("GENERALIZED HOLE");
+    std::vector<size_t> ncmo_to_mo = mospace_info->get_corr_abs_mo("GENERALIZED HOLE");
 
     nmo2_ = nmo_ * nmo_;
     nmo3_ = nmo_ * nmo_ * nmo_;
@@ -150,12 +137,9 @@ FCIIntegrals::FCIIntegrals(std::shared_ptr<ForteIntegrals> ints,
     // Initialize tei_rdocc vectors, but don't store them as global variable
 
     // Grab all integrals in blocks
-    ambit::Tensor act_aa =
-        ints->aptei_aa_block(cmo_to_mo, cmo_to_mo, cmo_to_mo, cmo_to_mo);
-    ambit::Tensor act_ab =
-        ints->aptei_ab_block(cmo_to_mo, cmo_to_mo, cmo_to_mo, cmo_to_mo);
-    ambit::Tensor act_bb =
-        ints->aptei_bb_block(cmo_to_mo, cmo_to_mo, cmo_to_mo, cmo_to_mo);
+    ambit::Tensor act_aa = ints->aptei_aa_block(cmo_to_mo, cmo_to_mo, cmo_to_mo, cmo_to_mo);
+    ambit::Tensor act_ab = ints->aptei_ab_block(cmo_to_mo, cmo_to_mo, cmo_to_mo, cmo_to_mo);
+    ambit::Tensor act_bb = ints->aptei_bb_block(cmo_to_mo, cmo_to_mo, cmo_to_mo, cmo_to_mo);
     tei_aa_ = act_aa.data();
     tei_ab_ = act_ab.data();
     tei_bb_ = act_bb.data();
@@ -180,8 +164,7 @@ void FCIIntegrals::startup() {
     diag_tei_bb_.resize(nmo2_);
     frozen_core_energy_ = ints_->frozen_core_energy();
 }
-void FCIIntegrals::set_active_integrals(const ambit::Tensor& act_aa,
-                                        const ambit::Tensor& act_ab,
+void FCIIntegrals::set_active_integrals(const ambit::Tensor& act_aa, const ambit::Tensor& act_ab,
                                         const ambit::Tensor& act_bb) {
     tei_aa_ = act_aa.data();
     tei_ab_ = act_ab.data();
@@ -195,18 +178,14 @@ void FCIIntegrals::compute_restricted_one_body_operator() {
 }
 
 void FCIIntegrals::set_active_integrals_and_restricted_docc() {
-    ambit::Tensor act_aa =
-        ints_->aptei_aa_block(active_mo_, active_mo_, active_mo_, active_mo_);
-    ambit::Tensor act_ab =
-        ints_->aptei_ab_block(active_mo_, active_mo_, active_mo_, active_mo_);
-    ambit::Tensor act_bb =
-        ints_->aptei_bb_block(active_mo_, active_mo_, active_mo_, active_mo_);
+    ambit::Tensor act_aa = ints_->aptei_aa_block(active_mo_, active_mo_, active_mo_, active_mo_);
+    ambit::Tensor act_ab = ints_->aptei_ab_block(active_mo_, active_mo_, active_mo_, active_mo_);
+    ambit::Tensor act_bb = ints_->aptei_bb_block(active_mo_, active_mo_, active_mo_, active_mo_);
 
     tei_aa_ = act_aa.data();
     tei_ab_ = act_ab.data();
     tei_bb_ = act_bb.data();
     RestrictedOneBodyOperator(oei_a_, oei_b_);
 }
-
 }
 }

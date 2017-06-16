@@ -28,12 +28,12 @@
 
 #include <cmath>
 
-#include "psi4/psifiles.h"
-#include "psi4/libmints/sointegral_twobody.h"
 #include "psi4/libmints/integralparameters.h"
+#include "psi4/libmints/sointegral_twobody.h"
+#include "psi4/psifiles.h"
 
-#include "integrals.h"
 #include "../blockedtensorfactory.h"
+#include "integrals.h"
 #include "psi4/libmints/vector.h"
 
 namespace psi {
@@ -45,12 +45,11 @@ namespace forte {
      * @param restricted - type of integral transformation
      * @param resort_frozen_core -
      */
-EffectiveIntegrals::EffectiveIntegrals(
-    psi::Options& options, SharedWavefunction ref_wfn,
-    IntegralSpinRestriction restricted, IntegralFrozenCore resort_frozen_core,
-    std::shared_ptr<MOSpaceInfo> mo_space_info)
-    : ForteIntegrals(options, ref_wfn, restricted, resort_frozen_core,
-                     mo_space_info),
+EffectiveIntegrals::EffectiveIntegrals(psi::Options& options, SharedWavefunction ref_wfn,
+                                       IntegralSpinRestriction restricted,
+                                       IntegralFrozenCore resort_frozen_core,
+                                       std::shared_ptr<MOSpaceInfo> mo_space_info)
+    : ForteIntegrals(options, ref_wfn, restricted, resort_frozen_core, mo_space_info),
       ints_(nullptr) {
     integral_type_ = Effective;
 
@@ -119,22 +118,16 @@ void EffectiveIntegrals::transform_integrals() {
     //        eri->compute_shell(shellIter,eri_saver);
     //    }
 
-    ambit::Tensor Vmo = ambit::Tensor::build(ambit::CoreTensor, "Vmo",
-                                             {nmo_, nmo_, nmo_, nmo_});
-    ambit::Tensor Vso = ambit::Tensor::build(ambit::CoreTensor, "Vso",
-                                             {nso_, nso_, nso_, nso_});
-    ambit::Tensor C =
-        ambit::Tensor::build(ambit::CoreTensor, "C", {nso_, nmo_});
+    ambit::Tensor Vmo = ambit::Tensor::build(ambit::CoreTensor, "Vmo", {nmo_, nmo_, nmo_, nmo_});
+    ambit::Tensor Vso = ambit::Tensor::build(ambit::CoreTensor, "Vso", {nso_, nso_, nso_, nso_});
+    ambit::Tensor C = ambit::Tensor::build(ambit::CoreTensor, "C", {nso_, nmo_});
 
     double eff_coulomb_omega = options_.get_double("EFFECTIVE_COULOMB_OMEGA");
     double eff_coulomb_factor = options_.get_double("EFFECTIVE_COULOMB_FACTOR");
     double eff_coulomb_exp = options_.get_double("EFFECTIVE_COULOMB_EXPONENT");
-    outfile->Printf("  Effective Coulomb Omega:              %6f\n",
-                    eff_coulomb_omega);
-    outfile->Printf("  Effective Coulomb Gaussian Factor:    %6f\n",
-                    eff_coulomb_factor);
-    outfile->Printf("  Effective Coulomb Gaussian Exponent:  %6f\n",
-                    eff_coulomb_exp);
+    outfile->Printf("  Effective Coulomb Omega:              %6f\n", eff_coulomb_omega);
+    outfile->Printf("  Effective Coulomb Gaussian Factor:    %6f\n", eff_coulomb_factor);
+    outfile->Printf("  Effective Coulomb Gaussian Exponent:  %6f\n", eff_coulomb_exp);
 
     // Erf(x)/x integrals (long range)
     {
@@ -142,10 +135,8 @@ void EffectiveIntegrals::transform_integrals() {
         std::shared_ptr<TwoBodySOInt> eri(new TwoBodySOInt(tb, integral));
 
         ERISaver erf_eri_saver(aptei_idx_, num_aptei);
-        SOShellCombinationsIterator shellIter(sobasisset, sobasisset,
-                                              sobasisset, sobasisset);
-        for (shellIter.first(); shellIter.is_done() == false;
-             shellIter.next()) {
+        SOShellCombinationsIterator shellIter(sobasisset, sobasisset, sobasisset, sobasisset);
+        for (shellIter.first(); shellIter.is_done() == false; shellIter.next()) {
             eri->compute_shell(shellIter, erf_eri_saver);
         }
 
@@ -176,8 +167,7 @@ void EffectiveIntegrals::transform_integrals() {
     // Gaussian(gamma,c) integrals (short range)
     {
         std::shared_ptr<Vector> coeff = std::shared_ptr<Vector>(new Vector(1));
-        std::shared_ptr<Vector> exponent =
-            std::shared_ptr<Vector>(new Vector(1));
+        std::shared_ptr<Vector> exponent = std::shared_ptr<Vector>(new Vector(1));
         coeff->set(0, eff_coulomb_factor);
         exponent->set(0, eff_coulomb_exp);
 
@@ -188,10 +178,8 @@ void EffectiveIntegrals::transform_integrals() {
         std::shared_ptr<TwoBodySOInt> eri(new TwoBodySOInt(tb, integral));
 
         ERISaver f12_eri_saver(aptei_idx_, num_aptei);
-        SOShellCombinationsIterator shellIter(sobasisset, sobasisset,
-                                              sobasisset, sobasisset);
-        for (shellIter.first(); shellIter.is_done() == false;
-             shellIter.next()) {
+        SOShellCombinationsIterator shellIter(sobasisset, sobasisset, sobasisset, sobasisset);
+        for (shellIter.first(); shellIter.is_done() == false; shellIter.next()) {
             eri->compute_shell(shellIter, f12_eri_saver);
         }
 
@@ -213,9 +201,8 @@ void EffectiveIntegrals::transform_integrals() {
         mo_offset += nmopi_[h];
     }
 
-    C.iterate([&](const std::vector<size_t>& i, double& value) {
-        value = Ca_nosym.get(i[0], i[1]);
-    });
+    C.iterate(
+        [&](const std::vector<size_t>& i, double& value) { value = Ca_nosym.get(i[0], i[1]); });
 
     Vmo("pqrs") = Vso("abcd") * C("ap") * C("bq") * C("cr") * C("ds");
 
@@ -244,10 +231,8 @@ void EffectiveIntegrals::transform_integrals() {
             for (size_t r = 0; r < nmo_; ++r) {
                 for (size_t s = 0; s < nmo_; ++s) {
                     // <pq||rs> = <pq|rs> - <pq|sr> = (pr|qs) - (ps|qr)
-                    double direct =
-                        two_electron_integrals[aptei_index(p, r, q, s)];
-                    double exchange =
-                        two_electron_integrals[aptei_index(p, s, q, r)];
+                    double direct = two_electron_integrals[aptei_index(p, r, q, s)];
+                    double exchange = two_electron_integrals[aptei_index(p, s, q, r)];
                     size_t index = aptei_index(p, q, r, s);
                     aphys_tei_aa[index] = direct - exchange;
                     aphys_tei_ab[index] = direct;
@@ -260,8 +245,7 @@ void EffectiveIntegrals::transform_integrals() {
     // Deallocate temp memory
     delete[] two_electron_integrals;
 
-    outfile->Printf("\n  Integral transformation done. %8.8f s",
-                    int_timer.get());
+    outfile->Printf("\n  Integral transformation done. %8.8f s", int_timer.get());
     outfile->Flush();
 }
 
@@ -281,8 +265,8 @@ ambit::Tensor EffectiveIntegrals::aptei_aa_block(const std::vector<size_t>& p,
                                                  const std::vector<size_t>& q,
                                                  const std::vector<size_t>& r,
                                                  const std::vector<size_t>& s) {
-    ambit::Tensor ReturnTensor = ambit::Tensor::build(
-        tensor_type_, "Return", {p.size(), q.size(), r.size(), s.size()});
+    ambit::Tensor ReturnTensor =
+        ambit::Tensor::build(tensor_type_, "Return", {p.size(), q.size(), r.size(), s.size()});
     ReturnTensor.iterate([&](const std::vector<size_t>& i, double& value) {
         value = aptei_aa(p[i[0]], q[i[1]], r[i[2]], s[i[3]]);
     });
@@ -293,8 +277,8 @@ ambit::Tensor EffectiveIntegrals::aptei_ab_block(const std::vector<size_t>& p,
                                                  const std::vector<size_t>& q,
                                                  const std::vector<size_t>& r,
                                                  const std::vector<size_t>& s) {
-    ambit::Tensor ReturnTensor = ambit::Tensor::build(
-        tensor_type_, "Return", {p.size(), q.size(), r.size(), s.size()});
+    ambit::Tensor ReturnTensor =
+        ambit::Tensor::build(tensor_type_, "Return", {p.size(), q.size(), r.size(), s.size()});
     ReturnTensor.iterate([&](const std::vector<size_t>& i, double& value) {
         value = aptei_ab(p[i[0]], q[i[1]], r[i[2]], s[i[3]]);
     });
@@ -305,16 +289,16 @@ ambit::Tensor EffectiveIntegrals::aptei_bb_block(const std::vector<size_t>& p,
                                                  const std::vector<size_t>& q,
                                                  const std::vector<size_t>& r,
                                                  const std::vector<size_t>& s) {
-    ambit::Tensor ReturnTensor = ambit::Tensor::build(
-        tensor_type_, "Return", {p.size(), q.size(), r.size(), s.size()});
+    ambit::Tensor ReturnTensor =
+        ambit::Tensor::build(tensor_type_, "Return", {p.size(), q.size(), r.size(), s.size()});
     ReturnTensor.iterate([&](const std::vector<size_t>& i, double& value) {
         value = aptei_bb(p[i[0]], q[i[1]], r[i[2]], s[i[3]]);
     });
     return ReturnTensor;
 }
 
-void EffectiveIntegrals::set_tei(size_t p, size_t q, size_t r, size_t s,
-                                 double value, bool alpha1, bool alpha2) {
+void EffectiveIntegrals::set_tei(size_t p, size_t q, size_t r, size_t s, double value, bool alpha1,
+                                 bool alpha2) {
     double* p_tei;
     if (alpha1 == true and alpha2 == true)
         p_tei = aphys_tei_aa;
@@ -365,11 +349,9 @@ void EffectiveIntegrals::resort_four(double*& tei, std::vector<size_t>& map) {
         for (size_t q = 0; q < ncmo_; ++q) {
             for (size_t r = 0; r < ncmo_; ++r) {
                 for (size_t s = 0; s < ncmo_; ++s) {
-                    size_t pqrs_cmo = ncmo_ * ncmo_ * ncmo_ * p +
-                                      ncmo_ * ncmo_ * q + ncmo_ * r + s;
-                    size_t pqrs_mo = nmo_ * nmo_ * nmo_ * map[p] +
-                                     nmo_ * nmo_ * map[q] + nmo_ * map[r] +
-                                     map[s];
+                    size_t pqrs_cmo = ncmo_ * ncmo_ * ncmo_ * p + ncmo_ * ncmo_ * q + ncmo_ * r + s;
+                    size_t pqrs_mo =
+                        nmo_ * nmo_ * nmo_ * map[p] + nmo_ * nmo_ * map[q] + nmo_ * map[r] + map[s];
                     temp_ints[pqrs_cmo] = tei[pqrs_mo];
                 }
             }
@@ -390,8 +372,7 @@ void EffectiveIntegrals::make_diagonal_integrals() {
     }
 }
 
-void EffectiveIntegrals::make_fock_matrix(SharedMatrix gamma_a,
-                                          SharedMatrix gamma_b) {
+void EffectiveIntegrals::make_fock_matrix(SharedMatrix gamma_a, SharedMatrix gamma_b) {
     for (size_t p = 0; p < ncmo_; ++p) {
         for (size_t q = 0; q < ncmo_; ++q) {
             fock_matrix_a[p * ncmo_ + q] = oei_a(p, q);
@@ -406,10 +387,8 @@ void EffectiveIntegrals::make_fock_matrix(SharedMatrix gamma_a,
             if (std::fabs(gamma_a_rs) > zero) {
                 for (size_t p = 0; p < ncmo_; ++p) {
                     for (size_t q = 0; q < ncmo_; ++q) {
-                        fock_matrix_a[p * ncmo_ + q] +=
-                            aptei_aa(p, r, q, s) * gamma_a_rs;
-                        fock_matrix_b[p * ncmo_ + q] +=
-                            aptei_ab(r, p, s, q) * gamma_a_rs;
+                        fock_matrix_a[p * ncmo_ + q] += aptei_aa(p, r, q, s) * gamma_a_rs;
+                        fock_matrix_b[p * ncmo_ + q] += aptei_ab(r, p, s, q) * gamma_a_rs;
                     }
                 }
             }
@@ -421,10 +400,8 @@ void EffectiveIntegrals::make_fock_matrix(SharedMatrix gamma_a,
             if (std::fabs(gamma_b_rs) > zero) {
                 for (size_t p = 0; p < ncmo_; ++p) {
                     for (size_t q = 0; q < ncmo_; ++q) {
-                        fock_matrix_a[p * ncmo_ + q] +=
-                            aptei_ab(p, r, q, s) * gamma_b_rs;
-                        fock_matrix_b[p * ncmo_ + q] +=
-                            aptei_bb(p, r, q, s) * gamma_b_rs;
+                        fock_matrix_a[p * ncmo_ + q] += aptei_ab(p, r, q, s) * gamma_b_rs;
+                        fock_matrix_b[p * ncmo_ + q] += aptei_bb(p, r, q, s) * gamma_b_rs;
                     }
                 }
             }

@@ -40,11 +40,9 @@ namespace psi {
 namespace forte {
 
 /* The rhs of x' = f(x) */
-void TensorSRG_ODEInterface::operator()(const odeint_state_type& x,
-                                        odeint_state_type& dxdt,
+void TensorSRG_ODEInterface::operator()(const odeint_state_type& x, odeint_state_type& dxdt,
                                         const double t) {
-    throw std::runtime_error(
-        "TensorSRG_ODEInterface::operator() is not implemented yet!");
+    throw std::runtime_error("TensorSRG_ODEInterface::operator() is not implemented yet!");
 
     /*
     // Step 1. Read the Hamiltonian from the vector x
@@ -81,15 +79,13 @@ struct push_back_state_and_time_srg {
     std::vector<double>& m_states;
     std::vector<double>& m_times;
 
-    push_back_state_and_time_srg(std::vector<double>& states,
-                                 std::vector<double>& times)
+    push_back_state_and_time_srg(std::vector<double>& states, std::vector<double>& times)
         : m_states(states), m_times(times) {}
 
     void operator()(const odeint_state_type& x, double t) {
         m_states.push_back(x[0]);
         m_times.push_back(t);
-        outfile->Printf("\n    @SRG%4d %24.15f %24.15f", int(m_states.size()),
-                        t, x[0]);
+        outfile->Printf("\n    @SRG%4d %24.15f %24.15f", int(m_states.size()), t, x[0]);
 
         //        outfile->Printf("\n %9d %20.12f
         //        %20.12f",int(m_states.size()),t,x[0]);
@@ -98,8 +94,7 @@ struct push_back_state_and_time_srg {
 };
 
 double TensorSRG::compute_srg_energy() {
-    throw std::runtime_error(
-        "TensorSRG::compute_srg_energy() is not implemented yet!");
+    throw std::runtime_error("TensorSRG::compute_srg_energy() is not implemented yet!");
     return 0.0;
     /*
     vector<double> e_vec,times;
@@ -201,14 +196,13 @@ double TensorSRG::compute_srg_energy() {
 ////            push_back_state_and_time_srg( e_vec , times ) );
 
 ////    size_t steps = integrate_adaptive(make_dense_output( 1.0e-12 , 1.0e-12 ,
-///runge_kutta_dopri5< state_type >() ),
+/// runge_kutta_dopri5< state_type >() ),
 ////                       sosrg_flow_computer,
 ////                       x,0.0,10.0,0.001,
 ////                       push_back_state_and_time_srg( e_vec , times ));
 
 void TensorSRG::compute_srg_step() {
-    throw std::runtime_error(
-        "TensorSRG::compute_srg_step() is not implemented yet!");
+    throw std::runtime_error("TensorSRG::compute_srg_step() is not implemented yet!");
 
     /*
     // Step 1. Compute the generator (stored in eta)

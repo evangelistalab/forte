@@ -32,15 +32,15 @@
 //#include <unordered_map>
 //#include <numeric>
 
-#include "psi4/libpsio/psio.hpp"
-#include "psi4/libmints/pointgrp.h"
 #include "psi4/libmints/molecule.h"
+#include "psi4/libmints/pointgrp.h"
+#include "psi4/libpsio/psio.hpp"
 
-#include "aci_string.h"
+#include "../fci/fci_integrals.h"
 #include "../sparse_ci_solver.h"
 #include "../stl_bitset_determinant.h"
 #include "../stl_bitset_string.h"
-#include "../fci/fci_integrals.h"
+#include "aci_string.h"
 //#include "ci_rdms.h"
 
 using namespace std;
@@ -115,19 +115,14 @@ void ACIString::startup() {
         quiet_mode_ = options_.get_bool("QUIET_MODE");
     }
 
-    fci_ints_ = std::make_shared<FCIIntegrals>(
-        ints_, mo_space_info_->get_corr_abs_mo("ACTIVE"),
-        mo_space_info_->get_corr_abs_mo("RESTRICTED_DOCC"));
+    fci_ints_ = std::make_shared<FCIIntegrals>(ints_, mo_space_info_->get_corr_abs_mo("ACTIVE"),
+                                               mo_space_info_->get_corr_abs_mo("RESTRICTED_DOCC"));
 
     auto active_mo = mo_space_info_->get_corr_abs_mo("ACTIVE");
-    ambit::Tensor tei_active_aa =
-        ints_->aptei_aa_block(active_mo, active_mo, active_mo, active_mo);
-    ambit::Tensor tei_active_ab =
-        ints_->aptei_ab_block(active_mo, active_mo, active_mo, active_mo);
-    ambit::Tensor tei_active_bb =
-        ints_->aptei_bb_block(active_mo, active_mo, active_mo, active_mo);
-    fci_ints_->set_active_integrals(tei_active_aa, tei_active_ab,
-                                    tei_active_bb);
+    ambit::Tensor tei_active_aa = ints_->aptei_aa_block(active_mo, active_mo, active_mo, active_mo);
+    ambit::Tensor tei_active_ab = ints_->aptei_ab_block(active_mo, active_mo, active_mo, active_mo);
+    ambit::Tensor tei_active_bb = ints_->aptei_bb_block(active_mo, active_mo, active_mo, active_mo);
+    fci_ints_->set_active_integrals(tei_active_aa, tei_active_ab, tei_active_bb);
     fci_ints_->compute_restricted_one_body_operator();
 
     STLBitsetDeterminant::set_ints(fci_ints_);
@@ -187,8 +182,7 @@ void ACIString::startup() {
     tau_q_ = options_.get_double("TAUQ");
     screen_thresh_ = options_.get_double("PRESCREEN_THRESHOLD");
     add_aimed_degenerate_ = options_.get_bool("ACI_ADD_AIMED_DEGENERATE");
-    project_out_spin_contaminants_ =
-        options_.get_bool("PROJECT_OUT_SPIN_CONTAMINANTS");
+    project_out_spin_contaminants_ = options_.get_bool("PROJECT_OUT_SPIN_CONTAMINANTS");
     spin_complete_ = options_.get_bool("ENFORCE_SPIN_COMPLETE");
     rdm_level_ = options_.get_int("ACI_MAX_RDM");
 
@@ -251,8 +245,8 @@ void ACIString::startup() {
     }
 
     // Set streamline mode to true if possible
-    if ((nroot_ == 1) and (aimed_selection_ == true) and
-        (energy_selection_ == true) and (perturb_select_ == false)) {
+    if ((nroot_ == 1) and (aimed_selection_ == true) and (energy_selection_ == true) and
+        (perturb_select_ == false)) {
 
         streamline_qspace_ = true;
     }
@@ -273,36 +267,27 @@ void ACIString::print_info() {
         {"Convergence threshold", options_.get_double("E_CONVERGENCE")}};
 
     std::vector<std::pair<std::string, std::string>> calculation_info_string{
-        {"Determinant selection criterion", energy_selection_
-                                                ? "Second-order Energy"
-                                                : "First-order Coefficients"},
-        {"Selection criterion",
-         aimed_selection_ ? "Aimed selection" : "Threshold"},
+        {"Determinant selection criterion",
+         energy_selection_ ? "Second-order Energy" : "First-order Coefficients"},
+        {"Selection criterion", aimed_selection_ ? "Aimed selection" : "Threshold"},
         {"PQ Function", options_.get_str("PQ_FUNCTION")},
         {"Q Type", q_rel_ ? "Relative Energy" : "Absolute Energy"},
-        {"PT2 Parameters",
-         options_.get_bool("PERTURB_SELECT") ? "True" : "False"},
-        {"Project out spin contaminants",
-         project_out_spin_contaminants_ ? "True" : "False"},
-        {"Enforce spin completeness of basis",
-         spin_complete_ ? "True" : "False"},
-        {"Enforce complete aimed selection",
-         add_aimed_degenerate_ ? "True" : "False"}};
+        {"PT2 Parameters", options_.get_bool("PERTURB_SELECT") ? "True" : "False"},
+        {"Project out spin contaminants", project_out_spin_contaminants_ ? "True" : "False"},
+        {"Enforce spin completeness of basis", spin_complete_ ? "True" : "False"},
+        {"Enforce complete aimed selection", add_aimed_degenerate_ ? "True" : "False"}};
 
     // Print some information
     outfile->Printf("\n  ==> Calculation Information <==\n");
     outfile->Printf("\n  %s", string(65, '-').c_str());
     for (auto& str_dim : calculation_info) {
-        outfile->Printf("\n    %-40s %-5d", str_dim.first.c_str(),
-                        str_dim.second);
+        outfile->Printf("\n    %-40s %-5d", str_dim.first.c_str(), str_dim.second);
     }
     for (auto& str_dim : calculation_info_double) {
-        outfile->Printf("\n    %-40s %8.2e", str_dim.first.c_str(),
-                        str_dim.second);
+        outfile->Printf("\n    %-40s %8.2e", str_dim.first.c_str(), str_dim.second);
     }
     for (auto& str_dim : calculation_info_string) {
-        outfile->Printf("\n    %-40s %s", str_dim.first.c_str(),
-                        str_dim.second.c_str());
+        outfile->Printf("\n    %-40s %s", str_dim.first.c_str(), str_dim.second.c_str());
     }
     outfile->Printf("\n  %s", string(65, '-').c_str());
     outfile->Flush();
@@ -350,7 +335,7 @@ std::vector<int> ACIString::get_occupation() {
             // Remove electron from highest energy docc
             occupation[labeled_orb_en[noalpha_ - k].second.second] = 0;
             //	outfile->Printf("\n  Electron removed from %d, out of %d",
-            //labeled_orb_en[noalpha_ - k].second.second, nactel_);
+            // labeled_orb_en[noalpha_ - k].second.second, nactel_);
 
             // Determine proper symmetry for new occupation
             orb_sym = wavefunction_symmetry_;
@@ -359,8 +344,7 @@ std::vector<int> ACIString::get_occupation() {
                 orb_sym = labeled_orb_en[noalpha_ - 1].second.first ^ orb_sym;
             } else {
                 for (int i = 1; i <= nsym; ++i) {
-                    orb_sym =
-                        labeled_orb_en[noalpha_ - i].second.first ^ orb_sym;
+                    orb_sym = labeled_orb_en[noalpha_ - i].second.first ^ orb_sym;
                 }
                 orb_sym = labeled_orb_en[noalpha_ - k].second.first ^ orb_sym;
             }
@@ -375,7 +359,7 @@ std::vector<int> ACIString::get_occupation() {
                     occupation[labeled_orb_en[i].second.second] != 1) {
                     occupation[labeled_orb_en[i].second.second] = 1;
                     //			outfile->Printf("\n  Added electron to %d",
-                    //labeled_orb_en[i].second.second);
+                    // labeled_orb_en[i].second.second);
                     add = true;
                     break;
                 } else {
@@ -387,7 +371,7 @@ std::vector<int> ACIString::get_occupation() {
             if (!add) {
                 occupation[labeled_orb_en[noalpha_ - k].second.second] = 1;
                 //		outfile->Printf("\n  No orbital of symmetry %d
-                //available! Putting electron back...", orb_sym);
+                // available! Putting electron back...", orb_sym);
                 ++k;
             } else {
                 break;
@@ -420,28 +404,24 @@ std::vector<int> ACIString::get_occupation() {
                 occupation[labeled_orb_en_alfa[noalpha_ - k].second.second] = 0;
 
                 //		outfile->Printf("\n  Electron removed from %d, out
-                //of %d", labeled_orb_en_alfa[noalpha_ - k].second.second,
-                //nactel_);
+                // of %d", labeled_orb_en_alfa[noalpha_ - k].second.second,
+                // nactel_);
 
                 // Determine proper symmetry for new electron
 
                 orb_sym = wavefunction_symmetry_;
 
                 if (wavefunction_multiplicity_ == 1) {
-                    orb_sym = labeled_orb_en_alfa[noalpha_ - 1].second.first ^
-                              orb_sym;
+                    orb_sym = labeled_orb_en_alfa[noalpha_ - 1].second.first ^ orb_sym;
                 } else {
                     for (int i = 1; i <= nsym; ++i) {
-                        orb_sym =
-                            labeled_orb_en_alfa[noalpha_ - i].second.first ^
-                            orb_sym;
+                        orb_sym = labeled_orb_en_alfa[noalpha_ - i].second.first ^ orb_sym;
                     }
-                    orb_sym = labeled_orb_en_alfa[noalpha_ - k].second.first ^
-                              orb_sym;
+                    orb_sym = labeled_orb_en_alfa[noalpha_ - k].second.first ^ orb_sym;
                 }
 
                 //		outfile->Printf("\n  Need orbital of symmetry %d",
-                //orb_sym);
+                // orb_sym);
 
                 // Add electron to lowest-energy orbital of proper symmetry
                 for (int i = noalpha_ - k; i < nactel_; ++i) {
@@ -449,8 +429,8 @@ std::vector<int> ACIString::get_occupation() {
                         occupation[labeled_orb_en_alfa[i].second.second] != 1) {
                         occupation[labeled_orb_en_alfa[i].second.second] = 1;
                         //				outfile->Printf("\n  Added
-                        //electron to %d",
-                        //labeled_orb_en_alfa[i].second.second);
+                        // electron to %d",
+                        // labeled_orb_en_alfa[i].second.second);
                         add = true;
                         break;
                     } else {
@@ -462,10 +442,9 @@ std::vector<int> ACIString::get_occupation() {
                 // add electron back and try a different one
 
                 if (!add) {
-                    occupation[labeled_orb_en_alfa[noalpha_ - k]
-                                   .second.second] = 1;
+                    occupation[labeled_orb_en_alfa[noalpha_ - k].second.second] = 1;
                     //			outfile->Printf("\n  No orbital of symmetry %d
-                    //available! Putting it back...", orb_sym);
+                    // available! Putting it back...", orb_sym);
                     ++k;
                 } else {
                     break;
@@ -481,27 +460,23 @@ std::vector<int> ACIString::get_occupation() {
                 // Remove highest-energy beta electron
                 occupation[labeled_orb_en_beta[nobeta_ - k].second.second] = 0;
                 //		outfile->Printf("\n  Electron removed from %d, out
-                //of %d", labeled_orb_en_beta[nobeta_ - k].second.second,
-                //nactel_);
+                // of %d", labeled_orb_en_beta[nobeta_ - k].second.second,
+                // nactel_);
 
                 // Determine proper symetry for new occupation
                 orb_sym = wavefunction_symmetry_;
 
                 if (wavefunction_multiplicity_ == 1) {
-                    orb_sym =
-                        labeled_orb_en_beta[nobeta_ - 1].second.first ^ orb_sym;
+                    orb_sym = labeled_orb_en_beta[nobeta_ - 1].second.first ^ orb_sym;
                 } else {
                     for (int i = 1; i <= nsym; ++i) {
-                        orb_sym =
-                            labeled_orb_en_beta[nobeta_ - i].second.first ^
-                            orb_sym;
+                        orb_sym = labeled_orb_en_beta[nobeta_ - i].second.first ^ orb_sym;
                     }
-                    orb_sym =
-                        labeled_orb_en_beta[nobeta_ - k].second.first ^ orb_sym;
+                    orb_sym = labeled_orb_en_beta[nobeta_ - k].second.first ^ orb_sym;
                 }
 
                 //		outfile->Printf("\n  Need orbital of symmetry %d",
-                //orb_sym);
+                // orb_sym);
 
                 // Add electron to lowest-energy beta orbital
 
@@ -510,8 +485,8 @@ std::vector<int> ACIString::get_occupation() {
                         occupation[labeled_orb_en_beta[i].second.second] != 1) {
                         occupation[labeled_orb_en_beta[i].second.second] = 1;
                         //				outfile->Printf("\n Added
-                        //electron to %d",
-                        //labeled_orb_en_beta[i].second.second);
+                        // electron to %d",
+                        // labeled_orb_en_beta[i].second.second);
                         add = true;
                         break;
                     }
@@ -521,33 +496,31 @@ std::vector<int> ACIString::get_occupation() {
                 // replace the electron and try again
 
                 if (!add) {
-                    occupation[labeled_orb_en_beta[nobeta_ - k].second.second] =
-                        1;
+                    occupation[labeled_orb_en_beta[nobeta_ - k].second.second] = 1;
                     //			outfile->Printf("\n  No orbital of symmetry %d
-                    //available! Putting electron back...", orb_sym);
+                    // available! Putting electron back...", orb_sym);
                     ++k;
                 } else {
                     break;
                 }
 
             } // End loop over k
-        } // End if noalpha_ < nobeta_
+        }     // End if noalpha_ < nobeta_
     }
     return occupation;
 }
 
 double ACIString::compute_energy() {
     if (!quiet_mode_) {
-        print_method_banner({"Adaptive Configuration Interaction",
-                             "written by Francesco A. Evangelista"});
+        print_method_banner(
+            {"Adaptive Configuration Interaction", "written by Francesco A. Evangelista"});
         outfile->Printf("\n  ==> Reference Information <==\n");
         outfile->Printf("\n  There are %d frozen orbitals.", nfrzc_);
         outfile->Printf("\n  There are %zu active orbitals.\n", nact_);
         reference_determinant_.print();
-        outfile->Printf("\n  REFERENCE ENERGY:         %1.12f",
-                        reference_determinant_.energy() +
-                            nuclear_repulsion_energy_ +
-                            fci_ints_->scalar_energy());
+        outfile->Printf("\n  REFERENCE ENERGY:         %1.12f", reference_determinant_.energy() +
+                                                                    nuclear_repulsion_energy_ +
+                                                                    fci_ints_->scalar_energy());
         print_info();
     }
     Timer t_iamrcisd;
@@ -600,8 +573,7 @@ double ACIString::compute_energy() {
 
         if (!quiet_mode_) {
             print_h2(cycle_h);
-            outfile->Printf("\n  Initial P space dimension: %zu",
-                            str_to_det_.size());
+            outfile->Printf("\n  Initial P space dimension: %zu", str_to_det_.size());
         }
 
         // Check that the initial space is spin-complete
@@ -609,8 +581,7 @@ double ACIString::compute_energy() {
             STLBitsetDeterminant::enforce_spin_completeness(P_space_);
             if (!quiet_mode_)
                 outfile->Printf("\n  %s: %zu determinants",
-                                "Spin-complete dimension of the P space",
-                                str_to_det_.size());
+                                "Spin-complete dimension of the P space", str_to_det_.size());
         } else if (!quiet_mode_) {
             outfile->Printf("\n Not checking for spin-completeness.");
         }
@@ -623,25 +594,20 @@ double ACIString::compute_energy() {
             P_space_.resize(psize);
             for (size_t I = 0; I < psize; ++I) {
                 STLBitsetDeterminant det(
-                    alfa_str_[std::get<0>(str_to_det_[I])][std::get<1>(
-                        str_to_det_[I])],
-                    beta_str_[std::get<2>(str_to_det_[I])][std::get<3>(
-                        str_to_det_[I])]);
+                    alfa_str_[std::get<0>(str_to_det_[I])][std::get<1>(str_to_det_[I])],
+                    beta_str_[std::get<2>(str_to_det_[I])][std::get<3>(str_to_det_[I])]);
                 P_space_[I] = det;
             }
-            sparse_solver.diagonalize_hamiltonian(
-                P_space_, P_evals, P_evecs, num_ref_roots,
-                wavefunction_multiplicity_, diag_method_);
+            sparse_solver.diagonalize_hamiltonian(P_space_, P_evals, P_evecs, num_ref_roots,
+                                                  wavefunction_multiplicity_, diag_method_);
         } else {
             // Fix this eventually
-            sparse_solver.diagonalize_hamiltonian(
-                P_space_, P_evals, P_evecs, num_ref_roots,
-                wavefunction_multiplicity_, DLString);
+            sparse_solver.diagonalize_hamiltonian(P_space_, P_evals, P_evecs, num_ref_roots,
+                                                  wavefunction_multiplicity_, DLString);
         }
 
         if (!quiet_mode_)
-            outfile->Printf("\n  Time spent diagonalizing H:   %1.6f s",
-                            diag.get());
+            outfile->Printf("\n  Time spent diagonalizing H:   %1.6f s", diag.get());
 
         // Save the dimention of the previous PQ space
         // size_t PQ_space_prev = PQ_space_.size();
@@ -652,14 +618,12 @@ double ACIString::compute_energy() {
                 compute_spin_contamination(P_space_, P_evecs, num_ref_roots);
             if (spin_contamination >= spin_tol_) {
                 if (!quiet_mode_)
-                    outfile->Printf(
-                        "\n  Average spin contamination per root is %1.5f",
-                        spin_contamination);
+                    outfile->Printf("\n  Average spin contamination per root is %1.5f",
+                                    spin_contamination);
                 full_spin_transform(P_space_, P_evecs, num_ref_roots);
                 P_evecs->zero();
                 P_evecs = PQ_spin_evecs_->clone();
-                compute_H_expectation_val(P_space_, P_evals, P_evecs,
-                                          num_ref_roots, diag_method_);
+                compute_H_expectation_val(P_space_, P_evals, P_evecs, num_ref_roots, diag_method_);
             } else if (!quiet_mode_) {
                 outfile->Printf("\n  Average spin contamination (%1.5f) is "
                                 "less than tolerance (%1.5f)",
@@ -674,11 +638,9 @@ double ACIString::compute_energy() {
         if (!quiet_mode_) {
             outfile->Printf("\n");
             for (int i = 0; i < num_ref_roots; ++i) {
-                double abs_energy = P_evals->get(i) +
-                                    nuclear_repulsion_energy_ +
-                                    fci_ints_->scalar_energy();
-                double exc_energy =
-                    pc_hartree2ev * (P_evals->get(i) - P_evals->get(0));
+                double abs_energy =
+                    P_evals->get(i) + nuclear_repulsion_energy_ + fci_ints_->scalar_energy();
+                double exc_energy = pc_hartree2ev * (P_evals->get(i) - P_evals->get(0));
                 outfile->Printf("\n    P-space  CI Energy Root %3d        = "
                                 "%.12f Eh = %8.4f eV",
                                 i + 1, abs_energy, exc_energy);
@@ -699,19 +661,16 @@ double ACIString::compute_energy() {
         if (spin_complete_) {
             STLBitsetDeterminant::enforce_spin_completeness(PQ_space_);
             if (!quiet_mode_)
-                outfile->Printf(
-                    "\n  Spin-complete dimension of the PQ space: %zu",
-                    PQ_space_.size());
+                outfile->Printf("\n  Spin-complete dimension of the PQ space: %zu",
+                                PQ_space_.size());
         }
 
         // Step 3. Diagonalize the Hamiltonian in the P + Q space
         Timer diag_pq;
-        sparse_solver.diagonalize_hamiltonian(
-            PQ_space_, PQ_evals, PQ_evecs, num_ref_roots,
-            wavefunction_multiplicity_, diag_method_);
+        sparse_solver.diagonalize_hamiltonian(PQ_space_, PQ_evals, PQ_evecs, num_ref_roots,
+                                              wavefunction_multiplicity_, diag_method_);
         if (!quiet_mode_)
-            outfile->Printf("\n  Time spent diagonalizing H:   %1.6f s",
-                            diag_pq.get());
+            outfile->Printf("\n  Time spent diagonalizing H:   %1.6f s", diag_pq.get());
 
         // Ensure the solutions are spin-pure
 
@@ -720,14 +679,12 @@ double ACIString::compute_energy() {
                 compute_spin_contamination(P_space_, P_evecs, num_ref_roots);
             if (spin_contamination >= spin_tol_) {
                 if (!quiet_mode_)
-                    outfile->Printf(
-                        "\n  Average spin contamination per root is %1.5f",
-                        spin_contamination);
+                    outfile->Printf("\n  Average spin contamination per root is %1.5f",
+                                    spin_contamination);
                 full_spin_transform(P_space_, P_evecs, num_ref_roots);
                 P_evecs->zero();
                 P_evecs = PQ_spin_evecs_->clone();
-                compute_H_expectation_val(P_space_, P_evals, P_evecs,
-                                          num_ref_roots, diag_method_);
+                compute_H_expectation_val(P_space_, P_evals, P_evecs, num_ref_roots, diag_method_);
             } else if (!quiet_mode_) {
                 outfile->Printf("\n  Average spin contamination (%1.5f) is "
                                 "less than tolerance (%1.5f)",
@@ -742,21 +699,18 @@ double ACIString::compute_energy() {
             // Print the energy
             outfile->Printf("\n");
             for (int i = 0; i < num_ref_roots; ++i) {
-                double abs_energy = PQ_evals->get(i) +
-                                    nuclear_repulsion_energy_ +
-                                    fci_ints_->scalar_energy();
-                double exc_energy =
-                    pc_hartree2ev * (PQ_evals->get(i) - PQ_evals->get(0));
+                double abs_energy =
+                    PQ_evals->get(i) + nuclear_repulsion_energy_ + fci_ints_->scalar_energy();
+                double exc_energy = pc_hartree2ev * (PQ_evals->get(i) - PQ_evals->get(0));
                 outfile->Printf("\n    PQ-space CI Energy Root %3d        = "
                                 "%.12f Eh = %8.4f eV",
                                 i + 1, abs_energy, exc_energy);
-                outfile->Printf(
-                    "\n    PQ-space CI Energy + EPT2 Root %3d = %.12f Eh = "
-                    "%8.4f eV",
-                    i + 1, abs_energy + multistate_pt2_energy_correction_[i],
-                    exc_energy +
-                        pc_hartree2ev * (multistate_pt2_energy_correction_[i] -
-                                         multistate_pt2_energy_correction_[0]));
+                outfile->Printf("\n    PQ-space CI Energy + EPT2 Root %3d = %.12f Eh = "
+                                "%8.4f eV",
+                                i + 1, abs_energy + multistate_pt2_energy_correction_[i],
+                                exc_energy +
+                                    pc_hartree2ev * (multistate_pt2_energy_correction_[i] -
+                                                     multistate_pt2_energy_correction_[0]));
             }
             outfile->Printf("\n");
             outfile->Flush();
@@ -779,8 +733,7 @@ double ACIString::compute_energy() {
         }
 
         // Step 5. Prune the P + Q space to get an updated P space
-        prune_q_space(PQ_space_, P_space_, P_space_map_, PQ_evecs,
-                      num_ref_roots);
+        prune_q_space(PQ_space_, P_space_, P_space_map_, PQ_evecs, num_ref_roots);
 
         // Print information about the wave function
         if (!quiet_mode_)
@@ -789,18 +742,15 @@ double ACIString::compute_energy() {
 
     // Ensure the solutions are spin-pure
     if (spin_projection == 1 or spin_projection == 3) {
-        double spin_contamination =
-            compute_spin_contamination(P_space_, P_evecs, nroot_);
+        double spin_contamination = compute_spin_contamination(P_space_, P_evecs, nroot_);
         if (spin_contamination >= spin_tol_) {
             if (!quiet_mode_)
-                outfile->Printf(
-                    "\n  Average spin contamination per root is %1.5f",
-                    spin_contamination);
+                outfile->Printf("\n  Average spin contamination per root is %1.5f",
+                                spin_contamination);
             full_spin_transform(P_space_, P_evecs, nroot_);
             P_evecs->zero();
             P_evecs = PQ_spin_evecs_->clone();
-            compute_H_expectation_val(P_space_, P_evals, P_evecs, nroot_,
-                                      diag_method_);
+            compute_H_expectation_val(P_space_, P_evals, P_evecs, nroot_, diag_method_);
         } else if (!quiet_mode_) {
             outfile->Printf("\n  Average spin contamination (%1.5f) is less "
                             "than tolerance (%1.5f)",
@@ -836,8 +786,8 @@ double ACIString::compute_energy() {
             outfile->Printf("\n  3-RDMs took %2.6f s", three.get());
 
         if (options_.get_bool("FCI_TEST_RDMS")) {
-            ci_rdms_.rdm_test(ordm_a_, ordm_b_, trdm_aa_, trdm_bb_, trdm_ab_,
-                              trdm_aaa_, trdm_aab_, trdm_abb_, trdm_bbb_);
+            ci_rdms_.rdm_test(ordm_a_, ordm_b_, trdm_aa_, trdm_bb_, trdm_ab_, trdm_aaa_, trdm_aab_,
+                              trdm_abb_, trdm_bbb_);
         }
     }
     // Timer energy;
@@ -852,17 +802,13 @@ double ACIString::compute_energy() {
     if (!quiet_mode_) {
         outfile->Printf("\n\n  ==> ACI Summary <==\n");
 
-        outfile->Printf("\n  Iterations required:                         %zu",
-                        cycle);
-        outfile->Printf(
-            "\n  Dimension of optimized determinant space:    %zu\n",
-            PQ_space_.size());
+        outfile->Printf("\n  Iterations required:                         %zu", cycle);
+        outfile->Printf("\n  Dimension of optimized determinant space:    %zu\n", PQ_space_.size());
     }
 
     std::vector<double> davidson;
     if (options_.get_str("SIZE_CORRECTION") == "DAVIDSON") {
-        davidson = davidson_correction(P_space_, P_evals, PQ_evecs, PQ_space_,
-                                       PQ_evals);
+        davidson = davidson_correction(P_space_, P_evals, PQ_evecs, PQ_space_, PQ_evals);
         for (auto& i : davidson) {
             outfile->Printf("\n Davidson corr: %1.9f", i);
         }
@@ -870,33 +816,29 @@ double ACIString::compute_energy() {
 
     if (!quiet_mode_) {
         for (int i = 0; i < nroot_; ++i) {
-            double abs_energy = PQ_evals->get(i) + nuclear_repulsion_energy_ +
-                                fci_ints_->scalar_energy();
-            double exc_energy =
-                pc_hartree2ev * (PQ_evals->get(i) - PQ_evals->get(0));
+            double abs_energy =
+                PQ_evals->get(i) + nuclear_repulsion_energy_ + fci_ints_->scalar_energy();
+            double exc_energy = pc_hartree2ev * (PQ_evals->get(i) - PQ_evals->get(0));
             outfile->Printf("\n  * Adaptive-CI Energy Root %3d        = %.12f "
                             "Eh = %8.4f eV",
                             i + 1, abs_energy, exc_energy);
-            outfile->Printf(
-                "\n  * Adaptive-CI Energy Root %3d + EPT2 = %.12f Eh = %8.4f "
-                "eV",
-                i + 1, abs_energy + multistate_pt2_energy_correction_[i],
-                exc_energy +
-                    pc_hartree2ev * (multistate_pt2_energy_correction_[i] -
-                                     multistate_pt2_energy_correction_[0]));
+            outfile->Printf("\n  * Adaptive-CI Energy Root %3d + EPT2 = %.12f Eh = %8.4f "
+                            "eV",
+                            i + 1, abs_energy + multistate_pt2_energy_correction_[i],
+                            exc_energy +
+                                pc_hartree2ev * (multistate_pt2_energy_correction_[i] -
+                                                 multistate_pt2_energy_correction_[0]));
             if (options_.get_str("SIZE_CORRECTION") == "DAVIDSON") {
-                outfile->Printf(
-                    "\n  * Adaptive-CI Energy Root %3d + D1   = %.12f Eh = "
-                    "%8.4f eV",
-                    i + 1, abs_energy + davidson[i],
-                    exc_energy + pc_hartree2ev * (davidson[i] - davidson[0]));
+                outfile->Printf("\n  * Adaptive-CI Energy Root %3d + D1   = %.12f Eh = "
+                                "%8.4f eV",
+                                i + 1, abs_energy + davidson[i],
+                                exc_energy + pc_hartree2ev * (davidson[i] - davidson[0]));
             }
         }
 
         outfile->Printf("\n\n  ==> Wavefunction Information <==");
         print_wfn(PQ_space_, PQ_evecs, nroot_);
-        outfile->Printf(
-            "\n\n     Order		 # of Dets        Total |c^2|   ");
+        outfile->Printf("\n\n     Order		 # of Dets        Total |c^2|   ");
         outfile->Printf("\n  __________ 	____________   "
                         "________________ ");
         wfn_analyzer(PQ_space_, PQ_evecs, nroot_);
@@ -913,18 +855,16 @@ double ACIString::compute_energy() {
             }
         }
 
-        outfile->Printf("\n\n  %s: %f s", "Adaptive-CI (bitset) ran in ",
-                        t_iamrcisd.get());
+        outfile->Printf("\n\n  %s: %f s", "Adaptive-CI (bitset) ran in ", t_iamrcisd.get());
         outfile->Printf("\n\n  %s: %d", "Saving information for root",
                         options_.get_int("ROOT") + 1);
     }
     outfile->Flush();
 
-    double root_energy = PQ_evals->get(options_.get_int("ROOT")) +
-                         nuclear_repulsion_energy_ + fci_ints_->scalar_energy();
+    double root_energy = PQ_evals->get(options_.get_int("ROOT")) + nuclear_repulsion_energy_ +
+                         fci_ints_->scalar_energy();
     double root_energy_pt2 =
-        root_energy +
-        multistate_pt2_energy_correction_[options_.get_int("ROOT")];
+        root_energy + multistate_pt2_energy_correction_[options_.get_int("ROOT")];
     Process::environment.globals["CURRENT ENERGY"] = root_energy;
     Process::environment.globals["ACI ENERGY"] = root_energy;
     Process::environment.globals["ACI+PT2 ENERGY"] = root_energy_pt2;
@@ -980,8 +920,7 @@ void ACIString::default_find_q_space(SharedVector evals, SharedMatrix evecs) {
     if (!quiet_mode_) {
         // outfile->Printf("\n  %s: %zu determinants","Dimension of the SD
         // space",V_hash.size());
-        outfile->Printf("\n  %s: %f s\n", "Time spent building the model space",
-                        build.get());
+        outfile->Printf("\n  %s: %f s\n", "Time spent building the model space", build.get());
     }
     outfile->Flush();
 
@@ -1026,8 +965,7 @@ void ACIString::default_find_q_space(SharedVector evals, SharedMatrix evecs) {
         size_t num_extra = 0;
         for (size_t I = 0, max_I = last_excluded; I < max_I; ++I) {
             size_t J = last_excluded - I;
-            if (std::fabs(sorted_dets[last_excluded + 1].first -
-                          sorted_dets[J].first) < 1.0e-10) {
+            if (std::fabs(sorted_dets[last_excluded + 1].first - sorted_dets[J].first) < 1.0e-10) {
                 PQ_space_.push_back(sorted_dets[J].second);
                 num_extra++;
             } else {
@@ -1035,25 +973,21 @@ void ACIString::default_find_q_space(SharedVector evals, SharedMatrix evecs) {
             }
         }
         if (num_extra > 0 and (!quiet_mode_)) {
-            outfile->Printf(
-                "\n  Added %zu missing determinants in aimed selection.",
-                num_extra);
+            outfile->Printf("\n  Added %zu missing determinants in aimed selection.", num_extra);
         }
     }
 
     multistate_pt2_energy_correction_ = ept2;
 
     if (!quiet_mode_) {
-        outfile->Printf("\n  %s: %zu determinants",
-                        "Dimension of the P + Q space", PQ_space_.size());
-        outfile->Printf("\n  %s: %f s", "Time spent screening the model space",
-                        screen.get());
+        outfile->Printf("\n  %s: %zu determinants", "Dimension of the P + Q space",
+                        PQ_space_.size());
+        outfile->Printf("\n  %s: %f s", "Time spent screening the model space", screen.get());
     }
     outfile->Flush();
 }
 
-void ACIString::find_q_space(int nroot, SharedVector evals,
-                             SharedMatrix evecs) {
+void ACIString::find_q_space(int nroot, SharedVector evals, SharedMatrix evecs) {
     Timer t_ms_build;
 
     // This hash saves the determinant coupling to the model space eigenfunction
@@ -1061,14 +995,12 @@ void ACIString::find_q_space(int nroot, SharedVector evals,
 
     for (size_t I = 0, max_I = P_space_.size(); I < max_I; ++I) {
         STLBitsetDeterminant& det = P_space_[I];
-//        generate_excited_determinants(nroot, I, evecs, det, V_hash);
+        //        generate_excited_determinants(nroot, I, evecs, det, V_hash);
     }
 
     if (!quiet_mode_) {
-        outfile->Printf("\n  %s: %zu determinants", "Dimension of the SD space",
-                        V_hash.size());
-        outfile->Printf("\n  %s: %f s\n", "Time spent building the model space",
-                        t_ms_build.get());
+        outfile->Printf("\n  %s: %zu determinants", "Dimension of the SD space", V_hash.size());
+        outfile->Printf("\n  %s: %f s\n", "Time spent building the model space", t_ms_build.get());
     }
     outfile->Flush();
 
@@ -1092,23 +1024,19 @@ void ACIString::find_q_space(int nroot, SharedVector evals,
     std::vector<std::pair<double, STLBitsetDeterminant>> sorted_dets;
 
     // Define coupling out of loop, assume perturb_select_ = false
-    std::function<double(double A, double B, double C)> C1_eq = [](
-        double A, double B, double C) -> double {
+    std::function<double(double A, double B, double C)> C1_eq = [](double A, double B,
+                                                                   double C) -> double {
         return 0.5 * ((B - C) - sqrt((B - C) * (B - C) + 4.0 * A * A)) / A;
     };
 
-    std::function<double(double A, double B, double C)> E2_eq = [](
-        double A, double B, double C) -> double {
+    std::function<double(double A, double B, double C)> E2_eq = [](double A, double B,
+                                                                   double C) -> double {
         return 0.5 * ((B - C) - sqrt((B - C) * (B - C) + 4.0 * A * A));
     };
 
     if (perturb_select_) {
-        C1_eq = [](double A, double B, double C) -> double {
-            return -A / (B - C);
-        };
-        E2_eq = [](double A, double B, double C) -> double {
-            return -A * A / (B - C);
-        };
+        C1_eq = [](double A, double B, double C) -> double { return -A / (B - C); };
+        E2_eq = [](double A, double B, double C) -> double { return -A * A / (B - C); };
     } else if (!quiet_mode_) {
         outfile->Printf("\n  Using non-perturbative energy estimates");
     }
@@ -1168,8 +1096,7 @@ void ACIString::find_q_space(int nroot, SharedVector evals,
                 last_excluded = I;
             } else {
                 PQ_space_.push_back(sorted_dets[I].second);
-                det_history_[sorted_dets[I].second].push_back(
-                    std::make_pair(cycle_, "Q"));
+                det_history_[sorted_dets[I].second].push_back(std::make_pair(cycle_, "Q"));
             }
         }
 
@@ -1179,20 +1106,18 @@ void ACIString::find_q_space(int nroot, SharedVector evals,
             size_t num_extra = 0;
             for (size_t I = 0, max_I = last_excluded; I < max_I; ++I) {
                 size_t J = last_excluded - I;
-                if (std::fabs(sorted_dets[last_excluded + 1].first -
-                              sorted_dets[J].first) < 1.0e-9) {
+                if (std::fabs(sorted_dets[last_excluded + 1].first - sorted_dets[J].first) <
+                    1.0e-9) {
                     PQ_space_.push_back(sorted_dets[J].second);
-                    det_history_[sorted_dets[J].second].push_back(
-                        std::make_pair(cycle_, "Q"));
+                    det_history_[sorted_dets[J].second].push_back(std::make_pair(cycle_, "Q"));
                     num_extra++;
                 } else {
                     break;
                 }
             }
             if (num_extra > 0 and (!quiet_mode_)) {
-                outfile->Printf(
-                    "\n  Added %zu missing determinants in aimed selection.",
-                    num_extra);
+                outfile->Printf("\n  Added %zu missing determinants in aimed selection.",
+                                num_extra);
             }
         }
     }
@@ -1200,16 +1125,14 @@ void ACIString::find_q_space(int nroot, SharedVector evals,
     multistate_pt2_energy_correction_ = ept2;
 
     if (!quiet_mode_) {
-        outfile->Printf("\n  %s: %zu determinants",
-                        "Dimension of the P + Q space", PQ_space_.size());
-        outfile->Printf("\n  %s: %f s", "Time spent screening the model space",
-                        t_ms_screen.get());
+        outfile->Printf("\n  %s: %zu determinants", "Dimension of the P + Q space",
+                        PQ_space_.size());
+        outfile->Printf("\n  %s: %f s", "Time spent screening the model space", t_ms_screen.get());
     }
     outfile->Flush();
 }
 
-double ACIString::average_q_values(int nroot, std::vector<double> C1,
-                                   std::vector<double> E2) {
+double ACIString::average_q_values(int nroot, std::vector<double> C1, std::vector<double> E2) {
     // f_E2 and f_C1 will store the selected function of the chosen q criteria
     // This functions should only be called when nroot_ > 1
 
@@ -1239,9 +1162,8 @@ double ACIString::average_q_values(int nroot, std::vector<double> C1,
 
     if (pq_function_ == "MAX" or nroot == 1) {
         f_C1 = *std::max_element(C1.begin(), C1.end());
-        f_E2 = (q_rel_ and (nroot != 1))
-                   ? *std::max_element(dE2.begin(), dE2.end())
-                   : *std::max_element(E2.begin(), E2.end());
+        f_E2 = (q_rel_ and (nroot != 1)) ? *std::max_element(dE2.begin(), dE2.end())
+                                         : *std::max_element(E2.begin(), E2.end());
     } else if (pq_function_ == "AVERAGE") {
         double C1_average = 0.0;
         double E2_average = 0.0;
@@ -1271,14 +1193,12 @@ double ACIString::average_q_values(int nroot, std::vector<double> C1,
     return select_value;
 }
 
-double ACIString::root_select(int nroot, std::vector<double> C1,
-                              std::vector<double> E2) {
+double ACIString::root_select(int nroot, std::vector<double> C1, std::vector<double> E2) {
     double select_value;
     ref_root_ = options_.get_int("ROOT");
 
     if (ref_root_ + 1 > nroot_) {
-        throw PSIEXCEPTION(
-            "\n  Your selection is not valid. Check ROOT in options.");
+        throw PSIEXCEPTION("\n  Your selection is not valid. Check ROOT in options.");
     }
 
     if (nroot == 1) {
@@ -1286,8 +1206,7 @@ double ACIString::root_select(int nroot, std::vector<double> C1,
     }
 
     if (aimed_selection_) {
-        select_value =
-            energy_selection_ ? E2[ref_root_] : (C1[ref_root_] * C1[ref_root_]);
+        select_value = energy_selection_ ? E2[ref_root_] : (C1[ref_root_] * C1[ref_root_]);
     } else {
         select_value = energy_selection_ ? E2[ref_root_] : C1[ref_root_];
     }
@@ -1295,8 +1214,7 @@ double ACIString::root_select(int nroot, std::vector<double> C1,
     return select_value;
 }
 
-void ACIString::add_single_sub_alfa(
-    std::vector<std::vector<STLBitsetString>> list) {
+void ACIString::add_single_sub_alfa(std::vector<std::vector<STLBitsetString>> list) {
 
     list.resize(nirrep_);
     string_hash<int> a_hash;
@@ -1335,8 +1253,7 @@ void ACIString::add_single_sub_alfa(
     }
 }
 
-void ACIString::add_single_sub_beta(
-    std::vector<std::vector<STLBitsetString>> list) {
+void ACIString::add_single_sub_beta(std::vector<std::vector<STLBitsetString>> list) {
     list.resize(nirrep_);
     string_hash<int> b_hash;
     for (int n = 0; n < nirrep_; ++n) {
@@ -1373,8 +1290,7 @@ void ACIString::add_single_sub_beta(
     }
 }
 
-void ACIString::add_double_sub_alfa(
-    std::vector<std::vector<STLBitsetString>> list) {
+void ACIString::add_double_sub_alfa(std::vector<std::vector<STLBitsetString>> list) {
     list.resize(nirrep_);
     string_hash<int> aa_hash;
 
@@ -1422,8 +1338,7 @@ void ACIString::add_double_sub_alfa(
     }
 }
 
-void ACIString::add_double_sub_beta(
-    std::vector<std::vector<STLBitsetString>> list) {
+void ACIString::add_double_sub_beta(std::vector<std::vector<STLBitsetString>> list) {
     list.resize(nirrep_);
     string_hash<int> bb_hash;
 
@@ -1470,8 +1385,8 @@ void ACIString::add_double_sub_beta(
     }
 }
 
-bool ACIString::check_convergence(
-    std::vector<std::vector<double>>& energy_history, SharedVector evals) {
+bool ACIString::check_convergence(std::vector<std::vector<double>>& energy_history,
+                                  SharedVector evals) {
     int nroot = evals->dim();
 
     if (energy_history.size() == 0) {
@@ -1488,8 +1403,7 @@ bool ACIString::check_convergence(
     double new_avg_energy = 0.0;
 
     std::vector<double> new_energies;
-    std::vector<double> old_energies =
-        energy_history[energy_history.size() - 1];
+    std::vector<double> old_energies = energy_history[energy_history.size() - 1];
     for (int n = 0; n < nroot; ++n) {
         double state_n_energy = evals->get(n) + nuclear_repulsion_energy_;
         new_energies.push_back(state_n_energy);
@@ -1502,8 +1416,7 @@ bool ACIString::check_convergence(
     energy_history.push_back(new_energies);
 
     // Check for convergence
-    return (std::fabs(new_avg_energy - old_avg_energy) <
-            options_.get_double("E_CONVERGENCE"));
+    return (std::fabs(new_avg_energy - old_avg_energy) < options_.get_double("E_CONVERGENCE"));
     //        // Check the history of energies to avoid cycling in a loop
     //        if(cycle > 3){
     //            bool stuck = true;
@@ -1522,8 +1435,7 @@ bool ACIString::check_convergence(
 
 void ACIString::prune_q_space(std::vector<STLBitsetDeterminant>& large_space,
                               std::vector<STLBitsetDeterminant>& pruned_space,
-                              det_hash<int>& pruned_space_map,
-                              SharedMatrix evecs, int nroot) {
+                              det_hash<int>& pruned_space_map, SharedMatrix evecs, int nroot) {
     // Select the new reference space using the sorted CI coefficients
     pruned_space.clear();
     pruned_space_map.clear();
@@ -1571,8 +1483,8 @@ void ACIString::prune_q_space(std::vector<STLBitsetDeterminant>& large_space,
             size_t num_extra = 0;
             for (size_t I = 0, max_I = last_excluded; I < max_I; ++I) {
                 size_t J = last_excluded - I;
-                if (std::fabs(dm_det_list[last_excluded + 1].first -
-                              dm_det_list[J].first) < 1.0e-9) {
+                if (std::fabs(dm_det_list[last_excluded + 1].first - dm_det_list[J].first) <
+                    1.0e-9) {
                     pruned_space.push_back(large_space[dm_det_list[J].second]);
                     pruned_space_map[large_space[dm_det_list[J].second]] = 1;
                     num_extra += 1;
@@ -1581,9 +1493,8 @@ void ACIString::prune_q_space(std::vector<STLBitsetDeterminant>& large_space,
                 }
             }
             if (num_extra > 0) {
-                outfile->Printf(
-                    "\n  Added %zu missing determinants in aimed selection.",
-                    num_extra);
+                outfile->Printf("\n  Added %zu missing determinants in aimed selection.",
+                                num_extra);
             }
         }
     }
@@ -1598,8 +1509,7 @@ void ACIString::prune_q_space(std::vector<STLBitsetDeterminant>& large_space,
     }
 }
 
-bool ACIString::check_stuck(std::vector<std::vector<double>>& energy_history,
-                            SharedVector evals) {
+bool ACIString::check_stuck(std::vector<std::vector<double>>& energy_history, SharedVector evals) {
     int nroot = evals->dim();
     if (cycle_ < 3) {
         return false;
@@ -1626,8 +1536,7 @@ bool ACIString::check_stuck(std::vector<std::vector<double>>& energy_history,
 }
 
 pVector<std::pair<double, double>, std::pair<size_t, double>>
-ACIString::compute_spin(std::vector<STLBitsetDeterminant> space,
-                        SharedMatrix evecs, int nroot) {
+ACIString::compute_spin(std::vector<STLBitsetDeterminant> space, SharedMatrix evecs, int nroot) {
     double norm;
     double S2;
     double S;
@@ -1654,8 +1563,7 @@ ACIString::compute_spin(std::vector<STLBitsetDeterminant> space,
             if ((sum_weight < wfn_threshold) and (I < max_sample)) {
                 sum_weight += det_weight[I].first * det_weight[I].first;
                 max_I++;
-            } else if (std::fabs(det_weight[I].first -
-                                 det_weight[I - 1].first) < 1.0e-6) {
+            } else if (std::fabs(det_weight[I].first - det_weight[I - 1].first) < 1.0e-6) {
                 // Special case, if there are several equivalent determinants
                 sum_weight += det_weight[I].first * det_weight[I].first;
                 max_I++;
@@ -1681,14 +1589,13 @@ ACIString::compute_spin(std::vector<STLBitsetDeterminant> space,
         S2 /= norm;
         S2 = std::fabs(S2);
         S = std::fabs(0.5 * (std::sqrt(1.0 + 4.0 * S2) - 1.0));
-        spin_vec.push_back(
-            make_pair(make_pair(S, S2), make_pair(max_I, sum_weight)));
+        spin_vec.push_back(make_pair(make_pair(S, S2), make_pair(max_I, sum_weight)));
     }
     return spin_vec;
 }
 
-void ACIString::wfn_analyzer(std::vector<STLBitsetDeterminant> det_space,
-                             SharedMatrix evecs, int nroot) {
+void ACIString::wfn_analyzer(std::vector<STLBitsetDeterminant> det_space, SharedMatrix evecs,
+                             int nroot) {
 
     std::vector<bool> occ(2 * nact_, 0);
     oVector<double, int, int> labeled_orb_en = sym_labeled_orbitals("RHF");
@@ -1705,8 +1612,7 @@ void ACIString::wfn_analyzer(std::vector<STLBitsetDeterminant> det_space,
         pVector<size_t, double> excitation_counter(1 + (1 + cycle_) * 2);
         pVector<double, size_t> det_weight;
         for (size_t I = 0, max = det_space.size(); I < max; ++I) {
-            det_weight.push_back(
-                std::make_pair(std::fabs(evecs->get(I, n)), I));
+            det_weight.push_back(std::make_pair(std::fabs(evecs->get(I, n)), I));
         }
 
         std::sort(det_weight.begin(), det_weight.end());
@@ -1724,16 +1630,14 @@ void ACIString::wfn_analyzer(std::vector<STLBitsetDeterminant> det_space,
                 }
             }
             ndiff /= 2;
-            excitation_counter[ndiff] =
-                std::make_pair(excitation_counter[ndiff].first + 1,
-                               excitation_counter[ndiff].second +
-                                   det_weight[I].first * det_weight[I].first);
+            excitation_counter[ndiff] = std::make_pair(
+                excitation_counter[ndiff].first + 1,
+                excitation_counter[ndiff].second + det_weight[I].first * det_weight[I].first);
         }
         int order = 0;
         size_t det = 0;
         for (auto& i : excitation_counter) {
-            outfile->Printf("\n      %2d           %8zu           %.11f", order,
-                            i.first, i.second);
+            outfile->Printf("\n      %2d           %8zu           %.11f", order, i.first, i.second);
             det += i.first;
             if (det == det_space.size())
                 break;
@@ -1754,16 +1658,15 @@ oVector<double, int, int> ACIString::sym_labeled_orbitals(std::string type) {
         int cumidx = 0;
         for (int h = 0; h < nirrep_; ++h) {
             for (int a = 0; a < nactpi_[h]; ++a) {
-                orb_e.push_back(
-                    make_pair(epsilon_a_->get(h, frzcpi_[h] + a), a + cumidx));
+                orb_e.push_back(make_pair(epsilon_a_->get(h, frzcpi_[h] + a), a + cumidx));
             }
             cumidx += nactpi_[h];
         }
 
         // Create a vector that stores the orbital energy, symmetry, and idx
         for (size_t a = 0; a < nact_; ++a) {
-            labeled_orb.push_back(make_pair(
-                orb_e[a].first, make_pair(mo_symmetry_[a], orb_e[a].second)));
+            labeled_orb.push_back(
+                make_pair(orb_e[a].first, make_pair(mo_symmetry_[a], orb_e[a].second)));
         }
         // Order by energy, low to high
         std::sort(labeled_orb.begin(), labeled_orb.end());
@@ -1774,42 +1677,38 @@ oVector<double, int, int> ACIString::sym_labeled_orbitals(std::string type) {
         int cumidx = 0;
         for (int h = 0; h < nirrep_; ++h) {
             for (size_t a = 0, max = nactpi_[h]; a < max; ++a) {
-                orb_e.push_back(
-                    make_pair(epsilon_b_->get(h, frzcpi_[h] + a), a + cumidx));
+                orb_e.push_back(make_pair(epsilon_b_->get(h, frzcpi_[h] + a), a + cumidx));
             }
             cumidx += nactpi_[h];
         }
 
         // Create a vector that stores the orbital energy, sym, and idx
         for (size_t a = 0; a < nact_; ++a) {
-            labeled_orb.push_back(make_pair(
-                orb_e[a].first, make_pair(mo_symmetry_[a], orb_e[a].second)));
+            labeled_orb.push_back(
+                make_pair(orb_e[a].first, make_pair(mo_symmetry_[a], orb_e[a].second)));
         }
         std::sort(labeled_orb.begin(), labeled_orb.end());
     }
 
     //	for(int i = 0; i < nact_; ++i){
     //		outfile->Printf("\n %1.5f    %d    %d", labeled_orb[i].first,
-    //labeled_orb[i].second.first, labeled_orb[i].second.second);
+    // labeled_orb[i].second.first, labeled_orb[i].second.second);
     //	}
 
     return labeled_orb;
 }
 
-void ACIString::print_wfn(std::vector<STLBitsetDeterminant> space,
-                          SharedMatrix evecs, int nroot) {
+void ACIString::print_wfn(std::vector<STLBitsetDeterminant> space, SharedMatrix evecs, int nroot) {
     std::string state_label;
-    std::vector<string> s2_labels({"singlet", "doublet", "triplet", "quartet",
-                                   "quintet", "sextet", "septet", "octet",
-                                   "nonet", "decatet"});
+    std::vector<string> s2_labels({"singlet", "doublet", "triplet", "quartet", "quintet", "sextet",
+                                   "septet", "octet", "nonet", "decatet"});
 
     for (int n = 0; n < nroot; ++n) {
         outfile->Printf("\n\n  Most important contributions to root %3d:", n);
 
         std::vector<std::pair<double, size_t>> det_weight;
         for (size_t I = 0; I < space.size(); ++I) {
-            det_weight.push_back(
-                std::make_pair(std::fabs(evecs->get(I, n)), I));
+            det_weight.push_back(std::make_pair(std::fabs(evecs->get(I, n)), I));
         }
         std::sort(det_weight.begin(), det_weight.end());
         std::reverse(det_weight.begin(), det_weight.end());
@@ -1817,27 +1716,24 @@ void ACIString::print_wfn(std::vector<STLBitsetDeterminant> space,
         for (size_t I = 0; I < max_dets; ++I) {
             outfile->Printf("\n  %3zu  %9.6f %.9f  %10zu %s", I,
                             evecs->get(det_weight[I].second, n),
-                            det_weight[I].first * det_weight[I].first,
-                            det_weight[I].second,
+                            det_weight[I].first * det_weight[I].first, det_weight[I].second,
                             space[det_weight[I].second].str().c_str());
         }
 
         auto spins = compute_spin(space, evecs, nroot);
         state_label = s2_labels[std::round(spins[n].first.first * 2.0)];
         root_spin_vec_.clear();
-        root_spin_vec_[n] =
-            make_pair(spins[n].first.first, spins[n].first.second);
+        root_spin_vec_[n] = make_pair(spins[n].first.first, spins[n].first.second);
         outfile->Printf("\n\n  Spin state for root %zu: S^2 = %5.3f, S = "
                         "%5.3f, %s (from %zu determinants, %3.2f%)",
-                        n, spins[n].first.second, spins[n].first.first,
-                        state_label.c_str(), spins[n].second.first,
-                        100.0 * spins[n].second.second);
+                        n, spins[n].first.second, spins[n].first.first, state_label.c_str(),
+                        spins[n].second.first, 100.0 * spins[n].second.second);
     }
     outfile->Flush();
 }
 
-void ACIString::full_spin_transform(std::vector<STLBitsetDeterminant> det_space,
-                                    SharedMatrix cI, int nroot) {
+void ACIString::full_spin_transform(std::vector<STLBitsetDeterminant> det_space, SharedMatrix cI,
+                                    int nroot) {
     Timer timer;
     outfile->Printf("\n  Performing spin projection...");
 
@@ -1863,9 +1759,7 @@ void ACIString::full_spin_transform(std::vector<STLBitsetDeterminant> det_space,
     // and get their indices wrt columns in T
     size_t csf_num = 0;
     size_t csf_idx = 0;
-    double criteria =
-        (0.25 *
-         (wavefunction_multiplicity_ * wavefunction_multiplicity_ - 1.0));
+    double criteria = (0.25 * (wavefunction_multiplicity_ * wavefunction_multiplicity_ - 1.0));
     // double criteria = static_cast<double>(wavefunction_multiplicity_) - 1.0;
     for (size_t l = 0; l < det_size; ++l) {
         if (std::fabs(evals->get(l) - criteria) <= 0.01) {
@@ -1882,10 +1776,8 @@ void ACIString::full_spin_transform(std::vector<STLBitsetDeterminant> det_space,
     // CHECK FOR TRIPLET (SHOULD INCLUDE CSF_IDX
     SharedMatrix C_trans(new Matrix("C_trans", det_size, nroot));
     SharedMatrix C(new Matrix("C", det_size, nroot));
-    C->gemm('t', 'n', csf_num, nroot, det_size, 1.0, T, det_size, cI, nroot,
-            0.0, nroot);
-    C_trans->gemm('n', 'n', det_size, nroot, csf_num, 1.0, T, det_size, C,
-                  nroot, 0.0, nroot);
+    C->gemm('t', 'n', csf_num, nroot, det_size, 1.0, T, det_size, cI, nroot, 0.0, nroot);
+    C_trans->gemm('n', 'n', det_size, nroot, csf_num, 1.0, T, det_size, C, nroot, 0.0, nroot);
 
     // Normalize transformed vectors
     for (int n = 0; n < nroot; ++n) {
@@ -1899,40 +1791,34 @@ void ACIString::full_spin_transform(std::vector<STLBitsetDeterminant> det_space,
     PQ_spin_evecs_.reset(new Matrix("PQ SPIN EVECS", det_size, nroot));
     PQ_spin_evecs_ = C_trans->clone();
 
-    outfile->Printf("\n  Time spent performing spin transformation: %6.6f",
-                    timer.get());
+    outfile->Printf("\n  Time spent performing spin transformation: %6.6f", timer.get());
     outfile->Flush();
 }
 
-double
-ACIString::compute_spin_contamination(std::vector<STLBitsetDeterminant> space,
-                                      SharedMatrix evecs, int nroot) {
+double ACIString::compute_spin_contamination(std::vector<STLBitsetDeterminant> space,
+                                             SharedMatrix evecs, int nroot) {
     auto spins = compute_spin(space, evecs, nroot);
     double spin_contam = 0.0;
     for (int n = 0; n < nroot; ++n) {
         spin_contam += spins[n].first.second;
     }
     spin_contam /= static_cast<double>(nroot);
-    spin_contam -=
-        (0.25 *
-         (wavefunction_multiplicity_ * wavefunction_multiplicity_ - 1.0));
+    spin_contam -= (0.25 * (wavefunction_multiplicity_ * wavefunction_multiplicity_ - 1.0));
 
     return spin_contam;
 }
 
-std::vector<double>
-ACIString::davidson_correction(std::vector<STLBitsetDeterminant> P_dets,
-                               SharedVector P_evals, SharedMatrix PQ_evecs,
-                               std::vector<STLBitsetDeterminant> PQ_dets,
-                               SharedVector PQ_evals) {
+std::vector<double> ACIString::davidson_correction(std::vector<STLBitsetDeterminant> P_dets,
+                                                   SharedVector P_evals, SharedMatrix PQ_evecs,
+                                                   std::vector<STLBitsetDeterminant> PQ_dets,
+                                                   SharedVector PQ_evals) {
     outfile->Printf("\n  There are %zu PQ dets.", PQ_dets.size());
     outfile->Printf("\n  There are %zu P dets.", P_dets.size());
 
     // The energy correction per root
     std::vector<double> dc(nroot_, 0.0);
 
-    std::unordered_map<STLBitsetDeterminant, double, STLBitsetDeterminant::Hash>
-        PQ_map;
+    std::unordered_map<STLBitsetDeterminant, double, STLBitsetDeterminant::Hash> PQ_map;
     for (int n = 0; n < nroot_; ++n) {
 
         // Build the map for each root
@@ -1956,28 +1842,23 @@ void ACIString::set_max_rdm(int rdm) { rdm_level_ = rdm; }
 
 Reference ACIString::reference() {
     CI_RDMS ci_rdms(options_, fci_ints_, PQ_space_, evecs_, 0, 0);
-    Reference aci_ref =
-        ci_rdms.reference(ordm_a_, ordm_b_, trdm_aa_, trdm_ab_, trdm_bb_,
-                          trdm_aaa_, trdm_aab_, trdm_abb_, trdm_bbb_);
+    Reference aci_ref = ci_rdms.reference(ordm_a_, ordm_b_, trdm_aa_, trdm_ab_, trdm_bb_, trdm_aaa_,
+                                          trdm_aab_, trdm_abb_, trdm_bbb_);
     return aci_ref;
 }
 
 void ACIString::print_nos() {
     print_h2("NATURAL ORBITALS");
 
-    std::shared_ptr<Matrix> opdm_a(
-        new Matrix("OPDM_A", nirrep_, nactpi_, nactpi_));
-    std::shared_ptr<Matrix> opdm_b(
-        new Matrix("OPDM_B", nirrep_, nactpi_, nactpi_));
+    std::shared_ptr<Matrix> opdm_a(new Matrix("OPDM_A", nirrep_, nactpi_, nactpi_));
+    std::shared_ptr<Matrix> opdm_b(new Matrix("OPDM_B", nirrep_, nactpi_, nactpi_));
 
     int offset = 0;
     for (int h = 0; h < nirrep_; h++) {
         for (int u = 0; u < nactpi_[h]; u++) {
             for (int v = 0; v < nactpi_[h]; v++) {
-                opdm_a->set(h, u, v,
-                            ordm_a_[(u + offset) * nact_ + v + offset]);
-                opdm_b->set(h, u, v,
-                            ordm_b_[(u + offset) * nact_ + v + offset]);
+                opdm_a->set(h, u, v, ordm_a_[(u + offset) * nact_ + v + offset]);
+                opdm_b->set(h, u, v, ordm_b_[(u + offset) * nact_ + v + offset]);
             }
         }
         offset += nactpi_[h];
@@ -1993,21 +1874,20 @@ void ACIString::print_nos() {
     std::vector<std::pair<double, std::pair<int, int>>> vec_irrep_occupation;
     for (int h = 0; h < nirrep_; h++) {
         for (int u = 0; u < nactpi_[h]; u++) {
-            auto irrep_occ = std::make_pair(OCC_A->get(h, u) + OCC_B->get(h, u),
-                                            std::make_pair(h, u + 1));
+            auto irrep_occ =
+                std::make_pair(OCC_A->get(h, u) + OCC_B->get(h, u), std::make_pair(h, u + 1));
             vec_irrep_occupation.push_back(irrep_occ);
         }
     }
-    CharacterTable ct =
-        Process::environment.molecule()->point_group()->char_table();
+    CharacterTable ct = Process::environment.molecule()->point_group()->char_table();
     std::sort(vec_irrep_occupation.begin(), vec_irrep_occupation.end(),
               std::greater<std::pair<double, std::pair<int, int>>>());
 
     int count = 0;
     outfile->Printf("\n    ");
     for (auto vec : vec_irrep_occupation) {
-        outfile->Printf(" %4d%-4s%11.6f  ", vec.second.second,
-                        ct.gamma(vec.second.first).symbol(), vec.first);
+        outfile->Printf(" %4d%-4s%11.6f  ", vec.second.second, ct.gamma(vec.second.first).symbol(),
+                        vec.first);
         if (count++ % 3 == 2 && count != vec_irrep_occupation.size())
             outfile->Printf("\n    ");
     }
@@ -2026,9 +1906,9 @@ int ACIString::get_sym(STLBitsetString str) {
     return sym;
 }
 
-void ACIString::compute_H_expectation_val(
-    const std::vector<STLBitsetDeterminant> space, SharedVector& evals,
-    const SharedMatrix evecs, int nroot, DiagonalizationMethod diag_method) {
+void ACIString::compute_H_expectation_val(const std::vector<STLBitsetDeterminant> space,
+                                          SharedVector& evals, const SharedMatrix evecs, int nroot,
+                                          DiagonalizationMethod diag_method) {
     size_t space_size = space.size();
     SparseCISolver ssolver;
 
@@ -2038,8 +1918,7 @@ void ACIString::compute_H_expectation_val(
         for (int n = 0; n < nroot; ++n) {
             for (size_t I = 0; I < space_size; ++I) {
                 for (size_t J = 0; J < space_size; ++J) {
-                    evals->add(n, evecs->get(I, n) * Hd->get(I, J) *
-                                      evecs->get(J, n));
+                    evals->add(n, evecs->get(I, n) * Hd->get(I, J) * evecs->get(J, n));
                 }
             }
         }
@@ -2051,8 +1930,7 @@ void ACIString::compute_H_expectation_val(
                 std::vector<double> H_val = Hs[I].second;
                 std::vector<int> Hidx = Hs[I].first;
                 for (size_t J = 0, max_J = H_val.size(); J < max_J; ++J) {
-                    evals->add(n, evecs->get(I, n) * H_val[J] *
-                                      evecs->get(Hidx[J], n));
+                    evals->add(n, evecs->get(I, n) * H_val[J] * evecs->get(Hidx[J], n));
                 }
             }
         }

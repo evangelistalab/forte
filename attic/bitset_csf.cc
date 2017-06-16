@@ -39,11 +39,9 @@ namespace forte {
 
 BitsetCSF::BitsetCSF() {}
 
-BitsetCSF::BitsetCSF(const std::vector<bool>& occupation_a,
-                     const std::vector<bool>& occupation_b, short s, short ms,
-                     short index)
-    : docc_(occupation_a.size()), socc_(occupation_a.size()), s_(s), ms_(ms),
-      index_(index) {
+BitsetCSF::BitsetCSF(const std::vector<bool>& occupation_a, const std::vector<bool>& occupation_b,
+                     short s, short ms, short index)
+    : docc_(occupation_a.size()), socc_(occupation_a.size()), s_(s), ms_(ms), index_(index) {
     int nmo = occupation_a.size();
     for (int p = 0; p < nmo; ++p) {
         if (occupation_a[p] and occupation_b[p]) {

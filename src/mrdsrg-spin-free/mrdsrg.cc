@@ -27,34 +27,30 @@
  */
 
 #include <algorithm>
-#include <vector>
-#include <map>
 #include <cmath>
+#include <map>
+#include <vector>
 
 #include "psi4/libmints/molecule.h"
 
-#include "../mini-boost/boost/format.hpp"
-#include "../helpers.h"
 #include "../fci/fci_solver.h"
-#include "../mp2_nos.h"
 #include "../fci_mo.h"
+#include "../helpers.h"
+#include "../mini-boost/boost/format.hpp"
+#include "../mp2_nos.h"
 #include "mrdsrg.h"
 
 namespace psi {
 namespace forte {
 
-MRDSRG::MRDSRG(Reference reference, SharedWavefunction ref_wfn,
-               Options& options, std::shared_ptr<ForteIntegrals> ints,
-               std::shared_ptr<MOSpaceInfo> mo_space_info)
-    : Wavefunction(options), reference_(reference), ints_(ints),
-      mo_space_info_(mo_space_info), BTF_(new BlockedTensorFactory(options)),
-      tensor_type_(CoreTensor) {
+MRDSRG::MRDSRG(Reference reference, SharedWavefunction ref_wfn, Options& options,
+               std::shared_ptr<ForteIntegrals> ints, std::shared_ptr<MOSpaceInfo> mo_space_info)
+    : Wavefunction(options), reference_(reference), ints_(ints), mo_space_info_(mo_space_info),
+      BTF_(new BlockedTensorFactory(options)), tensor_type_(CoreTensor) {
     shallow_copy(ref_wfn);
     reference_wavefunction_ = ref_wfn;
 
-    print_method_banner(
-        {"Multireference Driven Similarity Renormalization Group",
-         "Chenyang Li"});
+    print_method_banner({"Multireference Driven Similarity Renormalization Group", "Chenyang Li"});
     read_options();
     print_options();
     startup();
@@ -143,10 +139,8 @@ void MRDSRG::startup() {
     BTF_->add_composite_mo_space("H", "IJKL", {bcore_label_, bactv_label_});
     BTF_->add_composite_mo_space("p", "abcd", {aactv_label_, avirt_label_});
     BTF_->add_composite_mo_space("P", "ABCD", {bactv_label_, bvirt_label_});
-    BTF_->add_composite_mo_space("g", "pqrsto",
-                                 {acore_label_, aactv_label_, avirt_label_});
-    BTF_->add_composite_mo_space("G", "PQRSTO",
-                                 {bcore_label_, bactv_label_, bvirt_label_});
+    BTF_->add_composite_mo_space("g", "pqrsto", {acore_label_, aactv_label_, avirt_label_});
+    BTF_->add_composite_mo_space("G", "PQRSTO", {bcore_label_, bactv_label_, bvirt_label_});
 
     // prepare integrals
     H_ = BTF_->build(tensor_type_, "H", spin_cases({"gg"}));
@@ -186,10 +180,8 @@ void MRDSRG::startup() {
             throw PSIEXCEPTION("Orbital invariant formalism is not implemented "
                                "for the RELAX_REF option.");
         } else {
-            U_ = ambit::BlockedTensor::build(tensor_type_, "U",
-                                             spin_cases({"gg"}));
-            std::vector<std::vector<double>> eigens =
-                diagonalize_Fock_diagblocks(U_);
+            U_ = ambit::BlockedTensor::build(tensor_type_, "U", spin_cases({"gg"}));
+            std::vector<std::vector<double>> eigens = diagonalize_Fock_diagblocks(U_);
             Fa_ = eigens[0];
             Fb_ = eigens[1];
         }
@@ -203,8 +195,7 @@ void MRDSRG::startup() {
 
 void MRDSRG::build_ints() {
     // prepare one-electron integrals
-    H_.iterate([&](const std::vector<size_t>& i,
-                   const std::vector<SpinType>& spin, double& value) {
+    H_.iterate([&](const std::vector<size_t>& i, const std::vector<SpinType>& spin, double& value) {
         if (spin[0] == AlphaSpin)
             value = ints_->oei_a(i[0], i[1]);
         else
@@ -212,8 +203,7 @@ void MRDSRG::build_ints() {
     });
 
     // prepare two-electron integrals
-    V_.iterate([&](const std::vector<size_t>& i,
-                   const std::vector<SpinType>& spin, double& value) {
+    V_.iterate([&](const std::vector<size_t>& i, const std::vector<SpinType>& spin, double& value) {
         if ((spin[0] == AlphaSpin) && (spin[1] == AlphaSpin))
             value = ints_->aptei_aa(i[0], i[1], i[2], i[3]);
         if ((spin[0] == AlphaSpin) && (spin[1] == BetaSpin))
@@ -225,30 +215,24 @@ void MRDSRG::build_ints() {
 
 void MRDSRG::build_density() {
     // prepare density matrices
-    (Gamma1_.block("cc"))
-        .iterate([&](const std::vector<size_t>& i, double& value) {
-            value = i[0] == i[1] ? 1.0 : 0.0;
-        });
-    (Gamma1_.block("CC"))
-        .iterate([&](const std::vector<size_t>& i, double& value) {
-            value = i[0] == i[1] ? 1.0 : 0.0;
-        });
-    (Eta1_.block("aa"))
-        .iterate([&](const std::vector<size_t>& i, double& value) {
-            value = i[0] == i[1] ? 1.0 : 0.0;
-        });
-    (Eta1_.block("AA"))
-        .iterate([&](const std::vector<size_t>& i, double& value) {
-            value = i[0] == i[1] ? 1.0 : 0.0;
-        });
-    (Eta1_.block("vv"))
-        .iterate([&](const std::vector<size_t>& i, double& value) {
-            value = i[0] == i[1] ? 1.0 : 0.0;
-        });
-    (Eta1_.block("VV"))
-        .iterate([&](const std::vector<size_t>& i, double& value) {
-            value = i[0] == i[1] ? 1.0 : 0.0;
-        });
+    (Gamma1_.block("cc")).iterate([&](const std::vector<size_t>& i, double& value) {
+        value = i[0] == i[1] ? 1.0 : 0.0;
+    });
+    (Gamma1_.block("CC")).iterate([&](const std::vector<size_t>& i, double& value) {
+        value = i[0] == i[1] ? 1.0 : 0.0;
+    });
+    (Eta1_.block("aa")).iterate([&](const std::vector<size_t>& i, double& value) {
+        value = i[0] == i[1] ? 1.0 : 0.0;
+    });
+    (Eta1_.block("AA")).iterate([&](const std::vector<size_t>& i, double& value) {
+        value = i[0] == i[1] ? 1.0 : 0.0;
+    });
+    (Eta1_.block("vv")).iterate([&](const std::vector<size_t>& i, double& value) {
+        value = i[0] == i[1] ? 1.0 : 0.0;
+    });
+    (Eta1_.block("VV")).iterate([&](const std::vector<size_t>& i, double& value) {
+        value = i[0] == i[1] ? 1.0 : 0.0;
+    });
     // symmetrize beta spin
     outfile->Printf("\n  Warning: I am forcing density Db = Da to avoid spin "
                     "symmetry breaking.");
@@ -319,8 +303,7 @@ void MRDSRG::build_fock(BlockedTensor& H, BlockedTensor& V) {
     size_t ncmo_ = mo_space_info_->size("CORRELATED");
     Fa_ = std::vector<double>(ncmo_);
     Fb_ = std::vector<double>(ncmo_);
-    F_.iterate([&](const std::vector<size_t>& i,
-                   const std::vector<SpinType>& spin, double& value) {
+    F_.iterate([&](const std::vector<size_t>& i, const std::vector<SpinType>& spin, double& value) {
         if (spin[0] == AlphaSpin and (i[0] == i[1])) {
             Fa_[i[0]] = value;
         }
@@ -354,16 +337,13 @@ void MRDSRG::print_options() {
     // print some information
     print_h2("Calculation Information");
     for (auto& str_dim : calculation_info) {
-        outfile->Printf("\n    %-35s %15d", str_dim.first.c_str(),
-                        str_dim.second);
+        outfile->Printf("\n    %-35s %15d", str_dim.first.c_str(), str_dim.second);
     }
     for (auto& str_dim : calculation_info_double) {
-        outfile->Printf("\n    %-35s %15.3e", str_dim.first.c_str(),
-                        str_dim.second);
+        outfile->Printf("\n    %-35s %15.3e", str_dim.first.c_str(), str_dim.second);
     }
     for (auto& str_dim : calculation_info_string) {
-        outfile->Printf("\n    %-35s %15s", str_dim.first.c_str(),
-                        str_dim.second.c_str());
+        outfile->Printf("\n    %-35s %15s", str_dim.first.c_str(), str_dim.second.c_str());
     }
     outfile->Printf("\n");
     outfile->Flush();
@@ -450,8 +430,7 @@ double MRDSRG::compute_energy_relaxed() {
     if (options_["MS"].has_changed()) {
         twice_ms = std::round(2.0 * options_.get_double("MS"));
     }
-    auto nelec_actv =
-        nelec - 2 * mo_space_info_->size("FROZEN_DOCC") - 2 * acore_mos_.size();
+    auto nelec_actv = nelec - 2 * mo_space_info_->size("FROZEN_DOCC") - 2 * acore_mos_.size();
     auto na = (nelec_actv + twice_ms) / 2;
     auto nb = nelec_actv - na;
 
@@ -469,14 +448,11 @@ double MRDSRG::compute_energy_relaxed() {
         // diagonalize the Hamiltonian
         FCISolver fcisolver(active_dim, acore_mos_, aactv_mos_, na, nb, multi,
                             options_.get_int("ROOT_SYM"), ints_, mo_space_info_,
-                            options_.get_int("NTRIAL_PER_ROOT"), print_,
-                            options_);
+                            options_.get_int("NTRIAL_PER_ROOT"), print_, options_);
         fcisolver.set_max_rdm_level(1);
         fcisolver.set_fci_iterations(options_.get_int("FCI_MAXITER"));
-        fcisolver.set_collapse_per_root(
-            options_.get_int("DL_COLLAPSE_PER_ROOT"));
-        fcisolver.set_subspace_per_root(
-            options_.get_int("DL_SUBSPACE_PER_ROOT"));
+        fcisolver.set_collapse_per_root(options_.get_int("DL_COLLAPSE_PER_ROOT"));
+        fcisolver.set_subspace_per_root(options_.get_int("DL_SUBSPACE_PER_ROOT"));
         Erelax = fcisolver.compute_energy();
         //        std::shared_ptr<FCI_MO> fci_mo(new
         //        FCI_MO(reference_wavefunction_,options_,ints_,mo_space_info_));
@@ -484,10 +460,8 @@ double MRDSRG::compute_energy_relaxed() {
 
         // printing
         print_h2("MRDSRG Energy Summary");
-        outfile->Printf("\n    %-30s = %22.15f", "MRDSRG Total Energy (fixed)",
-                        Edsrg);
-        outfile->Printf("\n    %-30s = %22.15f",
-                        "MRDSRG Total Energy (relaxed)", Erelax);
+        outfile->Printf("\n    %-30s = %22.15f", "MRDSRG Total Energy (fixed)", Edsrg);
+        outfile->Printf("\n    %-30s = %22.15f", "MRDSRG Total Energy (relaxed)", Erelax);
         outfile->Printf("\n");
     } else if (relax_algorithm == "ITERATE") {
         // iteration variables
@@ -500,8 +474,7 @@ double MRDSRG::compute_energy_relaxed() {
         // start iteration
         do {
             // print
-            std::string relax_title =
-                "MR-DSRG Ref. Relaxation Iter. " + std::to_string(cycle);
+            std::string relax_title = "MR-DSRG Ref. Relaxation Iter. " + std::to_string(cycle);
             print_h2(relax_title);
 
             // compute dsrg energy
@@ -515,18 +488,15 @@ double MRDSRG::compute_energy_relaxed() {
             transfer_integrals();
 
             // diagonalize the Hamiltonian
-            FCISolver fcisolver(active_dim, acore_mos_, aactv_mos_, na, nb,
-                                multi, options_.get_int("ROOT_SYM"), ints_,
-                                mo_space_info_, options_);
+            FCISolver fcisolver(active_dim, acore_mos_, aactv_mos_, na, nb, multi,
+                                options_.get_int("ROOT_SYM"), ints_, mo_space_info_, options_);
             Etemp = Erelax;
             fcisolver.set_max_rdm_level(3);
             fcisolver.set_nroot(options_.get_int("NROOT"));
             fcisolver.set_root(options_.get_int("ROOT"));
             fcisolver.set_fci_iterations(options_.get_int("FCI_MAXITER"));
-            fcisolver.set_collapse_per_root(
-                options_.get_int("DL_COLLAPSE_PER_ROOT"));
-            fcisolver.set_subspace_per_root(
-                options_.get_int("DL_SUBSPACE_PER_ROOT"));
+            fcisolver.set_collapse_per_root(options_.get_int("DL_COLLAPSE_PER_ROOT"));
+            fcisolver.set_subspace_per_root(options_.get_int("DL_SUBSPACE_PER_ROOT"));
             Erelax = fcisolver.compute_energy();
             Erelax_vec.push_back(Erelax);
             double Edelta_relax = Erelax - Etemp;
@@ -550,27 +520,23 @@ double MRDSRG::compute_energy_relaxed() {
                 Timer timer;
 
                 // diagonalize blocks of Fock matrix
-                U_ = ambit::BlockedTensor::build(tensor_type_, "U",
-                                                 spin_cases({"gg"}));
+                U_ = ambit::BlockedTensor::build(tensor_type_, "U", spin_cases({"gg"}));
                 diagonalize_Fock_diagblocks(U_);
-                outfile->Printf("\n    %-47s %8.3f",
-                                "Timing for block-diagonalizing Fock matrix:",
+                outfile->Printf("\n    %-47s %8.3f", "Timing for block-diagonalizing Fock matrix:",
                                 timer.get() - timings.back());
                 timings.push_back(timer.get());
 
                 // transform O1 to new basis and copy to ints_
-                BlockedTensor O = ambit::BlockedTensor::build(
-                    tensor_type_, "Temp One", spin_cases({"gg"}));
+                BlockedTensor O =
+                    ambit::BlockedTensor::build(tensor_type_, "Temp One", spin_cases({"gg"}));
                 O["xy"] = U_["xu"] * O1_["uv"] * U_["yv"];
                 O["XY"] = U_["XU"] * O1_["UV"] * U_["YV"];
                 for (const std::string& block : {"aa", "AA"}) {
                     bool spin = islower(block[0]);
 
-                    O.block(block).citerate(
-                        [&](const std::vector<size_t>& i, const double& value) {
-                            ints_->set_oei(aactv_mos_[i[0]], aactv_mos_[i[1]],
-                                           value, spin);
-                        });
+                    O.block(block).citerate([&](const std::vector<size_t>& i, const double& value) {
+                        ints_->set_oei(aactv_mos_[i[0]], aactv_mos_[i[1]], value, spin);
+                    });
                 }
 
                 // transform bare one-body Hamiltonian
@@ -578,15 +544,13 @@ double MRDSRG::compute_energy_relaxed() {
                 O["RS"] = U_["RP"] * H_["PQ"] * U_["SQ"];
                 H_["pq"] = O["pq"];
                 H_["PQ"] = O["PQ"];
-                outfile->Printf(
-                    "\n    %-47s %8.3f",
-                    "Timing for transforming one-electron integral:",
-                    timer.get() - timings.back());
+                outfile->Printf("\n    %-47s %8.3f",
+                                "Timing for transforming one-electron integral:",
+                                timer.get() - timings.back());
                 timings.push_back(timer.get());
 
                 // transform Hbar2 to new basis and copy to ints_
-                O = ambit::BlockedTensor::build(tensor_type_, "Temp Two",
-                                                spin_cases({"aaaa"}));
+                O = ambit::BlockedTensor::build(tensor_type_, "Temp Two", spin_cases({"aaaa"}));
                 O["wzxy"] = U_["wu"] * U_["zv"] * Hbar2_["uvxy"];
                 O["wZxY"] = U_["wu"] * U_["ZV"] * Hbar2_["uVxY"];
                 O["WZXY"] = U_["WU"] * U_["ZV"] * Hbar2_["UVXY"];
@@ -609,32 +573,27 @@ double MRDSRG::compute_energy_relaxed() {
                 }
 
                 // transform bare two-body Hamiltonian
-                O = ambit::BlockedTensor::build(tensor_type_, "Temp Two",
-                                                {"gggg"});
+                O = ambit::BlockedTensor::build(tensor_type_, "Temp Two", {"gggg"});
                 O["tors"] = U_["tp"] * U_["oq"] * V_["pqrs"];
                 V_["pqot"] = O["pqrs"] * U_["ts"] * U_["or"];
 
-                O = ambit::BlockedTensor::build(tensor_type_, "Temp Two",
-                                                {"gGgG"});
+                O = ambit::BlockedTensor::build(tensor_type_, "Temp Two", {"gGgG"});
                 O["tOrS"] = U_["tp"] * U_["OQ"] * V_["pQrS"];
                 V_["pQoT"] = O["pQrS"] * U_["TS"] * U_["or"];
 
-                O = ambit::BlockedTensor::build(tensor_type_, "Temp Two",
-                                                {"GGGG"});
+                O = ambit::BlockedTensor::build(tensor_type_, "Temp Two", {"GGGG"});
                 O["TORS"] = U_["TP"] * U_["OQ"] * V_["PQRS"];
                 V_["PQOT"] = O["PQRS"] * U_["TS"] * U_["OR"];
-                outfile->Printf(
-                    "\n    %-47s %8.3f",
-                    "Timing for transforming two-electron integral:",
-                    timer.get() - timings.back());
+                outfile->Printf("\n    %-47s %8.3f",
+                                "Timing for transforming two-electron integral:",
+                                timer.get() - timings.back());
 
                 // new integrals in integral class
                 ints_->update_integrals(false);
 
                 // diagonalize the Hamiltonian
-                FCISolver fcisolver(active_dim, acore_mos_, aactv_mos_, na, nb,
-                                    multi, options_.get_int("ROOT_SYM"), ints_,
-                                    mo_space_info_, options_);
+                FCISolver fcisolver(active_dim, acore_mos_, aactv_mos_, na, nb, multi,
+                                    options_.get_int("ROOT_SYM"), ints_, mo_space_info_, options_);
                 fcisolver.set_max_rdm_level(3);
                 fcisolver.set_nroot(options_.get_int("NROOT"));
                 fcisolver.set_root(options_.get_int("ROOT"));
@@ -672,30 +631,26 @@ double MRDSRG::compute_energy_relaxed() {
         std::string indent(4, ' ');
         std::string dash(71, '-');
         std::string title;
-        title += indent + str(boost::format("%5c  %=31s  %=31s\n") % ' ' %
-                              "Fixed Ref. (a.u.)" % "Relaxed Ref. (a.u.)");
-        title += indent + std::string(7, ' ') + std::string(31, '-') + "  " +
-                 std::string(31, '-') + "\n";
-        title += indent + str(boost::format("%5s  %=20s %=10s  %=20s %=10s\n") %
-                              "Iter." % "Total Energy" % "Delta" %
-                              "Total Energy" % "Delta");
+        title += indent + str(boost::format("%5c  %=31s  %=31s\n") % ' ' % "Fixed Ref. (a.u.)" %
+                              "Relaxed Ref. (a.u.)");
+        title += indent + std::string(7, ' ') + std::string(31, '-') + "  " + std::string(31, '-') +
+                 "\n";
+        title += indent + str(boost::format("%5s  %=20s %=10s  %=20s %=10s\n") % "Iter." %
+                              "Total Energy" % "Delta" % "Total Energy" % "Delta");
         title += indent + dash;
         outfile->Printf("\n%s", title.c_str());
         for (int n = 0; n != cycle; ++n) {
-            outfile->Printf("\n    %5d  %20.12f %10.3e  %20.12f %10.3e", n,
-                            Edsrg_vec[n], Edelta_dsrg_vec[n], Erelax_vec[n],
-                            Edelta_relax_vec[n]);
+            outfile->Printf("\n    %5d  %20.12f %10.3e  %20.12f %10.3e", n, Edsrg_vec[n],
+                            Edelta_dsrg_vec[n], Erelax_vec[n], Edelta_relax_vec[n]);
             outfile->Flush();
         }
         outfile->Printf("\n    %s", dash.c_str());
         outfile->Printf("\n    %-30s = %23.15f", "MRDSRG Total Energy", Edsrg);
-        outfile->Printf("\n    %-30s = %23.15f",
-                        "MRDSRG Total Energy (relaxed)", Erelax);
+        outfile->Printf("\n    %-30s = %23.15f", "MRDSRG Total Energy (relaxed)", Erelax);
         outfile->Printf("\n");
 
         if (failed) {
-            throw PSIEXCEPTION(
-                "Reference relaxation process does not converge.");
+            throw PSIEXCEPTION("Reference relaxation process does not converge.");
         }
     }
 
@@ -926,8 +881,8 @@ double MRDSRG::compute_energy_sa() {
         transfer_integrals();
 
         // diagonalize the Hamiltonian
-        std::shared_ptr<FCI_MO> fci_mo = std::make_shared<FCI_MO>(
-            reference_wavefunction_, options_, ints_, mo_space_info_);
+        std::shared_ptr<FCI_MO> fci_mo =
+            std::make_shared<FCI_MO>(reference_wavefunction_, options_, ints_, mo_space_info_);
         Etemp = Erelax_sa;
         fci_mo->set_form_Fock(false);
         Erelax_sa = fci_mo->compute_sa_energy();
@@ -965,27 +920,23 @@ double MRDSRG::compute_energy_sa() {
             Timer timer;
 
             // diagonalize blocks of Fock matrix
-            U_ = ambit::BlockedTensor::build(tensor_type_, "U",
-                                             spin_cases({"gg"}));
+            U_ = ambit::BlockedTensor::build(tensor_type_, "U", spin_cases({"gg"}));
             diagonalize_Fock_diagblocks(U_);
-            outfile->Printf("\n    %-47s %8.3f",
-                            "Timing for block-diagonalizing Fock matrix:",
+            outfile->Printf("\n    %-47s %8.3f", "Timing for block-diagonalizing Fock matrix:",
                             timer.get() - timings.back());
             timings.push_back(timer.get());
 
             // transform O1 to new basis and copy to ints_
-            BlockedTensor O = ambit::BlockedTensor::build(
-                tensor_type_, "Temp One", spin_cases({"gg"}));
+            BlockedTensor O =
+                ambit::BlockedTensor::build(tensor_type_, "Temp One", spin_cases({"gg"}));
             O["xy"] = U_["xu"] * O1_["uv"] * U_["yv"];
             O["XY"] = U_["XU"] * O1_["UV"] * U_["YV"];
             for (const std::string& block : {"aa", "AA"}) {
                 bool spin = islower(block[0]);
 
-                O.block(block).citerate(
-                    [&](const std::vector<size_t>& i, const double& value) {
-                        ints_->set_oei(aactv_mos_[i[0]], aactv_mos_[i[1]],
-                                       value, spin);
-                    });
+                O.block(block).citerate([&](const std::vector<size_t>& i, const double& value) {
+                    ints_->set_oei(aactv_mos_[i[0]], aactv_mos_[i[1]], value, spin);
+                });
             }
 
             // transform bare one-body Hamiltonian
@@ -993,14 +944,12 @@ double MRDSRG::compute_energy_sa() {
             O["RS"] = U_["RP"] * H_["PQ"] * U_["SQ"];
             H_["pq"] = O["pq"];
             H_["PQ"] = O["PQ"];
-            outfile->Printf("\n    %-47s %8.3f",
-                            "Timing for transforming one-electron integral:",
+            outfile->Printf("\n    %-47s %8.3f", "Timing for transforming one-electron integral:",
                             timer.get() - timings.back());
             timings.push_back(timer.get());
 
             // transform Hbar2 to new basis and copy to ints_
-            O = ambit::BlockedTensor::build(tensor_type_, "Temp Two",
-                                            spin_cases({"aaaa"}));
+            O = ambit::BlockedTensor::build(tensor_type_, "Temp Two", spin_cases({"aaaa"}));
             O["wzxy"] = U_["wu"] * U_["zv"] * Hbar2_["uvxy"];
             O["wZxY"] = U_["wu"] * U_["ZV"] * Hbar2_["uVxY"];
             O["WZXY"] = U_["WU"] * U_["ZV"] * Hbar2_["UVXY"];
@@ -1033,15 +982,14 @@ double MRDSRG::compute_energy_sa() {
             O = ambit::BlockedTensor::build(tensor_type_, "Temp Two", {"GGGG"});
             O["TORS"] = U_["TP"] * U_["OQ"] * V_["PQRS"];
             V_["PQOT"] = O["PQRS"] * U_["TS"] * U_["OR"];
-            outfile->Printf("\n    %-47s %8.3f",
-                            "Timing for transforming two-electron integral:",
+            outfile->Printf("\n    %-47s %8.3f", "Timing for transforming two-electron integral:",
                             timer.get() - timings.back());
 
             ints_->update_integrals(false);
 
             // diagonalize the Hamiltonian
-            fci_mo = std::make_shared<FCI_MO>(reference_wavefunction_, options_,
-                                              ints_, mo_space_info_);
+            fci_mo =
+                std::make_shared<FCI_MO>(reference_wavefunction_, options_, ints_, mo_space_info_);
             fci_mo->set_form_Fock(false);
             Erelax_sa = fci_mo->compute_sa_energy();
             if (fabs(Erelax_sa - Erelax_sa_vec.back()) > 100.0 * e_conv) {
@@ -1080,26 +1028,23 @@ double MRDSRG::compute_energy_sa() {
     std::string indent(4, ' ');
     std::string dash(71, '-');
     std::string title;
-    title += indent + str(boost::format("%5c  %=31s  %=31s\n") % ' ' %
-                          "Fixed Ref. (a.u.)" % "Relaxed Ref. (a.u.)");
-    title += indent + std::string(7, ' ') + std::string(31, '-') + "  " +
-             std::string(31, '-') + "\n";
-    title += indent +
-             str(boost::format("%5s  %=20s %=10s  %=20s %=10s\n") % "Iter." %
-                 "Total Energy" % "Delta" % "Total Energy" % "Delta");
+    title += indent + str(boost::format("%5c  %=31s  %=31s\n") % ' ' % "Fixed Ref. (a.u.)" %
+                          "Relaxed Ref. (a.u.)");
+    title +=
+        indent + std::string(7, ' ') + std::string(31, '-') + "  " + std::string(31, '-') + "\n";
+    title += indent + str(boost::format("%5s  %=20s %=10s  %=20s %=10s\n") % "Iter." %
+                          "Total Energy" % "Delta" % "Total Energy" % "Delta");
     title += indent + dash;
     outfile->Printf("\n%s", title.c_str());
     for (int n = 0; n != cycle; ++n) {
-        outfile->Printf("\n    %5d  %20.12f %10.3e  %20.12f %10.3e", n,
-                        Edsrg_sa_vec[n], Edelta_dsrg_sa_vec[n],
-                        Erelax_sa_vec[n], Edelta_relax_sa_vec[n]);
+        outfile->Printf("\n    %5d  %20.12f %10.3e  %20.12f %10.3e", n, Edsrg_sa_vec[n],
+                        Edelta_dsrg_sa_vec[n], Erelax_sa_vec[n], Edelta_relax_sa_vec[n]);
         outfile->Flush();
     }
     outfile->Printf("\n    %s", dash.c_str());
 
     // get character table
-    CharacterTable ct =
-        Process::environment.molecule()->point_group()->char_table();
+    CharacterTable ct = Process::environment.molecule()->point_group()->char_table();
     std::vector<std::string> irrep_symbol;
     for (int h = 0; h < this->nirrep(); ++h) {
         irrep_symbol.push_back(std::string(ct.gamma(h).symbol()));
@@ -1133,8 +1078,7 @@ double MRDSRG::compute_energy_sa() {
 
         for (int i = 0; i < nstates; ++i) {
             outfile->Printf("\n     %3d     %3s    %2d   %20.12f*", multi,
-                            irrep_symbol[irrep].c_str(), i,
-                            Edsrg_vec[Edsrg_vec.size() - 1][n][i]);
+                            irrep_symbol[irrep].c_str(), i, Edsrg_vec[Edsrg_vec.size() - 1][n][i]);
         }
         outfile->Printf("\n    %s", dash1.c_str());
     }
@@ -1155,8 +1099,8 @@ void MRDSRG::transfer_integrals() {
     Timer t_scalar;
     std::string str = "Computing the scalar term   ...";
     outfile->Printf("\n    %-35s", str.c_str());
-    double scalar0 = Eref_ + Hbar0_ - molecule_->nuclear_repulsion_energy() -
-                     ints_->frozen_core_energy();
+    double scalar0 =
+        Eref_ + Hbar0_ - molecule_->nuclear_repulsion_energy() - ints_->frozen_core_energy();
 
     // scalar from Hbar1
     double scalar1 = 0.0;
@@ -1180,8 +1124,7 @@ void MRDSRG::transfer_integrals() {
     Timer t_one;
     str = "Computing the one-body term ...";
     outfile->Printf("\n    %-35s", str.c_str());
-    BlockedTensor temp1 =
-        BTF_->build(tensor_type_, "temp1", spin_cases({"aa"}));
+    BlockedTensor temp1 = BTF_->build(tensor_type_, "temp1", spin_cases({"aa"}));
     temp1["uv"] = Hbar1_["uv"];
     temp1["UV"] = Hbar1_["UV"];
     temp1["uv"] -= Hbar2_["uxvy"] * Gamma1_["yx"];
@@ -1272,32 +1215,31 @@ void MRDSRG::transfer_integrals() {
     }
 
     //   b) copy all active part
-    temp1.citerate([&](const std::vector<size_t>& i,
-                       const std::vector<SpinType>& spin, const double& value) {
-        if (spin[0] == AlphaSpin) {
-            ints_->set_oei(i[0], i[1], value, true);
-        } else {
-            ints_->set_oei(i[0], i[1], value, false);
-        }
-    });
+    temp1.citerate(
+        [&](const std::vector<size_t>& i, const std::vector<SpinType>& spin, const double& value) {
+            if (spin[0] == AlphaSpin) {
+                ints_->set_oei(i[0], i[1], value, true);
+            } else {
+                ints_->set_oei(i[0], i[1], value, false);
+            }
+        });
     O1_["uv"] = temp1["uv"];
     O1_["UV"] = temp1["UV"];
 
-    BlockedTensor temp2 =
-        BTF_->build(tensor_type_, "temp2", spin_cases({"aaaa"}));
+    BlockedTensor temp2 = BTF_->build(tensor_type_, "temp2", spin_cases({"aaaa"}));
     temp2["uvxy"] = Hbar2_["uvxy"];
     temp2["uVxY"] = Hbar2_["uVxY"];
     temp2["UVXY"] = Hbar2_["UVXY"];
-    temp2.citerate([&](const std::vector<size_t>& i,
-                       const std::vector<SpinType>& spin, const double& value) {
-        if ((spin[0] == AlphaSpin) && (spin[1] == AlphaSpin)) {
-            ints_->set_tei(i[0], i[1], i[2], i[3], value, true, true);
-        } else if ((spin[0] == AlphaSpin) && (spin[1] == BetaSpin)) {
-            ints_->set_tei(i[0], i[1], i[2], i[3], value, true, false);
-        } else if ((spin[0] == BetaSpin) && (spin[1] == BetaSpin)) {
-            ints_->set_tei(i[0], i[1], i[2], i[3], value, false, false);
-        }
-    });
+    temp2.citerate(
+        [&](const std::vector<size_t>& i, const std::vector<SpinType>& spin, const double& value) {
+            if ((spin[0] == AlphaSpin) && (spin[1] == AlphaSpin)) {
+                ints_->set_tei(i[0], i[1], i[2], i[3], value, true, true);
+            } else if ((spin[0] == AlphaSpin) && (spin[1] == BetaSpin)) {
+                ints_->set_tei(i[0], i[1], i[2], i[3], value, true, false);
+            } else if ((spin[0] == BetaSpin) && (spin[1] == BetaSpin)) {
+                ints_->set_tei(i[0], i[1], i[2], i[3], value, false, false);
+            }
+        });
     outfile->Printf("  Done. Timing %10.3f s", t_int.get());
 
     // print scalar
@@ -1306,10 +1248,8 @@ void MRDSRG::transfer_integrals() {
     outfile->Printf("\n    %-30s = %22.15f", "Scalar0", scalar0);
     outfile->Printf("\n    %-30s = %22.15f", "Scalar1", scalar1);
     outfile->Printf("\n    %-30s = %22.15f", "Scalar2", scalar2);
-    outfile->Printf("\n    %-30s = %22.15f", "Total Scalar W/O Frozen-Core",
-                    scalar);
-    outfile->Printf("\n    %-30s = %22.15f", "Total Scalar W/  Frozen-Core",
-                    scalar_include_fc);
+    outfile->Printf("\n    %-30s = %22.15f", "Total Scalar W/O Frozen-Core", scalar);
+    outfile->Printf("\n    %-30s = %22.15f", "Total Scalar W/  Frozen-Core", scalar_include_fc);
 
     // test if de-normal-ordering is correct
     print_h2("Test De-Normal-Ordered Hamiltonian");
@@ -1347,11 +1287,9 @@ void MRDSRG::transfer_integrals() {
     outfile->Printf("\n    %-30s = %22.15f", "One-Body Energy (after)", Etest1);
     outfile->Printf("\n    %-30s = %22.15f", "Two-Body Energy (after)", Etest2);
     outfile->Printf("\n    %-30s = %22.15f", "Total Energy (after)", Etest);
-    outfile->Printf("\n    %-30s = %22.15f", "Total Energy (before)",
-                    Eref_ + Hbar0_);
+    outfile->Printf("\n    %-30s = %22.15f", "Total Energy (before)", Eref_ + Hbar0_);
 
-    if (fabs(Etest - Eref_ - Hbar0_) >
-        100.0 * options_.get_double("E_CONVERGENCE")) {
+    if (fabs(Etest - Eref_ - Hbar0_) > 100.0 * options_.get_double("E_CONVERGENCE")) {
         throw PSIEXCEPTION("De-normal-odering failed.");
     } else {
         ints_->update_integrals(false);
@@ -1360,40 +1298,36 @@ void MRDSRG::transfer_integrals() {
 
 void MRDSRG::reset_ints(BlockedTensor& H, BlockedTensor& V) {
     ints_->set_scalar(0.0);
-    H.citerate([&](const std::vector<size_t>& i,
-                   const std::vector<SpinType>& spin, const double& value) {
-        if (spin[0] == AlphaSpin) {
-            ints_->set_oei(i[0], i[1], value, true);
-        } else {
-            ints_->set_oei(i[0], i[1], value, false);
-        }
-    });
-    V.citerate([&](const std::vector<size_t>& i,
-                   const std::vector<SpinType>& spin, const double& value) {
-        if ((spin[0] == AlphaSpin) && (spin[1] == AlphaSpin)) {
-            ints_->set_tei(i[0], i[1], i[2], i[3], value, true, true);
-        } else if ((spin[0] == AlphaSpin) && (spin[1] == BetaSpin)) {
-            ints_->set_tei(i[0], i[1], i[2], i[3], value, true, false);
-        } else if ((spin[0] == BetaSpin) && (spin[1] == BetaSpin)) {
-            ints_->set_tei(i[0], i[1], i[2], i[3], value, false, false);
-        }
-    });
+    H.citerate(
+        [&](const std::vector<size_t>& i, const std::vector<SpinType>& spin, const double& value) {
+            if (spin[0] == AlphaSpin) {
+                ints_->set_oei(i[0], i[1], value, true);
+            } else {
+                ints_->set_oei(i[0], i[1], value, false);
+            }
+        });
+    V.citerate(
+        [&](const std::vector<size_t>& i, const std::vector<SpinType>& spin, const double& value) {
+            if ((spin[0] == AlphaSpin) && (spin[1] == AlphaSpin)) {
+                ints_->set_tei(i[0], i[1], i[2], i[3], value, true, true);
+            } else if ((spin[0] == AlphaSpin) && (spin[1] == BetaSpin)) {
+                ints_->set_tei(i[0], i[1], i[2], i[3], value, true, false);
+            } else if ((spin[0] == BetaSpin) && (spin[1] == BetaSpin)) {
+                ints_->set_tei(i[0], i[1], i[2], i[3], value, false, false);
+            }
+        });
     ints_->update_integrals(false);
 }
 
-std::vector<std::vector<double>>
-MRDSRG::diagonalize_Fock_diagblocks(BlockedTensor& U) {
+std::vector<std::vector<double>> MRDSRG::diagonalize_Fock_diagblocks(BlockedTensor& U) {
     // diagonal blocks identifiers (C-A-V ordering)
     std::vector<std::string> blocks = diag_one_labels();
 
     // map MO space label to its Dimension
     std::map<std::string, Dimension> MOlabel_to_dimension;
-    MOlabel_to_dimension[acore_label_] =
-        mo_space_info_->get_dimension("RESTRICTED_DOCC");
-    MOlabel_to_dimension[aactv_label_] =
-        mo_space_info_->get_dimension("ACTIVE");
-    MOlabel_to_dimension[avirt_label_] =
-        mo_space_info_->get_dimension("RESTRICTED_UOCC");
+    MOlabel_to_dimension[acore_label_] = mo_space_info_->get_dimension("RESTRICTED_DOCC");
+    MOlabel_to_dimension[aactv_label_] = mo_space_info_->get_dimension("ACTIVE");
+    MOlabel_to_dimension[avirt_label_] = mo_space_info_->get_dimension("RESTRICTED_UOCC");
 
     // eigen values to be returned
     size_t ncmo = mo_space_info_->size("CORRELATED");
@@ -1404,17 +1338,13 @@ MRDSRG::diagonalize_Fock_diagblocks(BlockedTensor& U) {
     // map MO space label to its offset Dimension
     std::map<std::string, Dimension> MOlabel_to_offset_dimension;
     int nirrep = corr.n();
-    MOlabel_to_offset_dimension[acore_label_] =
-        Dimension(std::vector<int>(nirrep, 0));
-    MOlabel_to_offset_dimension[aactv_label_] =
-        mo_space_info_->get_dimension("RESTRICTED_DOCC");
+    MOlabel_to_offset_dimension[acore_label_] = Dimension(std::vector<int>(nirrep, 0));
+    MOlabel_to_offset_dimension[aactv_label_] = mo_space_info_->get_dimension("RESTRICTED_DOCC");
     MOlabel_to_offset_dimension[avirt_label_] =
-        mo_space_info_->get_dimension("RESTRICTED_DOCC") +
-        mo_space_info_->get_dimension("ACTIVE");
+        mo_space_info_->get_dimension("RESTRICTED_DOCC") + mo_space_info_->get_dimension("ACTIVE");
 
     // figure out index
-    auto fill_eigen = [&](std::string block_label, int irrep,
-                          std::vector<double> values) {
+    auto fill_eigen = [&](std::string block_label, int irrep, std::vector<double> values) {
         int h = irrep;
         size_t idx_begin = 0;
         while ((--h) >= 0)
@@ -1453,22 +1383,20 @@ MRDSRG::diagonalize_Fock_diagblocks(BlockedTensor& U) {
                 if (h_dim == 0) {
                     continue;
                 } else if (h_dim == 1) {
-                    U_h = ambit::Tensor::build(tensor_type_, "U_h",
-                                               std::vector<size_t>(2, h_dim));
+                    U_h = ambit::Tensor::build(tensor_type_, "U_h", std::vector<size_t>(2, h_dim));
                     U_h.data()[0] = 1.0;
-                    ambit::Tensor F_block = ambit::Tensor::build(
-                        tensor_type_, "F_block", F_.block(block).dims());
+                    ambit::Tensor F_block =
+                        ambit::Tensor::build(tensor_type_, "F_block", F_.block(block).dims());
                     F_block.data() = F_.block(block).data();
                     ambit::Tensor T_h = separate_tensor(F_block, space, h);
                     fill_eigen(block, h, T_h.data());
                 } else {
-                    ambit::Tensor F_block = ambit::Tensor::build(
-                        tensor_type_, "F_block", F_.block(block).dims());
+                    ambit::Tensor F_block =
+                        ambit::Tensor::build(tensor_type_, "F_block", F_.block(block).dims());
                     F_block.data() = F_.block(block).data();
                     ambit::Tensor T_h = separate_tensor(F_block, space, h);
                     auto Feigen = T_h.syev(AscendingEigenvalue);
-                    U_h = ambit::Tensor::build(tensor_type_, "U_h",
-                                               std::vector<size_t>(2, h_dim));
+                    U_h = ambit::Tensor::build(tensor_type_, "U_h", std::vector<size_t>(2, h_dim));
                     U_h("pq") = Feigen["eigenvectors"]("pq");
                     fill_eigen(block, h, Feigen["eigenvalues"].data());
                 }
@@ -1480,13 +1408,11 @@ MRDSRG::diagonalize_Fock_diagblocks(BlockedTensor& U) {
     return {eigenvalues_a, eigenvalues_b};
 }
 
-ambit::Tensor MRDSRG::separate_tensor(ambit::Tensor& tens,
-                                      const Dimension& irrep, const int& h) {
+ambit::Tensor MRDSRG::separate_tensor(ambit::Tensor& tens, const Dimension& irrep, const int& h) {
     // test tens and irrep
     int tens_dim = static_cast<int>(tens.dim(0));
     if (tens_dim != irrep.sum() || tens_dim != tens.dim(1)) {
-        throw PSIEXCEPTION(
-            "Wrong dimension for the to-be-separated ambit Tensor.");
+        throw PSIEXCEPTION("Wrong dimension for the to-be-separated ambit Tensor.");
     }
     if (h >= irrep.n()) {
         throw PSIEXCEPTION("Ask for wrong irrep.");
@@ -1504,8 +1430,7 @@ ambit::Tensor MRDSRG::separate_tensor(ambit::Tensor& tens,
         offset += irrep[h_local];
 
     // fill in values
-    ambit::Tensor T_h = ambit::Tensor::build(tensor_type_, "T_h",
-                                             std::vector<size_t>(2, h_dim));
+    ambit::Tensor T_h = ambit::Tensor::build(tensor_type_, "T_h", std::vector<size_t>(2, h_dim));
     for (size_t i = 0; i < h_dim; ++i) {
         for (size_t j = 0; j < h_dim; ++j) {
             size_t abs_idx = rel_to_abs(i, j, offset);
@@ -1516,16 +1441,15 @@ ambit::Tensor MRDSRG::separate_tensor(ambit::Tensor& tens,
     return T_h;
 }
 
-void MRDSRG::combine_tensor(ambit::Tensor& tens, ambit::Tensor& tens_h,
-                            const Dimension& irrep, const int& h) {
+void MRDSRG::combine_tensor(ambit::Tensor& tens, ambit::Tensor& tens_h, const Dimension& irrep,
+                            const int& h) {
     // test tens and irrep
     if (h >= irrep.n()) {
         throw PSIEXCEPTION("Ask for wrong irrep.");
     }
     size_t tens_h_dim = tens_h.dim(0), h_dim = irrep[h];
     if (tens_h_dim != h_dim || tens_h_dim != tens_h.dim(1)) {
-        throw PSIEXCEPTION(
-            "Wrong dimension for the to-be-combined ambit Tensor.");
+        throw PSIEXCEPTION("Wrong dimension for the to-be-combined ambit Tensor.");
     }
 
     // from relative (blocks) to absolute (big tensor) index
@@ -1578,15 +1502,14 @@ void MRDSRG::check_density(BlockedTensor& D, const std::string& name) {
         labels.emplace_back(spin_label);
 
         double D_norm = 0.0, D_max = 0.0;
-        D.block(block)
-            .citerate([&](const std::vector<size_t>&, const double& value) {
-                double abs_value = fabs(value);
-                if (abs_value > 1.0e-15) {
-                    if (abs_value > D_max)
-                        D_max = value;
-                    D_norm += value * value;
-                }
-            });
+        D.block(block).citerate([&](const std::vector<size_t>&, const double& value) {
+            double abs_value = fabs(value);
+            if (abs_value > 1.0e-15) {
+                if (abs_value > D_max)
+                    D_max = value;
+                D_norm += value * value;
+            }
+        });
         maxes.emplace_back(D_max);
         norms.emplace_back(std::sqrt(D_norm));
     }
@@ -1611,21 +1534,18 @@ void MRDSRG::check_density(BlockedTensor& D, const std::string& name) {
 
 std::vector<std::string> MRDSRG::diag_one_labels() {
     // C-A-V ordering
-    std::vector<std::string> labels{
-        acore_label_ + acore_label_, aactv_label_ + aactv_label_,
-        avirt_label_ + avirt_label_, bcore_label_ + bcore_label_,
-        bactv_label_ + bactv_label_, bvirt_label_ + bvirt_label_};
+    std::vector<std::string> labels{acore_label_ + acore_label_, aactv_label_ + aactv_label_,
+                                    avirt_label_ + avirt_label_, bcore_label_ + bcore_label_,
+                                    bactv_label_ + bactv_label_, bvirt_label_ + bvirt_label_};
     return labels;
 }
 
 std::vector<std::string> MRDSRG::re_two_labels() {
     std::vector<std::string> labels;
-    std::vector<std::string> labels_aa{
-        acore_label_ + acore_label_ + acore_label_ + acore_label_,
-        aactv_label_ + aactv_label_ + aactv_label_ + aactv_label_,
-        avirt_label_ + avirt_label_ + avirt_label_ + avirt_label_};
-    std::vector<std::string> mixed{acore_label_ + aactv_label_,
-                                   acore_label_ + avirt_label_,
+    std::vector<std::string> labels_aa{acore_label_ + acore_label_ + acore_label_ + acore_label_,
+                                       aactv_label_ + aactv_label_ + aactv_label_ + aactv_label_,
+                                       avirt_label_ + avirt_label_ + avirt_label_ + avirt_label_};
+    std::vector<std::string> mixed{acore_label_ + aactv_label_, acore_label_ + avirt_label_,
                                    aactv_label_ + avirt_label_};
     for (const std::string& half : mixed) {
         std::string reverse(half);
@@ -1683,19 +1603,16 @@ std::vector<std::string> MRDSRG::diag_two_labels() {
         for (const std::string& q : hole) {
             for (const std::string& r : particle) {
                 for (const std::string& s : particle) {
-                    if (p == aactv_label_ && q == aactv_label_ &&
-                        r == aactv_label_ && s == aactv_label_) {
+                    if (p == aactv_label_ && q == aactv_label_ && r == aactv_label_ &&
+                        s == aactv_label_) {
                         continue;
                     }
 
-                    std::vector<std::string> od_aa{p + q + r + s,
-                                                   r + s + p + q};
+                    std::vector<std::string> od_aa{p + q + r + s, r + s + p + q};
                     d_aa.erase(std::remove_if(d_aa.begin(), d_aa.end(),
                                               [&](std::string i) {
-                                                  return std::find(
-                                                             od_aa.begin(),
-                                                             od_aa.end(),
-                                                             i) != od_aa.end();
+                                                  return std::find(od_aa.begin(), od_aa.end(), i) !=
+                                                         od_aa.end();
                                               }),
                                d_aa.end());
                 }
@@ -1775,8 +1692,8 @@ std::vector<std::string> MRDSRG::od_two_labels_hhpp() {
         for (const std::string& q : {acore_label_, aactv_label_}) {
             for (const std::string& r : {aactv_label_, avirt_label_}) {
                 for (const std::string& s : {aactv_label_, avirt_label_}) {
-                    if (p == aactv_label_ && q == aactv_label_ &&
-                        r == aactv_label_ && s == aactv_label_) {
+                    if (p == aactv_label_ && q == aactv_label_ && r == aactv_label_ &&
+                        s == aactv_label_) {
                         continue;
                     }
                     labels_aa.push_back(p + q + r + s);

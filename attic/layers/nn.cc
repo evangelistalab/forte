@@ -1,6 +1,6 @@
 //#include "nn.h"
 
-//NeuralNetwork::NeuralNetwork(const std::vector<int>& layer_size, bool bias_node) {
+// NeuralNetwork::NeuralNetwork(const std::vector<int>& layer_size, bool bias_node) {
 //    bias_node_ = bias_node;
 //    nlayers_ = layer_size.size();
 //    for (int s : layer_size) {
@@ -18,7 +18,7 @@
 //    z_.resize(max_size_);
 //}
 
-//double NeuralNetwork::value(const std::vector<double>& x) {
+// double NeuralNetwork::value(const std::vector<double>& x) {
 //    // copy the input
 //    for (int i = 0; i < max_size_; ++i) {
 //        a_[i] = x_[i];
@@ -38,8 +38,8 @@
 //    return a_[0];
 //}
 
-//std::vector<SharedMatrix> NeuralNetwork::weights() { return weights_; }
+// std::vector<SharedMatrix> NeuralNetwork::weights() { return weights_; }
 
-//double NeuralNetwork::activation_function(double x) {
+// double NeuralNetwork::activation_function(double x) {
 //    return 2.0 / (1.0 + std::exp(-2.0 * x)) - 1.0;
 //}

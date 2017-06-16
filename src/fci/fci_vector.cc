@@ -27,8 +27,8 @@
  */
 
 #include "psi4/libmints/matrix.h"
-#include "psi4/libmints/pointgrp.h"
 #include "psi4/libmints/molecule.h"
+#include "psi4/libmints/pointgrp.h"
 
 #include "../helpers.h"
 #include "fci_vector.h"
@@ -49,8 +49,7 @@ double FCIWfn::h2_aaaa_timer = 0.0;
 double FCIWfn::h2_aabb_timer = 0.0;
 double FCIWfn::h2_bbbb_timer = 0.0;
 
-void FCIWfn::allocate_temp_space(std::shared_ptr<StringLists> lists_,
-                                 int print_) {
+void FCIWfn::allocate_temp_space(std::shared_ptr<StringLists> lists_, int print_) {
     // TODO Avoid allocating and deallocating these temp
 
     size_t nirreps = lists_->nirrep();
@@ -98,8 +97,7 @@ void FCIWfn::startup() {
     ndet_ = 0;
     for (int alfa_sym = 0; alfa_sym < nirrep_; ++alfa_sym) {
         int beta_sym = alfa_sym ^ symmetry_;
-        size_t detpi =
-            alfa_graph_->strpi(alfa_sym) * beta_graph_->strpi(beta_sym);
+        size_t detpi = alfa_graph_->strpi(alfa_sym) * beta_graph_->strpi(beta_sym);
         ndet_ += detpi;
         detpi_.push_back(detpi);
     }
@@ -109,8 +107,8 @@ void FCIWfn::startup() {
         int beta_sym = alfa_sym ^ symmetry_;
         //    outfile->Printf("\n\n  Block %d: allocate %d *
         //    %d",alfa_sym,(int)alfa_graph_->strpi(alfa_sym),(int)beta_graph_->strpi(beta_sym));
-        C_.push_back(SharedMatrix(new Matrix("C", alfa_graph_->strpi(alfa_sym),
-                                             beta_graph_->strpi(beta_sym))));
+        C_.push_back(SharedMatrix(
+            new Matrix("C", alfa_graph_->strpi(alfa_sym), beta_graph_->strpi(beta_sym))));
     }
 }
 
@@ -179,8 +177,7 @@ void FCIWfn::copy_to(SharedVector vec) {
     }
 }
 
-void FCIWfn::set(
-    std::vector<std::tuple<size_t, size_t, size_t, double>>& sparse_vec) {
+void FCIWfn::set(std::vector<std::tuple<size_t, size_t, size_t, double>>& sparse_vec) {
     zero();
     double C;
     size_t h, Ia, Ib;
@@ -325,16 +322,14 @@ void FCIWfn::zero() {
     }
 }
 
-void FCIWfn::print_natural_orbitals(
-    std::shared_ptr<MOSpaceInfo> mo_space_info) {
+void FCIWfn::print_natural_orbitals(std::shared_ptr<MOSpaceInfo> mo_space_info) {
     print_h2("NATURAL ORBITALS");
     Dimension active_dim = mo_space_info->get_dimension("ACTIVE");
 
     size_t na = alfa_graph_->nones();
     size_t nb = beta_graph_->nones();
 
-    auto opdm =
-        std::make_shared<Matrix>(new Matrix("OPDM", active_dim, active_dim));
+    auto opdm = std::make_shared<Matrix>(new Matrix("OPDM", active_dim, active_dim));
 
     int offset = 0;
     for (int h = 0; h < nirrep_; h++) {
@@ -354,28 +349,25 @@ void FCIWfn::print_natural_orbitals(
     }
 
     auto OCC = std::make_shared<Vector>("Occupation numbers", active_dim);
-    auto NO = std::make_shared<Matrix>("MO -> NO transformation", active_dim,
-                                       active_dim);
+    auto NO = std::make_shared<Matrix>("MO -> NO transformation", active_dim, active_dim);
 
     opdm->diagonalize(NO, OCC, descending);
     std::vector<std::pair<double, std::pair<int, int>>> vec_irrep_occupation;
     for (int h = 0; h < nirrep_; h++) {
         for (int u = 0; u < active_dim[h]; u++) {
-            auto irrep_occ =
-                std::make_pair(OCC->get(h, u), std::make_pair(h, u + 1));
+            auto irrep_occ = std::make_pair(OCC->get(h, u), std::make_pair(h, u + 1));
             vec_irrep_occupation.push_back(irrep_occ);
         }
     }
-    CharacterTable ct =
-        Process::environment.molecule()->point_group()->char_table();
+    CharacterTable ct = Process::environment.molecule()->point_group()->char_table();
     std::sort(vec_irrep_occupation.begin(), vec_irrep_occupation.end(),
               std::greater<std::pair<double, std::pair<int, int>>>());
 
     int count = 0;
     outfile->Printf("\n    ");
     for (auto vec : vec_irrep_occupation) {
-        outfile->Printf(" %4d%-4s%11.6f  ", vec.second.second,
-                        ct.gamma(vec.second.first).symbol(), vec.first);
+        outfile->Printf(" %4d%-4s%11.6f  ", vec.second.second, ct.gamma(vec.second.first).symbol(),
+                        vec.first);
         if (count++ % 3 == 2 && count != vec_irrep_occupation.size())
             outfile->Printf("\n    ");
     }
@@ -620,8 +612,7 @@ void FCIWfn::print() {
         for (size_t Ia = 0; Ia < alfa_graph_->strpi(alfa_sym); ++Ia) {
             for (size_t Ib = 0; Ib < beta_graph_->strpi(beta_sym); ++Ib) {
                 if (std::fabs(C_ha[Ia][Ib]) > 1.0e-9) {
-                    outfile->Printf("\n  %15.9f [%1d][%2d][%2d] (%d)",
-                                    C_ha[Ia][Ib], alfa_sym,
+                    outfile->Printf("\n  %15.9f [%1d][%2d][%2d] (%d)", C_ha[Ia][Ib], alfa_sym,
                                     static_cast<int>(Ia), static_cast<int>(Ib),
                                     static_cast<int>(det));
                 }

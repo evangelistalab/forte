@@ -26,16 +26,16 @@
  * @END LICENSE
  */
 
-#include <numeric>
 #include <math.h>
+#include <numeric>
 
-#include "psi4/libpsio/psio.hpp"
-#include "psi4/libpsio/psio.h"
 #include "psi4/libmints/molecule.h"
+#include "psi4/libpsio/psio.h"
+#include "psi4/libpsio/psio.hpp"
 #include "psi4/libqt/qt.h"
 
-#include "so-mrdsrg.h"
 #include "../blockedtensorfactory.h"
+#include "so-mrdsrg.h"
 
 #define ISA(x) (x < nactv)
 #define ISB(x) (x >= nactv)
@@ -46,12 +46,10 @@ using namespace ambit;
 namespace psi {
 namespace forte {
 
-SOMRDSRG::SOMRDSRG(Reference reference, SharedWavefunction ref_wfn,
-                   Options& options, std::shared_ptr<ForteIntegrals> ints,
-                   std::shared_ptr<MOSpaceInfo> mo_space_info)
-    : Wavefunction(options), reference_(reference), ints_(ints),
-      mo_space_info_(mo_space_info), tensor_type_(CoreTensor),
-      BTF(new BlockedTensorFactory(options)) {
+SOMRDSRG::SOMRDSRG(Reference reference, SharedWavefunction ref_wfn, Options& options,
+                   std::shared_ptr<ForteIntegrals> ints, std::shared_ptr<MOSpaceInfo> mo_space_info)
+    : Wavefunction(options), reference_(reference), ints_(ints), mo_space_info_(mo_space_info),
+      tensor_type_(CoreTensor), BTF(new BlockedTensorFactory(options)) {
     // Copy the wavefunction information
     shallow_copy(ref_wfn);
     reference_wavefunction_ = ref_wfn;
@@ -60,9 +58,8 @@ SOMRDSRG::SOMRDSRG(Reference reference, SharedWavefunction ref_wfn,
 
     print_ = 2;
 
-    print_method_banner(
-        {"Multireference Driven Similarity Renormalization Group",
-         "written by Francesco A. Evangelista"});
+    print_method_banner({"Multireference Driven Similarity Renormalization Group",
+                         "written by Francesco A. Evangelista"});
 
     startup();
     print_summary();
@@ -93,11 +90,9 @@ void SOMRDSRG::startup() {
     }
     taylor_order_ = int(0.5 * (15.0 / taylor_threshold_ + 1)) + 1;
 
-    std::vector<size_t> rdocc =
-        mo_space_info_->get_corr_abs_mo("RESTRICTED_DOCC");
+    std::vector<size_t> rdocc = mo_space_info_->get_corr_abs_mo("RESTRICTED_DOCC");
     std::vector<size_t> actv = mo_space_info_->get_corr_abs_mo("ACTIVE");
-    std::vector<size_t> ruocc =
-        mo_space_info_->get_corr_abs_mo("RESTRICTED_UOCC");
+    std::vector<size_t> ruocc = mo_space_info_->get_corr_abs_mo("RESTRICTED_UOCC");
 
     for (auto& space : {rdocc, actv, ruocc}) {
         outfile->Printf("\n");
@@ -127,16 +122,12 @@ void SOMRDSRG::startup() {
         ruocc_so.push_back(std::make_pair(p, BetaSpin));
 
     BTF->add_mo_space("c", "m,n,o,c0,c1,c2,c3,c4,c5,c6,c7,c8,c9", rdocc_so);
-    BTF->add_mo_space("a", "u,v,w,x,y,z,a0,a1,a2,a3,a4,a5,a6,a7,a8,a9",
-                      actv_so);
+    BTF->add_mo_space("a", "u,v,w,x,y,z,a0,a1,a2,a3,a4,a5,a6,a7,a8,a9", actv_so);
     BTF->add_mo_space("v", "e,f,g,h,v0,v1,v2,v3,v4,v5,v6,v7,v8,v9", ruocc_so);
 
-    BTF->add_composite_mo_space("h", "i,j,k,l,h0,h1,h2,h3,h4,h5,h6,h7",
-                                {"c", "a"});
-    BTF->add_composite_mo_space("p", "a,b,c,d,p0,p1,p2,p3,p4,p5,p6,p7",
-                                {"a", "v"});
-    BTF->add_composite_mo_space("g", "p,q,r,s,g0,g1,g2,g3,g4,g5,g6,g7",
-                                {"c", "a", "v"});
+    BTF->add_composite_mo_space("h", "i,j,k,l,h0,h1,h2,h3,h4,h5,h6,h7", {"c", "a"});
+    BTF->add_composite_mo_space("p", "a,b,c,d,p0,p1,p2,p3,p4,p5,p6,p7", {"a", "v"});
+    BTF->add_composite_mo_space("g", "p,q,r,s,g0,g1,g2,g3,g4,g5,g6,g7", {"c", "a", "v"});
 
     H = BTF->build(tensor_type_, "H", {"gg"});
     V = BTF->build(tensor_type_, "V", {"gggg"});
@@ -150,10 +141,8 @@ void SOMRDSRG::startup() {
     F = BTF->build(tensor_type_, "Fock", {"gg"});
     Delta1 = BTF->build(tensor_type_, "Delta1", {"hp"});
     Delta2 = BTF->build(tensor_type_, "Delta2", {"hhpp"});
-    RInvDelta1 =
-        BTF->build(tensor_type_, "Renormalized Inverse Delta1", {"hp"});
-    RInvDelta2 =
-        BTF->build(tensor_type_, "Renormalized Inverse Delta2", {"hhpp"});
+    RInvDelta1 = BTF->build(tensor_type_, "Renormalized Inverse Delta1", {"hp"});
+    RInvDelta2 = BTF->build(tensor_type_, "Renormalized Inverse Delta2", {"hhpp"});
     T1 = BTF->build(tensor_type_, "T1 Amplitudes", {"hp"});
     T2 = BTF->build(tensor_type_, "T2 Amplitudes", {"hhpp"});
     DT1 = BTF->build(tensor_type_, "Delta T1 Amplitudes", {"hp"});
@@ -167,8 +156,7 @@ void SOMRDSRG::startup() {
     Hbar1 = BTF->build(tensor_type_, "One-body Hbar", {"gg"});
     Hbar2 = BTF->build(tensor_type_, "Two-body Hbar", {"gggg"});
 
-    H.iterate([&](const std::vector<size_t>& i,
-                  const std::vector<SpinType>& spin, double& value) {
+    H.iterate([&](const std::vector<size_t>& i, const std::vector<SpinType>& spin, double& value) {
         if ((spin[0] == AlphaSpin) and (spin[1] == AlphaSpin))
             value = ints_->oei_a(i[0], i[1]);
         if ((spin[0] == BetaSpin) and (spin[1] == BetaSpin))
@@ -176,30 +164,29 @@ void SOMRDSRG::startup() {
     });
 
     // Fill in the two-electron operator (V)
-    V.iterate([&](const std::vector<size_t>& i,
-                  const std::vector<SpinType>& spin, double& value) {
-        if ((spin[0] == AlphaSpin) and (spin[1] == AlphaSpin) and
-            (spin[2] == AlphaSpin) and (spin[3] == AlphaSpin))
+    V.iterate([&](const std::vector<size_t>& i, const std::vector<SpinType>& spin, double& value) {
+        if ((spin[0] == AlphaSpin) and (spin[1] == AlphaSpin) and (spin[2] == AlphaSpin) and
+            (spin[3] == AlphaSpin))
             value = +ints_->aptei_aa(i[0], i[1], i[2], i[3]);
 
-        if ((spin[0] == AlphaSpin) and (spin[1] == BetaSpin) and
-            (spin[2] == AlphaSpin) and (spin[3] == BetaSpin))
+        if ((spin[0] == AlphaSpin) and (spin[1] == BetaSpin) and (spin[2] == AlphaSpin) and
+            (spin[3] == BetaSpin))
             value = +ints_->aptei_ab(i[0], i[1], i[2], i[3]);
 
-        if ((spin[0] == AlphaSpin) and (spin[1] == BetaSpin) and
-            (spin[2] == BetaSpin) and (spin[3] == AlphaSpin))
+        if ((spin[0] == AlphaSpin) and (spin[1] == BetaSpin) and (spin[2] == BetaSpin) and
+            (spin[3] == AlphaSpin))
             value = -ints_->aptei_ab(i[0], i[1], i[3], i[2]);
 
-        if ((spin[0] == BetaSpin) and (spin[1] == AlphaSpin) and
-            (spin[2] == AlphaSpin) and (spin[3] == BetaSpin))
+        if ((spin[0] == BetaSpin) and (spin[1] == AlphaSpin) and (spin[2] == AlphaSpin) and
+            (spin[3] == BetaSpin))
             value = -ints_->aptei_ab(i[1], i[0], i[2], i[3]);
 
-        if ((spin[0] == BetaSpin) and (spin[1] == AlphaSpin) and
-            (spin[2] == BetaSpin) and (spin[3] == AlphaSpin))
+        if ((spin[0] == BetaSpin) and (spin[1] == AlphaSpin) and (spin[2] == BetaSpin) and
+            (spin[3] == AlphaSpin))
             value = +ints_->aptei_ab(i[1], i[0], i[3], i[2]);
 
-        if ((spin[0] == BetaSpin) and (spin[1] == BetaSpin) and
-            (spin[2] == BetaSpin) and (spin[3] == BetaSpin))
+        if ((spin[0] == BetaSpin) and (spin[1] == BetaSpin) and (spin[2] == BetaSpin) and
+            (spin[3] == BetaSpin))
             value = +ints_->aptei_bb(i[0], i[1], i[2], i[3]);
     });
 
@@ -209,25 +196,20 @@ void SOMRDSRG::startup() {
     ambit::Tensor Eta1_aa = Eta1.block("aa");
     ambit::Tensor Eta1_vv = Eta1.block("vv");
 
-    Gamma1_cc.iterate([&](const std::vector<size_t>& i, double& value) {
-        value = i[0] == i[1] ? 1.0 : 0.0;
-    });
-    Eta1_aa.iterate([&](const std::vector<size_t>& i, double& value) {
-        value = i[0] == i[1] ? 1.0 : 0.0;
-    });
-    Eta1_vv.iterate([&](const std::vector<size_t>& i, double& value) {
-        value = i[0] == i[1] ? 1.0 : 0.0;
-    });
+    Gamma1_cc.iterate(
+        [&](const std::vector<size_t>& i, double& value) { value = i[0] == i[1] ? 1.0 : 0.0; });
+    Eta1_aa.iterate(
+        [&](const std::vector<size_t>& i, double& value) { value = i[0] == i[1] ? 1.0 : 0.0; });
+    Eta1_vv.iterate(
+        [&](const std::vector<size_t>& i, double& value) { value = i[0] == i[1] ? 1.0 : 0.0; });
 
     Matrix gamma_aa("Gamma_aa", nactv, nactv);
     Matrix gamma_AA("Gamma_AA", nactv, nactv);
 
-    reference_.L1a().iterate([&](const std::vector<size_t>& i, double& value) {
-        gamma_aa.set(i[0], i[1], value);
-    });
-    reference_.L1b().iterate([&](const std::vector<size_t>& i, double& value) {
-        gamma_AA.set(i[0], i[1], value);
-    });
+    reference_.L1a().iterate(
+        [&](const std::vector<size_t>& i, double& value) { gamma_aa.set(i[0], i[1], value); });
+    reference_.L1b().iterate(
+        [&](const std::vector<size_t>& i, double& value) { gamma_AA.set(i[0], i[1], value); });
 
     gamma_aa.print();
     gamma_AA.print();
@@ -311,226 +293,158 @@ void SOMRDSRG::startup() {
     if (options_.get_str("THREEPDC") != "ZERO") {
         ambit::Tensor Lambda3_aaa = Lambda3.block("aaaaaa");
 
-        Matrix lambda3_aaa("Lambda3_aaa", nactv * nactv * nactv,
-                           nactv * nactv * nactv);
-        Matrix lambda3_aaA("Lambda3_aaA", nactv * nactv * nactv,
-                           nactv * nactv * nactv);
-        Matrix lambda3_aAA("Lambda3_aAA", nactv * nactv * nactv,
-                           nactv * nactv * nactv);
-        Matrix lambda3_AAA("Lambda3_AAA", nactv * nactv * nactv,
-                           nactv * nactv * nactv);
+        Matrix lambda3_aaa("Lambda3_aaa", nactv * nactv * nactv, nactv * nactv * nactv);
+        Matrix lambda3_aaA("Lambda3_aaA", nactv * nactv * nactv, nactv * nactv * nactv);
+        Matrix lambda3_aAA("Lambda3_aAA", nactv * nactv * nactv, nactv * nactv * nactv);
+        Matrix lambda3_AAA("Lambda3_AAA", nactv * nactv * nactv, nactv * nactv * nactv);
 
-        reference_.L3aaa().iterate(
-            [&](const std::vector<size_t>& i, double& value) {
-                size_t I = nactv * nactv * i[0] + nactv * i[1] + i[2];
-                size_t J = nactv * nactv * i[3] + nactv * i[4] + i[5];
-                lambda3_aaa.set(I, J, value);
-            });
-        reference_.L3aab().iterate(
-            [&](const std::vector<size_t>& i, double& value) {
-                size_t I = nactv * nactv * i[0] + nactv * i[1] + i[2];
-                size_t J = nactv * nactv * i[3] + nactv * i[4] + i[5];
-                lambda3_aaA.set(I, J, value);
-            });
-        reference_.L3abb().iterate(
-            [&](const std::vector<size_t>& i, double& value) {
-                size_t I = nactv * nactv * i[0] + nactv * i[1] + i[2];
-                size_t J = nactv * nactv * i[3] + nactv * i[4] + i[5];
-                lambda3_aAA.set(I, J, value);
-            });
-        reference_.L3bbb().iterate(
-            [&](const std::vector<size_t>& i, double& value) {
-                size_t I = nactv * nactv * i[0] + nactv * i[1] + i[2];
-                size_t J = nactv * nactv * i[3] + nactv * i[4] + i[5];
-                lambda3_AAA.set(I, J, value);
-            });
+        reference_.L3aaa().iterate([&](const std::vector<size_t>& i, double& value) {
+            size_t I = nactv * nactv * i[0] + nactv * i[1] + i[2];
+            size_t J = nactv * nactv * i[3] + nactv * i[4] + i[5];
+            lambda3_aaa.set(I, J, value);
+        });
+        reference_.L3aab().iterate([&](const std::vector<size_t>& i, double& value) {
+            size_t I = nactv * nactv * i[0] + nactv * i[1] + i[2];
+            size_t J = nactv * nactv * i[3] + nactv * i[4] + i[5];
+            lambda3_aaA.set(I, J, value);
+        });
+        reference_.L3abb().iterate([&](const std::vector<size_t>& i, double& value) {
+            size_t I = nactv * nactv * i[0] + nactv * i[1] + i[2];
+            size_t J = nactv * nactv * i[3] + nactv * i[4] + i[5];
+            lambda3_aAA.set(I, J, value);
+        });
+        reference_.L3bbb().iterate([&](const std::vector<size_t>& i, double& value) {
+            size_t I = nactv * nactv * i[0] + nactv * i[1] + i[2];
+            size_t J = nactv * nactv * i[3] + nactv * i[4] + i[5];
+            lambda3_AAA.set(I, J, value);
+        });
 
         // Fill up the active part of Lamba3
         Lambda3_aaa.iterate([&](const std::vector<size_t>& i, double& value) {
             // aaa|aaa
-            if (ISA(i[0]) and ISA(i[1]) and ISA(i[2]) and ISA(i[3]) and
-                ISA(i[4]) and ISA(i[5])) {
-                size_t I =
-                    nactv * nactv * OFF(i[0]) + nactv * OFF(i[1]) + OFF(i[2]);
-                size_t J =
-                    nactv * nactv * OFF(i[3]) + nactv * OFF(i[4]) + OFF(i[5]);
+            if (ISA(i[0]) and ISA(i[1]) and ISA(i[2]) and ISA(i[3]) and ISA(i[4]) and ISA(i[5])) {
+                size_t I = nactv * nactv * OFF(i[0]) + nactv * OFF(i[1]) + OFF(i[2]);
+                size_t J = nactv * nactv * OFF(i[3]) + nactv * OFF(i[4]) + OFF(i[5]);
                 value = lambda3_aaa.get(I, J);
             }
             // aab|aab
-            if (ISA(i[0]) and ISA(i[1]) and ISB(i[2]) and ISA(i[3]) and
-                ISA(i[4]) and ISB(i[5])) {
-                size_t I =
-                    nactv * nactv * OFF(i[0]) + nactv * OFF(i[1]) + OFF(i[2]);
-                size_t J =
-                    nactv * nactv * OFF(i[3]) + nactv * OFF(i[4]) + OFF(i[5]);
+            if (ISA(i[0]) and ISA(i[1]) and ISB(i[2]) and ISA(i[3]) and ISA(i[4]) and ISB(i[5])) {
+                size_t I = nactv * nactv * OFF(i[0]) + nactv * OFF(i[1]) + OFF(i[2]);
+                size_t J = nactv * nactv * OFF(i[3]) + nactv * OFF(i[4]) + OFF(i[5]);
                 value = lambda3_aaA.get(I, J);
             }
             // aab|aba
-            if (ISA(i[0]) and ISA(i[1]) and ISB(i[2]) and ISA(i[3]) and
-                ISB(i[4]) and ISA(i[5])) {
-                size_t I =
-                    nactv * nactv * OFF(i[0]) + nactv * OFF(i[1]) + OFF(i[2]);
-                size_t J =
-                    nactv * nactv * OFF(i[3]) + nactv * OFF(i[5]) + OFF(i[4]);
+            if (ISA(i[0]) and ISA(i[1]) and ISB(i[2]) and ISA(i[3]) and ISB(i[4]) and ISA(i[5])) {
+                size_t I = nactv * nactv * OFF(i[0]) + nactv * OFF(i[1]) + OFF(i[2]);
+                size_t J = nactv * nactv * OFF(i[3]) + nactv * OFF(i[5]) + OFF(i[4]);
                 value = -lambda3_aaA.get(I, J);
             }
             // aab|baa
-            if (ISA(i[0]) and ISA(i[1]) and ISB(i[2]) and ISB(i[3]) and
-                ISA(i[4]) and ISA(i[5])) {
-                size_t I =
-                    nactv * nactv * OFF(i[0]) + nactv * OFF(i[1]) + OFF(i[2]);
-                size_t J =
-                    nactv * nactv * OFF(i[4]) + nactv * OFF(i[5]) + OFF(i[3]);
+            if (ISA(i[0]) and ISA(i[1]) and ISB(i[2]) and ISB(i[3]) and ISA(i[4]) and ISA(i[5])) {
+                size_t I = nactv * nactv * OFF(i[0]) + nactv * OFF(i[1]) + OFF(i[2]);
+                size_t J = nactv * nactv * OFF(i[4]) + nactv * OFF(i[5]) + OFF(i[3]);
                 value = lambda3_aaA.get(I, J);
             }
 
             // aba|aab
-            if (ISA(i[0]) and ISB(i[1]) and ISA(i[2]) and ISA(i[3]) and
-                ISA(i[4]) and ISB(i[5])) {
-                size_t I =
-                    nactv * nactv * OFF(i[0]) + nactv * OFF(i[2]) + OFF(i[1]);
-                size_t J =
-                    nactv * nactv * OFF(i[3]) + nactv * OFF(i[4]) + OFF(i[5]);
+            if (ISA(i[0]) and ISB(i[1]) and ISA(i[2]) and ISA(i[3]) and ISA(i[4]) and ISB(i[5])) {
+                size_t I = nactv * nactv * OFF(i[0]) + nactv * OFF(i[2]) + OFF(i[1]);
+                size_t J = nactv * nactv * OFF(i[3]) + nactv * OFF(i[4]) + OFF(i[5]);
                 value = -lambda3_aaA.get(I, J);
             }
             // aba|aba
-            if (ISA(i[0]) and ISB(i[1]) and ISA(i[2]) and ISA(i[3]) and
-                ISB(i[4]) and ISA(i[5])) {
-                size_t I =
-                    nactv * nactv * OFF(i[0]) + nactv * OFF(i[2]) + OFF(i[1]);
-                size_t J =
-                    nactv * nactv * OFF(i[3]) + nactv * OFF(i[5]) + OFF(i[4]);
+            if (ISA(i[0]) and ISB(i[1]) and ISA(i[2]) and ISA(i[3]) and ISB(i[4]) and ISA(i[5])) {
+                size_t I = nactv * nactv * OFF(i[0]) + nactv * OFF(i[2]) + OFF(i[1]);
+                size_t J = nactv * nactv * OFF(i[3]) + nactv * OFF(i[5]) + OFF(i[4]);
                 value = lambda3_aaA.get(I, J);
             }
             // aba|baa
-            if (ISA(i[0]) and ISB(i[1]) and ISA(i[2]) and ISB(i[3]) and
-                ISA(i[4]) and ISA(i[5])) {
-                size_t I =
-                    nactv * nactv * OFF(i[0]) + nactv * OFF(i[2]) + OFF(i[1]);
-                size_t J =
-                    nactv * nactv * OFF(i[4]) + nactv * OFF(i[5]) + OFF(i[3]);
+            if (ISA(i[0]) and ISB(i[1]) and ISA(i[2]) and ISB(i[3]) and ISA(i[4]) and ISA(i[5])) {
+                size_t I = nactv * nactv * OFF(i[0]) + nactv * OFF(i[2]) + OFF(i[1]);
+                size_t J = nactv * nactv * OFF(i[4]) + nactv * OFF(i[5]) + OFF(i[3]);
                 value = -lambda3_aaA.get(I, J);
             }
 
             // baa|aab
-            if (ISB(i[0]) and ISA(i[1]) and ISA(i[2]) and ISA(i[3]) and
-                ISA(i[4]) and ISB(i[5])) {
-                size_t I =
-                    nactv * nactv * OFF(i[1]) + nactv * OFF(i[2]) + OFF(i[0]);
-                size_t J =
-                    nactv * nactv * OFF(i[3]) + nactv * OFF(i[4]) + OFF(i[5]);
+            if (ISB(i[0]) and ISA(i[1]) and ISA(i[2]) and ISA(i[3]) and ISA(i[4]) and ISB(i[5])) {
+                size_t I = nactv * nactv * OFF(i[1]) + nactv * OFF(i[2]) + OFF(i[0]);
+                size_t J = nactv * nactv * OFF(i[3]) + nactv * OFF(i[4]) + OFF(i[5]);
                 value = lambda3_aaA.get(I, J);
             }
             // baa|aba
-            if (ISB(i[0]) and ISA(i[1]) and ISA(i[2]) and ISA(i[3]) and
-                ISB(i[4]) and ISA(i[5])) {
-                size_t I =
-                    nactv * nactv * OFF(i[1]) + nactv * OFF(i[2]) + OFF(i[0]);
-                size_t J =
-                    nactv * nactv * OFF(i[3]) + nactv * OFF(i[5]) + OFF(i[4]);
+            if (ISB(i[0]) and ISA(i[1]) and ISA(i[2]) and ISA(i[3]) and ISB(i[4]) and ISA(i[5])) {
+                size_t I = nactv * nactv * OFF(i[1]) + nactv * OFF(i[2]) + OFF(i[0]);
+                size_t J = nactv * nactv * OFF(i[3]) + nactv * OFF(i[5]) + OFF(i[4]);
                 value = -lambda3_aaA.get(I, J);
             }
             // baa|baa
-            if (ISB(i[0]) and ISA(i[1]) and ISA(i[2]) and ISB(i[3]) and
-                ISA(i[4]) and ISA(i[5])) {
-                size_t I =
-                    nactv * nactv * OFF(i[1]) + nactv * OFF(i[2]) + OFF(i[0]);
-                size_t J =
-                    nactv * nactv * OFF(i[4]) + nactv * OFF(i[5]) + OFF(i[3]);
+            if (ISB(i[0]) and ISA(i[1]) and ISA(i[2]) and ISB(i[3]) and ISA(i[4]) and ISA(i[5])) {
+                size_t I = nactv * nactv * OFF(i[1]) + nactv * OFF(i[2]) + OFF(i[0]);
+                size_t J = nactv * nactv * OFF(i[4]) + nactv * OFF(i[5]) + OFF(i[3]);
                 value = lambda3_aaA.get(I, J);
             }
 
             // abb|abb
-            if (ISA(i[0]) and ISB(i[1]) and ISB(i[2]) and ISA(i[3]) and
-                ISB(i[4]) and ISB(i[5])) {
-                size_t I =
-                    nactv * nactv * OFF(i[0]) + nactv * OFF(i[1]) + OFF(i[2]);
-                size_t J =
-                    nactv * nactv * OFF(i[3]) + nactv * OFF(i[4]) + OFF(i[5]);
+            if (ISA(i[0]) and ISB(i[1]) and ISB(i[2]) and ISA(i[3]) and ISB(i[4]) and ISB(i[5])) {
+                size_t I = nactv * nactv * OFF(i[0]) + nactv * OFF(i[1]) + OFF(i[2]);
+                size_t J = nactv * nactv * OFF(i[3]) + nactv * OFF(i[4]) + OFF(i[5]);
                 value = lambda3_aAA.get(I, J);
             }
             // abb|bab
-            if (ISA(i[0]) and ISB(i[1]) and ISB(i[2]) and ISB(i[3]) and
-                ISA(i[4]) and ISB(i[5])) {
-                size_t I =
-                    nactv * nactv * OFF(i[0]) + nactv * OFF(i[1]) + OFF(i[2]);
-                size_t J =
-                    nactv * nactv * OFF(i[4]) + nactv * OFF(i[3]) + OFF(i[5]);
+            if (ISA(i[0]) and ISB(i[1]) and ISB(i[2]) and ISB(i[3]) and ISA(i[4]) and ISB(i[5])) {
+                size_t I = nactv * nactv * OFF(i[0]) + nactv * OFF(i[1]) + OFF(i[2]);
+                size_t J = nactv * nactv * OFF(i[4]) + nactv * OFF(i[3]) + OFF(i[5]);
                 value = -lambda3_aAA.get(I, J);
             }
             // abb|bba
-            if (ISA(i[0]) and ISB(i[1]) and ISB(i[2]) and ISB(i[3]) and
-                ISB(i[4]) and ISA(i[5])) {
-                size_t I =
-                    nactv * nactv * OFF(i[0]) + nactv * OFF(i[1]) + OFF(i[2]);
-                size_t J =
-                    nactv * nactv * OFF(i[5]) + nactv * OFF(i[3]) + OFF(i[4]);
+            if (ISA(i[0]) and ISB(i[1]) and ISB(i[2]) and ISB(i[3]) and ISB(i[4]) and ISA(i[5])) {
+                size_t I = nactv * nactv * OFF(i[0]) + nactv * OFF(i[1]) + OFF(i[2]);
+                size_t J = nactv * nactv * OFF(i[5]) + nactv * OFF(i[3]) + OFF(i[4]);
                 value = lambda3_aAA.get(I, J);
             }
 
             // bab|abb
-            if (ISB(i[0]) and ISA(i[1]) and ISB(i[2]) and ISA(i[3]) and
-                ISB(i[4]) and ISB(i[5])) {
-                size_t I =
-                    nactv * nactv * OFF(i[1]) + nactv * OFF(i[0]) + OFF(i[2]);
-                size_t J =
-                    nactv * nactv * OFF(i[3]) + nactv * OFF(i[4]) + OFF(i[5]);
+            if (ISB(i[0]) and ISA(i[1]) and ISB(i[2]) and ISA(i[3]) and ISB(i[4]) and ISB(i[5])) {
+                size_t I = nactv * nactv * OFF(i[1]) + nactv * OFF(i[0]) + OFF(i[2]);
+                size_t J = nactv * nactv * OFF(i[3]) + nactv * OFF(i[4]) + OFF(i[5]);
                 value = -lambda3_aAA.get(I, J);
             }
             // bab|bab
-            if (ISB(i[0]) and ISA(i[1]) and ISB(i[2]) and ISB(i[3]) and
-                ISA(i[4]) and ISB(i[5])) {
-                size_t I =
-                    nactv * nactv * OFF(i[1]) + nactv * OFF(i[0]) + OFF(i[2]);
-                size_t J =
-                    nactv * nactv * OFF(i[4]) + nactv * OFF(i[3]) + OFF(i[5]);
+            if (ISB(i[0]) and ISA(i[1]) and ISB(i[2]) and ISB(i[3]) and ISA(i[4]) and ISB(i[5])) {
+                size_t I = nactv * nactv * OFF(i[1]) + nactv * OFF(i[0]) + OFF(i[2]);
+                size_t J = nactv * nactv * OFF(i[4]) + nactv * OFF(i[3]) + OFF(i[5]);
                 value = lambda3_aAA.get(I, J);
             }
             // bab|bba
-            if (ISB(i[0]) and ISA(i[1]) and ISB(i[2]) and ISB(i[3]) and
-                ISB(i[4]) and ISA(i[5])) {
-                size_t I =
-                    nactv * nactv * OFF(i[1]) + nactv * OFF(i[0]) + OFF(i[2]);
-                size_t J =
-                    nactv * nactv * OFF(i[5]) + nactv * OFF(i[3]) + OFF(i[4]);
+            if (ISB(i[0]) and ISA(i[1]) and ISB(i[2]) and ISB(i[3]) and ISB(i[4]) and ISA(i[5])) {
+                size_t I = nactv * nactv * OFF(i[1]) + nactv * OFF(i[0]) + OFF(i[2]);
+                size_t J = nactv * nactv * OFF(i[5]) + nactv * OFF(i[3]) + OFF(i[4]);
                 value = -lambda3_aAA.get(I, J);
             }
 
             // bba|abb
-            if (ISB(i[0]) and ISB(i[1]) and ISA(i[2]) and ISA(i[3]) and
-                ISB(i[4]) and ISB(i[5])) {
-                size_t I =
-                    nactv * nactv * OFF(i[2]) + nactv * OFF(i[0]) + OFF(i[1]);
-                size_t J =
-                    nactv * nactv * OFF(i[3]) + nactv * OFF(i[4]) + OFF(i[5]);
+            if (ISB(i[0]) and ISB(i[1]) and ISA(i[2]) and ISA(i[3]) and ISB(i[4]) and ISB(i[5])) {
+                size_t I = nactv * nactv * OFF(i[2]) + nactv * OFF(i[0]) + OFF(i[1]);
+                size_t J = nactv * nactv * OFF(i[3]) + nactv * OFF(i[4]) + OFF(i[5]);
                 value = lambda3_aAA.get(I, J);
             }
             // bba|bab
-            if (ISB(i[0]) and ISB(i[1]) and ISA(i[2]) and ISB(i[3]) and
-                ISA(i[4]) and ISB(i[5])) {
-                size_t I =
-                    nactv * nactv * OFF(i[2]) + nactv * OFF(i[0]) + OFF(i[1]);
-                size_t J =
-                    nactv * nactv * OFF(i[4]) + nactv * OFF(i[3]) + OFF(i[5]);
+            if (ISB(i[0]) and ISB(i[1]) and ISA(i[2]) and ISB(i[3]) and ISA(i[4]) and ISB(i[5])) {
+                size_t I = nactv * nactv * OFF(i[2]) + nactv * OFF(i[0]) + OFF(i[1]);
+                size_t J = nactv * nactv * OFF(i[4]) + nactv * OFF(i[3]) + OFF(i[5]);
                 value = -lambda3_aAA.get(I, J);
             }
             // bba|bba
-            if (ISB(i[0]) and ISB(i[1]) and ISA(i[2]) and ISB(i[3]) and
-                ISB(i[4]) and ISA(i[5])) {
-                size_t I =
-                    nactv * nactv * OFF(i[2]) + nactv * OFF(i[0]) + OFF(i[1]);
-                size_t J =
-                    nactv * nactv * OFF(i[5]) + nactv * OFF(i[3]) + OFF(i[4]);
+            if (ISB(i[0]) and ISB(i[1]) and ISA(i[2]) and ISB(i[3]) and ISB(i[4]) and ISA(i[5])) {
+                size_t I = nactv * nactv * OFF(i[2]) + nactv * OFF(i[0]) + OFF(i[1]);
+                size_t J = nactv * nactv * OFF(i[5]) + nactv * OFF(i[3]) + OFF(i[4]);
                 value = lambda3_aAA.get(I, J);
             }
 
             // bbb|bbb
-            if (ISB(i[0]) and ISB(i[1]) and ISB(i[2]) and ISB(i[3]) and
-                ISB(i[4]) and ISB(i[5])) {
-                size_t I =
-                    nactv * nactv * OFF(i[0]) + nactv * OFF(i[1]) + OFF(i[2]);
-                size_t J =
-                    nactv * nactv * OFF(i[3]) + nactv * OFF(i[4]) + OFF(i[5]);
+            if (ISB(i[0]) and ISB(i[1]) and ISB(i[2]) and ISB(i[3]) and ISB(i[4]) and ISB(i[5])) {
+                size_t I = nactv * nactv * OFF(i[0]) + nactv * OFF(i[1]) + OFF(i[2]);
+                size_t J = nactv * nactv * OFF(i[3]) + nactv * OFF(i[4]) + OFF(i[5]);
                 value = lambda3_AAA.get(I, J);
             }
         });
@@ -546,8 +460,7 @@ void SOMRDSRG::startup() {
     std::vector<double> Fa(ncmo_);
     std::vector<double> Fb(ncmo_);
 
-    F.iterate([&](const std::vector<size_t>& i,
-                  const std::vector<SpinType>& spin, double& value) {
+    F.iterate([&](const std::vector<size_t>& i, const std::vector<SpinType>& spin, double& value) {
         if (spin[0] == AlphaSpin and spin[1] == AlphaSpin and (i[0] == i[1])) {
             Fa[i[0]] = value;
         }
@@ -556,78 +469,78 @@ void SOMRDSRG::startup() {
         }
     });
 
-    Delta1.iterate([&](const std::vector<size_t>& i,
-                       const std::vector<SpinType>& spin, double& value) {
-        if (spin[0] == AlphaSpin and spin[1] == AlphaSpin) {
-            value = Fa[i[0]] - Fa[i[1]];
-        } else if (spin[0] == BetaSpin and spin[1] == BetaSpin) {
-            value = Fb[i[0]] - Fb[i[1]];
-        } else {
-            value = 0.0;
-        }
-    });
+    Delta1.iterate(
+        [&](const std::vector<size_t>& i, const std::vector<SpinType>& spin, double& value) {
+            if (spin[0] == AlphaSpin and spin[1] == AlphaSpin) {
+                value = Fa[i[0]] - Fa[i[1]];
+            } else if (spin[0] == BetaSpin and spin[1] == BetaSpin) {
+                value = Fb[i[0]] - Fb[i[1]];
+            } else {
+                value = 0.0;
+            }
+        });
 
-    Delta2.iterate([&](const std::vector<size_t>& i,
-                       const std::vector<SpinType>& spin, double& value) {
-        if (spin[0] == AlphaSpin and spin[1] == AlphaSpin and
-            spin[2] == AlphaSpin and spin[3] == AlphaSpin) {
-            value = Fa[i[0]] + Fa[i[1]] - Fa[i[2]] - Fa[i[3]];
-        } else if (spin[0] == AlphaSpin and spin[1] == BetaSpin and
-                   spin[2] == AlphaSpin and spin[3] == BetaSpin) {
-            value = Fa[i[0]] + Fb[i[1]] - Fa[i[2]] - Fb[i[3]];
-        } else if (spin[0] == AlphaSpin and spin[1] == BetaSpin and
-                   spin[2] == BetaSpin and spin[3] == AlphaSpin) {
-            value = Fa[i[0]] + Fb[i[1]] - Fb[i[2]] - Fa[i[3]];
-        } else if (spin[0] == BetaSpin and spin[1] == AlphaSpin and
-                   spin[2] == AlphaSpin and spin[3] == BetaSpin) {
-            value = Fb[i[0]] + Fa[i[1]] - Fa[i[2]] - Fb[i[3]];
-        } else if (spin[0] == BetaSpin and spin[1] == AlphaSpin and
-                   spin[2] == BetaSpin and spin[3] == AlphaSpin) {
-            value = Fb[i[0]] + Fa[i[1]] - Fb[i[2]] - Fa[i[3]];
-        } else if (spin[0] == BetaSpin and spin[1] == BetaSpin and
-                   spin[2] == BetaSpin and spin[3] == BetaSpin) {
-            value = Fb[i[0]] + Fb[i[1]] - Fb[i[2]] - Fb[i[3]];
-        } else {
-            value = 0.0;
-        }
-    });
+    Delta2.iterate(
+        [&](const std::vector<size_t>& i, const std::vector<SpinType>& spin, double& value) {
+            if (spin[0] == AlphaSpin and spin[1] == AlphaSpin and spin[2] == AlphaSpin and
+                spin[3] == AlphaSpin) {
+                value = Fa[i[0]] + Fa[i[1]] - Fa[i[2]] - Fa[i[3]];
+            } else if (spin[0] == AlphaSpin and spin[1] == BetaSpin and spin[2] == AlphaSpin and
+                       spin[3] == BetaSpin) {
+                value = Fa[i[0]] + Fb[i[1]] - Fa[i[2]] - Fb[i[3]];
+            } else if (spin[0] == AlphaSpin and spin[1] == BetaSpin and spin[2] == BetaSpin and
+                       spin[3] == AlphaSpin) {
+                value = Fa[i[0]] + Fb[i[1]] - Fb[i[2]] - Fa[i[3]];
+            } else if (spin[0] == BetaSpin and spin[1] == AlphaSpin and spin[2] == AlphaSpin and
+                       spin[3] == BetaSpin) {
+                value = Fb[i[0]] + Fa[i[1]] - Fa[i[2]] - Fb[i[3]];
+            } else if (spin[0] == BetaSpin and spin[1] == AlphaSpin and spin[2] == BetaSpin and
+                       spin[3] == AlphaSpin) {
+                value = Fb[i[0]] + Fa[i[1]] - Fb[i[2]] - Fa[i[3]];
+            } else if (spin[0] == BetaSpin and spin[1] == BetaSpin and spin[2] == BetaSpin and
+                       spin[3] == BetaSpin) {
+                value = Fb[i[0]] + Fb[i[1]] - Fb[i[2]] - Fb[i[3]];
+            } else {
+                value = 0.0;
+            }
+        });
 
-    RInvDelta1.iterate([&](const std::vector<size_t>& i,
-                           const std::vector<SpinType>& spin, double& value) {
-        if (spin[0] == AlphaSpin and spin[1] == AlphaSpin) {
-            value = renormalized_denominator(Fa[i[0]] - Fa[i[1]]);
-        } else if (spin[0] == BetaSpin and spin[1] == BetaSpin) {
-            value = renormalized_denominator(Fb[i[0]] - Fb[i[1]]);
-        } else {
-            value = 0.0;
-        }
-    });
+    RInvDelta1.iterate(
+        [&](const std::vector<size_t>& i, const std::vector<SpinType>& spin, double& value) {
+            if (spin[0] == AlphaSpin and spin[1] == AlphaSpin) {
+                value = renormalized_denominator(Fa[i[0]] - Fa[i[1]]);
+            } else if (spin[0] == BetaSpin and spin[1] == BetaSpin) {
+                value = renormalized_denominator(Fb[i[0]] - Fb[i[1]]);
+            } else {
+                value = 0.0;
+            }
+        });
 
-    RInvDelta2.iterate([&](const std::vector<size_t>& i,
-                           const std::vector<SpinType>& spin, double& value) {
-        if (spin[0] == AlphaSpin and spin[1] == AlphaSpin and
-            spin[2] == AlphaSpin and spin[3] == AlphaSpin) {
-            value = Fa[i[0]] + Fa[i[1]] - Fa[i[2]] - Fa[i[3]];
-        } else if (spin[0] == AlphaSpin and spin[1] == BetaSpin and
-                   spin[2] == AlphaSpin and spin[3] == BetaSpin) {
-            value = Fa[i[0]] + Fb[i[1]] - Fa[i[2]] - Fb[i[3]];
-        } else if (spin[0] == AlphaSpin and spin[1] == BetaSpin and
-                   spin[2] == BetaSpin and spin[3] == AlphaSpin) {
-            value = Fa[i[0]] + Fb[i[1]] - Fb[i[2]] - Fa[i[3]];
-        } else if (spin[0] == BetaSpin and spin[1] == AlphaSpin and
-                   spin[2] == AlphaSpin and spin[3] == BetaSpin) {
-            value = Fb[i[0]] + Fa[i[1]] - Fa[i[2]] - Fb[i[3]];
-        } else if (spin[0] == BetaSpin and spin[1] == AlphaSpin and
-                   spin[2] == BetaSpin and spin[3] == AlphaSpin) {
-            value = Fb[i[0]] + Fa[i[1]] - Fb[i[2]] - Fa[i[3]];
-        } else if (spin[0] == BetaSpin and spin[1] == BetaSpin and
-                   spin[2] == BetaSpin and spin[3] == BetaSpin) {
-            value = Fb[i[0]] + Fb[i[1]] - Fb[i[2]] - Fb[i[3]];
-        } else {
-            value = 0.0;
-        }
-        value = renormalized_denominator(value);
-    });
+    RInvDelta2.iterate(
+        [&](const std::vector<size_t>& i, const std::vector<SpinType>& spin, double& value) {
+            if (spin[0] == AlphaSpin and spin[1] == AlphaSpin and spin[2] == AlphaSpin and
+                spin[3] == AlphaSpin) {
+                value = Fa[i[0]] + Fa[i[1]] - Fa[i[2]] - Fa[i[3]];
+            } else if (spin[0] == AlphaSpin and spin[1] == BetaSpin and spin[2] == AlphaSpin and
+                       spin[3] == BetaSpin) {
+                value = Fa[i[0]] + Fb[i[1]] - Fa[i[2]] - Fb[i[3]];
+            } else if (spin[0] == AlphaSpin and spin[1] == BetaSpin and spin[2] == BetaSpin and
+                       spin[3] == AlphaSpin) {
+                value = Fa[i[0]] + Fb[i[1]] - Fb[i[2]] - Fa[i[3]];
+            } else if (spin[0] == BetaSpin and spin[1] == AlphaSpin and spin[2] == AlphaSpin and
+                       spin[3] == BetaSpin) {
+                value = Fb[i[0]] + Fa[i[1]] - Fa[i[2]] - Fb[i[3]];
+            } else if (spin[0] == BetaSpin and spin[1] == AlphaSpin and spin[2] == BetaSpin and
+                       spin[3] == AlphaSpin) {
+                value = Fb[i[0]] + Fa[i[1]] - Fb[i[2]] - Fa[i[3]];
+            } else if (spin[0] == BetaSpin and spin[1] == BetaSpin and spin[2] == BetaSpin and
+                       spin[3] == BetaSpin) {
+                value = Fb[i[0]] + Fb[i[1]] - Fb[i[2]] - Fb[i[3]];
+            } else {
+                value = 0.0;
+            }
+            value = renormalized_denominator(value);
+        });
 
     // Prepare Hbar
     Hbar1["pq"] = F["pq"];
@@ -658,22 +571,18 @@ void SOMRDSRG::print_summary() {
         {"taylor expansion threshold", pow(10.0, -double(taylor_threshold_))}};
 
     std::vector<std::pair<std::string, std::string>> calculation_info_string{
-        {"int_type", options_.get_str("INT_TYPE")},
-        {"source operator", source_}};
+        {"int_type", options_.get_str("INT_TYPE")}, {"source operator", source_}};
 
     // Print some information
     outfile->Printf("\n\n  ==> Calculation Information <==\n");
     for (auto& str_dim : calculation_info) {
-        outfile->Printf("\n    %-39s %10d", str_dim.first.c_str(),
-                        str_dim.second);
+        outfile->Printf("\n    %-39s %10d", str_dim.first.c_str(), str_dim.second);
     }
     for (auto& str_dim : calculation_info_double) {
-        outfile->Printf("\n    %-39s %10.3e", str_dim.first.c_str(),
-                        str_dim.second);
+        outfile->Printf("\n    %-39s %10.3e", str_dim.first.c_str(), str_dim.second);
     }
     for (auto& str_dim : calculation_info_string) {
-        outfile->Printf("\n    %-39s %10s", str_dim.first.c_str(),
-                        str_dim.second.c_str());
+        outfile->Printf("\n    %-39s %10s", str_dim.first.c_str(), str_dim.second.c_str());
     }
     outfile->Flush();
 }
@@ -803,15 +712,13 @@ double SOMRDSRG::compute_energy() {
 
         double max_T1 = 0.0;
         double max_T2 = 0.0;
-        T1.citerate([&](const std::vector<size_t>& i,
-                        const std::vector<SpinType>& spin,
+        T1.citerate([&](const std::vector<size_t>& i, const std::vector<SpinType>& spin,
                         const double& value) {
             if (std::fabs(value) > std::fabs(max_T1))
                 max_T1 = value;
         });
 
-        T2.citerate([&](const std::vector<size_t>& i,
-                        const std::vector<SpinType>& spin,
+        T2.citerate([&](const std::vector<size_t>& i, const std::vector<SpinType>& spin,
                         const double& value) {
             if (std::fabs(value) > std::fabs(max_T2))
                 max_T2 = value;
@@ -830,8 +737,7 @@ double SOMRDSRG::compute_energy() {
 
         outfile->Printf("\n    @SO-MR-DSRG %4d %20.12f %11.3e %10.3e %10.3e "
                         "%7.4f %7.4f %7.4f %7.4f",
-                        cycle, energy, delta_energy, 0, 0, norm_T1, norm_T2,
-                        max_T1, max_T2);
+                        cycle, energy, delta_energy, 0, 0, norm_T1, norm_T2, max_T1, max_T2);
 
         if (fabs(delta_energy) < options_.get_double("E_CONVERGENCE")) {
             converged = true;
@@ -852,10 +758,8 @@ double SOMRDSRG::compute_energy() {
                     "----------------------------------------------------------"
                     "----------------------------------------");
 
-    outfile->Printf("\n\n\n    SO-MR-DSRG correlation energy      = %25.15f",
-                    old_energy - E0_);
-    outfile->Printf("\n  * SO-MR-DSRG total energy            = %25.15f\n",
-                    old_energy);
+    outfile->Printf("\n\n\n    SO-MR-DSRG correlation energy      = %25.15f", old_energy - E0_);
+    outfile->Printf("\n  * SO-MR-DSRG total energy            = %25.15f\n", old_energy);
 
     // Set some environment variables
     Process::environment.globals["CURRENT ENERGY"] = old_energy;
@@ -875,8 +779,7 @@ void SOMRDSRG::mp2_guess() {
 
     double mp2_correlation_energy = 0.25 * T2["ijab"] * V["ijab"];
 
-    outfile->Printf("\n\n    SCF energy                            = %20.15f",
-                    E0_);
+    outfile->Printf("\n\n    SCF energy                            = %20.15f", E0_);
     outfile->Printf("\n    SRG-PT2 correlation energy            = %20.15f",
                     mp2_correlation_energy);
     outfile->Printf("\n  * SRG-PT2 total energy                  = %20.15f\n",
@@ -885,8 +788,7 @@ void SOMRDSRG::mp2_guess() {
 
 double SOMRDSRG::compute_hbar() {
     if (print_ > 1) {
-        outfile->Printf(
-            "\n\n  Computing the similarity-transformed Hamiltonian");
+        outfile->Printf("\n\n  Computing the similarity-transformed Hamiltonian");
         outfile->Printf("\n  "
                         "------------------------------------------------------"
                         "-----------");
@@ -906,8 +808,7 @@ double SOMRDSRG::compute_hbar() {
     O2["pqrs"] = V["pqrs"];
 
     if (print_ > 1) {
-        outfile->Printf("\n  %2d %20.12f %20e %20e", 0, Hbar0, Hbar1.norm(),
-                        Hbar2.norm());
+        outfile->Printf("\n  %2d %20.12f %20e %20e", 0, Hbar0, Hbar1.norm(), Hbar2.norm());
     }
 
     int maxn = options_.get_int("SRG_RSC_NCOMM");
@@ -936,8 +837,7 @@ double SOMRDSRG::compute_hbar() {
         double norm_C2 = C2.norm();
 
         if (print_ > 1) {
-            outfile->Printf("\n  %2d %20.12f %20e %20e", n, C0, norm_C1,
-                            norm_C2);
+            outfile->Printf("\n  %2d %20.12f %20e %20e", n, C0, norm_C1, norm_C2);
             outfile->Flush();
         }
         if (std::sqrt(norm_C2 * norm_C2 + norm_C1 * norm_C1) < ct_threshold) {
@@ -953,29 +853,25 @@ double SOMRDSRG::compute_hbar() {
     return Hbar0;
 }
 
-void SOMRDSRG::H_eq_commutator_C_T(double factor, BlockedTensor& F,
-                                   BlockedTensor& V, BlockedTensor& T1,
-                                   BlockedTensor& T2, double& H0,
-                                   BlockedTensor& H1, BlockedTensor& H2,
-                                   int order) {
+void SOMRDSRG::H_eq_commutator_C_T(double factor, BlockedTensor& F, BlockedTensor& V,
+                                   BlockedTensor& T1, BlockedTensor& T2, double& H0,
+                                   BlockedTensor& H1, BlockedTensor& H2, int order) {
     H0 += 1.000000 * Eta1["p1,p0"] * F["p0,h0"] * Gamma1["h0,h1"] * T1["h1,p1"];
     H0 += -0.500000 * F["a0,c0"] * Lambda2["a2,a3,a1,a0"] * T2["a1,c0,a2,a3"];
     H0 += 0.500000 * F["v0,a0"] * Lambda2["a0,a3,a1,a2"] * T2["a1,a2,v0,a3"];
     H0 += 0.500000 * Lambda2["a2,a3,a0,a1"] * T1["a0,v0"] * V["v0,a1,a2,a3"];
     H0 += -0.500000 * Lambda2["a0,a3,a1,a2"] * T1["c0,a0"] * V["a1,a2,c0,a3"];
-    H0 += 0.250000 * Eta1["p2,p0"] * Eta1["p3,p1"] * Gamma1["h0,h2"] *
-          Gamma1["h1,h3"] * T2["h2,h3,p2,p3"] * V["p0,p1,h0,h1"];
-    H0 += 0.125000 * Eta1["p2,p0"] * Eta1["p3,p1"] * Lambda2["a0,a1,a2,a3"] *
-          T2["a2,a3,p2,p3"] * V["p0,p1,a0,a1"];
-    H0 += 0.125000 * Gamma1["h0,h2"] * Gamma1["h1,h3"] *
-          Lambda2["a2,a3,a0,a1"] * T2["h2,h3,a2,a3"] * V["a0,a1,h0,h1"];
-    H0 += 1.000000 * Eta1["p1,p0"] * Gamma1["h0,h1"] * Lambda2["a0,a2,a3,a1"] *
-          T2["h1,a3,p1,a2"] * V["a1,p0,h0,a0"];
+    H0 += 0.250000 * Eta1["p2,p0"] * Eta1["p3,p1"] * Gamma1["h0,h2"] * Gamma1["h1,h3"] *
+          T2["h2,h3,p2,p3"] * V["p0,p1,h0,h1"];
+    H0 += 0.125000 * Eta1["p2,p0"] * Eta1["p3,p1"] * Lambda2["a0,a1,a2,a3"] * T2["a2,a3,p2,p3"] *
+          V["p0,p1,a0,a1"];
+    H0 += 0.125000 * Gamma1["h0,h2"] * Gamma1["h1,h3"] * Lambda2["a2,a3,a0,a1"] *
+          T2["h2,h3,a2,a3"] * V["a0,a1,h0,h1"];
+    H0 += 1.000000 * Eta1["p1,p0"] * Gamma1["h0,h1"] * Lambda2["a0,a2,a3,a1"] * T2["h1,a3,p1,a2"] *
+          V["a1,p0,h0,a0"];
     if (options_.get_str("THREEPDC") != "ZERO") {
-        H0 += 0.250000 * Lambda3["a3,a4,a0,a1,a2,a5"] * T2["h0,a5,a3,a4"] *
-              V["a1,a2,h0,a0"];
-        H0 += 0.250000 * Lambda3["a0,a1,a3,a4,a5,a2"] * T2["a4,a5,p0,a3"] *
-              V["a2,p0,a0,a1"];
+        H0 += 0.250000 * Lambda3["a3,a4,a0,a1,a2,a5"] * T2["h0,a5,a3,a4"] * V["a1,a2,h0,a0"];
+        H0 += 0.250000 * Lambda3["a0,a1,a3,a4,a5,a2"] * T2["a4,a5,p0,a3"] * V["a2,p0,a0,a1"];
     }
     H1["h0,g0"] += 1.000000 * F["p0,g0"] * T1["h0,p0"];
     H1["g0,p0"] += -1.000000 * F["g0,h0"] * T1["h0,p0"];
@@ -984,34 +880,24 @@ void SOMRDSRG::H_eq_commutator_C_T(double factor, BlockedTensor& F,
     H1["g1,g0"] += 1.000000 * Gamma1["h1,h0"] * T1["h0,p0"] * V["p0,g1,h1,g0"];
     H1["g1,g0"] += -1.000000 * Gamma1["a1,a0"] * T1["c0,a0"] * V["a1,g1,c0,g0"];
 
-    H1["g0,p0"] += -0.500000 * Gamma1["h1,h0"] * Gamma1["h3,h2"] *
-                   T2["h0,h2,p0,p1"] * V["g0,p1,h1,h3"];
     H1["g0,p0"] +=
-        -0.500000 * Gamma1["a1,a0"] * T2["h0,h1,p0,a1"] * V["g0,a0,h0,h1"];
-    H1["g0,p0"] += 1.000000 * Gamma1["a1,a0"] * Gamma1["h1,h0"] *
-                   T2["h0,h2,p0,a1"] * V["g0,a0,h1,h2"];
+        -0.500000 * Gamma1["h1,h0"] * Gamma1["h3,h2"] * T2["h0,h2,p0,p1"] * V["g0,p1,h1,h3"];
+    H1["g0,p0"] += -0.500000 * Gamma1["a1,a0"] * T2["h0,h1,p0,a1"] * V["g0,a0,h0,h1"];
+    H1["g0,p0"] +=
+        1.000000 * Gamma1["a1,a0"] * Gamma1["h1,h0"] * T2["h0,h2,p0,a1"] * V["g0,a0,h1,h2"];
+    H1["h0,g0"] += 0.500000 * Gamma1["h2,h1"] * T2["h0,h1,p0,p1"] * V["p0,p1,g0,h2"];
     H1["h0,g0"] +=
-        0.500000 * Gamma1["h2,h1"] * T2["h0,h1,p0,p1"] * V["p0,p1,g0,h2"];
-    H1["h0,g0"] += 0.500000 * Gamma1["a1,a0"] * Gamma1["a3,a2"] *
-                   T2["h0,h1,a1,a3"] * V["a0,a2,g0,h1"];
-    H1["h0,g0"] += -1.000000 * Gamma1["a1,a0"] * Gamma1["h2,h1"] *
-                   T2["h0,h1,p0,a1"] * V["p0,a0,g0,h2"];
-    H1["g0,p0"] += -0.250000 * Lambda2["a2,a3,a0,a1"] * T2["a0,a1,p0,p1"] *
-                   V["g0,p1,a2,a3"];
-    H1["h0,g0"] += 0.250000 * Lambda2["a0,a1,a2,a3"] * T2["h0,h1,a0,a1"] *
-                   V["a2,a3,g0,h1"];
-    H1["h0,g0"] += 1.000000 * Lambda2["a2,a0,a3,a1"] * T2["h0,a1,p0,a0"] *
-                   V["p0,a3,g0,a2"];
-    H1["g0,p0"] += -1.000000 * Lambda2["a2,a0,a3,a1"] * T2["h0,a1,p0,a0"] *
-                   V["g0,a3,h0,a2"];
-    H1["h0,p0"] += 0.500000 * Lambda2["a1,a2,a0,a3"] * T2["a0,h0,p1,p0"] *
-                   V["p1,a3,a1,a2"];
-    H1["h0,p0"] += -0.500000 * Lambda2["a0,a1,a2,a3"] * T2["h1,h0,a0,p0"] *
-                   V["a2,a3,h1,a1"];
-    H1["g1,g0"] += 0.500000 * Lambda2["a3,a0,a1,a2"] * T2["a1,a2,v0,a0"] *
-                   V["v0,g1,a3,g0"];
-    H1["g1,g0"] += -0.500000 * Lambda2["a0,a1,a3,a2"] * T2["c0,a2,a0,a1"] *
-                   V["a3,g1,c0,g0"];
+        0.500000 * Gamma1["a1,a0"] * Gamma1["a3,a2"] * T2["h0,h1,a1,a3"] * V["a0,a2,g0,h1"];
+    H1["h0,g0"] +=
+        -1.000000 * Gamma1["a1,a0"] * Gamma1["h2,h1"] * T2["h0,h1,p0,a1"] * V["p0,a0,g0,h2"];
+    H1["g0,p0"] += -0.250000 * Lambda2["a2,a3,a0,a1"] * T2["a0,a1,p0,p1"] * V["g0,p1,a2,a3"];
+    H1["h0,g0"] += 0.250000 * Lambda2["a0,a1,a2,a3"] * T2["h0,h1,a0,a1"] * V["a2,a3,g0,h1"];
+    H1["h0,g0"] += 1.000000 * Lambda2["a2,a0,a3,a1"] * T2["h0,a1,p0,a0"] * V["p0,a3,g0,a2"];
+    H1["g0,p0"] += -1.000000 * Lambda2["a2,a0,a3,a1"] * T2["h0,a1,p0,a0"] * V["g0,a3,h0,a2"];
+    H1["h0,p0"] += 0.500000 * Lambda2["a1,a2,a0,a3"] * T2["a0,h0,p1,p0"] * V["p1,a3,a1,a2"];
+    H1["h0,p0"] += -0.500000 * Lambda2["a0,a1,a2,a3"] * T2["h1,h0,a0,p0"] * V["a2,a3,h1,a1"];
+    H1["g1,g0"] += 0.500000 * Lambda2["a3,a0,a1,a2"] * T2["a1,a2,v0,a0"] * V["v0,g1,a3,g0"];
+    H1["g1,g0"] += -0.500000 * Lambda2["a0,a1,a3,a2"] * T2["c0,a2,a0,a1"] * V["a3,g1,c0,g0"];
 
     H2["h0,h1,g0,p0"] += 1.000000 * F["p1,g0"] * T2["h0,h1,p1,p0"];
     H2["h0,h1,p0,g0"] += 1.000000 * F["p1,g0"] * T2["h0,h1,p0,p1"];
@@ -1022,27 +908,17 @@ void SOMRDSRG::H_eq_commutator_C_T(double factor, BlockedTensor& F,
     H2["g1,g2,p0,g0"] += -1.000000 * T1["h0,p0"] * V["g1,g2,h0,g0"];
     H2["g1,g2,g0,p0"] += -1.000000 * T1["h0,p0"] * V["g1,g2,g0,h0"];
     H2["g0,g1,p0,p1"] += 0.500000 * T2["h0,h1,p0,p1"] * V["g0,g1,h0,h1"];
-    H2["g0,g1,p0,p1"] +=
-        -1.000000 * Eta1["a1,a0"] * T2["a0,h0,p0,p1"] * V["g0,g1,a1,h0"];
+    H2["g0,g1,p0,p1"] += -1.000000 * Eta1["a1,a0"] * T2["a0,h0,p0,p1"] * V["g0,g1,a1,h0"];
     H2["h0,h1,g0,g1"] += 0.500000 * T2["h0,h1,p0,p1"] * V["p0,p1,g0,g1"];
-    H2["h0,h1,g0,g1"] +=
-        -1.000000 * Gamma1["a0,a1"] * T2["h0,h1,a0,p0"] * V["a1,p0,g0,g1"];
-    H2["g1,h0,g0,p0"] +=
-        1.000000 * Gamma1["h2,h1"] * T2["h1,h0,p1,p0"] * V["p1,g1,h2,g0"];
-    H2["h0,g1,g0,p0"] +=
-        1.000000 * Gamma1["h2,h1"] * T2["h0,h1,p1,p0"] * V["p1,g1,h2,g0"];
-    H2["g1,h0,p0,g0"] +=
-        1.000000 * Gamma1["h2,h1"] * T2["h1,h0,p0,p1"] * V["p1,g1,h2,g0"];
-    H2["h0,g1,p0,g0"] +=
-        1.000000 * Gamma1["h2,h1"] * T2["h0,h1,p0,p1"] * V["p1,g1,h2,g0"];
-    H2["g1,h0,g0,p0"] +=
-        -1.000000 * Gamma1["a0,a1"] * T2["h1,h0,a0,p0"] * V["a1,g1,h1,g0"];
-    H2["h0,g1,g0,p0"] +=
-        -1.000000 * Gamma1["a0,a1"] * T2["h0,h1,a0,p0"] * V["a1,g1,h1,g0"];
-    H2["g1,h0,p0,g0"] +=
-        -1.000000 * Gamma1["a0,a1"] * T2["h1,h0,p0,a0"] * V["a1,g1,h1,g0"];
-    H2["h0,g1,p0,g0"] +=
-        -1.000000 * Gamma1["a0,a1"] * T2["h0,h1,p0,a0"] * V["a1,g1,h1,g0"];
+    H2["h0,h1,g0,g1"] += -1.000000 * Gamma1["a0,a1"] * T2["h0,h1,a0,p0"] * V["a1,p0,g0,g1"];
+    H2["g1,h0,g0,p0"] += 1.000000 * Gamma1["h2,h1"] * T2["h1,h0,p1,p0"] * V["p1,g1,h2,g0"];
+    H2["h0,g1,g0,p0"] += 1.000000 * Gamma1["h2,h1"] * T2["h0,h1,p1,p0"] * V["p1,g1,h2,g0"];
+    H2["g1,h0,p0,g0"] += 1.000000 * Gamma1["h2,h1"] * T2["h1,h0,p0,p1"] * V["p1,g1,h2,g0"];
+    H2["h0,g1,p0,g0"] += 1.000000 * Gamma1["h2,h1"] * T2["h0,h1,p0,p1"] * V["p1,g1,h2,g0"];
+    H2["g1,h0,g0,p0"] += -1.000000 * Gamma1["a0,a1"] * T2["h1,h0,a0,p0"] * V["a1,g1,h1,g0"];
+    H2["h0,g1,g0,p0"] += -1.000000 * Gamma1["a0,a1"] * T2["h0,h1,a0,p0"] * V["a1,g1,h1,g0"];
+    H2["g1,h0,p0,g0"] += -1.000000 * Gamma1["a0,a1"] * T2["h1,h0,p0,a0"] * V["a1,g1,h1,g0"];
+    H2["h0,g1,p0,g0"] += -1.000000 * Gamma1["a0,a1"] * T2["h0,h1,p0,a0"] * V["a1,g1,h1,g0"];
 
     outfile->Printf("\n   H0  = %20.12f", H0);
     outfile->Printf("\n  |H1| = %20.12f", H1.norm(1));

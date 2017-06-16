@@ -28,17 +28,16 @@
 
 #include <algorithm>
 
-#include "dsrg_time.h"
-#include "../mini-boost/boost/format.hpp"
 #include "../helpers.h"
+#include "../mini-boost/boost/format.hpp"
+#include "dsrg_time.h"
 
 namespace psi {
 namespace forte {
 
 DSRG_TIME::DSRG_TIME() {
     // fill in code
-    code_ = {"110", "120", "210", "220", "111", "121",
-             "211", "221", "122", "212", "222"};
+    code_ = {"110", "120", "210", "220", "111", "121", "211", "221", "122", "212", "222"};
 
     // initialize timing vector
     timing_ = std::vector<double>(code_.size(), 0.0);
@@ -56,8 +55,7 @@ void DSRG_TIME::add(const std::string& code, const double& t) {
             timing_[code_to_tidx_[code]] += t;
         } else {
             print_h2("Echo from DSRG_TIME", "!!!", "!!!");
-            outfile->Printf("  Cannot find time code %s. Add nothing.",
-                            code.c_str());
+            outfile->Printf("  Cannot find time code %s. Add nothing.", code.c_str());
         }
     }
 }
@@ -69,8 +67,7 @@ void DSRG_TIME::subtract(const std::string& code, const double& t) {
             timing_[code_to_tidx_[code]] -= t;
         } else {
             print_h2("Echo from DSRG_TIME", "!!!", "!!!");
-            outfile->Printf("  Cannot find time code %s. Substract nothing.",
-                            code.c_str());
+            outfile->Printf("  Cannot find time code %s. Substract nothing.", code.c_str());
         }
     }
 }
@@ -88,8 +85,7 @@ void DSRG_TIME::reset(const std::string& code) {
             timing_[code_to_tidx_[code]] = 0.0;
         } else {
             print_h2("Echo from DSRG_TIME", "!!!", "!!!");
-            outfile->Printf("  Cannot find time code %s. Reset nothing.",
-                            code.c_str());
+            outfile->Printf("  Cannot find time code %s. Reset nothing.", code.c_str());
         }
     }
 }
@@ -104,8 +100,7 @@ void DSRG_TIME::create_code(const std::string& code) {
             code_to_tidx_[code_.back()] = size - 1;
         } else {
             print_h2("Echo from DSRG_TIME", "!!!", "!!!");
-            outfile->Printf("  Time code %s is already there. Create nothing.",
-                            code.c_str());
+            outfile->Printf("  Time code %s is already there. Create nothing.", code.c_str());
         }
     }
 }
@@ -115,8 +110,7 @@ void DSRG_TIME::delete_code(const std::string& code) {
         auto iter = std::find(code_.begin(), code_.end(), code);
         if (iter == code_.end()) {
             print_h2("Echo from DSRG_TIME", "!!!", "!!!");
-            outfile->Printf("  Cannot find time code %s. Delete nothing.",
-                            code.c_str());
+            outfile->Printf("  Cannot find time code %s. Delete nothing.", code.c_str());
         } else {
             code_.erase(iter);
             const size_t offset = iter - code_.begin();
@@ -135,11 +129,9 @@ void DSRG_TIME::print(const std::string& code) {
         auto iter = std::find(code_.begin(), code_.end(), code);
         if (iter == code_.end()) {
             print_h2("Echo from DSRG_TIME", "!!!", "!!!");
-            outfile->Printf("  Cannot find time code %s. Print nothing.",
-                            code.c_str());
+            outfile->Printf("  Cannot find time code %s. Print nothing.", code.c_str());
         } else {
-            outfile->Printf("\n    Time for [A%c,B%c] -> C%c: %10.3f s.",
-                            code[0], code[1], code[2],
+            outfile->Printf("\n    Time for [A%c,B%c] -> C%c: %10.3f s.", code[0], code[1], code[2],
                             timing_[code_to_tidx_[code]]);
         }
     }
@@ -151,34 +143,27 @@ void DSRG_TIME::print() {
     std::string dash(34, '=');
     outfile->Printf("\n    %s", dash.c_str());
     for (const auto& code : code_) {
-        outfile->Printf("\n    Time for [A%c,B%c] -> C%c: %10.3f", code[0],
-                        code[1], code[2], timing_[code_to_tidx_[code]]);
+        outfile->Printf("\n    Time for [A%c,B%c] -> C%c: %10.3f", code[0], code[1], code[2],
+                        timing_[code_to_tidx_[code]]);
     }
     outfile->Printf("\n    %s", dash.c_str());
 }
 
 void DSRG_TIME::print_comm_time() {
     if (timing_.size() == 11) {
-        outfile->Printf(
-            "\n\n  ==> Total Timings (s) for Computing Commutators <==\n");
+        outfile->Printf("\n\n  ==> Total Timings (s) for Computing Commutators <==\n");
         std::string indent(4, ' ');
         std::string dash(53, '-');
         std::string output;
-        output +=
-            indent + str(boost::format("%5c  %10s  %10s  %10s  %10s\n") % ' ' %
-                         "[H1, T1]" % "[H1, T2]" % "[H2, T1]" % "[H2, T2]");
+        output += indent + str(boost::format("%5c  %10s  %10s  %10s  %10s\n") % ' ' % "[H1, T1]" %
+                               "[H1, T2]" % "[H2, T1]" % "[H2, T2]");
         output += indent + dash + "\n";
-        output +=
-            indent +
-            str(boost::format("%5s  %10.3f  %10.3f  %10.3f  %10.3f\n") %
-                "-> C0" % timing_[0] % timing_[1] % timing_[2] % timing_[3]);
-        output +=
-            indent +
-            str(boost::format("%5s  %10.3f  %10.3f  %10.3f  %10.3f\n") %
-                "-> C1" % timing_[4] % timing_[5] % timing_[6] % timing_[7]);
-        output +=
-            indent + str(boost::format("%5s  %10c  %10.3f  %10.3f  %10.3f\n") %
-                         "-> C2" % ' ' % timing_[8] % timing_[9] % timing_[10]);
+        output += indent + str(boost::format("%5s  %10.3f  %10.3f  %10.3f  %10.3f\n") % "-> C0" %
+                               timing_[0] % timing_[1] % timing_[2] % timing_[3]);
+        output += indent + str(boost::format("%5s  %10.3f  %10.3f  %10.3f  %10.3f\n") % "-> C1" %
+                               timing_[4] % timing_[5] % timing_[6] % timing_[7]);
+        output += indent + str(boost::format("%5s  %10c  %10.3f  %10.3f  %10.3f\n") % "-> C2" %
+                               ' ' % timing_[8] % timing_[9] % timing_[10]);
         output += indent + dash + "\n";
         outfile->Printf("\n%s", output.c_str());
     } else {
@@ -193,8 +178,7 @@ bool DSRG_TIME::test_code(const std::string& code) {
     if (code.size() != 3) {
         out = false;
         print_h2("Echo from DSRG_TIME", "!!!", "!!!");
-        outfile->Printf("  Wrong code size: %s contains %d digits.",
-                        code.c_str(), code.size());
+        outfile->Printf("  Wrong code size: %s contains %d digits.", code.c_str(), code.size());
     }
     return out;
 }
