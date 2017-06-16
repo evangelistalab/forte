@@ -1,39 +1,48 @@
-cmake_policy(SET CMP0048 NEW)  # project_VERSION* variables populated from project(... VERSION x.x.x) string
-project(forte
-        VERSION 0.1
-        LANGUAGES CXX C)
-set(forte_AUTHORS      "Francesco A. Evangelista and Group")
-set(forte_DESCRIPTION  "Quantum Chemistry Methods for Strongly Correlated Electrons plugin to Psi4")
-set(forte_URL          "https://github.com/evangelistalab/forte")
-set(forte_LICENSE      "GPL-3.0+")
+#
+# @BEGIN LICENSE
+#
+# forte_template by Psi4 Developer, a plugin to:
+#
+# Psi4: an open-source quantum chemistry software package
+#
+# Copyright (c) 2007-2017 The Psi4 Developers.
+#
+# The copyrights for code used from other parties are included in
+# the corresponding files.
+#
+# This file is part of Psi4.
+#
+# Psi4 is free software; you can redistribute it and/or modify
+# it under the terms of the GNU Lesser General Public License as published by
+# the Free Software Foundation, version 3.
+#
+# Psi4 is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU Lesser General Public License for more details.
+#
+# You should have received a copy of the GNU Lesser General Public License along
+# with Psi4; if not, write to the Free Software Foundation, Inc.,
+# 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
+#
+# @END LICENSE
+#
 
 cmake_minimum_required(VERSION 3.1 FATAL_ERROR)
-list(APPEND CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/cmake)
 
-include(psi4OptionsTools)
+project(forte_template CXX)
 
-option_with_print(ENABLE_CheMPS2 "Enable CheMPS2 solver." OFF)
-option_with_print(ENABLE_OPENMP "Enable threadsafe linking to OpenMP parallelized programs." ON)
-option_with_print(ENABLE_MPI "Enable MPI parallelization" OFF)
-option_with_print(ENABLE_GA "Enable Global Arrays" OFF)
-#option_with_print(ENABLE_GENERIC "Enable mostly static linking in shared library" OFF)
+find_package(psi4 1.1 REQUIRED)
 
-include(autocmake_omp)
-include(autocmake_mpi)  # MPI option A
-#include(custom_static_library)
-
-
-#find_package(psi4 1.1 REQUIRED COMPONENTS ambit chemps2)
-find_package(psi4 1.0 REQUIRED)
-
-find_package(TargetLAPACK REQUIRED)
-find_package(ambit REQUIRED)
-if(ENABLE_CheMPS2)
-    find_package(CheMPS2 1.8.3 CONFIG REQUIRED)
+find_package(OpenMP)
+if (OPENMP_FOUND)
+    set (CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${OpenMP_C_FLAGS}")
+    set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${OpenMP_CXX_FLAGS}")
 endif()
 
-# Including custom cmake rules
-include(cmake/clang-cxx-dev-tools.cmake)
+link_directories(/Users/jeffschriber/src/ambit/install/lib)
+include_directories(/Users/jeffschriber/src/ambit/install/include)
+include_directories(src/mini-boost)
 
 add_psi4_plugin(forte
 src/active_dsrgpt2.cc
@@ -129,25 +138,12 @@ src/mrdsrg-spin-free/mrdsrg_srg.cc
 src/mrdsrg-spin-free/three_dsrg_mrpt2.cc
 src/orbital-helper/localize.cc
 src/orbital-helper/unpaired_density.cc
+src/pci/ewci.cc
 src/pci/pci.cc
 src/pci/pci_hashvec.cc
 src/pci/pci_simple.cc
-src/pci/ewci.cc
 )
-
-target_link_libraries(forte PRIVATE ambit::ambit)
-if(TARGET CheMPS2::chemps2)
-    target_link_libraries(forte PRIVATE CheMPS2::chemps2)
-endif()
-
-target_include_directories(forte PRIVATE src/mini-boost)
-
-if(ENABLE_MPI)
-    target_link_libraries(forte PRIVATE ${MPI_CXX_LIBRARIES})  # MPI option A
-    #target_link_libraries(forte PRIVATE MPI::MPI_CXX)  # MPI option B
-    #target_add_definitions(forte PRIVATE HAVE_MPI)  # MPI option B
-endif()
-
-if(ENABLE_GA)
-    target_link_libraries(forte PRIVATE GlobalArrays::ga)
+    target_link_libraries(forte PRIVATE ambit)
+if (MPI_FOUND)
+    target_link_libraries(forte PRIVATE ${MPI_LIBRARIES})
 endif()
