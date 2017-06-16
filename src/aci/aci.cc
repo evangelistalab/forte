@@ -705,8 +705,7 @@ double AdaptiveCI::compute_energy() {
     if (ex_alg_ == "MULTISTATE") {
         Timer multi;
         compute_multistate(PQ_evals);
-        outfile->Printf("\n  Time spent computing multistate solution: %1.5f s",
-                        multi.get());
+        outfile->Printf("\n  Time spent computing multistate solution: %1.5f s", multi.get());
         //    PQ_evals->print();
     }
 

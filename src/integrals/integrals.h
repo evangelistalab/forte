@@ -35,10 +35,10 @@
 #include <iostream>
 
 //#include "psi4/libmints/wavefunction.h"
+#include "ambit/blocked_tensor.h"
+#include "psi4/libmints/matrix.h"
 #include "psi4/liboptions/liboptions.h"
 #include "psi4/libtrans/integraltransform.h"
-#include "psi4/libmints/matrix.h"
-#include "ambit/blocked_tensor.h"
 
 namespace psi {
 
@@ -52,14 +52,7 @@ class MOSpaceInfo;
 /// This decides the type of transformation: resticted vs. unrestricted
 enum IntegralSpinRestriction { RestrictedMOs, UnrestrictedMOs };
 enum IntegralFrozenCore { RemoveFrozenMOs, KeepFrozenMOs };
-enum IntegralType {
-    ConventionalInts,
-    DF,
-    Cholesky,
-    DiskDF,
-    DistDF,
-    Own
-};
+enum IntegralType { ConventionalInts, DF, Cholesky, DiskDF, DistDF, Own };
 // The integrals implementation is in a cc file for each class.
 // DFIntegrals->df_integrals.cc
 
@@ -84,8 +77,7 @@ class ForteIntegrals {
      * integrals).
      */
     ForteIntegrals(psi::Options& options, SharedWavefunction ref_wfn,
-                   IntegralSpinRestriction restricted,
-                   IntegralFrozenCore resort_frozen_core,
+                   IntegralSpinRestriction restricted, IntegralFrozenCore resort_frozen_core,
                    std::shared_ptr<MOSpaceInfo> mo_space_info);
 
     /// Destructor
@@ -129,24 +121,16 @@ class ForteIntegrals {
     /// Scalar component of the Hamiltonian
 
     /// The alpha one-electron integrals
-    double oei_a(size_t p, size_t q) {
-        return one_electron_integrals_a[p * aptei_idx_ + q];
-    }
+    double oei_a(size_t p, size_t q) { return one_electron_integrals_a[p * aptei_idx_ + q]; }
 
     /// The beta one-electron integrals
-    double oei_b(size_t p, size_t q) {
-        return one_electron_integrals_b[p * aptei_idx_ + q];
-    }
+    double oei_b(size_t p, size_t q) { return one_electron_integrals_b[p * aptei_idx_ + q]; }
 
     /// The diagonal fock matrix integrals
-    double fock_a(size_t p, size_t q) {
-        return fock_matrix_a[p * aptei_idx_ + q];
-    }
+    double fock_a(size_t p, size_t q) { return fock_matrix_a[p * aptei_idx_ + q]; }
 
     /// The diagonal fock matrix integrals
-    double fock_b(size_t p, size_t q) {
-        return fock_matrix_b[p * aptei_idx_ + q];
-    }
+    double fock_b(size_t p, size_t q) { return fock_matrix_b[p * aptei_idx_ + q]; }
 
     /// The diagonal fock matrix integrals
     double diag_fock_a(size_t p) { return fock_matrix_a[p * aptei_idx_ + p]; }
@@ -170,32 +154,27 @@ class ForteIntegrals {
     /// if p, q, r, s is equal to an array of all of the mos, then this will
     /// return
     /// a tensor of nmo^4.
-    virtual ambit::Tensor aptei_aa_block(const std::vector<size_t>& p,
-                                         const std::vector<size_t>& q,
+    virtual ambit::Tensor aptei_aa_block(const std::vector<size_t>& p, const std::vector<size_t>& q,
                                          const std::vector<size_t>& r,
                                          const std::vector<size_t>& s) = 0;
     /// Same as above but reads alpha-beta chunck
-    virtual ambit::Tensor aptei_ab_block(const std::vector<size_t>& p,
-                                         const std::vector<size_t>& q,
+    virtual ambit::Tensor aptei_ab_block(const std::vector<size_t>& p, const std::vector<size_t>& q,
                                          const std::vector<size_t>& r,
                                          const std::vector<size_t>& s) = 0;
     /// The beta-beta integrals
-    virtual ambit::Tensor aptei_bb_block(const std::vector<size_t>& p,
-                                         const std::vector<size_t>& q,
+    virtual ambit::Tensor aptei_bb_block(const std::vector<size_t>& p, const std::vector<size_t>& q,
                                          const std::vector<size_t>& r,
                                          const std::vector<size_t>& s) = 0;
 
     virtual double three_integral(size_t A, size_t p, size_t q) = 0;
 
-    virtual ambit::Tensor
-    three_integral_block(const std::vector<size_t>& A,
-                         const std::vector<size_t>& p,
-                         const std::vector<size_t>& q) = 0;
+    virtual ambit::Tensor three_integral_block(const std::vector<size_t>& A,
+                                               const std::vector<size_t>& p,
+                                               const std::vector<size_t>& q) = 0;
     /// This function is only used by DiskDF and it is used to go from a Apq->Aq
     /// tensor
-    virtual ambit::Tensor
-    three_integral_block_two_index(const std::vector<size_t>& A, size_t p,
-                                   const std::vector<size_t>& q) = 0;
+    virtual ambit::Tensor three_integral_block_two_index(const std::vector<size_t>& A, size_t p,
+                                                         const std::vector<size_t>& q) = 0;
 
     /// The diagonal antisymmetrixed alpha-alpha two-electron integrals in
     /// physicist notation <pq||pq>
@@ -210,8 +189,7 @@ class ForteIntegrals {
     virtual double diag_aptei_bb(size_t p, size_t q) = 0;
 
     /// Make a Fock matrix computed with respect to a given determinant
-    virtual void make_fock_matrix(SharedMatrix gamma_a,
-                                  SharedMatrix gamma_b) = 0;
+    virtual void make_fock_matrix(SharedMatrix gamma_a, SharedMatrix gamma_b) = 0;
 
     /// Set the value of the scalar part of the Hamiltonian
     /// @param value the new value of the scalar part of the Hamiltonian
@@ -230,8 +208,8 @@ class ForteIntegrals {
     void set_oei(size_t p, size_t q, double value, bool alpha);
 
     /// Set the value of the two-electron integrals
-    virtual void set_tei(size_t p, size_t q, size_t r, size_t s, double value,
-                         bool alpha1, bool alpha2) = 0;
+    virtual void set_tei(size_t p, size_t q, size_t r, size_t s, double value, bool alpha1,
+                         bool alpha2) = 0;
 
     void update_integrals(bool freeze_core = true);
 
@@ -241,12 +219,8 @@ class ForteIntegrals {
     virtual double** three_integral_pointer() = 0;
 
     /// Get the fock matrix elements
-    double get_fock_a(size_t p, size_t q) {
-        return fock_matrix_a[p * aptei_idx_ + q];
-    }
-    double get_fock_b(size_t p, size_t q) {
-        return fock_matrix_b[p * aptei_idx_ + q];
-    }
+    double get_fock_a(size_t p, size_t q) { return fock_matrix_a[p * aptei_idx_ + q]; }
+    double get_fock_b(size_t p, size_t q) { return fock_matrix_b[p * aptei_idx_ + q]; }
     /// Tell which integrals were used
     IntegralType integral_type() { return integral_type_; }
     SharedMatrix OneBody_symm() { return OneBody_symm_; }
@@ -366,8 +340,7 @@ class ForteIntegrals {
     /// we are left only with ncmo = nmo - nfzc - nfzv
     virtual void resort_integrals_after_freezing() = 0;
 
-    virtual void resort_three(std::shared_ptr<Matrix>&,
-                              std::vector<size_t>& map) = 0;
+    virtual void resort_three(std::shared_ptr<Matrix>&, std::vector<size_t>& map) = 0;
     virtual void resort_four(double*& tei, std::vector<size_t>& map) = 0;
     /// Function used to rotate MOs during contructor
     void rotate_mos();
@@ -405,8 +378,7 @@ class ConventionalIntegrals : public ForteIntegrals {
     /// Contructor of the class.  Calls std::shared_ptr<ForteIntegrals> ints
     /// constructor
     ConventionalIntegrals(psi::Options& options, SharedWavefunction ref_wfn,
-                          IntegralSpinRestriction restricted,
-                          IntegralFrozenCore resort_frozen_core,
+                          IntegralSpinRestriction restricted, IntegralFrozenCore resort_frozen_core,
                           std::shared_ptr<MOSpaceInfo> mo_space_info);
     virtual ~ConventionalIntegrals();
 
@@ -416,16 +388,13 @@ class ConventionalIntegrals : public ForteIntegrals {
     virtual double aptei_bb(size_t p, size_t q, size_t r, size_t s);
 
     /// Grabs the antisymmetrized TEI - assumes storage of ambit tensor
-    virtual ambit::Tensor aptei_aa_block(const std::vector<size_t>& p,
-                                         const std::vector<size_t>& q,
+    virtual ambit::Tensor aptei_aa_block(const std::vector<size_t>& p, const std::vector<size_t>& q,
                                          const std::vector<size_t>& r,
                                          const std::vector<size_t>& s);
-    virtual ambit::Tensor aptei_ab_block(const std::vector<size_t>& p,
-                                         const std::vector<size_t>& q,
+    virtual ambit::Tensor aptei_ab_block(const std::vector<size_t>& p, const std::vector<size_t>& q,
                                          const std::vector<size_t>& r,
                                          const std::vector<size_t>& s);
-    virtual ambit::Tensor aptei_bb_block(const std::vector<size_t>& p,
-                                         const std::vector<size_t>& q,
+    virtual ambit::Tensor aptei_bb_block(const std::vector<size_t>& p, const std::vector<size_t>& q,
                                          const std::vector<size_t>& r,
                                          const std::vector<size_t>& s);
 
@@ -450,9 +419,8 @@ class ConventionalIntegrals : public ForteIntegrals {
                         "is not there!!");
         throw PSIEXCEPTION("INT_TYPE=DF/CHOLESKY to use ThreeIntegral");
     }
-    virtual ambit::Tensor
-    three_integral_block_two_index(const std::vector<size_t>&, size_t,
-                                   const std::vector<size_t>&) {
+    virtual ambit::Tensor three_integral_block_two_index(const std::vector<size_t>&, size_t,
+                                                         const std::vector<size_t>&) {
         outfile->Printf("\n Oh no! this isn't here");
         throw PSIEXCEPTION("INT_TYPE=DISKDF");
     }
@@ -486,13 +454,13 @@ class ConventionalIntegrals : public ForteIntegrals {
     virtual void resort_integrals_after_freezing();
     virtual void resort_four(double*& tei, std::vector<size_t>& map);
     virtual void resort_three(std::shared_ptr<Matrix>&, std::vector<size_t>&) {}
-    virtual void set_tei(size_t p, size_t q, size_t r, size_t s, double value,
-                         bool alpha1, bool alpha2);
+    virtual void set_tei(size_t p, size_t q, size_t r, size_t s, double value, bool alpha1,
+                         bool alpha2);
 
     /// An addressing function to retrieve the two-electron integrals
     size_t aptei_index(size_t p, size_t q, size_t r, size_t s) {
-        return aptei_idx_ * aptei_idx_ * aptei_idx_ * p +
-               aptei_idx_ * aptei_idx_ * q + aptei_idx_ * r + s;
+        return aptei_idx_ * aptei_idx_ * aptei_idx_ * p + aptei_idx_ * aptei_idx_ * q +
+               aptei_idx_ * r + s;
     }
 
     /// The IntegralTransform object used by this class
@@ -516,8 +484,7 @@ class ConventionalIntegrals : public ForteIntegrals {
 class CholeskyIntegrals : public ForteIntegrals {
   public:
     CholeskyIntegrals(psi::Options& options, SharedWavefunction ref_wfn,
-                      IntegralSpinRestriction restricted,
-                      IntegralFrozenCore resort_frozen_core,
+                      IntegralSpinRestriction restricted, IntegralFrozenCore resort_frozen_core,
                       std::shared_ptr<MOSpaceInfo> mo_space_info);
     virtual ~CholeskyIntegrals();
     /// aptei_x will grab antisymmetriced integrals and creates DF/CD integrals
@@ -527,16 +494,13 @@ class CholeskyIntegrals : public ForteIntegrals {
     virtual double aptei_bb(size_t p, size_t q, size_t r, size_t s);
 
     /// Grabs the antisymmetrized TEI - assumes storage of ambit tensor
-    virtual ambit::Tensor aptei_aa_block(const std::vector<size_t>& p,
-                                         const std::vector<size_t>& q,
+    virtual ambit::Tensor aptei_aa_block(const std::vector<size_t>& p, const std::vector<size_t>& q,
                                          const std::vector<size_t>& r,
                                          const std::vector<size_t>& s);
-    virtual ambit::Tensor aptei_ab_block(const std::vector<size_t>& p,
-                                         const std::vector<size_t>& q,
+    virtual ambit::Tensor aptei_ab_block(const std::vector<size_t>& p, const std::vector<size_t>& q,
                                          const std::vector<size_t>& r,
                                          const std::vector<size_t>& s);
-    virtual ambit::Tensor aptei_bb_block(const std::vector<size_t>& p,
-                                         const std::vector<size_t>& q,
+    virtual ambit::Tensor aptei_bb_block(const std::vector<size_t>& p, const std::vector<size_t>& q,
                                          const std::vector<size_t>& r,
                                          const std::vector<size_t>& s);
 
@@ -552,21 +516,18 @@ class CholeskyIntegrals : public ForteIntegrals {
     virtual double three_integral(size_t A, size_t p, size_t q) {
         return ThreeIntegral_->get(p * aptei_idx_ + q, A);
     }
-    virtual double** three_integral_pointer() {
-        return ThreeIntegral_->pointer();
-    }
+    virtual double** three_integral_pointer() { return ThreeIntegral_->pointer(); }
     virtual ambit::Tensor three_integral_block(const std::vector<size_t>& A,
                                                const std::vector<size_t>& p,
                                                const std::vector<size_t>& q);
-    virtual ambit::Tensor
-    three_integral_block_two_index(const std::vector<size_t>&, size_t,
-                                   const std::vector<size_t>&) {
+    virtual ambit::Tensor three_integral_block_two_index(const std::vector<size_t>&, size_t,
+                                                         const std::vector<size_t>&) {
         outfile->Printf("\n Oh no! this isn't here");
         throw PSIEXCEPTION("INT_TYPE=DISKDF");
     }
     /// Do not use this if you are using CD/DF integrals
-    virtual void set_tei(size_t p, size_t q, size_t r, size_t s, double value,
-                         bool alpha1, bool alpha2);
+    virtual void set_tei(size_t p, size_t q, size_t r, size_t s, double value, bool alpha1,
+                         bool alpha2);
 
     virtual void make_fock_matrix(SharedMatrix gamma_a, SharedMatrix gamma_b);
 
@@ -582,8 +543,7 @@ class CholeskyIntegrals : public ForteIntegrals {
     virtual void allocate();
     virtual void deallocate();
     virtual void make_diagonal_integrals();
-    virtual void resort_three(std::shared_ptr<Matrix>& threeint,
-                              std::vector<size_t>& map);
+    virtual void resort_three(std::shared_ptr<Matrix>& threeint, std::vector<size_t>& map);
     virtual void resort_integrals_after_freezing();
     void transform_integrals();
     /// This is not used in Cholesky, but I have to have implementations for
@@ -606,8 +566,7 @@ class CholeskyIntegrals : public ForteIntegrals {
 class DFIntegrals : public ForteIntegrals {
   public:
     DFIntegrals(psi::Options& options, SharedWavefunction ref_wfn,
-                IntegralSpinRestriction restricted,
-                IntegralFrozenCore resort_frozen_core,
+                IntegralSpinRestriction restricted, IntegralFrozenCore resort_frozen_core,
                 std::shared_ptr<MOSpaceInfo> mo_space_info);
     virtual double aptei_aa(size_t p, size_t q, size_t r, size_t s);
     virtual double aptei_ab(size_t p, size_t q, size_t r, size_t s);
@@ -616,16 +575,13 @@ class DFIntegrals : public ForteIntegrals {
     /// Reads the antisymmetrized alpha-alpha chunck and returns an
     /// ambit::Tensor
     /// Grabs the antisymmetrized TEI - assumes storage of ambit tensor
-    virtual ambit::Tensor aptei_aa_block(const std::vector<size_t>& p,
-                                         const std::vector<size_t>& q,
+    virtual ambit::Tensor aptei_aa_block(const std::vector<size_t>& p, const std::vector<size_t>& q,
                                          const std::vector<size_t>& r,
                                          const std::vector<size_t>& s);
-    virtual ambit::Tensor aptei_ab_block(const std::vector<size_t>& p,
-                                         const std::vector<size_t>& q,
+    virtual ambit::Tensor aptei_ab_block(const std::vector<size_t>& p, const std::vector<size_t>& q,
                                          const std::vector<size_t>& r,
                                          const std::vector<size_t>& s);
-    virtual ambit::Tensor aptei_bb_block(const std::vector<size_t>& p,
-                                         const std::vector<size_t>& q,
+    virtual ambit::Tensor aptei_bb_block(const std::vector<size_t>& p, const std::vector<size_t>& q,
                                          const std::vector<size_t>& r,
                                          const std::vector<size_t>& s);
 
@@ -644,17 +600,14 @@ class DFIntegrals : public ForteIntegrals {
     virtual ambit::Tensor three_integral_block(const std::vector<size_t>& A,
                                                const std::vector<size_t>& p,
                                                const std::vector<size_t>& q);
-    virtual ambit::Tensor
-    three_integral_block_two_index(const std::vector<size_t>&, size_t,
-                                   const std::vector<size_t>&) {
+    virtual ambit::Tensor three_integral_block_two_index(const std::vector<size_t>&, size_t,
+                                                         const std::vector<size_t>&) {
         outfile->Printf("\n Oh no! this isn't here");
         throw PSIEXCEPTION("INT_TYPE=DISKDF");
     }
-    virtual double** three_integral_pointer() {
-        return ThreeIntegral_->pointer();
-    }
-    virtual void set_tei(size_t p, size_t q, size_t r, size_t s, double value,
-                         bool alpha1, bool alpha2);
+    virtual double** three_integral_pointer() { return ThreeIntegral_->pointer(); }
+    virtual void set_tei(size_t p, size_t q, size_t r, size_t s, double value, bool alpha1,
+                         bool alpha2);
     virtual ~DFIntegrals();
 
     virtual void make_fock_matrix(SharedMatrix gamma_a, SharedMatrix gamma_b);
@@ -669,8 +622,7 @@ class DFIntegrals : public ForteIntegrals {
     virtual void deallocate();
     // Grabs DF integrals with new Ca coefficients
     virtual void make_diagonal_integrals();
-    virtual void resort_three(std::shared_ptr<Matrix>& threeint,
-                              std::vector<size_t>& map);
+    virtual void resort_three(std::shared_ptr<Matrix>& threeint, std::vector<size_t>& map);
     virtual void resort_integrals_after_freezing();
     virtual void resort_four(double*&, std::vector<size_t>&) {}
 
@@ -688,8 +640,7 @@ class DFIntegrals : public ForteIntegrals {
 class DISKDFIntegrals : public ForteIntegrals {
   public:
     DISKDFIntegrals(psi::Options& options, SharedWavefunction ref_wfn,
-                    IntegralSpinRestriction restricted,
-                    IntegralFrozenCore resort_frozen_core,
+                    IntegralSpinRestriction restricted, IntegralFrozenCore resort_frozen_core,
                     std::shared_ptr<MOSpaceInfo> mo_space_info);
 
     /// aptei_xy functions are slow.  try to use three_integral_block
@@ -700,16 +651,13 @@ class DISKDFIntegrals : public ForteIntegrals {
 
     /// Reads the antisymmetrized alpha-alpha chunck and returns an
     /// ambit::Tensor
-    virtual ambit::Tensor aptei_aa_block(const std::vector<size_t>& p,
-                                         const std::vector<size_t>& q,
+    virtual ambit::Tensor aptei_aa_block(const std::vector<size_t>& p, const std::vector<size_t>& q,
                                          const std::vector<size_t>& r,
                                          const std::vector<size_t>& s);
-    virtual ambit::Tensor aptei_ab_block(const std::vector<size_t>& p,
-                                         const std::vector<size_t>& q,
+    virtual ambit::Tensor aptei_ab_block(const std::vector<size_t>& p, const std::vector<size_t>& q,
                                          const std::vector<size_t>& r,
                                          const std::vector<size_t>& s);
-    virtual ambit::Tensor aptei_bb_block(const std::vector<size_t>& p,
-                                         const std::vector<size_t>& q,
+    virtual ambit::Tensor aptei_bb_block(const std::vector<size_t>& p, const std::vector<size_t>& q,
                                          const std::vector<size_t>& r,
                                          const std::vector<size_t>& s);
 
@@ -717,21 +665,18 @@ class DISKDFIntegrals : public ForteIntegrals {
     virtual double diag_aptei_ab(size_t p, size_t q);
     virtual double diag_aptei_bb(size_t p, size_t q);
     virtual double three_integral(size_t A, size_t p, size_t q);
-    virtual double** three_integral_pointer() {
-        return (ThreeIntegral_->pointer());
-    }
+    virtual double** three_integral_pointer() { return (ThreeIntegral_->pointer()); }
     /// Read a block of the DFIntegrals and return an Ambit tensor of size A by
     /// p by q
     virtual ambit::Tensor three_integral_block(const std::vector<size_t>& A,
                                                const std::vector<size_t>& p,
                                                const std::vector<size_t>& q);
     /// return ambit tensor of size A by q
-    virtual ambit::Tensor
-    three_integral_block_two_index(const std::vector<size_t>& A, size_t p,
-                                   const std::vector<size_t>& q);
+    virtual ambit::Tensor three_integral_block_two_index(const std::vector<size_t>& A, size_t p,
+                                                         const std::vector<size_t>& q);
 
-    virtual void set_tei(size_t p, size_t q, size_t r, size_t s, double value,
-                         bool alpha1, bool alpha2);
+    virtual void set_tei(size_t p, size_t q, size_t r, size_t s, double value, bool alpha1,
+                         bool alpha2);
     virtual ~DISKDFIntegrals();
 
     virtual void make_fock_matrix(SharedMatrix gamma_a, SharedMatrix gamma_b);
@@ -746,8 +691,7 @@ class DISKDFIntegrals : public ForteIntegrals {
     virtual void deallocate();
     // Grabs DF integrals with new Ca coefficients
     virtual void make_diagonal_integrals();
-    virtual void resort_three(std::shared_ptr<Matrix>& threeint,
-                              std::vector<size_t>& map);
+    virtual void resort_three(std::shared_ptr<Matrix>& threeint, std::vector<size_t>& map);
     virtual void resort_integrals_after_freezing();
     virtual void resort_four(double*&, std::vector<size_t>&) {}
 
@@ -762,32 +706,25 @@ class DISKDFIntegrals : public ForteIntegrals {
 class DistDFIntegrals : public ForteIntegrals {
   public:
     DistDFIntegrals(psi::Options& options, SharedWavefunction ref_wfn,
-                    IntegralSpinRestriction restricted,
-                    IntegralFrozenCore resort_frozen_core,
+                    IntegralSpinRestriction restricted, IntegralFrozenCore resort_frozen_core,
                     std::shared_ptr<MOSpaceInfo> mo_space_info);
 
     virtual void retransform_integrals();
     /// aptei_xy functions are slow.  try to use three_integral_block
 
-    virtual double aptei_aa(size_t /*p*/, size_t /*q*/, size_t /*r*/,
-                            size_t /*s*/) {}
-    virtual double aptei_ab(size_t /*p*/, size_t /*q*/, size_t /*r*/,
-                            size_t /*s*/) {}
-    virtual double aptei_bb(size_t /*p*/, size_t /*q*/, size_t /*r*/,
-                            size_t /*s*/) {}
+    virtual double aptei_aa(size_t /*p*/, size_t /*q*/, size_t /*r*/, size_t /*s*/) {}
+    virtual double aptei_ab(size_t /*p*/, size_t /*q*/, size_t /*r*/, size_t /*s*/) {}
+    virtual double aptei_bb(size_t /*p*/, size_t /*q*/, size_t /*r*/, size_t /*s*/) {}
 
     /// Reads the antisymmetrized alpha-alpha chunck and returns an
     /// ambit::Tensor
-    virtual ambit::Tensor aptei_aa_block(const std::vector<size_t>& p,
-                                         const std::vector<size_t>& q,
+    virtual ambit::Tensor aptei_aa_block(const std::vector<size_t>& p, const std::vector<size_t>& q,
                                          const std::vector<size_t>& r,
                                          const std::vector<size_t>& s) {}
-    virtual ambit::Tensor aptei_ab_block(const std::vector<size_t>& p,
-                                         const std::vector<size_t>& q,
+    virtual ambit::Tensor aptei_ab_block(const std::vector<size_t>& p, const std::vector<size_t>& q,
                                          const std::vector<size_t>& r,
                                          const std::vector<size_t>& s) {}
-    virtual ambit::Tensor aptei_bb_block(const std::vector<size_t>& p,
-                                         const std::vector<size_t>& q,
+    virtual ambit::Tensor aptei_bb_block(const std::vector<size_t>& p, const std::vector<size_t>& q,
                                          const std::vector<size_t>& r,
                                          const std::vector<size_t>& s) {}
 
@@ -796,20 +733,17 @@ class DistDFIntegrals : public ForteIntegrals {
     virtual double diag_aptei_bb(size_t, size_t) {}
     virtual double three_integral(size_t, size_t, size_t) {}
     virtual double** three_integral_pointer() {
-        throw PSIEXCEPTION(
-            "Integrals are distributed.  Pointer does not exist");
+        throw PSIEXCEPTION("Integrals are distributed.  Pointer does not exist");
     }
     /// Read a block of the DFIntegrals and return an Ambit tensor of size A by
     /// p by q
-    virtual ambit::Tensor
-    three_integral_block(const std::vector<size_t>& /*A*/,
-                         const std::vector<size_t>& /*p*/,
-                         const std::vector<size_t>& /*q*/);
+    virtual ambit::Tensor three_integral_block(const std::vector<size_t>& /*A*/,
+                                               const std::vector<size_t>& /*p*/,
+                                               const std::vector<size_t>& /*q*/);
     /// return ambit tensor of size A by q
-    virtual ambit::Tensor
-    three_integral_block_two_index(const std::vector<size_t>& /*A*/,
-                                   size_t /*p*/,
-                                   const std::vector<size_t>& /*q*/) {}
+    virtual ambit::Tensor three_integral_block_two_index(const std::vector<size_t>& /*A*/,
+                                                         size_t /*p*/,
+                                                         const std::vector<size_t>& /*q*/) {}
 
     virtual void set_tei(size_t, size_t, size_t, size_t, double, bool, bool) {
         outfile->Printf("DistributedDF will not work with set_tei");
@@ -817,8 +751,7 @@ class DistDFIntegrals : public ForteIntegrals {
     }
     virtual ~DistDFIntegrals();
 
-    virtual void make_fock_matrix(SharedMatrix /*gamma_a*/,
-                                  SharedMatrix /*gamma_b*/) {}
+    virtual void make_fock_matrix(SharedMatrix /*gamma_a*/, SharedMatrix /*gamma_b*/) {}
 
     /// Make a Fock matrix computed with respect to a given determinant
     virtual size_t nthree() const { return nthree_; }
@@ -831,8 +764,8 @@ class DistDFIntegrals : public ForteIntegrals {
     virtual void deallocate();
     // Grabs DF integrals with new Ca coefficients
     virtual void make_diagonal_integrals() {}
-    virtual void resort_three(std::shared_ptr<Matrix>& /*threeint*/,
-                              std::vector<size_t>& /*map*/) {}
+    virtual void resort_three(std::shared_ptr<Matrix>& /*threeint*/, std::vector<size_t>& /*map*/) {
+    }
     virtual void resort_integrals_after_freezing() {}
     virtual void resort_four(double*&, std::vector<size_t>&) {}
 
@@ -846,8 +779,7 @@ class DistDFIntegrals : public ForteIntegrals {
     size_t nthree_ = 0;
     /// Assuming integrals are stored on disk
     /// Reads the block of integrals present for each process
-    ambit::Tensor read_integral_chunk(std::shared_ptr<Tensor>& B,
-                                      std::vector<int>& lo,
+    ambit::Tensor read_integral_chunk(std::shared_ptr<Tensor>& B, std::vector<int>& lo,
                                       std::vector<int>& hi);
     /// Distributes tensor according to naux dimension
     void create_dist_df();
@@ -863,25 +795,15 @@ class DistDFIntegrals : public ForteIntegrals {
 class OwnIntegrals : public ForteIntegrals {
   public:
     OwnIntegrals(psi::Options& options, SharedWavefunction ref_wfn,
-                 IntegralSpinRestriction restricted,
-                 IntegralFrozenCore resort_frozen_core,
+                 IntegralSpinRestriction restricted, IntegralFrozenCore resort_frozen_core,
                  std::shared_ptr<MOSpaceInfo> mo_space_info);
 
     virtual void retransform_integrals() {}
     /// aptei_xy functions are slow.  try to use three_integral_block
 
-    virtual double aptei_aa(size_t /*p*/, size_t /*q*/, size_t /*r*/,
-                            size_t /*s*/) {
-        return 0.0;
-    }
-    virtual double aptei_ab(size_t /*p*/, size_t /*q*/, size_t /*r*/,
-                            size_t /*s*/) {
-        return 0.0;
-    }
-    virtual double aptei_bb(size_t /*p*/, size_t /*q*/, size_t /*r*/,
-                            size_t /*s*/) {
-        return 0.0;
-    }
+    virtual double aptei_aa(size_t /*p*/, size_t /*q*/, size_t /*r*/, size_t /*s*/) { return 0.0; }
+    virtual double aptei_ab(size_t /*p*/, size_t /*q*/, size_t /*r*/, size_t /*s*/) { return 0.0; }
+    virtual double aptei_bb(size_t /*p*/, size_t /*q*/, size_t /*r*/, size_t /*s*/) { return 0.0; }
 
     /// Reads the antisymmetrized alpha-alpha chunck and returns an
     /// ambit::Tensor
@@ -909,30 +831,26 @@ class OwnIntegrals : public ForteIntegrals {
     virtual double diag_aptei_bb(size_t, size_t) { return 0.0; }
     virtual double three_integral(size_t, size_t, size_t) { return 0.0; }
     virtual double** three_integral_pointer() {
-        throw PSIEXCEPTION(
-            "Integrals are distributed.  Pointer does not exist");
+        throw PSIEXCEPTION("Integrals are distributed.  Pointer does not exist");
     }
     /// Read a block of the DFIntegrals and return an Ambit tensor of size A by
     /// p by q
-    virtual ambit::Tensor
-    three_integral_block(const std::vector<size_t>& /*A*/,
-                         const std::vector<size_t>& /*p*/,
-                         const std::vector<size_t>& /*q*/) {
+    virtual ambit::Tensor three_integral_block(const std::vector<size_t>& /*A*/,
+                                               const std::vector<size_t>& /*p*/,
+                                               const std::vector<size_t>& /*q*/) {
         return blank_tensor_;
     }
     /// return ambit tensor of size A by q
-    virtual ambit::Tensor
-    three_integral_block_two_index(const std::vector<size_t>& /*A*/,
-                                   size_t /*p*/,
-                                   const std::vector<size_t>& /*q*/) {
+    virtual ambit::Tensor three_integral_block_two_index(const std::vector<size_t>& /*A*/,
+                                                         size_t /*p*/,
+                                                         const std::vector<size_t>& /*q*/) {
         return blank_tensor_;
     }
 
     virtual void set_tei(size_t, size_t, size_t, size_t, double, bool, bool) {}
     virtual ~OwnIntegrals();
 
-    virtual void make_fock_matrix(SharedMatrix /*gamma_a*/,
-                                  SharedMatrix /*gamma_b*/) {}
+    virtual void make_fock_matrix(SharedMatrix /*gamma_a*/, SharedMatrix /*gamma_b*/) {}
     virtual size_t nthree() const { return 1; }
 
   private:
@@ -941,8 +859,8 @@ class OwnIntegrals : public ForteIntegrals {
     virtual void allocate() {}
     virtual void deallocate() {}
     virtual void make_diagonal_integrals() {}
-    virtual void resort_three(std::shared_ptr<Matrix>& /*threeint*/,
-                              std::vector<size_t>& /*map*/) {}
+    virtual void resort_three(std::shared_ptr<Matrix>& /*threeint*/, std::vector<size_t>& /*map*/) {
+    }
     virtual void resort_integrals_after_freezing() {}
     virtual void resort_four(double*&, std::vector<size_t>&) {}
     ambit::Tensor blank_tensor_;
