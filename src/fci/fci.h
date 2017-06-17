@@ -64,7 +64,7 @@ class FCI : public ActiveSpaceSolver {
     FCI(SharedWavefunction ref_wfn, Options& options, std::shared_ptr<ForteIntegrals> ints,
         std::shared_ptr<MOSpaceInfo> mo_space_info);
 
-    ~FCI();
+    virtual ~FCI();
 
     // ==> Class Interface <==
 
@@ -88,10 +88,6 @@ class FCI : public ActiveSpaceSolver {
   private:
     // ==> Class data <==
 
-    //    /// The molecular integrals
-    //    std::shared_ptr<ForteIntegrals> ints_;
-    //    /// The information about the molecular orbital spaces
-    //    std::shared_ptr<MOSpaceInfo> mo_space_info_;
     /// A pointer to the FCISolver object
     std::unique_ptr<FCISolver> fcisolver_;
     /// Print level

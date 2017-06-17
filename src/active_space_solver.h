@@ -50,6 +50,7 @@ class ActiveSpaceSolver : public Wavefunction {
 
     // enable deletion of a Derived* through a Base*
     virtual ~ActiveSpaceSolver() = default;
+    //    virtual ~ActiveSpaceSolver() {};
 
   protected:
     // pure virtual implementation
