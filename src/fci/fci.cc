@@ -50,7 +50,7 @@ void set_FCI_options(ForteOptions& foptions) {
 
 FCI::FCI(SharedWavefunction ref_wfn, Options& options, std::shared_ptr<ForteIntegrals> ints,
          std::shared_ptr<MOSpaceInfo> mo_space_info)
-    : ActiveSpaceSolver(ref_wfn,options,ints,mo_space_info) {
+    : ActiveSpaceSolver(ref_wfn, options, ints, mo_space_info) {
     // Copy the wavefunction information
     shallow_copy(ref_wfn);
     reference_wavefunction_ = ref_wfn;
@@ -60,7 +60,7 @@ FCI::FCI(SharedWavefunction ref_wfn, Options& options, std::shared_ptr<ForteInte
     startup();
 }
 
-//FCI::FCI(SharedWavefunction ref_wfn, Options& options, std::shared_ptr<ForteIntegrals> ints,
+// FCI::FCI(SharedWavefunction ref_wfn, Options& options, std::shared_ptr<ForteIntegrals> ints,
 //         std::shared_ptr<MOSpaceInfo> mo_space_info)
 //    : Wavefunction(options), ints_(ints), mo_space_info_(mo_space_info) {
 //    // Copy the wavefunction information
