@@ -33,6 +33,7 @@
 #include "psi4/libmints/pointgrp.h"
 #include "psi4/physconst.h"
 
+#include "fci_mo.h"
 #include "active_dsrgpt2.h"
 #include "mini-boost/boost/format.hpp"
 

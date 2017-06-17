@@ -41,7 +41,6 @@
 #include "psi4/libpsio/psio.hpp"
 #include "psi4/libqt/qt.h"
 
-#include "fci_mo.h"
 #include "helpers.h"
 #include "integrals/integrals.h"
 #include "mrdsrg-spin-free/dsrg_mrpt2.h"

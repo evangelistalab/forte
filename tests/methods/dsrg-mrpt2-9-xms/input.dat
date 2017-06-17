@@ -59,18 +59,21 @@ Emcscf, wfn = energy('casscf', return_wfn=True)
 compare_values(refmcscf,Emcscf,8,"SA-CASSCF energy")
 
 # MS
+psi4.print_out("\n==> !! MS !! <==\n")
 set forte{
   dsrg_multi_state   ms
 }
 Ems = energy('forte', ref_wfn=wfn)
 
 # XMS
+psi4.print_out("\n==> !! XMS !! <==\n")
 set forte{
   dsrg_multi_state   xms
 }
 Exms = energy('forte', ref_wfn=wfn)
 
 # SA SUB
+psi4.print_out("\n==> !! SA_SUB !! <==\n")
 set forte{
   dsrg_multi_state   sa_sub
   semi_canonical     true
@@ -78,6 +81,7 @@ set forte{
 Esub = energy('forte', ref_wfn=wfn)
 
 # SA FULL
+psi4.print_out("\n==> !! SA_FULL !! <==\n")
 set forte{
   dsrg_multi_state   sa_full
 }

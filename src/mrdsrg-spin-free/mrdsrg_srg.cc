@@ -5,7 +5,8 @@
  * that implements a variety of quantum chemistry methods for strongly
  * correlated electrons.
  *
- * Copyright (c) 2012-2017 by its authors (see COPYING, COPYING.LESSER, AUTHORS).
+ * Copyright (c) 2012-2017 by its authors (see COPYING, COPYING.LESSER,
+ * AUTHORS).
  *
  * The copyrights for code used from other parties are included in
  * the corresponding files.
@@ -407,7 +408,7 @@ double MRDSRG::compute_energy_srgpt2() {
 
     // some options
     std::string Hzero = options_.get_str("H0TH");
-    bool relax_ref = options_.get_str("RELAX_REF") != "NONE";
+    bool relax_ref = options_.get_str("RELAX_REF") != "NONE" || options_["AVG_STATE"].size() != 0;
 
     // initialize tensors
     BlockedTensor::set_expert_mode(true);

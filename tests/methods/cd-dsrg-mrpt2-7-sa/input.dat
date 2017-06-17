@@ -1,0 +1,68 @@
+#! Generated using commit GITCOMMIT
+
+import forte
+
+refmcscf    = -106.752885060580013
+refpt2full  = -106.929958810967
+
+molecule {
+  0 1
+  Li
+  F  1 R
+  R = 10.000
+
+  units bohr
+}
+
+basis {
+  assign Li cc-pvdz
+  assign F  aug-cc-pvdz
+}
+
+set globals{
+  reference           rhf
+  scf_type            out_of_core
+  maxiter             300
+  e_convergence       10
+  d_convergence       10
+  docc                [4,0,1,1]
+  restricted_docc     [3,0,1,1]
+  active              [2,0,0,0]
+  mcscf_r_convergence 7
+  mcscf_e_convergence 10
+  mcscf_maxiter       250
+  mcscf_diis_start    6
+  num_roots           2
+  follow_root         2
+  avg_states          [0,1]
+}
+
+set forte{
+  job_type           dsrg-mrpt2
+  frozen_docc        [3,0,0,0]
+  restricted_docc    [0,0,1,1]
+  active             [2,0,0,0]
+  root_sym           0
+  nroot              2
+  root               0
+  dsrg_s             0.5
+  maxiter            50
+  e_convergence      10
+  cas_type           cas
+  avg_state          [[0,1,2]]
+  dsrg_multi_state   sa_full
+}
+
+Emcscf, wfn = energy('casscf', return_wfn=True)
+
+Esa = energy('forte', ref_wfn=wfn)
+compare_values(refpt2full,get_variable("CURRENT ENERGY"),8,"SA-DSRG-MRPT2 FULL energy root 0")
+
+set forte {
+  job_type           three-dsrg-mrpt2
+  int_type           cholesky
+  cholesky_tolerance 1e-12
+}
+
+Esa_cd = energy('forte', ref_wfn=wfn)
+compare_values(Esa_cd,Esa,8,"CD vs. CONV SA-DSRG-MRPT2 FULL energy root 0")
