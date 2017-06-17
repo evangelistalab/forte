@@ -49,7 +49,7 @@ class ActiveSpaceSolver : public Wavefunction {
     double compute_energy() { return solver_compute_energy(); }
 
     // enable deletion of a Derived* through a Base*
-//    virtual ~ActiveSpaceSolver() = default;
+    //    virtual ~ActiveSpaceSolver() = default;
     virtual ~ActiveSpaceSolver();
 
   protected:
