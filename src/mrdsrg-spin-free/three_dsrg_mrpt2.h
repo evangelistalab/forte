@@ -292,7 +292,7 @@ class THREE_DSRG_MRPT2 : public Wavefunction {
 
     void de_normal_order();
 
-    double relaxed_energy();
+    std::vector<double> relaxed_energy();
 
     /// Print levels
     int print_;

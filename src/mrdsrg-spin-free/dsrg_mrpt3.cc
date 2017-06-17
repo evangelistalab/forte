@@ -60,7 +60,7 @@ DSRG_MRPT3::DSRG_MRPT3(Reference reference, SharedWavefunction ref_wfn, Options&
     print_method_banner({"Driven Similarity Renormalization Group",
                          "Third-Order Perturbation Theory", "Chenyang Li"});
     outfile->Printf("\n    Reference:");
-    outfile->Printf("\n      J. Chem. Phys. 2016 (in preparation)");
+    outfile->Printf("\n      J. Chem. Phys. 2017, 146, 124132.");
 
     startup();
 }
@@ -269,8 +269,8 @@ void DSRG_MRPT3::startup() {
 
     // Prepare Hbar
     relax_ref_ = options_.get_str("RELAX_REF");
-    multi_state_ = options_["AVG_STATE"].has_changed();
-    if (relax_ref_ != "NONE") {
+    multi_state_ = options_["AVG_STATE"].size() != 0;
+    if (relax_ref_ != "NONE" || multi_state_) {
         if (relax_ref_ != "ONCE" && !multi_state_) {
             outfile->Printf("\n  Warning: RELAX_REF option \"%s\" is not "
                             "supported. Change to ONCE",
@@ -678,7 +678,7 @@ double DSRG_MRPT3::compute_energy_pt2() {
     outfile->Printf("  Done. Timing %10.3f s", t1.get());
 
     // relax reference
-    if (relax_ref_ != "NONE") {
+    if (relax_ref_ != "NONE" || multi_state_) {
         Timer t2;
         str = "Computing integrals for ref. relaxation";
         outfile->Printf("\n    %-40s ...", str.c_str());
@@ -858,7 +858,7 @@ double DSRG_MRPT3::compute_energy_pt3_1() {
 
     outfile->Printf("  Done. Timing %10.3f s", t1.get());
 
-    if (relax_ref_ != "NONE") {
+    if (relax_ref_ != "NONE" || multi_state_) {
         Timer t2;
         str = "Computing integrals for ref. relaxation";
         outfile->Printf("\n    %-40s ...", str.c_str());
@@ -1024,7 +1024,7 @@ double DSRG_MRPT3::compute_energy_pt3_2() {
     H2_T2_C0(O2, T2_, 1.0, Ereturn);
     outfile->Printf("  Done. Timing %10.3f s", t2.get());
 
-    if (relax_ref_ != "NONE") {
+    if (relax_ref_ != "NONE" || multi_state_) {
         Timer t3;
         str = "Computing integrals for ref. relaxation";
         outfile->Printf("\n    %-40s ...", str.c_str());
@@ -1088,7 +1088,7 @@ double DSRG_MRPT3::compute_energy_pt3_3() {
     outfile->Printf("  Done. Timing %10.3f s", t1.get());
 
     // relax reference
-    if (relax_ref_ != "NONE") {
+    if (relax_ref_ != "NONE" || multi_state_) {
         Timer t2;
         str = "Computing integrals for ref. relaxation";
         outfile->Printf("\n    %-40s ...", str.c_str());
@@ -1463,8 +1463,6 @@ double DSRG_MRPT3::compute_energy_sa() {
     double Enuc = molecule->nuclear_repulsion_energy();
 
     // loop over entries of AVG_STATE
-    print_h2("Diagonalize Effective Hamiltonian");
-    outfile->Printf("\n");
     int nentry = eigens_.size();
     std::vector<std::vector<double>> Edsrg_sa(nentry, std::vector<double>());
 
@@ -1657,8 +1655,15 @@ double DSRG_MRPT3::compute_energy_relaxed() {
         transfer_integrals();
 
         // nroot and root
-        int root = options_.get_int("ROOT");
-        int nroot = options_.get_int("NROOT");
+        int root = 0;
+        int nroot = 1;
+        if (options_.get_str("CAS_TYPE") == "CAS") {
+            root = options_.get_int("ROOT");
+            nroot = options_.get_int("NROOT");
+        } else {
+            root = options_.get_int("FCI_ROOT");
+            nroot = options_.get_int("FCI_NROOT");
+        }
 
         // diagonalize the Hamiltonian
         FCISolver fcisolver(active_dim, acore_mos_, aactv_mos_, na, nb, multi,

@@ -582,6 +582,18 @@ double STLBitsetDeterminant::slater_sign_beta(int n) const {
     return (sign);
 }
 
+double STLBitsetDeterminant::single_excitation_a(int i, int a) {
+    bits_[i] = false;
+    bits_[a] = true;
+    return SlaterSign(bits_, i, a);
+}
+
+double STLBitsetDeterminant::single_excitation_b(int i, int a) {
+    bits_[nmo_ + i] = false;
+    bits_[nmo_ + a] = true;
+    return SlaterSign(bits_, nmo_ + i, nmo_ + a);
+}
+
 double STLBitsetDeterminant::double_excitation_aa(int i, int j, int a, int b) {
     bits_[i] = false;
     bits_[j] = false;

@@ -49,7 +49,7 @@ MCSRGPT2_MO::MCSRGPT2_MO(SharedWavefunction ref_wfn, Options& options,
                          std::shared_ptr<ForteIntegrals> ints,
                          std::shared_ptr<MOSpaceInfo> mo_space_info)
     : FCI_MO(ref_wfn, options, ints, mo_space_info) {
-    compute_canonical_energy();
+    compute_energy();
     reference();
 
     print_method_banner({"Driven Similarity Renormalization Group",
@@ -100,7 +100,7 @@ void MCSRGPT2_MO::startup(Options& options) {
     if (taylor_threshold_ <= 0) {
         throw PSIEXCEPTION("TAYLOR_THRESHOLD must be an integer greater than 0.");
     }
-    expo_delta_ = options.get_double("DELTA_EXPONENT");
+    expo_delta_ = options.get_double("DSRG_POWER");
     if (expo_delta_ <= 1.0) {
         throw PSIEXCEPTION("DELTA_EXPONENT must be greater than 1.0.");
     }
