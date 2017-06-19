@@ -29,19 +29,19 @@
 #ifndef _fci_h_
 #define _fci_h_
 
-#include "psi4/libmints/wavefunction.h"
 #include "psi4/physconst.h"
+#include "fci_solver.h"
+#include "../active_space_solver.h"
 
 namespace psi {
 namespace forte {
 
 class ForteOptions;
 class ForteIntegrals;
-class FCISolver;
 class MOSpaceInfo;
 class Reference;
-class FCIWfn;
 class FCISolver;
+class FCIWfn;
 
 /// Set the options for the FCI method
 void set_FCI_options(ForteOptions& foptions);
@@ -50,7 +50,7 @@ void set_FCI_options(ForteOptions& foptions);
  * @brief The FCI class
  * This class implements a FCI wave function and calls FCISolver
  */
-class FCI : public Wavefunction {
+class FCI : public ActiveSpaceSolver {
   public:
     // ==> Class Constructor and Destructor <==
 
@@ -61,16 +61,15 @@ class FCI : public Wavefunction {
      * @param ints A pointer to an allocated integral object
      * @param mo_space_info A pointer to the MOSpaceInfo object
      */
-    FCI(SharedWavefunction ref_wfn, Options& options,
-        std::shared_ptr<ForteIntegrals> ints,
+    FCI(SharedWavefunction ref_wfn, Options& options, std::shared_ptr<ForteIntegrals> ints,
         std::shared_ptr<MOSpaceInfo> mo_space_info);
 
-    ~FCI();
+    virtual ~FCI();
 
     // ==> Class Interface <==
 
     /// Compute the energy
-    virtual double compute_energy();
+    virtual double solver_compute_energy();
     /// Return a reference object
     Reference reference();
     /// Set the print level
@@ -89,10 +88,6 @@ class FCI : public Wavefunction {
   private:
     // ==> Class data <==
 
-    /// The molecular integrals
-    std::shared_ptr<ForteIntegrals> ints_;
-    /// The information about the molecular orbital spaces
-    std::shared_ptr<MOSpaceInfo> mo_space_info_;
     /// A pointer to the FCISolver object
     std::unique_ptr<FCISolver> fcisolver_;
     /// Print level
@@ -116,7 +111,6 @@ class FCI : public Wavefunction {
     /// All that happens before we compute the energy
     void startup();
 };
-
 }
 }
 

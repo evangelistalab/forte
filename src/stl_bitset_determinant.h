@@ -182,11 +182,15 @@ class STLBitsetDeterminant {
     double slater_sign_alpha(int n) const;
     /// Return the sign of a_n applied to this determinant
     double slater_sign_beta(int n) const;
+    /// Perform an alpha-alpha single excitation (i->a)
+    double single_excitation_a(int i, int a);
+    /// Perform an beta-beta single excitation (I -> A)
+    double single_excitation_b(int i, int a);
     /// Perform an alpha-alpha double excitation (ij->ab)
     double double_excitation_aa(int i, int j, int a, int b);
     /// Perform an alpha-beta double excitation (iJ -> aB)
     double double_excitation_ab(int i, int j, int a, int b);
-    /// Perform an alpha-beta double excitation (IJ -> AB)
+    /// Perform an beta-beta double excitation (IJ -> AB)
     double double_excitation_bb(int i, int j, int a, int b);
 
     /// Sets the pointer to the integral object
@@ -206,8 +210,10 @@ class STLBitsetDeterminant {
     static std::shared_ptr<FCIIntegrals> fci_ints_;
     /// Return the sign of a_n applied to string I
     static double SlaterSign(const bit_t& I, int n);
-    /// Return the sign of a_m^+ a_n applied to string I
+    /// Return the sign of a_n^+ a_m applied to string I
     static double SlaterSign(const bit_t& I, int m, int n);
+    /// Return the sign of a_a^+ a_b^+ a_j a_i applied to string I
+    static double SlaterSign(const bit_t& bits, int i, int j, int a, int b);
     /// Given a set of determinant adds new elements necessary to have a spin
     /// complete set
     static void enforce_spin_completeness(std::vector<STLBitsetDeterminant>& det_space);

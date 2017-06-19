@@ -37,6 +37,7 @@
 #include "mrpt2.h"
 #include "pci/pci.h"
 #include "reference.h"
+#include "../mrdsrg-helper/run_dsrg.h"
 
 namespace psi {
 namespace forte {
@@ -52,6 +53,7 @@ void forte_options(std::string name, ForteOptions& foptions) {
     set_AVAS_options(foptions);
     set_CINO_options(foptions);
     set_FCI_MO_options(foptions);
+    set_DSRG_options(foptions);
 
     // General options
 

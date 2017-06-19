@@ -157,6 +157,8 @@ class DYSON_SOURCE : public DSRG_SOURCE {
         return s_ * D / (1.0 + s_ * D * D);
     }
 };
+
+/// MP2 denominator
 class MP2_SOURCE : public DSRG_SOURCE {
   public:
     MP2_SOURCE(double s, double taylor_threshold);

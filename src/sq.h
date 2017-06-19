@@ -111,16 +111,15 @@ class WickTheorem {
     /// Contract a pair of SqOperators in all possible ways
     void contract(const SqOperator& lhs, const SqOperator& rhs, Operator& res);
     /// Contract a pair of SqOperators using a fixed contraction pattern
-    std::pair<double, SqOperator>
-    simple_contract(const SqOperator& lhs, const SqOperator& rhs,
-                    const std::vector<std::pair<int, int>>& pattern);
+    std::pair<double, SqOperator> simple_contract(const SqOperator& lhs, const SqOperator& rhs,
+                                                  const std::vector<std::pair<int, int>>& pattern);
 };
 
 /**
  * @brief The SqTest class
  */
 class SqTest {
-      public:
+  public:
     /// Default constructor
     SqTest();
 
