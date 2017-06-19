@@ -16,7 +16,7 @@ molecule {
 
 
 set {
-#  basis              cc-pvdz
+  basis              cc-pvdz
   reference          rhf
   scf_type           pk
   maxiter            300
