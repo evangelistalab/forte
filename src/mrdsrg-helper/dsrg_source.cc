@@ -39,6 +39,7 @@ STD_SOURCE::STD_SOURCE(double s, double taylor_threshold) : DSRG_SOURCE(s, taylo
 LABS_SOURCE::LABS_SOURCE(double s, double taylor_threshold) : DSRG_SOURCE(s, taylor_threshold) {}
 
 DYSON_SOURCE::DYSON_SOURCE(double s, double taylor_threshold) : DSRG_SOURCE(s, taylor_threshold) {}
+
 MP2_SOURCE::MP2_SOURCE(double s, double taylor_threshold) : DSRG_SOURCE(s, taylor_threshold) {}
 }
 }

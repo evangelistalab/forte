@@ -111,6 +111,7 @@ src/integrals/parallel_ccvv_algorithms.cc
 src/integrals/paralleldfmo.cc
 src/mrdsrg-helper/dsrg_source.cc
 src/mrdsrg-helper/dsrg_time.cc
+src/mrdsrg-helper/run_dsrg.cc
 src/mrdsrg-so/mrdsrg_so.cc
 src/mrdsrg-so/so-mrdsrg.cc
 src/mrdsrg-spin-adapted/dsrg_mrpt.cc

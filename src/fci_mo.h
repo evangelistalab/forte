@@ -5,7 +5,8 @@
  * that implements a variety of quantum chemistry methods for strongly
  * correlated electrons.
  *
- * Copyright (c) 2012-2017 by its authors (see COPYING, COPYING.LESSER, AUTHORS).
+ * Copyright (c) 2012-2017 by its authors (see COPYING, COPYING.LESSER,
+ * AUTHORS).
  *
  * The copyrights for code used from other parties are included in
  * the corresponding files.
@@ -90,23 +91,32 @@ class FCI_MO : public Wavefunction {
     /// Destructor
     ~FCI_MO();
 
-    /// Compute CASCI energy
+    /// Compute state-specific or state-averaged energy
     double compute_energy();
-    /// Compute semi-canonical CASCI energy
-    double compute_canonical_energy();
 
-    /// Returns the reference object
-    Reference reference(const int& level = 3);
-
+    /// Compute state-specific CASCI energy
+    double compute_ss_energy();
+    /// Compute state_specific semi-canonical CASCI energy
+    double compute_canonical_ss_energy();
     /// Compute state-averaged CASCI energy
     double compute_sa_energy();
     /// Compute semi-canonical state-averaged CASCI energy
     double compute_canonical_sa_energy();
+
+    /// Returns the reference object
+    Reference reference(const int& level = 3);
+
     /**
      * @brief Rotate the SA references such that <M|F|N> is diagonal
      * @param irrep The irrep of states M and N (same irrep)
      */
     void xms_rotate(const int& irrep);
+
+    /// Set fci_int_ pointer
+    void set_fci_int(std::shared_ptr<FCIIntegrals> fci_ints) {
+        fci_ints_ = fci_ints;
+        STLBitsetDeterminant::set_ints(fci_ints_);
+    }
 
     /// Set multiplicity
     void set_multiplicity(int multiplicity) { multi_ = multiplicity; }
@@ -138,11 +148,11 @@ class FCI_MO : public Wavefunction {
     }
 
     /// Return the vector of eigen vectors and eigen values
-    vector<pair<SharedVector, double>> eigen() { return eigen_; }
+    vector<pair<SharedVector, double>> const eigen() { return eigen_; }
 
     /// Return the vector of eigen vectors and eigen values (used in
     /// state-average computation)
-    vector<vector<pair<SharedVector, double>>> eigens() { return eigens_; }
+    vector<vector<pair<SharedVector, double>>> const eigens() { return eigens_; }
 
     /// Return a vector of dominant determinant for each root
     vector<STLBitsetDeterminant> dominant_dets() { return dominant_dets_; }
@@ -284,7 +294,8 @@ class FCI_MO : public Wavefunction {
     std::string diag_algorithm_;
 
     /// Diagonalize the Hamiltonian
-    void Diagonalize_H(const vecdet& P_space, const int& multi, const int& nroot,
+    void Diagonalize_H(const vecdet& P_space, const int& multi,
+                       const int& nroot,
                        vector<pair<SharedVector, double>>& eigen);
     /// Diagonalize the Hamiltonian without the HF determinant
     void Diagonalize_H_noHF(const vecdet& p_space, const int& multi,
