@@ -152,3 +152,4 @@ branches:
   - travis2
   - cmake1
   - solver
+  - psi4_pr736

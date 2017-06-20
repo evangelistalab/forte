@@ -316,7 +316,6 @@ void ElementwiseCI::print_info() {
     for (auto& str_dim : calculation_info_string) {
         outfile->Printf("\n    %-39s %10s", str_dim.first.c_str(), str_dim.second.c_str());
     }
-    
 }
 
 double ElementwiseCI::estimate_high_energy() {
@@ -719,7 +718,6 @@ double ElementwiseCI::compute_energy() {
             }
         }
         beta += time_step_;
-        
     }
 
     if (variational_estimate_) {
@@ -767,7 +765,6 @@ double ElementwiseCI::compute_energy() {
     outfile->Printf("\n\n  * Size of CI space                    = %zu", C.size());
 
     outfile->Printf("\n\n  %s: %f s", "Projector-CI (bitset) ran in  ", t_apici.elapsed());
-    
 
     if (print_full_wavefunction_) {
         print_wfn(dets_hashvec, C, C.size());
@@ -1561,8 +1558,6 @@ void ElementwiseCI::print_wfn(const det_hashvec& space_hashvec, std::vector<doub
     outfile->Printf("\n\n  Spin State: S^2 = %5.3f, S = %5.3f, %s (from %zu "
                     "determinants,%.2f\%)",
                     S2, S, state_label.c_str(), max_I, 100.0 * sum_weight);
-
-    
 }
 
 void ElementwiseCI::save_wfn(det_hashvec& space, std::vector<double>& C,

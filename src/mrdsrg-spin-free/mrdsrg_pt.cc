@@ -314,12 +314,11 @@ std::vector<std::pair<std::string, double>> MRDSRG::compute_energy_pt2_FdiagV() 
             if (cycle >= min_diis_vectors) {
                 diis_manager->add_entry(2, &(big_DT[0]), &(big_T[0]));
                 outfile->Printf("S");
-                
             }
             if (cycle > max_diis_vectors) {
                 if (diis_manager->subspace_size() >= min_diis_vectors && cycle) {
                     outfile->Printf("/E");
-                    
+
                     diis_manager->extrapolate(1, &(big_T[0]));
                     return_amp_diis(T1_, blocks1, T2_, blocks2, big_T);
                 }
@@ -338,7 +337,7 @@ std::vector<std::pair<std::string, double>> MRDSRG::compute_energy_pt2_FdiagV() 
             converged = true;
             failed = true;
         }
-        
+
         ++cycle;
     } while (!converged);
     outfile->Printf("\n    %s", dash.c_str());
@@ -555,7 +554,7 @@ std::vector<std::pair<std::string, double>> MRDSRG::compute_energy_pt2_FdiagVdia
             if (cycle > max_diis_vectors) {
                 if (diis_manager->subspace_size() >= min_diis_vectors && cycle) {
                     outfile->Printf(" -> DIIS");
-                    
+
                     diis_manager->extrapolate(1, &(big_T[0]));
                     return_amp_diis(T1_, blocks1, T2_, blocks2, big_T);
                 }
@@ -578,7 +577,7 @@ std::vector<std::pair<std::string, double>> MRDSRG::compute_energy_pt2_FdiagVdia
             converged = true;
             failed = true;
         }
-        
+
         ++cycle;
     } while (!converged);
     outfile->Printf("\n    %s", dash.c_str());
@@ -756,7 +755,7 @@ std::vector<std::pair<std::string, double>> MRDSRG::compute_energy_pt2_FdiagVdia
                 if (cycle > max_diis_vectors) {
                     if (diis_manager->subspace_size() >= min_diis_vectors && cycle) {
                         outfile->Printf(" -> DIIS");
-                        
+
                         diis_manager->extrapolate(1, &(big_T[0]));
                         return_amp_diis(T1_, blocks1, T2_, blocks2, big_T);
                     }
@@ -779,7 +778,7 @@ std::vector<std::pair<std::string, double>> MRDSRG::compute_energy_pt2_FdiagVdia
                 converged = true;
                 failed = true;
             }
-            
+
             ++cycle;
         } while (!converged);
         outfile->Printf("\n    %s", dash.c_str());
@@ -931,7 +930,7 @@ std::vector<std::pair<std::string, double>> MRDSRG::compute_energy_pt2_Ffull() {
             if (cycle > max_diis_vectors) {
                 if (diis_manager->subspace_size() >= min_diis_vectors && cycle) {
                     outfile->Printf(" -> DIIS");
-                    
+
                     diis_manager->extrapolate(1, &(big_T[0]));
                     return_amp_diis(T1_, blocks1, T2_, blocks2, big_T);
                 }
@@ -956,7 +955,7 @@ std::vector<std::pair<std::string, double>> MRDSRG::compute_energy_pt2_Ffull() {
             converged = true;
             failed = true;
         }
-        
+
         ++cycle;
     } while (!converged);
 
@@ -1095,7 +1094,7 @@ std::vector<std::pair<std::string, double>> MRDSRG::compute_energy_pt2_Ffull() {
             if (cycle > max_diis_vectors) {
                 if (diis_manager->subspace_size() >= min_diis_vectors && cycle % 4 == 0) {
                     outfile->Printf(" -> DIIS");
-                    
+
                     diis_manager->extrapolate(1, &(big_T[0]));
                     return_amp_diis(T1_, blocks1, T2_, blocks2, big_T);
                 }
@@ -1120,7 +1119,7 @@ std::vector<std::pair<std::string, double>> MRDSRG::compute_energy_pt2_Ffull() {
             converged = true;
             failed = true;
         }
-        
+
         ++cycle;
     } while (!converged);
 

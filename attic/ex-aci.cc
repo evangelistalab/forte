@@ -452,7 +452,6 @@ void EX_ACI::print_info() {
         outfile->Printf("\n    %-39s %s", str_dim.first.c_str(), str_dim.second.c_str());
     }
     outfile->Printf("\n  %s", string(52, '-').c_str());
-    
 }
 
 double EX_ACI::compute_energy() {
@@ -484,7 +483,6 @@ double EX_ACI::compute_energy() {
     }
 
     outfile->Printf("\n  The model space contains %zu determinants", P_space_.size());
-    
 
     double old_avg_energy = reference_determinant_.energy() + nuclear_repulsion_energy_;
     double new_avg_energy = 0.0;
@@ -509,7 +507,6 @@ double EX_ACI::compute_energy() {
                             P_space_.size());
         }
 
-        
         // Set the roots as the lowest possible as initial guess
         int num_ref_roots = std::min(nroot_, int(P_space_.size()));
 
@@ -567,7 +564,6 @@ double EX_ACI::compute_energy() {
                 i + 1, abs_energy, exc_energy, spins[i].first.second);
         }
         outfile->Printf("\n");
-        
 
         // Step 2. Find determinants in the Q space
         find_q_space(num_ref_roots, P_evals, P_evecs);
@@ -630,7 +626,6 @@ double EX_ACI::compute_energy() {
                                                  multistate_pt2_energy_correction_[0]));
         }
         outfile->Printf("\n");
-        
 
         // get final dimension of P space
         int PQ_space_final = PQ_space_.size();
@@ -756,7 +751,6 @@ double EX_ACI::compute_energy() {
 
     outfile->Printf("\n\n  %s: %f s", "Adaptive-CI (bitset) ran in ", t_iamrcisd.elapsed());
     outfile->Printf("\n\n  %s: %d", "Saving information for root", options_.get_int("ROOT") + 1);
-    
 
     double root_energy = PQ_evals->get(options_.get_int("ROOT")) + nuclear_repulsion_energy_;
     double root_energy_pt2 =
@@ -784,7 +778,6 @@ void EX_ACI::find_q_space(int nroot, SharedVector evals, SharedMatrix evecs) {
     }
     outfile->Printf("\n  %s: %zu determinants", "Dimension of the SD space", V_hash.size());
     outfile->Printf("\n  %s: %f s\n", "Time spent building the model space", t_ms_build.elapsed());
-    
 
     // This will contain all the determinants
     PQ_space_.clear();
@@ -885,7 +878,6 @@ void EX_ACI::find_q_space(int nroot, SharedVector evals, SharedMatrix evecs) {
 
     outfile->Printf("\n  %s: %zu determinants", "Dimension of the P + Q space", PQ_space_.size());
     outfile->Printf("\n  %s: %f s", "Time spent screening the model space", t_ms_screen.elapsed());
-    
 }
 
 double EX_ACI::average_q_values(int nroot, pVector<double, double> C1, pVector<double, double> E2) {
@@ -990,7 +982,6 @@ void EX_ACI::find_q_space_single_root(int nroot, SharedVector evals, SharedMatri
     }
     outfile->Printf("\n  %s: %zu determinants", "Dimension of the SD space", V_map.size());
     outfile->Printf("\n  %s: %f s\n", "Time spent building the model space", t_ms_build.elapsed());
-    
 
     // This will contain all the determinants
     PQ_space_.clear();
@@ -1065,7 +1056,6 @@ void EX_ACI::find_q_space_single_root(int nroot, SharedVector evals, SharedMatri
 
     outfile->Printf("\n  %s: %zu determinants", "Dimension of the P + Q space", PQ_space_.size());
     outfile->Printf("\n  %s: %f s", "Time spent screening the model space", t_ms_screen.elapsed());
-    
 }
 
 void EX_ACI::generate_excited_determinants_single_root(
@@ -1711,7 +1701,6 @@ void EX_ACI::print_wfn(std::vector<DynamicBitsetDeterminant> space, SharedMatrix
         root_spin_vec_.clear();
         root_spin_vec_[n] = make_pair(S, S2);
     }
-    
 }
 
 int EX_ACI::direct_sym_product(int sym1, int sym2) {
@@ -2191,7 +2180,6 @@ void EX_ACI::spin_transform(std::vector<DynamicBitsetDeterminant> det_space, Sha
     PQ_spin_evecs_ = C_trans->clone();
 
     outfile->Printf("\n  Time spent performing spin transformation: %6.6f s", timer.get());
-    
 }
 
 void EX_ACI::check_spin_completeness(std::vector<DynamicBitsetDeterminant>& det_space) {

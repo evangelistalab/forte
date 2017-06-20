@@ -65,7 +65,6 @@ void BitsetCSF::print() const {
         }
     }
     outfile->Printf("> (s = %s, ms = %d, idx = %d)", s_, ms_, index_);
-    
 }
 
 std::string BitsetCSF::str() const {

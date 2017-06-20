@@ -88,7 +88,6 @@ void LambdaCI::renormalized_mrcisd(psi::Options& options) {
                             imrcisd_test_size);
         }
     }
-    
 
     int nmo = reference_determinant_.nmo();
     std::vector<int> aocc(nalpha_);
@@ -284,7 +283,6 @@ void LambdaCI::renormalized_mrcisd(psi::Options& options) {
 
         outfile->Printf("\n  The SD excitation space has dimension: %zu", sd_dets_vec.size());
         outfile->Printf("\n  Time spent building the model space = %f s", t_ms_build.elapsed());
-        
 
         ForteTimer t_ms_screen;
 
@@ -341,7 +339,6 @@ void LambdaCI::renormalized_mrcisd(psi::Options& options) {
 
         outfile->Printf("\n  The i-MRCISD full space contains %zu determinants", num_mrcisd_dets);
         outfile->Printf("\n  Time spent screening the model space = %f s", t_ms_screen.elapsed());
-        
 
         evecs.reset(new Matrix("U", num_mrcisd_dets, nroot));
         evals.reset(new Vector("e", nroot));
@@ -360,7 +357,6 @@ void LambdaCI::renormalized_mrcisd(psi::Options& options) {
                 }
             }
             outfile->Printf("\n  Time spent building H               = %f s", t_h_build.elapsed());
-            
 
             // 4) Diagonalize the Hamiltonian
             ForteTimer t_hdiag_large;
@@ -374,7 +370,7 @@ void LambdaCI::renormalized_mrcisd(psi::Options& options) {
 
             outfile->Printf("\n  Time spent diagonalizing H          = %f s",
                             t_hdiag_large.elapsed());
-            
+
         } else
         // Sparse algorithm
         {
@@ -405,7 +401,6 @@ void LambdaCI::renormalized_mrcisd(psi::Options& options) {
                             size_t(num_mrcisd_dets * num_mrcisd_dets),
                             double(num_nonzero) / double(num_mrcisd_dets * num_mrcisd_dets));
             outfile->Printf("\n  Time spent building H               = %f s", t_h_build2.elapsed());
-            
 
             // 4) Diagonalize the Hamiltonian
             ForteTimer t_hdiag_large2;
@@ -413,11 +408,9 @@ void LambdaCI::renormalized_mrcisd(psi::Options& options) {
             davidson_liu_sparse(H_sparse, evals, evecs, nroot);
             outfile->Printf("\n  Time spent diagonalizing H          = %f s",
                             t_hdiag_large2.elapsed());
-            
 
             outfile->Printf("\n  Time spent diagonalizing H          = %f s",
                             t_hdiag_large2.elapsed());
-            
         }
 
         // 5) Print the energy
@@ -430,7 +423,6 @@ void LambdaCI::renormalized_mrcisd(psi::Options& options) {
             //                evals->get(i),multistate_pt2_energy_correction_[i]);
         }
         outfile->Printf("\n  Finished building H");
-        
 
         new_energy = evals->get(0) + nuclear_repulsion_energy_;
 
@@ -474,7 +466,6 @@ void LambdaCI::renormalized_mrcisd(psi::Options& options) {
             }
             outfile->Printf("\n  Time spent building H               = %f s",
                             t_h_small_build.elapsed());
-            
 
             // 4) Diagonalize the Hamiltonian
             if (options.get_str("DIAG_ALGORITHM") == "DAVIDSON") {
@@ -514,7 +505,6 @@ void LambdaCI::renormalized_mrcisd(psi::Options& options) {
                             size_t(size_small_ci * size_small_ci),
                             double(num_nonzero) / double(size_small_ci * size_small_ci));
             outfile->Printf("\n  Time spent building H               = %f s", t_h_build2.elapsed());
-            
 
             // 4) Diagonalize the Hamiltonian
             ForteTimer t_hdiag_large2;
@@ -522,7 +512,6 @@ void LambdaCI::renormalized_mrcisd(psi::Options& options) {
             davidson_liu_sparse(H_sparse, evals, evecs, nroot);
             outfile->Printf("\n  Time spent diagonalizing H          = %f s",
                             t_hdiag_large2.elapsed());
-            
         }
 
         for (size_t I = 0; I < size_small_ci; ++I) {
@@ -536,13 +525,11 @@ void LambdaCI::renormalized_mrcisd(psi::Options& options) {
                             evals->get(i) + nuclear_repulsion_energy_,
                             pc_hartree2ev * (evals->get(i) - evals->get(0)));
         }
-        
 
         new_energy = evals->get(0) + nuclear_repulsion_energy_;
         outfile->Printf("\n   @IMRCISD %2d  %24.16f  %24.16f", cycle, new_energy,
                         new_energy - old_energy);
 
-        
         if (std::fabs(new_energy - old_energy) < rmrci_threshold) {
             break;
         }
@@ -550,12 +537,9 @@ void LambdaCI::renormalized_mrcisd(psi::Options& options) {
 
         outfile->Printf("\n  After diagonalization there are %zu determinants",
                         old_dets_vec.size());
-        
     }
 
     outfile->Printf("\n\n   * IMRCISD total energy =  %24.16f\n", new_energy);
-
-    
 }
 
 /**
@@ -574,7 +558,6 @@ void LambdaCI::renormalized_mrcisd_simple(psi::Options& options) {
     outfile->Printf("\n  using a renormalization procedure keeping %zu determinants\n", ren_ndets);
     outfile->Printf("\n  and exciting those with a first-order coefficient greather than %f\n",
                     selection_threshold);
-    
 
     int nmo = reference_determinant_.nmo();
     std::vector<int> aocc(nalpha_);
@@ -751,7 +734,6 @@ void LambdaCI::renormalized_mrcisd_simple(psi::Options& options) {
 
         outfile->Printf("\n  The model space contains %zu determinants", num_mrcisd_dets);
         outfile->Printf("\n  Time spent building the model space = %f s", t_ms_build.elapsed());
-        
 
         H.reset(new Matrix("Hamiltonian Matrix", num_mrcisd_dets, num_mrcisd_dets));
         evecs.reset(new Matrix("U", num_mrcisd_dets, nroot));
@@ -766,7 +748,6 @@ void LambdaCI::renormalized_mrcisd_simple(psi::Options& options) {
             }
         }
         outfile->Printf("\n  Time spent building H               = %f s", t_h_build.elapsed());
-        
 
         // 4) Diagonalize the Hamiltonian
         ForteTimer t_hdiag_large;
@@ -779,7 +760,6 @@ void LambdaCI::renormalized_mrcisd_simple(psi::Options& options) {
         }
 
         outfile->Printf("\n  Time spent diagonalizing H          = %f s", t_hdiag_large.elapsed());
-        
 
         // 5) Print the energy
         for (int i = 0; i < nroot; ++i) {
@@ -791,7 +771,6 @@ void LambdaCI::renormalized_mrcisd_simple(psi::Options& options) {
             //                evals->get(i),multistate_pt2_energy_correction_[i]);
         }
         outfile->Printf("\n  Finished building H");
-        
 
         new_energy = evals->get(0) + nuclear_repulsion_energy_;
 
@@ -829,7 +808,6 @@ void LambdaCI::renormalized_mrcisd_simple(psi::Options& options) {
         }
         outfile->Printf("\n  Time spent building H               = %f s",
                         t_h_small_build.elapsed());
-        
 
         // 4) Diagonalize the Hamiltonian
         if (options.get_str("DIAG_ALGORITHM") == "DAVIDSON") {
@@ -850,12 +828,10 @@ void LambdaCI::renormalized_mrcisd_simple(psi::Options& options) {
                             evals->get(i) + nuclear_repulsion_energy_,
                             pc_hartree2ev * (evals->get(i) - evals->get(0)));
         }
-        
 
         new_energy = evals->get(0) + nuclear_repulsion_energy_;
         outfile->Printf("\n ->  %2d  %24.16f", cycle, new_energy);
 
-        
         if (std::fabs(new_energy - old_energy) < rmrci_threshold) {
             break;
         }
@@ -863,10 +839,7 @@ void LambdaCI::renormalized_mrcisd_simple(psi::Options& options) {
 
         outfile->Printf("\n  After diagonalization there are %zu determinants",
                         old_dets_vec.size());
-        
     }
-
-    
 }
 
 // void Explorer::renormalized_mrcisd_simple(psi::Options& options)
@@ -884,7 +857,7 @@ void LambdaCI::renormalized_mrcisd_simple(psi::Options& options) {
 //    outfile->Printf("\n  using a renormalization procedure keeping %zu determinants\n",ren_ndets);
 //    outfile->Printf("\n  and exciting those with a first-order coefficient greather than
 //    %f\n",selection_threshold);
-//    
+//
 
 //    int nmo = reference_determinant_.nmo();
 //    std::vector<int> aocc(nalpha_);
@@ -1075,7 +1048,7 @@ void LambdaCI::renormalized_mrcisd_simple(psi::Options& options) {
 
 //        outfile->Printf("\n  The model space contains %zu determinants",num_mrcisd_dets);
 //        outfile->Printf("\n  Time spent building the model space = %f s",t_ms_build.elapsed());
-//        
+//
 
 //        H.reset(new Matrix("Hamiltonian Matrix",num_mrcisd_dets,num_mrcisd_dets));
 //        evecs.reset(new Matrix("U",num_mrcisd_dets,nroot));
@@ -1094,7 +1067,7 @@ void LambdaCI::renormalized_mrcisd_simple(psi::Options& options) {
 
 //        }
 //        outfile->Printf("\n  Time spent building H               = %f s",t_h_build.elapsed());
-//        
+//
 
 //        // 4) Diagonalize the Hamiltonian
 //        ForteTimer t_hdiag_large;
@@ -1107,7 +1080,7 @@ void LambdaCI::renormalized_mrcisd_simple(psi::Options& options) {
 //        }
 
 //        outfile->Printf("\n  Time spent diagonalizing H          = %f s",t_hdiag_large.elapsed());
-//        
+//
 
 //        // 5) Print the energy
 //        for (int i = 0; i < nroot; ++ i){
@@ -1119,7 +1092,7 @@ void LambdaCI::renormalized_mrcisd_simple(psi::Options& options) {
 //            //                evals->get(i),multistate_pt2_energy_correction_[i]);
 //        }
 //        outfile->Printf("\n  Finished building H");
-//        
+//
 
 //        new_energy = evals->get(0) + nuclear_repulsion_energy_;
 
@@ -1164,7 +1137,7 @@ void LambdaCI::renormalized_mrcisd_simple(psi::Options& options) {
 //        outfile->Printf("\n  Time spent building H               = %f
 //        s",t_h_small_build.elapsed());
 //        H_small->print();
-//        
+//
 
 //        // 4) Diagonalize the Hamiltonian
 //        if (options.get_str("DIAG_ALGORITHM") == "DAVIDSON"){
@@ -1181,12 +1154,12 @@ void LambdaCI::renormalized_mrcisd_simple(psi::Options& options) {
 //            1,evals_small->get(i) + nuclear_repulsion_energy_,pc_hartree2ev * (evals->get(i) -
 //            evals->get(0)));
 //        }
-//        
+//
 
 //        new_energy = evals_small->get(0) + nuclear_repulsion_energy_;
 //        outfile->Printf("\n ->  %2d  %24.16f",cycle,new_energy);
 
-//        
+//
 //        if (std::fabs(new_energy - old_energy) < rmrci_threshold){
 //            break;
 //        }
@@ -1194,10 +1167,10 @@ void LambdaCI::renormalized_mrcisd_simple(psi::Options& options) {
 
 //        outfile->Printf("\n  After diagonalization there are %zu
 //        determinants",old_dets_vec.size());
-//        
+//
 //    }
 
-//    
+//
 //}
 }
 } // EndNamespaces

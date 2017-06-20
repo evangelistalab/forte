@@ -86,7 +86,6 @@ void test_davidson() {
     ifs.close();
     outfile->Printf(" DONE.");
 
-
     int nroots = 4;
 
     SharedMatrix evecs(new Matrix("U", ndets, nroots));
@@ -98,7 +97,6 @@ void test_davidson() {
     for (int i = 0; i < nroots_print; ++i) {
         outfile->Printf("\n  Adaptive CI Energy Root %3d = %.12f Eh = %8.4f eV", i + 1,
                         evals->get(i), pc_hartree2ev * (evals->get(i) - evals->get(0)));
-
     }
     // END DEBUGGING
 }

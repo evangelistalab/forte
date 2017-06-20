@@ -121,7 +121,8 @@ double dot(const det_hashvec& A, const std::vector<double> Ca, const det_hashvec
     return res;
 }
 
-void ProjectorCI_HashVec::sortHashVecByCoefficient(det_hashvec& dets_hashvec, std::vector<double>& C) {
+void ProjectorCI_HashVec::sortHashVecByCoefficient(det_hashvec& dets_hashvec,
+                                                   std::vector<double>& C) {
     size_t dets_size = dets_hashvec.size();
     std::vector<std::pair<double, size_t>> det_weight(dets_size);
     for (size_t I = 0; I < dets_size; ++I) {
@@ -352,7 +353,6 @@ void ProjectorCI_HashVec::print_info() {
     for (auto& str_dim : calculation_info_string) {
         outfile->Printf("\n    %-39s %10s", str_dim.first.c_str(), str_dim.second.c_str());
     }
-    
 }
 
 double ProjectorCI_HashVec::estimate_high_energy() {
@@ -756,7 +756,6 @@ double ProjectorCI_HashVec::compute_energy() {
             }
         }
         beta += time_step_;
-        
     }
 
     if (variational_estimate_) {
@@ -785,10 +784,10 @@ double ProjectorCI_HashVec::compute_energy() {
 
     timer_on("PCI:<E>end_v");
 
-//    timer_on("PCI:sort");
-//    sortHashVecByCoefficient(dets_hashvec, C);
-//    timer_off("PCI:sort");
-//    outfile->Printf("\nSuccessfully sorted!");
+    //    timer_on("PCI:sort");
+    //    sortHashVecByCoefficient(dets_hashvec, C);
+    //    timer_off("PCI:sort");
+    //    outfile->Printf("\nSuccessfully sorted!");
 
     if (fast_variational_estimate_) {
         var_energy = estimate_var_energy_sparse(dets_hashvec, C, 1.0e-14);
@@ -809,7 +808,6 @@ double ProjectorCI_HashVec::compute_energy() {
                     var_energy - approx_energy_);
 
     outfile->Printf("\n\n  %s: %f s", "Projector-CI (bitset) ran in  ", t_apici.elapsed());
-    
 
     if (print_full_wavefunction_) {
         print_wfn(dets_hashvec, C, C.size());
@@ -1835,8 +1833,6 @@ void ProjectorCI_HashVec::print_wfn(const det_hashvec& space_hashvec, std::vecto
     outfile->Printf("\n\n  Spin State: S^2 = %5.3f, S = %5.3f, %s (from %zu "
                     "determinants,%.2f\%)",
                     S2, S, state_label.c_str(), max_I, 100.0 * sum_weight);
-
-    
 }
 
 void ProjectorCI_HashVec::save_wfn(

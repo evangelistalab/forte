@@ -65,7 +65,6 @@ void TensorSRG::startup() {
     outfile->Printf("\n      --------------------------------------\n");
     outfile->Printf("\n      Debug level = %d", debug_);
     outfile->Printf("\n      Print level = %d\n", print_);
-    
 
     //    BlockedTensor::print_mo_spaces();
 
@@ -313,7 +312,6 @@ void TensorSRG::transfer_integrals() {
     outfile->Printf("\n  <H> = %24.12f", Esth + molecule()->nuclear_repulsion_energy());
 
     ints_->update_integrals(false);
-    
 }
 }
 } // EndNamespaces

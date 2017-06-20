@@ -116,18 +116,16 @@ void LambdaCI::explore_original(psi::Options& options) {
     // The strings are in QT format and are stored using the following structure:
     // [<string irrep>][<string index>](<string energy>,<string structure>)
     outfile->Printf("\n  +++ Screening the alpha strings +++\n");
-    
+
     ForteTimer timer_astr;
     vec_astr_symm_ = compute_strings_screened(epsilon_a_qt_, naocc, navir, maxnaex_, true);
     outfile->Printf("\n  Time required: %f s", timer_astr.elapsed());
-    
 
     outfile->Printf("\n\n  +++ Screening the beta strings +++\n");
-    
+
     ForteTimer timer_bstr;
     vec_bstr_symm_ = compute_strings_screened(epsilon_b_qt_, nbocc, nbvir, maxnbex_, false);
     outfile->Printf("\n  Time required: %f s", timer_bstr.elapsed());
-    
 
     outfile->Printf("\n  denominator_threshold_: %f s", denominator_threshold_);
 
@@ -212,11 +210,11 @@ void LambdaCI::explore_original(psi::Options& options) {
             }
         }
         outfile->Printf("\n  %2d   %12ld   %12ld", nex, num_dets_visited_ex, num_dets_accepted_ex);
-        
+
         if ((num_dets_accepted_ex == 0) and (nex > 4)) {
             outfile->Printf("\n\n  Excitation level %d produced no determinants, finishing search",
                             nex);
-            
+
             break;
         }
     }
@@ -276,7 +274,6 @@ void LambdaCI::explore_original(psi::Options& options) {
     outfile->Printf("\n  Time spent on generating strings  = %f s", time_string);
     outfile->Printf("\n  Time spent on generating dets     = %f s", time_dets);
     outfile->Printf("\n  Precompute algorithm time elapsed = %f s", t.elapsed());
-    
 }
 
 /**
@@ -333,18 +330,16 @@ void LambdaCI::explore(psi::Options& options) {
     // The strings are in QT format and are stored using the following structure:
     // [<string irrep>][<string index>](<string energy>,<string structure>)
     outfile->Printf("\n  +++ Screening the alpha strings +++\n");
-    
+
     ForteTimer timer_astr;
     vec_astr_symm_ = compute_strings_screened(epsilon_a_qt_, naocc, navir, maxnaex_, true);
     outfile->Printf("\n  Time required: %f s", timer_astr.elapsed());
-    
 
     outfile->Printf("\n\n  +++ Screening the beta strings +++\n");
-    
+
     ForteTimer timer_bstr;
     vec_bstr_symm_ = compute_strings_screened(epsilon_b_qt_, nbocc, nbvir, maxnbex_, false);
     outfile->Printf("\n  Time required: %f s", timer_bstr.elapsed());
-    
 
     vector<bool> empty_det(2 * ncmo_, false);
     StringDeterminant det(empty_det);
@@ -496,11 +491,11 @@ void LambdaCI::explore(psi::Options& options) {
             }
         }
         outfile->Printf("\n  %2d   %12ld   %12ld", nex, num_dets_visited_ex, num_dets_accepted_ex);
-        
+
         if (num_dets_accepted_ex == 0) {
             outfile->Printf("\n\n  Excitation level %d produced no determinants, finishing search",
                             nex);
-            
+
             break;
         }
     }
@@ -567,7 +562,6 @@ void LambdaCI::explore(psi::Options& options) {
     outfile->Printf("\n  Time spent on generating strings  = %f s", time_string);
     outfile->Printf("\n  Time spent on generating dets     = %f s", time_dets);
     outfile->Printf("\n  Precompute algorithm time elapsed = %f s", t.elapsed());
-    
 }
 }
 } // EndNamespaces
