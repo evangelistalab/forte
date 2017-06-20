@@ -2856,7 +2856,7 @@ void FCI_MO::compute_permanent_dipole() {
         DipoleInt::nuclear_contribution(Process::environment.molecule(), Vector3(0.0, 0.0, 0.0));
 
     // SO to AO transformer
-    boost::shared_ptr<PetiteList> pet(new PetiteList(basisset, ints));
+    std::shared_ptr<PetiteList> pet(new PetiteList(basisset, ints));
     SharedMatrix sotoao = pet->sotoao();
 
     // symmetrize the density according to point group
@@ -2969,7 +2969,7 @@ void FCI_MO::compute_trans_dipole() {
     aodOBI->compute(aodipole_ints);
 
     // SO to AO transformer
-    boost::shared_ptr<PetiteList> pet(new PetiteList(basisset, ints));
+    std::shared_ptr<PetiteList> pet(new PetiteList(basisset, ints));
     SharedMatrix sotoao = pet->sotoao();
 
     //    // obtain SO dipole from libmints

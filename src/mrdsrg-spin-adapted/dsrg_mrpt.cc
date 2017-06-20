@@ -31,6 +31,7 @@
 #include <numeric>
 #include <vector>
 
+#include "psi4/libpsi4util/process.h"
 #include "../mini-boost/boost/format.hpp"
 #include "dsrg_mrpt.h"
 
