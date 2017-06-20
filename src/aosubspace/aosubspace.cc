@@ -31,6 +31,7 @@
 #include <regex>
 #include <vector>
 
+#include "psi4/libpsi4util/PsiOutStream.h"
 #include "psi4/libmints/element_to_Z.h"
 #include "psi4/libmints/integral.h"
 #include "psi4/libmints/matrix.h"

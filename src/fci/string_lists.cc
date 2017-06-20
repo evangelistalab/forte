@@ -28,6 +28,8 @@
 
 #include "psi4/psi4-dec.h"
 
+#include "psi4/libpsi4util/PsiOutStream.h"
+
 #include "../helpers.h"
 #include "string_lists.h"
 
