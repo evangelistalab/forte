@@ -89,7 +89,7 @@ struct push_back_state_and_time_srg {
 
         //        outfile->Printf("\n %9d %20.12f
         //        %20.12f",int(m_states.size()),t,x[0]);
-        outfile->Flush();
+        
     }
 };
 

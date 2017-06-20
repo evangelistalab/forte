@@ -136,7 +136,7 @@ void DSRG_MRPT::print_options() {
         outfile->Printf("\n    %-35s %15s", str_dim.first.c_str(), str_dim.second.c_str());
     }
     outfile->Printf("\n");
-    outfile->Flush();
+    
 }
 
 void DSRG_MRPT::startup() {
@@ -507,7 +507,7 @@ void DSRG_MRPT::test_memory(const size_t& c, const size_t& a, const size_t& v) {
     outfile->Printf("\n  Note: Two-index quantities: ONLY upper triangle (hp, cc, vv).");
     outfile->Printf("\n  Four-index quantities: NO aaaa, ccvv, cavv, acvv, "
                     "ccav, ccva blocks.");
-    outfile->Flush();
+    
 
     if (leftover < 0) {
         outfile->Printf("\n  Error: Not enough memory! Need %s of memory.",
@@ -560,7 +560,7 @@ void DSRG_MRPT::print_citation() {
         outfile->Printf("\n    %-20s %-60s", str_dim.first.c_str(), str_dim.second.c_str());
     }
     outfile->Printf("\n");
-    outfile->Flush();
+    
 }
 }
 }

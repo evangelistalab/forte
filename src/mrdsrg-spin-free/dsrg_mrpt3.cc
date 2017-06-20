@@ -596,7 +596,7 @@ void DSRG_MRPT3::print_summary() {
         outfile->Printf("\n    %-40s %15s", str_dim.first.c_str(), str_dim.second.c_str());
     }
 
-    outfile->Flush();
+    
 }
 
 void DSRG_MRPT3::cleanup() { dsrg_time_.print_comm_time(); }

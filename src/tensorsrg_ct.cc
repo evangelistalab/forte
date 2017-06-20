@@ -95,7 +95,7 @@ double TensorSRG::compute_ct_energy() {
     while (!converged) {
         if (print_ > 1) {
             outfile->Printf("\n  Updating the S amplitudes...");
-            outfile->Flush();
+            
         }
 
         if (do_dsrg) {
@@ -136,7 +136,7 @@ double TensorSRG::compute_ct_energy() {
 
         if (print_ > 1) {
             outfile->Printf(" done.");
-            outfile->Flush();
+            
         }
         if (diis_manager) {
             if (do_dsrg) {
@@ -166,7 +166,7 @@ double TensorSRG::compute_ct_energy() {
         }
         if (print_ > 1) {
             outfile->Printf("\n  Compute recursive single commutator...");
-            outfile->Flush();
+            
         }
 
         // Compute the new similarity-transformed Hamiltonian
@@ -174,7 +174,7 @@ double TensorSRG::compute_ct_energy() {
 
         if (print_ > 1) {
             outfile->Printf(" done.");
-            outfile->Flush();
+            
         }
 
         double delta_energy = energy - old_energy;
@@ -227,11 +227,11 @@ double TensorSRG::compute_ct_energy() {
             outfile->Printf("\n\n\tThe calculation did not converge in %d "
                             "cycles\n\tQuitting.\n",
                             options_.get_int("MAXITER"));
-            outfile->Flush();
+            
             converged = true;
             old_energy = 0.0;
         }
-        outfile->Flush();
+        
         cycle++;
     }
     outfile->Printf("\n  "
@@ -321,7 +321,7 @@ double TensorSRG::compute_hbar() {
 
         if (print_ > 1) {
             outfile->Printf("\n  %2d %20.12f %20e %20e", n, C0, norm_C1, norm_C2);
-            outfile->Flush();
+            
         }
         if (std::sqrt(norm_C2 * norm_C2 + norm_C1 * norm_C1) < ct_threshold) {
             break;
@@ -331,7 +331,7 @@ double TensorSRG::compute_hbar() {
         outfile->Printf("\n  "
                         "------------------------------------------------------"
                         "-----------");
-        outfile->Flush();
+        
     }
     print_ = 0;
     return Hbar0;

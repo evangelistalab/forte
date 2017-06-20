@@ -1393,7 +1393,7 @@ void SparseCISolver::diagonalize_davidson_liu_solver(const std::vector<STLBitset
                                                      int nroot, int multiplicity) {
     if (print_details_) {
         outfile->Printf("\n\n  Davidson-liu solver algorithm");
-        outfile->Flush();
+        
     }
 
     size_t dim_space = space.size();
@@ -1464,7 +1464,7 @@ SparseCISolver::build_sparse_hamiltonian(const std::vector<STLBitsetDeterminant>
     size_t num_nonzero = 0;
 
     outfile->Printf("\n  Building H using OpenMP");
-    outfile->Flush();
+    
 
 // Form the Hamiltonian matrix
 
@@ -1498,7 +1498,7 @@ SparseCISolver::build_sparse_hamiltonian(const std::vector<STLBitsetDeterminant>
                     num_nonzero, dim_space * dim_space,
                     double(num_nonzero) / double(dim_space * dim_space));
     outfile->Printf("\n  %s: %f s", "Time spent building H (openmp)", t_h_build2.get());
-    outfile->Flush();
+    
     return H_sparse;
 }
 
@@ -2159,7 +2159,7 @@ void SparseCISolver::diagonalize_dl_sparse(const DeterminantMap& space, WFNOpera
                                            SharedVector& evals, SharedMatrix& evecs, int nroot,
                                            int multiplicity) {
     outfile->Printf("\n\n  Davidson-liu sparse algorithm");
-    outfile->Flush();
+    
     // Find all the eigenvalues and eigenvectors of the Hamiltonian
     std::vector<std::pair<std::vector<size_t>, std::vector<double>>> H = op.build_H_sparse(space);
 

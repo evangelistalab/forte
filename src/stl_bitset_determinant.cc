@@ -278,7 +278,7 @@ void STLBitsetDeterminant::print() const {
         }
     }
     outfile->Printf(">");
-    outfile->Flush();
+    
 }
 
 /**

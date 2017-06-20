@@ -355,7 +355,7 @@ void ProjectorCI_HashVec::print_info() {
     for (auto& str_dim : calculation_info_string) {
         outfile->Printf("\n    %-39s %10s", str_dim.first.c_str(), str_dim.second.c_str());
     }
-    outfile->Flush();
+    
 }
 
 double ProjectorCI_HashVec::estimate_high_energy() {
@@ -760,7 +760,7 @@ double ProjectorCI_HashVec::compute_energy() {
             }
         }
         beta += time_step_;
-        outfile->Flush();
+        
     }
 
     if (variational_estimate_) {
@@ -812,7 +812,7 @@ double ProjectorCI_HashVec::compute_energy() {
                     var_energy - approx_energy_);
 
     outfile->Printf("\n\n  %s: %f s", "Projector-CI (bitset) ran in  ", t_apici.elapsed());
-    outfile->Flush();
+    
 
     if (print_full_wavefunction_) {
         print_wfn(dets_hashvec, C, C.size());
@@ -2310,7 +2310,7 @@ void ProjectorCI_HashVec::print_wfn(const det_hashvec& space_hashvec, std::vecto
                     "determinants,%.2f\%)",
                     S2, S, state_label.c_str(), max_I, 100.0 * sum_weight);
 
-    outfile->Flush();
+    
 }
 
 void ProjectorCI_HashVec::save_wfn(

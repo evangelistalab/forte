@@ -470,7 +470,7 @@ void ProjectorCI::print_info() {
     for (auto& str_dim : calculation_info_string) {
         outfile->Printf("\n    %-39s %10s", str_dim.first.c_str(), str_dim.second.c_str());
     }
-    outfile->Flush();
+    
 }
 
 void print_polynomial(std::vector<double>& coefs) {
@@ -1061,7 +1061,7 @@ double ProjectorCI::compute_energy() {
             }
         }
         beta += time_step_;
-        outfile->Flush();
+        
     }
 
     //    det_hash<> dets_C_hash;
@@ -1143,7 +1143,7 @@ double ProjectorCI::compute_energy() {
     }
 
     outfile->Printf("\n\n  %s: %f s", "Projector-CI (bitset) ran in  ", t_apici.elapsed());
-    outfile->Flush();
+    
 
     if (print_full_wavefunction_) {
         print_wfn(dets, C, C.size());
@@ -2294,7 +2294,7 @@ void ProjectorCI::propagate_DavidsonLiu(det_vec& dets, std::vector<double>& C,
             }
         }
 
-        outfile->Flush();
+        
 
         iter++;
     }
@@ -4959,7 +4959,7 @@ void ProjectorCI::print_wfn(det_vec& space, std::vector<double>& C, size_t max_o
                     "determinants,%.2f\%)",
                     S2, S, state_label.c_str(), max_I, 100.0 * sum_weight);
 
-    outfile->Flush();
+    
 }
 
 void ProjectorCI::save_wfn(det_vec& space, std::vector<double>& C,
