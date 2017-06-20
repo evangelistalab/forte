@@ -3045,10 +3045,6 @@ void FCI_MO::compute_trans_dipole() {
             vector<double> opdm_b(na_ * na_, 0.0);
             ci_rdms.compute_1rdm(opdm_a, opdm_b);
 
-            //            SharedMatrix MOtransD (new Matrix("MO transition
-            //            density " + trans_name, nmopi_, nmopi_));
-            //            symmetrize_density(opdm_a, MOtransD);
-
             SharedMatrix SOtransD(
                 new Matrix("SO transition density " + trans_name, nmopi_, nmopi_));
             symmetrize_density(opdm_a, SOtransD);
