@@ -140,7 +140,7 @@ void ConventionalIntegrals::transform_integrals() {
     if (print_ > 0) {
         outfile->Printf("\n  Integral transformation done. %8.8f s", int_timer.get());
     }
-    outfile->Flush();
+    
 }
 
 double ConventionalIntegrals::aptei_aa(size_t p, size_t q, size_t r, size_t s) {

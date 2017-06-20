@@ -584,7 +584,7 @@ void SOMRDSRG::print_summary() {
     for (auto& str_dim : calculation_info_string) {
         outfile->Printf("\n    %-39s %10s", str_dim.first.c_str(), str_dim.second.c_str());
     }
-    outfile->Flush();
+    
 }
 
 double SOMRDSRG::compute_energy() {
@@ -618,7 +618,7 @@ double SOMRDSRG::compute_energy() {
     while (!converged) {
         if (print_ > 1) {
             outfile->Printf("\n  Updating the S amplitudes...");
-            outfile->Flush();
+            
         }
 
         update_T1();
@@ -654,7 +654,7 @@ double SOMRDSRG::compute_energy() {
 
         if (print_ > 1) {
             outfile->Printf(" done.");
-            outfile->Flush();
+            
         }
         //        if(diis_manager){
         //            if (do_dsrg){
@@ -696,7 +696,7 @@ double SOMRDSRG::compute_energy() {
         //        }
         if (print_ > 1) {
             outfile->Printf("\n  Compute recursive single commutator...");
-            outfile->Flush();
+            
         }
 
         // Compute the new similarity-transformed Hamiltonian
@@ -704,7 +704,7 @@ double SOMRDSRG::compute_energy() {
 
         if (print_ > 1) {
             outfile->Printf(" done.");
-            outfile->Flush();
+            
         }
 
         double delta_energy = energy - old_energy;
@@ -747,11 +747,11 @@ double SOMRDSRG::compute_energy() {
             outfile->Printf("\n\n\tThe calculation did not converge in %d "
                             "cycles\n\tQuitting.\n",
                             options_.get_int("MAXITER"));
-            outfile->Flush();
+            
             converged = true;
             old_energy = 0.0;
         }
-        outfile->Flush();
+        
         cycle++;
     }
     outfile->Printf("\n  "
@@ -838,7 +838,7 @@ double SOMRDSRG::compute_hbar() {
 
         if (print_ > 1) {
             outfile->Printf("\n  %2d %20.12f %20e %20e", n, C0, norm_C1, norm_C2);
-            outfile->Flush();
+            
         }
         if (std::sqrt(norm_C2 * norm_C2 + norm_C1 * norm_C1) < ct_threshold) {
             break;
@@ -848,7 +848,7 @@ double SOMRDSRG::compute_hbar() {
         outfile->Printf("\n  "
                         "------------------------------------------------------"
                         "-----------");
-        outfile->Flush();
+        
     }
     return Hbar0;
 }

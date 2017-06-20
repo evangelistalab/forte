@@ -35,11 +35,11 @@
 
 #include <iostream>
 
-//#include "psi4/libmints/wavefunction.h"
 #include "ambit/blocked_tensor.h"
 #include "psi4/libmints/matrix.h"
 #include "psi4/liboptions/liboptions.h"
 #include "psi4/libtrans/integraltransform.h"
+#include "psi4/libpsi4util/PsiOutStream.h"
 
 namespace psi {
 

@@ -29,6 +29,7 @@
 #include <numeric>
 #include <vector>
 
+#include "psi4/libpsi4util/process.h"
 #include "psi4/libciomr/libciomr.h"
 #include "psi4/libfock/jk.h"
 #include "psi4/libfunctional/superfunctional.h"
@@ -37,9 +38,6 @@
 #include "psi4/libmints/vector.h"
 #include "psi4/libmints/wavefunction.h"
 #include "psi4/liboptions/liboptions.h"
-#include "psi4/liboptions/liboptions.h"
-#include "psi4/libpsio/psio.h"
-#include "psi4/libpsio/psio.h"
 #include "psi4/libpsio/psio.hpp"
 
 #include "finite_temperature.h"

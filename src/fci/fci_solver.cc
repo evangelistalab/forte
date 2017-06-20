@@ -139,7 +139,7 @@ void FCISolver::startup() {
         for (auto& str_dim : calculation_info) {
             outfile->Printf("    %-39s %10d\n", str_dim.first.c_str(), str_dim.second);
         }
-        outfile->Flush();
+        
     }
 }
 
@@ -504,7 +504,7 @@ FCISolver::initial_guess(FCIWfn& diag, size_t n, size_t multiplicity,
         outfile->Printf("\n%s", to_string(table, "\n").c_str());
         outfile->Printf("\n  ---------------------------------------------");
         outfile->Printf("\n  Timing for initial guess  = %10.3f s\n", t.elapsed());
-        outfile->Flush();
+        
     }
 
     return guess;

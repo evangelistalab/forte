@@ -30,6 +30,7 @@
 
 #include "psi4/psi4-dec.h"
 
+#include "psi4/libpsi4util/process.h"
 #include "psi4/libmints/molecule.h"
 #include "psi4/libmints/pointgrp.h"
 #include "psi4/libmints/wavefunction.h"
@@ -303,7 +304,7 @@ void print_method_banner(const std::vector<std::string>& text, const std::string
     }
     *outfile << tab << header << std::endl;
 
-    outfile->Flush();
+    
 }
 
 void print_h2(const std::string& text, const std::string& left_separator,
