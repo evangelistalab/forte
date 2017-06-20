@@ -28,7 +28,7 @@
 
 #include <cmath>
 
-#include "mini-boost/boost/shared_ptr.hpp"
+#include "psi4/libpsi4util/process.h"
 #include "psi4/libdiis/diismanager.h"
 
 #include "tensorsrg.h"

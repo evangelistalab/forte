@@ -26,12 +26,7 @@
  * @END LICENSE
  */
 
-//#include <cmath>
-//#include <functional>
-//#include <algorithm>
-//#include <unordered_map>
-//#include <numeric>
-
+#include "psi4/libpsi4util/process.h"
 #include "psi4/libmints/molecule.h"
 #include "psi4/libmints/pointgrp.h"
 #include "psi4/libpsio/psio.hpp"
@@ -41,7 +36,6 @@
 #include "../stl_bitset_determinant.h"
 #include "../stl_bitset_string.h"
 #include "aci_string.h"
-//#include "ci_rdms.h"
 
 using namespace std;
 using namespace psi;

@@ -26,6 +26,7 @@
  * @END LICENSE
  */
 
+#include <cmath>
 #include <numeric>
 #include <vector>
 

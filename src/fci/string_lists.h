@@ -34,7 +34,6 @@
 #include <utility>
 #include "psi4/libmints/dimension.h"
 
-#include "boost/shared_ptr.hpp"
 #include "boost/tuple/tuple.hpp"
 #include "boost/tuple/tuple_comparison.hpp"
 #include "boost/dynamic_bitset.hpp"

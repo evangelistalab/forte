@@ -297,12 +297,13 @@ void print_method_banner(const std::vector<std::string>& text, const std::string
     std::string tab((max_width - width - 4) / 2, ' ');
     std::string header(width + 4, char(separator[0]));
 
-    *outfile << "\n\n" << tab << header << std::endl;
+    outfile->Printf("\n\n%s%s\n",tab.c_str(),header.c_str());
     for (auto& line : text) {
         size_t padding = 2 + (width - line.size()) / 2;
-        *outfile << tab << std::string(padding, ' ') << line << std::endl;
+        std::string padding_str(padding, ' ');
+        outfile->Printf("%s%s%s\n",tab.c_str(),padding_str.c_str(),line.c_str());
     }
-    *outfile << tab << header << std::endl;
+    outfile->Printf("%s%s\n",tab.c_str(),header.c_str());
 }
 
 void print_h2(const std::string& text, const std::string& left_separator,
