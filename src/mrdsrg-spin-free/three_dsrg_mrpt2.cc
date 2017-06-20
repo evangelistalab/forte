@@ -468,7 +468,6 @@ void THREE_DSRG_MRPT2::print_summary() {
     for (auto& str_dim : calculation_info_string) {
         outfile->Printf("\n    %-39s %10s", str_dim.first.c_str(), str_dim.second.c_str());
     }
-    
 }
 
 void THREE_DSRG_MRPT2::cleanup() { dsrg_time_.print_comm_time(); }

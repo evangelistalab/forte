@@ -346,7 +346,6 @@ void MRDSRG::print_options() {
         outfile->Printf("\n    %-35s %15s", str_dim.first.c_str(), str_dim.second.c_str());
     }
     outfile->Printf("\n");
-    
 }
 
 double MRDSRG::compute_energy() {
@@ -622,7 +621,6 @@ double MRDSRG::compute_energy_relaxed() {
                                 maxiter);
                 converged = true;
                 failed = true;
-                
             }
             ++cycle;
 
@@ -648,7 +646,6 @@ double MRDSRG::compute_energy_relaxed() {
         for (int n = 0; n != cycle; ++n) {
             outfile->Printf("\n    %5d  %20.12f %10.3e  %20.12f %10.3e", n, Edsrg_vec[n],
                             Edelta_dsrg_vec[n], Erelax_vec[n], Edelta_relax_vec[n]);
-            
         }
         outfile->Printf("\n    %s", dash.c_str());
         outfile->Printf("\n    %-30s = %23.15f", "MRDSRG Total Energy", Edsrg);
@@ -1030,7 +1027,6 @@ double MRDSRG::compute_energy_sa() {
                             maxiter);
             converged = true;
             failed = true;
-            
         }
         ++cycle;
     } while (!converged);
@@ -1052,7 +1048,6 @@ double MRDSRG::compute_energy_sa() {
     for (int n = 0; n != cycle; ++n) {
         outfile->Printf("\n    %5d  %20.12f %10.3e  %20.12f %10.3e", n, Edsrg_sa_vec[n],
                         Edelta_dsrg_sa_vec[n], Erelax_sa_vec[n], Edelta_relax_sa_vec[n]);
-        
     }
     outfile->Printf("\n    %s", dash.c_str());
 

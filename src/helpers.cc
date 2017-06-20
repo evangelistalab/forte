@@ -303,8 +303,6 @@ void print_method_banner(const std::vector<std::string>& text, const std::string
         *outfile << tab << std::string(padding, ' ') << line << std::endl;
     }
     *outfile << tab << header << std::endl;
-
-    
 }
 
 void print_h2(const std::string& text, const std::string& left_separator,

@@ -289,7 +289,7 @@ void FCI_MO::read_options() {
     //        print_idx("VIRTUAL", idx_v_);
     //        print_idx("PARTICLE", idx_p_);
     //        outfile->Printf("\n");
-    //        
+    //
     //    }
 
     // state averaging
@@ -643,7 +643,6 @@ void FCI_MO::form_det() {
         outfile->Printf("\n    %-35s = %5zu", str_dim.first.c_str(), str_dim.second);
     }
     outfile->Printf("\n");
-    
 
     if (print_ > 1) {
         print_det(determinant_);
@@ -767,7 +766,6 @@ void FCI_MO::form_det_cis() {
             outfile->Printf("\n    %-40s = %5zu", str_dim.first.c_str(), str_dim.second);
         }
         outfile->Printf("\n");
-        
     }
 
     if (print_ > 1) {
@@ -890,7 +888,6 @@ void FCI_MO::form_det_cisd() {
             outfile->Printf("\n    %-40s = %5zu", str_dim.first.c_str(), str_dim.second);
         }
         outfile->Printf("\n");
-        
     }
 
     if (print_ > 1) {
@@ -1655,7 +1652,6 @@ void FCI_MO::print_CI(const int& nroot, const double& CI_threshold,
         outfile->Printf("\n  *  CI Vectors & Configurations  *");
         outfile->Printf("\n  * * * * * * * * * * * * * * * * *");
         outfile->Printf("\n");
-        
     }
 
     dominant_dets_.clear();
@@ -1709,7 +1705,6 @@ void FCI_MO::print_CI(const int& nroot, const double& CI_threshold,
         if (!quiet_) {
             outfile->Printf("\n\n    Total Energy:   %.15lf\n\n", eigen[i].second);
         }
-        
     }
 
     timer_off("Print CI Vectors");
@@ -2475,7 +2470,6 @@ void FCI_MO::Check_Fock(const d2& A, const d2& B, const double& E, size_t& count
         outfile->Printf("\n  %-47s", str.c_str());
         outfile->Printf("Timing %15.6f s", tfock.get());
         outfile->Printf("\n");
-        
     }
     timer_off("Check Fock");
 }
@@ -2514,7 +2508,6 @@ void FCI_MO::Check_FockBlock(const d2& A, const d2& B, const double& E, size_t& 
             outfile->Printf("\n  Warning: Fb_%-7s NOT diagonal!", str.c_str());
             outfile->Printf("\n  Nonzero off-diagonal: %5zu. Largest value: %18.15lf", b, maxb);
         }
-        
     }
 }
 

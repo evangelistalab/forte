@@ -244,7 +244,6 @@ void DirectCI::diagonalize_davidson_liu(DeterminantMap& wfn, WFNOperator& op, Sh
                                         SharedVector& evals, int nroot, int multiplicity) {
     if (print_details_) {
         outfile->Printf("\n\n  Davidson-liu solver algorithm");
-        
     }
 
     size_t dim_space = wfn.size();

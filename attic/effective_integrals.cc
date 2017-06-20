@@ -383,7 +383,6 @@ void EffectiveIntegrals::transform_integrals() {
     delete[] two_electron_integrals;
 
     outfile->Printf("\n  Integral transformation done. %8.8f s", int_timer.get());
-    
 }
 
 double EffectiveIntegrals::aptei_aa(size_t p, size_t q, size_t r, size_t s) {

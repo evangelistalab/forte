@@ -382,7 +382,6 @@ void MRDSRG_SO::print_summary() {
     for (auto& str_dim : calculation_info_string) {
         outfile->Printf("\n    %-39s %10s", str_dim.first.c_str(), str_dim.second.c_str());
     }
-    
 }
 
 void MRDSRG_SO::guess_t2() {
@@ -604,7 +603,7 @@ double MRDSRG_SO::compute_energy() {
                             options_.get_int("MAXITER"));
             converged = true;
         }
-        
+
         ++cycle;
     } while (!converged);
 

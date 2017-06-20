@@ -6,8 +6,6 @@
 
 #include <cmath>
 
-
-
 namespace psi {
 namespace forte {
 

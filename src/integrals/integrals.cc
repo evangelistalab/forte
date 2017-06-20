@@ -110,7 +110,7 @@ void ForteIntegrals::startup() {
     if (not wfn_) {
         outfile->Printf("\n  No wave function object found!  Run a scf "
                         "calculation first!\n");
-        
+
         exit(1);
     }
 

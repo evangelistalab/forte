@@ -182,7 +182,6 @@ void LambdaCI::examine_all(psi::Options& options) {
                     double(num_dets_visited) / double(num_total_dets));
     outfile->Printf("\n  Number of determinants accepted   = %ld (%e)", num_dets_accepted,
                     double(num_dets_accepted) / double(num_total_dets));
-    
 }
 }
 } // EndNamespaces

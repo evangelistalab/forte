@@ -193,7 +193,6 @@ void StringLists::startup() {
         outfile->Printf("\n  Timing for 2-hole strings = %10.3f s", h2_list_timer);
         outfile->Printf("\n  Timing for 3-hole strings = %10.3f s", h3_list_timer);
         outfile->Printf("\n  Total timing              = %10.3f s", total_time);
-        
     }
 }
 
@@ -228,7 +227,7 @@ void StringLists::make_pair_list(NNList& list) {
     //    }
     //    h++;
     //  }
-    //  
+    //
 }
 
 void StringLists::make_strings(GraphPtr graph, StringList& list) {
