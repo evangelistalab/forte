@@ -43,72 +43,60 @@ namespace forte {
 void set_DSRG_options(ForteOptions& foptions) {
 
     /*- Correlation level -*/
-    foptions.add_str("CORR_LEVEL", "PT2",
-                     {"PT2", "PT3", "LDSRG2", "LDSRG2_QC", "LSRG2", "SRG_PT2",
-                      "QDSRG2", "LDSRG2_P3", "QDSRG2_P3"},
+    foptions.add_str("CORR_LEVEL", "PT2", {"PT2", "PT3", "LDSRG2", "LDSRG2_QC", "LSRG2", "SRG_PT2",
+                                           "QDSRG2", "LDSRG2_P3", "QDSRG2_P3"},
                      "Correlation level of MR-DSRG (used in mrdsrg code, "
                      "LDSRG2_P3 and QDSRG2_P3 not implemented)");
 
     /*- Source Operator -*/
-    foptions.add_str("SOURCE", "STANDARD", {"STANDARD", "LABS", "DYSON", "AMP",
-                                            "EMP2", "LAMP", "LEMP2"},
+    foptions.add_str("SOURCE", "STANDARD",
+                     {"STANDARD", "LABS", "DYSON", "AMP", "EMP2", "LAMP", "LEMP2"},
                      "Source operator used in DSRG (AMP, EMP2, LAMP, LEMP2 "
                      "only available in toy code mcsrgpt2)");
 
     /*- The Algorithm to Form T Amplitudes -*/
-    foptions.add_str("T_ALGORITHM", "DSRG",
-                     {"DSRG", "DSRG_NOSEMI", "SELEC", "ISA"},
+    foptions.add_str("T_ALGORITHM", "DSRG", {"DSRG", "DSRG_NOSEMI", "SELEC", "ISA"},
                      "The way of forming amplitudes (DSRG_NOSEMI, SELEC, ISA "
                      "only available in toy code mcsrgpt2)");
 
     /*- Different Zeroth-order Hamiltonian -*/
-    foptions.add_str(
-        "H0TH", "FDIAG", {"FDIAG", "FFULL", "FDIAG_VACTV", "FDIAG_VDIAG"},
-        "Zeroth-order Hamiltonian of DSRG-MRPT (used in mrdsrg code)");
+    foptions.add_str("H0TH", "FDIAG", {"FDIAG", "FFULL", "FDIAG_VACTV", "FDIAG_VDIAG"},
+                     "Zeroth-order Hamiltonian of DSRG-MRPT (used in mrdsrg code)");
 
     /*- T1 Amplitudes -*/
-    foptions.add_str(
-        "T1_AMP", "DSRG", {"DSRG", "SRG", "ZERO"},
-        "The way of forming T1 amplitudes (used in toy code mcsrgpt2)");
+    foptions.add_str("T1_AMP", "DSRG", {"DSRG", "SRG", "ZERO"},
+                     "The way of forming T1 amplitudes (used in toy code mcsrgpt2)");
 
     /*- Reference Relaxation -*/
-    foptions.add_str(
-        "RELAX_REF", "NONE", {"NONE", "ONCE", "ITERATE"},
-        "Relax the reference for MR-DSRG (used in dsrg-mrpt2/3, mrdsrg)");
+    foptions.add_str("RELAX_REF", "NONE", {"NONE", "ONCE", "ITERATE"},
+                     "Relax the reference for MR-DSRG (used in dsrg-mrpt2/3, mrdsrg)");
 
     /*- Max Iteration for Reference Relaxation -*/
-    foptions.add_int("MAXITER_RELAX_REF", 10,
-                     "Max macro iterations for DSRG reference relaxation");
+    foptions.add_int("MAXITER_RELAX_REF", 10, "Max macro iterations for DSRG reference relaxation");
 
     /*- DSRG Taylor Expansion Threshold -*/
     foptions.add_int("TAYLOR_THRESHOLD", 3, "DSRG Taylor expansion threshold");
 
     /*- Print N Largest T Amplitudes -*/
-    foptions.add_int("NTAMP", 15,
-                     "Number of amplitudes printed in the summary");
+    foptions.add_int("NTAMP", 15, "Number of amplitudes printed in the summary");
 
     /*- T Threshold for Intruder States -*/
-    foptions.add_double(
-        "INTRUDER_TAMP", 0.10,
-        "Threshold for amplitudes considered as intruders for warning");
+    foptions.add_double("INTRUDER_TAMP", 0.10,
+                        "Threshold for amplitudes considered as intruders for warning");
 
     /*- The residue convergence criterion -*/
-    foptions.add_double("R_CONVERGENCE", 1.0e-6,
-                        "Convergence criteria for amplitudes");
+    foptions.add_double("R_CONVERGENCE", 1.0e-6, "Convergence criteria for amplitudes");
 
     /*- DSRG Transformation Type -*/
-    foptions.add_str("DSRG_TRANS_TYPE", "UNITARY", {"UNITARY", "CC"},
-                     "DSRG transformation type");
+    foptions.add_str("DSRG_TRANS_TYPE", "UNITARY", {"UNITARY", "CC"}, "DSRG transformation type");
 
     /*- Automatic Adjusting Flow Parameter -*/
-    foptions.add_str(
-        "SMART_DSRG_S", "DSRG_S", {"DSRG_S", "MIN_DELTA1", "MAX_DELTA1",
-                                   "DAVG_MIN_DELTA1", "DAVG_MAX_DELTA1"},
-        "Automatic adjust the flow parameter according to denominators");
+    foptions.add_str("SMART_DSRG_S", "DSRG_S",
+                     {"DSRG_S", "MIN_DELTA1", "MAX_DELTA1", "DAVG_MIN_DELTA1", "DAVG_MAX_DELTA1"},
+                     "Automatic adjust the flow parameter according to denominators");
 
     /*- Print DSRG-MRPT3 Timing Profile -*/
-    foptions.add_bool("PRINT_TIME_PROFILE", false,
-                      "Print detailed timings in dsrg-mrpt3");
+    foptions.add_bool("PRINT_TIME_PROFILE", false, "Print detailed timings in dsrg-mrpt3");
 
     /*- Multi-State DSRG options
      *  - State-average approach
@@ -119,24 +107,20 @@ void set_DSRG_options(ForteOptions& foptions) {
      * <M|H T_N|N>]
      *    - XMS: rotate references such that <M|F|N> is diagonal before MS
      * procedure -*/
-    foptions.add_str(
-        "DSRG_MULTI_STATE", "SA_FULL", {"SA_FULL", "SA_SUB", "MS", "XMS"},
-        "Multi-state DSRG options (MS and XMS recouple states after "
-        "single-state computations)");
+    foptions.add_str("DSRG_MULTI_STATE", "SA_FULL", {"SA_FULL", "SA_SUB", "MS", "XMS"},
+                     "Multi-state DSRG options (MS and XMS recouple states after "
+                     "single-state computations)");
 
     /*- Form 3-Body Hbar (Test for SA_SUB) -*/
-    foptions.add_bool(
-        "FORM_HBAR3", false,
-        "Form 3-body Hbar (only used in dsrg-mrpt2 with SA_SUB for testing)");
+    foptions.add_bool("FORM_HBAR3", false,
+                      "Form 3-body Hbar (only used in dsrg-mrpt2 with SA_SUB for testing)");
 
     /*- DSRG Perturbation -*/
-    foptions.add_bool(
-        "DSRGPT", true,
-        "Renormalize (if true) the integrals (only used in toy code mcsrgpt2)");
+    foptions.add_bool("DSRGPT", true,
+                      "Renormalize (if true) the integrals (only used in toy code mcsrgpt2)");
 
     /*- Include internal amplitudes according to excitation level -*/
-    foptions.add_str("INTERNAL_AMP", "NONE",
-                     {"NONE", "SINGLES_DOUBLES", "SINGLES", "DOUBLES"},
+    foptions.add_str("INTERNAL_AMP", "NONE", {"NONE", "SINGLES_DOUBLES", "SINGLES", "DOUBLES"},
                      "Include internal amplitudes for VCIS/VCISD-DSRG");
 
     /*- Select only part of the asked internal amplitudes (IAs) in
@@ -146,9 +130,8 @@ void set_DSRG_options(ForteOptions& foptions) {
      *  - ALL:  all IAs (O->O, V->V, O->V; OO->OO, OV->OV, VV->VV, OO->VV,
      * OO->OV, OV->VV)
      *  - OOVV: pure external (O->V; OO->VV) -*/
-    foptions.add_str(
-        "INTERNAL_AMP_SELECT", "AUTO", {"AUTO", "ALL", "OOVV"},
-        "Excitation types considered when internal amplitudes are included");
+    foptions.add_str("INTERNAL_AMP_SELECT", "AUTO", {"AUTO", "ALL", "OOVV"},
+                     "Excitation types considered when internal amplitudes are included");
 
     /*- Intruder State Avoidance b Parameter -*/
     foptions.add_double("ISA_B", 0.02, "Intruder state avoidance parameter "
@@ -162,40 +145,35 @@ void set_DSRG_options(ForteOptions& foptions) {
 
     /*- Algorithm for the ccvv term for three-dsrg-mrpt2 -*/
     foptions.add_str("CCVV_ALGORITHM", "FLY_AMBIT",
-                     {"CORE", "FLY_AMBIT", "FLY_LOOP", "BATCH_CORE",
-                      "BATCH_VIRTUAL", "BATCH_CORE_GA", "BATCH_VIRTUAL_GA",
-                      "BATCH_VIRTUAL_MPI", "BATCH_CORE_MPI", "BATCH_CORE_REP",
-                      "BATCH_VIRTUAL_REP"},
+                     {"CORE", "FLY_AMBIT", "FLY_LOOP", "BATCH_CORE", "BATCH_VIRTUAL",
+                      "BATCH_CORE_GA", "BATCH_VIRTUAL_GA", "BATCH_VIRTUAL_MPI", "BATCH_CORE_MPI",
+                      "BATCH_CORE_REP", "BATCH_VIRTUAL_REP"},
                      "Algorithm to compute the CCVV term in DSRG-MRPT2 (only "
                      "used in three-dsrg-mrpt2 code)");
 
     /*- Do AO-DSRG-MRPT2 -*/
-    foptions.add_bool("AO_DSRG_MRPT2", false,
-                      "Do AO-DSRG-MRPT2 if true (not available)");
+    foptions.add_bool("AO_DSRG_MRPT2", false, "Do AO-DSRG-MRPT2 if true (not available)");
 
     /*- Batches for CCVV_ALGORITHM -*/
     foptions.add_int("CCVV_BATCH_NUMBER", -1, "Batches for CCVV_ALGORITHM");
 
     /*- Excessive printing for DF_DSRG_MRPT2 -*/
-    foptions.add_bool("DSRG_MRPT2_DEBUG", false,
-                      "Excssive printing for three-dsrg-mrpt2");
+    foptions.add_bool("DSRG_MRPT2_DEBUG", false, "Excssive printing for three-dsrg-mrpt2");
 
     /*- Algorithm for evaluating 3Cumulant -*/
-    foptions.add_str(
-        "THREEPDC_ALGORITHM", "CORE", {"CORE", "BATCH"},
-        "Algorithm for evaluating 3-body cumulants in three-dsrg-mrpt2");
+    foptions.add_str("THREEPDC_ALGORITHM", "CORE", {"CORE", "BATCH"},
+                     "Algorithm for evaluating 3-body cumulants in three-dsrg-mrpt2");
 
     /*- Detailed timing printings -*/
     foptions.add_bool("THREE_MRPT2_TIMINGS", false,
                       "Detailed printing (if true) in three-dsrg-mrpt2");
 
     /*- Print (1 - exp(-2*s*D)) / D -*/
-    foptions.add_bool(
-        "PRINT_DENOM2", false,
-        "Print (if true) renormalized denominators in DSRG-MRPT2");
+    foptions.add_bool("PRINT_DENOM2", false,
+                      "Print (if true) renormalized denominators in DSRG-MRPT2");
 }
 
 /// A uniformed function to run DSRG related jobs
-//void run_dsrg() {}
+// void run_dsrg() {}
 }
 }

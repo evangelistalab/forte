@@ -121,7 +121,8 @@ double dot(const det_hashvec& A, const std::vector<double> Ca, const det_hashvec
     return res;
 }
 
-void ProjectorCI_HashVec::sortHashVecByCoefficient(det_hashvec& dets_hashvec, std::vector<double>& C) {
+void ProjectorCI_HashVec::sortHashVecByCoefficient(det_hashvec& dets_hashvec,
+                                                   std::vector<double>& C) {
     size_t dets_size = dets_hashvec.size();
     std::vector<std::pair<double, size_t>> det_weight(dets_size);
     for (size_t I = 0; I < dets_size; ++I) {
@@ -785,10 +786,10 @@ double ProjectorCI_HashVec::compute_energy() {
 
     timer_on("PCI:<E>end_v");
 
-//    timer_on("PCI:sort");
-//    sortHashVecByCoefficient(dets_hashvec, C);
-//    timer_off("PCI:sort");
-//    outfile->Printf("\nSuccessfully sorted!");
+    //    timer_on("PCI:sort");
+    //    sortHashVecByCoefficient(dets_hashvec, C);
+    //    timer_off("PCI:sort");
+    //    outfile->Printf("\nSuccessfully sorted!");
 
     if (fast_variational_estimate_) {
         var_energy = estimate_var_energy_sparse(dets_hashvec, C, 1.0e-14);

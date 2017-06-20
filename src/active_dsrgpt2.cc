@@ -27,10 +27,13 @@
  */
 
 #include <algorithm>
+#include <iomanip>
 #include <map>
 
 #include "ambit/tensor.h"
 #include "psi4/libmints/pointgrp.h"
+#include "psi4/libmints/dipole.h"
+#include "psi4/libmints/petitelist.h"
 #include "psi4/physconst.h"
 
 #include "fci_mo.h"
@@ -79,14 +82,36 @@ void ACTIVE_DSRGPT2::startup() {
         }
 
         int nirrep = this->nirrep();
-        //        ref_energies_ = vector<vector<double>>(nirrep,
-        //        vector<double>());
-        //        pt_energies_ = vector<vector<double>>(nirrep,
-        //        vector<double>());
         dominant_dets_ =
             vector<vector<STLBitsetDeterminant>>(nirrep, vector<STLBitsetDeterminant>());
         Uaorbs_ = vector<vector<SharedMatrix>>(nirrep, vector<SharedMatrix>());
         Uborbs_ = vector<vector<SharedMatrix>>(nirrep, vector<SharedMatrix>());
+
+        // determined absolute indices of active orbitals in C1 symmetry
+        Dimension nmopi = this->nmopi();
+        Dimension frzcpi = mo_space_info_->get_dimension("FROZEN_DOCC");
+        Dimension corepi = mo_space_info_->get_dimension("RESTRICTED_DOCC");
+        Dimension actvpi = mo_space_info_->get_dimension("ACTIVE");
+
+        actvIdxC1_ = vector<vector<size_t>>(nirrep, vector<size_t>());
+        std::vector<std::tuple<double, int, int>> order;
+        for (int h = 0; h < nirrep; ++h) {
+            for (int i = 0; i < nmopi[h]; ++i) {
+                order.push_back(std::tuple<double, int, int>(this->epsilon_a()->get(h, i), i, h));
+            }
+        }
+        std::sort(order.begin(), order.end(), std::less<std::tuple<double, int, int>>());
+
+        for (int idx = 0; idx < order.size(); ++idx) {
+            int i = std::get<1>(order[idx]);
+            int h = std::get<2>(order[idx]);
+
+            int actv_min = frzcpi[h] + corepi[h];
+            int actv_max = actv_min + actvpi[h];
+            if (i >= actv_min && i < actv_max) {
+                actvIdxC1_[h].push_back(static_cast<size_t>(idx));
+            }
+        }
 
         CharacterTable ct = Process::environment.molecule()->point_group()->char_table();
         std::string cisd_noHF;
@@ -145,18 +170,23 @@ void ACTIVE_DSRGPT2::startup() {
 
 void ACTIVE_DSRGPT2::precompute_energy() {
     print_h2("Precomputation of ACTIVE-DSRGPT2");
-    outfile->Printf("\n  Note: Looping over all roots to ");
+    outfile->Printf("\n  Note: Looping over all roots to");
     outfile->Printf("\n  1) determine excitation type;");
     outfile->Printf("\n  2) obtain original orbital extent;");
     outfile->Printf("\n  3) obtain unitary matrices that semicanonicalize"
                     " orbitals of each state;");
-    outfile->Printf("\n  4) determine %%T1 in CISD.");
+    outfile->Printf("\n  4) compute singlet CIS/CISD oscillator strength;");
+    outfile->Printf("\n  5) determine %%T1 in CISD.");
     outfile->Printf("\n");
 
+    CharacterTable ct = Process::environment.molecule()->point_group()->char_table();
     fci_mo_ = std::make_shared<FCI_MO>(reference_wavefunction_, options_, ints_, mo_space_info_);
     orb_extents_ = flatten_fci_orbextents(fci_mo_->orb_extents());
 
     int nirrep = this->nirrep();
+    std::vector<STLBitsetDeterminant> p_space0;
+    std::vector<std::pair<SharedVector, double>> eigen0;
+
     for (int h = 0; h < nirrep; ++h) {
         if (nrootpi_[h] == 0) {
             if (h == 0) {
@@ -180,7 +210,7 @@ void ACTIVE_DSRGPT2::precompute_energy() {
                 fci_mo_->set_root(0);
                 fci_mo_->set_multiplicity(1);
 
-                fci_mo_->compute_energy();
+                fci_mo_->compute_ss_energy();
                 dominant_dets_[h].push_back(fci_mo_->dominant_dets()[0]);
                 if (ref_type_ == "CISD") {
                     t1_percentage_[h].push_back(fci_mo_->compute_T1_percentage()[0]);
@@ -202,7 +232,7 @@ void ACTIVE_DSRGPT2::precompute_energy() {
                     fci_mo_->set_nroots(nroot);
                     fci_mo_->set_root(0);
 
-                    fci_mo_->compute_energy();
+                    fci_mo_->compute_ss_energy();
                 } else {
                     continue; // move on to the next irrep
                 }
@@ -211,7 +241,7 @@ void ACTIVE_DSRGPT2::precompute_energy() {
                 fci_mo_->set_nroots(nroot);
                 fci_mo_->set_root(0);
 
-                fci_mo_->compute_energy();
+                fci_mo_->compute_ss_energy();
             }
 
             // fill in dominant_dets_
@@ -261,8 +291,211 @@ void ACTIVE_DSRGPT2::precompute_energy() {
                 Uaorbs_[h].push_back(Ua);
                 Uborbs_[h].push_back(Ub);
             }
+
+            // compute oscillator strength (only for singlet)
+            if (multiplicity_ == 1 && h == 0) {
+                eigen0 = eigen;
+                p_space0 = fci_mo_->p_space();
+                outfile->Printf("\n  Computing %s reference oscillator strength 0%s -> n%s ... ",
+                                ref_type_.c_str(), ct.gamma(0).symbol(), ct.gamma(0).symbol());
+                compute_oscillator_strength(0, h, p_space0, p_space0, eigen, eigen, true);
+                outfile->Printf("Done.");
+
+            } else if (multiplicity_ == 1 && h != 0) {
+
+                std::vector<STLBitsetDeterminant> p_space1 = fci_mo_->p_space();
+                outfile->Printf("\n  Computing %s reference oscillator strength 0%s -> n%s ... ",
+                                ref_type_.c_str(), ct.gamma(0).symbol(), ct.gamma(h).symbol());
+                compute_oscillator_strength(0, h, p_space0, p_space1, eigen0, eigen);
+                outfile->Printf("Done.");
+            }
         }
     }
+}
+
+void ACTIVE_DSRGPT2::compute_oscillator_strength(
+    const int& irrep0, const int& irrep1, const std::vector<STLBitsetDeterminant>& p_space0,
+    const std::vector<STLBitsetDeterminant>& p_space1,
+    const std::vector<std::pair<SharedVector, double>>& eigen0,
+    const std::vector<std::pair<SharedVector, double>>& eigen1, const bool& same) {
+
+    // obtain AO dipole from libmints
+    std::shared_ptr<BasisSet> basisset = this->basisset();
+    std::shared_ptr<IntegralFactory> ints = std::shared_ptr<IntegralFactory>(
+        new IntegralFactory(basisset, basisset, basisset, basisset));
+
+    std::vector<SharedMatrix> aodipole_ints;
+    for (const std::string& direction : {"X", "Y", "Z"}) {
+        std::string name = "AO Dipole" + direction;
+        aodipole_ints.push_back(SharedMatrix(new Matrix(name, basisset->nbf(), basisset->nbf())));
+    }
+    std::shared_ptr<OneBodyAOInt> aodOBI(ints->ao_dipole());
+    aodOBI->compute(aodipole_ints);
+
+    // SO to AO transformer
+    boost::shared_ptr<PetiteList> pet(new PetiteList(basisset, ints));
+    SharedMatrix sotoao = pet->sotoao();
+
+    // prepare FCIIntegrals to initialize CI_RDM
+    std::shared_ptr<FCIIntegrals> fci_ints =
+        std::make_shared<FCIIntegrals>(ints_, mo_space_info_->get_corr_abs_mo("ACTIVE"),
+                                       mo_space_info_->get_corr_abs_mo("RESTRICTED_DOCC"));
+
+    // character table
+    CharacterTable ct = Process::environment.molecule()->point_group()->char_table();
+
+    // combined space of determinants
+    size_t ndet0 = p_space0.size();
+    size_t ndet1 = p_space1.size();
+    size_t ndet = ndet0;
+    std::vector<STLBitsetDeterminant> p_space(p_space0);
+    if (!same) {
+        ndet += ndet1;
+        p_space.insert(p_space.end(), p_space1.begin(), p_space1.end());
+    }
+
+    // combined eigen values and vectors
+    size_t nroot0 = eigen0.size();
+    size_t nroot1 = eigen1.size();
+    size_t nroot = nroot0;
+    std::vector<double> evals(nroot, 0.0);
+    SharedMatrix evecs(new Matrix("combined evecs", ndet, nroot));
+
+    if (same) {
+        for (int n = 0; n < nroot0; ++n) {
+            evals[n] = eigen0[n].second;
+            evecs->set_column(0, n, eigen0[n].first);
+        }
+    } else {
+        nroot += nroot1;
+        evals = std::vector<double>(nroot, 0.0);
+        evecs = SharedMatrix(new Matrix("combined evecs", ndet, nroot));
+
+        for (int n = 0; n < nroot0; ++n) {
+            evals[n] = eigen0[n].second;
+
+            SharedVector evec0 = eigen0[n].first;
+            SharedVector evec(new Vector("combined evec0 " + std::to_string(n), ndet));
+            for (size_t i = 0; i < ndet0; ++i) {
+                evec->set(i, evec0->get(i));
+            }
+            evecs->set_column(0, n, evec);
+        }
+
+        for (int n = 0; n < nroot1; ++n) {
+            evals[n + nroot0] = eigen1[n].second;
+
+            SharedVector evec1 = eigen1[n].first;
+            SharedVector evec(new Vector("combined evec1 " + std::to_string(n), ndet));
+            for (size_t i = 0; i < ndet1; ++i) {
+                evec->set(i + ndet0, evec1->get(i));
+            }
+            evecs->set_column(0, n + nroot0, evec);
+        }
+    }
+
+    // compute oscillator strength for S0(sym0) -> Sn
+    std::string S0_symbol = ct.gamma(irrep0).symbol();
+    for (int n = 1; n < nroot; ++n) {
+        std::string Sn_symbol;
+        int nn;
+        if (n < nroot0) {
+            Sn_symbol = ct.gamma(irrep0).symbol();
+            nn = n;
+        } else {
+            Sn_symbol = ct.gamma(irrep1).symbol();
+            nn = n - nroot0;
+        }
+
+        std::stringstream name_ss;
+        int w = nn > 99 ? 3 : 2;
+        name_ss << 0 << " " << std::setw(3) << S0_symbol << " -> " << std::setw(w) << nn << " "
+                << std::setw(3) << Sn_symbol;
+        std::string name = name_ss.str();
+
+        if (f_ref_.find(name) == f_ref_.end()) {
+            Vector4 transD =
+                compute_root_trans_dipole(aodipole_ints, sotoao, fci_ints, p_space, evecs, 0, n);
+            double Eexcited = evals[n] - evals[0];
+
+            Vector4 osc;
+            osc.x = 2.0 / 3.0 * Eexcited * transD.x * transD.x;
+            osc.y = 2.0 / 3.0 * Eexcited * transD.y * transD.y;
+            osc.z = 2.0 / 3.0 * Eexcited * transD.z * transD.z;
+            osc.t = osc.x + osc.y + osc.z;
+
+            f_ref_[name] = osc;
+        }
+    }
+}
+
+Vector4 ACTIVE_DSRGPT2::compute_root_trans_dipole(const std::vector<SharedMatrix>& aodipole_ints,
+                                                  SharedMatrix sotoao,
+                                                  std::shared_ptr<FCIIntegrals> fci_ints,
+                                                  const std::vector<STLBitsetDeterminant>& p_space,
+                                                  SharedMatrix evecs, const int& root0,
+                                                  const int& root1) {
+    int nirrep = mo_space_info_->nirrep();
+    Dimension nmopi = this->nmopi();
+    Dimension actvpi = mo_space_info_->get_dimension("ACTIVE");
+    size_t nactv = actvpi.sum();
+    size_t nmo = nmopi.sum();
+
+    // obtain MO transition density
+    CI_RDMS ci_rdms(options_, fci_ints, p_space, evecs, root0, root1);
+    vector<double> opdm_a(nactv * nactv, 0.0);
+    vector<double> opdm_b(nactv * nactv, 0.0);
+    ci_rdms.compute_1rdm(opdm_a, opdm_b);
+
+    // prepare AO transition density (spin summed)
+    SharedMatrix AOtransD(new Matrix("AO TransD", nmo, nmo));
+
+    auto offset_irrep = [](const int& h, const Dimension& npi) -> size_t {
+        int h_local = h;
+        size_t offset = 0;
+        while ((--h_local) >= 0) {
+            offset += npi[h_local];
+        }
+        return offset;
+    };
+
+    for (int h0 = 0; h0 < nirrep; ++h0) {
+        size_t offset_rdm_h0 = offset_irrep(h0, actvpi);
+
+        for (int h1 = 0; h1 < nirrep; ++h1) {
+            size_t offset_rdm_h1 = offset_irrep(h1, actvpi);
+
+            for (size_t u = 0; u < actvpi[h0]; ++u) {
+                size_t u_rdm = u + offset_rdm_h0;
+                size_t u_all = actvIdxC1_[h0][u];
+
+                for (size_t v = 0; v < actvpi[h1]; ++v) {
+                    size_t v_rdm = v + offset_rdm_h1;
+                    size_t v_all = actvIdxC1_[h1][v];
+
+                    size_t idx = u_rdm * nactv + v_rdm;
+                    AOtransD->set(u_all, v_all, opdm_a[idx] + opdm_b[idx]);
+                    //                    if (fabs(opdm_a[idx]) > 0.00000001) {
+                    //                        outfile->Printf(
+                    //                            "\n  rdm i: %2zu, rdm j: %2zu, all i: %2zu, all j:
+                    //                            %2zu, alpha: %.12f",
+                    //                            u_rdm, v_rdm, u_all, v_all, opdm_a[idx]);
+                    //                    }
+                }
+            }
+        }
+    }
+
+    AOtransD->back_transform(this->Ca_subset("AO"));
+
+    // compute transition dipole
+    Vector4 transD;
+    transD.x = AOtransD->vector_dot(aodipole_ints[0]);
+    transD.y = AOtransD->vector_dot(aodipole_ints[1]);
+    transD.z = AOtransD->vector_dot(aodipole_ints[2]);
+    transD.t = sqrt(transD.x * transD.x + transD.y * transD.y + transD.z * transD.z);
+
+    return transD;
 }
 
 double ACTIVE_DSRGPT2::compute_energy() {
@@ -319,7 +552,7 @@ double ACTIVE_DSRGPT2::compute_energy() {
                     fci_mo_->set_nroots(1);
                     fci_mo_->set_root(0);
                     fci_mo_->set_multiplicity(1);
-                    double Eref = fci_mo_->compute_energy();
+                    double Eref = fci_mo_->compute_ss_energy();
                     ref_energies_[0].push_back(Eref);
 
                     // check Fock matrix
@@ -387,7 +620,7 @@ double ACTIVE_DSRGPT2::compute_energy() {
                     // compute reference energy
                     fci_mo_->set_nroots(nroot);
                     fci_mo_->set_root(i);
-                    double Eref = fci_mo_->compute_energy();
+                    double Eref = fci_mo_->compute_ss_energy();
                     ref_energies_[h].push_back(Eref);
                     Reference reference = fci_mo_->reference();
 
@@ -553,9 +786,17 @@ void ACTIVE_DSRGPT2::rotate_orbs(SharedMatrix Ca0, SharedMatrix Cb0, SharedMatri
 }
 
 void ACTIVE_DSRGPT2::print_summary() {
-    print_h2("ACTIVE-DSRG-MRPT2 Summary");
-
     int nirrep = this->nirrep();
+
+    // print oscillator strength
+    print_h2(ref_type_ + " Oscillator Strength");
+    for (const auto& fp : f_ref_) {
+        const Vector4& f = fp.second;
+        outfile->Printf("\n  %s:  X: %7.4f  Y: %7.4f  Z: %7.4f  Total: %7.4f", fp.first.c_str(),
+                        f.x, f.y, f.z, f.t);
+    }
+
+    print_h2("ACTIVE-DSRG-MRPT2 Summary");
 
     // print raw data
     if (ref_type_ == "CISD") {
