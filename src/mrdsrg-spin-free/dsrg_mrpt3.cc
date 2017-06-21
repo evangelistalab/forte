@@ -526,14 +526,29 @@ bool DSRG_MRPT3::check_semicanonical() {
         outfile->Printf("\n    Fa %15.10f %15.10f %15.10f", Foff[0], Foff[1], Foff[2]);
         outfile->Printf("\n    Fb %15.10f %15.10f %15.10f", Foff[3], Foff[4], Foff[5]);
         outfile->Printf("\n    %s\n", sep.c_str());
+
+        outfile->Printf("\n    DSRG energy is reliable roughly to the same "
+                        "digit as max(|F_ij|, i != j), F: Fock diag. blocks.\n");
     } else {
         outfile->Printf("\n    Orbitals are semi-canonicalized.");
         semi = true;
     }
 
-    if (ignore_semicanonical_) {
-        outfile->Printf("\n    Warning: ignore test result of semi-canonical "
-                        "orbitals. DSRG-MRPT3 energy may be meaningless.");
+    if (ignore_semicanonical_ && Foff_sum > threshold) {
+        std::string actv_type = options_.get_str("FCIMO_ACTV_TYPE");
+        if (actv_type == "CIS" || actv_type == "CISD") {
+            outfile->Printf("\n    It is OK for Fock (active) not being diagonal because %s "
+                            "active space is incomplete.",
+                            actv_type.c_str());
+            outfile->Printf("\n    Please inspect if the Fock diag. blocks (C, AH, AP, V) "
+                            "are diagonal or not in the prior CI step.");
+
+        } else {
+            outfile->Printf("\n    Warning: ignore testing of semi-canonical orbitals.");
+            outfile->Printf(
+                "\n    Please inspect if the Fock diag. blocks (C, A, V) are diagonal or not.");
+        }
+
         semi = true;
     }
 

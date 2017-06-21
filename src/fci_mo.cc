@@ -3312,7 +3312,10 @@ void FCI_MO::fill_density(vector<double>& opdm_a, vector<double>& opdm_b) {
 
 void FCI_MO::compute_ref() {
     timer_on("Compute Ref");
-    outfile->Printf("\n  Computing 2- and 3-cumulants ... ");
+    Timer tcu;
+    if (!quiet_) {
+        outfile->Printf("\n  Computing 2- and 3-cumulants ... ");
+    }
 
     // prepare ci_rdms
     int dim = (eigen_[0].first)->dim();
@@ -3393,7 +3396,9 @@ void FCI_MO::compute_ref() {
         }
     }
 
-    outfile->Printf("Done.\n");
+    if (!quiet_) {
+        outfile->Printf("Done. Timing %15.6f s\n", tcu.get());
+    }
     timer_off("Compute Ref");
 }
 

@@ -18,9 +18,9 @@
     -----------------------------------------------------------------------
 
 
-    Psi4 started on: Tuesday, 20 June 2017 05:52PM
+    Psi4 started on: Tuesday, 20 June 2017 08:39PM
 
-    Process ID:  68852
+    Process ID:  70887
     PSIDATADIR: /Users/york/src/psi4new/psi4/share/psi4
     Memory:     500.0 MiB
     Threads:    1
@@ -85,7 +85,7 @@ compare_values(r_0bu, E0bu, 8, "abs. energy of singlet 0Bu") #TEST
   Memory set to 953.674 MiB by Python driver.
 
 *** tstart() called on Yorks-Mac.local
-*** at Tue Jun 20 17:52:48 2017
+*** at Tue Jun 20 20:39:40 2017
 
    => Loading Basis Set <=
 
@@ -212,24 +212,24 @@ compare_values(r_0bu, E0bu, 8, "abs. energy of singlet 0Bu") #TEST
 
                            Total Energy        Delta E     RMS |[F,P]|
 
-   @DF-RHF iter   0:  -156.18792056885502   -1.56188e+02   4.28666e-02 
-   @DF-RHF iter   1:  -154.87864677391755    1.30927e+00   3.96188e-03 
-   @DF-RHF iter   2:  -154.96878727907682   -9.01405e-02   1.26252e-03 DIIS
-   @DF-RHF iter   3:  -154.97735228899154   -8.56501e-03   6.20598e-04 DIIS
-   @DF-RHF iter   4:  -154.97917145270733   -1.81916e-03   1.14135e-04 DIIS
-   @DF-RHF iter   5:  -154.97925616563279   -8.47129e-05   2.91460e-05 DIIS
-   @DF-RHF iter   6:  -154.97926262732318   -6.46169e-06   7.68647e-06 DIIS
-   @DF-RHF iter   7:  -154.97926321125846   -5.83935e-07   2.03276e-06 DIIS
-   @DF-RHF iter   8:  -154.97926325074366   -3.94852e-08   6.55440e-07 DIIS
-   @DF-RHF iter   9:  -154.97926325549602   -4.75237e-09   1.72370e-07 DIIS
-   @DF-RHF iter  10:  -154.97926325582782   -3.31795e-10   2.18218e-08 DIIS
-   @DF-RHF iter  11:  -154.97926325583217   -4.34852e-12   2.77221e-09 DIIS
-   @DF-RHF iter  12:  -154.97926325583239   -2.27374e-13   5.18925e-10 DIIS
-   @DF-RHF iter  13:  -154.97926325583231    8.52651e-14   9.22745e-11 DIIS
-   @DF-RHF iter  14:  -154.97926325583239   -8.52651e-14   1.98584e-11 DIIS
-   @DF-RHF iter  15:  -154.97926325583234    5.68434e-14   5.97901e-12 DIIS
-   @DF-RHF iter  16:  -154.97926325583239   -5.68434e-14   1.91049e-12 DIIS
-   @DF-RHF iter  17:  -154.97926325583251   -1.13687e-13   3.39988e-13 DIIS
+   @DF-RHF iter   0:  -156.18792056885525   -1.56188e+02   4.28666e-02 
+   @DF-RHF iter   1:  -154.87864677391775    1.30927e+00   3.96188e-03 
+   @DF-RHF iter   2:  -154.96878727907691   -9.01405e-02   1.26252e-03 DIIS
+   @DF-RHF iter   3:  -154.97735228899148   -8.56501e-03   6.20598e-04 DIIS
+   @DF-RHF iter   4:  -154.97917145270756   -1.81916e-03   1.14135e-04 DIIS
+   @DF-RHF iter   5:  -154.97925616563273   -8.47129e-05   2.91460e-05 DIIS
+   @DF-RHF iter   6:  -154.97926262732312   -6.46169e-06   7.68647e-06 DIIS
+   @DF-RHF iter   7:  -154.97926321125863   -5.83936e-07   2.03276e-06 DIIS
+   @DF-RHF iter   8:  -154.97926325074360   -3.94850e-08   6.55440e-07 DIIS
+   @DF-RHF iter   9:  -154.97926325549599   -4.75239e-09   1.72370e-07 DIIS
+   @DF-RHF iter  10:  -154.97926325582753   -3.31539e-10   2.18218e-08 DIIS
+   @DF-RHF iter  11:  -154.97926325583228   -4.74643e-12   2.77221e-09 DIIS
+   @DF-RHF iter  12:  -154.97926325583254   -2.55795e-13   5.18924e-10 DIIS
+   @DF-RHF iter  13:  -154.97926325583234    1.98952e-13   9.22747e-11 DIIS
+   @DF-RHF iter  14:  -154.97926325583231    2.84217e-14   1.98577e-11 DIIS
+   @DF-RHF iter  15:  -154.97926325583228    2.84217e-14   5.98053e-12 DIIS
+   @DF-RHF iter  16:  -154.97926325583245   -1.70530e-13   1.91120e-12 DIIS
+   @DF-RHF iter  17:  -154.97926325583245    0.00000e+00   3.40057e-13 DIIS
 
   ==> Post-Iterations <==
 
@@ -302,17 +302,16 @@ compare_values(r_0bu, E0bu, 8, "abs. energy of singlet 0Bu") #TEST
 
   Energy converged.
 
-  @DF-RHF Final Energy:  -154.97926325583251
+  @DF-RHF Final Energy:  -154.97926325583245
 
    => Energetics <=
 
     Nuclear Repulsion Energy =            103.5160937733975146
-    One-Electron Energy =                -412.4821654899354826
-    Two-Electron Energy =                 153.9868084607054470
-    PCM Polarization Energy =               0.0000000000000000
-    Total Energy =                       -154.9792632558325067
+    One-Electron Energy =                -412.4821654899334362
+    Two-Electron Energy =                 153.9868084607034575
+    Total Energy =                       -154.9792632558324499
 
-    Alert: EFP and PCM quantities not currently incorporated into SCF psivars.
+
 
 Properties will be evaluated at   0.000000,   0.000000,   0.000000 Bohr
 
@@ -331,14 +330,14 @@ Properties computed using the SCF density matrix
      X:     0.0000      Y:     0.0000      Z:     0.0000     Total:     0.0000
 
 
-*** tstop() called on Yorks-Mac.local at Tue Jun 20 17:52:52 2017
+*** tstop() called on Yorks-Mac.local at Tue Jun 20 20:39:44 2017
 Module time:
-	user time   =       5.13 seconds =       0.09 minutes
-	system time =       0.30 seconds =       0.01 minutes
+	user time   =       4.99 seconds =       0.08 minutes
+	system time =       0.28 seconds =       0.00 minutes
 	total time  =          4 seconds =       0.07 minutes
 Total time:
-	user time   =       5.13 seconds =       0.09 minutes
-	system time =       0.30 seconds =       0.01 minutes
+	user time   =       4.99 seconds =       0.08 minutes
+	system time =       0.28 seconds =       0.00 minutes
 	total time  =          4 seconds =       0.07 minutes
 	SCF energy........................................................PASSED
    => Loading Basis Set <=
@@ -548,16 +547,16 @@ Calling plugin forte.so.
  Number of auxiliary basis functions:  408
  Need 0.077820 GB to store DF integrals
 
-  Computing DF Integrals               ......Done. Timing        1.374189 s
-  Seeking DF Integrals                 ......Done. Timing        1.391325 s
-  Reading DF Integrals                 ......Done. Timing        1.409832 s
+  Computing DF Integrals               ......Done. Timing        1.377364 s
+  Seeking DF Integrals                 ......Done. Timing        1.394194 s
+  Reading DF Integrals                 ......Done. Timing        1.412781 s
   Frozen-core energy           -176.832886809166 a.u.
 
-  FrozenOneBody Operator takes  1.31339100 s
+  FrozenOneBody Operator takes  1.34758700 s
   Resorting integrals after freezing core.
  Done with resorting
- Resorting integrals takes   0.67723300s
-  DFIntegrals take      3.45003300 s
+ Resorting integrals takes   0.67017000s
+  DFIntegrals take      3.48107600 s
 
               ---------------------------------------------------
                                ACTIVE-DSRG-MRPT2
@@ -626,7 +625,7 @@ Calling plugin forte.so.
 
   ==> Working on Irrep Ag <==
 
-  Forming determinants                ...  Done. Timing        0.000058 s
+  Forming determinants                ...  Done. Timing        0.000056 s
 
   ==> Determinants Summary <==
 
@@ -642,7 +641,7 @@ Calling plugin forte.so.
   Diagonalizing Hamiltonian           ...
   Found 8 roots with 2S+1 = 1 *
   Found 5 roots with 2S+1 = 3
-  Found 1 roots with 2S+1 = 5  Done. Timing        0.001998 s
+  Found 1 roots with 2S+1 = 5  Done. Timing        0.001041 s
 
   * * * * * * * * * * * * * * * * *
   *  CI Vectors & Configurations  *
@@ -652,7 +651,7 @@ Calling plugin forte.so.
 
     20 20          1.0000000000
 
-    Total Energy:   -154.979263255780438
+    Total Energy:   -154.979263255782143
 
 
   ==> Root No. 1 <==
@@ -670,7 +669,7 @@ Calling plugin forte.so.
     bb aa         -0.0949273757
     22 00         -0.0899743824
 
-    Total Energy:   -154.733201173937346
+    Total Energy:   -154.733201173938625
 
 
   ==> Root No. 2 <==
@@ -682,11 +681,11 @@ Calling plugin forte.so.
     00 22          0.2578247824
     20 02         -0.1412729866
 
-    Total Energy:   -154.638421918865731
+    Total Energy:   -154.638421918867067
 
 
-  Forming one-particle density        ...  Done. Timing        0.001443 s
-  Forming generalized Fock matrix     ...  Done. Timing        3.372412 s
+  Forming one-particle density        ...  Done. Timing        0.001365 s
+  Forming generalized Fock matrix     ...  Done. Timing        3.397051 s
 
   ==> Permanent Dipole Moments (Ag) <==
 
@@ -703,19 +702,19 @@ Calling plugin forte.so.
   Only print nonzero (> 1.0e-5) elements.
 
   Computing semicanonical orbital rotation matrix for root 0.
-  Forming one-particle density        ...  Done. Timing        0.000105 s
-  Forming generalized Fock matrix     ...  Done. Timing        3.484644 s
-  Diagonalizing Fock                  ...  Done. Timing        0.003207 s
+  Forming one-particle density        ...  Done. Timing        0.000104 s
+  Forming generalized Fock matrix     ...  Done. Timing        3.197567 s
+  Diagonalizing Fock                  ...  Done. Timing        0.002188 s
 
   Computing semicanonical orbital rotation matrix for root 1.
-  Forming one-particle density        ...  Done. Timing        0.000111 s
-  Forming generalized Fock matrix     ...  Done. Timing        3.240976 s
-  Diagonalizing Fock                  ...  Done. Timing        0.002162 s
+  Forming one-particle density        ...  Done. Timing        0.000107 s
+  Forming generalized Fock matrix     ...  Done. Timing        3.098960 s
+  Diagonalizing Fock                  ...  Done. Timing        0.002148 s
 
   Computing semicanonical orbital rotation matrix for root 2.
-  Forming one-particle density        ...  Done. Timing        0.000109 s
-  Forming generalized Fock matrix     ...  Done. Timing        3.158888 s
-  Diagonalizing Fock                  ...  Done. Timing        0.002271 s
+  Forming one-particle density        ...  Done. Timing        0.000108 s
+  Forming generalized Fock matrix     ...  Done. Timing        3.150237 s
+  Diagonalizing Fock                  ...  Done. Timing        0.002258 s
 
   Computing CISD reference oscillator strength 0Ag -> nAg ... Done.
 
@@ -732,7 +731,7 @@ Calling plugin forte.so.
 
   Diagonalizing Hamiltonian           ...
   Found 6 roots with 2S+1 = 1 *
-  Found 6 roots with 2S+1 = 3  Done. Timing        0.000240 s
+  Found 6 roots with 2S+1 = 3  Done. Timing        0.000242 s
 
   * * * * * * * * * * * * * * * * *
   *  CI Vectors & Configurations  *
@@ -747,20 +746,20 @@ Calling plugin forte.so.
     0b 2a         -0.0517538926
     0a 2b         -0.0517538926
 
-    Total Energy:   -154.721216049706925
+    Total Energy:   -154.721216049707863
 
 
   Forming one-particle density        ...  Done. Timing        0.000089 s
-  Forming generalized Fock matrix     ...  Done. Timing        3.132040 s
+  Forming generalized Fock matrix     ...  Done. Timing        3.053411 s
 
   ==> Permanent Dipole Moments (Bu) <==
 
   Only print nonzero (> 1.0e-5) elements.
 
   Computing semicanonical orbital rotation matrix for root 0.
-  Forming one-particle density        ...  Done. Timing        0.000091 s
-  Forming generalized Fock matrix     ...  Done. Timing        3.159857 s
-  Diagonalizing Fock                  ...  Done. Timing        0.002254 s
+  Forming one-particle density        ...  Done. Timing        0.000093 s
+  Forming generalized Fock matrix     ...  Done. Timing        3.063310 s
+  Diagonalizing Fock                  ...  Done. Timing        0.002168 s
 
   Computing CISD reference oscillator strength 0Ag -> nBu ... Done.
 
@@ -927,18 +926,18 @@ Calling plugin forte.so.
  Number of auxiliary basis functions:  408
  Need 0.077820 GB to store DF integrals
 
-  Computing DF Integrals               ......Done. Timing        1.409807 s
-  Seeking DF Integrals                 ......Done. Timing        1.429690 s
-  Reading DF Integrals                 ......Done. Timing        1.452707 s
+  Computing DF Integrals               ......Done. Timing        1.351131 s
+  Seeking DF Integrals                 ......Done. Timing        1.367318 s
+  Reading DF Integrals                 ......Done. Timing        1.385566 s
  Integrals are about to be updated.
   Frozen-core energy           -176.832886809166 a.u.
 
-  FrozenOneBody Operator takes  1.26330000 s
+  FrozenOneBody Operator takes  1.26808500 s
   Resorting integrals after freezing core.
  Done with resorting
- Resorting integrals takes   0.73480700s
-  Frozen Orbitals takes     2.044 s.
-  Forming determinants                ...  Done. Timing        0.000014 s
+ Resorting integrals takes   0.66563200s
+  Frozen Orbitals takes     1.974 s.
+  Forming determinants                ...  Done. Timing        0.000025 s
 
   ==> Determinants Summary <==
 
@@ -954,7 +953,7 @@ Calling plugin forte.so.
   Diagonalizing Hamiltonian           ...
   Found 8 roots with 2S+1 = 1 *
   Found 5 roots with 2S+1 = 3
-  Found 1 roots with 2S+1 = 5  Done. Timing        0.000307 s
+  Found 1 roots with 2S+1 = 5  Done. Timing        0.000309 s
 
   * * * * * * * * * * * * * * * * *
   *  CI Vectors & Configurations  *
@@ -964,7 +963,7 @@ Calling plugin forte.so.
 
     20 20          1.0000000000
 
-    Total Energy:   -154.979263255780154
+    Total Energy:   -154.979263255777482
 
 
   ==> Root No. 1 <==
@@ -982,7 +981,7 @@ Calling plugin forte.so.
     bb aa         -0.0949273757
     22 00         -0.0899743824
 
-    Total Energy:   -154.733201173937061
+    Total Energy:   -154.733201173934560
 
 
   ==> Root No. 2 <==
@@ -994,11 +993,11 @@ Calling plugin forte.so.
     00 22          0.2578247824
     20 02         -0.1412729866
 
-    Total Energy:   -154.638421918865390
+    Total Energy:   -154.638421918862605
 
 
   Forming one-particle density        ...  Done. Timing        0.000104 s
-  Forming generalized Fock matrix     ...  Done. Timing        3.227946 s
+  Forming generalized Fock matrix     ...  Done. Timing        3.149379 s
 
   ==> Permanent Dipole Moments (Ag) <==
 
@@ -1014,25 +1013,25 @@ Calling plugin forte.so.
 
   Only print nonzero (> 1.0e-5) elements.
 
-  Computing 2- and 3-cumulants ... Done.
+  Computing 2- and 3-cumulants ... Done. Timing        0.035796 s
 
   Checking Fock matrices (Fa, Fb)     ...
   Nonzero criteria: > 1.00E-12
   Warning: Fa_CORE    NOT diagonal!
-  Nonzero off-diagonal:     5. Largest value:  0.000000000001493
+  Nonzero off-diagonal:     5. Largest value:  0.000000000001516
   Warning: Fb_CORE    NOT diagonal!
-  Nonzero off-diagonal:     5. Largest value:  0.000000000001493
+  Nonzero off-diagonal:     5. Largest value:  0.000000000001516
   Warning: Fa_ACT_H   NOT diagonal!
-  Nonzero off-diagonal:     1. Largest value:  0.000000000001093
+  Nonzero off-diagonal:     2. Largest value:  0.000000000001235
   Warning: Fb_ACT_H   NOT diagonal!
-  Nonzero off-diagonal:     1. Largest value:  0.000000000001093
+  Nonzero off-diagonal:     2. Largest value:  0.000000000001235
   Fa_ACT_P   block is diagonal.
   Fb_ACT_P   block is diagonal.
   Warning: Fa_VIRTUAL NOT diagonal!
-  Nonzero off-diagonal:   118. Largest value:  0.000000000002773
+  Nonzero off-diagonal:   129. Largest value:  0.000000000002584
   Warning: Fb_VIRTUAL NOT diagonal!
-  Nonzero off-diagonal:   118. Largest value:  0.000000000002773
-  Done checking Fock matrices.                   Timing        0.002109 s
+  Nonzero off-diagonal:   129. Largest value:  0.000000000002584
+  Done checking Fock matrices.                   Timing        0.001755 s
 
 
            ---------------------------------------------------------
@@ -1047,12 +1046,7 @@ Calling plugin forte.so.
       (pr-)DSRG-MRPT2: J. Chem. Phys. 2017, 146, 124132.
 
   Reference = RHF
-  Reference Energy = -154.979263255780154
-
-  ==> Checking Orbitals <==
-
-    Checking if orbitals are semi-canonicalized ...     OK.
-    Orbitals are semi-canonicalized.
+  Reference Energy = -154.979263255777482
 
   ==> Calculation Information <==
 
@@ -1062,43 +1056,48 @@ Calling plugin forte.so.
     int_type                                        DF
     ccvv_algorithm                           FLY_AMBIT
     ccvv_source                                 NORMAL
-    Computing T2                          ......Done. Timing        1.961685 s
-    Renormalizing V                       ......Done. Timing        2.052157 s
-    Computing T1                          ......Done. Timing        0.021052 s
-    Renormalizing F                       ......Done. Timing        0.021175 s
-    Computing <[F, T1]>                   ......Done. Timing        0.007101 s
-    Computing <[F, T2]>                   ......Done. Timing        0.022400 s
-    Computing <[V, T1]>                   ......Done. Timing        0.012936 s
-    Computing <[V, T2]> (C_2)^4 (no ccvv) ......Done. Timing        0.167647 s
+
+  ==> Checking Orbitals <==
+
+    Orbitals are semi-canonicalized.
+
+    Computing T2                          ......Done. Timing        1.702184 s
+    Renormalizing V                       ......Done. Timing        1.423156 s
+    Computing T1                          ......Done. Timing        0.007529 s
+    Renormalizing F                       ......Done. Timing        0.011430 s
+    Computing <[F, T1]>                   ......Done. Timing        0.009297 s
+    Computing <[F, T2]>                   ......Done. Timing        0.010713 s
+    Computing <[V, T1]>                   ......Done. Timing        0.009736 s
+    Computing <[V, T2]> (C_2)^4 (no ccvv) ......Done. Timing        0.157670 s
  Eccvv: -0.3502733134
-    Computing <[V, T2]> (C_2)^4 ccvv      ......Done. Timing        0.557406 s
-    Computing <[V, T2]> 4HH               ......Done. Timing        0.010809 s
-    Computing <V, T2]> 4PP                ......Done. Timing        0.018503 s
-    Computing [V, T2] 4PH                 ......Done. Timing        0.063240 s
-    Computing [V, T2] λ3                  ......Done. Timing        0.023763 s
+    Computing <[V, T2]> (C_2)^4 ccvv      ......Done. Timing        0.531575 s
+    Computing <[V, T2]> 4HH               ......Done. Timing        0.019084 s
+    Computing <V, T2]> 4PP                ......Done. Timing        0.023938 s
+    Computing [V, T2] 4PH                 ......Done. Timing        0.071413 s
+    Computing [V, T2] λ3                  ......Done. Timing        0.028456 s
 
   ==> DSRG-MRPT2 Energy Summary <==
 
-    E0 (reference)                 =   -154.979263255780154
+    E0 (reference)                 =   -154.979263255777482
     <[F, T1]>                      =     -0.000000000000000
     <[F, T2]>                      =      0.000000000000000
     <[V, T1]>                      =      0.000000000000000
-    <[V, T2]> (C_2)^4              =     -0.620354784986269
+    <[V, T2]> (C_2)^4              =     -0.620354784986304
     <[V, T2]> C_4 (C_2)^2 HH       =      0.000000000000000
     <[V, T2]> C_4 (C_2)^2 PP       =      0.000000000000000
     <[V, T2]> C_4 (C_2)^2 PH       =      0.000000000000000
     <[V, T2]> C_6 C_2              =      0.000000000000000
-    <[V, T2]>                      =     -0.620354784986269
-    DSRG-MRPT2 correlation energy  =     -0.620354784986269
-    DSRG-MRPT2 total energy        =   -155.599618040766416
-    max(T1)                        =      0.000000000003481
-    ||T1||                         =      0.000000000014826
+    <[V, T2]>                      =     -0.620354784986304
+    DSRG-MRPT2 correlation energy  =     -0.620354784986304
+    DSRG-MRPT2 total energy        =   -155.599618040763772
+    max(T1)                        =      0.000000000003522
+    ||T1||                         =      0.000000000014950
 
   ==> Total Timings (s) for Computing Commutators <==
 
              [H1, T1]    [H1, T2]    [H2, T1]    [H2, T2]
     -----------------------------------------------------
-    -> C0       0.007       0.022       0.013       0.842
+    -> C0       0.009       0.011       0.010       0.823
     -> C1       0.000       0.000       0.000       0.000
     -> C2                   0.000       0.000       0.000
     -----------------------------------------------------
@@ -1267,18 +1266,18 @@ Calling plugin forte.so.
  Number of auxiliary basis functions:  408
  Need 0.077820 GB to store DF integrals
 
-  Computing DF Integrals               ......Done. Timing        1.911649 s
-  Seeking DF Integrals                 ......Done. Timing        1.950379 s
-  Reading DF Integrals                 ......Done. Timing        1.973503 s
+  Computing DF Integrals               ......Done. Timing        1.368215 s
+  Seeking DF Integrals                 ......Done. Timing        1.384631 s
+  Reading DF Integrals                 ......Done. Timing        1.406129 s
  Integrals are about to be updated.
   Frozen-core energy           -176.832886809166 a.u.
 
-  FrozenOneBody Operator takes  1.55430400 s
+  FrozenOneBody Operator takes  1.23448600 s
   Resorting integrals after freezing core.
  Done with resorting
- Resorting integrals takes   0.86007900s
-  Frozen Orbitals takes     2.490 s.
-  Forming determinants                ...  Done. Timing        0.000133 s
+ Resorting integrals takes   0.65662200s
+  Frozen Orbitals takes     1.935 s.
+  Forming determinants                ...  Done. Timing        0.000117 s
 
   ==> Determinants Summary <==
 
@@ -1294,7 +1293,7 @@ Calling plugin forte.so.
   Diagonalizing Hamiltonian           ...
   Found 8 roots with 2S+1 = 1 *
   Found 5 roots with 2S+1 = 3
-  Found 1 roots with 2S+1 = 5  Done. Timing        0.000737 s
+  Found 1 roots with 2S+1 = 5  Done. Timing        0.000645 s
 
   * * * * * * * * * * * * * * * * *
   *  CI Vectors & Configurations  *
@@ -1304,7 +1303,7 @@ Calling plugin forte.so.
 
     20 20          1.0000000000
 
-    Total Energy:   -154.979263255782769
+    Total Energy:   -154.979263255781063
 
 
   ==> Root No. 1 <==
@@ -1322,7 +1321,7 @@ Calling plugin forte.so.
     bb aa         -0.0949273757
     22 00         -0.0899743824
 
-    Total Energy:   -154.733201173939790
+    Total Energy:   -154.733201173937942
 
 
   ==> Root No. 2 <==
@@ -1334,11 +1333,11 @@ Calling plugin forte.so.
     00 22          0.2578247824
     20 02         -0.1412729866
 
-    Total Energy:   -154.638421918868119
+    Total Energy:   -154.638421918866129
 
 
-  Forming one-particle density        ...  Done. Timing        0.000203 s
-  Forming generalized Fock matrix     ...  Done. Timing        4.137038 s
+  Forming one-particle density        ...  Done. Timing        0.000187 s
+  Forming generalized Fock matrix     ...  Done. Timing        3.143130 s
 
   ==> Permanent Dipole Moments (Ag) <==
 
@@ -1354,25 +1353,25 @@ Calling plugin forte.so.
 
   Only print nonzero (> 1.0e-5) elements.
 
-  Computing 2- and 3-cumulants ... Done.
+  Computing 2- and 3-cumulants ... Done. Timing        0.023436 s
 
   Checking Fock matrices (Fa, Fb)     ...
   Nonzero criteria: > 1.00E-12
   Warning: Fa_CORE    NOT diagonal!
-  Nonzero off-diagonal:     4. Largest value:  0.000000000001528
+  Nonzero off-diagonal:     4. Largest value:  0.000000000001480
   Warning: Fb_CORE    NOT diagonal!
-  Nonzero off-diagonal:     4. Largest value:  0.000000000001528
+  Nonzero off-diagonal:     4. Largest value:  0.000000000001480
   Warning: Fa_ACT_H   NOT diagonal!
-  Nonzero off-diagonal:     2. Largest value:  0.000000000001158
+  Nonzero off-diagonal:     2. Largest value:  0.000000000001270
   Warning: Fb_ACT_H   NOT diagonal!
-  Nonzero off-diagonal:     2. Largest value:  0.000000000001158
+  Nonzero off-diagonal:     2. Largest value:  0.000000000001270
   Fa_ACT_P   block is diagonal.
   Fb_ACT_P   block is diagonal.
   Warning: Fa_VIRTUAL NOT diagonal!
-  Nonzero off-diagonal:   146. Largest value:  0.000000000002256
+  Nonzero off-diagonal:   114. Largest value:  0.000000000002590
   Warning: Fb_VIRTUAL NOT diagonal!
-  Nonzero off-diagonal:   146. Largest value:  0.000000000002256
-  Done checking Fock matrices.                   Timing        0.000390 s
+  Nonzero off-diagonal:   114. Largest value:  0.000000000002590
+  Done checking Fock matrices.                   Timing        0.000630 s
 
 
            ---------------------------------------------------------
@@ -1387,21 +1386,7 @@ Calling plugin forte.so.
       (pr-)DSRG-MRPT2: J. Chem. Phys. 2017, 146, 124132.
 
   Reference = RHF
-  Reference Energy = -154.733201173939790
-
-  ==> Checking Orbitals <==
-
-    Checking if orbitals are semi-canonicalized ...
-    Warning! Orbitals are not semi-canonicalized!
-    Off-Diagonal norms of the core, active, virtual blocks of Fock matrix
-                  core          active         virtual
-    ---------------------------------------------------
-    Fa    0.0000000000    0.0872468492    0.0000000000
-    Fb    0.0000000000    0.0872468492    0.0000000000
-    ---------------------------------------------------
-
-    Warning: DF/CD-DSRG-MRPT2 only takes semi-canonical orbitals.
-    Warning: The code will keep running but the energy will be meaningless.
+  Reference Energy = -154.733201173937942
 
   ==> Calculation Information <==
 
@@ -1411,43 +1396,58 @@ Calling plugin forte.so.
     int_type                                        DF
     ccvv_algorithm                           FLY_AMBIT
     ccvv_source                                 NORMAL
-    Computing T2                          ......Done. Timing        1.928818 s
-    Renormalizing V                       ......Done. Timing        1.517782 s
-    Computing T1                          ......Done. Timing        0.007803 s
-    Renormalizing F                       ......Done. Timing        0.008940 s
-    Computing <[F, T1]>                   ......Done. Timing        0.003215 s
-    Computing <[F, T2]>                   ......Done. Timing        0.007915 s
-    Computing <[V, T1]>                   ......Done. Timing        0.007052 s
-    Computing <[V, T2]> (C_2)^4 (no ccvv) ......Done. Timing        0.135189 s
+
+  ==> Checking Orbitals <==
+
+    Warning! Orbitals are not semi-canonicalized!
+    Off-Diagonal norms of the core, active, virtual blocks of Fock matrix
+                  core          active         virtual
+    ---------------------------------------------------
+    Fa    0.0000000000    0.0872468492    0.0000000000
+    Fb    0.0000000000    0.0872468492    0.0000000000
+    ---------------------------------------------------
+
+    DSRG energy is reliable roughly to the same digit as max(|F_ij|, i != j), F: Fock diag. blocks.
+    It is OK for Fock (active) not being diagonal because CISD active space is incomplete.
+    Please inspect if the Fock diag. blocks (C, AH, AP, V) are diagonal or not in the prior CI step.
+
+    Computing T2                          ......Done. Timing        1.720644 s
+    Renormalizing V                       ......Done. Timing        1.435567 s
+    Computing T1                          ......Done. Timing        0.007463 s
+    Renormalizing F                       ......Done. Timing        0.008593 s
+    Computing <[F, T1]>                   ......Done. Timing        0.003182 s
+    Computing <[F, T2]>                   ......Done. Timing        0.007519 s
+    Computing <[V, T1]>                   ......Done. Timing        0.006757 s
+    Computing <[V, T2]> (C_2)^4 (no ccvv) ......Done. Timing        0.137898 s
  Eccvv: -0.3504382694
-    Computing <[V, T2]> (C_2)^4 ccvv      ......Done. Timing        0.513774 s
-    Computing <[V, T2]> 4HH               ......Done. Timing        0.011799 s
-    Computing <V, T2]> 4PP                ......Done. Timing        0.015200 s
-    Computing [V, T2] 4PH                 ......Done. Timing        0.058479 s
-    Computing [V, T2] λ3                  ......Done. Timing        0.023576 s
+    Computing <[V, T2]> (C_2)^4 ccvv      ......Done. Timing        0.501923 s
+    Computing <[V, T2]> 4HH               ......Done. Timing        0.010331 s
+    Computing <V, T2]> 4PP                ......Done. Timing        0.014705 s
+    Computing [V, T2] 4PH                 ......Done. Timing        0.061229 s
+    Computing [V, T2] λ3                  ......Done. Timing        0.021272 s
 
   ==> DSRG-MRPT2 Energy Summary <==
 
-    E0 (reference)                 =   -154.733201173939790
-    <[F, T1]>                      =     -0.006189507231341
-    <[F, T2]>                      =      0.001629347762777
-    <[V, T1]>                      =     -0.002675662852318
-    <[V, T2]> (C_2)^4              =     -0.653167006105511
-    <[V, T2]> C_4 (C_2)^2 HH       =      0.002268633983993
-    <[V, T2]> C_4 (C_2)^2 PP       =      0.014403945050137
-    <[V, T2]> C_4 (C_2)^2 PH       =      0.034411720240374
-    <[V, T2]> C_6 C_2              =     -0.000042748053340
-    <[V, T2]>                      =     -0.602125454884347
-    DSRG-MRPT2 correlation energy  =     -0.609361277205229
-    DSRG-MRPT2 total energy        =   -155.342562451145028
-    max(T1)                        =      0.008680280096553
-    ||T1||                         =      0.053873415864897
+    E0 (reference)                 =   -154.733201173937942
+    <[F, T1]>                      =     -0.006189507231367
+    <[F, T2]>                      =      0.001629347762753
+    <[V, T1]>                      =     -0.002675662852313
+    <[V, T2]> (C_2)^4              =     -0.653167006105545
+    <[V, T2]> C_4 (C_2)^2 HH       =      0.002268633983990
+    <[V, T2]> C_4 (C_2)^2 PP       =      0.014403945050129
+    <[V, T2]> C_4 (C_2)^2 PH       =      0.034411720240406
+    <[V, T2]> C_6 C_2              =     -0.000042748053339
+    <[V, T2]>                      =     -0.602125454884358
+    DSRG-MRPT2 correlation energy  =     -0.609361277205285
+    DSRG-MRPT2 total energy        =   -155.342562451143237
+    max(T1)                        =      0.008680280096546
+    ||T1||                         =      0.053873415864940
 
   ==> Total Timings (s) for Computing Commutators <==
 
              [H1, T1]    [H1, T2]    [H2, T1]    [H2, T2]
     -----------------------------------------------------
-    -> C0       0.003       0.008       0.007       0.751
+    -> C0       0.003       0.008       0.007       0.742
     -> C1       0.000       0.000       0.000       0.000
     -> C2                   0.000       0.000       0.000
     -----------------------------------------------------
@@ -1616,18 +1616,18 @@ Calling plugin forte.so.
  Number of auxiliary basis functions:  408
  Need 0.077820 GB to store DF integrals
 
-  Computing DF Integrals               ......Done. Timing        1.343604 s
-  Seeking DF Integrals                 ......Done. Timing        1.367336 s
-  Reading DF Integrals                 ......Done. Timing        1.385305 s
+  Computing DF Integrals               ......Done. Timing        1.327362 s
+  Seeking DF Integrals                 ......Done. Timing        1.343091 s
+  Reading DF Integrals                 ......Done. Timing        1.360274 s
  Integrals are about to be updated.
   Frozen-core energy           -176.832886809166 a.u.
 
-  FrozenOneBody Operator takes  1.26048200 s
+  FrozenOneBody Operator takes  1.21334200 s
   Resorting integrals after freezing core.
  Done with resorting
- Resorting integrals takes   0.72556100s
-  Frozen Orbitals takes     2.029 s.
-  Forming determinants                ...  Done. Timing        0.000100 s
+ Resorting integrals takes   0.67822400s
+  Frozen Orbitals takes     1.932 s.
+  Forming determinants                ...  Done. Timing        0.000136 s
 
   ==> Determinants Summary <==
 
@@ -1653,7 +1653,7 @@ Calling plugin forte.so.
 
     20 20          1.0000000000
 
-    Total Energy:   -154.979263255780324
+    Total Energy:   -154.979263255781120
 
 
   ==> Root No. 1 <==
@@ -1671,7 +1671,7 @@ Calling plugin forte.so.
     bb aa         -0.0949273757
     22 00         -0.0899743824
 
-    Total Energy:   -154.733201173937232
+    Total Energy:   -154.733201173938198
 
 
   ==> Root No. 2 <==
@@ -1683,11 +1683,11 @@ Calling plugin forte.so.
     00 22          0.2578247824
     20 02         -0.1412729866
 
-    Total Energy:   -154.638421918865504
+    Total Energy:   -154.638421918866214
 
 
-  Forming one-particle density        ...  Done. Timing        0.000192 s
-  Forming generalized Fock matrix     ...  Done. Timing        3.326027 s
+  Forming one-particle density        ...  Done. Timing        0.000188 s
+  Forming generalized Fock matrix     ...  Done. Timing        3.202014 s
 
   ==> Permanent Dipole Moments (Ag) <==
 
@@ -1703,25 +1703,25 @@ Calling plugin forte.so.
 
   Only print nonzero (> 1.0e-5) elements.
 
-  Computing 2- and 3-cumulants ... Done.
+  Computing 2- and 3-cumulants ... Done. Timing        0.017415 s
 
   Checking Fock matrices (Fa, Fb)     ...
   Nonzero criteria: > 1.00E-12
   Warning: Fa_CORE    NOT diagonal!
-  Nonzero off-diagonal:     6. Largest value:  0.000000000001301
+  Nonzero off-diagonal:     4. Largest value:  0.000000000001293
   Warning: Fb_CORE    NOT diagonal!
-  Nonzero off-diagonal:     6. Largest value:  0.000000000001301
+  Nonzero off-diagonal:     4. Largest value:  0.000000000001293
   Warning: Fa_ACT_H   NOT diagonal!
-  Nonzero off-diagonal:     2. Largest value:  0.000000000001134
+  Nonzero off-diagonal:     2. Largest value:  0.000000000001141
   Warning: Fb_ACT_H   NOT diagonal!
-  Nonzero off-diagonal:     2. Largest value:  0.000000000001134
+  Nonzero off-diagonal:     2. Largest value:  0.000000000001141
   Fa_ACT_P   block is diagonal.
   Fb_ACT_P   block is diagonal.
   Warning: Fa_VIRTUAL NOT diagonal!
-  Nonzero off-diagonal:   120. Largest value:  0.000000000004059
+  Nonzero off-diagonal:   118. Largest value:  0.000000000002179
   Warning: Fb_VIRTUAL NOT diagonal!
-  Nonzero off-diagonal:   120. Largest value:  0.000000000004059
-  Done checking Fock matrices.                   Timing        0.000275 s
+  Nonzero off-diagonal:   118. Largest value:  0.000000000002179
+  Done checking Fock matrices.                   Timing        0.000259 s
 
 
            ---------------------------------------------------------
@@ -1736,21 +1736,7 @@ Calling plugin forte.so.
       (pr-)DSRG-MRPT2: J. Chem. Phys. 2017, 146, 124132.
 
   Reference = RHF
-  Reference Energy = -154.638421918865504
-
-  ==> Checking Orbitals <==
-
-    Checking if orbitals are semi-canonicalized ...
-    Warning! Orbitals are not semi-canonicalized!
-    Off-Diagonal norms of the core, active, virtual blocks of Fock matrix
-                  core          active         virtual
-    ---------------------------------------------------
-    Fa    0.0000000000    0.0283904957    0.0000000000
-    Fb    0.0000000000    0.0283904957    0.0000000000
-    ---------------------------------------------------
-
-    Warning: DF/CD-DSRG-MRPT2 only takes semi-canonical orbitals.
-    Warning: The code will keep running but the energy will be meaningless.
+  Reference Energy = -154.638421918866214
 
   ==> Calculation Information <==
 
@@ -1760,43 +1746,58 @@ Calling plugin forte.so.
     int_type                                        DF
     ccvv_algorithm                           FLY_AMBIT
     ccvv_source                                 NORMAL
-    Computing T2                          ......Done. Timing        1.867197 s
-    Renormalizing V                       ......Done. Timing        1.558669 s
-    Computing T1                          ......Done. Timing        0.007698 s
-    Renormalizing F                       ......Done. Timing        0.010427 s
-    Computing <[F, T1]>                   ......Done. Timing        0.003290 s
-    Computing <[F, T2]>                   ......Done. Timing        0.007687 s
-    Computing <[V, T1]>                   ......Done. Timing        0.006991 s
-    Computing <[V, T2]> (C_2)^4 (no ccvv) ......Done. Timing        0.134745 s
+
+  ==> Checking Orbitals <==
+
+    Warning! Orbitals are not semi-canonicalized!
+    Off-Diagonal norms of the core, active, virtual blocks of Fock matrix
+                  core          active         virtual
+    ---------------------------------------------------
+    Fa    0.0000000000    0.0283904957    0.0000000000
+    Fb    0.0000000000    0.0283904957    0.0000000000
+    ---------------------------------------------------
+
+    DSRG energy is reliable roughly to the same digit as max(|F_ij|, i != j), F: Fock diag. blocks.
+    It is OK for Fock (active) not being diagonal because CISD active space is incomplete.
+    Please inspect if the Fock diag. blocks (C, AH, AP, V) are diagonal or not in the prior CI step.
+
+    Computing T2                          ......Done. Timing        1.679821 s
+    Renormalizing V                       ......Done. Timing        1.407805 s
+    Computing T1                          ......Done. Timing        0.007766 s
+    Renormalizing F                       ......Done. Timing        0.009828 s
+    Computing <[F, T1]>                   ......Done. Timing        0.003620 s
+    Computing <[F, T2]>                   ......Done. Timing        0.008253 s
+    Computing <[V, T1]>                   ......Done. Timing        0.006767 s
+    Computing <[V, T2]> (C_2)^4 (no ccvv) ......Done. Timing        0.154860 s
  Eccvv: -0.3504054017
-    Computing <[V, T2]> (C_2)^4 ccvv      ......Done. Timing        0.539412 s
-    Computing <[V, T2]> 4HH               ......Done. Timing        0.010522 s
-    Computing <V, T2]> 4PP                ......Done. Timing        0.015610 s
-    Computing [V, T2] 4PH                 ......Done. Timing        0.055506 s
-    Computing [V, T2] λ3                  ......Done. Timing        0.021591 s
+    Computing <[V, T2]> (C_2)^4 ccvv      ......Done. Timing        0.508928 s
+    Computing <[V, T2]> 4HH               ......Done. Timing        0.010348 s
+    Computing <V, T2]> 4PP                ......Done. Timing        0.015036 s
+    Computing [V, T2] 4PH                 ......Done. Timing        0.053194 s
+    Computing [V, T2] λ3                  ......Done. Timing        0.021162 s
 
   ==> DSRG-MRPT2 Energy Summary <==
 
-    E0 (reference)                 =   -154.638421918865504
-    <[F, T1]>                      =     -0.005010056231067
-    <[F, T2]>                      =      0.000764603030487
-    <[V, T1]>                      =      0.000163021984641
-    <[V, T2]> (C_2)^4              =     -0.649185745114629
-    <[V, T2]> C_4 (C_2)^2 HH       =     -0.000031400919321
-    <[V, T2]> C_4 (C_2)^2 PP       =     -0.001828971878120
-    <[V, T2]> C_4 (C_2)^2 PH       =      0.004149502994039
-    <[V, T2]> C_6 C_2              =      0.000154856909799
-    <[V, T2]>                      =     -0.646741758008232
-    DSRG-MRPT2 correlation energy  =     -0.650824189224171
-    DSRG-MRPT2 total energy        =   -155.289246108089685
-    max(T1)                        =      0.005270219564326
-    ||T1||                         =      0.040797420394854
+    E0 (reference)                 =   -154.638421918866214
+    <[F, T1]>                      =     -0.005010056231083
+    <[F, T2]>                      =      0.000764603030494
+    <[V, T1]>                      =      0.000163021984646
+    <[V, T2]> (C_2)^4              =     -0.649185745114539
+    <[V, T2]> C_4 (C_2)^2 HH       =     -0.000031400919314
+    <[V, T2]> C_4 (C_2)^2 PP       =     -0.001828971878097
+    <[V, T2]> C_4 (C_2)^2 PH       =      0.004149502994021
+    <[V, T2]> C_6 C_2              =      0.000154856909806
+    <[V, T2]>                      =     -0.646741758008123
+    DSRG-MRPT2 correlation energy  =     -0.650824189224066
+    DSRG-MRPT2 total energy        =   -155.289246108090282
+    max(T1)                        =      0.005270219564320
+    ||T1||                         =      0.040797420394918
 
   ==> Total Timings (s) for Computing Commutators <==
 
              [H1, T1]    [H1, T2]    [H2, T1]    [H2, T2]
     -----------------------------------------------------
-    -> C0       0.003       0.008       0.007       0.773
+    -> C0       0.004       0.008       0.007       0.759
     -> C1       0.000       0.000       0.000       0.000
     -> C2                   0.000       0.000       0.000
     -----------------------------------------------------
@@ -1965,18 +1966,18 @@ Calling plugin forte.so.
  Number of auxiliary basis functions:  408
  Need 0.077820 GB to store DF integrals
 
-  Computing DF Integrals               ......Done. Timing        1.515348 s
-  Seeking DF Integrals                 ......Done. Timing        1.541087 s
-  Reading DF Integrals                 ......Done. Timing        1.566716 s
+  Computing DF Integrals               ......Done. Timing        1.449730 s
+  Seeking DF Integrals                 ......Done. Timing        1.467025 s
+  Reading DF Integrals                 ......Done. Timing        1.485248 s
  Integrals are about to be updated.
   Frozen-core energy           -176.832886809166 a.u.
 
-  FrozenOneBody Operator takes  1.41560800 s
+  FrozenOneBody Operator takes  1.27142100 s
   Resorting integrals after freezing core.
  Done with resorting
- Resorting integrals takes   0.75071500s
-  Frozen Orbitals takes     2.223 s.
-  Forming determinants                ...  Done. Timing        0.000220 s
+ Resorting integrals takes   0.66716200s
+  Frozen Orbitals takes     1.977 s.
+  Forming determinants                ...  Done. Timing        0.000102 s
 
   ==> Determinants Summary <==
 
@@ -1987,7 +1988,7 @@ Calling plugin forte.so.
 
   Diagonalizing Hamiltonian           ...
   Found 6 roots with 2S+1 = 1 *
-  Found 6 roots with 2S+1 = 3  Done. Timing        0.000504 s
+  Found 6 roots with 2S+1 = 3  Done. Timing        0.000502 s
 
   * * * * * * * * * * * * * * * * *
   *  CI Vectors & Configurations  *
@@ -2002,35 +2003,35 @@ Calling plugin forte.so.
     0b 2a         -0.0517538926
     0a 2b         -0.0517538926
 
-    Total Energy:   -154.721216049702036
+    Total Energy:   -154.721216049706868
 
 
-  Forming one-particle density        ...  Done. Timing        0.000177 s
-  Forming generalized Fock matrix     ...  Done. Timing        3.578142 s
+  Forming one-particle density        ...  Done. Timing        0.000172 s
+  Forming generalized Fock matrix     ...  Done. Timing        3.146568 s
 
   ==> Permanent Dipole Moments (Bu) <==
 
   Only print nonzero (> 1.0e-5) elements.
 
-  Computing 2- and 3-cumulants ... Done.
+  Computing 2- and 3-cumulants ... Done. Timing        0.017206 s
 
   Checking Fock matrices (Fa, Fb)     ...
   Nonzero criteria: > 1.00E-12
   Warning: Fa_CORE    NOT diagonal!
-  Nonzero off-diagonal:     7. Largest value:  0.000000000001532
+  Nonzero off-diagonal:     4. Largest value:  0.000000000001632
   Warning: Fb_CORE    NOT diagonal!
-  Nonzero off-diagonal:     7. Largest value:  0.000000000001532
+  Nonzero off-diagonal:     4. Largest value:  0.000000000001632
   Warning: Fa_ACT_H   NOT diagonal!
-  Nonzero off-diagonal:     2. Largest value:  0.000000000001140
+  Nonzero off-diagonal:     2. Largest value:  0.000000000001192
   Warning: Fb_ACT_H   NOT diagonal!
-  Nonzero off-diagonal:     2. Largest value:  0.000000000001140
+  Nonzero off-diagonal:     2. Largest value:  0.000000000001192
   Fa_ACT_P   block is diagonal.
   Fb_ACT_P   block is diagonal.
   Warning: Fa_VIRTUAL NOT diagonal!
-  Nonzero off-diagonal:   144. Largest value:  0.000000000002971
+  Nonzero off-diagonal:   108. Largest value:  0.000000000002762
   Warning: Fb_VIRTUAL NOT diagonal!
-  Nonzero off-diagonal:   144. Largest value:  0.000000000002971
-  Done checking Fock matrices.                   Timing        0.000283 s
+  Nonzero off-diagonal:   108. Largest value:  0.000000000002762
+  Done checking Fock matrices.                   Timing        0.000274 s
 
 
            ---------------------------------------------------------
@@ -2045,21 +2046,7 @@ Calling plugin forte.so.
       (pr-)DSRG-MRPT2: J. Chem. Phys. 2017, 146, 124132.
 
   Reference = RHF
-  Reference Energy = -154.721216049702036
-
-  ==> Checking Orbitals <==
-
-    Checking if orbitals are semi-canonicalized ...
-    Warning! Orbitals are not semi-canonicalized!
-    Off-Diagonal norms of the core, active, virtual blocks of Fock matrix
-                  core          active         virtual
-    ---------------------------------------------------
-    Fa    0.0000000000    0.0230169019    0.0000000000
-    Fb    0.0000000000    0.0230169019    0.0000000000
-    ---------------------------------------------------
-
-    Warning: DF/CD-DSRG-MRPT2 only takes semi-canonical orbitals.
-    Warning: The code will keep running but the energy will be meaningless.
+  Reference Energy = -154.721216049706868
 
   ==> Calculation Information <==
 
@@ -2069,43 +2056,58 @@ Calling plugin forte.so.
     int_type                                        DF
     ccvv_algorithm                           FLY_AMBIT
     ccvv_source                                 NORMAL
-    Computing T2                          ......Done. Timing        1.764883 s
-    Renormalizing V                       ......Done. Timing        1.491288 s
-    Computing T1                          ......Done. Timing        0.007591 s
-    Renormalizing F                       ......Done. Timing        0.008821 s
-    Computing <[F, T1]>                   ......Done. Timing        0.003210 s
-    Computing <[F, T2]>                   ......Done. Timing        0.007727 s
-    Computing <[V, T1]>                   ......Done. Timing        0.010252 s
-    Computing <[V, T2]> (C_2)^4 (no ccvv) ......Done. Timing        0.148688 s
+
+  ==> Checking Orbitals <==
+
+    Warning! Orbitals are not semi-canonicalized!
+    Off-Diagonal norms of the core, active, virtual blocks of Fock matrix
+                  core          active         virtual
+    ---------------------------------------------------
+    Fa    0.0000000000    0.0230169019    0.0000000000
+    Fb    0.0000000000    0.0230169019    0.0000000000
+    ---------------------------------------------------
+
+    DSRG energy is reliable roughly to the same digit as max(|F_ij|, i != j), F: Fock diag. blocks.
+    It is OK for Fock (active) not being diagonal because CISD active space is incomplete.
+    Please inspect if the Fock diag. blocks (C, AH, AP, V) are diagonal or not in the prior CI step.
+
+    Computing T2                          ......Done. Timing        1.693336 s
+    Renormalizing V                       ......Done. Timing        1.391569 s
+    Computing T1                          ......Done. Timing        0.007495 s
+    Renormalizing F                       ......Done. Timing        0.008676 s
+    Computing <[F, T1]>                   ......Done. Timing        0.003208 s
+    Computing <[F, T2]>                   ......Done. Timing        0.007527 s
+    Computing <[V, T1]>                   ......Done. Timing        0.006741 s
+    Computing <[V, T2]> (C_2)^4 (no ccvv) ......Done. Timing        0.156744 s
  Eccvv: -0.3503469974
-    Computing <[V, T2]> (C_2)^4 ccvv      ......Done. Timing        0.517944 s
-    Computing <[V, T2]> 4HH               ......Done. Timing        0.010362 s
-    Computing <V, T2]> 4PP                ......Done. Timing        0.015166 s
-    Computing [V, T2] 4PH                 ......Done. Timing        0.054294 s
-    Computing [V, T2] λ3                  ......Done. Timing        0.028275 s
+    Computing <[V, T2]> (C_2)^4 ccvv      ......Done. Timing        0.513365 s
+    Computing <[V, T2]> 4HH               ......Done. Timing        0.010171 s
+    Computing <V, T2]> 4PP                ......Done. Timing        0.021974 s
+    Computing [V, T2] 4PH                 ......Done. Timing        0.062682 s
+    Computing [V, T2] λ3                  ......Done. Timing        0.021386 s
 
   ==> DSRG-MRPT2 Energy Summary <==
 
-    E0 (reference)                 =   -154.721216049702036
-    <[F, T1]>                      =     -0.003039289642865
-    <[F, T2]>                      =      0.003318788067214
-    <[V, T1]>                      =      0.001020888775846
-    <[V, T2]> (C_2)^4              =     -0.648820518293295
-    <[V, T2]> C_4 (C_2)^2 HH       =      0.000775398386475
-    <[V, T2]> C_4 (C_2)^2 PP       =     -0.001683294167640
-    <[V, T2]> C_4 (C_2)^2 PH       =      0.000142345077390
-    <[V, T2]> C_6 C_2              =     -0.000033953138768
-    <[V, T2]>                      =     -0.649620022135838
-    DSRG-MRPT2 correlation energy  =     -0.648319634935643
-    DSRG-MRPT2 total energy        =   -155.369535684637668
-    max(T1)                        =      0.004948314723968
-    ||T1||                         =      0.029152158453354
+    E0 (reference)                 =   -154.721216049706868
+    <[F, T1]>                      =     -0.003039289642863
+    <[F, T2]>                      =      0.003318788067217
+    <[V, T1]>                      =      0.001020888775844
+    <[V, T2]> (C_2)^4              =     -0.648820518293229
+    <[V, T2]> C_4 (C_2)^2 HH       =      0.000775398386476
+    <[V, T2]> C_4 (C_2)^2 PP       =     -0.001683294167637
+    <[V, T2]> C_4 (C_2)^2 PH       =      0.000142345077389
+    <[V, T2]> C_6 C_2              =     -0.000033953138769
+    <[V, T2]>                      =     -0.649620022135769
+    DSRG-MRPT2 correlation energy  =     -0.648319634935570
+    DSRG-MRPT2 total energy        =   -155.369535684642443
+    max(T1)                        =      0.004948314723991
+    ||T1||                         =      0.029152158453343
 
   ==> Total Timings (s) for Computing Commutators <==
 
              [H1, T1]    [H1, T2]    [H2, T1]    [H2, T2]
     -----------------------------------------------------
-    -> C0       0.003       0.008       0.010       0.763
+    -> C0       0.003       0.008       0.007       0.781
     -> C1       0.000       0.000       0.000       0.000
     -> C2                   0.000       0.000       0.000
     -----------------------------------------------------
@@ -2141,7 +2143,7 @@ Calling plugin forte.so.
     <r^2> (in a.u.) is given in parentheses. "Diffuse" when <r^2> > 1.0e6.
     (S) for singles; (D) for doubles.
 
-  Your calculation took 90.42002300 seconds
+  Your calculation took 81.19621600 seconds
 	abs. energy of singlet 0Bu........................................PASSED
 
 *** Psi4 exiting successfully. Buy a developer a beer!
