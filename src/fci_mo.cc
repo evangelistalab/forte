@@ -3045,10 +3045,6 @@ void FCI_MO::compute_trans_dipole() {
             vector<double> opdm_b(na_ * na_, 0.0);
             ci_rdms.compute_1rdm(opdm_a, opdm_b);
 
-            //            SharedMatrix MOtransD (new Matrix("MO transition
-            //            density " + trans_name, nmopi_, nmopi_));
-            //            symmetrize_density(opdm_a, MOtransD);
-
             SharedMatrix SOtransD(
                 new Matrix("SO transition density " + trans_name, nmopi_, nmopi_));
             symmetrize_density(opdm_a, SOtransD);
@@ -3316,7 +3312,10 @@ void FCI_MO::fill_density(vector<double>& opdm_a, vector<double>& opdm_b) {
 
 void FCI_MO::compute_ref() {
     timer_on("Compute Ref");
-    outfile->Printf("\n  Computing 2- and 3-cumulants ... ");
+    Timer tcu;
+    if (!quiet_) {
+        outfile->Printf("\n  Computing 2- and 3-cumulants ... ");
+    }
 
     // prepare ci_rdms
     int dim = (eigen_[0].first)->dim();
@@ -3397,7 +3396,9 @@ void FCI_MO::compute_ref() {
         }
     }
 
-    outfile->Printf("Done.\n");
+    if (!quiet_) {
+        outfile->Printf("Done. Timing %15.6f s\n", tcu.get());
+    }
     timer_off("Compute Ref");
 }
 

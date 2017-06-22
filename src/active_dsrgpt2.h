@@ -54,6 +54,10 @@ namespace forte {
 
 class FCI_MO;
 
+struct Vector4 {
+    double x, y, z, t;
+};
+
 class ACTIVE_DSRGPT2 : public Wavefunction {
   public:
     /**
@@ -125,6 +129,7 @@ class ACTIVE_DSRGPT2 : public Wavefunction {
      *  2) obtain original orbital extent
      *  3) determine %T1 in CISD
      *  4) obtain unitary matrices that semicanonicalize the orbitals
+     *  5) compute CIS or CISD oscillator strength
      */
     void precompute_energy();
 
@@ -133,8 +138,26 @@ class ACTIVE_DSRGPT2 : public Wavefunction {
     std::vector<std::vector<SharedMatrix>> Uborbs_;
 
     /// Rotate to semicanonical orbitals and pass to this
-    void rotate_orbs(SharedMatrix Ca0, SharedMatrix Cb0, SharedMatrix Ua,
-                     SharedMatrix Ub);
+    void rotate_orbs(SharedMatrix Ca0, SharedMatrix Cb0, SharedMatrix Ua, SharedMatrix Ub);
+
+    /// Compute CIS/CISD transition dipole from root0 -> root1
+    Vector4 compute_root_trans_dipole(const std::vector<SharedMatrix>& aodipole_ints,
+                                      SharedMatrix sotoao, std::shared_ptr<FCIIntegrals> fci_ints,
+                                      const std::vector<STLBitsetDeterminant>& p_space,
+                                      SharedMatrix evecs, const int& root0, const int& root1);
+    /// Compute CIS/CISD oscillator strength
+    /// Only compute root_0 of eigen0 -> root_n of eigen0 or eigen1
+    /// eigen0 and eigen1 are assumed to be different by default
+    void compute_oscillator_strength(const int& irrep0, const int& irrep1,
+                                     const std::vector<STLBitsetDeterminant>& p_space0,
+                                     const std::vector<STLBitsetDeterminant>& p_space1,
+                                     const std::vector<std::pair<SharedVector, double>>& eigen0,
+                                     const std::vector<std::pair<SharedVector, double>>& eigen1,
+                                     const bool& same = false);
+    /// Active indices in C1 symmetry per irrep
+    std::vector<std::vector<size_t>> actvIdxC1_;
+    /// Oscillator strength
+    std::map<std::string, Vector4> f_ref_;
 
     /// Print summary
     void print_summary();
@@ -144,8 +167,8 @@ class ACTIVE_DSRGPT2 : public Wavefunction {
 
     /// Flatten the structure of orbital extents in fci_mo and return a vector
     /// of <r^2>
-    std::vector<double> flatten_fci_orbextents(
-        const std::vector<std::vector<std::vector<double>>>& fci_orb_extents);
+    std::vector<double>
+    flatten_fci_orbextents(const std::vector<std::vector<std::vector<double>>>& fci_orb_extents);
 };
 }
 }
