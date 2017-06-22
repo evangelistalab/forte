@@ -346,7 +346,7 @@ void DSRG_MRPT2::build_fock() {
 }
 
 bool DSRG_MRPT2::check_semicanonical() {
-    outfile->Printf("\n    Checking if orbitals are semi-canonicalized ...");
+    print_h2("Checking Orbitals");
 
     // zero diagonal elements
     F_.iterate([&](const std::vector<size_t>& i, const std::vector<SpinType>& spin, double& value) {
@@ -389,10 +389,33 @@ bool DSRG_MRPT2::check_semicanonical() {
         outfile->Printf("\n    Fa %15.10f %15.10f %15.10f", Foff[0], Foff[1], Foff[2]);
         outfile->Printf("\n    Fb %15.10f %15.10f %15.10f", Foff[3], Foff[4], Foff[5]);
         outfile->Printf("\n    %s\n", sep.c_str());
+
+        outfile->Printf("\n    DSRG energy is reliable roughly to the same "
+                        "digit as max(|F_ij|, i != j), F: Fock diag. blocks.");
     } else {
-        outfile->Printf("     OK.");
+        outfile->Printf("\n    Orbitals are semi-canonicalized.");
         semi = true;
     }
+
+    if (ignore_semicanonical_ && Foff_sum > threshold) {
+        std::string actv_type = options_.get_str("FCIMO_ACTV_TYPE");
+        if (actv_type == "CIS" || actv_type == "CISD") {
+            outfile->Printf("\n    It is OK for Fock (active) not being diagonal because %s "
+                            "active space is incomplete.",
+                            actv_type.c_str());
+            outfile->Printf("\n    Please inspect if the Fock diag. blocks (C, AH, AP, V) "
+                            "are diagonal or not in the prior CI step.");
+
+        } else {
+            outfile->Printf("\n    Warning: ignore testing of semi-canonical orbitals.");
+            outfile->Printf("\n    Please inspect if the Fock diag. blocks (C, A, V) are "
+                            "diagonal or not.");
+        }
+
+        semi = true;
+    }
+    outfile->Printf("\n");
+
     return semi;
 }
 
@@ -488,20 +511,12 @@ double DSRG_MRPT2::compute_energy() {
     print_h2("Checking Orbitals");
     semi_canonical_ = check_semicanonical();
     if (!semi_canonical_) {
-        if (!ignore_semicanonical_) {
-            outfile->Printf("\n    Orbital invariant formalism is employed for "
-                            "DSRG-MRPT2.");
-            U_ = ambit::BlockedTensor::build(tensor_type_, "U", spin_cases({"gg"}));
-            std::vector<std::vector<double>> eigens = diagonalize_Fock_diagblocks(U_);
-            Fa_ = eigens[0];
-            Fb_ = eigens[1];
-        } else {
-            outfile->Printf("\n    Warning: ignore testing of semi-canonical "
-                            "orbitals. DSRG-MRPT2 energy may be meaningless.");
-            semi_canonical_ = true;
-        }
-    } else {
-        outfile->Printf("\n    Orbitals are semi-canonicalized.");
+        outfile->Printf("\n    Orbital invariant formalism is employed for "
+                        "DSRG-MRPT2.");
+        U_ = ambit::BlockedTensor::build(tensor_type_, "U", spin_cases({"gg"}));
+        std::vector<std::vector<double>> eigens = diagonalize_Fock_diagblocks(U_);
+        Fa_ = eigens[0];
+        Fb_ = eigens[1];
     }
 
     Timer DSRG_energy;
