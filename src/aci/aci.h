@@ -155,8 +155,6 @@ class AdaptiveCI : public Wavefunction {
     int pre_iter_;
 
     // ==> ACI Options <==
-    /// The initial reference
-    std::string reference_type_;
     /// The threshold applied to the primary space
     double sigma_;
     /// The threshold applied to the secondary space
@@ -175,8 +173,6 @@ class AdaptiveCI : public Wavefunction {
 
     /// The function of the q-space criteria per root
     std::string pq_function_;
-    /// The type of q criteria
-    bool q_rel_;
     /// the q reference
     std::string q_reference_;
     /// Algorithm for computing excited states
@@ -191,10 +187,6 @@ class AdaptiveCI : public Wavefunction {
     bool aimed_selection_;
     /// If true select by energy, if false use first-order coefficient
     bool energy_selection_;
-    /// Smooth the Hamiltonian in the P space?
-    bool do_smooth_;
-    /// The threshold for smoothing elements of the Hamiltonian
-    double smooth_threshold_;
     /// Number of roots to calculate for final excited state
     int post_root_;
     /// Rediagonalize H?
@@ -217,22 +209,8 @@ class AdaptiveCI : public Wavefunction {
     bool quiet_mode_;
     /// Control streamlining
     bool streamline_qspace_;
-
-    /// A vector of determinants in the P space
-    //    std::vector<STLBitsetDeterminant> P_space_;
-    /// A vector of determinants in the P + Q space
-    //    std::vector<STLBitsetDeterminant> PQ_space_;
     /// The CI coeffiecients
     SharedMatrix evecs_;
-
-    /// Vector of alpha strings
-    std::vector<STLBitsetString> alfa_list_;
-    /// Vector of beta strings
-    std::vector<STLBitsetString> beta_list_;
-    /// Map from alpha to beta
-    std::vector<std::vector<size_t>> a_to_b_;
-    /// Map from beta to alpha
-    std::vector<std::vector<size_t>> b_to_a_;
 
     /// A map of determinants in the P space
     std::unordered_map<STLBitsetDeterminant, int, STLBitsetDeterminant::Hash>
@@ -290,9 +268,6 @@ class AdaptiveCI : public Wavefunction {
     void compute_aci(DeterminantMap& PQ_space, SharedMatrix& PQ_evecs,
                      SharedVector& PQ_evals);
 
-    /// Get the reference occupation
-    std::vector<int> get_occupation();
-
     /// Print information about this calculation
     void print_info();
 
@@ -341,13 +316,6 @@ class AdaptiveCI : public Wavefunction {
     bool check_stuck(std::vector<std::vector<double>>& energy_history,
                      SharedVector evals);
 
-    /// Analyze the wavefunction
-    void wfn_analyzer(DeterminantMap& det_space, SharedMatrix evecs, int nroot);
-
-    /// Returns a vector of orbital energy, sym label pairs
-    std::vector<std::tuple<double, int, int>>
-    sym_labeled_orbitals(std::string type);
-
     /// Computes spin
     std::vector<std::pair<double, double>>
     compute_spin(DeterminantMap& space, SharedMatrix evecs, int nroot);
@@ -387,9 +355,6 @@ class AdaptiveCI : public Wavefunction {
 
     /// Convert from determinant to string representation
     void convert_to_string(const std::vector<STLBitsetDeterminant>& space);
-
-    /// Build initial reference
-    void build_initial_reference(DeterminantMap& space);
 
     /// Compute overlap for root following
     int root_follow(DeterminantMap& P_ref, std::vector<double>& P_ref_evecs,

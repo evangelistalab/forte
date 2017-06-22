@@ -86,6 +86,8 @@ void forte_options(std::string name, ForteOptions& foptions) {
     foptions.add_array("SUBSPACE", "A list of orbital subspaces");
 
     foptions.add_double("MS", 0.0, "Projection of spin onto the z axis");
+
+    foptions.add_str("ACTIVE_REF_TYPE", "CAS", "Initial guess for active space wave functions");
 }
 }
 }
