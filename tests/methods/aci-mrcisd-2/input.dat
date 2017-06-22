@@ -34,7 +34,7 @@ set forte {
   sigma              0.01
   nroot              1
   root               0
-  aci_initial_space hf
+  active_ref_type    hf
 }
 
 # cc-pvdz basis from Psi4 

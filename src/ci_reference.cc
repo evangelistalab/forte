@@ -70,7 +70,7 @@ CI_Reference::CI_Reference(std::shared_ptr<Wavefunction> wfn, Options& options,
 
     // Reference type
     ref_type_ = "CAS";
-    if( options["ACTIVE_REF_TYPE"].has_changed() ){
+    if (options["ACTIVE_REF_TYPE"].has_changed()) {
         ref_type_ = options.get_str("ACTIVE_REF_TYPE");
     }
 
@@ -94,24 +94,22 @@ CI_Reference::CI_Reference(std::shared_ptr<Wavefunction> wfn, Options& options,
 
 CI_Reference::~CI_Reference() {}
 
-
 void CI_Reference::build_reference(std::vector<STLBitsetDeterminant>& ref_space) {
-   
-    if( ref_type_ == "CAS" ){
-        build_cas_reference(ref_space);   
-    }else{
+
+    if (ref_type_ == "CAS") {
+        build_cas_reference(ref_space);
+    } else {
         build_ci_reference(ref_space);
     }
- 
 }
 
-void CI_Reference::build_ci_reference( std::vector<STLBitsetDeterminant>& ref_space) {
+void CI_Reference::build_ci_reference(std::vector<STLBitsetDeterminant>& ref_space) {
 
-    STLBitsetDeterminant det = STLBitsetDeterminant( get_occupation() );
+    STLBitsetDeterminant det = STLBitsetDeterminant(get_occupation());
 
     ref_space.push_back(det);
-    
-    if( (ref_type_ == "CIS") or (ref_type_ == "CISD") ){
+
+    if ((ref_type_ == "CIS") or (ref_type_ == "CISD")) {
         std::vector<int> aocc = det.get_alfa_occ();
         std::vector<int> bocc = det.get_beta_occ();
         std::vector<int> avir = det.get_alfa_vir();
@@ -122,11 +120,11 @@ void CI_Reference::build_ci_reference( std::vector<STLBitsetDeterminant>& ref_sp
         int nvalpha = avir.size();
         int nvbeta = bvir.size();
 
-        for( int i = 0; i < noalpha; ++i) {
+        for (int i = 0; i < noalpha; ++i) {
             int ii = aocc[i];
-            for( int a = 0; a < nvalpha; ++a){
+            for (int a = 0; a < nvalpha; ++a) {
                 int aa = avir[a];
-                if ( (mo_symmetry_[ii] ^ mo_symmetry_[aa]) == 0) {
+                if ((mo_symmetry_[ii] ^ mo_symmetry_[aa]) == 0) {
                     STLBitsetDeterminant new_det(det);
                     new_det.set_alfa_bit(ii, false);
                     new_det.set_alfa_bit(aa, true);
@@ -135,11 +133,11 @@ void CI_Reference::build_ci_reference( std::vector<STLBitsetDeterminant>& ref_sp
             }
         }
 
-        for( int i = 0; i < nobeta; ++i) {
+        for (int i = 0; i < nobeta; ++i) {
             int ii = bocc[i];
-            for( int a = 0; a < nvbeta; ++a){
+            for (int a = 0; a < nvbeta; ++a) {
                 int aa = bvir[a];
-                if ( (mo_symmetry_[ii] ^ mo_symmetry_[aa]) == 0) {
+                if ((mo_symmetry_[ii] ^ mo_symmetry_[aa]) == 0) {
                     STLBitsetDeterminant new_det(det);
                     new_det.set_beta_bit(ii, false);
                     new_det.set_beta_bit(aa, true);
@@ -149,7 +147,7 @@ void CI_Reference::build_ci_reference( std::vector<STLBitsetDeterminant>& ref_sp
         }
     }
 
-    if( (ref_type_ == "CID") or (ref_type_ == "CISD") ){
+    if ((ref_type_ == "CID") or (ref_type_ == "CISD")) {
         std::vector<int> aocc = det.get_alfa_occ();
         std::vector<int> bocc = det.get_beta_occ();
         std::vector<int> avir = det.get_alfa_vir();
@@ -468,7 +466,6 @@ std::vector<int> CI_Reference::get_occupation() {
 
     } // End loop over k
     return occupation;
-} 
-
+}
 }
 } // End Namespaces

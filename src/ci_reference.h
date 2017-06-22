@@ -39,7 +39,6 @@ namespace forte {
 class CI_Reference // : public Wavefunction
 {
   protected:
-
     // The wavefunction object
     SharedWavefunction wfn_;
 
@@ -53,7 +52,7 @@ class CI_Reference // : public Wavefunction
     int nalpha_;
 
     // Number of active beta electrons
-    int nbeta_; 
+    int nbeta_;
 
     // Symmetry of the reference
     int root_sym_;
@@ -88,15 +87,15 @@ class CI_Reference // : public Wavefunction
 
   public:
     /// Default constructor
-    CI_Reference(std::shared_ptr<Wavefunction> wfn, Options& options, std::shared_ptr<MOSpaceInfo> mo_space_info, STLBitsetDeterminant det, int multiplicity, double ms, int symmetry );
+    CI_Reference(std::shared_ptr<Wavefunction> wfn, Options& options,
+                 std::shared_ptr<MOSpaceInfo> mo_space_info, STLBitsetDeterminant det,
+                 int multiplicity, double ms, int symmetry);
 
     /// Destructor
     ~CI_Reference();
 
     /// Build a reference
-    void build_reference( std::vector<STLBitsetDeterminant>& ref_space );
-    
+    void build_reference(std::vector<STLBitsetDeterminant>& ref_space);
 };
 }
 } // End Namespaces
-

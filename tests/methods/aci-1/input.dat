@@ -39,7 +39,7 @@ set forte {
   charge 0
   aci_perturb_select true
   aci_enforce_spin_complete false
-  active_guess_size 1 
+  active_ref_type hf 
 }
 
 energy('scf')
