@@ -41,7 +41,7 @@ set forte {
   aci_n_average 3
   aci_average_offset 0
   diag_algorithm sparse
-  active_guess_size 1
+  active_ref_type hf
 }
 
 energy('scf')

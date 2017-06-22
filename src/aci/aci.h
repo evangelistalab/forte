@@ -65,8 +65,7 @@ class AdaptiveCI : public Wavefunction {
      * @param ints A pointer to an allocated integral object
      * @param mo_space_info A pointer to the MOSpaceInfo object
      */
-    AdaptiveCI(SharedWavefunction ref_wfn, Options& options,
-               std::shared_ptr<ForteIntegrals> ints,
+    AdaptiveCI(SharedWavefunction ref_wfn, Options& options, std::shared_ptr<ForteIntegrals> ints,
                std::shared_ptr<MOSpaceInfo> mo_space_info);
 
     /// Destructor
@@ -93,9 +92,10 @@ class AdaptiveCI : public Wavefunction {
 
     void diagonalize_final_and_compute_rdms();
 
-    void set_aci_ints( SharedWavefunction ref_Wfn, std::shared_ptr<ForteIntegrals> ints );
+    void set_aci_ints(SharedWavefunction ref_Wfn, std::shared_ptr<ForteIntegrals> ints);
 
     void semi_canonicalize();
+
   private:
     // ==> Class data <==
 
@@ -213,11 +213,9 @@ class AdaptiveCI : public Wavefunction {
     SharedMatrix evecs_;
 
     /// A map of determinants in the P space
-    std::unordered_map<STLBitsetDeterminant, int, STLBitsetDeterminant::Hash>
-        P_space_map_;
+    std::unordered_map<STLBitsetDeterminant, int, STLBitsetDeterminant::Hash> P_space_map_;
     /// A History of Determinants
-    std::unordered_map<STLBitsetDeterminant,
-                       std::vector<std::pair<size_t, std::string>>,
+    std::unordered_map<STLBitsetDeterminant, std::vector<std::pair<size_t, std::string>>,
                        STLBitsetDeterminant::Hash>
         det_history_;
     /// Stream for printing determinant coefficients
@@ -225,8 +223,7 @@ class AdaptiveCI : public Wavefunction {
     /// Roots to project out
     std::vector<std::vector<std::pair<size_t, double>>> bad_roots_;
     /// Storage of past roots
-    std::vector<std::vector<std::pair<STLBitsetDeterminant, double>>>
-        old_roots_;
+    std::vector<std::vector<std::pair<STLBitsetDeterminant, double>>> old_roots_;
 
     /// A Vector to store spin of each root
     std::vector<std::pair<double, double>> root_spin_vec_;
@@ -265,8 +262,7 @@ class AdaptiveCI : public Wavefunction {
     void startup();
 
     /// Compute an aci wavefunction
-    void compute_aci(DeterminantMap& PQ_space, SharedMatrix& PQ_evecs,
-                     SharedVector& PQ_evals);
+    void compute_aci(DeterminantMap& PQ_space, SharedMatrix& PQ_evecs, SharedVector& PQ_evals);
 
     /// Print information about this calculation
     void print_info();
@@ -275,72 +271,62 @@ class AdaptiveCI : public Wavefunction {
     void print_wfn(DeterminantMap& space, SharedMatrix evecs, int nroot);
 
     /// Streamlined version of find q space
-    void default_find_q_space(DeterminantMap& P_space, DeterminantMap& PQ_space,
-                              SharedVector evals, SharedMatrix evecs);
+    void default_find_q_space(DeterminantMap& P_space, DeterminantMap& PQ_space, SharedVector evals,
+                              SharedMatrix evecs);
 
     /// Find all the relevant excitations out of the P space
-    void find_q_space(DeterminantMap& P_space, DeterminantMap& PQ_space,
-                      int nroot, SharedVector evals, SharedMatrix evecs);
+    void find_q_space(DeterminantMap& P_space, DeterminantMap& PQ_space, int nroot,
+                      SharedVector evals, SharedMatrix evecs);
 
     /// Generate set of state-averaged q-criteria and determinants
-    double average_q_values(int nroot, std::vector<double>& C1,
-                            std::vector<double>& E2);
+    double average_q_values(int nroot, std::vector<double>& C1, std::vector<double>& E2);
 
     /// Get criteria for a specific root
-    double root_select(int nroot, std::vector<double>& C1,
-                       std::vector<double>& E2);
+    double root_select(int nroot, std::vector<double>& C1, std::vector<double>& E2);
 
     /// Find all the relevant excitations out of the P space - single root
     /// version
-    void find_q_space_single_root(int nroot, SharedVector evals,
-                                  SharedMatrix evecs);
+    void find_q_space_single_root(int nroot, SharedVector evals, SharedMatrix evecs);
 
     /// Alternate/experimental determinant generator
-    void get_excited_determinants(int nroot, SharedMatrix evecs,
-                                  DeterminantMap& P_space,
+    void get_excited_determinants(int nroot, SharedMatrix evecs, DeterminantMap& P_space,
                                   det_hash<std::vector<double>>& V_hash);
     /// Alternate/experimental determinant generator
-    void get_excited_determinants2(int nroot, SharedMatrix evecs,
-                                  DeterminantMap& P_space,
-                                  det_hash<std::vector<double>>& V_hash);
+    void get_excited_determinants2(int nroot, SharedMatrix evecs, DeterminantMap& P_space,
+                                   det_hash<std::vector<double>>& V_hash);
 
     /// Prune the space of determinants
-    void prune_q_space(DeterminantMap& PQ_space, DeterminantMap& P_space,
-                       SharedMatrix evecs, int nroot);
+    void prune_q_space(DeterminantMap& PQ_space, DeterminantMap& P_space, SharedMatrix evecs,
+                       int nroot);
 
     /// Check if the procedure has converged
     bool check_convergence(std::vector<std::vector<double>>& energy_history,
                            SharedVector new_energies);
 
     /// Check if the procedure is stuck
-    bool check_stuck(std::vector<std::vector<double>>& energy_history,
-                     SharedVector evals);
+    bool check_stuck(std::vector<std::vector<double>>& energy_history, SharedVector evals);
 
     /// Computes spin
-    std::vector<std::pair<double, double>>
-    compute_spin(DeterminantMap& space, SharedMatrix evecs, int nroot);
+    std::vector<std::pair<double, double>> compute_spin(DeterminantMap& space, SharedMatrix evecs,
+                                                        int nroot);
 
     /// Compute 1-RDM
-    void compute_1rdm(SharedMatrix A, SharedMatrix B,
-                      std::vector<STLBitsetDeterminant>& det_space,
+    void compute_1rdm(SharedMatrix A, SharedMatrix B, std::vector<STLBitsetDeterminant>& det_space,
                       SharedMatrix evecs, int nroot);
 
     /// Compute full S^2 matrix and diagonalize it
-    void full_spin_transform(DeterminantMap& det_space, SharedMatrix cI,
-                             int nroot);
+    void full_spin_transform(DeterminantMap& det_space, SharedMatrix cI, int nroot);
 
     /// Check for spin contamination
-    double compute_spin_contamination(DeterminantMap& space, SharedMatrix evecs,
-                                      int nroot);
+    double compute_spin_contamination(DeterminantMap& space, SharedMatrix evecs, int nroot);
 
     /// Save coefficients of lowest-root determinant
     void save_dets_to_file(DeterminantMap& space, SharedMatrix evecs);
     /// Compute the Davidson correction
-    std::vector<double>
-    davidson_correction(std::vector<STLBitsetDeterminant>& P_dets,
-                        SharedVector P_evals, SharedMatrix PQ_evecs,
-                        std::vector<STLBitsetDeterminant>& PQ_dets,
-                        SharedVector PQ_evals);
+    std::vector<double> davidson_correction(std::vector<STLBitsetDeterminant>& P_dets,
+                                            SharedVector P_evals, SharedMatrix PQ_evecs,
+                                            std::vector<STLBitsetDeterminant>& PQ_dets,
+                                            SharedVector PQ_evals);
 
     //    void compute_H_expectation_val(const
     //    std::vector<STLBitsetDeterminant>& space,
@@ -358,16 +344,15 @@ class AdaptiveCI : public Wavefunction {
 
     /// Compute overlap for root following
     int root_follow(DeterminantMap& P_ref, std::vector<double>& P_ref_evecs,
-                    DeterminantMap& P_space, SharedMatrix P_evecs,
-                    int num_ref_roots);
+                    DeterminantMap& P_space, SharedMatrix P_evecs, int num_ref_roots);
 
     /// Project ACI wavefunction
-    void project_determinant_space(DeterminantMap& space, SharedMatrix evecs,
-                                   SharedVector evals, int nroot);
+    void project_determinant_space(DeterminantMap& space, SharedMatrix evecs, SharedVector evals,
+                                   int nroot);
 
     /// Compute the RDMs
-    void compute_rdms(DeterminantMap& dets, WFNOperator& op,
-                      SharedMatrix& PQ_evecs, int root1, int root2);
+    void compute_rdms(DeterminantMap& dets, WFNOperator& op, SharedMatrix& PQ_evecs, int root1,
+                      int root2);
 
     /// Save older roots
     void save_old_root(DeterminantMap& dets, SharedMatrix& PQ_evecs, int root);
@@ -376,20 +361,19 @@ class AdaptiveCI : public Wavefunction {
     void add_bad_roots(DeterminantMap& dets);
 
     /// Print Summary
-    void print_final(DeterminantMap& dets, SharedMatrix& PQ_evecs,
-                     SharedVector& PQ_evals);
+    void print_final(DeterminantMap& dets, SharedMatrix& PQ_evecs, SharedVector& PQ_evals);
 
     void compute_multistate(SharedVector& PQ_evals);
 
-    void block_diagonalize_fock( const d2& Fa, const d2& Fb, SharedMatrix& Ua, SharedMatrix& Ub, const std::string& name); 
+    void block_diagonalize_fock(const d2& Fa, const d2& Fb, SharedMatrix& Ua, SharedMatrix& Ub,
+                                const std::string& name);
 
-    DeterminantMap approximate_wfn( DeterminantMap& PQ_space, SharedMatrix& evecs, det_hash<double>& external_space, SharedMatrix& new_evecs );
+    DeterminantMap approximate_wfn(DeterminantMap& PQ_space, SharedMatrix& evecs,
+                                   det_hash<double>& external_space, SharedMatrix& new_evecs);
 
     std::vector<std::pair<size_t, double>>
     dl_initial_guess(std::vector<STLBitsetDeterminant>& old_dets,
-                     std::vector<STLBitsetDeterminant>& dets,
-                     SharedMatrix& evecs, int nroot);
-
+                     std::vector<STLBitsetDeterminant>& dets, SharedMatrix& evecs, int nroot);
 
     //    int david2(double **A, int N, int M, double *eps, double **v,double
     //    cutoff, int print);

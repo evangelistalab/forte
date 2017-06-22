@@ -241,16 +241,16 @@ void AdaptiveCI::startup() {
 
     // Build the reference determinant and compute its energy
 
-//    if (options_.get_str("ACI_INITIAL_SPACE") == "HF" or
-//        options_.get_str("ACI_INITIAL_SPACE") == "CIS" or
-//        options_.get_str("ACI_INITIAL_SPACE") == "CISD") {
-//        det = STLBitsetDeterminant(get_occupation());
-//        initial_reference_.push_back(det);
-//    } else {
-        CI_Reference ref(reference_wavefunction_, options_, mo_space_info_, det, multiplicity_,
-                         twice_ms_, wavefunction_symmetry_);
-        ref.build_reference(initial_reference_);
-//    }
+    //    if (options_.get_str("ACI_INITIAL_SPACE") == "HF" or
+    //        options_.get_str("ACI_INITIAL_SPACE") == "CIS" or
+    //        options_.get_str("ACI_INITIAL_SPACE") == "CISD") {
+    //        det = STLBitsetDeterminant(get_occupation());
+    //        initial_reference_.push_back(det);
+    //    } else {
+    CI_Reference ref(reference_wavefunction_, options_, mo_space_info_, det, multiplicity_,
+                     twice_ms_, wavefunction_symmetry_);
+    ref.build_reference(initial_reference_);
+    //    }
 
     // Read options
     nroot_ = options_.get_int("ACI_NROOT");
@@ -288,10 +288,10 @@ void AdaptiveCI::startup() {
     approx_rdm_ = options_.get_bool("ACI_APPROXIMATE_RDM");
     print_weights_ = options_.get_bool("ACI_PRINT_WEIGHTS");
 
- //   reference_type_ = "SR";
- //   if (options_["ACI_INITIAL_SPACE"].has_changed()) {
- //       reference_type_ = options_.get_str("ACI_INITIAL_SPACE");
- //   }
+    //   reference_type_ = "SR";
+    //   if (options_["ACI_INITIAL_SPACE"].has_changed()) {
+    //       reference_type_ = options_.get_str("ACI_INITIAL_SPACE");
+    //   }
 
     diag_method_ = DLString;
     if (options_["DIAG_ALGORITHM"].has_changed()) {
