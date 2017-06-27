@@ -855,153 +855,229 @@ void CI_RDMS::compute_3rdm(std::vector<double>& tprdm_aaa, std::vector<double>& 
 
     // Build the diagonal part
     const std::vector<STLBitsetDeterminant>& dets = wfn_.determinants();
-    for( size_t I = 0; I < dim_space_; ++I ){
+    for (size_t I = 0; I < dim_space_; ++I) {
         double cI_sq = evecs_->get(I, root1_) * evecs_->get(I, root2_);
-        STLBitsetDeterminant detI = dets[I]; 
-        
+        STLBitsetDeterminant detI = dets[I];
+
         std::vector<int> aocc = detI.get_alfa_occ();
         std::vector<int> bocc = detI.get_beta_occ();
         int na = aocc.size();
         int nb = bocc.size();
 
-        for( int p = 0; p < na; ++p ){
+        for (int p = 0; p < na; ++p) {
             int pp = aocc[p];
-            for( int q = p+1; q < na; ++q ){
+            for (int q = p + 1; q < na; ++q) {
                 int qq = aocc[q];
-                for( int r = q+1; r < na; ++r ){
+                for (int r = q + 1; r < na; ++r) {
                     int rr = aocc[r];
-                    
-                    tprdm_aaa[pp * ncmo5 + qq * ncmo4_ + rr * ncmo3_ + pp * ncmo2_ + qq * ncmo_ + rr] += cI_sq; 
-                    tprdm_aaa[pp * ncmo5 + qq * ncmo4_ + rr * ncmo3_ + pp * ncmo2_ + rr * ncmo_ + qq] -= cI_sq; 
-                    tprdm_aaa[pp * ncmo5 + qq * ncmo4_ + rr * ncmo3_ + rr * ncmo2_ + pp * ncmo_ + qq] += cI_sq; 
-                    tprdm_aaa[pp * ncmo5 + qq * ncmo4_ + rr * ncmo3_ + rr * ncmo2_ + qq * ncmo_ + pp] -= cI_sq; 
-                    tprdm_aaa[pp * ncmo5 + qq * ncmo4_ + rr * ncmo3_ + qq * ncmo2_ + rr * ncmo_ + pp] += cI_sq; 
-                    tprdm_aaa[pp * ncmo5 + qq * ncmo4_ + rr * ncmo3_ + qq * ncmo2_ + pp * ncmo_ + rr] -= cI_sq; 
 
-                    tprdm_aaa[pp * ncmo5 + rr * ncmo4_ + qq * ncmo3_ + pp * ncmo2_ + qq * ncmo_ + rr] -= cI_sq; 
-                    tprdm_aaa[pp * ncmo5 + rr * ncmo4_ + qq * ncmo3_ + pp * ncmo2_ + rr * ncmo_ + qq] += cI_sq; 
-                    tprdm_aaa[pp * ncmo5 + rr * ncmo4_ + qq * ncmo3_ + rr * ncmo2_ + pp * ncmo_ + qq] -= cI_sq; 
-                    tprdm_aaa[pp * ncmo5 + rr * ncmo4_ + qq * ncmo3_ + rr * ncmo2_ + qq * ncmo_ + pp] += cI_sq; 
-                    tprdm_aaa[pp * ncmo5 + rr * ncmo4_ + qq * ncmo3_ + qq * ncmo2_ + rr * ncmo_ + pp] -= cI_sq; 
-                    tprdm_aaa[pp * ncmo5 + rr * ncmo4_ + qq * ncmo3_ + qq * ncmo2_ + pp * ncmo_ + rr] += cI_sq; 
+                    tprdm_aaa[pp * ncmo5 + qq * ncmo4_ + rr * ncmo3_ + pp * ncmo2_ + qq * ncmo_ +
+                              rr] += cI_sq;
+                    tprdm_aaa[pp * ncmo5 + qq * ncmo4_ + rr * ncmo3_ + pp * ncmo2_ + rr * ncmo_ +
+                              qq] -= cI_sq;
+                    tprdm_aaa[pp * ncmo5 + qq * ncmo4_ + rr * ncmo3_ + rr * ncmo2_ + pp * ncmo_ +
+                              qq] += cI_sq;
+                    tprdm_aaa[pp * ncmo5 + qq * ncmo4_ + rr * ncmo3_ + rr * ncmo2_ + qq * ncmo_ +
+                              pp] -= cI_sq;
+                    tprdm_aaa[pp * ncmo5 + qq * ncmo4_ + rr * ncmo3_ + qq * ncmo2_ + rr * ncmo_ +
+                              pp] += cI_sq;
+                    tprdm_aaa[pp * ncmo5 + qq * ncmo4_ + rr * ncmo3_ + qq * ncmo2_ + pp * ncmo_ +
+                              rr] -= cI_sq;
 
-                    tprdm_aaa[rr * ncmo5 + pp * ncmo4_ + qq * ncmo3_ + pp * ncmo2_ + qq * ncmo_ + rr] += cI_sq; 
-                    tprdm_aaa[rr * ncmo5 + pp * ncmo4_ + qq * ncmo3_ + pp * ncmo2_ + rr * ncmo_ + qq] -= cI_sq; 
-                    tprdm_aaa[rr * ncmo5 + pp * ncmo4_ + qq * ncmo3_ + rr * ncmo2_ + pp * ncmo_ + qq] += cI_sq; 
-                    tprdm_aaa[rr * ncmo5 + pp * ncmo4_ + qq * ncmo3_ + rr * ncmo2_ + qq * ncmo_ + pp] -= cI_sq; 
-                    tprdm_aaa[rr * ncmo5 + pp * ncmo4_ + qq * ncmo3_ + qq * ncmo2_ + rr * ncmo_ + pp] += cI_sq; 
-                    tprdm_aaa[rr * ncmo5 + pp * ncmo4_ + qq * ncmo3_ + qq * ncmo2_ + pp * ncmo_ + rr] -= cI_sq; 
+                    tprdm_aaa[pp * ncmo5 + rr * ncmo4_ + qq * ncmo3_ + pp * ncmo2_ + qq * ncmo_ +
+                              rr] -= cI_sq;
+                    tprdm_aaa[pp * ncmo5 + rr * ncmo4_ + qq * ncmo3_ + pp * ncmo2_ + rr * ncmo_ +
+                              qq] += cI_sq;
+                    tprdm_aaa[pp * ncmo5 + rr * ncmo4_ + qq * ncmo3_ + rr * ncmo2_ + pp * ncmo_ +
+                              qq] -= cI_sq;
+                    tprdm_aaa[pp * ncmo5 + rr * ncmo4_ + qq * ncmo3_ + rr * ncmo2_ + qq * ncmo_ +
+                              pp] += cI_sq;
+                    tprdm_aaa[pp * ncmo5 + rr * ncmo4_ + qq * ncmo3_ + qq * ncmo2_ + rr * ncmo_ +
+                              pp] -= cI_sq;
+                    tprdm_aaa[pp * ncmo5 + rr * ncmo4_ + qq * ncmo3_ + qq * ncmo2_ + pp * ncmo_ +
+                              rr] += cI_sq;
 
-                    tprdm_aaa[rr * ncmo5 + qq * ncmo4_ + pp * ncmo3_ + pp * ncmo2_ + qq * ncmo_ + rr] -= cI_sq; 
-                    tprdm_aaa[rr * ncmo5 + qq * ncmo4_ + pp * ncmo3_ + pp * ncmo2_ + rr * ncmo_ + qq] += cI_sq; 
-                    tprdm_aaa[rr * ncmo5 + qq * ncmo4_ + pp * ncmo3_ + rr * ncmo2_ + pp * ncmo_ + qq] -= cI_sq; 
-                    tprdm_aaa[rr * ncmo5 + qq * ncmo4_ + pp * ncmo3_ + rr * ncmo2_ + qq * ncmo_ + pp] += cI_sq; 
-                    tprdm_aaa[rr * ncmo5 + qq * ncmo4_ + pp * ncmo3_ + qq * ncmo2_ + rr * ncmo_ + pp] -= cI_sq; 
-                    tprdm_aaa[rr * ncmo5 + qq * ncmo4_ + pp * ncmo3_ + qq * ncmo2_ + pp * ncmo_ + rr] += cI_sq; 
+                    tprdm_aaa[rr * ncmo5 + pp * ncmo4_ + qq * ncmo3_ + pp * ncmo2_ + qq * ncmo_ +
+                              rr] += cI_sq;
+                    tprdm_aaa[rr * ncmo5 + pp * ncmo4_ + qq * ncmo3_ + pp * ncmo2_ + rr * ncmo_ +
+                              qq] -= cI_sq;
+                    tprdm_aaa[rr * ncmo5 + pp * ncmo4_ + qq * ncmo3_ + rr * ncmo2_ + pp * ncmo_ +
+                              qq] += cI_sq;
+                    tprdm_aaa[rr * ncmo5 + pp * ncmo4_ + qq * ncmo3_ + rr * ncmo2_ + qq * ncmo_ +
+                              pp] -= cI_sq;
+                    tprdm_aaa[rr * ncmo5 + pp * ncmo4_ + qq * ncmo3_ + qq * ncmo2_ + rr * ncmo_ +
+                              pp] += cI_sq;
+                    tprdm_aaa[rr * ncmo5 + pp * ncmo4_ + qq * ncmo3_ + qq * ncmo2_ + pp * ncmo_ +
+                              rr] -= cI_sq;
 
-                    tprdm_aaa[qq * ncmo5 + rr * ncmo4_ + pp * ncmo3_ + pp * ncmo2_ + qq * ncmo_ + rr] += cI_sq; 
-                    tprdm_aaa[qq * ncmo5 + rr * ncmo4_ + pp * ncmo3_ + pp * ncmo2_ + rr * ncmo_ + qq] -= cI_sq; 
-                    tprdm_aaa[qq * ncmo5 + rr * ncmo4_ + pp * ncmo3_ + rr * ncmo2_ + pp * ncmo_ + qq] += cI_sq; 
-                    tprdm_aaa[qq * ncmo5 + rr * ncmo4_ + pp * ncmo3_ + rr * ncmo2_ + qq * ncmo_ + pp] -= cI_sq; 
-                    tprdm_aaa[qq * ncmo5 + rr * ncmo4_ + pp * ncmo3_ + qq * ncmo2_ + rr * ncmo_ + pp] += cI_sq; 
-                    tprdm_aaa[qq * ncmo5 + rr * ncmo4_ + pp * ncmo3_ + qq * ncmo2_ + pp * ncmo_ + rr] -= cI_sq; 
+                    tprdm_aaa[rr * ncmo5 + qq * ncmo4_ + pp * ncmo3_ + pp * ncmo2_ + qq * ncmo_ +
+                              rr] -= cI_sq;
+                    tprdm_aaa[rr * ncmo5 + qq * ncmo4_ + pp * ncmo3_ + pp * ncmo2_ + rr * ncmo_ +
+                              qq] += cI_sq;
+                    tprdm_aaa[rr * ncmo5 + qq * ncmo4_ + pp * ncmo3_ + rr * ncmo2_ + pp * ncmo_ +
+                              qq] -= cI_sq;
+                    tprdm_aaa[rr * ncmo5 + qq * ncmo4_ + pp * ncmo3_ + rr * ncmo2_ + qq * ncmo_ +
+                              pp] += cI_sq;
+                    tprdm_aaa[rr * ncmo5 + qq * ncmo4_ + pp * ncmo3_ + qq * ncmo2_ + rr * ncmo_ +
+                              pp] -= cI_sq;
+                    tprdm_aaa[rr * ncmo5 + qq * ncmo4_ + pp * ncmo3_ + qq * ncmo2_ + pp * ncmo_ +
+                              rr] += cI_sq;
 
-                    tprdm_aaa[qq * ncmo5 + pp * ncmo4_ + rr * ncmo3_ + pp * ncmo2_ + qq * ncmo_ + rr] -= cI_sq; 
-                    tprdm_aaa[qq * ncmo5 + pp * ncmo4_ + rr * ncmo3_ + pp * ncmo2_ + rr * ncmo_ + qq] += cI_sq; 
-                    tprdm_aaa[qq * ncmo5 + pp * ncmo4_ + rr * ncmo3_ + rr * ncmo2_ + pp * ncmo_ + qq] -= cI_sq; 
-                    tprdm_aaa[qq * ncmo5 + pp * ncmo4_ + rr * ncmo3_ + rr * ncmo2_ + qq * ncmo_ + pp] += cI_sq; 
-                    tprdm_aaa[qq * ncmo5 + pp * ncmo4_ + rr * ncmo3_ + qq * ncmo2_ + rr * ncmo_ + pp] -= cI_sq; 
-                    tprdm_aaa[qq * ncmo5 + pp * ncmo4_ + rr * ncmo3_ + qq * ncmo2_ + pp * ncmo_ + rr] += cI_sq; 
+                    tprdm_aaa[qq * ncmo5 + rr * ncmo4_ + pp * ncmo3_ + pp * ncmo2_ + qq * ncmo_ +
+                              rr] += cI_sq;
+                    tprdm_aaa[qq * ncmo5 + rr * ncmo4_ + pp * ncmo3_ + pp * ncmo2_ + rr * ncmo_ +
+                              qq] -= cI_sq;
+                    tprdm_aaa[qq * ncmo5 + rr * ncmo4_ + pp * ncmo3_ + rr * ncmo2_ + pp * ncmo_ +
+                              qq] += cI_sq;
+                    tprdm_aaa[qq * ncmo5 + rr * ncmo4_ + pp * ncmo3_ + rr * ncmo2_ + qq * ncmo_ +
+                              pp] -= cI_sq;
+                    tprdm_aaa[qq * ncmo5 + rr * ncmo4_ + pp * ncmo3_ + qq * ncmo2_ + rr * ncmo_ +
+                              pp] += cI_sq;
+                    tprdm_aaa[qq * ncmo5 + rr * ncmo4_ + pp * ncmo3_ + qq * ncmo2_ + pp * ncmo_ +
+                              rr] -= cI_sq;
 
-                } 
-            } 
-        } 
+                    tprdm_aaa[qq * ncmo5 + pp * ncmo4_ + rr * ncmo3_ + pp * ncmo2_ + qq * ncmo_ +
+                              rr] -= cI_sq;
+                    tprdm_aaa[qq * ncmo5 + pp * ncmo4_ + rr * ncmo3_ + pp * ncmo2_ + rr * ncmo_ +
+                              qq] += cI_sq;
+                    tprdm_aaa[qq * ncmo5 + pp * ncmo4_ + rr * ncmo3_ + rr * ncmo2_ + pp * ncmo_ +
+                              qq] -= cI_sq;
+                    tprdm_aaa[qq * ncmo5 + pp * ncmo4_ + rr * ncmo3_ + rr * ncmo2_ + qq * ncmo_ +
+                              pp] += cI_sq;
+                    tprdm_aaa[qq * ncmo5 + pp * ncmo4_ + rr * ncmo3_ + qq * ncmo2_ + rr * ncmo_ +
+                              pp] -= cI_sq;
+                    tprdm_aaa[qq * ncmo5 + pp * ncmo4_ + rr * ncmo3_ + qq * ncmo2_ + pp * ncmo_ +
+                              rr] += cI_sq;
+                }
+            }
+        }
 
-        for( int p = 0; p < na; ++p ){
+        for (int p = 0; p < na; ++p) {
             int pp = aocc[p];
-            for( int q = p+1; q < na; ++q ){
+            for (int q = p + 1; q < na; ++q) {
                 int qq = aocc[q];
-                for( int r = 0; r < nb; ++r ){
+                for (int r = 0; r < nb; ++r) {
                     int rr = bocc[r];
 
-                    tprdm_aab[pp * ncmo5 + qq * ncmo4_ + rr * ncmo3_ + pp * ncmo2_ + qq * ncmo_ + rr] += cI_sq; 
-                    tprdm_aab[pp * ncmo5 + qq * ncmo4_ + rr * ncmo3_ + qq * ncmo2_ + pp * ncmo_ + rr] -= cI_sq; 
-                    tprdm_aab[qq * ncmo5 + pp * ncmo4_ + rr * ncmo3_ + pp * ncmo2_ + qq * ncmo_ + rr] -= cI_sq; 
-                    tprdm_aab[qq * ncmo5 + pp * ncmo4_ + rr * ncmo3_ + qq * ncmo2_ + pp * ncmo_ + rr] += cI_sq; 
-                    
+                    tprdm_aab[pp * ncmo5 + qq * ncmo4_ + rr * ncmo3_ + pp * ncmo2_ + qq * ncmo_ +
+                              rr] += cI_sq;
+                    tprdm_aab[pp * ncmo5 + qq * ncmo4_ + rr * ncmo3_ + qq * ncmo2_ + pp * ncmo_ +
+                              rr] -= cI_sq;
+                    tprdm_aab[qq * ncmo5 + pp * ncmo4_ + rr * ncmo3_ + pp * ncmo2_ + qq * ncmo_ +
+                              rr] -= cI_sq;
+                    tprdm_aab[qq * ncmo5 + pp * ncmo4_ + rr * ncmo3_ + qq * ncmo2_ + pp * ncmo_ +
+                              rr] += cI_sq;
                 }
             }
         }
 
-        for( int p = 0; p < na; ++p ){
+        for (int p = 0; p < na; ++p) {
             int pp = aocc[p];
-            for( int q = 0; q < nb; ++q ){
+            for (int q = 0; q < nb; ++q) {
                 int qq = bocc[q];
-                for( int r = q + 1; r < nb; ++r ){
+                for (int r = q + 1; r < nb; ++r) {
                     int rr = bocc[r];
-                        
-                    tprdm_abb[pp * ncmo5 + qq * ncmo4_ + rr * ncmo3_ + pp * ncmo2_ + qq * ncmo_ + rr] += cI_sq; 
-                    tprdm_abb[pp * ncmo5 + qq * ncmo4_ + rr * ncmo3_ + pp * ncmo2_ + rr * ncmo_ + qq] -= cI_sq; 
-                    tprdm_abb[pp * ncmo5 + rr * ncmo4_ + qq * ncmo3_ + pp * ncmo2_ + qq * ncmo_ + rr] -= cI_sq; 
-                    tprdm_abb[pp * ncmo5 + rr * ncmo4_ + qq * ncmo3_ + pp * ncmo2_ + rr * ncmo_ + qq] += cI_sq; 
+
+                    tprdm_abb[pp * ncmo5 + qq * ncmo4_ + rr * ncmo3_ + pp * ncmo2_ + qq * ncmo_ +
+                              rr] += cI_sq;
+                    tprdm_abb[pp * ncmo5 + qq * ncmo4_ + rr * ncmo3_ + pp * ncmo2_ + rr * ncmo_ +
+                              qq] -= cI_sq;
+                    tprdm_abb[pp * ncmo5 + rr * ncmo4_ + qq * ncmo3_ + pp * ncmo2_ + qq * ncmo_ +
+                              rr] -= cI_sq;
+                    tprdm_abb[pp * ncmo5 + rr * ncmo4_ + qq * ncmo3_ + pp * ncmo2_ + rr * ncmo_ +
+                              qq] += cI_sq;
                 }
             }
         }
 
-        for( int p = 0; p < nb; ++p ){
+        for (int p = 0; p < nb; ++p) {
             int pp = bocc[p];
-            for( int q = p+1; q < nb; ++q ){
+            for (int q = p + 1; q < nb; ++q) {
                 int qq = bocc[q];
-                for( int r = q+1; r < nb; ++r ){
+                for (int r = q + 1; r < nb; ++r) {
                     int rr = bocc[r];
-                    
-                    tprdm_bbb[pp * ncmo5 + qq * ncmo4_ + rr * ncmo3_ + pp * ncmo2_ + qq * ncmo_ + rr] += cI_sq; 
-                    tprdm_bbb[pp * ncmo5 + qq * ncmo4_ + rr * ncmo3_ + pp * ncmo2_ + rr * ncmo_ + qq] -= cI_sq; 
-                    tprdm_bbb[pp * ncmo5 + qq * ncmo4_ + rr * ncmo3_ + rr * ncmo2_ + pp * ncmo_ + qq] += cI_sq; 
-                    tprdm_bbb[pp * ncmo5 + qq * ncmo4_ + rr * ncmo3_ + rr * ncmo2_ + qq * ncmo_ + pp] -= cI_sq; 
-                    tprdm_bbb[pp * ncmo5 + qq * ncmo4_ + rr * ncmo3_ + qq * ncmo2_ + rr * ncmo_ + pp] += cI_sq; 
-                    tprdm_bbb[pp * ncmo5 + qq * ncmo4_ + rr * ncmo3_ + qq * ncmo2_ + pp * ncmo_ + rr] -= cI_sq; 
 
-                    tprdm_bbb[pp * ncmo5 + rr * ncmo4_ + qq * ncmo3_ + pp * ncmo2_ + qq * ncmo_ + rr] -= cI_sq; 
-                    tprdm_bbb[pp * ncmo5 + rr * ncmo4_ + qq * ncmo3_ + pp * ncmo2_ + rr * ncmo_ + qq] += cI_sq; 
-                    tprdm_bbb[pp * ncmo5 + rr * ncmo4_ + qq * ncmo3_ + rr * ncmo2_ + pp * ncmo_ + qq] -= cI_sq; 
-                    tprdm_bbb[pp * ncmo5 + rr * ncmo4_ + qq * ncmo3_ + rr * ncmo2_ + qq * ncmo_ + pp] += cI_sq; 
-                    tprdm_bbb[pp * ncmo5 + rr * ncmo4_ + qq * ncmo3_ + qq * ncmo2_ + rr * ncmo_ + pp] -= cI_sq; 
-                    tprdm_bbb[pp * ncmo5 + rr * ncmo4_ + qq * ncmo3_ + qq * ncmo2_ + pp * ncmo_ + rr] += cI_sq; 
+                    tprdm_bbb[pp * ncmo5 + qq * ncmo4_ + rr * ncmo3_ + pp * ncmo2_ + qq * ncmo_ +
+                              rr] += cI_sq;
+                    tprdm_bbb[pp * ncmo5 + qq * ncmo4_ + rr * ncmo3_ + pp * ncmo2_ + rr * ncmo_ +
+                              qq] -= cI_sq;
+                    tprdm_bbb[pp * ncmo5 + qq * ncmo4_ + rr * ncmo3_ + rr * ncmo2_ + pp * ncmo_ +
+                              qq] += cI_sq;
+                    tprdm_bbb[pp * ncmo5 + qq * ncmo4_ + rr * ncmo3_ + rr * ncmo2_ + qq * ncmo_ +
+                              pp] -= cI_sq;
+                    tprdm_bbb[pp * ncmo5 + qq * ncmo4_ + rr * ncmo3_ + qq * ncmo2_ + rr * ncmo_ +
+                              pp] += cI_sq;
+                    tprdm_bbb[pp * ncmo5 + qq * ncmo4_ + rr * ncmo3_ + qq * ncmo2_ + pp * ncmo_ +
+                              rr] -= cI_sq;
 
-                    tprdm_bbb[rr * ncmo5 + pp * ncmo4_ + qq * ncmo3_ + pp * ncmo2_ + qq * ncmo_ + rr] += cI_sq; 
-                    tprdm_bbb[rr * ncmo5 + pp * ncmo4_ + qq * ncmo3_ + pp * ncmo2_ + rr * ncmo_ + qq] -= cI_sq; 
-                    tprdm_bbb[rr * ncmo5 + pp * ncmo4_ + qq * ncmo3_ + rr * ncmo2_ + pp * ncmo_ + qq] += cI_sq; 
-                    tprdm_bbb[rr * ncmo5 + pp * ncmo4_ + qq * ncmo3_ + rr * ncmo2_ + qq * ncmo_ + pp] -= cI_sq; 
-                    tprdm_bbb[rr * ncmo5 + pp * ncmo4_ + qq * ncmo3_ + qq * ncmo2_ + rr * ncmo_ + pp] += cI_sq; 
-                    tprdm_bbb[rr * ncmo5 + pp * ncmo4_ + qq * ncmo3_ + qq * ncmo2_ + pp * ncmo_ + rr] -= cI_sq; 
+                    tprdm_bbb[pp * ncmo5 + rr * ncmo4_ + qq * ncmo3_ + pp * ncmo2_ + qq * ncmo_ +
+                              rr] -= cI_sq;
+                    tprdm_bbb[pp * ncmo5 + rr * ncmo4_ + qq * ncmo3_ + pp * ncmo2_ + rr * ncmo_ +
+                              qq] += cI_sq;
+                    tprdm_bbb[pp * ncmo5 + rr * ncmo4_ + qq * ncmo3_ + rr * ncmo2_ + pp * ncmo_ +
+                              qq] -= cI_sq;
+                    tprdm_bbb[pp * ncmo5 + rr * ncmo4_ + qq * ncmo3_ + rr * ncmo2_ + qq * ncmo_ +
+                              pp] += cI_sq;
+                    tprdm_bbb[pp * ncmo5 + rr * ncmo4_ + qq * ncmo3_ + qq * ncmo2_ + rr * ncmo_ +
+                              pp] -= cI_sq;
+                    tprdm_bbb[pp * ncmo5 + rr * ncmo4_ + qq * ncmo3_ + qq * ncmo2_ + pp * ncmo_ +
+                              rr] += cI_sq;
 
-                    tprdm_bbb[rr * ncmo5 + qq * ncmo4_ + pp * ncmo3_ + pp * ncmo2_ + qq * ncmo_ + rr] -= cI_sq; 
-                    tprdm_bbb[rr * ncmo5 + qq * ncmo4_ + pp * ncmo3_ + pp * ncmo2_ + rr * ncmo_ + qq] += cI_sq; 
-                    tprdm_bbb[rr * ncmo5 + qq * ncmo4_ + pp * ncmo3_ + rr * ncmo2_ + pp * ncmo_ + qq] -= cI_sq; 
-                    tprdm_bbb[rr * ncmo5 + qq * ncmo4_ + pp * ncmo3_ + rr * ncmo2_ + qq * ncmo_ + pp] += cI_sq; 
-                    tprdm_bbb[rr * ncmo5 + qq * ncmo4_ + pp * ncmo3_ + qq * ncmo2_ + rr * ncmo_ + pp] -= cI_sq; 
-                    tprdm_bbb[rr * ncmo5 + qq * ncmo4_ + pp * ncmo3_ + qq * ncmo2_ + pp * ncmo_ + rr] += cI_sq; 
+                    tprdm_bbb[rr * ncmo5 + pp * ncmo4_ + qq * ncmo3_ + pp * ncmo2_ + qq * ncmo_ +
+                              rr] += cI_sq;
+                    tprdm_bbb[rr * ncmo5 + pp * ncmo4_ + qq * ncmo3_ + pp * ncmo2_ + rr * ncmo_ +
+                              qq] -= cI_sq;
+                    tprdm_bbb[rr * ncmo5 + pp * ncmo4_ + qq * ncmo3_ + rr * ncmo2_ + pp * ncmo_ +
+                              qq] += cI_sq;
+                    tprdm_bbb[rr * ncmo5 + pp * ncmo4_ + qq * ncmo3_ + rr * ncmo2_ + qq * ncmo_ +
+                              pp] -= cI_sq;
+                    tprdm_bbb[rr * ncmo5 + pp * ncmo4_ + qq * ncmo3_ + qq * ncmo2_ + rr * ncmo_ +
+                              pp] += cI_sq;
+                    tprdm_bbb[rr * ncmo5 + pp * ncmo4_ + qq * ncmo3_ + qq * ncmo2_ + pp * ncmo_ +
+                              rr] -= cI_sq;
 
-                    tprdm_bbb[qq * ncmo5 + rr * ncmo4_ + pp * ncmo3_ + pp * ncmo2_ + qq * ncmo_ + rr] += cI_sq; 
-                    tprdm_bbb[qq * ncmo5 + rr * ncmo4_ + pp * ncmo3_ + pp * ncmo2_ + rr * ncmo_ + qq] -= cI_sq; 
-                    tprdm_bbb[qq * ncmo5 + rr * ncmo4_ + pp * ncmo3_ + rr * ncmo2_ + pp * ncmo_ + qq] += cI_sq; 
-                    tprdm_bbb[qq * ncmo5 + rr * ncmo4_ + pp * ncmo3_ + rr * ncmo2_ + qq * ncmo_ + pp] -= cI_sq; 
-                    tprdm_bbb[qq * ncmo5 + rr * ncmo4_ + pp * ncmo3_ + qq * ncmo2_ + rr * ncmo_ + pp] += cI_sq; 
-                    tprdm_bbb[qq * ncmo5 + rr * ncmo4_ + pp * ncmo3_ + qq * ncmo2_ + pp * ncmo_ + rr] -= cI_sq; 
+                    tprdm_bbb[rr * ncmo5 + qq * ncmo4_ + pp * ncmo3_ + pp * ncmo2_ + qq * ncmo_ +
+                              rr] -= cI_sq;
+                    tprdm_bbb[rr * ncmo5 + qq * ncmo4_ + pp * ncmo3_ + pp * ncmo2_ + rr * ncmo_ +
+                              qq] += cI_sq;
+                    tprdm_bbb[rr * ncmo5 + qq * ncmo4_ + pp * ncmo3_ + rr * ncmo2_ + pp * ncmo_ +
+                              qq] -= cI_sq;
+                    tprdm_bbb[rr * ncmo5 + qq * ncmo4_ + pp * ncmo3_ + rr * ncmo2_ + qq * ncmo_ +
+                              pp] += cI_sq;
+                    tprdm_bbb[rr * ncmo5 + qq * ncmo4_ + pp * ncmo3_ + qq * ncmo2_ + rr * ncmo_ +
+                              pp] -= cI_sq;
+                    tprdm_bbb[rr * ncmo5 + qq * ncmo4_ + pp * ncmo3_ + qq * ncmo2_ + pp * ncmo_ +
+                              rr] += cI_sq;
 
-                    tprdm_bbb[qq * ncmo5 + pp * ncmo4_ + rr * ncmo3_ + pp * ncmo2_ + qq * ncmo_ + rr] -= cI_sq; 
-                    tprdm_bbb[qq * ncmo5 + pp * ncmo4_ + rr * ncmo3_ + pp * ncmo2_ + rr * ncmo_ + qq] += cI_sq; 
-                    tprdm_bbb[qq * ncmo5 + pp * ncmo4_ + rr * ncmo3_ + rr * ncmo2_ + pp * ncmo_ + qq] -= cI_sq; 
-                    tprdm_bbb[qq * ncmo5 + pp * ncmo4_ + rr * ncmo3_ + rr * ncmo2_ + qq * ncmo_ + pp] += cI_sq; 
-                    tprdm_bbb[qq * ncmo5 + pp * ncmo4_ + rr * ncmo3_ + qq * ncmo2_ + rr * ncmo_ + pp] -= cI_sq; 
-                    tprdm_bbb[qq * ncmo5 + pp * ncmo4_ + rr * ncmo3_ + qq * ncmo2_ + pp * ncmo_ + rr] += cI_sq; 
+                    tprdm_bbb[qq * ncmo5 + rr * ncmo4_ + pp * ncmo3_ + pp * ncmo2_ + qq * ncmo_ +
+                              rr] += cI_sq;
+                    tprdm_bbb[qq * ncmo5 + rr * ncmo4_ + pp * ncmo3_ + pp * ncmo2_ + rr * ncmo_ +
+                              qq] -= cI_sq;
+                    tprdm_bbb[qq * ncmo5 + rr * ncmo4_ + pp * ncmo3_ + rr * ncmo2_ + pp * ncmo_ +
+                              qq] += cI_sq;
+                    tprdm_bbb[qq * ncmo5 + rr * ncmo4_ + pp * ncmo3_ + rr * ncmo2_ + qq * ncmo_ +
+                              pp] -= cI_sq;
+                    tprdm_bbb[qq * ncmo5 + rr * ncmo4_ + pp * ncmo3_ + qq * ncmo2_ + rr * ncmo_ +
+                              pp] += cI_sq;
+                    tprdm_bbb[qq * ncmo5 + rr * ncmo4_ + pp * ncmo3_ + qq * ncmo2_ + pp * ncmo_ +
+                              rr] -= cI_sq;
 
-                } 
-            } 
-        } 
+                    tprdm_bbb[qq * ncmo5 + pp * ncmo4_ + rr * ncmo3_ + pp * ncmo2_ + qq * ncmo_ +
+                              rr] -= cI_sq;
+                    tprdm_bbb[qq * ncmo5 + pp * ncmo4_ + rr * ncmo3_ + pp * ncmo2_ + rr * ncmo_ +
+                              qq] += cI_sq;
+                    tprdm_bbb[qq * ncmo5 + pp * ncmo4_ + rr * ncmo3_ + rr * ncmo2_ + pp * ncmo_ +
+                              qq] -= cI_sq;
+                    tprdm_bbb[qq * ncmo5 + pp * ncmo4_ + rr * ncmo3_ + rr * ncmo2_ + qq * ncmo_ +
+                              pp] += cI_sq;
+                    tprdm_bbb[qq * ncmo5 + pp * ncmo4_ + rr * ncmo3_ + qq * ncmo2_ + rr * ncmo_ +
+                              pp] -= cI_sq;
+                    tprdm_bbb[qq * ncmo5 + pp * ncmo4_ + rr * ncmo3_ + qq * ncmo2_ + pp * ncmo_ +
+                              rr] += cI_sq;
+                }
+            }
+        }
     }
-
 
     for (size_t K = 0, max_K = aaa_list.size(); K < max_K; ++K) {
         // aaa aaa
@@ -1026,11 +1102,10 @@ void CI_RDMS::compute_3rdm(std::vector<double>& tprdm_aaa, std::vector<double>& 
                 const double& sign_stu = std::get<1>(detI) > 0.0 ? 1.0 : -1.0;
                 const size_t& I = std::get<0>(detI);
 
-                double el =
-                    evecs_->get(I, root1_) * evecs_->get(J, root2_) * sign_pqr * sign_stu;
+                double el = evecs_->get(I, root1_) * evecs_->get(J, root2_) * sign_pqr * sign_stu;
 
                 tprdm_aaa[p * ncmo5 + q * ncmo4_ + r * ncmo3_ + s * ncmo2_ + t * ncmo_ + u] += el;
-                tprdm_aaa[p * ncmo5 + q * ncmo4_ + r * ncmo3_ + s * ncmo2_ + u * ncmo_ + t] -= el; 
+                tprdm_aaa[p * ncmo5 + q * ncmo4_ + r * ncmo3_ + s * ncmo2_ + u * ncmo_ + t] -= el;
                 tprdm_aaa[p * ncmo5 + q * ncmo4_ + r * ncmo3_ + u * ncmo2_ + t * ncmo_ + s] -= el;
                 tprdm_aaa[p * ncmo5 + q * ncmo4_ + r * ncmo3_ + u * ncmo2_ + s * ncmo_ + t] += el;
                 tprdm_aaa[p * ncmo5 + q * ncmo4_ + r * ncmo3_ + t * ncmo2_ + s * ncmo_ + u] -= el;
@@ -1072,7 +1147,7 @@ void CI_RDMS::compute_3rdm(std::vector<double>& tprdm_aaa, std::vector<double>& 
                 tprdm_aaa[r * ncmo5 + q * ncmo4_ + p * ncmo3_ + t * ncmo2_ + u * ncmo_ + s] -= el;
 
                 tprdm_aaa[s * ncmo5 + t * ncmo4_ + u * ncmo3_ + p * ncmo2_ + q * ncmo_ + r] += el;
-                tprdm_aaa[s * ncmo5 + u * ncmo4_ + t * ncmo3_ + p * ncmo2_ + q * ncmo_ + r] -= el; 
+                tprdm_aaa[s * ncmo5 + u * ncmo4_ + t * ncmo3_ + p * ncmo2_ + q * ncmo_ + r] -= el;
                 tprdm_aaa[u * ncmo5 + t * ncmo4_ + s * ncmo3_ + p * ncmo2_ + q * ncmo_ + r] -= el;
                 tprdm_aaa[u * ncmo5 + s * ncmo4_ + t * ncmo3_ + p * ncmo2_ + q * ncmo_ + r] += el;
                 tprdm_aaa[t * ncmo5 + s * ncmo4_ + u * ncmo3_ + p * ncmo2_ + q * ncmo_ + r] -= el;
@@ -1139,9 +1214,7 @@ void CI_RDMS::compute_3rdm(std::vector<double>& tprdm_aaa, std::vector<double>& 
                 const double& sign_stu = std::get<1>(detI) > 0.0 ? 1.0 : -1.0;
                 const size_t& I = std::get<0>(detI);
 
-                double el = evecs_->get(I, root1_) * 
-                            evecs_->get(J, root2_) * 
-                            sign_pqr * sign_stu;
+                double el = evecs_->get(I, root1_) * evecs_->get(J, root2_) * sign_pqr * sign_stu;
 
                 tprdm_aab[p * ncmo5 + q * ncmo4_ + r * ncmo3_ + s * ncmo2_ + t * ncmo_ + u] += el;
                 tprdm_aab[p * ncmo5 + q * ncmo4_ + r * ncmo3_ + t * ncmo2_ + s * ncmo_ + u] -= el;
@@ -1152,7 +1225,6 @@ void CI_RDMS::compute_3rdm(std::vector<double>& tprdm_aaa, std::vector<double>& 
                 tprdm_aab[t * ncmo5 + s * ncmo4_ + u * ncmo3_ + p * ncmo2_ + q * ncmo_ + r] -= el;
                 tprdm_aab[s * ncmo5 + t * ncmo4_ + u * ncmo3_ + q * ncmo2_ + p * ncmo_ + r] -= el;
                 tprdm_aab[t * ncmo5 + s * ncmo4_ + u * ncmo3_ + q * ncmo2_ + p * ncmo_ + r] += el;
-
             }
         }
     }
@@ -1180,9 +1252,7 @@ void CI_RDMS::compute_3rdm(std::vector<double>& tprdm_aaa, std::vector<double>& 
                 const double& sign_stu = std::get<1>(detI) > 0.0 ? 1.0 : -1.0;
                 const size_t& I = std::get<0>(detI);
 
-                double el = evecs_->get(I, root1_) * 
-                            evecs_->get(J, root2_) * 
-                            sign_pqr * sign_stu;
+                double el = evecs_->get(I, root1_) * evecs_->get(J, root2_) * sign_pqr * sign_stu;
 
                 tprdm_abb[p * ncmo5 + q * ncmo4_ + r * ncmo3_ + s * ncmo2_ + t * ncmo_ + u] += el;
                 tprdm_abb[p * ncmo5 + q * ncmo4_ + r * ncmo3_ + s * ncmo2_ + u * ncmo_ + t] -= el;
@@ -1196,7 +1266,6 @@ void CI_RDMS::compute_3rdm(std::vector<double>& tprdm_aaa, std::vector<double>& 
             }
         }
     }
-
 
     for (size_t K = 0, max_K = bbb_list.size(); K < max_K; ++K) {
         // bbb bbb
@@ -1221,11 +1290,10 @@ void CI_RDMS::compute_3rdm(std::vector<double>& tprdm_aaa, std::vector<double>& 
                 const double& sign_stu = std::get<1>(detI) > 0.0 ? 1.0 : -1.0;
                 const size_t& I = std::get<0>(detI);
 
-                double el =
-                    evecs_->get(I, root1_) * evecs_->get(J, root2_) * sign_pqr * sign_stu;
+                double el = evecs_->get(I, root1_) * evecs_->get(J, root2_) * sign_pqr * sign_stu;
 
                 tprdm_bbb[p * ncmo5 + q * ncmo4_ + r * ncmo3_ + s * ncmo2_ + t * ncmo_ + u] += el;
-                tprdm_bbb[p * ncmo5 + q * ncmo4_ + r * ncmo3_ + s * ncmo2_ + u * ncmo_ + t] -= el; 
+                tprdm_bbb[p * ncmo5 + q * ncmo4_ + r * ncmo3_ + s * ncmo2_ + u * ncmo_ + t] -= el;
                 tprdm_bbb[p * ncmo5 + q * ncmo4_ + r * ncmo3_ + u * ncmo2_ + t * ncmo_ + s] -= el;
                 tprdm_bbb[p * ncmo5 + q * ncmo4_ + r * ncmo3_ + u * ncmo2_ + s * ncmo_ + t] += el;
                 tprdm_bbb[p * ncmo5 + q * ncmo4_ + r * ncmo3_ + t * ncmo2_ + s * ncmo_ + u] -= el;
@@ -1267,7 +1335,7 @@ void CI_RDMS::compute_3rdm(std::vector<double>& tprdm_aaa, std::vector<double>& 
                 tprdm_bbb[r * ncmo5 + q * ncmo4_ + p * ncmo3_ + t * ncmo2_ + u * ncmo_ + s] -= el;
 
                 tprdm_bbb[s * ncmo5 + t * ncmo4_ + u * ncmo3_ + p * ncmo2_ + q * ncmo_ + r] += el;
-                tprdm_bbb[s * ncmo5 + u * ncmo4_ + t * ncmo3_ + p * ncmo2_ + q * ncmo_ + r] -= el; 
+                tprdm_bbb[s * ncmo5 + u * ncmo4_ + t * ncmo3_ + p * ncmo2_ + q * ncmo_ + r] -= el;
                 tprdm_bbb[u * ncmo5 + t * ncmo4_ + s * ncmo3_ + p * ncmo2_ + q * ncmo_ + r] -= el;
                 tprdm_bbb[u * ncmo5 + s * ncmo4_ + t * ncmo3_ + p * ncmo2_ + q * ncmo_ + r] += el;
                 tprdm_bbb[t * ncmo5 + s * ncmo4_ + u * ncmo3_ + p * ncmo2_ + q * ncmo_ + r] -= el;
@@ -2149,8 +2217,8 @@ void CI_RDMS::rdm_test(std::vector<double>& oprdm_a, std::vector<double>& oprdm_
                                 sign *= I.create_alfa_bit(p);
                                 for (size_t j = 0; j < dim_space_; ++j) {
                                     if (I == det_space[j]) {
-                                        rdm += sign * evecs_->get(i, root1_) *
-                                               evecs_->get(j, root2_);
+                                        rdm +=
+                                            sign * evecs_->get(i, root1_) * evecs_->get(j, root2_);
                                         // three_rdm->set(i,j,three_rdm->get(i,j)
                                         // + 1);
                                     }
@@ -2158,11 +2226,12 @@ void CI_RDMS::rdm_test(std::vector<double>& oprdm_a, std::vector<double>& oprdm_
                             }
                             if (std::fabs(rdm) > 1.0e-12) {
                                 double rdm_comp =
-                                    tprdm_aaa[p * ncmo4_ * ncmo_ + q * ncmo4_ +
-                                              r * ncmo3_ + s * ncmo2_ +
-                                              t * ncmo_ + a];
-                              //  outfile->Printf("\n  D3(aaaaaa)[%3lu][%3lu][%3lu][%3lu][%3lu][%3lu] = %18.12lf (%18.12lf,%18.12lf)",
-                              //  p,q,r,s,t,a,rdm-rdm_comp,rdm,rdm_comp);
+                                    tprdm_aaa[p * ncmo4_ * ncmo_ + q * ncmo4_ + r * ncmo3_ +
+                                              s * ncmo2_ + t * ncmo_ + a];
+                                //  outfile->Printf("\n
+                                //  D3(aaaaaa)[%3lu][%3lu][%3lu][%3lu][%3lu][%3lu] = %18.12lf
+                                //  (%18.12lf,%18.12lf)",
+                                //  p,q,r,s,t,a,rdm-rdm_comp,rdm,rdm_comp);
                                 error_3rdm_aaa += std::fabs(rdm - rdm_comp);
                             }
                         }
@@ -2194,8 +2263,8 @@ void CI_RDMS::rdm_test(std::vector<double>& oprdm_a, std::vector<double>& oprdm_
                                 sign *= I.create_alfa_bit(p);
                                 for (size_t j = 0; j < dim_space_; ++j) {
                                     if (I == det_space[j]) {
-                                        rdm += sign * evecs_->get(i, root1_) *
-                                               evecs_->get(j, root2_);
+                                        rdm +=
+                                            sign * evecs_->get(i, root1_) * evecs_->get(j, root2_);
                                         // three_rdm->set(i,j,three_rdm->get(i,j)
                                         // + 1);
                                     }
@@ -2203,11 +2272,12 @@ void CI_RDMS::rdm_test(std::vector<double>& oprdm_a, std::vector<double>& oprdm_
                             }
                             if (std::fabs(rdm) > 1.0e-12) {
                                 double rdm_comp =
-                                    tprdm_aab[p * ncmo4_ * ncmo_ + q * ncmo4_ +
-                                              r * ncmo3_ + s * ncmo2_ +
-                                              t * ncmo_ + a];
-                               // outfile->Printf("\n  D3(aabaab)[%3lu][%3lu][%3lu][%3lu][%3lu][%3lu] = %18.12lf (%18.12lf,%18.12lf)",
-                               // p,q,r,s,t,a,rdm-rdm_comp,rdm,rdm_comp);
+                                    tprdm_aab[p * ncmo4_ * ncmo_ + q * ncmo4_ + r * ncmo3_ +
+                                              s * ncmo2_ + t * ncmo_ + a];
+                                // outfile->Printf("\n
+                                // D3(aabaab)[%3lu][%3lu][%3lu][%3lu][%3lu][%3lu] = %18.12lf
+                                // (%18.12lf,%18.12lf)",
+                                // p,q,r,s,t,a,rdm-rdm_comp,rdm,rdm_comp);
                                 error_3rdm_aab += std::fabs(rdm - rdm_comp);
                             }
                         }
@@ -2240,8 +2310,8 @@ void CI_RDMS::rdm_test(std::vector<double>& oprdm_a, std::vector<double>& oprdm_
                                 sign *= I.create_alfa_bit(p);
                                 for (size_t j = 0; j < dim_space_; ++j) {
                                     if (I == det_space[j]) {
-                                        rdm += sign * evecs_->get(i, root1_) *
-                                               evecs_->get(j, root2_);
+                                        rdm +=
+                                            sign * evecs_->get(i, root1_) * evecs_->get(j, root2_);
                                         // three_rdm->set(i,j,three_rdm->get(i,j)
                                         // + 1);
                                     }
@@ -2249,9 +2319,8 @@ void CI_RDMS::rdm_test(std::vector<double>& oprdm_a, std::vector<double>& oprdm_
                             }
                             if (std::fabs(rdm) > 1.0e-12) {
                                 double rdm_comp =
-                                    tprdm_abb[p * ncmo4_ * ncmo_ + q * ncmo4_ +
-                                              r * ncmo3_ + s * ncmo2_ +
-                                              t * ncmo_ + a];
+                                    tprdm_abb[p * ncmo4_ * ncmo_ + q * ncmo4_ + r * ncmo3_ +
+                                              s * ncmo2_ + t * ncmo_ + a];
                                 //                                   outfile->Printf("\n
                                 //                                   D3(abbabb)[%3lu][%3lu][%3lu][%3lu][%3lu][%3lu]
                                 //                                   = %18.12lf
@@ -2289,8 +2358,8 @@ void CI_RDMS::rdm_test(std::vector<double>& oprdm_a, std::vector<double>& oprdm_
                                 sign *= I.create_beta_bit(p);
                                 for (size_t j = 0; j < dim_space_; ++j) {
                                     if (I == det_space[j]) {
-                                        rdm += sign * evecs_->get(i, root1_) *
-                                               evecs_->get(j, root2_);
+                                        rdm +=
+                                            sign * evecs_->get(i, root1_) * evecs_->get(j, root2_);
                                         // three_rdm->set(i,j,three_rdm->get(i,j)
                                         // + 1);
                                     }
@@ -2298,11 +2367,12 @@ void CI_RDMS::rdm_test(std::vector<double>& oprdm_a, std::vector<double>& oprdm_
                             }
                             if (std::fabs(rdm) > 1.0e-12) {
                                 double rdm_comp =
-                                    tprdm_bbb[p * ncmo4_ * ncmo_ + q * ncmo4_ +
-                                              r * ncmo3_ + s * ncmo2_ +
-                                              t * ncmo_ + a];
-                               // outfile->Printf("\n D3(bbbbbb)[%3lu][%3lu][%3lu][%3lu][%3lu][%3lu] = %18.12lf (%18.12lf,%18.12lf)",
-                               // p,q,r,s,t,a,rdm-rdm_comp,rdm,rdm_comp);
+                                    tprdm_bbb[p * ncmo4_ * ncmo_ + q * ncmo4_ + r * ncmo3_ +
+                                              s * ncmo2_ + t * ncmo_ + a];
+                                // outfile->Printf("\n
+                                // D3(bbbbbb)[%3lu][%3lu][%3lu][%3lu][%3lu][%3lu] = %18.12lf
+                                // (%18.12lf,%18.12lf)",
+                                // p,q,r,s,t,a,rdm-rdm_comp,rdm,rdm_comp);
                                 error_3rdm_bbb += std::fabs(rdm - rdm_comp);
                             }
                         }
@@ -2313,7 +2383,7 @@ void CI_RDMS::rdm_test(std::vector<double>& oprdm_a, std::vector<double>& oprdm_
     }
     Process::environment.globals["BBBBBB 3-RDM ERROR"] = error_3rdm_bbb;
     outfile->Printf("\n    BBBBBB 3-RDM Error : %2.15f", error_3rdm_bbb);
- // three_rdm->print_to_mathematica();
+    // three_rdm->print_to_mathematica();
 }
 }
 } // End Namespaces

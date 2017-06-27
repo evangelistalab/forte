@@ -1205,7 +1205,7 @@ void WFNOperator::three_s_lists(DeterminantMap& wfn) {
 
     size_t ndets = wfn.size();
     const std::vector<STLBitsetDeterminant>& dets = wfn.determinants();
-   // Timer aaa;
+    // Timer aaa;
     {
         for (size_t b = 0, max_b = beta_strings_.size(); b < max_b; ++b) {
             size_t naa_ann = 0;
@@ -1230,7 +1230,8 @@ void WFNOperator::three_s_lists(DeterminantMap& wfn) {
                             detJ.set_alfa_bit(jj, false);
                             detJ.set_alfa_bit(kk, false);
 
-                            double sign = detI.slater_sign_alpha(ii) * detI.slater_sign_alpha(jj) * detI.slater_sign_alpha(kk);
+                            double sign = detI.slater_sign_alpha(ii) * detI.slater_sign_alpha(jj) *
+                                          detI.slater_sign_alpha(kk);
 
                             det_hash<int>::iterator it = map_aaa.find(detJ);
                             size_t detJ_add;
@@ -1256,9 +1257,9 @@ void WFNOperator::three_s_lists(DeterminantMap& wfn) {
             }
         }
     }
-  //  if (!quiet_) {
-  //      outfile->Printf("\n  Time spent building aaa_list  %1.6f s", aaa.get());
-  //  }
+    //  if (!quiet_) {
+    //      outfile->Printf("\n  Time spent building aaa_list  %1.6f s", aaa.get());
+    //  }
 
     /// AAB coupling
     {
@@ -1446,8 +1447,8 @@ void WFNOperator::three_s_lists(DeterminantMap& wfn) {
                             } else {
                                 detJ_add = hash_it->second;
                             }
-                            tmp[detJ_add].push_back(std::make_tuple(
-                                idx, (sign > 0.5) ? (ii + 1) : (-ii - 1), jj, kk));
+                            tmp[detJ_add].push_back(
+                                std::make_tuple(idx, (sign > 0.5) ? (ii + 1) : (-ii - 1), jj, kk));
                         }
                     }
                 }
