@@ -527,7 +527,7 @@ double AdaptiveCI::compute_energy() {
     //** Compute the RDMs **//
 
     if (options_.get_int("ACI_MAX_RDM") >= 3 or (rdm_level_ >= 3)) {
-        op_.three_lists(final_wfn_);
+        op_.three_s_lists(final_wfn_);
     }
     SharedMatrix new_evecs;
     if (ex_alg_ == "ROOT_COMBINE") {
@@ -618,7 +618,7 @@ void AdaptiveCI::diagonalize_final_and_compute_rdms() {
     op_.clear_tp_s_lists();
     op_.op_lists(final_wfn_);
     op_.tp_lists(final_wfn_);
-    op_.three_lists(final_wfn_);
+    op_.three_s_lists(final_wfn_);
 
     compute_rdms(final_wfn_, op_, final_evecs, 0, 0);
 }
