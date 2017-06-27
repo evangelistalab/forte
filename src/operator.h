@@ -67,6 +67,7 @@ class WFNOperator {
 
     /// Build the coupling lists for three-particle operators
     void three_lists(DeterminantMap& wfn);
+    void three_s_lists(DeterminantMap& wfn);
 
     void clear_op_lists();
     void clear_tp_lists();
@@ -136,6 +137,15 @@ class WFNOperator {
         abb_cre_list_;
     std::vector<std::vector<std::tuple<size_t, short, short, short>>>
         bbb_cre_list_;
+
+    std::vector<std::vector<std::tuple<size_t, short, short, short>>>
+        aaa_list_;
+    std::vector<std::vector<std::tuple<size_t, short, short, short>>>
+        aab_list_;
+    std::vector<std::vector<std::tuple<size_t, short, short, short>>>
+        abb_list_;
+    std::vector<std::vector<std::tuple<size_t, short, short, short>>>
+        bbb_list_;
 
   protected:
     /// Initialize important variables on construction
