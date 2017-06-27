@@ -547,8 +547,8 @@ double AdaptiveCI::compute_energy() {
 
         op_.clear_op_s_lists();
         op_.clear_tp_s_lists();
-        op_.op_lists(final_wfn_);
-        op_.tp_lists(final_wfn_);
+        op_.op_s_lists(final_wfn_);
+        op_.tp_s_lists(final_wfn_);
         compute_rdms(final_wfn_, op_, PQ_evecs, 0, 0);
     }
 
