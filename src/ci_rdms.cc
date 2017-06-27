@@ -542,7 +542,7 @@ void CI_RDMS::compute_3rdm(std::vector<double>& tprdm_aaa, std::vector<double>& 
                 const double sign_stu = std::get<1>(a6J) > 0.0 ? 1.0 : -1.0;
                 const size_t I = std::get<0>(a6J);
 
-                double el=evecs_->get(I, root1_) * evecs_->get(J, root2_) * sign_pqr * sign_stu;
+                double el = evecs_->get(I, root1_) * evecs_->get(J, root2_) * sign_pqr * sign_stu;
 
                 tprdm_aaa[p * ncmo5 + q * ncmo4_ + r * ncmo3_ + s * ncmo2_ + t * ncmo_ + u] += el;
                 tprdm_aaa[p * ncmo5 + q * ncmo4_ + r * ncmo3_ + s * ncmo2_ + u * ncmo_ + t] -= el;
@@ -603,12 +603,12 @@ void CI_RDMS::compute_3rdm(std::vector<double>& tprdm_aaa, std::vector<double>& 
                 const double sign_stu = std::get<1>(aabJ) > 0.0 ? 1.0 : -1.0;
                 const size_t I = std::get<0>(aabJ);
 
-                double el=evecs_->get(I, root1_) * evecs_->get(J, root2_) * sign_pqr * sign_stu;
+                double el = evecs_->get(I, root1_) * evecs_->get(J, root2_) * sign_pqr * sign_stu;
 
-                tprdm_aab[p * ncmo5 + q * ncmo4_ + r * ncmo3_ + s * ncmo2_ + t * ncmo_ + u] +=el;
-                tprdm_aab[p * ncmo5 + q * ncmo4_ + r * ncmo3_ + t * ncmo2_ + s * ncmo_ + u] -=el;
-                tprdm_aab[q * ncmo5 + p * ncmo4_ + r * ncmo3_ + s * ncmo2_ + t * ncmo_ + u] -=el;
-                tprdm_aab[q * ncmo5 + p * ncmo4_ + r * ncmo3_ + t * ncmo2_ + s * ncmo_ + u] +=el;
+                tprdm_aab[p * ncmo5 + q * ncmo4_ + r * ncmo3_ + s * ncmo2_ + t * ncmo_ + u] += el;
+                tprdm_aab[p * ncmo5 + q * ncmo4_ + r * ncmo3_ + t * ncmo2_ + s * ncmo_ + u] -= el;
+                tprdm_aab[q * ncmo5 + p * ncmo4_ + r * ncmo3_ + s * ncmo2_ + t * ncmo_ + u] -= el;
+                tprdm_aab[q * ncmo5 + p * ncmo4_ + r * ncmo3_ + t * ncmo2_ + s * ncmo_ + u] += el;
             }
         }
         // abb abb
@@ -627,7 +627,7 @@ void CI_RDMS::compute_3rdm(std::vector<double>& tprdm_aaa, std::vector<double>& 
                 const double sign_stu = std::get<1>(abbJ) > 0.0 ? 1.0 : -1.0;
                 const size_t I = std::get<0>(abbJ);
 
-                double el=evecs_->get(I, root1_) * evecs_->get(J, root2_) * sign_pqr * sign_stu;
+                double el = evecs_->get(I, root1_) * evecs_->get(J, root2_) * sign_pqr * sign_stu;
 
                 tprdm_abb[p * ncmo5 + q * ncmo4_ + r * ncmo3_ + s * ncmo2_ + t * ncmo_ + u] += el;
                 tprdm_abb[p * ncmo5 + q * ncmo4_ + r * ncmo3_ + s * ncmo2_ + u * ncmo_ + t] -= el;
@@ -651,7 +651,7 @@ void CI_RDMS::compute_3rdm(std::vector<double>& tprdm_aaa, std::vector<double>& 
                 const double sign_stu = std::get<1>(b6J) > 0.0 ? 1.0 : -1.0;
                 const size_t I = std::get<0>(b6J);
 
-                double el=evecs_->get(I, root1_) * evecs_->get(J, root2_) * sign_pqr * sign_stu;
+                double el = evecs_->get(I, root1_) * evecs_->get(J, root2_) * sign_pqr * sign_stu;
 
                 tprdm_bbb[p * ncmo5 + q * ncmo4_ + r * ncmo3_ + s * ncmo2_ + t * ncmo_ + u] += el;
                 tprdm_bbb[p * ncmo5 + q * ncmo4_ + r * ncmo3_ + s * ncmo2_ + u * ncmo_ + t] -= el;
