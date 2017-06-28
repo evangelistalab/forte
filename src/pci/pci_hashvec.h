@@ -235,6 +235,8 @@ class ProjectorCI_HashVec : public Wavefunction {
     bool fast_variational_estimate_;
     /// The frequency of approximate variational estimation of the energy
     int energy_estimate_freq_;
+    /// The max allowed error for variational energy
+    double evar_max_error_;
     /// The threshold with which we estimate the energy during the iterations
     double energy_estimate_threshold_;
     /// Flag for conducting CHC energy estimation
