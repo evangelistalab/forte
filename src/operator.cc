@@ -40,7 +40,7 @@
 namespace psi {
 namespace forte {
 
-WFNOperator::WFNOperator(std::vector<int> symmetry) { mo_symmetry_ = symmetry; }
+WFNOperator::WFNOperator(std::vector<int>& symmetry) { mo_symmetry_ = symmetry; }
 
 WFNOperator::WFNOperator() {}
 
@@ -398,9 +398,10 @@ double WFNOperator::s2(DeterminantMap& wfn, SharedMatrix& evecs, int root) {
 }
 
 void WFNOperator::add_singles(DeterminantMap& wfn) {
+    
     det_hash<size_t>& wfn_map = wfn.wfn_hash();
 
-    DeterminantMap external;
+    DeterminantMap singles;
     // Loop through determinants, generate singles and add them to the wfn
     // Alpha excitations
     for (auto& I : wfn_map) {
@@ -408,15 +409,18 @@ void WFNOperator::add_singles(DeterminantMap& wfn) {
         std::vector<int> aocc = det.get_alfa_occ();
         std::vector<int> avir = det.get_alfa_vir();
 
+        STLBitsetDeterminant new_det(det);
         for (int i = 0, noalpha = aocc.size(); i < noalpha; ++i) {
             int ii = aocc[i];
             for (int a = 0, nvalpha = avir.size(); a < nvalpha; ++a) {
                 int aa = avir[a];
                 if ((mo_symmetry_[ii] ^ mo_symmetry_[aa]) == 0) {
-                    auto new_det = det;
+                    new_det = det;
                     new_det.set_alfa_bit(ii, false);
                     new_det.set_alfa_bit(aa, true);
-                    external.add(det);
+                    if( wfn_map.count(new_det) == 0 ){
+                         singles.add(new_det);
+                    }
                 }
             }
         }
@@ -433,16 +437,17 @@ void WFNOperator::add_singles(DeterminantMap& wfn) {
             for (int a = 0, nvbeta = bvir.size(); a < nvbeta; ++a) {
                 int aa = bvir[a];
                 if ((mo_symmetry_[ii] ^ mo_symmetry_[aa]) == 0) {
-                    det.set_beta_bit(ii, false);
-                    det.set_beta_bit(aa, true);
-                    external.add(det);
-                    det.set_beta_bit(ii, true);
-                    det.set_beta_bit(aa, false);
+                    new_det = det;
+                    new_det.set_beta_bit(ii, false);
+                    new_det.set_beta_bit(aa, true);
+                    if( wfn_map.count(new_det) == 0 ){
+                         singles.add(new_det);
+                    }
                 }
             }
         }
     }
-    wfn.merge(external);
+    wfn.merge(singles);
 }
 
 void WFNOperator::add_doubles(DeterminantMap& wfn) {
@@ -461,6 +466,7 @@ void WFNOperator::add_doubles(DeterminantMap& wfn) {
         int nvalfa = avir.size();
         int nobeta = bocc.size();
         int nvbeta = bvir.size();
+        STLBitsetDeterminant new_det;
 
         // alpha-alpha
         for (int i = 0; i < noalfa; ++i) {
@@ -473,15 +479,12 @@ void WFNOperator::add_doubles(DeterminantMap& wfn) {
                         int bb = avir[b];
                         if ((mo_symmetry_[ii] ^ mo_symmetry_[jj] ^ mo_symmetry_[aa] ^
                              mo_symmetry_[bb]) == 0) {
-                            det.set_alfa_bit(ii, false);
-                            det.set_alfa_bit(jj, false);
-                            det.set_alfa_bit(aa, true);
-                            det.set_alfa_bit(bb, true);
-                            external.add(det);
-                            det.set_alfa_bit(aa, false);
-                            det.set_alfa_bit(bb, false);
-                            det.set_alfa_bit(ii, true);
-                            det.set_alfa_bit(jj, true);
+                            new_det = det;
+                            new_det.set_alfa_bit(ii, false);
+                            new_det.set_alfa_bit(jj, false);
+                            new_det.set_alfa_bit(aa, true);
+                            new_det.set_alfa_bit(bb, true);
+                            external.add(new_det);
                         }
                     }
                 }
@@ -499,15 +502,12 @@ void WFNOperator::add_doubles(DeterminantMap& wfn) {
                         int bb = bvir[b];
                         if ((mo_symmetry_[ii] ^ mo_symmetry_[jj] ^ mo_symmetry_[aa] ^
                              mo_symmetry_[bb]) == 0) {
-                            det.set_beta_bit(ii, false);
-                            det.set_beta_bit(jj, false);
-                            det.set_beta_bit(aa, true);
-                            det.set_beta_bit(bb, true);
-                            external.add(det);
-                            det.set_beta_bit(aa, false);
-                            det.set_beta_bit(bb, false);
-                            det.set_beta_bit(ii, true);
-                            det.set_beta_bit(jj, true);
+                            new_det = det;
+                            new_det.set_beta_bit(ii, false);
+                            new_det.set_beta_bit(jj, false);
+                            new_det.set_beta_bit(aa, true);
+                            new_det.set_beta_bit(bb, true);
+                            external.add(new_det);
                         }
                     }
                 }
@@ -525,15 +525,12 @@ void WFNOperator::add_doubles(DeterminantMap& wfn) {
                         int bb = bvir[b];
                         if ((mo_symmetry_[ii] ^ mo_symmetry_[jj] ^ mo_symmetry_[aa] ^
                              mo_symmetry_[bb]) == 0) {
-                            det.set_alfa_bit(ii, false);
-                            det.set_beta_bit(jj, false);
-                            det.set_alfa_bit(aa, true);
-                            det.set_beta_bit(bb, true);
-                            external.add(det);
-                            det.set_alfa_bit(aa, false);
-                            det.set_beta_bit(bb, false);
-                            det.set_alfa_bit(ii, true);
-                            det.set_beta_bit(jj, true);
+                            new_det = det;
+                            new_det.set_alfa_bit(ii, false);
+                            new_det.set_beta_bit(jj, false);
+                            new_det.set_alfa_bit(aa, true);
+                            new_det.set_beta_bit(bb, true);
+                            external.add(new_det);
                         }
                     }
                 }
