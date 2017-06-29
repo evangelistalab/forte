@@ -149,6 +149,10 @@ void set_ACI_options(ForteOptions& foptions) {
 
     /*- Compute unpaired electron density -*/
     foptions.add_bool("UNPAIRED_DENSITY", false, "Compute unpaired electron density");
+
+    /*- Add all active singles -*/
+    foptions.add_bool("ACI_ADD_SINGLES", false,
+                      "Adds all active single excitations to the final wave function");
 }
 
 bool pairComp(const std::pair<double, STLBitsetDeterminant> E1,
@@ -164,6 +168,7 @@ AdaptiveCI::AdaptiveCI(SharedWavefunction ref_wfn, Options& options,
     shallow_copy(ref_wfn);
     reference_wavefunction_ = ref_wfn;
 
+    mo_symmetry_ = mo_space_info_->symmetry("ACTIVE");
     op_.initialize(mo_symmetry_);
     startup();
 }
@@ -234,8 +239,6 @@ void AdaptiveCI::startup() {
     nactel_ = nel - 2 * nfrzc_;
     nalpha_ = (nactel_ + twice_ms_) / 2;
     nbeta_ = nactel_ - nalpha_;
-
-    mo_symmetry_ = mo_space_info_->symmetry("ACTIVE");
 
     STLBitsetDeterminant det;
 
@@ -379,7 +382,6 @@ void AdaptiveCI::print_info() {
 }
 
 double AdaptiveCI::compute_energy() {
-    //   if (!quiet_mode_) {
     if (options_["ACI_QUIET_MODE"].has_changed()) {
         quiet_mode_ = options_.get_bool("ACI_QUIET_MODE");
     }
@@ -506,6 +508,38 @@ double AdaptiveCI::compute_energy() {
         //    PQ_evals->print();
     }
 
+    std::string sigma_method = options_.get_str("SIGMA_BUILD_TYPE");
+    if (options_.get_bool("ACI_ADD_SINGLES")) {
+
+        outfile->Printf("\n  Adding singles");
+
+        op_.add_singles(final_wfn_);
+        if (sigma_method == "HZ") {
+            op_.clear_op_lists();
+            op_.clear_tp_lists();
+            Timer str;
+            op_.build_strings(final_wfn_);
+            outfile->Printf("\n  Time spent building strings      %1.6f s", str.get());
+            op_.op_lists(final_wfn_);
+            op_.tp_lists(final_wfn_);
+        } else {
+            op_.clear_op_s_lists();
+            op_.clear_tp_s_lists();
+            op_.build_strings(final_wfn_);
+            op_.op_s_lists(final_wfn_);
+            op_.tp_s_lists(final_wfn_);
+        }
+
+        SparseCISolver sparse_solver;
+        sparse_solver.set_parallel(true);
+        sparse_solver.set_e_convergence(options_.get_double("E_CONVERGENCE"));
+        sparse_solver.set_maxiter_davidson(options_.get_int("DL_MAXITER"));
+        sparse_solver.set_spin_project_full(project_out_spin_contaminants_);
+        sparse_solver.set_guess_dimension(options_.get_int("DL_GUESS_SIZE"));
+        sparse_solver.diagonalize_hamiltonian_map(final_wfn_, op_, PQ_evals, PQ_evecs, nroot_,
+                                                  multiplicity_, diag_method_);
+    }
+
     //** Optionally compute full PT2 energy **//
     if (options_.get_bool("MRPT2")) {
         MRPT2 pt(reference_wavefunction_, options_, ints_, mo_space_info_, final_wfn_, PQ_evecs,
@@ -517,7 +551,7 @@ double AdaptiveCI::compute_energy() {
     // if (!quiet_mode_) {
     if (ex_alg_ == "ROOT_COMBINE") {
         print_final(full_space, PQ_evecs, PQ_evals);
-    } else if (ex_alg_ == "ROOT_ORTHOGONALIZE") {
+    } else if (ex_alg_ == "ROOT_ORTHOGONALIZE" and nroot_ > 1) {
         print_final(final_wfn_, PQ_evecs, energies);
     } else {
         print_final(final_wfn_, PQ_evecs, PQ_evals);

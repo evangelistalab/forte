@@ -45,7 +45,7 @@ using wfn_hash = det_hash<double>;
 class WFNOperator {
   public:
     /// Default constructor
-    WFNOperator(std::vector<int> symmetry);
+    WFNOperator(std::vector<int>& symmetry);
 
     /// Empty constructor
     WFNOperator();

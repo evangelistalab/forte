@@ -1557,7 +1557,8 @@ void FCI_MO::Diagonalize_H(const vecdet& p_space, const int& multi, const int& n
     } else {
         // use determinant map
         DeterminantMap detmap(p_space);
-        WFNOperator op(mo_space_info_->symmetry("ACTIVE"));
+        auto act_mo = mo_space_info_->symmetry("ACTIVE");
+        WFNOperator op(act_mo);
         op.build_strings(detmap);
         if (sigma_method == "HZ") {
             op.op_lists(detmap);
