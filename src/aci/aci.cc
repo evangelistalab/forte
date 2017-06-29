@@ -151,7 +151,8 @@ void set_ACI_options(ForteOptions& foptions) {
     foptions.add_bool("UNPAIRED_DENSITY", false, "Compute unpaired electron density");
 
     /*- Add all active singles -*/
-    foptions.add_bool("ACI_ADD_SINGLES", false, "Adds all active single excitations to the final wave function");
+    foptions.add_bool("ACI_ADD_SINGLES", false,
+                      "Adds all active single excitations to the final wave function");
 }
 
 bool pairComp(const std::pair<double, STLBitsetDeterminant> E1,
@@ -238,7 +239,6 @@ void AdaptiveCI::startup() {
     nactel_ = nel - 2 * nfrzc_;
     nalpha_ = (nactel_ + twice_ms_) / 2;
     nbeta_ = nactel_ - nalpha_;
-
 
     STLBitsetDeterminant det;
 
@@ -509,9 +509,9 @@ double AdaptiveCI::compute_energy() {
     }
 
     std::string sigma_method = options_.get_str("SIGMA_BUILD_TYPE");
-    if (options_.get_bool("ACI_ADD_SINGLES") ){
+    if (options_.get_bool("ACI_ADD_SINGLES")) {
 
-        outfile->Printf("\n  Adding singles");        
+        outfile->Printf("\n  Adding singles");
 
         op_.add_singles(final_wfn_);
         if (sigma_method == "HZ") {
@@ -529,7 +529,7 @@ double AdaptiveCI::compute_energy() {
             op_.op_s_lists(final_wfn_);
             op_.tp_s_lists(final_wfn_);
         }
-    
+
         SparseCISolver sparse_solver;
         sparse_solver.set_parallel(true);
         sparse_solver.set_e_convergence(options_.get_double("E_CONVERGENCE"));
@@ -539,7 +539,6 @@ double AdaptiveCI::compute_energy() {
         sparse_solver.diagonalize_hamiltonian_map(final_wfn_, op_, PQ_evals, PQ_evecs, nroot_,
                                                   multiplicity_, diag_method_);
     }
-
 
     //** Optionally compute full PT2 energy **//
     if (options_.get_bool("MRPT2")) {
