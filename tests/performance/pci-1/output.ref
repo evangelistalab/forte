@@ -1,9 +1,9 @@
 
     -----------------------------------------------------------------------
           Psi4: An Open-Source Ab Initio Electronic Structure Package
-                               Psi4 1.2a1.dev263 
+                               Psi4 1.2a1.dev307 
 
-                         Git: Rev {master} ae466b2 
+                         Git: Rev {parallel_timer} d619d6b dirty
 
 
     R. M. Parrish, L. A. Burns, D. G. A. Smith, A. C. Simmonett,
@@ -18,10 +18,10 @@
     -----------------------------------------------------------------------
 
 
-    Psi4 started on: Monday, 05 June 2017 11:51PM
+    Psi4 started on: Tuesday, 27 June 2017 01:55PM
 
-    Process ID:   1205
-    PSIDATADIR: /home/zty/Source/psi4-github-bin-g++-4.8.4-opt-c++11/share/psi4
+    Process ID:  12956
+    PSIDATADIR: /Users/tianyuanzhang/Documents/Source/psi4_2017/psi4-bin-clang-debug/share/psi4
     Memory:     500.0 MiB
     Threads:    1
     
@@ -64,15 +64,15 @@ energy('scf')
 energy('forte')
 --------------------------------------------------------------------------
 
-*** tstart() called on DESKTOP-JOFFIR0
-*** at Mon Jun  5 23:51:55 2017
+*** tstart() called on n-ac-88-90.wireless.emory.edu
+*** at Tue Jun 27 13:55:02 2017
 
    => Loading Basis Set <=
 
     Name: CC-PVDZ
     Role: ORBITAL
     Keyword: BASIS
-    atoms 1-2 entry LI         line    41 file /home/zty/Source/psi4-github-bin-g++-4.8.4-opt-c++11/share/psi4/basis/cc-pvdz.gbs 
+    atoms 1-2 entry LI         line    42 file /Users/tianyuanzhang/Documents/Source/psi4_2017/psi4-bin-clang-debug/share/psi4/basis/cc-pvdz.gbs 
 
     There are an even number of electrons - assuming singlet.
     Specify the multiplicity in the molecule input block.
@@ -154,7 +154,7 @@ energy('forte')
    Calculation information:
       Number of atoms:                   2
       Number of AO shells:              12
-      Number of primitives:             44
+      Number of primitives:             50
       Number of atomic orbitals:        30
       Number of basis functions:        28
 
@@ -174,7 +174,7 @@ energy('forte')
     Schwarz Cutoff:          1E-12
 
     OpenMP threads:              1
-  Minimum eigenvalue in the overlap matrix is 1.5276419262E-03.
+  Minimum eigenvalue in the overlap matrix is 8.7452129943E-04.
   Using Symmetric Orthogonalization.
 
   SCF Guess: Superposition of Atomic Densities via on-the-fly atomic UHF.
@@ -183,14 +183,14 @@ energy('forte')
 
                         Total Energy        Delta E     RMS |[F,P]|
 
-   @RHF iter   0:   -14.84646779998797   -1.48465e+01   2.47174e-02 
-   @RHF iter   1:   -14.83840248253978    8.06532e-03   1.83266e-03 
-   @RHF iter   2:   -14.83971318714640   -1.31070e-03   7.04042e-04 DIIS
-   @RHF iter   3:   -14.83996375142724   -2.50564e-04   9.22200e-05 DIIS
-   @RHF iter   4:   -14.83996921709250   -5.46567e-06   2.08620e-05 DIIS
-   @RHF iter   5:   -14.83996952255828   -3.05466e-07   1.16184e-06 DIIS
-   @RHF iter   6:   -14.83996952349671   -9.38439e-10   2.27917e-07 DIIS
-   @RHF iter   7:   -14.83996952353663   -3.99130e-11   2.66514e-08 DIIS
+   @RHF iter   0:   -14.84646779998794   -1.48465e+01   2.47171e-02 
+   @RHF iter   1:   -14.83839855528888    8.06924e-03   1.83768e-03 
+   @RHF iter   2:   -14.83971399450913   -1.31544e-03   7.07431e-04 DIIS
+   @RHF iter   3:   -14.83996712646250   -2.53132e-04   9.29255e-05 DIIS
+   @RHF iter   4:   -14.83997269073331   -5.56427e-06   2.09989e-05 DIIS
+   @RHF iter   5:   -14.83997300041106   -3.09678e-07   1.15457e-06 DIIS
+   @RHF iter   6:   -14.83997300134024   -9.29180e-10   2.30473e-07 DIIS
+   @RHF iter   7:   -14.83997300138121   -4.09699e-11   2.58536e-08 DIIS
 
   ==> Post-Iterations <==
 
@@ -199,19 +199,19 @@ energy('forte')
 
     Doubly Occupied:                                                      
 
-       1Ag    -2.459531     1B1u   -2.454363     2Ag    -0.193104  
+       1Ag    -2.459821     1B1u   -2.454655     2Ag    -0.193137  
 
     Virtual:                                                              
 
-       2B1u    0.013620     1B2u    0.027192     1B3u    0.027192  
-       3Ag     0.050348     1B3g    0.070724     1B2g    0.070724  
-       3B1u    0.084322     4Ag     0.136055     2B2u    0.142001  
-       2B3u    0.142001     5Ag     0.182581     2B3g    0.239224  
-       2B2g    0.239224     4B1u    0.269933     1B1g    0.333761  
-       6Ag     0.333761     5B1u    0.385797     3B2u    0.411637  
-       3B3u    0.411637     1Au     0.447887     6B1u    0.447887  
-       7Ag     0.527045     3B3g    0.644904     3B2g    0.644904  
-       7B1u    2.064824  
+       2B1u    0.013610     1B2u    0.027196     1B3u    0.027196  
+       3Ag     0.050308     1B2g    0.070692     1B3g    0.070692  
+       3B1u    0.084091     4Ag     0.135884     2B2u    0.141946  
+       2B3u    0.141946     5Ag     0.181818     2B2g    0.235695  
+       2B3g    0.235695     4B1u    0.270492     1B1g    0.310605  
+       6Ag     0.310605     5B1u    0.369334     3B2u    0.388409  
+       3B3u    0.388409     1Au     0.418536     6B1u    0.418536  
+       7Ag     0.508962     3B2g    0.617227     3B3g    0.617227  
+       7B1u    2.047022  
 
     Final Occupation by Irrep:
              Ag   B1g   B2g   B3g    Au   B1u   B2u   B3u 
@@ -219,17 +219,16 @@ energy('forte')
 
   Energy converged.
 
-  @RHF Final Energy:   -14.83996952353663
+  @RHF Final Energy:   -14.83997300138121
 
    => Energetics <=
 
     Nuclear Repulsion Energy =              2.3812974386549994
-    One-Electron Energy =                 -24.2285363462344492
-    Two-Electron Energy =                   7.0072693840428224
-    PCM Polarization Energy =               0.0000000000000000
-    Total Energy =                        -14.8399695235366273
+    One-Electron Energy =                 -24.2273154014853560
+    Two-Electron Energy =                   7.0060449614491409
+    Total Energy =                        -14.8399730013812139
 
-    Alert: EFP and PCM quantities not currently incorporated into SCF psivars.
+
 
 Properties will be evaluated at   0.000000,   0.000000,   0.000000 Bohr
 
@@ -248,25 +247,25 @@ Properties computed using the SCF density matrix
      X:     0.0000      Y:     0.0000      Z:     0.0000     Total:     0.0000
 
 
-*** tstop() called on DESKTOP-JOFFIR0 at Mon Jun  5 23:51:55 2017
+*** tstop() called on n-ac-88-90.wireless.emory.edu at Tue Jun 27 13:55:03 2017
 Module time:
-	user time   =       0.46 seconds =       0.01 minutes
-	system time =       0.06 seconds =       0.00 minutes
-	total time  =          0 seconds =       0.00 minutes
+	user time   =       0.84 seconds =       0.01 minutes
+	system time =       0.05 seconds =       0.00 minutes
+	total time  =          1 seconds =       0.02 minutes
 Total time:
-	user time   =       0.46 seconds =       0.01 minutes
-	system time =       0.06 seconds =       0.00 minutes
-	total time  =          0 seconds =       0.00 minutes
+	user time   =       0.84 seconds =       0.01 minutes
+	system time =       0.05 seconds =       0.00 minutes
+	total time  =          1 seconds =       0.02 minutes
 
-*** tstart() called on DESKTOP-JOFFIR0
-*** at Mon Jun  5 23:51:55 2017
+*** tstart() called on n-ac-88-90.wireless.emory.edu
+*** at Tue Jun 27 13:55:03 2017
 
    => Loading Basis Set <=
 
     Name: CC-PVDZ
     Role: ORBITAL
     Keyword: BASIS
-    atoms 1-2 entry LI         line    41 file /home/zty/Source/psi4-github-bin-g++-4.8.4-opt-c++11/share/psi4/basis/cc-pvdz.gbs 
+    atoms 1-2 entry LI         line    42 file /Users/tianyuanzhang/Documents/Source/psi4_2017/psi4-bin-clang-debug/share/psi4/basis/cc-pvdz.gbs 
 
 
          ---------------------------------------------------------
@@ -345,7 +344,7 @@ Total time:
    Calculation information:
       Number of atoms:                   2
       Number of AO shells:              12
-      Number of primitives:             44
+      Number of primitives:             50
       Number of atomic orbitals:        30
       Number of basis functions:        28
 
@@ -365,7 +364,7 @@ Total time:
     Schwarz Cutoff:          1E-12
 
     OpenMP threads:              1
-  Minimum eigenvalue in the overlap matrix is 1.5276419262E-03.
+  Minimum eigenvalue in the overlap matrix is 8.7452129943E-04.
   Using Symmetric Orthogonalization.
 
   SCF Guess: Superposition of Atomic Densities via on-the-fly atomic UHF.
@@ -374,15 +373,15 @@ Total time:
 
                         Total Energy        Delta E     RMS |[F,P]|
 
-   @RHF iter   0:   -14.84646779998797   -1.48465e+01   2.47174e-02 
-   @RHF iter   1:   -14.83840248253978    8.06532e-03   1.83266e-03 
-   @RHF iter   2:   -14.83971318714640   -1.31070e-03   7.04042e-04 DIIS
-   @RHF iter   3:   -14.83996375142724   -2.50564e-04   9.22200e-05 DIIS
-   @RHF iter   4:   -14.83996921709250   -5.46567e-06   2.08620e-05 DIIS
-   @RHF iter   5:   -14.83996952255828   -3.05466e-07   1.16184e-06 DIIS
-   @RHF iter   6:   -14.83996952349671   -9.38439e-10   2.27917e-07 DIIS
-   @RHF iter   7:   -14.83996952353663   -3.99130e-11   2.66514e-08 DIIS
-   @RHF iter   8:   -14.83996952353702   -3.96128e-13   2.22662e-09 DIIS
+   @RHF iter   0:   -14.84646779998794   -1.48465e+01   2.47171e-02 
+   @RHF iter   1:   -14.83839855528888    8.06924e-03   1.83768e-03 
+   @RHF iter   2:   -14.83971399450913   -1.31544e-03   7.07431e-04 DIIS
+   @RHF iter   3:   -14.83996712646250   -2.53132e-04   9.29255e-05 DIIS
+   @RHF iter   4:   -14.83997269073331   -5.56427e-06   2.09989e-05 DIIS
+   @RHF iter   5:   -14.83997300041106   -3.09678e-07   1.15457e-06 DIIS
+   @RHF iter   6:   -14.83997300134024   -9.29180e-10   2.30473e-07 DIIS
+   @RHF iter   7:   -14.83997300138121   -4.09699e-11   2.58536e-08 DIIS
+   @RHF iter   8:   -14.83997300138159   -3.78364e-13   2.23625e-09 DIIS
 
   ==> Post-Iterations <==
 
@@ -391,19 +390,19 @@ Total time:
 
     Doubly Occupied:                                                      
 
-       1Ag    -2.459531     1B1u   -2.454363     2Ag    -0.193105  
+       1Ag    -2.459821     1B1u   -2.454655     2Ag    -0.193137  
 
     Virtual:                                                              
 
-       2B1u    0.013620     1B3u    0.027192     1B2u    0.027192  
-       3Ag     0.050348     1B3g    0.070724     1B2g    0.070724  
-       3B1u    0.084322     4Ag     0.136055     2B3u    0.142001  
-       2B2u    0.142001     5Ag     0.182581     2B3g    0.239224  
-       2B2g    0.239224     4B1u    0.269933     1B1g    0.333761  
-       6Ag     0.333761     5B1u    0.385797     3B3u    0.411637  
-       3B2u    0.411637     1Au     0.447887     6B1u    0.447887  
-       7Ag     0.527045     3B3g    0.644904     3B2g    0.644904  
-       7B1u    2.064824  
+       2B1u    0.013610     1B2u    0.027196     1B3u    0.027196  
+       3Ag     0.050308     1B2g    0.070692     1B3g    0.070692  
+       3B1u    0.084091     4Ag     0.135884     2B2u    0.141946  
+       2B3u    0.141946     5Ag     0.181818     2B2g    0.235695  
+       2B3g    0.235695     4B1u    0.270492     1B1g    0.310605  
+       6Ag     0.310605     5B1u    0.369334     3B2u    0.388409  
+       3B3u    0.388409     6B1u    0.418536     1Au     0.418536  
+       7Ag     0.508962     3B2g    0.617227     3B3g    0.617227  
+       7B1u    2.047022  
 
     Final Occupation by Irrep:
              Ag   B1g   B2g   B3g    Au   B1u   B2u   B3u 
@@ -411,17 +410,16 @@ Total time:
 
   Energy converged.
 
-  @RHF Final Energy:   -14.83996952353702
+  @RHF Final Energy:   -14.83997300138159
 
    => Energetics <=
 
     Nuclear Repulsion Energy =              2.3812974386549994
-    One-Electron Energy =                 -24.2285367888729368
-    Two-Electron Energy =                   7.0072698266809130
-    PCM Polarization Energy =               0.0000000000000000
-    Total Energy =                        -14.8399695235370235
+    One-Electron Energy =                 -24.2273158177069128
+    Two-Electron Energy =                   7.0060453776703202
+    Total Energy =                        -14.8399730013815923
 
-    Alert: EFP and PCM quantities not currently incorporated into SCF psivars.
+
 
 Properties will be evaluated at   0.000000,   0.000000,   0.000000 Bohr
 
@@ -440,21 +438,21 @@ Properties computed using the SCF density matrix
      X:     0.0000      Y:     0.0000      Z:     0.0000     Total:     0.0000
 
 
-*** tstop() called on DESKTOP-JOFFIR0 at Mon Jun  5 23:51:56 2017
+*** tstop() called on n-ac-88-90.wireless.emory.edu at Tue Jun 27 13:55:04 2017
 Module time:
-	user time   =       0.47 seconds =       0.01 minutes
-	system time =       0.05 seconds =       0.00 minutes
+	user time   =       0.84 seconds =       0.01 minutes
+	system time =       0.03 seconds =       0.00 minutes
 	total time  =          1 seconds =       0.02 minutes
 Total time:
-	user time   =       0.96 seconds =       0.02 minutes
-	system time =       0.11 seconds =       0.00 minutes
-	total time  =          1 seconds =       0.02 minutes
+	user time   =       1.71 seconds =       0.03 minutes
+	system time =       0.08 seconds =       0.00 minutes
+	total time  =          2 seconds =       0.03 minutes
    => Loading Basis Set <=
 
     Name: STO-3G
     Role: ORBITAL
     Keyword: MINAO_BASIS
-    atoms 1-2 entry LI         line    31 file /home/zty/Source/psi4-github-bin-g++-4.8.4-opt-c++11/share/psi4/basis/sto-3g.gbs 
+    atoms 1-2 entry LI         line    31 file /Users/tianyuanzhang/Documents/Source/psi4_2017/psi4-bin-clang-debug/share/psi4/basis/sto-3g.gbs 
 
 
 Reading options from the FORTE block
@@ -497,7 +495,7 @@ Calling plugin forte.so.
     Name                   = CC-PVDZ
     Blend                  = CC-PVDZ
     Total number of shells = 12
-    Number of primitives   = 44
+    Number of primitives   = 50
     Number of AO           = 30
     Number of SO           = 28
     Maximum AM             = 2
@@ -506,8 +504,8 @@ Calling plugin forte.so.
   -Contraction Scheme:
     Atom   Type   All Primitives // Shells:
    ------ ------ --------------------------
-       1    LI     17s 4p 1d // 3s 2p 1d 
-       2    LI     17s 4p 1d // 3s 2p 1d 
+       1    LI     19s 5p 1d // 3s 2p 1d 
+       2    LI     19s 5p 1d // 3s 2p 1d 
 
   ==> AO Basis Functions <==
 
@@ -515,7 +513,7 @@ Calling plugin forte.so.
     spherical
     ****
    LI   1
-    S   8 1.00
+    S   9 1.00
                       1469.00000000           0.00076600
                        220.50000000           0.00589200
                         50.26000000           0.02967100
@@ -524,7 +522,8 @@ Calling plugin forte.so.
                          1.58000000           0.45312300
                          0.56400000           0.27477400
                          0.07345000           0.00975100
-    S   8 1.00
+                         0.02805000          -0.00318000
+    S   9 1.00
                       1469.00000000          -0.00012000
                        220.50000000          -0.00092300
                         50.26000000          -0.00468900
@@ -533,25 +532,23 @@ Calling plugin forte.so.
                          1.58000000          -0.09600900
                          0.56400000          -0.13638000
                          0.07345000           0.57510200
+                         0.02805000           0.51766100
     S   1 1.00
                          0.02805000           1.00000000
-    P   3 1.00
+    P   4 1.00
                          1.53400000           0.02278400
                          0.27490000           0.13910700
                          0.07362000           0.50037500
+                         0.02403000           0.50847400
     P   1 1.00
                          0.02403000           1.00000000
     D   1 1.00
-                         0.12390000           1.00000000
+                         0.11440000           1.00000000
     ****
 
 
   Overall Conventional Integrals timings
 
-  Frozen core orbitals per irrep (n = 8): 0  0  0  0  0  0  0  0  
-  Frozen core orbitals per irrep (n = 8): 7  1  3  3  1  7  3  3  
-   (n = 8): 0  0  0  0  0  0  0  0  
-  SOs per irrep (n = 8): 7  1  3  3  1  7  3  3  
 	Presorting SO-basis two-electron integrals.
 	Sorting File: SO Ints (nn|nn) nbuckets = 1
 	Transforming the one-electron integrals and constructing Fock matrices
@@ -561,16 +558,16 @@ Calling plugin forte.so.
 	Starting second half-transformation.
 	Two-electron integral transformation complete.
 
-  Integral transformation done. 0.08829100 s
+  Integral transformation done. 0.02766400 s
   Reading the two-electron integrals from disk
   Size of two-electron integrals:   0.013739 GB
-  Conventional integrals take 0.26673700 s
+  Conventional integrals take 0.27564000 s
 
 	  ---------------------------------------------------------
 	    Projector Configuration Interaction HashVector implementation
 	         by Francesco A. Evangelista and Tianyuan Zhang
-	                      version Jun. 4 2017
-	                       8 thread(s) (OMP)
+	                      version Jun. 15_2 2017
+	                       1 thread(s) 
 	  ---------------------------------------------------------
 
   ==> Calculation Information <==
@@ -581,7 +578,7 @@ Calling plugin forte.so.
     Root used for properties                         0
     Maximum number of iterations                100000
     Energy estimation frequency                      1
-    Number of threads                                8
+    Number of threads                                1
     Time step (beta)                         1.000e+00
     Spawning threshold                       1.000e-05
     Initial guess spawning threshold         1.000e-04
@@ -598,22 +595,22 @@ Calling plugin forte.so.
     Initiator approximation                         NO
     Fast variational estimate                       NO
     Result perturbation analysis                    NO
-    Using OpenMP                                   YES
+    Using OpenMP                                    NO
 
   ==> Initial Guess <==
 
-  Initial guess size = 878
+  Initial guess size = 892
 
   Davidson-liu solver algorithm
   Generating determinants with N-1 electrons.
 
-  Time spent building single lists: 0.010026 s
-  Memory for single-hole lists: 0.034351 MB
-  Memory for single-hole maps:  0.137405 MB
+  Time spent building single lists: 0.011270 s
+  Memory for single-hole lists: 0.034637 MB
+  Memory for single-hole maps:  0.138550 MB
   Generating determinants with N-2 electrons.
 
-  Memory for double-hole lists: 0.048248 MB
-  Memory for double-hole maps:  0.160828 MB
+  Memory for double-hole lists: 0.048294 MB
+  Memory for double-hole maps:  0.160980 MB
   Initial guess space is incomplete.
   Trying to add 9 determinant(s).  5 determinant(s) added.
   Found a guess vector with spin not close to integer value (4.123106)
@@ -629,114 +626,108 @@ Calling plugin forte.so.
   ----------------------------------------
     Iter.      Avg. Energy       Delta_E
   ----------------------------------------
-      1      -17.257680534286  -1.726e+01
-      2      -17.261185455401  -3.505e-03
-      3      -17.261198796438  -1.334e-05
-      4      -17.261200588909  -1.792e-06
-      5      -17.261200920329  -3.314e-07
-      6      -17.261200936551  -1.622e-08
-      7      -17.261200937925  -1.373e-09
-      8      -17.261200938150  -2.255e-10
-      9      -17.261200938204  -5.359e-11
+      1      -17.257623417638  -1.726e+01
+      2      -17.261116158591  -3.493e-03
+      3      -17.261130022911  -1.386e-05
+      4      -17.261131878038  -1.855e-06
+      5      -17.261132221155  -3.431e-07
+      6      -17.261132238253  -1.710e-08
+      7      -17.261132239728  -1.475e-09
+      8      -17.261132239968  -2.407e-10
+      9      -17.261132240025  -5.626e-11
   ----------------------------------------
   The Davidson-Liu algorithm converged in 10 iterations.
 
-  Initial guess energy (variational) =     -14.879903499549 Eh (root = 1)
+  Initial guess energy (variational) =     -14.879834801370 Eh (root = 1)
 
   Most important contributions to the wave function:
 
-    0      -0.940357      0.884272           0 |2200000000000002000000000000>    -17.221266962192
-    1       0.142535     0.0203163         705 |2000000000000002000000200000>    -17.022367923836
-    2       0.142535     0.0203163         704 |2000000000000002000000000200>    -17.022367923836
-    3      0.0984309    0.00968865         711 |2000000000000002000000+-0000>    -16.963302382547
-    4      0.0984309    0.00968865         710 |2000000000000002000000-+0000>    -16.963302382547
-    5      0.0984309    0.00968865         712 |2000000000000002000000000-+0>    -16.963302382547
-    6      0.0984309    0.00968865         709 |2000000000000002000000000+-0>    -16.963302382547
-    7       0.069499    0.00483011         706 |2000000000000002000000020000>    -16.885055742198
-    8       0.069499    0.00483011         707 |2000000000000002000000000020>    -16.885055742198
-    9      0.0584267    0.00341368         719 |2000000000000002200000000000>    -16.974352245085
+    0       0.940358      0.884274           0 |2200000000000002000000000000>    -17.221270440037
+    1      -0.142298     0.0202487         719 |2000000000000002000000000200>    -17.022375980707
+    2      -0.142298     0.0202487         718 |2000000000000002000000200000>    -17.022375980707
+    3     -0.0983714    0.00967692         726 |2000000000000002000000000-+0>    -16.963333415760
+    4     -0.0983714    0.00967692         723 |2000000000000002000000000+-0>    -16.963333415760
+    5     -0.0983714    0.00967692         725 |2000000000000002000000-+0000>    -16.963333415760
+    6     -0.0983714    0.00967692         724 |2000000000000002000000+-0000>    -16.963333415760
+    7     -0.0695919    0.00484303         721 |2000000000000002000000000020>    -16.885085734541
+    8     -0.0695919    0.00484303         720 |2000000000000002000000020000>    -16.885085734541
+    9     -0.0584948    0.00342165         731 |2000000000000002200000000000>    -16.974307582112
 
-  Spin State: S^2 = 0.000, S = 0.000, singlet (from 7 determinants,96.37%)
+  Spin State: S^2 = 0.000, S = 0.000, singlet (from 7 determinants,96.35)
 
   ==> Estimate highest excitation energy <==
   Highest Excited determinant:
   |0000000000200200000002000000>
-  Determinant Energy                    :  1.291807935230
-  Highest Energy Gershgorin circle Est. :  6.353681256061
+  Determinant Energy                    :  1.069990977797
+  Highest Energy Gershgorin circle Est. :  6.166427104311
 
   ==> Characteristic Function <==
-    f(x) = -2.372375e-04 * x^5 +1.259351e-03 * x^4 +2.674053e-02 * x^3 -1.064620e-01 * x^2 -5.651424e-01 * x +1.000000e+00
-    with tau = 1.000000e+00, shift = -6.644408560399, range = 10.616792377805
-    Initial guess: lambda_1= -14.879903499549
-    Est. Highest eigenvalue=  6.353681256061
+    f(x) = -2.479848e-04 * x^5 +1.304788e-03 * x^4 +2.746092e-02 * x^3 -1.083656e-01 * x^2 -5.701725e-01 * x +1.000000e+00
+    with tau = 1.000000e+00, shift = -6.738001287184, range = 10.523130952840
+    Initial guess: lambda_1= -14.879834801370
+    Est. Highest eigenvalue=  6.166427104311
 
-  ==> APIFCI Iterations <==
+  ==> PCI Iterations <==
 
   ------------------------------------------------------------------------------------------------
     Steps  Beta/Eh      Ndets     Proj. Energy/Eh     dEp/dt      Approx. Energy/Eh   dEv/dt
   ------------------------------------------------------------------------------------------------
-        0     0.00      22217     -14.880096185645 -1.927e-04     -14.880569424214 -6.566e-04
-        1     1.00      27264     -14.880210013977 -1.138e-04     -14.880647024616 -7.760e-05
-        2     2.00      27414     -14.880313861453 -1.038e-04     -14.880696677064 -4.965e-05
-        3     3.00      27438     -14.880398008942 -8.415e-05     -14.880732900605 -3.622e-05
-        4     4.00      27452     -14.880466762105 -6.875e-05     -14.880759922057 -2.702e-05
-        5     5.00      27464     -14.880523468173 -5.671e-05     -14.880780517171 -2.060e-05
-        6     6.00      27480     -14.880570697783 -4.723e-05     -14.880796168136 -1.565e-05
-        7     7.00      27496     -14.880610156019 -3.946e-05     -14.880808509021 -1.234e-05
-        8     8.00      27524     -14.880643473599 -3.332e-05     -14.880817824676 -9.316e-06
-        9     9.00      27544     -14.880671206707 -2.773e-05     -14.880825086066 -7.261e-06
-       10    10.00      27560     -14.880694626782 -2.342e-05     -14.880830759059 -5.673e-06
-       11    11.00      27570     -14.880714546861 -1.992e-05     -14.880835440828 -4.682e-06
-       12    12.00      27598     -14.880731796135 -1.725e-05     -14.880838753253 -3.312e-06
-       13    13.00      27606     -14.880746365168 -1.457e-05     -14.880841471083 -2.718e-06
-       14    14.00      27626     -14.880759005827 -1.264e-05     -14.880843889089 -2.418e-06
-       15    15.00      27636     -14.880770139553 -1.113e-05     -14.880845288730 -1.400e-06
-       16    16.00      27648     -14.880779017753 -8.878e-06     -14.880846652756 -1.364e-06
-       17    17.00      27648     -14.880787211009 -8.193e-06     -14.880847489567 -8.368e-07
-       18    18.00      27650     -14.880794048953 -6.838e-06     -14.880848156668 -6.671e-07
-       19    19.00      27662     -14.880800372418 -6.323e-06     -14.880848822929 -6.663e-07
-       20    20.00      27680     -14.880806078387 -5.706e-06     -14.880849414761 -5.918e-07
-       21    21.00      27684     -14.880811186094 -5.108e-06     -14.880849736829 -3.221e-07
-       22    22.00      27684     -14.880815710357 -4.524e-06     -14.880850180508 -4.437e-07
-       23    23.00      27684     -14.880819915107 -4.205e-06     -14.880850455335 -2.748e-07
-       24    24.00      27690     -14.880823513264 -3.598e-06     -14.880850669581 -2.142e-07
-       25    25.00      27690     -14.880826484511 -2.971e-06     -14.880850856247 -1.867e-07
-       26    26.00      27692     -14.880829305631 -2.821e-06     -14.880850999350 -1.431e-07
-       27    27.00      27696     -14.880831755673 -2.450e-06     -14.880851099487 -1.001e-07
-       28    28.00      27696     -14.880833922018 -2.166e-06     -14.880851030819  6.867e-08
-       29    29.00      27696     -14.880835376314 -1.454e-06
+        0     0.00      22452     -14.880029409570 -1.946e-04     -14.880498464117 -6.492e-04
+        1     1.00      27513     -14.880142848264 -1.134e-04     -14.880574393259 -7.593e-05
+        2     2.00      27687     -14.880246356286 -1.035e-04     -14.880622258191 -4.786e-05
+        3     3.00      27725     -14.880328081144 -8.172e-05     -14.880657160526 -3.490e-05
+        4     4.00      27731     -14.880395236686 -6.716e-05     -14.880683110474 -2.595e-05
+        5     5.00      27741     -14.880450388512 -5.515e-05     -14.880703207111 -2.010e-05
+        6     6.00      27765     -14.880496961935 -4.657e-05     -14.880718378435 -1.517e-05
+        7     7.00      27789     -14.880535366813 -3.840e-05     -14.880730196838 -1.182e-05
+        8     8.00      27821     -14.880567793891 -3.243e-05     -14.880739176977 -8.980e-06
+        9     9.00      27851     -14.880594884338 -2.709e-05     -14.880746172476 -6.995e-06
+       10    10.00      27885     -14.880617916460 -2.303e-05     -14.880751555008 -5.383e-06
+       11    11.00      27885     -14.880637235867 -1.932e-05     -14.880755939247 -4.384e-06
+       12    12.00      27907     -14.880654016508 -1.678e-05     -14.880759270279 -3.331e-06
+       13    13.00      27915     -14.880668428337 -1.441e-05     -14.880761899794 -2.630e-06
+       14    14.00      27919     -14.880680896828 -1.247e-05     -14.880764103025 -2.203e-06
+       15    15.00      27929     -14.880691869917 -1.097e-05     -14.880765859758 -1.757e-06
+       16    16.00      27929     -14.880701407858 -9.538e-06     -14.880767164948 -1.305e-06
+       17    17.00      27941     -14.880709551875 -8.144e-06     -14.880768080782 -9.158e-07
+       18    18.00      27941     -14.880716400644 -6.849e-06     -14.880768944421 -8.636e-07
+       19    19.00      27945     -14.880722858453 -6.458e-06     -14.880769599396 -6.550e-07
+       20    20.00      27951     -14.880728381303 -5.523e-06     -14.880770061859 -4.625e-07
+       21    21.00      27959     -14.880733216971 -4.836e-06     -14.880770510981 -4.491e-07
+       22    22.00      27963     -14.880737530356 -4.313e-06     -14.880770790268 -2.793e-07
+       23    23.00      27971     -14.880741304566 -3.774e-06     -14.880770800413 -1.014e-08
+       24    24.00      27971     -14.880744289905 -2.985e-06
   ------------------------------------------------------------------------------------------------
 
   Calculation converged.
 
   ==> Post-Iterations <==
 
-  * Projector-CI Variational Energy     =   -14.880850587682 Eh
-  * Projector-CI Projective  Energy     =   -14.880835376314 Eh
+  * Size of CI space                    = 27971
+  * Projector-CI Approximate Energy     =   -14.880770800413 Eh
+  * Projector-CI Projective  Energy     =   -14.880744289905 Eh
 
-  * Projector-CI Approximate Energy     =   -14.880851030819 Eh
-  * 1st order perturbation   Energy     =     0.000000443136 Eh
-  * Projector-CI Var. Corr.  Energy     =    -0.040881064145 Eh
+  * Projector-CI Variational Energy     =   -14.880764315067 Eh
+  * Projector-CI Var. Corr.  Energy     =    -0.040791313685 Eh
+  * 1st order perturbation   Energy     =     0.000006485347 Eh
 
-  * Size of CI space                    = 27696
-
-  Projector-CI (bitset) ran in  : 131.872258 s
+  Projector-CI (bitset) ran in  : 1111.179433 s
 
   Most important contributions to the wave function:
 
-    0      -0.936411      0.876866           0 |2200000000000002000000000000>    -17.221266962192
-    1       0.145274     0.0211044         705 |2000000000000002000000200000>    -17.022367923836
-    2       0.145274     0.0211044         704 |2000000000000002000000000200>    -17.022367923836
-    3       0.102473     0.0105008         710 |2000000000000002000000-+0000>    -16.963302382547
-    4       0.102473     0.0105008         712 |2000000000000002000000000-+0>    -16.963302382547
-    5       0.102473     0.0105008         711 |2000000000000002000000+-0000>    -16.963302382547
-    6       0.102473     0.0105008         709 |2000000000000002000000000+-0>    -16.963302382547
-    7      0.0734904    0.00540084         706 |2000000000000002000000020000>    -16.885055742198
-    8      0.0734904    0.00540084         707 |2000000000000002000000000020>    -16.885055742198
-    9      0.0575564    0.00331274         708 |2002000000000002000000000000>    -16.850132150175
+    0       0.936534      0.877095           0 |2200000000000002000000000000>    -17.221270440037
+    1      -0.145006     0.0210269         719 |2000000000000002000000000200>    -17.022375980707
+    2      -0.145006     0.0210269         718 |2000000000000002000000200000>    -17.022375980707
+    3      -0.102277     0.0104605         723 |2000000000000002000000000+-0>    -16.963333415760
+    4      -0.102277     0.0104605         724 |2000000000000002000000+-0000>    -16.963333415760
+    5      -0.102277     0.0104605         726 |2000000000000002000000000-+0>    -16.963333415760
+    6      -0.102277     0.0104605         725 |2000000000000002000000-+0000>    -16.963333415760
+    7     -0.0733977    0.00538722         721 |2000000000000002000000000020>    -16.885085734541
+    8     -0.0733977    0.00538722         720 |2000000000000002000000020000>    -16.885085734541
+    9      -0.057543     0.0033112         722 |2002000000000002000000000000>    -16.849769724257
 
-  Spin State: S^2 = -0.000, S = 0.000, singlet (from 7 determinants,96.11%)
+  Spin State: S^2 = 0.000, S = 0.000, singlet (from 7 determinants,96.10)
 
-  Your calculation took 132.38506500 seconds
+  Your calculation took 1111.88584300 seconds
 
 *** Psi4 exiting successfully. Buy a developer a beer!
