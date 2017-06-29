@@ -398,7 +398,7 @@ double WFNOperator::s2(DeterminantMap& wfn, SharedMatrix& evecs, int root) {
 }
 
 void WFNOperator::add_singles(DeterminantMap& wfn) {
-    
+
     det_hash<size_t>& wfn_map = wfn.wfn_hash();
 
     DeterminantMap singles;
@@ -418,8 +418,8 @@ void WFNOperator::add_singles(DeterminantMap& wfn) {
                     new_det = det;
                     new_det.set_alfa_bit(ii, false);
                     new_det.set_alfa_bit(aa, true);
-                    if( wfn_map.count(new_det) == 0 ){
-                         singles.add(new_det);
+                    if (wfn_map.count(new_det) == 0) {
+                        singles.add(new_det);
                     }
                 }
             }
@@ -440,8 +440,8 @@ void WFNOperator::add_singles(DeterminantMap& wfn) {
                     new_det = det;
                     new_det.set_beta_bit(ii, false);
                     new_det.set_beta_bit(aa, true);
-                    if( wfn_map.count(new_det) == 0 ){
-                         singles.add(new_det);
+                    if (wfn_map.count(new_det) == 0) {
+                        singles.add(new_det);
                     }
                 }
             }
