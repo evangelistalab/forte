@@ -63,9 +63,8 @@ class DSRG_MRPT2 : public Wavefunction {
      * @param ints A pointer to an allocated integral object
      * @param mo_space_info The MOSpaceInfo object
      */
-    DSRG_MRPT2(Reference reference, SharedWavefunction ref_wfn,
-               Options& options, std::shared_ptr<ForteIntegrals> ints,
-               std::shared_ptr<MOSpaceInfo> mo_space_info);
+    DSRG_MRPT2(Reference reference, SharedWavefunction ref_wfn, Options& options,
+               std::shared_ptr<ForteIntegrals> ints, std::shared_ptr<MOSpaceInfo> mo_space_info);
 
     /// Destructor
     ~DSRG_MRPT2();
@@ -80,21 +79,17 @@ class DSRG_MRPT2 : public Wavefunction {
     double compute_energy_multi_state();
 
     /// Set CASCI eigen values and eigen vectors for state averaging
-    void set_eigens(
-        std::vector<std::vector<std::pair<SharedVector, double>>> eigens) {
+    void set_eigens(std::vector<std::vector<std::pair<SharedVector, double>>> eigens) {
         eigens_ = eigens;
     }
 
     /// Set determinants in the model space
-    void set_p_spaces(
-        std::vector<std::vector<psi::forte::STLBitsetDeterminant>> p_spaces) {
+    void set_p_spaces(std::vector<std::vector<psi::forte::STLBitsetDeterminant>> p_spaces) {
         p_spaces_ = p_spaces;
     }
 
     /// Ignore semi-canonical testing in DSRG-MRPT2
-    void set_ignore_semicanonical(bool ignore) {
-        ignore_semicanonical_ = ignore;
-    }
+    void set_ignore_semicanonical(bool ignore) { ignore_semicanonical_ = ignore; }
 
     /// Set active active occupied MOs (relative to active)
     void set_actv_occ(std::vector<size_t> actv_occ) {
@@ -104,6 +99,65 @@ class DSRG_MRPT2 : public Wavefunction {
     void set_actv_uocc(std::vector<size_t> actv_uocc) {
         actv_uocc_mos_ = std::vector<size_t>(actv_uocc);
     }
+
+    /// Return const term from T1 and T2 de-normal-ordering
+    double Tamp_deGNO();
+
+    /// Return a BlockedTensor of T1 amplitudes
+    ambit::BlockedTensor T1(const std::vector<std::string>& blocks);
+    /// Return a BlockedTensor of de-normal-ordered T1 amplitudes
+    ambit::BlockedTensor T1deGNO(const std::vector<std::string>& blocks);
+    /// Return a BlockedTensor of T2 amplitudes
+    ambit::BlockedTensor T2(const std::vector<std::string>& blocks);
+    /// Set T1 amplitudes
+    void set_T1(ambit::BlockedTensor& T1);
+    /// Set T2 amplitudes
+    void set_T2(ambit::BlockedTensor& T2);
+
+    /// Set density to Gamma1_
+    void set_gamma1(const std::vector<double>& opdm_a, const std::vector<double>& opdm_b);
+
+    /// Set transition densities to Gamma1_, Lambda2_ and Lambda3_
+    void set_trans_dens(const std::vector<double>& td1a, const std::vector<double>& td1b,
+                        const std::vector<double>& td2aa, const std::vector<double>& td2ab,
+                        const std::vector<double>& td2bb, const std::vector<double>& td3aaa,
+                        const std::vector<double>& td3aab, const std::vector<double>& td3abb,
+                        const std::vector<double>& td3bbb);
+
+    /// Return a map of asked blocks of T1 amplitudes
+    std::map<std::string, ambit::Tensor> T1_blocks(const std::vector<std::string>& blocks);
+    /// Return a map of asked blocks of T2 amplitudes
+    std::map<std::string, ambit::Tensor> T2_blocks(const std::vector<std::string>& blocks);
+
+    /// Set asked blocks of T1 amplitudes to T1_
+    void set_T1_blocks(const std::map<std::string, ambit::Tensor>& blocks_to_tensors);
+    /// Set asked blocks of T2 amplitudes to T2_
+    void set_T2_blocks(const std::map<std::string, ambit::Tensor>& blocks_to_tensors);
+
+    /**
+     * Compute effective 1st-order transition densities
+     * for transition dipole computaions in active_dsrgpt2.
+     * @param transpose Transpose the 0th-order transition density if true
+     * @return a scalar term to scale sum_{m} (mu)^m_m
+     *
+     * The effective 1st-order trans. dens. is defined as follows:
+     * for example: <X0|mu T1(G)|G0> = (mu)^a_u * (t)^v_a * (td)^u_v + ...
+     *                               = (mu)^a_u * (td_eff)^u_a + ...
+     *              where T1(G) is the de-normal-ordered singles of state G,
+     *              and td_eff is defined as effective 1st-order transition density.
+     */
+    double compute_eff_trans_dens(const bool& transpose);
+    /// Return certain block of effective transition densities for dipole
+    ambit::Tensor trans_dipole_dens_block(const std::string& block_name);
+
+    /// Rotate orbital basis for amplitudes according to unitary matrix U
+    /// @param U unitary matrix from FCI_MO (INCLUDES frozen orbitals)
+    void rotate_amp(SharedMatrix Ua, SharedMatrix Ub, const bool& transpose = false,
+                    const bool& t1eff = false);
+
+    // return density
+    std::vector<double> Gamma1_a() { return Gamma1_.block("aa").data(); }
+    std::vector<double> Gamma1_b() { return Gamma1_.block("AA").data(); }
 
   protected:
     // => Class initialization and termination <= //
@@ -232,6 +286,8 @@ class DSRG_MRPT2 : public Wavefunction {
     ambit::BlockedTensor V_;
     /// Single excitation amplitude
     ambit::BlockedTensor T1_;
+    /// Effective single excitation amplitudes resulting from de-normal ordering
+    ambit::BlockedTensor T1eff_;
     /// Double excitation amplitude
     ambit::BlockedTensor T2_;
     /// One-body transformed Hamiltonian (active only)
@@ -243,6 +299,14 @@ class DSRG_MRPT2 : public Wavefunction {
 
     /// Unitary matrix to block diagonal Fock
     ambit::BlockedTensor U_;
+
+    /** Effective transition density for transition dipole computations
+     *  Example: <X0|mu T1(G)|G0> = (mu)^a_u * (t)^v_a * (td)^u_v + ...
+     *                            = (mu)^a_u * (td_eff)^u_a + ...
+     *           where T1(G) is the de-normal-ordered singles of state G,
+     *           and td_eff is what we call effective transition density here
+     */
+    ambit::BlockedTensor TDeff_;
 
     // => Amplitude <= //
 
@@ -272,10 +336,9 @@ class DSRG_MRPT2 : public Wavefunction {
     /// Number of amplitudes will be printed in amplitude summary
     int ntamp_;
     /// Print amplitudes summary
-    void print_amp_summary(
-        const std::string& name,
-        const std::vector<std::pair<std::vector<size_t>, double>>& list,
-        const double& norm, const size_t& number_nonzero);
+    void print_amp_summary(const std::string& name,
+                           const std::vector<std::pair<std::vector<size_t>, double>>& list,
+                           const double& norm, const size_t& number_nonzero);
 
     /// Threshold for amplitudes considered as intruders
     double intruder_tamp_;
@@ -286,9 +349,8 @@ class DSRG_MRPT2 : public Wavefunction {
     std::vector<std::pair<std::vector<size_t>, double>> lt2ab_;
     std::vector<std::pair<std::vector<size_t>, double>> lt2bb_;
     /// Print intruder analysis
-    void print_intruder(
-        const std::string& name,
-        const std::vector<std::pair<std::vector<size_t>, double>>& list);
+    void print_intruder(const std::string& name,
+                        const std::vector<std::pair<std::vector<size_t>, double>>& list);
 
     // => Energy terms <= //
 
@@ -316,43 +378,33 @@ class DSRG_MRPT2 : public Wavefunction {
     /// Compute zero-body Hbar truncated to 2nd-order
     double Hbar0_;
     /// Compute one-body term of commutator [H1, T1]
-    void H1_T1_C1(BlockedTensor& H1, BlockedTensor& T1, const double& alpha,
-                  BlockedTensor& C1);
+    void H1_T1_C1(BlockedTensor& H1, BlockedTensor& T1, const double& alpha, BlockedTensor& C1);
     /// Compute one-body term of commutator [H1, T2]
-    void H1_T2_C1(BlockedTensor& H1, BlockedTensor& T2, const double& alpha,
-                  BlockedTensor& C1);
+    void H1_T2_C1(BlockedTensor& H1, BlockedTensor& T2, const double& alpha, BlockedTensor& C1);
     /// Compute one-body term of commutator [H2, T1]
-    void H2_T1_C1(BlockedTensor& H2, BlockedTensor& T1, const double& alpha,
-                  BlockedTensor& C1);
+    void H2_T1_C1(BlockedTensor& H2, BlockedTensor& T1, const double& alpha, BlockedTensor& C1);
     /// Compute one-body term of commutator [H2, T2]
-    void H2_T2_C1(BlockedTensor& H2, BlockedTensor& T2, const double& alpha,
-                  BlockedTensor& C1);
+    void H2_T2_C1(BlockedTensor& H2, BlockedTensor& T2, const double& alpha, BlockedTensor& C1);
 
     /// Compute two-body term of commutator [H2, T1]
-    void H2_T1_C2(BlockedTensor& H2, BlockedTensor& T1, const double& alpha,
-                  BlockedTensor& C2);
+    void H2_T1_C2(BlockedTensor& H2, BlockedTensor& T1, const double& alpha, BlockedTensor& C2);
     /// Compute two-body term of commutator [H1, T2]
-    void H1_T2_C2(BlockedTensor& H1, BlockedTensor& T2, const double& alpha,
-                  BlockedTensor& C2);
+    void H1_T2_C2(BlockedTensor& H1, BlockedTensor& T2, const double& alpha, BlockedTensor& C2);
     /// Compute two-body term of commutator [H2, T2]
-    void H2_T2_C2(BlockedTensor& H2, BlockedTensor& T2, const double& alpha,
-                  BlockedTensor& C2);
+    void H2_T2_C2(BlockedTensor& H2, BlockedTensor& T2, const double& alpha, BlockedTensor& C2);
 
     /// Compute three-body term of commutator [H2, T2]
-    void H2_T2_C3(BlockedTensor& H2, BlockedTensor& T2, const double& alpha,
-                  BlockedTensor& C3);
+    void H2_T2_C3(BlockedTensor& H2, BlockedTensor& T2, const double& alpha, BlockedTensor& C3);
 
     /// Transfer integrals for FCI
     void transfer_integrals();
     /// Diagonalize the diagonal blocks of the Fock matrix
-    std::vector<std::vector<double>>
-    diagonalize_Fock_diagblocks(BlockedTensor& U);
+    std::vector<std::vector<double>> diagonalize_Fock_diagblocks(BlockedTensor& U);
     /// Separate an 2D ambit::Tensor according to its irrep
-    ambit::Tensor separate_tensor(ambit::Tensor& tens, const Dimension& irrep,
-                                  const int& h);
+    ambit::Tensor separate_tensor(ambit::Tensor& tens, const Dimension& irrep, const int& h);
     /// Combine a separated 2D ambit::Tensor
-    void combine_tensor(ambit::Tensor& tens, ambit::Tensor& tens_h,
-                        const Dimension& irrep, const int& h);
+    void combine_tensor(ambit::Tensor& tens, ambit::Tensor& tens_h, const Dimension& irrep,
+                        const int& h);
 
     // => Multi-state energy <= //
 
@@ -362,23 +414,21 @@ class DSRG_MRPT2 : public Wavefunction {
     std::vector<std::vector<double>> compute_energy_xms();
     /// XMS rotation for the reference states
     SharedMatrix xms_rotation(std::shared_ptr<FCIIntegrals> fci_ints,
-                              std::vector<STLBitsetDeterminant>& p_space,
-                              SharedMatrix civecs, const int& irrep);
+                              std::vector<STLBitsetDeterminant>& p_space, SharedMatrix civecs,
+                              const int& irrep);
 
     /// Build effective singles: T_{ia} -= T_{iu,av} * Gamma_{vu}
-    void build_eff_t1();
+    void build_T1eff_deGNO();
 
     /// Compute density cumulants
-    void
-    compute_cumulants(std::shared_ptr<FCIIntegrals> fci_ints,
-                      std::vector<psi::forte::STLBitsetDeterminant>& p_space,
-                      SharedMatrix evecs, const int& root1, const int& root2,
-                      const int& irrep);
+    void compute_cumulants(std::shared_ptr<FCIIntegrals> fci_ints,
+                           std::vector<psi::forte::STLBitsetDeterminant>& p_space,
+                           SharedMatrix evecs, const int& root1, const int& root2,
+                           const int& irrep);
     /// Compute denisty matrices and puts in Gamma1_, Lambda2_, and Lambda3_
     void compute_densities(std::shared_ptr<FCIIntegrals> fci_ints,
-                           std::vector<STLBitsetDeterminant>& p_space,
-                           SharedMatrix evecs, const int& root1,
-                           const int& root2, const int& irrep);
+                           std::vector<STLBitsetDeterminant>& p_space, SharedMatrix evecs,
+                           const int& root1, const int& root2, const int& irrep);
 
     /// Compute MS coupling <M|H|N>
     double compute_ms_1st_coupling(const std::string& name);
