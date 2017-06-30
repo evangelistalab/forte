@@ -29,6 +29,8 @@
 #include <algorithm>
 #include <iomanip>
 #include <map>
+#include <fstream>
+#include <cstdio>
 
 #include "psi4/libmints/pointgrp.h"
 #include "psi4/libmints/dipole.h"
@@ -551,7 +553,7 @@ double ACTIVE_DSRGPT2::compute_energy() {
 
         int nirrep = this->nirrep();
         ref_energies_ = vector<vector<double>>(nirrep, vector<double>());
-        pt_energies_ = vector<vector<double>>(nirrep, vector<double>());
+        pt2_energies_ = vector<vector<double>>(nirrep, vector<double>());
 
         double Tde_g = 0.0;
         std::vector<std::string> T1blocks{"aa", "AA", "av", "AV", "ca", "CA"};
@@ -625,7 +627,7 @@ double ACTIVE_DSRGPT2::compute_energy() {
                         dsrg->set_actv_uocc(fci_mo_->actv_uocc());
                         Ept2 = dsrg->compute_energy();
                     }
-                    pt_energies_[0].push_back(Ept2);
+                    pt2_energies_[0].push_back(Ept2);
 
                     // set multiplicity back to original
                     fci_mo_->set_multiplicity(multiplicity_);
@@ -763,7 +765,7 @@ double ACTIVE_DSRGPT2::compute_energy() {
                             }
                         }
                     }
-                    pt_energies_[h].push_back(Ept2);
+                    pt2_energies_[h].push_back(Ept2);
 
                     // if the reference oscillator strength is nonzero
                     if (do_osc) {
@@ -784,7 +786,7 @@ double ACTIVE_DSRGPT2::compute_energy() {
         for (int h = nirrep; h > 0; --h) {
             int n = nrootpi_[h - 1];
             if (n != 0) {
-                Process::environment.globals["CURRENT ENERGY"] = pt_energies_[h - 1][n - 1];
+                Process::environment.globals["CURRENT ENERGY"] = pt2_energies_[h - 1][n - 1];
                 break;
             }
         }
@@ -937,16 +939,16 @@ void ACTIVE_DSRGPT2::compute_osc_pt2(const int& irrep, const int& root, const do
 
     // save DSRG-PT2 transition density
     transD.t = sqrt(transD.x * transD.x + transD.y * transD.y + transD.z * transD.z);
-    tdipole_pt_[name] = transD;
+    tdipole_pt2_[name] = transD;
 
     // compute oscillator strength
-    double Eexcited = pt_energies_[irrep][root] - pt_energies_[0][0];
+    double Eexcited = pt2_energies_[irrep][root] - pt2_energies_[0][0];
     Vector4 osc;
     osc.x = 2.0 / 3.0 * Eexcited * transD.x * transD.x;
     osc.y = 2.0 / 3.0 * Eexcited * transD.y * transD.y;
     osc.z = 2.0 / 3.0 * Eexcited * transD.z * transD.z;
     osc.t = osc.x + osc.y + osc.z;
-    f_pt_[name] = osc;
+    f_pt2_[name] = osc;
 }
 
 double ACTIVE_DSRGPT2::compute_TDeff(ambit::BlockedTensor& T1, ambit::BlockedTensor& T2,
@@ -1191,9 +1193,8 @@ void ACTIVE_DSRGPT2::rotate_orbs(SharedMatrix Ca0, SharedMatrix Cb0, SharedMatri
                 ni += ncmopi[h_local];
                 nj += ncmopi[h_local];
             }
-            outfile->Printf("\n  Orbital ordering changed due to "
-                            "semicanonicalization. Swapped orbital %3zu back "
-                            "to %3zu.",
+            outfile->Printf("\n  Orbital ordering changed due to semicanonicalization. Swapped "
+                            "orbital %3zu back to %3zu.",
                             nj, ni);
             Ca->set_column(h, x, Ca_new->get_column(h, indexmap[x]));
             Cb->set_column(h, x, Cb_new->get_column(h, indexmap[x]));
@@ -1208,112 +1209,134 @@ void ACTIVE_DSRGPT2::rotate_orbs(SharedMatrix Ca0, SharedMatrix Cb0, SharedMatri
                 ni += ncmopi[h_local];
                 nj += ncmopi[h_local];
             }
-            outfile->Printf("\n  Orbital %3zu may have changed to "
-                            "semicanonical orbital %3zu. Please interpret "
-                            "orbitals with caution.",
+            outfile->Printf("\n  Orbital %3zu may have changed to semicanonical orbital %3zu. "
+                            "Please interpret orbitals with caution.",
                             ni, nj);
         }
     }
 }
 
 void ACTIVE_DSRGPT2::print_osc() {
+
+    auto loop_print = [&](std::map<std::string, Vector4> vecpair) -> std::string {
+        std::stringstream ss_out;
+        for (const auto& p : vecpair) {
+            const Vector4& d = p.second;
+            ss_out << std::endl
+                   << "  " << p.first << ":  X: " << format_double(d.x, 7, 4)
+                   << "  Y: " << format_double(d.y, 7, 4) << "  Z: " << format_double(d.z, 7, 4)
+                   << "  Total: " << format_double(d.t, 7, 4);
+        }
+        return ss_out.str();
+    };
+
+    std::stringstream out;
+
+    auto out_print = [&](std::string title, std::string values) {
+        print_h2(title);
+        outfile->Printf("%s", values.c_str());
+        out << title << std::endl << values << std::endl << std::endl;
+    };
+
     // print reference transition dipole
-    print_h2("V" + ref_type_ + " Transition Dipole Moment");
-    for (const auto& tdpair : tdipole_ref_) {
-        const Vector4& td = tdpair.second;
-        outfile->Printf("\n  %s:  X: %7.4f  Y: %7.4f  Z: %7.4f  Total: %7.4f", tdpair.first.c_str(),
-                        td.x, td.y, td.z, td.t);
-    }
+    std::string title = "V" + ref_type_ + " Transition Dipole Moment (a.u.)";
+    std::string values = loop_print(tdipole_ref_);
+    out_print(title, values);
 
     // print reference oscillator strength
-    print_h2("V" + ref_type_ + " Oscillator Strength");
-    for (const auto& fp : f_ref_) {
-        const Vector4& f = fp.second;
-        outfile->Printf("\n  %s:  X: %7.4f  Y: %7.4f  Z: %7.4f  Total: %7.4f", fp.first.c_str(),
-                        f.x, f.y, f.z, f.t);
-    }
+    title = "V" + ref_type_ + " Oscillator Strength (a.u.)";
+    values = loop_print(f_ref_);
+    out_print(title, values);
 
     // print DSRG-PT2 transition dipole
-    print_h2("V" + ref_type_ + "-DSRG-PT2 Transition Dipole Moment");
-    for (const auto& tdpair : tdipole_pt_) {
-        const Vector4& td = tdpair.second;
-        outfile->Printf("\n  %s:  X: %7.4f  Y: %7.4f  Z: %7.4f  Total: %7.4f", tdpair.first.c_str(),
-                        td.x, td.y, td.z, td.t);
-    }
+    title = "V" + ref_type_ + "-DSRG-PT2 Transition Dipole Moment (a.u.)";
+    values = loop_print(tdipole_pt2_);
+    out_print(title, values);
 
     // print DSRG-PT2 oscillator strength
-    print_h2("V" + ref_type_ + "-DSRG-PT2 Oscillator Strength");
-    for (const auto& fp : f_pt_) {
-        const Vector4& f = fp.second;
-        outfile->Printf("\n  %s:  X: %7.4f  Y: %7.4f  Z: %7.4f  Total: %7.4f", fp.first.c_str(),
-                        f.x, f.y, f.z, f.t);
-    }
+    title = "V" + ref_type_ + "-DSRG-PT2 Oscillator Strength (a.u.)";
+    values = loop_print(f_pt2_);
+    out_print(title, values);
+
+    // write to file (overwrite existing file)
+    ofstream out_osc;
+    out_osc.open("result_osc.txt");
+    out_osc << out.rdbuf();
+    out_osc.close();
 }
 
 void ACTIVE_DSRGPT2::print_summary() {
-    print_h2("ACTIVE-DSRG-MRPT2 Summary");
-
     int nirrep = this->nirrep();
 
     // print raw data
+    std::string title = "  ==> ACTIVE-DSRG-MRPT2 Summary <==";
+    std::stringstream out;
+    out << title << std::endl;
+
+    std::string ref_name = (ref_type_ == "CAS") ? "CAS" : "V" + ref_type_;
+    std::string pt2_name = ref_name + "-DSRG-PT2";
+    out << std::endl
+        << "    2S+1  Sym.  ROOT  " << std::setw(18) << ref_name << "  " << std::setw(18)
+        << pt2_name;
+
     if (ref_type_ == "CISD") {
         int total_width = 4 + 4 + 4 + 18 + 18 + 6 + 2 * 5;
-        outfile->Printf("\n    %4s  %4s  %4s  %18s  %18s  %6s", "2S+1", "Sym.", "ROOT",
-                        ref_type_.c_str(), "DSRG-MRPT2", "% T1");
-        outfile->Printf("\n    %s", std::string(total_width, '-').c_str());
+        out << "  " << std::setw(6) << "% T1";
+        out << std::endl << "    " << std::string(total_width, '-');
 
         for (int h = 0; h < nirrep; ++h) {
             if (nrootpi_[h] != 0) {
                 std::string sym = irrep_symbol_[h];
 
                 for (int i = 0; i < nrootpi_[h]; ++i) {
+                    int multi = multiplicity_;
                     if (h == 0 && multiplicity_ != 1 && i == 0) {
-                        outfile->Printf("\n    %4d  %4s  %4d  %18.10f  %18.10f  %6.2f", 1,
-                                        sym.c_str(), i, ref_energies_[h][i], pt_energies_[h][i],
-                                        t1_percentage_[h][i]);
-                    } else {
-                        outfile->Printf("\n    %4d  %4s  %4d  %18.10f  %18.10f  %6.2f",
-                                        multiplicity_, sym.c_str(), i, ref_energies_[h][i],
-                                        pt_energies_[h][i], t1_percentage_[h][i]);
+                        multi = 1;
                     }
+                    out << std::endl
+                        << "    " << std::setw(4) << multi << "  " << std::setw(4) << sym << "  "
+                        << std::setw(4) << i << "  " << format_double(ref_energies_[h][i], 18, 10)
+                        << "  " << format_double(pt2_energies_[h][i], 18, 10) << "  "
+                        << format_double(t1_percentage_[h][i], 6, 2);
                 }
-                outfile->Printf("\n    %s", std::string(total_width, '-').c_str());
+                out << std::endl << "    " << std::string(total_width, '-');
             }
         }
     } else {
         int total_width = 4 + 4 + 4 + 18 + 18 + 2 * 4;
-        outfile->Printf("\n    %4s  %4s  %4s  %18s  %18s", "2S+1", "Sym.", "ROOT",
-                        ref_type_.c_str(), "DSRG-MRPT2");
-        outfile->Printf("\n    %s", std::string(total_width, '-').c_str());
+        out << std::endl << "    " << std::string(total_width, '-');
 
         for (int h = 0; h < nirrep; ++h) {
             if (nrootpi_[h] != 0) {
                 std::string sym = irrep_symbol_[h];
 
                 for (int i = 0; i < nrootpi_[h]; ++i) {
+                    int multi = multiplicity_;
                     if (h == 0 && multiplicity_ != 1 && i == 0) {
-                        outfile->Printf("\n    %4d  %4s  %4d  %18.10f  %18.10f", 1, sym.c_str(), i,
-                                        ref_energies_[h][i], pt_energies_[h][i]);
-                    } else {
-                        outfile->Printf("\n    %4d  %4s  %4d  %18.10f  %18.10f", multiplicity_,
-                                        sym.c_str(), i, ref_energies_[h][i], pt_energies_[h][i]);
+                        multi = 1;
                     }
+                    out << std::endl
+                        << "    " << std::setw(4) << multi << "  " << std::setw(4) << sym << "  "
+                        << std::setw(4) << i << "  " << format_double(ref_energies_[h][i], 18, 10)
+                        << "  " << format_double(pt2_energies_[h][i], 18, 10);
                 }
-                outfile->Printf("\n    %s", std::string(total_width, '-').c_str());
+                out << std::endl << "    " << std::string(total_width, '-');
             }
         }
     }
 
     // print excitation energies in eV
     if (total_nroots_ > 1) {
-        print_h2("Relative Energy WRT Totally Symmetric Ground State (eV)");
+        title = "  ==> Relative Energy WRT Totally Symmetric Ground State (eV) <==";
+        out << std::endl << std::endl << title << std::endl;
 
         double ev = pc_hartree2ev;
         if (ref_type_ == "CAS") {
             int width = 4 + 4 + 4 + 8 + 8 + 2 * 4;
-            outfile->Printf("\n    %4s  %4s  %4s  %8s  %8s", "2S+1", "Sym.", "ROOT",
-                            ref_type_.c_str(), "DSRG-PT2");
-            outfile->Printf("\n    %s", std::string(width, '-').c_str());
+            out << std::endl
+                << "    2S+1  Sym.  ROOT  " << std::setw(8) << ref_name << "  " << std::setw(8)
+                << "DSRG-PT2";
+            out << std::endl << "    " << std::string(width, '-');
 
             for (int h = 0; h < nirrep; ++h) {
                 if (nrootpi_[h] != 0) {
@@ -1325,20 +1348,23 @@ void ACTIVE_DSRGPT2::print_summary() {
                         }
 
                         double Eref = ev * (ref_energies_[h][i] - ref_energies_[0][0]);
-                        double Ept2 = ev * (pt_energies_[h][i] - pt_energies_[0][0]);
+                        double Ept2 = ev * (pt2_energies_[h][i] - pt2_energies_[0][0]);
 
-                        outfile->Printf("\n    %4d  %4s  %4d  %8.3f  %8.3f", multiplicity_,
-                                        sym.c_str(), i, Eref, Ept2);
+                        out << std::endl
+                            << "    " << std::setw(4) << multiplicity_ << "  " << std::setw(4)
+                            << sym << "  " << std::setw(4) << i << "  " << format_double(Eref, 8, 4)
+                            << "  " << format_double(Ept2, 8, 4);
                     }
                     if (h != 0 || nrootpi_[0] != 1)
-                        outfile->Printf("\n    %s", std::string(width, '-').c_str());
+                        out << std::endl << "    " << std::string(width, '-');
                 }
             }
         } else {
             int width = 4 + 4 + 4 + 8 + 8 + 40 + 2 * 5;
-            outfile->Printf("\n    %4s  %4s  %4s  %8s  %8s  %40s", "2S+1", "Sym.", "ROOT",
-                            ref_type_.c_str(), "DSRG-PT2", "Excitation Type");
-            outfile->Printf("\n    %s", std::string(width, '-').c_str());
+            out << std::endl
+                << "    2S+1  Sym.  ROOT  " << std::setw(8) << ref_name << "  DSRG-PT2  "
+                << std::setw(40) << "Excitation Type";
+            out << std::endl << "    " << std::string(width, '-');
 
             for (int h = 0; h < nirrep; ++h) {
                 if (nrootpi_[h] != 0) {
@@ -1350,28 +1376,38 @@ void ACTIVE_DSRGPT2::print_summary() {
                         }
 
                         double Eref = ev * (ref_energies_[h][i] - ref_energies_[0][0]);
-                        double Ept2 = ev * (pt_energies_[h][i] - pt_energies_[0][0]);
+                        double Ept2 = ev * (pt2_energies_[h][i] - pt2_energies_[0][0]);
 
                         std::string ex_type =
                             compute_ex_type(dominant_dets_[h][i], dominant_dets_[0][0]);
 
-                        outfile->Printf("\n    %4d  %4s  %4d  %8.3f  %8.3f  %40s", multiplicity_,
-                                        sym.c_str(), i, Eref, Ept2, ex_type.c_str());
+                        out << std::endl
+                            << "    " << std::setw(4) << multiplicity_ << "  " << std::setw(4)
+                            << sym << "  " << std::setw(4) << i << "  " << format_double(Eref, 8, 4)
+                            << "  " << format_double(Ept2, 8, 4) << "  " << std::setw(40)
+                            << ex_type;
                     }
                     if (h != 0 || nrootpi_[0] != 1)
-                        outfile->Printf("\n    %s", std::string(width, '-').c_str());
+                        out << std::endl << "    " << std::string(width, '-');
                 }
             }
-            outfile->Printf("\n    Notes on excitation type:");
-            outfile->Printf("\n    General format: mAH -> nAP (<r^2>) (S/D)");
-            outfile->Printf("\n      mAH:   Mulliken symbol of m-th Active Hole orbital");
-            outfile->Printf("\n      nAP:   Mulliken symbol of n-th Active Particle orbital");
-            outfile->Printf("\n      <r^2>: orbital extent of the nAP orbital in a.u.");
-            outfile->Printf("\n      S/D:   single/double excitation");
-            outfile->Printf(
-                "\n    NOTE: m and n are ZERO based ACTIVE indices (NO core orbitals)!");
+            out << std::endl << "    Notes on excitation type:";
+            out << std::endl << "    General format: mAH -> nAP (<r^2>) (S/D)";
+            out << std::endl << "      mAH:   Mulliken symbol of m-th Active Hole orbital";
+            out << std::endl << "      nAP:   Mulliken symbol of n-th Active Particle orbital";
+            out << std::endl << "      <r^2>: orbital extent of the nAP orbital in a.u.";
+            out << std::endl << "      S/D:   single/double excitation";
+            out << std::endl
+                << "    NOTE: m and n are ZERO based ACTIVE indices (NO core orbitals)!";
         }
     }
+    outfile->Printf("\n\n\n%s", out.str().c_str());
+
+    // write to file (overwrite)
+    ofstream out_Eex;
+    out_Eex.open("result_ex.txt");
+    out_Eex << out.rdbuf();
+    out_Eex.close();
 }
 
 std::string ACTIVE_DSRGPT2::compute_ex_type(const STLBitsetDeterminant& det,
@@ -1504,6 +1540,27 @@ std::vector<double> ACTIVE_DSRGPT2::flatten_fci_orbextents(
     }
 
     return out;
+}
+
+std::string ACTIVE_DSRGPT2::format_double(const double& value, const int& width,
+                                          const int& precision, const bool& scientific) {
+    std::stringstream out;
+    out.precision(precision);
+    if (scientific) {
+        out << std::fixed << std::scientific << std::setw(width) << value;
+    } else {
+        out << std::fixed << std::setw(width) << value;
+    }
+    return out.str();
+}
+
+void ACTIVE_DSRGPT2::rename_file(const string& oldName, const string& newName) {
+    int result = rename(oldName.c_str(), newName.c_str());
+    if (result != 0) {
+        std::string error = "Cannot renaming file " + oldName;
+        perror(error.c_str());
+        throw PSIEXCEPTION(error);
+    }
 }
 }
 }

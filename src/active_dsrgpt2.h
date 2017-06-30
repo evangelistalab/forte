@@ -31,6 +31,7 @@
 
 #include <string>
 #include <vector>
+#include <sys/stat.h>
 
 #include "psi4/libmints/matrix.h"
 #include "psi4/libmints/molecule.h"
@@ -114,7 +115,7 @@ class ACTIVE_DSRGPT2 : public Wavefunction {
     std::vector<std::vector<double>> ref_energies_;
 
     /// DSRGPT2 energies
-    std::vector<std::vector<double>> pt_energies_;
+    std::vector<std::vector<double>> pt2_energies_;
 
     /// Singles (T1) percentage in VCISD
     std::vector<std::vector<double>> t1_percentage_;
@@ -173,9 +174,9 @@ class ACTIVE_DSRGPT2 : public Wavefunction {
     std::map<std::string, Vector4> f_ref_;
 
     /// Transition dipole moment of perturbation in a.u.
-    std::map<std::string, Vector4> tdipole_pt_;
+    std::map<std::string, Vector4> tdipole_pt2_;
     /// Oscillator strength of perturbation
-    std::map<std::string, Vector4> f_pt_;
+    std::map<std::string, Vector4> f_pt2_;
 
     /// A uniform format for transition type
     std::string transition_type(const int& n0, const int& irrep0, const int& n1, const int& irrep1);
@@ -225,12 +226,24 @@ class ACTIVE_DSRGPT2 : public Wavefunction {
     /// Print oscillator strength and transition dipoles
     void print_osc();
 
+    /// Format a double to string
+    std::string format_double(const double& value, const int& width, const int& precision,
+                              const bool& scientific = false);
+    /// Rename a file
+    void rename_file(const std::string& oldName, const std::string& newName);
+
     /// Orbital extents of original orbitals
     std::vector<double> orb_extents_;
 
     /// Flatten the structure of orbital extents in fci_mo and return a vector of <r^2>
     std::vector<double>
     flatten_fci_orbextents(const std::vector<std::vector<std::vector<double>>>& fci_orb_extents);
+
+    /// Test if a file exist or not
+    bool is_file_exist(const std::string& name) {
+        struct stat buffer;
+        return (stat(name.c_str(), &buffer) == 0);
+    }
 };
 }
 }
