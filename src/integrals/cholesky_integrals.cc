@@ -27,6 +27,7 @@
  */
 
 #include <cmath>
+#include <cstring>
 
 #include "psi4/libpsi4util/process.h"
 #include "psi4/libmints/wavefunction.h"
