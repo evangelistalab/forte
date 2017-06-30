@@ -68,6 +68,12 @@ CI_Reference::CI_Reference(std::shared_ptr<Wavefunction> wfn, Options& options,
     // Size of subspace
     subspace_size_ = options.get_int("ACTIVE_GUESS_SIZE");
 
+    // Reference type
+    ref_type_ = "CAS";
+    if (options["ACTIVE_REF_TYPE"].has_changed()) {
+        ref_type_ = options.get_str("ACTIVE_REF_TYPE");
+    }
+
     // First determine number of alpha and beta electrons
     // Assume twice_ms =( Na - Nb )
     int nel = 0;
@@ -89,6 +95,138 @@ CI_Reference::CI_Reference(std::shared_ptr<Wavefunction> wfn, Options& options,
 CI_Reference::~CI_Reference() {}
 
 void CI_Reference::build_reference(std::vector<STLBitsetDeterminant>& ref_space) {
+
+    if (ref_type_ == "CAS") {
+        build_cas_reference(ref_space);
+    } else {
+        build_ci_reference(ref_space);
+    }
+}
+
+void CI_Reference::build_ci_reference(std::vector<STLBitsetDeterminant>& ref_space) {
+
+    STLBitsetDeterminant det = STLBitsetDeterminant(get_occupation());
+
+    ref_space.push_back(det);
+
+    if ((ref_type_ == "CIS") or (ref_type_ == "CISD")) {
+        std::vector<int> aocc = det.get_alfa_occ();
+        std::vector<int> bocc = det.get_beta_occ();
+        std::vector<int> avir = det.get_alfa_vir();
+        std::vector<int> bvir = det.get_beta_vir();
+
+        int noalpha = aocc.size();
+        int nobeta = bocc.size();
+        int nvalpha = avir.size();
+        int nvbeta = bvir.size();
+
+        for (int i = 0; i < noalpha; ++i) {
+            int ii = aocc[i];
+            for (int a = 0; a < nvalpha; ++a) {
+                int aa = avir[a];
+                if ((mo_symmetry_[ii] ^ mo_symmetry_[aa]) == 0) {
+                    STLBitsetDeterminant new_det(det);
+                    new_det.set_alfa_bit(ii, false);
+                    new_det.set_alfa_bit(aa, true);
+                    ref_space.push_back(new_det);
+                }
+            }
+        }
+
+        for (int i = 0; i < nobeta; ++i) {
+            int ii = bocc[i];
+            for (int a = 0; a < nvbeta; ++a) {
+                int aa = bvir[a];
+                if ((mo_symmetry_[ii] ^ mo_symmetry_[aa]) == 0) {
+                    STLBitsetDeterminant new_det(det);
+                    new_det.set_beta_bit(ii, false);
+                    new_det.set_beta_bit(aa, true);
+                    ref_space.push_back(new_det);
+                }
+            }
+        }
+    }
+
+    if ((ref_type_ == "CID") or (ref_type_ == "CISD")) {
+        std::vector<int> aocc = det.get_alfa_occ();
+        std::vector<int> bocc = det.get_beta_occ();
+        std::vector<int> avir = det.get_alfa_vir();
+        std::vector<int> bvir = det.get_beta_vir();
+
+        int noalpha = aocc.size();
+        int nobeta = bocc.size();
+        int nvalpha = avir.size();
+        int nvbeta = bvir.size();
+
+        for (int i = 0; i < noalpha; ++i) {
+            int ii = aocc[i];
+            for (int j = i + 1; j < noalpha; ++j) {
+                int jj = aocc[j];
+                for (int a = 0; a < nvalpha; ++a) {
+                    int aa = avir[a];
+                    for (int b = a + 1; b < nvalpha; ++b) {
+                        int bb = avir[b];
+                        if ((mo_symmetry_[ii] ^ mo_symmetry_[jj] ^ mo_symmetry_[aa] ^
+                             mo_symmetry_[bb]) == 0) {
+                            STLBitsetDeterminant new_det(det);
+                            new_det.set_alfa_bit(ii, false);
+                            new_det.set_alfa_bit(jj, false);
+                            new_det.set_alfa_bit(aa, true);
+                            new_det.set_alfa_bit(bb, true);
+                            ref_space.push_back(new_det);
+                        }
+                    }
+                }
+            }
+        }
+        // Then the alpha-beta
+        for (int i = 0; i < noalpha; ++i) {
+            int ii = aocc[i];
+            for (int j = 0; j < nobeta; ++j) {
+                int jj = bocc[j];
+                for (int a = 0; a < nvalpha; ++a) {
+                    int aa = avir[a];
+                    for (int b = 0; b < nvbeta; ++b) {
+                        int bb = bvir[b];
+                        if ((mo_symmetry_[ii] ^ mo_symmetry_[jj] ^ mo_symmetry_[aa] ^
+                             mo_symmetry_[bb]) == 0) {
+                            STLBitsetDeterminant new_det(det);
+                            new_det.set_alfa_bit(ii, false);
+                            new_det.set_beta_bit(jj, false);
+                            new_det.set_alfa_bit(aa, true);
+                            new_det.set_beta_bit(bb, true);
+                            ref_space.push_back(new_det);
+                        }
+                    }
+                }
+            }
+        }
+        // Lastly the beta-beta
+        for (int i = 0; i < nobeta; ++i) {
+            int ii = bocc[i];
+            for (int j = i + 1; j < nobeta; ++j) {
+                int jj = bocc[j];
+                for (int a = 0; a < nvbeta; ++a) {
+                    int aa = bvir[a];
+                    for (int b = a + 1; b < nvbeta; ++b) {
+                        int bb = bvir[b];
+                        if ((mo_symmetry_[ii] ^
+                             (mo_symmetry_[jj] ^ (mo_symmetry_[aa] ^ mo_symmetry_[bb]))) == 0) {
+                            STLBitsetDeterminant new_det(det);
+                            new_det.set_beta_bit(ii, false);
+                            new_det.set_beta_bit(jj, false);
+                            new_det.set_beta_bit(aa, true);
+                            new_det.set_beta_bit(bb, true);
+                            ref_space.push_back(new_det);
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
+void CI_Reference::build_cas_reference(std::vector<STLBitsetDeterminant>& ref_space) {
     int nact = mo_space_info_->size("ACTIVE");
 
     // Get the active mos
@@ -254,6 +392,80 @@ std::vector<std::tuple<double, int, int>> CI_Reference::sym_labeled_orbitals(std
         std::sort(labeled_orb.begin(), labeled_orb.end());
     }
     return labeled_orb;
+}
+
+std::vector<int> CI_Reference::get_occupation() {
+    int nact = mo_space_info_->size("ACTIVE");
+    std::vector<int> occupation(2 * nact, 0);
+
+    // nyms denotes the number of electrons needed to assign symmetry and
+    // multiplicity
+    int nsym = twice_ms_;
+    int orb_sym = root_sym_;
+
+    if (twice_ms_ == 0.0) {
+        nsym = 2;
+    }
+
+    // Grab an ordered list of orbital energies, sym labels, and idxs
+    std::vector<std::tuple<double, int, int>> labeled_orb_en;
+    std::vector<std::tuple<double, int, int>> labeled_orb_en_alfa;
+    std::vector<std::tuple<double, int, int>> labeled_orb_en_beta;
+
+    // For a restricted reference
+    labeled_orb_en = sym_labeled_orbitals("RHF");
+
+    // Build initial reference determinant from restricted reference
+    for (int i = 0; i < nalpha_; ++i) {
+        occupation[std::get<2>(labeled_orb_en[i])] = 1;
+    }
+    for (int i = 0; i < nbeta_; ++i) {
+        occupation[nact + std::get<2>(labeled_orb_en[i])] = 1;
+    }
+
+    // Loop over as many outer-shell electrons as needed to get correct sym
+    for (int k = 1; k <= nsym;) {
+
+        bool add = false;
+        // Remove electron from highest energy docc
+        occupation[std::get<2>(labeled_orb_en[nalpha_ - k])] = 0;
+
+        // Determine proper symmetry for new occupation
+        // orb_sym = ms_;
+
+        if (twice_ms_ == 0.0) {
+            orb_sym = std::get<1>(labeled_orb_en[nalpha_ - 1]) ^ orb_sym;
+        } else {
+            for (int i = 1; i <= nsym; ++i) {
+                orb_sym = std::get<1>(labeled_orb_en[nalpha_ - i]) ^ orb_sym;
+            }
+            orb_sym = std::get<1>(labeled_orb_en[nalpha_ - k]) ^ orb_sym;
+        }
+
+        // Add electron to lowest-energy orbital of proper symmetry
+        // Loop from current occupation to max MO until correct orbital is
+        // reached
+        for (int i = nalpha_ - k, maxi = nact; i < maxi; ++i) {
+            if (orb_sym == std::get<1>(labeled_orb_en[i]) and
+                occupation[std::get<2>(labeled_orb_en[i])] != 1) {
+                occupation[std::get<2>(labeled_orb_en[i])] = 1;
+                add = true;
+                break;
+            } else {
+                continue;
+            }
+        }
+        // If a new occupation could not be created, put electron back and
+        // remove a different one
+        if (!add) {
+            occupation[std::get<2>(labeled_orb_en[nalpha_ - k])] = 1;
+            ++k;
+        } else {
+            break;
+        }
+
+    } // End loop over k
+    return occupation;
 }
 }
 } // End Namespaces

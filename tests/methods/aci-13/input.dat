@@ -41,7 +41,7 @@ set forte {
   aci_enforce_spin_complete true
   aci_prescreen_threshold 0.0
   diag_algorithm solver
-  active_guess_size 1
+  active_ref_type hf
 }
 
 energy('scf')

@@ -218,10 +218,16 @@ class ProjectorCI_HashVec : public Wavefunction {
     /// the couplings to the singles and doubles, respectively.
     std::vector<std::pair<double, double>> dets_max_couplings_;
     double dets_double_max_coupling_;
+    double dets_single_max_coupling_;
     std::vector<std::tuple<int, int, double, std::vector<std::tuple<int, int, double>>>>
         aa_couplings_, ab_couplings_, bb_couplings_;
-    double max_aa_coupling_, max_ab_coupling_, max_bb_coupling_;
-    size_t aa_couplings_size_, ab_couplings_size_, bb_couplings_size_;
+    std::vector<std::tuple<int, double, std::vector<std::tuple<int, double>>>> a_couplings_,
+        b_couplings_;
+    std::vector<std::vector<std::vector<double>>> single_alpha_excite_double_couplings_,
+        single_beta_excite_double_couplings_;
+    double max_aa_coupling_, max_ab_coupling_, max_bb_coupling_, max_a_coupling_, max_b_coupling_;
+    size_t aa_couplings_size_, ab_couplings_size_, bb_couplings_size_, a_couplings_size_,
+        b_couplings_size_;
 
     // * Energy estimation
     /// Estimate the variational energy?
@@ -230,6 +236,8 @@ class ProjectorCI_HashVec : public Wavefunction {
     bool fast_variational_estimate_;
     /// The frequency of approximate variational estimation of the energy
     int energy_estimate_freq_;
+    /// The max allowed error for variational energy
+    double evar_max_error_;
     /// The threshold with which we estimate the energy during the iterations
     double energy_estimate_threshold_;
     /// Flag for conducting CHC energy estimation
@@ -352,6 +360,15 @@ class ProjectorCI_HashVec : public Wavefunction {
         double CI, double ref_CI, std::vector<std::pair<Determinant, double>>& new_space_C_vec,
         double E0, std::pair<double, double>& max_coupling);
 
+    /// Apply symmetric approx tau H to a determinant using dynamic screening
+    /// with selection according to a reference coefficient
+    /// and with HBCI sorting scheme with singles screening
+    void apply_tau_H_ref_C_symm_det_dynamic_HBCI_2(
+        double tau, double spawning_threshold, const det_hashvec& dets_hashvec,
+        const std::vector<double>& pre_C, const std::vector<double>& ref_C, const Determinant& detI,
+        double CI, double ref_CI, std::vector<std::pair<Determinant, double>>& new_space_C_vec,
+        double E0, std::pair<double, double>& max_coupling);
+
     /// Estimates the energy give a wave function
     std::map<std::string, double> estimate_energy(const det_hashvec& dets_hashvec,
                                                   std::vector<double>& C);
@@ -391,6 +408,8 @@ class ProjectorCI_HashVec : public Wavefunction {
 
     /// Compute the double excitation couplings
     void compute_double_couplings(double double_coupling_threshold);
+    //    void compute_single_excite_max_double_couplings();
+    void compute_single_couplings(double single_coupling_threshold);
 
     /// Returns a vector of orbital energy, sym label pairs
     std::vector<std::tuple<double, int, int>> sym_labeled_orbitals(std::string type);

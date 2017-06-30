@@ -96,6 +96,8 @@ void set_PCI_options(ForteOptions& foptions) {
 
     foptions.add_bool("PCI_FAST_EVAR", false, "Use a fast (sparse) estimate of the energy");
 
+    foptions.add_double("PCI_EVAR_MAX_ERROR", 0.0, "The max allowed error for variational energy");
+
     foptions.add_int("PCI_ENERGY_ESTIMATE_FREQ", 1,
                      "Iterations in between variational estimation of the energy");
 
