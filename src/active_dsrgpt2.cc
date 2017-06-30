@@ -121,7 +121,6 @@ void ACTIVE_DSRGPT2::startup() {
             } else if (i >= actv_max && i < virt_max) {
                 virtIdxC1_[h].push_back(static_cast<size_t>(idx));
             }
-            outfile->Printf("\n  h = %zu, i = %2zu, C1i = %2zu", h, i, idx);
         }
 
         CharacterTable ct = Process::environment.molecule()->point_group()->char_table();
@@ -351,20 +350,21 @@ void ACTIVE_DSRGPT2::precompute_energy() {
     }
 
     // print reference oscillator strength
-    print_h2("V" + ref_type_ + " Transition Dipole Moment");
-    for (const auto& tdp : tdipole_ref_) {
-        const Vector4& td = tdp.second;
-        outfile->Printf("\n  %s:  X: %7.4f  Y: %7.4f  Z: %7.4f  Total: %7.4f", tdp.first.c_str(),
-                        td.x, td.y, td.z, td.t);
-    }
+    if (multiplicity_ == 1) {
+        print_h2("V" + ref_type_ + " Transition Dipole Moment");
+        for (const auto& tdp : tdipole_ref_) {
+            const Vector4& td = tdp.second;
+            outfile->Printf("\n  %s:  X: %7.4f  Y: %7.4f  Z: %7.4f  Total: %7.4f",
+                            tdp.first.c_str(), td.x, td.y, td.z, td.t);
+        }
 
-    print_h2("V" + ref_type_ + " Oscillator Strength");
-    for (const auto& fp : f_ref_) {
-        const Vector4& f = fp.second;
-        outfile->Printf("\n  %s:  X: %7.4f  Y: %7.4f  Z: %7.4f  Total: %7.4f", fp.first.c_str(),
-                        f.x, f.y, f.z, f.t);
+        print_h2("V" + ref_type_ + " Oscillator Strength");
+        for (const auto& fp : f_ref_) {
+            const Vector4& f = fp.second;
+            outfile->Printf("\n  %s:  X: %7.4f  Y: %7.4f  Z: %7.4f  Total: %7.4f", fp.first.c_str(),
+                            f.x, f.y, f.z, f.t);
+        }
     }
-
     outfile->Printf("\n\n  ########## END OF ACTIVE-DSRGPT2 PRE-COMPUTATION ##########\n");
 }
 
@@ -775,7 +775,9 @@ double ACTIVE_DSRGPT2::compute_energy() {
                 }
             }
         }
-        print_osc();
+        if (multiplicity_ == 1) {
+            print_osc();
+        }
         print_summary();
 
         // set the last energy to Process:environment
