@@ -446,7 +446,7 @@ std::vector<std::vector<double>> DSRG_MRPT2::compute_energy_xms() {
             build_eff_oei();
 
             // build effective singles resulting from de-normal-ordering
-            build_eff_t1();
+            build_T1eff_deGNO();
 
             // compute couplings between states
             print_h2("Compute Couplings with State " + std::to_string(M));
@@ -592,11 +592,38 @@ SharedMatrix DSRG_MRPT2::xms_rotation(std::shared_ptr<FCIIntegrals> fci_ints,
     return rcivecs;
 }
 
-void DSRG_MRPT2::build_eff_t1() {
-    T1_["ia"] -= T2_["iuav"] * Gamma1_["vu"];
-    T1_["ia"] -= T2_["iUaV"] * Gamma1_["VU"];
-    T1_["IA"] -= T2_["uIvA"] * Gamma1_["vu"];
-    T1_["IA"] -= T2_["IUAV"] * Gamma1_["VU"];
+double DSRG_MRPT2::Tamp_deGNO() {
+    // de-normal-order T1
+    build_T1eff_deGNO();
+
+    double out = 0.0;
+    if (internal_amp_) {
+        // the scalar term of amplitudes when de-normal-ordering
+        out -= T1_["uv"] * Gamma1_["vu"];
+        out -= T1_["UV"] * Gamma1_["VU"];
+
+        out -= 0.25 * T2_["xyuv"] * Lambda2_["uvxy"];
+        out -= 0.25 * T2_["XYUV"] * Lambda2_["UVXY"];
+        out -= T2_["xYuV"] * Lambda2_["uVxY"];
+
+        out += 0.5 * T2_["xyuv"] * Gamma1_["ux"] * Gamma1_["vy"];
+        out += 0.5 * T2_["XYUV"] * Gamma1_["UX"] * Gamma1_["VY"];
+        out += T2_["xYuV"] * Gamma1_["ux"] * Gamma1_["VY"];
+    }
+
+    return out;
+}
+
+void DSRG_MRPT2::build_T1eff_deGNO() {
+    T1eff_ = BTF_->build(tensor_type_, "Effective T1 from de-GNO", spin_cases({"hp"}));
+
+    T1eff_["ia"] = T1_["ia"];
+    T1eff_["IA"] = T1_["IA"];
+
+    T1eff_["ia"] -= T2_["iuav"] * Gamma1_["vu"];
+    T1eff_["ia"] -= T2_["iUaV"] * Gamma1_["VU"];
+    T1eff_["IA"] -= T2_["uIvA"] * Gamma1_["vu"];
+    T1eff_["IA"] -= T2_["IUAV"] * Gamma1_["VU"];
 }
 
 double DSRG_MRPT2::compute_ms_1st_coupling(const std::string& name) {
@@ -625,16 +652,16 @@ double DSRG_MRPT2::compute_ms_2nd_coupling(const std::string& name) {
 
     // temp contract with D1
     BlockedTensor temp = BTF_->build(tensor_type_, "temp", spin_cases({"aa"}), true);
-    temp["vu"] += Hoei_["eu"] * T1_["ve"];
-    temp["VU"] += Hoei_["EU"] * T1_["VE"];
+    temp["vu"] += Hoei_["eu"] * T1eff_["ve"];
+    temp["VU"] += Hoei_["EU"] * T1eff_["VE"];
 
-    temp["vu"] -= Hoei_["vm"] * T1_["mu"];
-    temp["VU"] -= Hoei_["VM"] * T1_["MU"];
+    temp["vu"] -= Hoei_["vm"] * T1eff_["mu"];
+    temp["VU"] -= Hoei_["VM"] * T1eff_["MU"];
 
-    temp["vu"] += V_["avmu"] * T1_["ma"];
-    temp["vu"] += V_["vAuM"] * T1_["MA"];
-    temp["VU"] += V_["aVmU"] * T1_["ma"];
-    temp["VU"] += V_["AVMU"] * T1_["MA"];
+    temp["vu"] += V_["avmu"] * T1eff_["ma"];
+    temp["vu"] += V_["vAuM"] * T1eff_["MA"];
+    temp["VU"] += V_["aVmU"] * T1eff_["ma"];
+    temp["VU"] += V_["AVMU"] * T1eff_["MA"];
 
     temp["vu"] += Hoei_["am"] * T2_["mvau"];
     temp["vu"] += Hoei_["AM"] * T2_["vMuA"];
@@ -656,15 +683,15 @@ double DSRG_MRPT2::compute_ms_2nd_coupling(const std::string& name) {
 
     // temp contract with D2
     temp = BTF_->build(tensor_type_, "temp", spin_cases({"aaaa"}), true);
-    temp["xyuv"] += 0.5 * V_["eyuv"] * T1_["xe"];
-    temp["xYuV"] += V_["eYuV"] * T1_["xe"];
-    temp["xYuV"] += V_["xEuV"] * T1_["YE"];
-    temp["XYUV"] += 0.5 * V_["EYUV"] * T1_["XE"];
+    temp["xyuv"] += 0.5 * V_["eyuv"] * T1eff_["xe"];
+    temp["xYuV"] += V_["eYuV"] * T1eff_["xe"];
+    temp["xYuV"] += V_["xEuV"] * T1eff_["YE"];
+    temp["XYUV"] += 0.5 * V_["EYUV"] * T1eff_["XE"];
 
-    temp["xyuv"] += 0.5 * V_["xyvm"] * T1_["mu"];
-    temp["xYuV"] -= V_["xYmV"] * T1_["mu"];
-    temp["xYuV"] -= V_["xYuM"] * T1_["MV"];
-    temp["XYUV"] += 0.5 * V_["XYVM"] * T1_["MU"];
+    temp["xyuv"] += 0.5 * V_["xyvm"] * T1eff_["mu"];
+    temp["xYuV"] -= V_["xYmV"] * T1eff_["mu"];
+    temp["xYuV"] -= V_["xYuM"] * T1eff_["MV"];
+    temp["XYUV"] += 0.5 * V_["XYVM"] * T1eff_["MU"];
 
     temp["xyuv"] += 0.5 * Hoei_["eu"] * T2_["xyev"];
     temp["xYuV"] += Hoei_["eu"] * T2_["xYeV"];
@@ -915,6 +942,207 @@ void DSRG_MRPT2::compute_densities(std::shared_ptr<FCIIntegrals> fci_ints,
     L3aab.data() = tpdm_aab;
     L3abb.data() = tpdm_abb;
     L3bbb.data() = tpdm_bbb;
+}
+
+ambit::Tensor DSRG_MRPT2::trans_dipole_dens_block(const string& block_name) {
+    // test if block_name makes sense
+    bool found = TDeff_.is_block(block_name);
+
+    if (found) {
+        std::string name = "Eff. Trans. Dens. " + block_name;
+        ambit::Tensor tdeff =
+            ambit::Tensor::build(tensor_type_, name, TDeff_.block(block_name).dims());
+        tdeff("pq") = TDeff_.block(block_name)("pq");
+        return tdeff;
+    } else {
+        std::string error = "Block " + block_name + " is not found in BlockedTensor TDeff.";
+        throw PSIEXCEPTION(error);
+    }
+}
+
+double DSRG_MRPT2::compute_eff_trans_dens(const bool& transpose) {
+    // initialization
+    double scalar = 0.0;
+    TDeff_ = BTF_->build(tensor_type_, "Eff. Trans. Dens.", spin_cases({"hp"}));
+
+    // Note: Assume transition densities ALREADY passed to Gamma1_, Lambda2_ and Lambda3_
+
+    std::string uv = "uv", UV = "UV";
+    std::string uvxy = "uvxy", uVxY = "uVxY", vUyX = "vUyX", UVXY = "UVXY";
+    std::string uvwxyz = "uvwxyz", uvWxyZ = "uvWxyZ", uVWxYZ = "uVWxYZ";
+    std::string vwUyzX = "vwUyzX", vUWyXZ = "vUWyXZ", UVWXYZ = "UVWXYZ";
+
+    if (transpose) {
+        uv = "vu";
+        UV = "VU";
+
+        uvxy = "xyuv";
+        uVxY = "xYuV";
+        vUyX = "yXvU";
+        UVXY = "XYUV";
+
+        uvwxyz = "xyzuvw";
+        uvWxyZ = "xyZuvW";
+        uVWxYZ = "xYZuVW";
+        vwUyzX = "yzXvwU";
+        vUWyXZ = "yXZvUW";
+        UVWXYZ = "XYZUVW";
+    }
+
+    if (internal_amp_) {
+        scalar += T1eff_["vu"] * Gamma1_[uv];
+        scalar += T1eff_["VU"] * Gamma1_[UV];
+
+        scalar -= T1eff_["uv"] * Gamma1_[uv];
+        scalar -= T1eff_["UV"] * Gamma1_[UV];
+
+        scalar += 0.25 * T2_["xyuv"] * Lambda2_[uvxy];
+        scalar += 0.25 * T2_["XYUV"] * Lambda2_[UVXY];
+        scalar += T2_["xYuV"] * Lambda2_[uVxY];
+
+        scalar -= 0.25 * T2_["uvxy"] * Lambda2_[uvxy];
+        scalar -= 0.25 * T2_["UVXY"] * Lambda2_[UVXY];
+        scalar -= T2_["uVxY"] * Lambda2_[uVxY];
+
+        TDeff_["ux"] += T1eff_["vx"] * Gamma1_[uv];
+        TDeff_["UX"] += T1eff_["VX"] * Gamma1_[UV];
+
+        TDeff_["ux"] -= T1eff_["xv"] * Gamma1_[uv];
+        TDeff_["UX"] -= T1eff_["XV"] * Gamma1_[UV];
+
+        TDeff_["ux"] += T1eff_["yv"] * Lambda2_[uvxy];
+        TDeff_["ux"] += T1eff_["YV"] * Lambda2_[uVxY];
+        TDeff_["UX"] += T1eff_["yv"] * Lambda2_[vUyX];
+        TDeff_["UX"] += T1eff_["YV"] * Lambda2_[UVXY];
+
+        TDeff_["ux"] -= T1eff_["vy"] * Lambda2_[uvxy];
+        TDeff_["ux"] -= T1eff_["VY"] * Lambda2_[uVxY];
+        TDeff_["UX"] -= T1eff_["vy"] * Lambda2_[vUyX];
+        TDeff_["UX"] -= T1eff_["VY"] * Lambda2_[UVXY];
+
+        TDeff_["uz"] += 0.5 * T2_["xyzv"] * Lambda2_[uvxy];
+        TDeff_["uz"] += T2_["xYzV"] * Lambda2_[uVxY];
+        TDeff_["UZ"] += T2_["yXvZ"] * Lambda2_[vUyX];
+        TDeff_["UZ"] += 0.5 * T2_["XYZV"] * Lambda2_[UVXY];
+
+        TDeff_["uz"] -= 0.5 * T2_["zvxy"] * Lambda2_[uvxy];
+        TDeff_["uz"] -= T2_["zVxY"] * Lambda2_[uVxY];
+        TDeff_["UZ"] -= T2_["vZyX"] * Lambda2_[vUyX];
+        TDeff_["UZ"] -= 0.5 * T2_["ZVXY"] * Lambda2_[UVXY];
+
+        TDeff_["ux"] += 0.25 * T2_["yzvw"] * Lambda3_[uvwxyz];
+        TDeff_["ux"] += T2_["yZvW"] * Lambda3_[uvWxyZ];
+        TDeff_["ux"] += 0.25 * T2_["YZVW"] * Lambda3_[uVWxYZ];
+        TDeff_["UX"] += 0.25 * T2_["yzvw"] * Lambda3_[vwUyzX];
+        TDeff_["UX"] += T2_["yZvW"] * Lambda3_[vUWyXZ];
+        TDeff_["UX"] += 0.25 * T2_["YZVW"] * Lambda3_[UVWXYZ];
+
+        TDeff_["ux"] -= 0.25 * T2_["vwyz"] * Lambda3_[uvwxyz];
+        TDeff_["ux"] -= T2_["vWyZ"] * Lambda3_[uvWxyZ];
+        TDeff_["ux"] -= 0.25 * T2_["VWYZ"] * Lambda3_[uVWxYZ];
+        TDeff_["UX"] -= 0.25 * T2_["vwyz"] * Lambda3_[vwUyzX];
+        TDeff_["UX"] -= T2_["vWyZ"] * Lambda3_[vUWyXZ];
+        TDeff_["UX"] -= 0.25 * T2_["VWYZ"] * Lambda3_[UVWXYZ];
+    }
+
+    TDeff_["ue"] += T1eff_["ve"] * Gamma1_[uv];
+    TDeff_["UE"] += T1eff_["VE"] * Gamma1_[UV];
+
+    TDeff_["mv"] -= T1eff_["mu"] * Gamma1_[uv];
+    TDeff_["MV"] -= T1eff_["MU"] * Gamma1_[UV];
+
+    TDeff_["ma"] += T2_["mvau"] * Gamma1_[uv];
+    TDeff_["ma"] += T2_["mVaU"] * Gamma1_[UV];
+    TDeff_["MA"] += T2_["vMuA"] * Gamma1_[uv];
+    TDeff_["MA"] += T2_["MVAU"] * Gamma1_[UV];
+
+    TDeff_["ue"] += 0.5 * T2_["xyev"] * Lambda2_[uvxy];
+    TDeff_["ue"] += T2_["xYeV"] * Lambda2_[uVxY];
+    TDeff_["UE"] += T2_["yXvE"] * Lambda2_[vUyX];
+    TDeff_["UE"] += 0.5 * T2_["XYEV"] * Lambda2_[UVXY];
+
+    TDeff_["mx"] -= 0.5 * T2_["myuv"] * Lambda2_[uvxy];
+    TDeff_["mx"] -= T2_["mYuV"] * Lambda2_[uVxY];
+    TDeff_["MX"] -= T2_["yMvU"] * Lambda2_[vUyX];
+    TDeff_["MX"] -= 0.5 * T2_["MYUV"] * Lambda2_[UVXY];
+
+    return scalar;
+}
+
+void DSRG_MRPT2::set_gamma1(const std::vector<double>& opdm_a, const std::vector<double>& opdm_b) {
+    Gamma1_.block("aa").data() = opdm_a;
+    Gamma1_.block("AA").data() = opdm_b;
+}
+
+void DSRG_MRPT2::set_trans_dens(const std::vector<double>& td1a, const std::vector<double>& td1b,
+                                const std::vector<double>& td2aa, const std::vector<double>& td2ab,
+                                const std::vector<double>& td2bb, const std::vector<double>& td3aaa,
+                                const std::vector<double>& td3aab,
+                                const std::vector<double>& td3abb,
+                                const std::vector<double>& td3bbb) {
+    Gamma1_.block("aa").data() = td1a;
+    Gamma1_.block("AA").data() = td1b;
+
+    Lambda2_.block("aaaa").data() = td2aa;
+    Lambda2_.block("aAaA").data() = td2ab;
+    Lambda2_.block("AAAA").data() = td2bb;
+
+    Lambda3_.block("aaaaaa").data() = td3aaa;
+    Lambda3_.block("aaAaaA").data() = td3aab;
+    Lambda3_.block("aAAaAA").data() = td3abb;
+    Lambda3_.block("AAAAAA").data() = td3bbb;
+}
+
+std::map<std::string, ambit::Tensor> DSRG_MRPT2::T1_blocks(const std::vector<string>& blocks) {
+    std::map<std::string, ambit::Tensor> out;
+    for (const auto& block : blocks) {
+        if (T1_.is_block(block)) {
+            ambit::Tensor t = ambit::Tensor::build(tensor_type_, block, T1_.block(block).dims());
+            t("pq") = T1_.block(block)("pq");
+            out[block] = t;
+        } else {
+            outfile->Printf("\n  Error from T1_blocks: block %s not found in T1.", block.c_str());
+        }
+    }
+    return out;
+}
+
+std::map<std::string, ambit::Tensor> DSRG_MRPT2::T2_blocks(const std::vector<string>& blocks) {
+    std::map<std::string, ambit::Tensor> out;
+    for (const auto& block : blocks) {
+        if (T2_.is_block(block)) {
+            ambit::Tensor t = ambit::Tensor::build(tensor_type_, block, T2_.block(block).dims());
+            t("pqrs") = T2_.block(block)("pqrs");
+            out[block] = t;
+        } else {
+            outfile->Printf("\n  Error from T2_blocks: block %s not found in T2.", block.c_str());
+        }
+    }
+    return out;
+}
+
+void DSRG_MRPT2::set_T1_blocks(const std::map<std::string, ambit::Tensor>& blocks_to_tensors) {
+    for (const auto& x : blocks_to_tensors) {
+        std::string block = x.first;
+        if (T1_.is_block(block)) {
+            T1_.block(block)("pq") = x.second("pq");
+        } else {
+            outfile->Printf("\n  Error from set_T1_blocks: block %s not found in T1.",
+                            block.c_str());
+        }
+    }
+}
+
+void DSRG_MRPT2::set_T2_blocks(const std::map<std::string, ambit::Tensor>& blocks_to_tensors) {
+    for (const auto& x : blocks_to_tensors) {
+        std::string block = x.first;
+        if (T2_.is_block(block)) {
+            T2_.block(block)("pqrs") = x.second("pqrs");
+        } else {
+            outfile->Printf("\n  Error from set_T2_blocks: block %s not found in T2.",
+                            block.c_str());
+        }
+    }
 }
 }
 }
