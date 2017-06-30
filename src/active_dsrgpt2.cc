@@ -559,29 +559,6 @@ double ACTIVE_DSRGPT2::compute_energy() {
                                           "CAVA", "CAAA", "AAVA", "aAaA", "cAvA",
                                           "aCaV", "cAaA", "aCaA", "aAvA", "aAaV"};
 
-        //        std::map<std::string, ambit::Tensor> T1_block_g;
-        //        std::map<std::string, ambit::Tensor> T2_block_g;
-
-        //        std::map<std::string, ambit::Tensor> TDeff;
-        //        std::vector<std::string> TDblocks{"aa", "AA", "av", "AV", "ca", "CA", "cv", "CV"};
-
-        //        std::vector<double> opdm_a_g, opdm_b_g;
-
-        //        // obtain absolute indices
-        //        std::map<char, std::vector<std::pair<size_t, size_t>>> space_rel_idx;
-        //        space_rel_idx['c'] = mo_space_info_->get_relative_mo("RESTRICTED_DOCC");
-        //        space_rel_idx['a'] = mo_space_info_->get_relative_mo("ACTIVE");
-        //        space_rel_idx['v'] = mo_space_info_->get_relative_mo("RESTRICTED_UOCC");
-
-        //        std::map<char, std::vector<std::vector<size_t>>> space_C1_idx;
-        //        space_C1_idx['c'] = coreIdxC1_;
-        //        space_C1_idx['a'] = actvIdxC1_;
-        //        space_C1_idx['v'] = virtIdxC1_;
-
-        //        Dimension frzcDim = mo_space_info_->get_dimension("FROZEN_DOCC");
-        //        Dimension coreDim = mo_space_info_->get_dimension("RESTRICTED_DOCC");
-        //        Dimension actvDim = mo_space_info_->get_dimension("ACTIVE");
-
         // real computation
         for (int h = 0; h < nirrep; ++h) {
             if (nrootpi_[h] == 0) {
@@ -735,8 +712,8 @@ double ACTIVE_DSRGPT2::compute_energy() {
                             dsrg->rotate_amp(Uaorbs_[h][i_real], Uborbs_[h][i_real], true, true);
 
                             // copy rotated amplitudes (T1deGNO, T2)
-                            ambit::BlockedTensor T1temp = dsrg->T1deGNO(T1blocks);
-                            ambit::BlockedTensor T2temp = dsrg->T2(T2blocks);
+                            T1 = dsrg->T1deGNO(T1blocks);
+                            T2 = dsrg->T2(T2blocks);
 
                             if (gs) {
                                 Tde_g = Tde;
@@ -744,258 +721,13 @@ double ACTIVE_DSRGPT2::compute_energy() {
                                                                     T1blocks);
                                 T2_g_ = ambit::BlockedTensor::build(ambit::CoreTensor, "T2_g",
                                                                     T2blocks);
-                                T1_g_["ia"] = T1temp["ia"];
-                                T1_g_["IA"] = T1temp["IA"];
-                                T2_g_["ijab"] = T2temp["ijab"];
-                                T2_g_["iJaB"] = T2temp["iJaB"];
-                                T2_g_["IJAB"] = T2temp["IJAB"];
-                            } else {
-                                T1 = ambit::BlockedTensor::build(ambit::CoreTensor, "T1_x",
-                                                                 T1blocks);
-                                T2 = ambit::BlockedTensor::build(ambit::CoreTensor, "T2_x",
-                                                                 T2blocks);
-                                T1["ia"] = T1temp["ia"];
-                                T1["IA"] = T1temp["IA"];
-                                T2["ijab"] = T2temp["ijab"];
-                                T2["iJaB"] = T2temp["iJaB"];
-                                T2["IJAB"] = T2temp["IJAB"];
+                                T1_g_["ia"] = T1["ia"];
+                                T1_g_["IA"] = T1["IA"];
+                                T2_g_["ijab"] = T2["ijab"];
+                                T2_g_["iJaB"] = T2["iJaB"];
+                                T2_g_["IJAB"] = T2["IJAB"];
                             }
-
-                            //                            if (gs) {
-                            //                                T1_block_g =
-                            //                                dsrg->T1_blocks(T1blocks);
-                            //                                T2_block_g =
-                            //                                dsrg->T2_blocks(T2blocks);
-
-                            //                                // recompute 1-density
-                            //                                CI_RDMS ci_rdms(options_,
-                            //                                fci_mo_->fci_ints_,
-                            //                                fci_mo_->p_space(),
-                            //                                                ref_wfns_[0], 0, 0);
-                            //                                size_t na =
-                            //                                mo_space_info_->size("ACTIVE");
-                            //                                size_t na2 = na * na;
-                            //                                opdm_a_g = vector<double>(na2, 0.0);
-                            //                                opdm_b_g = vector<double>(na2, 0.0);
-                            //                                ci_rdms.compute_1rdm(opdm_a_g,
-                            //                                opdm_b_g);
-                            //                            }
                         }
-
-                        //                        if (h == 0 && i == 0) {
-                        //                            Tde_g = Tde;
-                        //                        } else {
-
-                        //                            if (h == 0) {
-
-                        //                            } else {
-                        //                                std::vector<STLBitsetDeterminant>
-                        //                                p_space(p_space_g_);
-                        //                                std::vector<STLBitsetDeterminant> p_space1
-                        //                                = fci_mo_->p_space();
-                        //                                p_space.insert(p_space.end(),
-                        //                                p_space1.begin(), p_space1.end());
-
-                        //                                SharedMatrix evecs = combine_evecs(0, h);
-
-                        //                                size_t na =
-                        //                                mo_space_info_->size("ACTIVE");
-                        //                                size_t na2 = na * na;
-                        //                                size_t na4 = na2 * na2;
-                        //                                size_t na6 = na4 * na2;
-                        //                                vector<double> opdm_a(na2, 0.0);
-                        //                                vector<double> opdm_b(na2, 0.0);
-                        //                                vector<double> tpdm_aa(na4, 0.0);
-                        //                                vector<double> tpdm_ab(na4, 0.0);
-                        //                                vector<double> tpdm_bb(na4, 0.0);
-                        //                                vector<double> tpdm_aaa(na6, 0.0);
-                        //                                vector<double> tpdm_aab(na6, 0.0);
-                        //                                vector<double> tpdm_abb(na6, 0.0);
-                        //                                vector<double> tpdm_bbb(na6, 0.0);
-
-                        //                                CI_RDMS ci_rdms(options_,
-                        //                                fci_mo_->fci_ints_, p_space, evecs,
-                        //                                                i + nrootpi_[0], 0);
-                        //                                ci_rdms.compute_1rdm(opdm_a, opdm_b);
-                        //                                ci_rdms.compute_2rdm(tpdm_aa, tpdm_ab,
-                        //                                tpdm_bb);
-                        //                                ci_rdms.compute_3rdm(tpdm_aaa, tpdm_aab,
-                        //                                tpdm_abb, tpdm_bbb);
-
-                        //                                dsrg->set_trans_dens(opdm_a, opdm_b,
-                        //                                tpdm_aa, tpdm_ab, tpdm_bb,
-                        //                                                     tpdm_aaa, tpdm_aab,
-                        //                                                     tpdm_abb, tpdm_bbb);
-
-                        //                                // compute (Ax)^+ * mu; Ax: excited state
-                        //                                double mud_x =
-                        //                                dsrg->compute_eff_trans_dens(true);
-                        //                                for (const std::string& block : TDblocks)
-                        //                                {
-                        //                                    TDeff[block] =
-                        //                                    dsrg->trans_dipole_dens_block(block);
-                        //                                }
-
-                        //                                // compute mu * Ag; Ag: ground state
-                        //                                dsrg->set_T1_blocks(T1_block_g);
-                        //                                dsrg->set_T2_blocks(T2_block_g);
-                        //                                dsrg->set_gamma1(opdm_a_g, opdm_b_g);
-                        //                                dsrg->Tamp_deGNO();
-                        //                                dsrg->set_trans_dens(opdm_a, opdm_b,
-                        //                                tpdm_aa, tpdm_ab, tpdm_bb,
-                        //                                                     tpdm_aaa, tpdm_aab,
-                        //                                                     tpdm_abb, tpdm_bbb);
-                        //                                double mud_g =
-                        //                                dsrg->compute_eff_trans_dens(false);
-                        //                                for (const std::string& block : TDblocks)
-                        //                                {
-                        //                                    TDeff[block]("pq") +=
-                        //                                    dsrg->trans_dipole_dens_block(block)("pq");
-                        //                                }
-
-                        //                                // put TDeff into SharedMatrix form (spin
-                        //                                summed)
-                        //                                size_t nmo = modipole_ints_[0]->nrow();
-                        //                                SharedMatrix MOtransD(new Matrix("MO
-                        //                                TransD", nmo, nmo));
-                        //                                for (const std::string& block : TDblocks)
-                        //                                {
-                        //                                    char c0 = tolower(block[0]);
-                        //                                    char c1 = tolower(block[1]);
-
-                        //                                    std::vector<std::pair<size_t, size_t>>
-                        //                                    relIdx0 =
-                        //                                        space_rel_idx[c0];
-                        //                                    std::vector<std::pair<size_t, size_t>>
-                        //                                    relIdx1 =
-                        //                                        space_rel_idx[c1];
-
-                        //                                    TDeff[block].iterate(
-                        //                                        [&](const std::vector<size_t>&
-                        //                                        idx, double& value) {
-                        //                                            size_t h0 =
-                        //                                            relIdx0[idx[0]].first;
-                        //                                            size_t h1 =
-                        //                                            relIdx1[idx[1]].first;
-
-                        //                                            size_t offset0 = 0.0, offset1
-                        //                                            = 0.0;
-                        //                                            if (c0 == 'c') {
-                        //                                                offset0 -= frzcDim[h0];
-                        //                                            } else if (c0 == 'a') {
-                        //                                                offset0 -= frzcDim[h0] +
-                        //                                                coreDim[h0];
-                        //                                            } else {
-                        //                                                offset0 -= frzcDim[h0] +
-                        //                                                coreDim[h0] + actvDim[h0];
-                        //                                            }
-
-                        //                                            if (c1 == 'c') {
-                        //                                                offset1 -= frzcDim[h1];
-                        //                                            } else if (c1 == 'a') {
-                        //                                                offset1 -= frzcDim[h1] +
-                        //                                                coreDim[h1];
-                        //                                            } else {
-                        //                                                offset1 -= frzcDim[h1] +
-                        //                                                coreDim[h1] + actvDim[h1];
-                        //                                            }
-
-                        //                                            size_t ri0 =
-                        //                                            relIdx0[idx[0]].second +
-                        //                                            offset0;
-                        //                                            size_t ri1 =
-                        //                                            relIdx1[idx[1]].second +
-                        //                                            offset1;
-
-                        //                                            size_t n0 =
-                        //                                            space_C1_idx[c0][h0][ri0];
-                        //                                            size_t n1 =
-                        //                                            space_C1_idx[c1][h1][ri1];
-
-                        //                                            MOtransD->add(n0, n1, value);
-                        //                                        });
-                        //                                }
-
-                        //                                // contract with MO dipole integrals
-                        //                                Vector4 transD;
-                        //                                transD.x =
-                        //                                MOtransD->vector_dot(modipole_ints_[0]);
-                        //                                transD.y =
-                        //                                MOtransD->vector_dot(modipole_ints_[1]);
-                        //                                transD.z =
-                        //                                MOtransD->vector_dot(modipole_ints_[2]);
-                        //                                transD.t = 0.0;
-                        //                                outfile->Printf("\n  sym: %d, root: %d,
-                        //                                tdX : % .6f, tdY : %.6f, "
-                        //                                                "tdZ: %.6f, tdT: %.6f",
-                        //                                                h, i, transD.x, transD.y,
-                        //                                                transD.z, transD.t);
-
-                        //                                // compute diagonal contribution
-                        //                                // sum_{m} mu^{m}_{m} * tc, where tc is a
-                        //                                scalar from T * TD
-                        //                                std::vector<double> mud_core(3, 0.0);
-                        //                                for (int dir = 0; dir < 3; ++dir) {
-                        //                                    double mu = 0.0;
-                        //                                    for (const auto& p :
-                        //                                    space_rel_idx['c']) {
-                        //                                        size_t h = p.first;
-                        //                                        size_t m = p.second - frzcDim[h];
-                        //                                        size_t idx =
-                        //                                        space_C1_idx['c'][h][m];
-                        //                                        mu +=
-                        //                                        modipole_ints_[dir]->get(idx,
-                        //                                        idx);
-                        //                                    }
-                        //                                    mu *= mud_g + mud_x;
-
-                        //                                    mud_core[dir] = mu;
-                        //                                }
-                        //                                transD.x += mud_core[0];
-                        //                                transD.y += mud_core[1];
-                        //                                transD.z += mud_core[2];
-
-                        //                                // add zeroth-order transition density
-                        //                                std::string name = transition_type(0, 0,
-                        //                                i, h);
-                        //                                transD.x += tdipole_ref_[name].x * (1.0 +
-                        //                                Tde + Tde_g);
-                        //                                transD.y += tdipole_ref_[name].y * (1.0 +
-                        //                                Tde + Tde_g);
-                        //                                transD.z += tdipole_ref_[name].z * (1.0 +
-                        //                                Tde + Tde_g);
-                        //                                outfile->Printf("\n%s, scale = %.12f",
-                        //                                name.c_str(),
-                        //                                                1.0 + Tde + Tde_g);
-
-                        //                                transD.t = sqrt(transD.x * transD.x +
-                        //                                transD.y * transD.y +
-                        //                                                transD.z * transD.z);
-
-                        //                                // compute oscillator strength
-                        //                                double Eexcited = Ept2 -
-                        //                                pt_energies_[0][0];
-                        //                                Vector4 osc;
-                        //                                osc.x = 2.0 / 3.0 * Eexcited * transD.x *
-                        //                                transD.x;
-                        //                                osc.y = 2.0 / 3.0 * Eexcited * transD.y *
-                        //                                transD.y;
-                        //                                osc.z = 2.0 / 3.0 * Eexcited * transD.z *
-                        //                                transD.z;
-                        //                                osc.t = osc.x + osc.y + osc.z;
-
-                        //                                outfile->Printf("\n  sym: %d, root: %d,
-                        //                                tdX : % .6f, tdY : %.6f, "
-                        //                                                "tdZ: %.6f, tdT: %.6f",
-                        //                                                h, i, transD.x, transD.y,
-                        //                                                transD.z, transD.t);
-                        //                                outfile->Printf("\n  sym: %d, root: %d,
-                        //                                oscX : % .6f, oscY : %.6f, "
-                        //                                                "oscZ: %.6f, oscT: %.6f",
-                        //                                                h, i, osc.x, osc.y, osc.z,
-                        //                                                osc.t);
-                        //                            }
-                        //                        }
                     } else {
                         std::shared_ptr<THREE_DSRG_MRPT2> dsrg = std::make_shared<THREE_DSRG_MRPT2>(
                             reference, reference_wavefunction_, options_, ints_, mo_space_info_);
@@ -1003,26 +735,42 @@ double ACTIVE_DSRGPT2::compute_energy() {
                         dsrg->set_actv_occ(fci_mo_->actv_occ());
                         dsrg->set_actv_uocc(fci_mo_->actv_uocc());
                         Ept2 = dsrg->compute_energy();
+
+                        if (gs || do_osc) {
+                            // obtain the scalar term of de-normal-ordered amplitudes
+                            // before rotate amplitudes because the density will not be rotated
+                            Tde = dsrg->Tamp_deGNO();
+
+                            // rotate amplitudes from semicanonical to original basis
+                            // PS: rotated T1, T1deGNO, and T2
+                            dsrg->rotate_amp(Uaorbs_[h][i_real], Uborbs_[h][i_real], true, true);
+
+                            // copy rotated amplitudes (T1deGNO, T2)
+                            T1 = dsrg->T1deGNO(T1blocks);
+                            T2 = dsrg->T2(T2blocks);
+
+                            if (gs) {
+                                Tde_g = Tde;
+                                T1_g_ = ambit::BlockedTensor::build(ambit::CoreTensor, "T1_g",
+                                                                    T1blocks);
+                                T2_g_ = ambit::BlockedTensor::build(ambit::CoreTensor, "T2_g",
+                                                                    T2blocks);
+                                T1_g_["ia"] = T1["ia"];
+                                T1_g_["IA"] = T1["IA"];
+                                T2_g_["ijab"] = T2["ijab"];
+                                T2_g_["iJaB"] = T2["iJaB"];
+                                T2_g_["IJAB"] = T2["IJAB"];
+                            }
+                        }
                     }
                     pt_energies_[h].push_back(Ept2);
 
-                    // if this state is ground state, copy amplitudes to private variables
-                    //                    if (gs) {
-                    //                        Tde_g = Tde;
-                    //                        T1_g_ = ambit::BlockedTensor::build(ambit::CoreTensor,
-                    //                        "T1_g", T1blocks);
-                    //                        T2_g_ = ambit::BlockedTensor::build(ambit::CoreTensor,
-                    //                        "T2_g", T2blocks);
-                    //                        T1_g_["ia"] = T1["ia"];
-                    //                        T1_g_["IA"] = T1["IA"];
-                    //                        T2_g_["ijab"] = T2["ijab"];
-                    //                        T2_g_["iJaB"] = T2["iJaB"];
-                    //                        T2_g_["IJAB"] = T2["IJAB"];
-                    //                    }
-
                     // if the reference oscillator strength is nonzero
                     if (do_osc) {
+                        outfile->Printf("\n  Computing V%s-DSRG-PT2 oscillator strength ... ",
+                                        ref_type_.c_str());
                         compute_osc_pt2(h, i_real, Tde, T1, T2);
+                        outfile->Printf("Done.");
                     }
                 }
             }
@@ -1079,7 +827,7 @@ void ACTIVE_DSRGPT2::compute_osc_pt2(const int& irrep, const int& root, const do
     std::vector<double> tpdm_bbb(na6, 0.0);
     ci_rdms.compute_3rdm(tpdm_aaa, tpdm_aab, tpdm_abb, tpdm_bbb);
 
-    // step 3: turn transition rdms into BlockedTensor format
+    // step 3: translate transition rdms into BlockedTensor format
     ambit::BlockedTensor TD1 =
         ambit::BlockedTensor::build(ambit::CoreTensor, "TD1", spin_cases({"aa"}));
     TD1.block("aa").data() = opdm_a;
@@ -1618,7 +1366,8 @@ void ACTIVE_DSRGPT2::print_summary() {
             outfile->Printf("\n      nAP:   Mulliken symbol of n-th Active Particle orbital");
             outfile->Printf("\n      <r^2>: orbital extent of the nAP orbital in a.u.");
             outfile->Printf("\n      S/D:   single/double excitation");
-            outfile->Printf("\n    NOTE: m and n are ZERO based ACTIVE indices (NO core orbitals)!");
+            outfile->Printf(
+                "\n    NOTE: m and n are ZERO based ACTIVE indices (NO core orbitals)!");
         }
     }
 }

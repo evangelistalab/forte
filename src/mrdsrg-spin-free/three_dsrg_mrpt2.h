@@ -80,6 +80,21 @@ class THREE_DSRG_MRPT2 : public Wavefunction {
         actv_uocc_mos_ = std::vector<size_t>(actv_uocc);
     }
 
+    /// Compute de-normal-ordered amplitudes and return the scalar term
+    double Tamp_deGNO();
+
+    /// Return a BlockedTensor of T1 amplitudes
+    ambit::BlockedTensor T1(const std::vector<std::string>& blocks);
+    /// Return a BlockedTensor of de-normal-ordered T1 amplitudes
+    ambit::BlockedTensor T1deGNO(const std::vector<std::string>& blocks);
+    /// Return a BlockedTensor of T2 amplitudes
+    ambit::BlockedTensor T2(const std::vector<std::string>& blocks);
+
+    /// Rotate orbital basis for amplitudes according to unitary matrix U
+    /// @param U unitary matrix from FCI_MO (INCLUDES frozen orbitals)
+    void rotate_amp(SharedMatrix Ua, SharedMatrix Ub, const bool& transpose = false,
+                    const bool& t1eff = false);
+
   protected:
     // => Class data <= //
 
@@ -91,6 +106,9 @@ class THREE_DSRG_MRPT2 : public Wavefunction {
 
     /// The frozen-core energy
     double frozen_core_energy_;
+
+    /// Include internal amplitudes or not
+    bool internal_amp_;
 
     /// The molecular integrals required by MethodBase
     std::shared_ptr<ForteIntegrals> ints_;
@@ -172,16 +190,18 @@ class THREE_DSRG_MRPT2 : public Wavefunction {
     ambit::BlockedTensor Delta1_;
     ambit::BlockedTensor RDelta1_;
     ambit::BlockedTensor T1_;
-    ambit::BlockedTensor
-        RExp1_; // < one-particle exponential for renormalized Fock matrix
+    ambit::BlockedTensor T1eff_;
+    // one-particle exponential for renormalized Fock matrix
     // These three are defined as member variables, but if integrals use DiskDF,
     // these are not to be computed for the entire code
+    ambit::BlockedTensor RExp1_;
     ambit::BlockedTensor T2_;
     ambit::BlockedTensor V_;
     ambit::BlockedTensor ThreeIntegral_;
     ambit::BlockedTensor H0_;
     ambit::BlockedTensor Hbar1_;
     ambit::BlockedTensor Hbar2_;
+
 
     /// A vector of strings that avoids creating ccvv indices
     std::vector<std::string> no_hhpp_;
