@@ -55,8 +55,8 @@ class THREE_DSRG_MRPT2 : public Wavefunction {
      * @param ints A pointer to an allocated integral object
      * @param mo_space_info The MOSpaceInfo object
      */
-    THREE_DSRG_MRPT2(Reference reference, SharedWavefunction ref_wfn,
-                     Options& options, std::shared_ptr<ForteIntegrals> ints,
+    THREE_DSRG_MRPT2(Reference reference, SharedWavefunction ref_wfn, Options& options,
+                     std::shared_ptr<ForteIntegrals> ints,
                      std::shared_ptr<MOSpaceInfo> mo_space_info);
 
     /// Destructor
@@ -202,7 +202,6 @@ class THREE_DSRG_MRPT2 : public Wavefunction {
     ambit::BlockedTensor Hbar1_;
     ambit::BlockedTensor Hbar2_;
 
-
     /// A vector of strings that avoids creating ccvv indices
     std::vector<std::string> no_hhpp_;
 
@@ -219,13 +218,11 @@ class THREE_DSRG_MRPT2 : public Wavefunction {
 
     /// compute the minimal amount of T2 for each term
     /// The spaces correspond to all the blocks you want to use
-    ambit::BlockedTensor
-    compute_T2_minimal(const std::vector<std::string>& spaces);
+    ambit::BlockedTensor compute_T2_minimal(const std::vector<std::string>& spaces);
     /// compute ASTEI from DF/CD integrals
     /// function will take the spaces for V and use that to create the blocks
     /// for B
-    ambit::BlockedTensor
-    compute_B_minimal(const std::vector<std::string>& Vspaces);
+    ambit::BlockedTensor compute_B_minimal(const std::vector<std::string>& Vspaces);
 
     /// Computes the t1 amplitudes for three different cases of spin (alpha all,
     /// beta all, and alpha beta)
@@ -242,9 +239,7 @@ class THREE_DSRG_MRPT2 : public Wavefunction {
     /// Renormalize Fock matrix and two-electron integral
     void renormalize_F();
     void renormalize_V();
-    double renormalized_exp(double D) {
-        return std::exp(-s_ * std::pow(D, 2.0));
-    }
+    double renormalized_exp(double D) { return std::exp(-s_ * std::pow(D, 2.0)); }
 
     /// Compute DSRG-PT2 correlation energy - Group of functions to calculate
     /// individual pieces of energy
@@ -288,27 +283,27 @@ class THREE_DSRG_MRPT2 : public Wavefunction {
     double Hbar0_ = 0.0;
 
     /// Compute one-body term of commutator [H1, T1]
-    void H1_T1_C1(ambit::BlockedTensor& H1, ambit::BlockedTensor& T1,
-                  const double& alpha, ambit::BlockedTensor& C1);
+    void H1_T1_C1(ambit::BlockedTensor& H1, ambit::BlockedTensor& T1, const double& alpha,
+                  ambit::BlockedTensor& C1);
     /// Compute one-body term of commutator [H1, T2]
-    void H1_T2_C1(ambit::BlockedTensor& H1, ambit::BlockedTensor& T2,
-                  const double& alpha, ambit::BlockedTensor& C1);
+    void H1_T2_C1(ambit::BlockedTensor& H1, ambit::BlockedTensor& T2, const double& alpha,
+                  ambit::BlockedTensor& C1);
     /// Compute one-body term of commutator [H2, T1]
-    void H2_T1_C1(ambit::BlockedTensor& H2, ambit::BlockedTensor& T1,
-                  const double& alpha, ambit::BlockedTensor& C1);
+    void H2_T1_C1(ambit::BlockedTensor& H2, ambit::BlockedTensor& T1, const double& alpha,
+                  ambit::BlockedTensor& C1);
     /// Compute one-body term of commutator [H2, T2]
-    void H2_T2_C1(ambit::BlockedTensor& H2, ambit::BlockedTensor& T2,
-                  const double& alpha, ambit::BlockedTensor& C1);
+    void H2_T2_C1(ambit::BlockedTensor& H2, ambit::BlockedTensor& T2, const double& alpha,
+                  ambit::BlockedTensor& C1);
 
     /// Compute two-body term of commutator [H2, T1]
-    void H2_T1_C2(ambit::BlockedTensor& H2, ambit::BlockedTensor& T1,
-                  const double& alpha, ambit::BlockedTensor& C2);
+    void H2_T1_C2(ambit::BlockedTensor& H2, ambit::BlockedTensor& T1, const double& alpha,
+                  ambit::BlockedTensor& C2);
     /// Compute two-body term of commutator [H1, T2]
-    void H1_T2_C2(ambit::BlockedTensor& H1, ambit::BlockedTensor& T2,
-                  const double& alpha, ambit::BlockedTensor& C2);
+    void H1_T2_C2(ambit::BlockedTensor& H1, ambit::BlockedTensor& T2, const double& alpha,
+                  ambit::BlockedTensor& C2);
     /// Compute two-body term of commutator [H2, T2]
-    void H2_T2_C2(ambit::BlockedTensor& H2, ambit::BlockedTensor& T2,
-                  const double& alpha, ambit::BlockedTensor& C2);
+    void H2_T2_C2(ambit::BlockedTensor& H2, ambit::BlockedTensor& T2, const double& alpha,
+                  ambit::BlockedTensor& C2);
 
     void de_normal_order();
 
@@ -346,14 +341,12 @@ class THREE_DSRG_MRPT2 : public Wavefunction {
     /// Unitary matrix to block diagonal Fock
     ambit::BlockedTensor U_;
     /// Diagonalize the diagonal blocks of the Fock matrix
-    std::vector<std::vector<double>>
-    diagonalize_Fock_diagblocks(ambit::BlockedTensor& U);
+    std::vector<std::vector<double>> diagonalize_Fock_diagblocks(ambit::BlockedTensor& U);
     /// Separate an 2D ambit::Tensor according to its irrep
-    ambit::Tensor separate_tensor(ambit::Tensor& tens, const Dimension& irrep,
-                                  const int& h);
+    ambit::Tensor separate_tensor(ambit::Tensor& tens, const Dimension& irrep, const int& h);
     /// Combine a separated 2D ambit::Tensor
-    void combine_tensor(ambit::Tensor& tens, ambit::Tensor& tens_h,
-                        const Dimension& irrep, const int& h);
+    void combine_tensor(ambit::Tensor& tens, ambit::Tensor& tens_h, const Dimension& irrep,
+                        const int& h);
 
   private:
     // maximum number of threads
