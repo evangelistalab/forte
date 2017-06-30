@@ -4357,7 +4357,7 @@ ambit::BlockedTensor THREE_DSRG_MRPT2::T2(const std::vector<string>& blocks) {
 }
 
 void THREE_DSRG_MRPT2::rotate_amp(SharedMatrix Ua, SharedMatrix Ub, const bool& transpose,
-                            const bool& t1eff) {
+                                  const bool& t1eff) {
     ambit::BlockedTensor U = BTF_->build(tensor_type_, "Uorb", spin_cases({"gg"}));
 
     std::map<char, std::vector<std::pair<size_t, size_t>>> space_to_relmo;
