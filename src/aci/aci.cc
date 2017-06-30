@@ -149,6 +149,10 @@ void set_ACI_options(ForteOptions& foptions) {
 
     /*- Compute unpaired electron density -*/
     foptions.add_bool("UNPAIRED_DENSITY", false, "Compute unpaired electron density");
+
+    /*- Add all active singles -*/
+    foptions.add_bool("ACI_ADD_SINGLES", false,
+                      "Adds all active single excitations to the final wave function");
 }
 
 bool pairComp(const std::pair<double, STLBitsetDeterminant> E1,
@@ -164,6 +168,7 @@ AdaptiveCI::AdaptiveCI(SharedWavefunction ref_wfn, Options& options,
     shallow_copy(ref_wfn);
     reference_wavefunction_ = ref_wfn;
 
+    mo_symmetry_ = mo_space_info_->symmetry("ACTIVE");
     op_.initialize(mo_symmetry_);
     startup();
 }
@@ -198,24 +203,6 @@ void AdaptiveCI::startup() {
 
     set_aci_ints(reference_wavefunction_, ints_);
 
-    // fci_ints_ = std::make_shared<FCIIntegrals>(
-    //     ints_, mo_space_info_->get_corr_abs_mo("ACTIVE"),
-    //     mo_space_info_->get_corr_abs_mo("RESTRICTED_DOCC"));
-
-    // auto active_mo = mo_space_info_->get_corr_abs_mo("ACTIVE");
-    // ambit::Tensor tei_active_aa =
-    //     ints_->aptei_aa_block(active_mo, active_mo, active_mo, active_mo);
-    // ambit::Tensor tei_active_ab =
-    //     ints_->aptei_ab_block(active_mo, active_mo, active_mo, active_mo);
-    // ambit::Tensor tei_active_bb =
-    //     ints_->aptei_bb_block(active_mo, active_mo, active_mo, active_mo);
-    // fci_ints_->set_active_integrals(tei_active_aa, tei_active_ab,
-    //                                 tei_active_bb);
-    // fci_ints_->compute_restricted_one_body_operator();
-
-    // STLBitsetDeterminant::set_ints(fci_ints_);
-
-    // Get wfn info
     wavefunction_symmetry_ = 0;
     if (options_["ROOT_SYM"].has_changed()) {
         wavefunction_symmetry_ = options_.get_int("ROOT_SYM");
@@ -253,22 +240,20 @@ void AdaptiveCI::startup() {
     nalpha_ = (nactel_ + twice_ms_) / 2;
     nbeta_ = nactel_ - nalpha_;
 
-    mo_symmetry_ = mo_space_info_->symmetry("ACTIVE");
-
     STLBitsetDeterminant det;
 
     // Build the reference determinant and compute its energy
 
-    if (options_.get_str("ACI_INITIAL_SPACE") == "HF" or
-        options_.get_str("ACI_INITIAL_SPACE") == "CIS" or
-        options_.get_str("ACI_INITIAL_SPACE") == "CISD") {
-        det = STLBitsetDeterminant(get_occupation());
-        initial_reference_.push_back(det);
-    } else {
-        CI_Reference ref(reference_wavefunction_, options_, mo_space_info_, det, multiplicity_,
-                         twice_ms_, wavefunction_symmetry_);
-        ref.build_reference(initial_reference_);
-    }
+    //    if (options_.get_str("ACI_INITIAL_SPACE") == "HF" or
+    //        options_.get_str("ACI_INITIAL_SPACE") == "CIS" or
+    //        options_.get_str("ACI_INITIAL_SPACE") == "CISD") {
+    //        det = STLBitsetDeterminant(get_occupation());
+    //        initial_reference_.push_back(det);
+    //    } else {
+    CI_Reference ref(reference_wavefunction_, options_, mo_space_info_, det, multiplicity_,
+                     twice_ms_, wavefunction_symmetry_);
+    ref.build_reference(initial_reference_);
+    //    }
 
     // Read options
     nroot_ = options_.get_int("ACI_NROOT");
@@ -306,10 +291,10 @@ void AdaptiveCI::startup() {
     approx_rdm_ = options_.get_bool("ACI_APPROXIMATE_RDM");
     print_weights_ = options_.get_bool("ACI_PRINT_WEIGHTS");
 
-    reference_type_ = "SR";
-    if (options_["ACI_INITIAL_SPACE"].has_changed()) {
-        reference_type_ = options_.get_str("ACI_INITIAL_SPACE");
-    }
+    //   reference_type_ = "SR";
+    //   if (options_["ACI_INITIAL_SPACE"].has_changed()) {
+    //       reference_type_ = options_.get_str("ACI_INITIAL_SPACE");
+    //   }
 
     diag_method_ = DLString;
     if (options_["DIAG_ALGORITHM"].has_changed()) {
@@ -396,194 +381,7 @@ void AdaptiveCI::print_info() {
     outfile->Flush();
 }
 
-std::vector<int> AdaptiveCI::get_occupation() {
-
-    std::vector<int> occupation(2 * nact_, 0);
-
-    // Get reference type
-    std::string ref_type = options_.get_str("REFERENCE");
-    // if(!quiet_mode_) outfile->Printf("\n  Using %s reference.\n",
-    // ref_type.c_str());
-
-    // nyms denotes the number of electrons needed to assign symmetry and
-    // multiplicity
-    int nsym = twice_ms_;
-    int orb_sym = wavefunction_symmetry_;
-
-    if (twice_ms_ == 0.0) {
-        nsym = 2;
-    }
-
-    // Grab an ordered list of orbital energies, sym labels, and idxs
-    std::vector<std::tuple<double, int, int>> labeled_orb_en;
-    std::vector<std::tuple<double, int, int>> labeled_orb_en_alfa;
-    std::vector<std::tuple<double, int, int>> labeled_orb_en_beta;
-
-    // For a restricted reference
-    if (ref_type == "RHF" or ref_type == "RKS" or ref_type == "ROHF") {
-        labeled_orb_en = sym_labeled_orbitals("RHF");
-
-        // Build initial reference determinant from restricted reference
-        for (int i = 0; i < nalpha_; ++i) {
-            occupation[std::get<2>(labeled_orb_en[i])] = 1;
-        }
-        for (int i = 0; i < nbeta_; ++i) {
-            occupation[nact_ + std::get<2>(labeled_orb_en[i])] = 1;
-        }
-
-        // Loop over as many outer-shell electrons as needed to get correct sym
-        for (int k = 1; k <= nsym;) {
-
-            bool add = false;
-            // Remove electron from highest energy docc
-            occupation[std::get<2>(labeled_orb_en[nalpha_ - k])] = 0;
-
-            // Determine proper symmetry for new occupation
-            // orb_sym = ms_;
-
-            if (twice_ms_ == 0.0) {
-                orb_sym = std::get<1>(labeled_orb_en[nalpha_ - 1]) ^ orb_sym;
-            } else {
-                for (int i = 1; i <= nsym; ++i) {
-                    orb_sym = std::get<1>(labeled_orb_en[nalpha_ - i]) ^ orb_sym;
-                }
-                orb_sym = std::get<1>(labeled_orb_en[nalpha_ - k]) ^ orb_sym;
-            }
-
-            // Add electron to lowest-energy orbital of proper symmetry
-            // Loop from current occupation to max MO until correct orbital is
-            // reached
-            for (int i = nalpha_ - k, maxi = nact_; i < maxi; ++i) {
-                if (orb_sym == std::get<1>(labeled_orb_en[i]) and
-                    occupation[std::get<2>(labeled_orb_en[i])] != 1) {
-                    occupation[std::get<2>(labeled_orb_en[i])] = 1;
-                    add = true;
-                    break;
-                } else {
-                    continue;
-                }
-            }
-            // If a new occupation could not be created, put electron back and
-            // remove a different one
-            if (!add) {
-                occupation[std::get<2>(labeled_orb_en[nalpha_ - k])] = 1;
-                ++k;
-            } else {
-                break;
-            }
-
-        } // End loop over k
-
-    } else {
-        labeled_orb_en_alfa = sym_labeled_orbitals("ALFA");
-        labeled_orb_en_beta = sym_labeled_orbitals("BETA");
-
-        // For an unrestricted reference
-        // Make the reference
-        // For singlets, this will be closed-shell
-
-        for (int i = 0; i < nalpha_; ++i) {
-            occupation[std::get<2>(labeled_orb_en_alfa[i])] = 1;
-        }
-        for (int i = 0; i < nbeta_; ++i) {
-            occupation[std::get<2>(labeled_orb_en_beta[i]) + nact_] = 1;
-        }
-
-        if (nalpha_ >= nbeta_) {
-
-            // Loop over k
-            for (int k = 1; k < nsym;) {
-
-                bool add = false;
-                // Remove highest energy alpha electron
-                occupation[std::get<2>(labeled_orb_en_alfa[nalpha_ - k])] = 0;
-
-                // Determine proper symmetry for new electron
-
-                orb_sym = wavefunction_symmetry_;
-
-                if (twice_ms_ == 0.0) {
-                    orb_sym = std::get<1>(labeled_orb_en_alfa[nalpha_ - 1]) ^ orb_sym;
-                } else {
-                    for (int i = 1; i <= nsym; ++i) {
-                        orb_sym = std::get<1>(labeled_orb_en_alfa[nalpha_ - i]) ^ orb_sym;
-                    }
-                    orb_sym = std::get<1>(labeled_orb_en_alfa[nalpha_ - k]) ^ orb_sym;
-                }
-
-                // Add electron to lowest-energy orbital of proper symmetry
-                for (int i = nalpha_ - k; i < nactel_; ++i) {
-                    if (orb_sym == std::get<1>(labeled_orb_en_alfa[i]) and
-                        occupation[std::get<2>(labeled_orb_en_alfa[i])] != 1) {
-                        occupation[std::get<2>(labeled_orb_en_alfa[i])] = 1;
-                        add = true;
-                        break;
-                    } else {
-                        continue;
-                    }
-                }
-
-                // If a new occupation could not be made,
-                // add electron back and try a different one
-
-                if (!add) {
-                    occupation[std::get<2>(labeled_orb_en_alfa[nalpha_ - k])] = 1;
-                    ++k;
-                } else {
-                    break;
-                }
-
-            }    //	End loop over k
-        } else { // End if(nalpha_ >= nbeta_ )
-
-            for (int k = 1; k < nsym;) {
-
-                bool add = false;
-
-                // Remove highest-energy beta electron
-                occupation[std::get<2>(labeled_orb_en_beta[nbeta_ - k])] = 0;
-
-                // Determine proper symetry for new occupation
-                orb_sym = wavefunction_symmetry_;
-
-                if (multiplicity_ == 1) {
-                    orb_sym = std::get<1>(labeled_orb_en_beta[nbeta_ - 1]) ^ orb_sym;
-                } else {
-                    for (int i = 1; i <= nsym; ++i) {
-                        orb_sym = std::get<1>(labeled_orb_en_beta[nbeta_ - i]) ^ orb_sym;
-                    }
-                    orb_sym = std::get<1>(labeled_orb_en_beta[nbeta_ - k]) ^ orb_sym;
-                }
-
-                // Add electron to lowest-energy beta orbital
-
-                for (int i = nbeta_ - k; i < nactel_; ++i) {
-                    if (orb_sym == std::get<1>(labeled_orb_en_beta[i]) and
-                        occupation[std::get<2>(labeled_orb_en_beta[i])] != 1) {
-                        occupation[std::get<2>(labeled_orb_en_beta[i])] = 1;
-                        add = true;
-                        break;
-                    }
-                }
-
-                // If a new occupation could not be made,
-                // replace the electron and try again
-
-                if (!add) {
-                    occupation[std::get<2>(labeled_orb_en_beta[nbeta_ - k])] = 1;
-                    ++k;
-                } else {
-                    break;
-                }
-
-            } // End loop over k
-        }     // End if nalpha_ < nbeta_
-    }
-    return occupation;
-}
-
 double AdaptiveCI::compute_energy() {
-    //   if (!quiet_mode_) {
     if (options_["ACI_QUIET_MODE"].has_changed()) {
         quiet_mode_ = options_.get_bool("ACI_QUIET_MODE");
     }
@@ -710,6 +508,38 @@ double AdaptiveCI::compute_energy() {
         //    PQ_evals->print();
     }
 
+    std::string sigma_method = options_.get_str("SIGMA_BUILD_TYPE");
+    if (options_.get_bool("ACI_ADD_SINGLES")) {
+
+        outfile->Printf("\n  Adding singles");
+
+        op_.add_singles(final_wfn_);
+        if (sigma_method == "HZ") {
+            op_.clear_op_lists();
+            op_.clear_tp_lists();
+            Timer str;
+            op_.build_strings(final_wfn_);
+            outfile->Printf("\n  Time spent building strings      %1.6f s", str.get());
+            op_.op_lists(final_wfn_);
+            op_.tp_lists(final_wfn_);
+        } else {
+            op_.clear_op_s_lists();
+            op_.clear_tp_s_lists();
+            op_.build_strings(final_wfn_);
+            op_.op_s_lists(final_wfn_);
+            op_.tp_s_lists(final_wfn_);
+        }
+
+        SparseCISolver sparse_solver;
+        sparse_solver.set_parallel(true);
+        sparse_solver.set_e_convergence(options_.get_double("E_CONVERGENCE"));
+        sparse_solver.set_maxiter_davidson(options_.get_int("DL_MAXITER"));
+        sparse_solver.set_spin_project_full(project_out_spin_contaminants_);
+        sparse_solver.set_guess_dimension(options_.get_int("DL_GUESS_SIZE"));
+        sparse_solver.diagonalize_hamiltonian_map(final_wfn_, op_, PQ_evals, PQ_evecs, nroot_,
+                                                  multiplicity_, diag_method_);
+    }
+
     //** Optionally compute full PT2 energy **//
     if (options_.get_bool("MRPT2")) {
         MRPT2 pt(reference_wavefunction_, options_, ints_, mo_space_info_, final_wfn_, PQ_evecs,
@@ -721,7 +551,7 @@ double AdaptiveCI::compute_energy() {
     // if (!quiet_mode_) {
     if (ex_alg_ == "ROOT_COMBINE") {
         print_final(full_space, PQ_evecs, PQ_evals);
-    } else if (ex_alg_ == "ROOT_ORTHOGONALIZE") {
+    } else if (ex_alg_ == "ROOT_ORTHOGONALIZE" and nroot_ > 1) {
         print_final(final_wfn_, PQ_evecs, energies);
     } else {
         print_final(final_wfn_, PQ_evecs, PQ_evals);
@@ -731,7 +561,7 @@ double AdaptiveCI::compute_energy() {
     //** Compute the RDMs **//
 
     if (options_.get_int("ACI_MAX_RDM") >= 3 or (rdm_level_ >= 3)) {
-        op_.three_lists(final_wfn_);
+        op_.three_s_lists(final_wfn_);
     }
     SharedMatrix new_evecs;
     if (ex_alg_ == "ROOT_COMBINE") {
@@ -751,8 +581,8 @@ double AdaptiveCI::compute_energy() {
 
         op_.clear_op_s_lists();
         op_.clear_tp_s_lists();
-        op_.op_lists(final_wfn_);
-        op_.tp_lists(final_wfn_);
+        op_.op_s_lists(final_wfn_);
+        op_.tp_s_lists(final_wfn_);
         compute_rdms(final_wfn_, op_, PQ_evecs, 0, 0);
     }
 
@@ -822,7 +652,7 @@ void AdaptiveCI::diagonalize_final_and_compute_rdms() {
     op_.clear_tp_s_lists();
     op_.op_lists(final_wfn_);
     op_.tp_lists(final_wfn_);
-    op_.three_lists(final_wfn_);
+    op_.three_s_lists(final_wfn_);
 
     compute_rdms(final_wfn_, op_, final_evecs, 0, 0);
 }
@@ -905,7 +735,7 @@ void AdaptiveCI::default_find_q_space(DeterminantMap& P_space, DeterminantMap& P
     det_hash<std::vector<double>> V_hash;
 
     // Get the excited Determinants
-    get_excited_determinants(nroot_, evecs, P_space, V_hash);
+    get_excited_determinants2(nroot_, evecs, P_space, V_hash);
 
     // This will contain all the determinants
     PQ_space.clear();
@@ -971,8 +801,6 @@ void AdaptiveCI::default_find_q_space(DeterminantMap& P_space, DeterminantMap& P
             PQ_space.add(det);
         }
     }
-    // printf( "\n last excluded : %zu \n", last_excluded );
-    // printf( "\n sum : %1.12f \n", sum );
     // Add missing determinants
     if (add_aimed_degenerate_) {
         size_t num_extra = 0;
@@ -1019,12 +847,6 @@ void AdaptiveCI::find_q_space(DeterminantMap& P_space, DeterminantMap& PQ_space,
 
     // Add the P-space determinants and zero the hash
     PQ_space.copy(P_space);
-    // det_hash<size_t> detmap = P_space.wfn_hash();
-    // for (det_hash<size_t>::iterator it = detmap.begin(), endit = detmap.end();
-    //      it != endit; ++it) {
-    //     PQ_space.add(it->first);
-    //     //V_hash.erase(it->first);
-    // }
 
     Timer t_ms_screen;
 
@@ -1844,6 +1666,7 @@ std::vector<std::pair<double, double>> AdaptiveCI::compute_spin(DeterminantMap& 
     return spin_vec;
 }
 
+/*
 void AdaptiveCI::wfn_analyzer(DeterminantMap& det_space, SharedMatrix evecs, int nroot) {
 
     std::vector<bool> occ(2 * nact_, 0);
@@ -1925,48 +1748,7 @@ void AdaptiveCI::wfn_analyzer(DeterminantMap& det_space, SharedMatrix evecs, int
     //  if( print_final_wfn ) final_wfn.close();
     //  outfile->Flush();
 }
-
-std::vector<std::tuple<double, int, int>> AdaptiveCI::sym_labeled_orbitals(std::string type) {
-    std::vector<std::tuple<double, int, int>> labeled_orb;
-
-    if (type == "RHF" or type == "ROHF" or type == "ALFA") {
-
-        // Create a vector of orbital energy and index pairs
-        std::vector<std::pair<double, int>> orb_e;
-        int cumidx = 0;
-        for (int h = 0; h < nirrep_; ++h) {
-            for (int a = 0; a < nactpi_[h]; ++a) {
-                orb_e.push_back(make_pair(epsilon_a_->get(h, frzcpi_[h] + a), a + cumidx));
-            }
-            cumidx += nactpi_[h];
-        }
-
-        // Create a vector that stores the orbital energy, symmetry, and idx
-        for (size_t a = 0; a < nact_; ++a) {
-            labeled_orb.push_back(make_tuple(orb_e[a].first, mo_symmetry_[a], orb_e[a].second));
-        }
-        // Order by energy, low to high
-        std::sort(labeled_orb.begin(), labeled_orb.end());
-    }
-    if (type == "BETA") {
-        // Create a vector of orbital energies and index pairs
-        std::vector<std::pair<double, int>> orb_e;
-        int cumidx = 0;
-        for (int h = 0; h < nirrep_; ++h) {
-            for (size_t a = 0, max = nactpi_[h]; a < max; ++a) {
-                orb_e.push_back(make_pair(epsilon_b_->get(h, frzcpi_[h] + a), a + cumidx));
-            }
-            cumidx += nactpi_[h];
-        }
-
-        // Create a vector that stores the orbital energy, sym, and idx
-        for (size_t a = 0; a < nact_; ++a) {
-            labeled_orb.push_back(make_tuple(orb_e[a].first, mo_symmetry_[a], orb_e[a].second));
-        }
-        std::sort(labeled_orb.begin(), labeled_orb.end());
-    }
-    return labeled_orb;
-}
+*/
 
 void AdaptiveCI::print_wfn(DeterminantMap& space, SharedMatrix evecs, int nroot) {
     std::string state_label;
@@ -2258,6 +2040,7 @@ void AdaptiveCI::print_nos() {
 //    }
 //}
 
+/*
 void AdaptiveCI::convert_to_string(const std::vector<STLBitsetDeterminant>& space) {
     size_t space_size = space.size();
     size_t nalfa_str = 0;
@@ -2321,118 +2104,7 @@ void AdaptiveCI::convert_to_string(const std::vector<STLBitsetDeterminant>& spac
         b_to_a_[b_id].push_back(a_id);
     }
 }
-
-void AdaptiveCI::build_initial_reference(DeterminantMap& space) {
-    STLBitsetDeterminant det = space.get_det(0);
-
-    std::vector<int> aocc = det.get_alfa_occ();
-    std::vector<int> bocc = det.get_beta_occ();
-    std::vector<int> avir = det.get_alfa_vir();
-    std::vector<int> bvir = det.get_beta_vir();
-
-    int noalpha = aocc.size();
-    int nobeta = bocc.size();
-    int nvalpha = avir.size();
-    int nvbeta = bvir.size();
-
-    if (reference_type_ == "CIS" or reference_type_ == "CISD") {
-        // Generate alpha excitations
-        for (int i = 0; i < noalpha; ++i) {
-            int ii = aocc[i];
-            for (int a = 0; a < nvalpha; ++a) {
-                int aa = avir[a];
-                if ((mo_symmetry_[ii] ^ mo_symmetry_[aa]) == 0) {
-                    STLBitsetDeterminant ndet(det);
-                    ndet.set_alfa_bit(ii, false);
-                    ndet.set_alfa_bit(aa, true);
-                    space.add(ndet);
-                }
-            }
-        }
-        // Generate beta excitations
-        for (int i = 0; i < nobeta; ++i) {
-            int ii = bocc[i];
-            for (int a = 0; a < nvbeta; ++a) {
-                int aa = bvir[a];
-                if ((mo_symmetry_[ii] ^ mo_symmetry_[aa]) == 0) {
-                    STLBitsetDeterminant ndet(det);
-                    ndet.set_beta_bit(ii, false);
-                    ndet.set_beta_bit(aa, true);
-                    space.add(ndet);
-                }
-            }
-        }
-    }
-
-    if (reference_type_ == "CID" or reference_type_ == "CISD") {
-        // Generate alpha-alpha excitations
-        for (int i = 0; i < noalpha; ++i) {
-            int ii = aocc[i];
-            for (int j = i + 1; j < noalpha; ++j) {
-                int jj = aocc[j];
-                for (int a = 0; a < nvalpha; ++a) {
-                    int aa = avir[a];
-                    for (int b = a + 1; b < nvalpha; ++b) {
-                        int bb = avir[b];
-                        if ((mo_symmetry_[ii] ^ mo_symmetry_[jj] ^ mo_symmetry_[aa] ^
-                             mo_symmetry_[bb]) == 0) {
-                            STLBitsetDeterminant new_det(det);
-                            new_det.set_alfa_bit(ii, false);
-                            new_det.set_alfa_bit(jj, false);
-                            new_det.set_alfa_bit(aa, true);
-                            new_det.set_alfa_bit(bb, true);
-                            space.add(new_det);
-                        }
-                    }
-                }
-            }
-        }
-        // Then the alpha-beta
-        for (int i = 0; i < noalpha; ++i) {
-            int ii = aocc[i];
-            for (int j = 0; j < nobeta; ++j) {
-                int jj = bocc[j];
-                for (int a = 0; a < nvalpha; ++a) {
-                    int aa = avir[a];
-                    for (int b = 0; b < nvbeta; ++b) {
-                        int bb = bvir[b];
-                        if ((mo_symmetry_[ii] ^ mo_symmetry_[jj] ^ mo_symmetry_[aa] ^
-                             mo_symmetry_[bb]) == 0) {
-                            STLBitsetDeterminant new_det(det);
-                            new_det.set_alfa_bit(ii, false);
-                            new_det.set_beta_bit(jj, false);
-                            new_det.set_alfa_bit(aa, true);
-                            new_det.set_beta_bit(bb, true);
-                            space.add(new_det);
-                        }
-                    }
-                }
-            }
-        }
-        // Lastly the beta-beta
-        for (int i = 0; i < nobeta; ++i) {
-            int ii = bocc[i];
-            for (int j = i + 1; j < nobeta; ++j) {
-                int jj = bocc[j];
-                for (int a = 0; a < nvbeta; ++a) {
-                    int aa = bvir[a];
-                    for (int b = a + 1; b < nvbeta; ++b) {
-                        int bb = bvir[b];
-                        if ((mo_symmetry_[ii] ^
-                             (mo_symmetry_[jj] ^ (mo_symmetry_[aa] ^ mo_symmetry_[bb]))) == 0) {
-                            STLBitsetDeterminant new_det(det);
-                            new_det.set_beta_bit(ii, false);
-                            new_det.set_beta_bit(jj, false);
-                            new_det.set_beta_bit(aa, true);
-                            new_det.set_beta_bit(bb, true);
-                            space.add(new_det);
-                        }
-                    }
-                }
-            }
-        }
-    }
-}
+*/
 
 int AdaptiveCI::root_follow(DeterminantMap& P_ref, std::vector<double>& P_ref_evecs,
                             DeterminantMap& P_space, SharedMatrix P_evecs, int num_ref_roots) {
@@ -2542,10 +2214,6 @@ void AdaptiveCI::compute_aci(DeterminantMap& PQ_space, SharedMatrix& PQ_evecs,
     DeterminantMap P_ref;
     std::vector<double> P_ref_evecs;
     DeterminantMap P_space(initial_reference_);
-
-    if (reference_type_ == "CIS" or reference_type_ == "CISD") {
-        build_initial_reference(P_space);
-    }
 
     outfile->Flush();
 

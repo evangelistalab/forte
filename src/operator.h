@@ -45,7 +45,7 @@ using wfn_hash = det_hash<double>;
 class WFNOperator {
   public:
     /// Default constructor
-    WFNOperator(std::vector<int> symmetry);
+    WFNOperator(std::vector<int>& symmetry);
 
     /// Empty constructor
     WFNOperator();
@@ -53,9 +53,8 @@ class WFNOperator {
     /// Initializer
     void initialize(std::vector<int>& symmetry);
 
-
     /// Set print level
-    void set_quiet_mode( bool mode );
+    void set_quiet_mode(bool mode);
 
     /// Build the coupling lists for one-particle operators
     void op_lists(DeterminantMap& wfn);
@@ -67,6 +66,7 @@ class WFNOperator {
 
     /// Build the coupling lists for three-particle operators
     void three_lists(DeterminantMap& wfn);
+    void three_s_lists(DeterminantMap& wfn);
 
     void clear_op_lists();
     void clear_tp_lists();
@@ -84,13 +84,15 @@ class WFNOperator {
     /// Compute total spin expectation value <|S^2|>
     double s2(DeterminantMap& wfn, SharedMatrix& evecs, int root);
 
-    void build_strings(DeterminantMap& wfn);    
+    void build_strings(DeterminantMap& wfn);
 
     /// Build the sparse Hamiltonian
-    std::vector<std::pair<std::vector<size_t>, std::vector<double>>> build_H_sparse( const DeterminantMap& wfn);
+    std::vector<std::pair<std::vector<size_t>, std::vector<double>>>
+    build_H_sparse(const DeterminantMap& wfn);
 
     /// Build the sparse Hamiltonian -v2
-    std::vector<std::pair<std::vector<size_t>, std::vector<double>>> build_H_sparse2( const DeterminantMap& wfn);
+    std::vector<std::pair<std::vector<size_t>, std::vector<double>>>
+    build_H_sparse2(const DeterminantMap& wfn);
 
     std::vector<std::vector<std::pair<size_t, short>>> a_list_;
     std::vector<std::vector<std::pair<size_t, short>>> b_list_;
@@ -119,23 +121,20 @@ class WFNOperator {
     std::vector<std::vector<std::tuple<size_t, short, short>>> ab_cre_list_;
 
     /// Three particle lists
-    std::vector<std::vector<std::tuple<size_t, short, short, short>>>
-        aaa_ann_list_;
-    std::vector<std::vector<std::tuple<size_t, short, short, short>>>
-        aab_ann_list_;
-    std::vector<std::vector<std::tuple<size_t, short, short, short>>>
-        abb_ann_list_;
-    std::vector<std::vector<std::tuple<size_t, short, short, short>>>
-        bbb_ann_list_;
+    std::vector<std::vector<std::tuple<size_t, short, short, short>>> aaa_ann_list_;
+    std::vector<std::vector<std::tuple<size_t, short, short, short>>> aab_ann_list_;
+    std::vector<std::vector<std::tuple<size_t, short, short, short>>> abb_ann_list_;
+    std::vector<std::vector<std::tuple<size_t, short, short, short>>> bbb_ann_list_;
 
-    std::vector<std::vector<std::tuple<size_t, short, short, short>>>
-        aaa_cre_list_;
-    std::vector<std::vector<std::tuple<size_t, short, short, short>>>
-        aab_cre_list_;
-    std::vector<std::vector<std::tuple<size_t, short, short, short>>>
-        abb_cre_list_;
-    std::vector<std::vector<std::tuple<size_t, short, short, short>>>
-        bbb_cre_list_;
+    std::vector<std::vector<std::tuple<size_t, short, short, short>>> aaa_cre_list_;
+    std::vector<std::vector<std::tuple<size_t, short, short, short>>> aab_cre_list_;
+    std::vector<std::vector<std::tuple<size_t, short, short, short>>> abb_cre_list_;
+    std::vector<std::vector<std::tuple<size_t, short, short, short>>> bbb_cre_list_;
+
+    std::vector<std::vector<std::tuple<size_t, short, short, short>>> aaa_list_;
+    std::vector<std::vector<std::tuple<size_t, short, short, short>>> aab_list_;
+    std::vector<std::vector<std::tuple<size_t, short, short, short>>> abb_list_;
+    std::vector<std::vector<std::tuple<size_t, short, short, short>>> bbb_list_;
 
   protected:
     /// Initialize important variables on construction
@@ -143,9 +142,8 @@ class WFNOperator {
 
     std::vector<std::vector<size_t>> beta_strings_;
     std::vector<std::vector<size_t>> alpha_strings_;
-    std::vector<std::vector<std::pair<int,size_t>>> alpha_a_strings_;
-    std::vector<std::vector<std::pair<int,size_t>>> beta_a_strings_;
-    
+    std::vector<std::vector<std::pair<int, size_t>>> alpha_a_strings_;
+    std::vector<std::vector<std::pair<int, size_t>>> beta_a_strings_;
 
     /// Active space symmetry
     std::vector<int> mo_symmetry_;
