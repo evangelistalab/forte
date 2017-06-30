@@ -2477,7 +2477,6 @@ ambit::BlockedTensor DSRG_MRPT2::T1(const std::vector<string>& blocks) {
             throw PSIEXCEPTION(error);
         }
     }
-
     ambit::BlockedTensor out = ambit::BlockedTensor::build(tensor_type_, "T1 selected", blocks);
     out["ia"] = T1_["ia"];
     out["IA"] = T1_["IA"];
@@ -2491,7 +2490,6 @@ ambit::BlockedTensor DSRG_MRPT2::T1deGNO(const std::vector<string>& blocks) {
             throw PSIEXCEPTION(error);
         }
     }
-
     ambit::BlockedTensor out =
         ambit::BlockedTensor::build(tensor_type_, "T1deGNO selected", blocks);
     out["ia"] = T1eff_["ia"];
@@ -2506,7 +2504,6 @@ ambit::BlockedTensor DSRG_MRPT2::T2(const std::vector<string>& blocks) {
             throw PSIEXCEPTION(error);
         }
     }
-
     ambit::BlockedTensor out = ambit::BlockedTensor::build(tensor_type_, "T2 selected", blocks);
     out["ijab"] = T2_["ijab"];
     out["iJaB"] = T2_["iJaB"];
@@ -2514,18 +2511,8 @@ ambit::BlockedTensor DSRG_MRPT2::T2(const std::vector<string>& blocks) {
     return out;
 }
 
-void DSRG_MRPT2::set_T1(ambit::BlockedTensor& T1) {
-    T1_["ia"] = T1["ia"];
-    T1_["IA"] = T1["IA"];
-}
-
-void DSRG_MRPT2::set_T2(ambit::BlockedTensor& T2) {
-    T2_["ijab"] = T2["ijab"];
-    T2_["iJaB"] = T2["iJaB"];
-    T2_["IJAB"] = T2["IJAB"];
-}
-
-void DSRG_MRPT2::rotate_amp(SharedMatrix Ua, SharedMatrix Ub, const bool& transpose, const bool& t1eff) {
+void DSRG_MRPT2::rotate_amp(SharedMatrix Ua, SharedMatrix Ub, const bool& transpose,
+                            const bool& t1eff) {
     ambit::BlockedTensor U = BTF_->build(tensor_type_, "Uorb", spin_cases({"gg"}));
 
     std::map<char, std::vector<std::pair<size_t, size_t>>> space_to_relmo;
