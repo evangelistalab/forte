@@ -190,14 +190,14 @@ class ACTIVE_DSRGPT2 : public Wavefunction {
     std::vector<SharedMatrix> ref_wfns_;
 
     /// Scalar term from T amplitudes de-normal-ordering of the ground state
-    double T0_g_;
+    double Tde_g_;
     /// De-normal-ordered T1 amplitudes of the ground state
     ambit::BlockedTensor T1_g_;
     /// (De-normal-ordered) T2 amplitudes of the ground state
     ambit::BlockedTensor T2_g_;
 
     /// Compute the DSRG-PT2 oscillator strength
-    void compute_osc_pt2(const int& irrep, const int& root, const double& T0_x,
+    void compute_osc_pt2(const int& irrep, const int& root, const double& Tde_x,
                          ambit::BlockedTensor& T1_x, ambit::BlockedTensor& T2_x);
     /**
      * Compute effective 1st-order transition densities
