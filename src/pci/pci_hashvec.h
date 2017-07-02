@@ -381,6 +381,12 @@ class ProjectorCI_HashVec : public Wavefunction {
     /// C_J| < tollerance
     double estimate_var_energy(const det_hashvec& dets_hashvec, std::vector<double>& C,
                                double tollerance = 1.0e-14);
+    /// Estimates the variational energy within a given error
+    /// @param dets The set of determinants that form the wave function
+    /// @param C The wave function coefficients
+    /// @param max_error The accuracy of the estimate. |E_est - E_var|<max_error
+    double estimate_var_energy_within_error(const det_hashvec& dets_hashvec, std::vector<double>& C,
+                                            double max_error = 0.0);
     /// Estimates the variational energy using a sparse algorithm
     /// @param dets The set of determinants that form the wave function
     /// @param C The wave function coefficients
