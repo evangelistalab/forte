@@ -2192,7 +2192,7 @@ double ProjectorCI_HashVec::estimate_var_energy_within_error(const det_hashvec& 
                          : dets_double_max_coupling_;
     double ignore_bound = max_error * max_error / (2.0 * max_HIJ * max_HIJ);
     double cume_ignore = 0.0;
-    for (; cut_index >= 0; --cut_index) {
+    for (; cut_index > 0; --cut_index) {
         cume_ignore += C[cut_index] * C[cut_index];
         if (cume_ignore >= ignore_bound) {
             break;
@@ -2225,7 +2225,7 @@ double ProjectorCI_HashVec::estimate_var_energy_sparse(const det_hashvec& dets_h
                          : dets_double_max_coupling_;
     double ignore_bound = max_error * max_error / (2.0 * max_HIJ * max_HIJ);
     double cume_ignore = 0.0;
-    for (; cut_index >= 0; --cut_index) {
+    for (; cut_index > 0; --cut_index) {
         cume_ignore += C[cut_index] * C[cut_index];
         if (cume_ignore >= ignore_bound) {
             break;
