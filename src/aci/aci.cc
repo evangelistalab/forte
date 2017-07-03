@@ -244,16 +244,9 @@ void AdaptiveCI::startup() {
 
     // Build the reference determinant and compute its energy
 
-    //    if (options_.get_str("ACI_INITIAL_SPACE") == "HF" or
-    //        options_.get_str("ACI_INITIAL_SPACE") == "CIS" or
-    //        options_.get_str("ACI_INITIAL_SPACE") == "CISD") {
-    //        det = STLBitsetDeterminant(get_occupation());
-    //        initial_reference_.push_back(det);
-    //    } else {
     CI_Reference ref(reference_wavefunction_, options_, mo_space_info_, det, multiplicity_,
                      twice_ms_, wavefunction_symmetry_);
     ref.build_reference(initial_reference_);
-    //    }
 
     // Read options
     nroot_ = options_.get_int("ACI_NROOT");
@@ -290,11 +283,6 @@ void AdaptiveCI::startup() {
     root_ = options_.get_int("ACI_ROOT");
     approx_rdm_ = options_.get_bool("ACI_APPROXIMATE_RDM");
     print_weights_ = options_.get_bool("ACI_PRINT_WEIGHTS");
-
-    //   reference_type_ = "SR";
-    //   if (options_["ACI_INITIAL_SPACE"].has_changed()) {
-    //       reference_type_ = options_.get_str("ACI_INITIAL_SPACE");
-    //   }
 
     diag_method_ = DLString;
     if (options_["DIAG_ALGORITHM"].has_changed()) {
@@ -666,11 +654,6 @@ void AdaptiveCI::print_final(DeterminantMap& dets, SharedMatrix& PQ_evecs, Share
 
     outfile->Printf("\n  Iterations required:                         %zu", cycle_);
     outfile->Printf("\n  Dimension of optimized determinant space:    %zu\n", dim);
-    // if (nroot_ == 1) {
-    //     outfile->Printf("\n  ACI(%.3f) Correlation energy: %.12f Eh", sigma_,
-    //                     reference_determinant_.energy() -
-    //                         PQ_evals->get(ref_root_));
-    // }
 
     for (int i = 0; i < nroot_; ++i) {
         double abs_energy =
@@ -2189,26 +2172,6 @@ int AdaptiveCI::root_follow(DeterminantMap& P_ref, std::vector<double>& P_ref_ev
     return new_root;
 }
 
-void AdaptiveCI::project_determinant_space(DeterminantMap& space, SharedMatrix evecs,
-                                           SharedVector evals, int nroot) {
-    //	double spin_contamination = compute_spin_contamination(space, evecs,
-    // nroot);
-    //	if(spin_contamination >= spin_tol_){
-    //		if( !quiet_mode_ ) outfile->Printf("\n  Average spin
-    // contamination
-    // per
-    // root is %1.5f", spin_contamination);
-    //		full_spin_transform(space, evecs, nroot);
-    //		evecs->zero();
-    //		evecs = PQ_spin_evecs_->clone();
-    //        compute_H_expectation_val(space,evals,evecs,nroot,diag_method_);
-    //	}else if (!quiet_mode_){
-    //		outfile->Printf("\n  Average spin contamination (%1.5f) is less
-    // than
-    // tolerance (%1.5f)", spin_contamination, spin_tol_);
-    //		outfile->Printf("\n  No need to perform spin projection.");
-    //	}
-}
 
 void AdaptiveCI::compute_aci(DeterminantMap& PQ_space, SharedMatrix& PQ_evecs,
                              SharedVector& PQ_evals) {
@@ -2567,7 +2530,6 @@ AdaptiveCI::dl_initial_guess(std::vector<STLBitsetDeterminant>& old_dets,
 void AdaptiveCI::compute_rdms(DeterminantMap& dets, WFNOperator& op, SharedMatrix& PQ_evecs,
                               int root1, int root2) {
 
-    // std::vector<STLBitsetDeterminant> det_vec = dets.determinants();
     ordm_a_.clear();
     ordm_b_.clear();
 
@@ -2776,6 +2738,7 @@ DeterminantMap AdaptiveCI::approximate_wfn(DeterminantMap& PQ_space, SharedMatri
 
 void AdaptiveCI::compute_nos() {
 
+    
     Dimension nmopi = reference_wavefunction_->nmopi();
     Dimension ncmopi = mo_space_info_->get_dimension("CORRELATED");
     Dimension fdocc = mo_space_info_->get_dimension("FROZEN_DOCC");
@@ -2808,10 +2771,8 @@ void AdaptiveCI::compute_nos() {
     Matrix Ua("Ua", nmopi, nmopi);
     Matrix Ub("Ub", nmopi, nmopi);
 
-    //    Ua.identity();
-    //    Ub.identity();
-    Ua.zero();
-    Ua.zero();
+    Ua.identity();
+    Ub.identity();
 
     for (int h = 0; h < nirrep_; ++h) {
         size_t irrep_offset = 0;
@@ -2837,35 +2798,9 @@ void AdaptiveCI::compute_nos() {
     Ca_new->gemm(false, false, 1.0, Ca, Ua, 0.0);
     Cb_new->gemm(false, false, 1.0, Cb, Ub, 0.0);
 
-    // Compute unpaired-spin scaled NOs
-    //    for( int h = 0; h < nirrep_; ++h ){
-    //        int offset = fdocc[h] + rdocc[h];
-    //        for( int p = 0; p < nactpi_[h]; ++p ){
-    //            double n_p = OCC_A->get(p) + OCC_B->get(p);
-    //            //double up_el = std::sqrt( n_p * (2.0 - n_p));
-    //            double up_el = n_p * (2.0 - n_p);
-    //            //double up_el = n_p*n_p * (2.0 - n_p) * (2.0 - n_p);
-    //            outfile->Printf("\n  %d,%d: %1.5f", h,p,up_el);
-    //            Ca_new->scale_column(h, offset + p, up_el);
-    //            Cb_new->scale_column(h, offset + p, up_el);
-    //        }
-    //    }
-    //
     Ca->copy(Ca_new);
     Cb->copy(Cb_new);
-    /*
-        SharedMatrix Da = reference_wavefunction_->Da();
-        SharedMatrix Db = reference_wavefunction_->Db();
 
-        SharedMatrix Da_new(new Matrix("dan", nmopi, nmopi));
-        SharedMatrix Db_new(new Matrix("dbn", nmopi, nmopi));
-
-        Da_new->gemm(false, true, 1.0, Ca, Ca, 0.0);
-        Db_new->gemm(false, true, 1.0, Cb, Cb, 0.0);
-
-        Da->copy(Da_new);
-        Db->copy(Db_new);
-    */
     // Retransform the integarms in the new basis
     ints_->retransform_integrals();
 }
