@@ -317,10 +317,14 @@ void ACTIVE_DSRGPT2::precompute_energy() {
                                 "matrix for root %d.",
                                 i);
 
-                CI_RDMS ci_rdms(options_, fci_mo_->fci_ints_, fci_mo_->determinant_, evecs, i, i);
+                // reform density and Fock matrix only for i > 0
+                // because root is set to 0 previously
+                if (i != 0) {
+                    CI_RDMS rdms(options_, fci_mo_->fci_ints_, fci_mo_->determinant_, evecs, i, i);
 
-                fci_mo_->FormDensity(ci_rdms, fci_mo_->Da_, fci_mo_->Db_);
-                fci_mo_->Form_Fock(fci_mo_->Fa_, fci_mo_->Fb_);
+                    fci_mo_->FormDensity(rdms, fci_mo_->Da_, fci_mo_->Db_);
+                    fci_mo_->Form_Fock(fci_mo_->Fa_, fci_mo_->Fb_);
+                }
 
                 std::string namea = "Ua " + irrep_symbol_[h] + " " + std::to_string(i);
                 std::string nameb = "Ub " + irrep_symbol_[h] + " " + std::to_string(i);
@@ -768,10 +772,11 @@ double ACTIVE_DSRGPT2::compute_energy() {
 
                     // if the reference oscillator strength is nonzero
                     if (do_osc) {
-                        outfile->Printf("\n  Computing V%s-DSRG-PT2 oscillator strength ... ",
+                        Timer osc_pt2;
+                        outfile->Printf("\n  Computing V%s-DSRG-PT2 oscillator strength ...",
                                         ref_type_.c_str());
                         compute_osc_pt2(h, i_real, Tde, T1, T2);
-                        outfile->Printf("Done.");
+                        outfile->Printf(" Done. Timing %15.6f s", osc_pt2.get());
                     }
                 }
             }
