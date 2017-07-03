@@ -787,7 +787,6 @@ double ProjectorCI_HashVec::compute_energy() {
     outfile->Printf("\n  * Size of CI space                    = %zu", C.size());
     outfile->Printf("\n  * Projector-CI Approximate Energy     = %18.12f Eh", 1, approx_energy_);
 
-
     timer_on("PCI:sort");
     sortHashVecByCoefficient(dets_hashvec, C);
     timer_off("PCI:sort");
@@ -2379,7 +2378,7 @@ double ProjectorCI_HashVec::form_H_C(const det_hashvec& dets_hashvec, std::vecto
                 detJ.set_alfa_bit(aa, true);
                 size_t index = dets_hashvec.find(detJ);
                 if (index <= cut_index) {
-                    HJI = detI.slater_rules_single_alpha(ii,aa);
+                    HJI = detI.slater_rules_single_alpha(ii, aa);
                     result += HJI * CI * C[index];
                 }
                 detJ.set_alfa_bit(ii, true);
@@ -2397,7 +2396,7 @@ double ProjectorCI_HashVec::form_H_C(const det_hashvec& dets_hashvec, std::vecto
                 detJ.set_beta_bit(aa, true);
                 size_t index = dets_hashvec.find(detJ);
                 if (index <= cut_index) {
-                    HJI = detI.slater_rules_single_beta(ii,aa);
+                    HJI = detI.slater_rules_single_beta(ii, aa);
                     result += HJI * CI * C[index];
                 }
                 detJ.set_beta_bit(ii, true);
