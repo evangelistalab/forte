@@ -1240,9 +1240,9 @@ void ProjectorCI_HashVec::apply_tau_H_ref_C_symm(double tau, double spawning_thr
 #pragma omp parallel for
     for (size_t I = ref_max_I; I < max_I; ++I) {
         // Diagonal contribution
-        timer_on("PCI:diagonal", omp_get_thread_num());
+        // timer_on("PCI:diagonal", omp_get_thread_num());
         double det_energy = dets_hashvec[I].energy() + fci_ints_->scalar_energy();
-        timer_off("PCI:diagonal", omp_get_thread_num());
+        // timer_off("PCI:diagonal", omp_get_thread_num());
         // Diagonal contributions
         C_merge[I] += tau * (det_energy - S) * C[I];
     }
@@ -1288,14 +1288,14 @@ void ProjectorCI_HashVec::apply_tau_H_ref_C_symm_det_dynamic_HBCI_2(
     bool do_doubles = std::fabs(max_coupling.second * ref_CI) >= spawning_threshold;
 
     // Diagonal contributions
-    timer_on("PCI:diagonal", omp_get_thread_num());
+    // timer_on("PCI:diagonal", omp_get_thread_num());
     double det_energy = detI.energy() + fci_ints_->scalar_energy();
     new_space_C_vec.push_back(std::make_pair(detI, tau * (det_energy - E0) * CI));
-    timer_off("PCI:diagonal", omp_get_thread_num());
+    // timer_off("PCI:diagonal", omp_get_thread_num());
 
     Determinant detJ(detI);
     if (do_singles) {
-        timer_on("PCI:singles", omp_get_thread_num());
+        // timer_on("PCI:singles", omp_get_thread_num());
         // Generate alpha excitations
         for (size_t x = 0; x < a_couplings_size_; ++x) {
             double HJI_max = std::get<1>(a_couplings_[x]);
@@ -1392,9 +1392,9 @@ void ProjectorCI_HashVec::apply_tau_H_ref_C_symm_det_dynamic_HBCI_2(
                 }
             }
         }
-        timer_off("PCI:singles", omp_get_thread_num());
+        // timer_off("PCI:singles", omp_get_thread_num());
     } else if (do_singles_1) {
-        timer_on("PCI:singles", omp_get_thread_num());
+        // timer_on("PCI:singles", omp_get_thread_num());
         // Generate alpha excitations
         for (size_t x = 0; x < a_couplings_size_; ++x) {
             double HJI_max = std::get<1>(a_couplings_[x]);
@@ -1493,11 +1493,11 @@ void ProjectorCI_HashVec::apply_tau_H_ref_C_symm_det_dynamic_HBCI_2(
                 }
             }
         }
-        timer_off("PCI:singles", omp_get_thread_num());
+        // timer_off("PCI:singles", omp_get_thread_num());
     }
 
     if (do_doubles) {
-        timer_on("PCI:doubles", omp_get_thread_num());
+        // timer_on("PCI:doubles", omp_get_thread_num());
         // Generate alpha-alpha excitations
         for (size_t x = 0; x < aa_couplings_size_; ++x) {
             double HJI_max = std::get<2>(aa_couplings_[x]);
@@ -1612,9 +1612,9 @@ void ProjectorCI_HashVec::apply_tau_H_ref_C_symm_det_dynamic_HBCI_2(
                 }
             }
         }
-        timer_off("PCI:doubles", omp_get_thread_num());
+        // timer_off("PCI:doubles", omp_get_thread_num());
     } else if (do_doubles_1) {
-        timer_on("PCI:doubles", omp_get_thread_num());
+        // timer_on("PCI:doubles", omp_get_thread_num());
         // Generate alpha-alpha excitations
         for (size_t x = 0; x < aa_couplings_size_; ++x) {
             double HJI_max = std::get<2>(aa_couplings_[x]);
@@ -1732,7 +1732,7 @@ void ProjectorCI_HashVec::apply_tau_H_ref_C_symm_det_dynamic_HBCI_2(
                 }
             }
         }
-        timer_off("PCI:doubles", omp_get_thread_num());
+        // timer_off("PCI:doubles", omp_get_thread_num());
     }
 }
 
@@ -1751,14 +1751,14 @@ void ProjectorCI_HashVec::apply_tau_H_ref_C_symm_det_dynamic_HBCI(
     bool do_doubles = std::fabs(max_coupling.second * ref_CI) >= spawning_threshold;
 
     // Diagonal contributions
-    timer_on("PCI:diagonal", omp_get_thread_num());
+    // timer_on("PCI:diagonal", omp_get_thread_num());
     double det_energy = detI.energy() + fci_ints_->scalar_energy();
     new_space_C_vec.push_back(std::make_pair(detI, tau * (det_energy - E0) * CI));
-    timer_off("PCI:diagonal", omp_get_thread_num());
+    // timer_off("PCI:diagonal", omp_get_thread_num());
 
     Determinant detJ(detI);
     if (do_singles) {
-        timer_on("PCI:singles", omp_get_thread_num());
+        // timer_on("PCI:singles", omp_get_thread_num());
         std::vector<int> aocc = detI.get_alfa_occ();
         std::vector<int> bocc = detI.get_beta_occ();
         std::vector<int> avir = detI.get_alfa_vir();
@@ -1815,9 +1815,9 @@ void ProjectorCI_HashVec::apply_tau_H_ref_C_symm_det_dynamic_HBCI(
                 }
             }
         }
-        timer_off("PCI:singles", omp_get_thread_num());
+        // timer_off("PCI:singles", omp_get_thread_num());
     } else if (do_singles_1) {
-        timer_on("PCI:singles", omp_get_thread_num());
+        // timer_on("PCI:singles", omp_get_thread_num());
         std::vector<int> aocc = detI.get_alfa_occ();
         std::vector<int> bocc = detI.get_beta_occ();
         std::vector<int> avir = detI.get_alfa_vir();
@@ -1876,11 +1876,11 @@ void ProjectorCI_HashVec::apply_tau_H_ref_C_symm_det_dynamic_HBCI(
                 }
             }
         }
-        timer_off("PCI:singles", omp_get_thread_num());
+        // timer_off("PCI:singles", omp_get_thread_num());
     }
 
     if (do_doubles) {
-        timer_on("PCI:doubles", omp_get_thread_num());
+        // timer_on("PCI:doubles", omp_get_thread_num());
         // Generate alpha-alpha excitations
         for (size_t x = 0; x < aa_couplings_size_; ++x) {
             double HJI_max = std::get<2>(aa_couplings_[x]);
@@ -1995,9 +1995,9 @@ void ProjectorCI_HashVec::apply_tau_H_ref_C_symm_det_dynamic_HBCI(
                 }
             }
         }
-        timer_off("PCI:doubles", omp_get_thread_num());
+        // timer_off("PCI:doubles", omp_get_thread_num());
     } else if (do_doubles_1) {
-        timer_on("PCI:doubles", omp_get_thread_num());
+        // timer_on("PCI:doubles", omp_get_thread_num());
         // Generate alpha-alpha excitations
         for (size_t x = 0; x < aa_couplings_size_; ++x) {
             double HJI_max = std::get<2>(aa_couplings_[x]);
@@ -2115,7 +2115,7 @@ void ProjectorCI_HashVec::apply_tau_H_ref_C_symm_det_dynamic_HBCI(
                 }
             }
         }
-        timer_off("PCI:doubles", omp_get_thread_num());
+        // timer_off("PCI:doubles", omp_get_thread_num());
     }
 }
 

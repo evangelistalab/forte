@@ -555,7 +555,6 @@ double ACTIVE_DSRGPT2::compute_energy() {
         ref_energies_ = vector<vector<double>>(nirrep, vector<double>());
         pt2_energies_ = vector<vector<double>>(nirrep, vector<double>());
 
-        double Tde_g = 0.0;
         std::vector<std::string> T1blocks{"aa", "AA", "av", "AV", "ca", "CA"};
         std::vector<std::string> T2blocks{"aaaa", "cava", "caaa", "aava", "AAAA",
                                           "CAVA", "CAAA", "AAVA", "aAaA", "cAvA",
@@ -718,7 +717,7 @@ double ACTIVE_DSRGPT2::compute_energy() {
                             T2 = dsrg->T2(T2blocks);
 
                             if (gs) {
-                                Tde_g = Tde;
+                                Tde_g_ = Tde;
                                 T1_g_ = ambit::BlockedTensor::build(ambit::CoreTensor, "T1_g",
                                                                     T1blocks);
                                 T2_g_ = ambit::BlockedTensor::build(ambit::CoreTensor, "T2_g",
@@ -752,7 +751,7 @@ double ACTIVE_DSRGPT2::compute_energy() {
                             T2 = dsrg->T2(T2blocks);
 
                             if (gs) {
-                                Tde_g = Tde;
+                                Tde_g_ = Tde;
                                 T1_g_ = ambit::BlockedTensor::build(ambit::CoreTensor, "T1_g",
                                                                     T1blocks);
                                 T2_g_ = ambit::BlockedTensor::build(ambit::CoreTensor, "T2_g",
@@ -794,7 +793,7 @@ double ACTIVE_DSRGPT2::compute_energy() {
     return 0.0;
 }
 
-void ACTIVE_DSRGPT2::compute_osc_pt2(const int& irrep, const int& root, const double& T0_x,
+void ACTIVE_DSRGPT2::compute_osc_pt2(const int& irrep, const int& root, const double& Tde_x,
                                      ambit::BlockedTensor& T1_x, ambit::BlockedTensor& T2_x) {
     // compute reference transition density
     // step 1: combine p_space and eigenvectors if needed
@@ -932,7 +931,7 @@ void ACTIVE_DSRGPT2::compute_osc_pt2(const int& irrep, const int& root, const do
 
     // add zeroth-order transition density
     std::string name = transition_type(0, 0, root, irrep);
-    double scale = 1.0 + T0_g_ + T0_x;
+    double scale = 1.0 + Tde_g_ + Tde_x;
     transD.x += tdipole_ref_[name].x * scale;
     transD.y += tdipole_ref_[name].y * scale;
     transD.z += tdipole_ref_[name].z * scale;
