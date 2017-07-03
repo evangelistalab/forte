@@ -1,5 +1,7 @@
 #! Generated using commit GITCOMMIT
 
+Ept2_B1u = -77.9951530298
+
 import forte
 
 molecule C2H4{
@@ -37,6 +39,7 @@ set forte{
   internal_amp_select  auto
 }
 Econv = energy('forte', ref_wfn = wfn)
+compare_values(Econv, Ept2_B1u, 8, "VCIS-DSRG-MRPT2 energy")
 
 set forte{
   int_type             cholesky

@@ -221,12 +221,13 @@ class ProjectorCI_HashVec : public Wavefunction {
     double dets_single_max_coupling_;
     std::vector<std::tuple<int, int, double, std::vector<std::tuple<int, int, double>>>>
         aa_couplings_, ab_couplings_, bb_couplings_;
-    std::vector<std::tuple<int, double, std::vector<std::tuple<int, double>>>>
-        a_couplings_, b_couplings_;
-    double max_aa_coupling_, max_ab_coupling_, max_bb_coupling_,
-        max_a_coupling_, max_b_coupling_;
-    size_t aa_couplings_size_, ab_couplings_size_, bb_couplings_size_,
-        a_couplings_size_, b_couplings_size_;
+    std::vector<std::tuple<int, double, std::vector<std::tuple<int, double>>>> a_couplings_,
+        b_couplings_;
+    std::vector<std::vector<std::vector<double>>> single_alpha_excite_double_couplings_,
+        single_beta_excite_double_couplings_;
+    double max_aa_coupling_, max_ab_coupling_, max_bb_coupling_, max_a_coupling_, max_b_coupling_;
+    size_t aa_couplings_size_, ab_couplings_size_, bb_couplings_size_, a_couplings_size_,
+        b_couplings_size_;
 
     // * Energy estimation
     /// Estimate the variational energy?
@@ -380,16 +381,22 @@ class ProjectorCI_HashVec : public Wavefunction {
     /// C_J| < tollerance
     double estimate_var_energy(const det_hashvec& dets_hashvec, std::vector<double>& C,
                                double tollerance = 1.0e-14);
+    /// Estimates the variational energy within a given error
+    /// @param dets The set of determinants that form the wave function
+    /// @param C The wave function coefficients
+    /// @param max_error The accuracy of the estimate. |E_est - E_var|<max_error
+    double estimate_var_energy_within_error(const det_hashvec& dets_hashvec, std::vector<double>& C,
+                                            double max_error = 0.0);
     /// Estimates the variational energy using a sparse algorithm
     /// @param dets The set of determinants that form the wave function
     /// @param C The wave function coefficients
     /// @param tollerance The accuracy of the estimate.  Used to impose |C_I
     /// C_J| < tollerance
     double estimate_var_energy_sparse(const det_hashvec& dets_hashvec, std::vector<double>& C,
-                                      double tollerance = 1.0e-14);
+                                      double max_error = 0.0);
     /// Form the product H c
-    double form_H_C(double tau, double spawning_threshold, const det_hashvec& dets_hashvec,
-                    std::vector<double>& C, size_t I, std::pair<double, double>& max_coupling);
+    double form_H_C(const det_hashvec& dets_hashvec,
+                    std::vector<double>& C, size_t I, size_t cut_index);
     /// Do we have OpenMP?
     static bool have_omp_;
 
@@ -407,7 +414,7 @@ class ProjectorCI_HashVec : public Wavefunction {
 
     /// Compute the double excitation couplings
     void compute_double_couplings(double double_coupling_threshold);
-//    void compute_single_excite_max_double_couplings();
+    //    void compute_single_excite_max_double_couplings();
     void compute_single_couplings(double single_coupling_threshold);
 
     /// Returns a vector of orbital energy, sym label pairs

@@ -1062,7 +1062,6 @@ void AdaptiveCI::get_excited_determinants2(int nroot, SharedMatrix evecs, Determ
 
 #pragma omp parallel
     {
-
         int tid = omp_get_thread_num();
         int ntds = omp_get_num_threads();
 
@@ -1082,8 +1081,8 @@ void AdaptiveCI::get_excited_determinants2(int nroot, SharedMatrix evecs, Determ
         size_t end_idx = start_idx + bin_size;
         for (int bin = 0; bin < nbin; ++bin) {
 
-            // det_hash<std::vector<double>> A_I;
-            std::vector<std::pair<STLBitsetDeterminant, std::vector<double>>> A_I;
+            det_hash<std::vector<double>> A_I;
+            //std::vector<std::pair<STLBitsetDeterminant, std::vector<double>>> A_I;
 
             const std::vector<STLBitsetDeterminant>& dets = P_space.determinants();
             for (size_t I = start_idx; I < end_idx; ++I) {
@@ -1319,6 +1318,7 @@ void AdaptiveCI::get_excited_determinants(int nroot, SharedMatrix evecs, Determi
 
         for (size_t P = start_idx; P < end_idx; ++P) {
             STLBitsetDeterminant& det(P_dets[P]);
+            double evecs_P_row_norm = evecs->get_row(0, P)->norm();
 
             std::vector<int> aocc = det.get_alfa_occ();
             std::vector<int> bocc = det.get_beta_occ();
@@ -1338,7 +1338,7 @@ void AdaptiveCI::get_excited_determinants(int nroot, SharedMatrix evecs, Determi
                     int aa = avir[a];
                     if ((mo_symmetry_[ii] ^ mo_symmetry_[aa]) == 0) {
                         double HIJ = det.slater_rules_single_alpha(ii, aa);
-                        if ((std::fabs(HIJ) * evecs->get_row(0, P)->norm() >= screen_thresh_)) {
+                        if ((std::fabs(HIJ) * evecs_P_row_norm >= screen_thresh_)) {
                             //      if( std::abs(HIJ * evecs->get(0, P)) > screen_thresh_ ){
                             new_det = det;
                             new_det.set_alfa_bit(ii, false);
@@ -1364,7 +1364,7 @@ void AdaptiveCI::get_excited_determinants(int nroot, SharedMatrix evecs, Determi
                     int aa = bvir[a];
                     if ((mo_symmetry_[ii] ^ mo_symmetry_[aa]) == 0) {
                         double HIJ = det.slater_rules_single_beta(ii, aa);
-                        if ((std::fabs(HIJ) * evecs->get_row(0, P)->norm() >= screen_thresh_)) {
+                        if ((std::fabs(HIJ) * evecs_P_row_norm >= screen_thresh_)) {
                             // if( std::abs(HIJ * evecs->get(0, P)) > screen_thresh_ ){
                             new_det = det;
                             new_det.set_beta_bit(ii, false);
@@ -1395,8 +1395,7 @@ void AdaptiveCI::get_excited_determinants(int nroot, SharedMatrix evecs, Determi
                             if ((mo_symmetry_[ii] ^ mo_symmetry_[jj] ^ mo_symmetry_[aa] ^
                                  mo_symmetry_[bb]) == 0) {
                                 double HIJ = fci_ints_->tei_aa(ii, jj, aa, bb);
-                                if ((std::fabs(HIJ) * evecs->get_row(0, P)->norm() >=
-                                     screen_thresh_)) {
+                                if ((std::fabs(HIJ) * evecs_P_row_norm >= screen_thresh_)) {
                                     new_det = det;
                                     HIJ *= new_det.double_excitation_aa(ii, jj, aa, bb);
                                     // if( std::abs(HIJ * evecs->get(0, P)) > screen_thresh_ ){
@@ -1431,8 +1430,7 @@ void AdaptiveCI::get_excited_determinants(int nroot, SharedMatrix evecs, Determi
                             if ((mo_symmetry_[ii] ^ mo_symmetry_[jj] ^ mo_symmetry_[aa] ^
                                  mo_symmetry_[bb]) == 0) {
                                 double HIJ = fci_ints_->tei_ab(ii, jj, aa, bb);
-                                if ((std::fabs(HIJ) * evecs->get_row(0, P)->norm() >=
-                                     screen_thresh_)) {
+                                if ((std::fabs(HIJ) * evecs_P_row_norm >= screen_thresh_)) {
                                     new_det = det;
                                     HIJ *= new_det.double_excitation_ab(ii, jj, aa, bb);
                                     // if( std::abs(HIJ * evecs->get(0, P)) > screen_thresh_ ){
@@ -1466,8 +1464,7 @@ void AdaptiveCI::get_excited_determinants(int nroot, SharedMatrix evecs, Determi
                             if ((mo_symmetry_[ii] ^
                                  (mo_symmetry_[jj] ^ (mo_symmetry_[aa] ^ mo_symmetry_[bb]))) == 0) {
                                 double HIJ = fci_ints_->tei_bb(ii, jj, aa, bb);
-                                if ((std::fabs(HIJ) * evecs->get_row(0, P)->norm() >=
-                                     screen_thresh_)) {
+                                if ((std::fabs(HIJ) * evecs_P_row_norm >= screen_thresh_)) {
                                     // if( std::abs(HIJ * evecs->get(0, P)) >= screen_thresh_ ){
                                     new_det = det;
                                     HIJ *= new_det.double_excitation_bb(ii, jj, aa, bb);
