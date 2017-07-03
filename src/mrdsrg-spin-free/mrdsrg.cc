@@ -463,7 +463,7 @@ double MRDSRG::compute_energy_relaxed() {
         outfile->Printf("\n    %-30s = %22.15f", "MRDSRG Total Energy (fixed)", Edsrg);
         outfile->Printf("\n    %-30s = %22.15f", "MRDSRG Total Energy (relaxed)", Erelax);
         outfile->Printf("\n");
-    } else if (relax_algorithm == "ITERATE") {
+    } else if (relax_algorithm == "ITERATE" || relax_algorithm == "TWICE") {
         // iteration variables
         int cycle = 0, maxiter = options_.get_int("MAXITER_RELAX_REF");
         double e_conv = options_.get_double("E_CONVERGENCE");
@@ -625,6 +625,12 @@ double MRDSRG::compute_energy_relaxed() {
                 outfile->Flush();
             }
             ++cycle;
+
+            // terminate peacefully if relaxed twice
+            if (relax_algorithm == "TWICE" && cycle == 2) {
+                converged = true;
+                failed = false;
+            }
         } while (!converged);
 
         print_h2("MRDSRG Reference Relaxation Summary");
@@ -651,6 +657,13 @@ double MRDSRG::compute_energy_relaxed() {
 
         if (failed) {
             throw PSIEXCEPTION("Reference relaxation process does not converge.");
+        }
+
+        // set energies to psi4 environment
+        Process::environment.globals["UNRELAXED ENERGY"] = Edsrg_vec[0];
+        Process::environment.globals["PARTIALLY RELAXED ENERGY"] = Erelax_vec[0];
+        if (cycle > 1) {
+            Process::environment.globals["RELAXED ENERGY"] = Edsrg_vec[1];
         }
     }
 
