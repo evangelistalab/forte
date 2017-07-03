@@ -1082,7 +1082,7 @@ void AdaptiveCI::get_excited_determinants2(int nroot, SharedMatrix evecs, Determ
         for (int bin = 0; bin < nbin; ++bin) {
 
             det_hash<std::vector<double>> A_I;
-            //std::vector<std::pair<STLBitsetDeterminant, std::vector<double>>> A_I;
+            // std::vector<std::pair<STLBitsetDeterminant, std::vector<double>>> A_I;
 
             const std::vector<STLBitsetDeterminant>& dets = P_space.determinants();
             for (size_t I = start_idx; I < end_idx; ++I) {
