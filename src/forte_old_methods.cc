@@ -406,6 +406,9 @@ void forte_old_methods(SharedWavefunction ref_wfn, Options& options,
             aci->set_max_rdm(3);
             aci->compute_energy();
             Reference aci_reference = aci->reference();
+            if (options.get_bool("ACI_NO")) {
+                aci->compute_nos();
+            }        
 
             // Transform integrals to semicanonical basis
             SemiCanonical semi(ref_wfn, options, ints, mo_space_info, aci_reference);
@@ -478,6 +481,10 @@ void forte_old_methods(SharedWavefunction ref_wfn, Options& options,
             aci->set_quiet(true);
             aci->set_max_rdm(3);
             aci->compute_energy();
+            if (options.get_bool("ACI_NO")) {
+                aci->compute_nos();
+            }        
+    
             Reference aci_reference = aci->reference();
             SemiCanonical semi(ref_wfn, options, ints, mo_space_info, aci_reference);
             semi.semicanonicalize(aci_reference);
