@@ -31,6 +31,7 @@
 
 #include <string>
 #include <vector>
+#include <sys/stat.h>
 
 #include "psi4/libmints/matrix.h"
 #include "psi4/libmints/molecule.h"
@@ -40,6 +41,8 @@
 #include "psi4/libpsio/psio.h"
 #include "psi4/libpsio/psio.hpp"
 #include "psi4/libqt/qt.h"
+#include "ambit/blocked_tensor.h"
+#include "ambit/tensor.h"
 
 #include "helpers.h"
 #include "integrals/integrals.h"
@@ -112,7 +115,7 @@ class ACTIVE_DSRGPT2 : public Wavefunction {
     std::vector<std::vector<double>> ref_energies_;
 
     /// DSRGPT2 energies
-    std::vector<std::vector<double>> pt_energies_;
+    std::vector<std::vector<double>> pt2_energies_;
 
     /// Singles (T1) percentage in VCISD
     std::vector<std::vector<double>> t1_percentage_;
@@ -129,7 +132,7 @@ class ACTIVE_DSRGPT2 : public Wavefunction {
      *  2) obtain original orbital extent
      *  3) determine %T1 in CISD
      *  4) obtain unitary matrices that semicanonicalize the orbitals
-     *  5) compute CIS or CISD oscillator strength
+     *  5) compute VCIS or VCISD oscillator strength
      */
     void precompute_energy();
 
@@ -140,35 +143,107 @@ class ACTIVE_DSRGPT2 : public Wavefunction {
     /// Rotate to semicanonical orbitals and pass to this
     void rotate_orbs(SharedMatrix Ca0, SharedMatrix Cb0, SharedMatrix Ua, SharedMatrix Ub);
 
-    /// Compute CIS/CISD transition dipole from root0 -> root1
-    Vector4 compute_root_trans_dipole(const std::vector<SharedMatrix>& aodipole_ints,
-                                      SharedMatrix sotoao, std::shared_ptr<FCIIntegrals> fci_ints,
-                                      const std::vector<STLBitsetDeterminant>& p_space,
-                                      SharedMatrix evecs, const int& root0, const int& root1);
-    /// Compute CIS/CISD oscillator strength
-    /// Only compute root_0 of eigen0 -> root_n of eigen0 or eigen1
-    /// eigen0 and eigen1 are assumed to be different by default
-    void compute_oscillator_strength(const int& irrep0, const int& irrep1,
-                                     const std::vector<STLBitsetDeterminant>& p_space0,
-                                     const std::vector<STLBitsetDeterminant>& p_space1,
-                                     const std::vector<std::pair<SharedVector, double>>& eigen0,
-                                     const std::vector<std::pair<SharedVector, double>>& eigen1,
-                                     const bool& same = false);
+    /// MO dipole integrals in C1 Pitzer ordering in the original basis
+    std::vector<SharedMatrix> modipole_ints_;
+    /// Compute MO dipole integrals from libmints using the current orbitals
+    void compute_modipole();
+
     /// Active indices in C1 symmetry per irrep
     std::vector<std::vector<size_t>> actvIdxC1_;
-    /// Oscillator strength
+    /// Core indices in C1 symmetry per irrep
+    std::vector<std::vector<size_t>> coreIdxC1_;
+    /// Virtual indices in C1 symmetry per irrep
+    std::vector<std::vector<size_t>> virtIdxC1_;
+
+    /// Compute VCIS/VCISD transition dipole from root0 -> root1
+    Vector4 compute_td_ref_root(std::shared_ptr<FCIIntegrals> fci_ints,
+                                const std::vector<STLBitsetDeterminant>& p_space,
+                                SharedMatrix evecs, const int& root0, const int& root1);
+    /// Compute VCIS/VCISD oscillator strength
+    /// Only compute root_0 of eigen0 -> root_n of eigen0 or eigen1
+    /// eigen0 and eigen1 are assumed to be different by default
+    void compute_osc_ref(const int& irrep0, const int& irrep1,
+                         const std::vector<STLBitsetDeterminant>& p_space0,
+                         const std::vector<STLBitsetDeterminant>& p_space1,
+                         const std::vector<std::pair<SharedVector, double>>& eigen0,
+                         const std::vector<std::pair<SharedVector, double>>& eigen1);
+
+    /// Transition dipole moment of reference in a.u.
+    std::map<std::string, Vector4> tdipole_ref_;
+    /// Oscillator strength of reference
     std::map<std::string, Vector4> f_ref_;
+
+    /// Transition dipole moment of perturbation in a.u.
+    std::map<std::string, Vector4> tdipole_pt2_;
+    /// Oscillator strength of perturbation
+    std::map<std::string, Vector4> f_pt2_;
+
+    /// A uniform format for transition type
+    std::string transition_type(const int& n0, const int& irrep0, const int& n1, const int& irrep1);
+
+    /// Combine reference wavefunction of different symmetry
+    SharedMatrix combine_evecs(const int& h0, const int& h1);
+
+    /// Store a copy of the ground-state determinants
+    std::vector<STLBitsetDeterminant> p_space_g_;
+    /// Store a copy of all reference wavefunctions in the original basis
+    std::vector<SharedMatrix> ref_wfns_;
+
+    /// Scalar term from T amplitudes de-normal-ordering of the ground state
+    double Tde_g_;
+    /// De-normal-ordered T1 amplitudes of the ground state
+    ambit::BlockedTensor T1_g_;
+    /// (De-normal-ordered) T2 amplitudes of the ground state
+    ambit::BlockedTensor T2_g_;
+
+    /// Compute the DSRG-PT2 oscillator strength
+    void compute_osc_pt2(const int& irrep, const int& root, const double& Tde_x,
+                         ambit::BlockedTensor& T1_x, ambit::BlockedTensor& T2_x);
+    /**
+     * Compute effective 1st-order transition densities
+     * for transition dipole computaions in active_dsrgpt2.
+     * @param T1 T1 amplitudes
+     * @param T2 T2 amplitudes
+     * @param TD1 one-body transition density of the reference
+     * @param TD2 two-body transition density of the reference
+     * @param TD3 three-body transition density of the reference
+     * @param transpose Transpose the 0th-order transition density if true
+     * @return the fully contracted term of T * TD
+     *
+     * The effective 1st-order trans. dens. is defined as follows:
+     * for example: <X0|mu T1(G)|G0> = (mu)^a_u * (t)^v_a * (td)^u_v + ...
+     *                               = (mu)^a_u * (td_eff)^u_a + ...
+     *              where T1(G) is the de-normal-ordered singles of state G,
+     *              and td_eff is defined as effective 1st-order transition density.
+     */
+    double compute_TDeff(ambit::BlockedTensor& T1, ambit::BlockedTensor& T2,
+                         ambit::BlockedTensor& TD1, ambit::BlockedTensor& TD2,
+                         ambit::BlockedTensor& TD3, ambit::BlockedTensor& TDeff,
+                         const bool& transpose);
 
     /// Print summary
     void print_summary();
+    /// Print oscillator strength and transition dipoles
+    void print_osc();
+
+    /// Format a double to string
+    std::string format_double(const double& value, const int& width, const int& precision,
+                              const bool& scientific = false);
+    /// Rename a file
+    void rename_file(const std::string& oldName, const std::string& newName);
 
     /// Orbital extents of original orbitals
     std::vector<double> orb_extents_;
 
-    /// Flatten the structure of orbital extents in fci_mo and return a vector
-    /// of <r^2>
+    /// Flatten the structure of orbital extents in fci_mo and return a vector of <r^2>
     std::vector<double>
     flatten_fci_orbextents(const std::vector<std::vector<std::vector<double>>>& fci_orb_extents);
+
+    /// Test if a file exist or not
+    bool is_file_exist(const std::string& name) {
+        struct stat buffer;
+        return (stat(name.c_str(), &buffer) == 0);
+    }
 };
 }
 }

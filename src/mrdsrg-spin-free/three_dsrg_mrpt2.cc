@@ -175,6 +175,9 @@ void THREE_DSRG_MRPT2::startup() {
     // initialize timer for commutator
     dsrg_time_ = DSRG_TIME();
 
+    // include internal amplitudes or not
+    internal_amp_ = options_.get_str("INTERNAL_AMP") != "NONE";
+
     rdoccpi_ = mo_space_info_->get_dimension("RESTRICTED_DOCC");
     actvpi_ = mo_space_info_->get_dimension("ACTIVE");
     ruoccpi_ = mo_space_info_->get_dimension("RESTRICTED_UOCC");
@@ -1328,7 +1331,7 @@ double THREE_DSRG_MRPT2::E_FT1() {
     E += F_["EX"] * T1_["YE"] * Gamma1_["XY"];
     E += F_["XM"] * T1_["MY"] * Eta1_["YX"];
 
-    if (options_.get_str("INTERNAL_AMP") != "NONE") {
+    if (internal_amp_) {
         E += F_["xv"] * T1_["ux"] * Gamma1_["vu"];
         E -= F_["yu"] * T1_["ux"] * Gamma1_["xy"];
 
@@ -1364,7 +1367,7 @@ double THREE_DSRG_MRPT2::E_VT1() {
     E += 0.5 * temp["UVXY"] * Lambda2_["XYUV"];
     E += temp["uVxY"] * Lambda2_["xYuV"];
 
-    if (options_.get_str("INTERNAL_AMP") != "NONE") {
+    if (internal_amp_) {
         temp.zero();
 
         temp["uvxy"] += V_["wvxy"] * T1_["uw"];
@@ -1411,7 +1414,7 @@ double THREE_DSRG_MRPT2::E_FT2() {
     E += 0.5 * temp["UVXY"] * Lambda2_["XYUV"];
     E += temp["uVxY"] * Lambda2_["xYuV"];
 
-    if (options_.get_str("INTERNAL_AMP") != "NONE") {
+    if (internal_amp_) {
         temp.zero();
 
         temp["uvxy"] += F_["wx"] * T2_["uvwy"];
@@ -1665,7 +1668,7 @@ double THREE_DSRG_MRPT2::E_VT2_2() {
     MPI_Bcast(&all_e, 1, MPI_DOUBLE, 0, MPI_COMM_WORLD);
 #endif
 
-    if (options_.get_str("INTERNAL_AMP") != "NONE" && my_proc == 0) {
+    if (internal_amp_ && my_proc == 0) {
         temp.zero();
         temp["uvxy"] += 0.25 * V_["uvwz"] * Gamma1_["wx"] * Gamma1_["zy"];
         temp["uVxY"] += V_["uVwZ"] * Gamma1_["wx"] * Gamma1_["ZY"];
@@ -1714,7 +1717,7 @@ double THREE_DSRG_MRPT2::E_VT2_4HH() {
     E += Lambda2_["xYuV"] * temp["uVxY"];
     E += Lambda2_["XYUV"] * temp["UVXY"];
 
-    if (options_.get_str("INTERNAL_AMP") != "NONE") {
+    if (internal_amp_) {
         temp.zero();
         temp["uvxy"] -= 0.125 * V_["uvwz"] * T2_["wzxy"];
         temp["uVxY"] -= V_["uVwZ"] * T2_["wZxY"];
@@ -1755,7 +1758,7 @@ double THREE_DSRG_MRPT2::E_VT2_4PP() {
     E += Lambda2_["xYuV"] * temp["uVxY"];
     E += Lambda2_["XYUV"] * temp["UVXY"];
 
-    if (options_.get_str("INTERNAL_AMP") != "NONE") {
+    if (internal_amp_) {
         temp.zero();
         temp["uvxy"] += 0.125 * V_["wzxy"] * T2_["uvwz"];
         temp["uVxY"] += V_["wZxY"] * T2_["uVwZ"];
@@ -1862,7 +1865,7 @@ double THREE_DSRG_MRPT2::E_VT2_4PH() {
     temp["uVxY"] += Eta1_["ZW"] * V_["WVMY"] * T2_["uMxZ"];
     E += temp["uVxY"] * Lambda2_["xYuV"];
 
-    if (options_.get_str("INTERNAL_AMP") != "NONE") {
+    if (internal_amp_) {
         temp.zero();
         temp["uvxy"] -= V_["v1xw"] * T2_["zu1y"] * Gamma1_["wz"];
         temp["uvxy"] -= V_["v!xW"] * T2_["uZy!"] * Gamma1_["WZ"];
@@ -4279,6 +4282,149 @@ void THREE_DSRG_MRPT2::combine_tensor(ambit::Tensor& tens, ambit::Tensor& tens_h
             size_t abs_idx = rel_to_abs(i, j, offset);
             tens.data()[abs_idx] = tens_h.data()[i * h_dim + j];
         }
+    }
+}
+
+double THREE_DSRG_MRPT2::Tamp_deGNO() {
+    // de-normal-order T1
+    T1eff_ = BTF_->build(tensor_type_, "Effective T1 from de-GNO", spin_cases({"hp"}));
+
+    T1eff_["ia"] = T1_["ia"];
+    T1eff_["IA"] = T1_["IA"];
+
+    T1eff_["ia"] -= T2_["iuav"] * Gamma1_["vu"];
+    T1eff_["ia"] -= T2_["iUaV"] * Gamma1_["VU"];
+    T1eff_["IA"] -= T2_["uIvA"] * Gamma1_["vu"];
+    T1eff_["IA"] -= T2_["IUAV"] * Gamma1_["VU"];
+
+    double out = 0.0;
+    if (internal_amp_) {
+        // the scalar term of amplitudes when de-normal-ordering
+        out -= T1_["uv"] * Gamma1_["vu"];
+        out -= T1_["UV"] * Gamma1_["VU"];
+
+        out -= 0.25 * T2_["xyuv"] * Lambda2_["uvxy"];
+        out -= 0.25 * T2_["XYUV"] * Lambda2_["UVXY"];
+        out -= T2_["xYuV"] * Lambda2_["uVxY"];
+
+        out += 0.5 * T2_["xyuv"] * Gamma1_["ux"] * Gamma1_["vy"];
+        out += 0.5 * T2_["XYUV"] * Gamma1_["UX"] * Gamma1_["VY"];
+        out += T2_["xYuV"] * Gamma1_["ux"] * Gamma1_["VY"];
+    }
+
+    return out;
+}
+
+ambit::BlockedTensor THREE_DSRG_MRPT2::T1(const std::vector<string>& blocks) {
+    for (const std::string& block : blocks) {
+        if (!T1_.is_block(block)) {
+            std::string error = "Error from T1(blocks): cannot find block " + block;
+            throw PSIEXCEPTION(error);
+        }
+    }
+    ambit::BlockedTensor out = ambit::BlockedTensor::build(tensor_type_, "T1 selected", blocks);
+    out["ia"] = T1_["ia"];
+    out["IA"] = T1_["IA"];
+    return out;
+}
+
+ambit::BlockedTensor THREE_DSRG_MRPT2::T1deGNO(const std::vector<string>& blocks) {
+    for (const std::string& block : blocks) {
+        if (!T1eff_.is_block(block)) {
+            std::string error = "Error from T1deGNO(blocks): cannot find block " + block;
+            throw PSIEXCEPTION(error);
+        }
+    }
+    ambit::BlockedTensor out =
+        ambit::BlockedTensor::build(tensor_type_, "T1deGNO selected", blocks);
+    out["ia"] = T1eff_["ia"];
+    out["IA"] = T1eff_["IA"];
+    return out;
+}
+
+ambit::BlockedTensor THREE_DSRG_MRPT2::T2(const std::vector<string>& blocks) {
+    for (const std::string& block : blocks) {
+        if (!T2_.is_block(block)) {
+            std::string error = "Error from T2(blocks): cannot find block " + block;
+            throw PSIEXCEPTION(error);
+        }
+    }
+    ambit::BlockedTensor out = ambit::BlockedTensor::build(tensor_type_, "T2 selected", blocks);
+    out["ijab"] = T2_["ijab"];
+    out["iJaB"] = T2_["iJaB"];
+    out["IJAB"] = T2_["IJAB"];
+    return out;
+}
+
+void THREE_DSRG_MRPT2::rotate_amp(SharedMatrix Ua, SharedMatrix Ub, const bool& transpose,
+                                  const bool& t1eff) {
+    ambit::BlockedTensor U = BTF_->build(tensor_type_, "Uorb", spin_cases({"gg"}));
+
+    std::map<char, std::vector<std::pair<size_t, size_t>>> space_to_relmo;
+    space_to_relmo['c'] = mo_space_info_->get_relative_mo("RESTRICTED_DOCC");
+    space_to_relmo['a'] = mo_space_info_->get_relative_mo("ACTIVE");
+    space_to_relmo['v'] = mo_space_info_->get_relative_mo("RESTRICTED_UOCC");
+
+    // alpha
+    for (const std::string& block : {"cc", "aa", "vv"}) {
+        char space = block[0];
+
+        U.block(block).iterate([&](const std::vector<size_t>& i, double& value) {
+            std::pair<size_t, size_t> p0 = space_to_relmo[space][i[0]];
+            std::pair<size_t, size_t> p1 = space_to_relmo[space][i[1]];
+            size_t h0 = p0.first, h1 = p1.first;
+            size_t i0 = p0.second, i1 = p1.second;
+
+            if (h0 == h1) {
+                if (transpose) {
+                    value = Ua->get(h0, i1, i0);
+                } else {
+                    value = Ua->get(h0, i0, i1);
+                }
+            }
+        });
+    }
+
+    // beta
+    for (const std::string& block : {"CC", "AA", "VV"}) {
+        char space = tolower(block[0]);
+
+        U.block(block).iterate([&](const std::vector<size_t>& i, double& value) {
+            std::pair<size_t, size_t> p0 = space_to_relmo[space][i[0]];
+            std::pair<size_t, size_t> p1 = space_to_relmo[space][i[1]];
+            size_t h0 = p0.first, h1 = p1.first;
+            size_t i0 = p0.second, i1 = p1.second;
+
+            if (h0 == h1) {
+                if (transpose) {
+                    value = Ub->get(h0, i1, i0);
+                } else {
+                    value = Ub->get(h0, i0, i1);
+                }
+            }
+        });
+    }
+
+    // rotate amplitudes
+    BlockedTensor temp = ambit::BlockedTensor::build(tensor_type_, "Temp T2", spin_cases({"hhpp"}));
+    temp["klab"] = U["ik"] * U["jl"] * T2_["ijab"];
+    temp["kLaB"] = U["ik"] * U["JL"] * T2_["iJaB"];
+    temp["KLAB"] = U["IK"] * U["JL"] * T2_["IJAB"];
+    T2_["ijcd"] = temp["ijab"] * U["bd"] * U["ac"];
+    T2_["iJcD"] = temp["iJaB"] * U["BD"] * U["ac"];
+    T2_["IJCD"] = temp["IJAB"] * U["BD"] * U["AC"];
+
+    temp = ambit::BlockedTensor::build(tensor_type_, "Temp T1", spin_cases({"hp"}));
+    temp["jb"] = U["ij"] * T1_["ia"] * U["ab"];
+    temp["JB"] = U["IJ"] * T1_["IA"] * U["AB"];
+    T1_["ia"] = temp["ia"];
+    T1_["IA"] = temp["IA"];
+
+    if (t1eff) {
+        temp["jb"] = U["ij"] * T1eff_["ia"] * U["ab"];
+        temp["JB"] = U["IJ"] * T1eff_["IA"] * U["AB"];
+        T1eff_["ia"] = temp["ia"];
+        T1eff_["IA"] = temp["IA"];
     }
 }
 }

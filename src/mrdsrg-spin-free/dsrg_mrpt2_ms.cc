@@ -446,7 +446,7 @@ std::vector<std::vector<double>> DSRG_MRPT2::compute_energy_xms() {
             build_eff_oei();
 
             // build effective singles resulting from de-normal-ordering
-            build_eff_t1();
+            build_T1eff_deGNO();
 
             // compute couplings between states
             print_h2("Compute Couplings with State " + std::to_string(M));
@@ -592,11 +592,38 @@ SharedMatrix DSRG_MRPT2::xms_rotation(std::shared_ptr<FCIIntegrals> fci_ints,
     return rcivecs;
 }
 
-void DSRG_MRPT2::build_eff_t1() {
-    T1_["ia"] -= T2_["iuav"] * Gamma1_["vu"];
-    T1_["ia"] -= T2_["iUaV"] * Gamma1_["VU"];
-    T1_["IA"] -= T2_["uIvA"] * Gamma1_["vu"];
-    T1_["IA"] -= T2_["IUAV"] * Gamma1_["VU"];
+double DSRG_MRPT2::Tamp_deGNO() {
+    // de-normal-order T1
+    build_T1eff_deGNO();
+
+    double out = 0.0;
+    if (internal_amp_) {
+        // the scalar term of amplitudes when de-normal-ordering
+        out -= T1_["uv"] * Gamma1_["vu"];
+        out -= T1_["UV"] * Gamma1_["VU"];
+
+        out -= 0.25 * T2_["xyuv"] * Lambda2_["uvxy"];
+        out -= 0.25 * T2_["XYUV"] * Lambda2_["UVXY"];
+        out -= T2_["xYuV"] * Lambda2_["uVxY"];
+
+        out += 0.5 * T2_["xyuv"] * Gamma1_["ux"] * Gamma1_["vy"];
+        out += 0.5 * T2_["XYUV"] * Gamma1_["UX"] * Gamma1_["VY"];
+        out += T2_["xYuV"] * Gamma1_["ux"] * Gamma1_["VY"];
+    }
+
+    return out;
+}
+
+void DSRG_MRPT2::build_T1eff_deGNO() {
+    T1eff_ = BTF_->build(tensor_type_, "Effective T1 from de-GNO", spin_cases({"hp"}));
+
+    T1eff_["ia"] = T1_["ia"];
+    T1eff_["IA"] = T1_["IA"];
+
+    T1eff_["ia"] -= T2_["iuav"] * Gamma1_["vu"];
+    T1eff_["ia"] -= T2_["iUaV"] * Gamma1_["VU"];
+    T1eff_["IA"] -= T2_["uIvA"] * Gamma1_["vu"];
+    T1eff_["IA"] -= T2_["IUAV"] * Gamma1_["VU"];
 }
 
 double DSRG_MRPT2::compute_ms_1st_coupling(const std::string& name) {
@@ -625,16 +652,16 @@ double DSRG_MRPT2::compute_ms_2nd_coupling(const std::string& name) {
 
     // temp contract with D1
     BlockedTensor temp = BTF_->build(tensor_type_, "temp", spin_cases({"aa"}), true);
-    temp["vu"] += Hoei_["eu"] * T1_["ve"];
-    temp["VU"] += Hoei_["EU"] * T1_["VE"];
+    temp["vu"] += Hoei_["eu"] * T1eff_["ve"];
+    temp["VU"] += Hoei_["EU"] * T1eff_["VE"];
 
-    temp["vu"] -= Hoei_["vm"] * T1_["mu"];
-    temp["VU"] -= Hoei_["VM"] * T1_["MU"];
+    temp["vu"] -= Hoei_["vm"] * T1eff_["mu"];
+    temp["VU"] -= Hoei_["VM"] * T1eff_["MU"];
 
-    temp["vu"] += V_["avmu"] * T1_["ma"];
-    temp["vu"] += V_["vAuM"] * T1_["MA"];
-    temp["VU"] += V_["aVmU"] * T1_["ma"];
-    temp["VU"] += V_["AVMU"] * T1_["MA"];
+    temp["vu"] += V_["avmu"] * T1eff_["ma"];
+    temp["vu"] += V_["vAuM"] * T1eff_["MA"];
+    temp["VU"] += V_["aVmU"] * T1eff_["ma"];
+    temp["VU"] += V_["AVMU"] * T1eff_["MA"];
 
     temp["vu"] += Hoei_["am"] * T2_["mvau"];
     temp["vu"] += Hoei_["AM"] * T2_["vMuA"];
@@ -656,15 +683,15 @@ double DSRG_MRPT2::compute_ms_2nd_coupling(const std::string& name) {
 
     // temp contract with D2
     temp = BTF_->build(tensor_type_, "temp", spin_cases({"aaaa"}), true);
-    temp["xyuv"] += 0.5 * V_["eyuv"] * T1_["xe"];
-    temp["xYuV"] += V_["eYuV"] * T1_["xe"];
-    temp["xYuV"] += V_["xEuV"] * T1_["YE"];
-    temp["XYUV"] += 0.5 * V_["EYUV"] * T1_["XE"];
+    temp["xyuv"] += 0.5 * V_["eyuv"] * T1eff_["xe"];
+    temp["xYuV"] += V_["eYuV"] * T1eff_["xe"];
+    temp["xYuV"] += V_["xEuV"] * T1eff_["YE"];
+    temp["XYUV"] += 0.5 * V_["EYUV"] * T1eff_["XE"];
 
-    temp["xyuv"] += 0.5 * V_["xyvm"] * T1_["mu"];
-    temp["xYuV"] -= V_["xYmV"] * T1_["mu"];
-    temp["xYuV"] -= V_["xYuM"] * T1_["MV"];
-    temp["XYUV"] += 0.5 * V_["XYVM"] * T1_["MU"];
+    temp["xyuv"] += 0.5 * V_["xyvm"] * T1eff_["mu"];
+    temp["xYuV"] -= V_["xYmV"] * T1eff_["mu"];
+    temp["xYuV"] -= V_["xYuM"] * T1eff_["MV"];
+    temp["XYUV"] += 0.5 * V_["XYVM"] * T1eff_["MU"];
 
     temp["xyuv"] += 0.5 * Hoei_["eu"] * T2_["xyev"];
     temp["xYuV"] += Hoei_["eu"] * T2_["xYeV"];
