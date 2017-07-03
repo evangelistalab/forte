@@ -2172,7 +2172,6 @@ int AdaptiveCI::root_follow(DeterminantMap& P_ref, std::vector<double>& P_ref_ev
     return new_root;
 }
 
-
 void AdaptiveCI::compute_aci(DeterminantMap& PQ_space, SharedMatrix& PQ_evecs,
                              SharedVector& PQ_evals) {
 
@@ -2738,7 +2737,6 @@ DeterminantMap AdaptiveCI::approximate_wfn(DeterminantMap& PQ_space, SharedMatri
 
 void AdaptiveCI::compute_nos() {
 
-    
     Dimension nmopi = reference_wavefunction_->nmopi();
     Dimension ncmopi = mo_space_info_->get_dimension("CORRELATED");
     Dimension fdocc = mo_space_info_->get_dimension("FROZEN_DOCC");
