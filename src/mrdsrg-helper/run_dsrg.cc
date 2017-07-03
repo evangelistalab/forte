@@ -68,7 +68,7 @@ void set_DSRG_options(ForteOptions& foptions) {
                      "The way of forming T1 amplitudes (used in toy code mcsrgpt2)");
 
     /*- Reference Relaxation -*/
-    foptions.add_str("RELAX_REF", "NONE", {"NONE", "ONCE", "ITERATE"},
+    foptions.add_str("RELAX_REF", "NONE", {"NONE", "ONCE", "TWICE", "ITERATE"},
                      "Relax the reference for MR-DSRG (used in dsrg-mrpt2/3, mrdsrg)");
 
     /*- Max Iteration for Reference Relaxation -*/
