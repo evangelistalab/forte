@@ -395,8 +395,8 @@ class ProjectorCI_HashVec : public Wavefunction {
     double estimate_var_energy_sparse(const det_hashvec& dets_hashvec, std::vector<double>& C,
                                       double max_error = 0.0);
     /// Form the product H c
-    double form_H_C(const det_hashvec& dets_hashvec,
-                    std::vector<double>& C, size_t I, size_t cut_index);
+    double form_H_C(const det_hashvec& dets_hashvec, std::vector<double>& C, size_t I,
+                    size_t cut_index);
     /// Do we have OpenMP?
     static bool have_omp_;
 
