@@ -32,7 +32,6 @@
 #include "dynamic_bitset_determinant.h"
 #include "fci/fci_vector.h"
 
-using namespace std;
 using namespace psi;
 
 namespace psi {
@@ -694,7 +693,7 @@ void DynamicBitsetDeterminant::check_uniqueness(
     const std::vector<DynamicBitsetDeterminant> det_space) {
     size_t duplicates = 0;
     size_t dim = det_space.size();
-    std::unordered_map<DynamicBitsetDeterminant, size_t, function<decltype(hash_value)>> det_map(
+    std::unordered_map<DynamicBitsetDeterminant, size_t, std::function<decltype(hash_value)>> det_map(
         dim, hash_value);
 
     for (const auto& i : det_space) {

@@ -31,7 +31,6 @@
 
 #include "stl_bitset_string.h"
 
-using namespace std;
 using namespace psi;
 
 namespace psi {

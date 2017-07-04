@@ -43,9 +43,7 @@
 
 #include "psi4/psi4-dec.h"
 
-using namespace std;
 using namespace psi;
-using namespace boost;
 
 // extern double h1_aa_timer;
 // extern double h1_bb_timer;
@@ -448,11 +446,11 @@ FCISolver::initial_guess(FCIWfn& diag, size_t n, size_t multiplicity,
 
     std::vector<std::pair<int, std::vector<std::tuple<size_t, size_t, size_t, double>>>> guess;
 
-    std::vector<string> s2_labels({"singlet", "doublet", "triplet", "quartet", "quintet", "sextet",
+    std::vector<std::string> s2_labels({"singlet", "doublet", "triplet", "quartet", "quintet", "sextet",
                                    "septet",  "octet",   "nonet",   "decaet",  "11-et",   "12-et",
                                    "13-et",   "14-et",   "15-et",   "16-et",   "17-et",   "18-et",
                                    "19-et",   "20-et",   "21-et",   "22-et",   "23-et",   "24-et"});
-    std::vector<string> table;
+    std::vector<std::string> table;
 
     for (size_t r = 0; r < num_dets; ++r) {
         double energy = evals.get(r) + nuclear_repulsion_energy;
@@ -513,12 +511,12 @@ Reference FCISolver::reference() {
         ambit::Tensor L1a = ambit::Tensor::build(ambit::CoreTensor, "L1a", {nact, nact});
         ambit::Tensor L1b = ambit::Tensor::build(ambit::CoreTensor, "L1b", {nact, nact});
         if (na_ >= 1) {
-            L1a.iterate([&](const ::vector<size_t>& i, double& value) {
+            L1a.iterate([&](const std::vector<size_t>& i, double& value) {
                 value = opdm_a[i[0] * nact + i[1]];
             });
         }
         if (nb_ >= 1) {
-            L1b.iterate([&](const ::vector<size_t>& i, double& value) {
+            L1b.iterate([&](const std::vector<size_t>& i, double& value) {
                 value = opdm_b[i[0] * nact + i[1]];
             });
         }
@@ -542,19 +540,19 @@ Reference FCISolver::reference() {
 
             if (na_ >= 2) {
                 std::vector<double>& tpdm_aa = C_->tpdm_aa();
-                L2aa.iterate([&](const ::vector<size_t>& i, double& value) {
+                L2aa.iterate([&](const std::vector<size_t>& i, double& value) {
                     value = tpdm_aa[i[0] * nact3 + i[1] * nact2 + i[2] * nact + i[3]];
                 });
             }
             if ((na_ >= 1) and (nb_ >= 1)) {
                 std::vector<double>& tpdm_ab = C_->tpdm_ab();
-                L2ab.iterate([&](const ::vector<size_t>& i, double& value) {
+                L2ab.iterate([&](const std::vector<size_t>& i, double& value) {
                     value = tpdm_ab[i[0] * nact3 + i[1] * nact2 + i[2] * nact + i[3]];
                 });
             }
             if (nb_ >= 2) {
                 std::vector<double>& tpdm_bb = C_->tpdm_bb();
-                L2bb.iterate([&](const ::vector<size_t>& i, double& value) {
+                L2bb.iterate([&](const std::vector<size_t>& i, double& value) {
                     value = tpdm_bb[i[0] * nact3 + i[1] * nact2 + i[2] * nact + i[3]];
                 });
             }
@@ -591,28 +589,28 @@ Reference FCISolver::reference() {
                                                            {nact, nact, nact, nact, nact, nact});
                 if (na_ >= 3) {
                     std::vector<double>& tpdm_aaa = C_->tpdm_aaa();
-                    L3aaa.iterate([&](const ::vector<size_t>& i, double& value) {
+                    L3aaa.iterate([&](const std::vector<size_t>& i, double& value) {
                         value = tpdm_aaa[i[0] * nact5 + i[1] * nact4 + i[2] * nact3 + i[3] * nact2 +
                                          i[4] * nact + i[5]];
                     });
                 }
                 if ((na_ >= 2) and (nb_ >= 1)) {
                     std::vector<double>& tpdm_aab = C_->tpdm_aab();
-                    L3aab.iterate([&](const ::vector<size_t>& i, double& value) {
+                    L3aab.iterate([&](const std::vector<size_t>& i, double& value) {
                         value = tpdm_aab[i[0] * nact5 + i[1] * nact4 + i[2] * nact3 + i[3] * nact2 +
                                          i[4] * nact + i[5]];
                     });
                 }
                 if ((na_ >= 1) and (nb_ >= 2)) {
                     std::vector<double>& tpdm_abb = C_->tpdm_abb();
-                    L3abb.iterate([&](const ::vector<size_t>& i, double& value) {
+                    L3abb.iterate([&](const std::vector<size_t>& i, double& value) {
                         value = tpdm_abb[i[0] * nact5 + i[1] * nact4 + i[2] * nact3 + i[3] * nact2 +
                                          i[4] * nact + i[5]];
                     });
                 }
                 if (nb_ >= 3) {
                     std::vector<double>& tpdm_bbb = C_->tpdm_bbb();
-                    L3bbb.iterate([&](const ::vector<size_t>& i, double& value) {
+                    L3bbb.iterate([&](const std::vector<size_t>& i, double& value) {
                         value = tpdm_bbb[i[0] * nact5 + i[1] * nact4 + i[2] * nact3 + i[3] * nact2 +
                                          i[4] * nact + i[5]];
                     });
@@ -689,7 +687,7 @@ Reference FCISolver::reference() {
                 if (print_ > 1)
                     for (auto L1 : {L1a, L1b}) {
                         outfile->Printf("\n\n** %s **", L1.name().c_str());
-                        L1.iterate([&](const ::vector<size_t>& i, double& value) {
+                        L1.iterate([&](const std::vector<size_t>& i, double& value) {
                             if (std::fabs(value) > 1.0e-15)
                                 outfile->Printf("\n  Lambda [%3lu][%3lu] = %18.15lf", i[0], i[1],
                                                 value);
@@ -699,7 +697,7 @@ Reference FCISolver::reference() {
                 if (print_ > 2)
                     for (auto L2 : {L2aa, L2ab, L2bb}) {
                         outfile->Printf("\n\n** %s **", L2.name().c_str());
-                        L2.iterate([&](const ::vector<size_t>& i, double& value) {
+                        L2.iterate([&](const std::vector<size_t>& i, double& value) {
                             if (std::fabs(value) > 1.0e-15)
                                 outfile->Printf("\n  Lambda "
                                                 "[%3lu][%3lu][%3lu][%3lu] = "
@@ -711,7 +709,7 @@ Reference FCISolver::reference() {
                 if (print_ > 3)
                     for (auto L3 : {L3aaa, L3aab, L3abb, L3bbb}) {
                         outfile->Printf("\n\n** %s **", L3.name().c_str());
-                        L3.iterate([&](const ::vector<size_t>& i, double& value) {
+                        L3.iterate([&](const std::vector<size_t>& i, double& value) {
                             if (std::fabs(value) > 1.0e-15)
                                 outfile->Printf("\n  Lambda "
                                                 "[%3lu][%3lu][%3lu][%3lu][%"

@@ -36,7 +36,6 @@
 //#include "stl_bitset_determinant.h"
 //#include "fci/fci_vector.h"
 
-// using namespace std;
 // using namespace psi;
 
 // namespace psi {

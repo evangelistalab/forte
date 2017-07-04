@@ -31,7 +31,6 @@
 #include "helpers.h"
 #include "tensorsrg.h"
 
-using namespace std;
 using namespace psi;
 
 namespace psi {

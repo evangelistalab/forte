@@ -52,7 +52,6 @@
 #include <macdecls.h>
 #endif
 
-using namespace std;
 using namespace psi;
 using namespace ambit;
 

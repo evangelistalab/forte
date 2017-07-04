@@ -37,8 +37,6 @@
 
 #include "string_lists.h"
 
-using namespace boost;
-
 namespace psi {
 namespace forte {
 
