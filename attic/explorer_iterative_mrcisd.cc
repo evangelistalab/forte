@@ -334,8 +334,8 @@ void LambdaCI::iterative_adaptive_mrcisd(psi::Options& options) {
         std::vector<std::pair<double, size_t>> new_dets_importance_vec;
 
         std::vector<double> V(nroot, 0.0);
-        std::vector<std::pair<double, double>> C1(nroot, make_pair(0.0, 0.0));
-        std::vector<std::pair<double, double>> E2(nroot, make_pair(0.0, 0.0));
+        std::vector<std::pair<double, double>> C1(nroot, std::make_pair(0.0, 0.0));
+        std::vector<std::pair<double, double>> E2(nroot, std::make_pair(0.0, 0.0));
         std::vector<double> ept2(nroot, 0.0);
 
         double aimed_selection_sum = 0.0;
@@ -356,8 +356,8 @@ void LambdaCI::iterative_adaptive_mrcisd(psi::Options& options) {
             for (int n = 0; n < nroot; ++n) {
                 double C1_I = -V[n] / (EI - evals->get(n));
                 double E2_I = -V[n] * V[n] / (EI - evals->get(n));
-                C1[n] = make_pair(std::fabs(C1_I), C1_I);
-                E2[n] = make_pair(std::fabs(E2_I), E2_I);
+                C1[n] = std::make_pair(std::fabs(C1_I), C1_I);
+                E2[n] = std::make_pair(std::fabs(E2_I), E2_I);
             }
 
             std::pair<double, double> max_C1 = *std::max_element(C1.begin(), C1.end());
@@ -465,13 +465,13 @@ void LambdaCI::iterative_adaptive_mrcisd(psi::Options& options) {
                 std::vector<std::pair<int, double>> H_row;
                 const StringDeterminant& detI = ref_sd_dets[I];
                 double HII = detI.slater_rules(detI);
-                H_row.push_back(make_pair(int(I), HII));
+                H_row.push_back(std::make_pair(int(I), HII));
                 for (size_t J = 0; J < dim_ref_sd_dets; ++J) {
                     if (I != J) {
                         const StringDeterminant& detJ = ref_sd_dets[J];
                         double HIJ = detI.slater_rules(detJ);
                         if (std::fabs(HIJ) >= 1.0e-12) {
-                            H_row.push_back(make_pair(int(J), HIJ));
+                            H_row.push_back(std::make_pair(int(J), HIJ));
                             num_nonzero += 1;
                         }
                     }
@@ -914,8 +914,8 @@ void LambdaCI::iterative_adaptive_mrcisd_bitset(psi::Options& options) {
         ForteTimer t_ms_screen;
 
         typedef std::map<DynamicBitsetDeterminant, std::vector<double>>::iterator bsmap_it;
-        std::vector<std::pair<double, double>> C1(nroot, make_pair(0.0, 0.0));
-        std::vector<std::pair<double, double>> E2(nroot, make_pair(0.0, 0.0));
+        std::vector<std::pair<double, double>> C1(nroot, std::make_pair(0.0, 0.0));
+        std::vector<std::pair<double, double>> E2(nroot, std::make_pair(0.0, 0.0));
         std::vector<double> ept2(nroot, 0.0);
 
         // Check the coupling between the reference and the SD space
@@ -926,8 +926,8 @@ void LambdaCI::iterative_adaptive_mrcisd_bitset(psi::Options& options) {
                 double C1_I = -V / (EI - evals->get(n));
                 double E2_I = -V * V / (EI - evals->get(n));
 
-                C1[n] = make_pair(std::fabs(C1_I), C1_I);
-                E2[n] = make_pair(std::fabs(E2_I), E2_I);
+                C1[n] = std::make_pair(std::fabs(C1_I), C1_I);
+                E2[n] = std::make_pair(std::fabs(E2_I), E2_I);
             }
 
             std::pair<double, double> max_C1 = *std::max_element(C1.begin(), C1.end());
@@ -996,13 +996,13 @@ void LambdaCI::iterative_adaptive_mrcisd_bitset(psi::Options& options) {
                 std::vector<std::pair<int, double>> H_row;
                 const DynamicBitsetDeterminant& detI = ref_sd_dets[I];
                 double HII = detI.slater_rules(detI);
-                H_row.push_back(make_pair(int(I), HII));
+                H_row.push_back(std::make_pair(int(I), HII));
                 for (size_t J = 0; J < dim_ref_sd_dets; ++J) {
                     if (I != J) {
                         const DynamicBitsetDeterminant& detJ = ref_sd_dets[J];
                         double HIJ = detI.slater_rules(detJ);
                         if (std::fabs(HIJ) >= 1.0e-12) {
-                            H_row.push_back(make_pair(int(J), HIJ));
+                            H_row.push_back(std::make_pair(int(J), HIJ));
                             num_nonzero += 1;
                         }
                     }

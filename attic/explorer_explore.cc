@@ -129,10 +129,10 @@ void LambdaCI::explore_original(psi::Options& options) {
 
     outfile->Printf("\n  denominator_threshold_: %f s", denominator_threshold_);
 
-    ofstream de("det_energy.txt");
+    std::ofstream de("det_energy.txt");
     double ref_one_electron_energy = min_energy_determinant_.one_electron_energy();
 
-    vector<bool> empty_det(2 * ncmo_, false);
+    std::vector<bool> empty_det(2 * ncmo_, false);
     StringDeterminant det(empty_det);
     ForteTimer t_dets;
     // Loop over the excitation level
@@ -341,7 +341,7 @@ void LambdaCI::explore(psi::Options& options) {
     vec_bstr_symm_ = compute_strings_screened(epsilon_b_qt_, nbocc, nbvir, maxnbex_, false);
     outfile->Printf("\n  Time required: %f s", timer_bstr.elapsed());
 
-    vector<bool> empty_det(2 * ncmo_, false);
+    std::vector<bool> empty_det(2 * ncmo_, false);
     StringDeterminant det(empty_det);
     ForteTimer t_dets;
     // Loop over the excitation level

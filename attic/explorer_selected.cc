@@ -99,7 +99,7 @@ void LambdaCI::diagonalize_selected_space(psi::Options& options) {
         std::vector<std::pair<double, int>> C_J_sorted;
         for (int J = 0; J < ndets_m; ++J) {
             if (std::fabs(C_mat[J][i]) > significant_threshold) {
-                C_J_sorted.push_back(make_pair(std::fabs(C_mat[J][i]), J));
+                C_J_sorted.push_back(std::make_pair(std::fabs(C_mat[J][i]), J));
             }
         }
         // Sort them and print
@@ -156,7 +156,7 @@ void LambdaCI::diagonalize_selected_space(psi::Options& options) {
         std::vector<std::pair<double, int>> C_J_sorted;
         for (int J = 0; J < ndets; ++J) {
             if (std::fabs(C_mat[J][i]) > significant_threshold) {
-                C_J_sorted.push_back(make_pair(std::fabs(C_mat[J][i]), J));
+                C_J_sorted.push_back(std::make_pair(std::fabs(C_mat[J][i]), J));
             }
         }
         // Sort them and print
@@ -285,8 +285,8 @@ SharedMatrix LambdaCI::build_select_hamiltonian_roth(Options& options, SharedVec
     int nroot = options.get_int("NROOT");
     std::vector<double> V_q(nroot, 0.0);
     std::vector<double> t_q(nroot, 0.0);
-    std::vector<std::pair<double, double>> kappa_q(nroot, make_pair(0.0, 0.0));
-    std::vector<std::pair<double, double>> chi_q(nroot, make_pair(0.0, 0.0));
+    std::vector<std::pair<double, double>> kappa_q(nroot, std::make_pair(0.0, 0.0));
+    std::vector<std::pair<double, double>> chi_q(nroot, std::make_pair(0.0, 0.0));
     std::vector<double> ept2(nroot, 0.0);
 
     std::vector<std::pair<double, size_t>> aimed_selection_vec;
@@ -321,8 +321,8 @@ SharedMatrix LambdaCI::build_select_hamiltonian_roth(Options& options, SharedVec
         for (int n = 0; n < nroot; ++n) {
             double kappa = -V_q[n] / (EI - evals->get(n));
             double chi = -V_q[n] * V_q[n] / (EI - evals->get(n));
-            kappa_q[n] = make_pair(std::fabs(kappa), kappa);
-            chi_q[n] = make_pair(std::fabs(chi), chi);
+            kappa_q[n] = std::make_pair(std::fabs(kappa), kappa);
+            chi_q[n] = std::make_pair(std::fabs(chi), chi);
         }
 
         //        double kappa =  - V / (EI - E);
@@ -459,8 +459,8 @@ void LambdaCI::diagonalize_renormalized_space(psi::Options& options) {
 
         std::vector<double> V_q(nroot, 0.0);
         std::vector<double> t_q(nroot, 0.0);
-        std::vector<std::pair<double, double>> kappa_q(nroot, make_pair(0.0, 0.0));
-        std::vector<std::pair<double, double>> chi_q(nroot, make_pair(0.0, 0.0));
+        std::vector<std::pair<double, double>> kappa_q(nroot, std::make_pair(0.0, 0.0));
+        std::vector<std::pair<double, double>> chi_q(nroot, std::make_pair(0.0, 0.0));
 
         std::vector<size_t> selected_test_dets = selected_dets;
         if (step != 0) {
@@ -496,8 +496,8 @@ void LambdaCI::diagonalize_renormalized_space(psi::Options& options) {
                 for (int n = 0; n < nroot; ++n) {
                     double kappa = -V_q[n] / (EI - evals->get(n));
                     double chi = -V_q[n] * V_q[n] / (EI - evals->get(n));
-                    kappa_q[n] = make_pair(std::fabs(kappa), kappa);
-                    chi_q[n] = make_pair(std::fabs(chi), chi);
+                    kappa_q[n] = std::make_pair(std::fabs(kappa), kappa);
+                    chi_q[n] = std::make_pair(std::fabs(chi), chi);
                 }
 
                 std::pair<double, double> max_kappa =
@@ -625,7 +625,7 @@ void LambdaCI::diagonalize_renormalized_space(psi::Options& options) {
         std::vector<std::pair<double, int>> C_J_sorted;
         for (int J = 0; J < num_selected_dets; ++J) {
             if (std::fabs(C_mat[J][i]) > significant_threshold) {
-                C_J_sorted.push_back(make_pair(std::fabs(C_mat[J][i]), J));
+                C_J_sorted.push_back(std::make_pair(std::fabs(C_mat[J][i]), J));
             }
         }
         // Sort them and print
@@ -681,7 +681,7 @@ void LambdaCI::diagonalize_renormalized_space(psi::Options& options) {
     //        std::vector<std::pair<double,int> > C_J_sorted;
     //        for (int J = 0; J < ndets; ++J){
     //            if (std::fabs(C_mat[J][i]) > significant_threshold){
-    //                C_J_sorted.push_back(make_pair(std::fabs(C_mat[J][i]),J));
+    //                C_J_sorted.push_back(std::make_pair(std::fabs(C_mat[J][i]),J));
     //            }
     //        }
     //        // Sort them and print
@@ -772,8 +772,8 @@ void LambdaCI::diagonalize_renormalized_fixed_space(psi::Options& options) {
 
         std::vector<double> V_q(nroot, 0.0);
         std::vector<double> t_q(nroot, 0.0);
-        std::vector<std::pair<double, double>> kappa_q(nroot, make_pair(0.0, 0.0));
-        std::vector<std::pair<double, double>> chi_q(nroot, make_pair(0.0, 0.0));
+        std::vector<std::pair<double, double>> kappa_q(nroot, std::make_pair(0.0, 0.0));
+        std::vector<std::pair<double, double>> chi_q(nroot, std::make_pair(0.0, 0.0));
 
         std::vector<size_t> selected_test_dets = selected_dets;
         if (step != 0) {
@@ -809,8 +809,8 @@ void LambdaCI::diagonalize_renormalized_fixed_space(psi::Options& options) {
                 for (int n = 0; n < nroot; ++n) {
                     double kappa = -V_q[n] / (EI - evals->get(n));
                     double chi = -V_q[n] * V_q[n] / (EI - evals->get(n));
-                    kappa_q[n] = make_pair(std::fabs(kappa), kappa);
-                    chi_q[n] = make_pair(std::fabs(chi), chi);
+                    kappa_q[n] = std::make_pair(std::fabs(kappa), kappa);
+                    chi_q[n] = std::make_pair(std::fabs(chi), chi);
                 }
 
                 std::pair<double, double> max_kappa =
@@ -948,7 +948,7 @@ void LambdaCI::diagonalize_renormalized_fixed_space(psi::Options& options) {
         std::vector<std::pair<double, int>> C_J_sorted;
         for (int J = 0; J < num_selected_dets; ++J) {
             if (std::fabs(C_mat[J][i]) > significant_threshold) {
-                C_J_sorted.push_back(make_pair(std::fabs(C_mat[J][i]), J));
+                C_J_sorted.push_back(std::make_pair(std::fabs(C_mat[J][i]), J));
             }
         }
         // Sort them and print
@@ -1004,7 +1004,7 @@ void LambdaCI::diagonalize_renormalized_fixed_space(psi::Options& options) {
     //        std::vector<std::pair<double,int> > C_J_sorted;
     //        for (int J = 0; J < ndets; ++J){
     //            if (std::fabs(C_mat[J][i]) > significant_threshold){
-    //                C_J_sorted.push_back(make_pair(std::fabs(C_mat[J][i]),J));
+    //                C_J_sorted.push_back(std::make_pair(std::fabs(C_mat[J][i]),J));
     //            }
     //        }
     //        // Sort them and print

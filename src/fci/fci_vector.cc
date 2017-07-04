@@ -237,10 +237,10 @@ void FCIWfn::set(std::vector<std::tuple<size_t, size_t, size_t, double>>& sparse
 ///**
 // * Get a vector of the determinants with weight greather than alpha
 // */
-// vector<int> FCIWfn::get_important(double alpha)
+// std::vector<int> FCIWfn::get_important(double alpha)
 //{
 //  int k = 0;
-//  vector<int> list;
+//  std::vector<int> list;
 //  for(int h = 0; h < nirrep_; ++h){
 //    int beta_sym = h ^ symmetry_;
 //    size_t maxIa = alfa_graph_->strpi(h);
@@ -262,14 +262,14 @@ void FCIWfn::set(std::vector<std::tuple<size_t, size_t, size_t, double>>& sparse
 //// */
 ////vector<int> FCIWfn::get_sorted_important()
 ////{
-////  vector<pair<double,int> > list;
+////  std::vector<pair<double,int> > list;
 ////  for(int h = 0; h < nirrep_; ++h){
 ////    int beta_sym = h ^ symmetry_;
 ////    size_t maxIa = alfa_graph_->strpi(h);
 ////    size_t maxIb = beta_graph_->strpi(beta_sym);
 ////    for(size_t Ia = 0; Ia < maxIa; ++Ia){
 ////      for(size_t Ib = 0; Ib < maxIb; ++Ib){
-////        list.push_back(make_pair(std::fabs(coefficients[h][Ia][Ib]),k));
+////        list.push_back(std::make_pair(std::fabs(coefficients[h][Ia][Ib]),k));
 ////        k++;
 ////      }
 ////    }

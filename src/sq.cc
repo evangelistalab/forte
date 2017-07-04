@@ -384,7 +384,7 @@ SqTest::SqTest() {
 
 // From:
 // http://stackoverflow.com/questions/17554242/how-to-obtain-the-index-permutation-after-the-sorting
-//    vector<int> index(vec.size(), 0);
+//    std::vector<int> index(vec.size(), 0);
 //    std::iota(index.begin(),index.end(),0);
 //    sort(index.begin(), index.end(),
 //         [&](const int& a, const int& b) {

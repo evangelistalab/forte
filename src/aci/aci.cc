@@ -43,7 +43,7 @@
 #include "../stl_bitset_determinant.h"
 #include "aci.h"
 
-using namespace std;
+
 using namespace psi;
 
 namespace psi {
@@ -273,7 +273,7 @@ void AdaptiveCI::startup() {
     int S = (multiplicity_ - 1.0) / 2.0;
     int S2 = multiplicity_ - 1.0;
     for (int n = 0; n < nroot_; ++n) {
-        root_spin_vec_.push_back(make_pair(S, S2));
+        root_spin_vec_.push_back(std::make_pair(S, S2));
     }
 
     // get options for algorithm
@@ -356,7 +356,7 @@ void AdaptiveCI::print_info() {
 
     // Print some information
     outfile->Printf("\n  ==> Calculation Information <==\n");
-    outfile->Printf("\n  %s", string(65, '-').c_str());
+    outfile->Printf("\n  %s", std::string(65, '-').c_str());
     for (auto& str_dim : calculation_info) {
         outfile->Printf("\n    %-40s %-5d", str_dim.first.c_str(), str_dim.second);
     }
@@ -366,7 +366,7 @@ void AdaptiveCI::print_info() {
     for (auto& str_dim : calculation_info_string) {
         outfile->Printf("\n    %-40s %s", str_dim.first.c_str(), str_dim.second.c_str());
     }
-    outfile->Printf("\n  %s", string(65, '-').c_str());
+    outfile->Printf("\n  %s", std::string(65, '-').c_str());
 }
 
 double AdaptiveCI::compute_energy() {
@@ -1661,7 +1661,7 @@ std::vector<std::pair<double, double>> AdaptiveCI::compute_spin(DeterminantMap& 
     for (int n = 0; n < nroot_; ++n) {
         double S2 = op_.s2(space, evecs, n);
         double S = std::fabs(0.5 * (std::sqrt(1.0 + 4.0 * S2) - 1.0));
-        spin_vec[n] = make_pair(S, S2);
+        spin_vec[n] = std::make_pair(S, S2);
     }
 
     return spin_vec;
@@ -1760,14 +1760,14 @@ std::vector<std::tuple<double, int, int>> AdaptiveCI::sym_labeled_orbitals(std::
         int cumidx = 0;
         for (int h = 0; h < nirrep_; ++h) {
             for (int a = 0; a < nactpi_[h]; ++a) {
-                orb_e.push_back(make_pair(epsilon_a_->get(h, frzcpi_[h] + a), a + cumidx));
+                orb_e.push_back(std::make_pair(epsilon_a_->get(h, frzcpi_[h] + a), a + cumidx));
             }
             cumidx += nactpi_[h];
         }
 
         // Create a vector that stores the orbital energy, symmetry, and idx
         for (size_t a = 0; a < nact_; ++a) {
-            labeled_orb.push_back(make_tuple(orb_e[a].first, mo_symmetry_[a], orb_e[a].second));
+            labeled_orb.push_back(std::make_tuple(orb_e[a].first, mo_symmetry_[a], orb_e[a].second));
         }
         // Order by energy, low to high
         std::sort(labeled_orb.begin(), labeled_orb.end());
@@ -1778,14 +1778,14 @@ std::vector<std::tuple<double, int, int>> AdaptiveCI::sym_labeled_orbitals(std::
         int cumidx = 0;
         for (int h = 0; h < nirrep_; ++h) {
             for (size_t a = 0, max = nactpi_[h]; a < max; ++a) {
-                orb_e.push_back(make_pair(epsilon_b_->get(h, frzcpi_[h] + a), a + cumidx));
+                orb_e.push_back(std::make_pair(epsilon_b_->get(h, frzcpi_[h] + a), a + cumidx));
             }
             cumidx += nactpi_[h];
         }
 
         // Create a vector that stores the orbital energy, sym, and idx
         for (size_t a = 0; a < nact_; ++a) {
-            labeled_orb.push_back(make_tuple(orb_e[a].first, mo_symmetry_[a], orb_e[a].second));
+            labeled_orb.push_back(std::make_tuple(orb_e[a].first, mo_symmetry_[a], orb_e[a].second));
         }
         std::sort(labeled_orb.begin(), labeled_orb.end());
     }
@@ -1795,7 +1795,7 @@ std::vector<std::tuple<double, int, int>> AdaptiveCI::sym_labeled_orbitals(std::
 
 void AdaptiveCI::print_wfn(DeterminantMap& space, SharedMatrix evecs, int nroot) {
     std::string state_label;
-    std::vector<string> s2_labels({"singlet", "doublet", "triplet", "quartet", "quintet", "sextet",
+    std::vector<std::string> s2_labels({"singlet", "doublet", "triplet", "quartet", "quintet", "sextet",
                                    "septet", "octet", "nonet", "decatet"});
 
     std::vector<std::pair<double, double>> spins = compute_spin(space, evecs, nroot);
@@ -1817,7 +1817,7 @@ void AdaptiveCI::print_wfn(DeterminantMap& space, SharedMatrix evecs, int nroot)
 
         state_label = s2_labels[std::round(spins[n].first * 2.0)];
         root_spin_vec_.clear();
-        root_spin_vec_[n] = make_pair(spins[n].first, spins[n].second);
+        root_spin_vec_[n] = std::make_pair(spins[n].first, spins[n].second);
         outfile->Printf("\n\n  Spin state for root %zu: S^2 = %5.6f, S = %5.3f, %s", n,
                         root_spin_vec_[n].first, root_spin_vec_[n].second, state_label.c_str());
     }
@@ -1981,7 +1981,7 @@ void AdaptiveCI::print_nos() {
     opdm_a->diagonalize(NO_A, OCC_A, descending);
     opdm_b->diagonalize(NO_B, OCC_B, descending);
 
-    // ofstream file;
+    // std::ofstream file;
     // file.open("nos.txt",std::ios_base::app);
     std::vector<std::pair<double, std::pair<int, int>>> vec_irrep_occupation;
     for (int h = 0; h < nirrep_; h++) {

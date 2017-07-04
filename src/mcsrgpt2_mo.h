@@ -39,14 +39,14 @@
 #include "integrals/integrals.h"
 #include "./mrdsrg-helper/dsrg_source.h"
 
-using namespace std;
 
-using d1 = vector<double>;
-using d2 = vector<d1>;
-using d3 = vector<d2>;
-using d4 = vector<d3>;
-using d5 = vector<d4>;
-using d6 = vector<d5>;
+
+using d1 = std::vector<double>;
+using d2 = std::vector<d1>;
+using d3 = std::vector<d2>;
+using d4 = std::vector<d3>;
+using d5 = std::vector<d4>;
+using d6 = std::vector<d5>;
 
 namespace psi {
 namespace forte {

@@ -57,15 +57,15 @@
 #include "sparse_ci_solver.h"
 #include "stl_bitset_determinant.h"
 
-using namespace std;
 
-using d1 = vector<double>;
-using d2 = vector<d1>;
-using d3 = vector<d2>;
-using d4 = vector<d3>;
-using d5 = vector<d4>;
-using d6 = vector<d5>;
-using vecdet = vector<psi::forte::STLBitsetDeterminant>;
+
+using d1 = std::vector<double>;
+using d2 = std::vector<d1>;
+using d3 = std::vector<d2>;
+using d4 = std::vector<d3>;
+using d5 = std::vector<d4>;
+using d6 = std::vector<d5>;
+using vecdet = std::vector<psi::forte::STLBitsetDeterminant>;
 
 namespace psi {
 namespace forte {
@@ -140,22 +140,22 @@ class FCI_MO : public Wavefunction {
     vecdet p_space() { return determinant_; }
 
     /// Return P spaces for states with different symmetry
-    vector<vecdet> p_spaces() { return FCI_MO::p_spaces_; }
+    std::vector<vecdet> p_spaces() { return FCI_MO::p_spaces_; }
 
     /// Return the orbital extents of the current state
-    vector<vector<vector<double>>> orb_extents() {
+    std::vector<vector<vector<double>>> orb_extents() {
         return compute_orbital_extents();
     }
 
     /// Return the vector of eigen vectors and eigen values
-    vector<pair<SharedVector, double>> const eigen() { return eigen_; }
+    std::vector<pair<SharedVector, double>> const eigen() { return eigen_; }
 
     /// Return the vector of eigen vectors and eigen values (used in
     /// state-average computation)
-    vector<vector<pair<SharedVector, double>>> const eigens() { return eigens_; }
+    std::vector<vector<pair<SharedVector, double>>> const eigens() { return eigens_; }
 
     /// Return a vector of dominant determinant for each root
-    vector<STLBitsetDeterminant> dominant_dets() { return dominant_dets_; }
+    std::vector<STLBitsetDeterminant> dominant_dets() { return dominant_dets_; }
 
     /// Quiet mode (no printing, for use with CASSCF)
     void set_quite_mode(bool quiet) { quiet_ = quiet; }
@@ -165,14 +165,14 @@ class FCI_MO : public Wavefunction {
 
     /// Return indices (relative to active, not absolute) of active occupied
     /// orbitals
-    vector<size_t> actv_occ() { return ah_; }
+    std::vector<size_t> actv_occ() { return ah_; }
 
     /// Return indices (relative to active, not absolute) of active virtual
     /// orbitals
-    vector<size_t> actv_uocc() { return ap_; }
+    std::vector<size_t> actv_uocc() { return ap_; }
 
     /// Return the T1 percentage in CISD computations
-    vector<double> compute_T1_percentage();
+    std::vector<double> compute_T1_percentage();
 
   protected:
     /// Basic Preparation
@@ -210,8 +210,8 @@ class FCI_MO : public Wavefunction {
     /// Symmetry
     int nirrep_;             // number of irrep
     int root_sym_;           // root
-    vector<int> sym_active_; // active MOs
-    vector<int> sym_ncmo_;   // correlated MOs
+    std::vector<int> sym_active_; // active MOs
+    std::vector<int> sym_ncmo_;   // correlated MOs
 
     /// Molecular Orbitals
     size_t nmo_; // total MOs
@@ -224,21 +224,21 @@ class FCI_MO : public Wavefunction {
     size_t nfrzv_;
     Dimension core_; // core MOs
     size_t nc_;
-    vector<size_t> idx_c_;
+    std::vector<size_t> idx_c_;
     Dimension active_; // active MOs
     size_t na_;
-    vector<size_t> idx_a_;
+    std::vector<size_t> idx_a_;
     size_t nv_; // virtual MOs
     Dimension virtual_;
-    vector<size_t> idx_v_;
+    std::vector<size_t> idx_v_;
     size_t nh_; // hole MOs
-    vector<size_t> idx_h_;
+    std::vector<size_t> idx_h_;
     size_t npt_; // particle MOs
-    vector<size_t> idx_p_;
+    std::vector<size_t> idx_p_;
     Dimension active_h_; // active hole for incomplete active space
-    vector<size_t> ah_;
+    std::vector<size_t> ah_;
     Dimension active_p_; // active particle for incomplete active space
-    vector<size_t> ap_;
+    std::vector<size_t> ap_;
 
     /// Compute IP or EA
     std::string ipea_;
@@ -258,25 +258,25 @@ class FCI_MO : public Wavefunction {
     void form_det_cis();
     void form_det_cisd();
     vecdet determinant_;
-    vector<STLBitsetDeterminant> dominant_dets_;
-    vector<vecdet> p_spaces_;
+    std::vector<STLBitsetDeterminant> dominant_dets_;
+    std::vector<vecdet> p_spaces_;
 
     /// Size of Singles Determinants
     size_t singles_size_;
 
     /// Orbital Strings
-    vector<vector<vector<bool>>> Form_String(const int& active_elec,
+    std::vector<vector<vector<bool>>> Form_String(const int& active_elec,
                                              const bool& print = false);
-    vector<bool> Form_String_Ref(const bool& print = false);
-    vector<vector<vector<bool>>>
-    Form_String_Singles(const vector<bool>& ref_string,
+    std::vector<bool> Form_String_Ref(const bool& print = false);
+    std::vector<vector<vector<bool>>>
+    Form_String_Singles(const std::vector<bool>& ref_string,
                         const bool& print = false);
-    vector<vector<vector<bool>>>
-    Form_String_Doubles(const vector<bool>& ref_string,
+    std::vector<vector<vector<bool>>>
+    Form_String_Doubles(const std::vector<bool>& ref_string,
                         const bool& print = false);
-    vector<vector<vector<bool>>> Form_String_IP(const vector<bool>& ref_string,
+    std::vector<vector<vector<bool>>> Form_String_IP(const std::vector<bool>& ref_string,
                                                 const bool& print = false);
-    vector<vector<vector<bool>>> Form_String_EA(const vector<bool>& ref_string,
+    std::vector<vector<vector<bool>>> Form_String_EA(const std::vector<bool>& ref_string,
                                                 const bool& print = false);
 
     /// Choice of Roots
@@ -287,25 +287,25 @@ class FCI_MO : public Wavefunction {
     std::vector<std::tuple<int, int, int, std::vector<double>>> sa_info_;
 
     /// Eigen Values and Eigen Vectors of Certain Symmetry
-    vector<pair<SharedVector, double>> eigen_;
+    std::vector<pair<SharedVector, double>> eigen_;
     /// A List of Eigen Values and Vectors for State Average
-    vector<vector<pair<SharedVector, double>>> eigens_;
+    std::vector<vector<pair<SharedVector, double>>> eigens_;
     /// The algorithm for diagonalization
     std::string diag_algorithm_;
 
     /// Diagonalize the Hamiltonian
     void Diagonalize_H(const vecdet& P_space, const int& multi,
                        const int& nroot,
-                       vector<pair<SharedVector, double>>& eigen);
+                       std::vector<pair<SharedVector, double>>& eigen);
     /// Diagonalize the Hamiltonian without the HF determinant
     void Diagonalize_H_noHF(const vecdet& p_space, const int& multi,
                             const int& nroot,
-                            vector<pair<SharedVector, double>>& eigen);
+                            std::vector<pair<SharedVector, double>>& eigen);
 
     /// Print the CI Vectors and Configurations (figure out the dominant
     /// determinants)
     void print_CI(const int& nroot, const double& CI_threshold,
-                  const vector<pair<SharedVector, double>>& eigen,
+                  const std::vector<pair<SharedVector, double>>& eigen,
                   const vecdet& det);
 
     /// Semi-canonicalize orbitals
@@ -351,28 +351,28 @@ class FCI_MO : public Wavefunction {
     /// Fill in L1a, L1b from Da_, Db_
     void fill_density();
     /// Fill in L1a, L1b, Da_, Db_ from the RDM Vectors
-    void fill_density(vector<double>& opdm_a, vector<double>& opdm_b);
+    void fill_density(vector<double>& opdm_a, std::vector<double>& opdm_b);
 
     /// Form 2-Particle Density Cumulant
     void FormCumulant2(CI_RDMS& ci_rdms, d4& AA, d4& AB, d4& BB);
-    void FormCumulant2AA(const vector<double>& tpdm_aa,
-                         const vector<double>& tpdm_bb, d4& AA, d4& BB);
-    void FormCumulant2AB(const vector<double>& tpdm_ab, d4& AB);
+    void FormCumulant2AA(const std::vector<double>& tpdm_aa,
+                         const std::vector<double>& tpdm_bb, d4& AA, d4& BB);
+    void FormCumulant2AB(const std::vector<double>& tpdm_ab, d4& AB);
     /// Fill in L2aa, L2ab and L2bb from L2aa_, L2ab_, and L2bb_
     void fill_cumulant2();
     /// Fill in L2aa, L2ab, L2bb from the 2RDMs (used in state average, L2aa_
     /// ... are not initialized)
-    void compute_cumulant2(vector<double>& tpdm_aa, vector<double>& tpdm_ab,
-                           vector<double>& tpdm_bb);
+    void compute_cumulant2(vector<double>& tpdm_aa, std::vector<double>& tpdm_ab,
+                           std::vector<double>& tpdm_bb);
 
     /// Form 3-Particle Density Cumulant
     void FormCumulant3(CI_RDMS& ci_rdms, d6& AAA, d6& AAB, d6& ABB, d6& BBB,
                        string& DC);
-    void FormCumulant3AAA(const vector<double>& tpdm_aaa,
-                          const vector<double>& tpdm_bbb, d6& AAA, d6& BBB,
+    void FormCumulant3AAA(const std::vector<double>& tpdm_aaa,
+                          const std::vector<double>& tpdm_bbb, d6& AAA, d6& BBB,
                           string& DC);
-    void FormCumulant3AAB(const vector<double>& tpdm_aab,
-                          const vector<double>& tpdm_abb, d6& AAB, d6& ABB,
+    void FormCumulant3AAB(const std::vector<double>& tpdm_aab,
+                          const std::vector<double>& tpdm_abb, d6& AAB, d6& ABB,
                           string& DC);
     void FormCumulant3_DIAG(const vecdet& determinants, const int& root,
                             d6& AAA, d6& AAB, d6& ABB, d6& BBB);
@@ -380,8 +380,8 @@ class FCI_MO : public Wavefunction {
     void fill_cumulant3();
     /// Fill in L3aaa, L3aab, L3abb, L3bbb from the 3RDMs (used in state
     /// average, L3aaa_ ... are not initialized)
-    void compute_cumulant3(vector<double>& tpdm_aaa, vector<double>& tpdm_aab,
-                           vector<double>& tpdm_abb, vector<double>& tpdm_bbb);
+    void compute_cumulant3(vector<double>& tpdm_aaa, std::vector<double>& tpdm_aab,
+                           std::vector<double>& tpdm_abb, std::vector<double>& tpdm_bbb);
 
     /// N-Particle Operator
     double OneOP(const STLBitsetDeterminant& J, STLBitsetDeterminant& Jnew,
@@ -405,7 +405,7 @@ class FCI_MO : public Wavefunction {
     void Check_Fock(const d2& A, const d2& B, const double& E, size_t& count);
     void Check_FockBlock(const d2& A, const d2& B, const double& E,
                          size_t& count, const size_t& dim,
-                         const vector<size_t>& idx, const string& str);
+                         const std::vector<size_t>& idx, const string& str);
     void BD_Fock(const d2& Fa, const d2& Fb, SharedMatrix& Ua, SharedMatrix& Ub,
                  const string& name);
     /// Print Fock Matrix in Blocks
@@ -423,12 +423,12 @@ class FCI_MO : public Wavefunction {
     /// by orbital extents {xx, yy, zz}
     d3 compute_orbital_extents();
     size_t idx_diffused_;
-    vector<size_t> diffused_orbs_;
+    std::vector<size_t> diffused_orbs_;
 
     /// Compute permanent dipole moments
     void compute_permanent_dipole();
     /// Transition dipoles
-    map<string, vector<double>> trans_dipole_;
+    map<string, std::vector<double>> trans_dipole_;
     /// Compute transition dipole
     void compute_trans_dipole();
 
@@ -444,11 +444,11 @@ class FCI_MO : public Wavefunction {
      * @return The vector of indices before sorting v
      */
     template <typename T>
-    vector<size_t> sort_indexes(const vector<T>& v,
+    std::vector<size_t> sort_indexes(const std::vector<T>& v,
                                 const bool& decend = false) {
 
         // initialize original index locations
-        vector<size_t> idx(v.size());
+        std::vector<size_t> idx(v.size());
         std::iota(idx.begin(), idx.end(), 0);
 
         // sort indexes based on comparing values in v
@@ -464,7 +464,7 @@ class FCI_MO : public Wavefunction {
     }
 
     /// Check Sign (inline functons)
-    double CheckSign(const vector<bool>& I, const int& n) {
+    double CheckSign(const std::vector<bool>& I, const int& n) {
         timer_on("Check Sign");
         size_t count = 0;
         for (vector<bool>::const_iterator iter = I.begin();
@@ -497,7 +497,7 @@ class FCI_MO : public Wavefunction {
     }
 
     /// Print Indices
-    void print_idx(const string& str, const vector<size_t>& vec) {
+    void print_idx(const string& str, const std::vector<size_t>& vec) {
         outfile->Printf("\n    %-30s", str.c_str());
         size_t c = 0;
         for (size_t x : vec) {

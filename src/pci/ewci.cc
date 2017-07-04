@@ -45,7 +45,7 @@
 
 #include "ewci.h"
 
-using namespace std;
+
 using namespace psi;
 using namespace psi::forte::GeneratorType_EWCI;
 
@@ -1553,7 +1553,7 @@ void ElementwiseCI::print_wfn(const det_hashvec& space_hashvec, std::vector<doub
     S2 /= norm;
     double S = std::fabs(0.5 * (std::sqrt(1.0 + 4.0 * S2) - 1.0));
 
-    std::vector<string> s2_labels({"singlet", "doublet", "triplet", "quartet", "quintet", "sextet",
+    std::vector<std::string> s2_labels({"singlet", "doublet", "triplet", "quartet", "quintet", "sextet",
                                    "septet", "octet", "nonet", "decaet"});
     std::string state_label = s2_labels[std::round(S * 2.0)];
     outfile->Printf("\n\n  Spin State: S^2 = %5.3f, S = %5.3f, %s (from %zu "

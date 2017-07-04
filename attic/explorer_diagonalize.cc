@@ -133,7 +133,7 @@ void LambdaCI::diagonalize_p_space(psi::Options& options) {
 }
 
 void LambdaCI::print_results(SharedMatrix evecs, SharedVector evals, int nroots) {
-    std::vector<string> s2_labels({"singlet", "doublet", "triplet", "quartet", "quintet", "sextet",
+    std::vector<std::string> s2_labels({"singlet", "doublet", "triplet", "quartet", "quintet", "sextet",
                                    "septet", "octet", "nonet"});
 
     int nroots_print = std::min(nroots, 25);
@@ -149,7 +149,7 @@ void LambdaCI::print_results(SharedMatrix evecs, SharedVector evals, int nroots)
         double** C_mat = evecs->pointer();
         for (int J = 0; J < ndets; ++J) {
             if (std::fabs(C_mat[J][i]) > significant_threshold) {
-                C_J_sorted.push_back(make_pair(std::fabs(C_mat[J][i]), J));
+                C_J_sorted.push_back(std::make_pair(std::fabs(C_mat[J][i]), J));
             }
         }
 
@@ -218,7 +218,7 @@ void LambdaCI::print_results(SharedMatrix evecs, SharedVector evals, int nroots)
         size_t ndets = evecs->nrow();
         for (int J = 0; J < ndets; ++J) {
             if (std::fabs(C_mat[J][i]) > significant_threshold) {
-                C_J_sorted.push_back(make_pair(std::fabs(C_mat[J][i]), J));
+                C_J_sorted.push_back(std::make_pair(std::fabs(C_mat[J][i]), J));
             }
         }
         // Sort them and print
@@ -730,7 +730,7 @@ LambdaCI::build_hamiltonian_direct(Options& options) {
                                                           vec_bstr_symm_[I_class_b][Isb].get<2>(),
                                                           vec_astr_symm_[I_class_a][Isa].get<2>(),
                                                           vec_bstr_symm_[I_class_b][Isb].get<2>());
-        H_row.push_back(make_pair(I, determinantI.get<0>() /*HII*/));
+        H_row.push_back(std::make_pair(I, determinantI.get<0>() /*HII*/));
         for (int J = 0; J < ndets; ++J) {
             if (I != J) {
                 boost::tuple<double, int, int, int, int>& determinantJ = determinants_[J];
@@ -744,7 +744,7 @@ LambdaCI::build_hamiltonian_direct(Options& options) {
                                                    vec_astr_symm_[J_class_a][Jsa].get<2>(),
                                                    vec_bstr_symm_[J_class_b][Jsb].get<2>());
                 if (std::fabs(HIJ) >= 1.0e-12) {
-                    H_row.push_back(make_pair(J, HIJ));
+                    H_row.push_back(std::make_pair(J, HIJ));
                     num_nonzero += 1;
                 }
             }
@@ -1063,7 +1063,7 @@ bool LambdaCI::davidson_liu_sparse(std::vector<std::vector<std::pair<int, double
 //// Write the Hamiltonian to disk
 // outfile->Printf("\n\n  WRITING FILE TO DISK...");
 //
-// ofstream of("ham.dat", ios::binary | ios::out);
+// std::ofstream of("ham.dat", ios::binary | ios::out);
 // of.write(reinterpret_cast<char*>(&ndets),sizeof(int));
 // double** H_mat = H->pointer();
 // of.write(reinterpret_cast<char*>(&(H_mat[0][0])),ndets * ndets * sizeof(double));

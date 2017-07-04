@@ -1487,7 +1487,7 @@ SparseCISolver::build_sparse_hamiltonian(const std::vector<STLBitsetDeterminant>
 
 #pragma omp critical(save_h_row)
         {
-            H_sparse[I] = make_pair(index_row, H_row);
+            H_sparse[I] = std::make_pair(index_row, H_row);
             num_nonzero += index_row.size();
         }
     }

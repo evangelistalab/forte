@@ -139,7 +139,7 @@ void TensorSRG::save_hbar() {
         set_elements(hb,*Hbar2.block("vVoV"),vV_map,oV_map);
         set_elements(hb,*Hbar2.block("vVvV"),vV_map,vV_map);
 
-        ofstream myfile;
+        std::ofstream myfile;
         myfile.open ("hb.txt");
         for (int x = 0; x < dim; ++x){
             for (int y = 0; y < dim; ++y){

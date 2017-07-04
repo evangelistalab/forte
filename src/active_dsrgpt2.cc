@@ -84,10 +84,10 @@ void ACTIVE_DSRGPT2::startup() {
 
         int nirrep = this->nirrep();
         dominant_dets_ =
-            vector<vector<STLBitsetDeterminant>>(nirrep, vector<STLBitsetDeterminant>());
-        Uaorbs_ = vector<vector<SharedMatrix>>(nirrep, vector<SharedMatrix>());
-        Uborbs_ = vector<vector<SharedMatrix>>(nirrep, vector<SharedMatrix>());
-        ref_wfns_ = vector<SharedMatrix>(nirrep, SharedMatrix());
+            std::vector<vector<STLBitsetDeterminant>>(nirrep, std::vector<STLBitsetDeterminant>());
+        Uaorbs_ = std::vector<vector<SharedMatrix>>(nirrep, std::vector<SharedMatrix>());
+        Uborbs_ = std::vector<vector<SharedMatrix>>(nirrep, std::vector<SharedMatrix>());
+        ref_wfns_ = std::vector<SharedMatrix>(nirrep, SharedMatrix());
 
         // determined absolute orbitals indices in C1 symmetry
         Dimension nmopi = this->nmopi();
@@ -96,9 +96,9 @@ void ACTIVE_DSRGPT2::startup() {
         Dimension actvpi = mo_space_info_->get_dimension("ACTIVE");
         Dimension virtpi = mo_space_info_->get_dimension("RESTRICTED_UOCC");
 
-        coreIdxC1_ = vector<vector<size_t>>(nirrep, vector<size_t>());
-        actvIdxC1_ = vector<vector<size_t>>(nirrep, vector<size_t>());
-        virtIdxC1_ = vector<vector<size_t>>(nirrep, vector<size_t>());
+        coreIdxC1_ = std::vector<vector<size_t>>(nirrep, std::vector<size_t>());
+        actvIdxC1_ = std::vector<vector<size_t>>(nirrep, std::vector<size_t>());
+        virtIdxC1_ = std::vector<vector<size_t>>(nirrep, std::vector<size_t>());
         std::vector<std::tuple<double, int, int>> order;
         for (int h = 0; h < nirrep; ++h) {
             for (int i = 0; i < nmopi[h]; ++i) {
@@ -128,7 +128,7 @@ void ACTIVE_DSRGPT2::startup() {
         CharacterTable ct = Process::environment.molecule()->point_group()->char_table();
         std::string cisd_noHF;
         if (ref_type_ == "CISD") {
-            t1_percentage_ = vector<vector<double>>(nirrep, vector<double>());
+            t1_percentage_ = std::vector<vector<double>>(nirrep, std::vector<double>());
             if (options_.get_bool("FCIMO_CISD_NOHF")) {
                 cisd_noHF = "TURE";
             } else {
@@ -497,8 +497,8 @@ Vector4 ACTIVE_DSRGPT2::compute_td_ref_root(std::shared_ptr<FCIIntegrals> fci_in
 
     // obtain MO transition density
     CI_RDMS ci_rdms(options_, fci_ints, p_space, evecs, root0, root1);
-    vector<double> opdm_a(nactv * nactv, 0.0);
-    vector<double> opdm_b(nactv * nactv, 0.0);
+    std::vector<double> opdm_a(nactv * nactv, 0.0);
+    std::vector<double> opdm_b(nactv * nactv, 0.0);
     ci_rdms.compute_1rdm(opdm_a, opdm_b);
 
     // prepare MO transition density (spin summed)
@@ -556,8 +556,8 @@ double ACTIVE_DSRGPT2::compute_energy() {
         SharedMatrix Cb0(this->Cb()->clone());
 
         int nirrep = this->nirrep();
-        ref_energies_ = vector<vector<double>>(nirrep, vector<double>());
-        pt2_energies_ = vector<vector<double>>(nirrep, vector<double>());
+        ref_energies_ = std::vector<vector<double>>(nirrep, std::vector<double>());
+        pt2_energies_ = std::vector<vector<double>>(nirrep, std::vector<double>());
 
         std::vector<std::string> T1blocks{"aa", "AA", "av", "AV", "ca", "CA"};
         std::vector<std::string> T2blocks{"aaaa", "cava", "caaa", "aava", "AAAA",
@@ -1263,7 +1263,7 @@ void ACTIVE_DSRGPT2::print_osc() {
     out_print(title, values);
 
     // write to file (overwrite existing file)
-    ofstream out_osc;
+    std::ofstream out_osc;
     out_osc.open("result_osc.txt");
     out_osc << out.rdbuf();
     out_osc.close();
@@ -1408,7 +1408,7 @@ void ACTIVE_DSRGPT2::print_summary() {
     outfile->Printf("\n\n\n%s", out.str().c_str());
 
     // write to file (overwrite)
-    ofstream out_Eex;
+    std::ofstream out_Eex;
     out_Eex.open("result_ex.txt");
     out_Eex << out.rdbuf();
     out_Eex.close();
