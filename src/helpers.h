@@ -39,6 +39,9 @@
 #include "psi4/libmints/vector.h"
 
 namespace psi {
+
+class Options;
+
 namespace forte {
 
 /// MOInfo stores information about an orbital: (absolute index,irrep,relative

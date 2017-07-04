@@ -153,7 +153,6 @@ void GeneticAlgorithmCI::print_info() {
         outfile->Printf("\n    %-39s %s", str_dim.first.c_str(), str_dim.second.c_str());
     }
     outfile->Printf("\n  %s", string(52, '-').c_str());
-    outfile->Flush();
 }
 
 double GeneticAlgorithmCI::compute_energy() {
@@ -192,7 +191,7 @@ double GeneticAlgorithmCI::compute_energy() {
                             i + 1, abs_energy, exc_energy, total_pop);
         }
         outfile->Printf("\n");
-        outfile->Flush();
+
         fitness.clear();
 
         for (int I = 0; I < total_pop; ++I) {
@@ -212,7 +211,7 @@ double GeneticAlgorithmCI::compute_energy() {
     //        outfile->Printf("\n\n  Cycle %3d",cycle);
     //        outfile->Printf("\n  %s: %zu determinants","Dimension of the P
     //        space",P_space_.size());
-    //        outfile->Flush();
+    //
 
     SharedMatrix H;
     SharedMatrix P_evecs;
@@ -228,7 +227,7 @@ double GeneticAlgorithmCI::compute_energy() {
     //    P_space_map_[bs_det] = 1;
 
     //    outfile->Printf("\n  The model space contains %zu determinants",P_space_.size());
-    //    outfile->Flush();
+    //
 
     //    double old_avg_energy = reference_determinant_.energy() + nuclear_repulsion_energy_;
     //    double new_avg_energy = 0.0;
@@ -243,7 +242,7 @@ double GeneticAlgorithmCI::compute_energy() {
     //        outfile->Printf("\n\n  Cycle %3d",cycle);
     //        outfile->Printf("\n  %s: %zu determinants","Dimension of the P
     //        space",P_space_.size());
-    //        outfile->Flush();
+    //
 
     //        sparse_solver.diagonalize_hamiltonian(P_space_,P_evals,P_evecs,nroot_,DavidsonLiuSparse);
 
@@ -266,7 +265,7 @@ double GeneticAlgorithmCI::compute_energy() {
     //                            - multistate_pt2_energy_correction_[0]));
     //        }
     //        outfile->Printf("\n");
-    //        outfile->Flush();
+    //
 
     //        // Step 4. Check convergence and break if needed
     //        bool converged = check_convergence(energy_history,PQ_evals);
@@ -293,7 +292,7 @@ double GeneticAlgorithmCI::compute_energy() {
     //    outfile->Printf("\n\n  %s: %f s","Adaptive-CI (bitset) ran in ",t_iamrcisd.elapsed());
     //    outfile->Printf("\n\n  %s: %d","Saving information for root",options_.get_int("ROOT") +
     //    1);
-    //    outfile->Flush();
+    //
 
     //    return PQ_evals->get(options_.get_int("ROOT")) + nuclear_repulsion_energy_;
     return 0.0;

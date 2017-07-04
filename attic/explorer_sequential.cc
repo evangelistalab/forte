@@ -280,7 +280,6 @@ void LambdaCI::explore_singles_sequential(psi::Options& options) {
                     selected_determinants.size(), 0.0);
     outfile->Printf("\n  Time spent on generating dets     = %f s", time_dets);
     outfile->Printf("\n  Precompute algorithm time elapsed = %f s", t.elapsed());
-    outfile->Flush();
 }
 }
 } // EndNamespaces

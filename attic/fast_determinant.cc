@@ -184,7 +184,6 @@ void FastDeterminant::print() const {
         outfile->Printf("%d", get_beta_bit(p) ? 1 : 0);
     }
     outfile->Printf(">");
-    outfile->Flush();
 }
 
 /**

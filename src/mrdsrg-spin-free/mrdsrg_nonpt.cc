@@ -149,7 +149,6 @@ void MRDSRG::compute_hbar() {
     if (!converged) {
         outfile->Printf("\n    Warning! Hbar is not converged in %3d-nested commutators!", maxn);
         outfile->Printf("\n    Please increase SRG_RSC_NCOMM.");
-        outfile->Flush();
     }
 }
 
@@ -238,7 +237,7 @@ double MRDSRG::compute_energy_ldsrg2() {
             if (cycle > max_diis_vectors) {
                 if (diis_manager->subspace_size() >= min_diis_vectors && cycle) {
                     outfile->Printf(" -> DIIS");
-                    outfile->Flush();
+
                     diis_manager->extrapolate(1, &(big_T[0]));
                     return_amp_diis(T1_, blocks1, T2_, blocks2, big_T);
                 }
@@ -268,7 +267,7 @@ double MRDSRG::compute_energy_ldsrg2() {
             converged = true;
             failed = true;
         }
-        outfile->Flush();
+
         ++cycle;
     } while (!converged);
 
@@ -514,7 +513,7 @@ double MRDSRG::compute_energy_ldsrg2_qc() {
             if (cycle > max_diis_vectors) {
                 if (diis_manager->subspace_size() >= min_diis_vectors && cycle) {
                     outfile->Printf(" -> DIIS");
-                    outfile->Flush();
+
                     diis_manager->extrapolate(1, &(big_T[0]));
                     return_amp_diis(T1_, blocks1, T2_, blocks2, big_T);
                 }
@@ -544,7 +543,7 @@ double MRDSRG::compute_energy_ldsrg2_qc() {
             converged = true;
             failed = true;
         }
-        outfile->Flush();
+
         ++cycle;
     } while (!converged);
 

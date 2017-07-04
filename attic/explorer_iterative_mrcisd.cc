@@ -110,7 +110,6 @@ void LambdaCI::iterative_adaptive_mrcisd(psi::Options& options) {
 
         outfile->Printf("\n\n  Cycle %3d. The model space contains %zu determinants", cycle,
                         dim_ref_space);
-        outfile->Flush();
 
         int num_ref_roots = (cycle == 0 ? std::max(nroot, 4) : nroot);
 
@@ -130,7 +129,6 @@ void LambdaCI::iterative_adaptive_mrcisd(psi::Options& options) {
             }
         }
         outfile->Printf("\n  Time spent building H               = %f s", t_h_build.elapsed());
-        outfile->Flush();
 
         // Diagonalize the Hamiltonian
         ForteTimer t_hdiag_large;
@@ -148,7 +146,6 @@ void LambdaCI::iterative_adaptive_mrcisd(psi::Options& options) {
         }
 
         outfile->Printf("\n  Time spent diagonalizing H          = %f s", t_hdiag_large.elapsed());
-        outfile->Flush();
 
         // Print the energy
         for (int i = 0; i < num_ref_roots; ++i) {
@@ -156,7 +153,6 @@ void LambdaCI::iterative_adaptive_mrcisd(psi::Options& options) {
                             evals->get(i) + nuclear_repulsion_energy_,
                             pc_hartree2ev * (evals->get(i) - evals->get(0)));
         }
-        outfile->Flush();
 
         int nmo = reference_determinant_.nmo();
         //        size_t nfrzc = frzc_.size();
@@ -316,7 +312,6 @@ void LambdaCI::iterative_adaptive_mrcisd(psi::Options& options) {
 
         outfile->Printf("\n  The SD excitation space has dimension: %zu", sd_dets_vec.size());
         outfile->Printf("\n  Time spent building the model space = %f s", t_ms_build.elapsed());
-        outfile->Flush();
 
         // Remove the duplicate determinants
         ForteTimer t_ms_unique;
@@ -425,7 +420,6 @@ void LambdaCI::iterative_adaptive_mrcisd(psi::Options& options) {
         outfile->Printf("\n  After screening the ia-MRCISD space contains %zu determinants",
                         dim_ref_sd_dets);
         outfile->Printf("\n  Time spent screening the model space = %f s", t_ms_screen.elapsed());
-        outfile->Flush();
 
         evecs.reset(new Matrix("U", dim_ref_sd_dets, nroot));
         evals.reset(new Vector("e", nroot));
@@ -445,7 +439,6 @@ void LambdaCI::iterative_adaptive_mrcisd(psi::Options& options) {
                 }
             }
             outfile->Printf("\n  Time spent building H               = %f s", t_h_build2.elapsed());
-            outfile->Flush();
 
             // 4) Diagonalize the Hamiltonian
             ForteTimer t_hdiag_large2;
@@ -459,7 +452,7 @@ void LambdaCI::iterative_adaptive_mrcisd(psi::Options& options) {
 
             outfile->Printf("\n  Time spent diagonalizing H          = %f s",
                             t_hdiag_large2.elapsed());
-            outfile->Flush();
+
         }
         // Sparse algorithm
         else {
@@ -490,7 +483,6 @@ void LambdaCI::iterative_adaptive_mrcisd(psi::Options& options) {
                             size_t(dim_ref_sd_dets * dim_ref_sd_dets),
                             double(num_nonzero) / double(dim_ref_sd_dets * dim_ref_sd_dets));
             outfile->Printf("\n  Time spent building H               = %f s", t_h_build2.elapsed());
-            outfile->Flush();
 
             // 4) Diagonalize the Hamiltonian
             ForteTimer t_hdiag_large2;
@@ -498,7 +490,6 @@ void LambdaCI::iterative_adaptive_mrcisd(psi::Options& options) {
             davidson_liu_sparse(H_sparse, evals, evecs, nroot);
             outfile->Printf("\n  Time spent diagonalizing H          = %f s",
                             t_hdiag_large2.elapsed());
-            outfile->Flush();
         }
 
         //
@@ -513,7 +504,6 @@ void LambdaCI::iterative_adaptive_mrcisd(psi::Options& options) {
                                              multistate_pt2_energy_correction_[i] -
                                              multistate_pt2_energy_correction_[0]));
         }
-        outfile->Flush();
 
         // Select the new reference space
         ref_space.clear();
@@ -521,7 +511,6 @@ void LambdaCI::iterative_adaptive_mrcisd(psi::Options& options) {
 
         new_energy = evals->get(0) + nuclear_repulsion_energy_;
 
-        outfile->Flush();
         if (std::fabs(new_energy - old_energy) < ia_mrcisd_threshold) {
             break;
         }
@@ -577,7 +566,6 @@ void LambdaCI::iterative_adaptive_mrcisd(psi::Options& options) {
     }
 
     outfile->Printf("\n\n  iterative_adaptive_mrcisd        ran in %f s", t_iamrcisd.elapsed());
-    outfile->Flush();
 }
 
 /**
@@ -594,7 +582,6 @@ void LambdaCI::iterative_adaptive_mrcisd_bitset(psi::Options& options) {
 
     outfile->Printf("\n\n  TAU_P = %f Eh", tau_p);
     outfile->Printf("\n  TAU_Q = %.12f Eh\n", tau_q);
-    outfile->Flush();
 
     double ia_mrcisd_threshold = 1.0e-9;
 
@@ -641,7 +628,6 @@ void LambdaCI::iterative_adaptive_mrcisd_bitset(psi::Options& options) {
     size_t dim_ref_space = ref_space.size();
 
     outfile->Printf("\n  The model space contains %zu determinants", dim_ref_space);
-    outfile->Flush();
 
     //    H.reset(new Matrix("Hamiltonian Matrix",dim_ref_space,dim_ref_space));
     //    evecs.reset(new Matrix("U",dim_ref_space,nroot));
@@ -659,7 +645,7 @@ void LambdaCI::iterative_adaptive_mrcisd_bitset(psi::Options& options) {
     //        }
     //    }
     //    outfile->Printf("\n  Time spent building H               = %f s",t_h_build.elapsed());
-    //    outfile->Flush();
+    //
 
     //    // 4) Diagonalize the Hamiltonian
     //    ForteTimer t_hdiag_large;
@@ -672,7 +658,7 @@ void LambdaCI::iterative_adaptive_mrcisd_bitset(psi::Options& options) {
     //    }
 
     //    outfile->Printf("\n  Time spent diagonalizing H          = %f s",t_hdiag_large.elapsed());
-    //    outfile->Flush();
+    //
 
     //    std::vector<bool> ref_abits = reference_determinant_.get_alfa_bits_vector_bool();
     //    std::vector<bool> ref_bbits = reference_determinant_.get_beta_bits_vector_bool();
@@ -694,7 +680,6 @@ void LambdaCI::iterative_adaptive_mrcisd_bitset(psi::Options& options) {
         outfile->Printf("\n\n  Cycle %3d. The model space contains %zu determinants", cycle,
                         dim_ref_space);
         //        outfile->Printf("\n  Solving for %d roots",num_ref_roots);
-        outfile->Flush();
 
         H.reset(new Matrix("Hamiltonian Matrix", dim_ref_space, dim_ref_space));
 
@@ -710,7 +695,6 @@ void LambdaCI::iterative_adaptive_mrcisd_bitset(psi::Options& options) {
             }
         }
         outfile->Printf("\n  Time spent building H               = %f s", t_h_build.elapsed());
-        outfile->Flush();
 
         // Be careful, we might not have as many reference dets as roots (just in the first cycle)
         int num_ref_roots = std::min(nroot, int(dim_ref_space));
@@ -722,7 +706,6 @@ void LambdaCI::iterative_adaptive_mrcisd_bitset(psi::Options& options) {
         ForteTimer t_hdiag_large;
         davidson_liu(H, evals, evecs, num_ref_roots);
         outfile->Printf("\n  Time spent diagonalizing H          = %f s", t_hdiag_large.elapsed());
-        outfile->Flush();
 
         // Print the energy
         for (int i = 0; i < num_ref_roots; ++i) {
@@ -730,7 +713,6 @@ void LambdaCI::iterative_adaptive_mrcisd_bitset(psi::Options& options) {
                             evals->get(i) + nuclear_repulsion_energy_,
                             pc_hartree2ev * (evals->get(i) - evals->get(0)));
         }
-        outfile->Flush();
 
         int nmo = reference_determinant_.nmo();
         //        size_t nfrzc = frzc_.size();
@@ -920,7 +902,6 @@ void LambdaCI::iterative_adaptive_mrcisd_bitset(psi::Options& options) {
         }
         outfile->Printf("\n  The SD excitation space has dimension: %zu (unique)", V_hash.size());
         outfile->Printf("\n  Time spent building the model space = %f s", t_ms_build.elapsed());
-        outfile->Flush();
 
         // This will contain all the determinants
         std::vector<DynamicBitsetDeterminant> ref_sd_dets;
@@ -970,7 +951,6 @@ void LambdaCI::iterative_adaptive_mrcisd_bitset(psi::Options& options) {
         outfile->Printf("\n  After screening the ia-MRCISD space contains %zu determinants",
                         dim_ref_sd_dets);
         outfile->Printf("\n  Time spent screening the model space = %f s", t_ms_screen.elapsed());
-        outfile->Flush();
 
         evecs.reset(new Matrix("U", dim_ref_sd_dets, nroot));
         evals.reset(new Vector("e", nroot));
@@ -990,7 +970,6 @@ void LambdaCI::iterative_adaptive_mrcisd_bitset(psi::Options& options) {
                 }
             }
             outfile->Printf("\n  Time spent building H               = %f s", t_h_build2.elapsed());
-            outfile->Flush();
 
             // 4) Diagonalize the Hamiltonian
             ForteTimer t_hdiag_large2;
@@ -1004,7 +983,7 @@ void LambdaCI::iterative_adaptive_mrcisd_bitset(psi::Options& options) {
 
             outfile->Printf("\n  Time spent diagonalizing H          = %f s",
                             t_hdiag_large2.elapsed());
-            outfile->Flush();
+
         }
         // Sparse algorithm
         else {
@@ -1035,7 +1014,6 @@ void LambdaCI::iterative_adaptive_mrcisd_bitset(psi::Options& options) {
                             size_t(dim_ref_sd_dets * dim_ref_sd_dets),
                             double(num_nonzero) / double(dim_ref_sd_dets * dim_ref_sd_dets));
             outfile->Printf("\n  Time spent building H               = %f s", t_h_build2.elapsed());
-            outfile->Flush();
 
             // 4) Diagonalize the Hamiltonian
             ForteTimer t_hdiag_large2;
@@ -1043,7 +1021,6 @@ void LambdaCI::iterative_adaptive_mrcisd_bitset(psi::Options& options) {
             davidson_liu_sparse(H_sparse, evals, evecs, nroot);
             outfile->Printf("\n  Time spent diagonalizing H          = %f s",
                             t_hdiag_large2.elapsed());
-            outfile->Flush();
         }
 
         //
@@ -1058,7 +1035,6 @@ void LambdaCI::iterative_adaptive_mrcisd_bitset(psi::Options& options) {
                                              multistate_pt2_energy_correction_[i] -
                                              multistate_pt2_energy_correction_[0]));
         }
-        outfile->Flush();
 
         new_energy = 0.0;
         std::vector<double> energies;
@@ -1068,8 +1044,6 @@ void LambdaCI::iterative_adaptive_mrcisd_bitset(psi::Options& options) {
             new_energy += state_n_energy;
         }
         new_energy /= static_cast<double>(nroot);
-
-        outfile->Flush();
 
         // Check for convergence
         if (std::fabs(new_energy - old_energy) < ia_mrcisd_threshold and cycle > 1) {
@@ -1145,7 +1119,6 @@ void LambdaCI::iterative_adaptive_mrcisd_bitset(psi::Options& options) {
                              multistate_pt2_energy_correction_[0]));
     }
     outfile->Printf("\n\n  iterative_adaptive_mrcisd_bitset ran in %f s", t_iamrcisd.elapsed());
-    outfile->Flush();
 }
 }
 } // EndNamespaces

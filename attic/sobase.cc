@@ -132,7 +132,7 @@ void SOBase::sort_integrals() {
         //            V_[p][q][r][s] -= ints_->rtei(so_mo[p],so_mo[s],so_mo[q],so_mo[r]);
     }
     outfile->Printf("\n\n  WARNING: I had to temporarily disable the SO code! :(");
-    outfile->Flush();
+
     exit(1);
 }
 

@@ -26,6 +26,7 @@
  * @END LICENSE
  */
 
+#include <cmath>
 #include <numeric>
 #include <vector>
 
@@ -85,7 +86,6 @@ void FCIWfn::form_H_diagonal(std::shared_ptr<FCIIntegrals> fci_ints) {
     hdiag_timer += t.elapsed();
     if (print_) {
         outfile->Printf("\n  Timing for Hdiag          = %10.3f s", hdiag_timer);
-        outfile->Flush();
     }
 }
 

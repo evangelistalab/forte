@@ -115,14 +115,12 @@ void MCSRGPT2_MO::startup(Options& options) {
     print_idx("VIRTUAL", idx_v_);
     print_idx("PARTICLE", idx_p_);
     outfile->Printf("\n");
-    outfile->Flush();
 
     // Compute Reference Energy
     outfile->Printf("\n  Computing reference energy using density cumulant ...");
-    outfile->Flush();
+
     compute_ref();
     outfile->Printf("\t\t\tDone.");
-    outfile->Flush();
 
     // 2-Particle Density Cumulant
     string twopdc = options.get_str("TWOPDC");
@@ -172,7 +170,7 @@ void MCSRGPT2_MO::startup(Options& options) {
         bool t1_zero = t1_amp_ == "ZERO";
         outfile->Printf("\n");
         outfile->Printf("\n  Computing MR-DSRG-PT2 T amplitudes ...");
-        outfile->Flush();
+
         if (boost::starts_with(t_algorithm, "DSRG")) {
             outfile->Printf("\n  Form T amplitudes using %s formalism.", t_algorithm.c_str());
             Form_T2_DSRG(T2aa_, T2ab_, T2bb_, t_algorithm);
@@ -202,7 +200,6 @@ void MCSRGPT2_MO::startup(Options& options) {
             }
         }
         outfile->Printf("\n  Done.");
-        outfile->Flush();
 
         // Check T Amplitudes
         T2Naa_ = 0.0, T2Nab_ = 0.0, T2Nbb_ = 0.0;
@@ -223,18 +220,16 @@ void MCSRGPT2_MO::startup(Options& options) {
         Fb_dsrg_ = d2(ncmo_, d1(ncmo_));
         outfile->Printf("\n");
         outfile->Printf("\n  Computing the MR-DSRG-PT2 effective Fock matrix ...");
-        outfile->Flush();
+
         Form_Fock_DSRG(Fa_dsrg_, Fb_dsrg_, dsrgpt);
         outfile->Printf("\t\t\tDone.");
-        outfile->Flush();
 
         // Effective Two Electron Integrals
         outfile->Printf("\n  Computing the MR-DSRG-PT2 effective two-electron "
                         "integrals ...");
-        outfile->Flush();
+
         Form_APTEI_DSRG(dsrgpt);
         outfile->Printf("\tDone.");
-        outfile->Flush();
     }
 }
 
@@ -1639,37 +1634,33 @@ double MCSRGPT2_MO::compute_energy_dsrg() {
 
     outfile->Printf("\n");
     outfile->Printf("\n  Computing energy of [F, T1] ...");
-    outfile->Flush();
+
     E_FT1(E2);
     outfile->Printf("\t\t\t\t\tDone.");
-    outfile->Flush();
 
     outfile->Printf("\n  Computing energy of [V, T1] and [F, T2] ...");
-    outfile->Flush();
+
     E_VT1_FT2(E6_1, E6_2, E5_1, E5_2);
     outfile->Printf("\t\t\t\tDone.");
-    outfile->Flush();
 
     outfile->Printf("\n  Computing energy of [V, T2] C_2^4 ...");
-    outfile->Flush();
+
     E_VT2_2(E7);
     outfile->Printf("\t\t\t\t\tDone.");
-    outfile->Flush();
 
     outfile->Printf("\n  Computing energy of [V, T2] C_2^2 * C_4 ...");
-    outfile->Flush();
+
     E_VT2_4PP(E8_1);
     E_VT2_4HH(E8_2);
     E_VT2_4PH(E8_3);
     outfile->Printf("\t\t\t\tDone.");
-    outfile->Flush();
 
     if (options_.get_str("THREEPDC") != "ZERO") {
         outfile->Printf("\n  Computing energy of [V, T2] C_2 * C_6 ...");
-        outfile->Flush();
+
         E_VT2_6(E10_1, E10_2);
         outfile->Printf("\t\t\t\tDone.");
-        outfile->Flush();
+
     } else {
         E10_1 = 0.0;
         E10_2 = 0.0;
