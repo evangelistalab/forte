@@ -33,7 +33,6 @@
 #include "stl_bitset_determinant.h"
 #include "stl_bitset_string.h"
 
-using namespace std;
 using namespace psi;
 
 #define ALFA(n) bits_[n]

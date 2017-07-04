@@ -38,9 +38,6 @@
 #include "../stl_bitset_determinant.h"
 #include "ci-no.h"
 
-using namespace std;
-using namespace psi;
-
 namespace psi {
 namespace forte {
 

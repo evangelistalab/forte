@@ -32,7 +32,6 @@
 
 #include "tensorsrg.h"
 
-using namespace std;
 using namespace psi;
 using namespace boost::numeric::odeint;
 

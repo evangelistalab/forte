@@ -38,7 +38,6 @@
 #include "helpers.h"
 #include "tensorsrg.h"
 
-using namespace std;
 using namespace psi;
 using namespace ambit;
 
