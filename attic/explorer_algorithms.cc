@@ -170,7 +170,7 @@ string_list_symm LambdaCI::compute_strings_screened(vector<double>& epsilon, int
                     for (int a = 0; a < nvir; ++a)
                         I[qt_to_pitzer_[nocc + a]] = str_sv[a];
 
-                    vector<bool> bits(I, I + ncmo_);
+                    std::vector<bool> bits(I, I + ncmo_);
                     int h = string_symmetry(I);
 
                     // set the alpha/beta strings and compute the energy of this determinant
@@ -247,7 +247,7 @@ string_list_symm LambdaCI::compute_strings_screened(vector<double>& epsilon, int
 }
 
 half_string_list LambdaCI::compute_half_strings_screened(bool is_occ, int n, int k,
-                                                         vector<double>& weights, string label) {
+                                                         std::vector<double>& weights, string label) {
     bool print_debug = false;
     if (print_debug)
         outfile->Printf("\n      number of %14s strings: %ld", label.c_str(),
@@ -271,8 +271,8 @@ half_string_list LambdaCI::compute_half_strings_screened(bool is_occ, int n, int
         }
         double mp_energy = compute_denominator2(is_occ, str, str + n, weights);
         if (mp_energy < denominator_threshold_) {
-            vector<bool> bits(str, str + n);
-            vec_str.push_back(make_pair(mp_energy, bits));
+            std::vector<bool> bits(str, str + n);
+            vec_str.push_back(std::make_pair(mp_energy, bits));
         }
         if (print_debug) {
             outfile->Printf("\n          %6d: ", nstr);

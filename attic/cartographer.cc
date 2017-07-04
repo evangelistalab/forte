@@ -95,7 +95,7 @@ Cartographer::Cartographer(Options& options, double min_energy, double max_energ
     std::vector<std::pair<double, int>> e_mo_pair;
     for (int h = 0, q = 0; h < epsilon_a->nirrep(); ++h) {
         for (int p = 0; p < epsilon_a->dim(h); ++p) {
-            e_mo_pair.push_back(make_pair(epsilon_a->get(h, p), q));
+            e_mo_pair.push_back(std::make_pair(epsilon_a->get(h, p), q));
             q += 1;
         }
     }
@@ -144,7 +144,7 @@ void Cartographer::accumulate_dod(double det_energy) {
  * For virtual strings it returns the sum of the fock matrix elements corresponding
  * to the ones, e.g. 010010 -> +fock[1][1] + fock[4][4]
  *
- * @param os - an ofstream object that will receive the output
+ * @param os - an std::ofstream object that will receive the output
  * @param Ia - the alpha string
  * @param Ib - the beta string
  * @param energy - the energy of the determinant
@@ -155,7 +155,7 @@ void Cartographer::accumulate_dettour(int nmo, std::vector<bool>& Ia, std::vecto
                                       int naex, int nbex) {
     if (write_file_) {
         if (dettour_file_ == 0) {
-            dettour_file_ = new ofstream(dettour_fname_.c_str());
+            dettour_file_ = new std::ofstream(dettour_fname_.c_str());
         }
         if (restrict_excitation_ != 0) {
             if (naex + nbex != restrict_excitation_) {
@@ -186,7 +186,7 @@ void Cartographer::accumulate_dettour(int nmo, std::vector<bool>& Ia, std::vecto
 void Cartographer::write_dod() {
     outfile->Printf("\n  Cartographer is writing the density of determinants to the file: %s\n",
                     dod_fname_.c_str());
-    dod_file_ = new ofstream(dod_fname_.c_str());
+    dod_file_ = new std::ofstream(dod_fname_.c_str());
     double margin_energy_offset = -static_cast<double>(ndod_bins_margin_) * dod_bin_width_;
     for (int i = 0; i < ndod_bins_total_; ++i) {
         double energy =
@@ -265,7 +265,7 @@ void Cartographer::write_dod_gnuplot_input() {
                      "plot 'density_of_determinants.txt' using 1:2 notitle with boxes lc rgb "
                      "\"black\" fs solid 1";
 
-    ofstream ofs("dod_hist.plt");
+    std::ofstream ofs("dod_hist.plt");
     ofs << gnuplot_input;
     //    set xtics -109,1,-104''
 }

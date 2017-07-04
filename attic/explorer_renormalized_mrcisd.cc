@@ -383,13 +383,13 @@ void LambdaCI::renormalized_mrcisd(psi::Options& options) {
                 std::vector<std::pair<int, double>> H_row;
                 const StringDeterminant& detI = refsd_dets_vec[I];
                 double HII = detI.slater_rules(detI);
-                H_row.push_back(make_pair(int(I), HII));
+                H_row.push_back(std::make_pair(int(I), HII));
                 for (size_t J = 0; J < num_mrcisd_dets; ++J) {
                     if (I != J) {
                         const StringDeterminant& detJ = refsd_dets_vec[J];
                         double HIJ = detI.slater_rules(detJ);
                         if (std::fabs(HIJ) >= 1.0e-12) {
-                            H_row.push_back(make_pair(int(J), HIJ));
+                            H_row.push_back(std::make_pair(int(J), HIJ));
                             num_nonzero += 1;
                         }
                     }
@@ -487,13 +487,13 @@ void LambdaCI::renormalized_mrcisd(psi::Options& options) {
                 std::vector<std::pair<int, double>> H_row;
                 const StringDeterminant& detI = old_dets_vec[I];
                 double HII = detI.slater_rules(detI);
-                H_row.push_back(make_pair(int(I), HII));
+                H_row.push_back(std::make_pair(int(I), HII));
                 for (size_t J = 0; J < size_small_ci; ++J) {
                     if (I != J) {
                         const StringDeterminant& detJ = old_dets_vec[J];
                         double HIJ = detI.slater_rules(detJ);
                         if (std::fabs(HIJ) >= 1.0e-12) {
-                            H_row.push_back(make_pair(int(J), HIJ));
+                            H_row.push_back(std::make_pair(int(J), HIJ));
                             num_nonzero += 1;
                         }
                     }

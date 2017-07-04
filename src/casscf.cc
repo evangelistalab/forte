@@ -982,7 +982,7 @@ void CASSCF::overlap_coefficients() {
     for (size_t iter = 1; iter < CISolutions_.size(); ++iter) {
         for (size_t cisoln = 0; cisoln < CISolutions_[iter].size(); cisoln++) {
             for (size_t j = 0; j < CISolutions_[iter].size(); j++) {
-                if (abs(CISolutions_[0][cisoln]->dot(CISolutions_[iter][j])) > 0.90) {
+                if (std::fabs(CISolutions_[0][cisoln]->dot(CISolutions_[iter][j])) > 0.90) {
                     outfile->Printf("\n %d:%d %d:%d %8.8f", 0, cisoln, iter, j,
                                     CISolutions_[0][cisoln]->dot(CISolutions_[iter][j]));
                 }

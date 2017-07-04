@@ -167,7 +167,7 @@ void EX_ACI::startup() {
     // set the initial S^2 guess as input multiplicity
     for (int n = 0; n < nroot_; ++n) {
         root_spin_vec_.push_back(
-            make_pair((wavefunction_multiplicity_ - 1.0) / 2.0, wavefunction_multiplicity_ - 1.0));
+            std::make_pair((wavefunction_multiplicity_ - 1.0) / 2.0, wavefunction_multiplicity_ - 1.0));
     }
 
     perturb_select_ = options_.get_bool("PERTURB_SELECT");
@@ -791,8 +791,8 @@ void EX_ACI::find_q_space(int nroot, SharedVector evals, SharedMatrix evecs) {
     ForteTimer t_ms_screen;
 
     using bsmap_it = std::map<DynamicBitsetDeterminant, std::vector<double>>::const_iterator;
-    pVector<double, double> C1(nroot, make_pair(0.0, 0.0));
-    pVector<double, double> E2(nroot, make_pair(0.0, 0.0));
+    pVector<double, double> C1(nroot, std::make_pair(0.0, 0.0));
+    pVector<double, double> E2(nroot, std::make_pair(0.0, 0.0));
     std::vector<double> V(nroot, 0.0);
     DynamicBitsetDeterminant det;
     pVector<double, DynamicBitsetDeterminant> sorted_dets;
@@ -821,8 +821,8 @@ void EX_ACI::find_q_space(int nroot, SharedVector evals, SharedMatrix evecs) {
                     : ((EI - evals->get(n)) / 2.0) -
                           sqrt(std::pow(((EI - evals->get(n)) / 2.0), 2.0) + std::pow(V[n], 2.0));
 
-            C1[n] = make_pair(std::fabs(C1_I), C1_I);
-            E2[n] = make_pair(std::fabs(E2_I), E2_I);
+            C1[n] = std::make_pair(std::fabs(C1_I), C1_I);
+            E2[n] = std::make_pair(std::fabs(E2_I), E2_I);
         }
         // make q space in a number of ways with C1 and E1 as input, produces PQ_space
         if (ex_alg_ == "STATE_AVERAGE" and nroot_ != 1) {
@@ -886,7 +886,7 @@ double EX_ACI::average_q_values(int nroot, pVector<double, double> C1, pVector<d
     std::pair<double, double> f_E2;
 
     // Make vector of pairs for ∆e_n,0
-    pVector<double, double> dE2(nroot, make_pair(0.0, 0.0));
+    pVector<double, double> dE2(nroot, std::make_pair(0.0, 0.0));
 
     // Compute a determinant's effect on ground state or adjacent state transition
     q_rel_ = options_.get_bool("Q_REL");
@@ -895,12 +895,12 @@ double EX_ACI::average_q_values(int nroot, pVector<double, double> C1, pVector<d
         if (q_reference_ == "GS") {
             for (int n = 0; n < nroot; ++n) {
                 dE2[n] =
-                    make_pair(std::fabs(E2[n].first - E2[0].first), E2[n].second - E2[0].second);
+                    std::make_pair(std::fabs(E2[n].first - E2[0].first), E2[n].second - E2[0].second);
             }
         }
         if (q_reference_ == "ADJACENT") {
             for (int n = 1; n < nroot; ++n) {
-                dE2[n] = make_pair(std::fabs(E2[n].first - E2[n - 1].first),
+                dE2[n] = std::make_pair(std::fabs(E2[n].first - E2[n - 1].first),
                                    E2[n].second - E2[n - 1].second);
             }
         }
@@ -929,8 +929,8 @@ double EX_ACI::average_q_values(int nroot, pVector<double, double> C1, pVector<d
                 dE2_average += dE2[n].first * inv_d;
             }
         }
-        f_C1 = make_pair(C1_average, 0);
-        f_E2 = q_rel_ ? make_pair(dE2_average, 0) : make_pair(E2_average, 0);
+        f_C1 = std::make_pair(C1_average, 0);
+        f_E2 = q_rel_ ? std::make_pair(dE2_average, 0) : std::make_pair(E2_average, 0);
     } else {
         throw PSIEXCEPTION(options_.get_str("PQ_FUNCTION") + " is not a valid option");
     }
@@ -995,8 +995,8 @@ void EX_ACI::find_q_space_single_root(int nroot, SharedVector evals, SharedMatri
     ForteTimer t_ms_screen;
 
     using bsmap_it = std::map<DynamicBitsetDeterminant, std::vector<double>>::const_iterator;
-    std::vector<std::pair<double, double>> C1(nroot_, make_pair(0.0, 0.0));
-    std::vector<std::pair<double, double>> E2(nroot_, make_pair(0.0, 0.0));
+    std::vector<std::pair<double, double>> C1(nroot_, std::make_pair(0.0, 0.0));
+    std::vector<std::pair<double, double>> E2(nroot_, std::make_pair(0.0, 0.0));
     std::vector<double> ept2(nroot_, 0.0);
 
     std::vector<std::pair<double, DynamicBitsetDeterminant>> sorted_dets;
@@ -1009,8 +1009,8 @@ void EX_ACI::find_q_space_single_root(int nroot, SharedVector evals, SharedMatri
             double C1_I = -V / (EI - evals->get(n));
             double E2_I = -V * V / (EI - evals->get(n));
 
-            C1[n] = make_pair(std::fabs(C1_I), C1_I);
-            E2[n] = make_pair(std::fabs(E2_I), E2_I);
+            C1[n] = std::make_pair(std::fabs(C1_I), C1_I);
+            E2[n] = std::make_pair(std::fabs(E2_I), E2_I);
         }
 
         std::pair<double, double> max_C1 = *std::max_element(C1.begin(), C1.end());
@@ -1528,7 +1528,7 @@ void EX_ACI::prune_q_space(std::vector<DynamicBitsetDeterminant>& large_space,
             }
         }
         criteria /= static_cast<double>(nroot);
-        dm_det_list.push_back(make_pair(criteria, I));
+        dm_det_list.push_back(std::make_pair(criteria, I));
     }
 
     // Decide which determinants will go in pruned_space
@@ -1616,7 +1616,7 @@ EX_ACI::compute_spin(std::vector<DynamicBitsetDeterminant> space, SharedMatrix e
         pVector<double, size_t> det_weight;
 
         for (size_t I = 0, maxI = space.size(); I < maxI; ++I) {
-            det_weight.push_back(make_pair(evecs->get(I, n), I));
+            det_weight.push_back(std::make_pair(evecs->get(I, n), I));
         }
 
         // Don't require the determinants to be pre-sorted
@@ -1654,7 +1654,7 @@ EX_ACI::compute_spin(std::vector<DynamicBitsetDeterminant> space, SharedMatrix e
         S2 /= norm;
         S2 = std::fabs(S2);
         S = std::fabs(0.5 * (std::sqrt(1.0 + 4.0 * S2) - 1.0));
-        spin_vec.push_back(make_pair(make_pair(S, S2), make_pair(max_I, sum_weight)));
+        spin_vec.push_back(std::make_pair(make_pair(S, S2), std::make_pair(max_I, sum_weight)));
     }
     return spin_vec;
 }
@@ -1667,7 +1667,7 @@ void EX_ACI::print_wfn(std::vector<DynamicBitsetDeterminant> space, SharedMatrix
     double S;
     size_t max_I;
 
-    std::vector<string> s2_labels({"singlet", "doublet", "triplet", "quartet", "quintet", "sextet",
+    std::vector<std::string> s2_labels({"singlet", "doublet", "triplet", "quartet", "quintet", "sextet",
                                    "septet", "octet", "nonet", "decaet"});
     string state_label;
 
@@ -1699,7 +1699,7 @@ void EX_ACI::print_wfn(std::vector<DynamicBitsetDeterminant> space, SharedMatrix
                         "determinants,%3.2f%)",
                         n, S2, S, state_label.c_str(), max_I, 100.0 * sum_weight);
         root_spin_vec_.clear();
-        root_spin_vec_[n] = make_pair(S, S2);
+        root_spin_vec_[n] = std::make_pair(S, S2);
     }
 }
 
@@ -1817,7 +1817,7 @@ oVector<double, int, int> EX_ACI::sym_labeled_orbitals(std::string type) {
         int cumidx = 0;
         for (int h = 0; h < nirrep_; h++) {
             for (int a = 0; a < ncmopi_[h]; a++) {
-                orb_e.push_back(make_pair(epsilon_a_->get(h, a + frzcpi_[h]), a + cumidx));
+                orb_e.push_back(std::make_pair(epsilon_a_->get(h, a + frzcpi_[h]), a + cumidx));
             }
             cumidx += ncmopi_[h];
         }
@@ -1825,7 +1825,7 @@ oVector<double, int, int> EX_ACI::sym_labeled_orbitals(std::string type) {
         // Create a vector that stores the orbital energy, symmetry, and Pitzer-ordered index
         for (int a = 0; a < ncmo_; ++a) {
             labeled_orb.push_back(
-                make_pair(orb_e[a].first, make_pair(mo_symmetry_[a], orb_e[a].second)));
+                std::make_pair(orb_e[a].first, std::make_pair(mo_symmetry_[a], orb_e[a].second)));
         }
 
         // Order by energy, low to high
@@ -1838,7 +1838,7 @@ oVector<double, int, int> EX_ACI::sym_labeled_orbitals(std::string type) {
         int cumidx = 0;
         for (int h = 0; h < nirrep_; h++) {
             for (int a = 0; a < ncmopi_[h] - frzcpi_[h]; a++) {
-                orb_e.push_back(make_pair(epsilon_b_->get(h, a + frzcpi_[h]), a + cumidx));
+                orb_e.push_back(std::make_pair(epsilon_b_->get(h, a + frzcpi_[h]), a + cumidx));
             }
             cumidx += (ncmopi_[h]);
         }
@@ -1846,7 +1846,7 @@ oVector<double, int, int> EX_ACI::sym_labeled_orbitals(std::string type) {
         // Create a vector that stores the orbital energy, symmetry, and Pitzer-ordered index
         for (int a = 0; a < ncmo_; ++a) {
             labeled_orb.push_back(
-                make_pair(orb_e[a].first, make_pair(mo_symmetry_[a], orb_e[a].second)));
+                std::make_pair(orb_e[a].first, std::make_pair(mo_symmetry_[a], orb_e[a].second)));
         }
 
         // Order by energy, low to high
@@ -2056,7 +2056,7 @@ void EX_ACI::form_initial_space(std::vector<DynamicBitsetDeterminant> P_space, i
         det_map.clear();
 
         for (auto& S : V_map) {
-            det_map.push_back(make_pair(S.second, S.first));
+            det_map.push_back(std::make_pair(S.second, S.first));
         }
 
         // Sort determinants in ascending order

@@ -37,7 +37,7 @@
 #include "../stl_bitset_string.h"
 #include "aci_string.h"
 
-using namespace std;
+
 using namespace psi;
 
 namespace psi {
@@ -193,7 +193,7 @@ void ACIString::startup() {
     int S = (wavefunction_multiplicity_ - 1.0) / 2.0;
     int S2 = wavefunction_multiplicity_ - 1.0;
     for (int n = 0; n < nroot_; ++n) {
-        root_spin_vec_.push_back(make_pair(S, S2));
+        root_spin_vec_.push_back(std::make_pair(S, S2));
     }
 
     // get options for algorithm
@@ -202,7 +202,7 @@ void ACIString::startup() {
     q_rel_ = options_.get_bool("Q_REL");
     q_reference_ = options_.get_str("Q_REFERENCE");
     ex_alg_ = options_.get_str("EXCITED_ALGORITHM");
-    post_root_ = max(nroot_, options_.get_int("POST_ROOT"));
+    post_root_ = std::max(nroot_, options_.get_int("POST_ROOT"));
     post_diagonalize_ = options_.get_bool("POST_DIAGONALIZE");
     do_guess_ = options_.get_bool("LAMBDA_GUESS");
 
@@ -273,7 +273,7 @@ void ACIString::print_info() {
 
     // Print some information
     outfile->Printf("\n  ==> Calculation Information <==\n");
-    outfile->Printf("\n  %s", string(65, '-').c_str());
+    outfile->Printf("\n  %s", std::string(65, '-').c_str());
     for (auto& str_dim : calculation_info) {
         outfile->Printf("\n    %-40s %-5d", str_dim.first.c_str(), str_dim.second);
     }
@@ -283,7 +283,7 @@ void ACIString::print_info() {
     for (auto& str_dim : calculation_info_string) {
         outfile->Printf("\n    %-40s %s", str_dim.first.c_str(), str_dim.second.c_str());
     }
-    outfile->Printf("\n  %s", string(65, '-').c_str());
+    outfile->Printf("\n  %s", std::string(65, '-').c_str());
 }
 
 std::vector<int> ACIString::get_occupation() {
@@ -1534,7 +1534,7 @@ ACIString::compute_spin(std::vector<STLBitsetDeterminant> space, SharedMatrix ev
         pVector<double, size_t> det_weight;
 
         for (size_t I = 0, max = space.size(); I < max; ++I) {
-            det_weight.push_back(make_pair(evecs->get(I, n), I));
+            det_weight.push_back(std::make_pair(evecs->get(I, n), I));
         }
 
         // Don't require the determinats to be pre-ordered
@@ -1573,7 +1573,7 @@ ACIString::compute_spin(std::vector<STLBitsetDeterminant> space, SharedMatrix ev
         S2 /= norm;
         S2 = std::fabs(S2);
         S = std::fabs(0.5 * (std::sqrt(1.0 + 4.0 * S2) - 1.0));
-        spin_vec.push_back(make_pair(make_pair(S, S2), make_pair(max_I, sum_weight)));
+        spin_vec.push_back(std::make_pair(std::make_pair(S, S2), std::make_pair(max_I, sum_weight)));
     }
     return spin_vec;
 }
@@ -1642,7 +1642,7 @@ oVector<double, int, int> ACIString::sym_labeled_orbitals(std::string type) {
         int cumidx = 0;
         for (int h = 0; h < nirrep_; ++h) {
             for (int a = 0; a < nactpi_[h]; ++a) {
-                orb_e.push_back(make_pair(epsilon_a_->get(h, frzcpi_[h] + a), a + cumidx));
+                orb_e.push_back(std::make_pair(epsilon_a_->get(h, frzcpi_[h] + a), a + cumidx));
             }
             cumidx += nactpi_[h];
         }
@@ -1650,7 +1650,7 @@ oVector<double, int, int> ACIString::sym_labeled_orbitals(std::string type) {
         // Create a vector that stores the orbital energy, symmetry, and idx
         for (size_t a = 0; a < nact_; ++a) {
             labeled_orb.push_back(
-                make_pair(orb_e[a].first, make_pair(mo_symmetry_[a], orb_e[a].second)));
+                std::make_pair(orb_e[a].first, std::make_pair(mo_symmetry_[a], orb_e[a].second)));
         }
         // Order by energy, low to high
         std::sort(labeled_orb.begin(), labeled_orb.end());
@@ -1661,7 +1661,7 @@ oVector<double, int, int> ACIString::sym_labeled_orbitals(std::string type) {
         int cumidx = 0;
         for (int h = 0; h < nirrep_; ++h) {
             for (size_t a = 0, max = nactpi_[h]; a < max; ++a) {
-                orb_e.push_back(make_pair(epsilon_b_->get(h, frzcpi_[h] + a), a + cumidx));
+                orb_e.push_back(std::make_pair(epsilon_b_->get(h, frzcpi_[h] + a), a + cumidx));
             }
             cumidx += nactpi_[h];
         }
@@ -1669,7 +1669,7 @@ oVector<double, int, int> ACIString::sym_labeled_orbitals(std::string type) {
         // Create a vector that stores the orbital energy, sym, and idx
         for (size_t a = 0; a < nact_; ++a) {
             labeled_orb.push_back(
-                make_pair(orb_e[a].first, make_pair(mo_symmetry_[a], orb_e[a].second)));
+                std::make_pair(orb_e[a].first, std::make_pair(mo_symmetry_[a], orb_e[a].second)));
         }
         std::sort(labeled_orb.begin(), labeled_orb.end());
     }
@@ -1684,7 +1684,7 @@ oVector<double, int, int> ACIString::sym_labeled_orbitals(std::string type) {
 
 void ACIString::print_wfn(std::vector<STLBitsetDeterminant> space, SharedMatrix evecs, int nroot) {
     std::string state_label;
-    std::vector<string> s2_labels({"singlet", "doublet", "triplet", "quartet", "quintet", "sextet",
+    std::vector<std::string> s2_labels({"singlet", "doublet", "triplet", "quartet", "quintet", "sextet",
                                    "septet", "octet", "nonet", "decatet"});
 
     for (int n = 0; n < nroot; ++n) {
@@ -1707,7 +1707,7 @@ void ACIString::print_wfn(std::vector<STLBitsetDeterminant> space, SharedMatrix 
         auto spins = compute_spin(space, evecs, nroot);
         state_label = s2_labels[std::round(spins[n].first.first * 2.0)];
         root_spin_vec_.clear();
-        root_spin_vec_[n] = make_pair(spins[n].first.first, spins[n].first.second);
+        root_spin_vec_[n] = std::make_pair(spins[n].first.first, spins[n].first.second);
         outfile->Printf("\n\n  Spin state for root %zu: S^2 = %5.3f, S = "
                         "%5.3f, %s (from %zu determinants, %3.2f%)",
                         n, spins[n].first.second, spins[n].first.first, state_label.c_str(),

@@ -379,14 +379,14 @@ std::vector<std::vector<double>> DSRG_MRPT2::compute_energy_xms() {
                                 ss.str().c_str());
                 size_t na = aactv_mos_.size();
                 size_t na2 = na * na;
-                vector<double> sa_opdm_a(na2, 0.0);
-                vector<double> sa_opdm_b(na2, 0.0);
+                std::vector<double> sa_opdm_a(na2, 0.0);
+                std::vector<double> sa_opdm_b(na2, 0.0);
 
                 for (int M = 0; M < nstates; ++M) {
                     CI_RDMS ci_rdms(options_, fci_ints, p_space, civecs, M, M);
                     ci_rdms.set_symmetry(irrep);
-                    vector<double> opdm_a(na2, 0.0);
-                    vector<double> opdm_b(na2, 0.0);
+                    std::vector<double> opdm_a(na2, 0.0);
+                    std::vector<double> opdm_b(na2, 0.0);
                     ci_rdms.compute_1rdm(opdm_a, opdm_b);
 
                     std::transform(sa_opdm_a.begin(), sa_opdm_a.end(), opdm_a.begin(),

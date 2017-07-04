@@ -258,7 +258,7 @@ void LambdaCI::explore_singles_sequential(psi::Options& options) {
 
     // Convert to a string representation
 
-    //    vector<bool> bits(I,I + nmo_);
+    //    std::vector<bool> bits(I,I + nmo_);
     //    int h = string_symmetry(I);
 
     //    // set the alpha/beta strings and compute the energy of this determinant

@@ -40,7 +40,7 @@
 
 #define Delta(i, j) ((i == j) ? 1 : 0)
 
-using namespace std;
+
 
 namespace psi {
 namespace forte {
@@ -798,7 +798,7 @@ void MCSRGPT2_MO::Form_T1_ISA(d2& A, d2& B, const double& b_const) {
 
 inline bool ReverseSortT2(const tuple<double, size_t, size_t, size_t, size_t>& lhs,
                           const tuple<double, size_t, size_t, size_t, size_t>& rhs) {
-    return fabs(get<0>(rhs)) < fabs(get<0>(lhs));
+    return fabs(std::get<0>(rhs)) < fabs(std::get<0>(lhs));
 }
 
 void MCSRGPT2_MO::Check_T2(const string& x, const d4& M, double& Norm, double& MaxT,
@@ -806,8 +806,8 @@ void MCSRGPT2_MO::Check_T2(const string& x, const d4& M, double& Norm, double& M
     timer_on("Check T2");
     int ntamp = options.get_int("NTAMP");
     double intruder = options.get_double("INTRUDER_TAMP");
-    vector<tuple<double, size_t, size_t, size_t, size_t>> Max;
-    vector<tuple<double, size_t, size_t, size_t, size_t>> Large(ntamp, make_tuple(0.0, 0, 0, 0, 0));
+    std::vector<std::tuple<double, size_t, size_t, size_t, size_t>> Max;
+    std::vector<std::tuple<double, size_t, size_t, size_t, size_t>> Large(ntamp, std::make_tuple(0.0, 0, 0, 0, 0));
     double value = 0.0;
     size_t count = 0;
     for (size_t i = 0; i < nh_; ++i) {
@@ -820,12 +820,12 @@ void MCSRGPT2_MO::Check_T2(const string& x, const d4& M, double& Norm, double& M
                     size_t nb = idx_p_[b];
                     double m = M[i][j][a][b];
                     value += pow(m, 2.0);
-                    if (fabs(m) > fabs(get<0>(Large[ntamp - 1]))) {
-                        Large[ntamp - 1] = make_tuple(m, ni, nj, na, nb);
+                    if (fabs(m) > fabs(std::get<0>(Large[ntamp - 1]))) {
+                        Large[ntamp - 1] = std::make_tuple(m, ni, nj, na, nb);
                     }
                     sort(Large.begin(), Large.end(), ReverseSortT2);
                     if (fabs(m) > intruder)
-                        Max.push_back(make_tuple(m, ni, nj, na, nb));
+                        Max.push_back(std::make_tuple(m, ni, nj, na, nb));
                     sort(Max.begin(), Max.end(), ReverseSortT2);
                     if (fabs(m) > options.get_double("E_CONVERGENCE"))
                         ++count;
@@ -834,7 +834,7 @@ void MCSRGPT2_MO::Check_T2(const string& x, const d4& M, double& Norm, double& M
         }
     }
     Norm = sqrt(value);
-    MaxT = get<0>(Large[0]);
+    MaxT = std::get<0>(Large[0]);
 
     // Print
     outfile->Printf("\n");
@@ -857,8 +857,8 @@ void MCSRGPT2_MO::Check_T2(const string& x, const d4& M, double& Norm, double& M
     for (size_t n = 0; n != ntamp; ++n) {
         if (n % 3 == 0)
             outfile->Printf("\n  ");
-        outfile->Printf("[%3zu %3zu %3zu %3zu] %8.5f ", get<1>(Large[n]), get<2>(Large[n]),
-                        get<3>(Large[n]), get<4>(Large[n]), get<0>(Large[n]));
+        outfile->Printf("[%3zu %3zu %3zu %3zu] %8.5f ", std::get<1>(Large[n]), std::get<2>(Large[n]),
+                        std::get<3>(Large[n]), std::get<4>(Large[n]), std::get<0>(Large[n]));
     }
     outfile->Printf("\n  "
                     "----------------------------------------------------------"
@@ -879,11 +879,11 @@ void MCSRGPT2_MO::Check_T2(const string& x, const d4& M, double& Norm, double& M
                     "----------------------------------------------------------"
                     "-------------------------------");
     for (size_t n = 0; n != Max.size(); ++n) {
-        size_t i = get<1>(Max[n]);
-        size_t j = get<2>(Max[n]);
-        size_t a = get<3>(Max[n]);
-        size_t b = get<4>(Max[n]);
-        double t2 = get<0>(Max[n]);
+        size_t i = std::get<1>(Max[n]);
+        size_t j = std::get<2>(Max[n]);
+        size_t a = std::get<3>(Max[n]);
+        size_t b = std::get<4>(Max[n]);
+        double t2 = std::get<0>(Max[n]);
         double fi = (x != "BB") ? (Fa_[i][i]) : (Fb_[i][i]);
         double fj = (x == "AA") ? (Fa_[j][j]) : (Fb_[j][j]);
         double fa = (x != "BB") ? (Fa_[a][a]) : (Fb_[a][a]);
@@ -902,7 +902,7 @@ void MCSRGPT2_MO::Check_T2(const string& x, const d4& M, double& Norm, double& M
 
 inline bool ReverseSortT1(const tuple<double, size_t, size_t>& lhs,
                           const tuple<double, size_t, size_t>& rhs) {
-    return fabs(get<0>(rhs)) < fabs(get<0>(lhs));
+    return fabs(std::get<0>(rhs)) < fabs(std::get<0>(lhs));
 }
 
 void MCSRGPT2_MO::Check_T1(const string& x, const d2& M, double& Norm, double& MaxT,
@@ -910,8 +910,8 @@ void MCSRGPT2_MO::Check_T1(const string& x, const d2& M, double& Norm, double& M
     timer_on("Check T1");
     int ntamp = options.get_int("NTAMP");
     double intruder = options.get_double("INTRUDER_TAMP");
-    vector<tuple<double, size_t, size_t>> Max;
-    vector<tuple<double, size_t, size_t>> Large(ntamp, make_tuple(0.0, 0, 0));
+    std::vector<std::tuple<double, size_t, size_t>> Max;
+    std::vector<std::tuple<double, size_t, size_t>> Large(ntamp, std::make_tuple(0.0, 0, 0));
     double value = 0.0;
     size_t count = 0;
     for (size_t i = 0; i < nh_; ++i) {
@@ -920,19 +920,19 @@ void MCSRGPT2_MO::Check_T1(const string& x, const d2& M, double& Norm, double& M
             size_t na = idx_p_[a];
             double m = M[i][a];
             value += pow(m, 2.0);
-            if (fabs(m) > fabs(get<0>(Large[ntamp - 1]))) {
-                Large[ntamp - 1] = make_tuple(m, ni, na);
+            if (fabs(m) > fabs(std::get<0>(Large[ntamp - 1]))) {
+                Large[ntamp - 1] = std::make_tuple(m, ni, na);
             }
             sort(Large.begin(), Large.end(), ReverseSortT1);
             if (fabs(m) > intruder)
-                Max.push_back(make_tuple(m, ni, na));
+                Max.push_back(std::make_tuple(m, ni, na));
             sort(Max.begin(), Max.end(), ReverseSortT1);
             if (fabs(m) > options.get_double("E_CONVERGENCE"))
                 ++count;
         }
     }
     Norm = sqrt(value);
-    MaxT = get<0>(Large[0]);
+    MaxT = std::get<0>(Large[0]);
 
     // Print
     outfile->Printf("\n");
@@ -951,8 +951,8 @@ void MCSRGPT2_MO::Check_T1(const string& x, const d2& M, double& Norm, double& M
     for (size_t n = 0; n != ntamp; ++n) {
         if (n % 3 == 0)
             outfile->Printf("\n  ");
-        outfile->Printf("[%3zu %3c %3zu %3c] %8.5f ", get<1>(Large[n]), ' ', get<2>(Large[n]), ' ',
-                        get<0>(Large[n]));
+        outfile->Printf("[%3zu %3c %3zu %3c] %8.5f ", std::get<1>(Large[n]), ' ', std::get<2>(Large[n]), ' ',
+                        std::get<0>(Large[n]));
     }
     outfile->Printf("\n  "
                     "----------------------------------------------------------"
@@ -972,9 +972,9 @@ void MCSRGPT2_MO::Check_T1(const string& x, const d2& M, double& Norm, double& M
                     "----------------------------------------------------------"
                     "-----------");
     for (size_t n = 0; n != Max.size(); ++n) {
-        size_t i = get<1>(Max[n]);
-        size_t a = get<2>(Max[n]);
-        double t2 = get<0>(Max[n]);
+        size_t i = std::get<1>(Max[n]);
+        size_t a = std::get<2>(Max[n]);
+        double t2 = std::get<0>(Max[n]);
         double fi = (x == "A") ? (Fa_[i][i]) : (Fb_[i][i]);
         double fa = (x == "A") ? (Fa_[a][a]) : (Fb_[a][a]);
         double down = fi - fa;
@@ -1538,7 +1538,7 @@ void MCSRGPT2_MO::test_D2_Dyall() {
 }
 
 void MCSRGPT2_MO::PrintDelta() {
-    ofstream out_delta;
+    std::ofstream out_delta;
     out_delta.open("Delta_ijab");
     for (size_t i = 0; i < nh_; ++i) {
         size_t ni = idx_h_[i];

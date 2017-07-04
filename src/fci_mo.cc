@@ -42,7 +42,7 @@
 #include "psi4/libmints/oeprop.h"
 #include "psi4/libmints/petitelist.h"
 
-using namespace std;
+
 
 namespace psi {
 namespace forte {
@@ -243,9 +243,9 @@ void FCI_MO::read_options() {
     // code)
     nh_ = nc_ + na_;
     npt_ = na_ + nv_;
-    idx_h_ = vector<size_t>(idx_a_);
+    idx_h_ = std::vector<size_t>(idx_a_);
     idx_h_.insert(idx_h_.end(), idx_c_.begin(), idx_c_.end());
-    idx_p_ = vector<size_t>(idx_a_);
+    idx_p_ = std::vector<size_t>(idx_a_);
     idx_p_.insert(idx_p_.end(), idx_v_.begin(), idx_v_.end());
 
     // print input summary
@@ -589,8 +589,8 @@ void FCI_MO::form_det() {
     if (!quiet_) {
         outfile->Printf("\n  %-35s ...", str.c_str());
     }
-    vector<vector<vector<bool>>> a_string = Form_String(na_a);
-    vector<vector<vector<bool>>> b_string = Form_String(nb_a);
+    std::vector<vector<vector<bool>>> a_string = Form_String(na_a);
+    std::vector<vector<vector<bool>>> b_string = Form_String(nb_a);
     if (!quiet_) {
         outfile->Printf("  Done. Timing %15.6f s", tstrings.get());
     }
@@ -658,7 +658,7 @@ void FCI_MO::form_det() {
 vector<vector<vector<bool>>> FCI_MO::Form_String(const int& active_elec, const bool& print) {
 
     timer_on("FORM String");
-    vector<vector<vector<bool>>> String(nirrep_, vector<vector<bool>>());
+    std::vector<vector<vector<bool>>> String(nirrep_, std::vector<vector<bool>>());
 
     // initalize the string (only active)
     int symmetry = 0;
@@ -670,7 +670,7 @@ vector<vector<vector<bool>>> FCI_MO::Form_String(const int& active_elec, const b
 
     do {
         // permute the active
-        vector<bool> string_a;
+        std::vector<bool> string_a;
         int sym = symmetry;
         for (size_t i = 0; i < na_; ++i) {
             string_a.push_back(I_init[i]);
@@ -679,7 +679,7 @@ vector<vector<vector<bool>>> FCI_MO::Form_String(const int& active_elec, const b
             }
         }
         String[sym].push_back(string_a);
-    } while (next_permutation(I_init, I_init + na_));
+    } while (std::next_permutation(I_init, I_init + na_));
 
     if (print == true && !quiet_) {
         print_h2("Possible String");
@@ -702,10 +702,10 @@ vector<vector<vector<bool>>> FCI_MO::Form_String(const int& active_elec, const b
 
 void FCI_MO::form_det_cis() {
     // reference string
-    vector<bool> string_ref = Form_String_Ref();
+    std::vector<bool> string_ref = Form_String_Ref();
 
     // singles string
-    vector<vector<vector<bool>>> string_singles;
+    std::vector<vector<vector<bool>>> string_singles;
     if (ipea_ == "IP") {
         string_singles = Form_String_IP(string_ref);
     } else if (ipea_ == "EA") {
@@ -781,11 +781,11 @@ void FCI_MO::form_det_cis() {
 
 void FCI_MO::form_det_cisd() {
     // reference string
-    vector<bool> string_ref = Form_String_Ref();
+    std::vector<bool> string_ref = Form_String_Ref();
 
     // singles string
-    vector<vector<vector<bool>>> string_singles = Form_String_Singles(string_ref);
-    vector<vector<vector<bool>>> string_singles_ipea;
+    std::vector<vector<vector<bool>>> string_singles = Form_String_Singles(string_ref);
+    std::vector<vector<vector<bool>>> string_singles_ipea;
     if (ipea_ == "IP") {
         string_singles_ipea = Form_String_IP(string_ref);
     } else if (ipea_ == "EA") {
@@ -793,7 +793,7 @@ void FCI_MO::form_det_cisd() {
     }
 
     // doubles string
-    vector<vector<vector<bool>>> string_doubles = Form_String_Doubles(string_ref);
+    std::vector<vector<vector<bool>>> string_doubles = Form_String_Doubles(string_ref);
 
     // symmetry of ref (just active)
     int symmetry = 0;
@@ -904,7 +904,7 @@ void FCI_MO::form_det_cisd() {
 vector<bool> FCI_MO::Form_String_Ref(const bool& print) {
     timer_on("FORM String Ref");
 
-    vector<bool> String;
+    std::vector<bool> String;
     Dimension doccpi(this->doccpi());
     if (ipea_ == "EA") {
         doccpi[0] += 1;
@@ -949,14 +949,14 @@ vector<bool> FCI_MO::Form_String_Ref(const bool& print) {
     return String;
 }
 
-vector<vector<vector<bool>>> FCI_MO::Form_String_Singles(const vector<bool>& ref_string,
+vector<vector<vector<bool>>> FCI_MO::Form_String_Singles(const std::vector<bool>& ref_string,
                                                          const bool& print) {
     timer_on("FORM String Singles");
-    vector<vector<vector<bool>>> String(nirrep_, vector<vector<bool>>());
+    std::vector<vector<vector<bool>>> String(nirrep_, std::vector<vector<bool>>());
 
     // occupied and unoccupied indices, symmetry (active)
     int symmetry = 0;
-    vector<int> uocc, occ;
+    std::vector<int> uocc, occ;
     for (size_t i = 0; i < na_; ++i) {
         if (ipea_ != "NONE" &&
             std::find(diffused_orbs_.begin(), diffused_orbs_.end(), i) != diffused_orbs_.end()) {
@@ -973,7 +973,7 @@ vector<vector<vector<bool>>> FCI_MO::Form_String_Singles(const vector<bool>& ref
 
     // singles
     for (const int& a : uocc) {
-        vector<bool> string_local(ref_string);
+        std::vector<bool> string_local(ref_string);
         string_local[a] = true;
         int sym = symmetry ^ sym_active_[a];
         for (const int& i : occ) {
@@ -1006,14 +1006,14 @@ vector<vector<vector<bool>>> FCI_MO::Form_String_Singles(const vector<bool>& ref
     return String;
 }
 
-vector<vector<vector<bool>>> FCI_MO::Form_String_IP(const vector<bool>& ref_string,
+vector<vector<vector<bool>>> FCI_MO::Form_String_IP(const std::vector<bool>& ref_string,
                                                     const bool& print) {
     timer_on("FORM String Singles IP");
-    vector<vector<vector<bool>>> String(nirrep_, vector<vector<bool>>());
+    std::vector<vector<vector<bool>>> String(nirrep_, std::vector<vector<bool>>());
 
     // occupied and unoccupied indices, symmetry (active)
     int symmetry = 0;
-    vector<int> occ;
+    std::vector<int> occ;
     for (int i = 0; i < na_; ++i) {
         if (ref_string[i]) {
             occ.push_back(i);
@@ -1023,7 +1023,7 @@ vector<vector<vector<bool>>> FCI_MO::Form_String_IP(const vector<bool>& ref_stri
 
     // singles
     for (const int& i : occ) {
-        vector<bool> string_local(ref_string);
+        std::vector<bool> string_local(ref_string);
         string_local[idx_diffused_] = true;
 
         string_local[i] = false;
@@ -1051,14 +1051,14 @@ vector<vector<vector<bool>>> FCI_MO::Form_String_IP(const vector<bool>& ref_stri
     return String;
 }
 
-vector<vector<vector<bool>>> FCI_MO::Form_String_EA(const vector<bool>& ref_string,
+vector<vector<vector<bool>>> FCI_MO::Form_String_EA(const std::vector<bool>& ref_string,
                                                     const bool& print) {
     timer_on("FORM String Singles EA");
-    vector<vector<vector<bool>>> String(nirrep_, vector<vector<bool>>());
+    std::vector<vector<vector<bool>>> String(nirrep_, std::vector<vector<bool>>());
 
     // occupied and unoccupied indices, symmetry (active)
     int symmetry = 0;
-    vector<int> uocc;
+    std::vector<int> uocc;
     for (int i = 0; i < na_; ++i) {
         if (!ref_string[i]) {
             uocc.push_back(i);
@@ -1069,7 +1069,7 @@ vector<vector<vector<bool>>> FCI_MO::Form_String_EA(const vector<bool>& ref_stri
 
     // singles
     for (const int& a : uocc) {
-        vector<bool> string_local(ref_string);
+        std::vector<bool> string_local(ref_string);
         string_local[a] = true;
         int sym = symmetry ^ sym_active_[a];
 
@@ -1097,14 +1097,14 @@ vector<vector<vector<bool>>> FCI_MO::Form_String_EA(const vector<bool>& ref_stri
     return String;
 }
 
-vector<vector<vector<bool>>> FCI_MO::Form_String_Doubles(const vector<bool>& ref_string,
+vector<vector<vector<bool>>> FCI_MO::Form_String_Doubles(const std::vector<bool>& ref_string,
                                                          const bool& print) {
     timer_on("FORM String Doubles");
-    vector<vector<vector<bool>>> String(nirrep_, vector<vector<bool>>());
+    std::vector<vector<vector<bool>>> String(nirrep_, std::vector<vector<bool>>());
 
     // occupied and unoccupied indices, symmetry (active)
     int symmetry = 0;
-    vector<int> uocc, occ;
+    std::vector<int> uocc, occ;
     for (int i = 0; i < na_; ++i) {
         if (ipea_ != "NONE" && i != idx_diffused_ &&
             std::find(diffused_orbs_.begin(), diffused_orbs_.end(), i) != diffused_orbs_.end()) {
@@ -1121,24 +1121,24 @@ vector<vector<vector<bool>>> FCI_MO::Form_String_Doubles(const vector<bool>& ref
 
     // doubles
     for (const int& a : uocc) {
-        vector<bool> string_a(ref_string);
+        std::vector<bool> string_a(ref_string);
         string_a[a] = true;
         int sym_a = symmetry ^ sym_active_[a];
 
         for (const int& b : uocc) {
             if (b > a) {
-                vector<bool> string_b(string_a);
+                std::vector<bool> string_b(string_a);
                 string_b[b] = true;
                 int sym_b = sym_a ^ sym_active_[b];
 
                 for (const int& i : occ) {
-                    vector<bool> string_i(string_b);
+                    std::vector<bool> string_i(string_b);
                     string_i[i] = false;
                     int sym_i = sym_b ^ sym_active_[i];
 
                     for (const int& j : occ) {
                         if (j > i) {
-                            vector<bool> string_j(string_i);
+                            std::vector<bool> string_j(string_i);
                             string_j[j] = false;
                             int sym_j = sym_i ^ sym_active_[j];
                             String[sym_j].push_back(string_j);
@@ -1170,7 +1170,7 @@ vector<vector<vector<bool>>> FCI_MO::Form_String_Doubles(const vector<bool>& ref
 }
 
 vector<double> FCI_MO::compute_T1_percentage() {
-    vector<double> out;
+    std::vector<double> out;
 
     if (active_space_type_ != "CISD") {
         outfile->Printf("\n  No point to compute T1 percentage."
@@ -1443,9 +1443,9 @@ void FCI_MO::semi_canonicalize() {
 }
 
 void FCI_MO::Diagonalize_H_noHF(const vecdet& p_space, const int& multi, const int& nroot,
-                                vector<pair<SharedVector, double>>& eigen) {
+                                std::vector<pair<SharedVector, double>>& eigen) {
     // recompute RHF determinant
-    vector<bool> string_ref = Form_String_Ref();
+    std::vector<bool> string_ref = Form_String_Ref();
     STLBitsetDeterminant rhf(string_ref, string_ref);
 
     // test if RHF determinant is the last one in det
@@ -1460,7 +1460,7 @@ void FCI_MO::Diagonalize_H_noHF(const vecdet& p_space, const int& multi, const i
         double Erhf = rhf.slater_rules(rhf) + fci_ints_->scalar_energy() + e_nuc_;
         SharedVector rhf_vec(new Vector("RHF Eigen Vector", det_size));
         rhf_vec->set(det_size - 1, 1.0);
-        eigen.push_back(make_pair(rhf_vec, Erhf));
+        eigen.push_back(std::make_pair(rhf_vec, Erhf));
         outfile->Printf("Done.");
 
         // compute the rest of the states
@@ -1470,7 +1470,7 @@ void FCI_MO::Diagonalize_H_noHF(const vecdet& p_space, const int& multi, const i
             int nroot_noHF = nroot - 1;
             vecdet p_space_noHF(p_space);
             p_space_noHF.pop_back();
-            vector<pair<SharedVector, double>> eigen_noHF;
+            std::vector<pair<SharedVector, double>> eigen_noHF;
             Diagonalize_H(p_space_noHF, multi, nroot_noHF, eigen_noHF);
 
             for (int i = 0; i < nroot_noHF; ++i) {
@@ -1483,7 +1483,7 @@ void FCI_MO::Diagonalize_H_noHF(const vecdet& p_space, const int& multi, const i
                     vec->set(n, vec_noHF->get(n));
                 }
 
-                eigen.push_back(make_pair(vec, Ethis));
+                eigen.push_back(std::make_pair(vec, Ethis));
             }
         }
 
@@ -1497,7 +1497,7 @@ void FCI_MO::Diagonalize_H_noHF(const vecdet& p_space, const int& multi, const i
 }
 
 void FCI_MO::Diagonalize_H(const vecdet& p_space, const int& multi, const int& nroot,
-                           vector<pair<SharedVector, double>>& eigen) {
+                           std::vector<pair<SharedVector, double>>& eigen) {
     timer_on("Diagonalize H");
     Timer tdiagH;
     std::string str = "Diagonalizing Hamiltonian";
@@ -1548,7 +1548,7 @@ void FCI_MO::Diagonalize_H(const vecdet& p_space, const int& multi, const int& n
         for (int i = 0; i != nroot; ++i) {
             double value = evals->get(i);
 
-            eigen.push_back(make_pair(evecs->get_column(0, i), value + energy_offset));
+            eigen.push_back(std::make_pair(evecs->get_column(0, i), value + energy_offset));
         }
 
     } else {
@@ -1574,7 +1574,7 @@ void FCI_MO::Diagonalize_H(const vecdet& p_space, const int& multi, const int& n
         for (int i = 0; i != nroot; ++i) {
             double value = evals->get(i);
 
-            eigen.push_back(make_pair(evecs->get_column(0, i), value + energy_offset));
+            eigen.push_back(std::make_pair(evecs->get_column(0, i), value + energy_offset));
         }
     }
 
@@ -1616,7 +1616,7 @@ void FCI_MO::Diagonalize_H(const vecdet& p_space, const int& multi, const int& n
     //            }
     //            continue;
     //        } else {
-    //            std::vector<string> s2_labels(
+    //            std::vector<std::string> s2_labels(
     //                {"singlet", "doublet", "triplet", "quartet", "quintet",
     //                 "sextet", "septet", "octet", "nonet", "decaet"});
     //            std::string state_label = s2_labels[std::round(S * 2.0)];
@@ -1628,7 +1628,7 @@ void FCI_MO::Diagonalize_H(const vecdet& p_space, const int& multi, const int& n
     //            }
     //            ++count;
     //            eigen.push_back(
-    //                make_pair(vec_tmp->get_column(0, i), val_tmp->get(i) +
+    //                std::make_pair(vec_tmp->get_column(0, i), val_tmp->get(i) +
     //                e_nuc_));
     //        }
     //        if (count == nroot)
@@ -1641,11 +1641,11 @@ void FCI_MO::Diagonalize_H(const vecdet& p_space, const int& multi, const int& n
 }
 
 inline bool ReverseAbsSort(const tuple<double, int>& lhs, const tuple<double, int>& rhs) {
-    return abs(get<0>(rhs)) < abs(get<0>(lhs));
+    return std::fabs(std::get<0>(rhs)) < std::fabs(std::get<0>(lhs));
 }
 
 void FCI_MO::print_CI(const int& nroot, const double& CI_threshold,
-                      const vector<pair<SharedVector, double>>& eigen, const vecdet& det) {
+                      const std::vector<pair<SharedVector, double>>& eigen, const vecdet& det) {
     timer_on("Print CI Vectors");
     if (!quiet_) {
         outfile->Printf("\n\n  * * * * * * * * * * * * * * * * *");
@@ -1656,16 +1656,16 @@ void FCI_MO::print_CI(const int& nroot, const double& CI_threshold,
 
     dominant_dets_.clear();
     for (int i = 0; i != nroot; ++i) {
-        vector<tuple<double, int>> ci_select; // tuple<coeff, index>
+        std::vector<std::tuple<double, int>> ci_select; // tuple<coeff, index>
 
         // choose CI coefficients greater than CI_threshold
         for (size_t j = 0, det_size = det.size(); j < det_size; ++j) {
             double value = (eigen[i].first)->get(j);
             if (std::fabs(value) > CI_threshold)
-                ci_select.push_back(make_tuple(value, j));
+                ci_select.push_back(std::make_tuple(value, j));
         }
         sort(ci_select.begin(), ci_select.end(), ReverseAbsSort);
-        dominant_dets_.push_back(det[get<1>(ci_select[0])]);
+        dominant_dets_.push_back(det[std::get<1>(ci_select[0])]);
 
         if (!quiet_) {
             outfile->Printf("\n  ==> Root No. %d <==\n", i);
@@ -1674,8 +1674,8 @@ void FCI_MO::print_CI(const int& nroot, const double& CI_threshold,
             if (!quiet_) {
                 outfile->Printf("\n    ");
             }
-            double ci = get<0>(ci_select[j]);
-            size_t index = get<1>(ci_select[j]);
+            double ci = std::get<0>(ci_select[j]);
+            size_t index = std::get<1>(ci_select[j]);
             size_t ncmopi = 0;
             for (int h = 0; h < nirrep_; ++h) {
                 for (size_t k = 0; k < active_[h]; ++k) {
@@ -1725,8 +1725,8 @@ void FCI_MO::FormDensity(CI_RDMS& ci_rdms, d2& A, d2& B) {
     }
 
     size_t dim = na_ * na_;
-    vector<double> opdm_a(dim, 0.0);
-    vector<double> opdm_b(dim, 0.0);
+    std::vector<double> opdm_a(dim, 0.0);
+    std::vector<double> opdm_b(dim, 0.0);
 
     ci_rdms.compute_1rdm(opdm_a, opdm_b);
 
@@ -1757,7 +1757,7 @@ void FCI_MO::FormDensity(CI_RDMS& ci_rdms, d2& A, d2& B) {
 double FCI_MO::OneOP(const STLBitsetDeterminant& J, STLBitsetDeterminant& Jnew, const size_t& p,
                      const bool& sp, const size_t& q, const bool& sq) {
     timer_on("1PO");
-    vector<vector<bool>> tmp;
+    std::vector<vector<bool>> tmp;
     tmp.push_back(J.get_alfa_bits_vector_bool());
     tmp.push_back(J.get_beta_bits_vector_bool());
 
@@ -1820,9 +1820,9 @@ void FCI_MO::FormCumulant2(CI_RDMS& ci_rdms, d4& AA, d4& AB, d4& BB) {
     }
 
     size_t dim = na_ * na_ * na_ * na_;
-    vector<double> tpdm_aa(dim, 0.0);
-    vector<double> tpdm_ab(dim, 0.0);
-    vector<double> tpdm_bb(dim, 0.0);
+    std::vector<double> tpdm_aa(dim, 0.0);
+    std::vector<double> tpdm_ab(dim, 0.0);
+    std::vector<double> tpdm_bb(dim, 0.0);
 
     ci_rdms.compute_2rdm(tpdm_aa, tpdm_ab, tpdm_bb);
 
@@ -1834,7 +1834,7 @@ void FCI_MO::FormCumulant2(CI_RDMS& ci_rdms, d4& AA, d4& AB, d4& BB) {
     timer_off("FORM 2-Cumulant");
 }
 
-void FCI_MO::FormCumulant2AA(const vector<double>& tpdm_aa, const vector<double>& tpdm_bb, d4& AA,
+void FCI_MO::FormCumulant2AA(const std::vector<double>& tpdm_aa, const std::vector<double>& tpdm_bb, d4& AA,
                              d4& BB) {
     size_t dim2 = na_ * na_;
     size_t dim3 = na_ * dim2;
@@ -1873,7 +1873,7 @@ void FCI_MO::FormCumulant2AA(const vector<double>& tpdm_aa, const vector<double>
     }
 }
 
-void FCI_MO::FormCumulant2AB(const vector<double>& tpdm_ab, d4& AB) {
+void FCI_MO::FormCumulant2AB(const std::vector<double>& tpdm_ab, d4& AB) {
     size_t dim2 = na_ * na_;
     size_t dim3 = na_ * dim2;
 
@@ -1929,7 +1929,7 @@ double FCI_MO::TwoOP(const STLBitsetDeterminant& J, STLBitsetDeterminant& Jnew, 
                      const bool& sp, const size_t& q, const bool& sq, const size_t& r,
                      const bool& sr, const size_t& s, const bool& ss) {
     timer_on("2PO");
-    vector<vector<bool>> tmp;
+    std::vector<vector<bool>> tmp;
     tmp.push_back(J.get_alfa_bits_vector_bool());
     tmp.push_back(J.get_beta_bits_vector_bool());
 
@@ -1978,10 +1978,10 @@ void FCI_MO::FormCumulant3(CI_RDMS& ci_rdms, d6& AAA, d6& AAB, d6& ABB, d6& BBB,
     outfile->Printf("\n  %-35s ...", str.c_str());
 
     size_t dim = na_ * na_ * na_ * na_ * na_ * na_;
-    vector<double> tpdm_aaa(dim, 0.0);
-    vector<double> tpdm_aab(dim, 0.0);
-    vector<double> tpdm_abb(dim, 0.0);
-    vector<double> tpdm_bbb(dim, 0.0);
+    std::vector<double> tpdm_aaa(dim, 0.0);
+    std::vector<double> tpdm_aab(dim, 0.0);
+    std::vector<double> tpdm_abb(dim, 0.0);
+    std::vector<double> tpdm_bbb(dim, 0.0);
 
     ci_rdms.compute_3rdm(tpdm_aaa, tpdm_aab, tpdm_abb, tpdm_bbb);
 
@@ -1993,7 +1993,7 @@ void FCI_MO::FormCumulant3(CI_RDMS& ci_rdms, d6& AAA, d6& AAB, d6& ABB, d6& BBB,
     timer_off("FORM 3-Cumulant");
 }
 
-void FCI_MO::FormCumulant3AAA(const vector<double>& tpdm_aaa, const vector<double>& tpdm_bbb,
+void FCI_MO::FormCumulant3AAA(const std::vector<double>& tpdm_aaa, const std::vector<double>& tpdm_bbb,
                               d6& AAA, d6& BBB, string& DC) {
     size_t dim2 = na_ * na_;
     size_t dim3 = na_ * dim2;
@@ -2054,7 +2054,7 @@ void FCI_MO::FormCumulant3AAA(const vector<double>& tpdm_aaa, const vector<doubl
     }
 }
 
-void FCI_MO::FormCumulant3AAB(const vector<double>& tpdm_aab, const vector<double>& tpdm_abb,
+void FCI_MO::FormCumulant3AAB(const std::vector<double>& tpdm_aab, const std::vector<double>& tpdm_abb,
                               d6& AAB, d6& ABB, string& DC) {
     size_t dim2 = na_ * na_;
     size_t dim3 = na_ * dim2;
@@ -2227,7 +2227,7 @@ double FCI_MO::ThreeOP(const STLBitsetDeterminant& J, STLBitsetDeterminant& Jnew
                        const bool& sr, const size_t& s, const bool& ss, const size_t& t,
                        const bool& st, const size_t& u, const bool& su) {
     timer_on("3PO");
-    vector<vector<bool>> tmp;
+    std::vector<vector<bool>> tmp;
     tmp.push_back(J.get_alfa_bits_vector_bool());
     tmp.push_back(J.get_beta_bits_vector_bool());
 
@@ -2291,7 +2291,7 @@ void FCI_MO::print_Fock(const string& spin, const d2& Fock) {
 
     // print Fock block
     auto print_Fock_block = [&](const string& name1, const string& name2,
-                                const vector<size_t>& idx1, const vector<size_t>& idx2) {
+                                const std::vector<size_t>& idx1, const std::vector<size_t>& idx2) {
         size_t dim1 = idx1.size();
         size_t dim2 = idx2.size();
         string bname = name1 + "-" + name2;
@@ -2337,7 +2337,7 @@ void FCI_MO::print_Fock(const string& spin, const d2& Fock) {
     print_Fock_block("C", "C", idx_c_, idx_c_);
     print_Fock_block("V", "V", idx_v_, idx_v_);
 
-    vector<size_t> idx_ah, idx_ap;
+    std::vector<size_t> idx_ah, idx_ap;
     if (active_space_type_ == "CIS" || active_space_type_ == "CISD") {
         for (int i = 0; i < ah_.size(); ++i) {
             idx_ah.push_back(idx_a_[ah_[i]]);
@@ -2452,7 +2452,7 @@ void FCI_MO::Check_Fock(const d2& A, const d2& B, const double& E, size_t& count
     }
     Check_FockBlock(A, B, E, count, nc_, idx_c_, "CORE");
     if (active_space_type_ == "CIS" || active_space_type_ == "CISD") {
-        vector<size_t> idx_ah, idx_ap;
+        std::vector<size_t> idx_ah, idx_ap;
         for (int i = 0; i < ah_.size(); ++i) {
             idx_ah.push_back(idx_a_[ah_[i]]);
         }
@@ -2475,7 +2475,7 @@ void FCI_MO::Check_Fock(const d2& A, const d2& B, const double& E, size_t& count
 }
 
 void FCI_MO::Check_FockBlock(const d2& A, const d2& B, const double& E, size_t& count,
-                             const size_t& dim, const vector<size_t>& idx, const string& str) {
+                             const size_t& dim, const std::vector<size_t>& idx, const string& str) {
     double maxa = 0.0, maxb = 0.0;
     size_t a = 0, b = 0;
     for (size_t p = 0; p < dim; ++p) {
@@ -2781,7 +2781,7 @@ void FCI_MO::BD_Fock(const d2& Fa, const d2& Fb, SharedMatrix& Ua, SharedMatrix&
 
 bool FCI_MO::CheckDensity() {
     // check blocks
-    auto checkblocks = [&](const size_t& dim, const vector<size_t>& idx) -> vector<double> {
+    auto checkblocks = [&](const size_t& dim, const std::vector<size_t>& idx) -> std::vector<double> {
         double maxa = 0.0, maxb = 0.0;
         for (size_t p = 0; p < dim; ++p) {
             size_t np = idx[p];
@@ -2799,7 +2799,7 @@ bool FCI_MO::CheckDensity() {
     };
 
     outfile->Printf("\n    Checking if orbitals are natural orbitals ...");
-    vector<double> maxes, temp;
+    std::vector<double> maxes, temp;
     temp = checkblocks(nc_, idx_c_);
     maxes.insert(maxes.end(), temp.begin(), temp.end());
     temp = checkblocks(na_, idx_a_);
@@ -2860,7 +2860,7 @@ void FCI_MO::compute_permanent_dipole() {
     SharedMatrix sotoao = pet->sotoao();
 
     // symmetrize the density according to point group
-    auto symmetrize_density = [&](const vector<double>& vec, const SharedMatrix& mat) {
+    auto symmetrize_density = [&](const std::vector<double>& vec, const SharedMatrix& mat) {
         mat->zero();
         size_t offset = 0;
 
@@ -2907,8 +2907,8 @@ void FCI_MO::compute_permanent_dipole() {
         std::string trans_name = std::to_string(A) + " -> " + std::to_string(A);
 
         CI_RDMS ci_rdms(options_, fci_ints_, determinant_, evecs, A, A);
-        vector<double> opdm_a(na_ * na_, 0.0);
-        vector<double> opdm_b(na_ * na_, 0.0);
+        std::vector<double> opdm_a(na_ * na_, 0.0);
+        std::vector<double> opdm_b(na_ * na_, 0.0);
         ci_rdms.compute_1rdm(opdm_a, opdm_b);
 
         SharedMatrix SOdens(new Matrix("SO density " + trans_name, nmopi_, nmopi_));
@@ -2919,7 +2919,7 @@ void FCI_MO::compute_permanent_dipole() {
             new Matrix("AO density " + trans_name, basisset->nbf(), basisset->nbf()));
         AOdens->remove_symmetry(SOdens, sotoao);
 
-        vector<double> de(4, 0.0);
+        std::vector<double> de(4, 0.0);
         for (int i = 0; i < 3; ++i) {
             de[i] = 2.0 * AOdens->vector_dot(aodipole_ints[i]); // 2.0 for beta spin
             de[i] += ndip->get(i);                              // add nuclear contributions
@@ -2996,7 +2996,7 @@ void FCI_MO::compute_trans_dipole() {
     //    }
 
     // symmetrize the density according to point group
-    auto symmetrize_density = [&](const vector<double>& vec, const SharedMatrix& mat) {
+    auto symmetrize_density = [&](const std::vector<double>& vec, const SharedMatrix& mat) {
 
         size_t offset = 0;
         mat->zero();
@@ -3035,8 +3035,8 @@ void FCI_MO::compute_trans_dipole() {
             std::string trans_name = std::to_string(A) + " -> " + std::to_string(B);
 
             CI_RDMS ci_rdms(options_, fci_ints_, determinant_, evecs, A, B);
-            vector<double> opdm_a(na_ * na_, 0.0);
-            vector<double> opdm_b(na_ * na_, 0.0);
+            std::vector<double> opdm_a(na_ * na_, 0.0);
+            std::vector<double> opdm_b(na_ * na_, 0.0);
             ci_rdms.compute_1rdm(opdm_a, opdm_b);
 
             SharedMatrix SOtransD(
@@ -3048,7 +3048,7 @@ void FCI_MO::compute_trans_dipole() {
                                              basisset->nbf()));
             AOtransD->remove_symmetry(SOtransD, sotoao);
 
-            vector<double> de(4, 0.0);
+            std::vector<double> de(4, 0.0);
             for (int i = 0; i < 3; ++i) {
                 de[i] = 2.0 * AOtransD->vector_dot(aodipole_ints[i]); // 2.0 for beta spin
                 //                de[i] = 2.0 *
@@ -3071,8 +3071,8 @@ void FCI_MO::compute_trans_dipole() {
     //    // use oeprop
     //    for(int A = 0; A < nroot_; ++A){
     //        CI_RDMS ci_rdms (options_,fci_ints_,determinant_,evecs,0,A);
-    //        vector<double> opdm_a (na_ * na_, 0.0);
-    //        vector<double> opdm_b (na_ * na_, 0.0);
+    //        std::vector<double> opdm_a (na_ * na_, 0.0);
+    //        std::vector<double> opdm_b (na_ * na_, 0.0);
     //        ci_rdms.compute_1rdm(opdm_a, opdm_b);
 
     //        SharedMatrix transD (new Matrix("MO transition density 0 -> " +
@@ -3134,7 +3134,7 @@ d3 FCI_MO::compute_orbital_extents() {
     std::shared_ptr<IntegralFactory> ints = std::shared_ptr<IntegralFactory>(
         new IntegralFactory(basisset, basisset, basisset, basisset));
 
-    vector<SharedMatrix> ao_Qpole;
+    std::vector<SharedMatrix> ao_Qpole;
     for (const std::string& direction : {"XX", "XY", "XZ", "YY", "YZ", "ZZ"}) {
         std::string name = "AO Quadrupole" + direction;
         ao_Qpole.push_back(SharedMatrix(new Matrix(name, basisset->nbf(), basisset->nbf())));
@@ -3178,7 +3178,7 @@ d3 FCI_MO::compute_orbital_extents() {
     std::sort(metric.begin(), metric.end());
 
     // initialize vector saving current orbital extents
-    d3 orb_extents = vector<d2>(nirrep_, d2());
+    d3 orb_extents = std::vector<d2>(nirrep_, d2());
     for (int h = 0; h < nirrep_; ++h) {
         size_t na = active_[h];
         if (na == 0)
@@ -3269,7 +3269,7 @@ void FCI_MO::fill_cumulant3() {
     });
 }
 
-void FCI_MO::fill_density(vector<double>& opdm_a, vector<double>& opdm_b) {
+void FCI_MO::fill_density(vector<double>& opdm_a, std::vector<double>& opdm_b) {
     Da_ = d2(ncmo_, d1(ncmo_));
     Db_ = d2(ncmo_, d1(ncmo_));
     L1a = ambit::Tensor::build(ambit::CoreTensor, "L1a", {na_, na_});
@@ -3362,9 +3362,9 @@ void FCI_MO::compute_ref() {
 
     } else {
         size_t nelement2 = na_ * na_ * na_ * na_;
-        vector<double> tpdm_aa(nelement2, 0.0);
-        vector<double> tpdm_ab(nelement2, 0.0);
-        vector<double> tpdm_bb(nelement2, 0.0);
+        std::vector<double> tpdm_aa(nelement2, 0.0);
+        std::vector<double> tpdm_ab(nelement2, 0.0);
+        std::vector<double> tpdm_bb(nelement2, 0.0);
 
         // compute 2RDM
         ci_rdms.compute_2rdm(tpdm_aa, tpdm_ab, tpdm_bb);
@@ -3373,12 +3373,12 @@ void FCI_MO::compute_ref() {
         compute_cumulant2(tpdm_aa, tpdm_ab, tpdm_bb);
 
         size_t nelement3 = na_ * na_ * nelement2;
-        vector<double> tpdm_aaa, tpdm_aab, tpdm_abb, tpdm_bbb;
+        std::vector<double> tpdm_aaa, tpdm_aab, tpdm_abb, tpdm_bbb;
         if (threepdc != "ZERO") {
-            tpdm_aaa = vector<double>(nelement3, 0.0);
-            tpdm_aab = vector<double>(nelement3, 0.0);
-            tpdm_abb = vector<double>(nelement3, 0.0);
-            tpdm_bbb = vector<double>(nelement3, 0.0);
+            tpdm_aaa = std::vector<double>(nelement3, 0.0);
+            tpdm_aab = std::vector<double>(nelement3, 0.0);
+            tpdm_abb = std::vector<double>(nelement3, 0.0);
+            tpdm_bbb = std::vector<double>(nelement3, 0.0);
 
             // compute 3RDM
             if (threepdc == "MK") {
@@ -3440,8 +3440,8 @@ double FCI_MO::compute_sa_energy() {
     // averaged energy and density
     double Ecas_sa = 0.0;
     size_t nelement = na_ * na_;
-    vector<double> sa_opdm_a(nelement, 0.0);
-    vector<double> sa_opdm_b(nelement, 0.0);
+    std::vector<double> sa_opdm_a(nelement, 0.0);
+    std::vector<double> sa_opdm_b(nelement, 0.0);
     eigens_.clear();
     p_spaces_.clear();
 
@@ -3498,8 +3498,8 @@ double FCI_MO::compute_sa_energy() {
 
             CI_RDMS ci_rdms(options_, fci_ints_, determinant_, evecs, i, i);
             ci_rdms.set_symmetry(irrep);
-            vector<double> opdm_a(nelement, 0.0);
-            vector<double> opdm_b(nelement, 0.0);
+            std::vector<double> opdm_a(nelement, 0.0);
+            std::vector<double> opdm_b(nelement, 0.0);
             ci_rdms.compute_1rdm(opdm_a, opdm_b);
 
             std::for_each(opdm_a.begin(), opdm_a.end(), [&](double& v) { v *= weight; });
@@ -3549,8 +3549,8 @@ double FCI_MO::compute_sa_energy() {
 
     //            // clear previous stuff
     //            Ecas_sa = 0.0;
-    //            sa_opdm_a = vector<double> (nelement, 0.0);
-    //            sa_opdm_b = vector<double> (nelement, 0.0);
+    //            sa_opdm_a = std::vector<double> (nelement, 0.0);
+    //            sa_opdm_b = std::vector<double> (nelement, 0.0);
     //            eigens_.clear();
 
     //            // loop over all averaging states
@@ -3591,8 +3591,8 @@ double FCI_MO::compute_sa_energy() {
     //                    CI_RDMS ci_rdms
     //                    (options_,fci_ints_,determinant_,evecs,i,i);
     //                    ci_rdms.set_symmetry(irrep);
-    //                    vector<double> opdm_a (nelement, 0.0);
-    //                    vector<double> opdm_b (nelement, 0.0);
+    //                    std::vector<double> opdm_a (nelement, 0.0);
+    //                    std::vector<double> opdm_b (nelement, 0.0);
     //                    ci_rdms.compute_1rdm(opdm_a,opdm_b);
 
     //                    std::for_each(opdm_a.begin(), opdm_a.end(),
@@ -3660,8 +3660,8 @@ double FCI_MO::compute_sa_energy() {
     //                CI_RDMS ci_rdms
     //                (options_,fci_ints_,determinant_,evecs,M,N);
     //                ci_rdms.set_symmetry(irrep);
-    //                vector<double> opdm_a (nelement, 0.0);
-    //                vector<double> opdm_b (nelement, 0.0);
+    //                std::vector<double> opdm_a (nelement, 0.0);
+    //                std::vector<double> opdm_b (nelement, 0.0);
     //                ci_rdms.compute_1rdm(opdm_a,opdm_b);
 
     //                // contract density with SA-Fock
@@ -3777,8 +3777,8 @@ void FCI_MO::xms_rotate(const int& irrep) {
                     // compute density
                     CI_RDMS ci_rdms(options_, fci_ints_, determinant_, evecs, M, N);
                     ci_rdms.set_symmetry(irrep);
-                    vector<double> opdm_a(nelement, 0.0);
-                    vector<double> opdm_b(nelement, 0.0);
+                    std::vector<double> opdm_a(nelement, 0.0);
+                    std::vector<double> opdm_b(nelement, 0.0);
                     ci_rdms.compute_1rdm(opdm_a, opdm_b);
 
                     // contract density with SA-Fock
@@ -3837,18 +3837,18 @@ void FCI_MO::compute_sa_ref() {
 
     // prepare averaged 2- and 3-densities
     size_t nelement2 = na_ * na_ * na_ * na_;
-    vector<double> sa_tpdm_aa(nelement2, 0.0);
-    vector<double> sa_tpdm_ab(nelement2, 0.0);
-    vector<double> sa_tpdm_bb(nelement2, 0.0);
+    std::vector<double> sa_tpdm_aa(nelement2, 0.0);
+    std::vector<double> sa_tpdm_ab(nelement2, 0.0);
+    std::vector<double> sa_tpdm_bb(nelement2, 0.0);
 
     size_t nelement3 = na_ * na_ * nelement2;
     bool no_3pdc = (options_.get_str("THREEPDC") == "ZERO");
-    vector<double> sa_tpdm_aaa, sa_tpdm_aab, sa_tpdm_abb, sa_tpdm_bbb;
+    std::vector<double> sa_tpdm_aaa, sa_tpdm_aab, sa_tpdm_abb, sa_tpdm_bbb;
     if (!no_3pdc) {
-        sa_tpdm_aaa = vector<double>(nelement3, 0.0);
-        sa_tpdm_aab = vector<double>(nelement3, 0.0);
-        sa_tpdm_abb = vector<double>(nelement3, 0.0);
-        sa_tpdm_bbb = vector<double>(nelement3, 0.0);
+        sa_tpdm_aaa = std::vector<double>(nelement3, 0.0);
+        sa_tpdm_aab = std::vector<double>(nelement3, 0.0);
+        sa_tpdm_abb = std::vector<double>(nelement3, 0.0);
+        sa_tpdm_bbb = std::vector<double>(nelement3, 0.0);
     }
 
     // loop over all averaged states
@@ -3872,9 +3872,9 @@ void FCI_MO::compute_sa_ref() {
             CI_RDMS ci_rdms(options_, fci_ints_, determinant_, evecs, i, i);
             ci_rdms.set_symmetry(irrep);
 
-            vector<double> tpdm_aa(nelement2, 0.0);
-            vector<double> tpdm_ab(nelement2, 0.0);
-            vector<double> tpdm_bb(nelement2, 0.0);
+            std::vector<double> tpdm_aa(nelement2, 0.0);
+            std::vector<double> tpdm_ab(nelement2, 0.0);
+            std::vector<double> tpdm_bb(nelement2, 0.0);
             ci_rdms.compute_2rdm(tpdm_aa, tpdm_ab, tpdm_bb);
 
             std::for_each(tpdm_aa.begin(), tpdm_aa.end(), [&](double& v) { v *= weight; });
@@ -3888,10 +3888,10 @@ void FCI_MO::compute_sa_ref() {
                            sa_tpdm_bb.begin(), std::plus<double>());
 
             if (!no_3pdc) {
-                vector<double> tpdm_aaa(nelement3, 0.0);
-                vector<double> tpdm_aab(nelement3, 0.0);
-                vector<double> tpdm_abb(nelement3, 0.0);
-                vector<double> tpdm_bbb(nelement3, 0.0);
+                std::vector<double> tpdm_aaa(nelement3, 0.0);
+                std::vector<double> tpdm_aab(nelement3, 0.0);
+                std::vector<double> tpdm_abb(nelement3, 0.0);
+                std::vector<double> tpdm_bbb(nelement3, 0.0);
                 ci_rdms.compute_3rdm(tpdm_aaa, tpdm_aab, tpdm_abb, tpdm_bbb);
 
                 std::for_each(tpdm_aaa.begin(), tpdm_aaa.end(), [&](double& v) { v *= weight; });
@@ -3921,8 +3921,8 @@ void FCI_MO::compute_sa_ref() {
     timer_off("Compute SA Ref");
 }
 
-void FCI_MO::compute_cumulant2(vector<double>& tpdm_aa, vector<double>& tpdm_ab,
-                               vector<double>& tpdm_bb) {
+void FCI_MO::compute_cumulant2(vector<double>& tpdm_aa, std::vector<double>& tpdm_ab,
+                               std::vector<double>& tpdm_bb) {
     L2aa = ambit::Tensor::build(ambit::CoreTensor, "L2aa", {na_, na_, na_, na_});
     L2ab = ambit::Tensor::build(ambit::CoreTensor, "L2ab", {na_, na_, na_, na_});
     L2bb = ambit::Tensor::build(ambit::CoreTensor, "L2bb", {na_, na_, na_, na_});
@@ -3942,8 +3942,8 @@ void FCI_MO::compute_cumulant2(vector<double>& tpdm_aa, vector<double>& tpdm_ab,
     L2ab("pqrs") -= L1a("pr") * L1b("qs");
 }
 
-void FCI_MO::compute_cumulant3(vector<double>& tpdm_aaa, vector<double>& tpdm_aab,
-                               vector<double>& tpdm_abb, vector<double>& tpdm_bbb) {
+void FCI_MO::compute_cumulant3(vector<double>& tpdm_aaa, std::vector<double>& tpdm_aab,
+                               std::vector<double>& tpdm_abb, std::vector<double>& tpdm_bbb) {
     L3aaa = ambit::Tensor::build(ambit::CoreTensor, "L3aaa", {na_, na_, na_, na_, na_, na_});
     L3aab = ambit::Tensor::build(ambit::CoreTensor, "L3aab", {na_, na_, na_, na_, na_, na_});
     L3abb = ambit::Tensor::build(ambit::CoreTensor, "L3abb", {na_, na_, na_, na_, na_, na_});

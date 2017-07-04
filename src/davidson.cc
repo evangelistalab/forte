@@ -69,7 +69,7 @@
 */
 
 using namespace psi;
-using namespace std;
+
 
 int david2(double** A, int N, int M, double* eps, double** v, double cutoff, int print);
 
@@ -77,7 +77,7 @@ void test_davidson() {
     // BEGIN DEBUGGING
     // Write the Hamiltonian to disk
     outfile->Printf("\n\n  READING FILE FROM DISK...");
-    ifstream ifs("ham.dat", ios::binary | ios::in);
+    std::ifstream ifs("ham.dat", std::ios::binary | std::ios::in);
     int ndets;
     ifs.read(reinterpret_cast<char*>(&ndets), sizeof(int));
     Matrix H(ndets, ndets);

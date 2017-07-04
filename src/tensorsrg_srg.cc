@@ -95,7 +95,7 @@ double TensorSRG::compute_srg_energy() {
     throw std::runtime_error("TensorSRG::compute_srg_energy() is not implemented yet!");
     return 0.0;
     /*
-    vector<double> e_vec,times;
+    std::vector<double> e_vec,times;
 
     size_t x_size = 1 + Hbar1.size() + Hbar2.size();
     odeint_state_type x(x_size);

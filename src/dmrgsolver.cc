@@ -64,7 +64,7 @@
 #include "helpers.h"
 #include "integrals/integrals.h"
 
-using namespace std;
+
 
 // This allows us to be lazy in getting the spaces in DPD calls
 #define ID(x) ints->DPD_ID(x)
