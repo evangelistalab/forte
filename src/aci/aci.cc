@@ -1749,6 +1749,48 @@ void AdaptiveCI::wfn_analyzer(DeterminantMap& det_space, SharedMatrix evecs, int
     //  if( print_final_wfn ) final_wfn.close();
     //
 }
+
+std::vector<std::tuple<double, int, int>> AdaptiveCI::sym_labeled_orbitals(std::string type) {
+    std::vector<std::tuple<double, int, int>> labeled_orb;
+
+    if (type == "RHF" or type == "ROHF" or type == "ALFA") {
+
+        // Create a vector of orbital energy and index pairs
+        std::vector<std::pair<double, int>> orb_e;
+        int cumidx = 0;
+        for (int h = 0; h < nirrep_; ++h) {
+            for (int a = 0; a < nactpi_[h]; ++a) {
+                orb_e.push_back(make_pair(epsilon_a_->get(h, frzcpi_[h] + a), a + cumidx));
+            }
+            cumidx += nactpi_[h];
+        }
+
+        // Create a vector that stores the orbital energy, symmetry, and idx
+        for (size_t a = 0; a < nact_; ++a) {
+            labeled_orb.push_back(make_tuple(orb_e[a].first, mo_symmetry_[a], orb_e[a].second));
+        }
+        // Order by energy, low to high
+        std::sort(labeled_orb.begin(), labeled_orb.end());
+    }
+    if (type == "BETA") {
+        // Create a vector of orbital energies and index pairs
+        std::vector<std::pair<double, int>> orb_e;
+        int cumidx = 0;
+        for (int h = 0; h < nirrep_; ++h) {
+            for (size_t a = 0, max = nactpi_[h]; a < max; ++a) {
+                orb_e.push_back(make_pair(epsilon_b_->get(h, frzcpi_[h] + a), a + cumidx));
+            }
+            cumidx += nactpi_[h];
+        }
+
+        // Create a vector that stores the orbital energy, sym, and idx
+        for (size_t a = 0; a < nact_; ++a) {
+            labeled_orb.push_back(make_tuple(orb_e[a].first, mo_symmetry_[a], orb_e[a].second));
+        }
+        std::sort(labeled_orb.begin(), labeled_orb.end());
+    }
+    return labeled_orb;
+}
 */
 
 void AdaptiveCI::print_wfn(DeterminantMap& space, SharedMatrix evecs, int nroot) {
