@@ -6,6 +6,7 @@ Makefile.*
 Makefile
 timer.dat
 *~
+src/version.h
 
 # Qt Creator project files
 *.config

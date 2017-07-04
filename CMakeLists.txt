@@ -34,7 +34,9 @@ endif()
 
 # Including custom cmake rules
 include(cmake/clang-cxx-dev-tools.cmake)
+include(cmake/git-version.cmake)
 
+# List of CC files
 add_psi4_plugin(forte
 src/active_dsrgpt2.cc
 src/active_space_solver.cc

@@ -32,6 +32,7 @@
 #include "helpers.h"
 #include "integrals/integrals.h"
 #include "stl_bitset_determinant.h"
+#include "version.h"
 
 #ifdef HAVE_CHEMPS2
 #include "dmrgscf.h"
@@ -78,6 +79,8 @@ extern "C" int read_options(std::string name, Options& options) {
 extern "C" SharedWavefunction forte(SharedWavefunction ref_wfn, Options& options) {
     // Start a timer
     Timer total_time;
+
+    forte_banner();
 
     auto my_proc_n_nodes = forte_startup();
     int my_proc = my_proc_n_nodes.first;
@@ -218,6 +221,20 @@ std::shared_ptr<ForteIntegrals> make_forte_integrals(SharedWavefunction ref_wfn,
     }
 
     return ints;
+}
+
+void forte_banner() {
+    outfile->Printf(
+        "\n"
+        "  Forte\n"
+        "  ----------------------------------------------------------------------------\n"
+        "  A suite of quantum chemistry methods for strongly correlated electrons\n\n"
+        "    git branch: %s - git commit: %s\n\n"
+        "  Developed by:\n"
+        "    Francesco A. Evangelista, Chenyang Li, Kevin P. Hannon,\n"
+        "    Jeffrey B. Schriber, Tianyuan Zhang, Chenxi Cai\n"
+        "  ----------------------------------------------------------------------------\n",
+        GIT_BRANCH, GIT_COMMIT_HASH);
 }
 }
 } // End Namespaces

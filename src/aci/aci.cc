@@ -2194,10 +2194,6 @@ void AdaptiveCI::compute_aci(DeterminantMap& PQ_space, SharedMatrix& PQ_evecs,
     std::vector<double> P_ref_evecs;
     DeterminantMap P_space(initial_reference_);
 
-    if (reference_type_ == "CIS" or reference_type_ == "CISD") {
-        build_initial_reference(P_space);
-    }
-
     size_t nvec = options_.get_int("N_GUESS_VEC");
     std::string sigma_method = options_.get_str("SIGMA_BUILD_TYPE");
 

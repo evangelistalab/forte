@@ -32,13 +32,13 @@ namespace psi {
 namespace forte {
 
 void forte_options(std::string name, ForteOptions& options);
+
+void forte_banner();
 }
 }
 
 /// These functions replace the Memory Allocator in GA with C/C++ allocator.
-void* replace_malloc(size_t bytes, int align, char* name) {
-    return malloc(bytes);
-}
+void* replace_malloc(size_t bytes, int align, char* name) { return malloc(bytes); }
 void replace_free(void* ptr) { free(ptr); }
 
 namespace psi {
@@ -48,18 +48,14 @@ std::pair<int, int> forte_startup();
 
 void forte_cleanup();
 
-std::shared_ptr<MOSpaceInfo> make_mo_space_info(SharedWavefunction ref_wfn,
-                                                Options& options);
+std::shared_ptr<MOSpaceInfo> make_mo_space_info(SharedWavefunction ref_wfn, Options& options);
 
-SharedMatrix make_aosubspace_projector(SharedWavefunction ref_wfn,
-                                       Options& options);
+SharedMatrix make_aosubspace_projector(SharedWavefunction ref_wfn, Options& options);
 
-std::shared_ptr<ForteIntegrals>
-make_forte_integrals(SharedWavefunction ref_wfn, Options& options,
-                     std::shared_ptr<MOSpaceInfo> mo_space_info);
+std::shared_ptr<ForteIntegrals> make_forte_integrals(SharedWavefunction ref_wfn, Options& options,
+                                                     std::shared_ptr<MOSpaceInfo> mo_space_info);
 
-void make_ci_nos(SharedWavefunction ref_wfn, Options& options,
-                 std::shared_ptr<ForteIntegrals> ints,
+void make_ci_nos(SharedWavefunction ref_wfn, Options& options, std::shared_ptr<ForteIntegrals> ints,
                  std::shared_ptr<MOSpaceInfo> mo_space_info);
 
 void forte_old_methods(SharedWavefunction ref_wfn, Options& options,
