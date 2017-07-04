@@ -85,7 +85,7 @@ void set_ACI_options(ForteOptions& foptions) {
      * 1 - Project initial P spaces at each iteration
      * 2 - Project only after converged PQ space
      * 3 - Do 1 and 2 -*/
-    foptions.add_int("ACI_SPIN_PROJECTION", 0, "Type of spin projection");
+  //  foptions.add_int("ACI_SPIN_PROJECTION", 0, "Type of spin projection");
     /*- Add determinants to enforce spin-complete set? -*/
     foptions.add_bool("ACI_ENFORCE_SPIN_COMPLETE", true,
                       "Enforce determinant spaces to be spin-complete");
@@ -2736,6 +2736,8 @@ DeterminantMap AdaptiveCI::approximate_wfn(DeterminantMap& PQ_space, SharedMatri
 }
 
 void AdaptiveCI::compute_nos() {
+
+    print_h2("ACI NO Transformation");
 
     Dimension nmopi = reference_wavefunction_->nmopi();
     Dimension ncmopi = mo_space_info_->get_dimension("CORRELATED");
