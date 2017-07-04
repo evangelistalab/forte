@@ -366,7 +366,7 @@ void AdaptiveCI::print_info() {
         outfile->Printf("\n    %-40s %s", str_dim.first.c_str(), str_dim.second.c_str());
     }
     outfile->Printf("\n  %s", string(65, '-').c_str());
-    outfile->Flush();
+    
 }
 
 double AdaptiveCI::compute_energy() {
@@ -574,7 +574,7 @@ double AdaptiveCI::compute_energy() {
         compute_rdms(final_wfn_, op_, PQ_evecs, 0, 0);
     }
 
-    outfile->Flush();
+    
     //	std::vector<double> davidson;
     //	if(options_.get_str("SIZE_CORRECTION") == "DAVIDSON" ){
     //		davidson = davidson_correction( P_space_ , P_evals, PQ_evecs,
@@ -735,7 +735,7 @@ void AdaptiveCI::default_find_q_space(DeterminantMap& P_space, DeterminantMap& P
         outfile->Printf("\n  %s: %f s\n", "Time spent building the model space (default)",
                         build.get());
     }
-    outfile->Flush();
+    
 
     Timer screen;
 
@@ -808,7 +808,7 @@ void AdaptiveCI::default_find_q_space(DeterminantMap& P_space, DeterminantMap& P
                         PQ_space.size());
         outfile->Printf("\n  %s: %f s", "Time spent screening the model space", screen.get());
     }
-    outfile->Flush();
+    
 }
 
 void AdaptiveCI::find_q_space(DeterminantMap& P_space, DeterminantMap& PQ_space, int nroot,
@@ -823,7 +823,7 @@ void AdaptiveCI::find_q_space(DeterminantMap& P_space, DeterminantMap& PQ_space,
         outfile->Printf("\n  %s: %zu determinants", "Dimension of the SD space", V_hash.size());
         outfile->Printf("\n  %s: %f s\n", "Time spent building the model space", t_ms_build.get());
     }
-    outfile->Flush();
+    
 
     // This will contain all the determinants
     PQ_space.clear();
@@ -964,7 +964,7 @@ void AdaptiveCI::find_q_space(DeterminantMap& P_space, DeterminantMap& PQ_space,
                         PQ_space.size());
         outfile->Printf("\n  %s: %f s", "Time spent screening the model space", t_ms_screen.get());
     }
-    outfile->Flush();
+    
 }
 
 double AdaptiveCI::average_q_values(int nroot, std::vector<double>& C1, std::vector<double>& E2) {
@@ -1752,7 +1752,7 @@ void AdaptiveCI::wfn_analyzer(DeterminantMap& det_space, SharedMatrix evecs, int
         }
     }
     //  if( print_final_wfn ) final_wfn.close();
-    //  outfile->Flush();
+    //  
 }
 */
 
@@ -1784,7 +1784,7 @@ void AdaptiveCI::print_wfn(DeterminantMap& space, SharedMatrix evecs, int nroot)
         outfile->Printf("\n\n  Spin state for root %zu: S^2 = %5.6f, S = %5.3f, %s", n,
                         root_spin_vec_[n].first, root_spin_vec_[n].second, state_label.c_str());
     }
-    outfile->Flush();
+    
 }
 
 void AdaptiveCI::full_spin_transform(DeterminantMap& det_space, SharedMatrix cI, int nroot) {
@@ -1850,7 +1850,7 @@ void AdaptiveCI::full_spin_transform(DeterminantMap& det_space, SharedMatrix cI,
     //
     //	outfile->Printf("\n  Time spent performing spin transformation: %6.6f",
     // timer.get());
-    //	outfile->Flush();
+    //	
 }
 
 double AdaptiveCI::compute_spin_contamination(DeterminantMap& space, SharedMatrix evecs,
@@ -2200,7 +2200,9 @@ void AdaptiveCI::compute_aci(DeterminantMap& PQ_space, SharedMatrix& PQ_evecs,
     std::vector<double> P_ref_evecs;
     DeterminantMap P_space(initial_reference_);
 
-    outfile->Flush();
+    if (reference_type_ == "CIS" or reference_type_ == "CISD") {
+        build_initial_reference(P_space);
+    }
 
     size_t nvec = options_.get_int("N_GUESS_VEC");
     std::string sigma_method = options_.get_str("SIGMA_BUILD_TYPE");
@@ -2347,7 +2349,7 @@ void AdaptiveCI::compute_aci(DeterminantMap& PQ_space, SharedMatrix& PQ_evecs,
                                 i, abs_energy, exc_energy);
             }
             outfile->Printf("\n");
-            outfile->Flush();
+            
         }
 
         if (!quiet_mode_ and print_refs)
@@ -2431,7 +2433,7 @@ void AdaptiveCI::compute_aci(DeterminantMap& PQ_space, SharedMatrix& PQ_evecs,
                                                      multistate_pt2_energy_correction_[0]));
             }
             outfile->Printf("\n");
-            outfile->Flush();
+            
         }
 
         num_ref_roots = std::min(nroot_, int(PQ_space.size()));
