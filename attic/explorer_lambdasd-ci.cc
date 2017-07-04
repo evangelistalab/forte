@@ -101,7 +101,6 @@ void LambdaCI::lambda_mrcisd(psi::Options& options) {
     size_t dim_ref_space = ref_space.size();
 
     outfile->Printf("\n  The model space contains %zu determinants", dim_ref_space);
-    outfile->Flush();
 
     H.reset(new Matrix("Hamiltonian Matrix", dim_ref_space, dim_ref_space));
     evecs.reset(new Matrix("U", dim_ref_space, nroot));
@@ -119,7 +118,6 @@ void LambdaCI::lambda_mrcisd(psi::Options& options) {
         }
     }
     outfile->Printf("\n  Time spent building H               = %f s", t_h_build.elapsed());
-    outfile->Flush();
 
     // 4) Diagonalize the Hamiltonian
     ForteTimer t_hdiag_large;
@@ -132,7 +130,6 @@ void LambdaCI::lambda_mrcisd(psi::Options& options) {
     }
 
     outfile->Printf("\n  Time spent diagonalizing H          = %f s", t_hdiag_large.elapsed());
-    outfile->Flush();
 
     // 5) Print the energy
     for (int i = 0; i < nroot; ++i) {
@@ -143,7 +140,6 @@ void LambdaCI::lambda_mrcisd(psi::Options& options) {
         //        %.12f",i + 1,evals->get(i) + multistate_pt2_energy_correction_[i],
         //                evals->get(i),multistate_pt2_energy_correction_[i]);
     }
-    outfile->Flush();
 
     int nmo = reference_determinant_.nmo();
     //    size_t nfrzc = frzc_.size();
@@ -306,7 +302,6 @@ void LambdaCI::lambda_mrcisd(psi::Options& options) {
 
     outfile->Printf("\n  The SD excitation space has dimension: %zu (unique)", sd_dets_vec.size());
     outfile->Printf("\n  Time spent building the model space = %f s", t_ms_build.elapsed());
-    outfile->Flush();
 
     // This will contain all the determinants
     std::vector<StringDeterminant> ref_sd_dets;
@@ -406,7 +401,6 @@ void LambdaCI::lambda_mrcisd(psi::Options& options) {
     outfile->Printf("\n  After screening the Lambda-CISD space contains %zu determinants",
                     dim_ref_sd_dets);
     outfile->Printf("\n  Time spent screening the model space = %f s", t_ms_screen.elapsed());
-    outfile->Flush();
 
     evecs.reset(new Matrix("U", dim_ref_sd_dets, nroot));
     evals.reset(new Vector("e", nroot));
@@ -428,7 +422,6 @@ void LambdaCI::lambda_mrcisd(psi::Options& options) {
             }
         }
         outfile->Printf("\n  Time spent building H               = %f s", t_h_build2.elapsed());
-        outfile->Flush();
 
         // 4) Diagonalize the Hamiltonian
         ForteTimer t_hdiag_large2;
@@ -441,7 +434,7 @@ void LambdaCI::lambda_mrcisd(psi::Options& options) {
         }
 
         outfile->Printf("\n  Time spent diagonalizing H          = %f s", t_hdiag_large2.elapsed());
-        outfile->Flush();
+
     }
     // Sparse algorithm
     else {
@@ -472,14 +465,12 @@ void LambdaCI::lambda_mrcisd(psi::Options& options) {
                         size_t(dim_ref_sd_dets * dim_ref_sd_dets),
                         double(num_nonzero) / double(dim_ref_sd_dets * dim_ref_sd_dets));
         outfile->Printf("\n  Time spent building H               = %f s", t_h_build2.elapsed());
-        outfile->Flush();
 
         // 4) Diagonalize the Hamiltonian
         ForteTimer t_hdiag_large2;
         outfile->Printf("\n  Using the Davidson-Liu algorithm.");
         davidson_liu_sparse(H_sparse, evals, evecs, nroot);
         outfile->Printf("\n  Time spent diagonalizing H          = %f s", t_hdiag_large2.elapsed());
-        outfile->Flush();
     }
     outfile->Printf("\n  Finished building H");
 
@@ -494,13 +485,11 @@ void LambdaCI::lambda_mrcisd(psi::Options& options) {
                             (evals->get(i) - evals->get(0) + multistate_pt2_energy_correction_[i] -
                              multistate_pt2_energy_correction_[0]));
     }
-    outfile->Flush();
 
     // Set some environment variables
     Process::environment.globals["LAMBDA+SD-CI ENERGY"] = evals->get(options_.get_int("ROOT"));
 
     print_results_lambda_sd_ci(ref_sd_dets, evecs, evals, nroot);
-    outfile->Flush();
 }
 
 void LambdaCI::print_results_lambda_sd_ci(vector<StringDeterminant>& determinants,
@@ -561,7 +550,6 @@ void LambdaCI::print_results_lambda_sd_ci(vector<StringDeterminant>& determinant
             "\n  Adaptive CI Energy Root %3d = %20.12f Eh = %8.4f eV (S^2 = %5.3f, S = %5.3f, %s)",
             i + 1, evals->get(i), pc_hartree2ev * (evals->get(i) - evals->get(0)), S2, S,
             state_label.c_str());
-        outfile->Flush();
     }
 
     // 6) Print the major contributions to the eigenvector
@@ -622,8 +610,6 @@ void LambdaCI::print_results_lambda_sd_ci(vector<StringDeterminant>& determinant
             }
         }
         outfile->Printf("\n  Total number of alpha/beta electrons: %f/%f", na, nb);
-
-        outfile->Flush();
     }
 }
 
@@ -679,7 +665,6 @@ void LambdaCI::lambda_mrcis(psi::Options& options) {
     size_t dim_ref_space = ref_space.size();
 
     outfile->Printf("\n  The model space contains %zu determinants", dim_ref_space);
-    outfile->Flush();
 
     H.reset(new Matrix("Hamiltonian Matrix", dim_ref_space, dim_ref_space));
     evecs.reset(new Matrix("U", dim_ref_space, nroot));
@@ -697,7 +682,6 @@ void LambdaCI::lambda_mrcis(psi::Options& options) {
         }
     }
     outfile->Printf("\n  Time spent building H               = %f s", t_h_build.elapsed());
-    outfile->Flush();
 
     // 4) Diagonalize the Hamiltonian
     ForteTimer t_hdiag_large;
@@ -710,7 +694,6 @@ void LambdaCI::lambda_mrcis(psi::Options& options) {
     }
 
     outfile->Printf("\n  Time spent diagonalizing H          = %f s", t_hdiag_large.elapsed());
-    outfile->Flush();
 
     // 5) Print the energy
     for (int i = 0; i < nroot; ++i) {
@@ -721,7 +704,6 @@ void LambdaCI::lambda_mrcis(psi::Options& options) {
         //        %.12f",i + 1,evals->get(i) + multistate_pt2_energy_correction_[i],
         //                evals->get(i),multistate_pt2_energy_correction_[i]);
     }
-    outfile->Flush();
 
     int nmo = reference_determinant_.nmo();
     //    size_t nfrzc = frzc_.size();
@@ -812,7 +794,6 @@ void LambdaCI::lambda_mrcis(psi::Options& options) {
 
     outfile->Printf("\n  The S excitation space has dimension: %zu (unique)", sd_dets_vec.size());
     outfile->Printf("\n  Time spent building the model space = %f s", t_ms_build.elapsed());
-    outfile->Flush();
 
     // This will contain all the determinants
     std::vector<StringDeterminant> ref_sd_dets;
@@ -912,7 +893,6 @@ void LambdaCI::lambda_mrcis(psi::Options& options) {
     outfile->Printf("\n  After screening, the Lambda+S-CI space contains %zu determinants",
                     dim_ref_sd_dets);
     outfile->Printf("\n  Time spent screening the model space = %f s", t_ms_screen.elapsed());
-    outfile->Flush();
 
     evecs.reset(new Matrix("U", dim_ref_sd_dets, nroot));
     evals.reset(new Vector("e", nroot));
@@ -934,7 +914,6 @@ void LambdaCI::lambda_mrcis(psi::Options& options) {
             }
         }
         outfile->Printf("\n  Time spent building H               = %f s", t_h_build2.elapsed());
-        outfile->Flush();
 
         // 4) Diagonalize the Hamiltonian
         ForteTimer t_hdiag_large2;
@@ -947,7 +926,7 @@ void LambdaCI::lambda_mrcis(psi::Options& options) {
         }
 
         outfile->Printf("\n  Time spent diagonalizing H          = %f s", t_hdiag_large2.elapsed());
-        outfile->Flush();
+
     }
     // Sparse algorithm
     else {
@@ -978,14 +957,12 @@ void LambdaCI::lambda_mrcis(psi::Options& options) {
                         size_t(dim_ref_sd_dets * dim_ref_sd_dets),
                         double(num_nonzero) / double(dim_ref_sd_dets * dim_ref_sd_dets));
         outfile->Printf("\n  Time spent building H               = %f s", t_h_build2.elapsed());
-        outfile->Flush();
 
         // 4) Diagonalize the Hamiltonian
         ForteTimer t_hdiag_large2;
         outfile->Printf("\n  Using the Davidson-Liu algorithm.");
         davidson_liu_sparse(H_sparse, evals, evecs, nroot);
         outfile->Printf("\n  Time spent diagonalizing H          = %f s", t_hdiag_large2.elapsed());
-        outfile->Flush();
     }
     outfile->Printf("\n  Finished building H");
 
@@ -1000,13 +977,11 @@ void LambdaCI::lambda_mrcis(psi::Options& options) {
                             (evals->get(i) - evals->get(0) + multistate_pt2_energy_correction_[i] -
                              multistate_pt2_energy_correction_[0]));
     }
-    outfile->Flush();
 
     // Set some environment variables
     Process::environment.globals["LAMBDA+S-CI ENERGY"] = evals->get(options_.get_int("ROOT"));
 
     print_results_lambda_sd_ci(ref_sd_dets, evecs, evals, nroot);
-    outfile->Flush();
 }
 }
 } // EndNamespaces

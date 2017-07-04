@@ -27,7 +27,9 @@
  */
 
 #include <cmath>
+#include <cstring>
 
+#include "psi4/libpsi4util/process.h"
 #include "psi4/libmints/wavefunction.h"
 #include "psi4/libmints/integral.h"
 #include "psi4/libmints/sieve.h"
@@ -179,7 +181,7 @@ void CholeskyIntegrals::gather_integrals() {
             new ERISieve(primary, options_.get_double("INTS_TOLERANCE")));
         const std::vector<std::pair<int, int>>& function_pairs = sieve->function_pairs();
         int ntri = sieve->function_pairs().size();
-        ULI nbf = primary->nbf();
+        size_t nbf = primary->nbf();
         std::string str = "Reading CD Integrals";
         if (print_) {
             outfile->Printf("\n    %-36s ...", str.c_str());

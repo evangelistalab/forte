@@ -28,6 +28,7 @@
 
 #include <cmath>
 
+#include "psi4/libpsi4util/process.h"
 #include "psi4/libmints/molecule.h"
 #include "psi4/libmints/wavefunction.h"
 #include "psi4/libpsio/psio.hpp"
@@ -261,7 +262,6 @@ void FCIQMC::print_info() {
     for (auto& str_dim : calculation_info_string) {
         outfile->Printf("\n    %-39s %10s", str_dim.first.c_str(), str_dim.second.c_str());
     }
-    outfile->Flush();
 }
 
 double FCIQMC::compute_energy() {
@@ -432,7 +432,6 @@ double FCIQMC::compute_energy() {
 
     //    outfile->Printf("\n\n  %s: %f s","Adaptive Path-Integral CI (bitset)
     //    ran in ",t_apici.elapsed());
-    outfile->Flush();
 
     compute_var_energy(walkers);
     outfile->Printf("\n\n  * FCIQMC Variational Energy        = %.12f Eh", Evar_);

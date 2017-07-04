@@ -120,7 +120,6 @@ void STLBitsetString::print() const {
         }
     }
     outfile->Printf(">");
-    outfile->Flush();
 }
 
 std::string STLBitsetString::str() const {

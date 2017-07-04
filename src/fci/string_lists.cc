@@ -28,6 +28,8 @@
 
 #include "psi4/psi4-dec.h"
 
+#include "psi4/libpsi4util/PsiOutStream.h"
+
 #include "../helpers.h"
 #include "string_lists.h"
 
@@ -193,7 +195,6 @@ void StringLists::startup() {
         outfile->Printf("\n  Timing for 2-hole strings = %10.3f s", h2_list_timer);
         outfile->Printf("\n  Timing for 3-hole strings = %10.3f s", h3_list_timer);
         outfile->Printf("\n  Total timing              = %10.3f s", total_time);
-        outfile->Flush();
     }
 }
 
@@ -228,7 +229,7 @@ void StringLists::make_pair_list(NNList& list) {
     //    }
     //    h++;
     //  }
-    //  outfile->Flush();
+    //
 }
 
 void StringLists::make_strings(GraphPtr graph, StringList& list) {

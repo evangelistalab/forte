@@ -91,7 +91,6 @@ LambdaCI::LambdaCI(Options& options, ForteIntegrals* ints)
         }
     }
     outfile->Printf("\n  Explorer ran in %f s", t.elapsed());
-    outfile->Flush();
 }
 
 LambdaCI::~LambdaCI() {}
@@ -254,7 +253,6 @@ void LambdaCI::read_info(Options& options) {
         outfile->Printf(" %6d", str_dim.second.sum());
     }
     outfile->Printf("\n  %s", string(31 + (nirrep_ + 1) * 6, '-').c_str());
-    outfile->Flush();
 
     // Create the vectors of frozen orbitals (in the Pitzer ordering)
     for (int h = 0, p = 0; h < nirrep_; ++h) {
@@ -323,7 +321,6 @@ void LambdaCI::read_info(Options& options) {
         outfile->Printf("\n    %-40s   %5d", str_dim.first.c_str(), str_dim.second);
     }
     outfile->Printf("\n  %s", string(52, '-').c_str());
-    outfile->Flush();
 
     Da_.assign(ncmo_, 0.0);
     Db_.assign(ncmo_, 0.0);

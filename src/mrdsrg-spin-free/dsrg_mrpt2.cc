@@ -468,7 +468,6 @@ void DSRG_MRPT2::print_summary() {
     if (options_.get_bool("MEMORY_SUMMARY")) {
         BTF_->print_memory_info();
     }
-    outfile->Flush();
 }
 
 void DSRG_MRPT2::cleanup() { dsrg_time_.print_comm_time(); }

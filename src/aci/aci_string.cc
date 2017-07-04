@@ -26,12 +26,7 @@
  * @END LICENSE
  */
 
-//#include <cmath>
-//#include <functional>
-//#include <algorithm>
-//#include <unordered_map>
-//#include <numeric>
-
+#include "psi4/libpsi4util/process.h"
 #include "psi4/libmints/molecule.h"
 #include "psi4/libmints/pointgrp.h"
 #include "psi4/libpsio/psio.hpp"
@@ -41,7 +36,6 @@
 #include "../stl_bitset_determinant.h"
 #include "../stl_bitset_string.h"
 #include "aci_string.h"
-//#include "ci_rdms.h"
 
 using namespace std;
 using namespace psi;
@@ -290,7 +284,6 @@ void ACIString::print_info() {
         outfile->Printf("\n    %-40s %s", str_dim.first.c_str(), str_dim.second.c_str());
     }
     outfile->Printf("\n  %s", string(65, '-').c_str());
-    outfile->Flush();
 }
 
 std::vector<int> ACIString::get_occupation() {
@@ -548,8 +541,6 @@ double ACIString::compute_energy() {
     //	P_space_.push_back(bs_det);
     //  P_space_map_[bs_det] = 1;
 
-    outfile->Flush();
-
     std::vector<std::vector<double>> energy_history;
     SparseCISolver sparse_solver;
     if (quiet_mode_)
@@ -646,7 +637,6 @@ double ACIString::compute_energy() {
                                 i + 1, abs_energy, exc_energy);
             }
             outfile->Printf("\n");
-            outfile->Flush();
         }
 
         // Step 2. Find determinants in the Q space
@@ -713,7 +703,6 @@ double ACIString::compute_energy() {
                                                      multistate_pt2_energy_correction_[0]));
             }
             outfile->Printf("\n");
-            outfile->Flush();
         }
         // if(quiet_mode_){
         // 	double abs_energy = PQ_evals->get(0) + nuclear_repulsion_energy_
@@ -859,7 +848,6 @@ double ACIString::compute_energy() {
         outfile->Printf("\n\n  %s: %d", "Saving information for root",
                         options_.get_int("ROOT") + 1);
     }
-    outfile->Flush();
 
     double root_energy = PQ_evals->get(options_.get_int("ROOT")) + nuclear_repulsion_energy_ +
                          fci_ints_->scalar_energy();
@@ -922,7 +910,6 @@ void ACIString::default_find_q_space(SharedVector evals, SharedMatrix evecs) {
         // space",V_hash.size());
         outfile->Printf("\n  %s: %f s\n", "Time spent building the model space", build.get());
     }
-    outfile->Flush();
 
     // This will contain all the determinants
     PQ_space_.clear();
@@ -984,7 +971,6 @@ void ACIString::default_find_q_space(SharedVector evals, SharedMatrix evecs) {
                         PQ_space_.size());
         outfile->Printf("\n  %s: %f s", "Time spent screening the model space", screen.get());
     }
-    outfile->Flush();
 }
 
 void ACIString::find_q_space(int nroot, SharedVector evals, SharedMatrix evecs) {
@@ -1002,7 +988,6 @@ void ACIString::find_q_space(int nroot, SharedVector evals, SharedMatrix evecs) 
         outfile->Printf("\n  %s: %zu determinants", "Dimension of the SD space", V_hash.size());
         outfile->Printf("\n  %s: %f s\n", "Time spent building the model space", t_ms_build.get());
     }
-    outfile->Flush();
 
     // This will contain all the determinants
     PQ_space_.clear();
@@ -1129,7 +1114,6 @@ void ACIString::find_q_space(int nroot, SharedVector evals, SharedMatrix evecs) 
                         PQ_space_.size());
         outfile->Printf("\n  %s: %f s", "Time spent screening the model space", t_ms_screen.get());
     }
-    outfile->Flush();
 }
 
 double ACIString::average_q_values(int nroot, std::vector<double> C1, std::vector<double> E2) {
@@ -1729,7 +1713,6 @@ void ACIString::print_wfn(std::vector<STLBitsetDeterminant> space, SharedMatrix 
                         n, spins[n].first.second, spins[n].first.first, state_label.c_str(),
                         spins[n].second.first, 100.0 * spins[n].second.second);
     }
-    outfile->Flush();
 }
 
 void ACIString::full_spin_transform(std::vector<STLBitsetDeterminant> det_space, SharedMatrix cI,
@@ -1792,7 +1775,6 @@ void ACIString::full_spin_transform(std::vector<STLBitsetDeterminant> det_space,
     PQ_spin_evecs_ = C_trans->clone();
 
     outfile->Printf("\n  Time spent performing spin transformation: %6.6f", timer.get());
-    outfile->Flush();
 }
 
 double ACIString::compute_spin_contamination(std::vector<STLBitsetDeterminant> space,

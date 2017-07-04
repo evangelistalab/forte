@@ -60,7 +60,6 @@ void LambdaCI::diagonalize_selected_space(psi::Options& options) {
     ForteTimer t_hbuild;
     SharedMatrix H_m = build_model_space_hamiltonian(options);
     outfile->Printf("\n  Time spent building H model       = %f s", t_hbuild.elapsed());
-    outfile->Flush();
 
     // 2) Setup stuff necessary to diagonalize the Hamiltonian
     int ndets_m = H_m->nrow();
@@ -81,7 +80,6 @@ void LambdaCI::diagonalize_selected_space(psi::Options& options) {
         H_m->diagonalize(evecs_m, evals_m);
     }
     outfile->Printf("\n  Time spent diagonalizing H        = %f s", t_hdiag.elapsed());
-    outfile->Flush();
 
     // 4) Print the energy
     int nroots_print = std::min(nroots, 25);
@@ -116,7 +114,6 @@ void LambdaCI::diagonalize_selected_space(psi::Options& options) {
                 break;
         }
     }
-    outfile->Flush();
 
     int num_roots = options.get_int("NROOT");
     outfile->Printf(
@@ -139,7 +136,6 @@ void LambdaCI::diagonalize_selected_space(psi::Options& options) {
         H->diagonalize(evecs, evals);
     }
     outfile->Printf("\n  Time spent diagonalizing H        = %f s", t_hdiag_large.elapsed());
-    outfile->Flush();
 
     // 5) Print the energy
     for (int i = 0; i < nroots_print; ++i) {
@@ -175,7 +171,6 @@ void LambdaCI::diagonalize_selected_space(psi::Options& options) {
                 break;
         }
     }
-    outfile->Flush();
 }
 
 /**
@@ -388,7 +383,7 @@ SharedMatrix LambdaCI::build_select_hamiltonian_roth(Options& options, SharedVec
     outfile->Printf(
         "\n  %d states were discarded because the coupling to the main space is less than %f muE_h",
         ntot_dets - ndets_m - ndets_i, t2_threshold_ * 1000000.0);
-    outfile->Flush();
+
     SharedMatrix H(new Matrix("Hamiltonian Matrix", ndets, ndets));
 // Form the Hamiltonian matrix
 #pragma omp parallel for schedule(dynamic)
@@ -413,7 +408,7 @@ SharedMatrix LambdaCI::build_select_hamiltonian_roth(Options& options, SharedVec
         }
         H->set(I, I, determinantI.get<0>());
     }
-    outfile->Flush();
+
     return H;
 }
 
@@ -529,7 +524,6 @@ void LambdaCI::diagonalize_renormalized_space(psi::Options& options) {
                         selected_test_dets.size() - selected_dets.size(),
                         selected_test_dets.size());
         outfile->Printf("\n  Time spent selecting the new dets = %f s", t_select.elapsed());
-        outfile->Flush();
 
         multistate_pt2_energy_correction_ = ept2;
 
@@ -567,7 +561,6 @@ void LambdaCI::diagonalize_renormalized_space(psi::Options& options) {
             H->set(I, I, determinantI.get<0>());
         }
         outfile->Printf("\n  Time spent forming H              = %f s", t_h.elapsed());
-        outfile->Flush();
 
         // 4) Diagonalize the Hamiltonian
         ForteTimer t_hdiag_large;
@@ -588,8 +581,6 @@ void LambdaCI::diagonalize_renormalized_space(psi::Options& options) {
                             evals->get(i) + multistate_pt2_energy_correction_[i], evals->get(i),
                             multistate_pt2_energy_correction_[i]);
         }
-
-        outfile->Flush();
 
         size_t num_added = 0;
         for (size_t I = num_selected_dets; I < num_selected_test_dets; ++I) {
@@ -649,7 +640,6 @@ void LambdaCI::diagonalize_renormalized_space(psi::Options& options) {
                 break;
         }
     }
-    outfile->Flush();
 
     //    int num_roots = options.get_int("NROOT");
     //    outfile->Printf("\n\n  Building a selected Hamiltonian using the criterium by Roth (kappa)
@@ -671,7 +661,7 @@ void LambdaCI::diagonalize_renormalized_space(psi::Options& options) {
     //        H->diagonalize(evecs,evals);
     //    }
     //    outfile->Printf("\n  Time spent diagonalizing H        = %f s",t_hdiag_large.elapsed());
-    //    outfile->Flush();
+    //
 
     //    // 5) Print the energy
     //    for (int i = 0; i < nroots_print; ++ i){
@@ -705,7 +695,6 @@ void LambdaCI::diagonalize_renormalized_space(psi::Options& options) {
     //            if (cum_wfn > significant_wave_function) break;
     //        }
     //    }
-    outfile->Flush();
 }
 
 void LambdaCI::diagonalize_renormalized_fixed_space(psi::Options& options) {
@@ -741,7 +730,7 @@ void LambdaCI::diagonalize_renormalized_fixed_space(psi::Options& options) {
 
     outfile->Printf("\n\n  Determinants added each step: %zu", dets_per_step);
     outfile->Printf("\n\n  Number of steps             : %zu", renomalization_steps);
-    outfile->Flush();
+
     //    for (int step = 0; step < renomalization_steps; ++step){
     for (int step = 0; step < renomalization_steps + 1; ++step) {
         ForteTimer t_select;
@@ -848,7 +837,6 @@ void LambdaCI::diagonalize_renormalized_fixed_space(psi::Options& options) {
                         selected_test_dets.size() - selected_dets.size(),
                         selected_test_dets.size());
         outfile->Printf("\n  Time spent selecting the new dets = %f s", t_select.elapsed());
-        outfile->Flush();
 
         multistate_pt2_energy_correction_ = ept2;
 
@@ -890,7 +878,6 @@ void LambdaCI::diagonalize_renormalized_fixed_space(psi::Options& options) {
             H->set(I, I, determinantI.get<0>());
         }
         outfile->Printf("\n  Time spent forming H              = %f s", t_h.elapsed());
-        outfile->Flush();
 
         // 4) Diagonalize the Hamiltonian
         ForteTimer t_hdiag_large;
@@ -911,8 +898,6 @@ void LambdaCI::diagonalize_renormalized_fixed_space(psi::Options& options) {
                             i + 1, evals->get(i) + multistate_pt2_energy_correction_[i],
                             evals->get(i), multistate_pt2_energy_correction_[i]);
         }
-
-        outfile->Flush();
 
         std::vector<std::pair<double, size_t>> dm_det_list;
 
@@ -978,7 +963,6 @@ void LambdaCI::diagonalize_renormalized_fixed_space(psi::Options& options) {
                 break;
         }
     }
-    outfile->Flush();
 
     //    int num_roots = options.get_int("NROOT");
     //    outfile->Printf("\n\n  Building a selected Hamiltonian using the criterium by Roth (kappa)
@@ -1000,7 +984,7 @@ void LambdaCI::diagonalize_renormalized_fixed_space(psi::Options& options) {
     //        H->diagonalize(evecs,evals);
     //    }
     //    outfile->Printf("\n  Time spent diagonalizing H        = %f s",t_hdiag_large.elapsed());
-    //    outfile->Flush();
+    //
 
     //    // 5) Print the energy
     //    for (int i = 0; i < nroots_print; ++ i){
@@ -1034,7 +1018,6 @@ void LambdaCI::diagonalize_renormalized_fixed_space(psi::Options& options) {
     //            if (cum_wfn > significant_wave_function) break;
     //        }
     //    }
-    outfile->Flush();
 }
 }
 } // EndNamespaces

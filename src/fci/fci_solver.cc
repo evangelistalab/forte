@@ -26,25 +26,13 @@
  * @END LICENSE
  */
 
-//#include <cmath>
-//#include <numeric>
-
-//#include "psi4/libciomr/libciomr.h"
-//#include "psi4/liboptions/liboptions.h"
+#include "psi4/libpsi4util/process.h"
 #include "psi4/libmints/molecule.h"
-//#include "psi4/libpsio/psio.h"
-//#include "psi4/libpsio/psio.hpp"
-//#include "psi4/libmints/matrix.h"
-//#include "psi4/libmints/vector.h"
 
 #include "../mini-boost/boost/format.hpp"
 
 #include "../stl_bitset_determinant.h"
-//#include "../integrals.h"
 #include "../iterative_solvers.h"
-//#include "../string_lists.h"
-//#include "../helpers.h"
-//#include "../reference.h"
 
 #include "fci_solver.h"
 
@@ -139,7 +127,6 @@ void FCISolver::startup() {
         for (auto& str_dim : calculation_info) {
             outfile->Printf("    %-39s %10d\n", str_dim.first.c_str(), str_dim.second);
         }
-        outfile->Flush();
     }
 }
 
@@ -504,7 +491,6 @@ FCISolver::initial_guess(FCIWfn& diag, size_t n, size_t multiplicity,
         outfile->Printf("\n%s", to_string(table, "\n").c_str());
         outfile->Printf("\n  ---------------------------------------------");
         outfile->Printf("\n  Timing for initial guess  = %10.3f s\n", t.elapsed());
-        outfile->Flush();
     }
 
     return guess;

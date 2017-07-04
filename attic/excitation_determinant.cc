@@ -74,7 +74,6 @@ void ExcitationDeterminant::print() {
         outfile->Printf(" %d", acre(p));
     }
     outfile->Printf("}");
-    outfile->Flush();
 }
 
 void ExcitationDeterminant::to_pitzer(const std::vector<int>& qt_to_pitzer) {
