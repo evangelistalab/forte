@@ -28,6 +28,7 @@
 
 #include "operator.h"
 #include "forte-def.h"
+#include <cmath>
 
 #ifdef _OPENMP
 #include <omp.h>
