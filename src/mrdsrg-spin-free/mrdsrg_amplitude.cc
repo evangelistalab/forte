@@ -85,7 +85,7 @@ void MRDSRG::guess_t2_std(BlockedTensor& V, BlockedTensor& T2) {
     }
 
     T2.iterate([&](const std::vector<size_t>& i, const std::vector<SpinType>& spin, double& value) {
-        if (fabs(value) > 1.0e-15) {
+        if (std::fabs(value) > 1.0e-15) {
             if ((spin[0] == AlphaSpin) && (spin[1] == AlphaSpin)) {
                 value *= dsrg_source_->compute_renormalized_denominator(Fa_[i[0]] + Fa_[i[1]] -
                                                                         Fa_[i[2]] - Fa_[i[3]]);
@@ -196,7 +196,7 @@ void MRDSRG::guess_t1_std(BlockedTensor& F, BlockedTensor& T2, BlockedTensor& T1
     }
 
     T1.iterate([&](const std::vector<size_t>& i, const std::vector<SpinType>& spin, double& value) {
-        if (fabs(value) > 1.0e-15) {
+        if (std::fabs(value) > 1.0e-15) {
             if (spin[0] == AlphaSpin) {
                 value *= dsrg_source_->compute_renormalized_denominator(Fa_[i[0]] - Fa_[i[1]]);
                 t1a_norm_ += value * value;
@@ -1020,7 +1020,7 @@ void MRDSRG::analyze_amplitudes(std::string name, BlockedTensor& T1, BlockedTens
 template <class T1, class T2, class G3 = std::greater<T2>> struct rsort_pair_second {
     bool operator()(const std::pair<T1, T2>& left, const std::pair<T1, T2>& right) {
         G3 p;
-        return p(fabs(left.second), fabs(right.second));
+        return p(std::fabs(left.second), std::fabs(right.second));
     }
 };
 
@@ -1041,7 +1041,7 @@ void MRDSRG::check_t2(BlockedTensor& T2) {
         std::vector<std::pair<std::vector<size_t>, double>>& temp_lt2 = spin_to_lt2[spin];
 
         T2.block(block).citerate([&](const std::vector<size_t>& i, const double& value) {
-            if (fabs(value) > 1.0e-15) {
+            if (std::fabs(value) > 1.0e-15) {
                 size_t idx0 = label_to_spacemo_[block[0]][i[0]];
                 size_t idx1 = label_to_spacemo_[block[1]][i[1]];
                 size_t idx2 = label_to_spacemo_[block[2]][i[2]];
@@ -1061,7 +1061,7 @@ void MRDSRG::check_t2(BlockedTensor& T2) {
                         temp_t2.pop_back();
                     }
 
-                    if (fabs(value) > fabs(intruder_tamp_)) {
+                    if (std::fabs(value) > std::fabs(intruder_tamp_)) {
                         temp_lt2.push_back(idx_value);
                     }
                     std::sort(temp_lt2.begin(), temp_lt2.end(),
@@ -1107,7 +1107,7 @@ void MRDSRG::check_t1(BlockedTensor& T1) {
         std::vector<std::pair<std::vector<size_t>, double>>& temp_lt1 = spin_to_lt1[spin_alpha];
 
         T1.block(block).citerate([&](const std::vector<size_t>& i, const double& value) {
-            if (fabs(value) > 1.0e-15) {
+            if (std::fabs(value) > 1.0e-15) {
                 size_t idx0 = label_to_spacemo_[block[0]][i[0]];
                 size_t idx1 = label_to_spacemo_[block[1]][i[1]];
 
@@ -1123,7 +1123,7 @@ void MRDSRG::check_t1(BlockedTensor& T1) {
                     temp_t1.pop_back();
                 }
 
-                if (fabs(value) > fabs(intruder_tamp_)) {
+                if (std::fabs(value) > std::fabs(intruder_tamp_)) {
                     temp_lt1.push_back(idx_value);
                 }
                 std::sort(temp_lt1.begin(), temp_lt1.end(),

@@ -1906,7 +1906,7 @@ void AdaptiveCI::save_dets_to_file(DeterminantMap& space, SharedMatrix evecs) {
     // Use for single-root calculations only
     det_hash<size_t> detmap = space.wfn_hash();
     for (det_hash<size_t>::iterator it = detmap.begin(), endit = detmap.end(); it != endit; ++it) {
-        det_list_ << it->first.str().c_str() << " " << fabs(evecs->get(it->second, 0)) << " ";
+        det_list_ << it->first.str().c_str() << " " << std::fabs(evecs->get(it->second, 0)) << " ";
         //	for(size_t J = 0, maxJ = space.size(); J < maxJ; ++J){
         //		det_list_ << space[I].slater_rules(space[J]) << " ";
         //	}

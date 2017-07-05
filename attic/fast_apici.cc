@@ -302,7 +302,7 @@ double FastAdaptivePathIntegralCI::compute_energy() {
         timer_on("PIFCI:Step");
         if (use_inter_norm_) {
             auto minmax_C = std::minmax_element(C.begin(), C.end());
-            double min_C_abs = fabs(*minmax_C.first);
+            double min_C_abs = std::fabs(*minmax_C.first);
             double max_C = *minmax_C.second;
             max_C = max_C > min_C_abs ? max_C : min_C_abs;
             propagate(propagator_, dets, C, time_step_, spawning_threshold_ * max_C, shift);
@@ -915,7 +915,7 @@ void FastAdaptivePathIntegralCI::propagate_DavidsonLiu(std::vector<FastDetermina
 
             for (auto& det_r_k : r_k) {
                 double denom = lambda_p[k] - det_r_k.first.energy();
-                if (fabs(denom) > 1e-6) {
+                if (std::fabs(denom) > 1e-6) {
                     det_r_k.second /= denom;
                 } else {
                     det_r_k.second = 0.0;

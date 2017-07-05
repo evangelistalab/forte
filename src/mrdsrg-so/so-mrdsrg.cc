@@ -735,7 +735,7 @@ double SOMRDSRG::compute_energy() {
                         "%7.4f %7.4f %7.4f %7.4f",
                         cycle, energy, delta_energy, 0, 0, norm_T1, norm_T2, max_T1, max_T2);
 
-        if (fabs(delta_energy) < options_.get_double("E_CONVERGENCE")) {
+        if (std::fabs(delta_energy) < options_.get_double("E_CONVERGENCE")) {
             converged = true;
         }
 

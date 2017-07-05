@@ -453,7 +453,7 @@ void DMRGSolver::compute_energy() {
     for (int state = 0; state < dmrgscf_which_root; state++) {
 
         if (state > 0) {
-            DMRGCI->newExcitation(fabs(Energy));
+            DMRGCI->newExcitation(std::fabs(Energy));
         }
         Timer DMRGSolve;
         Energy = DMRGCI->Solve();

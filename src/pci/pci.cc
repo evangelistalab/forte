@@ -592,7 +592,7 @@ double ProjectorCI::estimate_high_energy() {
             for (int a = avir_offset[h]; a < avir_offset[h + 1]; ++a) {
                 int aa = avir[a];
                 double HJI = high_det.slater_rules_single_alpha(ii, aa);
-                lambda_h_G += fabs(HJI);
+                lambda_h_G += std::fabs(HJI);
             }
         }
     }
@@ -603,7 +603,7 @@ double ProjectorCI::estimate_high_energy() {
             for (int a = bvir_offset[h]; a < bvir_offset[h + 1]; ++a) {
                 int aa = bvir[a];
                 double HJI = high_det.slater_rules_single_beta(ii, aa);
-                lambda_h_G += fabs(HJI);
+                lambda_h_G += std::fabs(HJI);
             }
         }
     }
@@ -622,7 +622,7 @@ double ProjectorCI::estimate_high_energy() {
                 for (int b = minb; b < maxb; ++b) {
                     int bb = avir[b];
                     double HJI = fci_ints_->tei_aa(ii, jj, aa, bb);
-                    lambda_h_G += fabs(HJI);
+                    lambda_h_G += std::fabs(HJI);
                 }
             }
         }
@@ -640,7 +640,7 @@ double ProjectorCI::estimate_high_energy() {
                 for (int b = minb; b < maxb; ++b) {
                     int bb = bvir[b];
                     double HJI = fci_ints_->tei_ab(ii, jj, aa, bb);
-                    lambda_h_G += fabs(HJI);
+                    lambda_h_G += std::fabs(HJI);
                 }
             }
         }
@@ -659,7 +659,7 @@ double ProjectorCI::estimate_high_energy() {
                 for (int b = minb; b < maxb; ++b) {
                     int bb = bvir[b];
                     double HJI = fci_ints_->tei_bb(ii, jj, aa, bb);
-                    lambda_h_G += fabs(HJI);
+                    lambda_h_G += std::fabs(HJI);
                 }
             }
         }
@@ -902,15 +902,15 @@ double ProjectorCI::compute_energy() {
 
     for (size_t i = 0; i < (size_t)nact_; ++i) {
         for (size_t j = 0; j < (size_t)nact_; ++j) {
-            double temp_aa = sqrt(fabs(fci_ints_->tei_aa(i, j, i, j)));
+            double temp_aa = sqrt(std::fabs(fci_ints_->tei_aa(i, j, i, j)));
             pqpq_aa_[i * nact_ + j] = temp_aa;
             if (temp_aa > pqpq_max_aa_)
                 pqpq_max_aa_ = temp_aa;
-            double temp_ab = sqrt(fabs(fci_ints_->tei_ab(i, j, i, j)));
+            double temp_ab = sqrt(std::fabs(fci_ints_->tei_ab(i, j, i, j)));
             pqpq_ab_[i * nact_ + j] = temp_ab;
             if (temp_ab > pqpq_max_ab_)
                 pqpq_max_ab_ = temp_ab;
-            double temp_bb = sqrt(fabs(fci_ints_->tei_bb(i, j, i, j)));
+            double temp_bb = sqrt(std::fabs(fci_ints_->tei_bb(i, j, i, j)));
             pqpq_bb_[i * nact_ + j] = temp_bb;
             if (temp_bb > pqpq_max_bb_)
                 pqpq_max_bb_ = temp_bb;
@@ -976,7 +976,7 @@ double ProjectorCI::compute_energy() {
         timer_on("PCI:Step");
         if (use_inter_norm_) {
             auto minmax_C = std::minmax_element(C.begin(), C.end());
-            double min_C_abs = fabs(*minmax_C.first);
+            double min_C_abs = std::fabs(*minmax_C.first);
             double max_C = *minmax_C.second;
             max_C = max_C > min_C_abs ? max_C : min_C_abs;
             propagate(generator_, dets, C, time_step_, spawning_threshold_ * max_C, shift_);
@@ -1462,10 +1462,10 @@ void ProjectorCI::propagate_Lanczos(det_vec& dets, std::vector<double>& C,
     //    eigs->print();
 
     int ground_index = 0;
-    double abs_ground_coef = fabs(evecs->get(0, ground_index));
+    double abs_ground_coef = std::fabs(evecs->get(0, ground_index));
     for (int i = 1; i < current_order; i++) {
-        if (fabs(evecs->get(0, i)) > abs_ground_coef) {
-            abs_ground_coef = fabs(evecs->get(0, i));
+        if (std::fabs(evecs->get(0, i)) > abs_ground_coef) {
+            abs_ground_coef = std::fabs(evecs->get(0, i));
             ground_index = i;
         }
     }
@@ -1490,10 +1490,10 @@ void ProjectorCI::propagate_Lanczos(det_vec& dets, std::vector<double>& C,
         //        eigs->print();
 
         ground_index = 0;
-        abs_ground_coef = fabs(evecs->get(0, ground_index));
+        abs_ground_coef = std::fabs(evecs->get(0, ground_index));
         for (int i = 1; i < current_order; i++) {
-            if (fabs(evecs->get(0, i)) > abs_ground_coef) {
-                abs_ground_coef = fabs(evecs->get(0, i));
+            if (std::fabs(evecs->get(0, i)) > abs_ground_coef) {
+                abs_ground_coef = std::fabs(evecs->get(0, i));
                 ground_index = i;
             }
         }
@@ -1749,7 +1749,7 @@ void ProjectorCI::propagate_DL(det_vec& dets, std::vector<double>& C, double spa
         e_gradiant += lambda;
         outfile->Printf("\nDavidson iter %4d order %4d correction norm %10.3e dE %10.3e.", i,
                         current_order, correct_norm, e_gradiant);
-        if (fabs(e_gradiant) < e_convergence_) {
+        if (std::fabs(e_gradiant) < e_convergence_) {
             i++;
             break;
         }
@@ -2212,7 +2212,7 @@ void ProjectorCI::propagate_DavidsonLiu(det_vec& dets, std::vector<double>& C,
 
             for (auto& det_r_k : r_k) {
                 double denom = lambda_p[k] - det_r_k.first.energy() + fci_ints_->scalar_energy();
-                if (fabs(denom) > 1e-6) {
+                if (std::fabs(denom) > 1e-6) {
                     det_r_k.second /= denom;
                 } else {
                     det_r_k.second = 0.0;
@@ -3570,7 +3570,7 @@ void ProjectorCI::apply_tau_H(double tau, double spawning_threshold, det_vec& de
             size_t max_I = dets.size();
 #pragma omp parallel for
             for (size_t I = 0; I < max_I; ++I) {
-                if (fabs(C[I]) >= initiator_approx_factor_ * spawning_threshold) {
+                if (std::fabs(C[I]) >= initiator_approx_factor_ * spawning_threshold) {
                     std::vector<std::pair<Determinant, double>> thread_det_C_vec;
                     apply_tau_H_det_schwarz(tau, spawning_threshold, dets[I], C[I],
                                             thread_det_C_vec, S);
@@ -3610,7 +3610,7 @@ void ProjectorCI::apply_tau_H(double tau, double spawning_threshold, det_vec& de
 #pragma omp parallel for
         for (size_t I = 0; I < max_I; ++I) {
             int thread_id = omp_get_thread_num();
-            if (fabs(C[I]) >= initiator_approx_factor_ * spawning_threshold) {
+            if (std::fabs(C[I]) >= initiator_approx_factor_ * spawning_threshold) {
                 std::vector<std::pair<Determinant, double>> thread_det_C_vec;
                 const std::pair<double, double> max_HJI = apply_tau_H_det_prescreening(
                     tau, spawning_threshold, dets[I], C[I], thread_det_C_vec, S);
@@ -4469,7 +4469,7 @@ void ProjectorCI::apply_tau_H_det_schwarz(
         for (int j = i + 1; j < noalpha; ++j) {
             int jj = aocc[j];
             ++schwarz_total_;
-            if (fabs(pqpq_aa_[ii * nact_ + jj] * pqpq_max_ab * CI) < spawning_threshold) {
+            if (std::fabs(pqpq_aa_[ii * nact_ + jj] * pqpq_max_ab * CI) < spawning_threshold) {
                 ++schwarz_succ_;
                 continue;
             }
@@ -4505,7 +4505,7 @@ void ProjectorCI::apply_tau_H_det_schwarz(
         for (int j = 0; j < nobeta; ++j) {
             int jj = bocc[j];
             ++schwarz_total_;
-            if (fabs(pqpq_ab_[ii * nact_ + jj] * pqpq_max_ab * CI) < spawning_threshold) {
+            if (std::fabs(pqpq_ab_[ii * nact_ + jj] * pqpq_max_ab * CI) < spawning_threshold) {
                 ++schwarz_succ_;
                 continue;
             }
@@ -4540,7 +4540,7 @@ void ProjectorCI::apply_tau_H_det_schwarz(
         for (int j = i + 1; j < nobeta; ++j) {
             int jj = bocc[j];
             ++schwarz_total_;
-            if (fabs(pqpq_bb_[ii * nact_ + jj] * pqpq_max_ab * CI) < spawning_threshold) {
+            if (std::fabs(pqpq_bb_[ii * nact_ + jj] * pqpq_max_ab * CI) < spawning_threshold) {
                 ++schwarz_succ_;
                 continue;
             }

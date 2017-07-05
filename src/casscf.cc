@@ -165,12 +165,12 @@ void CASSCF::compute_casscf() {
         orbital_optimizer.update();
         double g_norm = orbital_optimizer.orbital_gradient_norm();
 
-        if ((fabs(E_casscf_old - E_casscf_) < options_.get_double("CASSCF_E_CONVERGENCE")) &&
+        if ((std::fabs(E_casscf_old - E_casscf_) < options_.get_double("CASSCF_E_CONVERGENCE")) &&
             (g_norm < options_.get_double("CASSCF_G_CONVERGENCE")) && (iter > 1)) {
 
             outfile->Printf("\n\n @E_CASSCF: = %12.12f \n\n", E_casscf_);
             outfile->Printf("\n Norm of orbital_gradient is %8.8f", g_norm);
-            outfile->Printf("\n\n Energy difference: %12.12f", fabs(E_casscf_old - E_casscf_));
+            outfile->Printf("\n\n Energy difference: %12.12f", std::fabs(E_casscf_old - E_casscf_));
             break;
         }
 
@@ -181,8 +181,8 @@ void CASSCF::compute_casscf() {
         for (int h = 0; h < Sstep->nirrep(); h++) {
             for (int i = 0; i < Sstep->rowspi()[h]; i++) {
                 for (int j = 0; j < Sstep->colspi()[h]; j++) {
-                    if (fabs(Sstep->get(h, i, j)) > maxS)
-                        maxS = fabs(Sstep->get(h, i, j));
+                    if (std::fabs(Sstep->get(h, i, j)) > maxS)
+                        maxS = std::fabs(Sstep->get(h, i, j));
                 }
             }
         }
@@ -214,7 +214,7 @@ void CASSCF::compute_casscf() {
             diis_start_label = "DIIS";
         }
         outfile->Printf("\n %4d   %10.12f   %10.12f   %10.12f  %10.6f s  %4s", iter, g_norm,
-                        fabs(E_casscf_ - E_casscf_old), E_casscf_, casscf_total_iter.get(),
+                        std::fabs(E_casscf_ - E_casscf_old), E_casscf_, casscf_total_iter.get(),
                         diis_start_label.c_str());
     }
     // if(casscf_debug_print_)

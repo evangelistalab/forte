@@ -945,7 +945,7 @@ std::vector<std::pair<std::string, double>> MRDSRG::compute_energy_pt2_Ffull() {
 
         // test convergence
         double rms = T1rms_ > T2rms_ ? T1rms_ : T2rms_;
-        if (fabs(Edelta) < e_conv && rms < r_conv) {
+        if (std::fabs(Edelta) < e_conv && rms < r_conv) {
             converged = true;
         }
         if (cycle > maxiter) {
@@ -1109,7 +1109,7 @@ std::vector<std::pair<std::string, double>> MRDSRG::compute_energy_pt2_Ffull() {
 
         // test convergence
         double rms = T1rms_ > T2rms_ ? T1rms_ : T2rms_;
-        if (fabs(Edelta) < e_conv && rms < r_conv) {
+        if (std::fabs(Edelta) < e_conv && rms < r_conv) {
             converged = true;
         }
         if (cycle > maxiter) {
