@@ -26,51 +26,51 @@ matrix:
 #      - BUILD_TYPE='release'
 #      - NAME='gcc'
 #      - VERSION='4.9'
-#  - os: linux
-#    compiler: clang
-#    addons: &1
-#      apt:
-#        sources:
-#        - llvm-toolchain-precise-3.6
-#        - ubuntu-toolchain-r-test
-#        - george-edison55-precise-backports
-#        packages:
-#        - liblapack-dev
-#        - clang-3.6
-#        - libhdf5-serial-dev
-#        - gfortran
-#    env:
-#      - CXX_COMPILER='clang++-3.6'
-#      - PYTHON_VER='2.7'
-#      - C_COMPILER='clang-3.6'
-#      - Fortran_COMPILER='gfortran'
-#      - BUILD_TYPE='debug'
-#      - NAME='clang'
-#      - VERSION='3.6'
   - os: linux
-    compiler: gcc
-    addons: &4
+    compiler: clang
+    addons: &1
       apt:
         sources:
+        - llvm-toolchain-precise-3.6
         - ubuntu-toolchain-r-test
         - george-edison55-precise-backports
         packages:
-        #- python-numpy
-        #- cmake
-        #- cmake-data
-        #- libhdf5-serial-dev
         - liblapack-dev
-        #- g++-6
-        #- gcc-6
-        #- gfortran-6
+        - clang-3.6
+        - libhdf5-serial-dev
+        - gfortran
     env:
-      #- CXX_COMPILER='g++-6'
+      - CXX_COMPILER='clang++-3.6'
       - PYTHON_VER='2.7'
-      #- C_COMPILER='gcc-6'
-      #- Fortran_COMPILER='gfortran-6'
+      - C_COMPILER='clang-3.6'
+      - Fortran_COMPILER='gfortran'
       - BUILD_TYPE='debug'
-      - NAME='gcc'
-      - VERSION=5.2
+      - NAME='clang'
+      - VERSION='3.6'
+# - os: linux
+#   compiler: gcc
+#   addons: &4
+#     apt:
+#       sources:
+#       - ubuntu-toolchain-r-test
+#       - george-edison55-precise-backports
+#       packages:
+#       #- python-numpy
+#       #- cmake
+#       #- cmake-data
+#       #- libhdf5-serial-dev
+#       - liblapack-dev
+#       #- g++-6
+#       #- gcc-6
+#       #- gfortran-6
+#   env:
+#     #- CXX_COMPILER='g++-6'
+#     - PYTHON_VER='2.7'
+#     #- C_COMPILER='gcc-6'
+#     #- Fortran_COMPILER='gfortran-6'
+#     - BUILD_TYPE='debug'
+#     - NAME='gcc'
+#     - VERSION=5.2
 
 install:
 - if [[ "$PYTHON_VER" == "2.7" ]]; then
