@@ -214,7 +214,7 @@ double TensorSRG::compute_ct_energy() {
                         cycle, energy, delta_energy, norm_Hbar1_ex, norm_Hbar2_ex, norm_S1, norm_S2,
                         max_S1, max_S2);
 
-        if (fabs(delta_energy) < options_.get_double("E_CONVERGENCE")) {
+        if (std::fabs(delta_energy) < options_.get_double("E_CONVERGENCE")) {
             converged = true;
         }
 

@@ -594,7 +594,7 @@ double MRDSRG_SO::compute_energy() {
 
         // test convergence
         double rms = rms_t1 > rms_t2 ? rms_t1 : rms_t2;
-        if (fabs(Edelta) < options_.get_double("E_CONVERGENCE") &&
+        if (std::fabs(Edelta) < options_.get_double("E_CONVERGENCE") &&
             rms < options_.get_double("R_CONVERGENCE")) {
             converged = true;
         }

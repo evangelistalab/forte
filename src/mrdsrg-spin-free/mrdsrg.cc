@@ -597,7 +597,7 @@ double MRDSRG::compute_energy_relaxed() {
                 fcisolver.set_nroot(options_.get_int("NROOT"));
                 fcisolver.set_root(options_.get_int("ROOT"));
                 Erelax = fcisolver.compute_energy();
-                if (fabs(Erelax - Erelax_vec.back()) > 100.0 * e_conv) {
+                if (std::fabs(Erelax - Erelax_vec.back()) > 100.0 * e_conv) {
                     throw PSIEXCEPTION("Semi-canonicalization failed.");
                 }
 
@@ -612,7 +612,7 @@ double MRDSRG::compute_energy_relaxed() {
             }
 
             // test convergence
-            if (fabs(Edelta_dsrg) < e_conv && fabs(Edelta_relax) < e_conv) {
+            if (std::fabs(Edelta_dsrg) < e_conv && std::fabs(Edelta_relax) < e_conv) {
                 converged = true;
             }
             if (cycle > maxiter) {
@@ -1002,7 +1002,7 @@ double MRDSRG::compute_energy_sa() {
                 std::make_shared<FCI_MO>(reference_wavefunction_, options_, ints_, mo_space_info_);
             fci_mo->set_form_Fock(false);
             Erelax_sa = fci_mo->compute_sa_energy();
-            if (fabs(Erelax_sa - Erelax_sa_vec.back()) > 100.0 * e_conv) {
+            if (std::fabs(Erelax_sa - Erelax_sa_vec.back()) > 100.0 * e_conv) {
                 throw PSIEXCEPTION("Semi-canonicalization failed.");
             }
 
@@ -1018,7 +1018,7 @@ double MRDSRG::compute_energy_sa() {
         }
 
         // test convergence
-        if (fabs(Edelta_dsrg) < e_conv && fabs(Edelta_relax) < e_conv) {
+        if (std::fabs(Edelta_dsrg) < e_conv && std::fabs(Edelta_relax) < e_conv) {
             converged = true;
         }
         if (cycle > maxiter) {
@@ -1297,7 +1297,7 @@ void MRDSRG::transfer_integrals() {
     outfile->Printf("\n    %-30s = %22.15f", "Total Energy (after)", Etest);
     outfile->Printf("\n    %-30s = %22.15f", "Total Energy (before)", Eref_ + Hbar0_);
 
-    if (fabs(Etest - Eref_ - Hbar0_) > 100.0 * options_.get_double("E_CONVERGENCE")) {
+    if (std::fabs(Etest - Eref_ - Hbar0_) > 100.0 * options_.get_double("E_CONVERGENCE")) {
         throw PSIEXCEPTION("De-normal-odering failed.");
     } else {
         ints_->update_integrals(false);
@@ -1511,7 +1511,7 @@ void MRDSRG::check_density(BlockedTensor& D, const std::string& name) {
 
         double D_norm = 0.0, D_max = 0.0;
         D.block(block).citerate([&](const std::vector<size_t>&, const double& value) {
-            double abs_value = fabs(value);
+            double abs_value = std::fabs(value);
             if (abs_value > 1.0e-15) {
                 if (abs_value > D_max)
                     D_max = value;

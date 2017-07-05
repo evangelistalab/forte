@@ -252,7 +252,7 @@ double MRDSRG::compute_energy_ldsrg2() {
 
         // test convergence
         double rms = T1rms_ > T2rms_ ? T1rms_ : T2rms_;
-        if (fabs(Edelta) < e_conv && rms < r_conv) {
+        if (std::fabs(Edelta) < e_conv && rms < r_conv) {
             converged = true;
 
             // rebuild Hbar because it is destroyed when updating amplitudes
@@ -528,7 +528,7 @@ double MRDSRG::compute_energy_ldsrg2_qc() {
 
         // test convergence
         double rms = T1rms_ > T2rms_ ? T1rms_ : T2rms_;
-        if (fabs(Edelta) < e_conv && rms < r_conv) {
+        if (std::fabs(Edelta) < e_conv && rms < r_conv) {
             converged = true;
 
             // rebuild Hbar because it is destroyed when updating amplitudes

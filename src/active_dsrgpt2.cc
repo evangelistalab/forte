@@ -1136,8 +1136,8 @@ void ACTIVE_DSRGPT2::rotate_orbs(SharedMatrix Ca0, SharedMatrix Cb0, SharedMatri
 
             for (int j = actv_start; j < actv_end; ++j) {
                 double s = MOoverlap->get(h, i, j);
-                if (fabs(s) > smax) {
-                    smax = fabs(s);
+                if (std::fabs(s) > smax) {
+                    smax = std::fabs(s);
                     ii = j;
                 }
             }

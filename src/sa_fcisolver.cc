@@ -138,7 +138,7 @@ void SA_FCISolver::read_options() {
                 }
                 weights.push_back(weight);
             }
-            if (fabs(wsum - 1.0) > 1.0e-10) {
+            if (std::fabs(wsum - 1.0) > 1.0e-10) {
                 outfile->Printf("\n  Error: AVG_WEIGHT entries do not add up "
                                 "to 1.0. Sum = %.10f",
                                 wsum);
