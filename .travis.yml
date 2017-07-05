@@ -105,8 +105,8 @@ install:
 - which psi4
 # Compile forte
 - cd ${HOME}/build/evangelistalab/forte
-- ./cmake_setup --ambit-bindir=/home/travis/build/ambit-bin
-- bash cmake_commands
+- FORTE_CMAKE_COM=$(psi4 --plugin-compile)
+- $FORTE_CMAKE_COM -Dambit_DIR=/home/travis/build/ambit-bin/share/cmake/ambit/
 - make -j2
 - export PYTHONPATH="${HOME}/build/evangelistalab:$PYTHONPATH"
 - hash -r
