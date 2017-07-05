@@ -28,6 +28,7 @@
 
 #include "determinant_map.h"
 #include <numeric>
+#include <cmath>
 
 namespace psi {
 namespace forte {
