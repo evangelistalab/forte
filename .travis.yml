@@ -84,7 +84,8 @@ install:
 - conda config --set always_yes yes --set changeps1 no
 - conda update -q conda
 - conda info -a
-- conda create -q -n p4env python=$PYTHON_VER psi4 cmake -c psi4/label/dev -c psi4
+#- conda create -q -n p4env python=$PYTHON_VER psi4 cmake -c psi4/label/dev -c psi4
+- conda create -q -n p4env python=$PYTHON_VER numpy cmake gdma libint libxc -c psi4/label/test -c psi4
 - source activate p4env
 - export LD_LIBRARY_PATH=$HOME/miniconda/envs/p4env/lib:$LD_LIBRARY_PATH
 - rm -rf $HOME/miniconda/envs/p4env/share/cmake/Target*
@@ -92,16 +93,16 @@ install:
 - python -V
 #- python -c 'import numpy; print(numpy.version.version)'
 - cd ${TRAVIS_BUILD_DIR}
-#- export CXX=${CXX_COMPILER}
-#- export CC=${C_COMPILER}
-#- export FC=${Fortran_COMPILER}
+- export CXX=${CXX_COMPILER}
+- export CC=${C_COMPILER}
+- export FC=${Fortran_COMPILER}
 - export CTEST_OUTPUT_ON_FAILURE=1
 #- ${CXX_COMPILER} --version
 #- ${Fortran_COMPILER} --version
 #- ${C_COMPILER} --version
-- gcc --version
-- g++ --version
-- gfortran --version
+#- gcc --version
+#- g++ --version
+#- gfortran --version
 # Compile ambit
 - cd ${HOME}/build
 - git clone https://github.com/jturney/ambit.git ambit
@@ -111,23 +112,24 @@ install:
 - make -j2
 - make install
 # Compile Psi4
-#- cd ${HOME}/build
-#- git clone https://github.com/psi4/psi4.git psi4
-#- cd psi4
-#- > 
-#    cmake -Bbuild -H. 
-#    -DCMAKE_CXX_COMPILER=${CXX_COMPILER} 
-#    -DCMAKE_C_COMPILER=${C_COMPILER} 
-#    -DCMAKE_BUILD_TYPE=${BUILD_TYPE} 
-#    -DCMAKE_PREFIX_PATH=${HOME}/miniconda/envs/p4env
-#    -DPYTHON_EXECUTABLE="${HOME}/miniconda/envs/p4env/bin/python"
-#    -DENABLE_gdma=ON
-#    -DENABLE_PLUGIN_TESTING=ON
-#    -DCMAKE_INSTALL_PREFIX=${HOME}/build/psi4-bin
-#- cd build
-#- make -j2
-#- make install >& psi4_install.log
-#- export PATH="$HOME/build/psi4-bin/bin:$PATH"
+- cd ${HOME}/build
+- git clone https://github.com/psi4/psi4.git psi4
+- cd psi4
+- > 
+    cmake -Bbuild -H. 
+    -DCMAKE_CXX_COMPILER=${CXX_COMPILER} 
+    -DCMAKE_C_COMPILER=${C_COMPILER} 
+    -DCMAKE_BUILD_TYPE=${BUILD_TYPE} 
+    -DCMAKE_PREFIX_PATH=${HOME}/miniconda/envs/p4env
+    -DPYTHON_EXECUTABLE="${HOME}/miniconda/envs/p4env/bin/python"
+    -DENABLE_gdma=ON
+    -DENABLE_PLUGIN_TESTING=ON
+    -DCMAKE_INSTALL_PREFIX=${HOME}/build/psi4-bin
+- cd build
+- make -j2
+- make install >& psi4_install.log
+- export PATH="$HOME/build/psi4-bin/bin:$PATH"
+# End compile Psi4
 - hash -r
 - which psi4
 - psi4 --version
@@ -149,7 +151,3 @@ branches:
   only:
   - master
   - travis
-  - travis2
-  - cmake1
-  - solver
-  - psi4_pr736
