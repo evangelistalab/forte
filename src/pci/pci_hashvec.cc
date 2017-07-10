@@ -150,7 +150,7 @@ ProjectorCI_HashVec::ProjectorCI_HashVec(SharedWavefunction ref_wfn, Options& op
                                          std::shared_ptr<ForteIntegrals> ints,
                                          std::shared_ptr<MOSpaceInfo> mo_space_info)
     : Wavefunction(options), ints_(ints), mo_space_info_(mo_space_info),
-      prescreening_tollerance_factor_(1.5), fast_variational_estimate_(false) {
+      fast_variational_estimate_(false) {
     // Copy the wavefunction information
     shallow_copy(ref_wfn);
     reference_wavefunction_ = ref_wfn;
@@ -244,33 +244,17 @@ void ProjectorCI_HashVec::startup() {
     e_convergence_ = options_.get_double("PCI_E_CONVERGENCE");
     energy_estimate_threshold_ = options_.get_double("PCI_ENERGY_ESTIMATE_THRESHOLD");
     evar_max_error_ = options_.get_double("PCI_EVAR_MAX_ERROR");
-    initiator_approx_factor_ = options_.get_double("PCI_INITIATOR_APPROX_FACTOR");
-    colinear_threshold_ = options_.get_double("PCI_COLINEAR_THRESHOLD");
 
     max_guess_size_ = options_.get_int("PCI_MAX_GUESS_SIZE");
     energy_estimate_freq_ = options_.get_int("PCI_ENERGY_ESTIMATE_FREQ");
 
-    adaptive_beta_ = options_.get_bool("PCI_ADAPTIVE_BETA");
     fast_variational_estimate_ = options_.get_bool("PCI_FAST_EVAR");
     do_shift_ = options_.get_bool("PCI_USE_SHIFT");
     use_inter_norm_ = options_.get_bool("PCI_USE_INTER_NORM");
-    do_simple_prescreening_ = options_.get_bool("PCI_SIMPLE_PRESCREENING");
-    do_dynamic_prescreening_ = options_.get_bool("PCI_DYNAMIC_PRESCREENING");
-    //    if (do_dynamic_prescreening_)
-    //        compute_max_double_coupling();
-    do_schwarz_prescreening_ = options_.get_bool("PCI_SCHWARZ_PRESCREENING");
-    do_initiator_approx_ = options_.get_bool("PCI_INITIATOR_APPROX");
     do_perturb_analysis_ = options_.get_bool("PCI_PERTURB_ANALYSIS");
     stop_higher_new_low_ = options_.get_bool("PCI_STOP_HIGHER_NEW_LOW");
     chebyshev_order_ = options_.get_int("PCI_CHEBYSHEV_ORDER");
     krylov_order_ = options_.get_int("PCI_KRYLOV_ORDER");
-    symm_approx_H_ = options_.get_bool("PCI_SYMM_APPROX_H");
-    reference_spawning_ = options_.get_bool("PCI_REFERENCE_SPAWNING");
-    if (reference_spawning_ && !symm_approx_H_) {
-        symm_approx_H_ = true;
-        outfile->Printf("\n\n  Warning! Use of symmetric approximated "
-                        "Hamiltonian is enforced by using reference spawning.");
-    }
 
     variational_estimate_ = options_.get_bool("PCI_VAR_ESTIMATE");
     print_full_wavefunction_ = options_.get_bool("PCI_PRINT_FULL_WAVEFUNCTION");
@@ -322,28 +306,16 @@ void ProjectorCI_HashVec::print_info() {
         {"Spawning threshold", spawning_threshold_},
         {"Initial guess spawning threshold", initial_guess_spawning_threshold_},
         {"Convergence threshold", e_convergence_},
-        {"Prescreening tollerance factor", prescreening_tollerance_factor_},
         {"Energy estimate tollerance", energy_estimate_threshold_}};
 
     std::vector<std::pair<std::string, std::string>> calculation_info_string{
         {"Generator type", generator_description_},
-        {"Adaptive time step", adaptive_beta_ ? "YES" : "NO"},
         {"Shift the energy", do_shift_ ? "YES" : "NO"},
         {"Use intermediate normalization", use_inter_norm_ ? "YES" : "NO"},
-        {"Prescreen spawning", do_simple_prescreening_ ? "YES" : "NO"},
-        {"Dynamic prescreening", do_dynamic_prescreening_ ? "YES" : "NO"},
-        {"Schwarz prescreening", do_schwarz_prescreening_ ? "YES" : "NO"},
-        {"Initiator approximation", do_initiator_approx_ ? "YES" : "NO"},
         {"Fast variational estimate", fast_variational_estimate_ ? "YES" : "NO"},
         {"Result perturbation analysis", do_perturb_analysis_ ? "YES" : "NO"},
         {"Using OpenMP", have_omp_ ? "YES" : "NO"},
     };
-    //    {"Number of electrons",nel},
-    //    {"Number of correlated alpha electrons",nalpha_},
-    //    {"Number of correlated beta electrons",nbeta_},
-    //    {"Number of restricted docc electrons",rdoccpi_.sum()},
-    //    {"Charge",charge},
-    //    {"Multiplicity",multiplicity},
 
     // Print some information
     outfile->Printf("\n\n  ==> Calculation Information <==\n");
@@ -642,10 +614,10 @@ double ProjectorCI_HashVec::compute_energy() {
     double var_energy = initial_guess(dets_hashvec, C);
     double proj_energy = var_energy;
     print_wfn(dets_hashvec, C);
-    det_hash<> old_space_map;
-    for (size_t I = 0; I < dets_hashvec.size(); ++I) {
-        old_space_map[dets_hashvec[I]] = C[I];
-    }
+//    det_hash<> old_space_map;
+//    for (size_t I = 0; I < dets_hashvec.size(); ++I) {
+//        old_space_map[dets_hashvec[I]] = C[I];
+//    }
 
     convergence_analysis();
 
@@ -1214,7 +1186,7 @@ void ProjectorCI_HashVec::apply_tau_H_ref_C_symm(double tau, double spawning_thr
                 thread_det_C_vecs[current_rank], S, max_coupling);
 #pragma omp critical
             {
-                dets_hashvec_merge.merge(thread_det_C_vecs[current_rank], C_merge,
+                merge(dets_hashvec_merge, C_merge, thread_det_C_vecs[current_rank],
                                          std::function<double(double, double)>(std::plus<double>()),
                                          0.0, false);
                 dets_max_couplings_.resize(dets_hashvec_merge.size());
@@ -1227,7 +1199,7 @@ void ProjectorCI_HashVec::apply_tau_H_ref_C_symm(double tau, double spawning_thr
                 thread_det_C_vecs[current_rank], S, max_coupling);
 #pragma omp critical
             {
-                dets_hashvec_merge.merge(thread_det_C_vecs[current_rank], C_merge,
+                merge(dets_hashvec_merge, C_merge, thread_det_C_vecs[current_rank],
                                          std::function<double(double, double)>(std::plus<double>()),
                                          0.0, false);
             }
@@ -2197,7 +2169,9 @@ double ProjectorCI_HashVec::estimate_var_energy_within_error(const det_hashvec& 
         }
     }
     cume_ignore -= C[cut_index] * C[cut_index];
-    ++cut_index;
+    if (cut_index < dets_hashvec.size() - 1) {
+        ++cut_index;
+    }
     outfile->Printf(
         "\n  Variational energy estimated with %zu determinants to meet the max error %e",
         cut_index + 1, max_error);
@@ -2230,7 +2204,9 @@ double ProjectorCI_HashVec::estimate_var_energy_sparse(const det_hashvec& dets_h
         }
     }
     cume_ignore -= C[cut_index] * C[cut_index];
-    ++cut_index;
+    if (cut_index < dets_hashvec.size() - 1) {
+        ++cut_index;
+    }
     outfile->Printf(
         "\n  Variational energy estimated with %zu determinants to meet the max error %e",
         cut_index + 1, max_error);

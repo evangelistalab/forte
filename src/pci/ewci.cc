@@ -1159,7 +1159,7 @@ void ElementwiseCI::apply_tau_H_ref_C_symm(double tau, double spawning_threshold
                                                max_coupling);
 #pragma omp critical(dets)
             {
-                dets_hashvec_merge.merge(thread_det_C_vec, C_merge,
+                merge(dets_hashvec_merge, C_merge, thread_det_C_vec,
                                          std::function<double(double, double)>(std::plus<double>()),
                                          0.0, false);
             }
@@ -1172,7 +1172,7 @@ void ElementwiseCI::apply_tau_H_ref_C_symm(double tau, double spawning_threshold
                                                max_coupling);
 #pragma omp critical(dets)
             {
-                dets_hashvec_merge.merge(thread_det_C_vec, C_merge,
+                merge(dets_hashvec_merge, C_merge, thread_det_C_vec,
                                          std::function<double(double, double)>(std::plus<double>()),
                                          0.0, false);
             }
