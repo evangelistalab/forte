@@ -2469,7 +2469,7 @@ void DSRG_MRPT2::combine_tensor(ambit::Tensor& tens, ambit::Tensor& tens_h, cons
     }
 }
 
-ambit::BlockedTensor DSRG_MRPT2::T1(const std::vector<std::string>& blocks) {
+ambit::BlockedTensor DSRG_MRPT2::get_T1(const std::vector<std::string>& blocks) {
     for (const std::string& block : blocks) {
         if (!T1_.is_block(block)) {
             std::string error = "Error from T1(blocks): cannot find block " + block;
@@ -2482,7 +2482,7 @@ ambit::BlockedTensor DSRG_MRPT2::T1(const std::vector<std::string>& blocks) {
     return out;
 }
 
-ambit::BlockedTensor DSRG_MRPT2::T1deGNO(const std::vector<std::string>& blocks) {
+ambit::BlockedTensor DSRG_MRPT2::get_T1deGNO(const std::vector<std::string>& blocks) {
     for (const std::string& block : blocks) {
         if (!T1eff_.is_block(block)) {
             std::string error = "Error from T1deGNO(blocks): cannot find block " + block;
@@ -2496,7 +2496,7 @@ ambit::BlockedTensor DSRG_MRPT2::T1deGNO(const std::vector<std::string>& blocks)
     return out;
 }
 
-ambit::BlockedTensor DSRG_MRPT2::T2(const std::vector<std::string>& blocks) {
+ambit::BlockedTensor DSRG_MRPT2::get_T2(const std::vector<std::string>& blocks) {
     for (const std::string& block : blocks) {
         if (!T2_.is_block(block)) {
             std::string error = "Error from T2(blocks): cannot find block " + block;
