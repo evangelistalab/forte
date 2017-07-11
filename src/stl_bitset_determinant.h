@@ -195,6 +195,13 @@ class STLBitsetDeterminant {
 
     /// Sets the pointer to the integral object
     static void set_ints(std::shared_ptr<FCIIntegrals> ints);
+    static void set_nmo(int nmo) {
+        if (nmo > 128) {
+            throw PSIEXCEPTION("Too many orbitals for determinant class");
+        } else {
+            nmo_ = nmo;
+        }
+    }
     /// Resets the pointer to the integral object
     static void reset_ints();
 
