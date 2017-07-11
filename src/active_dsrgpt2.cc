@@ -717,8 +717,10 @@ double ACTIVE_DSRGPT2::compute_energy() {
                             dsrg->rotate_amp(Uaorbs_[h][i_real], Uborbs_[h][i_real], true, true);
 
                             // copy rotated amplitudes (T1deGNO, T2)
-                            T1 = dsrg->T1deGNO(T1blocks);
-                            T2 = dsrg->T2(T2blocks);
+                            T1 = dsrg->get_T1deGNO(T1blocks);
+                            T2 = dsrg->get_T2(T2blocks);
+                            //                            T1 = dsrg->get_T1deGNO();
+                            //                            T2 = dsrg->get_T2();
 
                             if (gs) {
                                 Tde_g_ = Tde;
@@ -726,6 +728,12 @@ double ACTIVE_DSRGPT2::compute_energy() {
                                                                     T1blocks);
                                 T2_g_ = ambit::BlockedTensor::build(ambit::CoreTensor, "T2_g",
                                                                     T2blocks);
+                                //                                T1_g_ =
+                                //                                ambit::BlockedTensor::build(ambit::CoreTensor,
+                                //                                "T1_g", T1.block_labels());
+                                //                                T2_g_ =
+                                //                                ambit::BlockedTensor::build(ambit::CoreTensor,
+                                //                                "T2_g", T2.block_labels());
                                 T1_g_["ia"] = T1["ia"];
                                 T1_g_["IA"] = T1["IA"];
                                 T2_g_["ijab"] = T2["ijab"];
@@ -751,8 +759,10 @@ double ACTIVE_DSRGPT2::compute_energy() {
                             dsrg->rotate_amp(Uaorbs_[h][i_real], Uborbs_[h][i_real], true, true);
 
                             // copy rotated amplitudes (T1deGNO, T2)
-                            T1 = dsrg->T1deGNO(T1blocks);
-                            T2 = dsrg->T2(T2blocks);
+                            T1 = dsrg->get_T1deGNO(T1blocks);
+                            T2 = dsrg->get_T2(T2blocks);
+                            //                            T1 = dsrg->get_T1deGNO();
+                            //                            T2 = dsrg->get_T2();
 
                             if (gs) {
                                 Tde_g_ = Tde;
@@ -760,6 +770,12 @@ double ACTIVE_DSRGPT2::compute_energy() {
                                                                     T1blocks);
                                 T2_g_ = ambit::BlockedTensor::build(ambit::CoreTensor, "T2_g",
                                                                     T2blocks);
+                                //                                T1_g_ =
+                                //                                ambit::BlockedTensor::build(ambit::CoreTensor,
+                                //                                "T1_g", T1.block_labels());
+                                //                                T2_g_ =
+                                //                                ambit::BlockedTensor::build(ambit::CoreTensor,
+                                //                                "T2_g", T2.block_labels());
                                 T1_g_["ia"] = T1["ia"];
                                 T1_g_["IA"] = T1["IA"];
                                 T2_g_["ijab"] = T2["ijab"];
@@ -776,6 +792,8 @@ double ACTIVE_DSRGPT2::compute_energy() {
                         outfile->Printf("\n  Computing V%s-DSRG-PT2 oscillator strength ...",
                                         ref_type_.c_str());
                         compute_osc_pt2(h, i_real, Tde, T1, T2);
+                        //                        compute_osc_pt2_dets(h, i_real, Tde, T1, T2);
+                        //                        compute_osc_pt2_overlap(h, i_real, Tde, T1, T2);
                         outfile->Printf(" Done. Timing %15.6f s", osc_pt2.get());
                     }
                 }
@@ -795,6 +813,7 @@ double ACTIVE_DSRGPT2::compute_energy() {
             }
         }
     }
+
     return 0.0;
 }
 
@@ -818,7 +837,7 @@ void ACTIVE_DSRGPT2::compute_osc_pt2(const int& irrep, const int& root, const do
     size_t na2 = na * na;
     size_t na4 = na2 * na2;
     size_t na6 = na4 * na2;
-    CI_RDMS ci_rdms(options_, fci_mo_->fci_ints_, p_space, evecs, n, 0); // what if swap n and 0
+    CI_RDMS ci_rdms(options_, fci_mo_->fci_ints_, p_space, evecs, 0, n);
 
     std::vector<double> opdm_a(na2, 0.0);
     std::vector<double> opdm_b(na2, 0.0);
@@ -856,11 +875,15 @@ void ACTIVE_DSRGPT2::compute_osc_pt2(const int& irrep, const int& root, const do
 
     // compute first-order effective transition density
     // step 1: initialization
-    ambit::BlockedTensor TDeff =
-        ambit::BlockedTensor::build(ambit::CoreTensor, "TDeff", spin_cases({"hp"}));
+    ambit::BlockedTensor TDeff = ambit::BlockedTensor::build(ambit::CoreTensor, "TDeff",
+                                                             spin_cases({"hp", "vc", "va", "ac"}));
+    ambit::BlockedTensor temp =
+        ambit::BlockedTensor::build(ambit::CoreTensor, "TDeff temp", spin_cases({"hp"}));
 
     // step 2: compute TDeff from <ref_x| (A_x)^+ * mu |ref_g>
-    double fc_x = compute_TDeff(T1_x, T2_x, TD1, TD2, TD3, TDeff, true);
+    double fc_x = compute_TDeff(T1_x, T2_x, TD1, TD2, TD3, temp, true);
+    TDeff["ai"] = temp["ia"];
+    TDeff["AI"] = temp["IA"];
 
     // step 3: compute TDeff from <ref_x| mu * A_g |ref_g>
     double fc_g = compute_TDeff(T1_g_, T2_g_, TD1, TD2, TD3, TDeff, false);
@@ -908,6 +931,7 @@ void ACTIVE_DSRGPT2::compute_osc_pt2(const int& irrep, const int& root, const do
             MOtransD->add(n0, n1, value);
         });
     }
+    //    MOtransD->print();
 
     // contract with MO dipole integrals
     Vector4 transD;
@@ -1098,6 +1122,575 @@ SharedMatrix ACTIVE_DSRGPT2::combine_evecs(const int& h0, const int& h1) {
     }
 
     return evecs;
+}
+
+std::map<STLBitsetDeterminant, double>
+ACTIVE_DSRGPT2::p_space_actv_to_nmo(const std::vector<STLBitsetDeterminant>& p_space,
+                                    SharedVector wfn) {
+    STLBitsetDeterminant::reset_ints();
+    std::map<STLBitsetDeterminant, double> detsmap;
+
+    size_t ncmo = mo_space_info_->size("CORRELATED");
+    size_t nact = mo_space_info_->size("ACTIVE");
+
+    std::vector<size_t> core_mos = mo_space_info_->get_corr_abs_mo("RESTRICTED_DOCC");
+    std::vector<size_t> actv_mos = mo_space_info_->get_corr_abs_mo("ACTIVE");
+
+    for (size_t I = 0, sp = p_space.size(); I < sp; ++I) {
+        double ci = wfn->get(I);
+        if (fabs(ci) < 1.0e-12) {
+            continue;
+        }
+
+        // find out occupation of determinant (active only)
+        STLBitsetDeterminant::set_nmo(nact);
+        STLBitsetDeterminant det_actv = p_space[I];
+        std::vector<int> occ_alfa(det_actv.get_alfa_occ());
+        std::vector<int> occ_beta(det_actv.get_beta_occ());
+        //        det_actv.print();
+
+        // create a empty big determinant
+        STLBitsetDeterminant::set_nmo(ncmo);
+        STLBitsetDeterminant det(std::vector<bool>(2 * ncmo, false));
+
+        // fill in core orbitals
+        double sign = 1.0;
+        for (size_t m = 0, sc = core_mos.size(); m < sc; ++m) {
+            sign *= det.create_alfa_bit(static_cast<int>(core_mos[m]));
+            sign *= det.create_beta_bit(static_cast<int>(core_mos[m]));
+        }
+
+        // fill in active orbitals
+        for (const auto& u : occ_alfa) {
+            sign *= det.create_alfa_bit(actv_mos[u]);
+        }
+        for (const int& u : occ_beta) {
+            sign *= det.create_beta_bit(actv_mos[u]);
+        }
+
+        // push back
+        detsmap[det] = sign * ci;
+
+        //        det.print();
+        //        outfile->Printf("  %18.12f", detsmap[det]);
+    }
+
+    return detsmap;
+}
+
+std::map<STLBitsetDeterminant, double>
+ACTIVE_DSRGPT2::excited_wfn_1st(const std::map<STLBitsetDeterminant, double>& ref,
+                                ambit::BlockedTensor& T1, ambit::BlockedTensor& T2) {
+    size_t ncmo = mo_space_info_->size("CORRELATED");
+    STLBitsetDeterminant::reset_ints();
+    STLBitsetDeterminant::set_nmo(ncmo);
+
+    std::map<STLBitsetDeterminant, double> out;
+
+    for (const auto& detCIpair : ref) {
+        double ci = detCIpair.second;
+        STLBitsetDeterminant det = detCIpair.first;
+
+        // singles
+        T1.citerate([&](const std::vector<size_t>& i, const std::vector<SpinType>& spin,
+                        const double& value) {
+            // h: i[0], p: i[1]
+            if (fabs(value) > 1.0e-12) {
+                if (spin[0] == AlphaSpin) {
+                    double sign = 1.0;
+                    STLBitsetDeterminant E;
+                    E.copy(det);
+                    sign *= E.destroy_alfa_bit(i[0]);
+                    sign *= E.create_alfa_bit(i[1]);
+                    if (sign != 0) {
+                        if (out.find(E) != out.end()) {
+                            out[E] += ci * value * sign;
+                        } else {
+                            out[E] = ci * value * sign;
+                        }
+                    }
+
+                    sign = 1.0;
+                    E.copy(det);
+                    sign *= E.destroy_alfa_bit(i[1]);
+                    sign *= E.create_alfa_bit(i[0]);
+                    if (sign != 0) {
+                        if (out.find(E) != out.end()) {
+                            out[E] -= ci * value * sign;
+                        } else {
+                            out[E] = -1.0 * ci * value * sign;
+                        }
+                    }
+                } else {
+                    double sign = 1.0;
+                    STLBitsetDeterminant E;
+                    E.copy(det);
+                    sign *= E.destroy_beta_bit(i[0]);
+                    sign *= E.create_beta_bit(i[1]);
+                    if (sign != 0) {
+                        if (out.find(E) != out.end()) {
+                            out[E] += ci * value * sign;
+                        } else {
+                            out[E] = ci * value * sign;
+                        }
+                    }
+
+                    sign = 1.0;
+                    E.copy(det);
+                    sign *= E.destroy_beta_bit(i[1]);
+                    sign *= E.create_beta_bit(i[0]);
+                    if (sign != 0) {
+                        if (out.find(E) != out.end()) {
+                            out[E] -= ci * value * sign;
+                        } else {
+                            out[E] = -1.0 * ci * value * sign;
+                        }
+                    }
+                }
+            }
+        });
+
+        // doubles
+        T2.citerate([&](const std::vector<size_t>& i, const std::vector<SpinType>& spin,
+                        const double& value) {
+            // h: i[0], i[1]; p: i[2], i[3]
+            if (fabs(value) > 1.0e-12) {
+                if (spin[0] == AlphaSpin && spin[1] == AlphaSpin) {
+                    // a^+ b^+ j i
+                    double sign = 1.0;
+                    STLBitsetDeterminant E;
+                    E.copy(det);
+                    sign *= E.destroy_alfa_bit(i[0]);
+                    sign *= E.destroy_alfa_bit(i[1]);
+                    sign *= E.create_alfa_bit(i[3]);
+                    sign *= E.create_alfa_bit(i[2]);
+                    if (sign != 0) {
+                        if (out.find(E) != out.end()) {
+                            out[E] += 0.25 * ci * value * sign;
+                        } else {
+                            out[E] = 0.25 * ci * value * sign;
+                        }
+                    }
+
+                    // i^+ j^+ b a
+                    sign = 1.0;
+                    E.copy(det);
+                    sign *= E.destroy_alfa_bit(i[2]);
+                    sign *= E.destroy_alfa_bit(i[3]);
+                    sign *= E.create_alfa_bit(i[1]);
+                    sign *= E.create_alfa_bit(i[0]);
+                    if (sign != 0) {
+                        if (out.find(E) != out.end()) {
+                            out[E] -= 0.25 * ci * value * sign;
+                        } else {
+                            out[E] = -0.25 * ci * value * sign;
+                        }
+                    }
+                } else if (spin[0] == AlphaSpin && spin[1] == BetaSpin) {
+                    // a^+ B^+ J i
+                    double sign = 1.0;
+                    STLBitsetDeterminant E;
+                    E.copy(det);
+                    sign *= E.destroy_alfa_bit(i[0]);
+                    sign *= E.destroy_beta_bit(i[1]);
+                    sign *= E.create_beta_bit(i[3]);
+                    sign *= E.create_alfa_bit(i[2]);
+                    if (sign != 0) {
+                        if (out.find(E) != out.end()) {
+                            out[E] += ci * value * sign;
+                        } else {
+                            out[E] = ci * value * sign;
+                        }
+                    }
+
+                    // i^+ J^+ B a
+                    sign = 1.0;
+                    E.copy(det);
+                    sign *= E.destroy_alfa_bit(i[2]);
+                    sign *= E.destroy_beta_bit(i[3]);
+                    sign *= E.create_beta_bit(i[1]);
+                    sign *= E.create_alfa_bit(i[0]);
+                    if (sign != 0) {
+                        if (out.find(E) != out.end()) {
+                            out[E] -= ci * value * sign;
+                        } else {
+                            out[E] = -1.0 * ci * value * sign;
+                        }
+                    }
+                } else if (spin[0] == BetaSpin && spin[1] == BetaSpin) {
+                    // A^+ B^+ J I
+                    double sign = 1.0;
+                    STLBitsetDeterminant E;
+                    E.copy(det);
+                    sign *= E.destroy_beta_bit(i[0]);
+                    sign *= E.destroy_beta_bit(i[1]);
+                    sign *= E.create_beta_bit(i[3]);
+                    sign *= E.create_beta_bit(i[2]);
+                    if (sign != 0) {
+                        if (out.find(E) != out.end()) {
+                            out[E] += 0.25 * ci * value * sign;
+                        } else {
+                            out[E] = 0.25 * ci * value * sign;
+                        }
+                    }
+
+                    // I^+ J^+ B A
+                    sign = 1.0;
+                    E.copy(det);
+                    sign *= E.destroy_beta_bit(i[2]);
+                    sign *= E.destroy_beta_bit(i[3]);
+                    sign *= E.create_beta_bit(i[1]);
+                    sign *= E.create_beta_bit(i[0]);
+                    if (sign != 0) {
+                        if (out.find(E) != out.end()) {
+                            out[E] -= 0.25 * ci * value * sign;
+                        } else {
+                            out[E] = -0.25 * ci * value * sign;
+                        }
+                    }
+                }
+            }
+        });
+    }
+
+    //    outfile->Printf("\n excited 1st order wave function");
+    //    for (const auto& x : out) {
+    //        x.first.print();
+    //        outfile->Printf("  %18.12f", x.second);
+    //    }
+    return out;
+}
+
+void ACTIVE_DSRGPT2::compute_osc_pt2_dets(const int& irrep, const int& root, const double& Tde_x,
+                                          ambit::BlockedTensor& T1_x, ambit::BlockedTensor& T2_x) {
+    /**
+     * IMPORTANT NOTE:
+     *   1) All blocks of T should be stored
+     *   2) Number of basis function should not exceed 128
+    */
+
+    // form determinants for ground and excited states
+    std::map<STLBitsetDeterminant, double> wfn0_g =
+        p_space_actv_to_nmo(p_space_g_, ref_wfns_[0]->get_column(0, 0));
+    std::map<STLBitsetDeterminant, double> wfn0_x =
+        p_space_actv_to_nmo(fci_mo_->p_space(), ref_wfns_[irrep]->get_column(0, root));
+
+    // compute transition density matrix of <Psi_x 1st| p^+ q |Psi_g 0th>
+
+    // step 1: compute first order wavefunction of the excited state
+    std::map<STLBitsetDeterminant, double> wfn_1st = excited_wfn_1st(wfn0_x, T1_x, T2_x);
+
+    // step 2: combine determinant space
+    std::vector<STLBitsetDeterminant> p_space;
+    for (const auto& detCIpair : wfn0_g) {
+        p_space.emplace_back(detCIpair.first);
+    }
+    size_t offset = p_space.size();
+    for (const auto& detCIpair : wfn_1st) {
+        p_space.emplace_back(detCIpair.first);
+    }
+
+    // step 3: combine eigen vectors
+    size_t np = p_space.size();
+    SharedMatrix evecs(new Matrix("combined evecs", np, 2));
+    for (size_t i = 0; i < offset; ++i) {
+        evecs->set(i, 0, wfn0_g[p_space[i]]);
+    }
+    for (size_t i = offset; i < np; ++i) {
+        evecs->set(i, 1, wfn_1st[p_space[i]]);
+    }
+
+    // step 4: compute one transition density using CIRDMS
+    CI_RDMS rdms(options_, fci_mo_->fci_ints_, p_space, evecs, 0, 1);
+    size_t ncmo = mo_space_info_->size("CORRELATED");
+    size_t ncmo2 = ncmo * ncmo;
+    std::vector<double> tdm_a(ncmo2, 0.0);
+    std::vector<double> tdm_b(ncmo2, 0.0);
+    rdms.compute_1rdm(tdm_a, tdm_b);
+
+    // compute transition density matrix of <Psi_x 0th| p^+ q |Psi_g 1st>
+
+    // step 1: compute first order wavefunction of the ground state
+    wfn_1st = excited_wfn_1st(wfn0_g, T1_g_, T2_g_);
+
+    // step 2: combine determinant space
+    p_space.clear();
+    for (const auto& detCIpair : wfn0_x) {
+        p_space.emplace_back(detCIpair.first);
+    }
+    offset = p_space.size();
+    for (const auto& detCIpair : wfn_1st) {
+        p_space.emplace_back(detCIpair.first);
+    }
+
+    // step 3: combine eigen vectors
+    np = p_space.size();
+    evecs = SharedMatrix(new Matrix("combined evecs", np, 2));
+    for (size_t i = 0; i < offset; ++i) {
+        evecs->set(i, 0, wfn0_x[p_space[i]]);
+    }
+    for (size_t i = offset; i < np; ++i) {
+        evecs->set(i, 1, wfn_1st[p_space[i]]);
+    }
+
+    // step 4: compute one transition density using CIRDMS
+    CI_RDMS rdms1(options_, fci_mo_->fci_ints_, p_space, evecs, 1, 0);
+    std::vector<double> todm_a(ncmo2, 0.0);
+    std::vector<double> todm_b(ncmo2, 0.0);
+    rdms1.compute_1rdm(todm_a, todm_b);
+
+    // add to previous results tdm_a and tdm_b
+    std::transform(tdm_a.begin(), tdm_a.end(), todm_a.begin(), tdm_a.begin(), std::plus<double>());
+    std::transform(tdm_b.begin(), tdm_b.end(), todm_b.begin(), tdm_b.begin(), std::plus<double>());
+
+    //    // compute transition density matrix of <Psi_x 1th| p^+ q |Psi_g 1st>
+
+    //    // step 1: compute first-order wavefunction of the excited state
+    //    std::map<STLBitsetDeterminant, double> wfn1_x = excited_wfn_1st(wfn0_x, T1_x, T2_x);
+
+    //    // step 2: combine determinant space
+    //    p_space.clear();
+    //    for (const auto& detCIpair : wfn1_x) {
+    //        p_space.emplace_back(detCIpair.first);
+    //    }
+    //    offset = p_space.size();
+    //    for (const auto& detCIpair : wfn_1st) {
+    //        p_space.emplace_back(detCIpair.first);
+    //    }
+
+    //    // step 3: combine eigen vectors
+    //    np = p_space.size();
+    //    evecs = SharedMatrix(new Matrix("combined evecs", np, 2));
+    //    for (size_t i = 0; i < offset; ++i) {
+    //        evecs->set(i, 0, wfn1_x[p_space[i]]);
+    //    }
+    //    for (size_t i = offset; i < np; ++i) {
+    //        evecs->set(i, 1, wfn_1st[p_space[i]]);
+    //    }
+
+    //    // step 4: compute one transition density using CIRDMS
+    //    CI_RDMS rdms2(options_, fci_mo_->fci_ints_, p_space, evecs, 1, 0);
+    //    rdms2.compute_1rdm(todm_a, todm_b);
+
+    //    // step 5: add todm to tdm
+    //    std::transform(tdm_a.begin(), tdm_a.end(), todm_a.begin(), tdm_a.begin(),
+    //    std::plus<double>());
+    //    std::transform(tdm_b.begin(), tdm_b.end(), todm_b.begin(), tdm_b.begin(),
+    //    std::plus<double>());
+
+    // translate tdm to C1 Pitzer ordering
+    Dimension nmopi = this->nmopi();
+    std::vector<std::tuple<double, int, int>> order;
+    int nirrep = this->nirrep();
+    for (int h = 0; h < nirrep; ++h) {
+        for (int i = 0; i < nmopi[h]; ++i) {
+            order.push_back(std::tuple<double, int, int>(this->epsilon_a()->get(h, i), i, h));
+        }
+    }
+    std::sort(order.begin(), order.end(), std::less<std::tuple<double, int, int>>());
+
+    Dimension frzcpi = mo_space_info_->get_dimension("FROZEN_DOCC");
+    Dimension ncmopi = mo_space_info_->get_dimension("CORRELATED");
+    std::vector<size_t> indices(ncmo, 0);
+    for (size_t idx = 0, si = order.size(); idx < si; ++idx) {
+        int i = std::get<1>(order[idx]);
+        int h = std::get<2>(order[idx]);
+
+        if (i < frzcpi[h]) {
+            continue;
+        } else {
+            size_t offset = -frzcpi[h];
+            while ((--h) >= 0) {
+                offset += ncmopi[h];
+            }
+
+            indices[i + offset] = idx;
+        }
+    }
+
+    size_t nmo = modipole_ints_[0]->nrow();
+    SharedMatrix MOtransD(new Matrix("MO TransD", nmo, nmo));
+    for (size_t i = 0; i < ncmo; ++i) {
+        size_t ni = indices[i];
+        for (size_t j = 0; j < ncmo; ++j) {
+            size_t nj = indices[j];
+            size_t idx = i * ncmo + j;
+            MOtransD->set(ni, nj, tdm_a[idx] + tdm_b[idx]);
+        }
+    }
+    MOtransD->print();
+
+    // contract with mo dipole integrals
+    Vector4 transD;
+    transD.x = MOtransD->vector_dot(modipole_ints_[0]);
+    transD.y = MOtransD->vector_dot(modipole_ints_[1]);
+    transD.z = MOtransD->vector_dot(modipole_ints_[2]);
+
+    // add zeroth-order transition density
+    std::string name = transition_type(0, 0, root, irrep);
+    double scale = 1.0 + Tde_g_ + Tde_x;
+    transD.x += tdipole_ref_[name].x * scale;
+    transD.y += tdipole_ref_[name].y * scale;
+    transD.z += tdipole_ref_[name].z * scale;
+    transD.t = sqrt(transD.x * transD.x + transD.y * transD.y + transD.z * transD.z);
+
+    // print DSRG-PT2 transition density
+    outfile->Printf("\nTrans. Dipole %s: X: %7.4f, Y: %7.4f, Z: %7.4f", name.c_str(), transD.x,
+                    transD.y, transD.z);
+}
+
+std::map<STLBitsetDeterminant, double>
+ACTIVE_DSRGPT2::excited_ref(const std::map<STLBitsetDeterminant, double>& ref, const int& p,
+                            const int& q) {
+    size_t ncmo = mo_space_info_->size("CORRELATED");
+    STLBitsetDeterminant::reset_ints();
+    STLBitsetDeterminant::set_nmo(ncmo);
+
+    std::map<STLBitsetDeterminant, double> out;
+
+    for (const auto& detCIpair : ref) {
+        double ci = detCIpair.second;
+        STLBitsetDeterminant det = detCIpair.first;
+
+        std::vector<int> o_a = det.get_alfa_occ();
+        std::vector<int> o_b = det.get_beta_occ();
+        std::vector<int> v_a = det.get_alfa_vir();
+        std::vector<int> v_b = det.get_beta_vir();
+
+        if (p == q) {
+            // alpha
+            if (std::find(o_a.begin(), o_a.end(), q) != o_a.end()) {
+                if (out.find(det) != out.end()) {
+                    out[det] += ci;
+                } else {
+                    out[det] = ci;
+                }
+            }
+
+            // beta
+            if (std::find(o_b.begin(), o_b.end(), q) != o_b.end()) {
+                if (out.find(det) != out.end()) {
+                    out[det] += ci;
+                } else {
+                    out[det] = ci;
+                }
+            }
+
+        } else {
+            // alpha
+            if (std::find(o_a.begin(), o_a.end(), q) != o_a.end() &&
+                std::find(v_a.begin(), v_a.end(), p) != v_a.end()) {
+                STLBitsetDeterminant E;
+                E.copy(det);
+                double sign = E.single_excitation_a(q, p);
+                if (out.find(E) != out.end()) {
+                    out[E] += ci * sign;
+                } else {
+                    out[E] = ci * sign;
+                }
+            }
+
+            // beta
+            if (std::find(o_b.begin(), o_b.end(), q) != o_b.end() &&
+                std::find(v_b.begin(), v_b.end(), p) != v_b.end()) {
+                STLBitsetDeterminant E;
+                E.copy(det);
+                double sign = E.single_excitation_b(q, p);
+                if (out.find(E) != out.end()) {
+                    out[E] += ci * sign;
+                } else {
+                    out[E] = ci * sign;
+                }
+            }
+        }
+    }
+    return out;
+}
+
+void ACTIVE_DSRGPT2::compute_osc_pt2_overlap(const int& irrep, const int& root, const double& Tde_x,
+                                             ambit::BlockedTensor& T1_x,
+                                             ambit::BlockedTensor& T2_x) {
+    // form determinants for ground and excited states
+    std::map<STLBitsetDeterminant, double> wfn0_g =
+        p_space_actv_to_nmo(p_space_g_, ref_wfns_[0]->get_column(0, 0));
+    std::map<STLBitsetDeterminant, double> wfn0_x =
+        p_space_actv_to_nmo(fci_mo_->p_space(), ref_wfns_[irrep]->get_column(0, root));
+
+    // compute first order wavefunctions for the ground and excited states
+    std::map<STLBitsetDeterminant, double> wfn1_g = excited_wfn_1st(wfn0_g, T1_g_, T2_g_);
+    std::map<STLBitsetDeterminant, double> wfn1_x = excited_wfn_1st(wfn0_x, T1_x, T2_x);
+
+    // figure out C1 Pitzer ordering
+    Dimension nmopi = this->nmopi();
+    std::vector<std::tuple<double, int, int>> order;
+    int nirrep = this->nirrep();
+    for (int h = 0; h < nirrep; ++h) {
+        for (int i = 0; i < nmopi[h]; ++i) {
+            order.push_back(std::tuple<double, int, int>(this->epsilon_a()->get(h, i), i, h));
+        }
+    }
+    std::sort(order.begin(), order.end(), std::less<std::tuple<double, int, int>>());
+
+    size_t ncmo = mo_space_info_->size("CORRELATED");
+    Dimension frzcpi = mo_space_info_->get_dimension("FROZEN_DOCC");
+    Dimension ncmopi = mo_space_info_->get_dimension("CORRELATED");
+    std::vector<size_t> indices(ncmo, 0);
+    for (size_t idx = 0, si = order.size(); idx < si; ++idx) {
+        int i = std::get<1>(order[idx]);
+        int h = std::get<2>(order[idx]);
+
+        if (i < frzcpi[h]) {
+            continue;
+        } else {
+            size_t offset = -frzcpi[h];
+            while ((--h) >= 0) {
+                offset += ncmopi[h];
+            }
+
+            indices[i + offset] = idx;
+        }
+    }
+
+    size_t nmo = modipole_ints_[0]->nrow();
+    SharedMatrix MOtransD(new Matrix("MO TransD", nmo, nmo));
+    for (size_t i = 0; i < ncmo; ++i) {
+        size_t ni = indices[i];
+        for (size_t j = 0; j < ncmo; ++j) {
+            size_t nj = indices[j];
+
+            // compute p^+ q |Psi_g 0th>
+            std::map<STLBitsetDeterminant, double> g0_pq = excited_ref(wfn0_g, i, j);
+
+            // compute overlap <Psi_x 1th| p^+ q |Psi_g 0th>
+            double value = compute_overlap(g0_pq, wfn1_x);
+
+            // compute <Psi_x 0th| p^+ q
+            std::map<STLBitsetDeterminant, double> x0_qp = excited_ref(wfn0_x, j, i);
+
+            // compute overlap <Psi_x 0th| p^+ q |Psi_g 1st>
+            value += compute_overlap(x0_qp, wfn1_g);
+
+            // set value
+            MOtransD->set(ni, nj, value);
+        }
+    }
+    MOtransD->print();
+
+    // compute transition density matrix of <Psi_x 1st| p^+ q |Psi_g 0th>
+}
+
+double ACTIVE_DSRGPT2::compute_overlap(std::map<STLBitsetDeterminant, double> wfn1,
+                                       std::map<STLBitsetDeterminant, double> wfn2) {
+    double value = 0.0;
+
+    for (const auto& p1 : wfn1) {
+        STLBitsetDeterminant det1 = p1.first;
+        if (wfn2.find(det1) != wfn2.end()) {
+            value += p1.second * wfn2[det1];
+        }
+    }
+
+    return value;
 }
 
 void ACTIVE_DSRGPT2::rotate_orbs(SharedMatrix Ca0, SharedMatrix Cb0, SharedMatrix Ua,

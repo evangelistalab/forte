@@ -104,11 +104,14 @@ class DSRG_MRPT2 : public Wavefunction {
     double Tamp_deGNO();
 
     /// Return a BlockedTensor of T1 amplitudes
-    ambit::BlockedTensor T1(const std::vector<std::string>& blocks);
+    ambit::BlockedTensor get_T1(const std::vector<std::string>& blocks);
+    ambit::BlockedTensor get_T1() {return T1_;}
     /// Return a BlockedTensor of de-normal-ordered T1 amplitudes
-    ambit::BlockedTensor T1deGNO(const std::vector<std::string>& blocks);
+    ambit::BlockedTensor get_T1deGNO(const std::vector<std::string>& blocks);
+    ambit::BlockedTensor get_T1deGNO() {return T1eff_;}
     /// Return a BlockedTensor of T2 amplitudes
-    ambit::BlockedTensor T2(const std::vector<std::string>& blocks);
+    ambit::BlockedTensor get_T2(const std::vector<std::string>& blocks);
+    ambit::BlockedTensor get_T2() {return T2_;}
 
     /// Rotate orbital basis for amplitudes according to unitary matrix U
     /// @param U unitary matrix from FCI_MO (INCLUDES frozen orbitals)
