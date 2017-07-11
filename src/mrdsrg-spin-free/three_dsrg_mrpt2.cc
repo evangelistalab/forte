@@ -1249,7 +1249,7 @@ void THREE_DSRG_MRPT2::check_t1() {
     T1norm_ = T1_.norm();
     T1max_ = 0.0;
     T1_.iterate([&](const std::vector<size_t>&, const std::vector<SpinType>&, double& value) {
-        T1max_ = T1max_ > fabs(value) ? T1max_ : fabs(value);
+        T1max_ = T1max_ > std::fabs(value) ? T1max_ : std::fabs(value);
     });
 }
 
@@ -3407,7 +3407,7 @@ void THREE_DSRG_MRPT2::relax_reference_once() {
 
     Vint.iterate(
         [&](const std::vector<size_t>& i, const std::vector<SpinType>& spin, double& value) {
-            if (fabs(value) > 1.0e-12) {
+            if (std::fabs(value) > 1.0e-12) {
                 if ((spin[0] == AlphaSpin) and (spin[1] == AlphaSpin)) {
                     value *= 1.0 +
                              dsrg_source_->compute_renormalized(Fa_[i[0]] + Fa_[i[1]] - Fa_[i[2]] -
@@ -4050,7 +4050,7 @@ void THREE_DSRG_MRPT2::de_normal_order() {
     outfile->Printf("\n    %-35s = %22.15f", "Total Energy (after)", Etest);
     outfile->Printf("\n    %-35s = %22.15f", "Total Energy (before)", Eref_ + Hbar0_);
 
-    if (fabs(Etest - Eref_ - Hbar0_) > 100.0 * options_.get_double("E_CONVERGENCE")) {
+    if (std::fabs(Etest - Eref_ - Hbar0_) > 100.0 * options_.get_double("E_CONVERGENCE")) {
         throw PSIEXCEPTION("De-normal-odering failed.");
     }
 }

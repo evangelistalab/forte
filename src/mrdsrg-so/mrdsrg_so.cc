@@ -594,7 +594,7 @@ double MRDSRG_SO::compute_energy() {
 
         // test convergence
         double rms = rms_t1 > rms_t2 ? rms_t1 : rms_t2;
-        if (fabs(Edelta) < options_.get_double("E_CONVERGENCE") &&
+        if (std::fabs(Edelta) < options_.get_double("E_CONVERGENCE") &&
             rms < options_.get_double("R_CONVERGENCE")) {
             converged = true;
         }
@@ -643,7 +643,7 @@ void MRDSRG_SO::compute_hbar() {
     //    %20e",0,Hbar0,Hbar1.norm(),Hbar2.norm());
 
     // iterator variables
-    int maxn = options_.get_int("SRG_RSC_NCOMM");
+    int maxn = options_.get_int("DSRG_RSC_NCOMM");
     double ct_threshold = options_.get_double("SRG_RSC_THRESHOLD");
     BlockedTensor C1 = ambit::BlockedTensor::build(tensor_type_, "C1", {"gg"});
     BlockedTensor C2 = ambit::BlockedTensor::build(tensor_type_, "C2", {"gggg"});
@@ -734,7 +734,7 @@ void MRDSRG_SO::compute_qhbar() {
     //    %20e",0,Hbar0,Hbar1.norm(),Hbar2.norm());
 
     // iterator variables
-    int maxn = options_.get_int("SRG_RSC_NCOMM");
+    int maxn = options_.get_int("DSRG_RSC_NCOMM");
     double ct_threshold = options_.get_double("SRG_RSC_THRESHOLD");
     BlockedTensor C1 = ambit::BlockedTensor::build(tensor_type_, "C1", {"gg"});
     BlockedTensor C2 = ambit::BlockedTensor::build(tensor_type_, "C2", {"gggg"});

@@ -183,7 +183,7 @@ double FiniteTemperatureHF::bisection(std::vector<double>& ni, double T) {
     double ef = 0.0;
     /// The number of iterations needed for bisection to converge
     /// (b - a) / 2^n <= tolerance
-    double iterations = fabs(log(1e-10) / log(fabs(ef2 - ef1)));
+    double iterations = std::fabs(log(1e-10) / log(std::fabs(ef2 - ef1)));
     int max_iter = std::ceil(iterations);
 
     if (debug_ > 1) {

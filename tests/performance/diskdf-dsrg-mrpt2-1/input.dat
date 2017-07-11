@@ -46,14 +46,12 @@ set forte {
    root_sym                0
    nroot                   1
    multiplicity            1
-#   dsrgpt                  false
    dsrg_s                  0.5
    int_type                DISKDF
    job_type                three-dsrg-mrpt2
    cas_type                FCI
-   FCI_ITERATIONS          50
    e_convergence           10
-   ms                      0
+   ms                      0.0
    print                   0
 }
 
