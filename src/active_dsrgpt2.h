@@ -244,6 +244,39 @@ class ACTIVE_DSRGPT2 : public Wavefunction {
         struct stat buffer;
         return (stat(name.c_str(), &buffer) == 0);
     }
+
+    // ==> debug functions for pt2 oscillator strength <==
+
+    /**
+     * IMPORTANT NOTE:
+     *   1) All blocks of T should be stored
+     *   2) Number of basis function should not exceed 128
+    */
+
+    /// transform the reference determinants of size nactive to size nmo with Pitzer ordering
+    std::map<STLBitsetDeterminant, double>
+    p_space_actv_to_nmo(const std::vector<STLBitsetDeterminant>& p_space, SharedVector wfn);
+
+    /// generate excited determinants from the reference
+    std::map<STLBitsetDeterminant, double>
+    excited_wfn_1st(const std::map<STLBitsetDeterminant, double>& ref, ambit::BlockedTensor& T1,
+                    ambit::BlockedTensor& T2);
+
+    /// compute pt2 oscillator strength using determinants
+    void compute_osc_pt2_dets(const int& irrep, const int& root, const double& Tde_x,
+                              ambit::BlockedTensor& T1_x, ambit::BlockedTensor& T2_x);
+
+    /// generate singly excited determinants from the reference
+    std::map<STLBitsetDeterminant, double>
+    excited_ref(const std::map<STLBitsetDeterminant, double>& ref, const int& p, const int& q);
+
+    /// compute overlap between two wavefunctions
+    double compute_overlap(std::map<STLBitsetDeterminant, double> wfn1,
+                           std::map<STLBitsetDeterminant, double> wfn2);
+
+    /// compute pt2 oscillator strength using determinants overlap
+    void compute_osc_pt2_overlap(const int& irrep, const int& root, const double& Tde_x,
+                                 ambit::BlockedTensor& T1_x, ambit::BlockedTensor& T2_x);
 };
 }
 }

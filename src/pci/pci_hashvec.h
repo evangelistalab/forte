@@ -134,7 +134,6 @@ class ProjectorCI_HashVec : public Wavefunction {
     double nuclear_repulsion_energy_;
     /// The reference determinant
     Determinant reference_determinant_;
-    //    std::vector<det_hash<>> solutions_;
     std::vector<std::pair<det_hashvec, std::vector<double>>> solutions_;
     /// The information of mo space
     std::shared_ptr<MOSpaceInfo> mo_space_info_;
@@ -144,10 +143,6 @@ class ProjectorCI_HashVec : public Wavefunction {
     double pqpq_max_aa_, pqpq_max_ab_, pqpq_max_bb_;
     /// maximum element in (pq|pq) matrix
     std::vector<double> pqpq_row_max_;
-    /// 2loop total count
-    size_t schwarz_total_;
-    /// 2loop schwarz succeed count
-    size_t schwarz_succ_;
 
     // * Calculation info
     /// The threshold applied to the primary space
@@ -158,8 +153,6 @@ class ProjectorCI_HashVec : public Wavefunction {
     size_t max_guess_size_;
     /// The size of the time step (TAU)
     double time_step_;
-    /// Use an adaptive time step?
-    bool adaptive_beta_;
     /// Shift the Hamiltonian?
     bool do_shift_;
     /// Use intermediate normalization?
@@ -192,26 +185,14 @@ class ProjectorCI_HashVec : public Wavefunction {
     bool print_full_wavefunction_;
 
     // * Simple Prescreening
-    /// Prescreen spawning using general integral upper bounds
-    bool do_simple_prescreening_;
-    /// Prescreen spawning using schwarz inequality
-    bool do_schwarz_prescreening_;
-    /// Prescreen spawning using initiator approximation
-    bool do_initiator_approx_;
-    /// Initiator approximation factor
-    double initiator_approx_factor_;
     /// Maximum value of the one-electron coupling
     double new_max_one_HJI_;
     double old_max_one_HJI_;
     /// Maximum value of the two-electron coupling
     double new_max_two_HJI_;
     double old_max_two_HJI_;
-    /// The tollerance factor applied when prescreening singles
-    double prescreening_tollerance_factor_;
 
     // * Dynamics Prescreening
-    /// Prescreen spawning using a dynamic integral upper bounds
-    bool do_dynamic_prescreening_;
     /// A map used to store the largest absolute value of the couplings of a
     /// determinant to all of its singly and doubly excited states.
     /// Bounds are stored as a pair (f_max,v_max) where f_max and v_max are
@@ -263,46 +244,22 @@ class ProjectorCI_HashVec : public Wavefunction {
     int chebyshev_order_;
     /// Order of Krylov subspace truncate
     int krylov_order_;
-    /// Threshold for norm of orthogonal basis to be colinear.
-    double colinear_threshold_;
 
     // * Convergence analysis
     /// Shift of Hamiltonian
     double shift_;
     /// lowest e-value in initial guess
     double lambda_1_;
-    /// Second lowest e-value in initial guess
-    //    double lambda_2_;
     /// Highest possible e-value
     double lambda_h_;
     /// Characteristic function coefficients
     std::vector<double> cha_func_coefs_;
     /// Do result perturbation analysis
     bool do_perturb_analysis_;
-    /// Use symmetric approximated hamiltonian
-    bool symm_approx_H_;
     /// Stop iteration when higher new low detected
     bool stop_higher_new_low_;
     double lastLow = 0.0;
     bool previous_go_up = false;
-
-    // * Reference spawning
-    /// Spawning according to the coefficient in a reference
-    bool reference_spawning_;
-
-    //    // * Helping statistic
-    //    /// Hash for statistics
-    //    det_hash<size_t> statistic_hash;
-    //    /// Vector for statistics
-    //    std::vector<Determinant> statistic_vec;
-    //    void count_hash(Determinant det) {
-    //        auto it = statistic_hash.find(det);
-    //        if (it == statistic_hash.end()) {
-    //            statistic_vec.push_back(det);
-    //            statistic_hash[det] = 0;
-    //        }
-    //        statistic_hash[det]++;
-    //    }
 
     // ==> Class functions <==
 

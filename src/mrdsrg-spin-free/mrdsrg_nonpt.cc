@@ -64,7 +64,7 @@ void MRDSRG::compute_hbar() {
 
     // iteration variables
     bool converged = false;
-    int maxn = options_.get_int("SRG_RSC_NCOMM");
+    int maxn = options_.get_int("DSRG_RSC_NCOMM");
     double ct_threshold = options_.get_double("SRG_RSC_THRESHOLD");
     std::string dsrg_op = options_.get_str("DSRG_TRANS_TYPE");
 
@@ -148,7 +148,7 @@ void MRDSRG::compute_hbar() {
     }
     if (!converged) {
         outfile->Printf("\n    Warning! Hbar is not converged in %3d-nested commutators!", maxn);
-        outfile->Printf("\n    Please increase SRG_RSC_NCOMM.");
+        outfile->Printf("\n    Please increase DSRG_RSC_NCOMM.");
     }
 }
 
