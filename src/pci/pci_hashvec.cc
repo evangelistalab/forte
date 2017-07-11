@@ -2349,9 +2349,9 @@ double ProjectorCI_HashVec::form_H_C(const det_hashvec& dets_hashvec, std::vecto
                 detJ.set_alfa_bit(ii, false);
                 detJ.set_alfa_bit(aa, true);
                 size_t index = dets_hashvec.find(detJ);
-                if (index <= cut_index) {
+                if (index < I) {
                     HJI = detI.slater_rules_single_alpha(ii, aa);
-                    result += HJI * CI * C[index];
+                    result += 2.0 * HJI * CI * C[index];
                 }
                 detJ.set_alfa_bit(ii, true);
                 detJ.set_alfa_bit(aa, false);
@@ -2367,9 +2367,9 @@ double ProjectorCI_HashVec::form_H_C(const det_hashvec& dets_hashvec, std::vecto
                 detJ.set_beta_bit(ii, false);
                 detJ.set_beta_bit(aa, true);
                 size_t index = dets_hashvec.find(detJ);
-                if (index <= cut_index) {
+                if (index < I) {
                     HJI = detI.slater_rules_single_beta(ii, aa);
-                    result += HJI * CI * C[index];
+                    result += 2.0 * HJI * CI * C[index];
                 }
                 detJ.set_beta_bit(ii, true);
                 detJ.set_beta_bit(aa, false);
@@ -2393,10 +2393,10 @@ double ProjectorCI_HashVec::form_H_C(const det_hashvec& dets_hashvec, std::vecto
                         detJ.set_alfa_bit(aa, true);
                         detJ.set_alfa_bit(bb, true);
                         size_t index = dets_hashvec.find(detJ);
-                        if (index <= cut_index) {
+                        if (index < I) {
                             sign = detJ.double_excitation_aa(aa, bb, ii, jj);
                             HJI = fci_ints_->tei_aa(ii, jj, aa, bb);
-                            result += sign * HJI * CI * C[index];
+                            result += 2.0 * sign * HJI * CI * C[index];
                         } else {
                             detJ.set_alfa_bit(ii, true);
                             detJ.set_alfa_bit(jj, true);
@@ -2424,10 +2424,10 @@ double ProjectorCI_HashVec::form_H_C(const det_hashvec& dets_hashvec, std::vecto
                         detJ.set_alfa_bit(aa, true);
                         detJ.set_beta_bit(bb, true);
                         size_t index = dets_hashvec.find(detJ);
-                        if (index <= cut_index) {
+                        if (index < I) {
                             sign = detJ.double_excitation_ab(aa, bb, ii, jj);
                             HJI = fci_ints_->tei_ab(ii, jj, aa, bb);
-                            result += sign * HJI * CI * C[index];
+                            result += 2.0 * sign * HJI * CI * C[index];
                         } else {
                             detJ.set_alfa_bit(ii, true);
                             detJ.set_beta_bit(jj, true);
@@ -2454,10 +2454,10 @@ double ProjectorCI_HashVec::form_H_C(const det_hashvec& dets_hashvec, std::vecto
                         detJ.set_beta_bit(aa, true);
                         detJ.set_beta_bit(bb, true);
                         size_t index = dets_hashvec.find(detJ);
-                        if (index <= cut_index) {
+                        if (index < I) {
                             sign = detJ.double_excitation_bb(aa, bb, ii, jj);
                             HJI = fci_ints_->tei_bb(ii, jj, aa, bb);
-                            result += sign * HJI * CI * C[index];
+                            result += 2.0 * sign * HJI * CI * C[index];
                         } else {
                             detJ.set_beta_bit(ii, true);
                             detJ.set_beta_bit(jj, true);
