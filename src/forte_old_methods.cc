@@ -424,7 +424,8 @@ void forte_old_methods(SharedWavefunction ref_wfn, Options& options,
             dmrg.set_max_rdm(3);
             dmrg.compute_energy();
             Reference dmrg_reference = dmrg.reference();
-            if (options.get_bool("SEMI_CANONICAL") and !options.get_bool("CASSCF_REFERENCE")) {
+           // if (options.get_bool("SEMI_CANONICAL") and !options.get_bool("CASSCF_REFERENCE")) {
+            if (options.get_bool("SEMI_CANONICAL")) {
                 SemiCanonical semi(ref_wfn, options, ints, mo_space_info, dmrg_reference);
                 semi.semicanonicalize(dmrg_reference);
             }
@@ -498,7 +499,7 @@ void forte_old_methods(SharedWavefunction ref_wfn, Options& options,
             fci->set_max_rdm_level(3);
             fci->compute_energy();
             Reference reference = fci->reference();
-            if (options.get_bool("SEMI_CANONICAL") and !options.get_bool("CASSCF_REFERENCE")) {
+            if (options.get_bool("SEMI_CANONICAL")) {
                 SemiCanonical semi(ref_wfn, options, ints, mo_space_info, reference);
                 semi.semicanonicalize(reference);
             }
@@ -517,7 +518,7 @@ void forte_old_methods(SharedWavefunction ref_wfn, Options& options,
             dmrg.compute_energy();
 
             Reference dmrg_reference = dmrg.reference();
-            if (options.get_bool("SEMI_CANONICAL") and !options.get_bool("CASSCF_REFERENCE")) {
+            if (options.get_bool("SEMI_CANONICAL")) {
                 SemiCanonical semi(ref_wfn, options, ints, mo_space_info, dmrg_reference);
                 semi.semicanonicalize(dmrg_reference);
             }
