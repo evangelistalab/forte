@@ -354,6 +354,9 @@ class ProjectorCI_HashVec : public Wavefunction {
     /// Form the product H c
     double form_H_C(const det_hashvec& dets_hashvec, std::vector<double>& C, size_t I,
                     size_t cut_index);
+    /// Form the product H c
+    double form_H_C_2(const det_hashvec& dets_hashvec, std::vector<double>& C, size_t I,
+                    size_t cut_index);
     /// Do we have OpenMP?
     static bool have_omp_;
 
@@ -371,8 +374,11 @@ class ProjectorCI_HashVec : public Wavefunction {
 
     /// Compute the double excitation couplings
     void compute_double_couplings(double double_coupling_threshold);
-    //    void compute_single_excite_max_double_couplings();
+    /// Compute the single excitation couplings
     void compute_single_couplings(double single_coupling_threshold);
+
+    /// Compute half the single and double excitation couplings
+    void compute_couplings_half(const det_hashvec &dets, size_t cut_index);
 
     /// Returns a vector of orbital energy, sym label pairs
     std::vector<std::tuple<double, int, int>> sym_labeled_orbitals(std::string type);
