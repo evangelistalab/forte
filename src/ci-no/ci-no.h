@@ -36,6 +36,7 @@ namespace forte {
 
 class ForteOptions;
 
+
 /// Set the CI-NO options
 void set_CINO_options(ForteOptions& foptions);
 
@@ -101,6 +102,8 @@ class CINO : public Wavefunction {
     int wavefunction_multiplicity_ = 0;
     // The number of correlated mos
     size_t ncmo2_;
+    ///Pass MoSpaceInfo
+    bool cino_auto;
 
     //The RDMS
     std::vector<double> ordm_a_;
