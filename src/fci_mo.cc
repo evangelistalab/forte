@@ -380,7 +380,7 @@ void FCI_MO::read_options() {
                 }
                 weights.push_back(weight);
             }
-            if (fabs(wsum - 1.0) > 1.0e-10) {
+            if (std::fabs(wsum - 1.0) > 1.0e-10) {
                 outfile->Printf("\n  Error: AVG_WEIGHT entries do not add up "
                                 "to 1.0. Sum = %.10f",
                                 wsum);
@@ -1224,8 +1224,8 @@ void FCI_MO::semi_canonicalize() {
 
             for (int j = actv_start; j < actv_end; ++j) {
                 double s = MOoverlap->get(h, i, j);
-                if (fabs(s) > smax) {
-                    smax = fabs(s);
+                if (std::fabs(s) > smax) {
+                    smax = std::fabs(s);
                     ii = j;
                 }
             }
@@ -1417,9 +1417,9 @@ void FCI_MO::semi_canonicalize() {
 
     //            double v1 = tempH.data()[p * ncmo_ + q];
     //            double v2 = H_trans.data()[p * ncmo_ + q];
-    ////            double diff = fabs(v1) - fabs(v2);
+    ////            double diff = std::fabs(v1) - std::fabs(v2);
     //            double diff = v1 - v2;
-    //            if(fabs(diff) > 1.0e-12){
+    //            if(std::fabs(diff) > 1.0e-12){
     //                outfile->Printf("\n  diff of H[%3zu][%3zu] = %20.15f", p,
     //                q, diff);
     //            }
@@ -1430,8 +1430,8 @@ void FCI_MO::semi_canonicalize() {
     //                    ncmo_ + s];
     //                    double v4 = Vaa_trans.data()[p * ncmo3 + q * ncmo2 + r
     //                    * ncmo_ + s];
-    //                    double diff = fabs(v3) - fabs(v4);
-    //                    if(fabs(diff) > 1.0e-12){
+    //                    double diff = std::fabs(v3) - std::fabs(v4);
+    //                    if(std::fabs(diff) > 1.0e-12){
     //                        outfile->Printf("\n  diff of
     //                        V[%3zu][%3zu][%3zu][%3zu] = %20.15f", p, q, r, s,
     //                        diff);
@@ -1907,7 +1907,7 @@ void FCI_MO::print2PDC(const string& str, const d4& TwoPDC, const int& PRINT) {
         for (size_t j = 0; j != TwoPDC[i].size(); ++j) {
             for (size_t k = 0; k != TwoPDC[i][j].size(); ++k) {
                 for (size_t l = 0; l != TwoPDC[i][j][k].size(); ++l) {
-                    if (fabs(TwoPDC[i][j][k][l]) > 1.0e-15) {
+                    if (std::fabs(TwoPDC[i][j][k][l]) > 1.0e-15) {
                         ++count;
                         if (PRINT > 2)
                             outfile->Printf("\n  Lambda "
@@ -2202,7 +2202,7 @@ void FCI_MO::print3PDC(const string& str, const d6& ThreePDC, const int& PRINT) 
                 for (size_t l = 0; l != ThreePDC[i][j][k].size(); ++l) {
                     for (size_t m = 0; m != ThreePDC[i][j][k][l].size(); ++m) {
                         for (size_t n = 0; n != ThreePDC[i][j][k][l][m].size(); ++n) {
-                            if (fabs(ThreePDC[i][j][k][l][m][n]) > 1.0e-15) {
+                            if (std::fabs(ThreePDC[i][j][k][l][m][n]) > 1.0e-15) {
                                 ++count;
                                 if (PRINT > 3)
                                     outfile->Printf("\n  Lambda "
@@ -2483,13 +2483,13 @@ void FCI_MO::Check_FockBlock(const d2& A, const d2& B, const double& E, size_t& 
         for (size_t q = 0; q < dim; ++q) {
             size_t nq = idx[q];
             if (np != nq) {
-                if (fabs(A[np][nq]) > E) {
+                if (std::fabs(A[np][nq]) > E) {
                     ++a;
-                    maxa = (fabs(A[np][nq]) > maxa) ? fabs(A[np][nq]) : maxa;
+                    maxa = (std::fabs(A[np][nq]) > maxa) ? std::fabs(A[np][nq]) : maxa;
                 }
-                if (fabs(B[np][nq]) > E) {
+                if (std::fabs(B[np][nq]) > E) {
                     ++b;
-                    maxb = (fabs(B[np][nq]) > maxb) ? fabs(B[np][nq]) : maxb;
+                    maxb = (std::fabs(B[np][nq]) > maxb) ? std::fabs(B[np][nq]) : maxb;
                 }
             }
         }
@@ -2788,9 +2788,9 @@ bool FCI_MO::CheckDensity() {
             for (size_t q = 0; q < dim; ++q) {
                 size_t nq = idx[q];
                 if (np != nq) {
-                    if (fabs(Da_[np][nq]) > maxa)
+                    if (std::fabs(Da_[np][nq]) > maxa)
                         maxa = Da_[np][nq];
-                    if (fabs(Db_[np][nq]) > maxb)
+                    if (std::fabs(Db_[np][nq]) > maxb)
                         maxb = Db_[np][nq];
                 }
             }
@@ -2813,7 +2813,7 @@ bool FCI_MO::CheckDensity() {
     }
 
     bool natural = false;
-    if (fabs(maxes_sum) > 10.0 * dconv_) {
+    if (std::fabs(maxes_sum) > 10.0 * dconv_) {
         std::string sep(3 + 16 * 3, '-');
         outfile->Printf("\n    Warning! Orbitals are not natural orbitals!");
         outfile->Printf("\n    Max off-diagonal values of core, active, "
@@ -3163,9 +3163,9 @@ d3 FCI_MO::compute_orbital_extents() {
             }
         }
 
-        quadrupole[0]->set(0, i, fabs(sumx));
-        quadrupole[1]->set(0, i, fabs(sumy));
-        quadrupole[2]->set(0, i, fabs(sumz));
+        quadrupole[0]->set(0, i, std::fabs(sumx));
+        quadrupole[1]->set(0, i, std::fabs(sumy));
+        quadrupole[2]->set(0, i, std::fabs(sumz));
     }
 
     SharedVector epsilon_a = this->epsilon_a();

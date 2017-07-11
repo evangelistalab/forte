@@ -143,7 +143,7 @@ void DSRG_MRPT::analyze_amplitudes(BlockedTensor& T1, BlockedTensor& T2, std::st
 template <class T1, class T2, class G3 = std::greater<T2>> struct rsort_pair_second {
     bool operator()(const std::pair<T1, T2>& left, const std::pair<T1, T2>& right) {
         G3 p;
-        return p(fabs(left.second), fabs(right.second));
+        return p(std::fabs(left.second), std::fabs(right.second));
     }
 };
 
@@ -153,7 +153,7 @@ void DSRG_MRPT::check_t2(BlockedTensor& T2) {
 
     for (const std::string& block : T2.block_labels()) {
         T2.block(block).citerate([&](const std::vector<size_t>& i, const double& value) {
-            if (fabs(value) > 1.0e-15) {
+            if (std::fabs(value) > 1.0e-15) {
                 size_t idx0 = label_to_spacemo_[block[0]][i[0]];
                 size_t idx1 = label_to_spacemo_[block[1]][i[1]];
                 size_t idx2 = label_to_spacemo_[block[2]][i[2]];
@@ -173,7 +173,7 @@ void DSRG_MRPT::check_t2(BlockedTensor& T2) {
                         t2_idx_pair.pop_back();
                     }
 
-                    if (fabs(value) > fabs(intruder_tamp_)) {
+                    if (std::fabs(value) > std::fabs(intruder_tamp_)) {
                         lt2_.push_back(idx_value);
                     }
                     std::sort(lt2_.begin(), lt2_.end(),
@@ -193,7 +193,7 @@ void DSRG_MRPT::check_t1(BlockedTensor& T1) {
 
     for (const std::string& block : T1.block_labels()) {
         T1.block(block).citerate([&](const std::vector<size_t>& i, const double& value) {
-            if (fabs(value) > 1.0e-15) {
+            if (std::fabs(value) > 1.0e-15) {
                 size_t idx0 = label_to_spacemo_[block[0]][i[0]];
                 size_t idx1 = label_to_spacemo_[block[1]][i[1]];
 
@@ -209,7 +209,7 @@ void DSRG_MRPT::check_t1(BlockedTensor& T1) {
                     t1_idx_pair.pop_back();
                 }
 
-                if (fabs(value) > fabs(intruder_tamp_)) {
+                if (std::fabs(value) > std::fabs(intruder_tamp_)) {
                     lt1_.push_back(idx_value);
                 }
                 std::sort(lt1_.begin(), lt1_.end(),

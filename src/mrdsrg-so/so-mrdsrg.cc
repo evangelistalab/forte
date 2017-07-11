@@ -735,7 +735,7 @@ double SOMRDSRG::compute_energy() {
                         "%7.4f %7.4f %7.4f %7.4f",
                         cycle, energy, delta_energy, 0, 0, norm_T1, norm_T2, max_T1, max_T2);
 
-        if (fabs(delta_energy) < options_.get_double("E_CONVERGENCE")) {
+        if (std::fabs(delta_energy) < options_.get_double("E_CONVERGENCE")) {
             converged = true;
         }
 
@@ -807,7 +807,7 @@ double SOMRDSRG::compute_hbar() {
         outfile->Printf("\n  %2d %20.12f %20e %20e", 0, Hbar0, Hbar1.norm(), Hbar2.norm());
     }
 
-    int maxn = options_.get_int("SRG_RSC_NCOMM");
+    int maxn = options_.get_int("DSRG_RSC_NCOMM");
     double ct_threshold = options_.get_double("SRG_RSC_THRESHOLD");
     for (int n = 1; n <= maxn; ++n) {
         double factor = 1.0 / static_cast<double>(n);

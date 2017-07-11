@@ -1316,7 +1316,7 @@ void SparseCISolver::diagonalize_full(const std::vector<STLBitsetDeterminant>& s
         for (size_t i = 0; i < dim_space; ++i) {
             double multi = std::sqrt(1.0 + 4.0 * S2vals.get(i));
             double error = std::round(multi) - multi;
-            if (fabs(error) < Stollerance) {
+            if (std::fabs(error) < Stollerance) {
                 int multi_round = std::round(multi);
                 multi_list[multi_round].push_back(i);
             } else {

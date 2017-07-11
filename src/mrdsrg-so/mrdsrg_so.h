@@ -208,7 +208,7 @@ class MRDSRG_SO : public Wavefunction {
     void renormalize_F();
     void renormalize_V();
     double renormalized_exp(double D) { return std::exp(-s_ * pow(D, 2.0)); }
-    double renormalized_exp_linear(double D) { return std::exp(-s_ * fabs(D)); }
+    double renormalized_exp_linear(double D) { return std::exp(-s_ * std::fabs(D)); }
 
     /// Effective Hamiltonian Hbar
     double Hbar0;

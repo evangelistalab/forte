@@ -977,7 +977,7 @@ double DMRGSCF::compute_energy() {
             CheMPS2::DMRG* theDMRG = new CheMPS2::DMRG(Prob, OptScheme, mps_chkpt, psi4TMPpath);
             for (int state = 0; state < dmrgscf_which_root; state++) {
                 if (state > 0) {
-                    theDMRG->newExcitation(fabs(Energy));
+                    theDMRG->newExcitation(std::fabs(Energy));
                 }
                 Energy = theDMRG->Solve();
                 if (dmrgscf_state_avg) { // When SA-DMRGSCF: 2DM += current 2DM

@@ -405,7 +405,7 @@ double ElementwiseCI::estimate_high_energy() {
             for (int a = avir_offset[h]; a < avir_offset[h + 1]; ++a) {
                 int aa = avir[a];
                 double HJI = high_det.slater_rules_single_alpha(ii, aa);
-                lambda_h_G += fabs(HJI);
+                lambda_h_G += std::fabs(HJI);
             }
         }
     }
@@ -416,7 +416,7 @@ double ElementwiseCI::estimate_high_energy() {
             for (int a = bvir_offset[h]; a < bvir_offset[h + 1]; ++a) {
                 int aa = bvir[a];
                 double HJI = high_det.slater_rules_single_beta(ii, aa);
-                lambda_h_G += fabs(HJI);
+                lambda_h_G += std::fabs(HJI);
             }
         }
     }
@@ -435,7 +435,7 @@ double ElementwiseCI::estimate_high_energy() {
                 for (int b = minb; b < maxb; ++b) {
                     int bb = avir[b];
                     double HJI = fci_ints_->tei_aa(ii, jj, aa, bb);
-                    lambda_h_G += fabs(HJI);
+                    lambda_h_G += std::fabs(HJI);
                 }
             }
         }
@@ -453,7 +453,7 @@ double ElementwiseCI::estimate_high_energy() {
                 for (int b = minb; b < maxb; ++b) {
                     int bb = bvir[b];
                     double HJI = fci_ints_->tei_ab(ii, jj, aa, bb);
-                    lambda_h_G += fabs(HJI);
+                    lambda_h_G += std::fabs(HJI);
                 }
             }
         }
@@ -472,7 +472,7 @@ double ElementwiseCI::estimate_high_energy() {
                 for (int b = minb; b < maxb; ++b) {
                     int bb = bvir[b];
                     double HJI = fci_ints_->tei_bb(ii, jj, aa, bb);
-                    lambda_h_G += fabs(HJI);
+                    lambda_h_G += std::fabs(HJI);
                 }
             }
         }
@@ -581,15 +581,15 @@ double ElementwiseCI::compute_energy() {
 
     for (size_t i = 0; i < (size_t)ncmo_; ++i) {
         for (size_t j = 0; j < (size_t)ncmo_; ++j) {
-            double temp_aa = sqrt(fabs(fci_ints_->tei_aa(i, j, i, j)));
+            double temp_aa = sqrt(std::fabs(fci_ints_->tei_aa(i, j, i, j)));
             pqpq_aa_[i * ncmo_ + j] = temp_aa;
             if (temp_aa > pqpq_max_aa_)
                 pqpq_max_aa_ = temp_aa;
-            double temp_ab = sqrt(fabs(fci_ints_->tei_ab(i, j, i, j)));
+            double temp_ab = sqrt(std::fabs(fci_ints_->tei_ab(i, j, i, j)));
             pqpq_ab_[i * ncmo_ + j] = temp_ab;
             if (temp_ab > pqpq_max_ab_)
                 pqpq_max_ab_ = temp_ab;
-            double temp_bb = sqrt(fabs(fci_ints_->tei_bb(i, j, i, j)));
+            double temp_bb = sqrt(std::fabs(fci_ints_->tei_bb(i, j, i, j)));
             pqpq_bb_[i * ncmo_ + j] = temp_bb;
             if (temp_bb > pqpq_max_bb_)
                 pqpq_max_bb_ = temp_bb;
@@ -651,7 +651,7 @@ double ElementwiseCI::compute_energy() {
         timer_on("PIFCI:Step");
         if (use_inter_norm_) {
             auto minmax_C = std::minmax_element(C.begin(), C.end());
-            double min_C_abs = fabs(*minmax_C.first);
+            double min_C_abs = std::fabs(*minmax_C.first);
             double max_C = *minmax_C.second;
             max_C = max_C > min_C_abs ? max_C : min_C_abs;
             propagate(generator_, dets_hashvec, C, time_step_, spawning_threshold_ * max_C, shift_);
@@ -1061,7 +1061,7 @@ void ElementwiseCI::propagate_DL(det_hashvec& dets_hashvec, std::vector<double>&
         e_gradiant += lambda;
         outfile->Printf("\nDavidson iter %4d order %4d correction norm %10.3e dE %10.3e.", i,
                         current_order, correct_norm, e_gradiant);
-        if (fabs(e_gradiant) < e_convergence_) {
+        if (std::fabs(e_gradiant) < e_convergence_) {
             i++;
             break;
         }
@@ -1159,7 +1159,7 @@ void ElementwiseCI::apply_tau_H_ref_C_symm(double tau, double spawning_threshold
                                                max_coupling);
 #pragma omp critical(dets)
             {
-                dets_hashvec_merge.merge(thread_det_C_vec, C_merge,
+                merge(dets_hashvec_merge, C_merge, thread_det_C_vec,
                                          std::function<double(double, double)>(std::plus<double>()),
                                          0.0, false);
             }
@@ -1172,7 +1172,7 @@ void ElementwiseCI::apply_tau_H_ref_C_symm(double tau, double spawning_threshold
                                                max_coupling);
 #pragma omp critical(dets)
             {
-                dets_hashvec_merge.merge(thread_det_C_vec, C_merge,
+                merge(dets_hashvec_merge, C_merge, thread_det_C_vec,
                                          std::function<double(double, double)>(std::plus<double>()),
                                          0.0, false);
             }
@@ -1743,19 +1743,19 @@ double ElementwiseCI::compute_max_double_coupling() {
     std::vector<double> tei_ab = fci_ints_->tei_ab_vector();
     std::vector<double> tei_bb = fci_ints_->tei_bb_vector();
     auto minmax_aa_iter = std::minmax_element(tei_aa.begin(), tei_aa.end());
-    dets_double_max_coupling_ = fabs(*(minmax_aa_iter.first));
-    if (fabs(*(minmax_aa_iter.second)) > dets_double_max_coupling_)
-        dets_double_max_coupling_ = fabs(*(minmax_aa_iter.second));
+    dets_double_max_coupling_ = std::fabs(*(minmax_aa_iter.first));
+    if (std::fabs(*(minmax_aa_iter.second)) > dets_double_max_coupling_)
+        dets_double_max_coupling_ = std::fabs(*(minmax_aa_iter.second));
     auto minmax_ab_iter = std::minmax_element(tei_ab.begin(), tei_ab.end());
-    if (fabs(*(minmax_ab_iter.first)) > dets_double_max_coupling_)
-        dets_double_max_coupling_ = fabs(*(minmax_ab_iter.first));
-    if (fabs(*(minmax_ab_iter.second)) > dets_double_max_coupling_)
-        dets_double_max_coupling_ = fabs(*(minmax_ab_iter.second));
+    if (std::fabs(*(minmax_ab_iter.first)) > dets_double_max_coupling_)
+        dets_double_max_coupling_ = std::fabs(*(minmax_ab_iter.first));
+    if (std::fabs(*(minmax_ab_iter.second)) > dets_double_max_coupling_)
+        dets_double_max_coupling_ = std::fabs(*(minmax_ab_iter.second));
     auto minmax_bb_iter = std::minmax_element(tei_bb.begin(), tei_bb.end());
-    if (fabs(*(minmax_bb_iter.first)) > dets_double_max_coupling_)
-        dets_double_max_coupling_ = fabs(*(minmax_bb_iter.first));
-    if (fabs(*(minmax_bb_iter.second)) > dets_double_max_coupling_)
-        dets_double_max_coupling_ = fabs(*(minmax_bb_iter.second));
+    if (std::fabs(*(minmax_bb_iter.first)) > dets_double_max_coupling_)
+        dets_double_max_coupling_ = std::fabs(*(minmax_bb_iter.first));
+    if (std::fabs(*(minmax_bb_iter.second)) > dets_double_max_coupling_)
+        dets_double_max_coupling_ = std::fabs(*(minmax_bb_iter.second));
     return dets_double_max_coupling_;
 }
 }

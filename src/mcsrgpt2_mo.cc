@@ -234,28 +234,28 @@ void MCSRGPT2_MO::startup(Options& options) {
 }
 
 double MCSRGPT2_MO::ElementRH(const string& source, const double& D, const double& V) {
-    if (fabs(V) < 1.0e-12)
+    if (std::fabs(V) < 1.0e-12)
         return 0.0;
     switch (sourcemap[source]) {
     case AMP: {
         double RD = D / V;
-        return V * exp(-s_ * pow(fabs(RD), expo_delta_));
+        return V * exp(-s_ * pow(std::fabs(RD), expo_delta_));
     }
     case EMP2: {
         double RD = D / (V * V);
-        return V * exp(-s_ * pow(fabs(RD), expo_delta_));
+        return V * exp(-s_ * pow(std::fabs(RD), expo_delta_));
     }
     case LAMP: {
         double RD = D / V;
         //        outfile->Printf("\n  D = %20.15f, V = %20.15f, RD = %20.15f,
-        //        EXP = %20.15f", D, V, RD, V * exp(-s_ * fabs(RD)));
-        return V * exp(-s_ * fabs(RD));
+        //        EXP = %20.15f", D, V, RD, V * exp(-s_ * std::fabs(RD)));
+        return V * exp(-s_ * std::fabs(RD));
     }
     case LEMP2: {
         double RD = D / (V * V);
-        return V * exp(-s_ * fabs(RD));
+        return V * exp(-s_ * std::fabs(RD));
     }
-    default: { return V * exp(-s_ * pow(fabs(D), expo_delta_)); }
+    default: { return V * exp(-s_ * pow(std::fabs(D), expo_delta_)); }
     }
 }
 
@@ -436,51 +436,51 @@ void MCSRGPT2_MO::compute_ref() {
 }
 
 double MCSRGPT2_MO::ElementT(const string& source, const double& D, const double& V) {
-    if (fabs(V) < 1.0e-12)
+    if (std::fabs(V) < 1.0e-12)
         return 0.0;
     switch (sourcemap[source]) {
     case AMP: {
         double RD = D / V;
         double Z = pow(s_, 1 / expo_delta_) * RD;
-        if (fabs(Z) < pow(0.1, taylor_threshold_)) {
+        if (std::fabs(Z) < pow(0.1, taylor_threshold_)) {
             return Taylor_Exp(Z, taylor_order_, expo_delta_) * sqrt(s_);
         } else {
-            return (1 - exp(-1.0 * s_ * pow(fabs(RD), expo_delta_))) * V / D;
+            return (1 - exp(-1.0 * s_ * pow(std::fabs(RD), expo_delta_))) * V / D;
         }
     }
     case EMP2: {
         double RD = D / V;
         double Z = pow(s_, 1 / expo_delta_) * RD / V;
-        if (fabs(Z) < pow(0.1, taylor_threshold_)) {
+        if (std::fabs(Z) < pow(0.1, taylor_threshold_)) {
             return Taylor_Exp(Z, taylor_order_, expo_delta_) * sqrt(s_) / V;
         } else {
-            return (1 - exp(-1.0 * s_ * pow(fabs(RD / V), expo_delta_))) * V / D;
+            return (1 - exp(-1.0 * s_ * pow(std::fabs(RD / V), expo_delta_))) * V / D;
         }
     }
     case LAMP: {
         double RD = D / V;
         double Z = s_ * RD;
-        if (fabs(Z) < pow(0.1, taylor_threshold_)) {
+        if (std::fabs(Z) < pow(0.1, taylor_threshold_)) {
             return Taylor_Exp_Linear(Z, 2 * taylor_order_) * s_;
         } else {
-            return (1 - exp(-1.0 * s_ * fabs(RD))) * V / D;
+            return (1 - exp(-1.0 * s_ * std::fabs(RD))) * V / D;
         }
     }
     case LEMP2: {
         double RD = D / V;
         double Z = s_ * RD / V;
-        if (fabs(Z) < pow(0.1, taylor_threshold_)) {
+        if (std::fabs(Z) < pow(0.1, taylor_threshold_)) {
             return Taylor_Exp_Linear(Z, 2 * taylor_order_) * s_ / V;
         } else {
-            return (1 - exp(-1.0 * s_ * fabs(RD / V))) * V / D;
+            return (1 - exp(-1.0 * s_ * std::fabs(RD / V))) * V / D;
         }
     }
     default: {
         double Z = pow(s_, 1 / expo_delta_) * D;
-        if (fabs(Z) < pow(0.1, taylor_threshold_)) {
+        if (std::fabs(Z) < pow(0.1, taylor_threshold_)) {
             return Taylor_Exp(Z, taylor_order_, expo_delta_) * pow(s_, 1 / expo_delta_) * V;
         } else {
-            return (1 - exp(-1.0 * s_ * pow(fabs(D), expo_delta_))) * V / D;
+            return (1 - exp(-1.0 * s_ * pow(std::fabs(D), expo_delta_))) * V / D;
         }
     }
     }
@@ -798,7 +798,7 @@ void MCSRGPT2_MO::Form_T1_ISA(d2& A, d2& B, const double& b_const) {
 
 inline bool ReverseSortT2(const tuple<double, size_t, size_t, size_t, size_t>& lhs,
                           const tuple<double, size_t, size_t, size_t, size_t>& rhs) {
-    return fabs(std::get<0>(rhs)) < fabs(std::get<0>(lhs));
+    return std::fabs(std::get<0>(rhs)) < std::fabs(std::get<0>(lhs));
 }
 
 void MCSRGPT2_MO::Check_T2(const string& x, const d4& M, double& Norm, double& MaxT,
@@ -820,14 +820,14 @@ void MCSRGPT2_MO::Check_T2(const string& x, const d4& M, double& Norm, double& M
                     size_t nb = idx_p_[b];
                     double m = M[i][j][a][b];
                     value += pow(m, 2.0);
-                    if (fabs(m) > fabs(std::get<0>(Large[ntamp - 1]))) {
+                    if (std::fabs(m) > std::fabs(std::get<0>(Large[ntamp - 1]))) {
                         Large[ntamp - 1] = std::make_tuple(m, ni, nj, na, nb);
                     }
                     sort(Large.begin(), Large.end(), ReverseSortT2);
-                    if (fabs(m) > intruder)
+                    if (std::fabs(m) > intruder)
                         Max.push_back(std::make_tuple(m, ni, nj, na, nb));
                     sort(Max.begin(), Max.end(), ReverseSortT2);
-                    if (fabs(m) > options.get_double("E_CONVERGENCE"))
+                    if (std::fabs(m) > options.get_double("E_CONVERGENCE"))
                         ++count;
                 }
             }
@@ -902,7 +902,7 @@ void MCSRGPT2_MO::Check_T2(const string& x, const d4& M, double& Norm, double& M
 
 inline bool ReverseSortT1(const tuple<double, size_t, size_t>& lhs,
                           const tuple<double, size_t, size_t>& rhs) {
-    return fabs(std::get<0>(rhs)) < fabs(std::get<0>(lhs));
+    return std::fabs(std::get<0>(rhs)) < std::fabs(std::get<0>(lhs));
 }
 
 void MCSRGPT2_MO::Check_T1(const string& x, const d2& M, double& Norm, double& MaxT,
@@ -920,14 +920,14 @@ void MCSRGPT2_MO::Check_T1(const string& x, const d2& M, double& Norm, double& M
             size_t na = idx_p_[a];
             double m = M[i][a];
             value += pow(m, 2.0);
-            if (fabs(m) > fabs(std::get<0>(Large[ntamp - 1]))) {
+            if (std::fabs(m) > std::fabs(std::get<0>(Large[ntamp - 1]))) {
                 Large[ntamp - 1] = std::make_tuple(m, ni, na);
             }
             sort(Large.begin(), Large.end(), ReverseSortT1);
-            if (fabs(m) > intruder)
+            if (std::fabs(m) > intruder)
                 Max.push_back(std::make_tuple(m, ni, na));
             sort(Max.begin(), Max.end(), ReverseSortT1);
-            if (fabs(m) > options.get_double("E_CONVERGENCE"))
+            if (std::fabs(m) > options.get_double("E_CONVERGENCE"))
                 ++count;
         }
     }
@@ -1611,11 +1611,11 @@ void MCSRGPT2_MO::PrintDelta() {
 double MCSRGPT2_MO::compute_energy_dsrg() {
     timer_on("E_MCDSRGPT2");
     double T1max = T1Maxa_, T2max = T2Maxaa_;
-    if (fabs(T1max) < fabs(T1Maxb_))
+    if (std::fabs(T1max) < std::fabs(T1Maxb_))
         T1max = T1Maxb_;
-    if (fabs(T2max) < fabs(T2Maxab_))
+    if (std::fabs(T2max) < std::fabs(T2Maxab_))
         T2max = T2Maxab_;
-    if (fabs(T2max) < fabs(T2Maxbb_))
+    if (std::fabs(T2max) < std::fabs(T2Maxbb_))
         T2max = T2Maxbb_;
     double T1norm = sqrt(pow(T1Na_, 2) + pow(T1Nb_, 2));
     double T2norm = sqrt(pow(T2Naa_, 2) + 4 * pow(T2Nab_, 2) + pow(T2Nbb_, 2));

@@ -225,7 +225,7 @@ void DavidsonLiuSolver::form_correction_vectors() {
                 f_p[k][I] += alpha_p[i][k] * (sigma_p[I][i] - lambda_p[k] * b_p[i][I]);
             }
             double denom = lambda_p[k] - Adiag_p[I];
-            if (fabs(denom) > 1e-6) {
+            if (std::fabs(denom) > 1e-6) {
                 f_p[k][I] /= denom;
             } else {
                 f_p[k][I] = 0.0;

@@ -1156,7 +1156,7 @@ void DSRG_MRPT3::compute_t2() {
 
     T2_.iterate(
         [&](const std::vector<size_t>& i, const std::vector<SpinType>& spin, double& value) {
-            if (fabs(value) > 1.0e-12) {
+            if (std::fabs(value) > 1.0e-12) {
                 if ((spin[0] == AlphaSpin) and (spin[1] == AlphaSpin)) {
                     value *= dsrg_source_->compute_renormalized_denominator(Fa_[i[0]] + Fa_[i[1]] -
                                                                             Fa_[i[2]] - Fa_[i[3]]);
@@ -1245,7 +1245,7 @@ void DSRG_MRPT3::compute_t1() {
 
     T1_.iterate(
         [&](const std::vector<size_t>& i, const std::vector<SpinType>& spin, double& value) {
-            if (fabs(value) > 1.0e-12) {
+            if (std::fabs(value) > 1.0e-12) {
                 if (spin[0] == AlphaSpin) {
                     value *= dsrg_source_->compute_renormalized_denominator(Fa_[i[0]] - Fa_[i[1]]);
                 } else {
@@ -1291,7 +1291,7 @@ void DSRG_MRPT3::renormalize_V(const bool& plusone) {
     if (plusone) {
         V_.iterate(
             [&](const std::vector<size_t>& i, const std::vector<SpinType>& spin, double& value) {
-                if (fabs(value) > 1.0e-12) {
+                if (std::fabs(value) > 1.0e-12) {
                     if ((spin[0] == AlphaSpin) and (spin[1] == AlphaSpin)) {
                         value *= 1.0 +
                                  dsrg_source_->compute_renormalized(Fa_[i[0]] + Fa_[i[1]] -
@@ -1312,7 +1312,7 @@ void DSRG_MRPT3::renormalize_V(const bool& plusone) {
     } else {
         V_.iterate(
             [&](const std::vector<size_t>& i, const std::vector<SpinType>& spin, double& value) {
-                if (fabs(value) > 1.0e-12) {
+                if (std::fabs(value) > 1.0e-12) {
                     if ((spin[0] == AlphaSpin) and (spin[1] == AlphaSpin)) {
                         value *= dsrg_source_->compute_renormalized(Fa_[i[0]] + Fa_[i[1]] -
                                                                     Fa_[i[2]] - Fa_[i[3]]);
@@ -1401,7 +1401,7 @@ void DSRG_MRPT3::renormalize_F(const bool& plusone) {
 
     sum.iterate(
         [&](const std::vector<size_t>& i, const std::vector<SpinType>& spin, double& value) {
-            if (fabs(value) > 1.0e-12) {
+            if (std::fabs(value) > 1.0e-12) {
                 if (spin[0] == AlphaSpin) {
                     value *= dsrg_source_->compute_renormalized(Fa_[i[0]] - Fa_[i[1]]);
                 } else {
@@ -1710,13 +1710,13 @@ double DSRG_MRPT3::compute_energy_relaxed() {
             const double threshold = 0.90;
             int more_roots = (fciwfn0_->size() < 5) ? fciwfn0_->size() : 5;
 
-            if (fabs(overlap) > threshold) {
+            if (std::fabs(overlap) > threshold) {
                 outfile->Printf("\n    Overlap: <Phi0_unrelaxed|Phi0_relaxed> = %4.3f.",
-                                fabs(overlap));
+                                std::fabs(overlap));
             } else {
                 outfile->Printf("\n    Warning: overlap "
                                 "<Phi0_unrelaxed|Phi0_relaxed> = %4.3f < %.2f.",
-                                fabs(overlap), threshold);
+                                std::fabs(overlap), threshold);
                 outfile->Printf("\n    FCI seems to find the wrong root. Try "
                                 "%d more roots.",
                                 more_roots);
@@ -1739,8 +1739,8 @@ double DSRG_MRPT3::compute_energy_relaxed() {
 
                     outfile->Printf("\n    Current overlap "
                                     "<Phi0_unrelaxed|Phi0_relaxed> = %4.3f.",
-                                    fabs(overlap));
-                    if (fabs(overlap) >= threshold) {
+                                    std::fabs(overlap));
+                    if (std::fabs(overlap) >= threshold) {
                         outfile->Printf("\n    This root seems to be OK. Stop "
                                         "trying more roots.");
                         find = true;
@@ -1901,7 +1901,7 @@ void DSRG_MRPT3::transfer_integrals() {
     outfile->Printf("\n    %-35s = %22.15f", "Total Energy (after)", Etest);
     outfile->Printf("\n    %-35s = %22.15f", "Total Energy (before)", Eref_ + Hbar0_);
 
-    if (fabs(Etest - Eref_ - Hbar0_) > 100.0 * options_.get_double("E_CONVERGENCE")) {
+    if (std::fabs(Etest - Eref_ - Hbar0_) > 100.0 * options_.get_double("E_CONVERGENCE")) {
         throw PSIEXCEPTION("De-normal-odering failed.");
     } else {
         if (!eri_df_) {
@@ -5623,7 +5623,7 @@ void DSRG_MRPT3::combine_tensor(ambit::Tensor& tens, ambit::Tensor& tens_h, cons
 template <class T1, class T2, class G3 = std::greater<T2>> struct rsort_pair_second {
     bool operator()(const std::pair<T1, T2>& left, const std::pair<T1, T2>& right) {
         G3 p;
-        return p(fabs(left.second), fabs(right.second));
+        return p(std::fabs(left.second), std::fabs(right.second));
     }
 };
 
@@ -5646,7 +5646,7 @@ void DSRG_MRPT3::check_t2() {
         std::vector<std::pair<std::vector<size_t>, double>>& temp_lt2 = spin_to_lt2[spin];
 
         T2_.block(block).citerate([&](const std::vector<size_t>& i, const double& value) {
-            if (fabs(value) != 0.0) {
+            if (std::fabs(value) != 0.0) {
                 size_t idx0 = label_to_spacemo_[block[0]][i[0]];
                 size_t idx1 = label_to_spacemo_[block[1]][i[1]];
                 size_t idx2 = label_to_spacemo_[block[2]][i[2]];
@@ -5667,13 +5667,13 @@ void DSRG_MRPT3::check_t2() {
                         temp_t2.pop_back();
                     }
 
-                    if (fabs(value) > fabs(intruder_tamp_)) {
+                    if (std::fabs(value) > std::fabs(intruder_tamp_)) {
                         temp_lt2.push_back(idx_value);
                     }
                     std::sort(temp_lt2.begin(), temp_lt2.end(),
                               rsort_pair_second<std::vector<size_t>, double>());
                 }
-                T2max_ = T2max_ > fabs(value) ? T2max_ : fabs(value);
+                T2max_ = T2max_ > std::fabs(value) ? T2max_ : std::fabs(value);
             }
         });
     }
@@ -5721,7 +5721,7 @@ void DSRG_MRPT3::check_t1() {
         std::vector<std::pair<std::vector<size_t>, double>>& temp_lt1 = spin_to_lt1[spin_alpha];
 
         T1_.block(block).citerate([&](const std::vector<size_t>& i, const double& value) {
-            if (fabs(value) != 0.0) {
+            if (std::fabs(value) != 0.0) {
                 size_t idx0 = label_to_spacemo_[block[0]][i[0]];
                 size_t idx1 = label_to_spacemo_[block[1]][i[1]];
 
@@ -5738,13 +5738,13 @@ void DSRG_MRPT3::check_t1() {
                     temp_t1.pop_back();
                 }
 
-                if (fabs(value) > fabs(intruder_tamp_)) {
+                if (std::fabs(value) > std::fabs(intruder_tamp_)) {
                     temp_lt1.push_back(idx_value);
                 }
                 std::sort(temp_lt1.begin(), temp_lt1.end(),
                           rsort_pair_second<std::vector<size_t>, double>());
 
-                T1max_ = T1max_ > fabs(value) ? T1max_ : fabs(value);
+                T1max_ = T1max_ > std::fabs(value) ? T1max_ : std::fabs(value);
             }
         });
     }

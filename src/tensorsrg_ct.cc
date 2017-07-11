@@ -214,7 +214,7 @@ double TensorSRG::compute_ct_energy() {
                         cycle, energy, delta_energy, norm_Hbar1_ex, norm_Hbar2_ex, norm_S1, norm_S2,
                         max_S1, max_S2);
 
-        if (fabs(delta_energy) < options_.get_double("E_CONVERGENCE")) {
+        if (std::fabs(delta_energy) < options_.get_double("E_CONVERGENCE")) {
             converged = true;
         }
 
@@ -283,7 +283,7 @@ double TensorSRG::compute_hbar() {
         outfile->Printf("\n  %2d %20.12f %20e %20e", 0, Hbar0, Hbar1.norm(), Hbar2.norm());
     }
 
-    int maxn = options_.get_int("SRG_RSC_NCOMM");
+    int maxn = options_.get_int("DSRG_RSC_NCOMM");
     double ct_threshold = options_.get_double("SRG_RSC_THRESHOLD");
     for (int n = 1; n <= maxn; ++n) {
         double factor = 1.0 / static_cast<double>(n);
