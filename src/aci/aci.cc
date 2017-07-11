@@ -2836,5 +2836,10 @@ void AdaptiveCI::compute_nos() {
     // Retransform the integarms in the new basis
     ints_->retransform_integrals();
 }
+
+//void AdaptiveCI::compute_external_singles( ){
+//
+//} 
+
 }
 } // EndNamespaces
