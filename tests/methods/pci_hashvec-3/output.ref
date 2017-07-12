@@ -18,9 +18,9 @@
     -----------------------------------------------------------------------
 
 
-    Psi4 started on: Monday, 10 July 2017 06:24PM
+    Psi4 started on: Tuesday, 11 July 2017 08:04PM
 
-    Process ID:  56922
+    Process ID:   2760
     PSIDATADIR: /Users/tianyuanzhang/Documents/Source/psi4_2017/psi4-bin-clang-debug/share/psi4
     Memory:     500.0 MiB
     Threads:    1
@@ -56,7 +56,7 @@ set forte {
   pci_ENERGY_ESTIMATE_FREQ 1
   pci_FAST_EVAR true
   pci_USE_INTER_NORM true
-  pci_VAR_ESTIMATE true
+  pci_VAR_ESTIMATE false
   pci_ENERGY_ESTIMATE_THRESHOLD 1e-5
   MP2_NOS true
   pci_maxbeta 100000.00
@@ -73,7 +73,7 @@ compare_values(refpci, get_variable("PCI ENERGY"), 10, "PCI energy") #TEST
 /Users/tianyuanzhang/Documents/Source/psi4_2017/forte/forte.so loaded.
 
 *** tstart() called on n-ac-90-21.wireless.emory.edu
-*** at Mon Jul 10 18:24:34 2017
+*** at Tue Jul 11 20:04:02 2017
 
    => Loading Basis Set <=
 
@@ -212,7 +212,7 @@ compare_values(refpci, get_variable("PCI ENERGY"), 10, "PCI energy") #TEST
     Virtual:                                                              
 
        2B1u    0.093646     1B2u    0.108933     1B3u    0.108933  
-       3Ag     0.176245     1B2g    0.275579     1B3g    0.275579  
+       3Ag     0.176245     1B3g    0.275579     1B2g    0.275579  
        3B1u    0.645556  
 
     Final Occupation by Irrep:
@@ -228,9 +228,10 @@ compare_values(refpci, get_variable("PCI ENERGY"), 10, "PCI energy") #TEST
     Nuclear Repulsion Energy =              2.3812974386549994
     One-Electron Energy =                 -24.3030864505908752
     Two-Electron Energy =                   7.3120442730617787
+    PCM Polarization Energy =               0.0000000000000000
     Total Energy =                        -14.6097447388740953
 
-
+    Alert: EFP and PCM quantities not currently incorporated into SCF psivars.
 
 Properties will be evaluated at   0.000000,   0.000000,   0.000000 Bohr
 
@@ -249,19 +250,19 @@ Properties computed using the SCF density matrix
      X:     0.0000      Y:     0.0000      Z:     0.0000     Total:     0.0000
 
 
-*** tstop() called on n-ac-90-21.wireless.emory.edu at Mon Jul 10 18:24:35 2017
+*** tstop() called on n-ac-90-21.wireless.emory.edu at Tue Jul 11 20:04:02 2017
 Module time:
-	user time   =       0.45 seconds =       0.01 minutes
-	system time =       0.01 seconds =       0.00 minutes
-	total time  =          1 seconds =       0.02 minutes
+	user time   =       0.49 seconds =       0.01 minutes
+	system time =       0.02 seconds =       0.00 minutes
+	total time  =          0 seconds =       0.00 minutes
 Total time:
-	user time   =       0.45 seconds =       0.01 minutes
-	system time =       0.01 seconds =       0.00 minutes
-	total time  =          1 seconds =       0.02 minutes
+	user time   =       0.49 seconds =       0.01 minutes
+	system time =       0.02 seconds =       0.00 minutes
+	total time  =          0 seconds =       0.00 minutes
 	SCF energy........................................................PASSED
 
 *** tstart() called on n-ac-90-21.wireless.emory.edu
-*** at Mon Jul 10 18:24:35 2017
+*** at Tue Jul 11 20:04:02 2017
 
    => Loading Basis Set <=
 
@@ -397,7 +398,7 @@ Total time:
     Virtual:                                                              
 
        2B1u    0.093646     1B2u    0.108933     1B3u    0.108933  
-       3Ag     0.176245     1B3g    0.275579     1B2g    0.275579  
+       3Ag     0.176245     1B2g    0.275579     1B3g    0.275579  
        3B1u    0.645556  
 
     Final Occupation by Irrep:
@@ -434,13 +435,13 @@ Properties computed using the SCF density matrix
      X:     0.0000      Y:     0.0000      Z:     0.0000     Total:     0.0000
 
 
-*** tstop() called on n-ac-90-21.wireless.emory.edu at Mon Jul 10 18:24:35 2017
+*** tstop() called on n-ac-90-21.wireless.emory.edu at Tue Jul 11 20:04:03 2017
 Module time:
-	user time   =       0.44 seconds =       0.01 minutes
-	system time =       0.02 seconds =       0.00 minutes
-	total time  =          0 seconds =       0.00 minutes
+	user time   =       0.46 seconds =       0.01 minutes
+	system time =       0.01 seconds =       0.00 minutes
+	total time  =          1 seconds =       0.02 minutes
 Total time:
-	user time   =       0.92 seconds =       0.02 minutes
+	user time   =       0.97 seconds =       0.02 minutes
 	system time =       0.03 seconds =       0.00 minutes
 	total time  =          1 seconds =       0.02 minutes
    => Loading Basis Set <=
@@ -460,7 +461,7 @@ Calling plugin forte.so.
   ----------------------------------------------------------------------------
   A suite of quantum chemistry methods for strongly correlated electrons
 
-    git branch: master - git commit: 63976f22
+    git branch: master - git commit: fb42f078
 
   Developed by:
     Francesco A. Evangelista, Chenyang Li, Kevin P. Hannon,
@@ -546,10 +547,10 @@ Calling plugin forte.so.
 	Starting second half-transformation.
 	Two-electron integral transformation complete.
 
-  Integral transformation done. 0.00597600 s
+  Integral transformation done. 0.00593800 s
   Reading the two-electron integrals from disk
   Size of two-electron integrals:   0.000224 GB
-  Conventional integrals take 0.04680600 s
+  Conventional integrals take 0.04183700 s
 
                 ------------------------------------------------
                   Second-Order Moller-Plesset Natural Orbitals
@@ -617,7 +618,7 @@ Calling plugin forte.so.
 	Starting second half-transformation.
 	Two-electron integral transformation complete.
 
-  Integral transformation done. 0.00510200 s
+  Integral transformation done. 0.00514700 s
   Reading the two-electron integrals from disk
   Size of two-electron integrals:   0.000224 GB
  Integrals are about to be updated.
@@ -626,7 +627,7 @@ Calling plugin forte.so.
 	  ---------------------------------------------------------
 	    Projector Configuration Interaction HashVector implementation
 	         by Francesco A. Evangelista and Tianyuan Zhang
-	                      version Jun. 29 2017
+	                      version Jul. 11 2017
 	                       1 thread(s) 
 	  ---------------------------------------------------------
 
@@ -691,54 +692,32 @@ Calling plugin forte.so.
 
   ==> PCI Iterations <==
 
-  --------------------------------------------------------------------------------------------------------------------------------
-    Steps  Beta/Eh      Ndets     Proj. Energy/Eh     dEp/dt      Var. Energy/Eh      dEp/dt      Approx. Energy/Eh   dEv/dt
-  --------------------------------------------------------------------------------------------------------------------------------
-  Variational energy estimated with 388 determinants to meet the max error 1.000000e-05
-        0     0.00        388     -14.646010415739 -6.099e-05     -14.646114885233 -1.655e-04     -14.646115788332 -1.544e-04
-  Variational energy estimated with 388 determinants to meet the max error 1.000000e-05
-        1     1.00        388     -14.646055178395 -4.476e-05     -14.646132933536 -1.805e-05     -14.646134179162 -1.839e-05
-  Variational energy estimated with 388 determinants to meet the max error 1.000000e-05
-        2     2.00        388     -14.646087522948 -3.234e-05     -14.646143444544 -1.051e-05     -14.646143994760 -9.816e-06
-  Variational energy estimated with 388 determinants to meet the max error 1.000000e-05
-        3     3.00        388     -14.646109162708 -2.164e-05     -14.646150305516 -6.861e-06     -14.646150973978 -6.979e-06
-  Variational energy estimated with 388 determinants to meet the max error 1.000000e-05
-        4     4.00        388     -14.646126686258 -1.752e-05     -14.646154511310 -4.206e-06     -14.646155902112 -4.928e-06
-  Variational energy estimated with 388 determinants to meet the max error 1.000000e-05
-        5     5.00        388     -14.646139692512 -1.301e-05     -14.646157373329 -2.862e-06     -14.646155101235  8.009e-07
-  Variational energy estimated with 388 determinants to meet the max error 1.000000e-05
-        6     6.00        388     -14.646158733510 -1.904e-05     -14.646159032919 -1.660e-06     -14.646157832322 -2.731e-06
-  Variational energy estimated with 388 determinants to meet the max error 1.000000e-05
-        7     7.00        388     -14.646165852038 -7.119e-06     -14.646160340194 -1.307e-06     -14.646159435638 -1.603e-06
-  Variational energy estimated with 388 determinants to meet the max error 1.000000e-05
-        8     8.00        388     -14.646168836296 -2.984e-06     -14.646160920408 -5.802e-07     -14.646159836399 -4.008e-07
-  Variational energy estimated with 392 determinants to meet the max error 1.000000e-05
-        9     9.00        392     -14.646167993713  8.426e-07     -14.646161586456 -6.660e-07     -14.646160815766 -9.794e-07
-  Variational energy estimated with 392 determinants to meet the max error 1.000000e-05
-       10    10.00        392     -14.646169062347 -1.069e-06     -14.646161868012 -2.816e-07     -14.646160500971  3.148e-07
-  Variational energy estimated with 392 determinants to meet the max error 1.000000e-05
-       11    11.00        392     -14.646166990700  2.072e-06     -14.646162130764 -2.628e-07     -14.646161279962 -7.790e-07
-  Variational energy estimated with 392 determinants to meet the max error 1.000000e-05
-       12    12.00        392     -14.646165857789  1.133e-06     -14.646162299964 -1.692e-07     -14.646160761549  5.184e-07
-  Variational energy estimated with 392 determinants to meet the max error 1.000000e-05
-       13    13.00        392     -14.646163898496  1.959e-06     -14.646162391737 -9.177e-08     -14.646161491317 -7.298e-07
-  Variational energy estimated with 392 determinants to meet the max error 1.000000e-05
-       14    14.00        392     -14.646165131025 -1.233e-06     -14.646162448707 -5.697e-08     -14.646161018467  4.729e-07
-  Variational energy estimated with 392 determinants to meet the max error 1.000000e-05
-       15    15.00        392     -14.646163408193  1.723e-06     -14.646162571529 -1.228e-07     -14.646162063114 -1.045e-06
-  Variational energy estimated with 392 determinants to meet the max error 1.000000e-05
-       16    16.00        392     -14.646164990493 -1.582e-06     -14.646162549631  2.190e-08     -14.646161497712  5.654e-07
-  Variational energy estimated with 392 determinants to meet the max error 1.000000e-05
-       17    17.00        392     -14.646163138366  1.852e-06     -14.646162599226 -4.960e-08     -14.646162212698 -7.150e-07
-  Variational energy estimated with 392 determinants to meet the max error 1.000000e-05
-       18    18.00        392     -14.646164466353 -1.328e-06     -14.646162646038 -4.681e-08     -14.646161530229  6.825e-07
-  Variational energy estimated with 392 determinants to meet the max error 1.000000e-05
-       19    19.00        392     -14.646162731571  1.735e-06     -14.646162643296  2.742e-09     -14.646162166187 -6.360e-07
-  Variational energy estimated with 392 determinants to meet the max error 1.000000e-05
-       20    20.00        392     -14.646164024907 -1.293e-06     -14.646162628158  1.514e-08     -14.646161630284  5.359e-07
-  Variational energy estimated with 396 determinants to meet the max error 1.000000e-05
-       21    21.00        396     -14.646162377693  1.647e-06     -14.646162696268 -6.811e-08
-  --------------------------------------------------------------------------------------------------------------------------------
+  ------------------------------------------------------------------------------------------------
+    Steps  Beta/Eh      Ndets     Proj. Energy/Eh     dEp/dt      Approx. Energy/Eh   dEv/dt
+  ------------------------------------------------------------------------------------------------
+        0     0.00        388     -14.646010415739 -6.099e-05     -14.646115788332 -1.544e-04
+        1     1.00        388     -14.646055178395 -4.476e-05     -14.646134179162 -1.839e-05
+        2     2.00        388     -14.646087522948 -3.234e-05     -14.646143994760 -9.816e-06
+        3     3.00        388     -14.646109162708 -2.164e-05     -14.646150973978 -6.979e-06
+        4     4.00        388     -14.646126686258 -1.752e-05     -14.646155902112 -4.928e-06
+        5     5.00        388     -14.646139692512 -1.301e-05     -14.646155101235  8.009e-07
+        6     6.00        388     -14.646158733510 -1.904e-05     -14.646157832322 -2.731e-06
+        7     7.00        388     -14.646165852038 -7.119e-06     -14.646159435638 -1.603e-06
+        8     8.00        388     -14.646168836296 -2.984e-06     -14.646159836399 -4.008e-07
+        9     9.00        392     -14.646167993713  8.426e-07     -14.646160815766 -9.794e-07
+       10    10.00        392     -14.646169062347 -1.069e-06     -14.646160500971  3.148e-07
+       11    11.00        392     -14.646166990700  2.072e-06     -14.646161279962 -7.790e-07
+       12    12.00        392     -14.646165857789  1.133e-06     -14.646160761549  5.184e-07
+       13    13.00        392     -14.646163898496  1.959e-06     -14.646161491317 -7.298e-07
+       14    14.00        392     -14.646165131025 -1.233e-06     -14.646161018467  4.729e-07
+       15    15.00        392     -14.646163408193  1.723e-06     -14.646162063114 -1.045e-06
+       16    16.00        392     -14.646164990493 -1.582e-06     -14.646161497712  5.654e-07
+       17    17.00        392     -14.646163138366  1.852e-06     -14.646162212698 -7.150e-07
+       18    18.00        392     -14.646164466353 -1.328e-06     -14.646161530229  6.825e-07
+       19    19.00        392     -14.646162731571  1.735e-06     -14.646162166187 -6.360e-07
+       20    20.00        392     -14.646164024907 -1.293e-06     -14.646161630284  5.359e-07
+       21    21.00        396     -14.646162377693  1.647e-06
+  ------------------------------------------------------------------------------------------------
 
   Calculation did not converge!
 
@@ -753,7 +732,7 @@ Calling plugin forte.so.
   * Projector-CI Var. Corr.  Energy     =    -0.036417957394 Eh
   * 1st order perturbation   Energy     =    -0.000001065984 Eh
 
-  Projector-CI (bitset) ran in  : 0.780917 s
+  Projector-CI (bitset) ran in  : 0.313188 s
 
   Most important contributions to the wave function:
 
@@ -770,7 +749,7 @@ Calling plugin forte.so.
 
   Spin State: S^2 = 0.000, S = 0.000, singlet (from 3 determinants,97.69)
 
-  Your calculation took 0.92460000 seconds
+  Your calculation took 0.44223200 seconds
 	PCI energy........................................................PASSED
 
 *** Psi4 exiting successfully. Buy a developer a beer!

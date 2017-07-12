@@ -565,7 +565,7 @@ double ProjectorCI_HashVec::compute_energy() {
     outfile->Printf("\n\t    Projector Configuration Interaction HashVector "
                     "implementation");
     outfile->Printf("\n\t         by Francesco A. Evangelista and Tianyuan Zhang");
-    outfile->Printf("\n\t                      version Jun. 29 2017");
+    outfile->Printf("\n\t                      version Jul. 11 2017");
     outfile->Printf("\n\t                    %4d thread(s) %s", num_threads_,
                     have_omp_ ? "(OMP)" : "");
     outfile->Printf("\n\t  ---------------------------------------------------------");
@@ -765,10 +765,6 @@ double ProjectorCI_HashVec::compute_energy() {
 
     timer_on("PCI:<E>end_v");
     if (fast_variational_estimate_) {
-//        timer_on("PCI:Couplings");
-//        compute_single_couplings(0);
-//        compute_double_couplings(0);
-//        timer_off("PCI:Couplings");
         var_energy = estimate_var_energy_sparse(dets_hashvec, C, evar_max_error_);
     } else {
         var_energy = estimate_var_energy_within_error(dets_hashvec, C, evar_max_error_);
@@ -2215,6 +2211,10 @@ double ProjectorCI_HashVec::estimate_var_energy_sparse(const det_hashvec& dets_h
         "\n  Variational energy estimated with %zu determinants to meet the max error %e",
         cut_index + 1, max_error);
 
+    timer_on("PCI:Couplings");
+    compute_couplings_half(dets_hashvec, cut_index + 1);
+    timer_off("PCI:Couplings");
+
     double variational_energy_estimator = 0.0;
     std::vector<double> energy(num_threads_, 0.0);
 
@@ -2484,143 +2484,139 @@ double ProjectorCI_HashVec::form_H_C_2(const det_hashvec& dets_hashvec, std::vec
     // diagonal contribution
     double result = CI * CI * detI.energy();
 
-    std::vector<int> aocc = detI.get_alfa_occ();
-    std::vector<int> bocc = detI.get_beta_occ();
-    std::vector<int> avir = detI.get_alfa_vir();
-    std::vector<int> bvir = detI.get_beta_vir();
-
-    int noalpha = aocc.size();
-    int nobeta = bocc.size();
-    int nvalpha = avir.size();
-    int nvbeta = bvir.size();
-
     Determinant detJ(detI);
-    double HJI, sign;
+    double HJI;
+    for (size_t x = 0; x < a_couplings_size_; ++x) {
+        int i = std::get<0>(a_couplings_[x]);
+        if (detI.get_alfa_bit(i)) {
+            std::vector<std::tuple<int, double>>& sub_couplings = std::get<2>(a_couplings_[x]);
+            size_t sub_couplings_size = sub_couplings.size();
+            for (size_t y = 0; y < sub_couplings_size; ++y) {
+                int a;
+                std::tie(a, HJI) = sub_couplings[y];
+                if (!detI.get_alfa_bit(a)) {
+                    size_t max_bit = 2 * nact_;
+                    bit_t& bits = detJ.bits_;
+                    std::vector<double>& double_couplings =
+                        single_alpha_excite_double_couplings_[i][a];
+                    for (size_t p = 0; p < max_bit; ++p) {
+                        if (bits[p]) {
+                            HJI += double_couplings[p];
+                        }
+                    }
+                    HJI *= detJ.single_excitation_a(i, a);
+                    size_t index = dets_hashvec.find(detJ);
+                    if (index <= cut_index) {
+                        result += 2.0 * HJI * CI * C[index];
+                    }
+                    detJ.set_alfa_bit(i, true);
+                    detJ.set_alfa_bit(a, false);
+                }
+            }
+        }
+    }
+
+    for (size_t x = 0; x < b_couplings_size_; ++x) {
+        int i = std::get<0>(b_couplings_[x]);
+        if (detI.get_beta_bit(i)) {
+            std::vector<std::tuple<int, double>>& sub_couplings = std::get<2>(b_couplings_[x]);
+            size_t sub_couplings_size = sub_couplings.size();
+            for (size_t y = 0; y < sub_couplings_size; ++y) {
+                int a;
+                std::tie(a, HJI) = sub_couplings[y];
+                if (!detI.get_beta_bit(a)) {
+                    size_t max_bit = 2 * nact_;
+                    bit_t& bits = detJ.bits_;
+                    std::vector<double>& double_couplings =
+                        single_beta_excite_double_couplings_[i][a];
+                    for (size_t p = 0; p < max_bit; ++p) {
+                        if (bits[p]) {
+                            HJI += double_couplings[p];
+                        }
+                    }
+                    HJI *= detJ.single_excitation_b(i, a);
+                    size_t index = dets_hashvec.find(detJ);
+                    if (index <= cut_index) {
+                        result += 2.0 * HJI * CI * C[index];
+                    }
+                    detJ.set_beta_bit(i, true);
+                    detJ.set_beta_bit(a, false);
+                }
+            }
+        }
+    }
+
     // Generate aa excitations
-    for (int i = 0; i < noalpha; ++i) {
-        int ii = aocc[i];
-        for (int a = 0; a < nvalpha; ++a) {
-            int aa = avir[a];
-            if ((mo_symmetry_[ii] ^ mo_symmetry_[aa]) == 0) {
-                detJ.set_alfa_bit(ii, false);
-                detJ.set_alfa_bit(aa, true);
-                size_t index = dets_hashvec.find(detJ);
-                if (index < I) {
-                    HJI = detI.slater_rules_single_alpha(ii, aa);
-                    result += 2.0 * HJI * CI * C[index];
-                }
-                detJ.set_alfa_bit(ii, true);
-                detJ.set_alfa_bit(aa, false);
-            }
-        }
-    }
-
-    for (int i = 0; i < nobeta; ++i) {
-        int ii = bocc[i];
-        for (int a = 0; a < nvbeta; ++a) {
-            int aa = bvir[a];
-            if ((mo_symmetry_[ii] ^ mo_symmetry_[aa]) == 0) {
-                detJ.set_beta_bit(ii, false);
-                detJ.set_beta_bit(aa, true);
-                size_t index = dets_hashvec.find(detJ);
-                if (index < I) {
-                    HJI = detI.slater_rules_single_beta(ii, aa);
-                    result += 2.0 * HJI * CI * C[index];
-                }
-                detJ.set_beta_bit(ii, true);
-                detJ.set_beta_bit(aa, false);
-            }
-        }
-    }
-
-    // Generate aa excitations
-    for (int i = 0; i < noalpha; ++i) {
-        int ii = aocc[i];
-        for (int j = i + 1; j < noalpha; ++j) {
-            int jj = aocc[j];
-            for (int a = 0; a < nvalpha; ++a) {
-                int aa = avir[a];
-                for (int b = a + 1; b < nvalpha; ++b) {
-                    int bb = avir[b];
-                    if ((mo_symmetry_[ii] ^ mo_symmetry_[jj] ^ mo_symmetry_[aa] ^
-                         mo_symmetry_[bb]) == 0) {
-                        detJ.set_alfa_bit(ii, false);
-                        detJ.set_alfa_bit(jj, false);
-                        detJ.set_alfa_bit(aa, true);
-                        detJ.set_alfa_bit(bb, true);
-                        size_t index = dets_hashvec.find(detJ);
-                        if (index < I) {
-                            sign = detJ.double_excitation_aa(aa, bb, ii, jj);
-                            HJI = fci_ints_->tei_aa(ii, jj, aa, bb);
-                            result += 2.0 * sign * HJI * CI * C[index];
-                        } else {
-                            detJ.set_alfa_bit(ii, true);
-                            detJ.set_alfa_bit(jj, true);
-                            detJ.set_alfa_bit(aa, false);
-                            detJ.set_alfa_bit(bb, false);
-                        }
+    for (size_t x = 0; x < aa_couplings_size_; ++x) {
+        int i = std::get<0>(aa_couplings_[x]);
+        int j = std::get<1>(aa_couplings_[x]);
+        if (detI.get_alfa_bit(i) and detI.get_alfa_bit(j)) {
+            std::vector<std::tuple<int, int, double>>& sub_couplings =
+                std::get<3>(aa_couplings_[x]);
+            size_t sub_couplings_size = sub_couplings.size();
+            for (size_t y = 0; y < sub_couplings_size; ++y) {
+                int a, b;
+                std::tie(a, b, HJI) = sub_couplings[y];
+                if (!(detI.get_alfa_bit(a) or detI.get_alfa_bit(b))) {
+                    HJI *= detJ.double_excitation_aa(i, j, a, b);
+                    size_t index = dets_hashvec.find(detJ);
+                    if (index <= cut_index) {
+                        result += 2.0 * HJI * CI * C[index];
                     }
+                    detJ.set_alfa_bit(i, true);
+                    detJ.set_alfa_bit(j, true);
+                    detJ.set_alfa_bit(a, false);
+                    detJ.set_alfa_bit(b, false);
                 }
             }
         }
     }
 
-    for (int i = 0; i < noalpha; ++i) {
-        int ii = aocc[i];
-        for (int j = 0; j < nobeta; ++j) {
-            int jj = bocc[j];
-            for (int a = 0; a < nvalpha; ++a) {
-                int aa = avir[a];
-                for (int b = 0; b < nvbeta; ++b) {
-                    int bb = bvir[b];
-                    if ((mo_symmetry_[ii] ^ mo_symmetry_[jj] ^ mo_symmetry_[aa] ^
-                         mo_symmetry_[bb]) == 0) {
-                        detJ.set_alfa_bit(ii, false);
-                        detJ.set_beta_bit(jj, false);
-                        detJ.set_alfa_bit(aa, true);
-                        detJ.set_beta_bit(bb, true);
-                        size_t index = dets_hashvec.find(detJ);
-                        if (index < I) {
-                            sign = detJ.double_excitation_ab(aa, bb, ii, jj);
-                            HJI = fci_ints_->tei_ab(ii, jj, aa, bb);
-                            result += 2.0 * sign * HJI * CI * C[index];
-                        } else {
-                            detJ.set_alfa_bit(ii, true);
-                            detJ.set_beta_bit(jj, true);
-                            detJ.set_alfa_bit(aa, false);
-                            detJ.set_beta_bit(bb, false);
-                        }
+    for (size_t x = 0; x < ab_couplings_size_; ++x) {
+        int i = std::get<0>(ab_couplings_[x]);
+        int j = std::get<1>(ab_couplings_[x]);
+        if (detI.get_alfa_bit(i) and detI.get_beta_bit(j)) {
+            std::vector<std::tuple<int, int, double>>& sub_couplings =
+                std::get<3>(ab_couplings_[x]);
+            size_t sub_couplings_size = sub_couplings.size();
+            for (size_t y = 0; y < sub_couplings_size; ++y) {
+                int a, b;
+                std::tie(a, b, HJI) = sub_couplings[y];
+                if (!(detI.get_alfa_bit(a) or detI.get_beta_bit(b))) {
+                    HJI *= detJ.double_excitation_ab(i, j, a, b);
+                    size_t index = dets_hashvec.find(detJ);
+                    if (index <= cut_index) {
+                        result += 2.0 * HJI * CI * C[index];
                     }
+                    detJ.set_alfa_bit(i, true);
+                    detJ.set_beta_bit(j, true);
+                    detJ.set_alfa_bit(a, false);
+                    detJ.set_beta_bit(b, false);
                 }
             }
         }
     }
-    for (int i = 0; i < nobeta; ++i) {
-        int ii = bocc[i];
-        for (int j = i + 1; j < nobeta; ++j) {
-            int jj = bocc[j];
-            for (int a = 0; a < nvbeta; ++a) {
-                int aa = bvir[a];
-                for (int b = a + 1; b < nvbeta; ++b) {
-                    int bb = bvir[b];
-                    if ((mo_symmetry_[ii] ^
-                         (mo_symmetry_[jj] ^ (mo_symmetry_[aa] ^ mo_symmetry_[bb]))) == 0) {
-                        detJ.set_beta_bit(ii, false);
-                        detJ.set_beta_bit(jj, false);
-                        detJ.set_beta_bit(aa, true);
-                        detJ.set_beta_bit(bb, true);
-                        size_t index = dets_hashvec.find(detJ);
-                        if (index < I) {
-                            sign = detJ.double_excitation_bb(aa, bb, ii, jj);
-                            HJI = fci_ints_->tei_bb(ii, jj, aa, bb);
-                            result += 2.0 * sign * HJI * CI * C[index];
-                        } else {
-                            detJ.set_beta_bit(ii, true);
-                            detJ.set_beta_bit(jj, true);
-                            detJ.set_beta_bit(aa, false);
-                            detJ.set_beta_bit(bb, false);
-                        }
+
+    for (size_t x = 0; x < bb_couplings_size_; ++x) {
+        int i = std::get<0>(bb_couplings_[x]);
+        int j = std::get<1>(bb_couplings_[x]);
+        if (detI.get_beta_bit(i) and detI.get_beta_bit(j)) {
+            std::vector<std::tuple<int, int, double>>& sub_couplings =
+                std::get<3>(bb_couplings_[x]);
+            size_t sub_couplings_size = sub_couplings.size();
+            for (size_t y = 0; y < sub_couplings_size; ++y) {
+                int a, b;
+                std::tie(a, b, HJI) = sub_couplings[y];
+                if (!(detI.get_beta_bit(a) or detI.get_beta_bit(b))) {
+                    HJI *= detJ.double_excitation_bb(i, j, a, b);
+                    size_t index = dets_hashvec.find(detJ);
+                    if (index <= cut_index) {
+                        result += 2.0 * HJI * CI * C[index];
                     }
+                    detJ.set_beta_bit(i, true);
+                    detJ.set_beta_bit(j, true);
+                    detJ.set_beta_bit(a, false);
+                    detJ.set_beta_bit(b, false);
                 }
             }
         }
@@ -2758,48 +2754,6 @@ void ProjectorCI_HashVec::compute_single_couplings(double single_coupling_thresh
     if (dets_single_max_coupling_ < std::get<1>(b_couplings_[0])) {
         dets_single_max_coupling_ = std::get<1>(b_couplings_[0]);
     }
-
-    // examine
-//    for (size_t x = 0; x < a_couplings_size_; ++x) {
-//        int i = std::get<0>(a_couplings_[x]);
-//        std::vector<std::tuple<int, double>>& sub_couplings = std::get<2>(a_couplings_[x]);
-//        size_t sub_couplings_size = sub_couplings.size();
-//        for (size_t y = 0; y < sub_couplings_size; ++y) {
-//            int a = std::get<0>(sub_couplings[y]);
-//            int max_bit = 2 * nact_;
-//            std::vector<double>& double_couplings = single_alpha_excite_double_couplings_[i][a];
-//            for (int p = 0; p < max_bit; ++p) {
-//                if (p < nact_ && double_couplings[p] != fci_ints_->tei_aa(i, p, a, p))
-//                    outfile->Printf("\n(%d,%d,%d) %.6lf, %.6lf", i, a, p,
-//                                    fci_ints_->tei_aa(i, p, a, p), double_couplings[p]);
-//                else if (p >= nact_ &&
-//                         double_couplings[p] != fci_ints_->tei_ab(i, p - nact_, a, p - nact_))
-//                    outfile->Printf("\n(%d,%d,%d) %.6lf, %.6lf", i, a, p,
-//                                    fci_ints_->tei_ab(i, p - nact_, a, p - nact_),
-//                                    double_couplings[p]);
-//            }
-//        }
-//    }
-//    for (size_t x = 0; x < b_couplings_size_; ++x) {
-//        int i = std::get<0>(b_couplings_[x]);
-//        std::vector<std::tuple<int, double>>& sub_couplings = std::get<2>(b_couplings_[x]);
-//        size_t sub_couplings_size = sub_couplings.size();
-//        for (size_t y = 0; y < sub_couplings_size; ++y) {
-//            int a = std::get<0>(sub_couplings[y]);
-//            int max_bit = 2 * nact_;
-//            std::vector<double>& double_couplings = single_beta_excite_double_couplings_[i][a];
-//            for (int p = 0; p < max_bit; ++p) {
-//                if (p < nact_ && double_couplings[p] != fci_ints_->tei_ab(p, i, p, a))
-//                    outfile->Printf("\n(%d,%d,%d) %.6lf, %.6lf", i, a, p,
-//                                    fci_ints_->tei_aa(i, p, a, p), double_couplings[p]);
-//                else if (p >= nact_ &&
-//                         double_couplings[p] != fci_ints_->tei_bb(i, p - nact_, a, p - nact_))
-//                    outfile->Printf("\n(%d,%d,%d) %.6lf, %.6lf", i, a, p,
-//                                    fci_ints_->tei_ab(i, p - nact_, a, p - nact_),
-//                                    double_couplings[p]);
-//            }
-//        }
-//    }
 }
 
 void ProjectorCI_HashVec::compute_double_couplings(double double_coupling_threshold) {
@@ -2932,15 +2886,13 @@ void ProjectorCI_HashVec::compute_double_couplings(double double_coupling_thresh
 }
 
 void ProjectorCI_HashVec::compute_couplings_half(const det_hashvec& dets, size_t cut_size) {
-//    bit_t andBits, orBits;
-//    andBits.flip();
-//    for (size_t i = 0; i < cut_size; ++i) {
-//        andBits &= dets[i].bits_;
-//        orBits |= dets[i].bits_;
-//    }
-//    bit_t actBits = andBits ^ orBits;
-    bit_t actBits;
-    actBits.flip();
+    bit_t andBits, orBits;
+    andBits.flip();
+    for (size_t i = 0; i < cut_size; ++i) {
+        andBits &= dets[i].bits_;
+        orBits |= dets[i].bits_;
+    }
+    bit_t actBits = andBits ^ orBits;
 
     a_couplings_.clear();
     a_couplings_.resize(nact_);
