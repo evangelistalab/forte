@@ -198,6 +198,7 @@ class ProjectorCI_HashVec : public Wavefunction {
     /// Bounds are stored as a pair (f_max,v_max) where f_max and v_max are
     /// the couplings to the singles and doubles, respectively.
     std::vector<std::pair<double, double>> dets_max_couplings_;
+    std::vector<double> det_energies_;
     double dets_double_max_coupling_;
     double dets_single_max_coupling_;
     std::vector<std::tuple<int, int, double, std::vector<std::tuple<int, int, double>>>>
@@ -344,6 +345,12 @@ class ProjectorCI_HashVec : public Wavefunction {
     /// @param max_error The accuracy of the estimate. |E_est - E_var|<max_error
     double estimate_var_energy_within_error(const det_hashvec& dets_hashvec, std::vector<double>& C,
                                             double max_error = 0.0);
+    /// Estimates the variational energy within a given error by sigma vector algorithm
+    /// @param dets The set of determinants that form the wave function
+    /// @param C The wave function coefficients
+    /// @param max_error The accuracy of the estimate. |E_est - E_var|<max_error
+    double estimate_var_energy_within_error_sigma(const det_hashvec& dets_hashvec,
+                                                  std::vector<double>& C, double max_error = 0.0);
     /// Estimates the variational energy using a sparse algorithm
     /// @param dets The set of determinants that form the wave function
     /// @param C The wave function coefficients
@@ -356,7 +363,7 @@ class ProjectorCI_HashVec : public Wavefunction {
                     size_t cut_index);
     /// Form the product H c
     double form_H_C_2(const det_hashvec& dets_hashvec, std::vector<double>& C, size_t I,
-                    size_t cut_index);
+                      size_t cut_index);
     /// Do we have OpenMP?
     static bool have_omp_;
 
@@ -378,7 +385,7 @@ class ProjectorCI_HashVec : public Wavefunction {
     void compute_single_couplings(double single_coupling_threshold);
 
     /// Compute half the single and double excitation couplings
-    void compute_couplings_half(const det_hashvec &dets, size_t cut_index);
+    void compute_couplings_half(const det_hashvec& dets, size_t cut_index);
 
     /// Returns a vector of orbital energy, sym label pairs
     std::vector<std::tuple<double, int, int>> sym_labeled_orbitals(std::string type);

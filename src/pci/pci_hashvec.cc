@@ -47,7 +47,6 @@
 
 #include "pci_hashvec.h"
 
-
 using namespace psi;
 using namespace psi::forte::GeneratorType_HashVec;
 
@@ -614,10 +613,10 @@ double ProjectorCI_HashVec::compute_energy() {
     double var_energy = initial_guess(dets_hashvec, C);
     double proj_energy = var_energy;
     print_wfn(dets_hashvec, C);
-//    det_hash<> old_space_map;
-//    for (size_t I = 0; I < dets_hashvec.size(); ++I) {
-//        old_space_map[dets_hashvec[I]] = C[I];
-//    }
+    //    det_hash<> old_space_map;
+    //    for (size_t I = 0; I < dets_hashvec.size(); ++I) {
+    //        old_space_map[dets_hashvec[I]] = C[I];
+    //    }
 
     convergence_analysis();
 
@@ -767,7 +766,7 @@ double ProjectorCI_HashVec::compute_energy() {
     if (fast_variational_estimate_) {
         var_energy = estimate_var_energy_sparse(dets_hashvec, C, evar_max_error_);
     } else {
-        var_energy = estimate_var_energy_within_error(dets_hashvec, C, evar_max_error_);
+        var_energy = estimate_var_energy_within_error_sigma(dets_hashvec, C, evar_max_error_);
     }
     timer_off("PCI:<E>end_v");
 
@@ -1187,8 +1186,7 @@ void ProjectorCI_HashVec::apply_tau_H_ref_C_symm(double tau, double spawning_thr
 #pragma omp critical
             {
                 merge(dets_hashvec_merge, C_merge, thread_det_C_vecs[current_rank],
-                                         std::function<double(double, double)>(std::plus<double>()),
-                                         0.0, false);
+                      std::function<double(double, double)>(std::plus<double>()), 0.0, false);
                 dets_max_couplings_.resize(dets_hashvec_merge.size());
                 dets_max_couplings_[I] = max_coupling;
             }
@@ -1200,8 +1198,7 @@ void ProjectorCI_HashVec::apply_tau_H_ref_C_symm(double tau, double spawning_thr
 #pragma omp critical
             {
                 merge(dets_hashvec_merge, C_merge, thread_det_C_vecs[current_rank],
-                                         std::function<double(double, double)>(std::plus<double>()),
-                                         0.0, false);
+                      std::function<double(double, double)>(std::plus<double>()), 0.0, false);
             }
         }
     }
@@ -2189,6 +2186,54 @@ double ProjectorCI_HashVec::estimate_var_energy_within_error(const det_hashvec& 
     return variational_energy_estimator + nuclear_repulsion_energy_ + fci_ints_->scalar_energy();
 }
 
+double ProjectorCI_HashVec::estimate_var_energy_within_error_sigma(const det_hashvec& dets_hashvec,
+                                                                   std::vector<double>& C,
+                                                                   double max_error) {
+    // Compute a variational estimator of the energy
+    size_t cut_index = dets_hashvec.size() - 1;
+    double max_HIJ = dets_single_max_coupling_ > dets_double_max_coupling_
+                         ? dets_single_max_coupling_
+                         : dets_double_max_coupling_;
+    double ignore_bound = max_error * max_error / (2.0 * max_HIJ * max_HIJ);
+    double cume_ignore = 0.0;
+    for (; cut_index > 0; --cut_index) {
+        cume_ignore += C[cut_index] * C[cut_index];
+        if (cume_ignore >= ignore_bound) {
+            break;
+        }
+    }
+    cume_ignore -= C[cut_index] * C[cut_index];
+    if (cut_index < dets_hashvec.size() - 1) {
+        ++cut_index;
+    }
+    outfile->Printf(
+        "\n  Variational energy estimated with %zu determinants to meet the max error %e",
+        cut_index + 1, max_error);
+    double variational_energy_estimator = 0.0;
+
+    WFNOperator op(mo_symmetry_);
+    std::vector<Determinant> sub_dets = dets_hashvec.toVector();
+    sub_dets.erase(sub_dets.begin() + cut_index + 1, sub_dets.end());
+    DeterminantMap det_map(sub_dets);
+    op.build_strings(det_map);
+    op.op_s_lists(det_map);
+    op.tp_s_lists(det_map);
+    std::vector<std::pair<std::vector<size_t>, std::vector<double>>> H = op.build_H_sparse(det_map);
+    SigmaVectorSparse svs(H);
+    size_t sub_size = svs.size();
+    // allocate vectors
+    SharedVector b(new Vector("b", sub_size));
+    SharedVector sigma(new Vector("sigma", sub_size));
+    for (size_t i = 0; i < sub_size; ++i) {
+        b->set(i, C[i]);
+    }
+    svs.compute_sigma(sigma, b);
+    variational_energy_estimator = sigma->dot(b.get());
+
+    variational_energy_estimator /= 1.0 - cume_ignore;
+    return variational_energy_estimator + nuclear_repulsion_energy_ + fci_ints_->scalar_energy();
+}
+
 double ProjectorCI_HashVec::estimate_var_energy_sparse(const det_hashvec& dets_hashvec,
                                                        std::vector<double>& C, double max_error) {
     size_t cut_index = dets_hashvec.size() - 1;
@@ -2281,8 +2326,8 @@ void ProjectorCI_HashVec::print_wfn(const det_hashvec& space_hashvec, std::vecto
     S2 /= norm;
     double S = std::fabs(0.5 * (std::sqrt(1.0 + 4.0 * S2) - 1.0));
 
-    std::vector<std::string> s2_labels({"singlet", "doublet", "triplet", "quartet", "quintet", "sextet",
-                                   "septet", "octet", "nonet", "decaet"});
+    std::vector<std::string> s2_labels({"singlet", "doublet", "triplet", "quartet", "quintet",
+                                        "sextet", "septet", "octet", "nonet", "decaet"});
     std::string state_label = s2_labels[std::round(S * 2.0)];
     outfile->Printf("\n\n  Spin State: S^2 = %5.3f, S = %5.3f, %s (from %zu "
                     "determinants,%.2f\%)",
@@ -2477,7 +2522,7 @@ double ProjectorCI_HashVec::form_H_C(const det_hashvec& dets_hashvec, std::vecto
 }
 
 double ProjectorCI_HashVec::form_H_C_2(const det_hashvec& dets_hashvec, std::vector<double>& C,
-                                     size_t I, size_t cut_index) {
+                                       size_t I, size_t cut_index) {
     const Determinant& detI = dets_hashvec[I];
     double CI = C[I];
 
@@ -2801,7 +2846,8 @@ void ProjectorCI_HashVec::compute_double_couplings(double double_coupling_thresh
             if (ij_couplings.size() != 0) {
                 std::sort(ij_couplings.begin(), ij_couplings.end(), CouplingCompare);
                 max_ij_coupling = std::get<2>(ij_couplings[0]);
-                aa_couplings_.push_back(std::make_tuple(i, j, std::fabs(max_ij_coupling), ij_couplings));
+                aa_couplings_.push_back(
+                    std::make_tuple(i, j, std::fabs(max_ij_coupling), ij_couplings));
             }
         }
     }
@@ -2835,7 +2881,8 @@ void ProjectorCI_HashVec::compute_double_couplings(double double_coupling_thresh
             if (ij_couplings.size() != 0) {
                 std::sort(ij_couplings.begin(), ij_couplings.end(), CouplingCompare);
                 max_ij_coupling = std::get<2>(ij_couplings[0]);
-                ab_couplings_.push_back(std::make_tuple(i, j, std::fabs(max_ij_coupling), ij_couplings));
+                ab_couplings_.push_back(
+                    std::make_tuple(i, j, std::fabs(max_ij_coupling), ij_couplings));
             }
         }
     }
@@ -2871,7 +2918,8 @@ void ProjectorCI_HashVec::compute_double_couplings(double double_coupling_thresh
             if (ij_couplings.size() != 0) {
                 std::sort(ij_couplings.begin(), ij_couplings.end(), CouplingCompare);
                 max_ij_coupling = std::get<2>(ij_couplings[0]);
-                bb_couplings_.push_back(std::make_tuple(i, j, std::fabs(max_ij_coupling), ij_couplings));
+                bb_couplings_.push_back(
+                    std::make_tuple(i, j, std::fabs(max_ij_coupling), ij_couplings));
             }
         }
     }
@@ -3037,7 +3085,8 @@ ProjectorCI_HashVec::sym_labeled_orbitals(std::string type) {
 
         // Create a vector that stores the orbital energy, symmetry, and idx
         for (size_t a = 0; a < nact_; ++a) {
-            labeled_orb.push_back(std::make_tuple(orb_e[a].first, mo_symmetry_[a], orb_e[a].second));
+            labeled_orb.push_back(
+                std::make_tuple(orb_e[a].first, mo_symmetry_[a], orb_e[a].second));
         }
         // Order by energy, low to high
         std::sort(labeled_orb.begin(), labeled_orb.end());
@@ -3055,7 +3104,8 @@ ProjectorCI_HashVec::sym_labeled_orbitals(std::string type) {
 
         // Create a vector that stores the orbital energy, sym, and idx
         for (size_t a = 0; a < nact_; ++a) {
-            labeled_orb.push_back(std::make_tuple(orb_e[a].first, mo_symmetry_[a], orb_e[a].second));
+            labeled_orb.push_back(
+                std::make_tuple(orb_e[a].first, mo_symmetry_[a], orb_e[a].second));
         }
         std::sort(labeled_orb.begin(), labeled_orb.end());
     }

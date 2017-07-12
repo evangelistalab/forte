@@ -1271,6 +1271,12 @@ void SparseCISolver::diagonalize_dl(const DeterminantMap& space, WFNOperator& op
     evals.reset(new Vector("e", nroot));
     SigmaVector* sigma_vector = 0;
 
+    if (sigma_vec_ != nullptr) {
+        sigma_vec_->add_bad_roots(bad_states_);
+        davidson_liu_solver_map(space, sigma_vec_, evals, evecs, nroot, multiplicity);
+        return;
+    }
+
     if (sigma_method_ == "HZ") {
         SigmaVectorWfn1 svw(space, op);
         sigma_vector = &svw;
@@ -1400,6 +1406,12 @@ void SparseCISolver::diagonalize_davidson_liu_solver(const std::vector<STLBitset
     evals.reset(new Vector("e", nroot));
 
     // Diagonalize H
+    if (sigma_vec_ != nullptr) {
+        sigma_vec_->add_bad_roots(bad_states_);
+        davidson_liu_solver(space, sigma_vec_, evals, evecs, nroot, multiplicity);
+        return;
+    }
+
     SigmaVectorList svl(space, print_details_);
     SigmaVector* sigma_vector = &svl;
     sigma_vector->add_bad_roots(bad_states_);
@@ -2166,6 +2178,12 @@ void SparseCISolver::diagonalize_dl_sparse(const DeterminantMap& space, WFNOpera
     evals.reset(new Vector("e", nroot));
 
     // Diagonalize H
+    if (sigma_vec_ != nullptr) {
+        sigma_vec_->add_bad_roots(bad_states_);
+        davidson_liu_solver_map(space, sigma_vec_, evals, evecs, nroot, multiplicity);
+        return;
+    }
+
     SigmaVectorSparse svs(H);
     SigmaVector* sigma_vector = &svs;
     sigma_vector->add_bad_roots(bad_states_);
