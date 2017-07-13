@@ -239,10 +239,10 @@ void CASSCF::compute_casscf() {
                         retrans_ints.get());
     }
 
-    if (options_.get_str("JOB_TYPE") != "CASSCF") {
-        SemiCanonical semi(reference_wavefunction_, options_, ints_, mo_space_info_, cas_ref_);
-        ints_->retransform_integrals();
-    }
+    // if (options_.get_str("JOB_TYPE") != "CASSCF") {
+    //     SemiCanonical semi(reference_wavefunction_, options_, ints_, mo_space_info_, cas_ref_);
+    //     ints_->retransform_integrals();
+    // }
 }
 void CASSCF::startup() {
     print_method_banner({"Complete Active Space Self Consistent Field", "Kevin Hannon"});
