@@ -26,7 +26,7 @@ set forte {
   pci_ENERGY_ESTIMATE_FREQ 1
   pci_FAST_EVAR true
   pci_USE_INTER_NORM true
-  pci_VAR_ESTIMATE true
+  pci_VAR_ESTIMATE false
   pci_ENERGY_ESTIMATE_THRESHOLD 1e-5
   MP2_NOS true
   pci_maxbeta 100000.00

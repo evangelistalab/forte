@@ -47,7 +47,6 @@
 
 #include "pci_hashvec.h"
 
-
 using namespace psi;
 using namespace psi::forte::GeneratorType_HashVec;
 
@@ -565,7 +564,7 @@ double ProjectorCI_HashVec::compute_energy() {
     outfile->Printf("\n\t    Projector Configuration Interaction HashVector "
                     "implementation");
     outfile->Printf("\n\t         by Francesco A. Evangelista and Tianyuan Zhang");
-    outfile->Printf("\n\t                      version Jun. 29 2017");
+    outfile->Printf("\n\t                      version Jul. 11 2017");
     outfile->Printf("\n\t                    %4d thread(s) %s", num_threads_,
                     have_omp_ ? "(OMP)" : "");
     outfile->Printf("\n\t  ---------------------------------------------------------");
@@ -614,10 +613,10 @@ double ProjectorCI_HashVec::compute_energy() {
     double var_energy = initial_guess(dets_hashvec, C);
     double proj_energy = var_energy;
     print_wfn(dets_hashvec, C);
-//    det_hash<> old_space_map;
-//    for (size_t I = 0; I < dets_hashvec.size(); ++I) {
-//        old_space_map[dets_hashvec[I]] = C[I];
-//    }
+    //    det_hash<> old_space_map;
+    //    for (size_t I = 0; I < dets_hashvec.size(); ++I) {
+    //        old_space_map[dets_hashvec[I]] = C[I];
+    //    }
 
     convergence_analysis();
 
@@ -767,7 +766,7 @@ double ProjectorCI_HashVec::compute_energy() {
     if (fast_variational_estimate_) {
         var_energy = estimate_var_energy_sparse(dets_hashvec, C, evar_max_error_);
     } else {
-        var_energy = estimate_var_energy_within_error(dets_hashvec, C, evar_max_error_);
+        var_energy = estimate_var_energy_within_error_sigma(dets_hashvec, C, evar_max_error_);
     }
     timer_off("PCI:<E>end_v");
 
@@ -1187,8 +1186,7 @@ void ProjectorCI_HashVec::apply_tau_H_ref_C_symm(double tau, double spawning_thr
 #pragma omp critical
             {
                 merge(dets_hashvec_merge, C_merge, thread_det_C_vecs[current_rank],
-                                         std::function<double(double, double)>(std::plus<double>()),
-                                         0.0, false);
+                      std::function<double(double, double)>(std::plus<double>()), 0.0, false);
                 dets_max_couplings_.resize(dets_hashvec_merge.size());
                 dets_max_couplings_[I] = max_coupling;
             }
@@ -1200,8 +1198,7 @@ void ProjectorCI_HashVec::apply_tau_H_ref_C_symm(double tau, double spawning_thr
 #pragma omp critical
             {
                 merge(dets_hashvec_merge, C_merge, thread_det_C_vecs[current_rank],
-                                         std::function<double(double, double)>(std::plus<double>()),
-                                         0.0, false);
+                      std::function<double(double, double)>(std::plus<double>()), 0.0, false);
             }
         }
     }
@@ -1209,9 +1206,9 @@ void ProjectorCI_HashVec::apply_tau_H_ref_C_symm(double tau, double spawning_thr
 #pragma omp parallel for
     for (size_t I = ref_max_I; I < max_I; ++I) {
         // Diagonal contribution
-        // timer_on("PCI:diagonal", omp_get_thread_num());
+        // parallel_timer_on("PCI:diagonal", omp_get_thread_num());
         double det_energy = dets_hashvec[I].energy() + fci_ints_->scalar_energy();
-        // timer_off("PCI:diagonal", omp_get_thread_num());
+        // parallel_timer_off("PCI:diagonal", omp_get_thread_num());
         // Diagonal contributions
         C_merge[I] += tau * (det_energy - S) * C[I];
     }
@@ -1257,14 +1254,14 @@ void ProjectorCI_HashVec::apply_tau_H_ref_C_symm_det_dynamic_HBCI_2(
     bool do_doubles = std::fabs(max_coupling.second * ref_CI) >= spawning_threshold;
 
     // Diagonal contributions
-    // timer_on("PCI:diagonal", omp_get_thread_num());
+    // parallel_timer_on("PCI:diagonal", omp_get_thread_num());
     double det_energy = detI.energy() + fci_ints_->scalar_energy();
     new_space_C_vec.push_back(std::make_pair(detI, tau * (det_energy - E0) * CI));
-    // timer_off("PCI:diagonal", omp_get_thread_num());
+    // parallel_timer_off("PCI:diagonal", omp_get_thread_num());
 
     Determinant detJ(detI);
     if (do_singles) {
-        // timer_on("PCI:singles", omp_get_thread_num());
+        // parallel_timer_on("PCI:singles", omp_get_thread_num());
         // Generate alpha excitations
         for (size_t x = 0; x < a_couplings_size_; ++x) {
             double HJI_max = std::get<1>(a_couplings_[x]);
@@ -1283,19 +1280,18 @@ void ProjectorCI_HashVec::apply_tau_H_ref_C_symm_det_dynamic_HBCI_2(
                         break;
                     }
                     if (!detI.get_alfa_bit(a)) {
-                        //                        Determinant detJ(detI);
-                        //                        double HJI = detJ.slater_rules_single_alpha_abs(i,
-                        //                        a);
-                        double HJI = fci_ints_->oei_a(i, a);
-                        size_t max_bit = 2 * nact_;
-                        bit_t& bits = detJ.bits_;
-                        std::vector<double>& double_couplings =
-                            single_alpha_excite_double_couplings_[i][a];
-                        for (size_t p = 0; p < max_bit; ++p) {
-                            if (bits[p]) {
-                                HJI += double_couplings[p];
-                            }
-                        }
+                        Determinant detJ(detI);
+                        double HJI = detJ.slater_rules_single_alpha_abs(i, a);
+//                        double HJI = fci_ints_->oei_a(i, a);
+//                        size_t max_bit = 2 * nact_;
+//                        bit_t& bits = detJ.bits_;
+//                        std::vector<double>& double_couplings =
+//                            single_alpha_excite_double_couplings_[i][a];
+//                        for (size_t p = 0; p < max_bit; ++p) {
+//                            if (bits[p]) {
+//                                HJI += double_couplings[p];
+//                            }
+//                        }
                         if (std::fabs(HJI * ref_CI) >= spawning_threshold) {
                             HJI *= detJ.single_excitation_a(i, a);
                             new_space_C_vec.push_back(std::make_pair(detJ, tau * HJI * CI));
@@ -1331,19 +1327,18 @@ void ProjectorCI_HashVec::apply_tau_H_ref_C_symm_det_dynamic_HBCI_2(
                         break;
                     }
                     if (!detI.get_beta_bit(a)) {
-                        //                        Determinant detJ(detI);
-                        //                        double HJI = detJ.slater_rules_single_beta_abs(i,
-                        //                        a);
-                        double HJI = fci_ints_->oei_b(i, a);
-                        size_t max_bit = 2 * nact_;
-                        bit_t& bits = detJ.bits_;
-                        std::vector<double>& double_couplings =
-                            single_beta_excite_double_couplings_[i][a];
-                        for (size_t p = 0; p < max_bit; ++p) {
-                            if (bits[p]) {
-                                HJI += double_couplings[p];
-                            }
-                        }
+                        Determinant detJ(detI);
+                        double HJI = detJ.slater_rules_single_beta_abs(i, a);
+//                        double HJI = fci_ints_->oei_b(i, a);
+//                        size_t max_bit = 2 * nact_;
+//                        bit_t& bits = detJ.bits_;
+//                        std::vector<double>& double_couplings =
+//                            single_beta_excite_double_couplings_[i][a];
+//                        for (size_t p = 0; p < max_bit; ++p) {
+//                            if (bits[p]) {
+//                                HJI += double_couplings[p];
+//                            }
+//                        }
                         if (std::fabs(HJI * ref_CI) >= spawning_threshold) {
                             HJI *= detJ.single_excitation_b(i, a);
                             new_space_C_vec.push_back(std::make_pair(detJ, tau * HJI * CI));
@@ -1361,9 +1356,9 @@ void ProjectorCI_HashVec::apply_tau_H_ref_C_symm_det_dynamic_HBCI_2(
                 }
             }
         }
-        // timer_off("PCI:singles", omp_get_thread_num());
+        // parallel_timer_off("PCI:singles", omp_get_thread_num());
     } else if (do_singles_1) {
-        // timer_on("PCI:singles", omp_get_thread_num());
+        // parallel_timer_on("PCI:singles", omp_get_thread_num());
         // Generate alpha excitations
         for (size_t x = 0; x < a_couplings_size_; ++x) {
             double HJI_max = std::get<1>(a_couplings_[x]);
@@ -1382,19 +1377,18 @@ void ProjectorCI_HashVec::apply_tau_H_ref_C_symm_det_dynamic_HBCI_2(
                         break;
                     }
                     if (!detI.get_alfa_bit(a)) {
-                        //                        Determinant detJ(detI);
-                        //                        double HJI = detJ.slater_rules_single_alpha_abs(i,
-                        //                        a);
-                        double HJI = fci_ints_->oei_a(i, a);
-                        size_t max_bit = 2 * nact_;
-                        bit_t& bits = detJ.bits_;
-                        std::vector<double>& double_couplings =
-                            single_alpha_excite_double_couplings_[i][a];
-                        for (size_t p = 0; p < max_bit; ++p) {
-                            if (bits[p]) {
-                                HJI += double_couplings[p];
-                            }
-                        }
+                        Determinant detJ(detI);
+                        double HJI = detJ.slater_rules_single_alpha_abs(i, a);
+//                        double HJI = fci_ints_->oei_a(i, a);
+//                        size_t max_bit = 2 * nact_;
+//                        bit_t& bits = detJ.bits_;
+//                        std::vector<double>& double_couplings =
+//                            single_alpha_excite_double_couplings_[i][a];
+//                        for (size_t p = 0; p < max_bit; ++p) {
+//                            if (bits[p]) {
+//                                HJI += double_couplings[p];
+//                            }
+//                        }
                         max_coupling.first = std::max(max_coupling.first, std::fabs(HJI));
                         if (std::fabs(HJI * ref_CI) >= spawning_threshold) {
                             HJI *= detJ.single_excitation_a(i, a);
@@ -1431,19 +1425,18 @@ void ProjectorCI_HashVec::apply_tau_H_ref_C_symm_det_dynamic_HBCI_2(
                         break;
                     }
                     if (!detI.get_beta_bit(a)) {
-                        //                        Determinant detJ(detI);
-                        //                        double HJI = detJ.slater_rules_single_beta_abs(i,
-                        //                        a);
-                        double HJI = fci_ints_->oei_b(i, a);
-                        size_t max_bit = 2 * nact_;
-                        bit_t& bits = detJ.bits_;
-                        std::vector<double>& double_couplings =
-                            single_beta_excite_double_couplings_[i][a];
-                        for (size_t p = 0; p < max_bit; ++p) {
-                            if (bits[p]) {
-                                HJI += double_couplings[p];
-                            }
-                        }
+                        Determinant detJ(detI);
+                        double HJI = detJ.slater_rules_single_beta_abs(i, a);
+//                        double HJI = fci_ints_->oei_b(i, a);
+//                        size_t max_bit = 2 * nact_;
+//                        bit_t& bits = detJ.bits_;
+//                        std::vector<double>& double_couplings =
+//                            single_beta_excite_double_couplings_[i][a];
+//                        for (size_t p = 0; p < max_bit; ++p) {
+//                            if (bits[p]) {
+//                                HJI += double_couplings[p];
+//                            }
+//                        }
                         max_coupling.first = std::max(max_coupling.first, std::fabs(HJI));
                         if (std::fabs(HJI * ref_CI) >= spawning_threshold) {
                             HJI *= detJ.single_excitation_b(i, a);
@@ -1462,11 +1455,11 @@ void ProjectorCI_HashVec::apply_tau_H_ref_C_symm_det_dynamic_HBCI_2(
                 }
             }
         }
-        // timer_off("PCI:singles", omp_get_thread_num());
+        // parallel_timer_off("PCI:singles", omp_get_thread_num());
     }
 
     if (do_doubles) {
-        // timer_on("PCI:doubles", omp_get_thread_num());
+        // parallel_timer_on("PCI:doubles", omp_get_thread_num());
         // Generate alpha-alpha excitations
         for (size_t x = 0; x < aa_couplings_size_; ++x) {
             double HJI_max = std::get<2>(aa_couplings_[x]);
@@ -1581,9 +1574,9 @@ void ProjectorCI_HashVec::apply_tau_H_ref_C_symm_det_dynamic_HBCI_2(
                 }
             }
         }
-        // timer_off("PCI:doubles", omp_get_thread_num());
+        // parallel_timer_off("PCI:doubles", omp_get_thread_num());
     } else if (do_doubles_1) {
-        // timer_on("PCI:doubles", omp_get_thread_num());
+        // parallel_timer_on("PCI:doubles", omp_get_thread_num());
         // Generate alpha-alpha excitations
         for (size_t x = 0; x < aa_couplings_size_; ++x) {
             double HJI_max = std::get<2>(aa_couplings_[x]);
@@ -1701,7 +1694,7 @@ void ProjectorCI_HashVec::apply_tau_H_ref_C_symm_det_dynamic_HBCI_2(
                 }
             }
         }
-        // timer_off("PCI:doubles", omp_get_thread_num());
+        // parallel_timer_off("PCI:doubles", omp_get_thread_num());
     }
 }
 
@@ -1720,14 +1713,14 @@ void ProjectorCI_HashVec::apply_tau_H_ref_C_symm_det_dynamic_HBCI(
     bool do_doubles = std::fabs(max_coupling.second * ref_CI) >= spawning_threshold;
 
     // Diagonal contributions
-    // timer_on("PCI:diagonal", omp_get_thread_num());
+    // parallel_timer_on("PCI:diagonal", omp_get_thread_num());
     double det_energy = detI.energy() + fci_ints_->scalar_energy();
     new_space_C_vec.push_back(std::make_pair(detI, tau * (det_energy - E0) * CI));
-    // timer_off("PCI:diagonal", omp_get_thread_num());
+    // parallel_timer_off("PCI:diagonal", omp_get_thread_num());
 
     Determinant detJ(detI);
     if (do_singles) {
-        // timer_on("PCI:singles", omp_get_thread_num());
+        // parallel_timer_on("PCI:singles", omp_get_thread_num());
         std::vector<int> aocc = detI.get_alfa_occ();
         std::vector<int> bocc = detI.get_beta_occ();
         std::vector<int> avir = detI.get_alfa_vir();
@@ -1784,9 +1777,9 @@ void ProjectorCI_HashVec::apply_tau_H_ref_C_symm_det_dynamic_HBCI(
                 }
             }
         }
-        // timer_off("PCI:singles", omp_get_thread_num());
+        // parallel_timer_off("PCI:singles", omp_get_thread_num());
     } else if (do_singles_1) {
-        // timer_on("PCI:singles", omp_get_thread_num());
+        // parallel_timer_on("PCI:singles", omp_get_thread_num());
         std::vector<int> aocc = detI.get_alfa_occ();
         std::vector<int> bocc = detI.get_beta_occ();
         std::vector<int> avir = detI.get_alfa_vir();
@@ -1845,11 +1838,11 @@ void ProjectorCI_HashVec::apply_tau_H_ref_C_symm_det_dynamic_HBCI(
                 }
             }
         }
-        // timer_off("PCI:singles", omp_get_thread_num());
+        // parallel_timer_off("PCI:singles", omp_get_thread_num());
     }
 
     if (do_doubles) {
-        // timer_on("PCI:doubles", omp_get_thread_num());
+        // parallel_timer_on("PCI:doubles", omp_get_thread_num());
         // Generate alpha-alpha excitations
         for (size_t x = 0; x < aa_couplings_size_; ++x) {
             double HJI_max = std::get<2>(aa_couplings_[x]);
@@ -1964,9 +1957,9 @@ void ProjectorCI_HashVec::apply_tau_H_ref_C_symm_det_dynamic_HBCI(
                 }
             }
         }
-        // timer_off("PCI:doubles", omp_get_thread_num());
+        // parallel_timer_off("PCI:doubles", omp_get_thread_num());
     } else if (do_doubles_1) {
-        // timer_on("PCI:doubles", omp_get_thread_num());
+        // parallel_timer_on("PCI:doubles", omp_get_thread_num());
         // Generate alpha-alpha excitations
         for (size_t x = 0; x < aa_couplings_size_; ++x) {
             double HJI_max = std::get<2>(aa_couplings_[x]);
@@ -2084,7 +2077,7 @@ void ProjectorCI_HashVec::apply_tau_H_ref_C_symm_det_dynamic_HBCI(
                 }
             }
         }
-        // timer_off("PCI:doubles", omp_get_thread_num());
+        // parallel_timer_off("PCI:doubles", omp_get_thread_num());
     }
 }
 
@@ -2189,6 +2182,54 @@ double ProjectorCI_HashVec::estimate_var_energy_within_error(const det_hashvec& 
     return variational_energy_estimator + nuclear_repulsion_energy_ + fci_ints_->scalar_energy();
 }
 
+double ProjectorCI_HashVec::estimate_var_energy_within_error_sigma(const det_hashvec& dets_hashvec,
+                                                                   std::vector<double>& C,
+                                                                   double max_error) {
+    // Compute a variational estimator of the energy
+    size_t cut_index = dets_hashvec.size() - 1;
+    double max_HIJ = dets_single_max_coupling_ > dets_double_max_coupling_
+                         ? dets_single_max_coupling_
+                         : dets_double_max_coupling_;
+    double ignore_bound = max_error * max_error / (2.0 * max_HIJ * max_HIJ);
+    double cume_ignore = 0.0;
+    for (; cut_index > 0; --cut_index) {
+        cume_ignore += C[cut_index] * C[cut_index];
+        if (cume_ignore >= ignore_bound) {
+            break;
+        }
+    }
+    cume_ignore -= C[cut_index] * C[cut_index];
+    if (cut_index < dets_hashvec.size() - 1) {
+        ++cut_index;
+    }
+    outfile->Printf(
+        "\n  Variational energy estimated with %zu determinants to meet the max error %e",
+        cut_index + 1, max_error);
+    double variational_energy_estimator = 0.0;
+
+    WFNOperator op(mo_symmetry_);
+    std::vector<Determinant> sub_dets = dets_hashvec.toVector();
+    sub_dets.erase(sub_dets.begin() + cut_index + 1, sub_dets.end());
+    DeterminantMap det_map(sub_dets);
+    op.build_strings(det_map);
+    op.op_s_lists(det_map);
+    op.tp_s_lists(det_map);
+    std::vector<std::pair<std::vector<size_t>, std::vector<double>>> H = op.build_H_sparse(det_map);
+    SigmaVectorSparse svs(H);
+    size_t sub_size = svs.size();
+    // allocate vectors
+    SharedVector b(new Vector("b", sub_size));
+    SharedVector sigma(new Vector("sigma", sub_size));
+    for (size_t i = 0; i < sub_size; ++i) {
+        b->set(i, C[i]);
+    }
+    svs.compute_sigma(sigma, b);
+    variational_energy_estimator = sigma->dot(b.get());
+
+    variational_energy_estimator /= 1.0 - cume_ignore;
+    return variational_energy_estimator + nuclear_repulsion_energy_ + fci_ints_->scalar_energy();
+}
+
 double ProjectorCI_HashVec::estimate_var_energy_sparse(const det_hashvec& dets_hashvec,
                                                        std::vector<double>& C, double max_error) {
     size_t cut_index = dets_hashvec.size() - 1;
@@ -2210,6 +2251,10 @@ double ProjectorCI_HashVec::estimate_var_energy_sparse(const det_hashvec& dets_h
     outfile->Printf(
         "\n  Variational energy estimated with %zu determinants to meet the max error %e",
         cut_index + 1, max_error);
+
+    timer_on("PCI:Couplings");
+    compute_couplings_half(dets_hashvec, cut_index + 1);
+    timer_off("PCI:Couplings");
 
     double variational_energy_estimator = 0.0;
     std::vector<double> energy(num_threads_, 0.0);
@@ -2277,8 +2322,8 @@ void ProjectorCI_HashVec::print_wfn(const det_hashvec& space_hashvec, std::vecto
     S2 /= norm;
     double S = std::fabs(0.5 * (std::sqrt(1.0 + 4.0 * S2) - 1.0));
 
-    std::vector<std::string> s2_labels({"singlet", "doublet", "triplet", "quartet", "quintet", "sextet",
-                                   "septet", "octet", "nonet", "decaet"});
+    std::vector<std::string> s2_labels({"singlet", "doublet", "triplet", "quartet", "quintet",
+                                        "sextet", "septet", "octet", "nonet", "decaet"});
     std::string state_label = s2_labels[std::round(S * 2.0)];
     outfile->Printf("\n\n  Spin State: S^2 = %5.3f, S = %5.3f, %s (from %zu "
                     "determinants,%.2f\%)",
@@ -2349,9 +2394,9 @@ double ProjectorCI_HashVec::form_H_C(const det_hashvec& dets_hashvec, std::vecto
                 detJ.set_alfa_bit(ii, false);
                 detJ.set_alfa_bit(aa, true);
                 size_t index = dets_hashvec.find(detJ);
-                if (index <= cut_index) {
+                if (index < I) {
                     HJI = detI.slater_rules_single_alpha(ii, aa);
-                    result += HJI * CI * C[index];
+                    result += 2.0 * HJI * CI * C[index];
                 }
                 detJ.set_alfa_bit(ii, true);
                 detJ.set_alfa_bit(aa, false);
@@ -2367,9 +2412,9 @@ double ProjectorCI_HashVec::form_H_C(const det_hashvec& dets_hashvec, std::vecto
                 detJ.set_beta_bit(ii, false);
                 detJ.set_beta_bit(aa, true);
                 size_t index = dets_hashvec.find(detJ);
-                if (index <= cut_index) {
+                if (index < I) {
                     HJI = detI.slater_rules_single_beta(ii, aa);
-                    result += HJI * CI * C[index];
+                    result += 2.0 * HJI * CI * C[index];
                 }
                 detJ.set_beta_bit(ii, true);
                 detJ.set_beta_bit(aa, false);
@@ -2393,10 +2438,10 @@ double ProjectorCI_HashVec::form_H_C(const det_hashvec& dets_hashvec, std::vecto
                         detJ.set_alfa_bit(aa, true);
                         detJ.set_alfa_bit(bb, true);
                         size_t index = dets_hashvec.find(detJ);
-                        if (index <= cut_index) {
+                        if (index < I) {
                             sign = detJ.double_excitation_aa(aa, bb, ii, jj);
                             HJI = fci_ints_->tei_aa(ii, jj, aa, bb);
-                            result += sign * HJI * CI * C[index];
+                            result += 2.0 * sign * HJI * CI * C[index];
                         } else {
                             detJ.set_alfa_bit(ii, true);
                             detJ.set_alfa_bit(jj, true);
@@ -2424,10 +2469,10 @@ double ProjectorCI_HashVec::form_H_C(const det_hashvec& dets_hashvec, std::vecto
                         detJ.set_alfa_bit(aa, true);
                         detJ.set_beta_bit(bb, true);
                         size_t index = dets_hashvec.find(detJ);
-                        if (index <= cut_index) {
+                        if (index < I) {
                             sign = detJ.double_excitation_ab(aa, bb, ii, jj);
                             HJI = fci_ints_->tei_ab(ii, jj, aa, bb);
-                            result += sign * HJI * CI * C[index];
+                            result += 2.0 * sign * HJI * CI * C[index];
                         } else {
                             detJ.set_alfa_bit(ii, true);
                             detJ.set_beta_bit(jj, true);
@@ -2454,10 +2499,10 @@ double ProjectorCI_HashVec::form_H_C(const det_hashvec& dets_hashvec, std::vecto
                         detJ.set_beta_bit(aa, true);
                         detJ.set_beta_bit(bb, true);
                         size_t index = dets_hashvec.find(detJ);
-                        if (index <= cut_index) {
+                        if (index < I) {
                             sign = detJ.double_excitation_bb(aa, bb, ii, jj);
                             HJI = fci_ints_->tei_bb(ii, jj, aa, bb);
-                            result += sign * HJI * CI * C[index];
+                            result += 2.0 * sign * HJI * CI * C[index];
                         } else {
                             detJ.set_beta_bit(ii, true);
                             detJ.set_beta_bit(jj, true);
@@ -2465,6 +2510,158 @@ double ProjectorCI_HashVec::form_H_C(const det_hashvec& dets_hashvec, std::vecto
                             detJ.set_beta_bit(bb, false);
                         }
                     }
+                }
+            }
+        }
+    }
+    return result;
+}
+
+double ProjectorCI_HashVec::form_H_C_2(const det_hashvec& dets_hashvec, std::vector<double>& C,
+                                       size_t I, size_t cut_index) {
+    const Determinant& detI = dets_hashvec[I];
+    double CI = C[I];
+
+    // diagonal contribution
+    double result = CI * CI * detI.energy();
+
+    Determinant detJ(detI);
+    double HJI;
+    for (size_t x = 0; x < a_couplings_size_; ++x) {
+        int i = std::get<0>(a_couplings_[x]);
+        if (detI.get_alfa_bit(i)) {
+            std::vector<std::tuple<int, double>>& sub_couplings = std::get<2>(a_couplings_[x]);
+            size_t sub_couplings_size = sub_couplings.size();
+            for (size_t y = 0; y < sub_couplings_size; ++y) {
+                int a;
+                std::tie(a, HJI) = sub_couplings[y];
+                if (!detI.get_alfa_bit(a)) {
+//                    size_t max_bit = 2 * nact_;
+//                    bit_t& bits = detJ.bits_;
+//                    std::vector<double>& double_couplings =
+//                        single_alpha_excite_double_couplings_[i][a];
+//                    for (size_t p = 0; p < max_bit; ++p) {
+//                        if (bits[p]) {
+//                            HJI += double_couplings[p];
+//                        }
+//                    }
+//                    HJI *= detJ.single_excitation_a(i, a);
+                    HJI = detJ.slater_rules_single_alpha_abs(i, a);
+                    HJI *= detJ.single_excitation_a(i, a);
+                    size_t index = dets_hashvec.find(detJ);
+                    if (index <= cut_index) {
+                        result += 2.0 * HJI * CI * C[index];
+                    }
+                    detJ.set_alfa_bit(i, true);
+                    detJ.set_alfa_bit(a, false);
+                }
+            }
+        }
+    }
+
+    for (size_t x = 0; x < b_couplings_size_; ++x) {
+        int i = std::get<0>(b_couplings_[x]);
+        if (detI.get_beta_bit(i)) {
+            std::vector<std::tuple<int, double>>& sub_couplings = std::get<2>(b_couplings_[x]);
+            size_t sub_couplings_size = sub_couplings.size();
+            for (size_t y = 0; y < sub_couplings_size; ++y) {
+                int a;
+                std::tie(a, HJI) = sub_couplings[y];
+                if (!detI.get_beta_bit(a)) {
+//                    size_t max_bit = 2 * nact_;
+//                    bit_t& bits = detJ.bits_;
+//                    std::vector<double>& double_couplings =
+//                        single_beta_excite_double_couplings_[i][a];
+//                    for (size_t p = 0; p < max_bit; ++p) {
+//                        if (bits[p]) {
+//                            HJI += double_couplings[p];
+//                        }
+//                    }
+//                    HJI *= detJ.single_excitation_b(i, a);
+                    HJI = detJ.slater_rules_single_beta_abs(i, a);
+                    HJI *= detJ.single_excitation_b(i, a);
+                    size_t index = dets_hashvec.find(detJ);
+                    if (index <= cut_index) {
+                        result += 2.0 * HJI * CI * C[index];
+                    }
+                    detJ.set_beta_bit(i, true);
+                    detJ.set_beta_bit(a, false);
+                }
+            }
+        }
+    }
+
+    // Generate aa excitations
+    for (size_t x = 0; x < aa_couplings_size_; ++x) {
+        int i = std::get<0>(aa_couplings_[x]);
+        int j = std::get<1>(aa_couplings_[x]);
+        if (detI.get_alfa_bit(i) and detI.get_alfa_bit(j)) {
+            std::vector<std::tuple<int, int, double>>& sub_couplings =
+                std::get<3>(aa_couplings_[x]);
+            size_t sub_couplings_size = sub_couplings.size();
+            for (size_t y = 0; y < sub_couplings_size; ++y) {
+                int a, b;
+                std::tie(a, b, HJI) = sub_couplings[y];
+                if (!(detI.get_alfa_bit(a) or detI.get_alfa_bit(b))) {
+                    HJI *= detJ.double_excitation_aa(i, j, a, b);
+                    size_t index = dets_hashvec.find(detJ);
+                    if (index <= cut_index) {
+                        result += 2.0 * HJI * CI * C[index];
+                    }
+                    detJ.set_alfa_bit(i, true);
+                    detJ.set_alfa_bit(j, true);
+                    detJ.set_alfa_bit(a, false);
+                    detJ.set_alfa_bit(b, false);
+                }
+            }
+        }
+    }
+
+    for (size_t x = 0; x < ab_couplings_size_; ++x) {
+        int i = std::get<0>(ab_couplings_[x]);
+        int j = std::get<1>(ab_couplings_[x]);
+        if (detI.get_alfa_bit(i) and detI.get_beta_bit(j)) {
+            std::vector<std::tuple<int, int, double>>& sub_couplings =
+                std::get<3>(ab_couplings_[x]);
+            size_t sub_couplings_size = sub_couplings.size();
+            for (size_t y = 0; y < sub_couplings_size; ++y) {
+                int a, b;
+                std::tie(a, b, HJI) = sub_couplings[y];
+                if (!(detI.get_alfa_bit(a) or detI.get_beta_bit(b))) {
+                    HJI *= detJ.double_excitation_ab(i, j, a, b);
+                    size_t index = dets_hashvec.find(detJ);
+                    if (index <= cut_index) {
+                        result += 2.0 * HJI * CI * C[index];
+                    }
+                    detJ.set_alfa_bit(i, true);
+                    detJ.set_beta_bit(j, true);
+                    detJ.set_alfa_bit(a, false);
+                    detJ.set_beta_bit(b, false);
+                }
+            }
+        }
+    }
+
+    for (size_t x = 0; x < bb_couplings_size_; ++x) {
+        int i = std::get<0>(bb_couplings_[x]);
+        int j = std::get<1>(bb_couplings_[x]);
+        if (detI.get_beta_bit(i) and detI.get_beta_bit(j)) {
+            std::vector<std::tuple<int, int, double>>& sub_couplings =
+                std::get<3>(bb_couplings_[x]);
+            size_t sub_couplings_size = sub_couplings.size();
+            for (size_t y = 0; y < sub_couplings_size; ++y) {
+                int a, b;
+                std::tie(a, b, HJI) = sub_couplings[y];
+                if (!(detI.get_beta_bit(a) or detI.get_beta_bit(b))) {
+                    HJI *= detJ.double_excitation_bb(i, j, a, b);
+                    size_t index = dets_hashvec.find(detJ);
+                    if (index <= cut_index) {
+                        result += 2.0 * HJI * CI * C[index];
+                    }
+                    detJ.set_beta_bit(i, true);
+                    detJ.set_beta_bit(j, true);
+                    detJ.set_beta_bit(a, false);
+                    detJ.set_beta_bit(b, false);
                 }
             }
         }
@@ -2491,8 +2688,10 @@ void ProjectorCI_HashVec::compute_single_couplings(double single_coupling_thresh
         }
     } MaxCouplingCompare;
 
-    single_alpha_excite_double_couplings_.resize(nact_, std::vector<std::vector<double>>(nact_));
-    single_beta_excite_double_couplings_.resize(nact_, std::vector<std::vector<double>>(nact_));
+//    single_alpha_excite_double_couplings_.clear();
+//    single_beta_excite_double_couplings_.clear();
+//    single_alpha_excite_double_couplings_.resize(nact_, std::vector<std::vector<double>>(nact_));
+//    single_beta_excite_double_couplings_.resize(nact_, std::vector<std::vector<double>>(nact_));
 
     dets_single_max_coupling_ = 0.0;
     a_couplings_.clear();
@@ -2503,15 +2702,15 @@ void ProjectorCI_HashVec::compute_single_couplings(double single_coupling_thresh
                 double Hia = fci_ints_->oei_a(i, a);
                 std::vector<double> aa_double_couplings(nact_);
                 std::vector<double> ab_double_couplings(nact_);
-                single_alpha_excite_double_couplings_[i][a].resize(2 * nact_);
-                single_alpha_excite_double_couplings_[a][i].resize(2 * nact_);
+//                single_alpha_excite_double_couplings_[i][a].resize(2 * nact_);
+//                single_alpha_excite_double_couplings_[a][i].resize(2 * nact_);
                 for (int p = 0; p < nact_; ++p) {
                     aa_double_couplings[p] = fci_ints_->tei_aa(i, p, a, p);
                     ab_double_couplings[p] = fci_ints_->tei_ab(i, p, a, p);
-                    single_alpha_excite_double_couplings_[i][a][p] = aa_double_couplings[p];
-                    single_alpha_excite_double_couplings_[a][i][p] = aa_double_couplings[p];
-                    single_alpha_excite_double_couplings_[i][a][p + nact_] = ab_double_couplings[p];
-                    single_alpha_excite_double_couplings_[a][i][p + nact_] = ab_double_couplings[p];
+//                    single_alpha_excite_double_couplings_[i][a][p] = aa_double_couplings[p];
+//                    single_alpha_excite_double_couplings_[a][i][p] = aa_double_couplings[p];
+//                    single_alpha_excite_double_couplings_[i][a][p + nact_] = ab_double_couplings[p];
+//                    single_alpha_excite_double_couplings_[a][i][p + nact_] = ab_double_couplings[p];
                 }
                 std::sort(aa_double_couplings.begin(), aa_double_couplings.end());
                 std::sort(ab_double_couplings.begin(), ab_double_couplings.end());
@@ -2541,6 +2740,9 @@ void ProjectorCI_HashVec::compute_single_couplings(double single_coupling_thresh
         std::get<0>(a_couplings_[i]) = i;
     }
     std::sort(a_couplings_.begin(), a_couplings_.end(), MaxCouplingCompare);
+    while (std::get<1>(a_couplings_.back()) == 0.0) {
+        a_couplings_.pop_back();
+    }
     a_couplings_size_ = a_couplings_.size();
     dets_single_max_coupling_ = std::get<1>(a_couplings_[0]);
 
@@ -2552,15 +2754,15 @@ void ProjectorCI_HashVec::compute_single_couplings(double single_coupling_thresh
                 double Hia = fci_ints_->oei_b(i, a);
                 std::vector<double> ab_double_couplings(nact_);
                 std::vector<double> bb_double_couplings(nact_);
-                single_beta_excite_double_couplings_[i][a].resize(2 * nact_);
-                single_beta_excite_double_couplings_[a][i].resize(2 * nact_);
+//                single_beta_excite_double_couplings_[i][a].resize(2 * nact_);
+//                single_beta_excite_double_couplings_[a][i].resize(2 * nact_);
                 for (int p = 0; p < nact_; ++p) {
                     ab_double_couplings[p] = fci_ints_->tei_ab(p, i, p, a);
                     bb_double_couplings[p] = fci_ints_->tei_bb(i, p, a, p);
-                    single_beta_excite_double_couplings_[i][a][p] = ab_double_couplings[p];
-                    single_beta_excite_double_couplings_[a][i][p] = ab_double_couplings[p];
-                    single_beta_excite_double_couplings_[i][a][p + nact_] = bb_double_couplings[p];
-                    single_beta_excite_double_couplings_[a][i][p + nact_] = bb_double_couplings[p];
+//                    single_beta_excite_double_couplings_[i][a][p] = ab_double_couplings[p];
+//                    single_beta_excite_double_couplings_[a][i][p] = ab_double_couplings[p];
+//                    single_beta_excite_double_couplings_[i][a][p + nact_] = bb_double_couplings[p];
+//                    single_beta_excite_double_couplings_[a][i][p + nact_] = bb_double_couplings[p];
                 }
                 std::sort(ab_double_couplings.begin(), ab_double_couplings.end());
                 std::sort(bb_double_couplings.begin(), bb_double_couplings.end());
@@ -2590,51 +2792,12 @@ void ProjectorCI_HashVec::compute_single_couplings(double single_coupling_thresh
         std::get<0>(b_couplings_[i]) = i;
     }
     std::sort(b_couplings_.begin(), b_couplings_.end(), MaxCouplingCompare);
+    while (std::get<1>(b_couplings_.back()) == 0.0) {
+        b_couplings_.pop_back();
+    }
     b_couplings_size_ = b_couplings_.size();
     if (dets_single_max_coupling_ < std::get<1>(b_couplings_[0])) {
         dets_single_max_coupling_ = std::get<1>(b_couplings_[0]);
-    }
-
-    // examine
-    for (size_t x = 0; x < a_couplings_size_; ++x) {
-        int i = std::get<0>(a_couplings_[x]);
-        std::vector<std::tuple<int, double>>& sub_couplings = std::get<2>(a_couplings_[x]);
-        size_t sub_couplings_size = sub_couplings.size();
-        for (size_t y = 0; y < sub_couplings_size; ++y) {
-            int a = std::get<0>(sub_couplings[y]);
-            int max_bit = 2 * nact_;
-            std::vector<double>& double_couplings = single_alpha_excite_double_couplings_[i][a];
-            for (int p = 0; p < max_bit; ++p) {
-                if (p < nact_ && double_couplings[p] != fci_ints_->tei_aa(i, p, a, p))
-                    outfile->Printf("\n(%d,%d,%d) %.6lf, %.6lf", i, a, p,
-                                    fci_ints_->tei_aa(i, p, a, p), double_couplings[p]);
-                else if (p >= nact_ &&
-                         double_couplings[p] != fci_ints_->tei_ab(i, p - nact_, a, p - nact_))
-                    outfile->Printf("\n(%d,%d,%d) %.6lf, %.6lf", i, a, p,
-                                    fci_ints_->tei_ab(i, p - nact_, a, p - nact_),
-                                    double_couplings[p]);
-            }
-        }
-    }
-    for (size_t x = 0; x < b_couplings_size_; ++x) {
-        int i = std::get<0>(b_couplings_[x]);
-        std::vector<std::tuple<int, double>>& sub_couplings = std::get<2>(b_couplings_[x]);
-        size_t sub_couplings_size = sub_couplings.size();
-        for (size_t y = 0; y < sub_couplings_size; ++y) {
-            int a = std::get<0>(sub_couplings[y]);
-            int max_bit = 2 * nact_;
-            std::vector<double>& double_couplings = single_beta_excite_double_couplings_[i][a];
-            for (int p = 0; p < max_bit; ++p) {
-                if (p < nact_ && double_couplings[p] != fci_ints_->tei_ab(p, i, p, a))
-                    outfile->Printf("\n(%d,%d,%d) %.6lf, %.6lf", i, a, p,
-                                    fci_ints_->tei_aa(i, p, a, p), double_couplings[p]);
-                else if (p >= nact_ &&
-                         double_couplings[p] != fci_ints_->tei_bb(i, p - nact_, a, p - nact_))
-                    outfile->Printf("\n(%d,%d,%d) %.6lf, %.6lf", i, a, p,
-                                    fci_ints_->tei_ab(i, p - nact_, a, p - nact_),
-                                    double_couplings[p]);
-            }
-        }
     }
 }
 
@@ -2683,7 +2846,8 @@ void ProjectorCI_HashVec::compute_double_couplings(double double_coupling_thresh
             if (ij_couplings.size() != 0) {
                 std::sort(ij_couplings.begin(), ij_couplings.end(), CouplingCompare);
                 max_ij_coupling = std::get<2>(ij_couplings[0]);
-                aa_couplings_.push_back(std::make_tuple(i, j, std::fabs(max_ij_coupling), ij_couplings));
+                aa_couplings_.push_back(
+                    std::make_tuple(i, j, std::fabs(max_ij_coupling), ij_couplings));
             }
         }
     }
@@ -2717,7 +2881,8 @@ void ProjectorCI_HashVec::compute_double_couplings(double double_coupling_thresh
             if (ij_couplings.size() != 0) {
                 std::sort(ij_couplings.begin(), ij_couplings.end(), CouplingCompare);
                 max_ij_coupling = std::get<2>(ij_couplings[0]);
-                ab_couplings_.push_back(std::make_tuple(i, j, std::fabs(max_ij_coupling), ij_couplings));
+                ab_couplings_.push_back(
+                    std::make_tuple(i, j, std::fabs(max_ij_coupling), ij_couplings));
             }
         }
     }
@@ -2753,7 +2918,8 @@ void ProjectorCI_HashVec::compute_double_couplings(double double_coupling_thresh
             if (ij_couplings.size() != 0) {
                 std::sort(ij_couplings.begin(), ij_couplings.end(), CouplingCompare);
                 max_ij_coupling = std::get<2>(ij_couplings[0]);
-                bb_couplings_.push_back(std::make_tuple(i, j, std::fabs(max_ij_coupling), ij_couplings));
+                bb_couplings_.push_back(
+                    std::make_tuple(i, j, std::fabs(max_ij_coupling), ij_couplings));
             }
         }
     }
@@ -2765,6 +2931,140 @@ void ProjectorCI_HashVec::compute_double_couplings(double double_coupling_thresh
                                         ? dets_double_max_coupling_
                                         : max_bb_coupling_;
     }
+}
+
+void ProjectorCI_HashVec::compute_couplings_half(const det_hashvec& dets, size_t cut_size) {
+    bit_t andBits, orBits;
+    andBits.flip();
+    for (size_t i = 0; i < cut_size; ++i) {
+        andBits &= dets[i].bits_;
+        orBits |= dets[i].bits_;
+    }
+    bit_t actBits = andBits ^ orBits;
+
+    a_couplings_.clear();
+    a_couplings_.resize(nact_);
+    for (int i = 0; i < nact_; ++i) {
+        if (!actBits[i])
+            continue;
+        std::vector<std::tuple<int, double>> i_couplings;
+        for (int a = i + 1; a < nact_; ++a) {
+            if (!actBits[a])
+                continue;
+            if ((mo_symmetry_[i] ^ mo_symmetry_[a]) == 0) {
+                double Hia = fci_ints_->oei_a(i, a);
+                i_couplings.push_back(std::make_tuple(a, Hia));
+            }
+        }
+        if (i_couplings.size() != 0) {
+            a_couplings_.push_back(std::make_tuple(i, 0.0, i_couplings));
+        }
+    }
+    a_couplings_size_ = a_couplings_.size();
+
+    b_couplings_.clear();
+    b_couplings_.resize(nact_);
+    for (int i = 0; i < nact_; ++i) {
+        if (!actBits[i + nact_])
+            continue;
+        std::vector<std::tuple<int, double>> i_couplings;
+        for (int a = i + 1; a < nact_; ++a) {
+            if (!actBits[a + nact_])
+                continue;
+            if ((mo_symmetry_[i] ^ mo_symmetry_[a]) == 0) {
+                double Hia = fci_ints_->oei_b(i, a);
+                i_couplings.push_back(std::make_tuple(a, Hia));
+            }
+        }
+        if (i_couplings.size() != 0) {
+            b_couplings_.push_back(std::make_tuple(i, 0.0, i_couplings));
+        }
+    }
+    b_couplings_size_ = b_couplings_.size();
+
+    aa_couplings_.clear();
+    for (int i = 0; i < nact_; ++i) {
+        if (!actBits[i])
+            continue;
+        for (int j = i + 1; j < nact_; ++j) {
+            if (!actBits[j])
+                continue;
+            std::vector<std::tuple<int, int, double>> ij_couplings;
+            for (int a = i + 1; a < nact_; ++a) {
+                if (a == j or !actBits[a])
+                    continue;
+                for (int b = a + 1; b < nact_; ++b) {
+                    if (b == j or !actBits[b])
+                        continue;
+                    if ((mo_symmetry_[i] ^ mo_symmetry_[j] ^ mo_symmetry_[a] ^ mo_symmetry_[b]) ==
+                        0) {
+                        double Hijab = fci_ints_->tei_aa(i, j, a, b);
+                        ij_couplings.push_back(std::make_tuple(a, b, Hijab));
+                    }
+                }
+            }
+            if (ij_couplings.size() != 0) {
+                aa_couplings_.push_back(std::make_tuple(i, j, 0.0, ij_couplings));
+            }
+        }
+    }
+    aa_couplings_size_ = aa_couplings_.size();
+
+    ab_couplings_.clear();
+    for (int i = 0; i < nact_; ++i) {
+        if (!actBits[i])
+            continue;
+        for (int j = 0; j < nact_; ++j) {
+            if (!actBits[j + nact_])
+                continue;
+            std::vector<std::tuple<int, int, double>> ij_couplings;
+            for (int a = i + 1; a < nact_; ++a) {
+                if (a == i or !actBits[a])
+                    continue;
+                for (int b = 0; b < nact_; ++b) {
+                    if (b == j or !actBits[b + nact_])
+                        continue;
+                    if ((mo_symmetry_[i] ^ mo_symmetry_[j] ^ mo_symmetry_[a] ^ mo_symmetry_[b]) ==
+                        0) {
+                        double Hijab = fci_ints_->tei_ab(i, j, a, b);
+                        ij_couplings.push_back(std::make_tuple(a, b, Hijab));
+                    }
+                }
+            }
+            if (ij_couplings.size() != 0) {
+                ab_couplings_.push_back(std::make_tuple(i, j, 0.0, ij_couplings));
+            }
+        }
+    }
+    ab_couplings_size_ = ab_couplings_.size();
+
+    bb_couplings_.clear();
+    for (int i = 0; i < nact_; ++i) {
+        if (!actBits[i + nact_])
+            continue;
+        for (int j = i + 1; j < nact_; ++j) {
+            if (!actBits[j + nact_])
+                continue;
+            std::vector<std::tuple<int, int, double>> ij_couplings;
+            for (int a = i + 1; a < nact_; ++a) {
+                if (a == j or !actBits[a + nact_])
+                    continue;
+                for (int b = a + 1; b < nact_; ++b) {
+                    if (b == j or !actBits[b + nact_])
+                        continue;
+                    if ((mo_symmetry_[i] ^ mo_symmetry_[j] ^ mo_symmetry_[a] ^ mo_symmetry_[b]) ==
+                        0) {
+                        double Hijab = fci_ints_->tei_bb(i, j, a, b);
+                        ij_couplings.push_back(std::make_tuple(a, b, Hijab));
+                    }
+                }
+            }
+            if (ij_couplings.size() != 0) {
+                bb_couplings_.push_back(std::make_tuple(i, j, 0.0, ij_couplings));
+            }
+        }
+    }
+    bb_couplings_size_ = bb_couplings_.size();
 }
 
 std::vector<std::tuple<double, int, int>>
@@ -2785,7 +3085,8 @@ ProjectorCI_HashVec::sym_labeled_orbitals(std::string type) {
 
         // Create a vector that stores the orbital energy, symmetry, and idx
         for (size_t a = 0; a < nact_; ++a) {
-            labeled_orb.push_back(std::make_tuple(orb_e[a].first, mo_symmetry_[a], orb_e[a].second));
+            labeled_orb.push_back(
+                std::make_tuple(orb_e[a].first, mo_symmetry_[a], orb_e[a].second));
         }
         // Order by energy, low to high
         std::sort(labeled_orb.begin(), labeled_orb.end());
@@ -2803,7 +3104,8 @@ ProjectorCI_HashVec::sym_labeled_orbitals(std::string type) {
 
         // Create a vector that stores the orbital energy, sym, and idx
         for (size_t a = 0; a < nact_; ++a) {
-            labeled_orb.push_back(std::make_tuple(orb_e[a].first, mo_symmetry_[a], orb_e[a].second));
+            labeled_orb.push_back(
+                std::make_tuple(orb_e[a].first, mo_symmetry_[a], orb_e[a].second));
         }
         std::sort(labeled_orb.begin(), labeled_orb.end());
     }

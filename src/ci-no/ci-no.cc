@@ -31,12 +31,14 @@
 #include "psi4/libmints/pointgrp.h"
 #include "psi4/psi4-dec.h"
 
+
 #include "../ci_rdms.h"
 #include "../fci/fci_integrals.h"
 #include "../forte_options.h"
 #include "../sparse_ci_solver.h"
 #include "../stl_bitset_determinant.h"
 #include "ci-no.h"
+
 
 namespace psi {
 namespace forte {
@@ -74,6 +76,12 @@ void set_CINO_options(ForteOptions& foptions) {
      * 1 - Project initial P spaces at each iteration
      * 2 - Project only after converged PQ space
      * 3 - Do 1 and 2 -*/
+
+    // add options of whether pass MOSpaceInfo or not
+    foptions.add_bool("CINO_AUTO", false, "Allow the users to choose"
+                                          "whether pass frozen_docc"
+                                          "actice_docc and restricted_docc"
+                                          "or not");
 }
 
 CINO::CINO(SharedWavefunction ref_wfn, Options& options, std::shared_ptr<ForteIntegrals> ints,
@@ -175,6 +183,7 @@ void CINO::startup() {
     ncmo2_ = nactv_ * nactv_;
 
     aoccpi_ = nalphapi_ - rdoccpi_ - fdoccpi_;
+    cino_auto = options_.get_bool("CINO_AUTO");
 }
 
 std::vector<Determinant> CINO::build_dets(int irrep) {
@@ -560,6 +569,18 @@ void CINO::find_active_space_and_transform(
     outfile->Printf("\n  FROZEN_DOCC     = %s", dimension_to_string(noci_fdocc).c_str());
     outfile->Printf("\n  RESTRICTED_DOCC = %s", dimension_to_string(noci_rdocc).c_str());
     outfile->Printf("\n  ACTIVE          = %s", dimension_to_string(noci_actv).c_str());
+
+    //Pass the MOSpaceInfo
+    if (cino_auto){
+        for (int h = 0; h < nirrep_; h++){
+            options_["RESTRICTED_DOCC"].add(h);
+            options_["ACTIVE"].add(h);
+            options_["RESTRICTED_DOCC"][h].assign(noci_rdocc[h]);
+            options_["active"][h].assign(noci_actv[h]);
+         }
+
+    }
+
 }
 }
 } // EndNamespaces
