@@ -1179,7 +1179,7 @@ void ElementwiseCI::apply_tau_H_ref_C_symm(double tau, double spawning_threshold
     }
     size_t max_I = C.size();
 #pragma omp parallel for
-    for (size_t I = ref_max_I; I < max_I; ++I) {
+    for (size_t I = 0; I < max_I; ++I) {
         // Diagonal contribution
         // parallel_timer_on("EWCI:diagonal", omp_get_thread_num());
         double det_energy = dets_hashvec[I].energy() + fci_ints_->scalar_energy();
@@ -1230,8 +1230,9 @@ void ElementwiseCI::apply_tau_H_ref_C_symm_det_dynamic_HBCI_2(
 
     // Diagonal contributions
     // parallel_timer_on("EWCI:diagonal", omp_get_thread_num());
-    double det_energy = detI.energy() + fci_ints_->scalar_energy();
-    new_space_C_vec.push_back(std::make_pair(detI, tau * (det_energy - E0) * CI));
+//    double det_energy = detI.energy() + fci_ints_->scalar_energy();
+//    new_space_C_vec.push_back(std::make_pair(detI, tau * (det_energy - E0) * CI));
+    double diagonal_contribution = 0.0;
     // parallel_timer_off("EWCI:diagonal", omp_get_thread_num());
 
     Determinant detJ(detI);
@@ -1275,7 +1276,7 @@ void ElementwiseCI::apply_tau_H_ref_C_symm_det_dynamic_HBCI_2(
                             if ((index < pre_C_size) &&
                                 (std::fabs(HJI * ref_C[index]) < spawning_threshold ||
                                  index >= ref_C_size)) {
-                                new_space_C_vec[0].second += tau * HJI * pre_C[index];
+                                diagonal_contribution += tau * HJI * pre_C[index];
                             }
                             detJ.set_alfa_bit(i, true);
                             detJ.set_alfa_bit(a, false);
@@ -1322,7 +1323,7 @@ void ElementwiseCI::apply_tau_H_ref_C_symm_det_dynamic_HBCI_2(
                             if ((index < pre_C_size) &&
                                 (std::fabs(HJI * ref_C[index]) < spawning_threshold ||
                                  index >= ref_C_size)) {
-                                new_space_C_vec[0].second += tau * HJI * pre_C[index];
+                                diagonal_contribution += tau * HJI * pre_C[index];
                             }
                             detJ.set_beta_bit(i, true);
                             detJ.set_beta_bit(a, false);
@@ -1373,7 +1374,7 @@ void ElementwiseCI::apply_tau_H_ref_C_symm_det_dynamic_HBCI_2(
                             if ((index < pre_C_size) &&
                                 (std::fabs(HJI * ref_C[index]) < spawning_threshold ||
                                  index >= ref_C_size)) {
-                                new_space_C_vec[0].second += tau * HJI * pre_C[index];
+                                diagonal_contribution += tau * HJI * pre_C[index];
                             }
                             detJ.set_alfa_bit(i, true);
                             detJ.set_alfa_bit(a, false);
@@ -1421,7 +1422,7 @@ void ElementwiseCI::apply_tau_H_ref_C_symm_det_dynamic_HBCI_2(
                             if ((index < pre_C_size) &&
                                 (std::fabs(HJI * ref_C[index]) < spawning_threshold ||
                                  index >= ref_C_size)) {
-                                new_space_C_vec[0].second += tau * HJI * pre_C[index];
+                                diagonal_contribution += tau * HJI * pre_C[index];
                             }
                             detJ.set_beta_bit(i, true);
                             detJ.set_beta_bit(a, false);
@@ -1463,7 +1464,7 @@ void ElementwiseCI::apply_tau_H_ref_C_symm_det_dynamic_HBCI_2(
                         if ((index < pre_C_size) &&
                             (std::fabs(HJI * ref_C[index]) < spawning_threshold ||
                              index >= ref_C_size)) {
-                            new_space_C_vec[0].second += tau * HJI * pre_C[index];
+                            diagonal_contribution += tau * HJI * pre_C[index];
                         }
                         detJ.set_alfa_bit(i, true);
                         detJ.set_alfa_bit(j, true);
@@ -1501,7 +1502,7 @@ void ElementwiseCI::apply_tau_H_ref_C_symm_det_dynamic_HBCI_2(
                         if ((index < pre_C_size) &&
                             (std::fabs(HJI * ref_C[index]) < spawning_threshold ||
                              index >= ref_C_size)) {
-                            new_space_C_vec[0].second += tau * HJI * pre_C[index];
+                            diagonal_contribution += tau * HJI * pre_C[index];
                         }
                         detJ.set_alfa_bit(i, true);
                         detJ.set_beta_bit(j, true);
@@ -1539,7 +1540,7 @@ void ElementwiseCI::apply_tau_H_ref_C_symm_det_dynamic_HBCI_2(
                         if ((index < pre_C_size) &&
                             (std::fabs(HJI * ref_C[index]) < spawning_threshold ||
                              index >= ref_C_size)) {
-                            new_space_C_vec[0].second += tau * HJI * pre_C[index];
+                            diagonal_contribution += tau * HJI * pre_C[index];
                         }
                         detJ.set_beta_bit(i, true);
                         detJ.set_beta_bit(j, true);
@@ -1581,7 +1582,7 @@ void ElementwiseCI::apply_tau_H_ref_C_symm_det_dynamic_HBCI_2(
                         if ((index < pre_C_size) &&
                             (std::fabs(HJI * ref_C[index]) < spawning_threshold ||
                              index >= ref_C_size)) {
-                            new_space_C_vec[0].second += tau * HJI * pre_C[index];
+                            diagonal_contribution += tau * HJI * pre_C[index];
                         }
                         detJ.set_alfa_bit(i, true);
                         detJ.set_alfa_bit(j, true);
@@ -1620,7 +1621,7 @@ void ElementwiseCI::apply_tau_H_ref_C_symm_det_dynamic_HBCI_2(
                         if ((index < pre_C_size) &&
                             (std::fabs(HJI * ref_C[index]) < spawning_threshold ||
                              index >= ref_C_size)) {
-                            new_space_C_vec[0].second += tau * HJI * pre_C[index];
+                            diagonal_contribution += tau * HJI * pre_C[index];
                         }
                         detJ.set_alfa_bit(i, true);
                         detJ.set_beta_bit(j, true);
@@ -1659,7 +1660,7 @@ void ElementwiseCI::apply_tau_H_ref_C_symm_det_dynamic_HBCI_2(
                         if ((index < pre_C_size) &&
                             (std::fabs(HJI * ref_C[index]) < spawning_threshold ||
                              index >= ref_C_size)) {
-                            new_space_C_vec[0].second += tau * HJI * pre_C[index];
+                            diagonal_contribution += tau * HJI * pre_C[index];
                         }
                         detJ.set_beta_bit(i, true);
                         detJ.set_beta_bit(j, true);
@@ -1671,6 +1672,7 @@ void ElementwiseCI::apply_tau_H_ref_C_symm_det_dynamic_HBCI_2(
         }
         // parallel_timer_off("EWCI:doubles", omp_get_thread_num());
     }
+    new_space_C_vec.push_back(std::make_pair(detI, diagonal_contribution));
 }
 
 std::map<std::string, double> ElementwiseCI::estimate_energy(const det_hashvec& dets_hashvec,
