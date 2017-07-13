@@ -305,18 +305,23 @@ class ProjectorCI_HashVec : public Wavefunction {
                       double S);
     /// Apply symmetric approx tau H to a set of determinants with selection
     /// according to reference coefficients
-    void apply_tau_H_ref_C_symm(double tau, double spawning_threshold, det_hashvec& dets_hashvec,
+    void apply_tau_H_symm(double tau, double spawning_threshold, det_hashvec& dets_hashvec,
                                 const std::vector<double>& C, const std::vector<double>& ref_C,
                                 std::vector<double>& result_C, double S);
 
     /// Apply symmetric approx tau H to a determinant using dynamic screening
     /// with selection according to a reference coefficient
-    /// and with HBCI sorting scheme
-    void apply_tau_H_ref_C_symm_det_dynamic_HBCI(
+    /// and with HBCI sorting scheme with singles screening
+    void apply_tau_H_symm_det_dynamic_HBCI_2(
         double tau, double spawning_threshold, const det_hashvec& dets_hashvec,
         const std::vector<double>& pre_C, const std::vector<double>& ref_C, const Determinant& detI,
         double CI, double ref_CI, std::vector<std::pair<Determinant, double>>& new_space_C_vec,
         double E0, std::pair<double, double>& max_coupling);
+    /// Apply symmetric approx tau H to a set of determinants with selection
+    /// according to reference coefficients
+    void apply_tau_H_ref_C_symm(double tau, double spawning_threshold, det_hashvec& dets_hashvec,
+                                const std::vector<double>& C, const std::vector<double>& ref_C,
+                                std::vector<double>& result_C, double S);
 
     /// Apply symmetric approx tau H to a determinant using dynamic screening
     /// with selection according to a reference coefficient
