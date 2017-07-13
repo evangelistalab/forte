@@ -37,7 +37,7 @@ namespace psi {
 namespace forte {
 
 class Reference // : public Wavefunction
-    {
+{
   protected:
     /// Reference energy = FCI_energy + frozen_core_energy + restricted_docc +
     /// nuclear_replusion
