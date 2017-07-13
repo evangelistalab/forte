@@ -86,8 +86,7 @@ class ElementwiseCI : public Wavefunction {
      * @param ints A pointer to an allocated integral object
      */
     ElementwiseCI(SharedWavefunction ref_wfn, Options& options,
-                        std::shared_ptr<ForteIntegrals> ints,
-                        std::shared_ptr<MOSpaceInfo> mo_space_info);
+                  std::shared_ptr<ForteIntegrals> ints, std::shared_ptr<MOSpaceInfo> mo_space_info);
 
     // ==> Class Interface <==
 
@@ -197,8 +196,8 @@ class ElementwiseCI : public Wavefunction {
     /// determinant to all of its singly and doubly excited states.
     /// Bounds are stored as a pair (f_max,v_max) where f_max and v_max are
     /// the couplings to the singles and doubles, respectively.
-    std::unordered_map<Determinant, std::pair<double, double>,
-                       Determinant::Hash> dets_max_couplings_;
+    std::unordered_map<Determinant, std::pair<double, double>, Determinant::Hash>
+        dets_max_couplings_;
     std::vector<double> det_energies_;
     double dets_double_max_coupling_;
     double dets_single_max_coupling_;
@@ -206,8 +205,8 @@ class ElementwiseCI : public Wavefunction {
         aa_couplings_, ab_couplings_, bb_couplings_;
     std::vector<std::tuple<int, double, std::vector<std::tuple<int, double>>>> a_couplings_,
         b_couplings_;
-//    std::vector<std::vector<std::vector<double>>> single_alpha_excite_double_couplings_,
-//        single_beta_excite_double_couplings_;
+    //    std::vector<std::vector<std::vector<double>>> single_alpha_excite_double_couplings_,
+    //        single_beta_excite_double_couplings_;
     double max_aa_coupling_, max_ab_coupling_, max_bb_coupling_, max_a_coupling_, max_b_coupling_;
     size_t aa_couplings_size_, ab_couplings_size_, bb_couplings_size_, a_couplings_size_,
         b_couplings_size_;
