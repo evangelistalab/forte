@@ -1007,6 +1007,7 @@ void ProjectorCI_HashVec::propagate_DL(det_hashvec& dets_hashvec, std::vector<do
 
     size_t dets_size = dets_hashvec.size();
     std::vector<double> diag_vec(dets_size);
+#pragma omp parallel for
     for (int i = 0; i < dets_size; i++) {
         diag_vec[i] = dets_hashvec[i].energy() + fci_ints_->scalar_energy();
     }
