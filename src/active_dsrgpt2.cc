@@ -730,10 +730,12 @@ double ACTIVE_DSRGPT2::compute_energy() {
                                                                     T2blocks);
                                 //                                T1_g_ =
                                 //                                ambit::BlockedTensor::build(ambit::CoreTensor,
-                                //                                "T1_g", T1.block_labels());
+                                //                                "T1_g",
+                                //                                                                    T1.block_labels());
                                 //                                T2_g_ =
                                 //                                ambit::BlockedTensor::build(ambit::CoreTensor,
-                                //                                "T2_g", T2.block_labels());
+                                //                                "T2_g",
+                                //                                                                    T2.block_labels());
                                 T1_g_["ia"] = T1["ia"];
                                 T1_g_["IA"] = T1["IA"];
                                 T2_g_["ijab"] = T2["ijab"];
@@ -772,10 +774,12 @@ double ACTIVE_DSRGPT2::compute_energy() {
                                                                     T2blocks);
                                 //                                T1_g_ =
                                 //                                ambit::BlockedTensor::build(ambit::CoreTensor,
-                                //                                "T1_g", T1.block_labels());
+                                //                                "T1_g",
+                                //                                                                    T1.block_labels());
                                 //                                T2_g_ =
                                 //                                ambit::BlockedTensor::build(ambit::CoreTensor,
-                                //                                "T2_g", T2.block_labels());
+                                //                                "T2_g",
+                                //                                                                    T2.block_labels());
                                 T1_g_["ia"] = T1["ia"];
                                 T1_g_["IA"] = T1["IA"];
                                 T2_g_["ijab"] = T2["ijab"];
@@ -1127,7 +1131,7 @@ SharedMatrix ACTIVE_DSRGPT2::combine_evecs(const int& h0, const int& h1) {
 std::map<STLBitsetDeterminant, double>
 ACTIVE_DSRGPT2::p_space_actv_to_nmo(const std::vector<STLBitsetDeterminant>& p_space,
                                     SharedVector wfn) {
-    STLBitsetDeterminant::reset_ints();
+    //    STLBitsetDeterminant::reset_ints();
     std::map<STLBitsetDeterminant, double> detsmap;
 
     size_t ncmo = mo_space_info_->size("CORRELATED");
@@ -1175,6 +1179,7 @@ ACTIVE_DSRGPT2::p_space_actv_to_nmo(const std::vector<STLBitsetDeterminant>& p_s
         //        outfile->Printf("  %18.12f", detsmap[det]);
     }
 
+    //    STLBitsetDeterminant::set_ints(fci_mo_->fci_ints_);
     return detsmap;
 }
 
@@ -1182,7 +1187,7 @@ std::map<STLBitsetDeterminant, double>
 ACTIVE_DSRGPT2::excited_wfn_1st(const std::map<STLBitsetDeterminant, double>& ref,
                                 ambit::BlockedTensor& T1, ambit::BlockedTensor& T2) {
     size_t ncmo = mo_space_info_->size("CORRELATED");
-    STLBitsetDeterminant::reset_ints();
+    //    STLBitsetDeterminant::reset_ints();
     STLBitsetDeterminant::set_nmo(ncmo);
 
     std::map<STLBitsetDeterminant, double> out;
@@ -1358,6 +1363,7 @@ ACTIVE_DSRGPT2::excited_wfn_1st(const std::map<STLBitsetDeterminant, double>& re
     //        x.first.print();
     //        outfile->Printf("  %18.12f", x.second);
     //    }
+    //    STLBitsetDeterminant::set_ints(fci_mo_->fci_ints_);
     return out;
 }
 
@@ -1379,6 +1385,7 @@ void ACTIVE_DSRGPT2::compute_osc_pt2_dets(const int& irrep, const int& root, con
 
     // step 1: compute first order wavefunction of the excited state
     std::map<STLBitsetDeterminant, double> wfn_1st = excited_wfn_1st(wfn0_x, T1_x, T2_x);
+    //    std::map<STLBitsetDeterminant, double> wfn_1st;
 
     // step 2: combine determinant space
     std::vector<STLBitsetDeterminant> p_space;
@@ -1411,6 +1418,7 @@ void ACTIVE_DSRGPT2::compute_osc_pt2_dets(const int& irrep, const int& root, con
     // compute transition density matrix of <Psi_x 0th| p^+ q |Psi_g 1st>
 
     // step 1: compute first order wavefunction of the ground state
+    //    outfile->Printf("\n Compute first order wavefunction of the ground state");
     wfn_1st = excited_wfn_1st(wfn0_g, T1_g_, T2_g_);
 
     // step 2: combine determinant space
@@ -1426,6 +1434,7 @@ void ACTIVE_DSRGPT2::compute_osc_pt2_dets(const int& irrep, const int& root, con
     // step 3: combine eigen vectors
     np = p_space.size();
     evecs = SharedMatrix(new Matrix("combined evecs", np, 2));
+    //    SharedMatrix evecs(new Matrix("combined evecs", np, 2));
     for (size_t i = 0; i < offset; ++i) {
         evecs->set(i, 0, wfn0_x[p_space[i]]);
     }
@@ -1518,7 +1527,7 @@ void ACTIVE_DSRGPT2::compute_osc_pt2_dets(const int& irrep, const int& root, con
             MOtransD->set(ni, nj, tdm_a[idx] + tdm_b[idx]);
         }
     }
-    MOtransD->print();
+    //    MOtransD->print();
 
     // contract with mo dipole integrals
     Vector4 transD;
@@ -1537,6 +1546,9 @@ void ACTIVE_DSRGPT2::compute_osc_pt2_dets(const int& irrep, const int& root, con
     // print DSRG-PT2 transition density
     outfile->Printf("\nTrans. Dipole %s: X: %7.4f, Y: %7.4f, Z: %7.4f", name.c_str(), transD.x,
                     transD.y, transD.z);
+
+    // reset integrals for STLBitsetDeterminant
+    STLBitsetDeterminant::set_ints(fci_mo_->fci_ints_);
 }
 
 std::map<STLBitsetDeterminant, double>
