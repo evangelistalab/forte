@@ -106,8 +106,7 @@ void add(const det_hashvec& A, std::vector<double> Ca, double beta, const det_ha
 double dot(const det_hashvec& A, const std::vector<double> Ca, const det_hashvec& B,
            const std::vector<double> Cb);
 
-void ElementwiseCI::sortHashVecByCoefficient(det_hashvec& dets_hashvec,
-                                                   std::vector<double>& C) {
+void ElementwiseCI::sortHashVecByCoefficient(det_hashvec& dets_hashvec, std::vector<double>& C) {
     size_t dets_size = dets_hashvec.size();
     std::vector<std::pair<double, size_t>> det_weight(dets_size);
     for (size_t I = 0; I < dets_size; ++I) {
@@ -127,8 +126,8 @@ void ElementwiseCI::sortHashVecByCoefficient(det_hashvec& dets_hashvec,
 }
 
 ElementwiseCI::ElementwiseCI(SharedWavefunction ref_wfn, Options& options,
-                                         std::shared_ptr<ForteIntegrals> ints,
-                                         std::shared_ptr<MOSpaceInfo> mo_space_info)
+                             std::shared_ptr<ForteIntegrals> ints,
+                             std::shared_ptr<MOSpaceInfo> mo_space_info)
     : Wavefunction(options), ints_(ints), mo_space_info_(mo_space_info),
       fast_variational_estimate_(false) {
     // Copy the wavefunction information
@@ -903,8 +902,8 @@ double ElementwiseCI::initial_guess(det_hashvec& dets_hashvec, std::vector<doubl
 }
 
 void ElementwiseCI::propagate(GeneratorType generator, det_hashvec& dets_hashvec,
-                                    std::vector<double>& C, double tau, double spawning_threshold,
-                                    double S) {
+                              std::vector<double>& C, double tau, double spawning_threshold,
+                              double S) {
     //    det_hashvec dets_hashvec(dets);
     //    det_vec dets;
     switch (generator) {
@@ -926,7 +925,7 @@ void ElementwiseCI::propagate(GeneratorType generator, det_hashvec& dets_hashvec
 }
 
 void ElementwiseCI::propagate_wallCh(det_hashvec& dets_hashvec, std::vector<double>& C,
-                                           double spawning_threshold, double S) {
+                                     double spawning_threshold, double S) {
     //    det_hashvec dets_hashvec(dets);
     // A map that contains the pair (determinant,coefficient)
     const double PI = 2 * acos(0.0);
@@ -955,7 +954,7 @@ void ElementwiseCI::propagate_wallCh(det_hashvec& dets_hashvec, std::vector<doub
 }
 
 void ElementwiseCI::propagate_DL(det_hashvec& dets_hashvec, std::vector<double>& C,
-                                       double spawning_threshold, double S) {
+                                 double spawning_threshold, double S) {
     size_t ref_size = C.size();
     std::vector<std::vector<double>> b_vec(davidson_subspace_per_root_);
     std::vector<std::vector<double>> sigma_vec(davidson_subspace_per_root_);
@@ -1137,10 +1136,9 @@ void ElementwiseCI::propagate_DL(det_hashvec& dets_hashvec, std::vector<double>&
 //    const std::vector<double>& C, const std::vector<double>& ref_C,
 //    det_hash<>& dets_C_hash, double S) {
 void ElementwiseCI::apply_tau_H_ref_C_symm(double tau, double spawning_threshold,
-                                                 det_hashvec& dets_hashvec,
-                                                 const std::vector<double>& C,
-                                                 const std::vector<double>& ref_C,
-                                                 std::vector<double>& result_C, double S) {
+                                           det_hashvec& dets_hashvec, const std::vector<double>& C,
+                                           const std::vector<double>& ref_C,
+                                           std::vector<double>& result_C, double S) {
 
     det_hashvec dets_hashvec_merge(dets_hashvec);
     std::vector<double> C_merge(dets_hashvec_merge.size(), 0.0);
@@ -1230,8 +1228,8 @@ void ElementwiseCI::apply_tau_H_ref_C_symm_det_dynamic_HBCI_2(
 
     // Diagonal contributions
     // parallel_timer_on("EWCI:diagonal", omp_get_thread_num());
-//    double det_energy = detI.energy() + fci_ints_->scalar_energy();
-//    new_space_C_vec.push_back(std::make_pair(detI, tau * (det_energy - E0) * CI));
+    //    double det_energy = detI.energy() + fci_ints_->scalar_energy();
+    //    new_space_C_vec.push_back(std::make_pair(detI, tau * (det_energy - E0) * CI));
     double diagonal_contribution = 0.0;
     // parallel_timer_off("EWCI:diagonal", omp_get_thread_num());
 
@@ -1258,16 +1256,16 @@ void ElementwiseCI::apply_tau_H_ref_C_symm_det_dynamic_HBCI_2(
                     if (!detI.get_alfa_bit(a)) {
                         Determinant detJ(detI);
                         double HJI = detJ.slater_rules_single_alpha_abs(i, a);
-//                        double HJI = fci_ints_->oei_a(i, a);
-//                        size_t max_bit = 2 * nact_;
-//                        bit_t& bits = detJ.bits_;
-//                        std::vector<double>& double_couplings =
-//                            single_alpha_excite_double_couplings_[i][a];
-//                        for (size_t p = 0; p < max_bit; ++p) {
-//                            if (bits[p]) {
-//                                HJI += double_couplings[p];
-//                            }
-//                        }
+                        //                        double HJI = fci_ints_->oei_a(i, a);
+                        //                        size_t max_bit = 2 * nact_;
+                        //                        bit_t& bits = detJ.bits_;
+                        //                        std::vector<double>& double_couplings =
+                        //                            single_alpha_excite_double_couplings_[i][a];
+                        //                        for (size_t p = 0; p < max_bit; ++p) {
+                        //                            if (bits[p]) {
+                        //                                HJI += double_couplings[p];
+                        //                            }
+                        //                        }
                         if (std::fabs(HJI * ref_CI) >= spawning_threshold) {
                             HJI *= detJ.single_excitation_a(i, a);
                             new_space_C_vec.push_back(std::make_pair(detJ, tau * HJI * CI));
@@ -1305,16 +1303,16 @@ void ElementwiseCI::apply_tau_H_ref_C_symm_det_dynamic_HBCI_2(
                     if (!detI.get_beta_bit(a)) {
                         Determinant detJ(detI);
                         double HJI = detJ.slater_rules_single_beta_abs(i, a);
-//                        double HJI = fci_ints_->oei_b(i, a);
-//                        size_t max_bit = 2 * nact_;
-//                        bit_t& bits = detJ.bits_;
-//                        std::vector<double>& double_couplings =
-//                            single_beta_excite_double_couplings_[i][a];
-//                        for (size_t p = 0; p < max_bit; ++p) {
-//                            if (bits[p]) {
-//                                HJI += double_couplings[p];
-//                            }
-//                        }
+                        //                        double HJI = fci_ints_->oei_b(i, a);
+                        //                        size_t max_bit = 2 * nact_;
+                        //                        bit_t& bits = detJ.bits_;
+                        //                        std::vector<double>& double_couplings =
+                        //                            single_beta_excite_double_couplings_[i][a];
+                        //                        for (size_t p = 0; p < max_bit; ++p) {
+                        //                            if (bits[p]) {
+                        //                                HJI += double_couplings[p];
+                        //                            }
+                        //                        }
                         if (std::fabs(HJI * ref_CI) >= spawning_threshold) {
                             HJI *= detJ.single_excitation_b(i, a);
                             new_space_C_vec.push_back(std::make_pair(detJ, tau * HJI * CI));
@@ -1355,16 +1353,16 @@ void ElementwiseCI::apply_tau_H_ref_C_symm_det_dynamic_HBCI_2(
                     if (!detI.get_alfa_bit(a)) {
                         Determinant detJ(detI);
                         double HJI = detJ.slater_rules_single_alpha_abs(i, a);
-//                        double HJI = fci_ints_->oei_a(i, a);
-//                        size_t max_bit = 2 * nact_;
-//                        bit_t& bits = detJ.bits_;
-//                        std::vector<double>& double_couplings =
-//                            single_alpha_excite_double_couplings_[i][a];
-//                        for (size_t p = 0; p < max_bit; ++p) {
-//                            if (bits[p]) {
-//                                HJI += double_couplings[p];
-//                            }
-//                        }
+                        //                        double HJI = fci_ints_->oei_a(i, a);
+                        //                        size_t max_bit = 2 * nact_;
+                        //                        bit_t& bits = detJ.bits_;
+                        //                        std::vector<double>& double_couplings =
+                        //                            single_alpha_excite_double_couplings_[i][a];
+                        //                        for (size_t p = 0; p < max_bit; ++p) {
+                        //                            if (bits[p]) {
+                        //                                HJI += double_couplings[p];
+                        //                            }
+                        //                        }
                         max_coupling.first = std::max(max_coupling.first, std::fabs(HJI));
                         if (std::fabs(HJI * ref_CI) >= spawning_threshold) {
                             HJI *= detJ.single_excitation_a(i, a);
@@ -1403,16 +1401,16 @@ void ElementwiseCI::apply_tau_H_ref_C_symm_det_dynamic_HBCI_2(
                     if (!detI.get_beta_bit(a)) {
                         Determinant detJ(detI);
                         double HJI = detJ.slater_rules_single_beta_abs(i, a);
-//                        double HJI = fci_ints_->oei_b(i, a);
-//                        size_t max_bit = 2 * nact_;
-//                        bit_t& bits = detJ.bits_;
-//                        std::vector<double>& double_couplings =
-//                            single_beta_excite_double_couplings_[i][a];
-//                        for (size_t p = 0; p < max_bit; ++p) {
-//                            if (bits[p]) {
-//                                HJI += double_couplings[p];
-//                            }
-//                        }
+                        //                        double HJI = fci_ints_->oei_b(i, a);
+                        //                        size_t max_bit = 2 * nact_;
+                        //                        bit_t& bits = detJ.bits_;
+                        //                        std::vector<double>& double_couplings =
+                        //                            single_beta_excite_double_couplings_[i][a];
+                        //                        for (size_t p = 0; p < max_bit; ++p) {
+                        //                            if (bits[p]) {
+                        //                                HJI += double_couplings[p];
+                        //                            }
+                        //                        }
                         max_coupling.first = std::max(max_coupling.first, std::fabs(HJI));
                         if (std::fabs(HJI * ref_CI) >= spawning_threshold) {
                             HJI *= detJ.single_excitation_b(i, a);
@@ -1676,7 +1674,7 @@ void ElementwiseCI::apply_tau_H_ref_C_symm_det_dynamic_HBCI_2(
 }
 
 std::map<std::string, double> ElementwiseCI::estimate_energy(const det_hashvec& dets_hashvec,
-                                                                   std::vector<double>& C) {
+                                                             std::vector<double>& C) {
     std::map<std::string, double> results;
     //    det_hashvec dets_hashvec(dets);
     //    dets = dets_hashvec.toVector();
@@ -1705,7 +1703,7 @@ std::map<std::string, double> ElementwiseCI::estimate_energy(const det_hashvec& 
 static bool abs_compare(double a, double b) { return (std::abs(a) < std::abs(b)); }
 
 double ElementwiseCI::estimate_proj_energy(const det_hashvec& dets_hashvec,
-                                                 std::vector<double>& C) {
+                                           std::vector<double>& C) {
     // Find the determinant with the largest value of C
     auto result = std::max_element(C.begin(), C.end(), abs_compare);
     size_t J = std::distance(C.begin(), result);
@@ -1720,8 +1718,8 @@ double ElementwiseCI::estimate_proj_energy(const det_hashvec& dets_hashvec,
     return projective_energy_estimator + nuclear_repulsion_energy_ + fci_ints_->scalar_energy();
 }
 
-double ElementwiseCI::estimate_var_energy(const det_hashvec& dets_hashvec,
-                                                std::vector<double>& C, double tollerance) {
+double ElementwiseCI::estimate_var_energy(const det_hashvec& dets_hashvec, std::vector<double>& C,
+                                          double tollerance) {
     // Compute a variational estimator of the energy
     size_t size = dets_hashvec.size();
     double variational_energy_estimator = 0.0;
@@ -1740,8 +1738,7 @@ double ElementwiseCI::estimate_var_energy(const det_hashvec& dets_hashvec,
 }
 
 double ElementwiseCI::estimate_var_energy_within_error(const det_hashvec& dets_hashvec,
-                                                             std::vector<double>& C,
-                                                             double max_error) {
+                                                       std::vector<double>& C, double max_error) {
     // Compute a variational estimator of the energy
     size_t cut_index = dets_hashvec.size() - 1;
     double max_HIJ = dets_single_max_coupling_ > dets_double_max_coupling_
@@ -1777,8 +1774,8 @@ double ElementwiseCI::estimate_var_energy_within_error(const det_hashvec& dets_h
 }
 
 double ElementwiseCI::estimate_var_energy_within_error_sigma(const det_hashvec& dets_hashvec,
-                                                                   std::vector<double>& C,
-                                                                   double max_error) {
+                                                             std::vector<double>& C,
+                                                             double max_error) {
     // Compute a variational estimator of the energy
     size_t cut_index = dets_hashvec.size() - 1;
     double max_HIJ = dets_single_max_coupling_ > dets_double_max_coupling_
@@ -1825,7 +1822,7 @@ double ElementwiseCI::estimate_var_energy_within_error_sigma(const det_hashvec& 
 }
 
 double ElementwiseCI::estimate_var_energy_sparse(const det_hashvec& dets_hashvec,
-                                                       std::vector<double>& C, double max_error) {
+                                                 std::vector<double>& C, double max_error) {
     size_t cut_index = dets_hashvec.size() - 1;
     double max_HIJ = dets_single_max_coupling_ > dets_double_max_coupling_
                          ? dets_single_max_coupling_
@@ -1865,7 +1862,7 @@ double ElementwiseCI::estimate_var_energy_sparse(const det_hashvec& dets_hashvec
 }
 
 void ElementwiseCI::print_wfn(const det_hashvec& space_hashvec, std::vector<double>& C,
-                                    size_t max_output) {
+                              size_t max_output) {
     outfile->Printf("\n\n  Most important contributions to the wave function:\n");
 
     std::vector<std::pair<double, size_t>> det_weight;
@@ -1924,9 +1921,8 @@ void ElementwiseCI::print_wfn(const det_hashvec& space_hashvec, std::vector<doub
                     S2, S, state_label.c_str(), max_I, 100.0 * sum_weight);
 }
 
-void ElementwiseCI::save_wfn(
-    det_hashvec& space, std::vector<double>& C,
-    std::vector<std::pair<det_hashvec, std::vector<double>>>& solutions) {
+void ElementwiseCI::save_wfn(det_hashvec& space, std::vector<double>& C,
+                             std::vector<std::pair<det_hashvec, std::vector<double>>>& solutions) {
     outfile->Printf("\n\n  Saving the wave function:\n");
 
     //    det_hash<> solution;
@@ -1959,8 +1955,8 @@ void ElementwiseCI::orthogonalize(
     normalize(C);
 }
 
-double ElementwiseCI::form_H_C(const det_hashvec& dets_hashvec, std::vector<double>& C,
-                                     size_t I, size_t cut_index) {
+double ElementwiseCI::form_H_C(const det_hashvec& dets_hashvec, std::vector<double>& C, size_t I,
+                               size_t cut_index) {
     const Determinant& detI = dets_hashvec[I];
     double CI = C[I];
 
@@ -2111,8 +2107,8 @@ double ElementwiseCI::form_H_C(const det_hashvec& dets_hashvec, std::vector<doub
     return result;
 }
 
-double ElementwiseCI::form_H_C_2(const det_hashvec& dets_hashvec, std::vector<double>& C,
-                                       size_t I, size_t cut_index) {
+double ElementwiseCI::form_H_C_2(const det_hashvec& dets_hashvec, std::vector<double>& C, size_t I,
+                                 size_t cut_index) {
     const Determinant& detI = dets_hashvec[I];
     double CI = C[I];
 
@@ -2130,16 +2126,16 @@ double ElementwiseCI::form_H_C_2(const det_hashvec& dets_hashvec, std::vector<do
                 int a;
                 std::tie(a, HJI) = sub_couplings[y];
                 if (!detI.get_alfa_bit(a)) {
-//                    size_t max_bit = 2 * nact_;
-//                    bit_t& bits = detJ.bits_;
-//                    std::vector<double>& double_couplings =
-//                        single_alpha_excite_double_couplings_[i][a];
-//                    for (size_t p = 0; p < max_bit; ++p) {
-//                        if (bits[p]) {
-//                            HJI += double_couplings[p];
-//                        }
-//                    }
-//                    HJI *= detJ.single_excitation_a(i, a);
+                    //                    size_t max_bit = 2 * nact_;
+                    //                    bit_t& bits = detJ.bits_;
+                    //                    std::vector<double>& double_couplings =
+                    //                        single_alpha_excite_double_couplings_[i][a];
+                    //                    for (size_t p = 0; p < max_bit; ++p) {
+                    //                        if (bits[p]) {
+                    //                            HJI += double_couplings[p];
+                    //                        }
+                    //                    }
+                    //                    HJI *= detJ.single_excitation_a(i, a);
                     HJI = detJ.slater_rules_single_alpha_abs(i, a);
                     HJI *= detJ.single_excitation_a(i, a);
                     size_t index = dets_hashvec.find(detJ);
@@ -2162,16 +2158,16 @@ double ElementwiseCI::form_H_C_2(const det_hashvec& dets_hashvec, std::vector<do
                 int a;
                 std::tie(a, HJI) = sub_couplings[y];
                 if (!detI.get_beta_bit(a)) {
-//                    size_t max_bit = 2 * nact_;
-//                    bit_t& bits = detJ.bits_;
-//                    std::vector<double>& double_couplings =
-//                        single_beta_excite_double_couplings_[i][a];
-//                    for (size_t p = 0; p < max_bit; ++p) {
-//                        if (bits[p]) {
-//                            HJI += double_couplings[p];
-//                        }
-//                    }
-//                    HJI *= detJ.single_excitation_b(i, a);
+                    //                    size_t max_bit = 2 * nact_;
+                    //                    bit_t& bits = detJ.bits_;
+                    //                    std::vector<double>& double_couplings =
+                    //                        single_beta_excite_double_couplings_[i][a];
+                    //                    for (size_t p = 0; p < max_bit; ++p) {
+                    //                        if (bits[p]) {
+                    //                            HJI += double_couplings[p];
+                    //                        }
+                    //                    }
+                    //                    HJI *= detJ.single_excitation_b(i, a);
                     HJI = detJ.slater_rules_single_beta_abs(i, a);
                     HJI *= detJ.single_excitation_b(i, a);
                     size_t index = dets_hashvec.find(detJ);
@@ -2282,10 +2278,12 @@ void ElementwiseCI::compute_single_couplings(double single_coupling_threshold) {
         }
     } MaxCouplingCompare;
 
-//    single_alpha_excite_double_couplings_.clear();
-//    single_beta_excite_double_couplings_.clear();
-//    single_alpha_excite_double_couplings_.resize(nact_, std::vector<std::vector<double>>(nact_));
-//    single_beta_excite_double_couplings_.resize(nact_, std::vector<std::vector<double>>(nact_));
+    //    single_alpha_excite_double_couplings_.clear();
+    //    single_beta_excite_double_couplings_.clear();
+    //    single_alpha_excite_double_couplings_.resize(nact_,
+    //    std::vector<std::vector<double>>(nact_));
+    //    single_beta_excite_double_couplings_.resize(nact_,
+    //    std::vector<std::vector<double>>(nact_));
 
     dets_single_max_coupling_ = 0.0;
     a_couplings_.clear();
@@ -2296,15 +2294,19 @@ void ElementwiseCI::compute_single_couplings(double single_coupling_threshold) {
                 double Hia = fci_ints_->oei_a(i, a);
                 std::vector<double> aa_double_couplings(nact_);
                 std::vector<double> ab_double_couplings(nact_);
-//                single_alpha_excite_double_couplings_[i][a].resize(2 * nact_);
-//                single_alpha_excite_double_couplings_[a][i].resize(2 * nact_);
+                //                single_alpha_excite_double_couplings_[i][a].resize(2 * nact_);
+                //                single_alpha_excite_double_couplings_[a][i].resize(2 * nact_);
                 for (int p = 0; p < nact_; ++p) {
                     aa_double_couplings[p] = fci_ints_->tei_aa(i, p, a, p);
                     ab_double_couplings[p] = fci_ints_->tei_ab(i, p, a, p);
-//                    single_alpha_excite_double_couplings_[i][a][p] = aa_double_couplings[p];
-//                    single_alpha_excite_double_couplings_[a][i][p] = aa_double_couplings[p];
-//                    single_alpha_excite_double_couplings_[i][a][p + nact_] = ab_double_couplings[p];
-//                    single_alpha_excite_double_couplings_[a][i][p + nact_] = ab_double_couplings[p];
+                    //                    single_alpha_excite_double_couplings_[i][a][p] =
+                    //                    aa_double_couplings[p];
+                    //                    single_alpha_excite_double_couplings_[a][i][p] =
+                    //                    aa_double_couplings[p];
+                    //                    single_alpha_excite_double_couplings_[i][a][p + nact_] =
+                    //                    ab_double_couplings[p];
+                    //                    single_alpha_excite_double_couplings_[a][i][p + nact_] =
+                    //                    ab_double_couplings[p];
                 }
                 std::sort(aa_double_couplings.begin(), aa_double_couplings.end());
                 std::sort(ab_double_couplings.begin(), ab_double_couplings.end());
@@ -2348,15 +2350,19 @@ void ElementwiseCI::compute_single_couplings(double single_coupling_threshold) {
                 double Hia = fci_ints_->oei_b(i, a);
                 std::vector<double> ab_double_couplings(nact_);
                 std::vector<double> bb_double_couplings(nact_);
-//                single_beta_excite_double_couplings_[i][a].resize(2 * nact_);
-//                single_beta_excite_double_couplings_[a][i].resize(2 * nact_);
+                //                single_beta_excite_double_couplings_[i][a].resize(2 * nact_);
+                //                single_beta_excite_double_couplings_[a][i].resize(2 * nact_);
                 for (int p = 0; p < nact_; ++p) {
                     ab_double_couplings[p] = fci_ints_->tei_ab(p, i, p, a);
                     bb_double_couplings[p] = fci_ints_->tei_bb(i, p, a, p);
-//                    single_beta_excite_double_couplings_[i][a][p] = ab_double_couplings[p];
-//                    single_beta_excite_double_couplings_[a][i][p] = ab_double_couplings[p];
-//                    single_beta_excite_double_couplings_[i][a][p + nact_] = bb_double_couplings[p];
-//                    single_beta_excite_double_couplings_[a][i][p + nact_] = bb_double_couplings[p];
+                    //                    single_beta_excite_double_couplings_[i][a][p] =
+                    //                    ab_double_couplings[p];
+                    //                    single_beta_excite_double_couplings_[a][i][p] =
+                    //                    ab_double_couplings[p];
+                    //                    single_beta_excite_double_couplings_[i][a][p + nact_] =
+                    //                    bb_double_couplings[p];
+                    //                    single_beta_excite_double_couplings_[a][i][p + nact_] =
+                    //                    bb_double_couplings[p];
                 }
                 std::sort(ab_double_couplings.begin(), ab_double_couplings.end());
                 std::sort(bb_double_couplings.begin(), bb_double_couplings.end());
@@ -2661,8 +2667,7 @@ void ElementwiseCI::compute_couplings_half(const det_hashvec& dets, size_t cut_s
     bb_couplings_size_ = bb_couplings_.size();
 }
 
-std::vector<std::tuple<double, int, int>>
-ElementwiseCI::sym_labeled_orbitals(std::string type) {
+std::vector<std::tuple<double, int, int>> ElementwiseCI::sym_labeled_orbitals(std::string type) {
     std::vector<std::tuple<double, int, int>> labeled_orb;
 
     if (type == "RHF" or type == "ROHF" or type == "ALFA") {

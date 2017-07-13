@@ -205,8 +205,8 @@ class ProjectorCI_HashVec : public Wavefunction {
         aa_couplings_, ab_couplings_, bb_couplings_;
     std::vector<std::tuple<int, double, std::vector<std::tuple<int, double>>>> a_couplings_,
         b_couplings_;
-//    std::vector<std::vector<std::vector<double>>> single_alpha_excite_double_couplings_,
-//        single_beta_excite_double_couplings_;
+    //    std::vector<std::vector<std::vector<double>>> single_alpha_excite_double_couplings_,
+    //        single_beta_excite_double_couplings_;
     double max_aa_coupling_, max_ab_coupling_, max_bb_coupling_, max_a_coupling_, max_b_coupling_;
     size_t aa_couplings_size_, ab_couplings_size_, bb_couplings_size_, a_couplings_size_,
         b_couplings_size_;
