@@ -977,101 +977,107 @@ double MRDSRG::compute_energy_sa() {
             build_fock(H_, V_);
         }
 
-//        // semi-canonicalize orbitals
-//        print_h2("Semi-canonicalize Orbitals");
-//        bool semi = check_semicanonical();
-//        if (options_.get_bool("SEMI_CANONICAL") && !semi) {
-//            // set up timer
-//            std::vector<double> timings{0.0};
-//            Timer timer;
+        //        // semi-canonicalize orbitals
+        //        print_h2("Semi-canonicalize Orbitals");
+        //        bool semi = check_semicanonical();
+        //        if (options_.get_bool("SEMI_CANONICAL") && !semi) {
+        //            // set up timer
+        //            std::vector<double> timings{0.0};
+        //            Timer timer;
 
-//            // diagonalize blocks of Fock matrix
-//            U_ = ambit::BlockedTensor::build(tensor_type_, "U", spin_cases({"gg"}));
-//            diagonalize_Fock_diagblocks(U_);
-//            outfile->Printf("\n    %-47s %8.3f", "Timing for block-diagonalizing Fock matrix:",
-//                            timer.get() - timings.back());
-//            timings.push_back(timer.get());
+        //            // diagonalize blocks of Fock matrix
+        //            U_ = ambit::BlockedTensor::build(tensor_type_, "U", spin_cases({"gg"}));
+        //            diagonalize_Fock_diagblocks(U_);
+        //            outfile->Printf("\n    %-47s %8.3f", "Timing for block-diagonalizing Fock
+        //            matrix:",
+        //                            timer.get() - timings.back());
+        //            timings.push_back(timer.get());
 
-//            // transform O1 to new basis and copy to ints_
-//            BlockedTensor O =
-//                ambit::BlockedTensor::build(tensor_type_, "Temp One", spin_cases({"gg"}));
-//            O["xy"] = U_["xu"] * O1_["uv"] * U_["yv"];
-//            O["XY"] = U_["XU"] * O1_["UV"] * U_["YV"];
-//            for (const std::string& block : {"aa", "AA"}) {
-//                bool spin = islower(block[0]);
+        //            // transform O1 to new basis and copy to ints_
+        //            BlockedTensor O =
+        //                ambit::BlockedTensor::build(tensor_type_, "Temp One", spin_cases({"gg"}));
+        //            O["xy"] = U_["xu"] * O1_["uv"] * U_["yv"];
+        //            O["XY"] = U_["XU"] * O1_["UV"] * U_["YV"];
+        //            for (const std::string& block : {"aa", "AA"}) {
+        //                bool spin = islower(block[0]);
 
-//                O.block(block).citerate([&](const std::vector<size_t>& i, const double& value) {
-//                    ints_->set_oei(aactv_mos_[i[0]], aactv_mos_[i[1]], value, spin);
-//                });
-//            }
+        //                O.block(block).citerate([&](const std::vector<size_t>& i, const double&
+        //                value) {
+        //                    ints_->set_oei(aactv_mos_[i[0]], aactv_mos_[i[1]], value, spin);
+        //                });
+        //            }
 
-//            // transform bare one-body Hamiltonian
-//            O["rs"] = U_["rp"] * H_["pq"] * U_["sq"];
-//            O["RS"] = U_["RP"] * H_["PQ"] * U_["SQ"];
-//            H_["pq"] = O["pq"];
-//            H_["PQ"] = O["PQ"];
-//            outfile->Printf("\n    %-47s %8.3f", "Timing for transforming one-electron integral:",
-//                            timer.get() - timings.back());
-//            timings.push_back(timer.get());
+        //            // transform bare one-body Hamiltonian
+        //            O["rs"] = U_["rp"] * H_["pq"] * U_["sq"];
+        //            O["RS"] = U_["RP"] * H_["PQ"] * U_["SQ"];
+        //            H_["pq"] = O["pq"];
+        //            H_["PQ"] = O["PQ"];
+        //            outfile->Printf("\n    %-47s %8.3f", "Timing for transforming one-electron
+        //            integral:",
+        //                            timer.get() - timings.back());
+        //            timings.push_back(timer.get());
 
-//            // transform Hbar2 to new basis and copy to ints_
-//            O = ambit::BlockedTensor::build(tensor_type_, "Temp Two", spin_cases({"aaaa"}));
-//            O["wzxy"] = U_["wu"] * U_["zv"] * Hbar2_["uvxy"];
-//            O["wZxY"] = U_["wu"] * U_["ZV"] * Hbar2_["uVxY"];
-//            O["WZXY"] = U_["WU"] * U_["ZV"] * Hbar2_["UVXY"];
-//            Hbar2_["uvwz"] = O["uvxy"] * U_["zy"] * U_["wx"];
-//            Hbar2_["uVwZ"] = O["uVxY"] * U_["ZY"] * U_["wx"];
-//            Hbar2_["UVWZ"] = O["UVXY"] * U_["ZY"] * U_["WX"];
-//            for (const std::string& block : {"aaaa", "aAaA", "AAAA"}) {
-//                bool spin0 = islower(block[0]);
-//                bool spin1 = islower(block[1]);
+        //            // transform Hbar2 to new basis and copy to ints_
+        //            O = ambit::BlockedTensor::build(tensor_type_, "Temp Two",
+        //            spin_cases({"aaaa"}));
+        //            O["wzxy"] = U_["wu"] * U_["zv"] * Hbar2_["uvxy"];
+        //            O["wZxY"] = U_["wu"] * U_["ZV"] * Hbar2_["uVxY"];
+        //            O["WZXY"] = U_["WU"] * U_["ZV"] * Hbar2_["UVXY"];
+        //            Hbar2_["uvwz"] = O["uvxy"] * U_["zy"] * U_["wx"];
+        //            Hbar2_["uVwZ"] = O["uVxY"] * U_["ZY"] * U_["wx"];
+        //            Hbar2_["UVWZ"] = O["UVXY"] * U_["ZY"] * U_["WX"];
+        //            for (const std::string& block : {"aaaa", "aAaA", "AAAA"}) {
+        //                bool spin0 = islower(block[0]);
+        //                bool spin1 = islower(block[1]);
 
-//                Hbar2_.block(block).citerate(
-//                    [&](const std::vector<size_t>& i, const double& value) {
-//                        size_t p = aactv_mos_[i[0]];
-//                        size_t q = aactv_mos_[i[1]];
-//                        size_t r = aactv_mos_[i[2]];
-//                        size_t s = aactv_mos_[i[3]];
-//                        ints_->set_tei(p, q, r, s, value, spin0, spin1);
-//                    });
-//            }
+        //                Hbar2_.block(block).citerate(
+        //                    [&](const std::vector<size_t>& i, const double& value) {
+        //                        size_t p = aactv_mos_[i[0]];
+        //                        size_t q = aactv_mos_[i[1]];
+        //                        size_t r = aactv_mos_[i[2]];
+        //                        size_t s = aactv_mos_[i[3]];
+        //                        ints_->set_tei(p, q, r, s, value, spin0, spin1);
+        //                    });
+        //            }
 
-//            // transform bare two-body Hamiltonian
-//            O = ambit::BlockedTensor::build(tensor_type_, "Temp Two", {"gggg"});
-//            O["tors"] = U_["tp"] * U_["oq"] * V_["pqrs"];
-//            V_["pqot"] = O["pqrs"] * U_["ts"] * U_["or"];
+        //            // transform bare two-body Hamiltonian
+        //            O = ambit::BlockedTensor::build(tensor_type_, "Temp Two", {"gggg"});
+        //            O["tors"] = U_["tp"] * U_["oq"] * V_["pqrs"];
+        //            V_["pqot"] = O["pqrs"] * U_["ts"] * U_["or"];
 
-//            O = ambit::BlockedTensor::build(tensor_type_, "Temp Two", {"gGgG"});
-//            O["tOrS"] = U_["tp"] * U_["OQ"] * V_["pQrS"];
-//            V_["pQoT"] = O["pQrS"] * U_["TS"] * U_["or"];
+        //            O = ambit::BlockedTensor::build(tensor_type_, "Temp Two", {"gGgG"});
+        //            O["tOrS"] = U_["tp"] * U_["OQ"] * V_["pQrS"];
+        //            V_["pQoT"] = O["pQrS"] * U_["TS"] * U_["or"];
 
-//            O = ambit::BlockedTensor::build(tensor_type_, "Temp Two", {"GGGG"});
-//            O["TORS"] = U_["TP"] * U_["OQ"] * V_["PQRS"];
-//            V_["PQOT"] = O["PQRS"] * U_["TS"] * U_["OR"];
-//            outfile->Printf("\n    %-47s %8.3f", "Timing for transforming two-electron integral:",
-//                            timer.get() - timings.back());
+        //            O = ambit::BlockedTensor::build(tensor_type_, "Temp Two", {"GGGG"});
+        //            O["TORS"] = U_["TP"] * U_["OQ"] * V_["PQRS"];
+        //            V_["PQOT"] = O["PQRS"] * U_["TS"] * U_["OR"];
+        //            outfile->Printf("\n    %-47s %8.3f", "Timing for transforming two-electron
+        //            integral:",
+        //                            timer.get() - timings.back());
 
-//            ints_->update_integrals(false);
+        //            ints_->update_integrals(false);
 
-//            // diagonalize the Hamiltonian
-//            fci_mo =
-//                std::make_shared<FCI_MO>(reference_wavefunction_, options_, ints_, mo_space_info_);
-//            fci_mo->set_form_Fock(false);
-//            Erelax_sa = fci_mo->compute_sa_energy();
-//            if (std::fabs(Erelax_sa - Erelax_sa_vec.back()) > 100.0 * e_conv) {
-//                throw PSIEXCEPTION("Semi-canonicalization failed.");
-//            }
+        //            // diagonalize the Hamiltonian
+        //            fci_mo =
+        //                std::make_shared<FCI_MO>(reference_wavefunction_, options_, ints_,
+        //                mo_space_info_);
+        //            fci_mo->set_form_Fock(false);
+        //            Erelax_sa = fci_mo->compute_sa_energy();
+        //            if (std::fabs(Erelax_sa - Erelax_sa_vec.back()) > 100.0 * e_conv) {
+        //                throw PSIEXCEPTION("Semi-canonicalization failed.");
+        //            }
 
-//            // obtain new reference
-//            reference_ = fci_mo->reference();
+        //            // obtain new reference
+        //            reference_ = fci_mo->reference();
 
-//            // refill densities
-//            build_density();
+        //            // refill densities
+        //            build_density();
 
-//            // rebuild Fock matrix
-//            build_fock(H_, V_);
-//            check_semicanonical();
-//        }
+        //            // rebuild Fock matrix
+        //            build_fock(H_, V_);
+        //            check_semicanonical();
+        //        }
 
         // test convergence
         if (std::fabs(Edelta_dsrg) < e_conv && std::fabs(Edelta_relax) < e_conv) {
