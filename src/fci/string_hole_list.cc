@@ -123,24 +123,26 @@ void StringLists::make_2h_list(GraphPtr graph, GraphPtr graph_2h, H2List& list) 
                     size_t add_I = graph->rel_add(I);
                     for (size_t q = 0; q < ncmo_; ++q) {
                         for (size_t p = 0; p < ncmo_; ++p) {
-                            // copy I to J
-                            for (int i = 0; i < n; ++i)
-                                J[i] = I[i];
-                            if (J[q]) {
-                                J[q] = false;
-                                short q_sign = string_sign(J, q);
-                                if (J[p]) {
-                                    J[p] = false;
-                                    short p_sign = string_sign(J, p);
+                            if (p != q) {
+                                // copy I to J
+                                for (int i = 0; i < n; ++i)
+                                    J[i] = I[i];
+                                if (J[q]) {
+                                    J[q] = false;
+                                    short q_sign = string_sign(J, q);
+                                    if (J[p]) {
+                                        J[p] = false;
+                                        short p_sign = string_sign(J, p);
 
-                                    short sign = p_sign * q_sign;
+                                        short sign = p_sign * q_sign;
 
-                                    int h_J = graph_2h->sym(J);
-                                    size_t add_J = graph_2h->rel_add(J);
+                                        int h_J = graph_2h->sym(J);
+                                        size_t add_J = graph_2h->rel_add(J);
 
-                                    std::tuple<int, size_t, int> I_tuple(h_J, add_J, h_I);
-                                    list[I_tuple].push_back(
-                                        H2StringSubstitution(sign, p, q, add_I));
+                                        std::tuple<int, size_t, int> I_tuple(h_J, add_J, h_I);
+                                        list[I_tuple].push_back(
+                                            H2StringSubstitution(sign, p, q, add_I));
+                                    }
                                 }
                             }
                         }
@@ -191,35 +193,30 @@ void StringLists::make_3h_list(GraphPtr graph, GraphPtr graph_3h, H3List& list) 
                     for (size_t r = 0; r < ncmo_; ++r) {
                         for (size_t q = 0; q < ncmo_; ++q) {
                             for (size_t p = 0; p < ncmo_; ++p) {
-                                // copy I to J
-                                for (int i = 0; i < n; ++i)
-                                    J[i] = I[i];
-                                if (J[r]) {
-                                    J[r] = false;
-                                    short r_sign = string_sign(J, r);
-                                    if (J[q]) {
-                                        J[q] = false;
-                                        short q_sign = string_sign(J, q);
-                                        if (J[p]) {
-                                            J[p] = false;
-                                            short p_sign = string_sign(J, p);
+                                if ((p != q) and (p != r) and (q != r)) {
+                                    // copy I to J
+                                    for (int i = 0; i < n; ++i)
+                                        J[i] = I[i];
+                                    if (J[r]) {
+                                        J[r] = false;
+                                        short r_sign = string_sign(J, r);
+                                        if (J[q]) {
+                                            J[q] = false;
+                                            short q_sign = string_sign(J, q);
+                                            if (J[p]) {
+                                                J[p] = false;
+                                                short p_sign = string_sign(J, p);
 
-                                            short sign = p_sign * q_sign * r_sign;
+                                                short sign = p_sign * q_sign * r_sign;
 
-                                            int h_J = graph_3h->sym(J);
-                                            size_t add_J = graph_3h->rel_add(J);
+                                                int h_J = graph_3h->sym(J);
+                                                size_t add_J = graph_3h->rel_add(J);
 
-                                            std::tuple<int, size_t, int> I_tuple(h_J, add_J, h_I);
-                                            list[I_tuple].push_back(
-                                                H3StringSubstitution(sign, p, q, r, add_I));
-
-                                            //                                            outfile->Printf("\n
-                                            //                                            Adding
-                                            //                                            (%d,%zu,%d)
-                                            //                                            ->
-                                            //                                            (%d,%zu,%zu,%zu,%zu)",
-                                            //                                                            h_J,add_J,h_I,
-                                            //                                                            sign,p,q,r,add_I);
+                                                std::tuple<int, size_t, int> I_tuple(h_J, add_J,
+                                                                                     h_I);
+                                                list[I_tuple].push_back(
+                                                    H3StringSubstitution(sign, p, q, r, add_I));
+                                            }
                                         }
                                     }
                                 }
