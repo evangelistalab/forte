@@ -530,10 +530,6 @@ void ElementwiseCI::print_characteristic_function() {
 double ElementwiseCI::compute_energy() {
     timer_on("EWCI:Energy");
     ForteTimer t_apici;
-    old_max_one_HJI_ = 1e100;
-    new_max_one_HJI_ = 1e100;
-    old_max_two_HJI_ = 1e100;
-    new_max_two_HJI_ = 1e100;
 
     // Increase the root counter (ground state = 0)
     current_root_ += 1;
@@ -943,8 +939,10 @@ void ElementwiseCI::propagate_wallCh(det_hashvec& dets_hashvec, std::vector<doub
         //        range_ * root + shift_);
         double root = -cos(((double)i) * PI / (chebyshev_order_ + 0.5));
         //        dets = dets_hashvec.toVector();
-        apply_tau_H_ref_C_symm(-1.0, spawning_threshold, dets_hashvec, C, ref_C, C,
+        std::vector<double> result_C;
+        apply_tau_H_ref_C_symm(-1.0, spawning_threshold, dets_hashvec, ref_C, C, result_C,
                                range_ * root + shift_);
+        C.swap(result_C);
         //        copy_hash_to_vec_order_ref(dets_C_hash, dets, C);
         //        dets_hashvec = det_hashvec(dets_C_hash, C);
         //        dets = dets_hashvec.toVector();
@@ -1033,7 +1031,7 @@ void ElementwiseCI::propagate_DL(det_hashvec& dets_hashvec, std::vector<double>&
         //        copy_hash_to_vec_order_ref(dets_C_hash, dets,
         //        sigma_vec[current_order]);
         //        dets_hashvec = det_hashvec(dets);
-        apply_tau_H_ref_C_symm(1.0, spawning_threshold, dets_hashvec, b_vec[current_order], C,
+        apply_tau_H_ref_C_symm(1.0, spawning_threshold, dets_hashvec, C, b_vec[current_order],
                                sigma_vec[current_order], 0.0);
         //        dets = dets_hashvec.toVector();
         for (int m = 0; m < current_order; m++) {
@@ -1713,12 +1711,13 @@ void ElementwiseCI::apply_tau_H_symm_det_dynamic_HBCI_2(
 }
 
 void ElementwiseCI::apply_tau_H_ref_C_symm(double tau, double spawning_threshold,
-                                           det_hashvec& ref_dets, const std::vector<double>& C,
+                                           const det_hashvec& ref_dets,
                                            const std::vector<double>& ref_C,
+                                           const std::vector<double>& pre_C,
                                            std::vector<double>& result_C, double S) {
 
-    det_hashvec result_dets(ref_dets);
-    std::vector<double> C_merge(result_dets.size(), 0.0);
+    result_C.clear();
+    result_C.resize(ref_dets.size(), 0.0);
 
     std::vector<std::vector<std::pair<size_t, double>>> thread_index_C_vecs(num_threads_);
 
@@ -1729,17 +1728,17 @@ void ElementwiseCI::apply_tau_H_ref_C_symm(double tau, double spawning_threshold
         size_t current_rank = omp_get_thread_num();
         max_coupling = dets_max_couplings_[ref_dets[I]];
         thread_index_C_vecs[current_rank].clear();
-        apply_tau_H_ref_C_symm_det_dynamic_HBCI_2(tau, spawning_threshold, ref_dets, C, ref_C, I,
-                                                  C[I], ref_C[I], thread_index_C_vecs[current_rank],
-                                                  S, max_coupling);
+        apply_tau_H_ref_C_symm_det_dynamic_HBCI_2(
+            tau, spawning_threshold, ref_dets, pre_C, ref_C, I, pre_C[I], ref_C[I],
+            thread_index_C_vecs[current_rank], S, max_coupling);
 #pragma omp critical
         {
             for (const std::pair<size_t, double>& p : thread_index_C_vecs[current_rank]) {
-                C_merge[p.first] += p.second;
+                result_C[p.first] += p.second;
             }
         }
     }
-    size_t max_I = C.size();
+    size_t max_I = pre_C.size();
 #pragma omp parallel for
     for (size_t I = 0; I < max_I; ++I) {
         // Diagonal contribution
@@ -1747,12 +1746,8 @@ void ElementwiseCI::apply_tau_H_ref_C_symm(double tau, double spawning_threshold
         double det_energy = ref_dets[I].energy() + fci_ints_->scalar_energy();
         // parallel_timer_off("EWCI:diagonal", omp_get_thread_num());
         // Diagonal contributions
-        C_merge[I] += tau * (det_energy - S) * C[I];
+        result_C[I] += tau * (det_energy - S) * pre_C[I];
     }
-
-    ref_dets.swap(result_dets);
-
-    result_C.swap(C_merge);
 }
 
 void ElementwiseCI::apply_tau_H_ref_C_symm_det_dynamic_HBCI_2(
