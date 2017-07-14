@@ -90,6 +90,7 @@ src/aci/aci_string.cc
 src/aci/direct_ci.cc
 src/aosubspace/aosubspace.cc
 src/ci-no/ci-no.cc
+src/fci/binary_graph.cc
 src/fci/fci.cc
 src/fci/fci_integrals.cc
 src/fci/fci_solver.cc

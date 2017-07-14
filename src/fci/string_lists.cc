@@ -96,7 +96,6 @@ void StringLists::startup() {
     double vo_list_timer = 0.0;
     double nn_list_timer = 0.0;
     double oo_list_timer = 0.0;
-    double kh_list_timer = 0.0;
     double h1_list_timer = 0.0;
     double h2_list_timer = 0.0;
     double h3_list_timer = 0.0;
@@ -114,49 +113,36 @@ void StringLists::startup() {
         make_pair_list(nn_list);
         nn_list_timer += t.elapsed();
     }
-
     {
         ForteTimer t;
         make_vo_list(alfa_graph_, alfa_vo_list);
         make_vo_list(beta_graph_, beta_vo_list);
         vo_list_timer += t.elapsed();
     }
-
     {
         ForteTimer t;
         make_oo_list(alfa_graph_, alfa_oo_list);
         make_oo_list(beta_graph_, beta_oo_list);
         oo_list_timer += t.elapsed();
     }
-
-    {
-        ForteTimer t;
-        make_kh_list(alfa_graph_, alfa_kh_list);
-        make_kh_list(beta_graph_, beta_kh_list);
-        kh_list_timer += t.elapsed();
-    }
-
     {
         ForteTimer t;
         make_1h_list(alfa_graph_, alfa_graph_1h_, alfa_1h_list);
         make_1h_list(beta_graph_, beta_graph_1h_, beta_1h_list);
         h1_list_timer += t.elapsed();
     }
-
     {
         ForteTimer t;
         make_2h_list(alfa_graph_, alfa_graph_2h_, alfa_2h_list);
         make_2h_list(beta_graph_, beta_graph_2h_, beta_2h_list);
         h2_list_timer += t.elapsed();
     }
-
     {
         ForteTimer t;
         make_3h_list(alfa_graph_, alfa_graph_3h_, alfa_3h_list);
         make_3h_list(beta_graph_, beta_graph_3h_, beta_3h_list);
         h3_list_timer += t.elapsed();
     }
-
     if (required_lists_ == twoSubstituitionVVOO) {
         ForteTimer t;
         make_vvoo_list(alfa_graph_, alfa_vvoo_list);
@@ -188,7 +174,6 @@ void StringLists::startup() {
         outfile->Printf("\n  Timing for NN strings     = %10.3f s", nn_list_timer);
         outfile->Printf("\n  Timing for VO strings     = %10.3f s", vo_list_timer);
         outfile->Printf("\n  Timing for OO strings     = %10.3f s", oo_list_timer);
-        outfile->Printf("\n  Timing for Knowles-Handy  = %10.3f s", kh_list_timer);
         outfile->Printf("\n  Timing for VVOO strings   = %10.3f s", vvoo_list_timer);
         outfile->Printf("\n  Timing for VOVO strings   = %10.3f s", vovo_list_timer);
         outfile->Printf("\n  Timing for 1-hole strings = %10.3f s", h1_list_timer);
