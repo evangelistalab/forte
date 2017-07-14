@@ -45,7 +45,6 @@
 
 #include "pci_simple.h"
 
-
 using namespace psi;
 using namespace psi::forte::GeneratorType_Simple;
 
@@ -1797,8 +1796,8 @@ void ProjectorCI_Simple::print_wfn(det_vec& space, std::vector<double>& C, size_
     S2 /= norm;
     double S = std::fabs(0.5 * (std::sqrt(1.0 + 4.0 * S2) - 1.0));
 
-    std::vector<std::string> s2_labels({"singlet", "doublet", "triplet", "quartet", "quintet", "sextet",
-                                   "septet", "octet", "nonet", "decaet"});
+    std::vector<std::string> s2_labels({"singlet", "doublet", "triplet", "quartet", "quintet",
+                                        "sextet", "septet", "octet", "nonet", "decaet"});
     std::string state_label = s2_labels[std::round(S * 2.0)];
     outfile->Printf("\n\n  Spin State: S^2 = %5.3f, S = %5.3f, %s (from %zu "
                     "determinants,%.2f\%)",
@@ -1988,7 +1987,8 @@ ProjectorCI_Simple::sym_labeled_orbitals(std::string type) {
 
         // Create a vector that stores the orbital energy, symmetry, and idx
         for (size_t a = 0; a < nact_; ++a) {
-            labeled_orb.push_back(std::make_tuple(orb_e[a].first, mo_symmetry_[a], orb_e[a].second));
+            labeled_orb.push_back(
+                std::make_tuple(orb_e[a].first, mo_symmetry_[a], orb_e[a].second));
         }
         // Order by energy, low to high
         std::sort(labeled_orb.begin(), labeled_orb.end());
@@ -2006,7 +2006,8 @@ ProjectorCI_Simple::sym_labeled_orbitals(std::string type) {
 
         // Create a vector that stores the orbital energy, sym, and idx
         for (size_t a = 0; a < nact_; ++a) {
-            labeled_orb.push_back(std::make_tuple(orb_e[a].first, mo_symmetry_[a], orb_e[a].second));
+            labeled_orb.push_back(
+                std::make_tuple(orb_e[a].first, mo_symmetry_[a], orb_e[a].second));
         }
         std::sort(labeled_orb.begin(), labeled_orb.end());
     }

@@ -134,7 +134,6 @@ class ProjectorCI_HashVec : public Wavefunction {
     double nuclear_repulsion_energy_;
     /// The reference determinant
     Determinant reference_determinant_;
-    //    std::vector<det_hash<>> solutions_;
     std::vector<std::pair<det_hashvec, std::vector<double>>> solutions_;
     /// The information of mo space
     std::shared_ptr<MOSpaceInfo> mo_space_info_;
@@ -144,10 +143,6 @@ class ProjectorCI_HashVec : public Wavefunction {
     double pqpq_max_aa_, pqpq_max_ab_, pqpq_max_bb_;
     /// maximum element in (pq|pq) matrix
     std::vector<double> pqpq_row_max_;
-    /// 2loop total count
-    size_t schwarz_total_;
-    /// 2loop schwarz succeed count
-    size_t schwarz_succ_;
 
     // * Calculation info
     /// The threshold applied to the primary space
@@ -158,8 +153,6 @@ class ProjectorCI_HashVec : public Wavefunction {
     size_t max_guess_size_;
     /// The size of the time step (TAU)
     double time_step_;
-    /// Use an adaptive time step?
-    bool adaptive_beta_;
     /// Shift the Hamiltonian?
     bool do_shift_;
     /// Use intermediate normalization?
@@ -191,40 +184,21 @@ class ProjectorCI_HashVec : public Wavefunction {
     /// calculation?
     bool print_full_wavefunction_;
 
-    // * Simple Prescreening
-    /// Prescreen spawning using general integral upper bounds
-    bool do_simple_prescreening_;
-    /// Prescreen spawning using schwarz inequality
-    bool do_schwarz_prescreening_;
-    /// Prescreen spawning using initiator approximation
-    bool do_initiator_approx_;
-    /// Initiator approximation factor
-    double initiator_approx_factor_;
-    /// Maximum value of the one-electron coupling
-    double new_max_one_HJI_;
-    double old_max_one_HJI_;
-    /// Maximum value of the two-electron coupling
-    double new_max_two_HJI_;
-    double old_max_two_HJI_;
-    /// The tollerance factor applied when prescreening singles
-    double prescreening_tollerance_factor_;
-
     // * Dynamics Prescreening
-    /// Prescreen spawning using a dynamic integral upper bounds
-    bool do_dynamic_prescreening_;
     /// A map used to store the largest absolute value of the couplings of a
     /// determinant to all of its singly and doubly excited states.
     /// Bounds are stored as a pair (f_max,v_max) where f_max and v_max are
     /// the couplings to the singles and doubles, respectively.
     std::vector<std::pair<double, double>> dets_max_couplings_;
+    std::vector<double> det_energies_;
     double dets_double_max_coupling_;
     double dets_single_max_coupling_;
     std::vector<std::tuple<int, int, double, std::vector<std::tuple<int, int, double>>>>
         aa_couplings_, ab_couplings_, bb_couplings_;
     std::vector<std::tuple<int, double, std::vector<std::tuple<int, double>>>> a_couplings_,
         b_couplings_;
-    std::vector<std::vector<std::vector<double>>> single_alpha_excite_double_couplings_,
-        single_beta_excite_double_couplings_;
+    //    std::vector<std::vector<std::vector<double>>> single_alpha_excite_double_couplings_,
+    //        single_beta_excite_double_couplings_;
     double max_aa_coupling_, max_ab_coupling_, max_bb_coupling_, max_a_coupling_, max_b_coupling_;
     size_t aa_couplings_size_, ab_couplings_size_, bb_couplings_size_, a_couplings_size_,
         b_couplings_size_;
@@ -263,46 +237,22 @@ class ProjectorCI_HashVec : public Wavefunction {
     int chebyshev_order_;
     /// Order of Krylov subspace truncate
     int krylov_order_;
-    /// Threshold for norm of orthogonal basis to be colinear.
-    double colinear_threshold_;
 
     // * Convergence analysis
     /// Shift of Hamiltonian
     double shift_;
     /// lowest e-value in initial guess
     double lambda_1_;
-    /// Second lowest e-value in initial guess
-    //    double lambda_2_;
     /// Highest possible e-value
     double lambda_h_;
     /// Characteristic function coefficients
     std::vector<double> cha_func_coefs_;
     /// Do result perturbation analysis
     bool do_perturb_analysis_;
-    /// Use symmetric approximated hamiltonian
-    bool symm_approx_H_;
     /// Stop iteration when higher new low detected
     bool stop_higher_new_low_;
     double lastLow = 0.0;
     bool previous_go_up = false;
-
-    // * Reference spawning
-    /// Spawning according to the coefficient in a reference
-    bool reference_spawning_;
-
-    //    // * Helping statistic
-    //    /// Hash for statistics
-    //    det_hash<size_t> statistic_hash;
-    //    /// Vector for statistics
-    //    std::vector<Determinant> statistic_vec;
-    //    void count_hash(Determinant det) {
-    //        auto it = statistic_hash.find(det);
-    //        if (it == statistic_hash.end()) {
-    //            statistic_vec.push_back(det);
-    //            statistic_hash[det] = 0;
-    //        }
-    //        statistic_hash[det]++;
-    //    }
 
     // ==> Class functions <==
 
@@ -347,27 +297,33 @@ class ProjectorCI_HashVec : public Wavefunction {
                       double S);
     /// Apply symmetric approx tau H to a set of determinants with selection
     /// according to reference coefficients
-    void apply_tau_H_ref_C_symm(double tau, double spawning_threshold, det_hashvec& dets_hashvec,
-                                const std::vector<double>& C, const std::vector<double>& ref_C,
-                                std::vector<double>& result_C, double S);
+    void apply_tau_H_symm(double tau, double spawning_threshold, det_hashvec& dets_hashvec,
+                          const std::vector<double>& C, std::vector<double>& result_C, double S);
 
     /// Apply symmetric approx tau H to a determinant using dynamic screening
     /// with selection according to a reference coefficient
-    /// and with HBCI sorting scheme
-    void apply_tau_H_ref_C_symm_det_dynamic_HBCI(
+    /// and with HBCI sorting scheme with singles screening
+    void apply_tau_H_symm_det_dynamic_HBCI_2(
         double tau, double spawning_threshold, const det_hashvec& dets_hashvec,
-        const std::vector<double>& pre_C, const std::vector<double>& ref_C, const Determinant& detI,
-        double CI, double ref_CI, std::vector<std::pair<Determinant, double>>& new_space_C_vec,
-        double E0, std::pair<double, double>& max_coupling);
+        const std::vector<double>& pre_C, size_t I, double CI,
+        std::vector<std::pair<size_t, double>>& new_index_C_vec,
+        std::vector<std::pair<Determinant, double>>& new_space_C_vec, double E0,
+        std::pair<double, double>& max_coupling);
+    /// Apply symmetric approx tau H to a set of determinants with selection
+    /// according to reference coefficients
+    void apply_tau_H_ref_C_symm(double tau, double spawning_threshold,
+                                const det_hashvec& dets_hashvec, const std::vector<double>& ref_C,
+                                const std::vector<double>& pre_C, std::vector<double>& result_C,
+                                double S);
 
     /// Apply symmetric approx tau H to a determinant using dynamic screening
     /// with selection according to a reference coefficient
     /// and with HBCI sorting scheme with singles screening
     void apply_tau_H_ref_C_symm_det_dynamic_HBCI_2(
         double tau, double spawning_threshold, const det_hashvec& dets_hashvec,
-        const std::vector<double>& pre_C, const std::vector<double>& ref_C, const Determinant& detI,
-        double CI, double ref_CI, std::vector<std::pair<Determinant, double>>& new_space_C_vec,
-        double E0, std::pair<double, double>& max_coupling);
+        const std::vector<double>& pre_C, const std::vector<double>& ref_C, size_t I, double CI,
+        double ref_CI, std::vector<std::pair<size_t, double>>& new_index_C_vec, double E0,
+        const std::pair<double, double>& max_coupling);
 
     /// Estimates the energy give a wave function
     std::map<std::string, double> estimate_energy(const det_hashvec& dets_hashvec,
@@ -387,6 +343,12 @@ class ProjectorCI_HashVec : public Wavefunction {
     /// @param max_error The accuracy of the estimate. |E_est - E_var|<max_error
     double estimate_var_energy_within_error(const det_hashvec& dets_hashvec, std::vector<double>& C,
                                             double max_error = 0.0);
+    /// Estimates the variational energy within a given error by sigma vector algorithm
+    /// @param dets The set of determinants that form the wave function
+    /// @param C The wave function coefficients
+    /// @param max_error The accuracy of the estimate. |E_est - E_var|<max_error
+    double estimate_var_energy_within_error_sigma(const det_hashvec& dets_hashvec,
+                                                  std::vector<double>& C, double max_error = 0.0);
     /// Estimates the variational energy using a sparse algorithm
     /// @param dets The set of determinants that form the wave function
     /// @param C The wave function coefficients
@@ -397,6 +359,9 @@ class ProjectorCI_HashVec : public Wavefunction {
     /// Form the product H c
     double form_H_C(const det_hashvec& dets_hashvec, std::vector<double>& C, size_t I,
                     size_t cut_index);
+    /// Form the product H c
+    double form_H_C_2(const det_hashvec& dets_hashvec, std::vector<double>& C, size_t I,
+                      size_t cut_index);
     /// Do we have OpenMP?
     static bool have_omp_;
 
@@ -414,8 +379,11 @@ class ProjectorCI_HashVec : public Wavefunction {
 
     /// Compute the double excitation couplings
     void compute_double_couplings(double double_coupling_threshold);
-    //    void compute_single_excite_max_double_couplings();
+    /// Compute the single excitation couplings
     void compute_single_couplings(double single_coupling_threshold);
+
+    /// Compute half the single and double excitation couplings
+    void compute_couplings_half(const det_hashvec& dets, size_t cut_index);
 
     /// Returns a vector of orbital energy, sym label pairs
     std::vector<std::tuple<double, int, int>> sym_labeled_orbitals(std::string type);

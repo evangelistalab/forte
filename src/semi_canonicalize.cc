@@ -45,10 +45,16 @@ using namespace ambit;
 
 SemiCanonical::SemiCanonical(std::shared_ptr<Wavefunction> wfn, Options& options,
                              std::shared_ptr<ForteIntegrals> ints,
-                             std::shared_ptr<MOSpaceInfo> mo_space_info, Reference& reference)
-    : wfn_(wfn), mo_space_info_(mo_space_info), ints_(ints) {
-    print_method_banner(
-        {"Semi-Canonical Orbitals", "Jeffrey B. Schriber and Francesco A. Evangelista"});
+                             std::shared_ptr<MOSpaceInfo> mo_space_info, Reference& reference,
+                             const bool& quiet)
+    : wfn_(wfn), mo_space_info_(mo_space_info), ints_(ints), quiet_(quiet) {
+
+    if (!quiet) {
+        print_method_banner(
+            {"Semi-Canonical Orbitals", "Jeffrey B. Schriber and Francesco A. Evangelista"});
+    }
+
+    // TODO: remove options, reference?
 
     // 0. initialize the dimension objects
     nirrep_ = wfn_->nirrep();
@@ -68,6 +74,9 @@ void SemiCanonical::semicanonicalize(Reference& reference) {
     // 1. Build the Fock matrix
     build_fock_matrix(reference);
 
+    // TODO: it is probably useful to test the Fock matrix
+    // maybe the orbitals are semicanonical already
+
     // 2. Build transformation matrices from diagononalizing blocks in F
 
     // These transform all MOs
@@ -79,19 +88,22 @@ void SemiCanonical::semicanonicalize(Reference& reference) {
     for (int i = 0; i < nact_; ++i) {
         active_mo[i] = i;
     }
-    BlockedTensor::reset_mo_spaces();
-    BlockedTensor::set_expert_mode(true);
-    BlockedTensor::add_mo_space("a", "abcdpqrstuijk", active_mo, AlphaSpin);
-    BlockedTensor::add_mo_space("A", "ABCDPQRSTUIJK", active_mo, BetaSpin);
-    ambit::BlockedTensor U = BlockedTensor::build(CoreTensor, "U", spin_cases({"aa"}));
+    //    BlockedTensor::reset_mo_spaces();
+    //    BlockedTensor::set_expert_mode(true);
+    //    BlockedTensor::add_mo_space("a", "abcdpqrstuijk", active_mo, AlphaSpin);
+    //    BlockedTensor::add_mo_space("A", "ABCDPQRSTUIJK", active_mo, BetaSpin);
+    //    ambit::BlockedTensor U = BlockedTensor::build(CoreTensor, "U", spin_cases({"aa"}));
 
-    build_transformation_matrices(Ua, Ub, U);
+    ambit::Tensor Ua_t = ambit::Tensor::build(ambit::CoreTensor, "Ua", {nact_, nact_});
+    ambit::Tensor Ub_t = ambit::Tensor::build(ambit::CoreTensor, "Ub", {nact_, nact_});
+
+    build_transformation_matrices(Ua, Ub, Ua_t, Ub_t);
 
     // 3. Retransform integrals
     transform_ints(Ua, Ub);
 
     // 4. Transform RMDs/cumulants
-    transform_reference(U, reference);
+    transform_reference(Ua_t, Ub_t, reference);
 
     outfile->Printf("\n SemiCanonicalize takes %8.6f s.", SemiCanonicalize.get());
 }
@@ -131,7 +143,7 @@ void SemiCanonical::build_fock_matrix(Reference& reference) {
 }
 
 void SemiCanonical::build_transformation_matrices(SharedMatrix& Ua, SharedMatrix& Ub,
-                                                  ambit::BlockedTensor& U) {
+                                                  ambit::Tensor& Ua_t, ambit::Tensor& Ub_t) {
     // 2. Diagonalize the diagonal blocks of the Fock matrix
     SharedMatrix Fc_a(new Matrix("Fock core alpha", rdocc_, rdocc_));
     SharedMatrix Fc_b(new Matrix("Fock core beta", rdocc_, rdocc_));
@@ -186,12 +198,15 @@ void SemiCanonical::build_transformation_matrices(SharedMatrix& Ua, SharedMatrix
 
     // 3. Build the unitary matrices
 
-    Matrix Ua_copy(nact_, nact_);
-    Matrix Ub_copy(nact_, nact_);
+    std::vector<double> UaData(nact_ * nact_, 0.0);
+    std::vector<double> UbData(nact_ * nact_, 0.0);
+    //    Matrix Ua_copy(nact_, nact_);
+    //    Matrix Ub_copy(nact_, nact_);
 
-    size_t act_off = 0;
-    for (int h = 0; h < nirrep_; ++h) {
-        size_t offset = 0;
+    //    size_t act_off = 0;
+    for (int h = 0, act_off = 0; h < nirrep_; ++h) {
+        //        size_t offset = 0;
+        int offset = 0;
 
         // Set the matrices to the identity,
         // this takes care of the frozen core and virtual spaces
@@ -199,7 +214,6 @@ void SemiCanonical::build_transformation_matrices(SharedMatrix& Ua, SharedMatrix
             Ua->set(h, p, p, 1.0);
             Ub->set(h, p, p, 1.0);
         }
-
         offset += fdocc_[h];
 
         // core block
@@ -216,8 +230,14 @@ void SemiCanonical::build_transformation_matrices(SharedMatrix& Ua, SharedMatrix
             for (int v = 0; v < actv_[h]; ++v) {
                 Ua->set(h, offset + u, offset + v, evecs[2]->get(h, u, v));
                 Ub->set(h, offset + u, offset + v, evecs[3]->get(h, u, v));
-                Ua_copy.set(act_off + u, act_off + v, evecs[2]->get(h, u, v));
-                Ub_copy.set(act_off + u, act_off + v, evecs[3]->get(h, u, v));
+
+                int nu = act_off + u;
+                int nv = act_off + v;
+                UaData[nu * nact_ + nv] = evecs[2]->get(h, u, v);
+                UbData[nu * nact_ + nv] = evecs[3]->get(h, u, v);
+
+                //                Ua_copy.set(act_off + u, act_off + v, evecs[2]->get(h, u, v));
+                //                Ub_copy.set(act_off + u, act_off + v, evecs[3]->get(h, u, v));
             }
         }
         act_off += actv_[h];
@@ -232,13 +252,17 @@ void SemiCanonical::build_transformation_matrices(SharedMatrix& Ua, SharedMatrix
         }
     }
 
-    U.iterate([&](const std::vector<size_t>& i, const std::vector<SpinType>& spin, double& value) {
-        if (spin[0] == AlphaSpin) {
-            value = Ua_copy.get(i[0], i[1]);
-        } else {
-            value = Ub_copy.get(i[0], i[1]);
-        }
-    });
+    // copy active data to ambit tensors
+    Ua_t.data() = UaData;
+    Ub_t.data() = UbData;
+    //    Ua_t.iterate(
+    //        [&](const std::vector<size_t>& i, const std::vector<SpinType>& spin, double& value) {
+    //            if (spin[0] == AlphaSpin) {
+    //                value = Ua_copy.get(i[0], i[1]);
+    //            } else {
+    //                value = Ub_copy.get(i[0], i[1]);
+    //            }
+    //        });
 }
 
 void SemiCanonical::transform_ints(SharedMatrix& Ua, SharedMatrix& Ub) {
@@ -252,75 +276,171 @@ void SemiCanonical::transform_ints(SharedMatrix& Ua, SharedMatrix& Ub) {
     Cb->copy(Cb_new);
 
     // 5. Retransform the integrals in the new basis
-    print_h2("Integral transformation");
+    print_h2("Integral Transformation");
     ints_->retransform_integrals();
 }
 
-void SemiCanonical::transform_reference(ambit::BlockedTensor& U, Reference& reference) {
+void SemiCanonical::transform_reference(ambit::Tensor& Ua, ambit::Tensor& Ub,
+                                        Reference& reference) {
+    print_h2("Reference Transformation");
+
     // Transform the 1-cumulants
-    ambit::BlockedTensor gamma1 = BlockedTensor::build(CoreTensor, "Gamma1", spin_cases({"aa"}));
-    ambit::BlockedTensor rdm1 = BlockedTensor::build(CoreTensor, "rdm1", spin_cases({"aa"}));
+    ambit::Tensor L1a0 = reference.L1a();
+    ambit::Tensor L1b0 = reference.L1b();
 
-    rdm1.block("aa")("pq") = reference.L1a()("pq");
-    rdm1.block("AA")("pq") = reference.L1b()("pq");
+    ambit::Tensor L1aT = ambit::Tensor::build(ambit::CoreTensor, "Transformed L1a", {nact_, nact_});
+    ambit::Tensor L1bT = ambit::Tensor::build(ambit::CoreTensor, "Transformed L1b", {nact_, nact_});
+    L1aT("pq") = Ua("ap") * L1a0("ab") * Ua("bq");
+    L1bT("PQ") = Ub("AP") * L1b0("AB") * Ub("BQ");
 
-    gamma1["pq"] = U["ap"] * rdm1["ab"] * U["bq"];
-    gamma1["PQ"] = U["AP"] * rdm1["AB"] * U["BQ"];
+    reference.set_L1a(L1aT);
+    reference.set_L1b(L1bT);
+    outfile->Printf("\n    Transformed 1 cumulants.");
+
+    //    ambit::BlockedTensor gamma1 = BlockedTensor::build(CoreTensor, "Gamma1",
+    //    spin_cases({"aa"}));
+    //    ambit::BlockedTensor rdm1 = BlockedTensor::build(CoreTensor, "rdm1", spin_cases({"aa"}));
+
+    //    rdm1.block("aa")("pq") = reference.L1a()("pq");
+    //    rdm1.block("AA")("pq") = reference.L1b()("pq");
+
+    //    gamma1["pq"] = Ua["ap"] * rdm1["ab"] * Ua["bq"];
+    //    gamma1["PQ"] = Ua["AP"] * rdm1["AB"] * Ua["BQ"];
 
     // Transform 2-cumulants
-    ambit::BlockedTensor tmpL2 = BlockedTensor::build(CoreTensor, "tmpL2", spin_cases({"aaaa"}));
-    ambit::BlockedTensor L2 = BlockedTensor::build(CoreTensor, "L2", spin_cases({"aaaa"}));
+    ambit::Tensor L2aa0 = reference.L2aa();
+    ambit::Tensor L2ab0 = reference.L2ab();
+    ambit::Tensor L2bb0 = reference.L2bb();
 
-    tmpL2.block("aaaa")("abcd") = reference.L2aa()("abcd");
-    tmpL2.block("aAaA")("abcd") = reference.L2ab()("abcd");
-    tmpL2.block("AAAA")("abcd") = reference.L2bb()("abcd");
+    ambit::Tensor L2aaT =
+        ambit::Tensor::build(ambit::CoreTensor, "Transformed L2aa", {nact_, nact_, nact_, nact_});
+    ambit::Tensor L2abT =
+        ambit::Tensor::build(ambit::CoreTensor, "Transformed L2ab", {nact_, nact_, nact_, nact_});
+    ambit::Tensor L2bbT =
+        ambit::Tensor::build(ambit::CoreTensor, "Transformed L2bb", {nact_, nact_, nact_, nact_});
 
-    L2["pqrs"] = U["ap"] * U["bq"] * tmpL2["abcd"] * U["cr"] * U["ds"];
-    L2["pQrS"] = U["ap"] * U["BQ"] * tmpL2["aBcD"] * U["cr"] * U["DS"];
-    L2["PQRS"] = U["AP"] * U["BQ"] * tmpL2["ABCD"] * U["CR"] * U["DS"];
+    L2aaT("pqrs") = Ua("ap") * Ua("bq") * L2aa0("abcd") * Ua("cr") * Ua("ds");
+    L2abT("pQrS") = Ua("ap") * Ub("BQ") * L2ab0("aBcD") * Ua("cr") * Ub("DS");
+    L2bbT("PQRS") = Ub("AP") * Ub("BQ") * L2bb0("ABCD") * Ub("CR") * Ub("DS");
 
-    ambit::BlockedTensor g2 = BlockedTensor::build(CoreTensor, "g2", spin_cases({"aaaa"}));
-    ambit::BlockedTensor tmpg2 = BlockedTensor::build(CoreTensor, "tmpg2", spin_cases({"aaaa"}));
+    reference.set_L2aa(L2aaT);
+    reference.set_L2ab(L2abT);
+    reference.set_L2bb(L2bbT);
+    outfile->Printf("\n    Transformed 2 cumulants.");
 
-    tmpg2.block("aaaa")("abcd") = reference.g2aa()("abcd");
-    tmpg2.block("aAaA")("abcd") = reference.g2ab()("abcd");
-    tmpg2.block("AAAA")("abcd") = reference.g2bb()("abcd");
+    // Transform 2-RDMs
+    // TODO: it is faster to recompute using transformed cumulants
+    // unless the G2 is not consistent to L2
+    L2aa0 = reference.g2aa();
+    L2ab0 = reference.g2ab();
+    L2bb0 = reference.g2bb();
 
-    g2["pqrs"] = U["ap"] * U["bq"] * tmpg2["abcd"] * U["cr"] * U["ds"];
-    g2["pQrS"] = U["ap"] * U["BQ"] * tmpg2["aBcD"] * U["cr"] * U["DS"];
-    g2["PQRS"] = U["AP"] * U["BQ"] * tmpg2["ABCD"] * U["CR"] * U["DS"];
+    ambit::Tensor G2aaT =
+        ambit::Tensor::build(ambit::CoreTensor, "Transformed G2aa", {nact_, nact_, nact_, nact_});
+    ambit::Tensor G2abT =
+        ambit::Tensor::build(ambit::CoreTensor, "Transformed G2ab", {nact_, nact_, nact_, nact_});
+    ambit::Tensor G2bbT =
+        ambit::Tensor::build(ambit::CoreTensor, "Transformed G2bb", {nact_, nact_, nact_, nact_});
+
+    G2aaT("pqrs") = Ua("ap") * Ua("bq") * L2aa0("abcd") * Ua("cr") * Ua("ds");
+    G2abT("pQrS") = Ua("ap") * Ub("BQ") * L2ab0("aBcD") * Ua("cr") * Ub("DS");
+    G2bbT("PQRS") = Ub("AP") * Ub("BQ") * L2bb0("ABCD") * Ub("CR") * Ub("DS");
+
+    reference.set_g2aa(G2aaT);
+    reference.set_g2ab(G2abT);
+    reference.set_g2bb(G2bbT);
+    outfile->Printf("\n    Transformed 2 RDMs.");
+
+    //    ambit::BlockedTensor tmpL2 = BlockedTensor::build(CoreTensor, "tmpL2",
+    //    spin_cases({"aaaa"}));
+    //    ambit::BlockedTensor L2 = BlockedTensor::build(CoreTensor, "L2", spin_cases({"aaaa"}));
+
+    //    tmpL2.block("aaaa")("abcd") = reference.L2aa()("abcd");
+    //    tmpL2.block("aAaA")("abcd") = reference.L2ab()("abcd");
+    //    tmpL2.block("AAAA")("abcd") = reference.L2bb()("abcd");
+
+    //    L2["pqrs"] = Ua["ap"] * Ua["bq"] * tmpL2["abcd"] * Ua["cr"] * Ua["ds"];
+    //    L2["pQrS"] = Ua["ap"] * Ua["BQ"] * tmpL2["aBcD"] * Ua["cr"] * Ua["DS"];
+    //    L2["PQRS"] = Ua["AP"] * Ua["BQ"] * tmpL2["ABCD"] * Ua["CR"] * Ua["DS"];
+
+    //    ambit::BlockedTensor g2 = BlockedTensor::build(CoreTensor, "g2", spin_cases({"aaaa"}));
+    //    ambit::BlockedTensor tmpg2 = BlockedTensor::build(CoreTensor, "tmpg2",
+    //    spin_cases({"aaaa"}));
+
+    //    tmpg2.block("aaaa")("abcd") = reference.g2aa()("abcd");
+    //    tmpg2.block("aAaA")("abcd") = reference.g2ab()("abcd");
+    //    tmpg2.block("AAAA")("abcd") = reference.g2bb()("abcd");
+
+    //    g2["pqrs"] = Ua["ap"] * Ua["bq"] * tmpg2["abcd"] * Ua["cr"] * Ua["ds"];
+    //    g2["pQrS"] = Ua["ap"] * Ua["BQ"] * tmpg2["aBcD"] * Ua["cr"] * Ua["DS"];
+    //    g2["PQRS"] = Ua["AP"] * Ua["BQ"] * tmpg2["ABCD"] * Ua["CR"] * Ua["DS"];
 
     // Transform 3 cumulants
-    ambit::BlockedTensor tmpL3 = BlockedTensor::build(CoreTensor, "Gamma3", spin_cases({"aaaaaa"}));
-    ambit::BlockedTensor L3 = BlockedTensor::build(CoreTensor, "L3", spin_cases({"aaaaaa"}));
+    ambit::Tensor L3aaa0 = reference.L3aaa();
+    ambit::Tensor L3aab0 = reference.L3aab();
+    ambit::Tensor L3abb0 = reference.L3abb();
+    ambit::Tensor L3bbb0 = reference.L3bbb();
 
-    tmpL3.block("aaaaaa")("pqrstu") = reference.L3aaa()("pqrstu");
-    tmpL3.block("aaAaaA")("pqrstu") = reference.L3aab()("pqrstu");
-    tmpL3.block("aAAaAA")("pqrstu") = reference.L3abb()("pqrstu");
-    tmpL3.block("AAAAAA")("pqrstu") = reference.L3bbb()("pqrstu");
+    ambit::Tensor L3aaaT =
+        ambit::Tensor::build(ambit::CoreTensor, "Transformed L3aaa", std::vector<size_t>(6, nact_));
+    ambit::Tensor L3aabT =
+        ambit::Tensor::build(ambit::CoreTensor, "Transformed L3aab", std::vector<size_t>(6, nact_));
+    ambit::Tensor L3abbT =
+        ambit::Tensor::build(ambit::CoreTensor, "Transformed L3abb", std::vector<size_t>(6, nact_));
+    ambit::Tensor L3bbbT =
+        ambit::Tensor::build(ambit::CoreTensor, "Transformed L3bbb", std::vector<size_t>(6, nact_));
 
-    L3["pqrstu"] = U["ap"] * U["bq"] * U["cr"] * tmpL3["abcijk"] * U["is"] * U["jt"] * U["ku"];
-    L3["pqRstU"] = U["ap"] * U["bq"] * U["CR"] * tmpL3["abCijK"] * U["is"] * U["jt"] * U["KU"];
-    L3["pQRsTU"] = U["ap"] * U["BQ"] * U["CR"] * tmpL3["aBCiJK"] * U["is"] * U["JT"] * U["KU"];
-    L3["PQRSTU"] = U["AP"] * U["BQ"] * U["CR"] * tmpL3["ABCIJK"] * U["IS"] * U["JT"] * U["KU"];
-    // Recompute the energy
+    L3aaaT("pqrstu") =
+        Ua("ap") * Ua("bq") * Ua("cr") * L3aaa0("abcijk") * Ua("is") * Ua("jt") * Ua("ku");
+    L3aabT("pqRstU") =
+        Ua("ap") * Ua("bq") * Ub("CR") * L3aab0("abCijK") * Ua("is") * Ua("jt") * Ua("KU");
+    L3abbT("pQRsTU") =
+        Ua("ap") * Ub("BQ") * Ub("CR") * L3abb0("aBCiJK") * Ua("is") * Ub("JT") * Ua("KU");
+    L3bbbT("PQRSTU") =
+        Ub("AP") * Ub("BQ") * Ub("CR") * L3bbb0("ABCIJK") * Ub("IS") * Ub("JT") * Ua("KU");
 
-    // Update the reference
-    reference.set_L1a(gamma1.block("aa"));
-    reference.set_L1b(gamma1.block("AA"));
+    reference.set_L3aaa(L3aaaT);
+    reference.set_L3aab(L3aabT);
+    reference.set_L3abb(L3abbT);
+    reference.set_L3bbb(L3bbbT);
+    outfile->Printf("\n    Transformed 3 cumulants.");
 
-    reference.set_L2aa(L2.block("aaaa"));
-    reference.set_L2ab(L2.block("aAaA"));
-    reference.set_L2bb(L2.block("AAAA"));
+    //    ambit::BlockedTensor tmpL3 = BlockedTensor::build(CoreTensor, "Gamma3",
+    //    spin_cases({"aaaaaa"}));
+    //    ambit::BlockedTensor L3 = BlockedTensor::build(CoreTensor, "L3", spin_cases({"aaaaaa"}));
 
-    reference.set_g2aa(g2.block("aaaa"));
-    reference.set_g2ab(g2.block("aAaA"));
-    reference.set_g2bb(g2.block("AAAA"));
+    //    tmpL3.block("aaaaaa")("pqrstu") = reference.L3aaa()("pqrstu");
+    //    tmpL3.block("aaAaaA")("pqrstu") = reference.L3aab()("pqrstu");
+    //    tmpL3.block("aAAaAA")("pqrstu") = reference.L3abb()("pqrstu");
+    //    tmpL3.block("AAAAAA")("pqrstu") = reference.L3bbb()("pqrstu");
 
-    reference.set_L3aaa(L3.block("aaaaaa"));
-    reference.set_L3aab(L3.block("aaAaaA"));
-    reference.set_L3abb(L3.block("aAAaAA"));
-    reference.set_L3bbb(L3.block("AAAAAA"));
+    //    L3["pqrstu"] = Ua["ap"] * Ua["bq"] * Ua["cr"] * tmpL3["abcijk"] * Ua["is"] * Ua["jt"] *
+    //    Ua["ku"];
+    //    L3["pqRstU"] = Ua["ap"] * Ua["bq"] * Ua["CR"] * tmpL3["abCijK"] * Ua["is"] * Ua["jt"] *
+    //    Ua["KU"];
+    //    L3["pQRsTU"] = Ua["ap"] * Ua["BQ"] * Ua["CR"] * tmpL3["aBCiJK"] * Ua["is"] * Ua["JT"] *
+    //    Ua["KU"];
+    //    L3["PQRSTU"] = Ua["AP"] * Ua["BQ"] * Ua["CR"] * tmpL3["ABCIJK"] * Ua["IS"] * Ua["JT"] *
+    //    Ua["KU"];
+
+    //    // Recompute the energy
+
+    //    // Update the reference
+    //    reference.set_L1a(gamma1.block("aa"));
+    //    reference.set_L1b(gamma1.block("AA"));
+
+    //    reference.set_L2aa(L2.block("aaaa"));
+    //    reference.set_L2ab(L2.block("aAaA"));
+    //    reference.set_L2bb(L2.block("AAAA"));
+
+    //    reference.set_g2aa(g2.block("aaaa"));
+    //    reference.set_g2ab(g2.block("aAaA"));
+    //    reference.set_g2bb(g2.block("AAAA"));
+
+    //    reference.set_L3aaa(L3.block("aaaaaa"));
+    //    reference.set_L3aab(L3.block("aaAaaA"));
+    //    reference.set_L3abb(L3.block("aAAaAA"));
+    //    reference.set_L3bbb(L3.block("AAAAAA"));
 }
 }
 } // End Namespaces
