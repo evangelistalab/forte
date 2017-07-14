@@ -844,8 +844,7 @@ double ElementwiseCI::initial_guess(det_hashvec& dets_hashvec, std::vector<doubl
     dets_hashvec.clear();
     dets_hashvec.add(bs_det);
 
-    apply_tau_H_symm(time_step_, initial_guess_spawning_threshold_, dets_hashvec, {1.0}, C,
-                     0.0);
+    apply_tau_H_symm(time_step_, initial_guess_spawning_threshold_, dets_hashvec, {1.0}, C, 0.0);
 
     size_t guess_size = dets_hashvec.size();
     if (guess_size > max_guess_size_) {
@@ -1137,8 +1136,8 @@ void ElementwiseCI::propagate_DL(det_hashvec& dets_hashvec, std::vector<double>&
 }
 
 void ElementwiseCI::apply_tau_H_symm(double tau, double spawning_threshold, det_hashvec& ref_dets,
-                                     const std::vector<double>& C,
-                                     std::vector<double>& result_C, double S) {
+                                     const std::vector<double>& C, std::vector<double>& result_C,
+                                     double S) {
 
     det_hashvec result_dets(ref_dets);
     std::vector<double> C_merge(result_dets.size(), 0.0);
@@ -1156,8 +1155,8 @@ void ElementwiseCI::apply_tau_H_symm(double tau, double spawning_threshold, det_
         if (max_coupling.first == 0.0 or max_coupling.second == 0.0) {
             thread_det_C_vecs[current_rank].clear();
             thread_index_C_vecs[current_rank].clear();
-            apply_tau_H_symm_det_dynamic_HBCI_2(tau, spawning_threshold, ref_dets, C,
-                                                I, C[I], thread_index_C_vecs[current_rank],
+            apply_tau_H_symm_det_dynamic_HBCI_2(tau, spawning_threshold, ref_dets, C, I, C[I],
+                                                thread_index_C_vecs[current_rank],
                                                 thread_det_C_vecs[current_rank], S, max_coupling);
 #pragma omp critical
             {
@@ -1171,8 +1170,8 @@ void ElementwiseCI::apply_tau_H_symm(double tau, double spawning_threshold, det_
         } else {
             thread_det_C_vecs[current_rank].clear();
             thread_index_C_vecs[current_rank].clear();
-            apply_tau_H_symm_det_dynamic_HBCI_2(tau, spawning_threshold, ref_dets, C,
-                                                I, C[I], thread_index_C_vecs[current_rank],
+            apply_tau_H_symm_det_dynamic_HBCI_2(tau, spawning_threshold, ref_dets, C, I, C[I],
+                                                thread_index_C_vecs[current_rank],
                                                 thread_det_C_vecs[current_rank], S, max_coupling);
 #pragma omp critical
             {
@@ -1221,10 +1220,10 @@ void ElementwiseCI::apply_tau_H_symm(double tau, double spawning_threshold, det_
 
 void ElementwiseCI::apply_tau_H_symm_det_dynamic_HBCI_2(
     double tau, double spawning_threshold, const det_hashvec& dets_hashvec,
-    const std::vector<double>& pre_C, size_t I,
-    double CI, std::vector<std::pair<size_t, double>>& new_index_C_vec,
-    std::vector<std::pair<Determinant, double>>& new_det_C_vec,
-    double E0, std::pair<double, double>& max_coupling) {
+    const std::vector<double>& pre_C, size_t I, double CI,
+    std::vector<std::pair<size_t, double>>& new_index_C_vec,
+    std::vector<std::pair<Determinant, double>>& new_det_C_vec, double E0,
+    std::pair<double, double>& max_coupling) {
 
     const Determinant& detI = dets_hashvec[I];
     size_t pre_C_size = pre_C.size();
@@ -1740,9 +1739,9 @@ void ElementwiseCI::apply_tau_H_ref_C_symm(double tau, double spawning_threshold
         size_t current_rank = omp_get_thread_num();
         max_coupling = dets_max_couplings_[ref_dets[I]];
         thread_index_C_vecs[current_rank].clear();
-        apply_tau_H_ref_C_symm_det_dynamic_HBCI_2(tau, spawning_threshold, ref_dets, C, ref_C,
-                                                  I, C[I], ref_C[I],
-                                                  thread_index_C_vecs[current_rank], S, max_coupling);
+        apply_tau_H_ref_C_symm_det_dynamic_HBCI_2(tau, spawning_threshold, ref_dets, C, ref_C, I,
+                                                  C[I], ref_C[I], thread_index_C_vecs[current_rank],
+                                                  S, max_coupling);
 #pragma omp critical
         {
             for (const std::pair<size_t, double>& p : thread_index_C_vecs[current_rank]) {
@@ -1768,9 +1767,9 @@ void ElementwiseCI::apply_tau_H_ref_C_symm(double tau, double spawning_threshold
 
 void ElementwiseCI::apply_tau_H_ref_C_symm_det_dynamic_HBCI_2(
     double tau, double spawning_threshold, const det_hashvec& dets_hashvec,
-    const std::vector<double>& pre_C, const std::vector<double>& ref_C, size_t I,
-    double CI, double ref_CI, std::vector<std::pair<size_t, double>>& new_index_C_vec,
-    double E0, const std::pair<double, double>& max_coupling) {
+    const std::vector<double>& pre_C, const std::vector<double>& ref_C, size_t I, double CI,
+    double ref_CI, std::vector<std::pair<size_t, double>>& new_index_C_vec, double E0,
+    const std::pair<double, double>& max_coupling) {
 
     const Determinant& detI = dets_hashvec[I];
     size_t pre_C_size = pre_C.size(), ref_C_size = ref_C.size();
