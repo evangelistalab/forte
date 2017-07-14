@@ -13,7 +13,7 @@
 #include <iostream>
 #include <vector>
 
-#define BIN_GRAPH_TEST
+//#define BIN_GRAPH_TEST
 
 #ifdef BIN_GRAPH_TEST
 #include "psi4/psi4-dec.h"
