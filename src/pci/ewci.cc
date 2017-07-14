@@ -844,7 +844,7 @@ double ElementwiseCI::initial_guess(det_hashvec& dets_hashvec, std::vector<doubl
     dets_hashvec.clear();
     dets_hashvec.add(bs_det);
 
-    apply_tau_H_symm(time_step_, initial_guess_spawning_threshold_, dets_hashvec, {1.0}, {1.0}, C,
+    apply_tau_H_symm(time_step_, initial_guess_spawning_threshold_, dets_hashvec, {1.0}, C,
                      0.0);
 
     size_t guess_size = dets_hashvec.size();
@@ -934,7 +934,7 @@ void ElementwiseCI::propagate_wallCh(det_hashvec& dets_hashvec, std::vector<doub
     ref_C = C;
 
     double root = -cos(((double)chebyshev_order_) * PI / (chebyshev_order_ + 0.5));
-    apply_tau_H_symm(-1.0, spawning_threshold, dets_hashvec, C, ref_C, C, range_ * root + shift_);
+    apply_tau_H_symm(-1.0, spawning_threshold, dets_hashvec, C, C, range_ * root + shift_);
     normalize(C);
 
     for (int i = chebyshev_order_ - 1; i > 0; i--) {
@@ -970,7 +970,7 @@ void ElementwiseCI::propagate_DL(det_hashvec& dets_hashvec, std::vector<double>&
     //                           dets_C_hash, 0.0);
     //    copy_hash_to_vec_order_ref(dets_C_hash, dets, sigma_vec[0]);
     //    det_hashvec dets_hashvec(dets);
-    apply_tau_H_symm(1.0, spawning_threshold, dets_hashvec, b_vec[0], C, sigma_vec[0], 0.0);
+    apply_tau_H_symm(1.0, spawning_threshold, dets_hashvec, b_vec[0], sigma_vec[0], 0.0);
     //    dets = dets_hashvec.toVector();
     if (ref_size <= 1) {
         C = sigma_vec[0];
@@ -1137,7 +1137,7 @@ void ElementwiseCI::propagate_DL(det_hashvec& dets_hashvec, std::vector<double>&
 }
 
 void ElementwiseCI::apply_tau_H_symm(double tau, double spawning_threshold, det_hashvec& ref_dets,
-                                     const std::vector<double>& C, const std::vector<double>& ref_C,
+                                     const std::vector<double>& C,
                                      std::vector<double>& result_C, double S) {
 
     det_hashvec result_dets(ref_dets);
@@ -1145,17 +1145,17 @@ void ElementwiseCI::apply_tau_H_symm(double tau, double spawning_threshold, det_
 
     std::vector<std::vector<std::pair<Determinant, double>>> thread_det_C_vecs(num_threads_);
 
-    size_t ref_max_I = ref_C.size();
+    size_t max_I = C.size();
 #pragma omp parallel for
-    for (size_t I = 0; I < ref_max_I; ++I) {
+    for (size_t I = 0; I < max_I; ++I) {
         std::pair<double, double> max_coupling;
         size_t current_rank = omp_get_thread_num();
 #pragma omp critical
         { max_coupling = dets_max_couplings_[ref_dets[I]]; }
         if (max_coupling.first == 0.0 or max_coupling.second == 0.0) {
             thread_det_C_vecs[current_rank].clear();
-            apply_tau_H_symm_det_dynamic_HBCI_2(tau, spawning_threshold, ref_dets, C, ref_C,
-                                                ref_dets[I], C[I], ref_C[I],
+            apply_tau_H_symm_det_dynamic_HBCI_2(tau, spawning_threshold, ref_dets, C,
+                                                ref_dets[I], C[I],
                                                 thread_det_C_vecs[current_rank], S, max_coupling);
 #pragma omp critical
             {
@@ -1165,8 +1165,8 @@ void ElementwiseCI::apply_tau_H_symm(double tau, double spawning_threshold, det_
             }
         } else {
             thread_det_C_vecs[current_rank].clear();
-            apply_tau_H_symm_det_dynamic_HBCI_2(tau, spawning_threshold, ref_dets, C, ref_C,
-                                                ref_dets[I], C[I], ref_C[I],
+            apply_tau_H_symm_det_dynamic_HBCI_2(tau, spawning_threshold, ref_dets, C,
+                                                ref_dets[I], C[I],
                                                 thread_det_C_vecs[current_rank], S, max_coupling);
 #pragma omp critical
             {
@@ -1175,7 +1175,6 @@ void ElementwiseCI::apply_tau_H_symm(double tau, double spawning_threshold, det_
             }
         }
     }
-    size_t max_I = C.size();
 #pragma omp parallel for
     for (size_t I = 0; I < max_I; ++I) {
         // Diagonal contribution
@@ -1213,18 +1212,18 @@ void ElementwiseCI::apply_tau_H_symm(double tau, double spawning_threshold, det_
 
 void ElementwiseCI::apply_tau_H_symm_det_dynamic_HBCI_2(
     double tau, double spawning_threshold, const det_hashvec& dets_hashvec,
-    const std::vector<double>& pre_C, const std::vector<double>& ref_C, const Determinant& detI,
-    double CI, double ref_CI, std::vector<std::pair<Determinant, double>>& new_space_C_vec,
+    const std::vector<double>& pre_C, const Determinant& detI,
+    double CI, std::vector<std::pair<Determinant, double>>& new_space_C_vec,
     double E0, std::pair<double, double>& max_coupling) {
 
-    size_t pre_C_size = pre_C.size(), ref_C_size = ref_C.size();
+    size_t pre_C_size = pre_C.size();
 
     bool do_singles_1 = max_coupling.first == 0.0 and
-                        std::fabs(dets_single_max_coupling_ * ref_CI) >= spawning_threshold;
-    bool do_singles = std::fabs(max_coupling.first * ref_CI) >= spawning_threshold;
+                        std::fabs(dets_single_max_coupling_ * CI) >= spawning_threshold;
+    bool do_singles = std::fabs(max_coupling.first * CI) >= spawning_threshold;
     bool do_doubles_1 = max_coupling.second == 0.0 and
-                        std::fabs(dets_double_max_coupling_ * ref_CI) >= spawning_threshold;
-    bool do_doubles = std::fabs(max_coupling.second * ref_CI) >= spawning_threshold;
+                        std::fabs(dets_double_max_coupling_ * CI) >= spawning_threshold;
+    bool do_doubles = std::fabs(max_coupling.second * CI) >= spawning_threshold;
 
     // Diagonal contributions
     // parallel_timer_on("EWCI:diagonal", omp_get_thread_num());
@@ -1239,7 +1238,7 @@ void ElementwiseCI::apply_tau_H_symm_det_dynamic_HBCI_2(
         // Generate alpha excitations
         for (size_t x = 0; x < a_couplings_size_; ++x) {
             double HJI_max = std::get<1>(a_couplings_[x]);
-            if (std::fabs(HJI_max * ref_CI) < spawning_threshold) {
+            if (std::fabs(HJI_max * CI) < spawning_threshold) {
                 break;
             }
             int i = std::get<0>(a_couplings_[x]);
@@ -1250,7 +1249,7 @@ void ElementwiseCI::apply_tau_H_symm_det_dynamic_HBCI_2(
                     int a;
                     double HJI_bound;
                     std::tie(a, HJI_bound) = sub_couplings[y];
-                    if (std::fabs(HJI_bound * ref_CI) < spawning_threshold) {
+                    if (std::fabs(HJI_bound * CI) < spawning_threshold) {
                         break;
                     }
                     if (!detI.get_alfa_bit(a)) {
@@ -1266,14 +1265,13 @@ void ElementwiseCI::apply_tau_H_symm_det_dynamic_HBCI_2(
                         //                                HJI += double_couplings[p];
                         //                            }
                         //                        }
-                        if (std::fabs(HJI * ref_CI) >= spawning_threshold) {
+                        if (std::fabs(HJI * CI) >= spawning_threshold) {
                             HJI *= detJ.single_excitation_a(i, a);
                             new_space_C_vec.push_back(std::make_pair(detJ, tau * HJI * CI));
 
                             size_t index = dets_hashvec.find(detJ);
-                            if ((index < pre_C_size) &&
-                                (std::fabs(HJI * ref_C[index]) < spawning_threshold ||
-                                 index >= ref_C_size)) {
+                            if (index >= pre_C_size ||
+                                    std::fabs(HJI * pre_C[index]) < spawning_threshold) {
                                 diagonal_contribution += tau * HJI * pre_C[index];
                             }
                             detJ.set_alfa_bit(i, true);
@@ -1286,7 +1284,7 @@ void ElementwiseCI::apply_tau_H_symm_det_dynamic_HBCI_2(
         // Generate beta excitations
         for (size_t x = 0; x < b_couplings_size_; ++x) {
             double HJI_max = std::get<1>(b_couplings_[x]);
-            if (std::fabs(HJI_max * ref_CI) < spawning_threshold) {
+            if (std::fabs(HJI_max * CI) < spawning_threshold) {
                 break;
             }
             int i = std::get<0>(b_couplings_[x]);
@@ -1297,7 +1295,7 @@ void ElementwiseCI::apply_tau_H_symm_det_dynamic_HBCI_2(
                     int a;
                     double HJI_bound;
                     std::tie(a, HJI_bound) = sub_couplings[y];
-                    if (std::fabs(HJI_bound * ref_CI) < spawning_threshold) {
+                    if (std::fabs(HJI_bound * CI) < spawning_threshold) {
                         break;
                     }
                     if (!detI.get_beta_bit(a)) {
@@ -1313,14 +1311,13 @@ void ElementwiseCI::apply_tau_H_symm_det_dynamic_HBCI_2(
                         //                                HJI += double_couplings[p];
                         //                            }
                         //                        }
-                        if (std::fabs(HJI * ref_CI) >= spawning_threshold) {
+                        if (std::fabs(HJI * CI) >= spawning_threshold) {
                             HJI *= detJ.single_excitation_b(i, a);
                             new_space_C_vec.push_back(std::make_pair(detJ, tau * HJI * CI));
 
                             size_t index = dets_hashvec.find(detJ);
-                            if ((index < pre_C_size) &&
-                                (std::fabs(HJI * ref_C[index]) < spawning_threshold ||
-                                 index >= ref_C_size)) {
+                            if (index >= pre_C_size ||
+                                    std::fabs(HJI * pre_C[index]) < spawning_threshold) {
                                 diagonal_contribution += tau * HJI * pre_C[index];
                             }
                             detJ.set_beta_bit(i, true);
@@ -1336,7 +1333,7 @@ void ElementwiseCI::apply_tau_H_symm_det_dynamic_HBCI_2(
         // Generate alpha excitations
         for (size_t x = 0; x < a_couplings_size_; ++x) {
             double HJI_max = std::get<1>(a_couplings_[x]);
-            if (std::fabs(HJI_max * ref_CI) < spawning_threshold) {
+            if (std::fabs(HJI_max * CI) < spawning_threshold) {
                 break;
             }
             int i = std::get<0>(a_couplings_[x]);
@@ -1347,7 +1344,7 @@ void ElementwiseCI::apply_tau_H_symm_det_dynamic_HBCI_2(
                     int a;
                     double HJI_bound;
                     std::tie(a, HJI_bound) = sub_couplings[y];
-                    if (std::fabs(HJI_bound * ref_CI) < spawning_threshold) {
+                    if (std::fabs(HJI_bound * CI) < spawning_threshold) {
                         break;
                     }
                     if (!detI.get_alfa_bit(a)) {
@@ -1364,14 +1361,13 @@ void ElementwiseCI::apply_tau_H_symm_det_dynamic_HBCI_2(
                         //                            }
                         //                        }
                         max_coupling.first = std::max(max_coupling.first, std::fabs(HJI));
-                        if (std::fabs(HJI * ref_CI) >= spawning_threshold) {
+                        if (std::fabs(HJI * CI) >= spawning_threshold) {
                             HJI *= detJ.single_excitation_a(i, a);
                             new_space_C_vec.push_back(std::make_pair(detJ, tau * HJI * CI));
 
                             size_t index = dets_hashvec.find(detJ);
-                            if ((index < pre_C_size) &&
-                                (std::fabs(HJI * ref_C[index]) < spawning_threshold ||
-                                 index >= ref_C_size)) {
+                            if (index >= pre_C_size ||
+                                    std::fabs(HJI * pre_C[index]) < spawning_threshold) {
                                 diagonal_contribution += tau * HJI * pre_C[index];
                             }
                             detJ.set_alfa_bit(i, true);
@@ -1384,7 +1380,7 @@ void ElementwiseCI::apply_tau_H_symm_det_dynamic_HBCI_2(
         // Generate beta excitations
         for (size_t x = 0; x < b_couplings_size_; ++x) {
             double HJI_max = std::get<1>(b_couplings_[x]);
-            if (std::fabs(HJI_max * ref_CI) < spawning_threshold) {
+            if (std::fabs(HJI_max * CI) < spawning_threshold) {
                 break;
             }
             int i = std::get<0>(b_couplings_[x]);
@@ -1395,7 +1391,7 @@ void ElementwiseCI::apply_tau_H_symm_det_dynamic_HBCI_2(
                     int a;
                     double HJI_bound;
                     std::tie(a, HJI_bound) = sub_couplings[y];
-                    if (std::fabs(HJI_bound * ref_CI) < spawning_threshold) {
+                    if (std::fabs(HJI_bound * CI) < spawning_threshold) {
                         break;
                     }
                     if (!detI.get_beta_bit(a)) {
@@ -1412,14 +1408,13 @@ void ElementwiseCI::apply_tau_H_symm_det_dynamic_HBCI_2(
                         //                            }
                         //                        }
                         max_coupling.first = std::max(max_coupling.first, std::fabs(HJI));
-                        if (std::fabs(HJI * ref_CI) >= spawning_threshold) {
+                        if (std::fabs(HJI * CI) >= spawning_threshold) {
                             HJI *= detJ.single_excitation_b(i, a);
                             new_space_C_vec.push_back(std::make_pair(detJ, tau * HJI * CI));
 
                             size_t index = dets_hashvec.find(detJ);
-                            if ((index < pre_C_size) &&
-                                (std::fabs(HJI * ref_C[index]) < spawning_threshold ||
-                                 index >= ref_C_size)) {
+                            if (index >= pre_C_size ||
+                                    std::fabs(HJI * pre_C[index]) < spawning_threshold) {
                                 diagonal_contribution += tau * HJI * pre_C[index];
                             }
                             detJ.set_beta_bit(i, true);
@@ -1437,7 +1432,7 @@ void ElementwiseCI::apply_tau_H_symm_det_dynamic_HBCI_2(
         // Generate alpha-alpha excitations
         for (size_t x = 0; x < aa_couplings_size_; ++x) {
             double HJI_max = std::get<2>(aa_couplings_[x]);
-            if (std::fabs(HJI_max * ref_CI) < spawning_threshold) {
+            if (std::fabs(HJI_max * CI) < spawning_threshold) {
                 break;
             }
             int i = std::get<0>(aa_couplings_[x]);
@@ -1450,7 +1445,7 @@ void ElementwiseCI::apply_tau_H_symm_det_dynamic_HBCI_2(
                     int a, b;
                     double HJI;
                     std::tie(a, b, HJI) = sub_couplings[y];
-                    if (std::fabs(HJI * ref_CI) < spawning_threshold) {
+                    if (std::fabs(HJI * CI) < spawning_threshold) {
                         break;
                     }
                     if (!(detI.get_alfa_bit(a) or detI.get_alfa_bit(b))) {
@@ -1459,9 +1454,8 @@ void ElementwiseCI::apply_tau_H_symm_det_dynamic_HBCI_2(
                         new_space_C_vec.push_back(std::make_pair(detJ, tau * HJI * CI));
 
                         size_t index = dets_hashvec.find(detJ);
-                        if ((index < pre_C_size) &&
-                            (std::fabs(HJI * ref_C[index]) < spawning_threshold ||
-                             index >= ref_C_size)) {
+                        if (index >= pre_C_size ||
+                                std::fabs(HJI * pre_C[index]) < spawning_threshold) {
                             diagonal_contribution += tau * HJI * pre_C[index];
                         }
                         detJ.set_alfa_bit(i, true);
@@ -1475,7 +1469,7 @@ void ElementwiseCI::apply_tau_H_symm_det_dynamic_HBCI_2(
         // Generate alpha-beta excitations
         for (size_t x = 0; x < ab_couplings_size_; ++x) {
             double HJI_max = std::get<2>(ab_couplings_[x]);
-            if (std::fabs(HJI_max * ref_CI) < spawning_threshold) {
+            if (std::fabs(HJI_max * CI) < spawning_threshold) {
                 break;
             }
             int i = std::get<0>(ab_couplings_[x]);
@@ -1488,7 +1482,7 @@ void ElementwiseCI::apply_tau_H_symm_det_dynamic_HBCI_2(
                     int a, b;
                     double HJI;
                     std::tie(a, b, HJI) = sub_couplings[y];
-                    if (std::fabs(HJI * ref_CI) < spawning_threshold) {
+                    if (std::fabs(HJI * CI) < spawning_threshold) {
                         break;
                     }
                     if (!(detI.get_alfa_bit(a) or detI.get_beta_bit(b))) {
@@ -1497,9 +1491,8 @@ void ElementwiseCI::apply_tau_H_symm_det_dynamic_HBCI_2(
                         new_space_C_vec.push_back(std::make_pair(detJ, tau * HJI * CI));
 
                         size_t index = dets_hashvec.find(detJ);
-                        if ((index < pre_C_size) &&
-                            (std::fabs(HJI * ref_C[index]) < spawning_threshold ||
-                             index >= ref_C_size)) {
+                        if (index >= pre_C_size ||
+                                std::fabs(HJI * pre_C[index]) < spawning_threshold) {
                             diagonal_contribution += tau * HJI * pre_C[index];
                         }
                         detJ.set_alfa_bit(i, true);
@@ -1513,7 +1506,7 @@ void ElementwiseCI::apply_tau_H_symm_det_dynamic_HBCI_2(
         // Generate beta-beta excitations
         for (size_t x = 0; x < bb_couplings_size_; ++x) {
             double HJI_max = std::get<2>(bb_couplings_[x]);
-            if (std::fabs(HJI_max * ref_CI) < spawning_threshold) {
+            if (std::fabs(HJI_max * CI) < spawning_threshold) {
                 break;
             }
             int i = std::get<0>(bb_couplings_[x]);
@@ -1526,7 +1519,7 @@ void ElementwiseCI::apply_tau_H_symm_det_dynamic_HBCI_2(
                     int a, b;
                     double HJI;
                     std::tie(a, b, HJI) = sub_couplings[y];
-                    if (std::fabs(HJI * ref_CI) < spawning_threshold) {
+                    if (std::fabs(HJI * CI) < spawning_threshold) {
                         break;
                     }
                     if (!(detI.get_beta_bit(a) or detI.get_beta_bit(b))) {
@@ -1535,9 +1528,8 @@ void ElementwiseCI::apply_tau_H_symm_det_dynamic_HBCI_2(
                         new_space_C_vec.push_back(std::make_pair(detJ, tau * HJI * CI));
 
                         size_t index = dets_hashvec.find(detJ);
-                        if ((index < pre_C_size) &&
-                            (std::fabs(HJI * ref_C[index]) < spawning_threshold ||
-                             index >= ref_C_size)) {
+                        if (index >= pre_C_size ||
+                                std::fabs(HJI * pre_C[index]) < spawning_threshold) {
                             diagonal_contribution += tau * HJI * pre_C[index];
                         }
                         detJ.set_beta_bit(i, true);
@@ -1554,7 +1546,7 @@ void ElementwiseCI::apply_tau_H_symm_det_dynamic_HBCI_2(
         // Generate alpha-alpha excitations
         for (size_t x = 0; x < aa_couplings_size_; ++x) {
             double HJI_max = std::get<2>(aa_couplings_[x]);
-            if (std::fabs(HJI_max * ref_CI) < spawning_threshold) {
+            if (std::fabs(HJI_max * CI) < spawning_threshold) {
                 break;
             }
             int i = std::get<0>(aa_couplings_[x]);
@@ -1567,7 +1559,7 @@ void ElementwiseCI::apply_tau_H_symm_det_dynamic_HBCI_2(
                     int a, b;
                     double HJI;
                     std::tie(a, b, HJI) = sub_couplings[y];
-                    if (std::fabs(HJI * ref_CI) < spawning_threshold) {
+                    if (std::fabs(HJI * CI) < spawning_threshold) {
                         break;
                     }
                     if (!(detI.get_alfa_bit(a) or detI.get_alfa_bit(b))) {
@@ -1577,9 +1569,8 @@ void ElementwiseCI::apply_tau_H_symm_det_dynamic_HBCI_2(
                         new_space_C_vec.push_back(std::make_pair(detJ, tau * HJI * CI));
 
                         size_t index = dets_hashvec.find(detJ);
-                        if ((index < pre_C_size) &&
-                            (std::fabs(HJI * ref_C[index]) < spawning_threshold ||
-                             index >= ref_C_size)) {
+                        if (index >= pre_C_size ||
+                                std::fabs(HJI * pre_C[index]) < spawning_threshold) {
                             diagonal_contribution += tau * HJI * pre_C[index];
                         }
                         detJ.set_alfa_bit(i, true);
@@ -1593,7 +1584,7 @@ void ElementwiseCI::apply_tau_H_symm_det_dynamic_HBCI_2(
         // Generate alpha-beta excitations
         for (size_t x = 0; x < ab_couplings_size_; ++x) {
             double HJI_max = std::get<2>(ab_couplings_[x]);
-            if (std::fabs(HJI_max * ref_CI) < spawning_threshold) {
+            if (std::fabs(HJI_max * CI) < spawning_threshold) {
                 break;
             }
             int i = std::get<0>(ab_couplings_[x]);
@@ -1606,7 +1597,7 @@ void ElementwiseCI::apply_tau_H_symm_det_dynamic_HBCI_2(
                     int a, b;
                     double HJI;
                     std::tie(a, b, HJI) = sub_couplings[y];
-                    if (std::fabs(HJI * ref_CI) < spawning_threshold) {
+                    if (std::fabs(HJI * CI) < spawning_threshold) {
                         break;
                     }
                     if (!(detI.get_alfa_bit(a) or detI.get_beta_bit(b))) {
@@ -1616,9 +1607,8 @@ void ElementwiseCI::apply_tau_H_symm_det_dynamic_HBCI_2(
                         new_space_C_vec.push_back(std::make_pair(detJ, tau * HJI * CI));
 
                         size_t index = dets_hashvec.find(detJ);
-                        if ((index < pre_C_size) &&
-                            (std::fabs(HJI * ref_C[index]) < spawning_threshold ||
-                             index >= ref_C_size)) {
+                        if (index >= pre_C_size ||
+                                std::fabs(HJI * pre_C[index]) < spawning_threshold) {
                             diagonal_contribution += tau * HJI * pre_C[index];
                         }
                         detJ.set_alfa_bit(i, true);
@@ -1632,7 +1622,7 @@ void ElementwiseCI::apply_tau_H_symm_det_dynamic_HBCI_2(
         // Generate beta-beta excitations
         for (size_t x = 0; x < bb_couplings_size_; ++x) {
             double HJI_max = std::get<2>(bb_couplings_[x]);
-            if (std::fabs(HJI_max * ref_CI) < spawning_threshold) {
+            if (std::fabs(HJI_max * CI) < spawning_threshold) {
                 break;
             }
             int i = std::get<0>(bb_couplings_[x]);
@@ -1645,7 +1635,7 @@ void ElementwiseCI::apply_tau_H_symm_det_dynamic_HBCI_2(
                     int a, b;
                     double HJI;
                     std::tie(a, b, HJI) = sub_couplings[y];
-                    if (std::fabs(HJI * ref_CI) < spawning_threshold) {
+                    if (std::fabs(HJI * CI) < spawning_threshold) {
                         break;
                     }
                     if (!(detI.get_beta_bit(a) or detI.get_beta_bit(b))) {
@@ -1655,9 +1645,8 @@ void ElementwiseCI::apply_tau_H_symm_det_dynamic_HBCI_2(
                         new_space_C_vec.push_back(std::make_pair(detJ, tau * HJI * CI));
 
                         size_t index = dets_hashvec.find(detJ);
-                        if ((index < pre_C_size) &&
-                            (std::fabs(HJI * ref_C[index]) < spawning_threshold ||
-                             index >= ref_C_size)) {
+                        if (index >= pre_C_size ||
+                                std::fabs(HJI * pre_C[index]) < spawning_threshold) {
                             diagonal_contribution += tau * HJI * pre_C[index];
                         }
                         detJ.set_beta_bit(i, true);
@@ -1708,26 +1697,6 @@ void ElementwiseCI::apply_tau_H_ref_C_symm(double tau, double spawning_threshold
         // parallel_timer_off("EWCI:diagonal", omp_get_thread_num());
         // Diagonal contributions
         C_merge[I] += tau * (det_energy - S) * C[I];
-    }
-    if (approx_E_flag_) {
-        timer_on("EWCI:<E>a");
-        size_t max_I = C.size();
-        double CHC_energy = 0.0;
-#pragma omp parallel for reduction(+ : CHC_energy)
-        for (size_t I = 0; I < max_I; ++I) {
-            CHC_energy += C[I] * C_merge[I];
-        }
-        CHC_energy = CHC_energy / tau + S + nuclear_repulsion_energy_;
-        timer_off("EWCI:<E>a");
-        double CHC_energy_gradient =
-            (CHC_energy - approx_energy_) / (time_step_ * energy_estimate_freq_);
-        old_approx_energy_ = approx_energy_;
-        approx_energy_ = CHC_energy;
-        approx_E_flag_ = false;
-        approx_E_tau_ = tau;
-        approx_E_S_ = S;
-        if (iter_ != 0)
-            outfile->Printf(" %20.12f %10.3e", approx_energy_, CHC_energy_gradient);
     }
 
     ref_dets.swap(result_dets);
