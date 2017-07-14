@@ -27,7 +27,7 @@ set forte {
   PCI_GENERATOR wall-chebyshev
   PCI_maxbeta 100000.00
   PCI_e_convergence 7
-  PCI_FAST_EVAR true
+  PCI_FAST_EVAR false
 }
 
 energy('scf')
