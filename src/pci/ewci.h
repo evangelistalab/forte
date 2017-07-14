@@ -5,7 +5,8 @@
  * that implements a variety of quantum chemistry methods for strongly
  * correlated electrons.
  *
- * Copyright (c) 2012-2017 by its authors (see COPYING, COPYING.LESSER, AUTHORS).
+ * Copyright (c) 2012-2017 by its authors (see COPYING, COPYING.LESSER,
+ * AUTHORS).
  *
  * The copyrights for code used from other parties are included in
  * the corresponding files.
@@ -35,10 +36,10 @@
 #include "psi4/liboptions/liboptions.h"
 #include "psi4/physconst.h"
 
-#include "../hash_vector.h"
 #include "../fci/fci_vector.h"
 #include "../forte-def.h"
 #include "../forte_options.h"
+#include "../hash_vector.h"
 #include "../helpers.h"
 #include "../integrals/integrals.h"
 #include "../sparse_ci_solver.h"
@@ -85,8 +86,7 @@ class ElementwiseCI : public Wavefunction {
      * @param ints A pointer to an allocated integral object
      */
     ElementwiseCI(SharedWavefunction ref_wfn, Options& options,
-                       std::shared_ptr<ForteIntegrals> ints,
-                       std::shared_ptr<MOSpaceInfo> mo_space_info);
+                  std::shared_ptr<ForteIntegrals> ints, std::shared_ptr<MOSpaceInfo> mo_space_info);
 
     // ==> Class Interface <==
 
@@ -113,15 +113,26 @@ class ElementwiseCI : public Wavefunction {
     std::vector<int> mo_symmetry_;
     /// The number of correlated molecular orbitals
     int ncmo_;
+    /// The number of active electrons
+    int nactel_;
+    /// The number of correlated alpha electrons
+    int nalpha_;
+    /// The number of correlated beta electrons
+    int nbeta_;
+    /// The number of frozen core orbitals
+    int nfrzc_;
     /// The number of correlated molecular orbitals per irrep
     Dimension ncmopi_;
+    /// The number of active orbitals
+    size_t nact_;
+    /// The number of active orbitals per irrep
+    Dimension nactpi_;
     /// The multiplicity of the wave function
     int wavefunction_multiplicity_;
     /// The nuclear repulsion energy
     double nuclear_repulsion_energy_;
     /// The reference determinant
     Determinant reference_determinant_;
-    //    std::vector<det_hash<>> solutions_;
     std::vector<std::pair<det_hashvec, std::vector<double>>> solutions_;
     /// The information of mo space
     std::shared_ptr<MOSpaceInfo> mo_space_info_;
@@ -131,10 +142,6 @@ class ElementwiseCI : public Wavefunction {
     double pqpq_max_aa_, pqpq_max_ab_, pqpq_max_bb_;
     /// maximum element in (pq|pq) matrix
     std::vector<double> pqpq_row_max_;
-    /// 2loop total count
-    size_t schwarz_total_;
-    /// 2loop schwarz succeed count
-    size_t schwarz_succ_;
 
     // * Calculation info
     /// The threshold applied to the primary space
@@ -145,8 +152,6 @@ class ElementwiseCI : public Wavefunction {
     size_t max_guess_size_;
     /// The size of the time step (TAU)
     double time_step_;
-    /// Use an adaptive time step?
-    bool adaptive_beta_;
     /// Shift the Hamiltonian?
     bool do_shift_;
     /// Use intermediate normalization?
@@ -178,35 +183,25 @@ class ElementwiseCI : public Wavefunction {
     /// calculation?
     bool print_full_wavefunction_;
 
-    // * Simple Prescreening
-    /// Prescreen spawning using general integral upper bounds
-    bool do_simple_prescreening_;
-    /// Prescreen spawning using schwarz inequality
-    bool do_schwarz_prescreening_;
-    /// Prescreen spawning using initiator approximation
-    bool do_initiator_approx_;
-    /// Initiator approximation factor
-    double initiator_approx_factor_;
-    /// Maximum value of the one-electron coupling
-    double new_max_one_HJI_;
-    double old_max_one_HJI_;
-    /// Maximum value of the two-electron coupling
-    double new_max_two_HJI_;
-    double old_max_two_HJI_;
-    /// The tollerance factor applied when prescreening singles
-    double prescreening_tollerance_factor_;
-
     // * Dynamics Prescreening
-    /// Prescreen spawning using a dynamic integral upper bounds
-    bool do_dynamic_prescreening_;
     /// A map used to store the largest absolute value of the couplings of a
     /// determinant to all of its singly and doubly excited states.
     /// Bounds are stored as a pair (f_max,v_max) where f_max and v_max are
     /// the couplings to the singles and doubles, respectively.
-    std::unordered_map<Determinant, std::pair<double, double>,
-                       Determinant::Hash>
+    std::unordered_map<Determinant, std::pair<double, double>, Determinant::Hash>
         dets_max_couplings_;
+    std::vector<double> det_energies_;
     double dets_double_max_coupling_;
+    double dets_single_max_coupling_;
+    std::vector<std::tuple<int, int, double, std::vector<std::tuple<int, int, double>>>>
+        aa_couplings_, ab_couplings_, bb_couplings_;
+    std::vector<std::tuple<int, double, std::vector<std::tuple<int, double>>>> a_couplings_,
+        b_couplings_;
+    //    std::vector<std::vector<std::vector<double>>> single_alpha_excite_double_couplings_,
+    //        single_beta_excite_double_couplings_;
+    double max_aa_coupling_, max_ab_coupling_, max_bb_coupling_, max_a_coupling_, max_b_coupling_;
+    size_t aa_couplings_size_, ab_couplings_size_, bb_couplings_size_, a_couplings_size_,
+        b_couplings_size_;
 
     // * Energy estimation
     /// Estimate the variational energy?
@@ -215,6 +210,8 @@ class ElementwiseCI : public Wavefunction {
     bool fast_variational_estimate_;
     /// The frequency of approximate variational estimation of the energy
     int energy_estimate_freq_;
+    /// The max allowed error for variational energy
+    double evar_max_error_;
     /// The threshold with which we estimate the energy during the iterations
     double energy_estimate_threshold_;
     /// Flag for conducting CHC energy estimation
@@ -240,46 +237,22 @@ class ElementwiseCI : public Wavefunction {
     int chebyshev_order_;
     /// Order of Krylov subspace truncate
     int krylov_order_;
-    /// Threshold for norm of orthogonal basis to be colinear.
-    double colinear_threshold_;
 
     // * Convergence analysis
     /// Shift of Hamiltonian
     double shift_;
     /// lowest e-value in initial guess
     double lambda_1_;
-    /// Second lowest e-value in initial guess
-    //    double lambda_2_;
     /// Highest possible e-value
     double lambda_h_;
     /// Characteristic function coefficients
     std::vector<double> cha_func_coefs_;
     /// Do result perturbation analysis
     bool do_perturb_analysis_;
-    /// Use symmetric approximated hamiltonian
-    bool symm_approx_H_;
     /// Stop iteration when higher new low detected
     bool stop_higher_new_low_;
     double lastLow = 0.0;
     bool previous_go_up = false;
-
-    // * Reference spawning
-    /// Spawning according to the coefficient in a reference
-    bool reference_spawning_;
-
-    //    // * Helping statistic
-    //    /// Hash for statistics
-    //    det_hash<size_t> statistic_hash;
-    //    /// Vector for statistics
-    //    std::vector<Determinant> statistic_vec;
-    //    void count_hash(Determinant det) {
-    //        auto it = statistic_hash.find(det);
-    //        if (it == statistic_hash.end()) {
-    //            statistic_vec.push_back(det);
-    //            statistic_hash[det] = 0;
-    //        }
-    //        statistic_hash[det]++;
-    //    }
 
     // ==> Class functions <==
 
@@ -294,14 +267,12 @@ class ElementwiseCI : public Wavefunction {
                    size_t max_output = 10);
 
     /// Save a wave function
-    void save_wfn(
-        det_hashvec& space, std::vector<double>& C,
-        std::vector<std::pair<det_hashvec, std::vector<double>>>& solutions);
+    void save_wfn(det_hashvec& space, std::vector<double>& C,
+                  std::vector<std::pair<det_hashvec, std::vector<double>>>& solutions);
 
     /// Orthogonalize the wave function to previous solutions
-    void orthogonalize(
-        det_hashvec& space, std::vector<double>& C,
-        std::vector<std::pair<det_hashvec, std::vector<double>>>& solutions);
+    void orthogonalize(det_hashvec& space, std::vector<double>& C,
+                       std::vector<std::pair<det_hashvec, std::vector<double>>>& solutions);
 
     /// Initial wave function guess
     double initial_guess(det_hashvec& dets, std::vector<double>& C);
@@ -316,31 +287,44 @@ class ElementwiseCI : public Wavefunction {
     * events
     * @param S An energy shift subtracted from the Hamiltonian
     */
-    void propagate(GeneratorType_EWCI::GeneratorType generator,
-                   det_hashvec& dets_hashvec, std::vector<double>& C, double tau,
-                   double spawning_threshold, double S);
+    void propagate(GeneratorType_EWCI::GeneratorType generator, det_hashvec& dets_hashvec,
+                   std::vector<double>& C, double tau, double spawning_threshold, double S);
     /// A Delta projector fitted by 10th order chebyshev polynomial
     void propagate_wallCh(det_hashvec& dets_hashvec, std::vector<double>& C,
                           double spawning_threshold, double S);
     /// The DL Generator
-    void propagate_DL(det_hashvec& dets_hashvec, std::vector<double>& C,
-                      double spawning_threshold, double S);
+    void propagate_DL(det_hashvec& dets_hashvec, std::vector<double>& C, double spawning_threshold,
+                      double S);
     /// Apply symmetric approx tau H to a set of determinants with selection
     /// according to reference coefficients
-    void apply_tau_H_ref_C_symm(double tau, double spawning_threshold,
-                                det_hashvec& dets_hashvec,
-                                const std::vector<double>& C,
-                                const std::vector<double>& ref_C,
-                                std::vector<double>& result_C, double S);
+    void apply_tau_H_symm(double tau, double spawning_threshold, det_hashvec& dets_hashvec,
+                          const std::vector<double>& C, std::vector<double>& result_C, double S);
 
     /// Apply symmetric approx tau H to a determinant using dynamic screening
     /// with selection according to a reference coefficient
-    void apply_tau_H_ref_C_symm_det_dynamic(
+    /// and with HBCI sorting scheme with singles screening
+    void
+    apply_tau_H_symm_det_dynamic_HBCI_2(double tau, double spawning_threshold,
+                                        const det_hashvec& dets_hashvec,
+                                        const std::vector<double>& pre_C, size_t I, double CI,
+                                        std::vector<std::pair<size_t, double>>& new_index_C_vec,
+                                        std::vector<std::pair<Determinant, double>>& new_det_C_vec,
+                                        double E0, std::pair<double, double>& max_coupling);
+    /// Apply symmetric approx tau H to a set of determinants with selection
+    /// according to reference coefficients
+    void apply_tau_H_ref_C_symm(double tau, double spawning_threshold,
+                                const det_hashvec& dets_hashvec, const std::vector<double>& ref_C,
+                                const std::vector<double>& pre_C, std::vector<double>& result_C,
+                                double S);
+
+    /// Apply symmetric approx tau H to a determinant using dynamic screening
+    /// with selection according to a reference coefficient
+    /// and with HBCI sorting scheme with singles screening
+    void apply_tau_H_ref_C_symm_det_dynamic_HBCI_2(
         double tau, double spawning_threshold, const det_hashvec& dets_hashvec,
-        const std::vector<double>& pre_C, const std::vector<double>& ref_C,
-        const Determinant& detI, double CI, double ref_CI,
-        std::vector<std::pair<Determinant, double>>& new_space_C_vec, double E0,
-        std::pair<double, double>& max_coupling);
+        const std::vector<double>& pre_C, const std::vector<double>& ref_C, size_t I, double CI,
+        double ref_CI, std::vector<std::pair<size_t, double>>& new_index_C_vec, double E0,
+        const std::pair<double, double>& max_coupling);
 
     /// Estimates the energy give a wave function
     std::map<std::string, double> estimate_energy(const det_hashvec& dets_hashvec,
@@ -352,21 +336,33 @@ class ElementwiseCI : public Wavefunction {
     /// @param C The wave function coefficients
     /// @param tollerance The accuracy of the estimate.  Used to impose |C_I
     /// C_J| < tollerance
-    double estimate_var_energy(const det_hashvec& dets_hashvec,
-                               std::vector<double>& C,
+    double estimate_var_energy(const det_hashvec& dets_hashvec, std::vector<double>& C,
                                double tollerance = 1.0e-14);
+    /// Estimates the variational energy within a given error
+    /// @param dets The set of determinants that form the wave function
+    /// @param C The wave function coefficients
+    /// @param max_error The accuracy of the estimate. |E_est - E_var|<max_error
+    double estimate_var_energy_within_error(const det_hashvec& dets_hashvec, std::vector<double>& C,
+                                            double max_error = 0.0);
+    /// Estimates the variational energy within a given error by sigma vector algorithm
+    /// @param dets The set of determinants that form the wave function
+    /// @param C The wave function coefficients
+    /// @param max_error The accuracy of the estimate. |E_est - E_var|<max_error
+    double estimate_var_energy_within_error_sigma(const det_hashvec& dets_hashvec,
+                                                  std::vector<double>& C, double max_error = 0.0);
     /// Estimates the variational energy using a sparse algorithm
     /// @param dets The set of determinants that form the wave function
     /// @param C The wave function coefficients
     /// @param tollerance The accuracy of the estimate.  Used to impose |C_I
     /// C_J| < tollerance
-    double estimate_var_energy_sparse(const det_hashvec& dets_hashvec,
-                                      std::vector<double>& C,
-                                      double tollerance = 1.0e-14);
+    double estimate_var_energy_sparse(const det_hashvec& dets_hashvec, std::vector<double>& C,
+                                      double max_error = 0.0);
     /// Form the product H c
-    double form_H_C(double tau, double spawning_threshold,
-                    const det_hashvec& dets_hashvec, std::vector<double>& C,
-                    size_t I, std::pair<double, double>& max_coupling);
+    double form_H_C(const det_hashvec& dets_hashvec, std::vector<double>& C, size_t I,
+                    size_t cut_index);
+    /// Form the product H c
+    double form_H_C_2(const det_hashvec& dets_hashvec, std::vector<double>& C, size_t I,
+                      size_t cut_index);
     /// Do we have OpenMP?
     static bool have_omp_;
 
@@ -382,8 +378,21 @@ class ElementwiseCI : public Wavefunction {
     /// Test the convergence of calculation
     bool converge_test();
 
-    /// Compute the maximum absolute double excitation coupling
-    double compute_max_double_coupling();
+    /// Compute the double excitation couplings
+    void compute_double_couplings(double double_coupling_threshold);
+    /// Compute the single excitation couplings
+    void compute_single_couplings(double single_coupling_threshold);
+
+    /// Compute half the single and double excitation couplings
+    void compute_couplings_half(const det_hashvec& dets, size_t cut_index);
+
+    /// Returns a vector of orbital energy, sym label pairs
+    std::vector<std::tuple<double, int, int>> sym_labeled_orbitals(std::string type);
+
+    /// Get the reference occupation
+    std::vector<int> get_occupation();
+    /// Sort the determinants by coefficients
+    void sortHashVecByCoefficient(det_hashvec& dets_hashvec, std::vector<double>& C);
 };
 }
 } // End Namespaces

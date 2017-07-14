@@ -56,10 +56,9 @@ class SigmaVector {
     size_t size() { return size_; }
 
     virtual void compute_sigma(SharedVector sigma, SharedVector b) = 0;
-//    virtual void compute_sigma(Matrix& sigma, Matrix& b, int nroot) = 0;
+    //    virtual void compute_sigma(Matrix& sigma, Matrix& b, int nroot) = 0;
     virtual void get_diagonal(Vector& diag) = 0;
-    virtual void add_bad_roots(
-        std::vector<std::vector<std::pair<size_t, double>>>& bad_states) = 0;
+    virtual void add_bad_roots(std::vector<std::vector<std::pair<size_t, double>>>& bad_states) = 0;
 
   protected:
     size_t size_;
@@ -69,22 +68,21 @@ class SigmaVector {
  * @brief The SigmaVectorSparse class
  * Computes the sigma vector from a sparse Hamiltonian.
  */
-class SigmaVectorSparse : public SigmaVector
-{
- public:
-    SigmaVectorSparse(std::vector<std::pair<std::vector<size_t>,std::vector<double>>>& H) : SigmaVector(H.size()), H_(H) {};
+class SigmaVectorSparse : public SigmaVector {
+  public:
+    SigmaVectorSparse(std::vector<std::pair<std::vector<size_t>, std::vector<double>>>& H)
+        : SigmaVector(H.size()), H_(H){};
 
     void compute_sigma(SharedVector sigma, SharedVector b);
- //   void compute_sigma(Matrix& sigma, Matrix& b, int nroot) {}
+    //   void compute_sigma(Matrix& sigma, Matrix& b, int nroot) {}
     void get_diagonal(Vector& diag);
-    void add_bad_roots(
-        std::vector<std::vector<std::pair<size_t, double>>>& bad_states);
+    void add_bad_roots(std::vector<std::vector<std::pair<size_t, double>>>& bad_states);
 
     std::vector<std::vector<std::pair<size_t, double>>> bad_states_;
- protected:
-    std::vector<std::pair<std::vector<size_t>,std::vector<double>>>& H_;
-};
 
+  protected:
+    std::vector<std::pair<std::vector<size_t>, std::vector<double>>>& H_;
+};
 
 /**
  * @brief The SigmaVectorList class
@@ -92,17 +90,14 @@ class SigmaVectorSparse : public SigmaVector
  */
 class SigmaVectorList : public SigmaVector {
   public:
-    SigmaVectorList(const std::vector<STLBitsetDeterminant>& space,
-                    bool print_detail);
+    SigmaVectorList(const std::vector<STLBitsetDeterminant>& space, bool print_detail);
 
     void compute_sigma(SharedVector sigma, SharedVector b);
-  //  void compute_sigma(Matrix& sigma, Matrix& b, int nroot);
+    //  void compute_sigma(Matrix& sigma, Matrix& b, int nroot);
     void get_diagonal(Vector& diag);
     void get_hamiltonian(Matrix& H);
-    std::vector<std::pair<std::vector<int>, std::vector<double>>>
-    get_sparse_hamiltonian();
-    void add_bad_roots(
-        std::vector<std::vector<std::pair<size_t, double>>>& bad_states);
+    std::vector<std::pair<std::vector<int>, std::vector<double>>> get_sparse_hamiltonian();
+    void add_bad_roots(std::vector<std::vector<std::pair<size_t, double>>>& bad_states);
 
     std::vector<std::vector<std::pair<size_t, double>>> bad_states_;
 
@@ -130,17 +125,17 @@ class SigmaVectorList : public SigmaVector {
 };
 
 /* Uses ann/cre lists in sigma builds (Harrison and Zarrabian method) */
-class SigmaVectorWfn1 : public SigmaVector
-{
- public:
+class SigmaVectorWfn1 : public SigmaVector {
+  public:
     SigmaVectorWfn1(const DeterminantMap& space, WFNOperator& op);
 
     void compute_sigma(SharedVector sigma, SharedVector b);
- //   void compute_sigma(Matrix& sigma, Matrix& b, int nroot) {}
+    //   void compute_sigma(Matrix& sigma, Matrix& b, int nroot) {}
     void get_diagonal(Vector& diag);
-    void add_bad_roots( std::vector<std::vector<std::pair<size_t, double>>>& bad_states); 
+    void add_bad_roots(std::vector<std::vector<std::pair<size_t, double>>>& bad_states);
     std::vector<std::vector<std::pair<size_t, double>>> bad_states_;
- protected:
+
+  protected:
     // Create the list of a_p|N>
     std::vector<std::vector<std::pair<size_t, short>>>& a_ann_list_;
     std::vector<std::vector<std::pair<size_t, short>>>& b_ann_list_;
@@ -161,7 +156,7 @@ class SigmaVectorWfn1 : public SigmaVector
 };
 
 /* Uses only cre lists, sparse sigma build */
-class SigmaVectorWfn2: public SigmaVector {
+class SigmaVectorWfn2 : public SigmaVector {
   public:
     SigmaVectorWfn2(const DeterminantMap& space, WFNOperator& op);
     std::vector<std::vector<std::pair<size_t, short>>>& a_list_;
@@ -171,10 +166,9 @@ class SigmaVectorWfn2: public SigmaVector {
     std::vector<std::vector<std::tuple<size_t, short, short>>>& bb_list_;
 
     void compute_sigma(SharedVector sigma, SharedVector b);
-   // void compute_sigma(Matrix& sigma, Matrix& b, int nroot);
+    // void compute_sigma(Matrix& sigma, Matrix& b, int nroot);
     void get_diagonal(Vector& diag);
-    void add_bad_roots(
-        std::vector<std::vector<std::pair<size_t, double>>>& bad_states_);
+    void add_bad_roots(std::vector<std::vector<std::pair<size_t, double>>>& bad_states_);
 
     std::vector<std::vector<std::pair<size_t, double>>> bad_states_;
 
@@ -189,7 +183,7 @@ class SigmaVectorWfn2: public SigmaVector {
     std::vector<double> diag_;
 };
 /* Uses only cre lists, DGEMM sigma build */
-class SigmaVectorWfn3: public SigmaVector {
+class SigmaVectorWfn3 : public SigmaVector {
   public:
     SigmaVectorWfn3(const DeterminantMap& space, WFNOperator& op);
     std::vector<std::vector<std::pair<size_t, short>>>& a_list_;
@@ -199,10 +193,9 @@ class SigmaVectorWfn3: public SigmaVector {
     std::vector<std::vector<std::tuple<size_t, short, short>>>& bb_list_;
 
     void compute_sigma(SharedVector sigma, SharedVector b);
-   // void compute_sigma(Matrix& sigma, Matrix& b, int nroot);
+    // void compute_sigma(Matrix& sigma, Matrix& b, int nroot);
     void get_diagonal(Vector& diag);
-    void add_bad_roots(
-        std::vector<std::vector<std::pair<size_t, double>>>& bad_states_);
+    void add_bad_roots(std::vector<std::vector<std::pair<size_t, double>>>& bad_states_);
 
     std::vector<std::vector<std::pair<size_t, double>>> bad_states_;
 
@@ -219,7 +212,6 @@ class SigmaVectorWfn3: public SigmaVector {
     SharedMatrix aa_tei_;
     SharedMatrix ab_tei_;
     SharedMatrix bb_tei_;
-
 };
 
 #ifdef HAVE_MPI
@@ -228,12 +220,11 @@ class SigmaVectorMPI : public SigmaVector {
     SigmaVectorMPI(const DeterminantMap& space, WFNOperator& op);
 
     void compute_sigma(SharedVector sigma, SharedVector b);
-    void compute_sigma( Matrix& sigma, Matrix& b, int nroot);
+    void compute_sigma(Matrix& sigma, Matrix& b, int nroot);
     void get_diagonal(Vector& diag);
-    void add_bad_roots(
-        std::vector<std::vector<std::pair<size_t, double>>>& bad_states_);  
+    void add_bad_roots(std::vector<std::vector<std::pair<size_t, double>>>& bad_states_);
 
-    std::vector<std::vector<std::pair<size_t, double>>> bad_states_;  
+    std::vector<std::vector<std::pair<size_t, double>>> bad_states_;
 };
 #endif
 
@@ -256,23 +247,18 @@ class SparseCISolver {
      * singlet, 2 = doublet, ...
      */
     void diagonalize_hamiltonian(const std::vector<STLBitsetDeterminant>& space,
-                                 SharedVector& evals, SharedMatrix& evecs,
-                                 int nroot, int multiplicity,
-                                 DiagonalizationMethod diag_method);
+                                 SharedVector& evals, SharedMatrix& evecs, int nroot,
+                                 int multiplicity, DiagonalizationMethod diag_method);
 
-    void diagonalize_hamiltonian_map(const DeterminantMap& space,
-                                     WFNOperator& op, SharedVector& evals,
-                                     SharedMatrix& evecs, int nroot,
-                                     int multiplicity,
-                                     DiagonalizationMethod diag_method);
+    void diagonalize_hamiltonian_map(const DeterminantMap& space, WFNOperator& op,
+                                     SharedVector& evals, SharedMatrix& evecs, int nroot,
+                                     int multiplicity, DiagonalizationMethod diag_method);
 
     /// Enable/disable the parallel algorithms
     void set_parallel(bool parallel) { parallel_ = parallel; }
 
     /// Enable/disable printing of details
-    void set_print_details(bool print_details) {
-        print_details_ = print_details;
-    }
+    void set_print_details(bool print_details) { print_details_ = print_details; }
 
     /// Enable/disable spin projection
     void set_spin_project(bool value);
@@ -288,14 +274,12 @@ class SparseCISolver {
 
     /// The maximum number of iterations for the Davidson algorithm
     void set_maxiter_davidson(int value);
-    SharedMatrix
-    build_full_hamiltonian(const std::vector<STLBitsetDeterminant>& space);
+    SharedMatrix build_full_hamiltonian(const std::vector<STLBitsetDeterminant>& space);
     std::vector<std::pair<std::vector<int>, std::vector<double>>>
     build_sparse_hamiltonian(const std::vector<STLBitsetDeterminant>& space);
 
     /// Add roots to project out during Davidson-Liu procedure
-    void
-    add_bad_states(std::vector<std::vector<std::pair<size_t, double>>>& roots);
+    void add_bad_states(std::vector<std::vector<std::pair<size_t, double>>>& roots);
 
     /// Set option to force diagonalization type
     void set_force_diag(int value);
@@ -307,54 +291,48 @@ class SparseCISolver {
     void set_initial_guess(std::vector<std::pair<size_t, double>>& guess);
     void manual_guess(bool value);
     void set_num_vecs(size_t value);
-    void set_sigma_method( std::string value );
+    void set_sigma_method(std::string value);
     std::string sigma_method_ = "SPARSE";
+
+    /// Set a customized SigmaVector for Davidson-Liu algorithm
+    void set_sigma_vector(SigmaVector* sigma_vec) { sigma_vec_ = sigma_vec; }
+
   private:
-
     /// Form the full Hamiltonian and diagonalize it (for debugging)
-    void diagonalize_full(const std::vector<STLBitsetDeterminant>& space,
-                          SharedVector& evals, SharedMatrix& evecs, int nroot,
-                          int multiplicity);
+    void diagonalize_full(const std::vector<STLBitsetDeterminant>& space, SharedVector& evals,
+                          SharedMatrix& evecs, int nroot, int multiplicity);
 
-    void diagonalize_mpi(const DeterminantMap& space, WFNOperator& op,
-                        SharedVector& evals, SharedMatrix& evecs, int nroot,
-                        int multiplicity);
+    void diagonalize_mpi(const DeterminantMap& space, WFNOperator& op, SharedVector& evals,
+                         SharedMatrix& evecs, int nroot, int multiplicity);
 
-    void diagonalize_dl(const DeterminantMap& space, WFNOperator& op,
-                        SharedVector& evals, SharedMatrix& evecs, int nroot,
-                        int multiplicity);
+    void diagonalize_dl(const DeterminantMap& space, WFNOperator& op, SharedVector& evals,
+                        SharedMatrix& evecs, int nroot, int multiplicity);
 
-    void diagonalize_dl_sparse(const DeterminantMap& space, WFNOperator& op,
-                        SharedVector& evals, SharedMatrix& evecs, int nroot,
-                        int multiplicity);
+    void diagonalize_dl_sparse(const DeterminantMap& space, WFNOperator& op, SharedVector& evals,
+                               SharedMatrix& evecs, int nroot, int multiplicity);
 
-    void diagonalize_davidson_liu_solver(
-        const std::vector<STLBitsetDeterminant>& space, SharedVector& evals,
-        SharedMatrix& evecs, int nroot, int multiplicity);
+    void diagonalize_davidson_liu_solver(const std::vector<STLBitsetDeterminant>& space,
+                                         SharedVector& evals, SharedMatrix& evecs, int nroot,
+                                         int multiplicity);
 
- //   void diagonalize_davidson_liu_string(
- //       const std::vector<STLBitsetDeterminant>& space, SharedVector& evals,
- //       SharedMatrix& evecs, int nroot, int multiplicity, bool disk);
+    //   void diagonalize_davidson_liu_string(
+    //       const std::vector<STLBitsetDeterminant>& space, SharedVector& evals,
+    //       SharedMatrix& evecs, int nroot, int multiplicity, bool disk);
     /// Build the full Hamiltonian matrix
 
     std::vector<std::pair<double, std::vector<std::pair<size_t, double>>>>
-    initial_guess(const std::vector<STLBitsetDeterminant>& space, int nroot,
-                  int multiplicity);
+    initial_guess(const std::vector<STLBitsetDeterminant>& space, int nroot, int multiplicity);
 
     std::vector<std::pair<double, std::vector<std::pair<size_t, double>>>>
     initial_guess_map(const DeterminantMap& space, int nroot, int multiplicity);
 
     /// The Davidson-Liu algorithm
     bool davidson_liu_solver(const std::vector<STLBitsetDeterminant>& space,
-                             SigmaVector* sigma_vector,
-                             SharedVector Eigenvalues,
-                             SharedMatrix Eigenvectors, int nroot,
-                             int multiplicity);
+                             SigmaVector* sigma_vector, SharedVector Eigenvalues,
+                             SharedMatrix Eigenvectors, int nroot, int multiplicity);
 
-    bool davidson_liu_solver_map(const DeterminantMap& space,
-                                 SigmaVector* sigma_vector,
-                                 SharedVector Eigenvalues,
-                                 SharedMatrix Eigenvectors, int nroot,
+    bool davidson_liu_solver_map(const DeterminantMap& space, SigmaVector* sigma_vector,
+                                 SharedVector Eigenvalues, SharedMatrix Eigenvectors, int nroot,
                                  int multiplicity);
     /// Use a OMP parallel algorithm?
     bool parallel_ = false;
@@ -385,6 +363,9 @@ class SparseCISolver {
     std::vector<std::pair<size_t, double>> guess_;
     // Number of guess vectors
     size_t nvec_ = 10;
+
+    /// The SigmaVector object for Davidson-Liu algorithm
+    SigmaVector* sigma_vec_ = nullptr;
 };
 }
 }

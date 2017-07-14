@@ -50,6 +50,7 @@ src/ci_rdms.cc
 src/ci_reference.cc
 src/davidson.cc
 src/determinant_map.cc
+src/determinant_hashvector.cc
 src/dmrgscf.cc
 src/dmrgsolver.cc
 src/dynamic_bitset_determinant.cc

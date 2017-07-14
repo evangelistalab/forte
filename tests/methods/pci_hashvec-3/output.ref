@@ -1,0 +1,755 @@
+
+    -----------------------------------------------------------------------
+          Psi4: An Open-Source Ab Initio Electronic Structure Package
+                               Psi4 1.2a1.dev388 
+
+                         Git: Rev {parallel_timer} df084d7 dirty
+
+
+    R. M. Parrish, L. A. Burns, D. G. A. Smith, A. C. Simmonett,
+    A. E. DePrince III, E. G. Hohenstein, U. Bozkaya, A. Yu. Sokolov,
+    R. Di Remigio, R. M. Richard, J. F. Gonthier, A. M. James,
+    H. R. McAlexander, A. Kumar, M. Saitow, X. Wang, B. P. Pritchard,
+    P. Verma, H. F. Schaefer III, K. Patkowski, R. A. King, E. F. Valeev,
+    F. A. Evangelista, J. M. Turney, T. D. Crawford, and C. D. Sherrill,
+    J. Chem. Theory Comput. in press (2017).
+    (doi: 10.1021/acs.jctc.7b00174)
+
+    -----------------------------------------------------------------------
+
+
+    Psi4 started on: Tuesday, 11 July 2017 08:04PM
+
+    Process ID:   2760
+    PSIDATADIR: /Users/tianyuanzhang/Documents/Source/psi4_2017/psi4-bin-clang-debug/share/psi4
+    Memory:     500.0 MiB
+    Threads:    1
+    
+  ==> Input File <==
+
+--------------------------------------------------------------------------
+#! This tests the Adaptive Path-Integral FCI procedure with dynamic prescreening
+#! Generated using commit GITCOMMIT
+
+import forte
+
+refscf = -14.6097447388741113 #TEST
+refpci = -14.64616269627 #TEST
+
+molecule li2{
+   Li
+   Li 1 2.0000
+}
+
+set {
+  basis sto-3g
+  scf_type pk
+  e_convergence 12
+}
+
+set forte {
+  job_type pci_hashvec
+  pci_nroot 1
+  charge 0
+  pci_tau 1.0
+  pci_spawning_threshold 0.0001
+  pci_ENERGY_ESTIMATE_FREQ 1
+  pci_FAST_EVAR true
+  pci_USE_INTER_NORM true
+  pci_VAR_ESTIMATE false
+  pci_ENERGY_ESTIMATE_THRESHOLD 1e-5
+  MP2_NOS true
+  pci_maxbeta 100000.00
+  pci_e_convergence 12
+  pci_STOP_HIGHER_NEW_LOW true
+}
+
+energy('scf')
+compare_values(refscf, get_variable("CURRENT ENERGY"), 11, "SCF energy") #TEST
+
+energy('forte')
+compare_values(refpci, get_variable("PCI ENERGY"), 10, "PCI energy") #TEST
+--------------------------------------------------------------------------
+/Users/tianyuanzhang/Documents/Source/psi4_2017/forte/forte.so loaded.
+
+*** tstart() called on n-ac-90-21.wireless.emory.edu
+*** at Tue Jul 11 20:04:02 2017
+
+   => Loading Basis Set <=
+
+    Name: STO-3G
+    Role: ORBITAL
+    Keyword: BASIS
+    atoms 1-2 entry LI         line    31 file /Users/tianyuanzhang/Documents/Source/psi4_2017/psi4-bin-clang-debug/share/psi4/basis/sto-3g.gbs 
+
+    There are an even number of electrons - assuming singlet.
+    Specify the multiplicity in the molecule input block.
+
+
+         ---------------------------------------------------------
+                                   SCF
+            by Justin Turney, Rob Parrish, Andy Simmonett
+                             and Daniel Smith
+                              RHF Reference
+                        1 Threads,    500 MiB Core
+         ---------------------------------------------------------
+
+  ==> Geometry <==
+
+    Molecular point group: d2h
+    Full point group: D_inf_h
+
+    Geometry (in Angstrom), charge = 0, multiplicity = 1:
+
+       Center              X                  Y                   Z               Mass       
+    ------------   -----------------  -----------------  -----------------  -----------------
+          LI          0.000000000000     0.000000000000    -1.000000000000     7.016004548000
+          LI          0.000000000000     0.000000000000     1.000000000000     7.016004548000
+
+  Running in d2h symmetry.
+
+  Rotational constants: A = ************  B =      1.20137  C =      1.20137 [cm^-1]
+  Rotational constants: A = ************  B =  36016.15432  C =  36016.15432 [MHz]
+  Nuclear repulsion =    2.381297438654999
+
+  Charge       = 0
+  Multiplicity = 1
+  Electrons    = 6
+  Nalpha       = 3
+  Nbeta        = 3
+
+  ==> Algorithm <==
+
+  SCF Algorithm Type is PK.
+  DIIS enabled.
+  MOM disabled.
+  Fractional occupation disabled.
+  Guess Type is SAD.
+  Energy threshold   = 1.00e-12
+  Density threshold  = 1.00e-06
+  Integral threshold = 0.00e+00
+
+  ==> Primary Basis <==
+
+  Basis Set: STO-3G
+    Blend: STO-3G
+    Number of shells: 6
+    Number of basis function: 10
+    Number of Cartesian functions: 10
+    Spherical Harmonics?: true
+    Max angular momentum: 1
+
+  ==> Pre-Iterations <==
+
+   -------------------------------------------------------
+    Irrep   Nso     Nmo     Nalpha   Nbeta   Ndocc  Nsocc
+   -------------------------------------------------------
+     Ag         3       3       0       0       0       0
+     B1g        0       0       0       0       0       0
+     B2g        1       1       0       0       0       0
+     B3g        1       1       0       0       0       0
+     Au         0       0       0       0       0       0
+     B1u        3       3       0       0       0       0
+     B2u        1       1       0       0       0       0
+     B3u        1       1       0       0       0       0
+   -------------------------------------------------------
+    Total      10      10       3       3       3       0
+   -------------------------------------------------------
+
+  ==> Integral Setup <==
+
+  Using in-core PK algorithm.
+   Calculation information:
+      Number of atoms:                   2
+      Number of AO shells:               6
+      Number of primitives:             18
+      Number of atomic orbitals:        10
+      Number of basis functions:        10
+
+      Integral cutoff                 1.00e-12
+      Number of threads:                 1
+
+  Performing in-core PK
+  Using 3080 doubles for integral storage.
+  We computed 231 shell quartets total.
+  Whereas there are 231 unique shell quartets.
+  ==> DiskJK: Disk-Based J/K Matrices <==
+
+    J tasked:                  Yes
+    K tasked:                  Yes
+    wK tasked:                  No
+    Memory (MB):               375
+    Schwarz Cutoff:          1E-12
+
+    OpenMP threads:              1
+  Minimum eigenvalue in the overlap matrix is 4.0289193593E-02.
+  Using Symmetric Orthogonalization.
+
+  SCF Guess: Superposition of Atomic Densities via on-the-fly atomic UHF.
+
+  ==> Iterations <==
+
+                        Total Energy        Delta E     RMS |[F,P]|
+
+   @RHF iter   0:   -14.58573852603513   -1.45857e+01   6.38128e-02 
+   @RHF iter   1:   -14.60879129784490   -2.30528e-02   3.90853e-03 
+   @RHF iter   2:   -14.60956780431854   -7.76506e-04   1.49380e-03 DIIS
+   @RHF iter   3:   -14.60974068519981   -1.72881e-04   2.15662e-04 DIIS
+   @RHF iter   4:   -14.60974473694129   -4.05174e-06   4.32612e-06 DIIS
+   @RHF iter   5:   -14.60974473887196   -1.93068e-09   1.41353e-07 DIIS
+   @RHF iter   6:   -14.60974473887411   -2.14406e-12   3.63226e-09 DIIS
+   @RHF iter   7:   -14.60974473887410    1.06581e-14   1.73384e-11 DIIS
+
+  ==> Post-Iterations <==
+
+    Orbital Energies (a.u.)
+    -----------------------
+
+    Doubly Occupied:                                                      
+
+       1Ag    -2.340313     1B1u   -2.335347     2Ag    -0.163839  
+
+    Virtual:                                                              
+
+       2B1u    0.093646     1B2u    0.108933     1B3u    0.108933  
+       3Ag     0.176245     1B3g    0.275579     1B2g    0.275579  
+       3B1u    0.645556  
+
+    Final Occupation by Irrep:
+             Ag   B1g   B2g   B3g    Au   B1u   B2u   B3u 
+    DOCC [     2,    0,    0,    0,    0,    1,    0,    0 ]
+
+  Energy converged.
+
+  @RHF Final Energy:   -14.60974473887410
+
+   => Energetics <=
+
+    Nuclear Repulsion Energy =              2.3812974386549994
+    One-Electron Energy =                 -24.3030864505908752
+    Two-Electron Energy =                   7.3120442730617787
+    PCM Polarization Energy =               0.0000000000000000
+    Total Energy =                        -14.6097447388740953
+
+    Alert: EFP and PCM quantities not currently incorporated into SCF psivars.
+
+Properties will be evaluated at   0.000000,   0.000000,   0.000000 Bohr
+
+Properties computed using the SCF density matrix
+
+  Nuclear Dipole Moment: (a.u.)
+     X:     0.0000      Y:     0.0000      Z:     0.0000
+
+  Electronic Dipole Moment: (a.u.)
+     X:     0.0000      Y:     0.0000      Z:     0.0000
+
+  Dipole Moment: (a.u.)
+     X:     0.0000      Y:     0.0000      Z:     0.0000     Total:     0.0000
+
+  Dipole Moment: (Debye)
+     X:     0.0000      Y:     0.0000      Z:     0.0000     Total:     0.0000
+
+
+*** tstop() called on n-ac-90-21.wireless.emory.edu at Tue Jul 11 20:04:02 2017
+Module time:
+	user time   =       0.49 seconds =       0.01 minutes
+	system time =       0.02 seconds =       0.00 minutes
+	total time  =          0 seconds =       0.00 minutes
+Total time:
+	user time   =       0.49 seconds =       0.01 minutes
+	system time =       0.02 seconds =       0.00 minutes
+	total time  =          0 seconds =       0.00 minutes
+	SCF energy........................................................PASSED
+
+*** tstart() called on n-ac-90-21.wireless.emory.edu
+*** at Tue Jul 11 20:04:02 2017
+
+   => Loading Basis Set <=
+
+    Name: STO-3G
+    Role: ORBITAL
+    Keyword: BASIS
+    atoms 1-2 entry LI         line    31 file /Users/tianyuanzhang/Documents/Source/psi4_2017/psi4-bin-clang-debug/share/psi4/basis/sto-3g.gbs 
+
+
+         ---------------------------------------------------------
+                                   SCF
+            by Justin Turney, Rob Parrish, Andy Simmonett
+                             and Daniel Smith
+                              RHF Reference
+                        1 Threads,    500 MiB Core
+         ---------------------------------------------------------
+
+  ==> Geometry <==
+
+    Molecular point group: d2h
+    Full point group: D_inf_h
+
+    Geometry (in Angstrom), charge = 0, multiplicity = 1:
+
+       Center              X                  Y                   Z               Mass       
+    ------------   -----------------  -----------------  -----------------  -----------------
+          LI          0.000000000000     0.000000000000    -1.000000000000     7.016004548000
+          LI          0.000000000000     0.000000000000     1.000000000000     7.016004548000
+
+  Running in d2h symmetry.
+
+  Rotational constants: A = ************  B =      1.20137  C =      1.20137 [cm^-1]
+  Rotational constants: A = ************  B =  36016.15432  C =  36016.15432 [MHz]
+  Nuclear repulsion =    2.381297438654999
+
+  Charge       = 0
+  Multiplicity = 1
+  Electrons    = 6
+  Nalpha       = 3
+  Nbeta        = 3
+
+  ==> Algorithm <==
+
+  SCF Algorithm Type is PK.
+  DIIS enabled.
+  MOM disabled.
+  Fractional occupation disabled.
+  Guess Type is SAD.
+  Energy threshold   = 1.00e-12
+  Density threshold  = 1.00e-08
+  Integral threshold = 0.00e+00
+
+  ==> Primary Basis <==
+
+  Basis Set: STO-3G
+    Blend: STO-3G
+    Number of shells: 6
+    Number of basis function: 10
+    Number of Cartesian functions: 10
+    Spherical Harmonics?: true
+    Max angular momentum: 1
+
+  ==> Pre-Iterations <==
+
+   -------------------------------------------------------
+    Irrep   Nso     Nmo     Nalpha   Nbeta   Ndocc  Nsocc
+   -------------------------------------------------------
+     Ag         3       3       0       0       0       0
+     B1g        0       0       0       0       0       0
+     B2g        1       1       0       0       0       0
+     B3g        1       1       0       0       0       0
+     Au         0       0       0       0       0       0
+     B1u        3       3       0       0       0       0
+     B2u        1       1       0       0       0       0
+     B3u        1       1       0       0       0       0
+   -------------------------------------------------------
+    Total      10      10       3       3       3       0
+   -------------------------------------------------------
+
+  ==> Integral Setup <==
+
+  Using in-core PK algorithm.
+   Calculation information:
+      Number of atoms:                   2
+      Number of AO shells:               6
+      Number of primitives:             18
+      Number of atomic orbitals:        10
+      Number of basis functions:        10
+
+      Integral cutoff                 1.00e-12
+      Number of threads:                 1
+
+  Performing in-core PK
+  Using 3080 doubles for integral storage.
+  We computed 231 shell quartets total.
+  Whereas there are 231 unique shell quartets.
+  ==> DiskJK: Disk-Based J/K Matrices <==
+
+    J tasked:                  Yes
+    K tasked:                  Yes
+    wK tasked:                  No
+    Memory (MB):               375
+    Schwarz Cutoff:          1E-12
+
+    OpenMP threads:              1
+  Minimum eigenvalue in the overlap matrix is 4.0289193593E-02.
+  Using Symmetric Orthogonalization.
+
+  SCF Guess: Superposition of Atomic Densities via on-the-fly atomic UHF.
+
+  ==> Iterations <==
+
+                        Total Energy        Delta E     RMS |[F,P]|
+
+   @RHF iter   0:   -14.58573852603513   -1.45857e+01   6.38128e-02 
+   @RHF iter   1:   -14.60879129784490   -2.30528e-02   3.90853e-03 
+   @RHF iter   2:   -14.60956780431854   -7.76506e-04   1.49380e-03 DIIS
+   @RHF iter   3:   -14.60974068519981   -1.72881e-04   2.15662e-04 DIIS
+   @RHF iter   4:   -14.60974473694129   -4.05174e-06   4.32612e-06 DIIS
+   @RHF iter   5:   -14.60974473887196   -1.93068e-09   1.41353e-07 DIIS
+   @RHF iter   6:   -14.60974473887411   -2.14406e-12   3.63226e-09 DIIS
+   @RHF iter   7:   -14.60974473887410    1.06581e-14   1.73384e-11 DIIS
+
+  ==> Post-Iterations <==
+
+    Orbital Energies (a.u.)
+    -----------------------
+
+    Doubly Occupied:                                                      
+
+       1Ag    -2.340313     1B1u   -2.335347     2Ag    -0.163839  
+
+    Virtual:                                                              
+
+       2B1u    0.093646     1B2u    0.108933     1B3u    0.108933  
+       3Ag     0.176245     1B2g    0.275579     1B3g    0.275579  
+       3B1u    0.645556  
+
+    Final Occupation by Irrep:
+             Ag   B1g   B2g   B3g    Au   B1u   B2u   B3u 
+    DOCC [     2,    0,    0,    0,    0,    1,    0,    0 ]
+
+  Energy converged.
+
+  @RHF Final Energy:   -14.60974473887410
+
+   => Energetics <=
+
+    Nuclear Repulsion Energy =              2.3812974386549994
+    One-Electron Energy =                 -24.3030864505908752
+    Two-Electron Energy =                   7.3120442730617787
+    Total Energy =                        -14.6097447388740953
+
+
+
+Properties will be evaluated at   0.000000,   0.000000,   0.000000 Bohr
+
+Properties computed using the SCF density matrix
+
+  Nuclear Dipole Moment: (a.u.)
+     X:     0.0000      Y:     0.0000      Z:     0.0000
+
+  Electronic Dipole Moment: (a.u.)
+     X:     0.0000      Y:     0.0000      Z:     0.0000
+
+  Dipole Moment: (a.u.)
+     X:     0.0000      Y:     0.0000      Z:     0.0000     Total:     0.0000
+
+  Dipole Moment: (Debye)
+     X:     0.0000      Y:     0.0000      Z:     0.0000     Total:     0.0000
+
+
+*** tstop() called on n-ac-90-21.wireless.emory.edu at Tue Jul 11 20:04:03 2017
+Module time:
+	user time   =       0.46 seconds =       0.01 minutes
+	system time =       0.01 seconds =       0.00 minutes
+	total time  =          1 seconds =       0.02 minutes
+Total time:
+	user time   =       0.97 seconds =       0.02 minutes
+	system time =       0.03 seconds =       0.00 minutes
+	total time  =          1 seconds =       0.02 minutes
+   => Loading Basis Set <=
+
+    Name: STO-3G
+    Role: ORBITAL
+    Keyword: MINAO_BASIS
+    atoms 1-2 entry LI         line    31 file /Users/tianyuanzhang/Documents/Source/psi4_2017/psi4-bin-clang-debug/share/psi4/basis/sto-3g.gbs 
+
+
+Reading options from the FORTE block
+Calling plugin forte.so.
+
+
+
+  Forte
+  ----------------------------------------------------------------------------
+  A suite of quantum chemistry methods for strongly correlated electrons
+
+    git branch: master - git commit: fb42f078
+
+  Developed by:
+    Francesco A. Evangelista, Chenyang Li, Kevin P. Hannon,
+    Jeffrey B. Schriber, Tianyuan Zhang, Chenxi Cai
+  ----------------------------------------------------------------------------
+
+
+  ==> MO Space Information <==
+
+  -------------------------------------------------------------------------
+                       Ag   B1g   B2g   B3g    Au   B1u   B2u   B3u   Sum
+  -------------------------------------------------------------------------
+    FROZEN_DOCC         0     0     0     0     0     0     0     0     0
+    RESTRICTED_DOCC     0     0     0     0     0     0     0     0     0
+    ACTIVE              3     0     1     1     0     3     1     1    10
+    RESTRICTED_UOCC     0     0     0     0     0     0     0     0     0
+    FROZEN_UOCC         0     0     0     0     0     0     0     0     0
+    Total               3     0     1     1     0     3     1     1    10
+  -------------------------------------------------------------------------
+
+  ==> Integral Transformation <==
+
+  Number of molecular orbitals:               10
+  Number of correlated molecular orbitals:    10
+  Number of frozen occupied orbitals:          0
+  Number of frozen unoccupied orbitals:        0
+
+    Molecular point group: d2h
+    Full point group: D_inf_h
+
+    Geometry (in Angstrom), charge = 0, multiplicity = 1:
+
+       Center              X                  Y                   Z               Mass       
+    ------------   -----------------  -----------------  -----------------  -----------------
+          LI          0.000000000000     0.000000000000    -1.000000000000     7.016004548000
+          LI          0.000000000000     0.000000000000     1.000000000000     7.016004548000
+
+  -AO BASIS SET INFORMATION:
+    Name                   = STO-3G
+    Blend                  = STO-3G
+    Total number of shells = 6
+    Number of primitives   = 18
+    Number of AO           = 10
+    Number of SO           = 10
+    Maximum AM             = 1
+    Spherical Harmonics    = TRUE
+
+  -Contraction Scheme:
+    Atom   Type   All Primitives // Shells:
+   ------ ------ --------------------------
+       1    LI     6s 3p // 2s 1p 
+       2    LI     6s 3p // 2s 1p 
+
+  ==> AO Basis Functions <==
+
+    [ STO-3G ]
+    spherical
+    ****
+   LI   1
+    S   3 1.00
+                        16.11957500           0.15432897
+                         2.93620070           0.53532814
+                         0.79465050           0.44463454
+    S   3 1.00
+                         0.63628970          -0.09996723
+                         0.14786010           0.39951283
+                         0.04808870           0.70011547
+    P   3 1.00
+                         0.63628970           0.15591627
+                         0.14786010           0.60768372
+                         0.04808870           0.39195739
+    ****
+
+
+  Overall Conventional Integrals timings
+
+	Presorting SO-basis two-electron integrals.
+	Sorting File: SO Ints (nn|nn) nbuckets = 1
+	Transforming the one-electron integrals and constructing Fock matrices
+	Starting first half-transformation.
+	Sorting half-transformed integrals.
+	First half integral transformation complete.
+	Starting second half-transformation.
+	Two-electron integral transformation complete.
+
+  Integral transformation done. 0.00593800 s
+  Reading the two-electron integrals from disk
+  Size of two-electron integrals:   0.000224 GB
+  Conventional integrals take 0.04183700 s
+
+                ------------------------------------------------
+                  Second-Order Moller-Plesset Natural Orbitals
+                      written by Francesco A. Evangelista
+                ------------------------------------------------
+
+
+    SCF energy                            =  -14.609744738874095
+    MP2 correlation energy                =   -0.018767063805292
+  * MP2 total energy                      =  -14.628511802679387
+
+    Molecular point group: d2h
+    Full point group: D_inf_h
+
+    Geometry (in Angstrom), charge = 0, multiplicity = 1:
+
+       Center              X                  Y                   Z               Mass       
+    ------------   -----------------  -----------------  -----------------  -----------------
+          LI          0.000000000000     0.000000000000    -1.000000000000     7.016004548000
+          LI          0.000000000000     0.000000000000     1.000000000000     7.016004548000
+
+  -AO BASIS SET INFORMATION:
+    Name                   = STO-3G
+    Blend                  = STO-3G
+    Total number of shells = 6
+    Number of primitives   = 18
+    Number of AO           = 10
+    Number of SO           = 10
+    Maximum AM             = 1
+    Spherical Harmonics    = TRUE
+
+  -Contraction Scheme:
+    Atom   Type   All Primitives // Shells:
+   ------ ------ --------------------------
+       1    LI     6s 3p // 2s 1p 
+       2    LI     6s 3p // 2s 1p 
+
+  ==> AO Basis Functions <==
+
+    [ STO-3G ]
+    spherical
+    ****
+   LI   1
+    S   3 1.00
+                        16.11957500           0.15432897
+                         2.93620070           0.53532814
+                         0.79465050           0.44463454
+    S   3 1.00
+                         0.63628970          -0.09996723
+                         0.14786010           0.39951283
+                         0.04808870           0.70011547
+    P   3 1.00
+                         0.63628970           0.15591627
+                         0.14786010           0.60768372
+                         0.04808870           0.39195739
+    ****
+
+
+ Integrals are about to be computed.	Presorting SO-basis two-electron integrals.
+	Sorting File: SO Ints (nn|nn) nbuckets = 1
+	Transforming the one-electron integrals and constructing Fock matrices
+	Starting first half-transformation.
+	Sorting half-transformed integrals.
+	First half integral transformation complete.
+	Starting second half-transformation.
+	Two-electron integral transformation complete.
+
+  Integral transformation done. 0.00514700 s
+  Reading the two-electron integrals from disk
+  Size of two-electron integrals:   0.000224 GB
+ Integrals are about to be updated.
+  Frozen Orbitals takes     0.000 s.
+
+	  ---------------------------------------------------------
+	    Projector Configuration Interaction HashVector implementation
+	         by Francesco A. Evangelista and Tianyuan Zhang
+	                      version Jul. 11 2017
+	                       1 thread(s) 
+	  ---------------------------------------------------------
+
+  ==> Calculation Information <==
+
+    Symmetry                                         0
+    Multiplicity                                     1
+    Number of roots                                  1
+    Root used for properties                         0
+    Maximum number of iterations                100000
+    Energy estimation frequency                      1
+    Number of threads                                1
+    Time step (beta)                         1.000e+00
+    Spawning threshold                       1.000e-04
+    Initial guess spawning threshold         1.000e-03
+    Convergence threshold                    1.000e-12
+    Energy estimate tollerance               1.000e-05
+    Generator type                          Wall-Chebyshev
+    Shift the energy                                NO
+    Use intermediate normalization                 YES
+    Fast variational estimate                      YES
+    Result perturbation analysis                    NO
+    Using OpenMP                                    NO
+
+  ==> Initial Guess <==
+
+  Initial guess size = 88
+  Spin multiplicity of root 80 not close to integer (4.1231)
+  Spin multiplicity of root 81 not close to integer (4.1231)
+  Found 46 roots with 2S+1 = 1 *
+  Found 34 roots with 2S+1 = 3
+  Found 6 roots with 2S+1 = 5
+
+  Initial guess energy (variational) =     -14.645949429318 Eh (root = 1)
+
+  Most important contributions to the wave function:
+
+    0      -0.933702      0.871799           0 |2200020000>    -16.991042177529
+    1       0.231475     0.0535807          74 |0200020020>    -16.839359192615
+    2       0.231475     0.0535807          73 |0200020002>    -16.839359192615
+    3       0.119343     0.0142427          75 |0200020200>    -16.757530753052
+    4      0.0801595    0.00642555          76 |0220020000>    -16.716835515994
+    5    -0.00514605   2.64818e-05          62 |-+00020200>    -14.679187176280
+    6    -0.00514605   2.64818e-05          71 |+-00020200>    -14.679187176280
+    7    -0.00451282   2.03655e-05          78 |0200220000>    -16.536973029979
+    8    -0.00451282   2.03655e-05          77 |0202020000>    -16.536973029979
+    9    -0.00409228   1.67467e-05          66 |+-00020020>    -14.744117523934
+
+  Spin State: S^2 = 0.000, S = 0.000, singlet (from 3 determinants,97.90)
+
+  ==> Estimate highest excitation energy <==
+  Highest Excited determinant:
+  |0002202000>
+  Determinant Energy                    :  -2.573638399390
+  Highest Energy Gershgorin circle Est. :  -1.099642423838
+
+  ==> Characteristic Function <==
+    f(x) = -2.244892e-03 * x^5 +7.602498e-03 * x^4 +1.029858e-01 * x^3 -2.615769e-01 * x^2 -8.858503e-01 * x +1.000000e+00
+    with tau = 1.000000e+00, shift = -10.254093365233, range = 6.773153502740
+    Initial guess: lambda_1= -14.645949429318
+    Est. Highest eigenvalue= -1.099642423838
+
+  ==> PCI Iterations <==
+
+  ------------------------------------------------------------------------------------------------
+    Steps  Beta/Eh      Ndets     Proj. Energy/Eh     dEp/dt      Approx. Energy/Eh   dEv/dt
+  ------------------------------------------------------------------------------------------------
+        0     0.00        388     -14.646010415739 -6.099e-05     -14.646115788332 -1.544e-04
+        1     1.00        388     -14.646055178395 -4.476e-05     -14.646134179162 -1.839e-05
+        2     2.00        388     -14.646087522948 -3.234e-05     -14.646143994760 -9.816e-06
+        3     3.00        388     -14.646109162708 -2.164e-05     -14.646150973978 -6.979e-06
+        4     4.00        388     -14.646126686258 -1.752e-05     -14.646155902112 -4.928e-06
+        5     5.00        388     -14.646139692512 -1.301e-05     -14.646155101235  8.009e-07
+        6     6.00        388     -14.646158733510 -1.904e-05     -14.646157832322 -2.731e-06
+        7     7.00        388     -14.646165852038 -7.119e-06     -14.646159435638 -1.603e-06
+        8     8.00        388     -14.646168836296 -2.984e-06     -14.646159836399 -4.008e-07
+        9     9.00        392     -14.646167993713  8.426e-07     -14.646160815766 -9.794e-07
+       10    10.00        392     -14.646169062347 -1.069e-06     -14.646160500971  3.148e-07
+       11    11.00        392     -14.646166990700  2.072e-06     -14.646161279962 -7.790e-07
+       12    12.00        392     -14.646165857789  1.133e-06     -14.646160761549  5.184e-07
+       13    13.00        392     -14.646163898496  1.959e-06     -14.646161491317 -7.298e-07
+       14    14.00        392     -14.646165131025 -1.233e-06     -14.646161018467  4.729e-07
+       15    15.00        392     -14.646163408193  1.723e-06     -14.646162063114 -1.045e-06
+       16    16.00        392     -14.646164990493 -1.582e-06     -14.646161497712  5.654e-07
+       17    17.00        392     -14.646163138366  1.852e-06     -14.646162212698 -7.150e-07
+       18    18.00        392     -14.646164466353 -1.328e-06     -14.646161530229  6.825e-07
+       19    19.00        392     -14.646162731571  1.735e-06     -14.646162166187 -6.360e-07
+       20    20.00        392     -14.646164024907 -1.293e-06     -14.646161630284  5.359e-07
+       21    21.00        396     -14.646162377693  1.647e-06
+  ------------------------------------------------------------------------------------------------
+
+  Calculation did not converge!
+
+  ==> Post-Iterations <==
+
+  * Size of CI space                    = 396
+  * Projector-CI Approximate Energy     =   -14.646161630284 Eh
+  Variational energy estimated with 396 determinants to meet the max error 0.000000e+00
+  * Projector-CI Projective  Energy     =   -14.646162377693 Eh
+
+  * Projector-CI Variational Energy     =   -14.646162696268 Eh
+  * Projector-CI Var. Corr.  Energy     =    -0.036417957394 Eh
+  * 1st order perturbation   Energy     =    -0.000001065984 Eh
+
+  Projector-CI (bitset) ran in  : 0.313188 s
+
+  Most important contributions to the wave function:
+
+    0      -0.933195      0.870853           0 |2200020000>    -16.991042177529
+    1       0.230319      0.053047          74 |0200020020>    -16.839359192615
+    2       0.230319      0.053047          73 |0200020002>    -16.839359192615
+    3       0.125457     0.0157394          75 |0200020200>    -16.757530753052
+    4      0.0804563    0.00647321          76 |0220020000>    -16.716835515994
+    5      0.0146344   0.000214164         293 |-2+0020000>    -16.869832696882
+    6      0.0146344   0.000214164         292 |+2-0020000>    -16.869832696882
+    7    -0.00547797   3.00082e-05          71 |+-00020200>    -14.679187176280
+    8    -0.00547797   3.00082e-05          62 |-+00020200>    -14.679187176280
+    9     -0.0041663   1.73581e-05          78 |0200220000>    -16.536973029979
+
+  Spin State: S^2 = 0.000, S = 0.000, singlet (from 3 determinants,97.69)
+
+  Your calculation took 0.44223200 seconds
+	PCI energy........................................................PASSED
+
+*** Psi4 exiting successfully. Buy a developer a beer!

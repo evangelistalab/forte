@@ -43,7 +43,6 @@
 #include "../stl_bitset_determinant.h"
 #include "aci.h"
 
-
 using namespace psi;
 
 namespace psi {
@@ -1767,7 +1766,8 @@ std::vector<std::tuple<double, int, int>> AdaptiveCI::sym_labeled_orbitals(std::
 
         // Create a vector that stores the orbital energy, symmetry, and idx
         for (size_t a = 0; a < nact_; ++a) {
-            labeled_orb.push_back(std::make_tuple(orb_e[a].first, mo_symmetry_[a], orb_e[a].second));
+            labeled_orb.push_back(std::make_tuple(orb_e[a].first, mo_symmetry_[a],
+orb_e[a].second));
         }
         // Order by energy, low to high
         std::sort(labeled_orb.begin(), labeled_orb.end());
@@ -1785,7 +1785,8 @@ std::vector<std::tuple<double, int, int>> AdaptiveCI::sym_labeled_orbitals(std::
 
         // Create a vector that stores the orbital energy, sym, and idx
         for (size_t a = 0; a < nact_; ++a) {
-            labeled_orb.push_back(std::make_tuple(orb_e[a].first, mo_symmetry_[a], orb_e[a].second));
+            labeled_orb.push_back(std::make_tuple(orb_e[a].first, mo_symmetry_[a],
+orb_e[a].second));
         }
         std::sort(labeled_orb.begin(), labeled_orb.end());
     }
@@ -1795,8 +1796,8 @@ std::vector<std::tuple<double, int, int>> AdaptiveCI::sym_labeled_orbitals(std::
 
 void AdaptiveCI::print_wfn(DeterminantMap& space, SharedMatrix evecs, int nroot) {
     std::string state_label;
-    std::vector<std::string> s2_labels({"singlet", "doublet", "triplet", "quartet", "quintet", "sextet",
-                                   "septet", "octet", "nonet", "decatet"});
+    std::vector<std::string> s2_labels({"singlet", "doublet", "triplet", "quartet", "quintet",
+                                        "sextet", "septet", "octet", "nonet", "decatet"});
 
     std::vector<std::pair<double, double>> spins = compute_spin(space, evecs, nroot);
 
@@ -2836,5 +2837,9 @@ void AdaptiveCI::compute_nos() {
     // Retransform the integarms in the new basis
     ints_->retransform_integrals();
 }
+
+// void AdaptiveCI::compute_external_singles( ){
+//
+//}
 }
 } // EndNamespaces
