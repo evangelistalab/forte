@@ -26,20 +26,12 @@
  * @END LICENSE
  */
 
-/*
- *  string_vvoo_list.cc
- *  Capriccio
- *
- *  Created by Francesco Evangelista on 3/17/09.
- *  Copyright 2009 __MyCompanyName__. All rights reserved.
- *
- */
-
-#include "string_lists.h"
-
 #include <algorithm>
 
-using namespace boost;
+#include "psi4/psi4-dec.h"
+#include "psi4/libpsi4util/PsiOutStream.h"
+
+#include "string_lists.h"
 
 namespace psi {
 namespace forte {
@@ -77,8 +69,12 @@ void StringLists::make_vvoo_list(GraphPtr graph, VVOOList& list) {
                                 int q_abs = q_rel + cmopi_offset_[q_sym];
                                 int r_abs = r_rel + cmopi_offset_[r_sym];
                                 int s_abs = s_rel + cmopi_offset_[s_sym];
-                                if ((p_abs > q_abs) && (r_abs > s_abs))
-                                    make_vvoo(graph, list, p_abs, q_abs, r_abs, s_abs);
+                                if ((p_abs > q_abs) && (r_abs > s_abs)) {
+                                    // Avoid
+                                    if (not((p_abs == r_abs) and (q_abs == s_abs))) {
+                                        make_vvoo(graph, list, p_abs, q_abs, r_abs, s_abs);
+                                    }
+                                }
                             }
                         }
                     }
@@ -127,7 +123,14 @@ void StringLists::make_vvoo(GraphPtr graph, VVOOList& list, int p, int q, int r,
 
     int n = graph->nbits() - 4 + (overlap ? 1 : 0);
     int k = graph->nones() - 2;
-    if (k >= 0 and n >= 0) {
+    int nones = graph->nones();
+
+    //    outfile->Printf("\n a = %2d %2d %2d %2d", p, q, r, s);
+    //    outfile->Printf("\n a = %2d %2d %2d %2d", a[0], a[1], a[2], a[3]);
+    //    outfile->Printf("\n nb = %d no = %d n = %2d k = %2d", graph->nbits(), graph->nones(), n,
+    //    k);
+
+    if (k >= 0 and n >= 0 and (n >= k)) {
         bool* b = new bool[n];
         bool* I = new bool[ncmo_];
         bool* J = new bool[ncmo_];
@@ -190,7 +193,7 @@ void StringLists::make_vvoo(GraphPtr graph, VVOOList& list, int p, int q, int r,
                             for (int i = 0; i < p; ++i)
                                 if (J[i])
                                     sign *= -1;
-                            // Add the sting only of irrep(I) is h
+
                             list[pqrs_pair].push_back(
                                 StringSubstitution(sign, graph->rel_add(I), graph->rel_add(J)));
                         }
@@ -198,7 +201,7 @@ void StringLists::make_vvoo(GraphPtr graph, VVOOList& list, int p, int q, int r,
                 }
             } while (std::next_permutation(b, b + n));
         } // End loop over h
-
+        delete[] b;
         delete[] I;
         delete[] J;
     }

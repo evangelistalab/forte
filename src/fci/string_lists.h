@@ -58,16 +58,6 @@ struct StringSubstitution {
         : sign(sign_), I(I_), J(J_) {}
 };
 
-/// Knowles-Handy string substitution
-struct KHStringSubstitution {
-    short sign;
-    short p;
-    short q;
-    size_t J;
-    KHStringSubstitution(const short sign_, const short p_, const short q_, const size_t J_)
-        : sign(sign_), p(p_), q(q_), J(J_) {}
-};
-
 /// 1-hole string substitution
 struct H1StringSubstitution {
     short sign;
@@ -106,8 +96,6 @@ typedef std::map<boost::tuple<size_t, size_t, size_t, size_t, int>, std::vector<
     VVOOList;
 typedef std::map<boost::tuple<int, size_t, int>, std::vector<StringSubstitution>> OOList;
 
-/// Knowles-Handy list (irrep,I,irrep J) -> list of sgn,p,q,J
-typedef std::map<std::tuple<int, size_t, int>, std::vector<KHStringSubstitution>> KHList;
 /// 1-hole list
 typedef std::map<std::tuple<int, size_t, int>, std::vector<H1StringSubstitution>> H1List;
 /// 2-hole list
@@ -161,11 +149,6 @@ class StringLists {
 
     std::vector<StringSubstitution>& get_alfa_vo_list(size_t p, size_t q, int h);
     std::vector<StringSubstitution>& get_beta_vo_list(size_t p, size_t q, int h);
-
-    /// Return the Knowles-Handy alpha list
-    std::vector<KHStringSubstitution>& get_alfa_kh_list(int h_I, size_t add_I, int h_J);
-    /// Return the Knowles-Handy beta list
-    std::vector<KHStringSubstitution>& get_beta_kh_list(int h_I, size_t add_I, int h_J);
 
     std::vector<H1StringSubstitution>& get_alfa_1h_list(int h_I, size_t add_I, int h_J);
     std::vector<H1StringSubstitution>& get_beta_1h_list(int h_I, size_t add_I, int h_J);
@@ -239,9 +222,6 @@ class StringLists {
     /// The OO string lists
     OOList alfa_oo_list;
     OOList beta_oo_list;
-    /// The Knowles-Handy string lists
-    KHList alfa_kh_list;
-    KHList beta_kh_list;
     /// The VOVO string lists
     VOVOList alfa_vovo_list;
     VOVOList beta_vovo_list;
@@ -290,9 +270,6 @@ class StringLists {
 
     void make_oo_list(GraphPtr graph, OOList& list);
     void make_oo(GraphPtr graph, OOList& list, int pq_sym, size_t pq);
-
-    /// Make the Knowles-Handy lists (I -> a^{+}_p a_q I = sgn J)
-    void make_kh_list(GraphPtr graph, KHList& list);
 
     /// Make 1-hole lists (I -> a_p I = sgn J)
     void make_1h_list(GraphPtr graph, GraphPtr graph_1h, H1List& list);
