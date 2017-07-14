@@ -1238,6 +1238,7 @@ void ElementwiseCI::apply_tau_H_symm_det_dynamic_HBCI_2(
     //    double det_energy = detI.energy() + fci_ints_->scalar_energy();
     //    new_space_C_vec.push_back(std::make_pair(detI, tau * (det_energy - E0) * CI));
     double diagonal_contribution = 0.0;
+    bool diagonal_flag = false;
     // parallel_timer_off("EWCI:diagonal", omp_get_thread_num());
 
     Determinant detJ(detI);
@@ -1283,6 +1284,7 @@ void ElementwiseCI::apply_tau_H_symm_det_dynamic_HBCI_2(
                                 new_index_C_vec.push_back(std::make_pair(index, tau * HJI * CI));
                                 if (std::fabs(HJI * pre_C[index]) < spawning_threshold) {
                                     diagonal_contribution += tau * HJI * pre_C[index];
+                                    diagonal_flag = true;
                                 }
                             }
 
@@ -1333,6 +1335,7 @@ void ElementwiseCI::apply_tau_H_symm_det_dynamic_HBCI_2(
                                 new_index_C_vec.push_back(std::make_pair(index, tau * HJI * CI));
                                 if (std::fabs(HJI * pre_C[index]) < spawning_threshold) {
                                     diagonal_contribution += tau * HJI * pre_C[index];
+                                    diagonal_flag = true;
                                 }
                             }
 
@@ -1387,6 +1390,7 @@ void ElementwiseCI::apply_tau_H_symm_det_dynamic_HBCI_2(
                                 new_index_C_vec.push_back(std::make_pair(index, tau * HJI * CI));
                                 if (std::fabs(HJI * pre_C[index]) < spawning_threshold) {
                                     diagonal_contribution += tau * HJI * pre_C[index];
+                                    diagonal_flag = true;
                                 }
                             }
 
@@ -1438,6 +1442,7 @@ void ElementwiseCI::apply_tau_H_symm_det_dynamic_HBCI_2(
                                 new_index_C_vec.push_back(std::make_pair(index, tau * HJI * CI));
                                 if (std::fabs(HJI * pre_C[index]) < spawning_threshold) {
                                     diagonal_contribution += tau * HJI * pre_C[index];
+                                    diagonal_flag = true;
                                 }
                             }
 
@@ -1483,6 +1488,7 @@ void ElementwiseCI::apply_tau_H_symm_det_dynamic_HBCI_2(
                             new_index_C_vec.push_back(std::make_pair(index, tau * HJI * CI));
                             if (std::fabs(HJI * pre_C[index]) < spawning_threshold) {
                                 diagonal_contribution += tau * HJI * pre_C[index];
+                                diagonal_flag = true;
                             }
                         }
 
@@ -1524,6 +1530,7 @@ void ElementwiseCI::apply_tau_H_symm_det_dynamic_HBCI_2(
                             new_index_C_vec.push_back(std::make_pair(index, tau * HJI * CI));
                             if (std::fabs(HJI * pre_C[index]) < spawning_threshold) {
                                 diagonal_contribution += tau * HJI * pre_C[index];
+                                diagonal_flag = true;
                             }
                         }
 
@@ -1565,6 +1572,7 @@ void ElementwiseCI::apply_tau_H_symm_det_dynamic_HBCI_2(
                             new_index_C_vec.push_back(std::make_pair(index, tau * HJI * CI));
                             if (std::fabs(HJI * pre_C[index]) < spawning_threshold) {
                                 diagonal_contribution += tau * HJI * pre_C[index];
+                                diagonal_flag = true;
                             }
                         }
 
@@ -1610,6 +1618,7 @@ void ElementwiseCI::apply_tau_H_symm_det_dynamic_HBCI_2(
                             new_index_C_vec.push_back(std::make_pair(index, tau * HJI * CI));
                             if (std::fabs(HJI * pre_C[index]) < spawning_threshold) {
                                 diagonal_contribution += tau * HJI * pre_C[index];
+                                diagonal_flag = true;
                             }
                         }
 
@@ -1652,6 +1661,7 @@ void ElementwiseCI::apply_tau_H_symm_det_dynamic_HBCI_2(
                             new_index_C_vec.push_back(std::make_pair(index, tau * HJI * CI));
                             if (std::fabs(HJI * pre_C[index]) < spawning_threshold) {
                                 diagonal_contribution += tau * HJI * pre_C[index];
+                                diagonal_flag = true;
                             }
                         }
 
@@ -1694,6 +1704,7 @@ void ElementwiseCI::apply_tau_H_symm_det_dynamic_HBCI_2(
                             new_index_C_vec.push_back(std::make_pair(index, tau * HJI * CI));
                             if (std::fabs(HJI * pre_C[index]) < spawning_threshold) {
                                 diagonal_contribution += tau * HJI * pre_C[index];
+                                diagonal_flag = true;
                             }
                         }
 
@@ -1707,7 +1718,9 @@ void ElementwiseCI::apply_tau_H_symm_det_dynamic_HBCI_2(
         }
         // parallel_timer_off("EWCI:doubles", omp_get_thread_num());
     }
-    new_index_C_vec.push_back(std::make_pair(I, diagonal_contribution));
+    if (diagonal_flag) {
+        new_index_C_vec.push_back(std::make_pair(I, diagonal_contribution));
+    }
 }
 
 void ElementwiseCI::apply_tau_H_ref_C_symm(double tau, double spawning_threshold,
@@ -1757,7 +1770,7 @@ void ElementwiseCI::apply_tau_H_ref_C_symm_det_dynamic_HBCI_2(
     const std::pair<double, double>& max_coupling) {
 
     const Determinant& detI = dets_hashvec[I];
-    size_t pre_C_size = pre_C.size(), ref_C_size = ref_C.size();
+    size_t ref_C_size = ref_C.size();
 
     bool do_singles = std::fabs(max_coupling.first * ref_CI) >= spawning_threshold;
     bool do_doubles = std::fabs(max_coupling.second * ref_CI) >= spawning_threshold;

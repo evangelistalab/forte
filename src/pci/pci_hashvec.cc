@@ -1774,7 +1774,7 @@ void ProjectorCI_HashVec::apply_tau_H_ref_C_symm_det_dynamic_HBCI_2(
     const std::pair<double, double>& max_coupling) {
 
     const Determinant& detI = dets_hashvec[I];
-    size_t pre_C_size = pre_C.size(), ref_C_size = ref_C.size();
+    size_t ref_C_size = ref_C.size();
 
     bool do_singles = std::fabs(max_coupling.first * ref_CI) >= spawning_threshold;
     bool do_doubles = std::fabs(max_coupling.second * ref_CI) >= spawning_threshold;
