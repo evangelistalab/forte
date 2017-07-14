@@ -552,10 +552,6 @@ void ProjectorCI_HashVec::print_characteristic_function() {
 double ProjectorCI_HashVec::compute_energy() {
     timer_on("PCI:Energy");
     ForteTimer t_apici;
-    old_max_one_HJI_ = 1e100;
-    new_max_one_HJI_ = 1e100;
-    old_max_two_HJI_ = 1e100;
-    new_max_two_HJI_ = 1e100;
 
     // Increase the root counter (ground state = 0)
     current_root_ += 1;
@@ -970,8 +966,10 @@ void ProjectorCI_HashVec::propagate_wallCh(det_hashvec& dets_hashvec, std::vecto
         //        range_ * root + shift_);
         double root = -cos(((double)i) * PI / (chebyshev_order_ + 0.5));
         //        dets = dets_hashvec.toVector();
-        apply_tau_H_ref_C_symm(-1.0, spawning_threshold, dets_hashvec, C, ref_C, C,
+        std::vector<double> result_C;
+        apply_tau_H_ref_C_symm(-1.0, spawning_threshold, dets_hashvec, ref_C, C, result_C,
                                range_ * root + shift_);
+        C.swap(result_C);
         //        copy_hash_to_vec_order_ref(dets_C_hash, dets, C);
         //        dets_hashvec = det_hashvec(dets_C_hash, C);
         //        dets = dets_hashvec.toVector();
@@ -1060,7 +1058,7 @@ void ProjectorCI_HashVec::propagate_DL(det_hashvec& dets_hashvec, std::vector<do
         //        copy_hash_to_vec_order_ref(dets_C_hash, dets,
         //        sigma_vec[current_order]);
         //        dets_hashvec = det_hashvec(dets);
-        apply_tau_H_ref_C_symm(1.0, spawning_threshold, dets_hashvec, b_vec[current_order], C,
+        apply_tau_H_ref_C_symm(1.0, spawning_threshold, dets_hashvec, C, b_vec[current_order],
                                sigma_vec[current_order], 0.0);
         //        dets = dets_hashvec.toVector();
         for (int m = 0; m < current_order; m++) {
@@ -1730,13 +1728,13 @@ void ProjectorCI_HashVec::apply_tau_H_symm_det_dynamic_HBCI_2(
 }
 
 void ProjectorCI_HashVec::apply_tau_H_ref_C_symm(double tau, double spawning_threshold,
-                                                 det_hashvec& dets_hashvec,
-                                                 const std::vector<double>& C,
+                                                 const det_hashvec& dets_hashvec,
                                                  const std::vector<double>& ref_C,
+                                                 const std::vector<double>& pre_C,
                                                  std::vector<double>& result_C, double S) {
 
-    det_hashvec dets_hashvec_merge(dets_hashvec);
-    std::vector<double> C_merge(dets_hashvec_merge.size(), 0.0);
+    result_C.clear();
+    result_C.resize(dets_hashvec.size(), 0.0);
 
     std::vector<std::vector<std::pair<size_t, double>>> thread_index_C_vecs(num_threads_);
 
@@ -1748,16 +1746,16 @@ void ProjectorCI_HashVec::apply_tau_H_ref_C_symm(double tau, double spawning_thr
         max_coupling = dets_max_couplings_[I];
         thread_index_C_vecs[current_rank].clear();
         apply_tau_H_ref_C_symm_det_dynamic_HBCI_2(
-            tau, spawning_threshold, dets_hashvec, C, ref_C, I, C[I], ref_C[I],
+            tau, spawning_threshold, dets_hashvec, pre_C, ref_C, I, pre_C[I], ref_C[I],
             thread_index_C_vecs[current_rank], S, max_coupling);
 #pragma omp critical
         {
             for (const std::pair<size_t, double>& p : thread_index_C_vecs[current_rank]) {
-                C_merge[p.first] += p.second;
+                result_C[p.first] += p.second;
             }
         }
     }
-    size_t max_I = C.size();
+    size_t max_I = pre_C.size();
 #pragma omp parallel for
     for (size_t I = ref_max_I; I < max_I; ++I) {
         // Diagonal contribution
@@ -1765,12 +1763,8 @@ void ProjectorCI_HashVec::apply_tau_H_ref_C_symm(double tau, double spawning_thr
         double det_energy = dets_hashvec[I].energy() + fci_ints_->scalar_energy();
         // parallel_timer_off("PCI:diagonal", omp_get_thread_num());
         // Diagonal contributions
-        C_merge[I] += tau * (det_energy - S) * C[I];
+        result_C[I] += tau * (det_energy - S) * pre_C[I];
     }
-
-    dets_hashvec.swap(dets_hashvec_merge);
-
-    result_C.swap(C_merge);
 }
 
 void ProjectorCI_HashVec::apply_tau_H_ref_C_symm_det_dynamic_HBCI_2(

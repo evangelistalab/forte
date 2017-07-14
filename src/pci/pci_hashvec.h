@@ -184,14 +184,6 @@ class ProjectorCI_HashVec : public Wavefunction {
     /// calculation?
     bool print_full_wavefunction_;
 
-    // * Simple Prescreening
-    /// Maximum value of the one-electron coupling
-    double new_max_one_HJI_;
-    double old_max_one_HJI_;
-    /// Maximum value of the two-electron coupling
-    double new_max_two_HJI_;
-    double old_max_two_HJI_;
-
     // * Dynamics Prescreening
     /// A map used to store the largest absolute value of the couplings of a
     /// determinant to all of its singly and doubly excited states.
@@ -319,9 +311,10 @@ class ProjectorCI_HashVec : public Wavefunction {
         std::pair<double, double>& max_coupling);
     /// Apply symmetric approx tau H to a set of determinants with selection
     /// according to reference coefficients
-    void apply_tau_H_ref_C_symm(double tau, double spawning_threshold, det_hashvec& dets_hashvec,
-                                const std::vector<double>& C, const std::vector<double>& ref_C,
-                                std::vector<double>& result_C, double S);
+    void apply_tau_H_ref_C_symm(double tau, double spawning_threshold,
+                                const det_hashvec& dets_hashvec, const std::vector<double>& ref_C,
+                                const std::vector<double>& pre_C, std::vector<double>& result_C,
+                                double S);
 
     /// Apply symmetric approx tau H to a determinant using dynamic screening
     /// with selection according to a reference coefficient
