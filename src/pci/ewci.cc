@@ -925,11 +925,10 @@ void ElementwiseCI::propagate_wallCh(det_hashvec& dets_hashvec, std::vector<doub
     // A map that contains the pair (determinant,coefficient)
     const double PI = 2 * acos(0.0);
     //    det_hash<> dets_C_hash;
-    std::vector<double> ref_C;
-    ref_C = C;
+    const std::vector<double> ref_C(C);
 
     double root = -cos(((double)chebyshev_order_) * PI / (chebyshev_order_ + 0.5));
-    apply_tau_H_symm(-1.0, spawning_threshold, dets_hashvec, C, C, range_ * root + shift_);
+    apply_tau_H_symm(-1.0, spawning_threshold, dets_hashvec, ref_C, C, range_ * root + shift_);
     normalize(C);
 
     for (int i = chebyshev_order_ - 1; i > 0; i--) {
@@ -1138,7 +1137,8 @@ void ElementwiseCI::apply_tau_H_symm(double tau, double spawning_threshold, det_
                                      double S) {
 
     det_hashvec result_dets(ref_dets);
-    std::vector<double> C_merge(result_dets.size(), 0.0);
+    result_C.clear();
+    result_C.resize(result_dets.size(), 0.0);
 
     std::vector<std::vector<std::pair<size_t, double>>> thread_index_C_vecs(num_threads_);
     std::vector<std::vector<std::pair<Determinant, double>>> thread_det_C_vecs(num_threads_);
@@ -1159,9 +1159,9 @@ void ElementwiseCI::apply_tau_H_symm(double tau, double spawning_threshold, det_
 #pragma omp critical
             {
                 for (const std::pair<size_t, double>& p : thread_index_C_vecs[current_rank]) {
-                    C_merge[p.first] += p.second;
+                    result_C[p.first] += p.second;
                 }
-                merge(result_dets, C_merge, thread_det_C_vecs[current_rank],
+                merge(result_dets, result_C, thread_det_C_vecs[current_rank],
                       std::function<double(double, double)>(std::plus<double>()), 0.0, false);
                 dets_max_couplings_[ref_dets[I]] = max_coupling;
             }
@@ -1174,9 +1174,9 @@ void ElementwiseCI::apply_tau_H_symm(double tau, double spawning_threshold, det_
 #pragma omp critical
             {
                 for (const std::pair<size_t, double>& p : thread_index_C_vecs[current_rank]) {
-                    C_merge[p.first] += p.second;
+                    result_C[p.first] += p.second;
                 }
-                merge(result_dets, C_merge, thread_det_C_vecs[current_rank],
+                merge(result_dets, result_C, thread_det_C_vecs[current_rank],
                       std::function<double(double, double)>(std::plus<double>()), 0.0, false);
             }
         }
@@ -1188,7 +1188,7 @@ void ElementwiseCI::apply_tau_H_symm(double tau, double spawning_threshold, det_
         double det_energy = ref_dets[I].energy() + fci_ints_->scalar_energy();
         // parallel_timer_off("EWCI:diagonal", omp_get_thread_num());
         // Diagonal contributions
-        C_merge[I] += tau * (det_energy - S) * C[I];
+        result_C[I] += tau * (det_energy - S) * C[I];
     }
     if (approx_E_flag_) {
         timer_on("EWCI:<E>a");
@@ -1196,7 +1196,7 @@ void ElementwiseCI::apply_tau_H_symm(double tau, double spawning_threshold, det_
         double CHC_energy = 0.0;
 #pragma omp parallel for reduction(+ : CHC_energy)
         for (size_t I = 0; I < max_I; ++I) {
-            CHC_energy += C[I] * C_merge[I];
+            CHC_energy += C[I] * result_C[I];
         }
         CHC_energy = CHC_energy / tau + S + nuclear_repulsion_energy_;
         timer_off("EWCI:<E>a");
@@ -1212,8 +1212,6 @@ void ElementwiseCI::apply_tau_H_symm(double tau, double spawning_threshold, det_
     }
 
     ref_dets.swap(result_dets);
-
-    result_C.swap(C_merge);
 }
 
 void ElementwiseCI::apply_tau_H_symm_det_dynamic_HBCI_2(

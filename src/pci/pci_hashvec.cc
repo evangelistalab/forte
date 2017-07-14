@@ -952,11 +952,10 @@ void ProjectorCI_HashVec::propagate_wallCh(det_hashvec& dets_hashvec, std::vecto
     // A map that contains the pair (determinant,coefficient)
     const double PI = 2 * acos(0.0);
     //    det_hash<> dets_C_hash;
-    std::vector<double> ref_C;
-    ref_C = C;
+    const std::vector<double> ref_C(C);
 
     double root = -cos(((double)chebyshev_order_) * PI / (chebyshev_order_ + 0.5));
-    apply_tau_H_symm(-1.0, spawning_threshold, dets_hashvec, C, C, range_ * root + shift_);
+    apply_tau_H_symm(-1.0, spawning_threshold, dets_hashvec, ref_C, C, range_ * root + shift_);
     normalize(C);
 
     for (int i = chebyshev_order_ - 1; i > 0; i--) {
@@ -1165,7 +1164,8 @@ void ProjectorCI_HashVec::apply_tau_H_symm(double tau, double spawning_threshold
                                            std::vector<double>& result_C, double S) {
 
     det_hashvec dets_hashvec_merge(dets_hashvec);
-    std::vector<double> C_merge(dets_hashvec_merge.size(), 0.0);
+    result_C.clear();
+    result_C.resize(dets_hashvec_merge.size(), 0.0);
 
     std::vector<std::vector<std::pair<size_t, double>>> thread_index_C_vecs(num_threads_);
     std::vector<std::vector<std::pair<Determinant, double>>> thread_det_C_vecs(num_threads_);
@@ -1186,9 +1186,9 @@ void ProjectorCI_HashVec::apply_tau_H_symm(double tau, double spawning_threshold
 #pragma omp critical
             {
                 for (const std::pair<size_t, double>& p : thread_index_C_vecs[current_rank]) {
-                    C_merge[p.first] += p.second;
+                    result_C[p.first] += p.second;
                 }
-                merge(dets_hashvec_merge, C_merge, thread_det_C_vecs[current_rank],
+                merge(dets_hashvec_merge, result_C, thread_det_C_vecs[current_rank],
                       std::function<double(double, double)>(std::plus<double>()), 0.0, false);
                 dets_max_couplings_.resize(dets_hashvec_merge.size());
                 dets_max_couplings_[I] = max_coupling;
@@ -1202,9 +1202,9 @@ void ProjectorCI_HashVec::apply_tau_H_symm(double tau, double spawning_threshold
 #pragma omp critical
             {
                 for (const std::pair<size_t, double>& p : thread_index_C_vecs[current_rank]) {
-                    C_merge[p.first] += p.second;
+                    result_C[p.first] += p.second;
                 }
-                merge(dets_hashvec_merge, C_merge, thread_det_C_vecs[current_rank],
+                merge(dets_hashvec_merge, result_C, thread_det_C_vecs[current_rank],
                       std::function<double(double, double)>(std::plus<double>()), 0.0, false);
             }
         }
@@ -1215,7 +1215,7 @@ void ProjectorCI_HashVec::apply_tau_H_symm(double tau, double spawning_threshold
         double CHC_energy = 0.0;
 #pragma omp parallel for reduction(+ : CHC_energy)
         for (size_t I = 0; I < max_I; ++I) {
-            CHC_energy += C[I] * C_merge[I];
+            CHC_energy += C[I] * result_C[I];
         }
         CHC_energy = CHC_energy / tau + S + nuclear_repulsion_energy_;
         timer_off("PCI:<E>a");
@@ -1231,8 +1231,6 @@ void ProjectorCI_HashVec::apply_tau_H_symm(double tau, double spawning_threshold
     }
 
     dets_hashvec.swap(dets_hashvec_merge);
-
-    result_C.swap(C_merge);
 }
 
 void ProjectorCI_HashVec::apply_tau_H_symm_det_dynamic_HBCI_2(
