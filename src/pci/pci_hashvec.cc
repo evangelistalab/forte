@@ -867,8 +867,7 @@ double ProjectorCI_HashVec::initial_guess(det_hashvec& dets_hashvec, std::vector
     dets_hashvec.add(bs_det);
     dets_max_couplings_.resize(dets_hashvec.size());
 
-    apply_tau_H_symm(time_step_, initial_guess_spawning_threshold_, dets_hashvec,
-                           {1.0}, C, 0.0);
+    apply_tau_H_symm(time_step_, initial_guess_spawning_threshold_, dets_hashvec, {1.0}, C, 0.0);
 
     size_t guess_size = dets_hashvec.size();
     if (guess_size > max_guess_size_) {
@@ -961,8 +960,7 @@ void ProjectorCI_HashVec::propagate_wallCh(det_hashvec& dets_hashvec, std::vecto
     ref_C = C;
 
     double root = -cos(((double)chebyshev_order_) * PI / (chebyshev_order_ + 0.5));
-    apply_tau_H_symm(-1.0, spawning_threshold, dets_hashvec, C, C,
-                           range_ * root + shift_);
+    apply_tau_H_symm(-1.0, spawning_threshold, dets_hashvec, C, C, range_ * root + shift_);
     normalize(C);
 
     for (int i = chebyshev_order_ - 1; i > 0; i--) {
@@ -1165,9 +1163,8 @@ void ProjectorCI_HashVec::propagate_DL(det_hashvec& dets_hashvec, std::vector<do
 }
 
 void ProjectorCI_HashVec::apply_tau_H_symm(double tau, double spawning_threshold,
-                                                 det_hashvec& dets_hashvec,
-                                                 const std::vector<double>& C,
-                                                 std::vector<double>& result_C, double S) {
+                                           det_hashvec& dets_hashvec, const std::vector<double>& C,
+                                           std::vector<double>& result_C, double S) {
 
     det_hashvec dets_hashvec_merge(dets_hashvec);
     std::vector<double> C_merge(dets_hashvec_merge.size(), 0.0);
@@ -1185,10 +1182,9 @@ void ProjectorCI_HashVec::apply_tau_H_symm(double tau, double spawning_threshold
         if (max_coupling.first == 0.0 or max_coupling.second == 0.0) {
             thread_det_C_vecs[current_rank].clear();
             thread_index_C_vecs[current_rank].clear();
-            apply_tau_H_symm_det_dynamic_HBCI_2(
-                tau, spawning_threshold, dets_hashvec, C, I, C[I],
-                thread_index_C_vecs[current_rank],
-                thread_det_C_vecs[current_rank], S, max_coupling);
+            apply_tau_H_symm_det_dynamic_HBCI_2(tau, spawning_threshold, dets_hashvec, C, I, C[I],
+                                                thread_index_C_vecs[current_rank],
+                                                thread_det_C_vecs[current_rank], S, max_coupling);
 #pragma omp critical
             {
                 for (const std::pair<size_t, double>& p : thread_index_C_vecs[current_rank]) {
@@ -1202,10 +1198,9 @@ void ProjectorCI_HashVec::apply_tau_H_symm(double tau, double spawning_threshold
         } else {
             thread_det_C_vecs[current_rank].clear();
             thread_index_C_vecs[current_rank].clear();
-            apply_tau_H_symm_det_dynamic_HBCI_2(
-                tau, spawning_threshold, dets_hashvec, C, I, C[I],
-                thread_index_C_vecs[current_rank],
-                thread_det_C_vecs[current_rank], S, max_coupling);
+            apply_tau_H_symm_det_dynamic_HBCI_2(tau, spawning_threshold, dets_hashvec, C, I, C[I],
+                                                thread_index_C_vecs[current_rank],
+                                                thread_det_C_vecs[current_rank], S, max_coupling);
 #pragma omp critical
             {
                 for (const std::pair<size_t, double>& p : thread_index_C_vecs[current_rank]) {
@@ -1244,10 +1239,10 @@ void ProjectorCI_HashVec::apply_tau_H_symm(double tau, double spawning_threshold
 
 void ProjectorCI_HashVec::apply_tau_H_symm_det_dynamic_HBCI_2(
     double tau, double spawning_threshold, const det_hashvec& dets_hashvec,
-    const std::vector<double>& pre_C, size_t I,
-    double CI, std::vector<std::pair<size_t, double>>& new_index_C_vec,
-    std::vector<std::pair<Determinant, double>>& new_det_C_vec,
-    double E0, std::pair<double, double>& max_coupling) {
+    const std::vector<double>& pre_C, size_t I, double CI,
+    std::vector<std::pair<size_t, double>>& new_index_C_vec,
+    std::vector<std::pair<Determinant, double>>& new_det_C_vec, double E0,
+    std::pair<double, double>& max_coupling) {
 
     const Determinant& detI = dets_hashvec[I];
     size_t pre_C_size = pre_C.size();
@@ -1790,9 +1785,9 @@ void ProjectorCI_HashVec::apply_tau_H_ref_C_symm(double tau, double spawning_thr
 
 void ProjectorCI_HashVec::apply_tau_H_ref_C_symm_det_dynamic_HBCI_2(
     double tau, double spawning_threshold, const det_hashvec& dets_hashvec,
-    const std::vector<double>& pre_C, const std::vector<double>& ref_C, size_t I,
-    double CI, double ref_CI, std::vector<std::pair<size_t, double>>& new_index_C_vec,
-    double E0, const std::pair<double, double>& max_coupling) {
+    const std::vector<double>& pre_C, const std::vector<double>& ref_C, size_t I, double CI,
+    double ref_CI, std::vector<std::pair<size_t, double>>& new_index_C_vec, double E0,
+    const std::pair<double, double>& max_coupling) {
 
     const Determinant& detI = dets_hashvec[I];
     size_t pre_C_size = pre_C.size(), ref_C_size = ref_C.size();
