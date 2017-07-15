@@ -425,29 +425,30 @@ void FCIWfn::compute_3rdm_aaa(std::vector<double>& rdm, bool alfa) {
             }
 
             size_t maxL = alfa ? beta_graph_->strpi(h_Ib) : alfa_graph_->strpi(h_I);
+            if (maxL > 0) {
+                for (size_t K = 0; K < maxK; ++K) {
+                    std::vector<H3StringSubstitution>& Klist =
+                        alfa ? lists_->get_alfa_3h_list(h_K, K, h_I)
+                             : lists_->get_beta_3h_list(h_K, K, h_Ib);
+                    for (const auto& Kel : Klist) {
+                        size_t p = Kel.p;
+                        size_t q = Kel.q;
+                        size_t r = Kel.r;
+                        size_t I = Kel.J;
+                        for (const auto& Lel : Klist) {
+                            size_t s = Lel.p;
+                            size_t t = Lel.q;
+                            size_t u = Lel.r;
+                            short sign = Kel.sign * Lel.sign;
+                            size_t J = Lel.J;
 
-            for (size_t K = 0; K < maxK; ++K) {
-                std::vector<H3StringSubstitution>& Klist =
-                    alfa ? lists_->get_alfa_3h_list(h_K, K, h_I)
-                         : lists_->get_beta_3h_list(h_K, K, h_Ib);
-                for (const auto& Kel : Klist) {
-                    size_t p = Kel.p;
-                    size_t q = Kel.q;
-                    size_t r = Kel.r;
-                    size_t I = Kel.J;
-                    for (const auto& Lel : Klist) {
-                        size_t s = Lel.p;
-                        size_t t = Lel.q;
-                        size_t u = Lel.r;
-                        short sign = Kel.sign * Lel.sign;
-                        size_t J = Lel.J;
+                            double rdm_value = 0.0;
+                            rdm_value = C_DDOT(maxL, &(Ch[J][0]), 1, &(Ch[I][0]), 1);
 
-                        double rdm_value = 0.0;
-                        rdm_value = C_DDOT(maxL, &(Ch[J][0]), 1, &(Ch[I][0]), 1);
+                            rdm_value *= sign;
 
-                        rdm_value *= sign;
-
-                        rdm[six_index(p, q, r, s, t, u)] += rdm_value;
+                            rdm[six_index(p, q, r, s, t, u)] += rdm_value;
+                        }
                     }
                 }
             }
