@@ -298,8 +298,8 @@ class ElementwiseCI : public Wavefunction {
     /// Apply symmetric approx tau H to a set of determinants with selection
     /// according to reference coefficients
     void apply_tau_H_symm(double tau, double spawning_threshold, det_hashvec& dets_hashvec,
-                          std::vector<double>& ref_C, det_hashvec& result_dets,
-                          std::vector<double>& result_C, double S, size_t& overlap_size);
+                          std::vector<double>& ref_C, std::vector<double>& result_C, double S,
+                          size_t& overlap_size);
 
     /// Apply symmetric approx tau H to a determinant using dynamic screening
     /// with selection according to a reference coefficient
@@ -314,7 +314,7 @@ class ElementwiseCI : public Wavefunction {
     /// Apply symmetric approx tau H to a set of determinants with selection
     /// according to reference coefficients
     void apply_tau_H_ref_C_symm(double tau, double spawning_threshold,
-                                const std::vector<double>& ref_C, const det_hashvec& result_dets,
+                                const det_hashvec& result_dets, const std::vector<double>& ref_C,
                                 const std::vector<double>& pre_C, std::vector<double>& result_C,
                                 const size_t overlap_size, double S);
 
