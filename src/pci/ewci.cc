@@ -847,16 +847,17 @@ double ElementwiseCI::initial_guess(det_hashvec& dets_hashvec, std::vector<doubl
     dets_hashvec.clear();
     dets_hashvec.add(bs_det);
     std::vector<double> start_C(1, 1.0);
-    det_hashvec result_dets;
+    //    det_hashvec result_dets;
     size_t overlap_size;
 
-    apply_tau_H_symm(time_step_, initial_guess_spawning_threshold_, dets_hashvec, start_C,
-                     result_dets, C, 0.0, overlap_size);
+    apply_tau_H_symm(time_step_, initial_guess_spawning_threshold_, dets_hashvec, start_C, C, 0.0,
+                     overlap_size);
 
-    dets_hashvec.swap(result_dets);
+    //    dets_hashvec.swap(result_dets);
     size_t guess_size = dets_hashvec.size();
     if (guess_size == 0) {
         dets_hashvec.add(bs_det);
+        C.push_back(1.0);
         ++guess_size;
     }
 
@@ -943,12 +944,12 @@ void ElementwiseCI::propagate_wallCh(det_hashvec& dets_hashvec, std::vector<doub
     const double PI = 2 * acos(0.0);
     //    det_hash<> dets_C_hash;
     std::vector<double> ref_C(C);
-    det_hashvec result_dets;
+    //    det_hashvec result_dets;
     size_t overlap_size;
 
     double root = -cos(((double)chebyshev_order_) * PI / (chebyshev_order_ + 0.5));
-    apply_tau_H_symm(-1.0, spawning_threshold, dets_hashvec, ref_C, result_dets, C,
-                     range_ * root + shift_, overlap_size);
+    apply_tau_H_symm(-1.0, spawning_threshold, dets_hashvec, ref_C, C, range_ * root + shift_,
+                     overlap_size);
     normalize(C);
 
     for (int i = chebyshev_order_ - 1; i > 0; i--) {
@@ -959,7 +960,7 @@ void ElementwiseCI::propagate_wallCh(det_hashvec& dets_hashvec, std::vector<doub
         double root = -cos(((double)i) * PI / (chebyshev_order_ + 0.5));
         //        dets = dets_hashvec.toVector();
         std::vector<double> result_C;
-        apply_tau_H_ref_C_symm(-1.0, spawning_threshold, ref_C, result_dets, C, result_C,
+        apply_tau_H_ref_C_symm(-1.0, spawning_threshold, dets_hashvec, ref_C, C, result_C,
                                overlap_size, range_ * root + shift_);
         C.swap(result_C);
         //        copy_hash_to_vec_order_ref(dets_C_hash, dets, C);
@@ -971,13 +972,13 @@ void ElementwiseCI::propagate_wallCh(det_hashvec& dets_hashvec, std::vector<doub
         normalize(C);
     }
     //    dets = dets_hashvec.toVector();
-    dets_hashvec.swap(result_dets);
+    //    dets_hashvec.swap(result_dets);
 }
 
 void ElementwiseCI::propagate_DL(det_hashvec& dets_hashvec, std::vector<double>& C,
                                  double spawning_threshold, double S) {
     size_t ref_size = C.size();
-    det_hashvec result_dets;
+    //    det_hashvec result_dets;
     size_t overlap_size;
     std::vector<std::vector<double>> b_vec(davidson_subspace_per_root_);
     std::vector<std::vector<double>> sigma_vec(davidson_subspace_per_root_);
@@ -988,12 +989,11 @@ void ElementwiseCI::propagate_DL(det_hashvec& dets_hashvec, std::vector<double>&
     //                           dets_C_hash, 0.0);
     //    copy_hash_to_vec_order_ref(dets_C_hash, dets, sigma_vec[0]);
     //    det_hashvec dets_hashvec(dets);
-    apply_tau_H_symm(1.0, spawning_threshold, dets_hashvec, C, result_dets, sigma_vec[0], 0.0,
-                     overlap_size);
+    apply_tau_H_symm(1.0, spawning_threshold, dets_hashvec, C, sigma_vec[0], 0.0, overlap_size);
     b_vec[0] = C;
     b_vec[0].resize(overlap_size);
     //    b_vec[0].resize(result_dets.size(), 0.0);
-    dets_hashvec = result_dets;
+    //    dets_hashvec = result_dets;
     //    dets = dets_hashvec.toVector();
     if (ref_size <= 1) {
         C = sigma_vec[0];
@@ -1057,7 +1057,7 @@ void ElementwiseCI::propagate_DL(det_hashvec& dets_hashvec, std::vector<double>&
         //        copy_hash_to_vec_order_ref(dets_C_hash, dets,
         //        sigma_vec[current_order]);
         //        dets_hashvec = det_hashvec(dets);
-        apply_tau_H_ref_C_symm(1.0, spawning_threshold, C, result_dets, b_vec[current_order],
+        apply_tau_H_ref_C_symm(1.0, spawning_threshold, dets_hashvec, C, b_vec[current_order],
                                sigma_vec[current_order], overlap_size, 0.0);
         //        dets = dets_hashvec.toVector();
         for (int m = 0; m < current_order; m++) {
@@ -1160,18 +1160,17 @@ void ElementwiseCI::propagate_DL(det_hashvec& dets_hashvec, std::vector<double>&
 }
 
 void ElementwiseCI::apply_tau_H_symm(double tau, double spawning_threshold, det_hashvec& ref_dets,
-                                     std::vector<double>& ref_C, det_hashvec& result_dets,
-                                     std::vector<double>& result_C, double S,
-                                     size_t& overlap_size) {
+                                     std::vector<double>& ref_C, std::vector<double>& result_C,
+                                     double S, size_t& overlap_size) {
 
     size_t ref_size = ref_C.size();
-    result_dets.clear();
+    //    result_dets.clear();
     result_C.clear();
     //    det_hashvec result_dets(ref_dets);
     det_hashvec extra_dets;
     std::vector<double> extra_C;
-    //    std::vector<double> overlap_C(ref_dets.size(), std::nan(""));
-    std::vector<double> overlap_C(ref_dets.size(), 0.0);
+    std::vector<double> overlap_C(ref_dets.size(), std::nan(""));
+    //    std::vector<double> overlap_C(ref_dets.size(), 0.0);
 
     std::vector<std::vector<std::pair<size_t, double>>> thread_index_C_vecs(num_threads_);
     std::vector<std::vector<std::pair<Determinant, double>>> thread_det_C_vecs(num_threads_);
@@ -1223,31 +1222,53 @@ void ElementwiseCI::apply_tau_H_symm(double tau, double spawning_threshold, det_
     }
 
     //    det_hashvec overlap_dets;
-    result_dets.reserve(ref_size);
-    std::vector<double> ref_C_new(ref_size);
-    std::vector<Determinant> removing_dets;
-    result_C.reserve(ref_size);
-    removing_dets.reserve(ref_size);
-    size_t removing_count = 0;
-    for (size_t I = 0; I < ref_size; ++I) {
-        if (std::isnan(overlap_C[I])) {
-            removing_dets.push_back(ref_dets[I]);
-            ++removing_count;
-            ref_C_new[ref_size - removing_count] = ref_C[I];
-        } else {
-            ref_C_new[result_dets.add(ref_dets[I])] = ref_C[I];
-            result_C.push_back(overlap_C[I]);
+    for (size_t I = 0; I < overlap_C.size(); ++I) {
+        while (std::isnan(overlap_C[I])) {
+            std::pair<size_t, size_t> index_change = ref_dets.erase_by_index(I);
+            if (index_change.second != det_hashvec::npos) {
+                overlap_C[index_change.second] = overlap_C[index_change.first];
+                overlap_C.pop_back();
+                ref_C[index_change.second] = ref_C[index_change.first];
+                ref_C.pop_back();
+            } else {
+                overlap_C.pop_back();
+                ref_C.pop_back();
+                break;
+            }
         }
     }
-    ref_dets = result_dets;
-    while (removing_count > 0) {
-        --removing_count;
-        ref_dets.add(removing_dets[removing_count]);
-    }
-    ref_C.swap(ref_C_new);
-    overlap_size = result_dets.size();
-    result_dets.merge(extra_dets);
-    result_C.insert(result_C.end(), extra_C.begin(), extra_C.end());
+    overlap_size = ref_dets.size();
+    ref_dets.merge(extra_dets);
+    overlap_C.insert(overlap_C.end(), extra_C.begin(), extra_C.end());
+    result_C = overlap_C;
+
+//    det_hashvec result_dets;
+//    result_dets.reserve(ref_size);
+//    std::vector<double> ref_C_new(ref_size);
+//    std::vector<Determinant> removing_dets;
+//    result_C.reserve(ref_size);
+//    removing_dets.reserve(ref_size);
+//    size_t removing_count = 0;
+//    for (size_t I = 0; I < ref_size; ++I) {
+//        if (std::isnan(overlap_C[I])) {
+//            removing_dets.push_back(ref_dets[I]);
+//            ++removing_count;
+//            ref_C_new[ref_size - removing_count] = ref_C[I];
+//        } else {
+//            ref_C_new[result_dets.add(ref_dets[I])] = ref_C[I];
+//            result_C.push_back(overlap_C[I]);
+//        }
+//    }
+//    ref_dets = result_dets;
+//    while (removing_count > 0) {
+//        --removing_count;
+//        ref_dets.add(removing_dets[removing_count]);
+//    }
+//    ref_C.swap(ref_C_new);
+//    overlap_size = result_dets.size();
+//    result_dets.merge(extra_dets);
+//    result_C.insert(result_C.end(), extra_C.begin(), extra_C.end());
+//    ref_dets = result_dets;
 
 #pragma omp parallel for
     for (size_t I = 0; I < overlap_size; ++I) {
@@ -1310,7 +1331,6 @@ void ElementwiseCI::apply_tau_H_symm_det_dynamic_HBCI_2(
     //    double det_energy = detI.energy() + fci_ints_->scalar_energy();
     //    new_space_C_vec.push_back(std::make_pair(detI, tau * (det_energy - E0) * CI));
     double diagonal_contribution = 0.0;
-    bool diagonal_flag = false;
     // parallel_timer_off("EWCI:diagonal", omp_get_thread_num());
 
     Determinant detJ(detI);
@@ -1356,7 +1376,6 @@ void ElementwiseCI::apply_tau_H_symm_det_dynamic_HBCI_2(
                                 new_index_C_vec.push_back(std::make_pair(index, tau * HJI * CI));
                                 if (std::fabs(HJI * pre_C[index]) < spawning_threshold) {
                                     diagonal_contribution += tau * HJI * pre_C[index];
-                                    diagonal_flag = true;
                                 }
                             }
 
@@ -1407,7 +1426,6 @@ void ElementwiseCI::apply_tau_H_symm_det_dynamic_HBCI_2(
                                 new_index_C_vec.push_back(std::make_pair(index, tau * HJI * CI));
                                 if (std::fabs(HJI * pre_C[index]) < spawning_threshold) {
                                     diagonal_contribution += tau * HJI * pre_C[index];
-                                    diagonal_flag = true;
                                 }
                             }
 
@@ -1462,7 +1480,6 @@ void ElementwiseCI::apply_tau_H_symm_det_dynamic_HBCI_2(
                                 new_index_C_vec.push_back(std::make_pair(index, tau * HJI * CI));
                                 if (std::fabs(HJI * pre_C[index]) < spawning_threshold) {
                                     diagonal_contribution += tau * HJI * pre_C[index];
-                                    diagonal_flag = true;
                                 }
                             }
 
@@ -1514,7 +1531,6 @@ void ElementwiseCI::apply_tau_H_symm_det_dynamic_HBCI_2(
                                 new_index_C_vec.push_back(std::make_pair(index, tau * HJI * CI));
                                 if (std::fabs(HJI * pre_C[index]) < spawning_threshold) {
                                     diagonal_contribution += tau * HJI * pre_C[index];
-                                    diagonal_flag = true;
                                 }
                             }
 
@@ -1560,7 +1576,6 @@ void ElementwiseCI::apply_tau_H_symm_det_dynamic_HBCI_2(
                             new_index_C_vec.push_back(std::make_pair(index, tau * HJI * CI));
                             if (std::fabs(HJI * pre_C[index]) < spawning_threshold) {
                                 diagonal_contribution += tau * HJI * pre_C[index];
-                                diagonal_flag = true;
                             }
                         }
 
@@ -1602,7 +1617,6 @@ void ElementwiseCI::apply_tau_H_symm_det_dynamic_HBCI_2(
                             new_index_C_vec.push_back(std::make_pair(index, tau * HJI * CI));
                             if (std::fabs(HJI * pre_C[index]) < spawning_threshold) {
                                 diagonal_contribution += tau * HJI * pre_C[index];
-                                diagonal_flag = true;
                             }
                         }
 
@@ -1644,7 +1658,6 @@ void ElementwiseCI::apply_tau_H_symm_det_dynamic_HBCI_2(
                             new_index_C_vec.push_back(std::make_pair(index, tau * HJI * CI));
                             if (std::fabs(HJI * pre_C[index]) < spawning_threshold) {
                                 diagonal_contribution += tau * HJI * pre_C[index];
-                                diagonal_flag = true;
                             }
                         }
 
@@ -1690,7 +1703,6 @@ void ElementwiseCI::apply_tau_H_symm_det_dynamic_HBCI_2(
                             new_index_C_vec.push_back(std::make_pair(index, tau * HJI * CI));
                             if (std::fabs(HJI * pre_C[index]) < spawning_threshold) {
                                 diagonal_contribution += tau * HJI * pre_C[index];
-                                diagonal_flag = true;
                             }
                         }
 
@@ -1733,7 +1745,6 @@ void ElementwiseCI::apply_tau_H_symm_det_dynamic_HBCI_2(
                             new_index_C_vec.push_back(std::make_pair(index, tau * HJI * CI));
                             if (std::fabs(HJI * pre_C[index]) < spawning_threshold) {
                                 diagonal_contribution += tau * HJI * pre_C[index];
-                                diagonal_flag = true;
                             }
                         }
 
@@ -1776,7 +1787,6 @@ void ElementwiseCI::apply_tau_H_symm_det_dynamic_HBCI_2(
                             new_index_C_vec.push_back(std::make_pair(index, tau * HJI * CI));
                             if (std::fabs(HJI * pre_C[index]) < spawning_threshold) {
                                 diagonal_contribution += tau * HJI * pre_C[index];
-                                diagonal_flag = true;
                             }
                         }
 
@@ -1790,14 +1800,14 @@ void ElementwiseCI::apply_tau_H_symm_det_dynamic_HBCI_2(
         }
         // parallel_timer_off("EWCI:doubles", omp_get_thread_num());
     }
-    if (diagonal_flag) {
+    if (new_index_C_vec.size() + new_det_C_vec.size() != 0) {
         new_index_C_vec.push_back(std::make_pair(I, diagonal_contribution));
     }
 }
 
 void ElementwiseCI::apply_tau_H_ref_C_symm(double tau, double spawning_threshold,
-                                           const std::vector<double>& ref_C,
                                            const det_hashvec& result_dets,
+                                           const std::vector<double>& ref_C,
                                            const std::vector<double>& pre_C,
                                            std::vector<double>& result_C, const size_t overlap_size,
                                            double S) {
