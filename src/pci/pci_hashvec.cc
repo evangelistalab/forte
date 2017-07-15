@@ -132,7 +132,8 @@ void ProjectorCI_HashVec::sortHashVecByCoefficient(det_hashvec& dets_hashvec,
         det_weight[I] = std::make_pair(std::fabs(C[I]), I);
     }
     std::sort(det_weight.begin(), det_weight.end());
-    det_hashvec new_dets_hashvec(dets_size);
+    det_hashvec new_dets_hashvec;
+    new_dets_hashvec.reserve(dets_size);
     std::vector<double> new_C(dets_size);
     std::vector<std::pair<double, double>> new_dets_max_couplings(dets_size);
     size_t old_I = 0, new_I = 0;

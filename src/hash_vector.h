@@ -58,7 +58,6 @@ template <class Key, class Hash = std::hash<Key>> class HashVector {
   public:
     class iterator;
     explicit HashVector();
-    explicit HashVector(size_t count);
     explicit HashVector(const std::vector<Key>& other);
     template <class Hash_2> explicit HashVector(const std::unordered_set<Key, Hash_2>& other);
 
@@ -128,11 +127,6 @@ template <class Key, class Hash> void swap(HashVector<Key, Hash>& a, HashVector<
 }
 
 template <class Key, class Hash> HashVector<Key, Hash>::HashVector() { this->clear(); }
-
-template <class Key, class Hash> HashVector<Key, Hash>::HashVector(size_t count) {
-    this->clear();
-    this->reserve(count);
-}
 
 template <class Key, class Hash> HashVector<Key, Hash>::HashVector(const std::vector<Key>& other) {
     this->clear();
