@@ -541,7 +541,7 @@ double ElementwiseCI::compute_energy() {
     outfile->Printf("\n\t              Element wise Configuration Interaction"
                     "implementation");
     outfile->Printf("\n\t         by Francesco A. Evangelista and Tianyuan Zhang");
-    outfile->Printf("\n\t                      version Jul. 14 2017");
+    outfile->Printf("\n\t                      version Jul. 15 2017");
     outfile->Printf("\n\t                    %4d thread(s) %s", num_threads_,
                     have_omp_ ? "(OMP)" : "");
     outfile->Printf("\n\t  ---------------------------------------------------------");
@@ -972,7 +972,6 @@ void ElementwiseCI::propagate_wallCh(det_hashvec& dets_hashvec, std::vector<doub
         normalize(C);
     }
     //    dets = dets_hashvec.toVector();
-    //    dets_hashvec.swap(result_dets);
 }
 
 void ElementwiseCI::propagate_DL(det_hashvec& dets_hashvec, std::vector<double>& C,
@@ -1242,34 +1241,6 @@ void ElementwiseCI::apply_tau_H_symm(double tau, double spawning_threshold, det_
     overlap_C.insert(overlap_C.end(), extra_C.begin(), extra_C.end());
     result_C = overlap_C;
 
-//    det_hashvec result_dets;
-//    result_dets.reserve(ref_size);
-//    std::vector<double> ref_C_new(ref_size);
-//    std::vector<Determinant> removing_dets;
-//    result_C.reserve(ref_size);
-//    removing_dets.reserve(ref_size);
-//    size_t removing_count = 0;
-//    for (size_t I = 0; I < ref_size; ++I) {
-//        if (std::isnan(overlap_C[I])) {
-//            removing_dets.push_back(ref_dets[I]);
-//            ++removing_count;
-//            ref_C_new[ref_size - removing_count] = ref_C[I];
-//        } else {
-//            ref_C_new[result_dets.add(ref_dets[I])] = ref_C[I];
-//            result_C.push_back(overlap_C[I]);
-//        }
-//    }
-//    ref_dets = result_dets;
-//    while (removing_count > 0) {
-//        --removing_count;
-//        ref_dets.add(removing_dets[removing_count]);
-//    }
-//    ref_C.swap(ref_C_new);
-//    overlap_size = result_dets.size();
-//    result_dets.merge(extra_dets);
-//    result_C.insert(result_C.end(), extra_C.begin(), extra_C.end());
-//    ref_dets = result_dets;
-
 #pragma omp parallel for
     for (size_t I = 0; I < overlap_size; ++I) {
         // Diagonal contribution
@@ -1278,11 +1249,6 @@ void ElementwiseCI::apply_tau_H_symm(double tau, double spawning_threshold, det_
         // parallel_timer_off("EWCI:diagonal", omp_get_thread_num());
         // Diagonal contributions
         result_C[I] += tau * (det_energy - S) * ref_C[I];
-        //        if (std::isnan(overlap_C[I])) {
-        //            overlap_C[I] = tau * (det_energy - S) * ref_C[I];
-        //        } else {
-        //            overlap_C[I] += tau * (det_energy - S) * ref_C[I];
-        //        }
     }
 
     if (approx_E_flag_) {
@@ -1304,9 +1270,6 @@ void ElementwiseCI::apply_tau_H_symm(double tau, double spawning_threshold, det_
         if (iter_ != 0)
             outfile->Printf(" %20.12f %10.3e", approx_energy_, CHC_energy_gradient);
     }
-
-    //    ref_dets.swap(result_dets);
-    //    result_C.swap(overlap_C);
 }
 
 void ElementwiseCI::apply_tau_H_symm_det_dynamic_HBCI_2(
@@ -1862,8 +1825,6 @@ void ElementwiseCI::apply_tau_H_ref_C_symm_det_dynamic_HBCI_2(
 
     // Diagonal contributions
     // parallel_timer_on("EWCI:diagonal", omp_get_thread_num());
-    //    double det_energy = detI.energy() + fci_ints_->scalar_energy();
-    //    new_space_C_vec.push_back(std::make_pair(detI, tau * (det_energy - E0) * CI));
     double diagonal_contribution = 0.0;
     // parallel_timer_off("EWCI:diagonal", omp_get_thread_num());
 
