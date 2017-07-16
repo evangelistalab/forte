@@ -131,13 +131,13 @@ void ProjectorCI_HashVec::sortHashVecByCoefficient(det_hashvec& dets_hashvec,
     for (size_t I = 0; I < dets_size; ++I) {
         det_weight[I] = std::make_pair(std::fabs(C[I]), I);
     }
-    std::sort(det_weight.begin(), det_weight.end());
+    std::sort(det_weight.begin(), det_weight.end(), std::greater<std::pair<double, size_t>>());
     det_hashvec new_dets_hashvec;
     new_dets_hashvec.reserve(dets_size);
     std::vector<double> new_C(dets_size);
     std::vector<std::pair<double, double>> new_dets_max_couplings(dets_size);
     size_t old_I = 0, new_I = 0;
-    for (long I = dets_size - 1; I >= 0; --I) {
+    for (size_t I = 0; I < dets_size; ++I) {
         old_I = det_weight[I].second;
         new_I = new_dets_hashvec.add(dets_hashvec[old_I]);
         new_C[new_I] = C[old_I];
@@ -563,7 +563,7 @@ double ProjectorCI_HashVec::compute_energy() {
     outfile->Printf("\n\t    Projector Configuration Interaction HashVector "
                     "implementation");
     outfile->Printf("\n\t         by Francesco A. Evangelista and Tianyuan Zhang");
-    outfile->Printf("\n\t                      version Jul. 14 2017");
+    outfile->Printf("\n\t                      version Jul. 15 2017");
     outfile->Printf("\n\t                    %4d thread(s) %s", num_threads_,
                     have_omp_ ? "(OMP)" : "");
     outfile->Printf("\n\t  ---------------------------------------------------------");

@@ -112,12 +112,12 @@ void ElementwiseCI::sortHashVecByCoefficient(det_hashvec& dets_hashvec, std::vec
     for (size_t I = 0; I < dets_size; ++I) {
         det_weight[I] = std::make_pair(std::fabs(C[I]), I);
     }
-    std::sort(det_weight.begin(), det_weight.end());
+    std::sort(det_weight.begin(), det_weight.end(), std::greater<std::pair<double, size_t>>());
     det_hashvec new_dets_hashvec;
     new_dets_hashvec.reserve(dets_size);
     std::vector<double> new_C(dets_size);
     size_t old_I = 0, new_I = 0;
-    for (long I = dets_size - 1; I >= 0; --I) {
+    for (size_t I = 0; I < dets_size; ++I) {
         old_I = det_weight[I].second;
         new_I = new_dets_hashvec.add(dets_hashvec[old_I]);
         new_C[new_I] = C[old_I];
@@ -654,6 +654,10 @@ double ElementwiseCI::compute_energy() {
             propagate(generator_, dets_hashvec, C, time_step_, spawning_threshold_, shift_);
         }
         timer_off("EWCI:Step");
+
+        timer_on("EWCI:sort");
+        sortHashVecByCoefficient(dets_hashvec, C);
+        timer_off("EWCI:sort");
 
         // Orthogonalize this solution with respect to the previous ones
         timer_on("EWCI:Ortho");
