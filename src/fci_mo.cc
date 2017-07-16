@@ -42,8 +42,6 @@
 #include "psi4/libmints/oeprop.h"
 #include "psi4/libmints/petitelist.h"
 
-
-
 namespace psi {
 namespace forte {
 
@@ -1825,8 +1823,8 @@ void FCI_MO::FormCumulant2(CI_RDMS& ci_rdms, d4& AA, d4& AB, d4& BB) {
     timer_off("FORM 2-Cumulant");
 }
 
-void FCI_MO::FormCumulant2AA(const std::vector<double>& tpdm_aa, const std::vector<double>& tpdm_bb, d4& AA,
-                             d4& BB) {
+void FCI_MO::FormCumulant2AA(const std::vector<double>& tpdm_aa, const std::vector<double>& tpdm_bb,
+                             d4& AA, d4& BB) {
     size_t dim2 = na_ * na_;
     size_t dim3 = na_ * dim2;
 
@@ -1984,8 +1982,8 @@ void FCI_MO::FormCumulant3(CI_RDMS& ci_rdms, d6& AAA, d6& AAB, d6& ABB, d6& BBB,
     timer_off("FORM 3-Cumulant");
 }
 
-void FCI_MO::FormCumulant3AAA(const std::vector<double>& tpdm_aaa, const std::vector<double>& tpdm_bbb,
-                              d6& AAA, d6& BBB, string& DC) {
+void FCI_MO::FormCumulant3AAA(const std::vector<double>& tpdm_aaa,
+                              const std::vector<double>& tpdm_bbb, d6& AAA, d6& BBB, string& DC) {
     size_t dim2 = na_ * na_;
     size_t dim3 = na_ * dim2;
     size_t dim4 = na_ * dim3;
@@ -2045,8 +2043,8 @@ void FCI_MO::FormCumulant3AAA(const std::vector<double>& tpdm_aaa, const std::ve
     }
 }
 
-void FCI_MO::FormCumulant3AAB(const std::vector<double>& tpdm_aab, const std::vector<double>& tpdm_abb,
-                              d6& AAB, d6& ABB, string& DC) {
+void FCI_MO::FormCumulant3AAB(const std::vector<double>& tpdm_aab,
+                              const std::vector<double>& tpdm_abb, d6& AAB, d6& ABB, string& DC) {
     size_t dim2 = na_ * na_;
     size_t dim3 = na_ * dim2;
     size_t dim4 = na_ * dim3;
@@ -2772,7 +2770,8 @@ void FCI_MO::BD_Fock(const d2& Fa, const d2& Fb, SharedMatrix& Ua, SharedMatrix&
 
 bool FCI_MO::CheckDensity() {
     // check blocks
-    auto checkblocks = [&](const size_t& dim, const std::vector<size_t>& idx) -> std::vector<double> {
+    auto checkblocks = [&](const size_t& dim,
+                           const std::vector<size_t>& idx) -> std::vector<double> {
         double maxa = 0.0, maxb = 0.0;
         for (size_t p = 0; p < dim; ++p) {
             size_t np = idx[p];
