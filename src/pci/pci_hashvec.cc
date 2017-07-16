@@ -2142,8 +2142,9 @@ double ProjectorCI_HashVec::estimate_var_energy_within_error_sigma(const det_has
     op.build_strings(det_map);
     op.op_s_lists(det_map);
     op.tp_s_lists(det_map);
-    std::vector<std::pair<std::vector<size_t>, std::vector<double>>> H = op.build_H_sparse(det_map);
-    SigmaVectorSparse svs(H);
+//    std::vector<std::pair<std::vector<size_t>, std::vector<double>>> H = op.build_H_sparse(det_map);
+//    SigmaVectorSparse svs(H);
+    SigmaVectorWfn2 svs(det_map, op);
     size_t sub_size = svs.size();
     // allocate vectors
     SharedVector b(new Vector("b", sub_size));
