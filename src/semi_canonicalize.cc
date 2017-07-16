@@ -83,11 +83,13 @@ void SemiCanonical::semicanonicalize(Reference& reference) {
     SharedMatrix Ua(new Matrix("Ua", nmopi_, nmopi_));
     SharedMatrix Ub(new Matrix("Ub", nmopi_, nmopi_));
 
-    // This transforms only within ACTIVE mos
-    std::vector<size_t> active_mo(nact_);
-    for (int i = 0; i < nact_; ++i) {
-        active_mo[i] = i;
-    }
+    // This transforms only within ACTIVE MOs
+    // Use ambit Tensor here so that the ambit mo_spaces remains the same
+
+    //    std::vector<size_t> active_mo(nact_);
+    //    for (int i = 0; i < nact_; ++i) {
+    //        active_mo[i] = i;
+    //    }
     //    BlockedTensor::reset_mo_spaces();
     //    BlockedTensor::set_expert_mode(true);
     //    BlockedTensor::add_mo_space("a", "abcdpqrstuijk", active_mo, AlphaSpin);
@@ -96,6 +98,9 @@ void SemiCanonical::semicanonicalize(Reference& reference) {
 
     ambit::Tensor Ua_t = ambit::Tensor::build(ambit::CoreTensor, "Ua", {nact_, nact_});
     ambit::Tensor Ub_t = ambit::Tensor::build(ambit::CoreTensor, "Ub", {nact_, nact_});
+
+    // TODO: add ways to treat active hole and active particle orbitals
+    // TODO: it might be also useful to diagonalize Fock block only when it is not diagonal
 
     build_transformation_matrices(Ua, Ub, Ua_t, Ub_t);
 
@@ -329,12 +334,7 @@ void SemiCanonical::transform_reference(ambit::Tensor& Ua, ambit::Tensor& Ub,
     outfile->Printf("\n    Transformed 2 cumulants.");
 
     // Transform 2-RDMs
-    // TODO: it is faster to recompute using transformed cumulants
-    // unless the G2 is not consistent to L2
-    L2aa0 = reference.g2aa();
-    L2ab0 = reference.g2ab();
-    L2bb0 = reference.g2bb();
-
+    // Recompute 2-RDMs using transformed cumulants
     ambit::Tensor G2aaT =
         ambit::Tensor::build(ambit::CoreTensor, "Transformed G2aa", {nact_, nact_, nact_, nact_});
     ambit::Tensor G2abT =
@@ -342,9 +342,25 @@ void SemiCanonical::transform_reference(ambit::Tensor& Ua, ambit::Tensor& Ub,
     ambit::Tensor G2bbT =
         ambit::Tensor::build(ambit::CoreTensor, "Transformed G2bb", {nact_, nact_, nact_, nact_});
 
-    G2aaT("pqrs") = Ua("ap") * Ua("bq") * L2aa0("abcd") * Ua("cr") * Ua("ds");
-    G2abT("pQrS") = Ua("ap") * Ub("BQ") * L2ab0("aBcD") * Ua("cr") * Ub("DS");
-    G2bbT("PQRS") = Ub("AP") * Ub("BQ") * L2bb0("ABCD") * Ub("CR") * Ub("DS");
+    G2aaT.copy(L2aaT);
+    G2abT.copy(L2abT);
+    G2bbT.copy(L2bbT);
+
+    G2aaT("pqrs") += L1aT("pr") * L1aT("qs");
+    G2aaT("pqrs") -= L1aT("ps") * L1aT("qr");
+
+    G2abT("pqrs") += L1aT("pr") * L1bT("qs");
+
+    G2bbT("pqrs") += L1bT("pr") * L1bT("qs");
+    G2bbT("pqrs") -= L1bT("ps") * L1bT("qr");
+
+    //    L2aa0 = reference.g2aa();
+    //    L2ab0 = reference.g2ab();
+    //    L2bb0 = reference.g2bb();
+
+    //    G2aaT("pqrs") = Ua("ap") * Ua("bq") * L2aa0("abcd") * Ua("cr") * Ua("ds");
+    //    G2abT("pQrS") = Ua("ap") * Ub("BQ") * L2ab0("aBcD") * Ua("cr") * Ub("DS");
+    //    G2bbT("PQRS") = Ub("AP") * Ub("BQ") * L2bb0("ABCD") * Ub("CR") * Ub("DS");
 
     reference.set_g2aa(G2aaT);
     reference.set_g2ab(G2abT);

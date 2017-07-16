@@ -160,6 +160,9 @@ class FCI_MO : public Wavefunction {
     /// Quiet mode (no printing, for use with CASSCF)
     void set_quite_mode(bool quiet) { quiet_ = quiet; }
 
+    /// Set true to compute semi-canonical orbitals
+    void set_semi(bool semi) { semi_ = semi; }
+
     /// Set false to skip Fock build in FCI_MO
     void set_form_Fock(bool form_fock) { form_Fock_ = form_fock; }
 
@@ -309,6 +312,7 @@ class FCI_MO : public Wavefunction {
                   const vecdet& det);
 
     /// Semi-canonicalize orbitals
+    bool semi_;
     void semi_canonicalize();
     /// Use natural orbitals
     void nat_orbs();
