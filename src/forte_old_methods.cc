@@ -202,28 +202,14 @@ void forte_old_methods(SharedWavefunction ref_wfn, Options& options,
             Reference reference = fci_mo.reference();
 
             if (options["AVG_STATE"].size() != 0) {
-                //                options.set_str("FORTE", "RELAX_REF", "ITERATE");
-                //                if (options.get_bool("SEMI_CANONICAL")) {
-                //                    fci_mo.compute_canonical_sa_energy();
-                //                } else {
-                //                    fci_mo.compute_sa_energy();
-                //                }
-                //                Reference reference = fci_mo.reference();
-                std::shared_ptr<MRDSRG> mrdsrg(
-                    new MRDSRG(reference, ref_wfn, options, ints, mo_space_info));
+                auto mrdsrg =
+                    std::make_shared<MRDSRG>(reference, ref_wfn, options, ints, mo_space_info);
                 mrdsrg->set_p_spaces(fci_mo.p_spaces());
                 mrdsrg->set_eigens(fci_mo.eigens());
                 mrdsrg->compute_energy_sa();
             } else {
-                //                if (options.get_bool("SEMI_CANONICAL")) {
-                //                    fci_mo.compute_canonical_ss_energy();
-                //                } else {
-                //                    fci_mo.compute_ss_energy();
-                //                }
-                //                Reference reference = fci_mo.reference();
-
-                std::shared_ptr<MRDSRG> mrdsrg(
-                    new MRDSRG(reference, ref_wfn, options, ints, mo_space_info));
+                auto mrdsrg =
+                    std::make_shared<MRDSRG>(reference, ref_wfn, options, ints, mo_space_info);
                 if (options.get_str("RELAX_REF") == "NONE") {
                     mrdsrg->compute_energy();
                 } else {
@@ -244,8 +230,13 @@ void forte_old_methods(SharedWavefunction ref_wfn, Options& options,
                 semi.semicanonicalize(reference);
             }
 
-            std::shared_ptr<MRDSRG> mrdsrg(
-                new MRDSRG(reference, ref_wfn, options, ints, mo_space_info));
+            //            std::shared_ptr<FCI> fci1(new FCI(ref_wfn, options, ints, mo_space_info));
+            //            fci1->set_max_rdm_level(3);
+            //            fci1->compute_energy();
+            //            reference = fci1->reference();
+
+            auto mrdsrg =
+                std::make_shared<MRDSRG>(reference, ref_wfn, options, ints, mo_space_info);
             if (options.get_str("RELAX_REF") == "NONE") {
                 mrdsrg->compute_energy();
             } else {

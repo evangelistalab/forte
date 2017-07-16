@@ -128,6 +128,9 @@ void FCI_MO::read_options() {
     // digonalization algorithm
     diag_algorithm_ = options_.get_str("DIAG_ALGORITHM");
 
+    // semicanonical orbitals
+    semi_ = options_.get_bool("SEMI_CANONICAL");
+
     // number of Irrep
     nirrep_ = this->nirrep();
 
@@ -280,18 +283,6 @@ void FCI_MO::read_options() {
         print_irrep("VIRTUAL", virtual_);
     }
 
-    // print orbital indices
-    //    if (print_ > 0) {
-    //        print_h2("Correlated Subspace Indices");
-    //        print_idx("CORE", idx_c_);
-    //        print_idx("ACTIVE", idx_a_);
-    //        print_idx("HOLE", idx_h_);
-    //        print_idx("VIRTUAL", idx_v_);
-    //        print_idx("PARTICLE", idx_p_);
-    //        outfile->Printf("\n");
-    //
-    //    }
-
     // state averaging
     if (options_["AVG_STATE"].size() != 0) {
 
@@ -440,13 +431,13 @@ void FCI_MO::read_options() {
 
 double FCI_MO::compute_energy() {
     if (options_["AVG_STATE"].size() != 0) {
-        if (options_.get_bool("SEMI_CANONICAL")) {
+        if (semi_) {
             Eref_ = compute_canonical_sa_energy();
         } else {
             Eref_ = compute_sa_energy();
         }
     } else {
-        if (options_.get_bool("SEMI_CANONICAL")) {
+        if (semi_) {
             Eref_ = compute_canonical_ss_energy();
         } else {
             Eref_ = compute_ss_energy();
