@@ -756,9 +756,9 @@ double ProjectorCI_HashVec::compute_energy() {
     outfile->Printf("\n  * Size of CI space                    = %zu", C.size());
     outfile->Printf("\n  * Projector-CI Approximate Energy     = %18.12f Eh", 1, approx_energy_);
 
-    //    timer_on("PCI:sort");
-    //    sortHashVecByCoefficient(dets_hashvec, C);
-    //    timer_off("PCI:sort");
+    timer_on("PCI:sort");
+    sortHashVecByCoefficient(dets_hashvec, C);
+    timer_off("PCI:sort");
     //    outfile->Printf("\nSuccessfully sorted!");
 
     timer_on("PCI:<E>end_v");

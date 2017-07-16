@@ -740,9 +740,9 @@ double ElementwiseCI::compute_energy() {
     outfile->Printf("\n  * Size of CI space                    = %zu", C.size());
     outfile->Printf("\n  * ElementwiseCI Approximate Energy    = %18.12f Eh", 1, approx_energy_);
 
-    //    timer_on("EWCI:sort");
-    //    sortHashVecByCoefficient(dets_hashvec, C);
-    //    timer_off("EWCI:sort");
+    timer_on("EWCI:sort");
+    sortHashVecByCoefficient(dets_hashvec, C);
+    timer_off("EWCI:sort");
     //    outfile->Printf("\nSuccessfully sorted!");
 
     timer_on("EWCI:<E>end_v");
