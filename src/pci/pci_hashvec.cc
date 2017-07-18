@@ -563,7 +563,7 @@ double ProjectorCI_HashVec::compute_energy() {
     outfile->Printf("\n\t    Projector Configuration Interaction HashVector "
                     "implementation");
     outfile->Printf("\n\t         by Francesco A. Evangelista and Tianyuan Zhang");
-    outfile->Printf("\n\t                      version Jul. 15 2017");
+    outfile->Printf("\n\t                      version Jul. 17 2017");
     outfile->Printf("\n\t                    %4d thread(s) %s", num_threads_,
                     have_omp_ ? "(OMP)" : "");
     outfile->Printf("\n\t  ---------------------------------------------------------");
@@ -630,7 +630,7 @@ double ProjectorCI_HashVec::compute_energy() {
                         "------------------------------------------------------"
                         "------------------------------------------------------"
                         "----------------------------------");
-        outfile->Printf("\n    Steps  Beta/Eh      Ndets     Proj. Energy/Eh   "
+        outfile->Printf("\n    Steps  Beta/Eh      Ndets      NoffDiag     Proj. Energy/Eh   "
                         "  dEp/dt      Var. Energy/Eh      dEp/dt      Approx. "
                         "Energy/Eh   dEv/dt");
         outfile->Printf("\n  "
@@ -641,7 +641,7 @@ double ProjectorCI_HashVec::compute_energy() {
         outfile->Printf("\n\n  "
                         "------------------------------------------------------"
                         "--------------------------------------------------------");
-        outfile->Printf("\n    Steps  Beta/Eh      Ndets     Proj. Energy/Eh   "
+        outfile->Printf("\n    Steps  Beta/Eh      Ndets      NoffDiag     Proj. Energy/Eh   "
                         "  dEp/dt      Approx. Energy/Eh   dEv/dt");
         outfile->Printf("\n  "
                         "------------------------------------------------------"
