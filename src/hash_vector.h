@@ -529,7 +529,8 @@ std::unordered_set<Key, Hash> HashVector<Key, Hash>::toUnordered_set() const {
 template <class Key, class Hash, class Value>
 HashVector<Key, Hash>
 hashVector_from_unordered_map(const std::unordered_map<Key, Value, Hash>& umap) {
-    HashVector<Key, Hash> hvec(umap.size());
+    HashVector<Key, Hash> hvec;
+    hvec.reserve(umap.size());
     for (std::pair<Key, Value> kv : umap) {
         hvec.add(kv.first);
     }
@@ -540,7 +541,8 @@ template <class Key, class Hash, class Value>
 HashVector<Key, Hash>
 hashVector_from_unordered_map(const std::unordered_map<Key, Value, Hash>& umap,
                               std::vector<Value>& values) {
-    HashVector<Key, Hash> hvec(umap.size());
+    HashVector<Key, Hash> hvec;
+    hvec.reserve(umap.size());
     values.reserve(umap.size());
     for (std::pair<Key, Value> kv : umap) {
         hvec.add(kv.first);
