@@ -202,6 +202,7 @@ class ProjectorCI_HashVec : public Wavefunction {
     double max_aa_coupling_, max_ab_coupling_, max_bb_coupling_, max_a_coupling_, max_b_coupling_;
     size_t aa_couplings_size_, ab_couplings_size_, bb_couplings_size_, a_couplings_size_,
         b_couplings_size_;
+    size_t num_off_diag_elem_;
 
     // * Energy estimation
     /// Estimate the variational energy?

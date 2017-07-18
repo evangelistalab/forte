@@ -629,23 +629,23 @@ double ProjectorCI_HashVec::compute_energy() {
         outfile->Printf("\n\n  "
                         "------------------------------------------------------"
                         "------------------------------------------------------"
-                        "--------------------");
+                        "----------------------------------");
         outfile->Printf("\n    Steps  Beta/Eh      Ndets     Proj. Energy/Eh   "
                         "  dEp/dt      Var. Energy/Eh      dEp/dt      Approx. "
                         "Energy/Eh   dEv/dt");
         outfile->Printf("\n  "
                         "------------------------------------------------------"
                         "------------------------------------------------------"
-                        "--------------------");
+                        "----------------------------------");
     } else {
         outfile->Printf("\n\n  "
                         "------------------------------------------------------"
-                        "------------------------------------------");
+                        "--------------------------------------------------------");
         outfile->Printf("\n    Steps  Beta/Eh      Ndets     Proj. Energy/Eh   "
                         "  dEp/dt      Approx. Energy/Eh   dEv/dt");
         outfile->Printf("\n  "
                         "------------------------------------------------------"
-                        "------------------------------------------");
+                        "--------------------------------------------------------");
     }
 
     int maxcycle = maxiter_;
@@ -696,12 +696,13 @@ double ProjectorCI_HashVec::compute_energy() {
 
             switch (generator_) {
             case DLGenerator:
-                outfile->Printf("\n%9d %8d %10zu %20.12f %10.3e", cycle, current_davidson_iter_,
-                                C.size(), proj_energy, proj_energy_gradient);
+                outfile->Printf("\n%9d %8d %10zu %13zu %20.12f %10.3e", cycle,
+                                current_davidson_iter_, C.size(), num_off_diag_elem_, proj_energy,
+                                proj_energy_gradient);
                 break;
             default:
-                outfile->Printf("\n%9d %8.2f %10zu %20.12f %10.3e", cycle, beta, C.size(),
-                                proj_energy, proj_energy_gradient);
+                outfile->Printf("\n%9d %8.2f %10zu %13zu %20.12f %10.3e", cycle, beta, C.size(),
+                                num_off_diag_elem_, proj_energy, proj_energy_gradient);
                 break;
             }
 
@@ -736,14 +737,20 @@ double ProjectorCI_HashVec::compute_energy() {
         outfile->Printf("\n  "
                         "------------------------------------------------------"
                         "------------------------------------------------------"
-                        "--------------------");
+                        "----------------------------------");
     } else {
         outfile->Printf("\n  "
                         "------------------------------------------------------"
-                        "------------------------------------------");
+                        "--------------------------------------------------------");
     }
 
-    outfile->Printf("\n\n  Calculation %s", converged ? "converged." : "did not converge!");
+    if (converged) {
+        outfile->Printf("\n\n  Calculation converged.");
+    } else {
+        outfile->Printf("\n\n  Calculation %s",
+                        iter_ != maxiter_ ? "stoped in appearance of higher new low."
+                                          : "did not converge!");
+    }
 
     if (do_shift_) {
         outfile->Printf("\n\n  Shift applied during iteration, the "
@@ -754,7 +761,9 @@ double ProjectorCI_HashVec::compute_energy() {
 
     outfile->Printf("\n\n  ==> Post-Iterations <==\n");
     outfile->Printf("\n  * Size of CI space                    = %zu", C.size());
+    outfile->Printf("\n  * Number of off-diagonal elements     = %zu", num_off_diag_elem_);
     outfile->Printf("\n  * Projector-CI Approximate Energy     = %18.12f Eh", 1, approx_energy_);
+    outfile->Printf("\n  * Projector-CI Projective  Energy     = %18.12f Eh\n", 1, proj_energy);
 
     timer_on("PCI:sort");
     sortHashVecByCoefficient(dets_hashvec, C);
@@ -771,8 +780,7 @@ double ProjectorCI_HashVec::compute_energy() {
 
     Process::environment.globals["PCI ENERGY"] = var_energy;
 
-    outfile->Printf("\n  * Projector-CI Projective  Energy     = %18.12f Eh", 1, proj_energy);
-    outfile->Printf("\n\n  * Projector-CI Variational Energy     = %18.12f Eh", 1, var_energy);
+    outfile->Printf("\n  * Projector-CI Variational Energy     = %18.12f Eh", 1, var_energy);
     outfile->Printf("\n  * Projector-CI Var. Corr.  Energy     = %18.12f Eh", 1,
                     var_energy - reference_determinant_.energy() - nuclear_repulsion_energy_ -
                         fci_ints_->scalar_energy());
@@ -1170,6 +1178,7 @@ void ProjectorCI_HashVec::apply_tau_H_symm(double tau, double spawning_threshold
 
     std::vector<std::vector<std::pair<size_t, double>>> thread_index_C_vecs(num_threads_);
     std::vector<std::vector<std::pair<Determinant, double>>> thread_det_C_vecs(num_threads_);
+    num_off_diag_elem_ = 0;
 
     size_t max_I = C.size();
 #pragma omp parallel for
@@ -1296,10 +1305,16 @@ void ProjectorCI_HashVec::apply_tau_H_symm_det_dynamic_HBCI_2(
                             size_t index = dets_hashvec.find(detJ);
                             if (index >= pre_C_size) {
                                 new_det_C_vec.push_back(std::make_pair(detJ, tau * HJI * CI));
+#pragma omp atomic
+                                ++num_off_diag_elem_;
                             } else {
                                 new_index_C_vec.push_back(std::make_pair(index, tau * HJI * CI));
+#pragma omp atomic
+                                ++num_off_diag_elem_;
                                 if (std::fabs(HJI * pre_C[index]) < spawning_threshold) {
                                     new_index_C_vec[0].second += tau * HJI * pre_C[index];
+#pragma omp atomic
+                                    ++num_off_diag_elem_;
                                 }
                             }
 
@@ -1346,10 +1361,16 @@ void ProjectorCI_HashVec::apply_tau_H_symm_det_dynamic_HBCI_2(
                             size_t index = dets_hashvec.find(detJ);
                             if (index >= pre_C_size) {
                                 new_det_C_vec.push_back(std::make_pair(detJ, tau * HJI * CI));
+#pragma omp atomic
+                                ++num_off_diag_elem_;
                             } else {
                                 new_index_C_vec.push_back(std::make_pair(index, tau * HJI * CI));
+#pragma omp atomic
+                                ++num_off_diag_elem_;
                                 if (std::fabs(HJI * pre_C[index]) < spawning_threshold) {
                                     new_index_C_vec[0].second += tau * HJI * pre_C[index];
+#pragma omp atomic
+                                    ++num_off_diag_elem_;
                                 }
                             }
 
@@ -1400,10 +1421,16 @@ void ProjectorCI_HashVec::apply_tau_H_symm_det_dynamic_HBCI_2(
                             size_t index = dets_hashvec.find(detJ);
                             if (index >= pre_C_size) {
                                 new_det_C_vec.push_back(std::make_pair(detJ, tau * HJI * CI));
+#pragma omp atomic
+                                ++num_off_diag_elem_;
                             } else {
                                 new_index_C_vec.push_back(std::make_pair(index, tau * HJI * CI));
+#pragma omp atomic
+                                ++num_off_diag_elem_;
                                 if (std::fabs(HJI * pre_C[index]) < spawning_threshold) {
                                     new_index_C_vec[0].second += tau * HJI * pre_C[index];
+#pragma omp atomic
+                                    ++num_off_diag_elem_;
                                 }
                             }
 
@@ -1451,10 +1478,16 @@ void ProjectorCI_HashVec::apply_tau_H_symm_det_dynamic_HBCI_2(
                             size_t index = dets_hashvec.find(detJ);
                             if (index >= pre_C_size) {
                                 new_det_C_vec.push_back(std::make_pair(detJ, tau * HJI * CI));
+#pragma omp atomic
+                                ++num_off_diag_elem_;
                             } else {
                                 new_index_C_vec.push_back(std::make_pair(index, tau * HJI * CI));
+#pragma omp atomic
+                                ++num_off_diag_elem_;
                                 if (std::fabs(HJI * pre_C[index]) < spawning_threshold) {
                                     new_index_C_vec[0].second += tau * HJI * pre_C[index];
+#pragma omp atomic
+                                    ++num_off_diag_elem_;
                                 }
                             }
 
@@ -1496,10 +1529,16 @@ void ProjectorCI_HashVec::apply_tau_H_symm_det_dynamic_HBCI_2(
                         size_t index = dets_hashvec.find(detJ);
                         if (index >= pre_C_size) {
                             new_det_C_vec.push_back(std::make_pair(detJ, tau * HJI * CI));
+#pragma omp atomic
+                            ++num_off_diag_elem_;
                         } else {
                             new_index_C_vec.push_back(std::make_pair(index, tau * HJI * CI));
+#pragma omp atomic
+                            ++num_off_diag_elem_;
                             if (std::fabs(HJI * pre_C[index]) < spawning_threshold) {
                                 new_index_C_vec[0].second += tau * HJI * pre_C[index];
+#pragma omp atomic
+                                ++num_off_diag_elem_;
                             }
                         }
 
@@ -1537,10 +1576,16 @@ void ProjectorCI_HashVec::apply_tau_H_symm_det_dynamic_HBCI_2(
                         size_t index = dets_hashvec.find(detJ);
                         if (index >= pre_C_size) {
                             new_det_C_vec.push_back(std::make_pair(detJ, tau * HJI * CI));
+#pragma omp atomic
+                            ++num_off_diag_elem_;
                         } else {
                             new_index_C_vec.push_back(std::make_pair(index, tau * HJI * CI));
+#pragma omp atomic
+                            ++num_off_diag_elem_;
                             if (std::fabs(HJI * pre_C[index]) < spawning_threshold) {
                                 new_index_C_vec[0].second += tau * HJI * pre_C[index];
+#pragma omp atomic
+                                ++num_off_diag_elem_;
                             }
                         }
 
@@ -1578,10 +1623,16 @@ void ProjectorCI_HashVec::apply_tau_H_symm_det_dynamic_HBCI_2(
                         size_t index = dets_hashvec.find(detJ);
                         if (index >= pre_C_size) {
                             new_det_C_vec.push_back(std::make_pair(detJ, tau * HJI * CI));
+#pragma omp atomic
+                            ++num_off_diag_elem_;
                         } else {
                             new_index_C_vec.push_back(std::make_pair(index, tau * HJI * CI));
+#pragma omp atomic
+                            ++num_off_diag_elem_;
                             if (std::fabs(HJI * pre_C[index]) < spawning_threshold) {
                                 new_index_C_vec[0].second += tau * HJI * pre_C[index];
+#pragma omp atomic
+                                ++num_off_diag_elem_;
                             }
                         }
 
@@ -1623,10 +1674,16 @@ void ProjectorCI_HashVec::apply_tau_H_symm_det_dynamic_HBCI_2(
                         size_t index = dets_hashvec.find(detJ);
                         if (index >= pre_C_size) {
                             new_det_C_vec.push_back(std::make_pair(detJ, tau * HJI * CI));
+#pragma omp atomic
+                            ++num_off_diag_elem_;
                         } else {
                             new_index_C_vec.push_back(std::make_pair(index, tau * HJI * CI));
+#pragma omp atomic
+                            ++num_off_diag_elem_;
                             if (std::fabs(HJI * pre_C[index]) < spawning_threshold) {
                                 new_index_C_vec[0].second += tau * HJI * pre_C[index];
+#pragma omp atomic
+                                ++num_off_diag_elem_;
                             }
                         }
 
@@ -1665,10 +1722,16 @@ void ProjectorCI_HashVec::apply_tau_H_symm_det_dynamic_HBCI_2(
                         size_t index = dets_hashvec.find(detJ);
                         if (index >= pre_C_size) {
                             new_det_C_vec.push_back(std::make_pair(detJ, tau * HJI * CI));
+#pragma omp atomic
+                            ++num_off_diag_elem_;
                         } else {
                             new_index_C_vec.push_back(std::make_pair(index, tau * HJI * CI));
+#pragma omp atomic
+                            ++num_off_diag_elem_;
                             if (std::fabs(HJI * pre_C[index]) < spawning_threshold) {
                                 new_index_C_vec[0].second += tau * HJI * pre_C[index];
+#pragma omp atomic
+                                ++num_off_diag_elem_;
                             }
                         }
 
@@ -1707,10 +1770,16 @@ void ProjectorCI_HashVec::apply_tau_H_symm_det_dynamic_HBCI_2(
                         size_t index = dets_hashvec.find(detJ);
                         if (index >= pre_C_size) {
                             new_det_C_vec.push_back(std::make_pair(detJ, tau * HJI * CI));
+#pragma omp atomic
+                            ++num_off_diag_elem_;
                         } else {
                             new_index_C_vec.push_back(std::make_pair(index, tau * HJI * CI));
+#pragma omp atomic
+                            ++num_off_diag_elem_;
                             if (std::fabs(HJI * pre_C[index]) < spawning_threshold) {
                                 new_index_C_vec[0].second += tau * HJI * pre_C[index];
+#pragma omp atomic
+                                ++num_off_diag_elem_;
                             }
                         }
 
@@ -2142,8 +2211,9 @@ double ProjectorCI_HashVec::estimate_var_energy_within_error_sigma(const det_has
     op.build_strings(det_map);
     op.op_s_lists(det_map);
     op.tp_s_lists(det_map);
-//    std::vector<std::pair<std::vector<size_t>, std::vector<double>>> H = op.build_H_sparse(det_map);
-//    SigmaVectorSparse svs(H);
+    //    std::vector<std::pair<std::vector<size_t>, std::vector<double>>> H =
+    //    op.build_H_sparse(det_map);
+    //    SigmaVectorSparse svs(H);
     SigmaVectorWfn2 svs(det_map, op);
     size_t sub_size = svs.size();
     // allocate vectors
