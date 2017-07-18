@@ -751,7 +751,8 @@ double ElementwiseCI::compute_energy() {
     outfile->Printf("\n  * Size of CI space                    = %zu", C.size());
     outfile->Printf("\n  * Number of off-diagonal elements     = %zu", num_off_diag_elem_);
     outfile->Printf("\n  * ElementwiseCI Approximate Energy    = %18.12f Eh", 1, approx_energy_);
-    outfile->Printf("\n  * ElementwiseCI Projective  Energy    = %18.12f Eh\n", 1, proj_energy);
+    outfile->Printf("\n  * ElementwiseCI Projective  Energy    = %18.12f Eh", 1, proj_energy);
+    outfile->Printf("\n\n  %s: %f s\n", "ElementwiseCI (bitset) steps finished in  ", t_apici.elapsed());
 
     timer_on("EWCI:sort");
     sortHashVecByCoefficient(dets_hashvec, C);
