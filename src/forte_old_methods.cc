@@ -487,7 +487,7 @@ void forte_old_methods(SharedWavefunction ref_wfn, Options& options,
             if (options.get_bool("ACI_NO")) {
                 aci->compute_nos();
             }
-            if (options.get_bool("ESNOS")){
+            if (options.get_bool("ESNOS")) {
                 auto aci_wfn = aci->get_wavefunction();
                 ESNO esno(ref_wfn, options, ints, mo_space_info, aci_wfn);
                 esno.compute_nos();
