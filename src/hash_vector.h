@@ -58,7 +58,6 @@ template <class Key, class Hash = std::hash<Key>> class HashVector {
   public:
     class iterator;
     explicit HashVector();
-    explicit HashVector(size_t count);
     explicit HashVector(const std::vector<Key>& other);
     template <class Hash_2> explicit HashVector(const std::unordered_set<Key, Hash_2>& other);
 
@@ -68,8 +67,8 @@ template <class Key, class Hash = std::hash<Key>> class HashVector {
     size_t find(const Key& key) const;
 
     /*- Iterators -*/
-    const iterator begin() { return this->vec.begin(); }
-    const iterator end() { return this->vec.end(); }
+    const iterator begin() const { return this->vec.begin(); }
+    const iterator end() const { return this->vec.end(); }
 
     /*- Capacity -*/
     size_t size() const;
@@ -101,20 +100,20 @@ template <class Key, class Hash = std::hash<Key>> class HashVector {
     std::vector<size_t> optimize();
 
     /*- Convertors -*/
-    std::vector<Key> toVector();
-    std::unordered_set<Key, Hash> toUnordered_set();
+    std::vector<Key> toVector() const;
+    std::unordered_set<Key, Hash> toUnordered_set() const;
 
-    class iterator : public std::vector<CINode<Key>>::iterator {
+    class iterator : public std::vector<CINode<Key>>::const_iterator {
       public:
-        iterator(typename std::vector<CINode<Key>>::iterator it)
-            : std::vector<CINode<Key>>::iterator(it) {}
+        iterator(const typename std::vector<CINode<Key>>::const_iterator it)
+            : std::vector<CINode<Key>>::const_iterator(it) {}
 
         const Key& operator*() const {
-            return std::vector<CINode<Key>>::iterator::operator*().value;
+            return std::vector<CINode<Key>>::const_iterator::operator*().value;
         }
 
         const Key* const operator->() const {
-            return &(std::vector<CINode<Key>>::iterator::operator*().value);
+            return &(std::vector<CINode<Key>>::const_iterator::operator*().value);
         }
     };
 };
@@ -128,11 +127,6 @@ template <class Key, class Hash> void swap(HashVector<Key, Hash>& a, HashVector<
 }
 
 template <class Key, class Hash> HashVector<Key, Hash>::HashVector() { this->clear(); }
-
-template <class Key, class Hash> HashVector<Key, Hash>::HashVector(size_t count) {
-    this->clear();
-    this->reserve(count);
-}
 
 template <class Key, class Hash> HashVector<Key, Hash>::HashVector(const std::vector<Key>& other) {
     this->clear();
@@ -513,20 +507,20 @@ template <class Key, class Hash> std::vector<size_t> HashVector<Key, Hash>::opti
     return cur_index;
 }
 
-template <class Key, class Hash> std::vector<Key> HashVector<Key, Hash>::toVector() {
+template <class Key, class Hash> std::vector<Key> HashVector<Key, Hash>::toVector() const {
     std::vector<Key> keys;
     keys.reserve(current_size);
-    for (Key k : (*this)) {
+    for (const Key k : (*this)) {
         keys.push_back(k);
     }
     return keys;
 }
 
 template <class Key, class Hash>
-std::unordered_set<Key, Hash> HashVector<Key, Hash>::toUnordered_set() {
+std::unordered_set<Key, Hash> HashVector<Key, Hash>::toUnordered_set() const {
     std::unordered_set<Key, Hash> uSet;
     uSet.reserve(current_size);
-    for (Key k : (*this)) {
+    for (const Key k : (*this)) {
         uSet.insert(k);
     }
     return uSet;
@@ -535,7 +529,8 @@ std::unordered_set<Key, Hash> HashVector<Key, Hash>::toUnordered_set() {
 template <class Key, class Hash, class Value>
 HashVector<Key, Hash>
 hashVector_from_unordered_map(const std::unordered_map<Key, Value, Hash>& umap) {
-    HashVector<Key, Hash> hvec(umap.size());
+    HashVector<Key, Hash> hvec;
+    hvec.reserve(umap.size());
     for (std::pair<Key, Value> kv : umap) {
         hvec.add(kv.first);
     }
@@ -546,7 +541,8 @@ template <class Key, class Hash, class Value>
 HashVector<Key, Hash>
 hashVector_from_unordered_map(const std::unordered_map<Key, Value, Hash>& umap,
                               std::vector<Value>& values) {
-    HashVector<Key, Hash> hvec(umap.size());
+    HashVector<Key, Hash> hvec;
+    hvec.reserve(umap.size());
     values.reserve(umap.size());
     for (std::pair<Key, Value> kv : umap) {
         hvec.add(kv.first);

@@ -29,13 +29,10 @@
 #ifndef _fci_integrals_
 #define _fci_integrals_
 
-//#include <vector>
-
-//#include "psi4/libmints/matrix.h"
 #include "../integrals/integrals.h"
-//#include "../stl_bitset_determinant.h"
+#include "../stl_bitset_determinant.h"
 #include "../stl_determinant.h"
-//#include "string_lists.h"
+#include "string_lists.h"
 
 namespace psi {
 namespace forte {

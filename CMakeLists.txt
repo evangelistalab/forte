@@ -50,6 +50,7 @@ src/ci_rdms.cc
 src/ci_reference.cc
 src/davidson.cc
 src/determinant_map.cc
+src/determinant_hashvector.cc
 src/dmrgscf.cc
 src/dmrgsolver.cc
 src/dynamic_bitset_determinant.cc
@@ -90,6 +91,7 @@ src/aci/aci_string.cc
 src/aci/direct_ci.cc
 src/aosubspace/aosubspace.cc
 src/ci-no/ci-no.cc
+src/fci/binary_graph.cc
 src/fci/fci.cc
 src/fci/fci_integrals.cc
 src/fci/fci_solver.cc

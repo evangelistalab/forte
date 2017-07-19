@@ -165,9 +165,13 @@ double FCI::solver_compute_energy() {
     size_t na = (nactel + twice_ms_) / 2;
     size_t nb = nactel - na;
 
+    outfile->Printf("\n  A");
+
     fcisolver_ = std::unique_ptr<FCISolver>(new FCISolver(
         active_dim, rdocc, active, na, nb, multiplicity, options_.get_int("ROOT_SYM"), ints_,
         mo_space_info_, options_.get_int("FCI_NTRIAL_PER_ROOT"), print_, options_));
+
+    outfile->Printf("\n  B");
     // tweak some options
     fcisolver_->set_max_rdm_level(max_rdm_level_);
     fcisolver_->set_nroot(options_.get_int("FCI_NROOT"));
