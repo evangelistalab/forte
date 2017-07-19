@@ -563,7 +563,7 @@ double ProjectorCI_HashVec::compute_energy() {
     outfile->Printf("\n\t    Projector Configuration Interaction HashVector "
                     "implementation");
     outfile->Printf("\n\t         by Francesco A. Evangelista and Tianyuan Zhang");
-    outfile->Printf("\n\t                      version Jul. 17 2017");
+    outfile->Printf("\n\t                      version Jul. 18 2017");
     outfile->Printf("\n\t                    %4d thread(s) %s", num_threads_,
                     have_omp_ ? "(OMP)" : "");
     outfile->Printf("\n\t  ---------------------------------------------------------");
@@ -609,8 +609,14 @@ double ProjectorCI_HashVec::compute_energy() {
 
     // Compute the initial guess
     outfile->Printf("\n\n  ==> Initial Guess <==");
+    approx_E_flag_ = true;
     double var_energy = initial_guess(dets_hashvec, C);
     double proj_energy = var_energy;
+
+    timer_on("PCI:sort");
+    sortHashVecByCoefficient(dets_hashvec, C);
+    timer_off("PCI:sort");
+
     print_wfn(dets_hashvec, C);
     //    det_hash<> old_space_map;
     //    for (size_t I = 0; I < dets_hashvec.size(); ++I) {
@@ -764,12 +770,18 @@ double ProjectorCI_HashVec::compute_energy() {
     outfile->Printf("\n  * Number of off-diagonal elements     = %zu", num_off_diag_elem_);
     outfile->Printf("\n  * Projector-CI Approximate Energy     = %18.12f Eh", 1, approx_energy_);
     outfile->Printf("\n  * Projector-CI Projective  Energy     = %18.12f Eh", 1, proj_energy);
-    outfile->Printf("\n\n  %s: %f s\n", "Projector-CI (bitset) steps finished in  ", t_apici.elapsed());
 
     timer_on("PCI:sort");
     sortHashVecByCoefficient(dets_hashvec, C);
     timer_off("PCI:sort");
-    //    outfile->Printf("\nSuccessfully sorted!");
+
+    if (print_full_wavefunction_) {
+        print_wfn(dets_hashvec, C, C.size());
+    } else {
+        print_wfn(dets_hashvec, C);
+    }
+
+    outfile->Printf("\n  %s: %f s\n", "Projector-CI (bitset) steps finished in  ", t_apici.elapsed());
 
     timer_on("PCI:<E>end_v");
     if (fast_variational_estimate_) {
@@ -790,12 +802,6 @@ double ProjectorCI_HashVec::compute_energy() {
                     var_energy - approx_energy_);
 
     outfile->Printf("\n\n  %s: %f s", "Projector-CI (bitset) ran in  ", t_apici.elapsed());
-
-    if (print_full_wavefunction_) {
-        print_wfn(dets_hashvec, C, C.size());
-    } else {
-        print_wfn(dets_hashvec, C);
-    }
 
     if (current_root_ < nroot_ - 1) {
         save_wfn(dets_hashvec, C, solutions_);
@@ -827,6 +833,10 @@ double ProjectorCI_HashVec::compute_energy() {
         for (size_t I = 0; I < C.size(); ++I) {
             diag_C[I] = apfci_evecs->get(I, current_root_);
         }
+
+        timer_on("PCI:sort");
+        sortHashVecByCoefficient(dets_hashvec, diag_C);
+        timer_off("PCI:sort");
 
         if (print_full_wavefunction_) {
             print_wfn(dets_hashvec, diag_C, diag_C.size());
@@ -2274,18 +2284,12 @@ void ProjectorCI_HashVec::print_wfn(const det_hashvec& space_hashvec, std::vecto
                                     size_t max_output) {
     outfile->Printf("\n\n  Most important contributions to the wave function:\n");
 
-    std::vector<std::pair<double, size_t>> det_weight;
-    for (size_t I = 0; I < space_hashvec.size(); ++I) {
-        det_weight.push_back(std::make_pair(std::fabs(C[I]), I));
-    }
-    std::sort(det_weight.begin(), det_weight.end());
-    std::reverse(det_weight.begin(), det_weight.end());
     size_t max_dets = std::min(int(max_output), int(C.size()));
     for (size_t I = 0; I < max_dets; ++I) {
-        outfile->Printf("\n  %3zu  %13.6g %13.6g  %10zu %s  %18.12f", I, C[det_weight[I].second],
-                        det_weight[I].first * det_weight[I].first, det_weight[I].second,
-                        space_hashvec[det_weight[I].second].str().c_str(),
-                        space_hashvec[det_weight[I].second].energy() + fci_ints_->scalar_energy());
+        outfile->Printf("\n  %3zu  %13.6g %13.6g  %10zu %s  %18.12f", I, C[I],
+                        C[I] * C[I], I,
+                        space_hashvec[I].str().c_str(),
+                        space_hashvec[I].energy() + fci_ints_->scalar_energy());
     }
 
     // Compute the expectation value of the spin
@@ -2295,11 +2299,11 @@ void ProjectorCI_HashVec::print_wfn(const det_hashvec& space_hashvec, std::vecto
     double wfn_threshold = 0.95;
     for (size_t I = 0; I < space_hashvec.size(); ++I) {
         if ((sum_weight < wfn_threshold) and (I < max_sample)) {
-            sum_weight += std::pow(det_weight[I].first, 2.0);
+            sum_weight += C[I] * C[I];
             max_I++;
-        } else if (std::fabs(det_weight[I].first - det_weight[I - 1].first) < 1.0e-6) {
+        } else if (std::fabs(C[I - 1]) - std::fabs(C[I]) < 1.0e-6) {
             // Special case, if there are several equivalent determinants
-            sum_weight += std::pow(det_weight[I].first, 2.0);
+            sum_weight += C[I] * C[I];
             max_I++;
         } else {
             break;
@@ -2308,23 +2312,28 @@ void ProjectorCI_HashVec::print_wfn(const det_hashvec& space_hashvec, std::vecto
 
     double norm = 0.0;
     double S2 = 0.0;
-    for (size_t sI = 0; sI < max_I; ++sI) {
-        size_t I = det_weight[sI].second;
-        for (size_t sJ = 0; sJ < max_I; ++sJ) {
-            size_t J = det_weight[sJ].second;
+    for (size_t I = 0; I < max_I; ++I) {
+        for (size_t J = 0; J < max_I; ++J) {
             if (std::fabs(C[I] * C[J]) > 1.0e-12) {
                 const double S2IJ = space_hashvec[I].spin2(space_hashvec[J]);
                 S2 += C[I] * C[J] * S2IJ;
             }
         }
-        norm += std::pow(C[I], 2.0);
+        norm += C[I] * C[I];
     }
     S2 /= norm;
     double S = std::fabs(0.5 * (std::sqrt(1.0 + 4.0 * S2) - 1.0));
 
     std::vector<std::string> s2_labels({"singlet", "doublet", "triplet", "quartet", "quintet",
                                         "sextet", "septet", "octet", "nonet", "decaet"});
-    std::string state_label = s2_labels[std::round(S * 2.0)];
+    size_t nLet = std::round(S * 2.0);
+    std::string state_label;
+    if (nLet < 10) {
+        state_label = s2_labels[nLet];
+    } else {
+        state_label = std::to_string(nLet) + "-let";
+    }
+
     outfile->Printf("\n\n  Spin State: S^2 = %5.3f, S = %5.3f, %s (from %zu "
                     "determinants,%.2f\%)",
                     S2, S, state_label.c_str(), max_I, 100.0 * sum_weight);
