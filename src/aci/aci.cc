@@ -153,6 +153,9 @@ void set_ACI_options(ForteOptions& foptions) {
     /*- Add all active singles -*/
     foptions.add_bool("ACI_ADD_SINGLES", false,
                       "Adds all active single excitations to the final wave function");
+    /*- Do ESNO transformation? -*/
+    foptions.add_bool("ESNOS", false, "Compute external single natural orbitals");
+    foptions.add_int("ESNO_MAX_SIZE", 0, "Number of external orbitals to correlate");
 }
 
 bool pairComp(const std::pair<double, STLBitsetDeterminant> E1,
@@ -2838,8 +2841,5 @@ void AdaptiveCI::compute_nos() {
     ints_->retransform_integrals();
 }
 
-// void AdaptiveCI::compute_external_singles( ){
-//
-//}
 }
 } // EndNamespaces
