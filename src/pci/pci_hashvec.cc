@@ -781,7 +781,8 @@ double ProjectorCI_HashVec::compute_energy() {
         print_wfn(dets_hashvec, C);
     }
 
-    outfile->Printf("\n  %s: %f s\n", "Projector-CI (bitset) steps finished in  ", t_apici.elapsed());
+    outfile->Printf("\n  %s: %f s\n", "Projector-CI (bitset) steps finished in  ",
+                    t_apici.elapsed());
 
     timer_on("PCI:<E>end_v");
     if (fast_variational_estimate_) {
@@ -2286,8 +2287,7 @@ void ProjectorCI_HashVec::print_wfn(const det_hashvec& space_hashvec, std::vecto
 
     size_t max_dets = std::min(int(max_output), int(C.size()));
     for (size_t I = 0; I < max_dets; ++I) {
-        outfile->Printf("\n  %3zu  %13.6g %13.6g  %10zu %s  %18.12f", I, C[I],
-                        C[I] * C[I], I,
+        outfile->Printf("\n  %3zu  %13.6g %13.6g  %10zu %s  %18.12f", I, C[I], C[I] * C[I], I,
                         space_hashvec[I].str().c_str(),
                         space_hashvec[I].energy() + fci_ints_->scalar_energy());
     }
