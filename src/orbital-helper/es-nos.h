@@ -42,27 +42,26 @@
 #include "../operator.h"
 #include "../sparse_ci_solver.h"
 
-namespace psi { namespace forte {
+namespace psi {
+namespace forte {
 
 class ESNO : public Wavefunction {
   public:
+    // Class constructor and destructor
+    ESNO(SharedWavefunction ref_wfn, Options& options, std::shared_ptr<ForteIntegrals> ints,
+         std::shared_ptr<MOSpaceInfo> mo_space_info, DeterminantMap& reference);
 
-    //Class constructor and destructor
-    ESNO( SharedWavefunction ref_wfn, Options& options,
-        std::shared_ptr<ForteIntegrals> ints, 
-        std::shared_ptr<MOSpaceInfo> mo_space_info,
-        DeterminantMap& reference);
-    
     ~ESNO();
 
     std::shared_ptr<ForteIntegrals> ints_;
     DeterminantMap& reference_;
 
-    void compute_nos(); 
-    void transform(Reference& reference );
+    void compute_nos();
+    void transform(Reference& reference);
+
   private:
     std::shared_ptr<FCIIntegrals> fci_ints_;
-    std::shared_ptr<MOSpaceInfo> mo_space_info_; 
+    std::shared_ptr<MOSpaceInfo> mo_space_info_;
     std::shared_ptr<Wavefunction> ref_wfn_;
 
     void startup();
@@ -77,6 +76,6 @@ class ESNO : public Wavefunction {
     void get_excited_determinants();
     void upcast_reference();
     std::vector<size_t> get_excitation_space();
-
 };
-}}
+}
+}

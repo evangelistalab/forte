@@ -39,7 +39,8 @@ namespace forte {
 
 ESNO::ESNO(SharedWavefunction ref_wfn, Options& options, std::shared_ptr<ForteIntegrals> ints,
            std::shared_ptr<MOSpaceInfo> mo_space_info, DeterminantMap& reference)
-    : Wavefunction(options), ref_wfn_(ref_wfn), ints_(ints), mo_space_info_(mo_space_info), reference_(reference) {
+    : Wavefunction(options), ref_wfn_(ref_wfn), ints_(ints), mo_space_info_(mo_space_info),
+      reference_(reference) {
     shallow_copy(ref_wfn);
     print_method_banner({"External Singles Natural Orbitals", "Jeff Schriber"});
     startup();
@@ -124,27 +125,27 @@ void ESNO::compute_nos() {
     // build 1 rdm
 
     outfile->Printf("\n  Computing 1RDM");
-    CI_RDMS ci_rdms( options_, reference_, fci_ints_, evecs, 0,0 );
+    CI_RDMS ci_rdms(options_, reference_, fci_ints_, evecs, 0, 0);
     ci_rdms.set_max_rdm(1);
-    
+
     size_t ncmo = mo_space_info_->size("GENERALIZED PARTICLE");
     Dimension ncmopi = mo_space_info_->get_dimension("GENERALIZED PARTICLE");
     Dimension fdocc = mo_space_info_->get_dimension("FROZEN_DOCC");
     Dimension nmopi = mo_space_info_->get_dimension("ALL");
 
-    std::vector<double> ordm_a(ncmo*ncmo,0.0);
-    std::vector<double> ordm_b(ncmo*ncmo,0.0);
+    std::vector<double> ordm_a(ncmo * ncmo, 0.0);
+    std::vector<double> ordm_b(ncmo * ncmo, 0.0);
 
     ci_rdms.compute_1rdm(ordm_a, ordm_b, op);
-    
+
     SharedMatrix ordm_a_mat(new Matrix("OPDM_A", nirrep_, ncmopi, ncmopi));
     SharedMatrix ordm_b_mat(new Matrix("OPDM_B", nirrep_, ncmopi, ncmopi));
     int offset = 0;
-    for( int h = 0; h < nirrep_; ++h){
-        for( int u = 0; u < ncmopi[h]; ++u ){
-            for( int v = 0; v < ncmopi[h]; ++v ){
-                ordm_a_mat->set(h,u,v, ordm_a[(u+offset)*ncmo + (v+offset)]);
-                ordm_b_mat->set(h,u,v, ordm_b[(u+offset)*ncmo + (v+offset)]);
+    for (int h = 0; h < nirrep_; ++h) {
+        for (int u = 0; u < ncmopi[h]; ++u) {
+            for (int v = 0; v < ncmopi[h]; ++v) {
+                ordm_a_mat->set(h, u, v, ordm_a[(u + offset) * ncmo + (v + offset)]);
+                ordm_b_mat->set(h, u, v, ordm_b[(u + offset) * ncmo + (v + offset)]);
             }
         }
         offset += ncmopi[h];
@@ -153,29 +154,29 @@ void ESNO::compute_nos() {
     outfile->Printf("\n  Diagonalizing 1RDM");
     SharedVector OCC_A(new Vector("ALPHA NO OCC", nirrep_, ncmopi));
     SharedVector OCC_B(new Vector("BETA NO OCC", nirrep_, ncmopi));
-    SharedMatrix NO_A(new Matrix(nirrep_,ncmopi, ncmopi));
-    SharedMatrix NO_B(new Matrix(nirrep_,ncmopi, ncmopi));
+    SharedMatrix NO_A(new Matrix(nirrep_, ncmopi, ncmopi));
+    SharedMatrix NO_B(new Matrix(nirrep_, ncmopi, ncmopi));
 
     ordm_a_mat->diagonalize(NO_A, OCC_A, descending);
     ordm_b_mat->diagonalize(NO_B, OCC_B, descending);
 
     // Build the transformation matrix
-    SharedMatrix Ua(new Matrix("Ua", nmopi, nmopi)); 
-    SharedMatrix Ub(new Matrix("Ub", nmopi, nmopi)); 
+    SharedMatrix Ua(new Matrix("Ua", nmopi, nmopi));
+    SharedMatrix Ub(new Matrix("Ub", nmopi, nmopi));
 
     Ua->identity();
     Ub->identity();
 
-    for( int h = 0; h < nirrep_; ++h){
+    for (int h = 0; h < nirrep_; ++h) {
         size_t irrep_offset = 0;
 
         // Skip frozen core
         irrep_offset += fdocc[h];
 
-        for( int p = 0; p < ncmopi[h]; ++p ){
-            for( int q = 0; q < ncmopi[h]; ++q){
-                Ua->set(h,p+irrep_offset, q+irrep_offset, NO_A->get(h,p,q)); 
-                Ub->set(h,p+irrep_offset, q+irrep_offset, NO_B->get(h,p,q)); 
+        for (int p = 0; p < ncmopi[h]; ++p) {
+            for (int q = 0; q < ncmopi[h]; ++q) {
+                Ua->set(h, p + irrep_offset, q + irrep_offset, NO_A->get(h, p, q));
+                Ub->set(h, p + irrep_offset, q + irrep_offset, NO_B->get(h, p, q));
             }
         }
     }
@@ -186,9 +187,9 @@ void ESNO::compute_nos() {
     SharedMatrix Ca_new(Ca->clone());
     SharedMatrix Cb_new(Cb->clone());
 
-    Ca_new->gemm(false, false, 1.0, Ca, Ua, 0.0); 
-    Cb_new->gemm(false, false, 1.0, Cb, Ub, 0.0); 
-    
+    Ca_new->gemm(false, false, 1.0, Ca, Ua, 0.0);
+    Cb_new->gemm(false, false, 1.0, Cb, Ub, 0.0);
+
     Ca->copy(Ca_new);
     Cb->copy(Cb_new);
     ints_->retransform_integrals();
@@ -222,7 +223,7 @@ void ESNO::get_excited_determinants() {
             int ii = aocc[i];
             for (int a = 0; a < n_ext; ++a) {
                 int aa = external_mo[a];
-outfile->Printf("\n  aa: %d", aa);
+                outfile->Printf("\n  aa: %d", aa);
                 if ((mo_symmetry_[ii] ^ mo_symmetry_[aa]) == 0) {
                     new_det = det;
                     new_det.set_alfa_bit(ii, false);
@@ -274,16 +275,16 @@ void ESNO::upcast_reference() {
     }
     int b_shift = ncorr - nact;
 
-   // int max_n = ruocc.size();
-   // int n_kept = options_.get_int("ESNO_MAX_SIZE");
-   // 
-   // if(!options_["ESNO_MAX_SIZE"].has_changed()){
-   //     n_kept = max_n;
-   // } 
+    // int max_n = ruocc.size();
+    // int n_kept = options_.get_int("ESNO_MAX_SIZE");
+    //
+    // if(!options_["ESNO_MAX_SIZE"].has_changed()){
+    //     n_kept = max_n;
+    // }
 
-   // if( (n_kept <= max_n) and (nirrep_ == 1 )){
-   //     max_n = n_kept; 
-   // }
+    // if( (n_kept <= max_n) and (nirrep_ == 1 )){
+    //     max_n = n_kept;
+    // }
 
     for (size_t I = 0, max = ref_dets.size(); I < max; ++I) {
         STLBitsetDeterminant det = ref_dets[I];
@@ -317,8 +318,7 @@ void ESNO::upcast_reference() {
     }
 }
 
-std::vector<size_t> ESNO::get_excitation_space()
-{
+std::vector<size_t> ESNO::get_excitation_space() {
     std::vector<size_t> ex_space;
 
     // First get a list of absolute position of RUOCC
@@ -328,42 +328,41 @@ std::vector<size_t> ESNO::get_excitation_space()
 
     int max_n = ruocc.size();
     int n_kept = options_.get_int("ESNO_MAX_SIZE");
-    
-    if(!options_["ESNO_MAX_SIZE"].has_changed()){
+
+    if (!options_["ESNO_MAX_SIZE"].has_changed()) {
         n_kept = max_n;
-    } 
-
-    if( (n_kept <= max_n) and (nirrep_ == 1 )){
-        max_n = n_kept; 
     }
 
-    for( int n = 0; n < max_n; ++n){
-        ex_space.push_back( ruocc[n] - rdocc_dim[ c_sym[ruocc[n]]]); 
-     //   ex_space.push_back( ruocc[n]);
-//        outfile->Printf("\n idx: %d", ruocc[n]- rdocc_dim[ c_sym[ruocc[n]]] );
+    if ((n_kept <= max_n) and (nirrep_ == 1)) {
+        max_n = n_kept;
     }
-/*
 
-    // Create a vector of orbital energy and index pairs
-    std::vector<std::tuple<double, int, int>> labeled_orb;
-    std::vector<std::pair<double, int>> orb_e;
+    for (int n = 0; n < max_n; ++n) {
+        ex_space.push_back(ruocc[n] - rdocc_dim[c_sym[ruocc[n]]]);
+        //   ex_space.push_back( ruocc[n]);
+        //        outfile->Printf("\n idx: %d", ruocc[n]- rdocc_dim[ c_sym[ruocc[n]]] );
+    }
+    /*
 
-    int cumidx = 0;
-    for (int h = 0; h < nirrep_; ++h) {
-        for (int a = 0; a < nactpi_[h]; ++a) {
-            orb_e.push_back(std::make_pair(epsilon_a_->get(h, frzcpi_[h] + a), a + cumidx));
+        // Create a vector of orbital energy and index pairs
+        std::vector<std::tuple<double, int, int>> labeled_orb;
+        std::vector<std::pair<double, int>> orb_e;
+
+        int cumidx = 0;
+        for (int h = 0; h < nirrep_; ++h) {
+            for (int a = 0; a < nactpi_[h]; ++a) {
+                orb_e.push_back(std::make_pair(epsilon_a_->get(h, frzcpi_[h] + a), a + cumidx));
+            }
+            cumidx += nactpi_[h];
         }
-        cumidx += nactpi_[h];
-    }
-    // Create a vector that stores the orbital energy, symmetry, and idx
-    for (size_t a = 0; a < nact_; ++a) {
-        labeled_orb.push_back(std::make_tuple(orb_e[a].first, mo_symmetry_[a],orb_e[a].second));
-    }
-    // Order by energy, low to high
-    std::sort(labeled_orb.begin(), labeled_orb.end());
-*/
+        // Create a vector that stores the orbital energy, symmetry, and idx
+        for (size_t a = 0; a < nact_; ++a) {
+            labeled_orb.push_back(std::make_tuple(orb_e[a].first, mo_symmetry_[a],orb_e[a].second));
+        }
+        // Order by energy, low to high
+        std::sort(labeled_orb.begin(), labeled_orb.end());
+    */
     return ex_space;
 }
-
 }
 }
