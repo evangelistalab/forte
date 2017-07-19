@@ -57,8 +57,6 @@
 #include "sparse_ci_solver.h"
 #include "stl_bitset_determinant.h"
 
-
-
 using d1 = std::vector<double>;
 using d2 = std::vector<d1>;
 using d3 = std::vector<d2>;
@@ -84,8 +82,7 @@ class FCI_MO : public Wavefunction {
      * @param ints ForteInegrals
      * @param mo_space_info MOSpaceInfo
      */
-    FCI_MO(SharedWavefunction ref_wfn, Options& options,
-           std::shared_ptr<ForteIntegrals> ints,
+    FCI_MO(SharedWavefunction ref_wfn, Options& options, std::shared_ptr<ForteIntegrals> ints,
            std::shared_ptr<MOSpaceInfo> mo_space_info);
 
     /// Destructor
@@ -143,9 +140,7 @@ class FCI_MO : public Wavefunction {
     std::vector<vecdet> p_spaces() { return FCI_MO::p_spaces_; }
 
     /// Return the orbital extents of the current state
-    std::vector<vector<vector<double>>> orb_extents() {
-        return compute_orbital_extents();
-    }
+    std::vector<vector<vector<double>>> orb_extents() { return compute_orbital_extents(); }
 
     /// Return the vector of eigen vectors and eigen values
     std::vector<pair<SharedVector, double>> const eigen() { return eigen_; }
@@ -159,6 +154,9 @@ class FCI_MO : public Wavefunction {
 
     /// Quiet mode (no printing, for use with CASSCF)
     void set_quite_mode(bool quiet) { quiet_ = quiet; }
+
+    /// Set true to compute semi-canonical orbitals
+    void set_semi(bool semi) { semi_ = semi; }
 
     /// Set false to skip Fock build in FCI_MO
     void set_form_Fock(bool form_fock) { form_Fock_ = form_fock; }
@@ -208,8 +206,8 @@ class FCI_MO : public Wavefunction {
     int twice_ms_;
 
     /// Symmetry
-    int nirrep_;             // number of irrep
-    int root_sym_;           // root
+    int nirrep_;                  // number of irrep
+    int root_sym_;                // root
     std::vector<int> sym_active_; // active MOs
     std::vector<int> sym_ncmo_;   // correlated MOs
 
@@ -266,18 +264,16 @@ class FCI_MO : public Wavefunction {
 
     /// Orbital Strings
     std::vector<vector<vector<bool>>> Form_String(const int& active_elec,
-                                             const bool& print = false);
+                                                  const bool& print = false);
     std::vector<bool> Form_String_Ref(const bool& print = false);
-    std::vector<vector<vector<bool>>>
-    Form_String_Singles(const std::vector<bool>& ref_string,
-                        const bool& print = false);
-    std::vector<vector<vector<bool>>>
-    Form_String_Doubles(const std::vector<bool>& ref_string,
-                        const bool& print = false);
+    std::vector<vector<vector<bool>>> Form_String_Singles(const std::vector<bool>& ref_string,
+                                                          const bool& print = false);
+    std::vector<vector<vector<bool>>> Form_String_Doubles(const std::vector<bool>& ref_string,
+                                                          const bool& print = false);
     std::vector<vector<vector<bool>>> Form_String_IP(const std::vector<bool>& ref_string,
-                                                const bool& print = false);
+                                                     const bool& print = false);
     std::vector<vector<vector<bool>>> Form_String_EA(const std::vector<bool>& ref_string,
-                                                const bool& print = false);
+                                                     const bool& print = false);
 
     /// Choice of Roots
     int nroot_; // number of roots
@@ -294,21 +290,19 @@ class FCI_MO : public Wavefunction {
     std::string diag_algorithm_;
 
     /// Diagonalize the Hamiltonian
-    void Diagonalize_H(const vecdet& P_space, const int& multi,
-                       const int& nroot,
+    void Diagonalize_H(const vecdet& P_space, const int& multi, const int& nroot,
                        std::vector<pair<SharedVector, double>>& eigen);
     /// Diagonalize the Hamiltonian without the HF determinant
-    void Diagonalize_H_noHF(const vecdet& p_space, const int& multi,
-                            const int& nroot,
+    void Diagonalize_H_noHF(const vecdet& p_space, const int& multi, const int& nroot,
                             std::vector<pair<SharedVector, double>>& eigen);
 
     /// Print the CI Vectors and Configurations (figure out the dominant
     /// determinants)
     void print_CI(const int& nroot, const double& CI_threshold,
-                  const std::vector<pair<SharedVector, double>>& eigen,
-                  const vecdet& det);
+                  const std::vector<pair<SharedVector, double>>& eigen, const vecdet& det);
 
     /// Semi-canonicalize orbitals
+    bool semi_;
     void semi_canonicalize();
     /// Use natural orbitals
     void nat_orbs();
@@ -355,8 +349,8 @@ class FCI_MO : public Wavefunction {
 
     /// Form 2-Particle Density Cumulant
     void FormCumulant2(CI_RDMS& ci_rdms, d4& AA, d4& AB, d4& BB);
-    void FormCumulant2AA(const std::vector<double>& tpdm_aa,
-                         const std::vector<double>& tpdm_bb, d4& AA, d4& BB);
+    void FormCumulant2AA(const std::vector<double>& tpdm_aa, const std::vector<double>& tpdm_bb,
+                         d4& AA, d4& BB);
     void FormCumulant2AB(const std::vector<double>& tpdm_ab, d4& AB);
     /// Fill in L2aa, L2ab and L2bb from L2aa_, L2ab_, and L2bb_
     void fill_cumulant2();
@@ -366,16 +360,13 @@ class FCI_MO : public Wavefunction {
                            std::vector<double>& tpdm_bb);
 
     /// Form 3-Particle Density Cumulant
-    void FormCumulant3(CI_RDMS& ci_rdms, d6& AAA, d6& AAB, d6& ABB, d6& BBB,
-                       string& DC);
-    void FormCumulant3AAA(const std::vector<double>& tpdm_aaa,
-                          const std::vector<double>& tpdm_bbb, d6& AAA, d6& BBB,
-                          string& DC);
-    void FormCumulant3AAB(const std::vector<double>& tpdm_aab,
-                          const std::vector<double>& tpdm_abb, d6& AAB, d6& ABB,
-                          string& DC);
-    void FormCumulant3_DIAG(const vecdet& determinants, const int& root,
-                            d6& AAA, d6& AAB, d6& ABB, d6& BBB);
+    void FormCumulant3(CI_RDMS& ci_rdms, d6& AAA, d6& AAB, d6& ABB, d6& BBB, string& DC);
+    void FormCumulant3AAA(const std::vector<double>& tpdm_aaa, const std::vector<double>& tpdm_bbb,
+                          d6& AAA, d6& BBB, string& DC);
+    void FormCumulant3AAB(const std::vector<double>& tpdm_aab, const std::vector<double>& tpdm_abb,
+                          d6& AAB, d6& ABB, string& DC);
+    void FormCumulant3_DIAG(const vecdet& determinants, const int& root, d6& AAA, d6& AAB, d6& ABB,
+                            d6& BBB);
     /// Fill in L3aaa, L3aab, L3abb, L3bbb from L3aaa_, L3aab_, L3abb_, L3bbb_
     void fill_cumulant3();
     /// Fill in L3aaa, L3aab, L3abb, L3bbb from the 3RDMs (used in state
@@ -384,18 +375,15 @@ class FCI_MO : public Wavefunction {
                            std::vector<double>& tpdm_abb, std::vector<double>& tpdm_bbb);
 
     /// N-Particle Operator
-    double OneOP(const STLBitsetDeterminant& J, STLBitsetDeterminant& Jnew,
-                 const size_t& p, const bool& sp, const size_t& q,
-                 const bool& sq);
-    double TwoOP(const STLBitsetDeterminant& J, STLBitsetDeterminant& Jnew,
-                 const size_t& p, const bool& sp, const size_t& q,
-                 const bool& sq, const size_t& r, const bool& sr,
+    double OneOP(const STLBitsetDeterminant& J, STLBitsetDeterminant& Jnew, const size_t& p,
+                 const bool& sp, const size_t& q, const bool& sq);
+    double TwoOP(const STLBitsetDeterminant& J, STLBitsetDeterminant& Jnew, const size_t& p,
+                 const bool& sp, const size_t& q, const bool& sq, const size_t& r, const bool& sr,
                  const size_t& s, const bool& ss);
-    double ThreeOP(const STLBitsetDeterminant& J, STLBitsetDeterminant& Jnew,
-                   const size_t& p, const bool& sp, const size_t& q,
-                   const bool& sq, const size_t& r, const bool& sr,
-                   const size_t& s, const bool& ss, const size_t& t,
-                   const bool& st, const size_t& u, const bool& su);
+    double ThreeOP(const STLBitsetDeterminant& J, STLBitsetDeterminant& Jnew, const size_t& p,
+                   const bool& sp, const size_t& q, const bool& sq, const size_t& r, const bool& sr,
+                   const size_t& s, const bool& ss, const size_t& t, const bool& st,
+                   const size_t& u, const bool& su);
 
     /// Fock Matrix
     d2 Fa_;
@@ -403,9 +391,8 @@ class FCI_MO : public Wavefunction {
     bool form_Fock_ = true;
     void Form_Fock(d2& A, d2& B);
     void Check_Fock(const d2& A, const d2& B, const double& E, size_t& count);
-    void Check_FockBlock(const d2& A, const d2& B, const double& E,
-                         size_t& count, const size_t& dim,
-                         const std::vector<size_t>& idx, const string& str);
+    void Check_FockBlock(const d2& A, const d2& B, const double& E, size_t& count,
+                         const size_t& dim, const std::vector<size_t>& idx, const string& str);
     void BD_Fock(const d2& Fa, const d2& Fb, SharedMatrix& Ua, SharedMatrix& Ub,
                  const string& name);
     /// Print Fock Matrix in Blocks
@@ -444,8 +431,7 @@ class FCI_MO : public Wavefunction {
      * @return The vector of indices before sorting v
      */
     template <typename T>
-    std::vector<size_t> sort_indexes(const std::vector<T>& v,
-                                const bool& decend = false) {
+    std::vector<size_t> sort_indexes(const std::vector<T>& v, const bool& decend = false) {
 
         // initialize original index locations
         std::vector<size_t> idx(v.size());
@@ -453,11 +439,9 @@ class FCI_MO : public Wavefunction {
 
         // sort indexes based on comparing values in v
         if (decend) {
-            sort(idx.begin(), idx.end(),
-                 [&v](size_t i1, size_t i2) { return v[i1] > v[i2]; });
+            sort(idx.begin(), idx.end(), [&v](size_t i1, size_t i2) { return v[i1] > v[i2]; });
         } else {
-            sort(idx.begin(), idx.end(),
-                 [&v](size_t i1, size_t i2) { return v[i1] < v[i2]; });
+            sort(idx.begin(), idx.end(), [&v](size_t i1, size_t i2) { return v[i1] < v[i2]; });
         }
 
         return idx;
@@ -467,8 +451,7 @@ class FCI_MO : public Wavefunction {
     double CheckSign(const std::vector<bool>& I, const int& n) {
         timer_on("Check Sign");
         size_t count = 0;
-        for (vector<bool>::const_iterator iter = I.begin();
-             iter != I.begin() + n; ++iter) {
+        for (vector<bool>::const_iterator iter = I.begin(); iter != I.begin() + n; ++iter) {
             if (*iter)
                 ++count;
         }
@@ -519,24 +502,22 @@ class FCI_MO : public Wavefunction {
     }
 
     /// Permutations for 3-PDC
-    double P3DDD(const d2& Density, const size_t& p, const size_t& q,
-                 const size_t& r, const size_t& s, const size_t& t,
-                 const size_t& u) {
+    double P3DDD(const d2& Density, const size_t& p, const size_t& q, const size_t& r,
+                 const size_t& s, const size_t& t, const size_t& u) {
         double E = 0.0;
         int index[] = {0, 1, 2};
         size_t cop[] = {p, q, r};
         int count1 = 1;
         do {
             int count2 = count1 / 2;
-            E += pow(-1.0, count2) * Density[cop[index[0]]][s] *
-                 Density[cop[index[1]]][t] * Density[cop[index[2]]][u];
+            E += pow(-1.0, count2) * Density[cop[index[0]]][s] * Density[cop[index[1]]][t] *
+                 Density[cop[index[2]]][u];
             ++count1;
         } while (std::next_permutation(index, index + 3));
         return E;
     }
-    double P3DC(const d2& Density, const d4& Cumulant, const size_t& p,
-                const size_t& q, const size_t& r, const size_t& s,
-                const size_t& t, const size_t& u) {
+    double P3DC(const d2& Density, const d4& Cumulant, const size_t& p, const size_t& q,
+                const size_t& r, const size_t& s, const size_t& t, const size_t& u) {
         double E = 0.0;
         int idc[] = {0, 1, 2};    // creation index of cop[]
         int ida[] = {0, 1, 2};    // annihilation index of aop[]
@@ -556,13 +537,11 @@ class FCI_MO : public Wavefunction {
                     continue;
                 }
                 int count2 = b / 2;
-                size_t Didx1 =
-                    idx_a_[cop[idc[0]]]; // first index (creation) of denisty
+                size_t Didx1 = idx_a_[cop[idc[0]]]; // first index (creation) of denisty
                 size_t Didx2 = idx_a_[aop[ida[0]]]; // second index
                                                     // (annihilation) of density
                 double value = Density[Didx1][Didx2];
-                value *= Cumulant[cop[idc[1]]][cop[idc[2]]][aop[ida[1]]]
-                                 [aop[ida[2]]];
+                value *= Cumulant[cop[idc[1]]][cop[idc[2]]][aop[ida[1]]][aop[ida[2]]];
                 E += pow(-1.0, (count1 + count2)) * value;
                 ++b;
             } while (std::next_permutation(ida, ida + 3));

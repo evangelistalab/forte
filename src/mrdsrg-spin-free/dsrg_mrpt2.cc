@@ -508,7 +508,6 @@ double DSRG_MRPT2::compute_ref() {
 
 double DSRG_MRPT2::compute_energy() {
     // check semi-canonical orbitals
-    print_h2("Checking Orbitals");
     semi_canonical_ = check_semicanonical();
     if (!semi_canonical_) {
         outfile->Printf("\n    Orbital invariant formalism is employed for "

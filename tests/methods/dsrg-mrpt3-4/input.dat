@@ -39,7 +39,6 @@ set forte {
   dsrg_s             0.5
   corr_level         pt3
   e_convergence      8
-  srg_rsc_ncomm      50
   maxiter            100
   relax_ref          iterate
   ntrial_per_root    10

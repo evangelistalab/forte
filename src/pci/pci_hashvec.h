@@ -184,31 +184,25 @@ class ProjectorCI_HashVec : public Wavefunction {
     /// calculation?
     bool print_full_wavefunction_;
 
-    // * Simple Prescreening
-    /// Maximum value of the one-electron coupling
-    double new_max_one_HJI_;
-    double old_max_one_HJI_;
-    /// Maximum value of the two-electron coupling
-    double new_max_two_HJI_;
-    double old_max_two_HJI_;
-
     // * Dynamics Prescreening
     /// A map used to store the largest absolute value of the couplings of a
     /// determinant to all of its singly and doubly excited states.
     /// Bounds are stored as a pair (f_max,v_max) where f_max and v_max are
     /// the couplings to the singles and doubles, respectively.
     std::vector<std::pair<double, double>> dets_max_couplings_;
+    std::vector<double> det_energies_;
     double dets_double_max_coupling_;
     double dets_single_max_coupling_;
     std::vector<std::tuple<int, int, double, std::vector<std::tuple<int, int, double>>>>
         aa_couplings_, ab_couplings_, bb_couplings_;
     std::vector<std::tuple<int, double, std::vector<std::tuple<int, double>>>> a_couplings_,
         b_couplings_;
-    std::vector<std::vector<std::vector<double>>> single_alpha_excite_double_couplings_,
-        single_beta_excite_double_couplings_;
+    //    std::vector<std::vector<std::vector<double>>> single_alpha_excite_double_couplings_,
+    //        single_beta_excite_double_couplings_;
     double max_aa_coupling_, max_ab_coupling_, max_bb_coupling_, max_a_coupling_, max_b_coupling_;
     size_t aa_couplings_size_, ab_couplings_size_, bb_couplings_size_, a_couplings_size_,
         b_couplings_size_;
+    size_t num_off_diag_elem_;
 
     // * Energy estimation
     /// Estimate the variational energy?
@@ -304,27 +298,33 @@ class ProjectorCI_HashVec : public Wavefunction {
                       double S);
     /// Apply symmetric approx tau H to a set of determinants with selection
     /// according to reference coefficients
-    void apply_tau_H_ref_C_symm(double tau, double spawning_threshold, det_hashvec& dets_hashvec,
-                                const std::vector<double>& C, const std::vector<double>& ref_C,
-                                std::vector<double>& result_C, double S);
+    void apply_tau_H_symm(double tau, double spawning_threshold, det_hashvec& dets_hashvec,
+                          const std::vector<double>& C, std::vector<double>& result_C, double S);
 
     /// Apply symmetric approx tau H to a determinant using dynamic screening
     /// with selection according to a reference coefficient
-    /// and with HBCI sorting scheme
-    void apply_tau_H_ref_C_symm_det_dynamic_HBCI(
+    /// and with HBCI sorting scheme with singles screening
+    void apply_tau_H_symm_det_dynamic_HBCI_2(
         double tau, double spawning_threshold, const det_hashvec& dets_hashvec,
-        const std::vector<double>& pre_C, const std::vector<double>& ref_C, const Determinant& detI,
-        double CI, double ref_CI, std::vector<std::pair<Determinant, double>>& new_space_C_vec,
-        double E0, std::pair<double, double>& max_coupling);
+        const std::vector<double>& pre_C, size_t I, double CI,
+        std::vector<std::pair<size_t, double>>& new_index_C_vec,
+        std::vector<std::pair<Determinant, double>>& new_space_C_vec, double E0,
+        std::pair<double, double>& max_coupling);
+    /// Apply symmetric approx tau H to a set of determinants with selection
+    /// according to reference coefficients
+    void apply_tau_H_ref_C_symm(double tau, double spawning_threshold,
+                                const det_hashvec& dets_hashvec, const std::vector<double>& ref_C,
+                                const std::vector<double>& pre_C, std::vector<double>& result_C,
+                                double S);
 
     /// Apply symmetric approx tau H to a determinant using dynamic screening
     /// with selection according to a reference coefficient
     /// and with HBCI sorting scheme with singles screening
     void apply_tau_H_ref_C_symm_det_dynamic_HBCI_2(
         double tau, double spawning_threshold, const det_hashvec& dets_hashvec,
-        const std::vector<double>& pre_C, const std::vector<double>& ref_C, const Determinant& detI,
-        double CI, double ref_CI, std::vector<std::pair<Determinant, double>>& new_space_C_vec,
-        double E0, std::pair<double, double>& max_coupling);
+        const std::vector<double>& pre_C, const std::vector<double>& ref_C, size_t I, double CI,
+        double ref_CI, std::vector<std::pair<size_t, double>>& new_index_C_vec, double E0,
+        const std::pair<double, double>& max_coupling);
 
     /// Estimates the energy give a wave function
     std::map<std::string, double> estimate_energy(const det_hashvec& dets_hashvec,
@@ -344,6 +344,12 @@ class ProjectorCI_HashVec : public Wavefunction {
     /// @param max_error The accuracy of the estimate. |E_est - E_var|<max_error
     double estimate_var_energy_within_error(const det_hashvec& dets_hashvec, std::vector<double>& C,
                                             double max_error = 0.0);
+    /// Estimates the variational energy within a given error by sigma vector algorithm
+    /// @param dets The set of determinants that form the wave function
+    /// @param C The wave function coefficients
+    /// @param max_error The accuracy of the estimate. |E_est - E_var|<max_error
+    double estimate_var_energy_within_error_sigma(const det_hashvec& dets_hashvec,
+                                                  std::vector<double>& C, double max_error = 0.0);
     /// Estimates the variational energy using a sparse algorithm
     /// @param dets The set of determinants that form the wave function
     /// @param C The wave function coefficients
@@ -354,6 +360,9 @@ class ProjectorCI_HashVec : public Wavefunction {
     /// Form the product H c
     double form_H_C(const det_hashvec& dets_hashvec, std::vector<double>& C, size_t I,
                     size_t cut_index);
+    /// Form the product H c
+    double form_H_C_2(const det_hashvec& dets_hashvec, std::vector<double>& C, size_t I,
+                      size_t cut_index);
     /// Do we have OpenMP?
     static bool have_omp_;
 
@@ -371,8 +380,11 @@ class ProjectorCI_HashVec : public Wavefunction {
 
     /// Compute the double excitation couplings
     void compute_double_couplings(double double_coupling_threshold);
-    //    void compute_single_excite_max_double_couplings();
+    /// Compute the single excitation couplings
     void compute_single_couplings(double single_coupling_threshold);
+
+    /// Compute half the single and double excitation couplings
+    void compute_couplings_half(const det_hashvec& dets, size_t cut_index);
 
     /// Returns a vector of orbital energy, sym label pairs
     std::vector<std::tuple<double, int, int>> sym_labeled_orbitals(std::string type);

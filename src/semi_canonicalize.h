@@ -49,12 +49,11 @@ class SemiCanonical {
   public:
     // => Constructor <= //
     SemiCanonical(std::shared_ptr<Wavefunction> wfn, Options& options,
-                  std::shared_ptr<ForteIntegrals> ints,
-                  std::shared_ptr<MOSpaceInfo> mo_space_info,
-                  Reference& reference);
+                  std::shared_ptr<ForteIntegrals> ints, std::shared_ptr<MOSpaceInfo> mo_space_info,
+                  Reference& reference, const bool& quiet = false);
 
     // Transforms integrals and reference
-    void semicanonicalize( Reference& reference );
+    void semicanonicalize(Reference& reference);
 
   private:
     std::shared_ptr<MOSpaceInfo> mo_space_info_;
@@ -62,6 +61,9 @@ class SemiCanonical {
     std::shared_ptr<ForteIntegrals> ints_;
 
     std::shared_ptr<Wavefunction> wfn_;
+
+    // quiet printing
+    bool quiet_;
 
     // All orbitals
     Dimension nmopi_;
@@ -77,26 +79,28 @@ class SemiCanonical {
     Dimension ruocc_;
 
     // Total active MOs
-    size_t nact_;    
+    size_t nact_;
     // Total correlated MOs
-    size_t ncmo_;   
-    // Number of irreps 
-    size_t nirrep_;    
+    size_t ncmo_;
+    // Number of irreps
+    size_t nirrep_;
 
-    // Builds the generalized fock matrix 
+    // Builds the generalized fock matrix
     void build_fock_matrix(Reference& reference);
 
-    /* Builds unitary matrices used to diagonalize diagonal blocks of F
+    /**
+     * Builds unitary matrices used to diagonalize diagonal blocks of F
      * Ua, Ub span all MOs
-     * U spans active MOs */   
-    void build_transformation_matrices( SharedMatrix& Ua, SharedMatrix& Ub, 
-                                        ambit::BlockedTensor& U);
+     * Ua_t, Ub_t span active MOs
+     */
+    void build_transformation_matrices(SharedMatrix& Ua, SharedMatrix& Ub, ambit::Tensor& Ua_t,
+                                       ambit::Tensor& Ub_t);
 
     // Transforms integrals
-    void transform_ints( SharedMatrix& Ua, SharedMatrix& Ub ); 
+    void transform_ints(SharedMatrix& Ua, SharedMatrix& Ub);
 
     // Transforms all RDMS/cumulants
-    void transform_reference( ambit::BlockedTensor& U, Reference& reference );
+    void transform_reference(ambit::Tensor& Ua, ambit::Tensor& Ub, Reference& reference);
 };
 }
 } // End Namespaces
