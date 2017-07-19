@@ -36,7 +36,6 @@ namespace forte {
 
 class ForteOptions;
 
-
 /// Set the CI-NO options
 void set_CINO_options(ForteOptions& foptions);
 
@@ -55,8 +54,7 @@ class CINO : public Wavefunction {
      * @param ints A pointer to an allocated integral object
      * @param mo_space_info A pointer to the MOSpaceInfo object
      */
-    CINO(SharedWavefunction ref_wfn, Options& options,
-         std::shared_ptr<ForteIntegrals> ints,
+    CINO(SharedWavefunction ref_wfn, Options& options, std::shared_ptr<ForteIntegrals> ints,
          std::shared_ptr<MOSpaceInfo> mo_space_info);
 
     /// Destructor
@@ -86,12 +84,12 @@ class CINO : public Wavefunction {
     Dimension fdoccpi_;
     /// The number of alpha occupied active orbitals per irrep
     Dimension aoccpi_;
-//    /// The number of alpha unoccupied active orbitals per irrep
-//    Dimension avirpi_;
-//    /// The number of beta occupied active orbitals per irrep
-//    Dimension boccpi_;
-//    /// The number of beta unoccupied active orbitals per irrep
-//    Dimension bvirpi_;
+    //    /// The number of alpha unoccupied active orbitals per irrep
+    //    Dimension avirpi_;
+    //    /// The number of beta occupied active orbitals per irrep
+    //    Dimension boccpi_;
+    //    /// The number of beta unoccupied active orbitals per irrep
+    //    Dimension bvirpi_;
 
     // ==> CINO Options <==
     /// Add missing degenerate determinants excluded from the aimed selection?
@@ -102,10 +100,10 @@ class CINO : public Wavefunction {
     int wavefunction_multiplicity_ = 0;
     // The number of correlated mos
     size_t ncmo2_;
-    ///Pass MoSpaceInfo
+    /// Pass MoSpaceInfo
     bool cino_auto;
 
-    //The RDMS
+    // The RDMS
     std::vector<double> ordm_a_;
     std::vector<double> ordm_b_;
     /// Order of RDM to compute
@@ -121,14 +119,15 @@ class CINO : public Wavefunction {
     diagonalize_hamiltonian(const std::vector<Determinant>& dets, int nsolutions);
 
     std::pair<SharedMatrix, SharedMatrix> build_density_matrix(const std::vector<Determinant>& dets,
-                                      SharedMatrix evecs, int nroot_);
+                                                               SharedMatrix evecs, int nroot_);
 
     /// Diagonalize the density matrix
-    std::tuple<SharedVector, SharedMatrix, SharedVector, SharedMatrix> diagonalize_density_matrix(std::pair<SharedMatrix, SharedMatrix> gamma);
+    std::tuple<SharedVector, SharedMatrix, SharedVector, SharedMatrix>
+    diagonalize_density_matrix(std::pair<SharedMatrix, SharedMatrix> gamma);
 
     /// Find optimal active space and transform the orbitals
-    void
-    find_active_space_and_transform(std::tuple<SharedVector, SharedMatrix, SharedVector, SharedMatrix> no_U);
+    void find_active_space_and_transform(
+        std::tuple<SharedVector, SharedMatrix, SharedVector, SharedMatrix> no_U);
 };
 }
 } // End Namespaces

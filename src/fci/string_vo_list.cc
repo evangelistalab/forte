@@ -141,7 +141,6 @@ void StringLists::make_vo(GraphPtr graph, VOList& list, int p, int q) {
         delete[] b;
     }
 }
-
 }
 }
 
@@ -150,7 +149,7 @@ void StringLists::make_vo(GraphPtr graph, VOList& list, int p, int q) {
 // * that is: J = ± a^{+}_p a_q I. p and q are absolute indices and I belongs to
 // * the irrep h.
 // */
-//void StringLists::make_kh_list(GraphPtr graph, KHList& list) {
+// void StringLists::make_kh_list(GraphPtr graph, KHList& list) {
 //    int n = graph->nbits();
 //    int k = graph->nones();
 //    outfile->Printf("\n n = %d, k = %d, ncmo_ = %d",n,k,ncmo_);

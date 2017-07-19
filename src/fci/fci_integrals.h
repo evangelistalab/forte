@@ -30,7 +30,7 @@
 #define _fci_integrals_
 
 #include "../integrals/integrals.h"
-#include "../stl_bitset_determinant.h"
+//#include "../stl_bitset_determinant.h"
 #include "../stl_determinant.h"
 #include "string_lists.h"
 
