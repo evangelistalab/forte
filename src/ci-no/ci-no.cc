@@ -31,14 +31,12 @@
 #include "psi4/libmints/pointgrp.h"
 #include "psi4/psi4-dec.h"
 
-
 #include "../ci_rdms.h"
 #include "../fci/fci_integrals.h"
 #include "../forte_options.h"
 #include "../sparse_ci_solver.h"
 #include "../stl_bitset_determinant.h"
 #include "ci-no.h"
-
 
 namespace psi {
 namespace forte {
@@ -570,17 +568,15 @@ void CINO::find_active_space_and_transform(
     outfile->Printf("\n  RESTRICTED_DOCC = %s", dimension_to_string(noci_rdocc).c_str());
     outfile->Printf("\n  ACTIVE          = %s", dimension_to_string(noci_actv).c_str());
 
-    //Pass the MOSpaceInfo
-    if (cino_auto){
-        for (int h = 0; h < nirrep_; h++){
+    // Pass the MOSpaceInfo
+    if (cino_auto) {
+        for (int h = 0; h < nirrep_; h++) {
             options_["RESTRICTED_DOCC"].add(h);
             options_["ACTIVE"].add(h);
             options_["RESTRICTED_DOCC"][h].assign(noci_rdocc[h]);
             options_["active"][h].assign(noci_actv[h]);
-         }
-
+        }
     }
-
 }
 }
 } // EndNamespaces
