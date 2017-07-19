@@ -53,20 +53,19 @@ STLDeterminant::STLDeterminant(const std::vector<bool>& occupation) {
 }
 
 STLDeterminant::STLDeterminant(const std::vector<bool>& occupation_a,
-                                           const std::vector<bool>& occupation_b) {
+                               const std::vector<bool>& occupation_b) {
     for (int p = 0; p < nmo_; ++p) {
         bits_[p] = occupation_a[p];
         bits_[p + nmo_] = occupation_b[p];
     }
 }
 
-STLDeterminant::STLDeterminant(const bit_t& bits, int nmo) 
-{ 
-    bits_ = bits; 
+STLDeterminant::STLDeterminant(const bit_t& bits, int nmo) {
+    bits_ = bits;
     nmo_ = nmo;
 }
 
-//STLDeterminant::STLDeterminant(const STLBitsetString& alpha,
+// STLDeterminant::STLDeterminant(const STLBitsetString& alpha,
 //                                           const STLBitsetString& beta) {
 //    for (int p = 0; p < nmo_; ++p) {
 //        bits_[p] = alpha.get_bit(p);
@@ -76,9 +75,7 @@ STLDeterminant::STLDeterminant(const bit_t& bits, int nmo)
 
 void STLDeterminant::copy(const STLDeterminant& rhs) { bits_ = rhs.bits_; }
 
-bool STLDeterminant::operator==(const STLDeterminant& lhs) const {
-    return (bits_ == lhs.bits_);
-}
+bool STLDeterminant::operator==(const STLDeterminant& lhs) const { return (bits_ == lhs.bits_); }
 
 bool STLDeterminant::operator<(const STLDeterminant& lhs) const {
     for (int p = 2 * nmo_ - 1; p >= 0; --p) {
@@ -213,7 +210,7 @@ double STLDeterminant::create_alfa_bit(int n) {
     if (bits_[n])
         return 0.0;
     bits_[n] = true;
-    //return SlaterSign(bits_, n);
+    // return SlaterSign(bits_, n);
     return this->slater_sign_a(n);
 }
 
@@ -221,7 +218,7 @@ double STLDeterminant::create_beta_bit(int n) {
     if (bits_[nmo_ + n])
         return 0.0;
     bits_[nmo_ + n] = true;
-   // return SlaterSign(bits_, nmo_ + n);
+    // return SlaterSign(bits_, nmo_ + n);
     return this->slater_sign_b(n);
 }
 
@@ -229,7 +226,7 @@ double STLDeterminant::destroy_alfa_bit(int n) {
     if (not bits_[n])
         return 0.0;
     bits_[n] = false;
-   // return SlaterSign(bits_, n);
+    // return SlaterSign(bits_, n);
     return this->slater_sign_a(n);
 }
 
@@ -238,7 +235,7 @@ double STLDeterminant::destroy_beta_bit(int n) {
     if (not bits_[nmo_ + n])
         return 0.0;
     bits_[nmo_ + n] = false;
-    //return SlaterSign(bits_, nmo_ + n);
+    // return SlaterSign(bits_, nmo_ + n);
     return this->slater_sign_b(n);
 }
 
@@ -308,12 +305,12 @@ double STLDeterminant::slater_sign_a(int n) const {
 
 double STLDeterminant::slater_sign_aa(int n, int m) const {
     double sign = 1.0;
-    for (int i = m+1; i < n; ++i) { // This runs up to the operator before n
+    for (int i = m + 1; i < n; ++i) { // This runs up to the operator before n
         if (bits_[i])
             sign *= -1.0;
     }
-    for( int i = n + 1; i < m; ++i ){
-        if( bits_[i] ){
+    for (int i = n + 1; i < m; ++i) {
+        if (bits_[i]) {
             sign *= -1.0;
         }
     }
@@ -331,20 +328,19 @@ double STLDeterminant::slater_sign_b(int n) const {
 
 double STLDeterminant::slater_sign_bb(int n, int m) const {
     double sign = 1.0;
-    for (int i = m+1; i < n; ++i) { // This runs up to the operator before n
+    for (int i = m + 1; i < n; ++i) { // This runs up to the operator before n
         if (bits_[i + nmo_])
             sign *= -1.0;
     }
-    for( int i = n + 1; i < m; ++i ){
-        if( bits_[i + nmo_] ){
+    for (int i = n + 1; i < m; ++i) {
+        if (bits_[i + nmo_]) {
             sign *= -1.0;
         }
     }
     return (sign);
 }
 
-double STLDeterminant::slater_sign(int i, int j, int a, int b) const
-{
+double STLDeterminant::slater_sign(int i, int j, int a, int b) const {
     if ((((i < a) && (j < a) && (i < b) && (j < b)) == true) ||
         (((i < a) || (j < a) || (i < b) || (j < b)) == false)) {
         if ((i < j) ^ (a < b)) {
@@ -370,7 +366,7 @@ double STLDeterminant::single_excitation_a(int i, int a) {
 double STLDeterminant::single_excitation_b(int i, int a) {
     bits_[nmo_ + i] = false;
     bits_[nmo_ + a] = true;
-    return (this->slater_sign_bb(i,a));
+    return (this->slater_sign_bb(i, a));
 }
 
 double STLDeterminant::double_excitation_aa(int i, int j, int a, int b) {
@@ -506,9 +502,10 @@ double STLDeterminant::spin2(const STLDeterminant& rhs) const {
                 j = p; //(q)
         }
         if (i != j and i >= 0 and j >= 0) {
-            //double sign = SlaterSign(J, i) * SlaterSign(J, nmo_ + j) * SlaterSign(I, nmo_ + i) *
+            // double sign = SlaterSign(J, i) * SlaterSign(J, nmo_ + j) * SlaterSign(I, nmo_ + i) *
             //              SlaterSign(I, j);
-            double sign = rhs.slater_sign_a(i) * rhs.slater_sign_b(j) * this->slater_sign_a(j) * this->slater_sign_b(i); 
+            double sign = rhs.slater_sign_a(i) * rhs.slater_sign_b(j) * this->slater_sign_a(j) *
+                          this->slater_sign_b(i);
             matrix_element -= sign;
         }
     }

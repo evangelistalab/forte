@@ -69,13 +69,12 @@ class STLDeterminant {
     /// Construct an excited determinant of a given reference
     /// Construct the determinant from two occupation vectors that
     /// specifies the alpha and beta strings.  occupation = [Ia,Ib]
-    STLDeterminant(const std::vector<bool>& occupation_a,
-                                  const std::vector<bool>& occupation_b);
+    STLDeterminant(const std::vector<bool>& occupation_a, const std::vector<bool>& occupation_b);
     /// Construct a determinant from a bitset object
     STLDeterminant(const bit_t& bits);
     STLDeterminant(const bit_t& bits, int nmo);
     /// Construct a determinant from two STLBitsetStrings
-//    explicit STLDeterminant(const STLBitsetString& alpha, const STLBitsetString& beta);
+    //    explicit STLDeterminant(const STLBitsetString& alpha, const STLBitsetString& beta);
 
     void copy(const STLDeterminant& rhs);
 
@@ -166,8 +165,8 @@ class STLDeterminant {
     /// Return the sign of a_n applied to this determinant
     double slater_sign_b(int n) const;
     double slater_sign_bb(int n, int m) const;
-    
-    double slater_sign( int i, int j, int a, int b ) const;
+
+    double slater_sign(int i, int j, int a, int b) const;
 
     /// Perform an alpha-alpha single excitation (i->a)
     double single_excitation_a(int i, int a);
@@ -204,12 +203,11 @@ class STLDeterminant {
     };
 };
 
-//using Determinant = STLBitsetDeterminant;
+// using Determinant = STLBitsetDeterminant;
 using stldet_vec = std::vector<STLDeterminant>;
 template <typename T = double>
 using stldet_hash = std::unordered_map<STLDeterminant, T, STLDeterminant::Hash>;
-using stldet_hash_it =
-    std::unordered_map<STLDeterminant, double, STLDeterminant::Hash>::iterator;
+using stldet_hash_it = std::unordered_map<STLDeterminant, double, STLDeterminant::Hash>::iterator;
 }
 } // End Namespaces
 

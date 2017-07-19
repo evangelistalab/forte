@@ -49,12 +49,11 @@ class FCIIntegrals {
     // ==> Class Constructors <==
 
     /// Generating a contructor to create the active integrals
-    FCIIntegrals(std::shared_ptr<ForteIntegrals> ints,
-                 std::vector<size_t> active_mo, std::vector<size_t> rdocc_mo);
+    FCIIntegrals(std::shared_ptr<ForteIntegrals> ints, std::vector<size_t> active_mo,
+                 std::vector<size_t> rdocc_mo);
 
     /// Constructor that needs to be deleted
-    FCIIntegrals(std::shared_ptr<ForteIntegrals> ints,
-                 std::shared_ptr<MOSpaceInfo> mospace_info,
+    FCIIntegrals(std::shared_ptr<ForteIntegrals> ints, std::shared_ptr<MOSpaceInfo> mospace_info,
                  FCIIntegralsType type = Active);
 
     // ==> Class Interface <==
@@ -66,32 +65,30 @@ class FCIIntegrals {
     /// Return the scalar_energy energy (contribution from RESTRICTED_DOCC)
     double scalar_energy() const { return scalar_energy_; }
     /// Set scalar_energy();
-    void set_scalar_energy(double scalar_energy) {
-        scalar_energy_ = scalar_energy;
-    }
+    void set_scalar_energy(double scalar_energy) { scalar_energy_ = scalar_energy; }
 
     /// Initialize a determinant
     STLDeterminant determinant(const bit_t& bits);
     STLDeterminant determinant();
 
     /// Compute a determinant's energy
-    double energy( STLDeterminant& det );
-    
+    double energy(STLDeterminant& det);
+
     /// Compute the matrix element of the Hamiltonian between this determinant
     /// and a given one
     double slater_rules(const STLDeterminant& lhs, const STLDeterminant& rhs) const;
     /// Compute the matrix element of the Hamiltonian between this determinant
     /// and a given one
-    double slater_rules_single_alpha( const STLDeterminant& det, int i, int a) const;
+    double slater_rules_single_alpha(const STLDeterminant& det, int i, int a) const;
     /// Compute the matrix element of the Hamiltonian between this determinant
     /// and a given one
-    double slater_rules_single_beta( const STLDeterminant& det, int i, int a) const;
+    double slater_rules_single_beta(const STLDeterminant& det, int i, int a) const;
     /// Compute the matrix element of the Hamiltonian between this determinant
     /// and a given one
-    double slater_rules_single_alpha_abs( const STLDeterminant& det, int i, int a) const;
+    double slater_rules_single_alpha_abs(const STLDeterminant& det, int i, int a) const;
     /// Compute the matrix element of the Hamiltonian between this determinant
     /// and a given one
-    double slater_rules_single_beta_abs( const STLDeterminant& det, int i, int a) const;
+    double slater_rules_single_beta_abs(const STLDeterminant& det, int i, int a) const;
 
     /// Return the alpha effective one-electron integral
     double oei_a(size_t p, size_t q) const { return oei_a_[p * nmo_ + q]; }
@@ -134,8 +131,7 @@ class FCIIntegrals {
     }
     IntegralType get_integral_type() { return integral_type_; }
     /// Set the active integrals
-    void set_active_integrals(const ambit::Tensor& tei_aa,
-                              const ambit::Tensor& tei_ab,
+    void set_active_integrals(const ambit::Tensor& tei_aa, const ambit::Tensor& tei_ab,
                               const ambit::Tensor& tei_bb);
     /// Compute the restricted_docc operator
     void compute_restricted_one_body_operator();
@@ -207,11 +203,9 @@ class FCIIntegrals {
     }
     /// F^{Restricted}_{uv} = h_{uv} + \sum_{i = frozen_core}^{restricted_core}
     /// 2(uv | ii) - (ui|vi)
-    void RestrictedOneBodyOperator(std::vector<double>& oei_a,
-                                   std::vector<double>& oei_b);
+    void RestrictedOneBodyOperator(std::vector<double>& oei_a, std::vector<double>& oei_b);
     void startup();
 };
-
 }
 }
 

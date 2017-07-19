@@ -188,29 +188,28 @@ void FCIIntegrals::set_active_integrals_and_restricted_docc() {
     RestrictedOneBodyOperator(oei_a_, oei_b_);
 }
 
-double FCIIntegrals::energy( STLDeterminant& det )
-{
+double FCIIntegrals::energy(STLDeterminant& det) {
     const bit_t bits = det.bits();
     double energy = frozen_core_energy_;
-    for( int p = 0; p < nmo_; p++ ){
-        if ( bits[p] ){
-            energy += oei_a_[p*nmo_ + p]; 
-            for( int q = p + 1; q < nmo_; ++q ){
-                if (bits[q]){
-                    energy += tei_aa_[p*nmo3_ + q*nmo2_ + p*nmo_ + q ];
+    for (int p = 0; p < nmo_; p++) {
+        if (bits[p]) {
+            energy += oei_a_[p * nmo_ + p];
+            for (int q = p + 1; q < nmo_; ++q) {
+                if (bits[q]) {
+                    energy += tei_aa_[p * nmo3_ + q * nmo2_ + p * nmo_ + q];
                 }
             }
-            for( int q = 0; q < nmo_; ++q ){
-                if (bits[nmo_ + q]){
-                    energy += tei_ab_[p*nmo3_ + q*nmo2_ + p*nmo_ + q ];
+            for (int q = 0; q < nmo_; ++q) {
+                if (bits[nmo_ + q]) {
+                    energy += tei_ab_[p * nmo3_ + q * nmo2_ + p * nmo_ + q];
                 }
             }
         }
-        if (bits[nmo_ + p]){
+        if (bits[nmo_ + p]) {
             energy += oei_b_[p * nmo_ + p];
-            for ( int q = p + 1; q < nmo_; ++q ){
-                if( bits[nmo_ + q] ){
-                    energy += tei_bb_[p*nmo3_ + q*nmo2_ + p*nmo_ + q ];
+            for (int q = p + 1; q < nmo_; ++q) {
+                if (bits[nmo_ + q]) {
+                    energy += tei_bb_[p * nmo3_ + q * nmo2_ + p * nmo_ + q];
                 }
             }
         }
@@ -218,14 +217,12 @@ double FCIIntegrals::energy( STLDeterminant& det )
     return energy;
 }
 
-STLDeterminant FCIIntegrals::determinant()
-{
+STLDeterminant FCIIntegrals::determinant() {
     STLDeterminant det(nmo_);
     return det;
 }
 
-STLDeterminant FCIIntegrals::determinant( const bit_t& bits)
-{
+STLDeterminant FCIIntegrals::determinant(const bit_t& bits) {
     STLDeterminant det(bits, nmo_);
     return det;
 }
@@ -254,20 +251,20 @@ double FCIIntegrals::slater_rules(const STLDeterminant& lhs, const STLDeterminan
         matrix_element = frozen_core_energy_;
         for (int p = 0; p < nmo_; ++p) {
             if (I[p])
-                matrix_element += oei_a_[p*nmo_ + p];
+                matrix_element += oei_a_[p * nmo_ + p];
             if (I[nmo_ + p])
-                matrix_element += oei_b_[p*nmo_ + p];
+                matrix_element += oei_b_[p * nmo_ + p];
             for (int q = 0; q < nmo_; ++q) {
                 if (I[p] and I[q])
-                    matrix_element += 0.5 * tei_aa_[p*nmo3_ + q*nmo2_ + p*nmo_ + q ];
+                    matrix_element += 0.5 * tei_aa_[p * nmo3_ + q * nmo2_ + p * nmo_ + q];
                 //                    matrix_element +=   0.5 *
                 //                    ints_->diag_ce_rtei(p,q);
                 if (I[nmo_ + p] and I[nmo_ + q])
-                    matrix_element += 0.5 * tei_bb_[p*nmo3_ + q*nmo2_ + p*nmo_ + q ];
+                    matrix_element += 0.5 * tei_bb_[p * nmo3_ + q * nmo2_ + p * nmo_ + q];
                 //                    matrix_element +=   0.5 *
                 //                    ints_->diag_ce_rtei(p,q);
                 if (I[p] and I[nmo_ + q])
-                    matrix_element += 0.5 * tei_ab_[p*nmo3_ + q*nmo2_ + p*nmo_ + q ];
+                    matrix_element += 0.5 * tei_ab_[p * nmo3_ + q * nmo2_ + p * nmo_ + q];
                 //                    matrix_element +=
                 //                    fci_ints_->diag_c_rtei(p,q);
             }
@@ -285,15 +282,15 @@ double FCIIntegrals::slater_rules(const STLDeterminant& lhs, const STLDeterminan
             if ((I[p] != J[p]) and J[p])
                 j = p;
         }
-        //double sign = SlaterSign(I, i, j);
-        double sign = lhs.slater_sign_aa(i,j);
-        matrix_element = sign * oei_a_[i*nmo_ + j];
+        // double sign = SlaterSign(I, i, j);
+        double sign = lhs.slater_sign_aa(i, j);
+        matrix_element = sign * oei_a_[i * nmo_ + j];
         for (int p = 0; p < nmo_; ++p) {
             if (I[p] and J[p]) {
-                matrix_element += sign * tei_aa_[i*nmo3_ + p*nmo2_ +j*nmo_ + p];
+                matrix_element += sign * tei_aa_[i * nmo3_ + p * nmo2_ + j * nmo_ + p];
             }
             if (I[nmo_ + p] and J[nmo_ + p]) {
-                matrix_element += sign * tei_ab_[i*nmo3_ + p*nmo2_ + j*nmo_ + p];
+                matrix_element += sign * tei_ab_[i * nmo3_ + p * nmo2_ + j * nmo_ + p];
             }
         }
     }
@@ -308,15 +305,15 @@ double FCIIntegrals::slater_rules(const STLDeterminant& lhs, const STLDeterminan
             if ((I[nmo_ + p] != J[nmo_ + p]) and J[nmo_ + p])
                 j = p;
         }
-        //double sign = SlaterSign(I, nmo_ + i, nmo_ + j);
-        double sign = lhs.slater_sign_bb(i,j);
-        matrix_element = sign * oei_b_[i*nmo_ + j];
+        // double sign = SlaterSign(I, nmo_ + i, nmo_ + j);
+        double sign = lhs.slater_sign_bb(i, j);
+        matrix_element = sign * oei_b_[i * nmo_ + j];
         for (int p = 0; p < nmo_; ++p) {
             if (I[p] and J[p]) {
-                matrix_element += sign * tei_ab_[p*nmo3_ + i*nmo2_ + p*nmo_ + j];
+                matrix_element += sign * tei_ab_[p * nmo3_ + i * nmo2_ + p * nmo_ + j];
             }
             if (I[nmo_ + p] and J[nmo_ + p]) {
-                matrix_element += sign * tei_bb_[i*nmo3_ + p*nmo2_ + j*nmo_ + p];
+                matrix_element += sign * tei_bb_[i * nmo3_ + p * nmo2_ + j * nmo_ + p];
             }
         }
     }
@@ -344,9 +341,9 @@ double FCIIntegrals::slater_rules(const STLDeterminant& lhs, const STLDeterminan
                 }
             }
         }
-        //double sign = SlaterSign(I, i, j, k, l);
-        double sign = lhs.slater_sign(i,j,k,l);
-        matrix_element = sign * tei_aa_[i*nmo3_ + j*nmo2_ + k*nmo_ + l];
+        // double sign = SlaterSign(I, i, j, k, l);
+        double sign = lhs.slater_sign(i, j, k, l);
+        matrix_element = sign * tei_aa_[i * nmo3_ + j * nmo2_ + k * nmo_ + l];
     }
 
     // Slater rule 3 PhiI = k_a^+ l_a^+ j_a i_a PhiJ
@@ -373,9 +370,9 @@ double FCIIntegrals::slater_rules(const STLDeterminant& lhs, const STLDeterminan
                 }
             }
         }
-        //double sign = SlaterSign(I, nmo_ + i, nmo_ + j, nmo_ + k, nmo_ + l);
+        // double sign = SlaterSign(I, nmo_ + i, nmo_ + j, nmo_ + k, nmo_ + l);
         double sign = lhs.slater_sign(nmo_ + i, nmo_ + j, nmo_ + k, nmo_ + l);
-        matrix_element = sign * tei_bb_[i*nmo3_ + j*nmo2_ + k*nmo_ * l];
+        matrix_element = sign * tei_bb_[i * nmo3_ + j * nmo2_ + k * nmo_ * l];
     }
 
     // Slater rule 3 PhiI = j_a^+ i_a PhiJ
@@ -393,75 +390,73 @@ double FCIIntegrals::slater_rules(const STLDeterminant& lhs, const STLDeterminan
             if ((I[nmo_ + p] != J[nmo_ + p]) and J[nmo_ + p])
                 l = p;
         }
-        //double sign = SlaterSign(I, i, nmo_ + j, k, nmo_ + l);
+        // double sign = SlaterSign(I, i, nmo_ + j, k, nmo_ + l);
         double sign = lhs.slater_sign(i, nmo_ + j, k, nmo_ + l);
-        matrix_element = sign * tei_ab_[i*nmo3_ + j*nmo2_ + k*nmo_ * l];
+        matrix_element = sign * tei_ab_[i * nmo3_ + j * nmo2_ + k * nmo_ * l];
     }
     return (matrix_element);
 }
 
-double FCIIntegrals::slater_rules_single_alpha( const STLDeterminant& det, int i, int a) const {
+double FCIIntegrals::slater_rules_single_alpha(const STLDeterminant& det, int i, int a) const {
     // Slater rule 2 PhiI = j_a^+ i_a PhiJ
-    const bit_t& I = det.bits();    
+    const bit_t& I = det.bits();
     double sign = det.slater_sign_aa(i, a);
-    double matrix_element = oei_a_[i*nmo_ + a];
+    double matrix_element = oei_a_[i * nmo_ + a];
     for (int p = 0; p < nmo_; ++p) {
         if (I[p]) {
-            matrix_element += tei_aa_[i*nmo3_ + p*nmo2_ + a*nmo_ + p];
+            matrix_element += tei_aa_[i * nmo3_ + p * nmo2_ + a * nmo_ + p];
         }
         if (I[nmo_ + p]) {
-            matrix_element += tei_ab_[i*nmo3_ + p*nmo2_ + a*nmo_ + p];
+            matrix_element += tei_ab_[i * nmo3_ + p * nmo2_ + a * nmo_ + p];
         }
     }
     return sign * matrix_element;
 }
 
-double FCIIntegrals::slater_rules_single_alpha_abs( const STLDeterminant& det, int i, int a) const {
+double FCIIntegrals::slater_rules_single_alpha_abs(const STLDeterminant& det, int i, int a) const {
     // Slater rule 2 PhiI = j_a^+ i_a PhiJ
-    const bit_t& I = det.bits();    
-    double matrix_element = oei_a_[i*nmo_ + a];
+    const bit_t& I = det.bits();
+    double matrix_element = oei_a_[i * nmo_ + a];
     for (int p = 0; p < nmo_; ++p) {
         if (I[p]) {
-            matrix_element += tei_aa_[i*nmo3_ + p*nmo2_ + a*nmo_ + p];
+            matrix_element += tei_aa_[i * nmo3_ + p * nmo2_ + a * nmo_ + p];
         }
         if (I[nmo_ + p]) {
-            matrix_element += tei_ab_[i*nmo3_ + p*nmo2_ + a*nmo_ + p];
+            matrix_element += tei_ab_[i * nmo3_ + p * nmo2_ + a * nmo_ + p];
         }
     }
     return matrix_element;
 }
 
-double FCIIntegrals::slater_rules_single_beta( const STLDeterminant& det, int i, int a) const {
+double FCIIntegrals::slater_rules_single_beta(const STLDeterminant& det, int i, int a) const {
     // Slater rule 2 PhiI = j_a^+ i_a PhiJ
-    const bit_t& I = det.bits();    
-    double sign = det.slater_sign_bb(i,a);
-    double matrix_element = oei_b_[i*nmo_ + a];
+    const bit_t& I = det.bits();
+    double sign = det.slater_sign_bb(i, a);
+    double matrix_element = oei_b_[i * nmo_ + a];
     for (int p = 0; p < nmo_; ++p) {
         if (I[p]) {
-            matrix_element += tei_ab_[p*nmo3_ + i*nmo2_ + p*nmo_ + a];
+            matrix_element += tei_ab_[p * nmo3_ + i * nmo2_ + p * nmo_ + a];
         }
         if (I[nmo_ + p]) {
-            matrix_element += tei_bb_[i*nmo3_ + p*nmo2_ + a*nmo_ + p];
+            matrix_element += tei_bb_[i * nmo3_ + p * nmo2_ + a * nmo_ + p];
         }
     }
     return sign * matrix_element;
 }
 
-double FCIIntegrals::slater_rules_single_beta_abs( const STLDeterminant& det, int i, int a) const {
+double FCIIntegrals::slater_rules_single_beta_abs(const STLDeterminant& det, int i, int a) const {
     // Slater rule 2 PhiI = j_a^+ i_a PhiJ
-    const bit_t& I = det.bits();    
-    double matrix_element = oei_b_[i*nmo_ + a];
+    const bit_t& I = det.bits();
+    double matrix_element = oei_b_[i * nmo_ + a];
     for (int p = 0; p < nmo_; ++p) {
         if (I[p]) {
-            matrix_element += tei_ab_[p*nmo3_ + i*nmo2_ + p*nmo_ + a];
+            matrix_element += tei_ab_[p * nmo3_ + i * nmo2_ + p * nmo_ + a];
         }
         if (I[nmo_ + p]) {
-            matrix_element += tei_bb_[i*nmo3_ + p*nmo2_ + a*nmo_ + p];
+            matrix_element += tei_bb_[i * nmo3_ + p * nmo2_ + a * nmo_ + p];
         }
     }
     return matrix_element;
 }
-
-
 }
 }
