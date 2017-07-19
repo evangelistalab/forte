@@ -1107,8 +1107,9 @@ void ProjectorCI_HashVec::propagate_DL(det_hashvec& dets_hashvec, std::vector<do
             alpha_vec[j] = evecs->get(j, 0);
         }
         e_gradiant += lambda;
-        outfile->Printf("\nDavidson iter %4d order %4d correction norm %10.3e dE %10.3e.", i,
-                        current_order, correct_norm, e_gradiant);
+        outfile->Printf("\nDavidson iter %4d order %4d correction norm %10.3e dE %10.3e E %18.12f.",
+                        i, current_order, correct_norm, e_gradiant,
+                        lambda + nuclear_repulsion_energy_ + fci_ints_->scalar_energy());
         if (std::fabs(e_gradiant) < e_convergence_) {
             i++;
             break;
