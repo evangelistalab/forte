@@ -70,6 +70,7 @@ class FCIIntegrals {
 
     /// Compute a determinant's energy
     double energy(STLDeterminant& det);
+    double energy(const STLDeterminant& det);
 
     /// Compute the matrix element of the Hamiltonian between this determinant
     /// and a given one
