@@ -45,9 +45,7 @@ DeterminantHashVec::DeterminantHashVec(const std::vector<STLBitsetDeterminant>& 
     wfn_ = det_hashvec(dets);
 }
 
-DeterminantHashVec::DeterminantHashVec(STLBitsetDeterminant& det) {
-    wfn_.add(det);
-}
+DeterminantHashVec::DeterminantHashVec(STLBitsetDeterminant& det) { wfn_.add(det); }
 
 DeterminantHashVec::DeterminantHashVec() {}
 
@@ -57,9 +55,7 @@ const det_hashvec& DeterminantHashVec::wfn_hash() const { return wfn_; }
 
 det_hashvec& DeterminantHashVec::wfn_hash() { return wfn_; }
 
-void DeterminantHashVec::clear() {
-    wfn_.clear();
-}
+void DeterminantHashVec::clear() { wfn_.clear(); }
 
 std::vector<STLBitsetDeterminant> DeterminantHashVec::determinants() const {
     return wfn_.toVector();
@@ -67,9 +63,7 @@ std::vector<STLBitsetDeterminant> DeterminantHashVec::determinants() const {
 
 size_t DeterminantHashVec::size() const { return wfn_.size(); }
 
-void DeterminantHashVec::add(const STLBitsetDeterminant& det) {
-    wfn_.add(det);
-}
+void DeterminantHashVec::add(const STLBitsetDeterminant& det) { wfn_.add(det); }
 
 STLBitsetDeterminant DeterminantHashVec::get_det(const size_t value) const {
     // Iterate through map to find the right one
@@ -77,9 +71,7 @@ STLBitsetDeterminant DeterminantHashVec::get_det(const size_t value) const {
     return wfn_[value];
 }
 
-size_t DeterminantHashVec::get_idx(const STLBitsetDeterminant& det) const {
-    return wfn_.find(det);
-}
+size_t DeterminantHashVec::get_idx(const STLBitsetDeterminant& det) const { return wfn_.find(det); }
 
 void DeterminantHashVec::make_spin_complete() {
     int nmo = wfn_[0].nmo_;
@@ -157,7 +149,7 @@ bool DeterminantHashVec::has_det(const STLBitsetDeterminant& det) const {
 }
 
 double DeterminantHashVec::overlap(std::vector<double>& det1_evecs, DeterminantHashVec& det2,
-                               SharedMatrix det2_evecs, int root) {
+                                   SharedMatrix det2_evecs, int root) {
 
     double overlap = 0.0;
 
@@ -167,18 +159,18 @@ double DeterminantHashVec::overlap(std::vector<double>& det1_evecs, DeterminantH
             overlap += det1_evecs[i] * det2_evecs->get(idx, root);
         }
     }
-//    for (det_hashvec::iterator it = wfn_.begin(), endit = wfn_.end(); it != endit; ++it) {
-//        if (det2.has_det(*it)) {
-//            size_t idx = det2.get_idx(*it);
-//            overlap += det1_evecs[wfn_.find(*it)] * det2_evecs->get(idx, root);
-//        }
-//    }
+    //    for (det_hashvec::iterator it = wfn_.begin(), endit = wfn_.end(); it != endit; ++it) {
+    //        if (det2.has_det(*it)) {
+    //            size_t idx = det2.get_idx(*it);
+    //            overlap += det1_evecs[wfn_.find(*it)] * det2_evecs->get(idx, root);
+    //        }
+    //    }
     overlap = std::abs(overlap);
     return overlap;
 }
 
 double DeterminantHashVec::overlap(SharedMatrix det1_evecs, int root1, DeterminantHashVec& det2,
-                               SharedMatrix det2_evecs, int root2) {
+                                   SharedMatrix det2_evecs, int root2) {
     double overlap = 0.0;
     for (size_t i = 0, wfn_size = wfn_.size(); i < wfn_size; ++i) {
         if (det2.has_det(wfn_[i])) {
@@ -186,17 +178,17 @@ double DeterminantHashVec::overlap(SharedMatrix det1_evecs, int root1, Determina
             overlap += det1_evecs->get(i, root1) * det2_evecs->get(idx, root2);
         }
     }
-//    for (det_hashvec::iterator it = wfn_.begin(), endit = wfn_.end(); it != endit; ++it) {
-//        if (det2.has_det(*it)) {
-//            size_t idx = det2.get_idx(*it);
-//            overlap += det1_evecs->get(wfn_.find(*it), root1) * det2_evecs->get(idx, root2);
-//        }
-//    }
+    //    for (det_hashvec::iterator it = wfn_.begin(), endit = wfn_.end(); it != endit; ++it) {
+    //        if (det2.has_det(*it)) {
+    //            size_t idx = det2.get_idx(*it);
+    //            overlap += det1_evecs->get(wfn_.find(*it), root1) * det2_evecs->get(idx, root2);
+    //        }
+    //    }
     return overlap;
 }
 
 void DeterminantHashVec::subspace(DeterminantHashVec& dets, SharedMatrix evecs,
-                              std::vector<double>& new_evecs, int dim, int root) {
+                                  std::vector<double>& new_evecs, int dim, int root) {
     // Clear current wfn
     this->clear();
     new_evecs.assign(dim, 0.0);
@@ -208,11 +200,12 @@ void DeterminantHashVec::subspace(DeterminantHashVec& dets, SharedMatrix evecs,
     for (size_t i = 0, map_size = map.size(); i < map_size; ++i) {
         det_weights.push_back(std::make_pair(std::abs(evecs->get(i, root)), i));
     }
-//    for (det_hashvec::iterator it = map.begin(), endit = map.end(); it != endit; ++it) {
-//        det_weights.push_back(std::make_pair(std::abs(evecs->get(map.find(*it), root)), map.find(*it)));
-//        //      outfile->Printf("\n %1.6f  %zu  %s", evecs->get(it->second,
-//        //      root), it->second, *it.str().c_str());
-//    }
+    //    for (det_hashvec::iterator it = map.begin(), endit = map.end(); it != endit; ++it) {
+    //        det_weights.push_back(std::make_pair(std::abs(evecs->get(map.find(*it), root)),
+    //        map.find(*it)));
+    //        //      outfile->Printf("\n %1.6f  %zu  %s", evecs->get(it->second,
+    //        //      root), it->second, *it.str().c_str());
+    //    }
     std::sort(det_weights.begin(), det_weights.end(), descending_pair);
 
     // Build this wfn with most important subset
