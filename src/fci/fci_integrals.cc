@@ -188,6 +188,35 @@ void FCIIntegrals::set_active_integrals_and_restricted_docc() {
     RestrictedOneBodyOperator(oei_a_, oei_b_);
 }
 
+double FCIIntegrals::energy(const STLDeterminant& det) {
+    const bit_t bits = det.bits();
+    double energy = frozen_core_energy_;
+    for (int p = 0; p < nmo_; p++) {
+        if (bits[p]) {
+            energy += oei_a_[p * nmo_ + p];
+            for (int q = p + 1; q < nmo_; ++q) {
+                if (bits[q]) {
+                    energy += tei_aa_[p * nmo3_ + q * nmo2_ + p * nmo_ + q];
+                }
+            }
+            for (int q = 0; q < nmo_; ++q) {
+                if (bits[nmo_ + q]) {
+                    energy += tei_ab_[p * nmo3_ + q * nmo2_ + p * nmo_ + q];
+                }
+            }
+        }
+        if (bits[nmo_ + p]) {
+            energy += oei_b_[p * nmo_ + p];
+            for (int q = p + 1; q < nmo_; ++q) {
+                if (bits[nmo_ + q]) {
+                    energy += tei_bb_[p * nmo3_ + q * nmo2_ + p * nmo_ + q];
+                }
+            }
+        }
+    }
+    return energy;
+}
+
 double FCIIntegrals::energy(STLDeterminant& det) {
     const bit_t bits = det.bits();
     double energy = frozen_core_energy_;
