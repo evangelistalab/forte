@@ -1319,7 +1319,7 @@ void ProjectorCI_HashVec::apply_tau_H_symm_det_dynamic_HBCI_2(
                             if (index >= pre_C_size) {
                                 new_det_C_vec.push_back(std::make_pair(detJ, tau * HJI * CI));
 #pragma omp atomic
-                                ++num_off_diag_elem_;
+                                num_off_diag_elem_ += 2;
                             } else {
                                 new_index_C_vec.push_back(std::make_pair(index, tau * HJI * CI));
 #pragma omp atomic
@@ -1375,7 +1375,7 @@ void ProjectorCI_HashVec::apply_tau_H_symm_det_dynamic_HBCI_2(
                             if (index >= pre_C_size) {
                                 new_det_C_vec.push_back(std::make_pair(detJ, tau * HJI * CI));
 #pragma omp atomic
-                                ++num_off_diag_elem_;
+                                num_off_diag_elem_ += 2;
                             } else {
                                 new_index_C_vec.push_back(std::make_pair(index, tau * HJI * CI));
 #pragma omp atomic
@@ -1435,7 +1435,7 @@ void ProjectorCI_HashVec::apply_tau_H_symm_det_dynamic_HBCI_2(
                             if (index >= pre_C_size) {
                                 new_det_C_vec.push_back(std::make_pair(detJ, tau * HJI * CI));
 #pragma omp atomic
-                                ++num_off_diag_elem_;
+                                num_off_diag_elem_ += 2;
                             } else {
                                 new_index_C_vec.push_back(std::make_pair(index, tau * HJI * CI));
 #pragma omp atomic
@@ -1492,7 +1492,7 @@ void ProjectorCI_HashVec::apply_tau_H_symm_det_dynamic_HBCI_2(
                             if (index >= pre_C_size) {
                                 new_det_C_vec.push_back(std::make_pair(detJ, tau * HJI * CI));
 #pragma omp atomic
-                                ++num_off_diag_elem_;
+                                num_off_diag_elem_ += 2;
                             } else {
                                 new_index_C_vec.push_back(std::make_pair(index, tau * HJI * CI));
 #pragma omp atomic
@@ -1543,7 +1543,7 @@ void ProjectorCI_HashVec::apply_tau_H_symm_det_dynamic_HBCI_2(
                         if (index >= pre_C_size) {
                             new_det_C_vec.push_back(std::make_pair(detJ, tau * HJI * CI));
 #pragma omp atomic
-                            ++num_off_diag_elem_;
+                            num_off_diag_elem_ += 2;
                         } else {
                             new_index_C_vec.push_back(std::make_pair(index, tau * HJI * CI));
 #pragma omp atomic
@@ -1590,7 +1590,7 @@ void ProjectorCI_HashVec::apply_tau_H_symm_det_dynamic_HBCI_2(
                         if (index >= pre_C_size) {
                             new_det_C_vec.push_back(std::make_pair(detJ, tau * HJI * CI));
 #pragma omp atomic
-                            ++num_off_diag_elem_;
+                            num_off_diag_elem_ += 2;
                         } else {
                             new_index_C_vec.push_back(std::make_pair(index, tau * HJI * CI));
 #pragma omp atomic
@@ -1637,7 +1637,7 @@ void ProjectorCI_HashVec::apply_tau_H_symm_det_dynamic_HBCI_2(
                         if (index >= pre_C_size) {
                             new_det_C_vec.push_back(std::make_pair(detJ, tau * HJI * CI));
 #pragma omp atomic
-                            ++num_off_diag_elem_;
+                            num_off_diag_elem_ += 2;
                         } else {
                             new_index_C_vec.push_back(std::make_pair(index, tau * HJI * CI));
 #pragma omp atomic
@@ -1688,7 +1688,7 @@ void ProjectorCI_HashVec::apply_tau_H_symm_det_dynamic_HBCI_2(
                         if (index >= pre_C_size) {
                             new_det_C_vec.push_back(std::make_pair(detJ, tau * HJI * CI));
 #pragma omp atomic
-                            ++num_off_diag_elem_;
+                            num_off_diag_elem_ += 2;
                         } else {
                             new_index_C_vec.push_back(std::make_pair(index, tau * HJI * CI));
 #pragma omp atomic
@@ -1736,7 +1736,7 @@ void ProjectorCI_HashVec::apply_tau_H_symm_det_dynamic_HBCI_2(
                         if (index >= pre_C_size) {
                             new_det_C_vec.push_back(std::make_pair(detJ, tau * HJI * CI));
 #pragma omp atomic
-                            ++num_off_diag_elem_;
+                            num_off_diag_elem_ += 2;
                         } else {
                             new_index_C_vec.push_back(std::make_pair(index, tau * HJI * CI));
 #pragma omp atomic
@@ -1784,7 +1784,7 @@ void ProjectorCI_HashVec::apply_tau_H_symm_det_dynamic_HBCI_2(
                         if (index >= pre_C_size) {
                             new_det_C_vec.push_back(std::make_pair(detJ, tau * HJI * CI));
 #pragma omp atomic
-                            ++num_off_diag_elem_;
+                            num_off_diag_elem_ += 2;
                         } else {
                             new_index_C_vec.push_back(std::make_pair(index, tau * HJI * CI));
 #pragma omp atomic
