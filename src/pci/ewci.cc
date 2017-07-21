@@ -1246,13 +1246,17 @@ void ElementwiseCI::apply_tau_H_symm(double tau, double spawning_threshold, det_
         }
     }
 
-    //    det_hashvec overlap_dets;
+    std::vector<size_t> removing_indices;
     for (size_t I = 0; I < overlap_C.size(); ++I) {
-        while (I < overlap_C.size() and std::isnan(overlap_C[I])) {
-            ref_dets.erase_by_index(I);
-            overlap_C.erase(overlap_C.begin() + I);
-            ref_C.erase(ref_C.begin() + I);
+        if (std::isnan(overlap_C[I])) {
+            removing_indices.push_back(I);
         }
+    }
+    ref_dets.erase_by_index(removing_indices);
+    std::reverse(removing_indices.begin(), removing_indices.end());
+    for (size_t I : removing_indices) {
+        overlap_C.erase(overlap_C.begin() + I);
+        ref_C.erase(ref_C.begin() + I);
     }
     overlap_size = ref_dets.size();
     ref_dets.merge(extra_dets);
