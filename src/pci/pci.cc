@@ -148,6 +148,12 @@ void set_PCI_options(ForteOptions& foptions) {
     foptions.add_bool("PCI_REFERENCE_SPAWNING", false, "Do spawning according to reference");
 
     foptions.add_bool("PCI_POST_DIAGONALIZE", false, "Do a post diagonalization?");
+
+    foptions.add_str("PCI_FUNCTIONAL", "MAX", {"MAX", "SUM", "SQUARE", "SQRT", "SPECIFY-ORDER"},
+                     "The functional for determinant coupling importance evaluation");
+
+    foptions.add_double("PCI_FUNCTIONAL_ORDER", 1.0,
+                        "The functional order of PCI_FUNCTIONAL is SPECIFY-ORDER");
 }
 
 void combine_hashes(std::vector<det_hash<>>& thread_det_C_map, det_hash<>& dets_C_hash);
