@@ -31,6 +31,7 @@
 #define _ewci_h_
 
 #include <fstream>
+#include <functional>
 
 #include "psi4/libmints/wavefunction.h"
 #include "psi4/liboptions/liboptions.h"
@@ -182,6 +183,10 @@ class ElementwiseCI : public Wavefunction {
     /// Print full wavefunction in the APIFCI basis after running a ground state
     /// calculation?
     bool print_full_wavefunction_;
+    /// Function for prescreening with one coefficient
+    std::function<bool(double, double, double)> prescreen_H_CI_;
+    /// Function for important matrix element
+    std::function<bool(double, double, double, double)> important_H_CI_CJ_;
 
     // * Dynamics Prescreening
     /// A map used to store the largest absolute value of the couplings of a
