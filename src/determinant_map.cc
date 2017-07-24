@@ -33,7 +33,7 @@
 namespace psi {
 namespace forte {
 
-bool descending_pair(const std::pair<double, size_t> p1, const std::pair<double, size_t> p2) {
+bool descending_p(const std::pair<double, size_t> p1, const std::pair<double, size_t> p2) {
     return p1 > p2;
 }
 
@@ -119,7 +119,7 @@ void DeterminantMap::make_spin_complete() {
     std::vector<size_t> open_bits(nmo, 0);
     DeterminantMap new_dets;
 
-    for (det_hash<size_t>::iterator it = wfn_.begin(), endit = wfn_.end(); it != endit; ++it) {
+    for (stldet_hash<size_t>::iterator it = wfn_.begin(), endit = wfn_.end(); it != endit; ++it) {
         const STLBitsetDeterminant& det = it->first;
         //        outfile->Printf("\n  Original determinant: %s",
         //        det.str().c_str());
@@ -192,7 +192,7 @@ bool DeterminantMap::has_det(const STLBitsetDeterminant& det) const {
 }
 
 double DeterminantMap::overlap(std::vector<double>& det1_evecs, DeterminantMap& det2,
-                               SharedMatrix det2_evecs, int root) {
+                                SharedMatrix det2_evecs, int root) {
 
     double overlap = 0.0;
 
@@ -207,7 +207,7 @@ double DeterminantMap::overlap(std::vector<double>& det1_evecs, DeterminantMap& 
 }
 
 double DeterminantMap::overlap(SharedMatrix det1_evecs, int root1, DeterminantMap& det2,
-                               SharedMatrix det2_evecs, int root2) {
+                                SharedMatrix det2_evecs, int root2) {
     double overlap = 0.0;
     for (detmap::iterator it = wfn_.begin(), endit = wfn_.end(); it != endit; ++it) {
         if (det2.has_det(it->first)) {
@@ -219,7 +219,7 @@ double DeterminantMap::overlap(SharedMatrix det1_evecs, int root1, DeterminantMa
 }
 
 void DeterminantMap::subspace(DeterminantMap& dets, SharedMatrix evecs,
-                              std::vector<double>& new_evecs, int dim, int root) {
+                               std::vector<double>& new_evecs, int dim, int root) {
     // Clear current wfn
     this->clear();
     new_evecs.assign(dim, 0.0);
@@ -232,7 +232,7 @@ void DeterminantMap::subspace(DeterminantMap& dets, SharedMatrix evecs,
         //      outfile->Printf("\n %1.6f  %zu  %s", evecs->get(it->second,
         //      root), it->second, it->first.str().c_str());
     }
-    std::sort(det_weights.begin(), det_weights.end(), descending_pair);
+    std::sort(det_weights.begin(), det_weights.end(), descending_p);
 
     // Build this wfn with most important subset
     for (size_t I = 0; I < dim; ++I) {
@@ -247,8 +247,9 @@ void DeterminantMap::subspace(DeterminantMap& dets, SharedMatrix evecs,
 }
 
 void DeterminantMap::merge(DeterminantMap& dets) {
-    det_hash<size_t> detmap = dets.wfn_hash();
-    for (det_hash<size_t>::iterator it = detmap.begin(), endit = detmap.end(); it != endit; ++it) {
+    stldet_hash<size_t> detmap = dets.wfn_hash();
+    for (stldet_hash<size_t>::iterator it = detmap.begin(), endit = detmap.end(); it != endit;
+         ++it) {
         if (!(this->has_det(it->first))) {
             this->add(it->first);
         }
