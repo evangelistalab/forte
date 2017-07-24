@@ -31,6 +31,7 @@
 #define _ewci_h_
 
 #include <fstream>
+#include <functional>
 
 #include "psi4/libmints/wavefunction.h"
 #include "psi4/liboptions/liboptions.h"
@@ -107,6 +108,12 @@ class ElementwiseCI : public Wavefunction {
     GeneratorType_EWCI::GeneratorType generator_;
     /// A string that describes the Generator type
     std::string generator_description_;
+    /// Function for prescreening with one coefficient
+    std::function<bool(double, double, double)> prescreen_H_CI_;
+    /// Function for important matrix element
+    std::function<bool(double, double, double, double)> important_H_CI_CJ_;
+    /// A string that describes the coupling importance functional
+    std::string functional_description_;
     /// The wave function symmetry
     int wavefunction_symmetry_;
     /// The symmetry of each orbital in Pitzer ordering
