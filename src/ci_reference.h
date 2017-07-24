@@ -30,6 +30,7 @@
 #include "psi4/libmints/wavefunction.h"
 #include "psi4/liboptions/liboptions.h"
 
+#include "fci/fci_integrals.h"
 #include "stl_bitset_determinant.h"
 #include "helpers.h"
 

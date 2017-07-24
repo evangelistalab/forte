@@ -56,7 +56,7 @@ CI_RDMS::CI_RDMS(Options& options, DeterminantMap& wfn, std::shared_ptr<FCIInteg
       root2_(root2) {
 
     STLBitsetDeterminant det = wfn_.get_det(0);
-    ncmo_ = det.nmo_;
+    ncmo_ = fci_ints_->nmo();
     ncmo2_ = ncmo_ * ncmo_;
     ncmo3_ = ncmo2_ * ncmo_;
     ncmo4_ = ncmo3_ * ncmo_;
@@ -80,7 +80,7 @@ void CI_RDMS::startup() {
 
     // The number of correlated molecular orbitals
     //	ncmo_ = mo_space_info_->size("ACTIVE");
-    ncmo_ = STLBitsetDeterminant::nmo_;
+    ncmo_ = fci_ints_->nmo();
     ncmo2_ = ncmo_ * ncmo_;
     ncmo3_ = ncmo2_ * ncmo_;
     ncmo4_ = ncmo3_ * ncmo_;
@@ -1282,7 +1282,7 @@ void CI_RDMS::get_one_map() {
 
             // Annihilate bit ii, get the sign
             detJ.set_alfa_bit(ii, false);
-            double sign = detI.slater_sign_alpha(ii);
+            double sign = detI.slater_sign_a(ii);
 
             det_hash_it hash_it = a_ann_map.find(detJ);
             size_t detJ_add;
@@ -1304,7 +1304,7 @@ void CI_RDMS::get_one_map() {
 
             // Annihilate bit ii, get the sign
             detJ.set_beta_bit(ii, false);
-            double sign = detI.slater_sign_beta(ii);
+            double sign = detI.slater_sign_b(ii);
 
             det_hash_it hash_it = b_ann_map.find(detJ);
             size_t detJ_add;
@@ -1380,7 +1380,7 @@ void CI_RDMS::get_two_map() {
                 detJ.set_alfa_bit(ii, false);
                 detJ.set_alfa_bit(jj, false);
 
-                double sign = detI.slater_sign_alpha(ii) * detI.slater_sign_alpha(jj);
+                double sign = detI.slater_sign_a(ii) * detI.slater_sign_a(jj);
 
                 det_hash_it hash_it = aa_ann_map.find(detJ);
                 size_t detJ_add;
@@ -1406,7 +1406,7 @@ void CI_RDMS::get_two_map() {
                 detJ.set_beta_bit(ii, false);
                 detJ.set_beta_bit(jj, false);
 
-                double sign = detI.slater_sign_beta(ii) * detI.slater_sign_beta(jj);
+                double sign = detI.slater_sign_b(ii) * detI.slater_sign_b(jj);
 
                 det_hash_it hash_it = bb_ann_map.find(detJ);
                 size_t detJ_add;
@@ -1432,7 +1432,7 @@ void CI_RDMS::get_two_map() {
                 detJ.set_alfa_bit(ii, false);
                 detJ.set_beta_bit(jj, false);
 
-                double sign = detI.slater_sign_alpha(ii) * detI.slater_sign_beta(jj);
+                double sign = detI.slater_sign_a(ii) * detI.slater_sign_b(jj);
 
                 det_hash_it hash_it = ab_ann_map.find(detJ);
                 size_t detJ_add;
@@ -1532,8 +1532,8 @@ void CI_RDMS::get_three_map() {
                     detJ.set_alfa_bit(jj, false);
                     detJ.set_alfa_bit(kk, false);
 
-                    double sign = detI.slater_sign_alpha(ii) * detI.slater_sign_alpha(jj) *
-                                  detI.slater_sign_alpha(kk);
+                    double sign = detI.slater_sign_a(ii) * detI.slater_sign_a(jj) *
+                                  detI.slater_sign_a(kk);
 
                     det_hash_it hash_it = aaa_ann_map.find(detJ);
                     size_t detJ_add;
@@ -1566,8 +1566,8 @@ void CI_RDMS::get_three_map() {
                     detJ.set_alfa_bit(jj, false);
                     detJ.set_beta_bit(kk, false);
 
-                    double sign = detI.slater_sign_alpha(ii) * detI.slater_sign_alpha(jj) *
-                                  detI.slater_sign_beta(kk);
+                    double sign = detI.slater_sign_a(ii) * detI.slater_sign_a(jj) *
+                                  detI.slater_sign_b(kk);
 
                     det_hash_it hash_it = aab_ann_map.find(detJ);
                     size_t detJ_add;
@@ -1600,8 +1600,8 @@ void CI_RDMS::get_three_map() {
                     detJ.set_beta_bit(jj, false);
                     detJ.set_beta_bit(kk, false);
 
-                    double sign = detI.slater_sign_alpha(ii) * detI.slater_sign_beta(jj) *
-                                  detI.slater_sign_beta(kk);
+                    double sign = detI.slater_sign_a(ii) * detI.slater_sign_b(jj) *
+                                  detI.slater_sign_b(kk);
 
                     det_hash_it hash_it = abb_ann_map.find(detJ);
                     size_t detJ_add;
@@ -1634,8 +1634,8 @@ void CI_RDMS::get_three_map() {
                     detJ.set_beta_bit(jj, false);
                     detJ.set_beta_bit(kk, false);
 
-                    double sign = detI.slater_sign_beta(ii) * detI.slater_sign_beta(jj) *
-                                  detI.slater_sign_beta(kk);
+                    double sign = detI.slater_sign_b(ii) * detI.slater_sign_b(jj) *
+                                  detI.slater_sign_b(kk);
 
                     det_hash_it hash_it = bbb_ann_map.find(detJ);
                     size_t detJ_add;

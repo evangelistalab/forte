@@ -31,7 +31,6 @@
 
 #include "fci/fci_vector.h"
 #include "stl_bitset_determinant.h"
-#include "stl_bitset_string.h"
 
 using namespace psi;
 
@@ -40,17 +39,6 @@ using namespace psi;
 
 namespace psi {
 namespace forte {
-
-// Static members
-int STLBitsetDeterminant::nmo_;
-std::shared_ptr<FCIIntegrals> STLBitsetDeterminant::fci_ints_;
-
-void STLBitsetDeterminant::set_ints(std::shared_ptr<FCIIntegrals> ints) {
-    fci_ints_ = ints;
-    nmo_ = ints->nmo();
-}
-
-void STLBitsetDeterminant::reset_ints() { fci_ints_ = nullptr; }
 
 STLBitsetDeterminant::STLBitsetDeterminant() {}
 
@@ -65,28 +53,29 @@ STLBitsetDeterminant::STLBitsetDeterminant(const std::vector<bool>& occupation) 
 }
 
 STLBitsetDeterminant::STLBitsetDeterminant(const std::vector<bool>& occupation_a,
-                                           const std::vector<bool>& occupation_b) {
+                               const std::vector<bool>& occupation_b) {
     for (int p = 0; p < nmo_; ++p) {
         bits_[p] = occupation_a[p];
         bits_[p + nmo_] = occupation_b[p];
     }
 }
 
-STLBitsetDeterminant::STLBitsetDeterminant(const bit_t& bits) { bits_ = bits; }
-
-STLBitsetDeterminant::STLBitsetDeterminant(const STLBitsetString& alpha,
-                                           const STLBitsetString& beta) {
-    for (int p = 0; p < nmo_; ++p) {
-        bits_[p] = alpha.get_bit(p);
-        bits_[p + nmo_] = beta.get_bit(p);
-    }
+STLBitsetDeterminant::STLBitsetDeterminant(const bit_t& bits, int nmo) {
+    bits_ = bits;
+    nmo_ = nmo;
 }
+
+// STLBitsetDeterminant::STLBitsetDeterminant(const STLBitsetString& alpha,
+//                                           const STLBitsetString& beta) {
+//    for (int p = 0; p < nmo_; ++p) {
+//        bits_[p] = alpha.get_bit(p);
+//        bits_[p + nmo_] = beta.get_bit(p);
+//    }
+//}
 
 void STLBitsetDeterminant::copy(const STLBitsetDeterminant& rhs) { bits_ = rhs.bits_; }
 
-bool STLBitsetDeterminant::operator==(const STLBitsetDeterminant& lhs) const {
-    return (bits_ == lhs.bits_);
-}
+bool STLBitsetDeterminant::operator==(const STLBitsetDeterminant& lhs) const { return (bits_ == lhs.bits_); }
 
 bool STLBitsetDeterminant::operator<(const STLBitsetDeterminant& lhs) const {
     for (int p = 2 * nmo_ - 1; p >= 0; --p) {
@@ -221,21 +210,24 @@ double STLBitsetDeterminant::create_alfa_bit(int n) {
     if (bits_[n])
         return 0.0;
     bits_[n] = true;
-    return SlaterSign(bits_, n);
+    // return SlaterSign(bits_, n);
+    return this->slater_sign_a(n);
 }
 
 double STLBitsetDeterminant::create_beta_bit(int n) {
     if (bits_[nmo_ + n])
         return 0.0;
     bits_[nmo_ + n] = true;
-    return SlaterSign(bits_, nmo_ + n);
+    // return SlaterSign(bits_, nmo_ + n);
+    return this->slater_sign_b(n);
 }
 
 double STLBitsetDeterminant::destroy_alfa_bit(int n) {
     if (not bits_[n])
         return 0.0;
     bits_[n] = false;
-    return SlaterSign(bits_, n);
+    // return SlaterSign(bits_, n);
+    return this->slater_sign_a(n);
 }
 
 /// Set the value of a beta bit
@@ -243,7 +235,8 @@ double STLBitsetDeterminant::destroy_beta_bit(int n) {
     if (not bits_[nmo_ + n])
         return 0.0;
     bits_[nmo_ + n] = false;
-    return SlaterSign(bits_, nmo_ + n);
+    // return SlaterSign(bits_, nmo_ + n);
+    return this->slater_sign_b(n);
 }
 
 /// Switch alfa and beta bits
@@ -301,268 +294,7 @@ std::string STLBitsetDeterminant::str() const {
     return s;
 }
 
-/**
- * Compute the energy of this determinant
- * @return the electronic energy (does not include the nuclear repulsion energy)
- */
-double STLBitsetDeterminant::energy() const {
-    double matrix_element = fci_ints_->frozen_core_energy();
-    for (int p = 0; p < nmo_; ++p) {
-        if (bits_[p]) {
-            matrix_element += fci_ints_->oei_a(p, p);
-            for (int q = p + 1; q < nmo_; ++q) {
-                if (bits_[q]) {
-                    matrix_element += fci_ints_->diag_tei_aa(p, q);
-                }
-            }
-            for (int q = 0; q < nmo_; ++q) {
-                if (bits_[nmo_ + q]) {
-                    matrix_element += fci_ints_->diag_tei_ab(p, q);
-                }
-            }
-        }
-        if (bits_[nmo_ + p]) {
-            matrix_element += fci_ints_->oei_b(p, p);
-            for (int q = p + 1; q < nmo_; ++q) {
-                if (bits_[nmo_ + q]) {
-                    matrix_element += fci_ints_->diag_tei_bb(p, q);
-                }
-            }
-        }
-    }
-    return matrix_element;
-}
-
-/**
- * Compute the matrix element of the Hamiltonian between this determinant and a
- * given one
- * @param rhs
- * @return
- */
-double STLBitsetDeterminant::slater_rules(const STLBitsetDeterminant& rhs) const {
-    const bit_t& I = bits_;
-    const bit_t& J = rhs.bits_;
-
-    int nadiff = 0;
-    int nbdiff = 0;
-    // Count how many differences in mos are there
-    for (int n = 0; n < nmo_; ++n) {
-        if (I[n] != J[n])
-            nadiff++;
-        if (I[nmo_ + n] != J[nmo_ + n])
-            nbdiff++;
-        if (nadiff + nbdiff > 4)
-            return 0.0; // Get out of this as soon as possible
-    }
-    nadiff /= 2;
-    nbdiff /= 2;
-
-    double matrix_element = 0.0;
-    // Slater rule 1 PhiI = PhiJ
-    if ((nadiff == 0) and (nbdiff == 0)) {
-        matrix_element = fci_ints_->frozen_core_energy();
-        for (int p = 0; p < nmo_; ++p) {
-            if (bits_[p])
-                matrix_element += fci_ints_->oei_a(p, p);
-            if (bits_[nmo_ + p])
-                matrix_element += fci_ints_->oei_b(p, p);
-            for (int q = 0; q < nmo_; ++q) {
-                if (bits_[p] and bits_[q])
-                    matrix_element += 0.5 * fci_ints_->diag_tei_aa(p, q);
-                //                    matrix_element +=   0.5 *
-                //                    ints_->diag_ce_rtei(p,q);
-                if (bits_[nmo_ + p] and bits_[nmo_ + q])
-                    matrix_element += 0.5 * fci_ints_->diag_tei_bb(p, q);
-                //                    matrix_element +=   0.5 *
-                //                    ints_->diag_ce_rtei(p,q);
-                if (bits_[p] and bits_[nmo_ + q])
-                    matrix_element += fci_ints_->diag_tei_ab(p, q);
-                //                    matrix_element +=
-                //                    fci_ints_->diag_c_rtei(p,q);
-            }
-        }
-    }
-
-    // Slater rule 2 PhiI = j_a^+ i_a PhiJ
-    if ((nadiff == 1) and (nbdiff == 0)) {
-        // Diagonal contribution
-        int i = 0;
-        int j = 0;
-        for (int p = 0; p < nmo_; ++p) {
-            if ((I[p] != J[p]) and I[p])
-                i = p;
-            if ((I[p] != J[p]) and J[p])
-                j = p;
-        }
-        double sign = SlaterSign(I, i, j);
-        matrix_element = sign * fci_ints_->oei_a(i, j);
-        for (int p = 0; p < nmo_; ++p) {
-            if (I[p] and J[p]) {
-                matrix_element += sign * fci_ints_->tei_aa(i, p, j, p);
-            }
-            if (I[nmo_ + p] and J[nmo_ + p]) {
-                matrix_element += sign * fci_ints_->tei_ab(i, p, j, p);
-            }
-        }
-    }
-    // Slater rule 2 PhiI = j_b^+ i_b PhiJ
-    if ((nadiff == 0) and (nbdiff == 1)) {
-        // Diagonal contribution
-        int i = 0;
-        int j = 0;
-        for (int p = 0; p < nmo_; ++p) {
-            if ((I[nmo_ + p] != J[nmo_ + p]) and I[nmo_ + p])
-                i = p;
-            if ((I[nmo_ + p] != J[nmo_ + p]) and J[nmo_ + p])
-                j = p;
-        }
-        double sign = SlaterSign(I, nmo_ + i, nmo_ + j);
-        matrix_element = sign * fci_ints_->oei_b(i, j);
-        for (int p = 0; p < nmo_; ++p) {
-            if (I[p] and J[p]) {
-                matrix_element += sign * fci_ints_->tei_ab(p, i, p, j);
-            }
-            if (I[nmo_ + p] and J[nmo_ + p]) {
-                matrix_element += sign * fci_ints_->tei_bb(i, p, j, p);
-            }
-        }
-    }
-
-    // Slater rule 3 PhiI = k_a^+ l_a^+ j_a i_a PhiJ
-    if ((nadiff == 2) and (nbdiff == 0)) {
-        // Diagonal contribution
-        int i = -1;
-        int j = 0;
-        int k = -1;
-        int l = 0;
-        for (int p = 0; p < nmo_; ++p) {
-            if ((I[p] != J[p]) and I[p]) {
-                if (i == -1) {
-                    i = p;
-                } else {
-                    j = p;
-                }
-            }
-            if ((I[p] != J[p]) and J[p]) {
-                if (k == -1) {
-                    k = p;
-                } else {
-                    l = p;
-                }
-            }
-        }
-        double sign = SlaterSign(I, i, j, k, l);
-        matrix_element = sign * fci_ints_->tei_aa(i, j, k, l);
-    }
-
-    // Slater rule 3 PhiI = k_a^+ l_a^+ j_a i_a PhiJ
-    if ((nadiff == 0) and (nbdiff == 2)) {
-        // Diagonal contribution
-        int i, j, k, l;
-        i = -1;
-        j = -1;
-        k = -1;
-        l = -1;
-        for (int p = 0; p < nmo_; ++p) {
-            if ((I[nmo_ + p] != J[nmo_ + p]) and I[nmo_ + p]) {
-                if (i == -1) {
-                    i = p;
-                } else {
-                    j = p;
-                }
-            }
-            if ((I[nmo_ + p] != J[nmo_ + p]) and J[nmo_ + p]) {
-                if (k == -1) {
-                    k = p;
-                } else {
-                    l = p;
-                }
-            }
-        }
-        double sign = SlaterSign(I, nmo_ + i, nmo_ + j, nmo_ + k, nmo_ + l);
-        matrix_element = sign * fci_ints_->tei_bb(i, j, k, l);
-    }
-
-    // Slater rule 3 PhiI = j_a^+ i_a PhiJ
-    if ((nadiff == 1) and (nbdiff == 1)) {
-        // Diagonal contribution
-        int i, j, k, l;
-        i = j = k = l = -1;
-        for (int p = 0; p < nmo_; ++p) {
-            if ((I[p] != J[p]) and I[p])
-                i = p;
-            if ((I[nmo_ + p] != J[nmo_ + p]) and I[nmo_ + p])
-                j = p;
-            if ((I[p] != J[p]) and J[p])
-                k = p;
-            if ((I[nmo_ + p] != J[nmo_ + p]) and J[nmo_ + p])
-                l = p;
-        }
-        double sign = SlaterSign(I, i, nmo_ + j, k, nmo_ + l);
-        matrix_element = sign * fci_ints_->tei_ab(i, j, k, l);
-    }
-    return (matrix_element);
-}
-
-double STLBitsetDeterminant::slater_rules_single_alpha(int i, int a) const {
-    // Slater rule 2 PhiI = j_a^+ i_a PhiJ
-    double sign = SlaterSign(bits_, i, a);
-    double matrix_element = fci_ints_->oei_a(i, a);
-    for (int p = 0; p < nmo_; ++p) {
-        if (bits_[p]) {
-            matrix_element += fci_ints_->tei_aa(i, p, a, p);
-        }
-        if (bits_[nmo_ + p]) {
-            matrix_element += fci_ints_->tei_ab(i, p, a, p);
-        }
-    }
-    return sign * matrix_element;
-}
-
-double STLBitsetDeterminant::slater_rules_single_beta(int i, int a) const {
-    // Slater rule 2 PhiI = j_a^+ i_a PhiJ
-    double sign = SlaterSign(bits_, nmo_ + i, nmo_ + a);
-    double matrix_element = fci_ints_->oei_b(i, a);
-    for (int p = 0; p < nmo_; ++p) {
-        if (bits_[p]) {
-            matrix_element += fci_ints_->tei_ab(p, i, p, a);
-        }
-        if (bits_[nmo_ + p]) {
-            matrix_element += fci_ints_->tei_bb(i, p, a, p);
-        }
-    }
-    return sign * matrix_element;
-}
-
-double STLBitsetDeterminant::slater_rules_single_alpha_abs(int i, int a) const {
-    // Slater rule 2 PhiI = j_a^+ i_a PhiJ
-    double matrix_element = fci_ints_->oei_a(i, a);
-    for (int p = 0; p < nmo_; ++p) {
-        if (bits_[p]) {
-            matrix_element += fci_ints_->tei_aa(i, p, a, p);
-        }
-        if (bits_[nmo_ + p]) {
-            matrix_element += fci_ints_->tei_ab(i, p, a, p);
-        }
-    }
-    return matrix_element;
-}
-
-double STLBitsetDeterminant::slater_rules_single_beta_abs(int i, int a) const {
-    // Slater rule 2 PhiI = j_a^+ i_a PhiJ
-    double matrix_element = fci_ints_->oei_b(i, a);
-    for (int p = 0; p < nmo_; ++p) {
-        if (bits_[p]) {
-            matrix_element += fci_ints_->tei_ab(p, i, p, a);
-        }
-        if (bits_[nmo_ + p]) {
-            matrix_element += fci_ints_->tei_bb(i, p, a, p);
-        }
-    }
-    return matrix_element;
-}
-
-double STLBitsetDeterminant::slater_sign_alpha(int n) const {
+double STLBitsetDeterminant::slater_sign_a(int n) const {
     double sign = 1.0;
     for (int i = 0; i < n; ++i) { // This runs up to the operator before n
         if (bits_[i])
@@ -571,7 +303,21 @@ double STLBitsetDeterminant::slater_sign_alpha(int n) const {
     return (sign);
 }
 
-double STLBitsetDeterminant::slater_sign_beta(int n) const {
+double STLBitsetDeterminant::slater_sign_aa(int n, int m) const {
+    double sign = 1.0;
+    for (int i = m + 1; i < n; ++i) { // This runs up to the operator before n
+        if (bits_[i])
+            sign *= -1.0;
+    }
+    for (int i = n + 1; i < m; ++i) {
+        if (bits_[i]) {
+            sign *= -1.0;
+        }
+    }
+    return (sign);
+}
+
+double STLBitsetDeterminant::slater_sign_b(int n) const {
     double sign = 1.0;
     for (int i = 0; i < n; ++i) { // This runs up to the operator before n
         if (bits_[nmo_ + i])
@@ -580,16 +326,47 @@ double STLBitsetDeterminant::slater_sign_beta(int n) const {
     return (sign);
 }
 
+double STLBitsetDeterminant::slater_sign_bb(int n, int m) const {
+    double sign = 1.0;
+    for (int i = m + 1; i < n; ++i) { // This runs up to the operator before n
+        if (bits_[i + nmo_])
+            sign *= -1.0;
+    }
+    for (int i = n + 1; i < m; ++i) {
+        if (bits_[i + nmo_]) {
+            sign *= -1.0;
+        }
+    }
+    return (sign);
+}
+
+double STLBitsetDeterminant::slater_sign(int i, int j, int a, int b) const {
+    if ((((i < a) && (j < a) && (i < b) && (j < b)) == true) ||
+        (((i < a) || (j < a) || (i < b) || (j < b)) == false)) {
+        if ((i < j) ^ (a < b)) {
+            return (-1.0 * this->slater_sign_aa(i, j) * this->slater_sign_aa(a, b));
+        } else {
+            return (this->slater_sign_aa(i, j) * this->slater_sign_aa(a, b));
+        }
+    } else {
+        if ((i < j) ^ (a < b)) {
+            return (-1.0 * this->slater_sign_aa(i, b) * this->slater_sign_aa(j, a));
+        } else {
+            return (this->slater_sign_aa(i, a) * this->slater_sign_aa(j, b));
+        }
+    }
+}
+
 double STLBitsetDeterminant::single_excitation_a(int i, int a) {
     bits_[i] = false;
     bits_[a] = true;
-    return SlaterSign(bits_, i, a);
+    return (this->slater_sign_aa(i, a));
 }
 
 double STLBitsetDeterminant::single_excitation_b(int i, int a) {
     bits_[nmo_ + i] = false;
     bits_[nmo_ + a] = true;
-    return SlaterSign(bits_, nmo_ + i, nmo_ + a);
+    return (this->slater_sign_bb(i, a));
 }
 
 double STLBitsetDeterminant::double_excitation_aa(int i, int j, int a, int b) {
@@ -597,7 +374,7 @@ double STLBitsetDeterminant::double_excitation_aa(int i, int j, int a, int b) {
     bits_[j] = false;
     bits_[b] = true;
     bits_[a] = true;
-    return SlaterSign(bits_, i, j, a, b);
+    return (this->slater_sign(i, j, a, b));
 }
 
 double STLBitsetDeterminant::double_excitation_ab(int i, int j, int a, int b) {
@@ -605,7 +382,7 @@ double STLBitsetDeterminant::double_excitation_ab(int i, int j, int a, int b) {
     bits_[nmo_ + j] = false;
     bits_[nmo_ + b] = true;
     bits_[a] = true;
-    return SlaterSign(bits_, i, nmo_ + j, a, nmo_ + b);
+    return (this->slater_sign(i, nmo_ + j, a, nmo_ + b));
 }
 
 double STLBitsetDeterminant::double_excitation_bb(int i, int j, int a, int b) {
@@ -613,14 +390,14 @@ double STLBitsetDeterminant::double_excitation_bb(int i, int j, int a, int b) {
     bits_[nmo_ + j] = false;
     bits_[nmo_ + b] = true;
     bits_[nmo_ + a] = true;
-    return SlaterSign(bits_, nmo_ + i, nmo_ + j, nmo_ + a, nmo_ + b);
+    return (this->slater_sign(nmo_ + i, nmo_ + j, nmo_ + a, nmo_ + b));
 }
 
 std::vector<std::pair<STLBitsetDeterminant, double>> STLBitsetDeterminant::spin_plus() const {
     std::vector<std::pair<STLBitsetDeterminant, double>> res;
     for (int i = 0; i < nmo_; ++i) {
         if ((not ALFA(i)) and BETA(i)) {
-            double sign = slater_sign_alpha(i) * slater_sign_beta(i);
+            double sign = this->slater_sign_a(i) * this->slater_sign_b(i);
             STLBitsetDeterminant new_det(*this);
             new_det.set_alfa_bit(i, true);
             new_det.set_beta_bit(i, false);
@@ -634,7 +411,7 @@ std::vector<std::pair<STLBitsetDeterminant, double>> STLBitsetDeterminant::spin_
     std::vector<std::pair<STLBitsetDeterminant, double>> res;
     for (int i = 0; i < nmo_; ++i) {
         if (ALFA(i) and (not BETA(i))) {
-            double sign = slater_sign_alpha(i) * slater_sign_beta(i);
+            double sign = this->slater_sign_a(i) * this->slater_sign_b(i);
             STLBitsetDeterminant new_det(*this);
             new_det.set_alfa_bit(i, false);
             new_det.set_beta_bit(i, true);
@@ -725,18 +502,20 @@ double STLBitsetDeterminant::spin2(const STLBitsetDeterminant& rhs) const {
                 j = p; //(q)
         }
         if (i != j and i >= 0 and j >= 0) {
-            double sign = SlaterSign(J, i) * SlaterSign(J, nmo_ + j) * SlaterSign(I, nmo_ + i) *
-                          SlaterSign(I, j);
+            // double sign = SlaterSign(J, i) * SlaterSign(J, nmo_ + j) * SlaterSign(I, nmo_ + i) *
+            //              SlaterSign(I, j);
+            double sign = rhs.slater_sign_a(i) * rhs.slater_sign_b(j) * this->slater_sign_a(j) *
+                          this->slater_sign_b(i);
             matrix_element -= sign;
         }
     }
     return (matrix_element);
 }
-
-double STLBitsetDeterminant::SlaterSign(const bit_t& I, int n) {
+/*
+double STLBitsetDeterminant::SlaterSign(int n) {
     double sign = 1.0;
     for (int i = 0; i < n; ++i) { // This runs up to the operator before n
-        if (I[i])
+        if (bits_[i])
             sign *= -1.0;
     }
     return (sign);
@@ -771,9 +550,9 @@ double STLBitsetDeterminant::SlaterSign(const bit_t& bits, int i, int j, int a, 
         }
     }
 }
-
+*/
 void STLBitsetDeterminant::enforce_spin_completeness(std::vector<STLBitsetDeterminant>& det_space) {
-    det_hash<bool> det_map;
+    stldet_hash<bool> det_map;
 
     // Add all determinants to the map, assume set is mostly spin complete
     for (auto& I : det_space) {

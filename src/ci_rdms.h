@@ -41,6 +41,7 @@
 #include "reference.h"
 #include "stl_bitset_determinant.h"
 #include "fci/string_lists.h"
+#include "fci/fci_integrals.h"
 
 namespace psi {
 namespace forte {

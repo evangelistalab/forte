@@ -29,6 +29,7 @@
 #ifndef _determinant_map_h_
 #define _determinant_map_h_
 
+#include "psi4/libmints/matrix.h"
 #include "stl_bitset_determinant.h"
 #include "hash_vector.h"
 
@@ -90,21 +91,21 @@ class DeterminantMap {
     bool has_det(const STLBitsetDeterminant& det) const;
 
     // Compute overlap between this and input wfn
-    double overlap(std::vector<double>& det1_evecs, DeterminantMap& det2,
-                   SharedMatrix det2_evecs, int root);
+    double overlap(std::vector<double>& det1_evecs, DeterminantMap& det2, SharedMatrix det2_evecs,
+                   int root);
 
     // Compute overlap between this and input wfn
     double overlap(SharedMatrix det1_evecs, int root1, DeterminantMap& det2,
                    SharedMatrix det2_evecs, int root2);
 
     // Save most important subspace as this
-    void subspace(DeterminantMap& dets, SharedMatrix evecs,
-                  std::vector<double>& new_evecs, int dim, int root);
+    void subspace(DeterminantMap& dets, SharedMatrix evecs, std::vector<double>& new_evecs,
+                  int dim, int root);
 
     // Merge a wavefunction into this
     void merge(DeterminantMap& dets);
 
-    // Copy a wavefunctions
+    // Copy a wavefunction
     void copy(DeterminantMap& dets);
 
   protected:

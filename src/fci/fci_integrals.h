@@ -30,8 +30,7 @@
 #define _fci_integrals_
 
 #include "../integrals/integrals.h"
-//#include "../stl_bitset_determinant.h"
-#include "../stl_determinant.h"
+#include "../stl_bitset_determinant.h"
 #include "string_lists.h"
 
 namespace psi {
@@ -65,28 +64,28 @@ class FCIIntegrals {
     void set_scalar_energy(double scalar_energy) { scalar_energy_ = scalar_energy; }
 
     /// Initialize a determinant
-    STLDeterminant determinant(const bit_t& bits);
-    STLDeterminant determinant();
+    STLBitsetDeterminant determinant(const bit_t& bits);
+    STLBitsetDeterminant determinant();
 
     /// Compute a determinant's energy
-    double energy(STLDeterminant& det);
-    double energy(const STLDeterminant& det);
+    double energy(STLBitsetDeterminant& det);
+    double energy(const STLBitsetDeterminant& det);
 
     /// Compute the matrix element of the Hamiltonian between this determinant
     /// and a given one
-    double slater_rules(const STLDeterminant& lhs, const STLDeterminant& rhs) const;
+    double slater_rules(const STLBitsetDeterminant& lhs, const STLBitsetDeterminant& rhs) const;
     /// Compute the matrix element of the Hamiltonian between this determinant
     /// and a given one
-    double slater_rules_single_alpha(const STLDeterminant& det, int i, int a) const;
+    double slater_rules_single_alpha(const STLBitsetDeterminant& det, int i, int a) const;
     /// Compute the matrix element of the Hamiltonian between this determinant
     /// and a given one
-    double slater_rules_single_beta(const STLDeterminant& det, int i, int a) const;
+    double slater_rules_single_beta(const STLBitsetDeterminant& det, int i, int a) const;
     /// Compute the matrix element of the Hamiltonian between this determinant
     /// and a given one
-    double slater_rules_single_alpha_abs(const STLDeterminant& det, int i, int a) const;
+    double slater_rules_single_alpha_abs(const STLBitsetDeterminant& det, int i, int a) const;
     /// Compute the matrix element of the Hamiltonian between this determinant
     /// and a given one
-    double slater_rules_single_beta_abs(const STLDeterminant& det, int i, int a) const;
+    double slater_rules_single_beta_abs(const STLBitsetDeterminant& det, int i, int a) const;
 
     /// Return the alpha effective one-electron integral
     double oei_a(size_t p, size_t q) const { return oei_a_[p * nmo_ + q]; }

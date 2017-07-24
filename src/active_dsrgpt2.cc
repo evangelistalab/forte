@@ -1147,14 +1147,12 @@ ACTIVE_DSRGPT2::p_space_actv_to_nmo(const std::vector<STLBitsetDeterminant>& p_s
         }
 
         // find out occupation of determinant (active only)
-        STLBitsetDeterminant::set_nmo(nact);
         STLBitsetDeterminant det_actv = p_space[I];
         std::vector<int> occ_alfa(det_actv.get_alfa_occ());
         std::vector<int> occ_beta(det_actv.get_beta_occ());
         //        det_actv.print();
 
         // create a empty big determinant
-        STLBitsetDeterminant::set_nmo(ncmo);
         STLBitsetDeterminant det(std::vector<bool>(2 * ncmo, false));
 
         // fill in core orbitals
@@ -1188,7 +1186,6 @@ ACTIVE_DSRGPT2::excited_wfn_1st(const std::map<STLBitsetDeterminant, double>& re
                                 ambit::BlockedTensor& T1, ambit::BlockedTensor& T2) {
     size_t ncmo = mo_space_info_->size("CORRELATED");
     //    STLBitsetDeterminant::reset_ints();
-    STLBitsetDeterminant::set_nmo(ncmo);
 
     std::map<STLBitsetDeterminant, double> out;
 
@@ -1547,16 +1544,12 @@ void ACTIVE_DSRGPT2::compute_osc_pt2_dets(const int& irrep, const int& root, con
     outfile->Printf("\nTrans. Dipole %s: X: %7.4f, Y: %7.4f, Z: %7.4f", name.c_str(), transD.x,
                     transD.y, transD.z);
 
-    // reset integrals for STLBitsetDeterminant
-    STLBitsetDeterminant::set_ints(fci_mo_->fci_ints_);
 }
 
 std::map<STLBitsetDeterminant, double>
 ACTIVE_DSRGPT2::excited_ref(const std::map<STLBitsetDeterminant, double>& ref, const int& p,
                             const int& q) {
     size_t ncmo = mo_space_info_->size("CORRELATED");
-    STLBitsetDeterminant::reset_ints();
-    STLBitsetDeterminant::set_nmo(ncmo);
 
     std::map<STLBitsetDeterminant, double> out;
 
