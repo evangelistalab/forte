@@ -192,7 +192,7 @@ bool DeterminantMap::has_det(const STLBitsetDeterminant& det) const {
 }
 
 double DeterminantMap::overlap(std::vector<double>& det1_evecs, DeterminantMap& det2,
-                                SharedMatrix det2_evecs, int root) {
+                               SharedMatrix det2_evecs, int root) {
 
     double overlap = 0.0;
 
@@ -207,7 +207,7 @@ double DeterminantMap::overlap(std::vector<double>& det1_evecs, DeterminantMap& 
 }
 
 double DeterminantMap::overlap(SharedMatrix det1_evecs, int root1, DeterminantMap& det2,
-                                SharedMatrix det2_evecs, int root2) {
+                               SharedMatrix det2_evecs, int root2) {
     double overlap = 0.0;
     for (detmap::iterator it = wfn_.begin(), endit = wfn_.end(); it != endit; ++it) {
         if (det2.has_det(it->first)) {
@@ -219,7 +219,7 @@ double DeterminantMap::overlap(SharedMatrix det1_evecs, int root1, DeterminantMa
 }
 
 void DeterminantMap::subspace(DeterminantMap& dets, SharedMatrix evecs,
-                               std::vector<double>& new_evecs, int dim, int root) {
+                              std::vector<double>& new_evecs, int dim, int root) {
     // Clear current wfn
     this->clear();
     new_evecs.assign(dim, 0.0);

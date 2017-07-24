@@ -1532,8 +1532,8 @@ void CI_RDMS::get_three_map() {
                     detJ.set_alfa_bit(jj, false);
                     detJ.set_alfa_bit(kk, false);
 
-                    double sign = detI.slater_sign_a(ii) * detI.slater_sign_a(jj) *
-                                  detI.slater_sign_a(kk);
+                    double sign =
+                        detI.slater_sign_a(ii) * detI.slater_sign_a(jj) * detI.slater_sign_a(kk);
 
                     det_hash_it hash_it = aaa_ann_map.find(detJ);
                     size_t detJ_add;
@@ -1566,8 +1566,8 @@ void CI_RDMS::get_three_map() {
                     detJ.set_alfa_bit(jj, false);
                     detJ.set_beta_bit(kk, false);
 
-                    double sign = detI.slater_sign_a(ii) * detI.slater_sign_a(jj) *
-                                  detI.slater_sign_b(kk);
+                    double sign =
+                        detI.slater_sign_a(ii) * detI.slater_sign_a(jj) * detI.slater_sign_b(kk);
 
                     det_hash_it hash_it = aab_ann_map.find(detJ);
                     size_t detJ_add;
@@ -1600,8 +1600,8 @@ void CI_RDMS::get_three_map() {
                     detJ.set_beta_bit(jj, false);
                     detJ.set_beta_bit(kk, false);
 
-                    double sign = detI.slater_sign_a(ii) * detI.slater_sign_b(jj) *
-                                  detI.slater_sign_b(kk);
+                    double sign =
+                        detI.slater_sign_a(ii) * detI.slater_sign_b(jj) * detI.slater_sign_b(kk);
 
                     det_hash_it hash_it = abb_ann_map.find(detJ);
                     size_t detJ_add;
@@ -1634,8 +1634,8 @@ void CI_RDMS::get_three_map() {
                     detJ.set_beta_bit(jj, false);
                     detJ.set_beta_bit(kk, false);
 
-                    double sign = detI.slater_sign_b(ii) * detI.slater_sign_b(jj) *
-                                  detI.slater_sign_b(kk);
+                    double sign =
+                        detI.slater_sign_b(ii) * detI.slater_sign_b(jj) * detI.slater_sign_b(kk);
 
                     det_hash_it hash_it = bbb_ann_map.find(detJ);
                     size_t detJ_add;
