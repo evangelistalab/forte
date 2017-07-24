@@ -93,8 +93,8 @@ class CI_Reference // : public Wavefunction
                  std::shared_ptr<MOSpaceInfo> mo_space_info, STLBitsetDeterminant det,
                  int multiplicity, double ms, int symmetry);
     CI_Reference(std::shared_ptr<Wavefunction> wfn, Options& options,
-                 std::shared_ptr<MOSpaceInfo> mo_space_info, STLDeterminant det,
-                 int multiplicity, double ms, int symmetry);
+                 std::shared_ptr<MOSpaceInfo> mo_space_info, STLDeterminant det, int multiplicity,
+                 double ms, int symmetry);
 
     /// Destructor
     ~CI_Reference();
