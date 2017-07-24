@@ -86,7 +86,7 @@ CI_Reference::CI_Reference(std::shared_ptr<Wavefunction> wfn, Options& options,
     nalpha_ = 0.5 * (nel + twice_ms_);
     nbeta_ = nel - nalpha_;
 
-//    outfile->Printf("\n  Number of active orbitals: %d", STLBitsetDeterminant::nmo_);
+    //    outfile->Printf("\n  Number of active orbitals: %d", STLBitsetDeterminant::nmo_);
     outfile->Printf("\n  Number of active alpha electrons: %d", nalpha_);
     outfile->Printf("\n  Number of active beta electrons: %d", nbeta_);
     outfile->Printf("\n  Maximum reference space size: %zu", subspace_size_);
@@ -468,7 +468,6 @@ std::vector<int> CI_Reference::get_occupation() {
     return occupation;
 }
 
-
 void CI_Reference::build_reference(std::vector<STLDeterminant>& ref_space) {
 
     if (ref_type_ == "CAS") {
@@ -719,6 +718,5 @@ void CI_Reference::build_cas_reference(std::vector<STLDeterminant>& ref_space) {
     outfile->Printf("\n  Number of reference determinants: %zu", ref_space.size());
     outfile->Printf("\n  Reference generated from %d MOs", na);
 }
-
 }
 } // End Namespaces
