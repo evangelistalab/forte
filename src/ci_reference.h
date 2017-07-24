@@ -82,6 +82,8 @@ class CI_Reference // : public Wavefunction
 
     void build_ci_reference(std::vector<STLBitsetDeterminant>& ref_space);
     void build_cas_reference(std::vector<STLBitsetDeterminant>& ref_space);
+    void build_ci_reference(std::vector<STLDeterminant>& ref_space);
+    void build_cas_reference(std::vector<STLDeterminant>& ref_space);
 
     std::vector<int> get_occupation();
 
@@ -90,12 +92,16 @@ class CI_Reference // : public Wavefunction
     CI_Reference(std::shared_ptr<Wavefunction> wfn, Options& options,
                  std::shared_ptr<MOSpaceInfo> mo_space_info, STLBitsetDeterminant det,
                  int multiplicity, double ms, int symmetry);
+    CI_Reference(std::shared_ptr<Wavefunction> wfn, Options& options,
+                 std::shared_ptr<MOSpaceInfo> mo_space_info, STLDeterminant det,
+                 int multiplicity, double ms, int symmetry);
 
     /// Destructor
     ~CI_Reference();
 
     /// Build a reference
     void build_reference(std::vector<STLBitsetDeterminant>& ref_space);
+    void build_reference(std::vector<STLDeterminant>& ref_space);
 };
 }
 } // End Namespaces

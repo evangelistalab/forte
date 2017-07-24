@@ -52,7 +52,7 @@ class WFNOperator2 {
     WFNOperator2();
 
     /// Initializer
-    void initialize(std::vector<int>& symmetry, std::shared_ptr<FCIIntegrals> );
+    void initialize(std::vector<int>& symmetry, std::shared_ptr<FCIIntegrals>);
 
     /// Set print level
     void set_quiet_mode(bool mode);

@@ -67,7 +67,8 @@ class SigmaVector {
 /* Uses only cre lists, sparse sigma build */
 class SigmaVector2 : public SigmaVector {
   public:
-    SigmaVector2(const DeterminantMap2& space, WFNOperator2& op, std::shared_ptr<FCIIntegrals> fci_ints);
+    SigmaVector2(const DeterminantMap2& space, WFNOperator2& op,
+                 std::shared_ptr<FCIIntegrals> fci_ints);
     std::vector<std::vector<std::pair<size_t, short>>>& a_list_;
     std::vector<std::vector<std::pair<size_t, short>>>& b_list_;
     std::vector<std::vector<std::tuple<size_t, short, short>>>& aa_list_;
@@ -91,7 +92,6 @@ class SigmaVector2 : public SigmaVector {
 
     std::vector<double> diag_;
     std::shared_ptr<FCIIntegrals> fci_ints_;
-
 };
 
 /**
@@ -112,7 +112,7 @@ class SparseCISolver2 {
      * @param multiplicity The spin multiplicity of the solution (2S + 1).  1 =
      * singlet, 2 = doublet, ...
      */
-    SparseCISolver2(std::shared_ptr<FCIIntegrals> fci_ints); 
+    SparseCISolver2(std::shared_ptr<FCIIntegrals> fci_ints);
 
     void diagonalize_hamiltonian_map(const DeterminantMap2& space, WFNOperator2& op,
                                      SharedVector& evals, SharedMatrix& evecs, int nroot,

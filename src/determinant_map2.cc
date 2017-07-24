@@ -192,7 +192,7 @@ bool DeterminantMap2::has_det(const STLDeterminant& det) const {
 }
 
 double DeterminantMap2::overlap(std::vector<double>& det1_evecs, DeterminantMap2& det2,
-                               SharedMatrix det2_evecs, int root) {
+                                SharedMatrix det2_evecs, int root) {
 
     double overlap = 0.0;
 
@@ -207,7 +207,7 @@ double DeterminantMap2::overlap(std::vector<double>& det1_evecs, DeterminantMap2
 }
 
 double DeterminantMap2::overlap(SharedMatrix det1_evecs, int root1, DeterminantMap2& det2,
-                               SharedMatrix det2_evecs, int root2) {
+                                SharedMatrix det2_evecs, int root2) {
     double overlap = 0.0;
     for (detmap::iterator it = wfn_.begin(), endit = wfn_.end(); it != endit; ++it) {
         if (det2.has_det(it->first)) {
@@ -219,7 +219,7 @@ double DeterminantMap2::overlap(SharedMatrix det1_evecs, int root1, DeterminantM
 }
 
 void DeterminantMap2::subspace(DeterminantMap2& dets, SharedMatrix evecs,
-                              std::vector<double>& new_evecs, int dim, int root) {
+                               std::vector<double>& new_evecs, int dim, int root) {
     // Clear current wfn
     this->clear();
     new_evecs.assign(dim, 0.0);
@@ -248,7 +248,8 @@ void DeterminantMap2::subspace(DeterminantMap2& dets, SharedMatrix evecs,
 
 void DeterminantMap2::merge(DeterminantMap2& dets) {
     stldet_hash<size_t> detmap = dets.wfn_hash();
-    for (stldet_hash<size_t>::iterator it = detmap.begin(), endit = detmap.end(); it != endit; ++it) {
+    for (stldet_hash<size_t>::iterator it = detmap.begin(), endit = detmap.end(); it != endit;
+         ++it) {
         if (!(this->has_det(it->first))) {
             this->add(it->first);
         }

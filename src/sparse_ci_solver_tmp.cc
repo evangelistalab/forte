@@ -56,9 +56,10 @@ namespace forte {
 #define omp_get_num_threads() 1
 #endif
 
-SigmaVector2::SigmaVector2(const DeterminantMap2& space, WFNOperator2& op, std::shared_ptr<FCIIntegrals> fci_ints)
-    : SigmaVector(space.size()), space_(space), fci_ints_(fci_ints), a_list_(op.a_list_), b_list_(op.b_list_),
-      aa_list_(op.aa_list_), ab_list_(op.ab_list_), bb_list_(op.bb_list_) {
+SigmaVector2::SigmaVector2(const DeterminantMap2& space, WFNOperator2& op,
+                           std::shared_ptr<FCIIntegrals> fci_ints)
+    : SigmaVector(space.size()), space_(space), fci_ints_(fci_ints), a_list_(op.a_list_),
+      b_list_(op.b_list_), aa_list_(op.aa_list_), ab_list_(op.ab_list_), bb_list_(op.bb_list_) {
 
     stldet_hash<size_t> detmap = space_.wfn_hash();
     diag_.resize(space_.size());
@@ -150,7 +151,8 @@ void SigmaVector2::compute_sigma(SharedVector sigma, SharedVector b) {
                             const size_t I = detI.first;
                             double sign_q = detI.second > 0.0 ? 1.0 : -1.0;
                             const double HIJ =
-                                fci_ints_->slater_rules_single_alpha_abs(dets[J],p, q) * sign_p * sign_q;
+                                fci_ints_->slater_rules_single_alpha_abs(dets[J], p, q) * sign_p *
+                                sign_q;
                             sigma_t[I] += HIJ * b_p[J];
                         }
                     }
@@ -174,7 +176,8 @@ void SigmaVector2::compute_sigma(SharedVector sigma, SharedVector b) {
                             const size_t I = detI.first;
                             double sign_q = detI.second > 0.0 ? 1.0 : -1.0;
                             const double HIJ =
-                                fci_ints_->slater_rules_single_beta_abs(dets[J],p, q) * sign_p * sign_q;
+                                fci_ints_->slater_rules_single_beta_abs(dets[J], p, q) * sign_p *
+                                sign_q;
                             sigma_t[I] += HIJ * b_p[J];
                         }
                     }
@@ -269,7 +272,7 @@ void SigmaVector2::compute_sigma(SharedVector sigma, SharedVector b) {
     }
 }
 
-SparseCISolver2::SparseCISolver2( std::shared_ptr<FCIIntegrals> fci_ints ){ fci_ints_ = fci_ints;}
+SparseCISolver2::SparseCISolver2(std::shared_ptr<FCIIntegrals> fci_ints) { fci_ints_ = fci_ints; }
 
 void SparseCISolver2::set_spin_project(bool value) { spin_project_ = value; }
 
@@ -282,9 +285,9 @@ void SparseCISolver2::set_spin_project_full(bool value) { spin_project_full_ = v
 void SparseCISolver2::set_sigma_method(std::string value) { sigma_method_ = value; }
 
 void SparseCISolver2::diagonalize_hamiltonian_map(const DeterminantMap2& space, WFNOperator2& op,
-                                                 SharedVector& evals, SharedMatrix& evecs,
-                                                 int nroot, int multiplicity,
-                                                 DiagonalizationMethod diag_method) {
+                                                  SharedVector& evals, SharedMatrix& evecs,
+                                                  int nroot, int multiplicity,
+                                                  DiagonalizationMethod diag_method) {
     if (space.size() <= 200 or diag_method == Full) {
         const std::vector<STLDeterminant> dets = space.determinants();
         diagonalize_full(dets, evals, evecs, nroot, multiplicity);
@@ -294,8 +297,8 @@ void SparseCISolver2::diagonalize_hamiltonian_map(const DeterminantMap2& space, 
 }
 
 void SparseCISolver2::diagonalize_dl(const DeterminantMap2& space, WFNOperator2& op,
-                                    SharedVector& evals, SharedMatrix& evecs, int nroot,
-                                    int multiplicity) {
+                                     SharedVector& evals, SharedMatrix& evecs, int nroot,
+                                     int multiplicity) {
     if (print_details_) {
         outfile->Printf("\n\n  Davidson-Liu solver algorithm");
         outfile->Printf("\n  Using %s sigma builder", sigma_method_.c_str());
@@ -318,8 +321,8 @@ void SparseCISolver2::diagonalize_dl(const DeterminantMap2& space, WFNOperator2&
 }
 
 void SparseCISolver2::diagonalize_full(const std::vector<STLDeterminant>& space,
-                                      SharedVector& evals, SharedMatrix& evecs, int nroot,
-                                      int multiplicity) {
+                                       SharedVector& evals, SharedMatrix& evecs, int nroot,
+                                       int multiplicity) {
 
     size_t dim_space = space.size();
     evecs.reset(new Matrix("U", dim_space, nroot));
@@ -416,8 +419,7 @@ void SparseCISolver2::diagonalize_full(const std::vector<STLDeterminant>& space,
     }
 }
 
-SharedMatrix
-SparseCISolver2::build_full_hamiltonian(const std::vector<STLDeterminant>& space) {
+SharedMatrix SparseCISolver2::build_full_hamiltonian(const std::vector<STLDeterminant>& space) {
     // Build the H matrix
     size_t dim_space = space.size();
     SharedMatrix H(new Matrix("H", dim_space, dim_space));
@@ -534,7 +536,7 @@ SparseCISolver2::initial_guess_map(const DeterminantMap2& space, int nroot, int 
         for (size_t J = I; J < nguess; J++) {
             const STLDeterminant& detI = guess_dets_pos[I].first;
             const STLDeterminant& detJ = guess_dets_pos[J].first;
-            double HIJ = fci_ints_->slater_rules(detI,detJ);
+            double HIJ = fci_ints_->slater_rules(detI, detJ);
             H.set(I, J, HIJ);
             H.set(J, I, HIJ);
         }
@@ -630,9 +632,10 @@ void SparseCISolver2::set_initial_guess(std::vector<std::pair<size_t, double>>& 
 
 void SparseCISolver2::set_num_vecs(size_t value) { nvec_ = value; }
 
-bool SparseCISolver2::davidson_liu_solver_map(const DeterminantMap2& space, SigmaVector* sigma_vector,
-                                             SharedVector Eigenvalues, SharedMatrix Eigenvectors,
-                                             int nroot, int multiplicity) {
+bool SparseCISolver2::davidson_liu_solver_map(const DeterminantMap2& space,
+                                              SigmaVector* sigma_vector, SharedVector Eigenvalues,
+                                              SharedMatrix Eigenvectors, int nroot,
+                                              int multiplicity) {
     //    print_details_ = true;
     Timer dl;
     size_t fci_size = sigma_vector->size();
@@ -768,5 +771,5 @@ bool SparseCISolver2::davidson_liu_solver_map(const DeterminantMap2& space, Sigm
 
     return true;
 }
-
-}}
+}
+}

@@ -91,16 +91,16 @@ class DeterminantMap2 {
     bool has_det(const STLDeterminant& det) const;
 
     // Compute overlap between this and input wfn
-    double overlap(std::vector<double>& det1_evecs, DeterminantMap2& det2,
-                   SharedMatrix det2_evecs, int root);
+    double overlap(std::vector<double>& det1_evecs, DeterminantMap2& det2, SharedMatrix det2_evecs,
+                   int root);
 
     // Compute overlap between this and input wfn
     double overlap(SharedMatrix det1_evecs, int root1, DeterminantMap2& det2,
                    SharedMatrix det2_evecs, int root2);
 
     // Save most important subspace as this
-    void subspace(DeterminantMap2& dets, SharedMatrix evecs,
-                  std::vector<double>& new_evecs, int dim, int root);
+    void subspace(DeterminantMap2& dets, SharedMatrix evecs, std::vector<double>& new_evecs,
+                  int dim, int root);
 
     // Merge a wavefunction into this
     void merge(DeterminantMap2& dets);
