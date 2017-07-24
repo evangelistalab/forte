@@ -2268,7 +2268,7 @@ void AdaptiveCI::compute_aci(DeterminantMap& PQ_space, SharedMatrix& PQ_evecs,
 
     // Save the P_space energies to predict convergence
     std::vector<double> P_energies;
-   // approx_rdm_ = false;
+    // approx_rdm_ = false;
 
     int cycle;
     for (cycle = 0; cycle < max_cycle_; ++cycle) {
@@ -2728,13 +2728,13 @@ void AdaptiveCI::compute_multistate(SharedVector& PQ_evals) {
     //    PQ_evals->print();
 }
 
-DeterminantMap AdaptiveCI::approximate_wfn(DeterminantMap& PQ_space, SharedMatrix& evecs, SharedVector& evals,
-                                           SharedMatrix& new_evecs) {
+DeterminantMap AdaptiveCI::approximate_wfn(DeterminantMap& PQ_space, SharedMatrix& evecs,
+                                           SharedVector& evals, SharedMatrix& new_evecs) {
     DeterminantMap new_wfn;
     new_wfn.copy(PQ_space);
 
     det_hash<std::vector<double>> external_space;
-    get_excited_determinants( 1, evecs, PQ_space, external_space);
+    get_excited_determinants(1, evecs, PQ_space, external_space);
 
     size_t n_ref = PQ_space.size();
     size_t n_external = external_space.size();
@@ -2753,8 +2753,8 @@ DeterminantMap AdaptiveCI::approximate_wfn(DeterminantMap& PQ_space, SharedMatri
     double E0 = evals->get(0);
     for (auto& I : external_space) {
         new_wfn.add(I.first);
-        double val = I.second[0]/(E0 - I.first.energy());
-        new_evecs->set(new_wfn.get_idx(I.first), 0, val );
+        double val = I.second[0] / (E0 - I.first.energy());
+        new_evecs->set(new_wfn.get_idx(I.first), 0, val);
         sum += val * val;
     }
 
