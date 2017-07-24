@@ -53,7 +53,7 @@ STLBitsetDeterminant::STLBitsetDeterminant(const std::vector<bool>& occupation) 
 }
 
 STLBitsetDeterminant::STLBitsetDeterminant(const std::vector<bool>& occupation_a,
-                               const std::vector<bool>& occupation_b) {
+                                           const std::vector<bool>& occupation_b) {
     for (int p = 0; p < nmo_; ++p) {
         bits_[p] = occupation_a[p];
         bits_[p + nmo_] = occupation_b[p];
@@ -75,7 +75,9 @@ STLBitsetDeterminant::STLBitsetDeterminant(const bit_t& bits, int nmo) {
 
 void STLBitsetDeterminant::copy(const STLBitsetDeterminant& rhs) { bits_ = rhs.bits_; }
 
-bool STLBitsetDeterminant::operator==(const STLBitsetDeterminant& lhs) const { return (bits_ == lhs.bits_); }
+bool STLBitsetDeterminant::operator==(const STLBitsetDeterminant& lhs) const {
+    return (bits_ == lhs.bits_);
+}
 
 bool STLBitsetDeterminant::operator<(const STLBitsetDeterminant& lhs) const {
     for (int p = 2 * nmo_ - 1; p >= 0; --p) {

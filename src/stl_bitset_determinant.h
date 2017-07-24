@@ -69,11 +69,12 @@ class STLBitsetDeterminant {
     /// Construct an excited determinant of a given reference
     /// Construct the determinant from two occupation vectors that
     /// specifies the alpha and beta strings.  occupation = [Ia,Ib]
-    STLBitsetDeterminant(const std::vector<bool>& occupation_a, const std::vector<bool>& occupation_b);
+    STLBitsetDeterminant(const std::vector<bool>& occupation_a,
+                         const std::vector<bool>& occupation_b);
     /// Construct a determinant from a bitset object
     STLBitsetDeterminant(const bit_t& bits);
     STLBitsetDeterminant(const bit_t& bits, int nmo);
-    STLBitsetDeterminant(int nmo) {nmo_ = nmo;}
+    STLBitsetDeterminant(int nmo) { nmo_ = nmo; }
     /// Construct a determinant from two STLBitsetStrings
     //    explicit STLBitsetDeterminant(const STLBitsetString& alpha, const STLBitsetString& beta);
 
@@ -207,7 +208,8 @@ class STLBitsetDeterminant {
 using det_vec = std::vector<STLBitsetDeterminant>;
 template <typename T = double>
 using det_hash = std::unordered_map<STLBitsetDeterminant, T, STLBitsetDeterminant::Hash>;
-using det_hash_it = std::unordered_map<STLBitsetDeterminant, double, STLBitsetDeterminant::Hash>::iterator;
+using det_hash_it =
+    std::unordered_map<STLBitsetDeterminant, double, STLBitsetDeterminant::Hash>::iterator;
 }
 } // End Namespaces
 

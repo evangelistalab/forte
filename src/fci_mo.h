@@ -111,9 +111,7 @@ class FCI_MO : public Wavefunction {
     void xms_rotate(const int& irrep);
 
     /// Set fci_int_ pointer
-    void set_fci_int(std::shared_ptr<FCIIntegrals> fci_ints) {
-        fci_ints_ = fci_ints;
-    }
+    void set_fci_int(std::shared_ptr<FCIIntegrals> fci_ints) { fci_ints_ = fci_ints; }
 
     /// Set multiplicity
     void set_multiplicity(int multiplicity) { multi_ = multiplicity; }

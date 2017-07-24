@@ -99,8 +99,8 @@ class DeterminantMap {
                    SharedMatrix det2_evecs, int root2);
 
     // Save most important subspace as this
-    void subspace(DeterminantMap& dets, SharedMatrix evecs, std::vector<double>& new_evecs,
-                  int dim, int root);
+    void subspace(DeterminantMap& dets, SharedMatrix evecs, std::vector<double>& new_evecs, int dim,
+                  int root);
 
     // Merge a wavefunction into this
     void merge(DeterminantMap& dets);

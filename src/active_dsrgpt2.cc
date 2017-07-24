@@ -1543,7 +1543,6 @@ void ACTIVE_DSRGPT2::compute_osc_pt2_dets(const int& irrep, const int& root, con
     // print DSRG-PT2 transition density
     outfile->Printf("\nTrans. Dipole %s: X: %7.4f, Y: %7.4f, Z: %7.4f", name.c_str(), transD.x,
                     transD.y, transD.z);
-
 }
 
 std::map<STLBitsetDeterminant, double>
