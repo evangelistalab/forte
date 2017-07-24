@@ -557,7 +557,8 @@ double AdaptiveCI::compute_energy() {
     if (ex_alg_ == "ROOT_COMBINE") {
         compute_rdms(full_space, op_c, PQ_evecs, 0, 0);
     } else if (approx_rdm_) {
-        DeterminantMap approx = approximate_wfn(final_wfn_, PQ_evecs, external_wfn_, new_evecs);
+        outfile->Printf("\n  Approximating RDMs");
+        DeterminantMap approx = approximate_wfn(final_wfn_, PQ_evecs, PQ_evals, new_evecs);
         //    WFNOperator op1(mo_space_info_);
         //    op1.op_lists(approx);
         op_.clear_op_lists();
@@ -775,11 +776,6 @@ void AdaptiveCI::default_find_q_space(DeterminantMap& P_space, DeterminantMap& P
             sum += energy;
             ept2[0] -= energy;
             last_excluded = I;
-
-            // Optionally save an approximate external wfn
-            if (approx_rdm_) {
-                external_wfn_[det] = V_hash[det][0] / (evals->get(0) - det.energy());
-            }
         } else {
             PQ_space.add(det);
         }
@@ -925,10 +921,6 @@ void AdaptiveCI::find_q_space(DeterminantMap& P_space, DeterminantMap& PQ_space,
                     ept2[n] += E2_I;
                 }
                 last_excluded = I;
-                // Optionally save an approximate external wfn
-                if (approx_rdm_) {
-                    external_wfn_[det] = V_hash[det][0] / (evals->get(0) - det.energy());
-                }
             } else {
                 PQ_space.add(sorted_dets[I].second);
             }
@@ -2276,7 +2268,7 @@ void AdaptiveCI::compute_aci(DeterminantMap& PQ_space, SharedMatrix& PQ_evecs,
 
     // Save the P_space energies to predict convergence
     std::vector<double> P_energies;
-    approx_rdm_ = false;
+   // approx_rdm_ = false;
 
     int cycle;
     for (cycle = 0; cycle < max_cycle_; ++cycle) {
@@ -2736,11 +2728,13 @@ void AdaptiveCI::compute_multistate(SharedVector& PQ_evals) {
     //    PQ_evals->print();
 }
 
-DeterminantMap AdaptiveCI::approximate_wfn(DeterminantMap& PQ_space, SharedMatrix& evecs,
-                                           det_hash<double>& external_space,
+DeterminantMap AdaptiveCI::approximate_wfn(DeterminantMap& PQ_space, SharedMatrix& evecs, SharedVector& evals,
                                            SharedMatrix& new_evecs) {
     DeterminantMap new_wfn;
     new_wfn.copy(PQ_space);
+
+    det_hash<std::vector<double>> external_space;
+    get_excited_determinants( 1, evecs, PQ_space, external_space);
 
     size_t n_ref = PQ_space.size();
     size_t n_external = external_space.size();
@@ -2750,17 +2744,18 @@ DeterminantMap AdaptiveCI::approximate_wfn(DeterminantMap& PQ_space, SharedMatri
     new_evecs.reset(new Matrix("U", total_size, 1));
     double sum = 0.0;
 
-#pragma omp parallel for reduction(+ : sum)
     for (size_t I = 0; I < n_ref; ++I) {
         double val = evecs->get(I, 0);
         new_evecs->set(I, 0, val);
         sum += val * val;
     }
 
+    double E0 = evals->get(0);
     for (auto& I : external_space) {
         new_wfn.add(I.first);
-        new_evecs->set(new_wfn.get_idx(I.first), 0, I.second);
-        sum += I.second * I.second;
+        double val = I.second[0]/(E0 - I.first.energy());
+        new_evecs->set(new_wfn.get_idx(I.first), 0, val );
+        sum += val * val;
     }
 
     outfile->Printf("\n  Norm of approximate wfn: %1.12f", std::sqrt(sum));
