@@ -41,8 +41,7 @@
 namespace psi {
 namespace forte {
 
-WFNOperator2::WFNOperator2(std::vector<int>& symmetry, std::shared_ptr<FCIIntegrals> fci_ints) 
-{ 
+WFNOperator2::WFNOperator2(std::vector<int>& symmetry, std::shared_ptr<FCIIntegrals> fci_ints) {
     mo_symmetry_ = symmetry;
     fci_ints_ = fci_ints;
 }
@@ -51,8 +50,8 @@ WFNOperator2::WFNOperator2() {}
 
 void WFNOperator2::set_quiet_mode(bool mode) { quiet_ = mode; }
 
-void WFNOperator2::initialize(std::vector<int>& symmetry, std::shared_ptr<FCIIntegrals> fci_ints) { 
-    mo_symmetry_ = symmetry; 
+void WFNOperator2::initialize(std::vector<int>& symmetry, std::shared_ptr<FCIIntegrals> fci_ints) {
+    mo_symmetry_ = symmetry;
     fci_ints_ = fci_ints;
 }
 
@@ -86,7 +85,8 @@ WFNOperator2::build_H_sparse(const DeterminantMap2& wfn) {
                 if (p != q) {
                     size_t J = detJ.first;
                     double sign_q = detJ.second > 0.0 ? 1.0 : -1.0;
-                    double HIJ = sign_p * sign_q * fci_ints_->slater_rules_single_alpha_abs(dets[J], p, q);
+                    double HIJ =
+                        sign_p * sign_q * fci_ints_->slater_rules_single_alpha_abs(dets[J], p, q);
                     H_sparse[idx].first.push_back(J);
                     H_sparse[idx].second.push_back(HIJ);
                     n_nonzero++;
@@ -108,7 +108,8 @@ WFNOperator2::build_H_sparse(const DeterminantMap2& wfn) {
                 if (p != q) {
                     size_t J = detJ.first;
                     double sign_q = detJ.second > 0.0 ? 1.0 : -1.0;
-                    double HIJ = sign_p * sign_q * fci_ints_->slater_rules_single_beta_abs(dets[J], p, q);
+                    double HIJ =
+                        sign_p * sign_q * fci_ints_->slater_rules_single_beta_abs(dets[J], p, q);
                     H_sparse[idx].first.push_back(J);
                     H_sparse[idx].second.push_back(HIJ);
                     n_nonzero++;
@@ -132,8 +133,7 @@ WFNOperator2::build_H_sparse(const DeterminantMap2& wfn) {
                 if ((p != r) and (q != s) and (p != s) and (q != r)) {
                     size_t J = std::get<0>(detJ);
                     double sign_q = std::get<1>(detJ) > 0.0 ? 1.0 : -1.0;
-                    double HIJ =
-                        sign_p * sign_q * fci_ints_->tei_aa(p, q, r, s);
+                    double HIJ = sign_p * sign_q * fci_ints_->tei_aa(p, q, r, s);
                     H_sparse[idx].first.push_back(J);
                     H_sparse[idx].second.push_back(HIJ);
                     n_nonzero++;
@@ -157,8 +157,7 @@ WFNOperator2::build_H_sparse(const DeterminantMap2& wfn) {
                 if ((p != r) and (q != s) and (p != s) and (q != r)) {
                     size_t J = std::get<0>(detJ);
                     double sign_q = std::get<1>(detJ) > 0.0 ? 1.0 : -1.0;
-                    double HIJ =
-                        sign_p * sign_q * fci_ints_->tei_bb(p, q, r, s);
+                    double HIJ = sign_p * sign_q * fci_ints_->tei_bb(p, q, r, s);
                     H_sparse[idx].first.push_back(J);
                     H_sparse[idx].second.push_back(HIJ);
                     n_nonzero++;
@@ -182,8 +181,7 @@ WFNOperator2::build_H_sparse(const DeterminantMap2& wfn) {
                 if ((p != r) and (q != s)) {
                     size_t J = std::get<0>(detJ);
                     double sign_q = std::get<1>(detJ) > 0.0 ? 1.0 : -1.0;
-                    double HIJ =
-                        sign_p * sign_q * fci_ints_->tei_ab(p, q, r, s);
+                    double HIJ = sign_p * sign_q * fci_ints_->tei_ab(p, q, r, s);
                     H_sparse[idx].first.push_back(J);
                     H_sparse[idx].second.push_back(HIJ);
                     n_nonzero++;
@@ -1149,6 +1147,5 @@ void WFNOperator2::three_s_lists(DeterminantMap2& wfn) {
         }
     }
 }
-
 }
 }
