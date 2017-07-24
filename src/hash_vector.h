@@ -34,7 +34,6 @@
 #include <unordered_map>
 #include <tuple>
 #include <functional>
-#include <iostream>
 
 template <class Key, class Hash = std::hash<Key>> class HashVector {
   private:
@@ -78,8 +77,12 @@ template <class Key, class Hash = std::hash<Key>> class HashVector {
     /*- Modifiers -*/
     void clear();
     size_t add(const Key& key);
-    std::pair<size_t, size_t> erase_by_key(const Key& key);
-    std::pair<size_t, size_t> erase_by_index(size_t index);
+    void erase_by_key(const Key& key);
+    void erase_by_index(size_t index);
+    void erase_by_key(std::vector<Key> keys);
+    void erase_by_index(std::vector<size_t> indices);
+    std::pair<size_t, size_t> erase_by_key_move_last(const Key& key);
+    std::pair<size_t, size_t> erase_by_index_move_last(size_t index);
     template <class Hash_2> std::vector<size_t> merge(const HashVector<Key, Hash_2>& source);
     std::vector<size_t> merge(const std::vector<Key>& source);
     template <class Hash_2> void merge(const std::unordered_set<Key, Hash_2>& source);
@@ -339,8 +342,154 @@ template <class Key, class Hash> size_t HashVector<Key, Hash>::add(const Key& ke
     return current_size - 1;
 }
 
+template <class Key, class Hash> void HashVector<Key, Hash>::erase_by_key(const Key& key) {
+    size_t key_bucket_index, key_pre_index, key_index;
+    std::tie(key_bucket_index, key_pre_index, key_index) = find_detail_by_key(key);
+    if (key_index == npos)
+        return;
+    if (key_pre_index == npos) {
+        this->begin_index[key_bucket_index] = this->vec[key_index].next;
+    } else {
+        this->vec[key_pre_index].next = this->vec[key_index].next;
+    }
+    this->vec.erase(this->vec.begin() + key_index);
+    for (size_t& b : this->begin_index) {
+        if (b != npos && b > key_index) {
+            --b;
+        }
+    }
+    for (CINode<Key>& node : this->vec) {
+        if (node.next != npos && node.next > key_index) {
+            --node.next;
+        }
+    }
+    this->current_size--;
+}
+
+template <class Key, class Hash> void HashVector<Key, Hash>::erase_by_index(size_t index) {
+    return erase_by_key(this->operator [](index));
+}
+
+template <class Key, class Hash> void HashVector<Key, Hash>::erase_by_key(std::vector<Key> keys) {
+    std::vector<size_t> indices;
+    indices.reserve(keys.size());
+    for (Key& k : keys) {
+        size_t key_bucket_index, key_pre_index, key_index;
+        std::tie(key_bucket_index, key_pre_index, key_index) = find_detail_by_key(k);
+        if (key_index == npos)
+            continue;
+        indices.push_back(key_index);
+        if (key_pre_index == npos) {
+            this->begin_index[key_bucket_index] = this->vec[key_index].next;
+        } else {
+            this->vec[key_pre_index].next = this->vec[key_index].next;
+        }
+    }
+    size_t remove_size = indices.size();
+    if (remove_size == 0) {
+        return;
+    }
+    std::sort(indices.begin(), indices.end());
+    for (size_t& b : this->begin_index) {
+        if (b != npos) {
+            size_t m = 0;
+            for (size_t i : indices) {
+                if (b > i) {
+                    ++m;
+                } else {
+                    break;
+                }
+            }
+            b -= m;
+        }
+    }
+    for (CINode<Key>& node : this->vec) {
+        if (node.next != npos) {
+            size_t m = 0;
+            for (size_t i : indices) {
+                if (node.next > i) {
+                    ++m;
+                } else {
+                    break;
+                }
+            }
+            node.next -= m;
+        }
+    }
+    size_t current_move = 1;
+    size_t next_remove = (remove_size >= 2) ? indices[1] : npos;
+    for (size_t i = indices[0] + 1; i < this->current_size; ++i) {
+        if (i == next_remove) {
+            ++current_move;
+            next_remove = (current_move < remove_size) ? indices[current_move] : npos;
+        } else {
+            this->vec[i - current_move] = std::move(this->vec[i]);
+        }
+    }
+    this->vec.erase(vec.end() - remove_size, vec.end());
+    this->current_size -= remove_size;
+}
+
 template <class Key, class Hash>
-std::pair<size_t, size_t> HashVector<Key, Hash>::erase_by_key(const Key& key) {
+void HashVector<Key, Hash>::erase_by_index(std::vector<size_t> indices) {
+    std::sort(indices.begin(), indices.end());
+    for (size_t i : indices) {
+        size_t key_bucket_index, key_pre_index, key_index;
+        std::tie(key_bucket_index, key_pre_index, key_index) = find_detail_by_key(this->operator [](i));
+        if (key_index == npos)
+            continue;
+        if (key_pre_index == npos) {
+            this->begin_index[key_bucket_index] = this->vec[key_index].next;
+        } else {
+            this->vec[key_pre_index].next = this->vec[key_index].next;
+        }
+    }
+    size_t remove_size = indices.size();
+    if (remove_size == 0) {
+        return;
+    }
+    for (size_t& b : this->begin_index) {
+        if (b != npos) {
+            size_t m = 0;
+            for (size_t i : indices) {
+                if (b > i) {
+                    ++m;
+                } else {
+                    break;
+                }
+            }
+            b -= m;
+        }
+    }
+    for (CINode<Key>& node : this->vec) {
+        if (node.next != npos) {
+            size_t m = 0;
+            for (size_t i : indices) {
+                if (node.next > i) {
+                    ++m;
+                } else {
+                    break;
+                }
+            }
+            node.next -= m;
+        }
+    }
+    size_t current_move = 1;
+    size_t next_remove = (remove_size >= 2) ? indices[1] : npos;
+    for (size_t i = indices[0] + 1; i < this->current_size; ++i) {
+        if (i == next_remove) {
+            ++current_move;
+            next_remove = (current_move < remove_size) ? indices[current_move] : npos;
+        } else {
+            this->vec[i - current_move] = std::move(this->vec[i]);
+        }
+    }
+    this->vec.erase(vec.end() - remove_size, vec.end());
+    this->current_size -= remove_size;
+}
+
+template <class Key, class Hash>
+std::pair<size_t, size_t> HashVector<Key, Hash>::erase_by_key_move_last(const Key& key) {
     size_t key_bucket_index, key_pre_index, key_index;
     size_t last_bucket_index, last_pre_index, last_index;
     std::tie(key_bucket_index, key_pre_index, key_index) = find_detail_by_key(key);
@@ -373,8 +522,8 @@ std::pair<size_t, size_t> HashVector<Key, Hash>::erase_by_key(const Key& key) {
 }
 
 template <class Key, class Hash>
-std::pair<size_t, size_t> HashVector<Key, Hash>::erase_by_index(size_t index) {
-    return erase_by_key(this->vec.operator[](index).value);
+std::pair<size_t, size_t> HashVector<Key, Hash>::erase_by_index_move_last(size_t index) {
+    return erase_by_key_move_last(this->operator [](index));
 }
 
 template <class Key, class Hash>
