@@ -368,8 +368,8 @@ class AdaptiveCI : public Wavefunction {
     void block_diagonalize_fock(const d2& Fa, const d2& Fb, SharedMatrix& Ua, SharedMatrix& Ub,
                                 const std::string& name);
 
-    DeterminantMap approximate_wfn(DeterminantMap& PQ_space, SharedMatrix& evecs,
-                                   det_hash<double>& external_space, SharedMatrix& new_evecs);
+    DeterminantMap approximate_wfn(DeterminantMap& PQ_space, SharedMatrix& evecs,SharedVector& PQ_evals,
+                                   SharedMatrix& new_evecs);
 
     std::vector<std::pair<size_t, double>>
     dl_initial_guess(std::vector<STLBitsetDeterminant>& old_dets,
