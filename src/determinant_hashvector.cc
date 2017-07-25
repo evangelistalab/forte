@@ -27,6 +27,7 @@
  */
 
 #include "determinant_hashvector.h"
+#include "fci/fci_integrals.h"
 #include <numeric>
 #include <cmath>
 

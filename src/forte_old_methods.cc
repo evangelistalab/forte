@@ -49,6 +49,7 @@
 #include "ci-no/ci-no.h"
 #include "fci/fci.h"
 #include "fci/fci_solver.h"
+#include "fci/fci_integrals.h"
 #include "fci_mo.h"
 #include "fcimc.h"
 #include "finite_temperature.h"

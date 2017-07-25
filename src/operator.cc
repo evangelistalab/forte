@@ -61,7 +61,7 @@ WFNOperator::build_H_sparse(const DeterminantMap& wfn) {
     // Add diagonal
     for (size_t I = 0; I < size; ++I) {
         H_sparse[I].first.push_back(I);
-        H_sparse[I].second.push_back(dets[I].energy());
+        H_sparse[I].second.push_back((fci_ints_->energy(dets[I]));
         n_nonzero++;
     }
 

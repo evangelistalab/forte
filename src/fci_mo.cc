@@ -1445,7 +1445,7 @@ void FCI_MO::Diagonalize_H_noHF(const vecdet& p_space, const int& multi, const i
         // compute RHF energy
         outfile->Printf("\n  Isolate RHF determinant to the rest determinants.");
         outfile->Printf("\n  Recompute RHF energy ... ");
-        double Erhf = rhf.slater_rules(rhf) + fci_ints_->scalar_energy() + e_nuc_;
+        double Erhf = fci_ints_->energy(rhf) + fci_ints_->scalar_energy() + e_nuc_;
         SharedVector rhf_vec(new Vector("RHF Eigen Vector", det_size));
         rhf_vec->set(det_size - 1, 1.0);
         eigen.push_back(std::make_pair(rhf_vec, Erhf));

@@ -29,6 +29,7 @@
 #ifndef _wfn_operator_h_
 #define _wfn_operator_h_
 
+#include "psi4/libpsi4util/process.h"
 #include "determinant_map.h"
 #include "stl_bitset_determinant.h"
 
