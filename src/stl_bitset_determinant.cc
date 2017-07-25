@@ -43,17 +43,20 @@ namespace forte {
 STLBitsetDeterminant::STLBitsetDeterminant() {}
 
 STLBitsetDeterminant::STLBitsetDeterminant(const std::vector<int>& occupation) {
+    nmo_ = occupation.size();
     for (int p = 0; p < 2 * nmo_; ++p)
         bits_[p] = occupation[p];
 }
 
 STLBitsetDeterminant::STLBitsetDeterminant(const std::vector<bool>& occupation) {
+    nmo_ = occupation.size();
     for (int p = 0; p < 2 * nmo_; ++p)
         bits_[p] = occupation[p];
 }
 
 STLBitsetDeterminant::STLBitsetDeterminant(const std::vector<bool>& occupation_a,
                                            const std::vector<bool>& occupation_b) {
+    nmo_ = occupation_a.size() * 2;
     for (int p = 0; p < nmo_; ++p) {
         bits_[p] = occupation_a[p];
         bits_[p + nmo_] = occupation_b[p];
@@ -554,7 +557,7 @@ double STLBitsetDeterminant::SlaterSign(const bit_t& bits, int i, int j, int a, 
 }
 */
 void STLBitsetDeterminant::enforce_spin_completeness(std::vector<STLBitsetDeterminant>& det_space) {
-    stldet_hash<bool> det_map;
+    det_hash<bool> det_map;
 
     // Add all determinants to the map, assume set is mostly spin complete
     for (auto& I : det_space) {

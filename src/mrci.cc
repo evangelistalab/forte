@@ -78,7 +78,7 @@ void MRCI::startup() {
 double MRCI::compute_energy() {
 
     upcast_reference();
-    WFNOperator op(mo_symmetry_);
+    WFNOperator op(mo_symmetry_, fci_ints_);
 
     outfile->Printf("\n  Adding single and double excitations ...");
     Timer add;
@@ -101,7 +101,7 @@ double MRCI::compute_energy() {
     SharedMatrix evecs;
     SharedVector evals;
 
-    SparseCISolver sparse_solver;
+    SparseCISolver sparse_solver(fci_ints_);
 
     // set options
     sparse_solver.set_sigma_method(sigma_alg);

@@ -41,7 +41,10 @@
 namespace psi {
 namespace forte {
 
-WFNOperator::WFNOperator(std::vector<int>& symmetry) { mo_symmetry_ = symmetry; }
+WFNOperator::WFNOperator(std::vector<int>& symmetry, std::shared_ptr<FCIIntegrals> fci_ints) { 
+mo_symmetry_ = symmetry; 
+fci_ints_ = fci_ints;
+}
 
 WFNOperator::WFNOperator() {}
 
@@ -61,7 +64,7 @@ WFNOperator::build_H_sparse(const DeterminantMap& wfn) {
     // Add diagonal
     for (size_t I = 0; I < size; ++I) {
         H_sparse[I].first.push_back(I);
-        H_sparse[I].second.push_back((fci_ints_->energy(dets[I]));
+        H_sparse[I].second.push_back((fci_ints_->energy(dets[I])));
         n_nonzero++;
     }
 
@@ -79,7 +82,7 @@ WFNOperator::build_H_sparse(const DeterminantMap& wfn) {
                 if (p != q) {
                     size_t J = detJ.first;
                     double sign_q = detJ.second > 0.0 ? 1.0 : -1.0;
-                    double HIJ = sign_p * sign_q * dets[J].slater_rules_single_alpha_abs(p, q);
+                    double HIJ = sign_p * sign_q * fci_ints_->slater_rules_single_alpha_abs(dets[J], p, q);
                     H_sparse[idx].first.push_back(J);
                     H_sparse[idx].second.push_back(HIJ);
                     n_nonzero++;
@@ -101,7 +104,7 @@ WFNOperator::build_H_sparse(const DeterminantMap& wfn) {
                 if (p != q) {
                     size_t J = detJ.first;
                     double sign_q = detJ.second > 0.0 ? 1.0 : -1.0;
-                    double HIJ = sign_p * sign_q * dets[J].slater_rules_single_beta_abs(p, q);
+                    double HIJ = sign_p * sign_q * fci_ints_->slater_rules_single_beta_abs(dets[J],p, q);
                     H_sparse[idx].first.push_back(J);
                     H_sparse[idx].second.push_back(HIJ);
                     n_nonzero++;
@@ -125,8 +128,7 @@ WFNOperator::build_H_sparse(const DeterminantMap& wfn) {
                 if ((p != r) and (q != s) and (p != s) and (q != r)) {
                     size_t J = std::get<0>(detJ);
                     double sign_q = std::get<1>(detJ) > 0.0 ? 1.0 : -1.0;
-                    double HIJ =
-                        sign_p * sign_q * STLBitsetDeterminant::fci_ints_->tei_aa(p, q, r, s);
+                    double HIJ = sign_p * sign_q * fci_ints_->tei_aa(p, q, r, s);
                     H_sparse[idx].first.push_back(J);
                     H_sparse[idx].second.push_back(HIJ);
                     n_nonzero++;
@@ -150,8 +152,7 @@ WFNOperator::build_H_sparse(const DeterminantMap& wfn) {
                 if ((p != r) and (q != s) and (p != s) and (q != r)) {
                     size_t J = std::get<0>(detJ);
                     double sign_q = std::get<1>(detJ) > 0.0 ? 1.0 : -1.0;
-                    double HIJ =
-                        sign_p * sign_q * STLBitsetDeterminant::fci_ints_->tei_bb(p, q, r, s);
+                    double HIJ = sign_p * sign_q * fci_ints_->tei_bb(p, q, r, s);
                     H_sparse[idx].first.push_back(J);
                     H_sparse[idx].second.push_back(HIJ);
                     n_nonzero++;
@@ -175,8 +176,7 @@ WFNOperator::build_H_sparse(const DeterminantMap& wfn) {
                 if ((p != r) and (q != s)) {
                     size_t J = std::get<0>(detJ);
                     double sign_q = std::get<1>(detJ) > 0.0 ? 1.0 : -1.0;
-                    double HIJ =
-                        sign_p * sign_q * STLBitsetDeterminant::fci_ints_->tei_ab(p, q, r, s);
+                    double HIJ = sign_p * sign_q * fci_ints_->tei_ab(p, q, r, s);
                     H_sparse[idx].first.push_back(J);
                     H_sparse[idx].second.push_back(HIJ);
                     n_nonzero++;
@@ -639,7 +639,7 @@ void WFNOperator::op_s_lists(DeterminantMap& wfn) {
                 int ii = aocc[i];
                 STLBitsetDeterminant detJ(detI);
                 detJ.set_alfa_bit(ii, false);
-                double sign = detI.slater_sign_alpha(ii);
+                double sign = detI.slater_sign_a(ii);
                 size_t detJ_add;
                 auto search = map_a_ann.find(detJ);
                 if (search == map_a_ann.end()) {
@@ -682,7 +682,7 @@ void WFNOperator::op_s_lists(DeterminantMap& wfn) {
                 int ii = bocc[i];
                 STLBitsetDeterminant detJ(detI);
                 detJ.set_beta_bit(ii, false);
-                double sign = detI.slater_sign_beta(ii);
+                double sign = detI.slater_sign_b(ii);
                 size_t detJ_add;
                 auto search = map_b_ann.find(detJ);
                 if (search == map_b_ann.end()) {
@@ -730,7 +730,7 @@ void WFNOperator::op_lists(DeterminantMap& wfn) {
                     int ii = aocc[i];
                     STLBitsetDeterminant detJ(detI);
                     detJ.set_alfa_bit(ii, false);
-                    double sign = detI.slater_sign_alpha(ii);
+                    double sign = detI.slater_sign_a(ii);
 
                     det_hash<int>::iterator it = map_a_ann.find(detJ);
                     size_t detJ_add;
@@ -773,7 +773,7 @@ void WFNOperator::op_lists(DeterminantMap& wfn) {
                     STLBitsetDeterminant detJ(detI);
                     detJ.set_beta_bit(ii, false);
 
-                    double sign = detI.slater_sign_beta(ii);
+                    double sign = detI.slater_sign_b(ii);
 
                     det_hash<int>::iterator it = map_b_ann.find(detJ);
                     size_t detJ_add;
@@ -843,7 +843,7 @@ void WFNOperator::tp_s_lists(DeterminantMap& wfn) {
                         detJ.set_alfa_bit(ii, false);
                         detJ.set_alfa_bit(jj, false);
 
-                        double sign = detI.slater_sign_alpha(ii) * detI.slater_sign_alpha(jj);
+                        double sign = detI.slater_sign_a(ii) * detI.slater_sign_a(jj);
 
                         det_hash<int>::iterator it = map_aa_ann.find(detJ);
                         size_t detJ_add;
@@ -896,7 +896,7 @@ void WFNOperator::tp_s_lists(DeterminantMap& wfn) {
                         detJ.set_beta_bit(ii, false);
                         detJ.set_beta_bit(jj, false);
 
-                        double sign = detI.slater_sign_beta(ii) * detI.slater_sign_beta(jj);
+                        double sign = detI.slater_sign_b(ii) * detI.slater_sign_b(jj);
 
                         det_hash<int>::iterator it = map_bb_ann.find(detJ);
                         size_t detJ_add;
@@ -949,7 +949,7 @@ void WFNOperator::tp_s_lists(DeterminantMap& wfn) {
                     STLBitsetDeterminant detJ(detI);
                     detJ.set_beta_bit(jj, false);
 
-                    double sign = detI.slater_sign_alpha(ii) * detI.slater_sign_beta(jj);
+                    double sign = detI.slater_sign_a(ii) * detI.slater_sign_b(jj);
                     det_hash<int>::iterator it = map_ab_ann.find(detJ);
                     size_t detJ_add;
 
@@ -1011,7 +1011,7 @@ void WFNOperator::tp_lists(DeterminantMap& wfn) {
                         detJ.set_alfa_bit(ii, false);
                         detJ.set_alfa_bit(jj, false);
 
-                        double sign = detI.slater_sign_alpha(ii) * detI.slater_sign_alpha(jj);
+                        double sign = detI.slater_sign_a(ii) * detI.slater_sign_a(jj);
 
                         det_hash<int>::iterator it = map_aa_ann.find(detJ);
                         size_t detJ_add;
@@ -1061,7 +1061,7 @@ void WFNOperator::tp_lists(DeterminantMap& wfn) {
                         detJ.set_beta_bit(ii, false);
                         detJ.set_beta_bit(jj, false);
 
-                        double sign = detI.slater_sign_beta(ii) * detI.slater_sign_beta(jj);
+                        double sign = detI.slater_sign_b(ii) * detI.slater_sign_b(jj);
 
                         det_hash<int>::iterator it = map_bb_ann.find(detJ);
                         size_t detJ_add;
@@ -1114,7 +1114,7 @@ void WFNOperator::tp_lists(DeterminantMap& wfn) {
                     STLBitsetDeterminant detJ(detI);
                     detJ.set_beta_bit(jj, false);
 
-                    double sign = detI.slater_sign_alpha(ii) * detI.slater_sign_beta(jj);
+                    double sign = detI.slater_sign_a(ii) * detI.slater_sign_b(jj);
                     det_hash<int>::iterator it = map_ab_ann.find(detJ);
                     size_t detJ_add;
 
@@ -1228,8 +1228,8 @@ void WFNOperator::three_s_lists(DeterminantMap& wfn) {
                             detJ.set_alfa_bit(jj, false);
                             detJ.set_alfa_bit(kk, false);
 
-                            double sign = detI.slater_sign_alpha(ii) * detI.slater_sign_alpha(jj) *
-                                          detI.slater_sign_alpha(kk);
+                            double sign = detI.slater_sign_a(ii) * detI.slater_sign_a(jj) *
+                                          detI.slater_sign_a(kk);
 
                             det_hash<int>::iterator it = map_aaa.find(detJ);
                             size_t detJ_add;
@@ -1316,8 +1316,8 @@ void WFNOperator::three_s_lists(DeterminantMap& wfn) {
                         detJ.set_alfa_bit(ii, false);
                         detJ.set_alfa_bit(jj, false);
 
-                        double sign = detI.slater_sign_alpha(ii) * detI.slater_sign_alpha(jj) *
-                                      detI.slater_sign_beta(kk);
+                        double sign = detI.slater_sign_a(ii) * detI.slater_sign_a(jj) *
+                                      detI.slater_sign_b(kk);
 
                         det_hash<int>::iterator hash_it = aab_ann_map.find(detJ);
                         size_t detJ_add;
@@ -1373,8 +1373,8 @@ void WFNOperator::three_s_lists(DeterminantMap& wfn) {
                         detJ.set_beta_bit(jj, false);
                         detJ.set_beta_bit(kk, false);
 
-                        double sign = detI.slater_sign_alpha(ii) * detI.slater_sign_beta(jj) *
-                                      detI.slater_sign_beta(kk);
+                        double sign = detI.slater_sign_a(ii) * detI.slater_sign_b(jj) *
+                                      detI.slater_sign_b(kk);
 
                         det_hash<int>::iterator hash_it = abb_ann_map.find(detJ);
                         size_t detJ_add;
@@ -1431,8 +1431,8 @@ void WFNOperator::three_s_lists(DeterminantMap& wfn) {
                             detJ.set_beta_bit(jj, false);
                             detJ.set_beta_bit(kk, false);
 
-                            double sign = detI.slater_sign_beta(ii) * detI.slater_sign_beta(jj) *
-                                          detI.slater_sign_beta(kk);
+                            double sign = detI.slater_sign_b(ii) * detI.slater_sign_b(jj) *
+                                          detI.slater_sign_b(kk);
 
                             det_hash<int>::iterator hash_it = bbb_ann_map.find(detJ);
                             size_t detJ_add;
@@ -1498,8 +1498,8 @@ void WFNOperator::three_lists(DeterminantMap& wfn) {
                             detJ.set_alfa_bit(jj, false);
                             detJ.set_alfa_bit(kk, false);
 
-                            double sign = detI.slater_sign_alpha(ii) * detI.slater_sign_alpha(jj) *
-                                          detI.slater_sign_alpha(kk);
+                            double sign = detI.slater_sign_a(ii) * detI.slater_sign_a(jj) *
+                                          detI.slater_sign_a(kk);
 
                             det_hash<int>::iterator hash_it = aaa_ann_map.find(detJ);
                             size_t detJ_add;
@@ -1583,8 +1583,8 @@ void WFNOperator::three_lists(DeterminantMap& wfn) {
                         detJ.set_alfa_bit(ii, false);
                         detJ.set_alfa_bit(jj, false);
 
-                        double sign = detI.slater_sign_alpha(ii) * detI.slater_sign_alpha(jj) *
-                                      detI.slater_sign_beta(kk);
+                        double sign = detI.slater_sign_a(ii) * detI.slater_sign_a(jj) *
+                                      detI.slater_sign_b(kk);
 
                         det_hash<int>::iterator hash_it = aab_ann_map.find(detJ);
                         size_t detJ_add;
@@ -1640,8 +1640,8 @@ void WFNOperator::three_lists(DeterminantMap& wfn) {
                         detJ.set_beta_bit(jj, false);
                         detJ.set_beta_bit(kk, false);
 
-                        double sign = detI.slater_sign_alpha(ii) * detI.slater_sign_beta(jj) *
-                                      detI.slater_sign_beta(kk);
+                        double sign = detI.slater_sign_a(ii) * detI.slater_sign_b(jj) *
+                                      detI.slater_sign_b(kk);
 
                         det_hash<int>::iterator hash_it = abb_ann_map.find(detJ);
                         size_t detJ_add;
@@ -1697,8 +1697,8 @@ void WFNOperator::three_lists(DeterminantMap& wfn) {
                             detJ.set_beta_bit(jj, false);
                             detJ.set_beta_bit(kk, false);
 
-                            double sign = detI.slater_sign_beta(ii) * detI.slater_sign_beta(jj) *
-                                          detI.slater_sign_beta(kk);
+                            double sign = detI.slater_sign_b(ii) * detI.slater_sign_b(jj) *
+                                          detI.slater_sign_b(kk);
 
                             det_hash<int>::iterator hash_it = bbb_ann_map.find(detJ);
                             size_t detJ_add;

@@ -588,7 +588,7 @@ void FCIQMC::spawn(walker_map& walkers, walker_map& new_walkers) {
 
                 //                outfile->Printf("\nreached here 2!");
 
-                double HIJ = fci_ints_->slater_rules(new_det,det);
+                double HIJ = fci_ints_->slater_rules(new_det, det);
                 double pspawn = time_step_ * std::fabs(HIJ) * double(sumgen);
                 int pspawn_floor = std::floor(pspawn);
                 if (rand_real() < pspawn - double(pspawn_floor)) {
@@ -656,7 +656,7 @@ void FCIQMC::spawn(walker_map& walkers, walker_map& new_walkers) {
                 else
                     detSingleExcitation(new_det, singleExcitations[gen - sumDouble]);
 
-                double HIJ = fci_ints_->slater_rules(new_det,det);
+                double HIJ = fci_ints_->slater_rules(new_det, det);
                 double pspawn = time_step_ * std::fabs(HIJ) * nid;
                 int pspawn_floor = std::floor(pspawn);
                 if (rand_real() < pspawn - double(pspawn_floor)) {
@@ -685,7 +685,7 @@ void FCIQMC::spawn(walker_map& walkers, walker_map& new_walkers) {
                 size_t rand_ext = rand_int() % sumgen;
                 detExcitation(new_det, rand_ext, excitationDivides, excitationType, obtCount);
                 if (new_det == reference_) {
-                    double HIJ = fci_ints_->slater_rules(new_det,det);
+                    double HIJ = fci_ints_->slater_rules(new_det, det);
                     double pspawn = time_step_ * std::fabs(HIJ) * double(sumgen);
                     int pspawn_floor = std::floor(pspawn);
                     if (rand_real() < pspawn - double(pspawn_floor)) {
@@ -698,7 +698,7 @@ void FCIQMC::spawn(walker_map& walkers, walker_map& new_walkers) {
                         new_walkers[new_det] += double(nspawn);
                     }
                 } else {
-                    double HIJ = fci_ints_->slater_rules(new_det,det);
+                    double HIJ = fci_ints_->slater_rules(new_det, det);
                     double pspawn = time_step_ * std::fabs(HIJ) * double(sumgen - 1);
                     int pspawn_floor = std::floor(pspawn);
                     if (rand_real() < pspawn - double(pspawn_floor)) {
@@ -710,7 +710,7 @@ void FCIQMC::spawn(walker_map& walkers, walker_map& new_walkers) {
                     if (nspawn != 0) {
                         new_walkers[new_det] += double(nspawn);
                     }
-                    HIJ = fci_ints_->slater_rules(reference_,det);
+                    HIJ = fci_ints_->slater_rules(reference_, det);
                     pspawn = time_step_ * std::fabs(HIJ);
                     pspawn_floor = std::floor(pspawn);
                     if (rand_real() < pspawn - double(pspawn_floor)) {
@@ -2008,7 +2008,7 @@ double FCIQMC::compute_proj_energy(Determinant& ref, walker_map& walkers) {
     for (auto walker : walkers) {
         const Determinant& det = walker.first;
         double Cwalker = walker.second;
-        Eproj_ += fci_ints_->slater_rules(ref,det) * Cwalker / Cref;
+        Eproj_ += fci_ints_->slater_rules(ref, det) * Cwalker / Cref;
     }
     timer_off("FCIQMC:Calc_Eproj");
     return Eproj_;
@@ -2025,7 +2025,7 @@ double FCIQMC::compute_var_energy(walker_map& walkers) {
         for (auto walker2 : walkers) {
             const Determinant& det2 = walker2.first;
             double Cwalker2 = walker2.second;
-            Evar_ += fci_ints_->slater_rules(det,det2) * Cwalker * Cwalker2;
+            Evar_ += fci_ints_->slater_rules(det, det2) * Cwalker * Cwalker2;
         }
         //        det.print();
         //        outfile->Printf("\nCwalker: %lf",Cwalker);

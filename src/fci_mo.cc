@@ -1509,7 +1509,7 @@ void FCI_MO::Diagonalize_H(const vecdet& p_space, const int& multi, const int& n
     //    }
 
     // DL solver
-    SparseCISolver sparse_solver;
+    SparseCISolver sparse_solver(fci_ints_);
     DiagonalizationMethod diag_method = DLSolver;
     string sigma_method = options_.get_str("SIGMA_BUILD_TYPE");
     sparse_solver.set_e_convergence(econv_);
@@ -1543,7 +1543,7 @@ void FCI_MO::Diagonalize_H(const vecdet& p_space, const int& multi, const int& n
         // use determinant map
         DeterminantMap detmap(p_space);
         auto act_mo = mo_space_info_->symmetry("ACTIVE");
-        WFNOperator op(act_mo);
+        WFNOperator op(act_mo, fci_ints_);
         op.build_strings(detmap);
         if (sigma_method == "HZ") {
             op.op_lists(detmap);
