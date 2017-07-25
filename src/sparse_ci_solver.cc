@@ -64,7 +64,8 @@ void SigmaVectorMPI::compute_sigma(SharedVector sigma, SharedVector b) {}
 
 #endif
 
-SigmaVectorList::SigmaVectorList(const std::vector<STLBitsetDeterminant>& space, bool print_details, std::shared_ptr<FCIIntegrals> fci_ints)
+SigmaVectorList::SigmaVectorList(const std::vector<STLBitsetDeterminant>& space, bool print_details,
+                                 std::shared_ptr<FCIIntegrals> fci_ints)
     : SigmaVector(space.size()), space_(space), fci_ints_(fci_ints) {
     using det_hash = std::unordered_map<STLBitsetDeterminant, size_t, STLBitsetDeterminant::Hash>;
     using bstmap_it = det_hash::iterator;
@@ -437,7 +438,8 @@ void SigmaVectorList::compute_sigma(SharedVector sigma, SharedVector b) {
                         const size_t I = aaJ_mo_sign.first;
                         double sign_q = aaJ_mo_sign.second > 0.0 ? 1.0 : -1.0;
                         const double HIJ =
-                            fci_ints_->slater_rules_single_alpha_abs(space_[I], p, q) * sign_p * sign_q;
+                            fci_ints_->slater_rules_single_alpha_abs(space_[I], p, q) * sign_p *
+                            sign_q;
                         sigma_p[J] += HIJ * b_p[I];
                     }
                 }
@@ -453,7 +455,8 @@ void SigmaVectorList::compute_sigma(SharedVector sigma, SharedVector b) {
                         const size_t I = bbJ_mo_sign.first;
                         double sign_q = bbJ_mo_sign.second > 0.0 ? 1.0 : -1.0;
                         const double HIJ =
-                            fci_ints_->slater_rules_single_beta_abs(space_[I],p, q) * sign_p * sign_q;
+                            fci_ints_->slater_rules_single_beta_abs(space_[I], p, q) * sign_p *
+                            sign_q;
                         sigma_p[J] += HIJ * b_p[I];
                     }
                 }
@@ -471,8 +474,7 @@ void SigmaVectorList::compute_sigma(SharedVector sigma, SharedVector b) {
                         const size_t aaaaJ_add = std::get<0>(aaaaJ_mo_sign);
                         const double sign_rs = std::get<1>(aaaaJ_mo_sign) > 0.0 ? 1.0 : -1.0;
                         const size_t I = aaaaJ_add;
-                        const double HIJ =
-                            sign_pq * sign_rs * fci_ints_->tei_aa(p, q, r, s);
+                        const double HIJ = sign_pq * sign_rs * fci_ints_->tei_aa(p, q, r, s);
                         sigma_p[J] += HIJ * b_p[I];
                     }
                 }
@@ -490,8 +492,7 @@ void SigmaVectorList::compute_sigma(SharedVector sigma, SharedVector b) {
                         const size_t ababJ_add = std::get<0>(ababJ_mo_sign);
                         const double sign_rs = std::get<1>(ababJ_mo_sign) > 0.0 ? 1.0 : -1.0;
                         const size_t I = ababJ_add;
-                        const double HIJ =
-                            sign_pq * sign_rs * fci_ints_->tei_ab(p, q, r, s);
+                        const double HIJ = sign_pq * sign_rs * fci_ints_->tei_ab(p, q, r, s);
                         sigma_p[J] += HIJ * b_p[I];
                     }
                 }
@@ -509,8 +510,7 @@ void SigmaVectorList::compute_sigma(SharedVector sigma, SharedVector b) {
                         const size_t bbbbJ_add = std::get<0>(bbbbJ_mo_sign);
                         const double sign_rs = std::get<1>(bbbbJ_mo_sign) > 0.0 ? 1.0 : -1.0;
                         const size_t I = bbbbJ_add;
-                        const double HIJ =
-                            sign_pq * sign_rs * fci_ints_->tei_bb(p, q, r, s);
+                        const double HIJ = sign_pq * sign_rs * fci_ints_->tei_bb(p, q, r, s);
                         sigma_p[J] += HIJ * b_p[I];
                     }
                 }
@@ -532,7 +532,8 @@ void SigmaVectorList::get_diagonal(Vector& diag) {
     }
 }
 
-SigmaVectorWfn1::SigmaVectorWfn1(const DeterminantMap& space, WFNOperator& op, std::shared_ptr<FCIIntegrals> fci_ints)
+SigmaVectorWfn1::SigmaVectorWfn1(const DeterminantMap& space, WFNOperator& op,
+                                 std::shared_ptr<FCIIntegrals> fci_ints)
     : SigmaVector(space.size()), space_(space), a_ann_list_(op.a_ann_list_), fci_ints_(fci_ints),
       a_cre_list_(op.a_cre_list_), b_ann_list_(op.b_ann_list_), b_cre_list_(op.b_cre_list_),
       aa_ann_list_(op.aa_ann_list_), aa_cre_list_(op.aa_cre_list_), ab_ann_list_(op.ab_ann_list_),
@@ -618,7 +619,8 @@ void SigmaVectorWfn1::compute_sigma(SharedVector sigma, SharedVector b) {
                             const size_t I = aaJ_mo_sign.first;
                             double sign_q = aaJ_mo_sign.second > 0.0 ? 1.0 : -1.0;
                             const double HIJ =
-                                fci_ints_->slater_rules_single_alpha_abs(dets[I],p, q) * sign_p * sign_q;
+                                fci_ints_->slater_rules_single_alpha_abs(dets[I], p, q) * sign_p *
+                                sign_q;
                             sigma_p[J] += HIJ * b_p[I];
                         }
                     }
@@ -634,7 +636,8 @@ void SigmaVectorWfn1::compute_sigma(SharedVector sigma, SharedVector b) {
                             const size_t I = bbJ_mo_sign.first;
                             double sign_q = bbJ_mo_sign.second > 0.0 ? 1.0 : -1.0;
                             const double HIJ =
-                                fci_ints_->slater_rules_single_beta_abs(dets[I],p, q) * sign_p * sign_q;
+                                fci_ints_->slater_rules_single_beta_abs(dets[I], p, q) * sign_p *
+                                sign_q;
                             sigma_p[J] += HIJ * b_p[I];
                         }
                     }
@@ -656,8 +659,7 @@ void SigmaVectorWfn1::compute_sigma(SharedVector sigma, SharedVector b) {
                     if ((p != r) and (q != s) and (p != s) and (q != r)) {
                         const size_t I = std::get<0>(aaaaJ_mo_sign);
                         const double sign_rs = std::get<1>(aaaaJ_mo_sign) > 0.0 ? 1.0 : -1.0;
-                        const double HIJ =
-                            sign_pq * sign_rs * fci_ints_->tei_aa(p, q, r, s);
+                        const double HIJ = sign_pq * sign_rs * fci_ints_->tei_aa(p, q, r, s);
                         sigma_p[J] += HIJ * b_p[I];
                     }
                 }
@@ -674,8 +676,7 @@ void SigmaVectorWfn1::compute_sigma(SharedVector sigma, SharedVector b) {
                     if ((p != r) and (q != s)) {
                         const size_t I = std::get<0>(ababJ_mo_sign);
                         const double sign_rs = std::get<1>(ababJ_mo_sign) > 0.0 ? 1.0 : -1.0;
-                        const double HIJ =
-                            sign_pq * sign_rs * fci_ints_->tei_ab(p, q, r, s);
+                        const double HIJ = sign_pq * sign_rs * fci_ints_->tei_ab(p, q, r, s);
                         sigma_p[J] += HIJ * b_p[I];
                     }
                 }
@@ -692,8 +693,7 @@ void SigmaVectorWfn1::compute_sigma(SharedVector sigma, SharedVector b) {
                     if ((p != r) and (q != s) and (p != s) and (q != r)) {
                         const size_t I = std::get<0>(bbbbJ_mo_sign);
                         const double sign_rs = std::get<1>(bbbbJ_mo_sign) > 0.0 ? 1.0 : -1.0;
-                        const double HIJ =
-                            sign_pq * sign_rs * fci_ints_->tei_bb(p, q, r, s);
+                        const double HIJ = sign_pq * sign_rs * fci_ints_->tei_bb(p, q, r, s);
                         sigma_p[J] += HIJ * b_p[I];
                     }
                 }
@@ -703,9 +703,10 @@ void SigmaVectorWfn1::compute_sigma(SharedVector sigma, SharedVector b) {
     }
 }
 
-SigmaVectorWfn2::SigmaVectorWfn2(const DeterminantMap& space, WFNOperator& op, std::shared_ptr<FCIIntegrals> fci_ints)
-    : SigmaVector(space.size()), space_(space), fci_ints_(fci_ints), a_list_(op.a_list_), b_list_(op.b_list_),
-      aa_list_(op.aa_list_), ab_list_(op.ab_list_), bb_list_(op.bb_list_) {
+SigmaVectorWfn2::SigmaVectorWfn2(const DeterminantMap& space, WFNOperator& op,
+                                 std::shared_ptr<FCIIntegrals> fci_ints)
+    : SigmaVector(space.size()), space_(space), fci_ints_(fci_ints), a_list_(op.a_list_),
+      b_list_(op.b_list_), aa_list_(op.aa_list_), ab_list_(op.ab_list_), bb_list_(op.bb_list_) {
 
     det_hash<size_t> detmap = space_.wfn_hash();
     diag_.resize(space_.size());
@@ -797,7 +798,8 @@ void SigmaVectorWfn2::compute_sigma(SharedVector sigma, SharedVector b) {
                             const size_t I = detI.first;
                             double sign_q = detI.second > 0.0 ? 1.0 : -1.0;
                             const double HIJ =
-                                fci_ints_->slater_rules_single_alpha_abs(dets[J],p, q) * sign_p * sign_q;
+                                fci_ints_->slater_rules_single_alpha_abs(dets[J], p, q) * sign_p *
+                                sign_q;
                             sigma_t[I] += HIJ * b_p[J];
                         }
                     }
@@ -821,7 +823,8 @@ void SigmaVectorWfn2::compute_sigma(SharedVector sigma, SharedVector b) {
                             const size_t I = detI.first;
                             double sign_q = detI.second > 0.0 ? 1.0 : -1.0;
                             const double HIJ =
-                                fci_ints_->slater_rules_single_beta_abs(dets[J],p, q) * sign_p * sign_q;
+                                fci_ints_->slater_rules_single_beta_abs(dets[J], p, q) * sign_p *
+                                sign_q;
                             sigma_t[I] += HIJ * b_p[J];
                         }
                     }
@@ -916,9 +919,10 @@ void SigmaVectorWfn2::compute_sigma(SharedVector sigma, SharedVector b) {
     }
 }
 
-SigmaVectorWfn3::SigmaVectorWfn3(const DeterminantMap& space, WFNOperator& op, std::shared_ptr<FCIIntegrals> fci_ints)
-    : SigmaVector(space.size()), space_(space),fci_ints_(fci_ints), a_list_(op.a_list_), b_list_(op.b_list_),
-      aa_list_(op.aa_list_), ab_list_(op.ab_list_), bb_list_(op.bb_list_) {
+SigmaVectorWfn3::SigmaVectorWfn3(const DeterminantMap& space, WFNOperator& op,
+                                 std::shared_ptr<FCIIntegrals> fci_ints)
+    : SigmaVector(space.size()), space_(space), fci_ints_(fci_ints), a_list_(op.a_list_),
+      b_list_(op.b_list_), aa_list_(op.aa_list_), ab_list_(op.ab_list_), bb_list_(op.bb_list_) {
 
     det_hash<size_t> detmap = space_.wfn_hash();
     diag_.resize(space_.size());
@@ -943,13 +947,13 @@ SigmaVectorWfn3::SigmaVectorWfn3(const DeterminantMap& space, WFNOperator& op, s
             for (int r = 0; r < nact; ++r) {
                 for (int s = 0; s < nact; ++s) {
                     if ((p != r) and (q != s) and (p != s) and (q != r)) {
-                        aa_tei_->set(p * nact + q, r * nact + s,fci_ints_->tei_aa(p, q, r, s));
+                        aa_tei_->set(p * nact + q, r * nact + s, fci_ints_->tei_aa(p, q, r, s));
                     }
                     if ((p != r) and (q != s)) {
-                        ab_tei_->set(p * nact + q, r * nact + s,fci_ints_->tei_ab(p, q, r, s));
+                        ab_tei_->set(p * nact + q, r * nact + s, fci_ints_->tei_ab(p, q, r, s));
                     }
                     if ((p != r) and (q != s) and (p != s) and (q != r)) {
-                        bb_tei_->set(p * nact + q, r * nact + s,fci_ints_->tei_bb(p, q, r, s));
+                        bb_tei_->set(p * nact + q, r * nact + s, fci_ints_->tei_bb(p, q, r, s));
                     }
                 }
             }
@@ -1048,7 +1052,7 @@ void SigmaVectorWfn3::compute_sigma(SharedVector sigma, SharedVector b) {
                     const size_t I = detI.first;
                     double sign_q = detI.second > 0.0 ? 1.0 : -1.0;
                     const double HIJ =
-                        fci_ints_->slater_rules_single_alpha_abs(dets[J],p, q) * sign_p * sign_q;
+                        fci_ints_->slater_rules_single_alpha_abs(dets[J], p, q) * sign_p * sign_q;
                     sigma_p[I] += HIJ * b_p[J];
                 }
             }
@@ -1076,7 +1080,8 @@ void SigmaVectorWfn3::compute_sigma(SharedVector sigma, SharedVector b) {
                 if (p != q) {
                     const size_t I = detI.first;
                     double sign_q = detI.second > 0.0 ? 1.0 : -1.0;
-                    const double HIJ = fci_ints_->slater_rules_single_beta_abs(dets[J],p, q) * sign_p * sign_q;
+                    const double HIJ =
+                        fci_ints_->slater_rules_single_beta_abs(dets[J], p, q) * sign_p * sign_q;
                     sigma_p[I] += HIJ * b_p[J];
                 }
             }
@@ -1428,7 +1433,7 @@ SparseCISolver::build_full_hamiltonian(const std::vector<STLBitsetDeterminant>& 
         const STLBitsetDeterminant& detI = space[I];
         for (size_t J = I; J < dim_space; ++J) {
             const STLBitsetDeterminant& detJ = space[J];
-            double HIJ = fci_ints_->slater_rules(detI,detJ);
+            double HIJ = fci_ints_->slater_rules(detI, detJ);
             H->set(I, J, HIJ);
             H->set(J, I, HIJ);
         }
@@ -1482,7 +1487,7 @@ SparseCISolver::build_sparse_hamiltonian(const std::vector<STLBitsetDeterminant>
         for (size_t J = 0; J < dim_space; ++J) {
             if (I != J) {
                 const STLBitsetDeterminant detJ = space[J];
-                double HIJ = fci_ints_->slater_rules(detI,detJ);
+                double HIJ = fci_ints_->slater_rules(detI, detJ);
                 if (std::fabs(HIJ) >= 1.0e-12) {
                     H_row.push_back(HIJ);
                     index_row.push_back(J);
@@ -1575,7 +1580,7 @@ SparseCISolver::initial_guess(const std::vector<STLBitsetDeterminant>& space, in
         for (size_t J = I; J < nguess; J++) {
             const STLBitsetDeterminant& detI = guess_dets_pos[I].first;
             const STLBitsetDeterminant& detJ = guess_dets_pos[J].first;
-            double HIJ = fci_ints_->slater_rules(detI,detJ);
+            double HIJ = fci_ints_->slater_rules(detI, detJ);
             H.set(I, J, HIJ);
             H.set(J, I, HIJ);
         }
@@ -1663,7 +1668,7 @@ SparseCISolver::initial_guess_map(const DeterminantMap& space, int nroot, int mu
     for (det_hash<size_t>::const_iterator it = detmap.begin(), endit = detmap.end(); it != endit;
          ++it) {
         STLBitsetDeterminant det = it->first;
-        smallest.push_back(std::make_pair(fci_ints_->energy(det),det));
+        smallest.push_back(std::make_pair(fci_ints_->energy(det), det));
     }
     std::sort(smallest.begin(), smallest.end());
 
@@ -1723,7 +1728,7 @@ SparseCISolver::initial_guess_map(const DeterminantMap& space, int nroot, int mu
         for (size_t J = I; J < nguess; J++) {
             const STLBitsetDeterminant& detI = guess_dets_pos[I].first;
             const STLBitsetDeterminant& detJ = guess_dets_pos[J].first;
-            double HIJ = fci_ints_->slater_rules(detI,detJ);
+            double HIJ = fci_ints_->slater_rules(detI, detJ);
             H.set(I, J, HIJ);
             H.set(J, I, HIJ);
         }
