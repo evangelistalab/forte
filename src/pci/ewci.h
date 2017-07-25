@@ -332,8 +332,7 @@ class ElementwiseCI : public Wavefunction {
     void apply_tau_H_ref_C_symm_det_dynamic_HBCI_2(
         double tau, double spawning_threshold, const det_hashvec& dets_hashvec,
         const std::vector<double>& pre_C, const std::vector<double>& ref_C, size_t I, double CI,
-        double ref_CI, const size_t overlap_size,
-        std::vector<std::pair<size_t, double>>& new_index_C_vec, double E0,
+        double ref_CI, const size_t overlap_size, std::vector<double>& result_C, double E0,
         const std::pair<double, double>& max_coupling);
 
     /// Estimates the energy give a wave function

@@ -563,7 +563,7 @@ double ProjectorCI_HashVec::compute_energy() {
     outfile->Printf("\n\t    Projector Configuration Interaction HashVector "
                     "implementation");
     outfile->Printf("\n\t         by Francesco A. Evangelista and Tianyuan Zhang");
-    outfile->Printf("\n\t                      version Jul. 18 2017");
+    outfile->Printf("\n\t                      version Jul. 25 2017");
     outfile->Printf("\n\t                    %4d thread(s) %s", num_threads_,
                     have_omp_ ? "(OMP)" : "");
     outfile->Printf("\n\t  ---------------------------------------------------------");
@@ -1817,24 +1817,25 @@ void ProjectorCI_HashVec::apply_tau_H_ref_C_symm(double tau, double spawning_thr
     result_C.clear();
     result_C.resize(dets_hashvec.size(), 0.0);
 
-    std::vector<std::vector<std::pair<size_t, double>>> thread_index_C_vecs(num_threads_);
+    //    std::vector<std::vector<std::pair<size_t, double>>> thread_index_C_vecs(num_threads_);
 
     size_t ref_max_I = ref_C.size();
 #pragma omp parallel for
     for (size_t I = 0; I < ref_max_I; ++I) {
         std::pair<double, double> max_coupling;
-        size_t current_rank = omp_get_thread_num();
+        //        size_t current_rank = omp_get_thread_num();
         max_coupling = dets_max_couplings_[I];
-        thread_index_C_vecs[current_rank].clear();
-        apply_tau_H_ref_C_symm_det_dynamic_HBCI_2(
-            tau, spawning_threshold, dets_hashvec, pre_C, ref_C, I, pre_C[I], ref_C[I],
-            thread_index_C_vecs[current_rank], S, max_coupling);
-#pragma omp critical
-        {
-            for (const std::pair<size_t, double>& p : thread_index_C_vecs[current_rank]) {
-                result_C[p.first] += p.second;
-            }
-        }
+        apply_tau_H_ref_C_symm_det_dynamic_HBCI_2(tau, spawning_threshold, dets_hashvec, pre_C,
+                                                  ref_C, I, pre_C[I], ref_C[I], result_C, S,
+                                                  max_coupling);
+        //        thread_index_C_vecs[current_rank].clear();
+        //        apply_tau_H_ref_C_symm_det_dynamic_HBCI_2(
+        //            tau, spawning_threshold, dets_hashvec, pre_C, ref_C, I, pre_C[I], ref_C[I],
+        //            thread_index_C_vecs[current_rank], S, max_coupling);
+        //        for (const std::pair<size_t, double>& p : thread_index_C_vecs[current_rank]) {
+        //#pragma omp atomic
+        //            result_C[p.first] += p.second;
+        //        }
     }
     size_t max_I = pre_C.size();
 #pragma omp parallel for
@@ -1851,7 +1852,7 @@ void ProjectorCI_HashVec::apply_tau_H_ref_C_symm(double tau, double spawning_thr
 void ProjectorCI_HashVec::apply_tau_H_ref_C_symm_det_dynamic_HBCI_2(
     double tau, double spawning_threshold, const det_hashvec& dets_hashvec,
     const std::vector<double>& pre_C, const std::vector<double>& ref_C, size_t I, double CI,
-    double ref_CI, std::vector<std::pair<size_t, double>>& new_index_C_vec, double E0,
+    double ref_CI, std::vector<double>& result_C, double E0,
     const std::pair<double, double>& max_coupling) {
 
     const Determinant& detI = dets_hashvec[I];
@@ -1863,7 +1864,9 @@ void ProjectorCI_HashVec::apply_tau_H_ref_C_symm_det_dynamic_HBCI_2(
     // Diagonal contributions
     // parallel_timer_on("PCI:diagonal", omp_get_thread_num());
     double det_energy = detI.energy() + fci_ints_->scalar_energy();
-    new_index_C_vec.push_back(std::make_pair(I, tau * (det_energy - E0) * CI));
+//    new_index_C_vec.push_back(std::make_pair(I, tau * (det_energy - E0) * CI));
+#pragma omp atomic
+    result_C[I] += tau * (det_energy - E0) * CI;
     // parallel_timer_off("PCI:diagonal", omp_get_thread_num());
 
     Determinant detJ(detI);
@@ -1903,12 +1906,16 @@ void ProjectorCI_HashVec::apply_tau_H_ref_C_symm_det_dynamic_HBCI_2(
                             HJI *= detJ.single_excitation_a(i, a);
 
                             size_t index = dets_hashvec.find(detJ);
-                            new_index_C_vec.push_back(std::make_pair(index, tau * HJI * CI));
+//                            new_index_C_vec.push_back(std::make_pair(index, tau * HJI * CI));
+#pragma omp atomic
+                            result_C[index] += tau * HJI * CI;
 
                             if ((index < ref_C_size &&
                                  std::fabs(HJI * ref_C[index]) < spawning_threshold) ||
                                 index >= ref_C_size) {
-                                new_index_C_vec[0].second += tau * HJI * pre_C[index];
+//                                new_index_C_vec[0].second += tau * HJI * pre_C[index];
+#pragma omp atomic
+                                result_C[I] += tau * HJI * pre_C[index];
                             }
                             detJ.set_alfa_bit(i, true);
                             detJ.set_alfa_bit(a, false);
@@ -1951,12 +1958,16 @@ void ProjectorCI_HashVec::apply_tau_H_ref_C_symm_det_dynamic_HBCI_2(
                             HJI *= detJ.single_excitation_b(i, a);
 
                             size_t index = dets_hashvec.find(detJ);
-                            new_index_C_vec.push_back(std::make_pair(index, tau * HJI * CI));
+//                            new_index_C_vec.push_back(std::make_pair(index, tau * HJI * CI));
+#pragma omp atomic
+                            result_C[index] += tau * HJI * CI;
 
                             if ((index < ref_C_size &&
                                  std::fabs(HJI * ref_C[index]) < spawning_threshold) ||
                                 index >= ref_C_size) {
-                                new_index_C_vec[0].second += tau * HJI * pre_C[index];
+//                                new_index_C_vec[0].second += tau * HJI * pre_C[index];
+#pragma omp atomic
+                                result_C[I] += tau * HJI * pre_C[index];
                             }
                             detJ.set_beta_bit(i, true);
                             detJ.set_beta_bit(a, false);
@@ -1994,12 +2005,16 @@ void ProjectorCI_HashVec::apply_tau_H_ref_C_symm_det_dynamic_HBCI_2(
                         HJI *= detJ.double_excitation_aa(i, j, a, b);
 
                         size_t index = dets_hashvec.find(detJ);
-                        new_index_C_vec.push_back(std::make_pair(index, tau * HJI * CI));
+//                        new_index_C_vec.push_back(std::make_pair(index, tau * HJI * CI));
+#pragma omp atomic
+                        result_C[index] += tau * HJI * CI;
 
                         if ((index < ref_C_size &&
                              std::fabs(HJI * ref_C[index]) < spawning_threshold) ||
                             index >= ref_C_size) {
-                            new_index_C_vec[0].second += tau * HJI * pre_C[index];
+//                            new_index_C_vec[0].second += tau * HJI * pre_C[index];
+#pragma omp atomic
+                            result_C[I] += tau * HJI * pre_C[index];
                         }
                         detJ.set_alfa_bit(i, true);
                         detJ.set_alfa_bit(j, true);
@@ -2033,12 +2048,16 @@ void ProjectorCI_HashVec::apply_tau_H_ref_C_symm_det_dynamic_HBCI_2(
                         HJI *= detJ.double_excitation_ab(i, j, a, b);
 
                         size_t index = dets_hashvec.find(detJ);
-                        new_index_C_vec.push_back(std::make_pair(index, tau * HJI * CI));
+//                        new_index_C_vec.push_back(std::make_pair(index, tau * HJI * CI));
+#pragma omp atomic
+                        result_C[index] += tau * HJI * CI;
 
                         if ((index < ref_C_size &&
                              std::fabs(HJI * ref_C[index]) < spawning_threshold) ||
                             index >= ref_C_size) {
-                            new_index_C_vec[0].second += tau * HJI * pre_C[index];
+//                            new_index_C_vec[0].second += tau * HJI * pre_C[index];
+#pragma omp atomic
+                            result_C[I] += tau * HJI * pre_C[index];
                         }
                         detJ.set_alfa_bit(i, true);
                         detJ.set_beta_bit(j, true);
@@ -2072,12 +2091,16 @@ void ProjectorCI_HashVec::apply_tau_H_ref_C_symm_det_dynamic_HBCI_2(
                         HJI *= detJ.double_excitation_bb(i, j, a, b);
 
                         size_t index = dets_hashvec.find(detJ);
-                        new_index_C_vec.push_back(std::make_pair(index, tau * HJI * CI));
+//                        new_index_C_vec.push_back(std::make_pair(index, tau * HJI * CI));
+#pragma omp atomic
+                        result_C[index] += tau * HJI * CI;
 
                         if ((index < ref_C_size &&
                              std::fabs(HJI * ref_C[index]) < spawning_threshold) ||
                             index >= ref_C_size) {
-                            new_index_C_vec[0].second += tau * HJI * pre_C[index];
+//                            new_index_C_vec[0].second += tau * HJI * pre_C[index];
+#pragma omp atomic
+                            result_C[I] += tau * HJI * pre_C[index];
                         }
                         detJ.set_beta_bit(i, true);
                         detJ.set_beta_bit(j, true);
