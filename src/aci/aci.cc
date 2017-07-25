@@ -568,6 +568,7 @@ double AdaptiveCI::compute_energy() {
         outfile->Printf("\n  Size of approx: %zu  size of var: %zu", approx.size(),
                         final_wfn_.size());
         compute_rdms(approx, op_, new_evecs, 0, 0);
+
     } else {
 
         op_.clear_op_s_lists();
@@ -576,6 +577,10 @@ double AdaptiveCI::compute_energy() {
         op_.tp_s_lists(final_wfn_);
         compute_rdms(final_wfn_, op_, PQ_evecs, 0, 0);
     }
+
+    // if( approx_rdm_ ){
+    //     approximate_rdm( final_wfn_, PQ_evecs,);
+    // }
 
     //	std::vector<double> davidson;
     //	if(options_.get_str("SIZE_CORRECTION") == "DAVIDSON" ){
@@ -2595,6 +2600,13 @@ void AdaptiveCI::compute_rdms(DeterminantMap& dets, WFNOperator& op, SharedMatri
                               trdm_abb_, trdm_bbb_);
         }
     }
+
+    if (approx_rdm_ and (rdm_level_ >= 2)) {
+        outfile->Printf("\n  Computing energy with new RDMs");
+
+        double en = ci_rdms_.get_energy(ordm_a_, ordm_b_, trdm_aa_, trdm_bb_, trdm_ab_);
+        outfile->Printf("\n  Energy from approximate RDM:  %1.12f", en);
+    }
 }
 
 void AdaptiveCI::add_bad_roots(DeterminantMap& dets) {
@@ -2835,5 +2847,49 @@ void AdaptiveCI::compute_nos() {
     // Retransform the integarms in the new basis
     ints_->retransform_integrals();
 }
+/*
+void AdaptiveCI::approximate_rdm( DeterminantMap& ref, SharedMatrix evecs ){
+
+    size_t max_I = I_space.size();
+    std::vector<STLBitsetDeterminant> I_dets = ref.determinants();
+
+    for (size_t I = 0; I < max_I; ++I) {
+        STLBitsetDeterminant& det(ref[I]);
+       // double evecs_P_row_norm = evecs->get_row(0, P)->norm();
+
+        std::vector<int> aocc = det.get_alfa_occ();
+        std::vector<int> bocc = det.get_beta_occ();
+        std::vector<int> avir = det.get_alfa_vir();
+        std::vector<int> bvir = det.get_beta_vir();
+
+        int noalpha = aocc.size();
+        int nobeta = bocc.size();
+        int nvalpha = avir.size();
+        int nvbeta = bvir.size();
+        STLBitsetDeterminant new_det(det);
+
+        // Generate alpha excitations
+        for (int i = 0; i < noalpha; ++i) {
+            int ii = aocc[i];
+            for (int a = 0; a < nvalpha; ++a) {
+                int aa = avir[a];
+                if ((mo_symmetry_[ii] ^ mo_symmetry_[aa]) == 0) {
+                    double HIJ = det.slater_rules_single_alpha(ii, aa);
+                    //if ((std::fabs(HIJ) * evecs_P_row_norm >= screen_thresh_)) {
+                    //      if( std::abs(HIJ * evecs->get(0, P)) > screen_thresh_ ){
+                    new_det = det;
+                    new_det.set_alfa_bit(ii, false);
+                    new_det.set_alfa_bit(aa, true);
+
+                    if( !(ref.has_det(new_det)) ){
+
+                    }
+                }
+            }
+        }
+    }
+
+}
+*/
 }
 } // EndNamespaces
