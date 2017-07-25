@@ -41,9 +41,9 @@
 namespace psi {
 namespace forte {
 
-WFNOperator::WFNOperator(std::vector<int>& symmetry, std::shared_ptr<FCIIntegrals> fci_ints) { 
-mo_symmetry_ = symmetry; 
-fci_ints_ = fci_ints;
+WFNOperator::WFNOperator(std::vector<int>& symmetry, std::shared_ptr<FCIIntegrals> fci_ints) {
+    mo_symmetry_ = symmetry;
+    fci_ints_ = fci_ints;
 }
 
 WFNOperator::WFNOperator() {}
@@ -82,7 +82,8 @@ WFNOperator::build_H_sparse(const DeterminantMap& wfn) {
                 if (p != q) {
                     size_t J = detJ.first;
                     double sign_q = detJ.second > 0.0 ? 1.0 : -1.0;
-                    double HIJ = sign_p * sign_q * fci_ints_->slater_rules_single_alpha_abs(dets[J], p, q);
+                    double HIJ =
+                        sign_p * sign_q * fci_ints_->slater_rules_single_alpha_abs(dets[J], p, q);
                     H_sparse[idx].first.push_back(J);
                     H_sparse[idx].second.push_back(HIJ);
                     n_nonzero++;
@@ -104,7 +105,8 @@ WFNOperator::build_H_sparse(const DeterminantMap& wfn) {
                 if (p != q) {
                     size_t J = detJ.first;
                     double sign_q = detJ.second > 0.0 ? 1.0 : -1.0;
-                    double HIJ = sign_p * sign_q * fci_ints_->slater_rules_single_beta_abs(dets[J],p, q);
+                    double HIJ =
+                        sign_p * sign_q * fci_ints_->slater_rules_single_beta_abs(dets[J], p, q);
                     H_sparse[idx].first.push_back(J);
                     H_sparse[idx].second.push_back(HIJ);
                     n_nonzero++;

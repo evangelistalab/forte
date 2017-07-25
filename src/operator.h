@@ -155,7 +155,6 @@ class WFNOperator {
 
     /// The integrals
     std::shared_ptr<FCIIntegrals> fci_ints_;
-
 };
 }
 }

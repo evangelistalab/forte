@@ -71,7 +71,8 @@ class SigmaVector {
  */
 class SigmaVectorSparse : public SigmaVector {
   public:
-    SigmaVectorSparse(std::vector<std::pair<std::vector<size_t>, std::vector<double>>>& H, std::shared_ptr<FCIIntegrals> fci_ints)
+    SigmaVectorSparse(std::vector<std::pair<std::vector<size_t>, std::vector<double>>>& H,
+                      std::shared_ptr<FCIIntegrals> fci_ints)
         : SigmaVector(H.size()), H_(H), fci_ints_(fci_ints){};
 
     void compute_sigma(SharedVector sigma, SharedVector b);
@@ -92,7 +93,8 @@ class SigmaVectorSparse : public SigmaVector {
  */
 class SigmaVectorList : public SigmaVector {
   public:
-    SigmaVectorList(const std::vector<STLBitsetDeterminant>& space, bool print_detail, std::shared_ptr<FCIIntegrals> fci_ints);
+    SigmaVectorList(const std::vector<STLBitsetDeterminant>& space, bool print_detail,
+                    std::shared_ptr<FCIIntegrals> fci_ints);
 
     void compute_sigma(SharedVector sigma, SharedVector b);
     //  void compute_sigma(Matrix& sigma, Matrix& b, int nroot);
@@ -130,7 +132,8 @@ class SigmaVectorList : public SigmaVector {
 /* Uses ann/cre lists in sigma builds (Harrison and Zarrabian method) */
 class SigmaVectorWfn1 : public SigmaVector {
   public:
-    SigmaVectorWfn1(const DeterminantMap& space, WFNOperator& op, std::shared_ptr<FCIIntegrals> fci_ints);
+    SigmaVectorWfn1(const DeterminantMap& space, WFNOperator& op,
+                    std::shared_ptr<FCIIntegrals> fci_ints);
 
     void compute_sigma(SharedVector sigma, SharedVector b);
     //   void compute_sigma(Matrix& sigma, Matrix& b, int nroot) {}
@@ -162,7 +165,8 @@ class SigmaVectorWfn1 : public SigmaVector {
 /* Uses only cre lists, sparse sigma build */
 class SigmaVectorWfn2 : public SigmaVector {
   public:
-    SigmaVectorWfn2(const DeterminantMap& space, WFNOperator& op, std::shared_ptr<FCIIntegrals> fci_ints);
+    SigmaVectorWfn2(const DeterminantMap& space, WFNOperator& op,
+                    std::shared_ptr<FCIIntegrals> fci_ints);
     std::vector<std::vector<std::pair<size_t, short>>>& a_list_;
     std::vector<std::vector<std::pair<size_t, short>>>& b_list_;
     std::vector<std::vector<std::tuple<size_t, short, short>>>& aa_list_;
@@ -190,7 +194,8 @@ class SigmaVectorWfn2 : public SigmaVector {
 /* Uses only cre lists, DGEMM sigma build */
 class SigmaVectorWfn3 : public SigmaVector {
   public:
-    SigmaVectorWfn3(const DeterminantMap& space, WFNOperator& op, std::shared_ptr<FCIIntegrals> fci_ints);
+    SigmaVectorWfn3(const DeterminantMap& space, WFNOperator& op,
+                    std::shared_ptr<FCIIntegrals> fci_ints);
     std::vector<std::vector<std::pair<size_t, short>>>& a_list_;
     std::vector<std::vector<std::pair<size_t, short>>>& b_list_;
     std::vector<std::vector<std::tuple<size_t, short, short>>>& aa_list_;
@@ -223,7 +228,8 @@ class SigmaVectorWfn3 : public SigmaVector {
 #ifdef HAVE_MPI
 class SigmaVectorMPI : public SigmaVector {
   public:
-    SigmaVectorMPI(const DeterminantMap& space, WFNOperator& op, std::shared_ptr<FCIIntegrals> fci_ints);
+    SigmaVectorMPI(const DeterminantMap& space, WFNOperator& op,
+                   std::shared_ptr<FCIIntegrals> fci_ints);
 
     void compute_sigma(SharedVector sigma, SharedVector b);
     void compute_sigma(Matrix& sigma, Matrix& b, int nroot);
@@ -231,6 +237,7 @@ class SigmaVectorMPI : public SigmaVector {
     void add_bad_roots(std::vector<std::vector<std::pair<size_t, double>>>& bad_states_);
 
     std::vector<std::vector<std::pair<size_t, double>>> bad_states_;
+
   protected:
     std::shared_ptr<FCIIntegrals> fci_ints_;
 };
@@ -255,7 +262,7 @@ class SparseCISolver {
      * singlet, 2 = doublet, ...
      */
 
-    SparseCISolver(std::shared_ptr<FCIIntegrals> fci_ints) { fci_ints_ = fci_ints;}
+    SparseCISolver(std::shared_ptr<FCIIntegrals> fci_ints) { fci_ints_ = fci_ints; }
 
     void diagonalize_hamiltonian(const std::vector<STLBitsetDeterminant>& space,
                                  SharedVector& evals, SharedMatrix& evecs, int nroot,
