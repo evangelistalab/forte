@@ -568,7 +568,7 @@ double AdaptiveCI::compute_energy() {
         outfile->Printf("\n  Size of approx: %zu  size of var: %zu", approx.size(),
                         final_wfn_.size());
         compute_rdms(approx, op_, new_evecs, 0, 0);
-        
+
     } else {
 
         op_.clear_op_s_lists();
@@ -578,9 +578,9 @@ double AdaptiveCI::compute_energy() {
         compute_rdms(final_wfn_, op_, PQ_evecs, 0, 0);
     }
 
-   // if( approx_rdm_ ){
-   //     approximate_rdm( final_wfn_, PQ_evecs,);
-   // }
+    // if( approx_rdm_ ){
+    //     approximate_rdm( final_wfn_, PQ_evecs,);
+    // }
 
     //	std::vector<double> davidson;
     //	if(options_.get_str("SIZE_CORRECTION") == "DAVIDSON" ){
@@ -2601,14 +2601,12 @@ void AdaptiveCI::compute_rdms(DeterminantMap& dets, WFNOperator& op, SharedMatri
         }
     }
 
-    if( approx_rdm_ and (rdm_level_ >=2 ) ){
+    if (approx_rdm_ and (rdm_level_ >= 2)) {
         outfile->Printf("\n  Computing energy with new RDMs");
 
-        double en = ci_rdms_.get_energy( ordm_a_, ordm_b_, trdm_aa_, trdm_bb_, trdm_ab_);
+        double en = ci_rdms_.get_energy(ordm_a_, ordm_b_, trdm_aa_, trdm_bb_, trdm_ab_);
         outfile->Printf("\n  Energy from approximate RDM:  %1.12f", en);
-
     }
-
 }
 
 void AdaptiveCI::add_bad_roots(DeterminantMap& dets) {
@@ -2884,7 +2882,7 @@ void AdaptiveCI::approximate_rdm( DeterminantMap& ref, SharedMatrix evecs ){
                     new_det.set_alfa_bit(aa, true);
 
                     if( !(ref.has_det(new_det)) ){
-                        
+
                     }
                 }
             }
@@ -2893,6 +2891,5 @@ void AdaptiveCI::approximate_rdm( DeterminantMap& ref, SharedMatrix evecs ){
 
 }
 */
-
 }
 } // EndNamespaces
