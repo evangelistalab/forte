@@ -467,6 +467,5 @@ std::vector<int> CI_Reference::get_occupation() {
     } // End loop over k
     return occupation;
 }
-
 }
 }

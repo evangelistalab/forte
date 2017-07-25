@@ -248,8 +248,7 @@ void DeterminantMap::subspace(DeterminantMap& dets, SharedMatrix evecs,
 
 void DeterminantMap::merge(DeterminantMap& dets) {
     det_hash<size_t> detmap = dets.wfn_hash();
-    for (det_hash<size_t>::iterator it = detmap.begin(), endit = detmap.end(); it != endit;
-         ++it) {
+    for (det_hash<size_t>::iterator it = detmap.begin(), endit = detmap.end(); it != endit; ++it) {
         if (!(this->has_det(it->first))) {
             this->add(it->first);
         }

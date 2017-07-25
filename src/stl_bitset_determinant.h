@@ -204,7 +204,7 @@ class STLBitsetDeterminant {
     };
 };
 
- using Determinant = STLBitsetDeterminant;
+using Determinant = STLBitsetDeterminant;
 using det_vec = std::vector<STLBitsetDeterminant>;
 template <typename T = double>
 using det_hash = std::unordered_map<STLBitsetDeterminant, T, STLBitsetDeterminant::Hash>;
