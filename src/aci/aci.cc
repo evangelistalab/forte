@@ -32,15 +32,6 @@
 #include "psi4/libmints/pointgrp.h"
 #include "psi4/libpsio/psio.hpp"
 
-#include "../ci_rdms.h"
-#include "../ci_reference.h"
-#include "../fci/fci_integrals.h"
-#include "../forte_options.h"
-#include "../mrpt2.h"
-#include "../orbital-helper/unpaired_density.h"
-#include "../reference.h"
-#include "../sparse_ci_solver.h"
-#include "../stl_bitset_determinant.h"
 #include "aci.h"
 
 using namespace psi;

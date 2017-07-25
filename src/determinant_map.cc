@@ -119,7 +119,7 @@ void DeterminantMap::make_spin_complete() {
     std::vector<size_t> open_bits(nmo, 0);
     DeterminantMap new_dets;
 
-    for (stldet_hash<size_t>::iterator it = wfn_.begin(), endit = wfn_.end(); it != endit; ++it) {
+    for (det_hash<size_t>::iterator it = wfn_.begin(), endit = wfn_.end(); it != endit; ++it) {
         const STLBitsetDeterminant& det = it->first;
         //        outfile->Printf("\n  Original determinant: %s",
         //        det.str().c_str());
@@ -247,8 +247,8 @@ void DeterminantMap::subspace(DeterminantMap& dets, SharedMatrix evecs,
 }
 
 void DeterminantMap::merge(DeterminantMap& dets) {
-    stldet_hash<size_t> detmap = dets.wfn_hash();
-    for (stldet_hash<size_t>::iterator it = detmap.begin(), endit = detmap.end(); it != endit;
+    det_hash<size_t> detmap = dets.wfn_hash();
+    for (det_hash<size_t>::iterator it = detmap.begin(), endit = detmap.end(); it != endit;
          ++it) {
         if (!(this->has_det(it->first))) {
             this->add(it->first);

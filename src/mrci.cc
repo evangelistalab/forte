@@ -69,8 +69,6 @@ void MRCI::startup() {
 
     fci_ints_->compute_restricted_one_body_operator();
 
-    STLBitsetDeterminant::set_ints(fci_ints_);
-
     nroot_ = options_.get_int("NROOT");
     multiplicity_ = options_.get_int("MULTIPLICITY");
 
