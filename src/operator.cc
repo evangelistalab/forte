@@ -41,7 +41,8 @@
 namespace psi {
 namespace forte {
 
-WFNOperator::WFNOperator(std::vector<int>& symmetry, std::shared_ptr<FCIIntegrals> fci_ints) : fci_ints_(fci_ints) {
+WFNOperator::WFNOperator(std::vector<int>& symmetry, std::shared_ptr<FCIIntegrals> fci_ints)
+    : fci_ints_(fci_ints) {
     mo_symmetry_ = symmetry;
 }
 
@@ -49,8 +50,8 @@ WFNOperator::WFNOperator() {}
 
 void WFNOperator::set_quiet_mode(bool mode) { quiet_ = mode; }
 
-void WFNOperator::initialize(std::vector<int>& symmetry, std::shared_ptr<FCIIntegrals> fci_ints) { 
-    mo_symmetry_ = symmetry; 
+void WFNOperator::initialize(std::vector<int>& symmetry, std::shared_ptr<FCIIntegrals> fci_ints) {
+    mo_symmetry_ = symmetry;
     fci_ints_ = fci_ints;
 }
 
