@@ -87,8 +87,6 @@ src/tensorsrg_save.cc
 src/tensorsrg_srg.cc
 src/v2rdm.cc
 src/aci/aci.cc
-src/aci/aci_string.cc
-src/aci/direct_ci.cc
 src/aosubspace/aosubspace.cc
 src/ci-no/ci-no.cc
 src/fci/binary_graph.cc
