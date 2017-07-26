@@ -33,7 +33,7 @@
 namespace psi {
 namespace forte {
 
-bool descending_p(const std::pair<double, size_t> p1, const std::pair<double, size_t> p2) {
+bool descending_pair(const std::pair<double, size_t> p1, const std::pair<double, size_t> p2) {
     return p1 > p2;
 }
 
@@ -232,7 +232,7 @@ void DeterminantMap::subspace(DeterminantMap& dets, SharedMatrix evecs,
         //      outfile->Printf("\n %1.6f  %zu  %s", evecs->get(it->second,
         //      root), it->second, it->first.str().c_str());
     }
-    std::sort(det_weights.begin(), det_weights.end(), descending_p);
+    std::sort(det_weights.begin(), det_weights.end(), descending_pair);
 
     // Build this wfn with most important subset
     for (size_t I = 0; I < dim; ++I) {

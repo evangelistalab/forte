@@ -155,8 +155,6 @@ double FCISolver::compute_energy() {
         }
     }
 
-    STLBitsetDeterminant::set_ints(fci_ints);
-
     FCIWfn::allocate_temp_space(lists_, print_);
 
     FCIWfn Hdiag(lists_, symmetry_);
@@ -401,7 +399,8 @@ FCISolver::initial_guess(FCIWfn& diag, size_t n, size_t multiplicity,
     }
 
     // Make sure that the spin space is complete
-    STLBitsetDeterminant::enforce_spin_completeness(bsdets);
+    STLBitsetDeterminant det(nmo);
+    det.enforce_spin_completeness(bsdets);
     if (bsdets.size() > num_dets) {
         bool* Ia = new bool[nact];
         bool* Ib = new bool[nact];
@@ -435,7 +434,7 @@ FCISolver::initial_guess(FCIWfn& diag, size_t n, size_t multiplicity,
 
     for (size_t I = 0; I < num_dets; ++I) {
         for (size_t J = I; J < num_dets; ++J) {
-            double HIJ = bsdets[I].slater_rules(bsdets[J]);
+            double HIJ = fci_ints->slater_rules(bsdets[I],bsdets[J]);
             if (I == J)
                 HIJ += scalar_energy;
             H.set(I, J, HIJ);

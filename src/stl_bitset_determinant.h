@@ -77,7 +77,7 @@ class STLBitsetDeterminant {
     STLBitsetDeterminant(const bit_t& bits);
     STLBitsetDeterminant(const bit_t& bits, int nmo);
     STLBitsetDeterminant(int nmo) { nmo_ = nmo; }
-    STLBitsetDeterminant( const STLBitsetDeterminant& lhs );
+    STLBitsetDeterminant(const STLBitsetDeterminant& lhs);
     /// Construct a determinant from two STLBitsetStrings
     //    explicit STLBitsetDeterminant(const STLBitsetString& alpha, const STLBitsetString& beta);
 

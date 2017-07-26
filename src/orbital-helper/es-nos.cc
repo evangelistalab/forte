@@ -73,8 +73,6 @@ void ESNO::startup() {
 
     fci_ints_->compute_restricted_one_body_operator();
 
-    STLBitsetDeterminant::set_ints(fci_ints_);
-
     nroot_ = options_.get_int("NROOT");
     multiplicity_ = options_.get_int("MULTIPLICITY");
 
@@ -85,7 +83,7 @@ void ESNO::compute_nos() {
 
     outfile->Printf("\n Casting determinants into full correlated basis");
     upcast_reference();
-    WFNOperator op(mo_symmetry_);
+    WFNOperator op(mo_symmetry_, fci_ints_);
 
     outfile->Printf("\n  Adding single excitations ...");
     Timer add;
@@ -108,7 +106,7 @@ void ESNO::compute_nos() {
     SharedMatrix evecs;
     SharedVector evals;
 
-    SparseCISolver sparse_solver;
+    SparseCISolver sparse_solver(fci_ints_);
 
     // set options
     sparse_solver.set_sigma_method(sigma_alg);

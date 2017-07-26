@@ -38,9 +38,9 @@ namespace psi {
 namespace forte {
 
 CI_Reference::CI_Reference(std::shared_ptr<Wavefunction> wfn, Options& options,
-                           std::shared_ptr<MOSpaceInfo> mo_space_info, STLBitsetDeterminant det,
+                           std::shared_ptr<MOSpaceInfo> mo_space_info, std::shared_ptr<FCIIntegrals> fci_ints,
                            int multiplicity, double twice_ms, int symmetry)
-    : wfn_(wfn), mo_space_info_(mo_space_info) {
+    : wfn_(wfn), mo_space_info_(mo_space_info), fci_ints_(fci_ints) {
     // Get the mutlilicity and twice M_s
     multiplicity_ = multiplicity;
     twice_ms_ = twice_ms;
@@ -105,7 +105,8 @@ void CI_Reference::build_reference(std::vector<STLBitsetDeterminant>& ref_space)
 
 void CI_Reference::build_ci_reference(std::vector<STLBitsetDeterminant>& ref_space) {
 
-    STLBitsetDeterminant det = STLBitsetDeterminant(get_occupation());
+    STLBitsetDeterminant det = fci_ints_->determinant(get_occupation());
+    det.print();
 
     ref_space.push_back(det);
 
@@ -270,7 +271,7 @@ void CI_Reference::build_cas_reference(std::vector<STLBitsetDeterminant>& ref_sp
         std::sort(begin(tmp_det_b), end(tmp_det_b));
 
         // Build the core det
-        STLBitsetDeterminant core_det;
+        STLBitsetDeterminant core_det(nact);
         for (int i = 0; i < nf; ++i) {
             core_det.set_alfa_bit(std::get<2>(active_mos[i]), true);
             core_det.set_beta_bit(std::get<2>(active_mos[i]), true);
