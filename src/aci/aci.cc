@@ -32,15 +32,6 @@
 #include "psi4/libmints/pointgrp.h"
 #include "psi4/libpsio/psio.hpp"
 
-#include "../ci_rdms.h"
-#include "../ci_reference.h"
-#include "../fci/fci_integrals.h"
-#include "../forte_options.h"
-#include "../mrpt2.h"
-#include "../orbital-helper/unpaired_density.h"
-#include "../reference.h"
-#include "../sparse_ci_solver.h"
-#include "../stl_bitset_determinant.h"
 #include "aci.h"
 
 using namespace psi;
@@ -172,7 +163,6 @@ AdaptiveCI::AdaptiveCI(SharedWavefunction ref_wfn, Options& options,
     reference_wavefunction_ = ref_wfn;
 
     mo_symmetry_ = mo_space_info_->symmetry("ACTIVE");
-    op_.initialize(mo_symmetry_);
     startup();
 }
 
@@ -193,8 +183,6 @@ void AdaptiveCI::set_aci_ints(SharedWavefunction ref_wfn, std::shared_ptr<ForteI
     fci_ints_->set_active_integrals(tei_active_aa, tei_active_ab, tei_active_bb);
     fci_ints_->compute_restricted_one_body_operator();
 
-    STLBitsetDeterminant::set_ints(fci_ints_);
-
     nuclear_repulsion_energy_ = molecule_->nuclear_repulsion_energy();
 }
 
@@ -205,6 +193,7 @@ void AdaptiveCI::startup() {
     }
 
     set_aci_ints(reference_wavefunction_, ints_);
+    op_.initialize(mo_symmetry_, fci_ints_);
 
     wavefunction_symmetry_ = 0;
     if (options_["ROOT_SYM"].has_changed()) {
@@ -247,7 +236,7 @@ void AdaptiveCI::startup() {
 
     // Build the reference determinant and compute its energy
 
-    CI_Reference ref(reference_wavefunction_, options_, mo_space_info_, det, multiplicity_,
+    CI_Reference ref(reference_wavefunction_, options_, mo_space_info_, fci_ints_, multiplicity_,
                      twice_ms_, wavefunction_symmetry_);
     ref.build_reference(initial_reference_);
 
@@ -465,7 +454,7 @@ double AdaptiveCI::compute_energy() {
         PQ_evals = energies;
     }
 
-    WFNOperator op_c(mo_symmetry_);
+    WFNOperator op_c(mo_symmetry_, fci_ints_);
     if (ex_alg_ == "ROOT_COMBINE") {
         outfile->Printf("\n\n  ==> Diagonalizing Final Space <==");
         dim = full_space.size();
@@ -480,7 +469,7 @@ double AdaptiveCI::compute_energy() {
         op_c.op_lists(full_space);
         op_c.tp_lists(full_space);
 
-        SparseCISolver sparse_solver;
+        SparseCISolver sparse_solver(fci_ints_);
         sparse_solver.set_parallel(true);
         sparse_solver.set_e_convergence(options_.get_double("E_CONVERGENCE"));
         sparse_solver.set_maxiter_davidson(options_.get_int("DL_MAXITER"));
@@ -520,7 +509,7 @@ double AdaptiveCI::compute_energy() {
             op_.tp_s_lists(final_wfn_);
         }
 
-        SparseCISolver sparse_solver;
+        SparseCISolver sparse_solver(fci_ints_);
         sparse_solver.set_parallel(true);
         sparse_solver.set_e_convergence(options_.get_double("E_CONVERGENCE"));
         sparse_solver.set_maxiter_davidson(options_.get_int("DL_MAXITER"));
@@ -630,7 +619,7 @@ void AdaptiveCI::diagonalize_final_and_compute_rdms() {
     op_.op_s_lists(final_wfn_);
     op_.tp_s_lists(final_wfn_);
 
-    SparseCISolver sparse_solver;
+    SparseCISolver sparse_solver(fci_ints_);
     sparse_solver.set_parallel(true);
     sparse_solver.set_e_convergence(options_.get_double("E_CONVERGENCE"));
     sparse_solver.set_maxiter_davidson(options_.get_int("DL_MAXITER"));
@@ -760,7 +749,7 @@ void AdaptiveCI::default_find_q_space(DeterminantMap& P_space, DeterminantMap& P
         for (const auto& I : V_hash) {
 
             if ((N % num_thread) == tid) {
-                double delta = I.first.energy() - evals->get(0);
+                double delta = fci_ints_->energy(I.first) - evals->get(0);
                 double V = I.second[0];
 
                 double criteria = 0.5 * (delta - sqrt(delta * delta + V * V * 4.0));
@@ -781,6 +770,7 @@ void AdaptiveCI::default_find_q_space(DeterminantMap& P_space, DeterminantMap& P
             sum += energy;
             ept2[0] -= energy;
             last_excluded = I;
+
         } else {
             PQ_space.add(det);
         }
@@ -870,7 +860,7 @@ void AdaptiveCI::find_q_space(DeterminantMap& P_space, DeterminantMap& PQ_space,
         size_t count = 0;
         for (const auto& it : V_hash) {
             if ((count % nthreads) == ithread) {
-                double EI = it.first.energy();
+                double EI = fci_ints_->energy(it.first);
                 for (int n = 0; n < nroot; ++n) {
                     double V = it.second[n];
                     double C1_I = C1_eq(V, EI, evals->get(n));
@@ -917,7 +907,7 @@ void AdaptiveCI::find_q_space(DeterminantMap& P_space, DeterminantMap& PQ_space,
             const STLBitsetDeterminant& det = sorted_dets[I].second;
             if (sum + sorted_dets[I].first < sigma_) {
                 sum += sorted_dets[I].first;
-                double EI = det.energy();
+                double EI = fci_ints_->energy(det);
                 const std::vector<double>& V_vec = V_hash[det];
                 for (int n = 0; n < nroot; ++n) {
                     double V = V_vec[n];
@@ -926,6 +916,7 @@ void AdaptiveCI::find_q_space(DeterminantMap& P_space, DeterminantMap& PQ_space,
                     ept2[n] += E2_I;
                 }
                 last_excluded = I;
+
             } else {
                 PQ_space.add(sorted_dets[I].second);
             }
@@ -1029,7 +1020,7 @@ void AdaptiveCI::get_excited_determinants2(int nroot, SharedMatrix evecs, Determ
                                            det_hash<std::vector<double>>& V_hash) {
     const size_t n_dets = P_space.size();
 
-    int nmo = STLBitsetDeterminant::nmo_;
+    int nmo = fci_ints_->nmo();
     double max_mem = options_.get_double("PT2_MAX_MEM");
 
     size_t guess_size = n_dets * nmo * nmo;
@@ -1091,7 +1082,7 @@ void AdaptiveCI::get_excited_determinants2(int nroot, SharedMatrix evecs, Determ
                             // Check if the determinant goes in this bin
                             size_t hash_val = std::hash<bit_t>()(new_det.bits_);
                             if ((hash_val % nbin) == bin) {
-                                double HIJ = new_det.slater_rules_single_alpha(ii, aa);
+                                double HIJ = fci_ints_->slater_rules_single_alpha(new_det, ii, aa);
                                 if ((std::fabs(HIJ) * c_norm >= screen_thresh_)) {
                                     std::vector<double> coupling(nroot_);
                                     for (int n = 0; n < nroot_; ++n) {
@@ -1121,7 +1112,7 @@ void AdaptiveCI::get_excited_determinants2(int nroot, SharedMatrix evecs, Determ
                             // Check if the determinant goes in this bin
                             size_t hash_val = std::hash<bit_t>()(new_det.bits_);
                             if ((hash_val % nbin) == bin) {
-                                double HIJ = new_det.slater_rules_single_beta(ii, aa);
+                                double HIJ = fci_ints_->slater_rules_single_beta(new_det, ii, aa);
                                 if ((std::fabs(HIJ) * c_norm >= screen_thresh_)) {
                                     std::vector<double> coupling(nroot_);
                                     for (int n = 0; n < nroot_; ++n) {
@@ -1314,7 +1305,7 @@ void AdaptiveCI::get_excited_determinants(int nroot, SharedMatrix evecs, Determi
                 for (int a = 0; a < nvalpha; ++a) {
                     int aa = avir[a];
                     if ((mo_symmetry_[ii] ^ mo_symmetry_[aa]) == 0) {
-                        double HIJ = det.slater_rules_single_alpha(ii, aa);
+                        double HIJ = fci_ints_->slater_rules_single_alpha(det, ii, aa);
                         if ((std::fabs(HIJ) * evecs_P_row_norm >= screen_thresh_)) {
                             //      if( std::abs(HIJ * evecs->get(0, P)) > screen_thresh_ ){
                             new_det = det;
@@ -1340,7 +1331,7 @@ void AdaptiveCI::get_excited_determinants(int nroot, SharedMatrix evecs, Determi
                 for (int a = 0; a < nvbeta; ++a) {
                     int aa = bvir[a];
                     if ((mo_symmetry_[ii] ^ mo_symmetry_[aa]) == 0) {
-                        double HIJ = det.slater_rules_single_beta(ii, aa);
+                        double HIJ = fci_ints_->slater_rules_single_beta(det, ii, aa);
                         if ((std::fabs(HIJ) * evecs_P_row_norm >= screen_thresh_)) {
                             // if( std::abs(HIJ * evecs->get(0, P)) > screen_thresh_ ){
                             new_det = det;
@@ -2241,7 +2232,7 @@ void AdaptiveCI::compute_aci(DeterminantMap& PQ_space, SharedMatrix& PQ_evecs,
     std::string sigma_method = options_.get_str("SIGMA_BUILD_TYPE");
 
     std::vector<std::vector<double>> energy_history;
-    SparseCISolver sparse_solver;
+    SparseCISolver sparse_solver(fci_ints_);
     if (quiet_mode_) {
         sparse_solver.set_print_details(false);
     }
@@ -2372,6 +2363,7 @@ void AdaptiveCI::compute_aci(DeterminantMap& PQ_space, SharedMatrix& PQ_evecs,
 
         // Print the energy
         if (!quiet_mode_) {
+            outfile->Printf("\n  electronic e: %1.12f", P_evals->get(0));
             outfile->Printf("\n");
             for (int i = 0; i < num_ref_roots; ++i) {
                 double abs_energy =
@@ -2717,7 +2709,8 @@ void AdaptiveCI::compute_multistate(SharedVector& PQ_evals) {
                 STLBitsetDeterminant& detA = stateA[I].first;
                 for (size_t J = 0; J < ndetB; ++J) {
                     STLBitsetDeterminant& detB = stateB[J].first;
-                    HIJ += detA.slater_rules(detB) * stateA[I].second * stateB[J].second;
+                    HIJ +=
+                        fci_ints_->slater_rules(detA, detB) * stateA[I].second * stateB[J].second;
                 }
             }
             H->set(A, B, HIJ);
@@ -2765,7 +2758,7 @@ DeterminantMap AdaptiveCI::approximate_wfn(DeterminantMap& PQ_space, SharedMatri
     double E0 = evals->get(0);
     for (auto& I : external_space) {
         new_wfn.add(I.first);
-        double val = I.second[0] / (E0 - I.first.energy());
+        double val = I.second[0] / (E0 - fci_ints_->energy(I.first));
         new_evecs->set(new_wfn.get_idx(I.first), 0, val);
         sum += val * val;
     }

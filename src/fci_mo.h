@@ -55,6 +55,7 @@
 #include "integrals/integrals.h"
 #include "reference.h"
 #include "sparse_ci_solver.h"
+#include "fci/fci_integrals.h"
 #include "stl_bitset_determinant.h"
 
 using d1 = std::vector<double>;
@@ -110,10 +111,7 @@ class FCI_MO : public Wavefunction {
     void xms_rotate(const int& irrep);
 
     /// Set fci_int_ pointer
-    void set_fci_int(std::shared_ptr<FCIIntegrals> fci_ints) {
-        fci_ints_ = fci_ints;
-        STLBitsetDeterminant::set_ints(fci_ints_);
-    }
+    void set_fci_int(std::shared_ptr<FCIIntegrals> fci_ints) { fci_ints_ = fci_ints; }
 
     /// Set multiplicity
     void set_multiplicity(int multiplicity) { multi_ = multiplicity; }

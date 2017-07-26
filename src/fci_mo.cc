@@ -89,7 +89,6 @@ void FCI_MO::startup() {
     ambit::Tensor tei_active_bb = integral_->aptei_bb_block(idx_a_, idx_a_, idx_a_, idx_a_);
     fci_ints_->set_active_integrals(tei_active_aa, tei_active_ab, tei_active_bb);
     fci_ints_->compute_restricted_one_body_operator();
-    STLBitsetDeterminant::set_ints(fci_ints_);
 
     // compute orbital extents if CIS/CISD IPEA
     if (ipea_ != "NONE") {
@@ -1446,7 +1445,7 @@ void FCI_MO::Diagonalize_H_noHF(const vecdet& p_space, const int& multi, const i
         // compute RHF energy
         outfile->Printf("\n  Isolate RHF determinant to the rest determinants.");
         outfile->Printf("\n  Recompute RHF energy ... ");
-        double Erhf = rhf.slater_rules(rhf) + fci_ints_->scalar_energy() + e_nuc_;
+        double Erhf = fci_ints_->energy(rhf) + fci_ints_->scalar_energy() + e_nuc_;
         SharedVector rhf_vec(new Vector("RHF Eigen Vector", det_size));
         rhf_vec->set(det_size - 1, 1.0);
         eigen.push_back(std::make_pair(rhf_vec, Erhf));
@@ -1510,7 +1509,7 @@ void FCI_MO::Diagonalize_H(const vecdet& p_space, const int& multi, const int& n
     //    }
 
     // DL solver
-    SparseCISolver sparse_solver;
+    SparseCISolver sparse_solver(fci_ints_);
     DiagonalizationMethod diag_method = DLSolver;
     string sigma_method = options_.get_str("SIGMA_BUILD_TYPE");
     sparse_solver.set_e_convergence(econv_);
@@ -1544,7 +1543,7 @@ void FCI_MO::Diagonalize_H(const vecdet& p_space, const int& multi, const int& n
         // use determinant map
         DeterminantMap detmap(p_space);
         auto act_mo = mo_space_info_->symmetry("ACTIVE");
-        WFNOperator op(act_mo);
+        WFNOperator op(act_mo, fci_ints_);
         op.build_strings(detmap);
         if (sigma_method == "HZ") {
             op.op_lists(detmap);

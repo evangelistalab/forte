@@ -26,6 +26,8 @@
  * @END LICENSE
  */
 
+#include "psi4/libpsi4util/process.h"
+#include "psi4/libpsio/psio.hpp"
 #include "determinant_map.h"
 #include <numeric>
 #include <cmath>
@@ -112,7 +114,7 @@ size_t DeterminantMap::get_idx(const STLBitsetDeterminant& det) const {
 }
 
 void DeterminantMap::make_spin_complete() {
-    int nmo = this->get_det(0).nmo_;
+    int nmo = this->get_det(0).nmo();
     size_t ndet_added = 0;
     std::vector<size_t> closed(nmo, 0);
     std::vector<size_t> open(nmo, 0);
@@ -153,7 +155,7 @@ void DeterminantMap::make_spin_complete() {
         for (int i = nbopen; i < naopen + nbopen; ++i)
             open_bits[i] = true; // 1
         do {
-            STLBitsetDeterminant new_det;
+            STLBitsetDeterminant new_det(nmo);
             for (int c = 0; c < nclosed; ++c) {
                 new_det.set_alfa_bit(closed[c], true);
                 new_det.set_beta_bit(closed[c], true);

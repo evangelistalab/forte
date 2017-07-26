@@ -69,8 +69,6 @@ void MRCI::startup() {
 
     fci_ints_->compute_restricted_one_body_operator();
 
-    STLBitsetDeterminant::set_ints(fci_ints_);
-
     nroot_ = options_.get_int("NROOT");
     multiplicity_ = options_.get_int("MULTIPLICITY");
 
@@ -80,7 +78,7 @@ void MRCI::startup() {
 double MRCI::compute_energy() {
 
     upcast_reference();
-    WFNOperator op(mo_symmetry_);
+    WFNOperator op(mo_symmetry_, fci_ints_);
 
     outfile->Printf("\n  Adding single and double excitations ...");
     Timer add;
@@ -103,7 +101,7 @@ double MRCI::compute_energy() {
     SharedMatrix evecs;
     SharedVector evals;
 
-    SparseCISolver sparse_solver;
+    SparseCISolver sparse_solver(fci_ints_);
 
     // set options
     sparse_solver.set_sigma_method(sigma_alg);
@@ -275,7 +273,7 @@ void MRCI::upcast_reference() {
     int b_shift = ncorr - nact;
 
     for (size_t I = 0, max = ref_dets.size(); I < max; ++I) {
-        STLBitsetDeterminant det = ref_dets[I];
+        STLBitsetDeterminant det(ref_dets[I].bits(), fci_ints_->nmo());
 
         // First beta
         for (int n = n_irrep - 1; n >= 0; --n) {

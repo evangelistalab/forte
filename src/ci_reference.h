@@ -30,6 +30,7 @@
 #include "psi4/libmints/wavefunction.h"
 #include "psi4/liboptions/liboptions.h"
 
+#include "fci/fci_integrals.h"
 #include "stl_bitset_determinant.h"
 #include "helpers.h"
 
@@ -82,26 +83,22 @@ class CI_Reference // : public Wavefunction
 
     void build_ci_reference(std::vector<STLBitsetDeterminant>& ref_space);
     void build_cas_reference(std::vector<STLBitsetDeterminant>& ref_space);
-    void build_ci_reference(std::vector<STLDeterminant>& ref_space);
-    void build_cas_reference(std::vector<STLDeterminant>& ref_space);
 
     std::vector<int> get_occupation();
+
+    std::shared_ptr<FCIIntegrals> fci_ints_;
 
   public:
     /// Default constructor
     CI_Reference(std::shared_ptr<Wavefunction> wfn, Options& options,
-                 std::shared_ptr<MOSpaceInfo> mo_space_info, STLBitsetDeterminant det,
+                 std::shared_ptr<MOSpaceInfo> mo_space_info, std::shared_ptr<FCIIntegrals> fci_ints,
                  int multiplicity, double ms, int symmetry);
-    CI_Reference(std::shared_ptr<Wavefunction> wfn, Options& options,
-                 std::shared_ptr<MOSpaceInfo> mo_space_info, STLDeterminant det, int multiplicity,
-                 double ms, int symmetry);
 
     /// Destructor
     ~CI_Reference();
 
     /// Build a reference
     void build_reference(std::vector<STLBitsetDeterminant>& ref_space);
-    void build_reference(std::vector<STLDeterminant>& ref_space);
 };
 }
 } // End Namespaces
