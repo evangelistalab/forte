@@ -378,7 +378,7 @@ class AdaptiveCI : public Wavefunction {
                                 const std::string& name);
 
     DeterminantMap approximate_wfn(DeterminantMap& PQ_space, SharedMatrix& evecs,
-                                   det_hash<double>& external_space, SharedMatrix& new_evecs);
+                                   SharedVector& PQ_evals, SharedMatrix& new_evecs);
 
     std::vector<std::pair<size_t, double>>
     dl_initial_guess(std::vector<STLBitsetDeterminant>& old_dets,

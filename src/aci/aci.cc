@@ -546,7 +546,8 @@ double AdaptiveCI::compute_energy() {
     if (ex_alg_ == "ROOT_COMBINE") {
         compute_rdms(full_space, op_c, PQ_evecs, 0, 0);
     } else if (approx_rdm_) {
-        DeterminantMap approx = approximate_wfn(final_wfn_, PQ_evecs, external_wfn_, new_evecs);
+        outfile->Printf("\n  Approximating RDMs");
+        DeterminantMap approx = approximate_wfn(final_wfn_, PQ_evecs, PQ_evals, new_evecs);
         //    WFNOperator op1(mo_space_info_);
         //    op1.op_lists(approx);
         op_.clear_op_lists();
@@ -556,6 +557,7 @@ double AdaptiveCI::compute_energy() {
         outfile->Printf("\n  Size of approx: %zu  size of var: %zu", approx.size(),
                         final_wfn_.size());
         compute_rdms(approx, op_, new_evecs, 0, 0);
+
     } else {
 
         op_.clear_op_s_lists();
@@ -564,6 +566,10 @@ double AdaptiveCI::compute_energy() {
         op_.tp_s_lists(final_wfn_);
         compute_rdms(final_wfn_, op_, PQ_evecs, 0, 0);
     }
+
+    // if( approx_rdm_ ){
+    //     approximate_rdm( final_wfn_, PQ_evecs,);
+    // }
 
     //	std::vector<double> davidson;
     //	if(options_.get_str("SIZE_CORRECTION") == "DAVIDSON" ){
@@ -765,10 +771,6 @@ void AdaptiveCI::default_find_q_space(DeterminantMap& P_space, DeterminantMap& P
             ept2[0] -= energy;
             last_excluded = I;
 
-            // Optionally save an approximate external wfn
-            if (approx_rdm_) {
-                external_wfn_[det] = V_hash[det][0] / (evals->get(0) - fci_ints_->energy(det));
-            }
         } else {
             PQ_space.add(det);
         }
@@ -914,10 +916,7 @@ void AdaptiveCI::find_q_space(DeterminantMap& P_space, DeterminantMap& PQ_space,
                     ept2[n] += E2_I;
                 }
                 last_excluded = I;
-                // Optionally save an approximate external wfn
-                if (approx_rdm_) {
-                    external_wfn_[det] = V_hash[det][0] / (evals->get(0) - fci_ints_->energy(det));
-                }
+
             } else {
                 PQ_space.add(sorted_dets[I].second);
             }
@@ -2265,7 +2264,7 @@ void AdaptiveCI::compute_aci(DeterminantMap& PQ_space, SharedMatrix& PQ_evecs,
 
     // Save the P_space energies to predict convergence
     std::vector<double> P_energies;
-    approx_rdm_ = false;
+    // approx_rdm_ = false;
 
     int cycle;
     for (cycle = 0; cycle < max_cycle_; ++cycle) {
@@ -2593,6 +2592,13 @@ void AdaptiveCI::compute_rdms(DeterminantMap& dets, WFNOperator& op, SharedMatri
                               trdm_abb_, trdm_bbb_);
         }
     }
+
+    if (approx_rdm_ and (rdm_level_ >= 2)) {
+        outfile->Printf("\n  Computing energy with new RDMs");
+
+        double en = ci_rdms_.get_energy(ordm_a_, ordm_b_, trdm_aa_, trdm_bb_, trdm_ab_);
+        outfile->Printf("\n  Energy from approximate RDM:  %1.12f", en);
+    }
 }
 
 void AdaptiveCI::add_bad_roots(DeterminantMap& dets) {
@@ -2728,10 +2734,12 @@ void AdaptiveCI::compute_multistate(SharedVector& PQ_evals) {
 }
 
 DeterminantMap AdaptiveCI::approximate_wfn(DeterminantMap& PQ_space, SharedMatrix& evecs,
-                                           det_hash<double>& external_space,
-                                           SharedMatrix& new_evecs) {
+                                           SharedVector& evals, SharedMatrix& new_evecs) {
     DeterminantMap new_wfn;
     new_wfn.copy(PQ_space);
+
+    det_hash<std::vector<double>> external_space;
+    get_excited_determinants(1, evecs, PQ_space, external_space);
 
     size_t n_ref = PQ_space.size();
     size_t n_external = external_space.size();
@@ -2741,17 +2749,18 @@ DeterminantMap AdaptiveCI::approximate_wfn(DeterminantMap& PQ_space, SharedMatri
     new_evecs.reset(new Matrix("U", total_size, 1));
     double sum = 0.0;
 
-#pragma omp parallel for reduction(+ : sum)
     for (size_t I = 0; I < n_ref; ++I) {
         double val = evecs->get(I, 0);
         new_evecs->set(I, 0, val);
         sum += val * val;
     }
 
+    double E0 = evals->get(0);
     for (auto& I : external_space) {
         new_wfn.add(I.first);
-        new_evecs->set(new_wfn.get_idx(I.first), 0, I.second);
-        sum += I.second * I.second;
+        double val = I.second[0] / (E0 - I.first.energy());
+        new_evecs->set(new_wfn.get_idx(I.first), 0, val);
+        sum += val * val;
     }
 
     outfile->Printf("\n  Norm of approximate wfn: %1.12f", std::sqrt(sum));
@@ -2831,5 +2840,49 @@ void AdaptiveCI::compute_nos() {
     // Retransform the integarms in the new basis
     ints_->retransform_integrals();
 }
+/*
+void AdaptiveCI::approximate_rdm( DeterminantMap& ref, SharedMatrix evecs ){
+
+    size_t max_I = I_space.size();
+    std::vector<STLBitsetDeterminant> I_dets = ref.determinants();
+
+    for (size_t I = 0; I < max_I; ++I) {
+        STLBitsetDeterminant& det(ref[I]);
+       // double evecs_P_row_norm = evecs->get_row(0, P)->norm();
+
+        std::vector<int> aocc = det.get_alfa_occ();
+        std::vector<int> bocc = det.get_beta_occ();
+        std::vector<int> avir = det.get_alfa_vir();
+        std::vector<int> bvir = det.get_beta_vir();
+
+        int noalpha = aocc.size();
+        int nobeta = bocc.size();
+        int nvalpha = avir.size();
+        int nvbeta = bvir.size();
+        STLBitsetDeterminant new_det(det);
+
+        // Generate alpha excitations
+        for (int i = 0; i < noalpha; ++i) {
+            int ii = aocc[i];
+            for (int a = 0; a < nvalpha; ++a) {
+                int aa = avir[a];
+                if ((mo_symmetry_[ii] ^ mo_symmetry_[aa]) == 0) {
+                    double HIJ = det.slater_rules_single_alpha(ii, aa);
+                    //if ((std::fabs(HIJ) * evecs_P_row_norm >= screen_thresh_)) {
+                    //      if( std::abs(HIJ * evecs->get(0, P)) > screen_thresh_ ){
+                    new_det = det;
+                    new_det.set_alfa_bit(ii, false);
+                    new_det.set_alfa_bit(aa, true);
+
+                    if( !(ref.has_det(new_det)) ){
+
+                    }
+                }
+            }
+        }
+    }
+
+}
+*/
 }
 } // EndNamespaces
