@@ -123,9 +123,6 @@ void ProjectorCI_Simple::startup() {
     fci_ints_->set_active_integrals(tei_active_aa, tei_active_ab, tei_active_bb);
     fci_ints_->compute_restricted_one_body_operator();
 
-    Determinant::set_ints(fci_ints_);
-    //   DynamicBitsetDeterminant::set_ints(fci_ints_);
-
     // The number of correlated molecular orbitals
     nact_ = mo_space_info_->get_corr_abs_mo("ACTIVE").size();
     nactpi_ = mo_space_info_->get_dimension("ACTIVE");
@@ -352,7 +349,7 @@ double ProjectorCI_Simple::estimate_high_energy() {
     //    }
     lambda_h_ = high_obt_energy + fci_ints_->frozen_core_energy() + fci_ints_->scalar_energy();
 
-    double lambda_h_G = high_det.energy() + fci_ints_->scalar_energy();
+    double lambda_h_G = fci_ints_->energy(high_det) + fci_ints_->scalar_energy();
     std::vector<int> aocc = high_det.get_alfa_occ();
     std::vector<int> bocc = high_det.get_beta_occ();
     std::vector<int> avir = high_det.get_alfa_vir();
@@ -388,7 +385,7 @@ double ProjectorCI_Simple::estimate_high_energy() {
             int ii = aocc[i];
             for (int a = avir_offset[h]; a < avir_offset[h + 1]; ++a) {
                 int aa = avir[a];
-                double HJI = high_det.slater_rules_single_alpha(ii, aa);
+                double HJI = fci_ints_->slater_rules_single_alpha(high_det,ii, aa);
                 lambda_h_G += std::fabs(HJI);
             }
         }
@@ -399,7 +396,7 @@ double ProjectorCI_Simple::estimate_high_energy() {
             int ii = bocc[i];
             for (int a = bvir_offset[h]; a < bvir_offset[h + 1]; ++a) {
                 int aa = bvir[a];
-                double HJI = high_det.slater_rules_single_beta(ii, aa);
+                double HJI = fci_ints_->slater_rules_single_beta(high_det,ii, aa);
                 lambda_h_G += std::fabs(HJI);
             }
         }
@@ -465,7 +462,7 @@ double ProjectorCI_Simple::estimate_high_energy() {
     outfile->Printf("\n  Highest Excited determinant:");
     high_det.print();
     outfile->Printf("\n  Determinant Energy                    :  %.12f",
-                    high_det.energy() + nuclear_repulsion_energy_ + fci_ints_->scalar_energy());
+                    fci_ints_->energy(high_det) + nuclear_repulsion_energy_ + fci_ints_->scalar_energy());
     outfile->Printf("\n  Highest Energy Gershgorin circle Est. :  %.12f",
                     lambda_h_G + nuclear_repulsion_energy_);
     lambda_h_ = lambda_h_G;
@@ -553,7 +550,7 @@ double ProjectorCI_Simple::compute_energy() {
     det_vec dets;
     std::vector<double> C;
 
-    SparseCISolver sparse_solver;
+    SparseCISolver sparse_solver(fci_ints_);
     sparse_solver.set_parallel(true);
     sparse_solver.set_e_convergence(options_.get_double("E_CONVERGENCE"));
     sparse_solver.set_maxiter_davidson(options_.get_int("DL_MAXITER"));
@@ -771,7 +768,7 @@ double ProjectorCI_Simple::compute_energy() {
                     var_energy - approx_energy_);
 
     outfile->Printf("\n  * Projector-CI Var. Corr.  Energy     = %18.12f Eh", 1,
-                    var_energy - reference_determinant_.energy() - nuclear_repulsion_energy_ -
+                    var_energy - fci_ints_->energy(reference_determinant_) - nuclear_repulsion_energy_ -
                         fci_ints_->scalar_energy());
 
     outfile->Printf("\n\n  * Size of CI space                    = %zu", C.size());
@@ -807,7 +804,7 @@ double ProjectorCI_Simple::compute_energy() {
         outfile->Printf("\n\n  * Projector-CI Post-diag   Energy     = %18.12f Eh", 1,
                         post_diag_energy);
         outfile->Printf("\n  * Projector-CI Var. Corr.  Energy     = %18.12f Eh", 1,
-                        post_diag_energy - reference_determinant_.energy() -
+                        post_diag_energy - fci_ints_->energy(reference_determinant_) -
                             nuclear_repulsion_energy_ - fci_ints_->scalar_energy());
 
         std::vector<double> diag_C(C.size());
@@ -894,7 +891,7 @@ double ProjectorCI_Simple::initial_guess(det_vec& dets, std::vector<double>& C) 
 
     outfile->Printf("\n\n  Initial guess size = %zu", guess_size);
 
-    SparseCISolver sparse_solver;
+    SparseCISolver sparse_solver(fci_ints_);
     sparse_solver.set_parallel(true);
     sparse_solver.set_e_convergence(options_.get_double("E_CONVERGENCE"));
     sparse_solver.set_maxiter_davidson(options_.get_int("DL_MAXITER"));
@@ -1023,7 +1020,7 @@ void ProjectorCI_Simple::propagate_DL(det_vec& dets, std::vector<double>& C,
     size_t dets_size = dets.size();
     std::vector<double> diag_vec(dets_size);
     for (int i = 0; i < dets_size; i++) {
-        diag_vec[i] = dets[i].energy() + fci_ints_->scalar_energy();
+        diag_vec[i] = fci_ints_->energy(dets[i]) + fci_ints_->scalar_energy();
     }
 
     double lambda = A->get(0, 0);
@@ -1241,7 +1238,7 @@ void ProjectorCI_Simple::apply_tau_H_ref_C_symm(double tau, double spawning_thre
     size_t max_I = C.size();
     for (size_t I = ref_max_I; I < max_I; ++I) {
         // Diagonal contribution
-        double det_energy = dets[I].energy() + fci_ints_->scalar_energy();
+        double det_energy = fci_ints_->energy(dets[I]) + fci_ints_->scalar_energy();
 // Diagonal contributions
 #pragma omp critical
         {
@@ -1290,7 +1287,7 @@ void ProjectorCI_Simple::apply_tau_H_ref_C_symm_det_dynamic(
                       (std::fabs(max_coupling.second * ref_CI) >= spawning_threshold);
 
     // Diagonal contributions
-    double det_energy = detI.energy() + fci_ints_->scalar_energy();
+    double det_energy = fci_ints_->energy(detI) + fci_ints_->scalar_energy();
     new_space_C_vec.push_back(std::make_pair(detI, tau * (det_energy - E0) * CI));
 
     if (do_singles or do_doubles) {
@@ -1315,7 +1312,7 @@ void ProjectorCI_Simple::apply_tau_H_ref_C_symm_det_dynamic(
                         Determinant detJ(detI);
                         detJ.set_alfa_bit(ii, false);
                         detJ.set_alfa_bit(aa, true);
-                        double HJI = detJ.slater_rules(detI);
+                        double HJI = fci_ints_->slater_rules(detJ,detI);
                         max_coupling.first = std::max(max_coupling.first, std::fabs(HJI));
                         if (std::fabs(HJI * ref_CI) >= spawning_threshold) {
                             new_space_C_vec.push_back(std::make_pair(detJ, tau * HJI * CI));
@@ -1358,7 +1355,7 @@ void ProjectorCI_Simple::apply_tau_H_ref_C_symm_det_dynamic(
                         Determinant detJ(detI);
                         detJ.set_beta_bit(ii, false);
                         detJ.set_beta_bit(aa, true);
-                        double HJI = detJ.slater_rules(detI);
+                        double HJI = fci_ints_->slater_rules(detJ,detI);
                         max_coupling.first = std::max(max_coupling.first, std::fabs(HJI));
                         if (std::fabs(HJI * ref_CI) >= spawning_threshold) {
                             new_space_C_vec.push_back(std::make_pair(detJ, tau * HJI * CI));
@@ -1578,7 +1575,7 @@ double ProjectorCI_Simple::estimate_proj_energy(det_vec& dets, std::vector<doubl
     // Compute the projective energy
     double projective_energy_estimator = 0.0;
     for (int I = 0, max_I = dets.size(); I < max_I; ++I) {
-        double HIJ = dets[I].slater_rules(dets[J]);
+        double HIJ = fci_ints_->slater_rules(dets[I],dets[J]);
         projective_energy_estimator += HIJ * C[I] / CJ;
     }
     return projective_energy_estimator + nuclear_repulsion_energy_ + fci_ints_->scalar_energy();
@@ -1592,10 +1589,10 @@ double ProjectorCI_Simple::estimate_var_energy(det_vec& dets, std::vector<double
 #pragma omp parallel for reduction(+ : variational_energy_estimator)
     for (size_t I = 0; I < size; ++I) {
         const Determinant& detI = dets[I];
-        variational_energy_estimator += C[I] * C[I] * detI.energy();
+        variational_energy_estimator += C[I] * C[I] * fci_ints_->energy(detI);
         for (size_t J = I + 1; J < size; ++J) {
             if (std::fabs(C[I] * C[J]) > tollerance) {
-                double HIJ = dets[I].slater_rules(dets[J]);
+                double HIJ = fci_ints_->slater_rules(dets[I],dets[J]);
                 variational_energy_estimator += 2.0 * C[I] * HIJ * C[J];
             }
         }
@@ -1634,7 +1631,7 @@ double ProjectorCI_Simple::estimate_var_energy_sparse(det_vec& dets, std::vector
     }
 
     for (size_t I = 0; I < max_I; ++I) {
-        variational_energy_estimator += C[I] * C[I] * dets[I].energy();
+        variational_energy_estimator += C[I] * C[I] * fci_ints_->energy(dets[I]);
     }
     for (int t = 0; t < num_threads_; ++t) {
         variational_energy_estimator += energy[t];
@@ -1651,7 +1648,7 @@ double ProjectorCI_Simple::estimate_1st_order_perturbation(det_vec& dets, std::v
 #pragma omp parallel for reduction(+ : perturbation_energy_estimator)
     for (size_t I = 0; I < size; ++I) {
         for (size_t J = 0; J < size; ++J) {
-            double HIJ = dets[I].slater_rules(dets[J]);
+            double HIJ = fci_ints_->slater_rules(dets[I],dets[J]);
             if (std::fabs(C[I] * HIJ) < spawning_threshold && J != I) {
                 perturbation_energy_estimator += C[I] * HIJ * C[J];
             }
@@ -1670,7 +1667,7 @@ double ProjectorCI_Simple::estimate_2nd_order_perturbation_sub(det_vec& dets,
     for (size_t I = 0; I < size; ++I) {
         double current_V = 0.0;
         for (size_t J = 0; J < size; ++J) {
-            double HIJ = dets[I].slater_rules(dets[J]);
+            double HIJ = fci_ints_->slater_rules(dets[I],dets[J]);
             if (std::fabs(C[I] * HIJ) < spawning_threshold && J != I) {
                 perturbation_energy_estimator += C[I] * HIJ * C[J];
             }
@@ -1705,7 +1702,7 @@ std::tuple<double, double> ProjectorCI_Simple::estimate_perturbation(det_vec& de
     for (size_t I = 0; I < size; ++I) {
         double current_V = 0.0;
         for (size_t J = 0; J < size; ++J) {
-            double HIJ = dets[J].slater_rules(dets[I]);
+            double HIJ = fci_ints_->slater_rules(dets[J],dets[I]);
             if (symm_approx_H_) {
                 if (std::fabs(C[J] * HIJ) < spawning_threshold &&
                     std::fabs(C[I] * HIJ) < spawning_threshold && J != I) {
@@ -1718,7 +1715,7 @@ std::tuple<double, double> ProjectorCI_Simple::estimate_perturbation(det_vec& de
             }
         }
         current_V *= C[I];
-        double delta = variational_energy_estimator - dets[I].energy() - fci_ints_->scalar_energy();
+        double delta = variational_energy_estimator - fci_ints_->energy(dets[I]) - fci_ints_->scalar_energy();
         perturbation_2nd_energy_estimator_sub += current_V * current_V / delta;
         //            0.5 * (delta - sqrt(delta * delta + 4 * current_V *
         //            current_V));
@@ -1734,7 +1731,7 @@ double ProjectorCI_Simple::estimate_path_filtering_error(det_vec& dets, std::vec
     for (size_t I = 0; I < size; ++I) {
         double current_pf = 0.0;
         for (size_t J = 0; J < size; ++J) {
-            double HIJ = dets[J].slater_rules(dets[I]);
+            double HIJ = fci_ints_->slater_rules(dets[J],dets[I]);
             if (std::fabs(C[J] * HIJ) < spawning_threshold && J != I) {
                 current_pf += std::fabs(HIJ * C[J]);
             }
@@ -1759,7 +1756,7 @@ void ProjectorCI_Simple::print_wfn(det_vec& space, std::vector<double>& C, size_
         outfile->Printf("\n  %3zu  %13.6g %13.6g  %10zu %s  %18.12f", I, C[det_weight[I].second],
                         det_weight[I].first * det_weight[I].first, det_weight[I].second,
                         space[det_weight[I].second].str().c_str(),
-                        space[det_weight[I].second].energy() + fci_ints_->scalar_energy());
+                        fci_ints_->energy(space[det_weight[I].second]) + fci_ints_->scalar_energy());
     }
 
     // Compute the expectation value of the spin
@@ -1858,7 +1855,7 @@ double ProjectorCI_Simple::form_H_C(double tau, double spawning_threshold, Deter
                     detJ.set_alfa_bit(aa, true);
                     det_hash_it it = det_C.find(detJ);
                     if (it != det_C.end()) {
-                        double HJI = detJ.slater_rules(detI);
+                        double HJI = fci_ints_->slater_rules(detJ,detI);
                         if (std::fabs(HJI * CI) >= spawning_threshold) {
                             result += tau * HJI * CI * it->second;
                         }
@@ -1877,7 +1874,7 @@ double ProjectorCI_Simple::form_H_C(double tau, double spawning_threshold, Deter
                     detJ.set_beta_bit(aa, true);
                     det_hash_it it = det_C.find(detJ);
                     if (it != det_C.end()) {
-                        double HJI = detJ.slater_rules(detI);
+                        double HJI = fci_ints_->slater_rules(detJ,detI);
                         if (std::fabs(HJI * CI) >= spawning_threshold) {
                             result += tau * HJI * CI * it->second;
                         }

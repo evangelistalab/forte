@@ -86,10 +86,12 @@ class CI_Reference // : public Wavefunction
 
     std::vector<int> get_occupation();
 
+    std::shared_ptr<FCIIntegrals> fci_ints_;
+
   public:
     /// Default constructor
     CI_Reference(std::shared_ptr<Wavefunction> wfn, Options& options,
-                 std::shared_ptr<MOSpaceInfo> mo_space_info, STLBitsetDeterminant det,
+                 std::shared_ptr<MOSpaceInfo> mo_space_info, std::shared_ptr<FCIIntegrals> fci_ints,
                  int multiplicity, double ms, int symmetry);
 
     /// Destructor

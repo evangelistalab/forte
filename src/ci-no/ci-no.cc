@@ -100,7 +100,6 @@ CINO::CINO(SharedWavefunction ref_wfn, Options& options, std::shared_ptr<ForteIn
     fci_ints_->set_active_integrals(tei_active_aa, tei_active_ab, tei_active_bb);
     fci_ints_->compute_restricted_one_body_operator();
 
-    STLBitsetDeterminant::set_ints(fci_ints_);
     startup();
 }
 
@@ -318,7 +317,7 @@ std::pair<SharedVector, SharedMatrix>
 CINO::diagonalize_hamiltonian(const std::vector<Determinant>& dets, int nsolutions) {
     std::pair<SharedVector, SharedMatrix> evals_evecs;
 
-    SparseCISolver sparse_solver;
+    SparseCISolver sparse_solver(fci_ints_);
     sparse_solver.set_parallel(true);
     sparse_solver.set_e_convergence(options_.get_double("E_CONVERGENCE"));
     sparse_solver.set_maxiter_davidson(options_.get_int("DL_MAXITER"));

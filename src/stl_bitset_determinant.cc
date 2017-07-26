@@ -87,14 +87,14 @@ STLBitsetDeterminant::STLBitsetDeterminant(const bit_t& bits, int nmo) {
 //        bits_[p + nmo_] = beta.get_bit(p);
 //    }
 //}
-STLBitsetDeterminant::STLBitsetDeterminant(const STLBitsetDeterminant& rhs) { 
+STLBitsetDeterminant::STLBitsetDeterminant(const STLBitsetDeterminant& rhs) {
     nmo_ = rhs.nmo();
-    bits_ = rhs.bits_; 
+    bits_ = rhs.bits_;
 }
 
-void STLBitsetDeterminant::copy(const STLBitsetDeterminant& rhs) { 
+void STLBitsetDeterminant::copy(const STLBitsetDeterminant& rhs) {
     nmo_ = rhs.nmo();
-    bits_ = rhs.bits_; 
+    bits_ = rhs.bits_;
 }
 
 bool STLBitsetDeterminant::operator==(const STLBitsetDeterminant& lhs) const {
@@ -124,9 +124,7 @@ bool STLBitsetDeterminant::get_beta_bit(int n) const { return bits_[n + nmo_]; }
 
 void STLBitsetDeterminant::set_alfa_bit(int n, bool value) { bits_[n] = value; }
 
-void STLBitsetDeterminant::set_beta_bit(int n, bool value) { 
-    bits_[n + nmo_] = value;
-}
+void STLBitsetDeterminant::set_beta_bit(int n, bool value) { bits_[n + nmo_] = value; }
 
 std::vector<bool> STLBitsetDeterminant::get_alfa_bits_vector_bool() {
     std::vector<bool> result(nmo_);

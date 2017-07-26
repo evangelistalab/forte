@@ -286,7 +286,7 @@ double FCIIntegrals::slater_rules(const STLBitsetDeterminant& lhs,
     double matrix_element = 0.0;
     // Slater rule 1 PhiI = PhiJ
     if ((nadiff == 0) and (nbdiff == 0)) {
-    //matrix_element += frozen_core_energy_ + this->energy(rhs);
+        // matrix_element += frozen_core_energy_ + this->energy(rhs);
         matrix_element = frozen_core_energy_;
         for (int p = 0; p < nmo_; ++p) {
             if (I[p])
@@ -308,7 +308,6 @@ double FCIIntegrals::slater_rules(const STLBitsetDeterminant& lhs,
                 //                    fci_ints_->diag_c_rtei(p,q);
             }
         }
-
     }
 
     // Slater rule 2 PhiI = j_a^+ i_a PhiJ
@@ -430,9 +429,9 @@ double FCIIntegrals::slater_rules(const STLBitsetDeterminant& lhs,
             if ((I[nmo_ + p] != J[nmo_ + p]) and J[nmo_ + p])
                 l = p;
         }
-       //  double sign = SlaterSign(I, i, nmo_ + j, k, nmo_ + l);
-        //double sign = lhs.slater_sign(i, nmo_ + j, k, nmo_ + l);
-        double sign = lhs.slater_sign_aa(i,k) * lhs.slater_sign_bb(j,l);
+        //  double sign = SlaterSign(I, i, nmo_ + j, k, nmo_ + l);
+        // double sign = lhs.slater_sign(i, nmo_ + j, k, nmo_ + l);
+        double sign = lhs.slater_sign_aa(i, k) * lhs.slater_sign_bb(j, l);
         matrix_element = sign * tei_ab_[i * nmo3_ + j * nmo2_ + k * nmo_ + l];
     }
     return (matrix_element);
