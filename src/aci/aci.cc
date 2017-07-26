@@ -163,7 +163,6 @@ AdaptiveCI::AdaptiveCI(SharedWavefunction ref_wfn, Options& options,
     reference_wavefunction_ = ref_wfn;
 
     mo_symmetry_ = mo_space_info_->symmetry("ACTIVE");
-    op_.initialize(mo_symmetry_);
     startup();
 }
 
@@ -194,6 +193,7 @@ void AdaptiveCI::startup() {
     }
 
     set_aci_ints(reference_wavefunction_, ints_);
+    op_.initialize(mo_symmetry_, fci_ints_);
 
     wavefunction_symmetry_ = 0;
     if (options_["ROOT_SYM"].has_changed()) {

@@ -621,7 +621,7 @@ void STLBitsetDeterminant::enforce_spin_completeness(std::vector<STLBitsetDeterm
         for (int i = nbopen; i < naopen + nbopen; ++i)
             open_bits[i] = true; // 1
         do {
-            STLBitsetDeterminant new_det;
+            STLBitsetDeterminant new_det(nmo_);
             for (int c = 0; c < nclosed; ++c) {
                 new_det.set_alfa_bit(closed[c], true);
                 new_det.set_beta_bit(closed[c], true);
