@@ -62,9 +62,11 @@ class STLBitsetDeterminant {
     STLBitsetDeterminant();
     /// Construct the determinant from an occupation vector that
     /// specifies the alpha and beta strings.  occupation = [Ia,Ib]
+    STLBitsetDeterminant(const std::vector<int>& occupation, int nmo);
     STLBitsetDeterminant(const std::vector<int>& occupation);
     /// Construct the determinant from an occupation vector that
     /// specifies the alpha and beta strings.  occupation = [Ia,Ib]
+    STLBitsetDeterminant(const std::vector<bool>& occupation, int nmo);
     STLBitsetDeterminant(const std::vector<bool>& occupation);
     /// Construct an excited determinant of a given reference
     /// Construct the determinant from two occupation vectors that
@@ -75,6 +77,7 @@ class STLBitsetDeterminant {
     STLBitsetDeterminant(const bit_t& bits);
     STLBitsetDeterminant(const bit_t& bits, int nmo);
     STLBitsetDeterminant(int nmo) { nmo_ = nmo; }
+    STLBitsetDeterminant( const STLBitsetDeterminant& lhs );
     /// Construct a determinant from two STLBitsetStrings
     //    explicit STLBitsetDeterminant(const STLBitsetString& alpha, const STLBitsetString& beta);
 
@@ -89,6 +92,8 @@ class STLBitsetDeterminant {
 
     /// Get a pointer to the bits
     const bit_t& bits() const;
+
+    const int nmo() const { return nmo_; }
 
     /// Return the value of an alpha bit
     bool get_alfa_bit(int n) const;
@@ -183,9 +188,9 @@ class STLBitsetDeterminant {
 
     /// The occupation vector (does not include the frozen orbitals)
     bit_t bits_;
-
     /// Number of non-frozen molecular orbitals
     int nmo_;
+
     /// Return the sign of a_n applied to string I
     static double SlaterSign(const bit_t& I, int n);
     double SlaterSign(int n);

@@ -1457,7 +1457,6 @@ SparseCISolver::build_full_hamiltonian(const std::vector<STLBitsetDeterminant>& 
             H->transform(P);
         }
     }
-
     return H;
 }
 

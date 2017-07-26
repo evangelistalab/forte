@@ -65,11 +65,13 @@ class FCIIntegrals {
 
     /// Initialize a determinant
     STLBitsetDeterminant determinant(const bit_t& bits);
+    STLBitsetDeterminant determinant(const std::vector<int>& bits);
+    STLBitsetDeterminant determinant(const std::vector<bool>& bits);
     STLBitsetDeterminant determinant();
 
     /// Compute a determinant's energy
     double energy(STLBitsetDeterminant& det);
-    double energy(const STLBitsetDeterminant& det);
+    double energy(const STLBitsetDeterminant& det) const;
 
     /// Compute the matrix element of the Hamiltonian between this determinant
     /// and a given one
