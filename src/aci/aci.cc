@@ -239,7 +239,7 @@ void AdaptiveCI::startup() {
     CI_Reference ref(reference_wavefunction_, options_, mo_space_info_, fci_ints_, multiplicity_,
                      twice_ms_, wavefunction_symmetry_);
     ref.build_reference(initial_reference_);
-    
+
     // Read options
     nroot_ = options_.get_int("ACI_NROOT");
     sigma_ = options_.get_double("SIGMA");
@@ -1332,7 +1332,7 @@ void AdaptiveCI::get_excited_determinants(int nroot, SharedMatrix evecs, Determi
                 for (int a = 0; a < nvbeta; ++a) {
                     int aa = bvir[a];
                     if ((mo_symmetry_[ii] ^ mo_symmetry_[aa]) == 0) {
-                        double HIJ = fci_ints_->slater_rules_single_beta(det,ii, aa);
+                        double HIJ = fci_ints_->slater_rules_single_beta(det, ii, aa);
                         if ((std::fabs(HIJ) * evecs_P_row_norm >= screen_thresh_)) {
                             // if( std::abs(HIJ * evecs->get(0, P)) > screen_thresh_ ){
                             new_det = det;
@@ -2364,7 +2364,7 @@ void AdaptiveCI::compute_aci(DeterminantMap& PQ_space, SharedMatrix& PQ_evecs,
 
         // Print the energy
         if (!quiet_mode_) {
-        outfile->Printf("\n  electronic e: %1.12f", P_evals->get(0));
+            outfile->Printf("\n  electronic e: %1.12f", P_evals->get(0));
             outfile->Printf("\n");
             for (int i = 0; i < num_ref_roots; ++i) {
                 double abs_energy =
@@ -2703,7 +2703,8 @@ void AdaptiveCI::compute_multistate(SharedVector& PQ_evals) {
                 STLBitsetDeterminant& detA = stateA[I].first;
                 for (size_t J = 0; J < ndetB; ++J) {
                     STLBitsetDeterminant& detB = stateB[J].first;
-                    HIJ += fci_ints_->slater_rules(detA,detB) * stateA[I].second * stateB[J].second;
+                    HIJ +=
+                        fci_ints_->slater_rules(detA, detB) * stateA[I].second * stateB[J].second;
                 }
             }
             H->set(A, B, HIJ);

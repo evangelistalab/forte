@@ -239,7 +239,6 @@ void ProjectorCI::startup() {
     fci_ints_->set_active_integrals(tei_active_aa, tei_active_ab, tei_active_bb);
     fci_ints_->compute_restricted_one_body_operator();
 
-
     // The number of correlated molecular orbitals
     nact_ = mo_space_info_->get_corr_abs_mo("ACTIVE").size();
     nactpi_ = mo_space_info_->get_dimension("ACTIVE");
@@ -595,7 +594,7 @@ double ProjectorCI::estimate_high_energy() {
             int ii = aocc[i];
             for (int a = avir_offset[h]; a < avir_offset[h + 1]; ++a) {
                 int aa = avir[a];
-                double HJI = fci_ints_->slater_rules_single_alpha(high_det,ii, aa);
+                double HJI = fci_ints_->slater_rules_single_alpha(high_det, ii, aa);
                 lambda_h_G += std::fabs(HJI);
             }
         }
@@ -672,7 +671,8 @@ double ProjectorCI::estimate_high_energy() {
     outfile->Printf("\n  Highest Excited determinant:");
     high_det.print();
     outfile->Printf("\n  Determinant Energy                    :  %.12f",
-                    fci_ints_->energy(high_det) + nuclear_repulsion_energy_ + fci_ints_->scalar_energy());
+                    fci_ints_->energy(high_det) + nuclear_repulsion_energy_ +
+                        fci_ints_->scalar_energy());
     outfile->Printf("\n  Highest Energy Gershgorin circle Est. :  %.12f",
                     lambda_h_G + nuclear_repulsion_energy_);
     lambda_h_ = lambda_h_G;
@@ -1121,8 +1121,8 @@ double ProjectorCI::compute_energy() {
                     var_energy - approx_energy_);
 
     outfile->Printf("\n  * Projector-CI Var. Corr.  Energy     = %18.12f Eh", 1,
-                    var_energy - fci_ints_->energy(reference_determinant_) - nuclear_repulsion_energy_ -
-                        fci_ints_->scalar_energy());
+                    var_energy - fci_ints_->energy(reference_determinant_) -
+                        nuclear_repulsion_energy_ - fci_ints_->scalar_energy());
 
     //    double pfError = estimate_path_filtering_error(dets, C,
     //    spawning_threshold_);
@@ -2215,7 +2215,8 @@ void ProjectorCI::propagate_DavidsonLiu(det_vec& dets, std::vector<double>& C,
             }
 
             for (auto& det_r_k : r_k) {
-                double denom = lambda_p[k] - fci_ints_->energy(det_r_k.first) + fci_ints_->scalar_energy();
+                double denom =
+                    lambda_p[k] - fci_ints_->energy(det_r_k.first) + fci_ints_->scalar_energy();
                 if (std::fabs(denom) > 1e-6) {
                     det_r_k.second /= denom;
                 } else {
@@ -4826,7 +4827,7 @@ double ProjectorCI::estimate_2nd_order_perturbation_sub(det_vec& dets, std::vect
     for (size_t I = 0; I < size; ++I) {
         double current_V = 0.0;
         for (size_t J = 0; J < size; ++J) {
-            double HIJ = fci_ints_->slater_rules(dets[I],dets[J]);
+            double HIJ = fci_ints_->slater_rules(dets[I], dets[J]);
             if (std::fabs(C[I] * HIJ) < spawning_threshold && J != I) {
                 perturbation_energy_estimator += C[I] * HIJ * C[J];
             }
@@ -4873,7 +4874,8 @@ std::tuple<double, double> ProjectorCI::estimate_perturbation(det_vec& dets, std
             }
         }
         current_V *= C[I];
-        double delta = variational_energy_estimator - fci_ints_->energy(dets[I]) - fci_ints_->scalar_energy();
+        double delta =
+            variational_energy_estimator - fci_ints_->energy(dets[I]) - fci_ints_->scalar_energy();
         perturbation_2nd_energy_estimator_sub += current_V * current_V / delta;
         //            0.5 * (delta - sqrt(delta * delta + 4 * current_V *
         //            current_V));
@@ -4914,7 +4916,8 @@ void ProjectorCI::print_wfn(det_vec& space, std::vector<double>& C, size_t max_o
         outfile->Printf("\n  %3zu  %13.6g %13.6g  %10zu %s  %18.12f", I, C[det_weight[I].second],
                         det_weight[I].first * det_weight[I].first, det_weight[I].second,
                         space[det_weight[I].second].str().c_str(),
-                        fci_ints_->energy(space[det_weight[I].second]) + fci_ints_->scalar_energy());
+                        fci_ints_->energy(space[det_weight[I].second]) +
+                            fci_ints_->scalar_energy());
     }
 
     // Compute the expectation value of the spin
@@ -5564,7 +5567,7 @@ double ProjectorCI::form_H_C(double tau, double spawning_threshold, Determinant&
                     detJ.set_alfa_bit(aa, true);
                     det_hash_it it = det_C.find(detJ);
                     if (it != det_C.end()) {
-                        double HJI = fci_ints_->slater_rules(detJ,detI);
+                        double HJI = fci_ints_->slater_rules(detJ, detI);
                         if (std::fabs(HJI * CI) >= spawning_threshold) {
                             result += tau * HJI * CI * it->second;
                         }
@@ -5583,7 +5586,7 @@ double ProjectorCI::form_H_C(double tau, double spawning_threshold, Determinant&
                     detJ.set_beta_bit(aa, true);
                     det_hash_it it = det_C.find(detJ);
                     if (it != det_C.end()) {
-                        double HJI = fci_ints_->slater_rules(detJ,detI);
+                        double HJI = fci_ints_->slater_rules(detJ, detI);
                         if (std::fabs(HJI * CI) >= spawning_threshold) {
                             result += tau * HJI * CI * it->second;
                         }

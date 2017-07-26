@@ -434,7 +434,7 @@ FCISolver::initial_guess(FCIWfn& diag, size_t n, size_t multiplicity,
 
     for (size_t I = 0; I < num_dets; ++I) {
         for (size_t J = I; J < num_dets; ++J) {
-            double HIJ = fci_ints->slater_rules(bsdets[I],bsdets[J]);
+            double HIJ = fci_ints->slater_rules(bsdets[I], bsdets[J]);
             if (I == J)
                 HIJ += scalar_energy;
             H.set(I, J, HIJ);
@@ -445,10 +445,10 @@ FCISolver::initial_guess(FCIWfn& diag, size_t n, size_t multiplicity,
 
     std::vector<std::pair<int, std::vector<std::tuple<size_t, size_t, size_t, double>>>> guess;
 
-    std::vector<std::string> s2_labels({"singlet", "doublet", "triplet", "quartet", "quintet", "sextet",
-                                   "septet",  "octet",   "nonet",   "decaet",  "11-et",   "12-et",
-                                   "13-et",   "14-et",   "15-et",   "16-et",   "17-et",   "18-et",
-                                   "19-et",   "20-et",   "21-et",   "22-et",   "23-et",   "24-et"});
+    std::vector<std::string> s2_labels(
+        {"singlet", "doublet", "triplet", "quartet", "quintet", "sextet", "septet", "octet",
+         "nonet",   "decaet",  "11-et",   "12-et",   "13-et",   "14-et",  "15-et",  "16-et",
+         "17-et",   "18-et",   "19-et",   "20-et",   "21-et",   "22-et",  "23-et",  "24-et"});
     std::vector<std::string> table;
 
     for (size_t r = 0; r < num_dets; ++r) {

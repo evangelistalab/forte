@@ -487,7 +487,8 @@ double ProjectorCI_HashVec::estimate_high_energy() {
     outfile->Printf("\n  Highest Excited determinant:");
     high_det.print();
     outfile->Printf("\n  Determinant Energy                    :  %.12f",
-                    fci_ints_->energy(high_det) + nuclear_repulsion_energy_ + fci_ints_->scalar_energy());
+                    fci_ints_->energy(high_det) + nuclear_repulsion_energy_ +
+                        fci_ints_->scalar_energy());
     outfile->Printf("\n  Highest Energy Gershgorin circle Est. :  %.12f",
                     lambda_h_G + nuclear_repulsion_energy_);
     lambda_h_ = lambda_h_G;
@@ -793,8 +794,8 @@ double ProjectorCI_HashVec::compute_energy() {
 
     outfile->Printf("\n  * Projector-CI Variational Energy     = %18.12f Eh", 1, var_energy);
     outfile->Printf("\n  * Projector-CI Var. Corr.  Energy     = %18.12f Eh", 1,
-                    var_energy - fci_ints_->energy(reference_determinant_) - nuclear_repulsion_energy_ -
-                        fci_ints_->scalar_energy());
+                    var_energy - fci_ints_->energy(reference_determinant_) -
+                        nuclear_repulsion_energy_ - fci_ints_->scalar_energy());
 
     outfile->Printf("\n  * 1st order perturbation   Energy     = %18.12f Eh", 1,
                     var_energy - approx_energy_);
@@ -1298,7 +1299,7 @@ void ProjectorCI_HashVec::apply_tau_H_symm_det_dynamic_HBCI_2(
                     }
                     if (!detI.get_alfa_bit(a)) {
                         Determinant detJ(detI);
-                        double HJI = fci_ints_->slater_rules_single_alpha_abs(detJ,i, a);
+                        double HJI = fci_ints_->slater_rules_single_alpha_abs(detJ, i, a);
                         //                        double HJI = fci_ints_->oei_a(i, a);
                         //                        size_t max_bit = 2 * nact_;
                         //                        bit_t& bits = detJ.bits_;
@@ -1354,7 +1355,7 @@ void ProjectorCI_HashVec::apply_tau_H_symm_det_dynamic_HBCI_2(
                     }
                     if (!detI.get_beta_bit(a)) {
                         Determinant detJ(detI);
-                        double HJI = fci_ints_->slater_rules_single_beta_abs(detJ,i, a);
+                        double HJI = fci_ints_->slater_rules_single_beta_abs(detJ, i, a);
                         //                        double HJI = fci_ints_->oei_b(i, a);
                         //                        size_t max_bit = 2 * nact_;
                         //                        bit_t& bits = detJ.bits_;
@@ -1470,7 +1471,7 @@ void ProjectorCI_HashVec::apply_tau_H_symm_det_dynamic_HBCI_2(
                     }
                     if (!detI.get_beta_bit(a)) {
                         Determinant detJ(detI);
-                        double HJI = fci_ints_->slater_rules_single_beta_abs(detJ,i, a);
+                        double HJI = fci_ints_->slater_rules_single_beta_abs(detJ, i, a);
                         //                        double HJI = fci_ints_->oei_b(i, a);
                         //                        size_t max_bit = 2 * nact_;
                         //                        bit_t& bits = detJ.bits_;
@@ -1885,7 +1886,7 @@ void ProjectorCI_HashVec::apply_tau_H_ref_C_symm_det_dynamic_HBCI_2(
                     }
                     if (!detI.get_alfa_bit(a)) {
                         Determinant detJ(detI);
-                        double HJI = fci_ints_->slater_rules_single_alpha_abs(detJ,i, a);
+                        double HJI = fci_ints_->slater_rules_single_alpha_abs(detJ, i, a);
                         //                        double HJI = fci_ints_->oei_a(i, a);
                         //                        size_t max_bit = 2 * nact_;
                         //                        bit_t& bits = detJ.bits_;
@@ -1933,7 +1934,7 @@ void ProjectorCI_HashVec::apply_tau_H_ref_C_symm_det_dynamic_HBCI_2(
                     }
                     if (!detI.get_beta_bit(a)) {
                         Determinant detJ(detI);
-                        double HJI = fci_ints_->slater_rules_single_beta_abs(detJ,i, a);
+                        double HJI = fci_ints_->slater_rules_single_beta_abs(detJ, i, a);
                         //                        double HJI = fci_ints_->oei_b(i, a);
                         //                        size_t max_bit = 2 * nact_;
                         //                        bit_t& bits = detJ.bits_;
@@ -2127,7 +2128,7 @@ double ProjectorCI_HashVec::estimate_proj_energy(const det_hashvec& dets_hashvec
     // Compute the projective energy
     double projective_energy_estimator = 0.0;
     for (int I = 0, max_I = dets_hashvec.size(); I < max_I; ++I) {
-        double HIJ = fci_ints_->slater_rules(dets_hashvec[I],(dets_hashvec[J]));
+        double HIJ = fci_ints_->slater_rules(dets_hashvec[I], (dets_hashvec[J]));
         projective_energy_estimator += HIJ * C[I] / CJ;
     }
     return projective_energy_estimator + nuclear_repulsion_energy_ + fci_ints_->scalar_energy();
@@ -2144,7 +2145,7 @@ double ProjectorCI_HashVec::estimate_var_energy(const det_hashvec& dets_hashvec,
         variational_energy_estimator += C[I] * C[I] * fci_ints_->energy(detI);
         for (size_t J = I + 1; J < size; ++J) {
             if (std::fabs(C[I] * C[J]) > tollerance) {
-                double HIJ = fci_ints_->slater_rules(dets_hashvec[I],(dets_hashvec[J]));
+                double HIJ = fci_ints_->slater_rules(dets_hashvec[I], (dets_hashvec[J]));
                 variational_energy_estimator += 2.0 * C[I] * HIJ * C[J];
             }
         }
@@ -2181,7 +2182,7 @@ double ProjectorCI_HashVec::estimate_var_energy_within_error(const det_hashvec& 
         const Determinant& detI = dets_hashvec[I];
         variational_energy_estimator += C[I] * C[I] * fci_ints_->energy(detI);
         for (size_t J = I + 1; J <= cut_index; ++J) {
-            double HIJ = fci_ints_->slater_rules(dets_hashvec[I],dets_hashvec[J]);
+            double HIJ = fci_ints_->slater_rules(dets_hashvec[I], dets_hashvec[J]);
             variational_energy_estimator += 2.0 * C[I] * HIJ * C[J];
         }
     }
@@ -2402,7 +2403,7 @@ double ProjectorCI_HashVec::form_H_C(const det_hashvec& dets_hashvec, std::vecto
                 detJ.set_alfa_bit(aa, true);
                 size_t index = dets_hashvec.find(detJ);
                 if (index < I) {
-                    HJI = fci_ints_->slater_rules_single_alpha(detI,ii, aa);
+                    HJI = fci_ints_->slater_rules_single_alpha(detI, ii, aa);
                     result += 2.0 * HJI * CI * C[index];
                 }
                 detJ.set_alfa_bit(ii, true);
@@ -2420,7 +2421,7 @@ double ProjectorCI_HashVec::form_H_C(const det_hashvec& dets_hashvec, std::vecto
                 detJ.set_beta_bit(aa, true);
                 size_t index = dets_hashvec.find(detJ);
                 if (index < I) {
-                    HJI = fci_ints_->slater_rules_single_beta(detI,ii, aa);
+                    HJI = fci_ints_->slater_rules_single_beta(detI, ii, aa);
                     result += 2.0 * HJI * CI * C[index];
                 }
                 detJ.set_beta_bit(ii, true);
@@ -2553,7 +2554,7 @@ double ProjectorCI_HashVec::form_H_C_2(const det_hashvec& dets_hashvec, std::vec
                     //                        }
                     //                    }
                     //                    HJI *= detJ.single_excitation_a(i, a);
-                    HJI = fci_ints_->slater_rules_single_alpha_abs(detJ,i, a);
+                    HJI = fci_ints_->slater_rules_single_alpha_abs(detJ, i, a);
                     HJI *= detJ.single_excitation_a(i, a);
                     size_t index = dets_hashvec.find(detJ);
                     if (index <= cut_index) {
