@@ -2758,7 +2758,7 @@ DeterminantMap AdaptiveCI::approximate_wfn(DeterminantMap& PQ_space, SharedMatri
     double E0 = evals->get(0);
     for (auto& I : external_space) {
         new_wfn.add(I.first);
-        double val = I.second[0] / (E0 - I.first.energy());
+        double val = I.second[0] / (E0 - fci_ints_->energy(I.first));
         new_evecs->set(new_wfn.get_idx(I.first), 0, val);
         sum += val * val;
     }
