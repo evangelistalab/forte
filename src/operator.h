@@ -29,6 +29,8 @@
 #ifndef _wfn_operator_h_
 #define _wfn_operator_h_
 
+#include "psi4/libpsi4util/process.h"
+#include "fci/fci_integrals.h"
 #include "determinant_map.h"
 #include "stl_bitset_determinant.h"
 
@@ -45,13 +47,13 @@ using wfn_hash = det_hash<double>;
 class WFNOperator {
   public:
     /// Default constructor
-    WFNOperator(std::vector<int>& symmetry);
+    WFNOperator(std::vector<int>& symmetry, std::shared_ptr<FCIIntegrals> fci_ints);
 
     /// Empty constructor
     WFNOperator();
 
     /// Initializer
-    void initialize(std::vector<int>& symmetry);
+    void initialize(std::vector<int>& symmetry, std::shared_ptr<FCIIntegrals> fci_ints);
 
     /// Set print level
     void set_quiet_mode(bool mode);
@@ -150,6 +152,9 @@ class WFNOperator {
 
     /// Print level
     bool quiet_ = false;
+
+    /// The integrals
+    std::shared_ptr<FCIIntegrals> fci_ints_;
 };
 }
 }

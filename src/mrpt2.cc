@@ -81,8 +81,6 @@ void MRPT2::startup() {
 
     fci_ints_->compute_restricted_one_body_operator();
 
-    STLBitsetDeterminant::set_ints(fci_ints_);
-
     nroot_ = options_.get_int("NROOT");
     multiplicity_ = options_.get_int("MULTIPLICITY");
     screen_thresh_ = options_.get_double("ACI_PRESCREEN_THRESHOLD");
@@ -106,7 +104,7 @@ double MRPT2::compute_energy() {
 double MRPT2::compute_pt2_energy() {
     double energy = 0.0;
     const size_t n_dets = reference_.size();
-    int nmo = STLBitsetDeterminant::nmo_;
+    int nmo = fci_ints_->nmo();
     double max_mem = options_.get_double("PT2_MAX_MEM");
 
     size_t guess_size = n_dets * nmo * nmo;
@@ -177,7 +175,8 @@ double MRPT2::energy_kernel(int bin, int nbin) {
                     // Check if the determinant goes in this bin
                     size_t hash_val = std::hash<bit_t>()(new_det.bits_);
                     if ((hash_val % nbin) == bin) {
-                        double coupling = new_det.slater_rules_single_alpha(ii, aa) * c_I;
+                        double coupling =
+                            fci_ints_->slater_rules_single_alpha(new_det, ii, aa) * c_I;
                         if (A_I.find(new_det) != A_I.end()) {
                             coupling += A_I[new_det];
                         }
@@ -200,7 +199,8 @@ double MRPT2::energy_kernel(int bin, int nbin) {
                     // Check if the determinant goes in this bin
                     size_t hash_val = std::hash<bit_t>()(new_det.bits_);
                     if ((hash_val % nbin) == bin) {
-                        double coupling = new_det.slater_rules_single_beta(ii, aa) * c_I;
+                        double coupling =
+                            fci_ints_->slater_rules_single_beta(new_det, ii, aa) * c_I;
                         if (A_I.find(new_det) != A_I.end()) {
                             coupling += A_I[new_det];
                         }
@@ -229,9 +229,7 @@ double MRPT2::energy_kernel(int bin, int nbin) {
                             size_t hash_val = std::hash<bit_t>()(new_det.bits_);
                             if ((hash_val % nbin) == bin) {
 
-                                double coupling =
-                                    sign * c_I *
-                                    STLBitsetDeterminant::fci_ints_->tei_ab(ii, jj, aa, bb);
+                                double coupling = sign * c_I * fci_ints_->tei_ab(ii, jj, aa, bb);
                                 if (A_I.find(new_det) != A_I.end()) {
                                     coupling += A_I[new_det];
                                 }
@@ -261,9 +259,7 @@ double MRPT2::energy_kernel(int bin, int nbin) {
                             // Check if the determinant goes in this bin
                             size_t hash_val = std::hash<bit_t>()(new_det.bits_);
                             if ((hash_val % nbin) == bin) {
-                                double coupling =
-                                    sign * c_I *
-                                    STLBitsetDeterminant::fci_ints_->tei_aa(ii, jj, aa, bb);
+                                double coupling = sign * c_I * fci_ints_->tei_aa(ii, jj, aa, bb);
                                 if (A_I.find(new_det) != A_I.end()) {
                                     coupling += A_I[new_det];
                                 }
@@ -293,9 +289,7 @@ double MRPT2::energy_kernel(int bin, int nbin) {
                             // Check if the determinant goes in this bin
                             size_t hash_val = std::hash<bit_t>()(new_det.bits_);
                             if ((hash_val % nbin) == bin) {
-                                double coupling =
-                                    sign * c_I *
-                                    STLBitsetDeterminant::fci_ints_->tei_bb(ii, jj, aa, bb);
+                                double coupling = sign * c_I * fci_ints_->tei_bb(ii, jj, aa, bb);
                                 if (A_I.find(new_det) != A_I.end()) {
                                     coupling += A_I[new_det];
                                 }
@@ -309,7 +303,7 @@ double MRPT2::energy_kernel(int bin, int nbin) {
     }
 
     for (auto& det : A_I) {
-        energy += (det.second * det.second) / (E_0 - det.first.energy());
+        energy += (det.second * det.second) / (E_0 - fci_ints_->energy(det.first));
     }
     return energy;
 }

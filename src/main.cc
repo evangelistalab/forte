@@ -145,8 +145,6 @@ std::pair<int, int> forte_startup() {
  * once after running forte should go here.
  */
 void forte_cleanup() {
-    // Resets STLBitsetDeterminant's pointer to the integral object
-    STLBitsetDeterminant::reset_ints();
 
 #ifdef HAVE_GA
     GA_Terminate();

@@ -151,9 +151,6 @@ void ElementwiseCI::startup() {
     fci_ints_->set_active_integrals(tei_active_aa, tei_active_ab, tei_active_bb);
     fci_ints_->compute_restricted_one_body_operator();
 
-    Determinant::set_ints(fci_ints_);
-    //   DynamicBitsetDeterminant::set_ints(fci_ints_);
-
     // The number of correlated molecular orbitals
     nact_ = mo_space_info_->get_corr_abs_mo("ACTIVE").size();
     nactpi_ = mo_space_info_->get_dimension("ACTIVE");
@@ -409,7 +406,7 @@ double ElementwiseCI::estimate_high_energy() {
     //    }
     lambda_h_ = high_obt_energy + fci_ints_->frozen_core_energy() + fci_ints_->scalar_energy();
 
-    double lambda_h_G = high_det.energy() + fci_ints_->scalar_energy();
+    double lambda_h_G = fci_ints_->energy(high_det) + fci_ints_->scalar_energy();
     std::vector<int> aocc = high_det.get_alfa_occ();
     std::vector<int> bocc = high_det.get_beta_occ();
     std::vector<int> avir = high_det.get_alfa_vir();
@@ -445,7 +442,7 @@ double ElementwiseCI::estimate_high_energy() {
             int ii = aocc[i];
             for (int a = avir_offset[h]; a < avir_offset[h + 1]; ++a) {
                 int aa = avir[a];
-                double HJI = high_det.slater_rules_single_alpha(ii, aa);
+                double HJI = fci_ints_->slater_rules_single_alpha(high_det, ii, aa);
                 lambda_h_G += std::fabs(HJI);
             }
         }
@@ -456,7 +453,7 @@ double ElementwiseCI::estimate_high_energy() {
             int ii = bocc[i];
             for (int a = bvir_offset[h]; a < bvir_offset[h + 1]; ++a) {
                 int aa = bvir[a];
-                double HJI = high_det.slater_rules_single_beta(ii, aa);
+                double HJI = fci_ints_->slater_rules_single_beta(high_det, ii, aa);
                 lambda_h_G += std::fabs(HJI);
             }
         }
@@ -522,7 +519,8 @@ double ElementwiseCI::estimate_high_energy() {
     outfile->Printf("\n  Highest Excited determinant:");
     high_det.print();
     outfile->Printf("\n  Determinant Energy                    :  %.12f",
-                    high_det.energy() + nuclear_repulsion_energy_ + fci_ints_->scalar_energy());
+                    fci_ints_->energy(high_det) + nuclear_repulsion_energy_ +
+                        fci_ints_->scalar_energy());
     outfile->Printf("\n  Highest Energy Gershgorin circle Est. :  %.12f",
                     lambda_h_G + nuclear_repulsion_energy_);
     lambda_h_ = lambda_h_G;
@@ -613,7 +611,7 @@ double ElementwiseCI::compute_energy() {
     det_hashvec dets_hashvec;
     std::vector<double> C;
 
-    SparseCISolver sparse_solver;
+    SparseCISolver sparse_solver(fci_ints_);
     sparse_solver.set_parallel(true);
     sparse_solver.set_e_convergence(options_.get_double("E_CONVERGENCE"));
     sparse_solver.set_maxiter_davidson(options_.get_int("DL_MAXITER"));
@@ -838,8 +836,8 @@ double ElementwiseCI::compute_energy() {
 
     outfile->Printf("\n  * ElementwiseCI Variational Energy    = %18.12f Eh", 1, var_energy);
     outfile->Printf("\n  * ElementwiseCI Var. Corr.  Energy    = %18.12f Eh", 1,
-                    var_energy - reference_determinant_.energy() - nuclear_repulsion_energy_ -
-                        fci_ints_->scalar_energy());
+                    var_energy - fci_ints_->energy(reference_determinant_) -
+                        nuclear_repulsion_energy_ - fci_ints_->scalar_energy());
 
     outfile->Printf("\n  * 1st order perturbation   Energy     = %18.12f Eh", 1,
                     var_energy - approx_energy_);
@@ -868,7 +866,7 @@ double ElementwiseCI::compute_energy() {
         outfile->Printf("\n\n  * ElementwiseCI Post-diag   Energy    = %18.12f Eh", 1,
                         post_diag_energy);
         outfile->Printf("\n  * ElementwiseCI Var. Corr.  Energy    = %18.12f Eh", 1,
-                        post_diag_energy - reference_determinant_.energy() -
+                        post_diag_energy - fci_ints_->energy(reference_determinant_) -
                             nuclear_repulsion_energy_ - fci_ints_->scalar_energy());
 
         std::vector<double> diag_C(C.size());
@@ -962,7 +960,7 @@ double ElementwiseCI::initial_guess(det_hashvec& dets_hashvec, std::vector<doubl
 
     outfile->Printf("\n\n  Initial guess size = %zu", guess_size);
 
-    SparseCISolver sparse_solver;
+    SparseCISolver sparse_solver(fci_ints_);
     sparse_solver.set_parallel(true);
     sparse_solver.set_e_convergence(options_.get_double("E_CONVERGENCE"));
     sparse_solver.set_maxiter_davidson(options_.get_int("DL_MAXITER"));
@@ -1086,7 +1084,7 @@ void ElementwiseCI::propagate_DL(det_hashvec& dets_hashvec, std::vector<double>&
     std::vector<double> diag_vec(dets_size);
 #pragma omp parallel for
     for (int i = 0; i < dets_size; i++) {
-        diag_vec[i] = dets_hashvec[i].energy() + fci_ints_->scalar_energy();
+        diag_vec[i] = fci_ints_->energy(dets_hashvec[i]) + fci_ints_->scalar_energy();
     }
 
     double lambda = A->get(0, 0);
@@ -1299,7 +1297,7 @@ void ElementwiseCI::apply_tau_H_symm(double tau, double spawning_threshold, det_
     for (size_t I = 0; I < overlap_size; ++I) {
         // Diagonal contribution
         // parallel_timer_on("EWCI:diagonal", omp_get_thread_num());
-        double det_energy = ref_dets[I].energy() + fci_ints_->scalar_energy();
+        double det_energy = fci_ints_->energy(ref_dets[I]) + fci_ints_->scalar_energy();
         // parallel_timer_off("EWCI:diagonal", omp_get_thread_num());
         // Diagonal contributions
         result_C[I] += tau * (det_energy - S) * ref_C[I];
@@ -1370,7 +1368,9 @@ void ElementwiseCI::apply_tau_H_symm_det_dynamic_HBCI_2(
                     }
                     if (!detI.get_alfa_bit(a)) {
                         Determinant detJ(detI);
-                        double HJI = detJ.slater_rules_single_alpha_abs(i, a);
+
+                        double HJI = fci_ints_->slater_rules_single_alpha_abs(detJ, i, a);
+
                         if (prescreen_H_CI_(HJI, CI, spawning_threshold)) {
                             HJI *= detJ.single_excitation_a(i, a);
 
@@ -1419,7 +1419,8 @@ void ElementwiseCI::apply_tau_H_symm_det_dynamic_HBCI_2(
                     }
                     if (!detI.get_beta_bit(a)) {
                         Determinant detJ(detI);
-                        double HJI = detJ.slater_rules_single_beta_abs(i, a);
+
+                        double HJI = fci_ints_->slater_rules_single_beta_abs(detJ, i, a);
                         if (prescreen_H_CI_(HJI, CI, spawning_threshold)) {
                             HJI *= detJ.single_excitation_b(i, a);
 
@@ -1471,7 +1472,9 @@ void ElementwiseCI::apply_tau_H_symm_det_dynamic_HBCI_2(
                     }
                     if (!detI.get_alfa_bit(a)) {
                         Determinant detJ(detI);
-                        double HJI = detJ.slater_rules_single_alpha_abs(i, a);
+
+                        double HJI = fci_ints_->slater_rules_single_alpha_abs(detJ, i, a);
+
                         max_coupling.first = std::max(max_coupling.first, std::fabs(HJI));
                         if (prescreen_H_CI_(HJI, CI, spawning_threshold)) {
                             HJI *= detJ.single_excitation_a(i, a);
@@ -1521,7 +1524,9 @@ void ElementwiseCI::apply_tau_H_symm_det_dynamic_HBCI_2(
                     }
                     if (!detI.get_beta_bit(a)) {
                         Determinant detJ(detI);
-                        double HJI = detJ.slater_rules_single_beta_abs(i, a);
+
+                        double HJI = fci_ints_->slater_rules_single_beta_abs(detJ, i, a);
+
                         max_coupling.first = std::max(max_coupling.first, std::fabs(HJI));
                         if (prescreen_H_CI_(HJI, CI, spawning_threshold)) {
                             HJI *= detJ.single_excitation_b(i, a);
@@ -1881,7 +1886,7 @@ void ElementwiseCI::apply_tau_H_ref_C_symm(double tau, double spawning_threshold
     for (size_t I = 0; I < result_size; ++I) {
         // Diagonal contribution
         // parallel_timer_on("EWCI:diagonal", omp_get_thread_num());
-        double det_energy = result_dets[I].energy() + fci_ints_->scalar_energy();
+        double det_energy = fci_ints_->energy(result_dets[I]) + fci_ints_->scalar_energy();
         // parallel_timer_off("EWCI:diagonal", omp_get_thread_num());
         // Diagonal contributions
         result_C[I] += tau * (det_energy - S) * pre_C[I];
@@ -1926,7 +1931,9 @@ void ElementwiseCI::apply_tau_H_ref_C_symm_det_dynamic_HBCI_2(
                     }
                     if (!detI.get_alfa_bit(a)) {
                         Determinant detJ(detI);
-                        double HJI = detJ.slater_rules_single_alpha_abs(i, a);
+
+                        double HJI = fci_ints_->slater_rules_single_alpha_abs(detJ, i, a);
+
                         if (prescreen_H_CI_(HJI, ref_CI, spawning_threshold)) {
                             HJI *= detJ.single_excitation_a(i, a);
 
@@ -1972,7 +1979,9 @@ void ElementwiseCI::apply_tau_H_ref_C_symm_det_dynamic_HBCI_2(
                     }
                     if (!detI.get_beta_bit(a)) {
                         Determinant detJ(detI);
-                        double HJI = detJ.slater_rules_single_beta_abs(i, a);
+
+                        double HJI = fci_ints_->slater_rules_single_beta_abs(detJ, i, a);
+
                         if (prescreen_H_CI_(HJI, ref_CI, spawning_threshold)) {
                             HJI *= detJ.single_excitation_b(i, a);
 
@@ -2184,7 +2193,7 @@ double ElementwiseCI::estimate_proj_energy(const det_hashvec& dets_hashvec,
     // Compute the projective energy
     double projective_energy_estimator = 0.0;
     for (int I = 0, max_I = dets_hashvec.size(); I < max_I; ++I) {
-        double HIJ = dets_hashvec[I].slater_rules(dets_hashvec[J]);
+        double HIJ = fci_ints_->slater_rules(dets_hashvec[J], dets_hashvec[J]);
         projective_energy_estimator += HIJ * C[I] / CJ;
     }
     return projective_energy_estimator + nuclear_repulsion_energy_ + fci_ints_->scalar_energy();
@@ -2198,10 +2207,10 @@ double ElementwiseCI::estimate_var_energy(const det_hashvec& dets_hashvec, std::
 #pragma omp parallel for reduction(+ : variational_energy_estimator)
     for (size_t I = 0; I < size; ++I) {
         const Determinant& detI = dets_hashvec[I];
-        variational_energy_estimator += C[I] * C[I] * detI.energy();
+        variational_energy_estimator += C[I] * C[I] * fci_ints_->energy(detI);
         for (size_t J = I + 1; J < size; ++J) {
             if (std::fabs(C[I] * C[J]) > tollerance) {
-                double HIJ = dets_hashvec[I].slater_rules(dets_hashvec[J]);
+                double HIJ = fci_ints_->slater_rules(dets_hashvec[I], dets_hashvec[J]);
                 variational_energy_estimator += 2.0 * C[I] * HIJ * C[J];
             }
         }
@@ -2235,9 +2244,9 @@ double ElementwiseCI::estimate_var_energy_within_error(const det_hashvec& dets_h
 #pragma omp parallel for reduction(+ : variational_energy_estimator)
     for (size_t I = 0; I <= cut_index; ++I) {
         const Determinant& detI = dets_hashvec[I];
-        variational_energy_estimator += C[I] * C[I] * detI.energy();
+        variational_energy_estimator += C[I] * C[I] * fci_ints_->energy(detI);
         for (size_t J = I + 1; J <= cut_index; ++J) {
-            double HIJ = dets_hashvec[I].slater_rules(dets_hashvec[J]);
+            double HIJ = fci_ints_->slater_rules(dets_hashvec[I], dets_hashvec[J]);
             variational_energy_estimator += 2.0 * C[I] * HIJ * C[J];
         }
     }
@@ -2270,7 +2279,7 @@ double ElementwiseCI::estimate_var_energy_within_error_sigma(const det_hashvec& 
         cut_index + 1, max_error);
     double variational_energy_estimator = 0.0;
 
-    WFNOperator op(mo_symmetry_);
+    WFNOperator op(mo_symmetry_, fci_ints_);
     std::vector<Determinant> sub_dets = dets_hashvec.toVector();
     sub_dets.erase(sub_dets.begin() + cut_index + 1, sub_dets.end());
     DeterminantMap det_map(sub_dets);
@@ -2280,7 +2289,7 @@ double ElementwiseCI::estimate_var_energy_within_error_sigma(const det_hashvec& 
     //    std::vector<std::pair<std::vector<size_t>, std::vector<double>>> H =
     //    op.build_H_sparse(det_map);
     //    SigmaVectorSparse svs(H);
-    SigmaVectorWfn2 svs(det_map, op);
+    SigmaVectorWfn2 svs(det_map, op, fci_ints_);
     size_t sub_size = svs.size();
     // allocate vectors
     SharedVector b(new Vector("b", sub_size));
@@ -2343,7 +2352,7 @@ void ElementwiseCI::print_wfn(const det_hashvec& space_hashvec, std::vector<doub
     for (size_t I = 0; I < max_dets; ++I) {
         outfile->Printf("\n  %3zu  %13.6g %13.6g  %10zu %s  %18.12f", I, C[I], C[I] * C[I], I,
                         space_hashvec[I].str().c_str(),
-                        space_hashvec[I].energy() + fci_ints_->scalar_energy());
+                        fci_ints_->energy(space_hashvec[I]) + fci_ints_->scalar_energy());
     }
 
     // Compute the expectation value of the spin
@@ -2433,7 +2442,7 @@ double ElementwiseCI::form_H_C(const det_hashvec& dets_hashvec, std::vector<doub
     double CI = C[I];
 
     // diagonal contribution
-    double result = CI * CI * detI.energy();
+    double result = CI * CI * fci_ints_->energy(detI);
 
     std::vector<int> aocc = detI.get_alfa_occ();
     std::vector<int> bocc = detI.get_beta_occ();
@@ -2457,7 +2466,7 @@ double ElementwiseCI::form_H_C(const det_hashvec& dets_hashvec, std::vector<doub
                 detJ.set_alfa_bit(aa, true);
                 size_t index = dets_hashvec.find(detJ);
                 if (index < I) {
-                    HJI = detI.slater_rules_single_alpha(ii, aa);
+                    HJI = fci_ints_->slater_rules_single_alpha(detI, ii, aa);
                     result += 2.0 * HJI * CI * C[index];
                 }
                 detJ.set_alfa_bit(ii, true);
@@ -2475,7 +2484,7 @@ double ElementwiseCI::form_H_C(const det_hashvec& dets_hashvec, std::vector<doub
                 detJ.set_beta_bit(aa, true);
                 size_t index = dets_hashvec.find(detJ);
                 if (index < I) {
-                    HJI = detI.slater_rules_single_beta(ii, aa);
+                    HJI = fci_ints_->slater_rules_single_beta(detI, ii, aa);
                     result += 2.0 * HJI * CI * C[index];
                 }
                 detJ.set_beta_bit(ii, true);
@@ -2585,7 +2594,7 @@ double ElementwiseCI::form_H_C_2(const det_hashvec& dets_hashvec, std::vector<do
     double CI = C[I];
 
     // diagonal contribution
-    double result = CI * CI * detI.energy();
+    double result = CI * CI * fci_ints_->energy(detI);
 
     Determinant detJ(detI);
     double HJI;
@@ -2608,7 +2617,7 @@ double ElementwiseCI::form_H_C_2(const det_hashvec& dets_hashvec, std::vector<do
                     //                        }
                     //                    }
                     //                    HJI *= detJ.single_excitation_a(i, a);
-                    HJI = detJ.slater_rules_single_alpha_abs(i, a);
+                    HJI = fci_ints_->slater_rules_single_alpha_abs(detJ, i, a);
                     HJI *= detJ.single_excitation_a(i, a);
                     size_t index = dets_hashvec.find(detJ);
                     if (index <= cut_index) {
@@ -2640,7 +2649,7 @@ double ElementwiseCI::form_H_C_2(const det_hashvec& dets_hashvec, std::vector<do
                     //                        }
                     //                    }
                     //                    HJI *= detJ.single_excitation_b(i, a);
-                    HJI = detJ.slater_rules_single_beta_abs(i, a);
+                    HJI = fci_ints_->slater_rules_single_beta_abs(detJ, i, a);
                     HJI *= detJ.single_excitation_b(i, a);
                     size_t index = dets_hashvec.find(detJ);
                     if (index <= cut_index) {

@@ -48,6 +48,7 @@
 #include "../mrdsrg-helper/dsrg_time.h"
 #include "../mrdsrg-helper/dsrg_source.h"
 #include "../stl_bitset_determinant.h"
+#include "../fci/fci_integrals.h"
 
 using namespace ambit;
 namespace psi {

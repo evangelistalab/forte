@@ -29,6 +29,7 @@
 #ifndef _determinant_hashvector_h_
 #define _determinant_hashvector_h_
 
+#include "fci/fci_integrals.h"
 #include "stl_bitset_determinant.h"
 #include "hash_vector.h"
 

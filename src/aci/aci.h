@@ -36,7 +36,16 @@
 #include "psi4/liboptions/liboptions.h"
 #include "psi4/physconst.h"
 
+#include "../forte_options.h"
+#include "../ci_rdms.h"
+#include "../ci_reference.h"
+#include "../fci/fci_integrals.h"
+#include "../mrpt2.h"
+#include "../orbital-helper/unpaired_density.h"
 #include "../determinant_map.h"
+#include "../reference.h"
+#include "../sparse_ci_solver.h"
+#include "../stl_bitset_determinant.h"
 #include "../sparse_ci_solver.h"
 
 using d1 = std::vector<double>;

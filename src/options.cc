@@ -34,7 +34,6 @@
 #include "fci_mo.h"
 #include "forte_options.h"
 #include "integrals/integrals.h"
-#include "mrpt2.h"
 #include "pci/pci.h"
 #include "reference.h"
 #include "../mrdsrg-helper/run_dsrg.h"
