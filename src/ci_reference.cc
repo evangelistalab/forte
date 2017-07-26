@@ -38,8 +38,9 @@ namespace psi {
 namespace forte {
 
 CI_Reference::CI_Reference(std::shared_ptr<Wavefunction> wfn, Options& options,
-                           std::shared_ptr<MOSpaceInfo> mo_space_info, std::shared_ptr<FCIIntegrals> fci_ints,
-                           int multiplicity, double twice_ms, int symmetry)
+                           std::shared_ptr<MOSpaceInfo> mo_space_info,
+                           std::shared_ptr<FCIIntegrals> fci_ints, int multiplicity,
+                           double twice_ms, int symmetry)
     : wfn_(wfn), mo_space_info_(mo_space_info), fci_ints_(fci_ints) {
     // Get the mutlilicity and twice M_s
     multiplicity_ = multiplicity;
