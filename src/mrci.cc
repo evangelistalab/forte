@@ -273,7 +273,7 @@ void MRCI::upcast_reference() {
     int b_shift = ncorr - nact;
 
     for (size_t I = 0, max = ref_dets.size(); I < max; ++I) {
-        STLBitsetDeterminant det = ref_dets[I];
+        STLBitsetDeterminant det(ref_dets[I].bits(), fci_ints_->nmo());
 
         // First beta
         for (int n = n_irrep - 1; n >= 0; --n) {
