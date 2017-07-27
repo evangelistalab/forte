@@ -26,8 +26,9 @@
  * @END LICENSE
  */
 
+#include "psi4/libpsi4util/process.h"
+#include "psi4/libpsio/psio.hpp"
 #include "determinant_hashvector.h"
-#include "fci/fci_integrals.h"
 #include <numeric>
 #include <cmath>
 
@@ -75,7 +76,7 @@ STLBitsetDeterminant DeterminantHashVec::get_det(const size_t value) const {
 size_t DeterminantHashVec::get_idx(const STLBitsetDeterminant& det) const { return wfn_.find(det); }
 
 void DeterminantHashVec::make_spin_complete() {
-    int nmo = wfn_[0].nmo_;
+    int nmo = wfn_[0].nmo();
     size_t ndet_added = 0;
     std::vector<size_t> closed(nmo, 0);
     std::vector<size_t> open(nmo, 0);
@@ -116,7 +117,7 @@ void DeterminantHashVec::make_spin_complete() {
         for (int i = nbopen; i < naopen + nbopen; ++i)
             open_bits[i] = true; // 1
         do {
-            STLBitsetDeterminant new_det;
+            STLBitsetDeterminant new_det(nmo);
             for (int c = 0; c < nclosed; ++c) {
                 new_det.set_alfa_bit(closed[c], true);
                 new_det.set_beta_bit(closed[c], true);

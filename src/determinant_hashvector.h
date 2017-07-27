@@ -29,7 +29,9 @@
 #ifndef _determinant_hashvector_h_
 #define _determinant_hashvector_h_
 
-#include "fci/fci_integrals.h"
+#include "psi4/libpsi4util/PsiOutStream.h"
+#include "psi4/libmints/matrix.h"
+#include "psi4/psi4-dec.h"
 #include "stl_bitset_determinant.h"
 #include "hash_vector.h"
 

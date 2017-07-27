@@ -2165,7 +2165,7 @@ double ProjectorCI_HashVec::estimate_var_energy_within_error_sigma(const det_has
     WFNOperator op(mo_symmetry_, fci_ints_);
     std::vector<Determinant> sub_dets = dets_hashvec.toVector();
     sub_dets.erase(sub_dets.begin() + cut_index + 1, sub_dets.end());
-    DeterminantMap det_map(sub_dets);
+    DeterminantHashVec det_map(sub_dets);
     op.build_strings(det_map);
     op.op_s_lists(det_map);
     op.tp_s_lists(det_map);

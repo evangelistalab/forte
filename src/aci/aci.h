@@ -42,7 +42,7 @@
 #include "../fci/fci_integrals.h"
 #include "../mrpt2.h"
 #include "../orbital-helper/unpaired_density.h"
-#include "../determinant_map.h"
+#include "../determinant_hashvector.h"
 #include "../reference.h"
 #include "../sparse_ci_solver.h"
 #include "../stl_bitset_determinant.h"
@@ -94,7 +94,7 @@ class AdaptiveCI : public Wavefunction {
     void set_quiet(bool quiet) { quiet_mode_ = quiet; }
 
     /// Get the wavefunction
-    DeterminantMap get_wavefunction();
+    DeterminantHashVec get_wavefunction();
 
     /// Compute the ACI-NOs
     void compute_nos();
@@ -108,7 +108,7 @@ class AdaptiveCI : public Wavefunction {
   private:
     // ==> Class data <==
 
-    DeterminantMap final_wfn_;
+    DeterminantHashVec final_wfn_;
 
     WFNOperator op_;
 
@@ -271,20 +271,20 @@ class AdaptiveCI : public Wavefunction {
     void startup();
 
     /// Compute an aci wavefunction
-    void compute_aci(DeterminantMap& PQ_space, SharedMatrix& PQ_evecs, SharedVector& PQ_evals);
+    void compute_aci(DeterminantHashVec& PQ_space, SharedMatrix& PQ_evecs, SharedVector& PQ_evals);
 
     /// Print information about this calculation
     void print_info();
 
     /// Print a wave function
-    void print_wfn(DeterminantMap& space, SharedMatrix evecs, int nroot);
+    void print_wfn(DeterminantHashVec& space, SharedMatrix evecs, int nroot);
 
     /// Streamlined version of find q space
-    void default_find_q_space(DeterminantMap& P_space, DeterminantMap& PQ_space, SharedVector evals,
+    void default_find_q_space(DeterminantHashVec& P_space, DeterminantHashVec& PQ_space, SharedVector evals,
                               SharedMatrix evecs);
 
     /// Find all the relevant excitations out of the P space
-    void find_q_space(DeterminantMap& P_space, DeterminantMap& PQ_space, int nroot,
+    void find_q_space(DeterminantHashVec& P_space, DeterminantHashVec& PQ_space, int nroot,
                       SharedVector evals, SharedMatrix evecs);
 
     /// Generate set of state-averaged q-criteria and determinants
@@ -298,14 +298,14 @@ class AdaptiveCI : public Wavefunction {
     void find_q_space_single_root(int nroot, SharedVector evals, SharedMatrix evecs);
 
     /// Alternate/experimental determinant generator
-    void get_excited_determinants(int nroot, SharedMatrix evecs, DeterminantMap& P_space,
+    void get_excited_determinants(int nroot, SharedMatrix evecs, DeterminantHashVec& P_space,
                                   det_hash<std::vector<double>>& V_hash);
     /// Alternate/experimental determinant generator
-    void get_excited_determinants2(int nroot, SharedMatrix evecs, DeterminantMap& P_space,
+    void get_excited_determinants2(int nroot, SharedMatrix evecs, DeterminantHashVec& P_space,
                                    det_hash<std::vector<double>>& V_hash);
 
     /// Prune the space of determinants
-    void prune_q_space(DeterminantMap& PQ_space, DeterminantMap& P_space, SharedMatrix evecs,
+    void prune_q_space(DeterminantHashVec& PQ_space, DeterminantHashVec& P_space, SharedMatrix evecs,
                        int nroot);
 
     /// Check if the procedure has converged
@@ -316,7 +316,7 @@ class AdaptiveCI : public Wavefunction {
     bool check_stuck(std::vector<std::vector<double>>& energy_history, SharedVector evals);
 
     /// Computes spin
-    std::vector<std::pair<double, double>> compute_spin(DeterminantMap& space, SharedMatrix evecs,
+    std::vector<std::pair<double, double>> compute_spin(DeterminantHashVec& space, SharedMatrix evecs,
                                                         int nroot);
 
     /// Compute 1-RDM
@@ -324,13 +324,13 @@ class AdaptiveCI : public Wavefunction {
                       SharedMatrix evecs, int nroot);
 
     /// Compute full S^2 matrix and diagonalize it
-    void full_spin_transform(DeterminantMap& det_space, SharedMatrix cI, int nroot);
+    void full_spin_transform(DeterminantHashVec& det_space, SharedMatrix cI, int nroot);
 
     /// Check for spin contamination
-    double compute_spin_contamination(DeterminantMap& space, SharedMatrix evecs, int nroot);
+    double compute_spin_contamination(DeterminantHashVec& space, SharedMatrix evecs, int nroot);
 
     /// Save coefficients of lowest-root determinant
-    void save_dets_to_file(DeterminantMap& space, SharedMatrix evecs);
+    void save_dets_to_file(DeterminantHashVec& space, SharedMatrix evecs);
     /// Compute the Davidson correction
     std::vector<double> davidson_correction(std::vector<STLBitsetDeterminant>& P_dets,
                                             SharedVector P_evals, SharedMatrix PQ_evecs,
@@ -352,32 +352,32 @@ class AdaptiveCI : public Wavefunction {
     void convert_to_string(const std::vector<STLBitsetDeterminant>& space);
 
     /// Compute overlap for root following
-    int root_follow(DeterminantMap& P_ref, std::vector<double>& P_ref_evecs,
-                    DeterminantMap& P_space, SharedMatrix P_evecs, int num_ref_roots);
+    int root_follow(DeterminantHashVec& P_ref, std::vector<double>& P_ref_evecs,
+                    DeterminantHashVec& P_space, SharedMatrix P_evecs, int num_ref_roots);
 
     /// Project ACI wavefunction
-    void project_determinant_space(DeterminantMap& space, SharedMatrix evecs, SharedVector evals,
+    void project_determinant_space(DeterminantHashVec& space, SharedMatrix evecs, SharedVector evals,
                                    int nroot);
 
     /// Compute the RDMs
-    void compute_rdms(DeterminantMap& dets, WFNOperator& op, SharedMatrix& PQ_evecs, int root1,
+    void compute_rdms(DeterminantHashVec& dets, WFNOperator& op, SharedMatrix& PQ_evecs, int root1,
                       int root2);
 
     /// Save older roots
-    void save_old_root(DeterminantMap& dets, SharedMatrix& PQ_evecs, int root);
+    void save_old_root(DeterminantHashVec& dets, SharedMatrix& PQ_evecs, int root);
 
     /// Add roots to be projected out in DL
-    void add_bad_roots(DeterminantMap& dets);
+    void add_bad_roots(DeterminantHashVec& dets);
 
     /// Print Summary
-    void print_final(DeterminantMap& dets, SharedMatrix& PQ_evecs, SharedVector& PQ_evals);
+    void print_final(DeterminantHashVec& dets, SharedMatrix& PQ_evecs, SharedVector& PQ_evals);
 
     void compute_multistate(SharedVector& PQ_evals);
 
     void block_diagonalize_fock(const d2& Fa, const d2& Fb, SharedMatrix& Ua, SharedMatrix& Ub,
                                 const std::string& name);
 
-    DeterminantMap approximate_wfn(DeterminantMap& PQ_space, SharedMatrix& evecs,
+    DeterminantHashVec approximate_wfn(DeterminantHashVec& PQ_space, SharedMatrix& evecs,
                                    SharedVector& PQ_evals, SharedMatrix& new_evecs);
 
     std::vector<std::pair<size_t, double>>

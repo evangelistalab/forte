@@ -402,12 +402,12 @@ double AdaptiveCI::compute_energy() {
         multi_state = true;
     }
 
-    DeterminantMap full_space;
+    DeterminantHashVec full_space;
     std::vector<size_t> sizes(nroot_);
     SharedVector energies(new Vector(nroot_));
     std::vector<double> pt2_energies(nroot_);
 
-    DeterminantMap PQ_space;
+    DeterminantHashVec PQ_space;
 
     for (int i = 0; i < nrun; ++i) {
         nroot_ = options_.get_int("ACI_NROOT");
@@ -547,7 +547,7 @@ double AdaptiveCI::compute_energy() {
         compute_rdms(full_space, op_c, PQ_evecs, 0, 0);
     } else if (approx_rdm_) {
         outfile->Printf("\n  Approximating RDMs");
-        DeterminantMap approx = approximate_wfn(final_wfn_, PQ_evecs, PQ_evals, new_evecs);
+        DeterminantHashVec approx = approximate_wfn(final_wfn_, PQ_evecs, PQ_evals, new_evecs);
         //    WFNOperator op1(mo_space_info_);
         //    op1.op_lists(approx);
         op_.clear_op_lists();
@@ -641,9 +641,9 @@ void AdaptiveCI::diagonalize_final_and_compute_rdms() {
     compute_rdms(final_wfn_, op_, final_evecs, 0, 0);
 }
 
-DeterminantMap AdaptiveCI::get_wavefunction() { return final_wfn_; }
+DeterminantHashVec AdaptiveCI::get_wavefunction() { return final_wfn_; }
 
-void AdaptiveCI::print_final(DeterminantMap& dets, SharedMatrix& PQ_evecs, SharedVector& PQ_evals) {
+void AdaptiveCI::print_final(DeterminantHashVec& dets, SharedMatrix& PQ_evecs, SharedVector& PQ_evals) {
     size_t dim = dets.size();
     // Print a summary
     outfile->Printf("\n\n  ==> ACI Summary <==\n");
@@ -706,7 +706,7 @@ void AdaptiveCI::print_final(DeterminantMap& dets, SharedMatrix& PQ_evecs, Share
     //   }
 }
 
-void AdaptiveCI::default_find_q_space(DeterminantMap& P_space, DeterminantMap& PQ_space,
+void AdaptiveCI::default_find_q_space(DeterminantHashVec& P_space, DeterminantHashVec& PQ_space,
                                       SharedVector evals, SharedMatrix evecs) {
     Timer build;
 
@@ -720,10 +720,10 @@ void AdaptiveCI::default_find_q_space(DeterminantMap& P_space, DeterminantMap& P
     PQ_space.clear();
     external_wfn_.clear();
     // Add the P-space determinants and zero the hash
-    det_hash<size_t> detmap = P_space.wfn_hash();
-    for (det_hash<size_t>::iterator it = detmap.begin(), endit = detmap.end(); it != endit; ++it) {
-        PQ_space.add(it->first);
-        V_hash.erase(it->first);
+    det_hashvec detmap = P_space.wfn_hash();
+    for (det_hashvec::iterator it = detmap.begin(), endit = detmap.end(); it != endit; ++it) {
+        PQ_space.add(*it);
+        V_hash.erase(*it);
     }
 
     if (!quiet_mode_) {
@@ -801,7 +801,7 @@ void AdaptiveCI::default_find_q_space(DeterminantMap& P_space, DeterminantMap& P
     }
 }
 
-void AdaptiveCI::find_q_space(DeterminantMap& P_space, DeterminantMap& PQ_space, int nroot,
+void AdaptiveCI::find_q_space(DeterminantHashVec& P_space, DeterminantHashVec& PQ_space, int nroot,
                               SharedVector evals, SharedMatrix evecs) {
     Timer t_ms_build;
 
@@ -1016,7 +1016,7 @@ double AdaptiveCI::root_select(int nroot, std::vector<double>& C1, std::vector<d
 
     return select_value;
 }
-void AdaptiveCI::get_excited_determinants2(int nroot, SharedMatrix evecs, DeterminantMap& P_space,
+void AdaptiveCI::get_excited_determinants2(int nroot, SharedMatrix evecs, DeterminantHashVec& P_space,
                                            det_hash<std::vector<double>>& V_hash) {
     const size_t n_dets = P_space.size();
 
@@ -1259,7 +1259,7 @@ void AdaptiveCI::get_excited_determinants2(int nroot, SharedMatrix evecs, Determ
     }
 }
 
-void AdaptiveCI::get_excited_determinants(int nroot, SharedMatrix evecs, DeterminantMap& P_space,
+void AdaptiveCI::get_excited_determinants(int nroot, SharedMatrix evecs, DeterminantHashVec& P_space,
                                           det_hash<std::vector<double>>& V_hash) {
     size_t max_P = P_space.size();
     std::vector<STLBitsetDeterminant> P_dets = P_space.determinants();
@@ -1510,7 +1510,7 @@ bool AdaptiveCI::check_convergence(std::vector<std::vector<double>>& energy_hist
     return (std::fabs(new_avg_energy - old_avg_energy) < options_.get_double("ACI_CONVERGENCE"));
 }
 
-void AdaptiveCI::prune_q_space(DeterminantMap& PQ_space, DeterminantMap& P_space,
+void AdaptiveCI::prune_q_space(DeterminantHashVec& PQ_space, DeterminantHashVec& P_space,
                                SharedMatrix evecs, int nroot) {
     // Select the new reference space using the sorted CI coefficients
     P_space.clear();
@@ -1535,22 +1535,22 @@ void AdaptiveCI::prune_q_space(DeterminantMap& PQ_space, DeterminantMap& P_space
     // Create a vector that stores the absolute value of the CI coefficients
     std::vector<std::pair<double, STLBitsetDeterminant>> dm_det_list;
     // for (size_t I = 0, max = PQ_space.size(); I < max; ++I){
-    det_hash<size_t> detmap = PQ_space.wfn_hash();
-    for (det_hash<size_t>::iterator it = detmap.begin(), endit = detmap.end(); it != endit; ++it) {
+    det_hashvec detmap = PQ_space.wfn_hash();
+    for (size_t i = 0, max_i = detmap.size(); i < max_i; ++i) {
         double criteria = 0.0;
         if (ex_alg_ == "AVERAGE") {
             for (int n = 0; n < nav; ++n) {
                 if (pq_function_ == "MAX") {
-                    criteria = std::max(criteria, std::fabs(evecs->get(it->second, n)));
+                    criteria = std::max(criteria, std::fabs(evecs->get(i, n)));
                 } else if (pq_function_ == "AVERAGE") {
-                    criteria += std::fabs(evecs->get(it->second, n + off));
+                    criteria += std::fabs(evecs->get(i, n + off));
                 }
             }
             criteria /= static_cast<double>(nav);
         } else {
-            criteria = std::fabs(evecs->get(it->second, ref_root_));
+            criteria = std::fabs(evecs->get(i, ref_root_));
         }
-        dm_det_list.push_back(std::make_pair(criteria, it->first));
+        dm_det_list.push_back(std::make_pair(criteria, detmap[i]));
     }
 
     // Decide which determinants will go in pruned_space
@@ -1632,7 +1632,7 @@ bool AdaptiveCI::check_stuck(std::vector<std::vector<double>>& energy_history, S
     return stuck;
 }
 
-std::vector<std::pair<double, double>> AdaptiveCI::compute_spin(DeterminantMap& space,
+std::vector<std::pair<double, double>> AdaptiveCI::compute_spin(DeterminantHashVec& space,
                                                                 SharedMatrix evecs, int nroot) {
     // WFNOperator op(mo_symmetry_);
 
@@ -1785,7 +1785,7 @@ orb_e[a].second));
 }
 */
 
-void AdaptiveCI::print_wfn(DeterminantMap& space, SharedMatrix evecs, int nroot) {
+void AdaptiveCI::print_wfn(DeterminantHashVec& space, SharedMatrix evecs, int nroot) {
     std::string state_label;
     std::vector<std::string> s2_labels({"singlet", "doublet", "triplet", "quartet", "quintet",
                                         "sextet", "septet", "octet", "nonet", "decatet"});
@@ -1793,7 +1793,7 @@ void AdaptiveCI::print_wfn(DeterminantMap& space, SharedMatrix evecs, int nroot)
     std::vector<std::pair<double, double>> spins = compute_spin(space, evecs, nroot);
 
     for (int n = 0; n < nroot; ++n) {
-        DeterminantMap tmp;
+        DeterminantHashVec tmp;
         std::vector<double> tmp_evecs;
 
         outfile->Printf("\n\n  Most important contributions to root %3d:", n);
@@ -1815,7 +1815,7 @@ void AdaptiveCI::print_wfn(DeterminantMap& space, SharedMatrix evecs, int nroot)
     }
 }
 
-void AdaptiveCI::full_spin_transform(DeterminantMap& det_space, SharedMatrix cI, int nroot) {
+void AdaptiveCI::full_spin_transform(DeterminantHashVec& det_space, SharedMatrix cI, int nroot) {
     //	Timer timer;
     //	outfile->Printf("\n  Performing spin projection...");
     //
@@ -1881,7 +1881,7 @@ void AdaptiveCI::full_spin_transform(DeterminantMap& det_space, SharedMatrix cI,
     //
 }
 
-double AdaptiveCI::compute_spin_contamination(DeterminantMap& space, SharedMatrix evecs,
+double AdaptiveCI::compute_spin_contamination(DeterminantHashVec& space, SharedMatrix evecs,
                                               int nroot) {
     auto spins = compute_spin(space, evecs, nroot);
     double spin_contam = 0.0;
@@ -1894,11 +1894,11 @@ double AdaptiveCI::compute_spin_contamination(DeterminantMap& space, SharedMatri
     return spin_contam;
 }
 
-void AdaptiveCI::save_dets_to_file(DeterminantMap& space, SharedMatrix evecs) {
+void AdaptiveCI::save_dets_to_file(DeterminantHashVec& space, SharedMatrix evecs) {
     // Use for single-root calculations only
-    det_hash<size_t> detmap = space.wfn_hash();
-    for (det_hash<size_t>::iterator it = detmap.begin(), endit = detmap.end(); it != endit; ++it) {
-        det_list_ << it->first.str().c_str() << " " << std::fabs(evecs->get(it->second, 0)) << " ";
+    det_hashvec detmap = space.wfn_hash();
+    for (size_t i = 0, max_i = detmap.size(); i < max_i; ++i) {
+        det_list_ << detmap[i].str().c_str() << " " << std::fabs(evecs->get(i, 0)) << " ";
         //	for(size_t J = 0, maxJ = space.size(); J < maxJ; ++J){
         //		det_list_ << space[I].slater_rules(space[J]) << " ";
         //	}
@@ -2140,14 +2140,14 @@ void AdaptiveCI::convert_to_string(const std::vector<STLBitsetDeterminant>& spac
 }
 */
 
-int AdaptiveCI::root_follow(DeterminantMap& P_ref, std::vector<double>& P_ref_evecs,
-                            DeterminantMap& P_space, SharedMatrix P_evecs, int num_ref_roots) {
+int AdaptiveCI::root_follow(DeterminantHashVec& P_ref, std::vector<double>& P_ref_evecs,
+                            DeterminantHashVec& P_space, SharedMatrix P_evecs, int num_ref_roots) {
     int ndets = P_space.size();
     int max_dim = std::min(ndets, 1000);
     //    int max_dim = ndets;
     int new_root;
     double old_overlap = 0.0;
-    DeterminantMap P_int;
+    DeterminantHashVec P_int;
     std::vector<double> P_int_evecs;
 
     // std::vector<std::pair<double, size_t>> det_weights;
@@ -2200,7 +2200,7 @@ int AdaptiveCI::root_follow(DeterminantMap& P_ref, std::vector<double>& P_ref_ev
     return new_root;
 }
 
-void AdaptiveCI::compute_aci(DeterminantMap& PQ_space, SharedMatrix& PQ_evecs,
+void AdaptiveCI::compute_aci(DeterminantHashVec& PQ_space, SharedMatrix& PQ_evecs,
                              SharedVector& PQ_evals) {
 
     bool print_refs = false;
@@ -2224,9 +2224,9 @@ void AdaptiveCI::compute_aci(DeterminantMap& PQ_space, SharedMatrix& PQ_evecs,
     SharedMatrix P_evecs;
     SharedVector P_evals;
 
-    DeterminantMap P_ref;
+    DeterminantHashVec P_ref;
     std::vector<double> P_ref_evecs;
-    DeterminantMap P_space(initial_reference_);
+    DeterminantHashVec P_space(initial_reference_);
 
     size_t nvec = options_.get_int("N_GUESS_VEC");
     std::string sigma_method = options_.get_str("SIGMA_BUILD_TYPE");
@@ -2551,7 +2551,7 @@ AdaptiveCI::dl_initial_guess(std::vector<STLBitsetDeterminant>& old_dets,
     return guess;
 }
 
-void AdaptiveCI::compute_rdms(DeterminantMap& dets, WFNOperator& op, SharedMatrix& PQ_evecs,
+void AdaptiveCI::compute_rdms(DeterminantHashVec& dets, WFNOperator& op, SharedMatrix& PQ_evecs,
                               int root1, int root2) {
 
     ordm_a_.clear();
@@ -2601,7 +2601,7 @@ void AdaptiveCI::compute_rdms(DeterminantMap& dets, WFNOperator& op, SharedMatri
     }
 }
 
-void AdaptiveCI::add_bad_roots(DeterminantMap& dets) {
+void AdaptiveCI::add_bad_roots(DeterminantHashVec& dets) {
     bad_roots_.clear();
 
     // Look through each state, save common determinants/coeffs
@@ -2629,15 +2629,15 @@ void AdaptiveCI::add_bad_roots(DeterminantMap& dets) {
     }
 }
 
-void AdaptiveCI::save_old_root(DeterminantMap& dets, SharedMatrix& PQ_evecs, int root) {
+void AdaptiveCI::save_old_root(DeterminantHashVec& dets, SharedMatrix& PQ_evecs, int root) {
     std::vector<std::pair<STLBitsetDeterminant, double>> vec;
 
     if (!quiet_mode_ and nroot_ > 0) {
         outfile->Printf("\n  Saving root %d, ref_root is %d", root, ref_root_);
     }
-    det_hash<size_t> detmap = dets.wfn_hash();
-    for (auto it = detmap.begin(), endit = detmap.end(); it != endit; ++it) {
-        vec.push_back(std::make_pair(it->first, PQ_evecs->get(it->second, ref_root_)));
+    det_hashvec detmap = dets.wfn_hash();
+    for (size_t i = 0, max_i = detmap.size(); i < max_i; ++i) {
+        vec.push_back(std::make_pair(detmap[i], PQ_evecs->get(i, ref_root_)));
     }
     old_roots_.push_back(vec);
     if (!quiet_mode_ and nroot_ > 0) {
@@ -2733,9 +2733,9 @@ void AdaptiveCI::compute_multistate(SharedVector& PQ_evals) {
     //    PQ_evals->print();
 }
 
-DeterminantMap AdaptiveCI::approximate_wfn(DeterminantMap& PQ_space, SharedMatrix& evecs,
+DeterminantHashVec AdaptiveCI::approximate_wfn(DeterminantHashVec& PQ_space, SharedMatrix& evecs,
                                            SharedVector& evals, SharedMatrix& new_evecs) {
-    DeterminantMap new_wfn;
+    DeterminantHashVec new_wfn;
     new_wfn.copy(PQ_space);
 
     det_hash<std::vector<double>> external_space;

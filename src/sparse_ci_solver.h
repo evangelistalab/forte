@@ -31,7 +31,7 @@
 
 #include "fci/fci_integrals.h"
 #include "stl_bitset_determinant.h"
-#include "determinant_map.h"
+#include "determinant_hashvector.h"
 #include "operator.h"
 
 #ifdef HAVE_MPI
@@ -132,7 +132,7 @@ class SigmaVectorList : public SigmaVector {
 /* Uses ann/cre lists in sigma builds (Harrison and Zarrabian method) */
 class SigmaVectorWfn1 : public SigmaVector {
   public:
-    SigmaVectorWfn1(const DeterminantMap& space, WFNOperator& op,
+    SigmaVectorWfn1(const DeterminantHashVec& space, WFNOperator& op,
                     std::shared_ptr<FCIIntegrals> fci_ints);
 
     void compute_sigma(SharedVector sigma, SharedVector b);
@@ -158,14 +158,14 @@ class SigmaVectorWfn1 : public SigmaVector {
     std::vector<std::vector<std::tuple<size_t, short, short>>>& ab_cre_list_;
     std::vector<std::vector<std::tuple<size_t, short, short>>>& bb_cre_list_;
     std::vector<double> diag_;
-    const DeterminantMap& space_;
+    const DeterminantHashVec& space_;
     std::shared_ptr<FCIIntegrals> fci_ints_;
 };
 
 /* Uses only cre lists, sparse sigma build */
 class SigmaVectorWfn2 : public SigmaVector {
   public:
-    SigmaVectorWfn2(const DeterminantMap& space, WFNOperator& op,
+    SigmaVectorWfn2(const DeterminantHashVec& space, WFNOperator& op,
                     std::shared_ptr<FCIIntegrals> fci_ints);
     std::vector<std::vector<std::pair<size_t, short>>>& a_list_;
     std::vector<std::vector<std::pair<size_t, short>>>& b_list_;
@@ -184,7 +184,7 @@ class SigmaVectorWfn2 : public SigmaVector {
     bool print_;
     bool use_disk_ = false;
 
-    const DeterminantMap& space_;
+    const DeterminantHashVec& space_;
     // size_t noalfa_;
     // size_t nobeta_;
 
@@ -194,7 +194,7 @@ class SigmaVectorWfn2 : public SigmaVector {
 /* Uses only cre lists, DGEMM sigma build */
 class SigmaVectorWfn3 : public SigmaVector {
   public:
-    SigmaVectorWfn3(const DeterminantMap& space, WFNOperator& op,
+    SigmaVectorWfn3(const DeterminantHashVec& space, WFNOperator& op,
                     std::shared_ptr<FCIIntegrals> fci_ints);
     std::vector<std::vector<std::pair<size_t, short>>>& a_list_;
     std::vector<std::vector<std::pair<size_t, short>>>& b_list_;
@@ -214,7 +214,7 @@ class SigmaVectorWfn3 : public SigmaVector {
     bool use_disk_ = false;
 
     std::shared_ptr<FCIIntegrals> fci_ints_;
-    const DeterminantMap& space_;
+    const DeterminantHashVec& space_;
     // size_t noalfa_;
     // size_t nobeta_;
 
@@ -228,7 +228,7 @@ class SigmaVectorWfn3 : public SigmaVector {
 #ifdef HAVE_MPI
 class SigmaVectorMPI : public SigmaVector {
   public:
-    SigmaVectorMPI(const DeterminantMap& space, WFNOperator& op,
+    SigmaVectorMPI(const DeterminantHashVec& space, WFNOperator& op,
                    std::shared_ptr<FCIIntegrals> fci_ints);
 
     void compute_sigma(SharedVector sigma, SharedVector b);
@@ -268,7 +268,7 @@ class SparseCISolver {
                                  SharedVector& evals, SharedMatrix& evecs, int nroot,
                                  int multiplicity, DiagonalizationMethod diag_method);
 
-    void diagonalize_hamiltonian_map(const DeterminantMap& space, WFNOperator& op,
+    void diagonalize_hamiltonian_map(const DeterminantHashVec& space, WFNOperator& op,
                                      SharedVector& evals, SharedMatrix& evecs, int nroot,
                                      int multiplicity, DiagonalizationMethod diag_method);
 
@@ -320,13 +320,13 @@ class SparseCISolver {
     void diagonalize_full(const std::vector<STLBitsetDeterminant>& space, SharedVector& evals,
                           SharedMatrix& evecs, int nroot, int multiplicity);
 
-    void diagonalize_mpi(const DeterminantMap& space, WFNOperator& op, SharedVector& evals,
+    void diagonalize_mpi(const DeterminantHashVec& space, WFNOperator& op, SharedVector& evals,
                          SharedMatrix& evecs, int nroot, int multiplicity);
 
-    void diagonalize_dl(const DeterminantMap& space, WFNOperator& op, SharedVector& evals,
+    void diagonalize_dl(const DeterminantHashVec& space, WFNOperator& op, SharedVector& evals,
                         SharedMatrix& evecs, int nroot, int multiplicity);
 
-    void diagonalize_dl_sparse(const DeterminantMap& space, WFNOperator& op, SharedVector& evals,
+    void diagonalize_dl_sparse(const DeterminantHashVec& space, WFNOperator& op, SharedVector& evals,
                                SharedMatrix& evecs, int nroot, int multiplicity);
 
     void diagonalize_davidson_liu_solver(const std::vector<STLBitsetDeterminant>& space,
@@ -342,14 +342,14 @@ class SparseCISolver {
     initial_guess(const std::vector<STLBitsetDeterminant>& space, int nroot, int multiplicity);
 
     std::vector<std::pair<double, std::vector<std::pair<size_t, double>>>>
-    initial_guess_map(const DeterminantMap& space, int nroot, int multiplicity);
+    initial_guess_map(const DeterminantHashVec& space, int nroot, int multiplicity);
 
     /// The Davidson-Liu algorithm
     bool davidson_liu_solver(const std::vector<STLBitsetDeterminant>& space,
                              SigmaVector* sigma_vector, SharedVector Eigenvalues,
                              SharedMatrix Eigenvectors, int nroot, int multiplicity);
 
-    bool davidson_liu_solver_map(const DeterminantMap& space, SigmaVector* sigma_vector,
+    bool davidson_liu_solver_map(const DeterminantHashVec& space, SigmaVector* sigma_vector,
                                  SharedVector Eigenvalues, SharedMatrix Eigenvectors, int nroot,
                                  int multiplicity);
     /// Use a OMP parallel algorithm?
