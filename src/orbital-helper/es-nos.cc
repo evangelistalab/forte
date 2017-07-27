@@ -38,7 +38,7 @@ namespace psi {
 namespace forte {
 
 ESNO::ESNO(SharedWavefunction ref_wfn, Options& options, std::shared_ptr<ForteIntegrals> ints,
-           std::shared_ptr<MOSpaceInfo> mo_space_info, DeterminantMap& reference)
+           std::shared_ptr<MOSpaceInfo> mo_space_info, DeterminantHashVec& reference)
     : Wavefunction(options), ref_wfn_(ref_wfn), ints_(ints), mo_space_info_(mo_space_info),
       reference_(reference) {
     shallow_copy(ref_wfn);
@@ -202,7 +202,7 @@ void ESNO::get_excited_determinants() {
     std::vector<size_t> external_mo = get_excitation_space();
     int n_ext = external_mo.size();
 
-    DeterminantMap external;
+    DeterminantHashVec external;
     external.clear();
 
     const auto& internal = reference_.determinants();

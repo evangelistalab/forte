@@ -50,7 +50,7 @@ CI_RDMS::CI_RDMS(Options& options, std::shared_ptr<FCIIntegrals>& fci_ints,
     startup();
 }
 
-CI_RDMS::CI_RDMS(Options& options, DeterminantMap& wfn, std::shared_ptr<FCIIntegrals> fci_ints,
+CI_RDMS::CI_RDMS(Options& options, DeterminantHashVec& wfn, std::shared_ptr<FCIIntegrals> fci_ints,
                  SharedMatrix evecs, int root1, int root2)
     : options_(options), wfn_(wfn), fci_ints_(fci_ints), evecs_(evecs), root1_(root1),
       root2_(root2) {

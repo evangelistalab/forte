@@ -35,7 +35,7 @@
 #include "psi4/libmints/wavefunction.h"
 #include "psi4/liboptions/liboptions.h"
 
-#include "determinant_map.h"
+#include "determinant_hashvector.h"
 #include "helpers.h"
 #include "operator.h"
 #include "reference.h"
@@ -56,7 +56,7 @@ class CI_RDMS {
             const std::vector<STLBitsetDeterminant>& det_space, SharedMatrix evecs, int root1,
             int root2);
 
-    CI_RDMS(Options& options, DeterminantMap& wfn, std::shared_ptr<FCIIntegrals> fci_ints,
+    CI_RDMS(Options& options, DeterminantHashVec& wfn, std::shared_ptr<FCIIntegrals> fci_ints,
             SharedMatrix evecs, int root1, int root2);
 
     ~CI_RDMS();
@@ -123,7 +123,7 @@ class CI_RDMS {
     std::shared_ptr<MOSpaceInfo> mo_space_info_;
 
     // The Wavefunction
-    DeterminantMap wfn_;
+    DeterminantHashVec wfn_;
 
     // The Determinant Space
     const std::vector<STLBitsetDeterminant> det_space_;

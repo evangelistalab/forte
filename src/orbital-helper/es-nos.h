@@ -38,7 +38,7 @@
 #include "../stl_bitset_determinant.h"
 #include "../integrals/integrals.h"
 #include "../fci/fci_integrals.h"
-#include "../determinant_map.h"
+#include "../determinant_hashvector.h"
 #include "../operator.h"
 #include "../sparse_ci_solver.h"
 
@@ -49,12 +49,12 @@ class ESNO : public Wavefunction {
   public:
     // Class constructor and destructor
     ESNO(SharedWavefunction ref_wfn, Options& options, std::shared_ptr<ForteIntegrals> ints,
-         std::shared_ptr<MOSpaceInfo> mo_space_info, DeterminantMap& reference);
+         std::shared_ptr<MOSpaceInfo> mo_space_info, DeterminantHashVec& reference);
 
     ~ESNO();
 
     std::shared_ptr<ForteIntegrals> ints_;
-    DeterminantMap& reference_;
+    DeterminantHashVec& reference_;
 
     void compute_nos();
     void transform(Reference& reference);

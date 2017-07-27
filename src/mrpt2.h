@@ -38,7 +38,7 @@
 #include "stl_bitset_determinant.h"
 #include "integrals/integrals.h"
 #include "fci/fci_integrals.h"
-#include "determinant_map.h"
+#include "determinant_hashvector.h"
 #include "operator.h"
 #include "sparse_ci_solver.h"
 //#include "forte_options.h"
@@ -55,13 +55,13 @@ class MRPT2 : public Wavefunction {
     MRPT2( SharedWavefunction ref_wfn, Options& options,
         std::shared_ptr<ForteIntegrals> ints, 
         std::shared_ptr<MOSpaceInfo> mo_space_info,
-        DeterminantMap& reference, SharedMatrix evecs,
+        DeterminantHashVec& reference, SharedMatrix evecs,
         SharedVector evals);
     
     ~MRPT2();
 
     std::shared_ptr<ForteIntegrals> ints_;
-    DeterminantMap& reference_;
+    DeterminantHashVec& reference_;
 
     double compute_energy(); 
     
