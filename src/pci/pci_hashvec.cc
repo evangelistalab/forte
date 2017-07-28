@@ -66,40 +66,13 @@ bool ProjectorCI_HashVec::have_omp_ = true;
 bool ProjectorCI_HashVec::have_omp_ = false;
 #endif
 
-void combine_hashes(std::vector<det_hash<>>& thread_det_C_map, det_hash<>& dets_C_hash);
-void combine_hashes(det_hash<>& dets_C_hash_A, det_hash<>& dets_C_hash_B);
-void combine_hashes_into_hash(std::vector<det_hash<>>& thread_det_C_hash, det_hash<>& dets_C_hash);
-void copy_hash_to_vec(det_hash<>& dets_C_hash, det_vec& dets, std::vector<double>& C);
-void copy_hash_to_vec_order_ref(det_hash<>& dets_C_hash, det_vec& dets, std::vector<double>& C);
-void copy_vec_to_hash(det_vec& dets, const std::vector<double>& C, det_hash<>& dets_C_hash);
 void scale(std::vector<double>& A, double alpha);
-void scale(det_hash<>& A, double alpha);
 double normalize(std::vector<double>& C);
-double normalize(det_hash<>& dets_C);
-double norm(std::vector<double>& C);
-double norm(det_hash<>& dets_C);
-double dot(det_hash<>& A, det_hash<>& B);
 double dot(std::vector<double>& C1, std::vector<double>& C2);
-size_t ortho_norm(std::vector<std::vector<double>>& H_n_C, std::vector<double>& norms, Matrix& A,
-                  double colinear_threshold);
-void add(det_hash<>& A, double beta, det_hash<>& B);
 void add(std::vector<double>& a, double k, std::vector<double>& b);
-double factorial(int n);
-void binomial_coefs(std::vector<double>& coefs, int order, double a, double b);
-void Taylor_generator_coefs(std::vector<double>& coefs, int order, double tau, double S);
-void Taylor_polynomial_coefs(std::vector<double>& coefs, int order);
-void Chebyshev_polynomial_coefs(std::vector<double>& coefs, int order);
-void Exp_Chebyshev_generator_coefs(std::vector<double>& coefs, int order, double tau, double S,
-                                   double range);
-void Chebyshev_generator_coefs(std::vector<double>& coefs, int order, double tau, double S,
-                               double range);
 void Wall_Chebyshev_generator_coefs(std::vector<double>& coefs, int order, double tau, double S,
                                     double range);
 void print_polynomial(std::vector<double>& coefs);
-
-void print_vector(const std::vector<double>& C, std::string description);
-
-void print_hash(det_hash<>& C, std::string description, bool print_det = false);
 
 void add(const det_hashvec& A, std::vector<double> Ca, double beta, const det_hashvec& B,
          const std::vector<double> Cb) {
@@ -505,30 +478,6 @@ void ProjectorCI_HashVec::compute_characteristic_function() {
     shift_ = (lambda_h_ + lambda_1_) / 2.0;
     range_ = (lambda_h_ - lambda_1_) / 2.0;
     switch (generator_) {
-    case PowerGenerator:
-        cha_func_coefs_.clear();
-        cha_func_coefs_.push_back(0.0);
-        cha_func_coefs_.push_back(-1.0);
-        break;
-    case LinearGenerator:
-        Taylor_generator_coefs(cha_func_coefs_, 1, time_step_, range_);
-        break;
-    case QuadraticGenerator:
-        Taylor_generator_coefs(cha_func_coefs_, 2, time_step_, range_);
-        break;
-    case CubicGenerator:
-        Taylor_generator_coefs(cha_func_coefs_, 3, time_step_, range_);
-        break;
-    case QuarticGenerator:
-        Taylor_generator_coefs(cha_func_coefs_, 4, time_step_, range_);
-        break;
-    case ExpChebyshevGenerator:
-        Exp_Chebyshev_generator_coefs(cha_func_coefs_, chebyshev_order_, time_step_, shift_,
-                                      range_);
-        break;
-    case ChebyshevGenerator:
-        Chebyshev_generator_coefs(cha_func_coefs_, chebyshev_order_, time_step_, shift_, range_);
-        break;
     case WallChebyshevGenerator:
         Wall_Chebyshev_generator_coefs(cha_func_coefs_, chebyshev_order_, time_step_, shift_,
                                        range_);
