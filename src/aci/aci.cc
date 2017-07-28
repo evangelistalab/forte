@@ -147,6 +147,9 @@ void set_ACI_options(ForteOptions& foptions) {
     /*- Do ESNO transformation? -*/
     foptions.add_bool("ESNOS", false, "Compute external single natural orbitals");
     foptions.add_int("ESNO_MAX_SIZE", 0, "Number of external orbitals to correlate");
+
+    /*- optionally use low-memory screening -*/
+    foptions.add_bool("ACI_LOW_MEM_SCREENING", false, "Use low-memory screening algorithm");
 }
 
 bool pairComp(const std::pair<double, STLBitsetDeterminant> E1,
@@ -715,7 +718,11 @@ void AdaptiveCI::default_find_q_space(DeterminantHashVec& P_space, DeterminantHa
     det_hash<std::vector<double>> V_hash;
 
     // Get the excited Determinants
-    get_excited_determinants(nroot_, evecs, P_space, V_hash);
+    if (options_.get_bool("ACI_LOW_MEM_SCREEN")) {
+        get_excited_determinants2(nroot_, evecs, P_space, V_hash);
+    } else {
+        get_excited_determinants(nroot_, evecs, P_space, V_hash);
+    }
 
     // This will contain all the determinants
     PQ_space.clear();
@@ -723,9 +730,10 @@ void AdaptiveCI::default_find_q_space(DeterminantHashVec& P_space, DeterminantHa
     // Add the P-space determinants and zero the hash
     const det_hashvec& detmap = P_space.wfn_hash();
     for (det_hashvec::iterator it = detmap.begin(), endit = detmap.end(); it != endit; ++it) {
-        PQ_space.add(*it);
+        //  PQ_space.add(*it);
         V_hash.erase(*it);
     }
+    PQ_space.swap(P_space);
 
     if (!quiet_mode_) {
         outfile->Printf("\n  %s: %zu determinants", "Dimension of the SD space", V_hash.size());
@@ -2366,7 +2374,6 @@ void AdaptiveCI::compute_aci(DeterminantHashVec& PQ_space, SharedMatrix& PQ_evec
 
         // Print the energy
         if (!quiet_mode_) {
-            outfile->Printf("\n  electronic e: %1.12f", P_evals->get(0));
             outfile->Printf("\n");
             for (int i = 0; i < num_ref_roots; ++i) {
                 double abs_energy =
