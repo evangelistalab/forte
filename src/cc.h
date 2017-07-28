@@ -58,8 +58,7 @@ class CC : public Wavefunction {
      * @param ints A pointer to an allocated integral object
      * @param mo_space_info The MOSpaceInfo object
      */
-    CC(SharedWavefunction ref_wfn, Options& options,
-       std::shared_ptr<ForteIntegrals> ints,
+    CC(SharedWavefunction ref_wfn, Options& options, std::shared_ptr<ForteIntegrals> ints,
        std::shared_ptr<MOSpaceInfo> mo_space_info);
 
     /// Destructor

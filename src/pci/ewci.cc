@@ -1304,7 +1304,6 @@ void ElementwiseCI::apply_tau_H_symm(double tau, double spawning_threshold, det_
         }
     }
 
-
     std::vector<size_t> removing_indices;
     for (size_t I = 0; I < ref_size; ++I) {
         if (std::isnan(result_C[I])) {
@@ -2310,7 +2309,7 @@ double ElementwiseCI::estimate_var_energy_within_error_sigma(const det_hashvec& 
     WFNOperator op(mo_symmetry_, fci_ints_);
     std::vector<Determinant> sub_dets = dets_hashvec.toVector();
     sub_dets.erase(sub_dets.begin() + cut_index + 1, sub_dets.end());
-    DeterminantMap det_map(sub_dets);
+    DeterminantHashVec det_map(sub_dets);
     op.build_strings(det_map);
     op.op_s_lists(det_map);
     op.tp_s_lists(det_map);

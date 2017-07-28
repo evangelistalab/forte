@@ -32,7 +32,7 @@
 #include <numeric>
 #include <sstream>
 
-#include "determinant_map.h"
+#include "determinant_hashvector.h"
 #include "fci/fci_vector.h"
 #include "fci_mo.h"
 #include "forte_options.h"
@@ -1541,7 +1541,7 @@ void FCI_MO::Diagonalize_H(const vecdet& p_space, const int& multi, const int& n
 
     } else {
         // use determinant map
-        DeterminantMap detmap(p_space);
+        DeterminantHashVec detmap(p_space);
         auto act_mo = mo_space_info_->symmetry("ACTIVE");
         WFNOperator op(act_mo, fci_ints_);
         op.build_strings(detmap);

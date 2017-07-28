@@ -39,8 +39,6 @@
 #include "integrals/integrals.h"
 #include "./mrdsrg-helper/dsrg_source.h"
 
-
-
 using d1 = std::vector<double>;
 using d2 = std::vector<d1>;
 using d3 = std::vector<d2>;
@@ -60,8 +58,7 @@ class MCSRGPT2_MO : public FCI_MO {
      * @param ints A pointer to an allocated integral object
      * @param mo_space_info The MOSpaceInfo object
      */
-    MCSRGPT2_MO(SharedWavefunction ref_wfn, Options& options,
-                std::shared_ptr<ForteIntegrals> ints,
+    MCSRGPT2_MO(SharedWavefunction ref_wfn, Options& options, std::shared_ptr<ForteIntegrals> ints,
                 std::shared_ptr<MOSpaceInfo> mo_space_info);
 
     /// Destructor
@@ -70,9 +67,8 @@ class MCSRGPT2_MO : public FCI_MO {
   protected:
     /// Source Operators
     enum sourceop { STANDARD, AMP, EMP2, LAMP, LEMP2 };
-    std::map<std::string, sourceop> sourcemap =
-        boost::assign::map_list_of("STANDARD", STANDARD)("AMP", AMP)(
-            "EMP2", EMP2)("LAMP", LAMP)("LEMP2", LEMP2);
+    std::map<std::string, sourceop> sourcemap = boost::assign::map_list_of("STANDARD", STANDARD)(
+        "AMP", AMP)("EMP2", EMP2)("LAMP", LAMP)("LEMP2", LEMP2);
 
     /// Basis preparation
     void startup(Options& options);
@@ -123,10 +119,8 @@ class MCSRGPT2_MO : public FCI_MO {
     void Form_T2_SELEC(d4& AA, d4& AB, d4& BB);
 
     /// Check T Amplitudes
-    void Check_T1(const string& x, const d2& M, double& Norm, double& MaxT,
-                  Options& options);
-    void Check_T2(const string& x, const d4& M, double& Norm, double& MaxT,
-                  Options& options);
+    void Check_T1(const string& x, const d2& M, double& Norm, double& MaxT, Options& options);
+    void Check_T2(const string& x, const d4& M, double& Norm, double& MaxT, Options& options);
 
     /// Effective Fock Matrix
     d2 Fa_dsrg_;

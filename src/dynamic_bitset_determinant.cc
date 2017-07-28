@@ -693,8 +693,8 @@ void DynamicBitsetDeterminant::check_uniqueness(
     const std::vector<DynamicBitsetDeterminant> det_space) {
     size_t duplicates = 0;
     size_t dim = det_space.size();
-    std::unordered_map<DynamicBitsetDeterminant, size_t, std::function<decltype(hash_value)>> det_map(
-        dim, hash_value);
+    std::unordered_map<DynamicBitsetDeterminant, size_t, std::function<decltype(hash_value)>>
+        det_map(dim, hash_value);
 
     for (const auto& i : det_space) {
         ++det_map[i];

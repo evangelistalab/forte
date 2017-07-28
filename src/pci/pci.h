@@ -49,7 +49,7 @@ namespace forte {
 /// Set the forte style options for the FCI method
 void set_PCI_options(ForteOptions& foptions);
 
-namespace GeneratorType_{
+namespace GeneratorType_ {
 enum GeneratorType {
     LinearGenerator,
     TrotterLinear,
@@ -81,8 +81,7 @@ class ProjectorCI : public Wavefunction {
      * @param options The main options object
      * @param ints A pointer to an allocated integral object
      */
-    ProjectorCI(SharedWavefunction ref_wfn, Options& options,
-                std::shared_ptr<ForteIntegrals> ints,
+    ProjectorCI(SharedWavefunction ref_wfn, Options& options, std::shared_ptr<ForteIntegrals> ints,
                 std::shared_ptr<MOSpaceInfo> mo_space_info);
 
     // ==> Class Interface <==
@@ -211,8 +210,8 @@ class ProjectorCI : public Wavefunction {
     /// determinant to all of its singly and doubly excited states.
     /// Bounds are stored as a pair (f_max,v_max) where f_max and v_max are
     /// the couplings to the singles and doubles, respectively.
-    std::unordered_map<Determinant, std::pair<double, double>,
-                       Determinant::Hash> dets_max_couplings_;
+    std::unordered_map<Determinant, std::pair<double, double>, Determinant::Hash>
+        dets_max_couplings_;
     double dets_double_max_coupling_;
 
     // * Energy estimation
@@ -297,16 +296,13 @@ class ProjectorCI : public Wavefunction {
     void print_info();
 
     /// Print a wave function
-    void print_wfn(det_vec& space, std::vector<double>& C,
-                   size_t max_output = 10);
+    void print_wfn(det_vec& space, std::vector<double>& C, size_t max_output = 10);
 
     /// Save a wave function
-    void save_wfn(det_vec& space, std::vector<double>& C,
-                  std::vector<det_hash<>>& solutions);
+    void save_wfn(det_vec& space, std::vector<double>& C, std::vector<det_hash<>>& solutions);
 
     /// Orthogonalize the wave function to previous solutions
-    void orthogonalize(det_vec& space, std::vector<double>& C,
-                       std::vector<det_hash<>>& solutions);
+    void orthogonalize(det_vec& space, std::vector<double>& C, std::vector<det_hash<>>& solutions);
 
     /// Initial wave function guess
     double initial_guess(det_vec& dets, std::vector<double>& C);
@@ -321,121 +317,103 @@ class ProjectorCI : public Wavefunction {
     * events
     * @param S An energy shift subtracted from the Hamiltonian
     */
-    void propagate(GeneratorType_::GeneratorType generator, det_vec& dets,
-                   std::vector<double>& C, double tau,
-                   double spawning_threshold, double S);
+    void propagate(GeneratorType_::GeneratorType generator, det_vec& dets, std::vector<double>& C,
+                   double tau, double spawning_threshold, double S);
     /// A Delta projector fitted by 10th order chebyshev polynomial
-    void propagate_wallCh(det_vec& dets, std::vector<double>& C,
-                          double spawning_threshold, double S);
+    void propagate_wallCh(det_vec& dets, std::vector<double>& C, double spawning_threshold,
+                          double S);
     /// A first-order Generator
     void propagate_Linear(det_vec& dets, std::vector<double>& C, double tau,
                           double spawning_threshold, double S);
     /// An Trotter-decomposed Generator (H = H^d + H^od)
-    void propagate_Trotter_linear(det_vec& dets, std::vector<double>& C,
-                                  double tau, double spawning_threshold,
-                                  double S);
+    void propagate_Trotter_linear(det_vec& dets, std::vector<double>& C, double tau,
+                                  double spawning_threshold, double S);
     /// An experimental second-order Generator
-    void propagate_second_order(det_vec& dets, std::vector<double>& C,
-                                double tau, double spawning_threshold,
-                                double S);
+    void propagate_second_order(det_vec& dets, std::vector<double>& C, double tau,
+                                double spawning_threshold, double S);
     /// An experimental arbitrary-order Taylor series Generator
-    void propagate_Taylor(int order, det_vec& dets, std::vector<double>& C,
-                          double tau, double spawning_threshold, double S);
+    void propagate_Taylor(int order, det_vec& dets, std::vector<double>& C, double tau,
+                          double spawning_threshold, double S);
     /// The power Generator
-    void propagate_power(det_vec& dets, std::vector<double>& C,
-                         double spawning_threshold, double S);
+    void propagate_power(det_vec& dets, std::vector<double>& C, double spawning_threshold,
+                         double S);
     /// The power Generator
-    void propagate_power_quadratic_extrapolation(det_vec& dets,
-                                                 std::vector<double>& C,
-                                                 double tau,
-                                                 double spawning_threshold,
-                                                 double S);
+    void propagate_power_quadratic_extrapolation(det_vec& dets, std::vector<double>& C, double tau,
+                                                 double spawning_threshold, double S);
     /// The Olsen Generator
-    void propagate_Olsen(det_vec& dets, std::vector<double>& C,
-                         double spawning_threshold, double S);
+    void propagate_Olsen(det_vec& dets, std::vector<double>& C, double spawning_threshold,
+                         double S);
     /// The Davidson-Liu Generator
-    void propagate_DavidsonLiu(det_vec& dets, std::vector<double>& C,
-                               double spawning_threshold);
+    void propagate_DavidsonLiu(det_vec& dets, std::vector<double>& C, double spawning_threshold);
     /// The Chebyshev Generator
-    void propagate_Chebyshev(det_vec& dets, std::vector<double>& C,
-                             double spawning_threshold);
+    void propagate_Chebyshev(det_vec& dets, std::vector<double>& C, double spawning_threshold);
     //    void propagate_Chebyshev(det_vec& dets,std::vector<double>& C,double
     //    tau,double spawning_threshold,double S);
     /// The Polynomial Generator
-    void propagate_Polynomial(det_vec& dets, std::vector<double>& C,
-                              std::vector<double>& coef,
+    void propagate_Polynomial(det_vec& dets, std::vector<double>& C, std::vector<double>& coef,
                               double spawning_threshold);
     /// The Lanczos Generator
-    void propagate_Lanczos(det_vec& dets, std::vector<double>& C,
-                           double spawning_threshold, double S);
+    void propagate_Lanczos(det_vec& dets, std::vector<double>& C, double spawning_threshold,
+                           double S);
     /// The DL Generator
-    void propagate_DL(det_vec& dets, std::vector<double>& C,
-                      double spawning_threshold, double S);
+    void propagate_DL(det_vec& dets, std::vector<double>& C, double spawning_threshold, double S);
 
     /// Apply tau H to a set of determinants
     void apply_tau_H(double tau, double spawning_threshold, det_vec& dets,
-                     const std::vector<double>& C, det_hash<>& dets_C_map,
-                     double S);
+                     const std::vector<double>& C, det_hash<>& dets_C_map, double S);
     /// Apply symmetric approx tau H to a set of determinants
     void apply_tau_H_symm(double tau, double spawning_threshold, det_vec& dets,
-                          const std::vector<double>& C, det_hash<>& dets_C_hash,
-                          double S);
+                          const std::vector<double>& C, det_hash<>& dets_C_hash, double S);
     /// Apply symmetric approx tau H to a determinant using dynamic screening
-    void apply_tau_H_symm_det_dynamic(
-        double tau, double spawning_threshold, det_hash<>& pre_dets_C_hash,
-        const Determinant& detI, double CI,
-        std::vector<std::pair<Determinant, double>>& new_space_C_vec, double E0,
-        std::pair<double, double>& max_coupling);
+    void apply_tau_H_symm_det_dynamic(double tau, double spawning_threshold,
+                                      det_hash<>& pre_dets_C_hash, const Determinant& detI,
+                                      double CI,
+                                      std::vector<std::pair<Determinant, double>>& new_space_C_vec,
+                                      double E0, std::pair<double, double>& max_coupling);
     /// Apply tau H to a subset of determinants
-    void apply_tau_H_subset(double tau, double spawning_threshold,
-                            det_vec& dets, const std::vector<double>& C,
-                            det_hash<>& dets_sum_map, det_hash<>& dets_C_hash,
-                            double S);
+    void apply_tau_H_subset(double tau, double spawning_threshold, det_vec& dets,
+                            const std::vector<double>& C, det_hash<>& dets_sum_map,
+                            det_hash<>& dets_C_hash, double S);
     /// Apply tau H to a determinant using screening based on the maxim
     /// couplings
     std::pair<double, double> apply_tau_H_det_prescreening(
         double tau, double spawning_threshold, Determinant& detI, double CI,
-        std::vector<std::pair<Determinant, double>>& new_space_C_vec,
-        double E0);
+        std::vector<std::pair<Determinant, double>>& new_space_C_vec, double E0);
     /// Apply tau H to a determinant using dynamic screening
-    void apply_tau_H_det_dynamic(
-        double tau, double spawning_threshold, const Determinant& detI,
-        double CI, std::vector<std::pair<Determinant, double>>& new_space_C_vec,
-        double E0, std::pair<double, double>& max_coupling);
+    void apply_tau_H_det_dynamic(double tau, double spawning_threshold, const Determinant& detI,
+                                 double CI,
+                                 std::vector<std::pair<Determinant, double>>& new_space_C_vec,
+                                 double E0, std::pair<double, double>& max_coupling);
     /// Apply tau H to a determinant using Schwarz screening
-    void apply_tau_H_det_schwarz(
-        double tau, double spawning_threshold, const Determinant& detI,
-        double CI, std::vector<std::pair<Determinant, double>>& new_space_C_vec,
-        double E0);
+    void apply_tau_H_det_schwarz(double tau, double spawning_threshold, const Determinant& detI,
+                                 double CI,
+                                 std::vector<std::pair<Determinant, double>>& new_space_C_vec,
+                                 double E0);
     /// Apply tau H to a determinant within subset
-    void apply_tau_H_det_subset(
-        double tau, Determinant& detI, double CI, det_hash<>& dets_sum_map,
-        std::vector<std::pair<Determinant, double>>& new_space_C_vec,
-        double E0);
+    void apply_tau_H_det_subset(double tau, Determinant& detI, double CI, det_hash<>& dets_sum_map,
+                                std::vector<std::pair<Determinant, double>>& new_space_C_vec,
+                                double E0);
     /// Apply tau H to a determinant by selection within subset
     void apply_tau_H_det_subset_prescreening(
         double tau, double spawning_threshold, Determinant& detI, double CI,
-        det_hash<>& dets_sum_map,
-        std::vector<std::pair<Determinant, double>>& new_space_C_vec,
+        det_hash<>& dets_sum_map, std::vector<std::pair<Determinant, double>>& new_space_C_vec,
         double E0);
     /// Apply symmetric approx tau H to a set of determinants with selection
     /// according to reference coefficients
-    void apply_tau_H_ref_C_symm(double tau, double spawning_threshold,
-                                det_vec& dets, const std::vector<double>& C,
-                                const std::vector<double>& ref_C,
+    void apply_tau_H_ref_C_symm(double tau, double spawning_threshold, det_vec& dets,
+                                const std::vector<double>& C, const std::vector<double>& ref_C,
                                 det_hash<>& dets_C_hash, double S);
     /// Apply symmetric approx tau H to a determinant using dynamic screening
     /// with selection according to a reference coefficient
-    void apply_tau_H_ref_C_symm_det_dynamic(
-        double tau, double spawning_threshold, det_hash<>& pre_dets_C_hash,
-        det_hash<>& ref_dets_C_hash, const Determinant& detI, double CI,
-        double ref_CI,
-        std::vector<std::pair<Determinant, double>>& new_space_C_vec, double E0,
-        std::pair<double, double>& max_coupling);
+    void
+    apply_tau_H_ref_C_symm_det_dynamic(double tau, double spawning_threshold,
+                                       det_hash<>& pre_dets_C_hash, det_hash<>& ref_dets_C_hash,
+                                       const Determinant& detI, double CI, double ref_CI,
+                                       std::vector<std::pair<Determinant, double>>& new_space_C_vec,
+                                       double E0, std::pair<double, double>& max_coupling);
     void apply_tau_H_ref_C_symm_det_dynamic_smooth(
         double tau, double spawning_threshold, det_hash<>& pre_dets_C_hash,
-        det_hash<>& ref_dets_C_hash, const Determinant& detI, double CI,
-        double ref_CI,
+        det_hash<>& ref_dets_C_hash, const Determinant& detI, double CI, double ref_CI,
         std::vector<std::pair<Determinant, double>>& new_space_C_vec, double E0,
         std::pair<double, double>& max_coupling);
     //    void apply_tau_H_ref_C_symm_det_dynamic_stat(double tau, double
@@ -445,8 +423,7 @@ class ProjectorCI : public Wavefunction {
     //    E0, std::pair<double,double>& max_coupling);
 
     /// Estimates the energy give a wave function
-    std::map<std::string, double> estimate_energy(det_vec& dets,
-                                                  std::vector<double>& C);
+    std::map<std::string, double> estimate_energy(det_vec& dets, std::vector<double>& C);
     /// Estimates the projective energy
     double estimate_proj_energy(det_vec& dets, std::vector<double>& C);
     /// Estimates the variational energy
@@ -454,8 +431,7 @@ class ProjectorCI : public Wavefunction {
     /// @param C The wave function coefficients
     /// @param tollerance The accuracy of the estimate.  Used to impose |C_I
     /// C_J| < tollerance
-    double estimate_var_energy(det_vec& dets, std::vector<double>& C,
-                               double tollerance = 1.0e-14);
+    double estimate_var_energy(det_vec& dets, std::vector<double>& C, double tollerance = 1.0e-14);
     /// Estimates the variational energy using a sparse algorithm
     /// @param dets The set of determinants that form the wave function
     /// @param C The wave function coefficients
@@ -464,25 +440,21 @@ class ProjectorCI : public Wavefunction {
     double estimate_var_energy_sparse(det_vec& dets, std::vector<double>& C,
                                       double tollerance = 1.0e-14);
     /// Estimate the pertubation energy for the result
-    std::tuple<double, double> estimate_perturbation(det_vec& dets,
-                                                     std::vector<double>& C,
+    std::tuple<double, double> estimate_perturbation(det_vec& dets, std::vector<double>& C,
                                                      double spawning_threshold);
     /// Estimate the 1st order pertubation energy for the result.
-    double estimate_1st_order_perturbation(det_vec& dets,
-                                           std::vector<double>& C,
+    double estimate_1st_order_perturbation(det_vec& dets, std::vector<double>& C,
                                            double spawning_threshold);
     /// Estimate the 2nd order pertubation energy for the result within subspace
-    double estimate_2nd_order_perturbation_sub(det_vec& dets,
-                                               std::vector<double>& C,
+    double estimate_2nd_order_perturbation_sub(det_vec& dets, std::vector<double>& C,
                                                double spawning_threshold);
     /// Estimate the path-filtering error
     double estimate_path_filtering_error(det_vec& dets, std::vector<double>& C,
                                          double spawning_threshold);
 
     /// Form the product H c
-    double form_H_C(double tau, double spawning_threshold, Determinant& detI,
-                    double CI, det_hash<>& det_C,
-                    std::pair<double, double>& max_coupling);
+    double form_H_C(double tau, double spawning_threshold, Determinant& detI, double CI,
+                    det_hash<>& det_C, std::pair<double, double>& max_coupling);
     /// Do we have OpenMP?
     static bool have_omp_;
 
@@ -499,8 +471,7 @@ class ProjectorCI : public Wavefunction {
     bool converge_test();
 
     /// Returns a vector of orbital energy, sym label pairs
-    std::vector<std::tuple<double, int, int>>
-    sym_labeled_orbitals(std::string type);
+    std::vector<std::tuple<double, int, int>> sym_labeled_orbitals(std::string type);
 
     /// Get the reference occupation
     std::vector<int> get_occupation();

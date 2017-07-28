@@ -78,8 +78,7 @@ class STD_SOURCE : public DSRG_SOURCE {
 
   private:
     /// Order of the Taylor expansion
-    int taylor_order_ =
-        static_cast<int>(0.5 * (15.0 / taylor_threshold_ + 1)) + 1;
+    int taylor_order_ = static_cast<int>(0.5 * (15.0 / taylor_threshold_ + 1)) + 1;
 
     /// Taylor Expansion of [1 - exp(- Z^2)] / Z
     double Taylor_Exp(const double& Z, const int& n) {
@@ -103,9 +102,7 @@ class LABS_SOURCE : public DSRG_SOURCE {
     LABS_SOURCE(double s, double taylor_threshold);
 
     /// Return exp(-s * |D|)
-    virtual double compute_renormalized(const double& D) {
-        return std::exp(-s_ * std::fabs(D));
-    }
+    virtual double compute_renormalized(const double& D) { return std::exp(-s_ * std::fabs(D)); }
 
     /// Return [1 - exp(-s * |D|)] / D
     virtual double compute_renormalized_denominator(const double& D) {
@@ -148,9 +145,7 @@ class DYSON_SOURCE : public DSRG_SOURCE {
     DYSON_SOURCE(double s, double taylor_threshold);
 
     /// Return 1.0 / (1.0 + s * D^2)
-    virtual double compute_renormalized(const double& D) {
-        return 1.0 / (1.0 + s_ * D * D);
-    }
+    virtual double compute_renormalized(const double& D) { return 1.0 / (1.0 + s_ * D * D); }
 
     /// Return s * D / (1.0 + s * D^2)
     virtual double compute_renormalized_denominator(const double& D) {
@@ -165,9 +160,7 @@ class MP2_SOURCE : public DSRG_SOURCE {
 
     virtual double compute_renormalized(const double& D) { return 1.0; }
 
-    virtual double compute_renormalized_denominator(const double& D) {
-        return 1.0 / D;
-    }
+    virtual double compute_renormalized_denominator(const double& D) { return 1.0 / D; }
 };
 }
 }

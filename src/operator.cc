@@ -56,7 +56,7 @@ void WFNOperator::initialize(std::vector<int>& symmetry, std::shared_ptr<FCIInte
 }
 
 std::vector<std::pair<std::vector<size_t>, std::vector<double>>>
-WFNOperator::build_H_sparse(const DeterminantMap& wfn) {
+WFNOperator::build_H_sparse(const DeterminantHashVec& wfn) {
     Timer build;
     size_t size = wfn.size();
     std::vector<std::pair<std::vector<size_t>, std::vector<double>>> H_sparse(size);
@@ -353,20 +353,20 @@ WFNOperator::build_H_sparse(const DeterminantMap& wfn) {
     return H_sparse;
 }
 
-double WFNOperator::s2(DeterminantMap& wfn, SharedMatrix& evecs, int root) {
+double WFNOperator::s2(DeterminantHashVec& wfn, SharedMatrix& evecs, int root) {
     double S2 = 0.0;
-    const det_hash<size_t>& wfn_map = wfn.wfn_hash();
+    const det_hashvec& wfn_map = wfn.wfn_hash();
 
-    for (auto& det : wfn_map) {
+    for (size_t i = 0, max_i = wfn_map.size(); i < max_i; ++i) {
         // Compute diagonal
         // PhiI = PhiJ
-        STLBitsetDeterminant PhiI = det.first;
+        STLBitsetDeterminant PhiI = wfn_map[i];
         int npair = PhiI.npair();
         int na = PhiI.get_alfa_occ().size();
         int nb = PhiI.get_beta_occ().size();
         double ms = 0.5 * static_cast<double>(na - nb);
         S2 += (ms * ms + ms + static_cast<double>(nb) - static_cast<double>(npair)) *
-              evecs->get(det.second, root) * evecs->get(det.second, root);
+              evecs->get(i, root) * evecs->get(i, root);
         // if ((npair == nb) or (npair == na))
         //     continue;
     }
@@ -403,15 +403,14 @@ double WFNOperator::s2(DeterminantMap& wfn, SharedMatrix& evecs, int root) {
     return S2;
 }
 
-void WFNOperator::add_singles(DeterminantMap& wfn) {
+void WFNOperator::add_singles(DeterminantHashVec& wfn) {
 
-    det_hash<size_t>& wfn_map = wfn.wfn_hash();
+    det_hashvec& wfn_map = wfn.wfn_hash();
 
-    DeterminantMap singles;
+    DeterminantHashVec singles;
     // Loop through determinants, generate singles and add them to the wfn
     // Alpha excitations
-    for (auto& I : wfn_map) {
-        STLBitsetDeterminant det = I.first;
+    for (STLBitsetDeterminant det : wfn_map) {
         std::vector<int> aocc = det.get_alfa_occ();
         std::vector<int> avir = det.get_alfa_vir();
 
@@ -424,7 +423,7 @@ void WFNOperator::add_singles(DeterminantMap& wfn) {
                     new_det = det;
                     new_det.set_alfa_bit(ii, false);
                     new_det.set_alfa_bit(aa, true);
-                    if (wfn_map.count(new_det) == 0) {
+                    if (wfn_map.find(new_det) == det_hashvec::npos) {
                         singles.add(new_det);
                     }
                 }
@@ -446,7 +445,7 @@ void WFNOperator::add_singles(DeterminantMap& wfn) {
                     new_det = det;
                     new_det.set_beta_bit(ii, false);
                     new_det.set_beta_bit(aa, true);
-                    if (wfn_map.count(new_det) == 0) {
+                    if (wfn_map.find(new_det) == det_hashvec::npos) {
                         singles.add(new_det);
                     }
                 }
@@ -456,13 +455,12 @@ void WFNOperator::add_singles(DeterminantMap& wfn) {
     wfn.merge(singles);
 }
 
-void WFNOperator::add_doubles(DeterminantMap& wfn) {
-    const det_hash<size_t>& wfn_map = wfn.wfn_hash();
+void WFNOperator::add_doubles(DeterminantHashVec& wfn) {
+    const det_hashvec& wfn_map = wfn.wfn_hash();
 
-    DeterminantMap external;
+    DeterminantHashVec external;
 
-    for (auto& I : wfn_map) {
-        STLBitsetDeterminant det = I.first;
+    for (STLBitsetDeterminant det : wfn_map) {
         std::vector<int> aocc = det.get_alfa_occ();
         std::vector<int> bocc = det.get_beta_occ();
         std::vector<int> avir = det.get_alfa_vir();
@@ -546,19 +544,19 @@ void WFNOperator::add_doubles(DeterminantMap& wfn) {
     wfn.merge(external);
 }
 
-void WFNOperator::build_strings(DeterminantMap& wfn) {
+void WFNOperator::build_strings(DeterminantHashVec& wfn) {
     beta_strings_.clear();
     alpha_strings_.clear();
     alpha_a_strings_.clear();
 
     // First build a map from beta strings to determinants
-    const det_hash<size_t>& wfn_map = wfn.wfn_hash();
+    const det_hashvec& wfn_map = wfn.wfn_hash();
     {
         det_hash<size_t> beta_str_hash;
         size_t nbeta = 0;
-        for (auto& I : wfn_map) {
+        for (size_t I = 0, max_I = wfn_map.size(); I < max_I; ++I) {
             // Grab mutable copy of determinant
-            STLBitsetDeterminant detI = I.first;
+            STLBitsetDeterminant detI = wfn_map[I];
             detI.zero_spin(0);
 
             det_hash<size_t>::iterator it = beta_str_hash.find(detI);
@@ -571,16 +569,16 @@ void WFNOperator::build_strings(DeterminantMap& wfn) {
                 b_add = it->second;
             }
             beta_strings_.resize(nbeta);
-            beta_strings_[b_add].push_back(I.second);
+            beta_strings_[b_add].push_back(I);
         }
     }
 
     {
         det_hash<size_t> alfa_str_hash;
         size_t nalfa = 0;
-        for (auto& I : wfn_map) {
+        for (size_t I = 0, max_I = wfn_map.size(); I < max_I; ++I) {
             // Grab mutable copy of determinant
-            STLBitsetDeterminant detI = I.first;
+            STLBitsetDeterminant detI = wfn_map[I];
             detI.zero_spin(1);
 
             det_hash<size_t>::iterator it = alfa_str_hash.find(detI);
@@ -593,15 +591,15 @@ void WFNOperator::build_strings(DeterminantMap& wfn) {
                 a_add = it->second;
             }
             alpha_strings_.resize(nalfa);
-            alpha_strings_[a_add].push_back(I.second);
+            alpha_strings_[a_add].push_back(I);
         }
     }
     // Next build a map from annihilated alpha strings to determinants
     det_hash<size_t> alfa_str_hash;
     size_t naalpha = 0;
-    for (auto& I : wfn_map) {
+    for (size_t I = 0, max_I = wfn_map.size(); I < max_I; ++I) {
         // Grab mutable copy of determinant
-        STLBitsetDeterminant detI = I.first;
+        STLBitsetDeterminant detI = wfn_map[I];
         detI.zero_spin(1);
         const std::vector<int>& aocc = detI.get_alfa_occ();
         for (int i = 0, nalfa = aocc.size(); i < nalfa; ++i) {
@@ -619,12 +617,12 @@ void WFNOperator::build_strings(DeterminantMap& wfn) {
                 a_add = it->second;
             }
             alpha_a_strings_.resize(naalpha);
-            alpha_a_strings_[a_add].push_back(std::make_pair(ii, I.second));
+            alpha_a_strings_[a_add].push_back(std::make_pair(ii, I));
         }
     }
 }
 
-void WFNOperator::op_s_lists(DeterminantMap& wfn) {
+void WFNOperator::op_s_lists(DeterminantHashVec& wfn) {
 
     // Get a reference to the determinants
     const std::vector<STLBitsetDeterminant>& dets = wfn.determinants();
@@ -712,7 +710,7 @@ void WFNOperator::op_s_lists(DeterminantMap& wfn) {
     }
 }
 
-void WFNOperator::op_lists(DeterminantMap& wfn) {
+void WFNOperator::op_lists(DeterminantHashVec& wfn) {
     size_t ndets = wfn.size();
     a_ann_list_.resize(ndets);
     b_ann_list_.resize(ndets);
@@ -822,7 +820,7 @@ void WFNOperator::op_lists(DeterminantMap& wfn) {
     b_cre_list_.shrink_to_fit();
 }
 
-void WFNOperator::tp_s_lists(DeterminantMap& wfn) {
+void WFNOperator::tp_s_lists(DeterminantHashVec& wfn) {
 
     const std::vector<STLBitsetDeterminant>& dets = wfn.determinants();
     // Generate alpha-alpha coupling list
@@ -986,7 +984,7 @@ void WFNOperator::tp_s_lists(DeterminantMap& wfn) {
     }
 }
 
-void WFNOperator::tp_lists(DeterminantMap& wfn) {
+void WFNOperator::tp_lists(DeterminantHashVec& wfn) {
 
     size_t ndets = wfn.size();
     aa_ann_list_.resize(ndets);
@@ -1204,7 +1202,7 @@ void WFNOperator::clear_tp_s_lists() {
     ab_list_.clear();
 }
 
-void WFNOperator::three_s_lists(DeterminantMap& wfn) {
+void WFNOperator::three_s_lists(DeterminantHashVec& wfn) {
 
     size_t ndets = wfn.size();
     const std::vector<STLBitsetDeterminant>& dets = wfn.determinants();
@@ -1267,13 +1265,13 @@ void WFNOperator::three_s_lists(DeterminantMap& wfn) {
     /// AAB coupling
     {
         // We need the beta-1 list:
-        const det_hash<size_t>& wfn_map = wfn.wfn_hash();
+        const det_hashvec& wfn_map = wfn.wfn_hash();
         std::vector<std::vector<std::pair<int, size_t>>> beta_string;
         det_hash<size_t> beta_str_hash;
         size_t nabeta = 0;
-        for (auto& I : wfn_map) {
+        for (size_t I = 0, max_I = wfn_map.size(); I < max_I; ++I) {
             // Grab mutable copy of determinant
-            STLBitsetDeterminant detI = I.first;
+            STLBitsetDeterminant detI = wfn_map[I];
             detI.zero_spin(0);
             std::vector<int> bocc = detI.get_beta_occ();
             for (int i = 0, nbeta = bocc.size(); i < nbeta; ++i) {
@@ -1291,7 +1289,7 @@ void WFNOperator::three_s_lists(DeterminantMap& wfn) {
                     b_add = it->second;
                 }
                 beta_string.resize(nabeta);
-                beta_string[b_add].push_back(std::make_pair(ii, I.second));
+                beta_string[b_add].push_back(std::make_pair(ii, I));
             }
         }
         size_t naab_ann = 0;
@@ -1465,7 +1463,7 @@ void WFNOperator::three_s_lists(DeterminantMap& wfn) {
     }
 }
 
-void WFNOperator::three_lists(DeterminantMap& wfn) {
+void WFNOperator::three_lists(DeterminantHashVec& wfn) {
     size_t ndets = wfn.size();
     const std::vector<STLBitsetDeterminant>& dets = wfn.determinants();
     /// Compute aaa coupling
@@ -1530,13 +1528,13 @@ void WFNOperator::three_lists(DeterminantMap& wfn) {
     /// AAB coupling
     {
         // We need the beta-1 list:
-        const det_hash<size_t>& wfn_map = wfn.wfn_hash();
+        const det_hashvec& wfn_map = wfn.wfn_hash();
         std::vector<std::vector<std::pair<int, size_t>>> beta_string;
         det_hash<size_t> beta_str_hash;
         size_t nabeta = 0;
-        for (auto& I : wfn_map) {
+        for (size_t I = 0, max_I = wfn_map.size(); I < max_I; ++I) {
             // Grab mutable copy of determinant
-            STLBitsetDeterminant detI = I.first;
+            STLBitsetDeterminant detI = wfn_map[I];
             detI.zero_spin(0);
             std::vector<int> bocc = detI.get_beta_occ();
             for (int i = 0, nbeta = bocc.size(); i < nbeta; ++i) {
@@ -1554,7 +1552,7 @@ void WFNOperator::three_lists(DeterminantMap& wfn) {
                     b_add = it->second;
                 }
                 beta_string.resize(nabeta);
-                beta_string[b_add].push_back(std::make_pair(ii, I.second));
+                beta_string[b_add].push_back(std::make_pair(ii, I));
             }
         }
         aab_ann_list_.resize(ndets);

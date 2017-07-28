@@ -122,10 +122,8 @@ class STLBitsetString {
 
 using string_vec = std::vector<STLBitsetString>;
 template <typename T = double>
-using string_hash =
-    std::unordered_map<STLBitsetString, T, STLBitsetString::Hash>;
-using string_hash_it = std::unordered_map<STLBitsetString, double,
-                                          STLBitsetString::Hash>::iterator;
+using string_hash = std::unordered_map<STLBitsetString, T, STLBitsetString::Hash>;
+using string_hash_it = std::unordered_map<STLBitsetString, double, STLBitsetString::Hash>::iterator;
 }
 } // End Namespaces
 

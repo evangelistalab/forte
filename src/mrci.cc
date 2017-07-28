@@ -38,7 +38,7 @@ namespace psi {
 namespace forte {
 
 MRCI::MRCI(SharedWavefunction ref_wfn, Options& options, std::shared_ptr<ForteIntegrals> ints,
-           std::shared_ptr<MOSpaceInfo> mo_space_info, DeterminantMap& reference)
+           std::shared_ptr<MOSpaceInfo> mo_space_info, DeterminantHashVec& reference)
     : Wavefunction(options), ints_(ints), mo_space_info_(mo_space_info), reference_(reference) {
     shallow_copy(ref_wfn);
     print_method_banner({"Uncontracted MR-CISD", "Jeff Schriber"});
@@ -134,7 +134,7 @@ void MRCI::get_excited_determinants() {
 
     auto external_mo = mo_space_info_->get_corr_abs_mo("RESTRICTED_UOCC");
 
-    DeterminantMap external;
+    DeterminantHashVec external;
     external.clear();
 
     int n_ext = external_mo.size();

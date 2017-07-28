@@ -49,9 +49,7 @@ class SA_FCISolver {
 
     Reference reference() { return sa_ref_; }
 
-    void set_integral_pointer(std::shared_ptr<FCIIntegrals> fci_ints) {
-        fci_ints_ = fci_ints;
-    }
+    void set_integral_pointer(std::shared_ptr<FCIIntegrals> fci_ints) { fci_ints_ = fci_ints; }
 
     void set_mo_space_info(std::shared_ptr<MOSpaceInfo> mo_space_info) {
         mo_space_info_ = mo_space_info;
@@ -59,9 +57,7 @@ class SA_FCISolver {
 
     void set_integrals(std::shared_ptr<ForteIntegrals> ints) { ints_ = ints; }
 
-    std::vector<std::shared_ptr<FCIWfn>> StateAveragedCISolution() {
-        return SA_C_;
-    }
+    std::vector<std::shared_ptr<FCIWfn>> StateAveragedCISolution() { return SA_C_; }
 
   private:
     /// Options from Psi4

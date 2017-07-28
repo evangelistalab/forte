@@ -367,7 +367,7 @@ template <class Key, class Hash> void HashVector<Key, Hash>::erase_by_key(const 
 }
 
 template <class Key, class Hash> void HashVector<Key, Hash>::erase_by_index(size_t index) {
-    return erase_by_key(this->operator [](index));
+    return erase_by_key(this->operator[](index));
 }
 
 template <class Key, class Hash> void HashVector<Key, Hash>::erase_by_key(std::vector<Key> keys) {
@@ -435,7 +435,8 @@ void HashVector<Key, Hash>::erase_by_index(std::vector<size_t> indices) {
     std::sort(indices.begin(), indices.end());
     for (size_t i : indices) {
         size_t key_bucket_index, key_pre_index, key_index;
-        std::tie(key_bucket_index, key_pre_index, key_index) = find_detail_by_key(this->operator [](i));
+        std::tie(key_bucket_index, key_pre_index, key_index) =
+            find_detail_by_key(this->operator[](i));
         if (key_index == npos)
             continue;
         if (key_pre_index == npos) {
@@ -523,7 +524,7 @@ std::pair<size_t, size_t> HashVector<Key, Hash>::erase_by_key_move_last(const Ke
 
 template <class Key, class Hash>
 std::pair<size_t, size_t> HashVector<Key, Hash>::erase_by_index_move_last(size_t index) {
-    return erase_by_key_move_last(this->operator [](index));
+    return erase_by_key_move_last(this->operator[](index));
 }
 
 template <class Key, class Hash>

@@ -150,10 +150,8 @@ class SOMRDSRG : public Wavefunction {
     ambit::BlockedTensor C2;
     ambit::BlockedTensor O1;
     ambit::BlockedTensor O2;
-    ambit::BlockedTensor
-        RExp1; // < one-particle exponential for renormalized Fock matrix
-    ambit::BlockedTensor
-        RExp2; // < two-particle exponential for renormalized integral
+    ambit::BlockedTensor RExp1; // < one-particle exponential for renormalized Fock matrix
+    ambit::BlockedTensor RExp2; // < two-particle exponential for renormalized integral
     ambit::BlockedTensor Hbar1; // < one-body term of effective Hamiltonian
     ambit::BlockedTensor Hbar2; // < two-body term of effective Hamiltonian
 
@@ -172,11 +170,9 @@ class SOMRDSRG : public Wavefunction {
     /// Compute Hbar
     double compute_hbar();
     /// Compute the commutator H <- [C,T]
-    void H_eq_commutator_C_T(double factor, ambit::BlockedTensor& F,
-                             ambit::BlockedTensor& V, ambit::BlockedTensor& T1,
-                             ambit::BlockedTensor& T2, double& H0,
-                             ambit::BlockedTensor& H1, ambit::BlockedTensor& H2,
-                             int order);
+    void H_eq_commutator_C_T(double factor, ambit::BlockedTensor& F, ambit::BlockedTensor& V,
+                             ambit::BlockedTensor& T1, ambit::BlockedTensor& T2, double& H0,
+                             ambit::BlockedTensor& H1, ambit::BlockedTensor& H2, int order);
 
     /// T1 amplitude update
     void update_T1();
@@ -208,8 +204,7 @@ class SOMRDSRG : public Wavefunction {
     // => Constructors <= //
 
     SOMRDSRG(Reference reference, SharedWavefunction ref_wfn, Options& options,
-             std::shared_ptr<ForteIntegrals> ints,
-             std::shared_ptr<MOSpaceInfo> mo_space_info);
+             std::shared_ptr<ForteIntegrals> ints, std::shared_ptr<MOSpaceInfo> mo_space_info);
 
     ~SOMRDSRG();
 
