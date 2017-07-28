@@ -83,10 +83,13 @@ template <class Key, class Hash = std::hash<Key>> class HashVector {
     void erase_by_index(std::vector<size_t> indices);
     std::pair<size_t, size_t> erase_by_key_move_last(const Key& key);
     std::pair<size_t, size_t> erase_by_index_move_last(size_t index);
+    void swap(HashVector<Key, Hash>& other);
+
+    /*- Operations -*/
     template <class Hash_2> std::vector<size_t> merge(const HashVector<Key, Hash_2>& source);
     std::vector<size_t> merge(const std::vector<Key>& source);
     template <class Hash_2> void merge(const std::unordered_set<Key, Hash_2>& source);
-    void swap(HashVector<Key, Hash>& other);
+    void map_order(const std::vector<size_t>& index_map);
 
     /*- Bucket interface -*/
     size_t bucket_count() const;
@@ -527,6 +530,15 @@ std::pair<size_t, size_t> HashVector<Key, Hash>::erase_by_index_move_last(size_t
     return erase_by_key_move_last(this->operator[](index));
 }
 
+template <class Key, class Hash> void HashVector<Key, Hash>::swap(HashVector<Key, Hash>& other) {
+    vec.swap(other.vec);
+    begin_index.swap(other.begin_index);
+    std::swap(this->max_load, other.max_load);
+    std::swap(this->current_max_load_size, other.current_max_load_size);
+    std::swap(this->num_bucket, other.num_bucket);
+    std::swap(this->current_size, other.current_size);
+}
+
 template <class Key, class Hash>
 template <class Hash_2>
 std::vector<size_t> HashVector<Key, Hash>::merge(const HashVector<Key, Hash_2>& source) {
@@ -558,13 +570,21 @@ void HashVector<Key, Hash>::merge(const std::unordered_set<Key, Hash_2>& source)
     }
 }
 
-template <class Key, class Hash> void HashVector<Key, Hash>::swap(HashVector<Key, Hash>& other) {
-    vec.swap(other.vec);
-    begin_index.swap(other.begin_index);
-    std::swap(this->max_load, other.max_load);
-    std::swap(this->current_max_load_size, other.current_max_load_size);
-    std::swap(this->num_bucket, other.num_bucket);
-    std::swap(this->current_size, other.current_size);
+template <class Key, class Hash>
+void HashVector<Key, Hash>::map_order(const std::vector<size_t>& index_map) {
+    std::vector<CINode<Key>> new_vec;
+    new_vec.reserve(this->vec.capacity());
+    new_vec.resize(current_size);
+    for (size_t i = 0; i < current_size; ++i) {
+        new_vec[index_map[i]] = std::move(this->vec[i]);
+    }
+    this->vec = std::move(new_vec);
+    for (size_t i = 0; i < num_bucket; ++i) {
+        begin_index[i] = begin_index[i] == npos ? npos : index_map[begin_index[i]];
+    }
+    for (size_t i = 0; i < current_size; ++i) {
+        vec[i].next = vec[i].next == npos ? npos : index_map[vec[i].next];
+    }
 }
 
 template <class Key, class Hash> size_t HashVector<Key, Hash>::bucket_count() const {
