@@ -32,6 +32,7 @@
 #include <functional>
 #include <tuple>
 #include <unordered_map>
+#include <utility>
 
 #include "../mini-boost/boost/format.hpp"
 #include "../mini-boost/boost/math/special_functions/bessel.hpp"
@@ -593,7 +594,7 @@ double ElementwiseCI::compute_energy() {
     outfile->Printf("\n\t              Element wise Configuration Interaction"
                     "implementation");
     outfile->Printf("\n\t         by Francesco A. Evangelista and Tianyuan Zhang");
-    outfile->Printf("\n\t                      version Jul. 25 2017");
+    outfile->Printf("\n\t                      version Jul. 27 2017");
     outfile->Printf("\n\t                    %4d thread(s) %s", num_threads_,
                     have_omp_ ? "(OMP)" : "");
     outfile->Printf("\n\t  ---------------------------------------------------------");
@@ -854,8 +855,21 @@ double ElementwiseCI::compute_energy() {
         SharedMatrix apfci_evecs(new Matrix("Eigenvectors", C.size(), nroot_));
         SharedVector apfci_evals(new Vector("Eigenvalues", nroot_));
 
-        sparse_solver.diagonalize_hamiltonian(dets_hashvec.toVector(), apfci_evals, apfci_evecs,
-                                              nroot_, wavefunction_multiplicity_, diag_method_);
+        WFNOperator op(mo_symmetry_, fci_ints_);
+        DeterminantHashVec det_map(std::move(dets_hashvec));
+        op.build_strings(det_map);
+        op.op_s_lists(det_map);
+        op.tp_s_lists(det_map);
+
+        // set options
+        sparse_solver.set_sigma_method("SPARSE");
+        sparse_solver.set_e_convergence(e_convergence_);
+        sparse_solver.set_spin_project(true);
+        sparse_solver.set_spin_project_full(false);
+
+        sparse_solver.diagonalize_hamiltonian_map(det_map, op, apfci_evals, apfci_evecs, nroot_,
+                                                  wavefunction_multiplicity_, diag_method_);
+        det_map.swap(dets_hashvec);
 
         timer_off("EWCI:Post_Diag");
 
@@ -1253,27 +1267,54 @@ void ElementwiseCI::apply_tau_H_symm(double tau, double spawning_threshold, det_
 
 #pragma omp parallel for
     for (size_t I = 0; I < ref_size; ++I) {
+        std::pair<double, double> max_coupling;
         size_t current_rank = omp_get_thread_num();
-        std::pair<double, double>& max_coupling = dets_max_couplings_[ref_dets[I]];
-        thread_det_C_vecs[current_rank].clear();
-        thread_index_C_vecs[current_rank].clear();
-        apply_tau_H_symm_det_dynamic_HBCI_2(tau, spawning_threshold, ref_dets, ref_C, I,
-                                            ref_C[I], thread_index_C_vecs[current_rank],
-                                            thread_det_C_vecs[current_rank], S, max_coupling);
+#pragma omp critical(dets_coupling)
+        { max_coupling = dets_max_couplings_[ref_dets[I]]; }
+        if (max_coupling.first == 0.0 or max_coupling.second == 0.0) {
+            thread_det_C_vecs[current_rank].clear();
+            thread_index_C_vecs[current_rank].clear();
+            apply_tau_H_symm_det_dynamic_HBCI_2(tau, spawning_threshold, ref_dets, ref_C, I,
+                                                ref_C[I], thread_index_C_vecs[current_rank],
+                                                thread_det_C_vecs[current_rank], S, max_coupling);
 #pragma omp critical(overlap_dets)
-        {
-            for (const std::pair<size_t, double>& p : thread_index_C_vecs[current_rank]) {
-                if (std::isnan(result_C[p.first])) {
-                    result_C[p.first] = p.second;
-                } else {
-                    result_C[p.first] += p.second;
+            {
+                for (const std::pair<size_t, double>& p : thread_index_C_vecs[current_rank]) {
+                    if (std::isnan(result_C[p.first])) {
+                        result_C[p.first] = p.second;
+                    } else {
+                        result_C[p.first] += p.second;
+                    }
                 }
             }
-        }
 #pragma omp critical(merge_extra)
-        {
-            merge(extra_dets, extra_C, thread_det_C_vecs[current_rank],
-                  std::function<double(double, double)>(std::plus<double>()), 0.0, false);
+            {
+                merge(extra_dets, extra_C, thread_det_C_vecs[current_rank],
+                      std::function<double(double, double)>(std::plus<double>()), 0.0, false);
+            }
+#pragma omp critical(dets_coupling)
+            { dets_max_couplings_[ref_dets[I]] = max_coupling; }
+        } else {
+            thread_det_C_vecs[current_rank].clear();
+            thread_index_C_vecs[current_rank].clear();
+            apply_tau_H_symm_det_dynamic_HBCI_2(tau, spawning_threshold, ref_dets, ref_C, I,
+                                                ref_C[I], thread_index_C_vecs[current_rank],
+                                                thread_det_C_vecs[current_rank], S, max_coupling);
+#pragma omp critical(overlap_dets)
+            {
+                for (const std::pair<size_t, double>& p : thread_index_C_vecs[current_rank]) {
+                    if (std::isnan(result_C[p.first])) {
+                        result_C[p.first] = p.second;
+                    } else {
+                        result_C[p.first] += p.second;
+                    }
+                }
+            }
+#pragma omp critical(merge_extra)
+            {
+                merge(extra_dets, extra_C, thread_det_C_vecs[current_rank],
+                      std::function<double(double, double)>(std::plus<double>()), 0.0, false);
+            }
         }
     }
 
@@ -2193,7 +2234,7 @@ double ElementwiseCI::estimate_proj_energy(const det_hashvec& dets_hashvec,
     // Compute the projective energy
     double projective_energy_estimator = 0.0;
     for (int I = 0, max_I = dets_hashvec.size(); I < max_I; ++I) {
-        double HIJ = fci_ints_->slater_rules(dets_hashvec[J], dets_hashvec[J]);
+        double HIJ = fci_ints_->slater_rules(dets_hashvec[I], dets_hashvec[J]);
         projective_energy_estimator += HIJ * C[I] / CJ;
     }
     return projective_energy_estimator + nuclear_repulsion_energy_ + fci_ints_->scalar_energy();
@@ -2282,7 +2323,7 @@ double ElementwiseCI::estimate_var_energy_within_error_sigma(const det_hashvec& 
     WFNOperator op(mo_symmetry_, fci_ints_);
     std::vector<Determinant> sub_dets = dets_hashvec.toVector();
     sub_dets.erase(sub_dets.begin() + cut_index + 1, sub_dets.end());
-    DeterminantMap det_map(sub_dets);
+    DeterminantHashVec det_map(sub_dets);
     op.build_strings(det_map);
     op.op_s_lists(det_map);
     op.tp_s_lists(det_map);

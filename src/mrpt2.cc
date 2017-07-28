@@ -51,7 +51,7 @@ void set_PT2_options(ForteOptions& foptions) {
 }
 
 MRPT2::MRPT2(SharedWavefunction ref_wfn, Options& options, std::shared_ptr<ForteIntegrals> ints,
-             std::shared_ptr<MOSpaceInfo> mo_space_info, DeterminantMap& reference,
+             std::shared_ptr<MOSpaceInfo> mo_space_info, DeterminantHashVec& reference,
              SharedMatrix evecs, SharedVector evals)
     : Wavefunction(options), ints_(ints), mo_space_info_(mo_space_info), reference_(reference),
       evecs_(evecs), evals_(evals) {
@@ -144,7 +144,7 @@ double MRPT2::energy_kernel(int bin, int nbin) {
     double E_0 = evals_->get(0);
     double energy = 0.0;
     const size_t n_dets = reference_.size();
-    const std::vector<STLBitsetDeterminant>& dets = reference_.determinants();
+    const det_hashvec& dets = reference_.wfn_hash();
     det_hash<double> A_I;
     for (size_t I = 0; I < n_dets; ++I) {
         double c_I = evecs_->get(I, 0);

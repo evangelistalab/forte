@@ -40,8 +40,6 @@
 
 #define Delta(i, j) ((i == j) ? 1 : 0)
 
-
-
 namespace psi {
 namespace forte {
 
@@ -807,7 +805,8 @@ void MCSRGPT2_MO::Check_T2(const string& x, const d4& M, double& Norm, double& M
     int ntamp = options.get_int("NTAMP");
     double intruder = options.get_double("INTRUDER_TAMP");
     std::vector<std::tuple<double, size_t, size_t, size_t, size_t>> Max;
-    std::vector<std::tuple<double, size_t, size_t, size_t, size_t>> Large(ntamp, std::make_tuple(0.0, 0, 0, 0, 0));
+    std::vector<std::tuple<double, size_t, size_t, size_t, size_t>> Large(
+        ntamp, std::make_tuple(0.0, 0, 0, 0, 0));
     double value = 0.0;
     size_t count = 0;
     for (size_t i = 0; i < nh_; ++i) {
@@ -857,8 +856,9 @@ void MCSRGPT2_MO::Check_T2(const string& x, const d4& M, double& Norm, double& M
     for (size_t n = 0; n != ntamp; ++n) {
         if (n % 3 == 0)
             outfile->Printf("\n  ");
-        outfile->Printf("[%3zu %3zu %3zu %3zu] %8.5f ", std::get<1>(Large[n]), std::get<2>(Large[n]),
-                        std::get<3>(Large[n]), std::get<4>(Large[n]), std::get<0>(Large[n]));
+        outfile->Printf("[%3zu %3zu %3zu %3zu] %8.5f ", std::get<1>(Large[n]),
+                        std::get<2>(Large[n]), std::get<3>(Large[n]), std::get<4>(Large[n]),
+                        std::get<0>(Large[n]));
     }
     outfile->Printf("\n  "
                     "----------------------------------------------------------"
@@ -951,8 +951,8 @@ void MCSRGPT2_MO::Check_T1(const string& x, const d2& M, double& Norm, double& M
     for (size_t n = 0; n != ntamp; ++n) {
         if (n % 3 == 0)
             outfile->Printf("\n  ");
-        outfile->Printf("[%3zu %3c %3zu %3c] %8.5f ", std::get<1>(Large[n]), ' ', std::get<2>(Large[n]), ' ',
-                        std::get<0>(Large[n]));
+        outfile->Printf("[%3zu %3c %3zu %3c] %8.5f ", std::get<1>(Large[n]), ' ',
+                        std::get<2>(Large[n]), ' ', std::get<0>(Large[n]));
     }
     outfile->Printf("\n  "
                     "----------------------------------------------------------"

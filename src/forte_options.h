@@ -46,8 +46,7 @@ using double_opt_t = std::tuple<std::string, double, std::string>;
 
 // For the string type stores:
 // ("label", default value, "description",vector<"allowed values">)
-using str_opt_t =
-    std::tuple<std::string, std::string, std::string, std::vector<std::string>>;
+using str_opt_t = std::tuple<std::string, std::string, std::string, std::vector<std::string>>;
 
 // For the attay type stores:
 // ("label", "description")
@@ -64,8 +63,7 @@ class ForteOptions {
      * @param value Default value of the option
      * @param description Description of the option
      */
-    void add_bool(const std::string& label, bool value,
-                  const std::string& description);
+    void add_bool(const std::string& label, bool value, const std::string& description);
 
     /**
      * @brief Add a integer option
@@ -73,8 +71,7 @@ class ForteOptions {
      * @param value Default value of the option
      * @param description Description of the option
      */
-    void add_int(const std::string& label, int value,
-                 const std::string& description);
+    void add_int(const std::string& label, int value, const std::string& description);
 
     /**
      * @brief Add a double option
@@ -82,8 +79,7 @@ class ForteOptions {
      * @param value Default value of the option
      * @param description Description of the option
      */
-    void add_double(const std::string& label, double value,
-                    const std::string& description);
+    void add_double(const std::string& label, double value, const std::string& description);
 
     /**
      * @brief Add a string option
@@ -102,8 +98,7 @@ class ForteOptions {
      * @param allowed_values An array of allowed option values
      */
     void add_str(const std::string& label, const std::string& value,
-                 const std::vector<std::string>& allowed_values,
-                 const std::string& description);
+                 const std::vector<std::string>& allowed_values, const std::string& description);
 
     /**
      * @brief Add an array option

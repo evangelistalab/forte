@@ -31,7 +31,7 @@
 
 #include "psi4/libpsi4util/process.h"
 #include "fci/fci_integrals.h"
-#include "determinant_map.h"
+#include "determinant_hashvector.h"
 #include "stl_bitset_determinant.h"
 
 namespace psi {
@@ -59,16 +59,16 @@ class WFNOperator {
     void set_quiet_mode(bool mode);
 
     /// Build the coupling lists for one-particle operators
-    void op_lists(DeterminantMap& wfn);
-    void op_s_lists(DeterminantMap& wfn);
+    void op_lists(DeterminantHashVec& wfn);
+    void op_s_lists(DeterminantHashVec& wfn);
 
     /// Build the coupling lists for two-particle operators
-    void tp_lists(DeterminantMap& wfn);
-    void tp_s_lists(DeterminantMap& wfn);
+    void tp_lists(DeterminantHashVec& wfn);
+    void tp_s_lists(DeterminantHashVec& wfn);
 
     /// Build the coupling lists for three-particle operators
-    void three_lists(DeterminantMap& wfn);
-    void three_s_lists(DeterminantMap& wfn);
+    void three_lists(DeterminantHashVec& wfn);
+    void three_s_lists(DeterminantHashVec& wfn);
 
     void clear_op_lists();
     void clear_tp_lists();
@@ -78,23 +78,23 @@ class WFNOperator {
     /*- Operators -*/
 
     /// Single excitations, a_p^(+) a_q|>
-    void add_singles(DeterminantMap& wfn);
+    void add_singles(DeterminantHashVec& wfn);
 
     /// Double excitations, a_p^(+) a_q^(+) a_r a_s|>
-    void add_doubles(DeterminantMap& wfn);
+    void add_doubles(DeterminantHashVec& wfn);
 
     /// Compute total spin expectation value <|S^2|>
-    double s2(DeterminantMap& wfn, SharedMatrix& evecs, int root);
+    double s2(DeterminantHashVec& wfn, SharedMatrix& evecs, int root);
 
-    void build_strings(DeterminantMap& wfn);
+    void build_strings(DeterminantHashVec& wfn);
 
     /// Build the sparse Hamiltonian
     std::vector<std::pair<std::vector<size_t>, std::vector<double>>>
-    build_H_sparse(const DeterminantMap& wfn);
+    build_H_sparse(const DeterminantHashVec& wfn);
 
     /// Build the sparse Hamiltonian -v2
     std::vector<std::pair<std::vector<size_t>, std::vector<double>>>
-    build_H_sparse2(const DeterminantMap& wfn);
+    build_H_sparse2(const DeterminantHashVec& wfn);
 
     std::vector<std::vector<std::pair<size_t, short>>> a_list_;
     std::vector<std::vector<std::pair<size_t, short>>> b_list_;

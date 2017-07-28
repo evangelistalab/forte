@@ -57,7 +57,7 @@ namespace forte {
 #endif
 
 #ifdef HAVE_MPI
-SigmaVectorMPI::SigmaVectorMPI(const DeterminantMap& space, WFNOperator& op)
+SigmaVectorMPI::SigmaVectorMPI(const DeterminantHashVec& space, WFNOperator& op)
     : SigmaVector(space.size()), space_(space) {}
 
 void SigmaVectorMPI::compute_sigma(SharedVector sigma, SharedVector b) {}
@@ -532,18 +532,17 @@ void SigmaVectorList::get_diagonal(Vector& diag) {
     }
 }
 
-SigmaVectorWfn1::SigmaVectorWfn1(const DeterminantMap& space, WFNOperator& op,
+SigmaVectorWfn1::SigmaVectorWfn1(const DeterminantHashVec& space, WFNOperator& op,
                                  std::shared_ptr<FCIIntegrals> fci_ints)
     : SigmaVector(space.size()), space_(space), a_ann_list_(op.a_ann_list_), fci_ints_(fci_ints),
       a_cre_list_(op.a_cre_list_), b_ann_list_(op.b_ann_list_), b_cre_list_(op.b_cre_list_),
       aa_ann_list_(op.aa_ann_list_), aa_cre_list_(op.aa_cre_list_), ab_ann_list_(op.ab_ann_list_),
       ab_cre_list_(op.ab_cre_list_), bb_ann_list_(op.bb_ann_list_), bb_cre_list_(op.bb_cre_list_) {
 
-    det_hash<size_t> detmap = space_.wfn_hash();
+    const det_hashvec& detmap = space_.wfn_hash();
     diag_.resize(space_.size());
-    for (det_hash<size_t>::const_iterator it = detmap.begin(), endit = detmap.end(); it != endit;
-         ++it) {
-        diag_[it->second] = fci_ints_->energy(it->first);
+    for (size_t I = 0, max_I = detmap.size(); I < max_I; ++I) {
+        diag_[I] = fci_ints_->energy(detmap[I]);
     }
 }
 
@@ -604,7 +603,7 @@ void SigmaVectorWfn1::compute_sigma(SharedVector sigma, SharedVector b) {
         size_t end_idx = start_idx + bin_size;
         // Timer cycl;
         {
-            const std::vector<STLBitsetDeterminant>& dets = space_.determinants();
+            const det_hashvec& dets = space_.wfn_hash();
             for (size_t J = start_idx; J < end_idx; ++J) {
                 // reference
                 sigma_p[J] += diag_[J] * b_p[J];
@@ -703,16 +702,15 @@ void SigmaVectorWfn1::compute_sigma(SharedVector sigma, SharedVector b) {
     }
 }
 
-SigmaVectorWfn2::SigmaVectorWfn2(const DeterminantMap& space, WFNOperator& op,
+SigmaVectorWfn2::SigmaVectorWfn2(const DeterminantHashVec& space, WFNOperator& op,
                                  std::shared_ptr<FCIIntegrals> fci_ints)
     : SigmaVector(space.size()), space_(space), fci_ints_(fci_ints), a_list_(op.a_list_),
       b_list_(op.b_list_), aa_list_(op.aa_list_), ab_list_(op.ab_list_), bb_list_(op.bb_list_) {
 
-    det_hash<size_t> detmap = space_.wfn_hash();
+    const det_hashvec& detmap = space_.wfn_hash();
     diag_.resize(space_.size());
-    for (det_hash<size_t>::const_iterator it = detmap.begin(), endit = detmap.end(); it != endit;
-         ++it) {
-        diag_[it->second] = fci_ints_->energy(it->first);
+    for (size_t I = 0, max_I = detmap.size(); I < max_I; ++I) {
+        diag_[I] = fci_ints_->energy(detmap[I]);
     }
 }
 
@@ -761,7 +759,7 @@ void SigmaVectorWfn2::compute_sigma(SharedVector sigma, SharedVector b) {
             }
         }
     }
-    const std::vector<STLBitsetDeterminant>& dets = space_.determinants();
+    const det_hashvec& dets = space_.wfn_hash();
 
 #pragma omp parallel
     {
@@ -919,16 +917,15 @@ void SigmaVectorWfn2::compute_sigma(SharedVector sigma, SharedVector b) {
     }
 }
 
-SigmaVectorWfn3::SigmaVectorWfn3(const DeterminantMap& space, WFNOperator& op,
+SigmaVectorWfn3::SigmaVectorWfn3(const DeterminantHashVec& space, WFNOperator& op,
                                  std::shared_ptr<FCIIntegrals> fci_ints)
     : SigmaVector(space.size()), space_(space), fci_ints_(fci_ints), a_list_(op.a_list_),
       b_list_(op.b_list_), aa_list_(op.aa_list_), ab_list_(op.ab_list_), bb_list_(op.bb_list_) {
 
-    det_hash<size_t> detmap = space_.wfn_hash();
+    const det_hashvec& detmap = space_.wfn_hash();
     diag_.resize(space_.size());
-    for (det_hash<size_t>::const_iterator it = detmap.begin(), endit = detmap.end(); it != endit;
-         ++it) {
-        diag_[it->second] = fci_ints_->energy(it->first);
+    for (size_t I = 0, max_I = detmap.size(); I < max_I; ++I) {
+        diag_[I] = fci_ints_->energy(detmap[I]);
     }
 
     size_t nact = fci_ints_->nmo();
@@ -1036,7 +1033,7 @@ void SigmaVectorWfn3::compute_sigma(SharedVector sigma, SharedVector b) {
     }
 
     // Each thread gets local copy of sigma
-    const std::vector<STLBitsetDeterminant>& dets = space_.determinants();
+    const det_hashvec& dets = space_.wfn_hash();
 
     // a singles
     size_t end_a_idx = a_list_.size();
@@ -1222,7 +1219,7 @@ void SparseCISolver::diagonalize_hamiltonian(const std::vector<STLBitsetDetermin
     }
 }
 
-void SparseCISolver::diagonalize_hamiltonian_map(const DeterminantMap& space, WFNOperator& op,
+void SparseCISolver::diagonalize_hamiltonian_map(const DeterminantHashVec& space, WFNOperator& op,
                                                  SharedVector& evals, SharedMatrix& evecs,
                                                  int nroot, int multiplicity,
                                                  DiagonalizationMethod diag_method) {
@@ -1238,7 +1235,7 @@ void SparseCISolver::diagonalize_hamiltonian_map(const DeterminantMap& space, WF
     }
 }
 #ifdef HAVE_MPI
-void SparseCISolver::diagonalize_mpi(const DeterminantMap& space, WFNOperator& op,
+void SparseCISolver::diagonalize_mpi(const DeterminantHashVec& space, WFNOperator& op,
                                      SharedVector& evals, SharedMatrix& evecs, int nroot,
                                      int multiplicity) {
 
@@ -1257,7 +1254,7 @@ void SparseCISolver::diagonalize_mpi(const DeterminantMap& space, WFNOperator& o
 }
 #endif
 
-void SparseCISolver::diagonalize_dl(const DeterminantMap& space, WFNOperator& op,
+void SparseCISolver::diagonalize_dl(const DeterminantHashVec& space, WFNOperator& op,
                                     SharedVector& evals, SharedMatrix& evecs, int nroot,
                                     int multiplicity) {
     if (print_details_) {
@@ -1654,7 +1651,7 @@ SparseCISolver::initial_guess(const std::vector<STLBitsetDeterminant>& space, in
 }
 
 std::vector<std::pair<double, std::vector<std::pair<size_t, double>>>>
-SparseCISolver::initial_guess_map(const DeterminantMap& space, int nroot, int multiplicity) {
+SparseCISolver::initial_guess_map(const DeterminantHashVec& space, int nroot, int multiplicity) {
     size_t ndets = space.size();
     size_t nguess = std::min(static_cast<size_t>(nroot) * dl_guess_, ndets);
     std::vector<std::pair<double, std::vector<std::pair<size_t, double>>>> guess(nguess);
@@ -1662,11 +1659,9 @@ SparseCISolver::initial_guess_map(const DeterminantMap& space, int nroot, int mu
     // Find the ntrial lowest diagonals
     std::vector<std::pair<STLBitsetDeterminant, size_t>> guess_dets_pos;
     std::vector<std::pair<double, STLBitsetDeterminant>> smallest;
-    const det_hash<size_t>& detmap = space.wfn_hash();
+    const det_hashvec& detmap = space.wfn_hash();
 
-    for (det_hash<size_t>::const_iterator it = detmap.begin(), endit = detmap.end(); it != endit;
-         ++it) {
-        STLBitsetDeterminant det = it->first;
+    for (STLBitsetDeterminant det : detmap) {
         smallest.push_back(std::make_pair(fci_ints_->energy(det), det));
     }
     std::sort(smallest.begin(), smallest.end());
@@ -1957,9 +1952,10 @@ bool SparseCISolver::davidson_liu_solver(const std::vector<STLBitsetDeterminant>
     return true;
 }
 
-bool SparseCISolver::davidson_liu_solver_map(const DeterminantMap& space, SigmaVector* sigma_vector,
-                                             SharedVector Eigenvalues, SharedMatrix Eigenvectors,
-                                             int nroot, int multiplicity) {
+bool SparseCISolver::davidson_liu_solver_map(const DeterminantHashVec& space,
+                                             SigmaVector* sigma_vector, SharedVector Eigenvalues,
+                                             SharedMatrix Eigenvectors, int nroot,
+                                             int multiplicity) {
     //    print_details_ = true;
     Timer dl;
     size_t fci_size = sigma_vector->size();
@@ -2165,7 +2161,7 @@ void SigmaVectorSparse::add_bad_roots(std::vector<std::vector<std::pair<size_t, 
     }
 }
 
-void SparseCISolver::diagonalize_dl_sparse(const DeterminantMap& space, WFNOperator& op,
+void SparseCISolver::diagonalize_dl_sparse(const DeterminantHashVec& space, WFNOperator& op,
                                            SharedVector& evals, SharedMatrix& evecs, int nroot,
                                            int multiplicity) {
     outfile->Printf("\n\n  Davidson-liu sparse algorithm");

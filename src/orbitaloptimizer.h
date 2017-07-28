@@ -90,9 +90,8 @@ class OrbitalOptimizer {
      * @param mo_space_info MOSpace object for handling active/rdocc/ruocc
      */
 
-    OrbitalOptimizer(ambit::Tensor Gamma1, ambit::Tensor Gamma2,
-                     ambit::Tensor two_body_ab, Options& options,
-                     std::shared_ptr<MOSpaceInfo> mo_space_info);
+    OrbitalOptimizer(ambit::Tensor Gamma1, ambit::Tensor Gamma2, ambit::Tensor two_body_ab,
+                     Options& options, std::shared_ptr<MOSpaceInfo> mo_space_info);
 
     /// You have to set these at the start of the computation
     /// The MO Coefficient you get from wfn_->Ca()
@@ -242,9 +241,8 @@ class OrbitalOptimizer {
 /// using JK builders)
 class CASSCFOrbitalOptimizer : public OrbitalOptimizer {
   public:
-    CASSCFOrbitalOptimizer(ambit::Tensor Gamma1, ambit::Tensor Gamma2,
-                           ambit::Tensor two_body_ab, Options& options,
-                           std::shared_ptr<MOSpaceInfo> mo_space_info);
+    CASSCFOrbitalOptimizer(ambit::Tensor Gamma1, ambit::Tensor Gamma2, ambit::Tensor two_body_ab,
+                           Options& options, std::shared_ptr<MOSpaceInfo> mo_space_info);
     virtual ~CASSCFOrbitalOptimizer();
 
   private:
@@ -260,18 +258,10 @@ class PostCASSCFOrbitalOptimizer : public OrbitalOptimizer {
                                std::shared_ptr<MOSpaceInfo> mo_space_info);
     virtual ~PostCASSCFOrbitalOptimizer();
 
-    void set_fock_integrals_pq_mm(const ambit::Tensor& pq_mm) {
-        pq_mm_ = pq_mm;
-    }
-    void set_fock_integrals_pm_qm(const ambit::Tensor& pm_qm) {
-        pm_qm_ = pm_qm;
-    }
-    void set_fock_integrals_pq_uv(const ambit::Tensor& pq_uv) {
-        pq_uv_ = pq_uv;
-    }
-    void set_fock_integrals_pu_qv(const ambit::Tensor& pu_qv) {
-        pu_qv_ = pu_qv;
-    }
+    void set_fock_integrals_pq_mm(const ambit::Tensor& pq_mm) { pq_mm_ = pq_mm; }
+    void set_fock_integrals_pm_qm(const ambit::Tensor& pm_qm) { pm_qm_ = pm_qm; }
+    void set_fock_integrals_pq_uv(const ambit::Tensor& pq_uv) { pq_uv_ = pq_uv; }
+    void set_fock_integrals_pu_qv(const ambit::Tensor& pu_qv) { pu_qv_ = pu_qv; }
 
   private:
     ambit::Tensor pq_mm_;

@@ -38,7 +38,7 @@ namespace psi {
 namespace forte {
 
 MRCI::MRCI(SharedWavefunction ref_wfn, Options& options, std::shared_ptr<ForteIntegrals> ints,
-           std::shared_ptr<MOSpaceInfo> mo_space_info, DeterminantMap& reference)
+           std::shared_ptr<MOSpaceInfo> mo_space_info, DeterminantHashVec& reference)
     : Wavefunction(options), ints_(ints), mo_space_info_(mo_space_info), reference_(reference) {
     shallow_copy(ref_wfn);
     print_method_banner({"Uncontracted MR-CISD", "Jeff Schriber"});
@@ -134,12 +134,12 @@ void MRCI::get_excited_determinants() {
 
     auto external_mo = mo_space_info_->get_corr_abs_mo("RESTRICTED_UOCC");
 
-    DeterminantMap external;
+    DeterminantHashVec external;
     external.clear();
 
     int n_ext = external_mo.size();
 
-    const auto& internal = reference_.determinants();
+    const auto& internal = reference_.wfn_hash();
     for (const auto& det : internal) {
 
         std::vector<int> aocc = det.get_alfa_occ();
@@ -260,7 +260,8 @@ void MRCI::upcast_reference() {
     size_t ncorr = mo_space_info_->size("GENERALIZED PARTICLE");
     int n_irrep = old_dim.n();
 
-    std::vector<STLBitsetDeterminant> ref_dets = reference_.determinants();
+    det_hashvec ref_dets;
+    ref_dets.swap(reference_.wfn_hash());
     reference_.clear();
 
     // Compute shifts

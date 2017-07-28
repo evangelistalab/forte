@@ -47,6 +47,7 @@
 #include "casscf.h"
 #include "cc.h"
 #include "ci-no/ci-no.h"
+#include "determinant_hashvector.h"
 #include "fci/fci.h"
 #include "fci/fci_solver.h"
 #include "fci/fci_integrals.h"
@@ -659,7 +660,7 @@ void forte_old_methods(SharedWavefunction ref_wfn, Options& options,
         auto aci = std::make_shared<AdaptiveCI>(ref_wfn, options, ints, mo_space_info);
         aci->compute_energy();
 
-        DeterminantMap reference = aci->get_wavefunction();
+        DeterminantHashVec reference = aci->get_wavefunction();
         auto mrci = std::make_shared<MRCI>(ref_wfn, options, ints, mo_space_info, reference);
         mrci->compute_energy();
     }

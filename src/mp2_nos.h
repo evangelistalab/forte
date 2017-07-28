@@ -49,11 +49,9 @@ class MP2_NOS {
   public:
     // => Constructor <= //
     MP2_NOS(std::shared_ptr<Wavefunction> wfn, Options& options,
-            std::shared_ptr<ForteIntegrals> ints,
-            std::shared_ptr<MOSpaceInfo> mo_space_info);
+            std::shared_ptr<ForteIntegrals> ints, std::shared_ptr<MOSpaceInfo> mo_space_info);
     //  => Destructor <= //
 };
-
 }
 } // End Namespaces
 

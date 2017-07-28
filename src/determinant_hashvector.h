@@ -29,7 +29,9 @@
 #ifndef _determinant_hashvector_h_
 #define _determinant_hashvector_h_
 
-#include "fci/fci_integrals.h"
+#include "psi4/libpsi4util/PsiOutStream.h"
+#include "psi4/libmints/matrix.h"
+#include "psi4/psi4-dec.h"
 #include "stl_bitset_determinant.h"
 #include "hash_vector.h"
 
@@ -58,7 +60,10 @@ class DeterminantHashVec {
     DeterminantHashVec();
 
     /// Copy constructor
-    DeterminantHashVec(det_hashvec& wfn_);
+    DeterminantHashVec(const det_hashvec& wfn_);
+
+    /// Move constructor
+    DeterminantHashVec(det_hashvec&& wfn_);
 
     /// @return The hash
     const det_hashvec& wfn_hash() const;
@@ -107,6 +112,12 @@ class DeterminantHashVec {
 
     // Copy a wavefunctions
     void copy(DeterminantHashVec& dets);
+
+    // Swap with another DeterminantHashVec object
+    void swap(DeterminantHashVec& dets);
+
+    // Swap with a det_hashvec object
+    void swap(det_hashvec& dets);
 
   protected:
     /// A hashvector of determinants

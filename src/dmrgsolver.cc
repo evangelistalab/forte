@@ -64,8 +64,6 @@
 #include "helpers.h"
 #include "integrals/integrals.h"
 
-
-
 // This allows us to be lazy in getting the spaces in DPD calls
 #define ID(x) ints->DPD_ID(x)
 
@@ -444,8 +442,9 @@ void DMRGSolver::compute_energy() {
     std::memset(DMRG1DM, 0.0, sizeof(double) * nOrbDMRG * nOrbDMRG);
     std::memset(DMRG2DM, 0.0, sizeof(double) * nOrbDMRG * nOrbDMRG * nOrbDMRG * nOrbDMRG);
     if (max_rdm_ > 2 && !disk_3_rdm_)
-        std::memset(DMRG3DM, 0.0, sizeof(double) * nOrbDMRG * nOrbDMRG * nOrbDMRG * nOrbDMRG *
-                                      nOrbDMRG * nOrbDMRG);
+        std::memset(DMRG3DM, 0.0,
+                    sizeof(double) * nOrbDMRG * nOrbDMRG * nOrbDMRG * nOrbDMRG * nOrbDMRG *
+                        nOrbDMRG);
 
     std::shared_ptr<CheMPS2::DMRG> DMRGCI =
         std::make_shared<CheMPS2::DMRG>(Prob.get(), OptScheme.get());

@@ -58,8 +58,7 @@ class DSRG_MRPT : public Wavefunction {
      * @param mo_space_info The MOSpaceInfo object
      */
     DSRG_MRPT(Reference reference, SharedWavefunction ref_wfn, Options& options,
-              std::shared_ptr<ForteIntegrals> ints,
-              std::shared_ptr<MOSpaceInfo> mo_space_info);
+              std::shared_ptr<ForteIntegrals> ints, std::shared_ptr<MOSpaceInfo> mo_space_info);
 
     /// Destructor
     ~DSRG_MRPT();
@@ -201,8 +200,7 @@ class DSRG_MRPT : public Wavefunction {
     std::vector<std::pair<std::vector<size_t>, double>> lt1_;
     std::vector<std::pair<std::vector<size_t>, double>> lt2_;
     /// Analyze T1 and T2 amplitudes
-    void analyze_amplitudes(BlockedTensor& T1, BlockedTensor& T2,
-                            std::string name = "");
+    void analyze_amplitudes(BlockedTensor& T1, BlockedTensor& T2, std::string name = "");
 
     /// Compute DSRG-transformed Hamiltonian Hbar
     void compute_hbar();
@@ -228,27 +226,22 @@ class DSRG_MRPT : public Wavefunction {
     DSRG_TIME dsrg_time_;
 
     /// Compute zero-body term of commutator [H1, T1] * alpha
-    void H1_T1_C0(BlockedTensor& H1, BlockedTensor& T1, const double& alpha,
-                  double& C0);
+    void H1_T1_C0(BlockedTensor& H1, BlockedTensor& T1, const double& alpha, double& C0);
     /// Compute zero-body term of commutator [H1, T2] * alpha
-    void H1_T2_C0(BlockedTensor& H1, BlockedTensor& T2, const double& alpha,
-                  double& C0);
+    void H1_T2_C0(BlockedTensor& H1, BlockedTensor& T2, const double& alpha, double& C0);
     /// Compute zero-body term of commutator [H2, T1] * alpha
-    void H2_T1_C0(BlockedTensor& H2, BlockedTensor& T1, const double& alpha,
-                  double& C0);
+    void H2_T1_C0(BlockedTensor& H2, BlockedTensor& T1, const double& alpha, double& C0);
     /// Compute zero-body term of commutator [H2, T2] * alpha
-    void H2_T2_C0(BlockedTensor& H2, BlockedTensor& T2, const double& alpha,
-                  double& C0, const bool& stored);
+    void H2_T2_C0(BlockedTensor& H2, BlockedTensor& T2, const double& alpha, double& C0,
+                  const bool& stored);
 
     /// Compute zero-body term of commutator [H2, T2] involving only L1
-    void H2_T2_C0_L1(BlockedTensor& H2, BlockedTensor& T2, const double& alpha,
-                     double& C0, const bool& stored);
+    void H2_T2_C0_L1(BlockedTensor& H2, BlockedTensor& T2, const double& alpha, double& C0,
+                     const bool& stored);
     /// Compute zero-body term of commutator [H2, T2] involving only L2
-    void H2_T2_C0_L2(BlockedTensor& H2, BlockedTensor& T2, const double& alpha,
-                     double& C0);
+    void H2_T2_C0_L2(BlockedTensor& H2, BlockedTensor& T2, const double& alpha, double& C0);
     /// Compute zero-body term of commutator [H2, T2] involving only L3
-    void H2_T2_C0_L3(BlockedTensor& H2, BlockedTensor& T2, const double& alpha,
-                     double& C0);
+    void H2_T2_C0_L3(BlockedTensor& H2, BlockedTensor& T2, const double& alpha, double& C0);
 
     /// Compute zero-body term of commutator [H2, T2] involving only L3,
     /// intermediate of aaaaaa
@@ -259,38 +252,29 @@ class DSRG_MRPT : public Wavefunction {
 
     /// Compute zero-body term of commutator [V, T2] involving only L1 and ccvv
     /// of V
-    double
-    V_T2_C0_L1_ccvv(const std::vector<std::vector<size_t>>& small_core_mo);
+    double V_T2_C0_L1_ccvv(const std::vector<std::vector<size_t>>& small_core_mo);
     /// Compute zero-body term of commutator [V, T2] involving only L1 and cavv
     /// of V
-    double
-    V_T2_C0_L1_cavv(const std::vector<std::vector<size_t>>& small_core_mo);
+    double V_T2_C0_L1_cavv(const std::vector<std::vector<size_t>>& small_core_mo);
     /// Compute zero-body term of commutator [V, T2] involving only L1 and ccav
     /// of V
     double V_T2_C0_L1_ccav();
 
     /// Compute one-body term of commutator [H1, T1] * alpha
-    void H1_T1_C1(BlockedTensor& H1, BlockedTensor& T1, const double& alpha,
-                  BlockedTensor& C1);
+    void H1_T1_C1(BlockedTensor& H1, BlockedTensor& T1, const double& alpha, BlockedTensor& C1);
     /// Compute one-body term of commutator [H1, T2] * alpha
-    void H1_T2_C1(BlockedTensor& H1, BlockedTensor& T2, const double& alpha,
-                  BlockedTensor& C1);
+    void H1_T2_C1(BlockedTensor& H1, BlockedTensor& T2, const double& alpha, BlockedTensor& C1);
     /// Compute one-body term of commutator [H2, T1] * alpha
-    void H2_T1_C1(BlockedTensor& H2, BlockedTensor& T1, const double& alpha,
-                  BlockedTensor& C1);
+    void H2_T1_C1(BlockedTensor& H2, BlockedTensor& T1, const double& alpha, BlockedTensor& C1);
     /// Compute one-body term of commutator [H2, T2] * alpha
-    void H2_T2_C1(BlockedTensor& H2, BlockedTensor& T2, const double& alpha,
-                  BlockedTensor& C1);
+    void H2_T2_C1(BlockedTensor& H2, BlockedTensor& T2, const double& alpha, BlockedTensor& C1);
 
     /// Compute two-body term of commutator [H2, T1] * alpha
-    void H2_T1_C2(BlockedTensor& H2, BlockedTensor& T1, const double& alpha,
-                  BlockedTensor& C2);
+    void H2_T1_C2(BlockedTensor& H2, BlockedTensor& T1, const double& alpha, BlockedTensor& C2);
     /// Compute two-body term of commutator [H1, T2] * alpha
-    void H1_T2_C2(BlockedTensor& H1, BlockedTensor& T2, const double& alpha,
-                  BlockedTensor& C2);
+    void H1_T2_C2(BlockedTensor& H1, BlockedTensor& T2, const double& alpha, BlockedTensor& C2);
     /// Compute two-body term of commutator [H2, T2] * alpha
-    void H2_T2_C2(BlockedTensor& H2, BlockedTensor& T2, const double& alpha,
-                  BlockedTensor& C2);
+    void H2_T2_C2(BlockedTensor& H2, BlockedTensor& T2, const double& alpha, BlockedTensor& C2);
 
     /// Compute diagonal blocks labels of a one-body operator
     std::vector<std::string> d_one_labels();
@@ -315,8 +299,7 @@ class DSRG_MRPT : public Wavefunction {
     /// Fold in [H0th, A] effect to V1st for 2nd-order energy
     void renormalize_V_E2nd();
     /// Compute first-order T amplitudes
-    void compute_T_1st(BlockedTensor& V, BlockedTensor& T2, BlockedTensor& F,
-                       BlockedTensor& T1);
+    void compute_T_1st(BlockedTensor& V, BlockedTensor& T2, BlockedTensor& F, BlockedTensor& T1);
     /// Compute first-order T1
     void compute_T1_1st(BlockedTensor& F, BlockedTensor& T2, BlockedTensor& T1);
     /// Compute first-order T2
@@ -324,8 +307,8 @@ class DSRG_MRPT : public Wavefunction {
 
     // => DSRG-MRPT3 <= //
 
-//    /// Compute DSRG-MRPT3 energy
-//    double compute_energy_pt3();
+    //    /// Compute DSRG-MRPT3 energy
+    //    double compute_energy_pt3();
 
     // => Reference relaxation <= //
 
@@ -336,14 +319,12 @@ class DSRG_MRPT : public Wavefunction {
     /// Reset integrals to bare Hamiltonian
     void reset_ints(BlockedTensor& H, BlockedTensor& V);
     /// Diagonalize the diagonal blocks of the Fock matrix
-    std::vector<std::vector<double>>
-    diagonalize_Fock_diagblocks(BlockedTensor& U);
+    std::vector<std::vector<double>> diagonalize_Fock_diagblocks(BlockedTensor& U);
     /// Separate an 2D ambit::Tensor according to its irrep
-    ambit::Tensor separate_tensor(ambit::Tensor& tens, const Dimension& irrep,
-                                  const int& h);
+    ambit::Tensor separate_tensor(ambit::Tensor& tens, const Dimension& irrep, const int& h);
     /// Combine a separated 2D ambit::Tensor
-    void combine_tensor(ambit::Tensor& tens, ambit::Tensor& tens_h,
-                        const Dimension& irrep, const int& h);
+    void combine_tensor(ambit::Tensor& tens, ambit::Tensor& tens_h, const Dimension& irrep,
+                        const int& h);
 
     // => Useful printings <= //
 
@@ -352,14 +333,12 @@ class DSRG_MRPT : public Wavefunction {
     /// Print papers need to be cited
     void print_citation();
     /// Print amplitudes summary
-    void print_amp_summary(
-        const std::string& name,
-        const std::vector<std::pair<std::vector<size_t>, double>>& list,
-        const double& norm, const size_t& number_nonzero);
+    void print_amp_summary(const std::string& name,
+                           const std::vector<std::pair<std::vector<size_t>, double>>& list,
+                           const double& norm, const size_t& number_nonzero);
     /// Print intruder analysis
-    void print_intruder(
-        const std::string& name,
-        const std::vector<std::pair<std::vector<size_t>, double>>& list);
+    void print_intruder(const std::string& name,
+                        const std::vector<std::pair<std::vector<size_t>, double>>& list);
     /// Check the max and norm of density
     void check_density(BlockedTensor& D, const std::string& name);
     /// Print the summary of 2- and 3-body density cumulant
