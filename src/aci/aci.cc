@@ -2363,7 +2363,6 @@ void AdaptiveCI::compute_aci(DeterminantMap& PQ_space, SharedMatrix& PQ_evecs,
 
         // Print the energy
         if (!quiet_mode_) {
-            outfile->Printf("\n  electronic e: %1.12f", P_evals->get(0));
             outfile->Printf("\n");
             for (int i = 0; i < num_ref_roots; ++i) {
                 double abs_energy =
