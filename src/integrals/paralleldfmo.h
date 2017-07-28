@@ -33,8 +33,7 @@ namespace forte {
 
 class ParallelDFMO {
   public:
-    ParallelDFMO(std::shared_ptr<BasisSet> primary,
-                 std::shared_ptr<BasisSet> auxiliary);
+    ParallelDFMO(std::shared_ptr<BasisSet> primary, std::shared_ptr<BasisSet> auxiliary);
     void set_C(std::shared_ptr<Matrix> C) { Ca_ = C; }
     void compute_integrals();
     int Q_PQ() { return GA_Q_PQ_; }

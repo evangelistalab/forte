@@ -147,10 +147,8 @@ class MRDSRG_SO : public Wavefunction {
     ambit::BlockedTensor RDelta2;
     ambit::BlockedTensor T1;
     ambit::BlockedTensor T2;
-    ambit::BlockedTensor
-        RExp1; // < one-particle exponential for renormalized Fock matrix
-    ambit::BlockedTensor
-        RExp2; // < two-particle exponential for renormalized integral
+    ambit::BlockedTensor RExp1; // < one-particle exponential for renormalized Fock matrix
+    ambit::BlockedTensor RExp2; // < two-particle exponential for renormalized integral
 
     /// Diagonal elements of Fock matrix
     std::vector<double> Fd;
@@ -168,10 +166,9 @@ class MRDSRG_SO : public Wavefunction {
     /// Number of amplitudes will be printed in amplitude summary
     int ntamp_;
     /// Print amplitudes summary
-    void print_amp_summary(
-        const std::string& name,
-        const std::vector<std::pair<std::vector<size_t>, double>>& list,
-        const double& norm, const size_t& number_nonzero);
+    void print_amp_summary(const std::string& name,
+                           const std::vector<std::pair<std::vector<size_t>, double>>& list,
+                           const double& norm, const size_t& number_nonzero);
 
     /// Threshold for amplitudes considered as intruders
     double intruder_tamp_;
@@ -182,9 +179,8 @@ class MRDSRG_SO : public Wavefunction {
     std::vector<std::pair<std::vector<size_t>, double>> lt2ab;
     std::vector<std::pair<std::vector<size_t>, double>> lt2bb;
     /// Print intruder analysis
-    void print_intruder(
-        const std::string& name,
-        const std::vector<std::pair<std::vector<size_t>, double>>& list);
+    void print_intruder(const std::string& name,
+                        const std::vector<std::pair<std::vector<size_t>, double>>& list);
 
     /// Computes the t2 amplitudes for three different cases of spin (alpha all,
     /// beta all, and alpha beta)
@@ -218,44 +214,28 @@ class MRDSRG_SO : public Wavefunction {
     void compute_qhbar();
 
     /// Compute zero-term term of commutator [H, T]
-    void H1_T1_C0(BlockedTensor& H1, BlockedTensor& T1, const double& alpha,
-                  double& C0);
-    void H2_T1_C0(BlockedTensor& H2, BlockedTensor& T1, const double& alpha,
-                  double& C0);
-    void H1_T2_C0(BlockedTensor& H1, BlockedTensor& T2, const double& alpha,
-                  double& C0);
-    void H2_T2_C0(BlockedTensor& H2, BlockedTensor& T2, const double& alpha,
-                  double& C0);
+    void H1_T1_C0(BlockedTensor& H1, BlockedTensor& T1, const double& alpha, double& C0);
+    void H2_T1_C0(BlockedTensor& H2, BlockedTensor& T1, const double& alpha, double& C0);
+    void H1_T2_C0(BlockedTensor& H1, BlockedTensor& T2, const double& alpha, double& C0);
+    void H2_T2_C0(BlockedTensor& H2, BlockedTensor& T2, const double& alpha, double& C0);
 
     /// Compute one-body term of commutator [H, T]
-    void H1_T1_C1(BlockedTensor& H1, BlockedTensor& T1, const double& alpha,
-                  BlockedTensor& C1);
-    void H1_T2_C1(BlockedTensor& H1, BlockedTensor& T2, const double& alpha,
-                  BlockedTensor& C1);
-    void H2_T1_C1(BlockedTensor& H2, BlockedTensor& T1, const double& alpha,
-                  BlockedTensor& C1);
-    void H2_T2_C1(BlockedTensor& H2, BlockedTensor& T2, const double& alpha,
-                  BlockedTensor& C1);
-    void H3_T1_C1(BlockedTensor& H3, BlockedTensor& T1, const double& alpha,
-                  BlockedTensor& C1);
-    void H3_T2_C1(BlockedTensor& H3, BlockedTensor& T2, const double& alpha,
-                  BlockedTensor& C1);
+    void H1_T1_C1(BlockedTensor& H1, BlockedTensor& T1, const double& alpha, BlockedTensor& C1);
+    void H1_T2_C1(BlockedTensor& H1, BlockedTensor& T2, const double& alpha, BlockedTensor& C1);
+    void H2_T1_C1(BlockedTensor& H2, BlockedTensor& T1, const double& alpha, BlockedTensor& C1);
+    void H2_T2_C1(BlockedTensor& H2, BlockedTensor& T2, const double& alpha, BlockedTensor& C1);
+    void H3_T1_C1(BlockedTensor& H3, BlockedTensor& T1, const double& alpha, BlockedTensor& C1);
+    void H3_T2_C1(BlockedTensor& H3, BlockedTensor& T2, const double& alpha, BlockedTensor& C1);
 
     /// Compute two-body term of commutator [H, T]
-    void H2_T1_C2(BlockedTensor& H2, BlockedTensor& T1, const double& alpha,
-                  BlockedTensor& C2);
-    void H1_T2_C2(BlockedTensor& H1, BlockedTensor& T2, const double& alpha,
-                  BlockedTensor& C2);
-    void H2_T2_C2(BlockedTensor& H2, BlockedTensor& T2, const double& alpha,
-                  BlockedTensor& C2);
-    void H3_T1_C2(BlockedTensor& H3, BlockedTensor& T1, const double& alpha,
-                  BlockedTensor& C2);
-    void H3_T2_C2(BlockedTensor& H3, BlockedTensor& T2, const double& alpha,
-                  BlockedTensor& C2);
+    void H2_T1_C2(BlockedTensor& H2, BlockedTensor& T1, const double& alpha, BlockedTensor& C2);
+    void H1_T2_C2(BlockedTensor& H1, BlockedTensor& T2, const double& alpha, BlockedTensor& C2);
+    void H2_T2_C2(BlockedTensor& H2, BlockedTensor& T2, const double& alpha, BlockedTensor& C2);
+    void H3_T1_C2(BlockedTensor& H3, BlockedTensor& T1, const double& alpha, BlockedTensor& C2);
+    void H3_T2_C2(BlockedTensor& H3, BlockedTensor& T2, const double& alpha, BlockedTensor& C2);
 
     /// Compute three-body term of commutator [H, T]
-    void H2_T2_C3(BlockedTensor& H2, BlockedTensor& T2, const double& alpha,
-                  BlockedTensor& C3);
+    void H2_T2_C3(BlockedTensor& H2, BlockedTensor& T2, const double& alpha, BlockedTensor& C3);
 
     // Taylor Expansion of [1 - exp(-s * D^2)] / D = sqrt(s) * (\sum_{n=1}
     // \frac{1}{n!} (-1)^{n+1} Z^{2n-1})
@@ -298,8 +278,7 @@ class MRDSRG_SO : public Wavefunction {
   public:
     // => Constructors <= //
 
-    MRDSRG_SO(Reference reference, Options& options,
-              std::shared_ptr<ForteIntegrals> ints,
+    MRDSRG_SO(Reference reference, Options& options, std::shared_ptr<ForteIntegrals> ints,
               std::shared_ptr<MOSpaceInfo> mo_space_info);
 
     ~MRDSRG_SO();

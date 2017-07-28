@@ -43,39 +43,35 @@
 #include "sparse_ci_solver.h"
 //#include "forte_options.h"
 
-namespace psi { namespace forte {
+namespace psi {
+namespace forte {
 
-    
 void set_PT2_options(ForteOptions& foptions);
 
 class MRPT2 : public Wavefunction {
   public:
+    // Class constructor and destructor
+    MRPT2(SharedWavefunction ref_wfn, Options& options, std::shared_ptr<ForteIntegrals> ints,
+          std::shared_ptr<MOSpaceInfo> mo_space_info, DeterminantHashVec& reference,
+          SharedMatrix evecs, SharedVector evals);
 
-    //Class constructor and destructor
-    MRPT2( SharedWavefunction ref_wfn, Options& options,
-        std::shared_ptr<ForteIntegrals> ints, 
-        std::shared_ptr<MOSpaceInfo> mo_space_info,
-        DeterminantHashVec& reference, SharedMatrix evecs,
-        SharedVector evals);
-    
     ~MRPT2();
 
     std::shared_ptr<ForteIntegrals> ints_;
     DeterminantHashVec& reference_;
 
-    double compute_energy(); 
-    
+    double compute_energy();
 
   private:
     std::shared_ptr<FCIIntegrals> fci_ints_;
-    std::shared_ptr<MOSpaceInfo> mo_space_info_; 
+    std::shared_ptr<MOSpaceInfo> mo_space_info_;
     SharedMatrix evecs_;
     SharedVector evals_;
 
     void startup();
 
     double compute_pt2_energy();
-    double energy_kernel( int bin, int nbin);
+    double energy_kernel(int bin, int nbin);
 
     std::vector<int> mo_symmetry_;
 
@@ -84,6 +80,6 @@ class MRPT2 : public Wavefunction {
     DiagonalizationMethod diag_method_;
 
     double screen_thresh_;
-
 };
-}}
+}
+}

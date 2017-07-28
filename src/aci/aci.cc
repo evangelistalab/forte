@@ -643,7 +643,8 @@ void AdaptiveCI::diagonalize_final_and_compute_rdms() {
 
 DeterminantHashVec AdaptiveCI::get_wavefunction() { return final_wfn_; }
 
-void AdaptiveCI::print_final(DeterminantHashVec& dets, SharedMatrix& PQ_evecs, SharedVector& PQ_evals) {
+void AdaptiveCI::print_final(DeterminantHashVec& dets, SharedMatrix& PQ_evecs,
+                             SharedVector& PQ_evals) {
     size_t dim = dets.size();
     // Print a summary
     outfile->Printf("\n\n  ==> ACI Summary <==\n");
@@ -1016,7 +1017,8 @@ double AdaptiveCI::root_select(int nroot, std::vector<double>& C1, std::vector<d
 
     return select_value;
 }
-void AdaptiveCI::get_excited_determinants2(int nroot, SharedMatrix evecs, DeterminantHashVec& P_space,
+void AdaptiveCI::get_excited_determinants2(int nroot, SharedMatrix evecs,
+                                           DeterminantHashVec& P_space,
                                            det_hash<std::vector<double>>& V_hash) {
     const size_t n_dets = P_space.size();
 
@@ -1259,7 +1261,8 @@ void AdaptiveCI::get_excited_determinants2(int nroot, SharedMatrix evecs, Determ
     }
 }
 
-void AdaptiveCI::get_excited_determinants(int nroot, SharedMatrix evecs, DeterminantHashVec& P_space,
+void AdaptiveCI::get_excited_determinants(int nroot, SharedMatrix evecs,
+                                          DeterminantHashVec& P_space,
                                           det_hash<std::vector<double>>& V_hash) {
     size_t max_P = P_space.size();
     std::vector<STLBitsetDeterminant> P_dets = P_space.determinants();
@@ -2734,7 +2737,7 @@ void AdaptiveCI::compute_multistate(SharedVector& PQ_evals) {
 }
 
 DeterminantHashVec AdaptiveCI::approximate_wfn(DeterminantHashVec& PQ_space, SharedMatrix& evecs,
-                                           SharedVector& evals, SharedMatrix& new_evecs) {
+                                               SharedVector& evals, SharedMatrix& new_evecs) {
     DeterminantHashVec new_wfn;
     new_wfn.copy(PQ_space);
 

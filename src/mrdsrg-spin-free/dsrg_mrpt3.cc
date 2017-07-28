@@ -4079,7 +4079,8 @@ void DSRG_MRPT3::V_T2_C2_DF_VV(BlockedTensor& B, BlockedTensor& T2, const double
 }
 
 void DSRG_MRPT3::V_T2_C2_DF_AH_EX(BlockedTensor& B, BlockedTensor& T2, const double& alpha,
-                                  BlockedTensor& C2, const std::vector<std::vector<std::string>>& qs,
+                                  BlockedTensor& C2,
+                                  const std::vector<std::vector<std::string>>& qs,
                                   const std::vector<std::vector<std::string>>& jb) {
 
     // In DSRG-MRPT3, the "qs indices in C2[qj|sb] can only be 1 hole 1
@@ -4970,7 +4971,8 @@ void DSRG_MRPT3::V_T2_C2_DF_VA_EX(BlockedTensor& B, BlockedTensor& T2, const dou
 }
 
 void DSRG_MRPT3::V_T2_C2_DF_VH_EX(BlockedTensor& B, BlockedTensor& T2, const double& alpha,
-                                  BlockedTensor& C2, const std::vector<std::vector<std::string>>& qs,
+                                  BlockedTensor& C2,
+                                  const std::vector<std::vector<std::string>>& qs,
                                   const std::vector<std::vector<std::string>>& jb) {
 
     // We will do batches in "a". See V_T2_C2_DF_AH_EX for more comments.

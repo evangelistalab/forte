@@ -326,8 +326,9 @@ class SparseCISolver {
     void diagonalize_dl(const DeterminantHashVec& space, WFNOperator& op, SharedVector& evals,
                         SharedMatrix& evecs, int nroot, int multiplicity);
 
-    void diagonalize_dl_sparse(const DeterminantHashVec& space, WFNOperator& op, SharedVector& evals,
-                               SharedMatrix& evecs, int nroot, int multiplicity);
+    void diagonalize_dl_sparse(const DeterminantHashVec& space, WFNOperator& op,
+                               SharedVector& evals, SharedMatrix& evecs, int nroot,
+                               int multiplicity);
 
     void diagonalize_davidson_liu_solver(const std::vector<STLBitsetDeterminant>& space,
                                          SharedVector& evals, SharedMatrix& evecs, int nroot,
