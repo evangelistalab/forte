@@ -51,7 +51,7 @@ DeterminantHashVec::DeterminantHashVec(STLBitsetDeterminant& det) { wfn_.add(det
 
 DeterminantHashVec::DeterminantHashVec() {}
 
-DeterminantHashVec::DeterminantHashVec(const det_hashvec &wfn) : wfn_(wfn) {}
+DeterminantHashVec::DeterminantHashVec(const det_hashvec& wfn) : wfn_(wfn) {}
 
 DeterminantHashVec::DeterminantHashVec(det_hashvec&& wfn) { wfn_.swap(wfn); }
 
@@ -235,12 +235,8 @@ void DeterminantHashVec::copy(DeterminantHashVec& dets) {
     wfn_ = dets.wfn_;
 }
 
-void DeterminantHashVec::swap(DeterminantHashVec& dets) {
-    wfn_.swap(dets.wfn_);
-}
+void DeterminantHashVec::swap(DeterminantHashVec& dets) { wfn_.swap(dets.wfn_); }
 
-void DeterminantHashVec::swap(det_hashvec& dets) {
-    wfn_.swap(dets);
-}
+void DeterminantHashVec::swap(det_hashvec& dets) { wfn_.swap(dets); }
 }
 }
