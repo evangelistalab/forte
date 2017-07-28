@@ -150,7 +150,6 @@ void set_ACI_options(ForteOptions& foptions) {
 
     /*- optionally use low-memory screening -*/
     foptions.add_bool("ACI_LOW_MEM_SCREENING", false, "Use low-memory screening algorithm");
-
 }
 
 bool pairComp(const std::pair<double, STLBitsetDeterminant> E1,
@@ -719,7 +718,7 @@ void AdaptiveCI::default_find_q_space(DeterminantHashVec& P_space, DeterminantHa
     det_hash<std::vector<double>> V_hash;
 
     // Get the excited Determinants
-    if( options_.get_bool("ACI_LOW_MEM_SCREEN") ){
+    if (options_.get_bool("ACI_LOW_MEM_SCREEN")) {
         get_excited_determinants2(nroot_, evecs, P_space, V_hash);
     } else {
         get_excited_determinants(nroot_, evecs, P_space, V_hash);
