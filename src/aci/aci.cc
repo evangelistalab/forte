@@ -723,7 +723,7 @@ void AdaptiveCI::default_find_q_space(DeterminantHashVec& P_space, DeterminantHa
     // Add the P-space determinants and zero the hash
     const det_hashvec& detmap = P_space.wfn_hash();
     for (det_hashvec::iterator it = detmap.begin(), endit = detmap.end(); it != endit; ++it) {
-      //  PQ_space.add(*it);
+        //  PQ_space.add(*it);
         V_hash.erase(*it);
     }
     PQ_space.swap(P_space);
