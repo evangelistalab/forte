@@ -721,7 +721,7 @@ void AdaptiveCI::default_find_q_space(DeterminantHashVec& P_space, DeterminantHa
     PQ_space.clear();
     external_wfn_.clear();
     // Add the P-space determinants and zero the hash
-    det_hashvec detmap = P_space.wfn_hash();
+    const det_hashvec& detmap = P_space.wfn_hash();
     for (det_hashvec::iterator it = detmap.begin(), endit = detmap.end(); it != endit; ++it) {
         PQ_space.add(*it);
         V_hash.erase(*it);
@@ -1054,7 +1054,7 @@ void AdaptiveCI::get_excited_determinants2(int nroot, SharedMatrix evecs,
             det_hash<std::vector<double>> A_I;
             // std::vector<std::pair<STLBitsetDeterminant, std::vector<double>>> A_I;
 
-            const std::vector<STLBitsetDeterminant>& dets = P_space.determinants();
+            const det_hashvec& dets = P_space.wfn_hash();
             for (size_t I = start_idx; I < end_idx; ++I) {
                 double c_norm = evecs->get_row(0, I)->norm();
                 const STLBitsetDeterminant& det = dets[I];
@@ -1265,7 +1265,7 @@ void AdaptiveCI::get_excited_determinants(int nroot, SharedMatrix evecs,
                                           DeterminantHashVec& P_space,
                                           det_hash<std::vector<double>>& V_hash) {
     size_t max_P = P_space.size();
-    std::vector<STLBitsetDeterminant> P_dets = P_space.determinants();
+    const det_hashvec& P_dets = P_space.wfn_hash();
 
 // Loop over reference determinants
 #pragma omp parallel
@@ -1288,7 +1288,7 @@ void AdaptiveCI::get_excited_determinants(int nroot, SharedMatrix evecs,
             thread_ex_dets; //( noalpha * nvalpha  );
 
         for (size_t P = start_idx; P < end_idx; ++P) {
-            STLBitsetDeterminant& det(P_dets[P]);
+            const STLBitsetDeterminant& det(P_dets[P]);
             double evecs_P_row_norm = evecs->get_row(0, P)->norm();
 
             std::vector<int> aocc = det.get_alfa_occ();
@@ -1538,7 +1538,7 @@ void AdaptiveCI::prune_q_space(DeterminantHashVec& PQ_space, DeterminantHashVec&
     // Create a vector that stores the absolute value of the CI coefficients
     std::vector<std::pair<double, STLBitsetDeterminant>> dm_det_list;
     // for (size_t I = 0, max = PQ_space.size(); I < max; ++I){
-    det_hashvec detmap = PQ_space.wfn_hash();
+    const det_hashvec& detmap = PQ_space.wfn_hash();
     for (size_t i = 0, max_i = detmap.size(); i < max_i; ++i) {
         double criteria = 0.0;
         if (ex_alg_ == "AVERAGE") {
@@ -1899,7 +1899,7 @@ double AdaptiveCI::compute_spin_contamination(DeterminantHashVec& space, SharedM
 
 void AdaptiveCI::save_dets_to_file(DeterminantHashVec& space, SharedMatrix evecs) {
     // Use for single-root calculations only
-    det_hashvec detmap = space.wfn_hash();
+    const det_hashvec& detmap = space.wfn_hash();
     for (size_t i = 0, max_i = detmap.size(); i < max_i; ++i) {
         det_list_ << detmap[i].str().c_str() << " " << std::fabs(evecs->get(i, 0)) << " ";
         //	for(size_t J = 0, maxJ = space.size(); J < maxJ; ++J){
@@ -2638,7 +2638,7 @@ void AdaptiveCI::save_old_root(DeterminantHashVec& dets, SharedMatrix& PQ_evecs,
     if (!quiet_mode_ and nroot_ > 0) {
         outfile->Printf("\n  Saving root %d, ref_root is %d", root, ref_root_);
     }
-    det_hashvec detmap = dets.wfn_hash();
+    const det_hashvec& detmap = dets.wfn_hash();
     for (size_t i = 0, max_i = detmap.size(); i < max_i; ++i) {
         vec.push_back(std::make_pair(detmap[i], PQ_evecs->get(i, ref_root_)));
     }

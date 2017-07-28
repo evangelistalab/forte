@@ -62,7 +62,7 @@ WFNOperator::build_H_sparse(const DeterminantHashVec& wfn) {
     std::vector<std::pair<std::vector<size_t>, std::vector<double>>> H_sparse(size);
     size_t n_nonzero = 0;
 
-    const std::vector<STLBitsetDeterminant>& dets = wfn.determinants();
+    const det_hashvec& dets = wfn.wfn_hash();
 
     // Add diagonal
     for (size_t I = 0; I < size; ++I) {
@@ -405,7 +405,7 @@ double WFNOperator::s2(DeterminantHashVec& wfn, SharedMatrix& evecs, int root) {
 
 void WFNOperator::add_singles(DeterminantHashVec& wfn) {
 
-    det_hashvec& wfn_map = wfn.wfn_hash();
+    const det_hashvec& wfn_map = wfn.wfn_hash();
 
     DeterminantHashVec singles;
     // Loop through determinants, generate singles and add them to the wfn
@@ -625,7 +625,7 @@ void WFNOperator::build_strings(DeterminantHashVec& wfn) {
 void WFNOperator::op_s_lists(DeterminantHashVec& wfn) {
 
     // Get a reference to the determinants
-    const std::vector<STLBitsetDeterminant>& dets = wfn.determinants();
+    const det_hashvec& dets = wfn.wfn_hash();
     Timer ann;
     for (size_t b = 0, max_b = beta_strings_.size(); b < max_b; ++b) {
         size_t na_ann = 0;
@@ -714,7 +714,7 @@ void WFNOperator::op_lists(DeterminantHashVec& wfn) {
     size_t ndets = wfn.size();
     a_ann_list_.resize(ndets);
     b_ann_list_.resize(ndets);
-    const std::vector<STLBitsetDeterminant>& dets = wfn.determinants();
+    const det_hashvec& dets = wfn.wfn_hash();
     // Generate alpha coupling list
     Timer ann;
     {
@@ -822,7 +822,7 @@ void WFNOperator::op_lists(DeterminantHashVec& wfn) {
 
 void WFNOperator::tp_s_lists(DeterminantHashVec& wfn) {
 
-    const std::vector<STLBitsetDeterminant>& dets = wfn.determinants();
+    const det_hashvec& dets = wfn.wfn_hash();
     // Generate alpha-alpha coupling list
     Timer aa;
     {
@@ -990,7 +990,7 @@ void WFNOperator::tp_lists(DeterminantHashVec& wfn) {
     aa_ann_list_.resize(ndets);
     ab_ann_list_.resize(ndets);
     bb_ann_list_.resize(ndets);
-    const std::vector<STLBitsetDeterminant>& dets = wfn.determinants();
+    const det_hashvec& dets = wfn.wfn_hash();
     // Generate alpha-alpha coupling list
     Timer aa;
     {
@@ -1205,7 +1205,7 @@ void WFNOperator::clear_tp_s_lists() {
 void WFNOperator::three_s_lists(DeterminantHashVec& wfn) {
 
     size_t ndets = wfn.size();
-    const std::vector<STLBitsetDeterminant>& dets = wfn.determinants();
+    const det_hashvec& dets = wfn.wfn_hash();
     // Timer aaa;
     {
         for (size_t b = 0, max_b = beta_strings_.size(); b < max_b; ++b) {
@@ -1465,7 +1465,7 @@ void WFNOperator::three_s_lists(DeterminantHashVec& wfn) {
 
 void WFNOperator::three_lists(DeterminantHashVec& wfn) {
     size_t ndets = wfn.size();
-    const std::vector<STLBitsetDeterminant>& dets = wfn.determinants();
+    const det_hashvec& dets = wfn.wfn_hash();
     /// Compute aaa coupling
     {
         aaa_ann_list_.resize(ndets);

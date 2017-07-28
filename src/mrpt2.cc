@@ -144,7 +144,7 @@ double MRPT2::energy_kernel(int bin, int nbin) {
     double E_0 = evals_->get(0);
     double energy = 0.0;
     const size_t n_dets = reference_.size();
-    const std::vector<STLBitsetDeterminant>& dets = reference_.determinants();
+    const det_hashvec& dets = reference_.wfn_hash();
     det_hash<double> A_I;
     for (size_t I = 0; I < n_dets; ++I) {
         double c_I = evecs_->get(I, 0);

@@ -207,7 +207,7 @@ void CI_RDMS::compute_1rdm(std::vector<double>& oprdm_a, std::vector<double>& op
     oprdm_b.resize(ncmo2_, 0.0);
 
     //// Do something about diagonal
-    const std::vector<STLBitsetDeterminant>& dets = wfn_.determinants();
+    const det_hashvec& dets = wfn_.wfn_hash();
     for (size_t J = 0; J < dim_space_; ++J) {
         double cJ_sq = evecs_->get(J, root1_) * evecs_->get(J, root2_);
         std::vector<int> aocc = dets[J].get_alfa_occ();
@@ -355,7 +355,7 @@ void CI_RDMS::compute_2rdm(std::vector<double>& tprdm_aa, std::vector<double>& t
                            std::vector<double>& tprdm_bb, WFNOperator& op) {
     Timer build;
 
-    const std::vector<STLBitsetDeterminant>& dets = wfn_.determinants();
+    const det_hashvec& dets = wfn_.wfn_hash();
 
     tprdm_aa.resize(ncmo4_, 0.0);
     tprdm_ab.resize(ncmo4_, 0.0);
@@ -720,7 +720,7 @@ void CI_RDMS::compute_3rdm(std::vector<double>& tprdm_aaa, std::vector<double>& 
     std::vector<std::vector<std::tuple<size_t, short, short, short>>>& bbb_list = op.bbb_list_;
 
     // Build the diagonal part
-    const std::vector<STLBitsetDeterminant>& dets = wfn_.determinants();
+    const det_hashvec& dets = wfn_.wfn_hash();
     for (size_t I = 0; I < dim_space_; ++I) {
         double cI_sq = evecs_->get(I, root1_) * evecs_->get(I, root2_);
         STLBitsetDeterminant detI = dets[I];
@@ -1913,7 +1913,7 @@ void CI_RDMS::rdm_test(std::vector<double>& oprdm_a, std::vector<double>& oprdm_
                        std::vector<double>& tprdm_aab, std::vector<double>& tprdm_abb,
                        std::vector<double>& tprdm_bbb) {
 
-    const std::vector<STLBitsetDeterminant>& det_space = wfn_.determinants();
+    const det_hashvec& det_space = wfn_.wfn_hash();
 
     double error_1rdm_a = 0.0;
     for (size_t p = 0; p < ncmo_; ++p) {

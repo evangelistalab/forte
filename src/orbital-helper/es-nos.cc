@@ -205,7 +205,7 @@ void ESNO::get_excited_determinants() {
     DeterminantHashVec external;
     external.clear();
 
-    const auto& internal = reference_.determinants();
+    const auto& internal = reference_.wfn_hash();
     for (const auto& det : internal) {
         det.print();
         std::vector<int> aocc = det.get_alfa_occ();
@@ -261,7 +261,7 @@ void ESNO::upcast_reference() {
     size_t ncorr = mo_space_info_->size("GENERALIZED PARTICLE");
     int n_irrep = old_dim.n();
 
-    std::vector<STLBitsetDeterminant> ref_dets = reference_.determinants();
+    const det_hashvec& ref_dets = reference_.wfn_hash();
     reference_.clear();
 
     // Compute shifts

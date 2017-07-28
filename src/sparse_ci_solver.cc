@@ -539,7 +539,7 @@ SigmaVectorWfn1::SigmaVectorWfn1(const DeterminantHashVec& space, WFNOperator& o
       aa_ann_list_(op.aa_ann_list_), aa_cre_list_(op.aa_cre_list_), ab_ann_list_(op.ab_ann_list_),
       ab_cre_list_(op.ab_cre_list_), bb_ann_list_(op.bb_ann_list_), bb_cre_list_(op.bb_cre_list_) {
 
-    det_hashvec detmap = space_.wfn_hash();
+    const det_hashvec& detmap = space_.wfn_hash();
     diag_.resize(space_.size());
     for (size_t I = 0, max_I = detmap.size(); I < max_I; ++I) {
         diag_[I] = fci_ints_->energy(detmap[I]);
@@ -603,7 +603,7 @@ void SigmaVectorWfn1::compute_sigma(SharedVector sigma, SharedVector b) {
         size_t end_idx = start_idx + bin_size;
         // Timer cycl;
         {
-            const std::vector<STLBitsetDeterminant>& dets = space_.determinants();
+            const det_hashvec& dets = space_.wfn_hash();
             for (size_t J = start_idx; J < end_idx; ++J) {
                 // reference
                 sigma_p[J] += diag_[J] * b_p[J];
@@ -707,7 +707,7 @@ SigmaVectorWfn2::SigmaVectorWfn2(const DeterminantHashVec& space, WFNOperator& o
     : SigmaVector(space.size()), space_(space), fci_ints_(fci_ints), a_list_(op.a_list_),
       b_list_(op.b_list_), aa_list_(op.aa_list_), ab_list_(op.ab_list_), bb_list_(op.bb_list_) {
 
-    det_hashvec detmap = space_.wfn_hash();
+    const det_hashvec& detmap = space_.wfn_hash();
     diag_.resize(space_.size());
     for (size_t I = 0, max_I = detmap.size(); I < max_I; ++I) {
         diag_[I] = fci_ints_->energy(detmap[I]);
@@ -759,7 +759,7 @@ void SigmaVectorWfn2::compute_sigma(SharedVector sigma, SharedVector b) {
             }
         }
     }
-    const std::vector<STLBitsetDeterminant>& dets = space_.determinants();
+    const det_hashvec& dets = space_.wfn_hash();
 
 #pragma omp parallel
     {
@@ -922,7 +922,7 @@ SigmaVectorWfn3::SigmaVectorWfn3(const DeterminantHashVec& space, WFNOperator& o
     : SigmaVector(space.size()), space_(space), fci_ints_(fci_ints), a_list_(op.a_list_),
       b_list_(op.b_list_), aa_list_(op.aa_list_), ab_list_(op.ab_list_), bb_list_(op.bb_list_) {
 
-    det_hashvec detmap = space_.wfn_hash();
+    const det_hashvec& detmap = space_.wfn_hash();
     diag_.resize(space_.size());
     for (size_t I = 0, max_I = detmap.size(); I < max_I; ++I) {
         diag_[I] = fci_ints_->energy(detmap[I]);
@@ -1033,7 +1033,7 @@ void SigmaVectorWfn3::compute_sigma(SharedVector sigma, SharedVector b) {
     }
 
     // Each thread gets local copy of sigma
-    const std::vector<STLBitsetDeterminant>& dets = space_.determinants();
+    const det_hashvec& dets = space_.wfn_hash();
 
     // a singles
     size_t end_a_idx = a_list_.size();
