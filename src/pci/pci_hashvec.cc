@@ -133,20 +133,19 @@ void ProjectorCI_HashVec::sortHashVecByCoefficient(det_hashvec& dets_hashvec,
         det_weight[I] = std::make_pair(std::fabs(C[I]), I);
     }
     std::sort(det_weight.begin(), det_weight.end(), std::greater<std::pair<double, size_t>>());
-    det_hashvec new_dets_hashvec;
-    new_dets_hashvec.reserve(dets_size);
+    std::vector<size_t> order_map(dets_size);
+    for (size_t I = 0; I < dets_size; ++I) {
+        order_map[det_weight[I].second] = I;
+    }
+    dets_hashvec.map_order(order_map);
     std::vector<double> new_C(dets_size);
     std::vector<std::pair<double, double>> new_dets_max_couplings(dets_size);
-    size_t old_I = 0, new_I = 0;
     for (size_t I = 0; I < dets_size; ++I) {
-        old_I = det_weight[I].second;
-        new_I = new_dets_hashvec.add(dets_hashvec[old_I]);
-        new_C[new_I] = C[old_I];
-        new_dets_max_couplings[new_I] = dets_max_couplings_[old_I];
+        new_C[order_map[I]] = C[I];
+        new_dets_max_couplings[order_map[I]] = dets_max_couplings_[I];
     }
-    dets_hashvec = new_dets_hashvec;
-    C = new_C;
-    dets_max_couplings_ = new_dets_max_couplings;
+    C = std::move(new_C);
+    dets_max_couplings_ = std::move(new_dets_max_couplings);
 }
 
 ProjectorCI_HashVec::ProjectorCI_HashVec(SharedWavefunction ref_wfn, Options& options,
