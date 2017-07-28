@@ -718,7 +718,7 @@ void AdaptiveCI::default_find_q_space(DeterminantHashVec& P_space, DeterminantHa
     det_hash<std::vector<double>> V_hash;
 
     // Get the excited Determinants
-    if (options_.get_bool("ACI_LOW_MEM_SCREEN")) {
+    if (options_.get_bool("ACI_LOW_MEM_SCREENING")) {
         get_excited_determinants2(nroot_, evecs, P_space, V_hash);
     } else {
         get_excited_determinants(nroot_, evecs, P_space, V_hash);
