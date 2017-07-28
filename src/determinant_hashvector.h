@@ -60,7 +60,10 @@ class DeterminantHashVec {
     DeterminantHashVec();
 
     /// Copy constructor
-    DeterminantHashVec(det_hashvec& wfn_);
+    DeterminantHashVec(const det_hashvec& wfn_);
+
+    /// Move constructor
+    DeterminantHashVec(det_hashvec&& wfn_);
 
     /// @return The hash
     const det_hashvec& wfn_hash() const;
@@ -109,6 +112,12 @@ class DeterminantHashVec {
 
     // Copy a wavefunctions
     void copy(DeterminantHashVec& dets);
+
+    // Swap with another DeterminantHashVec object
+    void swap(DeterminantHashVec& dets);
+
+    // Swap with a det_hashvec object
+    void swap(det_hashvec& dets);
 
   protected:
     /// A hashvector of determinants

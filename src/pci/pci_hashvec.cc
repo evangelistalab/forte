@@ -32,6 +32,7 @@
 #include <functional>
 #include <tuple>
 #include <unordered_map>
+#include <utility>
 
 #include "../mini-boost/boost/format.hpp"
 #include "../mini-boost/boost/math/special_functions/bessel.hpp"
@@ -812,8 +813,21 @@ double ProjectorCI_HashVec::compute_energy() {
         SharedMatrix apfci_evecs(new Matrix("Eigenvectors", C.size(), nroot_));
         SharedVector apfci_evals(new Vector("Eigenvalues", nroot_));
 
-        sparse_solver.diagonalize_hamiltonian(dets_hashvec.toVector(), apfci_evals, apfci_evecs,
-                                              nroot_, wavefunction_multiplicity_, diag_method_);
+        WFNOperator op(mo_symmetry_, fci_ints_);
+        DeterminantHashVec det_map(std::move(dets_hashvec));
+        op.build_strings(det_map);
+        op.op_s_lists(det_map);
+        op.tp_s_lists(det_map);
+
+        // set options
+        sparse_solver.set_sigma_method("SPARSE");
+        sparse_solver.set_e_convergence(e_convergence_);
+        sparse_solver.set_spin_project(true);
+        sparse_solver.set_spin_project_full(false);
+
+        sparse_solver.diagonalize_hamiltonian_map(det_map, op, apfci_evals, apfci_evecs, nroot_,
+                                                  wavefunction_multiplicity_, diag_method_);
+        det_map.swap(dets_hashvec);
 
         timer_off("PCI:Post_Diag");
 
