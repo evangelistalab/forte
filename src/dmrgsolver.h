@@ -48,8 +48,7 @@ namespace forte {
 class DMRGSolver {
   public:
     DMRGSolver(SharedWavefunction ref_wfn, Options& options,
-               std::shared_ptr<MOSpaceInfo> mo_space_info,
-               std::shared_ptr<ForteIntegrals> ints);
+               std::shared_ptr<MOSpaceInfo> mo_space_info, std::shared_ptr<ForteIntegrals> ints);
     DMRGSolver(SharedWavefunction ref_wfn, Options& options,
                std::shared_ptr<MOSpaceInfo> mo_space_info);
     void compute_energy();

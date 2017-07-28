@@ -69,8 +69,7 @@ class FCIWfn {
     //    void initial_guess(FCIWfn& diag, size_t num_dets = 100);
 
     ////    void set_to(Determinant& det);
-    void
-    set(std::vector<std::tuple<size_t, size_t, size_t, double>>& sparse_vec);
+    void set(std::vector<std::tuple<size_t, size_t, size_t, double>>& sparse_vec);
     //    double get(int n);
     //    void plus_equal(double factor,FCIWfn& wfn);
     //    void scale(double factor);
@@ -111,16 +110,14 @@ class FCIWfn {
 
     /// Return the elements with the smallest value
     /// This function returns the tuple (C_I,irrep,Ia,Ib)
-    std::vector<std::tuple<double, size_t, size_t, size_t>>
-    min_elements(size_t num_dets);
+    std::vector<std::tuple<double, size_t, size_t, size_t>> min_elements(size_t num_dets);
     /// Return the elements with the largest absolute value
     /// This function returns the tuple (|C_I|,C_I,irrep,Ia,Ib)
     std::vector<std::tuple<double, double, size_t, size_t, size_t>>
     max_abs_elements(size_t num_dets);
 
     // Temporary memory allocation
-    static void allocate_temp_space(std::shared_ptr<StringLists> lists_,
-                                    int print_);
+    static void allocate_temp_space(std::shared_ptr<StringLists> lists_, int print_);
     static void release_temp_space();
     void set_print(int print) { print_ = print; }
 
@@ -187,8 +184,7 @@ class FCIWfn {
     void cleanup();
 
     /// Compute the energy of a determinant
-    double determinant_energy(bool*& Ia, bool*& Ib, int n,
-                              std::shared_ptr<FCIIntegrals> fci_ints);
+    double determinant_energy(bool*& Ia, bool*& Ib, int n, std::shared_ptr<FCIIntegrals> fci_ints);
 
     // ==> Class Private Functions <==
 
@@ -196,11 +192,9 @@ class FCIWfn {
     size_t tei_index(size_t p, size_t q, size_t r, size_t s) const {
         return ncmo_ * ncmo_ * ncmo_ * p + ncmo_ * ncmo_ * q + ncmo_ * r + s;
     }
-    size_t six_index(size_t p, size_t q, size_t r, size_t s, size_t t,
-                     size_t u) const {
-        return (ncmo_ * ncmo_ * ncmo_ * ncmo_ * ncmo_ * p +
-                ncmo_ * ncmo_ * ncmo_ * ncmo_ * q + ncmo_ * ncmo_ * ncmo_ * r +
-                ncmo_ * ncmo_ * s + ncmo_ * t + u);
+    size_t six_index(size_t p, size_t q, size_t r, size_t s, size_t t, size_t u) const {
+        return (ncmo_ * ncmo_ * ncmo_ * ncmo_ * ncmo_ * p + ncmo_ * ncmo_ * ncmo_ * ncmo_ * q +
+                ncmo_ * ncmo_ * ncmo_ * r + ncmo_ * ncmo_ * s + ncmo_ * t + u);
     }
 
     //    double oei_aa(size_t p, size_t q) const {return fci_ints_->oei_a(ncmo_
@@ -218,8 +212,7 @@ class FCIWfn {
     void H0(FCIWfn& result, std::shared_ptr<FCIIntegrals> fci_ints);
     void H1(FCIWfn& result, std::shared_ptr<FCIIntegrals> fci_ints, bool alfa);
     void H2_aabb(FCIWfn& result, std::shared_ptr<FCIIntegrals> fci_ints);
-    void H2_aaaa2(FCIWfn& result, std::shared_ptr<FCIIntegrals> fci_ints,
-                  bool alfa);
+    void H2_aaaa2(FCIWfn& result, std::shared_ptr<FCIIntegrals> fci_ints, bool alfa);
 
     void compute_1rdm(std::vector<double>& rdm, bool alfa);
     void compute_2rdm_aa(std::vector<double>& rdm, bool alfa);

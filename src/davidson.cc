@@ -70,7 +70,6 @@
 
 using namespace psi;
 
-
 int david2(double** A, int N, int M, double* eps, double** v, double cutoff, int print);
 
 void test_davidson() {

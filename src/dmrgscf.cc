@@ -60,8 +60,6 @@
 #include "helpers.h"
 #include "integrals/integrals.h"
 
-
-
 // This allows us to be lazy in getting the spaces in DPD calls
 #define ID(x) ints->DPD_ID(x)
 

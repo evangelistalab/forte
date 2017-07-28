@@ -31,11 +31,11 @@
 #ifndef _dynamic_bitset_determinant_h_
 #define _dynamic_bitset_determinant_h_
 
-#define mix_fasthash(h)                                                        \
-    ({                                                                         \
-        (h) ^= (h) >> 23;                                                      \
-        (h) *= 0x2127599bf4325c37ULL;                                          \
-        (h) ^= (h) >> 47;                                                      \
+#define mix_fasthash(h)                                                                            \
+    ({                                                                                             \
+        (h) ^= (h) >> 23;                                                                          \
+        (h) *= 0x2127599bf4325c37ULL;                                                              \
+        (h) ^= (h) >> 47;                                                                          \
     })
 
 #include "mini-boost/boost/dynamic_bitset.hpp"
@@ -66,9 +66,7 @@ class DynamicBitsetDeterminant {
     using bit_t = boost::dynamic_bitset<>;
 
     // test integrals
-    void test_ints() {
-        outfile->Printf("\n FC energy: %1.8f", fci_ints_->frozen_core_energy());
-    }
+    void test_ints() { outfile->Printf("\n FC energy: %1.8f", fci_ints_->frozen_core_energy()); }
 
     // Class Constructor and Destructor
     /// Construct an empty determinant
@@ -80,13 +78,11 @@ class DynamicBitsetDeterminant {
 
     /// Construct the determinant from an occupation vector that
     /// specifies the alpha and beta strings.  occupation = [Ia,Ib]
-    explicit DynamicBitsetDeterminant(const std::vector<int>& occupation,
-                                      bool print_det = false);
+    explicit DynamicBitsetDeterminant(const std::vector<int>& occupation, bool print_det = false);
 
     /// Construct the determinant from an occupation vector that
     /// specifies the alpha and beta strings.  occupation = [Ia,Ib]
-    explicit DynamicBitsetDeterminant(const std::vector<bool>& occupation,
-                                      bool print_det = false);
+    explicit DynamicBitsetDeterminant(const std::vector<bool>& occupation, bool print_det = false);
 
     /// Construct an excited determinant of a given reference
     /// Construct the determinant from two occupation vectors that
@@ -104,8 +100,7 @@ class DynamicBitsetDeterminant {
     }
 
     bool operator==(const DynamicBitsetDeterminant& lhs) const {
-        return ((alfa_bits_ == lhs.alfa_bits_) and
-                (beta_bits_ == lhs.beta_bits_));
+        return ((alfa_bits_ == lhs.alfa_bits_) and (beta_bits_ == lhs.beta_bits_));
     }
 
     //    DynamicBitsetDeterminant& operator=(const DynamicBitsetDeterminant
@@ -275,8 +270,7 @@ class DynamicBitsetDeterminant {
     static double FastSlaterSign(const boost::dynamic_bitset<>& I, int n);
 
     struct Hash {
-        std::size_t
-        operator()(const psi::forte::DynamicBitsetDeterminant& bs) const {
+        std::size_t operator()(const psi::forte::DynamicBitsetDeterminant& bs) const {
             size_t h = 0;
             for (int p = 0; p < bs.nmo_; p++) {
                 if (bs.alfa_bits_[p]) {

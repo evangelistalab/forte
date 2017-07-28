@@ -1952,9 +1952,10 @@ bool SparseCISolver::davidson_liu_solver(const std::vector<STLBitsetDeterminant>
     return true;
 }
 
-bool SparseCISolver::davidson_liu_solver_map(const DeterminantHashVec& space, SigmaVector* sigma_vector,
-                                             SharedVector Eigenvalues, SharedMatrix Eigenvectors,
-                                             int nroot, int multiplicity) {
+bool SparseCISolver::davidson_liu_solver_map(const DeterminantHashVec& space,
+                                             SigmaVector* sigma_vector, SharedVector Eigenvalues,
+                                             SharedMatrix Eigenvectors, int nroot,
+                                             int multiplicity) {
     //    print_details_ = true;
     Timer dl;
     size_t fci_size = sigma_vector->size();

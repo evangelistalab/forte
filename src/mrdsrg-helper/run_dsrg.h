@@ -8,7 +8,6 @@ namespace forte {
 
 /// Set the DSRG options
 void set_DSRG_options(ForteOptions& foptions);
-
 }
 }
 #endif // RUN_DSRG_H

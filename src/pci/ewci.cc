@@ -1304,7 +1304,6 @@ void ElementwiseCI::apply_tau_H_symm(double tau, double spawning_threshold, det_
         }
     }
 
-
     std::vector<size_t> removing_indices;
     for (size_t I = 0; I < ref_size; ++I) {
         if (std::isnan(result_C[I])) {

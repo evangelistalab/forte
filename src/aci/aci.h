@@ -280,8 +280,8 @@ class AdaptiveCI : public Wavefunction {
     void print_wfn(DeterminantHashVec& space, SharedMatrix evecs, int nroot);
 
     /// Streamlined version of find q space
-    void default_find_q_space(DeterminantHashVec& P_space, DeterminantHashVec& PQ_space, SharedVector evals,
-                              SharedMatrix evecs);
+    void default_find_q_space(DeterminantHashVec& P_space, DeterminantHashVec& PQ_space,
+                              SharedVector evals, SharedMatrix evecs);
 
     /// Find all the relevant excitations out of the P space
     void find_q_space(DeterminantHashVec& P_space, DeterminantHashVec& PQ_space, int nroot,
@@ -305,8 +305,8 @@ class AdaptiveCI : public Wavefunction {
                                    det_hash<std::vector<double>>& V_hash);
 
     /// Prune the space of determinants
-    void prune_q_space(DeterminantHashVec& PQ_space, DeterminantHashVec& P_space, SharedMatrix evecs,
-                       int nroot);
+    void prune_q_space(DeterminantHashVec& PQ_space, DeterminantHashVec& P_space,
+                       SharedMatrix evecs, int nroot);
 
     /// Check if the procedure has converged
     bool check_convergence(std::vector<std::vector<double>>& energy_history,
@@ -316,8 +316,8 @@ class AdaptiveCI : public Wavefunction {
     bool check_stuck(std::vector<std::vector<double>>& energy_history, SharedVector evals);
 
     /// Computes spin
-    std::vector<std::pair<double, double>> compute_spin(DeterminantHashVec& space, SharedMatrix evecs,
-                                                        int nroot);
+    std::vector<std::pair<double, double>> compute_spin(DeterminantHashVec& space,
+                                                        SharedMatrix evecs, int nroot);
 
     /// Compute 1-RDM
     void compute_1rdm(SharedMatrix A, SharedMatrix B, std::vector<STLBitsetDeterminant>& det_space,
@@ -356,8 +356,8 @@ class AdaptiveCI : public Wavefunction {
                     DeterminantHashVec& P_space, SharedMatrix P_evecs, int num_ref_roots);
 
     /// Project ACI wavefunction
-    void project_determinant_space(DeterminantHashVec& space, SharedMatrix evecs, SharedVector evals,
-                                   int nroot);
+    void project_determinant_space(DeterminantHashVec& space, SharedMatrix evecs,
+                                   SharedVector evals, int nroot);
 
     /// Compute the RDMs
     void compute_rdms(DeterminantHashVec& dets, WFNOperator& op, SharedMatrix& PQ_evecs, int root1,
@@ -378,7 +378,7 @@ class AdaptiveCI : public Wavefunction {
                                 const std::string& name);
 
     DeterminantHashVec approximate_wfn(DeterminantHashVec& PQ_space, SharedMatrix& evecs,
-                                   SharedVector& PQ_evals, SharedMatrix& new_evecs);
+                                       SharedVector& PQ_evals, SharedMatrix& new_evecs);
 
     std::vector<std::pair<size_t, double>>
     dl_initial_guess(std::vector<STLBitsetDeterminant>& old_dets,

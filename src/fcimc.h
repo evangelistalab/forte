@@ -64,8 +64,7 @@ class FCIQMC : public Wavefunction {
      * @param options The main options object
      * @param ints A pointer to an allocated integral object
      */
-    FCIQMC(SharedWavefunction ref_wfn, Options& options,
-           std::shared_ptr<ForteIntegrals> ints,
+    FCIQMC(SharedWavefunction ref_wfn, Options& options, std::shared_ptr<ForteIntegrals> ints,
            std::shared_ptr<MOSpaceInfo> mo_space_info);
 
     /// Destructor
@@ -171,64 +170,47 @@ class FCIQMC : public Wavefunction {
     // Spawning step
     void spawn(walker_map& walkers, walker_map& new_walkers);
     void spawn_generative(walker_map& walkers, walker_map& new_walkers);
-    void
-    singleWalkerSpawn(Determinant& new_det, const Determinant& det,
-                      std::tuple<size_t, size_t, size_t, size_t, size_t> pgen,
-                      size_t sumgen);
+    void singleWalkerSpawn(Determinant& new_det, const Determinant& det,
+                           std::tuple<size_t, size_t, size_t, size_t, size_t> pgen, size_t sumgen);
     // Death/Clone step
     void death_clone(walker_map& walkers, double shift);
-    void detClone(walker_map& walkers, const Determinant& det, double coef,
-                  double pDeathClone);
-    void detDeath(walker_map& walkers, const Determinant& det, double coef,
-                  double pDeathClone);
+    void detClone(walker_map& walkers, const Determinant& det, double coef, double pDeathClone);
+    void detDeath(walker_map& walkers, const Determinant& det, double coef, double pDeathClone);
     // Merge step
     void merge(walker_map& walkers, walker_map& new_walkers);
     // Annihilation step
     void annihilate(walker_map& walkers, walker_map& new_walkers);
 
     // Count the number of allowed single and double excitations
-    std::tuple<size_t, size_t, size_t, size_t, size_t>
-    compute_pgen(const Determinant& det);
-    std::tuple<size_t, size_t, size_t, size_t, size_t>
-    compute_pgen_C1(const Determinant& det);
-    void compute_excitations(
-        const Determinant& det,
-        std::vector<std::tuple<size_t, size_t>>& singleExcitations,
-        std::vector<std::tuple<size_t, size_t, size_t, size_t>>&
-            doubleExcitations);
-    void compute_single_excitations(
-        const Determinant& det,
-        std::vector<std::tuple<size_t, size_t>>& singleExcitations);
+    std::tuple<size_t, size_t, size_t, size_t, size_t> compute_pgen(const Determinant& det);
+    std::tuple<size_t, size_t, size_t, size_t, size_t> compute_pgen_C1(const Determinant& det);
+    void
+    compute_excitations(const Determinant& det,
+                        std::vector<std::tuple<size_t, size_t>>& singleExcitations,
+                        std::vector<std::tuple<size_t, size_t, size_t, size_t>>& doubleExcitations);
+    void compute_single_excitations(const Determinant& det,
+                                    std::vector<std::tuple<size_t, size_t>>& singleExcitations);
     void compute_double_excitations(
         const Determinant& det,
-        std::vector<std::tuple<size_t, size_t, size_t, size_t>>&
-            doubleExcitations);
+        std::vector<std::tuple<size_t, size_t, size_t, size_t>>& doubleExcitations);
     size_t compute_irrep_divided_excitations(
         const Determinant& det, std::vector<size_t>& excitationDivides,
-        std::vector<std::tuple<int, int, int, int>>& excitationType,
-        ObtCount& obtCount);
-    bool detSingleRandomExcitation(Determinant& new_det,
-                                   const std::vector<int>& occ,
+        std::vector<std::tuple<int, int, int, int>>& excitationType, ObtCount& obtCount);
+    bool detSingleRandomExcitation(Determinant& new_det, const std::vector<int>& occ,
                                    const std::vector<int>& vir, bool isAlpha);
-    void detSingleExcitation(Determinant& new_det,
-                             std::tuple<size_t, size_t>& rand_ext);
-    void
-    detDoubleExcitation(Determinant& new_det,
-                        std::tuple<size_t, size_t, size_t, size_t>& rand_ext);
-    bool detDoubleSoloSpinRandomExcitation(Determinant& new_det,
-                                           const std::vector<int>& occ,
-                                           const std::vector<int>& vir,
-                                           bool isAlpha);
-    bool detDoubleMixSpinRandomExcitation(Determinant& new_det,
-                                          const std::vector<int>& aocc,
+    void detSingleExcitation(Determinant& new_det, std::tuple<size_t, size_t>& rand_ext);
+    void detDoubleExcitation(Determinant& new_det,
+                             std::tuple<size_t, size_t, size_t, size_t>& rand_ext);
+    bool detDoubleSoloSpinRandomExcitation(Determinant& new_det, const std::vector<int>& occ,
+                                           const std::vector<int>& vir, bool isAlpha);
+    bool detDoubleMixSpinRandomExcitation(Determinant& new_det, const std::vector<int>& aocc,
                                           const std::vector<int>& bocc,
                                           const std::vector<int>& avir,
                                           const std::vector<int>& bvir);
-    void
-    detExcitation(Determinant& new_det, size_t rand_ext,
-                  std::vector<size_t>& excitationDivides,
-                  std::vector<std::tuple<int, int, int, int>>& excitationType,
-                  ObtCount& obtCount);
+    void detExcitation(Determinant& new_det, size_t rand_ext,
+                       std::vector<size_t>& excitationDivides,
+                       std::vector<std::tuple<int, int, int, int>>& excitationType,
+                       ObtCount& obtCount);
     double count_walkers(walker_map& walkers);
     double compute_proj_energy(Determinant& ref, walker_map& walkers);
     double compute_var_energy(walker_map& walkers);

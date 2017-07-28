@@ -134,11 +134,9 @@ class AOSubspace {
     // ==> Constructors <==
 
     // Simple constructor
-    AOSubspace(std::shared_ptr<Molecule> molecule,
-               std::shared_ptr<BasisSet> basis);
+    AOSubspace(std::shared_ptr<Molecule> molecule, std::shared_ptr<BasisSet> basis);
     // Constructor with list of subspaces
-    AOSubspace(std::vector<std::string> subspace_str,
-               std::shared_ptr<Molecule> molecule,
+    AOSubspace(std::vector<std::string> subspace_str, std::shared_ptr<Molecule> molecule,
                std::shared_ptr<BasisSet> basis);
 
     // ==> User's interface <==
@@ -170,8 +168,7 @@ class AOSubspace {
     ///   5. l/m label, e.g. "2px" (string)
     ///
     /// @arg str_format A string that specifies the output formatting
-    std::vector<std::string>
-    aolabels(std::string str_format = "%2$s%3$d (%4$d%5$s)") const;
+    std::vector<std::string> aolabels(std::string str_format = "%2$s%3$d (%4$d%5$s)") const;
 
     /// Return a vector of AOInfo objects
     const std::vector<AOInfo>& aoinfo() const;
@@ -199,8 +196,7 @@ class AOSubspace {
     /// with angular momentum quantum number l and index m
     std::vector<std::vector<std::string>> lm_labels_sperical_;
 
-    std::map<std::string, std::vector<std::pair<int, int>>>
-        labels_sperical_to_lm_;
+    std::map<std::string, std::vector<std::pair<int, int>>> labels_sperical_to_lm_;
 
     /// The list of all AOs with their properties
     std::vector<AOInfo> aoinfo_vec_;
@@ -231,8 +227,7 @@ class AOSubspace {
 };
 
 // Helper function to create a projector using info in wfn and options
-SharedMatrix create_aosubspace_projector(SharedWavefunction wfn,
-                                         Options& options);
+SharedMatrix create_aosubspace_projector(SharedWavefunction wfn, Options& options);
 }
 }
 

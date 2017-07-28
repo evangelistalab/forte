@@ -72,8 +72,7 @@ class BlockedTensorFactory {
     //ie for a hhpp, {hhpp, hHpP, HHPP}
     //Returns -> BlockTensor
     */
-    ambit::BlockedTensor build(ambit::TensorType storage,
-                               const std::string& name,
+    ambit::BlockedTensor build(ambit::TensorType storage, const std::string& name,
                                const std::vector<std::string>& spin_stuff,
                                bool is_local_variable = false);
     /* -- add_mo_space
@@ -88,8 +87,7 @@ class BlockedTensorFactory {
     void add_mo_space(const std::string& name, const std::string& mo_indices,
                       std::vector<std::pair<size_t, ambit::SpinType>> mo_spin);
     // Adds a composite_mo_space -> combines mo_space -> h = c + a
-    void add_composite_mo_space(const std::string& name,
-                                const std::string& mo_indices,
+    void add_composite_mo_space(const std::string& name, const std::string& mo_indices,
                                 const std::vector<std::string>& subspaces);
     // Reset mo_space
     void reset_mo_space() {
@@ -103,8 +101,7 @@ class BlockedTensorFactory {
     this
     /// for a four character string
     */
-    std::vector<std::string> generate_indices(const std::string in_str,
-                                              const std::string type);
+    std::vector<std::string> generate_indices(const std::string in_str, const std::string type);
     // Lets the user know how much memory is left
     double memory_left() { return memory_; }
     // Calculates the amount of memory BlockedTensor takes up
@@ -115,12 +112,9 @@ class BlockedTensorFactory {
     // controls printing information
     void print_memory_info() { print_memory_ = true; }
     void memory_summary_per_block(ambit::BlockedTensor&);
-    std::vector<std::string>
-    spin_cases_avoid(const std::vector<std::string>& vecstring,
-                     int how_many_active);
-    std::map<std::string, std::vector<size_t>> get_mo_to_index() {
-        return molabel_to_index_;
-    }
+    std::vector<std::string> spin_cases_avoid(const std::vector<std::string>& vecstring,
+                                              int how_many_active);
+    std::map<std::string, std::vector<size_t>> get_mo_to_index() { return molabel_to_index_; }
 };
 }
 }

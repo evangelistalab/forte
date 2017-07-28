@@ -66,11 +66,9 @@ class FCISolver {
      * @param initial_guess_per_root get from options object
      * @param print Control printing of FCISolver
      */
-    FCISolver(Dimension active_dim, std::vector<size_t> core_mo,
-              std::vector<size_t> active_mo, size_t na, size_t nb,
-              size_t multiplicity, size_t symmetry,
-              std::shared_ptr<ForteIntegrals> ints,
-              std::shared_ptr<MOSpaceInfo> mo_space_info,
+    FCISolver(Dimension active_dim, std::vector<size_t> core_mo, std::vector<size_t> active_mo,
+              size_t na, size_t nb, size_t multiplicity, size_t symmetry,
+              std::shared_ptr<ForteIntegrals> ints, std::shared_ptr<MOSpaceInfo> mo_space_info,
               size_t initial_guess_per_root, int print, Options& options);
     /**
      * @brief FCISolver
@@ -85,11 +83,10 @@ class FCISolver {
      * @param mo_space_info -> mo_space_info object
      * @param options object
      */
-    FCISolver(Dimension active_dim, std::vector<size_t> core_mo,
-              std::vector<size_t> active_mo, size_t na, size_t nb,
-              size_t multiplicity, size_t symmetry,
-              std::shared_ptr<ForteIntegrals> ints,
-              std::shared_ptr<MOSpaceInfo> mo_space_info, Options& options);
+    FCISolver(Dimension active_dim, std::vector<size_t> core_mo, std::vector<size_t> active_mo,
+              size_t na, size_t nb, size_t multiplicity, size_t symmetry,
+              std::shared_ptr<ForteIntegrals> ints, std::shared_ptr<MOSpaceInfo> mo_space_info,
+              Options& options);
 
     ~FCISolver() {}
 
@@ -119,9 +116,7 @@ class FCISolver {
     }
     /// If you want to use your own integrals need to set FCIIntegrals (This is
     /// normally not set)
-    void set_integral_pointer(std::shared_ptr<FCIIntegrals> fci_ints) {
-        fci_ints_ = fci_ints;
-    }
+    void set_integral_pointer(std::shared_ptr<FCIIntegrals> fci_ints) { fci_ints_ = fci_ints; }
 
     /// When set to true before calling compute_energy(), it will test the
     /// reduce density matrices.  Watch out, this function is very slow!
@@ -213,14 +208,12 @@ class FCISolver {
     std::shared_ptr<MOSpaceInfo> mo_space_info_;
 
     /// Initial CI wave function guess
-    std::vector<
-        std::pair<int, std::vector<std::tuple<size_t, size_t, size_t, double>>>>
+    std::vector<std::pair<int, std::vector<std::tuple<size_t, size_t, size_t, double>>>>
     initial_guess(FCIWfn& diag, size_t n, size_t multiplicity,
                   std::shared_ptr<FCIIntegrals> fci_ints);
     /// The options object
     Options& options_;
 };
-
 }
 }
 
