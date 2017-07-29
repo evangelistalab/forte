@@ -112,6 +112,8 @@ class ElementwiseCI : public Wavefunction {
     std::function<bool(double, double, double)> prescreen_H_CI_;
     /// Function for important matrix element
     std::function<bool(double, double, double, double)> important_H_CI_CJ_;
+    /// Functional order
+    double functional_order_;
     /// A string that describes the coupling importance functional
     std::string functional_description_;
     /// The wave function symmetry

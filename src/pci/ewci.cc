@@ -29,6 +29,7 @@
 
 #include <algorithm>
 #include <cmath>
+#include <limits>
 #include <functional>
 #include <tuple>
 #include <unordered_map>
@@ -238,6 +239,11 @@ void ElementwiseCI::startup() {
     }
 
     if (options_.get_str("PCI_FUNCTIONAL") == "MAX") {
+        if (std::numeric_limits<double>::has_infinity) {
+            functional_order_ = std::numeric_limits<double>::infinity();
+        } else {
+            functional_order_ = std::numeric_limits<double>::max();
+        }
         prescreen_H_CI_ = [](double HJI, double CI, double spawning_threshold) {
             return std::fabs(HJI * CI) >= spawning_threshold;
         };
@@ -246,6 +252,7 @@ void ElementwiseCI::startup() {
         };
         functional_description_ = "|Hij|*max(|Ci|,|Cj|)";
     } else if (options_.get_str("PCI_FUNCTIONAL") == "SUM") {
+        functional_order_ = 1.0;
         prescreen_H_CI_ = [](double HJI, double CI, double spawning_threshold) {
             return std::fabs(HJI * CI) >= 0.5 * spawning_threshold;
         };
@@ -254,6 +261,7 @@ void ElementwiseCI::startup() {
         };
         functional_description_ = "|Hij|*(|Ci|+|Cj|)";
     } else if (options_.get_str("PCI_FUNCTIONAL") == "SQUARE") {
+        functional_order_ = 2.0;
         prescreen_H_CI_ = [](double HJI, double CI, double spawning_threshold) {
             return std::fabs(HJI * CI) >= 1.4142135623730952 * spawning_threshold;
         };
@@ -262,6 +270,7 @@ void ElementwiseCI::startup() {
         };
         functional_description_ = "|Hij|*sqrt(Ci^2+Cj^2)";
     } else if (options_.get_str("PCI_FUNCTIONAL") == "SQRT") {
+        functional_order_ = 0.5;
         prescreen_H_CI_ = [](double HJI, double CI, double spawning_threshold) {
             return std::fabs(HJI * CI) >= 0.25 * spawning_threshold;
         };
@@ -272,11 +281,12 @@ void ElementwiseCI::startup() {
         };
         functional_description_ = "|Hij|*(sqrt(|Ci|)+sqrt(|Cj|))^2";
     } else if (options_.get_str("PCI_FUNCTIONAL") == "SPECIFY-ORDER") {
-        double order = options_.get_double("PCI_FUNCTIONAL_ORDER");
-        double factor = std::pow(2, 1.0 / order);
+        functional_order_ = options_.get_double("PCI_FUNCTIONAL_ORDER");
+        double factor = std::pow(2.0, 1.0 / functional_order_);
         prescreen_H_CI_ = [factor](double HJI, double CI, double spawning_threshold) {
             return std::fabs(HJI * CI) * factor >= spawning_threshold;
         };
+        double order = functional_order_;
         important_H_CI_CJ_ = [order](double HJI, double CI, double CJ, double spawning_threshold) {
             return std::fabs(HJI) *
                        std::pow(std::pow(std::fabs(CI), order) + std::pow(std::fabs(CJ), order),
@@ -588,8 +598,9 @@ double ElementwiseCI::compute_energy() {
     }
 
     timer_on("EWCI:Couplings");
-    compute_single_couplings(spawning_threshold_);
-    compute_double_couplings(spawning_threshold_);
+    double factor = std::max(1.0, std::pow(2.0, 1.0 / functional_order_ - 0.5));
+    compute_single_couplings(spawning_threshold_ / factor);
+    compute_double_couplings(spawning_threshold_ / factor);
     timer_off("EWCI:Couplings");
 
     // Compute the initial guess
