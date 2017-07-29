@@ -30,6 +30,7 @@
 #include <algorithm>
 #include <cmath>
 #include <limits>
+#include <cfloat>
 #include <functional>
 #include <tuple>
 #include <unordered_map>
@@ -1218,7 +1219,8 @@ void ElementwiseCI::apply_tau_H_symm(double tau, double spawning_threshold, det_
     //    det_hashvec result_dets(ref_dets);
     det_hashvec extra_dets;
     std::vector<double> extra_C;
-    result_C.resize(ref_size, std::nan(""));
+//    result_C.resize(ref_size, std::nan(""));
+    result_C.resize(ref_size, DBL_MIN);
 
     std::vector<std::vector<std::pair<size_t, double>>> thread_index_C_vecs(num_threads_);
     std::vector<std::vector<std::pair<Determinant, double>>> thread_det_C_vecs(num_threads_);
@@ -1239,11 +1241,7 @@ void ElementwiseCI::apply_tau_H_symm(double tau, double spawning_threshold, det_
 #pragma omp critical(overlap_dets)
             {
                 for (const std::pair<size_t, double>& p : thread_index_C_vecs[current_rank]) {
-                    if (std::isnan(result_C[p.first])) {
-                        result_C[p.first] = p.second;
-                    } else {
-                        result_C[p.first] += p.second;
-                    }
+                    result_C[p.first] += p.second;
                 }
             }
 #pragma omp critical(merge_extra)
@@ -1262,11 +1260,7 @@ void ElementwiseCI::apply_tau_H_symm(double tau, double spawning_threshold, det_
 #pragma omp critical(overlap_dets)
             {
                 for (const std::pair<size_t, double>& p : thread_index_C_vecs[current_rank]) {
-                    if (std::isnan(result_C[p.first])) {
-                        result_C[p.first] = p.second;
-                    } else {
-                        result_C[p.first] += p.second;
-                    }
+                    result_C[p.first] += p.second;
                 }
             }
 #pragma omp critical(merge_extra)
@@ -1279,7 +1273,7 @@ void ElementwiseCI::apply_tau_H_symm(double tau, double spawning_threshold, det_
 
     std::vector<size_t> removing_indices;
     for (size_t I = 0; I < ref_size; ++I) {
-        if (std::isnan(result_C[I])) {
+        if (result_C[I] == DBL_MIN) {
             removing_indices.push_back(I);
         }
     }
@@ -1859,7 +1853,11 @@ void ElementwiseCI::apply_tau_H_symm_det_dynamic_HBCI_2(
         // parallel_timer_off("EWCI:doubles", omp_get_thread_num());
     }
     if (new_index_C_vec.size() + new_det_C_vec.size() != 0) {
-        new_index_C_vec.push_back(std::make_pair(I, diagonal_contribution));
+        if (std::fabs(diagonal_contribution) > DBL_MIN) {
+            new_index_C_vec.push_back(std::make_pair(I, diagonal_contribution));
+        } else {
+            new_index_C_vec.push_back(std::make_pair(I, -DBL_MIN));
+        }
     }
 }
 
