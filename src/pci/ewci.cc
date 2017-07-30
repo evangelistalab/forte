@@ -1040,8 +1040,8 @@ void ElementwiseCI::propagate_DL(det_hashvec& dets_hashvec, std::vector<double>&
     //    det_hashvec dets_hashvec(dets);
     apply_tau_H_symm(1.0, spawning_threshold, dets_hashvec, C, sigma_vec[0], 0.0, overlap_size);
     b_vec[0] = C;
-    b_vec[0].resize(overlap_size);
-    //    b_vec[0].resize(result_dets.size(), 0.0);
+//    b_vec[0].resize(overlap_size);
+//    b_vec[0].resize(dets_hashvec.size(), 0.0);
     //    dets_hashvec = result_dets;
     //    dets = dets_hashvec.toVector();
     if (ref_size <= 1) {
@@ -1144,7 +1144,8 @@ void ElementwiseCI::propagate_DL(det_hashvec& dets_hashvec, std::vector<double>&
         }
         if (current_order >= davidson_subspace_per_root_) {
             b_vec[0].resize(dets_size, 0.0);
-            for (int j = 0, jmax = dets_hashvec.size(); j < jmax; j++) {
+            int jmax = dets_hashvec.size();
+            for (int j = 0; j < jmax; j++) {
                 std::vector<double> b_j(davidson_collapse_per_root_, 0.0);
                 std::vector<double> sigma_j(davidson_collapse_per_root_, 0.0);
                 for (int l = 0; l < davidson_collapse_per_root_; l++) {

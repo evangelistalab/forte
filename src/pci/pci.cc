@@ -5107,6 +5107,7 @@ double dot(std::vector<double>& C1, std::vector<double>& C2) {
     size_t size1 = C1.size(), size2 = C2.size();
     size1 = size1 < size2 ? size1 : size2;
     double result = 0.0;
+#pragma omp parallel for reduction(+ : result)
     for (int i = 0; i < size1; i++) {
         result += C1[i] * C2[i];
     }
@@ -5178,6 +5179,7 @@ void add(std::vector<double>& a, double k, std::vector<double>& b) {
     size_t sizeA = a.size(), sizeB = b.size();
     if (sizeA < sizeB)
         a.resize(sizeB);
+#pragma omp parallel for
     for (int i = 0; i < sizeB; i++) {
         a[i] += k * b[i];
     }
@@ -5185,6 +5187,7 @@ void add(std::vector<double>& a, double k, std::vector<double>& b) {
 
 void scale(std::vector<double>& A, double alpha) {
     size_t size = A.size();
+#pragma omp parallel for
     for (size_t I = 0; I < size; ++I) {
         A[I] *= alpha;
     }
