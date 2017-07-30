@@ -968,13 +968,12 @@ void ProjectorCI_HashVec::propagate_DL(det_hashvec& dets_hashvec, std::vector<do
     std::vector<std::vector<double>> sigma_vec(davidson_subspace_per_root_);
     std::vector<double> alpha_vec(davidson_subspace_per_root_);
     SharedMatrix A(new Matrix(davidson_subspace_per_root_, davidson_subspace_per_root_));
-    b_vec[0] = C;
     //    det_hash<> dets_C_hash;
     //    apply_tau_H_ref_C_symm(1.0, spawning_threshold, dets, b_vec[0], C,
     //                           dets_C_hash, 0.0);
     //    copy_hash_to_vec_order_ref(dets_C_hash, dets, sigma_vec[0]);
     //    det_hashvec dets_hashvec(dets);
-    apply_tau_H_symm(1.0, spawning_threshold, dets_hashvec, b_vec[0], sigma_vec[0], 0.0);
+    apply_tau_H_symm(1.0, spawning_threshold, dets_hashvec, C, sigma_vec[0], 0.0);
     //    dets = dets_hashvec.toVector();
     if (ref_size <= 1) {
         C = sigma_vec[0];
@@ -984,9 +983,11 @@ void ProjectorCI_HashVec::propagate_DL(det_hashvec& dets_hashvec, std::vector<do
         return;
     }
 
-    A->set(0, 0, dot(b_vec[0], sigma_vec[0]));
-
     size_t dets_size = dets_hashvec.size();
+    b_vec[0] = C;
+    A->set(0, 0, dot(b_vec[0], sigma_vec[0]));
+    b_vec[0].resize(dets_size, 0.0);
+
     std::vector<double> diag_vec(dets_size);
 #pragma omp parallel for
     for (int i = 0; i < dets_size; i++) {
@@ -1002,10 +1003,12 @@ void ProjectorCI_HashVec::propagate_DL(det_hashvec& dets_hashvec, std::vector<do
     for (i = 1; i < max_Davidson_iter_; i++) {
 
         for (int k = 0; k < current_order; k++) {
-            for (int j = 0, jmax = b_vec[k].size(); j < jmax; j++) {
+#pragma omp parallel for
+            for (int j = 0; j < dets_size; j++) {
                 delta_vec[j] += alpha_vec[k] * (sigma_vec[k][j] - lambda * b_vec[k][j]);
             }
         }
+#pragma omp parallel for
         for (int j = 0; j < dets_size; j++) {
             delta_vec[j] /= lambda - diag_vec[j];
         }
@@ -1075,8 +1078,8 @@ void ProjectorCI_HashVec::propagate_DL(det_hashvec& dets_hashvec, std::vector<do
             break;
         }
         if (current_order >= davidson_subspace_per_root_) {
-            b_vec[0].resize(dets_size, 0.0);
-            for (int j = 0, jmax = dets_hashvec.size(); j < jmax; j++) {
+#pragma omp parallel for
+            for (int j = 0; j < dets_size; j++) {
                 std::vector<double> b_j(davidson_collapse_per_root_, 0.0);
                 std::vector<double> sigma_j(davidson_collapse_per_root_, 0.0);
                 for (int l = 0; l < davidson_collapse_per_root_; l++) {
@@ -1124,7 +1127,8 @@ void ProjectorCI_HashVec::propagate_DL(det_hashvec& dets_hashvec, std::vector<do
     C.resize(dets_hashvec.size(), 0.0);
     //    b_vec[0].resize(dets.size(), 0.0);
     for (int i = 1; i < current_order; i++) {
-        for (int j = 0, jmax = b_vec[i].size(); j < jmax; j++) {
+#pragma omp parallel for
+        for (int j = 0; j < dets_size; j++) {
             C[j] += alpha_vec[i] * b_vec[i][j];
         }
     }
