@@ -409,11 +409,11 @@ void SemiCanonical::transform_reference(ambit::Tensor& Ua, ambit::Tensor& Ub,
     L3aaaT("pqrstu") =
         Ua("ap") * Ua("bq") * Ua("cr") * L3aaa0("abcijk") * Ua("is") * Ua("jt") * Ua("ku");
     L3aabT("pqRstU") =
-        Ua("ap") * Ua("bq") * Ub("CR") * L3aab0("abCijK") * Ua("is") * Ua("jt") * Ua("KU");
+        Ua("ap") * Ua("bq") * Ub("CR") * L3aab0("abCijK") * Ua("is") * Ua("jt") * Ub("KU");
     L3abbT("pQRsTU") =
-        Ua("ap") * Ub("BQ") * Ub("CR") * L3abb0("aBCiJK") * Ua("is") * Ub("JT") * Ua("KU");
+        Ua("ap") * Ub("BQ") * Ub("CR") * L3abb0("aBCiJK") * Ua("is") * Ub("JT") * Ub("KU");
     L3bbbT("PQRSTU") =
-        Ub("AP") * Ub("BQ") * Ub("CR") * L3bbb0("ABCIJK") * Ub("IS") * Ub("JT") * Ua("KU");
+        Ub("AP") * Ub("BQ") * Ub("CR") * L3bbb0("ABCIJK") * Ub("IS") * Ub("JT") * Ub("KU");
 
     reference.set_L3aaa(L3aaaT);
     reference.set_L3aab(L3aabT);
