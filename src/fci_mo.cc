@@ -116,7 +116,7 @@ void FCI_MO::read_options() {
 
     // energy convergence
     econv_ = options_.get_double("E_CONVERGENCE");
-    dconv_ = options_.get_double("D_CONVERGENCE");
+    fcheck_threshold_ = 0.1 * std::sqrt(econv_);
 
     // nuclear repulsion
     std::shared_ptr<Molecule> molecule = Process::environment.molecule();
@@ -529,7 +529,7 @@ double FCI_MO::compute_canonical_ss_energy() {
 
     // check Fock matrix
     size_t count = 0;
-    Check_Fock(Fa_, Fb_, dconv_, count);
+    Check_Fock(Fa_, Fb_, fcheck_threshold_, count);
 
     // semi-canonicalize orbitals
     if (count == 0) {
@@ -543,7 +543,7 @@ double FCI_MO::compute_canonical_ss_energy() {
 
         // recheck Fock matrix
         count = 0;
-        Check_Fock(Fa_, Fb_, dconv_, count);
+        Check_Fock(Fa_, Fb_, fcheck_threshold_, count);
     }
 
     Eref_ = Eref;
@@ -2313,7 +2313,7 @@ void FCI_MO::print_Fock(const string& spin, const d2& Fock) {
                     FT->set(i, j, diff);
                 }
             }
-            if (FT->rms() > dconv_) {
+            if (FT->rms() > fcheck_threshold_) {
                 outfile->Printf("  Warning: %s not symmetric for %s and %s blocks\n", name.c_str(),
                                 bname.c_str(), bnamer.c_str());
                 Fr.print();
@@ -2802,7 +2802,7 @@ bool FCI_MO::CheckDensity() {
     }
 
     bool natural = false;
-    if (std::fabs(maxes_sum) > 10.0 * dconv_) {
+    if (std::fabs(maxes_sum) > 10.0 * fcheck_threshold_) {
         std::string sep(3 + 16 * 3, '-');
         outfile->Printf("\n    Warning! Orbitals are not natural orbitals!");
         outfile->Printf("\n    Max off-diagonal values of core, active, "
@@ -3715,7 +3715,7 @@ double FCI_MO::compute_canonical_sa_energy() {
     // check Fock matrix
     size_t count = 0;
     if (form_Fock_) {
-        Check_Fock(Fa_, Fb_, dconv_, count);
+        Check_Fock(Fa_, Fb_, fcheck_threshold_, count);
     }
 
     // semi-canonicalize orbitals
@@ -3731,7 +3731,7 @@ double FCI_MO::compute_canonical_sa_energy() {
         // recheck Fock matrix
         count = 0;
         if (form_Fock_) {
-            Check_Fock(Fa_, Fb_, dconv_, count);
+            Check_Fock(Fa_, Fb_, fcheck_threshold_, count);
         }
     }
 
@@ -3823,6 +3823,10 @@ void FCI_MO::xms_rotate(const int& irrep) {
 
 void FCI_MO::compute_sa_ref() {
     timer_on("Compute SA Ref");
+    Timer tcu;
+    if (!quiet_) {
+        outfile->Printf("\n  Computing SA 2- and 3-cumulants ... ");
+    }
 
     // prepare averaged 2- and 3-densities
     size_t nelement2 = na_ * na_ * na_ * na_;
@@ -3907,6 +3911,9 @@ void FCI_MO::compute_sa_ref() {
         compute_cumulant3(sa_tpdm_aaa, sa_tpdm_aab, sa_tpdm_abb, sa_tpdm_bbb);
     }
 
+    if (!quiet_) {
+        outfile->Printf("Done. Timing %15.6f s\n", tcu.get());
+    }
     timer_off("Compute SA Ref");
 }
 

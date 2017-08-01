@@ -61,10 +61,10 @@
 #include "mrdsrg-so/mrdsrg_so.h"
 #include "mrdsrg-so/so-mrdsrg.h"
 #include "mrdsrg-spin-adapted/dsrg_mrpt.h"
-#include "mrdsrg-spin-free/dsrg_mrpt2.h"
-#include "mrdsrg-spin-free/dsrg_mrpt3.h"
-#include "mrdsrg-spin-free/mrdsrg.h"
-#include "mrdsrg-spin-free/three_dsrg_mrpt2.h"
+#include "mrdsrg-spin-integrated/dsrg_mrpt2.h"
+#include "mrdsrg-spin-integrated/dsrg_mrpt3.h"
+#include "mrdsrg-spin-integrated/mrdsrg.h"
+#include "mrdsrg-spin-integrated/three_dsrg_mrpt2.h"
 #include "orbital-helper/localize.h"
 #include "orbital-helper/es-nos.h"
 #include "pci/ewci.h"
@@ -229,7 +229,7 @@ void forte_old_methods(SharedWavefunction ref_wfn, Options& options,
             fci->compute_energy();
             Reference reference = fci->reference();
             if (options.get_bool("SEMI_CANONICAL")) {
-                SemiCanonical semi(ref_wfn, options, ints, mo_space_info, reference);
+                SemiCanonical semi(ref_wfn, ints, mo_space_info);
                 semi.semicanonicalize(reference);
             }
 
@@ -286,7 +286,7 @@ void forte_old_methods(SharedWavefunction ref_wfn, Options& options,
             fci->compute_energy();
             Reference reference = fci->reference();
             if (options.get_bool("SEMI_CANONICAL")) {
-                SemiCanonical semi(ref_wfn, options, ints, mo_space_info, reference);
+                SemiCanonical semi(ref_wfn, ints, mo_space_info);
                 semi.semicanonicalize(reference);
             }
             std::shared_ptr<DSRG_MRPT> dsrg(
@@ -372,7 +372,7 @@ void forte_old_methods(SharedWavefunction ref_wfn, Options& options,
             fci->compute_energy();
             Reference reference = fci->reference();
             if (options.get_bool("SEMI_CANONICAL")) {
-                SemiCanonical semi(ref_wfn, options, ints, mo_space_info, reference);
+                SemiCanonical semi(ref_wfn, ints, mo_space_info);
                 semi.semicanonicalize(reference);
             }
             std::shared_ptr<DSRG_MRPT2> dsrg_mrpt2 =
@@ -405,7 +405,7 @@ void forte_old_methods(SharedWavefunction ref_wfn, Options& options,
             }
 
             // Transform integrals to semicanonical basis
-            SemiCanonical semi(ref_wfn, options, ints, mo_space_info, aci_reference);
+            SemiCanonical semi(ref_wfn, ints, mo_space_info);
             semi.semicanonicalize(aci_reference);
 
             std::shared_ptr<DSRG_MRPT2> dsrg_mrpt2(
@@ -491,7 +491,7 @@ void forte_old_methods(SharedWavefunction ref_wfn, Options& options,
                 aci_reference = aci2->reference();
             }
 
-            SemiCanonical semi(ref_wfn, options, ints, mo_space_info, aci_reference);
+            SemiCanonical semi(ref_wfn, ints, mo_space_info);
             semi.semicanonicalize(aci_reference);
             std::shared_ptr<THREE_DSRG_MRPT2> three_dsrg_mrpt2(
                 new THREE_DSRG_MRPT2(aci_reference, ref_wfn, options, ints, mo_space_info));
@@ -504,7 +504,7 @@ void forte_old_methods(SharedWavefunction ref_wfn, Options& options,
             fci->compute_energy();
             Reference reference = fci->reference();
             if (options.get_bool("SEMI_CANONICAL")) {
-                SemiCanonical semi(ref_wfn, options, ints, mo_space_info, reference);
+                SemiCanonical semi(ref_wfn, ints, mo_space_info);
                 semi.semicanonicalize(reference);
             }
 
@@ -598,7 +598,7 @@ void forte_old_methods(SharedWavefunction ref_wfn, Options& options,
             fci->compute_energy();
             Reference reference = fci->reference();
             if (options.get_bool("SEMI_CANONICAL")) {
-                SemiCanonical semi(ref_wfn, options, ints, mo_space_info, reference);
+                SemiCanonical semi(ref_wfn, ints, mo_space_info);
                 semi.semicanonicalize(reference);
             }
 
@@ -634,7 +634,7 @@ void forte_old_methods(SharedWavefunction ref_wfn, Options& options,
             fci->compute_energy();
             Reference reference = fci->reference();
             if (options.get_bool("SEMI_CANONICAL")) {
-                SemiCanonical semi(ref_wfn, options, ints, mo_space_info, reference);
+                SemiCanonical semi(ref_wfn, ints, mo_space_info);
                 semi.semicanonicalize(reference);
             }
             std::shared_ptr<SOMRDSRG> somrdsrg(

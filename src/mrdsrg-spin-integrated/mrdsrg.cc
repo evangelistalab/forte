@@ -478,8 +478,7 @@ double MRDSRG::compute_energy_relaxed() {
         std::vector<double> Edsrg_vec, Erelax_vec;
         std::vector<double> Edelta_dsrg_vec, Edelta_relax_vec;
         bool converged = false, failed = false;
-        SemiCanonical semiorb(reference_wavefunction_, options_, ints_, mo_space_info_, reference_,
-                              true);
+        SemiCanonical semiorb(reference_wavefunction_, ints_, mo_space_info_, true);
 
         // start iteration
         do {
@@ -827,8 +826,7 @@ double MRDSRG::compute_energy_sa() {
     bool converged = false, failed = false;
     int nentry = eigens_.size();
     std::vector<std::vector<std::vector<double>>> Edsrg_vec;
-    SemiCanonical semiorb(reference_wavefunction_, options_, ints_, mo_space_info_, reference_,
-                          true);
+    SemiCanonical semiorb(reference_wavefunction_, ints_, mo_space_info_, true);
 
     // start iteration
     do {

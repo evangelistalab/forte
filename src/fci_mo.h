@@ -159,13 +159,17 @@ class FCI_MO : public Wavefunction {
     /// Set false to skip Fock build in FCI_MO
     void set_form_Fock(bool form_fock) { form_Fock_ = form_fock; }
 
-    /// Return indices (relative to active, not absolute) of active occupied
-    /// orbitals
+    /// Return indices (relative to active, not absolute) of active occupied orbitals
     std::vector<size_t> actv_occ() { return ah_; }
 
-    /// Return indices (relative to active, not absolute) of active virtual
-    /// orbitals
+    /// Return indices (relative to active, not absolute) of active virtual orbitals
     std::vector<size_t> actv_uocc() { return ap_; }
+
+    /// Return the Dimension of active occupied orbitals
+    Dimension actv_docc() {return active_h_;}
+
+    /// Return the Dimension of active virtual orbitals
+    Dimension actv_virt() {return active_p_;}
 
     /// Return the T1 percentage in CISD computations
     std::vector<double> compute_T1_percentage();
@@ -197,7 +201,7 @@ class FCI_MO : public Wavefunction {
 
     /// Convergence
     double econv_;
-    double dconv_;
+    double fcheck_threshold_;
 
     /// Multiplicity
     int multi_;

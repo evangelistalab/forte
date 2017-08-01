@@ -26,6 +26,8 @@
  * @END LICENSE
  */
 
+#include <cmath>
+
 #include "ambit/blocked_tensor.h"
 
 #include "psi4/libpsio/psio.h"
@@ -43,18 +45,15 @@ namespace forte {
 
 using namespace ambit;
 
-SemiCanonical::SemiCanonical(std::shared_ptr<Wavefunction> wfn, Options& options,
+SemiCanonical::SemiCanonical(std::shared_ptr<Wavefunction> wfn,
                              std::shared_ptr<ForteIntegrals> ints,
-                             std::shared_ptr<MOSpaceInfo> mo_space_info, Reference& reference,
-                             const bool& quiet)
+                             std::shared_ptr<MOSpaceInfo> mo_space_info, const bool& quiet)
     : wfn_(wfn), mo_space_info_(mo_space_info), ints_(ints), quiet_(quiet) {
 
     if (!quiet) {
         print_method_banner(
             {"Semi-Canonical Orbitals", "Jeffrey B. Schriber and Francesco A. Evangelista"});
     }
-
-    // TODO: remove options, reference?
 
     // 0. initialize the dimension objects
     nirrep_ = wfn_->nirrep();
@@ -66,6 +65,101 @@ SemiCanonical::SemiCanonical(std::shared_ptr<Wavefunction> wfn, Options& options
     rdocc_ = mo_space_info_->get_dimension("RESTRICTED_DOCC");
     actv_ = mo_space_info_->get_dimension("ACTIVE");
     ruocc_ = mo_space_info_->get_dimension("RESTRICTED_UOCC");
+
+    // figure out dimension map
+    mo_dims_["core"] = rdocc_;
+    mo_dims_["actv"] = actv_;
+    mo_dims_["virt"] = ruocc_;
+
+    // figure out index map
+    cmo_idx_["core"] = idx_space(rdocc_, Dimension(std::vector<int>(nirrep_, 0)), ncmopi_);
+    cmo_idx_["actv"] = idx_space(actv_, rdocc_, ncmopi_);
+    cmo_idx_["virt"] = idx_space(ruocc_, rdocc_ + actv_, ncmopi_);
+
+    // figure out offsets
+    offsets_["core"] = fdocc_;
+    offsets_["actv"] = fdocc_ + rdocc_;
+    offsets_["virt"] = fdocc_ + rdocc_ + actv_;
+
+    std::vector<int> actv_off;
+    for (int h = 0, offset = 0; h < nirrep_; ++h) {
+        actv_off.emplace_back(offset);
+        offset += actv_[h];
+    }
+    actv_offsets_["actv"] = actv_off;
+}
+
+SemiCanonical::SemiCanonical(std::shared_ptr<Wavefunction> wfn,
+                             std::shared_ptr<ForteIntegrals> ints,
+                             std::shared_ptr<MOSpaceInfo> mo_space_info, Dimension actv_docc,
+                             Dimension actv_virt, const bool& quiet)
+    : wfn_(wfn), mo_space_info_(mo_space_info), ints_(ints), actv_docc_(actv_docc),
+      actv_virt_(actv_virt), quiet_(quiet) {
+
+    if (!quiet) {
+        print_method_banner(
+            {"Semi-Canonical Orbitals", "Jeffrey B. Schriber and Francesco A. Evangelista"});
+    }
+
+    // initialization
+    nirrep_ = wfn_->nirrep();
+    ncmo_ = mo_space_info_->size("CORRELATED");
+    nact_ = mo_space_info_->size("ACTIVE");
+    nmopi_ = wfn_->nmopi();
+    ncmopi_ = mo_space_info_->get_dimension("CORRELATED");
+    fdocc_ = mo_space_info_->get_dimension("FROZEN_DOCC");
+    rdocc_ = mo_space_info_->get_dimension("RESTRICTED_DOCC");
+    actv_ = mo_space_info_->get_dimension("ACTIVE");
+    ruocc_ = mo_space_info_->get_dimension("RESTRICTED_UOCC");
+
+    // test actv_docc and actv_virt
+    Dimension actv = actv_docc + actv_virt;
+    if (actv != actv_) {
+        throw PSIEXCEPTION("ACTIVE_DOCC and ACTIVE_VIRT do not add up to ACTIVE!");
+    }
+
+    // figure out dimension map
+    mo_dims_["core"] = rdocc_;
+    mo_dims_["actv_docc"] = actv_docc_;
+    mo_dims_["actv_virt"] = actv_virt_;
+    mo_dims_["virt"] = ruocc_;
+
+    // figure out index map
+    cmo_idx_["core"] = idx_space(rdocc_, Dimension(std::vector<int>(nirrep_, 0)), ncmopi_);
+    cmo_idx_["actv_docc"] = idx_space(actv_docc_, rdocc_, ncmopi_);
+    cmo_idx_["actv_virt"] = idx_space(actv_virt_, rdocc_ + actv_docc, ncmopi_);
+    cmo_idx_["virt"] = idx_space(ruocc_, rdocc_ + actv_, ncmopi_);
+
+    // figure out offsets
+    offsets_["core"] = fdocc_;
+    offsets_["actv_docc"] = fdocc_ + rdocc_;
+    offsets_["actv_virt"] = fdocc_ + rdocc_ + actv_docc_;
+    offsets_["virt"] = fdocc_ + rdocc_ + actv_;
+
+    std::vector<int> actvh_off, actvp_off;
+    for (int h = 0, offset = 0; h < nirrep_; ++h) {
+        actvh_off.emplace_back(offset);
+        offset += actv_docc[h];
+        actvp_off.emplace_back(offset);
+        offset += actv_virt[h];
+    }
+    actv_offsets_["actv_docc"] = actvh_off;
+    actv_offsets_["actv_virt"] = actvp_off;
+}
+
+std::vector<std::vector<size_t>>
+SemiCanonical::idx_space(const Dimension& npi, const Dimension& bpi, const Dimension& tpi) {
+    std::vector<std::vector<size_t>> out(nirrep_, std::vector<size_t>());
+
+    for (int h = 0, offset = 0; h < nirrep_; ++h) {
+        offset += bpi[h];
+        for (int i = 0; i < npi[h]; ++i) {
+            out[h].emplace_back(offset + i);
+        }
+        offset += tpi[h] - bpi[h];
+    }
+
+    return out;
 }
 
 void SemiCanonical::semicanonicalize(Reference& reference) {
@@ -74,43 +168,40 @@ void SemiCanonical::semicanonicalize(Reference& reference) {
     // 1. Build the Fock matrix
     build_fock_matrix(reference);
 
-    // TODO: it is probably useful to test the Fock matrix
-    // maybe the orbitals are semicanonical already
+    // Check Fock matrix
+    check_fock_matrix();
 
-    // 2. Build transformation matrices from diagononalizing blocks in F
+    bool semi = true;
+    for (const auto& name_semi_pair : checked_results_) {
+        if (name_semi_pair.second) {
+            semi = false;
+        }
+    }
 
-    // These transform all MOs
-    SharedMatrix Ua(new Matrix("Ua", nmopi_, nmopi_));
-    SharedMatrix Ub(new Matrix("Ub", nmopi_, nmopi_));
+    if (semi) {
+        outfile->Printf("\n  Orbitals are already semicanonicalized.");
+    } else {
+        // 2. Build transformation matrices from diagononalizing blocks in F
 
-    // This transforms only within ACTIVE MOs
-    // Use ambit Tensor here so that the ambit mo_spaces remains the same
+        // These transform all MOs
+        SharedMatrix Ua(new Matrix("Ua", nmopi_, nmopi_));
+        SharedMatrix Ub(new Matrix("Ub", nmopi_, nmopi_));
 
-    //    std::vector<size_t> active_mo(nact_);
-    //    for (int i = 0; i < nact_; ++i) {
-    //        active_mo[i] = i;
-    //    }
-    //    BlockedTensor::reset_mo_spaces();
-    //    BlockedTensor::set_expert_mode(true);
-    //    BlockedTensor::add_mo_space("a", "abcdpqrstuijk", active_mo, AlphaSpin);
-    //    BlockedTensor::add_mo_space("A", "ABCDPQRSTUIJK", active_mo, BetaSpin);
-    //    ambit::BlockedTensor U = BlockedTensor::build(CoreTensor, "U", spin_cases({"aa"}));
+        // This transforms only within ACTIVE MOs
+        // Use ambit Tensor here so that the ambit mo_spaces remains the same
+        ambit::Tensor Ua_t = ambit::Tensor::build(ambit::CoreTensor, "Ua", {nact_, nact_});
+        ambit::Tensor Ub_t = ambit::Tensor::build(ambit::CoreTensor, "Ub", {nact_, nact_});
 
-    ambit::Tensor Ua_t = ambit::Tensor::build(ambit::CoreTensor, "Ua", {nact_, nact_});
-    ambit::Tensor Ub_t = ambit::Tensor::build(ambit::CoreTensor, "Ub", {nact_, nact_});
+        build_transformation_matrices(Ua, Ub, Ua_t, Ub_t);
 
-    // TODO: add ways to treat active hole and active particle orbitals
-    // TODO: it might be also useful to diagonalize Fock block only when it is not diagonal
+        // 3. Retransform integrals
+        transform_ints(Ua, Ub);
 
-    build_transformation_matrices(Ua, Ub, Ua_t, Ub_t);
+        // 4. Transform RMDs/cumulants
+        transform_reference(Ua_t, Ub_t, reference);
 
-    // 3. Retransform integrals
-    transform_ints(Ua, Ub);
-
-    // 4. Transform RMDs/cumulants
-    transform_reference(Ua_t, Ub_t, reference);
-
-    outfile->Printf("\n SemiCanonicalize takes %8.6f s.", SemiCanonicalize.get());
+        outfile->Printf("\n  SemiCanonicalize takes %8.6f s.", SemiCanonicalize.get());
+    }
 }
 
 void SemiCanonical::build_fock_matrix(Reference& reference) {
@@ -144,115 +235,133 @@ void SemiCanonical::build_fock_matrix(Reference& reference) {
 
     Timer FockTime;
     ints_->make_fock_matrix(Da, Db);
-    outfile->Printf("\n Took %8.6f s to build fock matrix", FockTime.get());
+    outfile->Printf("\n  Took %8.6f s to build Fock matrix", FockTime.get());
+}
+
+void SemiCanonical::check_fock_matrix() {
+    print_h2("Checking Fock Matrix Diagonal Blocks");
+    int width = 12 + 2 + 13 + 2 + 13;
+    std::string dash(width, '-');
+    outfile->Printf("\n    %12c  %5c%s%5c  %4c%s", ' ', ' ', "Max", ' ', ' ', "2-Norm");
+    outfile->Printf("\n    %s", dash.c_str());
+
+    // universial threshold
+    double e_conv = (wfn_->options()).get_double("E_CONVERGENCE");
+    double threshold_max = 10.0 * e_conv;
+
+    // loop over orbital spaces
+    for (const auto& name_dim_pair : mo_dims_) {
+        std::string name = name_dim_pair.first;
+        std::string name_a = "Fa " + name;
+        std::string name_b = "Fb " + name;
+        Dimension npi = name_dim_pair.second;
+
+        // build Fock matrix of this diagonal block
+        SharedMatrix Fa(new Matrix(name_a, npi, npi));
+        SharedMatrix Fb(new Matrix(name_b, npi, npi));
+
+        for (int h = 0; h < nirrep_; ++h) {
+            for (int i = 0; i < npi[h]; ++i) {
+                for (int j = 0; j < npi[h]; ++j) {
+                    Fa->set(h, i, j, ints_->fock_a(cmo_idx_[name][h][i], cmo_idx_[name][h][j]));
+                    Fb->set(h, i, j, ints_->fock_b(cmo_idx_[name][h][i], cmo_idx_[name][h][j]));
+                }
+            }
+        }
+
+        // zero diagonal elements
+        Fa->zero_diagonal();
+        Fb->zero_diagonal();
+
+        // max value
+        double Famax = Fa->absmax();
+        double Fbmax = Fb->absmax();
+
+        // 2-norm
+        double Fanorm = std::sqrt(Fa->sum_of_squares());
+        double Fbnorm = std::sqrt(Fb->sum_of_squares());
+
+        // printing
+        outfile->Printf("\n    %-12s  %13.10f  %13.10f", name_a.c_str(), Famax, Fanorm);
+        outfile->Printf("\n    %-12s  %13.10f  %13.10f", name_b.c_str(), Fbmax, Fbnorm);
+        outfile->Printf("\n    %s", dash.c_str());
+
+        // check threshold
+        double threshold_norm = npi.sum() * (npi.sum() - 1) * e_conv;
+        bool FaDo = (Famax <= threshold_max && Fanorm <= threshold_norm) ? false : true;
+        bool FbDo = (Fbmax <= threshold_max && Fbnorm <= threshold_norm) ? false : true;
+        checked_results_[name] = FaDo && FbDo;
+    }
 }
 
 void SemiCanonical::build_transformation_matrices(SharedMatrix& Ua, SharedMatrix& Ub,
                                                   ambit::Tensor& Ua_t, ambit::Tensor& Ub_t) {
     // 2. Diagonalize the diagonal blocks of the Fock matrix
-    SharedMatrix Fc_a(new Matrix("Fock core alpha", rdocc_, rdocc_));
-    SharedMatrix Fc_b(new Matrix("Fock core beta", rdocc_, rdocc_));
-    SharedMatrix Fa_a(new Matrix("Fock active alpha", actv_, actv_));
-    SharedMatrix Fa_b(new Matrix("Fock active beta", actv_, actv_));
-    SharedMatrix Fv_a(new Matrix("Fock virtual alpha", ruocc_, ruocc_));
-    SharedMatrix Fv_b(new Matrix("Fock virtual beta", ruocc_, ruocc_));
 
-    for (int h = 0, offset = 0; h < nirrep_; ++h) {
-        // core block
-        for (int i = 0; i < rdocc_[h]; ++i) {
-            for (int j = 0; j < rdocc_[h]; ++j) {
-                Fc_a->set(h, i, j, ints_->fock_a(offset + i, offset + j));
-                Fc_b->set(h, i, j, ints_->fock_b(offset + i, offset + j));
-            }
-        }
-        offset += rdocc_[h];
-
-        // active block
-        for (int u = 0; u < actv_[h]; ++u) {
-            for (int v = 0; v < actv_[h]; ++v) {
-                Fa_a->set(h, u, v, ints_->fock_a(offset + u, offset + v));
-                Fa_b->set(h, u, v, ints_->fock_b(offset + u, offset + v));
-            }
-        }
-        offset += actv_[h];
-
-        // virtual block
-        for (int a = 0; a < ruocc_[h]; ++a) {
-            for (int b = 0; b < ruocc_[h]; ++b) {
-                Fv_a->set(h, a, b, ints_->fock_a(offset + a, offset + b));
-                Fv_b->set(h, a, b, ints_->fock_b(offset + a, offset + b));
-            }
-        }
-        offset += ruocc_[h];
-    }
-
-    // Diagonalize each block of the Fock matrix
-    std::vector<SharedMatrix> evecs;
-    std::vector<SharedVector> evals;
-    for (auto F : {Fc_a, Fc_b, Fa_a, Fa_b, Fv_a, Fv_b}) {
-        SharedMatrix U_tmp(new Matrix("U", F->rowspi(), F->colspi()));
-        SharedVector lambda(new Vector("lambda", F->rowspi()));
-        F->diagonalize(U_tmp, lambda);
-        evecs.push_back(U_tmp);
-        evals.push_back(lambda);
-    }
-    //    Fv_a->print();
-    //    SharedMatrix Uv = evecs[4];
-    //    Fv_a->transform(Uv);
-    //    Fv_a->print();
-
-    // 3. Build the unitary matrices
-
+    // set Ua and Ub to identity by default
+    Ua->identity();
+    Ub->identity();
     std::vector<double> UaData(nact_ * nact_, 0.0);
     std::vector<double> UbData(nact_ * nact_, 0.0);
-    //    Matrix Ua_copy(nact_, nact_);
-    //    Matrix Ub_copy(nact_, nact_);
+    for (size_t i = 0; i < nact_; ++i) {
+        UaData[i * nact_ + i] = 1.0;
+        UbData[i * nact_ + i] = 1.0;
+    }
 
-    //    size_t act_off = 0;
-    for (int h = 0, act_off = 0; h < nirrep_; ++h) {
-        //        size_t offset = 0;
-        int offset = 0;
+    // loop over orbital spaces
+    for (const auto& name_dim_pair : mo_dims_) {
+        std::string name = name_dim_pair.first;
+        std::string name_a = "Fock " + name + " alpha";
+        std::string name_b = "Fock " + name + " beta";
+        Dimension npi = name_dim_pair.second;
+        bool FockDo = checked_results_[name];
 
-        // Set the matrices to the identity,
-        // this takes care of the frozen core and virtual spaces
-        for (int p = 0; p < nmopi_[h]; ++p) {
-            Ua->set(h, p, p, 1.0);
-            Ub->set(h, p, p, 1.0);
-        }
-        offset += fdocc_[h];
+        if (FockDo) {
+            // build Fock matrix of this diagonal block
+            SharedMatrix Fa(new Matrix(name_a, npi, npi));
+            SharedMatrix Fb(new Matrix(name_b, npi, npi));
 
-        // core block
-        for (int i = 0; i < rdocc_[h]; ++i) {
-            for (int j = 0; j < rdocc_[h]; ++j) {
-                Ua->set(h, offset + i, offset + j, evecs[0]->get(h, i, j));
-                Ub->set(h, offset + i, offset + j, evecs[1]->get(h, i, j));
+            for (int h = 0; h < nirrep_; ++h) {
+                for (int i = 0; i < npi[h]; ++i) {
+                    for (int j = 0; j < npi[h]; ++j) {
+                        Fa->set(h, i, j, ints_->fock_a(cmo_idx_[name][h][i], cmo_idx_[name][h][j]));
+                        Fb->set(h, i, j, ints_->fock_b(cmo_idx_[name][h][i], cmo_idx_[name][h][j]));
+                    }
+                }
             }
-        }
-        offset += rdocc_[h];
 
-        // active block
-        for (int u = 0; u < actv_[h]; ++u) {
-            for (int v = 0; v < actv_[h]; ++v) {
-                Ua->set(h, offset + u, offset + v, evecs[2]->get(h, u, v));
-                Ub->set(h, offset + u, offset + v, evecs[3]->get(h, u, v));
+            // diagonalize this Fock block
+            SharedMatrix UsubA(new Matrix("Ua " + name, npi, npi));
+            SharedMatrix UsubB(new Matrix("Ub " + name, npi, npi));
+            SharedVector evalsA(new Vector("evals a " + name, npi));
+            SharedVector evalsB(new Vector("evals b " + name, npi));
+            Fa->diagonalize(UsubA, evalsA);
+            Fb->diagonalize(UsubB, evalsB);
 
-                int nu = act_off + u;
-                int nv = act_off + v;
-                UaData[nu * nact_ + nv] = evecs[2]->get(h, u, v);
-                UbData[nu * nact_ + nv] = evecs[3]->get(h, u, v);
-
-                //                Ua_copy.set(act_off + u, act_off + v, evecs[2]->get(h, u, v));
-                //                Ub_copy.set(act_off + u, act_off + v, evecs[3]->get(h, u, v));
+            // fill in Ua and Ub
+            for (int h = 0; h < nirrep_; ++h) {
+                int offset = offsets_[name][h];
+                for (int i = 0; i < npi[h]; ++i) {
+                    for (int j = 0; j < npi[h]; ++j) {
+                        Ua->set(h, offset + i, offset + j, UsubA->get(h, i, j));
+                        Ub->set(h, offset + i, offset + j, UsubB->get(h, i, j));
+                    }
+                }
             }
-        }
-        act_off += actv_[h];
-        offset += actv_[h];
 
-        // virtual block
-        for (int a = 0; a < ruocc_[h]; ++a) {
-            for (int b = 0; b < ruocc_[h]; ++b) {
-                Ua->set(h, offset + a, offset + b, evecs[4]->get(h, a, b));
-                Ub->set(h, offset + a, offset + b, evecs[5]->get(h, a, b));
+            // fill in UaData and UbData if this block is active
+            if (name.find("actv") != std::string::npos) {
+                for (int h = 0; h < nirrep_; ++h) {
+                    int actv_off = actv_offsets_[name][h];
+                    for (int u = 0; u < npi[h]; ++u) {
+                        for (int v = 0; v < npi[h]; ++v) {
+                            int nu = actv_off + u;
+                            int nv = actv_off + v;
+                            UaData[nu * nact_ + nv] = UsubA->get(h, u, v);
+                            UbData[nu * nact_ + nv] = UsubB->get(h, u, v);
+                        }
+                    }
+                }
             }
         }
     }
@@ -260,14 +369,6 @@ void SemiCanonical::build_transformation_matrices(SharedMatrix& Ua, SharedMatrix
     // copy active data to ambit tensors
     Ua_t.data() = UaData;
     Ub_t.data() = UbData;
-    //    Ua_t.iterate(
-    //        [&](const std::vector<size_t>& i, const std::vector<SpinType>& spin, double& value) {
-    //            if (spin[0] == AlphaSpin) {
-    //                value = Ua_copy.get(i[0], i[1]);
-    //            } else {
-    //                value = Ub_copy.get(i[0], i[1]);
-    //            }
-    //        });
 }
 
 void SemiCanonical::transform_ints(SharedMatrix& Ua, SharedMatrix& Ub) {
@@ -302,94 +403,46 @@ void SemiCanonical::transform_reference(ambit::Tensor& Ua, ambit::Tensor& Ub,
     reference.set_L1b(L1bT);
     outfile->Printf("\n    Transformed 1 cumulants.");
 
-    //    ambit::BlockedTensor gamma1 = BlockedTensor::build(CoreTensor, "Gamma1",
-    //    spin_cases({"aa"}));
-    //    ambit::BlockedTensor rdm1 = BlockedTensor::build(CoreTensor, "rdm1", spin_cases({"aa"}));
-
-    //    rdm1.block("aa")("pq") = reference.L1a()("pq");
-    //    rdm1.block("AA")("pq") = reference.L1b()("pq");
-
-    //    gamma1["pq"] = Ua["ap"] * rdm1["ab"] * Ua["bq"];
-    //    gamma1["PQ"] = Ua["AP"] * rdm1["AB"] * Ua["BQ"];
-
-    // Transform 2-cumulants
+    // Transform 2-cumulants and recompute 2-RDMs using transformed cumulants
     ambit::Tensor L2aa0 = reference.L2aa();
     ambit::Tensor L2ab0 = reference.L2ab();
     ambit::Tensor L2bb0 = reference.L2bb();
 
-    ambit::Tensor L2aaT =
+    //   aa spin
+    ambit::Tensor L2T =
         ambit::Tensor::build(ambit::CoreTensor, "Transformed L2aa", {nact_, nact_, nact_, nact_});
-    ambit::Tensor L2abT =
-        ambit::Tensor::build(ambit::CoreTensor, "Transformed L2ab", {nact_, nact_, nact_, nact_});
-    ambit::Tensor L2bbT =
-        ambit::Tensor::build(ambit::CoreTensor, "Transformed L2bb", {nact_, nact_, nact_, nact_});
+    L2T("pqrs") = Ua("ap") * Ua("bq") * L2aa0("abcd") * Ua("cr") * Ua("ds");
+    L2aa0.copy(L2T);
 
-    L2aaT("pqrs") = Ua("ap") * Ua("bq") * L2aa0("abcd") * Ua("cr") * Ua("ds");
-    L2abT("pQrS") = Ua("ap") * Ub("BQ") * L2ab0("aBcD") * Ua("cr") * Ub("DS");
-    L2bbT("PQRS") = Ub("AP") * Ub("BQ") * L2bb0("ABCD") * Ub("CR") * Ub("DS");
-
-    reference.set_L2aa(L2aaT);
-    reference.set_L2ab(L2abT);
-    reference.set_L2bb(L2bbT);
-    outfile->Printf("\n    Transformed 2 cumulants.");
-
-    // Transform 2-RDMs
-    // Recompute 2-RDMs using transformed cumulants
-    ambit::Tensor G2aaT =
+    ambit::Tensor G2T =
         ambit::Tensor::build(ambit::CoreTensor, "Transformed G2aa", {nact_, nact_, nact_, nact_});
-    ambit::Tensor G2abT =
-        ambit::Tensor::build(ambit::CoreTensor, "Transformed G2ab", {nact_, nact_, nact_, nact_});
-    ambit::Tensor G2bbT =
-        ambit::Tensor::build(ambit::CoreTensor, "Transformed G2bb", {nact_, nact_, nact_, nact_});
+    G2T.copy(L2T);
+    G2T("pqrs") += L1aT("pr") * L1aT("qs");
+    G2T("pqrs") -= L1aT("ps") * L1aT("qr");
+    reference.set_g2aa(G2T.clone());
 
-    G2aaT.copy(L2aaT);
-    G2abT.copy(L2abT);
-    G2bbT.copy(L2bbT);
+    //   ab spin
+    L2T.set_name("Transformed L2ab");
+    L2T("pQrS") = Ua("ap") * Ub("BQ") * L2ab0("aBcD") * Ua("cr") * Ub("DS");
+    L2ab0.copy(L2T);
 
-    G2aaT("pqrs") += L1aT("pr") * L1aT("qs");
-    G2aaT("pqrs") -= L1aT("ps") * L1aT("qr");
+    G2T.set_name("Transformed G2ab");
+    G2T.copy(L2T);
+    G2T("pqrs") += L1aT("pr") * L1bT("qs");
+    reference.set_g2ab(G2T.clone());
 
-    G2abT("pqrs") += L1aT("pr") * L1bT("qs");
+    //   bb spin
+    L2T.set_name("Transformed L2bb");
+    L2T("PQRS") = Ub("AP") * Ub("BQ") * L2bb0("ABCD") * Ub("CR") * Ub("DS");
+    L2bb0.copy(L2T);
 
-    G2bbT("pqrs") += L1bT("pr") * L1bT("qs");
-    G2bbT("pqrs") -= L1bT("ps") * L1bT("qr");
+    G2T.set_name("Transformed G2bb");
+    G2T.copy(L2T);
+    G2T("pqrs") += L1bT("pr") * L1bT("qs");
+    G2T("pqrs") -= L1bT("ps") * L1bT("qr");
+    reference.set_g2bb(G2T.clone());
 
-    //    L2aa0 = reference.g2aa();
-    //    L2ab0 = reference.g2ab();
-    //    L2bb0 = reference.g2bb();
-
-    //    G2aaT("pqrs") = Ua("ap") * Ua("bq") * L2aa0("abcd") * Ua("cr") * Ua("ds");
-    //    G2abT("pQrS") = Ua("ap") * Ub("BQ") * L2ab0("aBcD") * Ua("cr") * Ub("DS");
-    //    G2bbT("PQRS") = Ub("AP") * Ub("BQ") * L2bb0("ABCD") * Ub("CR") * Ub("DS");
-
-    reference.set_g2aa(G2aaT);
-    reference.set_g2ab(G2abT);
-    reference.set_g2bb(G2bbT);
-    outfile->Printf("\n    Transformed 2 RDMs.");
-
-    //    ambit::BlockedTensor tmpL2 = BlockedTensor::build(CoreTensor, "tmpL2",
-    //    spin_cases({"aaaa"}));
-    //    ambit::BlockedTensor L2 = BlockedTensor::build(CoreTensor, "L2", spin_cases({"aaaa"}));
-
-    //    tmpL2.block("aaaa")("abcd") = reference.L2aa()("abcd");
-    //    tmpL2.block("aAaA")("abcd") = reference.L2ab()("abcd");
-    //    tmpL2.block("AAAA")("abcd") = reference.L2bb()("abcd");
-
-    //    L2["pqrs"] = Ua["ap"] * Ua["bq"] * tmpL2["abcd"] * Ua["cr"] * Ua["ds"];
-    //    L2["pQrS"] = Ua["ap"] * Ua["BQ"] * tmpL2["aBcD"] * Ua["cr"] * Ua["DS"];
-    //    L2["PQRS"] = Ua["AP"] * Ua["BQ"] * tmpL2["ABCD"] * Ua["CR"] * Ua["DS"];
-
-    //    ambit::BlockedTensor g2 = BlockedTensor::build(CoreTensor, "g2", spin_cases({"aaaa"}));
-    //    ambit::BlockedTensor tmpg2 = BlockedTensor::build(CoreTensor, "tmpg2",
-    //    spin_cases({"aaaa"}));
-
-    //    tmpg2.block("aaaa")("abcd") = reference.g2aa()("abcd");
-    //    tmpg2.block("aAaA")("abcd") = reference.g2ab()("abcd");
-    //    tmpg2.block("AAAA")("abcd") = reference.g2bb()("abcd");
-
-    //    g2["pqrs"] = Ua["ap"] * Ua["bq"] * tmpg2["abcd"] * Ua["cr"] * Ua["ds"];
-    //    g2["pQrS"] = Ua["ap"] * Ua["BQ"] * tmpg2["aBcD"] * Ua["cr"] * Ua["DS"];
-    //    g2["PQRS"] = Ua["AP"] * Ua["BQ"] * tmpg2["ABCD"] * Ua["CR"] * Ua["DS"];
+    outfile->Printf("\n    Transformed 2 cumulants and RDMs.");
 
     // Transform 3 cumulants
     ambit::Tensor L3aaa0 = reference.L3aaa();
@@ -397,66 +450,28 @@ void SemiCanonical::transform_reference(ambit::Tensor& Ua, ambit::Tensor& Ub,
     ambit::Tensor L3abb0 = reference.L3abb();
     ambit::Tensor L3bbb0 = reference.L3bbb();
 
-    ambit::Tensor L3aaaT =
+    ambit::Tensor L3T =
         ambit::Tensor::build(ambit::CoreTensor, "Transformed L3aaa", std::vector<size_t>(6, nact_));
-    ambit::Tensor L3aabT =
-        ambit::Tensor::build(ambit::CoreTensor, "Transformed L3aab", std::vector<size_t>(6, nact_));
-    ambit::Tensor L3abbT =
-        ambit::Tensor::build(ambit::CoreTensor, "Transformed L3abb", std::vector<size_t>(6, nact_));
-    ambit::Tensor L3bbbT =
-        ambit::Tensor::build(ambit::CoreTensor, "Transformed L3bbb", std::vector<size_t>(6, nact_));
-
-    L3aaaT("pqrstu") =
+    L3T("pqrstu") =
         Ua("ap") * Ua("bq") * Ua("cr") * L3aaa0("abcijk") * Ua("is") * Ua("jt") * Ua("ku");
-    L3aabT("pqRstU") =
-        Ua("ap") * Ua("bq") * Ub("CR") * L3aab0("abCijK") * Ua("is") * Ua("jt") * Ua("KU");
-    L3abbT("pQRsTU") =
-        Ua("ap") * Ub("BQ") * Ub("CR") * L3abb0("aBCiJK") * Ua("is") * Ub("JT") * Ua("KU");
-    L3bbbT("PQRSTU") =
-        Ub("AP") * Ub("BQ") * Ub("CR") * L3bbb0("ABCIJK") * Ub("IS") * Ub("JT") * Ua("KU");
+    L3aaa0.copy(L3T);
 
-    reference.set_L3aaa(L3aaaT);
-    reference.set_L3aab(L3aabT);
-    reference.set_L3abb(L3abbT);
-    reference.set_L3bbb(L3bbbT);
+    L3T.set_name("Transformed L3aab");
+    L3T("pqRstU") =
+        Ua("ap") * Ua("bq") * Ub("CR") * L3aab0("abCijK") * Ua("is") * Ua("jt") * Ub("KU");
+    L3aab0.copy(L3T);
+
+    L3T.set_name("Transformed L3abb");
+    L3T("pQRsTU") =
+        Ua("ap") * Ub("BQ") * Ub("CR") * L3abb0("aBCiJK") * Ua("is") * Ub("JT") * Ub("KU");
+    L3abb0.copy(L3T);
+
+    L3T.set_name("Transformed L3bbb");
+    L3T("PQRSTU") =
+        Ub("AP") * Ub("BQ") * Ub("CR") * L3bbb0("ABCIJK") * Ub("IS") * Ub("JT") * Ub("KU");
+    L3bbb0.copy(L3T);
+
     outfile->Printf("\n    Transformed 3 cumulants.");
-
-    //    ambit::BlockedTensor tmpL3 = BlockedTensor::build(CoreTensor, "Gamma3",
-    //    spin_cases({"aaaaaa"}));
-    //    ambit::BlockedTensor L3 = BlockedTensor::build(CoreTensor, "L3", spin_cases({"aaaaaa"}));
-
-    //    tmpL3.block("aaaaaa")("pqrstu") = reference.L3aaa()("pqrstu");
-    //    tmpL3.block("aaAaaA")("pqrstu") = reference.L3aab()("pqrstu");
-    //    tmpL3.block("aAAaAA")("pqrstu") = reference.L3abb()("pqrstu");
-    //    tmpL3.block("AAAAAA")("pqrstu") = reference.L3bbb()("pqrstu");
-
-    //    L3["pqrstu"] = Ua["ap"] * Ua["bq"] * Ua["cr"] * tmpL3["abcijk"] * Ua["is"] * Ua["jt"] *
-    //    Ua["ku"];
-    //    L3["pqRstU"] = Ua["ap"] * Ua["bq"] * Ua["CR"] * tmpL3["abCijK"] * Ua["is"] * Ua["jt"] *
-    //    Ua["KU"];
-    //    L3["pQRsTU"] = Ua["ap"] * Ua["BQ"] * Ua["CR"] * tmpL3["aBCiJK"] * Ua["is"] * Ua["JT"] *
-    //    Ua["KU"];
-    //    L3["PQRSTU"] = Ua["AP"] * Ua["BQ"] * Ua["CR"] * tmpL3["ABCIJK"] * Ua["IS"] * Ua["JT"] *
-    //    Ua["KU"];
-
-    //    // Recompute the energy
-
-    //    // Update the reference
-    //    reference.set_L1a(gamma1.block("aa"));
-    //    reference.set_L1b(gamma1.block("AA"));
-
-    //    reference.set_L2aa(L2.block("aaaa"));
-    //    reference.set_L2ab(L2.block("aAaA"));
-    //    reference.set_L2bb(L2.block("AAAA"));
-
-    //    reference.set_g2aa(g2.block("aaaa"));
-    //    reference.set_g2ab(g2.block("aAaA"));
-    //    reference.set_g2bb(g2.block("AAAA"));
-
-    //    reference.set_L3aaa(L3.block("aaaaaa"));
-    //    reference.set_L3aab(L3.block("aaAaaA"));
-    //    reference.set_L3abb(L3.block("aAAaAA"));
-    //    reference.set_L3bbb(L3.block("AAAAAA"));
 }
 }
 } // End Namespaces

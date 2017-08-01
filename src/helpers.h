@@ -93,7 +93,7 @@ using SpaceInfo = std::pair<Dimension, std::vector<MOInfo>>;
  * corr_abs_mo("FROZEN_UOCC")     -> []
  *
  * get_relative_mo("FROZEN_DOCC")     -> [(0,0),(1,0)]
- * get_relative_mo("RESTRICTED_DOCC") -> [(0,1),(1,1),(1,2),(2,1),(3,1)]
+ * get_relative_mo("RESTRICTED_DOCC") -> [(0,1),(1,1),(1,2),(2,0),(3,0)]
  * get_relative_mo("ACTIVE")          -> [(0,2),(0,3),(1,3)]
  * get_relative_mo("RESTRICTED_UOCC") -> [(0,4),(1,4),(3,1)]
  * get_relative_mo("FROZEN_UOCC")     -> [(2,1)]

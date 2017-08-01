@@ -608,7 +608,7 @@ double ACTIVE_DSRGPT2::compute_energy() {
 
                     // check Fock matrix
                     size_t count = 0;
-                    fci_mo_->Check_Fock(fci_mo_->Fa_, fci_mo_->Fb_, fci_mo_->dconv_, count);
+                    fci_mo_->Check_Fock(fci_mo_->Fa_, fci_mo_->Fb_, fci_mo_->fcheck_threshold_, count);
 
                     // compute 2- and 3-cumulants
                     Reference reference = fci_mo_->reference();
@@ -677,7 +677,7 @@ double ACTIVE_DSRGPT2::compute_energy() {
 
                     // check Fock matrix
                     size_t count = 0;
-                    fci_mo_->Check_Fock(fci_mo_->Fa_, fci_mo_->Fb_, fci_mo_->dconv_, count);
+                    fci_mo_->Check_Fock(fci_mo_->Fa_, fci_mo_->Fb_, fci_mo_->fcheck_threshold_, count);
 
                     // obtain the name of transition type
                     std::string trans_name = transition_type(0, 0, i_real, h);

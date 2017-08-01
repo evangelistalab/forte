@@ -30,10 +30,10 @@
 #include "../mrdsrg-so/mrdsrg_so.h"
 #include "../mrdsrg-so/so-mrdsrg.h"
 #include "../mrdsrg-spin-adapted/dsrg_mrpt.h"
-#include "../mrdsrg-spin-free/dsrg_mrpt2.h"
-#include "../mrdsrg-spin-free/dsrg_mrpt3.h"
-#include "../mrdsrg-spin-free/mrdsrg.h"
-#include "../mrdsrg-spin-free/three_dsrg_mrpt2.h"
+#include "../mrdsrg-spin-integrated/dsrg_mrpt2.h"
+#include "../mrdsrg-spin-integrated/dsrg_mrpt3.h"
+#include "../mrdsrg-spin-integrated/mrdsrg.h"
+#include "../mrdsrg-spin-integrated/three_dsrg_mrpt2.h"
 
 #include "run_dsrg.h"
 

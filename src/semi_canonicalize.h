@@ -29,6 +29,8 @@
 #ifndef _semi_canonicalize_h_
 #define _semi_canonicalize_h_
 
+#include <tuple>
+
 #include "psi4/liboptions/liboptions.h"
 #include "psi4/libmints/wavefunction.h"
 
@@ -48,9 +50,12 @@ namespace forte {
 class SemiCanonical {
   public:
     // => Constructor <= //
-    SemiCanonical(std::shared_ptr<Wavefunction> wfn, Options& options,
-                  std::shared_ptr<ForteIntegrals> ints, std::shared_ptr<MOSpaceInfo> mo_space_info,
-                  Reference& reference, const bool& quiet = false);
+    SemiCanonical(std::shared_ptr<Wavefunction> wfn, std::shared_ptr<ForteIntegrals> ints,
+                  std::shared_ptr<MOSpaceInfo> mo_space_info, const bool& quiet = false);
+
+    SemiCanonical(std::shared_ptr<Wavefunction> wfn, std::shared_ptr<ForteIntegrals> ints,
+                  std::shared_ptr<MOSpaceInfo> mo_space_info, Dimension actv_docc,
+                  Dimension actv_virt, const bool& quiet = false);
 
     // Transforms integrals and reference
     void semicanonicalize(Reference& reference);
@@ -77,6 +82,27 @@ class SemiCanonical {
     Dimension actv_;
     // Restricted virtuals
     Dimension ruocc_;
+    // Active holes
+    Dimension actv_docc_;
+    // Active particles
+    Dimension actv_virt_;
+
+    // Blocks map
+    std::map<std::string, Dimension> mo_dims_;
+
+    // Indices (no frozen) map
+    std::map<std::string, std::vector<std::vector<size_t>>> cmo_idx_;
+
+    // Figure out indices [[(A1)...], [(A2)...], [(B1)...], [(B2)...]]
+    // npi: this mo space; bpi: mo space before npi; tpi: total mo space
+    std::vector<std::vector<size_t>> idx_space(const Dimension& npi, const Dimension& bpi,
+                                               const Dimension& tpi);
+
+    // Offset of active orbitals
+    std::map<std::string, std::vector<int>> actv_offsets_;
+
+    // Offsets
+    std::map<std::string, Dimension> offsets_;
 
     // Total active MOs
     size_t nact_;
@@ -87,6 +113,12 @@ class SemiCanonical {
 
     // Builds the generalized fock matrix
     void build_fock_matrix(Reference& reference);
+
+    /// Check if diagonal blocks of Fock are diagonal
+    void check_fock_matrix();
+
+    /// If certain Fock blocks need to be diagonalized
+    std::map<std::string, bool> checked_results_;
 
     /**
      * Builds unitary matrices used to diagonalize diagonal blocks of F
