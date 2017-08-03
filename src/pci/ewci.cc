@@ -553,7 +553,7 @@ double ElementwiseCI::compute_energy() {
     outfile->Printf("\n\t              Element wise Configuration Interaction"
                     "implementation");
     outfile->Printf("\n\t         by Francesco A. Evangelista and Tianyuan Zhang");
-    outfile->Printf("\n\t                      version Jul. 29 2017");
+    outfile->Printf("\n\t                      version Aug. 3 2017");
     outfile->Printf("\n\t                    %4d thread(s) %s", num_threads_,
                     have_omp_ ? "(OMP)" : "");
     outfile->Printf("\n\t  ---------------------------------------------------------");
@@ -664,19 +664,12 @@ double ElementwiseCI::compute_energy() {
 
         timer_on("EWCI:Step");
         if (use_inter_norm_) {
-            auto minmax_C = std::minmax_element(C.begin(), C.end());
-            double min_C_abs = std::fabs(*minmax_C.first);
-            double max_C = *minmax_C.second;
-            max_C = max_C > min_C_abs ? max_C : min_C_abs;
+            double max_C = std::fabs(C[0]);
             propagate(generator_, dets_hashvec, C, time_step_, spawning_threshold_ * max_C, shift_);
         } else {
             propagate(generator_, dets_hashvec, C, time_step_, spawning_threshold_, shift_);
         }
         timer_off("EWCI:Step");
-
-        timer_on("EWCI:sort");
-        sortHashVecByCoefficient(dets_hashvec, C);
-        timer_off("EWCI:sort");
 
         // Orthogonalize this solution with respect to the previous ones
         timer_on("EWCI:Ortho");
@@ -684,6 +677,10 @@ double ElementwiseCI::compute_energy() {
             orthogonalize(dets_hashvec, C, solutions_);
         }
         timer_off("EWCI:Ortho");
+
+        timer_on("EWCI:sort");
+        sortHashVecByCoefficient(dets_hashvec, C);
+        timer_off("EWCI:sort");
 
         // Compute the energy and check for convergence
         if (cycle % energy_estimate_freq_ == 0) {
@@ -1039,8 +1036,8 @@ void ElementwiseCI::propagate_DL(det_hashvec& dets_hashvec, std::vector<double>&
     //    copy_hash_to_vec_order_ref(dets_C_hash, dets, sigma_vec[0]);
     //    det_hashvec dets_hashvec(dets);
     apply_tau_H_symm(1.0, spawning_threshold, dets_hashvec, C, sigma_vec[0], 0.0, overlap_size);
-//    b_vec[0].resize(overlap_size);
-//    b_vec[0].resize(dets_hashvec.size(), 0.0);
+    //    b_vec[0].resize(overlap_size);
+    //    b_vec[0].resize(dets_hashvec.size(), 0.0);
     //    dets_hashvec = result_dets;
     //    dets = dets_hashvec.toVector();
     if (ref_size <= 1) {
@@ -1237,8 +1234,8 @@ void ElementwiseCI::apply_tau_H_symm(double tau, double spawning_threshold, det_
         if (max_coupling.first == 0.0 or max_coupling.second == 0.0) {
             thread_det_C_vecs[current_rank].clear();
             apply_tau_H_symm_det_dynamic_HBCI_2(tau, spawning_threshold, ref_dets, ref_C, I,
-                                                ref_C[I], result_C,
-                                                thread_det_C_vecs[current_rank], S, max_coupling);
+                                                ref_C[I], result_C, thread_det_C_vecs[current_rank],
+                                                S, max_coupling);
 #pragma omp critical(merge_extra)
             {
                 merge(extra_dets, extra_C, thread_det_C_vecs[current_rank],
@@ -1249,8 +1246,8 @@ void ElementwiseCI::apply_tau_H_symm(double tau, double spawning_threshold, det_
         } else {
             thread_det_C_vecs[current_rank].clear();
             apply_tau_H_symm_det_dynamic_HBCI_2(tau, spawning_threshold, ref_dets, ref_C, I,
-                                                ref_C[I], result_C,
-                                                thread_det_C_vecs[current_rank], S, max_coupling);
+                                                ref_C[I], result_C, thread_det_C_vecs[current_rank],
+                                                S, max_coupling);
 #pragma omp critical(merge_extra)
             {
                 merge(extra_dets, extra_C, thread_det_C_vecs[current_rank],
@@ -1308,8 +1305,7 @@ void ElementwiseCI::apply_tau_H_symm(double tau, double spawning_threshold, det_
 
 void ElementwiseCI::apply_tau_H_symm_det_dynamic_HBCI_2(
     double tau, double spawning_threshold, const det_hashvec& dets_hashvec,
-    const std::vector<double>& pre_C, size_t I, double CI,
-    std::vector<double>& result_C,
+    const std::vector<double>& pre_C, size_t I, double CI, std::vector<double>& result_C,
     std::vector<std::pair<Determinant, double>>& new_det_C_vec, double E0,
     std::pair<double, double>& max_coupling) {
 
