@@ -553,7 +553,7 @@ double ElementwiseCI::compute_energy() {
     outfile->Printf("\n\t              Element wise Configuration Interaction"
                     "implementation");
     outfile->Printf("\n\t         by Francesco A. Evangelista and Tianyuan Zhang");
-    outfile->Printf("\n\t                      version Jul. 29 2017");
+    outfile->Printf("\n\t                      version Aug. 3 2017");
     outfile->Printf("\n\t                    %4d thread(s) %s", num_threads_,
                     have_omp_ ? "(OMP)" : "");
     outfile->Printf("\n\t  ---------------------------------------------------------");
@@ -664,19 +664,12 @@ double ElementwiseCI::compute_energy() {
 
         timer_on("EWCI:Step");
         if (use_inter_norm_) {
-            auto minmax_C = std::minmax_element(C.begin(), C.end());
-            double min_C_abs = std::fabs(*minmax_C.first);
-            double max_C = *minmax_C.second;
-            max_C = max_C > min_C_abs ? max_C : min_C_abs;
+            double max_C = std::fabs(C[0]);
             propagate(generator_, dets_hashvec, C, time_step_, spawning_threshold_ * max_C, shift_);
         } else {
             propagate(generator_, dets_hashvec, C, time_step_, spawning_threshold_, shift_);
         }
         timer_off("EWCI:Step");
-
-        timer_on("EWCI:sort");
-        sortHashVecByCoefficient(dets_hashvec, C);
-        timer_off("EWCI:sort");
 
         // Orthogonalize this solution with respect to the previous ones
         timer_on("EWCI:Ortho");
@@ -684,6 +677,10 @@ double ElementwiseCI::compute_energy() {
             orthogonalize(dets_hashvec, C, solutions_);
         }
         timer_off("EWCI:Ortho");
+
+        timer_on("EWCI:sort");
+        sortHashVecByCoefficient(dets_hashvec, C);
+        timer_off("EWCI:sort");
 
         // Compute the energy and check for convergence
         if (cycle % energy_estimate_freq_ == 0) {
