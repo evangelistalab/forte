@@ -183,26 +183,21 @@ void forte_old_methods(SharedWavefunction ref_wfn, Options& options,
     }
     if (options.get_str("JOB_TYPE") == "CAS") {
         FCI_MO fci_mo(ref_wfn, options, ints, mo_space_info);
-        if (options["AVG_STATE"].size() != 0) {
-            if (options.get_bool("SEMI_CANONICAL")) {
-                fci_mo.compute_canonical_sa_energy();
-            } else {
-                fci_mo.compute_sa_energy();
-            }
-        } else {
-            if (options.get_bool("SEMI_CANONICAL")) {
-                fci_mo.compute_canonical_ss_energy();
-            } else {
-                fci_mo.compute_energy();
-            }
-        }
+        fci_mo.compute_energy();
     }
     if (options.get_str("JOB_TYPE") == "MRDSRG") {
         std::string cas_type = options.get_str("CAS_TYPE");
+        int max_rdm_level = (options.get_str("THREEPDC") == "ZERO") ? 2 : 3;
+
         if (cas_type == "CAS") {
             FCI_MO fci_mo(ref_wfn, options, ints, mo_space_info);
             fci_mo.compute_energy();
-            Reference reference = fci_mo.reference();
+            Reference reference = fci_mo.reference(max_rdm_level);
+
+            if (options.get_bool("SEMI_CANONICAL")) {
+                SemiCanonical semi(ref_wfn, ints, mo_space_info);
+                semi.semicanonicalize(reference, max_rdm_level);
+            }
 
             if (options["AVG_STATE"].size() != 0) {
                 auto mrdsrg =
@@ -224,19 +219,14 @@ void forte_old_methods(SharedWavefunction ref_wfn, Options& options,
                 }
             }
         } else if (cas_type == "FCI") {
-            std::shared_ptr<FCI> fci(new FCI(ref_wfn, options, ints, mo_space_info));
-            fci->set_max_rdm_level(3);
+            auto fci = std::make_shared<FCI>(ref_wfn, options, ints, mo_space_info);
+            fci->set_max_rdm_level(max_rdm_level);
             fci->compute_energy();
             Reference reference = fci->reference();
             if (options.get_bool("SEMI_CANONICAL")) {
                 SemiCanonical semi(ref_wfn, ints, mo_space_info);
-                semi.semicanonicalize(reference);
+                semi.semicanonicalize(reference, max_rdm_level);
             }
-
-            //            std::shared_ptr<FCI> fci1(new FCI(ref_wfn, options, ints, mo_space_info));
-            //            fci1->set_max_rdm_level(3);
-            //            fci1->compute_energy();
-            //            reference = fci1->reference();
 
             auto mrdsrg =
                 std::make_shared<MRDSRG>(reference, ref_wfn, options, ints, mo_space_info);
@@ -255,6 +245,10 @@ void forte_old_methods(SharedWavefunction ref_wfn, Options& options,
         FCI_MO fci_mo(ref_wfn, options, ints, mo_space_info);
         fci_mo.compute_energy();
         Reference reference = fci_mo.reference();
+        if (options.get_bool("SEMI_CANONICAL")) {
+            SemiCanonical semi(ref_wfn, ints, mo_space_info);
+            semi.semicanonicalize(reference);
+        }
         std::shared_ptr<MRDSRG_SO> mrdsrg(new MRDSRG_SO(reference, options, ints, mo_space_info));
         mrdsrg->compute_energy();
     }
@@ -264,14 +258,17 @@ void forte_old_methods(SharedWavefunction ref_wfn, Options& options,
     }
     if (options.get_str("JOB_TYPE") == "DSRG_MRPT") {
         std::string cas_type = options.get_str("CAS_TYPE");
+        int max_rdm_level = (options.get_str("THREEPDC") == "ZERO") ? 2 : 3;
+
         if (cas_type == "CAS") {
             FCI_MO fci_mo(ref_wfn, options, ints, mo_space_info);
+            fci_mo.compute_energy();
+            Reference reference = fci_mo.reference(max_rdm_level);
+
             if (options.get_bool("SEMI_CANONICAL")) {
-                fci_mo.compute_canonical_ss_energy();
-            } else {
-                fci_mo.compute_ss_energy();
+                SemiCanonical semi(ref_wfn, ints, mo_space_info);
+                semi.semicanonicalize(reference, max_rdm_level);
             }
-            Reference reference = fci_mo.reference();
 
             std::shared_ptr<DSRG_MRPT> dsrg(
                 new DSRG_MRPT(reference, ref_wfn, options, ints, mo_space_info));
@@ -281,13 +278,13 @@ void forte_old_methods(SharedWavefunction ref_wfn, Options& options,
                 //                dsrg->compute_energy_relaxed();
             }
         } else if (cas_type == "FCI") {
-            std::shared_ptr<FCI> fci(new FCI(ref_wfn, options, ints, mo_space_info));
-            fci->set_max_rdm_level(3);
+            auto fci = std::make_shared<FCI>(ref_wfn, options, ints, mo_space_info);
+            fci->set_max_rdm_level(max_rdm_level);
             fci->compute_energy();
             Reference reference = fci->reference();
             if (options.get_bool("SEMI_CANONICAL")) {
                 SemiCanonical semi(ref_wfn, ints, mo_space_info);
-                semi.semicanonicalize(reference);
+                semi.semicanonicalize(reference, max_rdm_level);
             }
             std::shared_ptr<DSRG_MRPT> dsrg(
                 new DSRG_MRPT(reference, ref_wfn, options, ints, mo_space_info));
@@ -300,11 +297,22 @@ void forte_old_methods(SharedWavefunction ref_wfn, Options& options,
     }
     if (options.get_str("JOB_TYPE") == "DSRG-MRPT2") {
         std::string cas_type = options.get_str("CAS_TYPE");
+        std::string actv_type = options.get_str("FCIMO_ACTV_TYPE");
+        int max_rdm_level = (options.get_str("THREEPDC") == "ZERO") ? 2 : 3;
+
         if (cas_type == "CAS") {
             std::shared_ptr<FCI_MO> fci_mo =
                 std::make_shared<FCI_MO>(ref_wfn, options, ints, mo_space_info);
             fci_mo->compute_energy();
-            Reference reference = fci_mo->reference();
+            Reference reference = fci_mo->reference(max_rdm_level);
+
+            if (options.get_bool("SEMI_CANONICAL")) {
+                SemiCanonical semi(ref_wfn, ints, mo_space_info);
+                if (actv_type == "CIS" || actv_type == "CISD") {
+                    semi.set_actv_dims(fci_mo->actv_docc(), fci_mo->actv_virt());
+                }
+                semi.semicanonicalize(reference, max_rdm_level);
+            }
 
             std::shared_ptr<DSRG_MRPT2> dsrg_mrpt2 =
                 std::make_shared<DSRG_MRPT2>(reference, ref_wfn, options, ints, mo_space_info);
@@ -316,7 +324,6 @@ void forte_old_methods(SharedWavefunction ref_wfn, Options& options,
                 if (options.get_str("RELAX_REF") != "NONE") {
                     dsrg_mrpt2->compute_energy_relaxed();
                 } else {
-                    std::string actv_type = options.get_str("FCIMO_ACTV_TYPE");
                     if (actv_type == "CIS" || actv_type == "CISD") {
                         dsrg_mrpt2->set_actv_occ(fci_mo->actv_occ());
                         dsrg_mrpt2->set_actv_uocc(fci_mo->actv_uocc());
@@ -325,55 +332,14 @@ void forte_old_methods(SharedWavefunction ref_wfn, Options& options,
                 }
             }
 
-            //            if (options["AVG_STATE"].size() != 0) {
-            //                std::string ms_type = options.get_str("DSRG_MULTI_STATE");
-            //                if (ms_type.find("SA") != std::string::npos) {
-            //                    options.set_str("FORTE", "RELAX_REF", "ONCE");
-            //                }
-
-            //                if (options.get_bool("SEMI_CANONICAL")) {
-            //                    fci_mo->compute_canonical_sa_energy();
-            //                } else {
-            //                    fci_mo->compute_sa_energy();
-            //                }
-            //                Reference reference = fci_mo->reference();
-            //                std::shared_ptr<DSRG_MRPT2> dsrg_mrpt2 =
-            //                    std::make_shared<DSRG_MRPT2>(reference, ref_wfn, options,
-            //                                                 ints, mo_space_info);
-            //                dsrg_mrpt2->set_p_spaces(fci_mo->p_spaces());
-            //                dsrg_mrpt2->set_eigens(fci_mo->eigens());
-            //                dsrg_mrpt2->compute_energy_multi_state();
-            //            } else {
-            //                if (options.get_bool("SEMI_CANONICAL")) {
-            //                    fci_mo->compute_canonical_ss_energy();
-            //                } else {
-            //                    fci_mo->compute_ss_energy();
-            //                }
-            //                Reference reference = fci_mo->reference();
-            //                std::shared_ptr<DSRG_MRPT2> dsrg_mrpt2 =
-            //                    std::make_shared<DSRG_MRPT2>(reference, ref_wfn, options,
-            //                                                 ints, mo_space_info);
-            //                if (options.get_str("RELAX_REF") != "NONE") {
-            //                    dsrg_mrpt2->compute_energy_relaxed();
-            //                } else {
-            //                    std::string actv_type = options.get_str("FCIMO_ACTV_TYPE");
-            //                    if (actv_type == "CIS" || actv_type == "CISD") {
-            //                        dsrg_mrpt2->set_actv_occ(fci_mo->actv_occ());
-            //                        dsrg_mrpt2->set_actv_uocc(fci_mo->actv_uocc());
-            //                    }
-            //                    dsrg_mrpt2->compute_energy();
-            //                }
-            //            }
-        }
-
-        if (cas_type == "FCI") {
+        } else if (cas_type == "FCI") {
             std::shared_ptr<FCI> fci = std::make_shared<FCI>(ref_wfn, options, ints, mo_space_info);
-            fci->set_max_rdm_level(3);
+            fci->set_max_rdm_level(max_rdm_level);
             fci->compute_energy();
             Reference reference = fci->reference();
             if (options.get_bool("SEMI_CANONICAL")) {
                 SemiCanonical semi(ref_wfn, ints, mo_space_info);
-                semi.semicanonicalize(reference);
+                semi.semicanonicalize(reference, max_rdm_level);
             }
             std::shared_ptr<DSRG_MRPT2> dsrg_mrpt2 =
                 std::make_shared<DSRG_MRPT2>(reference, ref_wfn, options, ints, mo_space_info);
@@ -382,22 +348,20 @@ void forte_old_methods(SharedWavefunction ref_wfn, Options& options,
             } else {
                 dsrg_mrpt2->compute_energy();
             }
-        }
 
-        if (cas_type == "V2RDM") {
+        } else if (cas_type == "V2RDM") {
             std::shared_ptr<V2RDM> v2rdm =
                 std::make_shared<V2RDM>(ref_wfn, options, ints, mo_space_info);
             Reference reference = v2rdm->reference();
             std::shared_ptr<DSRG_MRPT2> dsrg_mrpt2 =
                 std::make_shared<DSRG_MRPT2>(reference, ref_wfn, options, ints, mo_space_info);
             dsrg_mrpt2->compute_energy();
-        }
 
-        if (cas_type == "ACI") {
+        } else if (cas_type == "ACI") {
             // Compute ACI wfn
             auto aci = std::make_shared<AdaptiveCI>(ref_wfn, options, ints, mo_space_info);
             aci->set_quiet(true);
-            aci->set_max_rdm(3);
+            aci->set_max_rdm(max_rdm_level);
             aci->compute_energy();
             Reference aci_reference = aci->reference();
             if (options.get_bool("ACI_NO")) {
@@ -406,7 +370,7 @@ void forte_old_methods(SharedWavefunction ref_wfn, Options& options,
 
             // Transform integrals to semicanonical basis
             SemiCanonical semi(ref_wfn, ints, mo_space_info);
-            semi.semicanonicalize(aci_reference);
+            semi.semicanonicalize(aci_reference, max_rdm_level);
 
             std::shared_ptr<DSRG_MRPT2> dsrg_mrpt2(
                 new DSRG_MRPT2(aci_reference, ref_wfn, options, ints, mo_space_info));
@@ -415,13 +379,13 @@ void forte_old_methods(SharedWavefunction ref_wfn, Options& options,
         } else if (cas_type == "DMRG") {
 #ifdef HAVE_CHEMPS2
             DMRGSolver dmrg(ref_wfn, options, mo_space_info, ints);
-            dmrg.set_max_rdm(3);
+            dmrg.set_max_rdm(max_rdm_level);
             dmrg.compute_energy();
             Reference dmrg_reference = dmrg.reference();
             // if (options.get_bool("SEMI_CANONICAL") and !options.get_bool("CASSCF_REFERENCE")) {
             if (options.get_bool("SEMI_CANONICAL")) {
                 SemiCanonical semi(ref_wfn, options, ints, mo_space_info, dmrg_reference);
-                semi.semicanonicalize(dmrg_reference);
+                semi.semicanonicalize(dmrg_reference, max_rdm_level);
             }
             std::shared_ptr<DSRG_MRPT2> dsrg_mrpt2(
                 new DSRG_MRPT2(dmrg_reference, ref_wfn, options, ints, mo_space_info));
@@ -437,7 +401,11 @@ void forte_old_methods(SharedWavefunction ref_wfn, Options& options,
             throw PSIEXCEPTION("Please set INT_TYPE  DF/CHOLESKY for THREE_DSRG");
         }
 
-        if (options.get_str("CAS_TYPE") == "CAS") {
+        std::string cas_type = options.get_str("CAS_TYPE");
+        std::string actv_type = options.get_str("FCIMO_ACTV_TYPE");
+        int max_rdm_level = (options.get_str("THREEPDC") == "ZERO") ? 2 : 3;
+
+        if (cas_type == "CAS") {
 
             if (options["AVG_STATE"].size() != 0) {
                 std::string ms_type = options.get_str("DSRG_MULTI_STATE");
@@ -449,32 +417,37 @@ void forte_old_methods(SharedWavefunction ref_wfn, Options& options,
 
             FCI_MO fci_mo(ref_wfn, options, ints, mo_space_info);
             fci_mo.compute_energy();
-            Reference reference = fci_mo.reference();
+            Reference reference = fci_mo.reference(max_rdm_level);
+
+            if (options.get_bool("SEMI_CANONICAL")) {
+                SemiCanonical semi(ref_wfn, ints, mo_space_info);
+                if (actv_type == "CIS" || actv_type == "CISD") {
+                    semi.set_actv_dims(fci_mo.actv_docc(), fci_mo.actv_virt());
+                }
+                semi.semicanonicalize(reference, max_rdm_level);
+            }
 
             std::shared_ptr<THREE_DSRG_MRPT2> three_dsrg_mrpt2(
                 new THREE_DSRG_MRPT2(reference, ref_wfn, options, ints, mo_space_info));
 
-            std::string actv_type = options.get_str("FCIMO_ACTV_TYPE");
             if (actv_type == "CIS" || actv_type == "CISD") {
                 three_dsrg_mrpt2->set_actv_occ(fci_mo.actv_occ());
                 three_dsrg_mrpt2->set_actv_uocc(fci_mo.actv_uocc());
             }
             three_dsrg_mrpt2->compute_energy();
-        }
 
-        if (options.get_str("CAS_TYPE") == "V2RDM") {
+        } else if (cas_type == "V2RDM") {
             std::shared_ptr<V2RDM> v2rdm =
                 std::make_shared<V2RDM>(ref_wfn, options, ints, mo_space_info);
             Reference reference = v2rdm->reference();
             std::shared_ptr<THREE_DSRG_MRPT2> dsrg_mrpt2 = std::make_shared<THREE_DSRG_MRPT2>(
                 reference, ref_wfn, options, ints, mo_space_info);
             dsrg_mrpt2->compute_energy();
-        }
 
-        if (options.get_str("CAS_TYPE") == "ACI") {
+        } else if (cas_type == "ACI") {
             auto aci = std::make_shared<AdaptiveCI>(ref_wfn, options, ints, mo_space_info);
             aci->set_quiet(true);
-            aci->set_max_rdm(3);
+            aci->set_max_rdm(max_rdm_level);
             aci->compute_energy();
             Reference aci_reference = aci->reference();
             if (options.get_bool("ACI_NO")) {
@@ -486,45 +459,41 @@ void forte_old_methods(SharedWavefunction ref_wfn, Options& options,
                 esno.compute_nos();
                 auto aci2 = std::make_shared<AdaptiveCI>(ref_wfn, options, ints, mo_space_info);
                 aci2->set_quiet(true);
-                aci2->set_max_rdm(3);
+                aci2->set_max_rdm(max_rdm_level);
                 aci2->compute_energy();
                 aci_reference = aci2->reference();
             }
 
             SemiCanonical semi(ref_wfn, ints, mo_space_info);
-            semi.semicanonicalize(aci_reference);
+            semi.semicanonicalize(aci_reference, max_rdm_level);
             std::shared_ptr<THREE_DSRG_MRPT2> three_dsrg_mrpt2(
                 new THREE_DSRG_MRPT2(aci_reference, ref_wfn, options, ints, mo_space_info));
             three_dsrg_mrpt2->compute_energy();
-        }
 
-        else if (options.get_str("CAS_TYPE") == "FCI") {
-            std::shared_ptr<FCI> fci(new FCI(ref_wfn, options, ints, mo_space_info));
-            fci->set_max_rdm_level(3);
+        } else if (cas_type == "FCI") {
+            auto fci = std::make_shared<FCI>(ref_wfn, options, ints, mo_space_info);
+            fci->set_max_rdm_level(max_rdm_level);
             fci->compute_energy();
             Reference reference = fci->reference();
             if (options.get_bool("SEMI_CANONICAL")) {
                 SemiCanonical semi(ref_wfn, ints, mo_space_info);
-                semi.semicanonicalize(reference);
+                semi.semicanonicalize(reference, max_rdm_level);
             }
 
             std::shared_ptr<THREE_DSRG_MRPT2> three_dsrg_mrpt2(
                 new THREE_DSRG_MRPT2(reference, ref_wfn, options, ints, mo_space_info));
             three_dsrg_mrpt2->compute_energy();
-        }
 
-        else if (options.get_str("CAS_TYPE") == "DMRG")
-
-        {
+        } else if (cas_type == "DMRG") {
 #ifdef HAVE_CHEMPS2
             DMRGSolver dmrg(ref_wfn, options, mo_space_info, ints);
-            dmrg.set_max_rdm(3);
+            dmrg.set_max_rdm(max_rdm_level);
             dmrg.compute_energy();
 
             Reference dmrg_reference = dmrg.reference();
             if (options.get_bool("SEMI_CANONICAL")) {
                 SemiCanonical semi(ref_wfn, options, ints, mo_space_info, dmrg_reference);
-                semi.semicanonicalize(dmrg_reference);
+                semi.semicanonicalize(dmrg_reference, max_rdm_level);
             }
 
             std::shared_ptr<THREE_DSRG_MRPT2> three_dsrg_mrpt2(
@@ -565,17 +534,19 @@ void forte_old_methods(SharedWavefunction ref_wfn, Options& options,
 
     if (options.get_str("JOB_TYPE") == "DSRG-MRPT3") {
         std::string cas_type = options.get_str("CAS_TYPE");
+        int max_rdm_level = (options.get_str("THREEPDC") == "ZERO") ? 2 : 3;
+
         if (cas_type == "CAS") {
-            std::shared_ptr<FCI_MO> fci_mo(new FCI_MO(ref_wfn, options, ints, mo_space_info));
+            auto fci_mo = std::make_shared<FCI_MO>(ref_wfn, options, ints, mo_space_info);
             fci_mo->compute_energy();
-            Reference reference = fci_mo->reference();
+            Reference reference = fci_mo->reference(max_rdm_level);
+
+            if (options.get_bool("SEMI_CANONICAL")) {
+                SemiCanonical semi(ref_wfn, ints, mo_space_info);
+                semi.semicanonicalize(reference, max_rdm_level);
+            }
 
             if (options["AVG_STATE"].size() != 0) {
-                //                std::string ms_type = options.get_str("DSRG_MULTI_STATE");
-                //                if (ms_type.find("SA") != std::string::npos) {
-                //                    options.set_str("FORTE", "RELAX_REF", "ONCE");
-                //                }
-
                 std::shared_ptr<DSRG_MRPT3> dsrg_mrpt3(
                     new DSRG_MRPT3(reference, ref_wfn, options, ints, mo_space_info));
                 dsrg_mrpt3->set_p_spaces(fci_mo->p_spaces());
@@ -593,13 +564,13 @@ void forte_old_methods(SharedWavefunction ref_wfn, Options& options,
         }
 
         if (cas_type == "FCI") {
-            std::shared_ptr<FCI> fci(new FCI(ref_wfn, options, ints, mo_space_info));
-            fci->set_max_rdm_level(3);
+            auto fci = std::make_shared<FCI>(ref_wfn, options, ints, mo_space_info);
+            fci->set_max_rdm_level(max_rdm_level);
             fci->compute_energy();
             Reference reference = fci->reference();
             if (options.get_bool("SEMI_CANONICAL")) {
                 SemiCanonical semi(ref_wfn, ints, mo_space_info);
-                semi.semicanonicalize(reference);
+                semi.semicanonicalize(reference, max_rdm_level);
             }
 
             std::shared_ptr<FCIWfn> fciwfn_ref = fci->get_FCIWfn();
@@ -616,26 +587,26 @@ void forte_old_methods(SharedWavefunction ref_wfn, Options& options,
     }
 
     if (options.get_str("JOB_TYPE") == "SOMRDSRG") {
+        int max_rdm_level = (options.get_str("THREEPDC") == "ZERO") ? 2 : 3;
         if (options.get_str("CAS_TYPE") == "CAS") {
             FCI_MO fci_mo(ref_wfn, options, ints, mo_space_info);
+            Reference reference = fci_mo.reference(max_rdm_level);
             if (options.get_bool("SEMI_CANONICAL")) {
-                fci_mo.compute_canonical_ss_energy();
-            } else {
-                fci_mo.compute_energy();
+                SemiCanonical semi(ref_wfn, ints, mo_space_info);
+                semi.semicanonicalize(reference, max_rdm_level);
             }
-            Reference reference = fci_mo.reference();
             std::shared_ptr<SOMRDSRG> somrdsrg(
                 new SOMRDSRG(reference, ref_wfn, options, ints, mo_space_info));
             somrdsrg->compute_energy();
         }
         if (options.get_str("CAS_TYPE") == "FCI") {
-            std::shared_ptr<FCI> fci(new FCI(ref_wfn, options, ints, mo_space_info));
-            fci->set_max_rdm_level(3);
+            std::shared_ptr<FCI> fci = std::make_shared<FCI>(ref_wfn, options, ints, mo_space_info);
+            fci->set_max_rdm_level(max_rdm_level);
             fci->compute_energy();
             Reference reference = fci->reference();
             if (options.get_bool("SEMI_CANONICAL")) {
                 SemiCanonical semi(ref_wfn, ints, mo_space_info);
-                semi.semicanonicalize(reference);
+                semi.semicanonicalize(reference, max_rdm_level);
             }
             std::shared_ptr<SOMRDSRG> somrdsrg(
                 new SOMRDSRG(reference, ref_wfn, options, ints, mo_space_info));

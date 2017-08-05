@@ -754,9 +754,9 @@ double ElementwiseCI::compute_energy() {
     if (converged) {
         outfile->Printf("\n\n  Calculation converged.");
     } else {
-        outfile->Printf("\n\n  Calculation %s",
-                        iter_ != maxiter_ ? "stoped in appearance of higher new low."
-                                          : "did not converge!");
+        outfile->Printf("\n\n  Calculation %s", iter_ != maxiter_
+                                                    ? "stoped in appearance of higher new low."
+                                                    : "did not converge!");
     }
 
     if (do_shift_) {
@@ -1039,8 +1039,8 @@ void ElementwiseCI::propagate_DL(det_hashvec& dets_hashvec, std::vector<double>&
     //    copy_hash_to_vec_order_ref(dets_C_hash, dets, sigma_vec[0]);
     //    det_hashvec dets_hashvec(dets);
     apply_tau_H_symm(1.0, spawning_threshold, dets_hashvec, C, sigma_vec[0], 0.0, overlap_size);
-//    b_vec[0].resize(overlap_size);
-//    b_vec[0].resize(dets_hashvec.size(), 0.0);
+    //    b_vec[0].resize(overlap_size);
+    //    b_vec[0].resize(dets_hashvec.size(), 0.0);
     //    dets_hashvec = result_dets;
     //    dets = dets_hashvec.toVector();
     if (ref_size <= 1) {
@@ -1237,8 +1237,8 @@ void ElementwiseCI::apply_tau_H_symm(double tau, double spawning_threshold, det_
         if (max_coupling.first == 0.0 or max_coupling.second == 0.0) {
             thread_det_C_vecs[current_rank].clear();
             apply_tau_H_symm_det_dynamic_HBCI_2(tau, spawning_threshold, ref_dets, ref_C, I,
-                                                ref_C[I], result_C,
-                                                thread_det_C_vecs[current_rank], S, max_coupling);
+                                                ref_C[I], result_C, thread_det_C_vecs[current_rank],
+                                                S, max_coupling);
 #pragma omp critical(merge_extra)
             {
                 merge(extra_dets, extra_C, thread_det_C_vecs[current_rank],
@@ -1249,8 +1249,8 @@ void ElementwiseCI::apply_tau_H_symm(double tau, double spawning_threshold, det_
         } else {
             thread_det_C_vecs[current_rank].clear();
             apply_tau_H_symm_det_dynamic_HBCI_2(tau, spawning_threshold, ref_dets, ref_C, I,
-                                                ref_C[I], result_C,
-                                                thread_det_C_vecs[current_rank], S, max_coupling);
+                                                ref_C[I], result_C, thread_det_C_vecs[current_rank],
+                                                S, max_coupling);
 #pragma omp critical(merge_extra)
             {
                 merge(extra_dets, extra_C, thread_det_C_vecs[current_rank],
@@ -1308,8 +1308,7 @@ void ElementwiseCI::apply_tau_H_symm(double tau, double spawning_threshold, det_
 
 void ElementwiseCI::apply_tau_H_symm_det_dynamic_HBCI_2(
     double tau, double spawning_threshold, const det_hashvec& dets_hashvec,
-    const std::vector<double>& pre_C, size_t I, double CI,
-    std::vector<double>& result_C,
+    const std::vector<double>& pre_C, size_t I, double CI, std::vector<double>& result_C,
     std::vector<std::pair<Determinant, double>>& new_det_C_vec, double E0,
     std::pair<double, double>& max_coupling) {
 

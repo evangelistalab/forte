@@ -506,7 +506,11 @@ double MRDSRG::compute_energy_relaxed() {
                 reference_ = fci_mo.reference();
             } else {
                 FCI fci(reference_wavefunction_, options_, ints_, mo_space_info_);
-                fci.set_max_rdm_level(3);
+                if (options_.get_str("THREEPDC") == "ZERO") {
+                    fci.set_max_rdm_level(2);
+                } else {
+                    fci.set_max_rdm_level(3);
+                }
                 Erelax = fci.compute_energy();
 
                 // obtain new reference

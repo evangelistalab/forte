@@ -494,8 +494,8 @@ void LambdaCI::lambda_mrcisd(psi::Options& options) {
 
 void LambdaCI::print_results_lambda_sd_ci(vector<StringDeterminant>& determinants,
                                           SharedMatrix evecs, SharedVector evals, int nroots) {
-    std::vector<std::string> s2_labels({"singlet", "doublet", "triplet", "quartet", "quintet", "sextet",
-                                   "septet", "octet", "nonet"});
+    std::vector<std::string> s2_labels({"singlet", "doublet", "triplet", "quartet", "quintet",
+                                        "sextet", "septet", "octet", "nonet"});
 
     int nroots_print = std::min(nroots, 25);
 

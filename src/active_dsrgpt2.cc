@@ -31,13 +31,16 @@
 #include <map>
 #include <fstream>
 #include <cstdio>
+#include <memory>
 
 #include "psi4/libmints/pointgrp.h"
 #include "psi4/libmints/dipole.h"
 #include "psi4/libmints/petitelist.h"
 #include "psi4/physconst.h"
 
+#include "../fci/fci_integrals.h"
 #include "fci_mo.h"
+#include "semi_canonicalize.h"
 #include "active_dsrgpt2.h"
 #include "mini-boost/boost/format.hpp"
 
@@ -545,6 +548,367 @@ Vector4 ACTIVE_DSRGPT2::compute_td_ref_root(std::shared_ptr<FCIIntegrals> fci_in
 }
 
 double ACTIVE_DSRGPT2::compute_energy() {
+
+    //    SharedMatrix Ca(this->Ca()->clone());
+    //    SharedMatrix Cb(this->Cb()->clone());
+    //    compute_energy_old();
+    //    transform_integrals(Ca, Cb);
+
+    if (total_nroots_ == 0) {
+        outfile->Printf("\n  NROOTPI is zero. Did nothing.");
+    } else {
+        int nirrep = this->nirrep();
+        CharacterTable ct = Process::environment.molecule()->point_group()->char_table();
+        std::vector<std::string> multi_label{"Singlet", "Doublet", "Triplet", "Quartet", "Quintet",
+                                             "Sextet",  "Septet",  "Octet",   "Nonet",   "Decaet"};
+
+        // final energies
+        ref_energies_ = std::vector<vector<double>>(nirrep, std::vector<double>());
+        pt2_energies_ = std::vector<vector<double>>(nirrep, std::vector<double>());
+
+        // save T1 and T2 blocks that are useful to compute PT2 oscillator strength
+        std::vector<std::string> T1blocks{"aa", "AA", "av", "AV", "ca", "CA"};
+        std::vector<std::string> T2blocks{"aaaa", "cava", "caaa", "aava", "AAAA",
+                                          "CAVA", "CAAA", "AAVA", "aAaA", "cAvA",
+                                          "aCaV", "cAaA", "aCaA", "aAvA", "aAaV"};
+
+        // compute MO dipole integrals
+        compute_modipole();
+
+        // FCI_MO object
+        fci_mo_ =
+            std::make_shared<FCI_MO>(reference_wavefunction_, options_, ints_, mo_space_info_);
+
+        // compute orbital extent
+        orb_extents_ = flatten_fci_orbextents(fci_mo_->orb_extents());
+
+        // some preps for oscillator strength
+        std::vector<std::pair<SharedVector, double>> eigen0;
+        ref_wfns_.clear();
+
+        // semicanonicalzer
+        std::shared_ptr<SemiCanonical> semi =
+            std::make_shared<SemiCanonical>(reference_wavefunction_, ints_, mo_space_info_, true);
+        if (ref_type_ == "CIS" || ref_type_ == "CISD") {
+            semi->set_actv_dims(fci_mo_->actv_docc(), fci_mo_->actv_virt());
+        }
+
+        // save a copy of the original orbitals
+        SharedMatrix Ca0(this->Ca()->clone());
+        SharedMatrix Cb0(this->Cb()->clone());
+
+        // max cumulant level
+        int max_cu_level = 3;
+        if (options_.get_str("THREEPDC") == "ZERO") {
+            max_cu_level = 2;
+        }
+
+        // real computation
+        for (int h = 0; h < nirrep; ++h) {
+            if (nrootpi_[h] == 0) {
+                if (h == 0) {
+                    outfile->Printf("\n  Please change the nroot of %s to 1 for the ground state.",
+                                    irrep_symbol_[0].c_str());
+                    throw PSIEXCEPTION("Please change NROOTPI to account for the ground state.");
+                } else {
+                    continue; // move on to the next irrep
+                }
+            } else {
+                // print title
+                size_t name_size = multi_label[multiplicity_ - 1].size() + irrep_symbol_[h].size();
+                outfile->Printf("\n\n  %s", std::string(name_size + 21, '=').c_str());
+                outfile->Printf("\n  Current Job: %s %s states",
+                                multi_label[multiplicity_ - 1].c_str(), irrep_symbol_[h].c_str());
+                outfile->Printf("\n  %s\n", std::string(name_size + 21, '=').c_str());
+
+                // basic setting under this irrep
+                int nroot = nrootpi_[h];
+                fci_mo_->set_root_sym(h);
+
+                // set the ground state to singlet A1 when multiplicity is not 1
+                if (multiplicity_ != 1 && h == 0) {
+                    outfile->Printf("\n  Set ground state to singlet %s.",
+                                    irrep_symbol_[0].c_str());
+
+                    // compute reference energy
+                    fci_mo_->set_nroots(1);
+                    fci_mo_->set_root(0);
+                    fci_mo_->set_multiplicity(1);
+                    double Eref = fci_mo_->compute_ss_energy();
+                    ref_energies_[0].push_back(Eref);
+
+                    dominant_dets_[h].push_back(fci_mo_->dominant_dets()[0]);
+                    if (ref_type_ == "CISD") {
+                        t1_percentage_[h].push_back(fci_mo_->compute_T1_percentage()[0]);
+                    }
+
+                    // compute cumultans
+                    Reference reference = fci_mo_->reference(max_cu_level);
+
+                    // semicanonicalize integrals and cumulants
+                    semi->semicanonicalize(reference, max_cu_level);
+
+                    // compute DSRG-MRPT2 energy
+                    double Ept2 = 0.0;
+                    if (options_.get_str("INT_TYPE") == "CONVENTIONAL") {
+                        std::shared_ptr<DSRG_MRPT2> dsrg = std::make_shared<DSRG_MRPT2>(
+                            reference, reference_wavefunction_, options_, ints_, mo_space_info_);
+                        dsrg->set_ignore_semicanonical(true);
+                        dsrg->set_actv_occ(fci_mo_->actv_occ());
+                        dsrg->set_actv_uocc(fci_mo_->actv_uocc());
+                        Ept2 = dsrg->compute_energy();
+                    } else {
+                        std::shared_ptr<THREE_DSRG_MRPT2> dsrg = std::make_shared<THREE_DSRG_MRPT2>(
+                            reference, reference_wavefunction_, options_, ints_, mo_space_info_);
+                        dsrg->ignore_semicanonical(true);
+                        dsrg->set_actv_occ(fci_mo_->actv_occ());
+                        dsrg->set_actv_uocc(fci_mo_->actv_uocc());
+                        Ept2 = dsrg->compute_energy();
+                    }
+                    pt2_energies_[0].push_back(Ept2);
+
+                    // minus nroot (just for irrep 0) by 1
+                    nroot -= 1;
+
+                    // transform integrals to the original basis
+                    print_h2("Transform Integrals to the Original Basis");
+                    transform_integrals(Ca0, Cb0);
+                }
+
+                // make sure we use the original integrals
+                // because 1) MO dipoles are in original basis (this is a minor problem)
+                //         2) CI coefficients are in the same basis
+                if (h != 0) {
+                    print_h2("Transform Integrals to the Original Basis");
+                    transform_integrals(Ca0, Cb0);
+                }
+
+                // compute reference energy for a given symmetry
+                fci_mo_->set_multiplicity(multiplicity_);
+                fci_mo_->set_nroots(nroot);
+                fci_mo_->set_root(0);
+                fci_mo_->compute_ss_energy();
+
+                // loop over nroot and save a copy of Fock matrices in the original basis
+                print_h2("Prepare Fock Matrices in the Original Basis");
+                std::vector<std::vector<double>> Fas(nroot, std::vector<double>());
+                std::vector<std::vector<double>> Fbs(nroot, std::vector<double>());
+                for (int i = 0; i < nroot; ++i) {
+                    fci_mo_->set_root(i);
+                    fci_mo_->reference(1);
+                    fci_mo_->compute_Fock_ints();
+
+                    Fas[i] = ints_->get_fock_a();
+                    Fbs[i] = ints_->get_fock_b();
+                }
+
+                // fill in dominant_dets_
+                std::vector<STLBitsetDeterminant> dominant_dets = fci_mo_->dominant_dets();
+                for (int i = 0; i < nroot; ++i) {
+                    dominant_dets_[h].push_back(dominant_dets[i]);
+                }
+
+                // fill in %T1
+                if (ref_type_ == "CISD") {
+                    std::vector<double> t1 = fci_mo_->compute_T1_percentage();
+                    for (int i = 0; i < nroot; ++i) {
+                        t1_percentage_[h].push_back(t1[i]);
+                    }
+                }
+
+                // compute reference oscillator strength (only for singlet)
+                if (multiplicity_ == 1) {
+                    std::vector<std::pair<SharedVector, double>> eigen = fci_mo_->eigen();
+                    int eigen_size = eigen.size();
+                    if (eigen_size != nroot) {
+                        outfile->Printf("\n  FCI_MO error from ACTIVE_DSRGPT2: Inconsistent nroot "
+                                        "to eigen_size.");
+                        throw PSIEXCEPTION("Inconsistent nroot to eigen_size.");
+                    }
+
+                    int dim = (eigen[0].first)->dim();
+                    SharedMatrix evecs(new Matrix("evecs", dim, eigen_size));
+                    for (int i = 0; i < eigen_size; ++i) {
+                        evecs->set_column(0, i, (eigen[i]).first);
+                    }
+
+                    // save a copy of the ref. wfn. in the original basis
+                    ref_wfns_[h] = evecs;
+
+                    outfile->Printf(
+                        "\n  Computing V%s reference oscillator strength 0%s -> n%s ... ",
+                        ref_type_.c_str(), ct.gamma(0).symbol(), ct.gamma(h).symbol());
+
+                    std::vector<STLBitsetDeterminant> p_space1 = fci_mo_->p_space();
+                    if (h == 0) {
+                        eigen0 = eigen;
+                        p_space_g_ = fci_mo_->p_space();
+                    }
+                    compute_osc_ref(0, h, p_space_g_, p_space1, eigen0, eigen);
+                    outfile->Printf("Done.");
+                }
+
+                // loop over nroot to compute ss-dsrg-mrpt2 energies
+                for (int i = 0; i < nroot; ++i) {
+                    int i_real = i;
+                    if (multiplicity_ != 1 && h == 0) {
+                        i_real = i + 1;
+                    }
+                    std::string current = "Working on Root " + std::to_string(i_real);
+                    print_h2(current);
+
+                    // save reference energies
+                    double Eref = ((fci_mo_->eigen())[i]).second;
+                    ref_energies_[h].push_back(Eref);
+
+                    // compute cumulants
+                    fci_mo_->set_root(i);
+                    Reference reference = fci_mo_->reference(max_cu_level);
+                    reference.set_Eref(Eref);
+
+                    // manually set the Fock matrix for semicanonicalization
+                    ints_->set_fock_a(Fas[i]);
+                    ints_->set_fock_b(Fbs[i]);
+
+                    // semicanonicalize integrals and cumulants
+                    this->Ca()->copy(Ca0);
+                    this->Cb()->copy(Cb0);
+                    semi->semicanonicalize(reference, max_cu_level, false);
+
+                    // obtain the name of transition type
+                    std::string trans_name = transition_type(0, 0, i_real, h);
+
+                    // decide whether to compute oscillator strength or not
+                    bool do_osc = false;
+                    if (f_ref_.find(trans_name) != f_ref_.end()) {
+                        if (f_ref_[trans_name].t > 1.0e-6) {
+                            do_osc = true;
+                        }
+                    }
+                    bool gs = (h == 0) && (i_real == 0);
+
+                    // Declare useful amplitudes outside dsrg-mrpt2 to avoid storage of multiple
+                    // 3-density, since orbital ordering is identical for different states
+                    // (although it is set in dsrg-mrpt2 for each state)
+                    double Tde = 0.0;
+                    ambit::BlockedTensor T1, T2;
+
+                    // compute DSRG-MRPT2 energy
+                    double Ept2 = 0.0;
+                    if (options_.get_str("INT_TYPE") == "CONVENTIONAL") {
+                        std::shared_ptr<DSRG_MRPT2> dsrg = std::make_shared<DSRG_MRPT2>(
+                            reference, reference_wavefunction_, options_, ints_, mo_space_info_);
+                        dsrg->set_ignore_semicanonical(true);
+                        dsrg->set_actv_occ(fci_mo_->actv_occ());
+                        dsrg->set_actv_uocc(fci_mo_->actv_uocc());
+                        Ept2 = dsrg->compute_energy();
+
+                        if (gs || do_osc) {
+                            // obtain the scalar term of de-normal-ordered amplitudes
+                            // before rotate amplitudes because the density will not be rotated
+                            Tde = dsrg->Tamp_deGNO();
+
+                            // rotate T1, T1deGNO, T2 from semicanonical to original basis
+                            dsrg->rotate_amp(semi->Ua(), semi->Ub(), true, true);
+
+                            // copy rotated amplitudes (T1deGNO, T2)
+                            T1 = dsrg->get_T1deGNO(T1blocks);
+                            T2 = dsrg->get_T2(T2blocks);
+                            //                            T1 = dsrg->get_T1deGNO();
+                            //                            T2 = dsrg->get_T2();
+
+                            if (gs) {
+                                Tde_g_ = Tde;
+                                T1_g_ = ambit::BlockedTensor::build(ambit::CoreTensor, "T1_g",
+                                                                    T1blocks);
+                                T2_g_ = ambit::BlockedTensor::build(ambit::CoreTensor, "T2_g",
+                                                                    T2blocks);
+                                //                                T1_g_ =
+                                //                                ambit::BlockedTensor::build(ambit::CoreTensor,
+                                //                                "T1_g",
+                                //                                                                    T1.block_labels());
+                                //                                T2_g_ =
+                                //                                ambit::BlockedTensor::build(ambit::CoreTensor,
+                                //                                "T2_g",
+                                //                                                                    T2.block_labels());
+                                T1_g_["ia"] = T1["ia"];
+                                T1_g_["IA"] = T1["IA"];
+                                T2_g_["ijab"] = T2["ijab"];
+                                T2_g_["iJaB"] = T2["iJaB"];
+                                T2_g_["IJAB"] = T2["IJAB"];
+                            }
+                        }
+                    } else {
+                        std::shared_ptr<THREE_DSRG_MRPT2> dsrg = std::make_shared<THREE_DSRG_MRPT2>(
+                            reference, reference_wavefunction_, options_, ints_, mo_space_info_);
+                        dsrg->ignore_semicanonical(true);
+                        dsrg->set_actv_occ(fci_mo_->actv_occ());
+                        dsrg->set_actv_uocc(fci_mo_->actv_uocc());
+                        Ept2 = dsrg->compute_energy();
+
+                        if (gs || do_osc) {
+                            // obtain the scalar term of de-normal-ordered amplitudes
+                            // before rotate amplitudes because the density will not be rotated
+                            Tde = dsrg->Tamp_deGNO();
+
+                            // rotate T1, T1deGNO, T2 from semicanonical to original basis
+                            dsrg->rotate_amp(semi->Ua(), semi->Ub(), true, true);
+
+                            // copy rotated amplitudes (T1deGNO, T2)
+                            T1 = dsrg->get_T1deGNO(T1blocks);
+                            T2 = dsrg->get_T2(T2blocks);
+
+                            if (gs) {
+                                Tde_g_ = Tde;
+                                T1_g_ = ambit::BlockedTensor::build(ambit::CoreTensor, "T1_g",
+                                                                    T1blocks);
+                                T2_g_ = ambit::BlockedTensor::build(ambit::CoreTensor, "T2_g",
+                                                                    T2blocks);
+                                T1_g_["ia"] = T1["ia"];
+                                T1_g_["IA"] = T1["IA"];
+                                T2_g_["ijab"] = T2["ijab"];
+                                T2_g_["iJaB"] = T2["iJaB"];
+                                T2_g_["IJAB"] = T2["IJAB"];
+                            }
+                        }
+                    }
+                    pt2_energies_[h].push_back(Ept2);
+
+                    // if the reference oscillator strength is nonzero
+                    if (do_osc) {
+                        Timer osc_pt2;
+                        outfile->Printf("\n  Computing V%s-DSRG-PT2 oscillator strength ...",
+                                        ref_type_.c_str());
+                        compute_osc_pt2(h, i_real, Tde, T1, T2);
+                        //                        compute_osc_pt2_dets(h, i_real, Tde, T1, T2);
+                        //                        compute_osc_pt2_overlap(h, i_real, Tde, T1,
+                        //                        T2);
+                        outfile->Printf(" Done. Timing %15.6f s", osc_pt2.get());
+                    }
+                }
+            }
+        }
+
+        // print results
+        if (multiplicity_ == 1) {
+            print_osc();
+        }
+        print_summary();
+
+        // set the last energy to Process:environment
+        for (int h = nirrep; h > 0; --h) {
+            int n = nrootpi_[h - 1];
+            if (n != 0) {
+                Process::environment.globals["CURRENT ENERGY"] = pt2_energies_[h - 1][n - 1];
+                break;
+            }
+        }
+    }
+
+    return Process::environment.globals["CURRENT ENERGY"];
+}
+
+double ACTIVE_DSRGPT2::compute_energy_old() {
     if (total_nroots_ == 0) {
         outfile->Printf("\n  NROOTPI is zero. Did nothing.");
     } else {
@@ -608,7 +972,8 @@ double ACTIVE_DSRGPT2::compute_energy() {
 
                     // check Fock matrix
                     size_t count = 0;
-                    fci_mo_->Check_Fock(fci_mo_->Fa_, fci_mo_->Fb_, fci_mo_->fcheck_threshold_, count);
+                    fci_mo_->Check_Fock(fci_mo_->Fa_, fci_mo_->Fb_, fci_mo_->fcheck_threshold_,
+                                        count);
 
                     // compute 2- and 3-cumulants
                     Reference reference = fci_mo_->reference();
@@ -677,7 +1042,8 @@ double ACTIVE_DSRGPT2::compute_energy() {
 
                     // check Fock matrix
                     size_t count = 0;
-                    fci_mo_->Check_Fock(fci_mo_->Fa_, fci_mo_->Fb_, fci_mo_->fcheck_threshold_, count);
+                    fci_mo_->Check_Fock(fci_mo_->Fa_, fci_mo_->Fb_, fci_mo_->fcheck_threshold_,
+                                        count);
 
                     // obtain the name of transition type
                     std::string trans_name = transition_type(0, 0, i_real, h);
@@ -692,7 +1058,8 @@ double ACTIVE_DSRGPT2::compute_energy() {
                     bool gs = (h == 0) && (i_real == 0);
 
                     // Declare useful amplitudes outside dsrg-mrpt2 to avoid storage of multiple
-                    // 3-density, since orbital ordering is identical for different states (although
+                    // 3-density, since orbital ordering is identical for different states
+                    // (although
                     // it is set in dsrg-mrpt2 for each state)
                     double Tde = 0.0;
                     ambit::BlockedTensor T1, T2;
@@ -789,6 +1156,11 @@ double ACTIVE_DSRGPT2::compute_energy() {
                         }
                     }
                     pt2_energies_[h].push_back(Ept2);
+                    //                                        outfile->Printf("\n Tde = %.15f,
+                    //                                        T1norm = %.15f, T2norm = %.15f", Tde,
+                    //                                        T1.norm(), T2.norm());
+                    //                                        T1.print();
+                    //                                        T2.print();
 
                     // if the reference oscillator strength is nonzero
                     if (do_osc) {
@@ -797,7 +1169,8 @@ double ACTIVE_DSRGPT2::compute_energy() {
                                         ref_type_.c_str());
                         compute_osc_pt2(h, i_real, Tde, T1, T2);
                         //                        compute_osc_pt2_dets(h, i_real, Tde, T1, T2);
-                        //                        compute_osc_pt2_overlap(h, i_real, Tde, T1, T2);
+                        //                        compute_osc_pt2_overlap(h, i_real, Tde, T1,
+                        //                        T2);
                         outfile->Printf(" Done. Timing %15.6f s", osc_pt2.get());
                     }
                 }
@@ -841,7 +1214,7 @@ void ACTIVE_DSRGPT2::compute_osc_pt2(const int& irrep, const int& root, const do
     size_t na2 = na * na;
     size_t na4 = na2 * na2;
     size_t na6 = na4 * na2;
-    CI_RDMS ci_rdms(options_, fci_mo_->fci_ints_, p_space, evecs, 0, n);
+    CI_RDMS ci_rdms(options_, fci_mo_->fci_ints(), p_space, evecs, 0, n);
 
     std::vector<double> opdm_a(na2, 0.0);
     std::vector<double> opdm_b(na2, 0.0);
@@ -891,6 +1264,7 @@ void ACTIVE_DSRGPT2::compute_osc_pt2(const int& irrep, const int& root, const do
 
     // step 3: compute TDeff from <ref_x| mu * A_g |ref_g>
     double fc_g = compute_TDeff(T1_g_, T2_g_, TD1, TD2, TD3, TDeff, false);
+    outfile->Printf("\n TDeff_0_Norm = %.15f, TDeff_final_Norm = %.15f", temp.norm(), TDeff.norm());
 
     // put TDeff into SharedMatrix format
     // step 1: setup orbital maps
@@ -1405,7 +1779,7 @@ void ACTIVE_DSRGPT2::compute_osc_pt2_dets(const int& irrep, const int& root, con
     }
 
     // step 4: compute one transition density using CIRDMS
-    CI_RDMS rdms(options_, fci_mo_->fci_ints_, p_space, evecs, 0, 1);
+    CI_RDMS rdms(options_, fci_mo_->fci_ints(), p_space, evecs, 0, 1);
     size_t ncmo = mo_space_info_->size("CORRELATED");
     size_t ncmo2 = ncmo * ncmo;
     std::vector<double> tdm_a(ncmo2, 0.0);
@@ -1440,7 +1814,7 @@ void ACTIVE_DSRGPT2::compute_osc_pt2_dets(const int& irrep, const int& root, con
     }
 
     // step 4: compute one transition density using CIRDMS
-    CI_RDMS rdms1(options_, fci_mo_->fci_ints_, p_space, evecs, 1, 0);
+    CI_RDMS rdms1(options_, fci_mo_->fci_ints(), p_space, evecs, 1, 0);
     std::vector<double> todm_a(ncmo2, 0.0);
     std::vector<double> todm_b(ncmo2, 0.0);
     rdms1.compute_1rdm(todm_a, todm_b);
@@ -1695,6 +2069,28 @@ double ACTIVE_DSRGPT2::compute_overlap(std::map<STLBitsetDeterminant, double> wf
     }
 
     return value;
+}
+
+void ACTIVE_DSRGPT2::transform_integrals(SharedMatrix Ca0, SharedMatrix Cb0) {
+    // copy to the wave function
+    SharedMatrix Ca = this->Ca();
+    SharedMatrix Cb = this->Cb();
+    Ca->copy(Ca0);
+    Cb->copy(Cb0);
+
+    // transform integrals
+    outfile->Printf("\n\n");
+    std::vector<size_t> idx_a = mo_space_info_->get_corr_abs_mo("ACTIVE");
+    ints_->retransform_integrals();
+    ambit::Tensor tei_active_aa = ints_->aptei_aa_block(idx_a, idx_a, idx_a, idx_a);
+    ambit::Tensor tei_active_ab = ints_->aptei_ab_block(idx_a, idx_a, idx_a, idx_a);
+    ambit::Tensor tei_active_bb = ints_->aptei_bb_block(idx_a, idx_a, idx_a, idx_a);
+    auto fci_ints =
+        std::make_shared<FCIIntegrals>(ints_, mo_space_info_->get_corr_abs_mo("ACTIVE"),
+                                       mo_space_info_->get_corr_abs_mo("RESTRICTED_DOCC"));
+    fci_ints->set_active_integrals(tei_active_aa, tei_active_ab, tei_active_bb);
+    fci_ints->compute_restricted_one_body_operator();
+    fci_mo_->set_fci_int(fci_ints);
 }
 
 void ACTIVE_DSRGPT2::rotate_orbs(SharedMatrix Ca0, SharedMatrix Cb0, SharedMatrix Ua,

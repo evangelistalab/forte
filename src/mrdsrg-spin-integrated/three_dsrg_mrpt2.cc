@@ -313,8 +313,6 @@ void THREE_DSRG_MRPT2::startup() {
         F_no_renorm_["pq"] = F_["pq"];
         F_no_renorm_["PQ"] = F_["PQ"];
 
-        Dimension ncmopi_ = mo_space_info_->get_dimension("CORRELATED");
-
         Fa_.resize(ncmo_);
         Fb_.resize(ncmo_);
 
@@ -4090,7 +4088,7 @@ bool THREE_DSRG_MRPT2::check_semicanonical() {
     bool semi = false;
     double threshold = 0.1 * std::sqrt(options_.get_double("E_CONVERGENCE"));
     if (Foff_sum > threshold) {
-        std::string sep(3 + 16 * 3, '-');
+        std::string sep(2 + 16 * 3, '-');
         outfile->Printf("\n    Warning! Orbitals are not semi-canonicalized!");
         outfile->Printf("\n    Off-Diagonal norms of the core, active, virtual "
                         "blocks of Fock matrix");

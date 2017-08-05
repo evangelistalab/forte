@@ -53,14 +53,22 @@ class SemiCanonical {
     SemiCanonical(std::shared_ptr<Wavefunction> wfn, std::shared_ptr<ForteIntegrals> ints,
                   std::shared_ptr<MOSpaceInfo> mo_space_info, const bool& quiet = false);
 
-    SemiCanonical(std::shared_ptr<Wavefunction> wfn, std::shared_ptr<ForteIntegrals> ints,
-                  std::shared_ptr<MOSpaceInfo> mo_space_info, Dimension actv_docc,
-                  Dimension actv_virt, const bool& quiet = false);
+    /// Transforms integrals and reference
+    void semicanonicalize(Reference& reference, const int& max_rdm_level = 3,
+                          const bool& build_fock = true, const bool& transform = true);
 
-    // Transforms integrals and reference
-    void semicanonicalize(Reference& reference);
+    /// Set active hole and particle dimensions
+    void set_actv_dims(const Dimension& actv_docc, const Dimension& actv_virt);
+
+    /// Return the alpha rotation matrix
+    SharedMatrix Ua() { return Ua_; }
+
+    /// Return the beta rotation matrix
+    SharedMatrix Ub() { return Ub_; }
 
   private:
+    void startup();
+
     std::shared_ptr<MOSpaceInfo> mo_space_info_;
 
     std::shared_ptr<ForteIntegrals> ints_;
@@ -111,11 +119,16 @@ class SemiCanonical {
     // Number of irreps
     size_t nirrep_;
 
-    // Builds the generalized fock matrix
+    /// Unitary matrix for alpha orbital rotation
+    SharedMatrix Ua_;
+    /// Unitary matrix for beta orbital rotation
+    SharedMatrix Ub_;
+
+    /// Build the generalized fock matrix
     void build_fock_matrix(Reference& reference);
 
-    /// Check if diagonal blocks of Fock are diagonal
-    void check_fock_matrix();
+    /// Check Fock matrix, return true if semicanonicalized
+    bool check_fock_matrix();
 
     /// If certain Fock blocks need to be diagonalized
     std::map<std::string, bool> checked_results_;
@@ -128,11 +141,12 @@ class SemiCanonical {
     void build_transformation_matrices(SharedMatrix& Ua, SharedMatrix& Ub, ambit::Tensor& Ua_t,
                                        ambit::Tensor& Ub_t);
 
-    // Transforms integrals
+    /// Transform integrals
     void transform_ints(SharedMatrix& Ua, SharedMatrix& Ub);
 
-    // Transforms all RDMS/cumulants
-    void transform_reference(ambit::Tensor& Ua, ambit::Tensor& Ub, Reference& reference);
+    /// Transform all cumulants, rebuild 2-RDMs using 2-cumulants
+    void transform_reference(ambit::Tensor& Ua, ambit::Tensor& Ub, Reference& reference,
+                             const int& rdm_level);
 };
 }
 } // End Namespaces

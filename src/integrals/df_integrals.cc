@@ -306,6 +306,7 @@ void DFIntegrals::deallocate() {
     delete[] diagonal_aphys_tei_bb;
     // delete[] qt_pitzer_;
 }
+
 void DFIntegrals::make_fock_matrix(SharedMatrix gamma_aM, SharedMatrix gamma_bM) {
     TensorType tensor_type = ambit::CoreTensor;
     ambit::Tensor ThreeIntegralTensor =
