@@ -1772,6 +1772,8 @@ double DSRG_MRPT3::compute_energy_relaxed() {
         outfile->Printf("\n");
     }
 
+    Process::environment.globals["UNRELAXED ENERGY"] = Edsrg;
+    Process::environment.globals["PARTIALLY RELAXED ENERGY"] = Erelax;
     Process::environment.globals["CURRENT ENERGY"] = Erelax;
     return Erelax;
 }

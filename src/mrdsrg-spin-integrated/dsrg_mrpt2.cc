@@ -1592,50 +1592,6 @@ double DSRG_MRPT2::compute_energy_relaxed() {
         FCI fci(reference_wavefunction_, options_, ints_, mo_space_info_);
         fci.set_max_rdm_level(1);
         Erelax = fci.compute_energy();
-
-        //        // setup for FCISolver
-        //        Dimension active_dim = mo_space_info_->get_dimension("ACTIVE");
-        //        int charge = Process::environment.molecule()->molecular_charge();
-        //        if (options_["CHARGE"].has_changed()) {
-        //            charge = options_.get_int("CHARGE");
-        //        }
-        //        auto nelec = 0;
-        //        int natom = Process::environment.molecule()->natom();
-        //        for (int i = 0; i < natom; ++i) {
-        //            nelec += Process::environment.molecule()->fZ(i);
-        //        }
-        //        nelec -= charge;
-        //        int multi = Process::environment.molecule()->multiplicity();
-        //        if (options_["MULTIPLICITY"].has_changed()) {
-        //            multi = options_.get_int("MULTIPLICITY");
-        //        }
-        //        int twice_ms = (multi + 1) % 2;
-        //        if (options_["MS"].has_changed()) {
-        //            twice_ms = std::round(2.0 * options_.get_double("MS"));
-        //        }
-        //        auto nelec_actv =
-        //            nelec - 2 * mo_space_info_->size("FROZEN_DOCC") - 2 *
-        //            acore_mos_.size();
-        //        auto na = (nelec_actv + twice_ms) / 2;
-        //        auto nb = nelec_actv - na;
-
-        //        // diagonalize the Hamiltonian
-        //        FCISolver fcisolver(active_dim, acore_mos_, aactv_mos_, na,
-        //                            nb, multi,
-        //                            options_.get_int("ROOT_SYM"), ints_,
-        //                            mo_space_info_,
-        //                            options_.get_int("NTRIAL_PER_ROOT"),
-        //                            print_,
-        //                            options_);
-        //        fcisolver.set_max_rdm_level(1);
-        //        fcisolver.set_nroot(options_.get_int("FCI_NROOT"));
-        //        fcisolver.set_root(options_.get_int("FCI_ROOT"));
-        //        fcisolver.set_fci_iterations(options_.get_int("FCI_MAXITER"));
-        //        fcisolver.set_collapse_per_root(
-        //                    options_.get_int("DL_COLLAPSE_PER_ROOT"));
-        //        fcisolver.set_subspace_per_root(
-        //                    options_.get_int("DL_SUBSPACE_PER_ROOT"));
-        //        Erelax = fcisolver.compute_energy();
     }
 
     // printing
@@ -1644,6 +1600,8 @@ double DSRG_MRPT2::compute_energy_relaxed() {
     outfile->Printf("\n    %-30s = %22.15f", "DSRG-MRPT2 Total Energy (relaxed)", Erelax);
     outfile->Printf("\n");
 
+    Process::environment.globals["UNRELAXED ENERGY"] = Edsrg;
+    Process::environment.globals["PARTIALLY RELAXED ENERGY"] = Erelax;
     Process::environment.globals["CURRENT ENERGY"] = Erelax;
     return Erelax;
 }

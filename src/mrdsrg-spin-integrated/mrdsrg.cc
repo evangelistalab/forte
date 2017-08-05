@@ -453,17 +453,6 @@ double MRDSRG::compute_energy_relaxed() {
         } else {
             FCI fci(reference_wavefunction_, options_, ints_, mo_space_info_);
             Erelax = fci.compute_energy();
-
-            //            // diagonalize the Hamiltonian
-            //            FCISolver fcisolver(active_dim, acore_mos_, aactv_mos_, na, nb, multi,
-            //                                options_.get_int("ROOT_SYM"), ints_, mo_space_info_,
-            //                                options_.get_int("NTRIAL_PER_ROOT"), print_,
-            //                                options_);
-            //            fcisolver.set_max_rdm_level(1);
-            //            fcisolver.set_fci_iterations(options_.get_int("FCI_MAXITER"));
-            //            fcisolver.set_collapse_per_root(options_.get_int("DL_COLLAPSE_PER_ROOT"));
-            //            fcisolver.set_subspace_per_root(options_.get_int("DL_SUBSPACE_PER_ROOT"));
-            //            Erelax = fcisolver.compute_energy();
         }
 
         // printing
