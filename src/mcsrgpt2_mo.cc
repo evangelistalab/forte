@@ -54,7 +54,7 @@ MCSRGPT2_MO::MCSRGPT2_MO(SharedWavefunction ref_wfn, Options& options,
 
     // reference cumulants
     int max_rdm_level = (options_.get_str("THREEPDC") != "ZERO") ? 3 : 2;
-    Reference ref = reference(max_rdm_level);    
+    Reference ref = reference(max_rdm_level);
 
     // semicanonicalize orbitals
     SemiCanonical semi(reference_wavefunction_, integral_, mo_space_info_);

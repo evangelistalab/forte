@@ -390,7 +390,7 @@ class FCI_MO : public Wavefunction {
                              ambit::Tensor& L3bbb);
 
     /// Fill in non-tensor cumulants used in the naive MR-DSRG-PT2 code
-    void fill_naive_cumulants(Reference &ref, const int& level);
+    void fill_naive_cumulants(Reference& ref, const int& level);
 
     /// N-Particle Operator
     double OneOP(const STLBitsetDeterminant& J, STLBitsetDeterminant& Jnew, const size_t& p,

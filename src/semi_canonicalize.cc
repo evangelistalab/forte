@@ -51,8 +51,8 @@ SemiCanonical::SemiCanonical(std::shared_ptr<Wavefunction> wfn,
     : wfn_(wfn), mo_space_info_(mo_space_info), ints_(ints), quiet_(quiet) {
 
     if (!quiet) {
-        print_method_banner(
-            {"Semi-Canonical Orbitals", "Chenyang Li, Jeffrey B. Schriber and Francesco A. Evangelista"});
+        print_method_banner({"Semi-Canonical Orbitals",
+                             "Chenyang Li, Jeffrey B. Schriber and Francesco A. Evangelista"});
     }
 
     // 0. initialize the dimension objects
