@@ -204,14 +204,25 @@ void MRDSRG::build_ints() {
     });
 
     // prepare two-electron integrals
-    V_.iterate([&](const std::vector<size_t>& i, const std::vector<SpinType>& spin, double& value) {
-        if ((spin[0] == AlphaSpin) && (spin[1] == AlphaSpin))
-            value = ints_->aptei_aa(i[0], i[1], i[2], i[3]);
-        if ((spin[0] == AlphaSpin) && (spin[1] == BetaSpin))
-            value = ints_->aptei_ab(i[0], i[1], i[2], i[3]);
-        if ((spin[0] == BetaSpin) && (spin[1] == BetaSpin))
-            value = ints_->aptei_bb(i[0], i[1], i[2], i[3]);
-    });
+    if (eri_df_) {
+        V["pqrs"] = B_["gpr"] * B_["gqs"];
+        V["pqrs"] -= B_["gps"] * B_["gqr"];
+
+        V["pQrS"] = B_["gpr"] * B_["gQS"];
+
+        V["PQRS"] = B_["gPR"] * B_["gQS"];
+        V["PQRS"] -= B_["gPS"] * B_["gQR"];
+    } else {
+        V.iterate(
+            [&](const std::vector<size_t>& i, const std::vector<SpinType>& spin, double& value) {
+                if ((spin[0] == AlphaSpin) and (spin[1] == AlphaSpin))
+                    value = ints_->aptei_aa(i[0], i[1], i[2], i[3]);
+                if ((spin[0] == AlphaSpin) and (spin[1] == BetaSpin))
+                    value = ints_->aptei_ab(i[0], i[1], i[2], i[3]);
+                if ((spin[0] == BetaSpin) and (spin[1] == BetaSpin))
+                    value = ints_->aptei_bb(i[0], i[1], i[2], i[3]);
+            });
+    }
 }
 
 void MRDSRG::build_density() {
