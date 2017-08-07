@@ -154,6 +154,13 @@ class MRDSRG : public Wavefunction {
     /// Map from space label to list of MOs
     std::map<char, std::vector<size_t>> label_to_spacemo_;
 
+    /// If ERI density fitted or Cholesky decomposed
+    bool eri_df_;
+    /// Auxiliary MOs
+    std::vector<size_t> aux_mos_;
+    /// Auxiliary space label
+    std::string aux_label_;
+
     /// Fill up integrals
     void build_ints();
     /// Fill up density matrix and density cumulants
@@ -203,6 +210,8 @@ class MRDSRG : public Wavefunction {
     ambit::BlockedTensor H_;
     /// Two-electron integral
     ambit::BlockedTensor V_;
+    /// Three-index integrals
+    ambit::BlockedTensor B_;
     /// Generalized Fock matrix
     ambit::BlockedTensor F_;
     /// One-particle density matrix

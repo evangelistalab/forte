@@ -104,6 +104,13 @@ void MRDSRG::startup() {
     // reference energy
     Eref_ = reference_.get_Eref();
 
+    // density fitted ERI?
+    eri_df_ = false;
+    std::string int_type = options_.get_str("INT_TYPE");
+    if (int_type == "CHOLESKY" || int_type == "DF" || int_type == "DISKDF") {
+        eri_df_ = true;
+    }
+
     // orbital spaces
     BlockedTensor::reset_mo_spaces();
     acore_mos_ = mo_space_info_->get_corr_abs_mo("RESTRICTED_DOCC");
@@ -205,15 +212,15 @@ void MRDSRG::build_ints() {
 
     // prepare two-electron integrals
     if (eri_df_) {
-        V["pqrs"] = B_["gpr"] * B_["gqs"];
-        V["pqrs"] -= B_["gps"] * B_["gqr"];
+        V_["pqrs"] = B_["gpr"] * B_["gqs"];
+        V_["pqrs"] -= B_["gps"] * B_["gqr"];
 
-        V["pQrS"] = B_["gpr"] * B_["gQS"];
+        V_["pQrS"] = B_["gpr"] * B_["gQS"];
 
-        V["PQRS"] = B_["gPR"] * B_["gQS"];
-        V["PQRS"] -= B_["gPS"] * B_["gQR"];
+        V_["PQRS"] = B_["gPR"] * B_["gQS"];
+        V_["PQRS"] -= B_["gPS"] * B_["gQR"];
     } else {
-        V.iterate(
+        V_.iterate(
             [&](const std::vector<size_t>& i, const std::vector<SpinType>& spin, double& value) {
                 if ((spin[0] == AlphaSpin) and (spin[1] == AlphaSpin))
                     value = ints_->aptei_aa(i[0], i[1], i[2], i[3]);
