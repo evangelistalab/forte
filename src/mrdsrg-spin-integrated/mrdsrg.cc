@@ -150,6 +150,21 @@ void MRDSRG::startup() {
     BTF_->add_composite_mo_space("g", "pqrsto", {acore_label_, aactv_label_, avirt_label_});
     BTF_->add_composite_mo_space("G", "PQRSTO", {bcore_label_, bactv_label_, bvirt_label_});
 
+    // if density fitted
+    if (eri_df_) {
+        aux_label_ = "L";
+        aux_mos_ = std::vector<size_t>(ints_->nthree());
+        std::iota(aux_mos_.begin(), aux_mos_.end(), 0);
+
+        BTF_->add_mo_space(aux_label_, "g", aux_mos_, NoSpin);
+        label_to_spacemo_[aux_label_[0]] = aux_mos_;
+
+        B_ = BTF_->build(tensor_type_, "B 3-idx", {"Lgg", "LGG"});
+        B_.iterate([&](const std::vector<size_t>& i, const std::vector<SpinType>&, double& value) {
+            value = ints_->three_integral(i[0], i[1], i[2]);
+        });
+    }
+
     // prepare integrals
     H_ = BTF_->build(tensor_type_, "H", spin_cases({"gg"}));
     V_ = BTF_->build(tensor_type_, "V", spin_cases({"gggg"}));
