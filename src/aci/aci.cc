@@ -153,7 +153,6 @@ void set_ACI_options(ForteOptions& foptions) {
 
     /*- Do reference relaxation in ACI? -*/
     foptions.add_bool("ACI_REF_RELAX", false, "Do reference relaxation in ACI");
-
 }
 
 bool pairComp(const std::pair<double, STLBitsetDeterminant> E1,
@@ -546,10 +545,10 @@ double AdaptiveCI::compute_energy() {
 
     //** Compute the RDMs **//
     if (options_.get_int("ACI_MAX_RDM") >= 3 or (rdm_level_ >= 3)) {
-outfile->Printf("\n  Computing 3-list...    ");
-Timer l3;
+        outfile->Printf("\n  Computing 3-list...    ");
+        Timer l3;
         op_.three_s_lists(final_wfn_);
-outfile->Printf(" done (%1.5f s)", l3.get());
+        outfile->Printf(" done (%1.5f s)", l3.get());
     }
     SharedMatrix new_evecs;
     if (ex_alg_ == "ROOT_COMBINE") {

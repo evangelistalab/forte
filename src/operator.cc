@@ -1206,7 +1206,7 @@ void WFNOperator::three_s_lists(DeterminantHashVec& wfn) {
 
     size_t ndets = wfn.size();
     const det_hashvec& dets = wfn.wfn_hash();
-   //  Timer aaa;
+    //  Timer aaa;
     {
         for (size_t b = 0, max_b = beta_strings_.size(); b < max_b; ++b) {
             size_t naa_ann = 0;
@@ -1345,14 +1345,14 @@ void WFNOperator::three_s_lists(DeterminantHashVec& wfn) {
                 }
             }
         }
-    //      outfile->Printf("\n  Time spent building aab_list  %1.6f s", aab.get());
+        //      outfile->Printf("\n  Time spent building aab_list  %1.6f s", aab.get());
     }
 
     /// ABB coupling
     {
-     //   Timer abb;
+        //   Timer abb;
         for (size_t a = 0, max_a = alpha_a_strings_.size(); a < max_a; ++a) {
-        size_t nabb_ann = 0;
+            size_t nabb_ann = 0;
             det_hash<int> abb_ann_map;
             std::vector<std::pair<int, size_t>>& c_dets = alpha_a_strings_[a];
             size_t max_I = c_dets.size();
@@ -1404,12 +1404,12 @@ void WFNOperator::three_s_lists(DeterminantHashVec& wfn) {
                 }
             }
         }
-      //    outfile->Printf("\n  Time spent building abb_list  %1.6f s", abb.get());
+        //    outfile->Printf("\n  Time spent building abb_list  %1.6f s", abb.get());
     }
 
     /// BBB coupling
     {
-       // Timer bbb;
+        // Timer bbb;
         for (size_t a = 0, max_a = alpha_strings_.size(); a < max_a; ++a) {
             size_t nbbb_ann = 0;
             det_hash<int> bbb_ann_map;
