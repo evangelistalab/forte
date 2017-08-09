@@ -104,6 +104,9 @@ class FCI_MO : public Wavefunction {
     /// Returns the reference object
     Reference reference(const int& level = 3);
 
+    /// Compute Fock (stored in ForteIntegal) using this->Da_
+    void compute_Fock_ints();
+
     /**
      * @brief Rotate the SA references such that <M|F|N> is diagonal
      * @param irrep The irrep of states M and N (same irrep)
@@ -130,6 +133,9 @@ class FCI_MO : public Wavefunction {
 
     /// Set orbitals
     void set_orbs(SharedMatrix Ca, SharedMatrix Cb);
+
+    /// Return fci_int_ pointer
+    std::shared_ptr<FCIIntegrals> fci_ints() { return fci_ints_; }
 
     /// Return the vector of determinants
     vecdet p_space() { return determinant_; }
@@ -159,13 +165,17 @@ class FCI_MO : public Wavefunction {
     /// Set false to skip Fock build in FCI_MO
     void set_form_Fock(bool form_fock) { form_Fock_ = form_fock; }
 
-    /// Return indices (relative to active, not absolute) of active occupied
-    /// orbitals
+    /// Return indices (relative to active, not absolute) of active occupied orbitals
     std::vector<size_t> actv_occ() { return ah_; }
 
-    /// Return indices (relative to active, not absolute) of active virtual
-    /// orbitals
+    /// Return indices (relative to active, not absolute) of active virtual orbitals
     std::vector<size_t> actv_uocc() { return ap_; }
+
+    /// Return the Dimension of active occupied orbitals
+    Dimension actv_docc() { return active_h_; }
+
+    /// Return the Dimension of active virtual orbitals
+    Dimension actv_virt() { return active_p_; }
 
     /// Return the T1 percentage in CISD computations
     std::vector<double> compute_T1_percentage();
@@ -197,7 +207,7 @@ class FCI_MO : public Wavefunction {
 
     /// Convergence
     double econv_;
-    double dconv_;
+    double fcheck_threshold_;
 
     /// Multiplicity
     int multi_;
@@ -344,6 +354,8 @@ class FCI_MO : public Wavefunction {
     void fill_density();
     /// Fill in L1a, L1b, Da_, Db_ from the RDM Vectors
     void fill_density(vector<double>& opdm_a, std::vector<double>& opdm_b);
+    /// Fill in non-tensor quantities D1a_ and D1b_ using ambit tensors
+    void fill_one_cumulant(ambit::Tensor& L1a, ambit::Tensor& L1b);
 
     /// Form 2-Particle Density Cumulant
     void FormCumulant2(CI_RDMS& ci_rdms, d4& AA, d4& AB, d4& BB);
@@ -356,6 +368,8 @@ class FCI_MO : public Wavefunction {
     /// ... are not initialized)
     void compute_cumulant2(vector<double>& tpdm_aa, std::vector<double>& tpdm_ab,
                            std::vector<double>& tpdm_bb);
+    /// Fill in non-tensor quantities L2aa_, L2ab_, and L2bb_ using ambit tensors
+    void fill_two_cumulant(ambit::Tensor& L2aa, ambit::Tensor& L2ab, ambit::Tensor& L2bb);
 
     /// Form 3-Particle Density Cumulant
     void FormCumulant3(CI_RDMS& ci_rdms, d6& AAA, d6& AAB, d6& ABB, d6& BBB, string& DC);
@@ -371,6 +385,12 @@ class FCI_MO : public Wavefunction {
     /// average, L3aaa_ ... are not initialized)
     void compute_cumulant3(vector<double>& tpdm_aaa, std::vector<double>& tpdm_aab,
                            std::vector<double>& tpdm_abb, std::vector<double>& tpdm_bbb);
+    /// Fill in non-tensor quantities L3aaa_, L3aab_, L3abb_ and L3bbb_ using ambit tensors
+    void fill_three_cumulant(ambit::Tensor& L3aaa, ambit::Tensor& L3aab, ambit::Tensor& L3abb,
+                             ambit::Tensor& L3bbb);
+
+    /// Fill in non-tensor cumulants used in the naive MR-DSRG-PT2 code
+    void fill_naive_cumulants(Reference& ref, const int& level);
 
     /// N-Particle Operator
     double OneOP(const STLBitsetDeterminant& J, STLBitsetDeterminant& Jnew, const size_t& p,
@@ -400,8 +420,8 @@ class FCI_MO : public Wavefunction {
     double Eref_;
 
     /// Compute 2- and 3-cumulants
-    void compute_ref();
-    void compute_sa_ref();
+    void compute_ref(const int& level);
+    void compute_sa_ref(const int& level);
 
     /// Orbital Extents
     /// returns a vector of irrep by # active orbitals in current irrep

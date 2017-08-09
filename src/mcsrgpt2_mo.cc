@@ -27,6 +27,7 @@
  */
 
 #include "mcsrgpt2_mo.h"
+#include "semi_canonicalize.h"
 #include "mini-boost/boost/algorithm/string/predicate.hpp"
 #include "mini-boost/boost/format.hpp"
 #include "psi4/libqt/qt.h"
@@ -47,8 +48,32 @@ MCSRGPT2_MO::MCSRGPT2_MO(SharedWavefunction ref_wfn, Options& options,
                          std::shared_ptr<ForteIntegrals> ints,
                          std::shared_ptr<MOSpaceInfo> mo_space_info)
     : FCI_MO(ref_wfn, options, ints, mo_space_info) {
-    compute_energy();
-    reference();
+
+    // compute CI energy
+    compute_ss_energy();
+
+    // reference cumulants
+    int max_rdm_level = (options_.get_str("THREEPDC") != "ZERO") ? 3 : 2;
+    Reference ref = reference(max_rdm_level);
+
+    // semicanonicalize orbitals
+    SemiCanonical semi(reference_wavefunction_, integral_, mo_space_info_);
+    if (active_space_type_ == "CIS" || active_space_type_ == "CISD") {
+        semi.set_actv_dims(active_h_, active_p_);
+    }
+    semi.semicanonicalize(ref, max_rdm_level);
+
+    // fill in non-tensor based cumulants
+    fill_naive_cumulants(ref, max_rdm_level);
+
+    // build Fock matrix using semicanonicalized densities
+    Fa_ = d2(ncmo_, d1(ncmo_));
+    Fb_ = d2(ncmo_, d1(ncmo_));
+    Form_Fock(Fa_, Fb_);
+    if (print_ > 1) {
+        print_Fock("Alpha", Fa_);
+        print_Fock("Beta", Fb_);
+    }
 
     print_method_banner({"Driven Similarity Renormalization Group",
                          "Second-Order Perturbative Analysis", "Chenyang Li"});
@@ -1648,22 +1673,20 @@ double MCSRGPT2_MO::compute_energy_dsrg() {
     E_VT2_2(E7);
     outfile->Printf("\t\t\t\t\tDone.");
 
-    outfile->Printf("\n  Computing energy of [V, T2] C_2^2 * C_4 ...");
+    if (options_.get_str("TWOPDC") != "ZERO") {
+        outfile->Printf("\n  Computing energy of [V, T2] C_2^2 * C_4 ...");
 
-    E_VT2_4PP(E8_1);
-    E_VT2_4HH(E8_2);
-    E_VT2_4PH(E8_3);
-    outfile->Printf("\t\t\t\tDone.");
+        E_VT2_4PP(E8_1);
+        E_VT2_4HH(E8_2);
+        E_VT2_4PH(E8_3);
+        outfile->Printf("\t\t\t\tDone.");
+    }
 
     if (options_.get_str("THREEPDC") != "ZERO") {
         outfile->Printf("\n  Computing energy of [V, T2] C_2 * C_6 ...");
 
         E_VT2_6(E10_1, E10_2);
         outfile->Printf("\t\t\t\tDone.");
-
-    } else {
-        E10_1 = 0.0;
-        E10_2 = 0.0;
     }
 
     double E5 = E5_1 + E5_2;

@@ -1437,7 +1437,7 @@ bool MRDSRG::check_semicanonical() {
     double threshold = 0.5 * std::sqrt(options_.get_double("E_CONVERGENCE"));
     bool semi = false;
     if (Foff_sum > threshold) {
-        std::string sep(3 + 16 * 3, '-');
+        std::string sep(2 + 16 * 3, '-');
         outfile->Printf("\n    Warning! Orbitals are not semi-canonicalized!");
         outfile->Printf("\n    Off-Diagonal norms of the core, active, virtual "
                         "blocks of Fock matrix");

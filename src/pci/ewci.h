@@ -112,6 +112,8 @@ class ElementwiseCI : public Wavefunction {
     std::function<bool(double, double, double)> prescreen_H_CI_;
     /// Function for important matrix element
     std::function<bool(double, double, double, double)> important_H_CI_CJ_;
+    /// Functional order
+    double functional_order_;
     /// A string that describes the coupling importance functional
     std::string functional_description_;
     /// The wave function symmetry
@@ -316,7 +318,7 @@ class ElementwiseCI : public Wavefunction {
     apply_tau_H_symm_det_dynamic_HBCI_2(double tau, double spawning_threshold,
                                         const det_hashvec& dets_hashvec,
                                         const std::vector<double>& pre_C, size_t I, double CI,
-                                        std::vector<std::pair<size_t, double>>& new_index_C_vec,
+                                        std::vector<double> &result_C,
                                         std::vector<std::pair<Determinant, double>>& new_det_C_vec,
                                         double E0, std::pair<double, double>& max_coupling);
     /// Apply symmetric approx tau H to a set of determinants with selection

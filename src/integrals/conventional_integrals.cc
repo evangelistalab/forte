@@ -443,7 +443,7 @@ void ConventionalIntegrals::make_fock_matrix(SharedMatrix gamma_a, SharedMatrix 
             fock_matrix_b[p * ncmo_ + q] = oei_b(p, q);
         }
     }
-    double zero = 1e-10;
+    double zero = 1e-12;
     /// TODO: Either use ambit or use structure of gamma.
     for (size_t r = 0; r < ncmo_; ++r) {
         for (size_t s = 0; s < ncmo_; ++s) {

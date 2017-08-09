@@ -247,7 +247,8 @@ string_list_symm LambdaCI::compute_strings_screened(vector<double>& epsilon, int
 }
 
 half_string_list LambdaCI::compute_half_strings_screened(bool is_occ, int n, int k,
-                                                         std::vector<double>& weights, string label) {
+                                                         std::vector<double>& weights,
+                                                         string label) {
     bool print_debug = false;
     if (print_debug)
         outfile->Printf("\n      number of %14s strings: %ld", label.c_str(),

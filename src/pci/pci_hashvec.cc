@@ -66,40 +66,13 @@ bool ProjectorCI_HashVec::have_omp_ = true;
 bool ProjectorCI_HashVec::have_omp_ = false;
 #endif
 
-void combine_hashes(std::vector<det_hash<>>& thread_det_C_map, det_hash<>& dets_C_hash);
-void combine_hashes(det_hash<>& dets_C_hash_A, det_hash<>& dets_C_hash_B);
-void combine_hashes_into_hash(std::vector<det_hash<>>& thread_det_C_hash, det_hash<>& dets_C_hash);
-void copy_hash_to_vec(det_hash<>& dets_C_hash, det_vec& dets, std::vector<double>& C);
-void copy_hash_to_vec_order_ref(det_hash<>& dets_C_hash, det_vec& dets, std::vector<double>& C);
-void copy_vec_to_hash(det_vec& dets, const std::vector<double>& C, det_hash<>& dets_C_hash);
 void scale(std::vector<double>& A, double alpha);
-void scale(det_hash<>& A, double alpha);
 double normalize(std::vector<double>& C);
-double normalize(det_hash<>& dets_C);
-double norm(std::vector<double>& C);
-double norm(det_hash<>& dets_C);
-double dot(det_hash<>& A, det_hash<>& B);
 double dot(std::vector<double>& C1, std::vector<double>& C2);
-size_t ortho_norm(std::vector<std::vector<double>>& H_n_C, std::vector<double>& norms, Matrix& A,
-                  double colinear_threshold);
-void add(det_hash<>& A, double beta, det_hash<>& B);
 void add(std::vector<double>& a, double k, std::vector<double>& b);
-double factorial(int n);
-void binomial_coefs(std::vector<double>& coefs, int order, double a, double b);
-void Taylor_generator_coefs(std::vector<double>& coefs, int order, double tau, double S);
-void Taylor_polynomial_coefs(std::vector<double>& coefs, int order);
-void Chebyshev_polynomial_coefs(std::vector<double>& coefs, int order);
-void Exp_Chebyshev_generator_coefs(std::vector<double>& coefs, int order, double tau, double S,
-                                   double range);
-void Chebyshev_generator_coefs(std::vector<double>& coefs, int order, double tau, double S,
-                               double range);
 void Wall_Chebyshev_generator_coefs(std::vector<double>& coefs, int order, double tau, double S,
                                     double range);
 void print_polynomial(std::vector<double>& coefs);
-
-void print_vector(const std::vector<double>& C, std::string description);
-
-void print_hash(det_hash<>& C, std::string description, bool print_det = false);
 
 void add(const det_hashvec& A, std::vector<double> Ca, double beta, const det_hashvec& B,
          const std::vector<double> Cb) {
@@ -133,20 +106,19 @@ void ProjectorCI_HashVec::sortHashVecByCoefficient(det_hashvec& dets_hashvec,
         det_weight[I] = std::make_pair(std::fabs(C[I]), I);
     }
     std::sort(det_weight.begin(), det_weight.end(), std::greater<std::pair<double, size_t>>());
-    det_hashvec new_dets_hashvec;
-    new_dets_hashvec.reserve(dets_size);
+    std::vector<size_t> order_map(dets_size);
+    for (size_t I = 0; I < dets_size; ++I) {
+        order_map[det_weight[I].second] = I;
+    }
+    dets_hashvec.map_order(order_map);
     std::vector<double> new_C(dets_size);
     std::vector<std::pair<double, double>> new_dets_max_couplings(dets_size);
-    size_t old_I = 0, new_I = 0;
     for (size_t I = 0; I < dets_size; ++I) {
-        old_I = det_weight[I].second;
-        new_I = new_dets_hashvec.add(dets_hashvec[old_I]);
-        new_C[new_I] = C[old_I];
-        new_dets_max_couplings[new_I] = dets_max_couplings_[old_I];
+        new_C[order_map[I]] = C[I];
+        new_dets_max_couplings[order_map[I]] = dets_max_couplings_[I];
     }
-    dets_hashvec = new_dets_hashvec;
-    C = new_C;
-    dets_max_couplings_ = new_dets_max_couplings;
+    C = std::move(new_C);
+    dets_max_couplings_ = std::move(new_dets_max_couplings);
 }
 
 ProjectorCI_HashVec::ProjectorCI_HashVec(SharedWavefunction ref_wfn, Options& options,
@@ -506,30 +478,6 @@ void ProjectorCI_HashVec::compute_characteristic_function() {
     shift_ = (lambda_h_ + lambda_1_) / 2.0;
     range_ = (lambda_h_ - lambda_1_) / 2.0;
     switch (generator_) {
-    case PowerGenerator:
-        cha_func_coefs_.clear();
-        cha_func_coefs_.push_back(0.0);
-        cha_func_coefs_.push_back(-1.0);
-        break;
-    case LinearGenerator:
-        Taylor_generator_coefs(cha_func_coefs_, 1, time_step_, range_);
-        break;
-    case QuadraticGenerator:
-        Taylor_generator_coefs(cha_func_coefs_, 2, time_step_, range_);
-        break;
-    case CubicGenerator:
-        Taylor_generator_coefs(cha_func_coefs_, 3, time_step_, range_);
-        break;
-    case QuarticGenerator:
-        Taylor_generator_coefs(cha_func_coefs_, 4, time_step_, range_);
-        break;
-    case ExpChebyshevGenerator:
-        Exp_Chebyshev_generator_coefs(cha_func_coefs_, chebyshev_order_, time_step_, shift_,
-                                      range_);
-        break;
-    case ChebyshevGenerator:
-        Chebyshev_generator_coefs(cha_func_coefs_, chebyshev_order_, time_step_, shift_, range_);
-        break;
     case WallChebyshevGenerator:
         Wall_Chebyshev_generator_coefs(cha_func_coefs_, chebyshev_order_, time_step_, shift_,
                                        range_);
@@ -562,7 +510,7 @@ double ProjectorCI_HashVec::compute_energy() {
     outfile->Printf("\n\t    Projector Configuration Interaction HashVector "
                     "implementation");
     outfile->Printf("\n\t         by Francesco A. Evangelista and Tianyuan Zhang");
-    outfile->Printf("\n\t                      version Jul. 27 2017");
+    outfile->Printf("\n\t                      version Jul. 28 2017");
     outfile->Printf("\n\t                    %4d thread(s) %s", num_threads_,
                     have_omp_ ? "(OMP)" : "");
     outfile->Printf("\n\t  ---------------------------------------------------------");
@@ -752,9 +700,9 @@ double ProjectorCI_HashVec::compute_energy() {
     if (converged) {
         outfile->Printf("\n\n  Calculation converged.");
     } else {
-        outfile->Printf("\n\n  Calculation %s",
-                        iter_ != maxiter_ ? "stoped in appearance of higher new low."
-                                          : "did not converge!");
+        outfile->Printf("\n\n  Calculation %s", iter_ != maxiter_
+                                                    ? "stoped in appearance of higher new low."
+                                                    : "did not converge!");
     }
 
     if (do_shift_) {
@@ -1020,13 +968,12 @@ void ProjectorCI_HashVec::propagate_DL(det_hashvec& dets_hashvec, std::vector<do
     std::vector<std::vector<double>> sigma_vec(davidson_subspace_per_root_);
     std::vector<double> alpha_vec(davidson_subspace_per_root_);
     SharedMatrix A(new Matrix(davidson_subspace_per_root_, davidson_subspace_per_root_));
-    b_vec[0] = C;
     //    det_hash<> dets_C_hash;
     //    apply_tau_H_ref_C_symm(1.0, spawning_threshold, dets, b_vec[0], C,
     //                           dets_C_hash, 0.0);
     //    copy_hash_to_vec_order_ref(dets_C_hash, dets, sigma_vec[0]);
     //    det_hashvec dets_hashvec(dets);
-    apply_tau_H_symm(1.0, spawning_threshold, dets_hashvec, b_vec[0], sigma_vec[0], 0.0);
+    apply_tau_H_symm(1.0, spawning_threshold, dets_hashvec, C, sigma_vec[0], 0.0);
     //    dets = dets_hashvec.toVector();
     if (ref_size <= 1) {
         C = sigma_vec[0];
@@ -1036,9 +983,11 @@ void ProjectorCI_HashVec::propagate_DL(det_hashvec& dets_hashvec, std::vector<do
         return;
     }
 
-    A->set(0, 0, dot(b_vec[0], sigma_vec[0]));
-
     size_t dets_size = dets_hashvec.size();
+    b_vec[0] = C;
+    A->set(0, 0, dot(b_vec[0], sigma_vec[0]));
+    b_vec[0].resize(dets_size, 0.0);
+
     std::vector<double> diag_vec(dets_size);
 #pragma omp parallel for
     for (int i = 0; i < dets_size; i++) {
@@ -1054,10 +1003,12 @@ void ProjectorCI_HashVec::propagate_DL(det_hashvec& dets_hashvec, std::vector<do
     for (i = 1; i < max_Davidson_iter_; i++) {
 
         for (int k = 0; k < current_order; k++) {
-            for (int j = 0, jmax = b_vec[k].size(); j < jmax; j++) {
+#pragma omp parallel for
+            for (int j = 0; j < dets_size; j++) {
                 delta_vec[j] += alpha_vec[k] * (sigma_vec[k][j] - lambda * b_vec[k][j]);
             }
         }
+#pragma omp parallel for
         for (int j = 0; j < dets_size; j++) {
             delta_vec[j] /= lambda - diag_vec[j];
         }
@@ -1127,8 +1078,8 @@ void ProjectorCI_HashVec::propagate_DL(det_hashvec& dets_hashvec, std::vector<do
             break;
         }
         if (current_order >= davidson_subspace_per_root_) {
-            b_vec[0].resize(dets_size, 0.0);
-            for (int j = 0, jmax = dets_hashvec.size(); j < jmax; j++) {
+#pragma omp parallel for
+            for (int j = 0; j < dets_size; j++) {
                 std::vector<double> b_j(davidson_collapse_per_root_, 0.0);
                 std::vector<double> sigma_j(davidson_collapse_per_root_, 0.0);
                 for (int l = 0; l < davidson_collapse_per_root_; l++) {
@@ -1176,7 +1127,8 @@ void ProjectorCI_HashVec::propagate_DL(det_hashvec& dets_hashvec, std::vector<do
     C.resize(dets_hashvec.size(), 0.0);
     //    b_vec[0].resize(dets.size(), 0.0);
     for (int i = 1; i < current_order; i++) {
-        for (int j = 0, jmax = b_vec[i].size(); j < jmax; j++) {
+#pragma omp parallel for
+        for (int j = 0; j < dets_size; j++) {
             C[j] += alpha_vec[i] * b_vec[i][j];
         }
     }

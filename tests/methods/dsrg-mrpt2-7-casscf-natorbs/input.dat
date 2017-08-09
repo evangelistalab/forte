@@ -1,0 +1,65 @@
+#! Generated using commit GITCOMMIT
+
+import forte
+
+refcasscf    = -108.942347617743536
+refpt2       = -109.103635338022116
+refpt2_relax = -109.105159176497864
+
+molecule N2{
+  0 1
+  N
+  N 1 1.50
+}
+
+set {
+  basis                  cc-pvdz
+  reference              rhf
+  scf_type               pk
+  maxiter                300
+  e_convergence          12
+  d_convergence          6
+  docc                   [3,0,0,0,0,2,1,1]
+  restricted_docc        [1,0,0,0,0,1,0,0]
+  active                 [2,0,1,1,0,2,1,1]
+  mcscf_maxiter          100
+  mcscf_r_convergence    10
+  mcscf_e_convergence    10
+  mcscf_diis_start       5
+}
+
+set forte {
+  job_type           dsrg-mrpt2
+  frozen_docc        [1,0,0,0,0,1,0,0]
+  frozen_uocc        [0,0,0,0,0,0,0,0]
+  restricted_docc    [0,0,0,0,0,0,0,0]
+  active             [2,0,1,1,0,2,1,1]
+  root_sym           0
+  nroot              1
+  dsrg_s             0.5
+  relax_ref          once
+  cas_type           cas
+  e_convergence      10
+}
+
+Ecasscf, wfn_cas = energy('casscf', return_wfn=True)
+compare_values(refcasscf, get_variable("CURRENT ENERGY"), 10, "CASSCF energy (canonical orbitals)")
+
+Eforte, wfn = energy('forte', ref_wfn=wfn_cas, return_wfn=True)
+compare_values(refpt2, get_variable("UNRELAXED ENERGY"), 10, "DSRG-MRPT2 urelaxed energy")
+compare_values(refpt2_relax, get_variable("PARTIALLY RELAXED ENERGY"), 10,
+               "DSRG-MRPT2 partially relaxed energy")
+
+# try CASSCF with natual orbital
+set {
+  nat_orbs true
+}
+Ecasscf, wfn_cas = energy('casscf', return_wfn=True)
+compare_values(refcasscf, get_variable("CURRENT ENERGY"), 10, "CASSCF energy (natural orbitals)")
+
+set forte {
+  cas_type           fci
+}
+Eforte, wfn = energy('forte', ref_wfn=wfn_cas, return_wfn=True)
+compare_values(refpt2_relax, get_variable("CURRENT ENERGY"), 6,
+               "DSRG-MRPT2 partially relaxed energy")

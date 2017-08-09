@@ -34,6 +34,7 @@
 #define four(i, j, k, l) PAIRINDEX(PAIRINDEX(i, j), PAIRINDEX(k, l))
 
 #include <iostream>
+#include <vector>
 
 #include "ambit/blocked_tensor.h"
 #include "psi4/libmints/matrix.h"
@@ -127,16 +128,49 @@ class ForteIntegrals {
     /// The beta one-electron integrals
     double oei_b(size_t p, size_t q) { return one_electron_integrals_b[p * aptei_idx_ + q]; }
 
-    /// The diagonal fock matrix integrals
-    double fock_a(size_t p, size_t q) { return fock_matrix_a[p * aptei_idx_ + q]; }
+    /// Get the alpha fock matrix elements
+    double get_fock_a(size_t p, size_t q) { return fock_matrix_a[p * aptei_idx_ + q]; }
 
-    /// The diagonal fock matrix integrals
-    double fock_b(size_t p, size_t q) { return fock_matrix_b[p * aptei_idx_ + q]; }
+    /// Get the beta fock matrix elements
+    double get_fock_b(size_t p, size_t q) { return fock_matrix_b[p * aptei_idx_ + q]; }
 
-    /// The diagonal fock matrix integrals
+    /// Get the alpha fock matrix in std::vector format
+    /// It seems to me (York) ncmo_ will always be the same as aptei_idx_
+    std::vector<double> get_fock_a() const {
+        std::vector<double> fock_stl(fock_matrix_a, fock_matrix_a + ncmo_ * ncmo_);
+        return fock_stl;
+    }
+
+    /// Get the beta fock matrix in std::vector format
+    std::vector<double> get_fock_b() const {
+        std::vector<double> fock_stl(fock_matrix_b, fock_matrix_b + ncmo_ * ncmo_);
+        return fock_stl;
+    }
+
+    /// Set the alpha fock matrix using a std::vector
+    void set_fock_a(const std::vector<double>& fock_stl) {
+        size_t fock_size = fock_stl.size();
+        if (fock_size > ncmo_ * ncmo_) {
+            throw PSIEXCEPTION("Cannot fill in fock_matrix_a because the vector is out-of-range.");
+        } else {
+            std::copy(fock_stl.begin(), fock_stl.end(), fock_matrix_a);
+        }
+    }
+
+    /// Set the beta fock matrix using a std::vector
+    void set_fock_b(const std::vector<double>& fock_stl) {
+        size_t fock_size = fock_stl.size();
+        if (fock_size > ncmo_ * ncmo_) {
+            throw PSIEXCEPTION("Cannot fill in fock_matrix_b because the vector is out-of-range.");
+        } else {
+            std::copy(fock_stl.begin(), fock_stl.end(), fock_matrix_b);
+        }
+    }
+
+    /// The alpha diagonal fock matrix integrals
     double diag_fock_a(size_t p) { return fock_matrix_a[p * aptei_idx_ + p]; }
 
-    /// The diagonal fock matrix integrals
+    /// The beta diagonal fock matrix integrals
     double diag_fock_b(size_t p) { return fock_matrix_b[p * aptei_idx_ + p]; }
 
     /// The antisymmetrixed alpha-alpha two-electron integrals in physicist
@@ -219,9 +253,6 @@ class ForteIntegrals {
     /// Expert Option: just try and use three_integral
     virtual double** three_integral_pointer() = 0;
 
-    /// Get the fock matrix elements
-    double get_fock_a(size_t p, size_t q) { return fock_matrix_a[p * aptei_idx_ + q]; }
-    double get_fock_b(size_t p, size_t q) { return fock_matrix_b[p * aptei_idx_ + q]; }
     /// Tell which integrals were used
     IntegralType integral_type() { return integral_type_; }
     SharedMatrix OneBody_symm() { return OneBody_symm_; }

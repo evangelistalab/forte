@@ -38,6 +38,7 @@
 #include "forte_options.h"
 #include "mini-boost/boost/algorithm/string/predicate.hpp"
 #include "operator.h"
+#include "semi_canonicalize.h"
 #include "psi4/libmints/dipole.h"
 #include "psi4/libmints/oeprop.h"
 #include "psi4/libmints/petitelist.h"
@@ -116,7 +117,7 @@ void FCI_MO::read_options() {
 
     // energy convergence
     econv_ = options_.get_double("E_CONVERGENCE");
-    dconv_ = options_.get_double("D_CONVERGENCE");
+    fcheck_threshold_ = 100.0 * econv_;
 
     // nuclear repulsion
     std::shared_ptr<Molecule> molecule = Process::environment.molecule();
@@ -247,6 +248,34 @@ void FCI_MO::read_options() {
     idx_h_.insert(idx_h_.end(), idx_c_.begin(), idx_c_.end());
     idx_p_ = std::vector<size_t>(idx_a_);
     idx_p_.insert(idx_p_.end(), idx_v_.begin(), idx_v_.end());
+
+    // active hole and particle indices
+    if (active_space_type_ == "CIS" || active_space_type_ == "CISD") {
+        Dimension doccpi(this->doccpi());
+        if (ipea_ == "EA") {
+            doccpi[0] += 1;
+        }
+        active_h_ = doccpi - frzcpi_ - core_;
+        active_p_ = active_ - active_h_;
+
+        ah_.clear();
+        ap_.clear();
+        for (int h = 0; h < nirrep_; ++h) {
+            int h_local = h;
+            size_t offset = 0;
+            while (--h_local >= 0) {
+                offset += active_[h_local];
+            }
+
+            for (size_t i = 0; i < active_[h]; ++i) {
+                if (i < active_h_[h]) {
+                    ah_.push_back(i + offset);
+                } else {
+                    ap_.push_back(i + offset);
+                }
+            }
+        }
+    }
 
     // print input summary
     std::vector<std::pair<std::string, size_t>> info;
@@ -434,11 +463,7 @@ double FCI_MO::compute_energy() {
             Eref_ = compute_sa_energy();
         }
     } else {
-        if (semi_) {
-            Eref_ = compute_canonical_ss_energy();
-        } else {
-            Eref_ = compute_ss_energy();
-        }
+        Eref_ = compute_ss_energy();
     }
 
     Process::environment.globals["CURRENT ENERGY"] = Eref_;
@@ -446,17 +471,6 @@ double FCI_MO::compute_energy() {
 }
 
 double FCI_MO::compute_ss_energy() {
-
-    // allocate density
-    Da_ = d2(ncmo_, d1(ncmo_));
-    Db_ = d2(ncmo_, d1(ncmo_));
-    L1a = ambit::Tensor::build(ambit::CoreTensor, "L1a", {na_, na_});
-    L1b = ambit::Tensor::build(ambit::CoreTensor, "L1b", {na_, na_});
-
-    // allocate Fock matrix
-    Fa_ = d2(ncmo_, d1(ncmo_));
-    Fb_ = d2(ncmo_, d1(ncmo_));
-
     // form determinants
     form_p_space();
 
@@ -482,32 +496,6 @@ double FCI_MO::compute_ss_energy() {
     }
     print_CI(nroot_, options_.get_double("FCIMO_PRINT_CIVEC"), eigen_, determinant_);
 
-    // prepare ci_rdms for one density
-    int dim = (eigen_[0].first)->dim();
-    SharedMatrix evecs(new Matrix("evecs", dim, eigen_size));
-    for (int i = 0; i < eigen_size; ++i) {
-        evecs->set_column(0, i, (eigen_[i]).first);
-    }
-    CI_RDMS ci_rdms(options_, fci_ints_, determinant_, evecs, root_, root_);
-
-    // form density
-    FormDensity(ci_rdms, Da_, Db_);
-    if (print_ > 1) {
-        //        print_d2("Da", Da_);
-        //        print_d2("Db", Db_);
-        print_density("Alpha", Da_);
-        print_density("Beta", Db_);
-    }
-
-    // build Fock Matrix
-    Form_Fock(Fa_, Fb_);
-    if (print_ > 1) {
-        //        print_d2("Fa", Fa_);
-        //        print_d2("Fb", Fb_);
-        print_Fock("Alpha", Fa_);
-        print_Fock("Beta", Fb_);
-    }
-
     // compute dipole moments
     compute_permanent_dipole();
 
@@ -516,6 +504,38 @@ double FCI_MO::compute_ss_energy() {
         compute_trans_dipole();
         compute_oscillator_strength();
     }
+
+    //    // allocate density
+    //    Da_ = d2(ncmo_, d1(ncmo_));
+    //    Db_ = d2(ncmo_, d1(ncmo_));
+    //    L1a = ambit::Tensor::build(ambit::CoreTensor, "L1a", {na_, na_});
+    //    L1b = ambit::Tensor::build(ambit::CoreTensor, "L1b", {na_, na_});
+
+    //    // allocate Fock matrix
+    //    Fa_ = d2(ncmo_, d1(ncmo_));
+    //    Fb_ = d2(ncmo_, d1(ncmo_));
+
+    //    // prepare ci_rdms for one density
+    //    int dim = (eigen_[0].first)->dim();
+    //    SharedMatrix evecs(new Matrix("evecs", dim, eigen_size));
+    //    for (int i = 0; i < eigen_size; ++i) {
+    //        evecs->set_column(0, i, (eigen_[i]).first);
+    //    }
+    //    CI_RDMS ci_rdms(options_, fci_ints_, determinant_, evecs, root_, root_);
+
+    //    // form density
+    //    FormDensity(ci_rdms, Da_, Db_);
+    //    if (print_ > 1) {
+    //        print_density("Alpha", Da_);
+    //        print_density("Beta", Db_);
+    //    }
+
+    //    // build Fock Matrix
+    //    Form_Fock(Fa_, Fb_);
+    //    if (print_ > 1) {
+    //        print_Fock("Alpha", Fa_);
+    //        print_Fock("Beta", Fb_);
+    //    }
 
     double Eref = eigen_[root_].second;
     Eref_ = Eref;
@@ -529,7 +549,7 @@ double FCI_MO::compute_canonical_ss_energy() {
 
     // check Fock matrix
     size_t count = 0;
-    Check_Fock(Fa_, Fb_, dconv_, count);
+    Check_Fock(Fa_, Fb_, fcheck_threshold_, count);
 
     // semi-canonicalize orbitals
     if (count == 0) {
@@ -543,7 +563,7 @@ double FCI_MO::compute_canonical_ss_energy() {
 
         // recheck Fock matrix
         count = 0;
-        Check_Fock(Fa_, Fb_, dconv_, count);
+        Check_Fock(Fa_, Fb_, fcheck_threshold_, count);
     }
 
     Eref_ = Eref;
@@ -893,35 +913,11 @@ vector<bool> FCI_MO::Form_String_Ref(const bool& print) {
     timer_on("FORM String Ref");
 
     std::vector<bool> String;
-    Dimension doccpi(this->doccpi());
-    if (ipea_ == "EA") {
-        doccpi[0] += 1;
-    }
     for (int h = 0; h < nirrep_; ++h) {
-        int act_docc = doccpi[h] - frzcpi_[h] - core_[h];
+        int act_docc = active_h_[h];
         int act = active_[h];
         for (int i = 0; i < act; ++i) {
             String.push_back(i < act_docc);
-        }
-    }
-    active_h_ = doccpi - frzcpi_ - core_;
-    active_p_ = active_ - active_h_;
-
-    ah_.clear();
-    ap_.clear();
-    for (int h = 0; h < nirrep_; ++h) {
-        int h_local = h;
-        size_t offset = 0;
-        while (--h_local >= 0) {
-            offset += active_[h_local];
-        }
-
-        for (size_t i = 0; i < active_[h]; ++i) {
-            if (i < active_h_[h]) {
-                ah_.push_back(i + offset);
-            } else {
-                ap_.push_back(i + offset);
-            }
         }
     }
 
@@ -1221,9 +1217,6 @@ void FCI_MO::semi_canonicalize() {
             if (ii != i) {
                 indexmap[i] = ii;
                 idx_0.push_back(i);
-                //                outfile->Printf("\n  i = %3d, ii = %3d, smax =
-                //                %.15f",
-                //                                i, ii, smax);
             }
         }
 
@@ -1300,85 +1293,6 @@ void FCI_MO::semi_canonicalize() {
         }
     }
 
-    //    // test integral transformation
-    //    ambit::Tensor U = ambit::Tensor::build(ambit::CoreTensor,"Orbital
-    //    rotation",{ncmo_,ncmo_});
-    //    ambit::Tensor H =
-    //    ambit::Tensor::build(ambit::CoreTensor,"OEI",{ncmo_,ncmo_});
-    //    ambit::Tensor F =
-    //    ambit::Tensor::build(ambit::CoreTensor,"Fock",{ncmo_,ncmo_});
-    //    ambit::Tensor Da =
-    //    ambit::Tensor::build(ambit::CoreTensor,"Da",{ncmo_,ncmo_});
-    //    ambit::Tensor Db =
-    //    ambit::Tensor::build(ambit::CoreTensor,"Db",{ncmo_,ncmo_});
-    //    ambit::Tensor Vaa =
-    //    ambit::Tensor::build(ambit::CoreTensor,"Vaa",{ncmo_,ncmo_,ncmo_,ncmo_});
-    //    ambit::Tensor Vab =
-    //    ambit::Tensor::build(ambit::CoreTensor,"Vab",{ncmo_,ncmo_,ncmo_,ncmo_});
-    //    ambit::Tensor H_trans = ambit::Tensor::build(ambit::CoreTensor,"OEI
-    //    transformed by integral class",{ncmo_,ncmo_});
-    //    ambit::Tensor Vaa_trans = ambit::Tensor::build(ambit::CoreTensor,"Vaa
-    //    transformed by integral class",{ncmo_,ncmo_,ncmo_,ncmo_});
-    //    ambit::Tensor Vab_trans = ambit::Tensor::build(ambit::CoreTensor,"Vab
-    //    transformed by integral class",{ncmo_,ncmo_,ncmo_,ncmo_});
-
-    //    Vaa.iterate([&](const std::vector<size_t>& i,double& value){
-    //        value = integral_->aptei_aa(i[0],i[1],i[2],i[3]);
-    //    });
-    //    Vab.iterate([&](const std::vector<size_t>& i,double& value){
-    //        value = integral_->aptei_ab(i[0],i[1],i[2],i[3]);
-    //    });
-    //    H.iterate([&](const std::vector<size_t>& i,double& value){
-    //        value = integral_->oei_a(i[0],i[1]);
-    //    });
-    ////    H.print();
-
-    //    Da.iterate([&](const std::vector<size_t>& i,double& value){
-    //        value = Da_[i[0]][i[1]];
-    //    });
-    //    Db.iterate([&](const std::vector<size_t>& i,double& value){
-    //        value = Db_[i[0]][i[1]];
-    //    });
-
-    //    for(int h = 0; h < nirrep_; ++h){
-    //        int h_local = h;
-    //        size_t offset = 0;
-    //        while(--h_local >= 0){
-    //            offset += ncmopi_[h_local];
-    //        }
-
-    //        for(size_t p = 0; p < ncmopi_[h]; ++p){
-    //            size_t np = p + offset;
-    //            for(size_t q = 0; q < ncmopi_[h]; ++q){
-    //                size_t nq = q + offset;
-
-    //                size_t idx = np * ncmo_ + nq;
-    //                U.data()[idx] = Ua->get(h,p+frzcpi_[h],q+frzcpi_[h]);
-    //            }
-    //        }
-    //    }
-    //    U.print();
-
-    //    ambit::Tensor tempH = ambit::Tensor::build(ambit::CoreTensor,"H
-    //    temp",{ncmo_,ncmo_});
-    //    ambit::Tensor tempDa = ambit::Tensor::build(ambit::CoreTensor,"Da
-    //    temp",{ncmo_,ncmo_});
-    //    ambit::Tensor tempVaa = ambit::Tensor::build(ambit::CoreTensor,"Vaa
-    //    temp",{ncmo_,ncmo_,ncmo_,ncmo_});
-    //    ambit::Tensor tempVab = ambit::Tensor::build(ambit::CoreTensor,"Vab
-    //    temp",{ncmo_,ncmo_,ncmo_,ncmo_});
-    //    tempVaa("cdkl") = U("ac") * U("bd") * Vaa("abij") * U("jl") * U("ik");
-    //    tempVab("cdkl") = U("ac") * U("bd") * Vab("abij") * U("jl") * U("ik");
-    //    tempH("rs") = U("pr") * H("pq") * U("qs");
-    //    tempDa("rs") = U("pr") * Da("pq") * U("qs");
-    ////    tempDa.print();
-    ////    tempVaa.print();
-
-    //    F("pq")  = tempH("pq");
-    //    F("pq") += U("xp") * Vaa("xrys") * U("yq") * Da("sr");
-    //    F("pq") += U("xp") * Vab("xrys") * U("yq") * Db("sr");
-    ////    F.print();
-
     outfile->Printf("\n\n");
     integral_->retransform_integrals();
     ambit::Tensor tei_active_aa = integral_->aptei_aa_block(idx_a_, idx_a_, idx_a_, idx_a_);
@@ -1386,48 +1300,6 @@ void FCI_MO::semi_canonicalize() {
     ambit::Tensor tei_active_bb = integral_->aptei_bb_block(idx_a_, idx_a_, idx_a_, idx_a_);
     fci_ints_->set_active_integrals(tei_active_aa, tei_active_ab, tei_active_bb);
     fci_ints_->compute_restricted_one_body_operator();
-
-    //    Vaa_trans.iterate([&](const std::vector<size_t>& i,double& value){
-    //        value = integral_->aptei_aa(i[0],i[1],i[2],i[3]);
-    //    });
-    //    Vab_trans.iterate([&](const std::vector<size_t>& i,double& value){
-    //        value = integral_->aptei_ab(i[0],i[1],i[2],i[3]);
-    //    });
-    //    H_trans.iterate([&](const std::vector<size_t>& i,double& value){
-    //        value = integral_->oei_a(i[0],i[1]);
-    //    });
-    ////    Vab_trans.print();
-
-    //    size_t ncmo2 = ncmo_ * ncmo_;
-    //    size_t ncmo3 = ncmo_ * ncmo2;
-    //    for(size_t p = 0; p < ncmo_; ++p){
-    //        for(size_t q = 0; q < ncmo_; ++q){
-
-    //            double v1 = tempH.data()[p * ncmo_ + q];
-    //            double v2 = H_trans.data()[p * ncmo_ + q];
-    ////            double diff = std::fabs(v1) - std::fabs(v2);
-    //            double diff = v1 - v2;
-    //            if(std::fabs(diff) > 1.0e-12){
-    //                outfile->Printf("\n  diff of H[%3zu][%3zu] = %20.15f", p,
-    //                q, diff);
-    //            }
-
-    //            for(size_t r = 0; r < ncmo_; ++r){
-    //                for(size_t s = 0; s < ncmo_; ++s){
-    //                    double v3 = tempVaa.data()[p * ncmo3 + q * ncmo2 + r *
-    //                    ncmo_ + s];
-    //                    double v4 = Vaa_trans.data()[p * ncmo3 + q * ncmo2 + r
-    //                    * ncmo_ + s];
-    //                    double diff = std::fabs(v3) - std::fabs(v4);
-    //                    if(std::fabs(diff) > 1.0e-12){
-    //                        outfile->Printf("\n  diff of
-    //                        V[%3zu][%3zu][%3zu][%3zu] = %20.15f", p, q, r, s,
-    //                        diff);
-    //                    }
-    //                }
-    //            }
-    //        }
-    //    }
 }
 
 void FCI_MO::Diagonalize_H_noHF(const vecdet& p_space, const int& multi, const int& nroot,
@@ -2313,7 +2185,7 @@ void FCI_MO::print_Fock(const string& spin, const d2& Fock) {
                     FT->set(i, j, diff);
                 }
             }
-            if (FT->rms() > dconv_) {
+            if (FT->rms() > fcheck_threshold_) {
                 outfile->Printf("  Warning: %s not symmetric for %s and %s blocks\n", name.c_str(),
                                 bname.c_str(), bnamer.c_str());
                 Fr.print();
@@ -2350,34 +2222,7 @@ void FCI_MO::print_Fock(const string& spin, const d2& Fock) {
 
 void FCI_MO::Form_Fock(d2& A, d2& B) {
     timer_on("Form Fock");
-    Timer tfock;
-    std::string str = "Forming generalized Fock matrix";
-    if (!quiet_) {
-        outfile->Printf("\n  %-35s ...", str.c_str());
-    }
-
-    SharedMatrix DaM(new Matrix("DaM", ncmo_, ncmo_));
-    SharedMatrix DbM(new Matrix("DbM", ncmo_, ncmo_));
-    for (size_t m = 0; m < nc_; m++) {
-        size_t nm = idx_c_[m];
-        for (size_t n = 0; n < nc_; n++) {
-            size_t nn = idx_c_[n];
-            DaM->set(nm, nn, Da_[nm][nn]);
-            DbM->set(nm, nn, Db_[nm][nn]);
-        }
-    }
-    for (size_t u = 0; u < na_; u++) {
-        size_t nu = idx_a_[u];
-        for (size_t v = 0; v < na_; v++) {
-            size_t nv = idx_a_[v];
-            DaM->set(nu, nv, Da_[nu][nv]);
-            DbM->set(nu, nv, Db_[nu][nv]);
-        }
-    }
-    integral_->make_fock_matrix(DaM, DbM);
-    if (!quiet_) {
-        outfile->Printf("  Done. Timing %15.6f s", tfock.get());
-    }
+    compute_Fock_ints();
 
     for (size_t p = 0; p < ncmo_; ++p) {
         for (size_t q = 0; q < ncmo_; ++q) {
@@ -2428,6 +2273,38 @@ void FCI_MO::Form_Fock(d2& A, d2& B) {
     //        }
     //    }
     timer_off("Form Fock");
+}
+
+void FCI_MO::compute_Fock_ints() {
+    Timer tfock;
+    std::string str = "Forming generalized Fock matrix";
+    if (!quiet_) {
+        outfile->Printf("\n  %-35s ...", str.c_str());
+    }
+
+    SharedMatrix DaM(new Matrix("DaM", ncmo_, ncmo_));
+    SharedMatrix DbM(new Matrix("DbM", ncmo_, ncmo_));
+    for (size_t m = 0; m < nc_; m++) {
+        size_t nm = idx_c_[m];
+        for (size_t n = 0; n < nc_; n++) {
+            size_t nn = idx_c_[n];
+            DaM->set(nm, nn, Da_[nm][nn]);
+            DbM->set(nm, nn, Db_[nm][nn]);
+        }
+    }
+    for (size_t u = 0; u < na_; u++) {
+        size_t nu = idx_a_[u];
+        for (size_t v = 0; v < na_; v++) {
+            size_t nv = idx_a_[v];
+            DaM->set(nu, nv, Da_[nu][nv]);
+            DbM->set(nu, nv, Db_[nu][nv]);
+        }
+    }
+    integral_->make_fock_matrix(DaM, DbM);
+
+    if (!quiet_) {
+        outfile->Printf("  Done. Timing %15.6f s", tfock.get());
+    }
 }
 
 void FCI_MO::Check_Fock(const d2& A, const d2& B, const double& E, size_t& count) {
@@ -2802,7 +2679,7 @@ bool FCI_MO::CheckDensity() {
     }
 
     bool natural = false;
-    if (std::fabs(maxes_sum) > 10.0 * dconv_) {
+    if (std::fabs(maxes_sum) > 10.0 * fcheck_threshold_) {
         std::string sep(3 + 16 * 3, '-');
         outfile->Printf("\n    Warning! Orbitals are not natural orbitals!");
         outfile->Printf("\n    Max off-diagonal values of core, active, "
@@ -3222,6 +3099,8 @@ d3 FCI_MO::compute_orbital_extents() {
 }
 
 void FCI_MO::fill_density() {
+    L1a = ambit::Tensor::build(ambit::CoreTensor, "L1a", {na_, na_});
+    L1b = ambit::Tensor::build(ambit::CoreTensor, "L1b", {na_, na_});
     L1a.iterate([&](const ::vector<size_t>& i, double& value) {
         size_t np = idx_a_[i[0]];
         size_t nq = idx_a_[i[1]];
@@ -3293,11 +3172,18 @@ void FCI_MO::fill_density(vector<double>& opdm_a, std::vector<double>& opdm_b) {
     }
 }
 
-void FCI_MO::compute_ref() {
+void FCI_MO::compute_ref(const int& level) {
     timer_on("Compute Ref");
     Timer tcu;
     if (!quiet_) {
-        outfile->Printf("\n  Computing 2- and 3-cumulants ... ");
+        std::string name = "1-";
+        if (level >= 2) {
+            name = "1- and 2-";
+            if (level >= 3) {
+                name = "1-, 2- and 3-";
+            }
+        }
+        outfile->Printf("\n  Computing %scumulants ... ", name.c_str());
     }
 
     // prepare ci_rdms
@@ -3309,74 +3195,38 @@ void FCI_MO::compute_ref() {
     }
     CI_RDMS ci_rdms(options_, fci_ints_, determinant_, evecs, root_, root_);
 
-    string threepdc = options_.get_str("THREEPDC");
-    string t_algorithm = options_.get_str("T_ALGORITHM");
+    // compute 1-RDM
+    std::vector<double> opdm_a, opdm_b;
+    ci_rdms.compute_1rdm(opdm_a, opdm_b);
 
-    // fill in L2aa_, L3aaa_, ... if use old non-tensor dsrg code
-    if (options_.get_str("JOB_TYPE") == "MR-DSRG-PT2") {
-        L2aa_ = d4(na_, d3(na_, d2(na_, d1(na_))));
-        L2ab_ = d4(na_, d3(na_, d2(na_, d1(na_))));
-        L2bb_ = d4(na_, d3(na_, d2(na_, d1(na_))));
+    // fill in L1a and L1b tensors
+    fill_density(opdm_a, opdm_b);
 
-        FormCumulant2(ci_rdms, L2aa_, L2ab_, L2bb_);
-
-        if (print_ > 2) {
-            print2PDC("L2aa", L2aa_, print_);
-            print2PDC("L2ab", L2ab_, print_);
-            print2PDC("L2bb", L2bb_, print_);
-        }
-
-        if (threepdc != "ZERO") {
-            L3aaa_ = d6(na_, d5(na_, d4(na_, d3(na_, d2(na_, d1(na_))))));
-            L3aab_ = d6(na_, d5(na_, d4(na_, d3(na_, d2(na_, d1(na_))))));
-            L3abb_ = d6(na_, d5(na_, d4(na_, d3(na_, d2(na_, d1(na_))))));
-            L3bbb_ = d6(na_, d5(na_, d4(na_, d3(na_, d2(na_, d1(na_))))));
-
-            if (t_algorithm != "DSRG_NOSEMI") {
-                FormCumulant3(ci_rdms, L3aaa_, L3aab_, L3abb_, L3bbb_, threepdc);
-            }
-            //            else if (threepdc == "DIAG") {
-            //                FormCumulant3_DIAG(determinant_, root_, L3aaa_,
-            //                L3aab_, L3abb_,
-            //                                   L3bbb_);
-            //            }
-
-            if (print_ > 3) {
-                print3PDC("L3aaa", L3aaa_, print_);
-                print3PDC("L3aab", L3aab_, print_);
-                print3PDC("L3abb", L3abb_, print_);
-                print3PDC("L3bbb", L3bbb_, print_);
-            }
-        }
-
-    } else {
-        size_t nelement2 = na_ * na_ * na_ * na_;
-        std::vector<double> tpdm_aa(nelement2, 0.0);
-        std::vector<double> tpdm_ab(nelement2, 0.0);
-        std::vector<double> tpdm_bb(nelement2, 0.0);
-
-        // compute 2RDM
+    // compute 2-RDM
+    if (level >= 2) {
+        std::vector<double> tpdm_aa, tpdm_ab, tpdm_bb;
         ci_rdms.compute_2rdm(tpdm_aa, tpdm_ab, tpdm_bb);
 
         // fill in L2aa, L2ab, L2bb tensors
         compute_cumulant2(tpdm_aa, tpdm_ab, tpdm_bb);
+    }
 
-        size_t nelement3 = na_ * na_ * nelement2;
+    // compute 3-RDM
+    string threepdc = options_.get_str("THREEPDC");
+    if (threepdc != "ZERO" && level >= 3) {
         std::vector<double> tpdm_aaa, tpdm_aab, tpdm_abb, tpdm_bbb;
-        if (threepdc != "ZERO") {
+        if (threepdc == "MK") {
+            ci_rdms.compute_3rdm(tpdm_aaa, tpdm_aab, tpdm_abb, tpdm_bbb);
+        } else if (threepdc == "MK_DECOMP") {
+            size_t nelement3 = na_ * na_ * na_ * na_ * na_ * na_;
             tpdm_aaa = std::vector<double>(nelement3, 0.0);
             tpdm_aab = std::vector<double>(nelement3, 0.0);
             tpdm_abb = std::vector<double>(nelement3, 0.0);
             tpdm_bbb = std::vector<double>(nelement3, 0.0);
-
-            // compute 3RDM
-            if (threepdc == "MK") {
-                ci_rdms.compute_3rdm(tpdm_aaa, tpdm_aab, tpdm_abb, tpdm_bbb);
-            }
-
-            // fill in L3aaa, L3aab, L3abb, L3bbb tensors
-            compute_cumulant3(tpdm_aaa, tpdm_aab, tpdm_abb, tpdm_bbb);
         }
+
+        // fill in L3aaa, L3aab, L3abb, L3bbb tensors
+        compute_cumulant3(tpdm_aaa, tpdm_aab, tpdm_abb, tpdm_bbb);
     }
 
     if (!quiet_) {
@@ -3388,16 +3238,19 @@ void FCI_MO::compute_ref() {
 Reference FCI_MO::reference(const int& level) {
     Reference ref;
     ref.set_Eref(Eref_);
-    ref.set_L1a(L1a);
-    ref.set_L1b(L1b);
+
+    if (options_["AVG_STATE"].size() != 0) {
+        compute_sa_ref(level);
+    } else {
+        compute_ref(level);
+    }
+
+    if (level > 0) {
+        ref.set_L1a(L1a);
+        ref.set_L1b(L1b);
+    }
 
     if (level > 1) {
-        if (options_["AVG_STATE"].size() != 0) {
-            compute_sa_ref();
-        } else {
-            compute_ref();
-        }
-
         ref.set_L2aa(L2aa);
         ref.set_L2ab(L2ab);
         ref.set_L2bb(L2bb);
@@ -3410,6 +3263,157 @@ Reference FCI_MO::reference(const int& level) {
         ref.set_L3bbb(L3bbb);
     }
     return ref;
+}
+
+void FCI_MO::fill_naive_cumulants(Reference& ref, const int& level) {
+    // fill in 1-cumulant (same as 1-RDM) to D1a_, D1b_
+    ambit::Tensor L1a = ref.L1a();
+    ambit::Tensor L1b = ref.L1b();
+    fill_one_cumulant(L1a, L1b);
+    if (print_ > 1) {
+        print_density("Alpha", Da_);
+        print_density("Beta", Db_);
+    }
+
+    // fill in 2-cumulant to L2aa_, L2ab_, L2bb_
+    if (level >= 2) {
+        ambit::Tensor L2aa = ref.L2aa();
+        ambit::Tensor L2ab = ref.L2ab();
+        ambit::Tensor L2bb = ref.L2bb();
+        fill_two_cumulant(L2aa, L2ab, L2bb);
+        if (print_ > 2) {
+            print2PDC("L2aa", L2aa_, print_);
+            print2PDC("L2ab", L2ab_, print_);
+            print2PDC("L2bb", L2bb_, print_);
+        }
+    }
+
+    // fill in 3-cumulant to L3aaa_, L3aab_, L3abb_, L3bbb_
+    if (level >= 3) {
+        ambit::Tensor L3aaa = ref.L3aaa();
+        ambit::Tensor L3aab = ref.L3aab();
+        ambit::Tensor L3abb = ref.L3abb();
+        ambit::Tensor L3bbb = ref.L3bbb();
+        fill_three_cumulant(L3aaa, L3aab, L3abb, L3bbb);
+        if (print_ > 3) {
+            print3PDC("L3aaa", L3aaa_, print_);
+            print3PDC("L3aab", L3aab_, print_);
+            print3PDC("L3abb", L3abb_, print_);
+            print3PDC("L3bbb", L3bbb_, print_);
+        }
+    }
+}
+
+void FCI_MO::fill_one_cumulant(ambit::Tensor& L1a, ambit::Tensor& L1b) {
+    Da_ = d2(ncmo_, d1(ncmo_));
+    Db_ = d2(ncmo_, d1(ncmo_));
+
+    for (size_t p = 0; p < nc_; ++p) {
+        size_t np = idx_c_[p];
+        Da_[np][np] = 1.0;
+        Db_[np][np] = 1.0;
+    }
+
+    std::vector<double>& opdc_a = L1a.data();
+    std::vector<double>& opdc_b = L1b.data();
+
+    // TODO: try omp here
+    for (size_t p = 0; p < na_; ++p) {
+        size_t np = idx_a_[p];
+        for (size_t q = p; q < na_; ++q) {
+            size_t nq = idx_a_[q];
+
+            if ((sym_active_[p] ^ sym_active_[q]) != 0)
+                continue;
+
+            size_t index = p * na_ + q;
+            Da_[np][nq] = opdc_a[index];
+            Db_[np][nq] = opdc_b[index];
+
+            Da_[nq][np] = Da_[np][nq];
+            Db_[nq][np] = Db_[np][nq];
+        }
+    }
+}
+
+void FCI_MO::fill_two_cumulant(ambit::Tensor& L2aa, ambit::Tensor& L2ab, ambit::Tensor& L2bb) {
+    L2aa_ = d4(na_, d3(na_, d2(na_, d1(na_))));
+    L2ab_ = d4(na_, d3(na_, d2(na_, d1(na_))));
+    L2bb_ = d4(na_, d3(na_, d2(na_, d1(na_))));
+
+    std::vector<double>& tpdc_aa = L2aa.data();
+    std::vector<double>& tpdc_ab = L2ab.data();
+    std::vector<double>& tpdc_bb = L2bb.data();
+
+    size_t dim2 = na_ * na_;
+    size_t dim3 = na_ * dim2;
+
+    // TODO: try omp here
+    for (size_t p = 0; p < na_; ++p) {
+        for (size_t q = 0; q < na_; ++q) {
+            for (size_t r = 0; r < na_; ++r) {
+                for (size_t s = 0; s < na_; ++s) {
+
+                    if ((sym_active_[p] ^ sym_active_[q] ^ sym_active_[r] ^ sym_active_[s]) != 0)
+                        continue;
+
+                    size_t index = p * dim3 + q * dim2 + r * na_ + s;
+
+                    L2aa_[p][q][r][s] = tpdc_aa[index];
+                    L2ab_[p][q][r][s] = tpdc_ab[index];
+                    L2bb_[p][q][r][s] = tpdc_bb[index];
+                }
+            }
+        }
+    }
+}
+
+void FCI_MO::fill_three_cumulant(ambit::Tensor& L3aaa, ambit::Tensor& L3aab, ambit::Tensor& L3abb,
+                                 ambit::Tensor& L3bbb) {
+    L3aaa_ = d6(na_, d5(na_, d4(na_, d3(na_, d2(na_, d1(na_))))));
+    L3aab_ = d6(na_, d5(na_, d4(na_, d3(na_, d2(na_, d1(na_))))));
+    L3abb_ = d6(na_, d5(na_, d4(na_, d3(na_, d2(na_, d1(na_))))));
+    L3bbb_ = d6(na_, d5(na_, d4(na_, d3(na_, d2(na_, d1(na_))))));
+
+    size_t dim2 = na_ * na_;
+    size_t dim3 = na_ * dim2;
+    size_t dim4 = na_ * dim3;
+    size_t dim5 = na_ * dim4;
+
+    auto fill_then_delete = [&](d6& L3, ambit::Tensor& L3t) {
+        std::vector<double>& data = L3t.data();
+
+        // TODO: try omp here
+        for (size_t p = 0; p != na_; ++p) {
+            for (size_t q = 0; q != na_; ++q) {
+                for (size_t r = 0; r != na_; ++r) {
+                    for (size_t s = 0; s != na_; ++s) {
+                        for (size_t t = 0; t != na_; ++t) {
+                            for (size_t u = 0; u != na_; ++u) {
+
+                                if ((sym_active_[p] ^ sym_active_[q] ^ sym_active_[r] ^
+                                     sym_active_[s] ^ sym_active_[t] ^ sym_active_[u]) != 0)
+                                    continue;
+
+                                size_t index =
+                                    p * dim5 + q * dim4 + r * dim3 + s * dim2 + t * na_ + u;
+
+                                L3[p][q][r][s][t][u] = data[index];
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        // delete tensor
+        //        L3t.reset();
+    };
+
+    fill_then_delete(L3aaa_, L3aaa);
+    fill_then_delete(L3aab_, L3aab);
+    fill_then_delete(L3abb_, L3abb);
+    fill_then_delete(L3bbb_, L3bbb);
 }
 
 void FCI_MO::set_orbs(SharedMatrix Ca, SharedMatrix Cb) {
@@ -3715,7 +3719,7 @@ double FCI_MO::compute_canonical_sa_energy() {
     // check Fock matrix
     size_t count = 0;
     if (form_Fock_) {
-        Check_Fock(Fa_, Fb_, dconv_, count);
+        Check_Fock(Fa_, Fb_, fcheck_threshold_, count);
     }
 
     // semi-canonicalize orbitals
@@ -3731,7 +3735,7 @@ double FCI_MO::compute_canonical_sa_energy() {
         // recheck Fock matrix
         count = 0;
         if (form_Fock_) {
-            Check_Fock(Fa_, Fb_, dconv_, count);
+            Check_Fock(Fa_, Fb_, fcheck_threshold_, count);
         }
     }
 
@@ -3821,8 +3825,12 @@ void FCI_MO::xms_rotate(const int& irrep) {
     }
 }
 
-void FCI_MO::compute_sa_ref() {
+void FCI_MO::compute_sa_ref(const int& level) {
     timer_on("Compute SA Ref");
+    Timer tcu;
+    if (!quiet_) {
+        outfile->Printf("\n  Computing SA 2- and 3-cumulants ... ");
+    }
 
     // prepare averaged 2- and 3-densities
     size_t nelement2 = na_ * na_ * na_ * na_;
@@ -3907,6 +3915,9 @@ void FCI_MO::compute_sa_ref() {
         compute_cumulant3(sa_tpdm_aaa, sa_tpdm_aab, sa_tpdm_abb, sa_tpdm_bbb);
     }
 
+    if (!quiet_) {
+        outfile->Printf("Done. Timing %15.6f s\n", tcu.get());
+    }
     timer_off("Compute SA Ref");
 }
 

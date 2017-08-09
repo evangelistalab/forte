@@ -29,6 +29,8 @@
 
 #include <algorithm>
 #include <cmath>
+#include <limits>
+#include <cfloat>
 #include <functional>
 #include <tuple>
 #include <unordered_map>
@@ -66,40 +68,13 @@ bool ElementwiseCI::have_omp_ = true;
 bool ElementwiseCI::have_omp_ = false;
 #endif
 
-void combine_hashes(std::vector<det_hash<>>& thread_det_C_map, det_hash<>& dets_C_hash);
-void combine_hashes(det_hash<>& dets_C_hash_A, det_hash<>& dets_C_hash_B);
-void combine_hashes_into_hash(std::vector<det_hash<>>& thread_det_C_hash, det_hash<>& dets_C_hash);
-void copy_hash_to_vec(det_hash<>& dets_C_hash, det_vec& dets, std::vector<double>& C);
-void copy_hash_to_vec_order_ref(det_hash<>& dets_C_hash, det_vec& dets, std::vector<double>& C);
-void copy_vec_to_hash(det_vec& dets, const std::vector<double>& C, det_hash<>& dets_C_hash);
 void scale(std::vector<double>& A, double alpha);
-void scale(det_hash<>& A, double alpha);
 double normalize(std::vector<double>& C);
-double normalize(det_hash<>& dets_C);
-double norm(std::vector<double>& C);
-double norm(det_hash<>& dets_C);
-double dot(det_hash<>& A, det_hash<>& B);
 double dot(std::vector<double>& C1, std::vector<double>& C2);
-size_t ortho_norm(std::vector<std::vector<double>>& H_n_C, std::vector<double>& norms, Matrix& A,
-                  double colinear_threshold);
-void add(det_hash<>& A, double beta, det_hash<>& B);
 void add(std::vector<double>& a, double k, std::vector<double>& b);
-double factorial(int n);
-void binomial_coefs(std::vector<double>& coefs, int order, double a, double b);
-void Taylor_generator_coefs(std::vector<double>& coefs, int order, double tau, double S);
-void Taylor_polynomial_coefs(std::vector<double>& coefs, int order);
-void Chebyshev_polynomial_coefs(std::vector<double>& coefs, int order);
-void Exp_Chebyshev_generator_coefs(std::vector<double>& coefs, int order, double tau, double S,
-                                   double range);
-void Chebyshev_generator_coefs(std::vector<double>& coefs, int order, double tau, double S,
-                               double range);
 void Wall_Chebyshev_generator_coefs(std::vector<double>& coefs, int order, double tau, double S,
                                     double range);
 void print_polynomial(std::vector<double>& coefs);
-
-void print_vector(const std::vector<double>& C, std::string description);
-
-void print_hash(det_hash<>& C, std::string description, bool print_det = false);
 
 void add(const det_hashvec& A, std::vector<double> Ca, double beta, const det_hashvec& B,
          const std::vector<double> Cb);
@@ -114,17 +89,16 @@ void ElementwiseCI::sortHashVecByCoefficient(det_hashvec& dets_hashvec, std::vec
         det_weight[I] = std::make_pair(std::fabs(C[I]), I);
     }
     std::sort(det_weight.begin(), det_weight.end(), std::greater<std::pair<double, size_t>>());
-    det_hashvec new_dets_hashvec;
-    new_dets_hashvec.reserve(dets_size);
-    std::vector<double> new_C(dets_size);
-    size_t old_I = 0, new_I = 0;
+    std::vector<size_t> order_map(dets_size);
     for (size_t I = 0; I < dets_size; ++I) {
-        old_I = det_weight[I].second;
-        new_I = new_dets_hashvec.add(dets_hashvec[old_I]);
-        new_C[new_I] = C[old_I];
+        order_map[det_weight[I].second] = I;
     }
-    dets_hashvec = new_dets_hashvec;
-    C = new_C;
+    dets_hashvec.map_order(order_map);
+    std::vector<double> new_C(dets_size);
+    for (size_t I = 0; I < dets_size; ++I) {
+        new_C[order_map[I]] = C[I];
+    }
+    C = std::move(new_C);
 }
 
 ElementwiseCI::ElementwiseCI(SharedWavefunction ref_wfn, Options& options,
@@ -266,6 +240,11 @@ void ElementwiseCI::startup() {
     }
 
     if (options_.get_str("PCI_FUNCTIONAL") == "MAX") {
+        if (std::numeric_limits<double>::has_infinity) {
+            functional_order_ = std::numeric_limits<double>::infinity();
+        } else {
+            functional_order_ = std::numeric_limits<double>::max();
+        }
         prescreen_H_CI_ = [](double HJI, double CI, double spawning_threshold) {
             return std::fabs(HJI * CI) >= spawning_threshold;
         };
@@ -274,6 +253,7 @@ void ElementwiseCI::startup() {
         };
         functional_description_ = "|Hij|*max(|Ci|,|Cj|)";
     } else if (options_.get_str("PCI_FUNCTIONAL") == "SUM") {
+        functional_order_ = 1.0;
         prescreen_H_CI_ = [](double HJI, double CI, double spawning_threshold) {
             return std::fabs(HJI * CI) >= 0.5 * spawning_threshold;
         };
@@ -282,6 +262,7 @@ void ElementwiseCI::startup() {
         };
         functional_description_ = "|Hij|*(|Ci|+|Cj|)";
     } else if (options_.get_str("PCI_FUNCTIONAL") == "SQUARE") {
+        functional_order_ = 2.0;
         prescreen_H_CI_ = [](double HJI, double CI, double spawning_threshold) {
             return std::fabs(HJI * CI) >= 1.4142135623730952 * spawning_threshold;
         };
@@ -290,6 +271,7 @@ void ElementwiseCI::startup() {
         };
         functional_description_ = "|Hij|*sqrt(Ci^2+Cj^2)";
     } else if (options_.get_str("PCI_FUNCTIONAL") == "SQRT") {
+        functional_order_ = 0.5;
         prescreen_H_CI_ = [](double HJI, double CI, double spawning_threshold) {
             return std::fabs(HJI * CI) >= 0.25 * spawning_threshold;
         };
@@ -300,11 +282,12 @@ void ElementwiseCI::startup() {
         };
         functional_description_ = "|Hij|*(sqrt(|Ci|)+sqrt(|Cj|))^2";
     } else if (options_.get_str("PCI_FUNCTIONAL") == "SPECIFY-ORDER") {
-        double order = options_.get_double("PCI_FUNCTIONAL_ORDER");
-        double factor = std::pow(2, 1.0 / order);
+        functional_order_ = options_.get_double("PCI_FUNCTIONAL_ORDER");
+        double factor = std::pow(2.0, 1.0 / functional_order_);
         prescreen_H_CI_ = [factor](double HJI, double CI, double spawning_threshold) {
             return std::fabs(HJI * CI) * factor >= spawning_threshold;
         };
+        double order = functional_order_;
         important_H_CI_CJ_ = [order](double HJI, double CI, double CJ, double spawning_threshold) {
             return std::fabs(HJI) *
                        std::pow(std::pow(std::fabs(CI), order) + std::pow(std::fabs(CJ), order),
@@ -538,30 +521,6 @@ void ElementwiseCI::compute_characteristic_function() {
     shift_ = (lambda_h_ + lambda_1_) / 2.0;
     range_ = (lambda_h_ - lambda_1_) / 2.0;
     switch (generator_) {
-    case PowerGenerator:
-        cha_func_coefs_.clear();
-        cha_func_coefs_.push_back(0.0);
-        cha_func_coefs_.push_back(-1.0);
-        break;
-    case LinearGenerator:
-        Taylor_generator_coefs(cha_func_coefs_, 1, time_step_, range_);
-        break;
-    case QuadraticGenerator:
-        Taylor_generator_coefs(cha_func_coefs_, 2, time_step_, range_);
-        break;
-    case CubicGenerator:
-        Taylor_generator_coefs(cha_func_coefs_, 3, time_step_, range_);
-        break;
-    case QuarticGenerator:
-        Taylor_generator_coefs(cha_func_coefs_, 4, time_step_, range_);
-        break;
-    case ExpChebyshevGenerator:
-        Exp_Chebyshev_generator_coefs(cha_func_coefs_, chebyshev_order_, time_step_, shift_,
-                                      range_);
-        break;
-    case ChebyshevGenerator:
-        Chebyshev_generator_coefs(cha_func_coefs_, chebyshev_order_, time_step_, shift_, range_);
-        break;
     case WallChebyshevGenerator:
         Wall_Chebyshev_generator_coefs(cha_func_coefs_, chebyshev_order_, time_step_, shift_,
                                        range_);
@@ -594,7 +553,7 @@ double ElementwiseCI::compute_energy() {
     outfile->Printf("\n\t              Element wise Configuration Interaction"
                     "implementation");
     outfile->Printf("\n\t         by Francesco A. Evangelista and Tianyuan Zhang");
-    outfile->Printf("\n\t                      version Jul. 27 2017");
+    outfile->Printf("\n\t                      version Aug. 3 2017");
     outfile->Printf("\n\t                    %4d thread(s) %s", num_threads_,
                     have_omp_ ? "(OMP)" : "");
     outfile->Printf("\n\t  ---------------------------------------------------------");
@@ -640,8 +599,9 @@ double ElementwiseCI::compute_energy() {
     }
 
     timer_on("EWCI:Couplings");
-    compute_single_couplings(spawning_threshold_);
-    compute_double_couplings(spawning_threshold_);
+    double factor = std::max(1.0, std::pow(2.0, 1.0 / functional_order_ - 0.5));
+    compute_single_couplings(spawning_threshold_ / factor);
+    compute_double_couplings(spawning_threshold_ / factor);
     timer_off("EWCI:Couplings");
 
     // Compute the initial guess
@@ -704,19 +664,12 @@ double ElementwiseCI::compute_energy() {
 
         timer_on("EWCI:Step");
         if (use_inter_norm_) {
-            auto minmax_C = std::minmax_element(C.begin(), C.end());
-            double min_C_abs = std::fabs(*minmax_C.first);
-            double max_C = *minmax_C.second;
-            max_C = max_C > min_C_abs ? max_C : min_C_abs;
+            double max_C = std::fabs(C[0]);
             propagate(generator_, dets_hashvec, C, time_step_, spawning_threshold_ * max_C, shift_);
         } else {
             propagate(generator_, dets_hashvec, C, time_step_, spawning_threshold_, shift_);
         }
         timer_off("EWCI:Step");
-
-        timer_on("EWCI:sort");
-        sortHashVecByCoefficient(dets_hashvec, C);
-        timer_off("EWCI:sort");
 
         // Orthogonalize this solution with respect to the previous ones
         timer_on("EWCI:Ortho");
@@ -724,6 +677,10 @@ double ElementwiseCI::compute_energy() {
             orthogonalize(dets_hashvec, C, solutions_);
         }
         timer_off("EWCI:Ortho");
+
+        timer_on("EWCI:sort");
+        sortHashVecByCoefficient(dets_hashvec, C);
+        timer_off("EWCI:sort");
 
         // Compute the energy and check for convergence
         if (cycle % energy_estimate_freq_ == 0) {
@@ -794,9 +751,9 @@ double ElementwiseCI::compute_energy() {
     if (converged) {
         outfile->Printf("\n\n  Calculation converged.");
     } else {
-        outfile->Printf("\n\n  Calculation %s",
-                        iter_ != maxiter_ ? "stoped in appearance of higher new low."
-                                          : "did not converge!");
+        outfile->Printf("\n\n  Calculation %s", iter_ != maxiter_
+                                                    ? "stoped in appearance of higher new low."
+                                                    : "did not converge!");
     }
 
     if (do_shift_) {
@@ -1079,9 +1036,8 @@ void ElementwiseCI::propagate_DL(det_hashvec& dets_hashvec, std::vector<double>&
     //    copy_hash_to_vec_order_ref(dets_C_hash, dets, sigma_vec[0]);
     //    det_hashvec dets_hashvec(dets);
     apply_tau_H_symm(1.0, spawning_threshold, dets_hashvec, C, sigma_vec[0], 0.0, overlap_size);
-    b_vec[0] = C;
-    b_vec[0].resize(overlap_size);
-    //    b_vec[0].resize(result_dets.size(), 0.0);
+    //    b_vec[0].resize(overlap_size);
+    //    b_vec[0].resize(dets_hashvec.size(), 0.0);
     //    dets_hashvec = result_dets;
     //    dets = dets_hashvec.toVector();
     if (ref_size <= 1) {
@@ -1092,9 +1048,11 @@ void ElementwiseCI::propagate_DL(det_hashvec& dets_hashvec, std::vector<double>&
         return;
     }
 
-    A->set(0, 0, dot(b_vec[0], sigma_vec[0]));
-
     size_t dets_size = dets_hashvec.size();
+    b_vec[0] = C;
+    A->set(0, 0, dot(b_vec[0], sigma_vec[0]));
+    b_vec[0].resize(dets_size, 0.0);
+
     std::vector<double> diag_vec(dets_size);
 #pragma omp parallel for
     for (int i = 0; i < dets_size; i++) {
@@ -1110,10 +1068,12 @@ void ElementwiseCI::propagate_DL(det_hashvec& dets_hashvec, std::vector<double>&
     for (i = 1; i < max_Davidson_iter_; i++) {
 
         for (int k = 0; k < current_order; k++) {
-            for (int j = 0, jmax = b_vec[k].size(); j < jmax; j++) {
+#pragma omp parallel for
+            for (int j = 0; j < dets_size; j++) {
                 delta_vec[j] += alpha_vec[k] * (sigma_vec[k][j] - lambda * b_vec[k][j]);
             }
         }
+#pragma omp parallel for
         for (int j = 0; j < dets_size; j++) {
             delta_vec[j] /= lambda - diag_vec[j];
         }
@@ -1183,8 +1143,8 @@ void ElementwiseCI::propagate_DL(det_hashvec& dets_hashvec, std::vector<double>&
             break;
         }
         if (current_order >= davidson_subspace_per_root_) {
-            b_vec[0].resize(dets_size, 0.0);
-            for (int j = 0, jmax = dets_hashvec.size(); j < jmax; j++) {
+#pragma omp parallel for
+            for (int j = 0; j < dets_size; j++) {
                 std::vector<double> b_j(davidson_collapse_per_root_, 0.0);
                 std::vector<double> sigma_j(davidson_collapse_per_root_, 0.0);
                 for (int l = 0; l < davidson_collapse_per_root_; l++) {
@@ -1232,7 +1192,8 @@ void ElementwiseCI::propagate_DL(det_hashvec& dets_hashvec, std::vector<double>&
     C.resize(dets_hashvec.size(), 0.0);
     //    b_vec[0].resize(dets.size(), 0.0);
     for (int i = 1; i < current_order; i++) {
-        for (int j = 0, jmax = b_vec[i].size(); j < jmax; j++) {
+#pragma omp parallel for
+        for (int j = 0; j < dets_size; j++) {
             C[j] += alpha_vec[i] * b_vec[i][j];
         }
     }
@@ -1259,9 +1220,8 @@ void ElementwiseCI::apply_tau_H_symm(double tau, double spawning_threshold, det_
     //    det_hashvec result_dets(ref_dets);
     det_hashvec extra_dets;
     std::vector<double> extra_C;
-    result_C.resize(ref_size, std::nan(""));
+    result_C.resize(ref_size, DBL_MIN);
 
-    std::vector<std::vector<std::pair<size_t, double>>> thread_index_C_vecs(num_threads_);
     std::vector<std::vector<std::pair<Determinant, double>>> thread_det_C_vecs(num_threads_);
     num_off_diag_elem_ = 0;
 
@@ -1273,20 +1233,9 @@ void ElementwiseCI::apply_tau_H_symm(double tau, double spawning_threshold, det_
         { max_coupling = dets_max_couplings_[ref_dets[I]]; }
         if (max_coupling.first == 0.0 or max_coupling.second == 0.0) {
             thread_det_C_vecs[current_rank].clear();
-            thread_index_C_vecs[current_rank].clear();
             apply_tau_H_symm_det_dynamic_HBCI_2(tau, spawning_threshold, ref_dets, ref_C, I,
-                                                ref_C[I], thread_index_C_vecs[current_rank],
-                                                thread_det_C_vecs[current_rank], S, max_coupling);
-#pragma omp critical(overlap_dets)
-            {
-                for (const std::pair<size_t, double>& p : thread_index_C_vecs[current_rank]) {
-                    if (std::isnan(result_C[p.first])) {
-                        result_C[p.first] = p.second;
-                    } else {
-                        result_C[p.first] += p.second;
-                    }
-                }
-            }
+                                                ref_C[I], result_C, thread_det_C_vecs[current_rank],
+                                                S, max_coupling);
 #pragma omp critical(merge_extra)
             {
                 merge(extra_dets, extra_C, thread_det_C_vecs[current_rank],
@@ -1296,20 +1245,9 @@ void ElementwiseCI::apply_tau_H_symm(double tau, double spawning_threshold, det_
             { dets_max_couplings_[ref_dets[I]] = max_coupling; }
         } else {
             thread_det_C_vecs[current_rank].clear();
-            thread_index_C_vecs[current_rank].clear();
             apply_tau_H_symm_det_dynamic_HBCI_2(tau, spawning_threshold, ref_dets, ref_C, I,
-                                                ref_C[I], thread_index_C_vecs[current_rank],
-                                                thread_det_C_vecs[current_rank], S, max_coupling);
-#pragma omp critical(overlap_dets)
-            {
-                for (const std::pair<size_t, double>& p : thread_index_C_vecs[current_rank]) {
-                    if (std::isnan(result_C[p.first])) {
-                        result_C[p.first] = p.second;
-                    } else {
-                        result_C[p.first] += p.second;
-                    }
-                }
-            }
+                                                ref_C[I], result_C, thread_det_C_vecs[current_rank],
+                                                S, max_coupling);
 #pragma omp critical(merge_extra)
             {
                 merge(extra_dets, extra_C, thread_det_C_vecs[current_rank],
@@ -1320,7 +1258,7 @@ void ElementwiseCI::apply_tau_H_symm(double tau, double spawning_threshold, det_
 
     std::vector<size_t> removing_indices;
     for (size_t I = 0; I < ref_size; ++I) {
-        if (std::isnan(result_C[I])) {
+        if (result_C[I] == DBL_MIN) {
             removing_indices.push_back(I);
         }
     }
@@ -1367,8 +1305,7 @@ void ElementwiseCI::apply_tau_H_symm(double tau, double spawning_threshold, det_
 
 void ElementwiseCI::apply_tau_H_symm_det_dynamic_HBCI_2(
     double tau, double spawning_threshold, const det_hashvec& dets_hashvec,
-    const std::vector<double>& pre_C, size_t I, double CI,
-    std::vector<std::pair<size_t, double>>& new_index_C_vec,
+    const std::vector<double>& pre_C, size_t I, double CI, std::vector<double>& result_C,
     std::vector<std::pair<Determinant, double>>& new_det_C_vec, double E0,
     std::pair<double, double>& max_coupling) {
 
@@ -1384,6 +1321,7 @@ void ElementwiseCI::apply_tau_H_symm_det_dynamic_HBCI_2(
 
     // Diagonal contributions
     // parallel_timer_on("EWCI:diagonal", omp_get_thread_num());
+    bool diagonal_flag = false;
     double diagonal_contribution = 0.0;
     // parallel_timer_off("EWCI:diagonal", omp_get_thread_num());
 
@@ -1421,13 +1359,15 @@ void ElementwiseCI::apply_tau_H_symm_det_dynamic_HBCI_2(
                                     if (important_H_CI_CJ_(HJI, CI, 0.0, spawning_threshold)) {
                                         new_det_C_vec.push_back(
                                             std::make_pair(detJ, tau * HJI * CI));
+                                        diagonal_flag = true;
 #pragma omp atomic
                                         num_off_diag_elem_ += 2;
                                     }
                                 } else if (important_H_CI_CJ_(HJI, CI, pre_C[index],
                                                               spawning_threshold)) {
-                                    new_index_C_vec.push_back(
-                                        std::make_pair(index, tau * HJI * CI));
+#pragma omp atomic
+                                    result_C[index] += tau * HJI * CI;
+                                    diagonal_flag = true;
                                     diagonal_contribution += tau * HJI * pre_C[index];
 #pragma omp atomic
                                     num_off_diag_elem_ += 2;
@@ -1471,13 +1411,15 @@ void ElementwiseCI::apply_tau_H_symm_det_dynamic_HBCI_2(
                                     if (important_H_CI_CJ_(HJI, CI, 0.0, spawning_threshold)) {
                                         new_det_C_vec.push_back(
                                             std::make_pair(detJ, tau * HJI * CI));
+                                        diagonal_flag = true;
 #pragma omp atomic
                                         num_off_diag_elem_ += 2;
                                     }
                                 } else if (important_H_CI_CJ_(HJI, CI, pre_C[index],
                                                               spawning_threshold)) {
-                                    new_index_C_vec.push_back(
-                                        std::make_pair(index, tau * HJI * CI));
+#pragma omp atomic
+                                    result_C[index] += tau * HJI * CI;
+                                    diagonal_flag = true;
                                     diagonal_contribution += tau * HJI * pre_C[index];
 #pragma omp atomic
                                     num_off_diag_elem_ += 2;
@@ -1526,13 +1468,15 @@ void ElementwiseCI::apply_tau_H_symm_det_dynamic_HBCI_2(
                                     if (important_H_CI_CJ_(HJI, CI, 0.0, spawning_threshold)) {
                                         new_det_C_vec.push_back(
                                             std::make_pair(detJ, tau * HJI * CI));
+                                        diagonal_flag = true;
 #pragma omp atomic
                                         num_off_diag_elem_ += 2;
                                     }
                                 } else if (important_H_CI_CJ_(HJI, CI, pre_C[index],
                                                               spawning_threshold)) {
-                                    new_index_C_vec.push_back(
-                                        std::make_pair(index, tau * HJI * CI));
+#pragma omp atomic
+                                    result_C[index] += tau * HJI * CI;
+                                    diagonal_flag = true;
                                     diagonal_contribution += tau * HJI * pre_C[index];
 #pragma omp atomic
                                     num_off_diag_elem_ += 2;
@@ -1578,13 +1522,15 @@ void ElementwiseCI::apply_tau_H_symm_det_dynamic_HBCI_2(
                                     if (important_H_CI_CJ_(HJI, CI, 0.0, spawning_threshold)) {
                                         new_det_C_vec.push_back(
                                             std::make_pair(detJ, tau * HJI * CI));
+                                        diagonal_flag = true;
 #pragma omp atomic
                                         num_off_diag_elem_ += 2;
                                     }
                                 } else if (important_H_CI_CJ_(HJI, CI, pre_C[index],
                                                               spawning_threshold)) {
-                                    new_index_C_vec.push_back(
-                                        std::make_pair(index, tau * HJI * CI));
+#pragma omp atomic
+                                    result_C[index] += tau * HJI * CI;
+                                    diagonal_flag = true;
                                     diagonal_contribution += tau * HJI * pre_C[index];
 #pragma omp atomic
                                     num_off_diag_elem_ += 2;
@@ -1631,12 +1577,15 @@ void ElementwiseCI::apply_tau_H_symm_det_dynamic_HBCI_2(
                             if (index >= pre_C_size) {
                                 if (important_H_CI_CJ_(HJI, CI, 0.0, spawning_threshold)) {
                                     new_det_C_vec.push_back(std::make_pair(detJ, tau * HJI * CI));
+                                    diagonal_flag = true;
 #pragma omp atomic
                                     num_off_diag_elem_ += 2;
                                 }
                             } else if (important_H_CI_CJ_(HJI, CI, pre_C[index],
                                                           spawning_threshold)) {
-                                new_index_C_vec.push_back(std::make_pair(index, tau * HJI * CI));
+#pragma omp atomic
+                                result_C[index] += tau * HJI * CI;
+                                diagonal_flag = true;
                                 diagonal_contribution += tau * HJI * pre_C[index];
 #pragma omp atomic
                                 num_off_diag_elem_ += 2;
@@ -1679,12 +1628,15 @@ void ElementwiseCI::apply_tau_H_symm_det_dynamic_HBCI_2(
                             if (index >= pre_C_size) {
                                 if (important_H_CI_CJ_(HJI, CI, 0.0, spawning_threshold)) {
                                     new_det_C_vec.push_back(std::make_pair(detJ, tau * HJI * CI));
+                                    diagonal_flag = true;
 #pragma omp atomic
                                     num_off_diag_elem_ += 2;
                                 }
                             } else if (important_H_CI_CJ_(HJI, CI, pre_C[index],
                                                           spawning_threshold)) {
-                                new_index_C_vec.push_back(std::make_pair(index, tau * HJI * CI));
+#pragma omp atomic
+                                result_C[index] += tau * HJI * CI;
+                                diagonal_flag = true;
                                 diagonal_contribution += tau * HJI * pre_C[index];
 #pragma omp atomic
                                 num_off_diag_elem_ += 2;
@@ -1727,12 +1679,15 @@ void ElementwiseCI::apply_tau_H_symm_det_dynamic_HBCI_2(
                             if (index >= pre_C_size) {
                                 if (important_H_CI_CJ_(HJI, CI, 0.0, spawning_threshold)) {
                                     new_det_C_vec.push_back(std::make_pair(detJ, tau * HJI * CI));
+                                    diagonal_flag = true;
 #pragma omp atomic
                                     num_off_diag_elem_ += 2;
                                 }
                             } else if (important_H_CI_CJ_(HJI, CI, pre_C[index],
                                                           spawning_threshold)) {
-                                new_index_C_vec.push_back(std::make_pair(index, tau * HJI * CI));
+#pragma omp atomic
+                                result_C[index] += tau * HJI * CI;
+                                diagonal_flag = true;
                                 diagonal_contribution += tau * HJI * pre_C[index];
 #pragma omp atomic
                                 num_off_diag_elem_ += 2;
@@ -1779,12 +1734,15 @@ void ElementwiseCI::apply_tau_H_symm_det_dynamic_HBCI_2(
                             if (index >= pre_C_size) {
                                 if (important_H_CI_CJ_(HJI, CI, 0.0, spawning_threshold)) {
                                     new_det_C_vec.push_back(std::make_pair(detJ, tau * HJI * CI));
+                                    diagonal_flag = true;
 #pragma omp atomic
                                     num_off_diag_elem_ += 2;
                                 }
                             } else if (important_H_CI_CJ_(HJI, CI, pre_C[index],
                                                           spawning_threshold)) {
-                                new_index_C_vec.push_back(std::make_pair(index, tau * HJI * CI));
+#pragma omp atomic
+                                result_C[index] += tau * HJI * CI;
+                                diagonal_flag = true;
                                 diagonal_contribution += tau * HJI * pre_C[index];
 #pragma omp atomic
                                 num_off_diag_elem_ += 2;
@@ -1828,12 +1786,15 @@ void ElementwiseCI::apply_tau_H_symm_det_dynamic_HBCI_2(
                             if (index >= pre_C_size) {
                                 if (important_H_CI_CJ_(HJI, CI, 0.0, spawning_threshold)) {
                                     new_det_C_vec.push_back(std::make_pair(detJ, tau * HJI * CI));
+                                    diagonal_flag = true;
 #pragma omp atomic
                                     num_off_diag_elem_ += 2;
                                 }
                             } else if (important_H_CI_CJ_(HJI, CI, pre_C[index],
                                                           spawning_threshold)) {
-                                new_index_C_vec.push_back(std::make_pair(index, tau * HJI * CI));
+#pragma omp atomic
+                                result_C[index] += tau * HJI * CI;
+                                diagonal_flag = true;
                                 diagonal_contribution += tau * HJI * pre_C[index];
 #pragma omp atomic
                                 num_off_diag_elem_ += 2;
@@ -1877,12 +1838,15 @@ void ElementwiseCI::apply_tau_H_symm_det_dynamic_HBCI_2(
                             if (index >= pre_C_size) {
                                 if (important_H_CI_CJ_(HJI, CI, 0.0, spawning_threshold)) {
                                     new_det_C_vec.push_back(std::make_pair(detJ, tau * HJI * CI));
+                                    diagonal_flag = true;
 #pragma omp atomic
                                     num_off_diag_elem_ += 2;
                                 }
                             } else if (important_H_CI_CJ_(HJI, CI, pre_C[index],
                                                           spawning_threshold)) {
-                                new_index_C_vec.push_back(std::make_pair(index, tau * HJI * CI));
+#pragma omp atomic
+                                result_C[index] += tau * HJI * CI;
+                                diagonal_flag = true;
                                 diagonal_contribution += tau * HJI * pre_C[index];
 #pragma omp atomic
                                 num_off_diag_elem_ += 2;
@@ -1899,8 +1863,14 @@ void ElementwiseCI::apply_tau_H_symm_det_dynamic_HBCI_2(
         }
         // parallel_timer_off("EWCI:doubles", omp_get_thread_num());
     }
-    if (new_index_C_vec.size() + new_det_C_vec.size() != 0) {
-        new_index_C_vec.push_back(std::make_pair(I, diagonal_contribution));
+    if (diagonal_flag) {
+        if (std::fabs(diagonal_contribution) > DBL_MIN) {
+#pragma omp atomic
+            result_C[I] += diagonal_contribution;
+        } else {
+#pragma omp atomic
+            result_C[I] -= DBL_MIN;
+        }
     }
 }
 

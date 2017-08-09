@@ -453,17 +453,6 @@ double MRDSRG::compute_energy_relaxed() {
         } else {
             FCI fci(reference_wavefunction_, options_, ints_, mo_space_info_);
             Erelax = fci.compute_energy();
-
-            //            // diagonalize the Hamiltonian
-            //            FCISolver fcisolver(active_dim, acore_mos_, aactv_mos_, na, nb, multi,
-            //                                options_.get_int("ROOT_SYM"), ints_, mo_space_info_,
-            //                                options_.get_int("NTRIAL_PER_ROOT"), print_,
-            //                                options_);
-            //            fcisolver.set_max_rdm_level(1);
-            //            fcisolver.set_fci_iterations(options_.get_int("FCI_MAXITER"));
-            //            fcisolver.set_collapse_per_root(options_.get_int("DL_COLLAPSE_PER_ROOT"));
-            //            fcisolver.set_subspace_per_root(options_.get_int("DL_SUBSPACE_PER_ROOT"));
-            //            Erelax = fcisolver.compute_energy();
         }
 
         // printing
@@ -478,8 +467,7 @@ double MRDSRG::compute_energy_relaxed() {
         std::vector<double> Edsrg_vec, Erelax_vec;
         std::vector<double> Edelta_dsrg_vec, Edelta_relax_vec;
         bool converged = false, failed = false;
-        SemiCanonical semiorb(reference_wavefunction_, options_, ints_, mo_space_info_, reference_,
-                              true);
+        SemiCanonical semiorb(reference_wavefunction_, ints_, mo_space_info_, true);
 
         // start iteration
         do {
@@ -507,7 +495,11 @@ double MRDSRG::compute_energy_relaxed() {
                 reference_ = fci_mo.reference();
             } else {
                 FCI fci(reference_wavefunction_, options_, ints_, mo_space_info_);
-                fci.set_max_rdm_level(3);
+                if (options_.get_str("THREEPDC") == "ZERO") {
+                    fci.set_max_rdm_level(2);
+                } else {
+                    fci.set_max_rdm_level(3);
+                }
                 Erelax = fci.compute_energy();
 
                 // obtain new reference
@@ -827,8 +819,7 @@ double MRDSRG::compute_energy_sa() {
     bool converged = false, failed = false;
     int nentry = eigens_.size();
     std::vector<std::vector<std::vector<double>>> Edsrg_vec;
-    SemiCanonical semiorb(reference_wavefunction_, options_, ints_, mo_space_info_, reference_,
-                          true);
+    SemiCanonical semiorb(reference_wavefunction_, ints_, mo_space_info_, true);
 
     // start iteration
     do {

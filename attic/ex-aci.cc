@@ -166,8 +166,8 @@ void EX_ACI::startup() {
     spin_tol_ = options_.get_double("SPIN_TOL");
     // set the initial S^2 guess as input multiplicity
     for (int n = 0; n < nroot_; ++n) {
-        root_spin_vec_.push_back(
-            std::make_pair((wavefunction_multiplicity_ - 1.0) / 2.0, wavefunction_multiplicity_ - 1.0));
+        root_spin_vec_.push_back(std::make_pair((wavefunction_multiplicity_ - 1.0) / 2.0,
+                                                wavefunction_multiplicity_ - 1.0));
     }
 
     perturb_select_ = options_.get_bool("PERTURB_SELECT");
@@ -894,14 +894,14 @@ double EX_ACI::average_q_values(int nroot, pVector<double, double> C1, pVector<d
     if (q_rel_ == true and nroot > 1) {
         if (q_reference_ == "GS") {
             for (int n = 0; n < nroot; ++n) {
-                dE2[n] =
-                    std::make_pair(std::fabs(E2[n].first - E2[0].first), E2[n].second - E2[0].second);
+                dE2[n] = std::make_pair(std::fabs(E2[n].first - E2[0].first),
+                                        E2[n].second - E2[0].second);
             }
         }
         if (q_reference_ == "ADJACENT") {
             for (int n = 1; n < nroot; ++n) {
                 dE2[n] = std::make_pair(std::fabs(E2[n].first - E2[n - 1].first),
-                                   E2[n].second - E2[n - 1].second);
+                                        E2[n].second - E2[n - 1].second);
             }
         }
     } else if (q_rel_ == true and nroot == 1) {
@@ -1667,8 +1667,8 @@ void EX_ACI::print_wfn(std::vector<DynamicBitsetDeterminant> space, SharedMatrix
     double S;
     size_t max_I;
 
-    std::vector<std::string> s2_labels({"singlet", "doublet", "triplet", "quartet", "quintet", "sextet",
-                                   "septet", "octet", "nonet", "decaet"});
+    std::vector<std::string> s2_labels({"singlet", "doublet", "triplet", "quartet", "quintet",
+                                        "sextet", "septet", "octet", "nonet", "decaet"});
     string state_label;
 
     for (int n = 0; n < nroot; ++n) {

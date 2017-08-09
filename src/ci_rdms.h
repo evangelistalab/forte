@@ -52,7 +52,7 @@ class CI_RDMS {
     using det_hash_it = det_hash::iterator;
 
     // Class constructor and destructor
-    CI_RDMS(Options& options, std::shared_ptr<FCIIntegrals>& fci_ints,
+    CI_RDMS(Options& options, std::shared_ptr<FCIIntegrals> fci_ints,
             const std::vector<STLBitsetDeterminant>& det_space, SharedMatrix evecs, int root1,
             int root2);
 

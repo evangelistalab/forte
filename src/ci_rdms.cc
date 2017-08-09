@@ -42,7 +42,7 @@ namespace forte {
 // A class that takes the determinants and expansion
 // coefficients and computes reduced density matrices.
 
-CI_RDMS::CI_RDMS(Options& options, std::shared_ptr<FCIIntegrals>& fci_ints,
+CI_RDMS::CI_RDMS(Options& options, std::shared_ptr<FCIIntegrals> fci_ints,
                  const std::vector<STLBitsetDeterminant>& det_space, SharedMatrix evecs, int root1,
                  int root2)
     : options_(options), fci_ints_(fci_ints), det_space_(det_space), evecs_(evecs), root1_(root1),

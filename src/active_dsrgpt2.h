@@ -46,9 +46,9 @@
 
 #include "helpers.h"
 #include "integrals/integrals.h"
-#include "mrdsrg-spin-free/dsrg_mrpt2.h"
-#include "mrdsrg-spin-free/dsrg_mrpt3.h"
-#include "mrdsrg-spin-free/three_dsrg_mrpt2.h"
+#include "mrdsrg-spin-integrated/dsrg_mrpt2.h"
+#include "mrdsrg-spin-integrated/dsrg_mrpt3.h"
+#include "mrdsrg-spin-integrated/three_dsrg_mrpt2.h"
 #include "reference.h"
 #include "stl_bitset_determinant.h"
 
@@ -79,6 +79,7 @@ class ACTIVE_DSRGPT2 : public Wavefunction {
 
     /// Compute energy
     double compute_energy();
+    double compute_energy_old();
 
   private:
     /// Basic Preparation
@@ -142,6 +143,9 @@ class ACTIVE_DSRGPT2 : public Wavefunction {
 
     /// Rotate to semicanonical orbitals and pass to this
     void rotate_orbs(SharedMatrix Ca0, SharedMatrix Cb0, SharedMatrix Ua, SharedMatrix Ub);
+
+    /// Transform integrals using the orbital coefficients
+    void transform_integrals(SharedMatrix Ca0, SharedMatrix Cb0);
 
     /// MO dipole integrals in C1 Pitzer ordering in the original basis
     std::vector<SharedMatrix> modipole_ints_;
