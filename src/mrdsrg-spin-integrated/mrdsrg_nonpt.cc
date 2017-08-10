@@ -664,6 +664,8 @@ void MRDSRG::compute_hbar_qc() {
 }
 
 void MRDSRG::compute_hbar_qc_sequential() {
+
+    outfile->Printf("\n  ==> compute_hbar_qc_sequential() <==\n");
     std::string dsrg_op = options_.get_str("DSRG_TRANS_TYPE");
 
     // initialize Hbar with bare H
@@ -677,9 +679,7 @@ void MRDSRG::compute_hbar_qc_sequential() {
     // compute S1 = H + 0.5 * [H, A]
     BlockedTensor S1 = BTF_->build(tensor_type_, "S1", spin_cases({"gg"}), true);
     H1_T1_C1(F_, T1_, 0.5, S1);
-    H1_T2_C1(F_, T2_, 0.5, S1);
     H2_T1_C1(V_, T1_, 0.5, S1);
-    H2_T2_C1(V_, T2_, 0.5, S1);
 
     BlockedTensor temp;
     if (dsrg_op == "UNITARY") {
@@ -696,15 +696,132 @@ void MRDSRG::compute_hbar_qc_sequential() {
     // compute Hbar = [S1, A]
     //   Step 1: [S1, T]_{ab}^{ij}
     H1_T1_C0(S1, T1_, 2.0, Hbar0_);
-    H1_T2_C0(S1, T2_, 2.0, Hbar0_);
     H1_T1_C1(S1, T1_, 1.0, Hbar1_);
+
+    //   Step 2: [S1, T]_{ij}^{ab}
+    if (dsrg_op == "UNITARY") {
+        temp = BTF_->build(tensor_type_, "temp", spin_cases({"ph"}), true);
+        H1_T1_C1(S1, T1_, 1.0, temp);
+        Hbar1_["ia"] += temp["ai"];
+        Hbar1_["IA"] += temp["AI"];
+
+        for (const std::string& block : {"pphh", "pPhH", "PPHH"}) {
+            // spin cases
+            std::string ijab{"ijab"};
+            std::string abij{"abij"};
+            if (isupper(block[1])) {
+                ijab = "iJaB";
+                abij = "aBiJ";
+            }
+            if (isupper(block[0])) {
+                ijab = "IJAB";
+                abij = "ABIJ";
+            }
+
+            temp = BTF_->build(tensor_type_, "temp", {block}, true);
+            Hbar2_[ijab] += temp[abij];
+        }
+    }
+
+    // compute Hbar = [S2, A]
+    // compute S2 = H + 0.5 * [H, A] in batches of spin
+    for (const std::string& block : {"gggg", "gGgG", "GGGG"}) {
+        // spin cases for S2
+        int spin = 0;
+        std::string pqrs{"pqrs"};
+        if (isupper(block[1])) {
+            spin = 1;
+            pqrs = "pQrS";
+        }
+        if (isupper(block[0])) {
+            spin = 2;
+            pqrs = "PQRS";
+        }
+
+        // 0.5 * [H, T]
+        BlockedTensor S2 = BTF_->build(tensor_type_, "S2", {block}, true);
+        H2_T1_C2(V_, T1_, 0.5, S2);
+
+        // 0.5 * [H, T]^+
+        if (dsrg_op == "UNITARY") {
+            if (spin == 0) {
+                tensor_add_HC_aa(S2);
+            } else if (spin == 1) {
+                tensor_add_HC_ab(S2);
+            } else if (spin == 2) {
+                tensor_add_HC_aa(S2, false);
+            }
+        }
+
+        // add bare Hamiltonian contribution
+        S2[pqrs] += V_[pqrs];
+
+        // compute Hbar = [S2, A]
+        //   Step 1: [S2, T]_{ab}^{ij}
+        H2_T1_C0(S2, T1_, 2.0, Hbar0_);
+        H2_T1_C1(S2, T1_, 1.0, Hbar1_);
+        H2_T1_C2(S2, T1_, 1.0, Hbar2_);
+
+        //   Step 2: [S2, T]_{ij}^{ab}
+        if (dsrg_op == "UNITARY") {
+            temp = BTF_->build(tensor_type_, "temp", spin_cases({"ph"}), true);
+            H2_T1_C1(S2, T1_, 1.0, temp);
+            Hbar1_["ia"] += temp["ai"];
+            Hbar1_["IA"] += temp["AI"];
+
+            for (const std::string& block : {"pphh", "pPhH", "PPHH"}) {
+                // spin cases
+                std::string ijab{"ijab"};
+                std::string abij{"abij"};
+                if (isupper(block[1])) {
+                    ijab = "iJaB";
+                    abij = "aBiJ";
+                }
+                if (isupper(block[0])) {
+                    ijab = "IJAB";
+                    abij = "ABIJ";
+                }
+
+                temp = BTF_->build(tensor_type_, "temp", {block}, true);
+                H2_T1_C2(S2, T1_, 1.0, temp);
+                Hbar2_[ijab] += temp[abij];
+            }
+        }
+    }
+
+    // initialize Hbar with bare H
+//    Hbar0_ = 0.0;
+//    Hbar1_["ia"] = F_["ia"];
+//    Hbar1_["IA"] = F_["IA"];
+//    Hbar2_["ijab"] = V_["ijab"];
+//    Hbar2_["iJaB"] = V_["iJaB"];
+//    Hbar2_["IJAB"] = V_["IJAB"];
+
+    // compute S1 = H + 0.5 * [H, A]
+    S1 = BTF_->build(tensor_type_, "S1", spin_cases({"gg"}), true);
+    H1_T2_C1(F_, T2_, 0.5, S1);
+    H2_T2_C1(V_, T2_, 0.5, S1);
+
+    if (dsrg_op == "UNITARY") {
+        temp = BTF_->build(tensor_type_, "temp", spin_cases({"gg"}), true);
+        temp["pq"] = S1["pq"];
+        temp["PQ"] = S1["PQ"];
+        S1["pq"] += temp["qp"];
+        S1["PQ"] += temp["QP"];
+    }
+
+    S1["pq"] += F_["pq"];
+    S1["PQ"] += F_["PQ"];
+
+    // compute Hbar = [S1, A]
+    //   Step 1: [S1, T]_{ab}^{ij}
+    H1_T2_C0(S1, T2_, 2.0, Hbar0_);
     H1_T2_C1(S1, T2_, 1.0, Hbar1_);
     H1_T2_C2(S1, T2_, 1.0, Hbar2_);
 
     //   Step 2: [S1, T]_{ij}^{ab}
     if (dsrg_op == "UNITARY") {
         temp = BTF_->build(tensor_type_, "temp", spin_cases({"ph"}), true);
-        H1_T1_C1(S1, T1_, 1.0, temp);
         H1_T2_C1(S1, T2_, 1.0, temp);
         Hbar1_["ia"] += temp["ai"];
         Hbar1_["IA"] += temp["AI"];
@@ -746,7 +863,6 @@ void MRDSRG::compute_hbar_qc_sequential() {
         // 0.5 * [H, T]
         BlockedTensor S2 = BTF_->build(tensor_type_, "S2", {block}, true);
         H1_T2_C2(F_, T2_, 0.5, S2);
-        H2_T1_C2(V_, T1_, 0.5, S2);
         H2_T2_C2(V_, T2_, 0.5, S2);
 
         // 0.5 * [H, T]^+
@@ -765,17 +881,13 @@ void MRDSRG::compute_hbar_qc_sequential() {
 
         // compute Hbar = [S2, A]
         //   Step 1: [S2, T]_{ab}^{ij}
-        H2_T1_C0(S2, T1_, 2.0, Hbar0_);
         H2_T2_C0(S2, T2_, 2.0, Hbar0_);
-        H2_T1_C1(S2, T1_, 1.0, Hbar1_);
         H2_T2_C1(S2, T2_, 1.0, Hbar1_);
-        H2_T1_C2(S2, T1_, 1.0, Hbar2_);
         H2_T2_C2(S2, T2_, 1.0, Hbar2_);
 
         //   Step 2: [S2, T]_{ij}^{ab}
         if (dsrg_op == "UNITARY") {
             temp = BTF_->build(tensor_type_, "temp", spin_cases({"ph"}), true);
-            H2_T1_C1(S2, T1_, 1.0, temp);
             H2_T2_C1(S2, T2_, 1.0, temp);
             Hbar1_["ia"] += temp["ai"];
             Hbar1_["IA"] += temp["AI"];
@@ -794,7 +906,6 @@ void MRDSRG::compute_hbar_qc_sequential() {
                 }
 
                 temp = BTF_->build(tensor_type_, "temp", {block}, true);
-                H2_T1_C2(S2, T1_, 1.0, temp);
                 H2_T2_C2(S2, T2_, 1.0, temp);
                 Hbar2_[ijab] += temp[abij];
             }
@@ -856,7 +967,11 @@ double MRDSRG::compute_energy_ldsrg2_qc() {
     do {
         // compute Hbar
         ForteTimer t_hbar;
-        compute_hbar_qc();
+        if (sequential_Hbar_) {
+            compute_hbar_qc_sequential();
+        } else {
+            compute_hbar_qc();
+        }
         double Edelta = Hbar0_ - Ecorr;
         Ecorr = Hbar0_;
         double time_hbar = t_hbar.elapsed();
@@ -902,7 +1017,11 @@ double MRDSRG::compute_energy_ldsrg2_qc() {
 
             // rebuild Hbar because it is destroyed when updating amplitudes
             if (options_.get_str("RELAX_REF") != "NONE" || options_["AVG_STATE"].size() != 0) {
-                compute_hbar_qc();
+                if (sequential_Hbar_) {
+                    compute_hbar_qc_sequential();
+                } else {
+                    compute_hbar_qc();
+                }
             }
         }
         if (cycle > maxiter) {
