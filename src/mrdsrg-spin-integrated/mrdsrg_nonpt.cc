@@ -185,7 +185,7 @@ void MRDSRG::compute_hbar_sequential() {
     if (print_ > 2) {
         outfile->Printf("\n\n  ==> Computing the DSRG Transformed Hamiltonian <==\n");
     }
-    outfile->Printf("\n\n  ==> compute_hbar_sequential() <==\n");
+    //    outfile->Printf("\n\n  ==> compute_hbar_sequential() <==\n");
 
     // copy bare Hamiltonian to Hbar
     Hbar0_ = 0.0;
@@ -433,7 +433,11 @@ double MRDSRG::compute_energy_ldsrg2() {
     do {
         // compute Hbar
         ForteTimer t_hbar;
-        compute_hbar();
+        if (sequential_Hbar_) {
+            compute_hbar_sequential();
+        } else {
+            compute_hbar();
+        }
         double Edelta = Hbar0_ - Ecorr;
         Ecorr = Hbar0_;
         double time_hbar = t_hbar.elapsed();
@@ -479,7 +483,11 @@ double MRDSRG::compute_energy_ldsrg2() {
 
             // rebuild Hbar because it is destroyed when updating amplitudes
             if (options_.get_str("RELAX_REF") != "NONE" || options_["AVG_STATE"].size() != 0) {
-                compute_hbar();
+                if (sequential_Hbar_) {
+                    compute_hbar_sequential();
+                } else {
+                    compute_hbar();
+                }
             }
         }
         if (cycle > maxiter) {

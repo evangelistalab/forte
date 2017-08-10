@@ -117,6 +117,9 @@ class MRDSRG : public Wavefunction {
     /// Are orbitals semi-canonicalized?
     bool semi_canonical_;
 
+    /// Is the H_bar evaluated sequentially?
+    bool sequential_Hbar_;
+
     /// MO space info
     std::shared_ptr<MOSpaceInfo> mo_space_info_;
 

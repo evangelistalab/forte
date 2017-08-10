@@ -181,6 +181,9 @@ void set_DSRG_options(ForteOptions& foptions) {
     /*- Print (1 - exp(-2*s*D)) / D -*/
     foptions.add_bool("PRINT_DENOM2", false,
                       "Print (if true) renormalized denominators in DSRG-MRPT2");
+
+    /*- Do Sequential h_bar evaluation -*/
+    foptions.add_bool("DSRG_HBAR_SEQ", false, "Evaluate H_bar sequentially if true");
 }
 
 /// A uniformed function to run DSRG related jobs

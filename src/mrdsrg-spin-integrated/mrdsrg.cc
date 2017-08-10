@@ -95,6 +95,8 @@ void MRDSRG::read_options() {
 
     ntamp_ = options_.get_int("NTAMP");
     intruder_tamp_ = options_.get_double("INTRUDER_TAMP");
+
+    sequential_Hbar_ = options_.get_bool("DSRG_HBAR_SEQ");
 }
 
 void MRDSRG::startup() {
