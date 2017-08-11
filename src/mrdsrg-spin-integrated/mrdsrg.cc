@@ -149,8 +149,8 @@ void MRDSRG::startup() {
     BTF_->add_composite_mo_space("H", "IJKL", {bcore_label_, bactv_label_});
     BTF_->add_composite_mo_space("p", "abcd", {aactv_label_, avirt_label_});
     BTF_->add_composite_mo_space("P", "ABCD", {bactv_label_, bvirt_label_});
-    BTF_->add_composite_mo_space("g", "pqrsto", {acore_label_, aactv_label_, avirt_label_});
-    BTF_->add_composite_mo_space("G", "PQRSTO", {bcore_label_, bactv_label_, bvirt_label_});
+    BTF_->add_composite_mo_space("g", "pqrsto12", {acore_label_, aactv_label_, avirt_label_});
+    BTF_->add_composite_mo_space("G", "PQRSTO89", {bcore_label_, bactv_label_, bvirt_label_});
 
     // if density fitted
     if (eri_df_) {
