@@ -135,6 +135,7 @@ void forte_old_methods(SharedWavefunction ref_wfn, Options& options,
         if (options.get_bool("ACI_ADD_EXTERNAL_SINGLES")) {
             DeterminantHashVec wfn = aci->get_wavefunction();
             aci->upcast_reference(wfn);
+            aci->add_external_singles(wfn);
         }
     }
     if (options.get_str("JOB_TYPE") == "PCI") {
