@@ -2900,8 +2900,8 @@ void AdaptiveCI::upcast_reference(DeterminantHashVec& ref) {
     }
 }
 
-void AdaptiveCI::add_external_singles( DeterminantHashVec& ref ){
-    
+void AdaptiveCI::add_external_singles(DeterminantHashVec& ref) {
+
     outfile->Printf("\n Adding external singles");
 
     const det_hashvec& dets = ref.wfn_hash();
@@ -2913,7 +2913,7 @@ void AdaptiveCI::add_external_singles( DeterminantHashVec& ref ){
     size_t ncore = mo_space_info_->size("RESTRICTED_DOCC");
     size_t nact = mo_space_info_->size("ACTIVE");
     size_t nvir = mo_space_info_->size("RESTRICTED_UOCC");
-    std::vector<int> sym = mo_space_info_->symmetry("CORRELATED");    
+    std::vector<int> sym = mo_space_info_->symmetry("CORRELATED");
 
     // Store different excitations in small hashes
     DeterminantHashVec ca_a;
@@ -2922,46 +2922,45 @@ void AdaptiveCI::add_external_singles( DeterminantHashVec& ref ){
     DeterminantHashVec av_b;
     DeterminantHashVec cv;
 
-
-    for( int I = 0; I < nref; ++I ){
+    for (int I = 0; I < nref; ++I) {
         STLBitsetDeterminant det = dets[I];
         std::vector<int> avir = det.get_alfa_vir();
         // core -> act (alpha)
-        for( int i = 0; i < ncore; ++i ){
+        for (int i = 0; i < ncore; ++i) {
             int ii = core_mos[i];
             det.set_alfa_bit(ii, false);
-            for( int p = 0; p < nact; ++p ){
+            for (int p = 0; p < nact; ++p) {
                 int pp = active_mos[p];
-                if( ((sym[ii] ^ sym[pp]) == 0) and !(det.get_alfa_bit(pp)) ){
-                    det.set_alfa_bit(pp,true); 
+                if (((sym[ii] ^ sym[pp]) == 0) and !(det.get_alfa_bit(pp))) {
+                    det.set_alfa_bit(pp, true);
                     ca_a.add(det);
-                    det.set_alfa_bit(pp,false); 
+                    det.set_alfa_bit(pp, false);
                 }
             }
             det.set_alfa_bit(ii, true);
-        } 
+        }
         // core -> act (beta)
-        for( int i = 0; i < ncore; ++i ){
+        for (int i = 0; i < ncore; ++i) {
             int ii = core_mos[i];
             det.set_beta_bit(ii, false);
-            for( int p = 0; p < nact; ++p ){
+            for (int p = 0; p < nact; ++p) {
                 int pp = active_mos[p];
-                if( ((sym[ii] ^ sym[pp]) == 0) and !(det.get_beta_bit(pp)) ){
-                    det.set_beta_bit(pp,true); 
+                if (((sym[ii] ^ sym[pp]) == 0) and !(det.get_beta_bit(pp))) {
+                    det.set_beta_bit(pp, true);
                     ca_b.add(det);
-                    det.set_beta_bit(pp,false); 
+                    det.set_beta_bit(pp, false);
                 }
             }
             det.set_beta_bit(ii, true);
-        } 
+        }
         // act -> vir (alpha)
-        for( int p = 0; p < nact; ++p ){
+        for (int p = 0; p < nact; ++p) {
             int pp = active_mos[p];
-            if( det.get_alfa_bit(pp) ){
+            if (det.get_alfa_bit(pp)) {
                 det.set_alfa_bit(pp, false);
-                for( int a = 0; a < nvir; ++a ){
+                for (int a = 0; a < nvir; ++a) {
                     int aa = vir_mos[a];
-                    if( (sym[aa] ^ sym [pp]) == 0 ) { 
+                    if ((sym[aa] ^ sym[pp]) == 0) {
                         det.set_alfa_bit(aa, true);
                         av_a.add(det);
                         det.set_alfa_bit(aa, false);
@@ -2971,13 +2970,13 @@ void AdaptiveCI::add_external_singles( DeterminantHashVec& ref ){
             }
         }
         // act -> vir (beta)
-        for( int p = 0; p < nact; ++p ){
+        for (int p = 0; p < nact; ++p) {
             int pp = active_mos[p];
-            if( det.get_beta_bit(pp) ){
+            if (det.get_beta_bit(pp)) {
                 det.set_beta_bit(pp, false);
-                for( int a = 0; a < nvir; ++a ){
+                for (int a = 0; a < nvir; ++a) {
                     int aa = vir_mos[a];
-                    if( (sym[aa] ^ sym [pp]) == 0 ) { 
+                    if ((sym[aa] ^ sym[pp]) == 0) {
                         det.set_beta_bit(aa, true);
                         av_b.add(det);
                         det.set_beta_bit(aa, false);
@@ -2987,11 +2986,11 @@ void AdaptiveCI::add_external_singles( DeterminantHashVec& ref ){
             }
         }
         // core -> vir
-        for( int i = 0; i < ncore; ++i ){
+        for (int i = 0; i < ncore; ++i) {
             int ii = core_mos[i];
-            for( int a = 0; a < nvir; ++a ){
+            for (int a = 0; a < nvir; ++a) {
                 int aa = vir_mos[a];
-                if( (sym[ii] ^ sym[aa]) == 0 ){
+                if ((sym[ii] ^ sym[aa]) == 0) {
                     det.set_alfa_bit(ii, false);
                     det.set_alfa_bit(aa, true);
                     cv.add(det);
@@ -3008,10 +3007,10 @@ void AdaptiveCI::add_external_singles( DeterminantHashVec& ref ){
         }
     }
     ref.merge(cv);
-    ref.merge(ca_a);    
-    ref.merge(ca_b);    
-    ref.merge(av_a);    
-    ref.merge(av_b);    
+    ref.merge(ca_a);
+    ref.merge(ca_b);
+    ref.merge(av_a);
+    ref.merge(av_b);
 
     outfile->Printf("\n Size of new model space:  %zu", ref.size());
 }
