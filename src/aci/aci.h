@@ -106,6 +106,7 @@ class AdaptiveCI : public Wavefunction {
     void semi_canonicalize();
 
     void upcast_reference(DeterminantHashVec& ref);
+
   private:
     // ==> Class data <==
 
@@ -384,8 +385,6 @@ class AdaptiveCI : public Wavefunction {
     std::vector<std::pair<size_t, double>>
     dl_initial_guess(std::vector<STLBitsetDeterminant>& old_dets,
                      std::vector<STLBitsetDeterminant>& dets, SharedMatrix& evecs, int nroot);
-
-
 
     //    int david2(double **A, int N, int M, double *eps, double **v,double
     //    cutoff, int print);

@@ -132,7 +132,7 @@ void forte_old_methods(SharedWavefunction ref_wfn, Options& options,
         if (options.get_bool("ACI_NO")) {
             aci->compute_nos();
         }
-        if( options.get_bool("ACI_ADD_EXTERNAL_SINGLES")){
+        if (options.get_bool("ACI_ADD_EXTERNAL_SINGLES")) {
             DeterminantHashVec wfn = aci->get_wavefunction();
             aci->upcast_reference(wfn);
         }
@@ -457,7 +457,7 @@ void forte_old_methods(SharedWavefunction ref_wfn, Options& options,
             if (options.get_bool("ACI_NO")) {
                 aci->compute_nos();
             }
-            if( options.get_bool("ACI_ADD_EXTERNAL_SINGLES")){
+            if (options.get_bool("ACI_ADD_EXTERNAL_SINGLES")) {
                 DeterminantHashVec wfn = aci->get_wavefunction();
                 aci->upcast_reference(wfn);
             }

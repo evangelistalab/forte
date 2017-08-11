@@ -2858,9 +2858,8 @@ void AdaptiveCI::compute_nos() {
     ints_->retransform_integrals();
 }
 
-void AdaptiveCI::upcast_reference( DeterminantHashVec& ref )
-{
-    Dimension act_dim  = mo_space_info_->get_dimension("ACTIVE");
+void AdaptiveCI::upcast_reference(DeterminantHashVec& ref) {
+    Dimension act_dim = mo_space_info_->get_dimension("ACTIVE");
     Dimension corr_dim = mo_space_info_->get_dimension("CORRELATED");
     Dimension core_dim = mo_space_info_->get_dimension("RESTRICTED_DOCC");
     Dimension vir_dim = mo_space_info_->get_dimension("RESTRICTED_UOCC");
@@ -2869,7 +2868,7 @@ void AdaptiveCI::upcast_reference( DeterminantHashVec& ref )
     size_t ncore = mo_space_info_->size("RESTRICTED_DOCC");
     size_t nvir = mo_space_info_->size("RESTRICTED_UOCC");
     size_t ncmo = mo_space_info_->size("CORRELATED");
-    outfile->Printf("\n  Upcasting reference from %d orbitals to %d orbitals",nact, ncmo); 
+    outfile->Printf("\n  Upcasting reference from %d orbitals to %d orbitals", nact, ncmo);
 
     det_hashvec ref_dets;
     ref_dets.swap(ref.wfn_hash());
@@ -2877,33 +2876,38 @@ void AdaptiveCI::upcast_reference( DeterminantHashVec& ref )
 
     size_t ndet = ref_dets.size();
 
-    for( int I = 0; I < ndet; ++I ){
+    for (int I = 0; I < ndet; ++I) {
         int offset = 0;
         int act_offset = 0;
-        STLBitsetDeterminant new_det( ncmo ); 
+        STLBitsetDeterminant new_det(ncmo);
         const STLBitsetDeterminant& old_det = ref_dets[I];
-        for( int h = 0; h < nirrep_; ++h ){
+        for (int h = 0; h < nirrep_; ++h) {
 
             // fill the rdocc orbitals with electrons
-            for( int i = 0; i < core_dim[h]; ++i ){
+            for (int i = 0; i < core_dim[h]; ++i) {
                 new_det.set_alfa_bit(i + offset, true);
                 new_det.set_beta_bit(i + offset, true);
-            } 
+            }
             offset += core_dim[h];
 
             // Copy active occupation
-            for( int p = 0; p < act_dim[h]; ++p ){
-                new_det.set_alfa_bit( p + offset, old_det.get_alfa_bit(p + act_offset) );
-                new_det.set_beta_bit( p + offset, old_det.get_beta_bit(p + act_offset) );
+            for (int p = 0; p < act_dim[h]; ++p) {
+                new_det.set_alfa_bit(p + offset, old_det.get_alfa_bit(p + act_offset));
+                new_det.set_beta_bit(p + offset, old_det.get_beta_bit(p + act_offset));
             }
             offset += act_dim[h] + vir_dim[h];
             act_offset += act_dim[h];
-        } 
+        }
         ref.add(new_det);
         old_det.print();
         new_det.print();
     }
 }
+
+//void AdaptiveCI::add_external_singles( DeterminantHashVec& ref ){
+//    
+//}
+
 
 /*
 void AdaptiveCI::approximate_rdm( DeterminantMap& ref, SharedMatrix evecs ){
