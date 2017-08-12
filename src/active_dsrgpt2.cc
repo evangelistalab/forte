@@ -573,7 +573,8 @@ double ACTIVE_DSRGPT2::compute_energy() {
                                           "aCaV", "cAaA", "aCaA", "aAvA", "aAaV"};
 
         // compute MO dipole integrals
-        compute_modipole();
+        modipole_ints_.clear();
+        modipole_ints_ = ints_->compute_MOdipole_ints();
 
         // FCI_MO object
         fci_mo_ =

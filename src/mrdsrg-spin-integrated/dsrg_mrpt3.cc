@@ -912,8 +912,7 @@ double DSRG_MRPT3::compute_energy_pt3_2() {
     outfile->Printf("\n    %-40s ...", str.c_str());
 
     // compute 2nd-order amplitudes
-    // Step 1: compute 0.5 * [H1st + Hbar1st, A1st] = [H1st, A1st] + 0.5 *
-    // [[H0th, A1st], A1st]
+    // Step 1: compute 0.5 * [H1st + Hbar1st, A1st] = [H1st, A1st] + 0.5 * [[H0th, A1st], A1st]
     //     a) keep a copy of H1st + Hbar1st
     BlockedTensor O1 = BTF_->build(tensor_type_, "O1 pt3 2/3", spin_cases({"pc", "va"}));
     BlockedTensor O2 =
@@ -924,8 +923,7 @@ double DSRG_MRPT3::compute_energy_pt3_2() {
     O2["aBiJ"] = V_["aBiJ"];
     O2["ABIJ"] = V_["ABIJ"];
 
-    //     b) scale -[[H0th, A1st], A1st] by -0.5, computed in
-    //     compute_energy_pt3_1
+    //     b) scale -[[H0th, A1st], A1st] by -0.5, computed in compute_energy_pt3_1
     O1_.scale(-0.5);
     O2_.scale(-0.5);
 

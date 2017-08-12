@@ -268,6 +268,18 @@ class ForteIntegrals {
     /// Print the one- and two-electron integrals to the output
     void print_ints();
 
+    /// Obtain AO dipole integrals [X, Y, Z]
+    /// Each direction is a SharedMatrix of dimension nmo * nmo
+    std::vector<SharedMatrix> AOdipole_ints() { return AOdipole_ints_; }
+
+    /**
+      * Compute MO dipole integrals
+      * @param resort if true, MOdipole ints are sorted to Pitzer order, otherwise in C1 order
+      * @return a vector of MOdipole ints in X, Y, Z order,
+      *         each of which is a nmo by nmo SharedMatrix
+      */
+    std::vector<SharedMatrix> compute_MOdipole_ints(const bool& resort = false);
+
   protected:
     // ==> Class data <==
 
@@ -397,7 +409,10 @@ class ForteIntegrals {
     SharedMatrix OneBody_symm_;
     SharedMatrix OneIntsAO_;
 
-    /// The Frozen One Body Operator
+    /// AO dipole integrals
+    std::vector<SharedMatrix> AOdipole_ints_;
+    /// Compute AO dipole integrals
+    void build_AOdipole_ints();
 };
 
 /**

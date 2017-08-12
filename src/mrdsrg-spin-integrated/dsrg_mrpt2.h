@@ -319,6 +319,38 @@ class DSRG_MRPT2 : public Wavefunction {
     double E_VT2_4PH();
     double E_VT2_6();
 
+    // => Dipole related <= //
+
+    /// MO dipole integrals (including frozen orbitals)
+    std::vector<SharedMatrix> MOdipole_ints_;
+
+    /// frozen-core dipole
+    std::vector<double> frozen_core_dipoles_;
+    /// Nuclear dipole
+    SharedVector nuc_dipoles_;
+
+    /// reference dipoles
+    std::vector<double> ref_dipoles_;
+
+    /// compute reference dipoles
+    void compute_ref_dipoles();
+
+    /// MO dipole integrals (no frozen orbitals)
+    ambit::BlockedTensor Mx_, My_, Mz_;
+
+    /// DSRG transformed dipole integrals
+    std::vector<double> Mbar0_;
+    ambit::BlockedTensor Mbar1x_, Mbar1y_, Mbar1z_;
+    ambit::BlockedTensor Mbar2x_, Mbar2y_, Mbar2z_;
+
+    /// fill in dipole integrals from ints
+    void fill_bare_dipoles();
+
+    /// Transform dipole integrals
+    void compute_pt2_dipole(BlockedTensor& M, double& Mbar0, BlockedTensor& Mbar1,
+                            BlockedTensor& Mbar2);
+    void transform_dipoles();
+
     // => Reference relaxation <= //
 
     /// Relaxation type
@@ -329,6 +361,31 @@ class DSRG_MRPT2 : public Wavefunction {
 
     /// Compute zero-body Hbar truncated to 2nd-order
     double Hbar0_;
+    /// Compute one-body term of commutator [H1, T1]
+    void H1_T1_C1aa(BlockedTensor& H1, BlockedTensor& T1, const double& alpha, BlockedTensor& C1);
+    /// Compute one-body term of commutator [H1, T2]
+    void H1_T2_C1aa(BlockedTensor& H1, BlockedTensor& T2, const double& alpha, BlockedTensor& C1);
+    /// Compute one-body term of commutator [H2, T1]
+    void H2_T1_C1aa(BlockedTensor& H2, BlockedTensor& T1, const double& alpha, BlockedTensor& C1);
+    /// Compute one-body term of commutator [H2, T2]
+    void H2_T2_C1hh(BlockedTensor& H2, BlockedTensor& T2, const double& alpha, BlockedTensor& C1);
+
+    /// Compute two-body term of commutator [H2, T1]
+    void H2_T1_C2aaaa(BlockedTensor& H2, BlockedTensor& T1, const double& alpha, BlockedTensor& C2);
+    /// Compute two-body term of commutator [H1, T2]
+    void H1_T2_C2aaaa(BlockedTensor& H1, BlockedTensor& T2, const double& alpha, BlockedTensor& C2);
+    /// Compute two-body term of commutator [H2, T2]
+    void H2_T2_C2aaaa(BlockedTensor& H2, BlockedTensor& T2, const double& alpha, BlockedTensor& C2);
+
+    /// Compute zero-body term of commutator [H1, T1]
+    void H1_T1_C0(BlockedTensor& H1, BlockedTensor& T1, const double& alpha, double& C0);
+    /// Compute zero-body term of commutator [H1, T2]
+    void H1_T2_C0(BlockedTensor& H1, BlockedTensor& T2, const double& alpha, double& C0);
+    /// Compute zero-body term of commutator [H2, T1]
+    void H2_T1_C0(BlockedTensor& H2, BlockedTensor& T1, const double& alpha, double& C0);
+    /// Compute zero-body term of commutator [H2, T2]
+    void H2_T2_C0(BlockedTensor& H2, BlockedTensor& T2, const double& alpha, double& C0);
+
     /// Compute one-body term of commutator [H1, T1]
     void H1_T1_C1(BlockedTensor& H1, BlockedTensor& T1, const double& alpha, BlockedTensor& C1);
     /// Compute one-body term of commutator [H1, T2]
@@ -346,7 +403,8 @@ class DSRG_MRPT2 : public Wavefunction {
     void H2_T2_C2(BlockedTensor& H2, BlockedTensor& T2, const double& alpha, BlockedTensor& C2);
 
     /// Compute three-body term of commutator [H2, T2]
-    void H2_T2_C3(BlockedTensor& H2, BlockedTensor& T2, const double& alpha, BlockedTensor& C3);
+    void H2_T2_C3aaaaaa(BlockedTensor& H2, BlockedTensor& T2, const double& alpha,
+                        BlockedTensor& C3);
 
     /// Transfer integrals for FCI
     void transfer_integrals();

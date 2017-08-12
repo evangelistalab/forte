@@ -105,7 +105,7 @@ THREE_DSRG_MRPT2::THREE_DSRG_MRPT2(Reference reference, SharedWavefunction ref_w
                          "Kevin Hannon and Chenyang (York) Li", title_thread});
     outfile->Printf("\n    References:");
     outfile->Printf("\n      u-DSRG-MRPT2:    J. Chem. Theory Comput. 2015, 11, 2097.");
-    outfile->Printf("\n      DF/CD-DSRG-PT2:  J. Chem. Phys. 2016, 144, 204111.");
+    outfile->Printf("\n      DF/CD-DSRG-MRPT2:  J. Chem. Phys. 2016, 144, 204111.");
     outfile->Printf("\n      (pr-)DSRG-MRPT2: J. Chem. Phys. 2017, 146, 124132.");
     outfile->Printf("\n");
 

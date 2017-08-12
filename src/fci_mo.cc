@@ -501,7 +501,7 @@ double FCI_MO::compute_ss_energy() {
 
     // compute oscillator strength
     if (nroot_ > 1) {
-        compute_trans_dipole();
+        compute_transition_dipole();
         compute_oscillator_strength();
     }
 
@@ -2704,29 +2704,18 @@ void FCI_MO::compute_permanent_dipole() {
     print_h2(title);
     outfile->Printf("\n  Only print nonzero (> 1.0e-5) elements.");
 
-    // obtain AO dipole from libmints
-    std::shared_ptr<BasisSet> basisset = this->basisset();
-    std::shared_ptr<IntegralFactory> ints = std::shared_ptr<IntegralFactory>(
-        new IntegralFactory(basisset, basisset, basisset, basisset));
-
-    std::vector<SharedMatrix> aodipole_ints;
-    for (const std::string& direction : {"X", "Y", "Z"}) {
-        std::string name = "AO Dipole" + direction;
-        aodipole_ints.push_back(SharedMatrix(new Matrix(name, basisset->nbf(), basisset->nbf())));
-    }
-    std::shared_ptr<OneBodyAOInt> aodOBI(ints->ao_dipole());
-    aodOBI->compute(aodipole_ints);
+    // obtain AO dipole from ForteIntegrals
+    std::vector<SharedMatrix> aodipole_ints = integral_->AOdipole_ints();
 
     // Nuclear dipole contribution
     SharedVector ndip =
         DipoleInt::nuclear_contribution(Process::environment.molecule(), Vector3(0.0, 0.0, 0.0));
 
     // SO to AO transformer
-    std::shared_ptr<PetiteList> pet(new PetiteList(basisset, ints));
-    SharedMatrix sotoao = pet->sotoao();
+    SharedMatrix sotoao(this->aotoso()->transpose());
 
-    // symmetrize the density according to point group
-    auto symmetrize_density = [&](const std::vector<double>& vec, const SharedMatrix& mat) {
+    // fill the density according to point group to a SharedMatrix
+    auto fill_density = [&](const std::vector<double>& vec, const SharedMatrix& mat) {
         mat->zero();
         size_t offset = 0;
 
@@ -2778,11 +2767,10 @@ void FCI_MO::compute_permanent_dipole() {
         ci_rdms.compute_1rdm(opdm_a, opdm_b);
 
         SharedMatrix SOdens(new Matrix("SO density " + trans_name, nmopi_, nmopi_));
-        symmetrize_density(opdm_a, SOdens);
+        fill_density(opdm_a, SOdens);
         SOdens->back_transform(this->Ca());
 
-        SharedMatrix AOdens(
-            new Matrix("AO density " + trans_name, basisset->nbf(), basisset->nbf()));
+        SharedMatrix AOdens(new Matrix("AO density " + trans_name, nmo_, nmo_));
         AOdens->remove_symmetry(SOdens, sotoao);
 
         std::vector<double> de(4, 0.0);
@@ -2802,7 +2790,7 @@ void FCI_MO::compute_permanent_dipole() {
     outfile->Printf("\n");
 }
 
-void FCI_MO::compute_trans_dipole() {
+void FCI_MO::compute_transition_dipole() {
 
     //    if(nirrep_ != 1){
     //        outfile->Printf("\n  Computing transition dipole moments in %s
@@ -2822,21 +2810,10 @@ void FCI_MO::compute_trans_dipole() {
     outfile->Printf("\n  Only print nonzero (> 1.0e-5) elements.");
 
     // obtain AO dipole from libmints
-    std::shared_ptr<BasisSet> basisset = this->basisset();
-    std::shared_ptr<IntegralFactory> ints = std::shared_ptr<IntegralFactory>(
-        new IntegralFactory(basisset, basisset, basisset, basisset));
-
-    std::vector<SharedMatrix> aodipole_ints;
-    for (const std::string& direction : {"X", "Y", "Z"}) {
-        std::string name = "AO Dipole" + direction;
-        aodipole_ints.push_back(SharedMatrix(new Matrix(name, basisset->nbf(), basisset->nbf())));
-    }
-    std::shared_ptr<OneBodyAOInt> aodOBI(ints->ao_dipole());
-    aodOBI->compute(aodipole_ints);
+    std::vector<SharedMatrix> aodipole_ints = integral_->AOdipole_ints();
 
     // SO to AO transformer
-    std::shared_ptr<PetiteList> pet(new PetiteList(basisset, ints));
-    SharedMatrix sotoao = pet->sotoao();
+    SharedMatrix sotoao(this->aotoso()->transpose());
 
     //    // obtain SO dipole from libmints
     //    std::vector<SharedMatrix> dipole_ints;
@@ -2861,8 +2838,8 @@ void FCI_MO::compute_trans_dipole() {
     //        dipole->transform(this->Ca());
     //    }
 
-    // symmetrize the density according to point group
-    auto symmetrize_density = [&](const std::vector<double>& vec, const SharedMatrix& mat) {
+    // fill the density according to point group to a SharedMatrix
+    auto fill_density = [&](const std::vector<double>& vec, const SharedMatrix& mat) {
 
         size_t offset = 0;
         mat->zero();
@@ -2907,11 +2884,10 @@ void FCI_MO::compute_trans_dipole() {
 
             SharedMatrix SOtransD(
                 new Matrix("SO transition density " + trans_name, nmopi_, nmopi_));
-            symmetrize_density(opdm_a, SOtransD);
+            fill_density(opdm_a, SOtransD);
             SOtransD->back_transform(this->Ca());
 
-            SharedMatrix AOtransD(new Matrix("AO transition density " + trans_name, basisset->nbf(),
-                                             basisset->nbf()));
+            SharedMatrix AOtransD(new Matrix("AO transition density " + trans_name, nmo_, nmo_));
             AOtransD->remove_symmetry(SOtransD, sotoao);
 
             std::vector<double> de(4, 0.0);
@@ -3068,8 +3044,7 @@ d3 FCI_MO::compute_orbital_extents() {
 
     // find the diffused orbital index (active zero based)
     if (ipea_ != "NONE") {
-        size_t wrong = 999999999;
-        idx_diffused_ = wrong;
+        bool found = false;
 
         diffused_orbs_.clear();
         size_t offset = 0;
@@ -3082,13 +3057,14 @@ d3 FCI_MO::compute_orbital_extents() {
 
                     if (h == 0) {
                         idx_diffused_ = i; // totally symmetric diffused orbital
+                        found = true;
                     }
                 }
             }
             offset += active_[h];
         }
 
-        if (idx_diffused_ == wrong) {
+        if (!found) {
             outfile->Printf("\n  Totally symmetric diffused orbital is not found.");
             outfile->Printf("\n  Make sure a diffused s function is added to the basis.");
             throw PSIEXCEPTION("Totally symmetric diffused orbital is not found.");
@@ -3508,7 +3484,7 @@ double FCI_MO::compute_sa_energy() {
 
         // compute oscillator strength
         if (nroot_ > 1) {
-            compute_trans_dipole();
+            compute_transition_dipole();
             compute_oscillator_strength();
         }
     }               // end looping over all averaged states

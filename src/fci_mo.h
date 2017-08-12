@@ -435,7 +435,7 @@ class FCI_MO : public Wavefunction {
     /// Transition dipoles
     map<string, std::vector<double>> trans_dipole_;
     /// Compute transition dipole
-    void compute_trans_dipole();
+    void compute_transition_dipole();
 
     /// Compute oscillator strength
     void compute_oscillator_strength();
