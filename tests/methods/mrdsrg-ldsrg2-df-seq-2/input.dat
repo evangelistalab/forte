@@ -46,7 +46,7 @@ set forte{
    dsrg_s                 1.0
    maxiter                100
    e_convergence          8
-   semi_canonical         false
+#  semi_canonical         false
    dsrg_hbar_seq          true
 }
 

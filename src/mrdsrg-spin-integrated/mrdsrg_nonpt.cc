@@ -396,8 +396,9 @@ void MRDSRG::compute_hbar_sequential_rotation() {
             bA1_m->set(i[0], i[1], value);
     });
 
-    aA1_m->expm();
-    bA1_m->expm();
+    // >=3 is required for high energy convergence
+    aA1_m->expm(3);
+    bA1_m->expm(3);
 
     ambit::BlockedTensor U1;
     U1 = BTF_->build(tensor_type_, "Transformer", spin_cases({"gg"}));
@@ -416,20 +417,29 @@ void MRDSRG::compute_hbar_sequential_rotation() {
     Hbar2_["pQrS"] = U1["pt"] * U1["QO"] * V_["tO19"] * U1["r1"] * U1["S9"];
     Hbar2_["PQRS"] = U1["PT"] * U1["QO"] * V_["TO89"] * U1["R8"] * U1["S9"];
 
-    // build Fock matrix
-//    ambit::BlockedTensor F;
-//    F = BTF_->build(tensor_type_, "F", spin_cases({"gg"}));
-//    F["pq"] = F_["pq"];
-//    F["PQ"] = F_["PQ"];
+    // build Fock matrix using rotated bare integrals
+    // step 1: make a copy of orignal Fock
+    BlockedTensor F = BTF_->build(tensor_type_, "F", spin_cases({"gg"}), true);
+    F["pq"] = F_["pq"];
+    F["PQ"] = F_["PQ"];
+    std::vector<double> Fa (Fa_);
+    std::vector<double> Fb (Fb_);
+
+    // step 2: build Fock and copy to Hbar1_
     build_fock(H1, Hbar2_);
     Hbar1_["pq"] = F_["pq"];
     Hbar1_["PQ"] = F_["PQ"];
-//    F_["pq"] = F["pq"];
-//    F_["PQ"] = F["PQ"];
-    Hbar0_ = 0.0;
 
+    // step3: reset F_, Fa_, Fb_ to original
+    F_["pq"] = F["pq"];
+    F_["PQ"] = F["PQ"];
+    Fa_ = Fa;
+    Fb_ = Fb;
+
+    // compute fully contracted term from T1
+    Hbar0_ = 0.0;
     for (const std::string block : {"cc", "CC"}) {
-        F_.block(block).iterate([&](const std::vector<size_t>& i, double& value) {
+        Hbar1_.block(block).iterate([&](const std::vector<size_t>& i, double& value) {
             if (i[0] == i[1]) {
                 Hbar0_ += 0.5 * value;
             }
@@ -443,17 +453,18 @@ void MRDSRG::compute_hbar_sequential_rotation() {
 
     Hbar0_ += 0.5 * H1["uv"] * Gamma1_["vu"];
     Hbar0_ += 0.5 * H1["UV"] * Gamma1_["VU"];
-    Hbar0_ += 0.5 * F_["uv"] * Gamma1_["vu"];
-    Hbar0_ += 0.5 * F_["UV"] * Gamma1_["VU"];
+    Hbar0_ += 0.5 * Hbar1_["uv"] * Gamma1_["vu"];
+    Hbar0_ += 0.5 * Hbar1_["UV"] * Gamma1_["VU"];
 
-    Hbar0_ += 0.25 * V_["uvxy"] * Lambda2_["xyuv"];
-    Hbar0_ += 0.25 * V_["UVXY"] * Lambda2_["XYUV"];
-    Hbar0_ += V_["uVxY"] * Lambda2_["xYuV"];
+    Hbar0_ += 0.25 * Hbar2_["uvxy"] * Lambda2_["xyuv"];
+    Hbar0_ += 0.25 * Hbar2_["UVXY"] * Lambda2_["XYUV"];
+    Hbar0_ += Hbar2_["uVxY"] * Lambda2_["xYuV"];
 
     double Enuc = Process::environment.molecule()->nuclear_repulsion_energy();
-    double temp = Hbar0_ + frozen_core_energy_ + Enuc;
-    Hbar0_ = temp - Eref_;
-    Eref_ = temp;
+    Hbar0_ += frozen_core_energy_ + Enuc - Eref_;
+//  double temp = Hbar0_ + frozen_core_energy_ + Enuc;
+//  Hbar0_ = temp - Eref_;
+//  Eref_ = temp;
 
     ////////////////////////////////////////////////////////////////////////////////////
     if (print_ > 2) {
@@ -616,7 +627,8 @@ double MRDSRG::compute_energy_ldsrg2() {
         // compute Hbar
         ForteTimer t_hbar;
         if (sequential_Hbar_) {
-            compute_hbar_sequential();
+//          compute_hbar_sequential();
+            compute_hbar_sequential_rotation();
         } else {
             compute_hbar();
         }
