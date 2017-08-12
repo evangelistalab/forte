@@ -144,12 +144,18 @@ void set_ACI_options(ForteOptions& foptions) {
     /*- Add all active singles -*/
     foptions.add_bool("ACI_ADD_SINGLES", false,
                       "Adds all active single excitations to the final wave function");
+    /*- Add all active singles -*/
+    foptions.add_bool("ACI_ADD_EXTERNAL_SINGLES", false,
+                      "Adds all external single excitations to the final wave function");
     /*- Do ESNO transformation? -*/
     foptions.add_bool("ESNOS", false, "Compute external single natural orbitals");
     foptions.add_int("ESNO_MAX_SIZE", 0, "Number of external orbitals to correlate");
 
     /*- optionally use low-memory screening -*/
     foptions.add_bool("ACI_LOW_MEM_SCREENING", false, "Use low-memory screening algorithm");
+
+    /*- Do reference relaxation in ACI? -*/
+    foptions.add_bool("ACI_REF_RELAX", false, "Do reference relaxation in ACI");
 }
 
 bool pairComp(const std::pair<double, STLBitsetDeterminant> E1,
@@ -541,9 +547,11 @@ double AdaptiveCI::compute_energy() {
     //  }
 
     //** Compute the RDMs **//
-
     if (options_.get_int("ACI_MAX_RDM") >= 3 or (rdm_level_ >= 3)) {
+        outfile->Printf("\n  Computing 3-list...    ");
+        Timer l3;
         op_.three_s_lists(final_wfn_);
+        outfile->Printf(" done (%1.5f s)", l3.get());
     }
     SharedMatrix new_evecs;
     if (ex_alg_ == "ROOT_COMBINE") {
@@ -562,7 +570,6 @@ double AdaptiveCI::compute_energy() {
         compute_rdms(approx, op_, new_evecs, 0, 0);
 
     } else {
-
         op_.clear_op_s_lists();
         op_.clear_tp_s_lists();
         op_.op_s_lists(final_wfn_);
@@ -2850,6 +2857,164 @@ void AdaptiveCI::compute_nos() {
     // Retransform the integarms in the new basis
     ints_->retransform_integrals();
 }
+
+void AdaptiveCI::upcast_reference(DeterminantHashVec& ref) {
+    Dimension act_dim = mo_space_info_->get_dimension("ACTIVE");
+    Dimension corr_dim = mo_space_info_->get_dimension("CORRELATED");
+    Dimension core_dim = mo_space_info_->get_dimension("RESTRICTED_DOCC");
+    Dimension vir_dim = mo_space_info_->get_dimension("RESTRICTED_UOCC");
+
+    size_t nact = mo_space_info_->size("ACTIVE");
+    size_t ncmo = mo_space_info_->size("CORRELATED");
+    outfile->Printf("\n  Upcasting reference from %d orbitals to %d orbitals", nact, ncmo);
+
+    det_hashvec ref_dets;
+    ref_dets.swap(ref.wfn_hash());
+    ref.clear();
+
+    size_t ndet = ref_dets.size();
+
+    for (int I = 0; I < ndet; ++I) {
+        int offset = 0;
+        int act_offset = 0;
+        STLBitsetDeterminant new_det(ncmo);
+        const STLBitsetDeterminant& old_det = ref_dets[I];
+        for (int h = 0; h < nirrep_; ++h) {
+
+            // fill the rdocc orbitals with electrons
+            for (int i = 0; i < core_dim[h]; ++i) {
+                new_det.set_alfa_bit(i + offset, true);
+                new_det.set_beta_bit(i + offset, true);
+            }
+            offset += core_dim[h];
+
+            // Copy active occupation
+            for (int p = 0; p < act_dim[h]; ++p) {
+                new_det.set_alfa_bit(p + offset, old_det.get_alfa_bit(p + act_offset));
+                new_det.set_beta_bit(p + offset, old_det.get_beta_bit(p + act_offset));
+            }
+            offset += act_dim[h] + vir_dim[h];
+            act_offset += act_dim[h];
+        }
+        ref.add(new_det);
+    }
+}
+
+void AdaptiveCI::add_external_singles(DeterminantHashVec& ref) {
+
+    outfile->Printf("\n Adding external singles");
+
+    const det_hashvec& dets = ref.wfn_hash();
+    size_t nref = ref.size();
+    std::vector<size_t> core_mos = mo_space_info_->get_corr_abs_mo("RESTRICTED_DOCC");
+    std::vector<size_t> vir_mos = mo_space_info_->get_corr_abs_mo("RESTRICTED_UOCC");
+    std::vector<size_t> active_mos = mo_space_info_->get_corr_abs_mo("ACTIVE");
+
+    size_t ncore = mo_space_info_->size("RESTRICTED_DOCC");
+    size_t nact = mo_space_info_->size("ACTIVE");
+    size_t nvir = mo_space_info_->size("RESTRICTED_UOCC");
+    std::vector<int> sym = mo_space_info_->symmetry("CORRELATED");
+
+    // Store different excitations in small hashes
+    DeterminantHashVec ca_a;
+    DeterminantHashVec ca_b;
+    DeterminantHashVec av_a;
+    DeterminantHashVec av_b;
+    DeterminantHashVec cv;
+
+    for (int I = 0; I < nref; ++I) {
+        STLBitsetDeterminant det = dets[I];
+        std::vector<int> avir = det.get_alfa_vir();
+        // core -> act (alpha)
+        for (int i = 0; i < ncore; ++i) {
+            int ii = core_mos[i];
+            det.set_alfa_bit(ii, false);
+            for (int p = 0; p < nact; ++p) {
+                int pp = active_mos[p];
+                if (((sym[ii] ^ sym[pp]) == 0) and !(det.get_alfa_bit(pp))) {
+                    det.set_alfa_bit(pp, true);
+                    ca_a.add(det);
+                    det.set_alfa_bit(pp, false);
+                }
+            }
+            det.set_alfa_bit(ii, true);
+        }
+        // core -> act (beta)
+        for (int i = 0; i < ncore; ++i) {
+            int ii = core_mos[i];
+            det.set_beta_bit(ii, false);
+            for (int p = 0; p < nact; ++p) {
+                int pp = active_mos[p];
+                if (((sym[ii] ^ sym[pp]) == 0) and !(det.get_beta_bit(pp))) {
+                    det.set_beta_bit(pp, true);
+                    ca_b.add(det);
+                    det.set_beta_bit(pp, false);
+                }
+            }
+            det.set_beta_bit(ii, true);
+        }
+        // act -> vir (alpha)
+        for (int p = 0; p < nact; ++p) {
+            int pp = active_mos[p];
+            if (det.get_alfa_bit(pp)) {
+                det.set_alfa_bit(pp, false);
+                for (int a = 0; a < nvir; ++a) {
+                    int aa = vir_mos[a];
+                    if ((sym[aa] ^ sym[pp]) == 0) {
+                        det.set_alfa_bit(aa, true);
+                        av_a.add(det);
+                        det.set_alfa_bit(aa, false);
+                    }
+                }
+                det.set_alfa_bit(pp, true);
+            }
+        }
+        // act -> vir (beta)
+        for (int p = 0; p < nact; ++p) {
+            int pp = active_mos[p];
+            if (det.get_beta_bit(pp)) {
+                det.set_beta_bit(pp, false);
+                for (int a = 0; a < nvir; ++a) {
+                    int aa = vir_mos[a];
+                    if ((sym[aa] ^ sym[pp]) == 0) {
+                        det.set_beta_bit(aa, true);
+                        av_b.add(det);
+                        det.set_beta_bit(aa, false);
+                    }
+                }
+                det.set_beta_bit(pp, true);
+            }
+        }
+        // core -> vir
+        for (int i = 0; i < ncore; ++i) {
+            int ii = core_mos[i];
+            for (int a = 0; a < nvir; ++a) {
+                int aa = vir_mos[a];
+                if ((sym[ii] ^ sym[aa]) == 0) {
+                    det.set_alfa_bit(ii, false);
+                    det.set_alfa_bit(aa, true);
+                    cv.add(det);
+                    det.set_alfa_bit(ii, true);
+                    det.set_alfa_bit(aa, false);
+
+                    det.set_beta_bit(ii, false);
+                    det.set_beta_bit(aa, true);
+                    cv.add(det);
+                    det.set_beta_bit(ii, true);
+                    det.set_beta_bit(aa, false);
+                }
+            }
+        }
+    }
+    ref.merge(cv);
+    ref.merge(ca_a);
+    ref.merge(ca_b);
+    ref.merge(av_a);
+    ref.merge(av_b);
+
+    outfile->Printf("\n Size of new model space:  %zu", ref.size());
+}
+
 /*
 void AdaptiveCI::approximate_rdm( DeterminantMap& ref, SharedMatrix evecs ){
 

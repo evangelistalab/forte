@@ -132,6 +132,11 @@ void forte_old_methods(SharedWavefunction ref_wfn, Options& options,
         if (options.get_bool("ACI_NO")) {
             aci->compute_nos();
         }
+        if (options.get_bool("ACI_ADD_EXTERNAL_SINGLES")) {
+            DeterminantHashVec wfn = aci->get_wavefunction();
+            aci->upcast_reference(wfn);
+            aci->add_external_singles(wfn);
+        }
     }
     if (options.get_str("JOB_TYPE") == "PCI") {
         auto pci = std::make_shared<ProjectorCI>(ref_wfn, options, ints, mo_space_info);
@@ -452,6 +457,10 @@ void forte_old_methods(SharedWavefunction ref_wfn, Options& options,
             Reference aci_reference = aci->reference();
             if (options.get_bool("ACI_NO")) {
                 aci->compute_nos();
+            }
+            if (options.get_bool("ACI_ADD_EXTERNAL_SINGLES")) {
+                DeterminantHashVec wfn = aci->get_wavefunction();
+                aci->upcast_reference(wfn);
             }
             if (options.get_bool("ESNOS")) {
                 auto aci_wfn = aci->get_wavefunction();
