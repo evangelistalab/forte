@@ -422,8 +422,8 @@ void MRDSRG::compute_hbar_sequential_rotation() {
     BlockedTensor F = BTF_->build(tensor_type_, "F", spin_cases({"gg"}), true);
     F["pq"] = F_["pq"];
     F["PQ"] = F_["PQ"];
-    std::vector<double> Fa (Fa_);
-    std::vector<double> Fb (Fb_);
+    std::vector<double> Fa(Fa_);
+    std::vector<double> Fb(Fb_);
 
     // step 2: build Fock and copy to Hbar1_
     build_fock(H1, Hbar2_);
@@ -462,9 +462,6 @@ void MRDSRG::compute_hbar_sequential_rotation() {
 
     double Enuc = Process::environment.molecule()->nuclear_repulsion_energy();
     Hbar0_ += frozen_core_energy_ + Enuc - Eref_;
-//  double temp = Hbar0_ + frozen_core_energy_ + Enuc;
-//  Hbar0_ = temp - Eref_;
-//  Eref_ = temp;
 
     ////////////////////////////////////////////////////////////////////////////////////
     if (print_ > 2) {
@@ -627,7 +624,7 @@ double MRDSRG::compute_energy_ldsrg2() {
         // compute Hbar
         ForteTimer t_hbar;
         if (sequential_Hbar_) {
-//          compute_hbar_sequential();
+            //          compute_hbar_sequential();
             compute_hbar_sequential_rotation();
         } else {
             compute_hbar();
@@ -984,12 +981,12 @@ void MRDSRG::compute_hbar_qc_sequential() {
     }
 
     // initialize Hbar with bare H
-//    Hbar0_ = 0.0;
-//    Hbar1_["ia"] = F_["ia"];
-//    Hbar1_["IA"] = F_["IA"];
-//    Hbar2_["ijab"] = V_["ijab"];
-//    Hbar2_["iJaB"] = V_["iJaB"];
-//    Hbar2_["IJAB"] = V_["IJAB"];
+    //    Hbar0_ = 0.0;
+    //    Hbar1_["ia"] = F_["ia"];
+    //    Hbar1_["IA"] = F_["IA"];
+    //    Hbar2_["ijab"] = V_["ijab"];
+    //    Hbar2_["iJaB"] = V_["iJaB"];
+    //    Hbar2_["IJAB"] = V_["IJAB"];
 
     // compute S1 = H + 0.5 * [H, A]
     S1 = BTF_->build(tensor_type_, "S1", spin_cases({"gg"}), true);
