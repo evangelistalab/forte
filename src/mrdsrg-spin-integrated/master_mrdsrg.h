@@ -198,32 +198,44 @@ class MASTER_DSRG : public DynamicCorrelationSolver {
     /// Compute one-body term of commutator [H2, T2]
     void H2_T2_C1(BlockedTensor& H2, BlockedTensor& T2, const double& alpha, BlockedTensor& C1);
 
-//    /// Compute one-body actv-actv term of commutator [H1, T1]
-//    void H1_T1_C1aa(BlockedTensor& H1, BlockedTensor& T1, const double& alpha, BlockedTensor& C1);
-//    /// Compute one-body actv-actv term of commutator [H1, T2]
-//    void H1_T2_C1aa(BlockedTensor& H1, BlockedTensor& T2, const double& alpha, BlockedTensor& C1);
-//    /// Compute one-body actv-actv term of commutator [H2, T1]
-//    void H2_T1_C1aa(BlockedTensor& H2, BlockedTensor& T1, const double& alpha, BlockedTensor& C1);
-//    /// Compute one-body actv-actv term of commutator [H2, T2]
-//    void H2_T2_C1aa(BlockedTensor& H2, BlockedTensor& T2, const double& alpha, BlockedTensor& C1);
+    //    /// Compute one-body actv-actv term of commutator [H1, T1]
+    //    void H1_T1_C1aa(BlockedTensor& H1, BlockedTensor& T1, const double& alpha, BlockedTensor&
+    //    C1);
+    //    /// Compute one-body actv-actv term of commutator [H1, T2]
+    //    void H1_T2_C1aa(BlockedTensor& H1, BlockedTensor& T2, const double& alpha, BlockedTensor&
+    //    C1);
+    //    /// Compute one-body actv-actv term of commutator [H2, T1]
+    //    void H2_T1_C1aa(BlockedTensor& H2, BlockedTensor& T1, const double& alpha, BlockedTensor&
+    //    C1);
+    //    /// Compute one-body actv-actv term of commutator [H2, T2]
+    //    void H2_T2_C1aa(BlockedTensor& H2, BlockedTensor& T2, const double& alpha, BlockedTensor&
+    //    C1);
 
-//    /// Compute one-body hole-particle term of commutator [H1, T1]
-//    void H1_T1_C1hp(BlockedTensor& H1, BlockedTensor& T1, const double& alpha, BlockedTensor& C1);
-//    /// Compute one-body hole-particle term of commutator [H1, T2]
-//    void H1_T2_C1hp(BlockedTensor& H1, BlockedTensor& T2, const double& alpha, BlockedTensor& C1);
-//    /// Compute one-body hole-particle term of commutator [H2, T1]
-//    void H2_T1_C1hp(BlockedTensor& H2, BlockedTensor& T1, const double& alpha, BlockedTensor& C1);
-//    /// Compute one-body hole-particle term of commutator [H2, T2]
-//    void H2_T2_C1hp(BlockedTensor& H2, BlockedTensor& T2, const double& alpha, BlockedTensor& C1);
+    //    /// Compute one-body hole-particle term of commutator [H1, T1]
+    //    void H1_T1_C1hp(BlockedTensor& H1, BlockedTensor& T1, const double& alpha, BlockedTensor&
+    //    C1);
+    //    /// Compute one-body hole-particle term of commutator [H1, T2]
+    //    void H1_T2_C1hp(BlockedTensor& H1, BlockedTensor& T2, const double& alpha, BlockedTensor&
+    //    C1);
+    //    /// Compute one-body hole-particle term of commutator [H2, T1]
+    //    void H2_T1_C1hp(BlockedTensor& H2, BlockedTensor& T1, const double& alpha, BlockedTensor&
+    //    C1);
+    //    /// Compute one-body hole-particle term of commutator [H2, T2]
+    //    void H2_T2_C1hp(BlockedTensor& H2, BlockedTensor& T2, const double& alpha, BlockedTensor&
+    //    C1);
 
-//    /// Compute one-body particle-hole term of commutator [H1, T1]
-//    void H1_T1_C1ph(BlockedTensor& H1, BlockedTensor& T1, const double& alpha, BlockedTensor& C1);
-//    /// Compute one-body particle-hole term of commutator [H1, T2]
-//    void H1_T2_C1ph(BlockedTensor& H1, BlockedTensor& T2, const double& alpha, BlockedTensor& C1);
-//    /// Compute one-body particle-hole term of commutator [H2, T1]
-//    void H2_T1_C1ph(BlockedTensor& H2, BlockedTensor& T1, const double& alpha, BlockedTensor& C1);
-//    /// Compute one-body particle-hole term of commutator [H2, T2]
-//    void H2_T2_C1ph(BlockedTensor& H2, BlockedTensor& T2, const double& alpha, BlockedTensor& C1);
+    //    /// Compute one-body particle-hole term of commutator [H1, T1]
+    //    void H1_T1_C1ph(BlockedTensor& H1, BlockedTensor& T1, const double& alpha, BlockedTensor&
+    //    C1);
+    //    /// Compute one-body particle-hole term of commutator [H1, T2]
+    //    void H1_T2_C1ph(BlockedTensor& H1, BlockedTensor& T2, const double& alpha, BlockedTensor&
+    //    C1);
+    //    /// Compute one-body particle-hole term of commutator [H2, T1]
+    //    void H2_T1_C1ph(BlockedTensor& H2, BlockedTensor& T1, const double& alpha, BlockedTensor&
+    //    C1);
+    //    /// Compute one-body particle-hole term of commutator [H2, T2]
+    //    void H2_T2_C1ph(BlockedTensor& H2, BlockedTensor& T2, const double& alpha, BlockedTensor&
+    //    C1);
 
     /// Compute two-body term of commutator [H2, T1]
     void H2_T1_C2(BlockedTensor& H2, BlockedTensor& T1, const double& alpha, BlockedTensor& C2);
@@ -237,7 +249,7 @@ class MASTER_DSRG : public DynamicCorrelationSolver {
 
     /// Compute one- and two-body off-diagonal term of commutator [[H1, A2]2d, T1+2]od
     void H1_A2_T_Cod(BlockedTensor& H1, BlockedTensor& A2, BlockedTensor& T1, BlockedTensor& T2,
-                   const double& alpha, BlockedTensor& C1, BlockedTensor& C2);
+                     const double& alpha, BlockedTensor& C1, BlockedTensor& C2);
 
     /// Compute one-body term of commutator [V, T1], V is constructed from B (DF/CD)
     void V_T1_C1_DF(BlockedTensor& B, BlockedTensor& T1, const double& alpha, BlockedTensor& C1);

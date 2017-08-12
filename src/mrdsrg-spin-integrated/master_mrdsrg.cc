@@ -428,7 +428,7 @@ void MASTER_DSRG::H1_T1_C1(BlockedTensor& H1, BlockedTensor& T1, const double& a
     dsrg_time_.add("111", timer.get());
 }
 
-//void MASTER_DSRG::H1_T1_C1aa(BlockedTensor& H1, BlockedTensor& T1, const double& alpha,
+// void MASTER_DSRG::H1_T1_C1aa(BlockedTensor& H1, BlockedTensor& T1, const double& alpha,
 //                             BlockedTensor& C1) {
 //    Timer timer;
 
@@ -443,7 +443,7 @@ void MASTER_DSRG::H1_T1_C1(BlockedTensor& H1, BlockedTensor& T1, const double& a
 //    dsrg_time_.add("111", timer.get());
 //}
 
-//void MASTER_DSRG::H1_T1_C1ph(BlockedTensor& H1, BlockedTensor& T1, const double& alpha,
+// void MASTER_DSRG::H1_T1_C1ph(BlockedTensor& H1, BlockedTensor& T1, const double& alpha,
 //                             BlockedTensor& C1) {
 //    Timer timer;
 
@@ -458,7 +458,7 @@ void MASTER_DSRG::H1_T1_C1(BlockedTensor& H1, BlockedTensor& T1, const double& a
 //    dsrg_time_.add("111", timer.get());
 //}
 
-//void MASTER_DSRG::H1_T1_C1hp(BlockedTensor& H1, BlockedTensor& T1, const double& alpha,
+// void MASTER_DSRG::H1_T1_C1hp(BlockedTensor& H1, BlockedTensor& T1, const double& alpha,
 //                             BlockedTensor& C1) {
 //    Timer timer;
 
@@ -497,7 +497,7 @@ void MASTER_DSRG::H1_T2_C1(BlockedTensor& H1, BlockedTensor& T2, const double& a
     dsrg_time_.add("121", timer.get());
 }
 
-//void MASTER_DSRG::H1_T2_C1aa(BlockedTensor& H1, BlockedTensor& T2, const double& alpha,
+// void MASTER_DSRG::H1_T2_C1aa(BlockedTensor& H1, BlockedTensor& T2, const double& alpha,
 //                             BlockedTensor& C1) {
 //    Timer timer;
 
@@ -521,12 +521,12 @@ void MASTER_DSRG::H1_T2_C1(BlockedTensor& H1, BlockedTensor& T2, const double& a
 //    dsrg_time_.add("121", timer.get());
 //}
 
-//void MASTER_DSRG::H1_T2_C1ph(BlockedTensor& H1, BlockedTensor& T2, const double& alpha,
+// void MASTER_DSRG::H1_T2_C1ph(BlockedTensor& H1, BlockedTensor& T2, const double& alpha,
 //                             BlockedTensor& C1) {
 //    H1_T2_C1aa(H1, T2, alpha, C1);
 //}
 
-//void MASTER_DSRG::H1_T2_C1hp(BlockedTensor& H1, BlockedTensor& T2, const double& alpha,
+// void MASTER_DSRG::H1_T2_C1hp(BlockedTensor& H1, BlockedTensor& T2, const double& alpha,
 //                             BlockedTensor& C1) {
 //    H1_T2_C1(H1, T2, alpha, C1);
 //}
@@ -555,7 +555,7 @@ void MASTER_DSRG::H2_T1_C1(BlockedTensor& H2, BlockedTensor& T1, const double& a
     dsrg_time_.add("211", timer.get());
 }
 
-//void MASTER_DSRG::H2_T1_C1aa(BlockedTensor& H2, BlockedTensor& T1, const double& alpha,
+// void MASTER_DSRG::H2_T1_C1aa(BlockedTensor& H2, BlockedTensor& T1, const double& alpha,
 //                             BlockedTensor& C1) {
 //    Timer timer;
 
@@ -579,7 +579,7 @@ void MASTER_DSRG::H2_T1_C1(BlockedTensor& H2, BlockedTensor& T1, const double& a
 //    dsrg_time_.add("211", timer.get());
 //}
 
-//void MASTER_DSRG::H2_T1_C1hp(BlockedTensor& H2, BlockedTensor& T1, const double& alpha,
+// void MASTER_DSRG::H2_T1_C1hp(BlockedTensor& H2, BlockedTensor& T1, const double& alpha,
 //                             BlockedTensor& C1) {
 //    Timer timer;
 
@@ -603,7 +603,7 @@ void MASTER_DSRG::H2_T1_C1(BlockedTensor& H2, BlockedTensor& T1, const double& a
 //    dsrg_time_.add("211", timer.get());
 //}
 
-//void MASTER_DSRG::H2_T1_C1ph(BlockedTensor& H2, BlockedTensor& T1, const double& alpha,
+// void MASTER_DSRG::H2_T1_C1ph(BlockedTensor& H2, BlockedTensor& T1, const double& alpha,
 //                           BlockedTensor& C1) {
 //    Timer timer;
 
