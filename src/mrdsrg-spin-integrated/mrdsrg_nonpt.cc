@@ -413,9 +413,23 @@ void MRDSRG::compute_hbar_sequential_rotation() {
     H1 = BTF_->build(tensor_type_, "Transformed H1", spin_cases({"gg"}));
     H1["rs"] = U1["rp"] * H_["pq"] * U1["sq"];
     H1["RS"] = U1["RP"] * H_["PQ"] * U1["SQ"];
-    Hbar2_["pqrs"] = U1["pt"] * U1["qo"] * V_["to12"] * U1["r1"] * U1["s2"];
-    Hbar2_["pQrS"] = U1["pt"] * U1["QO"] * V_["tO19"] * U1["r1"] * U1["S9"];
-    Hbar2_["PQRS"] = U1["PT"] * U1["QO"] * V_["TO89"] * U1["R8"] * U1["S9"];
+    if (eri_df_) {
+        ambit::BlockedTensor B;
+        B = BTF_->build(tensor_type_, "B 3-idx", {"Lgg", "LGG"});
+        B["grs"] = U1["rp"] * B_["gpq"] * U1["sq"];
+        B["gRS"] = U1["RP"] * B_["gPQ"] * U1["SQ"];
+        Hbar2_["pqrs"] = B["gpr"] * B["gqs"];
+        Hbar2_["pqrs"] -= B["gps"] * B["gqr"];
+
+        Hbar2_["pQrS"] = B["gpr"] * B["gQS"];
+
+        Hbar2_["PQRS"] = B["gPR"] * B["gQS"];
+        Hbar2_["PQRS"] -= B["gPS"] * B["gQR"];
+    } else {
+        Hbar2_["pqrs"] = U1["pt"] * U1["qo"] * V_["to12"] * U1["r1"] * U1["s2"];
+        Hbar2_["pQrS"] = U1["pt"] * U1["QO"] * V_["tO19"] * U1["r1"] * U1["S9"];
+        Hbar2_["PQRS"] = U1["PT"] * U1["QO"] * V_["TO89"] * U1["R8"] * U1["S9"];
+    }
 
     // build Fock matrix using rotated bare integrals
     // step 1: make a copy of orignal Fock
@@ -624,7 +638,7 @@ double MRDSRG::compute_energy_ldsrg2() {
         // compute Hbar
         ForteTimer t_hbar;
         if (sequential_Hbar_) {
-            //          compute_hbar_sequential();
+//            compute_hbar_sequential();
             compute_hbar_sequential_rotation();
         } else {
             compute_hbar();
@@ -675,7 +689,8 @@ double MRDSRG::compute_energy_ldsrg2() {
             // rebuild Hbar because it is destroyed when updating amplitudes
             if (options_.get_str("RELAX_REF") != "NONE" || options_["AVG_STATE"].size() != 0) {
                 if (sequential_Hbar_) {
-                    compute_hbar_sequential();
+//                    compute_hbar_sequential();
+                    compute_hbar_sequential_rotation();
                 } else {
                     compute_hbar();
                 }
