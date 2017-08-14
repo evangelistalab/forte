@@ -413,6 +413,16 @@ void MRDSRG::compute_hbar_sequential_rotation() {
     H1 = BTF_->build(tensor_type_, "Transformed H1", spin_cases({"gg"}));
     H1["rs"] = U1["rp"] * H_["pq"] * U1["sq"];
     H1["RS"] = U1["RP"] * H_["PQ"] * U1["SQ"];
+
+    Hbar0_ = 0.0;
+    for (const std::string block : {"cc", "CC"}) {
+        H1.block(block).iterate([&](const std::vector<size_t>& i, double& value) {
+            if (i[0] == i[1]) {
+                Hbar0_ += 0.5 * value;
+            }
+        });
+    }
+
     if (eri_df_) {
         ambit::BlockedTensor B;
         B = BTF_->build(tensor_type_, "B 3-idx", {"Lgg", "LGG"});
@@ -439,14 +449,8 @@ void MRDSRG::compute_hbar_sequential_rotation() {
     Hbar1_["PQ"] += Hbar2_["PJQI"] * Gamma1_["IJ"];
 
     // compute fully contracted term from T1
-    Hbar0_ = 0.0;
     for (const std::string block : {"cc", "CC"}) {
         Hbar1_.block(block).iterate([&](const std::vector<size_t>& i, double& value) {
-            if (i[0] == i[1]) {
-                Hbar0_ += 0.5 * value;
-            }
-        });
-        H1.block(block).iterate([&](const std::vector<size_t>& i, double& value) {
             if (i[0] == i[1]) {
                 Hbar0_ += 0.5 * value;
             }
