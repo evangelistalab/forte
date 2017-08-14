@@ -409,19 +409,19 @@ void MRDSRG::compute_hbar_sequential_rotation() {
             value = bA1_m->get(i[0], i[1]);
     });
 
-    ambit::BlockedTensor H1;
-    H1 = BTF_->build(tensor_type_, "Transformed H1", spin_cases({"gg"}));
-    H1["rs"] = U1["rp"] * H_["pq"] * U1["sq"];
-    H1["RS"] = U1["RP"] * H_["PQ"] * U1["SQ"];
+    Hbar1_["rs"] = U1["rp"] * H_["pq"] * U1["sq"];
+    Hbar1_["RS"] = U1["RP"] * H_["PQ"] * U1["SQ"];
 
     Hbar0_ = 0.0;
     for (const std::string block : {"cc", "CC"}) {
-        H1.block(block).iterate([&](const std::vector<size_t>& i, double& value) {
+        Hbar1_.block(block).iterate([&](const std::vector<size_t>& i, double& value) {
             if (i[0] == i[1]) {
                 Hbar0_ += 0.5 * value;
             }
         });
     }
+    Hbar0_ += 0.5 * Hbar1_["uv"] * Gamma1_["vu"];
+    Hbar0_ += 0.5 * Hbar1_["UV"] * Gamma1_["VU"];
 
     if (eri_df_) {
         ambit::BlockedTensor B;
@@ -441,10 +441,8 @@ void MRDSRG::compute_hbar_sequential_rotation() {
         Hbar2_["PQRS"] = U1["PT"] * U1["QO"] * V_["TO89"] * U1["R8"] * U1["S9"];
     }
 
-    Hbar1_["pq"] = H1["pq"];
     Hbar1_["pq"] += Hbar2_["pjqi"] * Gamma1_["ij"];
     Hbar1_["pq"] += Hbar2_["pJqI"] * Gamma1_["IJ"];
-    Hbar1_["PQ"] = H1["PQ"];
     Hbar1_["PQ"] += Hbar2_["jPiQ"] * Gamma1_["ij"];
     Hbar1_["PQ"] += Hbar2_["PJQI"] * Gamma1_["IJ"];
 
@@ -457,8 +455,6 @@ void MRDSRG::compute_hbar_sequential_rotation() {
         });
     }
 
-    Hbar0_ += 0.5 * H1["uv"] * Gamma1_["vu"];
-    Hbar0_ += 0.5 * H1["UV"] * Gamma1_["VU"];
     Hbar0_ += 0.5 * Hbar1_["uv"] * Gamma1_["vu"];
     Hbar0_ += 0.5 * Hbar1_["UV"] * Gamma1_["VU"];
 
@@ -473,7 +469,6 @@ void MRDSRG::compute_hbar_sequential_rotation() {
     if (print_ > 2) {
         outfile->Printf("\n\n  ==> Computing the DSRG Transformed Hamiltonian <==\n");
     }
-    //    outfile->Printf("\n\n  ==> compute_hbar_sequential() <==\n");
 
     // iteration variables
     bool converged = false;
