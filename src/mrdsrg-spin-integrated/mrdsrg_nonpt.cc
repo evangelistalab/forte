@@ -431,24 +431,12 @@ void MRDSRG::compute_hbar_sequential_rotation() {
         Hbar2_["PQRS"] = U1["PT"] * U1["QO"] * V_["TO89"] * U1["R8"] * U1["S9"];
     }
 
-    // build Fock matrix using rotated bare integrals
-    // step 1: make a copy of orignal Fock
-    BlockedTensor F = BTF_->build(tensor_type_, "F", spin_cases({"gg"}), true);
-    F["pq"] = F_["pq"];
-    F["PQ"] = F_["PQ"];
-    std::vector<double> Fa(Fa_);
-    std::vector<double> Fb(Fb_);
-
-    // step 2: build Fock and copy to Hbar1_
-    build_fock(H1, Hbar2_);
-    Hbar1_["pq"] = F_["pq"];
-    Hbar1_["PQ"] = F_["PQ"];
-
-    // step3: reset F_, Fa_, Fb_ to original
-    F_["pq"] = F["pq"];
-    F_["PQ"] = F["PQ"];
-    Fa_ = Fa;
-    Fb_ = Fb;
+    Hbar1_["pq"] = H1["pq"];
+    Hbar1_["pq"] += Hbar2_["pjqi"] * Gamma1_["ij"];
+    Hbar1_["pq"] += Hbar2_["pJqI"] * Gamma1_["IJ"];
+    Hbar1_["PQ"] = H1["PQ"];
+    Hbar1_["PQ"] += Hbar2_["jPiQ"] * Gamma1_["ij"];
+    Hbar1_["PQ"] += Hbar2_["PJQI"] * Gamma1_["IJ"];
 
     // compute fully contracted term from T1
     Hbar0_ = 0.0;
