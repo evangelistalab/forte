@@ -93,9 +93,38 @@ void MRDSRG::compute_hbar() {
         H1_T1_C1(O1_, T1_, factor, C1_);
         H1_T2_C1(O1_, T2_, factor, C1_);
         H2_T1_C1(O2_, T1_, factor, C1_);
-        H2_T2_C1(O2_, T2_, factor, C1_);
+        if (options_.get_str("SRG_COMM") == "STANDARD") {
+            H2_T2_C1(O2_, T2_, factor, C1_);
+        } else if (options_.get_str("SRG_COMM") == "FO") {
+            BlockedTensor C1p = BTF_->build(tensor_type_, "C1p", spin_cases({"gg"}));
+            H2_T2_C1(O2_, T2_, factor, C1p);
+            C1p.block("cc").scale(2.0);
+            C1p.block("aa").scale(2.0);
+            C1p.block("vv").scale(2.0);
+            C1p.block("CC").scale(2.0);
+            C1p.block("AA").scale(2.0);
+            C1p.block("VV").scale(2.0);
+            C1_["pq"] += C1p["pq"];
+            C1_["PQ"] += C1p["PQ"];
+        }
         // two-body
-        H1_T2_C2(O1_, T2_, factor, C2_);
+        if ((options_.get_str("SRG_COMM") == "STANDARD") or n < 2) {
+            H1_T2_C2(O1_, T2_, factor, C2_);
+        } else if (options_.get_str("SRG_COMM") == "FO2") {
+            O1_.block("cc").scale(2.0);
+            O1_.block("aa").scale(2.0);
+            O1_.block("vv").scale(2.0);
+            O1_.block("CC").scale(2.0);
+            O1_.block("AA").scale(2.0);
+            O1_.block("VV").scale(2.0);
+            H1_T2_C2(O1_, T2_, factor, C2_);
+            O1_.block("cc").scale(0.5);
+            O1_.block("aa").scale(0.5);
+            O1_.block("vv").scale(0.5);
+            O1_.block("CC").scale(0.5);
+            O1_.block("AA").scale(0.5);
+            O1_.block("VV").scale(0.5);
+        }
         H2_T1_C2(O2_, T1_, factor, C2_);
         H2_T2_C2(O2_, T2_, factor, C2_);
 
