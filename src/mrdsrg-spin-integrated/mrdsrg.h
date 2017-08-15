@@ -326,9 +326,6 @@ class MRDSRG : public Wavefunction {
     /// Compute DSRG-transformed Hamiltonian Hbar sequentially by orbital rotation
     void compute_hbar_sequential_rotation();
     /// Compute DSRG-transformed Hamiltonian Hbar truncated to quadratic nested
-    /// commutator sequentially
-    void compute_hbar_qc_sequential();
-    /// Compute DSRG-transformed Hamiltonian Hbar truncated to quadratic nested
     /// commutator
     void compute_hbar_qc();
     /// Zero-body Hbar
