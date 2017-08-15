@@ -431,13 +431,6 @@ void MRDSRG::compute_hbar_sequential_rotation() {
         B = BTF_->build(tensor_type_, "B 3-idx", {"Lgg", "LGG"});
         B["grs"] = U1["rp"] * B_["gpq"] * U1["sq"];
         B["gRS"] = U1["RP"] * B_["gPQ"] * U1["SQ"];
-        Hbar2_["pqrs"] = B["gpr"] * B["gqs"];
-        Hbar2_["pqrs"] -= B["gps"] * B["gqr"];
-
-        Hbar2_["pQrS"] = B["gpr"] * B["gQS"];
-
-        Hbar2_["PQRS"] = B["gPR"] * B["gQS"];
-        Hbar2_["PQRS"] -= B["gPS"] * B["gQR"];
 
         Hbar1_["pq"] += B["gpq"] * B["gji"] * Gamma1_["ij"];
         Hbar1_["pq"] -= B["gpi"] * B["gjq"] * Gamma1_["ij"];
@@ -494,9 +487,22 @@ void MRDSRG::compute_hbar_sequential_rotation() {
     // temporary Hamiltonian used in every iteration
     O1_["pq"] = Hbar1_["pq"];
     O1_["PQ"] = Hbar1_["PQ"];
-    O2_["pqrs"] = Hbar2_["pqrs"];
-    O2_["pQrS"] = Hbar2_["pQrS"];
-    O2_["PQRS"] = Hbar2_["PQRS"];
+    if (eri_df_) {
+        O2_["pqrs"] = B["gpr"] * B["gqs"];
+        O2_["pqrs"] -= B["gps"] * B["gqr"];
+
+        O2_["pQrS"] = B["gpr"] * B["gQS"];
+
+        O2_["PQRS"] = B["gPR"] * B["gQS"];
+        O2_["PQRS"] -= B["gPS"] * B["gQR"];
+        Hbar2_["pqrs"] = O2_["pqrs"];
+        Hbar2_["pQrS"] = O2_["pQrS"];
+        Hbar2_["PQRS"] = O2_["PQRS"];
+    } else {
+        O2_["pqrs"] = Hbar2_["pqrs"];
+        O2_["pQrS"] = Hbar2_["pQrS"];
+        O2_["PQRS"] = Hbar2_["PQRS"];
+    }
 
     // iteration variables
     converged = false;
