@@ -103,6 +103,7 @@ psi4.print_out("\n==> !! XMS !! <==\n")
 set forte{
   dsrg_multi_state   xms
 }
+Emcscf, wfn = energy('casscf', return_wfn=True)
 Exms = energy('forte', ref_wfn=wfn)
 
 # SA SUB
@@ -111,6 +112,7 @@ set forte{
   dsrg_multi_state   sa_sub
   semi_canonical     true
 }
+Emcscf, wfn = energy('casscf', return_wfn=True)
 Esub = energy('forte', ref_wfn=wfn)
 
 # SA FULL
@@ -118,6 +120,7 @@ psi4.print_out("\n==> !! SA_FULL !! <==\n")
 set forte{
   dsrg_multi_state   sa_full
 }
+Emcscf, wfn = energy('casscf', return_wfn=True)
 Efull = energy('forte', ref_wfn=wfn)
 
 names = ["SA-SUB", "SA-FULL", "MS", "XMS"]

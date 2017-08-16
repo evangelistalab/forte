@@ -2,6 +2,7 @@
 
 #include "psi4/libpsi4util/process.h"
 #include "psi4/libmints/molecule.h"
+#include "psi4/libmints/dipole.h"
 
 #include "master_mrdsrg.h"
 
@@ -18,6 +19,8 @@ MASTER_DSRG::MASTER_DSRG(Reference reference, SharedWavefunction ref_wfn, Option
 }
 
 void MASTER_DSRG::startup() {
+    print_h2("Multireference Driven Similarity Renormalization Group");
+
     // read options
     read_options();
 
@@ -36,13 +39,38 @@ void MASTER_DSRG::startup() {
     dsrg_time_ = DSRG_TIME();
 
     // prepare density matrix and cumulants
+    outfile->Printf("\n    Preparing ambit tensors for density cumulants ...... ");
     Eta1_ = BTF_->build(tensor_type_, "Eta1", spin_cases({"aa"}));
     Gamma1_ = BTF_->build(tensor_type_, "Gamma1", spin_cases({"aa"}));
     Lambda2_ = BTF_->build(tensor_type_, "Lambda2", spin_cases({"aaaa"}));
     fill_density();
+    outfile->Printf("Done");
+
+    // setup bare dipole tensors and compute reference dipoles
+    if (do_dm_) {
+        outfile->Printf("\n    Preparing ambit tensors for dipole moments ...... ");
+        dm_.clear();
+        dm_nuc_ = std::vector<double>(3, 0.0);
+        SharedVector dm_nuc = DipoleInt::nuclear_contribution(Process::environment.molecule(),
+                                                              Vector3(0.0, 0.0, 0.0));
+        for (int i = 0; i < 3; ++i) {
+            BlockedTensor dmi =
+                BTF_->build(tensor_type_, "Dipole " + dm_dirs_[i], spin_cases({"gg"}));
+            dm_.emplace_back(dmi);
+            dm_nuc_[i] = dm_nuc->get(i);
+        }
+
+        std::vector<SharedMatrix> dm_a = ints_->compute_MOdipole_ints(true, true);
+        std::vector<SharedMatrix> dm_b = ints_->compute_MOdipole_ints(false, true);
+        fill_MOdm(dm_a, dm_b);
+        compute_dm_ref();
+        outfile->Printf("Done");
+    }
 }
 
 void MASTER_DSRG::read_options() {
+    outfile->Printf("\n    Reading DSRG options ...... ");
+
     auto throw_error = [&](const std::string& message) -> void {
         outfile->Printf("\n  %s", message.c_str());
         throw PSIEXCEPTION(message);
@@ -86,6 +114,10 @@ void MASTER_DSRG::read_options() {
 
     multi_state_ = options_["AVG_STATE"].size() != 0;
     multi_state_algorithm_ = options_.get_str("DSRG_MULTI_STATE");
+
+    do_dm_ = options_.get_bool("DSRG_DIPOLE");
+
+    outfile->Printf("Done");
 }
 
 void MASTER_DSRG::read_MOSpaceInfo() {
@@ -100,6 +132,7 @@ void MASTER_DSRG::read_MOSpaceInfo() {
 }
 
 void MASTER_DSRG::set_ambit_MOSpace() {
+    outfile->Printf("\n    Setting ambit MO space ...... ");
     BlockedTensor::reset_mo_spaces();
     BlockedTensor::set_expert_mode(true);
 
@@ -141,27 +174,84 @@ void MASTER_DSRG::set_ambit_MOSpace() {
         BTF_->add_mo_space(aux_label_, "g", aux_mos_, NoSpin);
         label_to_spacemo_[aux_label_[0]] = aux_mos_;
     }
+
+    outfile->Printf("Done");
 }
 
 void MASTER_DSRG::fill_density() {
-    // 1-particle density (link the reference)
-    Gamma1_.block("aa") = reference_.L1a();
-    Gamma1_.block("AA") = reference_.L1a();
+    // 1-particle density (make a copy)
+    Gamma1_.block("aa")("pq") = reference_.L1a()("pq");
+    Gamma1_.block("AA")("pq") = reference_.L1a()("pq");
 
     // 1-hole density
-    (Eta1_.block("aa")).iterate([&](const std::vector<size_t>& i, double& value) {
-        value = i[0] == i[1] ? 1.0 : 0.0;
-    });
-    (Eta1_.block("AA")).iterate([&](const std::vector<size_t>& i, double& value) {
-        value = i[0] == i[1] ? 1.0 : 0.0;
-    });
-    Eta1_.block("aa")("pq") -= reference_.L1a()("pq");
-    Eta1_.block("AA")("pq") -= reference_.L1a()("pq");
+    for (const std::string& block : {"aa", "AA"}) {
+        (Eta1_.block(block)).iterate([&](const std::vector<size_t>& i, double& value) {
+            value = (i[0] == i[1]) ? 1.0 : 0.0;
+        });
+    }
+    Eta1_["uv"] -= Gamma1_["uv"];
+    Eta1_["UV"] -= Gamma1_["UV"];
 
-    // 2-body density cumulants (link the reference)
-    Lambda2_.block("aaaa") = reference_.L2aa();
-    Lambda2_.block("aAaA") = reference_.L2ab();
-    Lambda2_.block("AAAA") = reference_.L2bb();
+    // 2-body density cumulants (make a copy)
+    Lambda2_.block("aaaa")("pqrs") = reference_.L2aa()("pqrs");
+    Lambda2_.block("aAaA")("pqrs") = reference_.L2ab()("pqrs");
+    Lambda2_.block("AAAA")("pqrs") = reference_.L2bb()("pqrs");
+}
+
+void MASTER_DSRG::fill_MOdm(std::vector<SharedMatrix>& dm_a, std::vector<SharedMatrix>& dm_b) {
+    // consider frozen-core part
+    dm_frzc_ = std::vector<double>(3, 0.0);
+    std::vector<size_t> frzc_mos = mo_space_info_->get_absolute_mo("FROZEN_DOCC");
+    for (int z = 0; z < 3; ++z) {
+        double dipole = 0.0;
+        for (const auto& p : frzc_mos) {
+            dipole += dm_a[z]->get(p, p);
+            dipole += dm_b[z]->get(p, p);
+        }
+        dm_frzc_[z] = dipole;
+    }
+
+    // find out correspondance between ncmo and nmo
+    std::vector<size_t> cmo_to_mo;
+    Dimension frzcpi = mo_space_info_->get_dimension("FROZEN_DOCC");
+    Dimension frzvpi = mo_space_info_->get_dimension("FROZEN_UOCC");
+    Dimension ncmopi = mo_space_info_->get_dimension("CORRELATED");
+    for (int h = 0, p = 0; h < nirrep_; ++h) {
+        p += frzcpi[h];
+        for (int r = 0; r < ncmopi[h]; ++r) {
+            cmo_to_mo.push_back((size_t)p);
+            ++p;
+        }
+        p += frzvpi[h];
+    }
+
+    // fill in dipole integrals to dm_
+    for (int z = 0; z < 3; ++z) {
+        dm_[z].iterate(
+            [&](const std::vector<size_t>& i, const std::vector<SpinType>& spin, double& value) {
+                if (spin[0] == AlphaSpin)
+                    value = dm_a[z]->get(cmo_to_mo[i[0]], cmo_to_mo[i[1]]);
+                if (spin[0] == BetaSpin)
+                    value = dm_b[z]->get(cmo_to_mo[i[0]], cmo_to_mo[i[1]]);
+            });
+    }
+}
+
+void MASTER_DSRG::compute_dm_ref() {
+    dm_ref_ = std::vector<double>(3, 0.0);
+    for (int z = 0; z < 3; ++z) {
+        double dipole = dm_frzc_[z];
+        for (const std::string& block : {"cc", "CC"}) {
+            dm_[z].block(block).citerate([&](const std::vector<size_t>& i, const double& value) {
+                if (i[0] == i[1]) {
+                    dipole += value;
+                }
+            });
+        }
+        dipole += dm_[z]["uv"] * Gamma1_["uv"];
+        dipole += dm_[z]["UV"] * Gamma1_["UV"];
+        dm_ref_[z] = dipole;
+    }
 }
 
 void MASTER_DSRG::H1_T1_C0(BlockedTensor& H1, BlockedTensor& T1, const double& alpha, double& C0) {
@@ -632,7 +722,7 @@ void MASTER_DSRG::H2_T2_C1(BlockedTensor& H2, BlockedTensor& T2, const double& a
     Timer timer;
     BlockedTensor temp;
 
-    /// minimum memory requirement: h * a * p * p
+    /// max intermediate: a * a * p * p
 
     // [Hbar2, T2] (C_2)^3 -> C1 particle contractions
     C1["ir"] += 0.5 * alpha * H2["abrm"] * T2["imab"];
@@ -844,7 +934,7 @@ void MASTER_DSRG::H2_T2_C2(BlockedTensor& H2, BlockedTensor& T2, const double& a
                            BlockedTensor& C2) {
     Timer timer;
 
-    /// minimum memory requirement: g * g * p * p
+    /// max intermediate: g * g * p * p
 
     // particle-particle contractions
     C2["ijrs"] += 0.5 * alpha * H2["abrs"] * T2["ijab"];

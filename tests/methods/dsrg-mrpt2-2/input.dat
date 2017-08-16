@@ -41,6 +41,7 @@ set forte{
    nroot                   1
    dsrg_s                  1.0
    cas_type                cas
+   FCIMO_PRINT_CIVEC       0.000000000001
 }
 
 Emcscf, wfn = energy('mcscf', return_wfn=True)

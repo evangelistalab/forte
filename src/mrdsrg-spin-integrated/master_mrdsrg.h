@@ -49,9 +49,6 @@ class MASTER_DSRG : public DynamicCorrelationSolver {
     /// Read options
     void read_options();
 
-    //    /// Print read options
-    //    void print_options();
-
     /// Printing level
     int print_;
 
@@ -93,6 +90,28 @@ class MASTER_DSRG : public DynamicCorrelationSolver {
     double Enuc_;
     /// The frozen core energy
     double Efrzc_;
+
+    // ==> reference dipole moment <==
+
+    /// Compute Dipole or not
+    bool do_dm_;
+    /// Dipole moment directions
+    std::vector<std::string> dm_dirs_ {"X", "Y", "Z"};
+
+    /// Nuclear dipole moments
+    std::vector<double> dm_nuc_;
+    /// Frozen-core contributions to permament dipole
+    std::vector<double> dm_frzc_;
+    /// Electronic dipole moment of the reference
+    std::vector<double> dm_ref_;
+
+    /// MO bare dipole integrals of size ncmo by ncmo
+    std::vector<ambit::BlockedTensor> dm_;
+
+    /// Fill in bare MO dipole integrals
+    void fill_MOdm(std::vector<SharedMatrix>& dm_a, std::vector<SharedMatrix>& dm_b);
+    /// Compute dipole moment of the reference
+    void compute_dm_ref();
 
     // ==> MO space info <==
 
@@ -176,9 +195,6 @@ class MASTER_DSRG : public DynamicCorrelationSolver {
       * V: antisymmetrized 2-electron integrals
       * B: 3-index integrals from DF/CD
       */
-
-    /// Compute zero-body Hbar truncated to 2nd-order
-    double Hbar0_;
 
     /// Compute zero-body term of commutator [H1, T1]
     void H1_T1_C0(BlockedTensor& H1, BlockedTensor& T1, const double& alpha, double& C0);

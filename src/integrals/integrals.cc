@@ -486,13 +486,23 @@ void ForteIntegrals::build_AOdipole_ints() {
     aodOBI->compute(AOdipole_ints_);
 }
 
-std::vector<SharedMatrix> ForteIntegrals::compute_MOdipole_ints(const bool& resort) {
+std::vector<SharedMatrix> ForteIntegrals::compute_MOdipole_ints(const bool& alpha,
+                                                                const bool& resort) {
+    if (alpha) {
+        return MOdipole_ints_helper(wfn_->Ca_subset("AO"), wfn_->epsilon_a(), resort);
+    } else {
+        return MOdipole_ints_helper(wfn_->Cb_subset("AO"), wfn_->epsilon_b(), resort);
+    }
+}
+
+std::vector<SharedMatrix>
+ForteIntegrals::MOdipole_ints_helper(SharedMatrix Cao, SharedVector epsilon, const bool& resort) {
     std::vector<SharedMatrix> MOdipole_ints;
     std::vector<std::string> names{"X", "Y", "Z"};
     for (int i = 0; i < 3; ++i) {
         SharedMatrix modipole(AOdipole_ints_[i]->clone());
         modipole->set_name("MO Dipole " + names[i]);
-        modipole->transform(wfn_->Ca_subset("AO"));
+        modipole->transform(Cao);
         MOdipole_ints.push_back(modipole);
     }
 
@@ -501,7 +511,7 @@ std::vector<SharedMatrix> ForteIntegrals::compute_MOdipole_ints(const bool& reso
         std::vector<std::tuple<double, int, int>> order;
         for (int h = 0; h < nirrep_; ++h) {
             for (int i = 0; i < nmopi_[h]; ++i) {
-                order.push_back(std::tuple<double, int, int>(wfn_->epsilon_a()->get(h, i), i, h));
+                order.push_back(std::tuple<double, int, int>(epsilon->get(h, i), i, h));
             }
         }
         std::sort(order.begin(), order.end(), std::less<std::tuple<double, int, int>>());

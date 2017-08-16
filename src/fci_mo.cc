@@ -28,6 +28,7 @@
 
 #include <algorithm>
 #include <cmath>
+#include <functional>
 #include <iomanip>
 #include <numeric>
 #include <sstream>
@@ -457,11 +458,7 @@ void FCI_MO::read_options() {
 
 double FCI_MO::compute_energy() {
     if (options_["AVG_STATE"].size() != 0) {
-        if (semi_) {
-            Eref_ = compute_canonical_sa_energy();
-        } else {
-            Eref_ = compute_sa_energy();
-        }
+        Eref_ = compute_sa_energy();
     } else {
         Eref_ = compute_ss_energy();
     }
@@ -505,67 +502,7 @@ double FCI_MO::compute_ss_energy() {
         compute_oscillator_strength();
     }
 
-    //    // allocate density
-    //    Da_ = d2(ncmo_, d1(ncmo_));
-    //    Db_ = d2(ncmo_, d1(ncmo_));
-    //    L1a = ambit::Tensor::build(ambit::CoreTensor, "L1a", {na_, na_});
-    //    L1b = ambit::Tensor::build(ambit::CoreTensor, "L1b", {na_, na_});
-
-    //    // allocate Fock matrix
-    //    Fa_ = d2(ncmo_, d1(ncmo_));
-    //    Fb_ = d2(ncmo_, d1(ncmo_));
-
-    //    // prepare ci_rdms for one density
-    //    int dim = (eigen_[0].first)->dim();
-    //    SharedMatrix evecs(new Matrix("evecs", dim, eigen_size));
-    //    for (int i = 0; i < eigen_size; ++i) {
-    //        evecs->set_column(0, i, (eigen_[i]).first);
-    //    }
-    //    CI_RDMS ci_rdms(options_, fci_ints_, determinant_, evecs, root_, root_);
-
-    //    // form density
-    //    FormDensity(ci_rdms, Da_, Db_);
-    //    if (print_ > 1) {
-    //        print_density("Alpha", Da_);
-    //        print_density("Beta", Db_);
-    //    }
-
-    //    // build Fock Matrix
-    //    Form_Fock(Fa_, Fb_);
-    //    if (print_ > 1) {
-    //        print_Fock("Alpha", Fa_);
-    //        print_Fock("Beta", Fb_);
-    //    }
-
     double Eref = eigen_[root_].second;
-    Eref_ = Eref;
-    Process::environment.globals["CURRENT ENERGY"] = Eref;
-    return Eref;
-}
-
-double FCI_MO::compute_canonical_ss_energy() {
-    // compute energy
-    double Eref = compute_ss_energy();
-
-    // check Fock matrix
-    size_t count = 0;
-    Check_Fock(Fa_, Fb_, fcheck_threshold_, count);
-
-    // semi-canonicalize orbitals
-    if (count == 0) {
-        outfile->Printf("\n  Orbitals are semi-canonicalized already.\n");
-    } else {
-        outfile->Printf("\n  Use semi-canonical orbitals.\n");
-        semi_canonicalize();
-
-        // recompute energy
-        Eref = compute_ss_energy();
-
-        // recheck Fock matrix
-        count = 0;
-        Check_Fock(Fa_, Fb_, fcheck_threshold_, count);
-    }
-
     Eref_ = Eref;
     Process::environment.globals["CURRENT ENERGY"] = Eref;
     return Eref;
@@ -1157,8 +1094,7 @@ vector<double> FCI_MO::compute_T1_percentage() {
     std::vector<double> out;
 
     if (active_space_type_ != "CISD") {
-        outfile->Printf("\n  No point to compute T1 percentage."
-                        " Return an empty vector.");
+        outfile->Printf("\n  No point to compute T1 percentage. Return an empty vector.");
     } else {
         // in consistent to form_det_cisd,
         // the first singles_size_ determinants in determinant_ are singles
@@ -1614,34 +1550,34 @@ void FCI_MO::FormDensity(CI_RDMS& ci_rdms, d2& A, d2& B) {
     timer_off("FORM Density");
 }
 
-double FCI_MO::OneOP(const STLBitsetDeterminant& J, STLBitsetDeterminant& Jnew, const size_t& p,
-                     const bool& sp, const size_t& q, const bool& sq) {
-    timer_on("1PO");
-    std::vector<vector<bool>> tmp;
-    tmp.push_back(J.get_alfa_bits_vector_bool());
-    tmp.push_back(J.get_beta_bits_vector_bool());
+//double FCI_MO::OneOP(const STLBitsetDeterminant& J, STLBitsetDeterminant& Jnew, const size_t& p,
+//                     const bool& sp, const size_t& q, const bool& sq) {
+//    timer_on("1PO");
+//    std::vector<vector<bool>> tmp;
+//    tmp.push_back(J.get_alfa_bits_vector_bool());
+//    tmp.push_back(J.get_beta_bits_vector_bool());
 
-    double sign = 1.0;
+//    double sign = 1.0;
 
-    if (tmp[sq][q]) {
-        sign *= CheckSign(tmp[sq], q);
-        tmp[sq][q] = 0;
-    } else {
-        timer_off("1PO");
-        return 0.0;
-    }
+//    if (tmp[sq][q]) {
+//        sign *= CheckSign(tmp[sq], q);
+//        tmp[sq][q] = 0;
+//    } else {
+//        timer_off("1PO");
+//        return 0.0;
+//    }
 
-    if (!tmp[sp][p]) {
-        sign *= CheckSign(tmp[sp], p);
-        tmp[sp][p] = 1;
-        Jnew = STLBitsetDeterminant(tmp[0], tmp[1]);
-        timer_off("1PO");
-        return sign;
-    } else {
-        timer_off("1PO");
-        return 0.0;
-    }
-}
+//    if (!tmp[sp][p]) {
+//        sign *= CheckSign(tmp[sp], p);
+//        tmp[sp][p] = 1;
+//        Jnew = STLBitsetDeterminant(tmp[0], tmp[1]);
+//        timer_off("1PO");
+//        return sign;
+//    } else {
+//        timer_off("1PO");
+//        return 0.0;
+//    }
+//}
 
 void FCI_MO::print_density(const string& spin, const d2& density) {
     string name = "Density " + spin;
@@ -1659,114 +1595,115 @@ void FCI_MO::print_density(const string& spin, const d2& density) {
     dens->print();
 }
 
-void FCI_MO::print_d2(const string& str, const d2& OnePD) {
-    timer_on("PRINT Density");
-    SharedMatrix M(new Matrix(str.c_str(), OnePD.size(), OnePD[0].size()));
-    for (size_t i = 0; i != OnePD.size(); ++i) {
-        for (size_t j = 0; j != OnePD[i].size(); ++j) {
-            M->pointer()[i][j] = OnePD[i][j];
-        }
-    }
-    M->print();
-    timer_off("PRINT Density");
-}
+//void FCI_MO::print_d2(const string& str, const d2& OnePD) {
+//    timer_on("PRINT Density");
+//    SharedMatrix M(new Matrix(str.c_str(), OnePD.size(), OnePD[0].size()));
+//    for (size_t i = 0; i != OnePD.size(); ++i) {
+//        for (size_t j = 0; j != OnePD[i].size(); ++j) {
+//            M->pointer()[i][j] = OnePD[i][j];
+//        }
+//    }
+//    M->print();
+//    timer_off("PRINT Density");
+//}
 
-void FCI_MO::FormCumulant2(CI_RDMS& ci_rdms, d4& AA, d4& AB, d4& BB) {
-    timer_on("FORM 2-Cumulant");
-    Timer tL2;
-    std::string str = "Forming Lambda2";
-    if (!quiet_) {
-        outfile->Printf("\n  %-35s ...", str.c_str());
-    }
+//void FCI_MO::FormCumulant2(CI_RDMS& ci_rdms, d4& AA, d4& AB, d4& BB) {
+//    timer_on("FORM 2-Cumulant");
+//    Timer tL2;
+//    std::string str = "Forming Lambda2";
+//    if (!quiet_) {
+//        outfile->Printf("\n  %-35s ...", str.c_str());
+//    }
 
-    size_t dim = na_ * na_ * na_ * na_;
-    std::vector<double> tpdm_aa(dim, 0.0);
-    std::vector<double> tpdm_ab(dim, 0.0);
-    std::vector<double> tpdm_bb(dim, 0.0);
+//    size_t dim = na_ * na_ * na_ * na_;
+//    std::vector<double> tpdm_aa(dim, 0.0);
+//    std::vector<double> tpdm_ab(dim, 0.0);
+//    std::vector<double> tpdm_bb(dim, 0.0);
 
-    ci_rdms.compute_2rdm(tpdm_aa, tpdm_ab, tpdm_bb);
+//    ci_rdms.compute_2rdm(tpdm_aa, tpdm_ab, tpdm_bb);
 
-    FormCumulant2AA(tpdm_aa, tpdm_bb, AA, BB);
-    FormCumulant2AB(tpdm_ab, AB);
-    //    fill_cumulant2();
+//    FormCumulant2AA(tpdm_aa, tpdm_bb, AA, BB);
+//    FormCumulant2AB(tpdm_ab, AB);
+//    //    fill_cumulant2();
 
-    outfile->Printf("  Done. Timing %15.6f s", tL2.get());
-    timer_off("FORM 2-Cumulant");
-}
+//    outfile->Printf("  Done. Timing %15.6f s", tL2.get());
+//    timer_off("FORM 2-Cumulant");
+//}
 
-void FCI_MO::FormCumulant2AA(const std::vector<double>& tpdm_aa, const std::vector<double>& tpdm_bb,
-                             d4& AA, d4& BB) {
-    size_t dim2 = na_ * na_;
-    size_t dim3 = na_ * dim2;
+//void FCI_MO::FormCumulant2AA(const std::vector<double>& tpdm_aa, const std::vector<double>& tpdm_bb,
+//                             d4& AA, d4& BB) {
+//    size_t dim2 = na_ * na_;
+//    size_t dim3 = na_ * dim2;
 
-    for (size_t p = 0; p < na_; ++p) {
-        size_t np = idx_a_[p];
-        for (size_t q = p + 1; q < na_; ++q) {
-            size_t nq = idx_a_[q];
-            for (size_t r = 0; r < na_; ++r) {
-                size_t nr = idx_a_[r];
-                for (size_t s = r + 1; s < na_; ++s) {
-                    size_t ns = idx_a_[s];
+//    for (size_t p = 0; p < na_; ++p) {
+//        size_t np = idx_a_[p];
+//        for (size_t q = p + 1; q < na_; ++q) {
+//            size_t nq = idx_a_[q];
+//            for (size_t r = 0; r < na_; ++r) {
+//                size_t nr = idx_a_[r];
+//                for (size_t s = r + 1; s < na_; ++s) {
+//                    size_t ns = idx_a_[s];
 
-                    if ((sym_active_[p] ^ sym_active_[q] ^ sym_active_[r] ^ sym_active_[s]) != 0)
-                        continue;
+//                    if ((sym_active_[p] ^ sym_active_[q] ^ sym_active_[r] ^ sym_active_[s]) != 0)
+//                        continue;
 
-                    size_t index = p * dim3 + q * dim2 + r * na_ + s;
+//                    size_t index = p * dim3 + q * dim2 + r * na_ + s;
 
-                    AA[p][q][r][s] += tpdm_aa[index];
-                    BB[p][q][r][s] += tpdm_bb[index];
+//                    AA[p][q][r][s] += tpdm_aa[index];
+//                    BB[p][q][r][s] += tpdm_bb[index];
 
-                    AA[p][q][r][s] -= Da_[np][nr] * Da_[nq][ns];
-                    AA[p][q][r][s] += Da_[np][ns] * Da_[nq][nr];
-                    AA[p][q][s][r] -= AA[p][q][r][s];
-                    AA[q][p][r][s] -= AA[p][q][r][s];
-                    AA[q][p][s][r] += AA[p][q][r][s];
+//                    AA[p][q][r][s] -= Da_[np][nr] * Da_[nq][ns];
+//                    AA[p][q][r][s] += Da_[np][ns] * Da_[nq][nr];
+//                    AA[p][q][s][r] -= AA[p][q][r][s];
+//                    AA[q][p][r][s] -= AA[p][q][r][s];
+//                    AA[q][p][s][r] += AA[p][q][r][s];
 
-                    BB[p][q][r][s] -= Db_[np][nr] * Db_[nq][ns];
-                    BB[p][q][r][s] += Db_[np][ns] * Db_[nq][nr];
-                    BB[p][q][s][r] -= BB[p][q][r][s];
-                    BB[q][p][r][s] -= BB[p][q][r][s];
-                    BB[q][p][s][r] += BB[p][q][r][s];
-                }
-            }
-        }
-    }
-}
+//                    BB[p][q][r][s] -= Db_[np][nr] * Db_[nq][ns];
+//                    BB[p][q][r][s] += Db_[np][ns] * Db_[nq][nr];
+//                    BB[p][q][s][r] -= BB[p][q][r][s];
+//                    BB[q][p][r][s] -= BB[p][q][r][s];
+//                    BB[q][p][s][r] += BB[p][q][r][s];
+//                }
+//            }
+//        }
+//    }
+//}
 
-void FCI_MO::FormCumulant2AB(const std::vector<double>& tpdm_ab, d4& AB) {
-    size_t dim2 = na_ * na_;
-    size_t dim3 = na_ * dim2;
+//void FCI_MO::FormCumulant2AB(const std::vector<double>& tpdm_ab, d4& AB) {
+//    size_t dim2 = na_ * na_;
+//    size_t dim3 = na_ * dim2;
 
-    for (size_t p = 0; p < na_; ++p) {
-        size_t np = idx_a_[p];
-        for (size_t q = 0; q < na_; ++q) {
-            size_t nq = idx_a_[q];
-            for (size_t r = 0; r < na_; ++r) {
-                size_t nr = idx_a_[r];
-                for (size_t s = 0; s < na_; ++s) {
-                    size_t ns = idx_a_[s];
+//    for (size_t p = 0; p < na_; ++p) {
+//        size_t np = idx_a_[p];
+//        for (size_t q = 0; q < na_; ++q) {
+//            size_t nq = idx_a_[q];
+//            for (size_t r = 0; r < na_; ++r) {
+//                size_t nr = idx_a_[r];
+//                for (size_t s = 0; s < na_; ++s) {
+//                    size_t ns = idx_a_[s];
 
-                    if ((sym_active_[p] ^ sym_active_[q] ^ sym_active_[r] ^ sym_active_[s]) != 0)
-                        continue;
+//                    if ((sym_active_[p] ^ sym_active_[q] ^ sym_active_[r] ^ sym_active_[s]) != 0)
+//                        continue;
 
-                    size_t index = p * dim3 + q * dim2 + r * na_ + s;
-                    AB[p][q][r][s] += tpdm_ab[index];
+//                    size_t index = p * dim3 + q * dim2 + r * na_ + s;
+//                    AB[p][q][r][s] += tpdm_ab[index];
 
-                    AB[p][q][r][s] -= Da_[np][nr] * Db_[nq][ns];
-                }
-            }
-        }
-    }
-}
+//                    AB[p][q][r][s] -= Da_[np][nr] * Db_[nq][ns];
+//                }
+//            }
+//        }
+//    }
+//}
 
 void FCI_MO::print2PDC(const string& str, const d4& TwoPDC, const int& PRINT) {
     timer_on("PRINT 2-Cumulant");
     outfile->Printf("\n  ** %s **", str.c_str());
     size_t count = 0;
-    for (size_t i = 0; i != TwoPDC.size(); ++i) {
-        for (size_t j = 0; j != TwoPDC[i].size(); ++j) {
-            for (size_t k = 0; k != TwoPDC[i][j].size(); ++k) {
-                for (size_t l = 0; l != TwoPDC[i][j][k].size(); ++l) {
+    size_t size = TwoPDC.size();
+    for (size_t i = 0; i != size; ++i) {
+        for (size_t j = 0; j != size; ++j) {
+            for (size_t k = 0; k != size; ++k) {
+                for (size_t l = 0; l != size; ++l) {
                     if (std::fabs(TwoPDC[i][j][k][l]) > 1.0e-15) {
                         ++count;
                         if (PRINT > 2)
@@ -1785,283 +1722,284 @@ void FCI_MO::print2PDC(const string& str, const d4& TwoPDC, const int& PRINT) {
     timer_off("PRINT 2-Cumulant");
 }
 
-double FCI_MO::TwoOP(const STLBitsetDeterminant& J, STLBitsetDeterminant& Jnew, const size_t& p,
-                     const bool& sp, const size_t& q, const bool& sq, const size_t& r,
-                     const bool& sr, const size_t& s, const bool& ss) {
-    timer_on("2PO");
-    std::vector<vector<bool>> tmp;
-    tmp.push_back(J.get_alfa_bits_vector_bool());
-    tmp.push_back(J.get_beta_bits_vector_bool());
+//double FCI_MO::TwoOP(const STLBitsetDeterminant& J, STLBitsetDeterminant& Jnew, const size_t& p,
+//                     const bool& sp, const size_t& q, const bool& sq, const size_t& r,
+//                     const bool& sr, const size_t& s, const bool& ss) {
+//    timer_on("2PO");
+//    std::vector<vector<bool>> tmp;
+//    tmp.push_back(J.get_alfa_bits_vector_bool());
+//    tmp.push_back(J.get_beta_bits_vector_bool());
 
-    double sign = 1.0;
+//    double sign = 1.0;
 
-    if (tmp[sr][r]) {
-        sign *= CheckSign(tmp[sr], r);
-        tmp[sr][r] = 0;
-    } else {
-        timer_off("2PO");
-        return 0.0;
-    }
+//    if (tmp[sr][r]) {
+//        sign *= CheckSign(tmp[sr], r);
+//        tmp[sr][r] = 0;
+//    } else {
+//        timer_off("2PO");
+//        return 0.0;
+//    }
 
-    if (tmp[ss][s]) {
-        sign *= CheckSign(tmp[ss], s);
-        tmp[ss][s] = 0;
-    } else {
-        timer_off("2PO");
-        return 0.0;
-    }
+//    if (tmp[ss][s]) {
+//        sign *= CheckSign(tmp[ss], s);
+//        tmp[ss][s] = 0;
+//    } else {
+//        timer_off("2PO");
+//        return 0.0;
+//    }
 
-    if (!tmp[sq][q]) {
-        sign *= CheckSign(tmp[sq], q);
-        tmp[sq][q] = 1;
-    } else {
-        timer_off("2PO");
-        return 0.0;
-    }
+//    if (!tmp[sq][q]) {
+//        sign *= CheckSign(tmp[sq], q);
+//        tmp[sq][q] = 1;
+//    } else {
+//        timer_off("2PO");
+//        return 0.0;
+//    }
 
-    if (!tmp[sp][p]) {
-        sign *= CheckSign(tmp[sp], p);
-        tmp[sp][p] = 1;
-        Jnew = STLBitsetDeterminant(tmp[0], tmp[1]);
-        timer_off("2PO");
-        return sign;
-    } else {
-        timer_off("2PO");
-        return 0.0;
-    }
-}
+//    if (!tmp[sp][p]) {
+//        sign *= CheckSign(tmp[sp], p);
+//        tmp[sp][p] = 1;
+//        Jnew = STLBitsetDeterminant(tmp[0], tmp[1]);
+//        timer_off("2PO");
+//        return sign;
+//    } else {
+//        timer_off("2PO");
+//        return 0.0;
+//    }
+//}
 
-void FCI_MO::FormCumulant3(CI_RDMS& ci_rdms, d6& AAA, d6& AAB, d6& ABB, d6& BBB, string& DC) {
-    timer_on("FORM 3-Cumulant");
-    Timer tL3;
-    std::string str = "Forming Lambda3";
-    outfile->Printf("\n  %-35s ...", str.c_str());
+//void FCI_MO::FormCumulant3(CI_RDMS& ci_rdms, d6& AAA, d6& AAB, d6& ABB, d6& BBB, string& DC) {
+//    timer_on("FORM 3-Cumulant");
+//    Timer tL3;
+//    std::string str = "Forming Lambda3";
+//    outfile->Printf("\n  %-35s ...", str.c_str());
 
-    size_t dim = na_ * na_ * na_ * na_ * na_ * na_;
-    std::vector<double> tpdm_aaa(dim, 0.0);
-    std::vector<double> tpdm_aab(dim, 0.0);
-    std::vector<double> tpdm_abb(dim, 0.0);
-    std::vector<double> tpdm_bbb(dim, 0.0);
+//    size_t dim = na_ * na_ * na_ * na_ * na_ * na_;
+//    std::vector<double> tpdm_aaa(dim, 0.0);
+//    std::vector<double> tpdm_aab(dim, 0.0);
+//    std::vector<double> tpdm_abb(dim, 0.0);
+//    std::vector<double> tpdm_bbb(dim, 0.0);
 
-    ci_rdms.compute_3rdm(tpdm_aaa, tpdm_aab, tpdm_abb, tpdm_bbb);
+//    ci_rdms.compute_3rdm(tpdm_aaa, tpdm_aab, tpdm_abb, tpdm_bbb);
 
-    FormCumulant3AAA(tpdm_aaa, tpdm_bbb, AAA, BBB, DC);
-    FormCumulant3AAB(tpdm_aab, tpdm_abb, AAB, ABB, DC);
-    //    fill_cumulant3();
+//    FormCumulant3AAA(tpdm_aaa, tpdm_bbb, AAA, BBB, DC);
+//    FormCumulant3AAB(tpdm_aab, tpdm_abb, AAB, ABB, DC);
+//    //    fill_cumulant3();
 
-    outfile->Printf("  Done. Timing %15.6f s", tL3.get());
-    timer_off("FORM 3-Cumulant");
-}
+//    outfile->Printf("  Done. Timing %15.6f s", tL3.get());
+//    timer_off("FORM 3-Cumulant");
+//}
 
-void FCI_MO::FormCumulant3AAA(const std::vector<double>& tpdm_aaa,
-                              const std::vector<double>& tpdm_bbb, d6& AAA, d6& BBB, string& DC) {
-    size_t dim2 = na_ * na_;
-    size_t dim3 = na_ * dim2;
-    size_t dim4 = na_ * dim3;
-    size_t dim5 = na_ * dim4;
+//void FCI_MO::FormCumulant3AAA(const std::vector<double>& tpdm_aaa,
+//                              const std::vector<double>& tpdm_bbb, d6& AAA, d6& BBB, string& DC) {
+//    size_t dim2 = na_ * na_;
+//    size_t dim3 = na_ * dim2;
+//    size_t dim4 = na_ * dim3;
+//    size_t dim5 = na_ * dim4;
 
-    for (size_t p = 0; p != na_; ++p) {
-        size_t np = idx_a_[p];
-        for (size_t q = p + 1; q != na_; ++q) {
-            size_t nq = idx_a_[q];
-            for (size_t r = q + 1; r != na_; ++r) {
-                size_t nr = idx_a_[r];
-                for (size_t s = 0; s != na_; ++s) {
-                    size_t ns = idx_a_[s];
-                    for (size_t t = s + 1; t != na_; ++t) {
-                        size_t nt = idx_a_[t];
-                        for (size_t u = t + 1; u != na_; ++u) {
-                            size_t nu = idx_a_[u];
+//    for (size_t p = 0; p != na_; ++p) {
+//        size_t np = idx_a_[p];
+//        for (size_t q = p + 1; q != na_; ++q) {
+//            size_t nq = idx_a_[q];
+//            for (size_t r = q + 1; r != na_; ++r) {
+//                size_t nr = idx_a_[r];
+//                for (size_t s = 0; s != na_; ++s) {
+//                    size_t ns = idx_a_[s];
+//                    for (size_t t = s + 1; t != na_; ++t) {
+//                        size_t nt = idx_a_[t];
+//                        for (size_t u = t + 1; u != na_; ++u) {
+//                            size_t nu = idx_a_[u];
 
-                            if ((sym_active_[p] ^ sym_active_[q] ^ sym_active_[r] ^ sym_active_[s] ^
-                                 sym_active_[t] ^ sym_active_[u]) != 0)
-                                continue;
+//                            if ((sym_active_[p] ^ sym_active_[q] ^ sym_active_[r] ^ sym_active_[s] ^
+//                                 sym_active_[t] ^ sym_active_[u]) != 0)
+//                                continue;
 
-                            if (DC == "MK") {
-                                size_t index =
-                                    p * dim5 + q * dim4 + r * dim3 + s * dim2 + t * na_ + u;
+//                            if (DC == "MK") {
+//                                size_t index =
+//                                    p * dim5 + q * dim4 + r * dim3 + s * dim2 + t * na_ + u;
 
-                                AAA[p][q][r][s][t][u] += tpdm_aaa[index];
-                                BBB[p][q][r][s][t][u] += tpdm_bbb[index];
-                            }
+//                                AAA[p][q][r][s][t][u] += tpdm_aaa[index];
+//                                BBB[p][q][r][s][t][u] += tpdm_bbb[index];
+//                            }
 
-                            AAA[p][q][r][s][t][u] -= P3DDD(Da_, np, nq, nr, ns, nt, nu);
-                            AAA[p][q][r][s][t][u] -= P3DC(Da_, L2aa_, p, q, r, s, t, u);
+//                            AAA[p][q][r][s][t][u] -= P3DDD(Da_, np, nq, nr, ns, nt, nu);
+//                            AAA[p][q][r][s][t][u] -= P3DC(Da_, L2aa_, p, q, r, s, t, u);
 
-                            BBB[p][q][r][s][t][u] -= P3DDD(Db_, np, nq, nr, ns, nt, nu);
-                            BBB[p][q][r][s][t][u] -= P3DC(Db_, L2bb_, p, q, r, s, t, u);
+//                            BBB[p][q][r][s][t][u] -= P3DDD(Db_, np, nq, nr, ns, nt, nu);
+//                            BBB[p][q][r][s][t][u] -= P3DC(Db_, L2bb_, p, q, r, s, t, u);
 
-                            size_t cop[] = {p, q, r};
-                            size_t aop[] = {s, t, u};
-                            int P1 = 1;
-                            do {
-                                int P2 = 1;
-                                do {
-                                    double sign = pow(-1.0, int(P1 / 2) + int(P2 / 2));
-                                    AAA[cop[0]][cop[1]][cop[2]][aop[0]][aop[1]][aop[2]] =
-                                        sign * AAA[p][q][r][s][t][u];
-                                    BBB[cop[0]][cop[1]][cop[2]][aop[0]][aop[1]][aop[2]] =
-                                        sign * BBB[p][q][r][s][t][u];
-                                    ++P2;
-                                } while (std::next_permutation(aop, aop + 3));
-                                ++P1;
-                            } while (std::next_permutation(cop, cop + 3));
-                        }
-                    }
-                }
-            }
-        }
-    }
-}
+//                            size_t cop[] = {p, q, r};
+//                            size_t aop[] = {s, t, u};
+//                            int P1 = 1;
+//                            do {
+//                                int P2 = 1;
+//                                do {
+//                                    double sign = pow(-1.0, int(P1 / 2) + int(P2 / 2));
+//                                    AAA[cop[0]][cop[1]][cop[2]][aop[0]][aop[1]][aop[2]] =
+//                                        sign * AAA[p][q][r][s][t][u];
+//                                    BBB[cop[0]][cop[1]][cop[2]][aop[0]][aop[1]][aop[2]] =
+//                                        sign * BBB[p][q][r][s][t][u];
+//                                    ++P2;
+//                                } while (std::next_permutation(aop, aop + 3));
+//                                ++P1;
+//                            } while (std::next_permutation(cop, cop + 3));
+//                        }
+//                    }
+//                }
+//            }
+//        }
+//    }
+//}
 
-void FCI_MO::FormCumulant3AAB(const std::vector<double>& tpdm_aab,
-                              const std::vector<double>& tpdm_abb, d6& AAB, d6& ABB, string& DC) {
-    size_t dim2 = na_ * na_;
-    size_t dim3 = na_ * dim2;
-    size_t dim4 = na_ * dim3;
-    size_t dim5 = na_ * dim4;
+//void FCI_MO::FormCumulant3AAB(const std::vector<double>& tpdm_aab,
+//                              const std::vector<double>& tpdm_abb, d6& AAB, d6& ABB, string& DC) {
+//    size_t dim2 = na_ * na_;
+//    size_t dim3 = na_ * dim2;
+//    size_t dim4 = na_ * dim3;
+//    size_t dim5 = na_ * dim4;
 
-    for (size_t p = 0; p != na_; ++p) {
-        size_t np = idx_a_[p];
-        for (size_t q = p + 1; q != na_; ++q) {
-            size_t nq = idx_a_[q];
-            for (size_t r = 0; r != na_; ++r) {
-                size_t nr = idx_a_[r];
-                for (size_t s = 0; s != na_; ++s) {
-                    size_t ns = idx_a_[s];
-                    for (size_t t = s + 1; t != na_; ++t) {
-                        size_t nt = idx_a_[t];
-                        for (size_t u = 0; u != na_; ++u) {
-                            size_t nu = idx_a_[u];
+//    for (size_t p = 0; p != na_; ++p) {
+//        size_t np = idx_a_[p];
+//        for (size_t q = p + 1; q != na_; ++q) {
+//            size_t nq = idx_a_[q];
+//            for (size_t r = 0; r != na_; ++r) {
+//                size_t nr = idx_a_[r];
+//                for (size_t s = 0; s != na_; ++s) {
+//                    size_t ns = idx_a_[s];
+//                    for (size_t t = s + 1; t != na_; ++t) {
+//                        size_t nt = idx_a_[t];
+//                        for (size_t u = 0; u != na_; ++u) {
+//                            size_t nu = idx_a_[u];
 
-                            if ((sym_active_[p] ^ sym_active_[q] ^ sym_active_[r] ^ sym_active_[s] ^
-                                 sym_active_[t] ^ sym_active_[u]) != 0)
-                                continue;
+//                            if ((sym_active_[p] ^ sym_active_[q] ^ sym_active_[r] ^ sym_active_[s] ^
+//                                 sym_active_[t] ^ sym_active_[u]) != 0)
+//                                continue;
 
-                            if (DC == "MK") {
-                                size_t index =
-                                    p * dim5 + q * dim4 + r * dim3 + s * dim2 + t * na_ + u;
-                                AAB[p][q][r][s][t][u] += tpdm_aab[index];
+//                            if (DC == "MK") {
+//                                size_t index =
+//                                    p * dim5 + q * dim4 + r * dim3 + s * dim2 + t * na_ + u;
+//                                AAB[p][q][r][s][t][u] += tpdm_aab[index];
 
-                                index = r * dim5 + p * dim4 + q * dim3 + u * dim2 + s * na_ + t;
-                                ABB[r][p][q][u][s][t] += tpdm_abb[index];
-                            }
+//                                index = r * dim5 + p * dim4 + q * dim3 + u * dim2 + s * na_ + t;
+//                                ABB[r][p][q][u][s][t] += tpdm_abb[index];
+//                            }
 
-                            AAB[p][q][r][s][t][u] -= (Da_[np][ns] * Da_[nq][nt] * Db_[nr][nu] -
-                                                      Da_[nq][ns] * Da_[np][nt] * Db_[nr][nu]);
-                            AAB[p][q][r][s][t][u] -=
-                                (Da_[np][ns] * L2ab_[q][r][t][u] - Da_[np][nt] * L2ab_[q][r][s][u]);
-                            AAB[p][q][r][s][t][u] -=
-                                (Da_[nq][nt] * L2ab_[p][r][s][u] - Da_[nq][ns] * L2ab_[p][r][t][u]);
-                            AAB[p][q][r][s][t][u] -= (Db_[nr][nu] * L2aa_[p][q][s][t]);
-                            AAB[q][p][r][s][t][u] -= AAB[p][q][r][s][t][u];
-                            AAB[p][q][r][t][s][u] -= AAB[p][q][r][s][t][u];
-                            AAB[q][p][r][t][s][u] += AAB[p][q][r][s][t][u];
+//                            AAB[p][q][r][s][t][u] -= (Da_[np][ns] * Da_[nq][nt] * Db_[nr][nu] -
+//                                                      Da_[nq][ns] * Da_[np][nt] * Db_[nr][nu]);
+//                            AAB[p][q][r][s][t][u] -=
+//                                (Da_[np][ns] * L2ab_[q][r][t][u] - Da_[np][nt] * L2ab_[q][r][s][u]);
+//                            AAB[p][q][r][s][t][u] -=
+//                                (Da_[nq][nt] * L2ab_[p][r][s][u] - Da_[nq][ns] * L2ab_[p][r][t][u]);
+//                            AAB[p][q][r][s][t][u] -= (Db_[nr][nu] * L2aa_[p][q][s][t]);
+//                            AAB[q][p][r][s][t][u] -= AAB[p][q][r][s][t][u];
+//                            AAB[p][q][r][t][s][u] -= AAB[p][q][r][s][t][u];
+//                            AAB[q][p][r][t][s][u] += AAB[p][q][r][s][t][u];
 
-                            ABB[r][p][q][u][s][t] -= (Db_[np][ns] * Db_[nq][nt] * Da_[nr][nu] -
-                                                      Db_[nq][ns] * Db_[np][nt] * Da_[nr][nu]);
-                            ABB[r][p][q][u][s][t] -=
-                                (Db_[np][ns] * L2ab_[r][q][u][t] - Db_[np][nt] * L2ab_[r][q][u][s]);
-                            ABB[r][p][q][u][s][t] -=
-                                (Db_[nq][nt] * L2ab_[r][p][u][s] - Db_[nq][ns] * L2ab_[r][p][u][t]);
-                            ABB[r][p][q][u][s][t] -= (Da_[nr][nu] * L2bb_[p][q][s][t]);
-                            ABB[r][q][p][u][s][t] -= ABB[r][p][q][u][s][t];
-                            ABB[r][p][q][u][t][s] -= ABB[r][p][q][u][s][t];
-                            ABB[r][q][p][u][t][s] += ABB[r][p][q][u][s][t];
-                        }
-                    }
-                }
-            }
-        }
-    }
-}
+//                            ABB[r][p][q][u][s][t] -= (Db_[np][ns] * Db_[nq][nt] * Da_[nr][nu] -
+//                                                      Db_[nq][ns] * Db_[np][nt] * Da_[nr][nu]);
+//                            ABB[r][p][q][u][s][t] -=
+//                                (Db_[np][ns] * L2ab_[r][q][u][t] - Db_[np][nt] * L2ab_[r][q][u][s]);
+//                            ABB[r][p][q][u][s][t] -=
+//                                (Db_[nq][nt] * L2ab_[r][p][u][s] - Db_[nq][ns] * L2ab_[r][p][u][t]);
+//                            ABB[r][p][q][u][s][t] -= (Da_[nr][nu] * L2bb_[p][q][s][t]);
+//                            ABB[r][q][p][u][s][t] -= ABB[r][p][q][u][s][t];
+//                            ABB[r][p][q][u][t][s] -= ABB[r][p][q][u][s][t];
+//                            ABB[r][q][p][u][t][s] += ABB[r][p][q][u][s][t];
+//                        }
+//                    }
+//                }
+//            }
+//        }
+//    }
+//}
 
-void FCI_MO::FormCumulant3_DIAG(const vecdet& dets, const int& root, d6& AAA, d6& AAB, d6& ABB,
-                                d6& BBB) {
-    timer_on("FORM 3-Cumulant");
-    Timer tL3;
-    std::string str = "Forming Lambda3";
-    outfile->Printf("\n  %-35s ...", str.c_str());
-    for (size_t p = 0; p < na_; ++p) {
-        size_t np = idx_a_[p];
-        for (size_t q = 0; q < na_; ++q) {
-            size_t nq = idx_a_[q];
-            for (size_t r = 0; r < na_; ++r) {
-                size_t nr = idx_a_[r];
+//void FCI_MO::FormCumulant3_DIAG(const vecdet& dets, const int& root, d6& AAA, d6& AAB, d6& ABB,
+//                                d6& BBB) {
+//    timer_on("FORM 3-Cumulant");
+//    Timer tL3;
+//    std::string str = "Forming Lambda3";
+//    outfile->Printf("\n  %-35s ...", str.c_str());
+//    for (size_t p = 0; p < na_; ++p) {
+//        size_t np = idx_a_[p];
+//        for (size_t q = 0; q < na_; ++q) {
+//            size_t nq = idx_a_[q];
+//            for (size_t r = 0; r < na_; ++r) {
+//                size_t nr = idx_a_[r];
 
-                size_t size = dets.size();
-                for (size_t ket = 0; ket != size; ++ket) {
-                    STLBitsetDeterminant Jaaa(vector<bool>(2 * ncmo_)),
-                        Jaab(vector<bool>(2 * ncmo_)), Jabb(vector<bool>(2 * ncmo_)),
-                        Jbbb(vector<bool>(2 * ncmo_));
-                    double aaa = 1.0, aab = 1.0, abb = 1.0, bbb = 1.0,
-                           vket = (eigen_[root].first)->get(ket);
-                    ;
-                    aaa *= ThreeOP(dets[ket], Jaaa, p, 0, q, 0, r, 0, p, 0, q, 0, r, 0) * vket;
-                    aab *= ThreeOP(dets[ket], Jaab, p, 0, q, 0, r, 1, p, 0, q, 0, r, 1) * vket;
-                    abb *= ThreeOP(dets[ket], Jabb, p, 0, q, 1, r, 1, p, 0, q, 1, r, 1) * vket;
-                    bbb *= ThreeOP(dets[ket], Jbbb, p, 1, q, 1, r, 1, p, 1, q, 1, r, 1) * vket;
+//                size_t size = dets.size();
+//                for (size_t ket = 0; ket != size; ++ket) {
+//                    STLBitsetDeterminant Jaaa(vector<bool>(2 * ncmo_)),
+//                        Jaab(vector<bool>(2 * ncmo_)), Jabb(vector<bool>(2 * ncmo_)),
+//                        Jbbb(vector<bool>(2 * ncmo_));
+//                    double aaa = 1.0, aab = 1.0, abb = 1.0, bbb = 1.0,
+//                           vket = (eigen_[root].first)->get(ket);
+//                    ;
+//                    aaa *= ThreeOP(dets[ket], Jaaa, p, 0, q, 0, r, 0, p, 0, q, 0, r, 0) * vket;
+//                    aab *= ThreeOP(dets[ket], Jaab, p, 0, q, 0, r, 1, p, 0, q, 0, r, 1) * vket;
+//                    abb *= ThreeOP(dets[ket], Jabb, p, 0, q, 1, r, 1, p, 0, q, 1, r, 1) * vket;
+//                    bbb *= ThreeOP(dets[ket], Jbbb, p, 1, q, 1, r, 1, p, 1, q, 1, r, 1) * vket;
 
-                    for (size_t bra = 0; bra != size; ++bra) {
-                        double vbra = (eigen_[root].first)->get(bra);
-                        AAA[p][q][r][p][q][r] += aaa * (dets[bra] == Jaaa) * vbra;
-                        AAB[p][q][r][p][q][r] += aab * (dets[bra] == Jaab) * vbra;
-                        ABB[p][q][r][p][q][r] += abb * (dets[bra] == Jabb) * vbra;
-                        BBB[p][q][r][p][q][r] += bbb * (dets[bra] == Jbbb) * vbra;
-                    }
-                }
+//                    for (size_t bra = 0; bra != size; ++bra) {
+//                        double vbra = (eigen_[root].first)->get(bra);
+//                        AAA[p][q][r][p][q][r] += aaa * (dets[bra] == Jaaa) * vbra;
+//                        AAB[p][q][r][p][q][r] += aab * (dets[bra] == Jaab) * vbra;
+//                        ABB[p][q][r][p][q][r] += abb * (dets[bra] == Jabb) * vbra;
+//                        BBB[p][q][r][p][q][r] += bbb * (dets[bra] == Jbbb) * vbra;
+//                    }
+//                }
 
-                AAA[p][q][r][p][q][r] -= P3DDD(Da_, np, nq, nr, np, nq, nr);
-                AAA[p][q][r][p][q][r] -= P3DC(Da_, L2aa_, p, q, r, p, q, r);
-                AAA[p][q][r][p][r][q] -= AAA[p][q][r][p][q][r];
-                AAA[p][q][r][q][p][r] -= AAA[p][q][r][p][q][r];
-                AAA[p][q][r][q][r][p] = AAA[p][q][r][p][q][r];
-                AAA[p][q][r][r][p][q] = AAA[p][q][r][p][q][r];
-                AAA[p][q][r][r][q][p] -= AAA[p][q][r][p][q][r];
+//                AAA[p][q][r][p][q][r] -= P3DDD(Da_, np, nq, nr, np, nq, nr);
+//                AAA[p][q][r][p][q][r] -= P3DC(Da_, L2aa_, p, q, r, p, q, r);
+//                AAA[p][q][r][p][r][q] -= AAA[p][q][r][p][q][r];
+//                AAA[p][q][r][q][p][r] -= AAA[p][q][r][p][q][r];
+//                AAA[p][q][r][q][r][p] = AAA[p][q][r][p][q][r];
+//                AAA[p][q][r][r][p][q] = AAA[p][q][r][p][q][r];
+//                AAA[p][q][r][r][q][p] -= AAA[p][q][r][p][q][r];
 
-                AAB[p][q][r][p][q][r] -= (Da_[np][np] * Da_[nq][nq] * Db_[nr][nr] -
-                                          Da_[nq][np] * Da_[np][nq] * Db_[nr][nr]);
-                AAB[p][q][r][p][q][r] -=
-                    (Da_[np][np] * L2ab_[q][r][q][r] - Da_[np][nq] * L2ab_[q][r][p][r]);
-                AAB[p][q][r][p][q][r] -=
-                    (Da_[nq][nq] * L2ab_[p][r][p][r] - Da_[nq][np] * L2ab_[p][r][q][r]);
-                AAB[p][q][r][p][q][r] -= (Db_[nr][nr] * L2aa_[p][q][p][q]);
-                AAB[p][q][r][q][p][r] -= AAB[p][q][r][p][q][r];
+//                AAB[p][q][r][p][q][r] -= (Da_[np][np] * Da_[nq][nq] * Db_[nr][nr] -
+//                                          Da_[nq][np] * Da_[np][nq] * Db_[nr][nr]);
+//                AAB[p][q][r][p][q][r] -=
+//                    (Da_[np][np] * L2ab_[q][r][q][r] - Da_[np][nq] * L2ab_[q][r][p][r]);
+//                AAB[p][q][r][p][q][r] -=
+//                    (Da_[nq][nq] * L2ab_[p][r][p][r] - Da_[nq][np] * L2ab_[p][r][q][r]);
+//                AAB[p][q][r][p][q][r] -= (Db_[nr][nr] * L2aa_[p][q][p][q]);
+//                AAB[p][q][r][q][p][r] -= AAB[p][q][r][p][q][r];
 
-                ABB[p][q][r][p][q][r] -= (Da_[np][np] * Db_[nq][nq] * Db_[nr][nr] -
-                                          Da_[np][np] * Db_[nr][nq] * Db_[nq][nr]);
-                ABB[p][q][r][p][q][r] -=
-                    (Db_[nq][nq] * L2ab_[p][r][p][r] - Db_[nq][nr] * L2ab_[p][r][p][q]);
-                ABB[p][q][r][p][q][r] -=
-                    (Db_[nr][nr] * L2ab_[p][q][p][q] - Db_[nr][nq] * L2ab_[p][q][p][r]);
-                ABB[p][q][r][p][q][r] -= (Da_[np][np] * L2bb_[q][r][q][r]);
-                ABB[p][r][q][p][q][r] -= ABB[p][q][r][p][q][r];
+//                ABB[p][q][r][p][q][r] -= (Da_[np][np] * Db_[nq][nq] * Db_[nr][nr] -
+//                                          Da_[np][np] * Db_[nr][nq] * Db_[nq][nr]);
+//                ABB[p][q][r][p][q][r] -=
+//                    (Db_[nq][nq] * L2ab_[p][r][p][r] - Db_[nq][nr] * L2ab_[p][r][p][q]);
+//                ABB[p][q][r][p][q][r] -=
+//                    (Db_[nr][nr] * L2ab_[p][q][p][q] - Db_[nr][nq] * L2ab_[p][q][p][r]);
+//                ABB[p][q][r][p][q][r] -= (Da_[np][np] * L2bb_[q][r][q][r]);
+//                ABB[p][r][q][p][q][r] -= ABB[p][q][r][p][q][r];
 
-                BBB[p][q][r][p][q][r] -= P3DDD(Db_, np, nq, nr, np, nq, nr);
-                BBB[p][q][r][p][q][r] -= P3DC(Db_, L2bb_, p, q, r, p, q, r);
-                BBB[p][q][r][p][r][q] -= BBB[p][q][r][p][q][r];
-                BBB[p][q][r][q][p][r] -= BBB[p][q][r][p][q][r];
-                BBB[p][q][r][q][r][p] = BBB[p][q][r][p][q][r];
-                BBB[p][q][r][r][p][q] = BBB[p][q][r][p][q][r];
-                BBB[p][q][r][r][q][p] -= BBB[p][q][r][p][q][r];
-            }
-        }
-    }
-    fill_cumulant3();
-    outfile->Printf("  Done. Timing %15.6f s", tL3.get());
-    timer_off("FORM 3-Cumulant");
-}
+//                BBB[p][q][r][p][q][r] -= P3DDD(Db_, np, nq, nr, np, nq, nr);
+//                BBB[p][q][r][p][q][r] -= P3DC(Db_, L2bb_, p, q, r, p, q, r);
+//                BBB[p][q][r][p][r][q] -= BBB[p][q][r][p][q][r];
+//                BBB[p][q][r][q][p][r] -= BBB[p][q][r][p][q][r];
+//                BBB[p][q][r][q][r][p] = BBB[p][q][r][p][q][r];
+//                BBB[p][q][r][r][p][q] = BBB[p][q][r][p][q][r];
+//                BBB[p][q][r][r][q][p] -= BBB[p][q][r][p][q][r];
+//            }
+//        }
+//    }
+//    fill_cumulant3();
+//    outfile->Printf("  Done. Timing %15.6f s", tL3.get());
+//    timer_off("FORM 3-Cumulant");
+//}
 
 void FCI_MO::print3PDC(const string& str, const d6& ThreePDC, const int& PRINT) {
     timer_on("PRINT 3-Cumulant");
     outfile->Printf("\n  ** %s **", str.c_str());
     size_t count = 0;
-    for (size_t i = 0; i != ThreePDC.size(); ++i) {
-        for (size_t j = 0; j != ThreePDC[i].size(); ++j) {
-            for (size_t k = 0; k != ThreePDC[i][j].size(); ++k) {
-                for (size_t l = 0; l != ThreePDC[i][j][k].size(); ++l) {
-                    for (size_t m = 0; m != ThreePDC[i][j][k][l].size(); ++m) {
-                        for (size_t n = 0; n != ThreePDC[i][j][k][l][m].size(); ++n) {
+    size_t size = ThreePDC.size();
+    for (size_t i = 0; i != size; ++i) {
+        for (size_t j = 0; j != size; ++j) {
+            for (size_t k = 0; k != size; ++k) {
+                for (size_t l = 0; l != size; ++l) {
+                    for (size_t m = 0; m != size; ++m) {
+                        for (size_t n = 0; n != size; ++n) {
                             if (std::fabs(ThreePDC[i][j][k][l][m][n]) > 1.0e-15) {
                                 ++count;
                                 if (PRINT > 3)
@@ -2082,68 +2020,68 @@ void FCI_MO::print3PDC(const string& str, const d6& ThreePDC, const int& PRINT) 
     timer_off("PRINT 3-Cumulant");
 }
 
-double FCI_MO::ThreeOP(const STLBitsetDeterminant& J, STLBitsetDeterminant& Jnew, const size_t& p,
-                       const bool& sp, const size_t& q, const bool& sq, const size_t& r,
-                       const bool& sr, const size_t& s, const bool& ss, const size_t& t,
-                       const bool& st, const size_t& u, const bool& su) {
-    timer_on("3PO");
-    std::vector<vector<bool>> tmp;
-    tmp.push_back(J.get_alfa_bits_vector_bool());
-    tmp.push_back(J.get_beta_bits_vector_bool());
+//double FCI_MO::ThreeOP(const STLBitsetDeterminant& J, STLBitsetDeterminant& Jnew, const size_t& p,
+//                       const bool& sp, const size_t& q, const bool& sq, const size_t& r,
+//                       const bool& sr, const size_t& s, const bool& ss, const size_t& t,
+//                       const bool& st, const size_t& u, const bool& su) {
+//    timer_on("3PO");
+//    std::vector<vector<bool>> tmp;
+//    tmp.push_back(J.get_alfa_bits_vector_bool());
+//    tmp.push_back(J.get_beta_bits_vector_bool());
 
-    double sign = 1.0;
+//    double sign = 1.0;
 
-    if (tmp[ss][s]) {
-        sign *= CheckSign(tmp[ss], s);
-        tmp[ss][s] = 0;
-    } else {
-        timer_off("3PO");
-        return 0.0;
-    }
+//    if (tmp[ss][s]) {
+//        sign *= CheckSign(tmp[ss], s);
+//        tmp[ss][s] = 0;
+//    } else {
+//        timer_off("3PO");
+//        return 0.0;
+//    }
 
-    if (tmp[st][t]) {
-        sign *= CheckSign(tmp[st], t);
-        tmp[st][t] = 0;
-    } else {
-        timer_off("3PO");
-        return 0.0;
-    }
+//    if (tmp[st][t]) {
+//        sign *= CheckSign(tmp[st], t);
+//        tmp[st][t] = 0;
+//    } else {
+//        timer_off("3PO");
+//        return 0.0;
+//    }
 
-    if (tmp[su][u]) {
-        sign *= CheckSign(tmp[su], u);
-        tmp[su][u] = 0;
-    } else {
-        timer_off("3PO");
-        return 0.0;
-    }
+//    if (tmp[su][u]) {
+//        sign *= CheckSign(tmp[su], u);
+//        tmp[su][u] = 0;
+//    } else {
+//        timer_off("3PO");
+//        return 0.0;
+//    }
 
-    if (!tmp[sr][r]) {
-        sign *= CheckSign(tmp[sr], r);
-        tmp[sr][r] = 1;
-    } else {
-        timer_off("3PO");
-        return 0.0;
-    }
+//    if (!tmp[sr][r]) {
+//        sign *= CheckSign(tmp[sr], r);
+//        tmp[sr][r] = 1;
+//    } else {
+//        timer_off("3PO");
+//        return 0.0;
+//    }
 
-    if (!tmp[sq][q]) {
-        sign *= CheckSign(tmp[sq], q);
-        tmp[sq][q] = 1;
-    } else {
-        timer_off("3PO");
-        return 0.0;
-    }
+//    if (!tmp[sq][q]) {
+//        sign *= CheckSign(tmp[sq], q);
+//        tmp[sq][q] = 1;
+//    } else {
+//        timer_off("3PO");
+//        return 0.0;
+//    }
 
-    if (!tmp[sp][p]) {
-        sign *= CheckSign(tmp[sp], p);
-        tmp[sp][p] = 1;
-        Jnew = STLBitsetDeterminant(tmp[0], tmp[1]);
-        timer_off("3PO");
-        return sign;
-    } else {
-        timer_off("3PO");
-        return 0.0;
-    }
-}
+//    if (!tmp[sp][p]) {
+//        sign *= CheckSign(tmp[sp], p);
+//        tmp[sp][p] = 1;
+//        Jnew = STLBitsetDeterminant(tmp[0], tmp[1]);
+//        timer_off("3PO");
+//        return sign;
+//    } else {
+//        timer_off("3PO");
+//        return 0.0;
+//    }
+//}
 
 void FCI_MO::print_Fock(const string& spin, const d2& Fock) {
     string name = "Fock " + spin;
@@ -2537,163 +2475,8 @@ void FCI_MO::BD_Fock(const d2& Fa, const d2& Fb, SharedMatrix& Ua, SharedMatrix&
         offset += frzvpi_[h];
     }
 
-    //    // Test density in C1
-    //    SharedMatrix M(new Matrix(str.c_str(), Da_.size() + frzcpi_[0],
-    //    Da_[0].size() + frzcpi_[0]));
-    //    for (size_t i = 0; i != frzcpi_[0]; ++i){
-    //        M->set(i,i,1.0);
-    //    }
-
-    //    for (size_t i = 0; i != Da_.size(); ++i) {
-    //        for (size_t j = 0; j != Da_[i].size(); ++j) {
-    //            M->set(i+frzcpi_[0],j+frzcpi_[0],Da_[i][j]);
-    //        }
-    //    }
-    //    SharedMatrix test = Matrix::triplet(Ua,M,Ua,true,false,false);
-    //    test->print();
-
-    //    // Test Fock in C1
-    //    SharedMatrix M(new Matrix(str.c_str(), Fa_.size() + frzcpi_[0],
-    //    Fa_[0].size() + frzcpi_[0]));
-    //    for (size_t i = 0; i != frzcpi_[0]; ++i){
-    //        M->set(i,i,1.0);
-    //    }
-
-    //    for (size_t i = 0; i != Fa_.size(); ++i) {
-    //        for (size_t j = 0; j != Fa_[i].size(); ++j) {
-    //            M->set(i+frzcpi_[0],j+frzcpi_[0],Fa_[i][j]);
-    //        }
-    //    }
-    //    SharedMatrix test = Matrix::triplet(Ua,M,Ua,true,false,false);
-    //    test->print();
-
     outfile->Printf("  Done. Timing %15.6f s\n", tbdfock.get());
     timer_off("Block Diagonal 2D Matrix");
-}
-
-// void FCI_MO::nat_orbs(){
-//    outfile->Printf("\n  Use natural orbitals.");
-
-//    bool natural = CheckDensity();
-//    if(!natural){
-//        std::shared_ptr<Wavefunction> wfn =
-//        Process::environment.wavefunction();
-//        SharedMatrix Ua (new Matrix("Unitary A", nmopi_, nmopi_));
-//        SharedMatrix Ub (new Matrix("Unitary B", nmopi_, nmopi_));
-//        BD_2D_Matrix(Da_,Db_,Ua,Ub,"density","C");
-//        BD_2D_Matrix(Da_,Db_,Ua,Ub,"density","A");
-//        BD_2D_Matrix(Fa_,Fb_,Ua,Ub,"Fock","V");
-//        SharedMatrix Ca = wfn->Ca();
-//        SharedMatrix Cb = wfn->Cb();
-//        SharedMatrix Ca_new(Ca->clone());
-//        SharedMatrix Cb_new(Cb->clone());
-//        Ca_new->gemm(false,false,1.0,Ca,Ua,0.0);
-//        Cb_new->gemm(false,false,1.0,Cb,Ub,0.0);
-//        Ca->copy(Ca_new);
-//        Cb->copy(Cb_new);
-
-//        integral_->retransform_integrals();
-//        fci_ints_ = std::make_shared<FCIIntegrals>(integral_,
-//        mo_space_info_->get_corr_abs_mo("ACTIVE"),
-//        mo_space_info_->get_corr_abs_mo("RESTRICTED_DOCC"));
-//        auto active_mo = mo_space_info_->get_corr_abs_mo("ACTIVE");
-//        ambit::Tensor tei_active_aa = integral_->aptei_aa_block(active_mo,
-//        active_mo, active_mo, active_mo);
-//        ambit::Tensor tei_active_ab = integral_->aptei_ab_block(active_mo,
-//        active_mo, active_mo, active_mo);
-//        ambit::Tensor tei_active_bb = integral_->aptei_bb_block(active_mo,
-//        active_mo, active_mo, active_mo);
-//        fci_ints_->set_active_integrals(tei_active_aa, tei_active_ab,
-//        tei_active_bb);
-//        fci_ints_->compute_restricted_one_body_operator();
-
-//        // Form and Diagonalize the CASCI Hamiltonian
-//        Diagonalize_H(determinant_, eigen_);
-//        if(print_ > 2){
-//            for(pair<SharedVector, double> x: eigen_){
-//                outfile->Printf("\n\n  Spin selected CI vectors\n");
-//                (x.first)->print();
-//                outfile->Printf("  Energy  =  %20.15lf\n", x.second);
-//            }
-//        }
-
-//        // Store CI Vectors in eigen_
-//        Store_CI(nroot_, options_.get_double("FCIMO_PRINT_CIVEC"), eigen_,
-//        determinant_);
-
-//        // Form Density
-//        Da_ = d2(ncmo_, d1(ncmo_));
-//        Db_ = d2(ncmo_, d1(ncmo_));
-//        L1a = ambit::Tensor::build(ambit::CoreTensor,"L1a", {na_, na_});
-//        L1b = ambit::Tensor::build(ambit::CoreTensor,"L1b", {na_, na_});
-//        FormDensity(determinant_, root_, Da_, Db_);
-//        CheckDensity();
-//        if(print_ > 1){
-//            print_d2("Da", Da_);
-//            print_d2("Db", Db_);
-//        }
-
-//        // Fock Matrix
-//        Fa_ = d2(ncmo_, d1(ncmo_));
-//        Fb_ = d2(ncmo_, d1(ncmo_));
-//        Form_Fock(Fa_,Fb_);
-//        if(print_ > 1){
-//            print_d2("Fa", Fa_);
-//            print_d2("Fb", Fb_);
-//        }
-//    }
-//}
-
-bool FCI_MO::CheckDensity() {
-    // check blocks
-    auto checkblocks = [&](const size_t& dim,
-                           const std::vector<size_t>& idx) -> std::vector<double> {
-        double maxa = 0.0, maxb = 0.0;
-        for (size_t p = 0; p < dim; ++p) {
-            size_t np = idx[p];
-            for (size_t q = 0; q < dim; ++q) {
-                size_t nq = idx[q];
-                if (np != nq) {
-                    if (std::fabs(Da_[np][nq]) > maxa)
-                        maxa = Da_[np][nq];
-                    if (std::fabs(Db_[np][nq]) > maxb)
-                        maxb = Db_[np][nq];
-                }
-            }
-        }
-        return {maxa, maxb};
-    };
-
-    outfile->Printf("\n    Checking if orbitals are natural orbitals ...");
-    std::vector<double> maxes, temp;
-    temp = checkblocks(nc_, idx_c_);
-    maxes.insert(maxes.end(), temp.begin(), temp.end());
-    temp = checkblocks(na_, idx_a_);
-    maxes.insert(maxes.end(), temp.begin(), temp.end());
-    temp = checkblocks(nv_, idx_v_);
-    maxes.insert(maxes.end(), temp.begin(), temp.end());
-
-    double maxes_sum = 0.0;
-    for (auto it = maxes.begin(); it != maxes.end(); ++it) {
-        maxes_sum += *it;
-    }
-
-    bool natural = false;
-    if (std::fabs(maxes_sum) > 10.0 * fcheck_threshold_) {
-        std::string sep(3 + 16 * 3, '-');
-        outfile->Printf("\n    Warning! Orbitals are not natural orbitals!");
-        outfile->Printf("\n    Max off-diagonal values of core, active, "
-                        "virtual blocks of the density matrix");
-        outfile->Printf("\n       %15s %15s %15s", "core", "active", "virtual");
-        outfile->Printf("\n    %s", sep.c_str());
-        outfile->Printf("\n    Da %15.10f %15.10f %15.10f", maxes[0], maxes[2], maxes[4]);
-        outfile->Printf("\n    Db %15.10f %15.10f %15.10f", maxes[1], maxes[3], maxes[5]);
-        outfile->Printf("\n    %s\n", sep.c_str());
-    } else {
-        outfile->Printf("     OK.");
-        natural = true;
-    }
-    return natural;
 }
 
 void FCI_MO::compute_permanent_dipole() {
@@ -2770,7 +2553,8 @@ void FCI_MO::compute_permanent_dipole() {
         fill_density(opdm_a, SOdens);
         SOdens->back_transform(this->Ca());
 
-        SharedMatrix AOdens(new Matrix("AO density " + trans_name, nmo_, nmo_));
+        size_t nao = sotoao->coldim(0);
+        SharedMatrix AOdens(new Matrix("AO density " + trans_name, nao, nao));
         AOdens->remove_symmetry(SOdens, sotoao);
 
         std::vector<double> de(4, 0.0);
@@ -2887,7 +2671,8 @@ void FCI_MO::compute_transition_dipole() {
             fill_density(opdm_a, SOtransD);
             SOtransD->back_transform(this->Ca());
 
-            SharedMatrix AOtransD(new Matrix("AO transition density " + trans_name, nmo_, nmo_));
+            size_t nao = sotoao->coldim(0);
+            SharedMatrix AOtransD(new Matrix("AO transition density " + trans_name, nao, nao));
             AOtransD->remove_symmetry(SOtransD, sotoao);
 
             std::vector<double> de(4, 0.0);
@@ -3089,29 +2874,29 @@ void FCI_MO::fill_density() {
     });
 }
 
-void FCI_MO::fill_cumulant2() {
-    L2aa.iterate(
-        [&](const ::vector<size_t>& i, double& value) { value = L2aa_[i[0]][i[1]][i[2]][i[3]]; });
-    L2ab.iterate(
-        [&](const ::vector<size_t>& i, double& value) { value = L2ab_[i[0]][i[1]][i[2]][i[3]]; });
-    L2bb.iterate(
-        [&](const ::vector<size_t>& i, double& value) { value = L2bb_[i[0]][i[1]][i[2]][i[3]]; });
-}
+//void FCI_MO::fill_cumulant2() {
+//    L2aa.iterate(
+//        [&](const ::vector<size_t>& i, double& value) { value = L2aa_[i[0]][i[1]][i[2]][i[3]]; });
+//    L2ab.iterate(
+//        [&](const ::vector<size_t>& i, double& value) { value = L2ab_[i[0]][i[1]][i[2]][i[3]]; });
+//    L2bb.iterate(
+//        [&](const ::vector<size_t>& i, double& value) { value = L2bb_[i[0]][i[1]][i[2]][i[3]]; });
+//}
 
-void FCI_MO::fill_cumulant3() {
-    L3aaa.iterate([&](const ::vector<size_t>& i, double& value) {
-        value = L3aaa_[i[0]][i[1]][i[2]][i[3]][i[4]][i[5]];
-    });
-    L3aab.iterate([&](const ::vector<size_t>& i, double& value) {
-        value = L3aab_[i[0]][i[1]][i[2]][i[3]][i[4]][i[5]];
-    });
-    L3abb.iterate([&](const ::vector<size_t>& i, double& value) {
-        value = L3abb_[i[0]][i[1]][i[2]][i[3]][i[4]][i[5]];
-    });
-    L3bbb.iterate([&](const ::vector<size_t>& i, double& value) {
-        value = L3bbb_[i[0]][i[1]][i[2]][i[3]][i[4]][i[5]];
-    });
-}
+//void FCI_MO::fill_cumulant3() {
+//    L3aaa.iterate([&](const ::vector<size_t>& i, double& value) {
+//        value = L3aaa_[i[0]][i[1]][i[2]][i[3]][i[4]][i[5]];
+//    });
+//    L3aab.iterate([&](const ::vector<size_t>& i, double& value) {
+//        value = L3aab_[i[0]][i[1]][i[2]][i[3]][i[4]][i[5]];
+//    });
+//    L3abb.iterate([&](const ::vector<size_t>& i, double& value) {
+//        value = L3abb_[i[0]][i[1]][i[2]][i[3]][i[4]][i[5]];
+//    });
+//    L3bbb.iterate([&](const ::vector<size_t>& i, double& value) {
+//        value = L3bbb_[i[0]][i[1]][i[2]][i[3]][i[4]][i[5]];
+//    });
+//}
 
 void FCI_MO::fill_density(vector<double>& opdm_a, std::vector<double>& opdm_b) {
     Da_ = d2(ncmo_, d1(ncmo_));
@@ -3356,7 +3141,7 @@ void FCI_MO::fill_three_cumulant(ambit::Tensor& L3aaa, ambit::Tensor& L3aab, amb
     size_t dim4 = na_ * dim3;
     size_t dim5 = na_ * dim4;
 
-    auto fill_then_delete = [&](d6& L3, ambit::Tensor& L3t) {
+    auto fill = [&](d6& L3, ambit::Tensor& L3t) {
         std::vector<double>& data = L3t.data();
 
         // TODO: try omp here
@@ -3381,42 +3166,34 @@ void FCI_MO::fill_three_cumulant(ambit::Tensor& L3aaa, ambit::Tensor& L3aab, amb
                 }
             }
         }
-
-        // delete tensor
-        //        L3t.reset();
     };
 
-    fill_then_delete(L3aaa_, L3aaa);
-    fill_then_delete(L3aab_, L3aab);
-    fill_then_delete(L3abb_, L3abb);
-    fill_then_delete(L3bbb_, L3bbb);
+    fill(L3aaa_, L3aaa);
+    fill(L3aab_, L3aab);
+    fill(L3abb_, L3abb);
+    fill(L3bbb_, L3bbb);
 }
 
-void FCI_MO::set_orbs(SharedMatrix Ca, SharedMatrix Cb) {
-    SharedMatrix Ca_wfn = this->Ca();
-    SharedMatrix Cb_wfn = this->Cb();
-    Ca_wfn->copy(Ca);
-    Cb_wfn->copy(Cb);
-    integral_->retransform_integrals();
-    ambit::Tensor tei_active_aa = integral_->aptei_aa_block(idx_a_, idx_a_, idx_a_, idx_a_);
-    ambit::Tensor tei_active_ab = integral_->aptei_ab_block(idx_a_, idx_a_, idx_a_, idx_a_);
-    ambit::Tensor tei_active_bb = integral_->aptei_bb_block(idx_a_, idx_a_, idx_a_, idx_a_);
-    fci_ints_->set_active_integrals(tei_active_aa, tei_active_ab, tei_active_bb);
-    fci_ints_->compute_restricted_one_body_operator();
-}
+//void FCI_MO::set_orbs(SharedMatrix Ca, SharedMatrix Cb) {
+//    SharedMatrix Ca_wfn = this->Ca();
+//    SharedMatrix Cb_wfn = this->Cb();
+//    Ca_wfn->copy(Ca);
+//    Cb_wfn->copy(Cb);
+//    integral_->retransform_integrals();
+//    ambit::Tensor tei_active_aa = integral_->aptei_aa_block(idx_a_, idx_a_, idx_a_, idx_a_);
+//    ambit::Tensor tei_active_ab = integral_->aptei_ab_block(idx_a_, idx_a_, idx_a_, idx_a_);
+//    ambit::Tensor tei_active_bb = integral_->aptei_bb_block(idx_a_, idx_a_, idx_a_, idx_a_);
+//    fci_ints_->set_active_integrals(tei_active_aa, tei_active_ab, tei_active_bb);
+//    fci_ints_->compute_restricted_one_body_operator();
+//}
 
 double FCI_MO::compute_sa_energy() {
-    // averaged energy and density
+    // averaged energy
     double Ecas_sa = 0.0;
-    size_t nelement = na_ * na_;
-    std::vector<double> sa_opdm_a(nelement, 0.0);
-    std::vector<double> sa_opdm_b(nelement, 0.0);
+
+    // clear eigen values, eigen vectors and determinants
     eigens_.clear();
     p_spaces_.clear();
-
-    // allocate Fock matrix
-    Fa_ = d2(ncmo_, d1(ncmo_));
-    Fb_ = d2(ncmo_, d1(ncmo_));
 
     // loop over all averaged states
     int nstates = 0;
@@ -3454,29 +3231,9 @@ double FCI_MO::compute_sa_energy() {
         }
         print_CI(nroot_, options_.get_double("FCIMO_PRINT_CIVEC"), eigen_, determinant_);
 
-        // compute one density using ci_rdms
-        int dim = (eigen_[0].first)->dim();
-        SharedMatrix evecs(new Matrix("evecs", dim, eigen_size));
-        for (int i = 0; i < eigen_size; ++i) {
-            evecs->set_column(0, i, (eigen_[i]).first);
-        }
-
+        // weight energies
         for (int i = 0; i < nroots; ++i) {
-            double weight = weights[i];
-            Ecas_sa += weight * eigen_[i].second;
-
-            CI_RDMS ci_rdms(options_, fci_ints_, determinant_, evecs, i, i);
-            ci_rdms.set_symmetry(irrep);
-            std::vector<double> opdm_a(nelement, 0.0);
-            std::vector<double> opdm_b(nelement, 0.0);
-            ci_rdms.compute_1rdm(opdm_a, opdm_b);
-
-            std::for_each(opdm_a.begin(), opdm_a.end(), [&](double& v) { v *= weight; });
-            std::for_each(opdm_b.begin(), opdm_b.end(), [&](double& v) { v *= weight; });
-            std::transform(sa_opdm_a.begin(), sa_opdm_a.end(), opdm_a.begin(), sa_opdm_a.begin(),
-                           std::plus<double>());
-            std::transform(sa_opdm_b.begin(), sa_opdm_b.end(), opdm_b.begin(), sa_opdm_b.begin(),
-                           std::plus<double>());
+            Ecas_sa += weights[i] * eigen_[i].second;
         }
 
         // compute dipole moments
@@ -3487,123 +3244,10 @@ double FCI_MO::compute_sa_energy() {
             compute_transition_dipole();
             compute_oscillator_strength();
         }
-    }               // end looping over all averaged states
-    eigen_.clear(); // make sure other code use eigens_ for state average
+    }                     // end looping over all averaged states
+    eigen_.clear();       // make sure other code use eigens_ for state average
+    determinant_.clear(); // make sure other code use p_spaces_ for state average
     outfile->Printf("\n  Total Energy (averaged over %d states): %20.15f\n", nstates, Ecas_sa);
-
-    // fill in Da_, Db_, L1a, L1b
-    fill_density(sa_opdm_a, sa_opdm_b);
-    if (print_ > 1) {
-        print_density("Alpha", Da_);
-        print_density("Beta", Db_);
-    }
-
-    // form Fock matrix
-    if (form_Fock_) {
-        Form_Fock(Fa_, Fb_);
-        if (print_ > 1) {
-            print_Fock("Alpha", Fa_);
-            print_Fock("Beta", Fb_);
-        }
-    } else {
-        outfile->Printf("\n  Skip Fock matrix build in FCI_MO.");
-    }
-
-    //    // Orbitals. If use Kevin's CASSCF, this part is ignored.
-    //    if(!default_orbitals_){
-    //        if(semi_ && count != 0){
-    //            // Semi-canonicalize orbitals
-    //            outfile->Printf("\n  Use semi-canonical orbitals.\n");
-    //            semi_canonicalize();
-
-    //            // clear previous stuff
-    //            Ecas_sa = 0.0;
-    //            sa_opdm_a = std::vector<double> (nelement, 0.0);
-    //            sa_opdm_b = std::vector<double> (nelement, 0.0);
-    //            eigens_.clear();
-
-    //            // loop over all averaging states
-    //            for(const auto& info: sa_info_){
-    //                // set current symmetry, multiplicity, nroots
-    //                int irrep, multi, nroots;
-    //                std::vector<double> weights;
-    //                std::tie (irrep, multi, nroots, weights) = info;
-
-    //                root_sym_ = irrep;
-    //                multi_ = multi;
-    //                nroot_ = nroots;
-    //                root_ = nroot_ - 1; // not necessary
-
-    //                // form determinants
-    //                form_p_space();
-
-    //                // diagonalize the CASCI Hamiltonian
-    //                eigen_.clear();
-    //                Diagonalize_H(determinant_, eigen_);
-    //                eigens_.push_back(eigen_);
-
-    //                // print CI vectors in eigen_
-    //                print_CI(nroot_, options_.get_double("FCIMO_PRINT_CIVEC"),
-    //                eigen_, determinant_);
-
-    //                // compute one density using ci_rdms
-    //                int dim = (eigen_[0].first)->dim();
-    //                SharedMatrix evecs (new Matrix("evecs",dim,dim));
-    //                for(int i = 0; i < eigen_.size(); ++i){
-    //                    evecs->set_column(0,i,(eigen_[i]).first);
-    //                }
-
-    //                for(int i = 0; i < nroots; ++i){
-    //                    double weight = weights[i];
-    //                    Ecas_sa += weight * eigen_[i].second;
-
-    //                    CI_RDMS ci_rdms
-    //                    (options_,fci_ints_,determinant_,evecs,i,i);
-    //                    ci_rdms.set_symmetry(irrep);
-    //                    std::vector<double> opdm_a (nelement, 0.0);
-    //                    std::vector<double> opdm_b (nelement, 0.0);
-    //                    ci_rdms.compute_1rdm(opdm_a,opdm_b);
-
-    //                    std::for_each(opdm_a.begin(), opdm_a.end(),
-    //                    [&](double& v) {v *= weight;});
-    //                    std::for_each(opdm_b.begin(), opdm_b.end(),
-    //                    [&](double& v) {v *= weight;});
-    //                    std::transform (sa_opdm_a.begin(), sa_opdm_a.end(),
-    //                    opdm_a.begin(), sa_opdm_a.begin(),
-    //                    std::plus<double>());
-    //                    std::transform (sa_opdm_b.begin(), sa_opdm_b.end(),
-    //                    opdm_b.begin(), sa_opdm_b.begin(),
-    //                    std::plus<double>());
-    //                }
-
-    //            } // end looping over all averaged states
-    //            outfile->Printf("\n    Total Energy (averaged over %d states):
-    //            %20.15f\n", nstates, Ecas_sa);
-
-    //            // fill in Da_, Db_, L1a, L1b
-    //            fill_density(sa_opdm_a,sa_opdm_b);
-    //            if(print_ > 1){
-    //                print_d2("Da", Da_);
-    //                print_d2("Db", Db_);
-    //            }
-
-    //            // form Fock matrix
-    //            count = 0;
-    //            if(form_Fock_){
-    //                Form_Fock(Fa_,Fb_);
-    //                Check_Fock(Fa_,Fb_,dconv_,count);
-    //                if(print_ > 1){
-    //                    print_d2("Fa", Fa_);
-    //                    print_d2("Fb", Fb_);
-    //                }
-    //            }else{
-    //                outfile->Printf("\n  Skip Fock matrix build in FCI_MO.");
-    //            }
-
-    //        }else{
-    ////            nat_orbs();
-    //        }
-    //    }
 
     //    // rotate references such that <M|F|N> is diagonal
     //    int nentry = eigens_.size();
@@ -3686,38 +3330,6 @@ double FCI_MO::compute_sa_energy() {
     Eref_ = Ecas_sa;
     Process::environment.globals["CURRENT ENERGY"] = Ecas_sa;
     return Ecas_sa;
-}
-
-double FCI_MO::compute_canonical_sa_energy() {
-    // compute state-averaged energy
-    double Esa = compute_sa_energy();
-
-    // check Fock matrix
-    size_t count = 0;
-    if (form_Fock_) {
-        Check_Fock(Fa_, Fb_, fcheck_threshold_, count);
-    }
-
-    // semi-canonicalize orbitals
-    if (count == 0) {
-        outfile->Printf("\n  Orbitals are semi-canonicalized already.\n");
-    } else {
-        outfile->Printf("\n  Use semi-canonical orbitals.\n");
-        semi_canonicalize();
-
-        // recompute energy
-        Esa = compute_sa_energy();
-
-        // recheck Fock matrix
-        count = 0;
-        if (form_Fock_) {
-            Check_Fock(Fa_, Fb_, fcheck_threshold_, count);
-        }
-    }
-
-    Eref_ = Esa;
-    Process::environment.globals["CURRENT ENERGY"] = Esa;
-    return Esa;
 }
 
 // TODO this function probably should not be here.
@@ -3805,24 +3417,47 @@ void FCI_MO::compute_sa_ref(const int& level) {
     timer_on("Compute SA Ref");
     Timer tcu;
     if (!quiet_) {
-        outfile->Printf("\n  Computing SA 2- and 3-cumulants ... ");
+        std::string name = "1-";
+        if (level >= 2) {
+            name = "1- and 2-";
+            if (level >= 3) {
+                name = "1-, 2- and 3-";
+            }
+        }
+        outfile->Printf("\n  Computing %scumulants ... ", name.c_str());
     }
 
-    // prepare averaged 2- and 3-densities
-    size_t nelement2 = na_ * na_ * na_ * na_;
-    std::vector<double> sa_tpdm_aa(nelement2, 0.0);
-    std::vector<double> sa_tpdm_ab(nelement2, 0.0);
-    std::vector<double> sa_tpdm_bb(nelement2, 0.0);
+    // prepare averaged densities
+    size_t nelement = na_ * na_;
+    std::vector<double> sa_opdm_a(nelement, 0.0);
+    std::vector<double> sa_opdm_b(nelement, 0.0);
 
-    size_t nelement3 = na_ * na_ * nelement2;
-    bool no_3pdc = (options_.get_str("THREEPDC") == "ZERO");
+    size_t nelement2 = nelement * nelement;
+    std::vector<double> sa_tpdm_aa, sa_tpdm_ab, sa_tpdm_bb;
+    if (level >= 2) {
+        sa_tpdm_aa = std::vector<double>(nelement2, 0.0);
+        sa_tpdm_ab = std::vector<double>(nelement2, 0.0);
+        sa_tpdm_bb = std::vector<double>(nelement2, 0.0);
+    }
+
+    size_t nelement3 = nelement * nelement2;
     std::vector<double> sa_tpdm_aaa, sa_tpdm_aab, sa_tpdm_abb, sa_tpdm_bbb;
-    if (!no_3pdc) {
+    bool no_3pdc = (options_.get_str("THREEPDC") == "ZERO");
+    if (level >= 3 && (!no_3pdc)) {
         sa_tpdm_aaa = std::vector<double>(nelement3, 0.0);
         sa_tpdm_aab = std::vector<double>(nelement3, 0.0);
         sa_tpdm_abb = std::vector<double>(nelement3, 0.0);
         sa_tpdm_bbb = std::vector<double>(nelement3, 0.0);
     }
+
+    // function that scale pdm by w and add scaled pdm to sa_pdm
+    auto scale_add = [](std::vector<double>& sa_pdm, std::vector<double>& pdm, const double& w) {
+        //        std::transform(pdm.begin(), pdm.end(), pdm.begin(),
+        //                       std::bind1st(std::multiplies<double>(), w));
+        std::for_each(pdm.begin(), pdm.end(), [&](double& v) { v *= w; });
+        std::transform(sa_pdm.begin(), sa_pdm.end(), pdm.begin(), sa_pdm.begin(),
+                       std::plus<double>());
+    };
 
     // loop over all averaged states
     int nentry = sa_info_.size();
@@ -3832,7 +3467,7 @@ void FCI_MO::compute_sa_ref(const int& level) {
         std::vector<double> weights;
         std::tie(irrep, std::ignore, nroots, weights) = sa_info_[n];
 
-        // compute 2rdms and 3rdms
+        // prepare eigen vectors for current symmetry
         int dim = (eigens_[n][0].first)->dim();
         size_t eigen_size = eigens_[n].size();
         SharedMatrix evecs(new Matrix("evecs", dim, eigen_size));
@@ -3842,52 +3477,49 @@ void FCI_MO::compute_sa_ref(const int& level) {
 
         for (int i = 0; i < nroots; ++i) {
             double weight = weights[i];
-            CI_RDMS ci_rdms(options_, fci_ints_, determinant_, evecs, i, i);
+            CI_RDMS ci_rdms(options_, fci_ints_, p_spaces_[n], evecs, i, i);
             ci_rdms.set_symmetry(irrep);
 
-            std::vector<double> tpdm_aa(nelement2, 0.0);
-            std::vector<double> tpdm_ab(nelement2, 0.0);
-            std::vector<double> tpdm_bb(nelement2, 0.0);
-            ci_rdms.compute_2rdm(tpdm_aa, tpdm_ab, tpdm_bb);
+            // compute 1-RDMs
+            std::vector<double> opdm_a, opdm_b;
+            ci_rdms.compute_1rdm(opdm_a, opdm_b);
 
-            std::for_each(tpdm_aa.begin(), tpdm_aa.end(), [&](double& v) { v *= weight; });
-            std::for_each(tpdm_ab.begin(), tpdm_ab.end(), [&](double& v) { v *= weight; });
-            std::for_each(tpdm_bb.begin(), tpdm_bb.end(), [&](double& v) { v *= weight; });
-            std::transform(sa_tpdm_aa.begin(), sa_tpdm_aa.end(), tpdm_aa.begin(),
-                           sa_tpdm_aa.begin(), std::plus<double>());
-            std::transform(sa_tpdm_ab.begin(), sa_tpdm_ab.end(), tpdm_ab.begin(),
-                           sa_tpdm_ab.begin(), std::plus<double>());
-            std::transform(sa_tpdm_bb.begin(), sa_tpdm_bb.end(), tpdm_bb.begin(),
-                           sa_tpdm_bb.begin(), std::plus<double>());
+            scale_add(sa_opdm_a, opdm_a, weight);
+            scale_add(sa_opdm_b, opdm_b, weight);
 
-            if (!no_3pdc) {
-                std::vector<double> tpdm_aaa(nelement3, 0.0);
-                std::vector<double> tpdm_aab(nelement3, 0.0);
-                std::vector<double> tpdm_abb(nelement3, 0.0);
-                std::vector<double> tpdm_bbb(nelement3, 0.0);
+            // compute 2-RDMs
+            if (level >= 2) {
+                std::vector<double> tpdm_aa, tpdm_ab, tpdm_bb;
+                ci_rdms.compute_2rdm(tpdm_aa, tpdm_ab, tpdm_bb);
+
+                scale_add(sa_tpdm_aa, tpdm_aa, weight);
+                scale_add(sa_tpdm_ab, tpdm_ab, weight);
+                scale_add(sa_tpdm_bb, tpdm_bb, weight);
+            }
+
+            if (level >= 3 && (!no_3pdc)) {
+                std::vector<double> tpdm_aaa, tpdm_aab, tpdm_abb, tpdm_bbb;
                 ci_rdms.compute_3rdm(tpdm_aaa, tpdm_aab, tpdm_abb, tpdm_bbb);
 
-                std::for_each(tpdm_aaa.begin(), tpdm_aaa.end(), [&](double& v) { v *= weight; });
-                std::for_each(tpdm_aab.begin(), tpdm_aab.end(), [&](double& v) { v *= weight; });
-                std::for_each(tpdm_abb.begin(), tpdm_abb.end(), [&](double& v) { v *= weight; });
-                std::for_each(tpdm_bbb.begin(), tpdm_bbb.end(), [&](double& v) { v *= weight; });
-                std::transform(sa_tpdm_aaa.begin(), sa_tpdm_aaa.end(), tpdm_aaa.begin(),
-                               sa_tpdm_aaa.begin(), std::plus<double>());
-                std::transform(sa_tpdm_aab.begin(), sa_tpdm_aab.end(), tpdm_aab.begin(),
-                               sa_tpdm_aab.begin(), std::plus<double>());
-                std::transform(sa_tpdm_abb.begin(), sa_tpdm_abb.end(), tpdm_abb.begin(),
-                               sa_tpdm_abb.begin(), std::plus<double>());
-                std::transform(sa_tpdm_bbb.begin(), sa_tpdm_bbb.end(), tpdm_bbb.begin(),
-                               sa_tpdm_bbb.begin(), std::plus<double>());
+                scale_add(sa_tpdm_aaa, tpdm_aaa, weight);
+                scale_add(sa_tpdm_aab, tpdm_aab, weight);
+                scale_add(sa_tpdm_abb, tpdm_abb, weight);
+                scale_add(sa_tpdm_bbb, tpdm_bbb, weight);
             }
         }
 
     } // end looping over all averaged states
 
-    // compute 2-cumulants and 3-cumulants
-    compute_cumulant2(sa_tpdm_aa, sa_tpdm_ab, sa_tpdm_bb);
+    // fill in L1 tensors
+    fill_density(sa_opdm_a, sa_opdm_b);
 
-    if (!no_3pdc) {
+    // compute 2-cumulants and fill in L2 tensors
+    if (level >= 2) {
+        compute_cumulant2(sa_tpdm_aa, sa_tpdm_ab, sa_tpdm_bb);
+    }
+
+    // compute 3-cumulants and fill in L3 tensors
+    if (level >= 3 && (!no_3pdc)) {
         compute_cumulant3(sa_tpdm_aaa, sa_tpdm_aab, sa_tpdm_abb, sa_tpdm_bbb);
     }
 

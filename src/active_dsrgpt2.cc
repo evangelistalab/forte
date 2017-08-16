@@ -572,7 +572,7 @@ double ACTIVE_DSRGPT2::compute_energy() {
                                           "CAVA", "CAAA", "AAVA", "aAaA", "cAvA",
                                           "aCaV", "cAaA", "aCaA", "aAvA", "aAaV"};
 
-        // compute MO dipole integrals
+        // compute MO dipole integrals assume equal alpha beta orbitals
         modipole_ints_.clear();
         modipole_ints_ = ints_->compute_MOdipole_ints();
 

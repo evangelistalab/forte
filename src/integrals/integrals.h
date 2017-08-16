@@ -274,11 +274,13 @@ class ForteIntegrals {
 
     /**
       * Compute MO dipole integrals
+      * @param alpha if true, compute MO dipole using Ca, else Cb
       * @param resort if true, MOdipole ints are sorted to Pitzer order, otherwise in C1 order
       * @return a vector of MOdipole ints in X, Y, Z order,
       *         each of which is a nmo by nmo SharedMatrix
       */
-    std::vector<SharedMatrix> compute_MOdipole_ints(const bool& resort = false);
+    std::vector<SharedMatrix> compute_MOdipole_ints(const bool& alpha = true,
+                                                    const bool& resort = false);
 
   protected:
     // ==> Class data <==
@@ -413,6 +415,9 @@ class ForteIntegrals {
     std::vector<SharedMatrix> AOdipole_ints_;
     /// Compute AO dipole integrals
     void build_AOdipole_ints();
+    /// Compute MO dipole integrals
+    std::vector<SharedMatrix> MOdipole_ints_helper(SharedMatrix Cao, SharedVector epsilon,
+                                                   const bool& resort);
 };
 
 /**
