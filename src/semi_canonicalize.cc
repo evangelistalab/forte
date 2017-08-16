@@ -168,15 +168,13 @@ void SemiCanonical::semicanonicalize(Reference& reference, const int& max_rdm_le
     if (semi) {
         Ua_->identity();
         Ub_->identity();
+        Ua_t_ = ambit::Tensor::build(ambit::CoreTensor, "Ua", {nact_, nact_});
+        Ub_t_ = ambit::Tensor::build(ambit::CoreTensor, "Ub", {nact_, nact_});
         outfile->Printf("\n  Orbitals are already semicanonicalized.");
     } else {
         // 2. Build transformation matrices from diagononalizing blocks in F
 
         // This transforms only within ACTIVE MOs
-        // Use ambit Tensor here so that the ambit mo_spaces remains the same
-        Ua_t_ = ambit::Tensor::build(ambit::CoreTensor, "Ua", {nact_, nact_});
-        Ub_t_ = ambit::Tensor::build(ambit::CoreTensor, "Ub", {nact_, nact_});
-
         build_transformation_matrices(Ua_, Ub_, Ua_t_, Ub_t_);
 
         // 3. Retransform integrals and cumulants/RDMs
