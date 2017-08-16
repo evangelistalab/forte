@@ -166,8 +166,20 @@ void SemiCanonical::semicanonicalize(Reference& reference, const int& max_rdm_le
     bool semi = check_fock_matrix();
 
     if (semi) {
+        // set all U to identity
         Ua_->identity();
         Ub_->identity();
+
+        Ua_t_ = ambit::Tensor::build(ambit::CoreTensor, "Ua", {nact_, nact_});
+        Ua_t_.iterate([&](const std::vector<size_t>& i, double& value) {
+            if (i[0] == i[1])
+                value = 1.0;
+        });
+        Ub_t_ = ambit::Tensor::build(ambit::CoreTensor, "Ub", {nact_, nact_});
+        Ub_t_.iterate([&](const std::vector<size_t>& i, double& value) {
+            if (i[0] == i[1])
+                value = 1.0;
+        });
         outfile->Printf("\n  Orbitals are already semicanonicalized.");
     } else {
         // 2. Build transformation matrices from diagononalizing blocks in F

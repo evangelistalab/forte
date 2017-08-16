@@ -205,7 +205,6 @@ std::vector<std::vector<double>> DSRG_MRPT2::compute_energy_sa() {
                 for (int i = 0; i < eigen_size; ++i) {
                     evecs->set_column(0, i, (eigens_[n][i]).first);
                 }
-                evecs->print();
 
                 SharedMatrix Heff(
                     new Matrix("Heff " + multi_label[multi - 1] + " " + irrep_symbol[irrep],
