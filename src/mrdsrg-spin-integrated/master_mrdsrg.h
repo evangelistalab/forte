@@ -96,7 +96,7 @@ class MASTER_DSRG : public DynamicCorrelationSolver {
     /// Compute Dipole or not
     bool do_dm_;
     /// Dipole moment directions
-    std::vector<std::string> dm_dirs_ {"X", "Y", "Z"};
+    std::vector<std::string> dm_dirs_{"X", "Y", "Z"};
 
     /// Nuclear dipole moments
     std::vector<double> dm_nuc_;

@@ -1550,7 +1550,7 @@ void FCI_MO::FormDensity(CI_RDMS& ci_rdms, d2& A, d2& B) {
     timer_off("FORM Density");
 }
 
-//double FCI_MO::OneOP(const STLBitsetDeterminant& J, STLBitsetDeterminant& Jnew, const size_t& p,
+// double FCI_MO::OneOP(const STLBitsetDeterminant& J, STLBitsetDeterminant& Jnew, const size_t& p,
 //                     const bool& sp, const size_t& q, const bool& sq) {
 //    timer_on("1PO");
 //    std::vector<vector<bool>> tmp;
@@ -1595,7 +1595,7 @@ void FCI_MO::print_density(const string& spin, const d2& density) {
     dens->print();
 }
 
-//void FCI_MO::print_d2(const string& str, const d2& OnePD) {
+// void FCI_MO::print_d2(const string& str, const d2& OnePD) {
 //    timer_on("PRINT Density");
 //    SharedMatrix M(new Matrix(str.c_str(), OnePD.size(), OnePD[0].size()));
 //    for (size_t i = 0; i != OnePD.size(); ++i) {
@@ -1607,7 +1607,7 @@ void FCI_MO::print_density(const string& spin, const d2& density) {
 //    timer_off("PRINT Density");
 //}
 
-//void FCI_MO::FormCumulant2(CI_RDMS& ci_rdms, d4& AA, d4& AB, d4& BB) {
+// void FCI_MO::FormCumulant2(CI_RDMS& ci_rdms, d4& AA, d4& AB, d4& BB) {
 //    timer_on("FORM 2-Cumulant");
 //    Timer tL2;
 //    std::string str = "Forming Lambda2";
@@ -1630,7 +1630,8 @@ void FCI_MO::print_density(const string& spin, const d2& density) {
 //    timer_off("FORM 2-Cumulant");
 //}
 
-//void FCI_MO::FormCumulant2AA(const std::vector<double>& tpdm_aa, const std::vector<double>& tpdm_bb,
+// void FCI_MO::FormCumulant2AA(const std::vector<double>& tpdm_aa, const std::vector<double>&
+// tpdm_bb,
 //                             d4& AA, d4& BB) {
 //    size_t dim2 = na_ * na_;
 //    size_t dim3 = na_ * dim2;
@@ -1669,7 +1670,7 @@ void FCI_MO::print_density(const string& spin, const d2& density) {
 //    }
 //}
 
-//void FCI_MO::FormCumulant2AB(const std::vector<double>& tpdm_ab, d4& AB) {
+// void FCI_MO::FormCumulant2AB(const std::vector<double>& tpdm_ab, d4& AB) {
 //    size_t dim2 = na_ * na_;
 //    size_t dim3 = na_ * dim2;
 
@@ -1722,7 +1723,7 @@ void FCI_MO::print2PDC(const string& str, const d4& TwoPDC, const int& PRINT) {
     timer_off("PRINT 2-Cumulant");
 }
 
-//double FCI_MO::TwoOP(const STLBitsetDeterminant& J, STLBitsetDeterminant& Jnew, const size_t& p,
+// double FCI_MO::TwoOP(const STLBitsetDeterminant& J, STLBitsetDeterminant& Jnew, const size_t& p,
 //                     const bool& sp, const size_t& q, const bool& sq, const size_t& r,
 //                     const bool& sr, const size_t& s, const bool& ss) {
 //    timer_on("2PO");
@@ -1768,7 +1769,7 @@ void FCI_MO::print2PDC(const string& str, const d4& TwoPDC, const int& PRINT) {
 //    }
 //}
 
-//void FCI_MO::FormCumulant3(CI_RDMS& ci_rdms, d6& AAA, d6& AAB, d6& ABB, d6& BBB, string& DC) {
+// void FCI_MO::FormCumulant3(CI_RDMS& ci_rdms, d6& AAA, d6& AAB, d6& ABB, d6& BBB, string& DC) {
 //    timer_on("FORM 3-Cumulant");
 //    Timer tL3;
 //    std::string str = "Forming Lambda3";
@@ -1790,7 +1791,7 @@ void FCI_MO::print2PDC(const string& str, const d4& TwoPDC, const int& PRINT) {
 //    timer_off("FORM 3-Cumulant");
 //}
 
-//void FCI_MO::FormCumulant3AAA(const std::vector<double>& tpdm_aaa,
+// void FCI_MO::FormCumulant3AAA(const std::vector<double>& tpdm_aaa,
 //                              const std::vector<double>& tpdm_bbb, d6& AAA, d6& BBB, string& DC) {
 //    size_t dim2 = na_ * na_;
 //    size_t dim3 = na_ * dim2;
@@ -1810,7 +1811,8 @@ void FCI_MO::print2PDC(const string& str, const d4& TwoPDC, const int& PRINT) {
 //                        for (size_t u = t + 1; u != na_; ++u) {
 //                            size_t nu = idx_a_[u];
 
-//                            if ((sym_active_[p] ^ sym_active_[q] ^ sym_active_[r] ^ sym_active_[s] ^
+//                            if ((sym_active_[p] ^ sym_active_[q] ^ sym_active_[r] ^ sym_active_[s]
+//                            ^
 //                                 sym_active_[t] ^ sym_active_[u]) != 0)
 //                                continue;
 
@@ -1851,7 +1853,7 @@ void FCI_MO::print2PDC(const string& str, const d4& TwoPDC, const int& PRINT) {
 //    }
 //}
 
-//void FCI_MO::FormCumulant3AAB(const std::vector<double>& tpdm_aab,
+// void FCI_MO::FormCumulant3AAB(const std::vector<double>& tpdm_aab,
 //                              const std::vector<double>& tpdm_abb, d6& AAB, d6& ABB, string& DC) {
 //    size_t dim2 = na_ * na_;
 //    size_t dim3 = na_ * dim2;
@@ -1871,7 +1873,8 @@ void FCI_MO::print2PDC(const string& str, const d4& TwoPDC, const int& PRINT) {
 //                        for (size_t u = 0; u != na_; ++u) {
 //                            size_t nu = idx_a_[u];
 
-//                            if ((sym_active_[p] ^ sym_active_[q] ^ sym_active_[r] ^ sym_active_[s] ^
+//                            if ((sym_active_[p] ^ sym_active_[q] ^ sym_active_[r] ^ sym_active_[s]
+//                            ^
 //                                 sym_active_[t] ^ sym_active_[u]) != 0)
 //                                continue;
 
@@ -1887,9 +1890,11 @@ void FCI_MO::print2PDC(const string& str, const d4& TwoPDC, const int& PRINT) {
 //                            AAB[p][q][r][s][t][u] -= (Da_[np][ns] * Da_[nq][nt] * Db_[nr][nu] -
 //                                                      Da_[nq][ns] * Da_[np][nt] * Db_[nr][nu]);
 //                            AAB[p][q][r][s][t][u] -=
-//                                (Da_[np][ns] * L2ab_[q][r][t][u] - Da_[np][nt] * L2ab_[q][r][s][u]);
+//                                (Da_[np][ns] * L2ab_[q][r][t][u] - Da_[np][nt] *
+//                                L2ab_[q][r][s][u]);
 //                            AAB[p][q][r][s][t][u] -=
-//                                (Da_[nq][nt] * L2ab_[p][r][s][u] - Da_[nq][ns] * L2ab_[p][r][t][u]);
+//                                (Da_[nq][nt] * L2ab_[p][r][s][u] - Da_[nq][ns] *
+//                                L2ab_[p][r][t][u]);
 //                            AAB[p][q][r][s][t][u] -= (Db_[nr][nu] * L2aa_[p][q][s][t]);
 //                            AAB[q][p][r][s][t][u] -= AAB[p][q][r][s][t][u];
 //                            AAB[p][q][r][t][s][u] -= AAB[p][q][r][s][t][u];
@@ -1898,9 +1903,11 @@ void FCI_MO::print2PDC(const string& str, const d4& TwoPDC, const int& PRINT) {
 //                            ABB[r][p][q][u][s][t] -= (Db_[np][ns] * Db_[nq][nt] * Da_[nr][nu] -
 //                                                      Db_[nq][ns] * Db_[np][nt] * Da_[nr][nu]);
 //                            ABB[r][p][q][u][s][t] -=
-//                                (Db_[np][ns] * L2ab_[r][q][u][t] - Db_[np][nt] * L2ab_[r][q][u][s]);
+//                                (Db_[np][ns] * L2ab_[r][q][u][t] - Db_[np][nt] *
+//                                L2ab_[r][q][u][s]);
 //                            ABB[r][p][q][u][s][t] -=
-//                                (Db_[nq][nt] * L2ab_[r][p][u][s] - Db_[nq][ns] * L2ab_[r][p][u][t]);
+//                                (Db_[nq][nt] * L2ab_[r][p][u][s] - Db_[nq][ns] *
+//                                L2ab_[r][p][u][t]);
 //                            ABB[r][p][q][u][s][t] -= (Da_[nr][nu] * L2bb_[p][q][s][t]);
 //                            ABB[r][q][p][u][s][t] -= ABB[r][p][q][u][s][t];
 //                            ABB[r][p][q][u][t][s] -= ABB[r][p][q][u][s][t];
@@ -1913,7 +1920,7 @@ void FCI_MO::print2PDC(const string& str, const d4& TwoPDC, const int& PRINT) {
 //    }
 //}
 
-//void FCI_MO::FormCumulant3_DIAG(const vecdet& dets, const int& root, d6& AAA, d6& AAB, d6& ABB,
+// void FCI_MO::FormCumulant3_DIAG(const vecdet& dets, const int& root, d6& AAA, d6& AAB, d6& ABB,
 //                                d6& BBB) {
 //    timer_on("FORM 3-Cumulant");
 //    Timer tL3;
@@ -2020,7 +2027,8 @@ void FCI_MO::print3PDC(const string& str, const d6& ThreePDC, const int& PRINT) 
     timer_off("PRINT 3-Cumulant");
 }
 
-//double FCI_MO::ThreeOP(const STLBitsetDeterminant& J, STLBitsetDeterminant& Jnew, const size_t& p,
+// double FCI_MO::ThreeOP(const STLBitsetDeterminant& J, STLBitsetDeterminant& Jnew, const size_t&
+// p,
 //                       const bool& sp, const size_t& q, const bool& sq, const size_t& r,
 //                       const bool& sr, const size_t& s, const bool& ss, const size_t& t,
 //                       const bool& st, const size_t& u, const bool& su) {
@@ -2874,7 +2882,7 @@ void FCI_MO::fill_density() {
     });
 }
 
-//void FCI_MO::fill_cumulant2() {
+// void FCI_MO::fill_cumulant2() {
 //    L2aa.iterate(
 //        [&](const ::vector<size_t>& i, double& value) { value = L2aa_[i[0]][i[1]][i[2]][i[3]]; });
 //    L2ab.iterate(
@@ -2883,7 +2891,7 @@ void FCI_MO::fill_density() {
 //        [&](const ::vector<size_t>& i, double& value) { value = L2bb_[i[0]][i[1]][i[2]][i[3]]; });
 //}
 
-//void FCI_MO::fill_cumulant3() {
+// void FCI_MO::fill_cumulant3() {
 //    L3aaa.iterate([&](const ::vector<size_t>& i, double& value) {
 //        value = L3aaa_[i[0]][i[1]][i[2]][i[3]][i[4]][i[5]];
 //    });
@@ -3174,7 +3182,7 @@ void FCI_MO::fill_three_cumulant(ambit::Tensor& L3aaa, ambit::Tensor& L3aab, amb
     fill(L3bbb_, L3bbb);
 }
 
-//void FCI_MO::set_orbs(SharedMatrix Ca, SharedMatrix Cb) {
+// void FCI_MO::set_orbs(SharedMatrix Ca, SharedMatrix Cb) {
 //    SharedMatrix Ca_wfn = this->Ca();
 //    SharedMatrix Cb_wfn = this->Cb();
 //    Ca_wfn->copy(Ca);
