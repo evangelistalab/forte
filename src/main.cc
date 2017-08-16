@@ -78,7 +78,7 @@ extern "C" int read_options(std::string name, Options& options) {
  */
 extern "C" SharedWavefunction forte(SharedWavefunction ref_wfn, Options& options) {
     // Start a timer
-    Timer total_time;
+    timer total_time("Forte");
 
     forte_banner();
 
@@ -102,7 +102,7 @@ extern "C" SharedWavefunction forte(SharedWavefunction ref_wfn, Options& options
         // Compute energy
         forte_old_methods(ref_wfn, options, ints, mo_space_info, my_proc);
 
-        outfile->Printf("\n\n  Your calculation took %.8f seconds\n", total_time.get());
+//        outfile->Printf("\n\n  Your calculation took %.8f seconds\n", total_time.get());
     }
 
     forte_cleanup();
@@ -187,6 +187,7 @@ SharedMatrix make_aosubspace_projector(SharedWavefunction ref_wfn, Options& opti
 
 std::shared_ptr<ForteIntegrals> make_forte_integrals(SharedWavefunction ref_wfn, Options& options,
                                                      std::shared_ptr<MOSpaceInfo> mo_space_info) {
+    timer int_timer("Integrals");
     std::shared_ptr<ForteIntegrals> ints;
     if (options.get_str("INT_TYPE") == "CHOLESKY") {
         ints = std::make_shared<CholeskyIntegrals>(options, ref_wfn, UnrestrictedMOs,

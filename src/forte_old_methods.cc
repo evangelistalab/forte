@@ -97,6 +97,7 @@ namespace forte {
 void forte_old_methods(SharedWavefunction ref_wfn, Options& options,
                        std::shared_ptr<ForteIntegrals> ints,
                        std::shared_ptr<MOSpaceInfo> mo_space_info, int my_proc) {
+    timer method_timer("Method");
     if (options.get_str("ALTERNATIVE_CASSCF") == "FTHF") {
         auto FTHF = std::make_shared<FiniteTemperatureHF>(ref_wfn, options, mo_space_info);
         FTHF->compute_energy();

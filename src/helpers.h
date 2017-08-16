@@ -37,6 +37,7 @@
 #include "ambit/blocked_tensor.h"
 #include "psi4/libmints/matrix.h"
 #include "psi4/libmints/vector.h"
+#include "psi4/libqt/qt.h"
 
 namespace psi {
 
@@ -246,6 +247,51 @@ class ForteTimer {
   private:
     std::chrono::high_resolution_clock::time_point t_start_;
     std::chrono::high_resolution_clock::time_point t_end_;
+};
+
+/**
+  * @brief A timer class
+  */
+class timer {
+  public:
+    timer(const std::string& name) : name_(name) { timer_on(name_); }
+    ~timer() { stop(); }
+
+    /// Return the elapsed time in seconds
+    void stop() {
+        if (running_) {
+            running_ = false;
+            timer_off(name_);
+        }
+    }
+
+  private:
+    std::string name_;
+    bool running_ = true;
+};
+
+/**
+  * @brief A timer class
+  */
+class parallel_timer {
+  public:
+    parallel_timer(const std::string& name, int rank) : name_(name), rank_(rank) {
+        parallel_timer_on(name_,rank_);
+    }
+    ~parallel_timer() { stop(); }
+
+    /// Return the elapsed time in seconds
+    void stop() {
+        if (running_) {
+            running_ = false;
+            parallel_timer_off(name_,rank_);
+        }
+    }
+
+  private:
+    std::string name_;
+    int rank_;
+    bool running_ = true;
 };
 }
 } // End Namespaces
