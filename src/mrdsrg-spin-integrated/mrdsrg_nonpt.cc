@@ -381,6 +381,8 @@ void MRDSRG::compute_hbar_sequential_rotation() {
         outfile->Printf("\n\n  ==> Computing the DSRG Transformed Hamiltonian <==\n");
     }
 
+    timer rotation("Hbar T1 rotation");
+
     ambit::BlockedTensor A1;
     A1 = BTF_->build(tensor_type_, "A1 Amplitudes", spin_cases({"gg"}));
     A1["ia"] = T1_["ia"];
@@ -476,6 +478,8 @@ void MRDSRG::compute_hbar_sequential_rotation() {
     double Enuc = Process::environment.molecule()->nuclear_repulsion_energy();
     Hbar0_ += frozen_core_energy_ + Enuc - Eref_;
 
+    rotation.stop();
+
     ////////////////////////////////////////////////////////////////////////////////////
 
     // iteration variables
@@ -483,6 +487,8 @@ void MRDSRG::compute_hbar_sequential_rotation() {
     int maxn = options_.get_int("DSRG_RSC_NCOMM");
     double ct_threshold = options_.get_double("SRG_RSC_THRESHOLD");
     std::string dsrg_op = options_.get_str("DSRG_TRANS_TYPE");
+
+    timer comm("Hbar T2 commutator");
 
     // temporary Hamiltonian used in every iteration
     O1_["pq"] = Hbar1_["pq"];
@@ -591,6 +597,9 @@ double MRDSRG::compute_energy_ldsrg2() {
     outfile->Printf("\n\n  ==> Computing MR-LDSRG(2) Energy <==\n");
     outfile->Printf("\n    Reference:");
     outfile->Printf("\n      J. Chem. Phys. 2016, 144, 164114.\n");
+
+    timer ldsrg2("Energy_ldsrg2");
+
     if (options_.get_str("THREEPDC") == "ZERO") {
         outfile->Printf("\n    Skip Lambda3 contributions in [Hbar2, T2].");
     }
