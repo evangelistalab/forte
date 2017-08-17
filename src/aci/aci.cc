@@ -557,7 +557,7 @@ double AdaptiveCI::compute_energy() {
     }
     SharedMatrix new_evecs;
     if (ex_alg_ == "ROOT_COMBINE") {
-        compute_rdms(full_space, op_c, PQ_evecs, 0, 0);
+        compute_rdms(fci_ints_, full_space, op_c, PQ_evecs, 0, 0);
     } else if (approx_rdm_) {
         outfile->Printf("\n  Approximating RDMs");
         DeterminantHashVec approx = approximate_wfn(final_wfn_, PQ_evecs, PQ_evals, new_evecs);
@@ -569,14 +569,14 @@ double AdaptiveCI::compute_energy() {
         op_.op_lists(approx);
         outfile->Printf("\n  Size of approx: %zu  size of var: %zu", approx.size(),
                         final_wfn_.size());
-        compute_rdms(approx, op_, new_evecs, 0, 0);
+        compute_rdms(fci_ints_, approx, op_, new_evecs, 0, 0);
 
     } else {
         op_.clear_op_s_lists();
         op_.clear_tp_s_lists();
         op_.op_s_lists(final_wfn_);
         op_.tp_s_lists(final_wfn_);
-        compute_rdms(final_wfn_, op_, PQ_evecs, 0, 0);
+        compute_rdms(fci_ints_, final_wfn_, op_, PQ_evecs, 0, 0);
     }
 
     // if( approx_rdm_ ){
@@ -650,7 +650,7 @@ void AdaptiveCI::diagonalize_final_and_compute_rdms() {
     op_.tp_lists(final_wfn_);
     op_.three_s_lists(final_wfn_);
 
-    compute_rdms(final_wfn_, op_, final_evecs, 0, 0);
+    compute_rdms(fci_ints_, final_wfn_, op_, final_evecs, 0, 0);
 }
 
 DeterminantHashVec AdaptiveCI::get_wavefunction() { return final_wfn_; }
@@ -2572,8 +2572,8 @@ AdaptiveCI::dl_initial_guess(std::vector<STLBitsetDeterminant>& old_dets,
     return guess;
 }
 
-void AdaptiveCI::compute_rdms(DeterminantHashVec& dets, WFNOperator& op, SharedMatrix& PQ_evecs,
-                              int root1, int root2) {
+void AdaptiveCI::compute_rdms(std::shared_ptr<FCIIntegrals> fci_ints, DeterminantHashVec& dets,
+                              WFNOperator& op, SharedMatrix& PQ_evecs, int root1, int root2) {
 
     ordm_a_.clear();
     ordm_b_.clear();
@@ -2587,7 +2587,7 @@ void AdaptiveCI::compute_rdms(DeterminantHashVec& dets, WFNOperator& op, SharedM
     trdm_abb_.clear();
     trdm_bbb_.clear();
 
-    CI_RDMS ci_rdms_(options_, dets, fci_ints_, PQ_evecs, root1, root2);
+    CI_RDMS ci_rdms_(options_, dets, fci_ints, PQ_evecs, root1, root2);
     ci_rdms_.set_max_rdm(rdm_level_);
     if (rdm_level_ >= 1) {
         Timer one_r;
@@ -2906,7 +2906,7 @@ void AdaptiveCI::upcast_reference(DeterminantHashVec& ref) {
 
 void AdaptiveCI::add_external_singles(DeterminantHashVec& ref) {
 
-    outfile->Printf("\n Adding external singles");
+    print_h2("Adding external singles");
 
     const det_hashvec& dets = ref.wfn_hash();
     size_t nref = ref.size();
@@ -3016,7 +3016,67 @@ void AdaptiveCI::add_external_singles(DeterminantHashVec& ref) {
     ref.merge(av_a);
     ref.merge(av_b);
 
-    outfile->Printf("\n Size of new model space:  %zu", ref.size());
+    outfile->Printf("\n  Size of new model space:  %zu", ref.size());
+
+    // Diagonalize final space (maybe abstract this function)
+    outfile->Printf("\n  Building integrals");
+    std::vector<size_t> empty;
+    auto fci_ints =
+        std::make_shared<FCIIntegrals>(ints_, mo_space_info_->get_corr_abs_mo("CORRELATED"), empty);
+
+    auto active_mo = mo_space_info_->get_corr_abs_mo("CORRELATED");
+    ambit::Tensor tei_active_aa = ints_->aptei_aa_block(active_mo, active_mo, active_mo, active_mo);
+    ambit::Tensor tei_active_ab = ints_->aptei_ab_block(active_mo, active_mo, active_mo, active_mo);
+    ambit::Tensor tei_active_bb = ints_->aptei_bb_block(active_mo, active_mo, active_mo, active_mo);
+    fci_ints->set_active_integrals(tei_active_aa, tei_active_ab, tei_active_bb);
+    fci_ints->compute_restricted_one_body_operator();
+
+    // First build the lists
+    SharedMatrix final_evecs;
+    SharedVector final_evals;
+
+    op_.clear_op_s_lists();
+    op_.clear_tp_s_lists();
+    op_.build_strings(ref);
+    op_.op_s_lists(ref);
+    op_.tp_s_lists(ref);
+
+    SparseCISolver sparse_solver(fci_ints);
+    sparse_solver.set_parallel(true);
+    sparse_solver.set_e_convergence(options_.get_double("E_CONVERGENCE"));
+    sparse_solver.set_maxiter_davidson(options_.get_int("DL_MAXITER"));
+    sparse_solver.set_spin_project(project_out_spin_contaminants_);
+    //   sparse_solver.set_spin_project_full(project_out_spin_contaminants_);
+    sparse_solver.set_guess_dimension(options_.get_int("DL_GUESS_SIZE"));
+    sparse_solver.set_spin_project_full(false);
+    sparse_solver.diagonalize_hamiltonian_map(ref, op_, final_evals, final_evecs, nroot_,
+                                              multiplicity_, diag_method_);
+
+    outfile->Printf("\n\n");
+    for (int i = 0; i < nroot_; ++i) {
+        double abs_energy =
+            final_evals->get(i) + nuclear_repulsion_energy_ + fci_ints->scalar_energy();
+        double exc_energy = pc_hartree2ev * (final_evals->get(i) - final_evals->get(0));
+        outfile->Printf("\n  * ACI+es Energy Root %3d        = %.12f Eh = %8.4f eV", i, abs_energy,
+                        exc_energy);
+        //    outfile->Printf("\n  * Adaptive-CI Energy Root %3d + EPT2 = %.12f Eh = %8.4f eV", i,
+        //                    abs_energy + multistate_pt2_energy_correction_[i],
+        //                    exc_energy +
+        //                        pc_hartree2ev * (multistate_pt2_energy_correction_[i] -
+        //                                         multistate_pt2_energy_correction_[0]));
+        //    	if(options_.get_str("SIZE_CORRECTION") == "DAVIDSON" ){
+        //        outfile->Printf("\n  * Adaptive-CI Energy Root %3d + D1   =
+        //        %.12f Eh = %8.4f eV",i,abs_energy + davidson[i],
+        //                exc_energy + pc_hartree2ev * (davidson[i] -
+        //                davidson[0]));
+        //    	}
+    }
+
+    print_wfn(ref, final_evecs, nroot_);
+    rdm_level_ = 1;
+    nactpi_ = mo_space_info_->get_dimension("CORRELATED");
+    nact_ = mo_space_info_->size("CORRELATED");
+    compute_rdms(fci_ints, ref, op_, final_evecs, 0, 0);
 }
 
 /*

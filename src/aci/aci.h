@@ -363,8 +363,8 @@ class AdaptiveCI : public Wavefunction {
                                    SharedVector evals, int nroot);
 
     /// Compute the RDMs
-    void compute_rdms(DeterminantHashVec& dets, WFNOperator& op, SharedMatrix& PQ_evecs, int root1,
-                      int root2);
+    void compute_rdms(std::shared_ptr<FCIIntegrals> fci_ints, DeterminantHashVec& dets,
+                      WFNOperator& op, SharedMatrix& PQ_evecs, int root1, int root2);
 
     /// Save older roots
     void save_old_root(DeterminantHashVec& dets, SharedMatrix& PQ_evecs, int root);
