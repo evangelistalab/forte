@@ -597,7 +597,7 @@ double AdaptiveCI::compute_energy() {
     Process::environment.globals["ACI ENERGY"] = root_energy;
     Process::environment.globals["ACI+PT2 ENERGY"] = root_energy_pt2;
     //  if(!quiet_mode_){
-    outfile->Printf("\n\n  %s: %f s", "Adaptive-CI (bitset) ran in ", aci_elapse.get());
+    outfile->Printf("\n\n  %s: %f s", "Adaptive-CI ran in ", aci_elapse.get());
     outfile->Printf("\n\n  %s: %d", "Saving information for root", options_.get_int("ACI_ROOT"));
     //  }
 

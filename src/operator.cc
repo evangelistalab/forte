@@ -975,9 +975,9 @@ void WFNOperator::tp_s_lists(DeterminantHashVec& wfn) {
             }
         }
         double map_size = (32. + sizeof(size_t)) * ab_list_.size();
-        if (!quiet_) {
-            outfile->Printf("\n Memory for AB_ann: %1.3f MB", map_size / (1024. * 1024.));
-        }
+       // if (!quiet_) {
+       //     outfile->Printf("\n Memory for AB_ann: %1.3f MB", map_size / (1024. * 1024.));
+       // }
     }
     if (!quiet_) {
         outfile->Printf("\n  Time spent building ab_list  %1.6f s", ab.get());
