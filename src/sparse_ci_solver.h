@@ -33,6 +33,7 @@
 #include "stl_bitset_determinant.h"
 #include "determinant_hashvector.h"
 #include "operator.h"
+#include "helpers.h"
 
 #ifdef HAVE_MPI
 #include <mpi.h>

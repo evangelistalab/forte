@@ -33,6 +33,7 @@
 #include "fci/fci_integrals.h"
 #include "determinant_hashvector.h"
 #include "stl_bitset_determinant.h"
+#include "helpers.h"
 
 namespace psi {
 namespace forte {

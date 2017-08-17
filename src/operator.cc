@@ -623,7 +623,7 @@ void WFNOperator::build_strings(DeterminantHashVec& wfn) {
 }
 
 void WFNOperator::op_s_lists(DeterminantHashVec& wfn) {
-
+    timer ops("Single sub. lists");
     // Get a reference to the determinants
     const det_hashvec& dets = wfn.wfn_hash();
     Timer ann;
@@ -822,6 +822,7 @@ void WFNOperator::op_lists(DeterminantHashVec& wfn) {
 
 void WFNOperator::tp_s_lists(DeterminantHashVec& wfn) {
 
+    timer ops("Double sub. lists");
     const det_hashvec& dets = wfn.wfn_hash();
     // Generate alpha-alpha coupling list
     Timer aa;
@@ -1204,6 +1205,7 @@ void WFNOperator::clear_tp_s_lists() {
 
 void WFNOperator::three_s_lists(DeterminantHashVec& wfn) {
 
+    timer ops("Triple sub. lists");
     size_t ndets = wfn.size();
     const det_hashvec& dets = wfn.wfn_hash();
     //  Timer aaa;

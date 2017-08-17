@@ -178,6 +178,7 @@ AdaptiveCI::AdaptiveCI(SharedWavefunction ref_wfn, Options& options,
 AdaptiveCI::~AdaptiveCI() {}
 
 void AdaptiveCI::set_aci_ints(SharedWavefunction ref_wfn, std::shared_ptr<ForteIntegrals> ints) {
+    timer int_timer("ACI:Form Integrals");
     ints_ = ints;
     shallow_copy(ref_wfn);
     reference_wavefunction_ = ref_wfn;
@@ -370,6 +371,7 @@ void AdaptiveCI::print_info() {
 }
 
 double AdaptiveCI::compute_energy() {
+    timer energy_timer("ACI:Energy");
     if (options_["ACI_QUIET_MODE"].has_changed()) {
         quiet_mode_ = options_.get_bool("ACI_QUIET_MODE");
     }
@@ -719,6 +721,7 @@ void AdaptiveCI::print_final(DeterminantHashVec& dets, SharedMatrix& PQ_evecs,
 
 void AdaptiveCI::default_find_q_space(DeterminantHashVec& P_space, DeterminantHashVec& PQ_space,
                                       SharedVector evals, SharedMatrix evecs) {
+    timer find_q("ACI:Build Model Space");
     Timer build;
 
     // This hash saves the determinant coupling to the model space eigenfunction
@@ -819,6 +822,7 @@ void AdaptiveCI::default_find_q_space(DeterminantHashVec& P_space, DeterminantHa
 
 void AdaptiveCI::find_q_space(DeterminantHashVec& P_space, DeterminantHashVec& PQ_space, int nroot,
                               SharedVector evals, SharedMatrix evecs) {
+    timer find_q("ACI:Build Model Space");
     Timer t_ms_build;
 
     // This hash saves the determinant coupling to the model space eigenfunction

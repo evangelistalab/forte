@@ -1212,6 +1212,7 @@ void SparseCISolver::set_sigma_method(std::string value) { sigma_method_ = value
 void SparseCISolver::diagonalize_hamiltonian(const std::vector<STLBitsetDeterminant>& space,
                                              SharedVector& evals, SharedMatrix& evecs, int nroot,
                                              int multiplicity, DiagonalizationMethod diag_method) {
+    timer diag("H Diagonalization");
     if (space.size() <= 200 or diag_method == Full) {
         diagonalize_full(space, evals, evecs, nroot, multiplicity);
     } else {
@@ -1223,6 +1224,7 @@ void SparseCISolver::diagonalize_hamiltonian_map(const DeterminantHashVec& space
                                                  SharedVector& evals, SharedMatrix& evecs,
                                                  int nroot, int multiplicity,
                                                  DiagonalizationMethod diag_method) {
+    timer diag("H Diagonalization");
     if (space.size() <= 200 or diag_method == Full) {
         const std::vector<STLBitsetDeterminant> dets = space.determinants();
         diagonalize_full(dets, evals, evecs, nroot, multiplicity);
