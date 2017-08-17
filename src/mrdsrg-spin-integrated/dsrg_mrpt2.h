@@ -49,12 +49,13 @@
 #include "../mrdsrg-helper/dsrg_source.h"
 #include "../stl_bitset_determinant.h"
 #include "../fci/fci_integrals.h"
+#include "master_mrdsrg.h"
 
 using namespace ambit;
 namespace psi {
 namespace forte {
 
-class DSRG_MRPT2 : public Wavefunction {
+class DSRG_MRPT2 : public MASTER_DSRG {
   public:
     /**
      * DSRG_MRPT2 Constructor
@@ -68,10 +69,13 @@ class DSRG_MRPT2 : public Wavefunction {
                std::shared_ptr<ForteIntegrals> ints, std::shared_ptr<MOSpaceInfo> mo_space_info);
 
     /// Destructor
-    ~DSRG_MRPT2();
+    virtual ~DSRG_MRPT2();
 
     /// Compute the DSRG-MRPT2 energy
-    double compute_energy();
+    virtual double compute_energy();
+
+    /// Compute effective Hamiltonian
+    virtual std::shared_ptr<FCIIntegrals> compute_Heff();
 
     /// Compute the DSRG-MRPT2 energy with relaxed reference (once)
     double compute_energy_relaxed();
@@ -80,13 +84,20 @@ class DSRG_MRPT2 : public Wavefunction {
     double compute_energy_multi_state();
 
     /// Set CASCI eigen values and eigen vectors for state averaging
-    void set_eigens(std::vector<std::vector<std::pair<SharedVector, double>>> eigens) {
+    void set_eigens(const std::vector<std::vector<std::pair<SharedVector, double>>>& eigens) {
         eigens_ = eigens;
     }
 
     /// Set determinants in the model space
-    void set_p_spaces(std::vector<std::vector<psi::forte::STLBitsetDeterminant>> p_spaces) {
+    void set_p_spaces(const std::vector<std::vector<psi::forte::STLBitsetDeterminant>>& p_spaces) {
         p_spaces_ = p_spaces;
+    }
+
+    /// Set unitary matrix (in active space) from original to semicanonical
+    void set_Uactv(ambit::Tensor& Ua, ambit::Tensor& Ub) {
+        Uactv_ = BTF_->build(tensor_type_, "Uactv", spin_cases({"aa"}));
+        Uactv_.block("aa")("pq") = Ua("pq");
+        Uactv_.block("AA")("pq") = Ub("pq");
     }
 
     /// Ignore semi-canonical testing in DSRG-MRPT2
@@ -128,62 +139,62 @@ class DSRG_MRPT2 : public Wavefunction {
     void cleanup();
     /// Print a summary of the options
     void print_summary();
-    /// Print levels
-    int print_;
+    //    /// Print levels
+    //    int print_;
 
-    /// Do multi-state computation?
-    bool multi_state_;
+    //    /// Do multi-state computation?
+    //    bool multi_state_;
     /// CASCI eigen values and eigen vectors for state averaging
     std::vector<std::vector<std::pair<SharedVector, double>>> eigens_;
     /// Determinants with different symmetries in the model space
     std::vector<std::vector<psi::forte::STLBitsetDeterminant>> p_spaces_;
 
-    /// The reference object
-    Reference reference_;
-    /// The energy of the reference
-    double Eref_;
-    /// The frozen-core energy
-    double frozen_core_energy_;
+    //    /// The reference object
+    //    Reference reference_;
+    //    /// The energy of the reference
+    //    double Eref_;
+    //    /// The frozen-core energy
+    //    double Efrzc_;
 
-    /// The molecular integrals required by MethodBase
-    std::shared_ptr<ForteIntegrals> ints_;
+    //    /// The molecular integrals required by MethodBase
+    //    std::shared_ptr<ForteIntegrals> ints_;
 
-    /// MO space info
-    std::shared_ptr<MOSpaceInfo> mo_space_info_;
+    //    /// MO space info
+    //    std::shared_ptr<MOSpaceInfo> mo_space_info_;
 
-    /// List of alpha core MOs
-    std::vector<size_t> acore_mos_;
-    /// List of alpha active MOs
-    std::vector<size_t> aactv_mos_;
-    /// List of alpha virtual MOs
-    std::vector<size_t> avirt_mos_;
-    /// List of beta core MOs
-    std::vector<size_t> bcore_mos_;
-    /// List of beta active MOs
-    std::vector<size_t> bactv_mos_;
-    /// List of beta virtual MOs
-    std::vector<size_t> bvirt_mos_;
+    //    /// List of alpha core MOs
+    //    std::vector<size_t> core_mos_;
+    //    /// List of alpha active MOs
+    //    std::vector<size_t> actv_mos_;
+    //    /// List of alpha virtual MOs
+    //    std::vector<size_t> virt_mos_;
+    //    /// List of beta core MOs
+    //    std::vector<size_t> core_mos_;
+    //    /// List of beta active MOs
+    //    std::vector<size_t> actv_mos_;
+    //    /// List of beta virtual MOs
+    //    std::vector<size_t> virt_mos_;
 
     /// List of active active occupied MOs (relative to active)
     std::vector<size_t> actv_occ_mos_;
     /// List of active active unoccupied MOs (relative to active)
     std::vector<size_t> actv_uocc_mos_;
 
-    /// Alpha core label
-    std::string acore_label_;
-    /// Alpha active label
-    std::string aactv_label_;
-    /// Alpha virtual label
-    std::string avirt_label_;
-    /// Beta core label
-    std::string bcore_label_;
-    /// Beta active label
-    std::string bactv_label_;
-    /// Beta virtual label
-    std::string bvirt_label_;
+    //    /// Alpha core label
+    //    std::string acore_label_;
+    //    /// Alpha active label
+    //    std::string aactv_label_;
+    //    /// Alpha virtual label
+    //    std::string avirt_label_;
+    //    /// Beta core label
+    //    std::string bcore_label_;
+    //    /// Beta active label
+    //    std::string bactv_label_;
+    //    /// Beta virtual label
+    //    std::string bvirt_label_;
 
-    /// Map from space label to list of MOs
-    std::map<char, std::vector<size_t>> label_to_spacemo_;
+    //    /// Map from space label to list of MOs
+    //    std::map<char, std::vector<size_t>> label_to_spacemo_;
 
     /// Fill up two-electron integrals
     void build_ints();
@@ -208,14 +219,14 @@ class DSRG_MRPT2 : public Wavefunction {
 
     // => DSRG related <= //
 
-    /// The flow parameter
-    double s_;
-    /// Source operator
-    std::string source_;
-    /// The dsrg source operator
-    std::shared_ptr<DSRG_SOURCE> dsrg_source_;
-    /// Threshold for the Taylor expansion of f(z) = (1-exp(-z^2))/z
-    double taylor_threshold_;
+    //    /// The flow parameter
+    //    double s_;
+    //    /// Source operator
+    //    std::string source_;
+    //    /// The dsrg source operator
+    //    std::shared_ptr<DSRG_SOURCE> dsrg_source_;
+    //    /// Threshold for the Taylor expansion of f(z) = (1-exp(-z^2))/z
+    //    double taylor_threshold_;
 
     /// Renormalize Fock matrix
     void renormalize_F();
@@ -224,19 +235,19 @@ class DSRG_MRPT2 : public Wavefunction {
 
     // => Tensors <= //
 
-    /// Kevin's Tensor Wrapper
-    std::shared_ptr<BlockedTensorFactory> BTF_;
-    /// Tensor type for AMBIT
-    TensorType tensor_type_;
+    //    /// Kevin's Tensor Wrapper
+    //    std::shared_ptr<BlockedTensorFactory> BTF_;
+    //    /// Tensor type for AMBIT
+    //    TensorType tensor_type_;
 
-    /// One-particle density matrix
-    ambit::BlockedTensor Gamma1_;
-    /// One-hole density matrix
-    ambit::BlockedTensor Eta1_;
-    /// Two-body denisty cumulant
-    ambit::BlockedTensor Lambda2_;
-    /// Three-body density cumulant
-    ambit::BlockedTensor Lambda3_;
+    //    /// One-particle density matrix
+    //    ambit::BlockedTensor Gamma1_;
+    //    /// One-hole density matrix
+    //    ambit::BlockedTensor Eta1_;
+    //    /// Two-body denisty cumulant
+    //    ambit::BlockedTensor Lambda2_;
+    //    /// Three-body density cumulant
+    //    ambit::BlockedTensor Lambda3_;
 
     /// One-eletron integral
     ambit::BlockedTensor Hoei_;
@@ -259,6 +270,8 @@ class DSRG_MRPT2 : public Wavefunction {
 
     /// Unitary matrix to block diagonal Fock
     ambit::BlockedTensor U_;
+    /// Active orbital rotation from semicanonicalizor (set from outside)
+    ambit::BlockedTensor Uactv_;
 
     // => Amplitude <= //
 
@@ -285,15 +298,15 @@ class DSRG_MRPT2 : public Wavefunction {
     /// Include which part of internal amplitudes?
     std::string internal_amp_select_;
 
-    /// Number of amplitudes will be printed in amplitude summary
-    int ntamp_;
+    //    /// Number of amplitudes will be printed in amplitude summary
+    //    int ntamp_;
     /// Print amplitudes summary
     void print_amp_summary(const std::string& name,
                            const std::vector<std::pair<std::vector<size_t>, double>>& list,
                            const double& norm, const size_t& number_nonzero);
 
-    /// Threshold for amplitudes considered as intruders
-    double intruder_tamp_;
+    //    /// Threshold for amplitudes considered as intruders
+    //    double intruder_tamp_;
     /// List of large amplitudes
     std::vector<std::pair<std::vector<size_t>, double>> lt1a_;
     std::vector<std::pair<std::vector<size_t>, double>> lt1b_;
@@ -319,34 +332,101 @@ class DSRG_MRPT2 : public Wavefunction {
     double E_VT2_4PH();
     double E_VT2_6();
 
+    // => Dipole related <= //
+
+    //    /// MO dipole integrals (including frozen orbitals)
+    //    std::vector<SharedMatrix> MOdipole_ints_;
+
+    //    /// frozen-core dipole
+    //    std::vector<double> frozen_core_dipoles_;
+    //    /// Nuclear dipole
+    //    SharedVector nuc_dipoles_;
+
+    //    /// reference dipoles
+    //    std::vector<double> ref_dipoles_;
+
+    //    /// compute reference dipoles
+    //    void compute_ref_dipoles();
+
+    //    /// MO dipole integrals (no frozen orbitals)
+    //    ambit::BlockedTensor Mx_, My_, Mz_;
+
+    /// DSRG transformed dipole integrals
+    std::vector<double> Mbar0_;
+    std::vector<ambit::BlockedTensor> Mbar1_;
+    std::vector<ambit::BlockedTensor> Mbar2_;
+    //    ambit::BlockedTensor Mbar1x_, Mbar1y_, Mbar1z_;
+    //    ambit::BlockedTensor Mbar2x_, Mbar2y_, Mbar2z_;
+
+    //    /// fill in dipole integrals from ints
+    //    void fill_bare_dipoles();
+
+    /// Transform dipole integrals
+    void compute_pt2_dipole(BlockedTensor& M, double& Mbar0, BlockedTensor& Mbar1,
+                            BlockedTensor& Mbar2);
+    void transform_dipoles();
+
     // => Reference relaxation <= //
 
-    /// Relaxation type
-    std::string relax_ref_;
+    //    /// Relaxation type
+    //    std::string relax_ref_;
 
-    /// Timings for computing the commutators
-    DSRG_TIME dsrg_time_;
+    //    /// Timings for computing the commutators
+    //    DSRG_TIME dsrg_time_;
 
     /// Compute zero-body Hbar truncated to 2nd-order
     double Hbar0_;
     /// Compute one-body term of commutator [H1, T1]
-    void H1_T1_C1(BlockedTensor& H1, BlockedTensor& T1, const double& alpha, BlockedTensor& C1);
+    void H1_T1_C1aa(BlockedTensor& H1, BlockedTensor& T1, const double& alpha, BlockedTensor& C1);
     /// Compute one-body term of commutator [H1, T2]
-    void H1_T2_C1(BlockedTensor& H1, BlockedTensor& T2, const double& alpha, BlockedTensor& C1);
+    void H1_T2_C1aa(BlockedTensor& H1, BlockedTensor& T2, const double& alpha, BlockedTensor& C1);
     /// Compute one-body term of commutator [H2, T1]
-    void H2_T1_C1(BlockedTensor& H2, BlockedTensor& T1, const double& alpha, BlockedTensor& C1);
+    void H2_T1_C1aa(BlockedTensor& H2, BlockedTensor& T1, const double& alpha, BlockedTensor& C1);
     /// Compute one-body term of commutator [H2, T2]
-    void H2_T2_C1(BlockedTensor& H2, BlockedTensor& T2, const double& alpha, BlockedTensor& C1);
+    void H2_T2_C1hh(BlockedTensor& H2, BlockedTensor& T2, const double& alpha, BlockedTensor& C1);
 
     /// Compute two-body term of commutator [H2, T1]
-    void H2_T1_C2(BlockedTensor& H2, BlockedTensor& T1, const double& alpha, BlockedTensor& C2);
+    void H2_T1_C2aaaa(BlockedTensor& H2, BlockedTensor& T1, const double& alpha, BlockedTensor& C2);
     /// Compute two-body term of commutator [H1, T2]
-    void H1_T2_C2(BlockedTensor& H1, BlockedTensor& T2, const double& alpha, BlockedTensor& C2);
+    void H1_T2_C2aaaa(BlockedTensor& H1, BlockedTensor& T2, const double& alpha, BlockedTensor& C2);
     /// Compute two-body term of commutator [H2, T2]
-    void H2_T2_C2(BlockedTensor& H2, BlockedTensor& T2, const double& alpha, BlockedTensor& C2);
+    void H2_T2_C2aaaa(BlockedTensor& H2, BlockedTensor& T2, const double& alpha, BlockedTensor& C2);
+
+    //    /// Compute zero-body term of commutator [H1, T1]
+    //    void H1_T1_C0(BlockedTensor& H1, BlockedTensor& T1, const double& alpha, double& C0);
+    //    /// Compute zero-body term of commutator [H1, T2]
+    //    void H1_T2_C0(BlockedTensor& H1, BlockedTensor& T2, const double& alpha, double& C0);
+    //    /// Compute zero-body term of commutator [H2, T1]
+    //    void H2_T1_C0(BlockedTensor& H2, BlockedTensor& T1, const double& alpha, double& C0);
+    //    /// Compute zero-body term of commutator [H2, T2]
+    //    void H2_T2_C0(BlockedTensor& H2, BlockedTensor& T2, const double& alpha, double& C0);
+
+    //    /// Compute one-body term of commutator [H1, T1]
+    //    void H1_T1_C1(BlockedTensor& H1, BlockedTensor& T1, const double& alpha, BlockedTensor&
+    //    C1);
+    //    /// Compute one-body term of commutator [H1, T2]
+    //    void H1_T2_C1(BlockedTensor& H1, BlockedTensor& T2, const double& alpha, BlockedTensor&
+    //    C1);
+    //    /// Compute one-body term of commutator [H2, T1]
+    //    void H2_T1_C1(BlockedTensor& H2, BlockedTensor& T1, const double& alpha, BlockedTensor&
+    //    C1);
+    //    /// Compute one-body term of commutator [H2, T2]
+    //    void H2_T2_C1(BlockedTensor& H2, BlockedTensor& T2, const double& alpha, BlockedTensor&
+    //    C1);
+
+    //    /// Compute two-body term of commutator [H2, T1]
+    //    void H2_T1_C2(BlockedTensor& H2, BlockedTensor& T1, const double& alpha, BlockedTensor&
+    //    C2);
+    //    /// Compute two-body term of commutator [H1, T2]
+    //    void H1_T2_C2(BlockedTensor& H1, BlockedTensor& T2, const double& alpha, BlockedTensor&
+    //    C2);
+    //    /// Compute two-body term of commutator [H2, T2]
+    //    void H2_T2_C2(BlockedTensor& H2, BlockedTensor& T2, const double& alpha, BlockedTensor&
+    //    C2);
 
     /// Compute three-body term of commutator [H2, T2]
-    void H2_T2_C3(BlockedTensor& H2, BlockedTensor& T2, const double& alpha, BlockedTensor& C3);
+    void H2_T2_C3aaaaaa(BlockedTensor& H2, BlockedTensor& T2, const double& alpha,
+                        BlockedTensor& C3);
 
     /// Transfer integrals for FCI
     void transfer_integrals();
@@ -386,6 +466,13 @@ class DSRG_MRPT2 : public Wavefunction {
     double compute_ms_1st_coupling(const std::string& name);
     /// Compute MS coupling <M|HT|N>
     double compute_ms_2nd_coupling(const std::string& name);
+
+    /// Rotate RDMs computed by p_spaces_ so that they are in the same basis as amplitudes
+    void rotate_1rdm(std::vector<double>& opdm_a, std::vector<double>& opdm_b);
+    void rotate_2rdm(std::vector<double>& tpdm_aa, std::vector<double>& tpdm_ab,
+                     std::vector<double>& tpdm_bb);
+    void rotate_3rdm(std::vector<double>& tpdm_aaa, std::vector<double>& tpdm_aab,
+                     std::vector<double>& tpdm_abb, std::vector<double>& tpdm_bbb);
 };
 }
 } // End Namespaces

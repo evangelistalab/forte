@@ -54,6 +54,7 @@ src/determinant_hashvector.cc
 src/dmrgscf.cc
 src/dmrgsolver.cc
 src/dynamic_bitset_determinant.cc
+src/dynamic_correlation.cc
 src/fci_mo.cc
 src/fcimc.cc
 src/finite_temperature.cc
@@ -120,6 +121,7 @@ src/mrdsrg-spin-adapted/dsrg_mrpt.cc
 src/mrdsrg-spin-adapted/dsrg_mrpt_2nd.cc
 src/mrdsrg-spin-adapted/dsrg_mrpt_amp.cc
 src/mrdsrg-spin-adapted/dsrg_mrpt_comm.cc
+src/mrdsrg-spin-integrated/master_mrdsrg.cc
 src/mrdsrg-spin-integrated/dsrg_mrpt2.cc
 src/mrdsrg-spin-integrated/dsrg_mrpt2_ms.cc
 src/mrdsrg-spin-integrated/dsrg_mrpt3.cc

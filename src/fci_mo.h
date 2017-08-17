@@ -94,12 +94,8 @@ class FCI_MO : public Wavefunction {
 
     /// Compute state-specific CASCI energy
     double compute_ss_energy();
-    /// Compute state_specific semi-canonical CASCI energy
-    double compute_canonical_ss_energy();
     /// Compute state-averaged CASCI energy
     double compute_sa_energy();
-    /// Compute semi-canonical state-averaged CASCI energy
-    double compute_canonical_sa_energy();
 
     /// Returns the reference object
     Reference reference(const int& level = 3);
@@ -141,7 +137,7 @@ class FCI_MO : public Wavefunction {
     vecdet p_space() { return determinant_; }
 
     /// Return P spaces for states with different symmetry
-    std::vector<vecdet> p_spaces() { return FCI_MO::p_spaces_; }
+    std::vector<vecdet> p_spaces() { return p_spaces_; }
 
     /// Return the orbital extents of the current state
     std::vector<vector<vector<double>>> orb_extents() { return compute_orbital_extents(); }
@@ -435,7 +431,7 @@ class FCI_MO : public Wavefunction {
     /// Transition dipoles
     map<string, std::vector<double>> trans_dipole_;
     /// Compute transition dipole
-    void compute_trans_dipole();
+    void compute_transition_dipole();
 
     /// Compute oscillator strength
     void compute_oscillator_strength();

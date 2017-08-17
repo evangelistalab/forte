@@ -166,23 +166,35 @@ void SemiCanonical::semicanonicalize(Reference& reference, const int& max_rdm_le
     bool semi = check_fock_matrix();
 
     if (semi) {
+        // set all U to identity
         Ua_->identity();
         Ub_->identity();
+
+        Ua_t_ = ambit::Tensor::build(ambit::CoreTensor, "Ua", {nact_, nact_});
+        Ua_t_.iterate([&](const std::vector<size_t>& i, double& value) {
+            if (i[0] == i[1])
+                value = 1.0;
+        });
+        Ub_t_ = ambit::Tensor::build(ambit::CoreTensor, "Ub", {nact_, nact_});
+        Ub_t_.iterate([&](const std::vector<size_t>& i, double& value) {
+            if (i[0] == i[1])
+                value = 1.0;
+        });
         outfile->Printf("\n  Orbitals are already semicanonicalized.");
     } else {
         // 2. Build transformation matrices from diagononalizing blocks in F
 
         // This transforms only within ACTIVE MOs
         // Use ambit Tensor here so that the ambit mo_spaces remains the same
-        ambit::Tensor Ua_t = ambit::Tensor::build(ambit::CoreTensor, "Ua", {nact_, nact_});
-        ambit::Tensor Ub_t = ambit::Tensor::build(ambit::CoreTensor, "Ub", {nact_, nact_});
+        Ua_t_ = ambit::Tensor::build(ambit::CoreTensor, "Ua", {nact_, nact_});
+        Ub_t_ = ambit::Tensor::build(ambit::CoreTensor, "Ub", {nact_, nact_});
 
-        build_transformation_matrices(Ua_, Ub_, Ua_t, Ub_t);
+        build_transformation_matrices(Ua_, Ub_, Ua_t_, Ub_t_);
 
         // 3. Retransform integrals and cumulants/RDMs
         if (transform) {
             transform_ints(Ua_, Ub_);
-            transform_reference(Ua_t, Ub_t, reference, max_rdm_level);
+            transform_reference(Ua_t_, Ub_t_, reference, max_rdm_level);
         }
 
         outfile->Printf("\n  SemiCanonicalize takes %8.6f s.", SemiCanonicalize.get());

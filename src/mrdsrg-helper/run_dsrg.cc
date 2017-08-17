@@ -63,19 +63,24 @@ void set_DSRG_options(ForteOptions& foptions) {
     foptions.add_str("H0TH", "FDIAG", {"FDIAG", "FFULL", "FDIAG_VACTV", "FDIAG_VDIAG"},
                      "Zeroth-order Hamiltonian of DSRG-MRPT (used in mrdsrg code)");
 
-    /*- T1 Amplitudes -*/
-    foptions.add_str("T1_AMP", "DSRG", {"DSRG", "SRG", "ZERO"},
-                     "The way of forming T1 amplitudes (used in toy code mcsrgpt2)");
+    /*- Compute DSRG dipole momemts -*/
+    foptions.add_bool("DSRG_DIPOLE", false, "Compute (if true) DSRG dipole moments");
+
+    /*- Max Iteration for nonperturbative theory -*/
+    foptions.add_int("DSRG_MAXITER", 50, "Max iterations for MR-DSRG amplitudes update");
+
+    /*- The residue convergence criterion -*/
+    foptions.add_double("R_CONVERGENCE", 1.0e-6, "Convergence criteria for amplitudes");
 
     /*- Reference Relaxation -*/
     foptions.add_str("RELAX_REF", "NONE", {"NONE", "ONCE", "TWICE", "ITERATE"},
                      "Relax the reference for MR-DSRG (used in dsrg-mrpt2/3, mrdsrg)");
 
     /*- Max Iteration for Reference Relaxation -*/
-    foptions.add_int("MAXITER_RELAX_REF", 10, "Max macro iterations for DSRG reference relaxation");
+    foptions.add_int("MAXITER_RELAX_REF", 15, "Max macro iterations for DSRG reference relaxation");
 
     /*- DSRG Taylor Expansion Threshold -*/
-    foptions.add_int("TAYLOR_THRESHOLD", 3, "DSRG Taylor expansion threshold");
+    foptions.add_int("TAYLOR_THRESHOLD", 3, "Taylor expansion threshold for small denominator");
 
     /*- Print N Largest T Amplitudes -*/
     foptions.add_int("NTAMP", 15, "Number of amplitudes printed in the summary");
@@ -83,9 +88,6 @@ void set_DSRG_options(ForteOptions& foptions) {
     /*- T Threshold for Intruder States -*/
     foptions.add_double("INTRUDER_TAMP", 0.10,
                         "Threshold for amplitudes considered as intruders for warning");
-
-    /*- The residue convergence criterion -*/
-    foptions.add_double("R_CONVERGENCE", 1.0e-6, "Convergence criteria for amplitudes");
 
     /*- DSRG Transformation Type -*/
     foptions.add_str("DSRG_TRANS_TYPE", "UNITARY", {"UNITARY", "CC"}, "DSRG transformation type");
@@ -132,6 +134,10 @@ void set_DSRG_options(ForteOptions& foptions) {
      *  - OOVV: pure external (O->V; OO->VV) -*/
     foptions.add_str("INTERNAL_AMP_SELECT", "AUTO", {"AUTO", "ALL", "OOVV"},
                      "Excitation types considered when internal amplitudes are included");
+
+    /*- T1 Amplitudes -*/
+    foptions.add_str("T1_AMP", "DSRG", {"DSRG", "SRG", "ZERO"},
+                     "The way of forming T1 amplitudes (used in toy code mcsrgpt2)");
 
     /*- Intruder State Avoidance b Parameter -*/
     foptions.add_double("ISA_B", 0.02, "Intruder state avoidance parameter "

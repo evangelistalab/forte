@@ -66,6 +66,12 @@ class SemiCanonical {
     /// Return the beta rotation matrix
     SharedMatrix Ub() { return Ub_; }
 
+    /// Return the alpha rotation matrix in the active space
+    ambit::Tensor Ua_t() { return Ua_t_; }
+
+    /// Return the beta rotation matrix in the active space
+    ambit::Tensor Ub_t() { return Ub_t_; }
+
   private:
     void startup();
 
@@ -123,6 +129,10 @@ class SemiCanonical {
     SharedMatrix Ua_;
     /// Unitary matrix for beta orbital rotation
     SharedMatrix Ub_;
+    /// Unitary matrix for alpha orbital rotation in the active space
+    ambit::Tensor Ua_t_;
+    /// Unitary matrix for beta orbital rotation in the active space
+    ambit::Tensor Ub_t_;
 
     /// Build the generalized fock matrix
     void build_fock_matrix(Reference& reference);

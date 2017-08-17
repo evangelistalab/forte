@@ -97,6 +97,7 @@ namespace forte {
 void forte_old_methods(SharedWavefunction ref_wfn, Options& options,
                        std::shared_ptr<ForteIntegrals> ints,
                        std::shared_ptr<MOSpaceInfo> mo_space_info, int my_proc) {
+    timer method_timer("Method");
     if (options.get_str("ALTERNATIVE_CASSCF") == "FTHF") {
         auto FTHF = std::make_shared<FiniteTemperatureHF>(ref_wfn, options, mo_space_info);
         FTHF->compute_energy();
@@ -311,12 +312,26 @@ void forte_old_methods(SharedWavefunction ref_wfn, Options& options,
             fci_mo->compute_energy();
             Reference reference = fci_mo->reference(max_rdm_level);
 
+            size_t na = mo_space_info->get_dimension("ACTIVE").sum();
+            ambit::Tensor Ua = ambit::Tensor::build(CoreTensor, "Uactv a", {na, na});
+            ambit::Tensor Ub = ambit::Tensor::build(CoreTensor, "Uactv b", {na, na});
+            Ua.iterate([&](const std::vector<size_t>& i, double& value) {
+                if (i[0] == i[1])
+                    value = 1.0;
+            });
+            Ub.iterate([&](const std::vector<size_t>& i, double& value) {
+                if (i[0] == i[1])
+                    value = 1.0;
+            });
+
             if (options.get_bool("SEMI_CANONICAL")) {
                 SemiCanonical semi(ref_wfn, ints, mo_space_info);
                 if (actv_type == "CIS" || actv_type == "CISD") {
                     semi.set_actv_dims(fci_mo->actv_docc(), fci_mo->actv_virt());
                 }
                 semi.semicanonicalize(reference, max_rdm_level);
+                Ua = semi.Ua_t();
+                Ub = semi.Ub_t();
             }
 
             std::shared_ptr<DSRG_MRPT2> dsrg_mrpt2 =
@@ -324,6 +339,7 @@ void forte_old_methods(SharedWavefunction ref_wfn, Options& options,
             if (options["AVG_STATE"].size() != 0) {
                 dsrg_mrpt2->set_p_spaces(fci_mo->p_spaces());
                 dsrg_mrpt2->set_eigens(fci_mo->eigens());
+                dsrg_mrpt2->set_Uactv(Ua, Ub);
                 dsrg_mrpt2->compute_energy_multi_state();
             } else {
                 if (options.get_str("RELAX_REF") != "NONE") {
