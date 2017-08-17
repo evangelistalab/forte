@@ -18,12 +18,12 @@
     -----------------------------------------------------------------------
 
 
-    Psi4 started on: Wednesday, 16 August 2017 01:33PM
+    Psi4 started on: Thursday, 17 August 2017 03:20PM
 
-    Process ID:  16801
+    Process ID:  11977
     PSIDATADIR: /opt/software/psi4/psi4-github-bin-g++-4.9.0-opt-c++11/share/psi4
     Memory:     500.0 MiB
-    Threads:    16
+    Threads:    1
     
   ==> Input File <==
 
@@ -98,8 +98,8 @@ compare_values(refdsrg,get_variable("CURRENT ENERGY"),8,"MRDSRG relaxed energy")
     atoms 2 entry H          line    21 file /opt/software/psi4/psi4-github-bin-g++-4.9.0-opt-c++11/share/psi4/basis/3-21g.gbs 
 
 
-*** tstart() called on node21
-*** at Wed Aug 16 13:33:52 2017
+*** tstart() called on node18
+*** at Thu Aug 17 15:20:21 2017
 
 
          ------------------------------------------
@@ -429,13 +429,13 @@ compare_values(refdsrg,get_variable("CURRENT ENERGY"),8,"MRDSRG relaxed energy")
   MCSCF Execution Completed.
 
 
-*** tstop() called on node21 at Wed Aug 16 13:33:52 2017
+*** tstop() called on node18 at Thu Aug 17 15:20:21 2017
 Module time:
-	user time   =       0.40 seconds =       0.01 minutes
+	user time   =       0.08 seconds =       0.00 minutes
 	system time =       0.04 seconds =       0.00 minutes
 	total time  =          0 seconds =       0.00 minutes
 Total time:
-	user time   =       0.40 seconds =       0.01 minutes
+	user time   =       0.08 seconds =       0.00 minutes
 	system time =       0.04 seconds =       0.00 minutes
 	total time  =          0 seconds =       0.00 minutes
 	MCSCF energy......................................................PASSED
@@ -457,7 +457,7 @@ Calling plugin forte.so.
   ----------------------------------------------------------------------------
   A suite of quantum chemistry methods for strongly correlated electrons
 
-    git branch: DSRG_DF - git commit: 28c814d
+    git branch: DSRG_DF - git commit: ed4a1dd
 
   Developed by:
     Francesco A. Evangelista, Chenyang Li, Kevin P. Hannon,
@@ -548,16 +548,16 @@ Calling plugin forte.so.
   Cholesky integrals time
  Computing the Cholesky Vectors 
 
-    Computing CD Integrals               ......Done. Timing        0.018859 s
+    Computing CD Integrals               ......Done. Timing        0.019653 s
  Need 0.000039 GB to store cd integrals in core
 
  Number of cholesky vectors 43 to satisfy       0.000100000000 tolerance
 
   Frozen-core energy            -75.818535537076 a.u.
 
-  FrozenOneBody Operator takes  0.07593300 s
+  FrozenOneBody Operator takes  0.05186300 s
   Resorting integrals after freezing core.
-  CholeskyIntegrals take 0.22380100
+  CholeskyIntegrals take 0.08590600
 
                 -----------------------------------------------
                   String-based Full Configuration Interaction
@@ -611,7 +611,7 @@ Calling plugin forte.so.
       2      -98.863138509588  0.000  singlet
       3      -98.545347906083  0.000  singlet
   ---------------------------------------------
-  Timing for initial guess  =      0.007 s
+  Timing for initial guess  =      0.004 s
 
   Projecting out root 1
   ==> Diagonalizing Hamiltonian <==
@@ -647,7 +647,7 @@ Calling plugin forte.so.
          Chenyang Li, Jeffrey B. Schriber and Francesco A. Evangelista
        -----------------------------------------------------------------
 
-  Took 0.001409 s to build Fock matrix
+  Took 0.001419 s to build Fock matrix
 
   ==> Checking Fock Matrix Diagonal Blocks <==
 
@@ -723,7 +723,7 @@ Calling plugin forte.so.
  Integrals are about to be computed.
  Computing the Cholesky Vectors 
 
-    Computing CD Integrals               ......Done. Timing        0.011286 s
+    Computing CD Integrals               ......Done. Timing        0.020480 s
  Need 0.000039 GB to store cd integrals in core
 
  Number of cholesky vectors 43 to satisfy       0.000100000000 tolerance
@@ -731,16 +731,16 @@ Calling plugin forte.so.
  Integrals are about to be updated.
   Frozen-core energy            -75.818535537076 a.u.
 
-  FrozenOneBody Operator takes  0.07902200 s
+  FrozenOneBody Operator takes  0.05161200 s
   Resorting integrals after freezing core.
-  Frozen Orbitals takes     0.087 s.
+  Frozen Orbitals takes     0.053 s.
 
   ==> Reference Transformation to Semicanonical Basis <==
 
     Transformed 1 cumulants.
     Transformed 2 cumulants and RDMs.
     Transformed 3 cumulants.
-  SemiCanonicalize takes 0.635348 s.
+  SemiCanonicalize takes 0.383800 s.
 
            ----------------------------------------------------------
              Multireference Driven Similarity Renormalization Group
@@ -788,7 +788,7 @@ Calling plugin forte.so.
 
   ==> Build Initial Amplitude from DSRG-MRPT2 <==
 
-    Computing T2 amplitudes ...          Done. Timing      0.003 s
+    Computing T2 amplitudes ...          Done. Timing      0.002 s
     Computing T1 amplitudes ...          Done. Timing      0.002 s
 
   ==> First-Order Excitation Amplitudes Summary <==
@@ -878,16 +878,16 @@ Calling plugin forte.so.
            ---------------------------  ---------------------  ---------------------  -----------------
     Iter.        Corr.         Delta       Hbar1      Hbar2        T1         T2        Hbar     Amp.  
     ---------------------------------------------------------------------------------------------------
-        0   -0.089482873674 -8.948e-02   1.271e-01  6.339e-01   3.204e-02  1.660e-01     6.439    0.012
-        1   -0.092382882110 -2.900e-03   1.327e-01  2.294e-01   1.392e-02  4.450e-02     6.400    0.012
-        2   -0.092814064887 -4.312e-04   1.143e-01  1.606e-01   3.114e-03  1.415e-02     5.777    0.012
-        3   -0.092900126839 -8.606e-05   1.166e-01  1.605e-01   1.434e-03  4.576e-03     5.794    0.012
-        4   -0.092896129793  3.997e-06   1.154e-01  1.577e-01   4.100e-04  1.459e-03     5.842    0.012
-        5   -0.092896019116  1.107e-07   1.156e-01  1.582e-01   1.583e-04  4.673e-04     5.789    0.012 -> DIIS
-        6   -0.092895118732  9.004e-07   1.155e-01  1.579e-01   4.470e-05  1.503e-04     5.784    0.012 -> DIIS
-        7   -0.092894547272  5.715e-07   1.155e-01  1.579e-01   9.962e-07  5.087e-06     5.786    0.012 -> DIIS
-        8   -0.092894598004 -5.073e-08   1.155e-01  1.579e-01   4.792e-07  1.282e-06     5.788    0.012 -> DIIS
-        9   -0.092894596477  1.527e-09   1.155e-01  1.579e-01   7.929e-08  3.147e-07     5.778    0.012
+        0   -0.089482873674 -8.948e-02   1.271e-01  6.339e-01   3.204e-02  1.660e-01     5.041    0.010
+        1   -0.092382882110 -2.900e-03   1.327e-01  2.294e-01   1.392e-02  4.450e-02     4.876    0.010
+        2   -0.092814064887 -4.312e-04   1.143e-01  1.606e-01   3.114e-03  1.415e-02     4.204    0.010
+        3   -0.092900126839 -8.606e-05   1.166e-01  1.605e-01   1.434e-03  4.576e-03     4.216    0.010
+        4   -0.092896129793  3.997e-06   1.154e-01  1.577e-01   4.100e-04  1.459e-03     4.205    0.010
+        5   -0.092896019116  1.107e-07   1.156e-01  1.582e-01   1.583e-04  4.673e-04     4.211    0.010 -> DIIS
+        6   -0.092895118732  9.004e-07   1.155e-01  1.579e-01   4.470e-05  1.503e-04     4.206    0.010 -> DIIS
+        7   -0.092894547272  5.715e-07   1.155e-01  1.579e-01   9.962e-07  5.087e-06     4.193    0.010 -> DIIS
+        8   -0.092894598004 -5.073e-08   1.155e-01  1.579e-01   4.792e-07  1.282e-06     4.193    0.011 -> DIIS
+        9   -0.092894596477  1.527e-09   1.155e-01  1.579e-01   7.929e-08  3.147e-07     4.198    0.010
     ---------------------------------------------------------------------------------------------------
 
   ==> MR-LDSRG(2) Energy Summary <==
@@ -970,13 +970,10 @@ Calling plugin forte.so.
 
              [H1, T1]    [H1, T2]    [H2, T1]    [H2, T2]
     -----------------------------------------------------
-    -> C0       0.000       0.106       0.000       3.291
-    -> C1       0.000       0.745       0.000      14.203
-    -> C2                   2.949       0.000      35.959
+    -> C0       0.000       0.075       0.000       2.420
+    -> C1       0.000       0.565       0.000      10.763
+    -> C2                   2.146       0.000      26.098
     -----------------------------------------------------
-
-
-  Your calculation took 60.49720400 seconds
 	MRDSRG relaxed energy.............................................PASSED
 
 *** Psi4 exiting successfully. Buy a developer a beer!
