@@ -1754,6 +1754,8 @@ void DSRG_MRPT2::transform_dipoles() {
 
 std::shared_ptr<FCIIntegrals> DSRG_MRPT2::compute_Heff() {
     // TODO: implement this function
+    std::shared_ptr<FCIIntegrals> Heff;
+    return Heff;
 }
 
 void DSRG_MRPT2::compute_pt2_dipole(BlockedTensor& M, double& Mbar0, BlockedTensor& Mbar1,
