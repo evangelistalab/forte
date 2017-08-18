@@ -39,32 +39,11 @@ void MASTER_DSRG::startup() {
     dsrg_time_ = DSRG_TIME();
 
     // prepare density matrix and cumulants
-    outfile->Printf("\n    Preparing ambit tensors for density cumulants ...... ");
-    Eta1_ = BTF_->build(tensor_type_, "Eta1", spin_cases({"aa"}));
-    Gamma1_ = BTF_->build(tensor_type_, "Gamma1", spin_cases({"aa"}));
-    Lambda2_ = BTF_->build(tensor_type_, "Lambda2", spin_cases({"aaaa"}));
-    fill_density();
-    outfile->Printf("Done");
+    init_density();
 
     // setup bare dipole tensors and compute reference dipoles
     if (do_dm_) {
-        outfile->Printf("\n    Preparing ambit tensors for dipole moments ...... ");
-        dm_.clear();
-        dm_nuc_ = std::vector<double>(3, 0.0);
-        SharedVector dm_nuc = DipoleInt::nuclear_contribution(Process::environment.molecule(),
-                                                              Vector3(0.0, 0.0, 0.0));
-        for (int i = 0; i < 3; ++i) {
-            BlockedTensor dmi =
-                BTF_->build(tensor_type_, "Dipole " + dm_dirs_[i], spin_cases({"gg"}));
-            dm_.emplace_back(dmi);
-            dm_nuc_[i] = dm_nuc->get(i);
-        }
-
-        std::vector<SharedMatrix> dm_a = ints_->compute_MOdipole_ints(true, true);
-        std::vector<SharedMatrix> dm_b = ints_->compute_MOdipole_ints(false, true);
-        fill_MOdm(dm_a, dm_b);
-        compute_dm_ref();
-        outfile->Printf("Done");
+        init_dm_ints();
     }
 }
 
@@ -178,6 +157,15 @@ void MASTER_DSRG::set_ambit_MOSpace() {
     outfile->Printf("Done");
 }
 
+void MASTER_DSRG::init_density() {
+    outfile->Printf("\n    Preparing tensors for density cumulants ...... ");
+    Eta1_ = BTF_->build(tensor_type_, "Eta1", spin_cases({"aa"}));
+    Gamma1_ = BTF_->build(tensor_type_, "Gamma1", spin_cases({"aa"}));
+    Lambda2_ = BTF_->build(tensor_type_, "Lambda2", spin_cases({"aaaa"}));
+    fill_density();
+    outfile->Printf("Done");
+}
+
 void MASTER_DSRG::fill_density() {
     // 1-particle density (make a copy)
     Gamma1_.block("aa")("pq") = reference_.L1a()("pq");
@@ -196,6 +184,42 @@ void MASTER_DSRG::fill_density() {
     Lambda2_.block("aaaa")("pqrs") = reference_.L2aa()("pqrs");
     Lambda2_.block("aAaA")("pqrs") = reference_.L2ab()("pqrs");
     Lambda2_.block("AAAA")("pqrs") = reference_.L2bb()("pqrs");
+}
+
+void MASTER_DSRG::init_dm_ints() {
+    outfile->Printf("\n    Preparing ambit tensors for dipole moments ...... ");
+    dm_.clear();
+    dm_nuc_ = std::vector<double>(3, 0.0);
+    SharedVector dm_nuc =
+        DipoleInt::nuclear_contribution(Process::environment.molecule(), Vector3(0.0, 0.0, 0.0));
+    for (int i = 0; i < 3; ++i) {
+        dm_nuc_[i] = dm_nuc->get(i);
+
+        BlockedTensor dm_i = BTF_->build(tensor_type_, "Dipole " + dm_dirs_[i], spin_cases({"gg"}));
+        dm_.emplace_back(dm_i);
+    }
+
+    std::vector<SharedMatrix> dm_a = ints_->compute_MOdipole_ints(true, true);
+    std::vector<SharedMatrix> dm_b = ints_->compute_MOdipole_ints(false, true);
+    fill_MOdm(dm_a, dm_b);
+    compute_dm_ref();
+
+    // prepare transformed dipole integrals
+    if (multi_state_ || (relax_ref_ != "NONE")) {
+        Mbar0_ = std::vector<double>(3, 0.0);
+        Mbar1_.clear();
+        Mbar2_.clear();
+        for (int i = 0; i < 3; ++i) {
+            BlockedTensor Mbar1 =
+                BTF_->build(tensor_type_, "DSRG DM1 " + dm_dirs_[i], spin_cases({"aa"}));
+            Mbar1_.emplace_back(Mbar1);
+            BlockedTensor Mbar2 =
+                BTF_->build(tensor_type_, "DSRG DM2 " + dm_dirs_[i], spin_cases({"aaaa"}));
+            Mbar2_.emplace_back(Mbar2);
+        }
+    }
+
+    outfile->Printf("Done");
 }
 
 void MASTER_DSRG::fill_MOdm(std::vector<SharedMatrix>& dm_a, std::vector<SharedMatrix>& dm_b) {
@@ -239,6 +263,7 @@ void MASTER_DSRG::fill_MOdm(std::vector<SharedMatrix>& dm_a, std::vector<SharedM
 
 void MASTER_DSRG::compute_dm_ref() {
     dm_ref_ = std::vector<double>(3, 0.0);
+    do_dm_dirs_.clear();
     for (int z = 0; z < 3; ++z) {
         double dipole = dm_frzc_[z];
         for (const std::string& block : {"cc", "CC"}) {
@@ -251,7 +276,132 @@ void MASTER_DSRG::compute_dm_ref() {
         dipole += dm_[z]["uv"] * Gamma1_["uv"];
         dipole += dm_[z]["UV"] * Gamma1_["UV"];
         dm_ref_[z] = dipole;
+
+        do_dm_dirs_.push_back(std::fabs(dipole) > 1.0e-12 ? true : false);
     }
+}
+
+void MASTER_DSRG::deGNO_ints(const std::string& name, double& H0, BlockedTensor& H1,
+                             BlockedTensor& H2) {
+    print_h2("De-Normal-Order DSRG Transformed " + name);
+
+    // compute scalar
+    ForteTimer t0;
+    outfile->Printf("\n    %-40s ... ", "Computing the scalar term");
+
+    // scalar from H1
+    double scalar1 = 0.0;
+    scalar1 -= H1["vu"] * Gamma1_["uv"];
+    scalar1 -= H1["VU"] * Gamma1_["UV"];
+
+    // scalar from H2
+    double scalar2 = 0.0;
+    scalar2 += 0.5 * Gamma1_["uv"] * H2["vyux"] * Gamma1_["xy"];
+    scalar2 += 0.5 * Gamma1_["UV"] * H2["VYUX"] * Gamma1_["XY"];
+    scalar2 += Gamma1_["uv"] * H2["vYuX"] * Gamma1_["XY"];
+
+    scalar2 -= 0.25 * H2["xyuv"] * Lambda2_["uvxy"];
+    scalar2 -= 0.25 * H2["XYUV"] * Lambda2_["UVXY"];
+    scalar2 -= H2["xYuV"] * Lambda2_["uVxY"];
+
+    H0 += scalar1 + scalar2;
+    outfile->Printf("Done. Timing %8.3f s", t0.elapsed());
+
+    // compute 1-body term
+    ForteTimer t1;
+    outfile->Printf("\n    %-40s ... ", "Computing the 1-body term");
+
+    H1["uv"] -= H2["uxvy"] * Gamma1_["yx"];
+    H1["uv"] -= H2["uXvY"] * Gamma1_["YX"];
+    H1["UV"] -= H2["xUyV"] * Gamma1_["yx"];
+    H1["UV"] -= H2["UXVY"] * Gamma1_["YX"];
+    outfile->Printf("Done. Timing %8.3f s", t1.elapsed());
+}
+
+void MASTER_DSRG::deGNO_ints(const std::string& name, double& H0, BlockedTensor& H1,
+                             BlockedTensor& H2, BlockedTensor& H3) {
+    print_h2("De-Normal-Order DSRG Transformed " + name);
+
+    // compute scalar
+    ForteTimer t0;
+    outfile->Printf("\n    %-40s ... ", "Computing the scalar term");
+
+    // scalar from H1
+    double scalar1 = 0.0;
+    scalar1 -= H1["vu"] * Gamma1_["uv"];
+    scalar1 -= H1["VU"] * Gamma1_["UV"];
+
+    // scalar from H2
+    double scalar2 = 0.0;
+    scalar2 += 0.5 * Gamma1_["uv"] * H2["vyux"] * Gamma1_["xy"];
+    scalar2 += 0.5 * Gamma1_["UV"] * H2["VYUX"] * Gamma1_["XY"];
+    scalar2 += Gamma1_["uv"] * H2["vYuX"] * Gamma1_["XY"];
+
+    scalar2 -= 0.25 * H2["xyuv"] * Lambda2_["uvxy"];
+    scalar2 -= 0.25 * H2["XYUV"] * Lambda2_["UVXY"];
+    scalar2 -= H2["xYuV"] * Lambda2_["uVxY"];
+
+    // scalar from H3
+    double scalar3 = 0.0;
+    scalar3 -= (1.0 / 36.0) * H3.block("aaaaaa")("xyzuvw") * reference_.L3aaa()("xyzuvw");
+    scalar3 -= (1.0 / 36.0) * H3.block("AAAAAA")("XYZUVW") * reference_.L3bbb()("XYZUVW");
+    scalar3 -= 0.25 * H3.block("aaAaaA")("xyZuvW") * reference_.L3aab()("xyZuvW");
+    scalar3 -= 0.25 * H3.block("aAAaAA")("xYZuVW") * reference_.L3abb()("xYZuVW");
+
+    // TODO: form one-body intermediate for scalar and 1-body
+    scalar3 += 0.25 * H3["xyzuvw"] * Lambda2_["uvxy"] * Gamma1_["wz"];
+    scalar3 += 0.25 * H3["XYZUVW"] * Lambda2_["UVXY"] * Gamma1_["WZ"];
+    scalar3 += 0.25 * H3["xyZuvW"] * Lambda2_["uvxy"] * Gamma1_["WZ"];
+    scalar3 += H3["xzYuwV"] * Lambda2_["uVxY"] * Gamma1_["wz"];
+    scalar3 += 0.25 * H3["zXYwUV"] * Lambda2_["UVXY"] * Gamma1_["wz"];
+    scalar3 += H3["xZYuWV"] * Lambda2_["uVxY"] * Gamma1_["WZ"];
+
+    scalar3 -= (1.0 / 6.0) * H3["xyzuvw"] * Gamma1_["ux"] * Gamma1_["vy"] * Gamma1_["wz"];
+    scalar3 -= (1.0 / 6.0) * H3["XYZUVW"] * Gamma1_["UX"] * Gamma1_["VY"] * Gamma1_["WZ"];
+    scalar3 -= 0.5 * H3["xyZuvW"] * Gamma1_["ux"] * Gamma1_["vy"] * Gamma1_["WZ"];
+    scalar3 -= 0.5 * H3["xYZuVW"] * Gamma1_["ux"] * Gamma1_["VY"] * Gamma1_["WZ"];
+
+    H0 += scalar1 + scalar2 + scalar3;
+    outfile->Printf("Done. Timing %8.3f s", t0.elapsed());
+
+    // compute 1-body term
+    ForteTimer t1;
+    outfile->Printf("\n    %-40s ... ", "Computing the 1-body term");
+
+    // 1-body from H2
+    H1["uv"] -= H2["uxvy"] * Gamma1_["yx"];
+    H1["uv"] -= H2["uXvY"] * Gamma1_["YX"];
+    H1["UV"] -= H2["xUyV"] * Gamma1_["yx"];
+    H1["UV"] -= H2["UXVY"] * Gamma1_["YX"];
+
+    // 1-body from H3
+    H1["uv"] += 0.5 * H3["uyzvxw"] * Gamma1_["xy"] * Gamma1_["wz"];
+    H1["uv"] += 0.5 * H3["uYZvXW"] * Gamma1_["XY"] * Gamma1_["WZ"];
+    H1["uv"] += H3["uyZvxW"] * Gamma1_["xy"] * Gamma1_["WZ"];
+
+    H1["UV"] += 0.5 * H3["UYZVXW"] * Gamma1_["XY"] * Gamma1_["WZ"];
+    H1["UV"] += 0.5 * H3["yzUxwV"] * Gamma1_["xy"] * Gamma1_["wz"];
+    H1["UV"] += H3["yUZxVW"] * Gamma1_["xy"] * Gamma1_["WZ"];
+
+    H1["uv"] -= 0.25 * H3["uxyvwz"] * Lambda2_["wzxy"];
+    H1["uv"] -= 0.25 * H3["uXYvWZ"] * Lambda2_["WZXY"];
+    H1["uv"] -= H3["uxYvwZ"] * Lambda2_["wZxY"];
+
+    H1["UV"] -= 0.25 * H3["UXYVWZ"] * Lambda2_["WZXY"];
+    H1["UV"] -= 0.25 * H3["xyUwzV"] * Lambda2_["wzxy"];
+    H1["UV"] -= H3["xUYwVZ"] * Lambda2_["wZxY"];
+    outfile->Printf("Done. Timing %8.3f s", t1.elapsed());
+
+    // compute 2-body term
+    ForteTimer t2;
+    outfile->Printf("\n    %-40s ... ", "Computing the 2-body term");
+    H2["xyuv"] -= H3["xyzuvw"] * Gamma1_["wz"];
+    H2["xyuv"] -= H3["xyZuvW"] * Gamma1_["WZ"];
+    H2["xYuV"] -= H3["xYZuVW"] * Gamma1_["WZ"];
+    H2["xYuV"] -= H3["xzYuwV"] * Gamma1_["wz"];
+    H2["XYUV"] -= H3["XYZUVW"] * Gamma1_["WZ"];
+    H2["XYUV"] -= H3["zXYwUV"] * Gamma1_["wz"];
+    outfile->Printf("Done. Timing %8.3f s", t2.elapsed());
 }
 
 void MASTER_DSRG::H1_T1_C0(BlockedTensor& H1, BlockedTensor& T1, const double& alpha, double& C0) {

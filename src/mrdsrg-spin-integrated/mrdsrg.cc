@@ -234,15 +234,15 @@ void MRDSRG::build_density() {
     (Eta1_.block("VV")).iterate([&](const std::vector<size_t>& i, double& value) {
         value = i[0] == i[1] ? 1.0 : 0.0;
     });
-    // symmetrize beta spin
-    outfile->Printf("\n  Warning: I am forcing density Db = Da to avoid spin "
-                    "symmetry breaking.");
-    outfile->Printf("\n  If this is not desired, go to mrdsrg.cc "
-                    "build_density() around line 190.");
+    //    // symmetrize beta spin
+    //    outfile->Printf("\n  Warning: I am forcing density Db = Da to avoid spin "
+    //                    "symmetry breaking.");
+    //    outfile->Printf("\n  If this is not desired, go to mrdsrg.cc "
+    //                    "build_density() around line 190.");
     Gamma1_.block("aa")("pq") = reference_.L1a()("pq");
-    Gamma1_.block("AA")("pq") = reference_.L1a()("pq");
+    Gamma1_.block("AA")("pq") = reference_.L1b()("pq");
     Eta1_.block("aa")("pq") -= reference_.L1a()("pq");
-    Eta1_.block("AA")("pq") -= reference_.L1a()("pq");
+    Eta1_.block("AA")("pq") -= reference_.L1b()("pq");
 
     //    ambit::Tensor Diff =
     //    ambit::Tensor::build(tensor_type_,"Diff",reference_.L1a().dims());
@@ -262,18 +262,6 @@ void MRDSRG::build_density() {
     Lambda2_aa("pqrs") = reference_.L2aa()("pqrs");
     Lambda2_aA("pqrs") = reference_.L2ab()("pqrs");
     Lambda2_AA("pqrs") = reference_.L2bb()("pqrs");
-
-    //    Diff =
-    //    ambit::Tensor::build(tensor_type_,"Diff",reference_.L2aa().dims());
-    //    Diff.data() = reference_.L2aa().data();
-    //    Diff("pqrs") -= reference_.L2bb()("pqrs");
-    //    outfile->Printf("\n  L2aa diff Here !!!!");
-    //    Diff.citerate([&](const std::vector<size_t>& i,const double& value){
-    //        if(value != 0.0){
-    //            outfile->Printf("\n  [%zu][%zu][%zu][%zu] =
-    //            %20.15f",i[0],i[1],i[2],i[3],value);
-    //        }
-    //    });
 
     // prepare three-body density cumulants
     if (options_.get_str("THREEPDC") != "ZERO") {
@@ -448,7 +436,7 @@ double MRDSRG::compute_energy_relaxed() {
 
         if (cas_type == "CAS") {
             FCI_MO fci_mo(reference_wavefunction_, options_, ints_, mo_space_info_);
-            fci_mo.set_semi(false);
+            //            fci_mo.set_semi(false);
             Erelax = fci_mo.compute_energy();
         } else {
             FCI fci(reference_wavefunction_, options_, ints_, mo_space_info_);
@@ -488,7 +476,7 @@ double MRDSRG::compute_energy_relaxed() {
             // diagonalize the Hamiltonian
             if (cas_type == "CAS") {
                 FCI_MO fci_mo(reference_wavefunction_, options_, ints_, mo_space_info_);
-                fci_mo.set_semi(false);
+                //                fci_mo.set_semi(false);
                 Erelax = fci_mo.compute_energy();
 
                 // obtain new reference
@@ -840,7 +828,7 @@ double MRDSRG::compute_energy_sa() {
         auto fci_mo =
             std::make_shared<FCI_MO>(reference_wavefunction_, options_, ints_, mo_space_info_);
         Etemp = Erelax_sa;
-        fci_mo->set_form_Fock(false);
+        //        fci_mo->set_form_Fock(false);
         Erelax_sa = fci_mo->compute_energy();
         Erelax_sa_vec.push_back(Erelax_sa);
         double Edelta_relax = Erelax_sa - Etemp;

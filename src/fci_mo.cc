@@ -2762,6 +2762,160 @@ void FCI_MO::compute_oscillator_strength() {
     outfile->Printf("\n");
 }
 
+std::map<std::string, std::vector<double>>
+FCI_MO::compute_relaxed_dm(const std::vector<double>& dm0, std::vector<BlockedTensor>& dm1,
+                           std::vector<BlockedTensor>& dm2) {
+    std::map<std::string, std::vector<double>> out;
+
+    CharacterTable ct = Process::environment.molecule()->point_group()->char_table();
+    std::vector<std::string> mt{"Singlet", "Doublet", "Triplet", "Quartet", "Quintet",
+                                "Sextet",  "Septet",  "Octet",   "Nonet",   "Decaet"};
+
+    double dm0_sum = std::fabs(dm0[0]) + std::fabs(dm0[1]) + std::fabs(dm0[2]);
+    std::vector<bool> do_dm;
+    for (int z = 0; z < 3; ++z) {
+        do_dm.push_back(std::fabs(dm0[z]) > 1.0e-12 ? true : false);
+    }
+
+    // if SS, read from determinant_ and eigen_; otherwise, read from p_spaces_ and eigens_
+    if (sa_info_.size() == 0) {
+        std::string name =
+            mt[multi_ - 1] + " " + std::to_string(root_) + ct.gamma(root_sym_).symbol();
+        std::vector<double> dm(3, 0.0);
+
+        // prepare CI_RDMS
+        int dim = (eigen_[0].first)->dim();
+        size_t eigen_size = eigen_.size();
+        SharedMatrix evecs(new Matrix("evecs", dim, eigen_size));
+        for (int i = 0; i < eigen_size; ++i) {
+            evecs->set_column(0, i, (eigen_[i]).first);
+        }
+
+        // CI_RDMS for the targeted root
+        CI_RDMS ci_rdms(options_, fci_ints_, determinant_, evecs, root_, root_);
+        ci_rdms.set_symmetry(root_sym_);
+
+        if (dm0_sum > 1.0e-12) {
+            // compute RDMS and put into BlockedTensor format
+            ambit::BlockedTensor D1 = compute_n_rdm(ci_rdms, 1);
+            ambit::BlockedTensor D2 = compute_n_rdm(ci_rdms, 2);
+
+            // loop over directions
+            for (int z = 0; z < 3; ++z) {
+                if (do_dm[z]) {
+                    dm[z] = relaxed_dm_helper(dm0[z], dm1[z], dm2[z], D1, D2);
+                }
+            }
+        }
+        out[name] = dm;
+
+    } else {
+        int nentry = sa_info_.size();
+        for (int n = 0; n < nentry; ++n) {
+            // get current symmetry, multiplicity, nroots, weights
+            int irrep, multi, nroots;
+            std::vector<double> weights;
+            std::tie(irrep, multi, nroots, weights) = sa_info_[n];
+
+            // eigen vectors for current symmetry
+            int dim = (eigens_[n][0].first)->dim();
+            size_t eigen_size = eigens_[n].size();
+            SharedMatrix evecs(new Matrix("evecs", dim, eigen_size));
+            for (int i = 0; i < eigen_size; ++i) {
+                evecs->set_column(0, i, (eigens_[n][i]).first);
+            }
+
+            // loop over nroots for current symmetry
+            for (int i = 0; i < nroots; ++i) {
+                std::string name =
+                    mt[multi - 1] + " " + std::to_string(i) + ct.gamma(irrep).symbol();
+                std::vector<double> dm(3, 0.0);
+
+                CI_RDMS ci_rdms(options_, fci_ints_, p_spaces_[n], evecs, i, i);
+                ci_rdms.set_symmetry(irrep);
+
+                if (dm0_sum > 1.0e-12) {
+                    // compute RDMS and put into BlockedTensor format
+                    ambit::BlockedTensor D1 = compute_n_rdm(ci_rdms, 1);
+                    ambit::BlockedTensor D2 = compute_n_rdm(ci_rdms, 2);
+
+                    // loop over directions
+                    for (int z = 0; z < 3; ++z) {
+                        if (do_dm[z]) {
+                            dm[z] = relaxed_dm_helper(dm0[z], dm1[z], dm2[z], D1, D2);
+                        }
+                    }
+                }
+                out[name] = dm;
+            }
+        }
+    }
+
+    //    for (const auto& p : out) {
+    //        const double& x = p.second[0];
+    //        const double& y = p.second[1];
+    //        const double& z = p.second[2];
+    //        outfile->Printf("\n    %s:  X: %10.6f  Y: %10.6f  Z: %10.6f", p.first.c_str(), x, y,
+    //        z);
+    //    }
+    return out;
+}
+
+std::map<std::string, std::vector<double>>
+FCI_MO::compute_relaxed_osc(const std::vector<double>& dm0, std::vector<BlockedTensor>& dm1,
+                            std::vector<BlockedTensor>& dm2) {
+    std::map<std::string, std::vector<double>> out;
+    return out;
+}
+
+ambit::BlockedTensor FCI_MO::compute_n_rdm(CI_RDMS& cirdm, const int& order) {
+    if (order < 1 || order > 3) {
+        throw PSIEXCEPTION("Cannot compute RDMs except 1, 2, 3.");
+    }
+
+    ambit::BlockedTensor out;
+    if (order == 1) {
+        std::vector<double> opdm_a, opdm_b;
+        cirdm.compute_1rdm(opdm_a, opdm_b);
+
+        out = ambit::BlockedTensor::build(ambit::CoreTensor, "D1", spin_cases({"aa"}));
+        out.block("aa").data() = std::move(opdm_a);
+        out.block("AA").data() = std::move(opdm_b);
+    } else if (order == 2) {
+        std::vector<double> tpdm_aa, tpdm_ab, tpdm_bb;
+        cirdm.compute_2rdm(tpdm_aa, tpdm_ab, tpdm_bb);
+
+        out = ambit::BlockedTensor::build(ambit::CoreTensor, "D2", spin_cases({"aaaa"}));
+        out.block("aaaa").data() = std::move(tpdm_aa);
+        out.block("aAaA").data() = std::move(tpdm_ab);
+        out.block("AAAA").data() = std::move(tpdm_bb);
+    } else if (order == 3) {
+        std::vector<double> tpdm_aaa, tpdm_aab, tpdm_abb, tpdm_bbb;
+        cirdm.compute_3rdm(tpdm_aaa, tpdm_aab, tpdm_abb, tpdm_bbb);
+
+        out = ambit::BlockedTensor::build(ambit::CoreTensor, "D3", spin_cases({"aaaaaa"}));
+        out.block("aaaaaa").data() = std::move(tpdm_aaa);
+        out.block("aaAaaA").data() = std::move(tpdm_aab);
+        out.block("aAAaAA").data() = std::move(tpdm_abb);
+        out.block("AAAAAA").data() = std::move(tpdm_bbb);
+    }
+
+    return out;
+}
+
+double FCI_MO::relaxed_dm_helper(const double& dm0, BlockedTensor& dm1, BlockedTensor& dm2,
+                                 BlockedTensor& D1, BlockedTensor& D2) {
+    double dm_out = dm0;
+
+    dm_out += dm1["uv"] * D1["uv"];
+    dm_out += dm1["UV"] * D1["UV"];
+    dm_out += 0.25 * dm2["uvxy"] * D2["uvxy"];
+    dm_out += 0.25 * dm2["UVXY"] * D2["UVXY"];
+    dm_out += dm2["uVxY"] * D2["uVxY"];
+
+    return dm_out;
+}
+
 d3 FCI_MO::compute_orbital_extents() {
 
     // compute AO quadrupole integrals

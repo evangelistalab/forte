@@ -190,20 +190,6 @@ void DSRG_MRPT2::startup() {
         }
     }
 
-    // prepare transformed dipole integrals
-    if (do_dm_) {
-        Mbar1_.clear();
-        Mbar2_.clear();
-        for (int i = 0; i < 3; ++i) {
-            BlockedTensor Mbar1 =
-                BTF_->build(tensor_type_, "DSRG DM1 " + dm_dirs_[i], spin_cases({"aa"}));
-            Mbar1_.emplace_back(Mbar1);
-            BlockedTensor Mbar2 =
-                BTF_->build(tensor_type_, "DSRG DM2 " + dm_dirs_[i], spin_cases({"aaaa"}));
-            Mbar2_.emplace_back(Mbar2);
-        }
-    }
-
     //    MOdipole_ints_ = ints_->compute_MOdipole_ints(true, true);
     //    Mx_ = BTF_->build(tensor_type_, "Dipole X", spin_cases({"gg"}));
     //    My_ = BTF_->build(tensor_type_, "Dipole Y", spin_cases({"gg"}));
@@ -648,13 +634,14 @@ double DSRG_MRPT2::compute_energy() {
         outfile->Printf("\n    %-30s = %22.15f", str_dim.first.c_str(), str_dim.second);
     }
 
+    Process::environment.globals["UNRELAXED ENERGY"] = Etotal;
     Process::environment.globals["CURRENT ENERGY"] = Etotal;
     outfile->Printf("\n\n  Energy took %10.3f s", DSRG_energy.get());
     outfile->Printf("\n");
 
     // transform dipole integrals
     if (do_dm_) {
-        transform_dipoles();
+        compute_pt2_dm();
     }
 
     // relax reference
@@ -1602,100 +1589,7 @@ double DSRG_MRPT2::E_VT2_6() {
     return E;
 }
 
-// void DSRG_MRPT2::fill_bare_dipoles() {
-//    // nuclear dipole moments
-//    nuc_dipoles_ =
-//        DipoleInt::nuclear_contribution(Process::environment.molecule(), Vector3(0.0, 0.0, 0.0));
-
-//    // consider frozen core part
-//    frozen_core_dipoles_ = std::vector<double>(3, 0.0);
-//    std::vector<size_t> frzc_mos = mo_space_info_->get_absolute_mo("FROZEN_DOCC");
-//    for (int i = 0; i < 3; ++i) {
-//        double dipole = 0.0;
-//        for (const size_t& p : frzc_mos) {
-//            dipole += MOdipole_ints_[i]->get(p, p);
-//        }
-//        frozen_core_dipoles_[i] = 2.0 * dipole; // 2.0 for alpha and beta
-//    }
-
-//    // find out ncmo correspondance to nmo
-//    std::vector<size_t> cmo_to_mo;
-//    Dimension frzcpi = mo_space_info_->get_dimension("FROZEN_DOCC");
-//    Dimension frzvpi = mo_space_info_->get_dimension("FROZEN_UOCC");
-//    Dimension ncmopi = mo_space_info_->get_dimension("CORRELATED");
-//    for (int h = 0, p = 0; h < nirrep_; ++h) {
-//        p += frzcpi[h];
-//        for (int r = 0; r < ncmopi[h]; ++r) {
-//            cmo_to_mo.push_back(p);
-//            ++p;
-//        }
-//        p += frzvpi[h];
-//    }
-
-//    // fill the bare dipole to ambit tensor
-//    Mx_.iterate(
-//        [&](const std::vector<size_t>& i, const std::vector<SpinType>& spin, double& value) {
-//            if (spin[0] == AlphaSpin)
-//                value = MOdipole_ints_[0]->get(cmo_to_mo[i[0]], cmo_to_mo[i[1]]);
-//            if (spin[0] == BetaSpin)
-//                value = MOdipole_ints_[0]->get(cmo_to_mo[i[0]], cmo_to_mo[i[1]]);
-//        });
-
-//    My_.iterate(
-//        [&](const std::vector<size_t>& i, const std::vector<SpinType>& spin, double& value) {
-//            if (spin[0] == AlphaSpin)
-//                value = MOdipole_ints_[1]->get(cmo_to_mo[i[0]], cmo_to_mo[i[1]]);
-//            if (spin[0] == BetaSpin)
-//                value = MOdipole_ints_[1]->get(cmo_to_mo[i[0]], cmo_to_mo[i[1]]);
-//        });
-
-//    Mz_.iterate(
-//        [&](const std::vector<size_t>& i, const std::vector<SpinType>& spin, double& value) {
-//            if (spin[0] == AlphaSpin)
-//                value = MOdipole_ints_[2]->get(cmo_to_mo[i[0]], cmo_to_mo[i[1]]);
-//            if (spin[0] == BetaSpin)
-//                value = MOdipole_ints_[2]->get(cmo_to_mo[i[0]], cmo_to_mo[i[1]]);
-//        });
-//}
-
-// void DSRG_MRPT2::compute_ref_dipoles() {
-//    double x = frozen_core_dipoles_[0];
-//    for (const std::string& block : {"cc", "CC"}) {
-//        Mx_.block(block).citerate([&](const std::vector<size_t>& i, const double& value) {
-//            if (i[0] == i[1]) {
-//                x += value;
-//            }
-//        });
-//    }
-//    x += Mx_["uv"] * Gamma1_["uv"];
-//    x += Mx_["UV"] * Gamma1_["UV"];
-
-//    double y = frozen_core_dipoles_[1];
-//    for (const auto& block : {"cc", "CC"}) {
-//        My_.block(block).citerate([&](const std::vector<size_t>& i, const double& value) {
-//            if (i[0] == i[1]) {
-//                y += value;
-//            }
-//        });
-//    }
-//    y += My_["uv"] * Gamma1_["uv"];
-//    y += My_["UV"] * Gamma1_["UV"];
-
-//    double z = frozen_core_dipoles_[2];
-//    for (const auto& block : {"cc", "CC"}) {
-//        Mz_.block(block).citerate([&](const std::vector<size_t>& i, const double& value) {
-//            if (i[0] == i[1]) {
-//                z += value;
-//            }
-//        });
-//    }
-//    z += Mz_["uv"] * Gamma1_["uv"];
-//    z += Mz_["UV"] * Gamma1_["UV"];
-
-//    ref_dipoles_ = {x, y, z};
-//}
-
-void DSRG_MRPT2::transform_dipoles() {
+void DSRG_MRPT2::compute_pt2_dm() {
     print_h2("DSRG-MRPT2 (unrelaxed) Dipole Moments (a.u.)");
 
     double nx = dm_nuc_[0];
@@ -1711,27 +1605,16 @@ void DSRG_MRPT2::transform_dipoles() {
     outfile->Printf("\n      X: %10.6f  Y: %10.6f  Z: %10.6f\n", rx, ry, rz);
 
     // compute DSRG-MRPT2 dressed dipoles
-    Mbar0_ = std::vector<double>(3, 0.0);
+    Mbar0_ = std::vector<double>{rx, ry, rz};
     for (int i = 0; i < 3; ++i) {
-        if (std::fabs(dm_ref_[i]) > 1.0e-12) {
-            compute_pt2_dipole(dm_[i], Mbar0_[i], Mbar1_[i], Mbar2_[i]);
+        if (do_dm_dirs_[i]) {
+            compute_pt2_dm_helper(dm_[i], Mbar0_[i], Mbar1_[i], Mbar2_[i]);
         }
     }
-    //    double x = 0.0, y = 0.0, z = 0.0;
-    //    if (std::fabs(ref_dipoles_[0]) > 1.0e-12) {
-    //        compute_pt2_dipole(Mx_, x, Mbar1x_, Mbar2x_);
-    //    }
-    //    if (std::fabs(ref_dipoles_[1]) > 1.0e-12) {
-    //        compute_pt2_dipole(My_, y, Mbar1y_, Mbar2y_);
-    //    }
-    //    if (std::fabs(ref_dipoles_[2]) > 1.0e-12) {
-    //        compute_pt2_dipole(Mz_, z, Mbar1z_, Mbar2z_);
-    //    }
-    //    Mbar0_ = {x, y, z};
 
-    double x = Mbar0_[0] + rx;
-    double y = Mbar0_[1] + ry;
-    double z = Mbar0_[2] + rz;
+    double x = Mbar0_[0];
+    double y = Mbar0_[1];
+    double z = Mbar0_[2];
     outfile->Printf("\n    DSRG-MRPT2 electronic dipole moment:");
     outfile->Printf("\n      X: %10.6f  Y: %10.6f  Z: %10.6f\n", x, y, z);
 
@@ -1752,36 +1635,14 @@ void DSRG_MRPT2::transform_dipoles() {
     Process::environment.globals["UNRELAXED DIPOLE"] = t;
 }
 
-std::shared_ptr<FCIIntegrals> DSRG_MRPT2::compute_Heff() {
-    // TODO: implement this function
-    std::shared_ptr<FCIIntegrals> Heff;
-    return Heff;
-}
-
-void DSRG_MRPT2::compute_pt2_dipole(BlockedTensor& M, double& Mbar0, BlockedTensor& Mbar1,
-                                    BlockedTensor& Mbar2) {
+void DSRG_MRPT2::compute_pt2_dm_helper(BlockedTensor& M, double& Mbar0, BlockedTensor& Mbar1,
+                                       BlockedTensor& Mbar2) {
     /// Mbar = M + [M, A] + 0.5 * [[M, A], A]
-    /// Only Mbar0 is useful for unrelaxed dipoles
-    /// Only Mbar1 and Mbar2 with all active indices are useful for relaxation
-
-    // set Mbar1 to M
-    Mbar1["uv"] = M["uv"];
-    Mbar1["UV"] = M["UV"];
 
     // compute [M, A] fully contracted terms
     // 2.0 accounts for [M, T]^dag
     H1_T1_C0(M, T1_, 2.0, Mbar0);
     H1_T2_C0(M, T2_, 2.0, Mbar0);
-
-    // compute [M, T] active one- and two-body terms
-    BlockedTensor C1, C2;
-    if (relax_ref_ != "NONE" || multi_state_) {
-        C1 = BTF_->build(tensor_type_, "C1", spin_cases({"aa"}));
-        C2 = BTF_->build(tensor_type_, "C2", spin_cases({"aaaa"}));
-        H1_T1_C1aa(M, T1_, 1.0, C1);
-        H1_T2_C1aa(M, T2_, 1.0, C1);
-        H1_T2_C2aaaa(M, T2_, 1.0, C2);
-    }
 
     // compute O = [M, A] nondiagonal one- and two-body terms
     BlockedTensor O1, O2, temp1, temp2;
@@ -1810,8 +1671,20 @@ void DSRG_MRPT2::compute_pt2_dipole(BlockedTensor& M, double& Mbar0, BlockedTens
     H2_T1_C0(O2, T1_, 1.0, Mbar0);
     H2_T2_C0(O2, T2_, 1.0, Mbar0);
 
-    // all active part
+    // cases when we need Mbar1 and Mbar2
     if (relax_ref_ != "NONE" || multi_state_) {
+        // set to bare
+        Mbar1["uv"] = M["uv"];
+        Mbar1["UV"] = M["UV"];
+
+        // compute [M, T] active 1- and 2-body terms
+        BlockedTensor C1, C2;
+        C1 = BTF_->build(tensor_type_, "C1", spin_cases({"aa"}), true);
+        C2 = BTF_->build(tensor_type_, "C2", spin_cases({"aaaa"}), true);
+        H1_T1_C1aa(M, T1_, 1.0, C1);
+        H1_T2_C1aa(M, T2_, 1.0, C1);
+        H1_T2_C2aaaa(M, T2_, 1.0, C2);
+
         H1_T1_C1aa(O1, T1_, 0.5, C1);
         H1_T2_C1aa(O1, T2_, 0.5, C1);
         H2_T1_C1aa(O2, T1_, 0.5, C1);
@@ -1835,8 +1708,6 @@ void DSRG_MRPT2::compute_pt2_dipole(BlockedTensor& M, double& Mbar0, BlockedTens
 }
 
 double DSRG_MRPT2::compute_energy_relaxed() {
-
-    // reference relaxation
     double Edsrg = 0.0, Erelax = 0.0;
 
     // compute energy with fixed ref.
@@ -1845,12 +1716,28 @@ double DSRG_MRPT2::compute_energy_relaxed() {
     // transfer integrals
     transfer_integrals();
 
+    // dipole related
+    std::vector<double> dm_dsrg(Mbar0_);
+    std::map<std::string, std::vector<double>> dm_relax;
+
     // diagonalize Hbar depending on CAS_TYPE
     if (options_.get_str("CAS_TYPE") == "CAS") {
 
         FCI_MO fci_mo(reference_wavefunction_, options_, ints_, mo_space_info_);
-        fci_mo.set_form_Fock(false);
         Erelax = fci_mo.compute_energy();
+
+        if (do_dm_) {
+            // de-normal-order DSRG dipole integrals
+            for (int z = 0; z < 3; ++z) {
+                if (do_dm_dirs_[z]) {
+                    std::string name = "Dipole " + dm_dirs_[z] + " Integrals";
+                    deGNO_ints(name, Mbar0_[z], Mbar1_[z], Mbar2_[z]);
+                }
+            }
+
+            // compute permanent dipoles
+            dm_relax = fci_mo.compute_relaxed_dm(Mbar0_, Mbar1_, Mbar2_);
+        }
 
     } else {
 
@@ -1866,15 +1753,50 @@ double DSRG_MRPT2::compute_energy_relaxed() {
     outfile->Printf("\n    %-30s = %22.15f", "DSRG-MRPT2 Total Energy (relaxed)", Erelax);
     outfile->Printf("\n");
 
+    if (do_dm_) {
+        print_h2("DSRG-MRPT2 Dipole Moment Summary");
+        const double& nx = dm_nuc_[0];
+        const double& ny = dm_nuc_[1];
+        const double& nz = dm_nuc_[2];
+
+        double x = dm_dsrg[0] + nx;
+        double y = dm_dsrg[1] + ny;
+        double z = dm_dsrg[2] + nz;
+        double t = std::sqrt(x * x + y * y + z * z);
+        outfile->Printf("\n    DSRG-MRPT2 unrelaxed dipole moment:");
+        outfile->Printf("\n      X: %10.6f  Y: %10.6f  Z: %10.6f  Total: %10.6f\n", x, y, z, t);
+        Process::environment.globals["UNRELAXED DIPOLE"] = t;
+
+        // there should be only one entry for state-specific computations
+        if (dm_relax.size() != 0) {
+            for (const auto& p : dm_relax) {
+                x = p.second[0] + nx;
+                y = p.second[1] + ny;
+                z = p.second[2] + nz;
+                t = std::sqrt(x * x + y * y + z * z);
+            }
+            outfile->Printf("\n    DSRG-MRPT2 partially relaxed dipole moment:");
+            outfile->Printf("\n      X: %10.6f  Y: %10.6f  Z: %10.6f  Total: %10.6f\n", x, y, z, t);
+            Process::environment.globals["PARTIALLY RELAXED DIPOLE"] = t;
+        }
+    }
+
     Process::environment.globals["UNRELAXED ENERGY"] = Edsrg;
     Process::environment.globals["PARTIALLY RELAXED ENERGY"] = Erelax;
     Process::environment.globals["CURRENT ENERGY"] = Erelax;
     return Erelax;
 }
 
+std::shared_ptr<FCIIntegrals> DSRG_MRPT2::compute_Heff() {
+    // TODO: implement this function
+}
+
 void DSRG_MRPT2::transfer_integrals() {
     // printing
     print_h2("De-Normal-Order the DSRG Transformed Hamiltonian");
+
+    //    double Edsrg = Eref_ + Hbar0_;
+    //    deGNO_ints("Hamiltonian", Edsrg, Hbar1_, Hbar2_);
 
     // compute scalar term (all active only)
     Timer t_scalar;
@@ -1982,6 +1904,7 @@ void DSRG_MRPT2::transfer_integrals() {
     Timer t_int;
     str = "Updating integrals          ...";
     outfile->Printf("\n    %-35s", str.c_str());
+    //    ints_->set_scalar(Edsrg - Enuc_ - Efrzc_);
     ints_->set_scalar(scalar);
 
     //   a) zero hole integrals
@@ -2002,6 +1925,15 @@ void DSRG_MRPT2::transfer_integrals() {
     }
 
     //   b) copy all active part
+    //    Hbar1_.citerate(
+    //        [&](const std::vector<size_t>& i, const std::vector<SpinType>& spin, const double&
+    //        value) {
+    //            if (spin[0] == AlphaSpin) {
+    //                ints_->set_oei(i[0], i[1], value, true);
+    //            } else {
+    //                ints_->set_oei(i[0], i[1], value, false);
+    //            }
+    //        });
     temp1.citerate(
         [&](const std::vector<size_t>& i, const std::vector<SpinType>& spin, const double& value) {
             if (spin[0] == AlphaSpin) {

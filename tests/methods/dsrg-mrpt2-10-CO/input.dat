@@ -6,9 +6,9 @@ refcasscf    = -112.881481489535673
 refpt2       = -113.105649496912605
 refpt2_relax = -113.108902745248486
 refdm        =    0.078155
-refdm_relax  =    0.000000
+refdm_relax  =    0.008671
 
-molecule N2{
+molecule CO{
   0 1
   C
   O  1 1.128
@@ -42,11 +42,13 @@ set forte {
   root_sym           0
   nroot              1
   dsrg_s             0.5
-# relax_ref          once
+  relax_ref          once
   cas_type           cas
   dsrg_dipole        true
 }
 
 Eforte, wfn_cas = energy('forte', ref_wfn=wfn_cas, return_wfn=True)
-compare_values(refpt2,get_variable("CURRENT ENERGY"),10,"DSRG-MRPT2 unrelaxed energy")
-compare_values(refdm,get_variable("UNRELAXED DIPOLE"),6,"DSRG-MRPT2 urelaxed dipole moment")
+compare_values(refpt2,get_variable("UNRELAXED ENERGY"),9,"DSRG-MRPT2 unrelaxed energy")
+compare_values(refpt2_relax,get_variable("PARTIALLY RELAXED ENERGY"),9,"DSRG-MRPT2 partially relaxed energy")
+compare_values(refdm,get_variable("UNRELAXED DIPOLE"),5,"DSRG-MRPT2 unrelaxed dipole moment")
+compare_values(refdm_relax,get_variable("PARTIALLY RELAXED DIPOLE"),5,"DSRG-MRPT2 partially relaxed dipole moment")

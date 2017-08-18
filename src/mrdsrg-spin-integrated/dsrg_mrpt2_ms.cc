@@ -103,12 +103,6 @@ std::vector<std::vector<double>> DSRG_MRPT2::compute_energy_sa() {
         "Nonet",   "Decaet",  "11-et",   "12-et",   "13-et",   "14-et",  "15-et",  "16-et",
         "17-et",   "18-et",   "19-et",   "20-et",   "21-et",   "22-et",  "23-et",  "24-et"};
 
-    // size of 1rdm and 2rdm
-    size_t na = mo_space_info_->size("ACTIVE");
-    size_t nele1 = na * na;
-    size_t nele2 = nele1 * nele1;
-    size_t nele3 = nele1 * nele2;
-
     // prepare FCI integrals
     std::shared_ptr<FCIIntegrals> fci_ints =
         std::make_shared<FCIIntegrals>(ints_, actv_mos_, core_mos_);
@@ -137,6 +131,19 @@ std::vector<std::vector<double>> DSRG_MRPT2::compute_energy_sa() {
             for (int i = 0; i < ni; ++i) {
                 Edsrg_sa[n].push_back(eigen[i].second);
             }
+        }
+        if (do_dm_) {
+            // scalar term with nuclear contributions
+            std::vector<double> M0(3, 0.0);
+
+            // de-normal-order DSRG dipole integrals
+            for (int z = 0; z < 3; ++z) {
+                deGNO_ints("Dipole Integrals", Mbar0_[z], Mbar1_[z], Mbar2_[z]);
+                M0[z] = Mbar0_[z] + dm_nuc_[z];
+            }
+
+            // compute permanent dipoles
+            fci_mo.compute_relaxed_dm(M0, Mbar1_, Mbar2_);
         }
     } else {
 
@@ -236,45 +243,6 @@ std::vector<std::vector<double>> DSRG_MRPT2::compute_energy_sa() {
                         D2.block("aAaA").data() = std::move(tpdm_ab);
                         D2.block("AAAA").data() = std::move(tpdm_bb);
 
-                        //                        BlockedTensor temp =
-                        //                            BTF_->build(tensor_type_, "temp",
-                        //                            spin_cases({"aa"}), true);
-                        //                        temp.block("aa").data() = opdm_a;
-                        //                        temp.block("AA").data() = opdm_b;
-
-                        //                        ambit::Tensor Ua = Uactv_.block("aa");
-                        //                        ambit::Tensor Ub = Uactv_.block("AA");
-
-                        //                        BlockedTensor D1 =
-                        //                            BTF_->build(tensor_type_, "D1",
-                        //                            spin_cases({"aa"}), true);
-                        //                        D1.block("aa")("pq") = Ua("ap") *
-                        //                        temp.block("aa")("ab") * Ua("bq");
-                        //                        D1.block("AA")("PQ") = Ub("AP") *
-                        //                        temp.block("AA")("AB") * Ub("BQ");
-
-                        //                        temp = BTF_->build(tensor_type_, "temp",
-                        //                        spin_cases({"aaaa"}), true);
-                        //                        temp.block("aaaa").data() = tpdm_aa;
-                        //                        temp.block("aAaA").data() = tpdm_ab;
-                        //                        temp.block("AAAA").data() = tpdm_bb;
-
-                        //                        BlockedTensor D2 =
-                        //                            BTF_->build(tensor_type_, "D2",
-                        //                            spin_cases({"aaaa"}), true);
-                        //                        D2.block("aaaa")("pqrs") =
-                        //                            Ua("ap") * Ua("bq") *
-                        //                            temp.block("aaaa")("abcd") * Ua("cr") *
-                        //                            Ua("ds");
-                        //                        D2.block("aAaA")("pQrS") =
-                        //                            Ua("ap") * Ub("BQ") *
-                        //                            temp.block("aAaA")("aBcD") * Ua("cr") *
-                        //                            Ub("DS");
-                        //                        D2.block("AAAA")("PQRS") =
-                        //                            Ub("AP") * Ub("BQ") *
-                        //                            temp.block("AAAA")("ABCD") * Ub("CR") *
-                        //                            Ub("DS");
-
                         double H_AB = 0.0;
                         H_AB += oei["uv"] * D1["uv"];
                         H_AB += oei["UV"] * D1["UV"];
@@ -312,45 +280,6 @@ std::vector<std::vector<double>> DSRG_MRPT2::compute_energy_sa() {
                             D3.block("aaAaaA").data() = std::move(tpdm_aab);
                             D3.block("aAAaAA").data() = std::move(tpdm_abb);
                             D3.block("AAAAAA").data() = std::move(tpdm_bbb);
-
-                            //                            temp = BTF_->build(tensor_type_, "temp",
-                            //                            spin_cases({"aaaaaa"}), true);
-                            //                            temp.block("aaaaaa").data() = tpdm_aaa;
-                            //                            temp.block("aaAaaA").data() = tpdm_aab;
-                            //                            temp.block("aAAaAA").data() = tpdm_abb;
-                            //                            temp.block("AAAAAA").data() = tpdm_bbb;
-
-                            //                            BlockedTensor D3 =
-                            //                                BTF_->build(tensor_type_, "D3",
-                            //                                spin_cases({"aaaaaa"}), true);
-                            //                            D3.block("aaaaaa")("pqrstu") = Ua("ap") *
-                            //                            Ua("bq") * Ua("cr") *
-                            //                                                           temp.block("aaaaaa")("abcijk")
-                            //                                                           *
-                            //                                                           Ua("is") *
-                            //                                                           Ua("jt") *
-                            //                                                           Ua("ku");
-                            //                            D3.block("aaAaaA")("pqRstU") = Ua("ap") *
-                            //                            Ua("bq") * Ub("CR") *
-                            //                                                           temp.block("aaAaaA")("abCijK")
-                            //                                                           *
-                            //                                                           Ua("is") *
-                            //                                                           Ua("jt") *
-                            //                                                           Ub("KU");
-                            //                            D3.block("aAAaAA")("pQRsTU") = Ua("ap") *
-                            //                            Ub("BQ") * Ub("CR") *
-                            //                                                           temp.block("aAAaAA")("aBCiJK")
-                            //                                                           *
-                            //                                                           Ua("is") *
-                            //                                                           Ub("JT") *
-                            //                                                           Ub("KU");
-                            //                            D3.block("AAAAAA")("PQRSTU") = Ub("AP") *
-                            //                            Ub("BQ") * Ub("CR") *
-                            //                                                           temp.block("AAAAAA")("ABCIJK")
-                            //                                                           *
-                            //                                                           Ub("IS") *
-                            //                                                           Ub("JT") *
-                            //                                                           Ub("KU");
 
                             H_AB += (1.0 / 36) * Hbar3_["xyzuvw"] * D3["uvwxyz"];
                             H_AB += (1.0 / 36) * Hbar3_["XYZUVW"] * D3["UVWXYZ"];

@@ -334,37 +334,11 @@ class DSRG_MRPT2 : public MASTER_DSRG {
 
     // => Dipole related <= //
 
-    //    /// MO dipole integrals (including frozen orbitals)
-    //    std::vector<SharedMatrix> MOdipole_ints_;
-
-    //    /// frozen-core dipole
-    //    std::vector<double> frozen_core_dipoles_;
-    //    /// Nuclear dipole
-    //    SharedVector nuc_dipoles_;
-
-    //    /// reference dipoles
-    //    std::vector<double> ref_dipoles_;
-
-    //    /// compute reference dipoles
-    //    void compute_ref_dipoles();
-
-    //    /// MO dipole integrals (no frozen orbitals)
-    //    ambit::BlockedTensor Mx_, My_, Mz_;
-
-    /// DSRG transformed dipole integrals
-    std::vector<double> Mbar0_;
-    std::vector<ambit::BlockedTensor> Mbar1_;
-    std::vector<ambit::BlockedTensor> Mbar2_;
-    //    ambit::BlockedTensor Mbar1x_, Mbar1y_, Mbar1z_;
-    //    ambit::BlockedTensor Mbar2x_, Mbar2y_, Mbar2z_;
-
-    //    /// fill in dipole integrals from ints
-    //    void fill_bare_dipoles();
-
-    /// Transform dipole integrals
-    void compute_pt2_dipole(BlockedTensor& M, double& Mbar0, BlockedTensor& Mbar1,
-                            BlockedTensor& Mbar2);
-    void transform_dipoles();
+    /// Compute DSRG transformed dipole integrals
+    void compute_pt2_dm();
+    /// Compute DSRG transformed dipole integrals for a given direction
+    void compute_pt2_dm_helper(BlockedTensor& M, double& Mbar0, BlockedTensor& Mbar1,
+                               BlockedTensor& Mbar2);
 
     // => Reference relaxation <= //
 

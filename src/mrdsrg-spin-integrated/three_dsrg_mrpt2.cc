@@ -3512,7 +3512,6 @@ std::vector<double> THREE_DSRG_MRPT2::relaxed_energy() {
 
         FCI_MO fci_mo(reference_wavefunction_, options_, ints_, mo_space_info_);
         fci_mo.set_fci_int(fci_ints);
-        fci_mo.set_form_Fock(false);
 
         // test state specific or state average
         if (options_["AVG_STATE"].size() == 0) {

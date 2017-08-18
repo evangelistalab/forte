@@ -91,28 +91,6 @@ class MASTER_DSRG : public DynamicCorrelationSolver {
     /// The frozen core energy
     double Efrzc_;
 
-    // ==> reference dipole moment <==
-
-    /// Compute Dipole or not
-    bool do_dm_;
-    /// Dipole moment directions
-    std::vector<std::string> dm_dirs_{"X", "Y", "Z"};
-
-    /// Nuclear dipole moments
-    std::vector<double> dm_nuc_;
-    /// Frozen-core contributions to permament dipole
-    std::vector<double> dm_frzc_;
-    /// Electronic dipole moment of the reference
-    std::vector<double> dm_ref_;
-
-    /// MO bare dipole integrals of size ncmo by ncmo
-    std::vector<ambit::BlockedTensor> dm_;
-
-    /// Fill in bare MO dipole integrals
-    void fill_MOdm(std::vector<SharedMatrix>& dm_a, std::vector<SharedMatrix>& dm_b);
-    /// Compute dipole moment of the reference
-    void compute_dm_ref();
-
     // ==> MO space info <==
 
     /// Read MO space info
@@ -175,6 +153,8 @@ class MASTER_DSRG : public DynamicCorrelationSolver {
     // ==> fill in densities from Reference <==
     /** Lambda3 is no longer stored */
 
+    /// Initialize density cumulants
+    void init_density();
     /// Fill in density cumulants from the Reference
     void fill_density();
 
@@ -184,6 +164,52 @@ class MASTER_DSRG : public DynamicCorrelationSolver {
     ambit::BlockedTensor Eta1_;
     /// Two-body denisty cumulant
     ambit::BlockedTensor Lambda2_;
+
+    // ==> dipole moment <==
+
+    /// Compute dipole or not
+    bool do_dm_;
+    /// Dipole moment directions
+    std::vector<std::string> dm_dirs_{"X", "Y", "Z"};
+    /// Setup dipole integrals and DSRG transformed integrals
+    void init_dm_ints();
+
+    /// Nuclear dipole moments
+    std::vector<double> dm_nuc_;
+    /// Frozen-core contributions to permament dipole
+    std::vector<double> dm_frzc_;
+    /// Electronic dipole moment of the reference
+    std::vector<double> dm_ref_;
+
+    /// MO bare dipole integrals of size ncmo by ncmo
+    std::vector<ambit::BlockedTensor> dm_;
+
+    /// Fill in bare MO dipole integrals
+    void fill_MOdm(std::vector<SharedMatrix>& dm_a, std::vector<SharedMatrix>& dm_b);
+    /// Compute dipole moment of the reference
+    void compute_dm_ref();
+    /// Compute dipole for a certain direction or not
+    std::vector<bool> do_dm_dirs_;
+
+    /// DSRG transformed dipole integrals
+    std::vector<double> Mbar0_;
+    std::vector<ambit::BlockedTensor> Mbar1_;
+    std::vector<ambit::BlockedTensor> Mbar2_;
+
+    // ==> integrals <==
+
+    /**
+     * De-normal-order a 2-body DSRG transformed integrals
+     * This will change H0 and H1
+     */
+    void deGNO_ints(const std::string& name, double& H0, BlockedTensor& H1, BlockedTensor& H2);
+
+    /**
+     * De-normal-order a 3-body DSRG transformed integrals
+     * This will change H0, H1, and H2
+     */
+    void deGNO_ints(const std::string& name, double& H0, BlockedTensor& H1, BlockedTensor& H2,
+                    BlockedTensor& H3);
 
     // ==> commutators <==
     /**

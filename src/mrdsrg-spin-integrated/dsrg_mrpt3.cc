@@ -3905,8 +3905,7 @@ void DSRG_MRPT3::V_T2_C2_DF_VV(BlockedTensor& B, BlockedTensor& T2, const double
         }
 
         // if sv > nbatch0, just separate the 1st virtual index
-        // otherwise we will separate the 2nd virtual index, and set nbatch0 =
-        // sv
+        // otherwise we will separate the 2nd virtual index, and set nbatch0 = sv
         if (sv > nbatch0) {
 
             // 1st virtual index
