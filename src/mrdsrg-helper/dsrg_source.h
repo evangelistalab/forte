@@ -63,16 +63,16 @@ class STD_SOURCE : public DSRG_SOURCE {
 
     /// Return exp(-s * D^2)
     virtual double compute_renormalized(const double& D) {
-        return std::exp(-s_ * std::pow(D, 2.0));
+        return std::exp(-s_ * D * D);
     }
 
     /// Return [1 - exp(-s * D^2)] / D
     virtual double compute_renormalized_denominator(const double& D) {
         double Z = std::sqrt(s_) * D;
-        if (std::fabs(Z) < std::pow(0.1, taylor_threshold_)) {
+        if (std::fabs(Z) < small_) {
             return Taylor_Exp(Z, taylor_order_) * std::sqrt(s_);
         } else {
-            return (1.0 - std::exp(-s_ * std::pow(D, 2.0))) / D;
+            return (1.0 - std::exp(-s_ * D * D)) / D;
         }
     }
 
@@ -80,12 +80,15 @@ class STD_SOURCE : public DSRG_SOURCE {
     /// Order of the Taylor expansion
     int taylor_order_ = static_cast<int>(0.5 * (15.0 / taylor_threshold_ + 1)) + 1;
 
+    /// Smaller than which will do Taylor expansion
+    double small_ = std::pow(0.1, taylor_threshold_);
+
     /// Taylor Expansion of [1 - exp(- Z^2)] / Z
     double Taylor_Exp(const double& Z, const int& n) {
         if (n > 0) {
             double value = Z, tmp = Z;
             for (int x = 0; x < n - 1; ++x) {
-                tmp *= -1.0 * std::pow(Z, 2.0) / (x + 2);
+                tmp *= -1.0 * Z * Z / (x + 2);
                 value += tmp;
             }
             return value;
@@ -107,7 +110,7 @@ class LABS_SOURCE : public DSRG_SOURCE {
     /// Return [1 - exp(-s * |D|)] / D
     virtual double compute_renormalized_denominator(const double& D) {
         double Z = s_ * D;
-        if (std::fabs(Z) < std::pow(0.1, taylor_threshold_)) {
+        if (std::fabs(Z) < small_) {
             return Taylor_Exp_Linear(Z, taylor_order_ * 2) * s_;
         } else {
             return (1.0 - std::exp(-s_ * std::fabs(D))) / D;
@@ -117,6 +120,9 @@ class LABS_SOURCE : public DSRG_SOURCE {
   private:
     /// Order of the Taylor expansion
     int taylor_order_ = static_cast<int>(15.0 / taylor_threshold_ + 1) + 1;
+
+    /// Smaller than which will do Taylor expansion
+    double small_ = std::pow(0.1, taylor_threshold_);
 
     /// Taylor Expansion of [1 - exp(-|Z|)] / Z
     double Taylor_Exp_Linear(const double& Z, const int& n) {
