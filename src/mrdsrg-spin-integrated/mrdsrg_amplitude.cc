@@ -34,6 +34,8 @@
 #include "../mini-boost/boost/format.hpp"
 #include "mrdsrg.h"
 
+#define TIME_LINE(x) timer_on(#x);x;timer_off(#x)
+
 namespace psi {
 namespace forte {
 
@@ -54,11 +56,11 @@ void MRDSRG::update_t() {
     // if fully decouple core-core-virtual-virtual block
     std::string ccvv_source = options_.get_str("CCVV_SOURCE");
     if (ccvv_source == "ZERO") {
-        update_t2_noccvv();
-        update_t1_nocv();
+        TIME_LINE(update_t2_noccvv());
+        TIME_LINE(update_t1_nocv());
     } else if (ccvv_source == "NORMAL") {
-        update_t2_std();
-        update_t1_std();
+        TIME_LINE(update_t2_std());
+        TIME_LINE(update_t1_std());
     }
 }
 
@@ -508,6 +510,7 @@ void MRDSRG::update_t2_std() {
     // use the delta_t algorithm as the old Hbar and T will be modified
     // Step 1: work on Hbar2 and DT2 is treated as intermediate
 
+    timer t1("transform Hbar2 to semi-canonical basis");
     // transform Hbar2 to semi-canonical basis
     if (!semi_canonical_) {
         DT2_["klab"] = U_["ki"] * U_["lj"] * Hbar2_["ijab"];
@@ -517,7 +520,9 @@ void MRDSRG::update_t2_std() {
         Hbar2_["iJcD"] = DT2_["iJaB"] * U_["DB"] * U_["ca"];
         Hbar2_["IJCD"] = DT2_["IJAB"] * U_["DB"] * U_["CA"];
     }
+    t1.stop();
 
+    timer t2("scale Hbar2 by renormalized denominator");
     // scale Hbar2 by renormalized denominator
     Hbar2_.iterate(
         [&](const std::vector<size_t>& i, const std::vector<SpinType>& spin, double& value) {
@@ -532,19 +537,25 @@ void MRDSRG::update_t2_std() {
                                                                         Fb_[i[2]] - Fb_[i[3]]);
             }
         });
+    t2.stop();
 
+    timer t3("copy renormalized Hbar2 to DT2");
     // copy renormalized Hbar2 to DT2
     DT2_["ijab"] = Hbar2_["ijab"];
     DT2_["iJaB"] = Hbar2_["iJaB"];
     DT2_["IJAB"] = Hbar2_["IJAB"];
+    t3.stop();
 
     // Step 2: work on T2 and Hbar2 is treated as intermediate
 
+    timer t4("copy T2 to Hbar2");
     // copy T2 to Hbar2
     Hbar2_["ijab"] = T2_["ijab"];
     Hbar2_["iJaB"] = T2_["iJaB"];
     Hbar2_["IJAB"] = T2_["IJAB"];
+    t4.stop();
 
+    timer t5("transform T2 to semi-canonical basis");
     // transform T2 to semi-canonical basis
     if (!semi_canonical_) {
         BlockedTensor temp =
@@ -556,7 +567,9 @@ void MRDSRG::update_t2_std() {
         Hbar2_["iJcD"] = temp["iJaB"] * U_["DB"] * U_["ca"];
         Hbar2_["IJCD"] = temp["IJAB"] * U_["DB"] * U_["CA"];
     }
+    t5.stop();
 
+    timer t6("scale T2 by delta exponential");
     // scale T2 by delta exponential
     Hbar2_.iterate([&](const std::vector<size_t>& i, const std::vector<SpinType>& spin,
                        double& value) {
@@ -571,20 +584,26 @@ void MRDSRG::update_t2_std() {
                 dsrg_source_->compute_renormalized(Fb_[i[0]] + Fb_[i[1]] - Fb_[i[2]] - Fb_[i[3]]);
         }
     });
+    t6.stop();
 
+    timer t7("minus the renormalized T2 from renormalized Hbar2");
     // minus the renormalized T2 from renormalized Hbar2
     DT2_["ijab"] -= Hbar2_["ijab"];
     DT2_["iJaB"] -= Hbar2_["iJaB"];
     DT2_["IJAB"] -= Hbar2_["IJAB"];
+    t7.stop();
 
+    timer t8("zero internal amplitudes");
     // zero internal amplitudes
     for (const std::string& block : {"aaaa", "aAaA", "AAAA"}) {
         DT2_.block(block).iterate([&](const std::vector<size_t>&, double& value) { value = 0.0; });
     }
+    t8.stop();
 
     // compute RMS
-    T2rms_ = DT2_.norm();
+    TIME_LINE(T2rms_ = DT2_.norm());
 
+    timer t9("transform DT2 back to original basis");
     // transform DT2 back to original basis
     if (!semi_canonical_) {
         Hbar2_["klab"] = U_["ik"] * U_["jl"] * DT2_["ijab"];
@@ -594,7 +613,9 @@ void MRDSRG::update_t2_std() {
         DT2_["iJcD"] = Hbar2_["iJaB"] * U_["BD"] * U_["ac"];
         DT2_["IJCD"] = Hbar2_["IJAB"] * U_["BD"] * U_["AC"];
     }
+    t9.stop();
 
+    timer t10("Step 3: update and analyze T2");
     // Step 3: update and analyze T2
     T2_["ijab"] += DT2_["ijab"];
     T2_["iJaB"] += DT2_["iJaB"];
@@ -618,6 +639,7 @@ void MRDSRG::update_t2_std() {
     t2aa_norm_ = std::sqrt(t2aa_norm_);
     t2ab_norm_ = std::sqrt(t2ab_norm_);
     t2bb_norm_ = std::sqrt(t2bb_norm_);
+    t10.stop();
 }
 
 void MRDSRG::update_t1_std() {
