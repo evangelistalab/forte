@@ -180,6 +180,10 @@ void MRDSRG::startup() {
         B_.iterate([&](const std::vector<size_t>& i, const std::vector<SpinType>&, double& value) {
             value = ints_->three_integral(i[0], i[1], i[2]);
         });
+//        B_ = BTF_->build(tensor_type_, "B 3-idx", {"ggL", "GGL"});
+//        B_.iterate([&](const std::vector<size_t>& i, const std::vector<SpinType>&, double& value) {
+//            value = ints_->three_integral(i[2], i[0], i[1]);
+//        });
     }
 
     // prepare integrals
@@ -251,6 +255,13 @@ void MRDSRG::build_ints() {
 
         V_["PQRS"] = B_["gPR"] * B_["gQS"];
         V_["PQRS"] -= B_["gPS"] * B_["gQR"];
+//        V_["pqrs"] = B_["prg"] * B_["qsg"];
+//        V_["pqrs"] -= B_["psg"] * B_["qrg"];
+
+//        V_["pQrS"] = B_["prg"] * B_["QSg"];
+
+//        V_["PQRS"] = B_["PRg"] * B_["QSg"];
+//        V_["PQRS"] -= B_["PSg"] * B_["QRg"];
     } else {
         V_.iterate(
             [&](const std::vector<size_t>& i, const std::vector<SpinType>& spin, double& value) {

@@ -443,6 +443,16 @@ void MRDSRG::compute_hbar_sequential_rotation() {
         TIME_LINE(Hbar1_["PQ"] += B["gji"] * B["gPQ"] * Gamma1_["ij"]);
         TIME_LINE(Hbar1_["PQ"] += B["gPQ"] * B["gJI"] * Gamma1_["IJ"]);
         TIME_LINE(Hbar1_["PQ"] -= B["gPI"] * B["gJQ"] * Gamma1_["IJ"]);
+//        TIME_LINE(B = BTF_->build(tensor_type_, "B 3-idx", {"ggL", "GGL"}));
+//        TIME_LINE(B["rsg"] = U1["rp"] * B_["pqg"] * U1["sq"]);
+//        TIME_LINE(B["RSg"] = U1["RP"] * B_["PQg"] * U1["SQ"]);
+
+//        TIME_LINE(Hbar1_["pq"] += B["pqg"] * B["jig"] * Gamma1_["ij"]);
+//        TIME_LINE(Hbar1_["pq"] -= B["pig"] * B["jqg"] * Gamma1_["ij"]);
+//        TIME_LINE(Hbar1_["pq"] += B["pqg"] * B["JIg"] * Gamma1_["IJ"]);
+//        TIME_LINE(Hbar1_["PQ"] += B["jig"] * B["PQg"] * Gamma1_["ij"]);
+//        TIME_LINE(Hbar1_["PQ"] += B["PQg"] * B["JIg"] * Gamma1_["IJ"]);
+//        TIME_LINE(Hbar1_["PQ"] -= B["PIg"] * B["JQg"] * Gamma1_["IJ"]);
     } else {
         TIME_LINE(Hbar2_["pqrs"] = U1["pt"] * U1["qo"] * V_["to12"] * U1["r1"] * U1["s2"]);
         TIME_LINE(Hbar2_["pQrS"] = U1["pt"] * U1["QO"] * V_["tO19"] * U1["r1"] * U1["S9"]);
@@ -472,6 +482,11 @@ void MRDSRG::compute_hbar_sequential_rotation() {
         TIME_LINE(Hbar0_ += 0.25 * B["gUX"] * B["gVY"] * Lambda2_["XYUV"]);
         TIME_LINE(Hbar0_ -= 0.25 * B["gUY"] * B["gVX"] * Lambda2_["XYUV"]);
         TIME_LINE(Hbar0_ += B["gux"] * B["gVY"] * Lambda2_["xYuV"]);
+//        TIME_LINE(Hbar0_ += 0.25 * B["uxg"] * B["vyg"] * Lambda2_["xyuv"]);
+//        TIME_LINE(Hbar0_ -= 0.25 * B["uyg"] * B["vxg"] * Lambda2_["xyuv"]);
+//        TIME_LINE(Hbar0_ += 0.25 * B["UXg"] * B["VYg"] * Lambda2_["XYUV"]);
+//        TIME_LINE(Hbar0_ -= 0.25 * B["UYg"] * B["VXg"] * Lambda2_["XYUV"]);
+//        TIME_LINE(Hbar0_ += B["uxg"] * B["VYg"] * Lambda2_["xYuV"]);
     } else {
         TIME_LINE(Hbar0_ += 0.25 * Hbar2_["uvxy"] * Lambda2_["xyuv"]);
         TIME_LINE(Hbar0_ += 0.25 * Hbar2_["UVXY"] * Lambda2_["XYUV"]);
@@ -504,6 +519,13 @@ void MRDSRG::compute_hbar_sequential_rotation() {
 
         TIME_LINE(O2_["PQRS"] = B["gPR"] * B["gQS"]);
         TIME_LINE(O2_["PQRS"] -= B["gPS"] * B["gQR"]);
+//        TIME_LINE(O2_["pqrs"] = B["prg"] * B["qsg"]);
+//        TIME_LINE(O2_["pqrs"] -= B["psg"] * B["qrg"]);
+
+//        TIME_LINE(O2_["pQrS"] = B["prg"] * B["QSg"]);
+
+//        TIME_LINE(O2_["PQRS"] = B["PRg"] * B["QSg"]);
+//        TIME_LINE(O2_["PQRS"] -= B["PSg"] * B["QRg"]);
         TIME_LINE(Hbar2_["pqrs"] = O2_["pqrs"]);
         TIME_LINE(Hbar2_["pQrS"] = O2_["pQrS"]);
         TIME_LINE(Hbar2_["PQRS"] = O2_["PQRS"]);
