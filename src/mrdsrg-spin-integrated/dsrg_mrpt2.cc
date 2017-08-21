@@ -651,7 +651,7 @@ double DSRG_MRPT2::compute_energy() {
         H1_T1_C1aa(F_, T1_, 0.5, C1);
         H1_T2_C1aa(F_, T2_, 0.5, C1);
         H2_T1_C1aa(V_, T1_, 0.5, C1);
-        H2_T2_C1hh(V_, T2_, 0.5, C1);
+        H2_T2_C1aa(V_, T2_, 0.5, C1);
         H1_T2_C2aaaa(F_, T2_, 0.5, C2);
         H2_T1_C2aaaa(V_, T1_, 0.5, C2);
         H2_T2_C2aaaa(V_, T2_, 0.5, C2);
@@ -1607,9 +1607,7 @@ void DSRG_MRPT2::compute_pt2_dm() {
     // compute DSRG-MRPT2 dressed dipoles
     Mbar0_ = std::vector<double>{rx, ry, rz};
     for (int i = 0; i < 3; ++i) {
-        if (do_dm_dirs_[i]) {
-            compute_pt2_dm_helper(dm_[i], Mbar0_[i], Mbar1_[i], Mbar2_[i]);
-        }
+        compute_pt2_dm_helper(dm_[i], Mbar0_[i], Mbar1_[i], Mbar2_[i]);
     }
 
     double x = Mbar0_[0];
@@ -1688,7 +1686,7 @@ void DSRG_MRPT2::compute_pt2_dm_helper(BlockedTensor& M, double& Mbar0, BlockedT
         H1_T1_C1aa(O1, T1_, 0.5, C1);
         H1_T2_C1aa(O1, T2_, 0.5, C1);
         H2_T1_C1aa(O2, T1_, 0.5, C1);
-        H2_T2_C1hh(O2, T2_, 0.5, C1);
+        H2_T2_C1aa(O2, T2_, 0.5, C1);
         H1_T2_C2aaaa(O1, T2_, 0.5, C2);
         H2_T1_C2aaaa(O2, T1_, 0.5, C2);
         H2_T2_C2aaaa(O2, T2_, 0.5, C2);
@@ -1788,7 +1786,64 @@ double DSRG_MRPT2::compute_energy_relaxed() {
 }
 
 std::shared_ptr<FCIIntegrals> DSRG_MRPT2::compute_Heff() {
-    // TODO: implement this function
+    // de-normal-order DSRG transformed Hamiltonian
+    double Edsrg = Eref_ + Hbar0_;
+    if (options_.get_bool("FORM_HBAR3")) {
+        deGNO_ints("Hamiltonian", Edsrg, Hbar1_, Hbar2_, Hbar3_);
+    } else {
+        deGNO_ints("Hamiltonian", Edsrg, Hbar1_, Hbar2_);
+    }
+
+    // transfer integrals to ForteIntegrals
+    ints_->set_scalar(Edsrg - Enuc_ - Efrzc_);
+
+    // TODO: before zero hhhh integrals, is is probably good to save a copy
+    std::vector<size_t> hole_mos = core_mos_;
+    hole_mos.insert(hole_mos.end(), actv_mos_.begin(), actv_mos_.end());
+    for (const size_t& i : hole_mos) {
+        for (const size_t& j : hole_mos) {
+            ints_->set_oei(i, j, 0.0, true);
+            ints_->set_oei(i, j, 0.0, false);
+            for (const size_t& k : hole_mos) {
+                for (const size_t& l : hole_mos) {
+                    ints_->set_tei(i, j, k, l, 0.0, true, true);
+                    ints_->set_tei(i, j, k, l, 0.0, true, false);
+                    ints_->set_tei(i, j, k, l, 0.0, false, false);
+                }
+            }
+        }
+    }
+
+    Hbar1_.citerate(
+        [&](const std::vector<size_t>& i, const std::vector<SpinType>& spin, const double& value) {
+            if (spin[0] == AlphaSpin) {
+                ints_->set_oei(i[0], i[1], value, true);
+            } else {
+                ints_->set_oei(i[0], i[1], value, false);
+            }
+        });
+
+    Hbar2_.citerate([&](const std::vector<size_t>& i, const std::vector<SpinType>& spin,
+                        const double& value) {
+        if ((spin[0] == AlphaSpin) && (spin[1] == AlphaSpin)) {
+            ints_->set_tei(i[0], i[1], i[2], i[3], value, true, true);
+        } else if ((spin[0] == AlphaSpin) && (spin[1] == BetaSpin)) {
+            ints_->set_tei(i[0], i[1], i[2], i[3], value, true, false);
+        } else if ((spin[0] == BetaSpin) && (spin[1] == BetaSpin)) {
+            ints_->set_tei(i[0], i[1], i[2], i[3], value, false, false);
+        }
+    });
+
+    ints_->update_integrals(false);
+
+    // create FCIIntegral shared_ptr
+    std::shared_ptr<FCIIntegrals> fci_ints =
+        std::make_shared<FCIIntegrals>(ints_, actv_mos_, core_mos_);
+    fci_ints->set_active_integrals(Hbar2_.block("aaaa"), Hbar2_.block("aAaA"),
+                                   Hbar2_.block("AAAA"));
+    fci_ints->compute_restricted_one_body_operator();
+
+    return fci_ints;
 }
 
 void DSRG_MRPT2::transfer_integrals() {
@@ -2103,7 +2158,7 @@ void DSRG_MRPT2::H2_T1_C1aa(BlockedTensor& H2, BlockedTensor& T1, const double& 
     dsrg_time_.add("211", timer.get());
 }
 
-void DSRG_MRPT2::H2_T2_C1hh(BlockedTensor& H2, BlockedTensor& T2, const double& alpha,
+void DSRG_MRPT2::H2_T2_C1aa(BlockedTensor& H2, BlockedTensor& T2, const double& alpha,
                             BlockedTensor& C1) {
     Timer timer;
     BlockedTensor temp;

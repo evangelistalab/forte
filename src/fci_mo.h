@@ -102,14 +102,15 @@ class FCI_MO : public Wavefunction {
 
     /// Compute dipole moments with DSRG transformed MO dipole integrals
     /// This function is used for reference relaxation and SA-MRDSRG
+    /// This function should be in RUN_DSRG
     std::map<std::string, std::vector<double>> compute_relaxed_dm(const std::vector<double>& dm0,
                                                                   std::vector<BlockedTensor>& dm1,
                                                                   std::vector<BlockedTensor>& dm2);
 
     /// Compute oscillator strengths using DSRG transformed MO dipole integrals
     /// This function is used for SA-MRDSRG
-    std::map<std::string, std::vector<double>> compute_relaxed_osc(const std::vector<double>& dm0,
-                                                                   std::vector<BlockedTensor>& dm1,
+    /// This function should be in RUN_DSRG
+    std::map<std::string, std::vector<double>> compute_relaxed_osc(std::vector<BlockedTensor>& dm1,
                                                                    std::vector<BlockedTensor>& dm2);
 
     /// Compute Fock (stored in ForteIntegal) using this->Da_

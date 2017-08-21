@@ -26,6 +26,8 @@
  * @END LICENSE
  */
 
+#include <iomanip>
+
 #include "../ci_rdms.h"
 #include "../fci/fci_solver.h"
 #include "../fci_mo.h"
@@ -132,18 +134,53 @@ std::vector<std::vector<double>> DSRG_MRPT2::compute_energy_sa() {
                 Edsrg_sa[n].push_back(eigen[i].second);
             }
         }
-        if (do_dm_) {
-            // scalar term with nuclear contributions
-            std::vector<double> M0(3, 0.0);
 
+        if (do_dm_) {
             // de-normal-order DSRG dipole integrals
             for (int z = 0; z < 3; ++z) {
-                deGNO_ints("Dipole Integrals", Mbar0_[z], Mbar1_[z], Mbar2_[z]);
-                M0[z] = Mbar0_[z] + dm_nuc_[z];
+                std::string name = "Dipole " + dm_dirs_[z] + " Integrals";
+                deGNO_ints(name, Mbar0_[z], Mbar1_[z], Mbar2_[z]);
             }
 
             // compute permanent dipoles
-            fci_mo.compute_relaxed_dm(M0, Mbar1_, Mbar2_);
+            auto dm_relax = fci_mo.compute_relaxed_dm(Mbar0_, Mbar1_, Mbar2_);
+
+            print_h2("SA-DSRG-PT2 Dipole Moment (in a.u.) Summary");
+            outfile->Printf("\n    %14s  %10s  %10s  %10s", "State", "X", "Y", "Z");
+            std::string dash(50, '-');
+            outfile->Printf("\n    %s", dash.c_str());
+            for (const auto& p : dm_relax) {
+                std::stringstream ss;
+                ss << std::setw(14) << p.first;
+                for (int i = 0; i < 3; ++i) {
+                    ss << "  " << std::setw(10) << std::fixed << std::right << std::setprecision(6)
+                       << p.second[i] + dm_nuc_[i];
+                }
+                outfile->Printf("\n    %s", ss.str().c_str());
+            }
+            outfile->Printf("\n    %s", dash.c_str());
+
+            // oscillator strength
+            auto osc = fci_mo.compute_relaxed_osc(Mbar1_, Mbar2_);
+
+            print_h2("SA-DSRG-PT2 Oscillator Strength (in a.u.) Summary");
+            outfile->Printf("\n    %32s  %10s  %10s  %10s  %10s", "State", "X", "Y", "Z", "Total");
+            dash = std::string(80, '-');
+            outfile->Printf("\n    %s", dash.c_str());
+            for (const auto& p : osc) {
+                std::stringstream ss;
+                ss << std::setw(32) << p.first;
+                double total = 0.0;
+                for (int i = 0; i < 3; ++i) {
+                    ss << "  " << std::setw(10) << std::fixed << std::right << std::setprecision(6)
+                       << p.second[i];
+                    total += p.second[i];
+                }
+                ss << "  " << std::setw(10) << std::fixed << std::right << std::setprecision(6)
+                   << total;
+                outfile->Printf("\n    %s", ss.str().c_str());
+            }
+            outfile->Printf("\n    %s", dash.c_str());
         }
     } else {
 

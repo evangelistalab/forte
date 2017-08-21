@@ -357,7 +357,7 @@ class DSRG_MRPT2 : public MASTER_DSRG {
     /// Compute one-body term of commutator [H2, T1]
     void H2_T1_C1aa(BlockedTensor& H2, BlockedTensor& T1, const double& alpha, BlockedTensor& C1);
     /// Compute one-body term of commutator [H2, T2]
-    void H2_T2_C1hh(BlockedTensor& H2, BlockedTensor& T2, const double& alpha, BlockedTensor& C1);
+    void H2_T2_C1aa(BlockedTensor& H2, BlockedTensor& T2, const double& alpha, BlockedTensor& C1);
 
     /// Compute two-body term of commutator [H2, T1]
     void H2_T1_C2aaaa(BlockedTensor& H2, BlockedTensor& T1, const double& alpha, BlockedTensor& C2);
