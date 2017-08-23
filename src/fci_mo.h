@@ -86,6 +86,17 @@ class FCI_MO : public Wavefunction {
     FCI_MO(SharedWavefunction ref_wfn, Options& options, std::shared_ptr<ForteIntegrals> ints,
            std::shared_ptr<MOSpaceInfo> mo_space_info);
 
+    /**
+     * @brief FCI_MO Constructor
+     * @param ref_wfn The reference wavefunction object
+     * @param options PSI4 and FORTE options
+     * @param ints ForteInegrals
+     * @param mo_space_info MOSpaceInfo
+     * @param fci_ints FCIInegrals
+     */
+    FCI_MO(SharedWavefunction ref_wfn, Options& options, std::shared_ptr<ForteIntegrals> ints,
+           std::shared_ptr<MOSpaceInfo> mo_space_info, std::shared_ptr<FCIIntegrals> fci_ints);
+
     /// Destructor
     ~FCI_MO();
 

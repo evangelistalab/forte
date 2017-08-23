@@ -566,9 +566,23 @@ void forte_old_methods(SharedWavefunction ref_wfn, Options& options,
             fci_mo->compute_energy();
             Reference reference = fci_mo->reference(max_rdm_level);
 
+            size_t na = mo_space_info->get_dimension("ACTIVE").sum();
+            ambit::Tensor Ua = ambit::Tensor::build(CoreTensor, "Uactv a", {na, na});
+            ambit::Tensor Ub = ambit::Tensor::build(CoreTensor, "Uactv b", {na, na});
+            Ua.iterate([&](const std::vector<size_t>& i, double& value) {
+                if (i[0] == i[1])
+                    value = 1.0;
+            });
+            Ub.iterate([&](const std::vector<size_t>& i, double& value) {
+                if (i[0] == i[1])
+                    value = 1.0;
+            });
+
             if (options.get_bool("SEMI_CANONICAL")) {
                 SemiCanonical semi(ref_wfn, ints, mo_space_info);
                 semi.semicanonicalize(reference, max_rdm_level);
+                Ua = semi.Ua_t();
+                Ub = semi.Ub_t();
             }
 
             if (options["AVG_STATE"].size() != 0) {
@@ -576,6 +590,7 @@ void forte_old_methods(SharedWavefunction ref_wfn, Options& options,
                     new DSRG_MRPT3(reference, ref_wfn, options, ints, mo_space_info));
                 dsrg_mrpt3->set_p_spaces(fci_mo->p_spaces());
                 dsrg_mrpt3->set_eigens(fci_mo->eigens());
+                dsrg_mrpt3->set_Uactv(Ua, Ub);
                 dsrg_mrpt3->compute_energy_sa();
             } else {
                 std::shared_ptr<DSRG_MRPT3> dsrg_mrpt3(
@@ -598,11 +613,8 @@ void forte_old_methods(SharedWavefunction ref_wfn, Options& options,
                 semi.semicanonicalize(reference, max_rdm_level);
             }
 
-            std::shared_ptr<FCIWfn> fciwfn_ref = fci->get_FCIWfn();
-
-            std::shared_ptr<DSRG_MRPT3> dsrg_mrpt3(
-                new DSRG_MRPT3(reference, ref_wfn, options, ints, mo_space_info));
-            dsrg_mrpt3->set_fciwfn0(fciwfn_ref);
+            auto dsrg_mrpt3 =
+                std::make_shared<DSRG_MRPT3>(reference, ref_wfn, options, ints, mo_space_info);
             if (options.get_str("RELAX_REF") != "NONE") {
                 dsrg_mrpt3->compute_energy_relaxed();
             } else {

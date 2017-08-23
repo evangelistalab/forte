@@ -30,6 +30,7 @@
 #include <math.h>
 #include <numeric>
 #include <tuple>
+#include <iomanip>
 
 #include "psi4/libmints/molecule.h"
 #include "psi4/libpsio/psio.h"
@@ -39,7 +40,7 @@
 #include <iostream>
 
 #include "../blockedtensorfactory.h"
-#include "../fci/fci_solver.h"
+#include "../fci/fci.h"
 #include "../fci_mo.h"
 #include "../mini-boost/boost/format.hpp"
 #include "dsrg_mrpt3.h"
@@ -52,13 +53,9 @@ namespace forte {
 DSRG_MRPT3::DSRG_MRPT3(Reference reference, SharedWavefunction ref_wfn, Options& options,
                        std::shared_ptr<ForteIntegrals> ints,
                        std::shared_ptr<MOSpaceInfo> mo_space_info)
-    : Wavefunction(options), reference_(reference), ints_(ints), mo_space_info_(mo_space_info),
-      tensor_type_(ambit::CoreTensor), BTF_(new BlockedTensorFactory(options)) {
-    // Copy the wavefunction information
-    shallow_copy(ref_wfn);
+    : MASTER_DSRG(reference, ref_wfn, options, ints, mo_space_info) {
 
-    print_method_banner({"Driven Similarity Renormalization Group",
-                         "Third-Order Perturbation Theory", "Chenyang Li"});
+    print_method_banner({"MR-DSRG Third-Order Perturbation Theory", "Chenyang Li"});
     outfile->Printf("\n    Reference:");
     outfile->Printf("\n      J. Chem. Phys. 2017, 146, 124132.");
 
@@ -68,172 +65,56 @@ DSRG_MRPT3::DSRG_MRPT3(Reference reference, SharedWavefunction ref_wfn, Options&
 DSRG_MRPT3::~DSRG_MRPT3() { cleanup(); }
 
 void DSRG_MRPT3::startup() {
-    s_ = options_.get_double("DSRG_S");
-    if (s_ < 0) {
-        outfile->Printf("\n  S parameter for DSRG must >= 0!");
-        throw PSIEXCEPTION("S parameter for DSRG must >= 0!");
-    }
-    taylor_threshold_ = options_.get_int("TAYLOR_THRESHOLD");
-    if (taylor_threshold_ <= 0) {
-        outfile->Printf("\n  Threshold for Taylor expansion must be an integer "
-                        "greater than 0!");
-        throw PSIEXCEPTION("Threshold for Taylor expansion must be an integer "
-                           "greater than 0!");
-    }
-
-    source_ = options_.get_str("SOURCE");
-    if (source_ != "STANDARD" && source_ != "LABS" && source_ != "DYSON") {
-        outfile->Printf("\n  Warning: SOURCE option \"%s\" is not implemented "
-                        "in DSRG-MRPT3. Changed to STANDARD.",
-                        source_.c_str());
-        source_ = "STANDARD";
-    }
-    if (source_ == "STANDARD") {
-        dsrg_source_ = std::make_shared<STD_SOURCE>(s_, taylor_threshold_);
-    } else if (source_ == "LABS") {
-        dsrg_source_ = std::make_shared<LABS_SOURCE>(s_, taylor_threshold_);
-    } else if (source_ == "DYSON") {
-        dsrg_source_ = std::make_shared<DYSON_SOURCE>(s_, taylor_threshold_);
-    }
-
-    ntamp_ = options_.get_int("NTAMP");
-    intruder_tamp_ = options_.get_double("INTRUDER_TAMP");
-
-    // convert to appropriate memory unit
-    std::map<std::string, double> to_XB;
-    to_XB["B"] = 1.0;
-    to_XB["KB"] = 1000.0; // use 1000.0 for safety
-    to_XB["MB"] = 1000000.0;
-    to_XB["GB"] = 1000000000.0;
-    to_XB["TB"] = 1000000000000.0;
-    to_XB["PB"] = 1000000000000000.0;
-
-    auto converter = [&](long long int bytes) -> std::string {
-        if (bytes < 0) {
-            throw PSIEXCEPTION("Memory cannot be negative.");
-        }
-
-        std::string out;
-        for (auto& XB : to_XB) {
-            double xb = bytes / XB.second;
-            if (xb >= 0.1 && xb < 100.0) {
-                std::stringstream ss;
-                ss.precision(2);
-                ss << std::fixed << xb;
-                out = ss.str();
-                out += (XB.first == "B" ? "  " : " ") + XB.first;
-                break;
-            }
-        }
-        return out;
+    // lambda to print memory in good-looking unit
+    auto to_XB = [](size_t nele, size_t type_size) {
+        auto p = to_xb(nele, type_size);
+        auto value = p.first;
+        auto unit = p.second;
+        std::stringstream ss;
+        ss << std::fixed << std::setprecision(2) << value << " " << std::setw(2) << unit;
+        return ss.str();
     };
+
+    // sizes of each space
+    size_t sc = core_mos_.size();
+    size_t sa = actv_mos_.size();
+    size_t sv = virt_mos_.size();
+    size_t sh = sc + sa;
+    size_t sp = sa + sv;
+    size_t sg = sc + sp;
 
     // memory usage
     mem_total_ = static_cast<long long int>(0.98 * Process::environment.get_memory());
     std::vector<std::pair<std::string, std::string>> mem_info{
-        {"Memory asigned", converter(mem_total_)}};
+        {"Memory asigned", to_XB(mem_total_, 1)}};
 
-    // density fitted ERI?
-    eri_df_ = false;
-    std::string int_type = options_.get_str("INT_TYPE");
-    if (int_type == "CHOLESKY" || int_type == "DF" || int_type == "DISKDF") {
-        eri_df_ = true;
+    // number of elements stored in memory
+    size_t nelement = 6 * sh * sh * sh * sh + 6 * sa * sa * sa * sa;
+    if (options_.get_str("THREEPDC") != "ZERO") {
+        nelement += 4 * sa * sa * sa * sa * sa * sa;
     }
-
-    // get frozen core energy
-    frozen_core_energy_ = ints_->frozen_core_energy();
-
-    // get reference energy
-    Eref_ = reference_.get_Eref();
-
-    // orbital spaces
-    BlockedTensor::reset_mo_spaces();
-    BlockedTensor::set_expert_mode(true);
-    acore_mos_ = mo_space_info_->get_corr_abs_mo("RESTRICTED_DOCC");
-    bcore_mos_ = mo_space_info_->get_corr_abs_mo("RESTRICTED_DOCC");
-    aactv_mos_ = mo_space_info_->get_corr_abs_mo("ACTIVE");
-    bactv_mos_ = mo_space_info_->get_corr_abs_mo("ACTIVE");
-    avirt_mos_ = mo_space_info_->get_corr_abs_mo("RESTRICTED_UOCC");
-    bvirt_mos_ = mo_space_info_->get_corr_abs_mo("RESTRICTED_UOCC");
-
-    // define space labels
-    acore_label_ = "c";
-    aactv_label_ = "a";
-    avirt_label_ = "v";
-    bcore_label_ = "C";
-    bactv_label_ = "A";
-    bvirt_label_ = "V";
-    BTF_->add_mo_space(acore_label_, "mn", acore_mos_, AlphaSpin);
-    BTF_->add_mo_space(bcore_label_, "MN", bcore_mos_, BetaSpin);
-    BTF_->add_mo_space(aactv_label_, "uvwxyz", aactv_mos_, AlphaSpin);
-    BTF_->add_mo_space(bactv_label_, "UVWXYZ", bactv_mos_, BetaSpin);
-    BTF_->add_mo_space(avirt_label_, "ef", avirt_mos_, AlphaSpin);
-    BTF_->add_mo_space(bvirt_label_, "EF", bvirt_mos_, BetaSpin);
-
-    // map space labels to mo spaces
-    label_to_spacemo_[acore_label_[0]] = acore_mos_;
-    label_to_spacemo_[bcore_label_[0]] = bcore_mos_;
-    label_to_spacemo_[aactv_label_[0]] = aactv_mos_;
-    label_to_spacemo_[bactv_label_[0]] = bactv_mos_;
-    label_to_spacemo_[avirt_label_[0]] = avirt_mos_;
-    label_to_spacemo_[bvirt_label_[0]] = bvirt_mos_;
-
-    // define composite spaces
-    BTF_->add_composite_mo_space("h", "ijkl", {acore_label_, aactv_label_});
-    BTF_->add_composite_mo_space("H", "IJKL", {bcore_label_, bactv_label_});
-    BTF_->add_composite_mo_space("p", "abcd", {aactv_label_, avirt_label_});
-    BTF_->add_composite_mo_space("P", "ABCD", {bactv_label_, bvirt_label_});
-    BTF_->add_composite_mo_space("g", "pqrsto", {acore_label_, aactv_label_, avirt_label_});
-    BTF_->add_composite_mo_space("G", "PQRSTO", {bcore_label_, bactv_label_, bvirt_label_});
-
-    // sizes of each space
-    size_t sc = acore_mos_.size();
-    size_t sa = aactv_mos_.size();
-    size_t sv = avirt_mos_.size();
-    size_t sh = sc + sa;
-    size_t sp = sa + sv;
-    size_t sg = sc + sp;
-    size_t nelement = 0;
 
     // if density fitted
     if (eri_df_) {
-        aux_label_ = "L";
-        aux_mos_ = std::vector<size_t>(ints_->nthree());
-        std::iota(aux_mos_.begin(), aux_mos_.end(), 0);
-
-        BTF_->add_mo_space(aux_label_, "g", aux_mos_, NoSpin);
-        label_to_spacemo_[aux_label_[0]] = aux_mos_;
-
         B_ = BTF_->build(tensor_type_, "B 3-idx", {"Lgg", "LGG"});
         B_.iterate([&](const std::vector<size_t>& i, const std::vector<SpinType>&, double& value) {
             value = ints_->three_integral(i[0], i[1], i[2]);
         });
 
         size_t sL = aux_mos_.size();
-        nelement = 6 * sh * sh * sh * sh + 4 * sa * sa * sa * sa * sa * sa + 6 * sa * sa * sa * sa +
-                   sL * sg * sg;
-        mem_info.push_back({"Memory used before DSRG", converter(nelement * sizeof(double))});
-        mem_info.push_back({"Tensor B (3 index)", converter(2 * sL * sg * sg * sizeof(double))});
+        nelement += sL * sg * sg;
+        mem_info.push_back({"Memory used before DSRG", to_XB(nelement, sizeof(double))});
+        mem_info.push_back({"Tensor B (3 index)", to_XB(2 * sL * sg * sg, sizeof(double))});
         mem_total_ -= 2 * sL * sg * sg * sizeof(double);
-
     } else {
-        nelement = 6 * sh * sh * sh * sh + 4 * sa * sa * sa * sa * sa * sa + 6 * sa * sa * sa * sa +
-                   3 * sg * sg * sg * sg;
-        mem_info.push_back({"Memory used before DSRG", converter(nelement * sizeof(double))});
+        nelement += 3 * sg * sg * sg * sg;
+        mem_info.push_back({"Memory used before DSRG", to_XB(nelement, sizeof(double))});
     }
     mem_total_ -= nelement * sizeof(double);
 
-    // fill in density matrices
-    Eta1_ = BTF_->build(tensor_type_, "Eta1", spin_cases({"aa"}));
-    Gamma1_ = BTF_->build(tensor_type_, "Gamma1", spin_cases({"aa"}));
-    Lambda2_ = BTF_->build(tensor_type_, "Lambda2", spin_cases({"aaaa"}));
-    if (options_.get_str("THREEPDC") != "ZERO") {
-        Lambda3_ = BTF_->build(tensor_type_, "Lambda3", spin_cases({"aaaaaa"}));
-    }
-    build_density();
-
-    nelement = 4 * sa * sa + 3 * sa * sa * sa * sa + 4 * sa * sa * sa * sa * sa * sa;
-    mem_info.push_back({"Density Cumulants (1, 2, 3)", converter(nelement * sizeof(double))});
+    // size of density cumulants (Lambda3 is only stored in Reference object)
+    nelement = 4 * sa * sa + 3 * sa * sa * sa * sa;
+    mem_info.push_back({"Density Cumulants (1, 2)", to_XB(nelement, sizeof(double))});
     mem_total_ -= nelement * sizeof(double);
 
     // prepare integrals
@@ -241,43 +122,40 @@ void DSRG_MRPT3::startup() {
     build_tei(V_);
 
     nelement = 3 * sp * sp * sh * sh;
-    mem_info.push_back({"Asym MO tei (hhpp)", converter(nelement * sizeof(double))});
+    mem_info.push_back({"Asym MO tei (hhpp)", to_XB(nelement, sizeof(double))});
     mem_total_ -= nelement * sizeof(double);
 
-    // build Fock matrix and its diagonal elements
-    size_t ncmo = mo_space_info_->size("CORRELATED");
-    Fa_ = std::vector<double>(ncmo);
-    Fb_ = std::vector<double>(ncmo);
+    // copy Fock matrix from master_dsrg
     F_ = BTF_->build(tensor_type_, "Fock", spin_cases({"gc", "pa", "vv"}));
-    build_fock_half();
+    F_["pq"] = Fock_["pq"];
+    F_["PQ"] = Fock_["PQ"];
+    Fa_ = Fdiag_a_;
+    Fb_ = Fdiag_b_;
 
     // save a copy of zeroth-order Hamiltonian
-    F0th_ = BTF_->build(tensor_type_, "T1 1st", spin_cases({"cc", "aa", "vv"}));
+    F0th_ = BTF_->build(tensor_type_, "Fock 0th", spin_cases({"cc", "aa", "vv"}));
     F0th_["pq"] = F_["pq"];
     F0th_["PQ"] = F_["PQ"];
 
     // save a copy of first-order Fock matrix
-    F1st_ = BTF_->build(tensor_type_, "Fock", spin_cases({"pc", "va", "cp", "av"}));
+    F1st_ = BTF_->build(tensor_type_, "Fock 1st", spin_cases({"pc", "va", "cp", "av"}));
     F1st_["ai"] = F_["ai"];
     F1st_["ia"] = F_["ai"];
     F1st_["AI"] = F_["AI"];
     F1st_["IA"] = F_["AI"];
 
     nelement = 4 * sg * sg + 2 * sg;
-    mem_info.push_back({"Fock matrix", converter(nelement * sizeof(double))});
+    mem_info.push_back({"Fock matrix", to_XB(nelement, sizeof(double))});
     mem_total_ -= nelement * sizeof(double);
 
     // Prepare Hbar
-    relax_ref_ = options_.get_str("RELAX_REF");
-    multi_state_ = options_["AVG_STATE"].size() != 0;
-    if (relax_ref_ != "NONE" || multi_state_) {
-        if (relax_ref_ != "ONCE" && !multi_state_) {
-            outfile->Printf("\n  Warning: RELAX_REF option \"%s\" is not "
-                            "supported. Change to ONCE",
-                            relax_ref_.c_str());
-            relax_ref_ = "ONCE";
-        }
+    if (relax_ref_ != "NONE" && relax_ref_ != "ONCE") {
+        outfile->Printf("\n\n  Warning: RELAX_REF option \"%s\" is not supported. Change to ONCE.",
+                        relax_ref_.c_str());
+        relax_ref_ = "ONCE";
+    }
 
+    if (relax_ref_ != "NONE" || multi_state_) {
         Hbar1_ = BTF_->build(tensor_type_, "One-body Hbar", spin_cases({"aa"}));
         Hbar2_ = BTF_->build(tensor_type_, "Two-body Hbar", spin_cases({"aaaa"}));
         Hbar1_["uv"] = F_["uv"];
@@ -287,15 +165,11 @@ void DSRG_MRPT3::startup() {
         Hbar2_["UVXY"] = V_["UVXY"];
 
         nelement = 2 * sa * sa + 3 * sa * sa * sa * sa;
-        mem_info.push_back({"Hbar active (aa, aaaa)", converter(nelement * sizeof(double))});
+        mem_info.push_back({"Hbar active (aa, aaaa)", to_XB(nelement, sizeof(double))});
         mem_total_ -= nelement * sizeof(double);
     }
 
-    // initialize timer for commutator
-    dsrg_time_ = DSRG_TIME();
-
     // Print levels
-    print_ = options_.get_int("PRINT");
     if (print_ > 1) {
         Gamma1_.print(stdout);
         Eta1_.print(stdout);
@@ -303,29 +177,27 @@ void DSRG_MRPT3::startup() {
     }
     if (print_ > 3) {
         V_.print(stdout);
-        ;
     }
-
     profile_print_ = options_.get_bool("PRINT_TIME_PROFILE");
 
     // other memory usage
     nelement = 3 * (sp * sp * sh * sh - sa * sa * sa * sa) + 2 * (sh * sp - sa * sa);
-    mem_info.push_back({"Amplitudes (hp, hhpp)", converter(nelement * sizeof(double))});
-    mem_info.push_back({"O intermediates (hp, hhpp)", converter(nelement * sizeof(double))});
+    mem_info.push_back({"Amplitudes (hp, hhpp)", to_XB(nelement, sizeof(double))});
+    mem_info.push_back({"O intermediates (hp, hhpp)", to_XB(nelement, sizeof(double))});
     mem_total_ -= 2 * nelement * sizeof(double);
-    mem_info.push_back({"Memory remaining", converter(mem_total_)});
+    mem_info.push_back({"Memory remaining", to_XB(mem_total_, 1)});
 
     nelement = 3 * (sp * sp * sh * sh - sa * sa * sa * sa) + 6 * (sh * sp - sa * sa);
-    mem_info.push_back({"Energy part 1 min", converter(nelement * sizeof(double))});
+    mem_info.push_back({"Energy part 1 min", to_XB(nelement, sizeof(double))});
 
     if (!eri_df_) {
         nelement = 3 * (sp * sp * sh * sh - sa * sa * sa * sa) + 2 * (sh * sp - sa * sa) +
                    sg * sg * sg * sg;
-        mem_info.push_back({"Energy part 2 min", converter(nelement * sizeof(double))});
+        mem_info.push_back({"Energy part 2 min", to_XB(nelement, sizeof(double))});
     } else {
         nelement =
             3 * (sp * sp * sh * sh - sa * sa * sa * sa) + 2 * (sh * sp - sa * sa) + sv * sv * sc;
-        mem_info.push_back({"Energy part 2 min", converter(nelement * sizeof(double))});
+        mem_info.push_back({"Energy part 2 min", to_XB(nelement, sizeof(double))});
     }
 
     // print calculation summary
@@ -334,34 +206,6 @@ void DSRG_MRPT3::startup() {
     print_h2("Memory Infomation");
     for (auto& str_dim : mem_info) {
         outfile->Printf("\n    %-40s %15s", str_dim.first.c_str(), str_dim.second.c_str());
-    }
-}
-
-void DSRG_MRPT3::build_density() {
-    // prepare one-particle and one-hole densities
-    Gamma1_.block("aa")("pq") = reference_.L1a()("pq");
-    Gamma1_.block("AA")("pq") = reference_.L1a()("pq");
-
-    (Eta1_.block("aa")).iterate([&](const std::vector<size_t>& i, double& value) {
-        value = i[0] == i[1] ? 1.0 : 0.0;
-    });
-    (Eta1_.block("AA")).iterate([&](const std::vector<size_t>& i, double& value) {
-        value = i[0] == i[1] ? 1.0 : 0.0;
-    });
-    Eta1_.block("aa")("pq") -= reference_.L1a()("pq");
-    Eta1_.block("AA")("pq") -= reference_.L1a()("pq");
-
-    // prepare two-body density cumulants
-    Lambda2_.block("aaaa")("pqrs") = reference_.L2aa()("pqrs");
-    Lambda2_.block("aAaA")("pqrs") = reference_.L2ab()("pqrs");
-    Lambda2_.block("AAAA")("pqrs") = reference_.L2bb()("pqrs");
-
-    // prepare three-body density cumulants
-    if (options_.get_str("THREEPDC") != "ZERO") {
-        Lambda3_.block("aaaaaa")("pqrstu") = reference_.L3aaa()("pqrstu");
-        Lambda3_.block("aaAaaA")("pqrstu") = reference_.L3aab()("pqrstu");
-        Lambda3_.block("aAAaAA")("pqrstu") = reference_.L3abb()("pqrstu");
-        Lambda3_.block("AAAAAA")("pqrstu") = reference_.L3bbb()("pqrstu");
     }
 }
 
@@ -396,7 +240,7 @@ void DSRG_MRPT3::build_fock_half() {
                 size_t nq = label_to_spacemo_[block[1]][i[1]];
                 value = ints_->oei_a(np, nq);
 
-                for (const size_t& nm : acore_mos_) {
+                for (const size_t& nm : core_mos_) {
                     value += ints_->aptei_aa(np, nm, nq, nm);
                     value += ints_->aptei_ab(np, nm, nq, nm);
                 }
@@ -407,7 +251,7 @@ void DSRG_MRPT3::build_fock_half() {
                 size_t nq = label_to_spacemo_[block[1]][i[1]];
                 value = ints_->oei_b(np, nq);
 
-                for (const size_t& nm : bcore_mos_) {
+                for (const size_t& nm : core_mos_) {
                     value += ints_->aptei_bb(np, nm, nq, nm);
                     value += ints_->aptei_ab(nm, np, nm, nq);
                 }
@@ -454,13 +298,13 @@ void DSRG_MRPT3::build_fock_full() {
     F_.iterate([&](const std::vector<size_t>& i, const std::vector<SpinType>& spin, double& value) {
         if (spin[0] == AlphaSpin) {
             value = ints_->oei_a(i[0], i[1]);
-            for (const size_t& nm : acore_mos_) {
+            for (const size_t& nm : core_mos_) {
                 value += ints_->aptei_aa(i[0], nm, i[1], nm);
                 value += ints_->aptei_ab(i[0], nm, i[1], nm);
             }
         } else {
             value = ints_->oei_b(i[0], i[1]);
-            for (const size_t& nm : bcore_mos_) {
+            for (const size_t& nm : core_mos_) {
                 value += ints_->aptei_bb(i[0], nm, i[1], nm);
                 value += ints_->aptei_ab(nm, i[0], nm, i[1]);
             }
@@ -485,56 +329,8 @@ void DSRG_MRPT3::build_fock_full() {
 }
 
 bool DSRG_MRPT3::check_semicanonical() {
-    print_h2("Checking Orbitals");
-
-    // zero diagonal elements
-    F0th_.iterate([&](const std::vector<size_t>& i, const std::vector<SpinType>&, double& value) {
-        if (i[0] == i[1]) {
-            value = 0.0;
-        }
-    });
-
-    // off diagonal elements of diagonal blocks
-    double Foff_sum = 0.0;
-    std::vector<double> Foff;
-    for (const auto& block : {"cc", "aa", "vv", "CC", "AA", "VV"}) {
-        double value = F0th_.block(block).norm();
-        Foff.emplace_back(value);
-        Foff_sum += value;
-    }
-
-    // add diagonal elements back
-    F0th_.iterate(
-        [&](const std::vector<size_t>& i, const std::vector<SpinType>& spin, double& value) {
-            if (spin[0] == AlphaSpin && (i[0] == i[1])) {
-                value = Fa_[i[0]];
-            }
-            if (spin[0] == BetaSpin && (i[0] == i[1])) {
-                value = Fb_[i[0]];
-            }
-        });
-
-    bool semi = false;
-    double threshold = 0.1 * std::sqrt(options_.get_double("E_CONVERGENCE"));
-    if (Foff_sum > threshold) {
-        std::string sep(2 + 16 * 3, '-');
-        outfile->Printf("\n    Warning! Orbitals are not semi-canonicalized!");
-        outfile->Printf("\n    Off-Diagonal norms of the core, active, virtual "
-                        "blocks of Fock matrix");
-        outfile->Printf("\n       %15s %15s %15s", "core", "active", "virtual");
-        outfile->Printf("\n    %s", sep.c_str());
-        outfile->Printf("\n    Fa %15.10f %15.10f %15.10f", Foff[0], Foff[1], Foff[2]);
-        outfile->Printf("\n    Fb %15.10f %15.10f %15.10f", Foff[3], Foff[4], Foff[5]);
-        outfile->Printf("\n    %s\n", sep.c_str());
-
-        outfile->Printf("\n    DSRG energy is reliable roughly to the same "
-                        "digit as max(|F_ij|, i != j), F: Fock diag. blocks.\n");
-    } else {
-        outfile->Printf("\n    Orbitals are semi-canonicalized.");
-        semi = true;
-    }
-
-    if (ignore_semicanonical_ && Foff_sum > threshold) {
+    bool semi = check_semi_orbs();
+    if (ignore_semicanonical_) {
         std::string actv_type = options_.get_str("FCIMO_ACTV_TYPE");
         if (actv_type == "CIS" || actv_type == "CISD") {
             outfile->Printf("\n    It is OK for Fock (active) not being diagonal because %s "
@@ -548,7 +344,6 @@ bool DSRG_MRPT3::check_semicanonical() {
             outfile->Printf(
                 "\n    Please inspect if the Fock diag. blocks (C, A, V) are diagonal or not.");
         }
-
         semi = true;
     }
 
@@ -620,7 +415,7 @@ double DSRG_MRPT3::compute_energy() {
     // analyze amplitudes
     outfile->Printf("\n    Active Indices: ");
     int c = 0;
-    for (const auto& idx : aactv_mos_) {
+    for (const auto& idx : actv_mos_) {
         outfile->Printf("%4zu ", idx);
         if (++c % 10 == 0)
             outfile->Printf("\n    %16c", ' ');
@@ -738,9 +533,9 @@ double DSRG_MRPT3::compute_energy_pt3_1() {
     BlockedTensor C1, C2, temp1, temp2;
 
     // estimate memory
-    size_t sa = acore_mos_.size();
-    size_t sh = sa + aactv_mos_.size();
-    size_t sp = sa + avirt_mos_.size();
+    size_t sa = core_mos_.size();
+    size_t sh = sa + actv_mos_.size();
+    size_t sp = sa + virt_mos_.size();
     size_t shp = sh * sp;
     size_t saa = sa * sa;
 
@@ -1069,7 +864,7 @@ double DSRG_MRPT3::compute_energy_pt3_2() {
     print_h2("Second-Order Amplitudes Summary");
     outfile->Printf("\n    Active Indices: ");
     int c = 0;
-    for (const auto& idx : aactv_mos_) {
+    for (const auto& idx : actv_mos_) {
         outfile->Printf("%4zu ", idx);
         if (++c % 10 == 0)
             outfile->Printf("\n    %16c", ' ');
@@ -1441,7 +1236,7 @@ double DSRG_MRPT3::compute_energy_sa() {
 
     // prepare FCI integrals
     std::shared_ptr<FCIIntegrals> fci_ints =
-        std::make_shared<FCIIntegrals>(ints_, aactv_mos_, acore_mos_);
+        std::make_shared<FCIIntegrals>(ints_, actv_mos_, core_mos_);
     fci_ints->set_active_integrals(Hbar2_.block("aaaa"), Hbar2_.block("aAaA"),
                                    Hbar2_.block("AAAA"));
     if (eri_df_) {
@@ -1469,142 +1264,207 @@ double DSRG_MRPT3::compute_energy_sa() {
     oei.block("aa").data() = fci_ints->oei_a_vector();
     oei.block("AA").data() = fci_ints->oei_b_vector();
 
-    // get nuclear repulsion energy
-    std::shared_ptr<Molecule> molecule = Process::environment.molecule();
-    double Enuc = molecule->nuclear_repulsion_energy();
-
     // loop over entries of AVG_STATE
     int nentry = eigens_.size();
     std::vector<std::vector<double>> Edsrg_sa(nentry, std::vector<double>());
 
-    for (int n = 0; n < nentry; ++n) {
-        int irrep = options_["AVG_STATE"][n][0].to_integer();
-        int multi = options_["AVG_STATE"][n][1].to_integer();
-        int nstates = options_["AVG_STATE"][n][2].to_integer();
-        std::vector<psi::forte::STLBitsetDeterminant> p_space = p_spaces_[n];
-
-        // print current symmetry
-        std::stringstream ss;
-        ss << "Diagonalize Effective Hamiltonian (" << multi_label[multi - 1] << " "
-           << irrep_symbol[irrep] << ")";
-        print_h2(ss.str());
-
-        // diagonalize which the second-order effective Hamiltonian
-        // SA_FULL: CASCI using determinants
-        // SA_SUB: H_AB = <A|H|B> where A and B are SA-CAS states
-        if (options_.get_str("DSRG_MULTI_STATE") == "SA_FULL") {
-
-            outfile->Printf("    Use string FCI code.");
-
-            // prepare FCISolver
-            int charge = Process::environment.molecule()->molecular_charge();
-            if (options_["CHARGE"].has_changed()) {
-                charge = options_.get_int("CHARGE");
+    // call FCI_MO if SA_FULL and CAS_TYPE == CAS
+    if (options_.get_str("DSRG_MULTI_STATE") == "SA_FULL" &&
+        options_.get_str("CAS_TYPE") == "CAS") {
+        FCI_MO fci_mo(reference_wavefunction_, options_, ints_, mo_space_info_);
+        fci_mo.compute_energy();
+        auto eigens = fci_mo.eigens();
+        for (int n = 0; n < nentry; ++n) {
+            auto eigen = eigens[n];
+            int ni = eigen.size();
+            for (int i = 0; i < ni; ++i) {
+                Edsrg_sa[n].push_back(eigen[i].second);
             }
-            auto nelec = 0;
-            int natom = Process::environment.molecule()->natom();
-            for (int i = 0; i < natom; ++i) {
-                nelec += Process::environment.molecule()->fZ(i);
-            }
-            nelec -= charge;
-            int ms = (multi + 1) % 2;
-            auto nelec_actv =
-                nelec - 2 * mo_space_info_->size("FROZEN_DOCC") - 2 * acore_mos_.size();
-            auto na = (nelec_actv + ms) / 2;
-            auto nb = nelec_actv - na;
+        }
 
-            Dimension active_dim = mo_space_info_->get_dimension("ACTIVE");
-            int ntrial_per_root = options_.get_int("NTRIAL_PER_ROOT");
-
-            FCISolver fcisolver(active_dim, acore_mos_, aactv_mos_, na, nb, multi, irrep, ints_,
-                                mo_space_info_, ntrial_per_root, print_, options_);
-            fcisolver.set_max_rdm_level(1);
-            fcisolver.set_nroot(nstates);
-            fcisolver.set_root(nstates - 1);
-            fcisolver.set_fci_iterations(options_.get_int("FCI_MAXITER"));
-            fcisolver.set_collapse_per_root(options_.get_int("DL_COLLAPSE_PER_ROOT"));
-            fcisolver.set_subspace_per_root(options_.get_int("DL_SUBSPACE_PER_ROOT"));
-
-            if (eri_df_) {
-                fcisolver.use_user_integrals_and_restricted_docc(true);
-                fcisolver.set_integral_pointer(fci_ints);
+        if (do_dm_) {
+            // de-normal-order DSRG dipole integrals
+            for (int z = 0; z < 3; ++z) {
+                std::string name = "Dipole " + dm_dirs_[z] + " Integrals";
+                deGNO_ints(name, Mbar0_[z], Mbar1_[z], Mbar2_[z]);
             }
 
-            // compute energy and fill in results
-            fcisolver.compute_energy();
-            SharedVector Ems = fcisolver.eigen_vals();
-            for (int i = 0; i < nstates; ++i) {
-                Edsrg_sa[n].push_back(Ems->get(i) + Enuc);
-            }
+            // compute permanent dipoles
+            auto dm_relax = fci_mo.compute_relaxed_dm(Mbar0_, Mbar1_, Mbar2_);
 
-        } else {
-
-            outfile->Printf("\n    Use the sub-space of CASCI.");
-
-            int dim = (eigens_[n][0].first)->dim();
-            size_t eigen_size = eigens_[n].size();
-            SharedMatrix evecs(new Matrix("evecs", dim, eigen_size));
-            for (int i = 0; i < eigen_size; ++i) {
-                evecs->set_column(0, i, (eigens_[n][i]).first);
-            }
-
-            SharedMatrix Heff(new Matrix(
-                "Heff " + multi_label[multi - 1] + " " + irrep_symbol[irrep], nstates, nstates));
-            for (int A = 0; A < nstates; ++A) {
-                for (int B = A; B < nstates; ++B) {
-
-                    // compute rdms
-                    CI_RDMS ci_rdms(options_, fci_ints, p_space, evecs, A, B);
-                    ci_rdms.set_symmetry(irrep);
-
-                    std::vector<double> opdm_a, opdm_b;
-                    std::vector<double> tpdm_aa, tpdm_ab, tpdm_bb;
-
-                    ci_rdms.compute_1rdm(opdm_a, opdm_b);
-                    ci_rdms.compute_2rdm(tpdm_aa, tpdm_ab, tpdm_bb);
-
-                    // put rdms in tensor format
-                    BlockedTensor D1 = BTF_->build(tensor_type_, "D1", spin_cases({"aa"}), true);
-                    D1.block("aa").data() = opdm_a;
-                    D1.block("AA").data() = opdm_b;
-
-                    BlockedTensor D2 = BTF_->build(tensor_type_, "D2", spin_cases({"aaaa"}), true);
-                    D2.block("aaaa").data() = tpdm_aa;
-                    D2.block("aAaA").data() = tpdm_ab;
-                    D2.block("AAAA").data() = tpdm_bb;
-
-                    double H_AB = 0.0;
-                    H_AB += oei["uv"] * D1["uv"];
-                    H_AB += oei["UV"] * D1["UV"];
-                    H_AB += 0.25 * Hbar2_["uvxy"] * D2["xyuv"];
-                    H_AB += 0.25 * Hbar2_["UVXY"] * D2["XYUV"];
-                    H_AB += Hbar2_["uVxY"] * D2["xYuV"];
-
-                    if (A == B) {
-                        H_AB += ints_->frozen_core_energy() + fci_ints->scalar_energy() + Enuc;
-                        Heff->set(A, B, H_AB);
-                    } else {
-                        Heff->set(A, B, H_AB);
-                        Heff->set(B, A, H_AB);
-                    }
+            print_h2("SA-DSRG-PT3 Dipole Moment (in a.u.) Summary");
+            outfile->Printf("\n    %14s  %10s  %10s  %10s", "State", "X", "Y", "Z");
+            std::string dash(50, '-');
+            outfile->Printf("\n    %s", dash.c_str());
+            for (const auto& p : dm_relax) {
+                std::stringstream ss;
+                ss << std::setw(14) << p.first;
+                for (int i = 0; i < 3; ++i) {
+                    ss << "  " << std::setw(10) << std::fixed << std::right << std::setprecision(6)
+                       << p.second[i] + dm_nuc_[i];
                 }
-            } // end forming effective Hamiltonian
-
-            print_h2("Effective Hamiltonian Summary");
-            outfile->Printf("\n");
-            Heff->print();
-            SharedMatrix U(new Matrix("U of Heff", nstates, nstates));
-            SharedVector Ems(new Vector("MS Energies", nstates));
-            Heff->diagonalize(U, Ems);
-            U->eivprint(Ems);
-
-            // fill in Edsrg_sa
-            for (int i = 0; i < nstates; ++i) {
-                Edsrg_sa[n].push_back(Ems->get(i));
+                outfile->Printf("\n    %s", ss.str().c_str());
             }
-        } // end if DSRG_AVG_DIAG
+            outfile->Printf("\n    %s", dash.c_str());
 
-    } // end looping averaged states
+            // oscillator strength
+            auto osc = fci_mo.compute_relaxed_osc(Mbar1_, Mbar2_);
+
+            print_h2("SA-DSRG-PT3 Oscillator Strength (in a.u.) Summary");
+            outfile->Printf("\n    %32s  %10s  %10s  %10s  %10s", "State", "X", "Y", "Z", "Total");
+            dash = std::string(80, '-');
+            outfile->Printf("\n    %s", dash.c_str());
+            for (const auto& p : osc) {
+                std::stringstream ss;
+                ss << std::setw(32) << p.first;
+                double total = 0.0;
+                for (int i = 0; i < 3; ++i) {
+                    ss << "  " << std::setw(10) << std::fixed << std::right << std::setprecision(6)
+                       << p.second[i];
+                    total += p.second[i];
+                }
+                ss << "  " << std::setw(10) << std::fixed << std::right << std::setprecision(6)
+                   << total;
+                outfile->Printf("\n    %s", ss.str().c_str());
+            }
+            outfile->Printf("\n    %s", dash.c_str());
+        }
+    } else {
+        for (int n = 0; n < nentry; ++n) {
+            int irrep = options_["AVG_STATE"][n][0].to_integer();
+            int multi = options_["AVG_STATE"][n][1].to_integer();
+            int nstates = options_["AVG_STATE"][n][2].to_integer();
+            std::vector<psi::forte::STLBitsetDeterminant> p_space = p_spaces_[n];
+
+            // print current symmetry
+            std::stringstream ss;
+            ss << "Diagonalize Effective Hamiltonian (" << multi_label[multi - 1] << " "
+               << irrep_symbol[irrep] << ")";
+            print_h2(ss.str());
+
+            // diagonalize which the second-order effective Hamiltonian
+            // SA_FULL: CASCI using determinants
+            // SA_SUB: H_AB = <A|H|B> where A and B are SA-CAS states
+            if (options_.get_str("DSRG_MULTI_STATE") == "SA_FULL") {
+
+                outfile->Printf("    Use string FCI code.");
+
+                // prepare FCISolver
+                int charge = Process::environment.molecule()->molecular_charge();
+                if (options_["CHARGE"].has_changed()) {
+                    charge = options_.get_int("CHARGE");
+                }
+                auto nelec = 0;
+                int natom = Process::environment.molecule()->natom();
+                for (int i = 0; i < natom; ++i) {
+                    nelec += Process::environment.molecule()->fZ(i);
+                }
+                nelec -= charge;
+                int ms = (multi + 1) % 2;
+                auto nelec_actv =
+                    nelec - 2 * mo_space_info_->size("FROZEN_DOCC") - 2 * core_mos_.size();
+                auto na = (nelec_actv + ms) / 2;
+                auto nb = nelec_actv - na;
+
+                Dimension active_dim = mo_space_info_->get_dimension("ACTIVE");
+                int ntrial_per_root = options_.get_int("NTRIAL_PER_ROOT");
+
+                FCISolver fcisolver(active_dim, core_mos_, actv_mos_, na, nb, multi, irrep, ints_,
+                                    mo_space_info_, ntrial_per_root, print_, options_);
+                fcisolver.set_max_rdm_level(1);
+                fcisolver.set_nroot(nstates);
+                fcisolver.set_root(nstates - 1);
+                fcisolver.set_fci_iterations(options_.get_int("FCI_MAXITER"));
+                fcisolver.set_collapse_per_root(options_.get_int("DL_COLLAPSE_PER_ROOT"));
+                fcisolver.set_subspace_per_root(options_.get_int("DL_SUBSPACE_PER_ROOT"));
+
+                if (eri_df_) {
+                    fcisolver.use_user_integrals_and_restricted_docc(true);
+                    fcisolver.set_integral_pointer(fci_ints);
+                }
+
+                // compute energy and fill in results
+                fcisolver.compute_energy();
+                SharedVector Ems = fcisolver.eigen_vals();
+                for (int i = 0; i < nstates; ++i) {
+                    Edsrg_sa[n].push_back(Ems->get(i) + Enuc_);
+                }
+
+            } else {
+
+                outfile->Printf("\n    Use the sub-space of CASCI.");
+
+                int dim = (eigens_[n][0].first)->dim();
+                size_t eigen_size = eigens_[n].size();
+                SharedMatrix evecs(new Matrix("evecs", dim, eigen_size));
+                for (int i = 0; i < eigen_size; ++i) {
+                    evecs->set_column(0, i, (eigens_[n][i]).first);
+                }
+
+                SharedMatrix Heff(
+                    new Matrix("Heff " + multi_label[multi - 1] + " " + irrep_symbol[irrep],
+                               nstates, nstates));
+                for (int A = 0; A < nstates; ++A) {
+                    for (int B = A; B < nstates; ++B) {
+
+                        // compute rdms
+                        CI_RDMS ci_rdms(options_, fci_ints, p_space, evecs, A, B);
+                        ci_rdms.set_symmetry(irrep);
+
+                        std::vector<double> opdm_a, opdm_b;
+                        std::vector<double> tpdm_aa, tpdm_ab, tpdm_bb;
+
+                        ci_rdms.compute_1rdm(opdm_a, opdm_b);
+                        ci_rdms.compute_2rdm(tpdm_aa, tpdm_ab, tpdm_bb);
+
+                        rotate_1rdm(opdm_a, opdm_b);
+                        rotate_2rdm(tpdm_aa, tpdm_ab, tpdm_bb);
+
+                        // put rdms in tensor format
+                        BlockedTensor D1 =
+                            BTF_->build(tensor_type_, "D1", spin_cases({"aa"}), true);
+                        D1.block("aa").data() = std::move(opdm_a);
+                        D1.block("AA").data() = std::move(opdm_b);
+
+                        BlockedTensor D2 =
+                            BTF_->build(tensor_type_, "D2", spin_cases({"aaaa"}), true);
+                        D2.block("aaaa").data() = std::move(tpdm_aa);
+                        D2.block("aAaA").data() = std::move(tpdm_ab);
+                        D2.block("AAAA").data() = std::move(tpdm_bb);
+
+                        double H_AB = 0.0;
+                        H_AB += oei["uv"] * D1["uv"];
+                        H_AB += oei["UV"] * D1["UV"];
+                        H_AB += 0.25 * Hbar2_["uvxy"] * D2["xyuv"];
+                        H_AB += 0.25 * Hbar2_["UVXY"] * D2["XYUV"];
+                        H_AB += Hbar2_["uVxY"] * D2["xYuV"];
+
+                        if (A == B) {
+                            H_AB += Efrzc_ + fci_ints->scalar_energy() + Enuc_;
+                            Heff->set(A, B, H_AB);
+                        } else {
+                            Heff->set(A, B, H_AB);
+                            Heff->set(B, A, H_AB);
+                        }
+                    }
+                } // end forming effective Hamiltonian
+
+                print_h2("Effective Hamiltonian Summary");
+                outfile->Printf("\n");
+                Heff->print();
+                SharedMatrix U(new Matrix("U of Heff", nstates, nstates));
+                SharedVector Ems(new Vector("MS Energies", nstates));
+                Heff->diagonalize(U, Ems);
+                U->eivprint(Ems);
+
+                // fill in Edsrg_sa
+                for (int i = 0; i < nstates; ++i) {
+                    Edsrg_sa[n].push_back(Ems->get(i));
+                }
+            } // end if DSRG_AVG_DIAG
+
+        } // end looping averaged states
+    }
 
     // energy summuary
     print_h2("State-Average DSRG-MRPT3 Energy Summary");
@@ -1630,144 +1490,73 @@ double DSRG_MRPT3::compute_energy_sa() {
 }
 
 double DSRG_MRPT3::compute_energy_relaxed() {
-    // setup for FCISolver
-    Dimension active_dim = mo_space_info_->get_dimension("ACTIVE");
-    int charge = Process::environment.molecule()->molecular_charge();
-    if (options_["CHARGE"].has_changed()) {
-        charge = options_.get_int("CHARGE");
-    }
-    auto nelec = 0;
-    int natom = Process::environment.molecule()->natom();
-    for (int i = 0; i < natom; ++i) {
-        nelec += Process::environment.molecule()->fZ(i);
-    }
-    nelec -= charge;
-    int multi = Process::environment.molecule()->multiplicity();
-    if (options_["MULTIPLICITY"].has_changed()) {
-        multi = options_.get_int("MULTIPLICITY");
-    }
-    int twice_ms = (multi + 1) % 2;
-    if (options_["MS"].has_changed()) {
-        twice_ms = std::round(2.0 * options_.get_double("MS"));
-    }
-    auto nelec_actv = nelec - 2 * mo_space_info_->size("FROZEN_DOCC") - 2 * acore_mos_.size();
-    auto na = (nelec_actv + twice_ms) / 2;
-    auto nb = nelec_actv - na;
-
-    // reference relaxation
+    // relaxed energy
     double Edsrg = 0.0, Erelax = 0.0;
 
-    // only relax once, otherwise we have to store another
-    if (relax_ref_ != "NONE") {
-        // compute energy with fixed ref.
-        Edsrg = compute_energy();
+    // compute energy with fixed ref.
+    Edsrg = compute_energy();
 
-        // transfer integrals
-        transfer_integrals();
+    // unrelaxed dipole from compute_energy
+    std::vector<double> dm_dsrg(Mbar0_);
+    std::map<std::string, std::vector<double>> dm_relax;
 
-        // nroot and root
-        int root = 0;
-        int nroot = 1;
-        if (options_.get_str("CAS_TYPE") == "CAS") {
-            root = options_.get_int("ROOT");
-            nroot = options_.get_int("NROOT");
-        } else {
-            root = options_.get_int("FCI_ROOT");
-            nroot = options_.get_int("FCI_NROOT");
-        }
+    // obtain the all-active DSRG transformed Hamiltonian
+    auto fci_ints = compute_Heff();
 
-        // diagonalize the Hamiltonian
-        FCISolver fcisolver(active_dim, acore_mos_, aactv_mos_, na, nb, multi,
-                            options_.get_int("ROOT_SYM"), ints_, mo_space_info_,
-                            options_.get_int("NTRIAL_PER_ROOT"), print_, options_);
-        fcisolver.set_max_rdm_level(1);
-        fcisolver.set_nroot(nroot);
-        fcisolver.set_root(root);
-        fcisolver.set_fci_iterations(options_.get_int("FCI_MAXITER"));
-        fcisolver.set_collapse_per_root(options_.get_int("DL_COLLAPSE_PER_ROOT"));
-        fcisolver.set_subspace_per_root(options_.get_int("DL_SUBSPACE_PER_ROOT"));
+    if (options_.get_str("CAS_TYPE") == "CAS") {
+        FCI_MO fci_mo(reference_wavefunction_, options_, ints_, mo_space_info_, fci_ints);
+        Erelax = fci_mo.compute_energy();
 
-        // create FCIIntegrals manually
-        if (eri_df_) {
-            std::shared_ptr<FCIIntegrals> fci_ints;
-            fci_ints = std::make_shared<FCIIntegrals>(ints_, aactv_mos_, acore_mos_);
-            fcisolver.use_user_integrals_and_restricted_docc(true);
-            fci_ints->set_active_integrals(Hbar2_.block("aaaa"), Hbar2_.block("aAaA"),
-                                           Hbar2_.block("AAAA"));
-            fci_ints->set_restricted_one_body_operator(aone_eff_, bone_eff_);
-            fci_ints->set_scalar_energy(ints_->scalar());
-            fcisolver.set_integral_pointer(fci_ints);
-        }
-
-        Erelax = fcisolver.compute_energy();
-
-        // test the overlap of the relaxed wfn with original ref. wfn
-        if (fciwfn0_->size() != 0) {
-            fciwfn_ = fcisolver.get_FCIWFN();
-            double overlap = fciwfn0_->dot(fciwfn_);
-            const double threshold = 0.90;
-            int more_roots = (fciwfn0_->size() < 5) ? fciwfn0_->size() : 5;
-
-            if (std::fabs(overlap) > threshold) {
-                outfile->Printf("\n    Overlap: <Phi0_unrelaxed|Phi0_relaxed> = %4.3f.",
-                                std::fabs(overlap));
-            } else {
-                outfile->Printf("\n    Warning: overlap "
-                                "<Phi0_unrelaxed|Phi0_relaxed> = %4.3f < %.2f.",
-                                std::fabs(overlap), threshold);
-                outfile->Printf("\n    FCI seems to find the wrong root. Try "
-                                "%d more roots.",
-                                more_roots);
-
-                bool find = false;
-                double Etemp = 0.0;
-                for (int i = 0; i < more_roots; ++i) {
-                    if (root < nroot - 1) {
-                        ++root;
-                    } else {
-                        ++root;
-                        ++nroot;
-                    }
-                    fcisolver.set_nroot(nroot);
-                    fcisolver.set_root(root);
-                    Etemp = fcisolver.compute_energy();
-
-                    fciwfn_ = fcisolver.get_FCIWFN();
-                    overlap = fciwfn0_->dot(fciwfn_);
-
-                    outfile->Printf("\n    Current overlap "
-                                    "<Phi0_unrelaxed|Phi0_relaxed> = %4.3f.",
-                                    std::fabs(overlap));
-                    if (std::fabs(overlap) >= threshold) {
-                        outfile->Printf("\n    This root seems to be OK. Stop "
-                                        "trying more roots.");
-                        find = true;
-                        break;
-                    } else {
-                        outfile->Printf("\n    Keep looking for better "
-                                        "overlap. Tries left: %d.",
-                                        more_roots - 1 - i);
-                    }
-                }
-
-                if (find) {
-                    Erelax = Etemp;
-                } else {
-                    outfile->Printf("\n    Fatal Warning: Do not find root of "
-                                    "enough overlap (> %.2f) with original FCI "
-                                    "wavefunction.",
-                                    threshold);
-                    outfile->Printf("\n    The DSRG-MRPT3 relaxed energy might "
-                                    "be meaningless.");
+        if (do_dm_) {
+            // de-normal-order DSRG dipole integrals
+            for (int z = 0; z < 3; ++z) {
+                if (do_dm_dirs_[z]) {
+                    std::string name = "Dipole " + dm_dirs_[z] + " Integrals";
+                    deGNO_ints(name, Mbar0_[z], Mbar1_[z], Mbar2_[z]);
                 }
             }
-        }
 
-        // printing
-        print_h2("MRDSRG Energy Summary");
-        outfile->Printf("\n    %-35s = %22.15f", "DSRG-MRPT3 Total Energy (fixed)", Edsrg);
-        outfile->Printf("\n    %-35s = %22.15f", "DSRG-MRPT3 Total Energy (relaxed)", Erelax);
-        outfile->Printf("\n");
+            // compute permanent dipoles
+            dm_relax = fci_mo.compute_relaxed_dm(Mbar0_, Mbar1_, Mbar2_);
+        }
+    } else {
+        // it is simpler here to call FCI instead of FCISolver
+        FCI fci(reference_wavefunction_, options_, ints_, mo_space_info_, fci_ints);
+        fci.set_max_rdm_level(1);
+        Erelax = fci.compute_energy();
+    }
+
+    // printing
+    print_h2("DSRG-MRPT3 Energy Summary");
+    outfile->Printf("\n    %-35s = %22.15f", "DSRG-MRPT3 Total Energy (fixed)", Edsrg);
+    outfile->Printf("\n    %-35s = %22.15f\n", "DSRG-MRPT3 Total Energy (relaxed)", Erelax);
+
+    if (do_dm_) {
+        print_h2("DSRG-MRPT3 Dipole Moment Summary");
+        const double& nx = dm_nuc_[0];
+        const double& ny = dm_nuc_[1];
+        const double& nz = dm_nuc_[2];
+
+        double x = dm_dsrg[0] + nx;
+        double y = dm_dsrg[1] + ny;
+        double z = dm_dsrg[2] + nz;
+        double t = std::sqrt(x * x + y * y + z * z);
+        outfile->Printf("\n    DSRG-MRPT3 unrelaxed dipole moment:");
+        outfile->Printf("\n      X: %10.6f  Y: %10.6f  Z: %10.6f  Total: %10.6f\n", x, y, z, t);
+        Process::environment.globals["UNRELAXED DIPOLE"] = t;
+
+        // there should be only one entry for state-specific computations
+        if (dm_relax.size() == 1) {
+            for (const auto& p : dm_relax) {
+                x = p.second[0] + nx;
+                y = p.second[1] + ny;
+                z = p.second[2] + nz;
+                t = std::sqrt(x * x + y * y + z * z);
+            }
+            outfile->Printf("\n    DSRG-MRPT3 partially relaxed dipole moment:");
+            outfile->Printf("\n      X: %10.6f  Y: %10.6f  Z: %10.6f  Total: %10.6f\n", x, y, z, t);
+            Process::environment.globals["PARTIALLY RELAXED DIPOLE"] = t;
+        }
     }
 
     Process::environment.globals["UNRELAXED ENERGY"] = Edsrg;
@@ -1784,8 +1573,7 @@ void DSRG_MRPT3::transfer_integrals() {
     Timer t_scalar;
     std::string str = "Computing the scalar term";
     outfile->Printf("\n    %-40s ...", str.c_str());
-    double scalar0 =
-        Eref_ + Hbar0_ - molecule_->nuclear_repulsion_energy() - ints_->frozen_core_energy();
+    double scalar0 = Eref_ + Hbar0_ - Enuc_ - Efrzc_;
 
     // scalar from Hbar1
     double scalar1 = 0.0;
@@ -1830,8 +1618,8 @@ void DSRG_MRPT3::transfer_integrals() {
 
     if (!eri_df_) {
         //   a) zero hole integrals
-        std::vector<size_t> hole_mos = acore_mos_;
-        hole_mos.insert(hole_mos.end(), aactv_mos_.begin(), aactv_mos_.end());
+        std::vector<size_t> hole_mos = core_mos_;
+        hole_mos.insert(hole_mos.end(), actv_mos_.begin(), actv_mos_.end());
         for (const size_t& i : hole_mos) {
             for (const size_t& j : hole_mos) {
                 ints_->set_oei(i, j, 0.0, true);
@@ -1908,639 +1696,6 @@ void DSRG_MRPT3::transfer_integrals() {
             ints_->update_integrals(false);
         }
     }
-}
-
-void DSRG_MRPT3::H1_T1_C0(BlockedTensor& H1, BlockedTensor& T1, const double& alpha, double& C0) {
-    Timer timer;
-
-    double E = 0.0;
-    E += H1["em"] * T1["me"];
-    E += H1["ex"] * T1["ye"] * Gamma1_["xy"];
-    E += H1["xm"] * T1["my"] * Eta1_["yx"];
-
-    E += H1["EM"] * T1["ME"];
-    E += H1["EX"] * T1["YE"] * Gamma1_["XY"];
-    E += H1["XM"] * T1["MY"] * Eta1_["YX"];
-
-    E *= alpha;
-    C0 += E;
-
-    if (print_ > 2) {
-        outfile->Printf("\n    Time for [H1, T1] -> C0 : %12.3f", timer.get());
-    }
-    dsrg_time_.add("110", timer.get());
-}
-
-void DSRG_MRPT3::H1_T2_C0(BlockedTensor& H1, BlockedTensor& T2, const double& alpha, double& C0) {
-    Timer timer;
-    BlockedTensor temp;
-    double E = 0.0;
-
-    temp = ambit::BlockedTensor::build(tensor_type_, "temp", {"aaaa"});
-    temp["uvxy"] += H1["ex"] * T2["uvey"];
-    temp["uvxy"] -= H1["vm"] * T2["umxy"];
-    E += 0.5 * temp["uvxy"] * Lambda2_["xyuv"];
-
-    temp = ambit::BlockedTensor::build(tensor_type_, "temp", {"AAAA"});
-    temp["UVXY"] += H1["EX"] * T2["UVEY"];
-    temp["UVXY"] -= H1["VM"] * T2["UMXY"];
-    E += 0.5 * temp["UVXY"] * Lambda2_["XYUV"];
-
-    temp = ambit::BlockedTensor::build(tensor_type_, "temp", {"aAaA"});
-    temp["uVxY"] += H1["ex"] * T2["uVeY"];
-    temp["uVxY"] += H1["EY"] * T2["uVxE"];
-    temp["uVxY"] -= H1["VM"] * T2["uMxY"];
-    temp["uVxY"] -= H1["um"] * T2["mVxY"];
-    E += temp["uVxY"] * Lambda2_["xYuV"];
-
-    E *= alpha;
-    C0 += E;
-
-    if (print_ > 2) {
-        outfile->Printf("\n    Time for [H1, T2] -> C0 : %12.3f", timer.get());
-    }
-    dsrg_time_.add("120", timer.get());
-}
-
-void DSRG_MRPT3::H2_T1_C0(BlockedTensor& H2, BlockedTensor& T1, const double& alpha, double& C0) {
-    Timer timer;
-    BlockedTensor temp;
-    double E = 0.0;
-
-    temp = ambit::BlockedTensor::build(tensor_type_, "temp", {"aaaa"});
-    temp["uvxy"] += H2["evxy"] * T1["ue"];
-    temp["uvxy"] -= H2["uvmy"] * T1["mx"];
-    E += 0.5 * temp["uvxy"] * Lambda2_["xyuv"];
-
-    temp = ambit::BlockedTensor::build(tensor_type_, "temp", {"AAAA"});
-    temp["UVXY"] += H2["EVXY"] * T1["UE"];
-    temp["UVXY"] -= H2["UVMY"] * T1["MX"];
-    E += 0.5 * temp["UVXY"] * Lambda2_["XYUV"];
-
-    temp = ambit::BlockedTensor::build(tensor_type_, "temp", {"aAaA"});
-    temp["uVxY"] += H2["eVxY"] * T1["ue"];
-    temp["uVxY"] += H2["uExY"] * T1["VE"];
-    temp["uVxY"] -= H2["uVmY"] * T1["mx"];
-    temp["uVxY"] -= H2["uVxM"] * T1["MY"];
-    E += temp["uVxY"] * Lambda2_["xYuV"];
-
-    E *= alpha;
-    C0 += E;
-
-    if (print_ > 2) {
-        outfile->Printf("\n    Time for [H2, T1] -> C0 : %12.3f", timer.get());
-    }
-    dsrg_time_.add("210", timer.get());
-}
-
-void DSRG_MRPT3::H2_T2_C0(BlockedTensor& H2, BlockedTensor& T2, const double& alpha, double& C0) {
-    Timer timer;
-
-    // <[Hbar2, T2]> (C_2)^4
-    double E = H2["eFmN"] * T2["mNeF"];
-    E += 0.25 * H2["efmn"] * T2["mnef"];
-    E += 0.25 * H2["EFMN"] * T2["MNEF"];
-
-    BlockedTensor temp = ambit::BlockedTensor::build(tensor_type_, "temp", spin_cases({"aa"}));
-    temp["vu"] += 0.5 * H2["efmu"] * T2["mvef"];
-    temp["vu"] += H2["fEuM"] * T2["vMfE"];
-    temp["VU"] += 0.5 * H2["EFMU"] * T2["MVEF"];
-    temp["VU"] += H2["eFmU"] * T2["mVeF"];
-    E += temp["vu"] * Gamma1_["uv"];
-    E += temp["VU"] * Gamma1_["UV"];
-
-    temp.zero();
-    temp["vu"] += 0.5 * H2["vemn"] * T2["mnue"];
-    temp["vu"] += H2["vEmN"] * T2["mNuE"];
-    temp["VU"] += 0.5 * H2["VEMN"] * T2["MNUE"];
-    temp["VU"] += H2["eVnM"] * T2["nMeU"];
-    E += temp["vu"] * Eta1_["uv"];
-    E += temp["VU"] * Eta1_["UV"];
-
-    temp = BTF_->build(tensor_type_, "temp", spin_cases({"aaaa"}));
-    temp["yvxu"] += H2["efxu"] * T2["yvef"];
-    temp["yVxU"] += H2["eFxU"] * T2["yVeF"];
-    temp["YVXU"] += H2["EFXU"] * T2["YVEF"];
-    E += 0.25 * temp["yvxu"] * Gamma1_["xy"] * Gamma1_["uv"];
-    E += temp["yVxU"] * Gamma1_["UV"] * Gamma1_["xy"];
-    E += 0.25 * temp["YVXU"] * Gamma1_["XY"] * Gamma1_["UV"];
-
-    temp.zero();
-    temp["vyux"] += H2["vymn"] * T2["mnux"];
-    temp["vYuX"] += H2["vYmN"] * T2["mNuX"];
-    temp["VYUX"] += H2["VYMN"] * T2["MNUX"];
-    E += 0.25 * temp["vyux"] * Eta1_["uv"] * Eta1_["xy"];
-    E += temp["vYuX"] * Eta1_["uv"] * Eta1_["XY"];
-    E += 0.25 * temp["VYUX"] * Eta1_["UV"] * Eta1_["XY"];
-
-    temp.zero();
-    temp["vyux"] += H2["vemx"] * T2["myue"];
-    temp["vyux"] += H2["vExM"] * T2["yMuE"];
-    temp["VYUX"] += H2["eVmX"] * T2["mYeU"];
-    temp["VYUX"] += H2["VEXM"] * T2["YMUE"];
-    E += temp["vyux"] * Gamma1_["xy"] * Eta1_["uv"];
-    E += temp["VYUX"] * Gamma1_["XY"] * Eta1_["UV"];
-    temp["yVxU"] = H2["eVxM"] * T2["yMeU"];
-    E += temp["yVxU"] * Gamma1_["xy"] * Eta1_["UV"];
-    temp["vYuX"] = H2["vEmX"] * T2["mYuE"];
-    E += temp["vYuX"] * Gamma1_["XY"] * Eta1_["uv"];
-
-    temp.zero();
-    temp["yvxu"] += 0.5 * Gamma1_["wz"] * H2["vexw"] * T2["yzue"];
-    temp["yvxu"] += Gamma1_["WZ"] * H2["vExW"] * T2["yZuE"];
-    temp["yvxu"] += 0.5 * Eta1_["wz"] * T2["myuw"] * H2["vzmx"];
-    temp["yvxu"] += Eta1_["WZ"] * T2["yMuW"] * H2["vZxM"];
-    E += temp["yvxu"] * Gamma1_["xy"] * Eta1_["uv"];
-
-    temp["YVXU"] += 0.5 * Gamma1_["WZ"] * H2["VEXW"] * T2["YZUE"];
-    temp["YVXU"] += Gamma1_["wz"] * H2["eVwX"] * T2["zYeU"];
-    temp["YVXU"] += 0.5 * Eta1_["WZ"] * T2["MYUW"] * H2["VZMX"];
-    temp["YVXU"] += Eta1_["wz"] * H2["zVmX"] * T2["mYwU"];
-    E += temp["YVXU"] * Gamma1_["XY"] * Eta1_["UV"];
-
-    // <[Hbar2, T2]> C_4 (C_2)^2 HH -- combined with PH
-    temp = ambit::BlockedTensor::build(tensor_type_, "temp", spin_cases({"aaaa"}));
-    temp["uvxy"] += 0.125 * H2["uvmn"] * T2["mnxy"];
-    temp["uvxy"] += 0.25 * Gamma1_["wz"] * H2["uvmw"] * T2["mzxy"];
-    temp["uVxY"] += H2["uVmN"] * T2["mNxY"];
-    temp["uVxY"] += Gamma1_["wz"] * T2["zMxY"] * H2["uVwM"];
-    temp["uVxY"] += Gamma1_["WZ"] * H2["uVmW"] * T2["mZxY"];
-    temp["UVXY"] += 0.125 * H2["UVMN"] * T2["MNXY"];
-    temp["UVXY"] += 0.25 * Gamma1_["WZ"] * H2["UVMW"] * T2["MZXY"];
-
-    // <[Hbar2, T2]> C_4 (C_2)^2 PP -- combined with PH
-    temp["uvxy"] += 0.125 * H2["efxy"] * T2["uvef"];
-    temp["uvxy"] += 0.25 * Eta1_["wz"] * T2["uvew"] * H2["ezxy"];
-    temp["uVxY"] += H2["eFxY"] * T2["uVeF"];
-    temp["uVxY"] += Eta1_["wz"] * H2["zExY"] * T2["uVwE"];
-    temp["uVxY"] += Eta1_["WZ"] * T2["uVeW"] * H2["eZxY"];
-    temp["UVXY"] += 0.125 * H2["EFXY"] * T2["UVEF"];
-    temp["UVXY"] += 0.25 * Eta1_["WZ"] * T2["UVEW"] * H2["EZXY"];
-
-    // <[Hbar2, T2]> C_4 (C_2)^2 PH
-    temp["uvxy"] += H2["eumx"] * T2["mvey"];
-    temp["uvxy"] += H2["uExM"] * T2["vMyE"];
-    temp["uvxy"] += Gamma1_["wz"] * T2["zvey"] * H2["euwx"];
-    temp["uvxy"] += Gamma1_["WZ"] * H2["uExW"] * T2["vZyE"];
-    temp["uvxy"] += Eta1_["zw"] * H2["wumx"] * T2["mvzy"];
-    temp["uvxy"] += Eta1_["ZW"] * T2["vMyZ"] * H2["uWxM"];
-    E += temp["uvxy"] * Lambda2_["xyuv"];
-
-    temp["UVXY"] += H2["eUmX"] * T2["mVeY"];
-    temp["UVXY"] += H2["EUMX"] * T2["MVEY"];
-    temp["UVXY"] += Gamma1_["wz"] * T2["zVeY"] * H2["eUwX"];
-    temp["UVXY"] += Gamma1_["WZ"] * T2["ZVEY"] * H2["EUWX"];
-    temp["UVXY"] += Eta1_["zw"] * H2["wUmX"] * T2["mVzY"];
-    temp["UVXY"] += Eta1_["ZW"] * H2["WUMX"] * T2["MVZY"];
-    E += temp["UVXY"] * Lambda2_["XYUV"];
-
-    temp["uVxY"] += H2["uexm"] * T2["mVeY"];
-    temp["uVxY"] += H2["uExM"] * T2["MVEY"];
-    temp["uVxY"] -= H2["eVxM"] * T2["uMeY"];
-    temp["uVxY"] -= H2["uEmY"] * T2["mVxE"];
-    temp["uVxY"] += H2["eVmY"] * T2["umxe"];
-    temp["uVxY"] += H2["EVMY"] * T2["uMxE"];
-
-    temp["uVxY"] += Gamma1_["wz"] * T2["zVeY"] * H2["uexw"];
-    temp["uVxY"] += Gamma1_["WZ"] * T2["ZVEY"] * H2["uExW"];
-    temp["uVxY"] -= Gamma1_["WZ"] * H2["eVxW"] * T2["uZeY"];
-    temp["uVxY"] -= Gamma1_["wz"] * T2["zVxE"] * H2["uEwY"];
-    temp["uVxY"] += Gamma1_["wz"] * T2["zuex"] * H2["eVwY"];
-    temp["uVxY"] -= Gamma1_["WZ"] * H2["EVYW"] * T2["uZxE"];
-
-    temp["uVxY"] += Eta1_["zw"] * H2["wumx"] * T2["mVzY"];
-    temp["uVxY"] += Eta1_["ZW"] * T2["VMYZ"] * H2["uWxM"];
-    temp["uVxY"] -= Eta1_["zw"] * H2["wVxM"] * T2["uMzY"];
-    temp["uVxY"] -= Eta1_["ZW"] * T2["mVxZ"] * H2["uWmY"];
-    temp["uVxY"] += Eta1_["zw"] * T2["umxz"] * H2["wVmY"];
-    temp["uVxY"] += Eta1_["ZW"] * H2["WVMY"] * T2["uMxZ"];
-    E += temp["uVxY"] * Lambda2_["xYuV"];
-
-    // <[Hbar2, T2]> C_6 C_2
-    if (options_.get_str("THREEPDC") != "ZERO") {
-        temp = ambit::BlockedTensor::build(tensor_type_, "temp", {"aaaaaa"});
-        temp["uvwxyz"] += H2["uviz"] * T2["iwxy"]; //  aaaaaa from hole
-        temp["uvwxyz"] += H2["waxy"] * T2["uvaz"]; //  aaaaaa from particle
-        E += 0.25 * temp["uvwxyz"] * Lambda3_["xyzuvw"];
-
-        temp = ambit::BlockedTensor::build(tensor_type_, "temp", {"AAAAAA"});
-        temp["UVWXYZ"] += H2["UVIZ"] * T2["IWXY"]; //  AAAAAA from hole
-        temp["UVWXYZ"] += H2["WAXY"] * T2["UVAZ"]; //  AAAAAA from particle
-        E += 0.25 * temp["UVWXYZ"] * Lambda3_["XYZUVW"];
-
-        temp = ambit::BlockedTensor::build(tensor_type_, "temp", {"aaAaaA"});
-        temp["uvWxyZ"] -= H2["uviy"] * T2["iWxZ"];       //  aaAaaA from hole
-        temp["uvWxyZ"] -= H2["uWiZ"] * T2["ivxy"];       //  aaAaaA from hole
-        temp["uvWxyZ"] += 2.0 * H2["uWyI"] * T2["vIxZ"]; //  aaAaaA from hole
-
-        temp["uvWxyZ"] += H2["aWxZ"] * T2["uvay"];       //  aaAaaA from particle
-        temp["uvWxyZ"] -= H2["vaxy"] * T2["uWaZ"];       //  aaAaaA from particle
-        temp["uvWxyZ"] -= 2.0 * H2["vAxZ"] * T2["uWyA"]; //  aaAaaA from particle
-        E += 0.5 * temp["uvWxyZ"] * Lambda3_["xyZuvW"];
-
-        temp = ambit::BlockedTensor::build(tensor_type_, "temp", {"aAAaAA"});
-        temp["uVWxYZ"] -= H2["VWIZ"] * T2["uIxY"];       //  aAAaAA from hole
-        temp["uVWxYZ"] -= H2["uVxI"] * T2["IWYZ"];       //  aAAaAA from hole
-        temp["uVWxYZ"] += 2.0 * H2["uViZ"] * T2["iWxY"]; //  aAAaAA from hole
-
-        temp["uVWxYZ"] += H2["uAxY"] * T2["VWAZ"];       //  aAAaAA from particle
-        temp["uVWxYZ"] -= H2["WAYZ"] * T2["uVxA"];       //  aAAaAA from particle
-        temp["uVWxYZ"] -= 2.0 * H2["aWxY"] * T2["uVaZ"]; //  aAAaAA from particle
-        E += 0.5 * temp["uVWxYZ"] * Lambda3_["xYZuVW"];
-    }
-
-    // multiply prefactor and copy to C0
-    E *= alpha;
-    C0 += E;
-
-    if (print_ > 2) {
-        outfile->Printf("\n    Time for [H2, T2] -> C0 : %12.3f", timer.get());
-    }
-    dsrg_time_.add("220", timer.get());
-}
-
-void DSRG_MRPT3::H1_T1_C1(BlockedTensor& H1, BlockedTensor& T1, const double& alpha,
-                          BlockedTensor& C1) {
-    Timer timer;
-
-    C1["ip"] += alpha * H1["ap"] * T1["ia"];
-    C1["qa"] -= alpha * T1["ia"] * H1["qi"];
-
-    C1["IP"] += alpha * H1["AP"] * T1["IA"];
-    C1["QA"] -= alpha * T1["IA"] * H1["QI"];
-
-    if (print_ > 2) {
-        outfile->Printf("\n    Time for [H1, T1] -> C1 : %12.3f", timer.get());
-    }
-    dsrg_time_.add("111", timer.get());
-}
-
-void DSRG_MRPT3::H1_T2_C1(BlockedTensor& H1, BlockedTensor& T2, const double& alpha,
-                          BlockedTensor& C1) {
-    Timer timer;
-
-    C1["ia"] += alpha * H1["bm"] * T2["imab"];
-    C1["ia"] += alpha * H1["bu"] * T2["ivab"] * Gamma1_["uv"];
-    C1["ia"] -= alpha * H1["vj"] * T2["ijau"] * Gamma1_["uv"];
-    C1["ia"] += alpha * H1["BM"] * T2["iMaB"];
-    C1["ia"] += alpha * H1["BU"] * T2["iVaB"] * Gamma1_["UV"];
-    C1["ia"] -= alpha * H1["VJ"] * T2["iJaU"] * Gamma1_["UV"];
-
-    C1["IA"] += alpha * H1["bm"] * T2["mIbA"];
-    C1["IA"] += alpha * H1["bu"] * Gamma1_["uv"] * T2["vIbA"];
-    C1["IA"] -= alpha * H1["vj"] * T2["jIuA"] * Gamma1_["uv"];
-    C1["IA"] += alpha * H1["BM"] * T2["IMAB"];
-    C1["IA"] += alpha * H1["BU"] * T2["IVAB"] * Gamma1_["UV"];
-    C1["IA"] -= alpha * H1["VJ"] * T2["IJAU"] * Gamma1_["UV"];
-
-    if (print_ > 2) {
-        outfile->Printf("\n    Time for [H1, T2] -> C1 : %12.3f", timer.get());
-    }
-    dsrg_time_.add("121", timer.get());
-}
-
-void DSRG_MRPT3::H2_T1_C1(BlockedTensor& H2, BlockedTensor& T1, const double& alpha,
-                          BlockedTensor& C1) {
-    Timer timer;
-
-    C1["qp"] += alpha * T1["ma"] * H2["qapm"];
-    C1["qp"] += alpha * T1["xe"] * Gamma1_["yx"] * H2["qepy"];
-    C1["qp"] -= alpha * T1["mu"] * Gamma1_["uv"] * H2["qvpm"];
-    C1["qp"] += alpha * T1["MA"] * H2["qApM"];
-    C1["qp"] += alpha * T1["XE"] * Gamma1_["YX"] * H2["qEpY"];
-    C1["qp"] -= alpha * T1["MU"] * Gamma1_["UV"] * H2["qVpM"];
-
-    C1["QP"] += alpha * T1["ma"] * H2["aQmP"];
-    C1["QP"] += alpha * T1["xe"] * Gamma1_["yx"] * H2["eQyP"];
-    C1["QP"] -= alpha * T1["mu"] * Gamma1_["uv"] * H2["vQmP"];
-    C1["QP"] += alpha * T1["MA"] * H2["QAPM"];
-    C1["QP"] += alpha * T1["XE"] * Gamma1_["YX"] * H2["QEPY"];
-    C1["QP"] -= alpha * T1["MU"] * Gamma1_["UV"] * H2["QVPM"];
-
-    if (print_ > 2) {
-        outfile->Printf("\n    Time for [H2, T1] -> C1 : %12.3f", timer.get());
-    }
-    dsrg_time_.add("211", timer.get());
-}
-
-void DSRG_MRPT3::H2_T2_C1(BlockedTensor& H2, BlockedTensor& T2, const double& alpha,
-                          BlockedTensor& C1) {
-    Timer timer;
-    BlockedTensor temp;
-
-    // [Hbar2, T2] (C_2)^3 -> C1 particle contractions
-    C1["ir"] += 0.5 * alpha * H2["abrm"] * T2["imab"];
-    C1["ir"] += alpha * H2["aBrM"] * T2["iMaB"];
-    C1["IR"] += 0.5 * alpha * H2["ABRM"] * T2["IMAB"];
-    C1["IR"] += alpha * H2["aBmR"] * T2["mIaB"];
-
-    C1["ir"] += 0.5 * alpha * Gamma1_["uv"] * H2["abru"] * T2["ivab"];
-    C1["ir"] += alpha * Gamma1_["UV"] * H2["aBrU"] * T2["iVaB"];
-    C1["IR"] += 0.5 * alpha * Gamma1_["UV"] * H2["ABRU"] * T2["IVAB"];
-    C1["IR"] += alpha * Gamma1_["uv"] * H2["aBuR"] * T2["vIaB"];
-
-    C1["ir"] += 0.5 * alpha * T2["ijux"] * Gamma1_["xy"] * Gamma1_["uv"] * H2["vyrj"];
-    C1["IR"] += 0.5 * alpha * T2["IJUX"] * Gamma1_["XY"] * Gamma1_["UV"] * H2["VYRJ"];
-    temp = ambit::BlockedTensor::build(tensor_type_, "temp", {"hHaA"});
-    temp["iJvY"] = T2["iJuX"] * Gamma1_["XY"] * Gamma1_["uv"];
-    C1["ir"] += alpha * temp["iJvY"] * H2["vYrJ"];
-    C1["IR"] += alpha * temp["jIvY"] * H2["vYjR"];
-
-    C1["ir"] -= alpha * Gamma1_["uv"] * H2["vbrm"] * T2["imub"];
-    C1["ir"] -= alpha * Gamma1_["uv"] * H2["vBrM"] * T2["iMuB"];
-    C1["ir"] -= alpha * Gamma1_["UV"] * T2["iMbU"] * H2["bVrM"];
-    C1["IR"] -= alpha * Gamma1_["UV"] * H2["VBRM"] * T2["IMUB"];
-    C1["IR"] -= alpha * Gamma1_["UV"] * H2["bVmR"] * T2["mIbU"];
-    C1["IR"] -= alpha * Gamma1_["uv"] * H2["vBmR"] * T2["mIuB"];
-
-    C1["ir"] -= alpha * H2["vbrx"] * Gamma1_["uv"] * Gamma1_["xy"] * T2["iyub"];
-    C1["ir"] -= alpha * H2["vBrX"] * Gamma1_["uv"] * Gamma1_["XY"] * T2["iYuB"];
-    C1["ir"] -= alpha * H2["bVrX"] * Gamma1_["XY"] * Gamma1_["UV"] * T2["iYbU"];
-    C1["IR"] -= alpha * H2["VBRX"] * Gamma1_["UV"] * Gamma1_["XY"] * T2["IYUB"];
-    C1["IR"] -= alpha * H2["vBxR"] * Gamma1_["uv"] * Gamma1_["xy"] * T2["yIuB"];
-    C1["IR"] -= alpha * T2["yIbU"] * Gamma1_["UV"] * Gamma1_["xy"] * H2["bVxR"];
-
-    // [Hbar2, T2] (C_2)^3 -> C1 hole contractions
-    C1["pa"] -= 0.5 * alpha * H2["peij"] * T2["ijae"];
-    C1["pa"] -= alpha * H2["pEiJ"] * T2["iJaE"];
-    C1["PA"] -= 0.5 * alpha * H2["PEIJ"] * T2["IJAE"];
-    C1["PA"] -= alpha * H2["ePiJ"] * T2["iJeA"];
-
-    C1["pa"] -= 0.5 * alpha * Eta1_["uv"] * T2["ijau"] * H2["pvij"];
-    C1["pa"] -= alpha * Eta1_["UV"] * T2["iJaU"] * H2["pViJ"];
-    C1["PA"] -= 0.5 * alpha * Eta1_["UV"] * T2["IJAU"] * H2["PVIJ"];
-    C1["PA"] -= alpha * Eta1_["uv"] * T2["iJuA"] * H2["vPiJ"];
-
-    C1["pa"] -= 0.5 * alpha * T2["vyab"] * Eta1_["uv"] * Eta1_["xy"] * H2["pbux"];
-    C1["PA"] -= 0.5 * alpha * T2["VYAB"] * Eta1_["UV"] * Eta1_["XY"] * H2["PBUX"];
-    temp = ambit::BlockedTensor::build(tensor_type_, "temp", {"aApP"});
-    temp["uXaB"] = T2["vYaB"] * Eta1_["uv"] * Eta1_["XY"];
-    C1["pa"] -= alpha * H2["pBuX"] * temp["uXaB"];
-    C1["PA"] -= alpha * H2["bPuX"] * temp["uXbA"];
-
-    C1["pa"] += alpha * Eta1_["uv"] * T2["vjae"] * H2["peuj"];
-    C1["pa"] += alpha * Eta1_["uv"] * T2["vJaE"] * H2["pEuJ"];
-    C1["pa"] += alpha * Eta1_["UV"] * H2["pEjU"] * T2["jVaE"];
-    C1["PA"] += alpha * Eta1_["UV"] * T2["VJAE"] * H2["PEUJ"];
-    C1["PA"] += alpha * Eta1_["uv"] * T2["vJeA"] * H2["ePuJ"];
-    C1["PA"] += alpha * Eta1_["UV"] * H2["ePjU"] * T2["jVeA"];
-
-    C1["pa"] += alpha * T2["vjax"] * Eta1_["uv"] * Eta1_["xy"] * H2["pyuj"];
-    C1["pa"] += alpha * T2["vJaX"] * Eta1_["uv"] * Eta1_["XY"] * H2["pYuJ"];
-    C1["pa"] += alpha * T2["jVaX"] * Eta1_["XY"] * Eta1_["UV"] * H2["pYjU"];
-    C1["PA"] += alpha * T2["VJAX"] * Eta1_["UV"] * Eta1_["XY"] * H2["PYUJ"];
-    C1["PA"] += alpha * T2["vJxA"] * Eta1_["uv"] * Eta1_["xy"] * H2["yPuJ"];
-    C1["PA"] += alpha * H2["yPjU"] * Eta1_["UV"] * Eta1_["xy"] * T2["jVxA"];
-
-    // [Hbar2, T2] C_4 C_2 2:2 -> C1
-    C1["ir"] += 0.25 * alpha * T2["ijxy"] * Lambda2_["xyuv"] * H2["uvrj"];
-    C1["IR"] += 0.25 * alpha * T2["IJXY"] * Lambda2_["XYUV"] * H2["UVRJ"];
-    temp = ambit::BlockedTensor::build(tensor_type_, "temp", {"hHaA"});
-    temp["iJuV"] = T2["iJxY"] * Lambda2_["xYuV"];
-    C1["ir"] += alpha * H2["uVrJ"] * temp["iJuV"];
-    C1["IR"] += alpha * H2["uVjR"] * temp["jIuV"];
-
-    C1["pa"] -= 0.25 * alpha * Lambda2_["xyuv"] * T2["uvab"] * H2["pbxy"];
-    C1["PA"] -= 0.25 * alpha * Lambda2_["XYUV"] * T2["UVAB"] * H2["PBXY"];
-    temp = ambit::BlockedTensor::build(tensor_type_, "temp", {"aApP"});
-    temp["xYaB"] = T2["uVaB"] * Lambda2_["xYuV"];
-    C1["pa"] -= alpha * H2["pBxY"] * temp["xYaB"];
-    C1["PA"] -= alpha * H2["bPxY"] * temp["xYbA"];
-
-    C1["ir"] -= alpha * Lambda2_["yXuV"] * T2["iVyA"] * H2["uArX"];
-    C1["IR"] -= alpha * Lambda2_["xYvU"] * T2["vIaY"] * H2["aUxR"];
-    C1["pa"] += alpha * Lambda2_["xYvU"] * T2["vIaY"] * H2["pUxI"];
-    C1["PA"] += alpha * Lambda2_["yXuV"] * T2["iVyA"] * H2["uPiX"];
-
-    temp = ambit::BlockedTensor::build(tensor_type_, "temp", {"hapa"});
-    temp["ixau"] += Lambda2_["xyuv"] * T2["ivay"];
-    temp["ixau"] += Lambda2_["xYuV"] * T2["iVaY"];
-    C1["ir"] += alpha * temp["ixau"] * H2["aurx"];
-    C1["pa"] -= alpha * H2["puix"] * temp["ixau"];
-    temp = ambit::BlockedTensor::build(tensor_type_, "temp", {"hApA"});
-    temp["iXaU"] += Lambda2_["XYUV"] * T2["iVaY"];
-    temp["iXaU"] += Lambda2_["yXvU"] * T2["ivay"];
-    C1["ir"] += alpha * temp["iXaU"] * H2["aUrX"];
-    C1["pa"] -= alpha * H2["pUiX"] * temp["iXaU"];
-    temp = ambit::BlockedTensor::build(tensor_type_, "temp", {"aHaP"});
-    temp["xIuA"] += Lambda2_["xyuv"] * T2["vIyA"];
-    temp["xIuA"] += Lambda2_["xYuV"] * T2["VIYA"];
-    C1["IR"] += alpha * temp["xIuA"] * H2["uAxR"];
-    C1["PA"] -= alpha * H2["uPxI"] * temp["xIuA"];
-    temp = ambit::BlockedTensor::build(tensor_type_, "temp", {"HAPA"});
-    temp["IXAU"] += Lambda2_["XYUV"] * T2["IVAY"];
-    temp["IXAU"] += Lambda2_["yXvU"] * T2["vIyA"];
-    C1["IR"] += alpha * temp["IXAU"] * H2["AURX"];
-    C1["PA"] -= alpha * H2["PUIX"] * temp["IXAU"];
-
-    // [Hbar2, T2] C_4 C_2 1:3 -> C1
-    temp = ambit::BlockedTensor::build(tensor_type_, "temp", {"pa"});
-    temp["au"] += 0.5 * Lambda2_["xyuv"] * H2["avxy"];
-    temp["au"] += Lambda2_["xYuV"] * H2["aVxY"];
-    C1["jb"] += alpha * temp["au"] * T2["ujab"];
-    C1["JB"] += alpha * temp["au"] * T2["uJaB"];
-    temp = ambit::BlockedTensor::build(tensor_type_, "temp", {"PA"});
-    temp["AU"] += 0.5 * Lambda2_["XYUV"] * H2["AVXY"];
-    temp["AU"] += Lambda2_["xYvU"] * H2["vAxY"];
-    C1["jb"] += alpha * temp["AU"] * T2["jUbA"];
-    C1["JB"] += alpha * temp["AU"] * T2["UJAB"];
-
-    temp = ambit::BlockedTensor::build(tensor_type_, "temp", {"ah"});
-    temp["xi"] += 0.5 * Lambda2_["xyuv"] * H2["uviy"];
-    temp["xi"] += Lambda2_["xYuV"] * H2["uViY"];
-    C1["jb"] -= alpha * temp["xi"] * T2["ijxb"];
-    C1["JB"] -= alpha * temp["xi"] * T2["iJxB"];
-    temp = ambit::BlockedTensor::build(tensor_type_, "temp", {"AH"});
-    temp["XI"] += 0.5 * Lambda2_["XYUV"] * H2["UVIY"];
-    temp["XI"] += Lambda2_["yXvU"] * H2["vUyI"];
-    C1["jb"] -= alpha * temp["XI"] * T2["jIbX"];
-    C1["JB"] -= alpha * temp["XI"] * T2["IJXB"];
-
-    temp = ambit::BlockedTensor::build(tensor_type_, "temp", {"av"});
-    temp["xe"] += 0.5 * T2["uvey"] * Lambda2_["xyuv"];
-    temp["xe"] += T2["uVeY"] * Lambda2_["xYuV"];
-    C1["qs"] += alpha * temp["xe"] * H2["eqxs"];
-    C1["QS"] += alpha * temp["xe"] * H2["eQxS"];
-    temp = ambit::BlockedTensor::build(tensor_type_, "temp", {"AV"});
-    temp["XE"] += 0.5 * T2["UVEY"] * Lambda2_["XYUV"];
-    temp["XE"] += T2["uVyE"] * Lambda2_["yXuV"];
-    C1["qs"] += alpha * temp["XE"] * H2["qEsX"];
-    C1["QS"] += alpha * temp["XE"] * H2["EQXS"];
-
-    temp = ambit::BlockedTensor::build(tensor_type_, "temp", {"ca"});
-    temp["mu"] += 0.5 * T2["mvxy"] * Lambda2_["xyuv"];
-    temp["mu"] += T2["mVxY"] * Lambda2_["xYuV"];
-    C1["qs"] -= alpha * temp["mu"] * H2["uqms"];
-    C1["QS"] -= alpha * temp["mu"] * H2["uQmS"];
-    temp = ambit::BlockedTensor::build(tensor_type_, "temp", {"CA"});
-    temp["MU"] += 0.5 * T2["MVXY"] * Lambda2_["XYUV"];
-    temp["MU"] += T2["vMxY"] * Lambda2_["xYvU"];
-    C1["qs"] -= alpha * temp["MU"] * H2["qUsM"];
-    C1["QS"] -= alpha * temp["MU"] * H2["UQMS"];
-
-    if (print_ > 2) {
-        outfile->Printf("\n    Time for [H2, T2] -> C1 : %12.3f", timer.get());
-    }
-    dsrg_time_.add("221", timer.get());
-}
-
-void DSRG_MRPT3::H1_T2_C2(BlockedTensor& H1, BlockedTensor& T2, const double& alpha,
-                          BlockedTensor& C2) {
-    Timer timer;
-
-    C2["ijpb"] += alpha * T2["ijab"] * H1["ap"];
-    C2["ijap"] += alpha * T2["ijab"] * H1["bp"];
-    C2["qjab"] -= alpha * T2["ijab"] * H1["qi"];
-    C2["iqab"] -= alpha * T2["ijab"] * H1["qj"];
-
-    C2["iJpB"] += alpha * T2["iJaB"] * H1["ap"];
-    C2["iJaP"] += alpha * T2["iJaB"] * H1["BP"];
-    C2["qJaB"] -= alpha * T2["iJaB"] * H1["qi"];
-    C2["iQaB"] -= alpha * T2["iJaB"] * H1["QJ"];
-
-    C2["IJPB"] += alpha * T2["IJAB"] * H1["AP"];
-    C2["IJAP"] += alpha * T2["IJAB"] * H1["BP"];
-    C2["QJAB"] -= alpha * T2["IJAB"] * H1["QI"];
-    C2["IQAB"] -= alpha * T2["IJAB"] * H1["QJ"];
-
-    if (print_ > 2) {
-        outfile->Printf("\n    Time for [H1, T2] -> C2 : %12.3f", timer.get());
-    }
-    dsrg_time_.add("122", timer.get());
-}
-
-void DSRG_MRPT3::H2_T1_C2(BlockedTensor& H2, BlockedTensor& T1, const double& alpha,
-                          BlockedTensor& C2) {
-    Timer timer;
-
-    C2["irpq"] += alpha * T1["ia"] * H2["arpq"];
-    C2["ripq"] += alpha * T1["ia"] * H2["rapq"];
-    C2["rsaq"] -= alpha * T1["ia"] * H2["rsiq"];
-    C2["rspa"] -= alpha * T1["ia"] * H2["rspi"];
-
-    C2["iRpQ"] += alpha * T1["ia"] * H2["aRpQ"];
-    C2["rIpQ"] += alpha * T1["IA"] * H2["rApQ"];
-    C2["rSaQ"] -= alpha * T1["ia"] * H2["rSiQ"];
-    C2["rSpA"] -= alpha * T1["IA"] * H2["rSpI"];
-
-    C2["IRPQ"] += alpha * T1["IA"] * H2["ARPQ"];
-    C2["RIPQ"] += alpha * T1["IA"] * H2["RAPQ"];
-    C2["RSAQ"] -= alpha * T1["IA"] * H2["RSIQ"];
-    C2["RSPA"] -= alpha * T1["IA"] * H2["RSPI"];
-
-    if (print_ > 2) {
-        outfile->Printf("\n    Time for [H2, T1] -> C2 : %12.3f", timer.get());
-    }
-    dsrg_time_.add("212", timer.get());
-}
-
-void DSRG_MRPT3::H2_T2_C2(BlockedTensor& H2, BlockedTensor& T2, const double& alpha,
-                          BlockedTensor& C2) {
-    Timer timer;
-
-    // particle-particle contractions
-    C2["ijrs"] += 0.5 * alpha * H2["abrs"] * T2["ijab"];
-    C2["iJrS"] += alpha * H2["aBrS"] * T2["iJaB"];
-    C2["IJRS"] += 0.5 * alpha * H2["ABRS"] * T2["IJAB"];
-
-    C2["ijrs"] -= alpha * Gamma1_["xy"] * H2["ybrs"] * T2["ijxb"];
-    C2["iJrS"] -= alpha * Gamma1_["xy"] * H2["yBrS"] * T2["iJxB"];
-    C2["iJrS"] -= alpha * Gamma1_["XY"] * T2["iJbX"] * H2["bYrS"];
-    C2["IJRS"] -= alpha * Gamma1_["XY"] * H2["YBRS"] * T2["IJXB"];
-
-    // hole-hole contractions
-    C2["pqab"] += 0.5 * alpha * H2["pqij"] * T2["ijab"];
-    C2["pQaB"] += alpha * H2["pQiJ"] * T2["iJaB"];
-    C2["PQAB"] += 0.5 * alpha * H2["PQIJ"] * T2["IJAB"];
-
-    C2["pqab"] -= alpha * Eta1_["xy"] * T2["yjab"] * H2["pqxj"];
-    C2["pQaB"] -= alpha * Eta1_["xy"] * T2["yJaB"] * H2["pQxJ"];
-    C2["pQaB"] -= alpha * Eta1_["XY"] * H2["pQjX"] * T2["jYaB"];
-    C2["PQAB"] -= alpha * Eta1_["XY"] * T2["YJAB"] * H2["PQXJ"];
-
-    // hole-particle contractions
-    C2["qjsb"] += alpha * H2["aqms"] * T2["mjab"];
-    C2["qjsb"] += alpha * H2["qAsM"] * T2["jMbA"];
-    C2["qjsb"] += alpha * Gamma1_["xy"] * T2["yjab"] * H2["aqxs"];
-    C2["qjsb"] += alpha * Gamma1_["XY"] * T2["jYbA"] * H2["qAsX"];
-    C2["qjsb"] -= alpha * Gamma1_["xy"] * H2["yqis"] * T2["ijxb"];
-    C2["qjsb"] -= alpha * Gamma1_["XY"] * H2["qYsI"] * T2["jIbX"];
-
-    C2["jqsb"] -= alpha * H2["aqms"] * T2["mjab"];
-    C2["jqsb"] -= alpha * H2["qAsM"] * T2["jMbA"];
-    C2["jqsb"] -= alpha * Gamma1_["xy"] * T2["yjab"] * H2["aqxs"];
-    C2["jqsb"] -= alpha * Gamma1_["XY"] * T2["jYbA"] * H2["qAsX"];
-    C2["jqsb"] += alpha * Gamma1_["xy"] * H2["yqis"] * T2["ijxb"];
-    C2["jqsb"] += alpha * Gamma1_["XY"] * H2["qYsI"] * T2["jIbX"];
-
-    C2["qjbs"] -= alpha * H2["aqms"] * T2["mjab"];
-    C2["qjbs"] -= alpha * H2["qAsM"] * T2["jMbA"];
-    C2["qjbs"] -= alpha * Gamma1_["xy"] * T2["yjab"] * H2["aqxs"];
-    C2["qjbs"] -= alpha * Gamma1_["XY"] * T2["jYbA"] * H2["qAsX"];
-    C2["qjbs"] += alpha * Gamma1_["xy"] * H2["yqis"] * T2["ijxb"];
-    C2["qjbs"] += alpha * Gamma1_["XY"] * H2["qYsI"] * T2["jIbX"];
-
-    C2["jqbs"] += alpha * H2["aqms"] * T2["mjab"];
-    C2["jqbs"] += alpha * H2["qAsM"] * T2["jMbA"];
-    C2["jqbs"] += alpha * Gamma1_["xy"] * T2["yjab"] * H2["aqxs"];
-    C2["jqbs"] += alpha * Gamma1_["XY"] * T2["jYbA"] * H2["qAsX"];
-    C2["jqbs"] -= alpha * Gamma1_["xy"] * H2["yqis"] * T2["ijxb"];
-    C2["jqbs"] -= alpha * Gamma1_["XY"] * H2["qYsI"] * T2["jIbX"];
-
-    C2["QJSB"] += alpha * H2["AQMS"] * T2["MJAB"];
-    C2["QJSB"] += alpha * H2["aQmS"] * T2["mJaB"];
-    C2["QJSB"] += alpha * Gamma1_["XY"] * T2["YJAB"] * H2["AQXS"];
-    C2["QJSB"] += alpha * Gamma1_["xy"] * T2["yJaB"] * H2["aQxS"];
-    C2["QJSB"] -= alpha * Gamma1_["XY"] * H2["YQIS"] * T2["IJXB"];
-    C2["QJSB"] -= alpha * Gamma1_["xy"] * H2["yQiS"] * T2["iJxB"];
-
-    C2["JQSB"] -= alpha * H2["AQMS"] * T2["MJAB"];
-    C2["JQSB"] -= alpha * H2["aQmS"] * T2["mJaB"];
-    C2["JQSB"] -= alpha * Gamma1_["XY"] * T2["YJAB"] * H2["AQXS"];
-    C2["JQSB"] -= alpha * Gamma1_["xy"] * T2["yJaB"] * H2["aQxS"];
-    C2["JQSB"] += alpha * Gamma1_["XY"] * H2["YQIS"] * T2["IJXB"];
-    C2["JQSB"] += alpha * Gamma1_["xy"] * H2["yQiS"] * T2["iJxB"];
-
-    C2["QJBS"] -= alpha * H2["AQMS"] * T2["MJAB"];
-    C2["QJBS"] -= alpha * H2["aQmS"] * T2["mJaB"];
-    C2["QJBS"] -= alpha * Gamma1_["XY"] * T2["YJAB"] * H2["AQXS"];
-    C2["QJBS"] -= alpha * Gamma1_["xy"] * T2["yJaB"] * H2["aQxS"];
-    C2["QJBS"] += alpha * Gamma1_["XY"] * H2["YQIS"] * T2["IJXB"];
-    C2["QJBS"] += alpha * Gamma1_["xy"] * H2["yQiS"] * T2["iJxB"];
-
-    C2["JQBS"] += alpha * H2["AQMS"] * T2["MJAB"];
-    C2["JQBS"] += alpha * H2["aQmS"] * T2["mJaB"];
-    C2["JQBS"] += alpha * Gamma1_["XY"] * T2["YJAB"] * H2["AQXS"];
-    C2["JQBS"] += alpha * Gamma1_["xy"] * T2["yJaB"] * H2["aQxS"];
-    C2["JQBS"] -= alpha * Gamma1_["XY"] * H2["YQIS"] * T2["IJXB"];
-    C2["JQBS"] -= alpha * Gamma1_["xy"] * H2["yQiS"] * T2["iJxB"];
-
-    C2["qJsB"] += alpha * H2["aqms"] * T2["mJaB"];
-    C2["qJsB"] += alpha * H2["qAsM"] * T2["MJAB"];
-    C2["qJsB"] += alpha * Gamma1_["xy"] * T2["yJaB"] * H2["aqxs"];
-    C2["qJsB"] += alpha * Gamma1_["XY"] * T2["YJAB"] * H2["qAsX"];
-    C2["qJsB"] -= alpha * Gamma1_["xy"] * H2["yqis"] * T2["iJxB"];
-    C2["qJsB"] -= alpha * Gamma1_["XY"] * H2["qYsI"] * T2["IJXB"];
-
-    C2["iQsB"] -= alpha * T2["iMaB"] * H2["aQsM"];
-    C2["iQsB"] -= alpha * Gamma1_["XY"] * T2["iYaB"] * H2["aQsX"];
-    C2["iQsB"] += alpha * Gamma1_["xy"] * H2["yQsJ"] * T2["iJxB"];
-
-    C2["qJaS"] -= alpha * T2["mJaB"] * H2["qBmS"];
-    C2["qJaS"] -= alpha * Gamma1_["xy"] * T2["yJaB"] * H2["qBxS"];
-    C2["qJaS"] += alpha * Gamma1_["XY"] * H2["qYiS"] * T2["iJaX"];
-
-    C2["iQaS"] += alpha * T2["imab"] * H2["bQmS"];
-    C2["iQaS"] += alpha * T2["iMaB"] * H2["BQMS"];
-    C2["iQaS"] += alpha * Gamma1_["xy"] * T2["iyab"] * H2["bQxS"];
-    C2["iQaS"] += alpha * Gamma1_["XY"] * T2["iYaB"] * H2["BQXS"];
-    C2["iQaS"] -= alpha * Gamma1_["xy"] * H2["yQjS"] * T2["ijax"];
-    C2["iQaS"] -= alpha * Gamma1_["XY"] * H2["YQJS"] * T2["iJaX"];
-
-    if (print_ > 2) {
-        outfile->Printf("\n    Time for [H2, T2] -> C2 : %12.3f", timer.get());
-    }
-    dsrg_time_.add("222", timer.get());
 }
 
 void DSRG_MRPT3::V_T1_C1_DF(BlockedTensor& B, BlockedTensor& T1, const double& alpha,
@@ -2877,9 +2032,9 @@ void DSRG_MRPT3::V_T2_C2_DF(BlockedTensor& B, BlockedTensor& T2, const double& a
                             BlockedTensor& C2) {
     Timer timer;
 
-    size_t c = acore_mos_.size();
-    size_t a = aactv_mos_.size();
-    size_t v = avirt_mos_.size();
+    size_t c = core_mos_.size();
+    size_t a = actv_mos_.size();
+    size_t v = virt_mos_.size();
     size_t h = c + a;
     size_t p = a + v;
     size_t g = c + p;
@@ -3515,7 +2670,7 @@ void DSRG_MRPT3::V_T2_C2_DF_AA(BlockedTensor& B, BlockedTensor& T2, const double
     }
 
     // memory usage
-    nele_total *= aactv_mos_.size() * aactv_mos_.size();
+    nele_total *= actv_mos_.size() * actv_mos_.size();
     std::pair<double, std::string> mem_use = to_xb(nele_total, sizeof(double));
     outfile->Printf("\n    Computing [V, T2] DF -> C2 PP(AA) (%.2f %s)", mem_use.first,
                     mem_use.second.c_str());
@@ -3563,8 +2718,8 @@ void DSRG_MRPT3::V_T2_C2_DF_AA(BlockedTensor& B, BlockedTensor& T2, const double
 void DSRG_MRPT3::V_T2_C2_DF_AV(BlockedTensor& B, BlockedTensor& T2, const double& alpha,
                                BlockedTensor& C2) {
 
-    size_t sa = aactv_mos_.size();
-    size_t sv = avirt_mos_.size();
+    size_t sa = actv_mos_.size();
+    size_t sv = virt_mos_.size();
     size_t sL = aux_mos_.size();
 
     // figure out unique HALF block labels of C2[ij|rs]
@@ -3825,7 +2980,7 @@ void DSRG_MRPT3::V_T2_C2_DF_AV(BlockedTensor& B, BlockedTensor& T2, const double
 void DSRG_MRPT3::V_T2_C2_DF_VV(BlockedTensor& B, BlockedTensor& T2, const double& alpha,
                                BlockedTensor& C2) {
 
-    size_t sv = avirt_mos_.size();
+    size_t sv = virt_mos_.size();
     size_t sL = aux_mos_.size();
 
     // figure out unique HALF block labels of C2[ij|rs]
@@ -4090,8 +3245,8 @@ void DSRG_MRPT3::V_T2_C2_DF_AH_EX(BlockedTensor& B, BlockedTensor& T2, const dou
     // problem.
     // Otherwise, the memory problem should appear before this function.
 
-    size_t sa = aactv_mos_.size();
-    size_t sh = sa + acore_mos_.size();
+    size_t sa = actv_mos_.size();
+    size_t sh = sa + core_mos_.size();
 
     size_t nele_total = 0;
     std::vector<std::vector<std::string>> Cgg_aa(6, std::vector<std::string>());
@@ -4291,8 +3446,8 @@ void DSRG_MRPT3::V_T2_C2_DF_VC_EX(BlockedTensor& B, BlockedTensor& T2, const dou
     // Batches in "a". See See V_T2_C2_DF_AH_EX for more comments.
     // This function takes advantage of the fact that there is no spin in B.
 
-    size_t sc = acore_mos_.size();
-    size_t sv = avirt_mos_.size();
+    size_t sc = core_mos_.size();
+    size_t sv = virt_mos_.size();
     size_t sL = aux_mos_.size();
 
     size_t smax_jb = 0;
@@ -4619,9 +3774,9 @@ void DSRG_MRPT3::V_T2_C2_DF_VA_EX(BlockedTensor& B, BlockedTensor& T2, const dou
     // Batches in "a". See See V_T2_C2_DF_AH_EX for more comments.
     // This function takes advantage of the fact that there is no spin in B.
 
-    size_t sc = acore_mos_.size();
-    size_t sa = aactv_mos_.size();
-    size_t sv = avirt_mos_.size();
+    size_t sc = core_mos_.size();
+    size_t sa = actv_mos_.size();
+    size_t sv = virt_mos_.size();
     size_t sL = aux_mos_.size();
 
     size_t smax_jb = 0;
@@ -4976,9 +4131,9 @@ void DSRG_MRPT3::V_T2_C2_DF_VH_EX(BlockedTensor& B, BlockedTensor& T2, const dou
 
     // We will do batches in "a". See V_T2_C2_DF_AH_EX for more comments.
 
-    size_t sc = acore_mos_.size();
-    size_t sa = aactv_mos_.size();
-    size_t sv = avirt_mos_.size();
+    size_t sc = core_mos_.size();
+    size_t sa = actv_mos_.size();
+    size_t sv = virt_mos_.size();
     size_t sL = aux_mos_.size();
 
     // figure out peak memory usage and how to separate the virtual index
@@ -5976,6 +5131,86 @@ ambit::Tensor DSRG_MRPT3::sub_block(ambit::Tensor& T,
     });
 
     return Ts;
+}
+
+void DSRG_MRPT3::rotate_1rdm(std::vector<double>& opdm_a, std::vector<double>& opdm_b) {
+    size_t na = actv_mos_.size();
+    if ((na * na != opdm_a.size()) || (na * na != opdm_b.size())) {
+        throw PSIEXCEPTION("Cannot rotate 1RDM in DSRG_MRPT2.");
+    }
+
+    ambit::Tensor Ua = Uactv_.block("aa");
+    ambit::Tensor Ub = Uactv_.block("AA");
+
+    ambit::Tensor temp = ambit::Tensor::build(tensor_type_, "temp", {na, na});
+    ambit::Tensor D = ambit::Tensor::build(tensor_type_, "D1", {na, na});
+
+    temp.data() = std::move(opdm_a);
+    D("pq") = Ua("ap") * temp("ab") * Ua("bq");
+    opdm_a = D.data();
+
+    temp.data() = std::move(opdm_b);
+    D("PQ") = Ub("AP") * temp("AB") * Ub("BQ");
+    opdm_b = D.data();
+}
+
+void DSRG_MRPT3::rotate_2rdm(std::vector<double>& tpdm_aa, std::vector<double>& tpdm_ab,
+                             std::vector<double>& tpdm_bb) {
+    size_t na = actv_mos_.size();
+    size_t na4 = na * na * na * na;
+    if ((na4 != tpdm_aa.size()) || (na4 != tpdm_ab.size()) || (na4 != tpdm_bb.size())) {
+        throw PSIEXCEPTION("Cannot rotate 2RDM in DSRG_MRPT2.");
+    }
+
+    ambit::Tensor Ua = Uactv_.block("aa");
+    ambit::Tensor Ub = Uactv_.block("AA");
+
+    ambit::Tensor temp = ambit::Tensor::build(tensor_type_, "temp", {na, na, na, na});
+    ambit::Tensor D = ambit::Tensor::build(tensor_type_, "D2", {na, na, na, na});
+
+    temp.data() = std::move(tpdm_aa);
+    D("pqrs") = Ua("ap") * Ua("bq") * temp("abcd") * Ua("cr") * Ua("ds");
+    tpdm_aa = D.data();
+
+    temp.data() = std::move(tpdm_ab);
+    D("pQrS") = Ua("ap") * Ub("BQ") * temp("aBcD") * Ua("cr") * Ub("DS");
+    tpdm_ab = D.data();
+
+    temp.data() = std::move(tpdm_bb);
+    D("PQRS") = Ub("AP") * Ub("BQ") * temp("ABCD") * Ub("CR") * Ub("DS");
+    tpdm_bb = D.data();
+}
+
+void DSRG_MRPT3::rotate_3rdm(std::vector<double>& tpdm_aaa, std::vector<double>& tpdm_aab,
+                             std::vector<double>& tpdm_abb, std::vector<double>& tpdm_bbb) {
+    size_t na = actv_mos_.size();
+    size_t na6 = na * na * na * na * na * na;
+    if ((na6 != tpdm_aaa.size()) || (na6 != tpdm_aab.size()) || (na6 != tpdm_abb.size()) ||
+        (na6 != tpdm_bbb.size())) {
+        throw PSIEXCEPTION("Cannot rotate 3RDM in DSRG_MRPT2.");
+    }
+
+    ambit::Tensor Ua = Uactv_.block("aa");
+    ambit::Tensor Ub = Uactv_.block("AA");
+
+    ambit::Tensor temp = ambit::Tensor::build(tensor_type_, "temp", {na, na, na, na, na, na});
+    ambit::Tensor D = ambit::Tensor::build(tensor_type_, "D3", {na, na, na, na, na, na});
+
+    temp.data() = std::move(tpdm_aaa);
+    D("pqrstu") = Ua("ap") * Ua("bq") * Ua("cr") * temp("abcijk") * Ua("is") * Ua("jt") * Ua("ku");
+    tpdm_aaa = D.data();
+
+    temp.data() = std::move(tpdm_aab);
+    D("pqRstU") = Ua("ap") * Ua("bq") * Ub("CR") * temp("abCijK") * Ua("is") * Ua("jt") * Ub("KU");
+    tpdm_aab = D.data();
+
+    temp.data() = std::move(tpdm_abb);
+    D("pQRsTU") = Ua("ap") * Ub("BQ") * Ub("CR") * temp("aBCiJK") * Ua("is") * Ub("JT") * Ub("KU");
+    tpdm_abb = D.data();
+
+    temp.data() = std::move(tpdm_bbb);
+    D("PQRSTU") = Ub("AP") * Ub("BQ") * Ub("CR") * temp("ABCIJK") * Ub("IS") * Ub("JT") * Ub("KU");
+    tpdm_bbb = D.data();
 }
 }
 } // End Namespaces

@@ -72,16 +72,6 @@ FCI_MO::FCI_MO(SharedWavefunction ref_wfn, Options& options, std::shared_ptr<For
     reference_wavefunction_ = ref_wfn;
     print_method_banner({"Complete Active Space Configuration Interaction", "Chenyang Li"});
     startup();
-}
-
-FCI_MO::~FCI_MO() { cleanup(); }
-
-void FCI_MO::cleanup() {}
-
-void FCI_MO::startup() {
-
-    // read options
-    read_options();
 
     // setup integrals
     fci_ints_ = std::make_shared<FCIIntegrals>(integral_, mo_space_info_->get_corr_abs_mo("ACTIVE"),
@@ -91,6 +81,38 @@ void FCI_MO::startup() {
     ambit::Tensor tei_active_bb = integral_->aptei_bb_block(idx_a_, idx_a_, idx_a_, idx_a_);
     fci_ints_->set_active_integrals(tei_active_aa, tei_active_ab, tei_active_bb);
     fci_ints_->compute_restricted_one_body_operator();
+}
+
+FCI_MO::FCI_MO(SharedWavefunction ref_wfn, Options& options, std::shared_ptr<ForteIntegrals> ints,
+               std::shared_ptr<MOSpaceInfo> mo_space_info, std::shared_ptr<FCIIntegrals> fci_ints)
+    : Wavefunction(options), integral_(ints), mo_space_info_(mo_space_info) {
+    shallow_copy(ref_wfn);
+    reference_wavefunction_ = ref_wfn;
+    print_method_banner({"Complete Active Space Configuration Interaction", "Chenyang Li"});
+    startup();
+
+    // setup integrals
+    if (fci_ints != nullptr) {
+        fci_ints_ = fci_ints;
+    } else {
+        fci_ints_ =
+            std::make_shared<FCIIntegrals>(integral_, mo_space_info_->get_corr_abs_mo("ACTIVE"),
+                                           mo_space_info_->get_corr_abs_mo("RESTRICTED_DOCC"));
+        ambit::Tensor tei_active_aa = integral_->aptei_aa_block(idx_a_, idx_a_, idx_a_, idx_a_);
+        ambit::Tensor tei_active_ab = integral_->aptei_ab_block(idx_a_, idx_a_, idx_a_, idx_a_);
+        ambit::Tensor tei_active_bb = integral_->aptei_bb_block(idx_a_, idx_a_, idx_a_, idx_a_);
+        fci_ints_->set_active_integrals(tei_active_aa, tei_active_ab, tei_active_bb);
+        fci_ints_->compute_restricted_one_body_operator();
+    }
+}
+
+FCI_MO::~FCI_MO() { cleanup(); }
+
+void FCI_MO::cleanup() {}
+
+void FCI_MO::startup() {
+    // read options
+    read_options();
 
     // compute orbital extents if CIS/CISD IPEA
     if (ipea_ != "NONE") {
@@ -241,8 +263,7 @@ void FCI_MO::read_options() {
     idx_a_ = mo_space_info_->get_corr_abs_mo("ACTIVE");
     idx_v_ = mo_space_info_->get_corr_abs_mo("RESTRICTED_UOCC");
 
-    // setup hole and particle indices (Active must start first for old mcsrgpt2
-    // code)
+    // setup hole and particle indices (Active must start first for old mcsrgpt2 code)
     nh_ = nc_ + na_;
     npt_ = na_ + nv_;
     idx_h_ = std::vector<size_t>(idx_a_);

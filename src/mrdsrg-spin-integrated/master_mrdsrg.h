@@ -31,14 +31,18 @@ class MASTER_DSRG : public DynamicCorrelationSolver {
     MASTER_DSRG(Reference reference, SharedWavefunction ref_wfn, Options& options,
                 std::shared_ptr<ForteIntegrals> ints, std::shared_ptr<MOSpaceInfo> mo_space_info);
 
+    /// Destructor
+    virtual ~MASTER_DSRG() = default;
+
     /// Compute energy
     virtual double compute_energy() = 0;
 
-    /// Compute effetive Hamiltonian
-    virtual std::shared_ptr<FCIIntegrals> compute_Heff() = 0;
+    /// Compute DSRG transformed Hamiltonian
+    std::shared_ptr<FCIIntegrals> compute_Heff();
 
-    /// Destructor
-    virtual ~MASTER_DSRG() = default;
+    /// Compute DSRG transformed dipole integrals
+    //    virtual void compute_dm_eff(std::vector<double>& M0, std::vector<BlockedTensor>& M1,
+    //                                std::vector<BlockedTensor>& M2) = 0;
 
   protected:
     /// Startup function called in constructor
@@ -151,7 +155,7 @@ class MASTER_DSRG : public DynamicCorrelationSolver {
     std::vector<std::string> od_two_labels_pphh();
 
     // ==> fill in densities from Reference <==
-    /** Lambda3 is no longer stored */
+    /** Lambda3 is no longer stored !!! */
 
     /// Initialize density cumulants
     void init_density();
@@ -164,6 +168,48 @@ class MASTER_DSRG : public DynamicCorrelationSolver {
     ambit::BlockedTensor Eta1_;
     /// Two-body denisty cumulant
     ambit::BlockedTensor Lambda2_;
+
+    // ==> Fock matrix related <==
+
+    /// Fock matrix
+    ambit::BlockedTensor Fock_;
+    /// Diagonal elements of Fock matrix with alpha spin
+    std::vector<double> Fdiag_a_;
+    /// Diagonal elements of Fock matrix with beta spin
+    std::vector<double> Fdiag_b_;
+
+    /// Initialize Fock matrix
+    void init_fock();
+    /// Build Fock matrix from ForteIntegrals
+    void build_fock_from_ints(std::shared_ptr<ForteIntegrals> ints, BlockedTensor& F);
+    /// Fill in diagonal elements of Fock matrix to Fdiag
+    void fill_Fdiag(BlockedTensor& F, std::vector<double>& Fa, std::vector<double>& Fb);
+    /// Check orbitals if semicanonical
+    bool check_semi_orbs();
+
+    // ==> integrals <==
+
+    /// Scalar of the DSRG transformed Hamiltonian
+    double Hbar0_;
+    /// DSRG transformed 1-body Hamiltonian (active only)
+    ambit::BlockedTensor Hbar1_;
+    /// DSRG transformed 2-body Hamiltonian (active only)
+    ambit::BlockedTensor Hbar2_;
+    /// DSRG transformed 3-body Hamiltonian (active only)
+    ambit::BlockedTensor Hbar3_;
+
+    /**
+     * De-normal-order a 2-body DSRG transformed integrals
+     * This will change H0 and H1 !!!
+     */
+    void deGNO_ints(const std::string& name, double& H0, BlockedTensor& H1, BlockedTensor& H2);
+
+    /**
+     * De-normal-order a 3-body DSRG transformed integrals
+     * This will change H0, H1, and H2 !!!
+     */
+    void deGNO_ints(const std::string& name, double& H0, BlockedTensor& H1, BlockedTensor& H2,
+                    BlockedTensor& H3);
 
     // ==> dipole moment <==
 
@@ -191,25 +237,12 @@ class MASTER_DSRG : public DynamicCorrelationSolver {
     /// Compute dipole for a certain direction or not
     std::vector<bool> do_dm_dirs_;
 
-    /// DSRG transformed dipole integrals
+    /// DSRG transformed dipole scalar
     std::vector<double> Mbar0_;
-    std::vector<ambit::BlockedTensor> Mbar1_;
-    std::vector<ambit::BlockedTensor> Mbar2_;
-
-    // ==> integrals <==
-
-    /**
-     * De-normal-order a 2-body DSRG transformed integrals
-     * This will change H0 and H1
-     */
-    void deGNO_ints(const std::string& name, double& H0, BlockedTensor& H1, BlockedTensor& H2);
-
-    /**
-     * De-normal-order a 3-body DSRG transformed integrals
-     * This will change H0, H1, and H2
-     */
-    void deGNO_ints(const std::string& name, double& H0, BlockedTensor& H1, BlockedTensor& H2,
-                    BlockedTensor& H3);
+    /// DSRG transformed 1-body dipole integrals (active only)
+    std::vector<BlockedTensor> Mbar1_;
+    /// DSRG transformed 2-body dipole integrals (active only)
+    std::vector<BlockedTensor> Mbar2_;
 
     // ==> commutators <==
     /**

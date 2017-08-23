@@ -87,10 +87,9 @@ class ForteIntegrals {
 
     // ==> Class Interface <==
 
-    /// Return the total number of molecular orbitals (this number includes
-    /// frozen MOs)
-
+    /// I (York) am not sure why these are private, maybe they can be removed.
   private:
+    /// Return the total number of molecular orbitals (this number includes frozen MOs)
     size_t nmo() const { return nmo_; }
 
     /// Return the number of irreducible representations
@@ -110,6 +109,9 @@ class ForteIntegrals {
     Dimension& ncmopi() { return ncmopi_; }
 
   public:
+    /// Set printing level
+    void set_print(int print) { print_ = print; }
+
     /// Return the number of auxiliary functions
     virtual size_t nthree() const {
         throw PSIEXCEPTION("WRONG INT_TYPE");
@@ -117,10 +119,10 @@ class ForteIntegrals {
     }
 
     /// Return the frozen core energy
-    double scalar() const { return scalar_; }
     double frozen_core_energy() { return frozen_core_energy_; }
 
     /// Scalar component of the Hamiltonian
+    double scalar() const { return scalar_; }
 
     /// The alpha one-electron integrals
     double oei_a(size_t p, size_t q) { return one_electron_integrals_a[p * aptei_idx_ + q]; }
@@ -484,11 +486,7 @@ class ConventionalIntegrals : public ForteIntegrals {
 
     virtual void make_fock_matrix(SharedMatrix gamma_a, SharedMatrix gamma_b);
 
-    virtual size_t nthree() const
-
-    {
-        throw PSIEXCEPTION("Wrong Int_Type");
-    }
+    virtual size_t nthree() const { throw PSIEXCEPTION("Wrong Int_Type"); }
 
   private:
     /// Wavefunction object
