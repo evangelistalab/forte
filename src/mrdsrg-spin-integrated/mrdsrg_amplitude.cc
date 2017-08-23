@@ -507,8 +507,16 @@ void MRDSRG::guess_t1_nocv(BlockedTensor& F, BlockedTensor& T2, BlockedTensor& T
 void MRDSRG::update_t2_std() {
     T2max_ = 0.0, t2aa_norm_ = 0.0, t2ab_norm_ = 0.0, t2bb_norm_ = 0.0;
 
-    // use the delta_t algorithm as the old Hbar and T will be modified
-    // Step 1: work on Hbar2 and DT2 is treated as intermediate
+    /**
+     * Update T2 using  delta_t algorithm
+     * T2(new) = T2(old) + DT2
+     * DT2 = Hbar2(old) * (1 - exp(-s*d^2)) / d^2 - T2(old) * exp(-s * d^2)
+     *       ------------------------------------   -----------------------
+     *                      Step 1                          Step 2
+     **/
+
+
+    // Step 1: work on Hbar2 where DT2 is treated as intermediate
 
     timer t1("transform Hbar2 to semi-canonical basis");
     // transform Hbar2 to semi-canonical basis
@@ -520,11 +528,15 @@ void MRDSRG::update_t2_std() {
         Hbar2_["iJcD"] = DT2_["iJaB"] * U_["DB"] * U_["ca"];
         Hbar2_["IJCD"] = DT2_["IJAB"] * U_["DB"] * U_["CA"];
     }
+
+    DT2_["ijab"] = Hbar2_["ijab"];
+    DT2_["iJaB"] = Hbar2_["iJaB"];
+    DT2_["IJAB"] = Hbar2_["IJAB"];
     t1.stop();
 
     timer t2("scale Hbar2 by renormalized denominator");
     // scale Hbar2 by renormalized denominator
-    Hbar2_.iterate(
+    DT2_.iterate(
         [&](const std::vector<size_t>& i, const std::vector<SpinType>& spin, double& value) {
             if ((spin[0] == AlphaSpin) && (spin[1] == AlphaSpin)) {
                 value *= dsrg_source_->compute_renormalized_denominator(Fa_[i[0]] + Fa_[i[1]] -
@@ -539,14 +551,14 @@ void MRDSRG::update_t2_std() {
         });
     t2.stop();
 
-    timer t3("copy renormalized Hbar2 to DT2");
-    // copy renormalized Hbar2 to DT2
-    DT2_["ijab"] = Hbar2_["ijab"];
-    DT2_["iJaB"] = Hbar2_["iJaB"];
-    DT2_["IJAB"] = Hbar2_["IJAB"];
-    t3.stop();
+//  timer t3("copy renormalized Hbar2 to DT2");
+//  // copy renormalized Hbar2 to DT2
+//  DT2_["ijab"] = Hbar2_["ijab"];
+//  DT2_["iJaB"] = Hbar2_["iJaB"];
+//  DT2_["IJAB"] = Hbar2_["IJAB"];
+//  t3.stop();
 
-    // Step 2: work on T2 and Hbar2 is treated as intermediate
+    // Step 2: work on T2 where Hbar2 is treated as intermediate
 
     timer t4("copy T2 to Hbar2");
     // copy T2 to Hbar2
@@ -560,18 +572,18 @@ void MRDSRG::update_t2_std() {
     if (!semi_canonical_) {
         BlockedTensor temp =
             ambit::BlockedTensor::build(tensor_type_, "temp for T2 update", spin_cases({"hhpp"}));
-        temp["klab"] = U_["ki"] * U_["lj"] * Hbar2_["ijab"];
-        temp["kLaB"] = U_["ki"] * U_["LJ"] * Hbar2_["iJaB"];
-        temp["KLAB"] = U_["KI"] * U_["LJ"] * Hbar2_["IJAB"];
-        Hbar2_["ijcd"] = temp["ijab"] * U_["db"] * U_["ca"];
-        Hbar2_["iJcD"] = temp["iJaB"] * U_["DB"] * U_["ca"];
-        Hbar2_["IJCD"] = temp["IJAB"] * U_["DB"] * U_["CA"];
+        temp["klab"] = U_["ki"] * U_["lj"] * T2_["ijab"];
+        temp["kLaB"] = U_["ki"] * U_["LJ"] * T2_["iJaB"];
+        temp["KLAB"] = U_["KI"] * U_["LJ"] * T2_["IJAB"];
+        T2_["ijcd"] = temp["ijab"] * U_["db"] * U_["ca"];
+        T2_["iJcD"] = temp["iJaB"] * U_["DB"] * U_["ca"];
+        T2_["IJCD"] = temp["IJAB"] * U_["DB"] * U_["CA"];
     }
     t5.stop();
 
     timer t6("scale T2 by delta exponential");
     // scale T2 by delta exponential
-    Hbar2_.iterate([&](const std::vector<size_t>& i, const std::vector<SpinType>& spin,
+    T2_.iterate([&](const std::vector<size_t>& i, const std::vector<SpinType>& spin,
                        double& value) {
         if ((spin[0] == AlphaSpin) && (spin[1] == AlphaSpin)) {
             value *=
@@ -588,9 +600,9 @@ void MRDSRG::update_t2_std() {
 
     timer t7("minus the renormalized T2 from renormalized Hbar2");
     // minus the renormalized T2 from renormalized Hbar2
-    DT2_["ijab"] -= Hbar2_["ijab"];
-    DT2_["iJaB"] -= Hbar2_["iJaB"];
-    DT2_["IJAB"] -= Hbar2_["IJAB"];
+    DT2_["ijab"] -= T2_["ijab"];
+    DT2_["iJaB"] -= T2_["iJaB"];
+    DT2_["IJAB"] -= T2_["IJAB"];
     t7.stop();
 
     timer t8("zero internal amplitudes");
@@ -606,17 +618,20 @@ void MRDSRG::update_t2_std() {
     timer t9("transform DT2 back to original basis");
     // transform DT2 back to original basis
     if (!semi_canonical_) {
-        Hbar2_["klab"] = U_["ik"] * U_["jl"] * DT2_["ijab"];
-        Hbar2_["kLaB"] = U_["ik"] * U_["JL"] * DT2_["iJaB"];
-        Hbar2_["KLAB"] = U_["IK"] * U_["JL"] * DT2_["IJAB"];
-        DT2_["ijcd"] = Hbar2_["ijab"] * U_["bd"] * U_["ac"];
-        DT2_["iJcD"] = Hbar2_["iJaB"] * U_["BD"] * U_["ac"];
-        DT2_["IJCD"] = Hbar2_["IJAB"] * U_["BD"] * U_["AC"];
+        T2_["klab"] = U_["ik"] * U_["jl"] * DT2_["ijab"];
+        T2_["kLaB"] = U_["ik"] * U_["JL"] * DT2_["iJaB"];
+        T2_["KLAB"] = U_["IK"] * U_["JL"] * DT2_["IJAB"];
+        DT2_["ijcd"] = T2_["ijab"] * U_["bd"] * U_["ac"];
+        DT2_["iJcD"] = T2_["iJaB"] * U_["BD"] * U_["ac"];
+        DT2_["IJCD"] = T2_["IJAB"] * U_["BD"] * U_["AC"];
     }
     t9.stop();
 
     timer t10("Step 3: update and analyze T2");
     // Step 3: update and analyze T2
+    T2_["ijab"] = Hbar2_["ijab"];
+    T2_["iJaB"] = Hbar2_["iJaB"];
+    T2_["IJAB"] = Hbar2_["IJAB"];
     T2_["ijab"] += DT2_["ijab"];
     T2_["iJaB"] += DT2_["iJaB"];
     T2_["IJAB"] += DT2_["IJAB"];
@@ -645,8 +660,15 @@ void MRDSRG::update_t2_std() {
 void MRDSRG::update_t1_std() {
     T1max_ = 0.0, t1a_norm_ = 0.0, t1b_norm_ = 0.0;
 
-    // use the delta_t algorithm as the old Hbar and T will be modified
-    // Step 1: work on Hbar1 and DT1 is treated as intermediate
+    /**
+     * Update T1 using  delta_t algorithm
+     * T1(new) = T1(old) + DT1
+     * DT1 = Hbar1(old) * (1 - exp(-s*d^2)) / d^2 - T1(old) * exp(-s * d^2)
+     *       ------------------------------------   -----------------------
+     *                      Step 1                          Step 2
+     **/
+
+    // Step 1: work on Hbar1 where DT1 is treated as intermediate
 
     // transform Hbar1 to semi-canonical basis
     if (!semi_canonical_) {
@@ -656,8 +678,11 @@ void MRDSRG::update_t1_std() {
         Hbar1_["IA"] = DT1_["IA"];
     }
 
+    DT1_["ia"] = Hbar1_["ia"];
+    DT1_["IA"] = Hbar1_["IA"];
+
     // scale Hbar1 by renormalized denominator
-    Hbar1_.iterate(
+    DT1_.iterate(
         [&](const std::vector<size_t>& i, const std::vector<SpinType>& spin, double& value) {
             if (spin[0] == AlphaSpin) {
                 value *= dsrg_source_->compute_renormalized_denominator(Fa_[i[0]] - Fa_[i[1]]);
@@ -666,11 +691,11 @@ void MRDSRG::update_t1_std() {
             }
         });
 
-    // copy renormalized Hbar1 to DT1
-    DT1_["ia"] = Hbar1_["ia"];
-    DT1_["IA"] = Hbar1_["IA"];
+//  // copy renormalized Hbar1 to DT1
+//  DT1_["ia"] = Hbar1_["ia"];
+//  DT1_["IA"] = Hbar1_["IA"];
 
-    // Step 2: work on T1 and Hbar1 is treated as intermediate
+    // Step 2: work on T1 where Hbar1 is treated as intermediate
 
     // copy T1 to Hbar1
     Hbar1_["ia"] = T1_["ia"];
@@ -680,14 +705,14 @@ void MRDSRG::update_t1_std() {
     if (!semi_canonical_) {
         BlockedTensor temp =
             ambit::BlockedTensor::build(tensor_type_, "temp for T1 update", spin_cases({"hp"}));
-        temp["jb"] = U_["ji"] * Hbar1_["ia"] * U_["ba"];
-        temp["JB"] = U_["JI"] * Hbar1_["IA"] * U_["BA"];
-        Hbar1_["ia"] = temp["ia"];
-        Hbar1_["IA"] = temp["IA"];
+        temp["jb"] = U_["ji"] * T1_["ia"] * U_["ba"];
+        temp["JB"] = U_["JI"] * T1_["IA"] * U_["BA"];
+        T1_["ia"] = temp["ia"];
+        T1_["IA"] = temp["IA"];
     }
 
     // scale T1 by delta exponential
-    Hbar1_.iterate(
+    T1_.iterate(
         [&](const std::vector<size_t>& i, const std::vector<SpinType>& spin, double& value) {
             if (spin[0] == AlphaSpin) {
                 value *= dsrg_source_->compute_renormalized(Fa_[i[0]] - Fa_[i[1]]);
@@ -697,8 +722,8 @@ void MRDSRG::update_t1_std() {
         });
 
     // minus the renormalized T1 from renormalized Hbar1
-    DT1_["ia"] -= Hbar1_["ia"];
-    DT1_["IA"] -= Hbar1_["IA"];
+    DT1_["ia"] -= T1_["ia"];
+    DT1_["IA"] -= T1_["IA"];
 
     // zero internal amplitudes
     for (const std::string& block : {"aa", "AA"}) {
@@ -710,13 +735,15 @@ void MRDSRG::update_t1_std() {
 
     // transform DT1 back to original basis
     if (!semi_canonical_) {
-        Hbar1_["jb"] = U_["ji"] * DT1_["ia"] * U_["ba"];
-        Hbar1_["JB"] = U_["JI"] * DT1_["IA"] * U_["BA"];
-        DT1_["ia"] = Hbar1_["ia"];
-        DT1_["IA"] = Hbar1_["IA"];
+        T1_["jb"] = U_["ji"] * DT1_["ia"] * U_["ba"];
+        T1_["JB"] = U_["JI"] * DT1_["IA"] * U_["BA"];
+        DT1_["ia"] = T1_["ia"];
+        DT1_["IA"] = T1_["IA"];
     }
 
     // Step 3: update and analyze T1
+    T1_["ia"] = Hbar1_["ia"];
+    T1_["IA"] = Hbar1_["IA"];
     T1_["ia"] += DT1_["ia"];
     T1_["IA"] += DT1_["IA"];
 
