@@ -508,7 +508,7 @@ void MRDSRG::update_t2_std() {
     T2max_ = 0.0, t2aa_norm_ = 0.0, t2ab_norm_ = 0.0, t2bb_norm_ = 0.0;
 
     /**
-     * Update T2 using  delta_t algorithm
+     * Update T2 using delta_t algorithm
      * T2(new) = T2(old) + DT2
      * DT2 = Hbar2(old) * (1 - exp(-s*d^2)) / d^2 - T2(old) * exp(-s * d^2)
      *       ------------------------------------   -----------------------
@@ -661,7 +661,7 @@ void MRDSRG::update_t1_std() {
     T1max_ = 0.0, t1a_norm_ = 0.0, t1b_norm_ = 0.0;
 
     /**
-     * Update T1 using  delta_t algorithm
+     * Update T1 using delta_t algorithm
      * T1(new) = T1(old) + DT1
      * DT1 = Hbar1(old) * (1 - exp(-s*d^2)) / d^2 - T1(old) * exp(-s * d^2)
      *       ------------------------------------   -----------------------
