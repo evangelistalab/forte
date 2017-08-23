@@ -15,6 +15,7 @@ class bcolors:
     ENDC = ''
 
 timing_re = re.compile(r"Your calculation took (\d+.\d+) seconds")
+timing_re = re.compile(r"Psi4 exiting successfully. Buy a developer a beer!")
 
 psi4command = ""
 
@@ -54,7 +55,7 @@ dsrg_mrpt2_tests = ["mr-dsrg-pt2-1","mr-dsrg-pt2-2","mr-dsrg-pt2-3","mr-dsrg-pt2
                     "diskdf-dsrg-mrpt2-1", "diskdf-dsrg-mrpt2-2", "diskdf-dsrg-mrpt2-3", "diskdf-dsrg-mrpt2-4", "diskdf-dsrg-mrpt2-5",
                     "aci-dsrg-mrpt2-1","aci-dsrg-mrpt2-2","df-aci-dsrg-mrpt2-1", "df-aci-dsrg-mrpt2-2"]
 
-active_dsrgpt2_tests = ["actv-dsrg-1-C2H4-cis", "actv-dsrg-2-C2H4-cisd", "actv-dsrg-3-C4H6-cisd", "actv-dsrg-4-C4H6-triplet",
+active_dsrgpt2_tests = ["actv-dsrg-1-C2H4-cis", "actv-dsrg-2-C2H4-cisd",
                         "actv-dsrg-5-actv-independence", "actv-dsrg-ipea-1", "actv-dsrg-ipea-2"]
 
 casscf_tests = ["casscf", "casscf-2","casscf-3", "casscf-4", "casscf-5", "casscf-6", "casscf-7", "df-casscf-1"]
