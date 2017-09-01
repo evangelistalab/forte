@@ -74,9 +74,6 @@ class DSRG_MRPT2 : public MASTER_DSRG {
     /// Compute the DSRG-MRPT2 energy
     virtual double compute_energy();
 
-    /// Compute effective Hamiltonian
-    virtual std::shared_ptr<FCIIntegrals> compute_Heff();
-
     /// Compute the DSRG-MRPT2 energy with relaxed reference (once)
     double compute_energy_relaxed();
 
@@ -139,62 +136,16 @@ class DSRG_MRPT2 : public MASTER_DSRG {
     void cleanup();
     /// Print a summary of the options
     void print_summary();
-    //    /// Print levels
-    //    int print_;
 
-    //    /// Do multi-state computation?
-    //    bool multi_state_;
     /// CASCI eigen values and eigen vectors for state averaging
     std::vector<std::vector<std::pair<SharedVector, double>>> eigens_;
     /// Determinants with different symmetries in the model space
     std::vector<std::vector<psi::forte::STLBitsetDeterminant>> p_spaces_;
 
-    //    /// The reference object
-    //    Reference reference_;
-    //    /// The energy of the reference
-    //    double Eref_;
-    //    /// The frozen-core energy
-    //    double Efrzc_;
-
-    //    /// The molecular integrals required by MethodBase
-    //    std::shared_ptr<ForteIntegrals> ints_;
-
-    //    /// MO space info
-    //    std::shared_ptr<MOSpaceInfo> mo_space_info_;
-
-    //    /// List of alpha core MOs
-    //    std::vector<size_t> core_mos_;
-    //    /// List of alpha active MOs
-    //    std::vector<size_t> actv_mos_;
-    //    /// List of alpha virtual MOs
-    //    std::vector<size_t> virt_mos_;
-    //    /// List of beta core MOs
-    //    std::vector<size_t> core_mos_;
-    //    /// List of beta active MOs
-    //    std::vector<size_t> actv_mos_;
-    //    /// List of beta virtual MOs
-    //    std::vector<size_t> virt_mos_;
-
     /// List of active active occupied MOs (relative to active)
     std::vector<size_t> actv_occ_mos_;
     /// List of active active unoccupied MOs (relative to active)
     std::vector<size_t> actv_uocc_mos_;
-
-    //    /// Alpha core label
-    //    std::string acore_label_;
-    //    /// Alpha active label
-    //    std::string aactv_label_;
-    //    /// Alpha virtual label
-    //    std::string avirt_label_;
-    //    /// Beta core label
-    //    std::string bcore_label_;
-    //    /// Beta active label
-    //    std::string bactv_label_;
-    //    /// Beta virtual label
-    //    std::string bvirt_label_;
-
-    //    /// Map from space label to list of MOs
-    //    std::map<char, std::vector<size_t>> label_to_spacemo_;
 
     /// Fill up two-electron integrals
     void build_ints();
@@ -219,35 +170,12 @@ class DSRG_MRPT2 : public MASTER_DSRG {
 
     // => DSRG related <= //
 
-    //    /// The flow parameter
-    //    double s_;
-    //    /// Source operator
-    //    std::string source_;
-    //    /// The dsrg source operator
-    //    std::shared_ptr<DSRG_SOURCE> dsrg_source_;
-    //    /// Threshold for the Taylor expansion of f(z) = (1-exp(-z^2))/z
-    //    double taylor_threshold_;
-
     /// Renormalize Fock matrix
     void renormalize_F();
     /// Renormalize two-electron integrals
     void renormalize_V();
 
     // => Tensors <= //
-
-    //    /// Kevin's Tensor Wrapper
-    //    std::shared_ptr<BlockedTensorFactory> BTF_;
-    //    /// Tensor type for AMBIT
-    //    TensorType tensor_type_;
-
-    //    /// One-particle density matrix
-    //    ambit::BlockedTensor Gamma1_;
-    //    /// One-hole density matrix
-    //    ambit::BlockedTensor Eta1_;
-    //    /// Two-body denisty cumulant
-    //    ambit::BlockedTensor Lambda2_;
-    //    /// Three-body density cumulant
-    //    ambit::BlockedTensor Lambda3_;
 
     /// One-eletron integral
     ambit::BlockedTensor Hoei_;
@@ -261,12 +189,6 @@ class DSRG_MRPT2 : public MASTER_DSRG {
     ambit::BlockedTensor T1eff_;
     /// Double excitation amplitude
     ambit::BlockedTensor T2_;
-    /// One-body transformed Hamiltonian (active only)
-    ambit::BlockedTensor Hbar1_;
-    /// Two-body transformed Hamiltonian (active only)
-    ambit::BlockedTensor Hbar2_;
-    /// Three-body transformed Hamiltonian (active only)
-    ambit::BlockedTensor Hbar3_;
 
     /// Unitary matrix to block diagonal Fock
     ambit::BlockedTensor U_;
@@ -298,15 +220,11 @@ class DSRG_MRPT2 : public MASTER_DSRG {
     /// Include which part of internal amplitudes?
     std::string internal_amp_select_;
 
-    //    /// Number of amplitudes will be printed in amplitude summary
-    //    int ntamp_;
     /// Print amplitudes summary
     void print_amp_summary(const std::string& name,
                            const std::vector<std::pair<std::vector<size_t>, double>>& list,
                            const double& norm, const size_t& number_nonzero);
 
-    //    /// Threshold for amplitudes considered as intruders
-    //    double intruder_tamp_;
     /// List of large amplitudes
     std::vector<std::pair<std::vector<size_t>, double>> lt1a_;
     std::vector<std::pair<std::vector<size_t>, double>> lt1b_;
@@ -334,48 +252,14 @@ class DSRG_MRPT2 : public MASTER_DSRG {
 
     // => Dipole related <= //
 
-    //    /// MO dipole integrals (including frozen orbitals)
-    //    std::vector<SharedMatrix> MOdipole_ints_;
-
-    //    /// frozen-core dipole
-    //    std::vector<double> frozen_core_dipoles_;
-    //    /// Nuclear dipole
-    //    SharedVector nuc_dipoles_;
-
-    //    /// reference dipoles
-    //    std::vector<double> ref_dipoles_;
-
-    //    /// compute reference dipoles
-    //    void compute_ref_dipoles();
-
-    //    /// MO dipole integrals (no frozen orbitals)
-    //    ambit::BlockedTensor Mx_, My_, Mz_;
-
-    /// DSRG transformed dipole integrals
-    std::vector<double> Mbar0_;
-    std::vector<ambit::BlockedTensor> Mbar1_;
-    std::vector<ambit::BlockedTensor> Mbar2_;
-    //    ambit::BlockedTensor Mbar1x_, Mbar1y_, Mbar1z_;
-    //    ambit::BlockedTensor Mbar2x_, Mbar2y_, Mbar2z_;
-
-    //    /// fill in dipole integrals from ints
-    //    void fill_bare_dipoles();
-
-    /// Transform dipole integrals
-    void compute_pt2_dipole(BlockedTensor& M, double& Mbar0, BlockedTensor& Mbar1,
-                            BlockedTensor& Mbar2);
-    void transform_dipoles();
+    /// Compute DSRG transformed dipole integrals
+    void compute_pt2_dm();
+    /// Compute DSRG transformed dipole integrals for a given direction
+    void compute_pt2_dm_helper(BlockedTensor& M, double& Mbar0, BlockedTensor& Mbar1,
+                               BlockedTensor& Mbar2);
 
     // => Reference relaxation <= //
 
-    //    /// Relaxation type
-    //    std::string relax_ref_;
-
-    //    /// Timings for computing the commutators
-    //    DSRG_TIME dsrg_time_;
-
-    /// Compute zero-body Hbar truncated to 2nd-order
-    double Hbar0_;
     /// Compute one-body term of commutator [H1, T1]
     void H1_T1_C1aa(BlockedTensor& H1, BlockedTensor& T1, const double& alpha, BlockedTensor& C1);
     /// Compute one-body term of commutator [H1, T2]
@@ -383,7 +267,7 @@ class DSRG_MRPT2 : public MASTER_DSRG {
     /// Compute one-body term of commutator [H2, T1]
     void H2_T1_C1aa(BlockedTensor& H2, BlockedTensor& T1, const double& alpha, BlockedTensor& C1);
     /// Compute one-body term of commutator [H2, T2]
-    void H2_T2_C1hh(BlockedTensor& H2, BlockedTensor& T2, const double& alpha, BlockedTensor& C1);
+    void H2_T2_C1aa(BlockedTensor& H2, BlockedTensor& T2, const double& alpha, BlockedTensor& C1);
 
     /// Compute two-body term of commutator [H2, T1]
     void H2_T1_C2aaaa(BlockedTensor& H2, BlockedTensor& T1, const double& alpha, BlockedTensor& C2);
@@ -391,38 +275,6 @@ class DSRG_MRPT2 : public MASTER_DSRG {
     void H1_T2_C2aaaa(BlockedTensor& H1, BlockedTensor& T2, const double& alpha, BlockedTensor& C2);
     /// Compute two-body term of commutator [H2, T2]
     void H2_T2_C2aaaa(BlockedTensor& H2, BlockedTensor& T2, const double& alpha, BlockedTensor& C2);
-
-    //    /// Compute zero-body term of commutator [H1, T1]
-    //    void H1_T1_C0(BlockedTensor& H1, BlockedTensor& T1, const double& alpha, double& C0);
-    //    /// Compute zero-body term of commutator [H1, T2]
-    //    void H1_T2_C0(BlockedTensor& H1, BlockedTensor& T2, const double& alpha, double& C0);
-    //    /// Compute zero-body term of commutator [H2, T1]
-    //    void H2_T1_C0(BlockedTensor& H2, BlockedTensor& T1, const double& alpha, double& C0);
-    //    /// Compute zero-body term of commutator [H2, T2]
-    //    void H2_T2_C0(BlockedTensor& H2, BlockedTensor& T2, const double& alpha, double& C0);
-
-    //    /// Compute one-body term of commutator [H1, T1]
-    //    void H1_T1_C1(BlockedTensor& H1, BlockedTensor& T1, const double& alpha, BlockedTensor&
-    //    C1);
-    //    /// Compute one-body term of commutator [H1, T2]
-    //    void H1_T2_C1(BlockedTensor& H1, BlockedTensor& T2, const double& alpha, BlockedTensor&
-    //    C1);
-    //    /// Compute one-body term of commutator [H2, T1]
-    //    void H2_T1_C1(BlockedTensor& H2, BlockedTensor& T1, const double& alpha, BlockedTensor&
-    //    C1);
-    //    /// Compute one-body term of commutator [H2, T2]
-    //    void H2_T2_C1(BlockedTensor& H2, BlockedTensor& T2, const double& alpha, BlockedTensor&
-    //    C1);
-
-    //    /// Compute two-body term of commutator [H2, T1]
-    //    void H2_T1_C2(BlockedTensor& H2, BlockedTensor& T1, const double& alpha, BlockedTensor&
-    //    C2);
-    //    /// Compute two-body term of commutator [H1, T2]
-    //    void H1_T2_C2(BlockedTensor& H1, BlockedTensor& T2, const double& alpha, BlockedTensor&
-    //    C2);
-    //    /// Compute two-body term of commutator [H2, T2]
-    //    void H2_T2_C2(BlockedTensor& H2, BlockedTensor& T2, const double& alpha, BlockedTensor&
-    //    C2);
 
     /// Compute three-body term of commutator [H2, T2]
     void H2_T2_C3aaaaaa(BlockedTensor& H2, BlockedTensor& T2, const double& alpha,

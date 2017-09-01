@@ -64,6 +64,17 @@ class FCI : public ActiveSpaceSolver {
     FCI(SharedWavefunction ref_wfn, Options& options, std::shared_ptr<ForteIntegrals> ints,
         std::shared_ptr<MOSpaceInfo> mo_space_info);
 
+    /**
+     * Constructor
+     * @param ref_wfn The reference wavefunction object
+     * @param options The main options object
+     * @param ints A pointer to an allocated integral object
+     * @param mo_space_info A pointer to the MOSpaceInfo object
+     * @param fci_ints A pointer to FCIIntegrals
+     */
+    FCI(SharedWavefunction ref_wfn, Options& options, std::shared_ptr<ForteIntegrals> ints,
+        std::shared_ptr<MOSpaceInfo> mo_space_info, std::shared_ptr<FCIIntegrals> fci_ints);
+
     virtual ~FCI();
 
     // ==> Class Interface <==
@@ -82,12 +93,14 @@ class FCI : public ActiveSpaceSolver {
     void print_no(bool value);
     /// Set Ms value
     void set_ms(int ms);
-    /// Get the pointer of FCIWfn
-    std::shared_ptr<FCIWfn> get_FCIWfn() { return fcisolver_->get_FCIWFN(); }
+//    /// Get the pointer of FCIWfn
+//    std::shared_ptr<FCIWfn> get_FCIWfn() { return fcisolver_->get_FCIWFN(); }
 
   private:
     // ==> Class data <==
 
+    /// A pointer of FCIIntegral
+    std::shared_ptr<FCIIntegrals> fci_ints_;
     /// A pointer to the FCISolver object
     std::unique_ptr<FCISolver> fcisolver_;
     /// Print level

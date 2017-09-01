@@ -54,10 +54,16 @@ FCI::FCI(SharedWavefunction ref_wfn, Options& options, std::shared_ptr<ForteInte
     : ActiveSpaceSolver(ref_wfn, options, ints, mo_space_info) {
     // Copy the wavefunction information
     reference_wavefunction_ = ref_wfn;
-
-    print_ = options_.get_int("PRINT");
-
     startup();
+}
+
+FCI::FCI(SharedWavefunction ref_wfn, Options& options, std::shared_ptr<ForteIntegrals> ints,
+         std::shared_ptr<MOSpaceInfo> mo_space_info, std::shared_ptr<FCIIntegrals> fci_ints)
+    : ActiveSpaceSolver(ref_wfn, options, ints, mo_space_info) {
+    // Copy the wavefunction information
+    reference_wavefunction_ = ref_wfn;
+    startup();
+    fci_ints_ = fci_ints;
 }
 
 // FCI::FCI(SharedWavefunction ref_wfn, Options& options, std::shared_ptr<ForteIntegrals> ints,
@@ -86,6 +92,8 @@ void FCI::set_ms(int ms) {
 }
 
 void FCI::startup() {
+    print_ = options_.get_int("PRINT");
+
     if (print_)
         print_method_banner(
             {"String-based Full Configuration Interaction", "by Francesco A. Evangelista"});
@@ -166,13 +174,13 @@ double FCI::solver_compute_energy() {
     size_t na = (nactel + twice_ms_) / 2;
     size_t nb = nactel - na;
 
-    outfile->Printf("\n  A");
+    //    outfile->Printf("\n  A");
 
     fcisolver_ = std::unique_ptr<FCISolver>(new FCISolver(
         active_dim, rdocc, active, na, nb, multiplicity, options_.get_int("ROOT_SYM"), ints_,
         mo_space_info_, options_.get_int("FCI_NTRIAL_PER_ROOT"), print_, options_));
 
-    outfile->Printf("\n  B");
+    //    outfile->Printf("\n  B");
     // tweak some options
     fcisolver_->set_max_rdm_level(max_rdm_level_);
     fcisolver_->set_nroot(options_.get_int("FCI_NROOT"));
@@ -182,6 +190,10 @@ double FCI::solver_compute_energy() {
     fcisolver_->set_collapse_per_root(options_.get_int("DL_COLLAPSE_PER_ROOT"));
     fcisolver_->set_subspace_per_root(options_.get_int("DL_SUBSPACE_PER_ROOT"));
     fcisolver_->set_print_no(print_no_);
+    if (fci_ints_ != nullptr) {
+        fcisolver_->use_user_integrals_and_restricted_docc(true);
+        fcisolver_->set_integral_pointer(fci_ints_);
+    }
 
     double fci_energy = fcisolver_->compute_energy();
 

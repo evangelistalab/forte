@@ -75,6 +75,10 @@ void SemiCanonical::startup() {
     Ua_ = SharedMatrix(new Matrix("Ua", nmopi_, nmopi_));
     Ub_ = SharedMatrix(new Matrix("Ub", nmopi_, nmopi_));
 
+    // Preapare orbital rotation matrix, which transforms only active MOs
+    Ua_t_ = ambit::Tensor::build(ambit::CoreTensor, "Ua", {nact_, nact_});
+    Ub_t_ = ambit::Tensor::build(ambit::CoreTensor, "Ub", {nact_, nact_});
+
     // dimension map
     mo_dims_["core"] = rdocc_;
     mo_dims_["actv"] = actv_;
@@ -170,12 +174,10 @@ void SemiCanonical::semicanonicalize(Reference& reference, const int& max_rdm_le
         Ua_->identity();
         Ub_->identity();
 
-        Ua_t_ = ambit::Tensor::build(ambit::CoreTensor, "Ua", {nact_, nact_});
         Ua_t_.iterate([&](const std::vector<size_t>& i, double& value) {
             if (i[0] == i[1])
                 value = 1.0;
         });
-        Ub_t_ = ambit::Tensor::build(ambit::CoreTensor, "Ub", {nact_, nact_});
         Ub_t_.iterate([&](const std::vector<size_t>& i, double& value) {
             if (i[0] == i[1])
                 value = 1.0;
@@ -183,12 +185,6 @@ void SemiCanonical::semicanonicalize(Reference& reference, const int& max_rdm_le
         outfile->Printf("\n  Orbitals are already semicanonicalized.");
     } else {
         // 2. Build transformation matrices from diagononalizing blocks in F
-
-        // This transforms only within ACTIVE MOs
-        // Use ambit Tensor here so that the ambit mo_spaces remains the same
-        Ua_t_ = ambit::Tensor::build(ambit::CoreTensor, "Ua", {nact_, nact_});
-        Ub_t_ = ambit::Tensor::build(ambit::CoreTensor, "Ub", {nact_, nact_});
-
         build_transformation_matrices(Ua_, Ub_, Ua_t_, Ub_t_);
 
         // 3. Retransform integrals and cumulants/RDMs

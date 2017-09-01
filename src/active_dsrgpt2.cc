@@ -1211,45 +1211,35 @@ void ACTIVE_DSRGPT2::compute_osc_pt2(const int& irrep, const int& root, const do
     }
 
     // step 2: use CI_RDMS to compute transition density
-    size_t na = mo_space_info_->size("ACTIVE");
-    size_t na2 = na * na;
-    size_t na4 = na2 * na2;
-    size_t na6 = na4 * na2;
     CI_RDMS ci_rdms(options_, fci_mo_->fci_ints(), p_space, evecs, 0, n);
 
-    std::vector<double> opdm_a(na2, 0.0);
-    std::vector<double> opdm_b(na2, 0.0);
+    std::vector<double> opdm_a, opdm_b;
     ci_rdms.compute_1rdm(opdm_a, opdm_b);
 
-    std::vector<double> tpdm_aa(na4, 0.0);
-    std::vector<double> tpdm_ab(na4, 0.0);
-    std::vector<double> tpdm_bb(na4, 0.0);
+    std::vector<double> tpdm_aa, tpdm_ab, tpdm_bb;
     ci_rdms.compute_2rdm(tpdm_aa, tpdm_ab, tpdm_bb);
 
-    std::vector<double> tpdm_aaa(na6, 0.0);
-    std::vector<double> tpdm_aab(na6, 0.0);
-    std::vector<double> tpdm_abb(na6, 0.0);
-    std::vector<double> tpdm_bbb(na6, 0.0);
+    std::vector<double> tpdm_aaa, tpdm_aab, tpdm_abb, tpdm_bbb;
     ci_rdms.compute_3rdm(tpdm_aaa, tpdm_aab, tpdm_abb, tpdm_bbb);
 
     // step 3: translate transition rdms into BlockedTensor format
     ambit::BlockedTensor TD1 =
         ambit::BlockedTensor::build(ambit::CoreTensor, "TD1", spin_cases({"aa"}));
-    TD1.block("aa").data() = opdm_a;
-    TD1.block("AA").data() = opdm_b;
+    TD1.block("aa").data() = std::move(opdm_a);
+    TD1.block("AA").data() = std::move(opdm_b);
 
     ambit::BlockedTensor TD2 =
         ambit::BlockedTensor::build(ambit::CoreTensor, "TD2", spin_cases({"aaaa"}));
-    TD2.block("aaaa").data() = tpdm_aa;
-    TD2.block("aAaA").data() = tpdm_ab;
-    TD2.block("AAAA").data() = tpdm_bb;
+    TD2.block("aaaa").data() = std::move(tpdm_aa);
+    TD2.block("aAaA").data() = std::move(tpdm_ab);
+    TD2.block("AAAA").data() = std::move(tpdm_bb);
 
     ambit::BlockedTensor TD3 =
         ambit::BlockedTensor::build(ambit::CoreTensor, "TD3", spin_cases({"aaaaaa"}));
-    TD3.block("aaaaaa").data() = tpdm_aaa;
-    TD3.block("aaAaaA").data() = tpdm_aab;
-    TD3.block("aAAaAA").data() = tpdm_abb;
-    TD3.block("AAAAAA").data() = tpdm_bbb;
+    TD3.block("aaaaaa").data() = std::move(tpdm_aaa);
+    TD3.block("aaAaaA").data() = std::move(tpdm_aab);
+    TD3.block("aAAaAA").data() = std::move(tpdm_abb);
+    TD3.block("AAAAAA").data() = std::move(tpdm_bbb);
 
     // compute first-order effective transition density
     // step 1: initialization
@@ -1265,7 +1255,6 @@ void ACTIVE_DSRGPT2::compute_osc_pt2(const int& irrep, const int& root, const do
 
     // step 3: compute TDeff from <ref_x| mu * A_g |ref_g>
     double fc_g = compute_TDeff(T1_g_, T2_g_, TD1, TD2, TD3, TDeff, false);
-    outfile->Printf("\n TDeff_0_Norm = %.15f, TDeff_final_Norm = %.15f", temp.norm(), TDeff.norm());
 
     // put TDeff into SharedMatrix format
     // step 1: setup orbital maps
