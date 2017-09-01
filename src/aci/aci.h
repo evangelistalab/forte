@@ -250,6 +250,10 @@ class AdaptiveCI : public Wavefunction {
 
     bool print_weights_;
 
+
+    /// The alpha MO always unoccupied
+    int hole_;
+
     /// Timing variables
     double build_H_;
     double diag_H_;
@@ -305,6 +309,9 @@ class AdaptiveCI : public Wavefunction {
                                   det_hash<std::vector<double>>& V_hash);
     /// Alternate/experimental determinant generator
     void get_excited_determinants2(int nroot, SharedMatrix evecs, DeterminantHashVec& P_space,
+                                   det_hash<std::vector<double>>& V_hash);
+    /// Get excited determinants with a specified hole
+    void get_core_excited_determinants(SharedMatrix evecs, DeterminantHashVec& P_space,
                                    det_hash<std::vector<double>>& V_hash);
 
     /// Prune the space of determinants
@@ -386,6 +393,8 @@ class AdaptiveCI : public Wavefunction {
     std::vector<std::pair<size_t, double>>
     dl_initial_guess(std::vector<STLBitsetDeterminant>& old_dets,
                      std::vector<STLBitsetDeterminant>& dets, SharedMatrix& evecs, int nroot);
+
+    std::vector<std::tuple<double,int,int>> sym_labeled_orbitals(std::string type);
 
     //    int david2(double **A, int N, int M, double *eps, double **v,double
     //    cutoff, int print);
