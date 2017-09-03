@@ -253,10 +253,10 @@ class DSRG_MRPT2 : public MASTER_DSRG {
     // => Dipole related <= //
 
     /// Compute DSRG transformed dipole integrals
-    void compute_pt2_dm();
+    void print_dm_pt2();
     /// Compute DSRG transformed dipole integrals for a given direction
-    void compute_pt2_dm_helper(BlockedTensor& M, double& Mbar0, BlockedTensor& Mbar1,
-                               BlockedTensor& Mbar2);
+    void compute_dm1d_pt2(BlockedTensor& M, double& Mbar0, BlockedTensor& Mbar1,
+                          BlockedTensor& Mbar2);
 
     // => Reference relaxation <= //
 

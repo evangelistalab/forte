@@ -98,6 +98,11 @@ void MASTER_DSRG::read_options() {
     multi_state_algorithm_ = options_.get_str("DSRG_MULTI_STATE");
 
     do_dm_ = options_.get_bool("DSRG_DIPOLE");
+    if (multi_state_ && do_dm_) {
+        if (multi_state_algorithm_ != "SA_FULL") {
+            do_dm_ = false;
+        }
+    }
 
     outfile->Printf("Done");
 }
@@ -1251,17 +1256,20 @@ void MASTER_DSRG::H2_T2_C2(BlockedTensor& H2, BlockedTensor& T2, const double& a
     std::vector<std::string> blocks;
     std::set_intersection(temp_blocks.begin(), temp_blocks.end(), C2_blocks.begin(),
                           C2_blocks.end(), std::back_inserter(blocks));
-    BlockedTensor temp = ambit::BlockedTensor::build(tensor_type_, "temp", blocks);
-    temp["qjsb"] += alpha * H2["aqms"] * T2["mjab"];
-    temp["qjsb"] += alpha * H2["qAsM"] * T2["jMbA"];
-    temp["qjsb"] += alpha * Gamma1_["xy"] * T2["yjab"] * H2["aqxs"];
-    temp["qjsb"] += alpha * Gamma1_["XY"] * T2["jYbA"] * H2["qAsX"];
-    temp["qjsb"] -= alpha * Gamma1_["xy"] * T2["ijxb"] * H2["yqis"];
-    temp["qjsb"] -= alpha * Gamma1_["XY"] * T2["jIbX"] * H2["qYsI"];
-    C2["qjsb"] += temp["qjsb"];
-    C2["jqsb"] -= temp["qjsb"];
-    C2["qjbs"] -= temp["qjsb"];
-    C2["jqbs"] += temp["qjsb"];
+    BlockedTensor temp;
+    if (blocks.size() != 0) {
+        temp = ambit::BlockedTensor::build(tensor_type_, "temp", blocks);
+        temp["qjsb"] += alpha * H2["aqms"] * T2["mjab"];
+        temp["qjsb"] += alpha * H2["qAsM"] * T2["jMbA"];
+        temp["qjsb"] += alpha * Gamma1_["xy"] * T2["yjab"] * H2["aqxs"];
+        temp["qjsb"] += alpha * Gamma1_["XY"] * T2["jYbA"] * H2["qAsX"];
+        temp["qjsb"] -= alpha * Gamma1_["xy"] * T2["ijxb"] * H2["yqis"];
+        temp["qjsb"] -= alpha * Gamma1_["XY"] * T2["jIbX"] * H2["qYsI"];
+        C2["qjsb"] += temp["qjsb"];
+        C2["jqsb"] -= temp["qjsb"];
+        C2["qjbs"] -= temp["qjsb"];
+        C2["jqbs"] += temp["qjsb"];
+    }
 
     // figure out useful blocks of temp (assume symmetric C2 blocks, if cavv exists => acvv exists)
     temp_blocks.clear();
@@ -1278,17 +1286,19 @@ void MASTER_DSRG::H2_T2_C2(BlockedTensor& H2, BlockedTensor& T2, const double& a
     blocks.clear();
     std::set_intersection(temp_blocks.begin(), temp_blocks.end(), C2_blocks.begin(),
                           C2_blocks.end(), std::back_inserter(blocks));
-    temp = ambit::BlockedTensor::build(tensor_type_, "temp", blocks);
-    temp["QJSB"] += alpha * H2["AQMS"] * T2["MJAB"];
-    temp["QJSB"] += alpha * H2["aQmS"] * T2["mJaB"];
-    temp["QJSB"] += alpha * Gamma1_["XY"] * T2["YJAB"] * H2["AQXS"];
-    temp["QJSB"] += alpha * Gamma1_["xy"] * T2["yJaB"] * H2["aQxS"];
-    temp["QJSB"] -= alpha * Gamma1_["XY"] * T2["IJXB"] * H2["YQIS"];
-    temp["QJSB"] -= alpha * Gamma1_["xy"] * T2["iJxB"] * H2["yQiS"];
-    C2["QJSB"] += temp["QJSB"];
-    C2["JQSB"] -= temp["QJSB"];
-    C2["QJBS"] -= temp["QJSB"];
-    C2["JQBS"] += temp["QJSB"];
+    if (blocks.size() != 0) {
+        temp = ambit::BlockedTensor::build(tensor_type_, "temp", blocks);
+        temp["QJSB"] += alpha * H2["AQMS"] * T2["MJAB"];
+        temp["QJSB"] += alpha * H2["aQmS"] * T2["mJaB"];
+        temp["QJSB"] += alpha * Gamma1_["XY"] * T2["YJAB"] * H2["AQXS"];
+        temp["QJSB"] += alpha * Gamma1_["xy"] * T2["yJaB"] * H2["aQxS"];
+        temp["QJSB"] -= alpha * Gamma1_["XY"] * T2["IJXB"] * H2["YQIS"];
+        temp["QJSB"] -= alpha * Gamma1_["xy"] * T2["iJxB"] * H2["yQiS"];
+        C2["QJSB"] += temp["QJSB"];
+        C2["JQSB"] -= temp["QJSB"];
+        C2["QJBS"] -= temp["QJSB"];
+        C2["JQBS"] += temp["QJSB"];
+    }
 
     C2["qJsB"] += alpha * H2["aqms"] * T2["mJaB"];
     C2["qJsB"] += alpha * H2["qAsM"] * T2["MJAB"];

@@ -297,6 +297,22 @@ class DSRG_MRPT3 : public MASTER_DSRG {
                      std::vector<double>& tpdm_bb);
     void rotate_3rdm(std::vector<double>& tpdm_aaa, std::vector<double>& tpdm_aab,
                      std::vector<double>& tpdm_abb, std::vector<double>& tpdm_bbb);
+
+    // => Dipole related <= //
+
+    /// Compute DSRG transformed dipole integrals from 1st-order amplitudes for a given direction
+    void compute_dm1d_pt3_1(BlockedTensor& M, double& Mbar0, double& Mbar0_pt2,
+                            BlockedTensor& Mbar1, BlockedTensor& Mbar2);
+    /// Compute DSRG transformed dipole integrals from 2nd-order amplitudes for a given direction
+    void compute_dm1d_pt3_2(BlockedTensor& M, double& Mbar0, double& Mbar0_pt2,
+                            BlockedTensor& Mbar1, BlockedTensor& Mbar2);
+    /// Print unrelaxed dipole
+    void print_dm_pt3();
+
+    /// DSRG-MRPT2 transformed dipole scalar
+    std::vector<double> Mbar0_pt2_;
+    /// DSRG-MRPT2 (2nd-order complete) transformed dipole scalar
+    std::vector<double> Mbar0_pt2c_;
 };
 }
 } // End Namespaces
