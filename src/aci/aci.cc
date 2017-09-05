@@ -159,6 +159,12 @@ void set_ACI_options(ForteOptions& foptions) {
 
     /*- Type of excited state to compute -*/
     foptions.add_str("ACI_EX_TYPE", "CONV","Type of excited state to compute" );
+
+    /*- Number of core orbitals to freeze -*/
+    foptions.add_int("ACI_NFROZEN_CORE",0, "Number of orbitals to freeze for core excitations"); 
+ 
+    /*- Number of roots to compute per frozen orbital -*/
+    foptions.add_int("ACI_ROOTS_PER_CORE", 1, "Number of roots to compute per frozen occupation");
 }
 
 bool pairComp(const std::pair<double, STLBitsetDeterminant> E1,
@@ -262,9 +268,9 @@ void AdaptiveCI::startup() {
     project_out_spin_contaminants_ = options_.get_bool("ACI_PROJECT_OUT_SPIN_CONTAMINANTS");
     spin_complete_ = options_.get_bool("ACI_ENFORCE_SPIN_COMPLETE");
 
-    if( options_.get_str("ACI_EX_TYPE") == "CORE" ){
-        spin_complete_ = false;
-    }
+   // if( options_.get_str("ACI_EX_TYPE") == "CORE" ){
+   //     spin_complete_ = false;
+   // }
 
     rdm_level_ = options_.get_int("ACI_MAX_RDM");
 
@@ -293,6 +299,8 @@ void AdaptiveCI::startup() {
     root_ = options_.get_int("ACI_ROOT");
     approx_rdm_ = options_.get_bool("ACI_APPROXIMATE_RDM");
     print_weights_ = options_.get_bool("ACI_PRINT_WEIGHTS");
+
+    hole_ = 0;
 
     diag_method_ = DLString;
     if (options_["DIAG_ALGORITHM"].has_changed()) {
@@ -494,6 +502,7 @@ double AdaptiveCI::compute_energy() {
 
         SparseCISolver sparse_solver(fci_ints_);
         sparse_solver.set_parallel(true);
+        sparse_solver.set_force_diag(options_.get_bool("FORCE_DIAG_METHOD"));
         sparse_solver.set_e_convergence(options_.get_double("E_CONVERGENCE"));
         sparse_solver.set_maxiter_davidson(options_.get_int("DL_MAXITER"));
         sparse_solver.set_spin_project_full(project_out_spin_contaminants_);
@@ -534,6 +543,7 @@ double AdaptiveCI::compute_energy() {
 
         SparseCISolver sparse_solver(fci_ints_);
         sparse_solver.set_parallel(true);
+        sparse_solver.set_force_diag(options_.get_bool("FORCE_DIAG_METHOD"));
         sparse_solver.set_e_convergence(options_.get_double("E_CONVERGENCE"));
         sparse_solver.set_maxiter_davidson(options_.get_int("DL_MAXITER"));
         sparse_solver.set_spin_project_full(project_out_spin_contaminants_);
@@ -645,6 +655,7 @@ void AdaptiveCI::diagonalize_final_and_compute_rdms() {
 
     SparseCISolver sparse_solver(fci_ints_);
     sparse_solver.set_parallel(true);
+    sparse_solver.set_force_diag(options_.get_bool("FORCE_DIAG_METHOD"));
     sparse_solver.set_e_convergence(options_.get_double("E_CONVERGENCE"));
     sparse_solver.set_maxiter_davidson(options_.get_int("DL_MAXITER"));
     sparse_solver.set_spin_project(project_out_spin_contaminants_);
@@ -2417,7 +2428,10 @@ int AdaptiveCI::root_follow(DeterminantHashVec& P_ref, std::vector<double>& P_re
     //     P_ref.get_det(det_weights[I].second).str().c_str());
     // }
 
-    for (int n = 0; n < num_ref_roots; ++n) {
+    
+    int max_overlap = std::min(int(P_space.size()), num_ref_roots);
+    
+    for (int n = 0; n < max_overlap; ++n) {
         if (!quiet_mode_)
             outfile->Printf("\n\n  Computing overlap for root %d", n);
         double new_overlap = P_ref.overlap(P_ref_evecs, P_space, P_evecs, n);
@@ -2481,21 +2495,30 @@ void AdaptiveCI::compute_aci(DeterminantHashVec& PQ_space, SharedMatrix& PQ_evec
     DeterminantHashVec P_space(initial_reference_);
 
     if( (options_.get_str("ACI_EX_TYPE") == "CORE") and (root_ > 0)  ){
+        
+        int nf_orb = options_.get_int("ACI_NFROZEN_CORE");
+        int ncstate = options_.get_int("ACI_ROOTS_PER_CORE");
+
+        if( ((root_-1) > ncstate ) and (root_ > 1) ){
+            hole_++;
+        }
+        int particle = (root_-1) - (hole_*ncstate);        
+
         P_space.clear();
         auto orbs = sym_labeled_orbitals("RHF");
-        hole_ = std::get<2>(orbs[root_-1]);
         STLBitsetDeterminant det = initial_reference_[0];
         STLBitsetDeterminant detb(det);
         std::vector<int> avir = det.get_alfa_vir();
         det.print();
         outfile->Printf("\n  Freezing alpha orbital %d", hole_);
+        outfile->Printf("\n  Exciting electron from %d to %d", hole_, avir[particle] );
         det.set_alfa_bit( hole_, false );
         detb.set_beta_bit( hole_, false );
 
         for( int n = 0, max_n = avir.size(); n < max_n; ++n ){
             if( (mo_symmetry_[hole_] ^ mo_symmetry_[avir[n]]) == 0 ){
-                det.set_alfa_bit( avir[0], true);
-                detb.set_beta_bit( avir[0], true);
+                det.set_alfa_bit( avir[particle], true);
+                detb.set_beta_bit( avir[particle], true);
                 break; 
             }
         }
@@ -2517,6 +2540,7 @@ void AdaptiveCI::compute_aci(DeterminantHashVec& PQ_space, SharedMatrix& PQ_evec
         sparse_solver.set_print_details(false);
     }
     sparse_solver.set_parallel(true);
+    sparse_solver.set_force_diag(options_.get_bool("FORCE_DIAG_METHOD"));
     sparse_solver.set_e_convergence(options_.get_double("E_CONVERGENCE"));
     sparse_solver.set_maxiter_davidson(options_.get_int("DL_MAXITER"));
     sparse_solver.set_spin_project(project_out_spin_contaminants_);
@@ -3301,6 +3325,7 @@ void AdaptiveCI::add_external_singles(DeterminantHashVec& ref) {
 
     SparseCISolver sparse_solver(fci_ints);
     sparse_solver.set_parallel(true);
+    sparse_solver.set_force_diag(options_.get_bool("FORCE_DIAG_METHOD"));
     sparse_solver.set_e_convergence(options_.get_double("E_CONVERGENCE"));
     sparse_solver.set_maxiter_davidson(options_.get_int("DL_MAXITER"));
     sparse_solver.set_spin_project(project_out_spin_contaminants_);
