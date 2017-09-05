@@ -301,7 +301,7 @@ class SparseCISolver {
     void add_bad_states(std::vector<std::vector<std::pair<size_t, double>>>& roots);
 
     /// Set option to force diagonalization type
-    void set_force_diag(int value);
+    void set_force_diag(bool value);
 
     /// Set the size of the guess space
     void set_guess_dimension(size_t value) { dl_guess_ = value; };
@@ -374,6 +374,8 @@ class SparseCISolver {
     int maxiter_davidson_ = 100;
     /// Initial guess size per root
     size_t dl_guess_ = 200;
+    /// Options for forcing diagonalization method
+    bool force_diag_ = false;
 
     /// Additional roots to project out
     std::vector<std::vector<std::pair<size_t, double>>> bad_states_;

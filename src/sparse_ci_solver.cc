@@ -1209,11 +1209,13 @@ void SparseCISolver::set_spin_project_full(bool value) { spin_project_full_ = va
 
 void SparseCISolver::set_sigma_method(std::string value) { sigma_method_ = value; }
 
+void SparseCISolver::set_force_diag(bool value) {force_diag_ = value; }
+
 void SparseCISolver::diagonalize_hamiltonian(const std::vector<STLBitsetDeterminant>& space,
                                              SharedVector& evals, SharedMatrix& evecs, int nroot,
                                              int multiplicity, DiagonalizationMethod diag_method) {
     timer diag("H Diagonalization");
-    if (space.size() <= 200 or diag_method == Full) {
+    if ( (!force_diag_ and (space.size() <= 200)) or diag_method == Full) {
         diagonalize_full(space, evals, evecs, nroot, multiplicity);
     } else {
         diagonalize_davidson_liu_solver(space, evals, evecs, nroot, multiplicity);
@@ -1225,7 +1227,7 @@ void SparseCISolver::diagonalize_hamiltonian_map(const DeterminantHashVec& space
                                                  int nroot, int multiplicity,
                                                  DiagonalizationMethod diag_method) {
     timer diag("H Diagonalization");
-    if (space.size() <= 200 or diag_method == Full) {
+    if ( (!force_diag_ and (space.size() <= 200)) or diag_method == Full) {
         const std::vector<STLBitsetDeterminant> dets = space.determinants();
         diagonalize_full(dets, evals, evecs, nroot, multiplicity);
     } else if (diag_method == Sparse) {
