@@ -340,8 +340,7 @@ double DSRG_MRPT2::compute_energy() {
     // check semi-canonical orbitals
     semi_canonical_ = check_semicanonical();
     if (!semi_canonical_) {
-        outfile->Printf("\n    Orbital invariant formalism is employed for "
-                        "DSRG-MRPT2.");
+        outfile->Printf("\n    Orbital invariant formalism is employed for DSRG-MRPT2.");
         U_ = ambit::BlockedTensor::build(tensor_type_, "U", spin_cases({"gg"}));
         std::vector<std::vector<double>> eigens = diagonalize_Fock_diagblocks(U_);
         Fa_ = eigens[0];
@@ -349,7 +348,7 @@ double DSRG_MRPT2::compute_energy() {
     }
 
     Timer DSRG_energy;
-    outfile->Printf("\n\n  ==> Computing DSRG-MRPT2 ... <==\n");
+    print_h2("Computing DSRG-MRPT2 ...");
 
     // Compute T2 and T1
     T1_ = BTF_->build(tensor_type_, "T1 Amplitudes", spin_cases({"hp"}));
@@ -420,7 +419,7 @@ double DSRG_MRPT2::compute_energy() {
     Hbar0_ = Ecorr;
 
     // Analyze T1 and T2
-    outfile->Printf("\n\n  ==> Excitation Amplitudes Summary <==\n");
+    print_h2("Excitation Amplitudes Summary");
     outfile->Printf("\n    Active Indices: ");
     int c = 0;
     for (const auto& idx : actv_mos_) {
@@ -435,7 +434,7 @@ double DSRG_MRPT2::compute_energy() {
     energy.push_back({"||T1||", T1norm_});
     energy.push_back({"||T2||", T2norm_});
 
-    outfile->Printf("\n\n  ==> Possible Intruders <==\n");
+    print_h2("Possible Intruders");
     print_intruder("A", lt1a_);
     print_intruder("B", lt1b_);
     print_intruder("AA", lt2aa_);
@@ -443,7 +442,7 @@ double DSRG_MRPT2::compute_energy() {
     print_intruder("BB", lt2bb_);
 
     // Print energy summary
-    outfile->Printf("\n\n  ==> DSRG-MRPT2 Energy Summary <==\n");
+    print_h2("DSRG-MRPT2 Energy Summary");
     for (auto& str_dim : energy) {
         outfile->Printf("\n    %-30s = %22.15f", str_dim.first.c_str(), str_dim.second);
     }
@@ -452,11 +451,6 @@ double DSRG_MRPT2::compute_energy() {
     Process::environment.globals["CURRENT ENERGY"] = Etotal;
     outfile->Printf("\n\n  Energy took %10.3f s", DSRG_energy.get());
     outfile->Printf("\n");
-
-    // transform dipole integrals
-    if (do_dm_) {
-        compute_pt2_dm();
-    }
 
     // relax reference
     if (relax_ref_ != "NONE" || multi_state_) {
@@ -494,6 +488,26 @@ double DSRG_MRPT2::compute_energy() {
             Hbar3_["UVWXYZ"] += C3["UVWXYZ"];
             Hbar3_["UVWXYZ"] += C3["XYZUVW"];
         }
+    }
+
+    // transform dipole integrals
+    if (do_dm_) {
+        print_h2("Transforming Dipole Integrals ... ");
+        Mbar0_ = std::vector<double>{dm_ref_[0], dm_ref_[1], dm_ref_[2]};
+        for (int i = 0; i < 3; ++i) {
+            ForteTimer timer;
+            std::string name = "Computing direction " + dm_dirs_[i];
+            outfile->Printf("\n    %-30s ...", name.c_str());
+
+            Mbar1_[i]["uv"] = dm_[i]["uv"];
+            Mbar1_[i]["UV"] = dm_[i]["UV"];
+            if (do_dm_dirs_[i] || multi_state_) {
+                compute_dm1d_pt2(dm_[i], Mbar0_[i], Mbar1_[i], Mbar2_[i]);
+            }
+
+            outfile->Printf("  Done. Timing %15.6f s", timer.elapsed());
+        }
+        print_dm_pt2();
     }
 
     return Etotal;
@@ -1403,7 +1417,7 @@ double DSRG_MRPT2::E_VT2_6() {
     return E;
 }
 
-void DSRG_MRPT2::compute_pt2_dm() {
+void DSRG_MRPT2::print_dm_pt2() {
     print_h2("DSRG-MRPT2 (unrelaxed) Dipole Moments (a.u.)");
 
     double nx = dm_nuc_[0];
@@ -1417,12 +1431,6 @@ void DSRG_MRPT2::compute_pt2_dm() {
     double rz = dm_ref_[2];
     outfile->Printf("\n    Reference electronic dipole moment:");
     outfile->Printf("\n      X: %10.6f  Y: %10.6f  Z: %10.6f\n", rx, ry, rz);
-
-    // compute DSRG-MRPT2 dressed dipoles
-    Mbar0_ = std::vector<double>{rx, ry, rz};
-    for (int i = 0; i < 3; ++i) {
-        compute_pt2_dm_helper(dm_[i], Mbar0_[i], Mbar1_[i], Mbar2_[i]);
-    }
 
     double x = Mbar0_[0];
     double y = Mbar0_[1];
@@ -1447,8 +1455,8 @@ void DSRG_MRPT2::compute_pt2_dm() {
     Process::environment.globals["UNRELAXED DIPOLE"] = t;
 }
 
-void DSRG_MRPT2::compute_pt2_dm_helper(BlockedTensor& M, double& Mbar0, BlockedTensor& Mbar1,
-                                       BlockedTensor& Mbar2) {
+void DSRG_MRPT2::compute_dm1d_pt2(BlockedTensor& M, double& Mbar0, BlockedTensor& Mbar1,
+                                  BlockedTensor& Mbar2) {
     /// Mbar = M + [M, A] + 0.5 * [[M, A], A]
 
     // compute [M, A] fully contracted terms
@@ -1485,11 +1493,6 @@ void DSRG_MRPT2::compute_pt2_dm_helper(BlockedTensor& M, double& Mbar0, BlockedT
 
     // cases when we need Mbar1 and Mbar2
     if (relax_ref_ != "NONE" || multi_state_) {
-        // set to bare
-        Mbar1["uv"] = M["uv"];
-        Mbar1["UV"] = M["UV"];
-
-        // compute [M, T] active 1- and 2-body terms
         BlockedTensor C1, C2;
         C1 = BTF_->build(tensor_type_, "C1", spin_cases({"aa"}), true);
         C2 = BTF_->build(tensor_type_, "C2", spin_cases({"aaaa"}), true);

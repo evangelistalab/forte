@@ -102,7 +102,7 @@ extern "C" SharedWavefunction forte(SharedWavefunction ref_wfn, Options& options
         // Compute energy
         forte_old_methods(ref_wfn, options, ints, mo_space_info, my_proc);
 
-//        outfile->Printf("\n\n  Your calculation took %.8f seconds\n", total_time.get());
+        //        outfile->Printf("\n\n  Your calculation took %.8f seconds\n", total_time.get());
     }
 
     forte_cleanup();
