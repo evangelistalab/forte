@@ -3,10 +3,10 @@
 import forte
 
 refcasscf    = -112.881481489535673
-refpt2       = -113.105649496912605
-refpt2_relax = -113.108902745248486
-refdm        =    0.078155
-refdm_relax  =    0.008671
+refpt3       = -113.123616776456032
+refpt3_relax = -113.125830179724190
+dmpt3        =    0.110379987437590
+dmpt3_relax  =    0.069260524780207
 
 molecule CO{
   0 1
@@ -34,7 +34,7 @@ Ecasscf, wfn_cas = energy('casscf', return_wfn=True)
 compare_values(refcasscf,get_variable("CURRENT ENERGY"),10,"CASSCF energy")
 
 set forte {
-  job_type           dsrg-mrpt2
+  job_type           dsrg-mrpt3
   frozen_docc        [0,0,0,0]
   frozen_uocc        [0,0,0,0]
   restricted_docc    [2,0,0,0]
@@ -48,7 +48,7 @@ set forte {
 }
 
 Eforte, wfn_cas = energy('forte', ref_wfn=wfn_cas, return_wfn=True)
-compare_values(refpt2,get_variable("UNRELAXED ENERGY"),9,"DSRG-MRPT2 unrelaxed energy")
-compare_values(refpt2_relax,get_variable("PARTIALLY RELAXED ENERGY"),9,"DSRG-MRPT2 partially relaxed energy")
-compare_values(refdm,get_variable("UNRELAXED DIPOLE"),5,"DSRG-MRPT2 unrelaxed dipole moment")
-compare_values(refdm_relax,get_variable("PARTIALLY RELAXED DIPOLE"),5,"DSRG-MRPT2 partially relaxed dipole moment")
+compare_values(refpt3,get_variable("UNRELAXED ENERGY"),9,"DSRG-MRPT3 unrelaxed energy")
+compare_values(refpt3_relax,get_variable("PARTIALLY RELAXED ENERGY"),9,"DSRG-MRPT3 partially relaxed energy")
+compare_values(dmpt3,get_variable("UNRELAXED DIPOLE"),5,"DSRG-MRPT3 unrelaxed dipole moment")
+compare_values(dmpt3_relax,get_variable("PARTIALLY RELAXED DIPOLE"),5,"DSRG-MRPT3 partially relaxed dipole moment")

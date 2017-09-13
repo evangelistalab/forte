@@ -15,6 +15,7 @@ class bcolors:
     ENDC = '\033[0m'
 
 timing_re = re.compile(r"Your calculation took (\d+.\d+) seconds")
+timing_re = re.compile(r"Psi4 exiting successfully. Buy a developer a beer!")
 
 psi4command = ""
 
@@ -40,21 +41,27 @@ fciqmc_tests = ["fciqmc"]
 ct_tests = ["ct-1","ct-2","ct-3","ct-4","ct-5","ct-6","ct-7-fc"]
 dsrg_tests = ["dsrg-1","dsrg-2"]
 mrdsrg_tests = ["mrdsrg-pt2-1","mrdsrg-pt2-2","mrdsrg-pt2-3","mrdsrg-pt2-4"]
-dsrg_mrpt3_tests = ["dsrg-mrpt3-1","dsrg-mrpt3-2","dsrg-mrpt3-3","dsrg-mrpt3-4","dsrg-mrpt3-5"]
+dsrg_mrpt3_tests = ["dsrg-mrpt3-1","dsrg-mrpt3-2","dsrg-mrpt3-3","dsrg-mrpt3-4","dsrg-mrpt3-5",
+                    "dsrg-mrpt3-6-sa","dsrg-mrpt3-7-CO","dsrg-mrpt3-8-sa-C2H4"]
 dsrg_mrpt2_tests = ["mr-dsrg-pt2-1","mr-dsrg-pt2-2","mr-dsrg-pt2-3","mr-dsrg-pt2-4",
-                    "dsrg-mrpt2-1","dsrg-mrpt2-2","dsrg-mrpt2-3","dsrg-mrpt2-4","dsrg-mrpt2-5","dsrg-mrpt2-6",
-                    "dsrg-mrpt2-7-casscf-natorbs","dsrg-mrpt2-8-sa","dsrg-mrpt2-9-xms",
-                    "cd-dsrg-mrpt2-1","cd-dsrg-mrpt2-2","cd-dsrg-mrpt2-3","cd-dsrg-mrpt2-4","cd-dsrg-mrpt2-5",
-                    "cd-dsrg-mrpt2-6", "cd-dsrg-mrpt2-7-sa",
-                    "df-dsrg-mrpt2-1", "df-dsrg-mrpt2-2", "df-dsrg-mrpt2-3", "df-dsrg-mrpt2-4", "df-dsrg-mrpt2-5",
-                    "df-dsrg-mrpt2-threading1", "df-dsrg-mrpt2-threading2", "df-dsrg-mrpt2-threading4",
-                    "diskdf-dsrg-mrpt2-threading1", "diskdf-dsrg-mrpt2-threading4",
-                    "diskdf-dsrg-mrpt2-1", "diskdf-dsrg-mrpt2-2", "diskdf-dsrg-mrpt2-3", "diskdf-dsrg-mrpt2-4", "diskdf-dsrg-mrpt2-5",
-                    "aci-dsrg-mrpt2-1","aci-dsrg-mrpt2-2","df-aci-dsrg-mrpt2-1", "df-aci-dsrg-mrpt2-2"]
-active_dsrgpt2_tests = ["actv-dsrg-1-C2H4-cis", "actv-dsrg-2-C2H4-cisd", "actv-dsrg-3-C4H6-cisd", "actv-dsrg-4-C4H6-triplet",
-                        "actv-dsrg-5-actv-independence", "actv-dsrg-size-intensive", "actv-dsrg-ipea-1", "actv-dsrg-ipea-2"]
+                    "dsrg-mrpt2-1","dsrg-mrpt2-2","dsrg-mrpt2-3","dsrg-mrpt2-4","dsrg-mrpt2-5",
+                    "dsrg-mrpt2-6","dsrg-mrpt2-7-casscf-natorbs","dsrg-mrpt2-8-sa",
+                    "dsrg-mrpt2-9-xms","dsrg-mrpt2-10-CO","dsrg-mrpt2-11-sa-C2H4",
+                    "cd-dsrg-mrpt2-1","cd-dsrg-mrpt2-2","cd-dsrg-mrpt2-3","cd-dsrg-mrpt2-4",
+                    "cd-dsrg-mrpt2-5","cd-dsrg-mrpt2-6","cd-dsrg-mrpt2-7-sa",
+                    "df-dsrg-mrpt2-1","df-dsrg-mrpt2-2","df-dsrg-mrpt2-3","df-dsrg-mrpt2-4",
+                    "df-dsrg-mrpt2-5",
+                    "df-dsrg-mrpt2-threading1","df-dsrg-mrpt2-threading2","df-dsrg-mrpt2-threading4",
+                    "diskdf-dsrg-mrpt2-threading1","diskdf-dsrg-mrpt2-threading4",
+                    "diskdf-dsrg-mrpt2-1","diskdf-dsrg-mrpt2-2","diskdf-dsrg-mrpt2-3",
+                    "diskdf-dsrg-mrpt2-4", "diskdf-dsrg-mrpt2-5",
+                    "aci-dsrg-mrpt2-1","aci-dsrg-mrpt2-2","df-aci-dsrg-mrpt2-1","df-aci-dsrg-mrpt2-2"]
+active_dsrgpt2_tests = ["actv-dsrg-1-C2H4-cis", "actv-dsrg-2-C2H4-cisd", "actv-dsrg-3-C4H6-cisd",
+                        "actv-dsrg-4-C4H6-triplet", "actv-dsrg-5-actv-independence",
+                        "actv-dsrg-size-intensive", "actv-dsrg-ipea-1", "actv-dsrg-ipea-2"]
 
-casscf_tests = ["casscf", "casscf-2","casscf-3", "casscf-4", "casscf-5", "casscf-6", "casscf-7", "df-casscf-1"]
+casscf_tests = ["casscf", "casscf-2","casscf-3", "casscf-4", "casscf-5", "casscf-6", "casscf-7",
+                "df-casscf-1"]
 dmrg_tests = ["dmrgscf-1", "df-dmrgscf-1", "cd-dmrgscf-1", "dmrg-dsrg-mrpt2-1", "dmrg-dsrg-mrpt2-2"]
 
 #tests =  fci_tests + casscf_tests + dsrg_mrpt2_tests + adaptive_ci_tests + pci_tests + fciqmc_tests + ct_tests + dsrg_tests

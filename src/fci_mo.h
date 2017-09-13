@@ -86,6 +86,17 @@ class FCI_MO : public Wavefunction {
     FCI_MO(SharedWavefunction ref_wfn, Options& options, std::shared_ptr<ForteIntegrals> ints,
            std::shared_ptr<MOSpaceInfo> mo_space_info);
 
+    /**
+     * @brief FCI_MO Constructor
+     * @param ref_wfn The reference wavefunction object
+     * @param options PSI4 and FORTE options
+     * @param ints ForteInegrals
+     * @param mo_space_info MOSpaceInfo
+     * @param fci_ints FCIInegrals
+     */
+    FCI_MO(SharedWavefunction ref_wfn, Options& options, std::shared_ptr<ForteIntegrals> ints,
+           std::shared_ptr<MOSpaceInfo> mo_space_info, std::shared_ptr<FCIIntegrals> fci_ints);
+
     /// Destructor
     ~FCI_MO();
 
@@ -99,6 +110,19 @@ class FCI_MO : public Wavefunction {
 
     /// Returns the reference object
     Reference reference(const int& level = 3);
+
+    /// Compute dipole moments with DSRG transformed MO dipole integrals
+    /// This function is used for reference relaxation and SA-MRDSRG
+    /// This function should be in RUN_DSRG
+    std::map<std::string, std::vector<double>> compute_relaxed_dm(const std::vector<double>& dm0,
+                                                                  std::vector<BlockedTensor>& dm1,
+                                                                  std::vector<BlockedTensor>& dm2);
+
+    /// Compute oscillator strengths using DSRG transformed MO dipole integrals
+    /// This function is used for SA-MRDSRG
+    /// This function should be in RUN_DSRG
+    std::map<std::string, std::vector<double>> compute_relaxed_osc(std::vector<BlockedTensor>& dm1,
+                                                                   std::vector<BlockedTensor>& dm2);
 
     /// Compute Fock (stored in ForteIntegal) using this->Da_
     void compute_Fock_ints();
@@ -124,11 +148,11 @@ class FCI_MO : public Wavefunction {
     /// Set which root is preferred
     void set_root(int root) { root_ = root; }
 
-    /// Set active space type
-    void set_active_space_type(string act) { active_space_type_ = act; }
+    //    /// Set active space type
+    //    void set_active_space_type(string act) { active_space_type_ = act; }
 
-    /// Set orbitals
-    void set_orbs(SharedMatrix Ca, SharedMatrix Cb);
+    //    /// Set orbitals
+    //    void set_orbs(SharedMatrix Ca, SharedMatrix Cb);
 
     /// Return fci_int_ pointer
     std::shared_ptr<FCIIntegrals> fci_ints() { return fci_ints_; }
@@ -155,11 +179,11 @@ class FCI_MO : public Wavefunction {
     /// Quiet mode (no printing, for use with CASSCF)
     void set_quite_mode(bool quiet) { quiet_ = quiet; }
 
-    /// Set true to compute semi-canonical orbitals
-    void set_semi(bool semi) { semi_ = semi; }
+    //    /// Set true to compute semi-canonical orbitals
+    //    void set_semi(bool semi) { semi_ = semi; }
 
-    /// Set false to skip Fock build in FCI_MO
-    void set_form_Fock(bool form_fock) { form_Fock_ = form_fock; }
+    //    /// Set false to skip Fock build in FCI_MO
+    //    void set_form_Fock(bool form_fock) { form_Fock_ = form_fock; }
 
     /// Return indices (relative to active, not absolute) of active occupied orbitals
     std::vector<size_t> actv_occ() { return ah_; }
@@ -402,7 +426,7 @@ class FCI_MO : public Wavefunction {
     /// Fock Matrix
     d2 Fa_;
     d2 Fb_;
-    bool form_Fock_ = true;
+    //    bool form_Fock_ = true;
     void Form_Fock(d2& A, d2& B);
     void Check_Fock(const d2& A, const d2& B, const double& E, size_t& count);
     void Check_FockBlock(const d2& A, const d2& B, const double& E, size_t& count,
@@ -428,13 +452,26 @@ class FCI_MO : public Wavefunction {
 
     /// Compute permanent dipole moments
     void compute_permanent_dipole();
-    /// Transition dipoles
-    map<string, std::vector<double>> trans_dipole_;
-    /// Compute transition dipole
-    void compute_transition_dipole();
 
-    /// Compute oscillator strength
+    /// Transition dipoles
+    std::map<std::string, std::vector<double>> trans_dipole_;
+    /// Compute transition dipole of same symmetry
+    void compute_transition_dipole();
+    /// Compute oscillator strength of same symmetry
     void compute_oscillator_strength();
+
+    /// Compute transition dipole when doing state averaging
+    void compute_transition_dipole_sa();
+    /// Compute oscillator strength when doing state averaging
+    void compute_oscillator_strength_sa();
+
+    /// Compute dipole (or transition dipole) using DSRG transformed MO dipole integrals (dm)
+    /// and densities (or transition densities, D)
+    double relaxed_dm_helper(const double& dm0, BlockedTensor& dm1, BlockedTensor& dm2,
+                             BlockedTensor& D1, BlockedTensor& D2);
+
+    /// Compute RDMs at given order and put into BlockedTensor format
+    ambit::BlockedTensor compute_n_rdm(CI_RDMS& cirdm, const int& order);
 
     /**
      * @brief Return a vector of corresponding indices before the vector is

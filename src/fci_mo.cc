@@ -72,16 +72,6 @@ FCI_MO::FCI_MO(SharedWavefunction ref_wfn, Options& options, std::shared_ptr<For
     reference_wavefunction_ = ref_wfn;
     print_method_banner({"Complete Active Space Configuration Interaction", "Chenyang Li"});
     startup();
-}
-
-FCI_MO::~FCI_MO() { cleanup(); }
-
-void FCI_MO::cleanup() {}
-
-void FCI_MO::startup() {
-
-    // read options
-    read_options();
 
     // setup integrals
     fci_ints_ = std::make_shared<FCIIntegrals>(integral_, mo_space_info_->get_corr_abs_mo("ACTIVE"),
@@ -91,6 +81,38 @@ void FCI_MO::startup() {
     ambit::Tensor tei_active_bb = integral_->aptei_bb_block(idx_a_, idx_a_, idx_a_, idx_a_);
     fci_ints_->set_active_integrals(tei_active_aa, tei_active_ab, tei_active_bb);
     fci_ints_->compute_restricted_one_body_operator();
+}
+
+FCI_MO::FCI_MO(SharedWavefunction ref_wfn, Options& options, std::shared_ptr<ForteIntegrals> ints,
+               std::shared_ptr<MOSpaceInfo> mo_space_info, std::shared_ptr<FCIIntegrals> fci_ints)
+    : Wavefunction(options), integral_(ints), mo_space_info_(mo_space_info) {
+    shallow_copy(ref_wfn);
+    reference_wavefunction_ = ref_wfn;
+    print_method_banner({"Complete Active Space Configuration Interaction", "Chenyang Li"});
+    startup();
+
+    // setup integrals
+    if (fci_ints != nullptr) {
+        fci_ints_ = fci_ints;
+    } else {
+        fci_ints_ =
+            std::make_shared<FCIIntegrals>(integral_, mo_space_info_->get_corr_abs_mo("ACTIVE"),
+                                           mo_space_info_->get_corr_abs_mo("RESTRICTED_DOCC"));
+        ambit::Tensor tei_active_aa = integral_->aptei_aa_block(idx_a_, idx_a_, idx_a_, idx_a_);
+        ambit::Tensor tei_active_ab = integral_->aptei_ab_block(idx_a_, idx_a_, idx_a_, idx_a_);
+        ambit::Tensor tei_active_bb = integral_->aptei_bb_block(idx_a_, idx_a_, idx_a_, idx_a_);
+        fci_ints_->set_active_integrals(tei_active_aa, tei_active_ab, tei_active_bb);
+        fci_ints_->compute_restricted_one_body_operator();
+    }
+}
+
+FCI_MO::~FCI_MO() { cleanup(); }
+
+void FCI_MO::cleanup() {}
+
+void FCI_MO::startup() {
+    // read options
+    read_options();
 
     // compute orbital extents if CIS/CISD IPEA
     if (ipea_ != "NONE") {
@@ -241,8 +263,7 @@ void FCI_MO::read_options() {
     idx_a_ = mo_space_info_->get_corr_abs_mo("ACTIVE");
     idx_v_ = mo_space_info_->get_corr_abs_mo("RESTRICTED_UOCC");
 
-    // setup hole and particle indices (Active must start first for old mcsrgpt2
-    // code)
+    // setup hole and particle indices (Active must start first for old mcsrgpt2 code)
     nh_ = nc_ + na_;
     npt_ = na_ + nv_;
     idx_h_ = std::vector<size_t>(idx_a_);
@@ -2762,6 +2783,279 @@ void FCI_MO::compute_oscillator_strength() {
     outfile->Printf("\n");
 }
 
+std::map<std::string, std::vector<double>>
+FCI_MO::compute_relaxed_dm(const std::vector<double>& dm0, std::vector<BlockedTensor>& dm1,
+                           std::vector<BlockedTensor>& dm2) {
+    std::map<std::string, std::vector<double>> out;
+
+    CharacterTable ct = Process::environment.molecule()->point_group()->char_table();
+    std::vector<std::string> mt{"Singlet", "Doublet", "Triplet", "Quartet", "Quintet",
+                                "Sextet",  "Septet",  "Octet",   "Nonet",   "Decaet"};
+
+    double dm0_sum = std::fabs(dm0[0]) + std::fabs(dm0[1]) + std::fabs(dm0[2]);
+    std::vector<bool> do_dm;
+    for (int z = 0; z < 3; ++z) {
+        do_dm.push_back(std::fabs(dm0[z]) > 1.0e-12 ? true : false);
+    }
+
+    std::string pg = ct.symbol();
+    int width = 2;
+    if (pg == "cs" || pg == "d2h") {
+        width = 3;
+    } else if (pg == "c1") {
+        width = 1;
+    }
+    auto generate_name = [&](const int& multi, const int& root, const int& irrep) {
+        std::string symbol = ct.gamma(irrep).symbol();
+        std::stringstream name_ss;
+        name_ss << std::setw(2) << root << " " << std::setw(7) << mt[multi - 1] << " "
+                << std::setw(width) << symbol;
+        return name_ss.str();
+    };
+
+    // if SS, read from determinant_ and eigen_; otherwise, read from p_spaces_ and eigens_
+    if (sa_info_.size() == 0) {
+        std::string name = generate_name(multi_, root_, root_sym_);
+        std::vector<double> dm(3, 0.0);
+
+        // prepare CI_RDMS
+        int dim = (eigen_[0].first)->dim();
+        size_t eigen_size = eigen_.size();
+        SharedMatrix evecs(new Matrix("evecs", dim, eigen_size));
+        for (int i = 0; i < eigen_size; ++i) {
+            evecs->set_column(0, i, (eigen_[i]).first);
+        }
+
+        // CI_RDMS for the targeted root
+        CI_RDMS ci_rdms(options_, fci_ints_, determinant_, evecs, root_, root_);
+        ci_rdms.set_symmetry(root_sym_);
+
+        if (dm0_sum > 1.0e-12) {
+            // compute RDMS and put into BlockedTensor format
+            ambit::BlockedTensor D1 = compute_n_rdm(ci_rdms, 1);
+            ambit::BlockedTensor D2 = compute_n_rdm(ci_rdms, 2);
+
+            // loop over directions
+            for (int z = 0; z < 3; ++z) {
+                if (do_dm[z]) {
+                    dm[z] = relaxed_dm_helper(dm0[z], dm1[z], dm2[z], D1, D2);
+                }
+            }
+        }
+        out[name] = dm;
+
+    } else {
+        int nentry = sa_info_.size();
+        for (int n = 0; n < nentry; ++n) {
+            // get current symmetry, multiplicity, nroots, weights
+            int irrep, multi, nroots;
+            std::vector<double> weights;
+            std::tie(irrep, multi, nroots, weights) = sa_info_[n];
+
+            // eigen vectors for current symmetry
+            int dim = (eigens_[n][0].first)->dim();
+            size_t eigen_size = eigens_[n].size();
+            SharedMatrix evecs(new Matrix("evecs", dim, eigen_size));
+            for (int i = 0; i < eigen_size; ++i) {
+                evecs->set_column(0, i, (eigens_[n][i]).first);
+            }
+
+            // loop over nroots for current symmetry
+            for (int i = 0; i < nroots; ++i) {
+                std::string name = generate_name(multi, i, irrep);
+                std::vector<double> dm(3, 0.0);
+
+                CI_RDMS ci_rdms(options_, fci_ints_, p_spaces_[n], evecs, i, i);
+                ci_rdms.set_symmetry(irrep);
+
+                if (dm0_sum > 1.0e-12) {
+                    // compute RDMS and put into BlockedTensor format
+                    ambit::BlockedTensor D1 = compute_n_rdm(ci_rdms, 1);
+                    ambit::BlockedTensor D2 = compute_n_rdm(ci_rdms, 2);
+
+                    // loop over directions
+                    for (int z = 0; z < 3; ++z) {
+                        if (do_dm[z]) {
+                            dm[z] = relaxed_dm_helper(dm0[z], dm1[z], dm2[z], D1, D2);
+                        }
+                    }
+                }
+                out[name] = dm;
+            }
+        }
+    }
+    return out;
+}
+
+std::map<std::string, std::vector<double>>
+FCI_MO::compute_relaxed_osc(std::vector<BlockedTensor>& dm1, std::vector<BlockedTensor>& dm2) {
+    std::map<std::string, std::vector<double>> out;
+
+    CharacterTable ct = Process::environment.molecule()->point_group()->char_table();
+    std::vector<std::string> mt{"Singlet", "Doublet", "Triplet", "Quartet", "Quintet",
+                                "Sextet",  "Septet",  "Octet",   "Nonet",   "Decaet"};
+
+    std::string pg = ct.symbol();
+    int width = 2;
+    if (pg == "cs" || pg == "d2h") {
+        width = 3;
+    } else if (pg == "c1") {
+        width = 1;
+    }
+    auto generate_name = [&](const int& multi0, const int& root0, const int& irrep0,
+                             const int& multi1, const int& root1, const int& irrep1) {
+        std::string symbol0 = ct.gamma(irrep0).symbol();
+        std::string symbol1 = ct.gamma(irrep1).symbol();
+        std::stringstream name_ss;
+        name_ss << std::setw(2) << root0 << " " << std::setw(7) << mt[multi0 - 1] << " "
+                << std::setw(width) << symbol0 << " -> " << std::setw(2) << root1 << " "
+                << std::setw(7) << mt[multi1 - 1] << " " << std::setw(width) << symbol1;
+        return name_ss.str();
+    };
+
+    int nentry = sa_info_.size();
+    for (int A = 0; A < nentry; ++A) {
+        int irrep0, multi0, nroots0;
+        std::vector<double> weights0;
+        std::tie(irrep0, multi0, nroots0, weights0) = sa_info_[A];
+
+        int ndets0 = (eigens_[A][0].first)->dim();
+        SharedMatrix evecs0(new Matrix("evecs", ndets0, nroots0));
+        for (int i = 0; i < nroots0; ++i) {
+            evecs0->set_column(0, i, (eigens_[A][i]).first);
+        }
+
+        // oscillator strength of the same symmetry
+        for (int i = 0; i < nroots0; ++i) {
+            for (int j = i + 1; j < nroots0; ++j) {
+                std::string name = generate_name(multi0, i, irrep0, multi0, j, irrep0);
+
+                double Eex = eigens_[A][j].second - eigens_[A][i].second;
+                std::vector<double> osc(3, 0.0);
+
+                CI_RDMS ci_rdms(options_, fci_ints_, p_spaces_[A], evecs0, i, j);
+
+                ambit::BlockedTensor D1 = compute_n_rdm(ci_rdms, 1);
+                ambit::BlockedTensor D2 = compute_n_rdm(ci_rdms, 2);
+
+                for (int z = 0; z < 3; ++z) {
+                    double dm = relaxed_dm_helper(0.0, dm1[z], dm2[z], D1, D2);
+                    osc[z] = 2.0 / 3.0 * Eex * dm * dm;
+                }
+
+                out[name] = osc;
+            }
+        }
+
+        // oscillator strength of different symmetry
+        for (int B = A + 1; B < nentry; ++B) {
+            int irrep1, multi1, nroots1;
+            std::vector<double> weights1;
+            std::tie(irrep1, multi1, nroots1, weights1) = sa_info_[B];
+
+            // combine two eigen vectors
+            int ndets1 = (eigens_[B][0].first)->dim();
+            int ndets = ndets0 + ndets1;
+            int nroots = nroots0 + nroots1;
+            SharedMatrix evecs(new Matrix("evecs", ndets, nroots));
+
+            for (int n = 0; n < nroots0; ++n) {
+                SharedVector evec0 = evecs0->get_column(0, n);
+                SharedVector evec(new Vector("combined evec0 " + std::to_string(n), ndets));
+                for (size_t i = 0; i < ndets0; ++i) {
+                    evec->set(i, evec0->get(i));
+                }
+                evecs->set_column(0, n, evec);
+            }
+
+            for (int n = 0; n < nroots1; ++n) {
+                SharedVector evec1 = eigens_[B][n].first;
+                SharedVector evec(new Vector("combined evec1 " + std::to_string(n), ndets));
+                for (size_t i = 0; i < ndets1; ++i) {
+                    evec->set(i + ndets0, evec1->get(i));
+                }
+                evecs->set_column(0, n + nroots0, evec);
+            }
+
+            // combine p_space
+            std::vector<STLBitsetDeterminant> p_space(p_spaces_[A]);
+            std::vector<STLBitsetDeterminant>& p_space1 = p_spaces_[B];
+            p_space.insert(p_space.end(), p_space1.begin(), p_space1.end());
+
+            for (int i = 0; i < nroots0; ++i) {
+                for (int j = 0; j < nroots1; ++j) {
+                    std::string name = generate_name(multi0, i, irrep0, multi1, j, irrep1);
+
+                    double Eex = eigens_[B][j].second - eigens_[A][i].second;
+                    std::vector<double> osc(3, 0.0);
+
+                    CI_RDMS ci_rdms(options_, fci_ints_, p_space, evecs, i, j + nroots0);
+
+                    ambit::BlockedTensor D1 = compute_n_rdm(ci_rdms, 1);
+                    ambit::BlockedTensor D2 = compute_n_rdm(ci_rdms, 2);
+
+                    for (int z = 0; z < 3; ++z) {
+                        double dm = relaxed_dm_helper(0.0, dm1[z], dm2[z], D1, D2);
+                        osc[z] = 2.0 / 3.0 * Eex * dm * dm;
+                    }
+
+                    out[name] = osc;
+                }
+            }
+        }
+    }
+
+    return out;
+}
+
+ambit::BlockedTensor FCI_MO::compute_n_rdm(CI_RDMS& cirdm, const int& order) {
+    if (order < 1 || order > 3) {
+        throw PSIEXCEPTION("Cannot compute RDMs except 1, 2, 3.");
+    }
+
+    ambit::BlockedTensor out;
+    if (order == 1) {
+        std::vector<double> opdm_a, opdm_b;
+        cirdm.compute_1rdm(opdm_a, opdm_b);
+
+        out = ambit::BlockedTensor::build(ambit::CoreTensor, "D1", spin_cases({"aa"}));
+        out.block("aa").data() = std::move(opdm_a);
+        out.block("AA").data() = std::move(opdm_b);
+    } else if (order == 2) {
+        std::vector<double> tpdm_aa, tpdm_ab, tpdm_bb;
+        cirdm.compute_2rdm(tpdm_aa, tpdm_ab, tpdm_bb);
+
+        out = ambit::BlockedTensor::build(ambit::CoreTensor, "D2", spin_cases({"aaaa"}));
+        out.block("aaaa").data() = std::move(tpdm_aa);
+        out.block("aAaA").data() = std::move(tpdm_ab);
+        out.block("AAAA").data() = std::move(tpdm_bb);
+    } else if (order == 3) {
+        std::vector<double> tpdm_aaa, tpdm_aab, tpdm_abb, tpdm_bbb;
+        cirdm.compute_3rdm(tpdm_aaa, tpdm_aab, tpdm_abb, tpdm_bbb);
+
+        out = ambit::BlockedTensor::build(ambit::CoreTensor, "D3", spin_cases({"aaaaaa"}));
+        out.block("aaaaaa").data() = std::move(tpdm_aaa);
+        out.block("aaAaaA").data() = std::move(tpdm_aab);
+        out.block("aAAaAA").data() = std::move(tpdm_abb);
+        out.block("AAAAAA").data() = std::move(tpdm_bbb);
+    }
+
+    return out;
+}
+
+double FCI_MO::relaxed_dm_helper(const double& dm0, BlockedTensor& dm1, BlockedTensor& dm2,
+                                 BlockedTensor& D1, BlockedTensor& D2) {
+    double dm_out = dm0;
+
+    dm_out += dm1["uv"] * D1["uv"];
+    dm_out += dm1["UV"] * D1["UV"];
+    dm_out += 0.25 * dm2["uvxy"] * D2["uvxy"];
+    dm_out += 0.25 * dm2["UVXY"] * D2["UVXY"];
+    dm_out += dm2["uVxY"] * D2["uVxY"];
+
+    return dm_out;
+}
+
 d3 FCI_MO::compute_orbital_extents() {
 
     // compute AO quadrupole integrals
@@ -3544,9 +3838,9 @@ void FCI_MO::compute_cumulant2(vector<double>& tpdm_aa, std::vector<double>& tpd
     L2bb = ambit::Tensor::build(ambit::CoreTensor, "L2bb", {na_, na_, na_, na_});
 
     // copy incoming 2rdms to 2cumulants
-    L2aa.data() = tpdm_aa;
-    L2ab.data() = tpdm_ab;
-    L2bb.data() = tpdm_bb;
+    L2aa.data() = std::move(tpdm_aa);
+    L2ab.data() = std::move(tpdm_ab);
+    L2bb.data() = std::move(tpdm_bb);
 
     // add wedge product of 1cumulants (1rdms)
     L2aa("pqrs") -= L1a("pr") * L1a("qs");
@@ -3560,19 +3854,10 @@ void FCI_MO::compute_cumulant2(vector<double>& tpdm_aa, std::vector<double>& tpd
 
 void FCI_MO::compute_cumulant3(vector<double>& tpdm_aaa, std::vector<double>& tpdm_aab,
                                std::vector<double>& tpdm_abb, std::vector<double>& tpdm_bbb) {
+    // aaa
     L3aaa = ambit::Tensor::build(ambit::CoreTensor, "L3aaa", {na_, na_, na_, na_, na_, na_});
-    L3aab = ambit::Tensor::build(ambit::CoreTensor, "L3aab", {na_, na_, na_, na_, na_, na_});
-    L3abb = ambit::Tensor::build(ambit::CoreTensor, "L3abb", {na_, na_, na_, na_, na_, na_});
-    L3bbb = ambit::Tensor::build(ambit::CoreTensor, "L3bbb", {na_, na_, na_, na_, na_, na_});
+    L3aaa.data() = std::move(tpdm_aaa);
 
-    // copy incoming 3rdms to 3cumulants
-    L3aaa.data() = tpdm_aaa;
-    L3aab.data() = tpdm_aab;
-    L3abb.data() = tpdm_abb;
-    L3bbb.data() = tpdm_bbb;
-
-    // add wedge product of 1cumulants and 2cumulants
-    // - step 1: aaa
     L3aaa("pqrstu") -= L1a("ps") * L2aa("qrtu");
     L3aaa("pqrstu") += L1a("pt") * L2aa("qrsu");
     L3aaa("pqrstu") += L1a("pu") * L2aa("qrts");
@@ -3593,7 +3878,10 @@ void FCI_MO::compute_cumulant3(vector<double>& tpdm_aaa, std::vector<double>& tp
     L3aaa("pqrstu") += L1a("pu") * L1a("qt") * L1a("rs");
     L3aaa("pqrstu") += L1a("pt") * L1a("qs") * L1a("ru");
 
-    // - step 2: aab
+    // aab
+    L3aab = ambit::Tensor::build(ambit::CoreTensor, "L3aab", {na_, na_, na_, na_, na_, na_});
+    L3aab.data() = std::move(tpdm_aab);
+
     L3aab("pqRstU") -= L1a("ps") * L2ab("qRtU");
     L3aab("pqRstU") += L1a("pt") * L2ab("qRsU");
 
@@ -3605,7 +3893,10 @@ void FCI_MO::compute_cumulant3(vector<double>& tpdm_aaa, std::vector<double>& tp
     L3aab("pqRstU") -= L1a("ps") * L1a("qt") * L1b("RU");
     L3aab("pqRstU") += L1a("pt") * L1a("qs") * L1b("RU");
 
-    // - step 3: abb
+    // abb
+    L3abb = ambit::Tensor::build(ambit::CoreTensor, "L3abb", {na_, na_, na_, na_, na_, na_});
+    L3abb.data() = std::move(tpdm_abb);
+
     L3abb("pQRsTU") -= L1a("ps") * L2bb("QRTU");
 
     L3abb("pQRsTU") -= L1b("QT") * L2ab("pRsU");
@@ -3617,7 +3908,10 @@ void FCI_MO::compute_cumulant3(vector<double>& tpdm_aaa, std::vector<double>& tp
     L3abb("pQRsTU") -= L1a("ps") * L1b("QT") * L1b("RU");
     L3abb("pQRsTU") += L1a("ps") * L1b("QU") * L1b("RT");
 
-    // - step 4: bbb
+    // bbb
+    L3bbb = ambit::Tensor::build(ambit::CoreTensor, "L3bbb", {na_, na_, na_, na_, na_, na_});
+    L3bbb.data() = std::move(tpdm_bbb);
+
     L3bbb("pqrstu") -= L1b("ps") * L2bb("qrtu");
     L3bbb("pqrstu") += L1b("pt") * L2bb("qrsu");
     L3bbb("pqrstu") += L1b("pu") * L2bb("qrts");
