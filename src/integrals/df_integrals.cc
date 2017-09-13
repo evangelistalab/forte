@@ -34,8 +34,8 @@
 #include "psi4/libmints/basisset.h"
 #include "psi4/libmints/wavefunction.h"
 #include "psi4/libqt/qt.h"
-#include "psi4/libthce/lreri.h"
-#include "psi4/libthce/thce.h"
+#include "../libthce/lreri.h"
+#include "../libthce/thce.h"
 
 #ifdef HAVE_GA
 #include <ga.h>

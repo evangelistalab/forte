@@ -35,8 +35,8 @@
 #include "psi4/libmints/vector.h"
 #include "psi4/libmints/wavefunction.h"
 #include "psi4/libqt/qt.h"
-#include "psi4/libthce/lreri.h"
-#include "psi4/libthce/thce.h"
+#include "../libthce/lreri.h"
+#include "../libthce/thce.h"
 
 #include "../helpers.h"
 
