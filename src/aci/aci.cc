@@ -165,6 +165,9 @@ void set_ACI_options(ForteOptions& foptions) {
  
     /*- Number of roots to compute per frozen orbital -*/
     foptions.add_int("ACI_ROOTS_PER_CORE", 1, "Number of roots to compute per frozen occupation");
+
+    /*- Do spin analysis? -*/
+    foptions.add_bool("ACI_SPIN_ANALYSIS", false, "Do spin correlation analysis");
 }
 
 bool pairComp(const std::pair<double, STLBitsetDeterminant> E1,
@@ -630,6 +633,10 @@ double AdaptiveCI::compute_energy() {
     if (options_.get_bool("UNPAIRED_DENSITY")) {
         UPDensity density(reference_wavefunction_, mo_space_info_);
         density.compute_unpaired_density(ordm_a_, ordm_b_);
+    }
+
+    if (options_.get_bool("ACI_SPIN_ANALYSIS")){
+        spin_analysis();
     }
 
     return PQ_evals->get(options_.get_int("ACI_ROOT")) + nuclear_repulsion_energy_ +
@@ -3360,6 +3367,33 @@ void AdaptiveCI::add_external_singles(DeterminantHashVec& ref) {
     nactpi_ = mo_space_info_->get_dimension("CORRELATED");
     nact_ = mo_space_info_->size("CORRELATED");
     compute_rdms(fci_ints, ref, op_, final_evecs, 0, 0);
+}
+
+void AdaptiveCI::spin_analysis()
+{
+    // First compute intrisic atomic orbitals
+
+    SharedMatrix Ca = reference_wavefunction_->Ca();
+//    Ca->print();
+    std::shared_ptr<IAOBuilder> IAO = IAOBuilder::build(reference_wavefunction_->basisset(), reference_wavefunction_->get_basisset("MINAO_BASIS"), Ca, options_);
+    outfile->Printf("\n  Computing IAOs");
+    std::map<std::string, SharedMatrix> iao_info = IAO->build_iaos();
+    SharedMatrix iao_coeffs = iao_info["A"];
+//    iao_coeffs->print();
+    int new_dim = iao_coeffs->colspi()[0];
+    // Transform 1 and 2 rdms
+
+    // 1 rdms first
+    
+  //  std::vector<double> n_ordm_a(new_dim*new_dim, 0.0); 
+  //  std::vector<double> n_ordm_b(new_dim*new_dim, 0.0);
+
+  //  for( int p = 0; p < nmo_; ++p ){
+  //      for( int q = 0; q < nmo_; ++q ){
+
+  //      }   
+  //  }   
+     
 }
 
 /*
