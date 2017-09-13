@@ -29,8 +29,10 @@
 #ifndef _string_tree_h_
 #define _string_tree_h_
 
+#include <vector>
 #include <bitset>
 #include <unordered_map>
+#include "stl_bitset_determinant.h"
 
 namespace psi {
 namespace forte {
@@ -39,9 +41,10 @@ using sbit_t = unsigned long int;
 
 class string_tree
 {
-public:
+  public:
     // Build the string tree from a list of determinants
-    string_tree(size_t ndets, std::vector<Determinants>);
+    string_tree(size_t ndets);
+    string_tree(size_t ndets, std::vector<Determinant>);
     size_t ndets_;
     std::vector<sbit_t> sorted_a_;
     std::vector<sbit_t> sorted_b_;
