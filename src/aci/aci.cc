@@ -159,6 +159,15 @@ void set_ACI_options(ForteOptions& foptions) {
 
     /*- Type of excited state to compute -*/
     foptions.add_str("ACI_EX_TYPE", "CONV","Type of excited state to compute" );
+
+    /*- Number of core orbitals to freeze -*/
+    foptions.add_int("ACI_NFROZEN_CORE",0, "Number of orbitals to freeze for core excitations"); 
+ 
+    /*- Number of roots to compute per frozen orbital -*/
+    foptions.add_int("ACI_ROOTS_PER_CORE", 1, "Number of roots to compute per frozen occupation");
+
+    /*- Do spin analysis? -*/
+    foptions.add_bool("ACI_SPIN_ANALYSIS", false, "Do spin correlation analysis");
 }
 
 bool pairComp(const std::pair<double, STLBitsetDeterminant> E1,
@@ -262,9 +271,9 @@ void AdaptiveCI::startup() {
     project_out_spin_contaminants_ = options_.get_bool("ACI_PROJECT_OUT_SPIN_CONTAMINANTS");
     spin_complete_ = options_.get_bool("ACI_ENFORCE_SPIN_COMPLETE");
 
-    if( options_.get_str("ACI_EX_TYPE") == "CORE" ){
-        spin_complete_ = false;
-    }
+   // if( options_.get_str("ACI_EX_TYPE") == "CORE" ){
+   //     spin_complete_ = false;
+   // }
 
     rdm_level_ = options_.get_int("ACI_MAX_RDM");
 
@@ -293,6 +302,8 @@ void AdaptiveCI::startup() {
     root_ = options_.get_int("ACI_ROOT");
     approx_rdm_ = options_.get_bool("ACI_APPROXIMATE_RDM");
     print_weights_ = options_.get_bool("ACI_PRINT_WEIGHTS");
+
+    hole_ = 0;
 
     diag_method_ = DLString;
     if (options_["DIAG_ALGORITHM"].has_changed()) {
@@ -494,6 +505,7 @@ double AdaptiveCI::compute_energy() {
 
         SparseCISolver sparse_solver(fci_ints_);
         sparse_solver.set_parallel(true);
+        sparse_solver.set_force_diag(options_.get_bool("FORCE_DIAG_METHOD"));
         sparse_solver.set_e_convergence(options_.get_double("E_CONVERGENCE"));
         sparse_solver.set_maxiter_davidson(options_.get_int("DL_MAXITER"));
         sparse_solver.set_spin_project_full(project_out_spin_contaminants_);
@@ -534,6 +546,7 @@ double AdaptiveCI::compute_energy() {
 
         SparseCISolver sparse_solver(fci_ints_);
         sparse_solver.set_parallel(true);
+        sparse_solver.set_force_diag(options_.get_bool("FORCE_DIAG_METHOD"));
         sparse_solver.set_e_convergence(options_.get_double("E_CONVERGENCE"));
         sparse_solver.set_maxiter_davidson(options_.get_int("DL_MAXITER"));
         sparse_solver.set_spin_project_full(project_out_spin_contaminants_);
@@ -622,6 +635,10 @@ double AdaptiveCI::compute_energy() {
         density.compute_unpaired_density(ordm_a_, ordm_b_);
     }
 
+    if (options_.get_bool("ACI_SPIN_ANALYSIS")){
+        spin_analysis();
+    }
+
     return PQ_evals->get(options_.get_int("ACI_ROOT")) + nuclear_repulsion_energy_ +
            fci_ints_->scalar_energy();
 }
@@ -645,6 +662,7 @@ void AdaptiveCI::diagonalize_final_and_compute_rdms() {
 
     SparseCISolver sparse_solver(fci_ints_);
     sparse_solver.set_parallel(true);
+    sparse_solver.set_force_diag(options_.get_bool("FORCE_DIAG_METHOD"));
     sparse_solver.set_e_convergence(options_.get_double("E_CONVERGENCE"));
     sparse_solver.set_maxiter_davidson(options_.get_int("DL_MAXITER"));
     sparse_solver.set_spin_project(project_out_spin_contaminants_);
@@ -2417,7 +2435,10 @@ int AdaptiveCI::root_follow(DeterminantHashVec& P_ref, std::vector<double>& P_re
     //     P_ref.get_det(det_weights[I].second).str().c_str());
     // }
 
-    for (int n = 0; n < num_ref_roots; ++n) {
+    
+    int max_overlap = std::min(int(P_space.size()), num_ref_roots);
+    
+    for (int n = 0; n < max_overlap; ++n) {
         if (!quiet_mode_)
             outfile->Printf("\n\n  Computing overlap for root %d", n);
         double new_overlap = P_ref.overlap(P_ref_evecs, P_space, P_evecs, n);
@@ -2481,21 +2502,30 @@ void AdaptiveCI::compute_aci(DeterminantHashVec& PQ_space, SharedMatrix& PQ_evec
     DeterminantHashVec P_space(initial_reference_);
 
     if( (options_.get_str("ACI_EX_TYPE") == "CORE") and (root_ > 0)  ){
+        
+        int nf_orb = options_.get_int("ACI_NFROZEN_CORE");
+        int ncstate = options_.get_int("ACI_ROOTS_PER_CORE");
+
+        if( ((root_-1) > ncstate ) and (root_ > 1) ){
+            hole_++;
+        }
+        int particle = (root_-1) - (hole_*ncstate);        
+
         P_space.clear();
         auto orbs = sym_labeled_orbitals("RHF");
-        hole_ = std::get<2>(orbs[root_-1]);
         STLBitsetDeterminant det = initial_reference_[0];
         STLBitsetDeterminant detb(det);
         std::vector<int> avir = det.get_alfa_vir();
         det.print();
         outfile->Printf("\n  Freezing alpha orbital %d", hole_);
+        outfile->Printf("\n  Exciting electron from %d to %d", hole_, avir[particle] );
         det.set_alfa_bit( hole_, false );
         detb.set_beta_bit( hole_, false );
 
         for( int n = 0, max_n = avir.size(); n < max_n; ++n ){
             if( (mo_symmetry_[hole_] ^ mo_symmetry_[avir[n]]) == 0 ){
-                det.set_alfa_bit( avir[0], true);
-                detb.set_beta_bit( avir[0], true);
+                det.set_alfa_bit( avir[particle], true);
+                detb.set_beta_bit( avir[particle], true);
                 break; 
             }
         }
@@ -2517,6 +2547,7 @@ void AdaptiveCI::compute_aci(DeterminantHashVec& PQ_space, SharedMatrix& PQ_evec
         sparse_solver.set_print_details(false);
     }
     sparse_solver.set_parallel(true);
+    sparse_solver.set_force_diag(options_.get_bool("FORCE_DIAG_METHOD"));
     sparse_solver.set_e_convergence(options_.get_double("E_CONVERGENCE"));
     sparse_solver.set_maxiter_davidson(options_.get_int("DL_MAXITER"));
     sparse_solver.set_spin_project(project_out_spin_contaminants_);
@@ -3301,6 +3332,7 @@ void AdaptiveCI::add_external_singles(DeterminantHashVec& ref) {
 
     SparseCISolver sparse_solver(fci_ints);
     sparse_solver.set_parallel(true);
+    sparse_solver.set_force_diag(options_.get_bool("FORCE_DIAG_METHOD"));
     sparse_solver.set_e_convergence(options_.get_double("E_CONVERGENCE"));
     sparse_solver.set_maxiter_davidson(options_.get_int("DL_MAXITER"));
     sparse_solver.set_spin_project(project_out_spin_contaminants_);
@@ -3335,6 +3367,114 @@ void AdaptiveCI::add_external_singles(DeterminantHashVec& ref) {
     nactpi_ = mo_space_info_->get_dimension("CORRELATED");
     nact_ = mo_space_info_->size("CORRELATED");
     compute_rdms(fci_ints, ref, op_, final_evecs, 0, 0);
+}
+
+void AdaptiveCI::spin_analysis()
+{
+    // First compute intrisic atomic orbitals
+    size_t nact = static_cast<unsigned long>(nact_);
+    size_t nact2 = nact*nact;
+    size_t nact3 = nact*nact;
+
+    SharedMatrix Ca = reference_wavefunction_->Ca();
+    std::shared_ptr<IAOBuilder> IAO = IAOBuilder::build(reference_wavefunction_->basisset(), reference_wavefunction_->get_basisset("MINAO_BASIS"), Ca, options_);
+    outfile->Printf("\n  Computing IAOs");
+    std::map<std::string, SharedMatrix> iao_info = IAO->build_iaos();
+    SharedMatrix iao_coeffs(iao_info["A"]->clone());
+
+//    iao_coeffs->print();
+
+
+    size_t new_dim = iao_coeffs->colspi()[0];
+    size_t new_dim2 = new_dim*new_dim;
+    size_t new_dim3 = new_dim2*new_dim;
+    auto labels = IAO->print_IAO( iao_coeffs, new_dim, nact_, reference_wavefunction_);
+    // Transform 1 and 2 rdms
+
+    // First build rdms as ambit tensors
+    ambit::Tensor L1a = ambit::Tensor::build(ambit::CoreTensor, "L1a", {nact, nact});
+    ambit::Tensor L1b = ambit::Tensor::build(ambit::CoreTensor, "L1b", {nact, nact});
+
+    ambit::Tensor L2aa =
+        ambit::Tensor::build(ambit::CoreTensor, "L2aa", {nact, nact, nact, nact});
+    ambit::Tensor L2ab =
+        ambit::Tensor::build(ambit::CoreTensor, "L2ab", {nact, nact, nact, nact});
+    ambit::Tensor L2bb =
+        ambit::Tensor::build(ambit::CoreTensor, "L2bb", {nact, nact, nact, nact});
+
+    L1a.iterate([&](const std::vector<size_t>& i, double& value) {
+        value = ordm_a_[i[0] * nact + i[1]];
+    });
+
+    L1b.iterate([&](const std::vector<size_t>& i, double& value) {
+        value = ordm_b_[i[0] * nact + i[1]];
+    });
+
+    L2aa.iterate([&](const std::vector<size_t>& i, double& value) {
+        value = trdm_aa_[i[0] * nact3 + i[1] * nact2 + i[2] * nact + i[3]];
+    });
+    L2ab.iterate([&](const std::vector<size_t>& i, double& value) {
+        value = trdm_ab_[i[0] * nact3 + i[1] * nact2 + i[2] * nact + i[3]];
+    });
+    L2bb.iterate([&](const std::vector<size_t>& i, double& value) {
+        value = trdm_bb_[i[0] * nact3 + i[1] * nact2 + i[2] * nact + i[3]];
+    });
+
+    ambit::Tensor U = ambit::Tensor::build(ambit::CoreTensor, "U", {nact,new_dim});
+    U.iterate([&](const std::vector<size_t>& i, double& value) {
+        value = iao_coeffs->get(i[0], i[1]); });
+    
+
+    // 1 rdms first
+    ambit::Tensor L1aT =
+        ambit::Tensor::build(ambit::CoreTensor, "Transformed L1a", {new_dim, new_dim});
+    ambit::Tensor L1bT =
+        ambit::Tensor::build(ambit::CoreTensor, "Transformed L1b", {new_dim, new_dim});
+
+    L1aT("pq") = U("ap") * L1a("ab") * U("bq");
+    L1bT("PQ") = U("AP") * L1b("AB") * U("BQ");
+
+    // 2 rdms
+    ambit::Tensor L2aaT =
+        ambit::Tensor::build(ambit::CoreTensor, "Transformed L2aa", {new_dim, new_dim, new_dim, new_dim});
+    ambit::Tensor L2abT =
+        ambit::Tensor::build(ambit::CoreTensor, "Transformed L2ab", {new_dim, new_dim, new_dim, new_dim});
+    ambit::Tensor L2bbT =
+        ambit::Tensor::build(ambit::CoreTensor, "Transformed L2bb", {new_dim, new_dim, new_dim, new_dim});
+
+    L2aaT("pqrs") = U("ap") * U("bq") * L2aa("abcd") * U("cr") * U("ds");
+    L2abT("pQrS") = U("ap") * U("BQ") * L2ab("aBcD") * U("cr") * U("DS");
+    L2bbT("PQRS") = U("AP") * U("BQ") * L2bb("ABCD") * U("CR") * U("DS");
+
+
+    // Now form the spin correlation
+    SharedMatrix spin_corr(new Matrix("Spin Correlation", new_dim, new_dim));
+
+    std::vector<double> l1a(L1aT.data());
+    std::vector<double> l1b(L1bT.data());
+
+    std::vector<double> l2aa(L2aaT.data());
+    std::vector<double> l2ab(L2abT.data());
+    std::vector<double> l2bb(L2bbT.data());
+    
+
+    for( int i = 0; i < new_dim; ++i ){
+        for( int j = 0; j < new_dim; ++j){
+            double value = 0.0;
+            if( i == j ){
+                value += l1a[i*new_dim + j]; 
+                value += l1b[i*new_dim + j]; 
+            }
+            value -= 0.5*( l2ab[j*new_dim3 + i*new_dim2 + i*new_dim + j] +
+                           l2ab[i*new_dim3 + j*new_dim2 + j*new_dim + i] +
+                           l2ab[i*new_dim3 + j*new_dim2 + i*new_dim + j] +
+                           l2ab[j*new_dim3 + i*new_dim2 + j*new_dim + i] +
+                           l2aa[i*new_dim3 + j*new_dim2 + i*new_dim + j] +
+                           l2bb[i*new_dim3 + j*new_dim2 + i*new_dim + j] );
+            spin_corr->set(i,j,value);
+        }
+    }
+    spin_corr->print();
 }
 
 /*

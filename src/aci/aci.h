@@ -47,6 +47,7 @@
 #include "../sparse_ci_solver.h"
 #include "../stl_bitset_determinant.h"
 #include "../sparse_ci_solver.h"
+#include "../orbital-helper/iao_builder.h"
 
 using d1 = std::vector<double>;
 using d2 = std::vector<d1>;
@@ -395,6 +396,8 @@ class AdaptiveCI : public Wavefunction {
                      std::vector<STLBitsetDeterminant>& dets, SharedMatrix& evecs, int nroot);
 
     std::vector<std::tuple<double,int,int>> sym_labeled_orbitals(std::string type);
+
+    void spin_analysis();
 
     //    int david2(double **A, int N, int M, double *eps, double **v,double
     //    cutoff, int print);

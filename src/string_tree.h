@@ -26,38 +26,35 @@
  * @END LICENSE
  */
 
-#include <cmath>
-#include <numeric>
+#ifndef _string_tree_h_
+#define _string_tree_h_
 
-#include "psi4/libmints/basisset.h"
-#include "psi4/libqt/qt.h"
-#include "../libthce/lreri.h"
-#include "../libthce/thce.h"
-
-#include "../blockedtensorfactory.h"
+#include <vector>
+#include <bitset>
+#include <unordered_map>
+#include "stl_bitset_determinant.h"
 
 namespace psi {
 namespace forte {
 
-OwnIntegrals::OwnIntegrals(psi::Options& options, SharedWavefunction ref_wfn,
-                           IntegralSpinRestriction restricted,
-                           IntegralFrozenCore resort_frozen_core,
-                           std::shared_ptr<MOSpaceInfo> mo_space_info)
-    : ForteIntegrals(options, ref_wfn, restricted, resort_frozen_core, mo_space_info) {
-    integral_type_ = Own;
-    // If code calls constructor print things
-    // But if someone calls retransform integrals do not print it
+using sbit_t = unsigned long int;
 
-    wfn_ = ref_wfn;
+class string_tree
+{
+  public:
+    // Build the string tree from a list of determinants
+    string_tree(size_t ndets);
+    string_tree(size_t ndets, std::vector<Determinant>);
+    size_t ndets_;
+    std::vector<sbit_t> sorted_a_;
+    std::vector<sbit_t> sorted_b_;
+    std::vector<sbit_t> sorted_ab_;
+    std::vector<sbit_t> sorted_ba_;
+    std::vector<double> C_ab_;
+    std::vector<double> C_ba_;
+};
 
-    outfile->Printf("\n Avoiding Generation of Integrals");
-    if (ncmo_ < nmo_) {
-        freeze_core_orbitals();
-        // Set the new value of the number of orbitals to be used in indexing
-        // routines
-        aptei_idx_ = ncmo_;
-    }
 }
-OwnIntegrals::~OwnIntegrals() {}
-}
-}
+} // End Namespaces
+
+#endif // _string_tree_h_
