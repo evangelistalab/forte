@@ -38,7 +38,7 @@ class MASTER_DSRG : public DynamicCorrelationSolver {
     virtual double compute_energy() = 0;
 
     /// Compute DSRG transformed Hamiltonian
-    std::shared_ptr<FCIIntegrals> compute_Heff();
+    virtual std::shared_ptr<FCIIntegrals> compute_Heff();
 
     /// Compute DSRG transformed dipole integrals
     //    virtual void compute_dm_eff(std::vector<double>& M0, std::vector<BlockedTensor>& M1,

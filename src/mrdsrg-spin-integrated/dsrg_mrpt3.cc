@@ -169,6 +169,15 @@ void DSRG_MRPT3::startup() {
         mem_total_ -= nelement * sizeof(double);
     }
 
+    if (multi_state_) {
+        if (multi_state_algorithm_ != "SA_FULL") {
+            outfile->Printf("\n    Warning: %s is not supported in DSRG-MRPT3 at present.",
+                            multi_state_algorithm_.c_str());
+            outfile->Printf("\n             Set DSRG_MULTI_STATE back to default SA_FULL.");
+            multi_state_algorithm_ = "SA_FULL";
+        }
+    }
+
     // Print levels
     if (print_ > 1) {
         Gamma1_.print(stdout);
@@ -181,7 +190,7 @@ void DSRG_MRPT3::startup() {
     profile_print_ = options_.get_bool("PRINT_TIME_PROFILE");
 
     // print calculation summary
-    print_summary();
+    print_options_summary();
 
     // other memory usage
     nelement = 3 * (sp * sp * sh * sh - sa * sa * sa * sa) + 2 * (sh * sp - sa * sa);
@@ -371,38 +380,30 @@ bool DSRG_MRPT3::check_semicanonical() {
     return semi;
 }
 
-void DSRG_MRPT3::print_summary() {
+void DSRG_MRPT3::print_options_summary() {
     // Print a summary
-    std::vector<std::pair<std::string, int>> calculation_info{{"ntamp", ntamp_}};
+    std::vector<std::pair<std::string, int>> calculation_info_int{{"ntamp", ntamp_}};
 
     std::vector<std::pair<std::string, double>> calculation_info_double{
         {"flow parameter", s_},
-        {"taylor expansion threshold", pow(10.0, -double(taylor_threshold_))},
+        {"taylor expansion threshold", std::pow(10.0, -double(taylor_threshold_))},
         {"intruder_tamp", intruder_tamp_}};
 
     std::vector<std::pair<std::string, std::string>> calculation_info_string{
-        {"int_type", options_.get_str("INT_TYPE")},
+        {"int_type", ints_type_},
         {"source operator", source_},
         {"reference relaxation", relax_ref_}};
 
     if (multi_state_) {
         calculation_info_string.push_back({"state_type", "MULTI-STATE"});
-        std::string ms_type = options_.get_str("DSRG_MULTI_STATE");
-        if (ms_type.find("SA") == std::string::npos) {
-            outfile->Printf("\n    Warning: %s is not supported in DSRG-MRPT3 at present.",
-                            ms_type.c_str());
-            outfile->Printf("\n             Set DSRG_MULTI_STATE to the default SA_FULL.");
-            options_.set_str("FORTE", "DSRG_MULTI_STATE", "SA_FULL");
-        }
-        calculation_info_string.push_back(
-            {"multi-state type", options_.get_str("DSRG_MULTI_STATE")});
+        calculation_info_string.push_back({"multi-state type", multi_state_algorithm_});
     } else {
         calculation_info_string.push_back({"state_type", "STATE-SPECIFIC"});
     }
 
     // Print some information
-    outfile->Printf("\n\n  ==> Calculation Information <==\n");
-    for (auto& str_dim : calculation_info) {
+    print_h2("Calculation Information");
+    for (auto& str_dim : calculation_info_int) {
         outfile->Printf("\n    %-40s %15d", str_dim.first.c_str(), str_dim.second);
     }
     for (auto& str_dim : calculation_info_double) {
@@ -462,8 +463,11 @@ double DSRG_MRPT3::compute_energy() {
             std::string name = "Computing direction " + dm_dirs_[i];
             outfile->Printf("\n    %-40s ...", name.c_str());
 
-            Mbar1_[i]["uv"] = dm_[i]["uv"];
-            Mbar1_[i]["UV"] = dm_[i]["UV"];
+            if (relax_ref_ != "NONE" || multi_state_) {
+                Mbar1_[i]["uv"] = dm_[i]["uv"];
+                Mbar1_[i]["UV"] = dm_[i]["UV"];
+            }
+
             if (do_dm_dirs_[i] || multi_state_) {
                 compute_dm1d_pt3_1(dm_[i], Mbar0_[i], Mbar0_pt2c_[i], Mbar1_[i], Mbar2_[i]);
             }
@@ -1328,7 +1332,7 @@ double DSRG_MRPT3::compute_energy_sa() {
     std::vector<std::vector<double>> Edsrg_sa(nentry, std::vector<double>());
 
     // call FCI_MO if SA_FULL and CAS_TYPE == CAS
-    if (options_.get_str("DSRG_MULTI_STATE") == "SA_FULL" &&
+    if (multi_state_algorithm_ == "SA_FULL" &&
         options_.get_str("CAS_TYPE") == "CAS") {
         FCI_MO fci_mo(reference_wavefunction_, options_, ints_, mo_space_info_);
         fci_mo.compute_energy();
@@ -1404,7 +1408,7 @@ double DSRG_MRPT3::compute_energy_sa() {
             // diagonalize which the second-order effective Hamiltonian
             // SA_FULL: CASCI using determinants
             // SA_SUB: H_AB = <A|H|B> where A and B are SA-CAS states
-            if (options_.get_str("DSRG_MULTI_STATE") == "SA_FULL") {
+            if (multi_state_algorithm_ == "SA_FULL") {
 
                 outfile->Printf("    Use string FCI code.");
 

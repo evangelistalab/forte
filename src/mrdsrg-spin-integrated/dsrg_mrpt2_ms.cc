@@ -54,9 +54,8 @@ double DSRG_MRPT2::compute_energy_multi_state() {
 
     // multi-state calculation
     std::vector<std::vector<double>> Edsrg_ms;
-    std::string dsrg_multi_state = options_.get_str("DSRG_MULTI_STATE");
 
-    if (dsrg_multi_state.find("SA") != std::string::npos) {
+    if (multi_state_algorithm_.find("SA") != std::string::npos) {
         Edsrg_ms = compute_energy_sa();
     } else {
         Edsrg_ms = compute_energy_xms();
