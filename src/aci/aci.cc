@@ -3372,28 +3372,109 @@ void AdaptiveCI::add_external_singles(DeterminantHashVec& ref) {
 void AdaptiveCI::spin_analysis()
 {
     // First compute intrisic atomic orbitals
+    size_t nact = static_cast<unsigned long>(nact_);
+    size_t nact2 = nact*nact;
+    size_t nact3 = nact*nact;
 
     SharedMatrix Ca = reference_wavefunction_->Ca();
-//    Ca->print();
     std::shared_ptr<IAOBuilder> IAO = IAOBuilder::build(reference_wavefunction_->basisset(), reference_wavefunction_->get_basisset("MINAO_BASIS"), Ca, options_);
     outfile->Printf("\n  Computing IAOs");
     std::map<std::string, SharedMatrix> iao_info = IAO->build_iaos();
-    SharedMatrix iao_coeffs = iao_info["A"];
+    SharedMatrix iao_coeffs(iao_info["A"]->clone());
+
 //    iao_coeffs->print();
-    int new_dim = iao_coeffs->colspi()[0];
+
+
+    size_t new_dim = iao_coeffs->colspi()[0];
+    size_t new_dim2 = new_dim*new_dim;
+    size_t new_dim3 = new_dim2*new_dim;
+    auto labels = IAO->print_IAO( iao_coeffs, new_dim, nact_, reference_wavefunction_);
     // Transform 1 and 2 rdms
 
-    // 1 rdms first
+    // First build rdms as ambit tensors
+    ambit::Tensor L1a = ambit::Tensor::build(ambit::CoreTensor, "L1a", {nact, nact});
+    ambit::Tensor L1b = ambit::Tensor::build(ambit::CoreTensor, "L1b", {nact, nact});
+
+    ambit::Tensor L2aa =
+        ambit::Tensor::build(ambit::CoreTensor, "L2aa", {nact, nact, nact, nact});
+    ambit::Tensor L2ab =
+        ambit::Tensor::build(ambit::CoreTensor, "L2ab", {nact, nact, nact, nact});
+    ambit::Tensor L2bb =
+        ambit::Tensor::build(ambit::CoreTensor, "L2bb", {nact, nact, nact, nact});
+
+    L1a.iterate([&](const std::vector<size_t>& i, double& value) {
+        value = ordm_a_[i[0] * nact + i[1]];
+    });
+
+    L1b.iterate([&](const std::vector<size_t>& i, double& value) {
+        value = ordm_b_[i[0] * nact + i[1]];
+    });
+
+    L2aa.iterate([&](const std::vector<size_t>& i, double& value) {
+        value = trdm_aa_[i[0] * nact3 + i[1] * nact2 + i[2] * nact + i[3]];
+    });
+    L2ab.iterate([&](const std::vector<size_t>& i, double& value) {
+        value = trdm_ab_[i[0] * nact3 + i[1] * nact2 + i[2] * nact + i[3]];
+    });
+    L2bb.iterate([&](const std::vector<size_t>& i, double& value) {
+        value = trdm_bb_[i[0] * nact3 + i[1] * nact2 + i[2] * nact + i[3]];
+    });
+
+    ambit::Tensor U = ambit::Tensor::build(ambit::CoreTensor, "U", {nact,new_dim});
+    U.iterate([&](const std::vector<size_t>& i, double& value) {
+        value = iao_coeffs->get(i[0], i[1]); });
     
-  //  std::vector<double> n_ordm_a(new_dim*new_dim, 0.0); 
-  //  std::vector<double> n_ordm_b(new_dim*new_dim, 0.0);
 
-  //  for( int p = 0; p < nmo_; ++p ){
-  //      for( int q = 0; q < nmo_; ++q ){
+    // 1 rdms first
+    ambit::Tensor L1aT =
+        ambit::Tensor::build(ambit::CoreTensor, "Transformed L1a", {new_dim, new_dim});
+    ambit::Tensor L1bT =
+        ambit::Tensor::build(ambit::CoreTensor, "Transformed L1b", {new_dim, new_dim});
 
-  //      }   
-  //  }   
-     
+    L1aT("pq") = U("ap") * L1a("ab") * U("bq");
+    L1bT("PQ") = U("AP") * L1b("AB") * U("BQ");
+
+    // 2 rdms
+    ambit::Tensor L2aaT =
+        ambit::Tensor::build(ambit::CoreTensor, "Transformed L2aa", {new_dim, new_dim, new_dim, new_dim});
+    ambit::Tensor L2abT =
+        ambit::Tensor::build(ambit::CoreTensor, "Transformed L2ab", {new_dim, new_dim, new_dim, new_dim});
+    ambit::Tensor L2bbT =
+        ambit::Tensor::build(ambit::CoreTensor, "Transformed L2bb", {new_dim, new_dim, new_dim, new_dim});
+
+    L2aaT("pqrs") = U("ap") * U("bq") * L2aa("abcd") * U("cr") * U("ds");
+    L2abT("pQrS") = U("ap") * U("BQ") * L2ab("aBcD") * U("cr") * U("DS");
+    L2bbT("PQRS") = U("AP") * U("BQ") * L2bb("ABCD") * U("CR") * U("DS");
+
+
+    // Now form the spin correlation
+    SharedMatrix spin_corr(new Matrix("Spin Correlation", new_dim, new_dim));
+
+    std::vector<double> l1a(L1aT.data());
+    std::vector<double> l1b(L1bT.data());
+
+    std::vector<double> l2aa(L2aaT.data());
+    std::vector<double> l2ab(L2abT.data());
+    std::vector<double> l2bb(L2bbT.data());
+    
+
+    for( int i = 0; i < new_dim; ++i ){
+        for( int j = 0; j < new_dim; ++j){
+            double value = 0.0;
+            if( i == j ){
+                value += l1a[i*new_dim + j]; 
+                value += l1b[i*new_dim + j]; 
+            }
+            value -= 0.5*( l2ab[j*new_dim3 + i*new_dim2 + i*new_dim + j] +
+                           l2ab[i*new_dim3 + j*new_dim2 + j*new_dim + i] +
+                           l2ab[i*new_dim3 + j*new_dim2 + i*new_dim + j] +
+                           l2ab[j*new_dim3 + i*new_dim2 + j*new_dim + i] +
+                           l2aa[i*new_dim3 + j*new_dim2 + i*new_dim + j] +
+                           l2bb[i*new_dim3 + j*new_dim2 + i*new_dim + j] );
+            spin_corr->set(i,j,value);
+        }
+    }
+    spin_corr->print();
 }
 
 /*
