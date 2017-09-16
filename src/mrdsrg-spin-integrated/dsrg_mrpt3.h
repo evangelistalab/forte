@@ -106,7 +106,7 @@ class DSRG_MRPT3 : public MASTER_DSRG {
     /// Called in the destructor
     void cleanup();
     /// Print a summary of the options
-    void print_summary();
+    void print_options_summary();
     /// Profile printing for DF
     bool profile_print_;
     /// Time variable

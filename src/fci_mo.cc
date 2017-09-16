@@ -63,6 +63,9 @@ void set_FCI_MO_options(ForteOptions& foptions) {
 
     /*- Threshold for printing CI vectors -*/
     foptions.add_double("FCIMO_PRINT_CIVEC", 0.05, "The printing threshold for CI vectors");
+
+    /*- Automatic weight switching -*/
+    foptions.add_double("FCIMO_SA_WEIGHTS_GAMMA", 0.0, "FCIMO weight gamma");
 }
 
 FCI_MO::FCI_MO(SharedWavefunction ref_wfn, Options& options, std::shared_ptr<ForteIntegrals> ints,
@@ -3300,13 +3303,14 @@ void FCI_MO::compute_ref(const int& level) {
 
 Reference FCI_MO::reference(const int& level) {
     Reference ref;
-    ref.set_Eref(Eref_);
 
     if (options_["AVG_STATE"].size() != 0) {
         compute_sa_ref(level);
     } else {
         compute_ref(level);
     }
+
+    ref.set_Eref(Eref_);
 
     if (level > 0) {
         ref.set_L1a(L1a);
@@ -3763,11 +3767,82 @@ void FCI_MO::compute_sa_ref(const int& level) {
 
     // loop over all averaged states
     int nentry = sa_info_.size();
+
+    std::vector<std::vector<double>> new_weights_pentry;
+    if (options_["FCIMO_SA_WEIGHTS_GAMMA"].has_changed()) {
+        double Gamma = options_.get_double("FCIMO_SA_WEIGHTS_GAMMA");
+
+        // figure out target state
+        int entry = 0, root = 0;
+        int target_multi = options_.get_int("MULTIPLICITY");
+        int target_irrep = options_.get_int("ROOT_SYM");
+        int target_root = options_.get_int("ROOT");
+        for (int n = 0; n < nentry; ++n) {
+            int multi, irrep, nroots;
+            std::tie(irrep, multi, nroots, std::ignore) = sa_info_[n];
+            if (multi == target_multi && irrep == target_irrep) {
+                for (int i = 0; i < nroots; ++i) {
+                    if (i == target_root) {
+                        entry = n;
+                        root = i;
+                    }
+                }
+            }
+        }
+
+        double Ealpha = eigens_[entry][root].second;
+        double sum = 0.0;
+
+        for (int n = 0; n < nentry; ++n) {
+            int nroots;
+            std::tie(std::ignore, std::ignore, nroots, std::ignore) = sa_info_[n];
+
+            std::vector<double> new_weights;
+            for (int i = 0; i < nroots; ++i) {
+                double diff = Ealpha - eigens_[n][i].second;
+                double gaus = std::exp(-Gamma * diff * diff);
+                sum += gaus;
+                new_weights.push_back(gaus);
+            }
+            new_weights_pentry.push_back(new_weights);
+        }
+
+        for (auto& ws: new_weights_pentry) {
+            for (auto& w: ws) {
+                w /= sum;
+            }
+        }
+
+        // reset the reference energy
+        double Eref = 0.0;
+        for (int n = 0; n < nentry; ++n) {
+            int nroots;
+            std::tie(std::ignore, std::ignore, nroots, std::ignore) = sa_info_[n];
+            std::vector<double> weights = new_weights_pentry[n];
+            for (int i = 0; i < nroots; ++i) {
+                Eref += weights[i] * eigens_[n][i].second;
+            }
+        }
+        Eref_ = Eref;
+
+        for (int n = 0; n < nentry; ++n) {
+            outfile->Printf("\n  n = %d, weight:", n);
+            for (const auto& x: new_weights_pentry[n]) {
+                outfile->Printf(" %10.6f", x);
+            }
+            outfile->Printf("\n");
+        }
+    }
+
     for (int n = 0; n < nentry; ++n) {
         // get current nroots and weights
         int nroots, irrep;
         std::vector<double> weights;
         std::tie(irrep, std::ignore, nroots, weights) = sa_info_[n];
+
+        if (options_["FCIMO_SA_WEIGHTS_GAMMA"].has_changed()) {
+            weights = new_weights_pentry[n];
+        }
 
         // prepare eigen vectors for current symmetry
         int dim = (eigens_[n][0].first)->dim();

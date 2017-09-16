@@ -61,7 +61,7 @@ DSRG_MRPT2::DSRG_MRPT2(Reference reference, SharedWavefunction ref_wfn, Options&
     outfile->Printf("\n      (pr-)DSRG-MRPT2: J. Chem. Phys. 2017, 146, 124132.");
 
     startup();
-    print_summary();
+    print_options_summary();
 }
 
 DSRG_MRPT2::~DSRG_MRPT2() { cleanup(); }
@@ -250,7 +250,7 @@ bool DSRG_MRPT2::check_semicanonical() {
     return semi;
 }
 
-void DSRG_MRPT2::print_summary() {
+void DSRG_MRPT2::print_options_summary() {
     // Print a summary
     std::vector<std::pair<std::string, int>> calculation_info{{"ntamp", ntamp_}};
 
@@ -260,14 +260,13 @@ void DSRG_MRPT2::print_summary() {
         {"intruder_tamp", intruder_tamp_}};
 
     std::vector<std::pair<std::string, std::string>> calculation_info_string{
-        {"int_type", options_.get_str("INT_TYPE")},
+        {"int_type", ints_type_},
         {"source operator", source_},
         {"reference relaxation", relax_ref_}};
 
     if (multi_state_) {
         calculation_info_string.push_back({"state_type", "MULTI-STATE"});
-        calculation_info_string.push_back(
-            {"multi-state type", options_.get_str("DSRG_MULTI_STATE")});
+        calculation_info_string.push_back({"multi-state type", multi_state_algorithm_});
     } else {
         calculation_info_string.push_back({"state_type", "STATE-SPECIFIC"});
     }
@@ -284,7 +283,7 @@ void DSRG_MRPT2::print_summary() {
     }
 
     // Print some information
-    outfile->Printf("\n\n  ==> Calculation Information <==\n");
+    print_h2("Calculation Information");
     for (auto& str_dim : calculation_info) {
         outfile->Printf("\n    %-40s %15d", str_dim.first.c_str(), str_dim.second);
     }
@@ -330,10 +329,8 @@ double DSRG_MRPT2::compute_ref() {
     E += 0.25 * V_["UVXY"] * Lambda2_["XYUV"];
     E += V_["uVxY"] * Lambda2_["xYuV"];
 
-    double Enuc = Process::environment.molecule()->nuclear_repulsion_energy();
-
     outfile->Printf("  Done. Timing %15.6f s", timer.get());
-    return E + Efrzc_ + Enuc;
+    return E + Efrzc_ + Enuc_;
 }
 
 double DSRG_MRPT2::compute_energy() {
@@ -499,8 +496,11 @@ double DSRG_MRPT2::compute_energy() {
             std::string name = "Computing direction " + dm_dirs_[i];
             outfile->Printf("\n    %-30s ...", name.c_str());
 
-            Mbar1_[i]["uv"] = dm_[i]["uv"];
-            Mbar1_[i]["UV"] = dm_[i]["UV"];
+            if (relax_ref_ != "NONE" || multi_state_) {
+                Mbar1_[i]["uv"] = dm_[i]["uv"];
+                Mbar1_[i]["UV"] = dm_[i]["UV"];
+            }
+
             if (do_dm_dirs_[i] || multi_state_) {
                 compute_dm1d_pt2(dm_[i], Mbar0_[i], Mbar1_[i], Mbar2_[i]);
             }

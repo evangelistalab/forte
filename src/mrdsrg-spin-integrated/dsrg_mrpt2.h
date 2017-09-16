@@ -63,7 +63,7 @@ class DSRG_MRPT2 : public MASTER_DSRG {
      * @param ref_wfn The reference wavefunction object
      * @param options The main options object
      * @param ints A pointer to an allocated integral object
-     * @param mo_space_info The MOSpaceInfo object
+     * @param mo_space_info A pointer to the MOSpaceInfo object
      */
     DSRG_MRPT2(Reference reference, SharedWavefunction ref_wfn, Options& options,
                std::shared_ptr<ForteIntegrals> ints, std::shared_ptr<MOSpaceInfo> mo_space_info);
@@ -135,7 +135,7 @@ class DSRG_MRPT2 : public MASTER_DSRG {
     /// Called in the destructor
     void cleanup();
     /// Print a summary of the options
-    void print_summary();
+    void print_options_summary();
 
     /// CASCI eigen values and eigen vectors for state averaging
     std::vector<std::vector<std::pair<SharedVector, double>>> eigens_;
