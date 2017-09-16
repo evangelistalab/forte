@@ -3202,6 +3202,8 @@ void AdaptiveCI::add_external_singles(DeterminantHashVec& ref) {
     std::vector<size_t> core_mos = mo_space_info_->get_corr_abs_mo("RESTRICTED_DOCC");
     std::vector<size_t> vir_mos = mo_space_info_->get_corr_abs_mo("RESTRICTED_UOCC");
     std::vector<size_t> active_mos = mo_space_info_->get_corr_abs_mo("ACTIVE");
+    nactpi_ = mo_space_info_->get_dimension("CORRELATED");
+    nact_ = mo_space_info_->size("CORRELATED");
 
     size_t ncore = mo_space_info_->size("RESTRICTED_DOCC");
     size_t nact = mo_space_info_->size("ACTIVE");
@@ -3307,28 +3309,53 @@ void AdaptiveCI::add_external_singles(DeterminantHashVec& ref) {
 
     outfile->Printf("\n  Size of new model space:  %zu", ref.size());
 
+    const det_hashvec& newdets = ref.wfn_hash();
+
     // Diagonalize final space (maybe abstract this function)
+
+
+    // First build integrals in the new active space
     outfile->Printf("\n  Building integrals");
-    std::vector<size_t> empty;
+    std::vector<size_t> empty(0);
     auto fci_ints =
-        std::make_shared<FCIIntegrals>(ints_, mo_space_info_->get_corr_abs_mo("CORRELATED"), empty);
+        std::make_shared<FCIIntegrals>(ints_, mo_space_info_->get_corr_abs_mo("CORRELATED"),empty );
 
     auto active_mo = mo_space_info_->get_corr_abs_mo("CORRELATED");
+
+    std::sort(active_mo.begin(), active_mo.end());
+
     ambit::Tensor tei_active_aa = ints_->aptei_aa_block(active_mo, active_mo, active_mo, active_mo);
     ambit::Tensor tei_active_ab = ints_->aptei_ab_block(active_mo, active_mo, active_mo, active_mo);
     ambit::Tensor tei_active_bb = ints_->aptei_bb_block(active_mo, active_mo, active_mo, active_mo);
     fci_ints->set_active_integrals(tei_active_aa, tei_active_ab, tei_active_bb);
-    fci_ints->compute_restricted_one_body_operator();
 
-    // First build the lists
+    std::vector<double> oei_a(nact_*nact_, 0.0);
+    std::vector<double> oei_b(nact_*nact_, 0.0);
+    for (size_t p = 0; p < nact_; ++p) {
+        size_t pp = active_mo[p];
+        for(size_t q = 0; q < nact_; ++q) {
+            size_t qq = active_mo[q];
+            size_t idx = nact_ * p + q;
+            oei_a[idx] = ints_->oei_a(pp, qq);
+            oei_b[idx] = ints_->oei_b(pp, qq);
+        }
+    }
+
+    fci_ints->set_restricted_one_body_operator(oei_a ,oei_b );
+
+    // Then build the coupling lists
     SharedMatrix final_evecs;
     SharedVector final_evals;
 
     op_.clear_op_s_lists();
     op_.clear_tp_s_lists();
-    op_.build_strings(ref);
-    op_.op_s_lists(ref);
-    op_.tp_s_lists(ref);
+
+    WFNOperator op(mo_symmetry_,fci_ints);
+    op.build_strings(ref);
+    op.op_s_lists(ref);
+    op.tp_s_lists(ref);
+
+    // Diagonalize full space
 
     SparseCISolver sparse_solver(fci_ints);
     sparse_solver.set_parallel(true);
@@ -3339,13 +3366,13 @@ void AdaptiveCI::add_external_singles(DeterminantHashVec& ref) {
     //   sparse_solver.set_spin_project_full(project_out_spin_contaminants_);
     sparse_solver.set_guess_dimension(options_.get_int("DL_GUESS_SIZE"));
     sparse_solver.set_spin_project_full(false);
-    sparse_solver.diagonalize_hamiltonian_map(ref, op_, final_evals, final_evecs, nroot_,
+    sparse_solver.diagonalize_hamiltonian_map(ref, op, final_evals, final_evecs, nroot_,
                                               multiplicity_, diag_method_);
 
     outfile->Printf("\n\n");
     for (int i = 0; i < nroot_; ++i) {
         double abs_energy =
-            final_evals->get(i) + nuclear_repulsion_energy_ + fci_ints->scalar_energy();
+            final_evals->get(i) + nuclear_repulsion_energy_ + fci_ints->frozen_core_energy();
         double exc_energy = pc_hartree2ev * (final_evals->get(i) - final_evals->get(0));
         outfile->Printf("\n  * ACI+es Energy Root %3d        = %.12f Eh = %8.4f eV", i, abs_energy,
                         exc_energy);
@@ -3364,9 +3391,7 @@ void AdaptiveCI::add_external_singles(DeterminantHashVec& ref) {
 
     print_wfn(ref, final_evecs, nroot_);
     rdm_level_ = 1;
-    nactpi_ = mo_space_info_->get_dimension("CORRELATED");
-    nact_ = mo_space_info_->size("CORRELATED");
-    compute_rdms(fci_ints, ref, op_, final_evecs, 0, 0);
+    compute_rdms(fci_ints, ref, op, final_evecs, 0, 0);
 }
 
 void AdaptiveCI::spin_analysis()
