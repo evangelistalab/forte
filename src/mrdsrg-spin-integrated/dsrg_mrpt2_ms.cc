@@ -88,9 +88,6 @@ std::vector<std::vector<double>> DSRG_MRPT2::compute_energy_sa() {
     // compute DSRG-MRPT2 energy using SA densities
     compute_energy();
 
-    // transfer integrals
-    transfer_integrals();
-
     // get character table
     CharacterTable ct = Process::environment.molecule()->point_group()->char_table();
     std::vector<std::string> irrep_symbol;
@@ -104,12 +101,8 @@ std::vector<std::vector<double>> DSRG_MRPT2::compute_energy_sa() {
         "Nonet",   "Decaet",  "11-et",   "12-et",   "13-et",   "14-et",  "15-et",  "16-et",
         "17-et",   "18-et",   "19-et",   "20-et",   "21-et",   "22-et",  "23-et",  "24-et"};
 
-    // prepare FCI integrals
-    std::shared_ptr<FCIIntegrals> fci_ints =
-        std::make_shared<FCIIntegrals>(ints_, actv_mos_, core_mos_);
-    fci_ints->set_active_integrals(Hbar2_.block("aaaa"), Hbar2_.block("aAaA"),
-                                   Hbar2_.block("AAAA"));
-    fci_ints->compute_restricted_one_body_operator();
+    // obtain the all-active DSRG transformed Hamiltonian
+    auto fci_ints = compute_Heff();
 
     // get effective one-electron integral (DSRG transformed)
     BlockedTensor oei = BTF_->build(tensor_type_, "temp1", spin_cases({"aa"}));
@@ -121,9 +114,9 @@ std::vector<std::vector<double>> DSRG_MRPT2::compute_energy_sa() {
     std::vector<std::vector<double>> Edsrg_sa(nentry, std::vector<double>());
 
     // call FCI_MO if SA_FULL and CAS_TYPE == CAS
-    if (options_.get_str("DSRG_MULTI_STATE") == "SA_FULL" &&
+    if (multi_state_algorithm_ == "SA_FULL" &&
         options_.get_str("CAS_TYPE") == "CAS") {
-        FCI_MO fci_mo(reference_wavefunction_, options_, ints_, mo_space_info_);
+        FCI_MO fci_mo(reference_wavefunction_, options_, ints_, mo_space_info_, fci_ints);
         fci_mo.compute_energy();
         auto eigens = fci_mo.eigens();
         for (int n = 0; n < nentry; ++n) {
@@ -230,6 +223,7 @@ std::vector<std::vector<double>> DSRG_MRPT2::compute_energy_sa() {
                 fcisolver.set_fci_iterations(options_.get_int("FCI_MAXITER"));
                 fcisolver.set_collapse_per_root(options_.get_int("DL_COLLAPSE_PER_ROOT"));
                 fcisolver.set_subspace_per_root(options_.get_int("DL_SUBSPACE_PER_ROOT"));
+                fcisolver.set_integral_pointer(fci_ints);
 
                 // compute energy and fill in results
                 fcisolver.compute_energy();
@@ -367,7 +361,7 @@ std::vector<std::vector<double>> DSRG_MRPT2::compute_energy_xms() {
         "Nonet",   "Decaet",  "11-et",   "12-et",   "13-et",   "14-et",  "15-et",  "16-et",
         "17-et",   "18-et",   "19-et",   "20-et",   "21-et",   "22-et",  "23-et",  "24-et"};
 
-    // prepare FCI integrals
+    // prepare FCI integrals (a fake one)
     std::shared_ptr<FCIIntegrals> fci_ints =
         std::make_shared<FCIIntegrals>(ints_, actv_mos_, core_mos_);
     //    ambit::Tensor actv_aa = ints_->aptei_aa_block(aactv_mos_, aactv_mos_,

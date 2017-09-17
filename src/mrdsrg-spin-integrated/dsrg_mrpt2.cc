@@ -129,14 +129,38 @@ void DSRG_MRPT2::startup() {
 }
 
 void DSRG_MRPT2::build_ints() {
-    V_.iterate([&](const std::vector<size_t>& i, const std::vector<SpinType>& spin, double& value) {
-        if ((spin[0] == AlphaSpin) and (spin[1] == AlphaSpin))
-            value = ints_->aptei_aa(i[0], i[1], i[2], i[3]);
-        if ((spin[0] == AlphaSpin) and (spin[1] == BetaSpin))
-            value = ints_->aptei_ab(i[0], i[1], i[2], i[3]);
-        if ((spin[0] == BetaSpin) and (spin[1] == BetaSpin))
-            value = ints_->aptei_bb(i[0], i[1], i[2], i[3]);
-    });
+    if (eri_df_) {
+        // a simple trick when we cannot store <pq|rs> but can store <ij|ab>
+        BlockedTensor B = BTF_->build(tensor_type_, "B", {"Lph", "LPH"});
+
+        for (const std::string& block : B.block_labels()) {
+            std::vector<size_t> iaux = label_to_spacemo_[block[0]];
+            std::vector<size_t> ip = label_to_spacemo_[block[1]];
+            std::vector<size_t> ih = label_to_spacemo_[block[2]];
+
+            ambit::Tensor Bblock = ints_->three_integral_block(iaux, ip, ih);
+            B.block(block).copy(Bblock);
+        }
+
+        V_["abij"] = B["gai"] * B["gbj"];
+        V_["abij"] -= B["gaj"] * B["gbi"];
+
+        V_["aBiJ"] = B["gai"] * B["gBJ"];
+
+        V_["ABIJ"] = B["gAI"] * B["gBJ"];
+        V_["ABIJ"] -= B["gAJ"] * B["gBI"];
+
+    } else {
+        V_.iterate(
+            [&](const std::vector<size_t>& i, const std::vector<SpinType>& spin, double& value) {
+                if ((spin[0] == AlphaSpin) and (spin[1] == AlphaSpin))
+                    value = ints_->aptei_aa(i[0], i[1], i[2], i[3]);
+                if ((spin[0] == AlphaSpin) and (spin[1] == BetaSpin))
+                    value = ints_->aptei_ab(i[0], i[1], i[2], i[3]);
+                if ((spin[0] == BetaSpin) and (spin[1] == BetaSpin))
+                    value = ints_->aptei_bb(i[0], i[1], i[2], i[3]);
+            });
+    }
 }
 
 void DSRG_MRPT2::build_fock() {
