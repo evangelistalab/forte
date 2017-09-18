@@ -285,7 +285,7 @@ class AdaptiveCI : public Wavefunction {
     void print_info();
 
     /// Print a wave function
-    void print_wfn(DeterminantHashVec& space, SharedMatrix evecs, int nroot);
+    void print_wfn(DeterminantHashVec& space, WFNOperator& op,  SharedMatrix evecs, int nroot);
 
     /// Streamlined version of find q space
     void default_find_q_space(DeterminantHashVec& P_space, DeterminantHashVec& PQ_space,
@@ -327,7 +327,7 @@ class AdaptiveCI : public Wavefunction {
     bool check_stuck(std::vector<std::vector<double>>& energy_history, SharedVector evals);
 
     /// Computes spin
-    std::vector<std::pair<double, double>> compute_spin(DeterminantHashVec& space,
+    std::vector<std::pair<double, double>> compute_spin(DeterminantHashVec& space, WFNOperator& op,
                                                         SharedMatrix evecs, int nroot);
 
     /// Compute 1-RDM
@@ -338,7 +338,7 @@ class AdaptiveCI : public Wavefunction {
     void full_spin_transform(DeterminantHashVec& det_space, SharedMatrix cI, int nroot);
 
     /// Check for spin contamination
-    double compute_spin_contamination(DeterminantHashVec& space, SharedMatrix evecs, int nroot);
+    double compute_spin_contamination(DeterminantHashVec& space, WFNOperator& op, SharedMatrix evecs, int nroot);
 
     /// Save coefficients of lowest-root determinant
     void save_dets_to_file(DeterminantHashVec& space, SharedMatrix evecs);
