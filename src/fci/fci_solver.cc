@@ -330,30 +330,62 @@ double FCISolver::compute_energy() {
     }
 
     // Compute the RDMs
-    C_->copy(dls.eigenvector(root_));
-    if (print_) {
-        std::string title_rdm = "Computing RDMs for Root No. " + std::to_string(root_);
-        print_h2(title_rdm);
-    }
-    C_->compute_rdms(max_rdm_level_);
+    compute_rdms_root(root_);
+//    C_->copy(dls.eigenvector(root_));
+//    if (print_) {
+//        std::string title_rdm = "Computing RDMs for Root No. " + std::to_string(root_);
+//        print_h2(title_rdm);
+//    }
+//    C_->compute_rdms(max_rdm_level_);
 
     if (print_ > 1 && max_rdm_level_ > 1) {
         C_->energy_from_rdms(fci_ints);
     }
 
-    // Optionally, test the RDMs
-    if (test_rdms_) {
-        C_->rdm_test();
-    }
+//    // Optionally, test the RDMs
+//    if (test_rdms_) {
+//        C_->rdm_test();
+//    }
 
-    // Print the NO if energy converged
-    if (print_no_ || print_ > 0) {
-        C_->print_natural_orbitals(mo_space_info_);
-    }
+//    // Print the NO if energy converged
+//    if (print_no_ || print_ > 0) {
+//        C_->print_natural_orbitals(mo_space_info_);
+//    }
 
     energy_ = dls.eigenvalues()->get(root_) + nuclear_repulsion_energy;
 
     return energy_;
+}
+
+void FCISolver::compute_rdms_root(const int& root) {
+    // make sure a compute_energy is called before this
+    if (C_) {
+        if (root >= nroot_) {
+            std::string error = "Cannot compute RDMs of root " + std::to_string(root) +
+                                "(0-based) because nroot = " + std::to_string(nroot_);
+            throw PSIEXCEPTION(error);
+        }
+
+        SharedVector evec(eigen_vecs_->get_row(0, root));
+        C_->copy(evec);
+        if (print_) {
+            std::string title_rdm = "Computing RDMs for Root No. " + std::to_string(root);
+            print_h2(title_rdm);
+        }
+        C_->compute_rdms(max_rdm_level_);
+
+        // Optionally, test the RDMs
+        if (test_rdms_) {
+            C_->rdm_test();
+        }
+
+        // Print the NO if energy converged
+        if (print_no_ || print_ > 0) {
+            C_->print_natural_orbitals(mo_space_info_);
+        }
+    } else {
+        throw PSIEXCEPTION("FCIWfn is not assigned. Cannot compute RDMs.");
+    }
 }
 
 std::vector<std::pair<int, std::vector<std::tuple<size_t, size_t, size_t, double>>>>

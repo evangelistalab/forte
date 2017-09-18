@@ -1,9 +1,9 @@
 
     -----------------------------------------------------------------------
           Psi4: An Open-Source Ab Initio Electronic Structure Package
-                               Psi4 1.1a2.dev308 
+                               Psi4 1.2a1.dev491 
 
-                         Git: Rev {master} a2cd4f8 
+                         Git: Rev {master} 09b4ef6 
 
 
     R. M. Parrish, L. A. Burns, D. G. A. Smith, A. C. Simmonett,
@@ -12,14 +12,15 @@
     H. R. McAlexander, A. Kumar, M. Saitow, X. Wang, B. P. Pritchard,
     P. Verma, H. F. Schaefer III, K. Patkowski, R. A. King, E. F. Valeev,
     F. A. Evangelista, J. M. Turney, T. D. Crawford, and C. D. Sherrill,
-    submitted.
+    J. Chem. Theory Comput. 13(7) pp 3185--3197 (2017).
+    (doi: 10.1021/acs.jctc.7b00174)
 
     -----------------------------------------------------------------------
 
 
-    Psi4 started on: Tuesday, 09 May 2017 05:56PM
+    Psi4 started on: Monday, 18 September 2017 07:14PM
 
-    Process ID:  11386
+    Process ID:  24731
     PSIDATADIR: /Users/york/src/psi4new/psi4/share/psi4
     Memory:     500.0 MiB
     Threads:    1
@@ -60,9 +61,10 @@ set forte {
   active           [1,0,0,0,0,1,0,0]
   multiplicity     3
   root_sym         5
-  ms               0
+  ms               0.0
   cas_type         fci
   e_convergence    1e-10
+  casscf_e_convergence 1e-10
   int_type         conventional
   avg_state        [[5, 3, 1], [0, 1, 1]]
   casscf_reference true
@@ -71,19 +73,27 @@ set forte {
 triplet = energy('forte')
 compare_values(ref_casscf, triplet, 6, "FCI splitting")
 
-
+0.
 --------------------------------------------------------------------------
-/Users/york/src/forte/forte.so loaded.
 
 *** tstart() called on Yorks-Mac.local
-*** at Tue May  9 17:56:35 2017
+*** at Mon Sep 18 19:14:18 2017
+
+   => Loading Basis Set <=
+
+    Name: DEF2-TZVP
+    Role: ORBITAL
+    Keyword: BASIS
+    atoms 1, 3 entry H          line    15 file /Users/york/src/psi4new/psi4/share/psi4/basis/def2-tzvp.gbs 
+    atoms 2    entry HE         line    27 file /Users/york/src/psi4new/psi4/share/psi4/basis/def2-tzvp.gbs 
 
 
          ---------------------------------------------------------
                                    SCF
-            by Justin Turney, Rob Parrish, and Andy Simmonett
+            by Justin Turney, Rob Parrish, Andy Simmonett
+                             and Daniel Smith
                              ROHF Reference
-                        1 Threads,    524 MiB Core
+                        1 Threads,    500 MiB Core
          ---------------------------------------------------------
 
   ==> Geometry <==
@@ -124,12 +134,21 @@ compare_values(ref_casscf, triplet, 6, "FCI splitting")
 
   ==> Primary Basis <==
 
-  Basis Set: file /Users/york/src/psi4new/psi4/share/psi4/basis/def2-tzvp.gbs
+  Basis Set: DEF2-TZVP
+    Blend: DEF2-TZVP
     Number of shells: 12
     Number of basis function: 18
     Number of Cartesian functions: 18
     Spherical Harmonics?: true
     Max angular momentum: 1
+
+   => Loading Basis Set <=
+
+    Name: (DEF2-TZVP AUX)
+    Role: JKFIT
+    Keyword: DF_BASIS_SCF
+    atoms 1, 3 entry H          line    23 file /Users/york/src/psi4new/psi4/share/psi4/basis/def2-tzvp-jkfit.gbs 
+    atoms 2    entry HE         line    39 file /Users/york/src/psi4new/psi4/share/psi4/basis/def2-tzvp-jkfit.gbs 
 
   ==> Pre-Iterations <==
 
@@ -167,14 +186,15 @@ compare_values(ref_casscf, triplet, 6, "FCI splitting")
 
    => Auxiliary Basis Set <=
 
-  Basis Set: file /Users/york/src/psi4new/psi4/share/psi4/basis/def2-tzvp-jkfit.gbs
+  Basis Set: (DEF2-TZVP AUX)
+    Blend: DEF2-TZVP-JKFIT
     Number of shells: 21
     Number of basis function: 59
     Number of Cartesian functions: 65
     Spherical Harmonics?: true
     Max angular momentum: 2
 
-  Minimum eigenvalue in the overlap matrix is 9.5489188078E-02.
+  Minimum eigenvalue in the overlap matrix is 9.5489187992E-02.
   Using Symmetric Orthogonalization.
 
   SCF Guess: Generalized Wolfsberg-Helmholtz.
@@ -183,16 +203,16 @@ compare_values(ref_casscf, triplet, 6, "FCI splitting")
 
                            Total Energy        Delta E     RMS |[F,P]|
 
-   @DF-ROHF iter   1:    -3.18167389664065   -3.18167e+00   1.47728e-01 
-   @DF-ROHF iter   2:    -3.84051623581892   -6.58842e-01   1.40108e-02 DIIS
-   @DF-ROHF iter   3:    -3.85089225542535   -1.03760e-02   1.52278e-03 DIIS
-   @DF-ROHF iter   4:    -3.85102737989551   -1.35124e-04   1.43978e-04 DIIS
-   @DF-ROHF iter   5:    -3.85102845392172   -1.07403e-06   1.63500e-05 DIIS
-   @DF-ROHF iter   6:    -3.85102848130217   -2.73805e-08   1.79906e-06 DIIS
-   @DF-ROHF iter   7:    -3.85102848161597   -3.13801e-10   8.17351e-08 DIIS
-   @DF-ROHF iter   8:    -3.85102848161651   -5.31131e-13   9.83498e-09 DIIS
-   @DF-ROHF iter   9:    -3.85102848161651   -6.21725e-15   8.40882e-10 DIIS
-   @DF-ROHF iter  10:    -3.85102848161651   -2.66454e-15   9.75198e-11 DIIS
+   @DF-ROHF iter   1:    -3.18167393099497   -3.18167e+00   1.47728e-01 
+   @DF-ROHF iter   2:    -3.84051623567812   -6.58842e-01   1.40108e-02 DIIS
+   @DF-ROHF iter   3:    -3.85089225542422   -1.03760e-02   1.52278e-03 DIIS
+   @DF-ROHF iter   4:    -3.85102737990101   -1.35124e-04   1.43978e-04 DIIS
+   @DF-ROHF iter   5:    -3.85102845392728   -1.07403e-06   1.63500e-05 DIIS
+   @DF-ROHF iter   6:    -3.85102848130773   -2.73805e-08   1.79906e-06 DIIS
+   @DF-ROHF iter   7:    -3.85102848162154   -3.13809e-10   8.17351e-08 DIIS
+   @DF-ROHF iter   8:    -3.85102848162206   -5.24913e-13   9.83498e-09 DIIS
+   @DF-ROHF iter   9:    -3.85102848162207   -7.99361e-15   8.40882e-10 DIIS
+   @DF-ROHF iter  10:    -3.85102848162208   -3.55271e-15   9.75198e-11 DIIS
 
   DF guess converged.
 
@@ -206,13 +226,13 @@ compare_values(ref_casscf, triplet, 6, "FCI splitting")
     Integrals threads:           1
     Schwarz Cutoff:          1E-12
 
-   @ROHF iter  11:    -3.85103002645435   -1.54484e-06   8.40884e-05 DIIS
-   @ROHF iter  12:    -3.85103040879843   -3.82344e-07   1.08138e-05 DIIS
-   @ROHF iter  13:    -3.85103041664459   -7.84617e-09   6.41562e-07 DIIS
-   @ROHF iter  14:    -3.85103041668448   -3.98819e-11   6.79260e-08 DIIS
-   @ROHF iter  15:    -3.85103041668504   -5.60441e-13   1.17021e-08 DIIS
-   @ROHF iter  16:    -3.85103041668505   -1.42109e-14   1.25194e-09 DIIS
-   @ROHF iter  17:    -3.85103041668505   -1.77636e-15   6.94360e-11 DIIS
+   @ROHF iter  11:    -3.85103002646523   -1.54484e-06   8.40884e-05 DIIS
+   @ROHF iter  12:    -3.85103040880929   -3.82344e-07   1.08138e-05 DIIS
+   @ROHF iter  13:    -3.85103041665545   -7.84616e-09   6.41562e-07 DIIS
+   @ROHF iter  14:    -3.85103041669533   -3.98819e-11   6.79260e-08 DIIS
+   @ROHF iter  15:    -3.85103041669590   -5.61329e-13   1.17021e-08 DIIS
+   @ROHF iter  16:    -3.85103041669591   -1.42109e-14   1.25194e-09 DIIS
+   @ROHF iter  17:    -3.85103041669591    0.00000e+00   6.94360e-11 DIIS
 
   ==> Post-Iterations <==
 
@@ -230,10 +250,10 @@ compare_values(ref_casscf, triplet, 6, "FCI splitting")
     Virtual:                                                              
 
        3Ag     0.386823     2B1u    0.422114     4Ag     0.873128  
-       3B1u    1.618695     1B3u    1.663708     1B2u    1.663708  
-       1B3g    1.664271     1B2g    1.664271     5Ag     1.785491  
-       2B3u    1.980229     2B2u    1.980229     4B1u    2.044934  
-       6Ag     2.535949     5B1u    2.595332     7Ag     6.425248  
+       3B1u    1.618695     1B2u    1.663708     1B3u    1.663708  
+       1B2g    1.664271     1B3g    1.664271     5Ag     1.785491  
+       2B2u    1.980229     2B3u    1.980229     4B1u    2.044934  
+       6Ag     2.535949     5B1u    2.595332     7Ag     6.425247  
 
     Final Occupation by Irrep:
              Ag   B1g   B2g   B3g    Au   B1u   B2u   B3u 
@@ -242,20 +262,16 @@ compare_values(ref_casscf, triplet, 6, "FCI splitting")
 
   Energy converged.
 
-  @ROHF Final Energy:    -3.85103041668505
+  @ROHF Final Energy:    -3.85103041669591
 
    => Energetics <=
 
     Nuclear Repulsion Energy =              1.1906487193274999
-    One-Electron Energy =                  -7.2389195932560133
-    Two-Electron Energy =                   2.1972404572434603
-    DFT Exchange-Correlation Energy =       0.0000000000000000
-    Empirical Dispersion Energy =           0.0000000000000000
-    PCM Polarization Energy =               0.0000000000000000
-    EFP Energy =                            0.0000000000000000
-    Total Energy =                         -3.8510304166850529
+    One-Electron Energy =                  -7.2389195943144848
+    Two-Electron Energy =                   2.1972404582910743
+    Total Energy =                         -3.8510304166959104
 
-    Alert: EFP and PCM quantities not currently incorporated into SCF psivars.
+
 
 Properties will be evaluated at   0.000000,   0.000000,   0.000000 Bohr
 
@@ -274,20 +290,39 @@ Properties computed using the SCF density matrix
      X:     0.0000      Y:     0.0000      Z:     0.0000     Total:     0.0000
 
 
-*** tstop() called on Yorks-Mac.local at Tue May  9 17:56:35 2017
+*** tstop() called on Yorks-Mac.local at Mon Sep 18 19:14:19 2017
 Module time:
-	user time   =       0.28 seconds =       0.00 minutes
-	system time =       0.02 seconds =       0.00 minutes
-	total time  =          0 seconds =       0.00 minutes
+	user time   =       0.59 seconds =       0.01 minutes
+	system time =       0.03 seconds =       0.00 minutes
+	total time  =          1 seconds =       0.02 minutes
 Total time:
-	user time   =       0.28 seconds =       0.00 minutes
-	system time =       0.02 seconds =       0.00 minutes
-	total time  =          0 seconds =       0.00 minutes
+	user time   =       0.59 seconds =       0.01 minutes
+	system time =       0.03 seconds =       0.00 minutes
+	total time  =          1 seconds =       0.02 minutes
+   => Loading Basis Set <=
+
+    Name: STO-3G
+    Role: ORBITAL
+    Keyword: MINAO_BASIS
+    atoms 1, 3 entry H          line    19 file /Users/york/src/psi4new/psi4/share/psi4/basis/sto-3g.gbs 
+    atoms 2    entry HE         line    25 file /Users/york/src/psi4new/psi4/share/psi4/basis/sto-3g.gbs 
+
 
 Reading options from the FORTE block
 Calling plugin forte.so.
 
 
+
+  Forte
+  ----------------------------------------------------------------------------
+  A suite of quantum chemistry methods for strongly correlated electrons
+
+    git branch: master - git commit: 5a864b68
+
+  Developed by:
+    Francesco A. Evangelista, Chenyang Li, Kevin P. Hannon,
+    Jeffrey B. Schriber, Tianyuan Zhang, Chenxi Cai
+  ----------------------------------------------------------------------------
 
 
   ==> MO Space Information <==
@@ -324,7 +359,8 @@ Calling plugin forte.so.
            H          0.000000000000     0.000000000000     2.000000000000     1.007825032070
 
   -AO BASIS SET INFORMATION:
-    Name                   = file /Users/york/src/psi4new/psi4/share/psi4/basis/def2-tzvp.gbs
+    Name                   = DEF2-TZVP
+    Blend                  = DEF2-TZVP
     Total number of shells = 12
     Number of primitives   = 18
     Number of AO           = 18
@@ -341,7 +377,7 @@ Calling plugin forte.so.
 
   ==> AO Basis Functions <==
 
-    [ file /Users/york/src/psi4new/psi4/share/psi4/basis/def2-tzvp.gbs ]
+    [ DEF2-TZVP ]
     spherical
     ****
     H   1
@@ -381,25 +417,24 @@ Calling plugin forte.so.
 	Starting second half-transformation.
 	Two-electron integral transformation complete.
 
-  Integral transformation done. 0.01080000 s
+  Integral transformation done. 0.01487700 s
   Reading the two-electron integrals from disk
   Size of two-electron integrals:   0.002346 GB
-  Conventional integrals take 0.03414600 s
+  Conventional integrals take 0.05959700 s
 
                 -----------------------------------------------
                   Complete Active Space Self Consistent Field
                                  Kevin Hannon
                 -----------------------------------------------
 
-     JK takes 0.00590 s to initialize while using DIRECT
+     JK takes 0.01561 s to initialize while using DIRECT
 
   ==> CASSCF Iteration <==
 
  iter    ||g||           Delta_E            E_CASSCF       CONV_TYPE
- E_casscf: 0.00000000
  CSO2SO takes   0.0000 s.
 
- Transform Integrals takes 0.00801500 s.
+ Transform Integrals takes 0.03543100 s.
 
   Performing a CAS with FCI
 
@@ -432,7 +467,6 @@ Calling plugin forte.so.
   Timing for NN strings     =      0.000 s
   Timing for VO strings     =      0.000 s
   Timing for OO strings     =      0.000 s
-  Timing for Knowles-Handy  =      0.000 s
   Timing for VVOO strings   =      0.000 s
   Timing for VOVO strings   =      0.000 s
   Timing for 1-hole strings =      0.000 s
@@ -456,10 +490,10 @@ Calling plugin forte.so.
   ---------------------------------------------
     Root            Energy     <S^2>   Spin
   ---------------------------------------------
-      0       -3.851030416685  2.000  triplet
-      1       -3.351116510094  0.000  singlet
+      0       -3.851030416696  2.000  triplet
+      1       -3.351116509888  0.000  singlet
   ---------------------------------------------
-  Timing for initial guess  =      0.000 s
+  Timing for initial guess  =      0.002 s
 
   Projecting out root 1
   ==> Diagonalizing Hamiltonian <==
@@ -467,8 +501,8 @@ Calling plugin forte.so.
   ----------------------------------------
     Iter.      Avg. Energy       Delta_E
   ----------------------------------------
-      1       -3.851030416685  -3.851e+00
-      2       -3.851030416685  -8.882e-16
+      1       -3.851030416696  -3.851e+00
+      2       -3.851030416696  -1.776e-15
   ----------------------------------------
   The Davidson-Liu algorithm converged in 3 iterations.
 
@@ -477,7 +511,7 @@ Calling plugin forte.so.
     a b      0.70710678
     b a     -0.70710678
 
-    Total Energy:        -3.851030416685053
+    Total Energy:        -3.851030416695911
 
   ==> Computing RDMs for Root No. 0 <==
 
@@ -508,7 +542,6 @@ Calling plugin forte.so.
   Timing for NN strings     =      0.000 s
   Timing for VO strings     =      0.000 s
   Timing for OO strings     =      0.000 s
-  Timing for Knowles-Handy  =      0.000 s
   Timing for VVOO strings   =      0.000 s
   Timing for VOVO strings   =      0.000 s
   Timing for 1-hole strings =      0.000 s
@@ -532,8 +565,8 @@ Calling plugin forte.so.
   ---------------------------------------------
     Root            Energy     <S^2>   Spin
   ---------------------------------------------
-      0       -3.851214593767  0.000  singlet
-      1       -3.350801453156  0.000  singlet
+      0       -3.851214593778  0.000  singlet
+      1       -3.350801452950  0.000  singlet
   ---------------------------------------------
   Timing for initial guess  =      0.000 s
 
@@ -542,17 +575,17 @@ Calling plugin forte.so.
   ----------------------------------------
     Iter.      Avg. Energy       Delta_E
   ----------------------------------------
-      1       -3.851214593767  -3.851e+00
-      2       -3.851214593767  -8.882e-16
+      1       -3.851214593778  -3.851e+00
+      2       -3.851214593778  +0.000e+00
   ----------------------------------------
   The Davidson-Liu algorithm converged in 3 iterations.
 
   ==> Root No. 0 <==
 
-    0 2      0.72272315
-    2 0     -0.69113765
+    0 2     -0.72272315
+    2 0      0.69113765
 
-    Total Energy:        -3.851214593766535
+    Total Energy:        -3.851214593777639
 
   ==> Computing RDMs for Root No. 0 <==
 
@@ -564,19 +597,19 @@ Calling plugin forte.so.
         1B1u    1.044657      1Ag     0.955343  
 
 
- CAS took 0.018763 seconds.
+ CAS took 0.043125 seconds.
 
- FormFockIntermediates took 0.00678900 s.
+ FormFockIntermediates took 0.02539200 s.
 
- FormOrbitalGradient took 0.00031500 s.
+ FormOrbitalGradient took 0.00038700 s.
 
- FormDiagHessian took 0.00001200 s.
+ FormDiagHessian took 0.00001400 s.
 
- Update function takes 0.00714600 s
-    0   0.000729154653   3.851122505226   -3.851122505226    0.034940 s      
+ Update function takes 0.02582500 s
+    0   0.000729154653   3.851122505237   -3.851122505237    0.106675 s      
  CSO2SO takes   0.0000 s.
 
- Transform Integrals takes 0.00695900 s.
+ Transform Integrals takes 0.02118600 s.
 
   Performing a CAS with FCI
 
@@ -609,7 +642,6 @@ Calling plugin forte.so.
   Timing for NN strings     =      0.000 s
   Timing for VO strings     =      0.000 s
   Timing for OO strings     =      0.000 s
-  Timing for Knowles-Handy  =      0.000 s
   Timing for VVOO strings   =      0.000 s
   Timing for VOVO strings   =      0.000 s
   Timing for 1-hole strings =      0.000 s
@@ -633,8 +665,8 @@ Calling plugin forte.so.
   ---------------------------------------------
     Root            Energy     <S^2>   Spin
   ---------------------------------------------
-      0       -3.851025578264  2.000  triplet
-      1       -3.351127808998  0.000  singlet
+      0       -3.851025578275  2.000  triplet
+      1       -3.351127808792  0.000  singlet
   ---------------------------------------------
   Timing for initial guess  =      0.000 s
 
@@ -644,8 +676,8 @@ Calling plugin forte.so.
   ----------------------------------------
     Iter.      Avg. Energy       Delta_E
   ----------------------------------------
-      1       -3.851025578264  -3.851e+00
-      2       -3.851025578264  -1.776e-15
+      1       -3.851025578275  -3.851e+00
+      2       -3.851025578275  -2.665e-15
   ----------------------------------------
   The Davidson-Liu algorithm converged in 3 iterations.
 
@@ -654,7 +686,7 @@ Calling plugin forte.so.
     a b      0.70710678
     b a     -0.70710678
 
-    Total Energy:        -3.851025578263682
+    Total Energy:        -3.851025578274535
 
   ==> Computing RDMs for Root No. 0 <==
 
@@ -685,7 +717,6 @@ Calling plugin forte.so.
   Timing for NN strings     =      0.000 s
   Timing for VO strings     =      0.000 s
   Timing for OO strings     =      0.000 s
-  Timing for Knowles-Handy  =      0.000 s
   Timing for VVOO strings   =      0.000 s
   Timing for VOVO strings   =      0.000 s
   Timing for 1-hole strings =      0.000 s
@@ -709,8 +740,8 @@ Calling plugin forte.so.
   ---------------------------------------------
     Root            Energy     <S^2>   Spin
   ---------------------------------------------
-      0       -3.851232823622  0.000  singlet
-      1       -3.350783449808  0.000  singlet
+      0       -3.851232823633  0.000  singlet
+      1       -3.350783449602  0.000  singlet
   ---------------------------------------------
   Timing for initial guess  =      0.000 s
 
@@ -719,8 +750,8 @@ Calling plugin forte.so.
   ----------------------------------------
     Iter.      Avg. Energy       Delta_E
   ----------------------------------------
-      1       -3.851232823622  -3.851e+00
-      2       -3.851232823622  +8.882e-16
+      1       -3.851232823633  -3.851e+00
+      2       -3.851232823633  +0.000e+00
   ----------------------------------------
   The Davidson-Liu algorithm converged in 3 iterations.
 
@@ -729,7 +760,7 @@ Calling plugin forte.so.
     0 2     -0.72351175
     2 0      0.69031207
 
-    Total Energy:        -3.851232823621793
+    Total Energy:        -3.851232823632917
 
   ==> Computing RDMs for Root No. 0 <==
 
@@ -741,19 +772,19 @@ Calling plugin forte.so.
         1B1u    1.046938      1Ag     0.953062  
 
 
- CAS took 0.011593 seconds.
+ CAS took 0.025528 seconds.
 
- FormFockIntermediates took 0.00665600 s.
+ FormFockIntermediates took 0.02218400 s.
 
- FormOrbitalGradient took 0.00032100 s.
+ FormOrbitalGradient took 0.00033300 s.
 
- FormDiagHessian took 0.00002900 s.
+ FormDiagHessian took 0.00001300 s.
 
- Update function takes 0.00707500 s
-    1   0.000094536575   0.000006695717   -3.851129200943    0.026612 s      
+ Update function takes 0.02256300 s
+    1   0.000094536575   0.000006695717   -3.851129200954    0.070501 s      
  CSO2SO takes   0.0000 s.
 
- Transform Integrals takes 0.01731000 s.
+ Transform Integrals takes 0.02112100 s.
 
   Performing a CAS with FCI
 
@@ -786,7 +817,6 @@ Calling plugin forte.so.
   Timing for NN strings     =      0.000 s
   Timing for VO strings     =      0.000 s
   Timing for OO strings     =      0.000 s
-  Timing for Knowles-Handy  =      0.000 s
   Timing for VVOO strings   =      0.000 s
   Timing for VOVO strings   =      0.000 s
   Timing for 1-hole strings =      0.000 s
@@ -810,8 +840,8 @@ Calling plugin forte.so.
   ---------------------------------------------
     Root            Energy     <S^2>   Spin
   ---------------------------------------------
-      0       -3.851024208240  2.000  triplet
-      1       -3.351131413041  0.000  singlet
+      0       -3.851024208251  2.000  triplet
+      1       -3.351131412836  0.000  singlet
   ---------------------------------------------
   Timing for initial guess  =      0.000 s
 
@@ -821,8 +851,8 @@ Calling plugin forte.so.
   ----------------------------------------
     Iter.      Avg. Energy       Delta_E
   ----------------------------------------
-      1       -3.851024208240  -3.851e+00
-      2       -3.851024208240  -1.776e-15
+      1       -3.851024208251  -3.851e+00
+      2       -3.851024208251  -8.882e-16
   ----------------------------------------
   The Davidson-Liu algorithm converged in 3 iterations.
 
@@ -831,7 +861,7 @@ Calling plugin forte.so.
     a b      0.70710678
     b a     -0.70710678
 
-    Total Energy:        -3.851024208240131
+    Total Energy:        -3.851024208250979
 
   ==> Computing RDMs for Root No. 0 <==
 
@@ -862,7 +892,6 @@ Calling plugin forte.so.
   Timing for NN strings     =      0.000 s
   Timing for VO strings     =      0.000 s
   Timing for OO strings     =      0.000 s
-  Timing for Knowles-Handy  =      0.000 s
   Timing for VVOO strings   =      0.000 s
   Timing for VOVO strings   =      0.000 s
   Timing for 1-hole strings =      0.000 s
@@ -886,8 +915,8 @@ Calling plugin forte.so.
   ---------------------------------------------
     Root            Energy     <S^2>   Spin
   ---------------------------------------------
-      0       -3.851234470223  0.000  singlet
-      1       -3.350782458868  0.000  singlet
+      0       -3.851234470234  0.000  singlet
+      1       -3.350782458662  0.000  singlet
   ---------------------------------------------
   Timing for initial guess  =      0.000 s
 
@@ -896,8 +925,8 @@ Calling plugin forte.so.
   ----------------------------------------
     Iter.      Avg. Energy       Delta_E
   ----------------------------------------
-      1       -3.851234470223  -3.851e+00
-      2       -3.851234470223  +0.000e+00
+      1       -3.851234470234  -3.851e+00
+      2       -3.851234470234  -1.776e-15
   ----------------------------------------
   The Davidson-Liu algorithm converged in 3 iterations.
 
@@ -906,7 +935,7 @@ Calling plugin forte.so.
     0 2     -0.72362315
     2 0      0.69019529
 
-    Total Energy:        -3.851234470222773
+    Total Energy:        -3.851234470233897
 
   ==> Computing RDMs for Root No. 0 <==
 
@@ -918,25 +947,21 @@ Calling plugin forte.so.
         1B1u    1.047261      1Ag     0.952739  
 
 
- CAS took 0.013950 seconds.
+ CAS took 0.033555 seconds.
 
- FormFockIntermediates took 0.00666000 s.
+ FormFockIntermediates took 0.02018100 s.
 
- FormOrbitalGradient took 0.00028000 s.
+ FormOrbitalGradient took 0.00033700 s.
 
- FormDiagHessian took 0.00001200 s.
+ FormDiagHessian took 0.00001300 s.
 
- Update function takes 0.00698000 s
+ Update function takes 0.02056200 s
+    2   0.000016740829   0.000000000000   -3.851129339242    0.076255 s
 
- @E_CASSCF: = -3.851129339231 
+ A miracle has come to pass. The CASSCF iterations have converged.
+ @E(CASSCF) =    -3.851129339242 
 
-
- Norm of orbital_gradient is 0.00001674
-
- Energy difference: 0.000000138289
  Overall retranformation of integrals takes 0.0000 s.
-
-  Your calculation took 0.14988000 seconds
 	FCI splitting.....................................................PASSED
 
 *** Psi4 exiting successfully. Buy a developer a beer!
