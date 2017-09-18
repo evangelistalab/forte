@@ -42,7 +42,7 @@ double DSRG_MRPT2::compute_energy_multi_state() {
     if (nentry > 1) {
         outfile->Printf("\n\n  Warning: States with different symmetry are "
                         "found in the list of AVG_STATES.");
-        outfile->Printf("\n             Each symmetry will be considered separately here.");
+        outfile->Printf("\n           Each symmetry will be considered separately here.");
     }
 
     // get character table

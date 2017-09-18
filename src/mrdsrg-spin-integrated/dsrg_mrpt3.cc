@@ -1294,20 +1294,23 @@ double DSRG_MRPT3::compute_energy_sa() {
     // compute DSRG-MRPT3 energy
     compute_energy();
 
-    // transfer integrals
-    transfer_integrals();
+    // obtain active-only transformed intergals
+    std::shared_ptr<FCIIntegrals> fci_ints = compute_Heff();
 
-    // prepare FCI integrals
-    std::shared_ptr<FCIIntegrals> fci_ints =
-        std::make_shared<FCIIntegrals>(ints_, actv_mos_, core_mos_);
-    fci_ints->set_active_integrals(Hbar2_.block("aaaa"), Hbar2_.block("aAaA"),
-                                   Hbar2_.block("AAAA"));
-    if (eri_df_) {
-        fci_ints->set_restricted_one_body_operator(aone_eff_, bone_eff_);
-        fci_ints->set_scalar_energy(ints_->scalar());
-    } else {
-        fci_ints->compute_restricted_one_body_operator();
-    }
+    //    // transfer integrals
+    //    transfer_integrals();
+
+    //    // prepare FCI integrals
+    //    std::shared_ptr<FCIIntegrals> fci_ints =
+    //        std::make_shared<FCIIntegrals>(ints_, actv_mos_, core_mos_);
+    //    fci_ints->set_active_integrals(Hbar2_.block("aaaa"), Hbar2_.block("aAaA"),
+    //                                   Hbar2_.block("AAAA"));
+    //    if (eri_df_) {
+    //        fci_ints->set_restricted_one_body_operator(aone_eff_, bone_eff_);
+    //        fci_ints->set_scalar_energy(ints_->scalar());
+    //    } else {
+    //        fci_ints->compute_restricted_one_body_operator();
+    //    }
 
     // get character table
     CharacterTable ct = Process::environment.molecule()->point_group()->char_table();
@@ -1332,8 +1335,7 @@ double DSRG_MRPT3::compute_energy_sa() {
     std::vector<std::vector<double>> Edsrg_sa(nentry, std::vector<double>());
 
     // call FCI_MO if SA_FULL and CAS_TYPE == CAS
-    if (multi_state_algorithm_ == "SA_FULL" &&
-        options_.get_str("CAS_TYPE") == "CAS") {
+    if (multi_state_algorithm_ == "SA_FULL" && options_.get_str("CAS_TYPE") == "CAS") {
         FCI_MO fci_mo(reference_wavefunction_, options_, ints_, mo_space_info_);
         fci_mo.compute_energy();
         auto eigens = fci_mo.eigens();
