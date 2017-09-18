@@ -1336,7 +1336,7 @@ double DSRG_MRPT3::compute_energy_sa() {
 
     // call FCI_MO if SA_FULL and CAS_TYPE == CAS
     if (multi_state_algorithm_ == "SA_FULL" && options_.get_str("CAS_TYPE") == "CAS") {
-        FCI_MO fci_mo(reference_wavefunction_, options_, ints_, mo_space_info_);
+        FCI_MO fci_mo(reference_wavefunction_, options_, ints_, mo_space_info_, fci_ints);
         fci_mo.compute_energy();
         auto eigens = fci_mo.eigens();
         for (int n = 0; n < nentry; ++n) {
@@ -1457,6 +1457,8 @@ double DSRG_MRPT3::compute_energy_sa() {
 
             } else {
 
+                /// The sub-space CASCI is temporarily disabled because
+                /// the off-diagonal of Heff is just second order.
                 outfile->Printf("\n    Use the sub-space of CASCI.");
 
                 int dim = (eigens_[n][0].first)->dim();
