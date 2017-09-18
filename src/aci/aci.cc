@@ -726,7 +726,7 @@ void AdaptiveCI::print_final(DeterminantHashVec& dets, SharedMatrix& PQ_evecs,
     if ((ex_alg_ != "ROOT_ORTHOGONALIZE") or (nroot_ == 1)) {
         outfile->Printf("\n\n  ==> Wavefunction Information <==");
 
-        print_wfn(dets, PQ_evecs, nroot_);
+        print_wfn(dets,op_, PQ_evecs, nroot_);
 
         //         outfile->Printf("\n\n     Order		 # of Dets        Total
         //         |c^2|");
@@ -1902,7 +1902,7 @@ bool AdaptiveCI::check_stuck(std::vector<std::vector<double>>& energy_history, S
     return stuck;
 }
 
-std::vector<std::pair<double, double>> AdaptiveCI::compute_spin(DeterminantHashVec& space,
+std::vector<std::pair<double, double>> AdaptiveCI::compute_spin(DeterminantHashVec& space, WFNOperator& op,
                                                                 SharedMatrix evecs, int nroot) {
     // WFNOperator op(mo_symmetry_);
 
@@ -1910,16 +1910,16 @@ std::vector<std::pair<double, double>> AdaptiveCI::compute_spin(DeterminantHashV
     // op.op_lists(space);
     // op.tp_lists(space);
     if (options_.get_str("SIGMA_BUILD_TYPE") == "HZ") {
-        op_.clear_op_s_lists();
-        op_.clear_tp_s_lists();
-        op_.build_strings(space);
-        op_.op_lists(space);
-        op_.tp_lists(space);
+        op.clear_op_s_lists();
+        op.clear_tp_s_lists();
+        op.build_strings(space);
+        op.op_lists(space);
+        op.tp_lists(space);
     }
 
     std::vector<std::pair<double, double>> spin_vec(nroot);
     for (int n = 0; n < nroot_; ++n) {
-        double S2 = op_.s2(space, evecs, n);
+        double S2 = op.s2(space, evecs, n);
         double S = std::fabs(0.5 * (std::sqrt(1.0 + 4.0 * S2) - 1.0));
         spin_vec[n] = std::make_pair(S, S2);
     }
@@ -2055,12 +2055,12 @@ orb_e[a].second));
     return labeled_orb;
 }
 
-void AdaptiveCI::print_wfn(DeterminantHashVec& space, SharedMatrix evecs, int nroot) {
+void AdaptiveCI::print_wfn(DeterminantHashVec& space, WFNOperator& op, SharedMatrix evecs, int nroot) {
     std::string state_label;
     std::vector<std::string> s2_labels({"singlet", "doublet", "triplet", "quartet", "quintet",
                                         "sextet", "septet", "octet", "nonet", "decatet"});
 
-    std::vector<std::pair<double, double>> spins = compute_spin(space, evecs, nroot);
+    std::vector<std::pair<double, double>> spins = compute_spin(space, op, evecs, nroot);
 
     for (int n = 0; n < nroot; ++n) {
         DeterminantHashVec tmp;
@@ -2151,9 +2151,9 @@ void AdaptiveCI::full_spin_transform(DeterminantHashVec& det_space, SharedMatrix
     //
 }
 
-double AdaptiveCI::compute_spin_contamination(DeterminantHashVec& space, SharedMatrix evecs,
+double AdaptiveCI::compute_spin_contamination(DeterminantHashVec& space, WFNOperator& op, SharedMatrix evecs,
                                               int nroot) {
-    auto spins = compute_spin(space, evecs, nroot);
+    auto spins = compute_spin(space, op, evecs, nroot);
     double spin_contam = 0.0;
     for (int n = 0; n < nroot; ++n) {
         spin_contam += spins[n].second;
@@ -2687,7 +2687,7 @@ void AdaptiveCI::compute_aci(DeterminantHashVec& PQ_space, SharedMatrix& PQ_evec
         }
 
         if (!quiet_mode_ and print_refs)
-            print_wfn(P_space, P_evecs, num_ref_roots);
+            print_wfn(P_space, op_, P_evecs, num_ref_roots);
 
         // Step 2. Find determinants in the Q space
 
@@ -2821,7 +2821,7 @@ void AdaptiveCI::compute_aci(DeterminantHashVec& PQ_space, SharedMatrix& PQ_evec
 
         // Print information about the wave function
         if (!quiet_mode_) {
-            print_wfn(PQ_space, PQ_evecs, num_ref_roots);
+            print_wfn(PQ_space, op_, PQ_evecs, num_ref_roots);
             outfile->Printf("\n  Cycle %d took: %1.6f s", cycle, cycle_time.get());
         }
 
@@ -3307,6 +3307,13 @@ void AdaptiveCI::add_external_singles(DeterminantHashVec& ref) {
     ref.merge(av_a);
     ref.merge(av_b);
 
+    if (spin_complete_) {
+        ref.make_spin_complete();
+        if (!quiet_mode_)
+            outfile->Printf("\n  Spin-complete dimension of the PQ space: %zu",
+                            ref.size());
+    }
+
     outfile->Printf("\n  Size of new model space:  %zu", ref.size());
 
     const det_hashvec& newdets = ref.wfn_hash();
@@ -3363,9 +3370,11 @@ void AdaptiveCI::add_external_singles(DeterminantHashVec& ref) {
     sparse_solver.set_e_convergence(options_.get_double("E_CONVERGENCE"));
     sparse_solver.set_maxiter_davidson(options_.get_int("DL_MAXITER"));
     sparse_solver.set_spin_project(project_out_spin_contaminants_);
-    //   sparse_solver.set_spin_project_full(project_out_spin_contaminants_);
+    sparse_solver.set_spin_project_full(project_out_spin_contaminants_);
     sparse_solver.set_guess_dimension(options_.get_int("DL_GUESS_SIZE"));
-    sparse_solver.set_spin_project_full(false);
+    sparse_solver.set_num_vecs(options_.get_int("N_GUESS_VEC"));
+    sparse_solver.set_sigma_method(options_.get_str("SIGMA_BUILD_TYPE"));
+
     sparse_solver.diagonalize_hamiltonian_map(ref, op, final_evals, final_evecs, nroot_,
                                               multiplicity_, diag_method_);
 
@@ -3389,7 +3398,7 @@ void AdaptiveCI::add_external_singles(DeterminantHashVec& ref) {
         //    	}
     }
 
-    print_wfn(ref, final_evecs, nroot_);
+    print_wfn(ref,op, final_evecs, nroot_);
     rdm_level_ = 1;
     compute_rdms(fci_ints, ref, op, final_evecs, 0, 0);
 }
