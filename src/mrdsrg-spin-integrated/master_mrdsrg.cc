@@ -1344,6 +1344,8 @@ bool MASTER_DSRG::check_semi_orbs() {
     bool semi = true;
     std::vector<double> Fmax, Fnorm;
     double e_conv = options_.get_double("E_CONVERGENCE");
+    double cd = options_.get_double("CHOLESKY_TOLERANCE");
+    e_conv = cd < e_conv ? cd : e_conv;
     e_conv = e_conv < 1.0e-12 ? 1.0e-12 : e_conv;
     double threshold_max = 10.0 * e_conv;
     for (const auto& block : {"cc", "aa", "vv", "CC", "AA", "VV"}) {
