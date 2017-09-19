@@ -128,7 +128,6 @@ void CASSCF::compute_casscf() {
         /// Perform a CAS-CI using either York's code or Francesco's
         /// If CASSCF_DEBUG_PRINTING is on, will compare CAS-CI with SPIN-FREE RDM
         E_casscf_old = E_casscf_;
-        Ediff = std::fabs(E_casscf_old - E_casscf_);
         if (print_ > 0) {
             outfile->Printf("\n\n  Performing a CAS with %s", options_.get_str("CAS_TYPE").c_str());
         }
@@ -166,10 +165,11 @@ void CASSCF::compute_casscf() {
         orbital_optimizer.update();
         double g_norm = orbital_optimizer.orbital_gradient_norm();
 
-        if ((Ediff < econv) && (g_norm < gconv) && (iter > 1)) {
+        Ediff = E_casscf_ - E_casscf_old;
+        if ((std::fabs(Ediff) < econv) && (g_norm < gconv) && (iter > 1)) {
 
-            outfile->Printf("\n %4d   %10.12f   %10.12f   %10.12f  %10.6f s", iter, g_norm,
-                            Ediff, E_casscf_, casscf_total_iter.get());
+            outfile->Printf("\n %4d   %10.12f   %10.12f   %10.12f  %10.6f s", iter, g_norm, Ediff,
+                            E_casscf_, casscf_total_iter.get());
 
             outfile->Printf(
                 "\n\n A miracle has come to pass. The CASSCF iterations have converged.");
@@ -216,9 +216,8 @@ void CASSCF::compute_casscf() {
         if (iter >= diis_start && do_diis == true && g_norm < diis_gradient_norm) {
             diis_start_label = "DIIS";
         }
-        outfile->Printf("\n %4d   %10.12f   %10.12f   %10.12f  %10.6f s  %4s", iter, g_norm,
-                        std::fabs(E_casscf_ - E_casscf_old), E_casscf_, casscf_total_iter.get(),
-                        diis_start_label.c_str());
+        outfile->Printf("\n %4d   %10.12f   %10.12f   %10.12f  %10.6f s  %4s", iter, g_norm, Ediff,
+                        E_casscf_, casscf_total_iter.get(), diis_start_label.c_str());
     }
     // if(casscf_debug_print_)
     //{
