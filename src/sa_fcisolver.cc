@@ -312,12 +312,25 @@ double SA_FCISolver::compute_energy() {
         //            casscf_energies.push_back(Ecas);
         //        }
 
+        SharedVector evals;
+        double Enuc = Process::environment.molecule()->nuclear_repulsion_energy();
         for (int root_number = 0; root_number < nroot; root_number++) {
             fcisolver.set_root(root_number);
-            double E_casscf = fcisolver.compute_energy();
-            SA_C_.push_back(fcisolver.get_FCIWFN());
-            casscf_energies.push_back(E_casscf);
+
+            // only diagonalize the Hamiltonian once
+            // note: compute_energy of FCISolver computes energy (all roots) and RDMs (given root)
+            if (root_number == 0) {
+                fcisolver.compute_energy();
+                evals = fcisolver.eigen_vals();
+            } else {
+                fcisolver.compute_rdms_root(root_number);
+            }
+
+            //            SA_C_.push_back(fcisolver.get_FCIWFN());
+            double Ecasscf = evals->get(root_number) + Enuc;
+            casscf_energies.push_back(Ecasscf);
             sa_cas_ref.push_back(fcisolver.reference());
+            sa_cas_ref[root_number].set_Eref(Ecasscf);
         }
     }
     if (!options_["AVG_WEIGHT"].has_changed()) {
