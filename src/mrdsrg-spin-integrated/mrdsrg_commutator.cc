@@ -1108,11 +1108,11 @@ void MRDSRG::H2_T2_C2_DF(BlockedTensor& B, BlockedTensor& T2, const double& alph
 
     // particle-particle contractions
     forte::timer pp("H2_T2_C2 pp");
-    TIME_LINE(C2["ijrs"] += 0.5 * alpha * B["gar"] * B["gbs"] * T2["ijab"]);
-    TIME_LINE(C2["ijrs"] -= 0.5 * alpha * B["gas"] * B["gbr"] * T2["ijab"]);
-    TIME_LINE(C2["iJrS"] += alpha * B["gar"] * B["gBS"] * T2["iJaB"]);
-    TIME_LINE(C2["IJRS"] += 0.5 * alpha * B["gAR"] * B["gBS"] * T2["IJAB"]);
-    TIME_LINE(C2["IJRS"] -= 0.5 * alpha * B["gAS"] * B["gBR"] * T2["IJAB"]);
+    TIME_LINE(C2["ijrs"] += batched("r", 0.5 * alpha * B["gar"] * B["gbs"] * T2["ijab"]));
+    TIME_LINE(C2["ijrs"] -= batched("s", 0.5 * alpha * B["gas"] * B["gbr"] * T2["ijab"]));
+    TIME_LINE(C2["iJrS"] += batched("r", alpha * B["gar"] * B["gBS"] * T2["iJaB"]));
+    TIME_LINE(C2["IJRS"] += batched("R", 0.5 * alpha * B["gAR"] * B["gBS"] * T2["IJAB"]));
+    TIME_LINE(C2["IJRS"] -= batched("S", 0.5 * alpha * B["gAS"] * B["gBR"] * T2["IJAB"]));
 
     TIME_LINE(C2["ijrs"] -= alpha * Gamma1_["xy"] * B["gyr"] * B["gbs"] * T2["ijxb"]);
     TIME_LINE(C2["ijrs"] += alpha * Gamma1_["xy"] * B["gys"] * B["gbr"] * T2["ijxb"]);
