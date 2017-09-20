@@ -145,8 +145,13 @@ void set_ACI_options(ForteOptions& foptions) {
     foptions.add_bool("ACI_ADD_SINGLES", false,
                       "Adds all active single excitations to the final wave function");
     /*- Add all active singles -*/
-    foptions.add_bool("ACI_ADD_EXTERNAL_SINGLES", false,
-                      "Adds all external single excitations to the final wave function");
+    foptions.add_bool("ACI_ADD_EXTERNAL_EXCITATIONS", false,
+                      "Adds external single excitations to the final wave function");
+    /*- Order of external excitations to add -*/
+    foptions.add_str("ACI_EXTERNAL_EXCITATION_ORDER", "SINGLE", "Order of external excitations to add"); 
+    /*- Type of external excitations to add -*/
+    foptions.add_str("ACI_EXTERNAL_EXCITATION_TYPE", "ALL", "Type of external excitations to add"); 
+
     /*- Do ESNO transformation? -*/
     foptions.add_bool("ESNOS", false, "Compute external single natural orbitals");
     foptions.add_int("ESNO_MAX_SIZE", 0, "Number of external orbitals to correlate");
@@ -3193,7 +3198,7 @@ void AdaptiveCI::upcast_reference(DeterminantHashVec& ref) {
     }
 }
 
-void AdaptiveCI::add_external_singles(DeterminantHashVec& ref) {
+void AdaptiveCI::add_external_excitations(DeterminantHashVec& ref) {
 
     print_h2("Adding external singles");
 
@@ -3216,6 +3221,9 @@ void AdaptiveCI::add_external_singles(DeterminantHashVec& ref) {
     DeterminantHashVec av_a;
     DeterminantHashVec av_b;
     DeterminantHashVec cv;
+
+    std::string order = options_.get_str("ACI_EXTERNAL_EXCITATION_ORDER"); 
+    std::string type = options_.get_str("ACI_EXTERNAL_EXCITATION_TYPE"); 
 
     for (int I = 0; I < nref; ++I) {
         STLBitsetDeterminant det = dets[I];
@@ -3280,27 +3288,282 @@ void AdaptiveCI::add_external_singles(DeterminantHashVec& ref) {
                 det.set_beta_bit(pp, true);
             }
         }
-        // core -> vir
-        for (int i = 0; i < ncore; ++i) {
-            int ii = core_mos[i];
-            for (int a = 0; a < nvir; ++a) {
-                int aa = vir_mos[a];
-                if ((sym[ii] ^ sym[aa]) == 0) {
-                    det.set_alfa_bit(ii, false);
-                    det.set_alfa_bit(aa, true);
-                    cv.add(det);
-                    det.set_alfa_bit(ii, true);
-                    det.set_alfa_bit(aa, false);
+    }
 
-                    det.set_beta_bit(ii, false);
-                    det.set_beta_bit(aa, true);
-                    cv.add(det);
-                    det.set_beta_bit(ii, true);
-                    det.set_beta_bit(aa, false);
+    if( type == "ALL" ){
+        for (int I = 0; I < nref; ++I) {
+            STLBitsetDeterminant det = dets[I];
+            // core -> vir
+            for (int i = 0; i < ncore; ++i) {
+                int ii = core_mos[i];
+                for (int a = 0; a < nvir; ++a) {
+                    int aa = vir_mos[a];
+                    if ((sym[ii] ^ sym[aa]) == 0) {
+                        det.set_alfa_bit(ii, false);
+                        det.set_alfa_bit(aa, true);
+                        cv.add(det);
+                        det.set_alfa_bit(ii, true);
+                        det.set_alfa_bit(aa, false);
+
+                        det.set_beta_bit(ii, false);
+                        det.set_beta_bit(aa, true);
+                        cv.add(det);
+                        det.set_beta_bit(ii, true);
+                        det.set_beta_bit(aa, false);
+                    }
                 }
             }
         }
     }
+
+    // Now doubles
+    if( order == "DOUBLES" ){
+        DeterminantHashVec ca_aa;
+        DeterminantHashVec ca_ab;
+        DeterminantHashVec ca_bb;
+        DeterminantHashVec av_aa;
+        DeterminantHashVec av_ab;
+        DeterminantHashVec av_bb;
+        DeterminantHashVec cv_d;
+        for (int I = 0; I < nref; ++I) {
+            STLBitsetDeterminant det = dets[I];
+            std::vector<int> avir = det.get_alfa_vir();
+            // core -> act (alpha)
+            for (int i = 0; i < ncore; ++i) {
+                int ii = core_mos[i];
+                det.set_alfa_bit(ii, false);
+                for (int j = i + 1; j < ncore; ++j) {
+                    int jj = core_mos[j];
+                    det.set_alfa_bit(jj, false);
+                    for (int p = 0; p < nact; ++p) {
+                        int pp = active_mos[p];
+                        for (int q = p; q < nact; ++q) {
+                            int qq = active_mos[q];
+                            if (((sym[ii] ^ sym[pp] ^ sym[jj] ^ sym[qq]) == 0) and !(det.get_alfa_bit(pp) and det.get_alfa_bit(qq) )) {
+                                det.set_alfa_bit(pp, true);
+                                det.set_alfa_bit(qq, true);
+                                ca_aa.add(det);
+                                det.set_alfa_bit(pp, false);
+                                det.set_alfa_bit(qq, false);
+                            }
+                        }
+                    }
+                    det.set_alfa_bit(jj, true);
+                }
+                det.set_alfa_bit(ii, true);
+            }
+            // core -> act (beta)
+            for (int i = 0; i < ncore; ++i) {
+                int ii = core_mos[i];
+                det.set_beta_bit(ii, false);
+                for (int j = i + 1; j < ncore; ++j) {
+                    int jj = core_mos[j];
+                    det.set_beta_bit(jj, false);
+                    for (int p = 0; p < nact; ++p) {
+                        int pp = active_mos[p];
+                        for (int q = p + 1; q < nact; ++q) {
+                            int qq = active_mos[q];
+                            if (((sym[ii] ^ sym[pp] ^ sym[jj] ^ sym[qq]) == 0) and !(det.get_beta_bit(pp) and det.get_beta_bit(qq) )) {
+                                det.set_beta_bit(pp, true);
+                                det.set_beta_bit(qq, true);
+                                ca_bb.add(det);
+                                det.set_beta_bit(pp, false);
+                                det.set_beta_bit(qq, false);
+                            }
+                        }
+                    }
+                    det.set_beta_bit(jj, true);
+                }
+                det.set_beta_bit(ii, true);
+            }
+        
+            // core ->act (ab)
+
+            for (int i = 0; i < ncore; ++i) {
+                int ii = core_mos[i];
+                det.set_alfa_bit(ii, false);
+                for (int j = 0; j < ncore; ++j) {
+                    int jj = core_mos[j];
+                    det.set_beta_bit(jj, false);
+                    for (int p = 0; p < nact; ++p) {
+                        int pp = active_mos[p];
+                        for (int q = 0; q < nact; ++q) {
+                            int qq = active_mos[q];
+                            if (((sym[ii] ^ sym[pp] ^ sym[jj] ^ sym[qq]) == 0) and !(det.get_alfa_bit(pp) and det.get_beta_bit(qq) )) {
+                                det.set_alfa_bit(pp, true);
+                                det.set_beta_bit(qq, true);
+                                ca_ab.add(det);
+                                det.set_alfa_bit(pp, false);
+                                det.set_beta_bit(qq, false);
+                            }
+                        }
+                    }
+                    det.set_beta_bit(jj, true);
+                }
+                det.set_alfa_bit(ii, true);
+            }
+
+            // act -> vir (alpha)
+            for (int p = 0; p < nact; ++p) {
+                int pp = active_mos[p];
+                if (det.get_alfa_bit(pp)) {
+                    det.set_alfa_bit(pp, false);
+                    for (int q = p+1; q < nact; ++q) {
+                        int qq = active_mos[q];
+                        if (det.get_alfa_bit(qq)) {
+                            det.set_alfa_bit(qq, false);
+                            for (int a = 0; a < nvir; ++a) {
+                                int aa = vir_mos[a];
+                                for (int b = a+1; b < nvir; ++b) {
+                                    int bb = vir_mos[b];
+                                    if ((sym[aa] ^ sym[bb] ^ sym[pp] ^ sym[qq]) == 0) {
+                                        det.set_alfa_bit(aa, true);
+                                        det.set_alfa_bit(bb, true);
+                                        av_aa.add(det);
+                                        det.set_alfa_bit(aa, false);
+                                        det.set_alfa_bit(bb, false);
+                                    }
+                                }
+                            }
+                            det.set_alfa_bit(qq, true);
+                        }
+                    }
+                    det.set_alfa_bit(pp, true);
+                }
+            }
+            // act -> vir (beta)
+            for (int p = 0; p < nact; ++p) {
+                int pp = active_mos[p];
+                if (det.get_beta_bit(pp)) {
+                    det.set_beta_bit(pp, false);
+                    for (int q = p+1; q < nact; ++q) {
+                        int qq = active_mos[q];
+                        if (det.get_beta_bit(qq)) {
+                            det.set_beta_bit(qq, false);
+                            for (int a = 0; a < nvir; ++a) {
+                                int aa = vir_mos[a];
+                                for (int b = a+1; b < nvir; ++b) {
+                                    int bb = vir_mos[b];
+                                    if ((sym[aa] ^ sym[bb] ^ sym[pp] ^ sym[qq]) == 0) {
+                                        det.set_beta_bit(aa, true);
+                                        det.set_beta_bit(bb, true);
+                                        av_bb.add(det);
+                                        det.set_beta_bit(aa, false);
+                                        det.set_beta_bit(bb, false);
+                                    }
+                                }
+                            }
+                            det.set_beta_bit(qq, true);
+                        }
+                    }
+                    det.set_beta_bit(pp, true);
+                }
+            }
+
+            // act -> vir (alpha-beta)
+            for (int p = 0; p < nact; ++p) {
+                int pp = active_mos[p];
+                if (det.get_alfa_bit(pp)) {
+                    det.set_alfa_bit(pp, false);
+                    for (int q = 0; q < nact; ++q) {
+                        int qq = active_mos[q];
+                        if (det.get_beta_bit(qq)) {
+                            det.set_beta_bit(qq, false);
+                            for (int a = 0; a < nvir; ++a) {
+                                int aa = vir_mos[a];
+                                for (int b = 0; b < nvir; ++b) {
+                                    int bb = vir_mos[b];
+                                    if ((sym[aa] ^ sym[bb] ^ sym[pp] ^ sym[qq]) == 0) {
+                                        det.set_alfa_bit(aa, true);
+                                        det.set_beta_bit(bb, true);
+                                        av_bb.add(det);
+                                        det.set_alfa_bit(aa, false);
+                                        det.set_beta_bit(bb, false);
+                                    }
+                                }
+                            }
+                            det.set_beta_bit(qq, true);
+                        }
+                    }
+                    det.set_alfa_bit(pp, true);
+                }
+            }
+        }
+
+        if( type == "ALL" ){
+            for (int I = 0; I < nref; ++I) {
+                STLBitsetDeterminant det = dets[I];
+                // core -> vir
+                for (int i = 0; i < ncore; ++i) {
+                    int ii = core_mos[i];
+                    for (int j = i+1 ; j < ncore; ++j) {
+                        int jj = core_mos[j];
+                        for (int a = 0; a < nvir; ++a) {
+                            int aa = vir_mos[a];
+                            for (int b = a+1; b < nvir; ++b) {
+                                int bb = vir_mos[b];
+                                if ((sym[ii] ^ sym[jj] ^ sym[aa] ^ sym[bb]) == 0) {
+                                    det.set_alfa_bit(ii, false);
+                                    det.set_alfa_bit(jj, false);
+                                    det.set_alfa_bit(aa, true);
+                                    det.set_alfa_bit(bb, true);
+                                    cv_d.add(det);
+                                    det.set_alfa_bit(ii, true);
+                                    det.set_alfa_bit(jj, true);
+                                    det.set_alfa_bit(aa, false);
+                                    det.set_alfa_bit(bb, false);
+
+                                    det.set_beta_bit(ii, false);
+                                    det.set_beta_bit(jj, false);
+                                    det.set_beta_bit(aa, true);
+                                    det.set_beta_bit(bb, true);
+                                    cv_d.add(det);
+                                    det.set_beta_bit(ii, true);
+                                    det.set_beta_bit(jj, true);
+                                    det.set_beta_bit(aa, false);
+                                    det.set_beta_bit(bb, false);
+                                }
+                            }
+                        }
+                    }
+                }
+
+                for (int i = 0; i < ncore; ++i) {
+                    int ii = core_mos[i];
+                    for (int j = 0 ; j < ncore; ++j) {
+                        int jj = core_mos[j];
+                        for (int a = 0; a < nvir; ++a) {
+                            int aa = vir_mos[a];
+                            for (int b = 0; b < nvir; ++b) {
+                                int bb = vir_mos[b];
+                                if ((sym[ii] ^ sym[jj] ^ sym[aa] ^ sym[bb]) == 0) {
+                                    det.set_alfa_bit(ii, false);
+                                    det.set_beta_bit(jj, false);
+                                    det.set_alfa_bit(aa, true);
+                                    det.set_beta_bit(bb, true);
+                                    cv_d.add(det);
+                                    det.set_alfa_bit(ii, true);
+                                    det.set_beta_bit(jj, true);
+                                    det.set_alfa_bit(aa, false);
+                                    det.set_beta_bit(bb, false);
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+            ref.merge(cv_d);
+        }
+
+        ref.merge(ca_aa);
+        ref.merge(ca_ab);
+        ref.merge(ca_bb);
+        ref.merge(av_aa);
+        ref.merge(av_ab);
+        ref.merge(av_bb);
+    } 
+
+
     ref.merge(cv);
     ref.merge(ca_a);
     ref.merge(ca_b);

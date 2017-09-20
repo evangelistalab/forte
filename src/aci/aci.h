@@ -107,7 +107,7 @@ class AdaptiveCI : public Wavefunction {
     void semi_canonicalize();
 
     void upcast_reference(DeterminantHashVec& ref);
-    void add_external_singles(DeterminantHashVec& ref);
+    void add_external_excitations(DeterminantHashVec& ref);
 
   private:
     // ==> Class data <==
