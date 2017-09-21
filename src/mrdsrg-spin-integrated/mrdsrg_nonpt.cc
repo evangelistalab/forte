@@ -458,6 +458,19 @@ void MRDSRG::compute_hbar_sequential_rotation() {
         TIME_LINE(Hbar2_["pQrS"] = U1["pt"] * U1["QO"] * V_["tO19"] * U1["r1"] * U1["S9"]);
         TIME_LINE(Hbar2_["PQRS"] = U1["PT"] * U1["QO"] * V_["TO89"] * U1["R8"] * U1["S9"]);
 
+//        // Put blocks v3a v3c v4 to zero
+//        for (const std::string &b : {"vvvv", "vVvV", "VVVV",
+//                                     "cvvv", "cVvV", "CVVV",
+//                                     "vcvv", "vCvV", "VCVV",
+//                                     "vvcv", "vVcV", "VVCV",
+//                                     "vvvc", "vVvC", "VVVC",
+//                                     "avvv", "aVvV", "AVVV",
+//                                     "vavv", "vAvV", "VAVV",
+//                                     "vvav", "vVaV", "VVAV",
+//                                     "vvva", "vVvA", "VVVA"}) {
+//            Hbar2_.block(b).zero();
+//        }
+
         TIME_LINE(Hbar1_["pq"] += Hbar2_["pjqi"] * Gamma1_["ij"]);
         TIME_LINE(Hbar1_["pq"] += Hbar2_["pJqI"] * Gamma1_["IJ"]);
         TIME_LINE(Hbar1_["PQ"] += Hbar2_["jPiQ"] * Gamma1_["ij"]);
@@ -500,6 +513,8 @@ void MRDSRG::compute_hbar_sequential_rotation() {
 
     ////////////////////////////////////////////////////////////////////////////////////
 
+
+
     // iteration variables
     bool converged = false;
     int maxn = options_.get_int("DSRG_RSC_NCOMM");
@@ -512,23 +527,26 @@ void MRDSRG::compute_hbar_sequential_rotation() {
     TIME_LINE(O1_["pq"] = Hbar1_["pq"]);
     TIME_LINE(O1_["PQ"] = Hbar1_["PQ"]);
     if (eri_df_) {
-        TIME_LINE(O2_["pqrs"] = B["gpr"] * B["gqs"]);
-        TIME_LINE(O2_["pqrs"] -= B["gps"] * B["gqr"]);
+        TIME_LINE(Hbar2_["pqrs"] = B["gpr"] * B["gqs"]);
+        TIME_LINE(Hbar2_["pqrs"] -= B["gps"] * B["gqr"]);
 
-        TIME_LINE(O2_["pQrS"] = B["gpr"] * B["gQS"]);
+        TIME_LINE(Hbar2_["pQrS"] = B["gpr"] * B["gQS"]);
 
-        TIME_LINE(O2_["PQRS"] = B["gPR"] * B["gQS"]);
-        TIME_LINE(O2_["PQRS"] -= B["gPS"] * B["gQR"]);
-//        TIME_LINE(O2_["pqrs"] = B["prg"] * B["qsg"]);
-//        TIME_LINE(O2_["pqrs"] -= B["psg"] * B["qrg"]);
+        TIME_LINE(Hbar2_["PQRS"] = B["gPR"] * B["gQS"]);
+        TIME_LINE(Hbar2_["PQRS"] -= B["gPS"] * B["gQR"]);
 
-//        TIME_LINE(O2_["pQrS"] = B["prg"] * B["QSg"]);
-
-//        TIME_LINE(O2_["PQRS"] = B["PRg"] * B["QSg"]);
-//        TIME_LINE(O2_["PQRS"] -= B["PSg"] * B["QRg"]);
-        TIME_LINE(Hbar2_["pqrs"] = O2_["pqrs"]);
-        TIME_LINE(Hbar2_["pQrS"] = O2_["pQrS"]);
-        TIME_LINE(Hbar2_["PQRS"] = O2_["PQRS"]);
+//        // Put blocks v3a v3c v4 to zero
+//        for (const std::string &b : {"vvvv", "vVvV", "VVVV",
+//                                     "cvvv", "cVvV", "CVVV",
+//                                     "vcvv", "vCvV", "VCVV",
+//                                     "vvcv", "vVcV", "VVCV",
+//                                     "vvvc", "vVvC", "VVVC",
+//                                     "avvv", "aVvV", "AVVV",
+//                                     "vavv", "vAvV", "VAVV",
+//                                     "vvav", "vVaV", "VVAV",
+//                                     "vvva", "vVvA", "VVVA"}) {
+//            O2_.block(b).zero();
+//        }
     } else {
         TIME_LINE(O2_["pqrs"] = Hbar2_["pqrs"]);
         TIME_LINE(O2_["pQrS"] = Hbar2_["pQrS"]);
