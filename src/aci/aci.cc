@@ -148,7 +148,7 @@ void set_ACI_options(ForteOptions& foptions) {
     foptions.add_bool("ACI_ADD_EXTERNAL_EXCITATIONS", false,
                       "Adds external single excitations to the final wave function");
     /*- Order of external excitations to add -*/
-    foptions.add_str("ACI_EXTERNAL_EXCITATION_ORDER", "SINGLE", "Order of external excitations to add"); 
+    foptions.add_str("ACI_EXTERNAL_EXCITATION_ORDER", "SINGLES", "Order of external excitations to add"); 
     /*- Type of external excitations to add -*/
     foptions.add_str("ACI_EXTERNAL_EXCITATION_TYPE", "ALL", "Type of external excitations to add"); 
 
@@ -3200,7 +3200,7 @@ void AdaptiveCI::upcast_reference(DeterminantHashVec& ref) {
 
 void AdaptiveCI::add_external_excitations(DeterminantHashVec& ref) {
 
-    print_h2("Adding external singles");
+    print_h2("Adding external Excitations");
 
     const det_hashvec& dets = ref.wfn_hash();
     size_t nref = ref.size();
@@ -3224,6 +3224,9 @@ void AdaptiveCI::add_external_excitations(DeterminantHashVec& ref) {
 
     std::string order = options_.get_str("ACI_EXTERNAL_EXCITATION_ORDER"); 
     std::string type = options_.get_str("ACI_EXTERNAL_EXCITATION_TYPE"); 
+
+    outfile->Printf("\n  Maximum excitation order:  %s", order.c_str());
+    outfile->Printf("\n  Excitation type:  %s", type.c_str());
 
     for (int I = 0; I < nref; ++I) {
         STLBitsetDeterminant det = dets[I];
@@ -3290,7 +3293,7 @@ void AdaptiveCI::add_external_excitations(DeterminantHashVec& ref) {
         }
     }
 
-    if( type == "ALL" ){
+    if( options_.get_str("ACI_EXTERNAL_EXCITATION_TYPE")  == "ALL" ){
         for (int I = 0; I < nref; ++I) {
             STLBitsetDeterminant det = dets[I];
             // core -> vir
@@ -3573,11 +3576,11 @@ void AdaptiveCI::add_external_excitations(DeterminantHashVec& ref) {
     if (spin_complete_) {
         ref.make_spin_complete();
         if (!quiet_mode_)
-            outfile->Printf("\n  Spin-complete dimension of the PQ space: %zu",
+            outfile->Printf("\n  Spin-complete dimension of the new model space: %zu",
                             ref.size());
     }
 
-    outfile->Printf("\n  Size of new model space:  %zu", ref.size());
+//    outfile->Printf("\n  Size of new model space:  %zu", ref.size());
 
     const det_hashvec& newdets = ref.wfn_hash();
 
@@ -3774,49 +3777,5 @@ void AdaptiveCI::spin_analysis()
     spin_corr->print();
 }
 
-/*
-void AdaptiveCI::approximate_rdm( DeterminantMap& ref, SharedMatrix evecs ){
-
-    size_t max_I = I_space.size();
-    std::vector<STLBitsetDeterminant> I_dets = ref.determinants();
-
-    for (size_t I = 0; I < max_I; ++I) {
-        STLBitsetDeterminant& det(ref[I]);
-       // double evecs_P_row_norm = evecs->get_row(0, P)->norm();
-
-        std::vector<int> aocc = det.get_alfa_occ();
-        std::vector<int> bocc = det.get_beta_occ();
-        std::vector<int> avir = det.get_alfa_vir();
-        std::vector<int> bvir = det.get_beta_vir();
-
-        int noalpha = aocc.size();
-        int nobeta = bocc.size();
-        int nvalpha = avir.size();
-        int nvbeta = bvir.size();
-        STLBitsetDeterminant new_det(det);
-
-        // Generate alpha excitations
-        for (int i = 0; i < noalpha; ++i) {
-            int ii = aocc[i];
-            for (int a = 0; a < nvalpha; ++a) {
-                int aa = avir[a];
-                if ((mo_symmetry_[ii] ^ mo_symmetry_[aa]) == 0) {
-                    double HIJ = det.slater_rules_single_alpha(ii, aa);
-                    //if ((std::fabs(HIJ) * evecs_P_row_norm >= screen_thresh_)) {
-                    //      if( std::abs(HIJ * evecs->get(0, P)) > screen_thresh_ ){
-                    new_det = det;
-                    new_det.set_alfa_bit(ii, false);
-                    new_det.set_alfa_bit(aa, true);
-
-                    if( !(ref.has_det(new_det)) ){
-
-                    }
-                }
-            }
-        }
-    }
-
-}
-*/
 }
 } // EndNamespaces
