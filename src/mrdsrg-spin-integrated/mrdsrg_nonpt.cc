@@ -554,7 +554,7 @@ void MRDSRG::compute_hbar_sequential_rotation() {
             outfile->Printf("\n    %s", dash.c_str());
         }
 
-        if (eri_df_) {
+        if (n == 1 && eri_df_) {
             // zero-body
             TIME_LINE(H1_T2_C0(O1_, T2_, factor, C0));
             TIME_LINE(H2_T2_C0_DF(B, T2_, factor, C0));
