@@ -42,7 +42,10 @@
 #include "../mini-boost/boost/format.hpp"
 #include "mrdsrg.h"
 
-#define TIME_LINE(x) timer_on(#x);x;timer_off(#x)
+#define TIME_LINE(x)                                                                               \
+    timer_on(#x);                                                                                  \
+    x;                                                                                             \
+    timer_off(#x)
 
 namespace psi {
 namespace forte {
