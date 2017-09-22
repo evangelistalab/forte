@@ -184,6 +184,9 @@ void set_DSRG_options(ForteOptions& foptions) {
 
     /*- Do Sequential h_bar evaluation -*/
     foptions.add_bool("DSRG_HBAR_SEQ", false, "Evaluate H_bar sequentially if true");
+
+    /*- Omit blocks with >= 3 virtual indices -*/
+    foptions.add_bool("DSRG_OMIT_V3", false, "Omit blocks with >= 3 virtual indices if true");
 }
 
 /// A uniformed function to run DSRG related jobs

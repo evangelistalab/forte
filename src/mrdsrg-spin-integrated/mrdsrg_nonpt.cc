@@ -443,33 +443,10 @@ void MRDSRG::compute_hbar_sequential_rotation() {
         TIME_LINE(Hbar1_["PQ"] += B["gji"] * B["gPQ"] * Gamma1_["ij"]);
         TIME_LINE(Hbar1_["PQ"] += B["gPQ"] * B["gJI"] * Gamma1_["IJ"]);
         TIME_LINE(Hbar1_["PQ"] -= B["gPI"] * B["gJQ"] * Gamma1_["IJ"]);
-//        TIME_LINE(B = BTF_->build(tensor_type_, "B 3-idx", {"ggL", "GGL"}));
-//        TIME_LINE(B["rsg"] = U1["rp"] * B_["pqg"] * U1["sq"]);
-//        TIME_LINE(B["RSg"] = U1["RP"] * B_["PQg"] * U1["SQ"]);
-
-//        TIME_LINE(Hbar1_["pq"] += B["pqg"] * B["jig"] * Gamma1_["ij"]);
-//        TIME_LINE(Hbar1_["pq"] -= B["pig"] * B["jqg"] * Gamma1_["ij"]);
-//        TIME_LINE(Hbar1_["pq"] += B["pqg"] * B["JIg"] * Gamma1_["IJ"]);
-//        TIME_LINE(Hbar1_["PQ"] += B["jig"] * B["PQg"] * Gamma1_["ij"]);
-//        TIME_LINE(Hbar1_["PQ"] += B["PQg"] * B["JIg"] * Gamma1_["IJ"]);
-//        TIME_LINE(Hbar1_["PQ"] -= B["PIg"] * B["JQg"] * Gamma1_["IJ"]);
     } else {
         TIME_LINE(Hbar2_["pqrs"] = U1["pt"] * U1["qo"] * V_["to12"] * U1["r1"] * U1["s2"]);
         TIME_LINE(Hbar2_["pQrS"] = U1["pt"] * U1["QO"] * V_["tO19"] * U1["r1"] * U1["S9"]);
         TIME_LINE(Hbar2_["PQRS"] = U1["PT"] * U1["QO"] * V_["TO89"] * U1["R8"] * U1["S9"]);
-
-//        // Put blocks v3a v3c v4 to zero
-//        for (const std::string &b : {"vvvv", "vVvV", "VVVV",
-//                                     "cvvv", "cVvV", "CVVV",
-//                                     "vcvv", "vCvV", "VCVV",
-//                                     "vvcv", "vVcV", "VVCV",
-//                                     "vvvc", "vVvC", "VVVC",
-//                                     "avvv", "aVvV", "AVVV",
-//                                     "vavv", "vAvV", "VAVV",
-//                                     "vvav", "vVaV", "VVAV",
-//                                     "vvva", "vVvA", "VVVA"}) {
-//            Hbar2_.block(b).zero();
-//        }
 
         TIME_LINE(Hbar1_["pq"] += Hbar2_["pjqi"] * Gamma1_["ij"]);
         TIME_LINE(Hbar1_["pq"] += Hbar2_["pJqI"] * Gamma1_["IJ"]);
@@ -495,11 +472,6 @@ void MRDSRG::compute_hbar_sequential_rotation() {
         TIME_LINE(Hbar0_ += 0.25 * B["gUX"] * B["gVY"] * Lambda2_["XYUV"]);
         TIME_LINE(Hbar0_ -= 0.25 * B["gUY"] * B["gVX"] * Lambda2_["XYUV"]);
         TIME_LINE(Hbar0_ += B["gux"] * B["gVY"] * Lambda2_["xYuV"]);
-//        TIME_LINE(Hbar0_ += 0.25 * B["uxg"] * B["vyg"] * Lambda2_["xyuv"]);
-//        TIME_LINE(Hbar0_ -= 0.25 * B["uyg"] * B["vxg"] * Lambda2_["xyuv"]);
-//        TIME_LINE(Hbar0_ += 0.25 * B["UXg"] * B["VYg"] * Lambda2_["XYUV"]);
-//        TIME_LINE(Hbar0_ -= 0.25 * B["UYg"] * B["VXg"] * Lambda2_["XYUV"]);
-//        TIME_LINE(Hbar0_ += B["uxg"] * B["VYg"] * Lambda2_["xYuV"]);
     } else {
         TIME_LINE(Hbar0_ += 0.25 * Hbar2_["uvxy"] * Lambda2_["xyuv"]);
         TIME_LINE(Hbar0_ += 0.25 * Hbar2_["UVXY"] * Lambda2_["XYUV"]);
@@ -512,8 +484,6 @@ void MRDSRG::compute_hbar_sequential_rotation() {
     rotation.stop();
 
     ////////////////////////////////////////////////////////////////////////////////////
-
-
 
     // iteration variables
     bool converged = false;
@@ -534,19 +504,6 @@ void MRDSRG::compute_hbar_sequential_rotation() {
 
         TIME_LINE(Hbar2_["PQRS"] = B["gPR"] * B["gQS"]);
         TIME_LINE(Hbar2_["PQRS"] -= B["gPS"] * B["gQR"]);
-
-//        // Put blocks v3a v3c v4 to zero
-//        for (const std::string &b : {"vvvv", "vVvV", "VVVV",
-//                                     "cvvv", "cVvV", "CVVV",
-//                                     "vcvv", "vCvV", "VCVV",
-//                                     "vvcv", "vVcV", "VVCV",
-//                                     "vvvc", "vVvC", "VVVC",
-//                                     "avvv", "aVvV", "AVVV",
-//                                     "vavv", "vAvV", "VAVV",
-//                                     "vvav", "vVaV", "VVAV",
-//                                     "vvva", "vVvA", "VVVA"}) {
-//            O2_.block(b).zero();
-//        }
     } else {
         TIME_LINE(O2_["pqrs"] = Hbar2_["pqrs"]);
         TIME_LINE(O2_["pQrS"] = Hbar2_["pQrS"]);
@@ -593,15 +550,6 @@ void MRDSRG::compute_hbar_sequential_rotation() {
             TIME_LINE(H1_T2_C2(O1_, T2_, factor, C2_));
             TIME_LINE(H2_T2_C2(O2_, T2_, factor, C2_));
         }
-//        // zero-body
-//        TIME_LINE(H1_T2_C0(O1_, T2_, factor, C0));
-//        TIME_LINE(H2_T2_C0(O2_, T2_, factor, C0));
-//        // one-body
-//        TIME_LINE(H1_T2_C1(O1_, T2_, factor, C1_));
-//        TIME_LINE(H2_T2_C1(O2_, T2_, factor, C1_));
-//        // two-body
-//        TIME_LINE(H1_T2_C2(O1_, T2_, factor, C2_));
-//        TIME_LINE(H2_T2_C2(O2_, T2_, factor, C2_));
 
         // printing level
         if (print_ > 2) {
@@ -686,6 +634,33 @@ double MRDSRG::compute_energy_ldsrg2() {
     // figure out off-diagonal block labels for Hbar2
     std::vector<std::string> blocks2 = od_two_labels_hhpp();
 
+    if (omit_V3_) {
+        // Generate blocks for Hbar2_, O2_ and C2_
+        std::vector<std::string> blocks_exclude_V3;
+        for (std::string s0 : {"c", "a", "v"}) {
+            for (std::string s1 : {"c", "a", "v"}) {
+                for (std::string s2 : {"c", "a", "v"}) {
+                    for (std::string s3 : {"c", "a", "v"}) {
+                        std::string s = s0 + s1 + s2 + s3;
+                        if (std::count(s.begin(), s.end(), 'v') < 3) {
+                            blocks_exclude_V3.push_back(s);
+                        }
+                    }
+                }
+            }
+        }
+
+        BlockedTensor::set_expert_mode(true);
+
+        Hbar2_ = BTF_->build(tensor_type_, "Hbar2", spin_cases(blocks_exclude_V3));
+        O2_ = BTF_->build(tensor_type_, "O2", spin_cases(blocks_exclude_V3));
+        C2_ = BTF_->build(tensor_type_, "C2", spin_cases(blocks_exclude_V3));
+    } else {
+        Hbar2_ = BTF_->build(tensor_type_, "Hbar2", spin_cases({"gggg"}));
+        O2_ = BTF_->build(tensor_type_, "O2", spin_cases({"gggg"}));
+        C2_ = BTF_->build(tensor_type_, "C2", spin_cases({"gggg"}));
+    }
+
     // iteration variables
     double Ecorr = 0.0;
     int cycle = 0, maxiter = options_.get_int("MAXITER");
@@ -693,11 +668,8 @@ double MRDSRG::compute_energy_ldsrg2() {
     double r_conv = options_.get_double("R_CONVERGENCE");
     bool converged = false, failed = false;
     Hbar1_ = BTF_->build(tensor_type_, "Hbar1", spin_cases({"gg"}));
-    Hbar2_ = BTF_->build(tensor_type_, "Hbar2", spin_cases({"gggg"}));
     O1_ = BTF_->build(tensor_type_, "O1", spin_cases({"gg"}));
-    O2_ = BTF_->build(tensor_type_, "O2", spin_cases({"gggg"}));
     C1_ = BTF_->build(tensor_type_, "C1", spin_cases({"gg"}));
-    C2_ = BTF_->build(tensor_type_, "C2", spin_cases({"gggg"}));
     DT1_ = BTF_->build(tensor_type_, "DT1", spin_cases({"hp"}));
     DT2_ = BTF_->build(tensor_type_, "DT2", spin_cases({"hhpp"}));
     std::vector<double> big_T, big_DT;

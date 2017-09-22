@@ -97,6 +97,7 @@ void MRDSRG::read_options() {
     intruder_tamp_ = options_.get_double("INTRUDER_TAMP");
 
     sequential_Hbar_ = options_.get_bool("DSRG_HBAR_SEQ");
+    omit_V3_ = options_.get_bool("DSRG_OMIT_V3");
 }
 
 void MRDSRG::startup() {

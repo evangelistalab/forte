@@ -120,6 +120,9 @@ class MRDSRG : public Wavefunction {
     /// Is the H_bar evaluated sequentially?
     bool sequential_Hbar_;
 
+    /// Omitting blocks with >= 3 virtual indices?
+    bool omit_V3_;
+
     /// MO space info
     std::shared_ptr<MOSpaceInfo> mo_space_info_;
 

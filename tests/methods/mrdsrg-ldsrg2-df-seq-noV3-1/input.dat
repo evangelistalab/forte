@@ -74,6 +74,7 @@ set forte {
   e_convergence          8
 # semi_canonical         false
   dsrg_hbar_seq          true
+  dsrg_omit_v3           true
 }
 
 energy('scf')
