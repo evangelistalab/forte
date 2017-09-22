@@ -34,7 +34,10 @@
 #include "../mini-boost/boost/format.hpp"
 #include "mrdsrg.h"
 
-#define TIME_LINE(x) timer_on(#x);x;timer_off(#x)
+#define TIME_LINE(x)                                                                               \
+    timer_on(#x);                                                                                  \
+    x;                                                                                             \
+    timer_off(#x)
 
 namespace psi {
 namespace forte {
@@ -741,7 +744,6 @@ void MRDSRG::update_t2_std() {
      *                      Step 1                          Step 2
      **/
 
-
     // Step 1: work on Hbar2 where DT2 is treated as intermediate
 
     timer t1("transform Hbar2 to semi-canonical basis");
@@ -777,12 +779,12 @@ void MRDSRG::update_t2_std() {
         });
     t2.stop();
 
-//  timer t3("copy renormalized Hbar2 to DT2");
-//  // copy renormalized Hbar2 to DT2
-//  DT2_["ijab"] = Hbar2_["ijab"];
-//  DT2_["iJaB"] = Hbar2_["iJaB"];
-//  DT2_["IJAB"] = Hbar2_["IJAB"];
-//  t3.stop();
+    //  timer t3("copy renormalized Hbar2 to DT2");
+    //  // copy renormalized Hbar2 to DT2
+    //  DT2_["ijab"] = Hbar2_["ijab"];
+    //  DT2_["iJaB"] = Hbar2_["iJaB"];
+    //  DT2_["IJAB"] = Hbar2_["IJAB"];
+    //  t3.stop();
 
     // Step 2: work on T2 where Hbar2 is treated as intermediate
 
@@ -810,7 +812,7 @@ void MRDSRG::update_t2_std() {
     timer t6("scale T2 by delta exponential");
     // scale T2 by delta exponential
     T2_.iterate([&](const std::vector<size_t>& i, const std::vector<SpinType>& spin,
-                       double& value) {
+                    double& value) {
         if ((spin[0] == AlphaSpin) && (spin[1] == AlphaSpin)) {
             value *=
                 dsrg_source_->compute_renormalized(Fa_[i[0]] + Fa_[i[1]] - Fa_[i[2]] - Fa_[i[3]]);
@@ -917,9 +919,9 @@ void MRDSRG::update_t1_std() {
             }
         });
 
-//  // copy renormalized Hbar1 to DT1
-//  DT1_["ia"] = Hbar1_["ia"];
-//  DT1_["IA"] = Hbar1_["IA"];
+    //  // copy renormalized Hbar1 to DT1
+    //  DT1_["ia"] = Hbar1_["ia"];
+    //  DT1_["IA"] = Hbar1_["IA"];
 
     // Step 2: work on T1 where Hbar1 is treated as intermediate
 
