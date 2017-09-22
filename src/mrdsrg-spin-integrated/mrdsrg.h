@@ -173,6 +173,8 @@ class MRDSRG : public Wavefunction {
     void build_density();
     /// Build Fock matrix and diagonal Fock matrix elements
     void build_fock(BlockedTensor& H, BlockedTensor& V);
+    /// Build Fock matrix and diagonal Fock matrix elements with density fitted B tensor
+    void build_fock_df(BlockedTensor& H, BlockedTensor& B);
 
     // => DSRG related <= //
 
@@ -261,6 +263,8 @@ class MRDSRG : public Wavefunction {
     std::string T_algor_;
     /// Initial guess of T amplitudes
     void guess_t(BlockedTensor& V, BlockedTensor& T2, BlockedTensor& F, BlockedTensor& T1);
+    /// Initial guess of T amplitudes with density fitted B tensor.
+    void guess_t_df(BlockedTensor& B, BlockedTensor& T2, BlockedTensor& F, BlockedTensor& T1);
     /// Update T amplitude in every iteration
     void update_t();
     /// Analyze T1 and T2 amplitudes
@@ -280,6 +284,9 @@ class MRDSRG : public Wavefunction {
     /// Initial guess of T2
     void guess_t2_std(BlockedTensor& V, BlockedTensor& T2);
     void guess_t2_noccvv(BlockedTensor& V, BlockedTensor& T2);
+    /// Initial guess of T2 with density fitted B tensor.
+    void guess_t2_std_df(BlockedTensor& V, BlockedTensor& T2);
+    void guess_t2_noccvv_df(BlockedTensor& V, BlockedTensor& T2);
     /// Update T2 in every iteration
     void update_t2_std();
     void update_t2_noccvv();
