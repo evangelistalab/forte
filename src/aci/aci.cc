@@ -629,21 +629,20 @@ double AdaptiveCI::compute_energy() {
     Process::environment.globals["ACI ENERGY"] = root_energy;
     Process::environment.globals["ACI+PT2 ENERGY"] = root_energy_pt2;
     //  if(!quiet_mode_){
-    outfile->Printf("\n\n  %s: %f s", "Adaptive-CI ran in ", aci_elapse.get());
-    outfile->Printf("\n\n  %s: %d", "Saving information for root", options_.get_int("ACI_ROOT"));
     //  }
 
     // printf( "\n%1.5f\n", aci_elapse.get());
+    if (options_.get_bool("ACI_SPIN_ANALYSIS")){
+        spin_analysis();
+    }
 
     if (options_.get_bool("UNPAIRED_DENSITY")) {
         UPDensity density(reference_wavefunction_, mo_space_info_);
         density.compute_unpaired_density(ordm_a_, ordm_b_);
     }
 
-    if (options_.get_bool("ACI_SPIN_ANALYSIS")){
-        spin_analysis();
-    }
-
+    outfile->Printf("\n\n  %s: %f s", "Adaptive-CI ran in ", aci_elapse.get());
+    outfile->Printf("\n\n  %s: %d", "Saving information for root", options_.get_int("ACI_ROOT"));
     return PQ_evals->get(options_.get_int("ACI_ROOT")) + nuclear_repulsion_energy_ +
            fci_ints_->scalar_energy();
 }
@@ -3674,21 +3673,19 @@ void AdaptiveCI::spin_analysis()
     // First compute intrisic atomic orbitals
     size_t nact = static_cast<unsigned long>(nact_);
     size_t nact2 = nact*nact;
-    size_t nact3 = nact*nact;
+    size_t nact3 = nact*nact2;
 
     SharedMatrix Ca = reference_wavefunction_->Ca();
     std::shared_ptr<IAOBuilder> IAO = IAOBuilder::build(reference_wavefunction_->basisset(), reference_wavefunction_->get_basisset("MINAO_BASIS"), Ca, options_);
     outfile->Printf("\n  Computing IAOs");
     std::map<std::string, SharedMatrix> iao_info = IAO->build_iaos();
-    SharedMatrix iao_coeffs(iao_info["A"]->clone());
+    SharedMatrix iao_coeffs(iao_info["U"]->clone());
+    SharedMatrix iao_orbs(iao_info["A"]->clone());
 
-//    iao_coeffs->print();
-
-
-    size_t new_dim = iao_coeffs->colspi()[0];
+    size_t new_dim = iao_orbs->colspi()[0];
     size_t new_dim2 = new_dim*new_dim;
     size_t new_dim3 = new_dim2*new_dim;
-    auto labels = IAO->print_IAO( iao_coeffs, new_dim, nact_, reference_wavefunction_);
+//    auto labels = IAO->print_IAO( iao_orbs, new_dim, nact_, reference_wavefunction_);
     // Transform 1 and 2 rdms
 
     // First build rdms as ambit tensors
@@ -3720,10 +3717,13 @@ void AdaptiveCI::spin_analysis()
         value = trdm_bb_[i[0] * nact3 + i[1] * nact2 + i[2] * nact + i[3]];
     });
 
+
     ambit::Tensor U = ambit::Tensor::build(ambit::CoreTensor, "U", {nact,new_dim});
     U.iterate([&](const std::vector<size_t>& i, double& value) {
-        value = iao_coeffs->get(i[0], i[1]); });
-    
+        if( (i[0] < new_dim) and (i[1] < new_dim)){ 
+            value = iao_coeffs->get(i[0], i[1]); 
+        }
+    });
 
     // 1 rdms first
     ambit::Tensor L1aT =
@@ -3732,7 +3732,7 @@ void AdaptiveCI::spin_analysis()
         ambit::Tensor::build(ambit::CoreTensor, "Transformed L1b", {new_dim, new_dim});
 
     L1aT("pq") = U("ap") * L1a("ab") * U("bq");
-    L1bT("PQ") = U("AP") * L1b("AB") * U("BQ");
+    L1bT("pq") = U("ap") * L1b("ab") * U("bq");
 
     // 2 rdms
     ambit::Tensor L2aaT =
@@ -3743,8 +3743,8 @@ void AdaptiveCI::spin_analysis()
         ambit::Tensor::build(ambit::CoreTensor, "Transformed L2bb", {new_dim, new_dim, new_dim, new_dim});
 
     L2aaT("pqrs") = U("ap") * U("bq") * L2aa("abcd") * U("cr") * U("ds");
-    L2abT("pQrS") = U("ap") * U("BQ") * L2ab("aBcD") * U("cr") * U("DS");
-    L2bbT("PQRS") = U("AP") * U("BQ") * L2bb("ABCD") * U("CR") * U("DS");
+    L2abT("pqrs") = U("ap") * U("bq") * L2ab("abcd") * U("cr") * U("ds");
+    L2bbT("pqrs") = U("ap") * U("bq") * L2bb("abcd") * U("cr") * U("ds");
 
 
     // Now form the spin correlation
@@ -3756,21 +3756,22 @@ void AdaptiveCI::spin_analysis()
     std::vector<double> l2aa(L2aaT.data());
     std::vector<double> l2ab(L2abT.data());
     std::vector<double> l2bb(L2bbT.data());
-    
 
+    
     for( int i = 0; i < new_dim; ++i ){
         for( int j = 0; j < new_dim; ++j){
             double value = 0.0;
             if( i == j ){
-                value += l1a[i*new_dim + j]; 
-                value += l1b[i*new_dim + j]; 
+                value += 0.75 * l1a[new_dim *i + j];
+                value += 0.75 * l1b[new_dim *i + j];
             }
-            value -= 0.5*( l2ab[j*new_dim3 + i*new_dim2 + i*new_dim + j] +
-                           l2ab[i*new_dim3 + j*new_dim2 + j*new_dim + i] +
-                           l2ab[i*new_dim3 + j*new_dim2 + i*new_dim + j] +
-                           l2ab[j*new_dim3 + i*new_dim2 + j*new_dim + i] +
-                           l2aa[i*new_dim3 + j*new_dim2 + i*new_dim + j] +
-                           l2bb[i*new_dim3 + j*new_dim2 + i*new_dim + j] );
+            
+            value -= 0.5 * ( l2ab[i*new_dim3 + j*new_dim2 + j*new_dim + i] + l2ab[j*new_dim3 + i*new_dim2 + i*new_dim + j]);
+        
+            value -= 0.25 * ( l2aa[i*new_dim3 + j*new_dim2 + i*new_dim + j] +
+                              l2ab[i*new_dim3 + j*new_dim2 + i*new_dim + j] +  
+                              l2ab[j*new_dim3 + i*new_dim2 + j*new_dim + i] +  
+                              l2bb[i*new_dim3 + j*new_dim2 + i*new_dim + j] );  
             spin_corr->set(i,j,value);
         }
     }

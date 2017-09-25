@@ -247,10 +247,23 @@ std::map<std::string, SharedMatrix> IAOBuilder::build_iaos()
     }
 
 
+    // Build projection matrix U
+
+    SharedMatrix Cinv(C->clone());
+    Cinv->invert();
+    
+    SharedMatrix U = Matrix::doublet(Cinv, Ctilde, false, false);
+   // C->print();
+   // Ctilde->print();
+
+    outfile->Printf("\n  Printing C inverse");
+   // Cinv->print();
+   // U->print();
+
     std::map<std::string, SharedMatrix > ret; 
     ret["A"] = Acoeff;
     ret["S_min"] = S_min;
-    //ret["U"] = U;
+    ret["U"] = U;
     //print_IAO(Acoeff,nmin,primary_->nbf()); Function I envision
     //ret["A"] = set_name("A")
     //ret["S_min"] = set_name("S_min")
