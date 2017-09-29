@@ -303,7 +303,7 @@ std::vector<std::string> IAOBuilder::print_IAO(SharedMatrix A_, int nmin, int nb
 
     std::vector<std::string> l_to_symbol{"s","p","d","f","g","h"};
     std::vector<std::vector<std::string>> m_to_symbol{ {""},
-                                                        {"x","y","z"},
+                                                        {"z","x","y"},
                                                         {"Z2","XZ","YZ","X2Y2","XY"}};
 
     
@@ -361,7 +361,7 @@ std::vector<std::string> IAOBuilder::print_IAO(SharedMatrix A_, int nmin, int nb
                     all_iao_contributions.push_back(iao_cont);
 	        }
 		
-                std::string outstr = boost::str(boost::format("%d%s%s_%d") % (std::get<0>(i) + 1) % mol->symbol(std::get<0>(i)).c_str() % l_to_symbol[std::get<1>(i)].c_str() % iao);
+                std::string outstr = boost::str(boost::format("%d%s%s%s_%d") % (std::get<0>(i) + 1) % mol->symbol(std::get<0>(i)).c_str() % l_to_symbol[std::get<1>(i)].c_str() % m_to_symbol[std::get<1>(i)][std::get<4>(i)].c_str()  % iao);
                 std::string istring = outstr;
                 if(std::find(duplicates_iao.begin(), duplicates_iao.end(), istring.c_str()) != duplicates_iao.end()){}
 		else{
