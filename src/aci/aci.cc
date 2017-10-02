@@ -173,6 +173,13 @@ void set_ACI_options(ForteOptions& foptions) {
 
     /*- Do spin analysis? -*/
     foptions.add_bool("ACI_SPIN_ANALYSIS", false, "Do spin correlation analysis");
+
+    /*- Print IAOs -*/
+    foptions.add_bool("PRINT_IAOS", true, "Print IAOs");
+
+    /*- Active Space type -*/
+    foptions.add_bool("PI_ACTIVE_SPACE", false, "Active space type");
+
 }
 
 bool pairComp(const std::pair<double, STLBitsetDeterminant> E1,
@@ -1317,7 +1324,7 @@ void AdaptiveCI::get_excited_determinants2(int nroot, SharedMatrix evecs,
                     }
                 }
             }
-            outfile->Printf("\n TD, bin, size of hash: %d %d %zu", tid, bin, A_I.size());
+            //outfile->Printf("\n TD, bin, size of hash: %d %d %zu", tid, bin, A_I.size());
         }
     }
 }
@@ -3677,15 +3684,50 @@ void AdaptiveCI::spin_analysis()
 
     SharedMatrix Ca = reference_wavefunction_->Ca();
     std::shared_ptr<IAOBuilder> IAO = IAOBuilder::build(reference_wavefunction_->basisset(), reference_wavefunction_->get_basisset("MINAO_BASIS"), Ca, options_);
-    outfile->Printf("\n  Computing IAOs");
+    outfile->Printf("\n  Computing IAOs\n");
     std::map<std::string, SharedMatrix> iao_info = IAO->build_iaos();
-    SharedMatrix iao_coeffs(iao_info["U"]->clone());
+    //SharedMatrix iao_coeffs(iao_info["U"]->clone());
     SharedMatrix iao_orbs(iao_info["A"]->clone());
+
+    SharedMatrix Cinv(Ca->clone());
+    Cinv->invert();
+    SharedMatrix iao_coeffs = Matrix::doublet(Cinv,iao_orbs,false,false);
+//    iao_orbs->print();    
+//    iao_coeffs->print();
 
     size_t new_dim = iao_orbs->colspi()[0];
     size_t new_dim2 = new_dim*new_dim;
     size_t new_dim3 = new_dim2*new_dim;
-//    auto labels = IAO->print_IAO( iao_orbs, new_dim, nact_, reference_wavefunction_);
+
+    auto labels = IAO->print_IAO( iao_orbs, new_dim, nmo_, reference_wavefunction_);
+    std::vector<int> IAO_inds;
+    if( options_.get_bool("PI_ACTIVE_SPACE") ){
+        for( int i = 0; i < labels.size(); ++i ){
+            std::string label = labels[i];
+            if( label.find("z") != std::string::npos ){
+                IAO_inds.push_back(i);
+            }
+        }
+    }else{
+        nact = new_dim;
+        for( int i = 0; i < new_dim; ++i ){
+            IAO_inds.push_back(i);
+        }
+    }
+
+    SharedMatrix UA(new Matrix( nact, nact));
+
+    std::vector<size_t> active_mo = mo_space_info_->get_absolute_mo("ACTIVE");
+    for( int i = 0 ; i < nact; ++i ){
+        int idx = IAO_inds[i];
+        outfile->Printf("\n Using IAO %d", idx);
+        for( int j = 0; j < nact; ++j ){
+            int mo = active_mo[j];
+            UA->set(j,i, iao_coeffs->get(mo,idx));
+        }
+    }  
+    outfile->Printf("\n");
+
     // Transform 1 and 2 rdms
 
     // First build rdms as ambit tensors
@@ -3717,30 +3759,33 @@ void AdaptiveCI::spin_analysis()
         value = trdm_bb_[i[0] * nact3 + i[1] * nact2 + i[2] * nact + i[3]];
     });
 
+//    iao_coeffs->print();
 
-    ambit::Tensor U = ambit::Tensor::build(ambit::CoreTensor, "U", {nact,new_dim});
+    ambit::Tensor U = ambit::Tensor::build(ambit::CoreTensor, "U", {nact,nact});
     U.iterate([&](const std::vector<size_t>& i, double& value) {
-        if( (i[0] < new_dim) and (i[1] < new_dim)){ 
-            value = iao_coeffs->get(i[0], i[1]); 
-        }
+        value = UA->get(i[0], i[1]); 
     });
 
+
+//    new_dim = nact;
     // 1 rdms first
     ambit::Tensor L1aT =
-        ambit::Tensor::build(ambit::CoreTensor, "Transformed L1a", {new_dim, new_dim});
+        ambit::Tensor::build(ambit::CoreTensor, "Transformed L1a", {nact, nact});
     ambit::Tensor L1bT =
-        ambit::Tensor::build(ambit::CoreTensor, "Transformed L1b", {new_dim, new_dim});
+        ambit::Tensor::build(ambit::CoreTensor, "Transformed L1b", {nact, nact});
 
     L1aT("pq") = U("ap") * L1a("ab") * U("bq");
     L1bT("pq") = U("ap") * L1b("ab") * U("bq");
-
+//L1a.print();
+//U.print();
+//L1aT.print();
     // 2 rdms
     ambit::Tensor L2aaT =
-        ambit::Tensor::build(ambit::CoreTensor, "Transformed L2aa", {new_dim, new_dim, new_dim, new_dim});
+        ambit::Tensor::build(ambit::CoreTensor, "Transformed L2aa", {nact, nact, nact, nact});
     ambit::Tensor L2abT =
-        ambit::Tensor::build(ambit::CoreTensor, "Transformed L2ab", {new_dim, new_dim, new_dim, new_dim});
+        ambit::Tensor::build(ambit::CoreTensor, "Transformed L2ab", {nact, nact, nact, nact});
     ambit::Tensor L2bbT =
-        ambit::Tensor::build(ambit::CoreTensor, "Transformed L2bb", {new_dim, new_dim, new_dim, new_dim});
+        ambit::Tensor::build(ambit::CoreTensor, "Transformed L2bb", {nact, nact, nact, nact});
 
     L2aaT("pqrs") = U("ap") * U("bq") * L2aa("abcd") * U("cr") * U("ds");
     L2abT("pqrs") = U("ap") * U("bq") * L2ab("abcd") * U("cr") * U("ds");
@@ -3748,34 +3793,42 @@ void AdaptiveCI::spin_analysis()
 
 
     // Now form the spin correlation
-    SharedMatrix spin_corr(new Matrix("Spin Correlation", new_dim, new_dim));
+    SharedMatrix spin_corr(new Matrix("Spin Correlation", nact, nact));
 
     std::vector<double> l1a(L1aT.data());
     std::vector<double> l1b(L1bT.data());
+    
 
     std::vector<double> l2aa(L2aaT.data());
     std::vector<double> l2ab(L2abT.data());
     std::vector<double> l2bb(L2bbT.data());
 
-    
-    for( int i = 0; i < new_dim; ++i ){
-        for( int j = 0; j < new_dim; ++j){
+    for( int i = 0; i < nact; ++i ){
+        for( int j = 0; j < nact; ++j){
             double value = 0.0;
             if( i == j ){
-                value += 0.75 * l1a[new_dim *i + j];
-                value += 0.75 * l1b[new_dim *i + j];
+                value += 0.75 * l1a[nact*i + j];
+                value += 0.75 * l1b[nact*i + j];
             }
             
-            value -= 0.5 * ( l2ab[i*new_dim3 + j*new_dim2 + j*new_dim + i] + l2ab[j*new_dim3 + i*new_dim2 + i*new_dim + j]);
+            value -= 0.5 * ( l2ab[i*nact3 + j*nact2 + j*nact + i] + l2ab[j*nact3 + i*nact2 + i*nact + j]);
         
-            value -= 0.25 * ( l2aa[i*new_dim3 + j*new_dim2 + i*new_dim + j] +
-                              l2ab[i*new_dim3 + j*new_dim2 + i*new_dim + j] +  
-                              l2ab[j*new_dim3 + i*new_dim2 + j*new_dim + i] +  
-                              l2bb[i*new_dim3 + j*new_dim2 + i*new_dim + j] );  
+            value -= 0.25 * ( l2aa[i*nact3 + j*nact2 + i*nact + j] +
+                              l2ab[i*nact3 + j*nact2 + i*nact + j] +  
+                              l2ab[j*nact3 + i*nact2 + j*nact + i] +  
+                              l2bb[i*nact3 + j*nact2 + i*nact + j] );  
             spin_corr->set(i,j,value);
         }
     }
     spin_corr->print();
+
+//    outfile->Printf("\n Unpaired Electron Analysis");
+//    for( int i = 0; i < nact; ++i ){
+//        double s2 = spin_corr->get(i,i);
+//        double nel = sqrt( 4.0 * s2 + 1 ) - 1;
+//        outfile->Printf("\n IAO(%d) :  %1.3f", i, nel);   
+//    }
+
 }
 
 }
