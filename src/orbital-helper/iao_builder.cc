@@ -365,7 +365,7 @@ std::vector<std::string> IAOBuilder::print_IAO(SharedMatrix A_, int nmin, int nb
                 std::string istring = outstr;
                 if(std::find(duplicates_iao.begin(), duplicates_iao.end(), istring.c_str()) != duplicates_iao.end()){}
 		else{
-		    outfile->Printf("%s\n", outstr.c_str());
+		  //  outfile->Printf("%s\n", outstr.c_str());
                     //iao_labs.push_back(outstr);
 		}
 		duplicates_iao.push_back(istring.c_str());
@@ -397,7 +397,7 @@ std::vector<std::string> IAOBuilder::print_IAO(SharedMatrix A_, int nmin, int nb
 	    }
 	    duplicates.push_back(istring.c_str());
 	    if(total_basis_cont > 0.001){
-            outfile->Printf("SUM(%s): %.2f \n",istring.c_str(),total_basis_cont);
+      //      outfile->Printf("SUM(%s): %.2f \n",istring.c_str(),total_basis_cont);
 	        std::tuple<int,double,std::string> iao_sum_cont;
             iao_sum_cont = std::make_tuple(std::get<0>(all_iao_contributions[i]),total_basis_cont,std::get<2>(all_iao_contributions[i]).c_str());
 	        iao_sum.push_back(iao_sum_cont);
