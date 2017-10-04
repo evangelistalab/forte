@@ -32,7 +32,7 @@
 #include <vector>
 #include <bitset>
 #include <unordered_map>
-#include "stl_bitset_determinant.h"
+#include "sparse_ci/stl_bitset_determinant.h"
 
 namespace psi {
 namespace forte {

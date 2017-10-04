@@ -39,7 +39,7 @@
 #include "helpers.h"
 #include "operator.h"
 #include "reference.h"
-#include "stl_bitset_determinant.h"
+#include "sparse_ci/stl_bitset_determinant.h"
 #include "fci/string_lists.h"
 #include "fci/fci_integrals.h"
 

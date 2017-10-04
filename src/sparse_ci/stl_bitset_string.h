@@ -32,9 +32,8 @@
 #include <unordered_map>
 #include <bitset>
 
-#include "integrals/integrals.h"
-#include "fci/fci_integrals.h"
-//#include "stl_bitset_determinant.h"
+#include "../integrals/integrals.h"
+#include "../fci/fci_integrals.h"
 
 namespace psi {
 namespace forte {
