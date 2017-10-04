@@ -3797,7 +3797,27 @@ void AdaptiveCI::spin_analysis()
 
     std::vector<double> l1a(L1aT.data());
     std::vector<double> l1b(L1bT.data());
+
+    SharedMatrix rdma(new Matrix(nact, nact));
+    SharedMatrix rdmb(new Matrix(nact, nact));
+    for( int i = 0; i < nact; ++i ){
+        for( int j = 0; j < nact; ++j ){
+            rdma->set(i,j,l1a[i*nact +j]);
+            rdmb->set(i,j,l1b[i*nact +j]);
+        }
+    }
     
+    SharedMatrix evecs(new Matrix(nact,nact));
+    SharedVector evalsa(new Vector(nact));
+    SharedVector evalsb(new Vector(nact));
+    
+    rdma->diagonalize(evecs,evalsa);
+    rdmb->diagonalize(evecs,evalsb);
+
+    for( int i = 0; i < nact; ++i ){
+        outfile->Printf("\n  OCC for IAO%d: %1.5f", i, evalsa->get(i) + evalsb->get(i));
+    }
+    outfile->Printf("\n");
 
     std::vector<double> l2aa(L2aaT.data());
     std::vector<double> l2ab(L2abT.data());
@@ -3816,10 +3836,10 @@ void AdaptiveCI::spin_analysis()
             value -= 0.25 * ( l2aa[i*nact3 + j*nact2 + i*nact + j] +
                               l2ab[i*nact3 + j*nact2 + i*nact + j] +  
                               l2ab[j*nact3 + i*nact2 + j*nact + i] +  
-                              l2bb[i*nact3 + j*nact2 + i*nact + j] -
-                              l1a[i*nact + i] * l1a[j*nact +j] - 
-                              l1b[i*nact + i] * l1b[j*nact +j] + 
-                              l1b[i*nact + i] * l1a[j*nact +j] + 
+                              l2bb[i*nact3 + j*nact2 + i*nact + j] +
+                              l1a[i*nact + i] * l1a[j*nact +j] + 
+                              l1b[i*nact + i] * l1b[j*nact +j] - 
+                              l1b[i*nact + i] * l1a[j*nact +j] - 
                               l1a[i*nact + i] * l1b[j*nact +j] );  
 
             spin_corr->set(i,j,value);
