@@ -3816,17 +3816,22 @@ void AdaptiveCI::spin_analysis()
             value -= 0.25 * ( l2aa[i*nact3 + j*nact2 + i*nact + j] +
                               l2ab[i*nact3 + j*nact2 + i*nact + j] +  
                               l2ab[j*nact3 + i*nact2 + j*nact + i] +  
-                              l2bb[i*nact3 + j*nact2 + i*nact + j] );  
+                              l2bb[i*nact3 + j*nact2 + i*nact + j] -
+                              l1a[i*nact + i] * l1a[j*nact +j] - 
+                              l1b[i*nact + i] * l1b[j*nact +j] + 
+                              l1b[i*nact + i] * l1a[j*nact +j] + 
+                              l1a[i*nact + i] * l1b[j*nact +j] );  
+
             spin_corr->set(i,j,value);
         }
     }
     spin_corr->print();
 
-//    outfile->Printf("\n Unpaired Electron Analysis");
+//    outfile->Printf("\n Unpaired Electron Analysis (s^2, nel)");
 //    for( int i = 0; i < nact; ++i ){
 //        double s2 = spin_corr->get(i,i);
 //        double nel = sqrt( 4.0 * s2 + 1 ) - 1;
-//        outfile->Printf("\n IAO(%d) :  %1.3f", i, nel);   
+//        outfile->Printf("\n IAO(%d) :  %1.3f, %1.3f", i, s2, nel);   
 //    }
 
 }
