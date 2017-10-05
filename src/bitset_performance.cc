@@ -33,7 +33,7 @@
 
 //#include "mini-boost/boost/lexical_cast.hpp"
 
-//#include "stl_bitset_determinant.h"
+//#include "sparse_ci/stl_bitset_determinant.h"
 //#include "fci/fci_vector.h"
 
 // using namespace psi;

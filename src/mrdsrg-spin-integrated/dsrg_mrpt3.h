@@ -46,7 +46,7 @@
 #include "../mrdsrg-helper/dsrg_time.h"
 #include "../mrdsrg-helper/dsrg_source.h"
 #include "../fci/fci_vector.h"
-#include "../stl_bitset_determinant.h"
+#include "../sparse_ci/stl_bitset_determinant.h"
 #include "master_mrdsrg.h"
 
 using namespace ambit;
