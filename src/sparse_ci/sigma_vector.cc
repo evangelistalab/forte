@@ -1267,6 +1267,5 @@ void SigmaVectorSparse::add_bad_roots(std::vector<std::vector<std::pair<size_t, 
         bad_states_.push_back(roots[i]);
     }
 }
-
 }
 }
