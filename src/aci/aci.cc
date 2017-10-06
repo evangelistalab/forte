@@ -3686,13 +3686,13 @@ void AdaptiveCI::spin_analysis()
     std::shared_ptr<IAOBuilder> IAO = IAOBuilder::build(reference_wavefunction_->basisset(), reference_wavefunction_->get_basisset("MINAO_BASIS"), Ca, options_);
     outfile->Printf("\n  Computing IAOs\n");
     std::map<std::string, SharedMatrix> iao_info = IAO->build_iaos();
-    //SharedMatrix iao_coeffs(iao_info["U"]->clone());
+  //  SharedMatrix iao_coeffs(iao_info["U"]->clone());
     SharedMatrix iao_orbs(iao_info["A"]->clone());
 
+//    iao_orbs->print();    
     SharedMatrix Cinv(Ca->clone());
     Cinv->invert();
     SharedMatrix iao_coeffs = Matrix::doublet(Cinv,iao_orbs,false,false);
-//    iao_orbs->print();    
 //    iao_coeffs->print();
 
     size_t new_dim = iao_orbs->colspi()[0];
@@ -3726,8 +3726,9 @@ void AdaptiveCI::spin_analysis()
             UA->set(j,i, iao_coeffs->get(mo,idx));
         }
     }  
-    outfile->Printf("\n");
 
+    outfile->Printf("\n");
+//    UA->print();
     // Transform 1 and 2 rdms
 
     // First build rdms as ambit tensors
@@ -3814,45 +3815,54 @@ void AdaptiveCI::spin_analysis()
     rdma->diagonalize(evecs,evalsa);
     rdmb->diagonalize(evecs,evalsb);
 
-    for( int i = 0; i < nact; ++i ){
-        outfile->Printf("\n  OCC for IAO%d: %1.5f", i, evalsa->get(i) + evalsb->get(i));
-    }
-    outfile->Printf("\n");
+//    for( int i = 0; i < nact; ++i ){
+//        outfile->Printf("\n  OCC for IAO%d: %1.5f", i, evalsa->get(i) + evalsb->get(i));
+//    }
+//    outfile->Printf("\n");
 
     std::vector<double> l2aa(L2aaT.data());
     std::vector<double> l2ab(L2abT.data());
     std::vector<double> l2bb(L2bbT.data());
 
+     
+//    for( int i = 0; i < nact; ++i ){
+//        for( int j = 0; j < nact; ++j ){
+//            for( int k = 0; k < nact; ++k){
+//                for( int l = 0; l < nact; ++l){
+//                    outfile->Printf("\n  l2aa(%d %d %d %d) = %1.5f", i,j,k,l, trdm_aa_[i*nact3 + j*nact2 + k*nact + l]);}}}} 
+//                    outfile->Printf("\n  l2bb(%d %d %d %d) = %1.5f", i,j,k,l, l2bb[i*nact3 + j*nact2 + k*nact + l]); 
+//                    outfile->Printf("\n  l2ab(%d %d %d %d) = %1.5f", i,j,k,l, l2ab[i*nact3 + j*nact2 + k*nact + l]); }}}}
+
     for( int i = 0; i < nact; ++i ){
         for( int j = 0; j < nact; ++j){
             double value = 0.0;
             if( i == j ){
-                value += 0.75 * l1a[nact*i + j];
-                value += 0.75 * l1b[nact*i + j];
+                value += 0.75 * (l1a[nact*i + j] + l1b[nact*i + j]);
             }
-            
-            value -= 0.5 * ( l2ab[i*nact3 + j*nact2 + j*nact + i] + l2ab[j*nact3 + i*nact2 + i*nact + j]);
-        
-            value -= 0.25 * ( l2aa[i*nact3 + j*nact2 + i*nact + j] +
-                              l2ab[i*nact3 + j*nact2 + i*nact + j] +  
-                              l2ab[j*nact3 + i*nact2 + j*nact + i] +  
-                              l2bb[i*nact3 + j*nact2 + i*nact + j] +
-                              l1a[i*nact + i] * l1a[j*nact +j] + 
-                              l1b[i*nact + i] * l1b[j*nact +j] - 
-                              l1b[i*nact + i] * l1a[j*nact +j] - 
-                              l1a[i*nact + i] * l1b[j*nact +j] );  
+           
+            value -= 0.5  * ( l2ab[ i * nact3 + j * nact2 + j * nact + i ] 
+                            + l2ab[ j * nact3 + i * nact2 + i * nact + j ] );
+
+            value += 0.25 * ( l2aa[ i * nact3 + j * nact2 + i * nact + j ]
+                            + l2bb[ i * nact3 + j * nact2 + i * nact + j ] 
+                            - l2ab[ i * nact3 + j * nact2 + i * nact + j ] 
+                            - l2ab[ j * nact3 + i * nact2 + j * nact + i ]
+                            - l1a[i*nact + i] * l1a[j*nact + j] 
+                            - l1b[i*nact + i] * l1b[j*nact + j] 
+                            + l1a[i*nact + i] * l1b[j*nact + j] 
+                            + l1b[i*nact + i] * l1a[j*nact + j] );
 
             spin_corr->set(i,j,value);
         }
     }
     spin_corr->print();
 
-//    outfile->Printf("\n Unpaired Electron Analysis (s^2, nel)");
-//    for( int i = 0; i < nact; ++i ){
-//        double s2 = spin_corr->get(i,i);
-//        double nel = sqrt( 4.0 * s2 + 1 ) - 1;
-//        outfile->Printf("\n IAO(%d) :  %1.3f, %1.3f", i, s2, nel);   
-//    }
+    outfile->Printf("\n Unpaired Electron Analysis (s^2, nel)");
+    for( int i = 0; i < nact; ++i ){
+        double s2 = spin_corr->get(i,i);
+        double nel = sqrt( 4.0 * s2 + 1 ) - 1;
+        outfile->Printf("\n IAO(%d) :  %1.3f, %1.3f", i, s2, nel);   
+    }
 
 }
 
