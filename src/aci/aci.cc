@@ -3856,13 +3856,18 @@ void AdaptiveCI::spin_analysis()
         }
     }
     spin_corr->print();
+    SharedMatrix spin_evecs(new Matrix(nact,nact));
+    SharedVector spin_evals(new Vector(nact));
+    
+    spin_corr->diagonalize(spin_evecs,spin_evals);
+    spin_evals->print();
 
-    outfile->Printf("\n Unpaired Electron Analysis (s^2, nel)");
-    for( int i = 0; i < nact; ++i ){
-        double s2 = spin_corr->get(i,i);
-        double nel = sqrt( 4.0 * s2 + 1 ) - 1;
-        outfile->Printf("\n IAO(%d) :  %1.3f, %1.3f", i, s2, nel);   
-    }
+//    outfile->Printf("\n Unpaired Electron Analysis (s^2, nel)");
+//    for( int i = 0; i < nact; ++i ){
+//        double s2 = spin_corr->get(i,i);
+//        double nel = sqrt( 4.0 * s2 + 1 ) - 1;
+//        outfile->Printf("\n IAO(%d) :  %1.3f, %1.3f", i, s2, nel);   
+//    }
 
 }
 
