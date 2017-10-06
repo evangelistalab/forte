@@ -60,6 +60,7 @@ class SigmaVectorDirect : public SigmaVector {
 
   protected:
     std::shared_ptr<FCIIntegrals> fci_ints_;
+    std::vector<double> diag_;
 };
 }
 }

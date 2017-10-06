@@ -38,6 +38,7 @@
 #include "../forte-def.h"
 #include "../iterative_solvers.h"
 #include "sparse_ci_solver.h"
+#include "sigma_vector_direct.h"
 
 namespace psi {
 namespace forte {
@@ -54,11 +55,11 @@ SigmaVectorDirect::SigmaVectorDirect(const std::vector<STLBitsetDeterminant>& sp
                                      std::shared_ptr<FCIIntegrals> fci_ints)
     : SigmaVector(space.size()), fci_ints_(fci_ints) {}
 
-void SigmaVectorList::compute_sigma(SharedVector sigma, SharedVector b) {}
+void SigmaVectorDirect::compute_sigma(SharedVector sigma, SharedVector b) {}
 
-void SigmaVectorList::add_bad_roots(std::vector<std::vector<std::pair<size_t, double>>>& roots) {}
+void SigmaVectorDirect::add_bad_roots(std::vector<std::vector<std::pair<size_t, double>>>& roots) {}
 
-void SigmaVectorList::get_diagonal(Vector& diag) {
+void SigmaVectorDirect::get_diagonal(Vector& diag) {
     for (size_t I = 0; I < diag_.size(); ++I) {
         diag.set(I, diag_[I]);
     }
