@@ -5,7 +5,8 @@
  * that implements a variety of quantum chemistry methods for strongly
  * correlated electrons.
  *
- * Copyright (c) 2012-2017 by its authors (see COPYING, COPYING.LESSER, AUTHORS).
+ * Copyright (c) 2012-2017 by its authors (see COPYING, COPYING.LESSER,
+ * AUTHORS).
  *
  * The copyrights for code used from other parties are included in
  * the corresponding files.
@@ -26,35 +27,41 @@
  * @END LICENSE
  */
 
-#ifndef _string_tree_h_
-#define _string_tree_h_
+#ifndef _sigma_vector_direct_h_
+#define _sigma_vector_direct_h_
 
-#include <vector>
-#include <bitset>
-#include <unordered_map>
-#include "sparse_ci/stl_bitset_determinant.h"
+#include "../determinant_hashvector.h"
+#include "../fci/fci_integrals.h"
+#include "../helpers.h"
+#include "../operator.h"
+#include "sigma_vector.h"
+#include "stl_bitset_determinant.h"
+
+#ifdef HAVE_MPI
+#include <mpi.h>
+#endif
 
 namespace psi {
 namespace forte {
 
-using sbit_t = unsigned long int;
-
-class string_tree
-{
+/**
+ * @brief The SigmaVectorDirect class
+ * Computes the sigma vector from a sparse Hamiltonian.
+ */
+class SigmaVectorDirect : public SigmaVector {
   public:
-    // Build the string tree from a list of determinants
-    string_tree(size_t ndets);
-    string_tree(size_t ndets, std::vector<Determinant>);
-    size_t ndets_;
-    std::vector<sbit_t> sorted_a_;
-    std::vector<sbit_t> sorted_b_;
-    std::vector<sbit_t> sorted_ab_;
-    std::vector<sbit_t> sorted_ba_;
-    std::vector<double> C_ab_;
-    std::vector<double> C_ba_;
+    SigmaVectorDirect(const std::vector<STLBitsetDeterminant>& space,
+                      std::shared_ptr<FCIIntegrals> fci_ints);
+    void compute_sigma(SharedVector sigma, SharedVector b);
+    void get_diagonal(Vector& diag);
+    void add_bad_roots(std::vector<std::vector<std::pair<size_t, double>>>& bad_states);
+
+    std::vector<std::vector<std::pair<size_t, double>>> bad_states_;
+
+  protected:
+    std::shared_ptr<FCIIntegrals> fci_ints_;
 };
-
 }
-} // End Namespaces
+}
 
-#endif // _string_tree_h_
+#endif // _sigma_vector_direct_h_

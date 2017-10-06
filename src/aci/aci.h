@@ -44,9 +44,8 @@
 #include "../orbital-helper/unpaired_density.h"
 #include "../determinant_hashvector.h"
 #include "../reference.h"
-#include "../sparse_ci_solver.h"
-#include "../stl_bitset_determinant.h"
-#include "../sparse_ci_solver.h"
+#include "../sparse_ci/sparse_ci_solver.h"
+#include "../sparse_ci/stl_bitset_determinant.h"
 #include "../orbital-helper/iao_builder.h"
 
 using d1 = std::vector<double>;

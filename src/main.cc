@@ -31,7 +31,7 @@
 #include "forte_options.h"
 #include "helpers.h"
 #include "integrals/integrals.h"
-#include "stl_bitset_determinant.h"
+#include "sparse_ci/stl_bitset_determinant.h"
 #include "version.h"
 
 #ifdef HAVE_CHEMPS2
