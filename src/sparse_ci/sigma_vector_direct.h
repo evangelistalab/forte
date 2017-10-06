@@ -30,12 +30,7 @@
 #ifndef _sigma_vector_direct_h_
 #define _sigma_vector_direct_h_
 
-#include "../determinant_hashvector.h"
-#include "../fci/fci_integrals.h"
-#include "../helpers.h"
-#include "../operator.h"
 #include "sigma_vector.h"
-#include "stl_bitset_determinant.h"
 
 #ifdef HAVE_MPI
 #include <mpi.h>
@@ -50,7 +45,7 @@ namespace forte {
  */
 class SigmaVectorDirect : public SigmaVector {
   public:
-    SigmaVectorDirect(const std::vector<STLBitsetDeterminant>& space,
+    SigmaVectorDirect(const DeterminantHashVec& space,
                       std::shared_ptr<FCIIntegrals> fci_ints);
     void compute_sigma(SharedVector sigma, SharedVector b);
     void get_diagonal(Vector& diag);
@@ -59,7 +54,17 @@ class SigmaVectorDirect : public SigmaVector {
     std::vector<std::vector<std::pair<size_t, double>>> bad_states_;
 
   protected:
+    /// Diagonal elements of the Hamiltonian
+    std::vector<double> diag_;
+    const DeterminantHashVec& space_;
     std::shared_ptr<FCIIntegrals> fci_ints_;
+
+    void compute_sigma_scalar(SharedVector sigma, SharedVector b);
+    void compute_sigma_aa(SharedVector sigma, SharedVector b);
+    void compute_sigma_bb(SharedVector sigma, SharedVector b);
+    void compute_sigma_aaaa(SharedVector sigma, SharedVector b);
+    void compute_sigma_abab(SharedVector sigma, SharedVector b);
+    void compute_sigma_bbbb(SharedVector sigma, SharedVector b);
 };
 }
 }

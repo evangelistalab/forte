@@ -327,6 +327,8 @@ void AdaptiveCI::startup() {
             diag_method_ = Sparse;
         } else if (options_.get_str("DIAG_ALGORITHM") == "SOLVER") {
             diag_method_ = DLSolver;
+        } else if (options_.get_str("DIAG_ALGORITHM") == "DIRECT") {
+            diag_method_ = Direct;
         }
     }
     aimed_selection_ = false;
@@ -375,6 +377,7 @@ void AdaptiveCI::print_info() {
 
     std::vector<std::pair<std::string, std::string>> calculation_info_string{
         {"Ms", get_ms_string(twice_ms_)},
+        {"Diagonalization algorithm", options_.get_str("DIAG_ALGORITHM")},
         {"Determinant selection criterion",
          energy_selection_ ? "Second-order Energy" : "First-order Coefficients"},
         {"Selection criterion", aimed_selection_ ? "Aimed selection" : "Threshold"},

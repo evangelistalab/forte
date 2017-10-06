@@ -47,7 +47,7 @@
 namespace psi {
 namespace forte {
 
-enum DiagonalizationMethod { Full, DLSolver, DLString, DLDisk, MPI, Sparse };
+enum DiagonalizationMethod { Full, DLSolver, DLString, DLDisk, MPI, Sparse, Direct };
 
 /**
  * @brief The SparseCISolver class
@@ -133,6 +133,11 @@ class SparseCISolver {
                         SharedMatrix& evecs, int nroot, int multiplicity);
 
     void diagonalize_dl_sparse(const DeterminantHashVec& space, WFNOperator& op,
+                               SharedVector& evals, SharedMatrix& evecs, int nroot,
+                               int multiplicity);
+
+    /// Use a direct algorithm that does not require substitution lists
+    void diagonalize_dl_direct(const DeterminantHashVec& space, WFNOperator& op,
                                SharedVector& evals, SharedMatrix& evecs, int nroot,
                                int multiplicity);
 

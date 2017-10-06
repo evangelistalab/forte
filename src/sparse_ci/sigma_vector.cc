@@ -36,8 +36,7 @@
 
 #include "../forte-def.h"
 #include "../iterative_solvers.h"
-#include "sparse_ci_solver.h"
-//#include "fci/fci_vector.h"
+#include "sigma_vector.h"
 
 struct PairHash {
     size_t operator()(const std::pair<size_t, size_t>& p) const {
