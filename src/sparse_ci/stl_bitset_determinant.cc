@@ -115,7 +115,7 @@ STLBitsetDeterminant STLBitsetDeterminant::operator^(const STLBitsetDeterminant&
     return ndet;
 }
 
-const bit_t& STLBitsetDeterminant::bits() const { return bits_; }
+const STLBitsetDeterminant::bit_t& STLBitsetDeterminant::bits() const { return bits_; }
 
 bool STLBitsetDeterminant::get_alfa_bit(int n) const { return bits_[n]; }
 

@@ -3026,13 +3026,13 @@ void ElementwiseCI::compute_double_couplings(double double_coupling_threshold) {
 }
 
 void ElementwiseCI::compute_couplings_half(const det_hashvec& dets, size_t cut_size) {
-    bit_t andBits, orBits;
+    STLBitsetDeterminant::bit_t andBits, orBits;
     andBits.flip();
     for (size_t i = 0; i < cut_size; ++i) {
         andBits &= dets[i].bits_;
         orBits |= dets[i].bits_;
     }
-    bit_t actBits = andBits ^ orBits;
+    STLBitsetDeterminant::bit_t actBits = andBits ^ orBits;
 
     a_couplings_.clear();
     a_couplings_.resize(nact_);

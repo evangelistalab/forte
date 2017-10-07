@@ -50,10 +50,9 @@ namespace forte {
  * false <-> 0
  */
 
-using bit_t = std::bitset<256>;
-
 class STLBitsetDeterminant {
   public:
+    using bit_t = std::bitset<256>;
     // Class Constructor and Destructor
     /// Construct an empty determinant
     STLBitsetDeterminant();

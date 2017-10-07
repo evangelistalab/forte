@@ -1153,7 +1153,7 @@ void AdaptiveCI::get_excited_determinants2(int nroot, SharedMatrix evecs,
                                 continue;
 
                             // Check if the determinant goes in this bin
-                            size_t hash_val = std::hash<bit_t>()(new_det.bits_);
+                            size_t hash_val = std::hash<STLBitsetDeterminant::bit_t>()(new_det.bits_);
                             if ((hash_val % nbin) == bin) {
                                 double HIJ = fci_ints_->slater_rules_single_alpha(new_det, ii, aa);
                                 if ((std::fabs(HIJ) * c_norm >= screen_thresh_)) {
@@ -1183,7 +1183,7 @@ void AdaptiveCI::get_excited_determinants2(int nroot, SharedMatrix evecs,
                                 continue;
 
                             // Check if the determinant goes in this bin
-                            size_t hash_val = std::hash<bit_t>()(new_det.bits_);
+                            size_t hash_val = std::hash<STLBitsetDeterminant::bit_t>()(new_det.bits_);
                             if ((hash_val % nbin) == bin) {
                                 double HIJ = fci_ints_->slater_rules_single_beta(new_det, ii, aa);
                                 if ((std::fabs(HIJ) * c_norm >= screen_thresh_)) {
@@ -1217,7 +1217,7 @@ void AdaptiveCI::get_excited_determinants2(int nroot, SharedMatrix evecs,
                                         continue;
 
                                     // Check if the determinant goes in this bin
-                                    size_t hash_val = std::hash<bit_t>()(new_det.bits_);
+                                    size_t hash_val = std::hash<STLBitsetDeterminant::bit_t>()(new_det.bits_);
                                     if ((hash_val % nbin) == bin) {
                                         double HIJ = fci_ints_->tei_aa(ii, jj, aa, bb);
                                         if ((std::fabs(HIJ) * c_norm >= screen_thresh_)) {
@@ -1254,7 +1254,7 @@ void AdaptiveCI::get_excited_determinants2(int nroot, SharedMatrix evecs,
                                         continue;
 
                                     // Check if the determinant goes in this bin
-                                    size_t hash_val = std::hash<bit_t>()(new_det.bits_);
+                                    size_t hash_val = std::hash<STLBitsetDeterminant::bit_t>()(new_det.bits_);
                                     if ((hash_val % nbin) == bin) {
                                         double HIJ = fci_ints_->tei_bb(ii, jj, aa, bb);
                                         if ((std::fabs(HIJ) * c_norm >= screen_thresh_)) {
@@ -1291,7 +1291,7 @@ void AdaptiveCI::get_excited_determinants2(int nroot, SharedMatrix evecs,
                                         continue;
 
                                     // Check if the determinant goes in this bin
-                                    size_t hash_val = std::hash<bit_t>()(new_det.bits_);
+                                    size_t hash_val = std::hash<STLBitsetDeterminant::bit_t>()(new_det.bits_);
                                     if ((hash_val % nbin) == bin) {
                                         double HIJ = fci_ints_->tei_ab(ii, jj, aa, bb);
                                         if ((std::fabs(HIJ) * c_norm >= screen_thresh_)) {

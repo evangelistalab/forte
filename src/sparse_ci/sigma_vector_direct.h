@@ -47,6 +47,7 @@ class SigmaVectorDirect : public SigmaVector {
   public:
     SigmaVectorDirect(const DeterminantHashVec& space,
                       std::shared_ptr<FCIIntegrals> fci_ints);
+    ~SigmaVectorDirect();
     void compute_sigma(SharedVector sigma, SharedVector b);
     void get_diagonal(Vector& diag);
     void add_bad_roots(std::vector<std::vector<std::pair<size_t, double>>>& bad_states);
