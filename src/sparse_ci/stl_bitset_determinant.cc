@@ -88,8 +88,22 @@ bool STLBitsetDeterminant::operator<(const STLBitsetDeterminant& lhs) const {
 }
 
 STLBitsetDeterminant STLBitsetDeterminant::operator^(const STLBitsetDeterminant& lhs) const {
-    STLBitsetDeterminant ndet(bits_ ^ lhs.bits_);
-    return ndet;
+    return STLBitsetDeterminant(bits_ ^ lhs.bits_);
+}
+
+STLBitsetDeterminant& STLBitsetDeterminant::operator&=(const STLBitsetDeterminant& lhs) {
+    bits_ &= lhs.bits_;
+    return *this;
+}
+
+STLBitsetDeterminant& STLBitsetDeterminant::operator|=(const STLBitsetDeterminant& lhs) {
+    bits_ |= lhs.bits_;
+    return *this;
+}
+
+STLBitsetDeterminant& STLBitsetDeterminant::flip() {
+    bits_.flip();
+    return *this;
 }
 
 bool STLBitsetDeterminant::get_alfa_bit(int n) const { return ALFA(n); }

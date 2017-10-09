@@ -325,10 +325,10 @@ double ProjectorCI_HashVec::estimate_high_energy() {
 
         double temp = fci_ints_->oei_a(i, i);
         for (int p = 0; p < nact_; ++p) {
-            if (bits_[p]) {
+            if (reference_determinant_.get_alfa_bit(i)) {
                 temp += fci_ints_->tei_aa(i, p, i, p);
             }
-            if (bits_[nact_ + p]) {
+            if (reference_determinant_.get_beta_bit(i)) {
                 temp += fci_ints_->tei_ab(i, p, i, p);
             }
         }
@@ -2866,22 +2866,22 @@ void ProjectorCI_HashVec::compute_double_couplings(double double_coupling_thresh
 }
 
 void ProjectorCI_HashVec::compute_couplings_half(const det_hashvec& dets, size_t cut_size) {
-    STLBitsetDeterminant::bit_t andBits, orBits;
+    STLBitsetDeterminant andBits, orBits;
     andBits.flip();
     for (size_t i = 0; i < cut_size; ++i) {
-        andBits &= dets[i].bits_;
-        orBits |= dets[i].bits_;
+        andBits &= dets[i];
+        orBits |= dets[i];
     }
-    STLBitsetDeterminant::bit_t actBits = andBits ^ orBits;
+    STLBitsetDeterminant actBits = andBits ^ orBits;
 
     a_couplings_.clear();
     a_couplings_.resize(nact_);
     for (int i = 0; i < nact_; ++i) {
-        if (!actBits[i])
+        if (!actBits.get_alfa_bit(i))
             continue;
         std::vector<std::tuple<int, double>> i_couplings;
         for (int a = i + 1; a < nact_; ++a) {
-            if (!actBits[a])
+            if (!actBits.get_alfa_bit(a))
                 continue;
             if ((mo_symmetry_[i] ^ mo_symmetry_[a]) == 0) {
                 double Hia = fci_ints_->oei_a(i, a);
@@ -2897,11 +2897,11 @@ void ProjectorCI_HashVec::compute_couplings_half(const det_hashvec& dets, size_t
     b_couplings_.clear();
     b_couplings_.resize(nact_);
     for (int i = 0; i < nact_; ++i) {
-        if (!actBits[i + nact_])
+        if (!actBits.get_beta_bit(i))
             continue;
         std::vector<std::tuple<int, double>> i_couplings;
         for (int a = i + 1; a < nact_; ++a) {
-            if (!actBits[a + nact_])
+            if (!actBits.get_beta_bit(a))
                 continue;
             if ((mo_symmetry_[i] ^ mo_symmetry_[a]) == 0) {
                 double Hia = fci_ints_->oei_b(i, a);
@@ -2916,17 +2916,17 @@ void ProjectorCI_HashVec::compute_couplings_half(const det_hashvec& dets, size_t
 
     aa_couplings_.clear();
     for (int i = 0; i < nact_; ++i) {
-        if (!actBits[i])
+        if (!actBits.get_alfa_bit(i))
             continue;
         for (int j = i + 1; j < nact_; ++j) {
-            if (!actBits[j])
+            if (!actBits.get_alfa_bit(j))
                 continue;
             std::vector<std::tuple<int, int, double>> ij_couplings;
             for (int a = i + 1; a < nact_; ++a) {
-                if (a == j or !actBits[a])
+                if (a == j or !actBits.get_alfa_bit(a))
                     continue;
                 for (int b = a + 1; b < nact_; ++b) {
-                    if (b == j or !actBits[b])
+                    if (b == j or !actBits.get_alfa_bit(b))
                         continue;
                     if ((mo_symmetry_[i] ^ mo_symmetry_[j] ^ mo_symmetry_[a] ^ mo_symmetry_[b]) ==
                         0) {
@@ -2944,17 +2944,17 @@ void ProjectorCI_HashVec::compute_couplings_half(const det_hashvec& dets, size_t
 
     ab_couplings_.clear();
     for (int i = 0; i < nact_; ++i) {
-        if (!actBits[i])
+        if (!actBits.get_alfa_bit(i))
             continue;
         for (int j = 0; j < nact_; ++j) {
-            if (!actBits[j + nact_])
+            if (!actBits.get_beta_bit(j))
                 continue;
             std::vector<std::tuple<int, int, double>> ij_couplings;
             for (int a = i + 1; a < nact_; ++a) {
-                if (a == i or !actBits[a])
+                if (a == i or !actBits.get_alfa_bit(a))
                     continue;
                 for (int b = 0; b < nact_; ++b) {
-                    if (b == j or !actBits[b + nact_])
+                    if (b == j or !actBits.get_beta_bit(b))
                         continue;
                     if ((mo_symmetry_[i] ^ mo_symmetry_[j] ^ mo_symmetry_[a] ^ mo_symmetry_[b]) ==
                         0) {
@@ -2972,17 +2972,17 @@ void ProjectorCI_HashVec::compute_couplings_half(const det_hashvec& dets, size_t
 
     bb_couplings_.clear();
     for (int i = 0; i < nact_; ++i) {
-        if (!actBits[i + nact_])
+        if (!actBits.get_beta_bit(i))
             continue;
         for (int j = i + 1; j < nact_; ++j) {
-            if (!actBits[j + nact_])
+            if (!actBits.get_beta_bit(j))
                 continue;
             std::vector<std::tuple<int, int, double>> ij_couplings;
             for (int a = i + 1; a < nact_; ++a) {
-                if (a == j or !actBits[a + nact_])
+                if (a == j or !actBits.get_beta_bit(a))
                     continue;
                 for (int b = a + 1; b < nact_; ++b) {
-                    if (b == j or !actBits[b + nact_])
+                    if (b == j or !actBits.get_beta_bit(b))
                         continue;
                     if ((mo_symmetry_[i] ^ mo_symmetry_[j] ^ mo_symmetry_[a] ^ mo_symmetry_[b]) ==
                         0) {

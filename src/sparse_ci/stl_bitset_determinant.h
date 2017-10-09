@@ -79,6 +79,11 @@ class STLBitsetDeterminant {
     bool operator<(const STLBitsetDeterminant& lhs) const;
     /// XOR operator
     STLBitsetDeterminant operator^(const STLBitsetDeterminant& lhs) const;
+    /// &= operator
+    STLBitsetDeterminant& operator&=(const STLBitsetDeterminant& lhs);
+    /// &= operator
+    STLBitsetDeterminant& operator|=(const STLBitsetDeterminant& lhs);
+    STLBitsetDeterminant& flip();
 
     //    /// Get a pointer to the bits
     //    const bit_t& bits() const;
