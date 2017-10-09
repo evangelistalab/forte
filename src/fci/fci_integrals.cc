@@ -189,26 +189,25 @@ void FCIIntegrals::set_active_integrals_and_restricted_docc() {
 }
 
 double FCIIntegrals::energy(const STLBitsetDeterminant& det) const {
-    const STLBitsetDeterminant::bit_t bits = det.bits();
     double energy = frozen_core_energy_;
     for (int p = 0; p < nmo_; p++) {
-        if (bits[p]) {
+        if (det.get_alfa_bit(p)) {
             energy += oei_a_[p * nmo_ + p];
             for (int q = p + 1; q < nmo_; ++q) {
-                if (bits[q]) {
+                if (det.get_alfa_bit(q)) {
                     energy += tei_aa_[p * nmo3_ + q * nmo2_ + p * nmo_ + q];
                 }
             }
             for (int q = 0; q < nmo_; ++q) {
-                if (bits[nmo_ + q]) {
+                if (det.get_beta_bit(q)) {
                     energy += tei_ab_[p * nmo3_ + q * nmo2_ + p * nmo_ + q];
                 }
             }
         }
-        if (bits[nmo_ + p]) {
+        if (det.get_beta_bit(p)) {
             energy += oei_b_[p * nmo_ + p];
             for (int q = p + 1; q < nmo_; ++q) {
-                if (bits[nmo_ + q]) {
+                if (det.get_beta_bit(q)) {
                     energy += tei_bb_[p * nmo3_ + q * nmo2_ + p * nmo_ + q];
                 }
             }
@@ -218,26 +217,25 @@ double FCIIntegrals::energy(const STLBitsetDeterminant& det) const {
 }
 
 double FCIIntegrals::energy(STLBitsetDeterminant& det) {
-    const STLBitsetDeterminant::bit_t bits = det.bits();
     double energy = frozen_core_energy_;
     for (int p = 0; p < nmo_; p++) {
-        if (bits[p]) {
+        if (det.get_alfa_bit(p)) {
             energy += oei_a_[p * nmo_ + p];
             for (int q = p + 1; q < nmo_; ++q) {
-                if (bits[q]) {
+                if (det.get_alfa_bit(q)) {
                     energy += tei_aa_[p * nmo3_ + q * nmo2_ + p * nmo_ + q];
                 }
             }
             for (int q = 0; q < nmo_; ++q) {
-                if (bits[nmo_ + q]) {
+                if (det.get_beta_bit(q)) {
                     energy += tei_ab_[p * nmo3_ + q * nmo2_ + p * nmo_ + q];
                 }
             }
         }
-        if (bits[nmo_ + p]) {
+        if (det.get_beta_bit(p)) {
             energy += oei_b_[p * nmo_ + p];
             for (int q = p + 1; q < nmo_; ++q) {
-                if (bits[nmo_ + q]) {
+                if (det.get_beta_bit(q)) {
                     energy += tei_bb_[p * nmo3_ + q * nmo2_ + p * nmo_ + q];
                 }
             }
@@ -246,36 +244,15 @@ double FCIIntegrals::energy(STLBitsetDeterminant& det) {
     return energy;
 }
 
-//STLBitsetDeterminant FCIIntegrals::determinant() {
-//    STLBitsetDeterminant det(nmo_);
-//    return det;
-//}
-
-//STLBitsetDeterminant FCIIntegrals::determinant(const STLBitsetDeterminant::bit_t& bits) {
-//    STLBitsetDeterminant det(bits);
-//    return det;
-//}
-//STLBitsetDeterminant FCIIntegrals::determinant(const std::vector<int>& bits) {
-//    STLBitsetDeterminant det(bits);
-//    return det;
-//}
-//STLBitsetDeterminant FCIIntegrals::determinant(const std::vector<bool>& bits) {
-//    STLBitsetDeterminant det(bits);
-//    return det;
-//}
-
 double FCIIntegrals::slater_rules(const STLBitsetDeterminant& lhs,
                                   const STLBitsetDeterminant& rhs) const {
-    const STLBitsetDeterminant::bit_t& I = lhs.bits_;
-    const STLBitsetDeterminant::bit_t& J = rhs.bits_;
-
     int nadiff = 0;
     int nbdiff = 0;
     // Count how many differences in mos are there
     for (int n = 0; n < nmo_; ++n) {
-        if (I[n] != J[n])
+        if (lhs.get_alfa_bit(n) != rhs.get_alfa_bit(n))
             nadiff++;
-        if (I[nmo_ + n] != J[nmo_ + n])
+        if (lhs.get_beta_bit(n) != rhs.get_beta_bit(n))
             nbdiff++;
         if (nadiff + nbdiff > 4)
             return 0.0; // Get out of this as soon as possible
@@ -289,23 +266,17 @@ double FCIIntegrals::slater_rules(const STLBitsetDeterminant& lhs,
         // matrix_element += frozen_core_energy_ + this->energy(rhs);
         matrix_element = frozen_core_energy_;
         for (int p = 0; p < nmo_; ++p) {
-            if (I[p])
+            if (lhs.get_alfa_bit(p))
                 matrix_element += oei_a_[p * nmo_ + p];
-            if (I[nmo_ + p])
+            if (lhs.get_beta_bit(p))
                 matrix_element += oei_b_[p * nmo_ + p];
             for (int q = 0; q < nmo_; ++q) {
-                if (I[p] and I[q])
+                if (lhs.get_alfa_bit(p) and lhs.get_alfa_bit(q))
                     matrix_element += 0.5 * tei_aa_[p * nmo3_ + q * nmo2_ + p * nmo_ + q];
-                //                    matrix_element +=   0.5 *
-                //                    ints_->diag_ce_rtei(p,q);
-                if (I[nmo_ + p] and I[nmo_ + q])
+                if (lhs.get_beta_bit(p) and lhs.get_beta_bit(q))
                     matrix_element += 0.5 * tei_bb_[p * nmo3_ + q * nmo2_ + p * nmo_ + q];
-                //                    matrix_element +=   0.5 *
-                //                    ints_->diag_ce_rtei(p,q);
-                if (I[p] and I[nmo_ + q])
+                if (lhs.get_alfa_bit(p) and lhs.get_beta_bit(q))
                     matrix_element += tei_ab_[p * nmo3_ + q * nmo2_ + p * nmo_ + q];
-                //                    matrix_element +=
-                //                    fci_ints_->diag_c_rtei(p,q);
             }
         }
     }
@@ -316,19 +287,19 @@ double FCIIntegrals::slater_rules(const STLBitsetDeterminant& lhs,
         int i = 0;
         int j = 0;
         for (int p = 0; p < nmo_; ++p) {
-            if ((I[p] != J[p]) and I[p])
+            if ((lhs.get_alfa_bit(p) != rhs.get_alfa_bit(p)) and lhs.get_alfa_bit(p))
                 i = p;
-            if ((I[p] != J[p]) and J[p])
+            if ((lhs.get_alfa_bit(p) != rhs.get_alfa_bit(p)) and rhs.get_alfa_bit(p))
                 j = p;
         }
         // double sign = SlaterSign(I, i, j);
         double sign = lhs.slater_sign_aa(i, j);
         matrix_element = sign * oei_a_[i * nmo_ + j];
         for (int p = 0; p < nmo_; ++p) {
-            if (I[p] and J[p]) {
+            if (lhs.get_alfa_bit(p) and rhs.get_alfa_bit(p)) {
                 matrix_element += sign * tei_aa_[i * nmo3_ + p * nmo2_ + j * nmo_ + p];
             }
-            if (I[nmo_ + p] and J[nmo_ + p]) {
+            if (lhs.get_beta_bit(p) and rhs.get_beta_bit(p)) {
                 matrix_element += sign * tei_ab_[i * nmo3_ + p * nmo2_ + j * nmo_ + p];
             }
         }
@@ -339,19 +310,19 @@ double FCIIntegrals::slater_rules(const STLBitsetDeterminant& lhs,
         int i = 0;
         int j = 0;
         for (int p = 0; p < nmo_; ++p) {
-            if ((I[nmo_ + p] != J[nmo_ + p]) and I[nmo_ + p])
+            if ((lhs.get_beta_bit(p) != rhs.get_beta_bit(p)) and lhs.get_beta_bit(p))
                 i = p;
-            if ((I[nmo_ + p] != J[nmo_ + p]) and J[nmo_ + p])
+            if ((lhs.get_beta_bit(p) != rhs.get_beta_bit(p)) and rhs.get_beta_bit(p))
                 j = p;
         }
         // double sign = SlaterSign(I, nmo_ + i, nmo_ + j);
         double sign = lhs.slater_sign_bb(i, j);
         matrix_element = sign * oei_b_[i * nmo_ + j];
         for (int p = 0; p < nmo_; ++p) {
-            if (I[p] and J[p]) {
+            if (lhs.get_alfa_bit(p) and rhs.get_alfa_bit(p)) {
                 matrix_element += sign * tei_ab_[p * nmo3_ + i * nmo2_ + p * nmo_ + j];
             }
-            if (I[nmo_ + p] and J[nmo_ + p]) {
+            if (lhs.get_beta_bit(p) and rhs.get_beta_bit(p)) {
                 matrix_element += sign * tei_bb_[i * nmo3_ + p * nmo2_ + j * nmo_ + p];
             }
         }
@@ -365,14 +336,14 @@ double FCIIntegrals::slater_rules(const STLBitsetDeterminant& lhs,
         int k = -1;
         int l = 0;
         for (int p = 0; p < nmo_; ++p) {
-            if ((I[p] != J[p]) and I[p]) {
+            if ((lhs.get_alfa_bit(p) != rhs.get_alfa_bit(p)) and lhs.get_alfa_bit(p)) {
                 if (i == -1) {
                     i = p;
                 } else {
                     j = p;
                 }
             }
-            if ((I[p] != J[p]) and J[p]) {
+            if ((lhs.get_alfa_bit(p) != rhs.get_alfa_bit(p)) and rhs.get_alfa_bit(p)) {
                 if (k == -1) {
                     k = p;
                 } else {
@@ -394,14 +365,14 @@ double FCIIntegrals::slater_rules(const STLBitsetDeterminant& lhs,
         k = -1;
         l = -1;
         for (int p = 0; p < nmo_; ++p) {
-            if ((I[nmo_ + p] != J[nmo_ + p]) and I[nmo_ + p]) {
+            if ((lhs.get_beta_bit(p) != rhs.get_beta_bit(p)) and lhs.get_beta_bit(p)) {
                 if (i == -1) {
                     i = p;
                 } else {
                     j = p;
                 }
             }
-            if ((I[nmo_ + p] != J[nmo_ + p]) and J[nmo_ + p]) {
+            if ((lhs.get_beta_bit(p) != rhs.get_beta_bit(p)) and rhs.get_beta_bit(p)) {
                 if (k == -1) {
                     k = p;
                 } else {
@@ -420,13 +391,13 @@ double FCIIntegrals::slater_rules(const STLBitsetDeterminant& lhs,
         int i, j, k, l;
         i = j = k = l = -1;
         for (int p = 0; p < nmo_; ++p) {
-            if ((I[p] != J[p]) and I[p])
+            if ((lhs.get_alfa_bit(p) != rhs.get_alfa_bit(p)) and lhs.get_alfa_bit(p))
                 i = p;
-            if ((I[nmo_ + p] != J[nmo_ + p]) and I[nmo_ + p])
+            if ((lhs.get_beta_bit(p) != rhs.get_beta_bit(p)) and lhs.get_beta_bit(p))
                 j = p;
-            if ((I[p] != J[p]) and J[p])
+            if ((lhs.get_alfa_bit(p) != rhs.get_alfa_bit(p)) and rhs.get_alfa_bit(p))
                 k = p;
-            if ((I[nmo_ + p] != J[nmo_ + p]) and J[nmo_ + p])
+            if ((lhs.get_beta_bit(p) != rhs.get_beta_bit(p)) and rhs.get_beta_bit(p))
                 l = p;
         }
         //  double sign = SlaterSign(I, i, nmo_ + j, k, nmo_ + l);
@@ -440,14 +411,13 @@ double FCIIntegrals::slater_rules(const STLBitsetDeterminant& lhs,
 double FCIIntegrals::slater_rules_single_alpha(const STLBitsetDeterminant& det, int i,
                                                int a) const {
     // Slater rule 2 PhiI = j_a^+ i_a PhiJ
-    const STLBitsetDeterminant::bit_t& I = det.bits();
     double sign = det.slater_sign_aa(i, a);
     double matrix_element = oei_a_[i * nmo_ + a];
     for (int p = 0; p < nmo_; ++p) {
-        if (I[p]) {
+        if (det.get_alfa_bit(p)) {
             matrix_element += tei_aa_[i * nmo3_ + p * nmo2_ + a * nmo_ + p];
         }
-        if (I[nmo_ + p]) {
+        if (det.get_beta_bit(p)) {
             matrix_element += tei_ab_[i * nmo3_ + p * nmo2_ + a * nmo_ + p];
         }
     }
@@ -457,13 +427,12 @@ double FCIIntegrals::slater_rules_single_alpha(const STLBitsetDeterminant& det, 
 double FCIIntegrals::slater_rules_single_alpha_abs(const STLBitsetDeterminant& det, int i,
                                                    int a) const {
     // Slater rule 2 PhiI = j_a^+ i_a PhiJ
-    const STLBitsetDeterminant::bit_t& I = det.bits();
     double matrix_element = oei_a_[i * nmo_ + a];
     for (int p = 0; p < nmo_; ++p) {
-        if (I[p]) {
+        if (det.get_alfa_bit(p)) {
             matrix_element += tei_aa_[i * nmo3_ + p * nmo2_ + a * nmo_ + p];
         }
-        if (I[nmo_ + p]) {
+        if (det.get_beta_bit(p)) {
             matrix_element += tei_ab_[i * nmo3_ + p * nmo2_ + a * nmo_ + p];
         }
     }
@@ -472,14 +441,13 @@ double FCIIntegrals::slater_rules_single_alpha_abs(const STLBitsetDeterminant& d
 
 double FCIIntegrals::slater_rules_single_beta(const STLBitsetDeterminant& det, int i, int a) const {
     // Slater rule 2 PhiI = j_a^+ i_a PhiJ
-    const STLBitsetDeterminant::bit_t& I = det.bits();
     double sign = det.slater_sign_bb(i, a);
     double matrix_element = oei_b_[i * nmo_ + a];
     for (int p = 0; p < nmo_; ++p) {
-        if (I[p]) {
+        if (det.get_alfa_bit(p)) {
             matrix_element += tei_ab_[p * nmo3_ + i * nmo2_ + p * nmo_ + a];
         }
-        if (I[nmo_ + p]) {
+        if (det.get_beta_bit(p)) {
             matrix_element += tei_bb_[i * nmo3_ + p * nmo2_ + a * nmo_ + p];
         }
     }
@@ -489,13 +457,12 @@ double FCIIntegrals::slater_rules_single_beta(const STLBitsetDeterminant& det, i
 double FCIIntegrals::slater_rules_single_beta_abs(const STLBitsetDeterminant& det, int i,
                                                   int a) const {
     // Slater rule 2 PhiI = j_a^+ i_a PhiJ
-    const STLBitsetDeterminant::bit_t& I = det.bits();
     double matrix_element = oei_b_[i * nmo_ + a];
     for (int p = 0; p < nmo_; ++p) {
-        if (I[p]) {
+        if (det.get_alfa_bit(p)) {
             matrix_element += tei_ab_[p * nmo3_ + i * nmo2_ + p * nmo_ + a];
         }
-        if (I[nmo_ + p]) {
+        if (det.get_beta_bit(p)) {
             matrix_element += tei_bb_[i * nmo3_ + p * nmo2_ + a * nmo_ + p];
         }
     }

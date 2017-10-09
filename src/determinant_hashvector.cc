@@ -35,8 +35,6 @@
 namespace psi {
 namespace forte {
 
-bool descending_pair(const std::pair<double, size_t> p1, const std::pair<double, size_t> p2);
-
 DeterminantHashVec::DeterminantHashVec(std::vector<STLBitsetDeterminant>& dets) {
     // The dimension of the wavefunction
     wfn_ = det_hashvec(dets);
@@ -210,7 +208,7 @@ void DeterminantHashVec::subspace(DeterminantHashVec& dets, SharedMatrix evecs,
     //        //      outfile->Printf("\n %1.6f  %zu  %s", evecs->get(it->second,
     //        //      root), it->second, *it.str().c_str());
     //    }
-    std::sort(det_weights.begin(), det_weights.end(), descending_pair);
+    std::sort(det_weights.rbegin(), det_weights.rend());
 
     // Build this wfn with most important subset
     for (size_t I = 0; I < dim; ++I) {

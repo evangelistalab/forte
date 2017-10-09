@@ -66,7 +66,7 @@ src/main.cc
 src/mcsrgpt2_mo.cc
 src/methodbase.cc
 src/mp2_nos.cc
-src/mrci.cc
+#src/mrci.cc
 src/mrpt2.cc
 src/operator.cc
 src/options.cc

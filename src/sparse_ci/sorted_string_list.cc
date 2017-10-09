@@ -34,18 +34,16 @@ namespace forte {
 
 bool reverse_string_order(const STLBitsetDeterminant& i, const STLBitsetDeterminant& j) {
     int nmo = i.nmo();
-    const auto& i_bits = i.bits();
-    const auto& j_bits = j.bits();
     for (int p = nmo - 1; p >= 0; --p) {
-        if ((i_bits[p] == false) and (j_bits[p] == true))
+        if ((i.get_alfa_bit(p) == false) and (j.get_alfa_bit(p) == true))
             return true;
-        if ((i_bits[p] == true) and (j_bits[p] == false))
+        if ((i.get_alfa_bit(p) == true) and (j.get_alfa_bit(p) == false))
             return false;
     }
-    for (int p = 2 * nmo - 1; p >= nmo; --p) {
-        if ((i_bits[p] == false) and (j_bits[p] == true))
+    for (int p = nmo - 1; p >= 0; --p) {
+        if ((i.get_beta_bit(p) == false) and (j.get_beta_bit(p) == true))
             return true;
-        if ((i_bits[p] == true) and (j_bits[p] == false))
+        if ((i.get_beta_bit(p) == true) and (j.get_beta_bit(p) == false))
             return false;
     }
     return false;
@@ -53,26 +51,27 @@ bool reverse_string_order(const STLBitsetDeterminant& i, const STLBitsetDetermin
 
 SortedStringList::SortedStringList(const DeterminantHashVec& space,
                                    std::shared_ptr<FCIIntegrals> fci_ints,
-                                   SpinType sorted_string_spin) {
+                                   STLBitsetDeterminant::SpinType sorted_string_spin) {
     nmo_ = fci_ints->nmo();
     // Copy and sort the determinants
     sorted_dets_ = space.determinants();
     num_dets_ = sorted_dets_.size();
 
-    if (sorted_string_spin == SpinType::AlphaSpin) {
+    if (sorted_string_spin == STLBitsetDeterminant::SpinType::AlphaSpin) {
         std::sort(sorted_dets_.begin(), sorted_dets_.end(), reverse_string_order);
     } else {
         std::sort(sorted_dets_.begin(), sorted_dets_.end());
     }
 
     outfile->Printf("\n\n Sorted determinants (%zu,%s)\n", num_dets_,
-                    sorted_string_spin == SpinType::AlphaSpin ? "Alpha" : "Beta");
+                    sorted_string_spin == STLBitsetDeterminant::SpinType::AlphaSpin ? "Alpha"
+                                                                                    : "Beta");
     //    for (auto d : sorted_dets_) {
     //        outfile->Printf("\n %s", d.str2().c_str());
     //    }
 
     STLBitsetDeterminant half_bit_mask(nmo_);
-    if (sorted_string_spin == SpinType::AlphaSpin) {
+    if (sorted_string_spin == STLBitsetDeterminant::SpinType::AlphaSpin) {
         for (int i = 0; i < nmo_; i++)
             half_bit_mask.set_alfa_bit(i, true);
     } else {
@@ -82,13 +81,21 @@ SortedStringList::SortedStringList(const DeterminantHashVec& space,
 
     // Find the unique strings and their range
     STLBitsetDeterminant first_string;
-    STLBitsetDeterminant last_first_string(sorted_dets_[0].bits() & half_bit_mask.bits());
+    STLBitsetDeterminant last_first_string = sorted_dets_[0];
+    STLBitsetDeterminant::SpinType zero_spin_type =
+        sorted_string_spin == STLBitsetDeterminant::SpinType::AlphaSpin
+            ? STLBitsetDeterminant::SpinType::BetaSpin
+            : STLBitsetDeterminant::SpinType::AlphaSpin;
+    last_first_string.zero_spin(zero_spin_type);
 
     first_string_range_[last_first_string] = std::make_pair(0, 0);
     outfile->Printf("\n %6d %s", 0, sorted_dets_[0].str2(nmo_).c_str());
     for (size_t i = 1; i < num_dets_; i++) {
         outfile->Printf("\n %6d %s", i, sorted_dets_[i].str2(nmo_).c_str());
-        first_string.set_bits(sorted_dets_[i].bits() & half_bit_mask.bits());
+        first_string = sorted_dets_[i];
+        first_string.zero_spin(zero_spin_type);
+
+//        first_string.set_bits(sorted_dets_[i].bits() & half_bit_mask.bits());
         if (not(first_string == last_first_string)) {
             first_string_range_[last_first_string].second = i;
             first_string_range_[first_string] = std::make_pair(i, 0);

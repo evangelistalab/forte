@@ -502,24 +502,23 @@ double ProjectorCI::estimate_high_energy() {
     double high_obt_energy = 0.0;
     int nea = 0, neb = 0;
     std::vector<std::pair<double, int>> obt_energies;
-    auto bits_ = reference_determinant_.bits_;
     Determinant high_det(reference_determinant_);
     for (int i = 0; i < nact_; i++) {
-        if (bits_[i]) {
+        if (reference_determinant_.get_alfa_bit(i)) {
             ++nea;
             high_det.destroy_alfa_bit(i);
         }
-        if (bits_[nact_ + i]) {
+        if (reference_determinant_.get_beta_bit(i)) {
             ++neb;
             high_det.destroy_beta_bit(i);
         }
 
         double temp = fci_ints_->oei_a(i, i);
         for (int p = 0; p < nact_; ++p) {
-            if (bits_[p]) {
+        if (reference_determinant_.get_alfa_bit(i)) {
                 temp += fci_ints_->tei_aa(i, p, i, p);
             }
-            if (bits_[nact_ + p]) {
+        if (reference_determinant_.get_beta_bit(i)) {
                 temp += fci_ints_->tei_ab(i, p, i, p);
             }
         }

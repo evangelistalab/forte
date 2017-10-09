@@ -41,7 +41,7 @@ namespace forte {
 
 STLBitsetDeterminant::STLBitsetDeterminant() {}
 
-//STLBitsetDeterminant::STLBitsetDeterminant(const std::vector<int>& occupation) {
+// STLBitsetDeterminant::STLBitsetDeterminant(const std::vector<int>& occupation) {
 //    int nmo = occupation.size() / 2;
 //    for (int p = 0; p < 2 * nmo; ++p)
 //        bits_[p] = occupation[p];
@@ -68,7 +68,7 @@ STLBitsetDeterminant::STLBitsetDeterminant(const bit_t& bits) { bits_ = bits; }
 
 STLBitsetDeterminant::STLBitsetDeterminant(const STLBitsetDeterminant& rhs) { bits_ = rhs.bits_; }
 
-//STLBitsetDeterminant::STLBitsetDeterminant(STLBitsetDeterminant& rhs) { bits_ = rhs.bits_; }
+// STLBitsetDeterminant::STLBitsetDeterminant(STLBitsetDeterminant& rhs) { bits_ = rhs.bits_; }
 
 void STLBitsetDeterminant::copy(const STLBitsetDeterminant& rhs) { bits_ = rhs.bits_; }
 
@@ -88,11 +88,9 @@ bool STLBitsetDeterminant::operator<(const STLBitsetDeterminant& lhs) const {
 }
 
 STLBitsetDeterminant STLBitsetDeterminant::operator^(const STLBitsetDeterminant& lhs) const {
-    STLBitsetDeterminant ndet(bits_ ^ lhs.bits());
+    STLBitsetDeterminant ndet(bits_ ^ lhs.bits_);
     return ndet;
 }
-
-const STLBitsetDeterminant::bit_t& STLBitsetDeterminant::bits() const { return bits_; }
 
 bool STLBitsetDeterminant::get_alfa_bit(int n) const { return ALFA(n); }
 
@@ -221,9 +219,15 @@ void STLBitsetDeterminant::spin_flip() {
 }
 
 /// Return determinant with one spin annihilated, 0 == alpha
-void STLBitsetDeterminant::zero_spin(bool spin) {
-    for (int p = 0; p < num_str_bits; ++p) {
-        bits_[p + (spin * num_str_bits)] = false;
+void STLBitsetDeterminant::zero_spin(STLBitsetDeterminant::SpinType spin_type) {
+    if (spin_type == SpinType::AlphaSpin) {
+        for (int p = 0; p < num_str_bits; ++p) {
+            ALFA(p) = false;
+        }
+    } else {
+        for (int p = 0; p < num_str_bits; ++p) {
+            BETA(p) = false;
+        }
     }
 }
 

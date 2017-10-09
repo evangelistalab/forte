@@ -44,10 +44,8 @@ namespace forte {
  */
 class SortedStringList {
   public:
-    enum class SpinType { AlphaSpin, BetaSpin };
-
     SortedStringList(const DeterminantHashVec& space, std::shared_ptr<FCIIntegrals> fci_ints,
-                     SpinType sorted_string_spin);
+                     STLBitsetDeterminant::SpinType sorted_string_spin);
 
     const std::vector<STLBitsetDeterminant>& sorted_dets();
     const det_hash<std::pair<size_t, size_t>>& first_string_range();

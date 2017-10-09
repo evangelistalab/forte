@@ -55,31 +55,21 @@ const int num_str_bits = 128;
 
 class STLBitsetDeterminant {
   public:
+    enum class SpinType { AlphaSpin, BetaSpin };
     using bit_t = std::bitset<num_det_bits>;
     // Class Constructor and Destructor
     /// Construct an empty determinant
     explicit STLBitsetDeterminant();
     /// Construct the determinant from an occupation vector that
     /// specifies the alpha and beta strings.  occupation = [Ia,Ib]
-//    explicit STLBitsetDeterminant(const std::vector<int>& occupation);
-    /// Construct the determinant from an occupation vector that
-    /// specifies the alpha and beta strings.  occupation = [Ia,Ib]
     explicit STLBitsetDeterminant(const std::vector<bool>& occupation);
-    /// Construct an excited determinant of a given reference
-    /// Construct the determinant from two occupation vectors that
+    /// Construct the determinant from an occupation vector that
     /// specifies the alpha and beta strings.  occupation = [Ia,Ib]
     explicit STLBitsetDeterminant(const std::vector<bool>& occupation_a,
                                   const std::vector<bool>& occupation_b);
     /// Construct a determinant from a bitset object
     explicit STLBitsetDeterminant(const bit_t& bits);
     STLBitsetDeterminant(const STLBitsetDeterminant& lhs);
-    /// Construct a determinant from two STLBitsetStrings
-    //    explicit STLBitsetDeterminant(const STLBitsetString& alpha, const STLBitsetString& beta);
-
-//    STLBitsetDeterminant& operator=(const STLBitsetDeterminant& lhs) {
-//        bits_ = lhs.bits_;
-//        return *this;
-//    }
 
     void copy(const STLBitsetDeterminant& rhs);
 
@@ -90,8 +80,8 @@ class STLBitsetDeterminant {
     /// XOR operator
     STLBitsetDeterminant operator^(const STLBitsetDeterminant& lhs) const;
 
-    /// Get a pointer to the bits
-    const bit_t& bits() const;
+    //    /// Get a pointer to the bits
+    //    const bit_t& bits() const;
 
     /// Return the value of an alpha bit
     bool get_alfa_bit(int n) const;
@@ -109,16 +99,8 @@ class STLBitsetDeterminant {
     void spin_flip();
 
     /// Return determinant with one spin zeroed, alpha == 0
-    void zero_spin(bool spin);
+    void zero_spin(STLBitsetDeterminant::SpinType spin_type);
 
-    //    /// Get the alpha bits
-    //    std::vector<bool> get_alfa_bits_vector_bool();
-    //    /// Get the beta bits
-    //    std::vector<bool> get_beta_bits_vector_bool();
-    //    /// Get the alpha bits
-    //    const std::vector<bool> get_alfa_bits_vector_bool() const;
-    //    /// Get the beta bits
-    //    const std::vector<bool> get_beta_bits_vector_bool() const;
     /// Return the number of alpha/beta pairs
     int npair();
 
@@ -190,18 +172,7 @@ class STLBitsetDeterminant {
     /// Perform an beta-beta double excitation (IJ -> AB)
     double double_excitation_bb(int i, int j, int a, int b);
 
-    /// The occupation vector (does not include the frozen orbitals)
-    bit_t bits_;
-
-    /// Return the sign of a_n applied to string I
-    static double SlaterSign(const bit_t& I, int n);
-    double SlaterSign(int n);
-    /// Return the sign of a_n^+ a_m applied to string I
-    double SlaterSign(const bit_t& I, int m, int n);
-    /// Return the sign of a_a^+ a_b^+ a_j a_i applied to string I
-    double SlaterSign(const bit_t& bits, int i, int j, int a, int b);
-    /// Given a set of determinant adds new elements necessary to have a spin
-    /// complete set
+    /// Given a set of determinant adds new elements necessary to have a spin complete set
     void enforce_spin_completeness(std::vector<STLBitsetDeterminant>& det_space, int nmo);
 
     struct Hash {
@@ -209,6 +180,10 @@ class STLBitsetDeterminant {
             return std::hash<bit_t>()(bs.bits_);
         }
     };
+
+  protected:
+    /// The occupation vector (does not include the frozen orbitals)
+    bit_t bits_;
 };
 
 using Determinant = STLBitsetDeterminant;

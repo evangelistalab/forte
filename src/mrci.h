@@ -71,7 +71,7 @@ class MRCI : public Wavefunction {
     DiagonalizationMethod diag_method_;
 
     void get_excited_determinants();
-    void upcast_reference();
+//    void upcast_referen ce();
 };
 }
 }

@@ -173,7 +173,7 @@ double MRPT2::energy_kernel(int bin, int nbin) {
                         continue;
 
                     // Check if the determinant goes in this bin
-                    size_t hash_val = std::hash<STLBitsetDeterminant::bit_t>()(new_det.bits_);
+                    size_t hash_val = STLBitsetDeterminant::Hash()(new_det);
                     if ((hash_val % nbin) == bin) {
                         double coupling =
                             fci_ints_->slater_rules_single_alpha(new_det, ii, aa) * c_I;
@@ -197,7 +197,7 @@ double MRPT2::energy_kernel(int bin, int nbin) {
                     if (reference_.has_det(new_det))
                         continue;
                     // Check if the determinant goes in this bin
-                    size_t hash_val = std::hash<STLBitsetDeterminant::bit_t>()(new_det.bits_);
+                    size_t hash_val = STLBitsetDeterminant::Hash()(new_det);
                     if ((hash_val % nbin) == bin) {
                         double coupling =
                             fci_ints_->slater_rules_single_beta(new_det, ii, aa) * c_I;
@@ -226,7 +226,7 @@ double MRPT2::energy_kernel(int bin, int nbin) {
                                 continue;
 
                             // Check if the determinant goes in this bin
-                            size_t hash_val = std::hash<STLBitsetDeterminant::bit_t>()(new_det.bits_);
+                            size_t hash_val = STLBitsetDeterminant::Hash()(new_det);
                             if ((hash_val % nbin) == bin) {
 
                                 double coupling = sign * c_I * fci_ints_->tei_ab(ii, jj, aa, bb);
@@ -257,7 +257,7 @@ double MRPT2::energy_kernel(int bin, int nbin) {
                                 continue;
 
                             // Check if the determinant goes in this bin
-                            size_t hash_val = std::hash<STLBitsetDeterminant::bit_t>()(new_det.bits_);
+                            size_t hash_val = STLBitsetDeterminant::Hash()(new_det);
                             if ((hash_val % nbin) == bin) {
                                 double coupling = sign * c_I * fci_ints_->tei_aa(ii, jj, aa, bb);
                                 if (A_I.find(new_det) != A_I.end()) {
@@ -287,7 +287,7 @@ double MRPT2::energy_kernel(int bin, int nbin) {
                                 continue;
 
                             // Check if the determinant goes in this bin
-                            size_t hash_val = std::hash<STLBitsetDeterminant::bit_t>()(new_det.bits_);
+                            size_t hash_val = STLBitsetDeterminant::Hash()(new_det);
                             if ((hash_val % nbin) == bin) {
                                 double coupling = sign * c_I * fci_ints_->tei_bb(ii, jj, aa, bb);
                                 if (A_I.find(new_det) != A_I.end()) {

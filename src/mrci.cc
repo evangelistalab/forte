@@ -251,58 +251,59 @@ void MRCI::get_excited_determinants() {
     reference_.merge(external);
 }
 
-void MRCI::upcast_reference() {
-    auto mo_sym = mo_space_info_->symmetry("GENERALIZED PARTICLE");
+//void MRCI::upcast_reference() {
+//    auto mo_sym = mo_space_info_->symmetry("GENERALIZED PARTICLE");
 
-    Dimension old_dim = mo_space_info_->get_dimension("ACTIVE");
-    Dimension new_dim = mo_space_info_->get_dimension("GENERALIZED PARTICLE");
-    size_t nact = mo_space_info_->size("ACTIVE");
-    size_t ncorr = mo_space_info_->size("GENERALIZED PARTICLE");
-    int n_irrep = old_dim.n();
+//    Dimension old_dim = mo_space_info_->get_dimension("ACTIVE");
+//    Dimension new_dim = mo_space_info_->get_dimension("GENERALIZED PARTICLE");
+//    size_t nact = mo_space_info_->size("ACTIVE");
+//    size_t ncorr = mo_space_info_->size("GENERALIZED PARTICLE");
+//    int n_irrep = old_dim.n();
 
-    det_hashvec ref_dets;
-    ref_dets.swap(reference_.wfn_hash());
-    reference_.clear();
+//    det_hashvec ref_dets;
+//    ref_dets.swap(reference_.wfn_hash());
+//    reference_.clear();
 
-    // Compute shifts
-    std::vector<int> shift(n_irrep, 0);
-    if (n_irrep > 1) {
-        for (int n = 1; n < n_irrep; ++n) {
-            shift[n] += new_dim[n - 1] - old_dim[n - 1] + shift[n - 1];
-        }
-    }
-    int b_shift = ncorr - nact;
+//    // Compute shifts
+//    std::vector<int> shift(n_irrep, 0);
+//    if (n_irrep > 1) {
+//        for (int n = 1; n < n_irrep; ++n) {
+//            shift[n] += new_dim[n - 1] - old_dim[n - 1] + shift[n - 1];
+//        }
+//    }
+//    int b_shift = ncorr - nact;
 
-    for (size_t I = 0, max = ref_dets.size(); I < max; ++I) {
-        STLBitsetDeterminant det(ref_dets[I].bits());
+//    for (size_t I = 0, max = ref_dets.size(); I < max; ++I) {
+//        STLBitsetDeterminant det(ref_dets[I]);
 
-        // First beta
-        for (int n = n_irrep - 1; n >= 0; --n) {
-            int min = 0;
-            for (int m = 0; m < n; ++m) {
-                min += old_dim[m];
-            }
-            for (int pos = nact + min + old_dim[n] - 1; pos >= min + nact; --pos) {
-                det.bits_[pos + b_shift + shift[n]] = det.bits_[pos];
-                det.bits_[pos] = 0;
-            }
-        }
-        // Then alpha
-        for (int n = n_irrep - 1; n >= 0; --n) {
-            int min = 0;
-            for (int m = 0; m < n; ++m) {
-                min += old_dim[m];
-            }
-            for (int pos = min + old_dim[n] - 1; pos >= min; --pos) {
-                det.bits_[pos + shift[n]] = det.bits_[pos];
+//        // First beta
+//        for (int n = n_irrep - 1; n >= 0; --n) {
+//            int min = 0;
+//            for (int m = 0; m < n; ++m) {
+//                min += old_dim[m];
+//            }
+//            for (int pos = nact + min + old_dim[n] - 1; pos >= min + nact; --pos) {
+//                det.set_beta_bit(pos + b_shift + shift[n],);
+//                det.bits_[pos + b_shift + shift[n]] = det.bits_[pos];
+//                det.bits_[pos] = 0;
+//            }
+//        }
+//        // Then alpha
+//        for (int n = n_irrep - 1; n >= 0; --n) {
+//            int min = 0;
+//            for (int m = 0; m < n; ++m) {
+//                min += old_dim[m];
+//            }
+//            for (int pos = min + old_dim[n] - 1; pos >= min; --pos) {
+//                det.bits_[pos + shift[n]] = det.bits_[pos];
 
-                if (n > 0)
-                    det.bits_[pos] = 0;
-            }
-        }
+//                if (n > 0)
+//                    det.bits_[pos] = 0;
+//            }
+//        }
 
-        reference_.add(det);
-    }
-}
+//        reference_.add(det);
+//    }
+//}
 }
 }
