@@ -44,6 +44,7 @@
 #include "psi4/libqt/qt.h"
 
 #include "pci_simple.h"
+#include "../ci_reference.h"
 
 using namespace psi;
 using namespace psi::forte::GeneratorType_Simple;
@@ -160,7 +161,12 @@ void ProjectorCI_Simple::startup() {
     nbeta_ = nactel_ - nalpha_;
 
     // Build the reference determinant and compute its energy
-    reference_determinant_ = Determinant(get_occupation());
+    std::vector<STLBitsetDeterminant> reference_vec;
+    CI_Reference ref(reference_wavefunction_, options_, mo_space_info_, fci_ints_, wavefunction_multiplicity_,
+                     ms, wavefunction_symmetry_);
+    ref.set_ref_type("HF");
+    ref.build_reference(reference_vec);
+    reference_determinant_ = reference_vec[0];
 
     //    outfile->Printf("\n  The reference determinant is:\n");
     //    reference_determinant_.print();
@@ -460,7 +466,7 @@ double ProjectorCI_Simple::estimate_high_energy() {
     }
     outfile->Printf("\n\n  ==> Estimate highest excitation energy <==");
     outfile->Printf("\n  Highest Excited determinant:");
-    high_det.print();
+    high_det.print(nmo_);
     outfile->Printf("\n  Determinant Energy                    :  %.12f",
                     fci_ints_->energy(high_det) + nuclear_repulsion_energy_ +
                         fci_ints_->scalar_energy());
@@ -848,13 +854,10 @@ bool ProjectorCI_Simple::converge_test() {
 }
 
 double ProjectorCI_Simple::initial_guess(det_vec& dets, std::vector<double>& C) {
-    // Use the reference determinant as a starting point
-    std::vector<bool> alfa_bits = reference_determinant_.get_alfa_bits_vector_bool();
-    std::vector<bool> beta_bits = reference_determinant_.get_beta_bits_vector_bool();
     det_hash<> dets_C;
 
     // Do one time step starting from the reference determinant
-    Determinant bs_det(alfa_bits, beta_bits);
+    Determinant bs_det(reference_determinant_);
     det_vec guess_dets{bs_det};
 
     //    apply_tau_H(time_step_, initial_guess_spawning_threshold_, guess_dets,
@@ -1757,7 +1760,7 @@ void ProjectorCI_Simple::print_wfn(det_vec& space, std::vector<double>& C, size_
     for (size_t I = 0; I < max_dets; ++I) {
         outfile->Printf("\n  %3zu  %13.6g %13.6g  %10zu %s  %18.12f", I, C[det_weight[I].second],
                         det_weight[I].first * det_weight[I].first, det_weight[I].second,
-                        space[det_weight[I].second].str().c_str(),
+                        space[det_weight[I].second].str(nmo_).c_str(),
                         fci_ints_->energy(space[det_weight[I].second]) +
                             fci_ints_->scalar_energy());
     }
@@ -1787,7 +1790,7 @@ void ProjectorCI_Simple::print_wfn(det_vec& space, std::vector<double>& C, size_
         for (size_t sJ = 0; sJ < max_I; ++sJ) {
             size_t J = det_weight[sJ].second;
             if (std::fabs(C[I] * C[J]) > 1.0e-12) {
-                const double S2IJ = space[I].spin2(space[J]);
+                const double S2IJ = space[I].spin2(space[J], nmo_);
                 S2 += C[I] * C[J] * S2IJ;
             }
         }
@@ -2014,190 +2017,4 @@ ProjectorCI_Simple::sym_labeled_orbitals(std::string type) {
     return labeled_orb;
 }
 
-std::vector<int> ProjectorCI_Simple::get_occupation() {
-
-    std::vector<int> occupation(2 * nact_, 0);
-
-    // Get reference type
-    std::string ref_type = options_.get_str("REFERENCE");
-    // if(!quiet_mode_) outfile->Printf("\n  Using %s reference.\n",
-    // ref_type.c_str());
-
-    // nyms denotes the number of electrons needed to assign symmetry and
-    // multiplicity
-    int nsym = wavefunction_multiplicity_ - 1;
-    int orb_sym = wavefunction_symmetry_;
-
-    if (wavefunction_multiplicity_ == 1) {
-        nsym = 2;
-    }
-
-    // Grab an ordered list of orbital energies, sym labels, and idxs
-    std::vector<std::tuple<double, int, int>> labeled_orb_en;
-    std::vector<std::tuple<double, int, int>> labeled_orb_en_alfa;
-    std::vector<std::tuple<double, int, int>> labeled_orb_en_beta;
-
-    // For a restricted reference
-    if (ref_type == "RHF" or ref_type == "RKS" or ref_type == "ROHF") {
-        labeled_orb_en = sym_labeled_orbitals("RHF");
-
-        // Build initial reference determinant from restricted reference
-        for (int i = 0; i < nalpha_; ++i) {
-            occupation[std::get<2>(labeled_orb_en[i])] = 1;
-        }
-        for (int i = 0; i < nbeta_; ++i) {
-            occupation[nact_ + std::get<2>(labeled_orb_en[i])] = 1;
-        }
-
-        // Loop over as many outer-shell electrons as needed to get correct sym
-        for (int k = 1; k <= nsym;) {
-
-            bool add = false;
-            // Remove electron from highest energy docc
-            occupation[std::get<2>(labeled_orb_en[nalpha_ - k])] = 0;
-
-            // Determine proper symmetry for new occupation
-            orb_sym = wavefunction_symmetry_;
-
-            if (wavefunction_multiplicity_ == 1) {
-                orb_sym = std::get<1>(labeled_orb_en[nalpha_ - 1]) ^ orb_sym;
-            } else {
-                for (int i = 1; i <= nsym; ++i) {
-                    orb_sym = std::get<1>(labeled_orb_en[nalpha_ - i]) ^ orb_sym;
-                }
-                orb_sym = std::get<1>(labeled_orb_en[nalpha_ - k]) ^ orb_sym;
-            }
-
-            // Add electron to lowest-energy orbital of proper symmetry
-            // Loop from current occupation to max MO until correct orbital is
-            // reached
-            for (int i = nalpha_ - k, maxi = nact_; i < maxi; ++i) {
-                if (orb_sym == std::get<1>(labeled_orb_en[i]) and
-                    occupation[std::get<2>(labeled_orb_en[i])] != 1) {
-                    occupation[std::get<2>(labeled_orb_en[i])] = 1;
-                    add = true;
-                    break;
-                } else {
-                    continue;
-                }
-            }
-            // If a new occupation could not be created, put electron back and
-            // remove a different one
-            if (!add) {
-                occupation[std::get<2>(labeled_orb_en[nalpha_ - k])] = 1;
-                ++k;
-            } else {
-                break;
-            }
-
-        } // End loop over k
-
-    } else {
-        labeled_orb_en_alfa = sym_labeled_orbitals("ALFA");
-        labeled_orb_en_beta = sym_labeled_orbitals("BETA");
-
-        // For an unrestricted reference
-        // Make the reference
-        // For singlets, this will be closed-shell
-
-        for (int i = 0; i < nalpha_; ++i) {
-            occupation[std::get<2>(labeled_orb_en_alfa[i])] = 1;
-        }
-        for (int i = 0; i < nbeta_; ++i) {
-            occupation[std::get<2>(labeled_orb_en_beta[i]) + nact_] = 1;
-        }
-
-        if (nalpha_ >= nbeta_) {
-
-            // Loop over k
-            for (int k = 1; k < nsym;) {
-
-                bool add = false;
-                // Remove highest energy alpha electron
-                occupation[std::get<2>(labeled_orb_en_alfa[nalpha_ - k])] = 0;
-
-                // Determine proper symmetry for new electron
-
-                orb_sym = wavefunction_symmetry_;
-
-                if (wavefunction_multiplicity_ == 1) {
-                    orb_sym = std::get<1>(labeled_orb_en_alfa[nalpha_ - 1]) ^ orb_sym;
-                } else {
-                    for (int i = 1; i <= nsym; ++i) {
-                        orb_sym = std::get<1>(labeled_orb_en_alfa[nalpha_ - i]) ^ orb_sym;
-                    }
-                    orb_sym = std::get<1>(labeled_orb_en_alfa[nalpha_ - k]) ^ orb_sym;
-                }
-
-                // Add electron to lowest-energy orbital of proper symmetry
-                for (int i = nalpha_ - k; i < nactel_; ++i) {
-                    if (orb_sym == std::get<1>(labeled_orb_en_alfa[i]) and
-                        occupation[std::get<2>(labeled_orb_en_alfa[i])] != 1) {
-                        occupation[std::get<2>(labeled_orb_en_alfa[i])] = 1;
-                        add = true;
-                        break;
-                    } else {
-                        continue;
-                    }
-                }
-
-                // If a new occupation could not be made,
-                // add electron back and try a different one
-
-                if (!add) {
-                    occupation[std::get<2>(labeled_orb_en_alfa[nalpha_ - k])] = 1;
-                    ++k;
-                } else {
-                    break;
-                }
-
-            }    //	End loop over k
-        } else { // End if(nalpha_ >= nbeta_ )
-
-            for (int k = 1; k < nsym;) {
-
-                bool add = false;
-
-                // Remove highest-energy beta electron
-                occupation[std::get<2>(labeled_orb_en_beta[nbeta_ - k])] = 0;
-
-                // Determine proper symetry for new occupation
-                orb_sym = wavefunction_symmetry_;
-
-                if (wavefunction_multiplicity_ == 1) {
-                    orb_sym = std::get<1>(labeled_orb_en_beta[nbeta_ - 1]) ^ orb_sym;
-                } else {
-                    for (int i = 1; i <= nsym; ++i) {
-                        orb_sym = std::get<1>(labeled_orb_en_beta[nbeta_ - i]) ^ orb_sym;
-                    }
-                    orb_sym = std::get<1>(labeled_orb_en_beta[nbeta_ - k]) ^ orb_sym;
-                }
-
-                // Add electron to lowest-energy beta orbital
-
-                for (int i = nbeta_ - k; i < nactel_; ++i) {
-                    if (orb_sym == std::get<1>(labeled_orb_en_beta[i]) and
-                        occupation[std::get<2>(labeled_orb_en_beta[i])] != 1) {
-                        occupation[std::get<2>(labeled_orb_en_beta[i])] = 1;
-                        add = true;
-                        break;
-                    }
-                }
-
-                // If a new occupation could not be made,
-                // replace the electron and try again
-
-                if (!add) {
-                    occupation[std::get<2>(labeled_orb_en_beta[nbeta_ - k])] = 1;
-                    ++k;
-                } else {
-                    break;
-                }
-
-            } // End loop over k
-        }     // End if nalpha_ < nbeta_
-    }
-    return occupation;
-}
-}
-} // EndNamespaces
+}} // EndNamespaces

@@ -99,6 +99,9 @@ class CI_Reference // : public Wavefunction
 
     /// Build a reference
     void build_reference(std::vector<STLBitsetDeterminant>& ref_space);
+
+    /// Set the reference type
+    void set_ref_type(const std::string& ref_type) { ref_type_ = ref_type; }
 };
 }
 } // End Namespaces
