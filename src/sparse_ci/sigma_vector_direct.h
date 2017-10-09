@@ -76,8 +76,10 @@ class SigmaVectorDirect : public SigmaVector {
     void compute_sigma_bbbb(SharedVector sigma, SharedVector b);
 
     void compute_sigma_aa_fast_search(SharedVector sigma, SharedVector b);
+    void compute_sigma_bb_fast_search(SharedVector sigma, SharedVector b);
 
     void compute_aa_coupling(const STLBitsetDeterminant& detI, const double b_I, double* sigma_p);
+    void compute_bb_coupling(const STLBitsetDeterminant& detI, const double b_I, double* sigma_p);
 };
 }
 }

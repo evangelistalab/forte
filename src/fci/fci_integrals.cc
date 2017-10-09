@@ -246,23 +246,23 @@ double FCIIntegrals::energy(STLBitsetDeterminant& det) {
     return energy;
 }
 
-STLBitsetDeterminant FCIIntegrals::determinant() {
-    STLBitsetDeterminant det(nmo_);
-    return det;
-}
+//STLBitsetDeterminant FCIIntegrals::determinant() {
+//    STLBitsetDeterminant det(nmo_);
+//    return det;
+//}
 
-STLBitsetDeterminant FCIIntegrals::determinant(const STLBitsetDeterminant::bit_t& bits) {
-    STLBitsetDeterminant det(bits, nmo_);
-    return det;
-}
-STLBitsetDeterminant FCIIntegrals::determinant(const std::vector<int>& bits) {
-    STLBitsetDeterminant det(bits, nmo_);
-    return det;
-}
-STLBitsetDeterminant FCIIntegrals::determinant(const std::vector<bool>& bits) {
-    STLBitsetDeterminant det(bits, nmo_);
-    return det;
-}
+//STLBitsetDeterminant FCIIntegrals::determinant(const STLBitsetDeterminant::bit_t& bits) {
+//    STLBitsetDeterminant det(bits);
+//    return det;
+//}
+//STLBitsetDeterminant FCIIntegrals::determinant(const std::vector<int>& bits) {
+//    STLBitsetDeterminant det(bits);
+//    return det;
+//}
+//STLBitsetDeterminant FCIIntegrals::determinant(const std::vector<bool>& bits) {
+//    STLBitsetDeterminant det(bits);
+//    return det;
+//}
 
 double FCIIntegrals::slater_rules(const STLBitsetDeterminant& lhs,
                                   const STLBitsetDeterminant& rhs) const {

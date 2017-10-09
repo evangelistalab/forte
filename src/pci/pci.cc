@@ -195,11 +195,11 @@ void print_vector(const std::vector<double>& C, std::string description) {
     outfile->Printf("\n");
 }
 
-void print_hash(det_hash<>& C, std::string description, bool print_det = false) {
+void print_hash(det_hash<>& C, std::string description, int nmo, bool print_det = false) {
     outfile->Printf("\n%s :", description.c_str());
     for (det_hash_it it = C.begin(); it != C.end(); it++) {
         if (print_det)
-            it->first.print();
+            it->first.print(nmo);
         outfile->Printf(" %.12lf ", it->second);
     }
     outfile->Printf("\n");
@@ -669,7 +669,7 @@ double ProjectorCI::estimate_high_energy() {
     }
     outfile->Printf("\n\n  ==> Estimate highest excitation energy <==");
     outfile->Printf("\n  Highest Excited determinant:");
-    high_det.print();
+    high_det.print(nmo_);
     outfile->Printf("\n  Determinant Energy                    :  %.12f",
                     fci_ints_->energy(high_det) + nuclear_repulsion_energy_ +
                         fci_ints_->scalar_energy());
@@ -4945,7 +4945,7 @@ void ProjectorCI::print_wfn(det_vec& space, std::vector<double>& C, size_t max_o
         for (size_t sJ = 0; sJ < max_I; ++sJ) {
             size_t J = det_weight[sJ].second;
             if (std::fabs(C[I] * C[J]) > 1.0e-12) {
-                const double S2IJ = space[I].spin2(space[J]);
+                const double S2IJ = space[I].spin2(space[J],nmo_);
                 S2 += C[I] * C[J] * S2IJ;
             }
         }

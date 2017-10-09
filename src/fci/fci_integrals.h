@@ -63,11 +63,11 @@ class FCIIntegrals {
     /// Set scalar_energy();
     void set_scalar_energy(double scalar_energy) { scalar_energy_ = scalar_energy; }
 
-    /// Initialize a determinant
-    STLBitsetDeterminant determinant(const STLBitsetDeterminant::bit_t& bits);
-    STLBitsetDeterminant determinant(const std::vector<int>& bits);
-    STLBitsetDeterminant determinant(const std::vector<bool>& bits);
-    STLBitsetDeterminant determinant();
+//    /// Initialize a determinant
+//    STLBitsetDeterminant determinant(const STLBitsetDeterminant::bit_t& bits);
+//    STLBitsetDeterminant determinant(const std::vector<int>& bits);
+//    STLBitsetDeterminant determinant(const std::vector<bool>& bits);
+//    STLBitsetDeterminant determinant();
 
     /// Compute a determinant's energy
     double energy(STLBitsetDeterminant& det);

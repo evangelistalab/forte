@@ -2088,7 +2088,7 @@ void AdaptiveCI::print_wfn(DeterminantHashVec& space, WFNOperator& op, SharedMat
         for (size_t I = 0; I < max_dets; ++I) {
             outfile->Printf("\n  %3zu  %9.6f %.9f  %10zu %s", I, tmp_evecs[I],
                             tmp_evecs[I] * tmp_evecs[I], space.get_idx(tmp.get_det(I)),
-                            tmp.get_det(I).str().c_str());
+                            tmp.get_det(I).str(nmo_).c_str());
         }
 
         state_label = s2_labels[std::round(spins[n].first * 2.0)];
@@ -2182,7 +2182,7 @@ void AdaptiveCI::save_dets_to_file(DeterminantHashVec& space, SharedMatrix evecs
     // Use for single-root calculations only
     const det_hashvec& detmap = space.wfn_hash();
     for (size_t i = 0, max_i = detmap.size(); i < max_i; ++i) {
-        det_list_ << detmap[i].str().c_str() << " " << std::fabs(evecs->get(i, 0)) << " ";
+        det_list_ << detmap[i].str(nmo_).c_str() << " " << std::fabs(evecs->get(i, 0)) << " ";
         //	for(size_t J = 0, maxJ = space.size(); J < maxJ; ++J){
         //		det_list_ << space[I].slater_rules(space[J]) << " ";
         //	}
@@ -2530,7 +2530,7 @@ void AdaptiveCI::compute_aci(DeterminantHashVec& PQ_space, SharedMatrix& PQ_evec
         STLBitsetDeterminant det = initial_reference_[0];
         STLBitsetDeterminant detb(det);
         std::vector<int> avir = det.get_alfa_vir();
-        det.print();
+        det.print(nmo_);
         outfile->Printf("\n  Freezing alpha orbital %d", hole_);
         outfile->Printf("\n  Exciting electron from %d to %d", hole_, avir[particle] );
         det.set_alfa_bit( hole_, false );
@@ -2543,8 +2543,8 @@ void AdaptiveCI::compute_aci(DeterminantHashVec& PQ_space, SharedMatrix& PQ_evec
                 break; 
             }
         }
-        det.print();
-        detb.print();
+        det.print(nmo_);
+        detb.print(nmo_);
         P_space.add(det);
         P_space.add(detb);
     

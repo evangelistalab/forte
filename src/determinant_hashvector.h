@@ -81,7 +81,7 @@ class DeterminantHashVec {
     void clear();
 
     // Return a specific determinant by value
-    STLBitsetDeterminant get_det(const size_t value) const;
+    const STLBitsetDeterminant& get_det(const size_t value) const;
 
     // Return the index of a determinant
     size_t get_idx(const STLBitsetDeterminant& det) const;

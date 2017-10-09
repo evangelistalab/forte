@@ -84,7 +84,7 @@ class CI_Reference // : public Wavefunction
     void build_ci_reference(std::vector<STLBitsetDeterminant>& ref_space);
     void build_cas_reference(std::vector<STLBitsetDeterminant>& ref_space);
 
-    std::vector<int> get_occupation();
+    STLBitsetDeterminant get_occupation();
 
     std::shared_ptr<FCIIntegrals> fci_ints_;
 

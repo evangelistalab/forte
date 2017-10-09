@@ -69,7 +69,7 @@ size_t DeterminantHashVec::size() const { return wfn_.size(); }
 
 void DeterminantHashVec::add(const STLBitsetDeterminant& det) { wfn_.add(det); }
 
-STLBitsetDeterminant DeterminantHashVec::get_det(const size_t value) const {
+const STLBitsetDeterminant& DeterminantHashVec::get_det(const size_t value) const {
     // Iterate through map to find the right one
     // Possibly a faster way to do this?
     return wfn_[value];
@@ -225,7 +225,7 @@ void DeterminantHashVec::subspace(DeterminantHashVec& dets, SharedMatrix evecs,
 }
 
 void DeterminantHashVec::merge(DeterminantHashVec& dets) {
-    for (STLBitsetDeterminant d : dets.wfn_) {
+    for (const STLBitsetDeterminant& d : dets.wfn_) {
         wfn_.add(d);
     }
 }

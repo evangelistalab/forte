@@ -183,7 +183,7 @@ void SparseCISolver::diagonalize_full(const std::vector<STLBitsetDeterminant>& s
         Matrix S2("S^2", dim_space, dim_space);
         for (size_t I = 0; I < dim_space; ++I) {
             for (size_t J = 0; J < dim_space; ++J) {
-                double S2IJ = space[I].spin2(space[J]);
+                double S2IJ = space[I].spin2(space[J],fci_ints_->nmo());
                 S2.set(I, J, S2IJ);
             }
         }
@@ -410,7 +410,7 @@ SparseCISolver::initial_guess(const std::vector<STLBitsetDeterminant>& space, in
 
     if (spin_project_) {
         STLBitsetDeterminant det(fci_ints_->nmo());
-        det.enforce_spin_completeness(guess_det);
+        det.enforce_spin_completeness(guess_det,fci_ints_->nmo());
         if (guess_det.size() > nguess) {
             size_t nnew_dets = guess_det.size() - nguess;
             if (print_details_)
@@ -441,7 +441,7 @@ SparseCISolver::initial_guess(const std::vector<STLBitsetDeterminant>& space, in
         for (size_t J = I; J < nguess; J++) {
             const STLBitsetDeterminant& detI = guess_dets_pos[I].first;
             const STLBitsetDeterminant& detJ = guess_dets_pos[J].first;
-            double S2IJ = detI.spin2(detJ);
+            double S2IJ = detI.spin2(detJ,fci_ints_->nmo());
             S2.set(I, J, S2IJ);
             S2.set(J, I, S2IJ);
         }
@@ -556,7 +556,7 @@ SparseCISolver::initial_guess_map(const DeterminantHashVec& space, int nroot, in
 
     if (spin_project_) {
         STLBitsetDeterminant det(fci_ints_->nmo());
-        det.enforce_spin_completeness(guess_det);
+        det.enforce_spin_completeness(guess_det,fci_ints_->nmo());
         if (guess_det.size() > nguess) {
             size_t nnew_dets = guess_det.size() - nguess;
             if (print_details_)
@@ -587,7 +587,7 @@ SparseCISolver::initial_guess_map(const DeterminantHashVec& space, int nroot, in
         for (size_t J = I; J < nguess; J++) {
             const STLBitsetDeterminant& detI = guess_dets_pos[I].first;
             const STLBitsetDeterminant& detJ = guess_dets_pos[J].first;
-            double S2IJ = detI.spin2(detJ);
+            double S2IJ = detI.spin2(detJ,fci_ints_->nmo());
             S2.set(I, J, S2IJ);
             S2.set(J, I, S2IJ);
         }

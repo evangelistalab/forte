@@ -132,15 +132,15 @@ void FCIQMC::startup() {
     }
 
     // Build the reference determinant and compute its energy
-    std::vector<int> occupation(2 * ncmo_, 0);
+    std::vector<bool> occupation(2 * ncmo_, false);
     int cumidx = 0;
     for (int h = 0; h < nirrep_; ++h) {
         for (int i = 0; i < doccpi_[h] - frzcpi_[h]; ++i) {
-            occupation[i + cumidx] = 1;
-            occupation[ncmo_ + i + cumidx] = 1;
+            occupation[i + cumidx] = true;
+            occupation[ncmo_ + i + cumidx] = true;
         }
         for (int i = 0; i < soccpi_[h]; ++i) {
-            occupation[i + cumidx] = 1;
+            occupation[i + cumidx] = true;
         }
         cumidx += ncmopi_[h];
     }
@@ -148,7 +148,7 @@ void FCIQMC::startup() {
     reference_ = reference_determinant;
 
     outfile->Printf("\n  The reference determinant is:\n");
-    reference_.print();
+    reference_.print(nmo_);
     time_step_ = options_.get_double("TAU");
     maxiter_ = options_.get_int("MAXITER");
     start_num_walkers_ = options_.get_double("START_NUM_WALKERS");
@@ -288,7 +288,7 @@ double FCIQMC::compute_energy() {
     //        }
     //        cumidx += nmopi_[h];
     //    }
-    reference_.print();
+    reference_.print(nmo_);
 
     Ehf_ = fci_ints_->energy(reference_);
 

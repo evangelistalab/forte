@@ -38,6 +38,7 @@
 template <class Key, class Hash = std::hash<Key>> class HashVector {
   private:
     template <class V> struct CINode {
+        CINode(const V& v, size_t n) : value(v), next(n) {}
         V value;
         size_t next;
     };
@@ -137,7 +138,7 @@ template <class Key, class Hash> HashVector<Key, Hash>::HashVector() { this->cle
 template <class Key, class Hash> HashVector<Key, Hash>::HashVector(const std::vector<Key>& other) {
     this->clear();
     this->reserve(other.size());
-    for (Key k : other) {
+    for (const Key& k : other) {
         this->add(k);
     }
 }
@@ -334,7 +335,7 @@ template <class Key, class Hash> size_t HashVector<Key, Hash>::add(const Key& ke
     std::tie(key_bucket_index, key_pre_index, key_index) = find_detail_by_key(key);
     if (key_index != npos)
         return key_index;
-    this->vec.push_back({key, npos});
+    this->vec.push_back(CINode<Key>(key, npos));
     if (key_pre_index != npos)
         this->vec[key_pre_index].next = current_size;
     else
@@ -680,7 +681,7 @@ template <class Key, class Hash> std::vector<size_t> HashVector<Key, Hash>::opti
 template <class Key, class Hash> std::vector<Key> HashVector<Key, Hash>::toVector() const {
     std::vector<Key> keys;
     keys.reserve(current_size);
-    for (const Key k : (*this)) {
+    for (const Key& k : (*this)) {
         keys.push_back(k);
     }
     return keys;

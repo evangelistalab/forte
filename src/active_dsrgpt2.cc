@@ -1511,13 +1511,13 @@ ACTIVE_DSRGPT2::p_space_actv_to_nmo(const std::vector<STLBitsetDeterminant>& p_s
         }
 
         // find out occupation of determinant (active only)
-        STLBitsetDeterminant det_actv = p_space[I];
+        STLBitsetDeterminant det_actv(p_space[I]);
         std::vector<int> occ_alfa(det_actv.get_alfa_occ());
         std::vector<int> occ_beta(det_actv.get_beta_occ());
         //        det_actv.print();
 
         // create a empty big determinant
-        STLBitsetDeterminant det(std::vector<bool>(2 * ncmo, false));
+        STLBitsetDeterminant det;
 
         // fill in core orbitals
         double sign = 1.0;
@@ -1555,7 +1555,7 @@ ACTIVE_DSRGPT2::excited_wfn_1st(const std::map<STLBitsetDeterminant, double>& re
 
     for (const auto& detCIpair : ref) {
         double ci = detCIpair.second;
-        STLBitsetDeterminant det = detCIpair.first;
+        STLBitsetDeterminant det(detCIpair.first);
 
         // singles
         T1.citerate([&](const std::vector<size_t>& i, const std::vector<SpinType>& spin,
@@ -1918,7 +1918,7 @@ ACTIVE_DSRGPT2::excited_ref(const std::map<STLBitsetDeterminant, double>& ref, c
 
     for (const auto& detCIpair : ref) {
         double ci = detCIpair.second;
-        STLBitsetDeterminant det = detCIpair.first;
+        STLBitsetDeterminant det(detCIpair.first);
 
         std::vector<int> o_a = det.get_alfa_occ();
         std::vector<int> o_b = det.get_beta_occ();
@@ -2052,7 +2052,7 @@ double ACTIVE_DSRGPT2::compute_overlap(std::map<STLBitsetDeterminant, double> wf
     double value = 0.0;
 
     for (const auto& p1 : wfn1) {
-        STLBitsetDeterminant det1 = p1.first;
+        STLBitsetDeterminant det1(p1.first);
         if (wfn2.find(det1) != wfn2.end()) {
             value += p1.second * wfn2[det1];
         }
