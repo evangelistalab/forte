@@ -70,7 +70,6 @@ class STLBitsetDeterminant {
     STLBitsetDeterminant(const std::vector<bool>& occupation_a,
                          const std::vector<bool>& occupation_b);
     /// Construct a determinant from a bitset object
-    STLBitsetDeterminant(const bit_t& bits);
     STLBitsetDeterminant(const bit_t& bits, int nmo);
     STLBitsetDeterminant(int nmo) { nmo_ = nmo; }
     STLBitsetDeterminant(const STLBitsetDeterminant& lhs);
@@ -100,6 +99,8 @@ class STLBitsetDeterminant {
     void set_alfa_bit(int n, bool value);
     /// Set the value of a beta bit
     void set_beta_bit(int n, bool value);
+    /// Set the bits to a given bit_t
+    void set_bits(const bit_t& bits);
 
     /// Switch the alpha and beta occupations
     void spin_flip();

@@ -111,7 +111,7 @@ bool STLBitsetDeterminant::operator<(const STLBitsetDeterminant& lhs) const {
 }
 
 STLBitsetDeterminant STLBitsetDeterminant::operator^(const STLBitsetDeterminant& lhs) const {
-    STLBitsetDeterminant ndet(bits_ ^ lhs.bits());
+    STLBitsetDeterminant ndet(bits_ ^ lhs.bits(), nmo_);
     return ndet;
 }
 
@@ -124,6 +124,8 @@ bool STLBitsetDeterminant::get_beta_bit(int n) const { return bits_[n + nmo_]; }
 void STLBitsetDeterminant::set_alfa_bit(int n, bool value) { bits_[n] = value; }
 
 void STLBitsetDeterminant::set_beta_bit(int n, bool value) { bits_[n + nmo_] = value; }
+
+void STLBitsetDeterminant::set_bits(const bit_t& bits) { bits_ = bits; }
 
 std::vector<bool> STLBitsetDeterminant::get_alfa_bits_vector_bool() {
     std::vector<bool> result(nmo_);
@@ -264,9 +266,10 @@ double STLBitsetDeterminant::destroy_beta_bit(int n) {
 
 /// Switch alfa and beta bits
 void STLBitsetDeterminant::spin_flip() {
+    bool temp;
     for (int p = 0; p < nmo_; ++p) {
         //        std::swap(bits_[p],bits_[nmo_ + p]);
-        bool temp = bits_[p];
+        temp = bits_[p];
         bits_[p] = bits_[nmo_ + p];
         bits_[nmo_ + p] = temp;
     }

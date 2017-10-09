@@ -68,7 +68,10 @@ void print_SigmaVectorDirect_stats();
 
 SigmaVectorDirect::SigmaVectorDirect(const DeterminantHashVec& space,
                                      std::shared_ptr<FCIIntegrals> fci_ints)
-    : SigmaVector(space.size()), space_(space), fci_ints_(fci_ints) {
+    : SigmaVector(space.size()), space_(space), fci_ints_(fci_ints),
+      a_sorted_string_list_(space, fci_ints,false), b_sorted_string_list_(space, fci_ints,true) {
+
+    nmo_ = fci_ints_->nmo();
 
     for (size_t I = 0; I < size_; ++I) {
         STLBitsetDeterminant detI = space.get_det(I);
@@ -83,7 +86,7 @@ void SigmaVectorDirect::compute_sigma(SharedVector sigma, SharedVector b) {
 
     sigma->zero();
     compute_sigma_scalar(sigma, b);
-    compute_sigma_aa(sigma, b);
+    compute_sigma_aa_fast_search(sigma, b);
     compute_sigma_bb(sigma, b);
     compute_sigma_aaaa(sigma, b);
     compute_sigma_abab(sigma, b);
@@ -342,6 +345,72 @@ void SigmaVectorDirect::compute_sigma_bbbb(SharedVector sigma, SharedVector b) {
                                 }
                             }
                         }
+                    }
+                }
+            }
+        }
+    }
+}
+
+void SigmaVectorDirect::compute_sigma_aa_fast_search(SharedVector sigma, SharedVector b) {
+    timer energy_timer("SigmaVectorDirect:sigma_aa");
+    double* sigma_p = sigma->pointer();
+    double* b_p = b->pointer();
+    // loop over all determinants
+    for (size_t I = 0; I < size_; ++I) {
+        STLBitsetDeterminant detI = space_.get_det(I);
+        double b_I = b_p[I];
+        compute_aa_coupling(detI, b_I, sigma_p);
+    }
+}
+
+void SigmaVectorDirect::compute_aa_coupling(const STLBitsetDeterminant& detI, const double b_I,
+                                            double* sigma_p) {
+    STLBitsetDeterminant detJ;
+    // Case I
+    for (int i = nmo_ - 1; i >= 0; i--) {
+        if (detI.get_alfa_bit(i)) {
+            for (int a = 0; a < i; a++) {
+                if (not detI.get_alfa_bit(a)) {
+                    // this is a valid i -> a excitation
+                    detJ = detI;
+                    detJ.set_alfa_bit(i, false);
+                    detJ.set_alfa_bit(a, true);
+#if SIGMA_VEC_DEBUG
+                    count_aa_total++;
+#endif
+                    size_t addJ = space_.get_idx(detJ);
+                    if (addJ < size_) {
+                        double h_ia = fci_ints_->slater_rules_single_alpha(detI, i, a);
+                        sigma_p[addJ] += h_ia * b_I;
+#if SIGMA_VEC_DEBUG
+                        count_aa++;
+#endif
+                    }
+                }
+            }
+        }
+    }
+
+    // Case II
+    for (int a = 0; a < nmo_; a++) {
+        if (not detI.get_alfa_bit(a)) {
+            for (int i = a - 1; i >= 0; i--) {
+                if (detI.get_alfa_bit(i)) {
+                    // this is a valid i -> a excitation
+                    detJ = detI;
+                    detJ.set_alfa_bit(i, false);
+                    detJ.set_alfa_bit(a, true);
+#if SIGMA_VEC_DEBUG
+                    count_aa_total++;
+#endif
+                    size_t addJ = space_.get_idx(detJ);
+                    if (addJ < size_) {
+                        double h_ia = fci_ints_->slater_rules_single_alpha(detI, i, a);
+                        sigma_p[addJ] += h_ia * b_I;
+#if SIGMA_VEC_DEBUG
+                        count_aa++;
+#endif
                     }
                 }
             }

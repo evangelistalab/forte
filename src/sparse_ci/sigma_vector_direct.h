@@ -31,6 +31,8 @@
 #define _sigma_vector_direct_h_
 
 #include "sigma_vector.h"
+#include "sorted_string_list.h"
+
 
 #ifdef HAVE_MPI
 #include <mpi.h>
@@ -39,14 +41,15 @@
 namespace psi {
 namespace forte {
 
+//class SortedStringList;
+
 /**
  * @brief The SigmaVectorDirect class
  * Computes the sigma vector from a sparse Hamiltonian.
  */
 class SigmaVectorDirect : public SigmaVector {
   public:
-    SigmaVectorDirect(const DeterminantHashVec& space,
-                      std::shared_ptr<FCIIntegrals> fci_ints);
+    SigmaVectorDirect(const DeterminantHashVec& space, std::shared_ptr<FCIIntegrals> fci_ints);
     ~SigmaVectorDirect();
     void compute_sigma(SharedVector sigma, SharedVector b);
     void get_diagonal(Vector& diag);
@@ -55,10 +58,15 @@ class SigmaVectorDirect : public SigmaVector {
     std::vector<std::vector<std::pair<size_t, double>>> bad_states_;
 
   protected:
+    int nmo_ = 0;
+    /// Number of sigma builds
+    int num_builds_ = 0;
     /// Diagonal elements of the Hamiltonian
     std::vector<double> diag_;
     const DeterminantHashVec& space_;
     std::shared_ptr<FCIIntegrals> fci_ints_;
+    SortedStringList a_sorted_string_list_;
+    SortedStringList b_sorted_string_list_;
 
     void compute_sigma_scalar(SharedVector sigma, SharedVector b);
     void compute_sigma_aa(SharedVector sigma, SharedVector b);
@@ -66,6 +74,10 @@ class SigmaVectorDirect : public SigmaVector {
     void compute_sigma_aaaa(SharedVector sigma, SharedVector b);
     void compute_sigma_abab(SharedVector sigma, SharedVector b);
     void compute_sigma_bbbb(SharedVector sigma, SharedVector b);
+
+    void compute_sigma_aa_fast_search(SharedVector sigma, SharedVector b);
+
+    void compute_aa_coupling(const STLBitsetDeterminant& detI, const double b_I, double* sigma_p);
 };
 }
 }
