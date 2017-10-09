@@ -3686,14 +3686,11 @@ void AdaptiveCI::spin_analysis()
     std::shared_ptr<IAOBuilder> IAO = IAOBuilder::build(reference_wavefunction_->basisset(), reference_wavefunction_->get_basisset("MINAO_BASIS"), Ca, options_);
     outfile->Printf("\n  Computing IAOs\n");
     std::map<std::string, SharedMatrix> iao_info = IAO->build_iaos();
-  //  SharedMatrix iao_coeffs(iao_info["U"]->clone());
     SharedMatrix iao_orbs(iao_info["A"]->clone());
 
-//    iao_orbs->print();    
-    SharedMatrix Cinv(Ca->clone());
-    Cinv->invert();
-    SharedMatrix iao_coeffs = Matrix::doublet(Cinv,iao_orbs,false,false);
-//    iao_coeffs->print();
+    SharedMatrix Cainv(Ca->clone());
+    Cainv->invert();
+    SharedMatrix iao_coeffs = Matrix::doublet(Cainv,iao_orbs,false,false);
 
     size_t new_dim = iao_orbs->colspi()[0];
     size_t new_dim2 = new_dim*new_dim;
@@ -3728,9 +3725,8 @@ void AdaptiveCI::spin_analysis()
     }  
 
     outfile->Printf("\n");
-//    UA->print();
     // Transform 1 and 2 rdms
-
+    
     // First build rdms as ambit tensors
     ambit::Tensor L1a = ambit::Tensor::build(ambit::CoreTensor, "L1a", {nact, nact});
     ambit::Tensor L1b = ambit::Tensor::build(ambit::CoreTensor, "L1b", {nact, nact});
@@ -3760,8 +3756,6 @@ void AdaptiveCI::spin_analysis()
         value = trdm_bb_[i[0] * nact3 + i[1] * nact2 + i[2] * nact + i[3]];
     });
 
-//    iao_coeffs->print();
-
     ambit::Tensor U = ambit::Tensor::build(ambit::CoreTensor, "U", {nact,nact});
     U.iterate([&](const std::vector<size_t>& i, double& value) {
         value = UA->get(i[0], i[1]); 
@@ -3777,9 +3771,6 @@ void AdaptiveCI::spin_analysis()
 
     L1aT("pq") = U("ap") * L1a("ab") * U("bq");
     L1bT("pq") = U("ap") * L1b("ab") * U("bq");
-//L1a.print();
-//U.print();
-//L1aT.print();
     // 2 rdms
     ambit::Tensor L2aaT =
         ambit::Tensor::build(ambit::CoreTensor, "Transformed L2aa", {nact, nact, nact, nact});
@@ -3798,7 +3789,6 @@ void AdaptiveCI::spin_analysis()
 
     std::vector<double> l1a(L1aT.data());
     std::vector<double> l1b(L1bT.data());
-
     SharedMatrix rdma(new Matrix(nact, nact));
     SharedMatrix rdmb(new Matrix(nact, nact));
     for( int i = 0; i < nact; ++i ){
@@ -3807,31 +3797,10 @@ void AdaptiveCI::spin_analysis()
             rdmb->set(i,j,l1b[i*nact +j]);
         }
     }
-    
-    SharedMatrix evecs(new Matrix(nact,nact));
-    SharedVector evalsa(new Vector(nact));
-    SharedVector evalsb(new Vector(nact));
-    
-    rdma->diagonalize(evecs,evalsa);
-    rdmb->diagonalize(evecs,evalsb);
-
-//    for( int i = 0; i < nact; ++i ){
-//        outfile->Printf("\n  OCC for IAO%d: %1.5f", i, evalsa->get(i) + evalsb->get(i));
-//    }
-//    outfile->Printf("\n");
 
     std::vector<double> l2aa(L2aaT.data());
     std::vector<double> l2ab(L2abT.data());
     std::vector<double> l2bb(L2bbT.data());
-
-     
-//    for( int i = 0; i < nact; ++i ){
-//        for( int j = 0; j < nact; ++j ){
-//            for( int k = 0; k < nact; ++k){
-//                for( int l = 0; l < nact; ++l){
-//                    outfile->Printf("\n  l2aa(%d %d %d %d) = %1.5f", i,j,k,l, trdm_aa_[i*nact3 + j*nact2 + k*nact + l]);}}}} 
-//                    outfile->Printf("\n  l2bb(%d %d %d %d) = %1.5f", i,j,k,l, l2bb[i*nact3 + j*nact2 + k*nact + l]); 
-//                    outfile->Printf("\n  l2ab(%d %d %d %d) = %1.5f", i,j,k,l, l2ab[i*nact3 + j*nact2 + k*nact + l]); }}}}
 
     for( int i = 0; i < nact; ++i ){
         for( int j = 0; j < nact; ++j){
@@ -3861,13 +3830,6 @@ void AdaptiveCI::spin_analysis()
     
     spin_corr->diagonalize(spin_evecs,spin_evals);
     spin_evals->print();
-
-//    outfile->Printf("\n Unpaired Electron Analysis (s^2, nel)");
-//    for( int i = 0; i < nact; ++i ){
-//        double s2 = spin_corr->get(i,i);
-//        double nel = sqrt( 4.0 * s2 + 1 ) - 1;
-//        outfile->Printf("\n IAO(%d) :  %1.3f, %1.3f", i, s2, nel);   
-//    }
 
 }
 
