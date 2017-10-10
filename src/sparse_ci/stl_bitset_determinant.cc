@@ -42,8 +42,7 @@ namespace forte {
 STLBitsetDeterminant::STLBitsetDeterminant(int nmo) {
     set_count_bits(nmo);
     if (nmo == 0){
-        outfile->Printf("\n\n Using an uninitialized determinant");
-        exit(1);
+        bits_.flip();
     }
 }
 
@@ -154,7 +153,9 @@ int STLBitsetDeterminant::find_nmo() const {
         if (not ALFA(p))
             return p;
     }
-    return -1;
+    outfile->Printf("\n\n Using an uninitialized determinant");
+    exit(1);
+    return 0;
 }
 
 std::vector<int> STLBitsetDeterminant::get_alfa_occ() {
