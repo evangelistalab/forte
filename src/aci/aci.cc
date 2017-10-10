@@ -179,7 +179,9 @@ void set_ACI_options(ForteOptions& foptions) {
 
     /*- Active Space type -*/
     foptions.add_bool("PI_ACTIVE_SPACE", false, "Active space type");
-
+    
+    /*- Save spin correlation matrix to file -*/
+    foptions.add_bool("SPIN_MAT_TO_FILE", false, "Save spin correlation matrix to file");
 }
 
 bool pairComp(const std::pair<double, STLBitsetDeterminant> E1,
@@ -3830,6 +3832,19 @@ void AdaptiveCI::spin_analysis()
     
     spin_corr->diagonalize(spin_evecs,spin_evals);
     spin_evals->print();
+
+    if( options_.get_bool("SPIN_MAT_TO_FILE") ){
+        std::ofstream file;
+        file.open("spin_mat.txt",std::ios_base::app);
+        for( int i = 0; i < nact; ++i ){
+            for( int j = 0; j < nact; ++j ){
+                file << std::setw( 11 ) << spin_corr->get(i,j) << " ";
+            }
+            file << "\n";
+        } 
+        file.close();       
+    }
+
 
 }
 
