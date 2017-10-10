@@ -237,7 +237,7 @@ void SigmaVectorDirect::compute_sigma_aaaa(SharedVector sigma, SharedVector b) {
                                         size_t addJ = space_.get_idx(detJ);
                                         if (addJ < size_) {
                                             double h_ijab = fci_ints_->tei_aa(i, j, a, b) *
-                                                            detI.slater_sign(i, j, a, b);
+                                                            detI.slater_sign_aaaa(i, j, a, b);
                                             sigma_p[addJ] += h_ijab * b_I;
 #if SIGMA_VEC_DEBUG
                                             count_aaaa++;
@@ -284,9 +284,9 @@ void SigmaVectorDirect::compute_sigma_abab(SharedVector sigma, SharedVector b) {
 #endif
                                         size_t addJ = space_.get_idx(detJ);
                                         if (addJ < size_) {
-                                            double h_ijab =
-                                                fci_ints_->tei_ab(i, j, a, b) *
-                                                detI.slater_sign(i, j + nmo, a, b + nmo);
+                                            double h_ijab = fci_ints_->tei_ab(i, j, a, b) *
+                                                            detI.slater_sign_aa(i, a) *
+                                                            detI.slater_sign_bb(j, b);
                                             sigma_p[addJ] += h_ijab * b_I;
 #if SIGMA_VEC_DEBUG
                                             count_abab++;
@@ -334,8 +334,7 @@ void SigmaVectorDirect::compute_sigma_bbbb(SharedVector sigma, SharedVector b) {
                                         size_t addJ = space_.get_idx(detJ);
                                         if (addJ < size_) {
                                             double h_ijab = fci_ints_->tei_bb(i, j, a, b) *
-                                                            detI.slater_sign(i + nmo, j + nmo,
-                                                                             a + nmo, b + nmo);
+                                                            detI.slater_sign_bbbb(i, j, a, b);
                                             sigma_p[addJ] += h_ijab * b_I;
 #if SIGMA_VEC_DEBUG
                                             count_bbbb++;

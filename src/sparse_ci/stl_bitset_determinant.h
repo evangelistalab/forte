@@ -167,7 +167,8 @@ class STLBitsetDeterminant {
     double slater_sign_b(int n) const;
     double slater_sign_bb(int n, int m) const;
 
-    double slater_sign(int i, int j, int a, int b) const;
+    double slater_sign_aaaa(int i, int j, int a, int b) const;
+    double slater_sign_bbbb(int i, int j, int a, int b) const;
 
     /// Perform an alpha-alpha single excitation (i->a)
     double single_excitation_a(int i, int a);

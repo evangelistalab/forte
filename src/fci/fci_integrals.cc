@@ -352,7 +352,7 @@ double FCIIntegrals::slater_rules(const STLBitsetDeterminant& lhs,
             }
         }
         // double sign = SlaterSign(I, i, j, k, l);
-        double sign = lhs.slater_sign(i, j, k, l);
+        double sign = lhs.slater_sign_aaaa(i, j, k, l);
         matrix_element = sign * tei_aa_[i * nmo3_ + j * nmo2_ + k * nmo_ + l];
     }
 
@@ -381,7 +381,7 @@ double FCIIntegrals::slater_rules(const STLBitsetDeterminant& lhs,
             }
         }
         // double sign = SlaterSign(I, nmo_ + i, nmo_ + j, nmo_ + k, nmo_ + l);
-        double sign = lhs.slater_sign(nmo_ + i, nmo_ + j, nmo_ + k, nmo_ + l);
+        double sign = lhs.slater_sign_bbbb(i, j, k, l);
         matrix_element = sign * tei_bb_[i * nmo3_ + j * nmo2_ + k * nmo_ + l];
     }
 

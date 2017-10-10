@@ -242,23 +242,21 @@ double STLBitsetDeterminant::create_alfa_bit(int n) {
         return 0.0;
     ALFA(n) = true;
     // return SlaterSign(bits_, n);
-    return this->slater_sign_a(n);
+    return slater_sign_a(n);
 }
 
 double STLBitsetDeterminant::create_beta_bit(int n) {
     if (BETA(n))
         return 0.0;
     BETA(n) = true;
-    // return SlaterSign(bits_, nmo_ + n);
-    return this->slater_sign_b(n);
+    return slater_sign_b(n);
 }
 
 double STLBitsetDeterminant::destroy_alfa_bit(int n) {
     if (not ALFA(n))
         return 0.0;
     ALFA(n) = false;
-    // return SlaterSign(bits_, n);
-    return this->slater_sign_a(n);
+    return slater_sign_a(n);
 }
 
 /// Set the value of a beta bit
@@ -266,8 +264,7 @@ double STLBitsetDeterminant::destroy_beta_bit(int n) {
     if (not BETA(n))
         return 0.0;
     BETA(n) = false;
-    // return SlaterSign(bits_, nmo_ + n);
-    return this->slater_sign_b(n);
+    return slater_sign_b(n);
 }
 
 /// Switch alfa and beta bits
@@ -275,7 +272,6 @@ void STLBitsetDeterminant::spin_flip() {
     bool temp;
     int nmo = find_nmo();
     for (int p = 0; p < nmo; ++p) {
-        //        std::swap(bits_[p],bits_[nmo_ + p]);
         temp = ALFA(p);
         ALFA(p) = BETA(p);
         BETA(p) = temp;
@@ -393,19 +389,36 @@ double STLBitsetDeterminant::slater_sign_bb(int n, int m) const {
     return (sign);
 }
 
-double STLBitsetDeterminant::slater_sign(int i, int j, int a, int b) const {
+double STLBitsetDeterminant::slater_sign_aaaa(int i, int j, int a, int b) const {
     if ((((i < a) && (j < a) && (i < b) && (j < b)) == true) ||
         (((i < a) || (j < a) || (i < b) || (j < b)) == false)) {
         if ((i < j) ^ (a < b)) {
-            return (-1.0 * this->slater_sign_aa(i, j) * this->slater_sign_aa(a, b));
+            return (-1.0 * slater_sign_aa(i, j) * slater_sign_aa(a, b));
         } else {
-            return (this->slater_sign_aa(i, j) * this->slater_sign_aa(a, b));
+            return (slater_sign_aa(i, j) * slater_sign_aa(a, b));
         }
     } else {
         if ((i < j) ^ (a < b)) {
-            return (-1.0 * this->slater_sign_aa(i, b) * this->slater_sign_aa(j, a));
+            return (-1.0 * slater_sign_aa(i, b) * slater_sign_aa(j, a));
         } else {
-            return (this->slater_sign_aa(i, a) * this->slater_sign_aa(j, b));
+            return (slater_sign_aa(i, a) * slater_sign_aa(j, b));
+        }
+    }
+}
+
+double STLBitsetDeterminant::slater_sign_bbbb(int i, int j, int a, int b) const {
+    if ((((i < a) && (j < a) && (i < b) && (j < b)) == true) ||
+        (((i < a) || (j < a) || (i < b) || (j < b)) == false)) {
+        if ((i < j) ^ (a < b)) {
+            return (-1.0 * slater_sign_bb(i, j) * slater_sign_bb(a, b));
+        } else {
+            return (slater_sign_bb(i, j) * slater_sign_bb(a, b));
+        }
+    } else {
+        if ((i < j) ^ (a < b)) {
+            return (-1.0 * slater_sign_bb(i, b) * slater_sign_bb(j, a));
+        } else {
+            return (slater_sign_bb(i, a) * slater_sign_bb(j, b));
         }
     }
 }
@@ -427,7 +440,7 @@ double STLBitsetDeterminant::double_excitation_aa(int i, int j, int a, int b) {
     ALFA(j) = false;
     ALFA(b) = true;
     ALFA(a) = true;
-    return slater_sign(i, j, a, b);
+    return slater_sign_aaaa(i, j, a, b);
 }
 
 double STLBitsetDeterminant::double_excitation_ab(int i, int j, int a, int b) {
@@ -435,7 +448,7 @@ double STLBitsetDeterminant::double_excitation_ab(int i, int j, int a, int b) {
     BETA(j) = false;
     BETA(b) = true;
     ALFA(a) = true;
-    return slater_sign(i, num_str_bits + j, a, num_str_bits + b);
+    return slater_sign_aa(i,a) * slater_sign_bb(j,b);
 }
 
 double STLBitsetDeterminant::double_excitation_bb(int i, int j, int a, int b) {
@@ -443,7 +456,7 @@ double STLBitsetDeterminant::double_excitation_bb(int i, int j, int a, int b) {
     BETA(j) = false;
     BETA(b) = true;
     BETA(a) = true;
-    return slater_sign(num_str_bits + i, num_str_bits + j, num_str_bits + a, num_str_bits + b);
+    return slater_sign_bbbb(i,j,a,b);
 }
 
 std::vector<std::pair<STLBitsetDeterminant, double>> STLBitsetDeterminant::spin_plus() const {
@@ -452,7 +465,7 @@ std::vector<std::pair<STLBitsetDeterminant, double>> STLBitsetDeterminant::spin_
     std::vector<std::pair<STLBitsetDeterminant, double>> res;
     for (int i = 0; i < nmo; ++i) {
         if ((not ALFA(i)) and BETA(i)) {
-            double sign = this->slater_sign_a(i) * this->slater_sign_b(i);
+            double sign = slater_sign_a(i) * slater_sign_b(i);
             STLBitsetDeterminant new_det(*this);
             new_det.set_alfa_bit(i, true);
             new_det.set_beta_bit(i, false);
@@ -467,7 +480,7 @@ std::vector<std::pair<STLBitsetDeterminant, double>> STLBitsetDeterminant::spin_
     std::vector<std::pair<STLBitsetDeterminant, double>> res;
     for (int i = 0; i < nmo; ++i) {
         if (ALFA(i) and (not BETA(i))) {
-            double sign = this->slater_sign_a(i) * this->slater_sign_b(i);
+            double sign = slater_sign_a(i) * slater_sign_b(i);
             STLBitsetDeterminant new_det(*this);
             new_det.set_alfa_bit(i, false);
             new_det.set_beta_bit(i, true);
@@ -555,8 +568,8 @@ double STLBitsetDeterminant::spin2(const STLBitsetDeterminant& rhs) const {
         if (i != j and i >= 0 and j >= 0) {
             // double sign = SlaterSign(J, i) * SlaterSign(J, nmo_ + j) * SlaterSign(I, nmo_ + i) *
             //              SlaterSign(I, j);
-            double sign = rhs.slater_sign_a(i) * rhs.slater_sign_b(j) * this->slater_sign_a(j) *
-                          this->slater_sign_b(i);
+            double sign = rhs.slater_sign_a(i) * rhs.slater_sign_b(j) * slater_sign_a(j) *
+                          slater_sign_b(i);
             matrix_element -= sign;
         }
     }
@@ -640,44 +653,3 @@ void STLBitsetDeterminant::enforce_spin_completeness(std::vector<STLBitsetDeterm
 }
 }
 } // end namespace
-
-/*
-double STLBitsetDeterminant::SlaterSign(int n) {
-    double sign = 1.0;
-    for (int i = 0; i < n; ++i) { // This runs up to the operator before n
-        if (ALFA(i))
-            sign *= -1.0;
-    }
-    return (sign);
-}
-
-double STLBitsetDeterminant::SlaterSign(const bit_t& I, int m, int n) {
-    double sign = 1.0;
-    for (int i = m + 1; i < n; ++i) {
-        if (I[i])
-            sign *= -1.0;
-    }
-    for (int i = n + 1; i < m; ++i) {
-        if (I[i])
-            sign *= -1.0;
-    }
-    return (sign);
-}
-
-double STLBitsetDeterminant::SlaterSign(const bit_t& bits, int i, int j, int a, int b) {
-    if ((((i < a) && (j < a) && (i < b) && (j < b)) == true) ||
-        (((i < a) || (j < a) || (i < b) || (j < b)) == false)) {
-        if ((i < j) ^ (a < b)) {
-            return -1.0 * SlaterSign(bits, i, j) * SlaterSign(bits, a, b);
-        } else {
-            return SlaterSign(bits, i, j) * SlaterSign(bits, a, b);
-        }
-    } else {
-        if ((i < j) ^ (a < b)) {
-            return -1.0 * SlaterSign(bits, i, b) * SlaterSign(bits, j, a);
-        } else {
-            return SlaterSign(bits, i, a) * SlaterSign(bits, j, b);
-        }
-    }
-}
-*/
