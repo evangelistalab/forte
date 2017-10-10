@@ -639,12 +639,6 @@ void WFNOperator::op_s_lists(DeterminantHashVec& wfn) {
             const std::vector<int>& aocc = detI.get_alfa_occ();
             int noalfa = aocc.size();
 
-            // DEBUGFRANCESCO
-            outfile->Printf("\n det : %s",detI.str().c_str());
-            for (auto i : aocc) {
-                outfile->Printf("\n aocc -> %d", i);
-            }
-
             for (int i = 0; i < noalfa; ++i) {
                 int ii = aocc[i];
                 STLBitsetDeterminant detJ(detI);

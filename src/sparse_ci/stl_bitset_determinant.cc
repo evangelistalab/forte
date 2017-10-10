@@ -39,7 +39,13 @@ using namespace psi;
 namespace psi {
 namespace forte {
 
-STLBitsetDeterminant::STLBitsetDeterminant(int nmo) { set_count_bits(nmo); }
+STLBitsetDeterminant::STLBitsetDeterminant(int nmo) {
+    set_count_bits(nmo);
+    if (nmo == 0){
+        outfile->Printf("\n\n Using an uninitialized determinant");
+        exit(1);
+    }
+}
 
 STLBitsetDeterminant::STLBitsetDeterminant(const std::vector<bool>& occupation) {
     int nmo = occupation.size() / 2;
@@ -47,6 +53,7 @@ STLBitsetDeterminant::STLBitsetDeterminant(const std::vector<bool>& occupation) 
         ALFA(p) = occupation[p];
     for (int p = 0; p < nmo; ++p)
         BETA(p) = occupation[nmo + p];
+    set_count_bits(nmo);
 }
 
 STLBitsetDeterminant::STLBitsetDeterminant(const std::vector<bool>& occupation_a,
@@ -56,6 +63,7 @@ STLBitsetDeterminant::STLBitsetDeterminant(const std::vector<bool>& occupation_a
         ALFA(p) = occupation_a[p];
         BETA(p) = occupation_b[p];
     }
+    set_count_bits(nmo);
 }
 
 STLBitsetDeterminant::STLBitsetDeterminant(const bit_t& bits, int nmo) {
@@ -63,7 +71,10 @@ STLBitsetDeterminant::STLBitsetDeterminant(const bit_t& bits, int nmo) {
     set_count_bits(nmo);
 }
 
-void STLBitsetDeterminant::copy(const STLBitsetDeterminant& rhs) { bits_ = rhs.bits_; }
+void STLBitsetDeterminant::copy(const STLBitsetDeterminant& rhs) {
+    bits_ = rhs.bits_;
+    set_count_bits(rhs.find_nmo());
+}
 
 bool STLBitsetDeterminant::operator==(const STLBitsetDeterminant& lhs) const {
     return (bits_ == lhs.bits_);
@@ -98,7 +109,7 @@ bool STLBitsetDeterminant::reverse_string_order(const STLBitsetDeterminant& i,
 }
 
 STLBitsetDeterminant STLBitsetDeterminant::operator^(const STLBitsetDeterminant& lhs) const {
-    int nmo = find_nmo();
+    int nmo = lhs.find_nmo();
     return STLBitsetDeterminant(bits_ ^ lhs.bits_, nmo);
 }
 
@@ -129,11 +140,6 @@ void STLBitsetDeterminant::set_alfa_bit(int n, bool value) { ALFA(n) = value; }
 
 void STLBitsetDeterminant::set_beta_bit(int n, bool value) { BETA(n) = value; }
 
-// void STLBitsetDeterminant::set_bits(const bit_t& bits, int nmo) {
-//    bits_ = bits;
-//    set_count_bits(nmo);
-//}
-
 void STLBitsetDeterminant::set_count_bits(int nmo) {
     set_alfa_bit(nmo, false);
     set_beta_bit(nmo, false);
@@ -148,7 +154,7 @@ int STLBitsetDeterminant::find_nmo() const {
         if (not ALFA(p))
             return p;
     }
-    return -100;
+    return -1;
 }
 
 std::vector<int> STLBitsetDeterminant::get_alfa_occ() {
