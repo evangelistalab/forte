@@ -1369,19 +1369,6 @@ void AdaptiveCI::get_excited_determinants(int nroot, SharedMatrix evecs,
             std::vector<int> avir = det.get_alfa_vir();
             std::vector<int> bvir = det.get_beta_vir();
 
-            for (auto i : aocc) {
-                outfile->Printf("\n aocc -> %d", i);
-            }
-            for (auto i : bocc) {
-                outfile->Printf("\n bocc -> %d", i);
-            }
-            for (auto i : avir) {
-                outfile->Printf("\n avir -> %d", i);
-            }
-            for (auto i : bvir) {
-                outfile->Printf("\n bvir -> %d", i);
-            }
-
             int noalpha = aocc.size();
             int nobeta = bocc.size();
             int nvalpha = avir.size();
