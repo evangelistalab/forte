@@ -915,10 +915,8 @@ void AdaptiveCI::find_q_space(DeterminantHashVec& P_space, DeterminantHashVec& P
     std::vector<double> ept2(nroot_, 0.0);
 
     if (aimed_selection_) {
-//        sorted_dets.resize(V_hash.size());
         STLBitsetDeterminant zero_det(nact_);
-        std::vector<std::pair<double, STLBitsetDeterminant>> sorted_dets(V_hash.size(),
-                                                                         std::make_pair(0.0, zero_det));
+        sorted_dets.resize(V_hash.size(), std::make_pair(0.0, zero_det));
     }
 
 #pragma omp parallel
