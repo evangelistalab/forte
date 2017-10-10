@@ -82,7 +82,7 @@ bool STLBitsetDeterminant::operator==(const STLBitsetDeterminant& lhs) const {
 
 bool STLBitsetDeterminant::operator<(const STLBitsetDeterminant& lhs) const {
     // check beta first
-    for (int p = num_det_bits; p >= 0; --p) {
+    for (int p = num_det_bits - 1; p >= 0; --p) {
         if ((bits_[p] == false) and (lhs.bits_[p] == true))
             return true;
         if ((bits_[p] == true) and (lhs.bits_[p] == false))
@@ -241,7 +241,6 @@ double STLBitsetDeterminant::create_alfa_bit(int n) {
     if (ALFA(n))
         return 0.0;
     ALFA(n) = true;
-    // return SlaterSign(bits_, n);
     return slater_sign_a(n);
 }
 

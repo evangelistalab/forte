@@ -634,7 +634,7 @@ void FCIWfn::rdm_test() {
                     for (size_t s = 0; s < ncmo_; ++s) {
                         double rdm = 0.0;
                         for (size_t i = 0; i < dets.size(); ++i) {
-                            I.copy(dets[i]);
+                            I = dets[i];
                             double sign = 1.0;
                             sign *= I.destroy_alfa_bit(r);
                             sign *= I.destroy_alfa_bit(s);
@@ -648,10 +648,16 @@ void FCIWfn::rdm_test() {
                         }
                         if (std::fabs(rdm) > 1.0e-12) {
                             //                            outfile->Printf("\n
-                            //                            D2(aaaa)[%3lu][%3lu][%3lu][%3lu]
-                            //                            = %18.12lf
-                            //                            (%18.12lf,%18.12lf)",
-                            //                            p,q,r,s,rdm-tpdm_aa_[tei_index(p,q,r,s)],rdm,tpdm_aa_[tei_index(p,q,r,s)]);
+                            //                            D2(aaaa)[%3lu][%3lu][%3lu][%3lu] =
+                            //                            %18.12lf "
+                            //                                            "(%18.12lf,%18.12lf)",
+                            //                                            p, q, r, s, rdm -
+                            //                                            tpdm_aa_[tei_index(p, q,
+                            //                                            r,
+                            //                                            s)], rdm,
+                            //                                            tpdm_aa_[tei_index(p, q,
+                            //                                            r,
+                            //                                            s)]);
                             error_2rdm_aa += std::fabs(rdm - tpdm_aa_[tei_index(p, q, r, s)]);
                         }
                     }
@@ -670,7 +676,7 @@ void FCIWfn::rdm_test() {
                     for (size_t s = 0; s < ncmo_; ++s) {
                         double rdm = 0.0;
                         for (size_t i = 0; i < dets.size(); ++i) {
-                            I.copy(dets[i]);
+                            I = dets[i];
                             double sign = 1.0;
                             sign *= I.destroy_beta_bit(r);
                             sign *= I.destroy_beta_bit(s);
