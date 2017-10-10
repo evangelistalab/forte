@@ -3835,7 +3835,7 @@ void AdaptiveCI::spin_analysis()
 
     if( options_.get_bool("SPIN_MAT_TO_FILE") ){
         std::ofstream file;
-        file.open("spin_mat.txt",std::ios_base::app);
+        file.open("spin_mat.txt", std::ofstream::out | std::ofstream::trunc);
         for( int i = 0; i < nact; ++i ){
             for( int j = 0; j < nact; ++j ){
                 file << std::setw( 11 ) << spin_corr->get(i,j) << " ";
