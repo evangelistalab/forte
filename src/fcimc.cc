@@ -148,7 +148,7 @@ void FCIQMC::startup() {
     reference_ = reference_determinant;
 
     outfile->Printf("\n  The reference determinant is:\n");
-    reference_.print(nmo_);
+    reference_.print();
     time_step_ = options_.get_double("TAU");
     maxiter_ = options_.get_int("MAXITER");
     start_num_walkers_ = options_.get_double("START_NUM_WALKERS");
@@ -288,7 +288,7 @@ double FCIQMC::compute_energy() {
     //        }
     //        cumidx += nmopi_[h];
     //    }
-    reference_.print(nmo_);
+    reference_.print();
 
     Ehf_ = fci_ints_->energy(reference_);
 

@@ -489,7 +489,7 @@ FCISolver::initial_guess(FCIWfn& diag, size_t n, size_t multiplicity,
         double S2 = 0.0;
         for (size_t I = 0; I < num_dets; ++I) {
             for (size_t J = 0; J < num_dets; ++J) {
-                const double S2IJ = bsdets[I].spin2(bsdets[J],nmo);
+                const double S2IJ = bsdets[I].spin2(bsdets[J]);
                 S2 += evecs.get(I, r) * evecs.get(J, r) * S2IJ;
             }
             norm += std::pow(evecs.get(I, r), 2.0);

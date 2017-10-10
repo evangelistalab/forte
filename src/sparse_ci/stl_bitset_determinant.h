@@ -68,7 +68,7 @@ class STLBitsetDeterminant {
     explicit STLBitsetDeterminant(const std::vector<bool>& occupation_a,
                                   const std::vector<bool>& occupation_b);
     /// Construct a determinant from a bitset object
-    explicit STLBitsetDeterminant(const bit_t& bits);
+    explicit STLBitsetDeterminant(const bit_t& bits, int nmo);
 
 //    STLBitsetDeterminant(int n) = delete;
 //    STLBitsetDeterminant(size_t n) = delete;
@@ -102,8 +102,8 @@ class STLBitsetDeterminant {
     void set_alfa_bit(int n, bool value);
     /// Set the value of a beta bit
     void set_beta_bit(int n, bool value);
-    /// Set the bits to a given bit_t
-    void set_bits(const bit_t& bits);
+//    /// Set the bits to a given bit_t
+//    void set_bits(const bit_t& bits);
 
     /// Switch the alpha and beta occupations
     void spin_flip();
@@ -145,24 +145,21 @@ class STLBitsetDeterminant {
     double destroy_beta_bit(int n);
 
     /// Print the Slater determinant
-    void print(int nmo) const;
+    void print() const;
     /// Save the Slater determinant as a string
-    std::string str(int nmo) const;
+    std::string str() const;
     /// Save the Slater determinant as a string
-    std::string str2(int nmo) const;
+    std::string str2() const;
 
     /// Apply S+ to this determinant
     std::vector<std::pair<STLBitsetDeterminant, double>> spin_plus() const;
     /// Apply S- to this determinant
     std::vector<std::pair<STLBitsetDeterminant, double>> spin_minus() const;
-    /// Compute the matrix element of the S^2 operator between this determinant
-    /// and a given one
-    double spin2_slow(const STLBitsetDeterminant& rhs) const;
     /// Return the eigenvalue of Sz
     double spin_z() const;
     /// Compute the matrix element of the S^2 operator between this determinant
     /// and a given one
-    double spin2(const STLBitsetDeterminant& rhs, int nmo) const;
+    double spin2(const STLBitsetDeterminant& rhs) const;
     /// Return the sign of a_n applied to this determinant
     double slater_sign_a(int n) const;
     double slater_sign_aa(int n, int m) const;

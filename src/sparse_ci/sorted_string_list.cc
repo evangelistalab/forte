@@ -73,9 +73,9 @@ SortedStringList::SortedStringList(const DeterminantHashVec& space,
     last_first_string.zero_spin(zero_spin_type);
 
     first_string_range_[last_first_string] = std::make_pair(0, 0);
-    outfile->Printf("\n %6d %s", 0, sorted_dets_[0].str2(nmo_).c_str());
+    outfile->Printf("\n %6d %s", 0, sorted_dets_[0].str2().c_str());
     for (size_t i = 1; i < num_dets_; i++) {
-        outfile->Printf("\n %6d %s", i, sorted_dets_[i].str2(nmo_).c_str());
+        outfile->Printf("\n %6d %s", i, sorted_dets_[i].str2().c_str());
         first_string = sorted_dets_[i];
         first_string.zero_spin(zero_spin_type);
 

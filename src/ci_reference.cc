@@ -107,7 +107,7 @@ void CI_Reference::build_reference(std::vector<STLBitsetDeterminant>& ref_space)
 
 void CI_Reference::build_ci_reference(std::vector<STLBitsetDeterminant>& ref_space) {
     STLBitsetDeterminant det(get_occupation());
-    det.print(nact_);
+    det.print();
 
     ref_space.push_back(det);
 

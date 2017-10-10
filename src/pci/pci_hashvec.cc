@@ -465,7 +465,7 @@ double ProjectorCI_HashVec::estimate_high_energy() {
     }
     outfile->Printf("\n\n  ==> Estimate highest excitation energy <==");
     outfile->Printf("\n  Highest Excited determinant:");
-    high_det.print(nmo_);
+    high_det.print();
     outfile->Printf("\n  Determinant Energy                    :  %.12f",
                     fci_ints_->energy(high_det) + nuclear_repulsion_energy_ +
                         fci_ints_->scalar_energy());
@@ -2203,7 +2203,7 @@ void ProjectorCI_HashVec::print_wfn(const det_hashvec& space_hashvec, std::vecto
     size_t max_dets = std::min(int(max_output), int(C.size()));
     for (size_t I = 0; I < max_dets; ++I) {
         outfile->Printf("\n  %3zu  %13.6g %13.6g  %10zu %s  %18.12f", I, C[I], C[I] * C[I], I,
-                        space_hashvec[I].str(nmo_).c_str(),
+                        space_hashvec[I].str().c_str(),
                         fci_ints_->energy(space_hashvec[I]) + fci_ints_->scalar_energy());
     }
 
@@ -2230,7 +2230,7 @@ void ProjectorCI_HashVec::print_wfn(const det_hashvec& space_hashvec, std::vecto
     for (size_t I = 0; I < max_I; ++I) {
         for (size_t J = 0; J < max_I; ++J) {
             if (std::fabs(C[I] * C[J]) > 1.0e-12) {
-                const double S2IJ = space_hashvec[I].spin2(space_hashvec[J], nmo_);
+                const double S2IJ = space_hashvec[I].spin2(space_hashvec[J]);
                 S2 += C[I] * C[J] * S2IJ;
             }
         }
