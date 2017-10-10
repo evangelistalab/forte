@@ -327,10 +327,10 @@ double ProjectorCI_HashVec::estimate_high_energy() {
 
         double temp = fci_ints_->oei_a(i, i);
         for (int p = 0; p < nact_; ++p) {
-            if (reference_determinant_.get_alfa_bit(i)) {
+            if (reference_determinant_.get_alfa_bit(p)) {
                 temp += fci_ints_->tei_aa(i, p, i, p);
             }
-            if (reference_determinant_.get_beta_bit(i)) {
+            if (reference_determinant_.get_beta_bit(p)) {
                 temp += fci_ints_->tei_ab(i, p, i, p);
             }
         }
