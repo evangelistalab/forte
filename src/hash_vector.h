@@ -572,9 +572,10 @@ void HashVector<Key, Hash>::merge(const std::unordered_set<Key, Hash_2>& source)
 
 template <class Key, class Hash>
 void HashVector<Key, Hash>::map_order(const std::vector<size_t>& index_map) {
+    if (current_size == 0) return;
     std::vector<CINode<Key>> new_vec;
     new_vec.reserve(this->vec.capacity());
-    new_vec.resize(current_size);
+    new_vec.resize(current_size, vec[0]);
     for (size_t i = 0; i < current_size; ++i) {
         new_vec[index_map[i]] = std::move(this->vec[i]);
     }

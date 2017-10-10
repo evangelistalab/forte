@@ -94,7 +94,7 @@ void ElementwiseCI::sortHashVecByCoefficient(det_hashvec& dets_hashvec, std::vec
     for (size_t I = 0; I < dets_size; ++I) {
         order_map[det_weight[I].second] = I;
     }
-    // dets_hashvec.map_order(order_map); re-enable DEBUGFRANCESCO
+    dets_hashvec.map_order(order_map);
     std::vector<double> new_C(dets_size);
     for (size_t I = 0; I < dets_size; ++I) {
         new_C[order_map[I]] = C[I];

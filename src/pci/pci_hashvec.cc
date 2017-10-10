@@ -112,7 +112,7 @@ void ProjectorCI_HashVec::sortHashVecByCoefficient(det_hashvec& dets_hashvec,
         order_map[det_weight[I].second] = I;
     }
 
-//    dets_hashvec.map_order(order_map); // re-enable DEBUGFRANCESCO
+    dets_hashvec.map_order(order_map);
 
     std::vector<double> new_C(dets_size);
     std::vector<std::pair<double, double>> new_dets_max_couplings(dets_size);
