@@ -64,6 +64,7 @@ CI_Reference::CI_Reference(std::shared_ptr<Wavefunction> wfn, Options& options,
     mo_symmetry_ = mo_space_info_->symmetry("ACTIVE");
 
     // Size of total active space
+    nact_ = mo_space_info_->size("ACTIVE");
     nactpi_ = mo_space_info_->get_dimension("ACTIVE");
 
     // Size of subspace
@@ -105,9 +106,8 @@ void CI_Reference::build_reference(std::vector<STLBitsetDeterminant>& ref_space)
 }
 
 void CI_Reference::build_ci_reference(std::vector<STLBitsetDeterminant>& ref_space) {
-
     STLBitsetDeterminant det(get_occupation());
-    det.print(wfn_->nmo());
+    det.print(nact_);
 
     ref_space.push_back(det);
 
@@ -399,7 +399,7 @@ std::vector<std::tuple<double, int, int>> CI_Reference::sym_labeled_orbitals(std
 STLBitsetDeterminant CI_Reference::get_occupation() {
     int nact = mo_space_info_->size("ACTIVE");
 //    std::vector<int> occupation(2 * nact, 0);
-    STLBitsetDeterminant det;
+    STLBitsetDeterminant det(nact);
 
     // nyms denotes the number of electrons needed to assign symmetry and
     // multiplicity

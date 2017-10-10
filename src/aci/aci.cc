@@ -266,10 +266,7 @@ void AdaptiveCI::startup() {
     nalpha_ = (nactel_ + twice_ms_) / 2;
     nbeta_ = nactel_ - nalpha_;
 
-    STLBitsetDeterminant det;
-
     // Build the reference determinant and compute its energy
-
     CI_Reference ref(reference_wavefunction_, options_, mo_space_info_, fci_ints_, multiplicity_,
                      twice_ms_, wavefunction_symmetry_);
     ref.build_reference(initial_reference_);
@@ -800,7 +797,9 @@ void AdaptiveCI::default_find_q_space(DeterminantHashVec& P_space, DeterminantHa
     Timer screen;
 
     // Compute criteria for all dets, store them all
-    std::vector<std::pair<double, STLBitsetDeterminant>> sorted_dets(V_hash.size());
+    STLBitsetDeterminant zero_det(nact_);
+    std::vector<std::pair<double, STLBitsetDeterminant>> sorted_dets(V_hash.size(),
+                                                                     std::make_pair(0.0, zero_det));
     //    int ithread = omp_get_thread_num();
     //    int nthreads = omp_get_num_threads();
 
@@ -916,7 +915,10 @@ void AdaptiveCI::find_q_space(DeterminantHashVec& P_space, DeterminantHashVec& P
     std::vector<double> ept2(nroot_, 0.0);
 
     if (aimed_selection_) {
-        sorted_dets.resize(V_hash.size());
+//        sorted_dets.resize(V_hash.size());
+        STLBitsetDeterminant zero_det(nact_);
+        std::vector<std::pair<double, STLBitsetDeterminant>> sorted_dets(V_hash.size(),
+                                                                         std::make_pair(0.0, zero_det));
     }
 
 #pragma omp parallel
@@ -1366,6 +1368,19 @@ void AdaptiveCI::get_excited_determinants(int nroot, SharedMatrix evecs,
             std::vector<int> bocc = det.get_beta_occ();
             std::vector<int> avir = det.get_alfa_vir();
             std::vector<int> bvir = det.get_beta_vir();
+
+            for (auto i : aocc) {
+                outfile->Printf("\n aocc -> %d", i);
+            }
+            for (auto i : bocc) {
+                outfile->Printf("\n bocc -> %d", i);
+            }
+            for (auto i : avir) {
+                outfile->Printf("\n avir -> %d", i);
+            }
+            for (auto i : bvir) {
+                outfile->Printf("\n bvir -> %d", i);
+            }
 
             int noalpha = aocc.size();
             int nobeta = bocc.size();
@@ -2618,7 +2633,7 @@ void AdaptiveCI::compute_aci(DeterminantHashVec& PQ_space, SharedMatrix& PQ_evec
 
         // Check that the initial space is spin-complete
         if (spin_complete_) {
-            P_space.make_spin_complete();
+            P_space.make_spin_complete(nmo_);
             if (!quiet_mode_)
                 outfile->Printf("\n  %s: %zu determinants",
                                 "Spin-complete dimension of the P space", P_space.size());
@@ -2717,7 +2732,7 @@ void AdaptiveCI::compute_aci(DeterminantHashVec& PQ_space, SharedMatrix& PQ_evec
 
         // Check if P+Q space is spin complete
         if (spin_complete_) {
-            PQ_space.make_spin_complete();
+            PQ_space.make_spin_complete(nmo_);
             if (!quiet_mode_)
                 outfile->Printf("\n  Spin-complete dimension of the PQ space: %zu",
                                 PQ_space.size());
@@ -3187,8 +3202,8 @@ void AdaptiveCI::upcast_reference(DeterminantHashVec& ref) {
     for (int I = 0; I < ndet; ++I) {
         int offset = 0;
         int act_offset = 0;
-        STLBitsetDeterminant new_det(ncmo);
         const STLBitsetDeterminant& old_det = ref_dets[I];
+        STLBitsetDeterminant new_det(old_det);
         for (int h = 0; h < nirrep_; ++h) {
 
             // fill the rdocc orbitals with electrons
@@ -3588,7 +3603,7 @@ void AdaptiveCI::add_external_excitations(DeterminantHashVec& ref) {
     ref.merge(av_b);
 
     if (spin_complete_) {
-        ref.make_spin_complete();
+        ref.make_spin_complete(nmo_);
         if (!quiet_mode_)
             outfile->Printf("\n  Spin-complete dimension of the new model space: %zu", ref.size());
     }

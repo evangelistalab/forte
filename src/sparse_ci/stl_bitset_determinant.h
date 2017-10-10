@@ -59,7 +59,7 @@ class STLBitsetDeterminant {
     using bit_t = std::bitset<num_det_bits>;
     // Class Constructor and Destructor
     /// Construct an empty determinant
-    explicit STLBitsetDeterminant();
+    explicit STLBitsetDeterminant(int n);
     /// Construct the determinant from an occupation vector that
     /// specifies the alpha and beta strings.  occupation = [Ia,Ib]
     explicit STLBitsetDeterminant(const std::vector<bool>& occupation);
@@ -69,7 +69,9 @@ class STLBitsetDeterminant {
                                   const std::vector<bool>& occupation_b);
     /// Construct a determinant from a bitset object
     explicit STLBitsetDeterminant(const bit_t& bits);
-    STLBitsetDeterminant(const STLBitsetDeterminant& lhs);
+
+//    STLBitsetDeterminant(int n) = delete;
+//    STLBitsetDeterminant(size_t n) = delete;
 
     void copy(const STLBitsetDeterminant& rhs);
 
@@ -77,6 +79,9 @@ class STLBitsetDeterminant {
     bool operator==(const STLBitsetDeterminant& lhs) const;
     /// Less than operator
     bool operator<(const STLBitsetDeterminant& lhs) const;
+    /// Reverse string ordering
+    static bool reverse_string_order(const STLBitsetDeterminant& i, const STLBitsetDeterminant& j);
+
     /// XOR operator
     STLBitsetDeterminant operator^(const STLBitsetDeterminant& lhs) const;
     /// &= operator
@@ -108,6 +113,9 @@ class STLBitsetDeterminant {
 
     /// Return the number of alpha/beta pairs
     int npair();
+
+    void set_count_bits(int nmo);
+    int find_nmo() const;
 
     /// Return a vector of occupied alpha orbitals
     std::vector<int> get_alfa_occ();
@@ -142,8 +150,6 @@ class STLBitsetDeterminant {
     std::string str(int nmo) const;
     /// Save the Slater determinant as a string
     std::string str2(int nmo) const;
-
-    int nmo() const { return num_str_bits; }
 
     /// Apply S+ to this determinant
     std::vector<std::pair<STLBitsetDeterminant, double>> spin_plus() const;

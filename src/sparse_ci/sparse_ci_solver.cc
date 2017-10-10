@@ -362,7 +362,7 @@ SparseCISolver::build_sparse_hamiltonian(const std::vector<STLBitsetDeterminant>
         index_row.push_back(I);
         for (size_t J = 0; J < dim_space; ++J) {
             if (I != J) {
-                const STLBitsetDeterminant detJ = space[J];
+                const STLBitsetDeterminant detJ(space[J]);
                 double HIJ = fci_ints_->slater_rules(detI, detJ);
                 if (std::fabs(HIJ) >= 1.0e-12) {
                     H_row.push_back(HIJ);
@@ -541,14 +541,14 @@ SparseCISolver::initial_guess_map(const DeterminantHashVec& space, int nroot, in
     std::vector<std::pair<double, STLBitsetDeterminant>> smallest;
     const det_hashvec& detmap = space.wfn_hash();
 
-    for (STLBitsetDeterminant det : detmap) {
+    for (const STLBitsetDeterminant& det : detmap) {
         smallest.push_back(std::make_pair(fci_ints_->energy(det), det));
     }
     std::sort(smallest.begin(), smallest.end());
 
     std::vector<STLBitsetDeterminant> guess_det;
     for (size_t i = 0; i < nguess; i++) {
-        STLBitsetDeterminant detI = smallest[i].second;
+        const STLBitsetDeterminant& detI = smallest[i].second;
         guess_dets_pos.push_back(
             std::make_pair(detI, space.get_idx(detI))); // store a det and its position
         guess_det.push_back(detI);
@@ -566,7 +566,7 @@ SparseCISolver::initial_guess_map(const DeterminantHashVec& space, int nroot, in
             int nfound = 0;
             for (size_t i = 0; i < nnew_dets; ++i) {
                 for (size_t j = nguess; j < ndets; ++j) {
-                    STLBitsetDeterminant detJ = smallest[j].second;
+                    const STLBitsetDeterminant& detJ = smallest[j].second;
                     if (detJ == guess_det[nguess + i]) {
                         guess_dets_pos.push_back(std::make_pair(
                             detJ, space.get_idx(detJ))); // store a det and its position

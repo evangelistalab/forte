@@ -32,23 +32,6 @@
 namespace psi {
 namespace forte {
 
-bool reverse_string_order(const STLBitsetDeterminant& i, const STLBitsetDeterminant& j) {
-    int nmo = i.nmo();
-    for (int p = nmo - 1; p >= 0; --p) {
-        if ((i.get_alfa_bit(p) == false) and (j.get_alfa_bit(p) == true))
-            return true;
-        if ((i.get_alfa_bit(p) == true) and (j.get_alfa_bit(p) == false))
-            return false;
-    }
-    for (int p = nmo - 1; p >= 0; --p) {
-        if ((i.get_beta_bit(p) == false) and (j.get_beta_bit(p) == true))
-            return true;
-        if ((i.get_beta_bit(p) == true) and (j.get_beta_bit(p) == false))
-            return false;
-    }
-    return false;
-}
-
 SortedStringList::SortedStringList(const DeterminantHashVec& space,
                                    std::shared_ptr<FCIIntegrals> fci_ints,
                                    STLBitsetDeterminant::SpinType sorted_string_spin) {
@@ -58,7 +41,8 @@ SortedStringList::SortedStringList(const DeterminantHashVec& space,
     num_dets_ = sorted_dets_.size();
 
     if (sorted_string_spin == STLBitsetDeterminant::SpinType::AlphaSpin) {
-        std::sort(sorted_dets_.begin(), sorted_dets_.end(), reverse_string_order);
+        std::sort(sorted_dets_.begin(), sorted_dets_.end(),
+                  STLBitsetDeterminant::reverse_string_order);
     } else {
         std::sort(sorted_dets_.begin(), sorted_dets_.end());
     }
@@ -70,17 +54,17 @@ SortedStringList::SortedStringList(const DeterminantHashVec& space,
     //        outfile->Printf("\n %s", d.str2().c_str());
     //    }
 
-    STLBitsetDeterminant half_bit_mask(nmo_);
-    if (sorted_string_spin == STLBitsetDeterminant::SpinType::AlphaSpin) {
-        for (int i = 0; i < nmo_; i++)
-            half_bit_mask.set_alfa_bit(i, true);
-    } else {
-        for (int i = 0; i < nmo_; i++)
-            half_bit_mask.set_beta_bit(i, true);
-    }
+//    STLBitsetDeterminant half_bit_mask(nmo_);
+//    if (sorted_string_spin == STLBitsetDeterminant::SpinType::AlphaSpin) {
+//        for (int i = 0; i < nmo_; i++)
+//            half_bit_mask.set_alfa_bit(i, true);
+//    } else {
+//        for (int i = 0; i < nmo_; i++)
+//            half_bit_mask.set_beta_bit(i, true);
+//    }
 
     // Find the unique strings and their range
-    STLBitsetDeterminant first_string;
+    STLBitsetDeterminant first_string = sorted_dets_[0];
     STLBitsetDeterminant last_first_string = sorted_dets_[0];
     STLBitsetDeterminant::SpinType zero_spin_type =
         sorted_string_spin == STLBitsetDeterminant::SpinType::AlphaSpin
@@ -95,7 +79,7 @@ SortedStringList::SortedStringList(const DeterminantHashVec& space,
         first_string = sorted_dets_[i];
         first_string.zero_spin(zero_spin_type);
 
-//        first_string.set_bits(sorted_dets_[i].bits() & half_bit_mask.bits());
+        //        first_string.set_bits(sorted_dets_[i].bits() & half_bit_mask.bits());
         if (not(first_string == last_first_string)) {
             first_string_range_[last_first_string].second = i;
             first_string_range_[first_string] = std::make_pair(i, 0);

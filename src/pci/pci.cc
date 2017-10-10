@@ -210,7 +210,8 @@ ProjectorCI::ProjectorCI(SharedWavefunction ref_wfn, Options& options,
                          std::shared_ptr<ForteIntegrals> ints,
                          std::shared_ptr<MOSpaceInfo> mo_space_info)
     : Wavefunction(options), ints_(ints), mo_space_info_(mo_space_info),
-      prescreening_tollerance_factor_(1.5), fast_variational_estimate_(false) {
+      prescreening_tollerance_factor_(1.5), fast_variational_estimate_(false),
+      reference_determinant_(0) {
     // Copy the wavefunction information
     shallow_copy(ref_wfn);
     reference_wavefunction_ = ref_wfn;
@@ -278,8 +279,8 @@ void ProjectorCI::startup() {
 
     // Build the reference determinant and compute its energy
     std::vector<STLBitsetDeterminant> reference_vec;
-    CI_Reference ref(reference_wavefunction_, options_, mo_space_info_, fci_ints_, wavefunction_multiplicity_,
-                     ms, wavefunction_symmetry_);
+    CI_Reference ref(reference_wavefunction_, options_, mo_space_info_, fci_ints_,
+                     wavefunction_multiplicity_, ms, wavefunction_symmetry_);
     ref.set_ref_type("HF");
     ref.build_reference(reference_vec);
     reference_determinant_ = reference_vec[0];
@@ -515,10 +516,10 @@ double ProjectorCI::estimate_high_energy() {
 
         double temp = fci_ints_->oei_a(i, i);
         for (int p = 0; p < nact_; ++p) {
-        if (reference_determinant_.get_alfa_bit(i)) {
+            if (reference_determinant_.get_alfa_bit(i)) {
                 temp += fci_ints_->tei_aa(i, p, i, p);
             }
-        if (reference_determinant_.get_beta_bit(i)) {
+            if (reference_determinant_.get_beta_bit(i)) {
                 temp += fci_ints_->tei_ab(i, p, i, p);
             }
         }
@@ -4947,7 +4948,7 @@ void ProjectorCI::print_wfn(det_vec& space, std::vector<double>& C, size_t max_o
         for (size_t sJ = 0; sJ < max_I; ++sJ) {
             size_t J = det_weight[sJ].second;
             if (std::fabs(C[I] * C[J]) > 1.0e-12) {
-                const double S2IJ = space[I].spin2(space[J],nmo_);
+                const double S2IJ = space[I].spin2(space[J], nmo_);
                 S2 += C[I] * C[J] * S2IJ;
             }
         }
@@ -5016,8 +5017,8 @@ void combine_hashes_into_hash(std::vector<det_hash<>>& thread_det_C_hash, det_ha
 }
 
 void copy_hash_to_vec(det_hash<>& dets_C_hash, det_vec& dets, std::vector<double>& C) {
-    size_t size = dets_C_hash.size();
-    dets.resize(size);
+    size_t size = dets_C_hash.size();    
+    dets.resize(size,STLBitsetDeterminant(0));
     C.resize(size);
 
     size_t I = 0;
@@ -5031,7 +5032,7 @@ void copy_hash_to_vec(det_hash<>& dets_C_hash, det_vec& dets, std::vector<double
 void copy_hash_to_vec_order_ref(det_hash<>& dets_C_hash, det_vec& dets, std::vector<double>& C) {
     size_t hash_size = dets_C_hash.size();
     size_t size = dets.size();
-    dets.resize(hash_size);
+    dets.resize(hash_size,STLBitsetDeterminant(0));
     C.resize(hash_size);
 
     for (size_t I = 0; I < size; ++I) {
@@ -5726,5 +5727,5 @@ std::vector<std::tuple<double, int, int>> ProjectorCI::sym_labeled_orbitals(std:
     }
     return labeled_orb;
 }
-
-}} // EndNamespaces
+}
+} // EndNamespaces

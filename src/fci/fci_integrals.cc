@@ -427,6 +427,7 @@ double FCIIntegrals::slater_rules_single_alpha(const STLBitsetDeterminant& det, 
 double FCIIntegrals::slater_rules_single_alpha_abs(const STLBitsetDeterminant& det, int i,
                                                    int a) const {
     // Slater rule 2 PhiI = j_a^+ i_a PhiJ
+    outfile->Printf("\n i a nmo_ %d %d %d",i,a,nmo_);
     double matrix_element = oei_a_[i * nmo_ + a];
     for (int p = 0; p < nmo_; ++p) {
         if (det.get_alfa_bit(p)) {

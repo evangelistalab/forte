@@ -615,7 +615,7 @@ void FCIWfn::rdm_test() {
         } while (std::next_permutation(Ib, Ib + ncmo_));
     } while (std::next_permutation(Ia, Ia + ncmo_));
 
-    STLBitsetDeterminant I;
+    STLBitsetDeterminant I(ncmo_);
 
     bool test_2rdm_aa = true;
     bool test_2rdm_bb = true;

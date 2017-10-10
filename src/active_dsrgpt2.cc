@@ -1517,7 +1517,7 @@ ACTIVE_DSRGPT2::p_space_actv_to_nmo(const std::vector<STLBitsetDeterminant>& p_s
         //        det_actv.print();
 
         // create a empty big determinant
-        STLBitsetDeterminant det;
+        STLBitsetDeterminant det(ncmo);
 
         // fill in core orbitals
         double sign = 1.0;
@@ -1564,8 +1564,7 @@ ACTIVE_DSRGPT2::excited_wfn_1st(const std::map<STLBitsetDeterminant, double>& re
             if (fabs(value) > 1.0e-12) {
                 if (spin[0] == AlphaSpin) {
                     double sign = 1.0;
-                    STLBitsetDeterminant E;
-                    E.copy(det);
+                    STLBitsetDeterminant E(det);
                     sign *= E.destroy_alfa_bit(i[0]);
                     sign *= E.create_alfa_bit(i[1]);
                     if (sign != 0) {
@@ -1589,8 +1588,7 @@ ACTIVE_DSRGPT2::excited_wfn_1st(const std::map<STLBitsetDeterminant, double>& re
                     }
                 } else {
                     double sign = 1.0;
-                    STLBitsetDeterminant E;
-                    E.copy(det);
+                    STLBitsetDeterminant E(det);
                     sign *= E.destroy_beta_bit(i[0]);
                     sign *= E.create_beta_bit(i[1]);
                     if (sign != 0) {
@@ -1624,8 +1622,7 @@ ACTIVE_DSRGPT2::excited_wfn_1st(const std::map<STLBitsetDeterminant, double>& re
                 if (spin[0] == AlphaSpin && spin[1] == AlphaSpin) {
                     // a^+ b^+ j i
                     double sign = 1.0;
-                    STLBitsetDeterminant E;
-                    E.copy(det);
+                    STLBitsetDeterminant E(det);
                     sign *= E.destroy_alfa_bit(i[0]);
                     sign *= E.destroy_alfa_bit(i[1]);
                     sign *= E.create_alfa_bit(i[3]);
@@ -1655,8 +1652,7 @@ ACTIVE_DSRGPT2::excited_wfn_1st(const std::map<STLBitsetDeterminant, double>& re
                 } else if (spin[0] == AlphaSpin && spin[1] == BetaSpin) {
                     // a^+ B^+ J i
                     double sign = 1.0;
-                    STLBitsetDeterminant E;
-                    E.copy(det);
+                    STLBitsetDeterminant E(det);
                     sign *= E.destroy_alfa_bit(i[0]);
                     sign *= E.destroy_beta_bit(i[1]);
                     sign *= E.create_beta_bit(i[3]);
@@ -1686,8 +1682,7 @@ ACTIVE_DSRGPT2::excited_wfn_1st(const std::map<STLBitsetDeterminant, double>& re
                 } else if (spin[0] == BetaSpin && spin[1] == BetaSpin) {
                     // A^+ B^+ J I
                     double sign = 1.0;
-                    STLBitsetDeterminant E;
-                    E.copy(det);
+                    STLBitsetDeterminant E(det);
                     sign *= E.destroy_beta_bit(i[0]);
                     sign *= E.destroy_beta_bit(i[1]);
                     sign *= E.create_beta_bit(i[3]);
@@ -1948,8 +1943,7 @@ ACTIVE_DSRGPT2::excited_ref(const std::map<STLBitsetDeterminant, double>& ref, c
             // alpha
             if (std::find(o_a.begin(), o_a.end(), q) != o_a.end() &&
                 std::find(v_a.begin(), v_a.end(), p) != v_a.end()) {
-                STLBitsetDeterminant E;
-                E.copy(det);
+                STLBitsetDeterminant E(det);
                 double sign = E.single_excitation_a(q, p);
                 if (out.find(E) != out.end()) {
                     out[E] += ci * sign;
@@ -1961,8 +1955,7 @@ ACTIVE_DSRGPT2::excited_ref(const std::map<STLBitsetDeterminant, double>& ref, c
             // beta
             if (std::find(o_b.begin(), o_b.end(), q) != o_b.end() &&
                 std::find(v_b.begin(), v_b.end(), p) != v_b.end()) {
-                STLBitsetDeterminant E;
-                E.copy(det);
+                STLBitsetDeterminant E(det);
                 double sign = E.single_excitation_b(q, p);
                 if (out.find(E) != out.end()) {
                     out[E] += ci * sign;

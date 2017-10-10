@@ -90,7 +90,7 @@ class DeterminantHashVec {
     std::vector<STLBitsetDeterminant> determinants() const;
 
     // Make this spin complete
-    void make_spin_complete();
+    void make_spin_complete(int nmo);
 
     // Check if a determinant is in the wavefunction
     bool has_det(const STLBitsetDeterminant& det) const;

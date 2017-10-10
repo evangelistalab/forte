@@ -111,7 +111,9 @@ void ProjectorCI_HashVec::sortHashVecByCoefficient(det_hashvec& dets_hashvec,
     for (size_t I = 0; I < dets_size; ++I) {
         order_map[det_weight[I].second] = I;
     }
-    dets_hashvec.map_order(order_map);
+
+    // dets_hashvec.map_order(order_map); re-enable DEBUGFRANCESCO
+
     std::vector<double> new_C(dets_size);
     std::vector<std::pair<double, double>> new_dets_max_couplings(dets_size);
     for (size_t I = 0; I < dets_size; ++I) {
@@ -126,7 +128,7 @@ ProjectorCI_HashVec::ProjectorCI_HashVec(SharedWavefunction ref_wfn, Options& op
                                          std::shared_ptr<ForteIntegrals> ints,
                                          std::shared_ptr<MOSpaceInfo> mo_space_info)
     : Wavefunction(options), ints_(ints), mo_space_info_(mo_space_info),
-      fast_variational_estimate_(false) {
+      fast_variational_estimate_(false), reference_determinant_(0) {
     // Copy the wavefunction information
     shallow_copy(ref_wfn);
     reference_wavefunction_ = ref_wfn;
@@ -2866,7 +2868,7 @@ void ProjectorCI_HashVec::compute_double_couplings(double double_coupling_thresh
 }
 
 void ProjectorCI_HashVec::compute_couplings_half(const det_hashvec& dets, size_t cut_size) {
-    STLBitsetDeterminant andBits, orBits;
+    STLBitsetDeterminant andBits(dets[0]), orBits(dets[0]);
     andBits.flip();
     for (size_t i = 0; i < cut_size; ++i) {
         andBits &= dets[i];

@@ -52,7 +52,7 @@ namespace forte {
  * the irrep h.
  */
 std::vector<StringSubstitution>& StringLists::get_alfa_vo_list(size_t p, size_t q, int h) {
-    boost::tuple<size_t, size_t, int> pq_pair(p, q, h);
+    std::tuple<size_t, size_t, int> pq_pair(p, q, h);
     return alfa_vo_list[pq_pair];
 }
 
@@ -63,7 +63,7 @@ std::vector<StringSubstitution>& StringLists::get_alfa_vo_list(size_t p, size_t 
  * the irrep h.
  */
 std::vector<StringSubstitution>& StringLists::get_beta_vo_list(size_t p, size_t q, int h) {
-    boost::tuple<size_t, size_t, int> pq_pair(p, q, h);
+    std::tuple<size_t, size_t, int> pq_pair(p, q, h);
     return beta_vo_list[pq_pair];
 }
 
@@ -98,7 +98,7 @@ void StringLists::make_vo(GraphPtr graph, VOList& list, int p, int q) {
     if ((k >= 0) and (k <= n)) { // check that (n > 0) makes sense.
         for (int h = 0; h < nirrep_; ++h) {
             // Create the key to the map
-            boost::tuple<size_t, size_t, int> pq_pair(p, q, h);
+            std::tuple<size_t, size_t, int> pq_pair(p, q, h);
 
             // Generate the strings 1111100000
             //                      { k }{n-k}

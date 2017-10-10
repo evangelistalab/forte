@@ -69,7 +69,7 @@ bool FCIQMC::have_omp_ = false;
 
 FCIQMC::FCIQMC(SharedWavefunction ref_wfn, Options& options, std::shared_ptr<ForteIntegrals> ints,
                std::shared_ptr<MOSpaceInfo> mo_space_info)
-    : Wavefunction(options), ints_(ints), mo_space_info_(mo_space_info)
+    : Wavefunction(options), ints_(ints), mo_space_info_(mo_space_info), reference_(ints->ncmo())
 // fciInts_(ints, mo_space_info)
 {
     shallow_copy(ref_wfn);

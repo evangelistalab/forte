@@ -39,7 +39,9 @@ using namespace psi;
 namespace psi {
 namespace forte {
 
-STLBitsetDeterminant::STLBitsetDeterminant() {}
+STLBitsetDeterminant::STLBitsetDeterminant(int nmo) { set_count_bits(nmo); }
+
+// STLBitsetDeterminant::STLBitsetDeterminant() : bits_(0) {}
 
 // STLBitsetDeterminant::STLBitsetDeterminant(const std::vector<int>& occupation) {
 //    int nmo = occupation.size() / 2;
@@ -66,10 +68,6 @@ STLBitsetDeterminant::STLBitsetDeterminant(const std::vector<bool>& occupation_a
 
 STLBitsetDeterminant::STLBitsetDeterminant(const bit_t& bits) { bits_ = bits; }
 
-STLBitsetDeterminant::STLBitsetDeterminant(const STLBitsetDeterminant& rhs) { bits_ = rhs.bits_; }
-
-// STLBitsetDeterminant::STLBitsetDeterminant(STLBitsetDeterminant& rhs) { bits_ = rhs.bits_; }
-
 void STLBitsetDeterminant::copy(const STLBitsetDeterminant& rhs) { bits_ = rhs.bits_; }
 
 bool STLBitsetDeterminant::operator==(const STLBitsetDeterminant& lhs) const {
@@ -87,22 +85,47 @@ bool STLBitsetDeterminant::operator<(const STLBitsetDeterminant& lhs) const {
     return false;
 }
 
+bool STLBitsetDeterminant::reverse_string_order(const STLBitsetDeterminant& i,
+                                                const STLBitsetDeterminant& j) {
+    for (int p = num_str_bits - 1; p >= 0; --p) {
+        if ((i.get_alfa_bit(p) == false) and (j.get_alfa_bit(p) == true))
+            return true;
+        if ((i.get_alfa_bit(p) == true) and (j.get_alfa_bit(p) == false))
+            return false;
+    }
+    for (int p = num_str_bits - 1; p >= 0; --p) {
+        if ((i.get_beta_bit(p) == false) and (j.get_beta_bit(p) == true))
+            return true;
+        if ((i.get_beta_bit(p) == true) and (j.get_beta_bit(p) == false))
+            return false;
+    }
+    return false;
+}
+
 STLBitsetDeterminant STLBitsetDeterminant::operator^(const STLBitsetDeterminant& lhs) const {
-    return STLBitsetDeterminant(bits_ ^ lhs.bits_);
+    STLBitsetDeterminant det(bits_ ^ lhs.bits_);
+    det.set_count_bits(find_nmo());
+    return det;
 }
 
 STLBitsetDeterminant& STLBitsetDeterminant::operator&=(const STLBitsetDeterminant& lhs) {
+    int nmo = find_nmo();
     bits_ &= lhs.bits_;
+    set_count_bits(nmo);
     return *this;
 }
 
 STLBitsetDeterminant& STLBitsetDeterminant::operator|=(const STLBitsetDeterminant& lhs) {
+    int nmo = find_nmo();
     bits_ |= lhs.bits_;
+    set_count_bits(nmo);
     return *this;
 }
 
 STLBitsetDeterminant& STLBitsetDeterminant::flip() {
+    int nmo = find_nmo();
     bits_.flip();
+    set_count_bits(nmo);
     return *this;
 }
 
@@ -114,7 +137,27 @@ void STLBitsetDeterminant::set_alfa_bit(int n, bool value) { ALFA(n) = value; }
 
 void STLBitsetDeterminant::set_beta_bit(int n, bool value) { BETA(n) = value; }
 
-void STLBitsetDeterminant::set_bits(const bit_t& bits) { bits_ = bits; }
+//void STLBitsetDeterminant::set_bits(const bit_t& bits, int nmo) {
+//    bits_ = bits;
+//    set_count_bits(nmo);
+//}
+
+void STLBitsetDeterminant::set_count_bits(int nmo) {
+    set_alfa_bit(nmo, false);
+    set_beta_bit(nmo, false);
+    for (int b = nmo + 1; b < num_str_bits; ++b) {
+        set_alfa_bit(b, true);
+        set_beta_bit(b, true);
+    }
+}
+
+int STLBitsetDeterminant::find_nmo() const {
+    for (int p = num_str_bits - 1; p >= 0; --p) {
+        if (not ALFA(p))
+            return p;
+    }
+    return 0;
+}
 
 std::vector<int> STLBitsetDeterminant::get_alfa_occ() {
     std::vector<int> occ;
@@ -135,8 +178,9 @@ std::vector<int> STLBitsetDeterminant::get_beta_occ() {
 }
 
 std::vector<int> STLBitsetDeterminant::get_alfa_vir() {
+    int nmo = find_nmo();
     std::vector<int> vir;
-    for (int p = 0; p < num_str_bits; ++p) {
+    for (int p = 0; p < nmo; ++p) {
         if (not ALFA(p))
             vir.push_back(p);
     }
@@ -144,8 +188,9 @@ std::vector<int> STLBitsetDeterminant::get_alfa_vir() {
 }
 
 std::vector<int> STLBitsetDeterminant::get_beta_vir() {
+    int nmo = find_nmo();
     std::vector<int> vir;
-    for (int p = 0; p < num_str_bits; ++p) {
+    for (int p = 0; p < nmo; ++p) {
         if (not BETA(p))
             vir.push_back(p);
     }
@@ -171,8 +216,9 @@ std::vector<int> STLBitsetDeterminant::get_beta_occ() const {
 }
 
 std::vector<int> STLBitsetDeterminant::get_alfa_vir() const {
+    int nmo = find_nmo();
     std::vector<int> vir;
-    for (int p = 0; p < num_str_bits; ++p) {
+    for (int p = 0; p < nmo; ++p) {
         if (not ALFA(p))
             vir.push_back(p);
     }
@@ -180,8 +226,9 @@ std::vector<int> STLBitsetDeterminant::get_alfa_vir() const {
 }
 
 std::vector<int> STLBitsetDeterminant::get_beta_vir() const {
+    int nmo = find_nmo();
     std::vector<int> vir;
-    for (int p = 0; p < num_str_bits; ++p) {
+    for (int p = 0; p < nmo; ++p) {
         if (not BETA(p))
             vir.push_back(p);
     }
@@ -224,7 +271,8 @@ double STLBitsetDeterminant::destroy_beta_bit(int n) {
 /// Switch alfa and beta bits
 void STLBitsetDeterminant::spin_flip() {
     bool temp;
-    for (int p = 0; p < num_str_bits; ++p) {
+    int nmo = find_nmo();
+    for (int p = 0; p < nmo; ++p) {
         //        std::swap(bits_[p],bits_[nmo_ + p]);
         temp = ALFA(p);
         ALFA(p) = BETA(p);
@@ -234,12 +282,13 @@ void STLBitsetDeterminant::spin_flip() {
 
 /// Return determinant with one spin annihilated, 0 == alpha
 void STLBitsetDeterminant::zero_spin(STLBitsetDeterminant::SpinType spin_type) {
+    int nmo = find_nmo();
     if (spin_type == SpinType::AlphaSpin) {
-        for (int p = 0; p < num_str_bits; ++p) {
+        for (int p = 0; p < nmo; ++p) {
             ALFA(p) = false;
         }
     } else {
-        for (int p = 0; p < num_str_bits; ++p) {
+        for (int p = 0; p < nmo; ++p) {
             BETA(p) = false;
         }
     }
@@ -559,7 +608,7 @@ void STLBitsetDeterminant::enforce_spin_completeness(std::vector<STLBitsetDeterm
         for (int i = nbopen; i < naopen + nbopen; ++i)
             open_bits[i] = true; // 1
         do {
-            STLBitsetDeterminant new_det;
+            STLBitsetDeterminant new_det(nmo);
             for (int c = 0; c < nclosed; ++c) {
                 new_det.set_alfa_bit(closed[c], true);
                 new_det.set_beta_bit(closed[c], true);

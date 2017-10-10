@@ -75,7 +75,7 @@ SigmaVectorDirect::SigmaVectorDirect(const DeterminantHashVec& space,
     nmo_ = fci_ints_->nmo();
 
     for (size_t I = 0; I < size_; ++I) {
-        STLBitsetDeterminant detI = space.get_det(I);
+        const STLBitsetDeterminant& detI = space.get_det(I);
         double EI = fci_ints_->energy(detI);
         diag_.push_back(EI);
     }
@@ -125,9 +125,8 @@ void SigmaVectorDirect::compute_sigma_scalar(SharedVector sigma, SharedVector b)
     double* sigma_p = sigma->pointer();
     double* b_p = b->pointer();
     // loop over all determinants
-    STLBitsetDeterminant detJ;
     for (size_t I = 0; I < size_; ++I) {
-        STLBitsetDeterminant detI = space_.get_det(I);
+        const STLBitsetDeterminant& detI = space_.get_det(I);
         double b_I = b_p[I];
         sigma_p[I] += diag_[I] * b_I;
     }
@@ -140,9 +139,9 @@ void SigmaVectorDirect::compute_sigma_aa(SharedVector sigma, SharedVector b) {
     double* sigma_p = sigma->pointer();
     double* b_p = b->pointer();
     // loop over all determinants
-    STLBitsetDeterminant detJ;
+    STLBitsetDeterminant detJ = space_.get_det(0);
     for (size_t I = 0; I < size_; ++I) {
-        STLBitsetDeterminant detI = space_.get_det(I);
+        const STLBitsetDeterminant& detI = space_.get_det(I);
         double b_I = b_p[I];
         for (int i = 0; i < nmo; i++) {
             if (detI.get_alfa_bit(i)) {
@@ -177,9 +176,9 @@ void SigmaVectorDirect::compute_sigma_bb(SharedVector sigma, SharedVector b) {
     double* sigma_p = sigma->pointer();
     double* b_p = b->pointer();
     // loop over all determinants
-    STLBitsetDeterminant detJ;
+    STLBitsetDeterminant detJ = space_.get_det(0);
     for (size_t I = 0; I < size_; ++I) {
-        STLBitsetDeterminant detI = space_.get_det(I);
+        const STLBitsetDeterminant& detI = space_.get_det(I);
         double b_I = b_p[I];
         for (int i = 0; i < nmo; i++) {
             if (detI.get_beta_bit(i)) {
@@ -214,9 +213,9 @@ void SigmaVectorDirect::compute_sigma_aaaa(SharedVector sigma, SharedVector b) {
     double* sigma_p = sigma->pointer();
     double* b_p = b->pointer();
     // loop over all determinants
-    STLBitsetDeterminant detJ;
+    STLBitsetDeterminant detJ = space_.get_det(0);
     for (size_t I = 0; I < size_; ++I) {
-        STLBitsetDeterminant detI = space_.get_det(I);
+        const STLBitsetDeterminant& detI = space_.get_det(I);
         double b_I = b_p[I];
         for (int i = 0; i < nmo; i++) {
             if (detI.get_alfa_bit(i)) {
@@ -262,9 +261,9 @@ void SigmaVectorDirect::compute_sigma_abab(SharedVector sigma, SharedVector b) {
     double* sigma_p = sigma->pointer();
     double* b_p = b->pointer();
     // loop over all determinants
-    STLBitsetDeterminant detJ;
+    STLBitsetDeterminant detJ = space_.get_det(0);
     for (size_t I = 0; I < size_; ++I) {
-        STLBitsetDeterminant detI = space_.get_det(I);
+        const STLBitsetDeterminant& detI = space_.get_det(I);
         double b_I = b_p[I];
         for (int i = 0; i < nmo; i++) {
             if (detI.get_alfa_bit(i)) {
@@ -311,9 +310,9 @@ void SigmaVectorDirect::compute_sigma_bbbb(SharedVector sigma, SharedVector b) {
     double* sigma_p = sigma->pointer();
     double* b_p = b->pointer();
     // loop over all determinants
-    STLBitsetDeterminant detJ;
+    STLBitsetDeterminant detJ = space_.get_det(0);
     for (size_t I = 0; I < size_; ++I) {
-        STLBitsetDeterminant detI = space_.get_det(I);
+        const STLBitsetDeterminant& detI = space_.get_det(I);
         double b_I = b_p[I];
         for (int i = 0; i < nmo; i++) {
             if (detI.get_beta_bit(i)) {
@@ -359,7 +358,7 @@ void SigmaVectorDirect::compute_sigma_aa_fast_search(SharedVector sigma, SharedV
     double* b_p = b->pointer();
     // loop over all determinants
     for (size_t I = 0; I < size_; ++I) {
-        STLBitsetDeterminant detI = space_.get_det(I);
+        const STLBitsetDeterminant& detI = space_.get_det(I);
         double b_I = b_p[I];
         compute_aa_coupling(detI, b_I, sigma_p);
     }
@@ -371,7 +370,7 @@ void SigmaVectorDirect::compute_sigma_bb_fast_search(SharedVector sigma, SharedV
     double* b_p = b->pointer();
     // loop over all determinants
     for (size_t I = 0; I < size_; ++I) {
-        STLBitsetDeterminant detI = space_.get_det(I);
+        const STLBitsetDeterminant& detI = space_.get_det(I);
         double b_I = b_p[I];
         compute_bb_coupling(detI, b_I, sigma_p);
     }
@@ -379,7 +378,7 @@ void SigmaVectorDirect::compute_sigma_bb_fast_search(SharedVector sigma, SharedV
 
 void SigmaVectorDirect::compute_aa_coupling(const STLBitsetDeterminant& detI, const double b_I,
                                             double* sigma_p) {
-    STLBitsetDeterminant detJ;
+    STLBitsetDeterminant detJ = space_.get_det(0);
     // Case I
     for (int i = nmo_ - 1; i >= 0; i--) {
         if (detI.get_alfa_bit(i)) {
@@ -433,7 +432,7 @@ void SigmaVectorDirect::compute_aa_coupling(const STLBitsetDeterminant& detI, co
 
 void SigmaVectorDirect::compute_bb_coupling(const STLBitsetDeterminant& detI, const double b_I,
                                             double* sigma_p) {
-    STLBitsetDeterminant detJ;
+    STLBitsetDeterminant detJ = space_.get_det(0);
     // Case I
     for (int i = nmo_ - 1; i >= 0; i--) {
         if (detI.get_alfa_bit(i)) {

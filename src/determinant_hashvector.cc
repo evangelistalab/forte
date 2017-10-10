@@ -75,8 +75,7 @@ const STLBitsetDeterminant& DeterminantHashVec::get_det(const size_t value) cons
 
 size_t DeterminantHashVec::get_idx(const STLBitsetDeterminant& det) const { return wfn_.find(det); }
 
-void DeterminantHashVec::make_spin_complete() {
-    int nmo = wfn_[0].nmo();
+void DeterminantHashVec::make_spin_complete(int nmo) {
     size_t ndet_added = 0;
     std::vector<size_t> closed(nmo, 0);
     std::vector<size_t> open(nmo, 0);

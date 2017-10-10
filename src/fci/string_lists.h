@@ -26,18 +26,17 @@
  * @END LICENSE
  */
 
-#ifndef _capriccio_string_lists_
-#define _capriccio_string_lists_
+#ifndef _string_lists_
+#define _string_lists_
+
+#include "psi4/libmints/dimension.h"
 
 #include <map>
 #include <vector>
 #include <utility>
-#include "psi4/libmints/dimension.h"
 
-#include "boost/tuple/tuple.hpp"
-#include "boost/tuple/tuple_comparison.hpp"
-#include "boost/dynamic_bitset.hpp"
 #include "binary_graph.hpp"
+#include "../sparse_ci/stl_bitset_string.h"
 
 namespace psi {
 namespace forte {
@@ -88,13 +87,13 @@ struct H3StringSubstitution {
 };
 
 typedef std::shared_ptr<BinaryGraph> GraphPtr;
-typedef std::vector<std::vector<boost::dynamic_bitset<>>> StringList;
-typedef std::map<boost::tuple<size_t, size_t, int>, std::vector<StringSubstitution>> VOList;
-typedef std::map<boost::tuple<size_t, size_t, size_t, size_t, int>, std::vector<StringSubstitution>>
+typedef std::vector<std::vector<std::bitset<128>>> StringList;
+typedef std::map<std::tuple<size_t, size_t, int>, std::vector<StringSubstitution>> VOList;
+typedef std::map<std::tuple<size_t, size_t, size_t, size_t, int>, std::vector<StringSubstitution>>
     VOVOList;
-typedef std::map<boost::tuple<size_t, size_t, size_t, size_t, int>, std::vector<StringSubstitution>>
+typedef std::map<std::tuple<size_t, size_t, size_t, size_t, int>, std::vector<StringSubstitution>>
     VVOOList;
-typedef std::map<boost::tuple<int, size_t, int>, std::vector<StringSubstitution>> OOList;
+typedef std::map<std::tuple<int, size_t, int>, std::vector<StringSubstitution>> OOList;
 
 /// 1-hole list
 typedef std::map<std::tuple<int, size_t, int>, std::vector<H1StringSubstitution>> H1List;
@@ -144,8 +143,8 @@ class StringLists {
     GraphPtr alfa_graph_3h() { return alfa_graph_3h_; }
     GraphPtr beta_graph_3h() { return beta_graph_3h_; }
 
-    boost::dynamic_bitset<> alfa_str(size_t h, size_t I) const { return alfa_list_[h][I]; }
-    boost::dynamic_bitset<> beta_str(size_t h, size_t I) const { return beta_list_[h][I]; }
+    std::bitset<128> alfa_str(size_t h, size_t I) const { return alfa_list_[h][I]; }
+    std::bitset<128> beta_str(size_t h, size_t I) const { return beta_list_[h][I]; }
 
     std::vector<StringSubstitution>& get_alfa_vo_list(size_t p, size_t q, int h);
     std::vector<StringSubstitution>& get_beta_vo_list(size_t p, size_t q, int h);
@@ -288,6 +287,7 @@ class StringLists {
 
     void print_string(bool* I, size_t n);
 };
+
 }
 }
-#endif // _capriccio_string_lists_
+#endif // _string_lists_

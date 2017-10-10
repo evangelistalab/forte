@@ -103,7 +103,8 @@ ProjectorCI_Simple::ProjectorCI_Simple(SharedWavefunction ref_wfn, Options& opti
                                        std::shared_ptr<ForteIntegrals> ints,
                                        std::shared_ptr<MOSpaceInfo> mo_space_info)
     : Wavefunction(options), ints_(ints), mo_space_info_(mo_space_info),
-      prescreening_tollerance_factor_(1.5), fast_variational_estimate_(false) {
+      prescreening_tollerance_factor_(1.5), fast_variational_estimate_(false),
+      reference_determinant_(0) {
     // Copy the wavefunction information
     shallow_copy(ref_wfn);
     reference_wavefunction_ = ref_wfn;

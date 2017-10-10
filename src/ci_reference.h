@@ -67,6 +67,9 @@ class CI_Reference // : public Wavefunction
     // Pointer to the MOSpaceInfo object
     std::shared_ptr<MOSpaceInfo> mo_space_info_;
 
+    // Number of active MOs
+    int nact_;
+
     // Symmetry of each active MO
     Dimension mo_symmetry_;
 
