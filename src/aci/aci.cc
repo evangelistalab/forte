@@ -3838,7 +3838,7 @@ void AdaptiveCI::spin_analysis()
         file.open("spin_mat.txt", std::ofstream::out | std::ofstream::trunc);
         for( int i = 0; i < nact; ++i ){
             for( int j = 0; j < nact; ++j ){
-                file << std::setw( 11 ) << spin_corr->get(i,j) << " ";
+                file << std::setw( 12 ) << std::setprecision(6) << spin_corr->get(i,j) << " ";
             }
             file << "\n";
         } 
