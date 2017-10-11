@@ -18,7 +18,7 @@ set {
     active          [3, 0, 1, 2]
     e_convergence   1e-6
     d_convergence   1e-10
-    MCSCF_R_CONVERGENCE 1e-6
+    MCSCF_R_CONVERGENCE 1e-10
     MCSCF_E_CONVERGENCE 1e-10
 }
 

@@ -4,7 +4,7 @@ import forte
 
 refrhf     = -108.98300653123336
 #refdsrgpt2 = -109.368233368547152 # semi_canonical false
-refdsrgpt2 = -109.36841715616309
+#refdsrgpt2 = -109.36841715616309
 
 refrhf     = -108.95379624015762 # cc-pVDZ
 refdsrgpt2 = -109.25041672286461 # cc-pVDZ
@@ -23,7 +23,7 @@ set globals{
    reference               rhf
    scf_type                pk
    d_convergence           12
-   e_convergence           15
+   e_convergence           14
 }
 
 set forte{
@@ -41,7 +41,7 @@ set forte{
 }
 
 energy('scf')
-compare_values(refrhf,get_variable("CURRENT ENERGY"),10,"SCF energy")
+compare_values(refrhf,get_variable("CURRENT ENERGY"),9,"SCF energy")
 
 energy('forte')
-compare_values(refdsrgpt2,get_variable("CURRENT ENERGY"),10,"DSRG-MRPT2 energy")
+compare_values(refdsrgpt2,get_variable("CURRENT ENERGY"),9,"DSRG-MRPT2 energy")
