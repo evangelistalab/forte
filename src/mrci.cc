@@ -251,7 +251,7 @@ void MRCI::get_excited_determinants() {
     reference_.merge(external);
 }
 
-//void MRCI::upcast_reference() {
+void MRCI::upcast_reference() {
 //    auto mo_sym = mo_space_info_->symmetry("GENERALIZED PARTICLE");
 
 //    Dimension old_dim = mo_space_info_->get_dimension("ACTIVE");
@@ -283,7 +283,7 @@ void MRCI::get_excited_determinants() {
 //                min += old_dim[m];
 //            }
 //            for (int pos = nact + min + old_dim[n] - 1; pos >= min + nact; --pos) {
-//                det.set_beta_bit(pos + b_shift + shift[n],);
+//                det.set_beta_bit(pos + b_shift + shift[n], );
 //                det.bits_[pos + b_shift + shift[n]] = det.bits_[pos];
 //                det.bits_[pos] = 0;
 //            }
@@ -304,6 +304,6 @@ void MRCI::get_excited_determinants() {
 
 //        reference_.add(det);
 //    }
-//}
+}
 }
 }
