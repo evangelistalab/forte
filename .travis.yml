@@ -74,14 +74,12 @@ install:
 - ${CXX_COMPILER} --version
 - ${Fortran_COMPILER} --version
 - ${C_COMPILER} --version
-- pyenv local 3.5.3
-#pyenv virtualenv -p python3.5 3.5.3 myenv
 # Compile ambit
 - cd ${HOME}/build
 - pwd
 - git clone https://github.com/jturney/ambit.git ambit
 - cd ambit
-- cmake -H. -Bobjdir -DCMAKE_C_COMPILER=${C_COMPILER} -DCMAKE_CXX_COMPILER=${CXX_COMPILER} -DCMAKE_BUILD_TYPE=Debug -DCMAKE_INSTALL_PREFIX=/home/travis/build/ambit-bin -DPYTHON_EXECUTABLE=/full/path/to/bin/python
+- cmake -H. -Bobjdir -DCMAKE_C_COMPILER=${C_COMPILER} -DCMAKE_CXX_COMPILER=${CXX_COMPILER} -DCMAKE_BUILD_TYPE=Debug -DCMAKE_INSTALL_PREFIX=/home/travis/build/ambit-bin
 - cd objdir
 - make -j2
 - make install
