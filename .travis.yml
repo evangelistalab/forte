@@ -74,7 +74,7 @@ install:
 - ${CXX_COMPILER} --version
 - ${Fortran_COMPILER} --version
 - ${C_COMPILER} --version
-#- pyenv local 3.5.3
+- pyenv local 3.5.3
 #pyenv virtualenv -p python3.5 3.5.3 myenv
 # Compile ambit
 - cd ${HOME}/build
