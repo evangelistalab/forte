@@ -16,7 +16,7 @@ set {
     reference       rhf
     frozen_docc     [1, 0, 0, 0]
     active          [3, 0, 1, 2]
-    e_convergence   1e-6
+    e_convergence   1e-10
     d_convergence   1e-10
     MCSCF_R_CONVERGENCE 1e-10
     MCSCF_E_CONVERGENCE 1e-10
