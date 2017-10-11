@@ -7,7 +7,7 @@ refrhf     = -108.98300653123336
 #refdsrgpt2 = -109.36841715616309
 
 refrhf     = -108.95379624015762 # cc-pVDZ
-refdsrgpt2 = -109.25041672286461 # cc-pVDZ
+refdsrgpt2 = -109.2504167213 # older value = -109.25041672286461 # cc-pVDZ
 
 memory 500 mb
 
