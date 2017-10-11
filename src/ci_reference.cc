@@ -296,7 +296,6 @@ void CI_Reference::build_cas_reference(std::vector<STLBitsetDeterminant>& ref_sp
                 // Check symmetry
                 if (sym == root_sym_) {
                     ref_space.push_back(det);
-                    //                    det.print();
                 }
 
             } while (std::next_permutation(tmp_det_b.begin(), tmp_det_b.begin() + na));
@@ -398,7 +397,6 @@ std::vector<std::tuple<double, int, int>> CI_Reference::sym_labeled_orbitals(std
 
 STLBitsetDeterminant CI_Reference::get_occupation() {
     int nact = mo_space_info_->size("ACTIVE");
-//    std::vector<int> occupation(2 * nact, 0);
     STLBitsetDeterminant det(nact);
 
     // nyms denotes the number of electrons needed to assign symmetry and
@@ -420,12 +418,10 @@ STLBitsetDeterminant CI_Reference::get_occupation() {
 
     // Build initial reference determinant from restricted reference
     for (int i = 0; i < nalpha_; ++i) {
-        det.set_alfa_bit(std::get<2>(labeled_orb_en[i]),true);
-//        occupation[std::get<2>(labeled_orb_en[i])] = 1;
+        det.set_alfa_bit(std::get<2>(labeled_orb_en[i]), true);
     }
     for (int i = 0; i < nbeta_; ++i) {
-        det.set_beta_bit(std::get<2>(labeled_orb_en[i]),true);
-//        occupation[nact + std::get<2>(labeled_orb_en[i])] = 1;
+        det.set_beta_bit(std::get<2>(labeled_orb_en[i]), true);
     }
 
     // Loop over as many outer-shell electrons as needed to get correct sym
@@ -433,8 +429,8 @@ STLBitsetDeterminant CI_Reference::get_occupation() {
 
         bool add = false;
         // Remove electron from highest energy docc
-        det.set_alfa_bit(std::get<2>(labeled_orb_en[nalpha_ - k]),false);
-//        occupation[std::get<2>(labeled_orb_en[nalpha_ - k])] = 0;
+        det.set_alfa_bit(std::get<2>(labeled_orb_en[nalpha_ - k]), false);
+        //        occupation[std::get<2>(labeled_orb_en[nalpha_ - k])] = 0;
 
         // Determine proper symmetry for new occupation
         // orb_sym = ms_;
@@ -454,8 +450,8 @@ STLBitsetDeterminant CI_Reference::get_occupation() {
         for (int i = nalpha_ - k, maxi = nact; i < maxi; ++i) {
             if (orb_sym == std::get<1>(labeled_orb_en[i]) and
                 det.get_alfa_bit(std::get<2>(labeled_orb_en[i])) != true) {
-                det.set_alfa_bit(std::get<2>(labeled_orb_en[i]),true);
-//                occupation[std::get<2>(labeled_orb_en[i])] = true;
+                det.set_alfa_bit(std::get<2>(labeled_orb_en[i]), true);
+                //                occupation[std::get<2>(labeled_orb_en[i])] = true;
                 add = true;
                 break;
             } else {
@@ -465,8 +461,8 @@ STLBitsetDeterminant CI_Reference::get_occupation() {
         // If a new occupation could not be created, put electron back and
         // remove a different one
         if (!add) {
-            det.set_alfa_bit(std::get<2>(labeled_orb_en[nalpha_ - k]),true);
-//            occupation[] = 1;
+            det.set_alfa_bit(std::get<2>(labeled_orb_en[nalpha_ - k]), true);
+            //            occupation[] = 1;
             ++k;
         } else {
             break;

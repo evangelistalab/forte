@@ -2097,17 +2097,11 @@ void AdaptiveCI::print_wfn(DeterminantHashVec& space, WFNOperator& op, SharedMat
                             tmp_evecs[I] * tmp_evecs[I], space.get_idx(tmp.get_det(I)),
                             tmp.get_det(I).str().c_str());
         }
-        outfile->Printf("\n\n  a");
-
         state_label = s2_labels[std::round(spins[n].first * 2.0)];
-        outfile->Printf("\n\n  b");
         root_spin_vec_.clear();
-        outfile->Printf("\n\n  c");
         root_spin_vec_[n] = std::make_pair(spins[n].first, spins[n].second);
-        outfile->Printf("\n\n  d");
         outfile->Printf("\n\n  Spin state for root %zu: S^2 = %5.6f, S = %5.3f, %s", n,
                         root_spin_vec_[n].first, root_spin_vec_[n].second, state_label.c_str());
-        outfile->Printf("\n\n  e");
     }
 }
 
@@ -2623,7 +2617,7 @@ void AdaptiveCI::compute_aci(DeterminantHashVec& PQ_space, SharedMatrix& PQ_evec
 
         // Check that the initial space is spin-complete
         if (spin_complete_) {
-            P_space.make_spin_complete(nmo_);
+            P_space.make_spin_complete();
             if (!quiet_mode_)
                 outfile->Printf("\n  %s: %zu determinants",
                                 "Spin-complete dimension of the P space", P_space.size());
@@ -2722,7 +2716,7 @@ void AdaptiveCI::compute_aci(DeterminantHashVec& PQ_space, SharedMatrix& PQ_evec
 
         // Check if P+Q space is spin complete
         if (spin_complete_) {
-            PQ_space.make_spin_complete(nmo_);
+            PQ_space.make_spin_complete();
             if (!quiet_mode_)
                 outfile->Printf("\n  Spin-complete dimension of the PQ space: %zu",
                                 PQ_space.size());
@@ -3593,7 +3587,7 @@ void AdaptiveCI::add_external_excitations(DeterminantHashVec& ref) {
     ref.merge(av_b);
 
     if (spin_complete_) {
-        ref.make_spin_complete(nmo_);
+        ref.make_spin_complete();
         if (!quiet_mode_)
             outfile->Printf("\n  Spin-complete dimension of the new model space: %zu", ref.size());
     }
