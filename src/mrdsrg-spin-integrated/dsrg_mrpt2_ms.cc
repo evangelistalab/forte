@@ -131,11 +131,20 @@ std::vector<std::vector<double>> DSRG_MRPT2::compute_energy_sa() {
             // de-normal-order DSRG dipole integrals
             for (int z = 0; z < 3; ++z) {
                 std::string name = "Dipole " + dm_dirs_[z] + " Integrals";
-                deGNO_ints(name, Mbar0_[z], Mbar1_[z], Mbar2_[z]);
+                if (options_.get_bool("FORM_MBAR3")) {
+                    deGNO_ints(name, Mbar0_[z], Mbar1_[z], Mbar2_[z], Mbar3_[z]);
+                } else {
+                    deGNO_ints(name, Mbar0_[z], Mbar1_[z], Mbar2_[z]);
+                }
             }
 
             // compute permanent dipoles
-            auto dm_relax = fci_mo.compute_relaxed_dm(Mbar0_, Mbar1_, Mbar2_);
+            std::map<std::string, std::vector<double>> dm_relax;
+            if (options_.get_bool("FORM_MBAR3")) {
+                dm_relax = fci_mo.compute_relaxed_dm(Mbar0_, Mbar1_, Mbar2_, Mbar3_);
+            } else {
+                dm_relax = fci_mo.compute_relaxed_dm(Mbar0_, Mbar1_, Mbar2_);
+            }
 
             print_h2("SA-DSRG-PT2 Dipole Moment (in a.u.) Summary");
             outfile->Printf("\n    %14s  %10s  %10s  %10s", "State", "X", "Y", "Z");
@@ -153,7 +162,12 @@ std::vector<std::vector<double>> DSRG_MRPT2::compute_energy_sa() {
             outfile->Printf("\n    %s", dash.c_str());
 
             // oscillator strength
-            auto osc = fci_mo.compute_relaxed_osc(Mbar1_, Mbar2_);
+            std::map<std::string, std::vector<double>> osc;
+            if (options_.get_bool("FORM_MBAR3")) {
+                osc = fci_mo.compute_relaxed_osc(Mbar1_, Mbar2_, Mbar3_);
+            } else {
+                osc = fci_mo.compute_relaxed_osc(Mbar1_, Mbar2_);
+            }
 
             print_h2("SA-DSRG-PT2 Oscillator Strength (in a.u.) Summary");
             outfile->Printf("\n    %32s  %10s  %10s  %10s  %10s", "State", "X", "Y", "Z", "Total");

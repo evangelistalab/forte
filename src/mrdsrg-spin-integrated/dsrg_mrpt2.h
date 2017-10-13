@@ -74,6 +74,12 @@ class DSRG_MRPT2 : public MASTER_DSRG {
     /// Compute the DSRG-MRPT2 energy
     virtual double compute_energy();
 
+    /// Compute one-electron density of DSRG
+    /// Important: T1 and T2 are de-normal-ordered!
+    ambit::BlockedTensor compute_OE_density(BlockedTensor& T1, BlockedTensor& T2, BlockedTensor& D1,
+                                            BlockedTensor& D2, BlockedTensor& D3,
+                                            const bool& transition);
+
     /// Compute the DSRG-MRPT2 energy with relaxed reference (once)
     double compute_energy_relaxed();
 
@@ -257,6 +263,12 @@ class DSRG_MRPT2 : public MASTER_DSRG {
     /// Compute DSRG transformed dipole integrals for a given direction
     void compute_dm1d_pt2(BlockedTensor& M, double& Mbar0, BlockedTensor& Mbar1,
                           BlockedTensor& Mbar2);
+    /// Compute DSRG transformed dipole integrals for a given direction
+    void compute_dm1d_pt2(BlockedTensor& M, double& Mbar0, BlockedTensor& Mbar1,
+                          BlockedTensor& Mbar2, BlockedTensor& Mbar3);
+
+    /// Compute DSRG-PT2 correction for unrelaxed density
+    BlockedTensor compute_pt2_unrelaxed_opdm();
 
     // => Reference relaxation <= //
 
