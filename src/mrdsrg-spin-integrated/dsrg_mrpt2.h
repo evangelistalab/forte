@@ -47,7 +47,7 @@
 #include "../blockedtensorfactory.h"
 #include "../mrdsrg-helper/dsrg_time.h"
 #include "../mrdsrg-helper/dsrg_source.h"
-#include "../stl_bitset_determinant.h"
+#include "../sparse_ci/stl_bitset_determinant.h"
 #include "../fci/fci_integrals.h"
 #include "master_mrdsrg.h"
 

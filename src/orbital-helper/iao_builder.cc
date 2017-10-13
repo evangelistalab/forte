@@ -247,10 +247,16 @@ std::map<std::string, SharedMatrix> IAOBuilder::build_iaos()
     }
 
 
+    // Build projection matrix U
+
+    SharedMatrix Cinv(C->clone());
+    Cinv->invert();
+    SharedMatrix U = Matrix::doublet(Cinv, Ctilde, false, false);
+
     std::map<std::string, SharedMatrix > ret; 
     ret["A"] = Acoeff;
     ret["S_min"] = S_min;
-    //ret["U"] = U;
+    ret["U"] = U;
     //print_IAO(Acoeff,nmin,primary_->nbf()); Function I envision
     //ret["A"] = set_name("A")
     //ret["S_min"] = set_name("S_min")
@@ -270,8 +276,8 @@ std::vector<std::string> IAOBuilder::print_IAO(SharedMatrix A_, int nmin, int nb
         }
     }
     // Form a map that lists all functions on a given atom and with a given ang. momentum
-    std::map<std::tuple<int,int,int,int>,std::vector<int>> atom_am_to_f_minao;
-    std::map<std::tuple<int,int,int,int>,std::vector<int>> atom_am_to_f_primary;
+    std::map<std::tuple<int,int,int,int,int>,std::vector<int>> atom_am_to_f_minao;
+    std::map<std::tuple<int,int,int,int,int>,std::vector<int>> atom_am_to_f_primary;
     std::vector<std::tuple<std::string, double>> all_basis_conts;
     int sum = 0;
     int count_iao = 0;
@@ -285,20 +291,23 @@ std::vector<std::string> IAOBuilder::print_IAO(SharedMatrix A_, int nmin, int nb
             if(am==0){
                 principal_qn = principal_qn + 1;
             }
-            std::tuple<int,int,int,int> atom_am;
-            atom_am = std::make_tuple(A,am,(principal_qn),count_iao);
-            count_iao++;
             for (int p = sum; p < sum + nfunction; ++p){
+                std::tuple<int,int,int,int,int> atom_am;
+                atom_am = std::make_tuple(A,am,(principal_qn),count_iao, p-sum);
                 atom_am_to_f_minao[atom_am].push_back(p);
             }
+            count_iao++;
             sum += nfunction;
         }
     }
 
     std::vector<std::string> l_to_symbol{"s","p","d","f","g","h"};
+    std::vector<std::vector<std::string>> m_to_symbol{ {""},
+                                                        {"z","x","y"},
+                                                        {"Z2","XZ","YZ","X2Y2","XY"}};
 
     
-    std::vector<std::tuple<int,int,int,int>> keys;
+    std::vector<std::tuple<int,int,int,int,int>> keys;
     for (auto& kv : atom_am_to_f_minao){
         keys.push_back(kv.first);
     }
@@ -315,17 +324,17 @@ std::vector<std::string> IAOBuilder::print_IAO(SharedMatrix A_, int nmin, int nb
             if(am==0){
                 principal_qn = principal_qn + 1;
             }
-            std::tuple<int,int,int,int> atom_am;
-            atom_am = std::make_tuple(A,am,(principal_qn),count_nbf);
-	    count_nbf++;
             for (int p = sum2; p < sum2 + nfunction; ++p){
+                std::tuple<int,int,int,int,int> atom_am;
+                atom_am = std::make_tuple(A,am,(principal_qn),count_nbf, p-sum2);
                 atom_am_to_f_primary[atom_am].push_back(p);
             }
+	    count_nbf++;
             sum2 += nfunction;
         }
     }
 
-    std::vector<std::tuple<int,int,int,int>> keys_primary;
+    std::vector<std::tuple<int,int,int,int,int>> keys_primary;
     std::vector<std::tuple<int,double,std::string>> all_iao_contributions;
     std::vector<std::string> duplicates_iao;
     for (auto& kv_primary : atom_am_to_f_primary){
@@ -339,7 +348,7 @@ std::vector<std::string> IAOBuilder::print_IAO(SharedMatrix A_, int nmin, int nb
                 auto& ifn_primary = atom_am_to_f_primary[k];
                 for (auto& nbf_primary : ifn_primary){
 		            int num = iao;
-                    std::string outstr_primary = boost::str(boost::format("%d%s%s_%d") % (std::get<0>(k)+1) % mol->symbol(std::get<0>(k)).c_str() % l_to_symbol[std::get<1>(k)].c_str() % num);
+                    std::string outstr_primary = boost::str(boost::format("%d%s%s%s_%d") % (std::get<0>(k)+1) % mol->symbol(std::get<0>(k)).c_str() % l_to_symbol[std::get<1>(k)].c_str() % m_to_symbol[std::get<1>(k)][std::get<4>(k)].c_str() %num);
                     //iao_labs.push_back(outstr);
                     double a = 0.0;
                     a = A_nbf->get(nbf_primary,iao);
@@ -352,11 +361,11 @@ std::vector<std::string> IAOBuilder::print_IAO(SharedMatrix A_, int nmin, int nb
                     all_iao_contributions.push_back(iao_cont);
 	        }
 		
-                std::string outstr = boost::str(boost::format("%d%s%s_%d") % (std::get<0>(i) + 1) % mol->symbol(std::get<0>(i)).c_str() % l_to_symbol[std::get<1>(i)].c_str() % iao);
+                std::string outstr = boost::str(boost::format("%d%s%s%s_%d") % (std::get<0>(i) + 1) % mol->symbol(std::get<0>(i)).c_str() % l_to_symbol[std::get<1>(i)].c_str() % m_to_symbol[std::get<1>(i)][std::get<4>(i)].c_str()  % iao);
                 std::string istring = outstr;
                 if(std::find(duplicates_iao.begin(), duplicates_iao.end(), istring.c_str()) != duplicates_iao.end()){}
 		else{
-		    outfile->Printf("%s\n", outstr.c_str());
+		  //  outfile->Printf("%s\n", outstr.c_str());
                     //iao_labs.push_back(outstr);
 		}
 		duplicates_iao.push_back(istring.c_str());
@@ -388,7 +397,7 @@ std::vector<std::string> IAOBuilder::print_IAO(SharedMatrix A_, int nmin, int nb
 	    }
 	    duplicates.push_back(istring.c_str());
 	    if(total_basis_cont > 0.001){
-            outfile->Printf("SUM(%s): %.2f \n",istring.c_str(),total_basis_cont);
+      //      outfile->Printf("SUM(%s): %.2f \n",istring.c_str(),total_basis_cont);
 	        std::tuple<int,double,std::string> iao_sum_cont;
             iao_sum_cont = std::make_tuple(std::get<0>(all_iao_contributions[i]),total_basis_cont,std::get<2>(all_iao_contributions[i]).c_str());
 	        iao_sum.push_back(iao_sum_cont);

@@ -31,6 +31,7 @@
 
 #include <bitset>
 #include <unordered_map>
+#include <algorithm>
 
 //#include "fci/fci_integrals.h"
 //#include "integrals/integrals.h"

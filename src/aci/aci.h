@@ -44,9 +44,8 @@
 #include "../orbital-helper/unpaired_density.h"
 #include "../determinant_hashvector.h"
 #include "../reference.h"
-#include "../sparse_ci_solver.h"
-#include "../stl_bitset_determinant.h"
-#include "../sparse_ci_solver.h"
+#include "../sparse_ci/sparse_ci_solver.h"
+#include "../sparse_ci/stl_bitset_determinant.h"
 #include "../orbital-helper/iao_builder.h"
 
 using d1 = std::vector<double>;
@@ -107,7 +106,7 @@ class AdaptiveCI : public Wavefunction {
     void semi_canonicalize();
 
     void upcast_reference(DeterminantHashVec& ref);
-    void add_external_singles(DeterminantHashVec& ref);
+    void add_external_excitations(DeterminantHashVec& ref);
 
   private:
     // ==> Class data <==

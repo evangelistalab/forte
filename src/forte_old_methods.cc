@@ -133,10 +133,10 @@ void forte_old_methods(SharedWavefunction ref_wfn, Options& options,
         if (options.get_bool("ACI_NO")) {
             aci->compute_nos();
         }
-        if (options.get_bool("ACI_ADD_EXTERNAL_SINGLES")) {
+        if (options.get_bool("ACI_ADD_EXTERNAL_EXCITATIONS")) {
             DeterminantHashVec wfn = aci->get_wavefunction();
             aci->upcast_reference(wfn);
-            aci->add_external_singles(wfn);
+            aci->add_external_excitations(wfn);
         }
     }
     if (options.get_str("JOB_TYPE") == "PCI") {
@@ -474,7 +474,7 @@ void forte_old_methods(SharedWavefunction ref_wfn, Options& options,
             if (options.get_bool("ACI_NO")) {
                 aci->compute_nos();
             }
-            if (options.get_bool("ACI_ADD_EXTERNAL_SINGLES")) {
+            if (options.get_bool("ACI_ADD_EXTERNAL_EXCITATIONS")) {
                 DeterminantHashVec wfn = aci->get_wavefunction();
                 aci->upcast_reference(wfn);
             }
