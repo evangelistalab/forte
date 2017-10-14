@@ -424,10 +424,10 @@ void SigmaVectorDirect::compute_sigma_abab_fast_search(SharedVector sigma, Share
             // find common bits
             detJ = d;
             detJ ^= detI;
-            int ndiff = 0;
-            for (int i = 0; i < nmo_; ++i) {
-                ndiff += detJ.get_alfa_bit(i);
-            }
+            int ndiff = detJ.count_alfa();
+//            for (int i = 0; i < nmo_; ++i) {
+//                ndiff += detJ.get_alfa_bit(i);
+//            }
             if (ndiff == 2) {
                 compute_bb_coupling_compare_singles(detI, d, b_I);
             }
@@ -626,10 +626,10 @@ void SigmaVectorDirect::compute_bb_coupling_compare_singles(const STLBitsetDeter
 #endif
         // find common bits
         detJ ^= detI;
-        int ndiff = 0;
-        for (int i = 0; i < nmo_; ++i) {
-            ndiff += detJ.get_beta_bit(i);
-        }
+        int ndiff = detJ.count_beta();
+//        for (int i = 0; i < nmo_; ++i) {
+//            ndiff += detJ.get_beta_bit(i);
+//        }
         if (ndiff == 2) {
             double h_ia = fci_ints_->slater_rules(detI, sorted_dets[pos]);
             temp_sigma_[pos] += h_ia * b_I;

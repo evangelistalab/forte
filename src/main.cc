@@ -234,6 +234,9 @@ void forte_banner() {
         "    Jeffrey B. Schriber, Tianyuan Zhang, Chenxi Cai\n"
         "  ----------------------------------------------------------------------------\n",
         GIT_BRANCH, GIT_COMMIT_HASH);
+    outfile->Printf("\n  Size of STLBitsetDeterminant class: %d", sizeof(STLBitsetDeterminant));
+//    std::cout << "\n " << STLBitsetDeterminant::alfa_mask << std::endl;
+//    std::cout << "\n " << STLBitsetDeterminant::beta_mask << std::endl;
 }
 }
 } // End Namespaces

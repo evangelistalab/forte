@@ -39,11 +39,17 @@ using namespace psi;
 namespace psi {
 namespace forte {
 
-STLBitsetDeterminant::STLBitsetDeterminant(int nmo) {
-    set_count_bits(nmo);
-    if (nmo == 0) {
-        bits_.flip();
-    }
+const STLBitsetDeterminant::bit_t STLBitsetDeterminant::alfa_mask =
+    bit_t(0xFFFFFFFFFFFFFFFF) |
+    (bit_t(0xFFFFFFFFFFFFFFFF) << STLBitsetDeterminant::num_str_bits / 2);
+const STLBitsetDeterminant::bit_t STLBitsetDeterminant::beta_mask =
+    alfa_mask << STLBitsetDeterminant::num_str_bits;
+
+STLBitsetDeterminant::STLBitsetDeterminant(int nmo) : size_(nmo) {
+    //    set_count_bits(nmo);
+    //    if (nmo == 0) {
+    //        bits_.flip();
+    //    }
 }
 
 STLBitsetDeterminant::STLBitsetDeterminant(const std::vector<bool>& occupation) {
@@ -78,29 +84,48 @@ void STLBitsetDeterminant::copy(const STLBitsetDeterminant& rhs) {
 bool STLBitsetDeterminant::less_than(const STLBitsetDeterminant& rhs,
                                      const STLBitsetDeterminant& lhs) {
     // check beta first
-    for (int p = num_det_bits - 1; p >= 0; --p) {
-        if ((rhs.bits_[p] == false) and (lhs.bits_[p] == true))
-            return true;
-        if ((rhs.bits_[p] == true) and (lhs.bits_[p] == false))
-            return false;
+    for (int i = num_str_bits + rhs.size_ - 1; i >= num_str_bits; i--) {
+        if (rhs.bits_[i] ^ lhs.bits_[i])
+            return lhs.bits_[i];
     }
+    for (int i = rhs.size_ - 1; i >= 0; i--) {
+        if (rhs.bits_[i] ^ lhs.bits_[i])
+            return lhs.bits_[i];
+    }
+    //  return false;
+    //    // check beta first
+    //    for (int p = num_det_bits - 1; p >= 0; --p) {
+    //        if ((rhs.bits_[p] == false) and (lhs.bits_[p] == true))
+    //            return true;
+    //        if ((rhs.bits_[p] == true) and (lhs.bits_[p] == false))
+    //            return false;
+    //    }
     return false;
 }
 
-bool STLBitsetDeterminant::reverse_less_then(const STLBitsetDeterminant& i,
-                                                const STLBitsetDeterminant& j) {
-    for (int p = num_str_bits - 1; p >= 0; --p) {
-        if ((i.get_alfa_bit(p) == false) and (j.get_alfa_bit(p) == true))
-            return true;
-        if ((i.get_alfa_bit(p) == true) and (j.get_alfa_bit(p) == false))
-            return false;
+bool STLBitsetDeterminant::reverse_less_then(const STLBitsetDeterminant& rhs,
+                                             const STLBitsetDeterminant& lhs) {
+    // check alpha first
+    for (int i = rhs.size_ - 1; i >= 0; i--) {
+        if (rhs.bits_[i] ^ lhs.bits_[i])
+            return lhs.bits_[i];
     }
-    for (int p = num_str_bits - 1; p >= 0; --p) {
-        if ((i.get_beta_bit(p) == false) and (j.get_beta_bit(p) == true))
-            return true;
-        if ((i.get_beta_bit(p) == true) and (j.get_beta_bit(p) == false))
-            return false;
+    for (int i = num_str_bits + rhs.size_ - 1; i >= num_str_bits; i--) {
+        if (rhs.bits_[i] ^ lhs.bits_[i])
+            return lhs.bits_[i];
     }
+    //    for (int p = num_str_bits - 1; p >= 0; --p) {
+    //        if ((i.get_alfa_bit(p) == false) and (j.get_alfa_bit(p) == true))
+    //            return true;
+    //        if ((i.get_alfa_bit(p) == true) and (j.get_alfa_bit(p) == false))
+    //            return false;
+    //    }
+    //    for (int p = num_str_bits - 1; p >= 0; --p) {
+    //        if ((i.get_beta_bit(p) == false) and (j.get_beta_bit(p) == true))
+    //            return true;
+    //        if ((i.get_beta_bit(p) == true) and (j.get_beta_bit(p) == false))
+    //            return false;
+    //    }
     return false;
 }
 
@@ -110,12 +135,21 @@ bool STLBitsetDeterminant::operator==(const STLBitsetDeterminant& lhs) const {
 
 bool STLBitsetDeterminant::operator<(const STLBitsetDeterminant& lhs) const {
     // check beta first
-    for (int p = num_det_bits - 1; p >= 0; --p) {
-        if ((bits_[p] == false) and (lhs.bits_[p] == true))
-            return true;
-        if ((bits_[p] == true) and (lhs.bits_[p] == false))
-            return false;
+    // check beta first
+    for (int i = num_str_bits + size_ - 1; i >= num_str_bits; i--) {
+        if (bits_[i] ^ lhs.bits_[i])
+            return lhs.bits_[i];
     }
+    for (int i = size_ - 1; i >= 0; i--) {
+        if (bits_[i] ^ lhs.bits_[i])
+            return lhs.bits_[i];
+    }
+    //    for (int p = num_det_bits - 1; p >= 0; --p) {
+    //        if ((bits_[p] == false) and (lhs.bits_[p] == true))
+    //            return true;
+    //        if ((bits_[p] == true) and (lhs.bits_[p] == false))
+    //            return false;
+    //    }
     return false;
 }
 
@@ -150,6 +184,24 @@ STLBitsetDeterminant& STLBitsetDeterminant::flip() {
     return *this;
 }
 
+int STLBitsetDeterminant::count_alfa() const {
+//  int count = 0;
+//  for (int i = 0; i < size_; ++i) {
+//      count += ALFA(i);
+//  }
+//  return count;
+  return (bits_ & alfa_mask).count();
+}
+
+int STLBitsetDeterminant::count_beta() const {
+//    int count = 0;
+//    for (int i = 0; i < size_; ++i) {
+//        count += BETA(i);
+//    }
+//    return count;
+    return (bits_ & beta_mask).count();
+}
+
 bool STLBitsetDeterminant::get_alfa_bit(int n) const { return ALFA(n); }
 
 bool STLBitsetDeterminant::get_beta_bit(int n) const { return BETA(n); }
@@ -159,22 +211,24 @@ void STLBitsetDeterminant::set_alfa_bit(int n, bool value) { ALFA(n) = value; }
 void STLBitsetDeterminant::set_beta_bit(int n, bool value) { BETA(n) = value; }
 
 void STLBitsetDeterminant::set_count_bits(int nmo) {
-    set_alfa_bit(nmo, false);
-    set_beta_bit(nmo, false);
-    for (int b = nmo + 1; b < num_str_bits; ++b) {
-        set_alfa_bit(b, true);
-        set_beta_bit(b, true);
-    }
+    size_ = nmo;
+    //    set_alfa_bit(nmo, false);
+    //    set_beta_bit(nmo, false);
+    //    for (int b = nmo + 1; b < num_str_bits; ++b) {
+    //        set_alfa_bit(b, true);
+    //        set_beta_bit(b, true);
+    //    }
 }
 
 int STLBitsetDeterminant::find_nmo() const {
-    for (int p = num_str_bits - 1; p >= 0; --p) {
-        if (not ALFA(p))
-            return p;
-    }
-    outfile->Printf("\n\n Using an uninitialized determinant");
-    exit(1);
-    return 0;
+    return size_;
+    //    for (int p = num_str_bits - 1; p >= 0; --p) {
+    //        if (not ALFA(p))
+    //            return p;
+    //    }
+    //    outfile->Printf("\n\n Using an uninitialized determinant");
+    //    exit(1);
+    //    return 0;
 }
 
 std::vector<int> STLBitsetDeterminant::get_alfa_occ() {

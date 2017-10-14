@@ -50,13 +50,15 @@ namespace forte {
  * false <-> 0
  */
 
-const int num_det_bits = 256;
-const int num_str_bits = 128;
-
 class STLBitsetDeterminant {
   public:
     enum class SpinType { AlphaSpin, BetaSpin };
+    static constexpr int num_det_bits = 256;
+    static constexpr int num_str_bits = 128;
     using bit_t = std::bitset<num_det_bits>;
+    const static bit_t alfa_mask;
+    const static bit_t beta_mask;
+
     // Class Constructor and Destructor
     /// Construct an empty determinant
     explicit STLBitsetDeterminant(int n);
@@ -121,6 +123,9 @@ class STLBitsetDeterminant {
 
     void set_count_bits(int nmo);
     int find_nmo() const;
+
+    int count_alfa() const;
+    int count_beta() const;
 
     /// Return a vector of occupied alpha orbitals
     std::vector<int> get_alfa_occ();
@@ -198,6 +203,7 @@ class STLBitsetDeterminant {
   protected:
     /// The occupation vector (does not include the frozen orbitals)
     bit_t bits_;
+    unsigned char size_;
 };
 
 using Determinant = STLBitsetDeterminant;
