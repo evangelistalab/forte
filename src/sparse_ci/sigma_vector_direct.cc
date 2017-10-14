@@ -425,9 +425,9 @@ void SigmaVectorDirect::compute_sigma_abab_fast_search(SharedVector sigma, Share
             detJ = d;
             detJ ^= detI;
             int ndiff = detJ.count_alfa();
-//            for (int i = 0; i < nmo_; ++i) {
-//                ndiff += detJ.get_alfa_bit(i);
-//            }
+            //            for (int i = 0; i < nmo_; ++i) {
+            //                ndiff += detJ.get_alfa_bit(i);
+            //            }
             if (ndiff == 2) {
                 compute_bb_coupling_compare_singles(detI, d, b_I);
             }
@@ -568,17 +568,31 @@ void SigmaVectorDirect::compute_aa_coupling_compare(const STLBitsetDeterminant& 
 #endif
         // find common bits
         detJ ^= detI;
-        int ndiff = 0;
-        for (int i = 0; i < nmo_; ++i) {
-            ndiff += detJ.get_alfa_bit(i);
-        }
-        if ((ndiff == 2) or (ndiff == 4)) {
-            double h_ia = fci_ints_->slater_rules(detI, sorted_dets[pos]);
+        int ndiff = detJ.count_alfa();
+        if (ndiff == 2) {
+            double h_ia = fci_ints_->slater_rules_single_alpha(detI, sorted_dets[pos]);
             temp_sigma_[pos] += h_ia * b_I;
 #if SIGMA_VEC_DEBUG
             count_aa++;
 #endif
         }
+        if (ndiff == 4) {
+            double h_ia = fci_ints_->slater_rules_double_alpha_alpha(detI, sorted_dets[pos]);
+            temp_sigma_[pos] += h_ia * b_I;
+#if SIGMA_VEC_DEBUG
+            count_aa++;
+#endif
+        }
+        //        for (int i = 0; i < nmo_; ++i) {
+        //            ndiff += detJ.get_alfa_bit(i);
+        //        }
+        //        if ((ndiff == 2) or (ndiff == 4)) {
+        //            double h_ia = fci_ints_->slater_rules(detI, sorted_dets[pos]);
+        //            temp_sigma_[pos] += h_ia * b_I;
+        //#if SIGMA_VEC_DEBUG
+        //            count_aa++;
+        //#endif
+        //        }
     }
 }
 
@@ -597,17 +611,31 @@ void SigmaVectorDirect::compute_bb_coupling_compare(const STLBitsetDeterminant& 
 #endif
         // find common bits
         detJ ^= detI;
-        int ndiff = 0;
-        for (int i = 0; i < nmo_; ++i) {
-            ndiff += detJ.get_beta_bit(i);
-        }
-        if ((ndiff == 2) or (ndiff == 4)) {
-            double h_ia = fci_ints_->slater_rules(detI, sorted_dets[pos]);
+        int ndiff = detJ.count_beta();
+        if (ndiff == 2) {
+            double h_ia = fci_ints_->slater_rules_single_beta(detI, sorted_dets[pos]);
             temp_sigma_[pos] += h_ia * b_I;
 #if SIGMA_VEC_DEBUG
             count_bb++;
 #endif
         }
+        if (ndiff == 4) {
+            double h_ia = fci_ints_->slater_rules_double_beta_beta(detI, sorted_dets[pos]);
+            temp_sigma_[pos] += h_ia * b_I;
+#if SIGMA_VEC_DEBUG
+            count_bb++;
+#endif
+        }
+        //        for (int i = 0; i < nmo_; ++i) {
+        //            ndiff += detJ.get_beta_bit(i);
+        //        }
+        //        if ((ndiff == 2) or (ndiff == 4)) {
+        //            double h_ia = fci_ints_->slater_rules(detI, sorted_dets[pos]);
+        //            temp_sigma_[pos] += h_ia * b_I;
+        //#if SIGMA_VEC_DEBUG
+        //            count_bb++;
+        //#endif
+        //        }
     }
 }
 
@@ -627,11 +655,8 @@ void SigmaVectorDirect::compute_bb_coupling_compare_singles(const STLBitsetDeter
         // find common bits
         detJ ^= detI;
         int ndiff = detJ.count_beta();
-//        for (int i = 0; i < nmo_; ++i) {
-//            ndiff += detJ.get_beta_bit(i);
-//        }
         if (ndiff == 2) {
-            double h_ia = fci_ints_->slater_rules(detI, sorted_dets[pos]);
+            double h_ia = fci_ints_->slater_rules_double_alpha_beta(detI, sorted_dets[pos]);
             temp_sigma_[pos] += h_ia * b_I;
 #if SIGMA_VEC_DEBUG
             count_abab++;

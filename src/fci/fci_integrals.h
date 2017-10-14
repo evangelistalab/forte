@@ -63,11 +63,11 @@ class FCIIntegrals {
     /// Set scalar_energy();
     void set_scalar_energy(double scalar_energy) { scalar_energy_ = scalar_energy; }
 
-//    /// Initialize a determinant
-//    STLBitsetDeterminant determinant(const STLBitsetDeterminant::bit_t& bits);
-//    STLBitsetDeterminant determinant(const std::vector<int>& bits);
-//    STLBitsetDeterminant determinant(const std::vector<bool>& bits);
-//    STLBitsetDeterminant determinant();
+    //    /// Initialize a determinant
+    //    STLBitsetDeterminant determinant(const STLBitsetDeterminant::bit_t& bits);
+    //    STLBitsetDeterminant determinant(const std::vector<int>& bits);
+    //    STLBitsetDeterminant determinant(const std::vector<bool>& bits);
+    //    STLBitsetDeterminant determinant();
 
     /// Compute a determinant's energy
     double energy(STLBitsetDeterminant& det);
@@ -76,6 +76,18 @@ class FCIIntegrals {
     /// Compute the matrix element of the Hamiltonian between this determinant
     /// and a given one
     double slater_rules(const STLBitsetDeterminant& lhs, const STLBitsetDeterminant& rhs) const;
+    /// Compute the matrix element of the Hamiltonian between this determinant
+    /// and a given one
+    double slater_rules_single_alpha(const STLBitsetDeterminant& lhs,
+                                     const STLBitsetDeterminant& rhs) const;
+    double slater_rules_single_beta(const STLBitsetDeterminant& lhs,
+                                    const STLBitsetDeterminant& rhs) const;
+    double slater_rules_double_alpha_alpha(const STLBitsetDeterminant& lhs,
+                                           const STLBitsetDeterminant& rhs) const;
+    double slater_rules_double_beta_beta(const STLBitsetDeterminant& lhs,
+                                         const STLBitsetDeterminant& rhs) const;
+    double slater_rules_double_alpha_beta(const STLBitsetDeterminant& lhs,
+                                          const STLBitsetDeterminant& rhs) const;
     /// Compute the matrix element of the Hamiltonian between this determinant
     /// and a given one
     double slater_rules_single_alpha(const STLBitsetDeterminant& det, int i, int a) const;

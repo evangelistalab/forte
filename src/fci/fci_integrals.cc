@@ -408,6 +408,131 @@ double FCIIntegrals::slater_rules(const STLBitsetDeterminant& lhs,
     return (matrix_element);
 }
 
+double FCIIntegrals::slater_rules_single_alpha(const STLBitsetDeterminant& lhs,
+                                               const STLBitsetDeterminant& rhs) const {
+    // Slater rule 2 PhiI = j_a^+ i_a PhiJ
+    int i = 0;
+    int j = 0;
+    for (int p = 0; p < nmo_; ++p) {
+        if ((lhs.get_alfa_bit(p) != rhs.get_alfa_bit(p)) and lhs.get_alfa_bit(p))
+            i = p;
+        if ((lhs.get_alfa_bit(p) != rhs.get_alfa_bit(p)) and rhs.get_alfa_bit(p))
+            j = p;
+    }
+    double sign = lhs.slater_sign_aa(i, j);
+    // Diagonal contribution
+    double matrix_element = oei_a_[i * nmo_ + j];
+    for (int p = 0; p < nmo_; ++p) {
+        if (lhs.get_alfa_bit(p) and rhs.get_alfa_bit(p)) {
+            matrix_element += tei_aa_[i * nmo3_ + p * nmo2_ + j * nmo_ + p];
+        }
+        if (lhs.get_beta_bit(p) and rhs.get_beta_bit(p)) {
+            matrix_element += tei_ab_[i * nmo3_ + p * nmo2_ + j * nmo_ + p];
+        }
+    }
+    return (sign * matrix_element);
+}
+
+double FCIIntegrals::slater_rules_single_beta(const STLBitsetDeterminant& lhs,
+                                              const STLBitsetDeterminant& rhs) const {
+    // Slater rule 2 PhiI = j_b^+ i_b PhiJ
+    int i = 0;
+    int j = 0;
+    for (int p = 0; p < nmo_; ++p) {
+        if ((lhs.get_beta_bit(p) != rhs.get_beta_bit(p)) and lhs.get_beta_bit(p))
+            i = p;
+        if ((lhs.get_beta_bit(p) != rhs.get_beta_bit(p)) and rhs.get_beta_bit(p))
+            j = p;
+    }
+    double sign = lhs.slater_sign_bb(i, j);
+    // Diagonal contribution
+    double matrix_element = oei_b_[i * nmo_ + j];
+    for (int p = 0; p < nmo_; ++p) {
+        if (lhs.get_alfa_bit(p) and rhs.get_alfa_bit(p)) {
+            matrix_element += tei_ab_[p * nmo3_ + i * nmo2_ + p * nmo_ + j];
+        }
+        if (lhs.get_beta_bit(p) and rhs.get_beta_bit(p)) {
+            matrix_element += tei_bb_[i * nmo3_ + p * nmo2_ + j * nmo_ + p];
+        }
+    }
+
+    return (sign * matrix_element);
+}
+
+double FCIIntegrals::slater_rules_double_alpha_alpha(const STLBitsetDeterminant& lhs,
+                                                     const STLBitsetDeterminant& rhs) const {
+    // Slater rule 3 PhiI = k_a^+ l_a^+ j_a i_a PhiJ
+    // Diagonal contribution
+    int i = -1;
+    int k = -1;
+    int j, l;
+    for (int p = 0; p < nmo_; ++p) {
+        if ((lhs.get_alfa_bit(p) != rhs.get_alfa_bit(p)) and lhs.get_alfa_bit(p)) {
+            if (i == -1) {
+                i = p;
+            } else {
+                j = p;
+            }
+        }
+        if ((lhs.get_alfa_bit(p) != rhs.get_alfa_bit(p)) and rhs.get_alfa_bit(p)) {
+            if (k == -1) {
+                k = p;
+            } else {
+                l = p;
+            }
+        }
+    }
+    double sign = lhs.slater_sign_aaaa(i, j, k, l);
+    return (sign * tei_aa_[i * nmo3_ + j * nmo2_ + k * nmo_ + l]);
+}
+
+double FCIIntegrals::slater_rules_double_beta_beta(const STLBitsetDeterminant& lhs,
+                                                   const STLBitsetDeterminant& rhs) const {
+    // Slater rule 3 PhiI = k_a^+ l_a^+ j_a i_a PhiJ
+    // Diagonal contribution
+    int i = -1;
+    int k = -1;
+    int j, l;
+    for (int p = 0; p < nmo_; ++p) {
+        if ((lhs.get_beta_bit(p) != rhs.get_beta_bit(p)) and lhs.get_beta_bit(p)) {
+            if (i == -1) {
+                i = p;
+            } else {
+                j = p;
+            }
+        }
+        if ((lhs.get_beta_bit(p) != rhs.get_beta_bit(p)) and rhs.get_beta_bit(p)) {
+            if (k == -1) {
+                k = p;
+            } else {
+                l = p;
+            }
+        }
+    }
+    // double sign = SlaterSign(I, nmo_ + i, nmo_ + j, nmo_ + k, nmo_ + l);
+    double sign = lhs.slater_sign_bbbb(i, j, k, l);
+    return sign * tei_bb_[i * nmo3_ + j * nmo2_ + k * nmo_ + l];
+}
+
+double FCIIntegrals::slater_rules_double_alpha_beta(const STLBitsetDeterminant& lhs,
+                                                    const STLBitsetDeterminant& rhs) const {
+    // Slater rule 3 PhiI = j_a^+ i_a PhiJ
+    // Diagonal contribution
+    int i, j, k, l;
+    for (int p = 0; p < nmo_; ++p) {
+        if ((lhs.get_alfa_bit(p) != rhs.get_alfa_bit(p)) and lhs.get_alfa_bit(p))
+            i = p;
+        if ((lhs.get_beta_bit(p) != rhs.get_beta_bit(p)) and lhs.get_beta_bit(p))
+            j = p;
+        if ((lhs.get_alfa_bit(p) != rhs.get_alfa_bit(p)) and rhs.get_alfa_bit(p))
+            k = p;
+        if ((lhs.get_beta_bit(p) != rhs.get_beta_bit(p)) and rhs.get_beta_bit(p))
+            l = p;
+    }
+    double sign = lhs.slater_sign_aa(i, k) * lhs.slater_sign_bb(j, l);
+    return sign * tei_ab_[i * nmo3_ + j * nmo2_ + k * nmo_ + l];
+}
+
 double FCIIntegrals::slater_rules_single_alpha(const STLBitsetDeterminant& det, int i,
                                                int a) const {
     // Slater rule 2 PhiI = j_a^+ i_a PhiJ
