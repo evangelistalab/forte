@@ -33,7 +33,6 @@
 #include "sigma_vector.h"
 #include "sorted_string_list.h"
 
-
 #ifdef HAVE_MPI
 #include <mpi.h>
 #endif
@@ -41,7 +40,7 @@
 namespace psi {
 namespace forte {
 
-//class SortedStringList;
+// class SortedStringList;
 
 /**
  * @brief The SigmaVectorDirect class
@@ -63,6 +62,8 @@ class SigmaVectorDirect : public SigmaVector {
     int num_builds_ = 0;
     /// Diagonal elements of the Hamiltonian
     std::vector<double> diag_;
+    /// A temporary sigma vector of size N_det
+    std::vector<double> temp_sigma_;
     const DeterminantHashVec& space_;
     std::shared_ptr<FCIIntegrals> fci_ints_;
     SortedStringList a_sorted_string_list_;
@@ -77,9 +78,14 @@ class SigmaVectorDirect : public SigmaVector {
 
     void compute_sigma_aa_fast_search(SharedVector sigma, SharedVector b);
     void compute_sigma_bb_fast_search(SharedVector sigma, SharedVector b);
+    void compute_sigma_abab_fast_search(SharedVector sigma, SharedVector b);
 
     void compute_aa_coupling(const STLBitsetDeterminant& detI, const double b_I, double* sigma_p);
-    void compute_bb_coupling(const STLBitsetDeterminant& detI, const double b_I, double* sigma_p);
+    void compute_bb_coupling(const STLBitsetDeterminant& detI, const double b_I);
+    void compute_bb_coupling_compare(const STLBitsetDeterminant& detI, const double b_I);
+    void compute_aa_coupling_compare(const STLBitsetDeterminant& detI, const double b_I);
+    void compute_bb_coupling_compare_singles(const STLBitsetDeterminant& detI,
+                                             const STLBitsetDeterminant& detI_ia, const double b_I);
 };
 }
 }

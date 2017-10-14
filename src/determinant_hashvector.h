@@ -80,7 +80,7 @@ class DeterminantHashVec {
     // Clear hash
     void clear();
 
-    // Return a specific determinant by value
+    // Return a specific determinant by reference
     const STLBitsetDeterminant& get_det(const size_t value) const;
 
     // Return the index of a determinant
@@ -88,6 +88,9 @@ class DeterminantHashVec {
 
     // Return a vector of the determinants
     std::vector<STLBitsetDeterminant> determinants() const;
+
+    /// Return a vector of the determinants and their indices
+    std::vector<std::pair<STLBitsetDeterminant,size_t>> determinant_index_pairs() const;
 
     // Make this spin complete
     void make_spin_complete();

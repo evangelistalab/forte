@@ -70,8 +70,8 @@ class STLBitsetDeterminant {
     /// Construct a determinant from a bitset object
     explicit STLBitsetDeterminant(const bit_t& bits, int nmo);
 
-//    STLBitsetDeterminant(int n) = delete;
-//    STLBitsetDeterminant(size_t n) = delete;
+    //    STLBitsetDeterminant(int n) = delete;
+    //    STLBitsetDeterminant(size_t n) = delete;
 
     void copy(const STLBitsetDeterminant& rhs);
 
@@ -79,11 +79,16 @@ class STLBitsetDeterminant {
     bool operator==(const STLBitsetDeterminant& lhs) const;
     /// Less than operator
     bool operator<(const STLBitsetDeterminant& lhs) const;
+
+    /// Less than operator
+    static bool less_than(const STLBitsetDeterminant& rhs, const STLBitsetDeterminant& lhs);
     /// Reverse string ordering
-    static bool reverse_string_order(const STLBitsetDeterminant& i, const STLBitsetDeterminant& j);
+    static bool reverse_less_then(const STLBitsetDeterminant& i, const STLBitsetDeterminant& j);
 
     /// XOR operator
     STLBitsetDeterminant operator^(const STLBitsetDeterminant& lhs) const;
+    /// XOR operator
+    STLBitsetDeterminant& operator^=(const STLBitsetDeterminant& lhs);
     /// &= operator
     STLBitsetDeterminant& operator&=(const STLBitsetDeterminant& lhs);
     /// &= operator
@@ -102,8 +107,8 @@ class STLBitsetDeterminant {
     void set_alfa_bit(int n, bool value);
     /// Set the value of a beta bit
     void set_beta_bit(int n, bool value);
-//    /// Set the bits to a given bit_t
-//    void set_bits(const bit_t& bits);
+    //    /// Set the bits to a given bit_t
+    //    void set_bits(const bit_t& bits);
 
     /// Switch the alpha and beta occupations
     void spin_flip();

@@ -63,6 +63,10 @@ std::vector<STLBitsetDeterminant> DeterminantHashVec::determinants() const {
     return wfn_.toVector();
 }
 
+std::vector<std::pair<STLBitsetDeterminant,size_t>> DeterminantHashVec::determinant_index_pairs() const {
+    return wfn_.toKeyIndex();
+}
+
 size_t DeterminantHashVec::size() const { return wfn_.size(); }
 
 void DeterminantHashVec::add(const STLBitsetDeterminant& det) { wfn_.add(det); }

@@ -107,6 +107,7 @@ template <class Key, class Hash = std::hash<Key>> class HashVector {
 
     /*- Convertors -*/
     std::vector<Key> toVector() const;
+    std::vector<std::pair<Key,size_t>> toKeyIndex() const;
     std::unordered_set<Key, Hash> toUnordered_set() const;
 
     class iterator : public std::vector<CINode<Key>>::const_iterator {
@@ -685,6 +686,17 @@ template <class Key, class Hash> std::vector<Key> HashVector<Key, Hash>::toVecto
         keys.push_back(k);
     }
     return keys;
+}
+
+template <class Key, class Hash> std::vector<std::pair<Key,size_t>> HashVector<Key, Hash>::toKeyIndex() const {
+    std::vector<std::pair<Key,size_t>> key_index_pairs;
+    key_index_pairs.reserve(current_size);
+    size_t n = 0;
+    for (const Key& k : (*this)) {
+        key_index_pairs.push_back(std::make_pair(k,n));
+        n++;
+    }
+    return key_index_pairs;
 }
 
 template <class Key, class Hash>
