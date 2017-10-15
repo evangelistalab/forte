@@ -517,17 +517,10 @@ double FCIIntegrals::slater_rules_double_beta_beta(const STLBitsetDeterminant& l
 double FCIIntegrals::slater_rules_double_alpha_beta(const STLBitsetDeterminant& lhs,
                                                     const STLBitsetDeterminant& rhs) const {
     // Slater rule 3 PhiI = j_a^+ i_a PhiJ
-    const STLBitsetDeterminant::bit_t& lbits = lhs.bits();
-    const STLBitsetDeterminant::bit_t& rbits = rhs.bits();
     int i, j, k, l;
-    //    int j = 0;
-    //    int k = 0;
-    //    int l = 0;
     for (int p = 0; p < nmo_; ++p) {
-        //        const bool la_p = lhs.get_alfa_bit(p);
-        //        const bool ra_p = rhs.get_alfa_bit(p);
-        const bool la_p = lbits[p];
-        const bool ra_p = rbits[p];
+        const bool la_p = lhs.get_alfa_bit(p);
+        const bool ra_p = rhs.get_alfa_bit(p);
         if (la_p ^ ra_p) {
             i = la_p ? p : i; // i += la_p * p;
             k = ra_p ? p : k; // k += ra_p * p;
