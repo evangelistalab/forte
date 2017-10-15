@@ -580,19 +580,9 @@ void SigmaVectorDirect::compute_aa_coupling_compare(const STLBitsetDeterminant& 
             double h_ia = fci_ints_->slater_rules_double_alpha_alpha(detI, sorted_dets[pos]);
             temp_sigma_[pos] += h_ia * b_I;
 #if SIGMA_VEC_DEBUG
-            count_aa++;
+            count_aaaa++;
 #endif
         }
-        //        for (int i = 0; i < nmo_; ++i) {
-        //            ndiff += detJ.get_alfa_bit(i);
-        //        }
-        //        if ((ndiff == 2) or (ndiff == 4)) {
-        //            double h_ia = fci_ints_->slater_rules(detI, sorted_dets[pos]);
-        //            temp_sigma_[pos] += h_ia * b_I;
-        //#if SIGMA_VEC_DEBUG
-        //            count_aa++;
-        //#endif
-        //        }
     }
 }
 
@@ -623,19 +613,9 @@ void SigmaVectorDirect::compute_bb_coupling_compare(const STLBitsetDeterminant& 
             double h_ia = fci_ints_->slater_rules_double_beta_beta(detI, sorted_dets[pos]);
             temp_sigma_[pos] += h_ia * b_I;
 #if SIGMA_VEC_DEBUG
-            count_bb++;
+            count_bbbb++;
 #endif
         }
-        //        for (int i = 0; i < nmo_; ++i) {
-        //            ndiff += detJ.get_beta_bit(i);
-        //        }
-        //        if ((ndiff == 2) or (ndiff == 4)) {
-        //            double h_ia = fci_ints_->slater_rules(detI, sorted_dets[pos]);
-        //            temp_sigma_[pos] += h_ia * b_I;
-        //#if SIGMA_VEC_DEBUG
-        //            count_bb++;
-        //#endif
-        //        }
     }
 }
 

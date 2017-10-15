@@ -77,6 +77,8 @@ class STLBitsetDeterminant {
 
     void copy(const STLBitsetDeterminant& rhs);
 
+    const bit_t& bits() const;
+
     /// Equal operator
     bool operator==(const STLBitsetDeterminant& lhs) const;
     /// Less than operator

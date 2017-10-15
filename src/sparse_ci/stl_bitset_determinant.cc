@@ -76,6 +76,8 @@ STLBitsetDeterminant::STLBitsetDeterminant(const bit_t& bits, int nmo) {
     set_count_bits(nmo);
 }
 
+const STLBitsetDeterminant::bit_t& STLBitsetDeterminant::bits() const { return bits_; }
+
 void STLBitsetDeterminant::copy(const STLBitsetDeterminant& rhs) {
     bits_ = rhs.bits_;
     set_count_bits(rhs.find_nmo());
@@ -185,20 +187,20 @@ STLBitsetDeterminant& STLBitsetDeterminant::flip() {
 }
 
 int STLBitsetDeterminant::count_alfa() const {
-//  int count = 0;
-//  for (int i = 0; i < size_; ++i) {
-//      count += ALFA(i);
-//  }
-//  return count;
-  return (bits_ & alfa_mask).count();
+    //  int count = 0;
+    //  for (int i = 0; i < size_; ++i) {
+    //      count += ALFA(i);
+    //  }
+    //  return count;
+    return (bits_ & alfa_mask).count();
 }
 
 int STLBitsetDeterminant::count_beta() const {
-//    int count = 0;
-//    for (int i = 0; i < size_; ++i) {
-//        count += BETA(i);
-//    }
-//    return count;
+    //    int count = 0;
+    //    for (int i = 0; i < size_; ++i) {
+    //        count += BETA(i);
+    //    }
+    //    return count;
     return (bits_ & beta_mask).count();
 }
 

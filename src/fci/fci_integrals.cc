@@ -517,17 +517,37 @@ double FCIIntegrals::slater_rules_double_beta_beta(const STLBitsetDeterminant& l
 double FCIIntegrals::slater_rules_double_alpha_beta(const STLBitsetDeterminant& lhs,
                                                     const STLBitsetDeterminant& rhs) const {
     // Slater rule 3 PhiI = j_a^+ i_a PhiJ
-    // Diagonal contribution
+    const STLBitsetDeterminant::bit_t& lbits = lhs.bits();
+    const STLBitsetDeterminant::bit_t& rbits = rhs.bits();
     int i, j, k, l;
+    //    int j = 0;
+    //    int k = 0;
+    //    int l = 0;
     for (int p = 0; p < nmo_; ++p) {
-        if ((lhs.get_alfa_bit(p) != rhs.get_alfa_bit(p)) and lhs.get_alfa_bit(p))
-            i = p;
-        if ((lhs.get_beta_bit(p) != rhs.get_beta_bit(p)) and lhs.get_beta_bit(p))
-            j = p;
-        if ((lhs.get_alfa_bit(p) != rhs.get_alfa_bit(p)) and rhs.get_alfa_bit(p))
-            k = p;
-        if ((lhs.get_beta_bit(p) != rhs.get_beta_bit(p)) and rhs.get_beta_bit(p))
-            l = p;
+        //        const bool la_p = lhs.get_alfa_bit(p);
+        //        const bool ra_p = rhs.get_alfa_bit(p);
+        const bool la_p = lbits[p];
+        const bool ra_p = rbits[p];
+        if (la_p ^ ra_p) {
+            i = la_p ? p : i; // i += la_p * p;
+            k = ra_p ? p : k; // k += ra_p * p;
+        }
+        const bool lb_p = lhs.get_beta_bit(p);
+        const bool rb_p = rhs.get_beta_bit(p);
+        if (lb_p ^ rb_p) {
+            j = lb_p ? p : j;
+            l = rb_p ? p : l;
+            //            j += lb_p * p;
+            //            l += rb_p * p;
+        }
+        //        if (lhs.get_alfa_bit(p) ^ rhs.get_alfa_bit(p)) {
+        //            i += lhs.get_alfa_bit(p) * p;
+        //            k += rhs.get_alfa_bit(p) * p;
+        //        }
+        //        if (lhs.get_beta_bit(p) ^ rhs.get_beta_bit(p)) {
+        //            j += lhs.get_beta_bit(p) * p;
+        //            l += rhs.get_beta_bit(p) * p;
+        //        }
     }
     double sign = lhs.slater_sign_aa(i, k) * lhs.slater_sign_bb(j, l);
     return sign * tei_ab_[i * nmo3_ + j * nmo2_ + k * nmo_ + l];
