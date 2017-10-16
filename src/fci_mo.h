@@ -117,12 +117,19 @@ class FCI_MO : public Wavefunction {
     std::map<std::string, std::vector<double>> compute_relaxed_dm(const std::vector<double>& dm0,
                                                                   std::vector<BlockedTensor>& dm1,
                                                                   std::vector<BlockedTensor>& dm2);
+    std::map<std::string, std::vector<double>> compute_relaxed_dm(const std::vector<double>& dm0,
+                                                                  std::vector<BlockedTensor>& dm1,
+                                                                  std::vector<BlockedTensor>& dm2,
+                                                                  std::vector<BlockedTensor>& dm3);
 
     /// Compute oscillator strengths using DSRG transformed MO dipole integrals
     /// This function is used for SA-MRDSRG
     /// This function should be in RUN_DSRG
     std::map<std::string, std::vector<double>> compute_relaxed_osc(std::vector<BlockedTensor>& dm1,
                                                                    std::vector<BlockedTensor>& dm2);
+    std::map<std::string, std::vector<double>> compute_relaxed_osc(std::vector<BlockedTensor>& dm1,
+                                                                   std::vector<BlockedTensor>& dm2,
+                                                                   std::vector<BlockedTensor>& dm3);
 
     /// Compute Fock (stored in ForteIntegal) using this->Da_
     void compute_Fock_ints();
@@ -469,6 +476,9 @@ class FCI_MO : public Wavefunction {
     /// and densities (or transition densities, D)
     double relaxed_dm_helper(const double& dm0, BlockedTensor& dm1, BlockedTensor& dm2,
                              BlockedTensor& D1, BlockedTensor& D2);
+    double relaxed_dm_helper(const double& dm0, BlockedTensor& dm1, BlockedTensor& dm2,
+                             BlockedTensor& dm3, BlockedTensor& D1, BlockedTensor& D2,
+                             BlockedTensor& D3);
 
     /// Compute RDMs at given order and put into BlockedTensor format
     ambit::BlockedTensor compute_n_rdm(CI_RDMS& cirdm, const int& order);

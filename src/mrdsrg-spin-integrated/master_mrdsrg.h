@@ -40,6 +40,9 @@ class MASTER_DSRG : public DynamicCorrelationSolver {
     /// Compute DSRG transformed Hamiltonian
     virtual std::shared_ptr<FCIIntegrals> compute_Heff();
 
+    /// Compute DSRG dressed density
+    //    virtual void compute_density() = 0;
+
     /// Compute DSRG transformed dipole integrals
     //    virtual void compute_dm_eff(std::vector<double>& M0, std::vector<BlockedTensor>& M1,
     //                                std::vector<BlockedTensor>& M2) = 0;
@@ -243,6 +246,8 @@ class MASTER_DSRG : public DynamicCorrelationSolver {
     std::vector<BlockedTensor> Mbar1_;
     /// DSRG transformed 2-body dipole integrals (active only)
     std::vector<BlockedTensor> Mbar2_;
+    /// DSRG transformed 3-body dipole integrals (active only)
+    std::vector<BlockedTensor> Mbar3_;
 
     // ==> commutators <==
     /**
@@ -320,7 +325,8 @@ class MASTER_DSRG : public DynamicCorrelationSolver {
     void H2_T2_C2(BlockedTensor& H2, BlockedTensor& T2, const double& alpha, BlockedTensor& C2);
 
     /// Compute three-body term of commutator [H2, T2]
-    void H2_T2_C3(BlockedTensor& H2, BlockedTensor& T2, const double& alpha, BlockedTensor& C3);
+    void H2_T2_C3(BlockedTensor& H2, BlockedTensor& T2, const double& alpha, BlockedTensor& C3,
+                  const bool& active_only = true);
 
     /// Compute one- and two-body off-diagonal term of commutator [[H1, A2]2d, T1+2]od
     void H1_A2_T_Cod(BlockedTensor& H1, BlockedTensor& A2, BlockedTensor& T1, BlockedTensor& T2,
