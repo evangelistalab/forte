@@ -55,6 +55,7 @@
 #include "../fci/fci_solver.h"
 #include "../fci/fci_vector.h"
 #include "../fci_mo.h"
+#include "../aci/aci.h"
 #include "three_dsrg_mrpt2.h"
 
 using namespace ambit;
@@ -3065,10 +3066,10 @@ void THREE_DSRG_MRPT2::relax_reference_once() {
 
     de_normal_order();
 
-    std::vector<double> E_relaxes = relaxed_energy();
+    std::vector<double> E_relaxed = relaxed_energy();
 
     if (options_["AVG_STATE"].size() == 0) {
-        double Erelax = E_relaxes[0];
+        double Erelax = E_relaxed[0];
 
         // printing
         print_h2("CD/DF DSRG-MRPT2 Energy Summary");
@@ -3101,14 +3102,14 @@ void THREE_DSRG_MRPT2::relax_reference_once() {
 
             for (int i = 0; i < nstates; ++i) {
                 outfile->Printf("\n     %3d     %3s    %2d   %20.12f", multi,
-                                irrep_symbol[irrep].c_str(), i, E_relaxes[i + offset]);
+                                irrep_symbol[irrep].c_str(), i, E_relaxed[i + offset]);
             }
             outfile->Printf("\n    %s", dash.c_str());
 
             offset += nstates;
         }
 
-        Process::environment.globals["CURRENT ENERGY"] = E_relaxes[0];
+        Process::environment.globals["CURRENT ENERGY"] = E_relaxed[0];
     }
 }
 
@@ -3148,8 +3149,15 @@ std::vector<double> THREE_DSRG_MRPT2::relaxed_energy() {
             }
         }
 
-    } else {
+    } else if (options_.get_str("CAS_TYPE") == "ACI" ){ 
 
+        // Only do ground state ACI for now
+        AdaptiveCI aci(reference_wavefunction_, options_, ints_, mo_space_info_);
+        aci.set_fci_ints( fci_ints );
+        double relaxed_aci_en = aci.compute_energy(); 
+        Erelax.push_back(relaxed_aci_en);
+
+    } else {
         // common (SS and SA) setup of FCISolver
         int ntrial_per_root = options_.get_int("NTRIAL_PER_ROOT");
         Dimension active_dim = mo_space_info_->get_dimension("ACTIVE");
