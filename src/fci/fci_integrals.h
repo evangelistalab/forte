@@ -88,6 +88,8 @@ class FCIIntegrals {
                                          const STLBitsetDeterminant& rhs) const;
     double slater_rules_double_alpha_beta(const STLBitsetDeterminant& lhs,
                                           const STLBitsetDeterminant& rhs) const;
+    double slater_rules_double_alpha_beta_pre(const STLBitsetDeterminant& lhs,
+                                              const STLBitsetDeterminant& rhs, int i, int k) const;
     /// Compute the matrix element of the Hamiltonian between this determinant
     /// and a given one
     double slater_rules_single_alpha(const STLBitsetDeterminant& det, int i, int a) const;

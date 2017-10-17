@@ -70,7 +70,8 @@ SigmaVectorDirect::SigmaVectorDirect(const DeterminantHashVec& space,
                                      std::shared_ptr<FCIIntegrals> fci_ints)
     : SigmaVector(space.size()), space_(space), fci_ints_(fci_ints),
       a_sorted_string_list_(space, fci_ints, STLBitsetDeterminant::SpinType::AlphaSpin),
-      b_sorted_string_list_(space, fci_ints, STLBitsetDeterminant::SpinType::BetaSpin) {
+      b_sorted_string_list_(space, fci_ints, STLBitsetDeterminant::SpinType::BetaSpin),
+      a_sorted_string_list_ui64_(space, fci_ints, STLBitsetDeterminant::SpinType::AlphaSpin) {
 
     nmo_ = fci_ints_->nmo();
 
@@ -90,7 +91,8 @@ void SigmaVectorDirect::compute_sigma(SharedVector sigma, SharedVector b) {
     compute_sigma_scalar(sigma, b);
     compute_sigma_aa_fast_search(sigma, b);
     compute_sigma_bb_fast_search(sigma, b);
-    compute_sigma_abab_fast_search(sigma, b);
+//    compute_sigma_abab_fast_search_group(sigma, b);
+    compute_sigma_abab_fast_search_group_ui64(sigma, b);
     //    compute_sigma_aaaa(sigma, b);
     //    compute_sigma_abab(sigma, b);
     //    compute_sigma_bbbb(sigma, b);
@@ -425,11 +427,120 @@ void SigmaVectorDirect::compute_sigma_abab_fast_search(SharedVector sigma, Share
             detJ = d;
             detJ ^= detI;
             int ndiff = detJ.count_alfa();
-            //            for (int i = 0; i < nmo_; ++i) {
-            //                ndiff += detJ.get_alfa_bit(i);
-            //            }
             if (ndiff == 2) {
-                compute_bb_coupling_compare_singles(detI, d, b_I);
+                int i, a;
+                for (int p = 0; p < nmo_; ++p) {
+                    const bool la_p = detI.get_alfa_bit(p);
+                    const bool ra_p = d.get_alfa_bit(p);
+                    if (la_p ^ ra_p) {
+                        i = la_p ? p : i;
+                        a = ra_p ? p : a;
+                    }
+                }
+                double sign = detI.slater_sign_aa(i, a);
+                compute_bb_coupling_compare_singles(detI, d, b_I, sign, i, a);
+            }
+        }
+    }
+    // Add sigma using the determinant address used in the DeterminantHashVector object
+    const auto& sorted_dets = a_sorted_string_list_.sorted_dets();
+    for (size_t I = 0; I < size_; ++I) {
+        size_t addI = space_.get_idx(sorted_dets[I]);
+        sigma_p[addI] += temp_sigma_[I];
+    }
+}
+
+void SigmaVectorDirect::compute_sigma_abab_fast_search_group(SharedVector sigma, SharedVector b) {
+    timer energy_timer("SigmaVectorDirect:sigma_abab");
+    for (size_t I = 0; I < size_; ++I)
+        temp_sigma_[I] = 0.0;
+    double* sigma_p = sigma->pointer();
+    double* b_p = b->pointer();
+
+    STLBitsetDeterminant detIJa_common = space_.get_det(0);
+    // loop over all determinants
+    const auto& sorted_half_dets = a_sorted_string_list_.sorted_half_dets();
+    for (const auto& detIa : sorted_half_dets) {
+        for (const auto& detJa : sorted_half_dets) {
+            detIJa_common = detIa ^ detJa;
+            int ndiff = detIJa_common.count_alfa();
+            if (ndiff == 2) {
+                int i, a;
+                for (int p = 0; p < nmo_; ++p) {
+                    const bool la_p = detIa.get_alfa_bit(p);
+                    const bool ra_p = detJa.get_alfa_bit(p);
+                    if (la_p ^ ra_p) {
+                        i = la_p ? p : i;
+                        a = ra_p ? p : a;
+                    }
+                }
+                double sign = detIa.slater_sign_aa(i, a);
+                compute_bb_coupling_compare_singles_group(detIa, detJa, sign, i, a, b);
+            }
+        }
+    }
+
+    //    for (size_t I = 0; I < size_; ++I) {
+    //        const STLBitsetDeterminant& detI = space_.get_det(I);
+    //        double b_I = b_p[I];
+
+    //        // find all singles compared to this determinant
+    //        const auto& sorted_half_dets = a_sorted_string_list_.sorted_half_dets();
+    //        for (const auto& d : sorted_half_dets) {
+    //            // find common bits
+    //            detJ = d;
+    //            detJ ^= detI;
+    //            int ndiff = detJ.count_alfa();
+    //            if (ndiff == 2) {
+    //                int i, a;
+    //                for (int p = 0; p < nmo_; ++p) {
+    //                    const bool la_p = detI.get_alfa_bit(p);
+    //                    const bool ra_p = d.get_alfa_bit(p);
+    //                    if (la_p ^ ra_p) {
+    //                        i = la_p ? p : i;
+    //                        a = ra_p ? p : a;
+    //                    }
+    //                }
+    //                double sign = detI.slater_sign_aa(i, a);
+    //                compute_bb_coupling_compare_singles(detI, d, b_I, sign, i, a);
+    //            }
+    //        }
+    //    }
+    // Add sigma using the determinant address used in the DeterminantHashVector object
+    const auto& sorted_dets = a_sorted_string_list_.sorted_dets();
+    for (size_t I = 0; I < size_; ++I) {
+        size_t addI = space_.get_idx(sorted_dets[I]);
+        sigma_p[addI] += temp_sigma_[I];
+    }
+}
+
+void SigmaVectorDirect::compute_sigma_abab_fast_search_group_ui64(SharedVector sigma,
+                                                                  SharedVector b) {
+    timer energy_timer("SigmaVectorDirect:sigma_abab");
+    for (size_t I = 0; I < size_; ++I)
+        temp_sigma_[I] = 0.0;
+    double* sigma_p = sigma->pointer();
+    double* b_p = b->pointer();
+
+    UI64Determinant::bit_t detIJa_common;
+    // loop over all determinants
+    const auto& sorted_half_dets = a_sorted_string_list_ui64_.sorted_half_dets();
+    for (const auto& detIa : sorted_half_dets) {
+        for (const auto& detJa : sorted_half_dets) {
+            detIJa_common = detIa ^ detJa;
+            int ndiff = ui64_bit_count(detIJa_common);
+            if (ndiff == 2) {
+                int i, a;
+                for (int p = 0; p < nmo_; ++p) {
+                    const bool la_p = ui64_get_bit(detIa, p);
+                    const bool ra_p = ui64_get_bit(detJa, p);
+                    if (la_p ^ ra_p) {
+                        i = la_p ? p : i;
+                        a = ra_p ? p : a;
+                    }
+                }
+                double sign = ui64_slater_sign(detIa, i, a);
+                compute_bb_coupling_compare_singles_group_ui64(detIa, detJa, sign, i, a, b);
             }
         }
     }
@@ -621,7 +732,8 @@ void SigmaVectorDirect::compute_bb_coupling_compare(const STLBitsetDeterminant& 
 
 void SigmaVectorDirect::compute_bb_coupling_compare_singles(const STLBitsetDeterminant& detI,
                                                             const STLBitsetDeterminant& detI_ia,
-                                                            const double b_I) {
+                                                            const double b_I, double sign, int i,
+                                                            int a) {
     const auto& sorted_dets = a_sorted_string_list_.sorted_dets();
     const auto& range = a_sorted_string_list_.range(detI_ia);
     STLBitsetDeterminant detJ = detI;
@@ -636,11 +748,89 @@ void SigmaVectorDirect::compute_bb_coupling_compare_singles(const STLBitsetDeter
         detJ ^= detI;
         int ndiff = detJ.count_beta();
         if (ndiff == 2) {
-            double h_ia = fci_ints_->slater_rules_double_alpha_beta(detI, sorted_dets[pos]);
+            double h_ia =
+                sign * fci_ints_->slater_rules_double_alpha_beta_pre(detI, sorted_dets[pos], i, a);
             temp_sigma_[pos] += h_ia * b_I;
 #if SIGMA_VEC_DEBUG
             count_abab++;
 #endif
+        }
+    }
+}
+
+void SigmaVectorDirect::compute_bb_coupling_compare_singles_group(const STLBitsetDeterminant& detIa,
+                                                                  const STLBitsetDeterminant& detJa,
+                                                                  double sign, int i, int a,
+                                                                  const SharedVector& b) {
+    const auto& sorted_dets = a_sorted_string_list_.sorted_dets();
+    const auto& range_I = a_sorted_string_list_.range(detIa);
+    const auto& range_J = a_sorted_string_list_.range(detJa);
+    STLBitsetDeterminant detI = detIa;
+    STLBitsetDeterminant detJ = detJa;
+    STLBitsetDeterminant detIJ = detJa;
+    size_t first_I = range_I.first;
+    size_t last_I = range_I.second;
+    size_t first_J = range_J.first;
+    size_t last_J = range_J.second;
+    for (size_t posI = first_I; posI < last_I; ++posI) {
+        detI = sorted_dets[posI];
+        double b_I = b->get(space_.get_idx(detI));
+        for (size_t posJ = first_J; posJ < last_J; ++posJ) {
+            detJ = sorted_dets[posJ];
+#if SIGMA_VEC_DEBUG
+            count_abab_total++;
+#endif
+            // find common bits
+            detIJ = detJ ^ detI;
+            int ndiff = detIJ.count_beta();
+            if (ndiff == 2) {
+                double h_ia =
+                    sign * fci_ints_->slater_rules_double_alpha_beta_pre(detI, detJ, i, a);
+                temp_sigma_[posJ] += h_ia * b_I;
+#if SIGMA_VEC_DEBUG
+                count_abab++;
+#endif
+            }
+        }
+    }
+}
+
+void SigmaVectorDirect::compute_bb_coupling_compare_singles_group_ui64(
+    const UI64Determinant::bit_t& detIa, const UI64Determinant::bit_t& detJa, double sign, int i,
+    int a, const SharedVector& b) {
+    const auto& sorted_dets = a_sorted_string_list_ui64_.sorted_dets();
+    const auto& range_I = a_sorted_string_list_ui64_.range(detIa);
+    const auto& range_J = a_sorted_string_list_ui64_.range(detJa);
+    UI64Determinant::bit_t detIb;
+    UI64Determinant::bit_t detJb;
+    UI64Determinant::bit_t detIJb;
+    size_t first_I = range_I.first;
+    size_t last_I = range_I.second;
+    size_t first_J = range_J.first;
+    size_t last_J = range_J.second;
+    for (size_t posI = first_I; posI < last_I; ++posI) {
+        detIb = sorted_dets[posI].get_beta_bits();
+        size_t addI = a_sorted_string_list_ui64_.add(posI);
+        double b_I = b->get(addI);
+        for (size_t posJ = first_J; posJ < last_J; ++posJ) {
+            detJb = sorted_dets[posJ].get_beta_bits();
+#if SIGMA_VEC_DEBUG
+            count_abab_total++;
+#endif
+            // find common bits
+            detIJb = detJb ^ detIb;
+            int ndiff = ui64_bit_count(detIJb);
+            if (ndiff == 2) {
+                auto sign_j_b = ui64_slater_sign_single(detIb, detJb);
+                double sign_b = std::get<0>(sign_j_b);
+                size_t j = std::get<1>(sign_j_b);
+                size_t b = std::get<2>(sign_j_b);
+                double h_ia = sign * sign_b * fci_ints_->tei_ab(i, j, a, b);
+                temp_sigma_[posJ] += h_ia * b_I;
+#if SIGMA_VEC_DEBUG
+                count_abab++;
+#endif
+            }
         }
     }
 }

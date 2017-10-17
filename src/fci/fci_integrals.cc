@@ -546,6 +546,22 @@ double FCIIntegrals::slater_rules_double_alpha_beta(const STLBitsetDeterminant& 
     return sign * tei_ab_[i * nmo3_ + j * nmo2_ + k * nmo_ + l];
 }
 
+double FCIIntegrals::slater_rules_double_alpha_beta_pre(const STLBitsetDeterminant& lhs,
+                                                        const STLBitsetDeterminant& rhs, int i,
+                                                        int k) const {
+    // Slater rule 3 PhiI = j_a^+ i_a PhiJ
+    int j, l;
+    for (int p = 0; p < nmo_; ++p) {
+        const bool lb_p = lhs.get_beta_bit(p);
+        const bool rb_p = rhs.get_beta_bit(p);
+        if (lb_p ^ rb_p) {
+            j = lb_p ? p : j;
+            l = rb_p ? p : l;
+        }
+    }
+    return lhs.slater_sign_bb(j, l) * tei_ab_[i * nmo3_ + j * nmo2_ + k * nmo_ + l];
+}
+
 double FCIIntegrals::slater_rules_single_alpha(const STLBitsetDeterminant& det, int i,
                                                int a) const {
     // Slater rule 2 PhiI = j_a^+ i_a PhiJ
