@@ -84,77 +84,33 @@ uint64_t clear_lowest_one(uint64_t x)
     return x & (x - 1);
 }
 
-// inline std::vector<int> get_set(uint64_t x, uint64_t range) {
-//    uint64_t mask = (bit_t(1) << range) - bit_t(1);
-//    x = x & mask;
-//    std::vector<int> r(bit_count(x));
-//    bit_t index = lowest_one_idx(x);
-//    int i = 0;
-//    while (index != -1) {
-//        r[i] = index;
-//        x = clear_lowest_one(x);
-//        index = lowest_one_idx(x);
-//        i++;
-//    }
-//    return r;
-//}
-
 double ui64_slater_sign(uint64_t x, int m, int n) {
-    double sign = 1.0;
-    for (int i = m + 1; i < n; ++i) { // This runs up to the operator before n
-        if (ui64_get_bit(x, i))
-            sign *= -1.0;
+    // Example for 16 bit string
+    //              m  n            (m = 2, n = 5)
+    // want       00011000 00000000
+    // mask       11111111 11111111
+    // mask << 14 00000000 00000011 14 = 16 + 1 - |5-2|
+    // mask >> 11 00011000 00000000 11 = 16 - |5-2| -  min(2,5)
+    // the mask should have |m - n| - 1 bits turned on
+    uint64_t gap = std::abs(m - n);
+    if (gap < 2) { // special cases
+        return 1.0;
     }
-    for (int i = n + 1; i < m; ++i) {
-        if (ui64_get_bit(x, i)) {
-            sign *= -1.0;
-        }
-    }
-    return (sign);
+    uint64_t mask = ~0;
+    mask = mask << (65 - gap);                  // make a string with |m - n| - 1 bits set
+    mask = mask >> (64 - gap - std::min(m, n)); // move it right after min(m, n)
+    mask = x & mask;                            // intersect with string
+    mask = ui64_bit_count(mask);                // count bits in between
+    return (mask % 2 == 0) ? 1.0 : -1.0;        // compute sign
 }
 
 std::tuple<double, size_t, size_t> ui64_slater_sign_single(uint64_t l, uint64_t r) {
-    // Slater rule 3 PhiI = j_a^+ i_a PhiJ
-    size_t j, b;
-    for (int p = 0; p < 64; ++p) {
-        const bool lb_p = ui64_get_bit(l, p);
-        const bool rb_p = ui64_get_bit(r, p);
-        if (lb_p ^ rb_p) {
-            j = lb_p ? p : j;
-            b = rb_p ? p : b;
-        }
-    }
+    uint64_t lr = l ^ r;
+    uint64_t j = lowest_one_idx(lr);
+    lr = clear_lowest_one(lr);
+    uint64_t b = lowest_one_idx(lr);
     return std::make_tuple(ui64_slater_sign(l, j, b), j, b);
 }
-// lhs.slater_sign_bb(j, l) * tei_ab_[i * nmo3_ + j * nmo2_ + k * nmo_ + l]
-// double ui64_slater_sign_single(uint64_t x) {
-//    double sign = 1.0;
-//    //  uint64_t m = lowest_one_idx(x);
-//    //  x = clear_lowest_one(x);
-//    //  uint64_t n = lowest_one_idx(x);
-
-//    bool count = false;
-//    for (int i = 0; i < 64; ++i) { // This runs up to the operator before n
-//        if (not count) {
-//            if (ui64_get_bit(x, i)) {
-//                count = true;
-//            }
-//        } else {
-//            sign *= -1.0;
-//        }
-//    }
-
-//    //  for (int i = m + 1; i < n; ++i) { // This runs up to the operator before n
-//    //      if (ui64_get_bit(x, i))
-//    //          sign *= -1.0;
-//    //  }
-//    //  for (int i = n + 1; i < m; ++i) {
-//    //      if (ui64_get_bit(x, i)) {
-//    //          sign *= -1.0;
-//    //      }
-//    //  }
-//    return (sign);
-//}
 
 UI64Determinant::UI64Determinant() {}
 UI64Determinant::UI64Determinant(const STLBitsetDeterminant& d) {
