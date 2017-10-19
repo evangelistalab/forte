@@ -551,12 +551,16 @@ double FCIIntegrals::slater_rules_double_alpha_beta_pre(const STLBitsetDetermina
                                                         int k) const {
     // Slater rule 3 PhiI = j_a^+ i_a PhiJ
     int j, l;
+    int n = 0;
     for (int p = 0; p < nmo_; ++p) {
         const bool lb_p = lhs.get_beta_bit(p);
         const bool rb_p = rhs.get_beta_bit(p);
         if (lb_p ^ rb_p) {
             j = lb_p ? p : j;
             l = rb_p ? p : l;
+            n += 1;
+            if (n == 2)
+                break;
         }
     }
     return lhs.slater_sign_bb(j, l) * tei_ab_[i * nmo3_ + j * nmo2_ + k * nmo_ + l];

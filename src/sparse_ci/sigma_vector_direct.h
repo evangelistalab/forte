@@ -69,6 +69,7 @@ class SigmaVectorDirect : public SigmaVector {
     SortedStringList a_sorted_string_list_;
     SortedStringList b_sorted_string_list_;
     SortedStringList_UI64 a_sorted_string_list_ui64_;
+    SortedStringList_UI64 b_sorted_string_list_ui64_;
 
     void compute_sigma_scalar(SharedVector sigma, SharedVector b);
     void compute_sigma_aa(SharedVector sigma, SharedVector b);
@@ -81,7 +82,10 @@ class SigmaVectorDirect : public SigmaVector {
     void compute_sigma_bb_fast_search(SharedVector sigma, SharedVector b);
     void compute_sigma_abab_fast_search(SharedVector sigma, SharedVector b);
     void compute_sigma_abab_fast_search_group(SharedVector sigma, SharedVector b);
+    void compute_sigma_aa_fast_search_group_ui64(SharedVector sigma, SharedVector b);
+    void compute_sigma_bb_fast_search_group_ui64(SharedVector sigma, SharedVector b);
     void compute_sigma_abab_fast_search_group_ui64(SharedVector sigma, SharedVector b);
+
     void compute_aa_coupling(const STLBitsetDeterminant& detI, const double b_I, double* sigma_p);
     void compute_bb_coupling(const STLBitsetDeterminant& detI, const double b_I);
     void compute_bb_coupling_compare(const STLBitsetDeterminant& detI, const double b_I);
@@ -92,6 +96,10 @@ class SigmaVectorDirect : public SigmaVector {
     void compute_bb_coupling_compare_singles_group(const STLBitsetDeterminant& detIa,
                                                    const STLBitsetDeterminant& detJa, double sign,
                                                    int i, int a, const SharedVector& b);
+    void compute_aa_coupling_compare_group_ui64(const UI64Determinant::bit_t& detIb,
+                                                const SharedVector& b);
+    void compute_bb_coupling_compare_group_ui64(const UI64Determinant::bit_t& detIa,
+                                                const SharedVector& b);
     void compute_bb_coupling_compare_singles_group_ui64(const UI64Determinant::bit_t& detIa,
                                                         const UI64Determinant::bit_t& detJa,
                                                         double sign, int i, int a,
