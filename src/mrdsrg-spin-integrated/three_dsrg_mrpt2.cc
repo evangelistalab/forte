@@ -30,6 +30,7 @@
 #include <algorithm>
 #include <numeric>
 #include <string>
+#include <sstream>
 #include <vector>
 #ifdef HAVE_MPI
 #include <mpi.h>
@@ -860,8 +861,8 @@ ambit::BlockedTensor THREE_DSRG_MRPT2::compute_B_minimal(const std::vector<std::
     std::vector<std::string> ThreeIntegral_labels;
     for (const auto& label : spaces) {
         // for all spin cases, J term is a must
-        std::string J0 ("L");
-        std::string J1 ("L");
+        std::string J0("L");
+        std::string J1("L");
 
         J0 += label[0];
         J0 += label[2];
@@ -869,12 +870,12 @@ ambit::BlockedTensor THREE_DSRG_MRPT2::compute_B_minimal(const std::vector<std::
         J1 += label[1];
         J1 += label[3];
 
-        if (std::find(ThreeIntegral_labels.begin(), ThreeIntegral_labels.end(),
-                      J0) == ThreeIntegral_labels.end()) {
+        if (std::find(ThreeIntegral_labels.begin(), ThreeIntegral_labels.end(), J0) ==
+            ThreeIntegral_labels.end()) {
             ThreeIntegral_labels.push_back(J0);
         }
-        if (std::find(ThreeIntegral_labels.begin(), ThreeIntegral_labels.end(),
-                      J1) == ThreeIntegral_labels.end()) {
+        if (std::find(ThreeIntegral_labels.begin(), ThreeIntegral_labels.end(), J1) ==
+            ThreeIntegral_labels.end()) {
             ThreeIntegral_labels.push_back(J1);
         }
 
@@ -882,8 +883,8 @@ ambit::BlockedTensor THREE_DSRG_MRPT2::compute_B_minimal(const std::vector<std::
         bool aa = std::islower(label[0]) && std::islower(label[1]);
         bool bb = std::isupper(label[0]) && std::isupper(label[1]);
         if (aa || bb) {
-            std::string K0 ("L");
-            std::string K1 ("L");
+            std::string K0("L");
+            std::string K1("L");
 
             K0 += label[0];
             K0 += label[3];
@@ -891,12 +892,12 @@ ambit::BlockedTensor THREE_DSRG_MRPT2::compute_B_minimal(const std::vector<std::
             K1 += label[1];
             K1 += label[2];
 
-            if (std::find(ThreeIntegral_labels.begin(), ThreeIntegral_labels.end(),
-                          K0) == ThreeIntegral_labels.end()) {
+            if (std::find(ThreeIntegral_labels.begin(), ThreeIntegral_labels.end(), K0) ==
+                ThreeIntegral_labels.end()) {
                 ThreeIntegral_labels.push_back(K0);
             }
-            if (std::find(ThreeIntegral_labels.begin(), ThreeIntegral_labels.end(),
-                          K1) == ThreeIntegral_labels.end()) {
+            if (std::find(ThreeIntegral_labels.begin(), ThreeIntegral_labels.end(), K1) ==
+                ThreeIntegral_labels.end()) {
                 ThreeIntegral_labels.push_back(K1);
             }
         }
@@ -2983,74 +2984,35 @@ double THREE_DSRG_MRPT2::E_VT2_2_one_active() {
 }
 
 void THREE_DSRG_MRPT2::relax_reference_once() {
-    // Time to relax this reference!
-    BlockedTensor T2all = BTF_->build(tensor_type_, "T2all", spin_cases({"hhpp"}));
-    BlockedTensor Vint = BTF_->build(tensor_type_, "AllV", spin_cases({"pphh"}));
-    BlockedTensor ThreeInt = compute_B_minimal(Vint.block_labels());
-    Vint["pqrs"] = ThreeInt["gpr"] * ThreeInt["gqs"];
-    Vint["pqrs"] -= ThreeInt["gps"] * ThreeInt["gqr"];
-    Vint["PQRS"] = ThreeInt["gPR"] * ThreeInt["gQS"];
-    Vint["PQRS"] -= ThreeInt["gPS"] * ThreeInt["gQR"];
-    Vint["qPsR"] = ThreeInt["gPR"] * ThreeInt["gqs"];
+    /// Note: if internal amplitudes are included, this function will NOT be correct.
 
-    Hbar2_["uvxy"] = Vint["uvxy"];
-    Hbar2_["uVxY"] = Vint["uVxY"];
-    Hbar2_["UVXY"] = Vint["UVXY"];
+    // initialize Hbar2 (Hbar1 is initialized in the end of startup function)
+    BlockedTensor Bactv = compute_B_minimal({"aaaa", "aAaA", "AAAA"});
+    Hbar2_["pqrs"] = Bactv["gpr"] * Bactv["gqs"];
+    Hbar2_["pqrs"] -= Bactv["gps"] * Bactv["gqr"];
+    Hbar2_["PQRS"] = Bactv["gPR"] * Bactv["gQS"];
+    Hbar2_["PQRS"] -= Bactv["gPS"] * Bactv["gQR"];
+    Hbar2_["qPsR"] = Bactv["gPR"] * Bactv["gqs"];
 
-    T2all["ijab"] = Vint["abij"];
-    T2all["IJAB"] = Vint["ABIJ"];
-    T2all["iJaB"] = Vint["aBiJ"];
-
-    T2all.iterate(
-        [&](const std::vector<size_t>& i, const std::vector<SpinType>& spin, double& value) {
-            if (spin[0] == AlphaSpin && spin[1] == AlphaSpin) {
-                value *= dsrg_source_->compute_renormalized_denominator(Fa_[i[0]] + Fa_[i[1]] -
-                                                                        Fa_[i[2]] - Fa_[i[3]]);
-            } else if (spin[0] == BetaSpin && spin[1] == BetaSpin) {
-                value *= dsrg_source_->compute_renormalized_denominator(Fb_[i[0]] + Fb_[i[1]] -
-                                                                        Fb_[i[2]] - Fb_[i[3]]);
-            } else {
-                value *= dsrg_source_->compute_renormalized_denominator(Fa_[i[0]] + Fb_[i[1]] -
-                                                                        Fa_[i[2]] - Fb_[i[3]]);
-            }
-        });
-
-    if (!options_.get_bool("INTERNAL_AMP")) {
-        T2all.block("aaaa").zero();
-        T2all.block("AAAA").zero();
-        T2all.block("aAaA").zero();
-    }
-
-    Vint.iterate(
-        [&](const std::vector<size_t>& i, const std::vector<SpinType>& spin, double& value) {
-            if (std::fabs(value) > 1.0e-12) {
-                if ((spin[0] == AlphaSpin) and (spin[1] == AlphaSpin)) {
-                    value *= 1.0 +
-                             dsrg_source_->compute_renormalized(Fa_[i[0]] + Fa_[i[1]] - Fa_[i[2]] -
-                                                                Fa_[i[3]]);
-                } else if ((spin[0] == AlphaSpin) and (spin[1] == BetaSpin)) {
-                    value *= 1.0 +
-                             dsrg_source_->compute_renormalized(Fa_[i[0]] + Fb_[i[1]] - Fa_[i[2]] -
-                                                                Fb_[i[3]]);
-                } else if ((spin[0] == BetaSpin) and (spin[1] == BetaSpin)) {
-                    value *= 1.0 +
-                             dsrg_source_->compute_renormalized(Fb_[i[0]] + Fb_[i[1]] - Fb_[i[2]] -
-                                                                Fb_[i[3]]);
-                }
-            } else {
-                value = 0.0;
-            }
-        });
+    /**
+     * Implementation Notes
+     *
+     * 1. If DiskDF is NOT used, we already have all integrals to perform reference relaxation.
+     * 2. If DiskDF is used, we will use the stored V and T2 first.
+     *    These integrals contain at least two active indices.
+     *    In fact, the only two other blocks of V that need to be considered are vvac and avcc.
+     *    We shall implement these two blocks manually.
+     **/
 
     BlockedTensor C1 = BTF_->build(tensor_type_, "C1", spin_cases({"aa"}));
     BlockedTensor C2 = BTF_->build(tensor_type_, "C2", spin_cases({"aaaa"}));
     H1_T1_C1(F_, T1_, 0.5, C1);
-    H1_T2_C1(F_, T2all, 0.5, C1);
-    H2_T1_C1(Vint, T1_, 0.5, C1);
-    H2_T2_C1(Vint, T2all, 0.5, C1);
-    H1_T2_C2(F_, T2all, 0.5, C2);
-    H2_T1_C2(Vint, T1_, 0.5, C2);
-    H2_T2_C2(Vint, T2all, 0.5, C2);
+    H1_T2_C1(F_, T2_, 0.5, C1);
+    H2_T1_C1(V_, T1_, 0.5, C1);
+    H2_T2_C1(V_, T2_, 0.5, C1);
+    H1_T2_C2(F_, T2_, 0.5, C2);
+    H2_T1_C2(V_, T1_, 0.5, C2);
+    H2_T2_C2(V_, T2_, 0.5, C2);
 
     Hbar1_["uv"] += C1["uv"];
     Hbar1_["uv"] += C1["vu"];
@@ -3062,6 +3024,325 @@ void THREE_DSRG_MRPT2::relax_reference_once() {
     Hbar2_["uVxY"] += C2["xYuV"];
     Hbar2_["UVXY"] += C2["UVXY"];
     Hbar2_["UVXY"] += C2["XYUV"];
+
+    if (integral_type_ == DiskDF) {
+        /**
+         * AVCC and VACC Blocks of APTEI
+         *
+         * [V, T]["zw"] <- -0.5 * V["zemn"] * T["mnwe"] - V["zEmN"] * T["mNwE"]
+         * [V, T]["ZW"] <- -0.5 * V["ZEMN"] * T["MNWE"] - V["eZmN"] * T["mNeW"]
+         *
+         * We assume at least two tensors of size a * v * c * c can be stored.
+         * This assumption is reasonable for, say, v = 1500, c = 150, a = 50.
+         * Then we batch over spin cases.
+         * Remember to include Hermitian adjoint!
+         **/
+
+        for (const auto& Vblock : {"avcc", "aVcC", "AVCC", "vAcC"}) {
+            std::stringstream ss;
+            ss << Vblock[2] << Vblock[3] << Vblock[0] << Vblock[1];
+            std::string Tblock(ss.str());
+
+            BlockedTensor T = BTF_->build(tensor_type_, "T cc", {Tblock});
+            BlockedTensor V = BTF_->build(tensor_type_, "V cc", {Vblock});
+            BlockedTensor B = compute_B_minimal({Vblock});
+
+            std::string Hl, Vl, Tl;
+            double factor = 1.0;
+            if (std::islower(Vblock[0]) && std::isupper(Vblock[1])) {
+                if (Vblock[0] == 'a') {
+                    Vl = "zEmN";
+                    Tl = "mNwE";
+                    Hl = "zw";
+                } else {
+                    Vl = "eZmN";
+                    Tl = "mNeW";
+                    Hl = "ZW";
+                }
+                V["qPsR"] = B["gPR"] * B["gqs"];
+                T["iJaB"] = V["aBiJ"];
+            } else {
+                factor = 0.5;
+                if (std::islower(Vblock[0])) {
+                    Vl = "zemn";
+                    Tl = "mnwe";
+                    Hl = "zw";
+                    V["pqrs"] = B["gpr"] * B["gqs"];
+                    V["pqrs"] -= B["gps"] * B["gqr"];
+                    T["ijab"] = V["abij"];
+                } else {
+                    Vl = "ZEMN";
+                    Tl = "MNWE";
+                    Hl = "ZW";
+                    V["PQRS"] = B["gPR"] * B["gQS"];
+                    V["PQRS"] -= B["gPS"] * B["gQR"];
+                    T["IJAB"] = V["ABIJ"];
+                }
+            }
+
+            T.iterate([&](const std::vector<size_t>& i, const std::vector<SpinType>& spin,
+                          double& value) {
+                if (std::fabs(value) > 1.0e-12) {
+                    if (spin[0] == AlphaSpin && spin[1] == AlphaSpin) {
+                        value *= dsrg_source_->compute_renormalized_denominator(
+                            Fa_[i[0]] + Fa_[i[1]] - Fa_[i[2]] - Fa_[i[3]]);
+                    } else if (spin[0] == BetaSpin && spin[1] == BetaSpin) {
+                        value *= dsrg_source_->compute_renormalized_denominator(
+                            Fb_[i[0]] + Fb_[i[1]] - Fb_[i[2]] - Fb_[i[3]]);
+                    } else {
+                        value *= dsrg_source_->compute_renormalized_denominator(
+                            Fa_[i[0]] + Fb_[i[1]] - Fa_[i[2]] - Fb_[i[3]]);
+                    }
+                } else {
+                    value = 0.0;
+                }
+            });
+
+            V.iterate([&](const std::vector<size_t>& i, const std::vector<SpinType>& spin,
+                          double& value) {
+                if (std::fabs(value) > 1.0e-12) {
+                    if ((spin[0] == AlphaSpin) && (spin[1] == AlphaSpin)) {
+                        value *= 1.0 +
+                                 dsrg_source_->compute_renormalized(Fa_[i[0]] + Fa_[i[1]] -
+                                                                    Fa_[i[2]] - Fa_[i[3]]);
+                    } else if ((spin[0] == AlphaSpin) && (spin[1] == BetaSpin)) {
+                        value *= 1.0 +
+                                 dsrg_source_->compute_renormalized(Fa_[i[0]] + Fb_[i[1]] -
+                                                                    Fa_[i[2]] - Fb_[i[3]]);
+                    } else if ((spin[0] == BetaSpin) && (spin[1] == BetaSpin)) {
+                        value *= 1.0 +
+                                 dsrg_source_->compute_renormalized(Fb_[i[0]] + Fb_[i[1]] -
+                                                                    Fb_[i[2]] - Fb_[i[3]]);
+                    }
+                } else {
+                    value = 0.0;
+                }
+            });
+
+            BlockedTensor C1 = BTF_->build(tensor_type_, "C1", spin_cases({"aa"}));
+            C1[Hl] -= 0.5 * factor * V[Vl] * T[Tl];
+
+            std::string Hlt = std::string(1, Hl[1]) + std::string(1, Hl[0]);
+            Hbar1_[Hl] += C1[Hl];
+            Hbar1_[Hl] += C1[Hlt];
+        }
+
+        /**
+         * VVAC and VVCA Blocks of APTEI
+         *
+         * [V, T]["zw"] <- 0.5 * V["efwm"] * T["zmef"] + V["eFwM"] * T["zMeF"]
+         * [V, T]["ZW"] <- 0.5 * V["EFWM"] * T["ZMEF"] + V["eFmW"] * T["mZeF"]
+         *
+         * V["efwm"] = B["gew"] * B["gfm"] - B["em"] * B["fw"]
+         * V["eFwM"] = B["gew"] * B["gFM"]
+         *
+         * 1. We will batch over w and z, assuming two tensors of size v * v * c can be stored.
+         *    This assumption is reasonable, for example, v = 1500, c = 500.
+         * 2. Since L * v * c can potentially large, we load B["gfm"] in batches of m.
+         * 3. Since B is formed using only Ca, it is better to just use spin adapted formula,
+         *    though it is very inconsistent to the unrestricted style of this code.
+         * 4. Remember to include Hermitian adjoint of [V, T] to Hbar1!
+         **/
+
+        size_t nv2 = nvirtual_ * nvirtual_;
+        ambit::Tensor V, T, temp1, temp2, Be_w, Bf_m;
+        V = ambit::Tensor::build(tensor_type_, "V_w", {nvirtual_, nvirtual_, ncore_});
+        T = ambit::Tensor::build(tensor_type_, "T_z", {ncore_, nvirtual_, nvirtual_});
+        temp1 = ambit::Tensor::build(tensor_type_, "V_wm", {nvirtual_, nvirtual_});
+        temp2 = ambit::Tensor::build(tensor_type_, "V_wm permuted", {nvirtual_, nvirtual_});
+        std::vector<double>& rtemp2 = temp2.data();
+        std::vector<double>& rT = T.data();
+
+        //#pragma omp parallel
+        for (size_t w = 0; w < nactive_; ++w) {
+            size_t nw = actv_mos_[w];
+            double Fw = Fa_[nw];
+            for (size_t z = 0; z < nactive_; ++z) {
+                size_t nz = actv_mos_[z];
+                double Fz = Fa_[nz];
+
+                /// aa or bb part of bare APTEI
+                Be_w = ints_->three_integral_block_two_index(aux_mos_, nw, virt_mos_);
+                //#pragma omp for // test nowait
+                for (size_t m = 0, offset = 0; m < ncore_; ++m) {
+                    size_t nm = core_mos_[m];
+                    //#pragma omp critical // test if necessary
+                    //                    {
+                    Bf_m = ints_->three_integral_block_two_index(aux_mos_, nm, virt_mos_);
+                    //                    }
+                    temp1("ef") = Be_w("ge") * Bf_m("gf");
+                    temp2("ef") = temp1("ef");
+                    temp2("ef") -= temp1("fe");
+
+                    // for convenience, let's copy temp2 in T
+                    offset = m * nv2;
+                    std::copy(rtemp2.begin(), rtemp2.end(), rT.begin() + offset);
+                }
+                V("efm") = T("mef");
+
+                // scale V := V * (1 + e^{-s * D * D})
+                V.iterate([&](const std::vector<size_t>& i, double& value) {
+                    double D =
+                        Fa_[virt_mos_[i[0]]] + Fa_[virt_mos_[i[1]]] - Fa_[core_mos_[i[2]]] - Fw;
+                    value += value * dsrg_source_->compute_renormalized(D);
+                });
+
+                // scale T := V * (1 - e^{-s * D * D}) / D
+                T.iterate([&](const std::vector<size_t>& i, double& value) {
+                    double D =
+                        Fa_[core_mos_[i[0]]] + Fz - Fa_[virt_mos_[i[1]]] - Fa_[virt_mos_[i[2]]];
+                    value *= dsrg_source_->compute_renormalized_denominator(D);
+                });
+
+                double hbar = 0.0;
+                hbar = 0.5 * 0.5 * V("efm") * T("mef");
+                Hbar1_.block("aa").data()[w * nactive_ + z] += hbar;
+                Hbar1_.block("aa").data()[z * nactive_ + w] += hbar;
+                Hbar1_.block("AA").data()[w * nactive_ + z] += hbar;
+                Hbar1_.block("AA").data()[z * nactive_ + w] += hbar;
+
+                /// ab part of APTEI
+                //#pragma omp for // test nowait
+                for (size_t m = 0, offset = 0; m < ncore_; ++m) {
+                    size_t nm = core_mos_[m];
+                    //#pragma omp critical // test if necessary
+                    //                    {
+                    Bf_m = ints_->three_integral_block_two_index(aux_mos_, nm, virt_mos_);
+                    //                    }
+                    temp2("ef") = Be_w("ge") * Bf_m("gf");
+
+                    // for convenience, let's copy temp2 in T
+                    offset = m * nv2;
+                    std::copy(rtemp2.begin(), rtemp2.end(), rT.begin() + offset);
+                }
+                V("efm") = T("mef");
+
+                // scale V := V * (1 + e^{-s * D * D})
+                V.iterate([&](const std::vector<size_t>& i, double& value) {
+                    double D =
+                        Fa_[virt_mos_[i[0]]] + Fa_[virt_mos_[i[1]]] - Fa_[core_mos_[i[2]]] - Fw;
+                    value += value * dsrg_source_->compute_renormalized(D);
+                });
+
+                // scale T := V * (1 - e^{-s * D * D}) / D
+                T.iterate([&](const std::vector<size_t>& i, double& value) {
+                    double D =
+                        Fa_[core_mos_[i[0]]] + Fz - Fa_[virt_mos_[i[1]]] - Fa_[virt_mos_[i[2]]];
+                    value *= dsrg_source_->compute_renormalized_denominator(D);
+                });
+
+                hbar = 0.5 * V("efm") * T("mef");
+                Hbar1_.block("aa").data()[w * nactive_ + z] += hbar;
+                Hbar1_.block("aa").data()[z * nactive_ + w] += hbar;
+                Hbar1_.block("AA").data()[w * nactive_ + z] += hbar;
+                Hbar1_.block("AA").data()[z * nactive_ + w] += hbar;
+            }
+        }
+
+        //            // Time to relax this reference!
+        //            BlockedTensor T2all = BTF_->build(tensor_type_, "T2all", {"acvv",
+        //            "cavv", "ACVV", "CAVV"});
+        //            BlockedTensor Vint = BTF_->build(tensor_type_, "AllV", {"vvac", "vvca",
+        //            "VVAC", "VVCA"});
+        //            BlockedTensor ThreeInt = compute_B_minimal(Vint.block_labels());
+        //            Vint["pqrs"] = ThreeInt["gpr"] * ThreeInt["gqs"];
+        //            Vint["pqrs"] -= ThreeInt["gps"] * ThreeInt["gqr"];
+        //            Vint["PQRS"] = ThreeInt["gPR"] * ThreeInt["gQS"];
+        //            Vint["PQRS"] -= ThreeInt["gPS"] * ThreeInt["gQR"];
+        //            Vint["qPsR"] = ThreeInt["gPR"] * ThreeInt["gqs"];
+
+        //            //    Hbar2_["uvxy"] = Vint["uvxy"];
+        //            //    Hbar2_["uVxY"] = Vint["uVxY"];
+        //            //    Hbar2_["UVXY"] = Vint["UVXY"];
+
+        //            T2all["ijab"] = Vint["abij"];
+        //            T2all["IJAB"] = Vint["ABIJ"];
+        //            T2all["iJaB"] = Vint["aBiJ"];
+
+        //            T2all.iterate(
+        //                [&](const std::vector<size_t>& i, const std::vector<SpinType>& spin,
+        //                double&
+        //                value) {
+        //                    if (spin[0] == AlphaSpin && spin[1] == AlphaSpin) {
+        //                        value *= dsrg_source_->compute_renormalized_denominator(Fa_[i[0]]
+        //                        +
+        //                        Fa_[i[1]] -
+        //                                                                                Fa_[i[2]]
+        //                                                                                -
+        //                                                                                Fa_[i[3]]);
+        //                    } else if (spin[0] == BetaSpin && spin[1] == BetaSpin) {
+        //                        value *= dsrg_source_->compute_renormalized_denominator(Fb_[i[0]]
+        //                        +
+        //                        Fb_[i[1]] -
+        //                                                                                Fb_[i[2]]
+        //                                                                                -
+        //                                                                                Fb_[i[3]]);
+        //                    } else {
+        //                        value *= dsrg_source_->compute_renormalized_denominator(Fa_[i[0]]
+        //                        +
+        //                        Fb_[i[1]] -
+        //                                                                                Fa_[i[2]]
+        //                                                                                -
+        //                                                                                Fb_[i[3]]);
+        //                    }
+        //                });
+
+        //            //    if (!options_.get_bool("INTERNAL_AMP")) {
+        //            //        T2all.block("aaaa").zero();
+        //            //        T2all.block("AAAA").zero();
+        //            //        T2all.block("aAaA").zero();
+        //            //    }
+
+        //            Vint.iterate(
+        //                [&](const std::vector<size_t>& i, const std::vector<SpinType>& spin,
+        //                double&
+        //                value) {
+        //                    if (std::fabs(value) > 1.0e-12) {
+        //                        if ((spin[0] == AlphaSpin) and (spin[1] == AlphaSpin)) {
+        //                            value *= 1.0 +
+        //                                     dsrg_source_->compute_renormalized(Fa_[i[0]] +
+        //                                     Fa_[i[1]] -
+        //                                     Fa_[i[2]] -
+        //                                                                        Fa_[i[3]]);
+        //                        } else if ((spin[0] == AlphaSpin) and (spin[1] == BetaSpin)) {
+        //                            value *= 1.0 +
+        //                                     dsrg_source_->compute_renormalized(Fa_[i[0]] +
+        //                                     Fb_[i[1]] -
+        //                                     Fa_[i[2]] -
+        //                                                                        Fb_[i[3]]);
+        //                        } else if ((spin[0] == BetaSpin) and (spin[1] == BetaSpin)) {
+        //                            value *= 1.0 +
+        //                                     dsrg_source_->compute_renormalized(Fb_[i[0]] +
+        //                                     Fb_[i[1]] -
+        //                                     Fb_[i[2]] -
+        //                                                                        Fb_[i[3]]);
+        //                        }
+        //                    } else {
+        //                        value = 0.0;
+        //                    }
+        //                });
+
+        //            C1 = BTF_->build(tensor_type_, "C1", spin_cases({"aa"}));
+        //            C2 = BTF_->build(tensor_type_, "C2", spin_cases({"aaaa"}));
+        //            //    H1_T1_C1(F_, T1_, 0.5, C1);
+        //            //    H1_T2_C1(F_, T2all, 0.5, C1);
+        //            //    H2_T1_C1(Vint, T1_, 0.5, C1);
+        //            H2_T2_C1(Vint, T2all, 0.5, C1);
+        //            //    H1_T2_C2(F_, T2all, 0.5, C2);
+        //            //    H2_T1_C2(Vint, T1_, 0.5, C2);
+        //            //    H2_T2_C2(Vint, T2all, 0.5, C2);
+
+        //            Hbar1_["uv"] += C1["uv"];
+        //            Hbar1_["uv"] += C1["vu"];
+        //            Hbar1_["UV"] += C1["UV"];
+        //            Hbar1_["UV"] += C1["VU"];
+        //            Hbar2_["uvxy"] += C2["uvxy"];
+        //            Hbar2_["uvxy"] += C2["xyuv"];
+        //            Hbar2_["uVxY"] += C2["uVxY"];
+        //            Hbar2_["uVxY"] += C2["xYuV"];
+        //            Hbar2_["UVXY"] += C2["UVXY"];
+        //            Hbar2_["UVXY"] += C2["XYUV"];
+    }
 
     de_normal_order();
 
