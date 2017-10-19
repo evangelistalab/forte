@@ -266,6 +266,7 @@ void MASTER_DSRG::init_dm_ints() {
         Mbar0_ = std::vector<double>(3, 0.0);
         Mbar1_.clear();
         Mbar2_.clear();
+        Mbar3_.clear();
         for (int i = 0; i < 3; ++i) {
             BlockedTensor Mbar1 =
                 BTF_->build(tensor_type_, "DSRG DM1 " + dm_dirs_[i], spin_cases({"aa"}));
@@ -273,6 +274,11 @@ void MASTER_DSRG::init_dm_ints() {
             BlockedTensor Mbar2 =
                 BTF_->build(tensor_type_, "DSRG DM2 " + dm_dirs_[i], spin_cases({"aaaa"}));
             Mbar2_.emplace_back(Mbar2);
+            if (options_.get_bool("FORM_MBAR3")) {
+                BlockedTensor Mbar3 =
+                    BTF_->build(tensor_type_, "DSRG DM3 " + dm_dirs_[i], spin_cases({"aaaaaa"}));
+                Mbar3_.emplace_back(Mbar3);
+            }
         }
     }
 
@@ -1328,6 +1334,169 @@ void MASTER_DSRG::H2_T2_C2(BlockedTensor& H2, BlockedTensor& T2, const double& a
     dsrg_time_.add("222", timer.elapsed());
 }
 
+void MASTER_DSRG::H2_T2_C3(BlockedTensor& H2, BlockedTensor& T2, const double& alpha,
+                           BlockedTensor& C3, const bool& active_only) {
+    ForteTimer timer;
+
+    /// Potentially be as large as p * p * h * g * g * g
+
+    BlockedTensor temp;
+
+    // aaa and bbb
+    if (active_only) {
+        temp = ambit::BlockedTensor::build(tensor_type_, "temp", {"aaaaaa"});
+        temp["rsjabq"] -= alpha * H2["rsqi"] * T2["ijab"];
+        temp["ijspqb"] += alpha * H2["aspq"] * T2["ijba"];
+        C3["xyzuvw"] += temp["xyzuvw"];
+        C3["zxyuvw"] += temp["xyzuvw"];
+        C3["xzyuvw"] -= temp["xyzuvw"];
+        C3["xyzwuv"] += temp["xyzuvw"];
+        C3["zxywuv"] += temp["xyzuvw"];
+        C3["xzywuv"] -= temp["xyzuvw"];
+        C3["xyzuwv"] -= temp["xyzuvw"];
+        C3["zxyuwv"] -= temp["xyzuvw"];
+        C3["xzyuwv"] += temp["xyzuvw"];
+
+        temp = ambit::BlockedTensor::build(tensor_type_, "temp", {"AAAAAA"});
+        temp["RSJABQ"] -= alpha * H2["RSQI"] * T2["IJAB"];
+        temp["IJSPQB"] += alpha * H2["ASPQ"] * T2["IJBA"];
+        C3["XYZUVW"] += temp["XYZUVW"];
+        C3["ZXYUVW"] += temp["XYZUVW"];
+        C3["XZYUVW"] -= temp["XYZUVW"];
+        C3["XYZWUV"] += temp["XYZUVW"];
+        C3["ZXYWUV"] += temp["XYZUVW"];
+        C3["XZYWUV"] -= temp["XYZUVW"];
+        C3["XYZUWV"] -= temp["XYZUVW"];
+        C3["ZXYUWV"] -= temp["XYZUVW"];
+        C3["XZYUWV"] += temp["XYZUVW"];
+    } else {
+        temp = ambit::BlockedTensor::build(tensor_type_, "temp", {"gghppg"});
+        temp["rsjabq"] -= H2["rsqi"] * T2["ijab"];
+        C3["rsjabq"] += alpha * temp["rsjabq"];
+        C3["rjsabq"] -= alpha * temp["rsjabq"];
+        C3["jrsabq"] += alpha * temp["rsjabq"];
+        C3["rsjaqb"] -= alpha * temp["rsjabq"];
+        C3["rjsaqb"] += alpha * temp["rsjabq"];
+        C3["jrsaqb"] -= alpha * temp["rsjabq"];
+        C3["rsjqab"] += alpha * temp["rsjabq"];
+        C3["rjsqab"] -= alpha * temp["rsjabq"];
+        C3["jrsqab"] += alpha * temp["rsjabq"];
+
+        temp = ambit::BlockedTensor::build(tensor_type_, "temp", {"hhgggp"});
+        temp["ijspqb"] += H2["aspq"] * T2["ijba"];
+        C3["ijspqb"] += alpha * temp["ijspqb"];
+        C3["isjpqb"] -= alpha * temp["ijspqb"];
+        C3["sijpqb"] += alpha * temp["ijspqb"];
+        C3["ijspbq"] -= alpha * temp["ijspqb"];
+        C3["isjpbq"] += alpha * temp["ijspqb"];
+        C3["sijpbq"] -= alpha * temp["ijspqb"];
+        C3["ijsbpq"] += alpha * temp["ijspqb"];
+        C3["isjbpq"] -= alpha * temp["ijspqb"];
+        C3["sijbpq"] += alpha * temp["ijspqb"];
+
+        temp = ambit::BlockedTensor::build(tensor_type_, "temp", {"GGHPPG"});
+        temp["RSJABQ"] -= H2["RSQI"] * T2["IJAB"];
+        C3["RSJABQ"] += alpha * temp["RSJABQ"];
+        C3["RJSABQ"] -= alpha * temp["RSJABQ"];
+        C3["JRSABQ"] += alpha * temp["RSJABQ"];
+        C3["RSJAQB"] -= alpha * temp["RSJABQ"];
+        C3["RJSAQB"] += alpha * temp["RSJABQ"];
+        C3["JRSAQB"] -= alpha * temp["RSJABQ"];
+        C3["RSJQAB"] += alpha * temp["RSJABQ"];
+        C3["RJSQAB"] -= alpha * temp["RSJABQ"];
+        C3["JRSQAB"] += alpha * temp["RSJABQ"];
+
+        temp = ambit::BlockedTensor::build(tensor_type_, "temp", {"HHGGGP"});
+        temp["IJSPQB"] += H2["ASPQ"] * T2["IJBA"];
+        C3["IJSPQB"] += alpha * temp["IJSPQB"];
+        C3["ISJPQB"] -= alpha * temp["IJSPQB"];
+        C3["SIJPQB"] += alpha * temp["IJSPQB"];
+        C3["IJSPBQ"] -= alpha * temp["IJSPQB"];
+        C3["ISJPBQ"] += alpha * temp["IJSPQB"];
+        C3["SIJPBQ"] -= alpha * temp["IJSPQB"];
+        C3["IJSBPQ"] += alpha * temp["IJSPQB"];
+        C3["ISJBPQ"] -= alpha * temp["IJSPQB"];
+        C3["SIJBPQ"] += alpha * temp["IJSPQB"];
+    }
+
+    // aab hole contraction
+    C3["rjSabQ"] -= alpha * H2["rSiQ"] * T2["ijab"];
+    C3["jrSabQ"] += alpha * H2["rSiQ"] * T2["ijab"];
+
+    C3["rsJaqB"] += alpha * H2["rsqi"] * T2["iJaB"];
+    C3["rsJqaB"] -= alpha * H2["rsqi"] * T2["iJaB"];
+
+    if (active_only) {
+        temp = ambit::BlockedTensor::build(tensor_type_, "temp", {"aAaaAa"});
+    } else {
+        temp = ambit::BlockedTensor::build(tensor_type_, "temp", {"gGhpPg"});
+    }
+    temp["rSjaBq"] += H2["rSqI"] * T2["jIaB"];
+    C3["rjSaqB"] += alpha * temp["rSjaBq"];
+    C3["jrSaqB"] -= alpha * temp["rSjaBq"];
+    C3["rjSqaB"] -= alpha * temp["rSjaBq"];
+    C3["jrSqaB"] += alpha * temp["rSjaBq"];
+
+    // aab particle contraction
+    C3["isJpqB"] += alpha * H2["aspq"] * T2["iJaB"];
+    C3["siJpqB"] -= alpha * H2["aspq"] * T2["iJaB"];
+
+    C3["ijSpbQ"] -= alpha * H2["aSpQ"] * T2["ijba"];
+    C3["ijSbpQ"] += alpha * H2["aSpQ"] * T2["ijba"];
+
+    if (active_only) {
+        temp.zero();
+    } else {
+        temp = ambit::BlockedTensor::build(tensor_type_, "temp", {"hHggGp"});
+    }
+    temp["iJspQb"] -= H2["sApQ"] * T2["iJbA"];
+    C3["isJpbQ"] += alpha * temp["iJspQb"];
+    C3["siJpbQ"] -= alpha * temp["iJspQb"];
+    C3["isJbpQ"] -= alpha * temp["iJspQb"];
+    C3["siJbpQ"] += alpha * temp["iJspQb"];
+
+    // abb hole contraction
+    if (active_only) {
+        temp = ambit::BlockedTensor::build(tensor_type_, "temp", {"aAAaAA"});
+    } else {
+        temp = ambit::BlockedTensor::build(tensor_type_, "temp", {"gGHpPG"});
+    }
+    temp["rSJaBQ"] += H2["rSiQ"] * T2["iJaB"];
+    C3["rSJaBQ"] += alpha * temp["rSJaBQ"];
+    C3["rJSaBQ"] -= alpha * temp["rSJaBQ"];
+    C3["rSJaQB"] -= alpha * temp["rSJaBQ"];
+    C3["rJSaQB"] += alpha * temp["rSJaBQ"];
+
+    C3["jRSaBQ"] += alpha * H2["RSQI"] * T2["jIaB"];
+    C3["jRSaQB"] -= alpha * H2["RSQI"] * T2["jIaB"];
+
+    C3["rSJqAB"] -= alpha * H2["rSqI"] * T2["IJAB"];
+    C3["rJSqAB"] += alpha * H2["rSqI"] * T2["IJAB"];
+
+    // abb particle contraction
+    if (active_only) {
+        temp.zero();
+    } else {
+        temp = ambit::BlockedTensor::build(tensor_type_, "temp", {"hHGgGP"});
+    }
+    temp["iJSpQB"] -= H2["aSpQ"] * T2["iJaB"];
+    C3["iJSpQB"] += alpha * temp["iJSpQB"];
+    C3["iSJpQB"] -= alpha * temp["iJSpQB"];
+    C3["iJSpBQ"] -= alpha * temp["iJSpQB"];
+    C3["iSJpBQ"] += alpha * temp["iJSpQB"];
+
+    C3["sIJpQB"] -= alpha * H2["sApQ"] * T2["IJBA"];
+    C3["sIJpBQ"] += alpha * H2["sApQ"] * T2["IJBA"];
+
+    C3["iJSbPQ"] += alpha * H2["ASPQ"] * T2["iJbA"];
+    C3["iSJbPQ"] -= alpha * H2["ASPQ"] * T2["iJbA"];
+
+    if (print_ > 2) {
+        outfile->Printf("\n    Time for [H2, T2] -> C3 : %12.3f", timer.elapsed());
+    }
+    dsrg_time_.add("223", timer.elapsed());
+}
+
 bool MASTER_DSRG::check_semi_orbs() {
     print_h2("Checking Semicanonical Orbitals");
 
@@ -1345,7 +1514,7 @@ bool MASTER_DSRG::check_semi_orbs() {
     std::vector<double> Fmax, Fnorm;
     double e_conv = options_.get_double("E_CONVERGENCE");
     double cd = options_.get_double("CHOLESKY_TOLERANCE");
-    e_conv = cd < e_conv ? cd : e_conv;
+    e_conv = cd < e_conv ? e_conv : cd;
     e_conv = e_conv < 1.0e-12 ? 1.0e-12 : e_conv;
     double threshold_max = 10.0 * e_conv;
     for (const auto& block : {"cc", "aa", "vv", "CC", "AA", "VV"}) {

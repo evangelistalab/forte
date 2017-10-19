@@ -32,7 +32,7 @@
 #include "psi4/libpsi4util/PsiOutStream.h"
 #include "psi4/libmints/matrix.h"
 #include "psi4/psi4-dec.h"
-#include "stl_bitset_determinant.h"
+#include "sparse_ci/stl_bitset_determinant.h"
 #include "hash_vector.h"
 
 namespace psi {

@@ -34,7 +34,7 @@
 #include "ci_rdms.h"
 #include "helpers.h"
 #include "reference.h"
-#include "stl_bitset_determinant.h"
+#include "sparse_ci/stl_bitset_determinant.h"
 
 namespace psi {
 namespace forte {
@@ -1987,9 +1987,8 @@ void CI_RDMS::rdm_test(std::vector<double>& oprdm_a, std::vector<double>& oprdm_
                     if (std::fabs(rdm) > 1.0e-12) {
                         error_2rdm_aa +=
                             std::fabs(rdm - tprdm_aa[p * ncmo3_ + q * ncmo2_ + r * ncmo_ + s]);
-                        // outfile->Printf("\n  D2(aaaa)[%3lu][%3lu][%3lu][%3lu]
-                        // = %18.12lf (%18.12lf,%18.12lf)",
-                        // p,q,r,s,rdm-tprdm_aa[p*ncmo3_+q*ncmo2_+r*ncmo_+s],rdm,tprdm_aa[p*ncmo3_+q*ncmo2_+r*ncmo_+s]);
+                      //   outfile->Printf("\n  D2(aaaa)[%3lu][%3lu][%3lu][%3lu] = %18.12lf (%18.12lf,%18.12lf)",
+                      //   p,q,r,s,rdm-tprdm_aa[p*ncmo3_+q*ncmo2_+r*ncmo_+s],rdm,tprdm_aa[p*ncmo3_+q*ncmo2_+r*ncmo_+s]);
                     }
                 }
             }

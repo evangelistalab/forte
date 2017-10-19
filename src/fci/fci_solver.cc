@@ -31,7 +31,7 @@
 
 #include "../mini-boost/boost/format.hpp"
 
-#include "../stl_bitset_determinant.h"
+#include "../sparse_ci/stl_bitset_determinant.h"
 #include "../iterative_solvers.h"
 
 #include "fci_solver.h"

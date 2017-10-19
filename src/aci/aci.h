@@ -44,9 +44,8 @@
 #include "../orbital-helper/unpaired_density.h"
 #include "../determinant_hashvector.h"
 #include "../reference.h"
-#include "../sparse_ci_solver.h"
-#include "../stl_bitset_determinant.h"
-#include "../sparse_ci_solver.h"
+#include "../sparse_ci/sparse_ci_solver.h"
+#include "../sparse_ci/stl_bitset_determinant.h"
 #include "../orbital-helper/iao_builder.h"
 
 using d1 = std::vector<double>;
@@ -105,9 +104,10 @@ class AdaptiveCI : public Wavefunction {
     void set_aci_ints(SharedWavefunction ref_Wfn, std::shared_ptr<ForteIntegrals> ints);
 
     void semi_canonicalize();
+    void set_fci_ints( std::shared_ptr<FCIIntegrals> fci_ints );
 
     void upcast_reference(DeterminantHashVec& ref);
-    void add_external_singles(DeterminantHashVec& ref);
+    void add_external_excitations(DeterminantHashVec& ref);
 
   private:
     // ==> Class data <==
@@ -166,6 +166,7 @@ class AdaptiveCI : public Wavefunction {
     /// The last iteration
     int max_cycle_;
     int pre_iter_;
+    bool set_ints_ = false;
 
     // ==> ACI Options <==
     /// The threshold applied to the primary space
@@ -339,6 +340,7 @@ class AdaptiveCI : public Wavefunction {
 
     /// Check for spin contamination
     double compute_spin_contamination(DeterminantHashVec& space, WFNOperator& op, SharedMatrix evecs, int nroot);
+
 
     /// Save coefficients of lowest-root determinant
     void save_dets_to_file(DeterminantHashVec& space, SharedMatrix evecs);
