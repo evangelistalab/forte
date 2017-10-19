@@ -38,6 +38,7 @@
 #include "../iterative_solvers.h"
 #include "sparse_ci_solver.h"
 #include "sigma_vector_direct.h"
+#include "sigma_vector_dynamic.h"
 
 struct PairHash {
     size_t operator()(const std::pair<size_t, size_t>& p) const {
@@ -93,6 +94,8 @@ void SparseCISolver::diagonalize_hamiltonian_map(const DeterminantHashVec& space
         diagonalize_mpi(space, op, evals, evecs, nroot, multiplicity);
     } else if (diag_method == Direct) {
         diagonalize_dl_direct(space, op, evals, evecs, nroot, multiplicity);
+    } else if (diag_method == Dynamic) {
+        diagonalize_dl_dynamic(space, op, evals, evecs, nroot, multiplicity);
     } else {
         diagonalize_dl(space, op, evals, evecs, nroot, multiplicity);
     }
@@ -165,6 +168,23 @@ void SparseCISolver::diagonalize_dl_direct(const DeterminantHashVec& space, WFNO
     evals.reset(new Vector("e", nroot));
 
     SigmaVectorDirect svd(space, fci_ints_);
+    SigmaVector* sigma_vector = &svd;
+    sigma_vector->add_bad_roots(bad_states_);
+    davidson_liu_solver_map(space, sigma_vector, evals, evecs, nroot, multiplicity);
+}
+
+void SparseCISolver::diagonalize_dl_dynamic(const DeterminantHashVec& space, WFNOperator& op,
+                                            SharedVector& evals, SharedMatrix& evecs, int nroot,
+                                            int multiplicity) {
+    if (print_details_) {
+        outfile->Printf("\n\n  Davidson-Liu solver algorithm");
+        //        outfile->Printf("\n  Using %s sigma builder", sigma_method_.c_str());
+    }
+    size_t dim_space = space.size();
+    evecs.reset(new Matrix("U", dim_space, nroot));
+    evals.reset(new Vector("e", nroot));
+
+    SigmaVectorDynamic svd(space, fci_ints_);
     SigmaVector* sigma_vector = &svd;
     sigma_vector->add_bad_roots(bad_states_);
     davidson_liu_solver_map(space, sigma_vector, evals, evecs, nroot, multiplicity);
@@ -410,7 +430,7 @@ SparseCISolver::initial_guess(const std::vector<STLBitsetDeterminant>& space, in
 
     if (spin_project_) {
         STLBitsetDeterminant det(fci_ints_->nmo());
-        det.enforce_spin_completeness(guess_det,fci_ints_->nmo());
+        det.enforce_spin_completeness(guess_det, fci_ints_->nmo());
         if (guess_det.size() > nguess) {
             size_t nnew_dets = guess_det.size() - nguess;
             if (print_details_)
@@ -556,7 +576,7 @@ SparseCISolver::initial_guess_map(const DeterminantHashVec& space, int nroot, in
 
     if (spin_project_) {
         STLBitsetDeterminant det(fci_ints_->nmo());
-        det.enforce_spin_completeness(guess_det,fci_ints_->nmo());
+        det.enforce_spin_completeness(guess_det, fci_ints_->nmo());
         if (guess_det.size() > nguess) {
             size_t nnew_dets = guess_det.size() - nguess;
             if (print_details_)

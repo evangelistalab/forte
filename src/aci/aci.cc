@@ -326,6 +326,8 @@ void AdaptiveCI::startup() {
             diag_method_ = DLSolver;
         } else if (options_.get_str("DIAG_ALGORITHM") == "DIRECT") {
             diag_method_ = Direct;
+        } else if (options_.get_str("DIAG_ALGORITHM") == "DYNAMIC") {
+            diag_method_ = Dynamic;
         }
     }
     aimed_selection_ = false;

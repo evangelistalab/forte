@@ -47,7 +47,7 @@
 namespace psi {
 namespace forte {
 
-enum DiagonalizationMethod { Full, DLSolver, DLString, DLDisk, MPI, Sparse, Direct };
+enum DiagonalizationMethod { Full, DLSolver, DLString, DLDisk, MPI, Sparse, Direct, Dynamic };
 
 /**
  * @brief The SparseCISolver class
@@ -140,6 +140,10 @@ class SparseCISolver {
     void diagonalize_dl_direct(const DeterminantHashVec& space, WFNOperator& op,
                                SharedVector& evals, SharedMatrix& evecs, int nroot,
                                int multiplicity);
+    /// Use a dynamic algorithm that does not require substitution lists
+    void diagonalize_dl_dynamic(const DeterminantHashVec& space, WFNOperator& op,
+                                SharedVector& evals, SharedMatrix& evecs, int nroot,
+                                int multiplicity);
 
     void diagonalize_davidson_liu_solver(const std::vector<STLBitsetDeterminant>& space,
                                          SharedVector& evals, SharedMatrix& evecs, int nroot,

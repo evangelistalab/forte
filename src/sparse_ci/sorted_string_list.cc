@@ -167,6 +167,8 @@ SortedStringList_UI64::SortedStringList_UI64(const DeterminantHashVec& space,
     sorted_half_dets_.push_back(old_first_string);
 
     //    outfile->Printf("\n %6d %s", 0, sorted_dets_[0].str2().c_str());
+    size_t min_per_string = std::numeric_limits<std::size_t>::max();
+    size_t max_per_string = 0;
     for (size_t i = 1; i < num_dets_; i++) {
         //        outfile->Printf("\n %6d %s", i, sorted_dets_[i].str2().c_str());
         first_string = sorted_dets_[i].get_bits(sorted_spin_type_);
@@ -183,16 +185,21 @@ SortedStringList_UI64::SortedStringList_UI64(const DeterminantHashVec& space,
         }
     }
     first_string_range_[old_first_string].second = num_dets_;
-    //    outfile->Printf(" <- last determinant (%zu -> %zu)",
-    //                    first_string_range_[old_first_string].first,
-    //                    first_string_range_[old_first_string].second);
 
-    //    outfile->Printf("\n\n  Determinand ranges");
-    //    for (const auto& d : sorted_half_dets_) {
-    //        outfile->Printf("\n %s : %6zu -> %6zu", d.str2().c_str(),
-    //        first_string_range_[d].first,
-    //                        first_string_range_[d].second);
-    //    }
+    for (const auto& k_v : first_string_range_) {
+        size_t range = k_v.second.second - k_v.second.first;
+        min_per_string = std::min(min_per_string, range);
+        max_per_string = std::max(max_per_string, range);
+    }
+
+    outfile->Printf("\n\n  SortedStringList_UI64 Summary:");
+    outfile->Printf("\n    Number of determinants: %zu", num_dets_);
+    outfile->Printf("\n    Number of strings:      %zu (%.2f %%)", sorted_half_dets_.size(),
+                    100.0 * double(sorted_half_dets_.size()) / double(num_dets_));
+    outfile->Printf("\n    Max block size:         %zu", max_per_string);
+    outfile->Printf("\n    Min block size:         %zu", min_per_string);
+    outfile->Printf("\n    Avg block size:         %0.f\n",
+                    double(num_dets_) / double(sorted_half_dets_.size()));
 }
 
 const std::vector<UI64Determinant>& SortedStringList_UI64::sorted_dets() const {
@@ -207,80 +214,6 @@ const std::pair<size_t, size_t>&
 SortedStringList_UI64::range(const UI64Determinant::bit_t& d) const {
     return first_string_range_.at(d);
 }
-
-// UI64Determinant::UI64Determinant() {}
-// UI64Determinant::UI64Determinant(const STLBitsetDeterminant& d) {
-//    for (int i = 0; i < 64; ++i) {
-//        set_alfa_bit(i, d.get_alfa_bit(i));
-//        set_beta_bit(i, d.get_beta_bit(i));
-//    }
-//}
-
-// bool UI64Determinant::get_alfa_bit(bit_t n) const { return (0 != (a_ & (bit_t(1) << n))); }
-
-// bool UI64Determinant::get_beta_bit(bit_t n) const { return (0 != (b_ & (bit_t(1) << n))); }
-
-///// Set the value of an alpha bit
-// void UI64Determinant::set_alfa_bit(bit_t n, bool v) {
-//    if (v) {
-//        a_ |= (bit_t(1) << n);
-//    } else {
-//        a_ &= ~(bit_t(1) << n);
-//    }
-//}
-////            alfa_bits_ ^= (-bit_t(v) ^ alfa_bits_) & (1 << n);}
-///// Set the value of a beta bit
-// void UI64Determinant::set_beta_bit(bit_t n, bool v) {
-//    if (v) {
-//        b_ |= (bit_t(1) << n);
-//    } else {
-//        b_ &= ~(bit_t(1) << n);
-//    }
-//}
-
-// UI64Determinant::bit_t UI64Determinant::get_bits(STLBitsetDeterminant::SpinType spin_type) const
-// {
-//    return (spin_type == STLBitsetDeterminant::SpinType::AlphaSpin) ? a_ : b_;
-//}
-
-// void UI64Determinant::zero_spin(STLBitsetDeterminant::SpinType spin_type) {
-//    if (spin_type == STLBitsetDeterminant::SpinType::AlphaSpin) {
-//        a_ = bit_t(0);
-//    } else {
-//        b_ = bit_t(0);
-//    }
-//}
-
-// bool UI64Determinant::less_than(const UI64Determinant& rhs, const UI64Determinant& lhs) {
-//    if (rhs.b_ < lhs.b_) {
-//        return true;
-//    } else if (rhs.b_ > lhs.b_) {
-//        return false;
-//    }
-//    return rhs.a_ < lhs.a_;
-//}
-
-// bool UI64Determinant::reverse_less_then(const UI64Determinant& rhs, const UI64Determinant& lhs) {
-//    if (rhs.a_ < lhs.a_) {
-//        return true;
-//    } else if (rhs.a_ > lhs.a_) {
-//        return false;
-//    }
-//    return rhs.b_ < lhs.b_;
-//}
-
-// bool UI64Determinant::operator==(const UI64Determinant& lhs) const {
-//    return ((a_ == lhs.a_) and (b_ == lhs.b_));
-//}
-
-// bool UI64Determinant::operator<(const UI64Determinant& lhs) const {
-//    if (b_ < lhs.b_) {
-//        return true;
-//    } else if (b_ > lhs.b_) {
-//        return false;
-//    }
-//    return a_ < lhs.a_;
-//}
 
 size_t SortedStringList_UI64::add(size_t pos) const { return map_to_hashdets_[pos]; }
 }

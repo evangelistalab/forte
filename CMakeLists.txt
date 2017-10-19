@@ -77,6 +77,7 @@ src/semi_canonicalize.cc
 src/sparse_ci/sparse_ci_solver.cc
 src/sparse_ci/sigma_vector.cc
 src/sparse_ci/sigma_vector_direct.cc
+src/sparse_ci/sigma_vector_dynamic.cc
 src/sparse_ci/stl_bitset_determinant.cc
 src/sparse_ci/stl_bitset_string.cc
 src/sparse_ci/sorted_string_list.cc
