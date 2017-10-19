@@ -49,7 +49,7 @@ set forte {
   aci_add_aimed_degenerate false
   aci_project_out_spin_contaminants false
   diag_algorithm full
-  aci_quiet_mode true
+#  aci_quiet_mode true
 }
 
 scf = energy('scf')

@@ -203,6 +203,11 @@ AdaptiveCI::AdaptiveCI(SharedWavefunction ref_wfn, Options& options,
 
 AdaptiveCI::~AdaptiveCI() {}
 
+void AdaptiveCI::set_fci_ints( std::shared_ptr<FCIIntegrals> fci_ints ) {
+    fci_ints_ = fci_ints;
+    set_ints_ = true;
+}
+
 void AdaptiveCI::set_aci_ints(SharedWavefunction ref_wfn, std::shared_ptr<ForteIntegrals> ints) {
     timer int_timer("ACI:Form Integrals");
     ints_ = ints;
@@ -227,8 +232,11 @@ void AdaptiveCI::startup() {
     if (options_["ACI_QUIET_MODE"].has_changed()) {
         quiet_mode_ = options_.get_bool("ACI_QUIET_MODE");
     }
+    
+    if( !set_ints_ ){
+        set_aci_ints(reference_wavefunction_, ints_);
+    }
 
-    set_aci_ints(reference_wavefunction_, ints_);
     op_.initialize(mo_symmetry_, fci_ints_);
 
     wavefunction_symmetry_ = 0;

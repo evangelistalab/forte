@@ -466,29 +466,32 @@ void forte_old_methods(SharedWavefunction ref_wfn, Options& options,
             dsrg_mrpt2->compute_energy();
 
         } else if (cas_type == "ACI") {
-            auto aci = std::make_shared<AdaptiveCI>(ref_wfn, options, ints, mo_space_info);
-            aci->set_quiet(true);
-            aci->set_max_rdm(max_rdm_level);
-            aci->compute_energy();
-            Reference aci_reference = aci->reference();
-            if (options.get_bool("ACI_NO")) {
-                aci->compute_nos();
+            
+            Reference aci_reference;
+            {
+                auto aci = std::make_shared<AdaptiveCI>(ref_wfn, options, ints, mo_space_info);
+                aci->set_quiet(true);
+                aci->set_max_rdm(max_rdm_level);
+                aci->compute_energy();
+                aci_reference = aci->reference();
+                if (options.get_bool("ACI_NO")) {
+                    aci->compute_nos();
+                }
+                if (options.get_bool("ACI_ADD_EXTERNAL_EXCITATIONS")) {
+                    DeterminantHashVec wfn = aci->get_wavefunction();
+                    aci->upcast_reference(wfn);
+                }
+                if (options.get_bool("ESNOS")) {
+                    auto aci_wfn = aci->get_wavefunction();
+                    ESNO esno(ref_wfn, options, ints, mo_space_info, aci_wfn);
+                    esno.compute_nos();
+                    auto aci2 = std::make_shared<AdaptiveCI>(ref_wfn, options, ints, mo_space_info);
+                    aci2->set_quiet(true);
+                    aci2->set_max_rdm(max_rdm_level);
+                    aci2->compute_energy();
+                    aci_reference = aci2->reference();
+                }
             }
-            if (options.get_bool("ACI_ADD_EXTERNAL_EXCITATIONS")) {
-                DeterminantHashVec wfn = aci->get_wavefunction();
-                aci->upcast_reference(wfn);
-            }
-            if (options.get_bool("ESNOS")) {
-                auto aci_wfn = aci->get_wavefunction();
-                ESNO esno(ref_wfn, options, ints, mo_space_info, aci_wfn);
-                esno.compute_nos();
-                auto aci2 = std::make_shared<AdaptiveCI>(ref_wfn, options, ints, mo_space_info);
-                aci2->set_quiet(true);
-                aci2->set_max_rdm(max_rdm_level);
-                aci2->compute_energy();
-                aci_reference = aci2->reference();
-            }
-
             SemiCanonical semi(ref_wfn, ints, mo_space_info);
             semi.semicanonicalize(aci_reference, max_rdm_level);
             std::shared_ptr<THREE_DSRG_MRPT2> three_dsrg_mrpt2(
