@@ -313,7 +313,7 @@ class THREE_DSRG_MRPT2 : public MASTER_DSRG {
 
     void de_normal_order();
 
-    std::vector<double> relaxed_energy();
+    std::vector<double> relaxed_energy(std::shared_ptr<FCIIntegrals> fci_ints);
 
 //    /// Print levels
 //    int print_;

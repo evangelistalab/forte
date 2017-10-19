@@ -428,7 +428,7 @@ double THREE_DSRG_MRPT2::compute_energy() {
 
         Ecorr += EVT2;
         Etotal = Ecorr + Eref_;
-        Hbar0_ = Etotal - Eref_;
+        Hbar0_ = Ecorr;
         energy.push_back({"<[V, T2]>", EVT2});
         energy.push_back({"DSRG-MRPT2 correlation energy", Ecorr});
         energy.push_back({"DSRG-MRPT2 total energy", Etotal});
@@ -484,6 +484,7 @@ double THREE_DSRG_MRPT2::compute_energy() {
     MPI_Bcast(&Hbar0_, 1, MPI_DOUBLE, 0, MPI_COMM_WORLD);
 #endif
 
+    Process::environment.globals["UNRELAXED ENERGY"] = Etotal;
     Process::environment.globals["CURRENT ENERGY"] = Etotal;
 
     // use relaxation code to do SA_FULL
@@ -3146,15 +3147,23 @@ void THREE_DSRG_MRPT2::relax_reference_once() {
          **/
 
         size_t nv2 = nvirtual_ * nvirtual_;
-        ambit::Tensor V, T, temp1, temp2, Be_w, Bf_m;
+        ambit::Tensor V, T, Be_w;
         V = ambit::Tensor::build(tensor_type_, "V_w", {nvirtual_, nvirtual_, ncore_});
         T = ambit::Tensor::build(tensor_type_, "T_z", {ncore_, nvirtual_, nvirtual_});
-        temp1 = ambit::Tensor::build(tensor_type_, "V_wm", {nvirtual_, nvirtual_});
-        temp2 = ambit::Tensor::build(tensor_type_, "V_wm permuted", {nvirtual_, nvirtual_});
-        std::vector<double>& rtemp2 = temp2.data();
         std::vector<double>& rT = T.data();
 
-        //#pragma omp parallel
+        int nthread = 1;
+        int thread = 0;
+#ifdef _OPENMP
+        nthread = num_threads_;
+#endif
+
+        std::vector<ambit::Tensor> Bf_m, temp;
+        for (int thread = 0; thread < nthread; thread++) {
+            Bf_m.push_back(ambit::Tensor());
+            temp.push_back(ambit::Tensor::build(tensor_type_, "V_wm", {nvirtual_, nvirtual_}));
+        }
+
         for (size_t w = 0; w < nactive_; ++w) {
             size_t nw = actv_mos_[w];
             double Fw = Fa_[nw];
@@ -3164,20 +3173,29 @@ void THREE_DSRG_MRPT2::relax_reference_once() {
 
                 /// aa or bb part of bare APTEI
                 Be_w = ints_->three_integral_block_two_index(aux_mos_, nw, virt_mos_);
-                //#pragma omp for // test nowait
-                for (size_t m = 0, offset = 0; m < ncore_; ++m) {
+
+#pragma omp parallel for
+                for (size_t m = 0; m < ncore_; ++m) {
                     size_t nm = core_mos_[m];
-                    //#pragma omp critical // test if necessary
-                    //                    {
-                    Bf_m = ints_->three_integral_block_two_index(aux_mos_, nm, virt_mos_);
-                    //                    }
-                    temp1("ef") = Be_w("ge") * Bf_m("gf");
-                    temp2("ef") = temp1("ef");
-                    temp2("ef") -= temp1("fe");
+#ifdef _OPENMP
+                    thread = omp_get_thread_num();
+#endif
+#pragma omp critical
+                    {
+                        Bf_m[thread] =
+                            ints_->three_integral_block_two_index(aux_mos_, nm, virt_mos_);
+                    }
+
+                    ambit::Tensor temp1 =
+                        ambit::Tensor::build(tensor_type_, "V_wm temp", {nvirtual_, nvirtual_});
+                    temp1("ef") = Be_w("ge") * Bf_m[thread]("gf");
+                    temp[thread]("ef") = temp1("ef");
+                    temp[thread]("ef") -= temp1("fe");
 
                     // for convenience, let's copy temp2 in T
-                    offset = m * nv2;
-                    std::copy(rtemp2.begin(), rtemp2.end(), rT.begin() + offset);
+                    size_t offset = m * nv2;
+                    std::copy(temp[thread].data().begin(), temp[thread].data().end(),
+                              rT.begin() + offset);
                 }
                 V("efm") = T("mef");
 
@@ -3202,19 +3220,24 @@ void THREE_DSRG_MRPT2::relax_reference_once() {
                 Hbar1_.block("AA").data()[w * nactive_ + z] += hbar;
                 Hbar1_.block("AA").data()[z * nactive_ + w] += hbar;
 
-                /// ab part of APTEI
-                //#pragma omp for // test nowait
-                for (size_t m = 0, offset = 0; m < ncore_; ++m) {
+/// ab part of APTEI
+#pragma omp parallel for
+                for (size_t m = 0; m < ncore_; ++m) {
                     size_t nm = core_mos_[m];
-                    //#pragma omp critical // test if necessary
-                    //                    {
-                    Bf_m = ints_->three_integral_block_two_index(aux_mos_, nm, virt_mos_);
-                    //                    }
-                    temp2("ef") = Be_w("ge") * Bf_m("gf");
+#ifdef _OPENMP
+                    thread = omp_get_thread_num();
+#endif
+#pragma omp critical
+                    {
+                        Bf_m[thread] =
+                            ints_->three_integral_block_two_index(aux_mos_, nm, virt_mos_);
+                    }
+                    temp[thread]("ef") = Be_w("ge") * Bf_m[thread]("gf");
 
                     // for convenience, let's copy temp2 in T
-                    offset = m * nv2;
-                    std::copy(rtemp2.begin(), rtemp2.end(), rT.begin() + offset);
+                    size_t offset = m * nv2;
+                    std::copy(temp[thread].data().begin(), temp[thread].data().end(),
+                              rT.begin() + offset);
                 }
                 V("efm") = T("mef");
 
@@ -3239,115 +3262,11 @@ void THREE_DSRG_MRPT2::relax_reference_once() {
                 Hbar1_.block("AA").data()[z * nactive_ + w] += hbar;
             }
         }
-
-        //            // Time to relax this reference!
-        //            BlockedTensor T2all = BTF_->build(tensor_type_, "T2all", {"acvv",
-        //            "cavv", "ACVV", "CAVV"});
-        //            BlockedTensor Vint = BTF_->build(tensor_type_, "AllV", {"vvac", "vvca",
-        //            "VVAC", "VVCA"});
-        //            BlockedTensor ThreeInt = compute_B_minimal(Vint.block_labels());
-        //            Vint["pqrs"] = ThreeInt["gpr"] * ThreeInt["gqs"];
-        //            Vint["pqrs"] -= ThreeInt["gps"] * ThreeInt["gqr"];
-        //            Vint["PQRS"] = ThreeInt["gPR"] * ThreeInt["gQS"];
-        //            Vint["PQRS"] -= ThreeInt["gPS"] * ThreeInt["gQR"];
-        //            Vint["qPsR"] = ThreeInt["gPR"] * ThreeInt["gqs"];
-
-        //            //    Hbar2_["uvxy"] = Vint["uvxy"];
-        //            //    Hbar2_["uVxY"] = Vint["uVxY"];
-        //            //    Hbar2_["UVXY"] = Vint["UVXY"];
-
-        //            T2all["ijab"] = Vint["abij"];
-        //            T2all["IJAB"] = Vint["ABIJ"];
-        //            T2all["iJaB"] = Vint["aBiJ"];
-
-        //            T2all.iterate(
-        //                [&](const std::vector<size_t>& i, const std::vector<SpinType>& spin,
-        //                double&
-        //                value) {
-        //                    if (spin[0] == AlphaSpin && spin[1] == AlphaSpin) {
-        //                        value *= dsrg_source_->compute_renormalized_denominator(Fa_[i[0]]
-        //                        +
-        //                        Fa_[i[1]] -
-        //                                                                                Fa_[i[2]]
-        //                                                                                -
-        //                                                                                Fa_[i[3]]);
-        //                    } else if (spin[0] == BetaSpin && spin[1] == BetaSpin) {
-        //                        value *= dsrg_source_->compute_renormalized_denominator(Fb_[i[0]]
-        //                        +
-        //                        Fb_[i[1]] -
-        //                                                                                Fb_[i[2]]
-        //                                                                                -
-        //                                                                                Fb_[i[3]]);
-        //                    } else {
-        //                        value *= dsrg_source_->compute_renormalized_denominator(Fa_[i[0]]
-        //                        +
-        //                        Fb_[i[1]] -
-        //                                                                                Fa_[i[2]]
-        //                                                                                -
-        //                                                                                Fb_[i[3]]);
-        //                    }
-        //                });
-
-        //            //    if (!options_.get_bool("INTERNAL_AMP")) {
-        //            //        T2all.block("aaaa").zero();
-        //            //        T2all.block("AAAA").zero();
-        //            //        T2all.block("aAaA").zero();
-        //            //    }
-
-        //            Vint.iterate(
-        //                [&](const std::vector<size_t>& i, const std::vector<SpinType>& spin,
-        //                double&
-        //                value) {
-        //                    if (std::fabs(value) > 1.0e-12) {
-        //                        if ((spin[0] == AlphaSpin) and (spin[1] == AlphaSpin)) {
-        //                            value *= 1.0 +
-        //                                     dsrg_source_->compute_renormalized(Fa_[i[0]] +
-        //                                     Fa_[i[1]] -
-        //                                     Fa_[i[2]] -
-        //                                                                        Fa_[i[3]]);
-        //                        } else if ((spin[0] == AlphaSpin) and (spin[1] == BetaSpin)) {
-        //                            value *= 1.0 +
-        //                                     dsrg_source_->compute_renormalized(Fa_[i[0]] +
-        //                                     Fb_[i[1]] -
-        //                                     Fa_[i[2]] -
-        //                                                                        Fb_[i[3]]);
-        //                        } else if ((spin[0] == BetaSpin) and (spin[1] == BetaSpin)) {
-        //                            value *= 1.0 +
-        //                                     dsrg_source_->compute_renormalized(Fb_[i[0]] +
-        //                                     Fb_[i[1]] -
-        //                                     Fb_[i[2]] -
-        //                                                                        Fb_[i[3]]);
-        //                        }
-        //                    } else {
-        //                        value = 0.0;
-        //                    }
-        //                });
-
-        //            C1 = BTF_->build(tensor_type_, "C1", spin_cases({"aa"}));
-        //            C2 = BTF_->build(tensor_type_, "C2", spin_cases({"aaaa"}));
-        //            //    H1_T1_C1(F_, T1_, 0.5, C1);
-        //            //    H1_T2_C1(F_, T2all, 0.5, C1);
-        //            //    H2_T1_C1(Vint, T1_, 0.5, C1);
-        //            H2_T2_C1(Vint, T2all, 0.5, C1);
-        //            //    H1_T2_C2(F_, T2all, 0.5, C2);
-        //            //    H2_T1_C2(Vint, T1_, 0.5, C2);
-        //            //    H2_T2_C2(Vint, T2all, 0.5, C2);
-
-        //            Hbar1_["uv"] += C1["uv"];
-        //            Hbar1_["uv"] += C1["vu"];
-        //            Hbar1_["UV"] += C1["UV"];
-        //            Hbar1_["UV"] += C1["VU"];
-        //            Hbar2_["uvxy"] += C2["uvxy"];
-        //            Hbar2_["uvxy"] += C2["xyuv"];
-        //            Hbar2_["uVxY"] += C2["uVxY"];
-        //            Hbar2_["uVxY"] += C2["xYuV"];
-        //            Hbar2_["UVXY"] += C2["UVXY"];
-        //            Hbar2_["UVXY"] += C2["XYUV"];
     }
 
-    de_normal_order();
+    auto fci_ints = compute_Heff();
 
-    std::vector<double> E_relaxed = relaxed_energy();
+    std::vector<double> E_relaxed = relaxed_energy(fci_ints);
 
     if (options_["AVG_STATE"].size() == 0) {
         double Erelax = E_relaxed[0];
@@ -3358,6 +3277,7 @@ void THREE_DSRG_MRPT2::relax_reference_once() {
                         Hbar0_ + Eref_);
         outfile->Printf("\n    %-37s = %22.15f", "CD/DF DSRG-MRPT2 Total Energy (relaxed)", Erelax);
 
+        Process::environment.globals["PARTIALLY RELAXED ENERGY"] = Erelax;
         Process::environment.globals["CURRENT ENERGY"] = Erelax;
     } else {
         // get character table
@@ -3374,9 +3294,8 @@ void THREE_DSRG_MRPT2::relax_reference_once() {
         std::string dash(41, '-');
         outfile->Printf("\n    %s", dash.c_str());
 
-        int offset = 0;
         int nentry = options_["AVG_STATE"].size();
-        for (int n = 0; n < nentry; ++n) {
+        for (int n = 0, offset = 0; n < nentry; ++n) {
             int irrep = options_["AVG_STATE"][n][0].to_integer();
             int multi = options_["AVG_STATE"][n][1].to_integer();
             int nstates = options_["AVG_STATE"][n][2].to_integer();
@@ -3394,31 +3313,21 @@ void THREE_DSRG_MRPT2::relax_reference_once() {
     }
 }
 
-std::vector<double> THREE_DSRG_MRPT2::relaxed_energy() {
+std::vector<double> THREE_DSRG_MRPT2::relaxed_energy(std::shared_ptr<FCIIntegrals> fci_ints) {
 
     // reference relaxation
     std::vector<double> Erelax;
 
-    // setup FCIIntegrals manually
-    std::shared_ptr<FCIIntegrals> fci_ints =
-        std::make_shared<FCIIntegrals>(ints_, actv_mos_, core_mos_);
-    fci_ints->set_active_integrals(Hbar2_.block("aaaa"), Hbar2_.block("aAaA"),
-                                   Hbar2_.block("AAAA"));
-    fci_ints->set_restricted_one_body_operator(aone_eff_, bone_eff_);
-    fci_ints->set_scalar_energy(ints_->scalar());
-
     // check CAS_TYPE to decide diagonalization code
     if (options_.get_str("CAS_TYPE") == "CAS") {
 
-        FCI_MO fci_mo(reference_wavefunction_, options_, ints_, mo_space_info_);
-        fci_mo.set_fci_int(fci_ints);
+        FCI_MO fci_mo(reference_wavefunction_, options_, ints_, mo_space_info_, fci_ints);
+        double Eci = fci_mo.compute_energy();
 
         // test state specific or state average
         if (!multi_state_) {
-            Erelax.push_back(fci_mo.compute_ss_energy());
+            Erelax.push_back(Eci);
         } else {
-            fci_mo.compute_sa_energy();
-
             std::vector<std::vector<std::pair<SharedVector, double>>> eigens = fci_mo.eigens();
             size_t nentry = eigens.size();
             for (size_t n = 0; n < nentry; ++n) {
@@ -3430,15 +3339,16 @@ std::vector<double> THREE_DSRG_MRPT2::relaxed_energy() {
             }
         }
 
-    } else if (options_.get_str("CAS_TYPE") == "ACI" ){ 
+    } else if (options_.get_str("CAS_TYPE") == "ACI") {
 
         // Only do ground state ACI for now
         AdaptiveCI aci(reference_wavefunction_, options_, ints_, mo_space_info_);
-        aci.set_fci_ints( fci_ints );
-        double relaxed_aci_en = aci.compute_energy(); 
+        aci.set_fci_ints(fci_ints);
+        double relaxed_aci_en = aci.compute_energy();
         Erelax.push_back(relaxed_aci_en);
 
     } else {
+
         // common (SS and SA) setup of FCISolver
         int ntrial_per_root = options_.get_int("NTRIAL_PER_ROOT");
         Dimension active_dim = mo_space_info_->get_dimension("ACTIVE");
@@ -3511,6 +3421,10 @@ std::vector<double> THREE_DSRG_MRPT2::relaxed_energy() {
                 fcisolver.set_fci_iterations(options_.get_int("FCI_MAXITER"));
                 fcisolver.set_collapse_per_root(options_.get_int("DL_COLLAPSE_PER_ROOT"));
                 fcisolver.set_subspace_per_root(options_.get_int("DL_SUBSPACE_PER_ROOT"));
+
+                // set integrals manually
+                fcisolver.use_user_integrals_and_restricted_docc(true);
+                fcisolver.set_integral_pointer(fci_ints);
 
                 // compute energy and fill in results
                 fcisolver.compute_energy();
