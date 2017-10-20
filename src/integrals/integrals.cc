@@ -412,6 +412,9 @@ void ForteIntegrals::rotate_mos() {
         C_new->set_column(mo_group[0], mo_group[1], C_mo2);
     }
     C_old->copy(C_new);
+    
+    SharedMatrix Cb_old = wfn_->Cb();
+    Cb_old->copy(C_new);
 }
 
 void ForteIntegrals::print_ints() {

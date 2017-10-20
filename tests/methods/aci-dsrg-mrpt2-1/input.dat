@@ -16,7 +16,8 @@ molecule N2{
 
 set globals{
    basis                   cc-pvdz
-   reference               rhf
+   reference               uhf
+  # save_uhf_nos true
    scf_type                pk
    d_convergence           12
    e_convergence           13
