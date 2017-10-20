@@ -28,6 +28,8 @@
  */
 
 #include <cmath>
+#include <thread>
+#include <future>
 
 #include "psi4/libciomr/libciomr.h"
 #include "psi4/libmints/matrix.h"
@@ -81,6 +83,9 @@ SigmaVectorDynamic::SigmaVectorDynamic(const DeterminantHashVec& space,
     }
     temp_sigma_.resize(size_);
     temp_b_.resize(size_);
+
+    unsigned int n = std::thread::hardware_concurrency();
+    outfile->Printf("\n %d concurrent threads are supported.\n", n);
 }
 
 SigmaVectorDynamic::~SigmaVectorDynamic() { print_SigmaVectorDynamic_stats(); }
@@ -88,9 +93,9 @@ SigmaVectorDynamic::~SigmaVectorDynamic() { print_SigmaVectorDynamic_stats(); }
 void SigmaVectorDynamic::compute_sigma(SharedVector sigma, SharedVector b) {
     sigma->zero();
     compute_sigma_scalar(sigma, b);
-    compute_sigma_aa_fast_search_group_ui64(sigma, b);
-    compute_sigma_bb_fast_search_group_ui64(sigma, b);
-    compute_sigma_abab_fast_search_group_ui64(sigma, b);
+    compute_sigma_aa_fast_search_group_ui64_parallel(sigma, b);
+    compute_sigma_bb_fast_search_group_ui64_parallel(sigma, b);
+    compute_sigma_abab_fast_search_group_ui64_parallel(sigma, b);
 }
 
 void print_SigmaVectorDynamic_stats() {
@@ -148,12 +153,48 @@ void SigmaVectorDynamic::compute_sigma_aa_fast_search_group_ui64(SharedVector si
     }
 
     // Add sigma using the determinant address used in the DeterminantHashVector object
-    //    const auto& sorted_dets = b_sorted_string_list_ui64_.sorted_dets();
     double* sigma_p = sigma->pointer();
     for (size_t I = 0; I < size_; ++I) {
         size_t addI = b_sorted_string_list_ui64_.add(I);
-        //        size_t addI = space_.get_idx(sorted_dets[I]);
         sigma_p[addI] += temp_sigma_[I];
+    }
+}
+
+void SigmaVectorDynamic::compute_sigma_aa_fast_search_group_ui64_parallel(SharedVector sigma,
+                                                                          SharedVector b) {
+    timer energy_timer("SigmaVectorDynamic:sigma_aa");
+    for (size_t I = 0; I < size_; ++I)
+        temp_sigma_[I] = 0.0;
+    for (size_t I = 0; I < size_; ++I) {
+        size_t addI = b_sorted_string_list_ui64_.add(I);
+        temp_b_[I] = b->get(addI);
+    }
+
+    std::vector<std::future<void>> futures;
+    int num_tasks = std::thread::hardware_concurrency();
+    for (int task_id = 0; task_id < num_tasks; ++task_id) {
+        futures.push_back(std::async(std::launch::async, &SigmaVectorDynamic::sigma_aa_task, this,
+                                     task_id, num_tasks));
+    }
+    for (auto& e : futures) {
+        e.get();
+    }
+
+    // Add sigma using the determinant address used in the DeterminantHashVector object
+    double* sigma_p = sigma->pointer();
+    for (size_t I = 0; I < size_; ++I) {
+        size_t addI = b_sorted_string_list_ui64_.add(I);
+        sigma_p[addI] += temp_sigma_[I];
+    }
+}
+
+void SigmaVectorDynamic::sigma_aa_task(size_t task_id, size_t num_tasks) {
+    // loop over all determinants
+    const auto& sorted_half_dets = b_sorted_string_list_ui64_.sorted_half_dets();
+    size_t num_half_dets = sorted_half_dets.size();
+    for (size_t group = task_id; group < num_half_dets; group += num_tasks) {
+        const auto& Ib = sorted_half_dets[group];
+        compute_aa_coupling_compare_group_ui64(Ib, temp_b_);
     }
 }
 
@@ -174,12 +215,48 @@ void SigmaVectorDynamic::compute_sigma_bb_fast_search_group_ui64(SharedVector si
     }
 
     // Add sigma using the determinant address used in the DeterminantHashVector object
-    //    const auto& sorted_dets = a_sorted_string_list_ui64_.sorted_dets();
     double* sigma_p = sigma->pointer();
     for (size_t I = 0; I < size_; ++I) {
         size_t addI = a_sorted_string_list_ui64_.add(I);
-        //        size_t addI = space_.get_idx(sorted_dets[I]);
         sigma_p[addI] += temp_sigma_[I];
+    }
+}
+
+void SigmaVectorDynamic::compute_sigma_bb_fast_search_group_ui64_parallel(SharedVector sigma,
+                                                                          SharedVector b) {
+    timer energy_timer("SigmaVectorDynamic:sigma_bb");
+    for (size_t I = 0; I < size_; ++I)
+        temp_sigma_[I] = 0.0;
+    for (size_t I = 0; I < size_; ++I) {
+        size_t addI = a_sorted_string_list_ui64_.add(I);
+        temp_b_[I] = b->get(addI);
+    }
+
+    std::vector<std::future<void>> futures;
+    int num_tasks = std::thread::hardware_concurrency();
+    for (int task_id = 0; task_id < num_tasks; ++task_id) {
+        futures.push_back(std::async(std::launch::async, &SigmaVectorDynamic::sigma_bb_task, this,
+                                     task_id, num_tasks));
+    }
+    for (auto& e : futures) {
+        e.get();
+    }
+
+    // Add sigma using the determinant address used in the DeterminantHashVector object
+    double* sigma_p = sigma->pointer();
+    for (size_t I = 0; I < size_; ++I) {
+        size_t addI = a_sorted_string_list_ui64_.add(I);
+        sigma_p[addI] += temp_sigma_[I];
+    }
+}
+
+void SigmaVectorDynamic::sigma_bb_task(size_t task_id, size_t num_tasks) {
+    // loop over all determinants
+    const auto& sorted_half_dets = a_sorted_string_list_ui64_.sorted_half_dets();
+    size_t num_half_dets = sorted_half_dets.size();
+    for (size_t group = task_id; group < num_half_dets; group += num_tasks) {
+        const auto& Ia = sorted_half_dets[group];
+        compute_bb_coupling_compare_group_ui64(Ia, temp_b_);
     }
 }
 
@@ -188,6 +265,10 @@ void SigmaVectorDynamic::compute_sigma_abab_fast_search_group_ui64(SharedVector 
     timer energy_timer("SigmaVectorDynamic:sigma_abab");
     for (size_t I = 0; I < size_; ++I)
         temp_sigma_[I] = 0.0;
+    for (size_t I = 0; I < size_; ++I) {
+        size_t addI = a_sorted_string_list_ui64_.add(I);
+        temp_b_[I] = b->get(addI);
+    }
     double* sigma_p = sigma->pointer();
     double* b_p = b->pointer();
 
@@ -209,21 +290,76 @@ void SigmaVectorDynamic::compute_sigma_abab_fast_search_group_ui64(SharedVector 
                     }
                 }
                 double sign = ui64_slater_sign(detIa, i, a);
-                compute_bb_coupling_compare_singles_group_ui64(detIa, detJa, sign, i, a, b);
+                compute_bb_coupling_compare_singles_group_ui64(detIa, detJa, sign, i, a, temp_b_);
             }
         }
     }
     // Add sigma using the determinant address used in the DeterminantHashVector object
-    //    const auto& sorted_dets = a_sorted_string_list_ui64_.sorted_dets();
     for (size_t I = 0; I < size_; ++I) {
         size_t addI = a_sorted_string_list_ui64_.add(I);
-        //        size_t addI = space_.get_idx(sorted_dets[I]);
         sigma_p[addI] += temp_sigma_[I];
     }
 }
 
+void SigmaVectorDynamic::compute_sigma_abab_fast_search_group_ui64_parallel(SharedVector sigma,
+                                                                            SharedVector b) {
+    timer energy_timer("SigmaVectorDynamic:sigma_abab");
+    for (size_t I = 0; I < size_; ++I)
+        temp_sigma_[I] = 0.0;
+    for (size_t I = 0; I < size_; ++I) {
+        size_t addI = a_sorted_string_list_ui64_.add(I);
+        temp_b_[I] = b->get(addI);
+    }
+    double* sigma_p = sigma->pointer();
+    double* b_p = b->pointer();
+
+    std::vector<std::future<void>> futures;
+    int num_tasks = std::thread::hardware_concurrency();
+    for (int task_id = 0; task_id < num_tasks; ++task_id) {
+        futures.push_back(std::async(std::launch::async, &SigmaVectorDynamic::sigma_abab_task, this,
+                                     task_id, num_tasks));
+    }
+    for (auto& e : futures) {
+        e.get();
+    }
+
+    // Add sigma using the determinant address used in the DeterminantHashVector object
+    for (size_t I = 0; I < size_; ++I) {
+        size_t addI = a_sorted_string_list_ui64_.add(I);
+        sigma_p[addI] += temp_sigma_[I];
+    }
+}
+
+void SigmaVectorDynamic::sigma_abab_task(size_t task_id, size_t num_tasks) {
+    UI64Determinant::bit_t detIJa_common;
+    // loop over all determinants
+    const auto& sorted_half_dets = a_sorted_string_list_ui64_.sorted_half_dets();
+    size_t num_half_dets = sorted_half_dets.size();
+    // loop over all determinants
+    for (size_t group = task_id; group < num_half_dets; group += num_tasks) {
+        const auto& detIa = sorted_half_dets[group];
+        for (const auto& detJa : sorted_half_dets) {
+            detIJa_common = detIa ^ detJa;
+            int ndiff = ui64_bit_count(detIJa_common);
+            if (ndiff == 2) {
+                int i, a;
+                for (int p = 0; p < nmo_; ++p) {
+                    const bool la_p = ui64_get_bit(detIa, p);
+                    const bool ra_p = ui64_get_bit(detJa, p);
+                    if (la_p ^ ra_p) {
+                        i = la_p ? p : i;
+                        a = ra_p ? p : a;
+                    }
+                }
+                double sign = ui64_slater_sign(detIa, i, a);
+                compute_bb_coupling_compare_singles_group_ui64(detIa, detJa, sign, i, a, temp_b_);
+            }
+        }
+    }
+}
+
 void SigmaVectorDynamic::compute_aa_coupling_compare_group_ui64(const UI64Determinant::bit_t& Ib,
-                                                                std::vector<double>& b) {
+                                                                const std::vector<double>& b) {
     const auto& sorted_dets = b_sorted_string_list_ui64_.sorted_dets();
     const auto& range_I = b_sorted_string_list_ui64_.range(Ib);
     UI64Determinant::bit_t Ia;
@@ -258,7 +394,7 @@ void SigmaVectorDynamic::compute_aa_coupling_compare_group_ui64(const UI64Determ
     }
 }
 void SigmaVectorDynamic::compute_bb_coupling_compare_group_ui64(const UI64Determinant::bit_t& Ia,
-                                                                std::vector<double>& b) {
+                                                                const std::vector<double>& b) {
     const auto& sorted_dets = a_sorted_string_list_ui64_.sorted_dets();
     const auto& range_I = a_sorted_string_list_ui64_.range(Ia);
     UI64Determinant::bit_t Ib;
@@ -295,36 +431,30 @@ void SigmaVectorDynamic::compute_bb_coupling_compare_group_ui64(const UI64Determ
 
 void SigmaVectorDynamic::compute_bb_coupling_compare_singles_group_ui64(
     const UI64Determinant::bit_t& detIa, const UI64Determinant::bit_t& detJa, double sign, int i,
-    int a, const SharedVector& b) {
+    int a, const std::vector<double>& b) {
     const auto& sorted_dets = a_sorted_string_list_ui64_.sorted_dets();
     const auto& range_I = a_sorted_string_list_ui64_.range(detIa);
     const auto& range_J = a_sorted_string_list_ui64_.range(detJa);
-    UI64Determinant::bit_t detIb;
-    UI64Determinant::bit_t detJb;
-    UI64Determinant::bit_t detIJb;
+    UI64Determinant::bit_t Ib;
+    UI64Determinant::bit_t Jb;
+    UI64Determinant::bit_t IJb;
     size_t first_I = range_I.first;
     size_t last_I = range_I.second;
     size_t first_J = range_J.first;
     size_t last_J = range_J.second;
     for (size_t posI = first_I; posI < last_I; ++posI) {
-        detIb = sorted_dets[posI].get_beta_bits();
-        size_t addI = a_sorted_string_list_ui64_.add(posI);
-        double b_I = b->get(addI);
+        Ib = sorted_dets[posI].get_beta_bits();
         for (size_t posJ = first_J; posJ < last_J; ++posJ) {
-            detJb = sorted_dets[posJ].get_beta_bits();
+            Jb = sorted_dets[posJ].get_beta_bits();
 #if SIGMA_VEC_DEBUG
             count_abab_total++;
 #endif
             // find common bits
-            detIJb = detJb ^ detIb;
-            int ndiff = ui64_bit_count(detIJb);
+            IJb = Jb ^ Ib;
+            int ndiff = ui64_bit_count(IJb);
             if (ndiff == 2) {
-                auto sign_j_b = ui64_slater_sign_single(detIb, detJb);
-                double sign_b = std::get<0>(sign_j_b);
-                size_t j = std::get<1>(sign_j_b);
-                size_t b = std::get<2>(sign_j_b);
-                double h_ia = sign * sign_b * fci_ints_->tei_ab(i, j, a, b);
-                temp_sigma_[posJ] += h_ia * b_I;
+                double H_IJ = sign * slater_rules_double_alpha_beta_pre(i, a, Ib, Jb, fci_ints_);
+                temp_sigma_[posI] += H_IJ * b[posJ];
 #if SIGMA_VEC_DEBUG
                 count_abab++;
 #endif

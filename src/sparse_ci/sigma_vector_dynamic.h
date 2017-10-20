@@ -69,14 +69,22 @@ class SigmaVectorDynamic : public SigmaVector {
     void compute_sigma_bb_fast_search_group_ui64(SharedVector sigma, SharedVector b);
     void compute_sigma_abab_fast_search_group_ui64(SharedVector sigma, SharedVector b);
 
+    void compute_sigma_aa_fast_search_group_ui64_parallel(SharedVector sigma, SharedVector b);
+    void compute_sigma_bb_fast_search_group_ui64_parallel(SharedVector sigma, SharedVector b);
+    void compute_sigma_abab_fast_search_group_ui64_parallel(SharedVector sigma, SharedVector b);
+
+    void sigma_aa_task(size_t task_id, size_t num_tasks);
+    void sigma_bb_task(size_t task_id, size_t num_tasks);
+    void sigma_abab_task(size_t task_id, size_t num_tasks);
+
     void compute_aa_coupling_compare_group_ui64(const UI64Determinant::bit_t& detIb,
-                                                std::vector<double>& b);
+                                                const std::vector<double>& b);
     void compute_bb_coupling_compare_group_ui64(const UI64Determinant::bit_t& detIa,
-                                                std::vector<double>& b);
+                                                const std::vector<double>& b);
     void compute_bb_coupling_compare_singles_group_ui64(const UI64Determinant::bit_t& detIa,
                                                         const UI64Determinant::bit_t& detJa,
                                                         double sign, int i, int a,
-                                                        const SharedVector& b);
+                                                        const std::vector<double>& b);
 };
 }
 }

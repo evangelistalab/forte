@@ -207,6 +207,15 @@ double slater_rules_double_beta_beta(uint64_t Ib, uint64_t Jb,
     return ui64_slater_sign(Ib, i, j) * ui64_slater_sign(Jb, k, l) * ints->tei_bb(i, j, k, l);
 }
 
+double slater_rules_double_alpha_beta_pre(int i, int a, uint64_t Ib, uint64_t Jb,
+                                          const std::shared_ptr<FCIIntegrals>& ints) {
+    uint64_t Ib_xor_Jb = Ib ^ Jb;
+    uint64_t j = lowest_one_idx(Ib_xor_Jb);
+    Ib_xor_Jb = clear_lowest_one(Ib_xor_Jb);
+    uint64_t b = lowest_one_idx(Ib_xor_Jb);
+    return ui64_slater_sign(Ib, j, b) * ints->tei_ab(i, j, a, b);
+}
+
 UI64Determinant::UI64Determinant() {}
 UI64Determinant::UI64Determinant(const STLBitsetDeterminant& d) {
     for (int i = 0; i < 64; ++i) {

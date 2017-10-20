@@ -40,8 +40,7 @@ set forte {
   mp2_nos true
   aci_average_offset 0
   charge 0
-    diag_algorithm direct
-
+  diag_algorithm dynamic
 }
 
 energy('scf')

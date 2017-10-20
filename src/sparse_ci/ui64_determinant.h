@@ -87,6 +87,8 @@ double slater_rules_single_beta(uint64_t Ia, uint64_t Ib, uint64_t Jb,
                                 const std::shared_ptr<FCIIntegrals>& ints);
 double slater_rules_double_beta_beta(uint64_t Ib, uint64_t Jb,
                                      const std::shared_ptr<FCIIntegrals>& ints);
+double slater_rules_double_alpha_beta_pre(int i, int a, uint64_t Ib, uint64_t Jb,
+                                          const std::shared_ptr<FCIIntegrals>& ints);
 }
 }
 
