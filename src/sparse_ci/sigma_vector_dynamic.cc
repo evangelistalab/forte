@@ -74,6 +74,8 @@ SigmaVectorDynamic::SigmaVectorDynamic(const DeterminantHashVec& space,
       a_sorted_string_list_ui64_(space, fci_ints, STLBitsetDeterminant::SpinType::AlphaSpin),
       b_sorted_string_list_ui64_(space, fci_ints, STLBitsetDeterminant::SpinType::BetaSpin) {
 
+    timer this_timer("SigmaVectorDynamic:creator");
+
     nmo_ = fci_ints_->nmo();
 
     for (size_t I = 0; I < size_; ++I) {
@@ -367,7 +369,9 @@ void SigmaVectorDynamic::compute_aa_coupling_compare_group_ui64(const UI64Determ
     UI64Determinant::bit_t IJa;
     size_t first_I = range_I.first;
     size_t last_I = range_I.second;
+    double sigma_I = 0.0;
     for (size_t posI = first_I; posI < last_I; ++posI) {
+        sigma_I = 0.0;
         Ia = sorted_dets[posI].get_alfa_bits();
         for (size_t posJ = first_I; posJ < last_I; ++posJ) {
             Ja = sorted_dets[posJ].get_alfa_bits();
@@ -379,18 +383,19 @@ void SigmaVectorDynamic::compute_aa_coupling_compare_group_ui64(const UI64Determ
             int ndiff = ui64_bit_count(IJa);
             if (ndiff == 2) {
                 double H_IJ = slater_rules_single_alpha(Ib, Ia, Ja, fci_ints_);
-                temp_sigma_[posI] += H_IJ * b[posJ];
+                sigma_I += H_IJ * b[posJ];
 #if SIGMA_VEC_DEBUG
                 count_aa++;
 #endif
             } else if (ndiff == 4) {
                 double H_IJ = slater_rules_double_alpha_alpha(Ia, Ja, fci_ints_);
-                temp_sigma_[posI] += H_IJ * b[posJ];
+                sigma_I += H_IJ * b[posJ];
 #if SIGMA_VEC_DEBUG
                 count_aaaa++;
 #endif
             }
         }
+        temp_sigma_[posI] += sigma_I;
     }
 }
 void SigmaVectorDynamic::compute_bb_coupling_compare_group_ui64(const UI64Determinant::bit_t& Ia,
@@ -402,7 +407,9 @@ void SigmaVectorDynamic::compute_bb_coupling_compare_group_ui64(const UI64Determ
     UI64Determinant::bit_t IJb;
     size_t first_I = range_I.first;
     size_t last_I = range_I.second;
+    double sigma_I = 0.0;
     for (size_t posI = first_I; posI < last_I; ++posI) {
+        sigma_I = 0.0;
         Ib = sorted_dets[posI].get_beta_bits();
         for (size_t posJ = first_I; posJ < last_I; ++posJ) {
             Jb = sorted_dets[posJ].get_beta_bits();
@@ -414,18 +421,19 @@ void SigmaVectorDynamic::compute_bb_coupling_compare_group_ui64(const UI64Determ
             int ndiff = ui64_bit_count(IJb);
             if (ndiff == 2) {
                 double H_IJ = slater_rules_single_beta(Ia, Ib, Jb, fci_ints_);
-                temp_sigma_[posI] += H_IJ * b[posJ];
+                sigma_I += H_IJ * b[posJ];
 #if SIGMA_VEC_DEBUG
                 count_bb++;
 #endif
             } else if (ndiff == 4) {
                 double H_IJ = slater_rules_double_beta_beta(Ib, Jb, fci_ints_);
-                temp_sigma_[posI] += H_IJ * b[posJ];
+                sigma_I += H_IJ * b[posJ];
 #if SIGMA_VEC_DEBUG
                 count_bbbb++;
 #endif
             }
         }
+        temp_sigma_[posI] += sigma_I;
     }
 }
 
@@ -442,7 +450,9 @@ void SigmaVectorDynamic::compute_bb_coupling_compare_singles_group_ui64(
     size_t last_I = range_I.second;
     size_t first_J = range_J.first;
     size_t last_J = range_J.second;
+    double sigma_I = 0.0;
     for (size_t posI = first_I; posI < last_I; ++posI) {
+        sigma_I = 0.0;
         Ib = sorted_dets[posI].get_beta_bits();
         for (size_t posJ = first_J; posJ < last_J; ++posJ) {
             Jb = sorted_dets[posJ].get_beta_bits();
@@ -454,12 +464,13 @@ void SigmaVectorDynamic::compute_bb_coupling_compare_singles_group_ui64(
             int ndiff = ui64_bit_count(IJb);
             if (ndiff == 2) {
                 double H_IJ = sign * slater_rules_double_alpha_beta_pre(i, a, Ib, Jb, fci_ints_);
-                temp_sigma_[posI] += H_IJ * b[posJ];
+                sigma_I += H_IJ * b[posJ];
 #if SIGMA_VEC_DEBUG
                 count_abab++;
 #endif
             }
         }
+        temp_sigma_[posI] += sigma_I;
     }
 }
 }
