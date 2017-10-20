@@ -102,22 +102,11 @@ class THREE_DSRG_MRPT2 : public MASTER_DSRG {
   protected:
     // => Class data <= //
 
-//    /// The reference object
-//    Reference reference_;
-
-//    /// The energy of the reference
-//    double Eref_;
-
-//    /// The frozen-core energy
-//    double frozen_core_energy_;
-
     /// Include internal amplitudes or not
     bool internal_amp_;
     /// Include which part of internal amplitudes?
     std::string internal_amp_select_;
 
-//    /// The molecular integrals required by MethodBase
-//    std::shared_ptr<ForteIntegrals> ints_;
     /// The type of SCF reference
     std::string ref_type_;
     /// The number of corrleated MO
@@ -135,22 +124,12 @@ class THREE_DSRG_MRPT2 : public MASTER_DSRG {
     /// The number of restricted unoccupied orbitals per irrep (virtual)
     Dimension ruoccpi_;
 
-//    /// List of alpha core MOs
-//    std::vector<size_t> core_mos_;
+    /// Number of core orbitals
     size_t ncore_;
-//    /// List of alpha active MOs
-//    std::vector<size_t> actv_mos_;
+    /// Number of active orbitals
     size_t nactive_;
-//    /// List of alpha virtual MOs
-//    std::vector<size_t> virt_mos_;
+    /// Number of virutal orbitals
     size_t nvirtual_;
-
-//    /// List of beta core MOs
-//    std::vector<size_t> core_mos_;
-//    /// List of beta active MOs
-//    std::vector<size_t> actv_mos_;
-//    /// List of beta virtual MOs
-//    std::vector<size_t> virt_mos_;
 
     /// List of active active occupied MOs (relative to active)
     std::vector<size_t> actv_occ_mos_;
@@ -162,37 +141,9 @@ class THREE_DSRG_MRPT2 : public MASTER_DSRG {
     /// List of eigenvalues for fock beta
     std::vector<double> Fb_;
 
-//    /// Map from all the MOs to the alpha core
-//    std::map<size_t, size_t> mos_to_acore_;
-//    /// Map from all the MOs to the alpha active
-//    std::map<size_t, size_t> mos_to_aactv_;
-//    /// Map from all the MOs to the alpha virtual
-//    std::map<size_t, size_t> mos_to_avirt_;
-
-//    /// Map from all the MOs to the beta core
-//    std::map<size_t, size_t> mos_to_bcore_;
-//    /// Map from all the MOs to the beta active
-//    std::map<size_t, size_t> mos_to_bactv_;
-//    /// Map from all the MOs to the beta virtual
-//    std::map<size_t, size_t> mos_to_bvirt_;
-
-//    /// The flow parameter
-//    double s_;
-//    /// Source operator
-//    std::string source_;
-//    /// Threshold for the Taylor expansion of f(z) = (1-exp(-z^2))/z
-//    double taylor_threshold_;
-//    /// The dsrg source operator
-//    std::shared_ptr<DSRG_SOURCE> dsrg_source_;
-
     // => Tensors <= //
-//    ambit::TensorType tensor_type_;
     ambit::BlockedTensor H_;
     ambit::BlockedTensor F_;
-//    ambit::BlockedTensor F_no_renorm_;
-//    ambit::BlockedTensor Gamma1_;
-//    ambit::BlockedTensor Eta1_;
-//    ambit::BlockedTensor Lambda2_;
     ambit::BlockedTensor Delta1_;
     ambit::BlockedTensor RDelta1_;
     ambit::BlockedTensor T1_;
@@ -204,9 +155,6 @@ class THREE_DSRG_MRPT2 : public MASTER_DSRG {
     ambit::BlockedTensor T2_;
     ambit::BlockedTensor V_;
     ambit::BlockedTensor ThreeIntegral_;
-//    ambit::BlockedTensor H0_;
-//    ambit::BlockedTensor Hbar1_;
-//    ambit::BlockedTensor Hbar2_;
 
     /// A vector of strings that avoids creating ccvv indices
     std::vector<std::string> no_hhpp_;
@@ -282,41 +230,10 @@ class THREE_DSRG_MRPT2 : public MASTER_DSRG {
     double E_VT2_4PH();
     double E_VT2_6();
 
-//    /// Timings for computing the commutators
-//    DSRG_TIME dsrg_time_;
-
-//    /// Compute zero-body Hbar truncated to 2nd-order
-//    double Hbar0_ = 0.0;
-
-//    /// Compute one-body term of commutator [H1, T1]
-//    void H1_T1_C1(ambit::BlockedTensor& H1, ambit::BlockedTensor& T1, const double& alpha,
-//                  ambit::BlockedTensor& C1);
-//    /// Compute one-body term of commutator [H1, T2]
-//    void H1_T2_C1(ambit::BlockedTensor& H1, ambit::BlockedTensor& T2, const double& alpha,
-//                  ambit::BlockedTensor& C1);
-//    /// Compute one-body term of commutator [H2, T1]
-//    void H2_T1_C1(ambit::BlockedTensor& H2, ambit::BlockedTensor& T1, const double& alpha,
-//                  ambit::BlockedTensor& C1);
-//    /// Compute one-body term of commutator [H2, T2]
-//    void H2_T2_C1(ambit::BlockedTensor& H2, ambit::BlockedTensor& T2, const double& alpha,
-//                  ambit::BlockedTensor& C1);
-
-//    /// Compute two-body term of commutator [H2, T1]
-//    void H2_T1_C2(ambit::BlockedTensor& H2, ambit::BlockedTensor& T1, const double& alpha,
-//                  ambit::BlockedTensor& C2);
-//    /// Compute two-body term of commutator [H1, T2]
-//    void H1_T2_C2(ambit::BlockedTensor& H1, ambit::BlockedTensor& T2, const double& alpha,
-//                  ambit::BlockedTensor& C2);
-//    /// Compute two-body term of commutator [H2, T2]
-//    void H2_T2_C2(ambit::BlockedTensor& H2, ambit::BlockedTensor& T2, const double& alpha,
-//                  ambit::BlockedTensor& C2);
-
     void de_normal_order();
 
-    std::vector<double> relaxed_energy();
+    std::vector<double> relaxed_energy(std::shared_ptr<FCIIntegrals> fci_ints);
 
-//    /// Print levels
-//    int print_;
     /// Print detailed timings
     bool detail_time_ = false;
 
@@ -329,8 +246,7 @@ class THREE_DSRG_MRPT2 : public MASTER_DSRG {
 //    /// for a four character string
 //    std::shared_ptr<BlockedTensorFactory> BTF_;
 
-//    /// The MOSpace object
-//    std::shared_ptr<MOSpaceInfo> mo_space_info_;
+    /// Integral type (DF, CD, DISKDF)
     IntegralType integral_type_;
 
     /// Effective alpha one-electron integrals (used in denormal ordering)

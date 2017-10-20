@@ -44,4 +44,4 @@ energy('scf')
 compare_values(refrhf,get_variable("CURRENT ENERGY"),9,"SCF energy")
 
 energy('forte')
-compare_values(refdsrgpt2,get_variable("CURRENT ENERGY"),9,"DSRG-MRPT2 energy")
+compare_values(refdsrgpt2,get_variable("CURRENT ENERGY"),8,"DSRG-MRPT2 energy")

@@ -4,7 +4,8 @@ import forte
 
 refrhf     = -108.95379624015762 
 refdsrgpt2 = -109.25189866738
-refdsrgpt2_jk_rd = -109.25189813072
+refdsrgpt2_jk_rd = -109.25189813072 # unrelaxed
+refdsrgpt2_jk_rd_pr = -109.253503109377661 # partially relaxed
 
 memory 500 mb
 
@@ -26,21 +27,23 @@ set globals{
 }
 
 set forte {
+   job_type                three-dsrg-mrpt2
+   int_type                diskdf
    restricted_docc         [2,0,0,0,0,2,0,0]
    active                  [1,0,1,1,0,1,1,1]
    root_sym                0
    nroot                   1
    dsrg_s                  1.0
    semi_canonical          true
-   int_type                diskdf
-   job_type                three-dsrg-mrpt2
-   NTRIAL_PER_ROOT         100
-   cas_type                CAS
+   ntrial_per_root         100
+   cas_type                cas
+   relax_ref               once
 }
 
 scf = energy('scf')
 compare_values(refrhf, scf,10,"SCF energy")
 
 energy('forte')
-compare_values(refdsrgpt2_jk_rd, get_variable("CURRENT ENERGY"),10,"DSRG-MRPT2 energy")
+compare_values(refdsrgpt2_jk_rd, get_variable("UNRELAXED ENERGY"),10,"unrelaxed DSRG-MRPT2 energy")
+compare_values(refdsrgpt2_jk_rd_pr, get_variable("CURRENT ENERGY"),10,"DSRG-MRPT2 energy")
 
