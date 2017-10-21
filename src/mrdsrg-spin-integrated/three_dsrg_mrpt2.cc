@@ -3247,7 +3247,7 @@ void THREE_DSRG_MRPT2::relax_reference_once() {
 #pragma omp parallel for
                 for (size_t m = 0; m < ncore_; ++m) {
                     size_t nm = core_mos_[m];
-                    int thread = 0;           // SUPER IMPORTANT
+                    int thread = 0; // SUPER IMPORTANT!!!
 #ifdef _OPENMP
                     thread = omp_get_thread_num();
 #endif
