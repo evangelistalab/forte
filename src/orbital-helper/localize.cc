@@ -147,6 +147,16 @@ void LOCALIZE::localize_orbitals() {
         }
     }
 
+    double value = 0.0;
+    for( int h = 0; h < nirrep; ++h ){
+        for ( int i = 0; i < Ca->rowdim(h); ++i ){
+            for ( int j = 0; j < Ca->coldim(h); ++j ){
+                value = std::fabs(Ca->get(i,j) - Cb->get(i,j)); 
+            }
+        }
+    }
+    outfile->Printf("\n  ||Ca - Cb||_[1] = %1.5f", value);
+
     ints_->retransform_integrals();
 }
 
