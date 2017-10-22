@@ -177,8 +177,7 @@ void SparseCISolver::diagonalize_dl_dynamic(const DeterminantHashVec& space, WFN
                                             SharedVector& evals, SharedMatrix& evecs, int nroot,
                                             int multiplicity) {
     if (print_details_) {
-        outfile->Printf("\n\n  Davidson-Liu solver algorithm");
-        //        outfile->Printf("\n  Using %s sigma builder", sigma_method_.c_str());
+        outfile->Printf("\n\n  Davidson-Liu solver algorithm with dynamic sigma builds");
     }
     size_t dim_space = space.size();
     evecs.reset(new Matrix("U", dim_space, nroot));
@@ -797,8 +796,6 @@ bool SparseCISolver::davidson_liu_solver(const std::vector<STLBitsetDeterminant>
     double old_avg_energy = 0.0;
     int real_cycle = 1;
 
-    //    maxiter_davidson_ = 2;
-    //    b->print();
     for (int cycle = 0; cycle < maxiter_davidson_; ++cycle) {
         bool add_sigma = true;
         do {
@@ -856,6 +853,7 @@ bool SparseCISolver::davidson_liu_solver_map(const DeterminantHashVec& space,
                                              SigmaVector* sigma_vector, SharedVector Eigenvalues,
                                              SharedMatrix Eigenvectors, int nroot,
                                              int multiplicity) {
+    timer this_timer("davidson_liu_solver_map::total");
     //    print_details_ = true;
     Timer dl;
     size_t fci_size = sigma_vector->size();
@@ -874,7 +872,9 @@ bool SparseCISolver::davidson_liu_solver_map(const DeterminantHashVec& space,
     std::vector<std::vector<std::pair<size_t, double>>> bad_roots;
     size_t guess_size = std::min(nvec_, dls.collapse_size());
 
+    timer this_timer3("davidson_liu_solver_map::initial guess");
     auto guess = initial_guess_map(space, nroot, multiplicity);
+    timer this_timer4("davidson_liu_solver_map::guess");
     if (!set_guess_) {
         std::vector<int> guess_list;
         for (size_t g = 0; g < guess.size(); ++g) {
@@ -903,6 +903,7 @@ bool SparseCISolver::davidson_liu_solver_map(const DeterminantHashVec& space,
         }
     }
 
+    timer this_timer2("davidson_liu_solver_map::projection");
     // Prepare a list of bad roots to project out and pass them to the solver
     for (auto& g : guess) {
         if (g.first != multiplicity)
@@ -933,17 +934,18 @@ bool SparseCISolver::davidson_liu_solver_map(const DeterminantHashVec& space,
     double old_avg_energy = 0.0;
     int real_cycle = 1;
 
-    //    maxiter_davidson_ = 2;
-    //    b->print();
     for (int cycle = 0; cycle < maxiter_davidson_; ++cycle) {
         bool add_sigma = true;
         do {
+            timer this_timer("davidson_liu_solver_map::sigma_builds");
+
             dls.get_b(b);
             sigma_vector->compute_sigma(sigma, b);
 
             add_sigma = dls.add_sigma(sigma);
         } while (add_sigma);
 
+        timer this_timer("davidson_liu_solver_map::update-collapse");
         converged = dls.update();
 
         if (converged != SolverStatus::Collapse) {

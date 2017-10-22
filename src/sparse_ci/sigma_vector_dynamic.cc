@@ -86,11 +86,31 @@ SigmaVectorDynamic::SigmaVectorDynamic(const DeterminantHashVec& space,
     temp_sigma_.resize(size_);
     temp_b_.resize(size_);
 
-    unsigned int n = std::thread::hardware_concurrency();
-    outfile->Printf("\n %d concurrent threads are supported.\n", n);
+    num_threads_ = std::thread::hardware_concurrency();
+    size_t total_space = 100000000;
+    size_t space_per_thread = total_space / num_threads_;
+    for (int t = 0; t < num_threads_; ++t) {
+        H_IJ_list_thread_limit_.push_back((t + 1) * space_per_thread);
+
+        H_IJ_aa_list_thread_start_.push_back(t * space_per_thread);
+        H_IJ_aa_list_thread_end_.push_back(t * space_per_thread);
+
+        H_IJ_bb_list_thread_start_.push_back(t * space_per_thread);
+        H_IJ_bb_list_thread_end_.push_back(t * space_per_thread);
+
+        H_IJ_abab_list_thread_start_.push_back(t * space_per_thread);
+        H_IJ_abab_list_thread_end_.push_back(t * space_per_thread);
+
+        first_aa_onthefly_group_.push_back(t);
+        first_bb_onthefly_group_.push_back(t);
+        first_abab_onthefly_group_.push_back(t);
+    }
+    H_IJ_list_.resize(total_space);
+    outfile->Printf("\n %d concurrent threads are supported.\n", num_threads_);
 }
 
-SigmaVectorDynamic::~SigmaVectorDynamic() { print_SigmaVectorDynamic_stats(); }
+SigmaVectorDynamic::~SigmaVectorDynamic() { /* print_SigmaVectorDynamic_stats(); */
+}
 
 void SigmaVectorDynamic::compute_sigma(SharedVector sigma, SharedVector b) {
     sigma->zero();
@@ -98,6 +118,11 @@ void SigmaVectorDynamic::compute_sigma(SharedVector sigma, SharedVector b) {
     compute_sigma_aa_fast_search_group_ui64_parallel(sigma, b);
     compute_sigma_bb_fast_search_group_ui64_parallel(sigma, b);
     compute_sigma_abab_fast_search_group_ui64_parallel(sigma, b);
+
+    if (num_builds_ == 0) {
+        print_thread_stats();
+    }
+    num_builds_ += 1;
 }
 
 void print_SigmaVectorDynamic_stats() {
@@ -115,6 +140,30 @@ void print_SigmaVectorDynamic_stats() {
                     double(count_bbbb) / double(count_bb_total));
     outfile->Printf("\n");
 #endif
+}
+
+void SigmaVectorDynamic::print_thread_stats() {
+    outfile->Printf("\n  SigmaVectorDynamic Threads statistics:");
+    outfile->Printf("\n  b-b coupling:");
+    outfile->Printf("\n Thread     start          end        limit         size        first");
+    for (int t = 0; t < num_threads_; ++t) {
+        outfile->Printf("\n %3d %12zu %12zu %12zu %12zu %12zu", t, H_IJ_aa_list_thread_start_[t],
+                        H_IJ_aa_list_thread_end_[t], H_IJ_list_thread_limit_[t],
+                        H_IJ_aa_list_thread_end_[t] - H_IJ_aa_list_thread_start_[t],
+                        first_aa_onthefly_group_[t]);
+    }
+    for (int t = 0; t < num_threads_; ++t) {
+        outfile->Printf("\n %3d %12zu %12zu %12zu %12zu %12zu", t, H_IJ_bb_list_thread_start_[t],
+                        H_IJ_bb_list_thread_end_[t], H_IJ_list_thread_limit_[t],
+                        H_IJ_bb_list_thread_end_[t] - H_IJ_bb_list_thread_start_[t],
+                        first_bb_onthefly_group_[t]);
+    }
+    for (int t = 0; t < num_threads_; ++t) {
+        outfile->Printf("\n %3d %12zu %12zu %12zu %12zu %12zu", t, H_IJ_abab_list_thread_start_[t],
+                        H_IJ_abab_list_thread_end_[t], H_IJ_list_thread_limit_[t],
+                        H_IJ_abab_list_thread_end_[t] - H_IJ_abab_list_thread_start_[t],
+                        first_abab_onthefly_group_[t]);
+    }
 }
 
 void SigmaVectorDynamic::add_bad_roots(std::vector<std::vector<std::pair<size_t, double>>>& roots) {
@@ -175,8 +224,18 @@ void SigmaVectorDynamic::compute_sigma_aa_fast_search_group_ui64_parallel(Shared
     std::vector<std::future<void>> futures;
     int num_tasks = std::thread::hardware_concurrency();
     for (int task_id = 0; task_id < num_tasks; ++task_id) {
-        futures.push_back(std::async(std::launch::async, &SigmaVectorDynamic::sigma_aa_task, this,
-                                     task_id, num_tasks));
+        //        futures.push_back(std::async(std::launch::async,
+        //        &SigmaVectorDynamic::sigma_aa_task, this,
+        //                                     task_id, num_tasks));
+        if (num_builds_ == 0) {
+            futures.push_back(std::async(std::launch::async,
+                                         &SigmaVectorDynamic::sigma_aa_store_task, this, task_id,
+                                         num_tasks));
+        } else {
+            futures.push_back(std::async(std::launch::async,
+                                         &SigmaVectorDynamic::sigma_aa_dynamic_task, this, task_id,
+                                         num_tasks));
+        }
     }
     for (auto& e : futures) {
         e.get();
@@ -195,6 +254,51 @@ void SigmaVectorDynamic::sigma_aa_task(size_t task_id, size_t num_tasks) {
     const auto& sorted_half_dets = b_sorted_string_list_ui64_.sorted_half_dets();
     size_t num_half_dets = sorted_half_dets.size();
     for (size_t group = task_id; group < num_half_dets; group += num_tasks) {
+        const auto& Ib = sorted_half_dets[group];
+        compute_aa_coupling_compare_group_ui64(Ib, temp_b_);
+    }
+}
+
+void SigmaVectorDynamic::sigma_aa_store_task(size_t task_id, size_t num_tasks) {
+    // loop over all determinants
+    const auto& sorted_half_dets = b_sorted_string_list_ui64_.sorted_half_dets();
+    size_t num_half_dets = sorted_half_dets.size();
+    // a temp array that can fit one row of the Hamiltonian
+    bool store = true;
+    for (size_t group = task_id; group < num_half_dets; group += num_tasks) {
+        const auto& Ib = sorted_half_dets[group];
+        if (store) {
+            store = compute_aa_coupling_and_store(Ib, temp_b_, task_id);
+            if (store) {
+                first_aa_onthefly_group_[task_id] = group + num_tasks;
+            }
+        } else {
+            compute_aa_coupling_compare_group_ui64(Ib, temp_b_);
+        }
+    }
+    // update thread limits for next group of excitations
+    H_IJ_bb_list_thread_start_[task_id] = H_IJ_aa_list_thread_end_[task_id];
+    H_IJ_bb_list_thread_end_[task_id] = H_IJ_aa_list_thread_end_[task_id];
+}
+
+void SigmaVectorDynamic::sigma_aa_dynamic_task(size_t task_id, size_t num_tasks) {
+    // loop over all determinants
+    const auto& sorted_half_dets = b_sorted_string_list_ui64_.sorted_half_dets();
+    size_t num_half_dets = sorted_half_dets.size();
+
+    // compute contributions from elements stored in memory
+    double H_IJ;
+    size_t posI, posJ;
+    size_t begin_el = H_IJ_aa_list_thread_start_[task_id];
+    size_t end_el = H_IJ_aa_list_thread_end_[task_id];
+    for (size_t el = begin_el; el < end_el; ++el) {
+        std::tie(H_IJ, posI, posJ) = H_IJ_list_[el];
+        temp_sigma_[posI] += H_IJ * temp_b_[posJ];
+    }
+
+    // compute contributions on-the-fly
+    size_t first_group = first_aa_onthefly_group_[task_id];
+    for (size_t group = first_group; group < num_half_dets; group += num_tasks) {
         const auto& Ib = sorted_half_dets[group];
         compute_aa_coupling_compare_group_ui64(Ib, temp_b_);
     }
@@ -237,8 +341,18 @@ void SigmaVectorDynamic::compute_sigma_bb_fast_search_group_ui64_parallel(Shared
     std::vector<std::future<void>> futures;
     int num_tasks = std::thread::hardware_concurrency();
     for (int task_id = 0; task_id < num_tasks; ++task_id) {
-        futures.push_back(std::async(std::launch::async, &SigmaVectorDynamic::sigma_bb_task, this,
-                                     task_id, num_tasks));
+        //        futures.push_back(std::async(std::launch::async,
+        //        &SigmaVectorDynamic::sigma_bb_task, this,
+        //                                     task_id, num_tasks));
+        if (num_builds_ == 0) {
+            futures.push_back(std::async(std::launch::async,
+                                         &SigmaVectorDynamic::sigma_bb_store_task, this, task_id,
+                                         num_tasks));
+        } else {
+            futures.push_back(std::async(std::launch::async,
+                                         &SigmaVectorDynamic::sigma_bb_dynamic_task, this, task_id,
+                                         num_tasks));
+        }
     }
     for (auto& e : futures) {
         e.get();
@@ -257,6 +371,50 @@ void SigmaVectorDynamic::sigma_bb_task(size_t task_id, size_t num_tasks) {
     const auto& sorted_half_dets = a_sorted_string_list_ui64_.sorted_half_dets();
     size_t num_half_dets = sorted_half_dets.size();
     for (size_t group = task_id; group < num_half_dets; group += num_tasks) {
+        const auto& Ia = sorted_half_dets[group];
+        compute_bb_coupling_compare_group_ui64(Ia, temp_b_);
+    }
+}
+
+void SigmaVectorDynamic::sigma_bb_store_task(size_t task_id, size_t num_tasks) {
+    // loop over all determinants
+    const auto& sorted_half_dets = a_sorted_string_list_ui64_.sorted_half_dets();
+    size_t num_half_dets = sorted_half_dets.size();
+    bool store = true;
+    for (size_t group = task_id; group < num_half_dets; group += num_tasks) {
+        const auto& Ia = sorted_half_dets[group];
+        if (store) {
+            store = compute_bb_coupling_and_store(Ia, temp_b_, task_id);
+            if (store) {
+                first_bb_onthefly_group_[task_id] = group + num_tasks;
+            }
+        } else {
+            compute_bb_coupling_compare_group_ui64(Ia, temp_b_);
+        }
+    }
+    // update thread limits for next group of excitations
+    H_IJ_abab_list_thread_start_[task_id] = H_IJ_bb_list_thread_end_[task_id];
+    H_IJ_abab_list_thread_end_[task_id] = H_IJ_bb_list_thread_end_[task_id];
+}
+
+void SigmaVectorDynamic::sigma_bb_dynamic_task(size_t task_id, size_t num_tasks) {
+    // loop over all determinants
+    const auto& sorted_half_dets = a_sorted_string_list_ui64_.sorted_half_dets();
+    size_t num_half_dets = sorted_half_dets.size();
+
+    // compute contributions from elements stored in memory
+    double H_IJ;
+    size_t posI, posJ;
+    size_t begin_el = H_IJ_bb_list_thread_start_[task_id];
+    size_t end_el = H_IJ_bb_list_thread_end_[task_id];
+    for (size_t el = begin_el; el < end_el; ++el) {
+        std::tie(H_IJ, posI, posJ) = H_IJ_list_[el];
+        temp_sigma_[posI] += H_IJ * temp_b_[posJ];
+    }
+
+    // compute contributions on-the-fly
+    size_t first_group = first_bb_onthefly_group_[task_id];
+    for (size_t group = first_group; group < num_half_dets; group += num_tasks) {
         const auto& Ia = sorted_half_dets[group];
         compute_bb_coupling_compare_group_ui64(Ia, temp_b_);
     }
@@ -318,8 +476,18 @@ void SigmaVectorDynamic::compute_sigma_abab_fast_search_group_ui64_parallel(Shar
     std::vector<std::future<void>> futures;
     int num_tasks = std::thread::hardware_concurrency();
     for (int task_id = 0; task_id < num_tasks; ++task_id) {
-        futures.push_back(std::async(std::launch::async, &SigmaVectorDynamic::sigma_abab_task, this,
-                                     task_id, num_tasks));
+        //        futures.push_back(std::async(std::launch::async,
+        //        &SigmaVectorDynamic::sigma_abab_task, this,
+        //                                     task_id, num_tasks));
+        if (num_builds_ == 0) {
+            futures.push_back(std::async(std::launch::async,
+                                         &SigmaVectorDynamic::sigma_abab_store_task, this, task_id,
+                                         num_tasks));
+        } else {
+            futures.push_back(std::async(std::launch::async,
+                                         &SigmaVectorDynamic::sigma_abab_dynamic_task, this,
+                                         task_id, num_tasks));
+        }
     }
     for (auto& e : futures) {
         e.get();
@@ -339,6 +507,83 @@ void SigmaVectorDynamic::sigma_abab_task(size_t task_id, size_t num_tasks) {
     size_t num_half_dets = sorted_half_dets.size();
     // loop over all determinants
     for (size_t group = task_id; group < num_half_dets; group += num_tasks) {
+        const auto& detIa = sorted_half_dets[group];
+        for (const auto& detJa : sorted_half_dets) {
+            detIJa_common = detIa ^ detJa;
+            int ndiff = ui64_bit_count(detIJa_common);
+            if (ndiff == 2) {
+                int i, a;
+                for (int p = 0; p < nmo_; ++p) {
+                    const bool la_p = ui64_get_bit(detIa, p);
+                    const bool ra_p = ui64_get_bit(detJa, p);
+                    if (la_p ^ ra_p) {
+                        i = la_p ? p : i;
+                        a = ra_p ? p : a;
+                    }
+                }
+                double sign = ui64_slater_sign(detIa, i, a);
+                compute_bb_coupling_compare_singles_group_ui64(detIa, detJa, sign, i, a, temp_b_);
+            }
+        }
+    }
+}
+
+void SigmaVectorDynamic::sigma_abab_store_task(size_t task_id, size_t num_tasks) {
+    UI64Determinant::bit_t detIJa_common;
+    // loop over all determinants
+    const auto& sorted_half_dets = a_sorted_string_list_ui64_.sorted_half_dets();
+    size_t num_half_dets = sorted_half_dets.size();
+    bool store = true;
+    for (size_t group = task_id; group < num_half_dets; group += num_tasks) {
+        const auto& detIa = sorted_half_dets[group];
+        for (const auto& detJa : sorted_half_dets) {
+            detIJa_common = detIa ^ detJa;
+            int ndiff = ui64_bit_count(detIJa_common);
+            if (ndiff == 2) {
+                int i, a;
+                for (int p = 0; p < nmo_; ++p) {
+                    const bool la_p = ui64_get_bit(detIa, p);
+                    const bool ra_p = ui64_get_bit(detJa, p);
+                    if (la_p ^ ra_p) {
+                        i = la_p ? p : i;
+                        a = ra_p ? p : a;
+                    }
+                }
+                double sign = ui64_slater_sign(detIa, i, a);
+                if (store) {
+                    store = compute_bb_coupling_singles_and_store(detIa, detJa, sign, i, a, temp_b_,
+                                                                  task_id);
+                } else {
+                    compute_bb_coupling_compare_singles_group_ui64(detIa, detJa, sign, i, a,
+                                                                   temp_b_);
+                }
+            }
+        }
+        if (store) {
+            first_abab_onthefly_group_[task_id] = group + num_tasks;
+        }
+    }
+}
+
+void SigmaVectorDynamic::sigma_abab_dynamic_task(size_t task_id, size_t num_tasks) {
+    UI64Determinant::bit_t detIJa_common;
+    // loop over all determinants
+    const auto& sorted_half_dets = a_sorted_string_list_ui64_.sorted_half_dets();
+    size_t num_half_dets = sorted_half_dets.size();
+
+    // compute contributions from elements stored in memory
+    double H_IJ;
+    size_t posI, posJ;
+    size_t begin_el = H_IJ_abab_list_thread_start_[task_id];
+    size_t end_el = H_IJ_abab_list_thread_end_[task_id];
+    for (size_t el = begin_el; el < end_el; ++el) {
+        std::tie(H_IJ, posI, posJ) = H_IJ_list_[el];
+        temp_sigma_[posI] += H_IJ * temp_b_[posJ];
+    }
+
+    // compute contributions on-the-fly
+    size_t first_group = first_abab_onthefly_group_[task_id];
+    for (size_t group = first_group; group < num_half_dets; group += num_tasks) {
         const auto& detIa = sorted_half_dets[group];
         for (const auto& detJa : sorted_half_dets) {
             detIJa_common = detIa ^ detJa;
@@ -398,6 +643,7 @@ void SigmaVectorDynamic::compute_aa_coupling_compare_group_ui64(const UI64Determ
         temp_sigma_[posI] += sigma_I;
     }
 }
+
 void SigmaVectorDynamic::compute_bb_coupling_compare_group_ui64(const UI64Determinant::bit_t& Ia,
                                                                 const std::vector<double>& b) {
     const auto& sorted_dets = a_sorted_string_list_ui64_.sorted_dets();
@@ -472,6 +718,163 @@ void SigmaVectorDynamic::compute_bb_coupling_compare_singles_group_ui64(
         }
         temp_sigma_[posI] += sigma_I;
     }
+}
+
+bool SigmaVectorDynamic::compute_aa_coupling_and_store(const UI64Determinant::bit_t& Ib,
+                                                       const std::vector<double>& b,
+                                                       size_t task_id) {
+    bool stored = true;
+    size_t end = H_IJ_aa_list_thread_end_[task_id];
+    size_t limit = H_IJ_list_thread_limit_[task_id];
+
+    const auto& sorted_dets = b_sorted_string_list_ui64_.sorted_dets();
+    const auto& range_I = b_sorted_string_list_ui64_.range(Ib);
+    UI64Determinant::bit_t Ia;
+    UI64Determinant::bit_t Ja;
+    UI64Determinant::bit_t IJa;
+    size_t first_I = range_I.first;
+    size_t last_I = range_I.second;
+    double sigma_I = 0.0;
+    size_t num_elements = 0;
+    for (size_t posI = first_I; posI < last_I; ++posI) {
+        sigma_I = 0.0;
+        Ia = sorted_dets[posI].get_alfa_bits();
+        for (size_t posJ = first_I; posJ < last_I; ++posJ) {
+            Ja = sorted_dets[posJ].get_alfa_bits();
+            // find common bits
+            IJa = Ja ^ Ia;
+            int ndiff = ui64_bit_count(IJa);
+            if (ndiff == 2) {
+                double H_IJ = slater_rules_single_alpha(Ib, Ia, Ja, fci_ints_);
+                sigma_I += H_IJ * b[posJ];
+                // Add this to the Hamiltonian
+                if (end + num_elements < limit) {
+                    H_IJ_list_[end + num_elements] = std::tie(H_IJ, posI, posJ);
+                    num_elements++;
+                } else {
+                    stored = false;
+                }
+            } else if (ndiff == 4) {
+                double H_IJ = slater_rules_double_alpha_alpha(Ia, Ja, fci_ints_);
+                sigma_I += H_IJ * b[posJ];
+                // Add this to the Hamiltonian
+                if (end + num_elements < limit) {
+                    H_IJ_list_[end + num_elements] = std::tie(H_IJ, posI, posJ);
+                    num_elements++;
+                } else {
+                    stored = false;
+                }
+            }
+        }
+        temp_sigma_[posI] += sigma_I;
+    }
+    if (stored) {
+        H_IJ_aa_list_thread_end_[task_id] += num_elements;
+    }
+    return stored;
+}
+
+bool SigmaVectorDynamic::compute_bb_coupling_and_store(const UI64Determinant::bit_t& Ia,
+                                                       const std::vector<double>& b,
+                                                       size_t task_id) {
+    bool stored = true;
+    size_t end = H_IJ_bb_list_thread_end_[task_id];
+    size_t limit = H_IJ_list_thread_limit_[task_id];
+
+    const auto& sorted_dets = a_sorted_string_list_ui64_.sorted_dets();
+    const auto& range_I = a_sorted_string_list_ui64_.range(Ia);
+    UI64Determinant::bit_t Ib;
+    UI64Determinant::bit_t Jb;
+    UI64Determinant::bit_t IJb;
+    size_t first_I = range_I.first;
+    size_t last_I = range_I.second;
+    double sigma_I = 0.0;
+    size_t num_elements = 0;
+    for (size_t posI = first_I; posI < last_I; ++posI) {
+        sigma_I = 0.0;
+        Ib = sorted_dets[posI].get_beta_bits();
+        for (size_t posJ = first_I; posJ < last_I; ++posJ) {
+            Jb = sorted_dets[posJ].get_beta_bits();
+            // find common bits
+            IJb = Jb ^ Ib;
+            int ndiff = ui64_bit_count(IJb);
+            if (ndiff == 2) {
+                double H_IJ = slater_rules_single_beta(Ia, Ib, Jb, fci_ints_);
+                sigma_I += H_IJ * b[posJ];
+                // Add this to the Hamiltonian
+                if (end + num_elements < limit) {
+                    H_IJ_list_[end + num_elements] = std::tie(H_IJ, posI, posJ);
+                    num_elements++;
+                } else {
+                    stored = false;
+                }
+            } else if (ndiff == 4) {
+                double H_IJ = slater_rules_double_beta_beta(Ib, Jb, fci_ints_);
+                sigma_I += H_IJ * b[posJ];
+                // Add this to the Hamiltonian
+                if (end + num_elements < limit) {
+                    H_IJ_list_[end + num_elements] = std::tie(H_IJ, posI, posJ);
+                    num_elements++;
+                } else {
+                    stored = false;
+                }
+            }
+        }
+        temp_sigma_[posI] += sigma_I;
+    }
+    if (stored) {
+        H_IJ_bb_list_thread_end_[task_id] += num_elements;
+    }
+    return stored;
+}
+
+bool SigmaVectorDynamic::compute_bb_coupling_singles_and_store(const UI64Determinant::bit_t& detIa,
+                                                               const UI64Determinant::bit_t& detJa,
+                                                               double sign, int i, int a,
+                                                               const std::vector<double>& b,
+                                                               size_t task_id) {
+    bool stored = true;
+    size_t end = H_IJ_abab_list_thread_end_[task_id];
+    size_t limit = H_IJ_list_thread_limit_[task_id];
+
+    const auto& sorted_dets = a_sorted_string_list_ui64_.sorted_dets();
+    const auto& range_I = a_sorted_string_list_ui64_.range(detIa);
+    const auto& range_J = a_sorted_string_list_ui64_.range(detJa);
+    UI64Determinant::bit_t Ib;
+    UI64Determinant::bit_t Jb;
+    UI64Determinant::bit_t IJb;
+    size_t first_I = range_I.first;
+    size_t last_I = range_I.second;
+    size_t first_J = range_J.first;
+    size_t last_J = range_J.second;
+    double sigma_I = 0.0;
+    size_t num_elements = 0;
+    for (size_t posI = first_I; posI < last_I; ++posI) {
+        sigma_I = 0.0;
+        Ib = sorted_dets[posI].get_beta_bits();
+        for (size_t posJ = first_J; posJ < last_J; ++posJ) {
+            Jb = sorted_dets[posJ].get_beta_bits();
+            // find common bits
+            IJb = Jb ^ Ib;
+            int ndiff = ui64_bit_count(IJb);
+            if (ndiff == 2) {
+                double H_IJ = sign * slater_rules_double_alpha_beta_pre(i, a, Ib, Jb, fci_ints_);
+                sigma_I += H_IJ * b[posJ];
+                // Add this to the Hamiltonian
+                if (end + num_elements < limit) {
+                    H_IJ_list_[end + num_elements] = std::tie(H_IJ, posI, posJ);
+                    num_elements++;
+                } else {
+                    stored = false;
+                }
+            }
+        }
+        temp_sigma_[posI] += sigma_I;
+    }
+    if (stored) {
+        H_IJ_abab_list_thread_end_[task_id] += num_elements;
+    }
+    return stored;
 }
 }
 }

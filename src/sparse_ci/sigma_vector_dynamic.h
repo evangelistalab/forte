@@ -50,6 +50,8 @@ class SigmaVectorDynamic : public SigmaVector {
     std::vector<std::vector<std::pair<size_t, double>>> bad_states_;
 
   protected:
+    /// The number of threads
+    int num_threads_ = 1;
     int nmo_ = 0;
     /// Number of sigma builds
     int num_builds_ = 0;
@@ -64,6 +66,27 @@ class SigmaVectorDynamic : public SigmaVector {
     SortedStringList_UI64 a_sorted_string_list_ui64_;
     SortedStringList_UI64 b_sorted_string_list_ui64_;
 
+    /// The Hamiltonian stored as a list of pairs (H_IJ, I, J)
+    std::vector<std::tuple<double, std::uint32_t, std::uint32_t>> H_IJ_list_;
+    std::vector<size_t> H_IJ_list_thread_limit_;
+
+    std::vector<size_t> H_IJ_aa_list_thread_start_;
+    std::vector<size_t> H_IJ_aa_list_thread_end_;
+
+    std::vector<size_t> H_IJ_bb_list_thread_start_;
+    std::vector<size_t> H_IJ_bb_list_thread_end_;
+
+    std::vector<size_t> H_IJ_abab_list_thread_start_;
+    std::vector<size_t> H_IJ_abab_list_thread_end_;
+
+    std::vector<size_t> first_aa_onthefly_group_;
+    std::vector<size_t> first_bb_onthefly_group_;
+    std::vector<size_t> first_abab_onthefly_group_;
+    /// Stores the position of the first elements of a row of H
+    /// outer vector is for threads (index I, begin, end)
+    //    std::vector<std::vector<std::tuple<size_t,size_t,size_t>>> H_I_first_;
+
+    void print_thread_stats();
     void compute_sigma_scalar(SharedVector sigma, SharedVector b);
     void compute_sigma_aa_fast_search_group_ui64(SharedVector sigma, SharedVector b);
     void compute_sigma_bb_fast_search_group_ui64(SharedVector sigma, SharedVector b);
@@ -77,6 +100,15 @@ class SigmaVectorDynamic : public SigmaVector {
     void sigma_bb_task(size_t task_id, size_t num_tasks);
     void sigma_abab_task(size_t task_id, size_t num_tasks);
 
+    void sigma_aa_store_task(size_t task_id, size_t num_tasks);
+    void sigma_aa_dynamic_task(size_t task_id, size_t num_tasks);
+
+    void sigma_bb_store_task(size_t task_id, size_t num_tasks);
+    void sigma_bb_dynamic_task(size_t task_id, size_t num_tasks);
+
+    void sigma_abab_store_task(size_t task_id, size_t num_tasks);
+    void sigma_abab_dynamic_task(size_t task_id, size_t num_tasks);
+
     void compute_aa_coupling_compare_group_ui64(const UI64Determinant::bit_t& detIb,
                                                 const std::vector<double>& b);
     void compute_bb_coupling_compare_group_ui64(const UI64Determinant::bit_t& detIa,
@@ -85,6 +117,15 @@ class SigmaVectorDynamic : public SigmaVector {
                                                         const UI64Determinant::bit_t& detJa,
                                                         double sign, int i, int a,
                                                         const std::vector<double>& b);
+
+    bool compute_aa_coupling_and_store(const UI64Determinant::bit_t& Ib,
+                                       const std::vector<double>& b, size_t task_id);
+    bool compute_bb_coupling_and_store(const UI64Determinant::bit_t& Ia,
+                                       const std::vector<double>& b, size_t task_id);
+    bool compute_bb_coupling_singles_and_store(const UI64Determinant::bit_t& detIa,
+                                               const UI64Determinant::bit_t& detJa, double sign,
+                                               int i, int a, const std::vector<double>& b,
+                                               size_t task_id);
 };
 }
 }
