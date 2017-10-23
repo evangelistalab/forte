@@ -525,6 +525,7 @@ double AdaptiveCI::compute_energy() {
         sparse_solver.set_spin_project_full(project_out_spin_contaminants_);
         sparse_solver.set_guess_dimension(options_.get_int("DL_GUESS_SIZE"));
         // sparse_solver.set_spin_project_full(false);
+        sparse_solver.set_max_memory(options_.get_int("SIGMA_VECTOR_MAX_MEMORY"));
         sparse_solver.diagonalize_hamiltonian_map(full_space, op_c, PQ_evals, PQ_evecs, nroot_,
                                                   multiplicity_, diag_method_);
     }
@@ -565,6 +566,7 @@ double AdaptiveCI::compute_energy() {
         sparse_solver.set_maxiter_davidson(options_.get_int("DL_MAXITER"));
         sparse_solver.set_spin_project_full(project_out_spin_contaminants_);
         sparse_solver.set_guess_dimension(options_.get_int("DL_GUESS_SIZE"));
+        sparse_solver.set_max_memory(options_.get_int("SIGMA_VECTOR_MAX_MEMORY"));
         sparse_solver.diagonalize_hamiltonian_map(final_wfn_, op_, PQ_evals, PQ_evecs, nroot_,
                                                   multiplicity_, diag_method_);
     }
@@ -682,8 +684,10 @@ void AdaptiveCI::diagonalize_final_and_compute_rdms() {
     //   sparse_solver.set_spin_project_full(project_out_spin_contaminants_);
     sparse_solver.set_guess_dimension(options_.get_int("DL_GUESS_SIZE"));
     sparse_solver.set_spin_project_full(false);
+    sparse_solver.set_max_memory(options_.get_int("SIGMA_VECTOR_MAX_MEMORY"));
     sparse_solver.diagonalize_hamiltonian_map(final_wfn_, op_, final_evals, final_evecs, nroot_,
                                               multiplicity_, diag_method_);
+
 
     print_final(final_wfn_, final_evecs, final_evals);
 
@@ -2574,6 +2578,7 @@ void AdaptiveCI::compute_aci(DeterminantHashVec& PQ_space, SharedMatrix& PQ_evec
     sparse_solver.set_num_vecs(nvec);
     sparse_solver.set_sigma_method(sigma_method);
     sparse_solver.set_spin_project_full(false);
+    sparse_solver.set_max_memory(options_.get_int("SIGMA_VECTOR_MAX_MEMORY"));
     int spin_projection = options_.get_int("ACI_SPIN_PROJECTION");
 
     // if (det_save_)
@@ -3653,6 +3658,8 @@ void AdaptiveCI::add_external_excitations(DeterminantHashVec& ref) {
     sparse_solver.set_guess_dimension(options_.get_int("DL_GUESS_SIZE"));
     sparse_solver.set_num_vecs(options_.get_int("N_GUESS_VEC"));
     sparse_solver.set_sigma_method(options_.get_str("SIGMA_BUILD_TYPE"));
+    sparse_solver.set_max_memory(options_.get_int("SIGMA_VECTOR_MAX_MEMORY"));
+
 
     sparse_solver.diagonalize_hamiltonian_map(ref, op, final_evals, final_evecs, nroot_,
                                               multiplicity_, diag_method_);

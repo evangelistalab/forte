@@ -69,6 +69,8 @@ void SparseCISolver::set_sigma_method(std::string value) { sigma_method_ = value
 
 void SparseCISolver::set_force_diag(bool value) { force_diag_ = value; }
 
+void SparseCISolver::set_max_memory(size_t value) { max_memory_ = value; }
+
 void SparseCISolver::diagonalize_hamiltonian(const std::vector<STLBitsetDeterminant>& space,
                                              SharedVector& evals, SharedMatrix& evecs, int nroot,
                                              int multiplicity, DiagonalizationMethod diag_method) {
@@ -183,7 +185,7 @@ void SparseCISolver::diagonalize_dl_dynamic(const DeterminantHashVec& space, WFN
     evecs.reset(new Matrix("U", dim_space, nroot));
     evals.reset(new Vector("e", nroot));
 
-    SigmaVectorDynamic svd(space, fci_ints_);
+    SigmaVectorDynamic svd(space, fci_ints_, max_memory_);
     SigmaVector* sigma_vector = &svd;
     sigma_vector->add_bad_roots(bad_states_);
     davidson_liu_solver_map(space, sigma_vector, evals, evecs, nroot, multiplicity);

@@ -111,6 +111,10 @@ class SparseCISolver {
     /// Set the size of the guess space
     void set_guess_dimension(size_t value) { dl_guess_ = value; };
 
+    /// Set the maximum amount of memory (in number of doubles)
+    void set_max_memory(size_t value);
+
+
     /// Set the initial guess
     void set_initial_guess(std::vector<std::pair<size_t, double>>& guess);
     void manual_guess(bool value);
@@ -190,6 +194,8 @@ class SparseCISolver {
     size_t dl_guess_ = 200;
     /// Options for forcing diagonalization method
     bool force_diag_ = false;
+    /// Maximum amount of memory available
+    size_t max_memory_ = 0;
 
     /// Additional roots to project out
     std::vector<std::vector<std::pair<size_t, double>>> bad_states_;

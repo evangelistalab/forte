@@ -42,7 +42,8 @@ namespace forte {
  */
 class SigmaVectorDynamic : public SigmaVector {
   public:
-    SigmaVectorDynamic(const DeterminantHashVec& space, std::shared_ptr<FCIIntegrals> fci_ints);
+    SigmaVectorDynamic(const DeterminantHashVec& space, std::shared_ptr<FCIIntegrals> fci_ints,
+                       size_t max_memory);
     ~SigmaVectorDynamic();
     void compute_sigma(SharedVector sigma, SharedVector b);
     void get_diagonal(Vector& diag);
@@ -117,15 +118,15 @@ class SigmaVectorDynamic : public SigmaVector {
                                                         const UI64Determinant::bit_t& detJa,
                                                         double sign, int i, int a,
                                                         const std::vector<double>& b);
+    void compute_bb_coupling_singles_parallel(const UI64Determinant::bit_t& detIa,
+                                              const std::vector<double>& b, size_t task_id);
 
     bool compute_aa_coupling_and_store(const UI64Determinant::bit_t& Ib,
                                        const std::vector<double>& b, size_t task_id);
     bool compute_bb_coupling_and_store(const UI64Determinant::bit_t& Ia,
                                        const std::vector<double>& b, size_t task_id);
-    std::pair<bool, size_t>
-    compute_bb_coupling_singles_and_store(const UI64Determinant::bit_t& detIa,
-                                          const UI64Determinant::bit_t& detJa, double sign, int i,
-                                          int a, const std::vector<double>& b, size_t task_id);
+    bool compute_bb_coupling_singles_and_store(const UI64Determinant::bit_t& detIa,
+                                               const std::vector<double>& b, size_t task_id);
 };
 }
 }
