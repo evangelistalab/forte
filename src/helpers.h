@@ -244,6 +244,9 @@ class ForteTimer {
     /// Return the elapsed time in seconds
     double elapsed();
 
+    /// Reset timer to now
+    void reset() { t_start_ = std::chrono::high_resolution_clock::now(); }
+
   private:
     std::chrono::high_resolution_clock::time_point t_start_;
     std::chrono::high_resolution_clock::time_point t_end_;
@@ -276,7 +279,7 @@ class timer {
 class parallel_timer {
   public:
     parallel_timer(const std::string& name, int rank) : name_(name), rank_(rank) {
-        parallel_timer_on(name_,rank_);
+        parallel_timer_on(name_, rank_);
     }
     ~parallel_timer() { stop(); }
 
@@ -284,7 +287,7 @@ class parallel_timer {
     void stop() {
         if (running_) {
             running_ = false;
-            parallel_timer_off(name_,rank_);
+            parallel_timer_off(name_, rank_);
         }
     }
 
