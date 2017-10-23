@@ -74,7 +74,7 @@ SigmaVectorDynamic::SigmaVectorDynamic(const DeterminantHashVec& space,
       a_sorted_string_list_ui64_(space, fci_ints, STLBitsetDeterminant::SpinType::AlphaSpin),
       b_sorted_string_list_ui64_(space, fci_ints, STLBitsetDeterminant::SpinType::BetaSpin) {
 
-    timer this_timer("SigmaVectorDynamic:creator");
+    timer this_timer("creator");
 
     nmo_ = fci_ints_->nmo();
 
@@ -178,7 +178,7 @@ void SigmaVectorDynamic::get_diagonal(Vector& diag) {
 }
 
 void SigmaVectorDynamic::compute_sigma_scalar(SharedVector sigma, SharedVector b) {
-    timer energy_timer("SigmaVectorDynamic:scalar");
+    timer energy_timer("scalar");
 
     double* sigma_p = sigma->pointer();
     double* b_p = b->pointer();
@@ -191,7 +191,7 @@ void SigmaVectorDynamic::compute_sigma_scalar(SharedVector sigma, SharedVector b
 
 void SigmaVectorDynamic::compute_sigma_aa_fast_search_group_ui64(SharedVector sigma,
                                                                  SharedVector b) {
-    timer energy_timer("SigmaVectorDynamic:sigma_aa");
+    timer energy_timer("sigma_aa");
     for (size_t I = 0; I < size_; ++I)
         temp_sigma_[I] = 0.0;
     for (size_t I = 0; I < size_; ++I) {
@@ -215,7 +215,7 @@ void SigmaVectorDynamic::compute_sigma_aa_fast_search_group_ui64(SharedVector si
 
 void SigmaVectorDynamic::compute_sigma_aa_fast_search_group_ui64_parallel(SharedVector sigma,
                                                                           SharedVector b) {
-    timer energy_timer("SigmaVectorDynamic:sigma_aa");
+    timer energy_timer("sigma_aa");
     for (size_t I = 0; I < size_; ++I)
         temp_sigma_[I] = 0.0;
     for (size_t I = 0; I < size_; ++I) {
@@ -308,7 +308,7 @@ void SigmaVectorDynamic::sigma_aa_dynamic_task(size_t task_id, size_t num_tasks)
 
 void SigmaVectorDynamic::compute_sigma_bb_fast_search_group_ui64(SharedVector sigma,
                                                                  SharedVector b) {
-    timer energy_timer("SigmaVectorDynamic:sigma_bb");
+    timer energy_timer("sigma_bb");
     for (size_t I = 0; I < size_; ++I)
         temp_sigma_[I] = 0.0;
     for (size_t I = 0; I < size_; ++I) {
@@ -332,7 +332,7 @@ void SigmaVectorDynamic::compute_sigma_bb_fast_search_group_ui64(SharedVector si
 
 void SigmaVectorDynamic::compute_sigma_bb_fast_search_group_ui64_parallel(SharedVector sigma,
                                                                           SharedVector b) {
-    timer energy_timer("SigmaVectorDynamic:sigma_bb");
+    timer energy_timer("sigma_bb");
     for (size_t I = 0; I < size_; ++I)
         temp_sigma_[I] = 0.0;
     for (size_t I = 0; I < size_; ++I) {
@@ -412,6 +412,7 @@ void SigmaVectorDynamic::sigma_bb_dynamic_task(size_t task_id, size_t num_tasks)
     for (size_t el = begin_el; el < end_el; ++el) {
         std::tie(H_IJ, posI, posJ) = H_IJ_list_[el];
         temp_sigma_[posI] += H_IJ * temp_b_[posJ];
+        temp_sigma_[posJ] += H_IJ * temp_b_[posI];
     }
 
     // compute contributions on-the-fly
@@ -424,7 +425,7 @@ void SigmaVectorDynamic::sigma_bb_dynamic_task(size_t task_id, size_t num_tasks)
 
 void SigmaVectorDynamic::compute_sigma_abab_fast_search_group_ui64(SharedVector sigma,
                                                                    SharedVector b) {
-    timer energy_timer("SigmaVectorDynamic:sigma_abab");
+    timer energy_timer("sigma_abab");
     for (size_t I = 0; I < size_; ++I)
         temp_sigma_[I] = 0.0;
     for (size_t I = 0; I < size_; ++I) {
@@ -465,7 +466,7 @@ void SigmaVectorDynamic::compute_sigma_abab_fast_search_group_ui64(SharedVector 
 
 void SigmaVectorDynamic::compute_sigma_abab_fast_search_group_ui64_parallel(SharedVector sigma,
                                                                             SharedVector b) {
-    timer energy_timer("SigmaVectorDynamic:sigma_abab");
+    timer energy_timer("sigma_abab");
     for (size_t I = 0; I < size_; ++I)
         temp_sigma_[I] = 0.0;
     for (size_t I = 0; I < size_; ++I) {
@@ -621,7 +622,7 @@ void SigmaVectorDynamic::compute_bb_coupling_compare_group_ui64(const UI64Determ
     for (size_t posI = first_I; posI < last_I; ++posI) {
         sigma_I = 0.0;
         Ib = sorted_dets[posI].get_beta_bits();
-        for (size_t posJ = first_I; posJ < last_I; ++posJ) {
+        for (size_t posJ = posI + 1; posJ < last_I; ++posJ) {
             Jb = sorted_dets[posJ].get_beta_bits();
 #if SIGMA_VEC_DEBUG
             count_bb_total++;
@@ -632,12 +633,14 @@ void SigmaVectorDynamic::compute_bb_coupling_compare_group_ui64(const UI64Determ
             if (ndiff == 2) {
                 double H_IJ = slater_rules_single_beta(Ia, Ib, Jb, fci_ints_);
                 sigma_I += H_IJ * b[posJ];
+                temp_sigma_[posJ] += H_IJ * b[posI];
 #if SIGMA_VEC_DEBUG
                 count_bb++;
 #endif
             } else if (ndiff == 4) {
                 double H_IJ = slater_rules_double_beta_beta(Ib, Jb, fci_ints_);
                 sigma_I += H_IJ * b[posJ];
+                temp_sigma_[posJ] += H_IJ * b[posI];
 #if SIGMA_VEC_DEBUG
                 count_bbbb++;
 #endif
@@ -757,7 +760,7 @@ bool SigmaVectorDynamic::compute_bb_coupling_and_store(const UI64Determinant::bi
     for (size_t posI = first_I; posI < last_I; ++posI) {
         sigma_I = 0.0;
         Ib = sorted_dets[posI].get_beta_bits();
-        for (size_t posJ = first_I; posJ < last_I; ++posJ) {
+        for (size_t posJ = posI + 1; posJ < last_I; ++posJ) {
             Jb = sorted_dets[posJ].get_beta_bits();
             // find common bits
             IJb = Jb ^ Ib;
@@ -765,6 +768,7 @@ bool SigmaVectorDynamic::compute_bb_coupling_and_store(const UI64Determinant::bi
             if (ndiff == 2) {
                 double H_IJ = slater_rules_single_beta(Ia, Ib, Jb, fci_ints_);
                 sigma_I += H_IJ * b[posJ];
+                temp_sigma_[posJ] += H_IJ * b[posI];
                 // Add this to the Hamiltonian
                 if (end + num_elements < limit) {
                     H_IJ_list_[end + num_elements] = std::tie(H_IJ, posI, posJ);
@@ -775,6 +779,7 @@ bool SigmaVectorDynamic::compute_bb_coupling_and_store(const UI64Determinant::bi
             } else if (ndiff == 4) {
                 double H_IJ = slater_rules_double_beta_beta(Ib, Jb, fci_ints_);
                 sigma_I += H_IJ * b[posJ];
+                temp_sigma_[posJ] += H_IJ * b[posI];
                 // Add this to the Hamiltonian
                 if (end + num_elements < limit) {
                     H_IJ_list_[end + num_elements] = std::tie(H_IJ, posI, posJ);
@@ -911,49 +916,5 @@ bool SigmaVectorDynamic::compute_bb_coupling_singles_and_store(const UI64Determi
     }
     return stored;
 }
-
-// std::pair<bool, size_t> SigmaVectorDynamic::compute_bb_coupling_singles_and_store(
-//    const UI64Determinant::bit_t& detIa, const UI64Determinant::bit_t& detJa, double sign, int i,
-//    int a, const std::vector<double>& b, size_t task_id, size_t& group_num_elements) {
-//    bool stored = true;
-//    size_t end = H_IJ_abab_list_thread_end_[task_id];
-//    size_t limit = H_IJ_list_thread_limit_[task_id];
-
-//    const auto& sorted_dets = a_sorted_string_list_ui64_.sorted_dets();
-//    const auto& range_I = a_sorted_string_list_ui64_.range(detIa);
-//    const auto& range_J = a_sorted_string_list_ui64_.range(detJa);
-//    UI64Determinant::bit_t Ib;
-//    UI64Determinant::bit_t Jb;
-//    UI64Determinant::bit_t IJb;
-//    size_t first_I = range_I.first;
-//    size_t last_I = range_I.second;
-//    size_t first_J = range_J.first;
-//    size_t last_J = range_J.second;
-//    double sigma_I = 0.0;
-//    //    size_t num_elements = 0;
-//    for (size_t posI = first_I; posI < last_I; ++posI) {
-//        sigma_I = 0.0;
-//        Ib = sorted_dets[posI].get_beta_bits();
-//        for (size_t posJ = first_J; posJ < last_J; ++posJ) {
-//            Jb = sorted_dets[posJ].get_beta_bits();
-//            // find common bits
-//            IJb = Jb ^ Ib;
-//            int ndiff = ui64_bit_count(IJb);
-//            if (ndiff == 2) {
-//                double H_IJ = sign * slater_rules_double_alpha_beta_pre(i, a, Ib, Jb, fci_ints_);
-//                sigma_I += H_IJ * b[posJ];
-//                // Add this to the Hamiltonian
-//                if (end + group_num_elements < limit) {
-//                    H_IJ_list_[end + group_num_elements] = std::tie(H_IJ, posI, posJ);
-//                    group_num_elements++;
-//                } else {
-//                    stored = false;
-//                }
-//            }
-//        }
-//        temp_sigma_[posI] += sigma_I;
-//    }
-//    return std::make_pair(stored, group_num_elements);
-//}
 }
 }
