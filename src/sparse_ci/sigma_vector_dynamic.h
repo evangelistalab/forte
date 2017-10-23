@@ -36,6 +36,8 @@
 namespace psi {
 namespace forte {
 
+enum class SigmaVectorMode { Dynamic, OnTheFly };
+
 /**
  * @brief The SigmaVectorDynamic class
  * Computes the sigma vector with a dynamic approach
@@ -51,11 +53,13 @@ class SigmaVectorDynamic : public SigmaVector {
     std::vector<std::vector<std::pair<size_t, double>>> bad_states_;
 
   protected:
+    SigmaVectorMode mode_ = SigmaVectorMode::Dynamic;
     /// The number of threads
     int num_threads_ = 1;
     int nmo_ = 0;
     /// Number of sigma builds
     int num_builds_ = 0;
+    double H_threshold_ = 1.0e-14;
     /// Diagonal elements of the Hamiltonian
     std::vector<double> diag_;
     /// A temporary sigma vector of size N_det
@@ -83,50 +87,43 @@ class SigmaVectorDynamic : public SigmaVector {
     std::vector<size_t> first_aa_onthefly_group_;
     std::vector<size_t> first_bb_onthefly_group_;
     std::vector<size_t> first_abab_onthefly_group_;
-    /// Stores the position of the first elements of a row of H
-    /// outer vector is for threads (index I, begin, end)
-    //    std::vector<std::vector<std::tuple<size_t,size_t,size_t>>> H_I_first_;
 
     void print_thread_stats();
+    /// Scalar contribution to sigma
     void compute_sigma_scalar(SharedVector sigma, SharedVector b);
-    void compute_sigma_aa_fast_search_group_ui64(SharedVector sigma, SharedVector b);
-    void compute_sigma_bb_fast_search_group_ui64(SharedVector sigma, SharedVector b);
-    void compute_sigma_abab_fast_search_group_ui64(SharedVector sigma, SharedVector b);
+    /// Alpha-alpha single and double excitation contributions to sigma
+    void compute_sigma_aa(SharedVector sigma, SharedVector b);
+    /// Beta-beta single and double excitation contributions to sigma
+    void compute_sigma_bb(SharedVector sigma, SharedVector b);
+    /// Alpha-beta double excitation contributions to sigma
+    void compute_sigma_abab(SharedVector sigma, SharedVector b);
 
-    void compute_sigma_aa_fast_search_group_ui64_parallel(SharedVector sigma, SharedVector b);
-    void compute_sigma_bb_fast_search_group_ui64_parallel(SharedVector sigma, SharedVector b);
-    void compute_sigma_abab_fast_search_group_ui64_parallel(SharedVector sigma, SharedVector b);
-
-    void sigma_aa_task(size_t task_id, size_t num_tasks);
-    void sigma_bb_task(size_t task_id, size_t num_tasks);
-    void sigma_abab_task(size_t task_id, size_t num_tasks);
-
+    /// Task to compute sigma_aa. Computes sigma and stores part of the Hamiltonian
     void sigma_aa_store_task(size_t task_id, size_t num_tasks);
+    /// Task to compute sigma_aa. Computes sigma using a dynamic approach
     void sigma_aa_dynamic_task(size_t task_id, size_t num_tasks);
 
+    /// Task to compute sigma_bb. Computes sigma and stores part of the Hamiltonian
     void sigma_bb_store_task(size_t task_id, size_t num_tasks);
+    /// Task to compute sigma_bb. Computes sigma using a dynamic approach
     void sigma_bb_dynamic_task(size_t task_id, size_t num_tasks);
 
+    /// Task to compute sigma_abab. Computes sigma and stores part of the Hamiltonian
     void sigma_abab_store_task(size_t task_id, size_t num_tasks);
+    /// Task to compute sigma_abab. Computes sigma using a dynamic approach
     void sigma_abab_dynamic_task(size_t task_id, size_t num_tasks);
-
-    void compute_aa_coupling_compare_group_ui64(const UI64Determinant::bit_t& detIb,
-                                                const std::vector<double>& b);
-    void compute_bb_coupling_compare_group_ui64(const UI64Determinant::bit_t& detIa,
-                                                const std::vector<double>& b);
-    void compute_bb_coupling_compare_singles_group_ui64(const UI64Determinant::bit_t& detIa,
-                                                        const UI64Determinant::bit_t& detJa,
-                                                        double sign, int i, int a,
-                                                        const std::vector<double>& b);
-    void compute_bb_coupling_singles_parallel(const UI64Determinant::bit_t& detIa,
-                                              const std::vector<double>& b, size_t task_id);
 
     bool compute_aa_coupling_and_store(const UI64Determinant::bit_t& Ib,
                                        const std::vector<double>& b, size_t task_id);
     bool compute_bb_coupling_and_store(const UI64Determinant::bit_t& Ia,
                                        const std::vector<double>& b, size_t task_id);
-    bool compute_bb_coupling_singles_and_store(const UI64Determinant::bit_t& detIa,
-                                               const std::vector<double>& b, size_t task_id);
+    bool compute_abab_coupling_and_store(const UI64Determinant::bit_t& detIa,
+                                         const std::vector<double>& b, size_t task_id);
+
+    void compute_aa_coupling(const UI64Determinant::bit_t& detIb, const std::vector<double>& b);
+    void compute_bb_coupling(const UI64Determinant::bit_t& detIa, const std::vector<double>& b);
+    void compute_abab_coupling(const UI64Determinant::bit_t& detIa, const std::vector<double>& b,
+                               size_t task_id);
 };
 }
 }
