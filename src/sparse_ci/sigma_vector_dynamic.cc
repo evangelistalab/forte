@@ -87,7 +87,7 @@ SigmaVectorDynamic::SigmaVectorDynamic(const DeterminantHashVec& space,
     temp_b_.resize(size_);
 
     num_threads_ = std::thread::hardware_concurrency();
-    size_t total_space = 100000000;
+    size_t total_space = 16;
     size_t space_per_thread = total_space / num_threads_;
     for (int t = 0; t < num_threads_; ++t) {
         H_IJ_list_thread_limit_.push_back((t + 1) * space_per_thread);
@@ -536,6 +536,7 @@ void SigmaVectorDynamic::sigma_abab_store_task(size_t task_id, size_t num_tasks)
     bool store = true;
     for (size_t group = task_id; group < num_half_dets; group += num_tasks) {
         const auto& detIa = sorted_half_dets[group];
+        size_t group_num_elements = 0;
         for (const auto& detJa : sorted_half_dets) {
             detIJa_common = detIa ^ detJa;
             int ndiff = ui64_bit_count(detIJa_common);
@@ -551,8 +552,10 @@ void SigmaVectorDynamic::sigma_abab_store_task(size_t task_id, size_t num_tasks)
                 }
                 double sign = ui64_slater_sign(detIa, i, a);
                 if (store) {
-                    store = compute_bb_coupling_singles_and_store(detIa, detJa, sign, i, a, temp_b_,
-                                                                  task_id);
+                    auto store_nel = compute_bb_coupling_singles_and_store(detIa, detJa, sign, i, a,
+                                                                           temp_b_, task_id);
+                    store = store_nel.first;
+                    group_num_elements += store_nel.second;
                 } else {
                     compute_bb_coupling_compare_singles_group_ui64(detIa, detJa, sign, i, a,
                                                                    temp_b_);
@@ -561,6 +564,7 @@ void SigmaVectorDynamic::sigma_abab_store_task(size_t task_id, size_t num_tasks)
         }
         if (store) {
             first_abab_onthefly_group_[task_id] = group + num_tasks;
+            H_IJ_abab_list_thread_end_[task_id] += group_num_elements;
         }
     }
 }
@@ -828,11 +832,9 @@ bool SigmaVectorDynamic::compute_bb_coupling_and_store(const UI64Determinant::bi
     return stored;
 }
 
-bool SigmaVectorDynamic::compute_bb_coupling_singles_and_store(const UI64Determinant::bit_t& detIa,
-                                                               const UI64Determinant::bit_t& detJa,
-                                                               double sign, int i, int a,
-                                                               const std::vector<double>& b,
-                                                               size_t task_id) {
+std::pair<bool, size_t> SigmaVectorDynamic::compute_bb_coupling_singles_and_store(
+    const UI64Determinant::bit_t& detIa, const UI64Determinant::bit_t& detJa, double sign, int i,
+    int a, const std::vector<double>& b, size_t task_id) {
     bool stored = true;
     size_t end = H_IJ_abab_list_thread_end_[task_id];
     size_t limit = H_IJ_list_thread_limit_[task_id];
@@ -871,10 +873,7 @@ bool SigmaVectorDynamic::compute_bb_coupling_singles_and_store(const UI64Determi
         }
         temp_sigma_[posI] += sigma_I;
     }
-    if (stored) {
-        H_IJ_abab_list_thread_end_[task_id] += num_elements;
-    }
-    return stored;
+    return std::make_pair(stored, num_elements);
 }
 }
 }

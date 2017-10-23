@@ -122,10 +122,10 @@ class SigmaVectorDynamic : public SigmaVector {
                                        const std::vector<double>& b, size_t task_id);
     bool compute_bb_coupling_and_store(const UI64Determinant::bit_t& Ia,
                                        const std::vector<double>& b, size_t task_id);
-    bool compute_bb_coupling_singles_and_store(const UI64Determinant::bit_t& detIa,
-                                               const UI64Determinant::bit_t& detJa, double sign,
-                                               int i, int a, const std::vector<double>& b,
-                                               size_t task_id);
+    std::pair<bool, size_t>
+    compute_bb_coupling_singles_and_store(const UI64Determinant::bit_t& detIa,
+                                          const UI64Determinant::bit_t& detJa, double sign, int i,
+                                          int a, const std::vector<double>& b, size_t task_id);
 };
 }
 }
