@@ -3790,6 +3790,38 @@ void AdaptiveCI::spin_analysis()
         
         RDMa->diagonalize(UA, occa); 
         RDMb->diagonalize(UB, occb); 
+
+        int nmo = reference_wavefunction_->nmo();
+        SharedMatrix Ua_full(new Matrix(nmo,nmo)); 
+        SharedMatrix Ub_full(new Matrix(nmo,nmo)); 
+    
+        Ua_full->identity();
+        Ub_full->identity();
+
+        auto actpi = mo_space_info_->get_absolute_mo("ACTIVE");
+        auto nactpi = mo_space_info_->get_dimension("ACTIVE");
+        for( int h = 0; h < nirrep_; ++h ){
+            // skip frozen/restricted docc
+            int nact = nactpi[h]; 
+            for( int i = 0; i < nact; ++i ){
+                for( int j = 0; j < nact; ++j ){
+                    Ua_full->set(actpi[i],actpi[j], UA->get(i,j));
+                    Ub_full->set(actpi[i],actpi[j], UB->get(i,j));
+                }
+            }
+        }
+
+
+        SharedMatrix CA = reference_wavefunction_->Ca();
+        SharedMatrix CB = reference_wavefunction_->Cb();
+
+        SharedMatrix Ca_new = Matrix::doublet( CA, Ua_full, false,false);
+        SharedMatrix Cb_new = Matrix::doublet( CB, Ub_full, false,false);
+
+        CA->copy( Ca_new );
+        CB->copy( Cb_new );
+         
+
     } else {
         outfile->Printf("\n  Computing spin correlation in reference basis \n");
         UA->identity();
