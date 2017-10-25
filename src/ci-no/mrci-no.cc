@@ -36,6 +36,7 @@
 #include "../forte_options.h"
 #include "../sparse_ci_solver.h"
 #include "../stl_bitset_determinant.h"
+#include "mrci-no.h"
 #include "ci-no.h"
 //#include "../hash_vector.h"
 
@@ -51,24 +52,24 @@ namespace forte {
 #define omp_get_num_threads() 1
 #endif
 
-std::string dimension_to_string(Dimension dim) {
-    std::string s = "[";
-    int nirrep = dim.n();
-    for (int h = 0; h < nirrep; h++) {
-        s += (h == 0) ? "" : ",";
-        s += std::to_string(dim[h]);
-    }
-    s += "]";
-    return s;
-}
+//std::string dimension_to_string(Dimension dim) {
+//    std::string s = "[";
+//    int nirrep = dim.n();
+//    for (int h = 0; h < nirrep; h++) {
+//        s += (h == 0) ? "" : ",";
+//        s += std::to_string(dim[h]);
+//    }
+//    s += "]";
+//    return s;
+//}
 
-void set_CINO_options(ForteOptions& foptions) {
-    foptions.add_bool("CINO", false, "Do a CINO computation?");
-    foptions.add_str("CINO_TYPE", "CIS", {"CIS", "CISD"}, "The type of wave function.");
-    foptions.add_int("CINO_NROOT", 1, "The number of roots computed");
-    foptions.add_array("CINO_ROOTS_PER_IRREP",
+void set_MRCINO_options(ForteOptions& foptions) {
+    foptions.add_bool("MRCINO", false, "Do a MRCINO computation?");
+    foptions.add_str("MRCINO_TYPE", "CIS", {"CIS", "CISD"}, "The type of wave function.");
+    foptions.add_int("MRCINO_NROOT", 1, "The number of roots computed");
+    foptions.add_array("MRCINO_ROOTS_PER_IRREP",
                        "The number of excited states per irreducible representation");
-    foptions.add_double("CINO_THRESHOLD", 0.99,
+    foptions.add_double("MRCINO_THRESHOLD", 0.99,
                         "The fraction of NOs to include in the active space");
     foptions.add_int("ACI_MAX_RDM", 1, "Order of RDM to compute");
     /*- Type of spin projection
@@ -78,23 +79,30 @@ void set_CINO_options(ForteOptions& foptions) {
      * 3 - Do 1 and 2 -*/
 
     // add options of whether pass MOSpaceInfo or not
-    foptions.add_bool("CINO_AUTO", false, "Allow the users to choose"
+    foptions.add_bool("MRCINO_AUTO", false, "Allow the users to choose"
                                           "whether pass frozen_docc"
                                           "actice_docc and restricted_docc"
                                           "or not");
 }
 
-CINO::CINO(SharedWavefunction ref_wfn, Options& options, std::shared_ptr<ForteIntegrals> ints,
+MRCINO::MRCINO(SharedWavefunction ref_wfn, Options& options, std::shared_ptr<ForteIntegrals> ints,
            std::shared_ptr<MOSpaceInfo> mo_space_info)
     : Wavefunction(options), ints_(ints), mo_space_info_(mo_space_info) {
     // Copy the wavefunction information
     shallow_copy(ref_wfn);
     reference_wavefunction_ = ref_wfn;
 
-    fci_ints_ = std::make_shared<FCIIntegrals>(ints, mo_space_info_->get_corr_abs_mo("ACTIVE"),
-                                               mo_space_info_->get_corr_abs_mo("RESTRICTED_DOCC"));
+    std::vector<size_t> active_mo(mo_space_info_->size("CORRELATED"));
+    std::iota(active_mo.begin(), active_mo.end(), 0);
 
-    auto active_mo = mo_space_info_->get_corr_abs_mo("ACTIVE");
+    fci_ints_ = std::make_shared<FCIIntegrals>(ints, active_mo, std::vector<size_t>());
+
+
+//    for (auto& i: active_mo){
+//        outfile->Printf("\n %zu", i);
+//    }
+
+
     ambit::Tensor tei_active_aa = ints->aptei_aa_block(active_mo, active_mo, active_mo, active_mo);
     ambit::Tensor tei_active_ab = ints->aptei_ab_block(active_mo, active_mo, active_mo, active_mo);
     ambit::Tensor tei_active_bb = ints->aptei_bb_block(active_mo, active_mo, active_mo, active_mo);
@@ -105,30 +113,30 @@ CINO::CINO(SharedWavefunction ref_wfn, Options& options, std::shared_ptr<ForteIn
     startup();
 }
 
-CINO::~CINO() {}
+MRCINO::~MRCINO() {}
 
-double CINO::compute_energy() {
+double MRCINO::compute_energy() {
     outfile->Printf("\n\n  Computing CIS natural orbitals\n");
 
     CharacterTable ct = molecule_->point_group()->char_table();
 
-    SharedMatrix Density_a(new Matrix(actvpi_, actvpi_));
-    SharedMatrix Density_b(new Matrix(actvpi_, actvpi_));
+    SharedMatrix Density_a(new Matrix(corrpi_, corrpi_));
+    SharedMatrix Density_b(new Matrix(corrpi_, corrpi_));
     int sum = 0;
 
     //Build CAS determinants
-    //std::vector<std::vector<Determinant> > dets_cas = build_dets_cas();
+    std::vector<std::vector<Determinant> > dets_cas = build_dets_cas();
 
     for (int h = 0; h < nirrep_; ++h) {
-        int nsolutions = options_["CINO_ROOTS_PER_IRREP"][h].to_integer();
+        int nsolutions = options_["MRCINO_ROOTS_PER_IRREP"][h].to_integer();
         sum += nsolutions;
         if (nsolutions > 0) {
             outfile->Printf("\n  ==> Irrep %s: %d solutions <==\n", ct.gamma(h).symbol(),
                             nsolutions);
 
             // 1. Build the space of determinants
-
-            std::vector<Determinant> dets = build_dets(h);
+            std::vector<Determinant> dets = build_dets(h, dets_cas);
+//           // std::vector<Determinant> dets = build_dets(h);
 
             // 2. Diagonalize the Hamiltonian in this basis
             std::pair<SharedVector, SharedMatrix> evals_evecs =
@@ -138,18 +146,18 @@ double CINO::compute_energy() {
             std::pair<SharedMatrix, SharedMatrix> gamma =
                 build_density_matrix(dets, evals_evecs.second, nsolutions);
 
-             //Add density matrix to avg_gamma;
+            // Add density matrix to avg_gamma;
             gamma.first->scale(static_cast<double>(nsolutions));
             gamma.second->scale(static_cast<double>(nsolutions));
             Density_a->add(gamma.first);
             Density_b->add(gamma.second);
-
         }
     }
 
     Density_a->scale(1.0 / static_cast<double>(sum));
     Density_b->scale(1.0 / static_cast<double>(sum));
 
+   // Density_a->print();
 
     std::pair<SharedMatrix, SharedMatrix> avg_gamma = std::make_pair(Density_a, Density_b);
 
@@ -157,13 +165,13 @@ double CINO::compute_energy() {
     std::tuple<SharedVector, SharedMatrix, SharedVector, SharedMatrix> no_U =
         diagonalize_density_matrix(avg_gamma);
 
-    // 5. Find optimal active space and transform the orbitals
+//    // 5. Find optimal active space and transform the orbitals
     find_active_space_and_transform(no_U);
 
     return 0.0;
 }
 
-void CINO::startup() {
+void MRCINO::startup() {
     wavefunction_multiplicity_ = 1;
     if (options_["MULTIPLICITY"].has_changed()) {
         wavefunction_multiplicity_ = options_.get_int("MULTIPLICITY");
@@ -181,8 +189,8 @@ void CINO::startup() {
     // Read Options
     rdm_level_ = options_.get_int("ACI_MAX_RDM");
     nactv_ = mo_space_info_->size("ACTIVE");
-    nmo_ = mo_space_info_->size("FROZEN_DOCC") + mo_space_info_->size("RESTRICTED_DOCC")
-           + mo_space_info_->size("ACTIVE") +mo_space_info_->size("FROZEN_UOCC") +mo_space_info_->size("RESTRICTED_UOCC");
+    corr_ =  mo_space_info_->size("CORRELATED");
+
 
 
     actvpi_ = mo_space_info_->get_dimension("ACTIVE");
@@ -190,96 +198,241 @@ void CINO::startup() {
     rdoccpi_ = mo_space_info_->get_dimension("RESTRICTED_DOCC");
     fuoccpi_ = mo_space_info_->get_dimension("FROZEN_UOCC");
     ruoccpi_ = mo_space_info_->get_dimension("RESTRICTED_UOCC");
+    corrpi_ = mo_space_info_->get_dimension("CORRELATED");
 
-    ncmo2_ = nactv_ * nactv_;
+    ncmo2_ = corr_ * corr_;
 
-    aoccpi_ = nalphapi_ - rdoccpi_ - fdoccpi_;
-    cino_auto = options_.get_bool("CINO_AUTO");
+    aoccpi_ = nalphapi_ - fdoccpi_;
+    mrcino_auto = options_.get_bool("MRCINO_AUTO");
 }
 
+std::vector<std::vector<Determinant> > MRCINO:: build_dets_cas(){
 
+    //Build vector of all irrep determinants
+    std::vector<std::vector<Determinant> > dets_cas(nirrep_, std::vector<Determinant>());
 
-std::vector<Determinant> CINO::build_dets(int irrep) {
+    // Compute subspace vectors
+    std::vector<bool> tmp_det_a(nactv_, false);
+    std::vector<bool> tmp_det_b(nactv_, false);
 
-    // build the reference determinant
-
-    std::vector<Determinant> dets;
-
-    std::vector<bool> occupation_a(nactv_);
-    std::vector<bool> occupation_b(nactv_);
-
-    // add the reference determinant
     int offset = 0;
     for (int h = 0; h < nirrep_; h++) {
         int aocc_h = nalphapi_[h] - rdoccpi_[h] - fdoccpi_[h];
         for (int i = 0; i < aocc_h; i++) {
-            occupation_a[i + offset] = true;
+            tmp_det_a[i + offset] = true;
         }
         int bocc_h = nbetapi_[h] - rdoccpi_[h] - fdoccpi_[h];
         for (int i = 0; i < bocc_h; i++) {
-            occupation_b[i + offset] = true;
+            tmp_det_b[i + offset] = true;
         }
         offset += actvpi_[h];
+    }
+    // Make sure we start with the first permutation
+    std::sort(begin(tmp_det_a), end(tmp_det_a));
+    std::sort(begin(tmp_det_b), end(tmp_det_b));
+
+    std::vector<bool> occupation_a(corr_);
+    std::vector<bool> occupation_b(corr_);
+
+     //add the reference determinant
+    offset = 0;
+    for (int h = 0; h < nirrep_; h++) {
+        int aocc_h = nalphapi_[h] - fdoccpi_[h];
+        for (int i = 0; i < aocc_h; i++) {
+            occupation_a[i + offset] = true;
+        }
+        int bocc_h = nbetapi_[h] - fdoccpi_[h];
+        for (int i = 0; i < bocc_h; i++) {
+            occupation_b[i + offset] = true;
+        }
+        offset += corrpi_[h];
+//        outfile->Printf("\n corrpi_ is : %d \n", corrpi_[h]);
     }
 
     Determinant ref(occupation_a, occupation_b);
 
-    // add the reference only to the total symmetric irrep
-    if (irrep == 0) {
-        dets.push_back(ref);
-    }
+    // Generate all permutations, add the correct ones
+    do {
+        do {
+            // Build determinant
+            Determinant det(ref);
+            int offset_corr = 0;
+            int offset_act = 0;
+            int sym = 0;
+            for (int h = 0; h < nirrep_; h++) {
+                int core_irrep = rdoccpi_[h];
+                for (int i = 0; i < actvpi_[h]; ++i) {
+                    int corr_p = i + offset_corr + core_irrep;
+                    int active_p = offset_act + i;
+                    det.set_alfa_bit(corr_p, tmp_det_a[active_p]);
+                    det.set_beta_bit(corr_p, tmp_det_b[active_p]);
+                    if (tmp_det_a[active_p]) {
+                        sym ^= h;
+                    }
+                    if (tmp_det_b[active_p]) {
+                        sym ^= h;
+                    }
+                }
 
-    // alpha single excitation
-    offset = 0;
-    for (int irrep_i = 0; irrep_i < nirrep_; irrep_i++) {
-        // loop over i in irrep h
-        int irrep_a = irrep_i ^ irrep;
-        int offset_vir = 0;
-        for (int h = 0; h < irrep_a; h++) {
-            offset_vir += actvpi_[h];
-        }
-        // loop over occupied orbitals in irrep_i
-        // loop over virtual orbitals in irrep_a
-        int occ_irrep_i = nalphapi_[irrep_i] - rdoccpi_[irrep_i] - fdoccpi_[irrep_i];
-        int occ_irrep_a = nalphapi_[irrep_a] - rdoccpi_[irrep_a] - fdoccpi_[irrep_a];
-        for (int i = 0; i < occ_irrep_i; ++i) {
-            for (int a = occ_irrep_a; a < actvpi_[irrep_a]; ++a) {
-                Determinant single_ia(ref);
-                single_ia.set_alfa_bit(i + offset, false);
-                single_ia.set_alfa_bit(a + offset_vir, true);
-                dets.push_back(single_ia);
-//                single_ia.print();
+                offset_corr += corrpi_[h];
+                offset_act += actvpi_[h];
+
+           }
+            //Check Symmetry and assign to right vector
+            for(int irrep = 0; irrep < nirrep_; irrep++){
+                if (sym == irrep)
+                    dets_cas[irrep].push_back(det);
             }
-        }
-        offset += actvpi_[irrep_i];
+
+
+        } while (std::next_permutation(tmp_det_b.begin(), tmp_det_b.begin() + nactv_));
+    } while (std::next_permutation(tmp_det_a.begin(), tmp_det_a.begin() + nactv_));
+
+//   for(auto& i : dets_cas[0]){
+//       i.print();
+//   }
+   return dets_cas;
+
+}
+
+std::vector<Determinant> MRCINO::build_dets(int irrep, const std::vector<std::vector<Determinant> >& dets_cas) {
+    std::vector<Determinant> dets_irrep = dets_cas[irrep];
+
+        //Build unordered set of irrep determinant;
+    std::unordered_set<Determinant, Determinant::Hash> dets_set;
+    for (auto dets : dets_cas[irrep]){
+        dets_set.emplace(dets);
+
     }
 
-    // beta single excitation
-    offset = 0;
-    for (int irrep_i = 0; irrep_i < nirrep_; irrep_i++) {
-        // loop over i in irrep h
-        int irrep_a = irrep_i ^ irrep;
-        int offset_vir = 0;
-        for (int h = 0; h < irrep_a; h++) {
-            offset_vir += actvpi_[h];
-        }
-        // loop over occupied orbitals in irrep_i
-        // loop over virtual orbitals in irrep_a
-        int occ_irrep_i = nbetapi_[irrep_i] - rdoccpi_[irrep_i] - fdoccpi_[irrep_i];
-        int occ_irrep_a = nbetapi_[irrep_a] - rdoccpi_[irrep_a] - fdoccpi_[irrep_a];
-        for (int i = 0; i < occ_irrep_i; ++i) {
-            for (int a = occ_irrep_a; a < actvpi_[irrep_a]; ++a) {
-                Determinant single_ib(ref);
-                single_ib.set_beta_bit(i + offset, false);
-                single_ib.set_beta_bit(a + offset_vir, true);
-                dets.push_back(single_ib);
-                //                single_ib.print();
+    // alpha excitation
+    for (auto dets : dets_cas[irrep]){
+        int offset = 0;
+        for(int irrep_i = 0; irrep_i < nirrep_; irrep_i++){
+            // i and a orbitals should have same sym
+
+            // core -> virtual
+            // loop over core orbitals in irrep
+            // loop over virtual orbitals in irrep
+            int core_irrep = rdoccpi_[irrep_i];
+            int unvir_irrep = rdoccpi_[irrep_i] + actvpi_[irrep_i];
+            for (int i = 0; i < core_irrep; ++i) {
+                for (int a = unvir_irrep; a < corrpi_[irrep_i]; ++a) {
+                    Determinant single_ia(dets);
+                    single_ia.set_alfa_bit(i + offset, false);
+                    single_ia.set_alfa_bit(a + offset, true);
+                    if(dets_set.count(single_ia) == 0){
+                        dets_irrep.push_back(single_ia);
+
+                    }
+                }
             }
+
+            // core -> active
+            // loop over core orbitals in irrep
+            // loop over active orbitals in irrep
+            for (int a = core_irrep; a < unvir_irrep; ++a) {
+                if(not dets.get_alfa_bit(a + offset)){
+                    for (int i = 0; i < core_irrep; ++i) {
+                        Determinant single_ia(dets);
+                        single_ia.set_alfa_bit(i + offset, false);
+                        single_ia.set_alfa_bit(a + offset, true);
+
+                        if(dets_set.count(single_ia) == 0){
+                            dets_irrep.push_back(single_ia);
+
+                        }
+                    }
+                 }
+            }
+
+            // active -> virtual
+            // loop over active orbitals in irrep
+            // loop over virtual orbitals in irrep
+            for (int i = core_irrep; i < unvir_irrep; ++i) {
+                if(dets.get_alfa_bit(i+ offset)){
+                    for (int a = unvir_irrep; a < corrpi_[irrep_i]; ++a) {
+                        Determinant single_ia(dets);
+                        single_ia.set_alfa_bit(i + offset, false);
+                        single_ia.set_alfa_bit(a + offset, true);
+                        if(dets_set.count(single_ia) == 0){
+                            dets_irrep.push_back(single_ia);
+
+                        }
+
+                    }
+
+                }
+            }
+
+            offset += corrpi_[irrep_i];
+
         }
-        offset += actvpi_[irrep_i];
+
+    // beta excitation
+        offset = 0;
+        for(int irrep_i = 0; irrep_i < nirrep_; irrep_i++){
+
+
+            // core -> virtual
+            // loop over core orbitals in irrep
+            // loop over virtual orbitals in irrep
+            int core_irrep = rdoccpi_[irrep_i];
+            int unvir_irrep = rdoccpi_[irrep_i] + actvpi_[irrep_i];
+            for (int i = 0; i < core_irrep; ++i) {
+                for (int a = unvir_irrep; a < corrpi_[irrep_i]; ++a) {
+                    Determinant single_ib(dets);
+                    single_ib.set_beta_bit(i + offset, false);
+                    single_ib.set_beta_bit(a + offset, true);
+                    if(dets_set.count(single_ib) == 0){
+                        dets_irrep.push_back(single_ib);
+
+                    }
+                }
+            }
+
+            // core -> active
+            // loop over core orbitals in irrep
+            // loop over active orbitals in irrep
+            for (int a = core_irrep; a < unvir_irrep; ++a) {
+                if(not dets.get_beta_bit(a + offset)){
+                    for (int i = 0; i < core_irrep; ++i) {
+                        Determinant single_ib(dets);
+                        single_ib.set_beta_bit(i + offset, false);
+                        single_ib.set_beta_bit(a + offset, true);
+                        if(dets_set.count(single_ib) == 0){
+                            dets_irrep.push_back(single_ib);
+
+                        }
+                    }
+                }
+            }
+
+            // active -> virtual
+            // loop over active orbitals in irrep
+            // loop over virtual orbitals in irrep
+            for (int i = core_irrep; i < unvir_irrep; ++i) {
+                if(dets.get_beta_bit(i + offset)){
+                    for (int a = unvir_irrep; a < corrpi_[irrep_i]; ++a) {
+                        Determinant single_ib(dets);
+                        single_ib.set_beta_bit(i + offset, false);
+                        single_ib.set_beta_bit(a + offset, true);
+                        if(dets_set.count(single_ib) == 0){
+                            dets_irrep.push_back(single_ib);
+
+                        }
+                    }
+                }
+            }
+
+            offset += corrpi_[irrep_i];
+        }
+
     }
 
-    if (options_.get_str("CINO_TYPE") == "CISD") {
+
+
+    if (options_.get_str("MRCINO_TYPE") == "CISD") {
         // alpha-alpha double excitation
         //        for (int i = 0; i < naocc_; ++i) {
         //            for (int j = i + 1; j < naocc_; ++j) {
@@ -327,13 +480,26 @@ std::vector<Determinant> CINO::build_dets(int irrep) {
         //        }
     }
 
+    outfile->Printf("\n size is %d\n", dets_irrep.size());
+//    outfile->Printf("\n cis is :\n");
+//    for (auto& d: dets_irrep) {
+//        d.print();
+//    }
 
-    return dets;
+    return dets_irrep;
 
 }
 /// Diagonalize the Hamiltonian in this basis
 std::pair<SharedVector, SharedMatrix>
-CINO::diagonalize_hamiltonian(const std::vector<Determinant>& dets, int nsolutions) {
+MRCINO::diagonalize_hamiltonian(const std::vector<Determinant>& dets, int nsolutions) {
+
+    /// TODO: remove
+//    for (auto& d: dets) {
+//        d.print();
+//        outfile->Printf("  Energy: %20.15f", fci_ints_->energy(d));
+//    }
+
+
     std::pair<SharedVector, SharedMatrix> evals_evecs;
 
     SparseCISolver sparse_solver(fci_ints_);
@@ -345,6 +511,7 @@ CINO::diagonalize_hamiltonian(const std::vector<Determinant>& dets, int nsolutio
     sparse_solver.set_spin_project_full(true);
     sparse_solver.set_print_details(true);
 
+    outfile->Printf("\n size is %d\n", dets.size());
     sparse_solver.diagonalize_hamiltonian(dets, evals_evecs.first, evals_evecs.second, nsolutions,
                                           wavefunction_multiplicity_, DLSolver);
 
@@ -360,7 +527,7 @@ CINO::diagonalize_hamiltonian(const std::vector<Determinant>& dets, int nsolutio
 }
 /// Build the density matrix
 std::pair<SharedMatrix, SharedMatrix>
-CINO::build_density_matrix(const std::vector<Determinant>& dets, SharedMatrix evecs, int n) {
+MRCINO::build_density_matrix(const std::vector<Determinant>& dets, SharedMatrix evecs, int n) {
     std::vector<double> average_a_(ncmo2_);
     std::vector<double> average_b_(ncmo2_);
     std::vector<double> template_a_;
@@ -398,43 +565,43 @@ CINO::build_density_matrix(const std::vector<Determinant>& dets, SharedMatrix ev
     //    Dimension nmopi = reference_wavefunction_->nmopi();
     //    Dimension ncmopi = mo_space_info_->get_dimension("CORRELATED");
 
-    std::shared_ptr<Matrix> opdm_a(new Matrix("OPDM_A", actvpi_, actvpi_));
-    std::shared_ptr<Matrix> opdm_b(new Matrix("OPDM_B", actvpi_, actvpi_));
+    std::shared_ptr<Matrix> opdm_a(new Matrix("OPDM_A", corrpi_, corrpi_));
+    std::shared_ptr<Matrix> opdm_b(new Matrix("OPDM_B", corrpi_, corrpi_));
 
     int offset = 0;
     for (int h = 0; h < nirrep_; h++) {
-        for (int u = 0; u < actvpi_[h]; u++) {
-            for (int v = 0; v < actvpi_[h]; v++) {
-                opdm_a->set(h, u, v, ordm_a_[(u + offset) * nactv_ + v + offset]);
-                opdm_b->set(h, u, v, ordm_b_[(u + offset) * nactv_ + v + offset]);
+        for (int u = 0; u < corrpi_[h]; u++) {
+            for (int v = 0; v < corrpi_[h]; v++) {
+                opdm_a->set(h, u, v, ordm_a_[(u + offset) * corr_ + v + offset]);
+                opdm_b->set(h, u, v, ordm_b_[(u + offset) * corr_ + v + offset]);
             }
         }
-        offset += actvpi_[h];
+        offset += corrpi_[h];
     }
-    opdm_a->print();
+
     return std::make_pair(opdm_a, opdm_b);
 }
 
 /// Diagonalize the density matrix
 std::tuple<SharedVector, SharedMatrix, SharedVector, SharedMatrix>
-CINO::diagonalize_density_matrix(std::pair<SharedMatrix, SharedMatrix> gamma) {
+MRCINO::diagonalize_density_matrix(std::pair<SharedMatrix, SharedMatrix> gamma) {
     std::pair<SharedVector, SharedMatrix> no_U;
 
-    SharedVector OCC_A(new Vector("ALPHA OCCUPATION", actvpi_));
-    SharedVector OCC_B(new Vector("BETA OCCUPATION", actvpi_));
-    SharedMatrix NO_A(new Matrix(actvpi_, actvpi_));
-    SharedMatrix NO_B(new Matrix(actvpi_, actvpi_));
+    SharedVector OCC_A(new Vector("ALPHA OCCUPATION", corrpi_));
+    SharedVector OCC_B(new Vector("BETA OCCUPATION", corrpi_));
+    SharedMatrix NO_A(new Matrix(corrpi_, corrpi_));
+    SharedMatrix NO_B(new Matrix(corrpi_, corrpi_));
 
     Dimension zero_dim(nirrep_);
-    Dimension aoccpi = nalphapi_ - rdoccpi_ - fdoccpi_;
-    Dimension avirpi = actvpi_ - aoccpi;
+    Dimension aoccpi = nalphapi_ - fdoccpi_;
+    Dimension avirpi = corrpi_ - aoccpi;
 
     // Grab the alpha occupied/virtual block of the density matrix
     Slice aocc_slice(zero_dim, aoccpi);
     SharedMatrix gamma_a_occ = gamma.first->get_block(aocc_slice, aocc_slice);
     gamma_a_occ->set_name("Gamma alpha occupied");
 
-    Slice avir_slice(aoccpi, actvpi_);
+    Slice avir_slice(aoccpi, corrpi_);
     SharedMatrix gamma_a_vir = gamma.first->get_block(avir_slice, avir_slice);
     gamma_a_vir->set_name("Gamma alpha virtual");
 
@@ -445,44 +612,27 @@ CINO::diagonalize_density_matrix(std::pair<SharedMatrix, SharedMatrix> gamma) {
     SharedVector OCC_A_vir(new Vector("Virtual ALPHA OCCUPATION", avirpi));
     gamma_a_occ->diagonalize(NO_A_occ, OCC_A_occ, descending);
     gamma_a_vir->diagonalize(NO_A_vir, OCC_A_vir, descending);
-//        OCC_A_occ->print();
-//        OCC_A_vir->print();
+//    OCC_A_occ->print();
+//    OCC_A_vir->print();
 
     OCC_A->set_block(aocc_slice, OCC_A_occ);
     NO_A->set_block(aocc_slice, aocc_slice, NO_A_occ);
     OCC_A->set_block(avir_slice, OCC_A_vir);
     NO_A->set_block(avir_slice, avir_slice, NO_A_vir);
 
-
-
     /// Diagonalize Beta density matrix
-    Dimension boccpi = nbetapi_ - rdoccpi_ - fdoccpi_;
-    Dimension bvirpi = actvpi_ - boccpi;
+    Dimension boccpi = nbetapi_ - fdoccpi_;
+    Dimension bvirpi = corrpi_ - boccpi;
 
     // Grab the beta occupied/virtual block of the density matrix
     Slice bocc_slice(zero_dim, boccpi);
     SharedMatrix gamma_b_occ = gamma.second->get_block(bocc_slice, bocc_slice);
     gamma_b_occ->set_name("Gamma beta occupied");
 
-    Slice bvir_slice(boccpi, actvpi_);
+    Slice bvir_slice(boccpi, corrpi_);
     SharedMatrix gamma_b_vir = gamma.second->get_block(bvir_slice, bvir_slice);
     gamma_b_vir->set_name("Gamma beta virtual");
 
-
-//    for (int h = 0; h < nirrep_; h++) {
-//        for (int i = 0; i < boccpi[h]; i++) {
-//            for (int j = 0; j < boccpi[h]; j++) {
-//                gamma_b_occ->set(h, i, j, gamma.second->get(h, i, j));
-//            }
-//        }
-//    }
-//    for (int h = 0; h < nirrep_; h++) {
-//        for (int a = 0; a < bvirpi[h]; a++) {
-//            for (int b = 0; b < bvirpi[h]; b++) {
-//                gamma_b_vir->set(h, a, b, gamma.second->get(h, a + boccpi[h], b + boccpi[h]));
-//            }
-//        }
-//    }
 
     // Diagonalize beta density matrix
     SharedMatrix NO_B_occ(new Matrix(boccpi, boccpi));
@@ -491,39 +641,24 @@ CINO::diagonalize_density_matrix(std::pair<SharedMatrix, SharedMatrix> gamma) {
     SharedVector OCC_B_vir(new Vector("Virtual BETA OCCUPATION", bvirpi));
     gamma_b_occ->diagonalize(NO_B_occ, OCC_B_occ, descending);
     gamma_b_vir->diagonalize(NO_B_vir, OCC_B_vir, descending);
-    //    OCC_B_occ->print();
-    //    OCC_B_vir->print();
+//        OCC_B_occ->print();
+//        OCC_B_vir->print();
 
     OCC_B->set_block(bocc_slice, OCC_B_occ);
     NO_B->set_block(bocc_slice, bocc_slice, NO_B_occ);
     OCC_B->set_block(bvir_slice, OCC_B_vir);
     NO_B->set_block(bvir_slice, bvir_slice, NO_B_vir);
 
-//    for (int h = 0; h < nirrep_; h++) {
-//        for (int i = 0; i < boccpi[h]; i++) {
-//            OCC_B->set(h, i, OCC_B_occ->get(h, i));
-//            for (int j = 0; j < boccpi[h]; j++) {
-//                NO_B->set(h, i, j, NO_B_occ->get(h, i, j));
-//            }
-//        }
-//    }
-//    for (int h = 0; h < nirrep_; h++) {
-//        for (int a = 0; a < bvirpi[h]; a++) {
-//            OCC_B->set(h, a + boccpi[h], OCC_B_vir->get(h, a));
-//            for (int b = 0; b < bvirpi[h]; b++) {
-//                NO_B->set(h, a + boccpi[h], b + boccpi[h], NO_B_vir->get(h, a, b));
-//            }
-//        }
-//    }
 
-    //    gamma.first->diagonalize(NO_A, OCC_A, descending);
-    //    gamma.second->diagonalize(NO_B, OCC_B, descending);
-
+//        gamma.first->diagonalize(NO_A, OCC_A, descending);
+//        gamma.second->diagonalize(NO_B, OCC_B, descending);
+//        OCC_A->print();
+//        OCC_B->print();
     return std::make_tuple(OCC_A, NO_A, OCC_B, NO_B);
 }
 
 // Find optimal active space and transform the orbitals
-void CINO::find_active_space_and_transform(
+void MRCINO::find_active_space_and_transform(
     std::tuple<SharedVector, SharedMatrix, SharedVector, SharedMatrix> no_U) {
 
     SharedMatrix Ua = std::make_shared<Matrix>("U", nmopi_, nmopi_);
@@ -533,8 +668,8 @@ void CINO::find_active_space_and_transform(
             Ua->set(h, p, p, 1.0);
         }
     }
-    Slice actv_slice(fdoccpi_ + rdoccpi_, fdoccpi_ + rdoccpi_ + actvpi_);
-    Ua->set_block(actv_slice, actv_slice, NO_A);
+    Slice corr_slice(fdoccpi_, fdoccpi_ + corrpi_);
+    Ua->set_block(corr_slice, corr_slice, NO_A);
 
     SharedMatrix Ca_new = Matrix::doublet(Ca_, Ua);
     Ca_->copy(Ca_new);
@@ -555,7 +690,7 @@ void CINO::find_active_space_and_transform(
     std::vector<std::tuple<double, int, int>> sorted_avir; // (non,irrep,index)
     double sum_v = 0.0;
     for (int h = 0; h < nirrep_; h++) {
-        for (int a = aoccpi_[h]; a < actvpi_[h]; a++) {
+        for (int a = aoccpi_[h]; a < corrpi_[h]; a++) {
             sum_v += OCC_A->get(h, a);
             sorted_avir.push_back(std::make_tuple(OCC_A->get(h, a), h, a));
         }
@@ -565,7 +700,7 @@ void CINO::find_active_space_and_transform(
     std::sort(sorted_aocc.rbegin(), sorted_aocc.rend());
     std::sort(sorted_avir.rbegin(), sorted_avir.rend());
 
-    double cino_threshold = options_.get_double("CINO_THRESHOLD");
+    double mrcino_threshold = options_.get_double("MRCINO_THRESHOLD");
 
     Dimension nactv_occ(nirrep_);
     double partial_sum_o = 0.0;
@@ -574,7 +709,7 @@ void CINO::find_active_space_and_transform(
         int h = std::get<1>(non_h_p);
         partial_sum_o += w;
         nactv_occ[h] += 1;
-        if (partial_sum_o / sum_o > cino_threshold)
+        if (partial_sum_o / sum_o > mrcino_threshold)
             break;
     }
 
@@ -585,7 +720,7 @@ void CINO::find_active_space_and_transform(
         int h = std::get<1>(non_h_p);
         partial_sum_v += w;
         nactv_vir[h] += 1;
-        if (partial_sum_v / sum_v > cino_threshold)
+        if (partial_sum_v / sum_v > mrcino_threshold)
             break;
     }
 
@@ -596,14 +731,14 @@ void CINO::find_active_space_and_transform(
 
     Dimension noci_fdocc = fdoccpi_;
     Dimension noci_actv = nactv_occ + nactv_vir;
-    Dimension noci_rdocc = rdoccpi_ + aoccpi_ - nactv_occ;
+    Dimension noci_rdocc = aoccpi_ - nactv_occ;
 
     outfile->Printf("\n  FROZEN_DOCC     = %s", dimension_to_string(noci_fdocc).c_str());
     outfile->Printf("\n  RESTRICTED_DOCC = %s", dimension_to_string(noci_rdocc).c_str());
     outfile->Printf("\n  ACTIVE          = %s", dimension_to_string(noci_actv).c_str());
 
     // Pass the MOSpaceInfo
-    if (cino_auto) {
+    if (mrcino_auto) {
         for (int h = 0; h < nirrep_; h++) {
             options_["RESTRICTED_DOCC"].add(h);
             options_["ACTIVE"].add(h);
