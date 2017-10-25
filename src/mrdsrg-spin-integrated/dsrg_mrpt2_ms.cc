@@ -42,7 +42,7 @@ double DSRG_MRPT2::compute_energy_multi_state() {
     if (nentry > 1) {
         outfile->Printf("\n\n  Warning: States with different symmetry are "
                         "found in the list of AVG_STATES.");
-        outfile->Printf("\n             Each symmetry will be considered separately here.");
+        outfile->Printf("\n           Each symmetry will be considered separately here.");
     }
 
     // get character table
@@ -54,9 +54,8 @@ double DSRG_MRPT2::compute_energy_multi_state() {
 
     // multi-state calculation
     std::vector<std::vector<double>> Edsrg_ms;
-    std::string dsrg_multi_state = options_.get_str("DSRG_MULTI_STATE");
 
-    if (dsrg_multi_state.find("SA") != std::string::npos) {
+    if (multi_state_algorithm_.find("SA") != std::string::npos) {
         Edsrg_ms = compute_energy_sa();
     } else {
         Edsrg_ms = compute_energy_xms();
@@ -89,9 +88,6 @@ std::vector<std::vector<double>> DSRG_MRPT2::compute_energy_sa() {
     // compute DSRG-MRPT2 energy using SA densities
     compute_energy();
 
-    // transfer integrals
-    transfer_integrals();
-
     // get character table
     CharacterTable ct = Process::environment.molecule()->point_group()->char_table();
     std::vector<std::string> irrep_symbol;
@@ -105,12 +101,8 @@ std::vector<std::vector<double>> DSRG_MRPT2::compute_energy_sa() {
         "Nonet",   "Decaet",  "11-et",   "12-et",   "13-et",   "14-et",  "15-et",  "16-et",
         "17-et",   "18-et",   "19-et",   "20-et",   "21-et",   "22-et",  "23-et",  "24-et"};
 
-    // prepare FCI integrals
-    std::shared_ptr<FCIIntegrals> fci_ints =
-        std::make_shared<FCIIntegrals>(ints_, actv_mos_, core_mos_);
-    fci_ints->set_active_integrals(Hbar2_.block("aaaa"), Hbar2_.block("aAaA"),
-                                   Hbar2_.block("AAAA"));
-    fci_ints->compute_restricted_one_body_operator();
+    // obtain the all-active DSRG transformed Hamiltonian
+    auto fci_ints = compute_Heff();
 
     // get effective one-electron integral (DSRG transformed)
     BlockedTensor oei = BTF_->build(tensor_type_, "temp1", spin_cases({"aa"}));
@@ -122,9 +114,9 @@ std::vector<std::vector<double>> DSRG_MRPT2::compute_energy_sa() {
     std::vector<std::vector<double>> Edsrg_sa(nentry, std::vector<double>());
 
     // call FCI_MO if SA_FULL and CAS_TYPE == CAS
-    if (options_.get_str("DSRG_MULTI_STATE") == "SA_FULL" &&
+    if (multi_state_algorithm_ == "SA_FULL" &&
         options_.get_str("CAS_TYPE") == "CAS") {
-        FCI_MO fci_mo(reference_wavefunction_, options_, ints_, mo_space_info_);
+        FCI_MO fci_mo(reference_wavefunction_, options_, ints_, mo_space_info_, fci_ints);
         fci_mo.compute_energy();
         auto eigens = fci_mo.eigens();
         for (int n = 0; n < nentry; ++n) {
@@ -139,11 +131,20 @@ std::vector<std::vector<double>> DSRG_MRPT2::compute_energy_sa() {
             // de-normal-order DSRG dipole integrals
             for (int z = 0; z < 3; ++z) {
                 std::string name = "Dipole " + dm_dirs_[z] + " Integrals";
-                deGNO_ints(name, Mbar0_[z], Mbar1_[z], Mbar2_[z]);
+                if (options_.get_bool("FORM_MBAR3")) {
+                    deGNO_ints(name, Mbar0_[z], Mbar1_[z], Mbar2_[z], Mbar3_[z]);
+                } else {
+                    deGNO_ints(name, Mbar0_[z], Mbar1_[z], Mbar2_[z]);
+                }
             }
 
             // compute permanent dipoles
-            auto dm_relax = fci_mo.compute_relaxed_dm(Mbar0_, Mbar1_, Mbar2_);
+            std::map<std::string, std::vector<double>> dm_relax;
+            if (options_.get_bool("FORM_MBAR3")) {
+                dm_relax = fci_mo.compute_relaxed_dm(Mbar0_, Mbar1_, Mbar2_, Mbar3_);
+            } else {
+                dm_relax = fci_mo.compute_relaxed_dm(Mbar0_, Mbar1_, Mbar2_);
+            }
 
             print_h2("SA-DSRG-PT2 Dipole Moment (in a.u.) Summary");
             outfile->Printf("\n    %14s  %10s  %10s  %10s", "State", "X", "Y", "Z");
@@ -161,7 +162,12 @@ std::vector<std::vector<double>> DSRG_MRPT2::compute_energy_sa() {
             outfile->Printf("\n    %s", dash.c_str());
 
             // oscillator strength
-            auto osc = fci_mo.compute_relaxed_osc(Mbar1_, Mbar2_);
+            std::map<std::string, std::vector<double>> osc;
+            if (options_.get_bool("FORM_MBAR3")) {
+                osc = fci_mo.compute_relaxed_osc(Mbar1_, Mbar2_, Mbar3_);
+            } else {
+                osc = fci_mo.compute_relaxed_osc(Mbar1_, Mbar2_);
+            }
 
             print_h2("SA-DSRG-PT2 Oscillator Strength (in a.u.) Summary");
             outfile->Printf("\n    %32s  %10s  %10s  %10s  %10s", "State", "X", "Y", "Z", "Total");
@@ -231,6 +237,7 @@ std::vector<std::vector<double>> DSRG_MRPT2::compute_energy_sa() {
                 fcisolver.set_fci_iterations(options_.get_int("FCI_MAXITER"));
                 fcisolver.set_collapse_per_root(options_.get_int("DL_COLLAPSE_PER_ROOT"));
                 fcisolver.set_subspace_per_root(options_.get_int("DL_SUBSPACE_PER_ROOT"));
+                fcisolver.set_integral_pointer(fci_ints);
 
                 // compute energy and fill in results
                 fcisolver.compute_energy();
@@ -368,7 +375,7 @@ std::vector<std::vector<double>> DSRG_MRPT2::compute_energy_xms() {
         "Nonet",   "Decaet",  "11-et",   "12-et",   "13-et",   "14-et",  "15-et",  "16-et",
         "17-et",   "18-et",   "19-et",   "20-et",   "21-et",   "22-et",  "23-et",  "24-et"};
 
-    // prepare FCI integrals
+    // prepare FCI integrals (a fake one)
     std::shared_ptr<FCIIntegrals> fci_ints =
         std::make_shared<FCIIntegrals>(ints_, actv_mos_, core_mos_);
     //    ambit::Tensor actv_aa = ints_->aptei_aa_block(aactv_mos_, aactv_mos_,

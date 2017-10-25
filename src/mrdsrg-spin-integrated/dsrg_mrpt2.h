@@ -47,7 +47,7 @@
 #include "../blockedtensorfactory.h"
 #include "../mrdsrg-helper/dsrg_time.h"
 #include "../mrdsrg-helper/dsrg_source.h"
-#include "../stl_bitset_determinant.h"
+#include "../sparse_ci/stl_bitset_determinant.h"
 #include "../fci/fci_integrals.h"
 #include "master_mrdsrg.h"
 
@@ -63,7 +63,7 @@ class DSRG_MRPT2 : public MASTER_DSRG {
      * @param ref_wfn The reference wavefunction object
      * @param options The main options object
      * @param ints A pointer to an allocated integral object
-     * @param mo_space_info The MOSpaceInfo object
+     * @param mo_space_info A pointer to the MOSpaceInfo object
      */
     DSRG_MRPT2(Reference reference, SharedWavefunction ref_wfn, Options& options,
                std::shared_ptr<ForteIntegrals> ints, std::shared_ptr<MOSpaceInfo> mo_space_info);
@@ -73,6 +73,12 @@ class DSRG_MRPT2 : public MASTER_DSRG {
 
     /// Compute the DSRG-MRPT2 energy
     virtual double compute_energy();
+
+    /// Compute one-electron density of DSRG
+    /// Important: T1 and T2 are de-normal-ordered!
+    ambit::BlockedTensor compute_OE_density(BlockedTensor& T1, BlockedTensor& T2, BlockedTensor& D1,
+                                            BlockedTensor& D2, BlockedTensor& D3,
+                                            const bool& transition);
 
     /// Compute the DSRG-MRPT2 energy with relaxed reference (once)
     double compute_energy_relaxed();
@@ -135,7 +141,7 @@ class DSRG_MRPT2 : public MASTER_DSRG {
     /// Called in the destructor
     void cleanup();
     /// Print a summary of the options
-    void print_summary();
+    void print_options_summary();
 
     /// CASCI eigen values and eigen vectors for state averaging
     std::vector<std::vector<std::pair<SharedVector, double>>> eigens_;
@@ -253,10 +259,16 @@ class DSRG_MRPT2 : public MASTER_DSRG {
     // => Dipole related <= //
 
     /// Compute DSRG transformed dipole integrals
-    void compute_pt2_dm();
+    void print_dm_pt2();
     /// Compute DSRG transformed dipole integrals for a given direction
-    void compute_pt2_dm_helper(BlockedTensor& M, double& Mbar0, BlockedTensor& Mbar1,
-                               BlockedTensor& Mbar2);
+    void compute_dm1d_pt2(BlockedTensor& M, double& Mbar0, BlockedTensor& Mbar1,
+                          BlockedTensor& Mbar2);
+    /// Compute DSRG transformed dipole integrals for a given direction
+    void compute_dm1d_pt2(BlockedTensor& M, double& Mbar0, BlockedTensor& Mbar1,
+                          BlockedTensor& Mbar2, BlockedTensor& Mbar3);
+
+    /// Compute DSRG-PT2 correction for unrelaxed density
+    BlockedTensor compute_pt2_unrelaxed_opdm();
 
     // => Reference relaxation <= //
 

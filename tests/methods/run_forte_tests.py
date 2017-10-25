@@ -42,11 +42,11 @@ ct_tests = ["ct-1","ct-2","ct-3","ct-4","ct-5","ct-6","ct-7-fc"]
 dsrg_tests = ["dsrg-1","dsrg-2"]
 mrdsrg_tests = ["mrdsrg-pt2-1","mrdsrg-pt2-2","mrdsrg-pt2-3","mrdsrg-pt2-4"]
 dsrg_mrpt3_tests = ["dsrg-mrpt3-1","dsrg-mrpt3-2","dsrg-mrpt3-3","dsrg-mrpt3-4","dsrg-mrpt3-5",
-                    "dsrg-mrpt3-6-sa"]
+                    "dsrg-mrpt3-6-sa","dsrg-mrpt3-7-CO","dsrg-mrpt3-8-sa-C2H4"]
 dsrg_mrpt2_tests = ["mr-dsrg-pt2-1","mr-dsrg-pt2-2","mr-dsrg-pt2-3","mr-dsrg-pt2-4",
                     "dsrg-mrpt2-1","dsrg-mrpt2-2","dsrg-mrpt2-3","dsrg-mrpt2-4","dsrg-mrpt2-5",
                     "dsrg-mrpt2-6","dsrg-mrpt2-7-casscf-natorbs","dsrg-mrpt2-8-sa",
-                    "dsrg-mrpt2-9-xms",
+                    "dsrg-mrpt2-9-xms","dsrg-mrpt2-10-CO","dsrg-mrpt2-11-sa-C2H4",
                     "cd-dsrg-mrpt2-1","cd-dsrg-mrpt2-2","cd-dsrg-mrpt2-3","cd-dsrg-mrpt2-4",
                     "cd-dsrg-mrpt2-5","cd-dsrg-mrpt2-6","cd-dsrg-mrpt2-7-sa",
                     "df-dsrg-mrpt2-1","df-dsrg-mrpt2-2","df-dsrg-mrpt2-3","df-dsrg-mrpt2-4",

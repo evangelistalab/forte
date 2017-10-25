@@ -182,6 +182,7 @@ void MOSpaceInfo::read_options(Options& options) {
                             "orbital spaces.  Total unassigned MOs for irrep "
                             "%d is %d.",
                             h, unassigned[h]);
+        exit(1);
         }
     }
 

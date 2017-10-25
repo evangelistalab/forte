@@ -42,7 +42,7 @@ void forte_old_options(Options& options) {
     /*- The symmetry of the electronic state. (zero based) -*/
     options.add_int("ROOT_SYM", 0);
 
-    /*- The multiplicity (2S + 1 )of the electronic state.
+    /*- The multiplicity (2S + 1) of the electronic state.
      *  For example, 1 = singlet, 2 = doublet, 3 = triplet, ...
      *  If a value is provided it overrides the multiplicity
      *  of the SCF solution. -*/

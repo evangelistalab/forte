@@ -117,6 +117,10 @@ void set_DSRG_options(ForteOptions& foptions) {
     foptions.add_bool("FORM_HBAR3", false,
                       "Form 3-body Hbar (only used in dsrg-mrpt2 with SA_SUB for testing)");
 
+    /*- Form 3-Body Mbar (DSRG dipole) (Test for DSRG-PT2) -*/
+    foptions.add_bool("FORM_MBAR3", false,
+                      "Form 3-body mbar (only used in dsrg-mrpt2 for testing)");
+
     /*- DSRG Perturbation -*/
     foptions.add_bool("DSRGPT", true,
                       "Renormalize (if true) the integrals (only used in toy code mcsrgpt2)");

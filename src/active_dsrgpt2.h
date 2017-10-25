@@ -50,7 +50,7 @@
 #include "mrdsrg-spin-integrated/dsrg_mrpt3.h"
 #include "mrdsrg-spin-integrated/three_dsrg_mrpt2.h"
 #include "reference.h"
-#include "stl_bitset_determinant.h"
+#include "sparse_ci/stl_bitset_determinant.h"
 
 namespace psi {
 namespace forte {

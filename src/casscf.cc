@@ -105,14 +105,15 @@ void CASSCF::compute_casscf() {
 
     int diis_count = 0;
 
-    print_h2("CASSCF Iteration");
-    outfile->Printf("\n iter    ||g||           Delta_E            E_CASSCF    "
-                    "   CONV_TYPE");
-
-    E_casscf_ = Process::environment.globals["SCF ENERGY"];
-    outfile->Printf("\n E_casscf: %8.8f", E_casscf_);
-    double E_casscf_old = 0.0;
+    E_casscf_ = 0.0;
+    double E_casscf_old = 0.0, Ediff = 0.0;
     SharedMatrix C_start(this->Ca()->clone());
+    double econv = options_.get_double("CASSCF_E_CONVERGENCE");
+    double gconv = options_.get_double("CASSCF_G_CONVERGENCE");
+
+    print_h2("CASSCF Iteration");
+    outfile->Printf("\n iter    ||g||           Delta_E            E_CASSCF       CONV_TYPE");
+
     for (int iter = 0; iter < maxiter; iter++) {
         Timer casscf_total_iter;
 
@@ -125,8 +126,7 @@ void CASSCF::compute_casscf() {
         iter_con.push_back(iter);
 
         /// Perform a CAS-CI using either York's code or Francesco's
-        /// If CASSCF_DEBUG_PRINTING is on, will compare CAS-CI with SPIN-FREE
-        /// RDM
+        /// If CASSCF_DEBUG_PRINTING is on, will compare CAS-CI with SPIN-FREE RDM
         E_casscf_old = E_casscf_;
         if (print_ > 0) {
             outfile->Printf("\n\n  Performing a CAS with %s", options_.get_str("CAS_TYPE").c_str());
@@ -165,12 +165,15 @@ void CASSCF::compute_casscf() {
         orbital_optimizer.update();
         double g_norm = orbital_optimizer.orbital_gradient_norm();
 
-        if ((std::fabs(E_casscf_old - E_casscf_) < options_.get_double("CASSCF_E_CONVERGENCE")) &&
-            (g_norm < options_.get_double("CASSCF_G_CONVERGENCE")) && (iter > 1)) {
+        Ediff = E_casscf_ - E_casscf_old;
+        if ((std::fabs(Ediff) < econv) && (g_norm < gconv) && (iter > 1)) {
 
-            outfile->Printf("\n\n @E_CASSCF: = %12.12f \n\n", E_casscf_);
-            outfile->Printf("\n Norm of orbital_gradient is %8.8f", g_norm);
-            outfile->Printf("\n\n Energy difference: %12.12f", std::fabs(E_casscf_old - E_casscf_));
+            outfile->Printf("\n %4d   %10.12f   %10.12f   %10.12f  %10.6f s", iter, g_norm, Ediff,
+                            E_casscf_, casscf_total_iter.get());
+
+            outfile->Printf(
+                "\n\n A miracle has come to pass. The CASSCF iterations have converged.");
+            outfile->Printf("\n @E(CASSCF) = %18.12f \n", E_casscf_);
             break;
         }
 
@@ -213,17 +216,16 @@ void CASSCF::compute_casscf() {
         if (iter >= diis_start && do_diis == true && g_norm < diis_gradient_norm) {
             diis_start_label = "DIIS";
         }
-        outfile->Printf("\n %4d   %10.12f   %10.12f   %10.12f  %10.6f s  %4s", iter, g_norm,
-                        std::fabs(E_casscf_ - E_casscf_old), E_casscf_, casscf_total_iter.get(),
-                        diis_start_label.c_str());
+        outfile->Printf("\n %4d   %10.12f   %10.12f   %10.12f  %10.6f s  %4s", iter, g_norm, Ediff,
+                        E_casscf_, casscf_total_iter.get(), diis_start_label.c_str());
     }
     // if(casscf_debug_print_)
     //{
     //    overlap_orbitals(this->Ca(), C_start);
     //}
-    if (options_.get_bool("MONITOR_SA_SOLUTION")) {
-        overlap_coefficients();
-    }
+    //    if (options_.get_bool("MONITOR_SA_SOLUTION")) {
+    //        overlap_coefficients();
+    //    }
     diis_manager->delete_diis_file();
     diis_manager.reset();
 
@@ -235,7 +237,7 @@ void CASSCF::compute_casscf() {
     Process::environment.globals["CASSCF_ENERGY"] = E_casscf_;
     Timer retrans_ints;
     if (print_ > 0) {
-        outfile->Printf("\n Overall retranformation of integrals takes %6.4f s.",
+        outfile->Printf("\n Overall retranformation of integrals takes %6.4f s.\n",
                         retrans_ints.get());
     }
 
@@ -967,30 +969,30 @@ void CASSCF::set_up_sa_fci() {
 
     E_casscf_ = sa_fcisolver.compute_energy();
     cas_ref_ = sa_fcisolver.reference();
-    if (options_.get_bool("MONITOR_SA_SOLUTION")) {
-        std::vector<std::shared_ptr<FCIWfn>> StateAveragedFCISolver =
-            sa_fcisolver.StateAveragedCISolution();
-        CISolutions_.push_back(StateAveragedFCISolver);
-    }
+    //    if (options_.get_bool("MONITOR_SA_SOLUTION")) {
+    //        std::vector<std::shared_ptr<FCIWfn>> StateAveragedFCISolver =
+    //            sa_fcisolver.StateAveragedCISolution();
+    //        CISolutions_.push_back(StateAveragedFCISolver);
+    //    }
 }
 void CASSCF::write_orbitals_molden() {
     SharedVector occ_vector(new Vector(nirrep_, nmopi_));
     view_modified_orbitals(reference_wavefunction_, this->Ca(), this->epsilon_a(), occ_vector);
 }
-void CASSCF::overlap_coefficients() {
-    outfile->Printf("\n iter  Overlap_{i-1} Overlap_{i}");
-    for (size_t iter = 1; iter < CISolutions_.size(); ++iter) {
-        for (size_t cisoln = 0; cisoln < CISolutions_[iter].size(); cisoln++) {
-            for (size_t j = 0; j < CISolutions_[iter].size(); j++) {
-                if (std::fabs(CISolutions_[0][cisoln]->dot(CISolutions_[iter][j])) > 0.90) {
-                    outfile->Printf("\n %d:%d %d:%d %8.8f", 0, cisoln, iter, j,
-                                    CISolutions_[0][cisoln]->dot(CISolutions_[iter][j]));
-                }
-            }
-        }
-        outfile->Printf("\n");
-    }
-}
+// void CASSCF::overlap_coefficients() {
+//    outfile->Printf("\n iter  Overlap_{i-1} Overlap_{i}");
+//    for (size_t iter = 1; iter < CISolutions_.size(); ++iter) {
+//        for (size_t cisoln = 0; cisoln < CISolutions_[iter].size(); cisoln++) {
+//            for (size_t j = 0; j < CISolutions_[iter].size(); j++) {
+//                if (std::fabs(CISolutions_[0][cisoln]->dot(CISolutions_[iter][j])) > 0.90) {
+//                    outfile->Printf("\n %d:%d %d:%d %8.8f", 0, cisoln, iter, j,
+//                                    CISolutions_[0][cisoln]->dot(CISolutions_[iter][j]));
+//                }
+//            }
+//        }
+//        outfile->Printf("\n");
+//    }
+//}
 std::pair<ambit::Tensor, std::vector<double>> CASSCF::CI_Integrals() {
     std::vector<std::vector<double>> oei_vector = compute_restricted_docc_operator();
 

@@ -41,11 +41,12 @@
 #include "../blockedtensorfactory.h"
 #include "../mrdsrg-helper/dsrg_source.h"
 #include "../mrdsrg-helper/dsrg_time.h"
+#include "master_mrdsrg.h"
 
 namespace psi {
 namespace forte {
 
-class THREE_DSRG_MRPT2 : public Wavefunction {
+class THREE_DSRG_MRPT2 : public MASTER_DSRG {
   public:
     /**
      * THREE_DSRG_MRPT2 Constructor
@@ -53,17 +54,17 @@ class THREE_DSRG_MRPT2 : public Wavefunction {
      * @param ref_wfn The reference wavefunction object
      * @param options The main options object
      * @param ints A pointer to an allocated integral object
-     * @param mo_space_info The MOSpaceInfo object
+     * @param mo_space_info A pointer to the MOSpaceInfo object
      */
     THREE_DSRG_MRPT2(Reference reference, SharedWavefunction ref_wfn, Options& options,
                      std::shared_ptr<ForteIntegrals> ints,
                      std::shared_ptr<MOSpaceInfo> mo_space_info);
 
     /// Destructor
-    ~THREE_DSRG_MRPT2();
+    virtual ~THREE_DSRG_MRPT2();
 
     /// Compute the DSRG-MRPT2 energy
-    double compute_energy();
+    virtual double compute_energy();
 
     /// Allow the reference to relax
     void relax_reference_once();
@@ -101,20 +102,11 @@ class THREE_DSRG_MRPT2 : public Wavefunction {
   protected:
     // => Class data <= //
 
-    /// The reference object
-    Reference reference_;
-
-    /// The energy of the reference
-    double Eref_;
-
-    /// The frozen-core energy
-    double frozen_core_energy_;
-
     /// Include internal amplitudes or not
     bool internal_amp_;
+    /// Include which part of internal amplitudes?
+    std::string internal_amp_select_;
 
-    /// The molecular integrals required by MethodBase
-    std::shared_ptr<ForteIntegrals> ints_;
     /// The type of SCF reference
     std::string ref_type_;
     /// The number of corrleated MO
@@ -132,22 +124,12 @@ class THREE_DSRG_MRPT2 : public Wavefunction {
     /// The number of restricted unoccupied orbitals per irrep (virtual)
     Dimension ruoccpi_;
 
-    /// List of alpha core MOs
-    std::vector<size_t> acore_mos_;
-    size_t core_;
-    /// List of alpha active MOs
-    std::vector<size_t> aactv_mos_;
-    size_t active_;
-    /// List of alpha virtual MOs
-    std::vector<size_t> avirt_mos_;
-    size_t virtual_;
-
-    /// List of beta core MOs
-    std::vector<size_t> bcore_mos_;
-    /// List of beta active MOs
-    std::vector<size_t> bactv_mos_;
-    /// List of beta virtual MOs
-    std::vector<size_t> bvirt_mos_;
+    /// Number of core orbitals
+    size_t ncore_;
+    /// Number of active orbitals
+    size_t nactive_;
+    /// Number of virutal orbitals
+    size_t nvirtual_;
 
     /// List of active active occupied MOs (relative to active)
     std::vector<size_t> actv_occ_mos_;
@@ -159,37 +141,9 @@ class THREE_DSRG_MRPT2 : public Wavefunction {
     /// List of eigenvalues for fock beta
     std::vector<double> Fb_;
 
-    /// Map from all the MOs to the alpha core
-    std::map<size_t, size_t> mos_to_acore_;
-    /// Map from all the MOs to the alpha active
-    std::map<size_t, size_t> mos_to_aactv_;
-    /// Map from all the MOs to the alpha virtual
-    std::map<size_t, size_t> mos_to_avirt_;
-
-    /// Map from all the MOs to the beta core
-    std::map<size_t, size_t> mos_to_bcore_;
-    /// Map from all the MOs to the beta active
-    std::map<size_t, size_t> mos_to_bactv_;
-    /// Map from all the MOs to the beta virtual
-    std::map<size_t, size_t> mos_to_bvirt_;
-
-    /// The flow parameter
-    double s_;
-    /// Source operator
-    std::string source_;
-    /// Threshold for the Taylor expansion of f(z) = (1-exp(-z^2))/z
-    double taylor_threshold_;
-    /// The dsrg source operator
-    std::shared_ptr<DSRG_SOURCE> dsrg_source_;
-
     // => Tensors <= //
-    ambit::TensorType tensor_type_;
     ambit::BlockedTensor H_;
     ambit::BlockedTensor F_;
-    ambit::BlockedTensor F_no_renorm_;
-    ambit::BlockedTensor Gamma1_;
-    ambit::BlockedTensor Eta1_;
-    ambit::BlockedTensor Lambda2_;
     ambit::BlockedTensor Delta1_;
     ambit::BlockedTensor RDelta1_;
     ambit::BlockedTensor T1_;
@@ -201,9 +155,6 @@ class THREE_DSRG_MRPT2 : public Wavefunction {
     ambit::BlockedTensor T2_;
     ambit::BlockedTensor V_;
     ambit::BlockedTensor ThreeIntegral_;
-    ambit::BlockedTensor H0_;
-    ambit::BlockedTensor Hbar1_;
-    ambit::BlockedTensor Hbar2_;
 
     /// A vector of strings that avoids creating ccvv indices
     std::vector<std::string> no_hhpp_;
@@ -215,7 +166,7 @@ class THREE_DSRG_MRPT2 : public Wavefunction {
     /// Compute frozen natural orbitals
     /// Called in the destructor
     void cleanup();
-    void print_summary();
+    void print_options_summary();
 
     double renormalized_denominator(double D);
 
@@ -279,55 +230,23 @@ class THREE_DSRG_MRPT2 : public Wavefunction {
     double E_VT2_4PH();
     double E_VT2_6();
 
-    /// Timings for computing the commutators
-    DSRG_TIME dsrg_time_;
-
-    /// Compute zero-body Hbar truncated to 2nd-order
-    double Hbar0_ = 0.0;
-
-    /// Compute one-body term of commutator [H1, T1]
-    void H1_T1_C1(ambit::BlockedTensor& H1, ambit::BlockedTensor& T1, const double& alpha,
-                  ambit::BlockedTensor& C1);
-    /// Compute one-body term of commutator [H1, T2]
-    void H1_T2_C1(ambit::BlockedTensor& H1, ambit::BlockedTensor& T2, const double& alpha,
-                  ambit::BlockedTensor& C1);
-    /// Compute one-body term of commutator [H2, T1]
-    void H2_T1_C1(ambit::BlockedTensor& H2, ambit::BlockedTensor& T1, const double& alpha,
-                  ambit::BlockedTensor& C1);
-    /// Compute one-body term of commutator [H2, T2]
-    void H2_T2_C1(ambit::BlockedTensor& H2, ambit::BlockedTensor& T2, const double& alpha,
-                  ambit::BlockedTensor& C1);
-
-    /// Compute two-body term of commutator [H2, T1]
-    void H2_T1_C2(ambit::BlockedTensor& H2, ambit::BlockedTensor& T1, const double& alpha,
-                  ambit::BlockedTensor& C2);
-    /// Compute two-body term of commutator [H1, T2]
-    void H1_T2_C2(ambit::BlockedTensor& H1, ambit::BlockedTensor& T2, const double& alpha,
-                  ambit::BlockedTensor& C2);
-    /// Compute two-body term of commutator [H2, T2]
-    void H2_T2_C2(ambit::BlockedTensor& H2, ambit::BlockedTensor& T2, const double& alpha,
-                  ambit::BlockedTensor& C2);
-
     void de_normal_order();
 
-    std::vector<double> relaxed_energy();
+    std::vector<double> relaxed_energy(std::shared_ptr<FCIIntegrals> fci_ints);
 
-    /// Print levels
-    int print_;
     /// Print detailed timings
     bool detail_time_ = false;
 
-    /// This function will remove the indices that do not have at least one
-    /// active index
-    /// This function generates all possible MO spaces and spin components
-    /// Param:  std::string is the lables - "cav"
-    /// Will take a string like cav and generate all possible combinations of
-    /// this
-    /// for a four character string
-    std::shared_ptr<BlockedTensorFactory> BTF_;
+//    /// This function will remove the indices that do not have at least one
+//    /// active index
+//    /// This function generates all possible MO spaces and spin components
+//    /// Param:  std::string is the lables - "cav"
+//    /// Will take a string like cav and generate all possible combinations of
+//    /// this
+//    /// for a four character string
+//    std::shared_ptr<BlockedTensorFactory> BTF_;
 
-    /// The MOSpace object
-    std::shared_ptr<MOSpaceInfo> mo_space_info_;
+    /// Integral type (DF, CD, DISKDF)
     IntegralType integral_type_;
 
     /// Effective alpha one-electron integrals (used in denormal ordering)
@@ -350,6 +269,14 @@ class THREE_DSRG_MRPT2 : public Wavefunction {
     /// Combine a separated 2D ambit::Tensor
     void combine_tensor(ambit::Tensor& tens, ambit::Tensor& tens_h, const Dimension& irrep,
                         const int& h);
+
+    // => Dipole related <= //
+
+    /// Compute DSRG transformed dipole integrals
+    void print_dm_pt2();
+    /// Compute DSRG transformed dipole integrals for a given direction
+    void compute_dm1d_pt2(BlockedTensor& M, double& Mbar0, BlockedTensor& Mbar1,
+                          BlockedTensor& Mbar2);
 
   private:
     // maximum number of threads

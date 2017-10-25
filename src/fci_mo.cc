@@ -63,6 +63,9 @@ void set_FCI_MO_options(ForteOptions& foptions) {
 
     /*- Threshold for printing CI vectors -*/
     foptions.add_double("FCIMO_PRINT_CIVEC", 0.05, "The printing threshold for CI vectors");
+
+    /*- Automatic weight switching -*/
+    foptions.add_double("FCIMO_SA_WEIGHTS_GAMMA", 0.0, "FCIMO weight gamma");
 }
 
 FCI_MO::FCI_MO(SharedWavefunction ref_wfn, Options& options, std::shared_ptr<ForteIntegrals> ints,
@@ -2888,6 +2891,112 @@ FCI_MO::compute_relaxed_dm(const std::vector<double>& dm0, std::vector<BlockedTe
 }
 
 std::map<std::string, std::vector<double>>
+FCI_MO::compute_relaxed_dm(const std::vector<double>& dm0, std::vector<BlockedTensor>& dm1,
+                           std::vector<BlockedTensor>& dm2, std::vector<BlockedTensor>& dm3) {
+    std::map<std::string, std::vector<double>> out;
+
+    CharacterTable ct = Process::environment.molecule()->point_group()->char_table();
+    std::vector<std::string> mt{"Singlet", "Doublet", "Triplet", "Quartet", "Quintet",
+                                "Sextet",  "Septet",  "Octet",   "Nonet",   "Decaet"};
+
+    double dm0_sum = std::fabs(dm0[0]) + std::fabs(dm0[1]) + std::fabs(dm0[2]);
+    std::vector<bool> do_dm;
+    for (int z = 0; z < 3; ++z) {
+        do_dm.push_back(std::fabs(dm0[z]) > 1.0e-12 ? true : false);
+    }
+
+    std::string pg = ct.symbol();
+    int width = 2;
+    if (pg == "cs" || pg == "d2h") {
+        width = 3;
+    } else if (pg == "c1") {
+        width = 1;
+    }
+    auto generate_name = [&](const int& multi, const int& root, const int& irrep) {
+        std::string symbol = ct.gamma(irrep).symbol();
+        std::stringstream name_ss;
+        name_ss << std::setw(2) << root << " " << std::setw(7) << mt[multi - 1] << " "
+                << std::setw(width) << symbol;
+        return name_ss.str();
+    };
+
+    // if SS, read from determinant_ and eigen_; otherwise, read from p_spaces_ and eigens_
+    if (sa_info_.size() == 0) {
+        std::string name = generate_name(multi_, root_, root_sym_);
+        std::vector<double> dm(3, 0.0);
+
+        // prepare CI_RDMS
+        int dim = (eigen_[0].first)->dim();
+        size_t eigen_size = eigen_.size();
+        SharedMatrix evecs(new Matrix("evecs", dim, eigen_size));
+        for (int i = 0; i < eigen_size; ++i) {
+            evecs->set_column(0, i, (eigen_[i]).first);
+        }
+
+        // CI_RDMS for the targeted root
+        CI_RDMS ci_rdms(options_, fci_ints_, determinant_, evecs, root_, root_);
+        ci_rdms.set_symmetry(root_sym_);
+
+        if (dm0_sum > 1.0e-12) {
+            // compute RDMS and put into BlockedTensor format
+            ambit::BlockedTensor D1 = compute_n_rdm(ci_rdms, 1);
+            ambit::BlockedTensor D2 = compute_n_rdm(ci_rdms, 2);
+            ambit::BlockedTensor D3 = compute_n_rdm(ci_rdms, 3);
+
+            // loop over directions
+            for (int z = 0; z < 3; ++z) {
+                if (do_dm[z]) {
+                    dm[z] = relaxed_dm_helper(dm0[z], dm1[z], dm2[z], dm3[z], D1, D2, D3);
+                }
+            }
+        }
+        out[name] = dm;
+
+    } else {
+        int nentry = sa_info_.size();
+        for (int n = 0; n < nentry; ++n) {
+            // get current symmetry, multiplicity, nroots, weights
+            int irrep, multi, nroots;
+            std::vector<double> weights;
+            std::tie(irrep, multi, nroots, weights) = sa_info_[n];
+
+            // eigen vectors for current symmetry
+            int dim = (eigens_[n][0].first)->dim();
+            size_t eigen_size = eigens_[n].size();
+            SharedMatrix evecs(new Matrix("evecs", dim, eigen_size));
+            for (int i = 0; i < eigen_size; ++i) {
+                evecs->set_column(0, i, (eigens_[n][i]).first);
+            }
+
+            // loop over nroots for current symmetry
+            for (int i = 0; i < nroots; ++i) {
+                std::string name = generate_name(multi, i, irrep);
+                std::vector<double> dm(3, 0.0);
+
+                CI_RDMS ci_rdms(options_, fci_ints_, p_spaces_[n], evecs, i, i);
+                ci_rdms.set_symmetry(irrep);
+
+                if (dm0_sum > 1.0e-12) {
+                    // compute RDMS and put into BlockedTensor format
+                    ambit::BlockedTensor D1 = compute_n_rdm(ci_rdms, 1);
+                    ambit::BlockedTensor D2 = compute_n_rdm(ci_rdms, 2);
+                    ambit::BlockedTensor D3 = compute_n_rdm(ci_rdms, 3);
+
+                    // loop over directions
+                    for (int z = 0; z < 3; ++z) {
+                        if (do_dm[z]) {
+                            dm[z] = relaxed_dm_helper(dm0[z], dm1[z], dm2[z], dm3[z], D1, D2, D3);
+                        }
+                    }
+                }
+                out[name] = dm;
+            }
+        }
+    }
+    return out;
+}
+
+std::map<std::string, std::vector<double>>
 FCI_MO::compute_relaxed_osc(std::vector<BlockedTensor>& dm1, std::vector<BlockedTensor>& dm2) {
     std::map<std::string, std::vector<double>> out;
 
@@ -3008,6 +3117,130 @@ FCI_MO::compute_relaxed_osc(std::vector<BlockedTensor>& dm1, std::vector<Blocked
     return out;
 }
 
+std::map<std::string, std::vector<double>>
+FCI_MO::compute_relaxed_osc(std::vector<BlockedTensor>& dm1, std::vector<BlockedTensor>& dm2,
+                            std::vector<BlockedTensor>& dm3) {
+    std::map<std::string, std::vector<double>> out;
+
+    CharacterTable ct = Process::environment.molecule()->point_group()->char_table();
+    std::vector<std::string> mt{"Singlet", "Doublet", "Triplet", "Quartet", "Quintet",
+                                "Sextet",  "Septet",  "Octet",   "Nonet",   "Decaet"};
+
+    std::string pg = ct.symbol();
+    int width = 2;
+    if (pg == "cs" || pg == "d2h") {
+        width = 3;
+    } else if (pg == "c1") {
+        width = 1;
+    }
+    auto generate_name = [&](const int& multi0, const int& root0, const int& irrep0,
+                             const int& multi1, const int& root1, const int& irrep1) {
+        std::string symbol0 = ct.gamma(irrep0).symbol();
+        std::string symbol1 = ct.gamma(irrep1).symbol();
+        std::stringstream name_ss;
+        name_ss << std::setw(2) << root0 << " " << std::setw(7) << mt[multi0 - 1] << " "
+                << std::setw(width) << symbol0 << " -> " << std::setw(2) << root1 << " "
+                << std::setw(7) << mt[multi1 - 1] << " " << std::setw(width) << symbol1;
+        return name_ss.str();
+    };
+
+    int nentry = sa_info_.size();
+    for (int A = 0; A < nentry; ++A) {
+        int irrep0, multi0, nroots0;
+        std::vector<double> weights0;
+        std::tie(irrep0, multi0, nroots0, weights0) = sa_info_[A];
+
+        int ndets0 = (eigens_[A][0].first)->dim();
+        SharedMatrix evecs0(new Matrix("evecs", ndets0, nroots0));
+        for (int i = 0; i < nroots0; ++i) {
+            evecs0->set_column(0, i, (eigens_[A][i]).first);
+        }
+
+        // oscillator strength of the same symmetry
+        for (int i = 0; i < nroots0; ++i) {
+            for (int j = i + 1; j < nroots0; ++j) {
+                std::string name = generate_name(multi0, i, irrep0, multi0, j, irrep0);
+
+                double Eex = eigens_[A][j].second - eigens_[A][i].second;
+                std::vector<double> osc(3, 0.0);
+
+                CI_RDMS ci_rdms(options_, fci_ints_, p_spaces_[A], evecs0, i, j);
+
+                ambit::BlockedTensor D1 = compute_n_rdm(ci_rdms, 1);
+                ambit::BlockedTensor D2 = compute_n_rdm(ci_rdms, 2);
+                ambit::BlockedTensor D3 = compute_n_rdm(ci_rdms, 3);
+
+                for (int z = 0; z < 3; ++z) {
+                    double dm = relaxed_dm_helper(0.0, dm1[z], dm2[z], dm3[z], D1, D2, D3);
+                    osc[z] = 2.0 / 3.0 * Eex * dm * dm;
+                }
+
+                out[name] = osc;
+            }
+        }
+
+        // oscillator strength of different symmetry
+        for (int B = A + 1; B < nentry; ++B) {
+            int irrep1, multi1, nroots1;
+            std::vector<double> weights1;
+            std::tie(irrep1, multi1, nroots1, weights1) = sa_info_[B];
+
+            // combine two eigen vectors
+            int ndets1 = (eigens_[B][0].first)->dim();
+            int ndets = ndets0 + ndets1;
+            int nroots = nroots0 + nroots1;
+            SharedMatrix evecs(new Matrix("evecs", ndets, nroots));
+
+            for (int n = 0; n < nroots0; ++n) {
+                SharedVector evec0 = evecs0->get_column(0, n);
+                SharedVector evec(new Vector("combined evec0 " + std::to_string(n), ndets));
+                for (size_t i = 0; i < ndets0; ++i) {
+                    evec->set(i, evec0->get(i));
+                }
+                evecs->set_column(0, n, evec);
+            }
+
+            for (int n = 0; n < nroots1; ++n) {
+                SharedVector evec1 = eigens_[B][n].first;
+                SharedVector evec(new Vector("combined evec1 " + std::to_string(n), ndets));
+                for (size_t i = 0; i < ndets1; ++i) {
+                    evec->set(i + ndets0, evec1->get(i));
+                }
+                evecs->set_column(0, n + nroots0, evec);
+            }
+
+            // combine p_space
+            std::vector<STLBitsetDeterminant> p_space(p_spaces_[A]);
+            std::vector<STLBitsetDeterminant>& p_space1 = p_spaces_[B];
+            p_space.insert(p_space.end(), p_space1.begin(), p_space1.end());
+
+            for (int i = 0; i < nroots0; ++i) {
+                for (int j = 0; j < nroots1; ++j) {
+                    std::string name = generate_name(multi0, i, irrep0, multi1, j, irrep1);
+
+                    double Eex = eigens_[B][j].second - eigens_[A][i].second;
+                    std::vector<double> osc(3, 0.0);
+
+                    CI_RDMS ci_rdms(options_, fci_ints_, p_space, evecs, i, j + nroots0);
+
+                    ambit::BlockedTensor D1 = compute_n_rdm(ci_rdms, 1);
+                    ambit::BlockedTensor D2 = compute_n_rdm(ci_rdms, 2);
+                    ambit::BlockedTensor D3 = compute_n_rdm(ci_rdms, 3);
+
+                    for (int z = 0; z < 3; ++z) {
+                        double dm = relaxed_dm_helper(0.0, dm1[z], dm2[z], dm3[z], D1, D2, D3);
+                        osc[z] = 2.0 / 3.0 * Eex * dm * dm;
+                    }
+
+                    out[name] = osc;
+                }
+            }
+        }
+    }
+
+    return out;
+}
+
 ambit::BlockedTensor FCI_MO::compute_n_rdm(CI_RDMS& cirdm, const int& order) {
     if (order < 1 || order > 3) {
         throw PSIEXCEPTION("Cannot compute RDMs except 1, 2, 3.");
@@ -3052,6 +3285,26 @@ double FCI_MO::relaxed_dm_helper(const double& dm0, BlockedTensor& dm1, BlockedT
     dm_out += 0.25 * dm2["uvxy"] * D2["uvxy"];
     dm_out += 0.25 * dm2["UVXY"] * D2["UVXY"];
     dm_out += dm2["uVxY"] * D2["uVxY"];
+
+    return dm_out;
+}
+
+double FCI_MO::relaxed_dm_helper(const double& dm0, BlockedTensor& dm1, BlockedTensor& dm2,
+                                 BlockedTensor& dm3, BlockedTensor& D1, BlockedTensor& D2,
+                                 BlockedTensor& D3) {
+    double dm_out = dm0;
+
+    dm_out += dm1["uv"] * D1["uv"];
+    dm_out += dm1["UV"] * D1["UV"];
+
+    dm_out += 0.25 * dm2["uvxy"] * D2["uvxy"];
+    dm_out += 0.25 * dm2["UVXY"] * D2["UVXY"];
+    dm_out += dm2["uVxY"] * D2["uVxY"];
+
+    dm_out += 1.0 / 36.0 * dm3["uvwxyz"] * D3["uvwxyz"];
+    dm_out += 1.0 / 36.0 * dm3["UVWXYZ"] * D3["UVWXYZ"];
+    dm_out += 0.25 * dm3["uvWxyZ"] * D3["uvWxyZ"];
+    dm_out += 0.25 * dm3["uVWxYZ"] * D3["uVWxYZ"];
 
     return dm_out;
 }
@@ -3300,13 +3553,14 @@ void FCI_MO::compute_ref(const int& level) {
 
 Reference FCI_MO::reference(const int& level) {
     Reference ref;
-    ref.set_Eref(Eref_);
 
     if (options_["AVG_STATE"].size() != 0) {
         compute_sa_ref(level);
     } else {
         compute_ref(level);
     }
+
+    ref.set_Eref(Eref_);
 
     if (level > 0) {
         ref.set_L1a(L1a);
@@ -3763,11 +4017,82 @@ void FCI_MO::compute_sa_ref(const int& level) {
 
     // loop over all averaged states
     int nentry = sa_info_.size();
+
+    std::vector<std::vector<double>> new_weights_pentry;
+    if (options_["FCIMO_SA_WEIGHTS_GAMMA"].has_changed()) {
+        double Gamma = options_.get_double("FCIMO_SA_WEIGHTS_GAMMA");
+
+        // figure out target state
+        int entry = 0, root = 0;
+        int target_multi = options_.get_int("MULTIPLICITY");
+        int target_irrep = options_.get_int("ROOT_SYM");
+        int target_root = options_.get_int("ROOT");
+        for (int n = 0; n < nentry; ++n) {
+            int multi, irrep, nroots;
+            std::tie(irrep, multi, nroots, std::ignore) = sa_info_[n];
+            if (multi == target_multi && irrep == target_irrep) {
+                for (int i = 0; i < nroots; ++i) {
+                    if (i == target_root) {
+                        entry = n;
+                        root = i;
+                    }
+                }
+            }
+        }
+
+        double Ealpha = eigens_[entry][root].second;
+        double sum = 0.0;
+
+        for (int n = 0; n < nentry; ++n) {
+            int nroots;
+            std::tie(std::ignore, std::ignore, nroots, std::ignore) = sa_info_[n];
+
+            std::vector<double> new_weights;
+            for (int i = 0; i < nroots; ++i) {
+                double diff = Ealpha - eigens_[n][i].second;
+                double gaus = std::exp(-Gamma * diff * diff);
+                sum += gaus;
+                new_weights.push_back(gaus);
+            }
+            new_weights_pentry.push_back(new_weights);
+        }
+
+        for (auto& ws : new_weights_pentry) {
+            for (auto& w : ws) {
+                w /= sum;
+            }
+        }
+
+        // reset the reference energy
+        double Eref = 0.0;
+        for (int n = 0; n < nentry; ++n) {
+            int nroots;
+            std::tie(std::ignore, std::ignore, nroots, std::ignore) = sa_info_[n];
+            std::vector<double> weights = new_weights_pentry[n];
+            for (int i = 0; i < nroots; ++i) {
+                Eref += weights[i] * eigens_[n][i].second;
+            }
+        }
+        Eref_ = Eref;
+
+        for (int n = 0; n < nentry; ++n) {
+            outfile->Printf("\n  n = %d, weight:", n);
+            for (const auto& x : new_weights_pentry[n]) {
+                outfile->Printf(" %10.6f", x);
+            }
+            outfile->Printf("\n");
+        }
+    }
+
     for (int n = 0; n < nentry; ++n) {
         // get current nroots and weights
         int nroots, irrep;
         std::vector<double> weights;
         std::tie(irrep, std::ignore, nroots, weights) = sa_info_[n];
+
+        if (options_["FCIMO_SA_WEIGHTS_GAMMA"].has_changed()) {
+            weights = new_weights_pentry[n];
+        }
 
         // prepare eigen vectors for current symmetry
         int dim = (eigens_[n][0].first)->dim();

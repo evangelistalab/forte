@@ -44,9 +44,9 @@
 #include "../orbital-helper/unpaired_density.h"
 #include "../determinant_hashvector.h"
 #include "../reference.h"
-#include "../sparse_ci_solver.h"
-#include "../stl_bitset_determinant.h"
-#include "../sparse_ci_solver.h"
+#include "../sparse_ci/sparse_ci_solver.h"
+#include "../sparse_ci/stl_bitset_determinant.h"
+#include "../orbital-helper/iao_builder.h"
 
 using d1 = std::vector<double>;
 using d2 = std::vector<d1>;
@@ -104,9 +104,10 @@ class AdaptiveCI : public Wavefunction {
     void set_aci_ints(SharedWavefunction ref_Wfn, std::shared_ptr<ForteIntegrals> ints);
 
     void semi_canonicalize();
+    void set_fci_ints( std::shared_ptr<FCIIntegrals> fci_ints );
 
     void upcast_reference(DeterminantHashVec& ref);
-    void add_external_singles(DeterminantHashVec& ref);
+    void add_external_excitations(DeterminantHashVec& ref);
 
   private:
     // ==> Class data <==
@@ -165,6 +166,7 @@ class AdaptiveCI : public Wavefunction {
     /// The last iteration
     int max_cycle_;
     int pre_iter_;
+    bool set_ints_ = false;
 
     // ==> ACI Options <==
     /// The threshold applied to the primary space
@@ -250,6 +252,10 @@ class AdaptiveCI : public Wavefunction {
 
     bool print_weights_;
 
+
+    /// The alpha MO always unoccupied
+    int hole_;
+
     /// Timing variables
     double build_H_;
     double diag_H_;
@@ -280,7 +286,7 @@ class AdaptiveCI : public Wavefunction {
     void print_info();
 
     /// Print a wave function
-    void print_wfn(DeterminantHashVec& space, SharedMatrix evecs, int nroot);
+    void print_wfn(DeterminantHashVec& space, WFNOperator& op,  SharedMatrix evecs, int nroot);
 
     /// Streamlined version of find q space
     void default_find_q_space(DeterminantHashVec& P_space, DeterminantHashVec& PQ_space,
@@ -306,6 +312,9 @@ class AdaptiveCI : public Wavefunction {
     /// Alternate/experimental determinant generator
     void get_excited_determinants2(int nroot, SharedMatrix evecs, DeterminantHashVec& P_space,
                                    det_hash<std::vector<double>>& V_hash);
+    /// Get excited determinants with a specified hole
+    void get_core_excited_determinants(SharedMatrix evecs, DeterminantHashVec& P_space,
+                                   det_hash<std::vector<double>>& V_hash);
 
     /// Prune the space of determinants
     void prune_q_space(DeterminantHashVec& PQ_space, DeterminantHashVec& P_space,
@@ -319,7 +328,7 @@ class AdaptiveCI : public Wavefunction {
     bool check_stuck(std::vector<std::vector<double>>& energy_history, SharedVector evals);
 
     /// Computes spin
-    std::vector<std::pair<double, double>> compute_spin(DeterminantHashVec& space,
+    std::vector<std::pair<double, double>> compute_spin(DeterminantHashVec& space, WFNOperator& op,
                                                         SharedMatrix evecs, int nroot);
 
     /// Compute 1-RDM
@@ -330,7 +339,8 @@ class AdaptiveCI : public Wavefunction {
     void full_spin_transform(DeterminantHashVec& det_space, SharedMatrix cI, int nroot);
 
     /// Check for spin contamination
-    double compute_spin_contamination(DeterminantHashVec& space, SharedMatrix evecs, int nroot);
+    double compute_spin_contamination(DeterminantHashVec& space, WFNOperator& op, SharedMatrix evecs, int nroot);
+
 
     /// Save coefficients of lowest-root determinant
     void save_dets_to_file(DeterminantHashVec& space, SharedMatrix evecs);
@@ -386,6 +396,10 @@ class AdaptiveCI : public Wavefunction {
     std::vector<std::pair<size_t, double>>
     dl_initial_guess(std::vector<STLBitsetDeterminant>& old_dets,
                      std::vector<STLBitsetDeterminant>& dets, SharedMatrix& evecs, int nroot);
+
+    std::vector<std::tuple<double,int,int>> sym_labeled_orbitals(std::string type);
+
+    void spin_analysis();
 
     //    int david2(double **A, int N, int M, double *eps, double **v,double
     //    cutoff, int print);

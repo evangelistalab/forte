@@ -75,10 +75,11 @@ src/orbitaloptimizer.cc
 src/reference.cc
 src/sa_fcisolver.cc
 src/semi_canonicalize.cc
-src/sparse_ci_solver.cc
+src/sparse_ci/sparse_ci_solver.cc
+src/sparse_ci/sigma_vector.cc
+src/sparse_ci/stl_bitset_determinant.cc
+src/sparse_ci/stl_bitset_string.cc
 src/sq.cc
-src/stl_bitset_determinant.cc
-src/stl_bitset_string.cc
 src/tensorsrg.cc
 src/tensorsrg_antihermitian_commutators.cc
 src/tensorsrg_ct.cc
@@ -140,6 +141,8 @@ src/pci/pci.cc
 src/pci/pci_hashvec.cc
 src/pci/pci_simple.cc
 src/pci/ewci.cc
+src/libthce/thce.cc
+src/libthce/lreri.cc
 )
 
 target_link_libraries(forte PRIVATE ambit::ambit)

@@ -145,8 +145,13 @@ void set_ACI_options(ForteOptions& foptions) {
     foptions.add_bool("ACI_ADD_SINGLES", false,
                       "Adds all active single excitations to the final wave function");
     /*- Add all active singles -*/
-    foptions.add_bool("ACI_ADD_EXTERNAL_SINGLES", false,
-                      "Adds all external single excitations to the final wave function");
+    foptions.add_bool("ACI_ADD_EXTERNAL_EXCITATIONS", false,
+                      "Adds external single excitations to the final wave function");
+    /*- Order of external excitations to add -*/
+    foptions.add_str("ACI_EXTERNAL_EXCITATION_ORDER", "SINGLES", "Order of external excitations to add"); 
+    /*- Type of external excitations to add -*/
+    foptions.add_str("ACI_EXTERNAL_EXCITATION_TYPE", "ALL", "Type of external excitations to add"); 
+
     /*- Do ESNO transformation? -*/
     foptions.add_bool("ESNOS", false, "Compute external single natural orbitals");
     foptions.add_int("ESNO_MAX_SIZE", 0, "Number of external orbitals to correlate");
@@ -156,6 +161,29 @@ void set_ACI_options(ForteOptions& foptions) {
 
     /*- Do reference relaxation in ACI? -*/
     foptions.add_bool("ACI_REF_RELAX", false, "Do reference relaxation in ACI");
+
+    /*- Type of excited state to compute -*/
+    foptions.add_str("ACI_EX_TYPE", "CONV","Type of excited state to compute" );
+
+    /*- Number of core orbitals to freeze -*/
+    foptions.add_int("ACI_NFROZEN_CORE",0, "Number of orbitals to freeze for core excitations"); 
+ 
+    /*- Number of roots to compute per frozen orbital -*/
+    foptions.add_int("ACI_ROOTS_PER_CORE", 1, "Number of roots to compute per frozen occupation");
+
+    /*- Do spin analysis? -*/
+    foptions.add_bool("ACI_SPIN_ANALYSIS", false, "Do spin correlation analysis");
+
+    /*- Print IAOs -*/
+    foptions.add_bool("PRINT_IAOS", true, "Print IAOs");
+
+    /*- Active Space type -*/
+    foptions.add_bool("PI_ACTIVE_SPACE", false, "Active space type");
+    
+    /*- Save spin correlation matrix to file -*/
+    foptions.add_bool("SPIN_MAT_TO_FILE", false, "Save spin correlation matrix to file");
+
+    foptions.add_str("SPIN_BASIS","NO", "Basis for spin analysis");
 }
 
 bool pairComp(const std::pair<double, STLBitsetDeterminant> E1,
@@ -176,6 +204,11 @@ AdaptiveCI::AdaptiveCI(SharedWavefunction ref_wfn, Options& options,
 }
 
 AdaptiveCI::~AdaptiveCI() {}
+
+void AdaptiveCI::set_fci_ints( std::shared_ptr<FCIIntegrals> fci_ints ) {
+    fci_ints_ = fci_ints;
+    set_ints_ = true;
+}
 
 void AdaptiveCI::set_aci_ints(SharedWavefunction ref_wfn, std::shared_ptr<ForteIntegrals> ints) {
     timer int_timer("ACI:Form Integrals");
@@ -201,8 +234,11 @@ void AdaptiveCI::startup() {
     if (options_["ACI_QUIET_MODE"].has_changed()) {
         quiet_mode_ = options_.get_bool("ACI_QUIET_MODE");
     }
+    
+    if( !set_ints_ ){
+        set_aci_ints(reference_wavefunction_, ints_);
+    }
 
-    set_aci_ints(reference_wavefunction_, ints_);
     op_.initialize(mo_symmetry_, fci_ints_);
 
     wavefunction_symmetry_ = 0;
@@ -258,6 +294,11 @@ void AdaptiveCI::startup() {
     add_aimed_degenerate_ = options_.get_bool("ACI_ADD_AIMED_DEGENERATE");
     project_out_spin_contaminants_ = options_.get_bool("ACI_PROJECT_OUT_SPIN_CONTAMINANTS");
     spin_complete_ = options_.get_bool("ACI_ENFORCE_SPIN_COMPLETE");
+
+   // if( options_.get_str("ACI_EX_TYPE") == "CORE" ){
+   //     spin_complete_ = false;
+   // }
+
     rdm_level_ = options_.get_int("ACI_MAX_RDM");
 
     max_cycle_ = 20;
@@ -285,6 +326,8 @@ void AdaptiveCI::startup() {
     root_ = options_.get_int("ACI_ROOT");
     approx_rdm_ = options_.get_bool("ACI_APPROXIMATE_RDM");
     print_weights_ = options_.get_bool("ACI_PRINT_WEIGHTS");
+
+    hole_ = 0;
 
     diag_method_ = DLString;
     if (options_["DIAG_ALGORITHM"].has_changed()) {
@@ -420,6 +463,10 @@ double AdaptiveCI::compute_energy() {
 
     DeterminantHashVec PQ_space;
 
+    if( options_.get_str("ACI_EX_TYPE") == "CORE" ){
+        ex_alg_ = "ROOT_ORTHOGONALIZE";
+    }
+
     for (int i = 0; i < nrun; ++i) {
         nroot_ = options_.get_int("ACI_NROOT");
         if (!quiet_mode_)
@@ -482,6 +529,7 @@ double AdaptiveCI::compute_energy() {
 
         SparseCISolver sparse_solver(fci_ints_);
         sparse_solver.set_parallel(true);
+        sparse_solver.set_force_diag(options_.get_bool("FORCE_DIAG_METHOD"));
         sparse_solver.set_e_convergence(options_.get_double("E_CONVERGENCE"));
         sparse_solver.set_maxiter_davidson(options_.get_int("DL_MAXITER"));
         sparse_solver.set_spin_project_full(project_out_spin_contaminants_);
@@ -522,6 +570,7 @@ double AdaptiveCI::compute_energy() {
 
         SparseCISolver sparse_solver(fci_ints_);
         sparse_solver.set_parallel(true);
+        sparse_solver.set_force_diag(options_.get_bool("FORCE_DIAG_METHOD"));
         sparse_solver.set_e_convergence(options_.get_double("E_CONVERGENCE"));
         sparse_solver.set_maxiter_davidson(options_.get_int("DL_MAXITER"));
         sparse_solver.set_spin_project_full(project_out_spin_contaminants_);
@@ -599,17 +648,20 @@ double AdaptiveCI::compute_energy() {
     Process::environment.globals["ACI ENERGY"] = root_energy;
     Process::environment.globals["ACI+PT2 ENERGY"] = root_energy_pt2;
     //  if(!quiet_mode_){
-    outfile->Printf("\n\n  %s: %f s", "Adaptive-CI ran in ", aci_elapse.get());
-    outfile->Printf("\n\n  %s: %d", "Saving information for root", options_.get_int("ACI_ROOT"));
     //  }
 
     // printf( "\n%1.5f\n", aci_elapse.get());
+    if (options_.get_bool("ACI_SPIN_ANALYSIS")){
+        spin_analysis();
+    }
 
     if (options_.get_bool("UNPAIRED_DENSITY")) {
         UPDensity density(reference_wavefunction_, mo_space_info_);
         density.compute_unpaired_density(ordm_a_, ordm_b_);
     }
 
+    outfile->Printf("\n\n  %s: %f s", "Adaptive-CI ran in ", aci_elapse.get());
+    outfile->Printf("\n\n  %s: %d", "Saving information for root", options_.get_int("ACI_ROOT"));
     return PQ_evals->get(options_.get_int("ACI_ROOT")) + nuclear_repulsion_energy_ +
            fci_ints_->scalar_energy();
 }
@@ -633,6 +685,7 @@ void AdaptiveCI::diagonalize_final_and_compute_rdms() {
 
     SparseCISolver sparse_solver(fci_ints_);
     sparse_solver.set_parallel(true);
+    sparse_solver.set_force_diag(options_.get_bool("FORCE_DIAG_METHOD"));
     sparse_solver.set_e_convergence(options_.get_double("E_CONVERGENCE"));
     sparse_solver.set_maxiter_davidson(options_.get_int("DL_MAXITER"));
     sparse_solver.set_spin_project(project_out_spin_contaminants_);
@@ -696,7 +749,7 @@ void AdaptiveCI::print_final(DeterminantHashVec& dets, SharedMatrix& PQ_evecs,
     if ((ex_alg_ != "ROOT_ORTHOGONALIZE") or (nroot_ == 1)) {
         outfile->Printf("\n\n  ==> Wavefunction Information <==");
 
-        print_wfn(dets, PQ_evecs, nroot_);
+        print_wfn(dets,op_, PQ_evecs, nroot_);
 
         //         outfile->Printf("\n\n     Order		 # of Dets        Total
         //         |c^2|");
@@ -730,6 +783,8 @@ void AdaptiveCI::default_find_q_space(DeterminantHashVec& P_space, DeterminantHa
     // Get the excited Determinants
     if (options_.get_bool("ACI_LOW_MEM_SCREENING")) {
         get_excited_determinants2(nroot_, evecs, P_space, V_hash);
+    } else if ( (options_.get_str("ACI_EX_TYPE") == "CORE") and (root_ > 0) ){
+        get_core_excited_determinants(evecs, P_space, V_hash);
     } else {
         get_excited_determinants(nroot_, evecs, P_space, V_hash);
     }
@@ -827,7 +882,13 @@ void AdaptiveCI::find_q_space(DeterminantHashVec& P_space, DeterminantHashVec& P
 
     // This hash saves the determinant coupling to the model space eigenfunction
     det_hash<std::vector<double>> V_hash;
-    get_excited_determinants(nroot_, evecs, P_space, V_hash);
+    if (options_.get_bool("ACI_LOW_MEM_SCREENING")) {
+        get_excited_determinants2(nroot_, evecs, P_space, V_hash);
+    } else if ((options_.get_str("ACI_EX_TYPE") == "CORE") and ( root_ > 0 ) ){
+        get_core_excited_determinants(evecs, P_space, V_hash);
+    } else {
+        get_excited_determinants(nroot_, evecs, P_space, V_hash);
+    }
 
     if (!quiet_mode_) {
         outfile->Printf("\n  %s: %zu determinants", "Dimension of the SD space", V_hash.size());
@@ -1275,7 +1336,7 @@ void AdaptiveCI::get_excited_determinants2(int nroot, SharedMatrix evecs,
                     }
                 }
             }
-            outfile->Printf("\n TD, bin, size of hash: %d %d %zu", tid, bin, A_I.size());
+            //outfile->Printf("\n TD, bin, size of hash: %d %d %zu", tid, bin, A_I.size());
         }
     }
 }
@@ -1491,6 +1552,216 @@ void AdaptiveCI::get_excited_determinants(int nroot, SharedMatrix evecs,
     } // Close threads
 }
 
+void AdaptiveCI::get_core_excited_determinants(SharedMatrix evecs,
+                                          DeterminantHashVec& P_space,
+                                          det_hash<std::vector<double>>& V_hash) {
+    size_t max_P = P_space.size();
+    const det_hashvec& P_dets = P_space.wfn_hash();
+    int nroot = 1;
+
+// Loop over reference determinants
+#pragma omp parallel
+    {
+        int num_thread = omp_get_num_threads();
+        int tid = omp_get_thread_num();
+        size_t bin_size = max_P / num_thread;
+        bin_size += (tid < (max_P % num_thread)) ? 1 : 0;
+        size_t start_idx =
+            (tid < (max_P % num_thread))
+                ? tid * bin_size
+                : (max_P % num_thread) * (bin_size + 1) + (tid - (max_P % num_thread)) * bin_size;
+        size_t end_idx = start_idx + bin_size;
+
+        if (omp_get_thread_num() == 0 and !quiet_mode_) {
+            outfile->Printf("\n  Using %d threads.", num_thread);
+        }
+        // This will store the excited determinant info for each thread
+        std::vector<std::pair<STLBitsetDeterminant, std::vector<double>>>
+            thread_ex_dets; //( noalpha * nvalpha  );
+
+        for (size_t P = start_idx; P < end_idx; ++P) {
+            const STLBitsetDeterminant& det(P_dets[P]);
+            double evecs_P_row_norm = evecs->get_row(0, P)->norm();
+
+            std::vector<int> aocc = det.get_alfa_occ();
+            std::vector<int> bocc = det.get_beta_occ();
+            std::vector<int> avir = det.get_alfa_vir();
+            std::vector<int> bvir = det.get_beta_vir();
+
+            int noalpha = aocc.size();
+            int nobeta = bocc.size();
+            int nvalpha = avir.size();
+            int nvbeta = bvir.size();
+            STLBitsetDeterminant new_det(det);
+
+            // Generate alpha excitations
+            for (int i = 0; i < noalpha; ++i) {
+                int ii = aocc[i];
+                for (int a = 0; a < nvalpha; ++a) {
+                    int aa = avir[a];
+                    if (((mo_symmetry_[ii] ^ mo_symmetry_[aa]) == 0) and ((aa != hole_) or (!det.get_beta_bit(aa)) )) {
+                        double HIJ = fci_ints_->slater_rules_single_alpha(det, ii, aa);
+                        if ((std::fabs(HIJ) * evecs_P_row_norm >= screen_thresh_)) {
+                            //      if( std::abs(HIJ * evecs->get(0, P)) > screen_thresh_ ){
+                            new_det = det;
+                            new_det.set_alfa_bit(ii, false);
+                            new_det.set_alfa_bit(aa, true);
+                            if (!(P_space.has_det(new_det))) {
+                                std::vector<double> coupling(nroot, 0.0);
+                                for (int n = 0; n < nroot; ++n) {
+                                    coupling[n] += HIJ * evecs->get(P, n);
+                                }
+                                // thread_ex_dets[i * noalpha + a] =
+                                // std::make_pair(new_det,coupling);
+                                thread_ex_dets.push_back(std::make_pair(new_det, coupling));
+                            }
+                        }
+                    }
+                }
+            }
+            // Generate beta excitations
+            for (int i = 0; i < nobeta; ++i) {
+                int ii = bocc[i];
+                for (int a = 0; a < nvbeta; ++a) {
+                    int aa = bvir[a];
+                    if (((mo_symmetry_[ii] ^ mo_symmetry_[aa]) == 0) and ((aa != hole_) or (!det.get_alfa_bit(aa)) )) {
+                        double HIJ = fci_ints_->slater_rules_single_beta(det, ii, aa);
+                        if ((std::fabs(HIJ) * evecs_P_row_norm >= screen_thresh_)) {
+                            // if( std::abs(HIJ * evecs->get(0, P)) > screen_thresh_ ){
+                            new_det = det;
+                            new_det.set_beta_bit(ii, false);
+                            new_det.set_beta_bit(aa, true);
+                            if (!(P_space.has_det(new_det))) {
+                                std::vector<double> coupling(nroot, 0.0);
+                                for (int n = 0; n < nroot; ++n) {
+                                    coupling[n] += HIJ * evecs->get(P, n);
+                                }
+                                // thread_ex_dets[i * nobeta + a] =
+                                // std::make_pair(new_det,coupling);
+                                thread_ex_dets.push_back(std::make_pair(new_det, coupling));
+                            }
+                        }
+                    }
+                }
+            }
+
+            // Generate aa excitations
+            for (int i = 0; i < noalpha; ++i) {
+                int ii = aocc[i];
+                for (int j = i + 1; j < noalpha; ++j) {
+                    int jj = aocc[j];
+                    for (int a = 0; a < nvalpha; ++a) {
+                        int aa = avir[a];
+                        for (int b = a + 1; b < nvalpha; ++b) {
+                            int bb = avir[b];
+                            if (((mo_symmetry_[ii] ^ mo_symmetry_[jj] ^ mo_symmetry_[aa] ^
+                                 mo_symmetry_[bb]) == 0) and (aa != hole_ and bb != hole_)) {
+                                double HIJ = fci_ints_->tei_aa(ii, jj, aa, bb);
+                                if ((std::fabs(HIJ) * evecs_P_row_norm >= screen_thresh_)) {
+                                    new_det = det;
+                                    HIJ *= new_det.double_excitation_aa(ii, jj, aa, bb);
+                                    // if( std::abs(HIJ * evecs->get(0, P)) > screen_thresh_ ){
+
+                                    if (!(P_space.has_det(new_det))) {
+                                        std::vector<double> coupling(nroot, 0.0);
+                                        for (int n = 0; n < nroot; ++n) {
+                                            coupling[n] += HIJ * evecs->get(P, n);
+                                        }
+                                        // thread_ex_dets[i *
+                                        // noalpha*noalpha*nvalpha +
+                                        // j*nvalpha*noalpha +  a*nvalpha + b ]
+                                        // = std::make_pair(new_det,coupling);
+                                        thread_ex_dets.push_back(std::make_pair(new_det, coupling));
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+
+            // Generate ab excitations
+            for (int i = 0; i < noalpha; ++i) {
+                int ii = aocc[i];
+                for (int j = 0; j < nobeta; ++j) {
+                    int jj = bocc[j];
+                    for (int a = 0; a < nvalpha; ++a) {
+                        int aa = avir[a];
+                        for (int b = 0; b < nvbeta; ++b) {
+                            int bb = bvir[b];
+                            if (((mo_symmetry_[ii] ^ mo_symmetry_[jj] ^ mo_symmetry_[aa] ^
+                                 mo_symmetry_[bb]) == 0) and (aa != hole_ and bb != hole_)  ) {
+                                double HIJ = fci_ints_->tei_ab(ii, jj, aa, bb);
+                                if ((std::fabs(HIJ) * evecs_P_row_norm >= screen_thresh_)) {
+                                    new_det = det;
+                                    HIJ *= new_det.double_excitation_ab(ii, jj, aa, bb);
+                                    // if( std::abs(HIJ * evecs->get(0, P)) > screen_thresh_ ){
+
+                                    if (!(P_space.has_det(new_det))) {
+                                        std::vector<double> coupling(nroot, 0.0);
+                                        for (int n = 0; n < nroot; ++n) {
+                                            coupling[n] += HIJ * evecs->get(P, n);
+                                        }
+                                        // thread_ex_dets[i * nobeta * nvalpha
+                                        // *nvbeta + j * bvalpha * nvbeta + a *
+                                        // nvalpha]
+                                        thread_ex_dets.push_back(std::make_pair(new_det, coupling));
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+
+            // Generate bb excitations
+            for (int i = 0; i < nobeta; ++i) {
+                int ii = bocc[i];
+                for (int j = i + 1; j < nobeta; ++j) {
+                    int jj = bocc[j];
+                    for (int a = 0; a < nvbeta; ++a) {
+                        int aa = bvir[a];
+                        for (int b = a + 1; b < nvbeta; ++b) {
+                            int bb = bvir[b];
+                            if (((mo_symmetry_[ii] ^
+                                 (mo_symmetry_[jj] ^ (mo_symmetry_[aa] ^ mo_symmetry_[bb]))) == 0)and (aa != hole_ and bb != hole_) ) {
+                                double HIJ = fci_ints_->tei_bb(ii, jj, aa, bb);
+                                if ((std::fabs(HIJ) * evecs_P_row_norm >= screen_thresh_)) {
+                                    // if( std::abs(HIJ * evecs->get(0, P)) >= screen_thresh_ ){
+                                    new_det = det;
+                                    HIJ *= new_det.double_excitation_bb(ii, jj, aa, bb);
+
+                                    if (!(P_space.has_det(new_det))) {
+                                        std::vector<double> coupling(nroot, 0.0);
+                                        for (int n = 0; n < nroot; ++n) {
+                                            coupling[n] += HIJ * evecs->get(P, n);
+                                        }
+                                        thread_ex_dets.push_back(std::make_pair(new_det, coupling));
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+#pragma omp critical
+        {
+            for (size_t I = 0, maxI = thread_ex_dets.size(); I < maxI; ++I) {
+                std::vector<double>& coupling = thread_ex_dets[I].second;
+                STLBitsetDeterminant& det = thread_ex_dets[I].first;
+                if (V_hash.count(det) != 0) {
+                    for (int n = 0; n < nroot; ++n) {
+                        V_hash[det][n] += coupling[n];
+                    }
+                } else {
+                    V_hash[det] = coupling;
+                }
+            }
+        }
+    } // Close threads
+}
+
 bool AdaptiveCI::check_convergence(std::vector<std::vector<double>>& energy_history,
                                    SharedVector evals) {
     int nroot = evals->dim();
@@ -1654,7 +1925,7 @@ bool AdaptiveCI::check_stuck(std::vector<std::vector<double>>& energy_history, S
     return stuck;
 }
 
-std::vector<std::pair<double, double>> AdaptiveCI::compute_spin(DeterminantHashVec& space,
+std::vector<std::pair<double, double>> AdaptiveCI::compute_spin(DeterminantHashVec& space, WFNOperator& op,
                                                                 SharedMatrix evecs, int nroot) {
     // WFNOperator op(mo_symmetry_);
 
@@ -1662,16 +1933,16 @@ std::vector<std::pair<double, double>> AdaptiveCI::compute_spin(DeterminantHashV
     // op.op_lists(space);
     // op.tp_lists(space);
     if (options_.get_str("SIGMA_BUILD_TYPE") == "HZ") {
-        op_.clear_op_s_lists();
-        op_.clear_tp_s_lists();
-        op_.build_strings(space);
-        op_.op_lists(space);
-        op_.tp_lists(space);
+        op.clear_op_s_lists();
+        op.clear_tp_s_lists();
+        op.build_strings(space);
+        op.op_lists(space);
+        op.tp_lists(space);
     }
 
     std::vector<std::pair<double, double>> spin_vec(nroot);
     for (int n = 0; n < nroot_; ++n) {
-        double S2 = op_.s2(space, evecs, n);
+        double S2 = op.s2(space, evecs, n);
         double S = std::fabs(0.5 * (std::sqrt(1.0 + 4.0 * S2) - 1.0));
         spin_vec[n] = std::make_pair(S, S2);
     }
@@ -1762,6 +2033,7 @@ void AdaptiveCI::wfn_analyzer(DeterminantMap& det_space, SharedMatrix evecs, int
     //
 }
 
+*/
 std::vector<std::tuple<double, int, int>> AdaptiveCI::sym_labeled_orbitals(std::string type) {
     std::vector<std::tuple<double, int, int>> labeled_orb;
 
@@ -1805,14 +2077,13 @@ orb_e[a].second));
     }
     return labeled_orb;
 }
-*/
 
-void AdaptiveCI::print_wfn(DeterminantHashVec& space, SharedMatrix evecs, int nroot) {
+void AdaptiveCI::print_wfn(DeterminantHashVec& space, WFNOperator& op, SharedMatrix evecs, int nroot) {
     std::string state_label;
     std::vector<std::string> s2_labels({"singlet", "doublet", "triplet", "quartet", "quintet",
                                         "sextet", "septet", "octet", "nonet", "decatet"});
 
-    std::vector<std::pair<double, double>> spins = compute_spin(space, evecs, nroot);
+    std::vector<std::pair<double, double>> spins = compute_spin(space, op, evecs, nroot);
 
     for (int n = 0; n < nroot; ++n) {
         DeterminantHashVec tmp;
@@ -1903,9 +2174,9 @@ void AdaptiveCI::full_spin_transform(DeterminantHashVec& det_space, SharedMatrix
     //
 }
 
-double AdaptiveCI::compute_spin_contamination(DeterminantHashVec& space, SharedMatrix evecs,
+double AdaptiveCI::compute_spin_contamination(DeterminantHashVec& space, WFNOperator& op, SharedMatrix evecs,
                                               int nroot) {
-    auto spins = compute_spin(space, evecs, nroot);
+    auto spins = compute_spin(space, op, evecs, nroot);
     double spin_contam = 0.0;
     for (int n = 0; n < nroot; ++n) {
         spin_contam += spins[n].second;
@@ -2187,7 +2458,10 @@ int AdaptiveCI::root_follow(DeterminantHashVec& P_ref, std::vector<double>& P_re
     //     P_ref.get_det(det_weights[I].second).str().c_str());
     // }
 
-    for (int n = 0; n < num_ref_roots; ++n) {
+    
+    int max_overlap = std::min(int(P_space.size()), num_ref_roots);
+    
+    for (int n = 0; n < max_overlap; ++n) {
         if (!quiet_mode_)
             outfile->Printf("\n\n  Computing overlap for root %d", n);
         double new_overlap = P_ref.overlap(P_ref_evecs, P_space, P_evecs, n);
@@ -2250,6 +2524,43 @@ void AdaptiveCI::compute_aci(DeterminantHashVec& PQ_space, SharedMatrix& PQ_evec
     std::vector<double> P_ref_evecs;
     DeterminantHashVec P_space(initial_reference_);
 
+    if( (options_.get_str("ACI_EX_TYPE") == "CORE") and (root_ > 0)  ){
+        
+        int nf_orb = options_.get_int("ACI_NFROZEN_CORE");
+        int ncstate = options_.get_int("ACI_ROOTS_PER_CORE");
+
+        if( ((root_-1) > ncstate ) and (root_ > 1) ){
+            hole_++;
+        }
+        int particle = (root_-1) - (hole_*ncstate);        
+
+        P_space.clear();
+        auto orbs = sym_labeled_orbitals("RHF");
+        STLBitsetDeterminant det = initial_reference_[0];
+        STLBitsetDeterminant detb(det);
+        std::vector<int> avir = det.get_alfa_vir();
+        det.print();
+        outfile->Printf("\n  Freezing alpha orbital %d", hole_);
+        outfile->Printf("\n  Exciting electron from %d to %d", hole_, avir[particle] );
+        det.set_alfa_bit( hole_, false );
+        detb.set_beta_bit( hole_, false );
+
+        for( int n = 0, max_n = avir.size(); n < max_n; ++n ){
+            if( (mo_symmetry_[hole_] ^ mo_symmetry_[avir[n]]) == 0 ){
+                det.set_alfa_bit( avir[particle], true);
+                detb.set_beta_bit( avir[particle], true);
+                break; 
+            }
+        }
+        det.print();
+        detb.print();
+        P_space.add(det);
+        P_space.add(detb);
+    
+        
+    }
+
+
     size_t nvec = options_.get_int("N_GUESS_VEC");
     std::string sigma_method = options_.get_str("SIGMA_BUILD_TYPE");
 
@@ -2259,6 +2570,7 @@ void AdaptiveCI::compute_aci(DeterminantHashVec& PQ_space, SharedMatrix& PQ_evec
         sparse_solver.set_print_details(false);
     }
     sparse_solver.set_parallel(true);
+    sparse_solver.set_force_diag(options_.get_bool("FORCE_DIAG_METHOD"));
     sparse_solver.set_e_convergence(options_.get_double("E_CONVERGENCE"));
     sparse_solver.set_maxiter_davidson(options_.get_int("DL_MAXITER"));
     sparse_solver.set_spin_project(project_out_spin_contaminants_);
@@ -2398,7 +2710,7 @@ void AdaptiveCI::compute_aci(DeterminantHashVec& PQ_space, SharedMatrix& PQ_evec
         }
 
         if (!quiet_mode_ and print_refs)
-            print_wfn(P_space, P_evecs, num_ref_roots);
+            print_wfn(P_space, op_, P_evecs, num_ref_roots);
 
         // Step 2. Find determinants in the Q space
 
@@ -2532,7 +2844,7 @@ void AdaptiveCI::compute_aci(DeterminantHashVec& PQ_space, SharedMatrix& PQ_evec
 
         // Print information about the wave function
         if (!quiet_mode_) {
-            print_wfn(PQ_space, PQ_evecs, num_ref_roots);
+            print_wfn(PQ_space, op_, PQ_evecs, num_ref_roots);
             outfile->Printf("\n  Cycle %d took: %1.6f s", cycle, cycle_time.get());
         }
 
@@ -2904,15 +3216,17 @@ void AdaptiveCI::upcast_reference(DeterminantHashVec& ref) {
     }
 }
 
-void AdaptiveCI::add_external_singles(DeterminantHashVec& ref) {
+void AdaptiveCI::add_external_excitations(DeterminantHashVec& ref) {
 
-    print_h2("Adding external singles");
+    print_h2("Adding external Excitations");
 
     const det_hashvec& dets = ref.wfn_hash();
     size_t nref = ref.size();
     std::vector<size_t> core_mos = mo_space_info_->get_corr_abs_mo("RESTRICTED_DOCC");
     std::vector<size_t> vir_mos = mo_space_info_->get_corr_abs_mo("RESTRICTED_UOCC");
     std::vector<size_t> active_mos = mo_space_info_->get_corr_abs_mo("ACTIVE");
+    nactpi_ = mo_space_info_->get_dimension("CORRELATED");
+    nact_ = mo_space_info_->size("CORRELATED");
 
     size_t ncore = mo_space_info_->size("RESTRICTED_DOCC");
     size_t nact = mo_space_info_->size("ACTIVE");
@@ -2925,6 +3239,12 @@ void AdaptiveCI::add_external_singles(DeterminantHashVec& ref) {
     DeterminantHashVec av_a;
     DeterminantHashVec av_b;
     DeterminantHashVec cv;
+
+    std::string order = options_.get_str("ACI_EXTERNAL_EXCITATION_ORDER"); 
+    std::string type = options_.get_str("ACI_EXTERNAL_EXCITATION_TYPE"); 
+
+    outfile->Printf("\n  Maximum excitation order:  %s", order.c_str());
+    outfile->Printf("\n  Excitation type:  %s", type.c_str());
 
     for (int I = 0; I < nref; ++I) {
         STLBitsetDeterminant det = dets[I];
@@ -2989,73 +3309,363 @@ void AdaptiveCI::add_external_singles(DeterminantHashVec& ref) {
                 det.set_beta_bit(pp, true);
             }
         }
-        // core -> vir
-        for (int i = 0; i < ncore; ++i) {
-            int ii = core_mos[i];
-            for (int a = 0; a < nvir; ++a) {
-                int aa = vir_mos[a];
-                if ((sym[ii] ^ sym[aa]) == 0) {
-                    det.set_alfa_bit(ii, false);
-                    det.set_alfa_bit(aa, true);
-                    cv.add(det);
-                    det.set_alfa_bit(ii, true);
-                    det.set_alfa_bit(aa, false);
+    }
 
-                    det.set_beta_bit(ii, false);
-                    det.set_beta_bit(aa, true);
-                    cv.add(det);
-                    det.set_beta_bit(ii, true);
-                    det.set_beta_bit(aa, false);
+    if( options_.get_str("ACI_EXTERNAL_EXCITATION_TYPE")  == "ALL" ){
+        for (int I = 0; I < nref; ++I) {
+            STLBitsetDeterminant det = dets[I];
+            // core -> vir
+            for (int i = 0; i < ncore; ++i) {
+                int ii = core_mos[i];
+                for (int a = 0; a < nvir; ++a) {
+                    int aa = vir_mos[a];
+                    if ((sym[ii] ^ sym[aa]) == 0) {
+                        det.set_alfa_bit(ii, false);
+                        det.set_alfa_bit(aa, true);
+                        cv.add(det);
+                        det.set_alfa_bit(ii, true);
+                        det.set_alfa_bit(aa, false);
+
+                        det.set_beta_bit(ii, false);
+                        det.set_beta_bit(aa, true);
+                        cv.add(det);
+                        det.set_beta_bit(ii, true);
+                        det.set_beta_bit(aa, false);
+                    }
                 }
             }
         }
     }
+
+    // Now doubles
+    if( order == "DOUBLES" ){
+        DeterminantHashVec ca_aa;
+        DeterminantHashVec ca_ab;
+        DeterminantHashVec ca_bb;
+        DeterminantHashVec av_aa;
+        DeterminantHashVec av_ab;
+        DeterminantHashVec av_bb;
+        DeterminantHashVec cv_d;
+        for (int I = 0; I < nref; ++I) {
+            STLBitsetDeterminant det = dets[I];
+            std::vector<int> avir = det.get_alfa_vir();
+            // core -> act (alpha)
+            for (int i = 0; i < ncore; ++i) {
+                int ii = core_mos[i];
+                det.set_alfa_bit(ii, false);
+                for (int j = i + 1; j < ncore; ++j) {
+                    int jj = core_mos[j];
+                    det.set_alfa_bit(jj, false);
+                    for (int p = 0; p < nact; ++p) {
+                        int pp = active_mos[p];
+                        for (int q = p; q < nact; ++q) {
+                            int qq = active_mos[q];
+                            if (((sym[ii] ^ sym[pp] ^ sym[jj] ^ sym[qq]) == 0) and !(det.get_alfa_bit(pp) and det.get_alfa_bit(qq) )) {
+                                det.set_alfa_bit(pp, true);
+                                det.set_alfa_bit(qq, true);
+                                ca_aa.add(det);
+                                det.set_alfa_bit(pp, false);
+                                det.set_alfa_bit(qq, false);
+                            }
+                        }
+                    }
+                    det.set_alfa_bit(jj, true);
+                }
+                det.set_alfa_bit(ii, true);
+            }
+            // core -> act (beta)
+            for (int i = 0; i < ncore; ++i) {
+                int ii = core_mos[i];
+                det.set_beta_bit(ii, false);
+                for (int j = i + 1; j < ncore; ++j) {
+                    int jj = core_mos[j];
+                    det.set_beta_bit(jj, false);
+                    for (int p = 0; p < nact; ++p) {
+                        int pp = active_mos[p];
+                        for (int q = p + 1; q < nact; ++q) {
+                            int qq = active_mos[q];
+                            if (((sym[ii] ^ sym[pp] ^ sym[jj] ^ sym[qq]) == 0) and !(det.get_beta_bit(pp) and det.get_beta_bit(qq) )) {
+                                det.set_beta_bit(pp, true);
+                                det.set_beta_bit(qq, true);
+                                ca_bb.add(det);
+                                det.set_beta_bit(pp, false);
+                                det.set_beta_bit(qq, false);
+                            }
+                        }
+                    }
+                    det.set_beta_bit(jj, true);
+                }
+                det.set_beta_bit(ii, true);
+            }
+        
+            // core ->act (ab)
+
+            for (int i = 0; i < ncore; ++i) {
+                int ii = core_mos[i];
+                det.set_alfa_bit(ii, false);
+                for (int j = 0; j < ncore; ++j) {
+                    int jj = core_mos[j];
+                    det.set_beta_bit(jj, false);
+                    for (int p = 0; p < nact; ++p) {
+                        int pp = active_mos[p];
+                        for (int q = 0; q < nact; ++q) {
+                            int qq = active_mos[q];
+                            if (((sym[ii] ^ sym[pp] ^ sym[jj] ^ sym[qq]) == 0) and !(det.get_alfa_bit(pp) and det.get_beta_bit(qq) )) {
+                                det.set_alfa_bit(pp, true);
+                                det.set_beta_bit(qq, true);
+                                ca_ab.add(det);
+                                det.set_alfa_bit(pp, false);
+                                det.set_beta_bit(qq, false);
+                            }
+                        }
+                    }
+                    det.set_beta_bit(jj, true);
+                }
+                det.set_alfa_bit(ii, true);
+            }
+
+            // act -> vir (alpha)
+            for (int p = 0; p < nact; ++p) {
+                int pp = active_mos[p];
+                if (det.get_alfa_bit(pp)) {
+                    det.set_alfa_bit(pp, false);
+                    for (int q = p+1; q < nact; ++q) {
+                        int qq = active_mos[q];
+                        if (det.get_alfa_bit(qq)) {
+                            det.set_alfa_bit(qq, false);
+                            for (int a = 0; a < nvir; ++a) {
+                                int aa = vir_mos[a];
+                                for (int b = a+1; b < nvir; ++b) {
+                                    int bb = vir_mos[b];
+                                    if ((sym[aa] ^ sym[bb] ^ sym[pp] ^ sym[qq]) == 0) {
+                                        det.set_alfa_bit(aa, true);
+                                        det.set_alfa_bit(bb, true);
+                                        av_aa.add(det);
+                                        det.set_alfa_bit(aa, false);
+                                        det.set_alfa_bit(bb, false);
+                                    }
+                                }
+                            }
+                            det.set_alfa_bit(qq, true);
+                        }
+                    }
+                    det.set_alfa_bit(pp, true);
+                }
+            }
+            // act -> vir (beta)
+            for (int p = 0; p < nact; ++p) {
+                int pp = active_mos[p];
+                if (det.get_beta_bit(pp)) {
+                    det.set_beta_bit(pp, false);
+                    for (int q = p+1; q < nact; ++q) {
+                        int qq = active_mos[q];
+                        if (det.get_beta_bit(qq)) {
+                            det.set_beta_bit(qq, false);
+                            for (int a = 0; a < nvir; ++a) {
+                                int aa = vir_mos[a];
+                                for (int b = a+1; b < nvir; ++b) {
+                                    int bb = vir_mos[b];
+                                    if ((sym[aa] ^ sym[bb] ^ sym[pp] ^ sym[qq]) == 0) {
+                                        det.set_beta_bit(aa, true);
+                                        det.set_beta_bit(bb, true);
+                                        av_bb.add(det);
+                                        det.set_beta_bit(aa, false);
+                                        det.set_beta_bit(bb, false);
+                                    }
+                                }
+                            }
+                            det.set_beta_bit(qq, true);
+                        }
+                    }
+                    det.set_beta_bit(pp, true);
+                }
+            }
+
+            // act -> vir (alpha-beta)
+            for (int p = 0; p < nact; ++p) {
+                int pp = active_mos[p];
+                if (det.get_alfa_bit(pp)) {
+                    det.set_alfa_bit(pp, false);
+                    for (int q = 0; q < nact; ++q) {
+                        int qq = active_mos[q];
+                        if (det.get_beta_bit(qq)) {
+                            det.set_beta_bit(qq, false);
+                            for (int a = 0; a < nvir; ++a) {
+                                int aa = vir_mos[a];
+                                for (int b = 0; b < nvir; ++b) {
+                                    int bb = vir_mos[b];
+                                    if ((sym[aa] ^ sym[bb] ^ sym[pp] ^ sym[qq]) == 0) {
+                                        det.set_alfa_bit(aa, true);
+                                        det.set_beta_bit(bb, true);
+                                        av_bb.add(det);
+                                        det.set_alfa_bit(aa, false);
+                                        det.set_beta_bit(bb, false);
+                                    }
+                                }
+                            }
+                            det.set_beta_bit(qq, true);
+                        }
+                    }
+                    det.set_alfa_bit(pp, true);
+                }
+            }
+        }
+
+        if( type == "ALL" ){
+            for (int I = 0; I < nref; ++I) {
+                STLBitsetDeterminant det = dets[I];
+                // core -> vir
+                for (int i = 0; i < ncore; ++i) {
+                    int ii = core_mos[i];
+                    for (int j = i+1 ; j < ncore; ++j) {
+                        int jj = core_mos[j];
+                        for (int a = 0; a < nvir; ++a) {
+                            int aa = vir_mos[a];
+                            for (int b = a+1; b < nvir; ++b) {
+                                int bb = vir_mos[b];
+                                if ((sym[ii] ^ sym[jj] ^ sym[aa] ^ sym[bb]) == 0) {
+                                    det.set_alfa_bit(ii, false);
+                                    det.set_alfa_bit(jj, false);
+                                    det.set_alfa_bit(aa, true);
+                                    det.set_alfa_bit(bb, true);
+                                    cv_d.add(det);
+                                    det.set_alfa_bit(ii, true);
+                                    det.set_alfa_bit(jj, true);
+                                    det.set_alfa_bit(aa, false);
+                                    det.set_alfa_bit(bb, false);
+
+                                    det.set_beta_bit(ii, false);
+                                    det.set_beta_bit(jj, false);
+                                    det.set_beta_bit(aa, true);
+                                    det.set_beta_bit(bb, true);
+                                    cv_d.add(det);
+                                    det.set_beta_bit(ii, true);
+                                    det.set_beta_bit(jj, true);
+                                    det.set_beta_bit(aa, false);
+                                    det.set_beta_bit(bb, false);
+                                }
+                            }
+                        }
+                    }
+                }
+
+                for (int i = 0; i < ncore; ++i) {
+                    int ii = core_mos[i];
+                    for (int j = 0 ; j < ncore; ++j) {
+                        int jj = core_mos[j];
+                        for (int a = 0; a < nvir; ++a) {
+                            int aa = vir_mos[a];
+                            for (int b = 0; b < nvir; ++b) {
+                                int bb = vir_mos[b];
+                                if ((sym[ii] ^ sym[jj] ^ sym[aa] ^ sym[bb]) == 0) {
+                                    det.set_alfa_bit(ii, false);
+                                    det.set_beta_bit(jj, false);
+                                    det.set_alfa_bit(aa, true);
+                                    det.set_beta_bit(bb, true);
+                                    cv_d.add(det);
+                                    det.set_alfa_bit(ii, true);
+                                    det.set_beta_bit(jj, true);
+                                    det.set_alfa_bit(aa, false);
+                                    det.set_beta_bit(bb, false);
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+            ref.merge(cv_d);
+        }
+
+        ref.merge(ca_aa);
+        ref.merge(ca_ab);
+        ref.merge(ca_bb);
+        ref.merge(av_aa);
+        ref.merge(av_ab);
+        ref.merge(av_bb);
+    } 
+
+
     ref.merge(cv);
     ref.merge(ca_a);
     ref.merge(ca_b);
     ref.merge(av_a);
     ref.merge(av_b);
 
-    outfile->Printf("\n  Size of new model space:  %zu", ref.size());
+    if (spin_complete_) {
+        ref.make_spin_complete();
+        if (!quiet_mode_)
+            outfile->Printf("\n  Spin-complete dimension of the new model space: %zu",
+                            ref.size());
+    }
+
+//    outfile->Printf("\n  Size of new model space:  %zu", ref.size());
+
+    const det_hashvec& newdets = ref.wfn_hash();
 
     // Diagonalize final space (maybe abstract this function)
+
+
+    // First build integrals in the new active space
     outfile->Printf("\n  Building integrals");
-    std::vector<size_t> empty;
+    std::vector<size_t> empty(0);
     auto fci_ints =
-        std::make_shared<FCIIntegrals>(ints_, mo_space_info_->get_corr_abs_mo("CORRELATED"), empty);
+        std::make_shared<FCIIntegrals>(ints_, mo_space_info_->get_corr_abs_mo("CORRELATED"),empty );
 
     auto active_mo = mo_space_info_->get_corr_abs_mo("CORRELATED");
+
+    std::sort(active_mo.begin(), active_mo.end());
+
     ambit::Tensor tei_active_aa = ints_->aptei_aa_block(active_mo, active_mo, active_mo, active_mo);
     ambit::Tensor tei_active_ab = ints_->aptei_ab_block(active_mo, active_mo, active_mo, active_mo);
     ambit::Tensor tei_active_bb = ints_->aptei_bb_block(active_mo, active_mo, active_mo, active_mo);
     fci_ints->set_active_integrals(tei_active_aa, tei_active_ab, tei_active_bb);
-    fci_ints->compute_restricted_one_body_operator();
 
-    // First build the lists
+    std::vector<double> oei_a(nact_*nact_, 0.0);
+    std::vector<double> oei_b(nact_*nact_, 0.0);
+    for (size_t p = 0; p < nact_; ++p) {
+        size_t pp = active_mo[p];
+        for(size_t q = 0; q < nact_; ++q) {
+            size_t qq = active_mo[q];
+            size_t idx = nact_ * p + q;
+            oei_a[idx] = ints_->oei_a(pp, qq);
+            oei_b[idx] = ints_->oei_b(pp, qq);
+        }
+    }
+
+    fci_ints->set_restricted_one_body_operator(oei_a ,oei_b );
+
+    // Then build the coupling lists
     SharedMatrix final_evecs;
     SharedVector final_evals;
 
     op_.clear_op_s_lists();
     op_.clear_tp_s_lists();
-    op_.build_strings(ref);
-    op_.op_s_lists(ref);
-    op_.tp_s_lists(ref);
+
+    WFNOperator op(mo_symmetry_,fci_ints);
+    op.build_strings(ref);
+    op.op_s_lists(ref);
+    op.tp_s_lists(ref);
+
+    // Diagonalize full space
 
     SparseCISolver sparse_solver(fci_ints);
     sparse_solver.set_parallel(true);
+    sparse_solver.set_force_diag(options_.get_bool("FORCE_DIAG_METHOD"));
     sparse_solver.set_e_convergence(options_.get_double("E_CONVERGENCE"));
     sparse_solver.set_maxiter_davidson(options_.get_int("DL_MAXITER"));
     sparse_solver.set_spin_project(project_out_spin_contaminants_);
-    //   sparse_solver.set_spin_project_full(project_out_spin_contaminants_);
+    sparse_solver.set_spin_project_full(project_out_spin_contaminants_);
     sparse_solver.set_guess_dimension(options_.get_int("DL_GUESS_SIZE"));
-    sparse_solver.set_spin_project_full(false);
-    sparse_solver.diagonalize_hamiltonian_map(ref, op_, final_evals, final_evecs, nroot_,
+    sparse_solver.set_num_vecs(options_.get_int("N_GUESS_VEC"));
+    sparse_solver.set_sigma_method(options_.get_str("SIGMA_BUILD_TYPE"));
+
+    sparse_solver.diagonalize_hamiltonian_map(ref, op, final_evals, final_evecs, nroot_,
                                               multiplicity_, diag_method_);
 
     outfile->Printf("\n\n");
     for (int i = 0; i < nroot_; ++i) {
         double abs_energy =
-            final_evals->get(i) + nuclear_repulsion_energy_ + fci_ints->scalar_energy();
+            final_evals->get(i) + nuclear_repulsion_energy_ + fci_ints->frozen_core_energy();
         double exc_energy = pc_hartree2ev * (final_evals->get(i) - final_evals->get(0));
         outfile->Printf("\n  * ACI+es Energy Root %3d        = %.12f Eh = %8.4f eV", i, abs_energy,
                         exc_energy);
@@ -3072,56 +3682,237 @@ void AdaptiveCI::add_external_singles(DeterminantHashVec& ref) {
         //    	}
     }
 
-    print_wfn(ref, final_evecs, nroot_);
+    print_wfn(ref,op, final_evecs, nroot_);
     rdm_level_ = 1;
-    nactpi_ = mo_space_info_->get_dimension("CORRELATED");
-    nact_ = mo_space_info_->size("CORRELATED");
-    compute_rdms(fci_ints, ref, op_, final_evecs, 0, 0);
+    compute_rdms(fci_ints, ref, op, final_evecs, 0, 0);
 }
 
-/*
-void AdaptiveCI::approximate_rdm( DeterminantMap& ref, SharedMatrix evecs ){
+void AdaptiveCI::spin_analysis()
+{
+    size_t nact = static_cast<unsigned long>(nact_);
+    size_t nact2 = nact*nact;
+    size_t nact3 = nact*nact2;
 
-    size_t max_I = I_space.size();
-    std::vector<STLBitsetDeterminant> I_dets = ref.determinants();
+    // First build rdms as ambit tensors
+    ambit::Tensor L1a = ambit::Tensor::build(ambit::CoreTensor, "L1a", {nact, nact});
+    ambit::Tensor L1b = ambit::Tensor::build(ambit::CoreTensor, "L1b", {nact, nact});
+    ambit::Tensor L2aa =
+        ambit::Tensor::build(ambit::CoreTensor, "L2aa", {nact, nact, nact, nact});
+    ambit::Tensor L2ab =
+        ambit::Tensor::build(ambit::CoreTensor, "L2ab", {nact, nact, nact, nact});
+    ambit::Tensor L2bb =
+        ambit::Tensor::build(ambit::CoreTensor, "L2bb", {nact, nact, nact, nact});
 
-    for (size_t I = 0; I < max_I; ++I) {
-        STLBitsetDeterminant& det(ref[I]);
-       // double evecs_P_row_norm = evecs->get_row(0, P)->norm();
+    L1a.iterate([&](const std::vector<size_t>& i, double& value) {
+        value = ordm_a_[i[0] * nact + i[1]];
+    });
 
-        std::vector<int> aocc = det.get_alfa_occ();
-        std::vector<int> bocc = det.get_beta_occ();
-        std::vector<int> avir = det.get_alfa_vir();
-        std::vector<int> bvir = det.get_beta_vir();
+    L1b.iterate([&](const std::vector<size_t>& i, double& value) {
+        value = ordm_b_[i[0] * nact + i[1]];
+    });
 
-        int noalpha = aocc.size();
-        int nobeta = bocc.size();
-        int nvalpha = avir.size();
-        int nvbeta = bvir.size();
-        STLBitsetDeterminant new_det(det);
+    L2aa.iterate([&](const std::vector<size_t>& i, double& value) {
+        value = trdm_aa_[i[0] * nact3 + i[1] * nact2 + i[2] * nact + i[3]];
+    });
+    L2ab.iterate([&](const std::vector<size_t>& i, double& value) {
+        value = trdm_ab_[i[0] * nact3 + i[1] * nact2 + i[2] * nact + i[3]];
+    });
+    L2bb.iterate([&](const std::vector<size_t>& i, double& value) {
+        value = trdm_bb_[i[0] * nact3 + i[1] * nact2 + i[2] * nact + i[3]];
+    });
 
-        // Generate alpha excitations
-        for (int i = 0; i < noalpha; ++i) {
-            int ii = aocc[i];
-            for (int a = 0; a < nvalpha; ++a) {
-                int aa = avir[a];
-                if ((mo_symmetry_[ii] ^ mo_symmetry_[aa]) == 0) {
-                    double HIJ = det.slater_rules_single_alpha(ii, aa);
-                    //if ((std::fabs(HIJ) * evecs_P_row_norm >= screen_thresh_)) {
-                    //      if( std::abs(HIJ * evecs->get(0, P)) > screen_thresh_ ){
-                    new_det = det;
-                    new_det.set_alfa_bit(ii, false);
-                    new_det.set_alfa_bit(aa, true);
+    SharedMatrix UA(new Matrix( nact, nact));
+    SharedMatrix UB(new Matrix( nact, nact));
 
-                    if( !(ref.has_det(new_det)) ){
+    if( options_.get_str("SPIN_BASIS") == "IAO" ){
 
-                    }
+        outfile->Printf("\n  Computing spin correlation in IAO basis \n");
+        SharedMatrix Ca = reference_wavefunction_->Ca();
+        std::shared_ptr<IAOBuilder> IAO = IAOBuilder::build(reference_wavefunction_->basisset(), reference_wavefunction_->get_basisset("MINAO_BASIS"), Ca, options_);
+        outfile->Printf("\n  Computing IAOs\n");
+        std::map<std::string, SharedMatrix> iao_info = IAO->build_iaos();
+        SharedMatrix iao_orbs(iao_info["A"]->clone());
+
+        SharedMatrix Cainv(Ca->clone());
+        Cainv->invert();
+        SharedMatrix iao_coeffs = Matrix::doublet(Cainv,iao_orbs,false,false);
+
+        size_t new_dim = iao_orbs->colspi()[0];
+        size_t new_dim2 = new_dim*new_dim;
+        size_t new_dim3 = new_dim2*new_dim;
+
+        auto labels = IAO->print_IAO( iao_orbs, new_dim, nmo_, reference_wavefunction_);
+        std::vector<int> IAO_inds;
+        if( options_.get_bool("PI_ACTIVE_SPACE") ){
+            for( int i = 0; i < labels.size(); ++i ){
+                std::string label = labels[i];
+                if( label.find("z") != std::string::npos ){
+                    IAO_inds.push_back(i);
+                }
+            }
+        }else{
+            nact = new_dim;
+            for( int i = 0; i < new_dim; ++i ){
+                IAO_inds.push_back(i);
+            }
+        }
+
+
+        std::vector<size_t> active_mo = mo_space_info_->get_absolute_mo("ACTIVE");
+        for( int i = 0 ; i < nact; ++i ){
+            int idx = IAO_inds[i];
+            outfile->Printf("\n Using IAO %d", idx);
+            for( int j = 0; j < nact; ++j ){
+                int mo = active_mo[j];
+                UA->set(j,i, iao_coeffs->get(mo,idx));
+            }
+        }  
+        UB->copy(UA);
+        outfile->Printf("\n");
+
+    } else if ( options_.get_str("SPIN_BASIS") == "NO"){
+
+        outfile->Printf("\n  Computing spin correlation in NO basis \n");
+        SharedMatrix RDMa(new Matrix( nact, nact) );
+        SharedMatrix RDMb(new Matrix( nact, nact) );
+    
+        for( int i = 0; i < nact; ++i ){
+            for( int j = 0; j < nact; ++j ){
+                RDMa->set(i,j, ordm_a_[i*nact + j]);
+                RDMb->set(i,j, ordm_b_[i*nact + j]);
+            }
+        }
+        
+       // SharedMatrix NOa;
+       // SharedMatrix NOb;
+        SharedVector occa( new Vector(nact));
+        SharedVector occb( new Vector(nact));
+        
+        RDMa->diagonalize(UA, occa); 
+        RDMb->diagonalize(UB, occb); 
+
+        int nmo = reference_wavefunction_->nmo();
+        SharedMatrix Ua_full(new Matrix(nmo,nmo)); 
+        SharedMatrix Ub_full(new Matrix(nmo,nmo)); 
+    
+        Ua_full->identity();
+        Ub_full->identity();
+
+        auto actpi = mo_space_info_->get_absolute_mo("ACTIVE");
+        auto nactpi = mo_space_info_->get_dimension("ACTIVE");
+        for( int h = 0; h < nirrep_; ++h ){
+            // skip frozen/restricted docc
+            int nact = nactpi[h]; 
+            for( int i = 0; i < nact; ++i ){
+                for( int j = 0; j < nact; ++j ){
+                    Ua_full->set(actpi[i],actpi[j], UA->get(i,j));
+                    Ub_full->set(actpi[i],actpi[j], UB->get(i,j));
                 }
             }
         }
+
+
+        SharedMatrix CA = reference_wavefunction_->Ca();
+        SharedMatrix CB = reference_wavefunction_->Cb();
+
+        SharedMatrix Ca_new = Matrix::doublet( CA, Ua_full, false,false);
+        SharedMatrix Cb_new = Matrix::doublet( CB, Ub_full, false,false);
+
+        CA->copy( Ca_new );
+        CB->copy( Cb_new );
+         
+
+    } else {
+        outfile->Printf("\n  Computing spin correlation in reference basis \n");
+        UA->identity();
+        UB->identity();
     }
 
+
+    ambit::Tensor Ua = ambit::Tensor::build(ambit::CoreTensor, "U", {nact,nact});
+    ambit::Tensor Ub = ambit::Tensor::build(ambit::CoreTensor, "U", {nact,nact});
+    Ua.iterate([&](const std::vector<size_t>& i, double& value) {
+        value = UA->get(i[0], i[1]); 
+    });
+    Ub.iterate([&](const std::vector<size_t>& i, double& value) {
+        value = UB->get(i[0], i[1]); 
+    });
+
+
+//    new_dim = nact;
+    // 1 rdms first
+    ambit::Tensor L1aT =
+        ambit::Tensor::build(ambit::CoreTensor, "Transformed L1a", {nact, nact});
+    ambit::Tensor L1bT =
+        ambit::Tensor::build(ambit::CoreTensor, "Transformed L1b", {nact, nact});
+
+    L1aT("pq") = Ua("ap") * L1a("ab") * Ua("bq");
+    L1bT("pq") = Ub("ap") * L1b("ab") * Ub("bq");
+    // 2 rdms
+    ambit::Tensor L2aaT =
+        ambit::Tensor::build(ambit::CoreTensor, "Transformed L2aa", {nact, nact, nact, nact});
+    ambit::Tensor L2abT =
+        ambit::Tensor::build(ambit::CoreTensor, "Transformed L2ab", {nact, nact, nact, nact});
+    ambit::Tensor L2bbT =
+        ambit::Tensor::build(ambit::CoreTensor, "Transformed L2bb", {nact, nact, nact, nact});
+
+    L2aaT("pqrs") = Ua("ap") * Ua("bq") * L2aa("abcd") * Ua("cr") * Ua("ds");
+    L2abT("pqrs") = Ua("ap") * Ub("bq") * L2ab("abcd") * Ua("cr") * Ub("ds");
+    L2bbT("pqrs") = Ub("ap") * Ub("bq") * L2bb("abcd") * Ub("cr") * Ub("ds");
+
+
+    // Now form the spin correlation
+    SharedMatrix spin_corr(new Matrix("Spin Correlation", nact, nact));
+
+    std::vector<double> l1a(L1aT.data());
+    std::vector<double> l1b(L1bT.data());
+    std::vector<double> l2aa(L2aaT.data());
+    std::vector<double> l2ab(L2abT.data());
+    std::vector<double> l2bb(L2bbT.data());
+
+    for( int i = 0; i < nact; ++i ){
+        for( int j = 0; j < nact; ++j){
+            double value = 0.0;
+            if( i == j ){
+                value += 0.75 * (l1a[nact*i + j] + l1b[nact*i + j]);
+            }
+           
+            value -= 0.5  * ( l2ab[ i * nact3 + j * nact2 + j * nact + i ] 
+                            + l2ab[ j * nact3 + i * nact2 + i * nact + j ] );
+
+            value += 0.25 * ( l2aa[ i * nact3 + j * nact2 + i * nact + j ]
+                            + l2bb[ i * nact3 + j * nact2 + i * nact + j ] 
+                            - l2ab[ i * nact3 + j * nact2 + i * nact + j ] 
+                            - l2ab[ j * nact3 + i * nact2 + j * nact + i ]
+                            - l1a[i*nact + i] * l1a[j*nact + j] 
+                            - l1b[i*nact + i] * l1b[j*nact + j] 
+                            + l1a[i*nact + i] * l1b[j*nact + j] 
+                            + l1b[i*nact + i] * l1a[j*nact + j] );
+
+            spin_corr->set(i,j,value);
+        }
+    }
+    spin_corr->print();
+    SharedMatrix spin_evecs(new Matrix(nact,nact));
+    SharedVector spin_evals(new Vector(nact));
+    
+    spin_corr->diagonalize(spin_evecs,spin_evals);
+    spin_evals->print();
+
+    if( options_.get_bool("SPIN_MAT_TO_FILE") ){
+        std::ofstream file;
+        file.open("spin_mat.txt", std::ofstream::out | std::ofstream::trunc);
+        for( int i = 0; i < nact; ++i ){
+            for( int j = 0; j < nact; ++j ){
+                file << std::setw( 12 ) << std::setprecision(6) << spin_corr->get(i,j) << " ";
+            }
+            file << "\n";
+        } 
+        file.close();       
+    }
+
+
 }
-*/
+
 }
 } // EndNamespaces

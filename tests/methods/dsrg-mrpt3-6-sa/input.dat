@@ -3,7 +3,6 @@
 import forte
 
 refmcscf    = -106.752885105076
-refpt3sub   = -106.983385669631
 refpt3full  = -106.985885834684
 
 molecule {
@@ -49,13 +48,6 @@ set forte{
   e_convergence      10
   cas_type           cas
   avg_state          [[0,1,2]]
-  dsrg_multi_state   sa_sub
-}
-
-energy('forte',ref_wfn=wfn)
-compare_values(refpt3sub,get_variable("CURRENT ENERGY"),8,"SA-DSRG-PT3 SUB energy root 0")
-
-set forte{
   dsrg_multi_state   sa_full
 }
 energy('forte',ref_wfn=wfn)

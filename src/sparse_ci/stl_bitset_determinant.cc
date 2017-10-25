@@ -26,10 +26,9 @@
  * @END LICENSE
  */
 
-#include "psi4/libmints/matrix.h"
 #include "psi4/psi4-dec.h"
+#include "psi4/libpsi4util/PsiOutStream.h"
 
-#include "fci/fci_vector.h"
 #include "stl_bitset_determinant.h"
 
 using namespace psi;

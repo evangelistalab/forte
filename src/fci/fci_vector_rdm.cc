@@ -33,7 +33,7 @@
 #include "psi4/libqt/qt.h"
 
 #include "../helpers.h"
-#include "../stl_bitset_determinant.h"
+#include "../sparse_ci/stl_bitset_determinant.h"
 
 #include "fci_vector.h"
 

@@ -31,7 +31,7 @@
 #include "forte_options.h"
 #include "helpers.h"
 #include "integrals/integrals.h"
-#include "stl_bitset_determinant.h"
+#include "sparse_ci/stl_bitset_determinant.h"
 #include "version.h"
 
 #ifdef HAVE_CHEMPS2
@@ -102,7 +102,7 @@ extern "C" SharedWavefunction forte(SharedWavefunction ref_wfn, Options& options
         // Compute energy
         forte_old_methods(ref_wfn, options, ints, mo_space_info, my_proc);
 
-//        outfile->Printf("\n\n  Your calculation took %.8f seconds\n", total_time.get());
+        //        outfile->Printf("\n\n  Your calculation took %.8f seconds\n", total_time.get());
     }
 
     forte_cleanup();
