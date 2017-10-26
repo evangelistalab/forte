@@ -34,8 +34,8 @@
 #include "../ci_rdms.h"
 #include "../fci/fci_integrals.h"
 #include "../forte_options.h"
-#include "../sparse_ci_solver.h"
-#include "../stl_bitset_determinant.h"
+#include "../sparse_ci/sparse_ci_solver.h"
+#include "../sparse_ci/stl_bitset_determinant.h"
 #include "mrci-no.h"
 #include "ci-no.h"
 //#include "../hash_vector.h"
@@ -732,18 +732,22 @@ void MRCINO::find_active_space_and_transform(
     Dimension noci_fdocc = fdoccpi_;
     Dimension noci_actv = nactv_occ + nactv_vir;
     Dimension noci_rdocc = aoccpi_ - nactv_occ;
+    Dimension noci_rducc = corrpi_ - aoccpi_ - nactv_vir;
 
     outfile->Printf("\n  FROZEN_DOCC     = %s", dimension_to_string(noci_fdocc).c_str());
     outfile->Printf("\n  RESTRICTED_DOCC = %s", dimension_to_string(noci_rdocc).c_str());
     outfile->Printf("\n  ACTIVE          = %s", dimension_to_string(noci_actv).c_str());
+    outfile->Printf("\n  RESTRICTED_UOCC = %s", dimension_to_string(noci_rducc).c_str());
 
     // Pass the MOSpaceInfo
     if (mrcino_auto) {
         for (int h = 0; h < nirrep_; h++) {
             options_["RESTRICTED_DOCC"].add(h);
             options_["ACTIVE"].add(h);
+            options_["RESTRICTED_UOCC"].add(h);
             options_["RESTRICTED_DOCC"][h].assign(noci_rdocc[h]);
-            options_["active"][h].assign(noci_actv[h]);
+            options_["ACTIVE"][h].assign(noci_actv[h]);
+            options_["RESTRICTED_UOCC"][h].assign(noci_rducc[h]);
         }
     }
 }
