@@ -411,7 +411,7 @@ CINO::build_density_matrix(const std::vector<Determinant>& dets, SharedMatrix ev
         }
         offset += actvpi_[h];
     }
-    opdm_a->print();
+    //opdm_a->print();
     return std::make_pair(opdm_a, opdm_b);
 }
 
