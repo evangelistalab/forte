@@ -324,8 +324,6 @@ void AdaptiveCI::startup() {
             diag_method_ = Sparse;
         } else if (options_.get_str("DIAG_ALGORITHM") == "SOLVER") {
             diag_method_ = DLSolver;
-        } else if (options_.get_str("DIAG_ALGORITHM") == "DIRECT") {
-            diag_method_ = Direct;
         } else if (options_.get_str("DIAG_ALGORITHM") == "DYNAMIC") {
             diag_method_ = Dynamic;
         }
@@ -687,7 +685,6 @@ void AdaptiveCI::diagonalize_final_and_compute_rdms() {
     sparse_solver.set_max_memory(options_.get_int("SIGMA_VECTOR_MAX_MEMORY"));
     sparse_solver.diagonalize_hamiltonian_map(final_wfn_, op_, final_evals, final_evecs, nroot_,
                                               multiplicity_, diag_method_);
-
 
     print_final(final_wfn_, final_evecs, final_evals);
 
@@ -3659,7 +3656,6 @@ void AdaptiveCI::add_external_excitations(DeterminantHashVec& ref) {
     sparse_solver.set_num_vecs(options_.get_int("N_GUESS_VEC"));
     sparse_solver.set_sigma_method(options_.get_str("SIGMA_BUILD_TYPE"));
     sparse_solver.set_max_memory(options_.get_int("SIGMA_VECTOR_MAX_MEMORY"));
-
 
     sparse_solver.diagonalize_hamiltonian_map(ref, op, final_evals, final_evecs, nroot_,
                                               multiplicity_, diag_method_);

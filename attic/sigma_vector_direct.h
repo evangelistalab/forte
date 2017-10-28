@@ -66,8 +66,6 @@ class SigmaVectorDirect : public SigmaVector {
     std::vector<double> temp_sigma_;
     const DeterminantHashVec& space_;
     std::shared_ptr<FCIIntegrals> fci_ints_;
-    SortedStringList a_sorted_string_list_;
-    SortedStringList b_sorted_string_list_;
     SortedStringList_UI64 a_sorted_string_list_ui64_;
     SortedStringList_UI64 b_sorted_string_list_ui64_;
 

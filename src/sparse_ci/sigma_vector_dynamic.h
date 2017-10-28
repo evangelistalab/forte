@@ -56,6 +56,7 @@ class SigmaVectorDynamic : public SigmaVector {
     SigmaVectorMode mode_ = SigmaVectorMode::Dynamic;
     /// The number of threads
     int num_threads_ = 1;
+    size_t total_space_ = 0;
     int nmo_ = 0;
     /// Number of sigma builds
     int num_builds_ = 0;
@@ -68,8 +69,8 @@ class SigmaVectorDynamic : public SigmaVector {
     std::vector<double> temp_sigma_;
     const DeterminantHashVec& space_;
     std::shared_ptr<FCIIntegrals> fci_ints_;
-    SortedStringList_UI64 a_sorted_string_list_ui64_;
-    SortedStringList_UI64 b_sorted_string_list_ui64_;
+    SortedStringList_UI64 a_sorted_string_list_;
+    SortedStringList_UI64 b_sorted_string_list_;
 
     /// The Hamiltonian stored as a list of pairs (H_IJ, I, J)
     std::vector<std::tuple<double, std::uint32_t, std::uint32_t>> H_IJ_list_;

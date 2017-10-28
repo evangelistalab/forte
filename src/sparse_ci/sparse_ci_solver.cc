@@ -37,7 +37,6 @@
 #include "../forte-def.h"
 #include "../iterative_solvers.h"
 #include "sparse_ci_solver.h"
-#include "sigma_vector_direct.h"
 #include "sigma_vector_dynamic.h"
 
 struct PairHash {
@@ -156,23 +155,6 @@ void SparseCISolver::diagonalize_dl(const DeterminantHashVec& space, WFNOperator
         sigma_vector->add_bad_roots(bad_states_);
         davidson_liu_solver_map(space, sigma_vector, evals, evecs, nroot, multiplicity);
     }
-}
-
-void SparseCISolver::diagonalize_dl_direct(const DeterminantHashVec& space, WFNOperator& op,
-                                           SharedVector& evals, SharedMatrix& evecs, int nroot,
-                                           int multiplicity) {
-    if (print_details_) {
-        outfile->Printf("\n\n  Davidson-Liu solver algorithm");
-        //        outfile->Printf("\n  Using %s sigma builder", sigma_method_.c_str());
-    }
-    size_t dim_space = space.size();
-    evecs.reset(new Matrix("U", dim_space, nroot));
-    evals.reset(new Vector("e", nroot));
-
-    SigmaVectorDirect svd(space, fci_ints_);
-    SigmaVector* sigma_vector = &svd;
-    sigma_vector->add_bad_roots(bad_states_);
-    davidson_liu_solver_map(space, sigma_vector, evals, evecs, nroot, multiplicity);
 }
 
 void SparseCISolver::diagonalize_dl_dynamic(const DeterminantHashVec& space, WFNOperator& op,

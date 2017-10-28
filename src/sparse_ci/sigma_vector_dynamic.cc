@@ -63,8 +63,8 @@ void print_SigmaVectorDynamic_stats();
 SigmaVectorDynamic::SigmaVectorDynamic(const DeterminantHashVec& space,
                                        std::shared_ptr<FCIIntegrals> fci_ints, size_t max_memory)
     : SigmaVector(space.size()), space_(space), fci_ints_(fci_ints),
-      a_sorted_string_list_ui64_(space, fci_ints, STLBitsetDeterminant::SpinType::AlphaSpin),
-      b_sorted_string_list_ui64_(space, fci_ints, STLBitsetDeterminant::SpinType::BetaSpin) {
+      a_sorted_string_list_(space, fci_ints, STLBitsetDeterminant::SpinType::AlphaSpin),
+      b_sorted_string_list_(space, fci_ints, STLBitsetDeterminant::SpinType::BetaSpin) {
 
     timer this_timer("creator");
 
@@ -79,8 +79,9 @@ SigmaVectorDynamic::SigmaVectorDynamic(const DeterminantHashVec& space,
     temp_b_.resize(size_);
 
     num_threads_ = std::thread::hardware_concurrency();
-    size_t total_space = max_memory;
-    size_t space_per_thread = total_space / num_threads_;
+
+    total_space_ = max_memory;
+    size_t space_per_thread = total_space_ / num_threads_;
     for (int t = 0; t < num_threads_; ++t) {
         H_IJ_list_thread_limit_.push_back((t + 1) * space_per_thread);
 
@@ -97,9 +98,9 @@ SigmaVectorDynamic::SigmaVectorDynamic(const DeterminantHashVec& space,
         first_bb_onthefly_group_.push_back(t);
         first_abab_onthefly_group_.push_back(t);
     }
-    H_IJ_list_.resize(total_space);
+    H_IJ_list_.resize(total_space_);
     outfile->Printf("\n\n SigmaVectorDynamic:");
-    outfile->Printf("\n Maximum memory   : %zu double", max_memory);
+    outfile->Printf("\n Maximum memory   : %zu double", total_space_);
     outfile->Printf("\n Number of threads: %d\n", num_threads_);
 }
 
@@ -184,7 +185,7 @@ void SigmaVectorDynamic::compute_sigma_aa(SharedVector sigma, SharedVector b) {
     timer energy_timer("sigma_aa");
     std::fill(temp_sigma_.begin(), temp_sigma_.end(), 0.0);
     for (size_t I = 0; I < size_; ++I) {
-        size_t addI = b_sorted_string_list_ui64_.add(I);
+        size_t addI = b_sorted_string_list_.add(I);
         temp_b_[I] = b->get(addI);
     }
     // launch asynchronous tasks
@@ -201,20 +202,20 @@ void SigmaVectorDynamic::compute_sigma_aa(SharedVector sigma, SharedVector b) {
         }
     }
     // collect results
-    for (auto& f : tasks) {
-        f.get();
+    for (auto& task : tasks) {
+        task.get();
     }
     // Add sigma using the determinant address used in the DeterminantHashVector object
     double* sigma_p = sigma->pointer();
     for (size_t I = 0; I < size_; ++I) {
-        size_t addI = b_sorted_string_list_ui64_.add(I);
+        size_t addI = b_sorted_string_list_.add(I);
         sigma_p[addI] += temp_sigma_[I];
     }
 }
 
 void SigmaVectorDynamic::sigma_aa_store_task(size_t task_id, size_t num_tasks) {
     // loop over all determinants
-    const auto& sorted_half_dets = b_sorted_string_list_ui64_.sorted_half_dets();
+    const auto& sorted_half_dets = b_sorted_string_list_.sorted_half_dets();
     size_t num_half_dets = sorted_half_dets.size();
     // a temp array that can fit one row of the Hamiltonian
     bool store = true;
@@ -236,7 +237,7 @@ void SigmaVectorDynamic::sigma_aa_store_task(size_t task_id, size_t num_tasks) {
 
 void SigmaVectorDynamic::sigma_aa_dynamic_task(size_t task_id, size_t num_tasks) {
     // loop over all determinants
-    const auto& sorted_half_dets = b_sorted_string_list_ui64_.sorted_half_dets();
+    const auto& sorted_half_dets = b_sorted_string_list_.sorted_half_dets();
     size_t num_half_dets = sorted_half_dets.size();
 
     // compute contributions from elements stored in memory
@@ -262,13 +263,14 @@ void SigmaVectorDynamic::compute_sigma_bb(SharedVector sigma, SharedVector b) {
     timer energy_timer("sigma_bb");
     std::fill(temp_sigma_.begin(), temp_sigma_.end(), 0.0);
     for (size_t I = 0; I < size_; ++I) {
-        size_t addI = a_sorted_string_list_ui64_.add(I);
+        size_t addI = a_sorted_string_list_.add(I);
         temp_b_[I] = b->get(addI);
     }
     // launch asynchronous tasks
     std::vector<std::future<void>> tasks;
     for (int task_id = 0; task_id < num_threads_; ++task_id) {
         if ((mode_ == SigmaVectorMode::Dynamic) and ((num_builds_ == 0))) {
+            // If running in dynamic mode, store Hamiltonian on first build
             tasks.push_back(std::async(std::launch::async, &SigmaVectorDynamic::sigma_bb_store_task,
                                        this, task_id, num_threads_));
         } else {
@@ -278,20 +280,20 @@ void SigmaVectorDynamic::compute_sigma_bb(SharedVector sigma, SharedVector b) {
         }
     }
     // collect results
-    for (auto& f : tasks) {
-        f.get();
+    for (auto& task : tasks) {
+        task.get();
     }
     // Add sigma using the determinant address used in the DeterminantHashVector object
     double* sigma_p = sigma->pointer();
     for (size_t I = 0; I < size_; ++I) {
-        size_t addI = a_sorted_string_list_ui64_.add(I);
+        size_t addI = a_sorted_string_list_.add(I);
         sigma_p[addI] += temp_sigma_[I];
     }
 }
 
 void SigmaVectorDynamic::sigma_bb_store_task(size_t task_id, size_t num_tasks) {
     // loop over all determinants
-    const auto& sorted_half_dets = a_sorted_string_list_ui64_.sorted_half_dets();
+    const auto& sorted_half_dets = a_sorted_string_list_.sorted_half_dets();
     size_t num_half_dets = sorted_half_dets.size();
     bool store = true;
     for (size_t group = task_id; group < num_half_dets; group += num_tasks) {
@@ -312,7 +314,7 @@ void SigmaVectorDynamic::sigma_bb_store_task(size_t task_id, size_t num_tasks) {
 
 void SigmaVectorDynamic::sigma_bb_dynamic_task(size_t task_id, size_t num_tasks) {
     // loop over all determinants
-    const auto& sorted_half_dets = a_sorted_string_list_ui64_.sorted_half_dets();
+    const auto& sorted_half_dets = a_sorted_string_list_.sorted_half_dets();
     size_t num_half_dets = sorted_half_dets.size();
 
     // compute contributions from elements stored in memory
@@ -338,13 +340,14 @@ void SigmaVectorDynamic::compute_sigma_abab(SharedVector sigma, SharedVector b) 
     timer energy_timer("sigma_abab");
     std::fill(temp_sigma_.begin(), temp_sigma_.end(), 0.0);
     for (size_t I = 0; I < size_; ++I) {
-        size_t addI = a_sorted_string_list_ui64_.add(I);
+        size_t addI = a_sorted_string_list_.add(I);
         temp_b_[I] = b->get(addI);
     }
     // launch asynchronous tasks
     std::vector<std::future<void>> tasks;
     for (int task_id = 0; task_id < num_threads_; ++task_id) {
         if ((mode_ == SigmaVectorMode::Dynamic) and ((num_builds_ == 0))) {
+            // If running in dynamic mode, store Hamiltonian on first build
             tasks.push_back(std::async(std::launch::async,
                                        &SigmaVectorDynamic::sigma_abab_store_task, this, task_id,
                                        num_threads_));
@@ -355,20 +358,20 @@ void SigmaVectorDynamic::compute_sigma_abab(SharedVector sigma, SharedVector b) 
         }
     }
     // collect results
-    for (auto& f : tasks) {
-        f.get();
+    for (auto& task : tasks) {
+        task.get();
     }
     // Add sigma using the determinant address used in the DeterminantHashVector object
     double* sigma_p = sigma->pointer();
     for (size_t I = 0; I < size_; ++I) {
-        size_t addI = a_sorted_string_list_ui64_.add(I);
+        size_t addI = a_sorted_string_list_.add(I);
         sigma_p[addI] += temp_sigma_[I];
     }
 }
 
 void SigmaVectorDynamic::sigma_abab_store_task(size_t task_id, size_t num_tasks) {
     // loop over all determinants
-    const auto& sorted_half_dets = a_sorted_string_list_ui64_.sorted_half_dets();
+    const auto& sorted_half_dets = a_sorted_string_list_.sorted_half_dets();
     size_t num_half_dets = sorted_half_dets.size();
     bool store = true;
     for (size_t group = task_id; group < num_half_dets; group += num_tasks) {
@@ -396,7 +399,7 @@ void SigmaVectorDynamic::sigma_abab_dynamic_task(size_t task_id, size_t num_task
     }
 
     // compute contributions on-the-fly
-    const auto& sorted_half_dets = a_sorted_string_list_ui64_.sorted_half_dets();
+    const auto& sorted_half_dets = a_sorted_string_list_.sorted_half_dets();
     size_t num_half_dets = sorted_half_dets.size();
     size_t first_group = first_abab_onthefly_group_[task_id];
     for (size_t group = first_group; group < num_half_dets; group += num_tasks) {
@@ -412,8 +415,8 @@ bool SigmaVectorDynamic::compute_aa_coupling_and_store(const UI64Determinant::bi
     size_t end = H_IJ_aa_list_thread_end_[task_id];
     size_t limit = H_IJ_list_thread_limit_[task_id];
 
-    const auto& sorted_dets = b_sorted_string_list_ui64_.sorted_dets();
-    const auto& range_I = b_sorted_string_list_ui64_.range(Ib);
+    const auto& sorted_dets = b_sorted_string_list_.sorted_dets();
+    const auto& range_I = b_sorted_string_list_.range(Ib);
     UI64Determinant::bit_t Ia;
     UI64Determinant::bit_t Ja;
     UI64Determinant::bit_t IJa;
@@ -476,8 +479,8 @@ bool SigmaVectorDynamic::compute_aa_coupling_and_store(const UI64Determinant::bi
 
 void SigmaVectorDynamic::compute_aa_coupling(const UI64Determinant::bit_t& Ib,
                                              const std::vector<double>& b) {
-    const auto& sorted_dets = b_sorted_string_list_ui64_.sorted_dets();
-    const auto& range_I = b_sorted_string_list_ui64_.range(Ib);
+    const auto& sorted_dets = b_sorted_string_list_.sorted_dets();
+    const auto& range_I = b_sorted_string_list_.range(Ib);
     UI64Determinant::bit_t Ia;
     UI64Determinant::bit_t Ja;
     UI64Determinant::bit_t IJa;
@@ -522,8 +525,8 @@ bool SigmaVectorDynamic::compute_bb_coupling_and_store(const UI64Determinant::bi
     size_t end = H_IJ_bb_list_thread_end_[task_id];
     size_t limit = H_IJ_list_thread_limit_[task_id];
 
-    const auto& sorted_dets = a_sorted_string_list_ui64_.sorted_dets();
-    const auto& range_I = a_sorted_string_list_ui64_.range(Ia);
+    const auto& sorted_dets = a_sorted_string_list_.sorted_dets();
+    const auto& range_I = a_sorted_string_list_.range(Ia);
     UI64Determinant::bit_t Ib;
     UI64Determinant::bit_t Jb;
     UI64Determinant::bit_t IJb;
@@ -586,8 +589,8 @@ bool SigmaVectorDynamic::compute_bb_coupling_and_store(const UI64Determinant::bi
 
 void SigmaVectorDynamic::compute_bb_coupling(const UI64Determinant::bit_t& Ia,
                                              const std::vector<double>& b) {
-    const auto& sorted_dets = a_sorted_string_list_ui64_.sorted_dets();
-    const auto& range_I = a_sorted_string_list_ui64_.range(Ia);
+    const auto& sorted_dets = a_sorted_string_list_.sorted_dets();
+    const auto& range_I = a_sorted_string_list_.range(Ia);
     UI64Determinant::bit_t Ib;
     UI64Determinant::bit_t Jb;
     UI64Determinant::bit_t IJb;
@@ -628,9 +631,9 @@ void SigmaVectorDynamic::compute_bb_coupling(const UI64Determinant::bit_t& Ia,
 bool SigmaVectorDynamic::compute_abab_coupling_and_store(const UI64Determinant::bit_t& detIa,
                                                          const std::vector<double>& b,
                                                          size_t task_id) {
-    const auto& sorted_half_dets = a_sorted_string_list_ui64_.sorted_half_dets();
-    const auto& sorted_dets = a_sorted_string_list_ui64_.sorted_dets();
-    const auto& range_I = a_sorted_string_list_ui64_.range(detIa);
+    const auto& sorted_half_dets = a_sorted_string_list_.sorted_half_dets();
+    const auto& sorted_dets = a_sorted_string_list_.sorted_dets();
+    const auto& range_I = a_sorted_string_list_.range(detIa);
     bool stored = true;
     size_t end = H_IJ_abab_list_thread_end_[task_id];
     size_t limit = H_IJ_list_thread_limit_[task_id];
@@ -654,7 +657,7 @@ bool SigmaVectorDynamic::compute_abab_coupling_and_store(const UI64Determinant::
                 }
             }
             double sign_ia = ui64_slater_sign(detIa, i, a);
-            const auto& range_J = a_sorted_string_list_ui64_.range(detJa);
+            const auto& range_J = a_sorted_string_list_.range(detJa);
 
             size_t first_I = range_I.first;
             size_t last_I = range_I.second;
@@ -703,9 +706,9 @@ bool SigmaVectorDynamic::compute_abab_coupling_and_store(const UI64Determinant::
 
 void SigmaVectorDynamic::compute_abab_coupling(const UI64Determinant::bit_t& detIa,
                                                const std::vector<double>& b, size_t task_id) {
-    const auto& sorted_half_dets = a_sorted_string_list_ui64_.sorted_half_dets();
-    const auto& sorted_dets = a_sorted_string_list_ui64_.sorted_dets();
-    const auto& range_I = a_sorted_string_list_ui64_.range(detIa);
+    const auto& sorted_half_dets = a_sorted_string_list_.sorted_half_dets();
+    const auto& sorted_dets = a_sorted_string_list_.sorted_dets();
+    const auto& range_I = a_sorted_string_list_.range(detIa);
     UI64Determinant::bit_t detIJa_common;
     UI64Determinant::bit_t Ib;
     UI64Determinant::bit_t Jb;
@@ -725,7 +728,7 @@ void SigmaVectorDynamic::compute_abab_coupling(const UI64Determinant::bit_t& det
                 }
             }
             double sign_ia = ui64_slater_sign(detIa, i, a);
-            const auto& range_J = a_sorted_string_list_ui64_.range(detJa);
+            const auto& range_J = a_sorted_string_list_.range(detJa);
             size_t first_I = range_I.first;
             size_t last_I = range_I.second;
             size_t first_J = range_J.first;

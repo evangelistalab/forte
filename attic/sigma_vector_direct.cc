@@ -69,8 +69,8 @@ void print_SigmaVectorDirect_stats();
 SigmaVectorDirect::SigmaVectorDirect(const DeterminantHashVec& space,
                                      std::shared_ptr<FCIIntegrals> fci_ints)
     : SigmaVector(space.size()), space_(space), fci_ints_(fci_ints),
-      a_sorted_string_list_(space, fci_ints, STLBitsetDeterminant::SpinType::AlphaSpin),
-      b_sorted_string_list_(space, fci_ints, STLBitsetDeterminant::SpinType::BetaSpin),
+//      a_sorted_string_list_(space, fci_ints, STLBitsetDeterminant::SpinType::AlphaSpin),
+//      b_sorted_string_list_(space, fci_ints, STLBitsetDeterminant::SpinType::BetaSpin),
       a_sorted_string_list_ui64_(space, fci_ints, STLBitsetDeterminant::SpinType::AlphaSpin),
       b_sorted_string_list_ui64_(space, fci_ints, STLBitsetDeterminant::SpinType::BetaSpin) {
 
