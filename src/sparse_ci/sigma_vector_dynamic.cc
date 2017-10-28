@@ -44,17 +44,17 @@
 namespace psi {
 namespace forte {
 
-extern size_t count_aa_total;
-extern size_t count_bb_total;
-extern size_t count_aaaa_total;
-extern size_t count_abab_total;
-extern size_t count_bbbb_total;
+size_t count_aa_total;
+size_t count_bb_total;
+size_t count_aaaa_total;
+size_t count_abab_total;
+size_t count_bbbb_total;
 
-extern size_t count_aa;
-extern size_t count_bb;
-extern size_t count_aaaa;
-extern size_t count_abab;
-extern size_t count_bbbb;
+size_t count_aa;
+size_t count_bb;
+size_t count_aaaa;
+size_t count_abab;
+size_t count_bbbb;
 
 void print_SigmaVectorDynamic_stats();
 
