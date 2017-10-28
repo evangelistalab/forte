@@ -29,6 +29,7 @@
 #ifndef _helpers_h_
 #define _helpers_h_
 
+#include <algorithm>
 #include <map>
 #include <vector>
 #include <string>
