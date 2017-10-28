@@ -31,6 +31,7 @@
 
 #include <bitset>
 #include <unordered_map>
+#include <vector>
 
 namespace psi {
 namespace forte {
