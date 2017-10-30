@@ -58,7 +58,7 @@ size_t count_bbbb;
 
 void print_SigmaVectorDynamic_stats();
 
-#define SIGMA_VEC_DEBUG 1
+#define SIGMA_VEC_DEBUG 0
 
 SigmaVectorDynamic::SigmaVectorDynamic(const DeterminantHashVec& space,
                                        std::shared_ptr<FCIIntegrals> fci_ints, size_t max_memory)
@@ -137,6 +137,7 @@ void print_SigmaVectorDynamic_stats() {
 }
 
 void SigmaVectorDynamic::print_thread_stats() {
+#if SIGMA_VEC_DEBUG
     outfile->Printf("\n  SigmaVectorDynamic Threads statistics:");
     outfile->Printf("\n  b-b coupling:");
     outfile->Printf("\n Thread     start          end        limit         size        first");
@@ -158,6 +159,7 @@ void SigmaVectorDynamic::print_thread_stats() {
                         H_IJ_abab_list_thread_end_[t] - H_IJ_abab_list_thread_start_[t],
                         first_abab_onthefly_group_[t]);
     }
+#endif
 }
 
 void SigmaVectorDynamic::add_bad_roots(std::vector<std::vector<std::pair<size_t, double>>>& roots) {
