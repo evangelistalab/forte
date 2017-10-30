@@ -2525,11 +2525,6 @@ void AdaptiveCI::compute_aci(DeterminantHashVec& PQ_space, SharedMatrix& PQ_evec
     std::vector<double> P_ref_evecs;
     DeterminantHashVec P_space(initial_reference_);
 
-    auto det = initial_reference_[0];
-    det.print();
-    outfile->Printf("\n  Det energy: %5.12f", fci_ints_->energy(det));
-    outfile->Printf("\n  Scalar energy: %5.12f", fci_ints_->scalar_energy());
-
     if( (options_.get_str("ACI_EX_TYPE") == "CORE") and (root_ > 0)  ){
         
         int nf_orb = options_.get_int("ACI_NFROZEN_CORE");
