@@ -3364,6 +3364,7 @@ std::vector<double> THREE_DSRG_MRPT2::relaxed_energy(std::shared_ptr<FCIIntegral
         // Only do ground state ACI for now
         AdaptiveCI aci(reference_wavefunction_, options_, ints_, mo_space_info_);
         aci.set_fci_ints(fci_ints);
+        aci.startup();
         double relaxed_aci_en = aci.compute_energy();
         Erelax.push_back(relaxed_aci_en);
 

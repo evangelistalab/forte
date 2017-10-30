@@ -200,13 +200,14 @@ AdaptiveCI::AdaptiveCI(SharedWavefunction ref_wfn, Options& options,
     reference_wavefunction_ = ref_wfn;
 
     mo_symmetry_ = mo_space_info_->symmetry("ACTIVE");
-    startup();
+//    startup();
 }
 
 AdaptiveCI::~AdaptiveCI() {}
 
 void AdaptiveCI::set_fci_ints( std::shared_ptr<FCIIntegrals> fci_ints ) {
     fci_ints_ = fci_ints;
+    nuclear_repulsion_energy_ = molecule_->nuclear_repulsion_energy();
     set_ints_ = true;
 }
 
@@ -2523,6 +2524,11 @@ void AdaptiveCI::compute_aci(DeterminantHashVec& PQ_space, SharedMatrix& PQ_evec
     DeterminantHashVec P_ref;
     std::vector<double> P_ref_evecs;
     DeterminantHashVec P_space(initial_reference_);
+
+    auto det = initial_reference_[0];
+    det.print();
+    outfile->Printf("\n  Det energy: %5.12f", fci_ints_->energy(det));
+    outfile->Printf("\n  Scalar energy: %5.12f", fci_ints_->scalar_energy());
 
     if( (options_.get_str("ACI_EX_TYPE") == "CORE") and (root_ > 0)  ){
         

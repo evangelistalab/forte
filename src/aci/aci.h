@@ -109,6 +109,9 @@ class AdaptiveCI : public Wavefunction {
     void upcast_reference(DeterminantHashVec& ref);
     void add_external_excitations(DeterminantHashVec& ref);
 
+    /// All that happens before we compute the energy
+    void startup();
+
   private:
     // ==> Class data <==
 
@@ -276,8 +279,6 @@ class AdaptiveCI : public Wavefunction {
 
     // ==> Class functions <==
 
-    /// All that happens before we compute the energy
-    void startup();
 
     /// Compute an aci wavefunction
     void compute_aci(DeterminantHashVec& PQ_space, SharedMatrix& PQ_evecs, SharedVector& PQ_evals);
