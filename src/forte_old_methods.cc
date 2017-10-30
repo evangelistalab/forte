@@ -47,6 +47,7 @@
 #include "casscf.h"
 #include "cc.h"
 #include "ci-no/ci-no.h"
+#include "ci-no/mrci-no.h"
 #include "determinant_hashvector.h"
 #include "fci/fci.h"
 #include "fci/fci_solver.h"
@@ -114,6 +115,10 @@ void forte_old_methods(SharedWavefunction ref_wfn, Options& options,
     if (options.get_bool("CINO")) {
         auto cino = std::make_shared<CINO>(ref_wfn, options, ints, mo_space_info);
         cino->compute_energy();
+    }
+    if (options.get_bool("MRCINO")) {
+        auto mrcino = std::make_shared<MRCINO>(ref_wfn, options, ints, mo_space_info);
+        mrcino->compute_energy();
     }
     if (options.get_bool("LOCALIZE")) {
         auto localize = std::make_shared<LOCALIZE>(ref_wfn, options, ints, mo_space_info);

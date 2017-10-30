@@ -25,9 +25,8 @@
  *
  * @END LICENSE
  */
-
-#ifndef _ci_no_h_
-#define _ci_no_h_
+#ifndef _mrci_no_h_
+#define _mrci_no_h_
 
 #include "psi4/libmints/wavefunction.h"
 
@@ -36,14 +35,14 @@ namespace forte {
 
 class ForteOptions;
 
-/// Set the CI-NO options
-void set_CINO_options(ForteOptions& foptions);
+/// Set the MRCI-NO options
+void set_MRCINO_options(ForteOptions& foptions);
 
 /**
- * @brief The CINO class
+ * @brief The MRCINO class
  * This class implements natural orbitals for CI wave functions
  */
-class CINO : public Wavefunction {
+class MRCINO : public Wavefunction {
   public:
     // ==> Class Constructor and Destructor <==
 
@@ -54,11 +53,11 @@ class CINO : public Wavefunction {
      * @param ints A pointer to an allocated integral object
      * @param mo_space_info A pointer to the MOSpaceInfo object
      */
-    CINO(SharedWavefunction ref_wfn, Options& options, std::shared_ptr<ForteIntegrals> ints,
+    MRCINO(SharedWavefunction ref_wfn, Options& options, std::shared_ptr<ForteIntegrals> ints,
          std::shared_ptr<MOSpaceInfo> mo_space_info);
 
     /// Destructor
-    ~CINO();
+    ~MRCINO();
 
     // ==> Class Interface <==
 
@@ -74,10 +73,13 @@ class CINO : public Wavefunction {
     std::shared_ptr<MOSpaceInfo> mo_space_info_;
     /// Pointer to FCI integrals
     std::shared_ptr<FCIIntegrals> fci_ints_;
-    /// The number of orbitals
-    size_t nmo_;
+    /// The number of correlated orbitals
+    size_t corr_;
     /// The number of active orbitals
     size_t nactv_;
+
+    /// The number of correlated orbitals per irrep
+    Dimension corrpi_;
     /// The number of active orbitals per irrep
     Dimension actvpi_;
     /// The number of restricted doubly occupied orbitals per irrep
@@ -97,7 +99,7 @@ class CINO : public Wavefunction {
     //    /// The number of beta unoccupied active orbitals per irrep
     //    Dimension bvirpi_;
 
-    // ==> CINO Options <==
+    // ==> MRCINO Options <==
     /// Add missing degenerate determinants excluded from the aimed selection?
     bool project_out_spin_contaminants_ = true;
     /// The eigensolver type
@@ -107,7 +109,7 @@ class CINO : public Wavefunction {
     // The number of correlated mos
     size_t ncmo2_;
     /// Pass MoSpaceInfo
-    bool cino_auto;
+    bool mrcino_auto;
 
     // The RDMS
     std::vector<double> ordm_a_;
@@ -119,9 +121,9 @@ class CINO : public Wavefunction {
     /// All that happens before we compute the energy
     void startup();
 
-    //std::vector<std::vector<Determinant> > build_dets_cas();
+    std::vector<std::vector<Determinant> > build_dets_cas();
 
-    std::vector<Determinant> build_dets(int irrep);
+    std::vector<Determinant> build_dets(int irrep, const std::vector<std::vector<Determinant> > &dets_cas);
 
     std::pair<SharedVector, SharedMatrix>
     diagonalize_hamiltonian(const std::vector<Determinant>& dets, int nsolutions);
@@ -137,8 +139,6 @@ class CINO : public Wavefunction {
     void find_active_space_and_transform(
         std::tuple<SharedVector, SharedMatrix, SharedVector, SharedMatrix> no_U);
 };
-std::string dimension_to_string(Dimension dim);
 }
 } // End Namespaces
-
-#endif // _ci_no_h_
+#endif // MRCISNO_H
