@@ -112,6 +112,9 @@ class AdaptiveCI : public Wavefunction {
     /// All that happens before we compute the energy
     void startup();
 
+    // Update sigma
+    void update_sigma();
+    
   private:
     // ==> Class data <==
 

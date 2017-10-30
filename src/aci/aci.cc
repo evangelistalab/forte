@@ -184,6 +184,10 @@ void set_ACI_options(ForteOptions& foptions) {
     foptions.add_bool("SPIN_MAT_TO_FILE", false, "Save spin correlation matrix to file");
 
     foptions.add_str("SPIN_BASIS","NO", "Basis for spin analysis");
+
+    /*- Sigma for reference relaxation -*/
+    foptions.add_double("ACI_RELAX_SIGMA", 0.01, "Sigma for reference relaxation");
+    
 }
 
 bool pairComp(const std::pair<double, STLBitsetDeterminant> E1,
@@ -3914,6 +3918,12 @@ void AdaptiveCI::spin_analysis()
 
 
 }
+
+void AdaptiveCI::update_sigma()
+{
+    sigma_ = options_.get_double("ACI_RELAX_SIGMA");
+}
+
 
 }
 } // EndNamespaces
