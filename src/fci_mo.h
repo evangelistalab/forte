@@ -483,6 +483,12 @@ class FCI_MO : public Wavefunction {
     /// Compute RDMs at given order and put into BlockedTensor format
     ambit::BlockedTensor compute_n_rdm(CI_RDMS& cirdm, const int& order);
 
+    /// Intrinsic atomic orbital analysis
+    void iao_analysis();
+
+    /// Localize active orbitals
+    void localize_actv_orbs();
+
     /**
      * @brief Return a vector of corresponding indices before the vector is
      * sorted

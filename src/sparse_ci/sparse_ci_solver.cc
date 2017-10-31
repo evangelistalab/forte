@@ -956,7 +956,9 @@ bool SparseCISolver::davidson_liu_solver_map(const DeterminantHashVec& space,
 void SparseCISolver::diagonalize_dl_sparse(const DeterminantHashVec& space, WFNOperator& op,
                                            SharedVector& evals, SharedMatrix& evecs, int nroot,
                                            int multiplicity) {
-    outfile->Printf("\n\n  Davidson-liu sparse algorithm");
+    if( print_details_ ){
+        outfile->Printf("\n\n  Davidson-liu sparse algorithm");
+    }
 
     // Find all the eigenvalues and eigenvectors of the Hamiltonian
     std::vector<std::pair<std::vector<size_t>, std::vector<double>>> H = op.build_H_sparse(space);

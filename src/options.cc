@@ -29,6 +29,7 @@
 #include "aci/aci.h"
 #include "avas.h"
 #include "ci-no/ci-no.h"
+#include "ci-no/mrci-no.h"
 #include "fci/fci_solver.h"
 #include "fci/fci.h"
 #include "fci_mo.h"
@@ -51,6 +52,7 @@ void forte_options(std::string name, ForteOptions& foptions) {
     set_PT2_options(foptions);
     set_AVAS_options(foptions);
     set_CINO_options(foptions);
+    set_MRCINO_options(foptions);
     set_FCI_MO_options(foptions);
     set_DSRG_options(foptions);
 

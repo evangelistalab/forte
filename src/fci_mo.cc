@@ -40,9 +40,11 @@
 #include "mini-boost/boost/algorithm/string/predicate.hpp"
 #include "operator.h"
 #include "semi_canonicalize.h"
+#include "orbital-helper/iao_builder.h"
 #include "psi4/libmints/dipole.h"
 #include "psi4/libmints/oeprop.h"
 #include "psi4/libmints/petitelist.h"
+#include "psi4/libmints/local.h"
 
 namespace psi {
 namespace forte {
@@ -66,6 +68,12 @@ void set_FCI_MO_options(ForteOptions& foptions) {
 
     /*- Automatic weight switching -*/
     foptions.add_double("FCIMO_SA_WEIGHTS_GAMMA", 0.0, "FCIMO weight gamma");
+
+    /*- Intrinsic atomic orbital analysis -*/
+    foptions.add_bool("FCIMO_IAO_ANALYSIS", false, "Intrinsic atomic orbital analysis");
+
+    /*- Use localized orbitals -*/
+    foptions.add_bool("FCIMO_LOCALIZE_ACTV", false, "Localize active orbitals before computation");
 }
 
 FCI_MO::FCI_MO(SharedWavefunction ref_wfn, Options& options, std::shared_ptr<ForteIntegrals> ints,
@@ -481,10 +489,21 @@ void FCI_MO::read_options() {
 }
 
 double FCI_MO::compute_energy() {
+    if (options_.get_bool("FCIMO_LOCALIZE_ACTV")) {
+        if (nirrep_ != 1) {
+            throw PSIEXCEPTION("Localizer does not support point group symmetry.");
+        }
+        localize_actv_orbs();
+    }
+
     if (options_["AVG_STATE"].size() != 0) {
         Eref_ = compute_sa_energy();
     } else {
         Eref_ = compute_ss_energy();
+    }
+
+    if (options_.get_bool("FCIMO_IAO_ANALYSIS")) {
+        //        iao_analysis();
     }
 
     Process::environment.globals["CURRENT ENERGY"] = Eref_;
@@ -4257,5 +4276,269 @@ void FCI_MO::compute_cumulant3(vector<double>& tpdm_aaa, std::vector<double>& tp
     L3bbb("pqrstu") += L1b("pu") * L1b("qt") * L1b("rs");
     L3bbb("pqrstu") += L1b("pt") * L1b("qs") * L1b("ru");
 }
+
+void FCI_MO::localize_actv_orbs() {
+    // modified from localize.cc
+    print_h2("Localizing active orbitals");
+
+    SharedMatrix Ca = this->Ca();
+    auto Ca_actv = std::make_shared<Matrix>("Ca active", Ca->rowspi(), active_);
+
+    for (int h = 0; h < nirrep_; ++h) {
+        for (int u = 0; u < active_[h]; ++u) {
+            int nu = u + frzcpi_[h] + core_[h];
+            Ca_actv->set_column(h, u, Ca->get_column(h, nu));
+        }
+    }
+
+    std::shared_ptr<Localizer> localizer = Localizer::build(
+        options_.get_str("LOCALIZE_TYPE"), this->basisset(), Ca_actv);
+    localizer->localize();
+    SharedMatrix Lorbs = localizer->L();
+
+    for (int h = 0; h < nirrep_; ++h) {
+        for (int u = 0; u < active_[h]; ++u) {
+            int nu = u + frzcpi_[h] + core_[h];
+            Ca->set_column(h, nu, Lorbs->get_column(h, u));
+        }
+    }
+
+    integral_->retransform_integrals();
+    ambit::Tensor tei_active_aa = integral_->aptei_aa_block(idx_a_, idx_a_, idx_a_, idx_a_);
+    ambit::Tensor tei_active_ab = integral_->aptei_ab_block(idx_a_, idx_a_, idx_a_, idx_a_);
+    ambit::Tensor tei_active_bb = integral_->aptei_bb_block(idx_a_, idx_a_, idx_a_, idx_a_);
+    fci_ints_->set_active_integrals(tei_active_aa, tei_active_ab, tei_active_bb);
+    fci_ints_->compute_restricted_one_body_operator();
+}
+
+//void FCI_MO::iao_analysis() {
+//    // First compute intrisic atomic orbitals (copied from aci.cc)
+//    size_t nact = na_;
+//    SharedMatrix Ca = reference_wavefunction_->Ca();
+//    std::shared_ptr<IAOBuilder> IAO =
+//        IAOBuilder::build(reference_wavefunction_->basisset(),
+//                          reference_wavefunction_->get_basisset("MINAO_BASIS"), Ca, options_);
+
+//    outfile->Printf("\n  Computing IAOs\n");
+//    std::map<std::string, SharedMatrix> iao_info = IAO->build_iaos();
+//    SharedMatrix iao_orbs(iao_info["A"]->clone());
+
+//    SharedMatrix Cainv(Ca->clone());
+//    Cainv->invert();
+//    SharedMatrix iao_coeffs = Matrix::doublet(Cainv, iao_orbs, false, false);
+
+//    size_t new_dim = iao_orbs->colspi()[0];
+
+//    auto labels = IAO->print_IAO(iao_orbs, new_dim, nmo_, reference_wavefunction_);
+//    std::vector<int> IAO_inds;
+//    if (options_.get_bool("PI_ACTIVE_SPACE")) {
+//        for (int i = 0; i < labels.size(); ++i) {
+//            std::string label = labels[i];
+//            if (label.find("x") != std::string::npos) {
+//                IAO_inds.push_back(i);
+//            }
+//        }
+//    } else {
+//        nact = new_dim;
+//        for (int i = 0; i < new_dim; ++i) {
+//            IAO_inds.push_back(i);
+//        }
+//    }
+
+//    SharedMatrix UA(new Matrix(nact, nact));
+//    std::vector<size_t> active_mo = mo_space_info_->get_absolute_mo("ACTIVE");
+//    for (int i = 0; i < nact; ++i) {
+//        int idx = IAO_inds[i];
+//        outfile->Printf("\n Using IAO %d", idx);
+//        for (int j = 0; j < nact; ++j) {
+//            int mo = active_mo[j];
+//            UA->set(j, i, iao_coeffs->get(mo, idx));
+//        }
+//    }
+//    UA->print();
+//    outfile->Printf("\n");
+
+//    ambit::Tensor U = ambit::Tensor::build(ambit::CoreTensor, "U", {nact, nact});
+//    U.iterate([&](const std::vector<size_t>& i, double& value) { value = UA->get(i[0], i[1]); });
+
+//    // obtain density
+//    size_t nact2 = nact * nact;
+//    size_t nact3 = nact * nact2;
+//    if (options_["AVG_STATE"].size() == 0) {
+//        sa_info_.clear();
+//        std::vector<double> ws{1.0};
+//        sa_info_.push_back(std::make_tuple(root_sym_, multi_, nroot_, ws));
+//        eigens_.clear();
+//        eigens_.push_back(eigen_);
+//    }
+
+//    CharacterTable ct = Process::environment.molecule()->point_group()->char_table();
+//    std::vector<std::string> irrep_symbol;
+//    for (int h = 0; h < nirrep_; ++h) {
+//        irrep_symbol.push_back(std::string(ct.gamma(h).symbol()));
+//    }
+
+//    ambit::Tensor L1a = ambit::Tensor::build(ambit::CoreTensor, "L1a", {nact, nact});
+//    ambit::Tensor L1b = ambit::Tensor::build(ambit::CoreTensor, "L1b", {nact, nact});
+//    ambit::Tensor L2aa = ambit::Tensor::build(ambit::CoreTensor, "L2aa", {nact, nact, nact, nact});
+//    ambit::Tensor L2ab = ambit::Tensor::build(ambit::CoreTensor, "L2ab", {nact, nact, nact, nact});
+//    ambit::Tensor L2bb = ambit::Tensor::build(ambit::CoreTensor, "L2bb", {nact, nact, nact, nact});
+
+//    for (int n = 0, nentry = sa_info_.size(); n < nentry; ++n) {
+//        int nroots, irrep;
+//        std::tie(irrep, std::ignore, nroots, std::ignore) = sa_info_[n];
+
+//        // prepare eigen vectors for current symmetry
+//        int dim = (eigens_[n][0].first)->dim();
+//        size_t eigen_size = eigens_[n].size();
+//        SharedMatrix evecs(new Matrix("evecs", dim, eigen_size));
+//        for (int i = 0; i < eigen_size; ++i) {
+//            evecs->set_column(0, i, (eigens_[n][i]).first);
+//        }
+
+//        for (int i = 0; i < nroots; ++i) {
+//            CI_RDMS ci_rdms(options_, fci_ints_, p_spaces_[n], evecs, i, i);
+//            ci_rdms.set_symmetry(irrep);
+
+//            // compute 1-RDMs
+//            std::vector<double> opdm_a, opdm_b;
+//            ci_rdms.compute_1rdm(opdm_a, opdm_b);
+
+//            // compute 2-RDMs
+//            std::vector<double> tpdm_aa, tpdm_ab, tpdm_bb;
+//            ci_rdms.compute_2rdm(tpdm_aa, tpdm_ab, tpdm_bb);
+
+//            // put densities to ambit tensors
+//            L1a.data() = std::move(opdm_a);
+//            L1b.data() = std::move(opdm_b);
+//            L2aa.data() = std::move(tpdm_aa);
+//            L2ab.data() = std::move(tpdm_ab);
+//            L2bb.data() = std::move(tpdm_bb);
+
+//            std::vector<double>& l1a = L1a.data();
+//            std::vector<double>& l1b = L1b.data();
+//            std::vector<double>& l2aa = L2aa.data();
+//            std::vector<double>& l2ab = L2ab.data();
+//            std::vector<double>& l2bb = L2bb.data();
+
+//            // form occupation correlation
+//            std::string name_aa = "MO <n_i n_j> aa " + std::to_string(i) + irrep_symbol[irrep];
+//            std::string name_ab = "MO <n_i n_j> ab " + std::to_string(i) + irrep_symbol[irrep];
+//            SharedMatrix Daa(new Matrix(name_aa, nact, nact));
+//            SharedMatrix Dab(new Matrix(name_ab, nact, nact));
+
+//            name_aa = "MO <n_i n_j> - <n_i><n_j> aa " + std::to_string(i) + irrep_symbol[irrep];
+//            name_ab = "MO <n_i n_j> - <n_i><n_j> ab " + std::to_string(i) + irrep_symbol[irrep];
+//            SharedMatrix Caa(new Matrix(name_aa, nact, nact));
+//            SharedMatrix Cab(new Matrix(name_ab, nact, nact));
+
+//            for (int i = 0; i < nact; ++i) {
+//                for (int j = 0; j < nact; ++j) {
+//                    double aa = 0.0;
+
+//                    if (i == j) {
+//                        aa += l1a[i * nact + j];
+//                    }
+//                    aa += l2aa[i * nact3 + j * nact2 + i * nact + j];
+//                    Daa->set(i, j, aa);
+
+//                    double ab = l2ab[i * nact3 + j * nact2 + i * nact + j];
+//                    Dab->set(i, j, ab);
+
+//                    aa -= l1a[i * nact + i] * l1a[j * nact + j];
+//                    Caa->set(i, j, aa);
+
+//                    ab -= l1a[i * nact + i] * l1b[j * nact + j];
+//                    Cab->set(i, j, aa);
+//                }
+//            }
+//            Daa->print();
+//            Dab->print();
+//            Caa->print();
+//            Cab->print();
+
+//            SharedMatrix TDaa = Matrix::triplet(UA, Daa, UA, true, false, false);
+//            SharedMatrix TDab = Matrix::triplet(UA, Dab, UA, true, false, false);
+//            SharedMatrix TCaa = Matrix::triplet(UA, Caa, UA, true, false, false);
+//            SharedMatrix TCab = Matrix::triplet(UA, Cab, UA, true, false, false);
+
+//            name_aa = "IAO <n_i n_j> aa " + std::to_string(i) + irrep_symbol[irrep];
+//            name_ab = "IAO <n_i n_j> ab " + std::to_string(i) + irrep_symbol[irrep];
+//            TDaa->set_name(name_aa);
+//            TDab->set_name(name_ab);
+
+//            name_aa = "IAO <n_i n_j> - <n_i><n_j> aa " + std::to_string(i) + irrep_symbol[irrep];
+//            name_ab = "IAO <n_i n_j> - <n_i><n_j> ab " + std::to_string(i) + irrep_symbol[irrep];
+//            TCaa->set_name(name_aa);
+//            TCab->set_name(name_ab);
+
+//            TDaa->print();
+//            TDab->print();
+//            TCaa->print();
+//            TCab->print();
+
+//            //            // transform densities
+//            //            ambit::Tensor L1aT =
+//            //                ambit::Tensor::build(ambit::CoreTensor, "Transformed L1a", {nact,
+//            //                nact});
+//            //            ambit::Tensor L1bT =
+//            //                ambit::Tensor::build(ambit::CoreTensor, "Transformed L1b", {nact,
+//            //                nact});
+//            //            L1aT("pq") = U("ap") * L1a("ab") * U("bq");
+//            //            L1bT("pq") = U("ap") * L1b("ab") * U("bq");
+
+//            //            ambit::Tensor L2aaT = ambit::Tensor::build(ambit::CoreTensor, "Transformed
+//            //            L2aa",
+//            //                                                       {nact, nact, nact, nact});
+//            //            ambit::Tensor L2abT = ambit::Tensor::build(ambit::CoreTensor, "Transformed
+//            //            L2ab",
+//            //                                                       {nact, nact, nact, nact});
+//            //            ambit::Tensor L2bbT = ambit::Tensor::build(ambit::CoreTensor, "Transformed
+//            //            L2bb",
+//            //                                                       {nact, nact, nact, nact});
+//            //            L2aaT("pqrs") = U("ap") * U("bq") * L2aa("abcd") * U("cr") * U("ds");
+//            //            L2abT("pqrs") = U("ap") * U("bq") * L2ab("abcd") * U("cr") * U("ds");
+//            //            L2bbT("pqrs") = U("ap") * U("bq") * L2bb("abcd") * U("cr") * U("ds");
+
+//            //            std::vector<double>& l1a = L1aT.data();
+//            //            std::vector<double>& l1b = L1bT.data();
+//            //            std::vector<double>& l2aa = L2aaT.data();
+//            //            std::vector<double>& l2ab = L2abT.data();
+//            //            std::vector<double>& l2bb = L2bbT.data();
+
+//            //            // occupation correlation
+//            //            std::string name = "Occupation Correlation " + std::to_string(i) +
+//            //            irrep_symbol[irrep];
+//            //            SharedMatrix corr(new Matrix(name, nact, nact));
+
+//            //            for (int i = 0; i < nact; ++i) {
+//            //                for (int j = i; j < nact; ++j) {
+//            //                    double value = 0.0;
+//            //                    if (i == j) {
+//            //                        value += l1a[i * nact + j] + l1b[i * nact + j];
+//            //                    }
+//            //                    value += l2aa[i * nact3 + j * nact2 + i * nact + j];
+//            //                    value += l2bb[i * nact3 + j * nact2 + i * nact + j];
+//            //                    value += l2ab[i * nact3 + j * nact2 + i * nact + j];
+//            //                    value += l2ab[j * nact3 + i * nact2 + j * nact + i];
+//            //                    value -= l1a[i * nact + i] * l1a[j * nact + j];
+//            //                    value -= l1a[i * nact + i] * l1b[j * nact + j];
+//            //                    value -= l1b[i * nact + i] * l1a[j * nact + j];
+//            //                    value -= l1b[i * nact + i] * l1b[j * nact + j];
+
+//            //                    corr->set(i, j, value);
+//            //                    corr->set(j, i, value);
+//            //                }
+//            //            }
+//            //            corr->print();
+
+//            //            SharedMatrix corr_evecs(new Matrix(nact, nact));
+//            //            SharedVector corr_evals(new Vector(nact));
+
+//            //            corr->diagonalize(corr_evecs, corr_evals);
+//            //            corr_evecs->eivprint(corr_evals);
+//        }
+//    }
+//}
 }
 }

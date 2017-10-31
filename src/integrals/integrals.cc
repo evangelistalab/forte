@@ -145,8 +145,7 @@ void ForteIntegrals::startup() {
     print_ = options_.get_int("PRINT");
     /// If MO_ROTATE is set in option, call rotate_mos.
     /// Wasn't really sure where to put this function, but since, integrals is
-    /// always called,
-    /// this seems like a good spot.
+    /// always called, this seems like a good spot.
     if (options_["ROTATE_MOS"].size() > 0) {
         rotate_mos();
     }
