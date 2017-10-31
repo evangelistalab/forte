@@ -182,6 +182,12 @@ void set_ACI_options(ForteOptions& foptions) {
     
     /*- Save spin correlation matrix to file -*/
     foptions.add_bool("SPIN_MAT_TO_FILE", false, "Save spin correlation matrix to file");
+
+    foptions.add_str("SPIN_BASIS","NO", "Basis for spin analysis");
+
+    /*- Sigma for reference relaxation -*/
+    foptions.add_double("ACI_RELAX_SIGMA", 0.01, "Sigma for reference relaxation");
+    
 }
 
 bool pairComp(const std::pair<double, STLBitsetDeterminant> E1,
@@ -198,13 +204,13 @@ AdaptiveCI::AdaptiveCI(SharedWavefunction ref_wfn, Options& options,
     reference_wavefunction_ = ref_wfn;
 
     mo_symmetry_ = mo_space_info_->symmetry("ACTIVE");
-    startup();
 }
 
 AdaptiveCI::~AdaptiveCI() {}
 
 void AdaptiveCI::set_fci_ints( std::shared_ptr<FCIIntegrals> fci_ints ) {
     fci_ints_ = fci_ints;
+    nuclear_repulsion_energy_ = molecule_->nuclear_repulsion_energy();
     set_ints_ = true;
 }
 
@@ -297,7 +303,9 @@ void AdaptiveCI::startup() {
    //     spin_complete_ = false;
    // }
 
-    rdm_level_ = options_.get_int("ACI_MAX_RDM");
+    if( !set_rdm_ ){
+        rdm_level_ = options_.get_int("ACI_MAX_RDM");
+    }
 
     max_cycle_ = 20;
     if (options_["ACI_MAX_CYCLE"].has_changed()) {
@@ -413,6 +421,9 @@ void AdaptiveCI::print_info() {
 
 double AdaptiveCI::compute_energy() {
     timer energy_timer("ACI:Energy");
+
+    startup();
+
     if (options_["ACI_QUIET_MODE"].has_changed()) {
         quiet_mode_ = options_.get_bool("ACI_QUIET_MODE");
     }
@@ -2228,7 +2239,10 @@ std::vector<double> AdaptiveCI::davidson_correction(std::vector<STLBitsetDetermi
     return dc;
 }
 
-void AdaptiveCI::set_max_rdm(int rdm) { rdm_level_ = rdm; }
+void AdaptiveCI::set_max_rdm(int rdm) { 
+rdm_level_ = rdm; 
+set_rdm_ = true;
+}
 
 Reference AdaptiveCI::reference() {
     // const std::vector<STLBitsetDeterminant>& final_wfn =
@@ -3687,60 +3701,13 @@ void AdaptiveCI::add_external_excitations(DeterminantHashVec& ref) {
 
 void AdaptiveCI::spin_analysis()
 {
-    // First compute intrisic atomic orbitals
     size_t nact = static_cast<unsigned long>(nact_);
     size_t nact2 = nact*nact;
     size_t nact3 = nact*nact2;
 
-    SharedMatrix Ca = reference_wavefunction_->Ca();
-    std::shared_ptr<IAOBuilder> IAO = IAOBuilder::build(reference_wavefunction_->basisset(), reference_wavefunction_->get_basisset("MINAO_BASIS"), Ca, options_);
-    outfile->Printf("\n  Computing IAOs\n");
-    std::map<std::string, SharedMatrix> iao_info = IAO->build_iaos();
-    SharedMatrix iao_orbs(iao_info["A"]->clone());
-
-    SharedMatrix Cainv(Ca->clone());
-    Cainv->invert();
-    SharedMatrix iao_coeffs = Matrix::doublet(Cainv,iao_orbs,false,false);
-
-    size_t new_dim = iao_orbs->colspi()[0];
-    size_t new_dim2 = new_dim*new_dim;
-    size_t new_dim3 = new_dim2*new_dim;
-
-    auto labels = IAO->print_IAO( iao_orbs, new_dim, nmo_, reference_wavefunction_);
-    std::vector<int> IAO_inds;
-    if( options_.get_bool("PI_ACTIVE_SPACE") ){
-        for( int i = 0; i < labels.size(); ++i ){
-            std::string label = labels[i];
-            if( label.find("z") != std::string::npos ){
-                IAO_inds.push_back(i);
-            }
-        }
-    }else{
-        nact = new_dim;
-        for( int i = 0; i < new_dim; ++i ){
-            IAO_inds.push_back(i);
-        }
-    }
-
-    SharedMatrix UA(new Matrix( nact, nact));
-
-    std::vector<size_t> active_mo = mo_space_info_->get_absolute_mo("ACTIVE");
-    for( int i = 0 ; i < nact; ++i ){
-        int idx = IAO_inds[i];
-        outfile->Printf("\n Using IAO %d", idx);
-        for( int j = 0; j < nact; ++j ){
-            int mo = active_mo[j];
-            UA->set(j,i, iao_coeffs->get(mo,idx));
-        }
-    }  
-
-    outfile->Printf("\n");
-    // Transform 1 and 2 rdms
-    
     // First build rdms as ambit tensors
     ambit::Tensor L1a = ambit::Tensor::build(ambit::CoreTensor, "L1a", {nact, nact});
     ambit::Tensor L1b = ambit::Tensor::build(ambit::CoreTensor, "L1b", {nact, nact});
-
     ambit::Tensor L2aa =
         ambit::Tensor::build(ambit::CoreTensor, "L2aa", {nact, nact, nact, nact});
     ambit::Tensor L2ab =
@@ -3766,9 +3733,121 @@ void AdaptiveCI::spin_analysis()
         value = trdm_bb_[i[0] * nact3 + i[1] * nact2 + i[2] * nact + i[3]];
     });
 
-    ambit::Tensor U = ambit::Tensor::build(ambit::CoreTensor, "U", {nact,nact});
-    U.iterate([&](const std::vector<size_t>& i, double& value) {
+    SharedMatrix UA(new Matrix( nact, nact));
+    SharedMatrix UB(new Matrix( nact, nact));
+
+    if( options_.get_str("SPIN_BASIS") == "IAO" ){
+
+        outfile->Printf("\n  Computing spin correlation in IAO basis \n");
+        SharedMatrix Ca = reference_wavefunction_->Ca();
+        std::shared_ptr<IAOBuilder> IAO = IAOBuilder::build(reference_wavefunction_->basisset(), reference_wavefunction_->get_basisset("MINAO_BASIS"), Ca, options_);
+        outfile->Printf("\n  Computing IAOs\n");
+        std::map<std::string, SharedMatrix> iao_info = IAO->build_iaos();
+        SharedMatrix iao_orbs(iao_info["A"]->clone());
+
+        SharedMatrix Cainv(Ca->clone());
+        Cainv->invert();
+        SharedMatrix iao_coeffs = Matrix::doublet(Cainv,iao_orbs,false,false);
+
+        size_t new_dim = iao_orbs->colspi()[0];
+        size_t new_dim2 = new_dim*new_dim;
+        size_t new_dim3 = new_dim2*new_dim;
+
+        auto labels = IAO->print_IAO( iao_orbs, new_dim, nmo_, reference_wavefunction_);
+        std::vector<int> IAO_inds;
+        if( options_.get_bool("PI_ACTIVE_SPACE") ){
+            for( int i = 0; i < labels.size(); ++i ){
+                std::string label = labels[i];
+                if( label.find("z") != std::string::npos ){
+                    IAO_inds.push_back(i);
+                }
+            }
+        }else{
+            nact = new_dim;
+            for( int i = 0; i < new_dim; ++i ){
+                IAO_inds.push_back(i);
+            }
+        }
+
+
+        std::vector<size_t> active_mo = mo_space_info_->get_absolute_mo("ACTIVE");
+        for( int i = 0 ; i < nact; ++i ){
+            int idx = IAO_inds[i];
+            outfile->Printf("\n Using IAO %d", idx);
+            for( int j = 0; j < nact; ++j ){
+                int mo = active_mo[j];
+                UA->set(j,i, iao_coeffs->get(mo,idx));
+            }
+        }  
+        UB->copy(UA);
+        outfile->Printf("\n");
+
+    } else if ( options_.get_str("SPIN_BASIS") == "NO"){
+
+        outfile->Printf("\n  Computing spin correlation in NO basis \n");
+        SharedMatrix RDMa(new Matrix( nact, nact) );
+        SharedMatrix RDMb(new Matrix( nact, nact) );
+    
+        for( int i = 0; i < nact; ++i ){
+            for( int j = 0; j < nact; ++j ){
+                RDMa->set(i,j, ordm_a_[i*nact + j]);
+                RDMb->set(i,j, ordm_b_[i*nact + j]);
+            }
+        }
+        
+       // SharedMatrix NOa;
+       // SharedMatrix NOb;
+        SharedVector occa( new Vector(nact));
+        SharedVector occb( new Vector(nact));
+        
+        RDMa->diagonalize(UA, occa); 
+        RDMb->diagonalize(UB, occb); 
+
+        int nmo = reference_wavefunction_->nmo();
+        SharedMatrix Ua_full(new Matrix(nmo,nmo)); 
+        SharedMatrix Ub_full(new Matrix(nmo,nmo)); 
+    
+        Ua_full->identity();
+        Ub_full->identity();
+
+        auto actpi = mo_space_info_->get_absolute_mo("ACTIVE");
+        auto nactpi = mo_space_info_->get_dimension("ACTIVE");
+        for( int h = 0; h < nirrep_; ++h ){
+            // skip frozen/restricted docc
+            int nact = nactpi[h]; 
+            for( int i = 0; i < nact; ++i ){
+                for( int j = 0; j < nact; ++j ){
+                    Ua_full->set(actpi[i],actpi[j], UA->get(i,j));
+                    Ub_full->set(actpi[i],actpi[j], UB->get(i,j));
+                }
+            }
+        }
+
+
+        SharedMatrix CA = reference_wavefunction_->Ca();
+        SharedMatrix CB = reference_wavefunction_->Cb();
+
+        SharedMatrix Ca_new = Matrix::doublet( CA, Ua_full, false,false);
+        SharedMatrix Cb_new = Matrix::doublet( CB, Ub_full, false,false);
+
+        CA->copy( Ca_new );
+        CB->copy( Cb_new );
+         
+
+    } else {
+        outfile->Printf("\n  Computing spin correlation in reference basis \n");
+        UA->identity();
+        UB->identity();
+    }
+
+
+    ambit::Tensor Ua = ambit::Tensor::build(ambit::CoreTensor, "U", {nact,nact});
+    ambit::Tensor Ub = ambit::Tensor::build(ambit::CoreTensor, "U", {nact,nact});
+    Ua.iterate([&](const std::vector<size_t>& i, double& value) {
         value = UA->get(i[0], i[1]); 
+    });
+    Ub.iterate([&](const std::vector<size_t>& i, double& value) {
+        value = UB->get(i[0], i[1]); 
     });
 
 
@@ -3779,8 +3858,8 @@ void AdaptiveCI::spin_analysis()
     ambit::Tensor L1bT =
         ambit::Tensor::build(ambit::CoreTensor, "Transformed L1b", {nact, nact});
 
-    L1aT("pq") = U("ap") * L1a("ab") * U("bq");
-    L1bT("pq") = U("ap") * L1b("ab") * U("bq");
+    L1aT("pq") = Ua("ap") * L1a("ab") * Ua("bq");
+    L1bT("pq") = Ub("ap") * L1b("ab") * Ub("bq");
     // 2 rdms
     ambit::Tensor L2aaT =
         ambit::Tensor::build(ambit::CoreTensor, "Transformed L2aa", {nact, nact, nact, nact});
@@ -3789,9 +3868,9 @@ void AdaptiveCI::spin_analysis()
     ambit::Tensor L2bbT =
         ambit::Tensor::build(ambit::CoreTensor, "Transformed L2bb", {nact, nact, nact, nact});
 
-    L2aaT("pqrs") = U("ap") * U("bq") * L2aa("abcd") * U("cr") * U("ds");
-    L2abT("pqrs") = U("ap") * U("bq") * L2ab("abcd") * U("cr") * U("ds");
-    L2bbT("pqrs") = U("ap") * U("bq") * L2bb("abcd") * U("cr") * U("ds");
+    L2aaT("pqrs") = Ua("ap") * Ua("bq") * L2aa("abcd") * Ua("cr") * Ua("ds");
+    L2abT("pqrs") = Ua("ap") * Ub("bq") * L2ab("abcd") * Ua("cr") * Ub("ds");
+    L2bbT("pqrs") = Ub("ap") * Ub("bq") * L2bb("abcd") * Ub("cr") * Ub("ds");
 
 
     // Now form the spin correlation
@@ -3799,15 +3878,6 @@ void AdaptiveCI::spin_analysis()
 
     std::vector<double> l1a(L1aT.data());
     std::vector<double> l1b(L1bT.data());
-    SharedMatrix rdma(new Matrix(nact, nact));
-    SharedMatrix rdmb(new Matrix(nact, nact));
-    for( int i = 0; i < nact; ++i ){
-        for( int j = 0; j < nact; ++j ){
-            rdma->set(i,j,l1a[i*nact +j]);
-            rdmb->set(i,j,l1b[i*nact +j]);
-        }
-    }
-
     std::vector<double> l2aa(L2aaT.data());
     std::vector<double> l2ab(L2abT.data());
     std::vector<double> l2bb(L2bbT.data());
@@ -3855,6 +3925,12 @@ void AdaptiveCI::spin_analysis()
 
 
 }
+
+void AdaptiveCI::update_sigma()
+{
+    sigma_ = options_.get_double("ACI_RELAX_SIGMA");
+}
+
 
 }
 } // EndNamespaces

@@ -109,6 +109,10 @@ class AdaptiveCI : public Wavefunction {
     void upcast_reference(DeterminantHashVec& ref);
     void add_external_excitations(DeterminantHashVec& ref);
 
+
+    // Update sigma
+    void update_sigma();
+    
   private:
     // ==> Class data <==
 
@@ -252,6 +256,7 @@ class AdaptiveCI : public Wavefunction {
 
     bool print_weights_;
 
+    bool set_rdm_ = false;
 
     /// The alpha MO always unoccupied
     int hole_;

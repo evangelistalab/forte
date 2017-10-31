@@ -91,6 +91,7 @@ src/v2rdm.cc
 src/aci/aci.cc
 src/aosubspace/aosubspace.cc
 src/ci-no/ci-no.cc
+src/ci-no/mrci-no.cc
 src/fci/binary_graph.cc
 src/fci/fci.cc
 src/fci/fci_integrals.cc
