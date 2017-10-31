@@ -134,7 +134,6 @@ void forte_old_methods(SharedWavefunction ref_wfn, Options& options,
     }
     if (options.get_str("JOB_TYPE") == "ACI") {
         auto aci = std::make_shared<AdaptiveCI>(ref_wfn, options, ints, mo_space_info);
-        aci->startup();
         aci->compute_energy();
         if (options.get_bool("ACI_NO")) {
             aci->compute_nos();
@@ -387,7 +386,6 @@ void forte_old_methods(SharedWavefunction ref_wfn, Options& options,
         } else if (cas_type == "ACI") {
             // Compute ACI wfn
             auto aci = std::make_shared<AdaptiveCI>(ref_wfn, options, ints, mo_space_info);
-            aci->startup();
             aci->set_quiet(true);
             aci->set_max_rdm(max_rdm_level);
             aci->compute_energy();
@@ -477,7 +475,6 @@ void forte_old_methods(SharedWavefunction ref_wfn, Options& options,
             Reference aci_reference;
             {
                 auto aci = std::make_shared<AdaptiveCI>(ref_wfn, options, ints, mo_space_info);
-                aci->startup();
                 aci->set_quiet(true);
                 aci->set_max_rdm(max_rdm_level);
                 aci->compute_energy();
@@ -494,7 +491,6 @@ void forte_old_methods(SharedWavefunction ref_wfn, Options& options,
                     ESNO esno(ref_wfn, options, ints, mo_space_info, aci_wfn);
                     esno.compute_nos();
                     auto aci2 = std::make_shared<AdaptiveCI>(ref_wfn, options, ints, mo_space_info);
-                    aci2->startup();
                     aci2->set_quiet(true);
                     aci2->set_max_rdm(max_rdm_level);
                     aci2->compute_energy();
@@ -554,7 +550,6 @@ void forte_old_methods(SharedWavefunction ref_wfn, Options& options,
         }
         {
             auto aci = std::make_shared<AdaptiveCI>(ref_wfn, options, ints, mo_space_info);
-            aci->startup();
             aci->compute_energy();
         }
     }
@@ -675,12 +670,10 @@ void forte_old_methods(SharedWavefunction ref_wfn, Options& options,
     if (options.get_str("JOB_TYPE") == "MRCISD") {
         if (options.get_bool("ACI_NO")) {
             auto aci = std::make_shared<AdaptiveCI>(ref_wfn, options, ints, mo_space_info);
-            aci->startup();
             aci->compute_energy();
             aci->compute_nos();
         }
         auto aci = std::make_shared<AdaptiveCI>(ref_wfn, options, ints, mo_space_info);
-        aci->startup();
         aci->compute_energy();
 
         DeterminantHashVec reference = aci->get_wavefunction();

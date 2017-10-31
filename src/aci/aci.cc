@@ -204,7 +204,6 @@ AdaptiveCI::AdaptiveCI(SharedWavefunction ref_wfn, Options& options,
     reference_wavefunction_ = ref_wfn;
 
     mo_symmetry_ = mo_space_info_->symmetry("ACTIVE");
-//    startup();
 }
 
 AdaptiveCI::~AdaptiveCI() {}
@@ -304,7 +303,9 @@ void AdaptiveCI::startup() {
    //     spin_complete_ = false;
    // }
 
-    rdm_level_ = options_.get_int("ACI_MAX_RDM");
+    if( !set_rdm_ ){
+        rdm_level_ = options_.get_int("ACI_MAX_RDM");
+    }
 
     max_cycle_ = 20;
     if (options_["ACI_MAX_CYCLE"].has_changed()) {
@@ -420,6 +421,9 @@ void AdaptiveCI::print_info() {
 
 double AdaptiveCI::compute_energy() {
     timer energy_timer("ACI:Energy");
+
+    startup();
+
     if (options_["ACI_QUIET_MODE"].has_changed()) {
         quiet_mode_ = options_.get_bool("ACI_QUIET_MODE");
     }
@@ -2235,7 +2239,10 @@ std::vector<double> AdaptiveCI::davidson_correction(std::vector<STLBitsetDetermi
     return dc;
 }
 
-void AdaptiveCI::set_max_rdm(int rdm) { rdm_level_ = rdm; }
+void AdaptiveCI::set_max_rdm(int rdm) { 
+rdm_level_ = rdm; 
+set_rdm_ = true;
+}
 
 Reference AdaptiveCI::reference() {
     // const std::vector<STLBitsetDeterminant>& final_wfn =

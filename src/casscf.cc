@@ -360,7 +360,6 @@ void CASSCF::cas_ci() {
     } else if (options_.get_str("CAS_TYPE") == "ACI") {
         ints_->retransform_integrals();
         AdaptiveCI aci(reference_wavefunction_, options_, ints_, mo_space_info_);
-        aci.startup();
         aci.set_max_rdm(2);
         aci.set_quiet(quiet);
         aci.compute_energy();

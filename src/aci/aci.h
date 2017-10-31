@@ -109,8 +109,6 @@ class AdaptiveCI : public Wavefunction {
     void upcast_reference(DeterminantHashVec& ref);
     void add_external_excitations(DeterminantHashVec& ref);
 
-    /// All that happens before we compute the energy
-    void startup();
 
     // Update sigma
     void update_sigma();
@@ -258,6 +256,7 @@ class AdaptiveCI : public Wavefunction {
 
     bool print_weights_;
 
+    bool set_rdm_ = false;
 
     /// The alpha MO always unoccupied
     int hole_;
@@ -282,6 +281,8 @@ class AdaptiveCI : public Wavefunction {
 
     // ==> Class functions <==
 
+    /// All that happens before we compute the energy
+    void startup();
 
     /// Compute an aci wavefunction
     void compute_aci(DeterminantHashVec& PQ_space, SharedMatrix& PQ_evecs, SharedVector& PQ_evals);
