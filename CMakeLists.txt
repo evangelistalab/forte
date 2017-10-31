@@ -136,6 +136,8 @@ src/mrdsrg-spin-integrated/mrdsrg_srg.cc
 src/mrdsrg-spin-integrated/three_dsrg_mrpt2.cc
 src/orbital-helper/localize.cc
 src/orbital-helper/unpaired_density.cc
+src/orbital-helper/iao_builder.cc
+src/orbital-helper/es-nos.cc
 src/pci/pci.cc
 src/pci/pci_hashvec.cc
 src/pci/pci_simple.cc

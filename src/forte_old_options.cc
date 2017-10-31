@@ -80,7 +80,9 @@ void forte_old_options(Options& options) {
     /*- Molecular orbitals to swap -
      *  Swap mo_1 with mo_2 in irrep symmetry
      *  Swap mo_3 with mo_4 in irrep symmetry
-     *  Format: [irrep, mo_1, mo_2, irrep, mo_3, mo_4] -*/
+     *  Format: [irrep, mo_1, mo_2, irrep, mo_3, mo_4]
+     *          Irrep and MO indices are 1-based (NOT 0-based)!
+    -*/
     options.add("ROTATE_MOS", new ArrayType());
 
     /*- The algorithm used to screen the determinant
