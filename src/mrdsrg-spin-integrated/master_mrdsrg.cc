@@ -410,12 +410,8 @@ std::shared_ptr<FCIIntegrals> MASTER_DSRG::compute_Heff() {
         std::make_shared<FCIIntegrals>(ints_, actv_mos_, core_mos_);
     fci_ints->set_active_integrals(Hbar2_.block("aaaa"), Hbar2_.block("aAaA"),
                                    Hbar2_.block("AAAA"));
-    if (eri_df_) {
-        fci_ints->set_restricted_one_body_operator(Hbar1_.block("aa").data(),
-                                                   Hbar1_.block("AA").data());
-    } else {
-        fci_ints->compute_restricted_one_body_operator();
-    }
+    fci_ints->set_restricted_one_body_operator(Hbar1_.block("aa").data(),
+                                               Hbar1_.block("AA").data());
     fci_ints->set_scalar_energy(Edsrg - Enuc_ - Efrzc_);
 
     return fci_ints;
@@ -552,7 +548,7 @@ void MASTER_DSRG::rotate_ints_semi_to_origin(const std::string& name, BlockedTen
     ambit::Tensor Ub = Uactv_.block("AA");
 
     ForteTimer timer;
-    outfile->Printf("\n    %-40s ... ", "Transforming 1-body term to original basis");
+    outfile->Printf("\n    %-40s ... ", "Rotating 1-body term to original basis");
     temp = H1.block("aa").clone(tensor_type_);
     H1.block("aa")("pq") = Ua("pu") * temp("uv") * Ua("qv");
 
@@ -561,7 +557,7 @@ void MASTER_DSRG::rotate_ints_semi_to_origin(const std::string& name, BlockedTen
     outfile->Printf("Done. Timing %8.3f s", timer.elapsed());
 
     timer.reset();
-    outfile->Printf("\n    %-40s ... ", "Transforming 2-body term to original basis");
+    outfile->Printf("\n    %-40s ... ", "Rotating 2-body term to original basis");
     temp = H2.block("aaaa").clone(tensor_type_);
     H2.block("aaaa")("pqrs") = Ua("pa") * Ua("qb") * temp("abcd") * Ua("rc") * Ua("sd");
 
@@ -581,7 +577,7 @@ void MASTER_DSRG::rotate_ints_semi_to_origin(const std::string& name, BlockedTen
     ambit::Tensor Ub = Uactv_.block("AA");
 
     ForteTimer timer;
-    outfile->Printf("\n    %-40s ... ", "Transforming 1-body term to original basis");
+    outfile->Printf("\n    %-40s ... ", "Rotating 1-body term to original basis");
     temp = H1.block("aa").clone(tensor_type_);
     H1.block("aa")("pq") = Ua("pu") * temp("uv") * Ua("qv");
 
@@ -590,7 +586,7 @@ void MASTER_DSRG::rotate_ints_semi_to_origin(const std::string& name, BlockedTen
     outfile->Printf("Done. Timing %8.3f s", timer.elapsed());
 
     timer.reset();
-    outfile->Printf("\n    %-40s ... ", "Transforming 2-body term to original basis");
+    outfile->Printf("\n    %-40s ... ", "Rotating 2-body term to original basis");
     temp = H2.block("aaaa").clone(tensor_type_);
     H2.block("aaaa")("pqrs") = Ua("pa") * Ua("qb") * temp("abcd") * Ua("rc") * Ua("sd");
 
@@ -602,7 +598,7 @@ void MASTER_DSRG::rotate_ints_semi_to_origin(const std::string& name, BlockedTen
     outfile->Printf("Done. Timing %8.3f s", timer.elapsed());
 
     timer.reset();
-    outfile->Printf("\n    %-40s ... ", "Transforming Hbar3 to original basis");
+    outfile->Printf("\n    %-40s ... ", "Rotating 3-body to original basis");
     temp = H3.block("aaaaaa").clone(tensor_type_);
     H3.block("aaaaaa")("pqrstu") =
         Ua("pa") * Ua("qb") * Ua("rc") * temp("abcijk") * Ua("si") * Ua("tj") * Ua("uk");

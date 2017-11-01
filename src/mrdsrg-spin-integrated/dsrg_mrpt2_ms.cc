@@ -295,28 +295,11 @@ std::vector<std::vector<double>> DSRG_MRPT2::compute_energy_sa() {
                         H_AB += oei["uv"] * D1["uv"];
                         H_AB += oei["UV"] * D1["UV"];
 
-                        if (!options_.get_bool("FORM_HBAR3")) {
-                            H_AB += 0.25 * Hbar2_["uvxy"] * D2["xyuv"];
-                            H_AB += 0.25 * Hbar2_["UVXY"] * D2["XYUV"];
-                            H_AB += Hbar2_["uVxY"] * D2["xYuV"];
-                        } else {
-                            BlockedTensor temp2 =
-                                BTF_->build(tensor_type_, "temp2", spin_cases({"aaaa"}), true);
-                            temp2.iterate([&](const std::vector<size_t>& i,
-                                              const std::vector<SpinType>& spin, double& value) {
-                                if ((spin[0] == AlphaSpin) && (spin[1] == AlphaSpin)) {
-                                    value = ints_->aptei_aa(i[0], i[1], i[2], i[3]);
-                                } else if ((spin[0] == AlphaSpin) && (spin[1] == BetaSpin)) {
-                                    value = ints_->aptei_ab(i[0], i[1], i[2], i[3]);
-                                } else if ((spin[0] == BetaSpin) && (spin[1] == BetaSpin)) {
-                                    value = ints_->aptei_bb(i[0], i[1], i[2], i[3]);
-                                }
-                            });
+                        H_AB += 0.25 * Hbar2_["uvxy"] * D2["xyuv"];
+                        H_AB += 0.25 * Hbar2_["UVXY"] * D2["XYUV"];
+                        H_AB += Hbar2_["uVxY"] * D2["xYuV"];
 
-                            H_AB += 0.25 * temp2["uvxy"] * D2["xyuv"];
-                            H_AB += 0.25 * temp2["UVXY"] * D2["XYUV"];
-                            H_AB += temp2["uVxY"] * D2["xYuV"];
-
+                        if (options_.get_bool("FORM_HBAR3")) {
                             // 3-RDM
                             std::vector<double> tpdm_aaa, tpdm_aab, tpdm_abb, tpdm_bbb;
                             ci_rdms.compute_3rdm(tpdm_aaa, tpdm_aab, tpdm_abb, tpdm_bbb);
