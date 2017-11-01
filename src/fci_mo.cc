@@ -125,6 +125,19 @@ void FCI_MO::startup() {
     // read options
     read_options();
 
+    // print options
+    if (print_ > 0) {
+        print_options();
+    }
+
+    //    // localize active orbitals if needed
+    //    if (localize_actv_) {
+    //        if (nirrep_ != 1) {
+    //            throw PSIEXCEPTION("Localizer does not support point group symmetry.");
+    //        }
+    //        localize_actv_orbs();
+    //    }
+
     // compute orbital extents if CIS/CISD IPEA
     if (ipea_ != "NONE") {
         compute_orbital_extents();
@@ -132,7 +145,6 @@ void FCI_MO::startup() {
 }
 
 void FCI_MO::read_options() {
-
     // test reference type
     ref_type_ = options_.get_str("REFERENCE");
     if (ref_type_ == "UHF" || ref_type_ == "UKS" || ref_type_ == "CUHF") {
@@ -160,8 +172,9 @@ void FCI_MO::read_options() {
     // digonalization algorithm
     diag_algorithm_ = options_.get_str("DIAG_ALGORITHM");
 
-    // semicanonical orbitals
+    // orbitals
     semi_ = options_.get_bool("SEMI_CANONICAL");
+    localize_actv_ = options_.get_bool("FCIMO_LOCALIZE_ACTV");
 
     // number of Irrep
     nirrep_ = this->nirrep();
@@ -310,47 +323,8 @@ void FCI_MO::read_options() {
         }
     }
 
-    // print input summary
-    std::vector<std::pair<std::string, size_t>> info;
-    info.push_back({"number of atoms", natom});
-    info.push_back({"number of electrons", nelec});
-    info.push_back({"molecular charge", charge});
-    info.push_back({"number of alpha electrons", nalfa_});
-    info.push_back({"number of beta electrons", nbeta_});
-    info.push_back({"multiplicity", multi_});
-    info.push_back({"ms (2 * Sz)", twice_ms_});
-    info.push_back({"number of molecular orbitals", nmo_});
-
-    if (print_ > 0) {
-        print_h2("Input Summary");
-    }
-    if (print_ > 0) {
-        for (auto& str_dim : info) {
-            outfile->Printf("\n    %-30s = %5zu", str_dim.first.c_str(), str_dim.second);
-        }
-    }
-
-    // print orbital spaces
-    if (print_ > 0) {
-        print_h2("Orbital Spaces");
-        print_irrep("TOTAL MO", nmopi_);
-        print_irrep("FROZEN CORE", frzcpi_);
-        print_irrep("FROZEN VIRTUAL", frzvpi_);
-        print_irrep("CORRELATED MO", ncmopi_);
-        print_irrep("CORE", core_);
-        print_irrep("ACTIVE", active_);
-        print_irrep("VIRTUAL", virtual_);
-    }
-
     // state averaging
     if (options_["AVG_STATE"].size() != 0) {
-
-        CharacterTable ct = Process::environment.molecule()->point_group()->char_table();
-        std::vector<std::string> irrep_symbol;
-        for (int h = 0; h < nirrep_; ++h) {
-            irrep_symbol.push_back(std::string(ct.gamma(h).symbol()));
-        }
-
         size_t nstates = 0;
         int nentry = options_["AVG_STATE"].size();
 
@@ -452,24 +426,72 @@ void FCI_MO::read_options() {
                 std::make_tuple(irreps[i], multis[i], nstatespim[i], weights[i]);
             sa_info_.push_back(avg_info);
         }
+    }
+}
 
-        // printing summary
+void FCI_MO::print_options() {
+    print_h2("Input Summary");
+
+    std::vector<std::pair<std::string, size_t>> info;
+    info.push_back({"No. a electrons in active", nalfa_ - nc_ - nfrzc_});
+    info.push_back({"No. b electrons in active", nbeta_ - nc_ - nfrzc_});
+    info.push_back({"multiplicity", multi_});
+    info.push_back({"spin ms (2 * Sz)", twice_ms_});
+
+    for (auto& str_dim : info) {
+        outfile->Printf("\n    %-30s = %5zu", str_dim.first.c_str(), str_dim.second);
+    }
+
+    print_h2("Orbital Spaces");
+
+    print_irrep("TOTAL MO", nmopi_);
+    print_irrep("FROZEN CORE", frzcpi_);
+    print_irrep("FROZEN VIRTUAL", frzvpi_);
+    print_irrep("CORRELATED MO", ncmopi_);
+    print_irrep("CORE", core_);
+    print_irrep("ACTIVE", active_);
+    print_irrep("VIRTUAL", virtual_);
+
+    int nentry = sa_info_.size();
+    if (nentry != 0) {
         print_h2("State Averaging Summary");
-        int lweight = *std::max_element(nstatespim.begin(), nstatespim.end());
-        if (lweight == 1) {
-            lweight = 7;
-        } else {
-            lweight *= 6;
-            lweight -= 1;
+
+        CharacterTable ct = Process::environment.molecule()->point_group()->char_table();
+        std::vector<std::string> irrep_symbol;
+        for (int h = 0; h < nirrep_; ++h) {
+            irrep_symbol.push_back(std::string(ct.gamma(h).symbol()));
         }
-        int ltotal = 6 + 2 + 6 + 2 + 7 + 2 + lweight;
-        std::string blank(lweight - 7, ' ');
+
+        int nroots_max = 0;
+        int nstates = 0;
+        for (const auto& x : sa_info_) {
+            int nroots;
+            std::tie(std::ignore, std::ignore, nroots, std::ignore) = x;
+            nstates += nroots;
+            if (nroots > nroots_max) {
+                nroots_max = nroots;
+            }
+        }
+
+        if (nroots_max == 1) {
+            nroots_max = 7;
+        } else {
+            nroots_max *= 6;
+            nroots_max -= 1;
+        }
+        int ltotal = 6 + 2 + 6 + 2 + 7 + 2 + nroots_max;
+        std::string blank(nroots_max - 7, ' ');
         std::string dash(ltotal, '-');
         outfile->Printf("\n    Irrep.  Multi.  Nstates  %sWeights", blank.c_str());
         outfile->Printf("\n    %s", dash.c_str());
+
         for (int i = 0; i < nentry; ++i) {
+            int irrep, multi, nroots;
+            std::vector<double> weights;
+            std::tie(irrep, multi, nroots, weights) = sa_info_[i];
+
             std::string w_str;
-            for (double w : weights[i]) {
+            for (const double& w : weights) {
                 std::stringstream ss;
                 ss << std::fixed << std::setprecision(3) << w;
                 w_str += ss.str() + " ";
@@ -477,9 +499,9 @@ void FCI_MO::read_options() {
             w_str.pop_back(); // delete the last space character
 
             std::stringstream ss;
-            ss << std::setw(4) << std::right << irrep_symbol[irreps[i]] << "    " << std::setw(4)
-               << std::right << multis[i] << "    " << std::setw(5) << std::right << nstatespim[i]
-               << "    " << std::setw(lweight) << w_str;
+            ss << std::setw(4) << std::right << irrep_symbol[irrep] << "    " << std::setw(4)
+               << std::right << multi << "    " << std::setw(5) << std::right << nroots << "    "
+               << std::setw(nroots_max) << w_str;
             outfile->Printf("\n    %s", ss.str().c_str());
         }
         outfile->Printf("\n    %s", dash.c_str());
@@ -489,7 +511,9 @@ void FCI_MO::read_options() {
 }
 
 double FCI_MO::compute_energy() {
-    if (options_.get_bool("FCIMO_LOCALIZE_ACTV")) {
+    // temporarily put localizer here
+    // move to startup when run_dsrg is completed
+    if (localize_actv_) {
         if (nirrep_ != 1) {
             throw PSIEXCEPTION("Localizer does not support point group symmetry.");
         }
@@ -4291,8 +4315,8 @@ void FCI_MO::localize_actv_orbs() {
         }
     }
 
-    std::shared_ptr<Localizer> localizer = Localizer::build(
-        options_.get_str("LOCALIZE_TYPE"), this->basisset(), Ca_actv);
+    std::shared_ptr<Localizer> localizer =
+        Localizer::build(options_.get_str("LOCALIZE_TYPE"), this->basisset(), Ca_actv);
     localizer->localize();
     SharedMatrix Lorbs = localizer->L();
 
@@ -4311,7 +4335,7 @@ void FCI_MO::localize_actv_orbs() {
     fci_ints_->compute_restricted_one_body_operator();
 }
 
-//void FCI_MO::iao_analysis() {
+// void FCI_MO::iao_analysis() {
 //    // First compute intrisic atomic orbitals (copied from aci.cc)
 //    size_t nact = na_;
 //    SharedMatrix Ca = reference_wavefunction_->Ca();
@@ -4380,9 +4404,12 @@ void FCI_MO::localize_actv_orbs() {
 
 //    ambit::Tensor L1a = ambit::Tensor::build(ambit::CoreTensor, "L1a", {nact, nact});
 //    ambit::Tensor L1b = ambit::Tensor::build(ambit::CoreTensor, "L1b", {nact, nact});
-//    ambit::Tensor L2aa = ambit::Tensor::build(ambit::CoreTensor, "L2aa", {nact, nact, nact, nact});
-//    ambit::Tensor L2ab = ambit::Tensor::build(ambit::CoreTensor, "L2ab", {nact, nact, nact, nact});
-//    ambit::Tensor L2bb = ambit::Tensor::build(ambit::CoreTensor, "L2bb", {nact, nact, nact, nact});
+//    ambit::Tensor L2aa = ambit::Tensor::build(ambit::CoreTensor, "L2aa", {nact, nact, nact,
+//    nact});
+//    ambit::Tensor L2ab = ambit::Tensor::build(ambit::CoreTensor, "L2ab", {nact, nact, nact,
+//    nact});
+//    ambit::Tensor L2bb = ambit::Tensor::build(ambit::CoreTensor, "L2bb", {nact, nact, nact,
+//    nact});
 
 //    for (int n = 0, nentry = sa_info_.size(); n < nentry; ++n) {
 //        int nroots, irrep;
@@ -4487,13 +4514,16 @@ void FCI_MO::localize_actv_orbs() {
 //            //            L1aT("pq") = U("ap") * L1a("ab") * U("bq");
 //            //            L1bT("pq") = U("ap") * L1b("ab") * U("bq");
 
-//            //            ambit::Tensor L2aaT = ambit::Tensor::build(ambit::CoreTensor, "Transformed
+//            //            ambit::Tensor L2aaT = ambit::Tensor::build(ambit::CoreTensor,
+//            "Transformed
 //            //            L2aa",
 //            //                                                       {nact, nact, nact, nact});
-//            //            ambit::Tensor L2abT = ambit::Tensor::build(ambit::CoreTensor, "Transformed
+//            //            ambit::Tensor L2abT = ambit::Tensor::build(ambit::CoreTensor,
+//            "Transformed
 //            //            L2ab",
 //            //                                                       {nact, nact, nact, nact});
-//            //            ambit::Tensor L2bbT = ambit::Tensor::build(ambit::CoreTensor, "Transformed
+//            //            ambit::Tensor L2bbT = ambit::Tensor::build(ambit::CoreTensor,
+//            "Transformed
 //            //            L2bb",
 //            //                                                       {nact, nact, nact, nact});
 //            //            L2aaT("pqrs") = U("ap") * U("bq") * L2aa("abcd") * U("cr") * U("ds");

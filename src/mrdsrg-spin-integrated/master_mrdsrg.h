@@ -40,6 +40,13 @@ class MASTER_DSRG : public DynamicCorrelationSolver {
     /// Compute DSRG transformed Hamiltonian
     virtual std::shared_ptr<FCIIntegrals> compute_Heff();
 
+    /// Set unitary matrix (in active space) from original to semicanonical
+    void set_Uactv(ambit::Tensor& Ua, ambit::Tensor& Ub) {
+        Uactv_ = BTF_->build(tensor_type_, "Uactv", spin_cases({"aa"}));
+        Uactv_.block("aa")("pq") = Ua("pq");
+        Uactv_.block("AA")("pq") = Ub("pq");
+    }
+
     /// Compute DSRG dressed density
     //    virtual void compute_density() = 0;
 
@@ -88,6 +95,14 @@ class MASTER_DSRG : public DynamicCorrelationSolver {
 
     /// Timings for computing the commutators
     DSRG_TIME dsrg_time_;
+
+    /// Active orbital rotation from semicanonicalizor (set from outside)
+    ambit::BlockedTensor Uactv_;
+    /// Rotate 2-body DSRG transformed integrals from semicanonical back to original
+    void rotate_ints_semi_to_origin(const std::string& name, BlockedTensor& H1, BlockedTensor& H2);
+    /// Rotate 3-body DSRG transformed integrals from semicanonical back to original
+    void rotate_ints_semi_to_origin(const std::string& name, BlockedTensor& H1, BlockedTensor& H2,
+                                    BlockedTensor& H3);
 
     // ==> some common energies for all DSRG levels <==
 

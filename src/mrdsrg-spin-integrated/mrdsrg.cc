@@ -436,7 +436,7 @@ double MRDSRG::compute_energy_relaxed() {
 
         if (cas_type == "CAS") {
             FCI_MO fci_mo(reference_wavefunction_, options_, ints_, mo_space_info_);
-            //            fci_mo.set_semi(false);
+            fci_mo.set_localize_actv(false);
             Erelax = fci_mo.compute_energy();
         } else {
             FCI fci(reference_wavefunction_, options_, ints_, mo_space_info_);
@@ -476,7 +476,7 @@ double MRDSRG::compute_energy_relaxed() {
             // diagonalize the Hamiltonian
             if (cas_type == "CAS") {
                 FCI_MO fci_mo(reference_wavefunction_, options_, ints_, mo_space_info_);
-                //                fci_mo.set_semi(false);
+                fci_mo.set_localize_actv(false);
                 Erelax = fci_mo.compute_energy();
 
                 // obtain new reference
@@ -828,7 +828,7 @@ double MRDSRG::compute_energy_sa() {
         auto fci_mo =
             std::make_shared<FCI_MO>(reference_wavefunction_, options_, ints_, mo_space_info_);
         Etemp = Erelax_sa;
-        //        fci_mo->set_form_Fock(false);
+        fci_mo->set_localize_actv(false);
         Erelax_sa = fci_mo->compute_energy();
         Erelax_sa_vec.push_back(Erelax_sa);
         double Edelta_relax = Erelax_sa - Etemp;

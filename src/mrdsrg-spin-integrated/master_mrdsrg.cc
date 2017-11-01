@@ -51,7 +51,7 @@ void MASTER_DSRG::startup() {
 }
 
 void MASTER_DSRG::read_options() {
-    outfile->Printf("\n    Reading DSRG options ...... ");
+    outfile->Printf("\n    Reading DSRG options ............................ ");
 
     auto throw_error = [&](const std::string& message) -> void {
         outfile->Printf("\n  %s", message.c_str());
@@ -119,7 +119,7 @@ void MASTER_DSRG::read_MOSpaceInfo() {
 }
 
 void MASTER_DSRG::set_ambit_MOSpace() {
-    outfile->Printf("\n    Setting ambit MO space ...... ");
+    outfile->Printf("\n    Setting ambit MO space .......................... ");
     BlockedTensor::reset_mo_spaces();
     BlockedTensor::set_expert_mode(true);
 
@@ -166,7 +166,7 @@ void MASTER_DSRG::set_ambit_MOSpace() {
 }
 
 void MASTER_DSRG::init_density() {
-    outfile->Printf("\n    Preparing tensors for density cumulants ...... ");
+    outfile->Printf("\n    Preparing tensors for density cumulants ......... ");
     Eta1_ = BTF_->build(tensor_type_, "Eta1", spin_cases({"aa"}));
     Gamma1_ = BTF_->build(tensor_type_, "Gamma1", spin_cases({"aa"}));
     Lambda2_ = BTF_->build(tensor_type_, "Lambda2", spin_cases({"aaaa"}));
@@ -195,7 +195,7 @@ void MASTER_DSRG::fill_density() {
 }
 
 void MASTER_DSRG::init_fock() {
-    outfile->Printf("\n    Building Fock matrix ...... ");
+    outfile->Printf("\n    Building Fock matrix ............................ ");
     build_fock_from_ints(ints_, Fock_);
     fill_Fdiag(Fock_, Fdiag_a_, Fdiag_b_);
     outfile->Printf("Done");
@@ -349,8 +349,10 @@ std::shared_ptr<FCIIntegrals> MASTER_DSRG::compute_Heff() {
     double Edsrg = Eref_ + Hbar0_;
     if (options_.get_bool("FORM_HBAR3")) {
         deGNO_ints("Hamiltonian", Edsrg, Hbar1_, Hbar2_, Hbar3_);
+        rotate_ints_semi_to_origin("Hamiltonian", Hbar1_, Hbar2_, Hbar3_);
     } else {
         deGNO_ints("Hamiltonian", Edsrg, Hbar1_, Hbar2_);
+        rotate_ints_semi_to_origin("Hamiltonian", Hbar1_, Hbar2_);
     }
 
     if (!eri_df_) {
@@ -540,6 +542,84 @@ void MASTER_DSRG::deGNO_ints(const std::string& name, double& H0, BlockedTensor&
     H2["XYUV"] -= H3["XYZUVW"] * Gamma1_["WZ"];
     H2["XYUV"] -= H3["zXYwUV"] * Gamma1_["wz"];
     outfile->Printf("Done. Timing %8.3f s", t2.elapsed());
+}
+
+void MASTER_DSRG::rotate_ints_semi_to_origin(const std::string& name, BlockedTensor& H1,
+                                             BlockedTensor& H2) {
+    print_h2("Rotate DSRG Transformed " + name + " back to Original Basis");
+    ambit::Tensor temp;
+    ambit::Tensor Ua = Uactv_.block("aa");
+    ambit::Tensor Ub = Uactv_.block("AA");
+
+    ForteTimer timer;
+    outfile->Printf("\n    %-40s ... ", "Transforming 1-body term to original basis");
+    temp = H1.block("aa").clone(tensor_type_);
+    H1.block("aa")("pq") = Ua("pu") * temp("uv") * Ua("qv");
+
+    temp = H1.block("AA").clone(tensor_type_);
+    H1.block("AA")("PQ") = Ub("PU") * temp("UV") * Ub("QV");
+    outfile->Printf("Done. Timing %8.3f s", timer.elapsed());
+
+    timer.reset();
+    outfile->Printf("\n    %-40s ... ", "Transforming 2-body term to original basis");
+    temp = H2.block("aaaa").clone(tensor_type_);
+    H2.block("aaaa")("pqrs") = Ua("pa") * Ua("qb") * temp("abcd") * Ua("rc") * Ua("sd");
+
+    temp = H2.block("aAaA").clone(tensor_type_);
+    H2.block("aAaA")("pQrS") = Ua("pa") * Ub("QB") * temp("aBcD") * Ua("rc") * Ub("SD");
+
+    temp = H2.block("AAAA").clone(tensor_type_);
+    H2.block("AAAA")("PQRS") = Ub("PA") * Ub("QB") * temp("ABCD") * Ub("RC") * Ub("SD");
+    outfile->Printf("Done. Timing %8.3f s", timer.elapsed());
+}
+
+void MASTER_DSRG::rotate_ints_semi_to_origin(const std::string& name, BlockedTensor& H1,
+                                             BlockedTensor& H2, BlockedTensor& H3) {
+    print_h2("Rotate DSRG Transformed " + name + " back to Original Basis");
+    ambit::Tensor temp;
+    ambit::Tensor Ua = Uactv_.block("aa");
+    ambit::Tensor Ub = Uactv_.block("AA");
+
+    ForteTimer timer;
+    outfile->Printf("\n    %-40s ... ", "Transforming 1-body term to original basis");
+    temp = H1.block("aa").clone(tensor_type_);
+    H1.block("aa")("pq") = Ua("pu") * temp("uv") * Ua("qv");
+
+    temp = H1.block("AA").clone(tensor_type_);
+    H1.block("AA")("PQ") = Ub("PU") * temp("UV") * Ub("QV");
+    outfile->Printf("Done. Timing %8.3f s", timer.elapsed());
+
+    timer.reset();
+    outfile->Printf("\n    %-40s ... ", "Transforming 2-body term to original basis");
+    temp = H2.block("aaaa").clone(tensor_type_);
+    H2.block("aaaa")("pqrs") = Ua("pa") * Ua("qb") * temp("abcd") * Ua("rc") * Ua("sd");
+
+    temp = H2.block("aAaA").clone(tensor_type_);
+    H2.block("aAaA")("pQrS") = Ua("pa") * Ub("QB") * temp("aBcD") * Ua("rc") * Ub("SD");
+
+    temp = H2.block("AAAA").clone(tensor_type_);
+    H2.block("AAAA")("PQRS") = Ub("PA") * Ub("QB") * temp("ABCD") * Ub("RC") * Ub("SD");
+    outfile->Printf("Done. Timing %8.3f s", timer.elapsed());
+
+    timer.reset();
+    outfile->Printf("\n    %-40s ... ", "Transforming Hbar3 to original basis");
+    temp = H3.block("aaaaaa").clone(tensor_type_);
+    H3.block("aaaaaa")("pqrstu") =
+        Ua("pa") * Ua("qb") * Ua("rc") * temp("abcijk") * Ua("si") * Ua("tj") * Ua("uk");
+
+    temp = H3.block("aaAaaA").clone(tensor_type_);
+    H3.block("aaAaaA")("pqrstu") =
+        Ua("pa") * Ua("qb") * Ub("rc") * temp("abcijk") * Ua("si") * Ua("tj") * Ub("uk");
+
+    temp = H3.block("aAAaAA").clone(tensor_type_);
+    H3.block("aAAaAA")("pqrstu") =
+        Ua("pa") * Ub("qb") * Ub("rc") * temp("abcijk") * Ua("si") * Ub("tj") * Ub("uk");
+
+    temp = H3.block("AAAAAA").clone(tensor_type_);
+    H3.block("AAAAAA")("pqrstu") =
+        Ub("pa") * Ub("qb") * Ub("rc") * temp("abcijk") * Ub("si") * Ub("tj") * Ub("uk");
+
+    outfile->Printf("Done. Timing %8.3f s", timer.elapsed());
 }
 
 void MASTER_DSRG::H1_T1_C0(BlockedTensor& H1, BlockedTensor& T1, const double& alpha, double& C0) {

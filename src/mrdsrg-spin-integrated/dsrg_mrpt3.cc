@@ -1337,6 +1337,7 @@ double DSRG_MRPT3::compute_energy_sa() {
     // call FCI_MO if SA_FULL and CAS_TYPE == CAS
     if (multi_state_algorithm_ == "SA_FULL" && options_.get_str("CAS_TYPE") == "CAS") {
         FCI_MO fci_mo(reference_wavefunction_, options_, ints_, mo_space_info_, fci_ints);
+        fci_mo.set_localize_actv(false);
         fci_mo.compute_energy();
         auto eigens = fci_mo.eigens();
         for (int n = 0; n < nentry; ++n) {
@@ -1352,6 +1353,7 @@ double DSRG_MRPT3::compute_energy_sa() {
             for (int z = 0; z < 3; ++z) {
                 std::string name = "Dipole " + dm_dirs_[z] + " Integrals";
                 deGNO_ints(name, Mbar0_[z], Mbar1_[z], Mbar2_[z]);
+                rotate_ints_semi_to_origin(name, Mbar1_[z], Mbar2_[z]);
             }
 
             // compute permanent dipoles
@@ -1572,6 +1574,7 @@ double DSRG_MRPT3::compute_energy_relaxed() {
 
     if (options_.get_str("CAS_TYPE") == "CAS") {
         FCI_MO fci_mo(reference_wavefunction_, options_, ints_, mo_space_info_, fci_ints);
+        fci_mo.set_localize_actv(false);
         Erelax = fci_mo.compute_energy();
 
         if (do_dm_) {
@@ -1580,6 +1583,7 @@ double DSRG_MRPT3::compute_energy_relaxed() {
                 if (do_dm_dirs_[z]) {
                     std::string name = "Dipole " + dm_dirs_[z] + " Integrals";
                     deGNO_ints(name, Mbar0_[z], Mbar1_[z], Mbar2_[z]);
+                    rotate_ints_semi_to_origin(name, Mbar1_[z], Mbar2_[z]);
                 }
             }
 
