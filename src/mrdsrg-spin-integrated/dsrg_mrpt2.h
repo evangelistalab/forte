@@ -96,13 +96,6 @@ class DSRG_MRPT2 : public MASTER_DSRG {
         p_spaces_ = p_spaces;
     }
 
-    /// Set unitary matrix (in active space) from original to semicanonical
-    void set_Uactv(ambit::Tensor& Ua, ambit::Tensor& Ub) {
-        Uactv_ = BTF_->build(tensor_type_, "Uactv", spin_cases({"aa"}));
-        Uactv_.block("aa")("pq") = Ua("pq");
-        Uactv_.block("AA")("pq") = Ub("pq");
-    }
-
     /// Ignore semi-canonical testing in DSRG-MRPT2
     void set_ignore_semicanonical(bool ignore) { ignore_semicanonical_ = ignore; }
 
@@ -198,8 +191,6 @@ class DSRG_MRPT2 : public MASTER_DSRG {
 
     /// Unitary matrix to block diagonal Fock
     ambit::BlockedTensor U_;
-    /// Active orbital rotation from semicanonicalizor (set from outside)
-    ambit::BlockedTensor Uactv_;
 
     // => Amplitude <= //
 
@@ -331,7 +322,8 @@ class DSRG_MRPT2 : public MASTER_DSRG {
     /// Compute MS coupling <M|HT|N>
     double compute_ms_2nd_coupling(const std::string& name);
 
-    /// Rotate RDMs computed by p_spaces_ so that they are in the same basis as amplitudes
+    /// Rotate RDMs computed by eigens_ (in original basis) to semicanonical basis
+    /// so that they are in the same basis as amplitudes (in semicanonical basis)
     void rotate_1rdm(std::vector<double>& opdm_a, std::vector<double>& opdm_b);
     void rotate_2rdm(std::vector<double>& tpdm_aa, std::vector<double>& tpdm_ab,
                      std::vector<double>& tpdm_bb);

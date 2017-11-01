@@ -3342,6 +3342,7 @@ std::vector<double> THREE_DSRG_MRPT2::relaxed_energy(std::shared_ptr<FCIIntegral
     if (options_.get_str("CAS_TYPE") == "CAS") {
 
         FCI_MO fci_mo(reference_wavefunction_, options_, ints_, mo_space_info_, fci_ints);
+        fci_mo.set_localize_actv(false);
         double Eci = fci_mo.compute_energy();
 
         // test state specific or state average

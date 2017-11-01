@@ -117,6 +117,7 @@ std::vector<std::vector<double>> DSRG_MRPT2::compute_energy_sa() {
     if (multi_state_algorithm_ == "SA_FULL" &&
         options_.get_str("CAS_TYPE") == "CAS") {
         FCI_MO fci_mo(reference_wavefunction_, options_, ints_, mo_space_info_, fci_ints);
+        fci_mo.set_localize_actv(false);
         fci_mo.compute_energy();
         auto eigens = fci_mo.eigens();
         for (int n = 0; n < nentry; ++n) {
@@ -133,8 +134,10 @@ std::vector<std::vector<double>> DSRG_MRPT2::compute_energy_sa() {
                 std::string name = "Dipole " + dm_dirs_[z] + " Integrals";
                 if (options_.get_bool("FORM_MBAR3")) {
                     deGNO_ints(name, Mbar0_[z], Mbar1_[z], Mbar2_[z], Mbar3_[z]);
+                    rotate_ints_semi_to_origin(name, Mbar1_[z], Mbar2_[z], Mbar3_[z]);
                 } else {
                     deGNO_ints(name, Mbar0_[z], Mbar1_[z], Mbar2_[z]);
+                    rotate_ints_semi_to_origin(name, Mbar1_[z], Mbar2_[z]);
                 }
             }
 

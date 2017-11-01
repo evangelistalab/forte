@@ -311,23 +311,24 @@ void forte_old_methods(SharedWavefunction ref_wfn, Options& options,
         std::string actv_type = options.get_str("FCIMO_ACTV_TYPE");
         int max_rdm_level = (options.get_str("THREEPDC") == "ZERO") ? 2 : 3;
 
+        size_t na = mo_space_info->get_dimension("ACTIVE").sum();
+        ambit::Tensor Ua = ambit::Tensor::build(CoreTensor, "Uactv a", {na, na});
+        ambit::Tensor Ub = ambit::Tensor::build(CoreTensor, "Uactv b", {na, na});
+        Ua.iterate([&](const std::vector<size_t>& i, double& value) {
+            if (i[0] == i[1])
+                value = 1.0;
+        });
+        Ub.iterate([&](const std::vector<size_t>& i, double& value) {
+            if (i[0] == i[1])
+                value = 1.0;
+        });
+
         if (cas_type == "CAS") {
             std::shared_ptr<FCI_MO> fci_mo =
                 std::make_shared<FCI_MO>(ref_wfn, options, ints, mo_space_info);
             fci_mo->compute_energy();
             Reference reference = fci_mo->reference(max_rdm_level);
 
-            size_t na = mo_space_info->get_dimension("ACTIVE").sum();
-            ambit::Tensor Ua = ambit::Tensor::build(CoreTensor, "Uactv a", {na, na});
-            ambit::Tensor Ub = ambit::Tensor::build(CoreTensor, "Uactv b", {na, na});
-            Ua.iterate([&](const std::vector<size_t>& i, double& value) {
-                if (i[0] == i[1])
-                    value = 1.0;
-            });
-            Ub.iterate([&](const std::vector<size_t>& i, double& value) {
-                if (i[0] == i[1])
-                    value = 1.0;
-            });
 
             if (options.get_bool("SEMI_CANONICAL")) {
                 SemiCanonical semi(ref_wfn, ints, mo_space_info);
@@ -341,10 +342,10 @@ void forte_old_methods(SharedWavefunction ref_wfn, Options& options,
 
             std::shared_ptr<DSRG_MRPT2> dsrg_mrpt2 =
                 std::make_shared<DSRG_MRPT2>(reference, ref_wfn, options, ints, mo_space_info);
+            dsrg_mrpt2->set_Uactv(Ua, Ub);
             if (options["AVG_STATE"].size() != 0) {
                 dsrg_mrpt2->set_p_spaces(fci_mo->p_spaces());
                 dsrg_mrpt2->set_eigens(fci_mo->eigens());
-                dsrg_mrpt2->set_Uactv(Ua, Ub);
                 dsrg_mrpt2->compute_energy_multi_state();
             } else {
                 if (options.get_str("RELAX_REF") != "NONE") {
@@ -366,9 +367,12 @@ void forte_old_methods(SharedWavefunction ref_wfn, Options& options,
             if (options.get_bool("SEMI_CANONICAL")) {
                 SemiCanonical semi(ref_wfn, ints, mo_space_info);
                 semi.semicanonicalize(reference, max_rdm_level);
+                Ua = semi.Ua_t();
+                Ub = semi.Ub_t();
             }
             std::shared_ptr<DSRG_MRPT2> dsrg_mrpt2 =
                 std::make_shared<DSRG_MRPT2>(reference, ref_wfn, options, ints, mo_space_info);
+            dsrg_mrpt2->set_Uactv(Ua, Ub);
             if (options.get_str("RELAX_REF") != "NONE") {
                 dsrg_mrpt2->compute_energy_relaxed();
             } else {
@@ -431,6 +435,18 @@ void forte_old_methods(SharedWavefunction ref_wfn, Options& options,
         std::string actv_type = options.get_str("FCIMO_ACTV_TYPE");
         int max_rdm_level = (options.get_str("THREEPDC") == "ZERO") ? 2 : 3;
 
+        size_t na = mo_space_info->get_dimension("ACTIVE").sum();
+        ambit::Tensor Ua = ambit::Tensor::build(CoreTensor, "Uactv a", {na, na});
+        ambit::Tensor Ub = ambit::Tensor::build(CoreTensor, "Uactv b", {na, na});
+        Ua.iterate([&](const std::vector<size_t>& i, double& value) {
+            if (i[0] == i[1])
+                value = 1.0;
+        });
+        Ub.iterate([&](const std::vector<size_t>& i, double& value) {
+            if (i[0] == i[1])
+                value = 1.0;
+        });
+
         if (cas_type == "CAS") {
 
             if (options["AVG_STATE"].size() != 0) {
@@ -451,10 +467,13 @@ void forte_old_methods(SharedWavefunction ref_wfn, Options& options,
                     semi.set_actv_dims(fci_mo.actv_docc(), fci_mo.actv_virt());
                 }
                 semi.semicanonicalize(reference, max_rdm_level);
+                Ua = semi.Ua_t();
+                Ub = semi.Ub_t();
             }
 
             std::shared_ptr<THREE_DSRG_MRPT2> three_dsrg_mrpt2(
                 new THREE_DSRG_MRPT2(reference, ref_wfn, options, ints, mo_space_info));
+            three_dsrg_mrpt2->set_Uactv(Ua, Ub);
 
             if (actv_type == "CIS" || actv_type == "CISD") {
                 three_dsrg_mrpt2->set_actv_occ(fci_mo.actv_occ());
@@ -511,10 +530,13 @@ void forte_old_methods(SharedWavefunction ref_wfn, Options& options,
             if (options.get_bool("SEMI_CANONICAL")) {
                 SemiCanonical semi(ref_wfn, ints, mo_space_info);
                 semi.semicanonicalize(reference, max_rdm_level);
+                Ua = semi.Ua_t();
+                Ub = semi.Ub_t();
             }
 
             std::shared_ptr<THREE_DSRG_MRPT2> three_dsrg_mrpt2(
                 new THREE_DSRG_MRPT2(reference, ref_wfn, options, ints, mo_space_info));
+            three_dsrg_mrpt2->set_Uactv(Ua, Ub);
             three_dsrg_mrpt2->compute_energy();
 
         } else if (cas_type == "DMRG") {
@@ -569,22 +591,22 @@ void forte_old_methods(SharedWavefunction ref_wfn, Options& options,
         std::string cas_type = options.get_str("CAS_TYPE");
         int max_rdm_level = (options.get_str("THREEPDC") == "ZERO") ? 2 : 3;
 
+        size_t na = mo_space_info->get_dimension("ACTIVE").sum();
+        ambit::Tensor Ua = ambit::Tensor::build(CoreTensor, "Uactv a", {na, na});
+        ambit::Tensor Ub = ambit::Tensor::build(CoreTensor, "Uactv b", {na, na});
+        Ua.iterate([&](const std::vector<size_t>& i, double& value) {
+            if (i[0] == i[1])
+                value = 1.0;
+        });
+        Ub.iterate([&](const std::vector<size_t>& i, double& value) {
+            if (i[0] == i[1])
+                value = 1.0;
+        });
+
         if (cas_type == "CAS") {
             auto fci_mo = std::make_shared<FCI_MO>(ref_wfn, options, ints, mo_space_info);
             fci_mo->compute_energy();
             Reference reference = fci_mo->reference(max_rdm_level);
-
-            size_t na = mo_space_info->get_dimension("ACTIVE").sum();
-            ambit::Tensor Ua = ambit::Tensor::build(CoreTensor, "Uactv a", {na, na});
-            ambit::Tensor Ub = ambit::Tensor::build(CoreTensor, "Uactv b", {na, na});
-            Ua.iterate([&](const std::vector<size_t>& i, double& value) {
-                if (i[0] == i[1])
-                    value = 1.0;
-            });
-            Ub.iterate([&](const std::vector<size_t>& i, double& value) {
-                if (i[0] == i[1])
-                    value = 1.0;
-            });
 
             if (options.get_bool("SEMI_CANONICAL")) {
                 SemiCanonical semi(ref_wfn, ints, mo_space_info);
@@ -593,16 +615,15 @@ void forte_old_methods(SharedWavefunction ref_wfn, Options& options,
                 Ub = semi.Ub_t();
             }
 
+            std::shared_ptr<DSRG_MRPT3> dsrg_mrpt3(
+                new DSRG_MRPT3(reference, ref_wfn, options, ints, mo_space_info));
+            dsrg_mrpt3->set_Uactv(Ua, Ub);
+
             if (options["AVG_STATE"].size() != 0) {
-                std::shared_ptr<DSRG_MRPT3> dsrg_mrpt3(
-                    new DSRG_MRPT3(reference, ref_wfn, options, ints, mo_space_info));
                 dsrg_mrpt3->set_p_spaces(fci_mo->p_spaces());
                 dsrg_mrpt3->set_eigens(fci_mo->eigens());
-                dsrg_mrpt3->set_Uactv(Ua, Ub);
                 dsrg_mrpt3->compute_energy_sa();
             } else {
-                std::shared_ptr<DSRG_MRPT3> dsrg_mrpt3(
-                    new DSRG_MRPT3(reference, ref_wfn, options, ints, mo_space_info));
                 if (options.get_str("RELAX_REF") != "NONE") {
                     dsrg_mrpt3->compute_energy_relaxed();
                 } else {
@@ -619,10 +640,13 @@ void forte_old_methods(SharedWavefunction ref_wfn, Options& options,
             if (options.get_bool("SEMI_CANONICAL")) {
                 SemiCanonical semi(ref_wfn, ints, mo_space_info);
                 semi.semicanonicalize(reference, max_rdm_level);
+                Ua = semi.Ua_t();
+                Ub = semi.Ub_t();
             }
 
             auto dsrg_mrpt3 =
                 std::make_shared<DSRG_MRPT3>(reference, ref_wfn, options, ints, mo_space_info);
+            dsrg_mrpt3->set_Uactv(Ua, Ub);
             if (options.get_str("RELAX_REF") != "NONE") {
                 dsrg_mrpt3->compute_energy_relaxed();
             } else {

@@ -1578,7 +1578,6 @@ void DSRG_MRPT2::compute_dm1d_pt2(BlockedTensor& M, double& Mbar0, BlockedTensor
     BlockedTensor O1, O2, temp1, temp2;
     O1 = BTF_->build(tensor_type_, "O1", spin_cases({"pc", "va"}), true);
     O2 = BTF_->build(tensor_type_, "O2", spin_cases({"ppch", "ppac", "vpaa", "avaa"}), true);
-    O2 = BTF_->build(tensor_type_, "O2", spin_cases({"gggg"}), true);
     H1_T1_C1(M, T1_, 1.0, O1);
     H1_T2_C1(M, T2_, 1.0, O1);
     H1_T2_C2(M, T2_, 1.0, O2);
@@ -1730,6 +1729,7 @@ double DSRG_MRPT2::compute_energy_relaxed() {
     // diagonalize Hbar depending on CAS_TYPE
     if (options_.get_str("CAS_TYPE") == "CAS") {
         FCI_MO fci_mo(reference_wavefunction_, options_, ints_, mo_space_info_, fci_ints);
+        fci_mo.set_localize_actv(false);
         Erelax = fci_mo.compute_energy();
 
         if (do_dm_) {
@@ -1739,8 +1739,10 @@ double DSRG_MRPT2::compute_energy_relaxed() {
                     std::string name = "Dipole " + dm_dirs_[z] + " Integrals";
                     if (options_.get_bool("FORM_MBAR3")) {
                         deGNO_ints(name, Mbar0_[z], Mbar1_[z], Mbar2_[z], Mbar3_[z]);
+                        rotate_ints_semi_to_origin(name, Mbar1_[z], Mbar2_[z], Mbar3_[z]);
                     } else {
                         deGNO_ints(name, Mbar0_[z], Mbar1_[z], Mbar2_[z]);
+                        rotate_ints_semi_to_origin(name, Mbar1_[z], Mbar2_[z]);
                     }
                 }
             }

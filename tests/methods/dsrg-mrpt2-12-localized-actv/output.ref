@@ -1,0 +1,1928 @@
+
+    -----------------------------------------------------------------------
+          Psi4: An Open-Source Ab Initio Electronic Structure Package
+                               Psi4 1.2a1.dev491 
+
+                         Git: Rev {master} 09b4ef6 
+
+
+    R. M. Parrish, L. A. Burns, D. G. A. Smith, A. C. Simmonett,
+    A. E. DePrince III, E. G. Hohenstein, U. Bozkaya, A. Yu. Sokolov,
+    R. Di Remigio, R. M. Richard, J. F. Gonthier, A. M. James,
+    H. R. McAlexander, A. Kumar, M. Saitow, X. Wang, B. P. Pritchard,
+    P. Verma, H. F. Schaefer III, K. Patkowski, R. A. King, E. F. Valeev,
+    F. A. Evangelista, J. M. Turney, T. D. Crawford, and C. D. Sherrill,
+    J. Chem. Theory Comput. 13(7) pp 3185--3197 (2017).
+    (doi: 10.1021/acs.jctc.7b00174)
+
+    -----------------------------------------------------------------------
+
+
+    Psi4 started on: Tuesday, 31 October 2017 09:24PM
+
+    Process ID:  20802
+    PSIDATADIR: /Users/york/src/psi4new/psi4/share/psi4
+    Memory:     500.0 MiB
+    Threads:    1
+    
+  ==> Input File <==
+
+--------------------------------------------------------------------------
+#! Generated using commit GITCOMMIT
+
+import forte
+memory 1 gb
+
+r_scf = -154.809201458319
+r_0ag = -155.350467803889
+
+molecule butadiene{
+0 1
+H  1.080977 -2.558832  0.000000
+H -1.080977  2.558832  0.000000
+H  2.103773 -1.017723  0.000000
+H -2.103773  1.017723  0.000000
+H -0.973565 -1.219040  0.000000
+H  0.973565  1.219040  0.000000
+C  0.000000  0.728881  0.000000
+C  0.000000 -0.728881  0.000000
+C  1.117962 -1.474815  0.000000
+C -1.117962  1.474815  0.000000
+
+symmetry c1
+}
+
+set {
+  reference         rhf
+  scf_type          pk
+  basis             def2-svp
+  e_convergence     10
+  d_convergence     8
+  maxiter           100
+  cubeprop_orbitals [14,15,16,17]
+}
+Escf, wfn = energy('scf', return_wfn=True)
+compare_values(r_scf, Escf, 8, "SCF energy")
+
+set forte{
+  job_type            dsrg-mrpt2
+  rotate_mos          [1,17,20]
+  cas_type            cas
+  fcimo_localize_actv true
+  e_convergence       12
+  dsrg_s              0.5
+  frozen_docc         [4]
+  restricted_docc     [9]
+  active              [4]
+  avg_state           [[0,1,6]]
+  rotate_mos          [1,17,20]
+  dsrg_dipole         true
+}
+E0ag, wfn = energy('forte', ref_wfn=wfn, return_wfn=True)
+compare_values(r_0ag, E0ag, 8, "abs. energy of singlet 0Ag")
+--------------------------------------------------------------------------
+
+  Memory set to 953.674 MiB by Python driver.
+
+*** tstart() called on yorks-mac.wireless.emory.edu
+*** at Tue Oct 31 21:24:29 2017
+
+   => Loading Basis Set <=
+
+    Name: DEF2-SVP
+    Role: ORBITAL
+    Keyword: BASIS
+    atoms 1-6  entry H          line    15 file /Users/york/src/psi4new/psi4/share/psi4/basis/def2-svp.gbs 
+    atoms 7-10 entry C          line    90 file /Users/york/src/psi4new/psi4/share/psi4/basis/def2-svp.gbs 
+
+
+         ---------------------------------------------------------
+                                   SCF
+            by Justin Turney, Rob Parrish, Andy Simmonett
+                             and Daniel Smith
+                              RHF Reference
+                        1 Threads,    953 MiB Core
+         ---------------------------------------------------------
+
+  ==> Geometry <==
+
+    Molecular point group: c1
+    Full point group: C2h
+
+    Geometry (in Angstrom), charge = 0, multiplicity = 1:
+
+       Center              X                  Y                   Z               Mass       
+    ------------   -----------------  -----------------  -----------------  -----------------
+           H          1.080977000000    -2.558832000000     0.000000000000     1.007825032070
+           H         -1.080977000000     2.558832000000     0.000000000000     1.007825032070
+           H          2.103773000000    -1.017723000000     0.000000000000     1.007825032070
+           H         -2.103773000000     1.017723000000     0.000000000000     1.007825032070
+           H         -0.973565000000    -1.219040000000     0.000000000000     1.007825032070
+           H          0.973565000000     1.219040000000     0.000000000000     1.007825032070
+           C          0.000000000000     0.728881000000     0.000000000000    12.000000000000
+           C          0.000000000000    -0.728881000000     0.000000000000    12.000000000000
+           C          1.117962000000    -1.474815000000     0.000000000000    12.000000000000
+           C         -1.117962000000     1.474815000000     0.000000000000    12.000000000000
+
+  Running in c1 symmetry.
+
+  Rotational constants: A =      1.39831  B =      0.14741  C =      0.13335 [cm^-1]
+  Rotational constants: A =  41920.28271  B =   4419.18033  C =   3997.74354 [MHz]
+  Nuclear repulsion =  103.516093773397515
+
+  Charge       = 0
+  Multiplicity = 1
+  Electrons    = 30
+  Nalpha       = 15
+  Nbeta        = 15
+
+  ==> Algorithm <==
+
+  SCF Algorithm Type is PK.
+  DIIS enabled.
+  MOM disabled.
+  Fractional occupation disabled.
+  Guess Type is SAD.
+  Energy threshold   = 1.00e-10
+  Density threshold  = 1.00e-08
+  Integral threshold = 0.00e+00
+
+  ==> Primary Basis <==
+
+  Basis Set: DEF2-SVP
+    Blend: DEF2-SVP
+    Number of shells: 42
+    Number of basis function: 86
+    Number of Cartesian functions: 90
+    Spherical Harmonics?: true
+    Max angular momentum: 2
+
+  ==> Pre-Iterations <==
+
+   -------------------------------------------------------
+    Irrep   Nso     Nmo     Nalpha   Nbeta   Ndocc  Nsocc
+   -------------------------------------------------------
+     A         86      86       0       0       0       0
+   -------------------------------------------------------
+    Total      86      86      15      15      15       0
+   -------------------------------------------------------
+
+  ==> Integral Setup <==
+
+  Using in-core PK algorithm.
+   Calculation information:
+      Number of atoms:                  10
+      Number of AO shells:              42
+      Number of primitives:             78
+      Number of atomic orbitals:        90
+      Number of basis functions:        86
+
+      Integral cutoff                 1.00e-12
+      Number of threads:                 1
+
+  Performing in-core PK
+  Using 13998822 doubles for integral storage.
+  We computed 385288 shell quartets total.
+  Whereas there are 408156 unique shell quartets.
+  ==> DiskJK: Disk-Based J/K Matrices <==
+
+    J tasked:                  Yes
+    K tasked:                  Yes
+    wK tasked:                  No
+    Memory (MB):               715
+    Schwarz Cutoff:          1E-12
+
+    OpenMP threads:              1
+  Minimum eigenvalue in the overlap matrix is 1.8516788927E-03.
+  Using Symmetric Orthogonalization.
+
+  SCF Guess: Superposition of Atomic Densities via on-the-fly atomic UHF.
+
+  ==> Iterations <==
+
+                        Total Energy        Delta E     RMS |[F,P]|
+
+   @RHF iter   0:  -157.22797356060678   -1.57228e+02   4.41665e-02 
+   @RHF iter   1:  -154.74319359471576    2.48478e+00   3.13439e-03 
+   @RHF iter   2:  -154.80203768774504   -5.88441e-02   9.08990e-04 DIIS
+   @RHF iter   3:  -154.80801619101999   -5.97850e-03   4.07957e-04 DIIS
+   @RHF iter   4:  -154.80900032288986   -9.84132e-04   1.31298e-04 DIIS
+   @RHF iter   5:  -154.80917937591951   -1.79053e-04   4.03654e-05 DIIS
+   @RHF iter   6:  -154.80919980811609   -2.04322e-05   1.13726e-05 DIIS
+   @RHF iter   7:  -154.80920138968690   -1.58157e-06   2.21694e-06 DIIS
+   @RHF iter   8:  -154.80920145429164   -6.46047e-08   5.12693e-07 DIIS
+   @RHF iter   9:  -154.80920145821182   -3.92018e-09   8.48123e-08 DIIS
+   @RHF iter  10:  -154.80920145831359   -1.01778e-10   1.86760e-08 DIIS
+   @RHF iter  11:  -154.80920145831831   -4.71800e-12   4.37864e-09 DIIS
+
+  ==> Post-Iterations <==
+
+    Orbital Energies (a.u.)
+    -----------------------
+
+    Doubly Occupied:                                                      
+
+       1A    -11.243115     2A    -11.242402     3A    -11.236533  
+       4A    -11.236508     5A     -1.078931     6A     -0.987457  
+       7A     -0.818069     8A     -0.748132     9A     -0.643715  
+      10A     -0.634702    11A     -0.558613    12A     -0.544130  
+      13A     -0.495367    14A     -0.443875    15A     -0.322203  
+
+    Virtual:                                                              
+
+      16A      0.114604    17A      0.202404    18A      0.208193  
+      19A      0.218272    20A      0.237812    21A      0.269023  
+      22A      0.279205    23A      0.295457    24A      0.444533  
+      25A      0.459483    26A      0.535098    27A      0.555485  
+      28A      0.580928    29A      0.602941    30A      0.625158  
+      31A      0.686928    32A      0.724648    33A      0.746358  
+      34A      0.756693    35A      0.828068    36A      0.846995  
+      37A      0.874224    38A      0.881505    39A      0.900856  
+      40A      0.905545    41A      0.918921    42A      0.950799  
+      43A      1.022838    44A      1.088126    45A      1.090347  
+      46A      1.227137    47A      1.363898    48A      1.392577  
+      49A      1.430279    50A      1.457741    51A      1.493521  
+      52A      1.526441    53A      1.555811    54A      1.865556  
+      55A      1.872195    56A      1.900411    57A      1.926357  
+      58A      1.929125    59A      1.996993    60A      2.040038  
+      61A      2.049096    62A      2.079197    63A      2.084842  
+      64A      2.176176    65A      2.185964    66A      2.317107  
+      67A      2.320522    68A      2.361230    69A      2.367522  
+      70A      2.438919    71A      2.573505    72A      2.622184  
+      73A      2.625461    74A      2.667799    75A      2.737832  
+      76A      2.858975    77A      2.862270    78A      2.913273  
+      79A      3.057000    80A      3.101298    81A      3.171681  
+      82A      3.173502    83A      3.318628    84A      3.380894  
+      85A      3.713573    86A      3.734697  
+
+    Final Occupation by Irrep:
+              A 
+    DOCC [    15 ]
+
+  Energy converged.
+
+  @RHF Final Energy:  -154.80920145831831
+
+   => Energetics <=
+
+    Nuclear Repulsion Energy =            103.5160937733975146
+    One-Electron Energy =                -412.1830887393804232
+    Two-Electron Energy =                 153.8577935076645815
+    Total Energy =                       -154.8092014583183129
+
+
+
+Properties will be evaluated at   0.000000,   0.000000,   0.000000 Bohr
+
+Properties computed using the SCF density matrix
+
+  Nuclear Dipole Moment: (a.u.)
+     X:     0.0000      Y:     0.0000      Z:     0.0000
+
+  Electronic Dipole Moment: (a.u.)
+     X:    -0.0000      Y:     0.0000      Z:     0.0000
+
+  Dipole Moment: (a.u.)
+     X:    -0.0000      Y:     0.0000      Z:     0.0000     Total:     0.0000
+
+  Dipole Moment: (Debye)
+     X:    -0.0000      Y:     0.0000      Z:     0.0000     Total:     0.0000
+
+
+*** tstop() called on yorks-mac.wireless.emory.edu at Tue Oct 31 21:24:34 2017
+Module time:
+	user time   =       4.26 seconds =       0.07 minutes
+	system time =       0.10 seconds =       0.00 minutes
+	total time  =          5 seconds =       0.08 minutes
+Total time:
+	user time   =       4.26 seconds =       0.07 minutes
+	system time =       0.10 seconds =       0.00 minutes
+	total time  =          5 seconds =       0.08 minutes
+	SCF energy........................................................PASSED
+   => Loading Basis Set <=
+
+    Name: STO-3G
+    Role: ORBITAL
+    Keyword: MINAO_BASIS
+    atoms 1-6  entry H          line    19 file /Users/york/src/psi4new/psi4/share/psi4/basis/sto-3g.gbs 
+    atoms 7-10 entry C          line    61 file /Users/york/src/psi4new/psi4/share/psi4/basis/sto-3g.gbs 
+
+
+Reading options from the FORTE block
+Calling plugin forte.so.
+
+
+
+  Forte
+  ----------------------------------------------------------------------------
+  A suite of quantum chemistry methods for strongly correlated electrons
+
+    git branch: master - git commit: ad48a49e
+
+  Developed by:
+    Francesco A. Evangelista, Chenyang Li, Kevin P. Hannon,
+    Jeffrey B. Schriber, Tianyuan Zhang, Chenxi Cai
+  ----------------------------------------------------------------------------
+
+
+  ==> MO Space Information <==
+
+  Read options for space FROZEN_DOCC
+  Read options for space RESTRICTED_DOCC
+  Read options for space ACTIVE
+ Removing orbital 0
+ Removing orbital 1
+ Removing orbital 2
+ Removing orbital 3
+  -------------------------------
+                        A   Sum
+  -------------------------------
+    FROZEN_DOCC         4     4
+    RESTRICTED_DOCC     9     9
+    ACTIVE              4     4
+    RESTRICTED_UOCC    69    69
+    FROZEN_UOCC         0     0
+    Total              86    86
+  -------------------------------
+
+  ==> Integral Transformation <==
+
+  Number of molecular orbitals:               86
+  Number of correlated molecular orbitals:    82
+  Number of frozen occupied orbitals:          4
+  Number of frozen unoccupied orbitals:        0
+
+
+
+
+  ==> ROTATING MOS <==
+
+  IRREP  MO_1  MO_2
+   0   16   19
+    Molecular point group: c1
+    Full point group: C2h
+
+    Geometry (in Angstrom), charge = 0, multiplicity = 1:
+
+       Center              X                  Y                   Z               Mass       
+    ------------   -----------------  -----------------  -----------------  -----------------
+           H          1.080977000000    -2.558832000000     0.000000000000     1.007825032070
+           H         -1.080977000000     2.558832000000     0.000000000000     1.007825032070
+           H          2.103773000000    -1.017723000000     0.000000000000     1.007825032070
+           H         -2.103773000000     1.017723000000     0.000000000000     1.007825032070
+           H         -0.973565000000    -1.219040000000     0.000000000000     1.007825032070
+           H          0.973565000000     1.219040000000     0.000000000000     1.007825032070
+           C          0.000000000000     0.728881000000     0.000000000000    12.000000000000
+           C          0.000000000000    -0.728881000000     0.000000000000    12.000000000000
+           C          1.117962000000    -1.474815000000     0.000000000000    12.000000000000
+           C         -1.117962000000     1.474815000000     0.000000000000    12.000000000000
+
+  -AO BASIS SET INFORMATION:
+    Name                   = DEF2-SVP
+    Blend                  = DEF2-SVP
+    Total number of shells = 42
+    Number of primitives   = 78
+    Number of AO           = 90
+    Number of SO           = 86
+    Maximum AM             = 2
+    Spherical Harmonics    = TRUE
+
+  -Contraction Scheme:
+    Atom   Type   All Primitives // Shells:
+   ------ ------ --------------------------
+       1     H     4s 1p // 2s 1p 
+       2     H     4s 1p // 2s 1p 
+       3     H     4s 1p // 2s 1p 
+       4     H     4s 1p // 2s 1p 
+       5     H     4s 1p // 2s 1p 
+       6     H     4s 1p // 2s 1p 
+       7     C     7s 4p 1d // 3s 2p 1d 
+       8     C     7s 4p 1d // 3s 2p 1d 
+       9     C     7s 4p 1d // 3s 2p 1d 
+      10     C     7s 4p 1d // 3s 2p 1d 
+
+  ==> AO Basis Functions <==
+
+    [ DEF2-SVP ]
+    spherical
+    ****
+    H   1
+    S   3 1.00
+                        13.01070100           0.01968216
+                         1.96225720           0.13796524
+                         0.44453796           0.47831935
+    S   1 1.00
+                         0.12194962           1.00000000
+    P   1 1.00
+                         0.80000000           1.00000000
+    ****
+    H   2
+    S   3 1.00
+                        13.01070100           0.01968216
+                         1.96225720           0.13796524
+                         0.44453796           0.47831935
+    S   1 1.00
+                         0.12194962           1.00000000
+    P   1 1.00
+                         0.80000000           1.00000000
+    ****
+    H   3
+    S   3 1.00
+                        13.01070100           0.01968216
+                         1.96225720           0.13796524
+                         0.44453796           0.47831935
+    S   1 1.00
+                         0.12194962           1.00000000
+    P   1 1.00
+                         0.80000000           1.00000000
+    ****
+    H   4
+    S   3 1.00
+                        13.01070100           0.01968216
+                         1.96225720           0.13796524
+                         0.44453796           0.47831935
+    S   1 1.00
+                         0.12194962           1.00000000
+    P   1 1.00
+                         0.80000000           1.00000000
+    ****
+    H   5
+    S   3 1.00
+                        13.01070100           0.01968216
+                         1.96225720           0.13796524
+                         0.44453796           0.47831935
+    S   1 1.00
+                         0.12194962           1.00000000
+    P   1 1.00
+                         0.80000000           1.00000000
+    ****
+    H   6
+    S   3 1.00
+                        13.01070100           0.01968216
+                         1.96225720           0.13796524
+                         0.44453796           0.47831935
+    S   1 1.00
+                         0.12194962           1.00000000
+    P   1 1.00
+                         0.80000000           1.00000000
+    ****
+    C   7
+    S   5 1.00
+                      1238.40169380           0.00545688
+                       186.29004992           0.04063841
+                        42.25117635           0.18025594
+                        11.67655793           0.46315122
+                         3.59305065           0.44087173
+    S   1 1.00
+                         0.40245147           1.00000000
+    S   1 1.00
+                         0.13090183           1.00000000
+    P   3 1.00
+                         9.46809706           0.03838787
+                         2.01035451           0.21117025
+                         0.54771005           0.51328172
+    P   1 1.00
+                         0.15268614           1.00000000
+    D   1 1.00
+                         0.80000000           1.00000000
+    ****
+    C   8
+    S   5 1.00
+                      1238.40169380           0.00545688
+                       186.29004992           0.04063841
+                        42.25117635           0.18025594
+                        11.67655793           0.46315122
+                         3.59305065           0.44087173
+    S   1 1.00
+                         0.40245147           1.00000000
+    S   1 1.00
+                         0.13090183           1.00000000
+    P   3 1.00
+                         9.46809706           0.03838787
+                         2.01035451           0.21117025
+                         0.54771005           0.51328172
+    P   1 1.00
+                         0.15268614           1.00000000
+    D   1 1.00
+                         0.80000000           1.00000000
+    ****
+    C   9
+    S   5 1.00
+                      1238.40169380           0.00545688
+                       186.29004992           0.04063841
+                        42.25117635           0.18025594
+                        11.67655793           0.46315122
+                         3.59305065           0.44087173
+    S   1 1.00
+                         0.40245147           1.00000000
+    S   1 1.00
+                         0.13090183           1.00000000
+    P   3 1.00
+                         9.46809706           0.03838787
+                         2.01035451           0.21117025
+                         0.54771005           0.51328172
+    P   1 1.00
+                         0.15268614           1.00000000
+    D   1 1.00
+                         0.80000000           1.00000000
+    ****
+    C  10
+    S   5 1.00
+                      1238.40169380           0.00545688
+                       186.29004992           0.04063841
+                        42.25117635           0.18025594
+                        11.67655793           0.46315122
+                         3.59305065           0.44087173
+    S   1 1.00
+                         0.40245147           1.00000000
+    S   1 1.00
+                         0.13090183           1.00000000
+    P   3 1.00
+                         9.46809706           0.03838787
+                         2.01035451           0.21117025
+                         0.54771005           0.51328172
+    P   1 1.00
+                         0.15268614           1.00000000
+    D   1 1.00
+                         0.80000000           1.00000000
+    ****
+
+
+  Overall Conventional Integrals timings
+
+	Presorting SO-basis two-electron integrals.
+	Sorting File: SO Ints (nn|nn) nbuckets = 1
+	Transforming the one-electron integrals and constructing Fock matrices
+	Starting first half-transformation.
+	Sorting half-transformed integrals.
+	First half integral transformation complete.
+	Starting second half-transformation.
+	Two-electron integral transformation complete.
+
+  Integral transformation done. 5.52769200 s
+  Reading the two-electron integrals from disk
+  Size of two-electron integrals:   1.222659 GB  Using in-core PK algorithm.
+   Calculation information:
+      Number of atoms:                  10
+      Number of AO shells:              42
+      Number of primitives:             78
+      Number of atomic orbitals:        90
+      Number of basis functions:        86
+
+      Integral cutoff                 1.00e-12
+      Number of threads:                 1
+
+  Performing in-core PK
+  Using 13998822 doubles for integral storage.
+  We computed 385288 shell quartets total.
+  Whereas there are 408156 unique shell quartets.
+
+  Frozen-core energy           -176.777110788129 a.u.
+
+  FrozenOneBody Operator takes  2.50313600 s
+  Resorting integrals after freezing core.
+  Conventional integrals take 21.84561900 s
+
+              ---------------------------------------------------
+                Complete Active Space Configuration Interaction
+                                  Chenyang Li
+              ---------------------------------------------------
+
+
+  ==> Input Summary <==
+
+    No. a electrons in active      =     2
+    No. b electrons in active      =     2
+    multiplicity                   =     1
+    spin ms (2 * Sz)               =     0
+
+  ==> Orbital Spaces <==
+
+    TOTAL MO                      [   86 ]
+    FROZEN CORE                   [    4 ]
+    FROZEN VIRTUAL                [    0 ]
+    CORRELATED MO                 [   82 ]
+    CORE                          [    9 ]
+    ACTIVE                        [    4 ]
+    VIRTUAL                       [   69 ]
+
+  ==> State Averaging Summary <==
+
+    Irrep.  Multi.  Nstates                              Weights
+    ------------------------------------------------------------
+       A       1        6    0.167 0.167 0.167 0.167 0.167 0.167
+    ------------------------------------------------------------
+    Total number of states: 6
+    ------------------------------------------------------------
+
+
+  ==> Localizing active orbitals <==
+  ==> Pipek-Mezey Localizer <==
+
+    Convergence =   1.000E-12
+    Maxiter     =        1000
+
+    Iteration                   Metric       Residual
+    @PM    0   1.0574597623569546E+00              -
+    @PM    1   4.8820673842380709E+00   3.616788E+00
+    @PM    2   4.9436766323315995E+00   1.261950E-02
+    @PM    3   4.9438175556347126E+00   2.850577E-05
+    @PM    4   4.9438175702547857E+00   2.957244E-09
+    @PM    5   4.9438175703597924E+00   2.124000E-11
+    @PM    6   4.9438175703599345E+00   2.874470E-14
+
+    PM Localizer converged.
+
+    Molecular point group: c1
+    Full point group: C2h
+
+    Geometry (in Angstrom), charge = 0, multiplicity = 1:
+
+       Center              X                  Y                   Z               Mass       
+    ------------   -----------------  -----------------  -----------------  -----------------
+           H          1.080977000000    -2.558832000000     0.000000000000     1.007825032070
+           H         -1.080977000000     2.558832000000     0.000000000000     1.007825032070
+           H          2.103773000000    -1.017723000000     0.000000000000     1.007825032070
+           H         -2.103773000000     1.017723000000     0.000000000000     1.007825032070
+           H         -0.973565000000    -1.219040000000     0.000000000000     1.007825032070
+           H          0.973565000000     1.219040000000     0.000000000000     1.007825032070
+           C          0.000000000000     0.728881000000     0.000000000000    12.000000000000
+           C          0.000000000000    -0.728881000000     0.000000000000    12.000000000000
+           C          1.117962000000    -1.474815000000     0.000000000000    12.000000000000
+           C         -1.117962000000     1.474815000000     0.000000000000    12.000000000000
+
+  -AO BASIS SET INFORMATION:
+    Name                   = DEF2-SVP
+    Blend                  = DEF2-SVP
+    Total number of shells = 42
+    Number of primitives   = 78
+    Number of AO           = 90
+    Number of SO           = 86
+    Maximum AM             = 2
+    Spherical Harmonics    = TRUE
+
+  -Contraction Scheme:
+    Atom   Type   All Primitives // Shells:
+   ------ ------ --------------------------
+       1     H     4s 1p // 2s 1p 
+       2     H     4s 1p // 2s 1p 
+       3     H     4s 1p // 2s 1p 
+       4     H     4s 1p // 2s 1p 
+       5     H     4s 1p // 2s 1p 
+       6     H     4s 1p // 2s 1p 
+       7     C     7s 4p 1d // 3s 2p 1d 
+       8     C     7s 4p 1d // 3s 2p 1d 
+       9     C     7s 4p 1d // 3s 2p 1d 
+      10     C     7s 4p 1d // 3s 2p 1d 
+
+  ==> AO Basis Functions <==
+
+    [ DEF2-SVP ]
+    spherical
+    ****
+    H   1
+    S   3 1.00
+                        13.01070100           0.01968216
+                         1.96225720           0.13796524
+                         0.44453796           0.47831935
+    S   1 1.00
+                         0.12194962           1.00000000
+    P   1 1.00
+                         0.80000000           1.00000000
+    ****
+    H   2
+    S   3 1.00
+                        13.01070100           0.01968216
+                         1.96225720           0.13796524
+                         0.44453796           0.47831935
+    S   1 1.00
+                         0.12194962           1.00000000
+    P   1 1.00
+                         0.80000000           1.00000000
+    ****
+    H   3
+    S   3 1.00
+                        13.01070100           0.01968216
+                         1.96225720           0.13796524
+                         0.44453796           0.47831935
+    S   1 1.00
+                         0.12194962           1.00000000
+    P   1 1.00
+                         0.80000000           1.00000000
+    ****
+    H   4
+    S   3 1.00
+                        13.01070100           0.01968216
+                         1.96225720           0.13796524
+                         0.44453796           0.47831935
+    S   1 1.00
+                         0.12194962           1.00000000
+    P   1 1.00
+                         0.80000000           1.00000000
+    ****
+    H   5
+    S   3 1.00
+                        13.01070100           0.01968216
+                         1.96225720           0.13796524
+                         0.44453796           0.47831935
+    S   1 1.00
+                         0.12194962           1.00000000
+    P   1 1.00
+                         0.80000000           1.00000000
+    ****
+    H   6
+    S   3 1.00
+                        13.01070100           0.01968216
+                         1.96225720           0.13796524
+                         0.44453796           0.47831935
+    S   1 1.00
+                         0.12194962           1.00000000
+    P   1 1.00
+                         0.80000000           1.00000000
+    ****
+    C   7
+    S   5 1.00
+                      1238.40169380           0.00545688
+                       186.29004992           0.04063841
+                        42.25117635           0.18025594
+                        11.67655793           0.46315122
+                         3.59305065           0.44087173
+    S   1 1.00
+                         0.40245147           1.00000000
+    S   1 1.00
+                         0.13090183           1.00000000
+    P   3 1.00
+                         9.46809706           0.03838787
+                         2.01035451           0.21117025
+                         0.54771005           0.51328172
+    P   1 1.00
+                         0.15268614           1.00000000
+    D   1 1.00
+                         0.80000000           1.00000000
+    ****
+    C   8
+    S   5 1.00
+                      1238.40169380           0.00545688
+                       186.29004992           0.04063841
+                        42.25117635           0.18025594
+                        11.67655793           0.46315122
+                         3.59305065           0.44087173
+    S   1 1.00
+                         0.40245147           1.00000000
+    S   1 1.00
+                         0.13090183           1.00000000
+    P   3 1.00
+                         9.46809706           0.03838787
+                         2.01035451           0.21117025
+                         0.54771005           0.51328172
+    P   1 1.00
+                         0.15268614           1.00000000
+    D   1 1.00
+                         0.80000000           1.00000000
+    ****
+    C   9
+    S   5 1.00
+                      1238.40169380           0.00545688
+                       186.29004992           0.04063841
+                        42.25117635           0.18025594
+                        11.67655793           0.46315122
+                         3.59305065           0.44087173
+    S   1 1.00
+                         0.40245147           1.00000000
+    S   1 1.00
+                         0.13090183           1.00000000
+    P   3 1.00
+                         9.46809706           0.03838787
+                         2.01035451           0.21117025
+                         0.54771005           0.51328172
+    P   1 1.00
+                         0.15268614           1.00000000
+    D   1 1.00
+                         0.80000000           1.00000000
+    ****
+    C  10
+    S   5 1.00
+                      1238.40169380           0.00545688
+                       186.29004992           0.04063841
+                        42.25117635           0.18025594
+                        11.67655793           0.46315122
+                         3.59305065           0.44087173
+    S   1 1.00
+                         0.40245147           1.00000000
+    S   1 1.00
+                         0.13090183           1.00000000
+    P   3 1.00
+                         9.46809706           0.03838787
+                         2.01035451           0.21117025
+                         0.54771005           0.51328172
+    P   1 1.00
+                         0.15268614           1.00000000
+    D   1 1.00
+                         0.80000000           1.00000000
+    ****
+
+
+ Integrals are about to be computed.	Presorting SO-basis two-electron integrals.
+	Sorting File: SO Ints (nn|nn) nbuckets = 1
+	Transforming the one-electron integrals and constructing Fock matrices
+	Starting first half-transformation.
+	Sorting half-transformed integrals.
+	First half integral transformation complete.
+	Starting second half-transformation.
+	Two-electron integral transformation complete.
+
+  Integral transformation done. 6.25178000 s
+  Reading the two-electron integrals from disk
+  Size of two-electron integrals:   1.222659 GB
+ Integrals are about to be updated.  Using in-core PK algorithm.
+   Calculation information:
+      Number of atoms:                  10
+      Number of AO shells:              42
+      Number of primitives:             78
+      Number of atomic orbitals:        90
+      Number of basis functions:        86
+
+      Integral cutoff                 1.00e-12
+      Number of threads:                 1
+
+  Performing in-core PK
+  Using 13998822 doubles for integral storage.
+  We computed 385288 shell quartets total.
+  Whereas there are 408156 unique shell quartets.
+
+  Frozen-core energy           -176.777110788129 a.u.
+
+  FrozenOneBody Operator takes  2.75182100 s
+  Resorting integrals after freezing core.
+  Frozen Orbitals takes     5.995 s.
+  Forming alpha and beta strings      ...  Done. Timing        0.000837 s
+  Forming determinants                ...  Done. Timing        0.000614 s
+
+  ==> Determinants Summary <==
+
+    number of alpha active electrons    =     2
+    number of beta active electrons     =     2
+    root symmetry (zero based)          =     0
+    number of determinants              =    36
+
+  Diagonalizing Hamiltonian           ...
+  Found 20 roots with 2S+1 = 1 *
+  Found 15 roots with 2S+1 = 3
+  Found 1 roots with 2S+1 = 5  Done. Timing        0.004494 s
+
+  * * * * * * * * * * * * * * * * *
+  *  CI Vectors & Configurations  *
+  * * * * * * * * * * * * * * * * *
+
+  ==> Root No. 0 <==
+
+    abab          0.3518159588
+    baba          0.3518159588
+    abba          0.2920325068
+    baab          0.2920325068
+    02ab          0.2213329694
+    02ba          0.2213329694
+    ba20          0.2213329669
+    ab20          0.2213329669
+    ba02          0.2202758086
+    ab02          0.2202758086
+    20ab          0.2202758061
+    20ba          0.2202758061
+    0202          0.1678261866
+    2020          0.1678261829
+    0220          0.1379776496
+    2002          0.1372330851
+    2ba0         -0.1040256224
+    2ab0         -0.1040256224
+    0ab2         -0.1040256212
+    0ba2         -0.1040256212
+    b2a0         -0.0710337144
+    a2b0         -0.0710337144
+    0a2b         -0.0710337130
+    0b2a         -0.0710337130
+    2b0a         -0.0633394295
+    2a0b         -0.0633394295
+    b0a2         -0.0633394281
+    a0b2         -0.0633394281
+    aabb          0.0597834520
+    bbaa          0.0597834520
+    a20b         -0.0520806030
+    b20a         -0.0520806030
+    a02b         -0.0520806012
+    b02a         -0.0520806012
+
+    Total Energy:   -154.847006096078530
+
+
+  ==> Root No. 1 <==
+
+    aabb          0.4608161427
+    bbaa          0.4608161427
+    baab         -0.2928884588
+    abba         -0.2928884588
+    2ba0         -0.2496735793
+    2ab0         -0.2496735793
+    0ab2         -0.2496735778
+    0ba2         -0.2496735778
+    baba          0.1679276839
+    abab          0.1679276839
+    2a0b         -0.0898687296
+    2b0a         -0.0898687296
+    a0b2         -0.0898687290
+    b0a2         -0.0898687290
+    02ba         -0.0728959497
+    02ab         -0.0728959497
+    ba20         -0.0728959490
+    ab20         -0.0728959490
+    0220         -0.0683278281
+    ba02         -0.0610862708
+    ab02         -0.0610862708
+    20ba         -0.0610862701
+    20ab         -0.0610862701
+    2002         -0.0570532293
+    a2b0         -0.0543169903
+    b2a0         -0.0543169903
+    0b2a         -0.0543169897
+    0a2b         -0.0543169897
+
+    Total Energy:   -154.590268107879638
+
+
+  ==> Root No. 2 <==
+
+    0202          0.3180428243
+    2020         -0.3180428226
+    ab20         -0.2144785430
+    ba20         -0.2144785430
+    02ab          0.2144785406
+    02ba          0.2144785406
+    20ba         -0.1940459273
+    20ab         -0.1940459273
+    ba02          0.1940459252
+    ab02          0.1940459252
+    a20b         -0.1891677207
+    b20a         -0.1891677207
+    a02b          0.1891677183
+    b02a          0.1891677183
+    a2b0         -0.1790644568
+    b2a0         -0.1790644568
+    0b2a          0.1790644566
+    0a2b          0.1790644566
+    2b0a         -0.1596261177
+    2a0b         -0.1596261177
+    b0a2          0.1596261175
+    a0b2          0.1596261175
+    0ba2          0.1467022932
+    0ab2          0.1467022932
+    2ba0         -0.1467022912
+    2ab0         -0.1467022912
+
+    Total Energy:   -154.546370524513065
+
+
+  ==> Root No. 3 <==
+
+    2002          0.3452921599
+    0220         -0.3290974641
+    02ba         -0.2846757248
+    02ab         -0.2846757248
+    ba20         -0.2846757242
+    ab20         -0.2846757242
+    ab02          0.2838414990
+    ba02          0.2838414990
+    20ba          0.2838414971
+    20ab          0.2838414971
+    a2b0          0.1429105557
+    b2a0          0.1429105557
+    0b2a          0.1429105544
+    0a2b          0.1429105544
+    2b0a         -0.0709180969
+    2a0b         -0.0709180969
+    b0a2         -0.0709180952
+    a0b2         -0.0709180952
+    a20b          0.0560385477
+    b20a          0.0560385477
+    b02a          0.0560385473
+    a02b          0.0560385473
+    2020         -0.0501742734
+    0202         -0.0501742730
+
+    Total Energy:   -154.453714764486733
+
+
+  ==> Root No. 4 <==
+
+    b20a         -0.2922658215
+    a20b         -0.2922658215
+    a02b         -0.2922658201
+    b02a         -0.2922658201
+    abab         -0.2625271874
+    baba         -0.2625271874
+    2020          0.2213025498
+    0202          0.2213025480
+    a0b2         -0.1955977726
+    b0a2         -0.1955977726
+    2b0a         -0.1955977719
+    2a0b         -0.1955977719
+    0b2a         -0.1885265317
+    0a2b         -0.1885265317
+    a2b0         -0.1885265304
+    b2a0         -0.1885265304
+    aabb         -0.1587898329
+    bbaa         -0.1587898329
+    abba         -0.1037373545
+    baab         -0.1037373545
+    0220         -0.0897159479
+    2200          0.0841094501
+    0022          0.0841094479
+    2002          0.0670476223
+    20ba          0.0589681410
+    20ab          0.0589681410
+    ab02          0.0589681384
+    ba02          0.0589681384
+
+    Total Energy:   -154.380572075632756
+
+
+  ==> Root No. 5 <==
+
+    0ab2         -0.3317621441
+    0ba2         -0.3317621441
+    2ab0          0.3317621432
+    2ba0          0.3317621432
+    0202          0.2669401101
+    2020         -0.2669401060
+    2a0b          0.1994261003
+    2b0a          0.1994261003
+    b0a2         -0.1994260993
+    a0b2         -0.1994260993
+    ba20         -0.1829444249
+    ab20         -0.1829444249
+    02ab          0.1829444244
+    02ba          0.1829444244
+    20ab         -0.1343638128
+    20ba         -0.1343638128
+    ab02          0.1343638126
+    ba02          0.1343638126
+    b2a0          0.1051912113
+    a2b0          0.1051912113
+    0a2b         -0.1051912104
+    0b2a         -0.1051912104
+
+    Total Energy:   -154.367491279870421
+
+
+
+  ==> Permanent Dipole Moments (A) <==
+
+  Only print nonzero (> 1.0e-5) elements.
+
+
+  ==> Transition Dipole Moments (A -> A) <==
+
+  Only print nonzero (> 1.0e-5) elements.
+  Transition dipole moments (a.u.) 0 -> 2:  X: -1.6290  Y:  1.6638  Z:  0.0000  Total:  2.3285
+  Transition dipole moments (a.u.) 0 -> 5:  X: -1.0148  Y: -0.2110  Z:  0.0000  Total:  1.0365
+  Transition dipole moments (a.u.) 1 -> 2:  X: -0.0255  Y:  0.6797  Z: -0.0000  Total:  0.6802
+  Transition dipole moments (a.u.) 1 -> 5:  X:  0.5529  Y: -1.5571  Z:  0.0000  Total:  1.6523
+  Transition dipole moments (a.u.) 2 -> 3:  X:  0.5209  Y: -0.6364  Z:  0.0000  Total:  0.8224
+  Transition dipole moments (a.u.) 2 -> 4:  X: -2.1948  Y:  2.9538  Z: -0.0000  Total:  3.6799
+  Transition dipole moments (a.u.) 3 -> 5:  X:  0.1903  Y: -0.1026  Z:  0.0000  Total:  0.2162
+  Transition dipole moments (a.u.) 4 -> 5:  X:  0.1755  Y: -1.1414  Z:  0.0000  Total:  1.1549
+
+
+  ==> Oscillator Strength (A -> A) <==
+
+  Only print nonzero (> 1.0e-5) elements.
+  Oscillator strength (a.u.) 0 -> 2:  X:  0.5319  Y:  0.5548  Z:  0.0000  Total:  1.0867
+  Oscillator strength (a.u.) 0 -> 5:  X:  0.3292  Y:  0.0142  Z:  0.0000  Total:  0.3434
+  Oscillator strength (a.u.) 1 -> 2:  X:  0.0000  Y:  0.0135  Z:  0.0000  Total:  0.0135
+  Oscillator strength (a.u.) 1 -> 5:  X:  0.0454  Y:  0.3601  Z:  0.0000  Total:  0.4055
+  Oscillator strength (a.u.) 2 -> 3:  X:  0.0168  Y:  0.0250  Z:  0.0000  Total:  0.0418
+  Oscillator strength (a.u.) 2 -> 4:  X:  0.5324  Y:  0.9644  Z:  0.0000  Total:  1.4968
+  Oscillator strength (a.u.) 3 -> 5:  X:  0.0021  Y:  0.0006  Z:  0.0000  Total:  0.0027
+  Oscillator strength (a.u.) 4 -> 5:  X:  0.0003  Y:  0.0114  Z:  0.0000  Total:  0.0116
+
+  Total Energy (averaged over 6 states): -154.530903808076857
+
+  Computing 1-, 2- and 3-cumulants ... Done. Timing        0.046312 s
+
+
+       -----------------------------------------------------------------
+                            Semi-Canonical Orbitals
+         Chenyang Li, Jeffrey B. Schriber and Francesco A. Evangelista
+       -----------------------------------------------------------------
+
+  Took 0.023835 s to build Fock matrix
+
+  ==> Checking Fock Matrix Diagonal Blocks <==
+
+    Off-Diag. Elements       Max           2-Norm
+    ------------------------------------------------
+    Fa actv              0.1929908390   0.4411615711
+    Fb actv              0.1929908390   0.4411615711
+    ------------------------------------------------
+    Fa core              0.0120219971   0.0285393597
+    Fb core              0.0120219971   0.0285393597
+    ------------------------------------------------
+    Fa virt              0.0103499050   0.0926399253
+    Fb virt              0.0103499050   0.0926399253
+    ------------------------------------------------
+
+  ==> Integral Transformation to Semicanonical Basis <==
+    Molecular point group: c1
+    Full point group: C2h
+
+    Geometry (in Angstrom), charge = 0, multiplicity = 1:
+
+       Center              X                  Y                   Z               Mass       
+    ------------   -----------------  -----------------  -----------------  -----------------
+           H          1.080977000000    -2.558832000000     0.000000000000     1.007825032070
+           H         -1.080977000000     2.558832000000     0.000000000000     1.007825032070
+           H          2.103773000000    -1.017723000000     0.000000000000     1.007825032070
+           H         -2.103773000000     1.017723000000     0.000000000000     1.007825032070
+           H         -0.973565000000    -1.219040000000     0.000000000000     1.007825032070
+           H          0.973565000000     1.219040000000     0.000000000000     1.007825032070
+           C          0.000000000000     0.728881000000     0.000000000000    12.000000000000
+           C          0.000000000000    -0.728881000000     0.000000000000    12.000000000000
+           C          1.117962000000    -1.474815000000     0.000000000000    12.000000000000
+           C         -1.117962000000     1.474815000000     0.000000000000    12.000000000000
+
+  -AO BASIS SET INFORMATION:
+    Name                   = DEF2-SVP
+    Blend                  = DEF2-SVP
+    Total number of shells = 42
+    Number of primitives   = 78
+    Number of AO           = 90
+    Number of SO           = 86
+    Maximum AM             = 2
+    Spherical Harmonics    = TRUE
+
+  -Contraction Scheme:
+    Atom   Type   All Primitives // Shells:
+   ------ ------ --------------------------
+       1     H     4s 1p // 2s 1p 
+       2     H     4s 1p // 2s 1p 
+       3     H     4s 1p // 2s 1p 
+       4     H     4s 1p // 2s 1p 
+       5     H     4s 1p // 2s 1p 
+       6     H     4s 1p // 2s 1p 
+       7     C     7s 4p 1d // 3s 2p 1d 
+       8     C     7s 4p 1d // 3s 2p 1d 
+       9     C     7s 4p 1d // 3s 2p 1d 
+      10     C     7s 4p 1d // 3s 2p 1d 
+
+  ==> AO Basis Functions <==
+
+    [ DEF2-SVP ]
+    spherical
+    ****
+    H   1
+    S   3 1.00
+                        13.01070100           0.01968216
+                         1.96225720           0.13796524
+                         0.44453796           0.47831935
+    S   1 1.00
+                         0.12194962           1.00000000
+    P   1 1.00
+                         0.80000000           1.00000000
+    ****
+    H   2
+    S   3 1.00
+                        13.01070100           0.01968216
+                         1.96225720           0.13796524
+                         0.44453796           0.47831935
+    S   1 1.00
+                         0.12194962           1.00000000
+    P   1 1.00
+                         0.80000000           1.00000000
+    ****
+    H   3
+    S   3 1.00
+                        13.01070100           0.01968216
+                         1.96225720           0.13796524
+                         0.44453796           0.47831935
+    S   1 1.00
+                         0.12194962           1.00000000
+    P   1 1.00
+                         0.80000000           1.00000000
+    ****
+    H   4
+    S   3 1.00
+                        13.01070100           0.01968216
+                         1.96225720           0.13796524
+                         0.44453796           0.47831935
+    S   1 1.00
+                         0.12194962           1.00000000
+    P   1 1.00
+                         0.80000000           1.00000000
+    ****
+    H   5
+    S   3 1.00
+                        13.01070100           0.01968216
+                         1.96225720           0.13796524
+                         0.44453796           0.47831935
+    S   1 1.00
+                         0.12194962           1.00000000
+    P   1 1.00
+                         0.80000000           1.00000000
+    ****
+    H   6
+    S   3 1.00
+                        13.01070100           0.01968216
+                         1.96225720           0.13796524
+                         0.44453796           0.47831935
+    S   1 1.00
+                         0.12194962           1.00000000
+    P   1 1.00
+                         0.80000000           1.00000000
+    ****
+    C   7
+    S   5 1.00
+                      1238.40169380           0.00545688
+                       186.29004992           0.04063841
+                        42.25117635           0.18025594
+                        11.67655793           0.46315122
+                         3.59305065           0.44087173
+    S   1 1.00
+                         0.40245147           1.00000000
+    S   1 1.00
+                         0.13090183           1.00000000
+    P   3 1.00
+                         9.46809706           0.03838787
+                         2.01035451           0.21117025
+                         0.54771005           0.51328172
+    P   1 1.00
+                         0.15268614           1.00000000
+    D   1 1.00
+                         0.80000000           1.00000000
+    ****
+    C   8
+    S   5 1.00
+                      1238.40169380           0.00545688
+                       186.29004992           0.04063841
+                        42.25117635           0.18025594
+                        11.67655793           0.46315122
+                         3.59305065           0.44087173
+    S   1 1.00
+                         0.40245147           1.00000000
+    S   1 1.00
+                         0.13090183           1.00000000
+    P   3 1.00
+                         9.46809706           0.03838787
+                         2.01035451           0.21117025
+                         0.54771005           0.51328172
+    P   1 1.00
+                         0.15268614           1.00000000
+    D   1 1.00
+                         0.80000000           1.00000000
+    ****
+    C   9
+    S   5 1.00
+                      1238.40169380           0.00545688
+                       186.29004992           0.04063841
+                        42.25117635           0.18025594
+                        11.67655793           0.46315122
+                         3.59305065           0.44087173
+    S   1 1.00
+                         0.40245147           1.00000000
+    S   1 1.00
+                         0.13090183           1.00000000
+    P   3 1.00
+                         9.46809706           0.03838787
+                         2.01035451           0.21117025
+                         0.54771005           0.51328172
+    P   1 1.00
+                         0.15268614           1.00000000
+    D   1 1.00
+                         0.80000000           1.00000000
+    ****
+    C  10
+    S   5 1.00
+                      1238.40169380           0.00545688
+                       186.29004992           0.04063841
+                        42.25117635           0.18025594
+                        11.67655793           0.46315122
+                         3.59305065           0.44087173
+    S   1 1.00
+                         0.40245147           1.00000000
+    S   1 1.00
+                         0.13090183           1.00000000
+    P   3 1.00
+                         9.46809706           0.03838787
+                         2.01035451           0.21117025
+                         0.54771005           0.51328172
+    P   1 1.00
+                         0.15268614           1.00000000
+    D   1 1.00
+                         0.80000000           1.00000000
+    ****
+
+
+ Integrals are about to be computed.	Presorting SO-basis two-electron integrals.
+	Sorting File: SO Ints (nn|nn) nbuckets = 1
+	Transforming the one-electron integrals and constructing Fock matrices
+	Starting first half-transformation.
+	Sorting half-transformed integrals.
+	First half integral transformation complete.
+	Starting second half-transformation.
+	Two-electron integral transformation complete.
+
+  Integral transformation done. 9.01460600 s
+  Reading the two-electron integrals from disk
+  Size of two-electron integrals:   1.222659 GB
+ Integrals are about to be updated.  Using in-core PK algorithm.
+   Calculation information:
+      Number of atoms:                  10
+      Number of AO shells:              42
+      Number of primitives:             78
+      Number of atomic orbitals:        90
+      Number of basis functions:        86
+
+      Integral cutoff                 1.00e-12
+      Number of threads:                 1
+
+  Performing in-core PK
+  Using 13998822 doubles for integral storage.
+  We computed 385288 shell quartets total.
+  Whereas there are 408156 unique shell quartets.
+
+  Frozen-core energy           -176.777110788129 a.u.
+
+  FrozenOneBody Operator takes  2.54884200 s
+  Resorting integrals after freezing core.
+  Frozen Orbitals takes     5.657 s.
+
+  ==> Reference Transformation to Semicanonical Basis <==
+
+    Transformed 1 cumulants.
+    Transformed 2 cumulants and RDMs.
+    Transformed 3 cumulants.
+  SemiCanonicalize takes 31.420084 s.
+
+  ==> Multireference Driven Similarity Renormalization Group <==
+
+    Reading DSRG options ............................ Done
+    Setting ambit MO space .......................... Done
+    Preparing tensors for density cumulants ......... Done
+    Building Fock matrix ............................ Done
+    Preparing ambit tensors for dipole moments ...... Done
+
+              ----------------------------------------------------
+                    MR-DSRG Second-Order Perturbation Theory
+                Chenyang Li, Kevin Hannon, Francesco Evangelista
+              ----------------------------------------------------
+
+    References:
+      u-DSRG-MRPT2:    J. Chem. Theory Comput. 2015, 11, 2097.
+      (pr-)DSRG-MRPT2: J. Chem. Phys. 2017, 146, 124132.
+
+  ==> Calculation Information <==
+
+    ntamp                                                 15
+    flow parameter                                 5.000e-01
+    taylor expansion threshold                     1.000e-03
+    intruder_tamp                                  1.000e-01
+    int_type                                    CONVENTIONAL
+    source operator                                 STANDARD
+    reference relaxation                                NONE
+    state_type                                   MULTI-STATE
+    multi-state type                                 SA_FULL
+    form Hbar3                                         FALSE
+
+  ==> Checking Semicanonical Orbitals <==
+
+    Abs. max of Fock core, active, virtual blocks (Fij, i != j)
+                  core          active         virtual
+    --------------------------------------------------
+    Fα    0.0000000000    0.0000000000    0.0000000000
+    Fβ    0.0000000000    0.0000000000    0.0000000000
+    --------------------------------------------------
+
+    1-Norm of Fock core, active, virtual blocks (Fij, i != j)
+                  core          active         virtual
+    --------------------------------------------------
+    Fα    0.0000000000    0.0000000000    0.0000000000
+    Fβ    0.0000000000    0.0000000000    0.0000000000
+    --------------------------------------------------
+
+    Orbitals are semi-canonicalized.
+
+  ==> Computing DSRG-MRPT2 ... <==
+
+    Computing T2 amplitudes                  ...  Done. Timing        0.737033 s
+    Computing T1 amplitudes                  ...  Done. Timing        0.006480 s
+    Renormalizing two-electron integrals     ...  Done. Timing        0.587962 s
+    Renormalizing Fock matrix elements       ...  Done. Timing        0.006978 s
+    Computing <[F, T1]>                      ...  Done. Timing        0.001867 s
+    Computing <[F, T2]>                      ...  Done. Timing        0.005304 s
+    Computing <[V, T1]>                      ...  Done. Timing        0.006130 s
+    Computing <[V, T2]> (C_2)^4              ...  Done. Timing        0.112393 s
+    Computing <[V, T2]> C_4 (C_2)^2 HH       ...  Done. Timing        0.006717 s
+    Computing <[V, T2]> C_4 (C_2)^2 PP       ...  Done. Timing        0.008867 s
+    Computing <[V, T2]> C_4 (C_2)^2 PH       ...  Done. Timing        0.043523 s
+    Computing <[V, T2]> C_6 C_2              ...  Done. Timing        0.016329 s
+
+  ==> Excitation Amplitudes Summary <==
+
+    Active Indices:    9   10   11   12 
+    Largest T1 amplitudes for spin case A:
+       i       a                  i       a                  i       a               
+    --------------------------------------------------------------------------------
+    [ 11      31    ]-0.005339 [  1      23    ]-0.004441 [ 12      30    ]-0.004134 
+    [  0      22    ] 0.003883 [  6      22    ]-0.003324 [  7      37    ] 0.003301 
+    [  5      34    ] 0.003098 [  4      19    ]-0.002861 [ 12      28    ]-0.002771 
+    [  1      25    ] 0.002762 [  9      48    ] 0.002745 [  6      24    ] 0.002678 
+    [  8      34    ] 0.002633 [ 10      46    ]-0.002630 [ 11      71    ] 0.002542 
+    --------------------------------------------------------------------------------
+    Norm of T1A vector: (nonzero elements: 466)                   0.019098674094459.
+    --------------------------------------------------------------------------------
+    Largest T1 amplitudes for spin case B:
+       _       _                  _       _                  _       _               
+       i       a                  i       a                  i       a               
+    --------------------------------------------------------------------------------
+    [ 11      31    ]-0.005339 [  1      23    ]-0.004441 [ 12      30    ]-0.004134 
+    [  0      22    ] 0.003883 [  6      22    ]-0.003324 [  7      37    ] 0.003301 
+    [  5      34    ] 0.003098 [  4      19    ]-0.002861 [ 12      28    ]-0.002771 
+    [  1      25    ] 0.002762 [  9      48    ] 0.002745 [  6      24    ] 0.002678 
+    [  8      34    ] 0.002633 [ 10      46    ]-0.002630 [ 11      71    ] 0.002542 
+    --------------------------------------------------------------------------------
+    Norm of T1B vector: (nonzero elements: 466)                   0.019098674094459.
+    --------------------------------------------------------------------------------
+    Largest T2 amplitudes for spin case AA:
+       i   j   a   b              i   j   a   b              i   j   a   b           
+    --------------------------------------------------------------------------------
+    [  0   9   9  22] 0.019158 [ 11  12  12  48]-0.017872 [  6   9  10  23] 0.016437 
+    [ 10  12  11  48]-0.014073 [  6  10   9  23] 0.013993 [  7  10  10  37] 0.013677 
+    [  1   9  10  22] 0.013641 [  6   9  11  39]-0.013303 [  3   9   9  32] 0.012494 
+    [  7   9   9  18]-0.012420 [  6  11   9  39]-0.012290 [ 10  11  12  48]-0.012219 
+    [  9  12  10  48]-0.012212 [  7   9   9  37] 0.011937 [  0  10  10  22] 0.011917 
+    --------------------------------------------------------------------------------
+    Norm of T2AA vector: (nonzero elements: 407376)               0.468612827386973.
+    --------------------------------------------------------------------------------
+    Largest T2 amplitudes for spin case AB:
+           _       _                  _       _                  _       _           
+       i   j   a   b              i   j   a   b              i   j   a   b           
+    --------------------------------------------------------------------------------
+    [  0   0   9   9]-0.020662 [ 12  12  30  30]-0.020191 [ 10  10  10  28] 0.019080 
+    [  9   9   9  26]-0.018988 [  9  11   9  31] 0.018625 [  9  12   9  30] 0.018477 
+    [ 10  10  28  28]-0.018449 [ 10  11  10  31] 0.018305 [  1   1  10  10]-0.018051 
+    [ 11  11  31  31]-0.016524 [  0   1   9  10]-0.016254 [ 11  11  28  28]-0.015956 
+    [ 11  11  11  31] 0.015500 [  9  12  26  30] 0.015382 [  9  10  10  26]-0.014667 
+    --------------------------------------------------------------------------------
+    Norm of T2AB vector: (nonzero elements: 447957)               0.502912637862361.
+    --------------------------------------------------------------------------------
+    Largest T2 amplitudes for spin case BB:
+       _   _   _   _              _   _   _   _              _   _   _   _           
+       i   j   a   b              i   j   a   b              i   j   a   b           
+    --------------------------------------------------------------------------------
+    [  0   9   9  22] 0.019158 [ 11  12  12  48]-0.017872 [  6   9  10  23] 0.016437 
+    [ 10  12  11  48]-0.014073 [  6  10   9  23] 0.013993 [  7  10  10  37] 0.013677 
+    [  1   9  10  22] 0.013641 [  6   9  11  39]-0.013303 [  3   9   9  32] 0.012494 
+    [  7   9   9  18]-0.012420 [  6  11   9  39]-0.012290 [ 10  11  12  48]-0.012219 
+    [  9  12  10  48]-0.012212 [  7   9   9  37] 0.011937 [  0  10  10  22] 0.011917 
+    --------------------------------------------------------------------------------
+    Norm of T2BB vector: (nonzero elements: 407376)               0.468612827386973.
+    --------------------------------------------------------------------------------
+
+  ==> Possible Intruders <==
+
+    T1 amplitudes larger than 0.1000 for spin case A: NULL
+    T1 amplitudes larger than 0.1000 for spin case B: NULL
+    T2 amplitudes larger than 0.1000 for spin case AA: NULL
+    T2 amplitudes larger than 0.1000 for spin case AB: NULL
+    T2 amplitudes larger than 0.1000 for spin case BB: NULL
+
+  ==> DSRG-MRPT2 Energy Summary <==
+
+    E0 (reference)                 =   -154.530903808076857
+    <[F, T1]>                      =     -0.001998487882142
+    <[F, T2]>                      =     -0.000222244004785
+    <[V, T1]>                      =     -0.000123854536679
+    <[V, T2]> (C_2)^4              =     -0.557532913395126
+    <[V, T2]> C_4 (C_2)^2 HH       =      0.000554725711980
+    <[V, T2]> C_4 (C_2)^2 PP       =      0.004245862024620
+    <[V, T2]> C_4 (C_2)^2 PH       =      0.019961714833046
+    <[V, T2]> C_6 C_2              =     -0.000012524301655
+    <[V, T2]>                      =     -0.532783135127136
+    DSRG-MRPT2 correlation energy  =     -0.535127721550742
+    DSRG-MRPT2 total energy        =   -155.066031529627594
+    max(T1)                        =      0.005338596738960
+    max(T2)                        =      0.020661983600949
+    ||T1||                         =      0.027009603927728
+    ||T2||                         =      1.204524989059977
+
+  Energy took      2.971 s
+
+
+  ==> Transforming Dipole Integrals ...  <==
+
+    Computing direction X          ...  Done. Timing        1.983223 s
+    Computing direction Y          ...  Done. Timing        1.907752 s
+    Computing direction Z          ...  Done. Timing        2.001852 s
+
+  ==> DSRG-MRPT2 (unrelaxed) Dipole Moments (a.u.) <==
+
+    Nuclear dipole moment:
+      X:   0.000000  Y:   0.000000  Z:   0.000000
+
+    Reference electronic dipole moment:
+      X:  -0.000000  Y:  -0.000000  Z:   0.000000
+
+    DSRG-MRPT2 electronic dipole moment:
+      X:  -0.000000  Y:  -0.000000  Z:  -0.000000
+
+    Reference dipole moment:
+      X:  -0.000000  Y:  -0.000000  Z:   0.000000  Total:   0.000000
+
+    DSRG-MRPT2 dipole moment:
+      X:  -0.000000  Y:  -0.000000  Z:  -0.000000  Total:   0.000000
+
+
+  ==> De-Normal-Order DSRG Transformed Hamiltonian <==
+
+    Computing the scalar term                ... Done. Timing    0.003 s
+    Computing the 1-body term                ... Done. Timing    0.001 s
+
+  ==> Rotate DSRG Transformed Hamiltonian back to Original Basis <==
+
+    Transforming 1-body term to original basis ... Done. Timing    0.001 s
+    Transforming 2-body term to original basis ... Done. Timing    0.019 s
+    Updating integrals                       ... Done. Timing    0.007 s
+
+              ---------------------------------------------------
+                Complete Active Space Configuration Interaction
+                                  Chenyang Li
+              ---------------------------------------------------
+
+
+  ==> Input Summary <==
+
+    No. a electrons in active      =     2
+    No. b electrons in active      =     2
+    multiplicity                   =     1
+    spin ms (2 * Sz)               =     0
+
+  ==> Orbital Spaces <==
+
+    TOTAL MO                      [   86 ]
+    FROZEN CORE                   [    4 ]
+    FROZEN VIRTUAL                [    0 ]
+    CORRELATED MO                 [   82 ]
+    CORE                          [    9 ]
+    ACTIVE                        [    4 ]
+    VIRTUAL                       [   69 ]
+
+  ==> State Averaging Summary <==
+
+    Irrep.  Multi.  Nstates                              Weights
+    ------------------------------------------------------------
+       A       1        6    0.167 0.167 0.167 0.167 0.167 0.167
+    ------------------------------------------------------------
+    Total number of states: 6
+    ------------------------------------------------------------
+
+  Forming alpha and beta strings      ...  Done. Timing        0.000034 s
+  Forming determinants                ...  Done. Timing        0.000021 s
+
+  ==> Determinants Summary <==
+
+    number of alpha active electrons    =     2
+    number of beta active electrons     =     2
+    root symmetry (zero based)          =     0
+    number of determinants              =    36
+
+  Diagonalizing Hamiltonian           ...
+  Found 20 roots with 2S+1 = 1 *
+  Found 15 roots with 2S+1 = 3
+  Found 1 roots with 2S+1 = 5  Done. Timing        0.001554 s
+
+  * * * * * * * * * * * * * * * * *
+  *  CI Vectors & Configurations  *
+  * * * * * * * * * * * * * * * * *
+
+  ==> Root No. 0 <==
+
+    abab         -0.3322937596
+    baba         -0.3322937596
+    abba         -0.2762988306
+    baab         -0.2762988306
+    ab02         -0.2260292450
+    ba02         -0.2260292450
+    20ab         -0.2260292427
+    20ba         -0.2260292427
+    02ab         -0.2239541096
+    02ba         -0.2239541096
+    ab20         -0.2239541072
+    ba20         -0.2239541072
+    0202         -0.1814399569
+    2020         -0.1814399532
+    2002         -0.1556787209
+    0220         -0.1509630397
+    2ab0          0.1062060037
+    2ba0          0.1062060037
+    0ab2          0.1062060027
+    0ba2          0.1062060027
+    b2a0          0.0761925456
+    a2b0          0.0761925456
+    0b2a          0.0761925442
+    0a2b          0.0761925442
+    2b0a          0.0702871746
+    2a0b          0.0702871746
+    b0a2          0.0702871732
+    a0b2          0.0702871732
+    b20a          0.0592201365
+    a20b          0.0592201365
+    a02b          0.0592201346
+    b02a          0.0592201346
+    aabb         -0.0559949290
+    bbaa         -0.0559949290
+
+    Total Energy:   -155.350467801899981
+
+
+  ==> Root No. 1 <==
+
+    0202         -0.3198421022
+    2020          0.3198421008
+    ba20          0.2018056768
+    ab20          0.2018056768
+    02ba         -0.2018056745
+    02ab         -0.2018056745
+    a20b          0.1985617718
+    b20a          0.1985617718
+    b02a         -0.1985617694
+    a02b         -0.1985617694
+    20ba          0.1886593891
+    20ab          0.1886593891
+    ba02         -0.1886593869
+    ab02         -0.1886593869
+    b2a0          0.1795347850
+    a2b0          0.1795347850
+    0a2b         -0.1795347848
+    0b2a         -0.1795347848
+    2b0a          0.1670843113
+    2a0b          0.1670843113
+    b0a2         -0.1670843112
+    a0b2         -0.1670843112
+    0ba2         -0.1466975648
+    0ab2         -0.1466975648
+    2ab0          0.1466975627
+    2ba0          0.1466975627
+    2200         -0.0535865964
+    0022          0.0535865945
+
+    Total Energy:   -155.096341308947103
+
+
+  ==> Root No. 2 <==
+
+    aabb         -0.4213474388
+    bbaa         -0.4213474388
+    2ab0          0.2754520640
+    2ba0          0.2754520640
+    0ab2          0.2754520629
+    0ba2          0.2754520629
+    abba          0.2706615680
+    baab          0.2706615680
+    baba         -0.1506858707
+    abab         -0.1506858707
+    2a0b          0.1141042026
+    2b0a          0.1141042026
+    b0a2          0.1141042019
+    a0b2          0.1141042019
+    0220          0.1019576689
+    02ab          0.0922410647
+    02ba          0.0922410647
+    ab20          0.0922410639
+    ba20          0.0922410639
+    b2a0          0.0704318264
+    a2b0          0.0704318264
+    0a2b          0.0704318259
+    0b2a          0.0704318259
+    2002          0.0605223002
+    0202          0.0574968757
+    2020          0.0574968750
+    ab02          0.0572644786
+    ba02          0.0572644786
+    20ba          0.0572644779
+    20ab          0.0572644779
+
+    Total Energy:   -155.094274390682529
+
+
+  ==> Root No. 3 <==
+
+    2002          0.3849765259
+    0220         -0.3534367762
+    ab02          0.2839541459
+    ba02          0.2839541459
+    20ab          0.2839541441
+    20ba          0.2839541441
+    02ab         -0.2754131489
+    02ba         -0.2754131489
+    ba20         -0.2754131479
+    ab20         -0.2754131479
+    b2a0          0.1270930928
+    a2b0          0.1270930928
+    0b2a          0.1270930915
+    0a2b          0.1270930915
+    2b0a         -0.0832504807
+    2a0b         -0.0832504807
+    a0b2         -0.0832504792
+    b0a2         -0.0832504792
+
+    Total Energy:   -155.004913443201019
+
+
+  ==> Root No. 4 <==
+
+    a20b          0.3081757897
+    b20a          0.3081757897
+    b02a          0.3081757885
+    a02b          0.3081757885
+    baba          0.2684061189
+    abab          0.2684061189
+    2020         -0.2285674162
+    0202         -0.2285674140
+    0b2a          0.1850269558
+    0a2b          0.1850269558
+    a2b0          0.1850269543
+    b2a0          0.1850269543
+    a0b2          0.1746538473
+    b0a2          0.1746538473
+    2a0b          0.1746538461
+    2b0a          0.1746538461
+    aabb          0.1737092881
+    bbaa          0.1737092881
+    2200         -0.1100932763
+    0022         -0.1100932741
+    abba          0.0946968308
+    baab          0.0946968308
+    0220          0.0702925419
+
+    Total Energy:   -154.938783422262247
+
+
+  ==> Root No. 5 <==
+
+    0ab2          0.3234226054
+    0ba2          0.3234226054
+    2ab0         -0.3234226045
+    2ba0         -0.3234226045
+    0202         -0.2870728064
+    2020          0.2870728022
+    2a0b         -0.1843330810
+    2b0a         -0.1843330810
+    a0b2          0.1843330800
+    b0a2          0.1843330800
+    ba20          0.1729608440
+    ab20          0.1729608440
+    02ab         -0.1729608434
+    02ba         -0.1729608434
+    20ab          0.1515348058
+    20ba          0.1515348058
+    ab02         -0.1515348055
+    ba02         -0.1515348055
+    b2a0         -0.1240157927
+    a2b0         -0.1240157927
+    0b2a          0.1240157918
+    0a2b          0.1240157918
+
+    Total Energy:   -154.918541239975809
+
+
+
+  ==> Permanent Dipole Moments (A) <==
+
+  Only print nonzero (> 1.0e-5) elements.
+  Permanent dipole moments (a.u.) 0 -> 0:  X:  3.3126  Y: -6.0196  Z:  0.0000  Total:  6.8709
+  Permanent dipole moments (a.u.) 1 -> 1:  X:  4.2529  Y: -5.0248  Z:  0.0000  Total:  6.5830
+  Permanent dipole moments (a.u.) 2 -> 2:  X:  1.7515  Y: -1.3465  Z: -0.0000  Total:  2.2093
+  Permanent dipole moments (a.u.) 3 -> 3:  X:  1.3879  Y: -2.4708  Z:  0.0000  Total:  2.8339
+  Permanent dipole moments (a.u.) 4 -> 4:  X:  3.3088  Y: -3.3934  Z: -0.0000  Total:  4.7396
+  Permanent dipole moments (a.u.) 5 -> 5:  X: -0.5323  Y: -1.4706  Z:  0.0000  Total:  1.5640
+
+
+  ==> Transition Dipole Moments (A -> A) <==
+
+  Only print nonzero (> 1.0e-5) elements.
+  Transition dipole moments (a.u.) 0 -> 1:  X: -0.0001  Y:  0.0002  Z: -0.0000  Total:  0.0003
+  Transition dipole moments (a.u.) 0 -> 2:  X: -0.8170  Y:  2.3765  Z: -0.0000  Total:  2.5130
+  Transition dipole moments (a.u.) 0 -> 3:  X: -0.1309  Y:  0.2793  Z: -0.0000  Total:  0.3085
+  Transition dipole moments (a.u.) 0 -> 4:  X: -0.7673  Y:  1.1709  Z: -0.0000  Total:  1.3999
+  Transition dipole moments (a.u.) 0 -> 5:  X: -0.0002  Y:  0.0003  Z: -0.0000  Total:  0.0004
+  Transition dipole moments (a.u.) 1 -> 2:  X: -0.0006  Y:  0.0009  Z: -0.0000  Total:  0.0011
+  Transition dipole moments (a.u.) 1 -> 3:  X:  0.0087  Y: -0.0128  Z:  0.0000  Total:  0.0155
+  Transition dipole moments (a.u.) 1 -> 4:  X: -0.0006  Y:  0.0008  Z: -0.0000  Total:  0.0010
+  Transition dipole moments (a.u.) 1 -> 5:  X: -0.2232  Y:  0.4409  Z: -0.0000  Total:  0.4942
+  Transition dipole moments (a.u.) 2 -> 3:  X: -0.0456  Y: -0.0023  Z:  0.0000  Total:  0.0457
+  Transition dipole moments (a.u.) 2 -> 4:  X: -1.0290  Y: -0.2848  Z:  0.0000  Total:  1.0677
+  Transition dipole moments (a.u.) 2 -> 5:  X: -0.0011  Y:  0.0016  Z: -0.0000  Total:  0.0020
+  Transition dipole moments (a.u.) 3 -> 4:  X:  0.0262  Y:  0.0664  Z: -0.0000  Total:  0.0713
+  Transition dipole moments (a.u.) 3 -> 5:  X:  0.0089  Y: -0.0130  Z:  0.0000  Total:  0.0158
+  Transition dipole moments (a.u.) 4 -> 5:  X:  0.0001  Y: -0.0002  Z:  0.0000  Total:  0.0002
+
+
+  ==> Oscillator Strength (A -> A) <==
+
+  Only print nonzero (> 1.0e-5) elements.
+  Oscillator strength (a.u.) 0 -> 2:  X:  0.1140  Y:  0.9646  Z:  0.0000  Total:  1.0786
+  Oscillator strength (a.u.) 0 -> 3:  X:  0.0039  Y:  0.0180  Z:  0.0000  Total:  0.0219
+  Oscillator strength (a.u.) 0 -> 4:  X:  0.1616  Y:  0.3763  Z:  0.0000  Total:  0.5379
+  Oscillator strength (a.u.) 1 -> 3:  X:  0.0000  Y:  0.0000  Z:  0.0000  Total:  0.0000
+  Oscillator strength (a.u.) 1 -> 5:  X:  0.0059  Y:  0.0230  Z:  0.0000  Total:  0.0290
+  Oscillator strength (a.u.) 2 -> 3:  X:  0.0001  Y:  0.0000  Z:  0.0000  Total:  0.0001
+  Oscillator strength (a.u.) 2 -> 4:  X:  0.1098  Y:  0.0084  Z:  0.0000  Total:  0.1182
+  Oscillator strength (a.u.) 3 -> 4:  X:  0.0000  Y:  0.0002  Z:  0.0000  Total:  0.0002
+  Oscillator strength (a.u.) 3 -> 5:  X:  0.0000  Y:  0.0000  Z:  0.0000  Total:  0.0000
+
+  Total Energy (averaged over 6 states): -155.067220267828105
+
+
+  ==> De-Normal-Order DSRG Transformed Dipole X Integrals <==
+
+    Computing the scalar term                ... Done. Timing    0.003 s
+    Computing the 1-body term                ... Done. Timing    0.001 s
+
+  ==> Rotate DSRG Transformed Dipole X Integrals back to Original Basis <==
+
+    Transforming 1-body term to original basis ... Done. Timing    0.001 s
+    Transforming 2-body term to original basis ... Done. Timing    0.018 s
+
+  ==> De-Normal-Order DSRG Transformed Dipole Y Integrals <==
+
+    Computing the scalar term                ... Done. Timing    0.002 s
+    Computing the 1-body term                ... Done. Timing    0.001 s
+
+  ==> Rotate DSRG Transformed Dipole Y Integrals back to Original Basis <==
+
+    Transforming 1-body term to original basis ... Done. Timing    0.001 s
+    Transforming 2-body term to original basis ... Done. Timing    0.020 s
+
+  ==> De-Normal-Order DSRG Transformed Dipole Z Integrals <==
+
+    Computing the scalar term                ... Done. Timing    0.003 s
+    Computing the 1-body term                ... Done. Timing    0.001 s
+
+  ==> Rotate DSRG Transformed Dipole Z Integrals back to Original Basis <==
+
+    Transforming 1-body term to original basis ... Done. Timing    0.001 s
+    Transforming 2-body term to original basis ... Done. Timing    0.019 s
+
+  ==> SA-DSRG-PT2 Dipole Moment (in a.u.) Summary <==
+
+             State           X           Y           Z
+    --------------------------------------------------
+       0 Singlet A    0.000000    0.000000    0.000000
+       1 Singlet A    0.000000    0.000000    0.000000
+       2 Singlet A    0.000000    0.000000    0.000000
+       3 Singlet A    0.000000    0.000000    0.000000
+       4 Singlet A    0.000000    0.000000    0.000000
+       5 Singlet A    0.000000    0.000000    0.000000
+    --------------------------------------------------
+
+  ==> SA-DSRG-PT2 Oscillator Strength (in a.u.) Summary <==
+
+                               State           X           Y           Z       Total
+    --------------------------------------------------------------------------------
+         0 Singlet A ->  1 Singlet A    0.429873    0.497589    0.000000    0.927462
+         0 Singlet A ->  2 Singlet A    0.000000    0.000000    0.000000    0.000000
+         0 Singlet A ->  3 Singlet A    0.000000    0.000000    0.000000    0.000000
+         0 Singlet A ->  4 Singlet A    0.000000    0.000000    0.000000    0.000000
+         0 Singlet A ->  5 Singlet A    0.275613    0.006176    0.000000    0.281789
+         1 Singlet A ->  2 Singlet A    0.000022    0.000970    0.000000    0.000991
+         1 Singlet A ->  3 Singlet A    0.004418    0.007707    0.000000    0.012125
+         1 Singlet A ->  4 Singlet A    0.476192    0.846542    0.000000    1.322734
+         1 Singlet A ->  5 Singlet A    0.000000    0.000000    0.000000    0.000000
+         2 Singlet A ->  3 Singlet A    0.000000    0.000000    0.000000    0.000000
+         2 Singlet A ->  4 Singlet A    0.000000    0.000000    0.000000    0.000000
+         2 Singlet A ->  5 Singlet A    0.053036    0.331367    0.000000    0.384403
+         3 Singlet A ->  4 Singlet A    0.000000    0.000000    0.000000    0.000000
+         3 Singlet A ->  5 Singlet A    0.000273    0.000001    0.000000    0.000274
+         4 Singlet A ->  5 Singlet A    0.000353    0.009128    0.000000    0.009481
+    --------------------------------------------------------------------------------
+
+  ==> Multi-State DSRG-MRPT2 Energy Summary <==
+
+    Multi.  Irrep.  No.    DSRG-MRPT2 Energy
+    -----------------------------------------
+       1       A     0      -155.350467801900
+       1       A     1      -155.096341308947
+       1       A     2      -155.094274390683
+       1       A     3      -155.004913443201
+       1       A     4      -154.938783422262
+       1       A     5      -154.918541239976
+    -----------------------------------------
+
+  ==> Total Timings (s) for Computing Commutators <==
+
+             [H1, T1]    [H1, T2]    [H2, T1]    [H2, T2]
+    -----------------------------------------------------
+    -> C0       0.018       0.037       0.019       0.736
+    -> C1       0.024       0.575       0.036       0.750
+    -> C2                   3.468       0.033       0.246
+    -----------------------------------------------------
+	abs. energy of singlet 0Ag........................................PASSED
+
+*** Psi4 exiting successfully. Buy a developer a beer!

@@ -1,0 +1,88 @@
+#! Generated using commit GITCOMMIT
+
+import forte
+memory 1 gb
+
+r_scf = -154.979263255832
+r_cas = -154.745701429278
+r_0ag = -155.618385970396
+
+molecule butadiene{
+0 1
+H  1.080977 -2.558832  0.000000
+H -1.080977  2.558832  0.000000
+H  2.103773 -1.017723  0.000000
+H -2.103773  1.017723  0.000000
+H -0.973565 -1.219040  0.000000
+H  0.973565  1.219040  0.000000
+C  0.000000  0.728881  0.000000
+C  0.000000 -0.728881  0.000000
+C  1.117962 -1.474815  0.000000
+C -1.117962  1.474815  0.000000
+
+symmetry c1
+}
+
+set {
+  reference      rhf
+  scf_type       df
+  basis          def2-tzvp
+  df_basis_scf   def2-tzvp-jkfit
+  df_basis_mp2   def2-tzvp-jkfit
+  e_convergence  10
+  d_convergence  12
+  maxiter        100
+  cubeprop_orbitals [14,15,16,17]
+}
+Escf, wfn = energy('scf', return_wfn=True)
+compare_values(r_scf, Escf, 8, "SCF energy")
+
+set forte{
+  job_type             casscf
+  int_type             df
+  e_convergence        12
+  dsrg_s               0.5
+  frozen_docc          [4]
+  restricted_docc      [9]
+  active               [4]
+  avg_state            [[0,1,5]]
+  rotate_mos           [1,17,20]
+  casscf_iterations    250
+  casscf_g_convergence 1.0e-6
+  casscf_e_convergence 1.0e-8
+  casscf_max_rotation  0.2
+  casscf_diis_start    20
+  casscf_diis_freq     4
+  fci_maxiter          1000
+}
+Ecas, wfn = energy('forte', ref_wfn=wfn, return_wfn=True)
+compare_values(r_cas, Ecas, 8, "SA-CASSCF energy from FORTE CASSCF")
+
+set forte{
+  job_type            cas
+  frozen_docc         [4]
+  restricted_docc     [9]
+  active              [4]
+  avg_state           [[0,1,5]]
+  rotate_mos          []
+  fcimo_localize_actv true
+}
+Ecas, wfn = energy('forte', ref_wfn=wfn, return_wfn=True)
+compare_values(r_cas, Ecas, 8, "SA-CASSCF energy from FORTE FCIMO")
+#cubeprop(wfn)
+
+set forte{
+  job_type            dsrg-mrpt2
+  int_type            df
+  cas_type            cas
+  e_convergence       12
+  dsrg_s              0.5
+  frozen_docc         [4]
+  restricted_docc     [9]
+  active              [4]
+  avg_state           [[0,1,5]]
+  rotate_mos          []
+  dsrg_dipole         true
+}
+E0ag, wfn = energy('forte', ref_wfn=wfn, return_wfn=True)
+compare_values(r_0ag, E0ag, 8, "abs. energy of singlet 0Ag")

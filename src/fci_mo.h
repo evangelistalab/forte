@@ -161,6 +161,9 @@ class FCI_MO : public Wavefunction {
     //    /// Set orbitals
     //    void set_orbs(SharedMatrix Ca, SharedMatrix Cb);
 
+    /// Set if localize orbitals
+    void set_localize_actv(bool localize) { localize_actv_ = localize; }
+
     /// Return fci_int_ pointer
     std::shared_ptr<FCIIntegrals> fci_ints() { return fci_ints_; }
 
@@ -211,6 +214,7 @@ class FCI_MO : public Wavefunction {
     /// Basic Preparation
     void startup();
     void read_options();
+    void print_options();
     void cleanup();
 
     /// Integrals
@@ -487,6 +491,7 @@ class FCI_MO : public Wavefunction {
     void iao_analysis();
 
     /// Localize active orbitals
+    bool localize_actv_;
     void localize_actv_orbs();
 
     /**
