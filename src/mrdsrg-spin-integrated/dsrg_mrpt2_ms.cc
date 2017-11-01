@@ -114,8 +114,7 @@ std::vector<std::vector<double>> DSRG_MRPT2::compute_energy_sa() {
     std::vector<std::vector<double>> Edsrg_sa(nentry, std::vector<double>());
 
     // call FCI_MO if SA_FULL and CAS_TYPE == CAS
-    if (multi_state_algorithm_ == "SA_FULL" &&
-        options_.get_str("CAS_TYPE") == "CAS") {
+    if (multi_state_algorithm_ == "SA_FULL" && options_.get_str("CAS_TYPE") == "CAS") {
         FCI_MO fci_mo(reference_wavefunction_, options_, ints_, mo_space_info_, fci_ints);
         fci_mo.set_localize_actv(false);
         fci_mo.compute_energy();
@@ -272,11 +271,13 @@ std::vector<std::vector<double>> DSRG_MRPT2::compute_energy_sa() {
 
                         std::vector<double> opdm_a, opdm_b;
                         ci_rdms.compute_1rdm(opdm_a, opdm_b);
-                        rotate_1rdm(opdm_a, opdm_b);
+                        // since Hbar is rotated to the original basis
+                        // there is no need to rotate RDMs
+                        //                        rotate_1rdm(opdm_a, opdm_b);
 
                         std::vector<double> tpdm_aa, tpdm_ab, tpdm_bb;
                         ci_rdms.compute_2rdm(tpdm_aa, tpdm_ab, tpdm_bb);
-                        rotate_2rdm(tpdm_aa, tpdm_ab, tpdm_bb);
+                        //                        rotate_2rdm(tpdm_aa, tpdm_ab, tpdm_bb);
 
                         // put rdms in tensor format
                         BlockedTensor D1 =
@@ -319,7 +320,8 @@ std::vector<std::vector<double>> DSRG_MRPT2::compute_energy_sa() {
                             // 3-RDM
                             std::vector<double> tpdm_aaa, tpdm_aab, tpdm_abb, tpdm_bbb;
                             ci_rdms.compute_3rdm(tpdm_aaa, tpdm_aab, tpdm_abb, tpdm_bbb);
-                            rotate_3rdm(tpdm_aaa, tpdm_aab, tpdm_abb, tpdm_bbb);
+                            //                            rotate_3rdm(tpdm_aaa, tpdm_aab, tpdm_abb,
+                            //                            tpdm_bbb);
 
                             BlockedTensor D3 =
                                 BTF_->build(tensor_type_, "D3", spin_cases({"aaaaaa"}), true);

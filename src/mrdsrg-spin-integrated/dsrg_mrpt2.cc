@@ -250,6 +250,10 @@ void DSRG_MRPT2::build_fock() {
             Fb_[i[0]] = value;
         }
     });
+
+    // set F_ to Fock_ in master_dsrg because check_semi_orbs use Fock_
+    Fock_["pq"] = F_["pq"];
+    Fock_["PQ"] = F_["PQ"];
 }
 
 bool DSRG_MRPT2::check_semicanonical() {
