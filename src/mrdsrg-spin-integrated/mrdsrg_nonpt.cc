@@ -42,11 +42,6 @@
 #include "../mini-boost/boost/format.hpp"
 #include "mrdsrg.h"
 
-#define TIME_LINE(x)                                                                               \
-    timer_on(#x);                                                                                  \
-    x;                                                                                             \
-    timer_off(#x)
-
 namespace psi {
 namespace forte {
 
@@ -390,16 +385,16 @@ void MRDSRG::compute_hbar_sequential_rotation() {
     timer rotation("Hbar T1 rotation");
 
     ambit::BlockedTensor A1;
-    TIME_LINE(A1 = BTF_->build(tensor_type_, "A1 Amplitudes", spin_cases({"gg"})));
-    TIME_LINE(A1["ia"] = T1_["ia"]);
-    TIME_LINE(A1["ai"] -= T1_["ia"]);
-    TIME_LINE(A1["IA"] = T1_["IA"]);
-    TIME_LINE(A1["AI"] -= T1_["IA"]);
+    A1 = BTF_->build(tensor_type_, "A1 Amplitudes", spin_cases({"gg"}));
+    A1["ia"] = T1_["ia"];
+    A1["ai"] -= T1_["ia"];
+    A1["IA"] = T1_["IA"];
+    A1["AI"] -= T1_["IA"];
 
     size_t ncmo = acore_mos_.size() + aactv_mos_.size() + avirt_mos_.size();
 
-    TIME_LINE(SharedMatrix aA1_m(new Matrix("A1 alpha", ncmo, ncmo)));
-    TIME_LINE(SharedMatrix bA1_m(new Matrix("A1 beta", ncmo, ncmo)));
+    SharedMatrix aA1_m(new Matrix("A1 alpha", ncmo, ncmo));
+    SharedMatrix bA1_m(new Matrix("A1 beta", ncmo, ncmo));
     A1.iterate([&](const std::vector<size_t>& i, const std::vector<SpinType>& spin, double& value) {
         if (spin[0] == AlphaSpin)
             aA1_m->set(i[0], i[1], value);
@@ -408,11 +403,11 @@ void MRDSRG::compute_hbar_sequential_rotation() {
     });
 
     // >=3 is required for high energy convergence
-    TIME_LINE(aA1_m->expm(3));
-    TIME_LINE(bA1_m->expm(3));
+    aA1_m->expm(3);
+    bA1_m->expm(3);
 
     ambit::BlockedTensor U1;
-    TIME_LINE(U1 = BTF_->build(tensor_type_, "Transformer", spin_cases({"gg"})));
+    U1 = BTF_->build(tensor_type_, "Transformer", spin_cases({"gg"}));
     U1.iterate([&](const std::vector<size_t>& i, const std::vector<SpinType>& spin, double& value) {
         if (spin[0] == AlphaSpin)
             value = aA1_m->get(i[0], i[1]);
@@ -420,8 +415,8 @@ void MRDSRG::compute_hbar_sequential_rotation() {
             value = bA1_m->get(i[0], i[1]);
     });
 
-    TIME_LINE(Hbar1_["rs"] = U1["rp"] * H_["pq"] * U1["sq"]);
-    TIME_LINE(Hbar1_["RS"] = U1["RP"] * H_["PQ"] * U1["SQ"]);
+    Hbar1_["rs"] = U1["rp"] * H_["pq"] * U1["sq"];
+    Hbar1_["RS"] = U1["RP"] * H_["PQ"] * U1["SQ"];
 
     Hbar0_ = 0.0;
     for (const std::string block : {"cc", "CC"}) {
@@ -431,30 +426,30 @@ void MRDSRG::compute_hbar_sequential_rotation() {
             }
         });
     }
-    TIME_LINE(Hbar0_ += 0.5 * Hbar1_["uv"] * Gamma1_["vu"]);
-    TIME_LINE(Hbar0_ += 0.5 * Hbar1_["UV"] * Gamma1_["VU"]);
+    Hbar0_ += 0.5 * Hbar1_["uv"] * Gamma1_["vu"];
+    Hbar0_ += 0.5 * Hbar1_["UV"] * Gamma1_["VU"];
 
     ambit::BlockedTensor B;
     if (eri_df_) {
-        TIME_LINE(B = BTF_->build(tensor_type_, "B 3-idx", {"Lgg", "LGG"}));
-        TIME_LINE(B["grs"] = U1["rp"] * B_["gpq"] * U1["sq"]);
-        TIME_LINE(B["gRS"] = U1["RP"] * B_["gPQ"] * U1["SQ"]);
+        B = BTF_->build(tensor_type_, "B 3-idx", {"Lgg", "LGG"});
+        B["grs"] = U1["rp"] * B_["gpq"] * U1["sq"];
+        B["gRS"] = U1["RP"] * B_["gPQ"] * U1["SQ"];
 
-        TIME_LINE(Hbar1_["pq"] += B["gpq"] * B["gji"] * Gamma1_["ij"]);
-        TIME_LINE(Hbar1_["pq"] -= B["gpi"] * B["gjq"] * Gamma1_["ij"]);
-        TIME_LINE(Hbar1_["pq"] += B["gpq"] * B["gJI"] * Gamma1_["IJ"]);
-        TIME_LINE(Hbar1_["PQ"] += B["gji"] * B["gPQ"] * Gamma1_["ij"]);
-        TIME_LINE(Hbar1_["PQ"] += B["gPQ"] * B["gJI"] * Gamma1_["IJ"]);
-        TIME_LINE(Hbar1_["PQ"] -= B["gPI"] * B["gJQ"] * Gamma1_["IJ"]);
+        Hbar1_["pq"] += B["gpq"] * B["gji"] * Gamma1_["ij"];
+        Hbar1_["pq"] -= B["gpi"] * B["gjq"] * Gamma1_["ij"];
+        Hbar1_["pq"] += B["gpq"] * B["gJI"] * Gamma1_["IJ"];
+        Hbar1_["PQ"] += B["gji"] * B["gPQ"] * Gamma1_["ij"];
+        Hbar1_["PQ"] += B["gPQ"] * B["gJI"] * Gamma1_["IJ"];
+        Hbar1_["PQ"] -= B["gPI"] * B["gJQ"] * Gamma1_["IJ"];
     } else {
-        TIME_LINE(Hbar2_["pqrs"] = U1["pt"] * U1["qo"] * V_["to12"] * U1["r1"] * U1["s2"]);
-        TIME_LINE(Hbar2_["pQrS"] = U1["pt"] * U1["QO"] * V_["tO19"] * U1["r1"] * U1["S9"]);
-        TIME_LINE(Hbar2_["PQRS"] = U1["PT"] * U1["QO"] * V_["TO89"] * U1["R8"] * U1["S9"]);
+        Hbar2_["pqrs"] = U1["pt"] * U1["qo"] * V_["to12"] * U1["r1"] * U1["s2"];
+        Hbar2_["pQrS"] = U1["pt"] * U1["QO"] * V_["tO19"] * U1["r1"] * U1["S9"];
+        Hbar2_["PQRS"] = U1["PT"] * U1["QO"] * V_["TO89"] * U1["R8"] * U1["S9"];
 
-        TIME_LINE(Hbar1_["pq"] += Hbar2_["pjqi"] * Gamma1_["ij"]);
-        TIME_LINE(Hbar1_["pq"] += Hbar2_["pJqI"] * Gamma1_["IJ"]);
-        TIME_LINE(Hbar1_["PQ"] += Hbar2_["jPiQ"] * Gamma1_["ij"]);
-        TIME_LINE(Hbar1_["PQ"] += Hbar2_["PJQI"] * Gamma1_["IJ"]);
+        Hbar1_["pq"] += Hbar2_["pjqi"] * Gamma1_["ij"];
+        Hbar1_["pq"] += Hbar2_["pJqI"] * Gamma1_["IJ"];
+        Hbar1_["PQ"] += Hbar2_["jPiQ"] * Gamma1_["ij"];
+        Hbar1_["PQ"] += Hbar2_["PJQI"] * Gamma1_["IJ"];
     }
 
     // compute fully contracted term from T1
@@ -466,19 +461,19 @@ void MRDSRG::compute_hbar_sequential_rotation() {
         });
     }
 
-    TIME_LINE(Hbar0_ += 0.5 * Hbar1_["uv"] * Gamma1_["vu"]);
-    TIME_LINE(Hbar0_ += 0.5 * Hbar1_["UV"] * Gamma1_["VU"]);
+    Hbar0_ += 0.5 * Hbar1_["uv"] * Gamma1_["vu"];
+    Hbar0_ += 0.5 * Hbar1_["UV"] * Gamma1_["VU"];
 
     if (eri_df_) {
-        TIME_LINE(Hbar0_ += 0.25 * B["gux"] * B["gvy"] * Lambda2_["xyuv"]);
-        TIME_LINE(Hbar0_ -= 0.25 * B["guy"] * B["gvx"] * Lambda2_["xyuv"]);
-        TIME_LINE(Hbar0_ += 0.25 * B["gUX"] * B["gVY"] * Lambda2_["XYUV"]);
-        TIME_LINE(Hbar0_ -= 0.25 * B["gUY"] * B["gVX"] * Lambda2_["XYUV"]);
-        TIME_LINE(Hbar0_ += B["gux"] * B["gVY"] * Lambda2_["xYuV"]);
+        Hbar0_ += 0.25 * B["gux"] * B["gvy"] * Lambda2_["xyuv"];
+        Hbar0_ -= 0.25 * B["guy"] * B["gvx"] * Lambda2_["xyuv"];
+        Hbar0_ += 0.25 * B["gUX"] * B["gVY"] * Lambda2_["XYUV"];
+        Hbar0_ -= 0.25 * B["gUY"] * B["gVX"] * Lambda2_["XYUV"];
+        Hbar0_ += B["gux"] * B["gVY"] * Lambda2_["xYuV"];
     } else {
-        TIME_LINE(Hbar0_ += 0.25 * Hbar2_["uvxy"] * Lambda2_["xyuv"]);
-        TIME_LINE(Hbar0_ += 0.25 * Hbar2_["UVXY"] * Lambda2_["XYUV"]);
-        TIME_LINE(Hbar0_ += Hbar2_["uVxY"] * Lambda2_["xYuV"]);
+        Hbar0_ += 0.25 * Hbar2_["uvxy"] * Lambda2_["xyuv"];
+        Hbar0_ += 0.25 * Hbar2_["UVXY"] * Lambda2_["XYUV"];
+        Hbar0_ += Hbar2_["uVxY"] * Lambda2_["xYuV"];
     }
 
     double Enuc = Process::environment.molecule()->nuclear_repulsion_energy();
@@ -497,20 +492,20 @@ void MRDSRG::compute_hbar_sequential_rotation() {
     timer comm("Hbar T2 commutator");
 
     // temporary Hamiltonian used in every iteration
-    TIME_LINE(O1_["pq"] = Hbar1_["pq"]);
-    TIME_LINE(O1_["PQ"] = Hbar1_["PQ"]);
+    O1_["pq"] = Hbar1_["pq"];
+    O1_["PQ"] = Hbar1_["PQ"];
     if (eri_df_) {
-        TIME_LINE(Hbar2_["pqrs"] = B["gpr"] * B["gqs"]);
-        TIME_LINE(Hbar2_["pqrs"] -= B["gps"] * B["gqr"]);
+        Hbar2_["pqrs"] = B["gpr"] * B["gqs"];
+        Hbar2_["pqrs"] -= B["gps"] * B["gqr"];
 
-        TIME_LINE(Hbar2_["pQrS"] = B["gpr"] * B["gQS"]);
+        Hbar2_["pQrS"] = B["gpr"] * B["gQS"];
 
-        TIME_LINE(Hbar2_["PQRS"] = B["gPR"] * B["gQS"]);
-        TIME_LINE(Hbar2_["PQRS"] -= B["gPS"] * B["gQR"]);
+        Hbar2_["PQRS"] = B["gPR"] * B["gQS"];
+        Hbar2_["PQRS"] -= B["gPS"] * B["gQR"];
     } else {
-        TIME_LINE(O2_["pqrs"] = Hbar2_["pqrs"]);
-        TIME_LINE(O2_["pQrS"] = Hbar2_["pQrS"]);
-        TIME_LINE(O2_["PQRS"] = Hbar2_["PQRS"]);
+        O2_["pqrs"] = Hbar2_["pqrs"];
+        O2_["pQrS"] = Hbar2_["pQrS"];
+        O2_["PQRS"] = Hbar2_["PQRS"];
     }
 
     // iteration variables
@@ -523,8 +518,8 @@ void MRDSRG::compute_hbar_sequential_rotation() {
 
         // Compute the commutator C = 1/n [O, T]
         double C0 = 0.0;
-        TIME_LINE(C1_.zero());
-        TIME_LINE(C2_.zero());
+        C1_.zero();
+        C2_.zero();
 
         // printing level
         if (print_ > 2) {
@@ -534,24 +529,24 @@ void MRDSRG::compute_hbar_sequential_rotation() {
 
         if (n == 1 && eri_df_) {
             // zero-body
-            TIME_LINE(H1_T2_C0(O1_, T2_, factor, C0));
-            TIME_LINE(H2_T2_C0_DF(B, T2_, factor, C0));
+            H1_T2_C0(O1_, T2_, factor, C0);
+            H2_T2_C0_DF(B, T2_, factor, C0);
             // one-body
-            TIME_LINE(H1_T2_C1(O1_, T2_, factor, C1_));
-            TIME_LINE(H2_T2_C1_DF(B, T2_, factor, C1_));
+            H1_T2_C1(O1_, T2_, factor, C1_);
+            H2_T2_C1_DF(B, T2_, factor, C1_);
             // two-body
-            TIME_LINE(H1_T2_C2(O1_, T2_, factor, C2_));
-            TIME_LINE(H2_T2_C2_DF(B, T2_, factor, C2_));
+            H1_T2_C2(O1_, T2_, factor, C2_);
+            H2_T2_C2_DF(B, T2_, factor, C2_);
         } else {
             // zero-body
-            TIME_LINE(H1_T2_C0(O1_, T2_, factor, C0));
-            TIME_LINE(H2_T2_C0(O2_, T2_, factor, C0));
+            H1_T2_C0(O1_, T2_, factor, C0);
+            H2_T2_C0(O2_, T2_, factor, C0);
             // one-body
-            TIME_LINE(H1_T2_C1(O1_, T2_, factor, C1_));
-            TIME_LINE(H2_T2_C1(O2_, T2_, factor, C1_));
+            H1_T2_C1(O1_, T2_, factor, C1_);
+            H2_T2_C1(O2_, T2_, factor, C1_);
             // two-body
-            TIME_LINE(H1_T2_C2(O1_, T2_, factor, C2_));
-            TIME_LINE(H2_T2_C2(O2_, T2_, factor, C2_));
+            H1_T2_C2(O1_, T2_, factor, C2_);
+            H2_T2_C2(O2_, T2_, factor, C2_);
         }
 
         // printing level
@@ -563,36 +558,36 @@ void MRDSRG::compute_hbar_sequential_rotation() {
         // [H, A] = [H, T] + [H, T]^dagger
         if (dsrg_op == "UNITARY") {
             C0 *= 2.0;
-            TIME_LINE(O1_["pq"] = C1_["pq"]);
-            TIME_LINE(O1_["PQ"] = C1_["PQ"]);
-            TIME_LINE(C1_["pq"] += O1_["qp"]);
-            TIME_LINE(C1_["PQ"] += O1_["QP"]);
-            TIME_LINE(O2_["pqrs"] = C2_["pqrs"]);
-            TIME_LINE(O2_["pQrS"] = C2_["pQrS"]);
-            TIME_LINE(O2_["PQRS"] = C2_["PQRS"]);
-            TIME_LINE(C2_["pqrs"] += O2_["rspq"]);
-            TIME_LINE(C2_["pQrS"] += O2_["rSpQ"]);
-            TIME_LINE(C2_["PQRS"] += O2_["RSPQ"]);
+            O1_["pq"] = C1_["pq"];
+            O1_["PQ"] = C1_["PQ"];
+            C1_["pq"] += O1_["qp"];
+            C1_["PQ"] += O1_["QP"];
+            O2_["pqrs"] = C2_["pqrs"];
+            O2_["pQrS"] = C2_["pQrS"];
+            O2_["PQRS"] = C2_["PQRS"];
+            C2_["pqrs"] += O2_["rspq"];
+            C2_["pQrS"] += O2_["rSpQ"];
+            C2_["PQRS"] += O2_["RSPQ"];
         }
 
         // Hbar += C
         Hbar0_ += C0;
-        TIME_LINE(Hbar1_["pq"] += C1_["pq"]);
-        TIME_LINE(Hbar1_["PQ"] += C1_["PQ"]);
-        TIME_LINE(Hbar2_["pqrs"] += C2_["pqrs"]);
-        TIME_LINE(Hbar2_["pQrS"] += C2_["pQrS"]);
-        TIME_LINE(Hbar2_["PQRS"] += C2_["PQRS"]);
+        Hbar1_["pq"] += C1_["pq"];
+        Hbar1_["PQ"] += C1_["PQ"];
+        Hbar2_["pqrs"] += C2_["pqrs"];
+        Hbar2_["pQrS"] += C2_["pQrS"];
+        Hbar2_["PQRS"] += C2_["PQRS"];
 
         // copy C to O for next level commutator
-        TIME_LINE(O1_["pq"] = C1_["pq"]);
-        TIME_LINE(O1_["PQ"] = C1_["PQ"]);
-        TIME_LINE(O2_["pqrs"] = C2_["pqrs"]);
-        TIME_LINE(O2_["pQrS"] = C2_["pQrS"]);
-        TIME_LINE(O2_["PQRS"] = C2_["PQRS"]);
+        O1_["pq"] = C1_["pq"];
+        O1_["PQ"] = C1_["PQ"];
+        O2_["pqrs"] = C2_["pqrs"];
+        O2_["pQrS"] = C2_["pQrS"];
+        O2_["PQRS"] = C2_["PQRS"];
 
         // test convergence of C
-        TIME_LINE(double norm_C1 = C1_.norm());
-        TIME_LINE(double norm_C2 = C2_.norm());
+        double norm_C1 = C1_.norm();
+        double norm_C2 = C2_.norm();
         if (print_ > 2) {
             outfile->Printf("\n  n = %3d, C1norm = %20.15f, C2norm = %20.15f", n, norm_C1, norm_C2);
         }
@@ -709,12 +704,12 @@ double MRDSRG::compute_energy_ldsrg2() {
 
         timer od("Off-diagonal Hbar");
         // compute norms of off-diagonal Hbar
-        TIME_LINE(double Hbar1od = Hbar1od_norm(blocks1));
-        TIME_LINE(double Hbar2od = Hbar2od_norm(blocks2));
+        double Hbar1od = Hbar1od_norm(blocks1);
+        double Hbar2od = Hbar2od_norm(blocks2);
 
         // update amplitudes
         ForteTimer t_amp;
-        TIME_LINE(update_t());
+        update_t();
         double time_amp = t_amp.elapsed();
         od.stop();
 

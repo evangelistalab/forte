@@ -34,11 +34,6 @@
 #include "../mini-boost/boost/format.hpp"
 #include "mrdsrg.h"
 
-#define TIME_LINE(x)                                                                               \
-    timer_on(#x);                                                                                  \
-    x;                                                                                             \
-    timer_off(#x)
-
 namespace psi {
 namespace forte {
 
@@ -72,11 +67,11 @@ void MRDSRG::update_t() {
     // if fully decouple core-core-virtual-virtual block
     std::string ccvv_source = options_.get_str("CCVV_SOURCE");
     if (ccvv_source == "ZERO") {
-        TIME_LINE(update_t2_noccvv());
-        TIME_LINE(update_t1_nocv());
+        update_t2_noccvv();
+        update_t1_nocv();
     } else if (ccvv_source == "NORMAL") {
-        TIME_LINE(update_t2_std());
-        TIME_LINE(update_t1_std());
+        update_t2_std();
+        update_t1_std();
     }
 }
 
@@ -841,7 +836,7 @@ void MRDSRG::update_t2_std() {
     t8.stop();
 
     // compute RMS
-    TIME_LINE(T2rms_ = DT2_.norm());
+    T2rms_ = DT2_.norm();
 
     timer t9("transform DT2 back to original basis");
     // transform DT2 back to original basis
