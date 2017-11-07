@@ -34,6 +34,9 @@
 #include <vector>
 
 #include "psi4/libdiis/diismanager.h"
+#include "psi4/libpsi4util/process.h"
+#include "psi4/libmints/molecule.h"
+#include "psi4/libqt/qt.h"
 
 #include "../helpers.h"
 #include "../mini-boost/boost/format.hpp"
@@ -181,11 +184,432 @@ void MRDSRG::compute_hbar() {
     }
 }
 
+void MRDSRG::compute_hbar_sequential() {
+    if (print_ > 2) {
+        outfile->Printf("\n\n  ==> Computing the DSRG Transformed Hamiltonian <==\n");
+    }
+    //    outfile->Printf("\n\n  ==> compute_hbar_sequential() <==\n");
+
+    // copy bare Hamiltonian to Hbar
+    Hbar0_ = 0.0;
+    Hbar1_["pq"] = F_["pq"];
+    Hbar1_["PQ"] = F_["PQ"];
+    Hbar2_["pqrs"] = V_["pqrs"];
+    Hbar2_["pQrS"] = V_["pQrS"];
+    Hbar2_["PQRS"] = V_["PQRS"];
+
+    // temporary Hamiltonian used in every iteration
+    O1_["pq"] = F_["pq"];
+    O1_["PQ"] = F_["PQ"];
+    O2_["pqrs"] = V_["pqrs"];
+    O2_["pQrS"] = V_["pQrS"];
+    O2_["PQRS"] = V_["PQRS"];
+
+    // iteration variables
+    bool converged = false;
+    int maxn = options_.get_int("DSRG_RSC_NCOMM");
+    double ct_threshold = options_.get_double("SRG_RSC_THRESHOLD");
+    std::string dsrg_op = options_.get_str("DSRG_TRANS_TYPE");
+
+    // compute Hbar recursively
+    for (int n = 1; n <= maxn; ++n) {
+        // prefactor before n-nested commutator
+        double factor = 1.0 / n;
+
+        // Compute the commutator C = 1/n [O, T]
+        double C0 = 0.0;
+        C1_.zero();
+        C2_.zero();
+
+        // printing level
+        if (print_ > 2) {
+            std::string dash(38, '-');
+            outfile->Printf("\n    %s", dash.c_str());
+        }
+
+        // zero-body
+        H1_T1_C0(O1_, T1_, factor, C0);
+        H2_T1_C0(O2_, T1_, factor, C0);
+        // one-body
+        H1_T1_C1(O1_, T1_, factor, C1_);
+        H2_T1_C1(O2_, T1_, factor, C1_);
+        // two-body
+        H2_T1_C2(O2_, T1_, factor, C2_);
+
+        // printing level
+        if (print_ > 2) {
+            std::string dash(38, '-');
+            outfile->Printf("\n    %s\n", dash.c_str());
+        }
+
+        // [H, A] = [H, T] + [H, T]^dagger
+        if (dsrg_op == "UNITARY") {
+            C0 *= 2.0;
+            O1_["pq"] = C1_["pq"];
+            O1_["PQ"] = C1_["PQ"];
+            C1_["pq"] += O1_["qp"];
+            C1_["PQ"] += O1_["QP"];
+            O2_["pqrs"] = C2_["pqrs"];
+            O2_["pQrS"] = C2_["pQrS"];
+            O2_["PQRS"] = C2_["PQRS"];
+            C2_["pqrs"] += O2_["rspq"];
+            C2_["pQrS"] += O2_["rSpQ"];
+            C2_["PQRS"] += O2_["RSPQ"];
+        }
+
+        // Hbar += C
+        Hbar0_ += C0;
+        Hbar1_["pq"] += C1_["pq"];
+        Hbar1_["PQ"] += C1_["PQ"];
+        Hbar2_["pqrs"] += C2_["pqrs"];
+        Hbar2_["pQrS"] += C2_["pQrS"];
+        Hbar2_["PQRS"] += C2_["PQRS"];
+
+        // copy C to O for next level commutator
+        O1_["pq"] = C1_["pq"];
+        O1_["PQ"] = C1_["PQ"];
+        O2_["pqrs"] = C2_["pqrs"];
+        O2_["pQrS"] = C2_["pQrS"];
+        O2_["PQRS"] = C2_["PQRS"];
+
+        // test convergence of C
+        double norm_C1 = C1_.norm();
+        double norm_C2 = C2_.norm();
+        if (print_ > 2) {
+            outfile->Printf("\n  n = %3d, C1norm = %20.15f, C2norm = %20.15f", n, norm_C1, norm_C2);
+        }
+        if (std::sqrt(norm_C2 * norm_C2 + norm_C1 * norm_C1) < ct_threshold) {
+            converged = true;
+            break;
+        }
+    }
+    if (!converged) {
+        outfile->Printf("\n    Warning! Hbar is not converged in %3d-nested commutators!", maxn);
+        outfile->Printf("\n    Please increase DSRG_RSC_NCOMM.");
+    }
+
+    // temporary Hamiltonian used in every iteration
+    O1_["pq"] = Hbar1_["pq"];
+    O1_["PQ"] = Hbar1_["PQ"];
+    O2_["pqrs"] = Hbar2_["pqrs"];
+    O2_["pQrS"] = Hbar2_["pQrS"];
+    O2_["PQRS"] = Hbar2_["PQRS"];
+
+    // iteration variables
+    converged = false;
+
+    // compute Hbar recursively
+    for (int n = 1; n <= maxn; ++n) {
+        // prefactor before n-nested commutator
+        double factor = 1.0 / n;
+
+        // Compute the commutator C = 1/n [O, T]
+        double C0 = 0.0;
+        C1_.zero();
+        C2_.zero();
+
+        // printing level
+        if (print_ > 2) {
+            std::string dash(38, '-');
+            outfile->Printf("\n    %s", dash.c_str());
+        }
+
+        // zero-body
+        H1_T2_C0(O1_, T2_, factor, C0);
+        H2_T2_C0(O2_, T2_, factor, C0);
+        // one-body
+        H1_T2_C1(O1_, T2_, factor, C1_);
+        H2_T2_C1(O2_, T2_, factor, C1_);
+        // two-body
+        H1_T2_C2(O1_, T2_, factor, C2_);
+        H2_T2_C2(O2_, T2_, factor, C2_);
+
+        // printing level
+        if (print_ > 2) {
+            std::string dash(38, '-');
+            outfile->Printf("\n    %s\n", dash.c_str());
+        }
+
+        // [H, A] = [H, T] + [H, T]^dagger
+        if (dsrg_op == "UNITARY") {
+            C0 *= 2.0;
+            O1_["pq"] = C1_["pq"];
+            O1_["PQ"] = C1_["PQ"];
+            C1_["pq"] += O1_["qp"];
+            C1_["PQ"] += O1_["QP"];
+            O2_["pqrs"] = C2_["pqrs"];
+            O2_["pQrS"] = C2_["pQrS"];
+            O2_["PQRS"] = C2_["PQRS"];
+            C2_["pqrs"] += O2_["rspq"];
+            C2_["pQrS"] += O2_["rSpQ"];
+            C2_["PQRS"] += O2_["RSPQ"];
+        }
+
+        // Hbar += C
+        Hbar0_ += C0;
+        Hbar1_["pq"] += C1_["pq"];
+        Hbar1_["PQ"] += C1_["PQ"];
+        Hbar2_["pqrs"] += C2_["pqrs"];
+        Hbar2_["pQrS"] += C2_["pQrS"];
+        Hbar2_["PQRS"] += C2_["PQRS"];
+
+        // copy C to O for next level commutator
+        O1_["pq"] = C1_["pq"];
+        O1_["PQ"] = C1_["PQ"];
+        O2_["pqrs"] = C2_["pqrs"];
+        O2_["pQrS"] = C2_["pQrS"];
+        O2_["PQRS"] = C2_["PQRS"];
+
+        // test convergence of C
+        double norm_C1 = C1_.norm();
+        double norm_C2 = C2_.norm();
+        if (print_ > 2) {
+            outfile->Printf("\n  n = %3d, C1norm = %20.15f, C2norm = %20.15f", n, norm_C1, norm_C2);
+        }
+        if (std::sqrt(norm_C2 * norm_C2 + norm_C1 * norm_C1) < ct_threshold) {
+            converged = true;
+            break;
+        }
+    }
+    if (!converged) {
+        outfile->Printf("\n    Warning! Hbar is not converged in %3d-nested commutators!", maxn);
+        outfile->Printf("\n    Please increase DSRG_RSC_NCOMM.");
+    }
+}
+
+void MRDSRG::compute_hbar_sequential_rotation() {
+    if (print_ > 2) {
+        outfile->Printf("\n\n  ==> Computing the DSRG Transformed Hamiltonian <==\n");
+    }
+
+    timer rotation("Hbar T1 rotation");
+
+    ambit::BlockedTensor A1;
+    A1 = BTF_->build(tensor_type_, "A1 Amplitudes", spin_cases({"gg"}));
+    A1["ia"] = T1_["ia"];
+    A1["ai"] -= T1_["ia"];
+    A1["IA"] = T1_["IA"];
+    A1["AI"] -= T1_["IA"];
+
+    size_t ncmo = acore_mos_.size() + aactv_mos_.size() + avirt_mos_.size();
+
+    SharedMatrix aA1_m(new Matrix("A1 alpha", ncmo, ncmo));
+    SharedMatrix bA1_m(new Matrix("A1 beta", ncmo, ncmo));
+    A1.iterate([&](const std::vector<size_t>& i, const std::vector<SpinType>& spin, double& value) {
+        if (spin[0] == AlphaSpin)
+            aA1_m->set(i[0], i[1], value);
+        else
+            bA1_m->set(i[0], i[1], value);
+    });
+
+    // >=3 is required for high energy convergence
+    aA1_m->expm(3);
+    bA1_m->expm(3);
+
+    ambit::BlockedTensor U1;
+    U1 = BTF_->build(tensor_type_, "Transformer", spin_cases({"gg"}));
+    U1.iterate([&](const std::vector<size_t>& i, const std::vector<SpinType>& spin, double& value) {
+        if (spin[0] == AlphaSpin)
+            value = aA1_m->get(i[0], i[1]);
+        else
+            value = bA1_m->get(i[0], i[1]);
+    });
+
+    Hbar1_["rs"] = U1["rp"] * H_["pq"] * U1["sq"];
+    Hbar1_["RS"] = U1["RP"] * H_["PQ"] * U1["SQ"];
+
+    Hbar0_ = 0.0;
+    for (const std::string block : {"cc", "CC"}) {
+        Hbar1_.block(block).iterate([&](const std::vector<size_t>& i, double& value) {
+            if (i[0] == i[1]) {
+                Hbar0_ += 0.5 * value;
+            }
+        });
+    }
+    Hbar0_ += 0.5 * Hbar1_["uv"] * Gamma1_["vu"];
+    Hbar0_ += 0.5 * Hbar1_["UV"] * Gamma1_["VU"];
+
+    ambit::BlockedTensor B;
+    if (eri_df_) {
+        B = BTF_->build(tensor_type_, "B 3-idx", {"Lgg", "LGG"});
+        B["grs"] = U1["rp"] * B_["gpq"] * U1["sq"];
+        B["gRS"] = U1["RP"] * B_["gPQ"] * U1["SQ"];
+
+        Hbar1_["pq"] += B["gpq"] * B["gji"] * Gamma1_["ij"];
+        Hbar1_["pq"] -= B["gpi"] * B["gjq"] * Gamma1_["ij"];
+        Hbar1_["pq"] += B["gpq"] * B["gJI"] * Gamma1_["IJ"];
+        Hbar1_["PQ"] += B["gji"] * B["gPQ"] * Gamma1_["ij"];
+        Hbar1_["PQ"] += B["gPQ"] * B["gJI"] * Gamma1_["IJ"];
+        Hbar1_["PQ"] -= B["gPI"] * B["gJQ"] * Gamma1_["IJ"];
+    } else {
+        Hbar2_["pqrs"] = U1["pt"] * U1["qo"] * V_["to12"] * U1["r1"] * U1["s2"];
+        Hbar2_["pQrS"] = U1["pt"] * U1["QO"] * V_["tO19"] * U1["r1"] * U1["S9"];
+        Hbar2_["PQRS"] = U1["PT"] * U1["QO"] * V_["TO89"] * U1["R8"] * U1["S9"];
+
+        Hbar1_["pq"] += Hbar2_["pjqi"] * Gamma1_["ij"];
+        Hbar1_["pq"] += Hbar2_["pJqI"] * Gamma1_["IJ"];
+        Hbar1_["PQ"] += Hbar2_["jPiQ"] * Gamma1_["ij"];
+        Hbar1_["PQ"] += Hbar2_["PJQI"] * Gamma1_["IJ"];
+    }
+
+    // compute fully contracted term from T1
+    for (const std::string block : {"cc", "CC"}) {
+        Hbar1_.block(block).iterate([&](const std::vector<size_t>& i, double& value) {
+            if (i[0] == i[1]) {
+                Hbar0_ += 0.5 * value;
+            }
+        });
+    }
+
+    Hbar0_ += 0.5 * Hbar1_["uv"] * Gamma1_["vu"];
+    Hbar0_ += 0.5 * Hbar1_["UV"] * Gamma1_["VU"];
+
+    if (eri_df_) {
+        Hbar0_ += 0.25 * B["gux"] * B["gvy"] * Lambda2_["xyuv"];
+        Hbar0_ -= 0.25 * B["guy"] * B["gvx"] * Lambda2_["xyuv"];
+        Hbar0_ += 0.25 * B["gUX"] * B["gVY"] * Lambda2_["XYUV"];
+        Hbar0_ -= 0.25 * B["gUY"] * B["gVX"] * Lambda2_["XYUV"];
+        Hbar0_ += B["gux"] * B["gVY"] * Lambda2_["xYuV"];
+    } else {
+        Hbar0_ += 0.25 * Hbar2_["uvxy"] * Lambda2_["xyuv"];
+        Hbar0_ += 0.25 * Hbar2_["UVXY"] * Lambda2_["XYUV"];
+        Hbar0_ += Hbar2_["uVxY"] * Lambda2_["xYuV"];
+    }
+
+    double Enuc = Process::environment.molecule()->nuclear_repulsion_energy();
+    Hbar0_ += frozen_core_energy_ + Enuc - Eref_;
+
+    rotation.stop();
+
+    ////////////////////////////////////////////////////////////////////////////////////
+
+    // iteration variables
+    bool converged = false;
+    int maxn = options_.get_int("DSRG_RSC_NCOMM");
+    double ct_threshold = options_.get_double("SRG_RSC_THRESHOLD");
+    std::string dsrg_op = options_.get_str("DSRG_TRANS_TYPE");
+
+    timer comm("Hbar T2 commutator");
+
+    // temporary Hamiltonian used in every iteration
+    O1_["pq"] = Hbar1_["pq"];
+    O1_["PQ"] = Hbar1_["PQ"];
+    if (eri_df_) {
+        Hbar2_["pqrs"] = B["gpr"] * B["gqs"];
+        Hbar2_["pqrs"] -= B["gps"] * B["gqr"];
+
+        Hbar2_["pQrS"] = B["gpr"] * B["gQS"];
+
+        Hbar2_["PQRS"] = B["gPR"] * B["gQS"];
+        Hbar2_["PQRS"] -= B["gPS"] * B["gQR"];
+    } else {
+        O2_["pqrs"] = Hbar2_["pqrs"];
+        O2_["pQrS"] = Hbar2_["pQrS"];
+        O2_["PQRS"] = Hbar2_["PQRS"];
+    }
+
+    // iteration variables
+    converged = false;
+
+    // compute Hbar recursively
+    for (int n = 1; n <= maxn; ++n) {
+        // prefactor before n-nested commutator
+        double factor = 1.0 / n;
+
+        // Compute the commutator C = 1/n [O, T]
+        double C0 = 0.0;
+        C1_.zero();
+        C2_.zero();
+
+        // printing level
+        if (print_ > 2) {
+            std::string dash(38, '-');
+            outfile->Printf("\n    %s", dash.c_str());
+        }
+
+        if (n == 1 && eri_df_) {
+            // zero-body
+            H1_T2_C0(O1_, T2_, factor, C0);
+            H2_T2_C0_DF(B, T2_, factor, C0);
+            // one-body
+            H1_T2_C1(O1_, T2_, factor, C1_);
+            H2_T2_C1_DF(B, T2_, factor, C1_);
+            // two-body
+            H1_T2_C2(O1_, T2_, factor, C2_);
+            H2_T2_C2_DF(B, T2_, factor, C2_);
+        } else {
+            // zero-body
+            H1_T2_C0(O1_, T2_, factor, C0);
+            H2_T2_C0(O2_, T2_, factor, C0);
+            // one-body
+            H1_T2_C1(O1_, T2_, factor, C1_);
+            H2_T2_C1(O2_, T2_, factor, C1_);
+            // two-body
+            H1_T2_C2(O1_, T2_, factor, C2_);
+            H2_T2_C2(O2_, T2_, factor, C2_);
+        }
+
+        // printing level
+        if (print_ > 2) {
+            std::string dash(38, '-');
+            outfile->Printf("\n    %s\n", dash.c_str());
+        }
+
+        // [H, A] = [H, T] + [H, T]^dagger
+        if (dsrg_op == "UNITARY") {
+            C0 *= 2.0;
+            O1_["pq"] = C1_["pq"];
+            O1_["PQ"] = C1_["PQ"];
+            C1_["pq"] += O1_["qp"];
+            C1_["PQ"] += O1_["QP"];
+            O2_["pqrs"] = C2_["pqrs"];
+            O2_["pQrS"] = C2_["pQrS"];
+            O2_["PQRS"] = C2_["PQRS"];
+            C2_["pqrs"] += O2_["rspq"];
+            C2_["pQrS"] += O2_["rSpQ"];
+            C2_["PQRS"] += O2_["RSPQ"];
+        }
+
+        // Hbar += C
+        Hbar0_ += C0;
+        Hbar1_["pq"] += C1_["pq"];
+        Hbar1_["PQ"] += C1_["PQ"];
+        Hbar2_["pqrs"] += C2_["pqrs"];
+        Hbar2_["pQrS"] += C2_["pQrS"];
+        Hbar2_["PQRS"] += C2_["PQRS"];
+
+        // copy C to O for next level commutator
+        O1_["pq"] = C1_["pq"];
+        O1_["PQ"] = C1_["PQ"];
+        O2_["pqrs"] = C2_["pqrs"];
+        O2_["pQrS"] = C2_["pQrS"];
+        O2_["PQRS"] = C2_["PQRS"];
+
+        // test convergence of C
+        double norm_C1 = C1_.norm();
+        double norm_C2 = C2_.norm();
+        if (print_ > 2) {
+            outfile->Printf("\n  n = %3d, C1norm = %20.15f, C2norm = %20.15f", n, norm_C1, norm_C2);
+        }
+        if (std::sqrt(norm_C2 * norm_C2 + norm_C1 * norm_C1) < ct_threshold) {
+            converged = true;
+            break;
+        }
+    }
+    if (!converged) {
+        outfile->Printf("\n    Warning! Hbar is not converged in %3d-nested commutators!", maxn);
+        outfile->Printf("\n    Please increase DSRG_RSC_NCOMM.");
+    }
+}
+
 double MRDSRG::compute_energy_ldsrg2() {
     // print title
     outfile->Printf("\n\n  ==> Computing MR-LDSRG(2) Energy <==\n");
     outfile->Printf("\n    Reference:");
     outfile->Printf("\n      J. Chem. Phys. 2016, 144, 164114.\n");
+
+    timer ldsrg2("Energy_ldsrg2");
+
     if (options_.get_str("THREEPDC") == "ZERO") {
         outfile->Printf("\n    Skip Lambda3 contributions in [Hbar2, T2].");
     }
@@ -208,6 +632,33 @@ double MRDSRG::compute_energy_ldsrg2() {
     // figure out off-diagonal block labels for Hbar2
     std::vector<std::string> blocks2 = od_two_labels_hhpp();
 
+    if (omit_V3_) {
+        // Generate blocks for Hbar2_, O2_ and C2_
+        std::vector<std::string> blocks_exclude_V3;
+        for (std::string s0 : {"c", "a", "v"}) {
+            for (std::string s1 : {"c", "a", "v"}) {
+                for (std::string s2 : {"c", "a", "v"}) {
+                    for (std::string s3 : {"c", "a", "v"}) {
+                        std::string s = s0 + s1 + s2 + s3;
+                        if (std::count(s.begin(), s.end(), 'v') < 3) {
+                            blocks_exclude_V3.push_back(s);
+                        }
+                    }
+                }
+            }
+        }
+
+        BlockedTensor::set_expert_mode(true);
+
+        Hbar2_ = BTF_->build(tensor_type_, "Hbar2", spin_cases(blocks_exclude_V3));
+        O2_ = BTF_->build(tensor_type_, "O2", spin_cases(blocks_exclude_V3));
+        C2_ = BTF_->build(tensor_type_, "C2", spin_cases(blocks_exclude_V3));
+    } else {
+        Hbar2_ = BTF_->build(tensor_type_, "Hbar2", spin_cases({"gggg"}));
+        O2_ = BTF_->build(tensor_type_, "O2", spin_cases({"gggg"}));
+        C2_ = BTF_->build(tensor_type_, "C2", spin_cases({"gggg"}));
+    }
+
     // iteration variables
     double Ecorr = 0.0;
     int cycle = 0, maxiter = options_.get_int("MAXITER");
@@ -215,11 +666,8 @@ double MRDSRG::compute_energy_ldsrg2() {
     double r_conv = options_.get_double("R_CONVERGENCE");
     bool converged = false, failed = false;
     Hbar1_ = BTF_->build(tensor_type_, "Hbar1", spin_cases({"gg"}));
-    Hbar2_ = BTF_->build(tensor_type_, "Hbar2", spin_cases({"gggg"}));
     O1_ = BTF_->build(tensor_type_, "O1", spin_cases({"gg"}));
-    O2_ = BTF_->build(tensor_type_, "O2", spin_cases({"gggg"}));
     C1_ = BTF_->build(tensor_type_, "C1", spin_cases({"gg"}));
-    C2_ = BTF_->build(tensor_type_, "C2", spin_cases({"gggg"}));
     DT1_ = BTF_->build(tensor_type_, "DT1", spin_cases({"hp"}));
     DT2_ = BTF_->build(tensor_type_, "DT2", spin_cases({"hhpp"}));
     std::vector<double> big_T, big_DT;
@@ -240,11 +688,18 @@ double MRDSRG::compute_energy_ldsrg2() {
     do {
         // compute Hbar
         ForteTimer t_hbar;
-        compute_hbar();
+        timer hbar("Compute Hbar");
+        if (sequential_Hbar_) {
+            compute_hbar_sequential_rotation();
+        } else {
+            compute_hbar();
+        }
+        hbar.stop();
         double Edelta = Hbar0_ - Ecorr;
         Ecorr = Hbar0_;
         double time_hbar = t_hbar.elapsed();
 
+        timer od("Off-diagonal Hbar");
         // compute norms of off-diagonal Hbar
         double Hbar1od = Hbar1od_norm(blocks1);
         double Hbar2od = Hbar2od_norm(blocks2);
@@ -253,8 +708,10 @@ double MRDSRG::compute_energy_ldsrg2() {
         ForteTimer t_amp;
         update_t();
         double time_amp = t_amp.elapsed();
+        od.stop();
 
         // copy amplitudes to the big vector
+        timer diis("DIIS");
         big_T = copy_amp_diis(T1_, blocks1, T2_, blocks2);
         big_DT = copy_amp_diis(DT1_, blocks1, DT2_, blocks2);
 
@@ -272,6 +729,7 @@ double MRDSRG::compute_energy_ldsrg2() {
                 }
             }
         }
+        diis.stop();
 
         // printing
         outfile->Printf("\n    %5d  %16.12f %10.3e  %10.3e %10.3e  %10.3e "
@@ -286,7 +744,11 @@ double MRDSRG::compute_energy_ldsrg2() {
 
             // rebuild Hbar because it is destroyed when updating amplitudes
             if (options_.get_str("RELAX_REF") != "NONE" || options_["AVG_STATE"].size() != 0) {
-                compute_hbar();
+                if (sequential_Hbar_) {
+                    compute_hbar_sequential_rotation();
+                } else {
+                    compute_hbar();
+                }
             }
         }
         if (cycle > maxiter) {
@@ -300,6 +762,7 @@ double MRDSRG::compute_energy_ldsrg2() {
         ++cycle;
     } while (!converged);
 
+    timer final("Summary");
     // print summary
     outfile->Printf("\n    %s", dash.c_str());
     outfile->Printf("\n\n  ==> MR-LDSRG(2) Energy Summary <==\n");
@@ -318,6 +781,7 @@ double MRDSRG::compute_energy_ldsrg2() {
     if (failed) {
         throw PSIEXCEPTION("The MR-LDSRG(2) computation does not converge.");
     }
+    final.stop();
 
     Hbar0_ = Ecorr;
     return Ecorr;

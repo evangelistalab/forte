@@ -301,8 +301,8 @@ double FCISolver::compute_energy() {
                 if (ci_abs < 0.1)
                     continue;
 
-                boost::dynamic_bitset<> Ia_v = lists_->alfa_str(h, add_Ia);
-                boost::dynamic_bitset<> Ib_v = lists_->beta_str(h ^ symmetry_, add_Ib);
+                std::bitset<128> Ia_v = lists_->alfa_str(h, add_Ia);
+                std::bitset<128> Ib_v = lists_->beta_str(h ^ symmetry_, add_Ib);
 
                 outfile->Printf("\n    ");
                 size_t offset = 0;
@@ -331,26 +331,26 @@ double FCISolver::compute_energy() {
 
     // Compute the RDMs
     compute_rdms_root(root_);
-//    C_->copy(dls.eigenvector(root_));
-//    if (print_) {
-//        std::string title_rdm = "Computing RDMs for Root No. " + std::to_string(root_);
-//        print_h2(title_rdm);
-//    }
-//    C_->compute_rdms(max_rdm_level_);
+    //    C_->copy(dls.eigenvector(root_));
+    //    if (print_) {
+    //        std::string title_rdm = "Computing RDMs for Root No. " + std::to_string(root_);
+    //        print_h2(title_rdm);
+    //    }
+    //    C_->compute_rdms(max_rdm_level_);
 
     if (print_ > 1 && max_rdm_level_ > 1) {
         C_->energy_from_rdms(fci_ints);
     }
 
-//    // Optionally, test the RDMs
-//    if (test_rdms_) {
-//        C_->rdm_test();
-//    }
+    //    // Optionally, test the RDMs
+    //    if (test_rdms_) {
+    //        C_->rdm_test();
+    //    }
 
-//    // Print the NO if energy converged
-//    if (print_no_ || print_ > 0) {
-//        C_->print_natural_orbitals(mo_space_info_);
-//    }
+    //    // Print the NO if energy converged
+    //    if (print_no_ || print_ > 0) {
+    //        C_->print_natural_orbitals(mo_space_info_);
+    //    }
 
     energy_ = dls.eigenvalues()->get(root_) + nuclear_repulsion_energy;
 
@@ -407,18 +407,15 @@ FCISolver::initial_guess(FCIWfn& diag, size_t n, size_t multiplicity,
 
     // Build the full determinants
     size_t nact = active_mo_.size();
-    // The corrleated MO, not the actual number of molecule orbitals
-    size_t nmo = mo_space_info_->size("ACTIVE");
-
     for (auto det : dets) {
         double e;
         size_t h, add_Ia, add_Ib;
         std::tie(e, h, add_Ia, add_Ib) = det;
-        boost::dynamic_bitset<> Ia_v = lists_->alfa_str(h, add_Ia);
-        boost::dynamic_bitset<> Ib_v = lists_->beta_str(h ^ symmetry_, add_Ib);
+        std::bitset<128> Ia_v = lists_->alfa_str(h, add_Ia);
+        std::bitset<128> Ib_v = lists_->beta_str(h ^ symmetry_, add_Ib);
 
-        std::vector<bool> Ia(nmo, false);
-        std::vector<bool> Ib(nmo, false);
+        std::vector<bool> Ia(nact, false);
+        std::vector<bool> Ib(nact, false);
 
         for (size_t i = 0; i < nact; ++i) {
             if (Ia_v[i])
@@ -431,8 +428,8 @@ FCISolver::initial_guess(FCIWfn& diag, size_t n, size_t multiplicity,
     }
 
     // Make sure that the spin space is complete
-    STLBitsetDeterminant det(nmo);
-    det.enforce_spin_completeness(bsdets);
+    STLBitsetDeterminant det(nact);
+    det.enforce_spin_completeness(bsdets, nact);
     if (bsdets.size() > num_dets) {
         bool* Ia = new bool[nact];
         bool* Ib = new bool[nact];

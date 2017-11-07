@@ -1312,7 +1312,7 @@ void FCI_MO::Diagonalize_H_noHF(const vecdet& p_space, const int& multi, const i
     STLBitsetDeterminant rhf(string_ref, string_ref);
 
     // test if RHF determinant is the last one in det
-    STLBitsetDeterminant det_back = p_space.back();
+    STLBitsetDeterminant det_back(p_space.back());
     if (rhf == det_back) {
         eigen.clear();
         size_t det_size = p_space.size();

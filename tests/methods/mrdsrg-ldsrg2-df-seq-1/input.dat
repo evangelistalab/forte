@@ -1,0 +1,83 @@
+#! Generated using commit GITCOMMIT
+
+import forte
+
+refrohf      = -15.611546532146
+refdsrg   = -15.545759344425274
+
+molecule {
+  0 3
+  Be 0.00000000    0.00000000   0.000000000
+  H  0.00000000    1.2750       2.7500
+  H  0.00000000   -1.2750       2.7500
+  units bohr
+  no_reorient
+}
+
+basis { 
+cartesian
+****
+Be 0
+S 6 1.00 
+ 1267.07000 0.001940
+  190.35600 0.014786
+   43.29590 0.071795
+   12.14420 0.236348
+    3.80923 0.471763
+    1.26847 0.355183
+S 3 1.00
+    5.69388 -0.028876
+    1.55563 -0.177565
+    0.171855 1.071630
+S 1 1.0
+    0.057181 1.000000
+P 1 1.0
+    5.69388  1.000000
+P 2 1.0
+    1.55563  0.144045
+    0.171855 0.949692
+****
+H 0 
+S 3 1.00 
+   19.24060  0.032828   
+    2.899200 0.231208   
+    0.653400 0.817238
+S 1 1.0   
+    0.177600  1.00000
+****
+} 
+
+set {
+  docc               [2,0,0,0]
+  socc               [1,0,0,1]
+  reference          rohf
+  scf_type           pk
+  maxiter            300
+  e_convergence      8
+  d_convergence      10
+}
+
+set forte {
+  job_type               mrdsrg
+  int_type               cholesky
+  CHOLESKY_TOLERANCE     1e-4
+  corr_level             ldsrg2
+  frozen_docc            [1,0,0,0]
+  restricted_docc        [1,0,0,0]
+  active                 [1,0,0,1]
+  multiplicity           1
+  root_sym               0
+  nroot                  1
+  root                   0
+  dsrg_s                 1.0
+  maxiter                100
+  e_convergence          8
+# semi_canonical         false
+  dsrg_hbar_seq          true
+}
+
+energy('scf')
+compare_values(refrohf,get_variable("CURRENT ENERGY"),10,"ROHF energy") #TEST
+
+energy('forte')
+compare_values(refdsrg,get_variable("CURRENT ENERGY"),8, "MRDSRG relaxed energy") #TEST

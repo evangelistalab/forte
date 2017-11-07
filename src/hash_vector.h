@@ -107,6 +107,7 @@ template <class Key, class Hash = std::hash<Key>> class HashVector {
 
     /*- Convertors -*/
     std::vector<Key> toVector() const;
+    std::vector<std::pair<Key,size_t>> toKeyIndex() const;
     std::unordered_set<Key, Hash> toUnordered_set() const;
 
     class iterator : public std::vector<CINode<Key>>::const_iterator {
@@ -137,7 +138,7 @@ template <class Key, class Hash> HashVector<Key, Hash>::HashVector() { this->cle
 template <class Key, class Hash> HashVector<Key, Hash>::HashVector(const std::vector<Key>& other) {
     this->clear();
     this->reserve(other.size());
-    for (Key k : other) {
+    for (const Key& k : other) {
         this->add(k);
     }
 }
@@ -572,9 +573,10 @@ void HashVector<Key, Hash>::merge(const std::unordered_set<Key, Hash_2>& source)
 
 template <class Key, class Hash>
 void HashVector<Key, Hash>::map_order(const std::vector<size_t>& index_map) {
+    if (current_size == 0) return;
     std::vector<CINode<Key>> new_vec;
     new_vec.reserve(this->vec.capacity());
-    new_vec.resize(current_size);
+    new_vec.resize(current_size, vec[0]);
     for (size_t i = 0; i < current_size; ++i) {
         new_vec[index_map[i]] = std::move(this->vec[i]);
     }
@@ -680,10 +682,21 @@ template <class Key, class Hash> std::vector<size_t> HashVector<Key, Hash>::opti
 template <class Key, class Hash> std::vector<Key> HashVector<Key, Hash>::toVector() const {
     std::vector<Key> keys;
     keys.reserve(current_size);
-    for (const Key k : (*this)) {
+    for (const Key& k : (*this)) {
         keys.push_back(k);
     }
     return keys;
+}
+
+template <class Key, class Hash> std::vector<std::pair<Key,size_t>> HashVector<Key, Hash>::toKeyIndex() const {
+    std::vector<std::pair<Key,size_t>> key_index_pairs;
+    key_index_pairs.reserve(current_size);
+    size_t n = 0;
+    for (const Key& k : (*this)) {
+        key_index_pairs.push_back(std::make_pair(k,n));
+        n++;
+    }
+    return key_index_pairs;
 }
 
 template <class Key, class Hash>

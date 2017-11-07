@@ -41,6 +41,8 @@ fciqmc_tests = ["fciqmc"]
 ct_tests = ["ct-1","ct-2","ct-3","ct-4","ct-5","ct-6","ct-7-fc"]
 dsrg_tests = ["dsrg-1","dsrg-2"]
 mrdsrg_tests = ["mrdsrg-pt2-1","mrdsrg-pt2-2","mrdsrg-pt2-3","mrdsrg-pt2-4"]
+mrdsrg_df_tests = ["mrdsrg-ldsrg2-df-seq-1","mrdsrg-ldsrg2-df-seq-2","mrdsrg-ldsrg2-df-seq-3",
+                   "mrdsrg-ldsrg2-df-seq-noV3-1","mrdsrg-ldsrg2-df-seq-noV3-2","mrdsrg-ldsrg2-df-seq-noV3-3"]
 dsrg_mrpt3_tests = ["dsrg-mrpt3-1","dsrg-mrpt3-2","dsrg-mrpt3-3","dsrg-mrpt3-4","dsrg-mrpt3-5",
                     "dsrg-mrpt3-6-sa","dsrg-mrpt3-7-CO","dsrg-mrpt3-8-sa-C2H4"]
 dsrg_mrpt2_tests = ["mr-dsrg-pt2-1","mr-dsrg-pt2-2","mr-dsrg-pt2-3","mr-dsrg-pt2-4",
@@ -67,7 +69,7 @@ dmrg_tests = ["dmrgscf-1", "df-dmrgscf-1", "cd-dmrgscf-1", "dmrg-dsrg-mrpt2-1", 
 
 #tests =  fci_tests + casscf_tests + dsrg_mrpt2_tests + adaptive_ci_tests + pci_tests + fciqmc_tests + ct_tests + dsrg_tests
 #tests =  fci_tests + casscf_tests + dsrg_mrpt2_tests + dmrg_tests + mrdsrg_tests + adaptive_ci_tests + pci_tests
-tests = fci_tests + casscf_tests + dsrg_mrpt2_tests + active_dsrgpt2_tests + dsrg_mrpt3_tests + mrdsrg_tests + adaptive_ci_tests + pci_tests + pci_hashvec_tests
+tests = fci_tests + casscf_tests + dsrg_mrpt2_tests + active_dsrgpt2_tests + dsrg_mrpt3_tests + mrdsrg_tests + mrdsrg_df_tests + adaptive_ci_tests + pci_tests + pci_hashvec_tests
 
 maindir = os.getcwd()
 if len(sys.argv) == 1:

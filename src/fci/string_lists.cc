@@ -219,7 +219,7 @@ void StringLists::make_pair_list(NNList& list) {
 
 void StringLists::make_strings(GraphPtr graph, StringList& list) {
     for (int h = 0; h < nirrep_; ++h) {
-        list.push_back(std::vector<boost::dynamic_bitset<>>(graph->strpi(h)));
+        list.push_back(std::vector<std::bitset<128>>(graph->strpi(h)));
     }
 
     int n = graph->nbits();
@@ -227,7 +227,7 @@ void StringLists::make_strings(GraphPtr graph, StringList& list) {
 
     if ((k >= 0) and (k <= n)) { // check that (n > 0) makes sense.
         bool* I = new bool[n];
-        boost::dynamic_bitset<> I_bs(n);
+        std::bitset<128> I_bs(n);
 
         // Generate the strings 1111100000
         //                      { k }{n-k}
@@ -295,7 +295,7 @@ void StringLists::print_string(bool* I, size_t n) {
 
 //  for(int h = 0; h < nirrep_; ++h){
 //    // Create the key to the map
-//    boost::tuple<size_t,size_t,size_t,size_t,int> pqrs_pair(p,q,r,s,h);
+//    std::tuple<size_t,size_t,size_t,size_t,int> pqrs_pair(p,q,r,s,h);
 
 //    for(int i = 0; i < ncmos; ++i) I[i] = J[i] = false; // 0
 

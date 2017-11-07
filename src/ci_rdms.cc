@@ -55,7 +55,7 @@ CI_RDMS::CI_RDMS(Options& options, DeterminantHashVec& wfn, std::shared_ptr<FCII
     : options_(options), wfn_(wfn), fci_ints_(fci_ints), evecs_(evecs), root1_(root1),
       root2_(root2) {
 
-    STLBitsetDeterminant det = wfn_.get_det(0);
+    STLBitsetDeterminant det(wfn_.get_det(0));
     ncmo_ = fci_ints_->nmo();
     ncmo2_ = ncmo_ * ncmo_;
     ncmo3_ = ncmo2_ * ncmo_;
@@ -723,7 +723,7 @@ void CI_RDMS::compute_3rdm(std::vector<double>& tprdm_aaa, std::vector<double>& 
     const det_hashvec& dets = wfn_.wfn_hash();
     for (size_t I = 0; I < dim_space_; ++I) {
         double cI_sq = evecs_->get(I, root1_) * evecs_->get(I, root2_);
-        STLBitsetDeterminant detI = dets[I];
+        STLBitsetDeterminant detI(dets[I]);
 
         std::vector<int> aocc = detI.get_alfa_occ();
         std::vector<int> bocc = detI.get_beta_occ();
@@ -1263,7 +1263,7 @@ void CI_RDMS::get_one_map() {
         outfile->Printf("\n\n  Generating one-particle maps.");
 
     for (size_t I = 0; I < dim_space_; ++I) {
-        STLBitsetDeterminant detI = det_space_[I];
+        STLBitsetDeterminant detI(det_space_[I]);
 
         // Alpha and beta occupation vectors
         std::vector<int> aocc = detI.get_alfa_occ();
@@ -1358,7 +1358,7 @@ void CI_RDMS::get_two_map() {
         outfile->Printf("\n  Generating two-particle maps.");
 
     for (size_t I = 0; I < dim_space_; ++I) {
-        STLBitsetDeterminant detI = det_space_[I];
+        STLBitsetDeterminant detI(det_space_[I]);
 
         std::vector<int> aocc = detI.get_alfa_occ();
         std::vector<int> bocc = detI.get_beta_occ();
@@ -1501,7 +1501,7 @@ void CI_RDMS::get_three_map() {
         outfile->Printf("\n  Generating three-particle maps.");
 
     for (size_t I = 0; I < dim_space_; ++I) {
-        STLBitsetDeterminant detI = det_space_[I];
+        STLBitsetDeterminant detI(det_space_[I]);
 
         const std::vector<int>& aocc = detI.get_alfa_occ();
         const std::vector<int>& bocc = detI.get_beta_occ();
