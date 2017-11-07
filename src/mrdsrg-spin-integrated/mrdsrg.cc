@@ -169,21 +169,6 @@ void MRDSRG::startup() {
         B_.iterate([&](const std::vector<size_t>& i, const std::vector<SpinType>&, double& value) {
             value = ints_->three_integral(i[0], i[1], i[2]);
         });
-    }
-
-    // if density fitted
-    if (eri_df_) {
-        aux_label_ = "L";
-        aux_mos_ = std::vector<size_t>(ints_->nthree());
-        std::iota(aux_mos_.begin(), aux_mos_.end(), 0);
-
-        BTF_->add_mo_space(aux_label_, "g", aux_mos_, NoSpin);
-        label_to_spacemo_[aux_label_[0]] = aux_mos_;
-
-        B_ = BTF_->build(tensor_type_, "B 3-idx", {"Lgg", "LGG"});
-        B_.iterate([&](const std::vector<size_t>& i, const std::vector<SpinType>&, double& value) {
-            value = ints_->three_integral(i[0], i[1], i[2]);
-        });
         H_.iterate([&](const std::vector<size_t>& i, const std::vector<SpinType>& spin, double& value) {
             if (spin[0] == AlphaSpin)
                 value = ints_->oei_a(i[0], i[1]);

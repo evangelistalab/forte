@@ -690,10 +690,7 @@ double MRDSRG::compute_energy_ldsrg2() {
         ForteTimer t_hbar;
         timer hbar("Compute Hbar");
         if (sequential_Hbar_) {
-            if (eri_df_)
-                compute_hbar_sequential_rotation();
-            else
-                compute_hbar_sequential();
+            compute_hbar_sequential_rotation();
         } else {
             compute_hbar();
         }
@@ -748,10 +745,7 @@ double MRDSRG::compute_energy_ldsrg2() {
             // rebuild Hbar because it is destroyed when updating amplitudes
             if (options_.get_str("RELAX_REF") != "NONE" || options_["AVG_STATE"].size() != 0) {
                 if (sequential_Hbar_) {
-                    if (eri_df_)
-                        compute_hbar_sequential_rotation();
-                    else
-                        compute_hbar_sequential();
+                    compute_hbar_sequential_rotation();
                 } else {
                     compute_hbar();
                 }
