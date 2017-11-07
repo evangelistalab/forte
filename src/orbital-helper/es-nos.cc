@@ -294,8 +294,10 @@ void ESNO::upcast_reference() {
                 min += old_dim[m];
             }
             for (int pos = nact + min + old_dim[n] - 1; pos >= min + nact; --pos) {
-                det.bits_[pos + b_shift + shift[n]] = det.bits_[pos];
-                det.bits_[pos] = 0;
+                det.set_beta_bit(pos + shift[n], det.get_beta_bit(pos));
+                det.set_beta_bit(pos, false);
+                //                det.bits_[pos + b_shift + shift[n]] = det.bits_[pos];
+                //                det.bits_[pos] = 0;
             }
         }
         // Then alpha
@@ -305,10 +307,9 @@ void ESNO::upcast_reference() {
                 min += old_dim[m];
             }
             for (int pos = min + old_dim[n] - 1; pos >= min; --pos) {
-                det.bits_[pos + shift[n]] = det.bits_[pos];
-
+                det.set_alfa_bit(pos + shift[n], det.get_alfa_bit(pos));
                 if (n > 0)
-                    det.bits_[pos] = 0;
+                    det.set_alfa_bit(pos, false);
             }
         }
         reference_.add(det);
