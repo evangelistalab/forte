@@ -40,7 +40,7 @@ namespace forte {
  */
 std::vector<StringSubstitution>& StringLists::get_alfa_vvoo_list(size_t p, size_t q, size_t r,
                                                                  size_t s, int h) {
-    boost::tuple<size_t, size_t, size_t, size_t, int> pqrs_pair(p, q, r, s, h);
+    std::tuple<size_t, size_t, size_t, size_t, int> pqrs_pair(p, q, r, s, h);
     return alfa_vvoo_list[pqrs_pair];
 }
 
@@ -48,7 +48,7 @@ std::vector<StringSubstitution>& StringLists::get_alfa_vvoo_list(size_t p, size_
  */
 std::vector<StringSubstitution>& StringLists::get_beta_vvoo_list(size_t p, size_t q, size_t r,
                                                                  size_t s, int h) {
-    boost::tuple<size_t, size_t, size_t, size_t, int> pqrs_pair(p, q, r, s, h);
+    std::tuple<size_t, size_t, size_t, size_t, int> pqrs_pair(p, q, r, s, h);
     return beta_vvoo_list[pqrs_pair];
 }
 
@@ -137,7 +137,7 @@ void StringLists::make_vvoo(GraphPtr graph, VVOOList& list, int p, int q, int r,
 
         for (int h = 0; h < nirrep_; ++h) {
             // Create the key to the map
-            boost::tuple<size_t, size_t, size_t, size_t, int> pqrs_pair(p, q, r, s, h);
+            std::tuple<size_t, size_t, size_t, size_t, int> pqrs_pair(p, q, r, s, h);
 
             // Generate the strings 1111100000
             //                      { k }{n-k}
@@ -247,7 +247,7 @@ void StringLists::make_VOVO(GraphPtr graph, VOVOList& list, int p, int q, int r,
 
     for (int h = 0; h < nirrep_; ++h) {
         // Create the key to the map
-        boost::tuple<size_t, size_t, size_t, size_t, int> pqrs_pair(p, q, r, s, h);
+        std::tuple<size_t, size_t, size_t, size_t, int> pqrs_pair(p, q, r, s, h);
 
         // Generate the strings 1111100000
         //                      { k }{n-k}
@@ -305,7 +305,7 @@ void StringLists::make_VOVO(GraphPtr graph, VOVOList& list, int p, int q, int r,
  */
 std::vector<StringSubstitution>& StringLists::get_alfa_vovo_list(size_t p, size_t q, size_t r,
                                                                  size_t s, int h) {
-    boost::tuple<size_t, size_t, size_t, size_t, int> pqrs_pair(p, q, r, s, h);
+    std::tuple<size_t, size_t, size_t, size_t, int> pqrs_pair(p, q, r, s, h);
     return alfa_vovo_list[pqrs_pair];
 }
 
@@ -316,7 +316,7 @@ std::vector<StringSubstitution>& StringLists::get_alfa_vovo_list(size_t p, size_
  */
 std::vector<StringSubstitution>& StringLists::get_beta_vovo_list(size_t p, size_t q, size_t r,
                                                                  size_t s, int h) {
-    boost::tuple<size_t, size_t, size_t, size_t, int> pqrs_pair(p, q, r, s, h);
+    std::tuple<size_t, size_t, size_t, size_t, int> pqrs_pair(p, q, r, s, h);
     return beta_vovo_list[pqrs_pair];
 }
 }

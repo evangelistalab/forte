@@ -32,9 +32,7 @@
 #include <bitset>
 #include <unordered_map>
 #include <algorithm>
-
-//#include "fci/fci_integrals.h"
-//#include "integrals/integrals.h"
+#include <vector>
 
 namespace psi {
 namespace forte {
@@ -54,47 +52,57 @@ namespace forte {
  * false <-> 0
  */
 
-using bit_t = std::bitset<256>;
-
 class STLBitsetDeterminant {
   public:
+    enum class SpinType { AlphaSpin, BetaSpin };
+    static constexpr int num_det_bits = 256;
+    static constexpr int num_str_bits = 128;
+    using bit_t = std::bitset<num_det_bits>;
+    const static bit_t alfa_mask;
+    const static bit_t beta_mask;
+
     // Class Constructor and Destructor
     /// Construct an empty determinant
-    STLBitsetDeterminant();
+    explicit STLBitsetDeterminant(int n);
     /// Construct the determinant from an occupation vector that
     /// specifies the alpha and beta strings.  occupation = [Ia,Ib]
-    STLBitsetDeterminant(const std::vector<int>& occupation, int nmo);
-    STLBitsetDeterminant(const std::vector<int>& occupation);
+    explicit STLBitsetDeterminant(const std::vector<bool>& occupation);
     /// Construct the determinant from an occupation vector that
     /// specifies the alpha and beta strings.  occupation = [Ia,Ib]
-    STLBitsetDeterminant(const std::vector<bool>& occupation, int nmo);
-    STLBitsetDeterminant(const std::vector<bool>& occupation);
-    /// Construct an excited determinant of a given reference
-    /// Construct the determinant from two occupation vectors that
-    /// specifies the alpha and beta strings.  occupation = [Ia,Ib]
-    STLBitsetDeterminant(const std::vector<bool>& occupation_a,
-                         const std::vector<bool>& occupation_b);
+    explicit STLBitsetDeterminant(const std::vector<bool>& occupation_a,
+                                  const std::vector<bool>& occupation_b);
     /// Construct a determinant from a bitset object
-    STLBitsetDeterminant(const bit_t& bits);
-    STLBitsetDeterminant(const bit_t& bits, int nmo);
-    STLBitsetDeterminant(int nmo) { nmo_ = nmo; }
-    STLBitsetDeterminant(const STLBitsetDeterminant& lhs);
-    /// Construct a determinant from two STLBitsetStrings
-    //    explicit STLBitsetDeterminant(const STLBitsetString& alpha, const STLBitsetString& beta);
+    explicit STLBitsetDeterminant(const bit_t& bits, int nmo);
+
+    //    STLBitsetDeterminant(int n) = delete;
+    //    STLBitsetDeterminant(size_t n) = delete;
 
     void copy(const STLBitsetDeterminant& rhs);
+
+    const bit_t& bits() const;
 
     /// Equal operator
     bool operator==(const STLBitsetDeterminant& lhs) const;
     /// Less than operator
     bool operator<(const STLBitsetDeterminant& lhs) const;
+
+    /// Less than operator
+    static bool less_than(const STLBitsetDeterminant& rhs, const STLBitsetDeterminant& lhs);
+    /// Reverse string ordering
+    static bool reverse_less_then(const STLBitsetDeterminant& i, const STLBitsetDeterminant& j);
+
     /// XOR operator
     STLBitsetDeterminant operator^(const STLBitsetDeterminant& lhs) const;
+    /// XOR operator
+    STLBitsetDeterminant& operator^=(const STLBitsetDeterminant& lhs);
+    /// &= operator
+    STLBitsetDeterminant& operator&=(const STLBitsetDeterminant& lhs);
+    /// &= operator
+    STLBitsetDeterminant& operator|=(const STLBitsetDeterminant& lhs);
+    STLBitsetDeterminant& flip();
 
-    /// Get a pointer to the bits
-    const bit_t& bits() const;
-
-    const int nmo() const { return nmo_; }
+    //    /// Get a pointer to the bits
+    //    const bit_t& bits() const;
 
     /// Return the value of an alpha bit
     bool get_alfa_bit(int n) const;
@@ -105,23 +113,23 @@ class STLBitsetDeterminant {
     void set_alfa_bit(int n, bool value);
     /// Set the value of a beta bit
     void set_beta_bit(int n, bool value);
+    //    /// Set the bits to a given bit_t
+    //    void set_bits(const bit_t& bits);
 
     /// Switch the alpha and beta occupations
     void spin_flip();
 
     /// Return determinant with one spin zeroed, alpha == 0
-    void zero_spin(bool spin);
+    void zero_spin(STLBitsetDeterminant::SpinType spin_type);
 
-    /// Get the alpha bits
-    std::vector<bool> get_alfa_bits_vector_bool();
-    /// Get the beta bits
-    std::vector<bool> get_beta_bits_vector_bool();
-    /// Get the alpha bits
-    const std::vector<bool> get_alfa_bits_vector_bool() const;
-    /// Get the beta bits
-    const std::vector<bool> get_beta_bits_vector_bool() const;
     /// Return the number of alpha/beta pairs
     int npair();
+
+    void set_count_bits(int nmo);
+    int find_nmo() const;
+
+    int count_alfa() const;
+    int count_beta() const;
 
     /// Return a vector of occupied alpha orbitals
     std::vector<int> get_alfa_occ();
@@ -154,14 +162,13 @@ class STLBitsetDeterminant {
     void print() const;
     /// Save the Slater determinant as a string
     std::string str() const;
+    /// Save the Slater determinant as a string
+    std::string str2() const;
 
     /// Apply S+ to this determinant
     std::vector<std::pair<STLBitsetDeterminant, double>> spin_plus() const;
     /// Apply S- to this determinant
     std::vector<std::pair<STLBitsetDeterminant, double>> spin_minus() const;
-    /// Compute the matrix element of the S^2 operator between this determinant
-    /// and a given one
-    double spin2_slow(const STLBitsetDeterminant& rhs) const;
     /// Return the eigenvalue of Sz
     double spin_z() const;
     /// Compute the matrix element of the S^2 operator between this determinant
@@ -174,7 +181,8 @@ class STLBitsetDeterminant {
     double slater_sign_b(int n) const;
     double slater_sign_bb(int n, int m) const;
 
-    double slater_sign(int i, int j, int a, int b) const;
+    double slater_sign_aaaa(int i, int j, int a, int b) const;
+    double slater_sign_bbbb(int i, int j, int a, int b) const;
 
     /// Perform an alpha-alpha single excitation (i->a)
     double single_excitation_a(int i, int a);
@@ -187,27 +195,19 @@ class STLBitsetDeterminant {
     /// Perform an beta-beta double excitation (IJ -> AB)
     double double_excitation_bb(int i, int j, int a, int b);
 
-    /// The occupation vector (does not include the frozen orbitals)
-    bit_t bits_;
-    /// Number of non-frozen molecular orbitals
-    int nmo_;
-
-    /// Return the sign of a_n applied to string I
-    static double SlaterSign(const bit_t& I, int n);
-    double SlaterSign(int n);
-    /// Return the sign of a_n^+ a_m applied to string I
-    double SlaterSign(const bit_t& I, int m, int n);
-    /// Return the sign of a_a^+ a_b^+ a_j a_i applied to string I
-    double SlaterSign(const bit_t& bits, int i, int j, int a, int b);
-    /// Given a set of determinant adds new elements necessary to have a spin
-    /// complete set
-    void enforce_spin_completeness(std::vector<STLBitsetDeterminant>& det_space);
+    /// Given a set of determinant adds new elements necessary to have a spin complete set
+    void enforce_spin_completeness(std::vector<STLBitsetDeterminant>& det_space, int nmo);
 
     struct Hash {
         std::size_t operator()(const psi::forte::STLBitsetDeterminant& bs) const {
             return std::hash<bit_t>()(bs.bits_);
         }
     };
+
+  protected:
+    /// The occupation vector (does not include the frozen orbitals)
+    bit_t bits_;
+    unsigned char size_;
 };
 
 using Determinant = STLBitsetDeterminant;

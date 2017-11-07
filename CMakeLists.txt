@@ -49,7 +49,6 @@ src/cc.cc
 src/ci_rdms.cc
 src/ci_reference.cc
 src/davidson.cc
-src/determinant_map.cc
 src/determinant_hashvector.cc
 src/dmrgscf.cc
 src/dmrgsolver.cc
@@ -77,8 +76,11 @@ src/sa_fcisolver.cc
 src/semi_canonicalize.cc
 src/sparse_ci/sparse_ci_solver.cc
 src/sparse_ci/sigma_vector.cc
+src/sparse_ci/sigma_vector_dynamic.cc
 src/sparse_ci/stl_bitset_determinant.cc
 src/sparse_ci/stl_bitset_string.cc
+src/sparse_ci/sorted_string_list.cc
+src/sparse_ci/ui64_determinant.cc
 src/sq.cc
 src/tensorsrg.cc
 src/tensorsrg_antihermitian_commutators.cc

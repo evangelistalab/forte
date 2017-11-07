@@ -36,8 +36,7 @@
 
 #include "../forte-def.h"
 #include "../iterative_solvers.h"
-#include "sparse_ci_solver.h"
-//#include "fci/fci_vector.h"
+#include "sigma_vector.h"
 
 struct PairHash {
     size_t operator()(const std::pair<size_t, size_t>& p) const {
@@ -92,7 +91,7 @@ SigmaVectorList::SigmaVectorList(const std::vector<STLBitsetDeterminant>& space,
         size_t na_ann = 0;
         det_hash map_a_ann;
         for (size_t I = 0; I < max_I; ++I) {
-            STLBitsetDeterminant detI = space[I];
+            const STLBitsetDeterminant& detI = space[I];
             double EI = fci_ints_->energy(detI);
             diag_.push_back(EI);
 
@@ -133,7 +132,7 @@ SigmaVectorList::SigmaVectorList(const std::vector<STLBitsetDeterminant>& space,
         size_t nb_ann = 0;
         det_hash map_b_ann;
         for (size_t I = 0; I < max_I; ++I) {
-            STLBitsetDeterminant detI = space[I];
+            const STLBitsetDeterminant& detI = space[I];
 
             std::vector<int> bocc = detI.get_beta_occ();
             int nobeta = bocc.size();
@@ -206,7 +205,7 @@ SigmaVectorList::SigmaVectorList(const std::vector<STLBitsetDeterminant>& space,
     {
         det_hash map_aa_ann;
         for (size_t I = 0; I < max_I; ++I) {
-            STLBitsetDeterminant detI = space[I];
+            const STLBitsetDeterminant& detI = space[I];
 
             std::vector<int> aocc = detI.get_alfa_occ();
             size_t noalpha = aocc.size();
@@ -248,7 +247,7 @@ SigmaVectorList::SigmaVectorList(const std::vector<STLBitsetDeterminant>& space,
     {
         det_hash map_bb_ann;
         for (size_t I = 0; I < max_I; ++I) {
-            STLBitsetDeterminant detI = space[I];
+            const STLBitsetDeterminant& detI = space[I];
 
             std::vector<int> bocc = detI.get_beta_occ();
 
@@ -290,7 +289,7 @@ SigmaVectorList::SigmaVectorList(const std::vector<STLBitsetDeterminant>& space,
     {
         det_hash map_ab_ann;
         for (size_t I = 0; I < max_I; ++I) {
-            STLBitsetDeterminant detI = space[I];
+            const STLBitsetDeterminant& detI = space[I];
 
             std::vector<int> aocc = detI.get_alfa_occ();
             std::vector<int> bocc = detI.get_beta_occ();

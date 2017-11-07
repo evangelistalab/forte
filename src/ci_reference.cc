@@ -64,6 +64,7 @@ CI_Reference::CI_Reference(std::shared_ptr<Wavefunction> wfn, Options& options,
     mo_symmetry_ = mo_space_info_->symmetry("ACTIVE");
 
     // Size of total active space
+    nact_ = mo_space_info_->size("ACTIVE");
     nactpi_ = mo_space_info_->get_dimension("ACTIVE");
 
     // Size of subspace
@@ -105,8 +106,7 @@ void CI_Reference::build_reference(std::vector<STLBitsetDeterminant>& ref_space)
 }
 
 void CI_Reference::build_ci_reference(std::vector<STLBitsetDeterminant>& ref_space) {
-
-    STLBitsetDeterminant det = fci_ints_->determinant(get_occupation());
+    STLBitsetDeterminant det(get_occupation());
     det.print();
 
     ref_space.push_back(det);
@@ -296,7 +296,6 @@ void CI_Reference::build_cas_reference(std::vector<STLBitsetDeterminant>& ref_sp
                 // Check symmetry
                 if (sym == root_sym_) {
                     ref_space.push_back(det);
-                    //                    det.print();
                 }
 
             } while (std::next_permutation(tmp_det_b.begin(), tmp_det_b.begin() + na));
@@ -396,9 +395,9 @@ std::vector<std::tuple<double, int, int>> CI_Reference::sym_labeled_orbitals(std
     return labeled_orb;
 }
 
-std::vector<int> CI_Reference::get_occupation() {
+STLBitsetDeterminant CI_Reference::get_occupation() {
     int nact = mo_space_info_->size("ACTIVE");
-    std::vector<int> occupation(2 * nact, 0);
+    STLBitsetDeterminant det(nact);
 
     // nyms denotes the number of electrons needed to assign symmetry and
     // multiplicity
@@ -419,10 +418,10 @@ std::vector<int> CI_Reference::get_occupation() {
 
     // Build initial reference determinant from restricted reference
     for (int i = 0; i < nalpha_; ++i) {
-        occupation[std::get<2>(labeled_orb_en[i])] = 1;
+        det.set_alfa_bit(std::get<2>(labeled_orb_en[i]), true);
     }
     for (int i = 0; i < nbeta_; ++i) {
-        occupation[nact + std::get<2>(labeled_orb_en[i])] = 1;
+        det.set_beta_bit(std::get<2>(labeled_orb_en[i]), true);
     }
 
     // Loop over as many outer-shell electrons as needed to get correct sym
@@ -430,7 +429,8 @@ std::vector<int> CI_Reference::get_occupation() {
 
         bool add = false;
         // Remove electron from highest energy docc
-        occupation[std::get<2>(labeled_orb_en[nalpha_ - k])] = 0;
+        det.set_alfa_bit(std::get<2>(labeled_orb_en[nalpha_ - k]), false);
+        //        occupation[std::get<2>(labeled_orb_en[nalpha_ - k])] = 0;
 
         // Determine proper symmetry for new occupation
         // orb_sym = ms_;
@@ -449,8 +449,9 @@ std::vector<int> CI_Reference::get_occupation() {
         // reached
         for (int i = nalpha_ - k, maxi = nact; i < maxi; ++i) {
             if (orb_sym == std::get<1>(labeled_orb_en[i]) and
-                occupation[std::get<2>(labeled_orb_en[i])] != 1) {
-                occupation[std::get<2>(labeled_orb_en[i])] = 1;
+                det.get_alfa_bit(std::get<2>(labeled_orb_en[i])) != true) {
+                det.set_alfa_bit(std::get<2>(labeled_orb_en[i]), true);
+                //                occupation[std::get<2>(labeled_orb_en[i])] = true;
                 add = true;
                 break;
             } else {
@@ -460,14 +461,15 @@ std::vector<int> CI_Reference::get_occupation() {
         // If a new occupation could not be created, put electron back and
         // remove a different one
         if (!add) {
-            occupation[std::get<2>(labeled_orb_en[nalpha_ - k])] = 1;
+            det.set_alfa_bit(std::get<2>(labeled_orb_en[nalpha_ - k]), true);
+            //            occupation[] = 1;
             ++k;
         } else {
             break;
         }
 
     } // End loop over k
-    return occupation;
+    return det;
 }
 }
 }

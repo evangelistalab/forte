@@ -236,6 +236,8 @@ void forte_old_options(Options& options) {
     options.add_int("DL_COLLAPSE_PER_ROOT", 2);
     /*- The maxim number of trial vectors -*/
     options.add_int("DL_SUBSPACE_PER_ROOT", 8);
+    /*- The maxim number of trial vectors -*/
+    options.add_int("SIGMA_VECTOR_MAX_MEMORY", 10000000);
 
     //////////////////////////////////////////////////////////////
     ///         OPTIONS FOR THE CASSCF CODE
