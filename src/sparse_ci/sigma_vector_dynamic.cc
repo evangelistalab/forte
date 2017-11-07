@@ -44,21 +44,23 @@
 namespace psi {
 namespace forte {
 
-size_t count_aa_total;
-size_t count_bb_total;
-size_t count_aaaa_total;
-size_t count_abab_total;
-size_t count_bbbb_total;
+#define SIGMA_VEC_DEBUG 0
 
-size_t count_aa;
-size_t count_bb;
-size_t count_aaaa;
-size_t count_abab;
-size_t count_bbbb;
+#if SIGMA_VEC_DEBUG
+size_t count_aa_total = 0;
+size_t count_bb_total = 0;
+size_t count_aaaa_total = 0;
+size_t count_abab_total = 0;
+size_t count_bbbb_total = 0;
+
+size_t count_aa = 0;
+size_t count_bb = 0;
+size_t count_aaaa = 0;
+size_t count_abab = 0;
+size_t count_bbbb = 0;
+#endif
 
 void print_SigmaVectorDynamic_stats();
-
-#define SIGMA_VEC_DEBUG 0
 
 SigmaVectorDynamic::SigmaVectorDynamic(const DeterminantHashVec& space,
                                        std::shared_ptr<FCIIntegrals> fci_ints, size_t max_memory)
@@ -764,184 +766,3 @@ void SigmaVectorDynamic::compute_abab_coupling(const UI64Determinant::bit_t& det
 }
 }
 }
-
-/*
- *
- * void SigmaVectorDynamic::compute_sigma_aa_fast_search_group_ui64(SharedVector sigma,
-                                                                 SharedVector b) {
-    timer energy_timer("sigma_aa");
-    for (size_t I = 0; I < size_; ++I)
-        temp_sigma_[I] = 0.0;
-    for (size_t I = 0; I < size_; ++I) {
-        size_t addI = b_sorted_string_list_ui64_.add(I);
-        temp_b_[I] = b->get(addI);
-    }
-
-    // loop over all determinants
-    const auto& sorted_half_dets = b_sorted_string_list_ui64_.sorted_half_dets();
-    for (const auto& Ib : sorted_half_dets) {
-        compute_aa_coupling_compare_group_ui64(Ib, temp_b_);
-    }
-
-    // Add sigma using the determinant address used in the DeterminantHashVector object
-    double* sigma_p = sigma->pointer();
-    for (size_t I = 0; I < size_; ++I) {
-        size_t addI = b_sorted_string_list_ui64_.add(I);
-        sigma_p[addI] += temp_sigma_[I];
-    }
-}
-
-void SigmaVectorDynamic::compute_sigma_bb_fast_search_group_ui64(SharedVector sigma,
-                                                                 SharedVector b) {
-    timer energy_timer("sigma_bb");
-    for (size_t I = 0; I < size_; ++I)
-        temp_sigma_[I] = 0.0;
-    for (size_t I = 0; I < size_; ++I) {
-        size_t addI = a_sorted_string_list_ui64_.add(I);
-        temp_b_[I] = b->get(addI);
-    }
-
-    // loop over all determinants
-    const auto& sorted_half_dets = a_sorted_string_list_ui64_.sorted_half_dets();
-    for (const auto& Ia : sorted_half_dets) {
-        compute_bb_coupling_compare_group_ui64(Ia, temp_b_);
-    }
-
-    // Add sigma using the determinant address used in the DeterminantHashVector object
-    double* sigma_p = sigma->pointer();
-    for (size_t I = 0; I < size_; ++I) {
-        size_t addI = a_sorted_string_list_ui64_.add(I);
-        sigma_p[addI] += temp_sigma_[I];
-    }
-}
-
-void SigmaVectorDynamic::compute_sigma_abab_fast_search_group_ui64(SharedVector sigma,
-                                                                   SharedVector b) {
-    timer energy_timer("sigma_abab");
-    for (size_t I = 0; I < size_; ++I)
-        temp_sigma_[I] = 0.0;
-    for (size_t I = 0; I < size_; ++I) {
-        size_t addI = a_sorted_string_list_ui64_.add(I);
-        temp_b_[I] = b->get(addI);
-    }
-    double* sigma_p = sigma->pointer();
-    double* b_p = b->pointer();
-
-    UI64Determinant::bit_t detIJa_common;
-    // loop over all determinants
-    const auto& sorted_half_dets = a_sorted_string_list_ui64_.sorted_half_dets();
-    for (const auto& detIa : sorted_half_dets) {
-        for (const auto& detJa : sorted_half_dets) {
-            detIJa_common = detIa ^ detJa;
-            int ndiff = ui64_bit_count(detIJa_common);
-            if (ndiff == 2) {
-                int i, a;
-                for (int p = 0; p < nmo_; ++p) {
-                    const bool la_p = ui64_get_bit(detIa, p);
-                    const bool ra_p = ui64_get_bit(detJa, p);
-                    if (la_p ^ ra_p) {
-                        i = la_p ? p : i;
-                        a = ra_p ? p : a;
-                    }
-                }
-                double sign = ui64_slater_sign(detIa, i, a);
-                compute_bb_coupling_compare_singles_group_ui64(detIa, detJa, sign, i, a, temp_b_);
-            }
-        }
-    }
-    // Add sigma using the determinant address used in the DeterminantHashVector object
-    for (size_t I = 0; I < size_; ++I) {
-        size_t addI = a_sorted_string_list_ui64_.add(I);
-        sigma_p[addI] += temp_sigma_[I];
-    }
-}
-
-
-void SigmaVectorDynamic::sigma_aa_task(size_t task_id, size_t num_tasks) {
-    // loop over all determinants
-    const auto& sorted_half_dets = b_sorted_string_list_ui64_.sorted_half_dets();
-    size_t num_half_dets = sorted_half_dets.size();
-    for (size_t group = task_id; group < num_half_dets; group += num_tasks) {
-        const auto& Ib = sorted_half_dets[group];
-        compute_aa_coupling_compare_group_ui64(Ib, temp_b_);
-    }
-}
-
-
-void SigmaVectorDynamic::sigma_bb_task(size_t task_id, size_t num_tasks) {
-    // loop over all determinants
-    const auto& sorted_half_dets = a_sorted_string_list_ui64_.sorted_half_dets();
-    size_t num_half_dets = sorted_half_dets.size();
-    for (size_t group = task_id; group < num_half_dets; group += num_tasks) {
-        const auto& Ia = sorted_half_dets[group];
-        compute_bb_coupling_compare_group_ui64(Ia, temp_b_);
-    }
-}
-
-
-void SigmaVectorDynamic::sigma_abab_task(size_t task_id, size_t num_tasks) {
-    UI64Determinant::bit_t detIJa_common;
-    // loop over all determinants
-    const auto& sorted_half_dets = a_sorted_string_list_ui64_.sorted_half_dets();
-    size_t num_half_dets = sorted_half_dets.size();
-    // loop over all determinants
-    for (size_t group = task_id; group < num_half_dets; group += num_tasks) {
-        const auto& detIa = sorted_half_dets[group];
-        for (const auto& detJa : sorted_half_dets) {
-            detIJa_common = detIa ^ detJa;
-            int ndiff = ui64_bit_count(detIJa_common);
-            if (ndiff == 2) {
-                int i, a;
-                for (int p = 0; p < nmo_; ++p) {
-                    const bool la_p = ui64_get_bit(detIa, p);
-                    const bool ra_p = ui64_get_bit(detJa, p);
-                    if (la_p ^ ra_p) {
-                        i = la_p ? p : i;
-                        a = ra_p ? p : a;
-                    }
-                }
-                double sign = ui64_slater_sign(detIa, i, a);
-                compute_bb_coupling_compare_singles_group_ui64(detIa, detJa, sign, i, a, temp_b_);
-            }
-        }
-    }
-}
-
-
-void SigmaVectorDynamic::compute_bb_coupling_compare_singles_group_ui64(
-    const UI64Determinant::bit_t& detIa, const UI64Determinant::bit_t& detJa, double sign, int i,
-    int a, const std::vector<double>& b) {
-    const auto& sorted_dets = a_sorted_string_list_ui64_.sorted_dets();
-    const auto& range_I = a_sorted_string_list_ui64_.range(detIa);
-    const auto& range_J = a_sorted_string_list_ui64_.range(detJa);
-    UI64Determinant::bit_t Ib;
-    UI64Determinant::bit_t Jb;
-    UI64Determinant::bit_t IJb;
-    size_t first_I = range_I.first;
-    size_t last_I = range_I.second;
-    size_t first_J = range_J.first;
-    size_t last_J = range_J.second;
-    double sigma_I = 0.0;
-    for (size_t posI = first_I; posI < last_I; ++posI) {
-        sigma_I = 0.0;
-        Ib = sorted_dets[posI].get_beta_bits();
-        for (size_t posJ = first_J; posJ < last_J; ++posJ) {
-            Jb = sorted_dets[posJ].get_beta_bits();
-#if SIGMA_VEC_DEBUG
-            count_abab_total++;
-#endif
-            // find common bits
-            IJb = Jb ^ Ib;
-            int ndiff = ui64_bit_count(IJb);
-            if (ndiff == 2) {
-                double H_IJ = sign * slater_rules_double_alpha_beta_pre(i, a, Ib, Jb, fci_ints_);
-                sigma_I += H_IJ * b[posJ];
-#if SIGMA_VEC_DEBUG
-                count_abab++;
-#endif
-            }
-        }
-        temp_sigma_[posI] += sigma_I;
-    }
-}
-*/
