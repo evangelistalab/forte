@@ -22,7 +22,7 @@ psi4command = ""
 
 print "Running forte tests using the psi4 executable found in:\n  %s\n" % psi4command
 
-fci_tests = ["fci-1","fci-2","fci-3","fci-4","fci-5","fci-6","fci-7","fci-rdms-1","fci-rdms-2","fci-one-electron","fci-ex-1",
+fci_tests = ["fci-1","fci-2","fci-3","fci-4","fci-5","fci-7","fci-rdms-1","fci-rdms-2","fci-one-electron","fci-ex-1",
              "fci-ecp-1","fci-ecp-2"]
 
 lambda_ci_tests = ["casci-1","casci-2","casci-3","casci-4",
@@ -33,8 +33,8 @@ adaptive_ci_tests = ["aci-1","aci-2","aci-3",
                      "aci-4","aci-5",
                      "aci-7","aci-8","aci-9",
                      "aci-10","aci-11","aci-12",
-                     "aci-13","aci-14","aci-15","aci-16","aci-17","aci_scf-1","cis-aci-1",
-                     "aci-mrcisd-1","aci-mrcisd-2"]
+                     "aci-13","aci-14","aci-15","aci-16","aci-17","aci_scf-1","cis-aci-1"]
+                     #"aci-mrcisd-1","aci-mrcisd-2"]
 
 pci_tests = ["pci-1","pci-2","pci-3","pci-4","pci-5", "pci-6", "pci-7", "pci-8","pci-9"]
 pci_hashvec_tests = ["pci_hashvec-1","pci_hashvec-2","pci_hashvec-3","pci_hashvec-4","pci_hashvec-5", "pci_hashvec-6"]

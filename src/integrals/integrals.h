@@ -95,9 +95,6 @@ class ForteIntegrals {
     /// Return the number of irreducible representations
     int nirrep() const { return nirrep_; }
 
-    /// Return the total number of correlated molecular orbitals (this number
-    /// excludes frozen MOs)
-    size_t ncmo() const { return ncmo_; }
 
     /// Return the number of frozen core orbitals per irrep
     Dimension& frzcpi() { return frzcpi_; }
@@ -109,6 +106,10 @@ class ForteIntegrals {
     Dimension& ncmopi() { return ncmopi_; }
 
   public:
+    /// Return the total number of correlated molecular orbitals (this number
+    /// excludes frozen MOs)
+    size_t ncmo() const { return ncmo_; }
+
     /// Set printing level
     void set_print(int print) { print_ = print; }
 

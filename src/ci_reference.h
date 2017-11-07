@@ -67,6 +67,9 @@ class CI_Reference // : public Wavefunction
     // Pointer to the MOSpaceInfo object
     std::shared_ptr<MOSpaceInfo> mo_space_info_;
 
+    // Number of active MOs
+    int nact_;
+
     // Symmetry of each active MO
     Dimension mo_symmetry_;
 
@@ -84,7 +87,7 @@ class CI_Reference // : public Wavefunction
     void build_ci_reference(std::vector<STLBitsetDeterminant>& ref_space);
     void build_cas_reference(std::vector<STLBitsetDeterminant>& ref_space);
 
-    std::vector<int> get_occupation();
+    STLBitsetDeterminant get_occupation();
 
     std::shared_ptr<FCIIntegrals> fci_ints_;
 
@@ -99,6 +102,9 @@ class CI_Reference // : public Wavefunction
 
     /// Build a reference
     void build_reference(std::vector<STLBitsetDeterminant>& ref_space);
+
+    /// Set the reference type
+    void set_ref_type(const std::string& ref_type) { ref_type_ = ref_type; }
 };
 }
 } // End Namespaces

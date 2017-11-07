@@ -49,6 +49,7 @@
 #include "psi4/libqt/qt.h"
 
 #include "ewci.h"
+#include "../ci_reference.h"
 
 using namespace psi;
 using namespace psi::forte::GeneratorType_EWCI;
@@ -105,7 +106,7 @@ ElementwiseCI::ElementwiseCI(SharedWavefunction ref_wfn, Options& options,
                              std::shared_ptr<ForteIntegrals> ints,
                              std::shared_ptr<MOSpaceInfo> mo_space_info)
     : Wavefunction(options), ints_(ints), mo_space_info_(mo_space_info),
-      fast_variational_estimate_(false) {
+      fast_variational_estimate_(false), reference_determinant_(0) {
     // Copy the wavefunction information
     shallow_copy(ref_wfn);
     reference_wavefunction_ = ref_wfn;
@@ -163,7 +164,12 @@ void ElementwiseCI::startup() {
     nbeta_ = nactel_ - nalpha_;
 
     // Build the reference determinant and compute its energy
-    reference_determinant_ = Determinant(get_occupation());
+    std::vector<STLBitsetDeterminant> reference_vec;
+    CI_Reference ref(reference_wavefunction_, options_, mo_space_info_, fci_ints_,
+                     wavefunction_multiplicity_, ms, wavefunction_symmetry_);
+    ref.set_ref_type("HF");
+    ref.build_reference(reference_vec);
+    reference_determinant_ = reference_vec[0];
 
     //    outfile->Printf("\n  The reference determinant is:\n");
     //    reference_determinant_.print();
@@ -349,24 +355,23 @@ double ElementwiseCI::estimate_high_energy() {
     double high_obt_energy = 0.0;
     int nea = 0, neb = 0;
     std::vector<std::pair<double, int>> obt_energies;
-    auto bits_ = reference_determinant_.bits_;
     Determinant high_det(reference_determinant_);
     for (int i = 0; i < nact_; i++) {
-        if (bits_[i]) {
+        if (reference_determinant_.get_alfa_bit(i)) {
             ++nea;
             high_det.destroy_alfa_bit(i);
         }
-        if (bits_[nact_ + i]) {
+        if (reference_determinant_.get_beta_bit(i)) {
             ++neb;
             high_det.destroy_beta_bit(i);
         }
 
         double temp = fci_ints_->oei_a(i, i);
         for (int p = 0; p < nact_; ++p) {
-            if (bits_[p]) {
+            if (reference_determinant_.get_alfa_bit(p)) {
                 temp += fci_ints_->tei_aa(i, p, i, p);
             }
-            if (bits_[nact_ + p]) {
+            if (reference_determinant_.get_beta_bit(p)) {
                 temp += fci_ints_->tei_ab(i, p, i, p);
             }
         }
@@ -885,12 +890,8 @@ bool ElementwiseCI::converge_test() {
 
 double ElementwiseCI::initial_guess(det_hashvec& dets_hashvec, std::vector<double>& C) {
 
-    // Use the reference determinant as a starting point
-    std::vector<bool> alfa_bits = reference_determinant_.get_alfa_bits_vector_bool();
-    std::vector<bool> beta_bits = reference_determinant_.get_beta_bits_vector_bool();
-
     // Do one time step starting from the reference determinant
-    Determinant bs_det(alfa_bits, beta_bits);
+    Determinant bs_det(reference_determinant_);
     dets_hashvec.clear();
     dets_hashvec.add(bs_det);
     std::vector<double> start_C(1, 1.0);
@@ -3026,22 +3027,22 @@ void ElementwiseCI::compute_double_couplings(double double_coupling_threshold) {
 }
 
 void ElementwiseCI::compute_couplings_half(const det_hashvec& dets, size_t cut_size) {
-    bit_t andBits, orBits;
+    STLBitsetDeterminant andBits(dets[0]), orBits(dets[0]);
     andBits.flip();
     for (size_t i = 0; i < cut_size; ++i) {
-        andBits &= dets[i].bits_;
-        orBits |= dets[i].bits_;
+        andBits &= dets[i];
+        orBits |= dets[i];
     }
-    bit_t actBits = andBits ^ orBits;
+    STLBitsetDeterminant actBits = andBits ^ orBits;
 
     a_couplings_.clear();
     a_couplings_.resize(nact_);
     for (int i = 0; i < nact_; ++i) {
-        if (!actBits[i])
+        if (!actBits.get_alfa_bit(i))
             continue;
         std::vector<std::tuple<int, double>> i_couplings;
         for (int a = i + 1; a < nact_; ++a) {
-            if (!actBits[a])
+            if (!actBits.get_alfa_bit(a))
                 continue;
             if ((mo_symmetry_[i] ^ mo_symmetry_[a]) == 0) {
                 double Hia = fci_ints_->oei_a(i, a);
@@ -3057,11 +3058,11 @@ void ElementwiseCI::compute_couplings_half(const det_hashvec& dets, size_t cut_s
     b_couplings_.clear();
     b_couplings_.resize(nact_);
     for (int i = 0; i < nact_; ++i) {
-        if (!actBits[i + nact_])
+        if (!actBits.get_beta_bit(i))
             continue;
         std::vector<std::tuple<int, double>> i_couplings;
         for (int a = i + 1; a < nact_; ++a) {
-            if (!actBits[a + nact_])
+            if (!actBits.get_beta_bit(a))
                 continue;
             if ((mo_symmetry_[i] ^ mo_symmetry_[a]) == 0) {
                 double Hia = fci_ints_->oei_b(i, a);
@@ -3076,17 +3077,17 @@ void ElementwiseCI::compute_couplings_half(const det_hashvec& dets, size_t cut_s
 
     aa_couplings_.clear();
     for (int i = 0; i < nact_; ++i) {
-        if (!actBits[i])
+        if (!actBits.get_alfa_bit(i))
             continue;
         for (int j = i + 1; j < nact_; ++j) {
-            if (!actBits[j])
+            if (!actBits.get_alfa_bit(j))
                 continue;
             std::vector<std::tuple<int, int, double>> ij_couplings;
             for (int a = i + 1; a < nact_; ++a) {
-                if (a == j or !actBits[a])
+                if (a == j or !actBits.get_alfa_bit(a))
                     continue;
                 for (int b = a + 1; b < nact_; ++b) {
-                    if (b == j or !actBits[b])
+                    if (b == j or !actBits.get_alfa_bit(b))
                         continue;
                     if ((mo_symmetry_[i] ^ mo_symmetry_[j] ^ mo_symmetry_[a] ^ mo_symmetry_[b]) ==
                         0) {
@@ -3104,17 +3105,17 @@ void ElementwiseCI::compute_couplings_half(const det_hashvec& dets, size_t cut_s
 
     ab_couplings_.clear();
     for (int i = 0; i < nact_; ++i) {
-        if (!actBits[i])
+        if (!actBits.get_alfa_bit(i))
             continue;
         for (int j = 0; j < nact_; ++j) {
-            if (!actBits[j + nact_])
+            if (!actBits.get_beta_bit(j))
                 continue;
             std::vector<std::tuple<int, int, double>> ij_couplings;
             for (int a = i + 1; a < nact_; ++a) {
-                if (a == i or !actBits[a])
+                if (a == i or !actBits.get_alfa_bit(a))
                     continue;
                 for (int b = 0; b < nact_; ++b) {
-                    if (b == j or !actBits[b + nact_])
+                    if (b == j or !actBits.get_beta_bit(b))
                         continue;
                     if ((mo_symmetry_[i] ^ mo_symmetry_[j] ^ mo_symmetry_[a] ^ mo_symmetry_[b]) ==
                         0) {
@@ -3132,17 +3133,17 @@ void ElementwiseCI::compute_couplings_half(const det_hashvec& dets, size_t cut_s
 
     bb_couplings_.clear();
     for (int i = 0; i < nact_; ++i) {
-        if (!actBits[i + nact_])
+        if (!actBits.get_beta_bit(i))
             continue;
         for (int j = i + 1; j < nact_; ++j) {
-            if (!actBits[j + nact_])
+            if (!actBits.get_beta_bit(j))
                 continue;
             std::vector<std::tuple<int, int, double>> ij_couplings;
             for (int a = i + 1; a < nact_; ++a) {
-                if (a == j or !actBits[a + nact_])
+                if (a == j or !actBits.get_beta_bit(a))
                     continue;
                 for (int b = a + 1; b < nact_; ++b) {
-                    if (b == j or !actBits[b + nact_])
+                    if (b == j or !actBits.get_beta_bit(b))
                         continue;
                     if ((mo_symmetry_[i] ^ mo_symmetry_[j] ^ mo_symmetry_[a] ^ mo_symmetry_[b]) ==
                         0) {
@@ -3201,192 +3202,6 @@ std::vector<std::tuple<double, int, int>> ElementwiseCI::sym_labeled_orbitals(st
         std::sort(labeled_orb.begin(), labeled_orb.end());
     }
     return labeled_orb;
-}
-
-std::vector<int> ElementwiseCI::get_occupation() {
-
-    std::vector<int> occupation(2 * nact_, 0);
-
-    // Get reference type
-    std::string ref_type = options_.get_str("REFERENCE");
-    // if(!quiet_mode_) outfile->Printf("\n  Using %s reference.\n",
-    // ref_type.c_str());
-
-    // nyms denotes the number of electrons needed to assign symmetry and
-    // multiplicity
-    int nsym = wavefunction_multiplicity_ - 1;
-    int orb_sym = wavefunction_symmetry_;
-
-    if (wavefunction_multiplicity_ == 1) {
-        nsym = 2;
-    }
-
-    // Grab an ordered list of orbital energies, sym labels, and idxs
-    std::vector<std::tuple<double, int, int>> labeled_orb_en;
-    std::vector<std::tuple<double, int, int>> labeled_orb_en_alfa;
-    std::vector<std::tuple<double, int, int>> labeled_orb_en_beta;
-
-    // For a restricted reference
-    if (ref_type == "RHF" or ref_type == "RKS" or ref_type == "ROHF") {
-        labeled_orb_en = sym_labeled_orbitals("RHF");
-
-        // Build initial reference determinant from restricted reference
-        for (int i = 0; i < nalpha_; ++i) {
-            occupation[std::get<2>(labeled_orb_en[i])] = 1;
-        }
-        for (int i = 0; i < nbeta_; ++i) {
-            occupation[nact_ + std::get<2>(labeled_orb_en[i])] = 1;
-        }
-
-        // Loop over as many outer-shell electrons as needed to get correct sym
-        for (int k = 1; k <= nsym;) {
-
-            bool add = false;
-            // Remove electron from highest energy docc
-            occupation[std::get<2>(labeled_orb_en[nalpha_ - k])] = 0;
-
-            // Determine proper symmetry for new occupation
-            orb_sym = wavefunction_symmetry_;
-
-            if (wavefunction_multiplicity_ == 1) {
-                orb_sym = std::get<1>(labeled_orb_en[nalpha_ - 1]) ^ orb_sym;
-            } else {
-                for (int i = 1; i <= nsym; ++i) {
-                    orb_sym = std::get<1>(labeled_orb_en[nalpha_ - i]) ^ orb_sym;
-                }
-                orb_sym = std::get<1>(labeled_orb_en[nalpha_ - k]) ^ orb_sym;
-            }
-
-            // Add electron to lowest-energy orbital of proper symmetry
-            // Loop from current occupation to max MO until correct orbital is
-            // reached
-            for (int i = nalpha_ - k, maxi = nact_; i < maxi; ++i) {
-                if (orb_sym == std::get<1>(labeled_orb_en[i]) and
-                    occupation[std::get<2>(labeled_orb_en[i])] != 1) {
-                    occupation[std::get<2>(labeled_orb_en[i])] = 1;
-                    add = true;
-                    break;
-                } else {
-                    continue;
-                }
-            }
-            // If a new occupation could not be created, put electron back and
-            // remove a different one
-            if (!add) {
-                occupation[std::get<2>(labeled_orb_en[nalpha_ - k])] = 1;
-                ++k;
-            } else {
-                break;
-            }
-
-        } // End loop over k
-
-    } else {
-        labeled_orb_en_alfa = sym_labeled_orbitals("ALFA");
-        labeled_orb_en_beta = sym_labeled_orbitals("BETA");
-
-        // For an unrestricted reference
-        // Make the reference
-        // For singlets, this will be closed-shell
-
-        for (int i = 0; i < nalpha_; ++i) {
-            occupation[std::get<2>(labeled_orb_en_alfa[i])] = 1;
-        }
-        for (int i = 0; i < nbeta_; ++i) {
-            occupation[std::get<2>(labeled_orb_en_beta[i]) + nact_] = 1;
-        }
-
-        if (nalpha_ >= nbeta_) {
-
-            // Loop over k
-            for (int k = 1; k < nsym;) {
-
-                bool add = false;
-                // Remove highest energy alpha electron
-                occupation[std::get<2>(labeled_orb_en_alfa[nalpha_ - k])] = 0;
-
-                // Determine proper symmetry for new electron
-
-                orb_sym = wavefunction_symmetry_;
-
-                if (wavefunction_multiplicity_ == 1) {
-                    orb_sym = std::get<1>(labeled_orb_en_alfa[nalpha_ - 1]) ^ orb_sym;
-                } else {
-                    for (int i = 1; i <= nsym; ++i) {
-                        orb_sym = std::get<1>(labeled_orb_en_alfa[nalpha_ - i]) ^ orb_sym;
-                    }
-                    orb_sym = std::get<1>(labeled_orb_en_alfa[nalpha_ - k]) ^ orb_sym;
-                }
-
-                // Add electron to lowest-energy orbital of proper symmetry
-                for (int i = nalpha_ - k; i < nactel_; ++i) {
-                    if (orb_sym == std::get<1>(labeled_orb_en_alfa[i]) and
-                        occupation[std::get<2>(labeled_orb_en_alfa[i])] != 1) {
-                        occupation[std::get<2>(labeled_orb_en_alfa[i])] = 1;
-                        add = true;
-                        break;
-                    } else {
-                        continue;
-                    }
-                }
-
-                // If a new occupation could not be made,
-                // add electron back and try a different one
-
-                if (!add) {
-                    occupation[std::get<2>(labeled_orb_en_alfa[nalpha_ - k])] = 1;
-                    ++k;
-                } else {
-                    break;
-                }
-
-            }    //	End loop over k
-        } else { // End if(nalpha_ >= nbeta_ )
-
-            for (int k = 1; k < nsym;) {
-
-                bool add = false;
-
-                // Remove highest-energy beta electron
-                occupation[std::get<2>(labeled_orb_en_beta[nbeta_ - k])] = 0;
-
-                // Determine proper symetry for new occupation
-                orb_sym = wavefunction_symmetry_;
-
-                if (wavefunction_multiplicity_ == 1) {
-                    orb_sym = std::get<1>(labeled_orb_en_beta[nbeta_ - 1]) ^ orb_sym;
-                } else {
-                    for (int i = 1; i <= nsym; ++i) {
-                        orb_sym = std::get<1>(labeled_orb_en_beta[nbeta_ - i]) ^ orb_sym;
-                    }
-                    orb_sym = std::get<1>(labeled_orb_en_beta[nbeta_ - k]) ^ orb_sym;
-                }
-
-                // Add electron to lowest-energy beta orbital
-
-                for (int i = nbeta_ - k; i < nactel_; ++i) {
-                    if (orb_sym == std::get<1>(labeled_orb_en_beta[i]) and
-                        occupation[std::get<2>(labeled_orb_en_beta[i])] != 1) {
-                        occupation[std::get<2>(labeled_orb_en_beta[i])] = 1;
-                        add = true;
-                        break;
-                    }
-                }
-
-                // If a new occupation could not be made,
-                // replace the electron and try again
-
-                if (!add) {
-                    occupation[std::get<2>(labeled_orb_en_beta[nbeta_ - k])] = 1;
-                    ++k;
-                } else {
-                    break;
-                }
-
-            } // End loop over k
-        }     // End if nalpha_ < nbeta_
-    }
-    return occupation;
 }
 }
 } // EndNamespaces

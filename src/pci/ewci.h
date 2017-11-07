@@ -400,8 +400,6 @@ class ElementwiseCI : public Wavefunction {
     /// Returns a vector of orbital energy, sym label pairs
     std::vector<std::tuple<double, int, int>> sym_labeled_orbitals(std::string type);
 
-    /// Get the reference occupation
-    std::vector<int> get_occupation();
     /// Sort the determinants by coefficients
     void sortHashVecByCoefficient(det_hashvec& dets_hashvec, std::vector<double>& C);
 };

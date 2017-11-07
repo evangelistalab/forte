@@ -35,8 +35,6 @@
 namespace psi {
 namespace forte {
 
-bool descending_pair(const std::pair<double, size_t> p1, const std::pair<double, size_t> p2);
-
 DeterminantHashVec::DeterminantHashVec(std::vector<STLBitsetDeterminant>& dets) {
     // The dimension of the wavefunction
     wfn_ = det_hashvec(dets);
@@ -65,11 +63,15 @@ std::vector<STLBitsetDeterminant> DeterminantHashVec::determinants() const {
     return wfn_.toVector();
 }
 
+std::vector<std::pair<STLBitsetDeterminant,size_t>> DeterminantHashVec::determinant_index_pairs() const {
+    return wfn_.toKeyIndex();
+}
+
 size_t DeterminantHashVec::size() const { return wfn_.size(); }
 
 void DeterminantHashVec::add(const STLBitsetDeterminant& det) { wfn_.add(det); }
 
-STLBitsetDeterminant DeterminantHashVec::get_det(const size_t value) const {
+const STLBitsetDeterminant& DeterminantHashVec::get_det(const size_t value) const {
     // Iterate through map to find the right one
     // Possibly a faster way to do this?
     return wfn_[value];
@@ -77,8 +79,9 @@ STLBitsetDeterminant DeterminantHashVec::get_det(const size_t value) const {
 
 size_t DeterminantHashVec::get_idx(const STLBitsetDeterminant& det) const { return wfn_.find(det); }
 
-void DeterminantHashVec::make_spin_complete() {
-    int nmo = wfn_[0].nmo();
+void DeterminantHashVec::make_spin_complete() {  
+    int nmo = wfn_[0].find_nmo();
+
     size_t ndet_added = 0;
     std::vector<size_t> closed(nmo, 0);
     std::vector<size_t> open(nmo, 0);
@@ -210,7 +213,7 @@ void DeterminantHashVec::subspace(DeterminantHashVec& dets, SharedMatrix evecs,
     //        //      outfile->Printf("\n %1.6f  %zu  %s", evecs->get(it->second,
     //        //      root), it->second, *it.str().c_str());
     //    }
-    std::sort(det_weights.begin(), det_weights.end(), descending_pair);
+    std::sort(det_weights.rbegin(), det_weights.rend());
 
     // Build this wfn with most important subset
     for (size_t I = 0; I < dim; ++I) {
@@ -225,7 +228,7 @@ void DeterminantHashVec::subspace(DeterminantHashVec& dets, SharedMatrix evecs,
 }
 
 void DeterminantHashVec::merge(DeterminantHashVec& dets) {
-    for (STLBitsetDeterminant d : dets.wfn_) {
+    for (const STLBitsetDeterminant& d : dets.wfn_) {
         wfn_.add(d);
     }
 }
