@@ -122,6 +122,8 @@ class CASSCF : public Wavefunction {
     void set_up_fci();
     /// Set up a SA-FCI
     void set_up_sa_fci();
+    /// Set up FCI_MO
+    void set_up_fcimo();
     /// check the cas_ci energy with spin-free RDM
     double cas_check(Reference cas);
     /// Read all the mospace info and assign correct dimensions
