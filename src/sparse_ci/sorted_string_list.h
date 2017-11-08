@@ -46,7 +46,7 @@ namespace forte {
 class SortedStringList {
   public:
     SortedStringList(const DeterminantHashVec& space, std::shared_ptr<FCIIntegrals> fci_ints,
-                     STLBitsetDeterminant::SpinType sorted_string_spin);
+                     DetSpinType sorted_string_spin);
 
     const std::vector<STLBitsetDeterminant>& sorted_dets() const;
     const std::vector<STLBitsetDeterminant>& sorted_half_dets() const;
@@ -62,7 +62,7 @@ class SortedStringList {
   protected:
     int nmo_ = 0;
     size_t num_dets_ = 0;
-    STLBitsetDeterminant::SpinType zero_spin_type_;
+    DetSpinType zero_spin_type_;
     std::vector<STLBitsetDeterminant> sorted_half_dets_;
     std::vector<STLBitsetDeterminant> sorted_dets_;
     det_hash<std::pair<size_t, size_t>> first_string_range_;
@@ -75,7 +75,7 @@ class SortedStringList {
 class SortedStringList_UI64 {
   public:
     SortedStringList_UI64(const DeterminantHashVec& space, std::shared_ptr<FCIIntegrals> fci_ints,
-                          STLBitsetDeterminant::SpinType sorted_string_spin);
+                          DetSpinType sorted_string_spin);
 
     const std::vector<UI64Determinant>& sorted_dets() const;
     const std::vector<UI64Determinant::bit_t>& sorted_half_dets() const;
@@ -86,7 +86,7 @@ class SortedStringList_UI64 {
   protected:
     int nmo_ = 0;
     size_t num_dets_ = 0;
-    STLBitsetDeterminant::SpinType sorted_spin_type_;
+    DetSpinType sorted_spin_type_;
     std::vector<UI64Determinant::bit_t> sorted_half_dets_;
     std::vector<UI64Determinant> sorted_dets_;
     std::vector<size_t> map_to_hashdets_;

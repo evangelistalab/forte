@@ -47,42 +47,37 @@ const STLBitsetDeterminant::bit_t STLBitsetDeterminant::alfa_mask =
 const STLBitsetDeterminant::bit_t STLBitsetDeterminant::beta_mask =
     alfa_mask << STLBitsetDeterminant::num_str_bits;
 
-STLBitsetDeterminant::STLBitsetDeterminant(int nmo) : size_(nmo) {
-    //    set_count_bits(nmo);
-    //    if (nmo == 0) {
-    //        bits_.flip();
-    //    }
+STLBitsetDeterminant::STLBitsetDeterminant(int size) : size_(size) {}
+
+STLBitsetDeterminant::STLBitsetDeterminant(const bit_t& bits, int nmo) {
+    bits_ = bits;
+    size_ = nmo;
 }
 
 STLBitsetDeterminant::STLBitsetDeterminant(const std::vector<bool>& occupation) {
-    int nmo = occupation.size() / 2;
-    for (int p = 0; p < nmo; ++p)
+    size_ = occupation.size() / 2;
+    for (int p = 0; p < size_; ++p)
         ALFA(p) = occupation[p];
-    for (int p = 0; p < nmo; ++p)
-        BETA(p) = occupation[nmo + p];
-    set_count_bits(nmo);
+    for (int p = 0; p < size_; ++p)
+        BETA(p) = occupation[size_ + p];
 }
 
 STLBitsetDeterminant::STLBitsetDeterminant(const std::vector<bool>& occupation_a,
                                            const std::vector<bool>& occupation_b) {
-    int nmo = occupation_a.size();
-    for (int p = 0; p < nmo; ++p) {
+    size_ = occupation_a.size();
+    for (int p = 0; p < size_; ++p) {
         ALFA(p) = occupation_a[p];
         BETA(p) = occupation_b[p];
     }
-    set_count_bits(nmo);
-}
-
-STLBitsetDeterminant::STLBitsetDeterminant(const bit_t& bits, int nmo) {
-    bits_ = bits;
-    set_count_bits(nmo);
 }
 
 const STLBitsetDeterminant::bit_t& STLBitsetDeterminant::bits() const { return bits_; }
 
+int STLBitsetDeterminant::size() const { return size_; }
+
 void STLBitsetDeterminant::copy(const STLBitsetDeterminant& rhs) {
     bits_ = rhs.bits_;
-    set_count_bits(rhs.find_nmo());
+    size_ = rhs.size_;
 }
 
 bool STLBitsetDeterminant::less_than(const STLBitsetDeterminant& rhs,
@@ -96,14 +91,6 @@ bool STLBitsetDeterminant::less_than(const STLBitsetDeterminant& rhs,
         if (rhs.bits_[i] ^ lhs.bits_[i])
             return lhs.bits_[i];
     }
-    //  return false;
-    //    // check beta first
-    //    for (int p = num_det_bits - 1; p >= 0; --p) {
-    //        if ((rhs.bits_[p] == false) and (lhs.bits_[p] == true))
-    //            return true;
-    //        if ((rhs.bits_[p] == true) and (lhs.bits_[p] == false))
-    //            return false;
-    //    }
     return false;
 }
 
@@ -118,18 +105,6 @@ bool STLBitsetDeterminant::reverse_less_then(const STLBitsetDeterminant& rhs,
         if (rhs.bits_[i] ^ lhs.bits_[i])
             return lhs.bits_[i];
     }
-    //    for (int p = num_str_bits - 1; p >= 0; --p) {
-    //        if ((i.get_alfa_bit(p) == false) and (j.get_alfa_bit(p) == true))
-    //            return true;
-    //        if ((i.get_alfa_bit(p) == true) and (j.get_alfa_bit(p) == false))
-    //            return false;
-    //    }
-    //    for (int p = num_str_bits - 1; p >= 0; --p) {
-    //        if ((i.get_beta_bit(p) == false) and (j.get_beta_bit(p) == true))
-    //            return true;
-    //        if ((i.get_beta_bit(p) == true) and (j.get_beta_bit(p) == false))
-    //            return false;
-    //    }
     return false;
 }
 
@@ -139,7 +114,6 @@ bool STLBitsetDeterminant::operator==(const STLBitsetDeterminant& lhs) const {
 
 bool STLBitsetDeterminant::operator<(const STLBitsetDeterminant& lhs) const {
     // check beta first
-    // check beta first
     for (int i = num_str_bits + size_ - 1; i >= num_str_bits; i--) {
         if (bits_[i] ^ lhs.bits_[i])
             return lhs.bits_[i];
@@ -148,63 +122,36 @@ bool STLBitsetDeterminant::operator<(const STLBitsetDeterminant& lhs) const {
         if (bits_[i] ^ lhs.bits_[i])
             return lhs.bits_[i];
     }
-    //    for (int p = num_det_bits - 1; p >= 0; --p) {
-    //        if ((bits_[p] == false) and (lhs.bits_[p] == true))
-    //            return true;
-    //        if ((bits_[p] == true) and (lhs.bits_[p] == false))
-    //            return false;
-    //    }
     return false;
 }
 
 STLBitsetDeterminant STLBitsetDeterminant::operator^(const STLBitsetDeterminant& lhs) const {
-    int nmo = lhs.find_nmo();
-    return STLBitsetDeterminant(bits_ ^ lhs.bits_, nmo);
+    return STLBitsetDeterminant(bits_ ^ lhs.bits_, size_);
 }
 
 STLBitsetDeterminant& STLBitsetDeterminant::operator^=(const STLBitsetDeterminant& lhs) {
-    int nmo = lhs.find_nmo();
     bits_ ^= lhs.bits_;
-    set_count_bits(nmo);
     return *this;
 }
 
 STLBitsetDeterminant& STLBitsetDeterminant::operator&=(const STLBitsetDeterminant& lhs) {
     bits_ &= lhs.bits_;
-    set_count_bits(lhs.find_nmo());
     return *this;
 }
 
 STLBitsetDeterminant& STLBitsetDeterminant::operator|=(const STLBitsetDeterminant& lhs) {
     bits_ |= lhs.bits_;
-    set_count_bits(lhs.find_nmo());
     return *this;
 }
 
 STLBitsetDeterminant& STLBitsetDeterminant::flip() {
-    int nmo = find_nmo();
     bits_.flip();
-    set_count_bits(nmo);
     return *this;
 }
 
-int STLBitsetDeterminant::count_alfa() const {
-    //  int count = 0;
-    //  for (int i = 0; i < size_; ++i) {
-    //      count += ALFA(i);
-    //  }
-    //  return count;
-    return (bits_ & alfa_mask).count();
-}
+int STLBitsetDeterminant::count_alfa() const { return (bits_ & alfa_mask).count(); }
 
-int STLBitsetDeterminant::count_beta() const {
-    //    int count = 0;
-    //    for (int i = 0; i < size_; ++i) {
-    //        count += BETA(i);
-    //    }
-    //    return count;
-    return (bits_ & beta_mask).count();
-}
+int STLBitsetDeterminant::count_beta() const { return (bits_ & beta_mask).count(); }
 
 bool STLBitsetDeterminant::get_alfa_bit(int n) const { return ALFA(n); }
 
@@ -214,31 +161,9 @@ void STLBitsetDeterminant::set_alfa_bit(int n, bool value) { ALFA(n) = value; }
 
 void STLBitsetDeterminant::set_beta_bit(int n, bool value) { BETA(n) = value; }
 
-void STLBitsetDeterminant::set_count_bits(int nmo) {
-    size_ = nmo;
-    //    set_alfa_bit(nmo, false);
-    //    set_beta_bit(nmo, false);
-    //    for (int b = nmo + 1; b < num_str_bits; ++b) {
-    //        set_alfa_bit(b, true);
-    //        set_beta_bit(b, true);
-    //    }
-}
-
-int STLBitsetDeterminant::find_nmo() const {
-    return size_;
-    //    for (int p = num_str_bits - 1; p >= 0; --p) {
-    //        if (not ALFA(p))
-    //            return p;
-    //    }
-    //    outfile->Printf("\n\n Using an uninitialized determinant");
-    //    exit(1);
-    //    return 0;
-}
-
 std::vector<int> STLBitsetDeterminant::get_alfa_occ() {
-    int nmo = find_nmo();
     std::vector<int> occ;
-    for (int p = 0; p < nmo; ++p) {
+    for (int p = 0; p < size_; ++p) {
         if (ALFA(p))
             occ.push_back(p);
     }
@@ -246,9 +171,8 @@ std::vector<int> STLBitsetDeterminant::get_alfa_occ() {
 }
 
 std::vector<int> STLBitsetDeterminant::get_beta_occ() {
-    int nmo = find_nmo();
     std::vector<int> occ;
-    for (int p = 0; p < nmo; ++p) {
+    for (int p = 0; p < size_; ++p) {
         if (BETA(p))
             occ.push_back(p);
     }
@@ -256,9 +180,8 @@ std::vector<int> STLBitsetDeterminant::get_beta_occ() {
 }
 
 std::vector<int> STLBitsetDeterminant::get_alfa_vir() {
-    int nmo = find_nmo();
     std::vector<int> vir;
-    for (int p = 0; p < nmo; ++p) {
+    for (int p = 0; p < size_; ++p) {
         if (not ALFA(p))
             vir.push_back(p);
     }
@@ -266,9 +189,8 @@ std::vector<int> STLBitsetDeterminant::get_alfa_vir() {
 }
 
 std::vector<int> STLBitsetDeterminant::get_beta_vir() {
-    int nmo = find_nmo();
     std::vector<int> vir;
-    for (int p = 0; p < nmo; ++p) {
+    for (int p = 0; p < size_; ++p) {
         if (not BETA(p))
             vir.push_back(p);
     }
@@ -276,9 +198,8 @@ std::vector<int> STLBitsetDeterminant::get_beta_vir() {
 }
 
 std::vector<int> STLBitsetDeterminant::get_alfa_occ() const {
-    int nmo = find_nmo();
     std::vector<int> occ;
-    for (int p = 0; p < nmo; ++p) {
+    for (int p = 0; p < size_; ++p) {
         if (ALFA(p))
             occ.push_back(p);
     }
@@ -286,9 +207,8 @@ std::vector<int> STLBitsetDeterminant::get_alfa_occ() const {
 }
 
 std::vector<int> STLBitsetDeterminant::get_beta_occ() const {
-    int nmo = find_nmo();
     std::vector<int> occ;
-    for (int p = 0; p < nmo; ++p) {
+    for (int p = 0; p < size_; ++p) {
         if (BETA(p))
             occ.push_back(p);
     }
@@ -296,9 +216,8 @@ std::vector<int> STLBitsetDeterminant::get_beta_occ() const {
 }
 
 std::vector<int> STLBitsetDeterminant::get_alfa_vir() const {
-    int nmo = find_nmo();
     std::vector<int> vir;
-    for (int p = 0; p < nmo; ++p) {
+    for (int p = 0; p < size_; ++p) {
         if (not ALFA(p))
             vir.push_back(p);
     }
@@ -306,9 +225,8 @@ std::vector<int> STLBitsetDeterminant::get_alfa_vir() const {
 }
 
 std::vector<int> STLBitsetDeterminant::get_beta_vir() const {
-    int nmo = find_nmo();
     std::vector<int> vir;
-    for (int p = 0; p < nmo; ++p) {
+    for (int p = 0; p < size_; ++p) {
         if (not BETA(p))
             vir.push_back(p);
     }
@@ -347,8 +265,7 @@ double STLBitsetDeterminant::destroy_beta_bit(int n) {
 /// Switch alfa and beta bits
 void STLBitsetDeterminant::spin_flip() {
     bool temp;
-    int nmo = find_nmo();
-    for (int p = 0; p < nmo; ++p) {
+    for (int p = 0; p < size_; ++p) {
         temp = ALFA(p);
         ALFA(p) = BETA(p);
         BETA(p) = temp;
@@ -356,41 +273,24 @@ void STLBitsetDeterminant::spin_flip() {
 }
 
 /// Return determinant with one spin annihilated, 0 == alpha
-void STLBitsetDeterminant::zero_spin(STLBitsetDeterminant::SpinType spin_type) {
-    int nmo = find_nmo();
-    if (spin_type == SpinType::AlphaSpin) {
-        for (int p = 0; p < nmo; ++p) {
-            ALFA(p) = false;
-        }
+void STLBitsetDeterminant::zero_spin(DetSpinType spin_type) {
+    if (spin_type == DetSpinType::Alpha) {
+        bits_ &= beta_mask;
+        //        for (int p = 0; p < size_; ++p) {
+        //            ALFA(p) = false;
+        //        }
     } else {
-        for (int p = 0; p < nmo; ++p) {
-            BETA(p) = false;
-        }
+        bits_ &= alfa_mask;
+//        for (int p = 0; p < size_; ++p) {
+//            BETA(p) = false;
+//        }
     }
-}
-
-void STLBitsetDeterminant::print() const {
-    int nmo = find_nmo();
-    outfile->Printf("\n  |");
-    for (int p = 0; p < nmo; ++p) {
-        if (ALFA(p) and BETA(p)) {
-            outfile->Printf("%d", 2);
-        } else if (ALFA(p) and not BETA(p)) {
-            outfile->Printf("+");
-        } else if (not ALFA(p) and BETA(p)) {
-            outfile->Printf("-");
-        } else {
-            outfile->Printf("0");
-        }
-    }
-    outfile->Printf(">");
 }
 
 std::string STLBitsetDeterminant::str() const {
-    int nmo = find_nmo();
     std::string s;
     s += "|";
-    for (int p = 0; p < nmo; ++p) {
+    for (int p = 0; p < size_; ++p) {
         if (ALFA(p) and BETA(p)) {
             s += "2";
         } else if (ALFA(p) and not BETA(p)) {
@@ -406,14 +306,13 @@ std::string STLBitsetDeterminant::str() const {
 }
 
 std::string STLBitsetDeterminant::str2() const {
-    int nmo = find_nmo();
     std::string s;
     s += "|";
-    for (int p = 0; p < nmo; ++p) {
+    for (int p = 0; p < size_; ++p) {
         s += ALFA(p) ? "1" : "0";
     }
     s += "|";
-    for (int p = 0; p < nmo; ++p) {
+    for (int p = 0; p < size_; ++p) {
         s += BETA(p) ? "1" : "0";
     }
     s += ">";
@@ -537,10 +436,8 @@ double STLBitsetDeterminant::double_excitation_bb(int i, int j, int a, int b) {
 }
 
 std::vector<std::pair<STLBitsetDeterminant, double>> STLBitsetDeterminant::spin_plus() const {
-    int nmo = find_nmo();
-
     std::vector<std::pair<STLBitsetDeterminant, double>> res;
-    for (int i = 0; i < nmo; ++i) {
+    for (int i = 0; i < size_; ++i) {
         if ((not ALFA(i)) and BETA(i)) {
             double sign = slater_sign_a(i) * slater_sign_b(i);
             STLBitsetDeterminant new_det(*this);
@@ -553,9 +450,8 @@ std::vector<std::pair<STLBitsetDeterminant, double>> STLBitsetDeterminant::spin_
 }
 
 std::vector<std::pair<STLBitsetDeterminant, double>> STLBitsetDeterminant::spin_minus() const {
-    int nmo = find_nmo();
     std::vector<std::pair<STLBitsetDeterminant, double>> res;
-    for (int i = 0; i < nmo; ++i) {
+    for (int i = 0; i < size_; ++i) {
         if (ALFA(i) and (not BETA(i))) {
             double sign = slater_sign_a(i) * slater_sign_b(i);
             STLBitsetDeterminant new_det(*this);
@@ -568,22 +464,12 @@ std::vector<std::pair<STLBitsetDeterminant, double>> STLBitsetDeterminant::spin_
 }
 
 double STLBitsetDeterminant::spin_z() const {
-    int nmo = find_nmo();
-
-    int n = 0;
-    for (int i = 0; i < nmo; ++i) {
-        if (ALFA(i))
-            n++;
-        if (BETA(i))
-            n--;
-    }
-    return 0.5 * static_cast<double>(n);
+    return 0.5 * static_cast<double>(count_alfa() - count_beta());
 }
 
 int STLBitsetDeterminant::npair() {
-    int nmo = find_nmo();
     int npair = 0;
-    for (int n = 0; n < nmo; ++n) {
+    for (int n = 0; n < size_; ++n) {
         if (ALFA(n) and BETA(n)) {
             npair++;
         }
@@ -592,7 +478,6 @@ int STLBitsetDeterminant::npair() {
 }
 
 double STLBitsetDeterminant::spin2(const STLBitsetDeterminant& rhs) const {
-    int nmo = find_nmo();
     const bit_t& I = bits_;
     const bit_t& J = rhs.bits_;
 
@@ -608,7 +493,7 @@ double STLBitsetDeterminant::spin2(const STLBitsetDeterminant& rhs) const {
     int npair = 0;
     // Count how many differences in mos are there and the number of alpha/beta
     // electrons
-    for (int n = 0; n < nmo; ++n) {
+    for (int n = 0; n < size_; ++n) {
         if (I[n] != J[n])
             nadiff++;
         if (I[num_str_bits + n] != J[num_str_bits + n])
@@ -636,15 +521,13 @@ double STLBitsetDeterminant::spin2(const STLBitsetDeterminant& rhs) const {
         int i = -1;
         int j = -1;
         // The logic here is a bit complex
-        for (int p = 0; p < nmo; ++p) {
+        for (int p = 0; p < size_; ++p) {
             if (J[p] and I[num_str_bits + p] and (not J[num_str_bits + p]) and (not I[p]))
-                i = p; //(p)
+                i = p;
             if (J[num_str_bits + p] and I[p] and (not J[p]) and (not I[num_str_bits + p]))
-                j = p; //(q)
+                j = p;
         }
         if (i != j and i >= 0 and j >= 0) {
-            // double sign = SlaterSign(J, i) * SlaterSign(J, nmo_ + j) * SlaterSign(I, nmo_ + i) *
-            //              SlaterSign(I, j);
             double sign =
                 rhs.slater_sign_a(i) * rhs.slater_sign_b(j) * slater_sign_a(j) * slater_sign_b(i);
             matrix_element -= sign;

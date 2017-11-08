@@ -567,8 +567,7 @@ class FCI_MO : public Wavefunction {
     void print_det(const vecdet& dets) {
         outfile->Printf("\n\n  ==> Determinants |alpha|beta> <==\n");
         for (const STLBitsetDeterminant& x : dets) {
-            outfile->Printf("  ");
-            x.print();
+            outfile->Printf("  %s",x.str().c_str());
         }
         outfile->Printf("\n");
     }

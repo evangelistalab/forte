@@ -557,7 +557,7 @@ void WFNOperator::build_strings(DeterminantHashVec& wfn) {
         for (size_t I = 0, max_I = wfn_map.size(); I < max_I; ++I) {
             // Grab mutable copy of determinant
             STLBitsetDeterminant detI(wfn_map[I]);
-            detI.zero_spin(STLBitsetDeterminant::SpinType::AlphaSpin);
+            detI.zero_spin(DetSpinType::Alpha);
 
             det_hash<size_t>::iterator it = beta_str_hash.find(detI);
             size_t b_add;
@@ -579,7 +579,7 @@ void WFNOperator::build_strings(DeterminantHashVec& wfn) {
         for (size_t I = 0, max_I = wfn_map.size(); I < max_I; ++I) {
             // Grab mutable copy of determinant
             STLBitsetDeterminant detI(wfn_map[I]);
-            detI.zero_spin(STLBitsetDeterminant::SpinType::BetaSpin);
+            detI.zero_spin(DetSpinType::Beta);
 
             det_hash<size_t>::iterator it = alfa_str_hash.find(detI);
             size_t a_add;
@@ -600,7 +600,7 @@ void WFNOperator::build_strings(DeterminantHashVec& wfn) {
     for (size_t I = 0, max_I = wfn_map.size(); I < max_I; ++I) {
         // Grab mutable copy of determinant
         STLBitsetDeterminant detI(wfn_map[I]);
-        detI.zero_spin(STLBitsetDeterminant::SpinType::BetaSpin);
+        detI.zero_spin(DetSpinType::Beta);
         const std::vector<int>& aocc = detI.get_alfa_occ();
         for (int i = 0, nalfa = aocc.size(); i < nalfa; ++i) {
             int ii = aocc[i];
@@ -1276,7 +1276,7 @@ void WFNOperator::three_s_lists(DeterminantHashVec& wfn) {
         for (size_t I = 0, max_I = wfn_map.size(); I < max_I; ++I) {
             // Grab mutable copy of determinant
             STLBitsetDeterminant detI(wfn_map[I]);
-            detI.zero_spin(STLBitsetDeterminant::SpinType::AlphaSpin);
+            detI.zero_spin(DetSpinType::Alpha);
             std::vector<int> bocc = detI.get_beta_occ();
             for (int i = 0, nbeta = bocc.size(); i < nbeta; ++i) {
                 int ii = bocc[i];
@@ -1544,7 +1544,7 @@ void WFNOperator::three_lists(DeterminantHashVec& wfn) {
         for (size_t I = 0, max_I = wfn_map.size(); I < max_I; ++I) {
             // Grab mutable copy of determinant
             STLBitsetDeterminant detI(wfn_map[I]);
-            detI.zero_spin(STLBitsetDeterminant::SpinType::AlphaSpin);
+            detI.zero_spin(DetSpinType::Alpha);
             std::vector<int> bocc = detI.get_beta_occ();
             for (int i = 0, nbeta = bocc.size(); i < nbeta; ++i) {
                 int ii = bocc[i];

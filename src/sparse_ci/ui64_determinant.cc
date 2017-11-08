@@ -254,12 +254,12 @@ void UI64Determinant::set_beta_bit(UI64Determinant::bit_t n, bool v) {
     }
 }
 
-UI64Determinant::bit_t UI64Determinant::get_bits(STLBitsetDeterminant::SpinType spin_type) const {
-    return (spin_type == STLBitsetDeterminant::SpinType::AlphaSpin) ? a_ : b_;
+UI64Determinant::bit_t UI64Determinant::get_bits(DetSpinType spin_type) const {
+    return (spin_type == DetSpinType::Alpha) ? a_ : b_;
 }
 
-void UI64Determinant::zero_spin(STLBitsetDeterminant::SpinType spin_type) {
-    if (spin_type == STLBitsetDeterminant::SpinType::AlphaSpin) {
+void UI64Determinant::zero_spin(DetSpinType spin_type) {
+    if (spin_type == DetSpinType::Alpha) {
         a_ = bit_t(0);
     } else {
         b_ = bit_t(0);
