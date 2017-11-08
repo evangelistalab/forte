@@ -52,15 +52,19 @@ namespace forte {
  * false <-> 0
  */
 
-enum class DetSpinType { AlphaSpin, BetaSpin };
+enum class DetSpinType { Alpha, Beta };
 
 class STLBitsetDeterminant {
   public:
+    /// The number of bits used to represent a determinant
     static constexpr int num_det_bits = 256;
+    /// The number of bits used to represent a string (half a determinant)
     static constexpr int num_str_bits = 128;
+    /// The bitset type
     using bit_t = std::bitset<num_det_bits>;
 
     // Class Constructor and Destructor
+
     /// Construct an empty determinant
     explicit STLBitsetDeterminant(int size);
     /// Construct a determinant from a bitset object
@@ -73,12 +77,10 @@ class STLBitsetDeterminant {
     explicit STLBitsetDeterminant(const std::vector<bool>& occupation_a,
                                   const std::vector<bool>& occupation_b);
 
-    void copy(const STLBitsetDeterminant& rhs);
-
-    /// Return the bitset
-    const bit_t& bits() const;
     /// Return the size of the field
     int size() const;
+    /// Return the bitset
+    const bit_t& bits() const;
 
     /// Equal operator
     bool operator==(const STLBitsetDeterminant& lhs) const;
@@ -98,6 +100,7 @@ class STLBitsetDeterminant {
     STLBitsetDeterminant& operator&=(const STLBitsetDeterminant& lhs);
     /// &= operator
     STLBitsetDeterminant& operator|=(const STLBitsetDeterminant& lhs);
+    /// Flip all bits
     STLBitsetDeterminant& flip();
 
     /// Return the value of an alpha bit
@@ -194,7 +197,7 @@ class STLBitsetDeterminant {
         }
     };
 
-  protected:
+  private:
     /// The bits
     bit_t bits_;
     /// The number of orbitals
@@ -204,7 +207,6 @@ class STLBitsetDeterminant {
     const static bit_t alfa_mask;
     /// A mask for the beta bits
     const static bit_t beta_mask;
-
 };
 
 using Determinant = STLBitsetDeterminant;
