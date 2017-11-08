@@ -417,6 +417,7 @@ class AdaptiveCI : public Wavefunction {
     //    > > H_sparse,SharedVector Eigenvalues,SharedMatrix Eigenvectors,int
     //    nroots);
 };
+
 }
 } // End Namespaces
 
