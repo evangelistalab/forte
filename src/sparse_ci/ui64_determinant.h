@@ -52,7 +52,7 @@ class UI64Determinant {
     /// Reverse string ordering
     static bool reverse_less_than(const UI64Determinant& i, const UI64Determinant& j);
 
-    bit_t get_bits(STLBitsetDeterminant::SpinType spin_type) const;
+    bit_t get_bits(DetSpinType spin_type) const;
     /// Return the value of an alpha bit
     bit_t get_alfa_bits() const;
     /// Return the value of a beta bit
@@ -63,7 +63,7 @@ class UI64Determinant {
     bool get_beta_bit(bit_t n) const;
     void set_alfa_bit(bit_t n, bool v);
     void set_beta_bit(bit_t n, bool v);
-    void zero_spin(STLBitsetDeterminant::SpinType spin_type);
+    void zero_spin(DetSpinType spin_type);
 
   private:
     bit_t a_;

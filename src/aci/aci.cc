@@ -2562,7 +2562,7 @@ void AdaptiveCI::compute_aci(DeterminantHashVec& PQ_space, SharedMatrix& PQ_evec
         STLBitsetDeterminant det = initial_reference_[0];
         STLBitsetDeterminant detb(det);
         std::vector<int> avir = det.get_alfa_vir();
-        det.print();
+        outfile->Printf("\n  %s",det.str().c_str());
         outfile->Printf("\n  Freezing alpha orbital %d", hole_);
         outfile->Printf("\n  Exciting electron from %d to %d", hole_, avir[particle]);
         det.set_alfa_bit(hole_, false);
@@ -2575,8 +2575,8 @@ void AdaptiveCI::compute_aci(DeterminantHashVec& PQ_space, SharedMatrix& PQ_evec
                 break;
             }
         }
-        det.print();
-        detb.print();
+        outfile->Printf("\n  %s",det.str().c_str());
+        outfile->Printf("\n  %s",detb.str().c_str());
         P_space.add(det);
         P_space.add(detb);
     }

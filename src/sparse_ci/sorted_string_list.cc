@@ -35,13 +35,13 @@ namespace forte {
 
 SortedStringList::SortedStringList(const DeterminantHashVec& space,
                                    std::shared_ptr<FCIIntegrals> fci_ints,
-                                   STLBitsetDeterminant::SpinType sorted_string_spin) {
+                                   DetSpinType sorted_string_spin) {
     nmo_ = fci_ints->nmo();
     // Copy and sort the determinants
     sorted_dets_ = space.determinants();
     num_dets_ = sorted_dets_.size();
 
-    if (sorted_string_spin == STLBitsetDeterminant::SpinType::AlphaSpin) {
+    if (sorted_string_spin == DetSpinType::Alpha) {
         std::sort(sorted_dets_.begin(), sorted_dets_.end(),
                   STLBitsetDeterminant::reverse_less_then);
     } else {
@@ -49,14 +49,14 @@ SortedStringList::SortedStringList(const DeterminantHashVec& space,
     }
 
     outfile->Printf("\n\n Sorted determinants (%zu,%s)\n", num_dets_,
-                    sorted_string_spin == STLBitsetDeterminant::SpinType::AlphaSpin ? "Alpha"
+                    sorted_string_spin == DetSpinType::Alpha ? "Alpha"
                                                                                     : "Beta");
     // Find the unique strings and their range
     STLBitsetDeterminant first_string = sorted_dets_[0];
     STLBitsetDeterminant last_first_string = sorted_dets_[0];
-    zero_spin_type_ = sorted_string_spin == STLBitsetDeterminant::SpinType::AlphaSpin
-                          ? STLBitsetDeterminant::SpinType::BetaSpin
-                          : STLBitsetDeterminant::SpinType::AlphaSpin;
+    zero_spin_type_ = sorted_string_spin == DetSpinType::Alpha
+                          ? DetSpinType::Beta
+                          : DetSpinType::Alpha;
     last_first_string.zero_spin(zero_spin_type_);
 
     first_string_range_[last_first_string] = std::make_pair(0, 0);
@@ -132,7 +132,7 @@ size_t SortedStringList::find(const STLBitsetDeterminant& d, size_t& first, size
 
 SortedStringList_UI64::SortedStringList_UI64(const DeterminantHashVec& space,
                                              std::shared_ptr<FCIIntegrals> fci_ints,
-                                             STLBitsetDeterminant::SpinType sorted_string_spin) {
+                                             DetSpinType sorted_string_spin) {
     nmo_ = fci_ints->nmo();
     // Copy and sort the determinants
     auto dets = space.determinants();
@@ -141,7 +141,7 @@ SortedStringList_UI64::SortedStringList_UI64(const DeterminantHashVec& space,
     for (const auto& d : dets) {
         sorted_dets_.push_back(UI64Determinant(d));
     }
-    if (sorted_string_spin == STLBitsetDeterminant::SpinType::AlphaSpin) {
+    if (sorted_string_spin == DetSpinType::Alpha) {
         map_to_hashdets_ = sort_permutation(sorted_dets_, UI64Determinant::reverse_less_than);
         apply_permutation_in_place(sorted_dets_, map_to_hashdets_);
         //        std::sort(sorted_dets_.begin(), sorted_dets_.end(),
@@ -153,13 +153,13 @@ SortedStringList_UI64::SortedStringList_UI64(const DeterminantHashVec& space,
     }
 
     outfile->Printf("\n\n Sorted determinants (%zu,%s)\n", num_dets_,
-                    sorted_string_spin == STLBitsetDeterminant::SpinType::AlphaSpin ? "Alpha"
+                    sorted_string_spin == DetSpinType::Alpha ? "Alpha"
                                                                                     : "Beta");
     // Find the unique strings and their range
 
-    sorted_spin_type_ = sorted_string_spin == STLBitsetDeterminant::SpinType::AlphaSpin
-                            ? STLBitsetDeterminant::SpinType::AlphaSpin
-                            : STLBitsetDeterminant::SpinType::BetaSpin;
+    sorted_spin_type_ = sorted_string_spin == DetSpinType::Alpha
+                            ? DetSpinType::Alpha
+                            : DetSpinType::Beta;
     UI64Determinant::bit_t first_string = sorted_dets_[0].get_bits(sorted_spin_type_);
     UI64Determinant::bit_t old_first_string = first_string;
 
