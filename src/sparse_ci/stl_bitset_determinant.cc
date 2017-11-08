@@ -75,11 +75,6 @@ const STLBitsetDeterminant::bit_t& STLBitsetDeterminant::bits() const { return b
 
 int STLBitsetDeterminant::size() const { return size_; }
 
-void STLBitsetDeterminant::copy(const STLBitsetDeterminant& rhs) {
-    bits_ = rhs.bits_;
-    size_ = rhs.size_;
-}
-
 bool STLBitsetDeterminant::less_than(const STLBitsetDeterminant& rhs,
                                      const STLBitsetDeterminant& lhs) {
     // check beta first

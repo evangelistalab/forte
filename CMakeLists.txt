@@ -91,6 +91,7 @@ src/tensorsrg_save.cc
 src/tensorsrg_srg.cc
 src/v2rdm.cc
 src/aci/aci.cc
+src/aci/aci64.cc
 src/aosubspace/aosubspace.cc
 src/ci-no/ci-no.cc
 src/ci-no/mrci-no.cc

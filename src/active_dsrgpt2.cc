@@ -1576,7 +1576,7 @@ ACTIVE_DSRGPT2::excited_wfn_1st(const std::map<STLBitsetDeterminant, double>& re
                     }
 
                     sign = 1.0;
-                    E.copy(det);
+                    E = det;
                     sign *= E.destroy_alfa_bit(i[1]);
                     sign *= E.create_alfa_bit(i[0]);
                     if (sign != 0) {
@@ -1600,7 +1600,7 @@ ACTIVE_DSRGPT2::excited_wfn_1st(const std::map<STLBitsetDeterminant, double>& re
                     }
 
                     sign = 1.0;
-                    E.copy(det);
+                    E = det;
                     sign *= E.destroy_beta_bit(i[1]);
                     sign *= E.create_beta_bit(i[0]);
                     if (sign != 0) {
@@ -1637,7 +1637,7 @@ ACTIVE_DSRGPT2::excited_wfn_1st(const std::map<STLBitsetDeterminant, double>& re
 
                     // i^+ j^+ b a
                     sign = 1.0;
-                    E.copy(det);
+                    E = det;
                     sign *= E.destroy_alfa_bit(i[2]);
                     sign *= E.destroy_alfa_bit(i[3]);
                     sign *= E.create_alfa_bit(i[1]);
@@ -1667,7 +1667,7 @@ ACTIVE_DSRGPT2::excited_wfn_1st(const std::map<STLBitsetDeterminant, double>& re
 
                     // i^+ J^+ B a
                     sign = 1.0;
-                    E.copy(det);
+                    E = det;
                     sign *= E.destroy_alfa_bit(i[2]);
                     sign *= E.destroy_beta_bit(i[3]);
                     sign *= E.create_beta_bit(i[1]);
@@ -1697,7 +1697,7 @@ ACTIVE_DSRGPT2::excited_wfn_1st(const std::map<STLBitsetDeterminant, double>& re
 
                     // I^+ J^+ B A
                     sign = 1.0;
-                    E.copy(det);
+                    E = det;
                     sign *= E.destroy_beta_bit(i[2]);
                     sign *= E.destroy_beta_bit(i[3]);
                     sign *= E.create_beta_bit(i[1]);
