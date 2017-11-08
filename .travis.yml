@@ -114,11 +114,3 @@ install:
 script:
 - cd ${HOME}/build/evangelistalab/forte/tests/methods
 - python run_forte_tests_travis.py 
-
-# safelist
-branches:
-  only:
-  - master
-  - travis
-  - DSRG_DF
-  - directaci

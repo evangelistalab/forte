@@ -52,18 +52,19 @@ namespace forte {
  * false <-> 0
  */
 
+enum class DetSpinType { AlphaSpin, BetaSpin };
+
 class STLBitsetDeterminant {
   public:
-    enum class SpinType { AlphaSpin, BetaSpin };
     static constexpr int num_det_bits = 256;
     static constexpr int num_str_bits = 128;
     using bit_t = std::bitset<num_det_bits>;
-    const static bit_t alfa_mask;
-    const static bit_t beta_mask;
 
     // Class Constructor and Destructor
     /// Construct an empty determinant
-    explicit STLBitsetDeterminant(int n);
+    explicit STLBitsetDeterminant(int size);
+    /// Construct a determinant from a bitset object
+    explicit STLBitsetDeterminant(const bit_t& bits, int nmo);
     /// Construct the determinant from an occupation vector that
     /// specifies the alpha and beta strings.  occupation = [Ia,Ib]
     explicit STLBitsetDeterminant(const std::vector<bool>& occupation);
@@ -71,15 +72,13 @@ class STLBitsetDeterminant {
     /// specifies the alpha and beta strings.  occupation = [Ia,Ib]
     explicit STLBitsetDeterminant(const std::vector<bool>& occupation_a,
                                   const std::vector<bool>& occupation_b);
-    /// Construct a determinant from a bitset object
-    explicit STLBitsetDeterminant(const bit_t& bits, int nmo);
-
-    //    STLBitsetDeterminant(int n) = delete;
-    //    STLBitsetDeterminant(size_t n) = delete;
 
     void copy(const STLBitsetDeterminant& rhs);
 
+    /// Return the bitset
     const bit_t& bits() const;
+    /// Return the size of the field
+    int size() const;
 
     /// Equal operator
     bool operator==(const STLBitsetDeterminant& lhs) const;
@@ -101,9 +100,6 @@ class STLBitsetDeterminant {
     STLBitsetDeterminant& operator|=(const STLBitsetDeterminant& lhs);
     STLBitsetDeterminant& flip();
 
-    //    /// Get a pointer to the bits
-    //    const bit_t& bits() const;
-
     /// Return the value of an alpha bit
     bool get_alfa_bit(int n) const;
     /// Return the value of a beta bit
@@ -113,23 +109,19 @@ class STLBitsetDeterminant {
     void set_alfa_bit(int n, bool value);
     /// Set the value of a beta bit
     void set_beta_bit(int n, bool value);
-    //    /// Set the bits to a given bit_t
-    //    void set_bits(const bit_t& bits);
 
     /// Switch the alpha and beta occupations
     void spin_flip();
 
     /// Return determinant with one spin zeroed, alpha == 0
-    void zero_spin(STLBitsetDeterminant::SpinType spin_type);
+    void zero_spin(DetSpinType spin_type);
 
+    /// Count the number of alpha bits set to true
+    int count_alfa() const;
+    /// Count the number of beta bits set to true
+    int count_beta() const;
     /// Return the number of alpha/beta pairs
     int npair();
-
-    void set_count_bits(int nmo);
-    int find_nmo() const;
-
-    int count_alfa() const;
-    int count_beta() const;
 
     /// Return a vector of occupied alpha orbitals
     std::vector<int> get_alfa_occ();
@@ -158,8 +150,6 @@ class STLBitsetDeterminant {
     /// Set the value of a beta bit
     double destroy_beta_bit(int n);
 
-    /// Print the Slater determinant
-    void print() const;
     /// Save the Slater determinant as a string
     std::string str() const;
     /// Save the Slater determinant as a string
@@ -169,7 +159,7 @@ class STLBitsetDeterminant {
     std::vector<std::pair<STLBitsetDeterminant, double>> spin_plus() const;
     /// Apply S- to this determinant
     std::vector<std::pair<STLBitsetDeterminant, double>> spin_minus() const;
-    /// Return the eigenvalue of Sz
+    /// Return the expectation value of S_z
     double spin_z() const;
     /// Compute the matrix element of the S^2 operator between this determinant
     /// and a given one
@@ -205,9 +195,16 @@ class STLBitsetDeterminant {
     };
 
   protected:
-    /// The occupation vector (does not include the frozen orbitals)
+    /// The bits
     bit_t bits_;
-    unsigned char size_;
+    /// The number of orbitals
+    int size_;
+
+    /// A mask for the alpha bits
+    const static bit_t alfa_mask;
+    /// A mask for the beta bits
+    const static bit_t beta_mask;
+
 };
 
 using Determinant = STLBitsetDeterminant;
