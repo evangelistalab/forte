@@ -47,7 +47,7 @@ namespace forte {
  * @param h      symmetry of the I strings in the list
  */
 std::vector<StringSubstitution>& StringLists::get_alfa_oo_list(int pq_sym, size_t pq, int h) {
-    boost::tuple<int, size_t, int> pq_pair(pq_sym, pq, h);
+    std::tuple<int, size_t, int> pq_pair(pq_sym, pq, h);
     return alfa_oo_list[pq_pair];
 }
 
@@ -58,7 +58,7 @@ std::vector<StringSubstitution>& StringLists::get_alfa_oo_list(int pq_sym, size_
  * @param h      symmetry of the I strings in the list
  */
 std::vector<StringSubstitution>& StringLists::get_beta_oo_list(int pq_sym, size_t pq, int h) {
-    boost::tuple<int, size_t, int> pq_pair(pq_sym, pq, h);
+    std::tuple<int, size_t, int> pq_pair(pq_sym, pq, h);
     return beta_oo_list[pq_pair];
 }
 
@@ -96,7 +96,7 @@ void StringLists::make_oo(GraphPtr graph, OOList& list, int pq_sym, size_t pq) {
 
         for (int h = 0; h < nirrep_; ++h) {
             // Create the key to the map
-            boost::tuple<int, size_t, int> pq_pair(pq_sym, pq, h);
+            std::tuple<int, size_t, int> pq_pair(pq_sym, pq, h);
 
             // Generate the strings 1111100000
             //                      { k }{n-k}

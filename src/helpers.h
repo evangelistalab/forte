@@ -29,10 +29,12 @@
 #ifndef _helpers_h_
 #define _helpers_h_
 
+#include <algorithm>
 #include <map>
 #include <vector>
 #include <string>
 #include <chrono>
+#include <numeric>
 
 #include "ambit/blocked_tensor.h"
 #include "psi4/libmints/matrix.h"
@@ -233,6 +235,43 @@ std::pair<double, std::string> to_xb(size_t nele, size_t type_size);
  *                           -> pair.1 -> end or each processor
  */
 std::pair<std::vector<int>, std::vector<int>> split_up_tasks(size_t size_of_tasks, int nproc);
+
+template <typename T, typename Compare>
+std::vector<std::size_t> sort_permutation(
+    const std::vector<T>& vec,
+    Compare& compare)
+{
+    std::vector<std::size_t> p(vec.size());
+    std::iota(p.begin(), p.end(), 0);
+    std::sort(p.begin(), p.end(),
+        [&](std::size_t i, std::size_t j){ return compare(vec[i], vec[j]); });
+    return p;
+}
+
+template <typename T>
+void apply_permutation_in_place(
+    std::vector<T>& vec,
+    const std::vector<std::size_t>& p)
+{
+    std::vector<bool> done(vec.size());
+    for (std::size_t i = 0; i < vec.size(); ++i)
+    {
+        if (done[i])
+        {
+            continue;
+        }
+        done[i] = true;
+        std::size_t prev_j = i;
+        std::size_t j = p[i];
+        while (i != j)
+        {
+            std::swap(vec[prev_j], vec[j]);
+            done[j] = true;
+            prev_j = j;
+            j = p[j];
+        }
+    }
+}
 
 /**
   * @brief A timer class

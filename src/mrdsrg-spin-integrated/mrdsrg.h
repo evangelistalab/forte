@@ -117,6 +117,12 @@ class MRDSRG : public Wavefunction {
     /// Are orbitals semi-canonicalized?
     bool semi_canonical_;
 
+    /// Is the H_bar evaluated sequentially?
+    bool sequential_Hbar_;
+
+    /// Omitting blocks with >= 3 virtual indices?
+    bool omit_V3_;
+
     /// MO space info
     std::shared_ptr<MOSpaceInfo> mo_space_info_;
 
@@ -154,12 +160,21 @@ class MRDSRG : public Wavefunction {
     /// Map from space label to list of MOs
     std::map<char, std::vector<size_t>> label_to_spacemo_;
 
+    /// If ERI density fitted or Cholesky decomposed
+    bool eri_df_;
+    /// Auxiliary MOs
+    std::vector<size_t> aux_mos_;
+    /// Auxiliary space label
+    std::string aux_label_;
+
     /// Fill up integrals
     void build_ints();
     /// Fill up density matrix and density cumulants
     void build_density();
     /// Build Fock matrix and diagonal Fock matrix elements
     void build_fock(BlockedTensor& H, BlockedTensor& V);
+    /// Build Fock matrix and diagonal Fock matrix elements with density fitted B tensor
+    void build_fock_df(BlockedTensor& H, BlockedTensor& B);
 
     // => DSRG related <= //
 
@@ -203,6 +218,8 @@ class MRDSRG : public Wavefunction {
     ambit::BlockedTensor H_;
     /// Two-electron integral
     ambit::BlockedTensor V_;
+    /// Three-index integrals
+    ambit::BlockedTensor B_;
     /// Generalized Fock matrix
     ambit::BlockedTensor F_;
     /// One-particle density matrix
@@ -246,6 +263,8 @@ class MRDSRG : public Wavefunction {
     std::string T_algor_;
     /// Initial guess of T amplitudes
     void guess_t(BlockedTensor& V, BlockedTensor& T2, BlockedTensor& F, BlockedTensor& T1);
+    /// Initial guess of T amplitudes with density fitted B tensor.
+    void guess_t_df(BlockedTensor& B, BlockedTensor& T2, BlockedTensor& F, BlockedTensor& T1);
     /// Update T amplitude in every iteration
     void update_t();
     /// Analyze T1 and T2 amplitudes
@@ -265,6 +284,9 @@ class MRDSRG : public Wavefunction {
     /// Initial guess of T2
     void guess_t2_std(BlockedTensor& V, BlockedTensor& T2);
     void guess_t2_noccvv(BlockedTensor& V, BlockedTensor& T2);
+    /// Initial guess of T2 with density fitted B tensor.
+    void guess_t2_std_df(BlockedTensor& V, BlockedTensor& T2);
+    void guess_t2_noccvv_df(BlockedTensor& V, BlockedTensor& T2);
     /// Update T2 in every iteration
     void update_t2_std();
     void update_t2_noccvv();
@@ -309,6 +331,10 @@ class MRDSRG : public Wavefunction {
 
     /// Compute DSRG-transformed Hamiltonian Hbar
     void compute_hbar();
+    /// Compute DSRG-transformed Hamiltonian Hbar sequentially
+    void compute_hbar_sequential();
+    /// Compute DSRG-transformed Hamiltonian Hbar sequentially by orbital rotation
+    void compute_hbar_sequential_rotation();
     /// Compute DSRG-transformed Hamiltonian Hbar truncated to quadratic nested
     /// commutator
     void compute_hbar_qc();
@@ -338,6 +364,8 @@ class MRDSRG : public Wavefunction {
     void H2_T1_C0(BlockedTensor& H2, BlockedTensor& T1, const double& alpha, double& C0);
     /// Compute zero-body term of commutator [H2, T2]
     void H2_T2_C0(BlockedTensor& H2, BlockedTensor& T2, const double& alpha, double& C0);
+    /// Compute zero-body term of commutator [H2, T2] with density fitting
+    void H2_T2_C0_DF(BlockedTensor& B, BlockedTensor& T2, const double& alpha, double& C0);
 
     /// Compute one-body term of commutator [H1, T1]
     void H1_T1_C1(BlockedTensor& H1, BlockedTensor& T1, const double& alpha, BlockedTensor& C1);
@@ -347,6 +375,8 @@ class MRDSRG : public Wavefunction {
     void H2_T1_C1(BlockedTensor& H2, BlockedTensor& T1, const double& alpha, BlockedTensor& C1);
     /// Compute one-body term of commutator [H2, T2]
     void H2_T2_C1(BlockedTensor& H2, BlockedTensor& T2, const double& alpha, BlockedTensor& C1);
+    /// Compute one-body term of commutator [H2, T2] with density fitting
+    void H2_T2_C1_DF(BlockedTensor& B, BlockedTensor& T2, const double& alpha, BlockedTensor& C1);
 
     /// Compute two-body term of commutator [H2, T1]
     void H2_T1_C2(BlockedTensor& H2, BlockedTensor& T1, const double& alpha, BlockedTensor& C2);
@@ -354,6 +384,8 @@ class MRDSRG : public Wavefunction {
     void H1_T2_C2(BlockedTensor& H1, BlockedTensor& T2, const double& alpha, BlockedTensor& C2);
     /// Compute two-body term of commutator [H2, T2]
     void H2_T2_C2(BlockedTensor& H2, BlockedTensor& T2, const double& alpha, BlockedTensor& C2);
+    /// Compute two-body term of commutator [H2, T2] with density fitting
+    void H2_T2_C2_DF(BlockedTensor& B, BlockedTensor& T2, const double& alpha, BlockedTensor& C2);
 
     /// Compute diagonal blocks labels of a one-body operator
     std::vector<std::string> diag_one_labels();

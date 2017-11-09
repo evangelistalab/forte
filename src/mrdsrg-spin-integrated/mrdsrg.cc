@@ -95,6 +95,9 @@ void MRDSRG::read_options() {
 
     ntamp_ = options_.get_int("NTAMP");
     intruder_tamp_ = options_.get_double("INTRUDER_TAMP");
+
+    sequential_Hbar_ = options_.get_bool("DSRG_HBAR_SEQ");
+    omit_V3_ = options_.get_bool("DSRG_OMIT_V3");
 }
 
 void MRDSRG::startup() {
@@ -103,6 +106,13 @@ void MRDSRG::startup() {
 
     // reference energy
     Eref_ = reference_.get_Eref();
+
+    // density fitted ERI?
+    eri_df_ = false;
+    std::string int_type = options_.get_str("INT_TYPE");
+    if (int_type == "CHOLESKY" || int_type == "DF" || int_type == "DISKDF") {
+        eri_df_ = true;
+    }
 
     // orbital spaces
     BlockedTensor::reset_mo_spaces();
@@ -140,13 +150,35 @@ void MRDSRG::startup() {
     BTF_->add_composite_mo_space("H", "IJKL", {bcore_label_, bactv_label_});
     BTF_->add_composite_mo_space("p", "abcd", {aactv_label_, avirt_label_});
     BTF_->add_composite_mo_space("P", "ABCD", {bactv_label_, bvirt_label_});
-    BTF_->add_composite_mo_space("g", "pqrsto", {acore_label_, aactv_label_, avirt_label_});
-    BTF_->add_composite_mo_space("G", "PQRSTO", {bcore_label_, bactv_label_, bvirt_label_});
+    BTF_->add_composite_mo_space("g", "pqrsto12", {acore_label_, aactv_label_, avirt_label_});
+    BTF_->add_composite_mo_space("G", "PQRSTO89", {bcore_label_, bactv_label_, bvirt_label_});
 
     // prepare integrals
     H_ = BTF_->build(tensor_type_, "H", spin_cases({"gg"}));
-    V_ = BTF_->build(tensor_type_, "V", spin_cases({"gggg"}));
-    build_ints();
+
+    // if density fitted
+    if (eri_df_) {
+        aux_label_ = "L";
+        aux_mos_ = std::vector<size_t>(ints_->nthree());
+        std::iota(aux_mos_.begin(), aux_mos_.end(), 0);
+
+        BTF_->add_mo_space(aux_label_, "g", aux_mos_, NoSpin);
+        label_to_spacemo_[aux_label_[0]] = aux_mos_;
+
+        B_ = BTF_->build(tensor_type_, "B 3-idx", {"Lgg", "LGG"});
+        B_.iterate([&](const std::vector<size_t>& i, const std::vector<SpinType>&, double& value) {
+            value = ints_->three_integral(i[0], i[1], i[2]);
+        });
+        H_.iterate([&](const std::vector<size_t>& i, const std::vector<SpinType>& spin, double& value) {
+            if (spin[0] == AlphaSpin)
+                value = ints_->oei_a(i[0], i[1]);
+            else
+                value = ints_->oei_b(i[0], i[1]);
+        });
+    } else {
+        V_ = BTF_->build(tensor_type_, "V", spin_cases({"gggg"}));
+        build_ints();
+    }
 
     // prepare density matrix and cumulants
     // TODO: future code will store only active Gamma1 and Eta1
@@ -160,7 +192,11 @@ void MRDSRG::startup() {
 
     // build Fock matrix
     F_ = BTF_->build(tensor_type_, "Fock", spin_cases({"gg"}));
-    build_fock(H_, V_);
+    if (eri_df_) {
+        build_fock_df(H_, B_);
+    } else {
+        build_fock(H_, V_);
+    }
 
     // auto adjusted s_
     s_ = make_s_smart();
@@ -204,14 +240,25 @@ void MRDSRG::build_ints() {
     });
 
     // prepare two-electron integrals
-    V_.iterate([&](const std::vector<size_t>& i, const std::vector<SpinType>& spin, double& value) {
-        if ((spin[0] == AlphaSpin) && (spin[1] == AlphaSpin))
-            value = ints_->aptei_aa(i[0], i[1], i[2], i[3]);
-        if ((spin[0] == AlphaSpin) && (spin[1] == BetaSpin))
-            value = ints_->aptei_ab(i[0], i[1], i[2], i[3]);
-        if ((spin[0] == BetaSpin) && (spin[1] == BetaSpin))
-            value = ints_->aptei_bb(i[0], i[1], i[2], i[3]);
-    });
+    if (eri_df_) {
+        V_["pqrs"] = B_["gpr"] * B_["gqs"];
+        V_["pqrs"] -= B_["gps"] * B_["gqr"];
+
+        V_["pQrS"] = B_["gpr"] * B_["gQS"];
+
+        V_["PQRS"] = B_["gPR"] * B_["gQS"];
+        V_["PQRS"] -= B_["gPS"] * B_["gQR"];
+    } else {
+        V_.iterate(
+            [&](const std::vector<size_t>& i, const std::vector<SpinType>& spin, double& value) {
+                if ((spin[0] == AlphaSpin) and (spin[1] == AlphaSpin))
+                    value = ints_->aptei_aa(i[0], i[1], i[2], i[3]);
+                if ((spin[0] == AlphaSpin) and (spin[1] == BetaSpin))
+                    value = ints_->aptei_ab(i[0], i[1], i[2], i[3]);
+                if ((spin[0] == BetaSpin) and (spin[1] == BetaSpin))
+                    value = ints_->aptei_bb(i[0], i[1], i[2], i[3]);
+            });
+    }
 }
 
 void MRDSRG::build_density() {
@@ -302,6 +349,31 @@ void MRDSRG::build_fock(BlockedTensor& H, BlockedTensor& V) {
     });
 }
 
+void MRDSRG::build_fock_df(BlockedTensor& H, BlockedTensor& B) {
+    // build Fock matrix
+    F_["pq"] = H["pq"];
+    F_["pq"] += B["gpq"] * B["gji"] * Gamma1_["ij"];
+    F_["pq"] -= B["gpi"] * B["gjq"] * Gamma1_["ij"];
+    F_["pq"] += B["gpq"] * B["gJI"] * Gamma1_["IJ"];
+    F_["PQ"] = H["PQ"];
+    F_["PQ"] += B["gji"] * B["gPQ"] * Gamma1_["ij"];
+    F_["PQ"] += B["gPQ"] * B["gJI"] * Gamma1_["IJ"];
+    F_["PQ"] -= B["gPI"] * B["gJQ"] * Gamma1_["IJ"];
+
+    // obtain diagonal elements of Fock matrix
+    size_t ncmo_ = mo_space_info_->size("CORRELATED");
+    Fa_ = std::vector<double>(ncmo_);
+    Fb_ = std::vector<double>(ncmo_);
+    F_.iterate([&](const std::vector<size_t>& i, const std::vector<SpinType>& spin, double& value) {
+        if (spin[0] == AlphaSpin and (i[0] == i[1])) {
+            Fa_[i[0]] = value;
+        }
+        if (spin[0] == BetaSpin and (i[0] == i[1])) {
+            Fb_[i[0]] = value;
+        }
+    });
+}
+
 void MRDSRG::print_options() {
     // fill in information
     std::vector<std::pair<std::string, int>> calculation_info{
@@ -350,7 +422,11 @@ double MRDSRG::compute_energy() {
         print_h2("Build Initial Amplitude from DSRG-MRPT2");
         T1_ = BTF_->build(tensor_type_, "T1 Amplitudes", spin_cases({"hp"}));
         T2_ = BTF_->build(tensor_type_, "T2 Amplitudes", spin_cases({"hhpp"}));
-        guess_t(V_, T2_, F_, T1_);
+        if (eri_df_) {
+            guess_t_df(B_, T2_, F_, T1_);
+        } else {
+            guess_t(V_, T2_, F_, T1_);
+        }
 
         // check initial amplitudes
         analyze_amplitudes("First-Order", T1_, T2_);

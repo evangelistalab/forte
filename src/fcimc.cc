@@ -69,7 +69,7 @@ bool FCIQMC::have_omp_ = false;
 
 FCIQMC::FCIQMC(SharedWavefunction ref_wfn, Options& options, std::shared_ptr<ForteIntegrals> ints,
                std::shared_ptr<MOSpaceInfo> mo_space_info)
-    : Wavefunction(options), ints_(ints), mo_space_info_(mo_space_info)
+    : Wavefunction(options), ints_(ints), mo_space_info_(mo_space_info), reference_(ints->ncmo())
 // fciInts_(ints, mo_space_info)
 {
     shallow_copy(ref_wfn);
@@ -132,15 +132,15 @@ void FCIQMC::startup() {
     }
 
     // Build the reference determinant and compute its energy
-    std::vector<int> occupation(2 * ncmo_, 0);
+    std::vector<bool> occupation(2 * ncmo_, false);
     int cumidx = 0;
     for (int h = 0; h < nirrep_; ++h) {
         for (int i = 0; i < doccpi_[h] - frzcpi_[h]; ++i) {
-            occupation[i + cumidx] = 1;
-            occupation[ncmo_ + i + cumidx] = 1;
+            occupation[i + cumidx] = true;
+            occupation[ncmo_ + i + cumidx] = true;
         }
         for (int i = 0; i < soccpi_[h]; ++i) {
-            occupation[i + cumidx] = 1;
+            occupation[i + cumidx] = true;
         }
         cumidx += ncmopi_[h];
     }
