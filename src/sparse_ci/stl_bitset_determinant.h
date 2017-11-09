@@ -66,9 +66,9 @@ class STLBitsetDeterminant {
     // Class Constructor and Destructor
 
     /// Construct an empty determinant
-    explicit STLBitsetDeterminant(int size);
+    explicit STLBitsetDeterminant();
     /// Construct a determinant from a bitset object
-    explicit STLBitsetDeterminant(const bit_t& bits, int nmo);
+    explicit STLBitsetDeterminant(const bit_t& bits);
     /// Construct the determinant from an occupation vector that
     /// specifies the alpha and beta strings.  occupation = [Ia,Ib]
     explicit STLBitsetDeterminant(const std::vector<bool>& occupation);
@@ -77,8 +77,6 @@ class STLBitsetDeterminant {
     explicit STLBitsetDeterminant(const std::vector<bool>& occupation_a,
                                   const std::vector<bool>& occupation_b);
 
-    /// Return the size of the field
-    int size() const;
     /// Return the bitset
     const bit_t& bits() const;
 
@@ -92,14 +90,6 @@ class STLBitsetDeterminant {
     /// Reverse string ordering
     static bool reverse_less_then(const STLBitsetDeterminant& i, const STLBitsetDeterminant& j);
 
-    /// XOR operator
-    STLBitsetDeterminant operator^(const STLBitsetDeterminant& lhs) const;
-    /// XOR operator
-    STLBitsetDeterminant& operator^=(const STLBitsetDeterminant& lhs);
-    /// &= operator
-    STLBitsetDeterminant& operator&=(const STLBitsetDeterminant& lhs);
-    /// &= operator
-    STLBitsetDeterminant& operator|=(const STLBitsetDeterminant& lhs);
     /// Flip all bits
     STLBitsetDeterminant& flip();
 
@@ -151,9 +141,7 @@ class STLBitsetDeterminant {
     double destroy_beta_bit(int n);
 
     /// Save the Slater determinant as a string
-    std::string str() const;
-    /// Save the Slater determinant as a string
-    std::string str2() const;
+    std::string str(int n = num_str_bits) const;
 
     /// Apply S+ to this determinant
     std::vector<std::pair<STLBitsetDeterminant, double>> spin_plus() const;
@@ -161,9 +149,6 @@ class STLBitsetDeterminant {
     std::vector<std::pair<STLBitsetDeterminant, double>> spin_minus() const;
     /// Return the expectation value of S_z
     double spin_z() const;
-    /// Compute the matrix element of the S^2 operator between this determinant
-    /// and a given one
-    double spin2(const STLBitsetDeterminant& rhs) const;
     /// Return the sign of a_n applied to this determinant
     double slater_sign_a(int n) const;
     double slater_sign_aa(int n, int m) const;
@@ -185,9 +170,6 @@ class STLBitsetDeterminant {
     /// Perform an beta-beta double excitation (IJ -> AB)
     double double_excitation_bb(int i, int j, int a, int b);
 
-    /// Given a set of determinant adds new elements necessary to have a spin complete set
-    void enforce_spin_completeness(std::vector<STLBitsetDeterminant>& det_space, int nmo);
-
     struct Hash {
         std::size_t operator()(const psi::forte::STLBitsetDeterminant& bs) const {
             return std::hash<bit_t>()(bs.bits_);
@@ -197,14 +179,28 @@ class STLBitsetDeterminant {
   private:
     /// The bits
     bit_t bits_;
-    /// The number of orbitals
-    int size_;
-
     /// A mask for the alpha bits
     const static bit_t alfa_mask;
     /// A mask for the beta bits
     const static bit_t beta_mask;
 };
+
+/// Find the spin orbitals that are occupied in both determinants (performs a bitwise AND, &)
+STLBitsetDeterminant common_occupation(const STLBitsetDeterminant& lhs,
+                                       const STLBitsetDeterminant& rhs);
+
+/// Find the spin orbitals that are occupied only one determinant (performs a bitwise XOR, ^)
+STLBitsetDeterminant different_occupation(const STLBitsetDeterminant& lhs,
+                                          const STLBitsetDeterminant& rhs);
+
+/// Find the spin orbitals that are occupied only one determinant (performs a bitwise OR, |)
+STLBitsetDeterminant union_occupation(const STLBitsetDeterminant& lhs,
+                                      const STLBitsetDeterminant& rhs);
+
+/// Given a set of determinant adds new elements necessary to have a spin complete set
+void enforce_spin_completeness(std::vector<STLBitsetDeterminant>& det_space, int nmo);
+/// Compute the matrix element of the S^2 operator between two determinants
+double spin2(const STLBitsetDeterminant& lhs, const STLBitsetDeterminant& rhs);
 }
 } // End Namespaces
 

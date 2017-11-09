@@ -213,10 +213,12 @@ double slater_rules_double_beta_beta(uint64_t Ib, uint64_t Jb,
 
 double slater_rules_double_alpha_beta_pre(int i, int a, uint64_t Ib, uint64_t Jb,
                                           const std::shared_ptr<FCIIntegrals>& ints) {
+    outfile->Printf("\n %zu %zu", Ib, Jb);
     uint64_t Ib_xor_Jb = Ib ^ Jb;
     uint64_t j = lowest_one_idx(Ib_xor_Jb);
     Ib_xor_Jb = clear_lowest_one(Ib_xor_Jb);
     uint64_t b = lowest_one_idx(Ib_xor_Jb);
+    outfile->Printf("\n  i = %d, j = %d, a = %d, b = %d", i, j, a, b);
     return ui64_slater_sign(Ib, j, b) * ints->tei_ab(i, j, a, b);
 }
 
@@ -542,6 +544,55 @@ double spin2(const UI64Determinant& lhs, const UI64Determinant& rhs) {
     // S^2 = S- S+ + Sz (Sz + 1)
     //     = Sz (Sz + 1) + Nbeta + Npairs - sum_pq' a+(qa) a+(pb) a-(qb) a-(pa)
     double matrix_element = 0.0;
+
+    //    int nadiff = 0;
+    //    int nbdiff = 0;
+    //    int na = 0;
+    //    int nb = 0;
+    //    int npair = 0;
+    //    // Count how many differences in mos are there and the number of alpha/beta
+    //    // electrons
+    //    for (int n = 0; n < size_; ++n) {
+    //        if (lhs.get_alfa_bit(n) != rhs.get_alfa_bit(n))
+    //            nadiff++;
+    //        if (lhs.get_beta_bit(n) != rhs.get_beta_bit(n))
+    //            nbdiff++;
+    //        if (lhs.get_alfa_bit(n))
+    //            na++;
+    //        if (lhs.get_beta_bit(n))
+    //            nb++;
+    //        if ((lhs.get_alfa_bit(n) and lhs.get_beta_bit(n)))
+    //            npair += 1;
+    //    }
+    //    nadiff /= 2;
+    //    nbdiff /= 2;
+
+    //    double Ms = 0.5 * static_cast<double>(na - nb);
+
+    //    // PhiI = PhiJ -> S^2 = Sz (Sz + 1) + Nbeta - Npairs
+    //    if ((nadiff == 0) and (nbdiff == 0)) {
+    //        matrix_element += Ms * (Ms + 1.0) + double(nb) - double(npair);
+    //    }
+
+    //    // PhiI = a+(qa) a+(pb) a-(qb) a-(pa) PhiJ
+    //    if ((nadiff == 1) and (nbdiff == 1)) {
+    //        // Find a pair of spin coupled electrons
+    //        int i = -1;
+    //        int j = -1;
+    //        // The logic here is a bit complex
+    //        for (int n = 0; n < size_; ++n) {
+    //            if (J[p] and I[num_str_bits + p] and (not rhs.get_beta_bit(n)) and (not I[p]))
+    //                i = p;
+    //            if (rhs.get_beta_bit(n) and I[p] and (not J[p]) and (not I[num_str_bits + p]))
+    //                j = p;
+    //        }
+    //        if (i != j and i >= 0 and j >= 0) {
+    //            double sign =
+    //                rhs.slater_sign_a(i) * rhs.slater_sign_b(j) * slater_sign_a(j) *
+    //                slater_sign_b(i);
+    //            matrix_element -= sign;
+    //        }
+    //    }
 
     int nadiff = ui64_bit_count(lhs.get_alfa_bits() ^ rhs.get_alfa_bits()) / 2;
     int nbdiff = ui64_bit_count(lhs.get_beta_bits() ^ rhs.get_beta_bits()) / 2;
