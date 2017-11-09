@@ -34,7 +34,7 @@
 namespace psi {
 namespace forte {
 
-class enum SparseMatrixType { General, Symmetric };
+enum SparseMatrixType { General, Symmetric };
 
 /**
  * A class to store a matrix in compressed sparse row format.
@@ -81,6 +81,7 @@ class CSCMatrix {
 
     /// Multiply by a dense vector b = Matrix x a
     void cscmatrix_densevector_multiplication(const std::vector<double>& a, std::vector<double>& b);
+    std::vector<unsigned int> column_index_;
 
   private:
     // Object Data
