@@ -41,6 +41,7 @@
 #include "psi4/liboptions/liboptions.h"
 #include "psi4/libtrans/integraltransform.h"
 #include "psi4/libpsi4util/PsiOutStream.h"
+#include "psi4/lib3index/df_helper.h"
 
 namespace psi {
 
@@ -398,7 +399,9 @@ class ForteIntegrals {
     /// computes/reads integrals
     virtual void gather_integrals() = 0;
     /// The B tensor
-    std::shared_ptr<psi::Tensor> B_;
+   // std::shared_ptr<psi::Tensor> B_;
+    std::shared_ptr<DF_Helper> df_;
+
     /// The mapping from correlated to actual MO
     /// Basically gives the original ordering back
     std::vector<size_t> cmotomo_;
