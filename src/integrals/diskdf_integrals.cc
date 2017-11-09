@@ -35,8 +35,6 @@
 #include "psi4/libmints/vector.h"
 #include "psi4/libmints/wavefunction.h"
 #include "psi4/libqt/qt.h"
-#include "../libthce/lreri.h"
-#include "../libthce/thce.h"
 
 #include "../helpers.h"
 
@@ -130,7 +128,8 @@ double DISKDFIntegrals::aptei_aa(size_t p, size_t q, size_t r, size_t s) {
     SharedVector B2(new Vector("B2", nthree_));
 
     // Read a block of Vectors for the Columb term
-    fseek(B_->file_pointer(), offset1 * sizeof(double), SEEK_SET);
+   // fseek(B_->file_pointer(), offset1 * sizeof(double), SEEK_SET);
+    fseek(B_, offset1 * sizeof(double), SEEK_SET);
     fread(&(B1->pointer()[0]), sizeof(double), nthree_, B_->file_pointer());
     fseek(B_->file_pointer(), offset2 * sizeof(double), SEEK_SET);
     fread(&(B2->pointer()[0]), sizeof(double), nthree_, B_->file_pointer());
@@ -473,17 +472,14 @@ void DISKDFIntegrals::gather_integrals() {
     // Constructs the DF function
     // I used this version of build as this doesn't build all the apces and
     // assume a RHF/UHF reference
-    std::shared_ptr<DFERI> df = DFERI::build(primary, auxiliary, options_);
+    std::shared_ptr<DF_Helper> df = std::make_shared(DF_Helper(primary,auxiliary));
 
-    // Pushes a C matrix that is ordered in pitzer ordering
-    // into the C_matrix object
-    df->set_C(Ca_ao);
     // set_C clears all the orbital spaces, so this creates the space
     // This space creates the total nmo_.
     // This assumes that everything is correlated.
-    df->add_space("ALL", 0, nmo_);
+    df->add_space("ALL", Ca_ao);
     // Does not add the pair_space, but says which one is should use
-    df->add_pair_space("B", "ALL", "ALL");
+    df->add_pair_space("B", "ALL", "ALL", "Qpq");
     df->set_memory(Process::environment.get_memory() / 8L);
 
     // Finally computes the df integrals
@@ -491,11 +487,14 @@ void DISKDFIntegrals::gather_integrals() {
     Timer timer;
     std::string str = "Computing DF Integrals";
     outfile->Printf("\n    %-36s ...", str.c_str());
-    df->compute();
+    df->transform();
     outfile->Printf("...Done. Timing %15.6f s", timer.get());
 
-    std::shared_ptr<Tensor> B = df->ints()["B"];
-    B_ = B;
+
+    df->write_disk_tensor("Bpq", df->get_tensor("B"));
+
+    
+
     df.reset();
 
     // outfile->Printf("\n %8.8f integral", aptei_ab(10,8,5,2));
