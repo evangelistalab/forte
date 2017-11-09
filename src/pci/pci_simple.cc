@@ -103,8 +103,7 @@ ProjectorCI_Simple::ProjectorCI_Simple(SharedWavefunction ref_wfn, Options& opti
                                        std::shared_ptr<ForteIntegrals> ints,
                                        std::shared_ptr<MOSpaceInfo> mo_space_info)
     : Wavefunction(options), ints_(ints), mo_space_info_(mo_space_info),
-      prescreening_tollerance_factor_(1.5), fast_variational_estimate_(false),
-      reference_determinant_(0) {
+      prescreening_tollerance_factor_(1.5), fast_variational_estimate_(false) {
     // Copy the wavefunction information
     shallow_copy(ref_wfn);
     reference_wavefunction_ = ref_wfn;
@@ -162,7 +161,7 @@ void ProjectorCI_Simple::startup() {
     nbeta_ = nactel_ - nalpha_;
 
     // Build the reference determinant and compute its energy
-    std::vector<STLBitsetDeterminant> reference_vec;
+    std::vector<Determinant> reference_vec;
     CI_Reference ref(reference_wavefunction_, options_, mo_space_info_, fci_ints_,
                      wavefunction_multiplicity_, ms, wavefunction_symmetry_);
     ref.set_ref_type("HF");
@@ -466,7 +465,7 @@ double ProjectorCI_Simple::estimate_high_energy() {
     }
     outfile->Printf("\n\n  ==> Estimate highest excitation energy <==");
     outfile->Printf("\n  Highest Excited determinant:");
-    outfile->Printf("\n  %s",high_det.str().c_str());
+    outfile->Printf("\n  %s", high_det.str().c_str());
     outfile->Printf("\n  Determinant Energy                    :  %.12f",
                     fci_ints_->energy(high_det) + nuclear_repulsion_energy_ +
                         fci_ints_->scalar_energy());
@@ -1790,7 +1789,7 @@ void ProjectorCI_Simple::print_wfn(det_vec& space, std::vector<double>& C, size_
         for (size_t sJ = 0; sJ < max_I; ++sJ) {
             size_t J = det_weight[sJ].second;
             if (std::fabs(C[I] * C[J]) > 1.0e-12) {
-                const double S2IJ = space[I].spin2(space[J]);
+                const double S2IJ = spin2(space[I], space[J]);
                 S2 += C[I] * C[J] * S2IJ;
             }
         }

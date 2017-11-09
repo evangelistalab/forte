@@ -128,7 +128,7 @@ ProjectorCI_HashVec::ProjectorCI_HashVec(SharedWavefunction ref_wfn, Options& op
                                          std::shared_ptr<ForteIntegrals> ints,
                                          std::shared_ptr<MOSpaceInfo> mo_space_info)
     : Wavefunction(options), ints_(ints), mo_space_info_(mo_space_info),
-      fast_variational_estimate_(false), reference_determinant_(0) {
+      fast_variational_estimate_(false) {
     // Copy the wavefunction information
     shallow_copy(ref_wfn);
     reference_wavefunction_ = ref_wfn;
@@ -186,7 +186,7 @@ void ProjectorCI_HashVec::startup() {
     nbeta_ = nactel_ - nalpha_;
 
     // Build the reference determinant and compute its energy
-    std::vector<STLBitsetDeterminant> reference_vec;
+    std::vector<Determinant> reference_vec;
     CI_Reference ref(reference_wavefunction_, options_, mo_space_info_, fci_ints_,
                      wavefunction_multiplicity_, ms, wavefunction_symmetry_);
     ref.set_ref_type("HF");
@@ -465,7 +465,7 @@ double ProjectorCI_HashVec::estimate_high_energy() {
     }
     outfile->Printf("\n\n  ==> Estimate highest excitation energy <==");
     outfile->Printf("\n  Highest Excited determinant:");
-    outfile->Printf("\n  %s",high_det.str().c_str());
+    outfile->Printf("\n  %s", high_det.str().c_str());
     outfile->Printf("\n  Determinant Energy                    :  %.12f",
                     fci_ints_->energy(high_det) + nuclear_repulsion_energy_ +
                         fci_ints_->scalar_energy());
@@ -2230,7 +2230,7 @@ void ProjectorCI_HashVec::print_wfn(const det_hashvec& space_hashvec, std::vecto
     for (size_t I = 0; I < max_I; ++I) {
         for (size_t J = 0; J < max_I; ++J) {
             if (std::fabs(C[I] * C[J]) > 1.0e-12) {
-                const double S2IJ = space_hashvec[I].spin2(space_hashvec[J]);
+                const double S2IJ = spin2(space_hashvec[I], space_hashvec[J]);
                 S2 += C[I] * C[J] * S2IJ;
             }
         }
@@ -2868,13 +2868,13 @@ void ProjectorCI_HashVec::compute_double_couplings(double double_coupling_thresh
 }
 
 void ProjectorCI_HashVec::compute_couplings_half(const det_hashvec& dets, size_t cut_size) {
-    STLBitsetDeterminant andBits(dets[0]), orBits(dets[0]);
+    Determinant andBits(dets[0]), orBits(dets[0]);
     andBits.flip();
     for (size_t i = 0; i < cut_size; ++i) {
-        andBits &= dets[i];
-        orBits |= dets[i];
+        andBits = common_occupation(andBits, dets[i]);
+        orBits = union_occupation(orBits, dets[i]);
     }
-    STLBitsetDeterminant actBits = andBits ^ orBits;
+    Determinant actBits = different_occupation(andBits, orBits);
 
     a_couplings_.clear();
     a_couplings_.resize(nact_);

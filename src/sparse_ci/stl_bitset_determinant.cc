@@ -257,16 +257,6 @@ double STLBitsetDeterminant::destroy_beta_bit(int n) {
     return slater_sign_b(n);
 }
 
-/// Switch alfa and beta bits
-void STLBitsetDeterminant::spin_flip() {
-    bool temp;
-    for (int p = 0; p < size_; ++p) {
-        temp = ALFA(p);
-        ALFA(p) = BETA(p);
-        BETA(p) = temp;
-    }
-}
-
 /// Return determinant with one spin annihilated, 0 == alpha
 void STLBitsetDeterminant::zero_spin(DetSpinType spin_type) {
     if (spin_type == DetSpinType::Alpha) {
@@ -276,9 +266,9 @@ void STLBitsetDeterminant::zero_spin(DetSpinType spin_type) {
         //        }
     } else {
         bits_ &= alfa_mask;
-//        for (int p = 0; p < size_; ++p) {
-//            BETA(p) = false;
-//        }
+        //        for (int p = 0; p < size_; ++p) {
+        //            BETA(p) = false;
+        //        }
     }
 }
 
@@ -533,7 +523,8 @@ double STLBitsetDeterminant::spin2(const STLBitsetDeterminant& rhs) const {
 
 void STLBitsetDeterminant::enforce_spin_completeness(std::vector<STLBitsetDeterminant>& det_space,
                                                      int nmo) {
-    det_hash<bool> det_map;
+    std::unordered_map<STLBitsetDeterminant, bool, STLBitsetDeterminant::Hash> det_map;
+    //    det_hash<bool> det_map;
 
     // Add all determinants to the map, assume set is mostly spin complete
     for (auto& I : det_space) {

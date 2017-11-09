@@ -200,7 +200,7 @@ void print_hash(det_hash<>& C, std::string description, int nmo, bool print_det 
     outfile->Printf("\n%s :", description.c_str());
     for (det_hash_it it = C.begin(); it != C.end(); it++) {
         if (print_det)
-          outfile->Printf("\n  %s",it->first.str().c_str());
+            outfile->Printf("\n  %s", it->first.str().c_str());
         outfile->Printf(" %.12lf ", it->second);
     }
     outfile->Printf("\n");
@@ -210,8 +210,7 @@ ProjectorCI::ProjectorCI(SharedWavefunction ref_wfn, Options& options,
                          std::shared_ptr<ForteIntegrals> ints,
                          std::shared_ptr<MOSpaceInfo> mo_space_info)
     : Wavefunction(options), ints_(ints), mo_space_info_(mo_space_info),
-      prescreening_tollerance_factor_(1.5), fast_variational_estimate_(false),
-      reference_determinant_(0) {
+      prescreening_tollerance_factor_(1.5), fast_variational_estimate_(false) {
     // Copy the wavefunction information
     shallow_copy(ref_wfn);
     reference_wavefunction_ = ref_wfn;
@@ -278,7 +277,7 @@ void ProjectorCI::startup() {
     nbeta_ = nactel_ - nalpha_;
 
     // Build the reference determinant and compute its energy
-    std::vector<STLBitsetDeterminant> reference_vec;
+    std::vector<Determinant> reference_vec;
     CI_Reference ref(reference_wavefunction_, options_, mo_space_info_, fci_ints_,
                      wavefunction_multiplicity_, ms, wavefunction_symmetry_);
     ref.set_ref_type("HF");
@@ -675,7 +674,7 @@ double ProjectorCI::estimate_high_energy() {
     }
     outfile->Printf("\n\n  ==> Estimate highest excitation energy <==");
     outfile->Printf("\n  Highest Excited determinant:");
-    outfile->Printf("\n  %s",high_det.str().c_str());
+    outfile->Printf("\n  %s", high_det.str().c_str());
     outfile->Printf("\n  Determinant Energy                    :  %.12f",
                     fci_ints_->energy(high_det) + nuclear_repulsion_energy_ +
                         fci_ints_->scalar_energy());
@@ -4948,7 +4947,7 @@ void ProjectorCI::print_wfn(det_vec& space, std::vector<double>& C, size_t max_o
         for (size_t sJ = 0; sJ < max_I; ++sJ) {
             size_t J = det_weight[sJ].second;
             if (std::fabs(C[I] * C[J]) > 1.0e-12) {
-                const double S2IJ = space[I].spin2(space[J]);
+                const double S2IJ = spin2(space[I], space[J]);
                 S2 += C[I] * C[J] * S2IJ;
             }
         }
@@ -5017,8 +5016,8 @@ void combine_hashes_into_hash(std::vector<det_hash<>>& thread_det_C_hash, det_ha
 }
 
 void copy_hash_to_vec(det_hash<>& dets_C_hash, det_vec& dets, std::vector<double>& C) {
-    size_t size = dets_C_hash.size();    
-    dets.resize(size,STLBitsetDeterminant(0));
+    size_t size = dets_C_hash.size();
+    dets.resize(size, Determinant());
     C.resize(size);
 
     size_t I = 0;
@@ -5032,7 +5031,7 @@ void copy_hash_to_vec(det_hash<>& dets_C_hash, det_vec& dets, std::vector<double
 void copy_hash_to_vec_order_ref(det_hash<>& dets_C_hash, det_vec& dets, std::vector<double>& C) {
     size_t hash_size = dets_C_hash.size();
     size_t size = dets.size();
-    dets.resize(hash_size,STLBitsetDeterminant(0));
+    dets.resize(hash_size, Determinant());
     C.resize(hash_size);
 
     for (size_t I = 0; I < size; ++I) {

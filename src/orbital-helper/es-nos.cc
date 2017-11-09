@@ -214,7 +214,7 @@ void ESNO::get_excited_determinants() {
         int noalfa = aocc.size();
         int nobeta = bocc.size();
 
-        STLBitsetDeterminant new_det(det);
+        Determinant new_det(det);
 
         // Single Alpha
         for (int i = 0; i < noalfa; ++i) {
@@ -272,7 +272,7 @@ void ESNO::upcast_reference() {
         }
     }
     for (size_t I = 0, max = ref_dets.size(); I < max; ++I) {
-        STLBitsetDeterminant det = ref_dets[I];
+        Determinant det = ref_dets[I];
 
         // First beta
         for (int n = n_irrep - 1; n >= 0; --n) {

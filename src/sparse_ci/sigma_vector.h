@@ -90,7 +90,7 @@ class SigmaVectorSparse : public SigmaVector {
  */
 class SigmaVectorList : public SigmaVector {
   public:
-    SigmaVectorList(const std::vector<STLBitsetDeterminant>& space, bool print_detail,
+    SigmaVectorList(const std::vector<Determinant>& space, bool print_detail,
                     std::shared_ptr<FCIIntegrals> fci_ints);
 
     void compute_sigma(SharedVector sigma, SharedVector b);
@@ -103,7 +103,7 @@ class SigmaVectorList : public SigmaVector {
     std::vector<std::vector<std::pair<size_t, double>>> bad_states_;
 
   protected:
-    const std::vector<STLBitsetDeterminant>& space_;
+    const std::vector<Determinant>& space_;
     std::shared_ptr<FCIIntegrals> fci_ints_;
 
     // Create the list of a_p|N>

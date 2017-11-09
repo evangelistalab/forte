@@ -5,7 +5,8 @@
  * that implements a variety of quantum chemistry methods for strongly
  * correlated electrons.
  *
- * Copyright (c) 2012-2017 by its authors (see COPYING, COPYING.LESSER, AUTHORS).
+ * Copyright (c) 2012-2017 by its authors (see COPYING, COPYING.LESSER,
+ * AUTHORS).
  *
  * The copyrights for code used from other parties are included in
  * the corresponding files.
@@ -26,35 +27,21 @@
  * @END LICENSE
  */
 
-#ifndef _string_tree_h_
-#define _string_tree_h_
+#ifndef _determinant_h_
+#define _determinant_h_
 
-#include <vector>
-#include <bitset>
 #include <unordered_map>
-#include "sparse_ci/determinant.h"
+//#include "stl_bitset_determinant.h"
+#include "ui64_determinant.h"
 
 namespace psi {
 namespace forte {
 
-using sbit_t = unsigned long int;
-
-class string_tree
-{
-  public:
-    // Build the string tree from a list of determinants
-    string_tree(size_t ndets);
-    string_tree(size_t ndets, std::vector<Determinant>);
-    size_t ndets_;
-    std::vector<sbit_t> sorted_a_;
-    std::vector<sbit_t> sorted_b_;
-    std::vector<sbit_t> sorted_ab_;
-    std::vector<sbit_t> sorted_ba_;
-    std::vector<double> C_ab_;
-    std::vector<double> C_ba_;
-};
-
+using Determinant = UI64Determinant;
+using det_vec = std::vector<Determinant>;
+template <typename T = double>
+using det_hash = std::unordered_map<Determinant, T, Determinant::Hash>;
+using det_hash_it = std::unordered_map<Determinant, double, Determinant::Hash>::iterator;
 }
-} // End Namespaces
-
-#endif // _string_tree_h_
+}
+#endif // _determinant_h_

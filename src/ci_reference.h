@@ -26,12 +26,15 @@
  * @END LICENSE
  */
 
+#ifndef _ci_reference_h_
+#define _ci_reference_h_
+
 #include "psi4/libmints/molecule.h"
 #include "psi4/libmints/wavefunction.h"
 #include "psi4/liboptions/liboptions.h"
 
 #include "fci/fci_integrals.h"
-#include "sparse_ci/stl_bitset_determinant.h"
+#include "sparse_ci/determinant.h"
 #include "helpers.h"
 
 namespace psi {
@@ -84,10 +87,10 @@ class CI_Reference // : public Wavefunction
 
     std::string ref_type_;
 
-    void build_ci_reference(std::vector<STLBitsetDeterminant>& ref_space);
-    void build_cas_reference(std::vector<STLBitsetDeterminant>& ref_space);
+    void build_ci_reference(std::vector<Determinant>& ref_space);
+    void build_cas_reference(std::vector<Determinant>& ref_space);
 
-    STLBitsetDeterminant get_occupation();
+    Determinant get_occupation();
 
     std::shared_ptr<FCIIntegrals> fci_ints_;
 
@@ -101,10 +104,12 @@ class CI_Reference // : public Wavefunction
     ~CI_Reference();
 
     /// Build a reference
-    void build_reference(std::vector<STLBitsetDeterminant>& ref_space);
+    void build_reference(std::vector<Determinant>& ref_space);
 
     /// Set the reference type
     void set_ref_type(const std::string& ref_type) { ref_type_ = ref_type; }
 };
 }
 } // End Namespaces
+
+#endif // _ci_reference_h_

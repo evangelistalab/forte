@@ -87,7 +87,7 @@ void ACTIVE_DSRGPT2::startup() {
 
         int nirrep = this->nirrep();
         dominant_dets_ =
-            std::vector<vector<STLBitsetDeterminant>>(nirrep, std::vector<STLBitsetDeterminant>());
+            std::vector<vector<Determinant>>(nirrep, std::vector<Determinant>());
         Uaorbs_ = std::vector<vector<SharedMatrix>>(nirrep, std::vector<SharedMatrix>());
         Uborbs_ = std::vector<vector<SharedMatrix>>(nirrep, std::vector<SharedMatrix>());
         ref_wfns_ = std::vector<SharedMatrix>(nirrep, SharedMatrix());
@@ -287,7 +287,7 @@ void ACTIVE_DSRGPT2::precompute_energy() {
             }
 
             // fill in dominant_dets_
-            std::vector<STLBitsetDeterminant> dominant_dets = fci_mo_->dominant_dets();
+            std::vector<Determinant> dominant_dets = fci_mo_->dominant_dets();
             for (int i = 0; i < nroot; ++i) {
                 dominant_dets_[h].push_back(dominant_dets[i]);
             }
@@ -347,7 +347,7 @@ void ACTIVE_DSRGPT2::precompute_energy() {
                 outfile->Printf("\n  Computing V%s reference oscillator strength 0%s -> n%s ... ",
                                 ref_type_.c_str(), ct.gamma(0).symbol(), ct.gamma(h).symbol());
 
-                std::vector<STLBitsetDeterminant> p_space1 = fci_mo_->p_space();
+                std::vector<Determinant> p_space1 = fci_mo_->p_space();
                 if (h == 0) {
                     eigen0 = eigen;
                     p_space_g_ = fci_mo_->p_space();
@@ -398,8 +398,8 @@ std::string ACTIVE_DSRGPT2::transition_type(const int& n0, const int& irrep0, co
 }
 
 void ACTIVE_DSRGPT2::compute_osc_ref(const int& irrep0, const int& irrep1,
-                                     const std::vector<STLBitsetDeterminant>& p_space0,
-                                     const std::vector<STLBitsetDeterminant>& p_space1,
+                                     const std::vector<Determinant>& p_space0,
+                                     const std::vector<Determinant>& p_space1,
                                      const std::vector<std::pair<SharedVector, double>>& eigen0,
                                      const std::vector<std::pair<SharedVector, double>>& eigen1) {
     // some basic test
@@ -418,7 +418,7 @@ void ACTIVE_DSRGPT2::compute_osc_ref(const int& irrep0, const int& irrep1,
 
     // combined space of determinants
     size_t ndet = ndet0;
-    std::vector<STLBitsetDeterminant> p_space(p_space0);
+    std::vector<Determinant> p_space(p_space0);
     if (!same) {
         ndet += ndet1;
         p_space.insert(p_space.end(), p_space1.begin(), p_space1.end());
@@ -489,7 +489,7 @@ void ACTIVE_DSRGPT2::compute_osc_ref(const int& irrep0, const int& irrep1,
 }
 
 Vector4 ACTIVE_DSRGPT2::compute_td_ref_root(std::shared_ptr<FCIIntegrals> fci_ints,
-                                            const std::vector<STLBitsetDeterminant>& p_space,
+                                            const std::vector<Determinant>& p_space,
                                             SharedMatrix evecs, const int& root0,
                                             const int& root1) {
     int nirrep = mo_space_info_->nirrep();
@@ -704,7 +704,7 @@ double ACTIVE_DSRGPT2::compute_energy() {
                 }
 
                 // fill in dominant_dets_
-                std::vector<STLBitsetDeterminant> dominant_dets = fci_mo_->dominant_dets();
+                std::vector<Determinant> dominant_dets = fci_mo_->dominant_dets();
                 for (int i = 0; i < nroot; ++i) {
                     dominant_dets_[h].push_back(dominant_dets[i]);
                 }
@@ -740,7 +740,7 @@ double ACTIVE_DSRGPT2::compute_energy() {
                         "\n  Computing V%s reference oscillator strength 0%s -> n%s ... ",
                         ref_type_.c_str(), ct.gamma(0).symbol(), ct.gamma(h).symbol());
 
-                    std::vector<STLBitsetDeterminant> p_space1 = fci_mo_->p_space();
+                    std::vector<Determinant> p_space1 = fci_mo_->p_space();
                     if (h == 0) {
                         eigen0 = eigen;
                         p_space_g_ = fci_mo_->p_space();
@@ -1200,12 +1200,12 @@ void ACTIVE_DSRGPT2::compute_osc_pt2(const int& irrep, const int& root, const do
     // compute reference transition density
     // step 1: combine p_space and eigenvectors if needed
     int n = root;
-    std::vector<STLBitsetDeterminant> p_space(p_space_g_);
+    std::vector<Determinant> p_space(p_space_g_);
     SharedMatrix evecs = ref_wfns_[0];
 
     if (irrep != 0) {
         n += ref_wfns_[0]->ncol();
-        std::vector<STLBitsetDeterminant> p_space1 = fci_mo_->p_space();
+        std::vector<Determinant> p_space1 = fci_mo_->p_space();
         p_space.insert(p_space.end(), p_space1.begin(), p_space1.end());
         evecs = combine_evecs(0, irrep);
     }
@@ -1492,11 +1492,11 @@ SharedMatrix ACTIVE_DSRGPT2::combine_evecs(const int& h0, const int& h1) {
     return evecs;
 }
 
-std::map<STLBitsetDeterminant, double>
-ACTIVE_DSRGPT2::p_space_actv_to_nmo(const std::vector<STLBitsetDeterminant>& p_space,
+std::map<Determinant, double>
+ACTIVE_DSRGPT2::p_space_actv_to_nmo(const std::vector<Determinant>& p_space,
                                     SharedVector wfn) {
-    //    STLBitsetDeterminant::reset_ints();
-    std::map<STLBitsetDeterminant, double> detsmap;
+    //    Determinant::reset_ints();
+    std::map<Determinant, double> detsmap;
 
     size_t ncmo = mo_space_info_->size("CORRELATED");
     size_t nact = mo_space_info_->size("ACTIVE");
@@ -1511,14 +1511,14 @@ ACTIVE_DSRGPT2::p_space_actv_to_nmo(const std::vector<STLBitsetDeterminant>& p_s
         }
 
         // find out occupation of determinant (active only)
-        STLBitsetDeterminant det_actv(p_space[I]);
+        Determinant det_actv(p_space[I]);
         std::vector<int> occ_alfa(det_actv.get_alfa_occ());
         std::vector<int> occ_beta(det_actv.get_beta_occ());
         //        det_actv.print();
 
         // create a empty big determinant
-        STLBitsetDeterminant det(ncmo);
-
+//        Determinant det(ncmo); <- xsize
+        Determinant det;
         // fill in core orbitals
         double sign = 1.0;
         for (size_t m = 0, sc = core_mos.size(); m < sc; ++m) {
@@ -1541,21 +1541,21 @@ ACTIVE_DSRGPT2::p_space_actv_to_nmo(const std::vector<STLBitsetDeterminant>& p_s
         //        outfile->Printf("  %18.12f", detsmap[det]);
     }
 
-    //    STLBitsetDeterminant::set_ints(fci_mo_->fci_ints_);
+    //    Determinant::set_ints(fci_mo_->fci_ints_);
     return detsmap;
 }
 
-std::map<STLBitsetDeterminant, double>
-ACTIVE_DSRGPT2::excited_wfn_1st(const std::map<STLBitsetDeterminant, double>& ref,
+std::map<Determinant, double>
+ACTIVE_DSRGPT2::excited_wfn_1st(const std::map<Determinant, double>& ref,
                                 ambit::BlockedTensor& T1, ambit::BlockedTensor& T2) {
     size_t ncmo = mo_space_info_->size("CORRELATED");
-    //    STLBitsetDeterminant::reset_ints();
+    //    Determinant::reset_ints();
 
-    std::map<STLBitsetDeterminant, double> out;
+    std::map<Determinant, double> out;
 
     for (const auto& detCIpair : ref) {
         double ci = detCIpair.second;
-        STLBitsetDeterminant det(detCIpair.first);
+        Determinant det(detCIpair.first);
 
         // singles
         T1.citerate([&](const std::vector<size_t>& i, const std::vector<SpinType>& spin,
@@ -1564,7 +1564,7 @@ ACTIVE_DSRGPT2::excited_wfn_1st(const std::map<STLBitsetDeterminant, double>& re
             if (fabs(value) > 1.0e-12) {
                 if (spin[0] == AlphaSpin) {
                     double sign = 1.0;
-                    STLBitsetDeterminant E(det);
+                    Determinant E(det);
                     sign *= E.destroy_alfa_bit(i[0]);
                     sign *= E.create_alfa_bit(i[1]);
                     if (sign != 0) {
@@ -1588,7 +1588,7 @@ ACTIVE_DSRGPT2::excited_wfn_1st(const std::map<STLBitsetDeterminant, double>& re
                     }
                 } else {
                     double sign = 1.0;
-                    STLBitsetDeterminant E(det);
+                    Determinant E(det);
                     sign *= E.destroy_beta_bit(i[0]);
                     sign *= E.create_beta_bit(i[1]);
                     if (sign != 0) {
@@ -1622,7 +1622,7 @@ ACTIVE_DSRGPT2::excited_wfn_1st(const std::map<STLBitsetDeterminant, double>& re
                 if (spin[0] == AlphaSpin && spin[1] == AlphaSpin) {
                     // a^+ b^+ j i
                     double sign = 1.0;
-                    STLBitsetDeterminant E(det);
+                    Determinant E(det);
                     sign *= E.destroy_alfa_bit(i[0]);
                     sign *= E.destroy_alfa_bit(i[1]);
                     sign *= E.create_alfa_bit(i[3]);
@@ -1652,7 +1652,7 @@ ACTIVE_DSRGPT2::excited_wfn_1st(const std::map<STLBitsetDeterminant, double>& re
                 } else if (spin[0] == AlphaSpin && spin[1] == BetaSpin) {
                     // a^+ B^+ J i
                     double sign = 1.0;
-                    STLBitsetDeterminant E(det);
+                    Determinant E(det);
                     sign *= E.destroy_alfa_bit(i[0]);
                     sign *= E.destroy_beta_bit(i[1]);
                     sign *= E.create_beta_bit(i[3]);
@@ -1682,7 +1682,7 @@ ACTIVE_DSRGPT2::excited_wfn_1st(const std::map<STLBitsetDeterminant, double>& re
                 } else if (spin[0] == BetaSpin && spin[1] == BetaSpin) {
                     // A^+ B^+ J I
                     double sign = 1.0;
-                    STLBitsetDeterminant E(det);
+                    Determinant E(det);
                     sign *= E.destroy_beta_bit(i[0]);
                     sign *= E.destroy_beta_bit(i[1]);
                     sign *= E.create_beta_bit(i[3]);
@@ -1719,7 +1719,7 @@ ACTIVE_DSRGPT2::excited_wfn_1st(const std::map<STLBitsetDeterminant, double>& re
     //        x.first.print();
     //        outfile->Printf("  %18.12f", x.second);
     //    }
-    //    STLBitsetDeterminant::set_ints(fci_mo_->fci_ints_);
+    //    Determinant::set_ints(fci_mo_->fci_ints_);
     return out;
 }
 
@@ -1732,19 +1732,19 @@ void ACTIVE_DSRGPT2::compute_osc_pt2_dets(const int& irrep, const int& root, con
     */
 
     // form determinants for ground and excited states
-    std::map<STLBitsetDeterminant, double> wfn0_g =
+    std::map<Determinant, double> wfn0_g =
         p_space_actv_to_nmo(p_space_g_, ref_wfns_[0]->get_column(0, 0));
-    std::map<STLBitsetDeterminant, double> wfn0_x =
+    std::map<Determinant, double> wfn0_x =
         p_space_actv_to_nmo(fci_mo_->p_space(), ref_wfns_[irrep]->get_column(0, root));
 
     // compute transition density matrix of <Psi_x 1st| p^+ q |Psi_g 0th>
 
     // step 1: compute first order wavefunction of the excited state
-    std::map<STLBitsetDeterminant, double> wfn_1st = excited_wfn_1st(wfn0_x, T1_x, T2_x);
-    //    std::map<STLBitsetDeterminant, double> wfn_1st;
+    std::map<Determinant, double> wfn_1st = excited_wfn_1st(wfn0_x, T1_x, T2_x);
+    //    std::map<Determinant, double> wfn_1st;
 
     // step 2: combine determinant space
-    std::vector<STLBitsetDeterminant> p_space;
+    std::vector<Determinant> p_space;
     for (const auto& detCIpair : wfn0_g) {
         p_space.emplace_back(detCIpair.first);
     }
@@ -1811,7 +1811,7 @@ void ACTIVE_DSRGPT2::compute_osc_pt2_dets(const int& irrep, const int& root, con
     //    // compute transition density matrix of <Psi_x 1th| p^+ q |Psi_g 1st>
 
     //    // step 1: compute first-order wavefunction of the excited state
-    //    std::map<STLBitsetDeterminant, double> wfn1_x = excited_wfn_1st(wfn0_x, T1_x, T2_x);
+    //    std::map<Determinant, double> wfn1_x = excited_wfn_1st(wfn0_x, T1_x, T2_x);
 
     //    // step 2: combine determinant space
     //    p_space.clear();
@@ -1904,16 +1904,16 @@ void ACTIVE_DSRGPT2::compute_osc_pt2_dets(const int& irrep, const int& root, con
                     transD.y, transD.z);
 }
 
-std::map<STLBitsetDeterminant, double>
-ACTIVE_DSRGPT2::excited_ref(const std::map<STLBitsetDeterminant, double>& ref, const int& p,
+std::map<Determinant, double>
+ACTIVE_DSRGPT2::excited_ref(const std::map<Determinant, double>& ref, const int& p,
                             const int& q) {
     size_t ncmo = mo_space_info_->size("CORRELATED");
 
-    std::map<STLBitsetDeterminant, double> out;
+    std::map<Determinant, double> out;
 
     for (const auto& detCIpair : ref) {
         double ci = detCIpair.second;
-        STLBitsetDeterminant det(detCIpair.first);
+        Determinant det(detCIpair.first);
 
         std::vector<int> o_a = det.get_alfa_occ();
         std::vector<int> o_b = det.get_beta_occ();
@@ -1943,7 +1943,7 @@ ACTIVE_DSRGPT2::excited_ref(const std::map<STLBitsetDeterminant, double>& ref, c
             // alpha
             if (std::find(o_a.begin(), o_a.end(), q) != o_a.end() &&
                 std::find(v_a.begin(), v_a.end(), p) != v_a.end()) {
-                STLBitsetDeterminant E(det);
+                Determinant E(det);
                 double sign = E.single_excitation_a(q, p);
                 if (out.find(E) != out.end()) {
                     out[E] += ci * sign;
@@ -1955,7 +1955,7 @@ ACTIVE_DSRGPT2::excited_ref(const std::map<STLBitsetDeterminant, double>& ref, c
             // beta
             if (std::find(o_b.begin(), o_b.end(), q) != o_b.end() &&
                 std::find(v_b.begin(), v_b.end(), p) != v_b.end()) {
-                STLBitsetDeterminant E(det);
+                Determinant E(det);
                 double sign = E.single_excitation_b(q, p);
                 if (out.find(E) != out.end()) {
                     out[E] += ci * sign;
@@ -1972,14 +1972,14 @@ void ACTIVE_DSRGPT2::compute_osc_pt2_overlap(const int& irrep, const int& root, 
                                              ambit::BlockedTensor& T1_x,
                                              ambit::BlockedTensor& T2_x) {
     // form determinants for ground and excited states
-    std::map<STLBitsetDeterminant, double> wfn0_g =
+    std::map<Determinant, double> wfn0_g =
         p_space_actv_to_nmo(p_space_g_, ref_wfns_[0]->get_column(0, 0));
-    std::map<STLBitsetDeterminant, double> wfn0_x =
+    std::map<Determinant, double> wfn0_x =
         p_space_actv_to_nmo(fci_mo_->p_space(), ref_wfns_[irrep]->get_column(0, root));
 
     // compute first order wavefunctions for the ground and excited states
-    std::map<STLBitsetDeterminant, double> wfn1_g = excited_wfn_1st(wfn0_g, T1_g_, T2_g_);
-    std::map<STLBitsetDeterminant, double> wfn1_x = excited_wfn_1st(wfn0_x, T1_x, T2_x);
+    std::map<Determinant, double> wfn1_g = excited_wfn_1st(wfn0_g, T1_g_, T2_g_);
+    std::map<Determinant, double> wfn1_x = excited_wfn_1st(wfn0_x, T1_x, T2_x);
 
     // figure out C1 Pitzer ordering
     Dimension nmopi = this->nmopi();
@@ -2020,13 +2020,13 @@ void ACTIVE_DSRGPT2::compute_osc_pt2_overlap(const int& irrep, const int& root, 
             size_t nj = indices[j];
 
             // compute p^+ q |Psi_g 0th>
-            std::map<STLBitsetDeterminant, double> g0_pq = excited_ref(wfn0_g, i, j);
+            std::map<Determinant, double> g0_pq = excited_ref(wfn0_g, i, j);
 
             // compute overlap <Psi_x 1th| p^+ q |Psi_g 0th>
             double value = compute_overlap(g0_pq, wfn1_x);
 
             // compute <Psi_x 0th| p^+ q
-            std::map<STLBitsetDeterminant, double> x0_qp = excited_ref(wfn0_x, j, i);
+            std::map<Determinant, double> x0_qp = excited_ref(wfn0_x, j, i);
 
             // compute overlap <Psi_x 0th| p^+ q |Psi_g 1st>
             value += compute_overlap(x0_qp, wfn1_g);
@@ -2040,12 +2040,12 @@ void ACTIVE_DSRGPT2::compute_osc_pt2_overlap(const int& irrep, const int& root, 
     // compute transition density matrix of <Psi_x 1st| p^+ q |Psi_g 0th>
 }
 
-double ACTIVE_DSRGPT2::compute_overlap(std::map<STLBitsetDeterminant, double> wfn1,
-                                       std::map<STLBitsetDeterminant, double> wfn2) {
+double ACTIVE_DSRGPT2::compute_overlap(std::map<Determinant, double> wfn1,
+                                       std::map<Determinant, double> wfn2) {
     double value = 0.0;
 
     for (const auto& p1 : wfn1) {
-        STLBitsetDeterminant det1(p1.first);
+        Determinant det1(p1.first);
         if (wfn2.find(det1) != wfn2.end()) {
             value += p1.second * wfn2[det1];
         }
@@ -2390,8 +2390,8 @@ void ACTIVE_DSRGPT2::print_summary() {
     out_Eex.close();
 }
 
-std::string ACTIVE_DSRGPT2::compute_ex_type(const STLBitsetDeterminant& det,
-                                            const STLBitsetDeterminant& ref_det) {
+std::string ACTIVE_DSRGPT2::compute_ex_type(const Determinant& det,
+                                            const Determinant& ref_det) {
     Dimension active = mo_space_info_->get_dimension("ACTIVE");
     int nirrep = this->nirrep();
     std::vector<std::string> sym_active;

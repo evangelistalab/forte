@@ -32,7 +32,7 @@
 #include "psi4/libpsi4util/process.h"
 #include "fci/fci_integrals.h"
 #include "determinant_hashvector.h"
-#include "sparse_ci/stl_bitset_determinant.h"
+#include "sparse_ci/determinant.h"
 #include "helpers.h"
 
 namespace psi {

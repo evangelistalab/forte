@@ -44,7 +44,7 @@
 #include "../blockedtensorfactory.h"
 #include "../mrdsrg-helper/dsrg_source.h"
 #include "../mrdsrg-helper/dsrg_time.h"
-#include "../sparse_ci/stl_bitset_determinant.h"
+#include "../sparse_ci/determinant.h"
 
 using namespace ambit;
 namespace psi {
@@ -84,7 +84,7 @@ class MRDSRG : public Wavefunction {
     }
 
     /// Set determinants in the model space
-    void set_p_spaces(std::vector<std::vector<psi::forte::STLBitsetDeterminant>> p_spaces) {
+    void set_p_spaces(std::vector<std::vector<psi::forte::Determinant>> p_spaces) {
         p_spaces_ = p_spaces;
     }
 
@@ -129,7 +129,7 @@ class MRDSRG : public Wavefunction {
     /// CASCI eigen values and eigen vectors for state averaging
     std::vector<std::vector<std::pair<SharedVector, double>>> eigens_;
     /// Determinants in the model space
-    std::vector<std::vector<psi::forte::STLBitsetDeterminant>> p_spaces_;
+    std::vector<std::vector<psi::forte::Determinant>> p_spaces_;
 
     /// List of alpha core MOs
     std::vector<size_t> acore_mos_;

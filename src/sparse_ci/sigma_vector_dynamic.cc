@@ -73,7 +73,7 @@ SigmaVectorDynamic::SigmaVectorDynamic(const DeterminantHashVec& space,
     nmo_ = fci_ints_->nmo();
 
     for (size_t I = 0; I < size_; ++I) {
-        const STLBitsetDeterminant& detI = space.get_det(I);
+        const Determinant& detI = space.get_det(I);
         double EI = fci_ints_->energy(detI);
         diag_.push_back(EI);
     }

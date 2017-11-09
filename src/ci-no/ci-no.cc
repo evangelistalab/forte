@@ -35,7 +35,7 @@
 #include "../fci/fci_integrals.h"
 #include "../forte_options.h"
 #include "../sparse_ci/sparse_ci_solver.h"
-#include "../sparse_ci/stl_bitset_determinant.h"
+#include "../sparse_ci/determinant.h"
 #include "ci-no.h"
 //#include "../hash_vector.h"
 
