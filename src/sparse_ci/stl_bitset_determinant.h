@@ -34,6 +34,8 @@
 #include <algorithm>
 #include <vector>
 
+#include "determinant_common.h"
+
 namespace psi {
 namespace forte {
 
@@ -51,8 +53,6 @@ namespace forte {
  * true <-> 1
  * false <-> 0
  */
-
-enum class DetSpinType { Alpha, Beta };
 
 class STLBitsetDeterminant {
   public:
@@ -112,9 +112,6 @@ class STLBitsetDeterminant {
     void set_alfa_bit(int n, bool value);
     /// Set the value of a beta bit
     void set_beta_bit(int n, bool value);
-
-    /// Switch the alpha and beta occupations
-    void spin_flip();
 
     /// Return determinant with one spin zeroed, alpha == 0
     void zero_spin(DetSpinType spin_type);
@@ -208,13 +205,6 @@ class STLBitsetDeterminant {
     /// A mask for the beta bits
     const static bit_t beta_mask;
 };
-
-using Determinant = STLBitsetDeterminant;
-using det_vec = std::vector<STLBitsetDeterminant>;
-template <typename T = double>
-using det_hash = std::unordered_map<STLBitsetDeterminant, T, STLBitsetDeterminant::Hash>;
-using det_hash_it =
-    std::unordered_map<STLBitsetDeterminant, double, STLBitsetDeterminant::Hash>::iterator;
 }
 } // End Namespaces
 

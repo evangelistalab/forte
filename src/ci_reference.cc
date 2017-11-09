@@ -88,7 +88,7 @@ CI_Reference::CI_Reference(std::shared_ptr<Wavefunction> wfn, Options& options,
     nalpha_ = 0.5 * (nel + twice_ms_);
     nbeta_ = nel - nalpha_;
 
-    //    outfile->Printf("\n  Number of active orbitals: %d", STLBitsetDeterminant::nmo_);
+    //    outfile->Printf("\n  Number of active orbitals: %d", Determinant::nmo_);
     outfile->Printf("\n  Number of active alpha electrons: %d", nalpha_);
     outfile->Printf("\n  Number of active beta electrons: %d", nbeta_);
     outfile->Printf("\n  Maximum reference space size: %zu", subspace_size_);
@@ -96,7 +96,7 @@ CI_Reference::CI_Reference(std::shared_ptr<Wavefunction> wfn, Options& options,
 
 CI_Reference::~CI_Reference() {}
 
-void CI_Reference::build_reference(std::vector<STLBitsetDeterminant>& ref_space) {
+void CI_Reference::build_reference(std::vector<Determinant>& ref_space) {
 
     if (ref_type_ == "CAS") {
         build_cas_reference(ref_space);
@@ -105,9 +105,9 @@ void CI_Reference::build_reference(std::vector<STLBitsetDeterminant>& ref_space)
     }
 }
 
-void CI_Reference::build_ci_reference(std::vector<STLBitsetDeterminant>& ref_space) {
-    STLBitsetDeterminant det(get_occupation());
-    outfile->Printf("\n  %s",det.str().c_str());
+void CI_Reference::build_ci_reference(std::vector<Determinant>& ref_space) {
+    Determinant det(get_occupation());
+    outfile->Printf("\n  %s", det.str().c_str());
 
     ref_space.push_back(det);
 
@@ -127,7 +127,7 @@ void CI_Reference::build_ci_reference(std::vector<STLBitsetDeterminant>& ref_spa
             for (int a = 0; a < nvalpha; ++a) {
                 int aa = avir[a];
                 if ((mo_symmetry_[ii] ^ mo_symmetry_[aa]) == 0) {
-                    STLBitsetDeterminant new_det(det);
+                    Determinant new_det(det);
                     new_det.set_alfa_bit(ii, false);
                     new_det.set_alfa_bit(aa, true);
                     ref_space.push_back(new_det);
@@ -140,7 +140,7 @@ void CI_Reference::build_ci_reference(std::vector<STLBitsetDeterminant>& ref_spa
             for (int a = 0; a < nvbeta; ++a) {
                 int aa = bvir[a];
                 if ((mo_symmetry_[ii] ^ mo_symmetry_[aa]) == 0) {
-                    STLBitsetDeterminant new_det(det);
+                    Determinant new_det(det);
                     new_det.set_beta_bit(ii, false);
                     new_det.set_beta_bit(aa, true);
                     ref_space.push_back(new_det);
@@ -170,7 +170,7 @@ void CI_Reference::build_ci_reference(std::vector<STLBitsetDeterminant>& ref_spa
                         int bb = avir[b];
                         if ((mo_symmetry_[ii] ^ mo_symmetry_[jj] ^ mo_symmetry_[aa] ^
                              mo_symmetry_[bb]) == 0) {
-                            STLBitsetDeterminant new_det(det);
+                            Determinant new_det(det);
                             new_det.set_alfa_bit(ii, false);
                             new_det.set_alfa_bit(jj, false);
                             new_det.set_alfa_bit(aa, true);
@@ -192,7 +192,7 @@ void CI_Reference::build_ci_reference(std::vector<STLBitsetDeterminant>& ref_spa
                         int bb = bvir[b];
                         if ((mo_symmetry_[ii] ^ mo_symmetry_[jj] ^ mo_symmetry_[aa] ^
                              mo_symmetry_[bb]) == 0) {
-                            STLBitsetDeterminant new_det(det);
+                            Determinant new_det(det);
                             new_det.set_alfa_bit(ii, false);
                             new_det.set_beta_bit(jj, false);
                             new_det.set_alfa_bit(aa, true);
@@ -214,7 +214,7 @@ void CI_Reference::build_ci_reference(std::vector<STLBitsetDeterminant>& ref_spa
                         int bb = bvir[b];
                         if ((mo_symmetry_[ii] ^
                              (mo_symmetry_[jj] ^ (mo_symmetry_[aa] ^ mo_symmetry_[bb]))) == 0) {
-                            STLBitsetDeterminant new_det(det);
+                            Determinant new_det(det);
                             new_det.set_beta_bit(ii, false);
                             new_det.set_beta_bit(jj, false);
                             new_det.set_beta_bit(aa, true);
@@ -228,7 +228,7 @@ void CI_Reference::build_ci_reference(std::vector<STLBitsetDeterminant>& ref_spa
     }
 }
 
-void CI_Reference::build_cas_reference(std::vector<STLBitsetDeterminant>& ref_space) {
+void CI_Reference::build_cas_reference(std::vector<Determinant>& ref_space) {
     int nact = mo_space_info_->size("ACTIVE");
 
     // Get the active mos
@@ -272,7 +272,8 @@ void CI_Reference::build_cas_reference(std::vector<STLBitsetDeterminant>& ref_sp
         std::sort(begin(tmp_det_b), end(tmp_det_b));
 
         // Build the core det
-        STLBitsetDeterminant core_det(nact);
+        // Determinant core_det(nact); <- xsize
+        Determinant core_det;
         for (int i = 0; i < nf; ++i) {
             core_det.set_alfa_bit(std::get<2>(active_mos[i]), true);
             core_det.set_beta_bit(std::get<2>(active_mos[i]), true);
@@ -281,7 +282,8 @@ void CI_Reference::build_cas_reference(std::vector<STLBitsetDeterminant>& ref_sp
         do {
             do {
                 // Build determinant
-                STLBitsetDeterminant det(core_det);
+//                Determinant det(core_det); <- xsize
+                Determinant det;
                 int sym = 0;
                 for (int p = 0; p < na; ++p) {
                     det.set_alfa_bit(active_subspace[p], tmp_det_a[p]);
@@ -395,9 +397,10 @@ std::vector<std::tuple<double, int, int>> CI_Reference::sym_labeled_orbitals(std
     return labeled_orb;
 }
 
-STLBitsetDeterminant CI_Reference::get_occupation() {
+Determinant CI_Reference::get_occupation() {
     int nact = mo_space_info_->size("ACTIVE");
-    STLBitsetDeterminant det(nact);
+//    Determinant det(nact); <- xsize
+    Determinant det;
 
     // nyms denotes the number of electrons needed to assign symmetry and
     // multiplicity

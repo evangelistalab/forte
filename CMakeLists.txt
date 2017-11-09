@@ -52,7 +52,6 @@ src/davidson.cc
 src/determinant_hashvector.cc
 src/dmrgscf.cc
 src/dmrgsolver.cc
-src/dynamic_bitset_determinant.cc
 src/dynamic_correlation.cc
 src/fci_mo.cc
 src/fcimc.cc
@@ -81,6 +80,7 @@ src/sparse_ci/stl_bitset_determinant.cc
 src/sparse_ci/stl_bitset_string.cc
 src/sparse_ci/sorted_string_list.cc
 src/sparse_ci/ui64_determinant.cc
+src/sparse_ci/ui64_determinant_functions.cc
 src/sq.cc
 src/tensorsrg.cc
 src/tensorsrg_antihermitian_commutators.cc
@@ -91,7 +91,6 @@ src/tensorsrg_save.cc
 src/tensorsrg_srg.cc
 src/v2rdm.cc
 src/aci/aci.cc
-src/aci/aci64.cc
 src/aosubspace/aosubspace.cc
 src/ci-no/ci-no.cc
 src/ci-no/mrci-no.cc

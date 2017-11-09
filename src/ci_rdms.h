@@ -39,7 +39,7 @@
 #include "helpers.h"
 #include "operator.h"
 #include "reference.h"
-#include "sparse_ci/stl_bitset_determinant.h"
+#include "sparse_ci/determinant.h"
 #include "fci/string_lists.h"
 #include "fci/fci_integrals.h"
 
@@ -48,12 +48,12 @@ namespace forte {
 
 class CI_RDMS {
   public:
-    using det_hash = std::unordered_map<STLBitsetDeterminant, size_t, STLBitsetDeterminant::Hash>;
+    using det_hash = std::unordered_map<Determinant, size_t, Determinant::Hash>;
     using det_hash_it = det_hash::iterator;
 
     // Class constructor and destructor
     CI_RDMS(Options& options, std::shared_ptr<FCIIntegrals> fci_ints,
-            const std::vector<STLBitsetDeterminant>& det_space, SharedMatrix evecs, int root1,
+            const std::vector<Determinant>& det_space, SharedMatrix evecs, int root1,
             int root2);
 
     CI_RDMS(Options& options, DeterminantHashVec& wfn, std::shared_ptr<FCIIntegrals> fci_ints,
@@ -110,7 +110,7 @@ class CI_RDMS {
     void set_symmetry(int sym) { symmetry_ = sym; }
 
     // Convert to strings
-    void convert_to_string(std::vector<STLBitsetDeterminant>& space);
+    void convert_to_string(std::vector<Determinant>& space);
 
   private:
     /* Class Variables*/
@@ -126,7 +126,7 @@ class CI_RDMS {
     DeterminantHashVec wfn_;
 
     // The Determinant Space
-    const std::vector<STLBitsetDeterminant> det_space_;
+    const std::vector<Determinant> det_space_;
 
     // The CI coefficients
     SharedMatrix evecs_;

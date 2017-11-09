@@ -45,7 +45,7 @@
 #include "../determinant_hashvector.h"
 #include "../reference.h"
 #include "../sparse_ci/sparse_ci_solver.h"
-#include "../sparse_ci/stl_bitset_determinant.h"
+#include "../sparse_ci/determinant.h"
 #include "../orbital-helper/iao_builder.h"
 
 using d1 = std::vector<double>;
@@ -162,7 +162,7 @@ class AdaptiveCI : public Wavefunction {
     /// The nuclear repulsion energy
     double nuclear_repulsion_energy_;
     /// The reference determinant
-    std::vector<STLBitsetDeterminant> initial_reference_;
+    std::vector<Determinant> initial_reference_;
     /// The PT2 energy correction
     std::vector<double> multistate_pt2_energy_correction_;
     /// The current iteration
@@ -231,17 +231,17 @@ class AdaptiveCI : public Wavefunction {
     SharedMatrix evecs_;
 
     /// A map of determinants in the P space
-    std::unordered_map<STLBitsetDeterminant, int, STLBitsetDeterminant::Hash> P_space_map_;
+    std::unordered_map<Determinant, int, Determinant::Hash> P_space_map_;
     /// A History of Determinants
-    std::unordered_map<STLBitsetDeterminant, std::vector<std::pair<size_t, std::string>>,
-                       STLBitsetDeterminant::Hash>
+    std::unordered_map<Determinant, std::vector<std::pair<size_t, std::string>>,
+                       Determinant::Hash>
         det_history_;
     /// Stream for printing determinant coefficients
     std::ofstream det_list_;
     /// Roots to project out
     std::vector<std::vector<std::pair<size_t, double>>> bad_roots_;
     /// Storage of past roots
-    std::vector<std::vector<std::pair<STLBitsetDeterminant, double>>> old_roots_;
+    std::vector<std::vector<std::pair<Determinant, double>>> old_roots_;
 
     /// A Vector to store spin of each root
     std::vector<std::pair<double, double>> root_spin_vec_;
@@ -337,7 +337,7 @@ class AdaptiveCI : public Wavefunction {
                                                         SharedMatrix evecs, int nroot);
 
     /// Compute 1-RDM
-    void compute_1rdm(SharedMatrix A, SharedMatrix B, std::vector<STLBitsetDeterminant>& det_space,
+    void compute_1rdm(SharedMatrix A, SharedMatrix B, std::vector<Determinant>& det_space,
                       SharedMatrix evecs, int nroot);
 
     /// Compute full S^2 matrix and diagonalize it
@@ -350,13 +350,13 @@ class AdaptiveCI : public Wavefunction {
     /// Save coefficients of lowest-root determinant
     void save_dets_to_file(DeterminantHashVec& space, SharedMatrix evecs);
     /// Compute the Davidson correction
-    std::vector<double> davidson_correction(std::vector<STLBitsetDeterminant>& P_dets,
+    std::vector<double> davidson_correction(std::vector<Determinant>& P_dets,
                                             SharedVector P_evals, SharedMatrix PQ_evecs,
-                                            std::vector<STLBitsetDeterminant>& PQ_dets,
+                                            std::vector<Determinant>& PQ_dets,
                                             SharedVector PQ_evals);
 
     //    void compute_H_expectation_val(const
-    //    std::vector<STLBitsetDeterminant>& space,
+    //    std::vector<Determinant>& space,
     //                                    SharedVector& evals,
     //                                    const SharedMatrix evecs,
     //                                    int nroot,
@@ -367,7 +367,7 @@ class AdaptiveCI : public Wavefunction {
     void print_nos();
 
     /// Convert from determinant to string representation
-    void convert_to_string(const std::vector<STLBitsetDeterminant>& space);
+    void convert_to_string(const std::vector<Determinant>& space);
 
     /// Compute overlap for root following
     int root_follow(DeterminantHashVec& P_ref, std::vector<double>& P_ref_evecs,
@@ -399,8 +399,8 @@ class AdaptiveCI : public Wavefunction {
                                        SharedVector& PQ_evals, SharedMatrix& new_evecs);
 
     std::vector<std::pair<size_t, double>>
-    dl_initial_guess(std::vector<STLBitsetDeterminant>& old_dets,
-                     std::vector<STLBitsetDeterminant>& dets, SharedMatrix& evecs, int nroot);
+    dl_initial_guess(std::vector<Determinant>& old_dets,
+                     std::vector<Determinant>& dets, SharedMatrix& evecs, int nroot);
 
     std::vector<std::tuple<double,int,int>> sym_labeled_orbitals(std::string type);
 

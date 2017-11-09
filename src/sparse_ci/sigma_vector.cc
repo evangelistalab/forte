@@ -63,10 +63,10 @@ void SigmaVectorMPI::compute_sigma(SharedVector sigma, SharedVector b) {}
 
 #endif
 
-SigmaVectorList::SigmaVectorList(const std::vector<STLBitsetDeterminant>& space, bool print_details,
+SigmaVectorList::SigmaVectorList(const std::vector<Determinant>& space, bool print_details,
                                  std::shared_ptr<FCIIntegrals> fci_ints)
     : SigmaVector(space.size()), space_(space), fci_ints_(fci_ints) {
-    using det_hash = std::unordered_map<STLBitsetDeterminant, size_t, STLBitsetDeterminant::Hash>;
+    using det_hash = std::unordered_map<Determinant, size_t, Determinant::Hash>;
     using bstmap_it = det_hash::iterator;
 
     size_t max_I = space.size();
@@ -91,7 +91,7 @@ SigmaVectorList::SigmaVectorList(const std::vector<STLBitsetDeterminant>& space,
         size_t na_ann = 0;
         det_hash map_a_ann;
         for (size_t I = 0; I < max_I; ++I) {
-            const STLBitsetDeterminant& detI = space[I];
+            const Determinant& detI = space[I];
             double EI = fci_ints_->energy(detI);
             diag_.push_back(EI);
 
@@ -102,7 +102,7 @@ SigmaVectorList::SigmaVectorList(const std::vector<STLBitsetDeterminant>& space,
 
             for (int i = 0; i < noalpha; ++i) {
                 int ii = aocc[i];
-                STLBitsetDeterminant detJ(detI);
+                Determinant detJ(detI);
                 detJ.set_alfa_bit(ii, false);
 
                 double sign = detI.slater_sign_a(ii);
@@ -132,7 +132,7 @@ SigmaVectorList::SigmaVectorList(const std::vector<STLBitsetDeterminant>& space,
         size_t nb_ann = 0;
         det_hash map_b_ann;
         for (size_t I = 0; I < max_I; ++I) {
-            const STLBitsetDeterminant& detI = space[I];
+            const Determinant& detI = space[I];
 
             std::vector<int> bocc = detI.get_beta_occ();
             int nobeta = bocc.size();
@@ -141,7 +141,7 @@ SigmaVectorList::SigmaVectorList(const std::vector<STLBitsetDeterminant>& space,
 
             for (int i = 0; i < nobeta; ++i) {
                 int ii = bocc[i];
-                STLBitsetDeterminant detJ(detI);
+                Determinant detJ(detI);
                 detJ.set_beta_bit(ii, false);
 
                 double sign = detI.slater_sign_b(ii);
@@ -205,7 +205,7 @@ SigmaVectorList::SigmaVectorList(const std::vector<STLBitsetDeterminant>& space,
     {
         det_hash map_aa_ann;
         for (size_t I = 0; I < max_I; ++I) {
-            const STLBitsetDeterminant& detI = space[I];
+            const Determinant& detI = space[I];
 
             std::vector<int> aocc = detI.get_alfa_occ();
             size_t noalpha = aocc.size();
@@ -216,7 +216,7 @@ SigmaVectorList::SigmaVectorList(const std::vector<STLBitsetDeterminant>& space,
                 for (size_t j = i + 1; j < noalpha; ++j, ++ij) {
                     int ii = aocc[i];
                     int jj = aocc[j];
-                    STLBitsetDeterminant detJ(detI);
+                    Determinant detJ(detI);
                     detJ.set_alfa_bit(ii, false);
                     detJ.set_alfa_bit(jj, false);
 
@@ -247,7 +247,7 @@ SigmaVectorList::SigmaVectorList(const std::vector<STLBitsetDeterminant>& space,
     {
         det_hash map_bb_ann;
         for (size_t I = 0; I < max_I; ++I) {
-            const STLBitsetDeterminant& detI = space[I];
+            const Determinant& detI = space[I];
 
             std::vector<int> bocc = detI.get_beta_occ();
 
@@ -258,7 +258,7 @@ SigmaVectorList::SigmaVectorList(const std::vector<STLBitsetDeterminant>& space,
                 for (size_t j = i + 1; j < nobeta; ++j, ++ij) {
                     int ii = bocc[i];
                     int jj = bocc[j];
-                    STLBitsetDeterminant detJ(detI);
+                    Determinant detJ(detI);
                     detJ.set_beta_bit(ii, false);
                     detJ.set_beta_bit(jj, false);
 
@@ -289,7 +289,7 @@ SigmaVectorList::SigmaVectorList(const std::vector<STLBitsetDeterminant>& space,
     {
         det_hash map_ab_ann;
         for (size_t I = 0; I < max_I; ++I) {
-            const STLBitsetDeterminant& detI = space[I];
+            const Determinant& detI = space[I];
 
             std::vector<int> aocc = detI.get_alfa_occ();
             std::vector<int> bocc = detI.get_beta_occ();
@@ -302,7 +302,7 @@ SigmaVectorList::SigmaVectorList(const std::vector<STLBitsetDeterminant>& space,
                 for (size_t j = 0; j < nobeta; ++j, ++ij) {
                     int ii = aocc[i];
                     int jj = bocc[j];
-                    STLBitsetDeterminant detJ(detI);
+                    Determinant detJ(detI);
                     detJ.set_alfa_bit(ii, false);
                     detJ.set_beta_bit(jj, false);
 

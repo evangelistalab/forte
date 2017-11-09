@@ -70,7 +70,7 @@ void SparseCISolver::set_force_diag(bool value) { force_diag_ = value; }
 
 void SparseCISolver::set_max_memory(size_t value) { max_memory_ = value; }
 
-void SparseCISolver::diagonalize_hamiltonian(const std::vector<STLBitsetDeterminant>& space,
+void SparseCISolver::diagonalize_hamiltonian(const std::vector<Determinant>& space,
                                              SharedVector& evals, SharedMatrix& evecs, int nroot,
                                              int multiplicity, DiagonalizationMethod diag_method) {
     timer diag("H Diagonalization");
@@ -87,7 +87,7 @@ void SparseCISolver::diagonalize_hamiltonian_map(const DeterminantHashVec& space
                                                  DiagonalizationMethod diag_method) {
     timer diag("H Diagonalization");
     if ((!force_diag_ and (space.size() <= 200)) or diag_method == Full) {
-        const std::vector<STLBitsetDeterminant> dets = space.determinants();
+        const std::vector<Determinant> dets = space.determinants();
         diagonalize_full(dets, evals, evecs, nroot, multiplicity);
     } else if (diag_method == Sparse) {
         diagonalize_dl_sparse(space, op, evals, evecs, nroot, multiplicity);
@@ -173,9 +173,8 @@ void SparseCISolver::diagonalize_dl_dynamic(const DeterminantHashVec& space, WFN
     davidson_liu_solver_map(space, sigma_vector, evals, evecs, nroot, multiplicity);
 }
 
-void SparseCISolver::diagonalize_full(const std::vector<STLBitsetDeterminant>& space,
-                                      SharedVector& evals, SharedMatrix& evecs, int nroot,
-                                      int multiplicity) {
+void SparseCISolver::diagonalize_full(const std::vector<Determinant>& space, SharedVector& evals,
+                                      SharedMatrix& evecs, int nroot, int multiplicity) {
 
     size_t dim_space = space.size();
     evecs.reset(new Matrix("U", dim_space, nroot));
@@ -186,7 +185,7 @@ void SparseCISolver::diagonalize_full(const std::vector<STLBitsetDeterminant>& s
         Matrix S2("S^2", dim_space, dim_space);
         for (size_t I = 0; I < dim_space; ++I) {
             for (size_t J = 0; J < dim_space; ++J) {
-                double S2IJ = space[I].spin2(space[J]);
+                double S2IJ = spin2(space[I], space[J]);
                 S2.set(I, J, S2IJ);
             }
         }
@@ -272,7 +271,7 @@ void SparseCISolver::diagonalize_full(const std::vector<STLBitsetDeterminant>& s
     }
 }
 
-void SparseCISolver::diagonalize_davidson_liu_solver(const std::vector<STLBitsetDeterminant>& space,
+void SparseCISolver::diagonalize_davidson_liu_solver(const std::vector<Determinant>& space,
                                                      SharedVector& evals, SharedMatrix& evecs,
                                                      int nroot, int multiplicity) {
     if (print_details_) {
@@ -296,8 +295,7 @@ void SparseCISolver::diagonalize_davidson_liu_solver(const std::vector<STLBitset
     davidson_liu_solver(space, sigma_vector, evals, evecs, nroot, multiplicity);
 }
 
-SharedMatrix
-SparseCISolver::build_full_hamiltonian(const std::vector<STLBitsetDeterminant>& space) {
+SharedMatrix SparseCISolver::build_full_hamiltonian(const std::vector<Determinant>& space) {
     // Build the H matrix
     size_t dim_space = space.size();
     SharedMatrix H(new Matrix("H", dim_space, dim_space));
@@ -310,9 +308,9 @@ SparseCISolver::build_full_hamiltonian(const std::vector<STLBitsetDeterminant>& 
     }
 #pragma omp parallel for schedule(dynamic) num_threads(threads)
     for (size_t I = 0; I < dim_space; ++I) {
-        const STLBitsetDeterminant& detI = space[I];
+        const Determinant& detI = space[I];
         for (size_t J = I; J < dim_space; ++J) {
-            const STLBitsetDeterminant& detJ = space[J];
+            const Determinant& detJ = space[J];
             double HIJ = fci_ints_->slater_rules(detI, detJ);
             H->set(I, J, HIJ);
             H->set(J, I, HIJ);
@@ -341,7 +339,7 @@ SparseCISolver::build_full_hamiltonian(const std::vector<STLBitsetDeterminant>& 
 }
 
 std::vector<std::pair<std::vector<int>, std::vector<double>>>
-SparseCISolver::build_sparse_hamiltonian(const std::vector<STLBitsetDeterminant>& space) {
+SparseCISolver::build_sparse_hamiltonian(const std::vector<Determinant>& space) {
     // std::vector<std::pair<std::vector<int>, std::vector<double>>>
     // SparseCISolver::build_sparse_hamiltonian(const DeterminantMap& space) {
     Timer t_h_build2;
@@ -359,13 +357,13 @@ SparseCISolver::build_sparse_hamiltonian(const std::vector<STLBitsetDeterminant>
     for (size_t I = 0; I < dim_space; ++I) {
         std::vector<double> H_row;
         std::vector<int> index_row;
-        const STLBitsetDeterminant& detI = space[I];
+        const Determinant& detI = space[I];
         double HII = fci_ints_->energy(detI);
         H_row.push_back(HII);
         index_row.push_back(I);
         for (size_t J = 0; J < dim_space; ++J) {
             if (I != J) {
-                const STLBitsetDeterminant detJ(space[J]);
+                const Determinant detJ(space[J]);
                 double HIJ = fci_ints_->slater_rules(detI, detJ);
                 if (std::fabs(HIJ) >= 1.0e-12) {
                     H_row.push_back(HIJ);
@@ -390,21 +388,20 @@ SparseCISolver::build_sparse_hamiltonian(const std::vector<STLBitsetDeterminant>
 }
 
 std::vector<std::pair<double, std::vector<std::pair<size_t, double>>>>
-SparseCISolver::initial_guess(const std::vector<STLBitsetDeterminant>& space, int nroot,
-                              int multiplicity) {
+SparseCISolver::initial_guess(const std::vector<Determinant>& space, int nroot, int multiplicity) {
     size_t ndets = space.size();
     size_t nguess = std::min(static_cast<size_t>(nroot) * dl_guess_, ndets);
     std::vector<std::pair<double, std::vector<std::pair<size_t, double>>>> guess(nguess);
 
     // Find the ntrial lowest diagonals
-    std::vector<std::pair<STLBitsetDeterminant, size_t>> guess_dets_pos;
+    std::vector<std::pair<Determinant, size_t>> guess_dets_pos;
     std::vector<std::pair<double, size_t>> smallest(ndets);
     for (size_t I = 0; I < ndets; ++I) {
         smallest[I] = std::make_pair(fci_ints_->energy(space[I]), I);
     }
     std::sort(smallest.begin(), smallest.end());
 
-    std::vector<STLBitsetDeterminant> guess_det;
+    std::vector<Determinant> guess_det;
     for (size_t i = 0; i < nguess; i++) {
         size_t I = smallest[i].second;
         guess_dets_pos.push_back(std::make_pair(space[I], I)); // store a det and its position
@@ -412,8 +409,9 @@ SparseCISolver::initial_guess(const std::vector<STLBitsetDeterminant>& space, in
     }
 
     if (spin_project_) {
-        STLBitsetDeterminant det(fci_ints_->nmo());
-        det.enforce_spin_completeness(guess_det, fci_ints_->nmo());
+        // Determinant det(fci_ints_->nmo()); <- xsize
+//        Determinant det;
+        enforce_spin_completeness(guess_det, fci_ints_->nmo());
         if (guess_det.size() > nguess) {
             size_t nnew_dets = guess_det.size() - nguess;
             if (print_details_)
@@ -442,9 +440,9 @@ SparseCISolver::initial_guess(const std::vector<STLBitsetDeterminant>& space, in
     Matrix S2("S^2", nguess, nguess);
     for (size_t I = 0; I < nguess; I++) {
         for (size_t J = I; J < nguess; J++) {
-            const STLBitsetDeterminant& detI = guess_dets_pos[I].first;
-            const STLBitsetDeterminant& detJ = guess_dets_pos[J].first;
-            double S2IJ = detI.spin2(detJ);
+            const Determinant& detI = guess_dets_pos[I].first;
+            const Determinant& detJ = guess_dets_pos[J].first;
+            double S2IJ = spin2(detI, detJ);
             S2.set(I, J, S2IJ);
             S2.set(J, I, S2IJ);
         }
@@ -457,8 +455,8 @@ SparseCISolver::initial_guess(const std::vector<STLBitsetDeterminant>& space, in
     Matrix H("H", nguess, nguess);
     for (size_t I = 0; I < nguess; I++) {
         for (size_t J = I; J < nguess; J++) {
-            const STLBitsetDeterminant& detI = guess_dets_pos[I].first;
-            const STLBitsetDeterminant& detJ = guess_dets_pos[J].first;
+            const Determinant& detI = guess_dets_pos[I].first;
+            const Determinant& detJ = guess_dets_pos[J].first;
             double HIJ = fci_ints_->slater_rules(detI, detJ);
             H.set(I, J, HIJ);
             H.set(J, I, HIJ);
@@ -540,26 +538,27 @@ SparseCISolver::initial_guess_map(const DeterminantHashVec& space, int nroot, in
     std::vector<std::pair<double, std::vector<std::pair<size_t, double>>>> guess(nguess);
 
     // Find the ntrial lowest diagonals
-    std::vector<std::pair<STLBitsetDeterminant, size_t>> guess_dets_pos;
-    std::vector<std::pair<double, STLBitsetDeterminant>> smallest;
+    std::vector<std::pair<Determinant, size_t>> guess_dets_pos;
+    std::vector<std::pair<double, Determinant>> smallest;
     const det_hashvec& detmap = space.wfn_hash();
 
-    for (const STLBitsetDeterminant& det : detmap) {
+    for (const Determinant& det : detmap) {
         smallest.push_back(std::make_pair(fci_ints_->energy(det), det));
     }
     std::sort(smallest.begin(), smallest.end());
 
-    std::vector<STLBitsetDeterminant> guess_det;
+    std::vector<Determinant> guess_det;
     for (size_t i = 0; i < nguess; i++) {
-        const STLBitsetDeterminant& detI = smallest[i].second;
+        const Determinant& detI = smallest[i].second;
         guess_dets_pos.push_back(
             std::make_pair(detI, space.get_idx(detI))); // store a det and its position
         guess_det.push_back(detI);
     }
 
     if (spin_project_) {
-        STLBitsetDeterminant det(fci_ints_->nmo());
-        det.enforce_spin_completeness(guess_det, fci_ints_->nmo());
+        // Determinant det(fci_ints_->nmo()); <- xsize
+//        Determinant det;
+        enforce_spin_completeness(guess_det, fci_ints_->nmo());
         if (guess_det.size() > nguess) {
             size_t nnew_dets = guess_det.size() - nguess;
             if (print_details_)
@@ -569,7 +568,7 @@ SparseCISolver::initial_guess_map(const DeterminantHashVec& space, int nroot, in
             int nfound = 0;
             for (size_t i = 0; i < nnew_dets; ++i) {
                 for (size_t j = nguess; j < ndets; ++j) {
-                    const STLBitsetDeterminant& detJ = smallest[j].second;
+                    const Determinant& detJ = smallest[j].second;
                     if (detJ == guess_det[nguess + i]) {
                         guess_dets_pos.push_back(std::make_pair(
                             detJ, space.get_idx(detJ))); // store a det and its position
@@ -588,9 +587,9 @@ SparseCISolver::initial_guess_map(const DeterminantHashVec& space, int nroot, in
     Matrix S2("S^2", nguess, nguess);
     for (size_t I = 0; I < nguess; I++) {
         for (size_t J = I; J < nguess; J++) {
-            const STLBitsetDeterminant& detI = guess_dets_pos[I].first;
-            const STLBitsetDeterminant& detJ = guess_dets_pos[J].first;
-            double S2IJ = detI.spin2(detJ);
+            const Determinant& detI = guess_dets_pos[I].first;
+            const Determinant& detJ = guess_dets_pos[J].first;
+            double S2IJ = spin2(detI, detJ);
             S2.set(I, J, S2IJ);
             S2.set(J, I, S2IJ);
         }
@@ -603,8 +602,8 @@ SparseCISolver::initial_guess_map(const DeterminantHashVec& space, int nroot, in
     Matrix H("H", nguess, nguess);
     for (size_t I = 0; I < nguess; I++) {
         for (size_t J = I; J < nguess; J++) {
-            const STLBitsetDeterminant& detI = guess_dets_pos[I].first;
-            const STLBitsetDeterminant& detJ = guess_dets_pos[J].first;
+            const Determinant& detI = guess_dets_pos[I].first;
+            const Determinant& detJ = guess_dets_pos[J].first;
             double HIJ = fci_ints_->slater_rules(detI, detJ);
             H.set(I, J, HIJ);
             H.set(J, I, HIJ);
@@ -701,7 +700,7 @@ void SparseCISolver::set_initial_guess(std::vector<std::pair<size_t, double>>& g
 
 void SparseCISolver::set_num_vecs(size_t value) { nvec_ = value; }
 
-bool SparseCISolver::davidson_liu_solver(const std::vector<STLBitsetDeterminant>& space,
+bool SparseCISolver::davidson_liu_solver(const std::vector<Determinant>& space,
                                          SigmaVector* sigma_vector, SharedVector Eigenvalues,
                                          SharedMatrix Eigenvectors, int nroot, int multiplicity) {
     //    print_details_ = true;
@@ -974,7 +973,7 @@ bool SparseCISolver::davidson_liu_solver_map(const DeterminantHashVec& space,
 void SparseCISolver::diagonalize_dl_sparse(const DeterminantHashVec& space, WFNOperator& op,
                                            SharedVector& evals, SharedMatrix& evecs, int nroot,
                                            int multiplicity) {
-    if( print_details_ ){
+    if (print_details_) {
         outfile->Printf("\n\n  Davidson-liu sparse algorithm");
     }
 

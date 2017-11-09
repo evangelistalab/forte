@@ -32,7 +32,7 @@
 #include "psi4/libpsi4util/PsiOutStream.h"
 #include "psi4/libmints/matrix.h"
 #include "psi4/psi4-dec.h"
-#include "sparse_ci/stl_bitset_determinant.h"
+#include "sparse_ci/determinant.h"
 #include "hash_vector.h"
 
 namespace psi {
@@ -48,13 +48,13 @@ using det_hashvec = HashVector<Determinant, Determinant::Hash>;
 class DeterminantHashVec {
   public:
     /// Default constructor
-    DeterminantHashVec(std::vector<STLBitsetDeterminant>& dets);
+    DeterminantHashVec(std::vector<Determinant>& dets);
 
     /// Default constructor
-    DeterminantHashVec(const std::vector<STLBitsetDeterminant>& dets);
+    DeterminantHashVec(const std::vector<Determinant>& dets);
 
     /// Default constructor
-    DeterminantHashVec(STLBitsetDeterminant& det);
+    DeterminantHashVec(Determinant& det);
 
     /// Empty constructor
     DeterminantHashVec();
@@ -72,7 +72,7 @@ class DeterminantHashVec {
     det_hashvec& wfn_hash();
 
     /// Add a determinant
-    void add(const STLBitsetDeterminant& det);
+    void add(const Determinant& det);
 
     /// Return the number of determinants
     size_t size() const;
@@ -81,22 +81,22 @@ class DeterminantHashVec {
     void clear();
 
     // Return a specific determinant by reference
-    const STLBitsetDeterminant& get_det(const size_t value) const;
+    const Determinant& get_det(const size_t value) const;
 
     // Return the index of a determinant
-    size_t get_idx(const STLBitsetDeterminant& det) const;
+    size_t get_idx(const Determinant& det) const;
 
     // Return a vector of the determinants
-    std::vector<STLBitsetDeterminant> determinants() const;
+    std::vector<Determinant> determinants() const;
 
     /// Return a vector of the determinants and their indices
-    std::vector<std::pair<STLBitsetDeterminant,size_t>> determinant_index_pairs() const;
+    std::vector<std::pair<Determinant,size_t>> determinant_index_pairs() const;
 
     // Make this spin complete
-    void make_spin_complete();
+    void make_spin_complete(int nmo);
 
     // Check if a determinant is in the wavefunction
-    bool has_det(const STLBitsetDeterminant& det) const;
+    bool has_det(const Determinant& det) const;
 
     // Compute overlap between this and input wfn
     double overlap(std::vector<double>& det1_evecs, DeterminantHashVec& det2,
