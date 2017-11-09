@@ -331,7 +331,7 @@ void AdaptiveCI::startup() {
 
     hole_ = 0;
 
-    diag_method_ = Dynamic;
+    diag_method_ = DLSolver;
     if (options_["DIAG_ALGORITHM"].has_changed()) {
         if (options_.get_str("DIAG_ALGORITHM") == "FULL") {
             diag_method_ = Full;

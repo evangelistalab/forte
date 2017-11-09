@@ -562,7 +562,7 @@ SparseCISolver::initial_guess_map(const DeterminantHashVec& space, int nroot, in
         if (guess_det.size() > nguess) {
             size_t nnew_dets = guess_det.size() - nguess;
             if (print_details_)
-                outfile->Printf("\n  Initial guess space is incomplete.\n  "
+                outfile->Printf("\n  Initial guess space is incomplete!\n  "
                                 "Trying to add %d determinant(s).",
                                 nnew_dets);
             int nfound = 0;

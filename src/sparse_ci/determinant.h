@@ -31,13 +31,13 @@
 #define _determinant_h_
 
 #include <unordered_map>
-//#include "stl_bitset_determinant.h"
-#include "ui64_determinant.h"
+#include "stl_bitset_determinant.h"
+//#include "ui64_determinant.h"
 
 namespace psi {
 namespace forte {
 
-using Determinant = UI64Determinant;
+using Determinant = STLBitsetDeterminant;
 using det_vec = std::vector<Determinant>;
 template <typename T = double>
 using det_hash = std::unordered_map<Determinant, T, Determinant::Hash>;
