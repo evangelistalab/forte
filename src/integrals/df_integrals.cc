@@ -261,6 +261,7 @@ void DFIntegrals::gather_integrals() {
 
     // Store as transpose for now
     ThreeIntegral_ = Bpq->transpose()->clone();
+    outfile->Printf("\n %8.8f integral", aptei_aa(1,2,5,2));
 }
 
 void DFIntegrals::make_diagonal_integrals() {
