@@ -35,8 +35,6 @@
 #include "psi4/libmints/wavefunction.h"
 #include "psi4/libqt/qt.h"
 #include "psi4/lib3index/df_helper.h"
-//#include "../libthce/lreri.h"
-//#include "../libthce/thce.h"
 
 #ifdef HAVE_GA
 #include <ga.h>
