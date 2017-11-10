@@ -224,14 +224,14 @@ double slater_rules_double_alpha_beta_pre(int i, int a, uint64_t Ib, uint64_t Jb
 
 UI64Determinant::UI64Determinant() : a_(0), b_(0) {}
 
-UI64Determinant::UI64Determinant(const STLBitsetDeterminant& d) {
+UI64Determinant::UI64Determinant(const STLBitsetDeterminant& d) : a_(0), b_(0) {
     for (int i = 0; i < 64; ++i) {
         set_alfa_bit(i, d.get_alfa_bit(i));
         set_beta_bit(i, d.get_beta_bit(i));
     }
 }
 
-UI64Determinant::UI64Determinant(const std::vector<bool>& occupation) {
+UI64Determinant::UI64Determinant(const std::vector<bool>& occupation) : a_(0), b_(0) {
     int size = occupation.size() / 2;
     for (int p = 0; p < size; ++p)
         set_alfa_bit(p, occupation[p]);
@@ -240,7 +240,8 @@ UI64Determinant::UI64Determinant(const std::vector<bool>& occupation) {
 }
 
 UI64Determinant::UI64Determinant(const std::vector<bool>& occupation_a,
-                                 const std::vector<bool>& occupation_b) {
+                                 const std::vector<bool>& occupation_b)
+    : a_(0), b_(0) {
     int size = occupation_a.size();
     for (int p = 0; p < size; ++p) {
         set_alfa_bit(p, occupation_a[p]);
