@@ -27,6 +27,7 @@
  * @END LICENSE
  */
 
+#include <algorithm>
 #include <unordered_map>
 
 #include "ui64_determinant.h"
