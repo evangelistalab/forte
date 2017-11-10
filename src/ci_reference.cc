@@ -272,7 +272,6 @@ void CI_Reference::build_cas_reference(std::vector<Determinant>& ref_space) {
         std::sort(begin(tmp_det_b), end(tmp_det_b));
 
         // Build the core det
-        // Determinant core_det(nact); <- xsize
         Determinant core_det;
         for (int i = 0; i < nf; ++i) {
             core_det.set_alfa_bit(std::get<2>(active_mos[i]), true);
@@ -282,8 +281,7 @@ void CI_Reference::build_cas_reference(std::vector<Determinant>& ref_space) {
         do {
             do {
                 // Build determinant
-                //                Determinant det(core_det); <- xsize
-                Determinant det;
+                Determinant det(core_det);
                 int sym = 0;
                 for (int p = 0; p < na; ++p) {
                     det.set_alfa_bit(active_subspace[p], tmp_det_a[p]);
