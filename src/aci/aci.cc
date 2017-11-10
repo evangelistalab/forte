@@ -3841,6 +3841,12 @@ void AdaptiveCI::spin_analysis()
         CA->copy( Ca_new );
         CB->copy( Cb_new );
          
+    } else if (options_.get_str("SPIN_BASIS") == "LOCAL" ){
+        
+        auto loc = std::make_shared<LOCALIZE>(reference_wavefunction_, options_, ints_, mo_space_info_ );
+        loc->full_localize();
+        UA->copy(loc->get_U());      
+        UB->copy(loc->get_U());      
 
     } else {
         outfile->Printf("\n  Computing spin correlation in reference basis \n");
