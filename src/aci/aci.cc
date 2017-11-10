@@ -2644,7 +2644,8 @@ void AdaptiveCI::compute_aci(DeterminantHashVec& PQ_space, SharedMatrix& PQ_evec
 
         // Check that the initial space is spin-complete
         if (spin_complete_) {
-            P_space.make_spin_complete(ncmo_); // <- xsize
+            // assumes P_space handles determinants with only active space orbitals
+            P_space.make_spin_complete(nact_);
             if (!quiet_mode_)
                 outfile->Printf("\n  %s: %zu determinants",
                                 "Spin-complete dimension of the P space", P_space.size());
