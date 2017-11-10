@@ -199,7 +199,8 @@ void LOCALIZE::full_localize(){
     }
     ints_->retransform_integrals();
 
-    U_->copy(U->clone());
+    U_ = SharedMatrix(new Matrix("U", nsopi[0],nact));
+    U_->copy(U);
 }
 
 SharedMatrix LOCALIZE::get_U()
