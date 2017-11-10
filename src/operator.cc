@@ -49,6 +49,7 @@ WFNOperator::WFNOperator() {}
 void WFNOperator::set_quiet_mode(bool mode) { quiet_ = mode; }
 
 void WFNOperator::initialize(std::vector<int>& symmetry, std::shared_ptr<FCIIntegrals> fci_ints) {
+    ncmo_ = fci_ints->nmo();
     mo_symmetry_ = symmetry;
     fci_ints_ = fci_ints;
 }
