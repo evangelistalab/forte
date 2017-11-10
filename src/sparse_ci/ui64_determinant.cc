@@ -222,7 +222,8 @@ double slater_rules_double_alpha_beta_pre(int i, int a, uint64_t Ib, uint64_t Jb
     return ui64_slater_sign(Ib, j, b) * ints->tei_ab(i, j, a, b);
 }
 
-UI64Determinant::UI64Determinant() {}
+UI64Determinant::UI64Determinant() : a_(0), b_(0) {}
+
 UI64Determinant::UI64Determinant(const STLBitsetDeterminant& d) {
     for (int i = 0; i < 64; ++i) {
         set_alfa_bit(i, d.get_alfa_bit(i));
