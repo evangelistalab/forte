@@ -30,14 +30,25 @@
 #ifndef _determinant_h_
 #define _determinant_h_
 
+#define BITSET_TYPE 0
+
 #include <unordered_map>
+
+#if BITSET_TYPE == 0
 #include "stl_bitset_determinant.h"
-//#include "ui64_determinant.h"
+#elif BITSET_TYPE == 1
+#include "ui64_determinant.h"
+#endif
 
 namespace psi {
 namespace forte {
 
+#if BITSET_TYPE == 0
 using Determinant = STLBitsetDeterminant;
+#elif BITSET_TYPE == 1
+using Determinant = UI64Determinant;
+#endif
+
 using det_vec = std::vector<Determinant>;
 template <typename T = double>
 using det_hash = std::unordered_map<Determinant, T, Determinant::Hash>;

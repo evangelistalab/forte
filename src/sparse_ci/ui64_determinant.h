@@ -31,6 +31,7 @@
 #define _ui64_determinant_h_
 
 #include <cstdint>
+#include <memory>
 #include <vector>
 
 #include "determinant_common.h"
@@ -109,6 +110,10 @@ class UI64Determinant {
     double slater_sign_aaaa(int i, int j, int a, int b) const;
     double slater_sign_bbbb(int i, int j, int a, int b) const;
 
+    /// Count the number of alpha bits set to true
+    int count_alfa() const;
+    /// Count the number of beta bits set to true
+    int count_beta() const;
     /// Return the number of alpha/beta pairs
     int npair() const;
 

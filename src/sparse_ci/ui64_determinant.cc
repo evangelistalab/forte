@@ -285,7 +285,10 @@ UI64Determinant::bit_t UI64Determinant::get_bits(DetSpinType spin_type) const {
     return (spin_type == DetSpinType::Alpha) ? a_ : b_;
 }
 
-/// Return the number of alpha/beta pairs
+int UI64Determinant::count_alfa() const { return ui64_bit_count(a_); }
+
+int UI64Determinant::count_beta() const { return ui64_bit_count(b_); }
+
 int UI64Determinant::npair() const { return ui64_bit_count(a_ & b_); }
 
 std::vector<int> UI64Determinant::get_alfa_occ(int norb) const {
