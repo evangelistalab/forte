@@ -341,48 +341,12 @@ ambit::Tensor DISKDFIntegrals::three_integral_block(const std::vector<size_t>& A
     bool frozen_core = false;
 
     // Take care of frozen orbitals
-//    size_t p_max, p_min, q_max, q_min;
     if (frzcpi_.sum() && aptei_idx_ == ncmo_) {
-//        p_min = cmotomo_[p[0]];
-//        p_min = cmotomo_[p[0]];
-//        p_max = cmotomo_[p.back()];
-//        p_max = cmotomo_[p.back()];
-//
-//        q_min = cmotomo_[q[0]];
-//        q_min = cmotomo_[q[0]];
-//        q_max = cmotomo_[q.back()];
-//        q_max = cmotomo_[q.back()];
-//    } else {
-//        p_min = p[0];
-//        p_min = p[0];
-//        p_max = p.back();
-//        p_max = p.back();
-//
-//        q_min = q[0];
-//        q_min = q[0];
-//        q_max = q.back();
-//        q_max = q.back();
         frozen_core = true;
     }
 
-//
-//    std::vector<size_t> A_range = {A[0], A.back() + 1};
-//    std::vector<size_t> p_range = {p_min, p_max + 1};
-//    std::vector<size_t> q_range = {q_min, q_max + 1};
-//
-//    SharedMatrix Bpq = std::make_shared<Matrix>(nthree_, p.size() * q.size());
-//
-//    df_->fill_tensor( "B", Bpq, A_range, p_range, q_range ); 
-//
-//    // Integrals stored as (A, p*q)
-//    // Put them into ambit tensor
-//    ReturnTensor.iterate([&](const std::vector<size_t>& i, double& value) {
-//        value = Bpq->get(i[0], i[1]*p_max + i[2] );
-//    });
-//
     size_t pn, qn;
     if (nthree_ == A.size()) {
-outfile->Printf("\n here");
         std::vector<std::shared_ptr<Matrix>> p_by_Aq;
         for (auto p_block : p) {
             if (frozen_core) {
@@ -393,8 +357,6 @@ outfile->Printf("\n here");
 
             std::shared_ptr<Matrix> Aq(new Matrix("Aq", nthree_, nmo_));
 
-           // fseek(B_->file_pointer(), pn * nthree_ * nmo_ * sizeof(double), SEEK_SET);
-           // fread(&(Aq->pointer()[0][0]), sizeof(double), nmo_ * nthree_, B_->file_pointer());
             std::vector<size_t> A_range = {A[0], A.back() + 1};
             std::vector<size_t> p_range = {pn, pn + 1};
             std::vector<size_t> q_range = {0, nmo_};
@@ -411,9 +373,7 @@ outfile->Printf("\n here");
                 value = p_by_Aq[i[1]]->get(A[i[0]], q[i[2]]);
             });
         }
-outfile->Printf("\n here done");
     } else {
-outfile->Printf("\n here 2");
         // If user wants blocking in A
         pn = 0;
         qn = 0;
@@ -445,9 +405,6 @@ outfile->Printf("\n here 2");
                 std::vector<size_t> q_range = {qn, qn };
 
                 double* A_chunk;// = new double[A.size()];
-                //size_t offset = pn * nthree_ * nmo_ + qn * nthree_ + A[0];
-                //fseek(B_->file_pointer(), offset * sizeof(double), SEEK_SET);
-                //fread(&(A_chunk[0]), sizeof(double), A.size(), B_->file_pointer());
             
                 df_->fill_tensor("B", A_chunk, A_range, p_range, q_range);
 
@@ -741,7 +698,6 @@ ambit::Tensor DISKDFIntegrals::three_integral_block_two_index(const std::vector<
 
     ambit::Tensor ReturnTensor = ambit::Tensor::build(tensor_type_, "Return", {A.size(), q.size()});
  
-outfile->Printf("\n here tidx");
     size_t p_max, p_min;
     bool frozen_core = false;
     if (frzcpi_.sum() && aptei_idx_ == ncmo_) {
@@ -775,7 +731,6 @@ outfile->Printf("\n here tidx");
         outfile->Printf("\n Not implemened for variable size in A");
         throw PSIEXCEPTION("Can only use if 2nd parameter is a size_t and A.size==nthree_");
     }
-outfile->Printf("\n here tidx done");
     return ReturnTensor;
 }
 
