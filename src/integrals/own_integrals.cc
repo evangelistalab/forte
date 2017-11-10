@@ -31,8 +31,6 @@
 
 #include "psi4/libmints/basisset.h"
 #include "psi4/libqt/qt.h"
-#include "../libthce/lreri.h"
-#include "../libthce/thce.h"
 
 #include "../blockedtensorfactory.h"
 

@@ -36,8 +36,6 @@
 #include "psi4/libmints/basisset.h"
 #include "psi4/libmints/matrix.h"
 #include "psi4/libqt/qt.h"
-#include "psi4/libthce/lreri.h"
-#include "psi4/libthce/thce.h"
 
 #ifdef _OPENMP
 #include <omp.h>
