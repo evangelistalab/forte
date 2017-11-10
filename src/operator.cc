@@ -42,7 +42,7 @@ namespace psi {
 namespace forte {
 
 WFNOperator::WFNOperator(std::vector<int>& symmetry, std::shared_ptr<FCIIntegrals> fci_ints)
-    : ncmo_(fci_ints_->nmo()), mo_symmetry_(symmetry), fci_ints_(fci_ints) {}
+    : ncmo_(fci_ints->nmo()), mo_symmetry_(symmetry), fci_ints_(fci_ints) {}
 
 WFNOperator::WFNOperator() {}
 
