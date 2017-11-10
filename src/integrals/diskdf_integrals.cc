@@ -742,57 +742,40 @@ ambit::Tensor DISKDFIntegrals::three_integral_block_two_index(const std::vector<
     ambit::Tensor ReturnTensor = ambit::Tensor::build(tensor_type_, "Return", {A.size(), q.size()});
  
 outfile->Printf("\n here tidx");
-    size_t p_max, p_min, q_max, q_min;
+    size_t p_max, p_min;
+    bool frozen_core = false;
     if (frzcpi_.sum() && aptei_idx_ == ncmo_) {
+        frozen_core = true; 
         p_min = cmotomo_[p];
         p_max = p_min +1;
-        q_min = cmotomo_[q[0]];
-        q_max = cmotomo_[q.back()];
     } else {
         p_min = p;
         p_max = p_min +1;
-        q_min = q[0];
-        q_max = q.back();
     }
 
-    std::vector<size_t> arange = {A[0], A.back()+1};
-    std::vector<size_t> qrange = {q_min, q_max}; 
-    std::vector<size_t> prange = {p_min, p_max}; 
-
-    std::shared_ptr<Matrix> Aq(new Matrix("Aq", A.size(), q.size()+1));
-
-    df_->fill_tensor("B", Aq, arange, prange, qrange ); 
-    
-    ReturnTensor.iterate([&](const std::vector<size_t>& i, double& value) {
-        value = Aq->get(i[0],i[1]);
-    });
-outfile->Printf("\n here tidx done");
-/*
     if (nthree_ == A.size()) {
-        if (frozen_core) {
-            pn = cmotomo_[p];
-        } else {
-            pn = p;
-        }
 
+        std::vector<size_t> arange = {0, nthree_};
+        std::vector<size_t> qrange = {0, nmo_}; 
+        std::vector<size_t> prange = {p_min, p_max}; 
 
-        fseek(B_->file_pointer(), pn * nthree_ * nmo_ * sizeof(double), SEEK_SET);
-        fread(&(Aq->pointer()[0][0]), sizeof(double), nmo_ * nthree_, B_->file_pointer());
+        std::shared_ptr<Matrix> Aq(new Matrix("Aq", nthree_, nmo_));
+        df_->fill_tensor("B", Aq, arange, prange, qrange ); 
 
         if (frozen_core) {
             ReturnTensor.iterate([&](const std::vector<size_t>& i, double& value) {
-                value = Aq->get(cmotomo_[q[i[1]]], A[i[0]]);
+                value = Aq->get(A[i[0]], cmotomo_[q[i[1]]]);
             });
         } else {
             ReturnTensor.iterate([&](const std::vector<size_t>& i, double& value) {
-                value = Aq->get(q[i[1]], A[i[0]]);
+                value = Aq->get(A[i[0]], q[i[1]]);
             });
         }
     } else {
         outfile->Printf("\n Not implemened for variable size in A");
         throw PSIEXCEPTION("Can only use if 2nd parameter is a size_t and A.size==nthree_");
     }
-*/
+outfile->Printf("\n here tidx done");
     return ReturnTensor;
 }
 
