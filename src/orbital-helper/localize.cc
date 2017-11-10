@@ -35,6 +35,7 @@
 #include "psi4/libmints/matrix.h"
 #include "psi4/libmints/vector.h"
 #include "psi4/liboptions/liboptions.h"
+#include "../reference.h"
 
 #include "localize.h"
 
@@ -78,7 +79,7 @@ LOCALIZE::LOCALIZE(std::shared_ptr<Wavefunction> wfn, Options& options,
     }
 }
 
-void LOCALIZE::localize_orbitals() {
+void LOCALIZE::split_localize() {
     SharedMatrix Ca = wfn_->Ca();
     SharedMatrix Cb = wfn_->Cb();
 
@@ -158,6 +159,52 @@ void LOCALIZE::localize_orbitals() {
     outfile->Printf("\n  ||Ca - Cb||_[1] = %1.5f", value);
 
     ints_->retransform_integrals();
+}
+
+void LOCALIZE::full_localize(){ 
+
+
+    // Build C matrices
+    SharedMatrix Ca = wfn_->Ca(); 
+    SharedMatrix Cb = wfn_->Cb(); 
+    Dimension nsopi = wfn_->nsopi();
+    int nirrep = wfn_->nirrep();
+
+    size_t nact = abs_act_.size();
+    
+    SharedMatrix Caact(new Matrix("Caact", nsopi[0], nact ));
+    for (int h = 0; h < nirrep; h++) {
+        for (int mu = 0; mu < nsopi[h]; mu++) {
+            for (int i = 0; i < nact; i++) {
+                Caact->set(h, mu, i, Ca->get(h, mu, abs_act_[i]));
+            }
+        }
+    }
+
+    // Localize all active together
+    std::shared_ptr<BasisSet> primary = wfn_->basisset();
+
+    std::shared_ptr<Localizer> loc_a = Localizer::build(local_type_, primary, Caact);
+    loc_a->localize();
+
+    SharedMatrix U = loc_a->U();
+    SharedMatrix Laocc = loc_a->L();
+
+    for (int h = 0; h < nirrep; ++h) {
+        for (int i = 0; i < nact; ++i) {
+            SharedVector vec = Laocc->get_column(h, i);
+            Ca->set_column(h, i + nfrz_ + nrst_, vec);
+            Cb->set_column(h, i + nfrz_ + nrst_, vec);
+        }
+    }
+    ints_->retransform_integrals();
+
+    U_->copy(U->clone());
+}
+
+SharedMatrix LOCALIZE::get_U()
+{
+    return U_;
 }
 
 LOCALIZE::~LOCALIZE() {}

@@ -48,12 +48,18 @@ class LOCALIZE {
 
     ~LOCALIZE();
 
-    void localize_orbitals();
+    void split_localize();
+
+    void full_localize();
+
+    SharedMatrix get_U();
 
   private:
     std::shared_ptr<Wavefunction> wfn_;
 
     std::shared_ptr<ForteIntegrals> ints_;
+
+    SharedMatrix U_;
 
     size_t nfrz_;
     size_t nrst_;
