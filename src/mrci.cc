@@ -133,6 +133,7 @@ void MRCI::get_excited_determinants() {
     // Only excite into the restricted uocc
 
     auto external_mo = mo_space_info_->get_corr_abs_mo("RESTRICTED_UOCC");
+    size_t nact = mo_space_info_->size("ACTIVE");
 
     DeterminantHashVec external;
     external.clear();
@@ -142,8 +143,8 @@ void MRCI::get_excited_determinants() {
     const auto& internal = reference_.wfn_hash();
     for (const auto& det : internal) {
 
-        std::vector<int> aocc = det.get_alfa_occ();
-        std::vector<int> bocc = det.get_beta_occ();
+        std::vector<int> aocc = det.get_alfa_occ(nact + n_ext); // <- TODO: check if correct
+        std::vector<int> bocc = det.get_beta_occ(nact + n_ext); // <- TODO: check if correct
 
         int noalfa = aocc.size();
         int nobeta = bocc.size();

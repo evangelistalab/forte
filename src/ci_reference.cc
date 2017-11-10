@@ -112,10 +112,10 @@ void CI_Reference::build_ci_reference(std::vector<Determinant>& ref_space) {
     ref_space.push_back(det);
 
     if ((ref_type_ == "CIS") or (ref_type_ == "CISD")) {
-        std::vector<int> aocc = det.get_alfa_occ();
-        std::vector<int> bocc = det.get_beta_occ();
-        std::vector<int> avir = det.get_alfa_vir();
-        std::vector<int> bvir = det.get_beta_vir();
+        std::vector<int> aocc = det.get_alfa_occ(nact_);
+        std::vector<int> bocc = det.get_beta_occ(nact_);
+        std::vector<int> avir = det.get_alfa_vir(nact_);
+        std::vector<int> bvir = det.get_beta_vir(nact_);
 
         int noalpha = aocc.size();
         int nobeta = bocc.size();
@@ -150,10 +150,10 @@ void CI_Reference::build_ci_reference(std::vector<Determinant>& ref_space) {
     }
 
     if ((ref_type_ == "CID") or (ref_type_ == "CISD")) {
-        std::vector<int> aocc = det.get_alfa_occ();
-        std::vector<int> bocc = det.get_beta_occ();
-        std::vector<int> avir = det.get_alfa_vir();
-        std::vector<int> bvir = det.get_beta_vir();
+        std::vector<int> aocc = det.get_alfa_occ(nact_);
+        std::vector<int> bocc = det.get_beta_occ(nact_);
+        std::vector<int> avir = det.get_alfa_vir(nact_);
+        std::vector<int> bvir = det.get_beta_vir(nact_);
 
         int noalpha = aocc.size();
         int nobeta = bocc.size();
@@ -282,7 +282,7 @@ void CI_Reference::build_cas_reference(std::vector<Determinant>& ref_space) {
         do {
             do {
                 // Build determinant
-//                Determinant det(core_det); <- xsize
+                //                Determinant det(core_det); <- xsize
                 Determinant det;
                 int sym = 0;
                 for (int p = 0; p < na; ++p) {
@@ -399,7 +399,7 @@ std::vector<std::tuple<double, int, int>> CI_Reference::sym_labeled_orbitals(std
 
 Determinant CI_Reference::get_occupation() {
     int nact = mo_space_info_->size("ACTIVE");
-//    Determinant det(nact); <- xsize
+    //    Determinant det(nact); <- xsize
     Determinant det;
 
     // nyms denotes the number of electrons needed to assign symmetry and

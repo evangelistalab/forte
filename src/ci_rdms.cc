@@ -64,8 +64,8 @@ CI_RDMS::CI_RDMS(Options& options, DeterminantHashVec& wfn, std::shared_ptr<FCII
     print_ = false;
     dim_space_ = wfn.size();
 
-    na_ = det.get_alfa_occ().size();
-    nb_ = det.get_beta_occ().size();
+    na_ = det.count_alfa();
+    nb_ = det.count_beta();
     symmetry_ = 0;
     if (options_["ROOT_SYM"].has_changed()) {
         symmetry_ = options_.get_int("ROOT_SYM");
@@ -86,8 +86,8 @@ void CI_RDMS::startup() {
     ncmo4_ = ncmo3_ * ncmo_;
     ncmo5_ = ncmo3_ * ncmo2_;
 
-    na_ = det_space_[0].get_alfa_occ().size();
-    nb_ = det_space_[0].get_beta_occ().size();
+    na_ = det_space_[0].count_alfa();
+    nb_ = det_space_[0].count_beta();
 
     // Dimension of the determinant space
     dim_space_ = det_space_.size();
@@ -210,10 +210,10 @@ void CI_RDMS::compute_1rdm(std::vector<double>& oprdm_a, std::vector<double>& op
     const det_hashvec& dets = wfn_.wfn_hash();
     for (size_t J = 0; J < dim_space_; ++J) {
         double cJ_sq = evecs_->get(J, root1_) * evecs_->get(J, root2_);
-        std::vector<int> aocc = dets[J].get_alfa_occ();
-        std::vector<int> bocc = dets[J].get_beta_occ();
-        std::vector<int> avir = dets[J].get_alfa_vir();
-        std::vector<int> bvir = dets[J].get_beta_vir();
+        std::vector<int> aocc = dets[J].get_alfa_occ(ncmo_);
+        std::vector<int> bocc = dets[J].get_beta_occ(ncmo_);
+        std::vector<int> avir = dets[J].get_alfa_vir(ncmo_);
+        std::vector<int> bvir = dets[J].get_beta_vir(ncmo_);
 
         for (int p = 0, max_p = aocc.size(); p < max_p; ++p) {
             int pp = aocc[p];
@@ -367,8 +367,8 @@ void CI_RDMS::compute_2rdm(std::vector<double>& tprdm_aa, std::vector<double>& t
 
     for (size_t J = 0; J < dim_space_; ++J) {
         double cJ_sq = evecs_->get(J, root1_) * evecs_->get(J, root2_);
-        std::vector<int> aocc = dets[J].get_alfa_occ();
-        std::vector<int> bocc = dets[J].get_beta_occ();
+        std::vector<int> aocc = dets[J].get_alfa_occ(ncmo_);
+        std::vector<int> bocc = dets[J].get_beta_occ(ncmo_);
 
         int naocc = aocc.size();
         int nbocc = bocc.size();
@@ -725,8 +725,8 @@ void CI_RDMS::compute_3rdm(std::vector<double>& tprdm_aaa, std::vector<double>& 
         double cI_sq = evecs_->get(I, root1_) * evecs_->get(I, root2_);
         Determinant detI(dets[I]);
 
-        std::vector<int> aocc = detI.get_alfa_occ();
-        std::vector<int> bocc = detI.get_beta_occ();
+        std::vector<int> aocc = detI.get_alfa_occ(ncmo_);
+        std::vector<int> bocc = detI.get_beta_occ(ncmo_);
         int na = aocc.size();
         int nb = bocc.size();
 
@@ -1266,8 +1266,8 @@ void CI_RDMS::get_one_map() {
         Determinant detI(det_space_[I]);
 
         // Alpha and beta occupation vectors
-        std::vector<int> aocc = detI.get_alfa_occ();
-        std::vector<int> bocc = detI.get_beta_occ();
+        std::vector<int> aocc = detI.get_alfa_occ(ncmo_);
+        std::vector<int> bocc = detI.get_beta_occ(ncmo_);
 
         int noalfa = aocc.size();
         int nobeta = bocc.size();
@@ -1360,8 +1360,8 @@ void CI_RDMS::get_two_map() {
     for (size_t I = 0; I < dim_space_; ++I) {
         Determinant detI(det_space_[I]);
 
-        std::vector<int> aocc = detI.get_alfa_occ();
-        std::vector<int> bocc = detI.get_beta_occ();
+        std::vector<int> aocc = detI.get_alfa_occ(ncmo_);
+        std::vector<int> bocc = detI.get_beta_occ(ncmo_);
 
         int noalfa = aocc.size();
         int nobeta = bocc.size();
@@ -1503,8 +1503,8 @@ void CI_RDMS::get_three_map() {
     for (size_t I = 0; I < dim_space_; ++I) {
         Determinant detI(det_space_[I]);
 
-        const std::vector<int>& aocc = detI.get_alfa_occ();
-        const std::vector<int>& bocc = detI.get_beta_occ();
+        const std::vector<int>& aocc = detI.get_alfa_occ(ncmo_);
+        const std::vector<int>& bocc = detI.get_beta_occ(ncmo_);
 
         int noalfa = aocc.size();
         int nobeta = bocc.size();
@@ -1987,8 +1987,9 @@ void CI_RDMS::rdm_test(std::vector<double>& oprdm_a, std::vector<double>& oprdm_
                     if (std::fabs(rdm) > 1.0e-12) {
                         error_2rdm_aa +=
                             std::fabs(rdm - tprdm_aa[p * ncmo3_ + q * ncmo2_ + r * ncmo_ + s]);
-                      //   outfile->Printf("\n  D2(aaaa)[%3lu][%3lu][%3lu][%3lu] = %18.12lf (%18.12lf,%18.12lf)",
-                      //   p,q,r,s,rdm-tprdm_aa[p*ncmo3_+q*ncmo2_+r*ncmo_+s],rdm,tprdm_aa[p*ncmo3_+q*ncmo2_+r*ncmo_+s]);
+                        //   outfile->Printf("\n  D2(aaaa)[%3lu][%3lu][%3lu][%3lu] = %18.12lf
+                        //   (%18.12lf,%18.12lf)",
+                        //   p,q,r,s,rdm-tprdm_aa[p*ncmo3_+q*ncmo2_+r*ncmo_+s],rdm,tprdm_aa[p*ncmo3_+q*ncmo2_+r*ncmo_+s]);
                     }
                 }
             }

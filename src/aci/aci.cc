@@ -1152,10 +1152,10 @@ void AdaptiveCI::get_excited_determinants2(int nroot, SharedMatrix evecs,
             for (size_t I = start_idx; I < end_idx; ++I) {
                 double c_norm = evecs->get_row(0, I)->norm();
                 const Determinant& det = dets[I];
-                std::vector<int> aocc = det.get_alfa_occ();
-                std::vector<int> bocc = det.get_beta_occ();
-                std::vector<int> avir = det.get_alfa_vir();
-                std::vector<int> bvir = det.get_beta_vir();
+                std::vector<int> aocc = det.get_alfa_occ(nmo);
+                std::vector<int> bocc = det.get_beta_occ(nmo);
+                std::vector<int> avir = det.get_alfa_vir(nmo);
+                std::vector<int> bvir = det.get_beta_vir(nmo);
 
                 int noalpha = aocc.size();
                 int nobeta = bocc.size();
@@ -1385,10 +1385,10 @@ void AdaptiveCI::get_excited_determinants(int nroot, SharedMatrix evecs,
             const Determinant& det(P_dets[P]);
             double evecs_P_row_norm = evecs->get_row(0, P)->norm();
 
-            std::vector<int> aocc = det.get_alfa_occ();
-            std::vector<int> bocc = det.get_beta_occ();
-            std::vector<int> avir = det.get_alfa_vir();
-            std::vector<int> bvir = det.get_beta_vir();
+            std::vector<int> aocc = det.get_alfa_occ(nact_);
+            std::vector<int> bocc = det.get_beta_occ(nact_);
+            std::vector<int> avir = det.get_alfa_vir(nact_);
+            std::vector<int> bvir = det.get_beta_vir(nact_);
 
             int noalpha = aocc.size();
             int nobeta = bocc.size();
@@ -1596,10 +1596,10 @@ void AdaptiveCI::get_core_excited_determinants(SharedMatrix evecs, DeterminantHa
             const Determinant& det(P_dets[P]);
             double evecs_P_row_norm = evecs->get_row(0, P)->norm();
 
-            std::vector<int> aocc = det.get_alfa_occ();
-            std::vector<int> bocc = det.get_beta_occ();
-            std::vector<int> avir = det.get_alfa_vir();
-            std::vector<int> bvir = det.get_beta_vir();
+            std::vector<int> aocc = det.get_alfa_occ(nact_); // TODO check size
+            std::vector<int> bocc = det.get_beta_occ(nact_); // TODO check size
+            std::vector<int> avir = det.get_alfa_vir(nact_); // TODO check size
+            std::vector<int> bvir = det.get_beta_vir(nact_); // TODO check size
 
             int noalpha = aocc.size();
             int nobeta = bocc.size();
@@ -2560,7 +2560,7 @@ void AdaptiveCI::compute_aci(DeterminantHashVec& PQ_space, SharedMatrix& PQ_evec
         auto orbs = sym_labeled_orbitals("RHF");
         Determinant det = initial_reference_[0];
         Determinant detb(det);
-        std::vector<int> avir = det.get_alfa_vir();
+        std::vector<int> avir = det.get_alfa_vir(nact_); // TODO check this
         outfile->Printf("\n  %s", det.str().c_str());
         outfile->Printf("\n  Freezing alpha orbital %d", hole_);
         outfile->Printf("\n  Exciting electron from %d to %d", hole_, avir[particle]);
@@ -3267,7 +3267,7 @@ void AdaptiveCI::add_external_excitations(DeterminantHashVec& ref) {
 
     for (int I = 0; I < nref; ++I) {
         Determinant det = dets[I];
-        std::vector<int> avir = det.get_alfa_vir();
+        std::vector<int> avir = det.get_alfa_vir(nact_); // TODO check this
         // core -> act (alpha)
         for (int i = 0; i < ncore; ++i) {
             int ii = core_mos[i];
@@ -3367,7 +3367,7 @@ void AdaptiveCI::add_external_excitations(DeterminantHashVec& ref) {
         DeterminantHashVec cv_d;
         for (int I = 0; I < nref; ++I) {
             Determinant det = dets[I];
-            std::vector<int> avir = det.get_alfa_vir();
+            std::vector<int> avir = det.get_alfa_vir(nact_); // TODO check this
             // core -> act (alpha)
             for (int i = 0; i < ncore; ++i) {
                 int ii = core_mos[i];

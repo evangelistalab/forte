@@ -198,6 +198,8 @@ void ESNO::get_excited_determinants() {
 
     auto ruocc = mo_space_info_->get_corr_abs_mo("RESTRICTED_UOCC");
     Dimension rdoccpi = mo_space_info_->get_dimension("RESTRICTED_DOCC");
+    size_t nrdo = mo_space_info_->size("RESTRICTED_DOCC");
+    size_t nact = mo_space_info_->size("ACTIVE");
 
     std::vector<size_t> external_mo = get_excitation_space();
     int n_ext = external_mo.size();
@@ -208,8 +210,8 @@ void ESNO::get_excited_determinants() {
     const auto& internal = reference_.wfn_hash();
     for (const auto& det : internal) {
         outfile->Printf("\n  %s",det.str().c_str());
-        std::vector<int> aocc = det.get_alfa_occ();
-        std::vector<int> bocc = det.get_beta_occ();
+        std::vector<int> aocc = det.get_alfa_occ(nrdo + nact); // TODO check this
+        std::vector<int> bocc = det.get_beta_occ(nrdo + nact); // TODO check this
 
         int noalfa = aocc.size();
         int nobeta = bocc.size();

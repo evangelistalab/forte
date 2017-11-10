@@ -114,22 +114,22 @@ class STLBitsetDeterminant {
     int npair();
 
     /// Return a vector of occupied alpha orbitals
-    std::vector<int> get_alfa_occ();
+    std::vector<int> get_alfa_occ(int norb) const;
     /// Return a vector of occupied beta orbitals
-    std::vector<int> get_beta_occ();
+    std::vector<int> get_beta_occ(int norb) const;
     /// Return a vector of virtual alpha orbitals
-    std::vector<int> get_alfa_vir();
+    std::vector<int> get_alfa_vir(int norb) const;
     /// Return a vector of virtual beta orbitals
-    std::vector<int> get_beta_vir();
+    std::vector<int> get_beta_vir(int norb) const;
 
-    /// Return a vector of occupied alpha orbitals
-    std::vector<int> get_alfa_occ() const;
-    /// Return a vector of occupied beta orbitals
-    std::vector<int> get_beta_occ() const;
-    /// Return a vector of virtual alpha orbitals
-    std::vector<int> get_alfa_vir() const;
-    /// Return a vector of virtual beta orbitals
-    std::vector<int> get_beta_vir() const;
+    //    /// Return a vector of occupied alpha orbitals
+    //    std::vector<int> get_alfa_occ() const;
+    //    /// Return a vector of occupied beta orbitals
+    //    std::vector<int> get_beta_occ() const;
+    //    /// Return a vector of virtual alpha orbitals
+    //    std::vector<int> get_alfa_vir() const;
+    //    /// Return a vector of virtual beta orbitals
+    //    std::vector<int> get_beta_vir() const;
 
     /// Set the value of an alpha bit
     double create_alfa_bit(int n);

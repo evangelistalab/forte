@@ -42,9 +42,7 @@ namespace psi {
 namespace forte {
 
 WFNOperator::WFNOperator(std::vector<int>& symmetry, std::shared_ptr<FCIIntegrals> fci_ints)
-    : fci_ints_(fci_ints) {
-    mo_symmetry_ = symmetry;
-}
+    : ncmo_(fci_ints_->nmo()), mo_symmetry_(symmetry), fci_ints_(fci_ints) {}
 
 WFNOperator::WFNOperator() {}
 
@@ -362,8 +360,8 @@ double WFNOperator::s2(DeterminantHashVec& wfn, SharedMatrix& evecs, int root) {
         // PhiI = PhiJ
         Determinant PhiI(wfn_map[i]);
         int npair = PhiI.npair();
-        int na = PhiI.get_alfa_occ().size();
-        int nb = PhiI.get_beta_occ().size();
+        int na = PhiI.count_alfa();
+        int nb = PhiI.count_beta();
         double ms = 0.5 * static_cast<double>(na - nb);
         S2 += (ms * ms + ms + static_cast<double>(nb) - static_cast<double>(npair)) *
               evecs->get(i, root) * evecs->get(i, root);
@@ -404,15 +402,14 @@ double WFNOperator::s2(DeterminantHashVec& wfn, SharedMatrix& evecs, int root) {
 }
 
 void WFNOperator::add_singles(DeterminantHashVec& wfn) {
-
     const det_hashvec& wfn_map = wfn.wfn_hash();
 
     DeterminantHashVec singles;
     // Loop through determinants, generate singles and add them to the wfn
     // Alpha excitations
     for (const Determinant& det : wfn_map) {
-        std::vector<int> aocc = det.get_alfa_occ();
-        std::vector<int> avir = det.get_alfa_vir();
+        std::vector<int> aocc = det.get_alfa_occ(ncmo_);
+        std::vector<int> avir = det.get_alfa_vir(ncmo_);
 
         Determinant new_det(det);
         for (int i = 0, noalpha = aocc.size(); i < noalpha; ++i) {
@@ -434,8 +431,8 @@ void WFNOperator::add_singles(DeterminantHashVec& wfn) {
         // Beta excitations
         // for( auto& I : wfn_map ){
         //     Determinant det = I.first;
-        std::vector<int> bocc = det.get_beta_occ();
-        std::vector<int> bvir = det.get_beta_vir();
+        std::vector<int> bocc = det.get_beta_occ(ncmo_);
+        std::vector<int> bvir = det.get_beta_vir(ncmo_);
 
         for (int i = 0, nobeta = bocc.size(); i < nobeta; ++i) {
             int ii = bocc[i];
@@ -461,10 +458,10 @@ void WFNOperator::add_doubles(DeterminantHashVec& wfn) {
     DeterminantHashVec external;
 
     for (const Determinant& det : wfn_map) {
-        std::vector<int> aocc = det.get_alfa_occ();
-        std::vector<int> bocc = det.get_beta_occ();
-        std::vector<int> avir = det.get_alfa_vir();
-        std::vector<int> bvir = det.get_beta_vir();
+        std::vector<int> aocc = det.get_alfa_occ(ncmo_);
+        std::vector<int> bocc = det.get_beta_occ(ncmo_);
+        std::vector<int> avir = det.get_alfa_vir(ncmo_);
+        std::vector<int> bvir = det.get_beta_vir(ncmo_);
 
         int noalfa = aocc.size();
         int nvalfa = avir.size();
@@ -601,7 +598,7 @@ void WFNOperator::build_strings(DeterminantHashVec& wfn) {
         // Grab mutable copy of determinant
         Determinant detI(wfn_map[I]);
         detI.zero_spin(DetSpinType::Beta);
-        const std::vector<int>& aocc = detI.get_alfa_occ();
+        const std::vector<int>& aocc = detI.get_alfa_occ(ncmo_);
         for (int i = 0, nalfa = aocc.size(); i < nalfa; ++i) {
             int ii = aocc[i];
             Determinant ann_det(detI);
@@ -624,6 +621,7 @@ void WFNOperator::build_strings(DeterminantHashVec& wfn) {
 
 void WFNOperator::op_s_lists(DeterminantHashVec& wfn) {
     timer ops("Single sub. lists");
+
     // Get a reference to the determinants
     const det_hashvec& dets = wfn.wfn_hash();
     Timer ann;
@@ -636,7 +634,7 @@ void WFNOperator::op_s_lists(DeterminantHashVec& wfn) {
             size_t index = c_dets[I];
             const Determinant& detI = dets[index];
 
-            const std::vector<int>& aocc = detI.get_alfa_occ();
+            const std::vector<int>& aocc = detI.get_alfa_occ(ncmo_);
             int noalfa = aocc.size();
 
             for (int i = 0; i < noalfa; ++i) {
@@ -679,7 +677,7 @@ void WFNOperator::op_s_lists(DeterminantHashVec& wfn) {
         for (size_t I = 0, maxI = c_dets.size(); I < maxI; ++I) {
             size_t index = c_dets[I];
             const Determinant& detI = dets[index];
-            const std::vector<int>& bocc = detI.get_beta_occ();
+            const std::vector<int>& bocc = detI.get_beta_occ(ncmo_);
             int nobeta = bocc.size();
 
             for (int i = 0; i < nobeta; ++i) {
@@ -726,7 +724,7 @@ void WFNOperator::op_lists(DeterminantHashVec& wfn) {
             det_hash<int> map_a_ann;
             for (size_t I = 0; I < max_I; ++I) {
                 const Determinant& detI = dets[c_dets[I]];
-                const std::vector<int>& aocc = detI.get_alfa_occ();
+                const std::vector<int>& aocc = detI.get_alfa_occ(ncmo_);
                 int noalfa = aocc.size();
 
                 std::vector<std::pair<size_t, short>> a_ann(noalfa);
@@ -767,7 +765,7 @@ void WFNOperator::op_lists(DeterminantHashVec& wfn) {
             for (size_t I = 0; I < max_I; ++I) {
                 int idx = c_dets[I];
                 const Determinant& detI = dets[idx];
-                std::vector<int> bocc = detI.get_beta_occ();
+                std::vector<int> bocc = detI.get_beta_occ(ncmo_);
                 int nobeta = bocc.size();
 
                 std::vector<std::pair<size_t, short>> b_ann(nobeta);
@@ -837,7 +835,7 @@ void WFNOperator::tp_s_lists(DeterminantHashVec& wfn) {
             for (size_t I = 0; I < max_I; ++I) {
                 size_t idx = c_dets[I];
                 Determinant detI = dets[idx];
-                std::vector<int> aocc = detI.get_alfa_occ();
+                std::vector<int> aocc = detI.get_alfa_occ(ncmo_);
                 int noalfa = aocc.size();
 
                 for (int i = 0; i < noalfa; ++i) {
@@ -890,7 +888,7 @@ void WFNOperator::tp_s_lists(DeterminantHashVec& wfn) {
                 size_t idx = c_dets[I];
 
                 Determinant detI(dets[idx]);
-                std::vector<int> bocc = detI.get_beta_occ();
+                std::vector<int> bocc = detI.get_beta_occ(ncmo_);
                 int nobeta = bocc.size();
 
                 for (int i = 0, ij = 0; i < nobeta; ++i) {
@@ -945,7 +943,7 @@ void WFNOperator::tp_s_lists(DeterminantHashVec& wfn) {
                 int ii = c_dets[I].first;
                 Determinant detI(dets[idx]);
                 detI.set_alfa_bit(ii, false);
-                std::vector<int> bocc = detI.get_beta_occ();
+                std::vector<int> bocc = detI.get_beta_occ(ncmo_);
                 size_t nobeta = bocc.size();
 
                 for (size_t j = 0; j < nobeta; ++j) {
@@ -1004,7 +1002,7 @@ void WFNOperator::tp_lists(DeterminantHashVec& wfn) {
             for (size_t I = 0; I < max_I; ++I) {
                 size_t idx = c_dets[I];
                 Determinant detI(dets[idx]);
-                std::vector<int> aocc = detI.get_alfa_occ();
+                std::vector<int> aocc = detI.get_alfa_occ(ncmo_);
                 int noalfa = aocc.size();
 
                 std::vector<std::tuple<size_t, short, short>> aa_ann(noalfa * (noalfa - 1) / 2);
@@ -1054,7 +1052,7 @@ void WFNOperator::tp_lists(DeterminantHashVec& wfn) {
                 size_t idx = c_dets[I];
 
                 Determinant detI(dets[idx]);
-                std::vector<int> bocc = detI.get_beta_occ();
+                std::vector<int> bocc = detI.get_beta_occ(ncmo_);
                 int nobeta = bocc.size();
 
                 std::vector<std::tuple<size_t, short, short>> bb_ann(nobeta * (nobeta - 1) / 2);
@@ -1107,7 +1105,7 @@ void WFNOperator::tp_lists(DeterminantHashVec& wfn) {
                 int ii = c_dets[I].first;
                 Determinant detI(dets[idx]);
                 detI.set_alfa_bit(ii, false);
-                std::vector<int> bocc = detI.get_beta_occ();
+                std::vector<int> bocc = detI.get_beta_occ(ncmo_);
                 size_t nobeta = bocc.size();
 
                 size_t offset = ab_ann_list_[idx].size();
@@ -1220,7 +1218,7 @@ void WFNOperator::three_s_lists(DeterminantHashVec& wfn) {
             for (size_t I = 0; I < max_I; ++I) {
                 size_t idx = c_dets[I];
                 Determinant detI(dets[idx]);
-                std::vector<int> aocc = detI.get_alfa_occ();
+                std::vector<int> aocc = detI.get_alfa_occ(ncmo_);
                 int noalfa = aocc.size();
 
                 for (int i = 0; i < noalfa; ++i) {
@@ -1277,7 +1275,7 @@ void WFNOperator::three_s_lists(DeterminantHashVec& wfn) {
             // Grab mutable copy of determinant
             Determinant detI(wfn_map[I]);
             detI.zero_spin(DetSpinType::Alpha);
-            std::vector<int> bocc = detI.get_beta_occ();
+            std::vector<int> bocc = detI.get_beta_occ(ncmo_);
             for (int i = 0, nbeta = bocc.size(); i < nbeta; ++i) {
                 int ii = bocc[i];
                 Determinant ann_det(detI);
@@ -1309,7 +1307,7 @@ void WFNOperator::three_s_lists(DeterminantHashVec& wfn) {
                 int kk = c_dets[I].first;
                 detI.set_beta_bit(kk, false);
 
-                std::vector<int> aocc = detI.get_alfa_occ();
+                std::vector<int> aocc = detI.get_alfa_occ(ncmo_);
 
                 int noalfa = aocc.size();
 
@@ -1368,7 +1366,7 @@ void WFNOperator::three_s_lists(DeterminantHashVec& wfn) {
                 int ii = c_dets[I].first;
                 detI.set_alfa_bit(ii, false);
 
-                std::vector<int> bocc = detI.get_beta_occ();
+                std::vector<int> bocc = detI.get_beta_occ(ncmo_);
 
                 int nobeta = bocc.size();
 
@@ -1424,7 +1422,7 @@ void WFNOperator::three_s_lists(DeterminantHashVec& wfn) {
                 size_t idx = c_dets[I];
                 Determinant detI(dets[idx]);
 
-                std::vector<int> bocc = detI.get_beta_occ();
+                std::vector<int> bocc = detI.get_beta_occ(ncmo_);
 
                 int nobeta = bocc.size();
 
@@ -1488,8 +1486,8 @@ void WFNOperator::three_lists(DeterminantHashVec& wfn) {
                 size_t idx = c_dets[I];
                 Determinant detI(dets[idx]);
 
-                std::vector<int> aocc = detI.get_alfa_occ();
-                std::vector<int> bocc = detI.get_beta_occ();
+                std::vector<int> aocc = detI.get_alfa_occ(ncmo_);
+                std::vector<int> bocc = detI.get_beta_occ(ncmo_);
 
                 int noalfa = aocc.size();
                 int nobeta = bocc.size();
@@ -1545,7 +1543,7 @@ void WFNOperator::three_lists(DeterminantHashVec& wfn) {
             // Grab mutable copy of determinant
             Determinant detI(wfn_map[I]);
             detI.zero_spin(DetSpinType::Alpha);
-            std::vector<int> bocc = detI.get_beta_occ();
+            std::vector<int> bocc = detI.get_beta_occ(ncmo_);
             for (int i = 0, nbeta = bocc.size(); i < nbeta; ++i) {
                 int ii = bocc[i];
                 Determinant ann_det(detI);
@@ -1577,7 +1575,7 @@ void WFNOperator::three_lists(DeterminantHashVec& wfn) {
                 int kk = c_dets[I].first;
                 detI.set_beta_bit(kk, false);
 
-                std::vector<int> aocc = detI.get_alfa_occ();
+                std::vector<int> aocc = detI.get_alfa_occ(ncmo_);
 
                 int noalfa = aocc.size();
 
@@ -1634,7 +1632,7 @@ void WFNOperator::three_lists(DeterminantHashVec& wfn) {
                 int ii = c_dets[I].first;
                 detI.set_alfa_bit(ii, false);
 
-                std::vector<int> bocc = detI.get_beta_occ();
+                std::vector<int> bocc = detI.get_beta_occ(ncmo_);
 
                 int nobeta = bocc.size();
 
@@ -1688,8 +1686,8 @@ void WFNOperator::three_lists(DeterminantHashVec& wfn) {
                 size_t idx = c_dets[I].second;
                 Determinant detI(dets[idx]);
 
-                std::vector<int> aocc = detI.get_alfa_occ();
-                std::vector<int> bocc = detI.get_beta_occ();
+                std::vector<int> aocc = detI.get_alfa_occ(ncmo_);
+                std::vector<int> bocc = detI.get_beta_occ(ncmo_);
 
                 int noalfa = aocc.size();
                 int nobeta = bocc.size();

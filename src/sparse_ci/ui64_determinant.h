@@ -82,13 +82,13 @@ class UI64Determinant {
     void zero_spin(DetSpinType spin_type);
 
     /// Return a vector of occupied alpha orbitals
-    std::vector<int> get_alfa_occ() const;
+    std::vector<int> get_alfa_occ(int norb) const;
     /// Return a vector of occupied beta orbitals
-    std::vector<int> get_beta_occ() const;
+    std::vector<int> get_beta_occ(int norb) const;
     /// Return a vector of virtual alpha orbitals
-    std::vector<int> get_alfa_vir() const;
+    std::vector<int> get_alfa_vir(int norb) const;
     /// Return a vector of virtual beta orbitals
-    std::vector<int> get_beta_vir() const;
+    std::vector<int> get_beta_vir(int norb) const;
 
     /// Set the value of an alpha bit
     double create_alfa_bit(int n);
