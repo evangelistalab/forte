@@ -148,6 +148,8 @@ class WFNOperator {
     std::vector<std::vector<std::pair<int, size_t>>> alpha_a_strings_;
     std::vector<std::vector<std::pair<int, size_t>>> beta_a_strings_;
 
+    /// Number of active space orbitals
+    size_t ncmo_;
     /// Active space symmetry
     std::vector<int> mo_symmetry_;
 

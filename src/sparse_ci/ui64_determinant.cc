@@ -288,9 +288,9 @@ UI64Determinant::bit_t UI64Determinant::get_bits(DetSpinType spin_type) const {
 /// Return the number of alpha/beta pairs
 int UI64Determinant::npair() const { return ui64_bit_count(a_ & b_); }
 
-std::vector<int> UI64Determinant::get_alfa_occ() const {
+std::vector<int> UI64Determinant::get_alfa_occ(int norb) const {
     std::vector<int> occ;
-    for (int p = 0; p < 64; ++p) {
+    for (int p = 0; p < norb; ++p) {
         if (get_alfa_bit(p)) {
             occ.push_back(p);
         }
@@ -298,9 +298,9 @@ std::vector<int> UI64Determinant::get_alfa_occ() const {
     return occ;
 }
 
-std::vector<int> UI64Determinant::get_beta_occ() const {
+std::vector<int> UI64Determinant::get_beta_occ(int norb) const {
     std::vector<int> occ;
-    for (int p = 0; p < 64; ++p) {
+    for (int p = 0; p < norb; ++p) {
         if (get_beta_bit(p)) {
             occ.push_back(p);
         }
@@ -308,9 +308,9 @@ std::vector<int> UI64Determinant::get_beta_occ() const {
     return occ;
 }
 
-std::vector<int> UI64Determinant::get_alfa_vir() const {
+std::vector<int> UI64Determinant::get_alfa_vir(int norb) const {
     std::vector<int> vir;
-    for (int p = 0; p < 64; ++p) {
+    for (int p = 0; p < norb; ++p) {
         if (not get_alfa_bit(p)) {
             vir.push_back(p);
         }
@@ -318,9 +318,9 @@ std::vector<int> UI64Determinant::get_alfa_vir() const {
     return vir;
 }
 
-std::vector<int> UI64Determinant::get_beta_vir() const {
+std::vector<int> UI64Determinant::get_beta_vir(int norb) const {
     std::vector<int> vir;
-    for (int p = 0; p < 64; ++p) {
+    for (int p = 0; p < norb; ++p) {
         if (not get_beta_bit(p)) {
             vir.push_back(p);
         }

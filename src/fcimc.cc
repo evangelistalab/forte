@@ -467,10 +467,10 @@ void FCIQMC::spawn_generative(walker_map& walkers, walker_map& new_walkers) {
         size_t nid = std::round(std::fabs(coef));
         if (use_initiator_ && nid < std::round(initiator_na_))
             continue;
-        const std::vector<int> aocc = det.get_alfa_occ();
-        const std::vector<int> bocc = det.get_beta_occ();
-        const std::vector<int> avir = det.get_alfa_vir();
-        const std::vector<int> bvir = det.get_beta_vir();
+        const std::vector<int> aocc = det.get_alfa_occ(ncmo_);
+        const std::vector<int> bocc = det.get_beta_occ(ncmo_);
+        const std::vector<int> avir = det.get_alfa_vir(ncmo_);
+        const std::vector<int> bvir = det.get_beta_vir(ncmo_);
         switch (spawn_type_) {
         case random:
             for (size_t detW = 0; detW < nid; ++detW) {
@@ -740,10 +740,10 @@ void FCIQMC::singleWalkerSpawn(Determinant& new_det, const Determinant& det,
     std::tie(nsa, nsb, ndaa, ndab, ndbb) = pgen;
     size_t rand_class = rand_int() % sumgen;
     if (rand_class < ndab) {
-        const std::vector<int> aocc = det.get_alfa_occ();
-        const std::vector<int> avir = det.get_alfa_vir();
-        const std::vector<int> bocc = det.get_beta_occ();
-        const std::vector<int> bvir = det.get_beta_vir();
+        const std::vector<int> aocc = det.get_alfa_occ(ncmo_);
+        const std::vector<int> avir = det.get_alfa_vir(ncmo_);
+        const std::vector<int> bocc = det.get_beta_occ(ncmo_);
+        const std::vector<int> bvir = det.get_beta_vir(ncmo_);
         size_t i = aocc[rand_int() % aocc.size()];
         size_t j = bocc[rand_int() % bocc.size()];
         size_t a = avir[rand_int() % avir.size()];
@@ -753,8 +753,8 @@ void FCIQMC::singleWalkerSpawn(Determinant& new_det, const Determinant& det,
         new_det.set_beta_bit(j, false);
         new_det.set_beta_bit(b, true);
     } else if (rand_class < ndab + ndaa) {
-        const std::vector<int> aocc = det.get_alfa_occ();
-        const std::vector<int> avir = det.get_alfa_vir();
+        const std::vector<int> aocc = det.get_alfa_occ(ncmo_);
+        const std::vector<int> avir = det.get_alfa_vir(ncmo_);
         std::pair<size_t, size_t> ij = generate_ind_random_pair(aocc.size());
         std::pair<size_t, size_t> ab = generate_ind_random_pair(avir.size());
         size_t i = aocc[ij.first];
@@ -766,8 +766,8 @@ void FCIQMC::singleWalkerSpawn(Determinant& new_det, const Determinant& det,
         new_det.set_alfa_bit(a, true);
         new_det.set_alfa_bit(b, true);
     } else if (rand_class < ndab + ndaa + ndbb) {
-        const std::vector<int> bocc = det.get_beta_occ();
-        const std::vector<int> bvir = det.get_beta_vir();
+        const std::vector<int> bocc = det.get_beta_occ(ncmo_);
+        const std::vector<int> bvir = det.get_beta_vir(ncmo_);
         std::pair<size_t, size_t> ij = generate_ind_random_pair(bocc.size());
         std::pair<size_t, size_t> ab = generate_ind_random_pair(bvir.size());
         size_t i = bocc[ij.first];
@@ -779,15 +779,15 @@ void FCIQMC::singleWalkerSpawn(Determinant& new_det, const Determinant& det,
         new_det.set_beta_bit(a, true);
         new_det.set_beta_bit(b, true);
     } else if (rand_class < ndab + ndaa + ndbb + nsa) {
-        const std::vector<int> aocc = det.get_alfa_occ();
-        const std::vector<int> avir = det.get_alfa_vir();
+        const std::vector<int> aocc = det.get_alfa_occ(ncmo_);
+        const std::vector<int> avir = det.get_alfa_vir(ncmo_);
         size_t i = aocc[rand_int() % aocc.size()];
         size_t a = avir[rand_int() % avir.size()];
         new_det.set_alfa_bit(i, false);
         new_det.set_alfa_bit(a, true);
     } else {
-        const std::vector<int> bocc = det.get_beta_occ();
-        const std::vector<int> bvir = det.get_beta_vir();
+        const std::vector<int> bocc = det.get_beta_occ(ncmo_);
+        const std::vector<int> bvir = det.get_beta_vir(ncmo_);
         size_t i = bocc[rand_int() % bocc.size()];
         size_t a = bvir[rand_int() % bvir.size()];
         new_det.set_beta_bit(i, false);
@@ -907,10 +907,10 @@ void FCIQMC::merge(walker_map& walkers, walker_map& new_walkers) {
 void FCIQMC::annihilate(walker_map& walkers, walker_map& new_walkers) {}
 
 std::tuple<size_t, size_t, size_t, size_t, size_t> FCIQMC::compute_pgen_C1(const Determinant& det) {
-    const std::vector<int> aocc = det.get_alfa_occ();
-    const std::vector<int> bocc = det.get_beta_occ();
-    const std::vector<int> avir = det.get_alfa_vir();
-    const std::vector<int> bvir = det.get_beta_vir();
+    const std::vector<int> aocc = det.get_alfa_occ(ncmo_);
+    const std::vector<int> bocc = det.get_beta_occ(ncmo_);
+    const std::vector<int> avir = det.get_alfa_vir(ncmo_);
+    const std::vector<int> bvir = det.get_beta_vir(ncmo_);
 
     int noalpha = aocc.size();
     int nobeta = bocc.size();
@@ -926,10 +926,10 @@ std::tuple<size_t, size_t, size_t, size_t, size_t> FCIQMC::compute_pgen_C1(const
 }
 
 std::tuple<size_t, size_t, size_t, size_t, size_t> FCIQMC::compute_pgen(const Determinant& det) {
-    const std::vector<int> aocc = det.get_alfa_occ();
-    const std::vector<int> bocc = det.get_beta_occ();
-    const std::vector<int> avir = det.get_alfa_vir();
-    const std::vector<int> bvir = det.get_beta_vir();
+    const std::vector<int> aocc = det.get_alfa_occ(ncmo_);
+    const std::vector<int> bocc = det.get_beta_occ(ncmo_);
+    const std::vector<int> avir = det.get_alfa_vir(ncmo_);
+    const std::vector<int> bvir = det.get_beta_vir(ncmo_);
 
     int noalpha = aocc.size();
     int nobeta = bocc.size();
@@ -1023,10 +1023,10 @@ void FCIQMC::compute_excitations(
 
 void FCIQMC::compute_single_excitations(
     const Determinant& det, std::vector<std::tuple<size_t, size_t>>& singleExcitations) {
-    const std::vector<int> aocc = det.get_alfa_occ();
-    const std::vector<int> bocc = det.get_beta_occ();
-    const std::vector<int> avir = det.get_alfa_vir();
-    const std::vector<int> bvir = det.get_beta_vir();
+    const std::vector<int> aocc = det.get_alfa_occ(ncmo_);
+    const std::vector<int> bocc = det.get_beta_occ(ncmo_);
+    const std::vector<int> avir = det.get_alfa_vir(ncmo_);
+    const std::vector<int> bvir = det.get_beta_vir(ncmo_);
 
     //    det.print();
 
@@ -1065,10 +1065,10 @@ void FCIQMC::compute_single_excitations(
 void FCIQMC::compute_double_excitations(
     const Determinant& det,
     std::vector<std::tuple<size_t, size_t, size_t, size_t>>& doubleExcitations) {
-    const std::vector<int> aocc = det.get_alfa_occ();
-    const std::vector<int> bocc = det.get_beta_occ();
-    const std::vector<int> avir = det.get_alfa_vir();
-    const std::vector<int> bvir = det.get_beta_vir();
+    const std::vector<int> aocc = det.get_alfa_occ(ncmo_);
+    const std::vector<int> bocc = det.get_beta_occ(ncmo_);
+    const std::vector<int> avir = det.get_alfa_vir(ncmo_);
+    const std::vector<int> bvir = det.get_beta_vir(ncmo_);
 
     int noalpha = aocc.size();
     int nobeta = bocc.size();
@@ -1144,10 +1144,10 @@ void FCIQMC::compute_double_excitations(
 size_t FCIQMC::compute_irrep_divided_excitations(
     const Determinant& det, std::vector<size_t>& excitationDivides,
     std::vector<std::tuple<int, int, int, int>>& excitationType, ObtCount& obtCount) {
-    const std::vector<int> aocc = det.get_alfa_occ();
-    const std::vector<int> bocc = det.get_beta_occ();
-    const std::vector<int> avir = det.get_alfa_vir();
-    const std::vector<int> bvir = det.get_beta_vir();
+    const std::vector<int> aocc = det.get_alfa_occ(ncmo_);
+    const std::vector<int> bocc = det.get_beta_occ(ncmo_);
+    const std::vector<int> avir = det.get_alfa_vir(ncmo_);
+    const std::vector<int> bvir = det.get_beta_vir(ncmo_);
     size_t totalExcitation = 0;
     obtCount.naocc.clear();
     obtCount.nbocc.clear();

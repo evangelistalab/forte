@@ -59,6 +59,7 @@ class SigmaVector {
     virtual void add_bad_roots(std::vector<std::vector<std::pair<size_t, double>>>& bad_states) = 0;
 
   protected:
+    /// The length of the C/sigma vector (number of determinants)
     size_t size_;
 };
 

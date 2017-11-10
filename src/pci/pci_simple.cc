@@ -355,10 +355,10 @@ double ProjectorCI_Simple::estimate_high_energy() {
     lambda_h_ = high_obt_energy + fci_ints_->frozen_core_energy() + fci_ints_->scalar_energy();
 
     double lambda_h_G = fci_ints_->energy(high_det) + fci_ints_->scalar_energy();
-    std::vector<int> aocc = high_det.get_alfa_occ();
-    std::vector<int> bocc = high_det.get_beta_occ();
-    std::vector<int> avir = high_det.get_alfa_vir();
-    std::vector<int> bvir = high_det.get_beta_vir();
+    std::vector<int> aocc = high_det.get_alfa_occ(nact_);
+    std::vector<int> bocc = high_det.get_beta_occ(nact_);
+    std::vector<int> avir = high_det.get_alfa_vir(nact_);
+    std::vector<int> bvir = high_det.get_beta_vir(nact_);
     std::vector<int> aocc_offset(nirrep_ + 1);
     std::vector<int> bocc_offset(nirrep_ + 1);
     std::vector<int> avir_offset(nirrep_ + 1);
@@ -1295,10 +1295,10 @@ void ProjectorCI_Simple::apply_tau_H_ref_C_symm_det_dynamic(
 
     if (do_singles or do_doubles) {
 
-        std::vector<int> aocc = detI.get_alfa_occ();
-        std::vector<int> bocc = detI.get_beta_occ();
-        std::vector<int> avir = detI.get_alfa_vir();
-        std::vector<int> bvir = detI.get_beta_vir();
+        std::vector<int> aocc = detI.get_alfa_occ(nact_);
+        std::vector<int> bocc = detI.get_beta_occ(nact_);
+        std::vector<int> avir = detI.get_alfa_vir(nact_);
+        std::vector<int> bvir = detI.get_beta_vir(nact_);
 
         int noalpha = aocc.size();
         int nobeta = bocc.size();
@@ -1836,10 +1836,10 @@ double ProjectorCI_Simple::form_H_C(double tau, double spawning_threshold, Deter
                                     std::pair<double, double>& max_coupling) {
     double result = 0.0;
 
-    std::vector<int> aocc = detI.get_alfa_occ();
-    std::vector<int> bocc = detI.get_beta_occ();
-    std::vector<int> avir = detI.get_alfa_vir();
-    std::vector<int> bvir = detI.get_beta_vir();
+    std::vector<int> aocc = detI.get_alfa_occ(nact_);
+    std::vector<int> bocc = detI.get_beta_occ(nact_);
+    std::vector<int> avir = detI.get_alfa_vir(nact_);
+    std::vector<int> bvir = detI.get_beta_vir(nact_);
 
     int noalpha = aocc.size();
     int nobeta = bocc.size();

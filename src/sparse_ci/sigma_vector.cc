@@ -70,8 +70,7 @@ SigmaVectorList::SigmaVectorList(const std::vector<Determinant>& space, bool pri
     using bstmap_it = det_hash::iterator;
 
     size_t max_I = space.size();
-
-    //  for( auto& I : space) I.print();
+    size_t ncmo = fci_ints_->nmo();
 
     size_t naa_ann = 0;
     size_t nab_ann = 0;
@@ -95,7 +94,7 @@ SigmaVectorList::SigmaVectorList(const std::vector<Determinant>& space, bool pri
             double EI = fci_ints_->energy(detI);
             diag_.push_back(EI);
 
-            std::vector<int> aocc = detI.get_alfa_occ();
+            std::vector<int> aocc = detI.get_alfa_occ(ncmo);
             int noalpha = aocc.size();
 
             std::vector<std::pair<size_t, short>> a_ann(noalpha);
@@ -134,7 +133,7 @@ SigmaVectorList::SigmaVectorList(const std::vector<Determinant>& space, bool pri
         for (size_t I = 0; I < max_I; ++I) {
             const Determinant& detI = space[I];
 
-            std::vector<int> bocc = detI.get_beta_occ();
+            std::vector<int> bocc = detI.get_beta_occ(ncmo);
             int nobeta = bocc.size();
 
             std::vector<std::pair<size_t, short>> b_ann(nobeta);
@@ -207,7 +206,7 @@ SigmaVectorList::SigmaVectorList(const std::vector<Determinant>& space, bool pri
         for (size_t I = 0; I < max_I; ++I) {
             const Determinant& detI = space[I];
 
-            std::vector<int> aocc = detI.get_alfa_occ();
+            std::vector<int> aocc = detI.get_alfa_occ(ncmo);
             size_t noalpha = aocc.size();
 
             std::vector<std::tuple<size_t, short, short>> aa_ann(noalpha * (noalpha - 1) / 2);
@@ -249,7 +248,7 @@ SigmaVectorList::SigmaVectorList(const std::vector<Determinant>& space, bool pri
         for (size_t I = 0; I < max_I; ++I) {
             const Determinant& detI = space[I];
 
-            std::vector<int> bocc = detI.get_beta_occ();
+            std::vector<int> bocc = detI.get_beta_occ(ncmo);
 
             size_t nobeta = bocc.size();
 
@@ -291,8 +290,8 @@ SigmaVectorList::SigmaVectorList(const std::vector<Determinant>& space, bool pri
         for (size_t I = 0; I < max_I; ++I) {
             const Determinant& detI = space[I];
 
-            std::vector<int> aocc = detI.get_alfa_occ();
-            std::vector<int> bocc = detI.get_beta_occ();
+            std::vector<int> aocc = detI.get_alfa_occ(ncmo);
+            std::vector<int> bocc = detI.get_beta_occ(ncmo);
 
             size_t noalpha = aocc.size();
             size_t nobeta = bocc.size();

@@ -86,8 +86,7 @@ void ACTIVE_DSRGPT2::startup() {
         }
 
         int nirrep = this->nirrep();
-        dominant_dets_ =
-            std::vector<vector<Determinant>>(nirrep, std::vector<Determinant>());
+        dominant_dets_ = std::vector<vector<Determinant>>(nirrep, std::vector<Determinant>());
         Uaorbs_ = std::vector<vector<SharedMatrix>>(nirrep, std::vector<SharedMatrix>());
         Uborbs_ = std::vector<vector<SharedMatrix>>(nirrep, std::vector<SharedMatrix>());
         ref_wfns_ = std::vector<SharedMatrix>(nirrep, SharedMatrix());
@@ -1493,8 +1492,7 @@ SharedMatrix ACTIVE_DSRGPT2::combine_evecs(const int& h0, const int& h1) {
 }
 
 std::map<Determinant, double>
-ACTIVE_DSRGPT2::p_space_actv_to_nmo(const std::vector<Determinant>& p_space,
-                                    SharedVector wfn) {
+ACTIVE_DSRGPT2::p_space_actv_to_nmo(const std::vector<Determinant>& p_space, SharedVector wfn) {
     //    Determinant::reset_ints();
     std::map<Determinant, double> detsmap;
 
@@ -1512,12 +1510,12 @@ ACTIVE_DSRGPT2::p_space_actv_to_nmo(const std::vector<Determinant>& p_space,
 
         // find out occupation of determinant (active only)
         Determinant det_actv(p_space[I]);
-        std::vector<int> occ_alfa(det_actv.get_alfa_occ());
-        std::vector<int> occ_beta(det_actv.get_beta_occ());
+        std::vector<int> occ_alfa(det_actv.get_alfa_occ(nact));
+        std::vector<int> occ_beta(det_actv.get_beta_occ(nact));
         //        det_actv.print();
 
         // create a empty big determinant
-//        Determinant det(ncmo); <- xsize
+        //        Determinant det(ncmo); <- xsize
         Determinant det;
         // fill in core orbitals
         double sign = 1.0;
@@ -1546,8 +1544,8 @@ ACTIVE_DSRGPT2::p_space_actv_to_nmo(const std::vector<Determinant>& p_space,
 }
 
 std::map<Determinant, double>
-ACTIVE_DSRGPT2::excited_wfn_1st(const std::map<Determinant, double>& ref,
-                                ambit::BlockedTensor& T1, ambit::BlockedTensor& T2) {
+ACTIVE_DSRGPT2::excited_wfn_1st(const std::map<Determinant, double>& ref, ambit::BlockedTensor& T1,
+                                ambit::BlockedTensor& T2) {
     size_t ncmo = mo_space_info_->size("CORRELATED");
     //    Determinant::reset_ints();
 
@@ -1904,10 +1902,10 @@ void ACTIVE_DSRGPT2::compute_osc_pt2_dets(const int& irrep, const int& root, con
                     transD.y, transD.z);
 }
 
-std::map<Determinant, double>
-ACTIVE_DSRGPT2::excited_ref(const std::map<Determinant, double>& ref, const int& p,
-                            const int& q) {
+std::map<Determinant, double> ACTIVE_DSRGPT2::excited_ref(const std::map<Determinant, double>& ref,
+                                                          const int& p, const int& q) {
     size_t ncmo = mo_space_info_->size("CORRELATED");
+    size_t nact = mo_space_info_->size("ACTIVE");
 
     std::map<Determinant, double> out;
 
@@ -1915,10 +1913,10 @@ ACTIVE_DSRGPT2::excited_ref(const std::map<Determinant, double>& ref, const int&
         double ci = detCIpair.second;
         Determinant det(detCIpair.first);
 
-        std::vector<int> o_a = det.get_alfa_occ();
-        std::vector<int> o_b = det.get_beta_occ();
-        std::vector<int> v_a = det.get_alfa_vir();
-        std::vector<int> v_b = det.get_beta_vir();
+        std::vector<int> o_a = det.get_alfa_occ(nact);
+        std::vector<int> o_b = det.get_beta_occ(nact);
+        std::vector<int> v_a = det.get_alfa_vir(nact);
+        std::vector<int> v_b = det.get_beta_vir(nact);
 
         if (p == q) {
             // alpha
@@ -2390,9 +2388,9 @@ void ACTIVE_DSRGPT2::print_summary() {
     out_Eex.close();
 }
 
-std::string ACTIVE_DSRGPT2::compute_ex_type(const Determinant& det,
-                                            const Determinant& ref_det) {
+std::string ACTIVE_DSRGPT2::compute_ex_type(const Determinant& det, const Determinant& ref_det) {
     Dimension active = mo_space_info_->get_dimension("ACTIVE");
+    size_t nact = mo_space_info_->size("ACTIVE");
     int nirrep = this->nirrep();
     std::vector<std::string> sym_active;
     for (int h = 0; h < nirrep; ++h) {
@@ -2402,8 +2400,8 @@ std::string ACTIVE_DSRGPT2::compute_ex_type(const Determinant& det,
     }
 
     // compare alpha occ
-    std::vector<int> occA_ref(ref_det.get_alfa_occ());
-    std::vector<int> occA_det(det.get_alfa_occ());
+    std::vector<int> occA_ref(ref_det.get_alfa_occ(nact));
+    std::vector<int> occA_det(det.get_alfa_occ(nact));
     std::vector<int> commonA;
     std::set_intersection(occA_ref.begin(), occA_ref.end(), occA_det.begin(), occA_det.end(),
                           back_inserter(commonA));
@@ -2415,8 +2413,8 @@ std::string ACTIVE_DSRGPT2::compute_ex_type(const Determinant& det,
                    occA_det.end());
 
     // compare beta occ
-    std::vector<int> occB_ref(ref_det.get_beta_occ());
-    std::vector<int> occB_det(det.get_beta_occ());
+    std::vector<int> occB_ref(ref_det.get_beta_occ(nact));
+    std::vector<int> occB_det(det.get_beta_occ(nact));
     std::vector<int> commonB;
     std::set_intersection(occB_ref.begin(), occB_ref.end(), occB_det.begin(), occB_det.end(),
                           back_inserter(commonB));

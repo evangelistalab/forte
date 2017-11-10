@@ -132,76 +132,80 @@ void STLBitsetDeterminant::set_alfa_bit(int n, bool value) { ALFA(n) = value; }
 
 void STLBitsetDeterminant::set_beta_bit(int n, bool value) { BETA(n) = value; }
 
-std::vector<int> STLBitsetDeterminant::get_alfa_occ() {
-    std::vector<int> occ;
-    for (int p = 0; p < num_str_bits; ++p) {
-        if (ALFA(p))
-            occ.push_back(p);
+// std::vector<int> STLBitsetDeterminant::get_alfa_occ() {
+//    std::vector<int> occ;
+//    for (int p = 0; p < num_str_bits; ++p) {
+//        if (ALFA(p))
+//            occ.push_back(p);
+//    }
+//    return occ;
+//}
+
+// std::vector<int> STLBitsetDeterminant::get_beta_occ() {
+//    std::vector<int> occ;
+//    for (int p = 0; p < num_str_bits; ++p) {
+//        if (BETA(p))
+//            occ.push_back(p);
+//    }
+//    return occ;
+//}
+
+// std::vector<int> STLBitsetDeterminant::get_alfa_vir() {
+//    std::vector<int> vir;
+//    for (int p = 0; p < num_str_bits; ++p) {
+//        if (not ALFA(p))
+//            vir.push_back(p);
+//    }
+//    return vir;
+//}
+
+// std::vector<int> STLBitsetDeterminant::get_beta_vir() {
+//    std::vector<int> vir;
+//    for (int p = 0; p < num_str_bits; ++p) {
+//        if (not BETA(p))
+//            vir.push_back(p);
+//    }
+//    return vir;
+//}
+
+std::vector<int> STLBitsetDeterminant::get_alfa_occ(int norb) const {
+    std::vector<int> orbs;
+    for (int p = 0; p < norb; ++p) {
+        if (ALFA(p)) {
+            orbs.push_back(p);
+        }
     }
-    return occ;
+    return orbs;
 }
 
-std::vector<int> STLBitsetDeterminant::get_beta_occ() {
-    std::vector<int> occ;
-    for (int p = 0; p < num_str_bits; ++p) {
-        if (BETA(p))
-            occ.push_back(p);
+std::vector<int> STLBitsetDeterminant::get_beta_occ(int norb) const {
+    std::vector<int> orbs;
+    for (int p = 0; p < norb; ++p) {
+        if (BETA(p)) {
+            orbs.push_back(p);
+        }
     }
-    return occ;
+    return orbs;
 }
 
-std::vector<int> STLBitsetDeterminant::get_alfa_vir() {
-    std::vector<int> vir;
-    for (int p = 0; p < num_str_bits; ++p) {
-        if (not ALFA(p))
-            vir.push_back(p);
+std::vector<int> STLBitsetDeterminant::get_alfa_vir(int norb) const {
+    std::vector<int> orbs;
+    for (int p = 0; p < norb; ++p) {
+        if (not ALFA(p)) {
+            orbs.push_back(p);
+        }
     }
-    return vir;
+    return orbs;
 }
 
-std::vector<int> STLBitsetDeterminant::get_beta_vir() {
-    std::vector<int> vir;
-    for (int p = 0; p < num_str_bits; ++p) {
-        if (not BETA(p))
-            vir.push_back(p);
+std::vector<int> STLBitsetDeterminant::get_beta_vir(int norb) const {
+    std::vector<int> orbs;
+    for (int p = 0; p < norb; ++p) {
+        if (not BETA(p)) {
+            orbs.push_back(p);
+        }
     }
-    return vir;
-}
-
-std::vector<int> STLBitsetDeterminant::get_alfa_occ() const {
-    std::vector<int> occ;
-    for (int p = 0; p < num_str_bits; ++p) {
-        if (ALFA(p))
-            occ.push_back(p);
-    }
-    return occ;
-}
-
-std::vector<int> STLBitsetDeterminant::get_beta_occ() const {
-    std::vector<int> occ;
-    for (int p = 0; p < num_str_bits; ++p) {
-        if (BETA(p))
-            occ.push_back(p);
-    }
-    return occ;
-}
-
-std::vector<int> STLBitsetDeterminant::get_alfa_vir() const {
-    std::vector<int> vir;
-    for (int p = 0; p < num_str_bits; ++p) {
-        if (not ALFA(p))
-            vir.push_back(p);
-    }
-    return vir;
-}
-
-std::vector<int> STLBitsetDeterminant::get_beta_vir() const {
-    std::vector<int> vir;
-    for (int p = 0; p < num_str_bits; ++p) {
-        if (not BETA(p))
-            vir.push_back(p);
-    }
-    return vir;
+    return orbs;
 }
 
 double STLBitsetDeterminant::create_alfa_bit(int n) {

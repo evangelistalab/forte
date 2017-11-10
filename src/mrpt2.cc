@@ -141,6 +141,7 @@ double MRPT2::compute_pt2_energy() {
 }
 
 double MRPT2::energy_kernel(int bin, int nbin) {
+    size_t nact = mo_space_info_->size("ACTIVE");
     double E_0 = evals_->get(0);
     double energy = 0.0;
     const size_t n_dets = reference_.size();
@@ -149,10 +150,10 @@ double MRPT2::energy_kernel(int bin, int nbin) {
     for (size_t I = 0; I < n_dets; ++I) {
         double c_I = evecs_->get(I, 0);
         const Determinant& det = dets[I];
-        std::vector<int> aocc = det.get_alfa_occ();
-        std::vector<int> bocc = det.get_beta_occ();
-        std::vector<int> avir = det.get_alfa_vir();
-        std::vector<int> bvir = det.get_beta_vir();
+        std::vector<int> aocc = det.get_alfa_occ(nact);
+        std::vector<int> bocc = det.get_beta_occ(nact);
+        std::vector<int> avir = det.get_alfa_vir(nact);
+        std::vector<int> bvir = det.get_beta_vir(nact);
 
         int noalpha = aocc.size();
         int nobeta = bocc.size();
