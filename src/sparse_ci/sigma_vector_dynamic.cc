@@ -80,7 +80,7 @@ SigmaVectorDynamic::SigmaVectorDynamic(const DeterminantHashVec& space,
     temp_sigma_.resize(size_);
     temp_b_.resize(size_);
 
-    num_threads_ = 1; // std::thread::hardware_concurrency();
+    num_threads_ = std::thread::hardware_concurrency();
 
     total_space_ = max_memory;
     size_t space_per_thread = total_space_ / num_threads_;

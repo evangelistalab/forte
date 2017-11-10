@@ -409,8 +409,6 @@ SparseCISolver::initial_guess(const std::vector<Determinant>& space, int nroot, 
     }
 
     if (spin_project_) {
-        // Determinant det(fci_ints_->nmo()); <- xsize
-//        Determinant det;
         enforce_spin_completeness(guess_det, fci_ints_->nmo());
         if (guess_det.size() > nguess) {
             size_t nnew_dets = guess_det.size() - nguess;
@@ -556,8 +554,6 @@ SparseCISolver::initial_guess_map(const DeterminantHashVec& space, int nroot, in
     }
 
     if (spin_project_) {
-        // Determinant det(fci_ints_->nmo()); <- xsize
-//        Determinant det;
         enforce_spin_completeness(guess_det, fci_ints_->nmo());
         if (guess_det.size() > nguess) {
             size_t nnew_dets = guess_det.size() - nguess;

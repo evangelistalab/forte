@@ -67,6 +67,8 @@ class STLBitsetDeterminant {
 
     /// Construct an empty determinant
     explicit STLBitsetDeterminant();
+    STLBitsetDeterminant(int n) = delete;
+    STLBitsetDeterminant(size_t n) = delete;
     /// Construct a determinant from a bitset object
     explicit STLBitsetDeterminant(const bit_t& bits);
     /// Construct the determinant from an occupation vector that

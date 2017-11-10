@@ -30,23 +30,21 @@
 #ifndef _determinant_h_
 #define _determinant_h_
 
-#define BITSET_TYPE 0
-
 #include <unordered_map>
 
-#if BITSET_TYPE == 0
-#include "stl_bitset_determinant.h"
-#elif BITSET_TYPE == 1
+#ifdef SMALL_BITSET
 #include "ui64_determinant.h"
+#else
+#include "stl_bitset_determinant.h"
 #endif
 
 namespace psi {
 namespace forte {
 
-#if BITSET_TYPE == 0
-using Determinant = STLBitsetDeterminant;
-#elif BITSET_TYPE == 1
+#ifdef SMALL_BITSET
 using Determinant = UI64Determinant;
+#else
+using Determinant = STLBitsetDeterminant;
 #endif
 
 using det_vec = std::vector<Determinant>;

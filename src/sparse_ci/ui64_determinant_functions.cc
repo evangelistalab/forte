@@ -105,7 +105,7 @@ void enforce_spin_completeness(std::vector<UI64Determinant>& det_space, int nmo)
         for (int i = nbopen; i < naopen + nbopen; ++i)
             open_bits[i] = true; // 1
         do {
-            UI64Determinant new_det; // <- xsize (nmo);
+            UI64Determinant new_det;
             for (int c = 0; c < nclosed; ++c) {
                 new_det.set_alfa_bit(closed[c], true);
                 new_det.set_beta_bit(closed[c], true);
