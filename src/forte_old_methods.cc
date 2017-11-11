@@ -122,7 +122,7 @@ void forte_old_methods(SharedWavefunction ref_wfn, Options& options,
     }
     if (options.get_bool("LOCALIZE")) {
         auto localize = std::make_shared<LOCALIZE>(ref_wfn, options, ints, mo_space_info);
-        localize->localize_orbitals();
+        localize->split_localize();
     }
 
     if (options.get_str("JOB_TYPE") == "MR-DSRG-PT2") {

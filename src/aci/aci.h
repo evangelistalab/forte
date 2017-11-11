@@ -47,6 +47,7 @@
 #include "../sparse_ci/sparse_ci_solver.h"
 #include "../sparse_ci/determinant.h"
 #include "../orbital-helper/iao_builder.h"
+#include "../orbital-helper/localize.h"
 
 using d1 = std::vector<double>;
 using d2 = std::vector<d1>;

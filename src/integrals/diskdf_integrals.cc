@@ -35,8 +35,6 @@
 #include "psi4/libmints/vector.h"
 #include "psi4/libmints/wavefunction.h"
 #include "psi4/libqt/qt.h"
-#include "../libthce/lreri.h"
-#include "../libthce/thce.h"
 
 #include "../helpers.h"
 
@@ -121,41 +119,35 @@ double DISKDFIntegrals::aptei_aa(size_t p, size_t q, size_t r, size_t s) {
         sn = s;
     }
 
-    size_t offset1 = rn * nthree_ + pn * (nthree_ * nmo_);
-    size_t offset2 = sn * nthree_ + qn * (nthree_ * nmo_);
+    std::vector<size_t> A_range = {0, nthree_};
+    std::vector<size_t> p_range = {pn,pn+1};
+    std::vector<size_t> q_range = {qn,qn+1};
+    std::vector<size_t> r_range = {rn,rn+1};
+    std::vector<size_t> s_range = {sn,sn+1};
+
     double vpqrsalphaC = 0.0;
     double vpqrsalphaE = 0.0;
 
-    SharedVector B1(new Vector("B1", nthree_));
-    SharedVector B2(new Vector("B2", nthree_));
+    SharedMatrix B1(new Matrix(1,nthree_));
+    SharedMatrix B2(new Matrix(1,nthree_));
 
-    // Read a block of Vectors for the Columb term
-    fseek(B_->file_pointer(), offset1 * sizeof(double), SEEK_SET);
-    fread(&(B1->pointer()[0]), sizeof(double), nthree_, B_->file_pointer());
-    fseek(B_->file_pointer(), offset2 * sizeof(double), SEEK_SET);
-    fread(&(B2->pointer()[0]), sizeof(double), nthree_, B_->file_pointer());
+    df_->fill_tensor("B",B1, A_range, p_range, r_range ); 
+    df_->fill_tensor("B",B2, A_range, q_range, s_range ); 
 
-    vpqrsalphaC = C_DDOT(nthree_, &(B1->pointer()[0]), 1, &(B2->pointer()[0]), 1);
+    vpqrsalphaC = B1->vector_dot(B2);
 
     B1->zero();
     B2->zero();
-    offset1 = 0;
-    offset2 = 0;
 
-    offset1 = sn * nthree_ + pn * (nthree_ * nmo_);
-    offset2 = rn * nthree_ + qn * (nthree_ * nmo_);
+    df_->fill_tensor("B",B1, A_range, p_range, s_range ); 
+    df_->fill_tensor("B",B2, A_range, q_range, r_range ); 
 
-    fseek(B_->file_pointer(), offset1 * sizeof(double), SEEK_SET);
-    fread(&(B1->pointer()[0]), sizeof(double), nthree_, B_->file_pointer());
-    fseek(B_->file_pointer(), offset2 * sizeof(double), SEEK_SET);
-    fread(&(B2->pointer()[0]), sizeof(double), nthree_, B_->file_pointer());
-    vpqrsalphaE = C_DDOT(nthree_, &(B1->pointer()[0]), 1, &(B2->pointer()[0]), 1);
+    vpqrsalphaE = B1->vector_dot(B2);
 
     return (vpqrsalphaC - vpqrsalphaE);
 }
 
 double DISKDFIntegrals::aptei_ab(size_t p, size_t q, size_t r, size_t s) {
-
     size_t pn, qn, rn, sn;
     if (frzcpi_.sum() > 0 && ncmo_ == aptei_idx_) {
         pn = cmotomo_[p];
@@ -168,21 +160,20 @@ double DISKDFIntegrals::aptei_ab(size_t p, size_t q, size_t r, size_t s) {
         rn = r;
         sn = s;
     }
+    std::vector<size_t> A_range = {0, nthree_};
+    std::vector<size_t> p_range = {pn,pn+1};
+    std::vector<size_t> q_range = {qn,qn+1};
+    std::vector<size_t> r_range = {rn,rn+1};
+    std::vector<size_t> s_range = {sn,sn+1};
 
-    size_t offset1 = rn * nthree_ + pn * (nthree_ * nmo_);
-    size_t offset2 = sn * nthree_ + qn * (nthree_ * nmo_);
     double vpqrsalphaC = 0.0;
+    SharedMatrix B1(new Matrix(1,nthree_));
+    SharedMatrix B2(new Matrix(1,nthree_));
 
-    SharedVector B1(new Vector("B1", nthree_));
-    SharedVector B2(new Vector("B2", nthree_));
+    df_->fill_tensor("B",B1, A_range, p_range, r_range ); 
+    df_->fill_tensor("B",B2, A_range, q_range, s_range ); 
 
-    // Read a block of Vectors for the Columb term
-    fseek(B_->file_pointer(), offset1 * sizeof(double), SEEK_SET);
-    fread(&(B1->pointer()[0]), sizeof(double), nthree_, B_->file_pointer());
-    fseek(B_->file_pointer(), offset2 * sizeof(double), SEEK_SET);
-    fread(&(B2->pointer()[0]), sizeof(double), nthree_, B_->file_pointer());
-
-    vpqrsalphaC = C_DDOT(nthree_, &(B1->pointer()[0]), 1, &(B2->pointer()[0]), 1);
+    vpqrsalphaC = B1->vector_dot(B2);
 
     return (vpqrsalphaC);
 }
@@ -201,38 +192,34 @@ double DISKDFIntegrals::aptei_bb(size_t p, size_t q, size_t r, size_t s) {
         rn = r;
         sn = s;
     }
+    std::vector<size_t> A_range = {0, nthree_};
+    std::vector<size_t> p_range = {pn,pn+1};
+    std::vector<size_t> q_range = {qn,qn+1};
+    std::vector<size_t> r_range = {rn,rn+1};
+    std::vector<size_t> s_range = {sn,sn+1};
 
-    size_t offset1 = rn * nthree_ + pn * (nthree_ * nmo_);
-    size_t offset2 = sn * nthree_ + qn * (nthree_ * nmo_);
     double vpqrsalphaC = 0.0;
     double vpqrsalphaE = 0.0;
 
-    SharedVector B1(new Vector("B1", nthree_));
-    SharedVector B2(new Vector("B2", nthree_));
+    SharedMatrix B1(new Matrix(1,nthree_));
+    SharedMatrix B2(new Matrix(1,nthree_));
 
-    // Read a block of Vectors for the Columb term
-    fseek(B_->file_pointer(), offset1 * sizeof(double), SEEK_SET);
-    fread(&(B1->pointer()[0]), sizeof(double), nthree_, B_->file_pointer());
-    fseek(B_->file_pointer(), offset2 * sizeof(double), SEEK_SET);
-    fread(&(B2->pointer()[0]), sizeof(double), nthree_, B_->file_pointer());
+    df_->fill_tensor("B",B1, A_range, p_range, r_range ); 
+    df_->fill_tensor("B",B2, A_range, q_range, s_range ); 
 
-    vpqrsalphaC = C_DDOT(nthree_, &(B1->pointer()[0]), 1, &(B2->pointer()[0]), 1);
+    vpqrsalphaC = B1->vector_dot(B2);
 
     B1->zero();
     B2->zero();
-    offset1 = 0;
-    offset2 = 0;
 
-    offset1 = sn * nthree_ + pn * (nthree_ * nmo_);
-    offset2 = rn * nthree_ + qn * (nthree_ * nmo_);
-    fseek(B_->file_pointer(), offset1 * sizeof(double), SEEK_SET);
-    fread(&(B1->pointer()[0]), sizeof(double), nthree_, B_->file_pointer());
-    fseek(B_->file_pointer(), offset2 * sizeof(double), SEEK_SET);
-    fread(&(B2->pointer()[0]), sizeof(double), nthree_, B_->file_pointer());
-    vpqrsalphaE = C_DDOT(nthree_, &(B1->pointer()[0]), 1, &(B2->pointer()[0]), 1);
+    df_->fill_tensor("B",B1, A_range, p_range, s_range ); 
+    df_->fill_tensor("B",B2, A_range, q_range, r_range ); 
+
+    vpqrsalphaE = B1->vector_dot(B2);
 
     return (vpqrsalphaC - vpqrsalphaE);
 }
+
 ambit::Tensor
 DISKDFIntegrals::aptei_aa_block(const std::vector<size_t>& p, const std::vector<size_t>& q,
                                 const std::vector<size_t>& r, const std::vector<size_t>& s)
@@ -330,23 +317,30 @@ double DISKDFIntegrals::three_integral(size_t A, size_t p, size_t q) {
         pn = p;
         qn = q;
     }
+    std::vector<size_t> A_range = {A,A+1};
+    std::vector<size_t> p_range = {pn,pn+1};
+    std::vector<size_t> q_range = {qn,qn+1};
+    
+    double* Apq;
 
-    size_t offset1 = pn * (nthree_ * nmo_) + qn * nthree_ + A;
-    double value = 0.0;
-    fseek(B_->file_pointer(), offset1 * sizeof(double), SEEK_SET);
-    fread(&value, sizeof(double), 1, B_->file_pointer());
+    df_->fill_tensor("B",Apq, A_range, p_range, q_range ); 
+
+    double value = *Apq;
+
+    delete[] Apq;
+
     return value;
 }
 ambit::Tensor DISKDFIntegrals::three_integral_block(const std::vector<size_t>& A,
                                                     const std::vector<size_t>& p,
                                                     const std::vector<size_t>& q) {
-    // Since file is formatted as p by A * q
-    bool frozen_core = false;
-
     ambit::Tensor ReturnTensor =
         ambit::Tensor::build(tensor_type_, "Return", {A.size(), p.size(), q.size()});
     std::vector<double>& ReturnTensorV = ReturnTensor.data();
 
+    bool frozen_core = false;
+
+    // Take care of frozen orbitals
     if (frzcpi_.sum() && aptei_idx_ == ncmo_) {
         frozen_core = true;
     }
@@ -361,19 +355,22 @@ ambit::Tensor DISKDFIntegrals::three_integral_block(const std::vector<size_t>& A
                 pn = p_block;
             }
 
-            std::shared_ptr<Matrix> Aq(new Matrix("Aq", nmo_, nthree_));
+            std::shared_ptr<Matrix> Aq(new Matrix("Aq", nthree_, nmo_));
 
-            fseek(B_->file_pointer(), pn * nthree_ * nmo_ * sizeof(double), SEEK_SET);
-            fread(&(Aq->pointer()[0][0]), sizeof(double), nmo_ * nthree_, B_->file_pointer());
+            std::vector<size_t> A_range = {A[0], A.back() + 1};
+            std::vector<size_t> p_range = {pn, pn + 1};
+            std::vector<size_t> q_range = {0, nmo_};
+
+            df_->fill_tensor("B", Aq, A_range, p_range, q_range); 
             p_by_Aq.push_back(Aq);
         }
         if (frozen_core) {
             ReturnTensor.iterate([&](const std::vector<size_t>& i, double& value) {
-                value = p_by_Aq[i[1]]->get(cmotomo_[q[i[2]]], A[i[0]]);
+                value = p_by_Aq[i[1]]->get(A[i[0]], cmotomo_[q[i[2]]]);
             });
         } else {
             ReturnTensor.iterate([&](const std::vector<size_t>& i, double& value) {
-                value = p_by_Aq[i[1]]->get(q[i[2]], A[i[0]]);
+                value = p_by_Aq[i[1]]->get(A[i[0]], q[i[2]]);
             });
         }
     } else {
@@ -403,10 +400,14 @@ ambit::Tensor DISKDFIntegrals::three_integral_block(const std::vector<size_t>& A
             for (size_t q_block : q) {
                 qn = frozen_core ? cmotomo_[q_block] : q_block;
 
-                double* A_chunk = new double[A.size()];
-                size_t offset = pn * nthree_ * nmo_ + qn * nthree_ + A[0];
-                fseek(B_->file_pointer(), offset * sizeof(double), SEEK_SET);
-                fread(&(A_chunk[0]), sizeof(double), A.size(), B_->file_pointer());
+                std::vector<size_t> A_range = {A[0], A.size()};
+                std::vector<size_t> p_range = {pn, pn };
+                std::vector<size_t> q_range = {qn, qn };
+
+                double* A_chunk;// = new double[A.size()];
+            
+                df_->fill_tensor("B", A_chunk, A_range, p_range, q_range);
+
                 for (size_t a = 0; a < A.size(); a++) {
                     // Weird way the tensor is formatted
                     // Fill the tensor for every chunk of A
@@ -473,32 +474,24 @@ void DISKDFIntegrals::gather_integrals() {
     // Constructs the DF function
     // I used this version of build as this doesn't build all the apces and
     // assume a RHF/UHF reference
-    std::shared_ptr<DFERI> df = DFERI::build(primary, auxiliary, options_);
-
-    // Pushes a C matrix that is ordered in pitzer ordering
-    // into the C_matrix object
-    df->set_C(Ca_ao);
+    df_ = std::make_shared<DF_Helper>(primary,auxiliary);
+    df_->initialize();
+    df_->set_MO_core(false);
     // set_C clears all the orbital spaces, so this creates the space
     // This space creates the total nmo_.
     // This assumes that everything is correlated.
-    df->add_space("ALL", 0, nmo_);
+    df_->add_space("ALL", Ca_ao);
     // Does not add the pair_space, but says which one is should use
-    df->add_pair_space("B", "ALL", "ALL");
-    df->set_memory(Process::environment.get_memory() / 8L);
+    df_->add_transformation("B", "ALL", "ALL", "Qpq");
+    df_->set_memory(Process::environment.get_memory() / 8L);
 
     // Finally computes the df integrals
     // Does the timings also
     Timer timer;
     std::string str = "Computing DF Integrals";
     outfile->Printf("\n    %-36s ...", str.c_str());
-    df->compute();
+    df_->transform();
     outfile->Printf("...Done. Timing %15.6f s", timer.get());
-
-    std::shared_ptr<Tensor> B = df->ints()["B"];
-    B_ = B;
-    df.reset();
-
-    // outfile->Printf("\n %8.8f integral", aptei_ab(10,8,5,2));
 }
 
 void DISKDFIntegrals::make_diagonal_integrals() {
@@ -702,44 +695,45 @@ void DISKDFIntegrals::resort_integrals_after_freezing() {
 ambit::Tensor DISKDFIntegrals::three_integral_block_two_index(const std::vector<size_t>& A,
                                                               size_t p,
                                                               const std::vector<size_t>& q) {
-    // Since file is formatted as p by A * q
-    bool frozen_core = false;
 
     ambit::Tensor ReturnTensor = ambit::Tensor::build(tensor_type_, "Return", {A.size(), q.size()});
-
+ 
+    size_t p_max, p_min;
+    bool frozen_core = false;
     if (frzcpi_.sum() && aptei_idx_ == ncmo_) {
-        frozen_core = true;
+        frozen_core = true; 
+        p_min = cmotomo_[p];
+        p_max = p_min +1;
+    } else {
+        p_min = p;
+        p_max = p_min +1;
     }
 
-    size_t pn;
     if (nthree_ == A.size()) {
-        if (frozen_core) {
-            pn = cmotomo_[p];
-        } else {
-            pn = p;
-        }
 
-        std::shared_ptr<Matrix> Aq(new Matrix("Aq", nmo_, nthree_));
+        std::vector<size_t> arange = {0, nthree_};
+        std::vector<size_t> qrange = {0, nmo_}; 
+        std::vector<size_t> prange = {p_min, p_max}; 
 
-        fseek(B_->file_pointer(), pn * nthree_ * nmo_ * sizeof(double), SEEK_SET);
-        fread(&(Aq->pointer()[0][0]), sizeof(double), nmo_ * nthree_, B_->file_pointer());
+        std::shared_ptr<Matrix> Aq(new Matrix("Aq", nthree_, nmo_));
+        df_->fill_tensor("B", Aq, arange, prange, qrange ); 
 
         if (frozen_core) {
             ReturnTensor.iterate([&](const std::vector<size_t>& i, double& value) {
-                value = Aq->get(cmotomo_[q[i[1]]], A[i[0]]);
+                value = Aq->get(A[i[0]], cmotomo_[q[i[1]]]);
             });
         } else {
             ReturnTensor.iterate([&](const std::vector<size_t>& i, double& value) {
-                value = Aq->get(q[i[1]], A[i[0]]);
+                value = Aq->get(A[i[0]], q[i[1]]);
             });
         }
     } else {
         outfile->Printf("\n Not implemened for variable size in A");
         throw PSIEXCEPTION("Can only use if 2nd parameter is a size_t and A.size==nthree_");
     }
-
     return ReturnTensor;
 }
+
 double DISKDFIntegrals::diag_aptei_aa(size_t, size_t) {
     outfile->Printf("\n Kevin seemed to find that nobody uses this function.  "
                     "It is quite slow in DISKDF");

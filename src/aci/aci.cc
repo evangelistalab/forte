@@ -3833,8 +3833,15 @@ void AdaptiveCI::spin_analysis() {
         SharedMatrix Ca_new = Matrix::doublet(CA, Ua_full, false, false);
         SharedMatrix Cb_new = Matrix::doublet(CB, Ub_full, false, false);
 
-        CA->copy(Ca_new);
-        CB->copy(Cb_new);
+        CA->copy( Ca_new );
+        CB->copy( Cb_new );
+         
+    } else if (options_.get_str("SPIN_BASIS") == "LOCAL" ){
+        
+        auto loc = std::make_shared<LOCALIZE>(reference_wavefunction_, options_, ints_, mo_space_info_ );
+        loc->full_localize();
+        UA->copy(loc->get_U());      
+        UB->copy(loc->get_U());      
 
     } else {
         outfile->Printf("\n  Computing spin correlation in reference basis \n");
