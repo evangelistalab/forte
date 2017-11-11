@@ -200,7 +200,7 @@ void print_hash(det_hash<>& C, std::string description, int nmo, bool print_det 
     outfile->Printf("\n%s :", description.c_str());
     for (det_hash_it it = C.begin(); it != C.end(); it++) {
         if (print_det)
-            it->first.print();
+            outfile->Printf("\n  %s", it->first.str().c_str());
         outfile->Printf(" %.12lf ", it->second);
     }
     outfile->Printf("\n");
@@ -210,8 +210,7 @@ ProjectorCI::ProjectorCI(SharedWavefunction ref_wfn, Options& options,
                          std::shared_ptr<ForteIntegrals> ints,
                          std::shared_ptr<MOSpaceInfo> mo_space_info)
     : Wavefunction(options), ints_(ints), mo_space_info_(mo_space_info),
-      prescreening_tollerance_factor_(1.5), fast_variational_estimate_(false),
-      reference_determinant_(0) {
+      prescreening_tollerance_factor_(1.5), fast_variational_estimate_(false) {
     // Copy the wavefunction information
     shallow_copy(ref_wfn);
     reference_wavefunction_ = ref_wfn;
@@ -278,7 +277,7 @@ void ProjectorCI::startup() {
     nbeta_ = nactel_ - nalpha_;
 
     // Build the reference determinant and compute its energy
-    std::vector<STLBitsetDeterminant> reference_vec;
+    std::vector<Determinant> reference_vec;
     CI_Reference ref(reference_wavefunction_, options_, mo_space_info_, fci_ints_,
                      wavefunction_multiplicity_, ms, wavefunction_symmetry_);
     ref.set_ref_type("HF");
@@ -565,10 +564,10 @@ double ProjectorCI::estimate_high_energy() {
     lambda_h_ = high_obt_energy + fci_ints_->frozen_core_energy() + fci_ints_->scalar_energy();
 
     double lambda_h_G = fci_ints_->energy(high_det) + fci_ints_->scalar_energy();
-    std::vector<int> aocc = high_det.get_alfa_occ();
-    std::vector<int> bocc = high_det.get_beta_occ();
-    std::vector<int> avir = high_det.get_alfa_vir();
-    std::vector<int> bvir = high_det.get_beta_vir();
+    std::vector<int> aocc = high_det.get_alfa_occ(nact_);
+    std::vector<int> bocc = high_det.get_beta_occ(nact_);
+    std::vector<int> avir = high_det.get_alfa_vir(nact_);
+    std::vector<int> bvir = high_det.get_beta_vir(nact_);
     std::vector<int> aocc_offset(nirrep_ + 1);
     std::vector<int> bocc_offset(nirrep_ + 1);
     std::vector<int> avir_offset(nirrep_ + 1);
@@ -675,7 +674,7 @@ double ProjectorCI::estimate_high_energy() {
     }
     outfile->Printf("\n\n  ==> Estimate highest excitation energy <==");
     outfile->Printf("\n  Highest Excited determinant:");
-    high_det.print();
+    outfile->Printf("\n  %s", high_det.str().c_str());
     outfile->Printf("\n  Determinant Energy                    :  %.12f",
                     fci_ints_->energy(high_det) + nuclear_repulsion_energy_ +
                         fci_ints_->scalar_energy());
@@ -2351,10 +2350,10 @@ void ProjectorCI::apply_tau_H_symm_det_dynamic(
 
     if (do_singles or do_doubles) {
 
-        std::vector<int> aocc = detI.get_alfa_occ();
-        std::vector<int> bocc = detI.get_beta_occ();
-        std::vector<int> avir = detI.get_alfa_vir();
-        std::vector<int> bvir = detI.get_beta_vir();
+        std::vector<int> aocc = detI.get_alfa_occ(nact_);
+        std::vector<int> bocc = detI.get_beta_occ(nact_);
+        std::vector<int> avir = detI.get_alfa_vir(nact_);
+        std::vector<int> bvir = detI.get_beta_vir(nact_);
 
         int noalpha = aocc.size();
         int nobeta = bocc.size();
@@ -2713,10 +2712,10 @@ void ProjectorCI::apply_tau_H_ref_C_symm(double tau, double spawning_threshold, 
 
 //    if (do_singles or do_doubles){
 
-//        std::vector<int> aocc = detI.get_alfa_occ();
-//        std::vector<int> bocc = detI.get_beta_occ();
-//        std::vector<int> avir = detI.get_alfa_vir();
-//        std::vector<int> bvir = detI.get_beta_vir();
+//        std::vector<int> aocc = detI.get_alfa_occ(nact_);
+//        std::vector<int> bocc = detI.get_beta_occ(nact_);
+//        std::vector<int> avir = detI.get_alfa_vir(nact_);
+//        std::vector<int> bvir = detI.get_beta_vir(nact_);
 
 //        int noalpha = aocc.size();
 //        int nobeta  = bocc.size();
@@ -2997,10 +2996,10 @@ void ProjectorCI::apply_tau_H_ref_C_symm_det_dynamic_smooth(
 
     if (do_singles or do_doubles) {
 
-        std::vector<int> aocc = detI.get_alfa_occ();
-        std::vector<int> bocc = detI.get_beta_occ();
-        std::vector<int> avir = detI.get_alfa_vir();
-        std::vector<int> bvir = detI.get_beta_vir();
+        std::vector<int> aocc = detI.get_alfa_occ(nact_);
+        std::vector<int> bocc = detI.get_beta_occ(nact_);
+        std::vector<int> avir = detI.get_alfa_vir(nact_);
+        std::vector<int> bvir = detI.get_beta_vir(nact_);
 
         int noalpha = aocc.size();
         int nobeta = bocc.size();
@@ -3285,10 +3284,10 @@ void ProjectorCI::apply_tau_H_ref_C_symm_det_dynamic(
 
     if (do_singles or do_doubles) {
 
-        std::vector<int> aocc = detI.get_alfa_occ();
-        std::vector<int> bocc = detI.get_beta_occ();
-        std::vector<int> avir = detI.get_alfa_vir();
-        std::vector<int> bvir = detI.get_beta_vir();
+        std::vector<int> aocc = detI.get_alfa_occ(nact_);
+        std::vector<int> bocc = detI.get_beta_occ(nact_);
+        std::vector<int> avir = detI.get_alfa_vir(nact_);
+        std::vector<int> bvir = detI.get_beta_vir(nact_);
 
         int noalpha = aocc.size();
         int nobeta = bocc.size();
@@ -3701,10 +3700,10 @@ void ProjectorCI::apply_tau_H_det_subset(
     //    new_space_C[detI] += tau * (det_energy - E0) * CI;
     new_space_C_vec.push_back(std::make_pair(detI, tau * (det_energy - E0) * CI));
 
-    std::vector<int> aocc = detI.get_alfa_occ();
-    std::vector<int> bocc = detI.get_beta_occ();
-    std::vector<int> avir = detI.get_alfa_vir();
-    std::vector<int> bvir = detI.get_beta_vir();
+    std::vector<int> aocc = detI.get_alfa_occ(nact_);
+    std::vector<int> bocc = detI.get_beta_occ(nact_);
+    std::vector<int> avir = detI.get_alfa_vir(nact_);
+    std::vector<int> bvir = detI.get_beta_vir(nact_);
     std::vector<int> aocc_offset(nirrep_ + 1);
     std::vector<int> bocc_offset(nirrep_ + 1);
     std::vector<int> avir_offset(nirrep_ + 1);
@@ -3844,10 +3843,10 @@ void ProjectorCI::apply_tau_H_det_subset_prescreening(
     //    new_space_C[detI] += tau * (det_energy - E0) * CI;
     new_space_C_vec.push_back(std::make_pair(detI, tau * (det_energy - E0) * CI));
 
-    std::vector<int> aocc = detI.get_alfa_occ();
-    std::vector<int> bocc = detI.get_beta_occ();
-    std::vector<int> avir = detI.get_alfa_vir();
-    std::vector<int> bvir = detI.get_beta_vir();
+    std::vector<int> aocc = detI.get_alfa_occ(nact_);
+    std::vector<int> bocc = detI.get_beta_occ(nact_);
+    std::vector<int> avir = detI.get_alfa_vir(nact_);
+    std::vector<int> bvir = detI.get_beta_vir(nact_);
     std::vector<int> aocc_offset(nirrep_ + 1);
     std::vector<int> bocc_offset(nirrep_ + 1);
     std::vector<int> avir_offset(nirrep_ + 1);
@@ -4098,10 +4097,10 @@ std::pair<double, double> ProjectorCI::apply_tau_H_det_prescreening(
     new_space_C_vec.push_back(std::make_pair(detI, tau * (det_energy - E0) * CI));
 
     if (do_singles or do_doubles) {
-        std::vector<int> aocc = detI.get_alfa_occ();
-        std::vector<int> bocc = detI.get_beta_occ();
-        std::vector<int> avir = detI.get_alfa_vir();
-        std::vector<int> bvir = detI.get_beta_vir();
+        std::vector<int> aocc = detI.get_alfa_occ(nact_);
+        std::vector<int> bocc = detI.get_beta_occ(nact_);
+        std::vector<int> avir = detI.get_alfa_vir(nact_);
+        std::vector<int> bvir = detI.get_beta_vir(nact_);
         std::vector<int> aocc_offset(nirrep_ + 1);
         std::vector<int> bocc_offset(nirrep_ + 1);
         std::vector<int> avir_offset(nirrep_ + 1);
@@ -4416,10 +4415,10 @@ std::pair<double, double> ProjectorCI::apply_tau_H_det_prescreening(
 void ProjectorCI::apply_tau_H_det_schwarz(
     double tau, double spawning_threshold, const Determinant& detI, double CI,
     std::vector<std::pair<Determinant, double>>& new_space_C_vec, double E0) {
-    std::vector<int> aocc = detI.get_alfa_occ();
-    std::vector<int> bocc = detI.get_beta_occ();
-    std::vector<int> avir = detI.get_alfa_vir();
-    std::vector<int> bvir = detI.get_beta_vir();
+    std::vector<int> aocc = detI.get_alfa_occ(nact_);
+    std::vector<int> bocc = detI.get_beta_occ(nact_);
+    std::vector<int> avir = detI.get_alfa_vir(nact_);
+    std::vector<int> bvir = detI.get_beta_vir(nact_);
 
     int noalpha = aocc.size();
     int nobeta = bocc.size();
@@ -4585,10 +4584,10 @@ void ProjectorCI::apply_tau_H_det_dynamic(
     new_space_C_vec.push_back(std::make_pair(detI, tau * (det_energy - E0) * CI));
 
     if (do_singles or do_doubles) {
-        std::vector<int> aocc = detI.get_alfa_occ();
-        std::vector<int> bocc = detI.get_beta_occ();
-        std::vector<int> avir = detI.get_alfa_vir();
-        std::vector<int> bvir = detI.get_beta_vir();
+        std::vector<int> aocc = detI.get_alfa_occ(nact_);
+        std::vector<int> bocc = detI.get_beta_occ(nact_);
+        std::vector<int> avir = detI.get_alfa_vir(nact_);
+        std::vector<int> bvir = detI.get_beta_vir(nact_);
 
         int noalpha = aocc.size();
         int nobeta = bocc.size();
@@ -4948,7 +4947,7 @@ void ProjectorCI::print_wfn(det_vec& space, std::vector<double>& C, size_t max_o
         for (size_t sJ = 0; sJ < max_I; ++sJ) {
             size_t J = det_weight[sJ].second;
             if (std::fabs(C[I] * C[J]) > 1.0e-12) {
-                const double S2IJ = space[I].spin2(space[J]);
+                const double S2IJ = spin2(space[I], space[J]);
                 S2 += C[I] * C[J] * S2IJ;
             }
         }
@@ -5017,8 +5016,8 @@ void combine_hashes_into_hash(std::vector<det_hash<>>& thread_det_C_hash, det_ha
 }
 
 void copy_hash_to_vec(det_hash<>& dets_C_hash, det_vec& dets, std::vector<double>& C) {
-    size_t size = dets_C_hash.size();    
-    dets.resize(size,STLBitsetDeterminant(0));
+    size_t size = dets_C_hash.size();
+    dets.resize(size, Determinant());
     C.resize(size);
 
     size_t I = 0;
@@ -5032,7 +5031,7 @@ void copy_hash_to_vec(det_hash<>& dets_C_hash, det_vec& dets, std::vector<double
 void copy_hash_to_vec_order_ref(det_hash<>& dets_C_hash, det_vec& dets, std::vector<double>& C) {
     size_t hash_size = dets_C_hash.size();
     size_t size = dets.size();
-    dets.resize(hash_size,STLBitsetDeterminant(0));
+    dets.resize(hash_size, Determinant());
     C.resize(hash_size);
 
     for (size_t I = 0; I < size; ++I) {
@@ -5549,10 +5548,10 @@ double ProjectorCI::form_H_C(double tau, double spawning_threshold, Determinant&
                              det_hash<>& det_C, std::pair<double, double>& max_coupling) {
     double result = 0.0;
 
-    std::vector<int> aocc = detI.get_alfa_occ();
-    std::vector<int> bocc = detI.get_beta_occ();
-    std::vector<int> avir = detI.get_alfa_vir();
-    std::vector<int> bvir = detI.get_beta_vir();
+    std::vector<int> aocc = detI.get_alfa_occ(nact_);
+    std::vector<int> bocc = detI.get_beta_occ(nact_);
+    std::vector<int> avir = detI.get_alfa_vir(nact_);
+    std::vector<int> bvir = detI.get_beta_vir(nact_);
 
     int noalpha = aocc.size();
     int nobeta = bocc.size();

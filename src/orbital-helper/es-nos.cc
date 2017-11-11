@@ -198,6 +198,8 @@ void ESNO::get_excited_determinants() {
 
     auto ruocc = mo_space_info_->get_corr_abs_mo("RESTRICTED_UOCC");
     Dimension rdoccpi = mo_space_info_->get_dimension("RESTRICTED_DOCC");
+    size_t nrdo = mo_space_info_->size("RESTRICTED_DOCC");
+    size_t nact = mo_space_info_->size("ACTIVE");
 
     std::vector<size_t> external_mo = get_excitation_space();
     int n_ext = external_mo.size();
@@ -207,14 +209,14 @@ void ESNO::get_excited_determinants() {
 
     const auto& internal = reference_.wfn_hash();
     for (const auto& det : internal) {
-        det.print();
-        std::vector<int> aocc = det.get_alfa_occ();
-        std::vector<int> bocc = det.get_beta_occ();
+        outfile->Printf("\n  %s",det.str().c_str());
+        std::vector<int> aocc = det.get_alfa_occ(nrdo + nact); // TODO check this
+        std::vector<int> bocc = det.get_beta_occ(nrdo + nact); // TODO check this
 
         int noalfa = aocc.size();
         int nobeta = bocc.size();
 
-        STLBitsetDeterminant new_det(det);
+        Determinant new_det(det);
 
         // Single Alpha
         for (int i = 0; i < noalfa; ++i) {
@@ -227,7 +229,7 @@ void ESNO::get_excited_determinants() {
                     new_det.set_alfa_bit(ii, false);
                     new_det.set_alfa_bit(aa, true);
                     external.add(new_det);
-                    new_det.print();
+                    outfile->Printf("\n  %s",new_det.str().c_str());
                 }
             }
         }
@@ -271,21 +273,8 @@ void ESNO::upcast_reference() {
             shift[n] += new_dim[n - 1] - old_dim[n - 1] + shift[n - 1];
         }
     }
-    int b_shift = ncorr - nact;
-
-    // int max_n = ruocc.size();
-    // int n_kept = options_.get_int("ESNO_MAX_SIZE");
-    //
-    // if(!options_["ESNO_MAX_SIZE"].has_changed()){
-    //     n_kept = max_n;
-    // }
-
-    // if( (n_kept <= max_n) and (nirrep_ == 1 )){
-    //     max_n = n_kept;
-    // }
-
     for (size_t I = 0, max = ref_dets.size(); I < max; ++I) {
-        STLBitsetDeterminant det = ref_dets[I];
+        Determinant det = ref_dets[I];
 
         // First beta
         for (int n = n_irrep - 1; n >= 0; --n) {
@@ -296,8 +285,6 @@ void ESNO::upcast_reference() {
             for (int pos = nact + min + old_dim[n] - 1; pos >= min + nact; --pos) {
                 det.set_beta_bit(pos + shift[n], det.get_beta_bit(pos));
                 det.set_beta_bit(pos, false);
-                //                det.bits_[pos + b_shift + shift[n]] = det.bits_[pos];
-                //                det.bits_[pos] = 0;
             }
         }
         // Then alpha
@@ -313,7 +300,7 @@ void ESNO::upcast_reference() {
             }
         }
         reference_.add(det);
-        det.print();
+        outfile->Printf("\n  %s",det.str().c_str());
     }
 }
 

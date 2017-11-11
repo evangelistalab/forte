@@ -34,7 +34,7 @@
 #include "ci_rdms.h"
 #include "helpers.h"
 #include "reference.h"
-#include "sparse_ci/stl_bitset_determinant.h"
+#include "sparse_ci/determinant.h"
 
 namespace psi {
 namespace forte {
@@ -43,7 +43,7 @@ namespace forte {
 // coefficients and computes reduced density matrices.
 
 CI_RDMS::CI_RDMS(Options& options, std::shared_ptr<FCIIntegrals> fci_ints,
-                 const std::vector<STLBitsetDeterminant>& det_space, SharedMatrix evecs, int root1,
+                 const std::vector<Determinant>& det_space, SharedMatrix evecs, int root1,
                  int root2)
     : options_(options), fci_ints_(fci_ints), det_space_(det_space), evecs_(evecs), root1_(root1),
       root2_(root2) {
@@ -55,7 +55,7 @@ CI_RDMS::CI_RDMS(Options& options, DeterminantHashVec& wfn, std::shared_ptr<FCII
     : options_(options), wfn_(wfn), fci_ints_(fci_ints), evecs_(evecs), root1_(root1),
       root2_(root2) {
 
-    STLBitsetDeterminant det(wfn_.get_det(0));
+    Determinant det(wfn_.get_det(0));
     ncmo_ = fci_ints_->nmo();
     ncmo2_ = ncmo_ * ncmo_;
     ncmo3_ = ncmo2_ * ncmo_;
@@ -64,8 +64,8 @@ CI_RDMS::CI_RDMS(Options& options, DeterminantHashVec& wfn, std::shared_ptr<FCII
     print_ = false;
     dim_space_ = wfn.size();
 
-    na_ = det.get_alfa_occ().size();
-    nb_ = det.get_beta_occ().size();
+    na_ = det.count_alfa();
+    nb_ = det.count_beta();
     symmetry_ = 0;
     if (options_["ROOT_SYM"].has_changed()) {
         symmetry_ = options_.get_int("ROOT_SYM");
@@ -86,8 +86,8 @@ void CI_RDMS::startup() {
     ncmo4_ = ncmo3_ * ncmo_;
     ncmo5_ = ncmo3_ * ncmo2_;
 
-    na_ = det_space_[0].get_alfa_occ().size();
-    nb_ = det_space_[0].get_beta_occ().size();
+    na_ = det_space_[0].count_alfa();
+    nb_ = det_space_[0].count_beta();
 
     // Dimension of the determinant space
     dim_space_ = det_space_.size();
@@ -210,10 +210,10 @@ void CI_RDMS::compute_1rdm(std::vector<double>& oprdm_a, std::vector<double>& op
     const det_hashvec& dets = wfn_.wfn_hash();
     for (size_t J = 0; J < dim_space_; ++J) {
         double cJ_sq = evecs_->get(J, root1_) * evecs_->get(J, root2_);
-        std::vector<int> aocc = dets[J].get_alfa_occ();
-        std::vector<int> bocc = dets[J].get_beta_occ();
-        std::vector<int> avir = dets[J].get_alfa_vir();
-        std::vector<int> bvir = dets[J].get_beta_vir();
+        std::vector<int> aocc = dets[J].get_alfa_occ(ncmo_);
+        std::vector<int> bocc = dets[J].get_beta_occ(ncmo_);
+        std::vector<int> avir = dets[J].get_alfa_vir(ncmo_);
+        std::vector<int> bvir = dets[J].get_beta_vir(ncmo_);
 
         for (int p = 0, max_p = aocc.size(); p < max_p; ++p) {
             int pp = aocc[p];
@@ -367,8 +367,8 @@ void CI_RDMS::compute_2rdm(std::vector<double>& tprdm_aa, std::vector<double>& t
 
     for (size_t J = 0; J < dim_space_; ++J) {
         double cJ_sq = evecs_->get(J, root1_) * evecs_->get(J, root2_);
-        std::vector<int> aocc = dets[J].get_alfa_occ();
-        std::vector<int> bocc = dets[J].get_beta_occ();
+        std::vector<int> aocc = dets[J].get_alfa_occ(ncmo_);
+        std::vector<int> bocc = dets[J].get_beta_occ(ncmo_);
 
         int naocc = aocc.size();
         int nbocc = bocc.size();
@@ -723,10 +723,10 @@ void CI_RDMS::compute_3rdm(std::vector<double>& tprdm_aaa, std::vector<double>& 
     const det_hashvec& dets = wfn_.wfn_hash();
     for (size_t I = 0; I < dim_space_; ++I) {
         double cI_sq = evecs_->get(I, root1_) * evecs_->get(I, root2_);
-        STLBitsetDeterminant detI(dets[I]);
+        Determinant detI(dets[I]);
 
-        std::vector<int> aocc = detI.get_alfa_occ();
-        std::vector<int> bocc = detI.get_beta_occ();
+        std::vector<int> aocc = detI.get_alfa_occ(ncmo_);
+        std::vector<int> bocc = detI.get_beta_occ(ncmo_);
         int na = aocc.size();
         int nb = bocc.size();
 
@@ -1263,11 +1263,11 @@ void CI_RDMS::get_one_map() {
         outfile->Printf("\n\n  Generating one-particle maps.");
 
     for (size_t I = 0; I < dim_space_; ++I) {
-        STLBitsetDeterminant detI(det_space_[I]);
+        Determinant detI(det_space_[I]);
 
         // Alpha and beta occupation vectors
-        std::vector<int> aocc = detI.get_alfa_occ();
-        std::vector<int> bocc = detI.get_beta_occ();
+        std::vector<int> aocc = detI.get_alfa_occ(ncmo_);
+        std::vector<int> bocc = detI.get_beta_occ(ncmo_);
 
         int noalfa = aocc.size();
         int nobeta = bocc.size();
@@ -1278,7 +1278,7 @@ void CI_RDMS::get_one_map() {
         // Form alpha annihilation lists
         for (int i = 0; i < noalfa; ++i) {
             int ii = aocc[i];
-            STLBitsetDeterminant detJ(detI);
+            Determinant detJ(detI);
 
             // Annihilate bit ii, get the sign
             detJ.set_alfa_bit(ii, false);
@@ -1300,7 +1300,7 @@ void CI_RDMS::get_one_map() {
         // Form beta annihilation lists
         for (int i = 0; i < nobeta; ++i) {
             int ii = bocc[i];
-            STLBitsetDeterminant detJ(detI);
+            Determinant detJ(detI);
 
             // Annihilate bit ii, get the sign
             detJ.set_beta_bit(ii, false);
@@ -1358,10 +1358,10 @@ void CI_RDMS::get_two_map() {
         outfile->Printf("\n  Generating two-particle maps.");
 
     for (size_t I = 0; I < dim_space_; ++I) {
-        STLBitsetDeterminant detI(det_space_[I]);
+        Determinant detI(det_space_[I]);
 
-        std::vector<int> aocc = detI.get_alfa_occ();
-        std::vector<int> bocc = detI.get_beta_occ();
+        std::vector<int> aocc = detI.get_alfa_occ(ncmo_);
+        std::vector<int> bocc = detI.get_beta_occ(ncmo_);
 
         int noalfa = aocc.size();
         int nobeta = bocc.size();
@@ -1376,7 +1376,7 @@ void CI_RDMS::get_two_map() {
                 int ii = aocc[i];
                 int jj = aocc[j];
 
-                STLBitsetDeterminant detJ(detI);
+                Determinant detJ(detI);
                 detJ.set_alfa_bit(ii, false);
                 detJ.set_alfa_bit(jj, false);
 
@@ -1402,7 +1402,7 @@ void CI_RDMS::get_two_map() {
                 int ii = bocc[i];
                 int jj = bocc[j];
 
-                STLBitsetDeterminant detJ(detI);
+                Determinant detJ(detI);
                 detJ.set_beta_bit(ii, false);
                 detJ.set_beta_bit(jj, false);
 
@@ -1428,7 +1428,7 @@ void CI_RDMS::get_two_map() {
                 int ii = aocc[i];
                 int jj = bocc[j];
 
-                STLBitsetDeterminant detJ(detI);
+                Determinant detJ(detI);
                 detJ.set_alfa_bit(ii, false);
                 detJ.set_beta_bit(jj, false);
 
@@ -1501,10 +1501,10 @@ void CI_RDMS::get_three_map() {
         outfile->Printf("\n  Generating three-particle maps.");
 
     for (size_t I = 0; I < dim_space_; ++I) {
-        STLBitsetDeterminant detI(det_space_[I]);
+        Determinant detI(det_space_[I]);
 
-        const std::vector<int>& aocc = detI.get_alfa_occ();
-        const std::vector<int>& bocc = detI.get_beta_occ();
+        const std::vector<int>& aocc = detI.get_alfa_occ(ncmo_);
+        const std::vector<int>& bocc = detI.get_beta_occ(ncmo_);
 
         int noalfa = aocc.size();
         int nobeta = bocc.size();
@@ -1527,7 +1527,7 @@ void CI_RDMS::get_three_map() {
                     int jj = aocc[j];
                     int kk = aocc[k];
 
-                    STLBitsetDeterminant detJ(detI);
+                    Determinant detJ(detI);
                     detJ.set_alfa_bit(ii, false);
                     detJ.set_alfa_bit(jj, false);
                     detJ.set_alfa_bit(kk, false);
@@ -1561,7 +1561,7 @@ void CI_RDMS::get_three_map() {
                     int jj = aocc[j];
                     int kk = bocc[k];
 
-                    STLBitsetDeterminant detJ(detI);
+                    Determinant detJ(detI);
                     detJ.set_alfa_bit(ii, false);
                     detJ.set_alfa_bit(jj, false);
                     detJ.set_beta_bit(kk, false);
@@ -1595,7 +1595,7 @@ void CI_RDMS::get_three_map() {
                     int jj = bocc[j];
                     int kk = bocc[k];
 
-                    STLBitsetDeterminant detJ(detI);
+                    Determinant detJ(detI);
                     detJ.set_alfa_bit(ii, false);
                     detJ.set_beta_bit(jj, false);
                     detJ.set_beta_bit(kk, false);
@@ -1629,7 +1629,7 @@ void CI_RDMS::get_three_map() {
                     int jj = bocc[j];
                     int kk = bocc[k];
 
-                    STLBitsetDeterminant detJ(detI);
+                    Determinant detJ(detI);
                     detJ.set_beta_bit(ii, false);
                     detJ.set_beta_bit(jj, false);
                     detJ.set_beta_bit(kk, false);
@@ -1920,7 +1920,7 @@ void CI_RDMS::rdm_test(std::vector<double>& oprdm_a, std::vector<double>& oprdm_
         for (size_t q = 0; q < ncmo_; ++q) {
             double rdm = 0.0;
             for (size_t i = 0; i < dim_space_; ++i) {
-                STLBitsetDeterminant I(det_space[i]);
+                Determinant I(det_space[i]);
                 double sign = 1.0;
                 sign *= I.destroy_alfa_bit(q);
                 sign *= I.create_alfa_bit(p);
@@ -1945,7 +1945,7 @@ void CI_RDMS::rdm_test(std::vector<double>& oprdm_a, std::vector<double>& oprdm_
         for (size_t q = 0; q < ncmo_; ++q) {
             double rdm = 0.0;
             for (size_t i = 0; i < dim_space_; ++i) {
-                STLBitsetDeterminant I(det_space[i]);
+                Determinant I(det_space[i]);
                 double sign = 1.0;
                 sign *= I.destroy_beta_bit(q);
                 sign *= I.create_beta_bit(p);
@@ -1972,7 +1972,7 @@ void CI_RDMS::rdm_test(std::vector<double>& oprdm_a, std::vector<double>& oprdm_
                 for (size_t s = 0; s < ncmo_; ++s) {
                     double rdm = 0.0;
                     for (size_t i = 0; i < dim_space_; ++i) {
-                        STLBitsetDeterminant I(det_space[i]);
+                        Determinant I(det_space[i]);
                         double sign = 1.0;
                         sign *= I.destroy_alfa_bit(r);
                         sign *= I.destroy_alfa_bit(s);
@@ -1987,8 +1987,9 @@ void CI_RDMS::rdm_test(std::vector<double>& oprdm_a, std::vector<double>& oprdm_
                     if (std::fabs(rdm) > 1.0e-12) {
                         error_2rdm_aa +=
                             std::fabs(rdm - tprdm_aa[p * ncmo3_ + q * ncmo2_ + r * ncmo_ + s]);
-                      //   outfile->Printf("\n  D2(aaaa)[%3lu][%3lu][%3lu][%3lu] = %18.12lf (%18.12lf,%18.12lf)",
-                      //   p,q,r,s,rdm-tprdm_aa[p*ncmo3_+q*ncmo2_+r*ncmo_+s],rdm,tprdm_aa[p*ncmo3_+q*ncmo2_+r*ncmo_+s]);
+                        //   outfile->Printf("\n  D2(aaaa)[%3lu][%3lu][%3lu][%3lu] = %18.12lf
+                        //   (%18.12lf,%18.12lf)",
+                        //   p,q,r,s,rdm-tprdm_aa[p*ncmo3_+q*ncmo2_+r*ncmo_+s],rdm,tprdm_aa[p*ncmo3_+q*ncmo2_+r*ncmo_+s]);
                     }
                 }
             }
@@ -2003,7 +2004,7 @@ void CI_RDMS::rdm_test(std::vector<double>& oprdm_a, std::vector<double>& oprdm_
                 for (size_t s = 0; s < ncmo_; ++s) {
                     double rdm = 0.0;
                     for (size_t i = 0; i < dim_space_; ++i) {
-                        STLBitsetDeterminant I(det_space[i]);
+                        Determinant I(det_space[i]);
                         double sign = 1.0;
                         sign *= I.destroy_beta_bit(r);
                         sign *= I.destroy_beta_bit(s);
@@ -2035,7 +2036,7 @@ void CI_RDMS::rdm_test(std::vector<double>& oprdm_a, std::vector<double>& oprdm_
                 for (size_t s = 0; s < ncmo_; ++s) {
                     double rdm = 0.0;
                     for (size_t i = 0; i < dim_space_; ++i) {
-                        STLBitsetDeterminant I(det_space[i]);
+                        Determinant I(det_space[i]);
                         double sign = 1.0;
                         sign *= I.destroy_alfa_bit(r);
                         sign *= I.destroy_beta_bit(s);
@@ -2072,7 +2073,7 @@ void CI_RDMS::rdm_test(std::vector<double>& oprdm_a, std::vector<double>& oprdm_
                         for (size_t a = 0; a < ncmo_; ++a) {
                             double rdm = 0.0;
                             for (size_t i = 0; i < dim_space_; ++i) {
-                                STLBitsetDeterminant I(det_space[i]);
+                                Determinant I(det_space[i]);
                                 double sign = 1.0;
                                 sign *= I.destroy_alfa_bit(s);
                                 sign *= I.destroy_alfa_bit(t);
@@ -2118,7 +2119,7 @@ void CI_RDMS::rdm_test(std::vector<double>& oprdm_a, std::vector<double>& oprdm_
                         for (size_t a = 0; a < ncmo_; ++a) {
                             double rdm = 0.0;
                             for (size_t i = 0; i < dim_space_; ++i) {
-                                STLBitsetDeterminant I(det_space[i]);
+                                Determinant I(det_space[i]);
                                 double sign = 1.0;
                                 sign *= I.destroy_alfa_bit(s);
                                 sign *= I.destroy_alfa_bit(t);
@@ -2165,7 +2166,7 @@ void CI_RDMS::rdm_test(std::vector<double>& oprdm_a, std::vector<double>& oprdm_
                         for (size_t a = 0; a < ncmo_; ++a) {
                             double rdm = 0.0;
                             for (size_t i = 0; i < dim_space_; ++i) {
-                                STLBitsetDeterminant I(det_space[i]);
+                                Determinant I(det_space[i]);
                                 double sign = 1.0;
                                 sign *= I.destroy_alfa_bit(s);
                                 sign *= I.destroy_beta_bit(t);
@@ -2213,7 +2214,7 @@ void CI_RDMS::rdm_test(std::vector<double>& oprdm_a, std::vector<double>& oprdm_
                         for (size_t a = 0; a < ncmo_; ++a) {
                             double rdm = 0.0;
                             for (size_t i = 0; i < dim_space_; ++i) {
-                                STLBitsetDeterminant I(det_space[i]);
+                                Determinant I(det_space[i]);
                                 double sign = 1.0;
                                 sign *= I.destroy_beta_bit(s);
                                 sign *= I.destroy_beta_bit(t);

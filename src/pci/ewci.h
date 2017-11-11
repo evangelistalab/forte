@@ -44,7 +44,7 @@
 #include "../helpers.h"
 #include "../integrals/integrals.h"
 #include "../sparse_ci/sparse_ci_solver.h"
-#include "../sparse_ci/stl_bitset_determinant.h"
+#include "../sparse_ci/determinant.h"
 
 namespace psi {
 namespace forte {

@@ -33,7 +33,7 @@
 #include "psi4/libqt/qt.h"
 
 #include "../helpers.h"
-#include "../sparse_ci/stl_bitset_determinant.h"
+#include "../sparse_ci/determinant.h"
 
 #include "fci_vector.h"
 
@@ -589,8 +589,8 @@ void FCIWfn::rdm_test() {
     for (int i = ncmo_ - nb; i < ncmo_; ++i)
         Ib[i] = true; // 1
 
-    std::vector<STLBitsetDeterminant> dets;
-    std::map<STLBitsetDeterminant, size_t> dets_map;
+    std::vector<Determinant> dets;
+    std::map<Determinant, size_t> dets_map;
 
     std::vector<double> C;
     std::vector<bool> a_occ(ncmo_);
@@ -604,7 +604,7 @@ void FCIWfn::rdm_test() {
             for (int i = 0; i < ncmo_; ++i)
                 b_occ[i] = Ib[i];
             if ((alfa_graph_->sym(Ia) ^ beta_graph_->sym(Ib)) == symmetry_) {
-                STLBitsetDeterminant d(a_occ, b_occ);
+                Determinant d(a_occ, b_occ);
                 dets.push_back(d);
                 double c = C_[alfa_graph_->sym(Ia)]->get(alfa_graph_->rel_add(Ia),
                                                          beta_graph_->rel_add(Ib));
@@ -615,7 +615,7 @@ void FCIWfn::rdm_test() {
         } while (std::next_permutation(Ib, Ib + ncmo_));
     } while (std::next_permutation(Ia, Ia + ncmo_));
 
-    STLBitsetDeterminant I(ncmo_);
+    Determinant I; // <- xsize (ncmo_);
 
     bool test_2rdm_aa = true;
     bool test_2rdm_bb = true;
@@ -712,7 +712,7 @@ void FCIWfn::rdm_test() {
                     for (size_t s = 0; s < ncmo_; ++s) {
                         double rdm = 0.0;
                         for (size_t i = 0; i < dets.size(); ++i) {
-                            I.copy(dets[i]);
+                            I = dets[i];
                             double sign = 1.0;
                             sign *= I.destroy_alfa_bit(r);
                             sign *= I.destroy_beta_bit(s);
@@ -750,7 +750,7 @@ void FCIWfn::rdm_test() {
                             for (size_t a = 0; a < ncmo_; ++a) {
                                 double rdm = 0.0;
                                 for (size_t i = 0; i < dets.size(); ++i) {
-                                    I.copy(dets[i]);
+                                    I = dets[i];
                                     double sign = 1.0;
                                     sign *= I.destroy_alfa_bit(s);
                                     sign *= I.destroy_alfa_bit(t);
@@ -795,7 +795,7 @@ void FCIWfn::rdm_test() {
                             for (size_t a = 0; a < ncmo_; ++a) {
                                 double rdm = 0.0;
                                 for (size_t i = 0; i < dets.size(); ++i) {
-                                    I.copy(dets[i]);
+                                    I = dets[i];
                                     double sign = 1.0;
                                     sign *= I.destroy_alfa_bit(s);
                                     sign *= I.destroy_beta_bit(t);
@@ -841,7 +841,7 @@ void FCIWfn::rdm_test() {
                             for (size_t a = t + 1; a < ncmo_; ++a) {
                                 double rdm = 0.0;
                                 for (size_t i = 0; i < dets.size(); ++i) {
-                                    I.copy(dets[i]);
+                                    I = dets[i];
                                     double sign = 1.0;
                                     sign *= I.destroy_alfa_bit(s);
                                     sign *= I.destroy_alfa_bit(t);
@@ -887,7 +887,7 @@ void FCIWfn::rdm_test() {
                             for (size_t a = t + 1; a < ncmo_; ++a) {
                                 double rdm = 0.0;
                                 for (size_t i = 0; i < dets.size(); ++i) {
-                                    I.copy(dets[i]);
+                                    I = dets[i];
                                     double sign = 1.0;
                                     sign *= I.destroy_beta_bit(s);
                                     sign *= I.destroy_beta_bit(t);

@@ -32,7 +32,7 @@
 #include "psi4/libpsi4util/process.h"
 #include "fci/fci_integrals.h"
 #include "determinant_hashvector.h"
-#include "sparse_ci/stl_bitset_determinant.h"
+#include "sparse_ci/determinant.h"
 #include "helpers.h"
 
 namespace psi {
@@ -148,6 +148,8 @@ class WFNOperator {
     std::vector<std::vector<std::pair<int, size_t>>> alpha_a_strings_;
     std::vector<std::vector<std::pair<int, size_t>>> beta_a_strings_;
 
+    /// Number of active space orbitals
+    size_t ncmo_;
     /// Active space symmetry
     std::vector<int> mo_symmetry_;
 
