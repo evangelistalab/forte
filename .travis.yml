@@ -114,3 +114,5 @@ install:
 script:
 - cd ${HOME}/build/evangelistalab/forte/tests/methods
 - python run_forte_tests_travis.py 
+- cd ${HOME}/build/evangelistalab/forte
+- ./forte_tests
