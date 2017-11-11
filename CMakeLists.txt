@@ -1,4 +1,5 @@
 cmake_policy(SET CMP0048 NEW)  # project_VERSION* variables populated from project(... VERSION x.x.x) string
+
 project(forte
         VERSION 0.1
         LANGUAGES CXX C)
@@ -21,6 +22,7 @@ option_with_print(ENABLE_GA "Enable Global Arrays" OFF)
 include(autocmake_omp)
 include(autocmake_mpi)  # MPI option A
 #include(custom_static_library)
+
 
 
 #find_package(psi4 1.1 REQUIRED COMPONENTS ambit chemps2)
@@ -163,3 +165,18 @@ endif()
 if(ENABLE_GA)
     target_link_libraries(forte PRIVATE GlobalArrays::ga)
 endif()
+
+#
+# Forte tests
+#
+option(ENABLE_ForteTests "Enable Forte tests." ON)
+
+set (CMAKE_CXX_STANDARD 11)
+
+if (ENABLE_ForteTests)
+  project (forte_tests)
+  include_directories(${CMAKE_BINARY_DIR} ${CMAKE_BINARY_DIR}/catch2/src/catch2/single_include)
+  add_executable(forte_tests
+    src/sparse_ci/ui64_determinant.cc
+    tests/code/test_determinant.cc)
+endif (ENABLE_ForteTests)

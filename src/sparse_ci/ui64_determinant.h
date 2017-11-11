@@ -49,7 +49,6 @@ class UI64Determinant {
     static constexpr int num_str_bits = 64;
 
     UI64Determinant();
-    UI64Determinant(const STLBitsetDeterminant& d);
     explicit UI64Determinant(const std::vector<bool>& occupation);
     /// Construct the determinant from an occupation vector that
     /// specifies the alpha and beta strings.  occupation = [Ia,Ib]
@@ -167,15 +166,6 @@ double slater_rules_double_alpha_beta_pre(int i, int a, uint64_t Ib, uint64_t Jb
 
 double spin2(const UI64Determinant& lhs, const UI64Determinant& rhs);
 
-///// XOR operator
-//STLBitsetDeterminant operator^(const STLBitsetDeterminant& lhs) const;
-///// XOR operator
-//STLBitsetDeterminant& operator^=(const STLBitsetDeterminant& lhs);
-///// &= operator
-//STLBitsetDeterminant& operator&=(const STLBitsetDeterminant& lhs);
-///// &= operator
-//STLBitsetDeterminant& operator|=(const STLBitsetDeterminant& lhs);
-
 /// Find the spin orbitals that are occupied in both determinants (performs a bitwise AND, &)
 UI64Determinant common_occupation(const UI64Determinant& lhs, const UI64Determinant& rhs);
 
@@ -185,10 +175,10 @@ UI64Determinant different_occupation(const UI64Determinant& lhs, const UI64Deter
 /// Find the spin orbitals that are occupied only one determinant (performs a bitwise OR, |)
 UI64Determinant union_occupation(const UI64Determinant& lhs, const UI64Determinant& rhs);
 
-
 /// Given a set of determinant adds new elements necessary to have a spin complete set
 void enforce_spin_completeness(std::vector<UI64Determinant>& det_space, int nmo);
 
+template <typename T1, typename T2> T1 make_det(const T2& d);
 }
 }
 

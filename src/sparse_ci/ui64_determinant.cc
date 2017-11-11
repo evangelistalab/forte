@@ -29,9 +29,7 @@
 
 #include "nmmintrin.h"
 
-#include "../fci/fci_integrals.h"
 #include "stl_bitset_determinant.h"
-
 #include "ui64_determinant.h"
 
 namespace psi {
@@ -133,103 +131,7 @@ std::tuple<double, size_t, size_t> ui64_slater_sign_single(uint64_t l, uint64_t 
     return std::make_tuple(ui64_slater_sign(l, j, b), j, b);
 }
 
-double slater_rules_single_alpha(uint64_t Ib, uint64_t Ia, uint64_t Ja,
-                                 const std::shared_ptr<FCIIntegrals>& ints) {
-    uint64_t IJa = Ia ^ Ja;
-    uint64_t i = lowest_one_idx(IJa);
-    IJa = clear_lowest_one(IJa);
-    uint64_t a = lowest_one_idx(IJa);
-
-    // Diagonal contribution
-    double matrix_element = ints->oei_b(i, a);
-    // find common bits
-    IJa = Ia & Ja;
-    for (int p = 0; p < 64; ++p) {
-        if (ui64_get_bit(Ia, p)) {
-            matrix_element += ints->tei_aa(i, p, a, p);
-        }
-        if (ui64_get_bit(Ib, p)) {
-            matrix_element += ints->tei_ab(i, p, a, p);
-        }
-    }
-    return (ui64_slater_sign(Ia, i, a) * matrix_element);
-}
-
-double slater_rules_double_alpha_alpha(uint64_t Ia, uint64_t Ja,
-                                       const std::shared_ptr<FCIIntegrals>& ints) {
-    uint64_t IJb = Ia ^ Ja;
-
-    uint64_t Ia_sub = Ia & IJb;
-    uint64_t i = lowest_one_idx(Ia_sub);
-    Ia_sub = clear_lowest_one(Ia_sub);
-    uint64_t j = lowest_one_idx(Ia_sub);
-
-    uint64_t Ja_sub = Ja & IJb;
-    uint64_t k = lowest_one_idx(Ja_sub);
-    Ja_sub = clear_lowest_one(Ja_sub);
-    uint64_t l = lowest_one_idx(Ja_sub);
-
-    return ui64_slater_sign(Ia, i, j) * ui64_slater_sign(Ja, k, l) * ints->tei_aa(i, j, k, l);
-}
-
-double slater_rules_single_beta(uint64_t Ia, uint64_t Ib, uint64_t Jb,
-                                const std::shared_ptr<FCIIntegrals>& ints) {
-    uint64_t IJb = Ib ^ Jb;
-    uint64_t i = lowest_one_idx(IJb);
-    IJb = clear_lowest_one(IJb);
-    uint64_t a = lowest_one_idx(IJb);
-
-    // Diagonal contribution
-    double matrix_element = ints->oei_b(i, a);
-    // find common bits
-    IJb = Ib & Jb;
-    for (int p = 0; p < 64; ++p) {
-        if (ui64_get_bit(Ia, p)) {
-            matrix_element += ints->tei_ab(p, i, p, a);
-        }
-        if (ui64_get_bit(Ib, p)) {
-            matrix_element += ints->tei_bb(p, i, p, a);
-        }
-    }
-    return (ui64_slater_sign(Ib, i, a) * matrix_element);
-}
-
-double slater_rules_double_beta_beta(uint64_t Ib, uint64_t Jb,
-                                     const std::shared_ptr<FCIIntegrals>& ints) {
-    uint64_t IJb = Ib ^ Jb;
-
-    uint64_t Ib_sub = Ib & IJb;
-    uint64_t i = lowest_one_idx(Ib_sub);
-    Ib_sub = clear_lowest_one(Ib_sub);
-    uint64_t j = lowest_one_idx(Ib_sub);
-
-    uint64_t Jb_sub = Jb & IJb;
-    uint64_t k = lowest_one_idx(Jb_sub);
-    Jb_sub = clear_lowest_one(Jb_sub);
-    uint64_t l = lowest_one_idx(Jb_sub);
-
-    return ui64_slater_sign(Ib, i, j) * ui64_slater_sign(Jb, k, l) * ints->tei_bb(i, j, k, l);
-}
-
-double slater_rules_double_alpha_beta_pre(int i, int a, uint64_t Ib, uint64_t Jb,
-                                          const std::shared_ptr<FCIIntegrals>& ints) {
-    outfile->Printf("\n %zu %zu", Ib, Jb);
-    uint64_t Ib_xor_Jb = Ib ^ Jb;
-    uint64_t j = lowest_one_idx(Ib_xor_Jb);
-    Ib_xor_Jb = clear_lowest_one(Ib_xor_Jb);
-    uint64_t b = lowest_one_idx(Ib_xor_Jb);
-    outfile->Printf("\n  i = %d, j = %d, a = %d, b = %d", i, j, a, b);
-    return ui64_slater_sign(Ib, j, b) * ints->tei_ab(i, j, a, b);
-}
-
 UI64Determinant::UI64Determinant() : a_(0), b_(0) {}
-
-UI64Determinant::UI64Determinant(const STLBitsetDeterminant& d) : a_(0), b_(0) {
-    for (int i = 0; i < 64; ++i) {
-        set_alfa_bit(i, d.get_alfa_bit(i));
-        set_beta_bit(i, d.get_beta_bit(i));
-    }
-}
 
 UI64Determinant::UI64Determinant(const std::vector<bool>& occupation) : a_(0), b_(0) {
     int size = occupation.size() / 2;
