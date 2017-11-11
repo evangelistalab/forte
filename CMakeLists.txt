@@ -83,7 +83,6 @@ src/sparse_ci/stl_bitset_string.cc
 src/sparse_ci/sorted_string_list.cc
 src/sparse_ci/ui64_determinant.cc
 src/sparse_ci/ui64_determinant_functions.cc
-src/sq.cc
 src/tensorsrg.cc
 src/tensorsrg_antihermitian_commutators.cc
 src/tensorsrg_ct.cc
