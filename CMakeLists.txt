@@ -178,4 +178,10 @@ if (ENABLE_ForteTests)
   add_executable(forte_tests
     src/sparse_ci/ui64_determinant.cc
     tests/code/test_determinant.cc)
+
+  project (forte_benchmarks)
+  include_directories(${CMAKE_BINARY_DIR})
+  add_executable(forte_benchmarks
+    src/sparse_ci/ui64_determinant.cc
+    tests/benchmark/determinant_benchmark.cc)
 endif (ENABLE_ForteTests)
