@@ -2118,7 +2118,7 @@ void AdaptiveCI::print_wfn(DeterminantHashVec& space, WFNOperator& op, SharedMat
         for (size_t I = 0; I < max_dets; ++I) {
             outfile->Printf("\n  %3zu  %9.6f %.9f  %10zu %s", I, tmp_evecs[I],
                             tmp_evecs[I] * tmp_evecs[I], space.get_idx(tmp.get_det(I)),
-                            tmp.get_det(I).str(ncmo_).c_str());
+                            tmp.get_det(I).str(nact_).c_str());
         }
         state_label = s2_labels[std::round(spins[n].first * 2.0)];
         root_spin_vec_.clear();

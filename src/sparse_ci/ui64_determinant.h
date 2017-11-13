@@ -132,7 +132,7 @@ class UI64Determinant {
     double double_excitation_bb(int i, int j, int a, int b);
 
     /// Save the Slater determinant as a string
-    std::string str() const;
+    std::string str( int n) const;
 
     struct Hash {
         std::size_t operator()(const psi::forte::UI64Determinant& bs) const {

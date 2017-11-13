@@ -369,10 +369,10 @@ void UI64Determinant::zero_spin(DetSpinType spin_type) {
     }
 }
 
-std::string UI64Determinant::str() const {
+std::string UI64Determinant::str( int n ) const {
     std::string s;
     s += "|";
-    for (int p = 0; p < num_str_bits; ++p) {
+    for (int p = 0; p < n; ++p) {
         if (get_alfa_bit(p) and get_beta_bit(p)) {
             s += "2";
         } else if (get_alfa_bit(p) and not get_beta_bit(p)) {
