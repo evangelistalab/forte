@@ -3907,15 +3907,6 @@ void AdaptiveCI::spin_analysis() {
             value -= 0.5 * (l2ab[i * nact3 + j * nact2 + j * nact + i] +
                             l2ab[j * nact3 + i * nact2 + i * nact + j]);
 
-            value -=
-                0.25 *
-                (l2aa[i * nact3 + j * nact2 + i * nact + j] +
-                 l2ab[i * nact3 + j * nact2 + i * nact + j] +
-                 l2ab[j * nact3 + i * nact2 + j * nact + i] +
-                 l2bb[i * nact3 + j * nact2 + i * nact + j] +
-                 l1a[i * nact + i] * l1a[j * nact + j] + l1b[i * nact + i] * l1b[j * nact + j] -
-                 l1b[i * nact + i] * l1a[j * nact + j] - l1a[i * nact + i] * l1b[j * nact + j]);
-
             spin_corr->set(i, j, value);
         }
     }
