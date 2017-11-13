@@ -35,17 +35,17 @@
 namespace psi {
 namespace forte {
 
-DeterminantHashVec::DeterminantHashVec(std::vector<STLBitsetDeterminant>& dets) {
+DeterminantHashVec::DeterminantHashVec(std::vector<Determinant>& dets) {
     // The dimension of the wavefunction
     wfn_ = det_hashvec(dets);
 }
 
-DeterminantHashVec::DeterminantHashVec(const std::vector<STLBitsetDeterminant>& dets) {
+DeterminantHashVec::DeterminantHashVec(const std::vector<Determinant>& dets) {
     // The dimension of the wavefunction
     wfn_ = det_hashvec(dets);
 }
 
-DeterminantHashVec::DeterminantHashVec(STLBitsetDeterminant& det) { wfn_.add(det); }
+DeterminantHashVec::DeterminantHashVec(Determinant& det) { wfn_.add(det); }
 
 DeterminantHashVec::DeterminantHashVec() {}
 
@@ -59,29 +59,27 @@ det_hashvec& DeterminantHashVec::wfn_hash() { return wfn_; }
 
 void DeterminantHashVec::clear() { wfn_.clear(); }
 
-std::vector<STLBitsetDeterminant> DeterminantHashVec::determinants() const {
+std::vector<Determinant> DeterminantHashVec::determinants() const {
     return wfn_.toVector();
 }
 
-std::vector<std::pair<STLBitsetDeterminant,size_t>> DeterminantHashVec::determinant_index_pairs() const {
+std::vector<std::pair<Determinant,size_t>> DeterminantHashVec::determinant_index_pairs() const {
     return wfn_.toKeyIndex();
 }
 
 size_t DeterminantHashVec::size() const { return wfn_.size(); }
 
-void DeterminantHashVec::add(const STLBitsetDeterminant& det) { wfn_.add(det); }
+void DeterminantHashVec::add(const Determinant& det) { wfn_.add(det); }
 
-const STLBitsetDeterminant& DeterminantHashVec::get_det(const size_t value) const {
+const Determinant& DeterminantHashVec::get_det(const size_t value) const {
     // Iterate through map to find the right one
     // Possibly a faster way to do this?
     return wfn_[value];
 }
 
-size_t DeterminantHashVec::get_idx(const STLBitsetDeterminant& det) const { return wfn_.find(det); }
+size_t DeterminantHashVec::get_idx(const Determinant& det) const { return wfn_.find(det); }
 
-void DeterminantHashVec::make_spin_complete() {  
-    int nmo = wfn_[0].find_nmo();
-
+void DeterminantHashVec::make_spin_complete(int nmo) {
     size_t ndet_added = 0;
     std::vector<size_t> closed(nmo, 0);
     std::vector<size_t> open(nmo, 0);
@@ -89,7 +87,7 @@ void DeterminantHashVec::make_spin_complete() {
     DeterminantHashVec new_dets;
 
     for (det_hashvec::iterator it = wfn_.begin(), endit = wfn_.end(); it != endit; ++it) {
-        const STLBitsetDeterminant& det = *it;
+        const Determinant& det = *it;
         //        outfile->Printf("\n  Original determinant: %s",
         //        det.str().c_str());
         for (int i = 0; i < nmo; ++i) {
@@ -122,7 +120,8 @@ void DeterminantHashVec::make_spin_complete() {
         for (int i = nbopen; i < naopen + nbopen; ++i)
             open_bits[i] = true; // 1
         do {
-            STLBitsetDeterminant new_det(nmo);
+            // Determinant new_det(nmo); <- xsize
+            Determinant new_det;
             for (int c = 0; c < nclosed; ++c) {
                 new_det.set_alfa_bit(closed[c], true);
                 new_det.set_beta_bit(closed[c], true);
@@ -151,7 +150,7 @@ void DeterminantHashVec::make_spin_complete() {
     this->merge(new_dets);
 }
 
-bool DeterminantHashVec::has_det(const STLBitsetDeterminant& det) const {
+bool DeterminantHashVec::has_det(const Determinant& det) const {
     return wfn_.find(det) != det_hashvec::npos;
 }
 
@@ -217,7 +216,7 @@ void DeterminantHashVec::subspace(DeterminantHashVec& dets, SharedMatrix evecs,
 
     // Build this wfn with most important subset
     for (size_t I = 0; I < dim; ++I) {
-        const STLBitsetDeterminant& detI = dets.get_det(det_weights[I].second);
+        const Determinant& detI = dets.get_det(det_weights[I].second);
         this->add(detI);
         new_evecs[I] = evecs->get(det_weights[I].second, root);
         // outfile->Printf("\n %1.6f  %s", new_evecs[I],
@@ -228,7 +227,7 @@ void DeterminantHashVec::subspace(DeterminantHashVec& dets, SharedMatrix evecs,
 }
 
 void DeterminantHashVec::merge(DeterminantHashVec& dets) {
-    for (const STLBitsetDeterminant& d : dets.wfn_) {
+    for (const Determinant& d : dets.wfn_) {
         wfn_.add(d);
     }
 }

@@ -1401,7 +1401,7 @@ double DSRG_MRPT3::compute_energy_sa() {
             int irrep = options_["AVG_STATE"][n][0].to_integer();
             int multi = options_["AVG_STATE"][n][1].to_integer();
             int nstates = options_["AVG_STATE"][n][2].to_integer();
-            std::vector<psi::forte::STLBitsetDeterminant> p_space = p_spaces_[n];
+            std::vector<psi::forte::Determinant> p_space = p_spaces_[n];
 
             // print current symmetry
             std::stringstream ss;

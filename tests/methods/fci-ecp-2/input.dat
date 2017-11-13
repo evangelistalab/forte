@@ -26,5 +26,5 @@ set forte {
 }
 
 e = energy('forte')
-compare_values(nucenergy, arwater.nuclear_repulsion_energy(), 10, "Nuclear repulsion energy")   #TEST
-compare_values(refenergy, e,10, "FCI energy with ECP")                                          #TEST
+compare_values(nucenergy, arwater.nuclear_repulsion_energy(), 9, "Nuclear repulsion energy")   #TEST
+compare_values(refenergy, e, 9, "FCI energy with ECP")                                          #TEST

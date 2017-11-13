@@ -56,7 +56,7 @@
 #include "reference.h"
 #include "sparse_ci/sparse_ci_solver.h"
 #include "fci/fci_integrals.h"
-#include "sparse_ci/stl_bitset_determinant.h"
+#include "sparse_ci/determinant.h"
 
 using d1 = std::vector<double>;
 using d2 = std::vector<d1>;
@@ -64,7 +64,7 @@ using d3 = std::vector<d2>;
 using d4 = std::vector<d3>;
 using d5 = std::vector<d4>;
 using d6 = std::vector<d5>;
-using vecdet = std::vector<psi::forte::STLBitsetDeterminant>;
+using vecdet = std::vector<psi::forte::Determinant>;
 
 namespace psi {
 namespace forte {
@@ -184,7 +184,7 @@ class FCI_MO : public Wavefunction {
     std::vector<vector<pair<SharedVector, double>>> const eigens() { return eigens_; }
 
     /// Return a vector of dominant determinant for each root
-    std::vector<STLBitsetDeterminant> dominant_dets() { return dominant_dets_; }
+    std::vector<Determinant> dominant_dets() { return dominant_dets_; }
 
     /// Quiet mode (no printing, for use with CASSCF)
     void set_quite_mode(bool quiet) { quiet_ = quiet; }
@@ -295,7 +295,7 @@ class FCI_MO : public Wavefunction {
     void form_det_cis();
     void form_det_cisd();
     vecdet determinant_;
-    std::vector<STLBitsetDeterminant> dominant_dets_;
+    std::vector<Determinant> dominant_dets_;
     std::vector<vecdet> p_spaces_;
 
     /// Size of Singles Determinants
@@ -424,12 +424,12 @@ class FCI_MO : public Wavefunction {
     void fill_naive_cumulants(Reference& ref, const int& level);
 
     /// N-Particle Operator
-    double OneOP(const STLBitsetDeterminant& J, STLBitsetDeterminant& Jnew, const size_t& p,
+    double OneOP(const Determinant& J, Determinant& Jnew, const size_t& p,
                  const bool& sp, const size_t& q, const bool& sq);
-    double TwoOP(const STLBitsetDeterminant& J, STLBitsetDeterminant& Jnew, const size_t& p,
+    double TwoOP(const Determinant& J, Determinant& Jnew, const size_t& p,
                  const bool& sp, const size_t& q, const bool& sq, const size_t& r, const bool& sr,
                  const size_t& s, const bool& ss);
-    double ThreeOP(const STLBitsetDeterminant& J, STLBitsetDeterminant& Jnew, const size_t& p,
+    double ThreeOP(const Determinant& J, Determinant& Jnew, const size_t& p,
                    const bool& sp, const size_t& q, const bool& sq, const size_t& r, const bool& sr,
                    const size_t& s, const bool& ss, const size_t& t, const bool& st,
                    const size_t& u, const bool& su);
@@ -566,9 +566,8 @@ class FCI_MO : public Wavefunction {
     /// Print Determinants
     void print_det(const vecdet& dets) {
         outfile->Printf("\n\n  ==> Determinants |alpha|beta> <==\n");
-        for (const STLBitsetDeterminant& x : dets) {
-            outfile->Printf("  ");
-            x.print();
+        for (const Determinant& x : dets) {
+            outfile->Printf("  %s",x.str().c_str());
         }
         outfile->Printf("\n");
     }

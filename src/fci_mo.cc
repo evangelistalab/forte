@@ -622,7 +622,7 @@ void FCI_MO::form_det() {
                 size_t sa = a_string[i].size();
                 for (size_t alfa = 0; alfa < sa; ++alfa) {
                     determinant_.push_back(
-                        STLBitsetDeterminant(a_string[i][alfa], a_string[i][alfa]));
+                        Determinant(a_string[i][alfa], a_string[i][alfa]));
                 }
             }
         }
@@ -634,7 +634,7 @@ void FCI_MO::form_det() {
             for (size_t alfa = 0; alfa < sa; ++alfa) {
                 for (size_t beta = 0; beta < sb; ++beta) {
                     determinant_.push_back(
-                        STLBitsetDeterminant(a_string[i][alfa], b_string[j][beta]));
+                        Determinant(a_string[i][alfa], b_string[j][beta]));
                 }
             }
         }
@@ -744,13 +744,13 @@ void FCI_MO::form_det_cis() {
     int i = symmetry ^ root_sym_;
     size_t single_size = string_singles[i].size();
     for (size_t x = 0; x < single_size; ++x) {
-        determinant_.push_back(STLBitsetDeterminant(string_singles[i][x], string_ref));
-        determinant_.push_back(STLBitsetDeterminant(string_ref, string_singles[i][x]));
+        determinant_.push_back(Determinant(string_singles[i][x], string_ref));
+        determinant_.push_back(Determinant(string_ref, string_singles[i][x]));
     }
 
     // add HF determinant at the end if root_sym = 0
     if (root_sym_ == 0) {
-        determinant_.push_back(STLBitsetDeterminant(string_ref, string_ref));
+        determinant_.push_back(Determinant(string_ref, string_ref));
     }
 
     if (!quiet_) {
@@ -828,23 +828,23 @@ void FCI_MO::form_det_cisd() {
         size_t single_size = string_singles[i].size();
         singles_size_ = 2 * single_size;
         for (size_t x = 0; x < single_size; ++x) {
-            determinant_.push_back(STLBitsetDeterminant(string_singles[i][x], string_ref));
-            determinant_.push_back(STLBitsetDeterminant(string_ref, string_singles[i][x]));
+            determinant_.push_back(Determinant(string_singles[i][x], string_ref));
+            determinant_.push_back(Determinant(string_ref, string_singles[i][x]));
         }
     } else {
         size_t single_size = string_singles_ipea[i].size();
         singles_size_ = 2 * single_size;
         for (size_t x = 0; x < single_size; ++x) {
-            determinant_.push_back(STLBitsetDeterminant(string_singles_ipea[i][x], string_ref));
-            determinant_.push_back(STLBitsetDeterminant(string_ref, string_singles_ipea[i][x]));
+            determinant_.push_back(Determinant(string_singles_ipea[i][x], string_ref));
+            determinant_.push_back(Determinant(string_ref, string_singles_ipea[i][x]));
         }
     }
 
     // doubles
     size_t double_size = string_doubles[i].size();
     for (size_t x = 0; x < double_size; ++x) {
-        determinant_.push_back(STLBitsetDeterminant(string_doubles[i][x], string_ref));
-        determinant_.push_back(STLBitsetDeterminant(string_ref, string_doubles[i][x]));
+        determinant_.push_back(Determinant(string_doubles[i][x], string_ref));
+        determinant_.push_back(Determinant(string_ref, string_doubles[i][x]));
     }
 
     for (int h = 0; h < nirrep_; ++h) {
@@ -855,16 +855,16 @@ void FCI_MO::form_det_cisd() {
             size_t single_size_b = string_singles[sym].size();
             for (size_t y = 0; y < single_size_b; ++y) {
                 determinant_.push_back(
-                    STLBitsetDeterminant(string_singles[h][x], string_singles[sym][y]));
+                    Determinant(string_singles[h][x], string_singles[sym][y]));
             }
 
             if (ipea_ != "NONE") {
                 size_t single_ipea_size_b = string_singles_ipea[sym].size();
                 for (size_t y = 0; y < single_ipea_size_b; ++y) {
                     determinant_.push_back(
-                        STLBitsetDeterminant(string_singles[h][x], string_singles_ipea[sym][y]));
+                        Determinant(string_singles[h][x], string_singles_ipea[sym][y]));
                     determinant_.push_back(
-                        STLBitsetDeterminant(string_singles_ipea[sym][y], string_singles[h][x]));
+                        Determinant(string_singles_ipea[sym][y], string_singles[h][x]));
                 }
             }
         }
@@ -872,7 +872,7 @@ void FCI_MO::form_det_cisd() {
 
     // add HF determinant at the end if root_sym = 0
     if (root_sym_ == 0) {
-        determinant_.push_back(STLBitsetDeterminant(string_ref, string_ref));
+        determinant_.push_back(Determinant(string_ref, string_ref));
     }
 
     if (!quiet_) {
@@ -1309,10 +1309,10 @@ void FCI_MO::Diagonalize_H_noHF(const vecdet& p_space, const int& multi, const i
                                 std::vector<pair<SharedVector, double>>& eigen) {
     // recompute RHF determinant
     std::vector<bool> string_ref = Form_String_Ref();
-    STLBitsetDeterminant rhf(string_ref, string_ref);
+    Determinant rhf(string_ref, string_ref);
 
     // test if RHF determinant is the last one in det
-    STLBitsetDeterminant det_back(p_space.back());
+    Determinant det_back(p_space.back());
     if (rhf == det_back) {
         eigen.clear();
         size_t det_size = p_space.size();
@@ -1371,14 +1371,14 @@ void FCI_MO::Diagonalize_H(const vecdet& p_space, const int& multi, const int& n
     eigen.clear();
 
     //    // use bitset determinants
-    //    STLBitsetDeterminant::set_ints(fci_ints_);
-    //    std::vector<STLBitsetDeterminant> P_space;
+    //    Determinant::set_ints(fci_ints_);
+    //    std::vector<Determinant> P_space;
     //    for (size_t x = 0; x != det_size; ++x) {
     //        std::vector<bool> alfa_bits =
     //        P_space[x].get_alfa_bits_vector_bool();
     //        std::vector<bool> beta_bits =
     //        P_space[x].get_beta_bits_vector_bool();
-    //        STLBitsetDeterminant bs_det(alfa_bits, beta_bits);
+    //        Determinant bs_det(alfa_bits, beta_bits);
     //        P_space.push_back(bs_det);
     //        //        bs_det.print();
     //    }
@@ -1617,7 +1617,7 @@ void FCI_MO::FormDensity(CI_RDMS& ci_rdms, d2& A, d2& B) {
     timer_off("FORM Density");
 }
 
-// double FCI_MO::OneOP(const STLBitsetDeterminant& J, STLBitsetDeterminant& Jnew, const size_t& p,
+// double FCI_MO::OneOP(const Determinant& J, Determinant& Jnew, const size_t& p,
 //                     const bool& sp, const size_t& q, const bool& sq) {
 //    timer_on("1PO");
 //    std::vector<vector<bool>> tmp;
@@ -1637,7 +1637,7 @@ void FCI_MO::FormDensity(CI_RDMS& ci_rdms, d2& A, d2& B) {
 //    if (!tmp[sp][p]) {
 //        sign *= CheckSign(tmp[sp], p);
 //        tmp[sp][p] = 1;
-//        Jnew = STLBitsetDeterminant(tmp[0], tmp[1]);
+//        Jnew = Determinant(tmp[0], tmp[1]);
 //        timer_off("1PO");
 //        return sign;
 //    } else {
@@ -1790,7 +1790,7 @@ void FCI_MO::print2PDC(const string& str, const d4& TwoPDC, const int& PRINT) {
     timer_off("PRINT 2-Cumulant");
 }
 
-// double FCI_MO::TwoOP(const STLBitsetDeterminant& J, STLBitsetDeterminant& Jnew, const size_t& p,
+// double FCI_MO::TwoOP(const Determinant& J, Determinant& Jnew, const size_t& p,
 //                     const bool& sp, const size_t& q, const bool& sq, const size_t& r,
 //                     const bool& sr, const size_t& s, const bool& ss) {
 //    timer_on("2PO");
@@ -1827,7 +1827,7 @@ void FCI_MO::print2PDC(const string& str, const d4& TwoPDC, const int& PRINT) {
 //    if (!tmp[sp][p]) {
 //        sign *= CheckSign(tmp[sp], p);
 //        tmp[sp][p] = 1;
-//        Jnew = STLBitsetDeterminant(tmp[0], tmp[1]);
+//        Jnew = Determinant(tmp[0], tmp[1]);
 //        timer_off("2PO");
 //        return sign;
 //    } else {
@@ -2002,7 +2002,7 @@ void FCI_MO::print2PDC(const string& str, const d4& TwoPDC, const int& PRINT) {
 
 //                size_t size = dets.size();
 //                for (size_t ket = 0; ket != size; ++ket) {
-//                    STLBitsetDeterminant Jaaa(vector<bool>(2 * ncmo_)),
+//                    Determinant Jaaa(vector<bool>(2 * ncmo_)),
 //                        Jaab(vector<bool>(2 * ncmo_)), Jabb(vector<bool>(2 * ncmo_)),
 //                        Jbbb(vector<bool>(2 * ncmo_));
 //                    double aaa = 1.0, aab = 1.0, abb = 1.0, bbb = 1.0,
@@ -2094,7 +2094,7 @@ void FCI_MO::print3PDC(const string& str, const d6& ThreePDC, const int& PRINT) 
     timer_off("PRINT 3-Cumulant");
 }
 
-// double FCI_MO::ThreeOP(const STLBitsetDeterminant& J, STLBitsetDeterminant& Jnew, const size_t&
+// double FCI_MO::ThreeOP(const Determinant& J, Determinant& Jnew, const size_t&
 // p,
 //                       const bool& sp, const size_t& q, const bool& sq, const size_t& r,
 //                       const bool& sr, const size_t& s, const bool& ss, const size_t& t,
@@ -2149,7 +2149,7 @@ void FCI_MO::print3PDC(const string& str, const d6& ThreePDC, const int& PRINT) 
 //    if (!tmp[sp][p]) {
 //        sign *= CheckSign(tmp[sp], p);
 //        tmp[sp][p] = 1;
-//        Jnew = STLBitsetDeterminant(tmp[0], tmp[1]);
+//        Jnew = Determinant(tmp[0], tmp[1]);
 //        timer_off("3PO");
 //        return sign;
 //    } else {
@@ -3130,8 +3130,8 @@ FCI_MO::compute_relaxed_osc(std::vector<BlockedTensor>& dm1, std::vector<Blocked
             }
 
             // combine p_space
-            std::vector<STLBitsetDeterminant> p_space(p_spaces_[A]);
-            std::vector<STLBitsetDeterminant>& p_space1 = p_spaces_[B];
+            std::vector<Determinant> p_space(p_spaces_[A]);
+            std::vector<Determinant>& p_space1 = p_spaces_[B];
             p_space.insert(p_space.end(), p_space1.begin(), p_space1.end());
 
             for (int i = 0; i < nroots0; ++i) {
@@ -3253,8 +3253,8 @@ FCI_MO::compute_relaxed_osc(std::vector<BlockedTensor>& dm1, std::vector<Blocked
             }
 
             // combine p_space
-            std::vector<STLBitsetDeterminant> p_space(p_spaces_[A]);
-            std::vector<STLBitsetDeterminant>& p_space1 = p_spaces_[B];
+            std::vector<Determinant> p_space(p_spaces_[A]);
+            std::vector<Determinant>& p_space1 = p_spaces_[B];
             p_space.insert(p_space.end(), p_space1.begin(), p_space1.end());
 
             for (int i = 0; i < nroots0; ++i) {

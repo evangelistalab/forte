@@ -65,15 +65,15 @@ void print_SigmaVectorDynamic_stats();
 SigmaVectorDynamic::SigmaVectorDynamic(const DeterminantHashVec& space,
                                        std::shared_ptr<FCIIntegrals> fci_ints, size_t max_memory)
     : SigmaVector(space.size()), space_(space), fci_ints_(fci_ints),
-      a_sorted_string_list_(space, fci_ints, STLBitsetDeterminant::SpinType::AlphaSpin),
-      b_sorted_string_list_(space, fci_ints, STLBitsetDeterminant::SpinType::BetaSpin) {
+      a_sorted_string_list_(space, fci_ints, DetSpinType::Alpha),
+      b_sorted_string_list_(space, fci_ints, DetSpinType::Beta) {
 
     timer this_timer("creator");
 
     nmo_ = fci_ints_->nmo();
 
     for (size_t I = 0; I < size_; ++I) {
-        const STLBitsetDeterminant& detI = space.get_det(I);
+        const Determinant& detI = space.get_det(I);
         double EI = fci_ints_->energy(detI);
         diag_.push_back(EI);
     }

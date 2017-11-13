@@ -59,6 +59,7 @@ class SigmaVector {
     virtual void add_bad_roots(std::vector<std::vector<std::pair<size_t, double>>>& bad_states) = 0;
 
   protected:
+    /// The length of the C/sigma vector (number of determinants)
     size_t size_;
 };
 
@@ -90,7 +91,7 @@ class SigmaVectorSparse : public SigmaVector {
  */
 class SigmaVectorList : public SigmaVector {
   public:
-    SigmaVectorList(const std::vector<STLBitsetDeterminant>& space, bool print_detail,
+    SigmaVectorList(const std::vector<Determinant>& space, bool print_detail,
                     std::shared_ptr<FCIIntegrals> fci_ints);
 
     void compute_sigma(SharedVector sigma, SharedVector b);
@@ -103,7 +104,7 @@ class SigmaVectorList : public SigmaVector {
     std::vector<std::vector<std::pair<size_t, double>>> bad_states_;
 
   protected:
-    const std::vector<STLBitsetDeterminant>& space_;
+    const std::vector<Determinant>& space_;
     std::shared_ptr<FCIIntegrals> fci_ints_;
 
     // Create the list of a_p|N>

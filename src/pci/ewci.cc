@@ -106,7 +106,7 @@ ElementwiseCI::ElementwiseCI(SharedWavefunction ref_wfn, Options& options,
                              std::shared_ptr<ForteIntegrals> ints,
                              std::shared_ptr<MOSpaceInfo> mo_space_info)
     : Wavefunction(options), ints_(ints), mo_space_info_(mo_space_info),
-      fast_variational_estimate_(false), reference_determinant_(0) {
+      fast_variational_estimate_(false) {
     // Copy the wavefunction information
     shallow_copy(ref_wfn);
     reference_wavefunction_ = ref_wfn;
@@ -164,7 +164,7 @@ void ElementwiseCI::startup() {
     nbeta_ = nactel_ - nalpha_;
 
     // Build the reference determinant and compute its energy
-    std::vector<STLBitsetDeterminant> reference_vec;
+    std::vector<Determinant> reference_vec;
     CI_Reference ref(reference_wavefunction_, options_, mo_space_info_, fci_ints_,
                      wavefunction_multiplicity_, ms, wavefunction_symmetry_);
     ref.set_ref_type("HF");
@@ -396,10 +396,10 @@ double ElementwiseCI::estimate_high_energy() {
     lambda_h_ = high_obt_energy + fci_ints_->frozen_core_energy() + fci_ints_->scalar_energy();
 
     double lambda_h_G = fci_ints_->energy(high_det) + fci_ints_->scalar_energy();
-    std::vector<int> aocc = high_det.get_alfa_occ();
-    std::vector<int> bocc = high_det.get_beta_occ();
-    std::vector<int> avir = high_det.get_alfa_vir();
-    std::vector<int> bvir = high_det.get_beta_vir();
+    std::vector<int> aocc = high_det.get_alfa_occ(nact_);
+    std::vector<int> bocc = high_det.get_beta_occ(nact_);
+    std::vector<int> avir = high_det.get_alfa_vir(nact_);
+    std::vector<int> bvir = high_det.get_beta_vir(nact_);
     std::vector<int> aocc_offset(nirrep_ + 1);
     std::vector<int> bocc_offset(nirrep_ + 1);
     std::vector<int> avir_offset(nirrep_ + 1);
@@ -506,7 +506,7 @@ double ElementwiseCI::estimate_high_energy() {
     }
     outfile->Printf("\n\n  ==> Estimate highest excitation energy <==");
     outfile->Printf("\n  Highest Excited determinant:");
-    high_det.print();
+    outfile->Printf("\n  %s", high_det.str().c_str());
     outfile->Printf("\n  Determinant Energy                    :  %.12f",
                     fci_ints_->energy(high_det) + nuclear_repulsion_energy_ +
                         fci_ints_->scalar_energy());
@@ -2390,7 +2390,7 @@ void ElementwiseCI::print_wfn(const det_hashvec& space_hashvec, std::vector<doub
     for (size_t I = 0; I < max_I; ++I) {
         for (size_t J = 0; J < max_I; ++J) {
             if (std::fabs(C[I] * C[J]) > 1.0e-12) {
-                const double S2IJ = space_hashvec[I].spin2(space_hashvec[J]);
+                const double S2IJ = spin2(space_hashvec[I], space_hashvec[J]);
                 S2 += C[I] * C[J] * S2IJ;
             }
         }
@@ -2456,10 +2456,10 @@ double ElementwiseCI::form_H_C(const det_hashvec& dets_hashvec, std::vector<doub
     // diagonal contribution
     double result = CI * CI * fci_ints_->energy(detI);
 
-    std::vector<int> aocc = detI.get_alfa_occ();
-    std::vector<int> bocc = detI.get_beta_occ();
-    std::vector<int> avir = detI.get_alfa_vir();
-    std::vector<int> bvir = detI.get_beta_vir();
+    std::vector<int> aocc = detI.get_alfa_occ(nact_);
+    std::vector<int> bocc = detI.get_beta_occ(nact_);
+    std::vector<int> avir = detI.get_alfa_vir(nact_);
+    std::vector<int> bvir = detI.get_beta_vir(nact_);
 
     int noalpha = aocc.size();
     int nobeta = bocc.size();
@@ -3027,13 +3027,13 @@ void ElementwiseCI::compute_double_couplings(double double_coupling_threshold) {
 }
 
 void ElementwiseCI::compute_couplings_half(const det_hashvec& dets, size_t cut_size) {
-    STLBitsetDeterminant andBits(dets[0]), orBits(dets[0]);
-    andBits.flip();
+    Determinant andBits(dets[0]), orBits(dets[0]);
+    andBits.flip();    
     for (size_t i = 0; i < cut_size; ++i) {
-        andBits &= dets[i];
-        orBits |= dets[i];
+        andBits = common_occupation(andBits, dets[i]);
+        orBits = union_occupation(orBits, dets[i]);
     }
-    STLBitsetDeterminant actBits = andBits ^ orBits;
+    Determinant actBits = different_occupation(andBits, orBits);
 
     a_couplings_.clear();
     a_couplings_.resize(nact_);

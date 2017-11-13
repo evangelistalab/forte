@@ -46,7 +46,7 @@
 #include "../mrdsrg-helper/dsrg_time.h"
 #include "../mrdsrg-helper/dsrg_source.h"
 #include "../fci/fci_vector.h"
-#include "../sparse_ci/stl_bitset_determinant.h"
+#include "../sparse_ci/determinant.h"
 #include "master_mrdsrg.h"
 
 using namespace ambit;
@@ -84,7 +84,7 @@ class DSRG_MRPT3 : public MASTER_DSRG {
     }
 
     /// Set determinants in the model space
-    void set_p_spaces(std::vector<std::vector<psi::forte::STLBitsetDeterminant>> p_spaces) {
+    void set_p_spaces(std::vector<std::vector<psi::forte::Determinant>> p_spaces) {
         p_spaces_ = p_spaces;
     }
 
@@ -115,7 +115,7 @@ class DSRG_MRPT3 : public MASTER_DSRG {
     /// CASCI eigen values and eigen vectors for state averaging
     std::vector<std::vector<std::pair<SharedVector, double>>> eigens_;
     /// Determinants in the model space
-    std::vector<std::vector<psi::forte::STLBitsetDeterminant>> p_spaces_;
+    std::vector<std::vector<psi::forte::Determinant>> p_spaces_;
 
     /// Total memory left
     long long int mem_total_;
