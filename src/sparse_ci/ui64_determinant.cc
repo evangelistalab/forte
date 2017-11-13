@@ -112,6 +112,11 @@ double ui64_slater_sign(uint64_t x, int n) {
     // mask       11111111 11111111
     // mask << 11 00000000 00011111 11 = 16 - 5
     // mask >> 11 11111000 00000000
+    //
+    // Note: This strategy does not work when n = 0 because ~0 << 64 = ~0 (!!!)
+    // so we treat this case separately
+    if (n == 0)
+        return 1.0;
     uint64_t mask = ~0;
     mask = mask << (64 - n);             // make a string with n bits set
     mask = mask >> (64 - n);             // move it right by n
