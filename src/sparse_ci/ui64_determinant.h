@@ -131,7 +131,8 @@ class UI64Determinant {
     double double_excitation_bb(int i, int j, int a, int b);
 
     /// Save the Slater determinant as a string
-    std::string str() const;
+    /// @param n number of bits to print (number of MOs)
+    std::string str(int n = num_str_bits) const;
 
     struct Hash {
         std::size_t operator()(const psi::forte::UI64Determinant& bs) const {
