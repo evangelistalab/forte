@@ -103,7 +103,26 @@ uint64_t clear_lowest_one(uint64_t x)
     return x & (x - 1);
 }
 
+double ui64_slater_sign(uint64_t x, int n) {
+    // This implementation is 20 x times faster than one based on for loops
+    // First build a mask with n bit set. Then & with string.
+    // Example for 16 bit string
+    //                 n            (n = 5)
+    // want       11111000 00000000
+    // mask       11111111 11111111
+    // mask << 11 00000000 00011111 11 = 16 - 5
+    // mask >> 11 11111000 00000000
+    uint64_t mask = ~0;
+    mask = mask << (64 - n);             // make a string with n bits set
+    mask = mask >> (64 - n);             // move it right by n
+    mask = x & mask;                     // intersect with string
+    mask = ui64_bit_count(mask);         // count bits in between
+    return (mask % 2 == 0) ? 1.0 : -1.0; // compute sign
+}
+
 double ui64_slater_sign(uint64_t x, int m, int n) {
+    // This implementation is a bit faster than one based on for loops
+    // First build a mask with bit set between positions m and n. Then & with string.
     // Example for 16 bit string
     //              m  n            (m = 2, n = 5)
     // want       00011000 00000000
@@ -289,54 +308,13 @@ std::string UI64Determinant::str() const {
     return s;
 }
 
-double UI64Determinant::slater_sign_a(int n) const {
-    double sign = 1.0;
-    for (int i = 0; i < n; ++i) { // This runs up to the operator before n
-        if (get_alfa_bit(i))
-            sign *= -1.0;
-    }
-    return (sign);
-}
+double UI64Determinant::slater_sign_a(int n) const { return ui64_slater_sign(a_, n); }
 
-double UI64Determinant::slater_sign_aa(int n, int m) const {
-    return ui64_slater_sign(a_, n, m);
-    //    double sign = 1.0;
-    //    for (int i = m + 1; i < n; ++i) { // This runs up to the operator before n
-    //        if (ALFA(i))
-    //            sign *= -1.0;
-    //    }
-    //    for (int i = n + 1; i < m; ++i) {
-    //        if (ALFA(i)) {
-    //            sign *= -1.0;
-    //        }
-    //    }
-    //    return (sign);
-}
+double UI64Determinant::slater_sign_aa(int n, int m) const { return ui64_slater_sign(a_, n, m); }
 
-double UI64Determinant::slater_sign_b(int n) const {
-    double sign = 1.0;
-    for (int i = 0; i < n; ++i) { // This runs up to the operator before n
-        if (get_beta_bit(i))
-            sign *= -1.0;
-    }
-    return (sign);
-}
+double UI64Determinant::slater_sign_b(int n) const { return ui64_slater_sign(b_, n); }
 
-double UI64Determinant::slater_sign_bb(int n, int m) const {
-    return ui64_slater_sign(b_, n, m);
-
-    //    double sign = 1.0;
-    //    for (int i = m + 1; i < n; ++i) { // This runs up to the operator before n
-    //        if (BETA(i))
-    //            sign *= -1.0;
-    //    }
-    //    for (int i = n + 1; i < m; ++i) {
-    //        if (BETA(i)) {
-    //            sign *= -1.0;
-    //        }
-    //    }
-    //    return (sign);
-}
+double UI64Determinant::slater_sign_bb(int n, int m) const { return ui64_slater_sign(b_, n, m); }
 
 double UI64Determinant::slater_sign_aaaa(int i, int j, int a, int b) const {
     if ((((i < a) && (j < a) && (i < b) && (j < b)) == true) ||
@@ -451,55 +429,6 @@ double spin2(const UI64Determinant& lhs, const UI64Determinant& rhs) {
     // S^2 = S- S+ + Sz (Sz + 1)
     //     = Sz (Sz + 1) + Nbeta + Npairs - sum_pq' a+(qa) a+(pb) a-(qb) a-(pa)
     double matrix_element = 0.0;
-
-    //    int nadiff = 0;
-    //    int nbdiff = 0;
-    //    int na = 0;
-    //    int nb = 0;
-    //    int npair = 0;
-    //    // Count how many differences in mos are there and the number of alpha/beta
-    //    // electrons
-    //    for (int n = 0; n < size_; ++n) {
-    //        if (lhs.get_alfa_bit(n) != rhs.get_alfa_bit(n))
-    //            nadiff++;
-    //        if (lhs.get_beta_bit(n) != rhs.get_beta_bit(n))
-    //            nbdiff++;
-    //        if (lhs.get_alfa_bit(n))
-    //            na++;
-    //        if (lhs.get_beta_bit(n))
-    //            nb++;
-    //        if ((lhs.get_alfa_bit(n) and lhs.get_beta_bit(n)))
-    //            npair += 1;
-    //    }
-    //    nadiff /= 2;
-    //    nbdiff /= 2;
-
-    //    double Ms = 0.5 * static_cast<double>(na - nb);
-
-    //    // PhiI = PhiJ -> S^2 = Sz (Sz + 1) + Nbeta - Npairs
-    //    if ((nadiff == 0) and (nbdiff == 0)) {
-    //        matrix_element += Ms * (Ms + 1.0) + double(nb) - double(npair);
-    //    }
-
-    //    // PhiI = a+(qa) a+(pb) a-(qb) a-(pa) PhiJ
-    //    if ((nadiff == 1) and (nbdiff == 1)) {
-    //        // Find a pair of spin coupled electrons
-    //        int i = -1;
-    //        int j = -1;
-    //        // The logic here is a bit complex
-    //        for (int n = 0; n < size_; ++n) {
-    //            if (J[p] and I[num_str_bits + p] and (not rhs.get_beta_bit(n)) and (not I[p]))
-    //                i = p;
-    //            if (rhs.get_beta_bit(n) and I[p] and (not J[p]) and (not I[num_str_bits + p]))
-    //                j = p;
-    //        }
-    //        if (i != j and i >= 0 and j >= 0) {
-    //            double sign =
-    //                rhs.slater_sign_a(i) * rhs.slater_sign_b(j) * slater_sign_a(j) *
-    //                slater_sign_b(i);
-    //            matrix_element -= sign;
-    //        }
-    //    }
 
     int nadiff = ui64_bit_count(lhs.get_alfa_bits() ^ rhs.get_alfa_bits()) / 2;
     int nbdiff = ui64_bit_count(lhs.get_beta_bits() ^ rhs.get_beta_bits()) / 2;

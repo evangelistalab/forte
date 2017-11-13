@@ -79,6 +79,13 @@ TEST_CASE("Empty determinant", "[UI64Determinant]") {
 
     REQUIRE(aocc == aocc_ref);
     REQUIRE(bocc == bocc_ref);
+
+    REQUIRE(det_test.slater_sign_a(0) == 1.0);
+    REQUIRE(det_test.slater_sign_a(10) == 1.0);
+    REQUIRE(det_test.slater_sign_a(63) == 1.0);
+    REQUIRE(det_test.slater_sign_b(0) == 1.0);
+    REQUIRE(det_test.slater_sign_b(10) == 1.0);
+    REQUIRE(det_test.slater_sign_b(63) == 1.0);
 }
 
 TEST_CASE("Bit counting", "[UI64Determinant]") {
@@ -104,6 +111,25 @@ TEST_CASE("Bit counting", "[UI64Determinant]") {
     REQUIRE(bocc == bocc_ref);
     REQUIRE(avir == avir_ref);
     REQUIRE(bvir == bvir_ref);
+
+    REQUIRE(det_test.slater_sign_a(0) == 1.0);
+    REQUIRE(det_test.slater_sign_a(1) == -1.0);
+    REQUIRE(det_test.slater_sign_a(2) == -1.0);
+    REQUIRE(det_test.slater_sign_a(3) == -1.0);
+    REQUIRE(det_test.slater_sign_a(4) == 1.0);
+    REQUIRE(det_test.slater_sign_a(5) == -1.0);
+    REQUIRE(det_test.slater_sign_a(58) == -1.0);
+    REQUIRE(det_test.slater_sign_a(59) == -1.0);
+    REQUIRE(det_test.slater_sign_a(60) == 1.0);
+    REQUIRE(det_test.slater_sign_a(63) == 1.0);
+    REQUIRE(det_test.slater_sign_b(0) == 1.0);
+    REQUIRE(det_test.slater_sign_b(3) == 1.0);
+    REQUIRE(det_test.slater_sign_b(4) == -1.0);
+    REQUIRE(det_test.slater_sign_b(5) == -1.0);
+    REQUIRE(det_test.slater_sign_b(18) == -1.0);
+    REQUIRE(det_test.slater_sign_b(19) == 1.0);
+    REQUIRE(det_test.slater_sign_b(62) == 1.0);
+    REQUIRE(det_test.slater_sign_b(63) == 1.0);
 }
 
 TEST_CASE("Full determinant", "[UI64Determinant]") {
@@ -129,4 +155,21 @@ TEST_CASE("Full determinant", "[UI64Determinant]") {
     REQUIRE(bocc == bocc_ref);
     REQUIRE(avir == avir_ref);
     REQUIRE(bvir == bvir_ref);
+
+    REQUIRE(det_test.slater_sign_a(0) == 1.0);
+    REQUIRE(det_test.slater_sign_a(1) == -1.0);
+    REQUIRE(det_test.slater_sign_a(2) == 1.0);
+    REQUIRE(det_test.slater_sign_a(3) == -1.0);
+    REQUIRE(det_test.slater_sign_a(4) == 1.0);
+    REQUIRE(det_test.slater_sign_a(5) == -1.0);
+    REQUIRE(det_test.slater_sign_a(6) == 1.0);
+    REQUIRE(det_test.slater_sign_a(7) == -1.0);
+    REQUIRE(det_test.slater_sign_b(0) == 1.0);
+    REQUIRE(det_test.slater_sign_b(1) == -1.0);
+    REQUIRE(det_test.slater_sign_b(2) == 1.0);
+    REQUIRE(det_test.slater_sign_b(3) == -1.0);
+    REQUIRE(det_test.slater_sign_b(4) == 1.0);
+    REQUIRE(det_test.slater_sign_b(5) == -1.0);
+    REQUIRE(det_test.slater_sign_b(6) == 1.0);
+    REQUIRE(det_test.slater_sign_b(7) == -1.0);
 }
