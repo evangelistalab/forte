@@ -107,7 +107,7 @@ void CI_Reference::build_reference(std::vector<Determinant>& ref_space) {
 
 void CI_Reference::build_ci_reference(std::vector<Determinant>& ref_space) {
     Determinant det(get_occupation());
-    outfile->Printf("\n  %s", det.str().c_str());
+    outfile->Printf("\n  %s", det.str(nact_).c_str());
 
     ref_space.push_back(det);
 
