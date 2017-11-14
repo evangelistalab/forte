@@ -74,7 +74,6 @@
 #include "pci/pci_simple.h"
 #include "reference.h"
 #include "semi_canonicalize.h"
-#include "sq.h"
 #include "tensorsrg.h"
 #include "v2rdm.h"
 
@@ -329,7 +328,6 @@ void forte_old_methods(SharedWavefunction ref_wfn, Options& options,
             fci_mo->compute_energy();
             Reference reference = fci_mo->reference(max_rdm_level);
 
-
             if (options.get_bool("SEMI_CANONICAL")) {
                 SemiCanonical semi(ref_wfn, ints, mo_space_info);
                 if (actv_type == "CIS" || actv_type == "CISD") {
@@ -490,7 +488,7 @@ void forte_old_methods(SharedWavefunction ref_wfn, Options& options,
             dsrg_mrpt2->compute_energy();
 
         } else if (cas_type == "ACI") {
-            
+
             Reference aci_reference;
             {
                 auto aci = std::make_shared<AdaptiveCI>(ref_wfn, options, ints, mo_space_info);
@@ -681,9 +679,6 @@ void forte_old_methods(SharedWavefunction ref_wfn, Options& options,
                 new SOMRDSRG(reference, ref_wfn, options, ints, mo_space_info));
             somrdsrg->compute_energy();
         }
-    }
-    if (options.get_str("JOB_TYPE") == "SQ") {
-        SqTest sqtest;
     }
 
     if (options.get_str("JOB_TYPE") == "CC") {

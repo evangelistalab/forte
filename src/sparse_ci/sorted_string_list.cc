@@ -33,98 +33,6 @@
 namespace psi {
 namespace forte {
 
-SortedStringList::SortedStringList(const DeterminantHashVec& space,
-                                   std::shared_ptr<FCIIntegrals> fci_ints,
-                                   DetSpinType sorted_string_spin) {
-    nmo_ = fci_ints->nmo();
-    // Copy and sort the determinants
-    sorted_dets_ = space.determinants();
-    num_dets_ = sorted_dets_.size();
-
-    if (sorted_string_spin == DetSpinType::Alpha) {
-        std::sort(sorted_dets_.begin(), sorted_dets_.end(), UI64Determinant::reverse_less_than);
-    } else {
-        std::sort(sorted_dets_.begin(), sorted_dets_.end());
-    }
-
-    outfile->Printf("\n\n Sorted determinants (%zu,%s)\n", num_dets_,
-                    sorted_string_spin == DetSpinType::Alpha ? "Alpha" : "Beta");
-    // Find the unique strings and their range
-    Determinant first_string = sorted_dets_[0];
-    Determinant last_first_string = sorted_dets_[0];
-    zero_spin_type_ =
-        sorted_string_spin == DetSpinType::Alpha ? DetSpinType::Beta : DetSpinType::Alpha;
-    last_first_string.zero_spin(zero_spin_type_);
-
-    first_string_range_[last_first_string] = std::make_pair(0, 0);
-    sorted_half_dets_.push_back(last_first_string);
-
-    outfile->Printf("\n %6d %s", 0, sorted_dets_[0].str().c_str());
-    for (size_t i = 1; i < num_dets_; i++) {
-        outfile->Printf("\n %6d %s", i, sorted_dets_[i].str().c_str());
-        first_string = sorted_dets_[i];
-        first_string.zero_spin(zero_spin_type_);
-
-        //        first_string.set_bits(sorted_dets_[i].bits() & half_bit_mask.bits());
-        if (not(first_string == last_first_string)) {
-            first_string_range_[last_first_string].second = i;
-            first_string_range_[first_string] = std::make_pair(i, 0);
-            outfile->Printf(" <- new determinant (%zu -> %zu)",
-                            first_string_range_[last_first_string].first,
-                            first_string_range_[last_first_string].second);
-            last_first_string = first_string;
-            sorted_half_dets_.push_back(first_string);
-        }
-    }
-    first_string_range_[last_first_string].second = num_dets_;
-    outfile->Printf(" <- last determinant (%zu -> %zu)",
-                    first_string_range_[last_first_string].first,
-                    first_string_range_[last_first_string].second);
-
-    outfile->Printf("\n\n  Determinand ranges");
-    for (const auto& d : sorted_half_dets_) {
-        outfile->Printf("\n %s : %6zu -> %6zu", d.str().c_str(), first_string_range_[d].first,
-                        first_string_range_[d].second);
-    }
-}
-
-const std::vector<Determinant>& SortedStringList::sorted_dets() const { return sorted_dets_; }
-
-const std::vector<Determinant>& SortedStringList::sorted_half_dets() const {
-    return sorted_half_dets_;
-}
-
-const std::pair<size_t, size_t>& SortedStringList::range(Determinant d) const {
-    d.zero_spin(zero_spin_type_);
-    return first_string_range_.at(d);
-}
-
-size_t SortedStringList::find(const Determinant& d, size_t& first, size_t& last) const {
-    for (size_t pos = first; pos < last; ++pos) {
-        if (not Determinant::less_than(d, sorted_dets_[pos])) {
-            if (d == sorted_dets_[pos]) {
-                // Case I. Found the determinant d at position pos.
-                // return add(d) = pos
-                // set first = pos + 1 for next search
-                first = pos + 1;
-                return pos;
-            }
-        } else {
-            // Case II. Not found d,
-            // but we found another determinant d' with lex(d') > lex(d).
-            // return num_dets_ to indicate failure
-            // set first = pos for next search
-            first = pos;
-            return num_dets_;
-        }
-    }
-    // Case III. Not found d and we reached the end of the range.
-    // return num_dets_ to indicate failure and set first = last so to skip the next search
-    // The determinant
-    first = last;
-    return num_dets_;
-}
-
 SortedStringList_UI64::SortedStringList_UI64(const DeterminantHashVec& space,
                                              std::shared_ptr<FCIIntegrals> fci_ints,
                                              DetSpinType sorted_string_spin) {
@@ -134,7 +42,7 @@ SortedStringList_UI64::SortedStringList_UI64(const DeterminantHashVec& space,
     num_dets_ = dets.size();
     sorted_dets_.reserve(num_dets_);
     for (const auto& d : dets) {
-        sorted_dets_.push_back(UI64Determinant(d));
+        sorted_dets_.push_back(make_det<UI64Determinant,Determinant>(d));
     }
     if (sorted_string_spin == DetSpinType::Alpha) {
         map_to_hashdets_ = sort_permutation(sorted_dets_, UI64Determinant::reverse_less_than);

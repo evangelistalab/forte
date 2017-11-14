@@ -107,10 +107,13 @@ install:
 # Compile forte
 - cd ${HOME}/build/evangelistalab/forte
 - FORTE_CMAKE_COM=$(psi4 --plugin-compile)
-- $FORTE_CMAKE_COM -Dambit_DIR=/home/travis/build/ambit-bin/share/cmake/ambit/ -DCMAKE_BUILD_TYPE=Release
+- $FORTE_CMAKE_COM -Dambit_DIR=/home/travis/build/ambit-bin/share/cmake/ambit/ -DCMAKE_BUILD_TYPE=Release -DENABLE_ForteTests=ON
 - make -j2
 - export PYTHONPATH="${HOME}/build/evangelistalab:$PYTHONPATH"
 - hash -r
 script:
 - cd ${HOME}/build/evangelistalab/forte/tests/methods
 - python run_forte_tests_travis.py 
+- cd ${HOME}/build/evangelistalab/forte
+- ./forte_tests
+- ./forte_benchmarks

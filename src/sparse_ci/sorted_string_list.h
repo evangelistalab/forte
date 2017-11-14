@@ -43,35 +43,6 @@ namespace forte {
  * @brief The SortedStringList class
  * Stores determinants as a sorted string list.
  */
-class SortedStringList {
-  public:
-    SortedStringList(const DeterminantHashVec& space, std::shared_ptr<FCIIntegrals> fci_ints,
-                     DetSpinType sorted_string_spin);
-
-    const std::vector<Determinant>& sorted_dets() const;
-    const std::vector<Determinant>& sorted_half_dets() const;
-
-    const std::pair<size_t, size_t>& range(Determinant d) const;
-
-    /// Find the determinant d in the range first and last.
-    /// If d is found at position pos, then first = pos + 1 and the function returns pos
-    /// If d is not found at position pos, then we return num_dets_ (out of range) and first is set
-    /// to the position of the determinant that has lexicographic value greather than d
-    size_t find(const Determinant& d, size_t& first, size_t& last) const;
-
-  protected:
-    int nmo_ = 0;
-    size_t num_dets_ = 0;
-    DetSpinType zero_spin_type_;
-    std::vector<Determinant> sorted_half_dets_;
-    std::vector<Determinant> sorted_dets_;
-    det_hash<std::pair<size_t, size_t>> first_string_range_;
-};
-
-/**
- * @brief The SortedStringList class
- * Stores determinants as a sorted string list.
- */
 class SortedStringList_UI64 {
   public:
     SortedStringList_UI64(const DeterminantHashVec& space, std::shared_ptr<FCIIntegrals> fci_ints,
