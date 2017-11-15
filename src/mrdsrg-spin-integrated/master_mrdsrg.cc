@@ -542,6 +542,7 @@ void MASTER_DSRG::deGNO_ints(const std::string& name, double& H0, BlockedTensor&
 
 void MASTER_DSRG::rotate_ints_semi_to_origin(const std::string& name, BlockedTensor& H1,
                                              BlockedTensor& H2) {
+
     print_h2("Rotate DSRG Transformed " + name + " back to Original Basis");
     ambit::Tensor temp;
     ambit::Tensor Ua = Uactv_.block("aa");
