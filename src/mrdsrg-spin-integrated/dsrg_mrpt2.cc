@@ -1758,6 +1758,11 @@ double DSRG_MRPT2::compute_energy_relaxed() {
                 dm_relax = fci_mo.compute_relaxed_dm(Mbar0_, Mbar1_, Mbar2_);
             }
         }
+    } else if ( options_.get_str("CAS_TYPE") == "ACI" ){
+
+            AdaptiveCI aci(reference_wavefunction_, options_, ints_, mo_space_info_);
+           
+            Erelax = aci.compute_energy();
     } else {
         // it is simpler here to call FCI instead of FCISolver
         FCI fci(reference_wavefunction_, options_, ints_, mo_space_info_, fci_ints);

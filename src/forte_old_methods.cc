@@ -405,7 +405,11 @@ void forte_old_methods(SharedWavefunction ref_wfn, Options& options,
             std::shared_ptr<DSRG_MRPT2> dsrg_mrpt2(
                 new DSRG_MRPT2(aci_reference, ref_wfn, options, ints, mo_space_info));
             dsrg_mrpt2->set_Uactv(Ua, Ub);
-            dsrg_mrpt2->compute_energy();
+            if (options.get_str("RELAX_REF") != "NONE") {
+                dsrg_mrpt2->compute_energy_relaxed();
+            } else {
+                dsrg_mrpt2->compute_energy();
+            }
 
         } else if (cas_type == "DMRG") {
 #ifdef HAVE_CHEMPS2

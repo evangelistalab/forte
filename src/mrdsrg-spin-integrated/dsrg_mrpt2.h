@@ -40,7 +40,8 @@
 #include "psi4/libmints/pointgrp.h"
 #include "ambit/blocked_tensor.h"
 
-#include "../mini-boost/boost/assign.hpp"
+//#include "../mini-boost/boost/assign.hpp"
+#include "../aci/aci.h"
 #include "../integrals/integrals.h"
 #include "../reference.h"
 #include "../helpers.h"
