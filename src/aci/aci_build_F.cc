@@ -42,9 +42,11 @@ Timer build;
         // This will store the excited determinant info for each thread
 //        std::vector<std::pair<Determinant, double>> thread_ex_dets; //( noalpha * nvalpha  );
 
-        for (size_t P = start_idx; P < end_idx; ++P) {
+//        for (size_t P = start_idx; P < end_idx; ++P) {
+        for (size_t P = 0; P < max_P; ++P) {
             const Determinant& det(P_dets[P]);
             double Cp = evecs->get(P,0);
+//            outfile->Printf("\n  C[%zu] = %20.12f", P,Cp);
 
             std::vector<int> aocc = det.get_alfa_occ(nact_); // TODO check size
             std::vector<int> bocc = det.get_beta_occ(nact_); // TODO check size
@@ -64,7 +66,7 @@ Timer build;
                     int aa = avir[a];
                     if ((mo_symmetry_[ii] ^ mo_symmetry_[aa]) == 0) {
                         double HIJ = fci_ints_->slater_rules_single_alpha(det, ii, aa) * Cp;
-                        if ( std::abs(HIJ*Cp) >= screen_thresh_) {
+                        if ( std::abs(HIJ) >= screen_thresh_) {
                             new_det = det;
                             new_det.set_alfa_bit(ii, false);
                             new_det.set_alfa_bit(aa, true);
@@ -84,7 +86,7 @@ Timer build;
                     int aa = bvir[a];
                     if ((mo_symmetry_[ii] ^ mo_symmetry_[aa]) == 0) {
                         double HIJ = fci_ints_->slater_rules_single_beta(det, ii, aa) * Cp;
-                        if ( std::abs(HIJ*Cp) >= screen_thresh_) {
+                        if ( std::abs(HIJ) >= screen_thresh_) {
                             new_det = det;
                             new_det.set_beta_bit(ii, false);
                             new_det.set_beta_bit(aa, true);
@@ -107,10 +109,9 @@ Timer build;
                         int aa = avir[a];
                         for (int b = a + 1; b < nvalpha; ++b) {
                             int bb = avir[b];
-                            if ((mo_symmetry_[ii] ^ mo_symmetry_[jj] ^ mo_symmetry_[aa] ^
-                                  mo_symmetry_[bb]) == 0) {
+                            if ((mo_symmetry_[ii] ^ mo_symmetry_[jj] ^ mo_symmetry_[aa] ^ mo_symmetry_[bb]) == 0) {
                                 double HIJ = fci_ints_->tei_aa(ii, jj, aa, bb) * Cp;
-                                if ( std::abs(HIJ*Cp) >= screen_thresh_) {
+                                if ( std::abs(HIJ) >= screen_thresh_) {
                                     new_det = det;
                                     HIJ *= new_det.double_excitation_aa(ii, jj, aa, bb);
                                     if( V_hash_t.count(new_det) == 0){
@@ -134,10 +135,9 @@ Timer build;
                         int aa = avir[a];
                         for (int b = 0; b < nvbeta; ++b) {
                             int bb = bvir[b];
-                            if ((mo_symmetry_[ii] ^ mo_symmetry_[jj] ^ mo_symmetry_[aa] ^
-                                  mo_symmetry_[bb]) == 0){ 
+                            if ((mo_symmetry_[ii] ^ mo_symmetry_[jj] ^ mo_symmetry_[aa] ^ mo_symmetry_[bb]) == 0){ 
                                 double HIJ = fci_ints_->tei_ab(ii, jj, aa, bb) * Cp;
-                                if ( std::abs(HIJ*Cp) >= screen_thresh_) {
+                                if ( std::abs(HIJ) >= screen_thresh_) {
                                     new_det = det;
                                     HIJ *= new_det.double_excitation_ab(ii, jj, aa, bb);
                                     if( V_hash_t.count(new_det) == 0){
@@ -161,10 +161,9 @@ Timer build;
                         int aa = bvir[a];
                         for (int b = a + 1; b < nvbeta; ++b) {
                             int bb = bvir[b];
-                            if ((mo_symmetry_[ii] ^
-                                  (mo_symmetry_[jj] ^ (mo_symmetry_[aa] ^ mo_symmetry_[bb]))) == 0) {
+                            if ((mo_symmetry_[ii] ^ mo_symmetry_[jj] ^ mo_symmetry_[aa] ^ mo_symmetry_[bb]) == 0) {
                                 double HIJ = fci_ints_->tei_bb(ii, jj, aa, bb) * Cp;
-                                if ( std::abs(HIJ*Cp) >= screen_thresh_) {
+                                if ( std::abs(HIJ) >= screen_thresh_) {
                                     new_det = det;
                                     HIJ *= new_det.double_excitation_bb(ii, jj, aa, bb);
                                     if( V_hash_t.count(new_det) == 0){
@@ -187,9 +186,7 @@ Timer merge_t;
             for( auto& pair : V_hash_t ){
                 const Determinant& det = pair.first;
                 if (V_hash.count(det) != 0) {
-                    for (int n = 0; n < nroot; ++n) {
-                        V_hash[det] += pair.second;
-                    }
+                    V_hash[det] += pair.second;
                 } else {
                     V_hash[det] = pair.second;
                 }
