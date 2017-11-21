@@ -34,6 +34,7 @@
 
 #include "helpers.h"
 #include "integrals/integrals.h"
+#include "reference.h"
 
 namespace psi {
 namespace forte {
@@ -51,6 +52,9 @@ class ActiveSpaceSolver : public Wavefunction {
     // enable deletion of a Derived* through a Base*
     virtual ~ActiveSpaceSolver() = default;
     //    virtual ~ActiveSpaceSolver() {};
+
+//    /// Return the reference object that contains density cumulants
+//    virtual Reference reference(const int& max_rdm_level) = 0;
 
   protected:
     // pure virtual implementation

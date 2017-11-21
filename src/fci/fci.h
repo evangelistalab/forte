@@ -83,6 +83,11 @@ class FCI : public ActiveSpaceSolver {
     virtual double solver_compute_energy();
     /// Return a reference object
     Reference reference();
+
+//    /// TODO: reference needs to be virtual
+//    virtual Reference reference(const int& max_rdm_level);
+
+
     /// Set the print level
     void set_print(int value) { print_ = value; }
     /// Set the maximum RDM computed (0 - 3)

@@ -40,7 +40,7 @@
 namespace psi {
 namespace forte {
 
-void set_DSRG_options(ForteOptions& foptions) {
+void set_dsrg_options(ForteOptions& foptions) {
 
     /*- Correlation level -*/
     foptions.add_str("CORR_LEVEL", "PT2", {"PT2", "PT3", "LDSRG2", "LDSRG2_QC", "LSRG2", "SRG_PT2",
@@ -187,7 +187,120 @@ void set_DSRG_options(ForteOptions& foptions) {
     foptions.add_bool("DSRG_OMIT_V3", false, "Omit blocks with >= 3 virtual indices if true");
 }
 
-/// A uniformed function to run DSRG related jobs
-// void run_dsrg() {}
+std::shared_ptr<ActiveSpaceSolver>
+select_dsrg_actv_solver(SharedWavefunction ref_wfn, Options& options,
+                        std::shared_ptr<ForteIntegrals> ints,
+                        std::shared_ptr<MOSpaceInfo> mo_space_info) {
+    std::shared_ptr<ActiveSpaceSolver> as_solver;
+    std::string cas_type = options.get_str("CAS_TYPE");
+
+    if (cas_type == "FCI") {
+        as_solver = std::make_shared<FCI>(ref_wfn, options, ints, mo_space_info);
+    } else if (cas_type == "CAS") {
+
+    } else if (cas_type == "ACI") {
+
+    } else if (cas_type == "PCI") {
+
+    } else if (cas_type == "V2RDM") {
+
+    } else if (cas_type == "DMRG") {
+    }
+
+    return as_solver;
+}
+
+std::shared_ptr<DynamicCorrelationSolver>
+select_dsrg_code(SharedWavefunction ref_wfn, Options& options, std::shared_ptr<ForteIntegrals> ints,
+                 std::shared_ptr<MOSpaceInfo> mo_space_info, Reference reference) {
+    std::shared_ptr<DynamicCorrelationSolver> dy_solver;
+    std::string job_type = options.get_str("JOB_TYPE");
+
+    if (job_type == "DSRG-MRPT2") {
+        /// TODO: print a warning if use density fitting.
+        /// Once the dipoles are implemented for three-dsrg-pt2, switch to three-dsrg-pt2 if use df.
+        dy_solver = std::make_shared<DSRG_MRPT2>(reference, ref_wfn, options, ints, mo_space_info);
+    } else if (job_type == "THREE-DSRG-MRPT2") {
+        dy_solver =
+            std::make_shared<THREE_DSRG_MRPT2>(reference, ref_wfn, options, ints, mo_space_info);
+    } else if (job_type == "DSRG-MRPT3") {
+        dy_solver = std::make_shared<DSRG_MRPT3>(reference, ref_wfn, options, ints, mo_space_info);
+    } else if (job_type == "MRDSRG") {
+    }
+
+    return dy_solver;
+}
+
+void compute_dsrg_energy(SharedWavefunction ref_wfn, Options& options,
+                         std::shared_ptr<ForteIntegrals> ints,
+                         std::shared_ptr<MOSpaceInfo> mo_space_info) {
+    // MK vacuum energy
+    auto as_solver = select_dsrg_actv_solver(ref_wfn, options, ints, mo_space_info);
+    double Eref = as_solver->compute_energy();
+
+    // MK vacuum density cumulants
+    int max_rdm_level = 3;
+    if (options.get_str("THREEPDC") == "ZERO") {
+        max_rdm_level = 2;
+    }
+
+//    /// TODO: need to change all dy_solver to accept Reference&
+//    Reference reference = as_solver->reference(max_rdm_level);
+    Reference reference;
+
+    /// TODO: add semi-canonicalization here
+
+    // DSRG energy
+    auto dy_solver = select_dsrg_code(ref_wfn, options, ints, mo_space_info, reference);
+
+    // DSRG reference relaxation
+    int ndsrg = 1, ndiag = 0;
+    std::string ref_relax = options.get_str("RELAX_REF");
+
+    /// !!! TODO: need to change keywords for RELAX_REF
+    if (ref_relax == "PARTIALLY_RELAXED") {
+        ndsrg = 1;
+        ndiag = 1;
+    } else if (ref_relax == "RELAXED") {
+        ndsrg = 2;
+        ndiag = 1;
+    } else if (ref_relax == "FULLY_RELAXED") {
+        ndsrg = options.get_int("MAXITER_RELAX_REF");
+        ndiag = ndsrg;
+    }
+
+    std::vector<double> Edsrg(ndsrg, 0.0), Ediag(ndiag, 0.0);
+    int niter = ndsrg > ndiag ? ndsrg : ndiag;
+
+    for (int i = 0; i < niter; ++i) {
+        Edsrg[i] = dy_solver->compute_energy();
+        ndsrg -= 1;
+        if (ndsrg <= 0 && ndiag <= 0) {
+            break;
+        }
+
+        auto fci_ints = dy_solver->compute_Heff();
+
+        /// TODO: add semi-canonicalization here
+
+//        /// TODO: pass fci_ints to active-space solver
+//        as_solver->set_fci_ints(fci_ints);
+
+        Ediag[i] = as_solver->compute_energy();
+        ndiag -= 1;
+        if (ndsrg <= 0 && ndiag <= 0) {
+            break;
+        } else {
+//            /// TODO: uncomment reference in ActiveSpaceSolver
+//            reference = as_solver->reference(max_rdm_level);
+
+//            /// TODO: may be avoided once dy_solver uses Reference& or shared_ptr<Reference>
+//            dy_solver->set_reference(reference);
+        }
+    }
+
+    // printing
+    /// TODO: print reference energy, table of relaxed energies
+}
 }
 }

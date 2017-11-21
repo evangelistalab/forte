@@ -9,17 +9,36 @@
 #include "../mrdsrg-spin-integrated/master_mrdsrg.h"
 #include "../mrdsrg-spin-integrated/three_dsrg_mrpt2.h"
 #include "../mrdsrg-spin-integrated/mrdsrg.h"
+#include "../dynamic_correlation_solver.h"
+#include "../active_space_solver.h"
 
 namespace psi {
 namespace forte {
 
 /// Set the DSRG options
-void set_DSRG_options(ForteOptions& foptions);
+void set_dsrg_options(ForteOptions& foptions);
+
+/// Select active-space solver according to CAS_TYPE
+std::shared_ptr<ActiveSpaceSolver>
+select_dsrg_actv_solver(SharedWavefunction ref_wfn, Options& options,
+                        std::shared_ptr<ForteIntegrals> ints,
+                        std::shared_ptr<MOSpaceInfo> mo_space_info);
+
+/// Select DSRG code according to JOB_TYPE
+std::shared_ptr<DynamicCorrelationSolver>
+select_dsrg_code(SharedWavefunction ref_wfn, Options& options, std::shared_ptr<ForteIntegrals> ints,
+                 std::shared_ptr<MOSpaceInfo> mo_space_info, Reference reference);
 
 /// Reference relaxation, relaxed dipoles, transition dipoles,
 /// general sequence of running dsrg should be implemented in this class
 
-//class RUN_DSRG {
+/// Compute DSRG energy
+void compute_dsrg_energy(SharedWavefunction ref_wfn, Options& options,
+                         std::shared_ptr<ForteIntegrals> ints,
+                         std::shared_ptr<MOSpaceInfo> mo_space_info);
+
+
+// class RUN_DSRG {
 //  public:
 //    /**
 //     * Constructor
@@ -37,10 +56,9 @@ void set_DSRG_options(ForteOptions& foptions);
 //    /// Compute DSRG density
 //    void compute_dsrg_density();
 
-//protected:
+// protected:
 //    /// Reference type (FCI for FCI_MO)
 //    std::string ref_type_;
-
 
 //};
 }
