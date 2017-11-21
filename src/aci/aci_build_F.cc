@@ -36,17 +36,9 @@ Timer build;
         size_t end_idx = start_idx + bin_size;
 
         det_hash<double> V_hash_t;
-//        if (omp_get_thread_num() == 0 and !quiet_mode_) {
-//            outfile->Printf("\n  Using %d threads.", num_thread);
-//        }
-        // This will store the excited determinant info for each thread
-//        std::vector<std::pair<Determinant, double>> thread_ex_dets; //( noalpha * nvalpha  );
-
-//        for (size_t P = start_idx; P < end_idx; ++P) {
-        for (size_t P = 0; P < max_P; ++P) {
+        for (size_t P = start_idx; P < end_idx; ++P) {
             const Determinant& det(P_dets[P]);
             double Cp = evecs->get(P,0);
-//            outfile->Printf("\n  C[%zu] = %20.12f", P,Cp);
 
             std::vector<int> aocc = det.get_alfa_occ(nact_); // TODO check size
             std::vector<int> bocc = det.get_beta_occ(nact_); // TODO check size
