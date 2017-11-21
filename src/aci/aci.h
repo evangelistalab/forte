@@ -321,6 +321,8 @@ class AdaptiveCI : public Wavefunction {
     /// Get excited determinants with a specified hole
     void get_core_excited_determinants(SharedMatrix evecs, DeterminantHashVec& P_space,
                                    det_hash<std::vector<double>>& V_hash);
+    void get_excited_determinants_sr(SharedMatrix evecs, DeterminantHashVec& P_space,
+                                   det_hash<double>& V_hash);
 
     /// Prune the space of determinants
     void prune_q_space(DeterminantHashVec& PQ_space, DeterminantHashVec& P_space,

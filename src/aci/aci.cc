@@ -788,28 +788,20 @@ void AdaptiveCI::default_find_q_space(DeterminantHashVec& P_space, DeterminantHa
     timer find_q("ACI:Build Model Space");
     Timer build;
 
-    // This hash saves the determinant coupling to the model space eigenfunction
-    det_hash<std::vector<double>> V_hash;
-
-    // Get the excited Determinants
-    if (options_.get_bool("ACI_LOW_MEM_SCREENING")) {
-        get_excited_determinants2(nroot_, evecs, P_space, V_hash);
-    } else if ((options_.get_str("ACI_EX_TYPE") == "CORE") and (root_ > 0)) {
-        get_core_excited_determinants(evecs, P_space, V_hash);
-    } else {
-        get_excited_determinants(nroot_, evecs, P_space, V_hash);
-    }
+    det_hash<double> V_hash;
+    get_excited_determinants_sr(evecs, P_space, V_hash);
 
     // This will contain all the determinants
     PQ_space.clear();
     external_wfn_.clear();
     // Add the P-space determinants and zero the hash
+Timer erase;
     const det_hashvec& detmap = P_space.wfn_hash();
     for (det_hashvec::iterator it = detmap.begin(), endit = detmap.end(); it != endit; ++it) {
-        //  PQ_space.add(*it);
         V_hash.erase(*it);
     }
     PQ_space.swap(P_space);
+outfile->Printf("\n  Time spent preparing PQ_space: %1.6f", erase.get());
 
     if (!quiet_mode_) {
         outfile->Printf("\n  %s: %zu determinants", "Dimension of the SD space", V_hash.size());
@@ -821,33 +813,39 @@ void AdaptiveCI::default_find_q_space(DeterminantHashVec& P_space, DeterminantHa
 
     // Compute criteria for all dets, store them all
     Determinant zero_det; // <- xsize (nact_);
-    std::vector<std::pair<double, Determinant>> sorted_dets(V_hash.size(),
-                                                            std::make_pair(0.0, zero_det));
+    std::vector<std::pair<double, Determinant>> sorted_dets;//(V_hash.size(),std::make_pair(0.0, zero_det));
     //    int ithread = omp_get_thread_num();
     //    int nthreads = omp_get_num_threads();
-
+Timer build_sort;
     size_t max = V_hash.size();
-#pragma omp parallel
+//#pragma omp parallel
     {
-        int num_thread = omp_get_max_threads();
-        int tid = omp_get_thread_num();
+//        int num_thread = omp_get_max_threads();
+//        int tid = omp_get_thread_num();
 
-        size_t N = 0;
+
+ //       size_t N = 0;
+ //       sorted_dets.reserve(max);
         for (const auto& I : V_hash) {
-
-            if ((N % num_thread) == tid) {
+ //           if ((N % num_thread) == tid) {
                 double delta = fci_ints_->energy(I.first) - evals->get(0);
-                double V = I.second[0];
+                double V = I.second;
 
                 double criteria = 0.5 * (delta - sqrt(delta * delta + V * V * 4.0));
-                sorted_dets[N] = std::make_pair(std::fabs(criteria), I.first);
-            }
-            N++;
+                sorted_dets.push_back(std::make_pair(std::fabs(criteria), I.first));
+ //           }
+ //           N++;
         }
     }
-    std::sort(sorted_dets.begin(), sorted_dets.end(), pairComp);
-    std::vector<double> ept2(nroot_, 0.0);
 
+outfile->Printf("\n  Time spent building sorting list: %1.6f", build_sort.get());
+
+Timer sorter;
+    std::sort(sorted_dets.begin(), sorted_dets.end(), pairComp);
+outfile->Printf("\n  Time spent sorting: %1.6f", sorter.get());
+
+    double ept2 = 0.0;
+Timer select;
     double sum = 0.0;
     size_t last_excluded = 0;
     for (size_t I = 0, max_I = sorted_dets.size(); I < max_I; ++I) {
@@ -855,7 +853,7 @@ void AdaptiveCI::default_find_q_space(DeterminantHashVec& P_space, DeterminantHa
         Determinant& det = sorted_dets[I].second;
         if (sum + energy < sigma_) {
             sum += energy;
-            ept2[0] -= energy;
+            ept2 -= energy;
             last_excluded = I;
 
         } else {
@@ -878,8 +876,9 @@ void AdaptiveCI::default_find_q_space(DeterminantHashVec& P_space, DeterminantHa
             outfile->Printf("\n  Added %zu missing determinants in aimed selection.", num_extra);
         }
     }
-
-    multistate_pt2_energy_correction_ = ept2;
+outfile->Printf("\n Time spent selecting: %1.6f", select.get());
+    multistate_pt2_energy_correction_.resize(nroot_);
+    multistate_pt2_energy_correction_[0] = ept2;
 
     if (!quiet_mode_) {
         outfile->Printf("\n  %s: %zu determinants", "Dimension of the P + Q space",
@@ -3220,24 +3219,21 @@ void AdaptiveCI::spin_analysis() {
     for (int i = 0; i < nact; ++i) {
         for (int j = 0; j < nact; ++j) {
             double value = 0.0;
-            if (i == j) {
-                value += 0.75 * (l1a[nact * i + j] + l1b[nact * i + j]);
+            if( i == j ){
+                value += 0.75 * (l1a[nact*i + j] + l1b[nact*i + j]);
             }
+           
+            value -= 0.5  * ( l2ab[ i * nact3 + j * nact2 + j * nact + i ] 
+                            + l2ab[ j * nact3 + i * nact2 + i * nact + j ] );
 
-            value -= 0.5 * (l2ab[i * nact3 + j * nact2 + j * nact + i] +
-                            l2ab[j * nact3 + i * nact2 + i * nact + j]);
-
-            value +=
-                0.25 *
-                (l2aa[i * nact3 + j * nact2 + i * nact + j] +
-                 l2bb[i * nact3 + j * nact2 + i * nact + j] -
-                 l2ab[i * nact3 + j * nact2 + i * nact + j] -
-                 l2ab[j * nact3 + i * nact2 + j * nact + i] -
-                 l1a[i * nact + i] * l1a[j * nact + j] - l1b[i * nact + i] * l1b[j * nact + j] +
-                 l1a[i * nact + i] * l1b[j * nact + j] + l1b[i * nact + i] * l1a[j * nact + j]);
-
-            value -= 0.5 * (l2ab[i * nact3 + j * nact2 + j * nact + i] +
-                            l2ab[j * nact3 + i * nact2 + i * nact + j]);
+            value += 0.25 * ( l2aa[ i * nact3 + j * nact2 + i * nact + j ]
+                            + l2bb[ i * nact3 + j * nact2 + i * nact + j ] 
+                            - l2ab[ i * nact3 + j * nact2 + i * nact + j ] 
+                            - l2ab[ j * nact3 + i * nact2 + j * nact + i ]);
+                           // - l1a[i*nact + i] * l1a[j*nact + j] 
+                           // - l1b[i*nact + i] * l1b[j*nact + j] 
+                           // + l1a[i*nact + i] * l1b[j*nact + j] 
+                           // + l1b[i*nact + i] * l1a[j*nact + j] );
 
             spin_corr->set(i, j, value);
         }
@@ -3260,6 +3256,28 @@ void AdaptiveCI::spin_analysis() {
         }
         file.close();
     }
+/*
+    // Build spin-correlation densities
+    SharedMatrix Ca = reference_wavefunction_->Ca();
+    Dimension nactpi = mo_space_info_->get_dimension("ACTIVE");
+    std::vector<size_t> actpi = mo_space_info_->get_absolute_mo("ACTIVE");
+
+    SharedMatrix S_plt = std::make_shared<Matrix>("S", nact, nact);
+Ca->print();    
+    for( int i = 0; i < nact; ++i ){
+        SharedVector vec = std::make_shared<Vector>(nact);
+        for( int j = 0; j < nact; ++j ){
+            auto col = Ca->get_column(0,actpi[j]);
+            for( int k = 0; k < nact; ++k ){
+                double val = col->get(k)*col->get(k)*spin_corr->get(actpi[i],actpi[j]);
+                vec->set(j, val + vec->get(actpi[j]));
+            } 
+        }
+        S_plt->set_column(0,i, vec);
+    }
+    Ca->copy(S_plt);
+S_plt->print();
+*/
 }
 
 void AdaptiveCI::update_sigma() { sigma_ = options_.get_double("ACI_RELAX_SIGMA"); }
