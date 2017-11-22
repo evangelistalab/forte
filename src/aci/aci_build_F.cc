@@ -172,19 +172,25 @@ Timer build;
             }
         }
 if ( tid == 0 ) outfile->Printf("\n  Time spent forming F space: %20.6f", build.get());
+Timer merge_t;
+size_t n_new = 0;
+size_t n_repeat = 0;
 #pragma omp critical
         {
-Timer merge_t;
             for( auto& pair : V_hash_t ){
                 const Determinant& det = pair.first;
                 if (V_hash.count(det) != 0) {
                     V_hash[det] += pair.second;
+                    n_repeat++;
                 } else {
                     V_hash[det] = pair.second;
+                    n_new++;
                 }
             }
-if ( tid == 0 ) outfile->Printf("\n  Time spent merging thread F spaces: %20.6f", merge_t.get());
+        outfile->Printf("\n td[%d] = %zu new entries", tid, n_new);
+        outfile->Printf("\n td[%d] = %zu repeat entries", tid, n_repeat);
         }
+if ( tid == 0 ) outfile->Printf("\n  Time spent merging thread F spaces: %20.6f", merge_t.get());
     } // Close threads
 }
 

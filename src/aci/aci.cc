@@ -818,23 +818,21 @@ outfile->Printf("\n  Time spent preparing PQ_space: %1.6f", erase.get());
     //    int nthreads = omp_get_num_threads();
 Timer build_sort;
     size_t max = V_hash.size();
-//#pragma omp parallel
+#pragma omp parallel
     {
-//        int num_thread = omp_get_max_threads();
-//        int tid = omp_get_thread_num();
-
-
- //       size_t N = 0;
- //       sorted_dets.reserve(max);
+        int num_thread = omp_get_max_threads();
+        int tid = omp_get_thread_num();
+        size_t N = 0;
+        sorted_dets.reserve(max);
         for (const auto& I : V_hash) {
- //           if ((N % num_thread) == tid) {
+            if ((N % num_thread) == tid) {
                 double delta = fci_ints_->energy(I.first) - evals->get(0);
                 double V = I.second;
 
                 double criteria = 0.5 * (delta - sqrt(delta * delta + V * V * 4.0));
                 sorted_dets.push_back(std::make_pair(std::fabs(criteria), I.first));
- //           }
- //           N++;
+            }
+            N++;
         }
     }
 
