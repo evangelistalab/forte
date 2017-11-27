@@ -41,6 +41,7 @@ MRCI::MRCI(SharedWavefunction ref_wfn, Options& options, std::shared_ptr<ForteIn
            std::shared_ptr<MOSpaceInfo> mo_space_info, DeterminantHashVec& reference)
     : Wavefunction(options), ints_(ints), mo_space_info_(mo_space_info), reference_(reference) {
     shallow_copy(ref_wfn);
+    ref_wfn_ = ref_wfn;
     print_method_banner({"Uncontracted MR-CISD", "Jeff Schriber"});
     startup();
 }
@@ -116,7 +117,7 @@ double MRCI::compute_energy() {
                                               diag_method_);
 
     std::vector<double> energy(nroot_);
-    double scalar = fci_ints_->scalar_energy() + molecule_->nuclear_repulsion_energy();
+    double scalar = fci_ints_->scalar_energy() + molecule_->nuclear_repulsion_energy(ref_wfn_->get_dipole_field_strength());
 
     outfile->Printf("\n");
     for (int n = 0; n < nroot_; ++n) {

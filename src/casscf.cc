@@ -364,7 +364,7 @@ void CASSCF::cas_ci() {
         std::pair<ambit::Tensor, std::vector<double>> integral_pair = CI_Integrals();
         dmrg.set_up_integrals(integral_pair.first, integral_pair.second);
         dmrg.set_scalar(scalar_energy_ + ints_->frozen_core_energy() +
-                        Process::environment.molecule()->nuclear_repulsion_energy());
+                        Process::environment.molecule()->nuclear_repulsion_energy(reference_wavefunction_->get_dipole_field_strength()));
         dmrg.compute_energy();
 
         cas_ref_ = dmrg.reference();
@@ -477,7 +477,7 @@ double CASSCF::cas_check(Reference cas_ref) {
     Frozen = ints_->frozen_core_energy();
     E_casscf += fci_ints->scalar_energy();
     fci_ints_scalar = fci_ints->scalar_energy();
-    E_casscf += Process::environment.molecule()->nuclear_repulsion_energy();
+    E_casscf += Process::environment.molecule()->nuclear_repulsion_energy(reference_wavefunction_->get_dipole_field_strength());
     outfile->Printf("\n\n OneBody: %8.8f TwoBody: %8.8f Frozen: %8.8f "
                     "fci_ints_scalar: %8.8f",
                     OneBody, TwoBody, Frozen, fci_ints_scalar);

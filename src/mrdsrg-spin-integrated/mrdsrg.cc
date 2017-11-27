@@ -1044,9 +1044,9 @@ void MRDSRG::transfer_integrals() {
     // compute scalar term (all active only)
     Timer t_scalar;
     std::string str = "Computing the scalar term   ...";
-    outfile->Printf("\n    %-35s", str.c_str());
-    double scalar0 =
-        Eref_ + Hbar0_ - molecule_->nuclear_repulsion_energy() - ints_->frozen_core_energy();
+            outfile->Printf("\n    %-35s", str.c_str());
+            double scalar0 =
+        Eref_ + Hbar0_ - molecule_->nuclear_repulsion_energy(reference_wavefunction_->get_dipole_field_strength()) - ints_->frozen_core_energy();
 
     // scalar from Hbar1
     double scalar1 = 0.0;
@@ -1199,7 +1199,7 @@ void MRDSRG::transfer_integrals() {
 
     // test if de-normal-ordering is correct
     print_h2("Test De-Normal-Ordered Hamiltonian");
-    double Etest = scalar_include_fc + molecule_->nuclear_repulsion_energy();
+    double Etest = scalar_include_fc + molecule_->nuclear_repulsion_energy(reference_wavefunction_->get_dipole_field_strength());
 
     double Etest1 = 0.0;
     Etest1 += temp1["uv"] * Gamma1_["vu"];

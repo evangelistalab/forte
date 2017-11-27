@@ -476,7 +476,7 @@ void MRDSRG::compute_hbar_sequential_rotation() {
         Hbar0_ += Hbar2_["uVxY"] * Lambda2_["xYuV"];
     }
 
-    double Enuc = Process::environment.molecule()->nuclear_repulsion_energy();
+    double Enuc = Process::environment.molecule()->nuclear_repulsion_energy(reference_wavefunction_->get_dipole_field_strength());
     Hbar0_ += frozen_core_energy_ + Enuc - Eref_;
 
     rotation.stop();
