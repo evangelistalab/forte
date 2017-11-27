@@ -43,6 +43,7 @@ MethodBase::MethodBase(SharedWavefunction ref_wfn, Options& options,
     : Wavefunction(options), ints_(ints), tensor_type_(CoreTensor), mo_space_info_(mo_space_info) {
     // Copy the wavefunction information
     shallow_copy(ref_wfn);
+    ref_wfn_ = ref_wfn;
     //    Tensor::set_print_level(debug_);
     startup();
 }

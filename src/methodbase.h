@@ -103,6 +103,8 @@ class MethodBase : public Wavefunction {
     /// The MOSpaceInfo object
     std::shared_ptr<MOSpaceInfo> mo_space_info_;
 
+    SharedWavefunction ref_wfn_;
+
   public:
     // => Constructors <= //
 

@@ -248,7 +248,7 @@ void ProjectorCI::startup() {
     frzcpi_ = mo_space_info_->get_dimension("INACTIVE_DOCC");
     nfrzc_ = mo_space_info_->size("INACTIVE_DOCC");
 
-    nuclear_repulsion_energy_ = molecule_->nuclear_repulsion_energy();
+    nuclear_repulsion_energy_ = molecule_->nuclear_repulsion_energy(reference_wavefunction_->get_dipole_field_strength());
 
     mo_symmetry_ = mo_space_info_->symmetry("ACTIVE");
 

@@ -519,7 +519,7 @@ MRCINO::diagonalize_hamiltonian(const std::vector<Determinant>& dets, int nsolut
     outfile->Printf("\n  ----------------------------");
     for (int i = 0; i < nsolutions; ++i) {
         double energy = evals_evecs.first->get(i) + fci_ints_->scalar_energy() +
-                        molecule_->nuclear_repulsion_energy();
+                        molecule_->nuclear_repulsion_energy(reference_wavefunction_->get_dipole_field_strength());
         outfile->Printf("\n    %3d %20.10f", i, energy);
     }
     outfile->Printf("\n  ------------------------------\n");

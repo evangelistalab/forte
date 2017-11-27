@@ -59,6 +59,8 @@ class MRCI : public Wavefunction {
     double compute_energy();
 
   private:
+    SharedWavefunction ref_wfn_;
+    
     std::shared_ptr<FCIIntegrals> fci_ints_;
     std::shared_ptr<MOSpaceInfo> mo_space_info_;
 

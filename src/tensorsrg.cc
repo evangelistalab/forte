@@ -246,7 +246,7 @@ void TensorSRG::transfer_integrals() {
             scalar2 += 0.5 * value;
     });
 
-    double scalar = scalar0 + scalar1 + scalar2 - molecule_->nuclear_repulsion_energy();
+    double scalar = scalar0 + scalar1 + scalar2 - molecule_->nuclear_repulsion_energy(ref_wfn_->get_dipole_field_strength());
     outfile->Printf("\n  The Hamiltonian electronic scalar term (normal "
                     "ordered wrt the true vacuum");
     outfile->Printf("\n  E0 = %20.12f", scalar);
@@ -308,7 +308,7 @@ void TensorSRG::transfer_integrals() {
             Esth += 0.5 * value;
     });
 
-    outfile->Printf("\n  <H> = %24.12f", Esth + molecule()->nuclear_repulsion_energy());
+    outfile->Printf("\n  <H> = %24.12f", Esth + molecule()->nuclear_repulsion_energy(ref_wfn_->get_dipole_field_strength()));
 
     ints_->update_integrals(false);
 }

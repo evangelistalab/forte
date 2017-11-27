@@ -124,7 +124,7 @@ void FCIQMC::startup() {
     cume_excit_irrep_[5] = cume_excit_irrep_[4] + nirrep_;
     cume_excit_irrep_[6] = cume_excit_irrep_[5] + nirrep_;
 
-    nuclear_repulsion_energy_ = molecule_->nuclear_repulsion_energy();
+    nuclear_repulsion_energy_ = molecule_->nuclear_repulsion_energy(reference_wavefunction_->get_dipole_field_strength());
 
     wavefunction_symmetry_ = 0;
     if (options_["ROOT_SYM"].has_changed()) {
@@ -301,7 +301,7 @@ double FCIQMC::compute_energy() {
     cume_sumgen_[3] = nsa_ + nsb_ + ndab_ + ndaa_;
     cume_sumgen_[4] = sumgen_;
 
-    double nre = molecule_->nuclear_repulsion_energy();
+    double nre = molecule_->nuclear_repulsion_energy(reference_wavefunction_->get_dipole_field_strength());
     outfile->Printf("\nnuclear_repulsion_energy:%lf, Ehf:%lf", nre, Ehf_);
 
     // Create the initial walker population
