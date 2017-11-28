@@ -813,7 +813,7 @@ outfile->Printf("\n  Time spent preparing PQ_space: %1.6f", erase.get());
 
     // Compute criteria for all dets, store them all
     Determinant zero_det; // <- xsize (nact_);
-    std::vector<std::pair<double, Determinant>> sorted_dets;//(V_hash.size(),std::make_pair(0.0, zero_det));
+    std::vector<std::pair<double, Determinant>> sorted_dets(V_hash.size(),std::make_pair(0.0, zero_det));
     //    int ithread = omp_get_thread_num();
     //    int nthreads = omp_get_num_threads();
 Timer build_sort;
@@ -823,7 +823,7 @@ Timer build_sort;
         int num_thread = omp_get_max_threads();
         int tid = omp_get_thread_num();
         size_t N = 0;
-        sorted_dets.reserve(max);
+       // sorted_dets.reserve(max);
         for (const auto& I : V_hash) {
             if ((N % num_thread) == tid) {
                 double delta = fci_ints_->energy(I.first) - evals->get(0);
@@ -835,7 +835,6 @@ Timer build_sort;
             N++;
         }
     }
-
 outfile->Printf("\n  Time spent building sorting list: %1.6f", build_sort.get());
 
 Timer sorter;
