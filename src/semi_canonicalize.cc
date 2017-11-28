@@ -400,6 +400,20 @@ void SemiCanonical::transform_ints(SharedMatrix& Ua, SharedMatrix& Ub) {
     ints_->retransform_integrals();
 }
 
+void SemiCanonical::back_transform_ints(SharedMatrix& Ua, SharedMatrix& Ub) {
+    SharedMatrix Ca = wfn_->Ca();
+    SharedMatrix Cb = wfn_->Cb();
+    SharedMatrix Ca_new(Ca->clone());
+    SharedMatrix Cb_new(Cb->clone());
+    Ca_new->gemm(false, true, 1.0, Ca, Ua, 0.0);
+    Cb_new->gemm(false, true, 1.0, Cb, Ub, 0.0);
+    Ca->copy(Ca_new);
+    Cb->copy(Cb_new);
+
+    print_h2("Back Transformation of Semicanonical Integrals");
+    ints_->retransform_integrals();
+}
+
 void SemiCanonical::transform_reference(ambit::Tensor& Ua, ambit::Tensor& Ub, Reference& reference,
                                         const int& max_rdm_level) {
     if (max_rdm_level >= 1) {

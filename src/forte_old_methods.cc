@@ -66,6 +66,7 @@
 #include "mrdsrg-spin-integrated/dsrg_mrpt3.h"
 #include "mrdsrg-spin-integrated/mrdsrg.h"
 #include "mrdsrg-spin-integrated/three_dsrg_mrpt2.h"
+#include "mrdsrg-spin-integrated/dwms_mrpt2.h"
 #include "orbital-helper/localize.h"
 #include "orbital-helper/es-nos.h"
 #include "pci/ewci.h"
@@ -265,6 +266,9 @@ void forte_old_methods(SharedWavefunction ref_wfn, Options& options,
     if (options.get_str("JOB_TYPE") == "ACTIVE-DSRGPT2") {
         ACTIVE_DSRGPT2 pt(ref_wfn, options, ints, mo_space_info);
         pt.compute_energy();
+    }
+    if (options.get_str("JOB_TYPE") == "DWMS-DSRGPT2") {
+        compute_dwms_mrpt2_energy(ref_wfn, options, ints, mo_space_info);
     }
     if (options.get_str("JOB_TYPE") == "DSRG_MRPT") {
         std::string cas_type = options.get_str("CAS_TYPE");

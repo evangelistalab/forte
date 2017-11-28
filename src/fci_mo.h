@@ -155,6 +155,15 @@ class FCI_MO : public Wavefunction {
     /// Set which root is preferred
     void set_root(int root) { root_ = root; }
 
+    /// Quiet mode (no printing, for use with CASSCF)
+    void set_quite_mode(bool quiet) { quiet_ = quiet; }
+
+    //    /// Set true to compute semi-canonical orbitals
+    //    void set_semi(bool semi) { semi_ = semi; }
+
+    //    /// Set false to skip Fock build in FCI_MO
+    //    void set_form_Fock(bool form_fock) { form_Fock_ = form_fock; }
+
     //    /// Set active space type
     //    void set_active_space_type(string act) { active_space_type_ = act; }
 
@@ -163,6 +172,11 @@ class FCI_MO : public Wavefunction {
 
     /// Set if localize orbitals
     void set_localize_actv(bool localize) { localize_actv_ = localize; }
+
+    /// Set target root from DWMS-DSRG-PT2
+    void set_target_dwms(const int& entry, const int& root) {
+        dwms_target_ = std::make_tuple(entry, root);
+    }
 
     /// Return fci_int_ pointer
     std::shared_ptr<FCIIntegrals> fci_ints() { return fci_ints_; }
@@ -186,15 +200,6 @@ class FCI_MO : public Wavefunction {
     /// Return a vector of dominant determinant for each root
     std::vector<Determinant> dominant_dets() { return dominant_dets_; }
 
-    /// Quiet mode (no printing, for use with CASSCF)
-    void set_quite_mode(bool quiet) { quiet_ = quiet; }
-
-    //    /// Set true to compute semi-canonical orbitals
-    //    void set_semi(bool semi) { semi_ = semi; }
-
-    //    /// Set false to skip Fock build in FCI_MO
-    //    void set_form_Fock(bool form_fock) { form_Fock_ = form_fock; }
-
     /// Return indices (relative to active, not absolute) of active occupied orbitals
     std::vector<size_t> actv_occ() { return ah_; }
 
@@ -209,6 +214,9 @@ class FCI_MO : public Wavefunction {
 
     /// Return the T1 percentage in CISD computations
     std::vector<double> compute_T1_percentage();
+
+    /// Return the parsed state-averaged info
+    std::vector<std::tuple<int, int, int, std::vector<double>>> sa_info() { return sa_info_; }
 
   protected:
     /// Basic Preparation
@@ -320,6 +328,8 @@ class FCI_MO : public Wavefunction {
 
     /// State Average Information (tuple of irrep, multi, nstates, weights)
     std::vector<std::tuple<int, int, int, std::vector<double>>> sa_info_;
+    /// Target root for DWMS-DSRG-PT2 [tuple of sym (1st dim of sa_info_), root_number]
+    std::tuple<int, int> dwms_target_;
 
     /// Eigen Values and Eigen Vectors of Certain Symmetry
     std::vector<pair<SharedVector, double>> eigen_;
@@ -424,13 +434,13 @@ class FCI_MO : public Wavefunction {
     void fill_naive_cumulants(Reference& ref, const int& level);
 
     /// N-Particle Operator
-    double OneOP(const Determinant& J, Determinant& Jnew, const size_t& p,
-                 const bool& sp, const size_t& q, const bool& sq);
-    double TwoOP(const Determinant& J, Determinant& Jnew, const size_t& p,
-                 const bool& sp, const size_t& q, const bool& sq, const size_t& r, const bool& sr,
-                 const size_t& s, const bool& ss);
-    double ThreeOP(const Determinant& J, Determinant& Jnew, const size_t& p,
-                   const bool& sp, const size_t& q, const bool& sq, const size_t& r, const bool& sr,
+    double OneOP(const Determinant& J, Determinant& Jnew, const size_t& p, const bool& sp,
+                 const size_t& q, const bool& sq);
+    double TwoOP(const Determinant& J, Determinant& Jnew, const size_t& p, const bool& sp,
+                 const size_t& q, const bool& sq, const size_t& r, const bool& sr, const size_t& s,
+                 const bool& ss);
+    double ThreeOP(const Determinant& J, Determinant& Jnew, const size_t& p, const bool& sp,
+                   const size_t& q, const bool& sq, const size_t& r, const bool& sr,
                    const size_t& s, const bool& ss, const size_t& t, const bool& st,
                    const size_t& u, const bool& su);
 
@@ -493,6 +503,9 @@ class FCI_MO : public Wavefunction {
     /// Localize active orbitals
     bool localize_actv_;
     void localize_actv_orbs();
+
+    /// Compute new weights for DWMS-DSRG
+    std::vector<std::vector<double>> compute_dwms_weights();
 
     /**
      * @brief Return a vector of corresponding indices before the vector is
@@ -567,7 +580,7 @@ class FCI_MO : public Wavefunction {
     void print_det(const vecdet& dets) {
         outfile->Printf("\n\n  ==> Determinants |alpha|beta> <==\n");
         for (const Determinant& x : dets) {
-            outfile->Printf("  %s",x.str().c_str());
+            outfile->Printf("  %s", x.str().c_str());
         }
         outfile->Printf("\n");
     }

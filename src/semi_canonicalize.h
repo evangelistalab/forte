@@ -57,6 +57,11 @@ class SemiCanonical {
     void semicanonicalize(Reference& reference, const int& max_rdm_level = 3,
                           const bool& build_fock = true, const bool& transform = true);
 
+    /// Back transform integrals
+    void back_transform_ints() {
+        back_transform_ints(Ua_, Ub_);
+    }
+
     /// Set active hole and particle dimensions
     void set_actv_dims(const Dimension& actv_docc, const Dimension& actv_virt);
 
@@ -157,6 +162,10 @@ class SemiCanonical {
     /// Transform all cumulants, rebuild 2-RDMs using 2-cumulants
     void transform_reference(ambit::Tensor& Ua, ambit::Tensor& Ub, Reference& reference,
                              const int& rdm_level);
+
+    /// Back transform integrals
+    /// Ua and Ub rotate non-semicanonical to semicanonical
+    void back_transform_ints(SharedMatrix& Ua, SharedMatrix& Ub);
 };
 }
 } // End Namespaces
