@@ -830,7 +830,7 @@ Timer build_sort;
                 double V = I.second;
 
                 double criteria = 0.5 * (delta - sqrt(delta * delta + V * V * 4.0));
-                sorted_dets.push_back(std::make_pair(std::fabs(criteria), I.first));
+                sorted_dets[N] = std::make_pair(std::fabs(criteria), I.first);
             }
             N++;
         }
