@@ -32,7 +32,7 @@ void MASTER_DSRG::startup() {
 
     // read commonly used energies
     Eref_ = reference_.get_Eref();
-    Enuc_ = Process::environment.molecule()->nuclear_repulsion_energy();
+    Enuc_ = Process::environment.molecule()->nuclear_repulsion_energy(reference_wavefunction_->get_dipole_field_strength());
     Efrzc_ = ints_->frozen_core_energy();
 
     // initialize timer for commutator

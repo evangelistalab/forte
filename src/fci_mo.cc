@@ -167,7 +167,7 @@ void FCI_MO::read_options() {
 
     // nuclear repulsion
     std::shared_ptr<Molecule> molecule = Process::environment.molecule();
-    e_nuc_ = molecule->nuclear_repulsion_energy();
+    e_nuc_ = molecule->nuclear_repulsion_energy(reference_wavefunction_->get_dipole_field_strength());
 
     // digonalization algorithm
     diag_algorithm_ = options_.get_str("DIAG_ALGORITHM");

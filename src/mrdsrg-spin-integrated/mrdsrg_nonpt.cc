@@ -54,16 +54,26 @@ void MRDSRG::compute_hbar() {
     Hbar0_ = 0.0;
     Hbar1_["pq"] = F_["pq"];
     Hbar1_["PQ"] = F_["PQ"];
-    Hbar2_["pqrs"] = V_["pqrs"];
-    Hbar2_["pQrS"] = V_["pQrS"];
-    Hbar2_["PQRS"] = V_["PQRS"];
+    if (eri_df_) {
+        Hbar2_["pqrs"] = B_["gpr"] * B_["gqs"];
+        Hbar2_["pqrs"] -= B_["gps"] * B_["gqr"];
+
+        Hbar2_["pQrS"] = B_["gpr"] * B_["gQS"];
+
+        Hbar2_["PQRS"] = B_["gPR"] * B_["gQS"];
+        Hbar2_["PQRS"] -= B_["gPS"] * B_["gQR"];
+    } else {
+        Hbar2_["pqrs"] = V_["pqrs"];
+        Hbar2_["pQrS"] = V_["pQrS"];
+        Hbar2_["PQRS"] = V_["PQRS"];
+    }
 
     // temporary Hamiltonian used in every iteration
     O1_["pq"] = F_["pq"];
     O1_["PQ"] = F_["PQ"];
-    O2_["pqrs"] = V_["pqrs"];
-    O2_["pQrS"] = V_["pQrS"];
-    O2_["PQRS"] = V_["PQRS"];
+    O2_["pqrs"] = Hbar2_["pqrs"];
+    O2_["pQrS"] = Hbar2_["pQrS"];
+    O2_["PQRS"] = Hbar2_["PQRS"];
 
     // iteration variables
     bool converged = false;
@@ -476,7 +486,7 @@ void MRDSRG::compute_hbar_sequential_rotation() {
         Hbar0_ += Hbar2_["uVxY"] * Lambda2_["xYuV"];
     }
 
-    double Enuc = Process::environment.molecule()->nuclear_repulsion_energy();
+    double Enuc = Process::environment.molecule()->nuclear_repulsion_energy(reference_wavefunction_->get_dipole_field_strength());
     Hbar0_ += frozen_core_energy_ + Enuc - Eref_;
 
     rotation.stop();

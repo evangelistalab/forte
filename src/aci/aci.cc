@@ -209,7 +209,7 @@ AdaptiveCI::~AdaptiveCI() {}
 
 void AdaptiveCI::set_fci_ints(std::shared_ptr<FCIIntegrals> fci_ints) {
     fci_ints_ = fci_ints;
-    nuclear_repulsion_energy_ = molecule_->nuclear_repulsion_energy();
+    nuclear_repulsion_energy_ = molecule_->nuclear_repulsion_energy(reference_wavefunction_->get_dipole_field_strength());
     set_ints_ = true;
 }
 
@@ -229,7 +229,7 @@ void AdaptiveCI::set_aci_ints(SharedWavefunction ref_wfn, std::shared_ptr<ForteI
     fci_ints_->set_active_integrals(tei_active_aa, tei_active_ab, tei_active_bb);
     fci_ints_->compute_restricted_one_body_operator();
 
-    nuclear_repulsion_energy_ = molecule_->nuclear_repulsion_energy();
+    nuclear_repulsion_energy_ = molecule_->nuclear_repulsion_energy(reference_wavefunction_->get_dipole_field_strength());
 }
 
 void AdaptiveCI::startup() {
@@ -813,7 +813,7 @@ outfile->Printf("\n  Time spent preparing PQ_space: %1.6f", erase.get());
 
     // Compute criteria for all dets, store them all
     Determinant zero_det; // <- xsize (nact_);
-    std::vector<std::pair<double, Determinant>> sorted_dets;//(V_hash.size(),std::make_pair(0.0, zero_det));
+    std::vector<std::pair<double, Determinant>> sorted_dets(V_hash.size(),std::make_pair(0.0, zero_det));
     //    int ithread = omp_get_thread_num();
     //    int nthreads = omp_get_num_threads();
 Timer build_sort;
@@ -823,19 +823,18 @@ Timer build_sort;
         int num_thread = omp_get_max_threads();
         int tid = omp_get_thread_num();
         size_t N = 0;
-        sorted_dets.reserve(max);
+       // sorted_dets.reserve(max);
         for (const auto& I : V_hash) {
             if ((N % num_thread) == tid) {
                 double delta = fci_ints_->energy(I.first) - evals->get(0);
                 double V = I.second;
 
                 double criteria = 0.5 * (delta - sqrt(delta * delta + V * V * 4.0));
-                sorted_dets.push_back(std::make_pair(std::fabs(criteria), I.first));
+                sorted_dets[N] = std::make_pair(std::fabs(criteria), I.first);
             }
             N++;
         }
     }
-
 outfile->Printf("\n  Time spent building sorting list: %1.6f", build_sort.get());
 
 Timer sorter;
