@@ -218,6 +218,9 @@ class THREE_DSRG_MRPT2 : public MASTER_DSRG {
 
     void de_normal_order();
 
+    /// Form Hbar for reference relaxation
+    void form_Hbar();
+
     std::vector<double> relaxed_energy(std::shared_ptr<FCIIntegrals> fci_ints);
 
     /// Print detailed timings

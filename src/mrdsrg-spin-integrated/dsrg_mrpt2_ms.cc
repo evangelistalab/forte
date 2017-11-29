@@ -613,8 +613,8 @@ SharedMatrix DSRG_MRPT2::xms_rotation(std::shared_ptr<FCIIntegrals> fci_ints,
     SharedMatrix Fevec(new Matrix("Fock Evec", nstates, nstates));
     SharedVector Feval(new Vector("Fock Eval", nstates));
     Fock->diagonalize(Fevec, Feval);
-    Fevec->print();
-    //    Fevec->eivprint(Feval);
+    //    Fevec->print();
+    Fevec->eivprint(Feval);
 
     // Rotate ci vecs
     SharedMatrix rcivecs(civecs->clone());
