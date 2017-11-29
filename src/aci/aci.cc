@@ -3257,26 +3257,22 @@ void AdaptiveCI::spin_analysis() {
     SharedMatrix Ca = reference_wavefunction_->Ca();
     Dimension nactpi = mo_space_info_->get_dimension("ACTIVE");
     std::vector<size_t> actpi = mo_space_info_->get_absolute_mo("ACTIVE");
-
-    SharedMatrix S_plt = std::make_shared<Matrix>("S", nact, nact);
-    Ca->print();    
+    SharedMatrix Ca_copy = Ca->clone();
     for( int i = 0; i < nact; ++i ){
-        SharedVector vec = std::make_shared<Vector>(nact);
+        SharedVector vec = std::make_shared<Vector>(nmo_);
         vec->zero();
         for( int j = 0; j < nact; ++j ){
-            auto col = Ca->get_column(0,actpi[j]);
+            auto col = Ca_copy->get_column(0,actpi[j]);
             double spin = spin_corr->get(j,i);
-            for( int k = 0; k < nact; ++k ){
-                double val = col->get(k)*col->get(k);
+            for( int k = 0; k < nmo_; ++k ){
+                double val = col->get(k) * col->get(k);
                 col->set(k, val);
             } 
             col->scale(spin);
             vec->add(col);
        }
-        S_plt->set_column(0,i, vec);
+        Ca->set_column(0,actpi[i], vec);
     }
-    Ca->copy(S_plt);
-    S_plt->print();
 }
 
 void AdaptiveCI::update_sigma() { sigma_ = options_.get_double("ACI_RELAX_SIGMA"); }
