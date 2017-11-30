@@ -72,15 +72,6 @@ class THREE_DSRG_MRPT2 : public MASTER_DSRG {
     /// Ignore semi-canonical testing in DSRG-MRPT2
     void ignore_semicanonical(bool ignore) { ignore_semicanonical_ = ignore; }
 
-    /// Set active active occupied MOs (relative to active)
-    void set_actv_occ(std::vector<size_t> actv_occ) {
-        actv_occ_mos_ = std::vector<size_t>(actv_occ);
-    }
-    /// Set active active unoccupied MOs (relative to active)
-    void set_actv_uocc(std::vector<size_t> actv_uocc) {
-        actv_uocc_mos_ = std::vector<size_t>(actv_uocc);
-    }
-
     /// Compute de-normal-ordered amplitudes and return the scalar term
     double Tamp_deGNO();
 
@@ -130,11 +121,6 @@ class THREE_DSRG_MRPT2 : public MASTER_DSRG {
     size_t nactive_;
     /// Number of virutal orbitals
     size_t nvirtual_;
-
-    /// List of active active occupied MOs (relative to active)
-    std::vector<size_t> actv_occ_mos_;
-    /// List of active active unoccupied MOs (relative to active)
-    std::vector<size_t> actv_uocc_mos_;
 
     /// List of eigenvalues for fock alpha
     std::vector<double> Fa_;
@@ -231,6 +217,9 @@ class THREE_DSRG_MRPT2 : public MASTER_DSRG {
     double E_VT2_6();
 
     void de_normal_order();
+
+    /// Form Hbar for reference relaxation
+    void form_Hbar();
 
     std::vector<double> relaxed_energy(std::shared_ptr<FCIIntegrals> fci_ints);
 

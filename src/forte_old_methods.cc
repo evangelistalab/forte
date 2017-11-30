@@ -66,6 +66,7 @@
 #include "mrdsrg-spin-integrated/dsrg_mrpt3.h"
 #include "mrdsrg-spin-integrated/mrdsrg.h"
 #include "mrdsrg-spin-integrated/three_dsrg_mrpt2.h"
+#include "mrdsrg-spin-integrated/dwms_mrpt2.h"
 #include "orbital-helper/localize.h"
 #include "orbital-helper/es-nos.h"
 #include "pci/ewci.h"
@@ -266,6 +267,9 @@ void forte_old_methods(SharedWavefunction ref_wfn, Options& options,
         ACTIVE_DSRGPT2 pt(ref_wfn, options, ints, mo_space_info);
         pt.compute_energy();
     }
+    if (options.get_str("JOB_TYPE") == "DWMS-DSRGPT2") {
+        compute_dwms_mrpt2_energy(ref_wfn, options, ints, mo_space_info);
+    }
     if (options.get_str("JOB_TYPE") == "DSRG_MRPT") {
         std::string cas_type = options.get_str("CAS_TYPE");
         int max_rdm_level = (options.get_str("THREEPDC") == "ZERO") ? 2 : 3;
@@ -436,6 +440,8 @@ void forte_old_methods(SharedWavefunction ref_wfn, Options& options,
             throw PSIEXCEPTION("Please set INT_TYPE  DF/CHOLESKY for THREE_DSRG");
         }
 
+        bool multi_state = options["AVG_STATE"].size() != 0;
+        bool ref_relax = options.get_str("RELAX_REF") != "NONE";
         std::string cas_type = options.get_str("CAS_TYPE");
         std::string actv_type = options.get_str("FCIMO_ACTV_TYPE");
         int max_rdm_level = (options.get_str("THREEPDC") == "ZERO") ? 2 : 3;
@@ -485,6 +491,9 @@ void forte_old_methods(SharedWavefunction ref_wfn, Options& options,
                 three_dsrg_mrpt2->set_actv_uocc(fci_mo.actv_uocc());
             }
             three_dsrg_mrpt2->compute_energy();
+            if (ref_relax || multi_state) {
+                three_dsrg_mrpt2->relax_reference_once();
+            }
 
         } else if (cas_type == "V2RDM") {
             std::shared_ptr<V2RDM> v2rdm =
@@ -529,6 +538,9 @@ void forte_old_methods(SharedWavefunction ref_wfn, Options& options,
                 new THREE_DSRG_MRPT2(aci_reference, ref_wfn, options, ints, mo_space_info));
             three_dsrg_mrpt2->set_Uactv(Ua, Ub);
             three_dsrg_mrpt2->compute_energy();
+            if (ref_relax || multi_state) {
+                three_dsrg_mrpt2->relax_reference_once();
+            }
 
         } else if (cas_type == "FCI") {
             auto fci = std::make_shared<FCI>(ref_wfn, options, ints, mo_space_info);
@@ -546,6 +558,9 @@ void forte_old_methods(SharedWavefunction ref_wfn, Options& options,
                 new THREE_DSRG_MRPT2(reference, ref_wfn, options, ints, mo_space_info));
             three_dsrg_mrpt2->set_Uactv(Ua, Ub);
             three_dsrg_mrpt2->compute_energy();
+            if (ref_relax || multi_state) {
+                three_dsrg_mrpt2->relax_reference_once();
+            }
 
         } else if (cas_type == "DMRG") {
 #ifdef HAVE_CHEMPS2
@@ -562,6 +577,9 @@ void forte_old_methods(SharedWavefunction ref_wfn, Options& options,
             std::shared_ptr<THREE_DSRG_MRPT2> three_dsrg_mrpt2(
                 new THREE_DSRG_MRPT2(dmrg_reference, ref_wfn, options, ints, mo_space_info));
             three_dsrg_mrpt2->compute_energy();
+            if (ref_relax || multi_state) {
+                three_dsrg_mrpt2->relax_reference_once();
+            }
 #endif
         }
 

@@ -100,15 +100,6 @@ class DSRG_MRPT2 : public MASTER_DSRG {
     /// Ignore semi-canonical testing in DSRG-MRPT2
     void set_ignore_semicanonical(bool ignore) { ignore_semicanonical_ = ignore; }
 
-    /// Set active active occupied MOs (relative to active)
-    void set_actv_occ(std::vector<size_t> actv_occ) {
-        actv_occ_mos_ = std::vector<size_t>(actv_occ);
-    }
-    /// Set active active unoccupied MOs (relative to active)
-    void set_actv_uocc(std::vector<size_t> actv_uocc) {
-        actv_uocc_mos_ = std::vector<size_t>(actv_uocc);
-    }
-
     /// Compute de-normal-ordered amplitudes and return the scalar term
     double Tamp_deGNO();
 
@@ -141,11 +132,6 @@ class DSRG_MRPT2 : public MASTER_DSRG {
     std::vector<std::vector<std::pair<SharedVector, double>>> eigens_;
     /// Determinants with different symmetries in the model space
     std::vector<std::vector<psi::forte::Determinant>> p_spaces_;
-
-    /// List of active active occupied MOs (relative to active)
-    std::vector<size_t> actv_occ_mos_;
-    /// List of active active unoccupied MOs (relative to active)
-    std::vector<size_t> actv_uocc_mos_;
 
     /// Fill up two-electron integrals
     void build_ints();

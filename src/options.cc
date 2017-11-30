@@ -87,6 +87,7 @@ void forte_options(std::string name, ForteOptions& foptions) {
                                           "MRDSRG_SO",
                                           "CASSCF",
                                           "ACTIVE-DSRGPT2",
+                                          "DWMS-DSRGPT2",
                                           "DSRG_MRPT",
                                           "TASKS",
                                           "CC",

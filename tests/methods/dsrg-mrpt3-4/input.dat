@@ -1,8 +1,8 @@
 #! Generated using commit GITCOMMIT
 
 refmcscf     = -108.789661408880420
-refdsrgpt3   = -108.970050068674198 # no relaxation
-refdsrgpt3   = -108.971218810214850 # relaxed once
+refdsrgpt3   = -108.970049880193017 # no relaxation
+refdsrgpt3   = -108.971218743049150 # relaxed once
 
 import forte
 
@@ -37,11 +37,11 @@ set forte {
   root_sym           0
   nroot              1
   dsrg_s             0.5
-  corr_level         pt3
-  e_convergence      8
+  e_convergence      15
   maxiter            100
   relax_ref          iterate
   ntrial_per_root    10
+# cas_type           cas
 }
 
 Ecas, wfn = energy('casscf', return_wfn=True)

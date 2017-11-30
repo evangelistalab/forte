@@ -54,6 +54,16 @@ class MASTER_DSRG : public DynamicCorrelationSolver {
     //    virtual void compute_dm_eff(std::vector<double>& M0, std::vector<BlockedTensor>& M1,
     //                                std::vector<BlockedTensor>& M2) = 0;
 
+    /// Set active active occupied MOs (relative to active)
+    void set_actv_occ(std::vector<size_t> actv_occ) {
+        actv_occ_mos_ = std::vector<size_t>(actv_occ);
+    }
+
+    /// Set active active unoccupied MOs (relative to active)
+    void set_actv_uocc(std::vector<size_t> actv_uocc) {
+        actv_uocc_mos_ = std::vector<size_t>(actv_uocc);
+    }
+
   protected:
     /// Startup function called in constructor
     void startup();
@@ -124,6 +134,11 @@ class MASTER_DSRG : public DynamicCorrelationSolver {
     std::vector<size_t> actv_mos_;
     /// List of virtual MOs
     std::vector<size_t> virt_mos_;
+
+    /// List of active active occupied MOs (relative to active)
+    std::vector<size_t> actv_occ_mos_;
+    /// List of active active unoccupied MOs (relative to active)
+    std::vector<size_t> actv_uocc_mos_;
 
     /// List of auxiliary MOs when DF/CD
     std::vector<size_t> aux_mos_;

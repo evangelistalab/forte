@@ -50,6 +50,7 @@ dsrg_mrpt2_tests = ["mr-dsrg-pt2-1","mr-dsrg-pt2-2","mr-dsrg-pt2-3","mr-dsrg-pt2
                     "dsrg-mrpt2-6","dsrg-mrpt2-7-casscf-natorbs","dsrg-mrpt2-8-sa",
                     "dsrg-mrpt2-9-xms","dsrg-mrpt2-10-CO","dsrg-mrpt2-11-sa-C2H4",
                     "dsrg-mrpt2-12-localized-actv",
+                    "dwms-dsrgpt2-1",
                     "cd-dsrg-mrpt2-1","cd-dsrg-mrpt2-2","cd-dsrg-mrpt2-3","cd-dsrg-mrpt2-4",
                     "cd-dsrg-mrpt2-5","cd-dsrg-mrpt2-6","cd-dsrg-mrpt2-7-sa",
                     "df-dsrg-mrpt2-1","df-dsrg-mrpt2-2","df-dsrg-mrpt2-3","df-dsrg-mrpt2-4",
