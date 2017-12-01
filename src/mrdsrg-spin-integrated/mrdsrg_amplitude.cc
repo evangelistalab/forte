@@ -1271,7 +1271,7 @@ void MRDSRG::analyze_amplitudes(std::string name, BlockedTensor& T1, BlockedTens
     outfile->Printf("\n\n  ==> %sExcitation Amplitudes Summary <==\n", name.c_str());
     outfile->Printf("\n    Active Indices: ");
     int c = 0;
-    for (const auto& idx : aactv_mos_) {
+    for (const auto& idx : actv_mos_) {
         outfile->Printf("%4zu ", idx);
         if (++c % 10 == 0)
             outfile->Printf("\n    %16c", ' ');

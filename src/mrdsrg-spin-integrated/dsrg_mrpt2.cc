@@ -365,7 +365,7 @@ double DSRG_MRPT2::compute_energy() {
     // check semi-canonical orbitals
     semi_canonical_ = check_semicanonical();
     if (!semi_canonical_) {
-        outfile->Printf("\n    Orbital invariant formalism is employed for DSRG-MRPT2.");
+        outfile->Printf("\n    Orbital invariant formalism will be employed for DSRG-MRPT2.");
         U_ = ambit::BlockedTensor::build(tensor_type_, "U", spin_cases({"gg"}));
         std::vector<std::vector<double>> eigens = diagonalize_Fock_diagblocks(U_);
         Fa_ = eigens[0];
@@ -1761,6 +1761,7 @@ double DSRG_MRPT2::compute_energy_relaxed() {
     } else if ( options_.get_str("CAS_TYPE") == "ACI" ){
 
             AdaptiveCI aci(reference_wavefunction_, options_, ints_, mo_space_info_);
+            aci.set_fci_ints(fci_ints);
            
             Erelax = aci.compute_energy();
     } else {

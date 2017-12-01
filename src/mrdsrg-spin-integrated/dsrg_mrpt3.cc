@@ -420,7 +420,7 @@ double DSRG_MRPT3::compute_energy() {
     // check semi-canonical orbitals
     semi_canonical_ = check_semicanonical();
     if (!semi_canonical_) {
-        outfile->Printf("\n    Orbital invariant formalism is employed for DSRG-MRPT3.");
+        outfile->Printf("\n    Orbital invariant formalism will be employed for DSRG-MRPT3.");
         U_ = ambit::BlockedTensor::build(tensor_type_, "U", spin_cases({"gg"}));
         std::vector<std::vector<double>> eigens = diagonalize_Fock_diagblocks(U_);
         Fa_ = eigens[0];

@@ -1,27 +1,30 @@
+
     -----------------------------------------------------------------------
           Psi4: An Open-Source Ab Initio Electronic Structure Package
-                              Psi4 0.3.869 Driver
+                               Psi4 1.2a1.dev704 
 
-                          Git: Rev {master} ace9693 
+                         Git: Rev {master} a7fc050 
 
-    J. M. Turney, A. C. Simmonett, R. M. Parrish, E. G. Hohenstein,
-    F. A. Evangelista, J. T. Fermann, B. J. Mintz, L. A. Burns, J. J. Wilke,
-    M. L. Abrams, N. J. Russ, M. L. Leininger, C. L. Janssen, E. T. Seidl,
-    W. D. Allen, H. F. Schaefer, R. A. King, E. F. Valeev, C. D. Sherrill,
-    and T. D. Crawford, WIREs Comput. Mol. Sci. 2, 556-565 (2012)
-    (doi: 10.1002/wcms.93)
 
-                         Additional Contributions by
-    A. E. DePrince, M. Saitow, U. Bozkaya, A. Yu. Sokolov
+    R. M. Parrish, L. A. Burns, D. G. A. Smith, A. C. Simmonett,
+    A. E. DePrince III, E. G. Hohenstein, U. Bozkaya, A. Yu. Sokolov,
+    R. Di Remigio, R. M. Richard, J. F. Gonthier, A. M. James,
+    H. R. McAlexander, A. Kumar, M. Saitow, X. Wang, B. P. Pritchard,
+    P. Verma, H. F. Schaefer III, K. Patkowski, R. A. King, E. F. Valeev,
+    F. A. Evangelista, J. M. Turney, T. D. Crawford, and C. D. Sherrill,
+    J. Chem. Theory Comput. 13(7) pp 3185--3197 (2017).
+    (doi: 10.1021/acs.jctc.7b00174)
+
     -----------------------------------------------------------------------
 
 
-    Psi4 started on: Thu May 19 19:22:37 2016
+    Psi4 started on: Friday, 01 December 2017 02:03AM
 
-    Process ID:  77047
-    PSI4DATADIR: /Users/ChenyangLi/src/psi4public/share
-    Memory level set to 256.000 MB
-
+    Process ID:   1524
+    PSIDATADIR: /Users/york/src/psi4new/psi4/share/psi4
+    Memory:     500.0 MiB
+    Threads:    1
+    
   ==> Input File <==
 
 --------------------------------------------------------------------------
@@ -81,12 +84,19 @@ compare_values(refmcscf,get_variable("CURRENT ENERGY"),10,"MCSCF energy") #TEST
 energy('forte', ref_wfn=wfn)
 compare_values(refdsrg,get_variable("CURRENT ENERGY"),8,"MRDSRG relaxed energy") #TEST
 --------------------------------------------------------------------------
-/Users/ChenyangLi/src/forte/forte.so loaded.
 
-  Memory set to 500.000 MiB by Python script.
+  Memory set to 476.837 MiB by Python driver.
+   => Loading Basis Set <=
 
-*** tstart() called on dhcp189-46.emerson.emory.edu
-*** at Thu May 19 19:22:38 2016
+    Name: 3-21G
+    Role: ORBITAL
+    Keyword: BASIS
+    atoms 1 entry F          line   101 file /Users/york/src/psi4new/psi4/share/psi4/basis/3-21g.gbs 
+    atoms 2 entry H          line    21 file /Users/york/src/psi4new/psi4/share/psi4/basis/3-21g.gbs 
+
+
+*** tstart() called on Yorks-Mac.local
+*** at Fri Dec  1 02:03:06 2017
 
 
          ------------------------------------------
@@ -400,22 +410,42 @@ compare_values(refdsrg,get_variable("CURRENT ENERGY"),8,"MRDSRG relaxed energy")
   MCSCF Execution Completed.
 
 
-*** tstop() called on dhcp189-46.emerson.emory.edu at Thu May 19 19:22:38 2016
+*** tstop() called on Yorks-Mac.local at Fri Dec  1 02:03:06 2017
 Module time:
-	user time   =       0.03 seconds =       0.00 minutes
-	system time =       0.02 seconds =       0.00 minutes
+	user time   =       0.06 seconds =       0.00 minutes
+	system time =       0.03 seconds =       0.00 minutes
 	total time  =          0 seconds =       0.00 minutes
 Total time:
-	user time   =       0.03 seconds =       0.00 minutes
-	system time =       0.02 seconds =       0.00 minutes
+	user time   =       0.06 seconds =       0.00 minutes
+	system time =       0.03 seconds =       0.00 minutes
 	total time  =          0 seconds =       0.00 minutes
 	MCSCF energy......................................................PASSED
+   => Loading Basis Set <=
+
+    Name: STO-3G
+    Role: ORBITAL
+    Keyword: MINAO_BASIS
+    atoms 1 entry F          line    91 file /Users/york/src/psi4new/psi4/share/psi4/basis/sto-3g.gbs 
+    atoms 2 entry H          line    19 file /Users/york/src/psi4new/psi4/share/psi4/basis/sto-3g.gbs 
+
 
 Reading options from the FORTE block
-Calling plugin /Users/ChenyangLi/src/forte/forte.so.
+Calling plugin forte.so.
 
 
 
+  Forte
+  ----------------------------------------------------------------------------
+  A suite of quantum chemistry methods for strongly correlated electrons
+
+    git branch: master - git commit: 1c92254a
+
+  Developed by:
+    Francesco A. Evangelista, Chenyang Li, Kevin P. Hannon,
+    Jeffrey B. Schriber, Tianyuan Zhang, Chenxi Cai
+  ----------------------------------------------------------------------------
+
+  Size of Determinant class: 32
 
   ==> MO Space Information <==
 
@@ -441,6 +471,61 @@ Calling plugin /Users/ChenyangLi/src/forte/forte.so.
   Number of frozen occupied orbitals:          1
   Number of frozen unoccupied orbitals:        0
 
+    Molecular point group: c2v
+    Full point group: C_inf_v
+
+    Geometry (in Angstrom), charge = 0, multiplicity = 1:
+
+       Center              X                  Y                   Z               Mass       
+    ------------   -----------------  -----------------  -----------------  -----------------
+           F          0.000000000000     0.000000000000    -0.075563346012    18.998403224000
+           H          0.000000000000     0.000000000000     1.424436653988     1.007825032070
+
+  -AO BASIS SET INFORMATION:
+    Name                   = 3-21G
+    Blend                  = 3-21G
+    Total number of shells = 7
+    Number of primitives   = 12
+    Number of AO           = 11
+    Number of SO           = 11
+    Maximum AM             = 1
+    Spherical Harmonics    = FALSE
+
+  -Contraction Scheme:
+    Atom   Type   All Primitives // Shells:
+   ------ ------ --------------------------
+       1     F     6s 3p // 3s 2p 
+       2     H     3s // 2s 
+
+  ==> AO Basis Functions <==
+
+    [ 3-21G ]
+    cartesian
+    ****
+    F   1
+    S   3 1.00
+                       413.80100000           0.05854830
+                        62.24460000           0.34930800
+                        13.43400000           0.70963200
+    S   2 1.00
+                         9.77759000          -0.40732700
+                         2.08617000           1.22314000
+    P   2 1.00
+                         9.77759000           0.24668000
+                         2.08617000           0.85232100
+    S   1 1.00
+                         0.48238300           1.00000000
+    P   1 1.00
+                         0.48238300           1.00000000
+    ****
+    H   2
+    S   2 1.00
+                         5.44717800           0.15628500
+                         0.82454700           0.90469100
+    S   1 1.00
+                         0.18319200           1.00000000
+    ****
+
 
   Overall Conventional Integrals timings
 
@@ -453,15 +538,29 @@ Calling plugin /Users/ChenyangLi/src/forte/forte.so.
 	Starting second half-transformation.
 	Two-electron integral transformation complete.
 
-  Integral transformation done. 0.00453200 s
+  Integral transformation done. 0.01584800 s
   Reading the two-electron integrals from disk
-  Size of two-electron integrals:   0.000327 GB	Batch   1 pq = [       0,      34] index = [             0,595]
+  Size of two-electron integrals:   0.000327 GB  Using in-core PK algorithm.
+   Calculation information:
+      Number of atoms:                   2
+      Number of AO shells:               7
+      Number of primitives:             12
+      Number of atomic orbitals:        11
+      Number of basis functions:        11
+
+      Integral cutoff                 1.00e-12
+      Number of threads:                 1
+
+  Performing in-core PK
+  Using 4422 doubles for integral storage.
+  We computed 406 shell quartets total.
+  Whereas there are 406 unique shell quartets.
 
   Frozen-core energy            -75.818535536959 a.u.
 
- FrozenOneBody Operator takes  0.01629400 s
+  FrozenOneBody Operator takes  0.04122300 s
   Resorting integrals after freezing core.
-  Conventional integrals take 0.03493500 s
+  Conventional integrals take 0.09238900 s
 
                 -----------------------------------------------
                   String-based Full Configuration Interaction
@@ -485,7 +584,6 @@ Calling plugin /Users/ChenyangLi/src/forte/forte.so.
   Timing for NN strings     =      0.000 s
   Timing for VO strings     =      0.000 s
   Timing for OO strings     =      0.000 s
-  Timing for Knowles-Handy  =      0.000 s
   Timing for VVOO strings   =      0.000 s
   Timing for VOVO strings   =      0.000 s
   Timing for 1-hole strings =      0.000 s
@@ -514,7 +612,7 @@ Calling plugin /Users/ChenyangLi/src/forte/forte.so.
       2      -98.863152605285  0.000  singlet
       3      -98.545355422633  0.000  singlet
   ---------------------------------------------
-  Timing for initial guess  =      0.000 s
+  Timing for initial guess  =      0.001 s
 
   Projecting out root 1
   ==> Diagonalizing Hamiltonian <==
@@ -523,7 +621,7 @@ Calling plugin /Users/ChenyangLi/src/forte/forte.so.
     Iter.      Avg. Energy       Delta_E
   ----------------------------------------
       1      -99.406065222747  -9.941e+01
-      2      -99.406065222747  -1.421e-14
+      2      -99.406065222747  +0.000e+00
   ----------------------------------------
   The Davidson-Liu algorithm converged in 3 iterations.
 
@@ -532,118 +630,11 @@ Calling plugin /Users/ChenyangLi/src/forte/forte.so.
     20      0.94943697
     02     -0.31395771
 
-    Total Energy:       -99.406065222746960
+    Total Energy:       -99.406065222746847
 
-  ==> RDMs for Root No. 0 <==
-    Timing for 1-RDM: 0.000 s
+  ==> Computing RDMs for Root No. 0 <==
 
-  ==> NATURAL ORBITALS <==
-
-        1A1     1.802861      2A1     0.197139  
-
-
-
-                          ----------------------------
-                            Semi-Canonical Orbitals
-                            Francesco A. Evangelista
-                          ----------------------------
-
- Took 0.000010 s to build fock matrix
-
-  ==> Integral transformation <==
-	Presorting SO-basis two-electron integrals.
-	Sorting File: SO Ints (nn|nn) nbuckets = 1
-	Transforming the one-electron integrals and constructing Fock matrices
-	Starting first half-transformation.
-	Sorting half-transformed integrals.
-	First half integral transformation complete.
-	Starting second half-transformation.
-	Two-electron integral transformation complete.
-
-  Integral transformation done. 0.00411600 s
-  Reading the two-electron integrals from disk
-  Size of two-electron integrals:   0.000327 GB	Batch   1 pq = [       0,      34] index = [             0,595]
-
-  Frozen-core energy            -75.818535536959 a.u.
-
- FrozenOneBody Operator takes  0.01485500 s
-  Resorting integrals after freezing core.
-  Frozen Orbitals takes     0.015 s.
- SemiCanonicalize takes 0.034746 s.
-
-                -----------------------------------------------
-                  String-based Full Configuration Interaction
-                          by Francesco A. Evangelista
-                -----------------------------------------------
-
-  Number of electrons: 10
-  Charge: 0
-  Multiplicity: 1
-  Davidson subspace max dim: 8
-  Davidson subspace min dim: 2
-  M_s: 0
-
-  ==> String Lists <==
-
-  Number of alpha electrons     = 1
-  Number of beta electrons      = 1
-  Number of alpha strings       = 2
-  Number of beta strings        = 2
-  Timing for strings        =      0.000 s
-  Timing for NN strings     =      0.000 s
-  Timing for VO strings     =      0.000 s
-  Timing for OO strings     =      0.000 s
-  Timing for Knowles-Handy  =      0.000 s
-  Timing for VVOO strings   =      0.000 s
-  Timing for VOVO strings   =      0.000 s
-  Timing for 1-hole strings =      0.000 s
-  Timing for 2-hole strings =      0.000 s
-  Timing for 3-hole strings =      0.000 s
-  Total timing              =      0.000 s
-
-  ==> FCI Solver <==
-
-    Number of determinants                           4
-    Symmetry                                         0
-    Multiplicity                                     1
-    Number of roots                                  1
-    Target root                                      0
-    Trial vectors per root                          10
-
-  Allocating memory for the Hamiltonian algorithm. Size: 2 x 2 x 2.   Memory: 0.000000 GB
-
-  ==> FCI Initial Guess <==
-
-  ---------------------------------------------
-    Root            Energy     <S^2>   Spin
-  ---------------------------------------------
-      0      -99.406065222747  0.000  singlet
-      1      -99.266219555683  2.000  triplet
-      2      -98.863152605285  0.000  singlet
-      3      -98.545355422633  0.000  singlet
-  ---------------------------------------------
-  Timing for initial guess  =      0.000 s
-
-  Projecting out root 1
-  ==> Diagonalizing Hamiltonian <==
-
-  ----------------------------------------
-    Iter.      Avg. Energy       Delta_E
-  ----------------------------------------
-      1      -99.406065222747  -9.941e+01
-      2      -99.406065222747  +1.421e-14
-  ----------------------------------------
-  The Davidson-Liu algorithm converged in 3 iterations.
-
-  ==> Root No. 0 <==
-
-    20      0.94498921
-    02     -0.30950995
-
-    Total Energy:       -99.406065222746861
-
-  ==> RDMs for Root No. 0 <==
-    Timing for 1-RDM: 0.000 s
+    Timing for 1-RDM: 0.001 s
     Timing for 2-RDM: 0.000 s
     Timing for 3-RDM: 0.000 s
 
@@ -652,12 +643,169 @@ Calling plugin /Users/ChenyangLi/src/forte/forte.so.
         1A1     1.802861      2A1     0.197139  
 
 
+       -----------------------------------------------------------------
+                            Semi-Canonical Orbitals
+         Chenyang Li, Jeffrey B. Schriber and Francesco A. Evangelista
+       -----------------------------------------------------------------
+
+  Took 0.000050 s to build Fock matrix
+
+  ==> Checking Fock Matrix Diagonal Blocks <==
+
+    Off-Diag. Elements       Max           2-Norm
+    ------------------------------------------------
+    Fa actv              0.0348818657   0.0493304076
+    Fb actv              0.0348818657   0.0493304076
+    ------------------------------------------------
+    Fa core              0.0000000000   0.0000000000
+    Fb core              0.0000000000   0.0000000000
+    ------------------------------------------------
+    Fa virt              0.0000000000   0.0000000000
+    Fb virt              0.0000000000   0.0000000000
+    ------------------------------------------------
+
+  ==> Integral Transformation to Semicanonical Basis <==
+    Molecular point group: c2v
+    Full point group: C_inf_v
+
+    Geometry (in Angstrom), charge = 0, multiplicity = 1:
+
+       Center              X                  Y                   Z               Mass       
+    ------------   -----------------  -----------------  -----------------  -----------------
+           F          0.000000000000     0.000000000000    -0.075563346012    18.998403224000
+           H          0.000000000000     0.000000000000     1.424436653988     1.007825032070
+
+  -AO BASIS SET INFORMATION:
+    Name                   = 3-21G
+    Blend                  = 3-21G
+    Total number of shells = 7
+    Number of primitives   = 12
+    Number of AO           = 11
+    Number of SO           = 11
+    Maximum AM             = 1
+    Spherical Harmonics    = FALSE
+
+  -Contraction Scheme:
+    Atom   Type   All Primitives // Shells:
+   ------ ------ --------------------------
+       1     F     6s 3p // 3s 2p 
+       2     H     3s // 2s 
+
+  ==> AO Basis Functions <==
+
+    [ 3-21G ]
+    cartesian
+    ****
+    F   1
+    S   3 1.00
+                       413.80100000           0.05854830
+                        62.24460000           0.34930800
+                        13.43400000           0.70963200
+    S   2 1.00
+                         9.77759000          -0.40732700
+                         2.08617000           1.22314000
+    P   2 1.00
+                         9.77759000           0.24668000
+                         2.08617000           0.85232100
+    S   1 1.00
+                         0.48238300           1.00000000
+    P   1 1.00
+                         0.48238300           1.00000000
+    ****
+    H   2
+    S   2 1.00
+                         5.44717800           0.15628500
+                         0.82454700           0.90469100
+    S   1 1.00
+                         0.18319200           1.00000000
+    ****
+
+
+ Integrals are about to be computed.	Presorting SO-basis two-electron integrals.
+	Sorting File: SO Ints (nn|nn) nbuckets = 1
+	Transforming the one-electron integrals and constructing Fock matrices
+	Starting first half-transformation.
+	Sorting half-transformed integrals.
+	First half integral transformation complete.
+	Starting second half-transformation.
+	Two-electron integral transformation complete.
+
+  Integral transformation done. 0.01239800 s
+  Reading the two-electron integrals from disk
+  Size of two-electron integrals:   0.000327 GB
+ Integrals are about to be updated.  Using in-core PK algorithm.
+   Calculation information:
+      Number of atoms:                   2
+      Number of AO shells:               7
+      Number of primitives:             12
+      Number of atomic orbitals:        11
+      Number of basis functions:        11
+
+      Integral cutoff                 1.00e-12
+      Number of threads:                 1
+
+  Performing in-core PK
+  Using 4422 doubles for integral storage.
+  We computed 406 shell quartets total.
+  Whereas there are 406 unique shell quartets.
+
+  Frozen-core energy            -75.818535536959 a.u.
+
+  FrozenOneBody Operator takes  0.03486300 s
+  Resorting integrals after freezing core.
+  Frozen Orbitals takes     0.035 s.
+
+  ==> Reference Transformation to Semicanonical Basis <==
+
+    Transformed 1 cumulants.
+    Transformed 2 cumulants and RDMs.
+    Transformed 3 cumulants.
+  SemiCanonicalize takes 2.058516 s.
+
+  ==> Multireference Driven Similarity Renormalization Group <==
+
+    Reading DSRG options ............................ Done
+    Setting ambit MO space .......................... Done
+    Preparing tensors for density cumulants ......... Done
+    Building Fock matrix ............................ Done
 
            ----------------------------------------------------------
              Multireference Driven Similarity Renormalization Group
                                   Chenyang Li
            ----------------------------------------------------------
 
+  Additional contributions by: Tianyuan Zhang
+
+  ==> Density Cumulant Summary <==
+
+    2-body             AA           AB           BB
+    -----------------------------------------------
+    max          0.088854     0.294745     0.088854
+    norm         0.177707     0.457479     0.177707
+    -----------------------------------------------
+    3-body            AAA          AAB          ABB          BBB
+    ------------------------------------------------------------
+    max          0.000000     0.070835     0.070835     0.000000
+    norm         0.000000     0.201772     0.201772     0.000000
+    ------------------------------------------------------------
+
+  ==> Checking Semicanonical Orbitals <==
+
+    Abs. max of Fock core, active, virtual blocks (Fij, i != j)
+                  core          active         virtual
+    --------------------------------------------------
+    Fα    0.0000000000    0.0000000000    0.0000000000
+    Fβ    0.0000000000    0.0000000000    0.0000000000
+    --------------------------------------------------
+
+    1-Norm of Fock core, active, virtual blocks (Fij, i != j)
+                  core          active         virtual
+    --------------------------------------------------
+    Fα    0.0000000000    0.0000000000    0.0000000001
+    Fβ    0.0000000000    0.0000000000    0.0000000001
+    --------------------------------------------------
+
+    Orbitals are semi-canonicalized.
 
   ==> Calculation Information <==
 
@@ -674,33 +822,17 @@ Calling plugin /Users/ChenyangLi/src/forte/forte.so.
     reference relaxation                        ITERATE
     dsrg transformation type                    UNITARY
     core virtual source type                     NORMAL
+    sequential dsrg transformation                FALSE
+    omit blocks of >= 3 virtual indices           FALSE
 
-  Warning: I am forcing density Db = Da to avoid spin symmetry breaking.
-  If this is not desired, go to mrdsrg.cc around line 190.
 
-  ==> Density Cumulant Summary <==
-
-    2-body               AA           AB           BB
-    -------------------------------------------------
-    max            0.088854     0.085515     0.088854
-    norm           0.177707     0.457479     0.177707
-    -------------------------------------------------
-    3-body              AAA          AAB          ABB          BBB
-    --------------------------------------------------------------
-    max            0.000000     0.070835     0.070835     0.000000
-    norm           0.000000     0.201772     0.201772     0.000000
-    --------------------------------------------------------------
-
-  ==> Checking Orbitals <==
-
-    Checking if orbitals are semi-canonicalized ...     OK.
-    Orbitals are semi-canonicalized.
   ==> MR-DSRG Ref. Relaxation Iter. 0 <==
+
 
   ==> Build Initial Amplitude from DSRG-MRPT2 <==
 
-    Computing T2 amplitudes ...          Done. Timing      0.002 s
-    Computing T1 amplitudes ...          Done. Timing      0.001 s
+    Computing T2 amplitudes ...          Done. Timing      0.003 s
+    Computing T1 amplitudes ...          Done. Timing      0.008 s
 
   ==> First-Order Excitation Amplitudes Summary <==
 
@@ -714,7 +846,7 @@ Calling plugin /Users/ChenyangLi/src/forte/forte.so.
     [  6       7    ] 0.000313 [  0       3    ] 0.000094 [  0       5    ]-0.000043 
     [  0       4    ] 0.000023 
     --------------------------------------------------------------------------------
-    Norm of T1A vector: (nonzero elements: 13)                    0.147953918501825.
+    Norm of T1A vector: (nonzero elements: 13)                    0.147953918502054.
     --------------------------------------------------------------------------------
     Largest T1 amplitudes for spin case B:
        _       _                  _       _                  _       _               
@@ -726,7 +858,7 @@ Calling plugin /Users/ChenyangLi/src/forte/forte.so.
     [  6       7    ] 0.000313 [  0       3    ] 0.000094 [  0       5    ]-0.000043 
     [  0       4    ] 0.000023 
     --------------------------------------------------------------------------------
-    Norm of T1B vector: (nonzero elements: 13)                    0.147953918501825.
+    Norm of T1B vector: (nonzero elements: 13)                    0.147953918502054.
     --------------------------------------------------------------------------------
     Largest T2 amplitudes for spin case AA:
        i   j   a   b              i   j   a   b              i   j   a   b           
@@ -737,7 +869,7 @@ Calling plugin /Users/ChenyangLi/src/forte/forte.so.
     [  1   2   1   3] 0.024606 [  6   8   7   9]-0.024088 [  0   1   1   5]-0.021278 
     [  1   2   1   4]-0.019808 [  2   6   4   7]-0.019572 [  2   8   4   9]-0.019572 
     --------------------------------------------------------------------------------
-    Norm of T2AA vector: (nonzero elements: 240)                  0.282244263475446.
+    Norm of T2AA vector: (nonzero elements: 240)                  0.282244263475480.
     --------------------------------------------------------------------------------
     Largest T2 amplitudes for spin case AB:
            _       _                  _       _                  _       _           
@@ -749,7 +881,7 @@ Calling plugin /Users/ChenyangLi/src/forte/forte.so.
     [  1   6   1   7]-0.048770 [  1   2   2   4]-0.046425 [  2   8   2   9]-0.039894 
     [  2   6   2   7]-0.039894 [  8   8   9   9]-0.036327 [  6   6   7   7]-0.036327 
     --------------------------------------------------------------------------------
-    Norm of T2AB vector: (nonzero elements: 405)                  0.349806856006844.
+    Norm of T2AB vector: (nonzero elements: 405)                  0.349806856006837.
     --------------------------------------------------------------------------------
     Largest T2 amplitudes for spin case BB:
        _   _   _   _              _   _   _   _              _   _   _   _           
@@ -759,9 +891,9 @@ Calling plugin /Users/ChenyangLi/src/forte/forte.so.
     [  2   6   1   7]-0.045393 [  2   8   2   9]-0.036068 [  2   6   2   7]-0.036068 
     [  0   1   1   2] 0.034294 [  1   8   2   9]-0.030773 [  1   6   2   7]-0.030773 
     [  1   2   1   3] 0.024606 [  6   8   7   9]-0.024088 [  0   1   1   5]-0.021278 
-    [  1   2   1   4]-0.019808 [  2   6   4   7]-0.019572 [  2   8   4   9]-0.019572 
+    [  1   2   1   4]-0.019808 [  2   8   4   9]-0.019572 [  2   6   4   7]-0.019572 
     --------------------------------------------------------------------------------
-    Norm of T2BB vector: (nonzero elements: 240)                  0.282244263475446.
+    Norm of T2BB vector: (nonzero elements: 240)                  0.282244263475480.
     --------------------------------------------------------------------------------
 
   ==> Possible Intruders <==
@@ -790,25 +922,25 @@ Calling plugin /Users/ChenyangLi/src/forte/forte.so.
            ---------------------------  ---------------------  ---------------------  -----------------
     Iter.        Corr.         Delta       Hbar1      Hbar2        T1         T2        Hbar     Amp.  
     ---------------------------------------------------------------------------------------------------
-        0   -0.088647290707 -8.865e-02   1.457e-01  6.696e-01   4.339e-02  1.764e-01     2.069    0.005
-        1   -0.090857680153 -2.210e-03   1.429e-01  2.731e-01   2.190e-02  6.249e-02     2.033    0.004
-        2   -0.091122024563 -2.643e-04   1.099e-01  1.652e-01   6.071e-03  2.606e-02     1.992    0.004
-        3   -0.091299062924 -1.770e-04   1.151e-01  1.655e-01   2.686e-03  1.125e-02     2.006    0.003
-        4   -0.091285284431  1.378e-05   1.120e-01  1.549e-01   9.753e-04  4.790e-03     2.009    0.003
-        5   -0.091294687249 -9.403e-06   1.130e-01  1.578e-01   4.247e-04  2.063e-03     1.980    0.003 -> DIIS
-        6   -0.091292258020  2.429e-06   1.125e-01  1.561e-01   1.690e-04  8.835e-04     1.997    0.004 -> DIIS
-        7   -0.091291492396  7.656e-07   1.127e-01  1.566e-01   3.859e-06  9.919e-06     1.980    0.004 -> DIIS
-        8   -0.091291423472  6.892e-08   1.127e-01  1.566e-01   1.364e-06  3.188e-06     2.033    0.004 -> DIIS
-        9   -0.091291358857  6.462e-08   1.127e-01  1.566e-01   4.138e-07  1.144e-06     2.008    0.004 -> DIIS
-       10   -0.091291333794  2.506e-08   1.127e-01  1.566e-01   5.379e-08  2.930e-07     2.029    0.004 -> DIIS
-       11   -0.091291332290  1.504e-09   1.127e-01  1.566e-01   1.717e-08  1.018e-07     1.986    0.004
+        0   -0.088647290707 -8.865e-02   1.457e-01  6.696e-01   4.339e-02  1.764e-01     5.746    0.011
+        1   -0.090857680153 -2.210e-03   1.429e-01  2.731e-01   2.190e-02  6.249e-02     5.772    0.010
+        2   -0.091122024563 -2.643e-04   1.099e-01  1.652e-01   6.071e-03  2.606e-02     5.635    0.010
+        3   -0.091299062924 -1.770e-04   1.151e-01  1.655e-01   2.686e-03  1.125e-02     5.657    0.012
+        4   -0.091285284431  1.378e-05   1.120e-01  1.549e-01   9.753e-04  4.790e-03     6.493    0.014
+        5   -0.091294687249 -9.403e-06   1.130e-01  1.578e-01   4.247e-04  2.063e-03     7.129    0.012 -> DIIS
+        6   -0.091292258020  2.429e-06   1.125e-01  1.561e-01   1.690e-04  8.835e-04     6.557    0.012 -> DIIS
+        7   -0.091291492396  7.656e-07   1.127e-01  1.566e-01   3.859e-06  9.919e-06     7.063    0.012 -> DIIS
+        8   -0.091291423472  6.892e-08   1.127e-01  1.566e-01   1.364e-06  3.188e-06     6.614    0.011 -> DIIS
+        9   -0.091291358857  6.462e-08   1.127e-01  1.566e-01   4.138e-07  1.144e-06     6.523    0.011 -> DIIS
+       10   -0.091291333794  2.506e-08   1.127e-01  1.566e-01   5.379e-08  2.930e-07     6.328    0.011 -> DIIS
+       11   -0.091291332290  1.504e-09   1.127e-01  1.566e-01   1.717e-08  1.018e-07     5.750    0.010
     ---------------------------------------------------------------------------------------------------
 
   ==> MR-LDSRG(2)-QC Energy Summary <==
 
-    E0 (reference)                      =     -99.406065222746861
-    MR-LDSRG(2)-QC correlation energy   =      -0.091291332290354
-    MR-LDSRG(2)-QC total energy         =     -99.497356555037214
+    E0 (reference)                      =     -99.406065222746847
+    MR-LDSRG(2)-QC correlation energy   =      -0.091291332290337
+    MR-LDSRG(2)-QC total energy         =     -99.497356555037186
 
   ==> Final Excitation Amplitudes Summary <==
 
@@ -822,7 +954,7 @@ Calling plugin /Users/ChenyangLi/src/forte/forte.so.
     [  0       3    ]-0.000642 [  0       5    ]-0.000592 [  8       9    ] 0.000206 
     [  6       7    ] 0.000206 
     --------------------------------------------------------------------------------
-    Norm of T1A vector: (nonzero elements: 13)                    0.133908101537309.
+    Norm of T1A vector: (nonzero elements: 13)                    0.133908101537149.
     --------------------------------------------------------------------------------
     Largest T1 amplitudes for spin case B:
        _       _                  _       _                  _       _               
@@ -834,7 +966,7 @@ Calling plugin /Users/ChenyangLi/src/forte/forte.so.
     [  0       3    ]-0.000642 [  0       5    ]-0.000592 [  8       9    ] 0.000206 
     [  6       7    ] 0.000206 
     --------------------------------------------------------------------------------
-    Norm of T1B vector: (nonzero elements: 13)                    0.133908101537309.
+    Norm of T1B vector: (nonzero elements: 13)                    0.133908101537149.
     --------------------------------------------------------------------------------
     Largest T2 amplitudes for spin case AA:
        i   j   a   b              i   j   a   b              i   j   a   b           
@@ -845,7 +977,7 @@ Calling plugin /Users/ChenyangLi/src/forte/forte.so.
     [  6   8   7   9]-0.023101 [  1   2   1   3] 0.020113 [  0   1   1   5]-0.016611 
     [  0   2   1   2]-0.015957 [  1   2   2   3] 0.015648 [  1   8   4   9]-0.014107 
     --------------------------------------------------------------------------------
-    Norm of T2AA vector: (nonzero elements: 240)                  0.228381671024077.
+    Norm of T2AA vector: (nonzero elements: 240)                  0.228381671024156.
     --------------------------------------------------------------------------------
     Largest T2 amplitudes for spin case AB:
            _       _                  _       _                  _       _           
@@ -857,7 +989,7 @@ Calling plugin /Users/ChenyangLi/src/forte/forte.so.
     [  2   6   1   7]-0.035766 [  2   2   3   3]-0.034031 [  2   2   1   4]-0.033783 
     [  2   8   2   9]-0.030944 [  2   6   2   7]-0.030944 [  1   2   2   3]-0.030915 
     --------------------------------------------------------------------------------
-    Norm of T2AB vector: (nonzero elements: 405)                  0.295719391455656.
+    Norm of T2AB vector: (nonzero elements: 405)                  0.295719391455985.
     --------------------------------------------------------------------------------
     Largest T2 amplitudes for spin case BB:
        _   _   _   _              _   _   _   _              _   _   _   _           
@@ -869,7 +1001,7 @@ Calling plugin /Users/ChenyangLi/src/forte/forte.so.
     [  6   8   7   9]-0.023101 [  1   2   1   3] 0.020113 [  0   1   1   5]-0.016611 
     [  0   2   1   2]-0.015957 [  1   2   2   3] 0.015648 [  1   8   4   9]-0.014107 
     --------------------------------------------------------------------------------
-    Norm of T2BB vector: (nonzero elements: 240)                  0.228381671024077.
+    Norm of T2BB vector: (nonzero elements: 240)                  0.228381671024155.
     --------------------------------------------------------------------------------
 
   ==> Possible Intruders <==
@@ -880,27 +1012,27 @@ Calling plugin /Users/ChenyangLi/src/forte/forte.so.
     T2 amplitudes larger than 0.1000 for spin case AB: NULL
     T2 amplitudes larger than 0.1000 for spin case BB: NULL
 
-  ==> De-Normal-Order the DSRG Transformed Hamiltonian <==
+  ==> De-Normal-Order DSRG Transformed Hamiltonian <==
 
-    Computing the scalar term   ...      Done. Timing      0.001 s
-    Computing the one-body term ...      Done. Timing      0.001 s
-    Updating integrals          ...      Done. Timing      0.000 s
+    Computing the scalar term                ... Done. Timing    0.003 s
+    Computing the 1-body term                ... Done. Timing    0.002 s
 
-  ==> Scalar of the DSRG Hamiltonian (WRT True Vacuum) <==
+  ==> Rotate DSRG Transformed Hamiltonian back to Original Basis <==
 
-    Scalar0                        =    -26.853884269618618
-    Scalar1                        =      0.924329247094907
-    Scalar2                        =      0.762776778756338
-    Total Scalar W/O Frozen-Core   =    -25.166778243767375
-    Total Scalar W/  Frozen-Core   =   -100.985313780725960
+    Rotating 1-body term to original basis   ... Done. Timing    0.001 s
+    Rotating 2-body term to original basis   ... Done. Timing    0.017 s
 
-  ==> Test De-Normal-Ordered Hamiltonian <==
+                -----------------------------------------------
+                  String-based Full Configuration Interaction
+                          by Francesco A. Evangelista
+                -----------------------------------------------
 
-    One-Body Energy (after)        =     -1.527616553843456
-    Two-Body Energy (after)        =     -0.159489472007788
-    Total Energy (after)           =    -99.497356555037214
-    Total Energy (before)          =    -99.497356555037214
-  Frozen Orbitals takes     0.000 s.
+  Number of electrons: 10
+  Charge: 0
+  Multiplicity: 1
+  Davidson subspace max dim: 8
+  Davidson subspace min dim: 2
+  M_s: 0
 
   ==> String Lists <==
 
@@ -912,7 +1044,6 @@ Calling plugin /Users/ChenyangLi/src/forte/forte.so.
   Timing for NN strings     =      0.000 s
   Timing for VO strings     =      0.000 s
   Timing for OO strings     =      0.000 s
-  Timing for Knowles-Handy  =      0.000 s
   Timing for VVOO strings   =      0.000 s
   Timing for VOVO strings   =      0.000 s
   Timing for 1-hole strings =      0.000 s
@@ -925,7 +1056,7 @@ Calling plugin /Users/ChenyangLi/src/forte/forte.so.
     Number of determinants                           4
     Symmetry                                         0
     Multiplicity                                     1
-    Number of roots                                  0
+    Number of roots                                  1
     Target root                                      0
     Trial vectors per root                          10
 
@@ -941,7 +1072,7 @@ Calling plugin /Users/ChenyangLi/src/forte/forte.so.
       2      -99.089953574919  0.000  singlet
       3      -98.766695543093  0.000  singlet
   ---------------------------------------------
-  Timing for initial guess  =      0.000 s
+  Timing for initial guess  =      0.001 s
 
   Projecting out root 1
   ==> Diagonalizing Hamiltonian <==
@@ -956,12 +1087,13 @@ Calling plugin /Users/ChenyangLi/src/forte/forte.so.
 
   ==> Root No. 0 <==
 
-    20     -0.95833954
-    02      0.27504842
+    20      0.96044969
+    02     -0.27715857
 
-    Total Energy:       -99.498401702632364
+    Total Energy:       -99.498401702632421
 
-  ==> RDMs for Root No. 0 <==
+  ==> Computing RDMs for Root No. 0 <==
+
     Timing for 1-RDM: 0.000 s
     Timing for 2-RDM: 0.000 s
     Timing for 3-RDM: 0.000 s
@@ -970,129 +1102,150 @@ Calling plugin /Users/ChenyangLi/src/forte/forte.so.
 
         1A1     1.846044      2A1     0.153956  
 
+  The following reference rotation will make the new reference and integrals in the same basis.
 
-  Warning: I am forcing density Db = Da to avoid spin symmetry breaking.
-  If this is not desired, go to mrdsrg.cc around line 190.
+  ==> Reference Transformation to Semicanonical Basis <==
+
+    Transformed 1 cumulants.
+    Transformed 2 cumulants and RDMs.
+    Transformed 3 cumulants.
+
+  ==> Semicanonicalize Orbitals <==
+
+  Took 0.000067 s to build Fock matrix
+
+  ==> Checking Fock Matrix Diagonal Blocks <==
+
+    Off-Diag. Elements       Max           2-Norm
+    ------------------------------------------------
+    Fa actv              0.0035403811   0.0050068550
+    Fb actv              0.0035403811   0.0050068550
+    ------------------------------------------------
+    Fa core              0.0000000000   0.0000000000
+    Fb core              0.0000000000   0.0000000000
+    ------------------------------------------------
+    Fa virt              0.0019268208   0.0044699520
+    Fb virt              0.0019268208   0.0044699520
+    ------------------------------------------------
+
+  ==> Integral Transformation to Semicanonical Basis <==
+    Molecular point group: c2v
+    Full point group: C_inf_v
+
+    Geometry (in Angstrom), charge = 0, multiplicity = 1:
+
+       Center              X                  Y                   Z               Mass       
+    ------------   -----------------  -----------------  -----------------  -----------------
+           F          0.000000000000     0.000000000000    -0.075563346012    18.998403224000
+           H          0.000000000000     0.000000000000     1.424436653988     1.007825032070
+
+  -AO BASIS SET INFORMATION:
+    Name                   = 3-21G
+    Blend                  = 3-21G
+    Total number of shells = 7
+    Number of primitives   = 12
+    Number of AO           = 11
+    Number of SO           = 11
+    Maximum AM             = 1
+    Spherical Harmonics    = FALSE
+
+  -Contraction Scheme:
+    Atom   Type   All Primitives // Shells:
+   ------ ------ --------------------------
+       1     F     6s 3p // 3s 2p 
+       2     H     3s // 2s 
+
+  ==> AO Basis Functions <==
+
+    [ 3-21G ]
+    cartesian
+    ****
+    F   1
+    S   3 1.00
+                       413.80100000           0.05854830
+                        62.24460000           0.34930800
+                        13.43400000           0.70963200
+    S   2 1.00
+                         9.77759000          -0.40732700
+                         2.08617000           1.22314000
+    P   2 1.00
+                         9.77759000           0.24668000
+                         2.08617000           0.85232100
+    S   1 1.00
+                         0.48238300           1.00000000
+    P   1 1.00
+                         0.48238300           1.00000000
+    ****
+    H   2
+    S   2 1.00
+                         5.44717800           0.15628500
+                         0.82454700           0.90469100
+    S   1 1.00
+                         0.18319200           1.00000000
+    ****
+
+
+ Integrals are about to be computed.	Presorting SO-basis two-electron integrals.
+	Sorting File: SO Ints (nn|nn) nbuckets = 1
+	Transforming the one-electron integrals and constructing Fock matrices
+	Starting first half-transformation.
+	Sorting half-transformed integrals.
+	First half integral transformation complete.
+	Starting second half-transformation.
+	Two-electron integral transformation complete.
+
+  Integral transformation done. 0.00865600 s
+  Reading the two-electron integrals from disk
+  Size of two-electron integrals:   0.000327 GB
+ Integrals are about to be updated.  Using in-core PK algorithm.
+   Calculation information:
+      Number of atoms:                   2
+      Number of AO shells:               7
+      Number of primitives:             12
+      Number of atomic orbitals:        11
+      Number of basis functions:        11
+
+      Integral cutoff                 1.00e-12
+      Number of threads:                 1
+
+  Performing in-core PK
+  Using 4422 doubles for integral storage.
+  We computed 406 shell quartets total.
+  Whereas there are 406 unique shell quartets.
+
+  Frozen-core energy            -75.818535536959 a.u.
+
+  FrozenOneBody Operator takes  0.03290700 s
+  Resorting integrals after freezing core.
+  Frozen Orbitals takes     0.033 s.
+
+  ==> Reference Transformation to Semicanonical Basis <==
+
+    Transformed 1 cumulants.
+    Transformed 2 cumulants and RDMs.
+    Transformed 3 cumulants.
+  SemiCanonicalize takes 2.049139 s.
 
   ==> Density Cumulant Summary <==
 
-    2-body               AA           AB           BB
-    -------------------------------------------------
-    max            0.071052     0.069471     0.071052
-    norm           0.142105     0.402863     0.142105
-    -------------------------------------------------
-    3-body              AAA          AAB          ABB          BBB
-    --------------------------------------------------------------
-    max            0.000000     0.059880     0.059880     0.000000
-    norm           0.000000     0.170027     0.170027     0.000000
-    --------------------------------------------------------------
+    2-body             AA           AB           BB
+    -----------------------------------------------
+    max          0.071052     0.265369     0.071052
+    norm         0.142105     0.402863     0.142105
+    -----------------------------------------------
+    3-body            AAA          AAB          ABB          BBB
+    ------------------------------------------------------------
+    max          0.000000     0.059939     0.059939     0.000000
+    norm         0.000000     0.170027     0.170027     0.000000
+    ------------------------------------------------------------
 
-  ==> Semi-canonicalize Orbitals <==
-
-    Checking if orbitals are semi-canonicalized ...
-    Warning! Orbitals are not semi-canonicalized!
-    Off-Diagonal norms of the core, active, virtual blocks of Fock matrix
-                  core          active         virtual
-    ---------------------------------------------------
-    Fa    0.0000000000    0.0050068550    0.0044699520
-    Fb    0.0000000000    0.0050068550    0.0044699520
-    ---------------------------------------------------
-
-    Timing for block-diagonalizing Fock matrix:        0.000
-    Timing for transforming one-electron integral:     0.011
-  Frozen Orbitals takes     0.000 s.
-    Timing for transforming two-electron integral:     0.443
-
-  ==> String Lists <==
-
-  Number of alpha electrons     = 1
-  Number of beta electrons      = 1
-  Number of alpha strings       = 2
-  Number of beta strings        = 2
-  Timing for strings        =      0.000 s
-  Timing for NN strings     =      0.000 s
-  Timing for VO strings     =      0.000 s
-  Timing for OO strings     =      0.000 s
-  Timing for Knowles-Handy  =      0.000 s
-  Timing for VVOO strings   =      0.000 s
-  Timing for VOVO strings   =      0.000 s
-  Timing for 1-hole strings =      0.000 s
-  Timing for 2-hole strings =      0.000 s
-  Timing for 3-hole strings =      0.000 s
-  Total timing              =      0.000 s
-
-  ==> FCI Solver <==
-
-    Number of determinants                           4
-    Symmetry                                         0
-    Multiplicity                                     1
-    Number of roots                                  0
-    Target root                                      0
-    Trial vectors per root                          10
-
-  Allocating memory for the Hamiltonian algorithm. Size: 2 x 2 x 2.   Memory: 0.000000 GB
-
-  ==> FCI Initial Guess <==
-
-  ---------------------------------------------
-    Root            Energy     <S^2>   Spin
-  ---------------------------------------------
-      0      -99.498401702632  0.000  singlet
-      1      -99.370040872188  2.000  triplet
-      2      -99.089953574919  0.000  singlet
-      3      -98.766695543093  0.000  singlet
-  ---------------------------------------------
-  Timing for initial guess  =      0.000 s
-
-  Projecting out root 1
-  ==> Diagonalizing Hamiltonian <==
-
-  ----------------------------------------
-    Iter.      Avg. Energy       Delta_E
-  ----------------------------------------
-      1      -99.498401702632  -9.950e+01
-      2      -99.498401702632  -1.421e-14
-  ----------------------------------------
-  The Davidson-Liu algorithm converged in 3 iterations.
-
-  ==> Root No. 0 <==
-
-    20      0.95893855
-    02     -0.27564742
-
-    Total Energy:       -99.498401702632435
-
-  ==> RDMs for Root No. 0 <==
-    Timing for 1-RDM: 0.000 s
-    Timing for 2-RDM: 0.000 s
-    Timing for 3-RDM: 0.000 s
-
-  ==> NATURAL ORBITALS <==
-
-        1A1     1.846044      2A1     0.153956  
-
-
-  Warning: I am forcing density Db = Da to avoid spin symmetry breaking.
-  If this is not desired, go to mrdsrg.cc around line 190.
-
-  ==> Density Cumulant Summary <==
-
-    2-body               AA           AB           BB
-    -------------------------------------------------
-    max            0.071052     0.069865     0.071052
-    norm           0.142105     0.402863     0.142105
-    -------------------------------------------------
-    3-body              AAA          AAB          ABB          BBB
-    --------------------------------------------------------------
-    max            0.000000     0.059939    -0.059939     0.000000
-    norm           0.000000     0.170027     0.170027     0.000000
-    --------------------------------------------------------------
   ==> MR-DSRG Ref. Relaxation Iter. 1 <==
+
 
   ==> Build Initial Amplitude from DSRG-MRPT2 <==
 
-    Computing T2 amplitudes ...          Done. Timing      0.001 s
-    Computing T1 amplitudes ...          Done. Timing      0.001 s
+    Computing T2 amplitudes ...          Done. Timing      0.003 s
+    Computing T1 amplitudes ...          Done. Timing      0.003 s
 
   ==> First-Order Excitation Amplitudes Summary <==
 
@@ -1106,7 +1259,7 @@ Calling plugin /Users/ChenyangLi/src/forte/forte.so.
     [  8       9    ]-0.001809 [  0       5    ] 0.001030 [  0       4    ]-0.000061 
     [  0       3    ] 0.000046 
     --------------------------------------------------------------------------------
-    Norm of T1A vector: (nonzero elements: 13)                    0.149291033434515.
+    Norm of T1A vector: (nonzero elements: 13)                    0.149291033434513.
     --------------------------------------------------------------------------------
     Largest T1 amplitudes for spin case B:
        _       _                  _       _                  _       _               
@@ -1118,7 +1271,7 @@ Calling plugin /Users/ChenyangLi/src/forte/forte.so.
     [  8       9    ]-0.001809 [  0       5    ] 0.001030 [  0       4    ]-0.000061 
     [  0       3    ] 0.000046 
     --------------------------------------------------------------------------------
-    Norm of T1B vector: (nonzero elements: 13)                    0.149291033434515.
+    Norm of T1B vector: (nonzero elements: 13)                    0.149291033434513.
     --------------------------------------------------------------------------------
     Largest T2 amplitudes for spin case AA:
        i   j   a   b              i   j   a   b              i   j   a   b           
@@ -1127,7 +1280,7 @@ Calling plugin /Users/ChenyangLi/src/forte/forte.so.
     [  2   6   1   7]-0.045716 [  2   8   2   9]-0.036513 [  2   6   2   7]-0.036513 
     [  0   1   1   2]-0.034453 [  1   8   2   9]-0.030725 [  1   6   2   7]-0.030725 
     [  1   2   1   3]-0.024446 [  6   8   7   9]-0.024096 [  0   1   1   5]-0.021086 
-    [  1   2   1   4] 0.019729 [  2   6   4   7] 0.019674 [  2   8   4   9] 0.019674 
+    [  1   2   1   4] 0.019729 [  2   8   4   9] 0.019674 [  2   6   4   7] 0.019674 
     --------------------------------------------------------------------------------
     Norm of T2AA vector: (nonzero elements: 240)                  0.282470992683063.
     --------------------------------------------------------------------------------
@@ -1151,7 +1304,7 @@ Calling plugin /Users/ChenyangLi/src/forte/forte.so.
     [  2   6   1   7]-0.045716 [  2   8   2   9]-0.036513 [  2   6   2   7]-0.036513 
     [  0   1   1   2]-0.034453 [  1   8   2   9]-0.030725 [  1   6   2   7]-0.030725 
     [  1   2   1   3]-0.024446 [  6   8   7   9]-0.024096 [  0   1   1   5]-0.021086 
-    [  1   2   1   4] 0.019729 [  2   6   4   7] 0.019674 [  2   8   4   9] 0.019674 
+    [  1   2   1   4] 0.019729 [  2   8   4   9] 0.019674 [  2   6   4   7] 0.019674 
     --------------------------------------------------------------------------------
     Norm of T2BB vector: (nonzero elements: 240)                  0.282470992683063.
     --------------------------------------------------------------------------------
@@ -1182,24 +1335,24 @@ Calling plugin /Users/ChenyangLi/src/forte/forte.so.
            ---------------------------  ---------------------  ---------------------  -----------------
     Iter.        Corr.         Delta       Hbar1      Hbar2        T1         T2        Hbar     Amp.  
     ---------------------------------------------------------------------------------------------------
-        0   -0.090967139585 -9.097e-02   1.512e-01  6.770e-01   4.443e-02  1.791e-01     2.016    0.003
-        1   -0.093123306637 -2.156e-03   1.459e-01  2.796e-01   2.188e-02  6.437e-02     2.048    0.004
-        2   -0.093324571366 -2.013e-04   1.137e-01  1.686e-01   5.942e-03  2.701e-02     2.038    0.003
-        3   -0.093476338802 -1.518e-04   1.186e-01  1.693e-01   2.605e-03  1.176e-02     2.017    0.004
-        4   -0.093468002134  8.337e-06   1.158e-01  1.582e-01   9.302e-04  5.035e-03     2.001    0.004
-        5   -0.093473817605 -5.815e-06   1.167e-01  1.613e-01   4.054e-04  2.184e-03     1.992    0.004 -> DIIS
-        6   -0.093473081679  7.359e-07   1.162e-01  1.595e-01   1.601e-04  9.423e-04     2.079    0.004 -> DIIS
-        7   -0.093471840516  1.241e-06   1.164e-01  1.600e-01   4.739e-06  1.148e-05     2.010    0.004 -> DIIS
-        8   -0.093471729691  1.108e-07   1.164e-01  1.600e-01   1.613e-06  3.825e-06     1.979    0.003 -> DIIS
-        9   -0.093471658771  7.092e-08   1.164e-01  1.600e-01   4.818e-07  1.337e-06     2.016    0.004 -> DIIS
-       10   -0.093471631172  2.760e-08   1.164e-01  1.600e-01   5.117e-08  3.291e-07     1.968    0.003 -> DIIS
-       11   -0.093471630750  4.228e-10   1.164e-01  1.600e-01   1.956e-08  1.149e-07     1.992    0.004
+        0   -0.090967139585 -9.097e-02   1.512e-01  6.770e-01   4.443e-02  1.791e-01     5.711    0.013
+        1   -0.093123306637 -2.156e-03   1.459e-01  2.796e-01   2.188e-02  6.437e-02     5.834    0.013
+        2   -0.093324571366 -2.013e-04   1.137e-01  1.686e-01   5.942e-03  2.701e-02     6.251    0.011
+        3   -0.093476338802 -1.518e-04   1.186e-01  1.693e-01   2.605e-03  1.176e-02     6.134    0.011
+        4   -0.093468002134  8.337e-06   1.158e-01  1.582e-01   9.302e-04  5.035e-03     6.085    0.012
+        5   -0.093473817605 -5.815e-06   1.167e-01  1.613e-01   4.054e-04  2.184e-03     6.273    0.012 -> DIIS
+        6   -0.093473081679  7.359e-07   1.162e-01  1.595e-01   1.601e-04  9.423e-04     6.369    0.012 -> DIIS
+        7   -0.093471840516  1.241e-06   1.164e-01  1.600e-01   4.739e-06  1.148e-05     6.231    0.012 -> DIIS
+        8   -0.093471729691  1.108e-07   1.164e-01  1.600e-01   1.613e-06  3.825e-06     6.097    0.011 -> DIIS
+        9   -0.093471658771  7.092e-08   1.164e-01  1.600e-01   4.818e-07  1.337e-06     5.897    0.010 -> DIIS
+       10   -0.093471631172  2.760e-08   1.164e-01  1.600e-01   5.117e-08  3.291e-07     5.819    0.011 -> DIIS
+       11   -0.093471630750  4.228e-10   1.164e-01  1.600e-01   1.956e-08  1.149e-07     6.520    0.013
     ---------------------------------------------------------------------------------------------------
 
   ==> MR-LDSRG(2)-QC Energy Summary <==
 
-    E0 (reference)                      =     -99.406065222746861
-    MR-LDSRG(2)-QC correlation energy   =      -0.093471630749583
+    E0 (reference)                      =     -99.406065222746847
+    MR-LDSRG(2)-QC correlation energy   =      -0.093471630749584
     MR-LDSRG(2)-QC total energy         =     -99.499536853496437
 
   ==> Final Excitation Amplitudes Summary <==
@@ -1214,7 +1367,7 @@ Calling plugin /Users/ChenyangLi/src/forte/forte.so.
     [  8       9    ]-0.001398 [  0       3    ]-0.000641 [  0       4    ] 0.000543 
     [  0       5    ] 0.000236 
     --------------------------------------------------------------------------------
-    Norm of T1A vector: (nonzero elements: 13)                    0.134684211210833.
+    Norm of T1A vector: (nonzero elements: 13)                    0.134684211210832.
     --------------------------------------------------------------------------------
     Largest T1 amplitudes for spin case B:
        _       _                  _       _                  _       _               
@@ -1226,7 +1379,7 @@ Calling plugin /Users/ChenyangLi/src/forte/forte.so.
     [  8       9    ]-0.001398 [  0       3    ]-0.000641 [  0       4    ] 0.000543 
     [  0       5    ] 0.000236 
     --------------------------------------------------------------------------------
-    Norm of T1B vector: (nonzero elements: 13)                    0.134684211210833.
+    Norm of T1B vector: (nonzero elements: 13)                    0.134684211210832.
     --------------------------------------------------------------------------------
     Largest T2 amplitudes for spin case AA:
        i   j   a   b              i   j   a   b              i   j   a   b           
@@ -1249,7 +1402,7 @@ Calling plugin /Users/ChenyangLi/src/forte/forte.so.
     [  2   6   1   7]-0.035706 [  2   2   3   3]-0.033941 [  2   2   1   4] 0.033764 
     [  2   8   2   9]-0.031231 [  2   6   2   7]-0.031231 [  1   1   1   3] 0.030847 
     --------------------------------------------------------------------------------
-    Norm of T2AB vector: (nonzero elements: 405)                  0.294696261286614.
+    Norm of T2AB vector: (nonzero elements: 405)                  0.294696261286615.
     --------------------------------------------------------------------------------
     Largest T2 amplitudes for spin case BB:
        _   _   _   _              _   _   _   _              _   _   _   _           
@@ -1272,27 +1425,27 @@ Calling plugin /Users/ChenyangLi/src/forte/forte.so.
     T2 amplitudes larger than 0.1000 for spin case AB: NULL
     T2 amplitudes larger than 0.1000 for spin case BB: NULL
 
-  ==> De-Normal-Order the DSRG Transformed Hamiltonian <==
+  ==> De-Normal-Order DSRG Transformed Hamiltonian <==
 
-    Computing the scalar term   ...      Done. Timing      0.001 s
-    Computing the one-body term ...      Done. Timing      0.001 s
-    Updating integrals          ...      Done. Timing      0.000 s
+    Computing the scalar term                ... Done. Timing    0.003 s
+    Computing the 1-body term                ... Done. Timing    0.001 s
 
-  ==> Scalar of the DSRG Hamiltonian (WRT True Vacuum) <==
+  ==> Rotate DSRG Transformed Hamiltonian back to Original Basis <==
 
-    Scalar0                        =    -26.856064568077841
-    Scalar1                        =      0.954919843031174
-    Scalar2                        =      0.734495792276565
-    Total Scalar W/O Frozen-Core   =    -25.166648932770102
-    Total Scalar W/  Frozen-Core   =   -100.985184469728694
+    Rotating 1-body term to original basis   ... Done. Timing    0.001 s
+    Rotating 2-body term to original basis   ... Done. Timing    0.019 s
 
-  ==> Test De-Normal-Ordered Hamiltonian <==
+                -----------------------------------------------
+                  String-based Full Configuration Interaction
+                          by Francesco A. Evangelista
+                -----------------------------------------------
 
-    One-Body Energy (after)        =     -1.553332337263590
-    Two-Body Energy (after)        =     -0.136083298044148
-    Total Energy (after)           =    -99.499536853496437
-    Total Energy (before)          =    -99.499536853496437
-  Frozen Orbitals takes     0.000 s.
+  Number of electrons: 10
+  Charge: 0
+  Multiplicity: 1
+  Davidson subspace max dim: 8
+  Davidson subspace min dim: 2
+  M_s: 0
 
   ==> String Lists <==
 
@@ -1304,7 +1457,6 @@ Calling plugin /Users/ChenyangLi/src/forte/forte.so.
   Timing for NN strings     =      0.000 s
   Timing for VO strings     =      0.000 s
   Timing for OO strings     =      0.000 s
-  Timing for Knowles-Handy  =      0.000 s
   Timing for VVOO strings   =      0.000 s
   Timing for VOVO strings   =      0.000 s
   Timing for 1-hole strings =      0.000 s
@@ -1317,7 +1469,7 @@ Calling plugin /Users/ChenyangLi/src/forte/forte.so.
     Number of determinants                           4
     Symmetry                                         0
     Multiplicity                                     1
-    Number of roots                                  0
+    Number of roots                                  1
     Target root                                      0
     Trial vectors per root                          10
 
@@ -1333,7 +1485,7 @@ Calling plugin /Users/ChenyangLi/src/forte/forte.so.
       2      -99.090180136134  0.000  singlet
       3      -98.766844798747  0.000  singlet
   ---------------------------------------------
-  Timing for initial guess  =      0.000 s
+  Timing for initial guess  =      0.001 s
 
   Projecting out root 1
   ==> Diagonalizing Hamiltonian <==
@@ -1342,18 +1494,19 @@ Calling plugin /Users/ChenyangLi/src/forte/forte.so.
     Iter.      Avg. Energy       Delta_E
   ----------------------------------------
       1      -99.499537532495  -9.950e+01
-      2      -99.499537532495  +2.842e-14
+      2      -99.499537532495  -2.842e-14
   ----------------------------------------
   The Davidson-Liu algorithm converged in 3 iterations.
 
   ==> Root No. 0 <==
 
-    20     -0.95924867
-    02      0.27469479
+    20      0.95865411
+    02     -0.27410024
 
-    Total Energy:       -99.499537532494571
+    Total Energy:       -99.499537532494642
 
-  ==> RDMs for Root No. 0 <==
+  ==> Computing RDMs for Root No. 0 <==
+
     Timing for 1-RDM: 0.000 s
     Timing for 2-RDM: 0.000 s
     Timing for 3-RDM: 0.000 s
@@ -1362,129 +1515,150 @@ Calling plugin /Users/ChenyangLi/src/forte/forte.so.
 
         1A1     1.847130      2A1     0.152870  
 
+  The following reference rotation will make the new reference and integrals in the same basis.
 
-  Warning: I am forcing density Db = Da to avoid spin symmetry breaking.
-  If this is not desired, go to mrdsrg.cc around line 190.
+  ==> Reference Transformation to Semicanonical Basis <==
+
+    Transformed 1 cumulants.
+    Transformed 2 cumulants and RDMs.
+    Transformed 3 cumulants.
+
+  ==> Semicanonicalize Orbitals <==
+
+  Took 0.000048 s to build Fock matrix
+
+  ==> Checking Fock Matrix Diagonal Blocks <==
+
+    Off-Diag. Elements       Max           2-Norm
+    ------------------------------------------------
+    Fa actv              0.0000791365   0.0001119159
+    Fb actv              0.0000791365   0.0001119159
+    ------------------------------------------------
+    Fa core              0.0000000000   0.0000000000
+    Fb core              0.0000000000   0.0000000000
+    ------------------------------------------------
+    Fa virt              0.0000392427   0.0000914882
+    Fb virt              0.0000392427   0.0000914882
+    ------------------------------------------------
+
+  ==> Integral Transformation to Semicanonical Basis <==
+    Molecular point group: c2v
+    Full point group: C_inf_v
+
+    Geometry (in Angstrom), charge = 0, multiplicity = 1:
+
+       Center              X                  Y                   Z               Mass       
+    ------------   -----------------  -----------------  -----------------  -----------------
+           F          0.000000000000     0.000000000000    -0.075563346012    18.998403224000
+           H          0.000000000000     0.000000000000     1.424436653988     1.007825032070
+
+  -AO BASIS SET INFORMATION:
+    Name                   = 3-21G
+    Blend                  = 3-21G
+    Total number of shells = 7
+    Number of primitives   = 12
+    Number of AO           = 11
+    Number of SO           = 11
+    Maximum AM             = 1
+    Spherical Harmonics    = FALSE
+
+  -Contraction Scheme:
+    Atom   Type   All Primitives // Shells:
+   ------ ------ --------------------------
+       1     F     6s 3p // 3s 2p 
+       2     H     3s // 2s 
+
+  ==> AO Basis Functions <==
+
+    [ 3-21G ]
+    cartesian
+    ****
+    F   1
+    S   3 1.00
+                       413.80100000           0.05854830
+                        62.24460000           0.34930800
+                        13.43400000           0.70963200
+    S   2 1.00
+                         9.77759000          -0.40732700
+                         2.08617000           1.22314000
+    P   2 1.00
+                         9.77759000           0.24668000
+                         2.08617000           0.85232100
+    S   1 1.00
+                         0.48238300           1.00000000
+    P   1 1.00
+                         0.48238300           1.00000000
+    ****
+    H   2
+    S   2 1.00
+                         5.44717800           0.15628500
+                         0.82454700           0.90469100
+    S   1 1.00
+                         0.18319200           1.00000000
+    ****
+
+
+ Integrals are about to be computed.	Presorting SO-basis two-electron integrals.
+	Sorting File: SO Ints (nn|nn) nbuckets = 1
+	Transforming the one-electron integrals and constructing Fock matrices
+	Starting first half-transformation.
+	Sorting half-transformed integrals.
+	First half integral transformation complete.
+	Starting second half-transformation.
+	Two-electron integral transformation complete.
+
+  Integral transformation done. 0.01134100 s
+  Reading the two-electron integrals from disk
+  Size of two-electron integrals:   0.000327 GB
+ Integrals are about to be updated.  Using in-core PK algorithm.
+   Calculation information:
+      Number of atoms:                   2
+      Number of AO shells:               7
+      Number of primitives:             12
+      Number of atomic orbitals:        11
+      Number of basis functions:        11
+
+      Integral cutoff                 1.00e-12
+      Number of threads:                 1
+
+  Performing in-core PK
+  Using 4422 doubles for integral storage.
+  We computed 406 shell quartets total.
+  Whereas there are 406 unique shell quartets.
+
+  Frozen-core energy            -75.818535536959 a.u.
+
+  FrozenOneBody Operator takes  0.03307300 s
+  Resorting integrals after freezing core.
+  Frozen Orbitals takes     0.034 s.
+
+  ==> Reference Transformation to Semicanonical Basis <==
+
+    Transformed 1 cumulants.
+    Transformed 2 cumulants and RDMs.
+    Transformed 3 cumulants.
+  SemiCanonicalize takes 2.159984 s.
 
   ==> Density Cumulant Summary <==
 
-    2-body               AA           AB           BB
-    -------------------------------------------------
-    max            0.070593     0.069428     0.070593
-    norm           0.141186     0.401396     0.141186
-    -------------------------------------------------
-    3-body              AAA          AAB          ABB          BBB
-    --------------------------------------------------------------
-    max            0.000000     0.059630     0.059630     0.000000
-    norm           0.000000     0.169143     0.169143     0.000000
-    --------------------------------------------------------------
+    2-body             AA           AB           BB
+    -----------------------------------------------
+    max          0.070593     0.264536     0.070593
+    norm         0.141186     0.401396     0.141186
+    -----------------------------------------------
+    3-body            AAA          AAB          ABB          BBB
+    ------------------------------------------------------------
+    max          0.000000     0.059631     0.059631     0.000000
+    norm         0.000000     0.169143     0.169143     0.000000
+    ------------------------------------------------------------
 
-  ==> Semi-canonicalize Orbitals <==
-
-    Checking if orbitals are semi-canonicalized ...
-    Warning! Orbitals are not semi-canonicalized!
-    Off-Diagonal norms of the core, active, virtual blocks of Fock matrix
-                  core          active         virtual
-    ---------------------------------------------------
-    Fa    0.0000000000    0.0001119159    0.0000914882
-    Fb    0.0000000000    0.0001119159    0.0000914882
-    ---------------------------------------------------
-
-    Timing for block-diagonalizing Fock matrix:        0.000
-    Timing for transforming one-electron integral:     0.011
-  Frozen Orbitals takes     0.000 s.
-    Timing for transforming two-electron integral:     0.438
-
-  ==> String Lists <==
-
-  Number of alpha electrons     = 1
-  Number of beta electrons      = 1
-  Number of alpha strings       = 2
-  Number of beta strings        = 2
-  Timing for strings        =      0.000 s
-  Timing for NN strings     =      0.000 s
-  Timing for VO strings     =      0.000 s
-  Timing for OO strings     =      0.000 s
-  Timing for Knowles-Handy  =      0.000 s
-  Timing for VVOO strings   =      0.000 s
-  Timing for VOVO strings   =      0.000 s
-  Timing for 1-hole strings =      0.000 s
-  Timing for 2-hole strings =      0.000 s
-  Timing for 3-hole strings =      0.000 s
-  Total timing              =      0.000 s
-
-  ==> FCI Solver <==
-
-    Number of determinants                           4
-    Symmetry                                         0
-    Multiplicity                                     1
-    Number of roots                                  0
-    Target root                                      0
-    Trial vectors per root                          10
-
-  Allocating memory for the Hamiltonian algorithm. Size: 2 x 2 x 2.   Memory: 0.000000 GB
-
-  ==> FCI Initial Guess <==
-
-  ---------------------------------------------
-    Root            Energy     <S^2>   Spin
-  ---------------------------------------------
-      0      -99.499537532495  0.000  singlet
-      1      -99.370751089380  2.000  triplet
-      2      -99.090180136134  0.000  singlet
-      3      -98.766844798747  0.000  singlet
-  ---------------------------------------------
-  Timing for initial guess  =      0.000 s
-
-  Projecting out root 1
-  ==> Diagonalizing Hamiltonian <==
-
-  ----------------------------------------
-    Iter.      Avg. Energy       Delta_E
-  ----------------------------------------
-      1      -99.499537532495  -9.950e+01
-      2      -99.499537532495  +0.000e+00
-  ----------------------------------------
-  The Davidson-Liu algorithm converged in 3 iterations.
-
-  ==> Root No. 0 <==
-
-    20      0.95926097
-    02     -0.27470710
-
-    Total Energy:       -99.499537532494656
-
-  ==> RDMs for Root No. 0 <==
-    Timing for 1-RDM: 0.000 s
-    Timing for 2-RDM: 0.000 s
-    Timing for 3-RDM: 0.000 s
-
-  ==> NATURAL ORBITALS <==
-
-        1A1     1.847130      2A1     0.152870  
-
-
-  Warning: I am forcing density Db = Da to avoid spin symmetry breaking.
-  If this is not desired, go to mrdsrg.cc around line 190.
-
-  ==> Density Cumulant Summary <==
-
-    2-body               AA           AB           BB
-    -------------------------------------------------
-    max           -0.070593     0.069436    -0.070593
-    norm           0.141186     0.401396     0.141186
-    -------------------------------------------------
-    3-body              AAA          AAB          ABB          BBB
-    --------------------------------------------------------------
-    max            0.000000     0.059631     0.059631     0.000000
-    norm           0.000000     0.169143     0.169143     0.000000
-    --------------------------------------------------------------
   ==> MR-DSRG Ref. Relaxation Iter. 2 <==
+
 
   ==> Build Initial Amplitude from DSRG-MRPT2 <==
 
-    Computing T2 amplitudes ...          Done. Timing      0.001 s
-    Computing T1 amplitudes ...          Done. Timing      0.001 s
+    Computing T2 amplitudes ...          Done. Timing      0.005 s
+    Computing T1 amplitudes ...          Done. Timing      0.004 s
 
   ==> First-Order Excitation Amplitudes Summary <==
 
@@ -1498,7 +1672,7 @@ Calling plugin /Users/ChenyangLi/src/forte/forte.so.
     [  8       9    ]-0.001851 [  0       5    ] 0.001052 [  0       4    ]-0.000064 
     [  0       3    ] 0.000046 
     --------------------------------------------------------------------------------
-    Norm of T1A vector: (nonzero elements: 13)                    0.149321913118068.
+    Norm of T1A vector: (nonzero elements: 13)                    0.149321913118073.
     --------------------------------------------------------------------------------
     Largest T1 amplitudes for spin case B:
        _       _                  _       _                  _       _               
@@ -1510,7 +1684,7 @@ Calling plugin /Users/ChenyangLi/src/forte/forte.so.
     [  8       9    ]-0.001851 [  0       5    ] 0.001052 [  0       4    ]-0.000064 
     [  0       3    ] 0.000046 
     --------------------------------------------------------------------------------
-    Norm of T1B vector: (nonzero elements: 13)                    0.149321913118068.
+    Norm of T1B vector: (nonzero elements: 13)                    0.149321913118073.
     --------------------------------------------------------------------------------
     Largest T2 amplitudes for spin case AA:
        i   j   a   b              i   j   a   b              i   j   a   b           
@@ -1519,9 +1693,9 @@ Calling plugin /Users/ChenyangLi/src/forte/forte.so.
     [  2   6   1   7]-0.045724 [  2   8   2   9]-0.036523 [  2   6   2   7]-0.036523 
     [  0   1   1   2] 0.034456 [  1   8   2   9]-0.030723 [  1   6   2   7]-0.030723 
     [  1   2   1   3] 0.024443 [  6   8   7   9]-0.024096 [  0   1   1   5]-0.021081 
-    [  1   2   1   4]-0.019728 [  2   6   4   7]-0.019677 [  2   8   4   9]-0.019677 
+    [  1   2   1   4]-0.019728 [  2   8   4   9]-0.019677 [  2   6   4   7]-0.019677 
     --------------------------------------------------------------------------------
-    Norm of T2AA vector: (nonzero elements: 240)                  0.282476631329024.
+    Norm of T2AA vector: (nonzero elements: 240)                  0.282476631329025.
     --------------------------------------------------------------------------------
     Largest T2 amplitudes for spin case AB:
            _       _                  _       _                  _       _           
@@ -1543,9 +1717,9 @@ Calling plugin /Users/ChenyangLi/src/forte/forte.so.
     [  2   6   1   7]-0.045724 [  2   8   2   9]-0.036523 [  2   6   2   7]-0.036523 
     [  0   1   1   2] 0.034456 [  1   8   2   9]-0.030723 [  1   6   2   7]-0.030723 
     [  1   2   1   3] 0.024443 [  6   8   7   9]-0.024096 [  0   1   1   5]-0.021081 
-    [  1   2   1   4]-0.019728 [  2   6   4   7]-0.019677 [  2   8   4   9]-0.019677 
+    [  1   2   1   4]-0.019728 [  2   8   4   9]-0.019677 [  2   6   4   7]-0.019677 
     --------------------------------------------------------------------------------
-    Norm of T2BB vector: (nonzero elements: 240)                  0.282476631329024.
+    Norm of T2BB vector: (nonzero elements: 240)                  0.282476631329025.
     --------------------------------------------------------------------------------
 
   ==> Possible Intruders <==
@@ -1574,24 +1748,24 @@ Calling plugin /Users/ChenyangLi/src/forte/forte.so.
            ---------------------------  ---------------------  ---------------------  -----------------
     Iter.        Corr.         Delta       Hbar1      Hbar2        T1         T2        Hbar     Amp.  
     ---------------------------------------------------------------------------------------------------
-        0   -0.091031679736 -9.103e-02   1.513e-01  6.772e-01   4.446e-02  1.792e-01     1.996    0.004
-        1   -0.093188003835 -2.156e-03   1.460e-01  2.797e-01   2.188e-02  6.442e-02     1.999    0.003
-        2   -0.093387654480 -1.997e-04   1.138e-01  1.687e-01   5.939e-03  2.704e-02     1.999    0.003
-        3   -0.093538907528 -1.513e-04   1.187e-01  1.694e-01   2.604e-03  1.178e-02     1.985    0.003
-        4   -0.093530656016  8.252e-06   1.159e-01  1.583e-01   9.292e-04  5.043e-03     1.986    0.004
-        5   -0.093536414667 -5.759e-06   1.168e-01  1.614e-01   4.050e-04  2.188e-03     2.116    0.003 -> DIIS
-        6   -0.093535707210  7.075e-07   1.163e-01  1.596e-01   1.599e-04  9.440e-04     1.998    0.004 -> DIIS
-        7   -0.093534460021  1.247e-06   1.165e-01  1.601e-01   4.758e-06  1.151e-05     1.999    0.003 -> DIIS
-        8   -0.093534348425  1.116e-07   1.164e-01  1.601e-01   1.618e-06  3.839e-06     1.987    0.004 -> DIIS
-        9   -0.093534277418  7.101e-08   1.164e-01  1.601e-01   4.833e-07  1.341e-06     1.996    0.004 -> DIIS
-       10   -0.093534249794  2.762e-08   1.164e-01  1.601e-01   5.112e-08  3.300e-07     2.002    0.004 -> DIIS
-       11   -0.093534249392  4.019e-10   1.164e-01  1.601e-01   1.963e-08  1.152e-07     1.980    0.003
+        0   -0.091031679736 -9.103e-02   1.513e-01  6.772e-01   4.446e-02  1.792e-01     6.369    0.012
+        1   -0.093188003835 -2.156e-03   1.460e-01  2.797e-01   2.188e-02  6.442e-02     6.536    0.012
+        2   -0.093387654480 -1.997e-04   1.138e-01  1.687e-01   5.939e-03  2.704e-02     6.675    0.013
+        3   -0.093538907528 -1.513e-04   1.187e-01  1.694e-01   2.604e-03  1.178e-02     6.373    0.012
+        4   -0.093530656016  8.252e-06   1.159e-01  1.583e-01   9.292e-04  5.043e-03     6.563    0.013
+        5   -0.093536414667 -5.759e-06   1.168e-01  1.614e-01   4.050e-04  2.188e-03     6.285    0.012 -> DIIS
+        6   -0.093535707210  7.075e-07   1.163e-01  1.596e-01   1.599e-04  9.440e-04     6.147    0.011 -> DIIS
+        7   -0.093534460021  1.247e-06   1.165e-01  1.601e-01   4.758e-06  1.151e-05     6.146    0.012 -> DIIS
+        8   -0.093534348425  1.116e-07   1.164e-01  1.601e-01   1.618e-06  3.839e-06     6.412    0.011 -> DIIS
+        9   -0.093534277418  7.101e-08   1.164e-01  1.601e-01   4.833e-07  1.341e-06     6.458    0.013 -> DIIS
+       10   -0.093534249794  2.762e-08   1.164e-01  1.601e-01   5.112e-08  3.300e-07     6.285    0.013 -> DIIS
+       11   -0.093534249392  4.019e-10   1.164e-01  1.601e-01   1.963e-08  1.152e-07     6.132    0.012
     ---------------------------------------------------------------------------------------------------
 
   ==> MR-LDSRG(2)-QC Energy Summary <==
 
-    E0 (reference)                      =     -99.406065222746861
-    MR-LDSRG(2)-QC correlation energy   =      -0.093534249392479
+    E0 (reference)                      =     -99.406065222746847
+    MR-LDSRG(2)-QC correlation energy   =      -0.093534249392489
     MR-LDSRG(2)-QC total energy         =     -99.499599472139337
 
   ==> Final Excitation Amplitudes Summary <==
@@ -1606,7 +1780,7 @@ Calling plugin /Users/ChenyangLi/src/forte/forte.so.
     [  8       9    ]-0.001429 [  0       3    ]-0.000641 [  0       4    ] 0.000540 
     [  0       5    ] 0.000252 
     --------------------------------------------------------------------------------
-    Norm of T1A vector: (nonzero elements: 13)                    0.134702212953974.
+    Norm of T1A vector: (nonzero elements: 13)                    0.134702212953977.
     --------------------------------------------------------------------------------
     Largest T1 amplitudes for spin case B:
        _       _                  _       _                  _       _               
@@ -1618,7 +1792,7 @@ Calling plugin /Users/ChenyangLi/src/forte/forte.so.
     [  8       9    ]-0.001429 [  0       3    ]-0.000641 [  0       4    ] 0.000540 
     [  0       5    ] 0.000252 
     --------------------------------------------------------------------------------
-    Norm of T1B vector: (nonzero elements: 13)                    0.134702212953974.
+    Norm of T1B vector: (nonzero elements: 13)                    0.134702212953977.
     --------------------------------------------------------------------------------
     Largest T2 amplitudes for spin case AA:
        i   j   a   b              i   j   a   b              i   j   a   b           
@@ -1629,7 +1803,7 @@ Calling plugin /Users/ChenyangLi/src/forte/forte.so.
     [  6   8   7   9]-0.023078 [  1   2   1   3] 0.019986 [  0   1   1   5]-0.016433 
     [  1   2   2   3] 0.015887 [  0   2   1   2]-0.015648 [  1   8   4   9]-0.013983 
     --------------------------------------------------------------------------------
-    Norm of T2AA vector: (nonzero elements: 240)                  0.228026728546443.
+    Norm of T2AA vector: (nonzero elements: 240)                  0.228026728546441.
     --------------------------------------------------------------------------------
     Largest T2 amplitudes for spin case AB:
            _       _                  _       _                  _       _           
@@ -1641,7 +1815,7 @@ Calling plugin /Users/ChenyangLi/src/forte/forte.so.
     [  2   6   1   7]-0.035705 [  2   2   3   3]-0.033939 [  2   2   1   4]-0.033763 
     [  2   8   2   9]-0.031237 [  2   6   2   7]-0.031237 [  1   1   1   3]-0.030861 
     --------------------------------------------------------------------------------
-    Norm of T2AB vector: (nonzero elements: 405)                  0.294673590344298.
+    Norm of T2AB vector: (nonzero elements: 405)                  0.294673590344292.
     --------------------------------------------------------------------------------
     Largest T2 amplitudes for spin case BB:
        _   _   _   _              _   _   _   _              _   _   _   _           
@@ -1653,7 +1827,7 @@ Calling plugin /Users/ChenyangLi/src/forte/forte.so.
     [  6   8   7   9]-0.023078 [  1   2   1   3] 0.019986 [  0   1   1   5]-0.016433 
     [  1   2   2   3] 0.015887 [  0   2   1   2]-0.015648 [  1   8   4   9]-0.013983 
     --------------------------------------------------------------------------------
-    Norm of T2BB vector: (nonzero elements: 240)                  0.228026728546443.
+    Norm of T2BB vector: (nonzero elements: 240)                  0.228026728546441.
     --------------------------------------------------------------------------------
 
   ==> Possible Intruders <==
@@ -1664,27 +1838,27 @@ Calling plugin /Users/ChenyangLi/src/forte/forte.so.
     T2 amplitudes larger than 0.1000 for spin case AB: NULL
     T2 amplitudes larger than 0.1000 for spin case BB: NULL
 
-  ==> De-Normal-Order the DSRG Transformed Hamiltonian <==
+  ==> De-Normal-Order DSRG Transformed Hamiltonian <==
 
-    Computing the scalar term   ...      Done. Timing      0.001 s
-    Computing the one-body term ...      Done. Timing      0.001 s
-    Updating integrals          ...      Done. Timing      0.000 s
+    Computing the scalar term                ... Done. Timing    0.003 s
+    Computing the 1-body term                ... Done. Timing    0.001 s
 
-  ==> Scalar of the DSRG Hamiltonian (WRT True Vacuum) <==
+  ==> Rotate DSRG Transformed Hamiltonian back to Original Basis <==
 
-    Scalar0                        =    -26.856127186720741
-    Scalar1                        =      0.955701885932740
-    Scalar2                        =      0.733743037548699
-    Total Scalar W/O Frozen-Core   =    -25.166682263239302
-    Total Scalar W/  Frozen-Core   =   -100.985217800197887
+    Rotating 1-body term to original basis   ... Done. Timing    0.001 s
+    Rotating 2-body term to original basis   ... Done. Timing    0.020 s
 
-  ==> Test De-Normal-Ordered Hamiltonian <==
+                -----------------------------------------------
+                  String-based Full Configuration Interaction
+                          by Francesco A. Evangelista
+                -----------------------------------------------
 
-    One-Body Energy (after)        =     -1.553968053666617
-    Two-Body Energy (after)        =     -0.135476869814821
-    Total Energy (after)           =    -99.499599472139323
-    Total Energy (before)          =    -99.499599472139337
-  Frozen Orbitals takes     0.000 s.
+  Number of electrons: 10
+  Charge: 0
+  Multiplicity: 1
+  Davidson subspace max dim: 8
+  Davidson subspace min dim: 2
+  M_s: 0
 
   ==> String Lists <==
 
@@ -1696,7 +1870,6 @@ Calling plugin /Users/ChenyangLi/src/forte/forte.so.
   Timing for NN strings     =      0.000 s
   Timing for VO strings     =      0.000 s
   Timing for OO strings     =      0.000 s
-  Timing for Knowles-Handy  =      0.000 s
   Timing for VVOO strings   =      0.000 s
   Timing for VOVO strings   =      0.000 s
   Timing for 1-hole strings =      0.000 s
@@ -1709,7 +1882,7 @@ Calling plugin /Users/ChenyangLi/src/forte/forte.so.
     Number of determinants                           4
     Symmetry                                         0
     Multiplicity                                     1
-    Number of roots                                  0
+    Number of roots                                  1
     Target root                                      0
     Trial vectors per root                          10
 
@@ -1725,7 +1898,7 @@ Calling plugin /Users/ChenyangLi/src/forte/forte.so.
       2      -99.090219891581  0.000  singlet
       3      -98.766884019785  0.000  singlet
   ---------------------------------------------
-  Timing for initial guess  =      0.000 s
+  Timing for initial guess  =      0.001 s
 
   Projecting out root 1
   ==> Diagonalizing Hamiltonian <==
@@ -1734,18 +1907,19 @@ Calling plugin /Users/ChenyangLi/src/forte/forte.so.
     Iter.      Avg. Energy       Delta_E
   ----------------------------------------
       1      -99.499599472505  -9.950e+01
-      2      -99.499599472505  +2.842e-14
+      2      -99.499599472505  -1.421e-14
   ----------------------------------------
   The Davidson-Liu algorithm converged in 3 iterations.
 
   ==> Root No. 0 <==
 
-    20      0.95926815
-    02     -0.27468521
+    20     -0.95925585
+    02      0.27467291
 
-    Total Energy:       -99.499599472504627
+    Total Energy:       -99.499599472504698
 
-  ==> RDMs for Root No. 0 <==
+  ==> Computing RDMs for Root No. 0 <==
+
     Timing for 1-RDM: 0.000 s
     Timing for 2-RDM: 0.000 s
     Timing for 3-RDM: 0.000 s
@@ -1754,129 +1928,150 @@ Calling plugin /Users/ChenyangLi/src/forte/forte.so.
 
         1A1     1.847155      2A1     0.152845  
 
+  The following reference rotation will make the new reference and integrals in the same basis.
 
-  Warning: I am forcing density Db = Da to avoid spin symmetry breaking.
-  If this is not desired, go to mrdsrg.cc around line 190.
+  ==> Reference Transformation to Semicanonical Basis <==
+
+    Transformed 1 cumulants.
+    Transformed 2 cumulants and RDMs.
+    Transformed 3 cumulants.
+
+  ==> Semicanonicalize Orbitals <==
+
+  Took 0.000141 s to build Fock matrix
+
+  ==> Checking Fock Matrix Diagonal Blocks <==
+
+    Off-Diag. Elements       Max           2-Norm
+    ------------------------------------------------
+    Fa actv              0.0000018743   0.0000026507
+    Fb actv              0.0000018743   0.0000026507
+    ------------------------------------------------
+    Fa core              0.0000000000   0.0000000000
+    Fb core              0.0000000000   0.0000000000
+    ------------------------------------------------
+    Fa virt              0.0000009695   0.0000022472
+    Fb virt              0.0000009695   0.0000022472
+    ------------------------------------------------
+
+  ==> Integral Transformation to Semicanonical Basis <==
+    Molecular point group: c2v
+    Full point group: C_inf_v
+
+    Geometry (in Angstrom), charge = 0, multiplicity = 1:
+
+       Center              X                  Y                   Z               Mass       
+    ------------   -----------------  -----------------  -----------------  -----------------
+           F          0.000000000000     0.000000000000    -0.075563346012    18.998403224000
+           H          0.000000000000     0.000000000000     1.424436653988     1.007825032070
+
+  -AO BASIS SET INFORMATION:
+    Name                   = 3-21G
+    Blend                  = 3-21G
+    Total number of shells = 7
+    Number of primitives   = 12
+    Number of AO           = 11
+    Number of SO           = 11
+    Maximum AM             = 1
+    Spherical Harmonics    = FALSE
+
+  -Contraction Scheme:
+    Atom   Type   All Primitives // Shells:
+   ------ ------ --------------------------
+       1     F     6s 3p // 3s 2p 
+       2     H     3s // 2s 
+
+  ==> AO Basis Functions <==
+
+    [ 3-21G ]
+    cartesian
+    ****
+    F   1
+    S   3 1.00
+                       413.80100000           0.05854830
+                        62.24460000           0.34930800
+                        13.43400000           0.70963200
+    S   2 1.00
+                         9.77759000          -0.40732700
+                         2.08617000           1.22314000
+    P   2 1.00
+                         9.77759000           0.24668000
+                         2.08617000           0.85232100
+    S   1 1.00
+                         0.48238300           1.00000000
+    P   1 1.00
+                         0.48238300           1.00000000
+    ****
+    H   2
+    S   2 1.00
+                         5.44717800           0.15628500
+                         0.82454700           0.90469100
+    S   1 1.00
+                         0.18319200           1.00000000
+    ****
+
+
+ Integrals are about to be computed.	Presorting SO-basis two-electron integrals.
+	Sorting File: SO Ints (nn|nn) nbuckets = 1
+	Transforming the one-electron integrals and constructing Fock matrices
+	Starting first half-transformation.
+	Sorting half-transformed integrals.
+	First half integral transformation complete.
+	Starting second half-transformation.
+	Two-electron integral transformation complete.
+
+  Integral transformation done. 0.01072300 s
+  Reading the two-electron integrals from disk
+  Size of two-electron integrals:   0.000327 GB
+ Integrals are about to be updated.  Using in-core PK algorithm.
+   Calculation information:
+      Number of atoms:                   2
+      Number of AO shells:               7
+      Number of primitives:             12
+      Number of atomic orbitals:        11
+      Number of basis functions:        11
+
+      Integral cutoff                 1.00e-12
+      Number of threads:                 1
+
+  Performing in-core PK
+  Using 4422 doubles for integral storage.
+  We computed 406 shell quartets total.
+  Whereas there are 406 unique shell quartets.
+
+  Frozen-core energy            -75.818535536959 a.u.
+
+  FrozenOneBody Operator takes  0.03289000 s
+  Resorting integrals after freezing core.
+  Frozen Orbitals takes     0.033 s.
+
+  ==> Reference Transformation to Semicanonical Basis <==
+
+    Transformed 1 cumulants.
+    Transformed 2 cumulants and RDMs.
+    Transformed 3 cumulants.
+  SemiCanonicalize takes 2.143247 s.
 
   ==> Density Cumulant Summary <==
 
-    2-body               AA           AB           BB
-    -------------------------------------------------
-    max            0.070582     0.069426     0.070582
-    norm           0.141164     0.401362     0.141164
-    -------------------------------------------------
-    3-body              AAA          AAB          ABB          BBB
-    --------------------------------------------------------------
-    max            0.000000     0.059624     0.059624     0.000000
-    norm           0.000000     0.169123     0.169123     0.000000
-    --------------------------------------------------------------
+    2-body             AA           AB           BB
+    -----------------------------------------------
+    max          0.070582     0.264517     0.070582
+    norm         0.141164     0.401362     0.141164
+    -----------------------------------------------
+    3-body            AAA          AAB          ABB          BBB
+    ------------------------------------------------------------
+    max          0.000000     0.059624     0.059624     0.000000
+    norm         0.000000     0.169123     0.169123     0.000000
+    ------------------------------------------------------------
 
-  ==> Semi-canonicalize Orbitals <==
-
-    Checking if orbitals are semi-canonicalized ...
-    Warning! Orbitals are not semi-canonicalized!
-    Off-Diagonal norms of the core, active, virtual blocks of Fock matrix
-                  core          active         virtual
-    ---------------------------------------------------
-    Fa    0.0000000000    0.0000026507    0.0000022472
-    Fb    0.0000000000    0.0000026507    0.0000022472
-    ---------------------------------------------------
-
-    Timing for block-diagonalizing Fock matrix:        0.000
-    Timing for transforming one-electron integral:     0.011
-  Frozen Orbitals takes     0.000 s.
-    Timing for transforming two-electron integral:     0.449
-
-  ==> String Lists <==
-
-  Number of alpha electrons     = 1
-  Number of beta electrons      = 1
-  Number of alpha strings       = 2
-  Number of beta strings        = 2
-  Timing for strings        =      0.000 s
-  Timing for NN strings     =      0.000 s
-  Timing for VO strings     =      0.000 s
-  Timing for OO strings     =      0.000 s
-  Timing for Knowles-Handy  =      0.000 s
-  Timing for VVOO strings   =      0.000 s
-  Timing for VOVO strings   =      0.000 s
-  Timing for 1-hole strings =      0.000 s
-  Timing for 2-hole strings =      0.000 s
-  Timing for 3-hole strings =      0.000 s
-  Total timing              =      0.000 s
-
-  ==> FCI Solver <==
-
-    Number of determinants                           4
-    Symmetry                                         0
-    Multiplicity                                     1
-    Number of roots                                  0
-    Target root                                      0
-    Trial vectors per root                          10
-
-  Allocating memory for the Hamiltonian algorithm. Size: 2 x 2 x 2.   Memory: 0.000000 GB
-
-  ==> FCI Initial Guess <==
-
-  ---------------------------------------------
-    Root            Energy     <S^2>   Spin
-  ---------------------------------------------
-      0      -99.499599472505  0.000  singlet
-      1      -99.370803716369  2.000  triplet
-      2      -99.090219891581  0.000  singlet
-      3      -98.766884019785  0.000  singlet
-  ---------------------------------------------
-  Timing for initial guess  =      0.000 s
-
-  Projecting out root 1
-  ==> Diagonalizing Hamiltonian <==
-
-  ----------------------------------------
-    Iter.      Avg. Energy       Delta_E
-  ----------------------------------------
-      1      -99.499599472505  -9.950e+01
-      2      -99.499599472505  +0.000e+00
-  ----------------------------------------
-  The Davidson-Liu algorithm converged in 3 iterations.
-
-  ==> Root No. 0 <==
-
-    20      0.95926844
-    02     -0.27468550
-
-    Total Energy:       -99.499599472504642
-
-  ==> RDMs for Root No. 0 <==
-    Timing for 1-RDM: 0.000 s
-    Timing for 2-RDM: 0.000 s
-    Timing for 3-RDM: 0.000 s
-
-  ==> NATURAL ORBITALS <==
-
-        1A1     1.847155      2A1     0.152845  
-
-
-  Warning: I am forcing density Db = Da to avoid spin symmetry breaking.
-  If this is not desired, go to mrdsrg.cc around line 190.
-
-  ==> Density Cumulant Summary <==
-
-    2-body               AA           AB           BB
-    -------------------------------------------------
-    max            0.070582     0.069426     0.070582
-    norm           0.141164     0.401362     0.141164
-    -------------------------------------------------
-    3-body              AAA          AAB          ABB          BBB
-    --------------------------------------------------------------
-    max            0.000000     0.059624     0.059624     0.000000
-    norm           0.000000     0.169123     0.169123     0.000000
-    --------------------------------------------------------------
   ==> MR-DSRG Ref. Relaxation Iter. 3 <==
+
 
   ==> Build Initial Amplitude from DSRG-MRPT2 <==
 
-    Computing T2 amplitudes ...          Done. Timing      0.001 s
-    Computing T1 amplitudes ...          Done. Timing      0.001 s
+    Computing T2 amplitudes ...          Done. Timing      0.003 s
+    Computing T1 amplitudes ...          Done. Timing      0.003 s
 
   ==> First-Order Excitation Amplitudes Summary <==
 
@@ -1890,7 +2085,7 @@ Calling plugin /Users/ChenyangLi/src/forte/forte.so.
     [  8       9    ]-0.001852 [  0       5    ] 0.001052 [  0       4    ]-0.000064 
     [  0       3    ] 0.000046 
     --------------------------------------------------------------------------------
-    Norm of T1A vector: (nonzero elements: 13)                    0.149322651129442.
+    Norm of T1A vector: (nonzero elements: 13)                    0.149322651129416.
     --------------------------------------------------------------------------------
     Largest T1 amplitudes for spin case B:
        _       _                  _       _                  _       _               
@@ -1902,7 +2097,7 @@ Calling plugin /Users/ChenyangLi/src/forte/forte.so.
     [  8       9    ]-0.001852 [  0       5    ] 0.001052 [  0       4    ]-0.000064 
     [  0       3    ] 0.000046 
     --------------------------------------------------------------------------------
-    Norm of T1B vector: (nonzero elements: 13)                    0.149322651129441.
+    Norm of T1B vector: (nonzero elements: 13)                    0.149322651129416.
     --------------------------------------------------------------------------------
     Largest T2 amplitudes for spin case AA:
        i   j   a   b              i   j   a   b              i   j   a   b           
@@ -1913,7 +2108,7 @@ Calling plugin /Users/ChenyangLi/src/forte/forte.so.
     [  1   2   1   3]-0.024443 [  6   8   7   9]-0.024096 [  0   1   1   5]-0.021081 
     [  1   2   1   4] 0.019728 [  2   6   4   7] 0.019677 [  2   8   4   9] 0.019677 
     --------------------------------------------------------------------------------
-    Norm of T2AA vector: (nonzero elements: 240)                  0.282476761424912.
+    Norm of T2AA vector: (nonzero elements: 240)                  0.282476761424911.
     --------------------------------------------------------------------------------
     Largest T2 amplitudes for spin case AB:
            _       _                  _       _                  _       _           
@@ -1925,7 +2120,7 @@ Calling plugin /Users/ChenyangLi/src/forte/forte.so.
     [  1   6   1   7]-0.048306 [  1   2   2   4] 0.046382 [  2   8   2   9]-0.040389 
     [  2   6   2   7]-0.040389 [  8   8   9   9]-0.036340 [  6   6   7   7]-0.036340 
     --------------------------------------------------------------------------------
-    Norm of T2AB vector: (nonzero elements: 405)                  0.349773820382693.
+    Norm of T2AB vector: (nonzero elements: 405)                  0.349773820382697.
     --------------------------------------------------------------------------------
     Largest T2 amplitudes for spin case BB:
        _   _   _   _              _   _   _   _              _   _   _   _           
@@ -1935,9 +2130,9 @@ Calling plugin /Users/ChenyangLi/src/forte/forte.so.
     [  2   6   1   7]-0.045724 [  2   8   2   9]-0.036524 [  2   6   2   7]-0.036524 
     [  0   1   1   2]-0.034457 [  1   8   2   9]-0.030723 [  1   6   2   7]-0.030723 
     [  1   2   1   3]-0.024443 [  6   8   7   9]-0.024096 [  0   1   1   5]-0.021081 
-    [  1   2   1   4] 0.019728 [  2   6   4   7] 0.019677 [  2   8   4   9] 0.019677 
+    [  1   2   1   4] 0.019728 [  2   8   4   9] 0.019677 [  2   6   4   7] 0.019677 
     --------------------------------------------------------------------------------
-    Norm of T2BB vector: (nonzero elements: 240)                  0.282476761424912.
+    Norm of T2BB vector: (nonzero elements: 240)                  0.282476761424911.
     --------------------------------------------------------------------------------
 
   ==> Possible Intruders <==
@@ -1966,25 +2161,25 @@ Calling plugin /Users/ChenyangLi/src/forte/forte.so.
            ---------------------------  ---------------------  ---------------------  -----------------
     Iter.        Corr.         Delta       Hbar1      Hbar2        T1         T2        Hbar     Amp.  
     ---------------------------------------------------------------------------------------------------
-        0   -0.091033191762 -9.103e-02   1.513e-01  6.772e-01   4.446e-02  1.792e-01     2.018    0.004
-        1   -0.093189515332 -2.156e-03   1.460e-01  2.797e-01   2.188e-02  6.442e-02     2.029    0.004
-        2   -0.093389130943 -1.996e-04   1.138e-01  1.687e-01   5.939e-03  2.704e-02     1.993    0.003
-        3   -0.093540370588 -1.512e-04   1.187e-01  1.694e-01   2.604e-03  1.178e-02     2.002    0.004
-        4   -0.093532121687  8.249e-06   1.159e-01  1.583e-01   9.292e-04  5.043e-03     2.016    0.004
-        5   -0.093537878706 -5.757e-06   1.168e-01  1.614e-01   4.050e-04  2.188e-03     1.997    0.004 -> DIIS
-        6   -0.093537172049  7.067e-07   1.163e-01  1.596e-01   1.599e-04  9.441e-04     1.997    0.003 -> DIIS
-        7   -0.093535924677  1.247e-06   1.165e-01  1.601e-01   4.759e-06  1.151e-05     2.011    0.003 -> DIIS
-        8   -0.093535813063  1.116e-07   1.165e-01  1.601e-01   1.618e-06  3.840e-06     2.007    0.004 -> DIIS
-        9   -0.093535742055  7.101e-08   1.165e-01  1.601e-01   4.834e-07  1.341e-06     1.987    0.003 -> DIIS
-       10   -0.093535714431  2.762e-08   1.165e-01  1.601e-01   5.112e-08  3.300e-07     2.009    0.004 -> DIIS
-       11   -0.093535714029  4.013e-10   1.165e-01  1.601e-01   1.964e-08  1.152e-07     1.996    0.004
+        0   -0.091033191762 -9.103e-02   1.513e-01  6.772e-01   4.446e-02  1.792e-01     6.154    0.010
+        1   -0.093189515332 -2.156e-03   1.460e-01  2.797e-01   2.188e-02  6.442e-02     6.155    0.012
+        2   -0.093389130943 -1.996e-04   1.138e-01  1.687e-01   5.939e-03  2.704e-02     6.149    0.010
+        3   -0.093540370588 -1.512e-04   1.187e-01  1.694e-01   2.604e-03  1.178e-02     6.044    0.012
+        4   -0.093532121687  8.249e-06   1.159e-01  1.583e-01   9.292e-04  5.043e-03     6.158    0.012
+        5   -0.093537878706 -5.757e-06   1.168e-01  1.614e-01   4.050e-04  2.188e-03     6.119    0.013 -> DIIS
+        6   -0.093537172049  7.067e-07   1.163e-01  1.596e-01   1.599e-04  9.441e-04     6.244    0.011 -> DIIS
+        7   -0.093535924677  1.247e-06   1.165e-01  1.601e-01   4.759e-06  1.151e-05     6.168    0.011 -> DIIS
+        8   -0.093535813063  1.116e-07   1.165e-01  1.601e-01   1.618e-06  3.840e-06     6.090    0.012 -> DIIS
+        9   -0.093535742055  7.101e-08   1.165e-01  1.601e-01   4.834e-07  1.341e-06     6.269    0.013 -> DIIS
+       10   -0.093535714431  2.762e-08   1.165e-01  1.601e-01   5.112e-08  3.300e-07     6.185    0.012 -> DIIS
+       11   -0.093535714029  4.013e-10   1.165e-01  1.601e-01   1.964e-08  1.152e-07     6.100    0.011
     ---------------------------------------------------------------------------------------------------
 
   ==> MR-LDSRG(2)-QC Energy Summary <==
 
-    E0 (reference)                      =     -99.406065222746861
-    MR-LDSRG(2)-QC correlation energy   =      -0.093535714029286
-    MR-LDSRG(2)-QC total energy         =     -99.499600936776147
+    E0 (reference)                      =     -99.406065222746847
+    MR-LDSRG(2)-QC correlation energy   =      -0.093535714029261
+    MR-LDSRG(2)-QC total energy         =     -99.499600936776105
 
   ==> Final Excitation Amplitudes Summary <==
 
@@ -1998,7 +2193,7 @@ Calling plugin /Users/ChenyangLi/src/forte/forte.so.
     [  8       9    ]-0.001429 [  0       3    ]-0.000641 [  0       4    ] 0.000540 
     [  0       5    ] 0.000252 
     --------------------------------------------------------------------------------
-    Norm of T1A vector: (nonzero elements: 13)                    0.134702644116786.
+    Norm of T1A vector: (nonzero elements: 13)                    0.134702644116772.
     --------------------------------------------------------------------------------
     Largest T1 amplitudes for spin case B:
        _       _                  _       _                  _       _               
@@ -2010,7 +2205,7 @@ Calling plugin /Users/ChenyangLi/src/forte/forte.so.
     [  8       9    ]-0.001429 [  0       3    ]-0.000641 [  0       4    ] 0.000540 
     [  0       5    ] 0.000252 
     --------------------------------------------------------------------------------
-    Norm of T1B vector: (nonzero elements: 13)                    0.134702644116786.
+    Norm of T1B vector: (nonzero elements: 13)                    0.134702644116772.
     --------------------------------------------------------------------------------
     Largest T2 amplitudes for spin case AA:
        i   j   a   b              i   j   a   b              i   j   a   b           
@@ -2021,7 +2216,7 @@ Calling plugin /Users/ChenyangLi/src/forte/forte.so.
     [  6   8   7   9]-0.023078 [  1   2   1   3]-0.019986 [  0   1   1   5]-0.016433 
     [  1   2   2   3]-0.015887 [  0   2   1   2] 0.015647 [  1   8   4   9] 0.013983 
     --------------------------------------------------------------------------------
-    Norm of T2AA vector: (nonzero elements: 240)                  0.228026545443047.
+    Norm of T2AA vector: (nonzero elements: 240)                  0.228026545443061.
     --------------------------------------------------------------------------------
     Largest T2 amplitudes for spin case AB:
            _       _                  _       _                  _       _           
@@ -2033,7 +2228,7 @@ Calling plugin /Users/ChenyangLi/src/forte/forte.so.
     [  2   6   1   7]-0.035705 [  2   2   3   3]-0.033939 [  2   2   1   4] 0.033763 
     [  2   8   2   9]-0.031237 [  2   6   2   7]-0.031237 [  1   1   1   3] 0.030861 
     --------------------------------------------------------------------------------
-    Norm of T2AB vector: (nonzero elements: 405)                  0.294673045378808.
+    Norm of T2AB vector: (nonzero elements: 405)                  0.294673045378839.
     --------------------------------------------------------------------------------
     Largest T2 amplitudes for spin case BB:
        _   _   _   _              _   _   _   _              _   _   _   _           
@@ -2045,7 +2240,7 @@ Calling plugin /Users/ChenyangLi/src/forte/forte.so.
     [  6   8   7   9]-0.023078 [  1   2   1   3]-0.019986 [  0   1   1   5]-0.016433 
     [  1   2   2   3]-0.015887 [  0   2   1   2] 0.015647 [  1   8   4   9] 0.013983 
     --------------------------------------------------------------------------------
-    Norm of T2BB vector: (nonzero elements: 240)                  0.228026545443047.
+    Norm of T2BB vector: (nonzero elements: 240)                  0.228026545443061.
     --------------------------------------------------------------------------------
 
   ==> Possible Intruders <==
@@ -2056,27 +2251,27 @@ Calling plugin /Users/ChenyangLi/src/forte/forte.so.
     T2 amplitudes larger than 0.1000 for spin case AB: NULL
     T2 amplitudes larger than 0.1000 for spin case BB: NULL
 
-  ==> De-Normal-Order the DSRG Transformed Hamiltonian <==
+  ==> De-Normal-Order DSRG Transformed Hamiltonian <==
 
-    Computing the scalar term   ...      Done. Timing      0.001 s
-    Computing the one-body term ...      Done. Timing      0.001 s
-    Updating integrals          ...      Done. Timing      0.000 s
+    Computing the scalar term                ... Done. Timing    0.003 s
+    Computing the 1-body term                ... Done. Timing    0.002 s
 
-  ==> Scalar of the DSRG Hamiltonian (WRT True Vacuum) <==
+  ==> Rotate DSRG Transformed Hamiltonian back to Original Basis <==
 
-    Scalar0                        =    -26.856128651357551
-    Scalar1                        =      0.955719789081795
-    Scalar2                        =      0.733725807573899
-    Total Scalar W/O Frozen-Core   =    -25.166683054701856
-    Total Scalar W/  Frozen-Core   =   -100.985218591660441
+    Rotating 1-body term to original basis   ... Done. Timing    0.001 s
+    Rotating 2-body term to original basis   ... Done. Timing    0.019 s
 
-  ==> Test De-Normal-Ordered Hamiltonian <==
+                -----------------------------------------------
+                  String-based Full Configuration Interaction
+                          by Francesco A. Evangelista
+                -----------------------------------------------
 
-    One-Body Energy (after)        =     -1.553982746901687
-    Two-Body Energy (after)        =     -0.135462849754007
-    Total Energy (after)           =    -99.499600936776133
-    Total Energy (before)          =    -99.499600936776147
-  Frozen Orbitals takes     0.000 s.
+  Number of electrons: 10
+  Charge: 0
+  Multiplicity: 1
+  Davidson subspace max dim: 8
+  Davidson subspace min dim: 2
+  M_s: 0
 
   ==> String Lists <==
 
@@ -2088,7 +2283,6 @@ Calling plugin /Users/ChenyangLi/src/forte/forte.so.
   Timing for NN strings     =      0.000 s
   Timing for VO strings     =      0.000 s
   Timing for OO strings     =      0.000 s
-  Timing for Knowles-Handy  =      0.000 s
   Timing for VVOO strings   =      0.000 s
   Timing for VOVO strings   =      0.000 s
   Timing for 1-hole strings =      0.000 s
@@ -2101,7 +2295,7 @@ Calling plugin /Users/ChenyangLi/src/forte/forte.so.
     Number of determinants                           4
     Symmetry                                         0
     Multiplicity                                     1
-    Number of roots                                  0
+    Number of roots                                  1
     Target root                                      0
     Trial vectors per root                          10
 
@@ -2117,7 +2311,7 @@ Calling plugin /Users/ChenyangLi/src/forte/forte.so.
       2      -99.090220851669  0.000  singlet
       3      -98.766884951581  0.000  singlet
   ---------------------------------------------
-  Timing for initial guess  =      0.000 s
+  Timing for initial guess  =      0.001 s
 
   Projecting out root 1
   ==> Diagonalizing Hamiltonian <==
@@ -2126,18 +2320,19 @@ Calling plugin /Users/ChenyangLi/src/forte/forte.so.
     Iter.      Avg. Energy       Delta_E
   ----------------------------------------
       1      -99.499600936776  -9.950e+01
-      2      -99.499600936776  +5.684e-14
+      2      -99.499600936776  +2.842e-14
   ----------------------------------------
   The Davidson-Liu algorithm converged in 3 iterations.
 
   ==> Root No. 0 <==
 
-    20      0.95926861
-    02     -0.27468499
+    20     -0.95926832
+    02      0.27468470
 
-    Total Energy:       -99.499600936776261
+    Total Energy:       -99.499600936776275
 
-  ==> RDMs for Root No. 0 <==
+  ==> Computing RDMs for Root No. 0 <==
+
     Timing for 1-RDM: 0.000 s
     Timing for 2-RDM: 0.000 s
     Timing for 3-RDM: 0.000 s
@@ -2146,32 +2341,150 @@ Calling plugin /Users/ChenyangLi/src/forte/forte.so.
 
         1A1     1.847155      2A1     0.152845  
 
+  The following reference rotation will make the new reference and integrals in the same basis.
 
-  Warning: I am forcing density Db = Da to avoid spin symmetry breaking.
-  If this is not desired, go to mrdsrg.cc around line 190.
+  ==> Reference Transformation to Semicanonical Basis <==
+
+    Transformed 1 cumulants.
+    Transformed 2 cumulants and RDMs.
+    Transformed 3 cumulants.
+
+  ==> Semicanonicalize Orbitals <==
+
+  Took 0.000048 s to build Fock matrix
+
+  ==> Checking Fock Matrix Diagonal Blocks <==
+
+    Off-Diag. Elements       Max           2-Norm
+    ------------------------------------------------
+    Fa actv              0.0000000436   0.0000000617
+    Fb actv              0.0000000436   0.0000000617
+    ------------------------------------------------
+    Fa core              0.0000000000   0.0000000000
+    Fb core              0.0000000000   0.0000000000
+    ------------------------------------------------
+    Fa virt              0.0000000224   0.0000000519
+    Fb virt              0.0000000224   0.0000000519
+    ------------------------------------------------
+
+  ==> Integral Transformation to Semicanonical Basis <==
+    Molecular point group: c2v
+    Full point group: C_inf_v
+
+    Geometry (in Angstrom), charge = 0, multiplicity = 1:
+
+       Center              X                  Y                   Z               Mass       
+    ------------   -----------------  -----------------  -----------------  -----------------
+           F          0.000000000000     0.000000000000    -0.075563346012    18.998403224000
+           H          0.000000000000     0.000000000000     1.424436653988     1.007825032070
+
+  -AO BASIS SET INFORMATION:
+    Name                   = 3-21G
+    Blend                  = 3-21G
+    Total number of shells = 7
+    Number of primitives   = 12
+    Number of AO           = 11
+    Number of SO           = 11
+    Maximum AM             = 1
+    Spherical Harmonics    = FALSE
+
+  -Contraction Scheme:
+    Atom   Type   All Primitives // Shells:
+   ------ ------ --------------------------
+       1     F     6s 3p // 3s 2p 
+       2     H     3s // 2s 
+
+  ==> AO Basis Functions <==
+
+    [ 3-21G ]
+    cartesian
+    ****
+    F   1
+    S   3 1.00
+                       413.80100000           0.05854830
+                        62.24460000           0.34930800
+                        13.43400000           0.70963200
+    S   2 1.00
+                         9.77759000          -0.40732700
+                         2.08617000           1.22314000
+    P   2 1.00
+                         9.77759000           0.24668000
+                         2.08617000           0.85232100
+    S   1 1.00
+                         0.48238300           1.00000000
+    P   1 1.00
+                         0.48238300           1.00000000
+    ****
+    H   2
+    S   2 1.00
+                         5.44717800           0.15628500
+                         0.82454700           0.90469100
+    S   1 1.00
+                         0.18319200           1.00000000
+    ****
+
+
+ Integrals are about to be computed.	Presorting SO-basis two-electron integrals.
+	Sorting File: SO Ints (nn|nn) nbuckets = 1
+	Transforming the one-electron integrals and constructing Fock matrices
+	Starting first half-transformation.
+	Sorting half-transformed integrals.
+	First half integral transformation complete.
+	Starting second half-transformation.
+	Two-electron integral transformation complete.
+
+  Integral transformation done. 0.01289400 s
+  Reading the two-electron integrals from disk
+  Size of two-electron integrals:   0.000327 GB
+ Integrals are about to be updated.  Using in-core PK algorithm.
+   Calculation information:
+      Number of atoms:                   2
+      Number of AO shells:               7
+      Number of primitives:             12
+      Number of atomic orbitals:        11
+      Number of basis functions:        11
+
+      Integral cutoff                 1.00e-12
+      Number of threads:                 1
+
+  Performing in-core PK
+  Using 4422 doubles for integral storage.
+  We computed 406 shell quartets total.
+  Whereas there are 406 unique shell quartets.
+
+  Frozen-core energy            -75.818535536959 a.u.
+
+  FrozenOneBody Operator takes  0.03351000 s
+  Resorting integrals after freezing core.
+  Frozen Orbitals takes     0.034 s.
+
+  ==> Reference Transformation to Semicanonical Basis <==
+
+    Transformed 1 cumulants.
+    Transformed 2 cumulants and RDMs.
+    Transformed 3 cumulants.
+  SemiCanonicalize takes 2.157129 s.
 
   ==> Density Cumulant Summary <==
 
-    2-body               AA           AB           BB
-    -------------------------------------------------
-    max           -0.070582     0.069426     0.070582
-    norm           0.141164     0.401362     0.141164
-    -------------------------------------------------
-    3-body              AAA          AAB          ABB          BBB
-    --------------------------------------------------------------
-    max            0.000000     0.059624     0.059624     0.000000
-    norm           0.000000     0.169123     0.169123     0.000000
-    --------------------------------------------------------------
+    2-body             AA           AB           BB
+    -----------------------------------------------
+    max          0.070582     0.264516     0.070582
+    norm         0.141164     0.401362     0.141164
+    -----------------------------------------------
+    3-body            AAA          AAB          ABB          BBB
+    ------------------------------------------------------------
+    max          0.000000     0.059624     0.059624     0.000000
+    norm         0.000000     0.169123     0.169123     0.000000
+    ------------------------------------------------------------
 
-  ==> Semi-canonicalize Orbitals <==
-
-    Checking if orbitals are semi-canonicalized ...     OK.
   ==> MR-DSRG Ref. Relaxation Iter. 4 <==
 
+
   ==> Build Initial Amplitude from DSRG-MRPT2 <==
 
-    Computing T2 amplitudes ...          Done. Timing      0.001 s
-    Computing T1 amplitudes ...          Done. Timing      0.001 s
+    Computing T2 amplitudes ...          Done. Timing      0.006 s
+    Computing T1 amplitudes ...          Done. Timing      0.003 s
 
   ==> First-Order Excitation Amplitudes Summary <==
 
@@ -2179,48 +2492,48 @@ Calling plugin /Users/ChenyangLi/src/forte/forte.so.
     Largest T1 amplitudes for spin case A:
        i       a                  i       a                  i       a               
     --------------------------------------------------------------------------------
-    [  2       4    ] 0.104960 [  2       3    ]-0.095050 [  0       1    ]-0.040943 
-    [  1       4    ] 0.020418 [  1       3    ] 0.007373 [  0       2    ] 0.007148 
-    [  2       5    ]-0.005453 [  1       5    ]-0.003114 [  6       7    ]-0.001852 
+    [  2       4    ]-0.104960 [  2       3    ] 0.095050 [  0       1    ] 0.040943 
+    [  1       4    ]-0.020418 [  1       3    ]-0.007373 [  0       2    ]-0.007148 
+    [  2       5    ] 0.005453 [  1       5    ] 0.003114 [  6       7    ]-0.001852 
     [  8       9    ]-0.001852 [  0       5    ] 0.001052 [  0       4    ]-0.000064 
     [  0       3    ] 0.000046 
     --------------------------------------------------------------------------------
-    Norm of T1A vector: (nonzero elements: 13)                    0.149322668636595.
+    Norm of T1A vector: (nonzero elements: 13)                    0.149322669005862.
     --------------------------------------------------------------------------------
     Largest T1 amplitudes for spin case B:
        _       _                  _       _                  _       _               
        i       a                  i       a                  i       a               
     --------------------------------------------------------------------------------
-    [  2       4    ] 0.104960 [  2       3    ]-0.095050 [  0       1    ]-0.040943 
-    [  1       4    ] 0.020418 [  1       3    ] 0.007373 [  0       2    ] 0.007148 
-    [  2       5    ]-0.005453 [  1       5    ]-0.003114 [  6       7    ]-0.001852 
+    [  2       4    ]-0.104960 [  2       3    ] 0.095050 [  0       1    ] 0.040943 
+    [  1       4    ]-0.020418 [  1       3    ]-0.007373 [  0       2    ]-0.007148 
+    [  2       5    ] 0.005453 [  1       5    ] 0.003114 [  6       7    ]-0.001852 
     [  8       9    ]-0.001852 [  0       5    ] 0.001052 [  0       4    ]-0.000064 
     [  0       3    ] 0.000046 
     --------------------------------------------------------------------------------
-    Norm of T1B vector: (nonzero elements: 13)                    0.149322668636595.
+    Norm of T1B vector: (nonzero elements: 13)                    0.149322669005862.
     --------------------------------------------------------------------------------
     Largest T2 amplitudes for spin case AA:
        i   j   a   b              i   j   a   b              i   j   a   b           
     --------------------------------------------------------------------------------
     [  1   8   1   9]-0.046421 [  1   6   1   7]-0.046421 [  2   8   1   9]-0.045724 
     [  2   6   1   7]-0.045724 [  2   8   2   9]-0.036524 [  2   6   2   7]-0.036524 
-    [  0   1   1   2]-0.034457 [  1   8   2   9]-0.030723 [  1   6   2   7]-0.030723 
-    [  1   2   1   3]-0.024443 [  6   8   7   9]-0.024096 [  0   1   1   5]-0.021081 
-    [  1   2   1   4] 0.019728 [  2   6   4   7] 0.019677 [  2   8   4   9] 0.019677 
+    [  0   1   1   2] 0.034457 [  1   8   2   9]-0.030723 [  1   6   2   7]-0.030723 
+    [  1   2   1   3] 0.024443 [  6   8   7   9]-0.024096 [  0   1   1   5]-0.021081 
+    [  1   2   1   4]-0.019728 [  2   8   4   9]-0.019677 [  2   6   4   7]-0.019677 
     --------------------------------------------------------------------------------
-    Norm of T2AA vector: (nonzero elements: 240)                  0.282476764482434.
+    Norm of T2AA vector: (nonzero elements: 240)                  0.282476764549858.
     --------------------------------------------------------------------------------
     Largest T2 amplitudes for spin case AB:
            _       _                  _       _                  _       _           
        i   j   a   b              i   j   a   b              i   j   a   b           
     --------------------------------------------------------------------------------
-    [  2   2   1   4] 0.074976 [  2   2   2   3]-0.074895 [  0   0   1   1]-0.060598 
-    [  2   2   3   3]-0.052038 [  1   2   1   3]-0.050801 [  2   8   1   9]-0.050351 
-    [  2   6   1   7]-0.050351 [  1   2   1   4] 0.049795 [  1   8   1   9]-0.048306 
-    [  1   6   1   7]-0.048306 [  1   2   2   4] 0.046382 [  2   8   2   9]-0.040389 
+    [  2   2   1   4]-0.074976 [  2   2   2   3] 0.074895 [  0   0   1   1]-0.060598 
+    [  2   2   3   3]-0.052038 [  1   2   1   3] 0.050801 [  2   8   1   9]-0.050351 
+    [  2   6   1   7]-0.050351 [  1   2   1   4]-0.049795 [  1   8   1   9]-0.048306 
+    [  1   6   1   7]-0.048306 [  1   2   2   4]-0.046382 [  2   8   2   9]-0.040389 
     [  2   6   2   7]-0.040389 [  8   8   9   9]-0.036340 [  6   6   7   7]-0.036340 
     --------------------------------------------------------------------------------
-    Norm of T2AB vector: (nonzero elements: 405)                  0.349773820151438.
+    Norm of T2AB vector: (nonzero elements: 405)                  0.349773820154155.
     --------------------------------------------------------------------------------
     Largest T2 amplitudes for spin case BB:
        _   _   _   _              _   _   _   _              _   _   _   _           
@@ -2228,11 +2541,11 @@ Calling plugin /Users/ChenyangLi/src/forte/forte.so.
     --------------------------------------------------------------------------------
     [  1   8   1   9]-0.046421 [  1   6   1   7]-0.046421 [  2   8   1   9]-0.045724 
     [  2   6   1   7]-0.045724 [  2   8   2   9]-0.036524 [  2   6   2   7]-0.036524 
-    [  0   1   1   2]-0.034457 [  1   8   2   9]-0.030723 [  1   6   2   7]-0.030723 
-    [  1   2   1   3]-0.024443 [  6   8   7   9]-0.024096 [  0   1   1   5]-0.021081 
-    [  1   2   1   4] 0.019728 [  2   6   4   7] 0.019677 [  2   8   4   9] 0.019677 
+    [  0   1   1   2] 0.034457 [  1   8   2   9]-0.030723 [  1   6   2   7]-0.030723 
+    [  1   2   1   3] 0.024443 [  6   8   7   9]-0.024096 [  0   1   1   5]-0.021081 
+    [  1   2   1   4]-0.019728 [  2   8   4   9]-0.019677 [  2   6   4   7]-0.019677 
     --------------------------------------------------------------------------------
-    Norm of T2BB vector: (nonzero elements: 240)                  0.282476764482434.
+    Norm of T2BB vector: (nonzero elements: 240)                  0.282476764549858.
     --------------------------------------------------------------------------------
 
   ==> Possible Intruders <==
@@ -2240,12 +2553,12 @@ Calling plugin /Users/ChenyangLi/src/forte/forte.so.
     T1 amplitudes larger than 0.1000 for spin case A:
         Amplitude         Value                  Denominator              
     ----------------------------------------------------------------------
-    [  2       4    ]    0.10496035 (  0.084955 -   2.309658 =  -2.224703)
+    [  2       4    ]   -0.10496035 (  0.084955 -   2.309658 =  -2.224703)
     ----------------------------------------------------------------------
     T1 amplitudes larger than 0.1000 for spin case B:
         Amplitude         Value                  Denominator              
     ----------------------------------------------------------------------
-    [  2       4    ]    0.10496035 (  0.084955 -   2.309658 =  -2.224703)
+    [  2       4    ]   -0.10496035 (  0.084955 -   2.309658 =  -2.224703)
     ----------------------------------------------------------------------
     T2 amplitudes larger than 0.1000 for spin case AA: NULL
     T2 amplitudes larger than 0.1000 for spin case AB: NULL
@@ -2261,25 +2574,25 @@ Calling plugin /Users/ChenyangLi/src/forte/forte.so.
            ---------------------------  ---------------------  ---------------------  -----------------
     Iter.        Corr.         Delta       Hbar1      Hbar2        T1         T2        Hbar     Amp.  
     ---------------------------------------------------------------------------------------------------
-        0   -0.091033226996 -9.103e-02   1.513e-01  6.772e-01   4.446e-02  1.792e-01     1.988    0.004
-        1   -0.093189550686 -2.156e-03   1.460e-01  2.797e-01   2.188e-02  6.442e-02     1.980    0.004
-        2   -0.093389165459 -1.996e-04   1.138e-01  1.687e-01   5.939e-03  2.704e-02     2.003    0.003
-        3   -0.093540404820 -1.512e-04   1.187e-01  1.694e-01   2.604e-03  1.178e-02     1.998    0.003
-        4   -0.093532155964  8.249e-06   1.159e-01  1.583e-01   9.292e-04  5.043e-03     1.991    0.004
-        5   -0.093537912952 -5.757e-06   1.168e-01  1.614e-01   4.050e-04  2.188e-03     2.013    0.004 -> DIIS
-        6   -0.093537206307  7.066e-07   1.163e-01  1.596e-01   1.599e-04  9.441e-04     2.021    0.004 -> DIIS
-        7   -0.093535958932  1.247e-06   1.165e-01  1.601e-01   4.759e-06  1.151e-05     2.104    0.004 -> DIIS
-        8   -0.093535847317  1.116e-07   1.165e-01  1.601e-01   1.618e-06  3.840e-06     2.243    0.004 -> DIIS
-        9   -0.093535776309  7.101e-08   1.165e-01  1.601e-01   4.834e-07  1.341e-06     2.094    0.004 -> DIIS
-       10   -0.093535748684  2.762e-08   1.165e-01  1.601e-01   5.112e-08  3.300e-07     2.117    0.004 -> DIIS
-       11   -0.093535748283  4.013e-10   1.165e-01  1.601e-01   1.964e-08  1.152e-07     2.194    0.004
+        0   -0.091033227083 -9.103e-02   1.513e-01  6.772e-01   4.446e-02  1.792e-01     6.128    0.012
+        1   -0.093189550638 -2.156e-03   1.460e-01  2.797e-01   2.188e-02  6.442e-02     6.134    0.011
+        2   -0.093389165430 -1.996e-04   1.138e-01  1.687e-01   5.939e-03  2.704e-02     6.317    0.011
+        3   -0.093540404769 -1.512e-04   1.187e-01  1.694e-01   2.604e-03  1.178e-02     6.438    0.011
+        4   -0.093532155927  8.249e-06   1.159e-01  1.583e-01   9.292e-04  5.043e-03     7.418    0.012
+        5   -0.093537912909 -5.757e-06   1.168e-01  1.614e-01   4.050e-04  2.188e-03     6.730    0.015 -> DIIS
+        6   -0.093537206271  7.066e-07   1.163e-01  1.596e-01   1.599e-04  9.441e-04     6.306    0.012 -> DIIS
+        7   -0.093535958895  1.247e-06   1.165e-01  1.601e-01   4.759e-06  1.151e-05     6.197    0.014 -> DIIS
+        8   -0.093535847281  1.116e-07   1.165e-01  1.601e-01   1.618e-06  3.840e-06     6.173    0.012 -> DIIS
+        9   -0.093535776272  7.101e-08   1.165e-01  1.601e-01   4.834e-07  1.341e-06     6.206    0.011 -> DIIS
+       10   -0.093535748648  2.762e-08   1.165e-01  1.601e-01   5.112e-08  3.300e-07     6.188    0.011 -> DIIS
+       11   -0.093535748246  4.013e-10   1.165e-01  1.601e-01   1.964e-08  1.152e-07     6.163    0.014
     ---------------------------------------------------------------------------------------------------
 
   ==> MR-LDSRG(2)-QC Energy Summary <==
 
-    E0 (reference)                      =     -99.406065222746861
-    MR-LDSRG(2)-QC correlation energy   =      -0.093535748283034
-    MR-LDSRG(2)-QC total energy         =     -99.499600971029892
+    E0 (reference)                      =     -99.406065222746847
+    MR-LDSRG(2)-QC correlation energy   =      -0.093535748246355
+    MR-LDSRG(2)-QC total energy         =     -99.499600970993200
 
   ==> Final Excitation Amplitudes Summary <==
 
@@ -2287,60 +2600,60 @@ Calling plugin /Users/ChenyangLi/src/forte/forte.so.
     Largest T1 amplitudes for spin case A:
        i       a                  i       a                  i       a               
     --------------------------------------------------------------------------------
-    [  2       4    ] 0.090030 [  2       3    ]-0.084807 [  0       1    ]-0.049654 
-    [  1       4    ] 0.014035 [  0       2    ] 0.011404 [  1       3    ] 0.006105 
-    [  2       5    ]-0.002900 [  1       5    ]-0.002041 [  6       7    ]-0.001429 
+    [  2       4    ]-0.090030 [  2       3    ] 0.084807 [  0       1    ] 0.049654 
+    [  1       4    ]-0.014035 [  0       2    ]-0.011404 [  1       3    ]-0.006105 
+    [  2       5    ] 0.002900 [  1       5    ] 0.002041 [  6       7    ]-0.001429 
     [  8       9    ]-0.001429 [  0       3    ]-0.000641 [  0       4    ] 0.000540 
     [  0       5    ] 0.000252 
     --------------------------------------------------------------------------------
-    Norm of T1A vector: (nonzero elements: 13)                    0.134702653563860.
+    Norm of T1A vector: (nonzero elements: 13)                    0.134702653536202.
     --------------------------------------------------------------------------------
     Largest T1 amplitudes for spin case B:
        _       _                  _       _                  _       _               
        i       a                  i       a                  i       a               
     --------------------------------------------------------------------------------
-    [  2       4    ] 0.090030 [  2       3    ]-0.084807 [  0       1    ]-0.049654 
-    [  1       4    ] 0.014035 [  0       2    ] 0.011404 [  1       3    ] 0.006105 
-    [  2       5    ]-0.002900 [  1       5    ]-0.002041 [  6       7    ]-0.001429 
+    [  2       4    ]-0.090030 [  2       3    ] 0.084807 [  0       1    ] 0.049654 
+    [  1       4    ]-0.014035 [  0       2    ]-0.011404 [  1       3    ]-0.006105 
+    [  2       5    ] 0.002900 [  1       5    ] 0.002041 [  6       7    ]-0.001429 
     [  8       9    ]-0.001429 [  0       3    ]-0.000641 [  0       4    ] 0.000540 
     [  0       5    ] 0.000252 
     --------------------------------------------------------------------------------
-    Norm of T1B vector: (nonzero elements: 13)                    0.134702653563859.
+    Norm of T1B vector: (nonzero elements: 13)                    0.134702653536202.
     --------------------------------------------------------------------------------
     Largest T2 amplitudes for spin case AA:
        i   j   a   b              i   j   a   b              i   j   a   b           
     --------------------------------------------------------------------------------
-    [  0   1   1   2]-0.041562 [  1   8   1   9]-0.037981 [  1   6   1   7]-0.037981 
+    [  0   1   1   2] 0.041562 [  1   8   1   9]-0.037981 [  1   6   1   7]-0.037981 
     [  2   8   1   9]-0.030433 [  2   6   1   7]-0.030433 [  1   8   2   9]-0.026013 
     [  1   6   2   7]-0.026013 [  2   8   2   9]-0.025407 [  2   6   2   7]-0.025407 
-    [  6   8   7   9]-0.023078 [  1   2   1   3]-0.019986 [  0   1   1   5]-0.016433 
-    [  1   2   2   3]-0.015887 [  0   2   1   2] 0.015647 [  1   8   4   9] 0.013983 
+    [  6   8   7   9]-0.023078 [  1   2   1   3] 0.019986 [  0   1   1   5]-0.016433 
+    [  1   2   2   3] 0.015887 [  0   2   1   2]-0.015647 [  1   6   4   7]-0.013983 
     --------------------------------------------------------------------------------
-    Norm of T2AA vector: (nonzero elements: 240)                  0.228026540865968.
+    Norm of T2AA vector: (nonzero elements: 240)                  0.228026541249068.
     --------------------------------------------------------------------------------
     Largest T2 amplitudes for spin case AB:
            _       _                  _       _                  _       _           
        i   j   a   b              i   j   a   b              i   j   a   b           
     --------------------------------------------------------------------------------
-    [  0   0   1   1]-0.066649 [  2   2   2   3]-0.055486 [  1   2   1   3]-0.044936 
+    [  0   0   1   1]-0.066649 [  2   2   2   3] 0.055486 [  1   2   1   3] 0.044936 
     [  8   8   9   9]-0.041772 [  6   6   7   7]-0.041772 [  1   8   1   9]-0.041386 
     [  1   6   1   7]-0.041386 [  0   0   1   2]-0.040340 [  2   8   1   9]-0.035705 
-    [  2   6   1   7]-0.035705 [  2   2   3   3]-0.033939 [  2   2   1   4] 0.033763 
-    [  2   8   2   9]-0.031237 [  2   6   2   7]-0.031237 [  1   1   1   3] 0.030861 
+    [  2   6   1   7]-0.035705 [  2   2   3   3]-0.033939 [  2   2   1   4]-0.033763 
+    [  2   8   2   9]-0.031237 [  2   6   2   7]-0.031237 [  1   1   1   3]-0.030861 
     --------------------------------------------------------------------------------
-    Norm of T2AB vector: (nonzero elements: 405)                  0.294673031065952.
+    Norm of T2AB vector: (nonzero elements: 405)                  0.294673032830070.
     --------------------------------------------------------------------------------
     Largest T2 amplitudes for spin case BB:
        _   _   _   _              _   _   _   _              _   _   _   _           
        i   j   a   b              i   j   a   b              i   j   a   b           
     --------------------------------------------------------------------------------
-    [  0   1   1   2]-0.041562 [  1   8   1   9]-0.037981 [  1   6   1   7]-0.037981 
+    [  0   1   1   2] 0.041562 [  1   8   1   9]-0.037981 [  1   6   1   7]-0.037981 
     [  2   8   1   9]-0.030433 [  2   6   1   7]-0.030433 [  1   8   2   9]-0.026013 
     [  1   6   2   7]-0.026013 [  2   8   2   9]-0.025407 [  2   6   2   7]-0.025407 
-    [  6   8   7   9]-0.023078 [  1   2   1   3]-0.019986 [  0   1   1   5]-0.016433 
-    [  1   2   2   3]-0.015887 [  0   2   1   2] 0.015647 [  1   8   4   9] 0.013983 
+    [  6   8   7   9]-0.023078 [  1   2   1   3] 0.019986 [  0   1   1   5]-0.016433 
+    [  1   2   2   3] 0.015887 [  0   2   1   2]-0.015647 [  1   8   4   9]-0.013983 
     --------------------------------------------------------------------------------
-    Norm of T2BB vector: (nonzero elements: 240)                  0.228026540865968.
+    Norm of T2BB vector: (nonzero elements: 240)                  0.228026541249068.
     --------------------------------------------------------------------------------
 
   ==> Possible Intruders <==
@@ -2351,27 +2664,27 @@ Calling plugin /Users/ChenyangLi/src/forte/forte.so.
     T2 amplitudes larger than 0.1000 for spin case AB: NULL
     T2 amplitudes larger than 0.1000 for spin case BB: NULL
 
-  ==> De-Normal-Order the DSRG Transformed Hamiltonian <==
+  ==> De-Normal-Order DSRG Transformed Hamiltonian <==
 
-    Computing the scalar term   ...      Done. Timing      0.001 s
-    Computing the one-body term ...      Done. Timing      0.001 s
-    Updating integrals          ...      Done. Timing      0.000 s
+    Computing the scalar term                ... Done. Timing    0.003 s
+    Computing the 1-body term                ... Done. Timing    0.002 s
 
-  ==> Scalar of the DSRG Hamiltonian (WRT True Vacuum) <==
+  ==> Rotate DSRG Transformed Hamiltonian back to Original Basis <==
 
-    Scalar0                        =    -26.856128685611296
-    Scalar1                        =      0.955720209310591
-    Scalar2                        =      0.733725403414921
-    Total Scalar W/O Frozen-Core   =    -25.166683072885785
-    Total Scalar W/  Frozen-Core   =   -100.985218609844381
+    Rotating 1-body term to original basis   ... Done. Timing    0.001 s
+    Rotating 2-body term to original basis   ... Done. Timing    0.023 s
 
-  ==> Test De-Normal-Ordered Hamiltonian <==
+                -----------------------------------------------
+                  String-based Full Configuration Interaction
+                          by Francesco A. Evangelista
+                -----------------------------------------------
 
-    One-Body Energy (after)        =     -1.553983091125473
-    Two-Body Energy (after)        =     -0.135462521600038
-    Total Energy (after)           =    -99.499600971029892
-    Total Energy (before)          =    -99.499600971029892
-  Frozen Orbitals takes     0.000 s.
+  Number of electrons: 10
+  Charge: 0
+  Multiplicity: 1
+  Davidson subspace max dim: 8
+  Davidson subspace min dim: 2
+  M_s: 0
 
   ==> String Lists <==
 
@@ -2383,7 +2696,6 @@ Calling plugin /Users/ChenyangLi/src/forte/forte.so.
   Timing for NN strings     =      0.000 s
   Timing for VO strings     =      0.000 s
   Timing for OO strings     =      0.000 s
-  Timing for Knowles-Handy  =      0.000 s
   Timing for VVOO strings   =      0.000 s
   Timing for VOVO strings   =      0.000 s
   Timing for 1-hole strings =      0.000 s
@@ -2396,7 +2708,7 @@ Calling plugin /Users/ChenyangLi/src/forte/forte.so.
     Number of determinants                           4
     Symmetry                                         0
     Multiplicity                                     1
-    Number of roots                                  0
+    Number of roots                                  1
     Target root                                      0
     Trial vectors per root                          10
 
@@ -2407,12 +2719,12 @@ Calling plugin /Users/ChenyangLi/src/forte/forte.so.
   ---------------------------------------------
     Root            Energy     <S^2>   Spin
   ---------------------------------------------
-      0      -99.499600971030  0.000  singlet
-      1      -99.370804990991  2.000  triplet
-      2      -99.090220874315  0.000  singlet
-      3      -98.766884972819  0.000  singlet
+      0      -99.499600970993  0.000  singlet
+      1      -99.370804990933  2.000  triplet
+      2      -99.090220873975  0.000  singlet
+      3      -98.766884973289  0.000  singlet
   ---------------------------------------------
-  Timing for initial guess  =      0.000 s
+  Timing for initial guess  =      0.001 s
 
   Projecting out root 1
   ==> Diagonalizing Hamiltonian <==
@@ -2420,8 +2732,8 @@ Calling plugin /Users/ChenyangLi/src/forte/forte.so.
   ----------------------------------------
     Iter.      Avg. Energy       Delta_E
   ----------------------------------------
-      1      -99.499600971030  -9.950e+01
-      2      -99.499600971030  -2.842e-14
+      1      -99.499600970993  -9.950e+01
+      2      -99.499600970993  +0.000e+00
   ----------------------------------------
   The Davidson-Liu algorithm converged in 3 iterations.
 
@@ -2430,9 +2742,10 @@ Calling plugin /Users/ChenyangLi/src/forte/forte.so.
     20      0.95926861
     02     -0.27468498
 
-    Total Energy:       -99.499600971029949
+    Total Energy:       -99.499600970993143
 
-  ==> RDMs for Root No. 0 <==
+  ==> Computing RDMs for Root No. 0 <==
+
     Timing for 1-RDM: 0.000 s
     Timing for 2-RDM: 0.000 s
     Timing for 3-RDM: 0.000 s
@@ -2441,32 +2754,53 @@ Calling plugin /Users/ChenyangLi/src/forte/forte.so.
 
         1A1     1.847155      2A1     0.152845  
 
+  The following reference rotation will make the new reference and integrals in the same basis.
 
-  Warning: I am forcing density Db = Da to avoid spin symmetry breaking.
-  If this is not desired, go to mrdsrg.cc around line 190.
+  ==> Reference Transformation to Semicanonical Basis <==
+
+    Transformed 1 cumulants.
+    Transformed 2 cumulants and RDMs.
+    Transformed 3 cumulants.
+
+  ==> Semicanonicalize Orbitals <==
+
+  Took 0.000069 s to build Fock matrix
+
+  ==> Checking Fock Matrix Diagonal Blocks <==
+
+    Off-Diag. Elements       Max           2-Norm
+    ------------------------------------------------
+    Fa actv              0.0000000010   0.0000000014
+    Fb actv              0.0000000010   0.0000000014
+    ------------------------------------------------
+    Fa core              0.0000000000   0.0000000000
+    Fb core              0.0000000000   0.0000000000
+    ------------------------------------------------
+    Fa virt              0.0000000229   0.0000000531
+    Fb virt              0.0000000229   0.0000000531
+    ------------------------------------------------
+  Orbitals are already semicanonicalized.
 
   ==> Density Cumulant Summary <==
 
-    2-body               AA           AB           BB
-    -------------------------------------------------
-    max            0.070582     0.069426     0.070582
-    norm           0.141164     0.401362     0.141164
-    -------------------------------------------------
-    3-body              AAA          AAB          ABB          BBB
-    --------------------------------------------------------------
-    max            0.000000     0.059624     0.059624     0.000000
-    norm           0.000000     0.169123     0.169123     0.000000
-    --------------------------------------------------------------
+    2-body             AA           AB           BB
+    -----------------------------------------------
+    max          0.070582     0.264516     0.070582
+    norm         0.141164     0.401362     0.141164
+    -----------------------------------------------
+    3-body            AAA          AAB          ABB          BBB
+    ------------------------------------------------------------
+    max          0.000000     0.059624     0.059624     0.000000
+    norm         0.000000     0.169123     0.169123     0.000000
+    ------------------------------------------------------------
 
-  ==> Semi-canonicalize Orbitals <==
-
-    Checking if orbitals are semi-canonicalized ...     OK.
   ==> MR-DSRG Ref. Relaxation Iter. 5 <==
 
+
   ==> Build Initial Amplitude from DSRG-MRPT2 <==
 
-    Computing T2 amplitudes ...          Done. Timing      0.001 s
-    Computing T1 amplitudes ...          Done. Timing      0.001 s
+    Computing T2 amplitudes ...          Done. Timing      0.003 s
+    Computing T1 amplitudes ...          Done. Timing      0.003 s
 
   ==> First-Order Excitation Amplitudes Summary <==
 
@@ -2474,48 +2808,48 @@ Calling plugin /Users/ChenyangLi/src/forte/forte.so.
     Largest T1 amplitudes for spin case A:
        i       a                  i       a                  i       a               
     --------------------------------------------------------------------------------
-    [  2       4    ] 0.104960 [  2       3    ]-0.095050 [  0       1    ]-0.040943 
-    [  1       4    ] 0.020418 [  1       3    ] 0.007373 [  0       2    ] 0.007148 
-    [  2       5    ]-0.005453 [  1       5    ]-0.003114 [  6       7    ]-0.001852 
+    [  2       4    ]-0.104960 [  2       3    ] 0.095050 [  0       1    ] 0.040943 
+    [  1       4    ]-0.020418 [  1       3    ]-0.007373 [  0       2    ]-0.007148 
+    [  2       5    ] 0.005453 [  1       5    ] 0.003114 [  6       7    ]-0.001852 
     [  8       9    ]-0.001852 [  0       5    ] 0.001052 [  0       4    ]-0.000064 
     [  0       3    ] 0.000046 
     --------------------------------------------------------------------------------
-    Norm of T1A vector: (nonzero elements: 13)                    0.149322669051272.
+    Norm of T1A vector: (nonzero elements: 13)                    0.149322669416624.
     --------------------------------------------------------------------------------
     Largest T1 amplitudes for spin case B:
        _       _                  _       _                  _       _               
        i       a                  i       a                  i       a               
     --------------------------------------------------------------------------------
-    [  2       4    ] 0.104960 [  2       3    ]-0.095050 [  0       1    ]-0.040943 
-    [  1       4    ] 0.020418 [  1       3    ] 0.007373 [  0       2    ] 0.007148 
-    [  2       5    ]-0.005453 [  1       5    ]-0.003114 [  6       7    ]-0.001852 
+    [  2       4    ]-0.104960 [  2       3    ] 0.095050 [  0       1    ] 0.040943 
+    [  1       4    ]-0.020418 [  1       3    ]-0.007373 [  0       2    ]-0.007148 
+    [  2       5    ] 0.005453 [  1       5    ] 0.003114 [  6       7    ]-0.001852 
     [  8       9    ]-0.001852 [  0       5    ] 0.001052 [  0       4    ]-0.000064 
     [  0       3    ] 0.000046 
     --------------------------------------------------------------------------------
-    Norm of T1B vector: (nonzero elements: 13)                    0.149322669051272.
+    Norm of T1B vector: (nonzero elements: 13)                    0.149322669416624.
     --------------------------------------------------------------------------------
     Largest T2 amplitudes for spin case AA:
        i   j   a   b              i   j   a   b              i   j   a   b           
     --------------------------------------------------------------------------------
     [  1   8   1   9]-0.046421 [  1   6   1   7]-0.046421 [  2   8   1   9]-0.045724 
     [  2   6   1   7]-0.045724 [  2   8   2   9]-0.036524 [  2   6   2   7]-0.036524 
-    [  0   1   1   2]-0.034457 [  1   8   2   9]-0.030723 [  1   6   2   7]-0.030723 
-    [  1   2   1   3]-0.024443 [  6   8   7   9]-0.024096 [  0   1   1   5]-0.021081 
-    [  1   2   1   4] 0.019728 [  2   6   4   7] 0.019677 [  2   8   4   9] 0.019677 
+    [  0   1   1   2] 0.034457 [  1   8   2   9]-0.030723 [  1   6   2   7]-0.030723 
+    [  1   2   1   3] 0.024443 [  6   8   7   9]-0.024096 [  0   1   1   5]-0.021081 
+    [  1   2   1   4]-0.019728 [  2   8   4   9]-0.019677 [  2   6   4   7]-0.019677 
     --------------------------------------------------------------------------------
-    Norm of T2AA vector: (nonzero elements: 240)                  0.282476764553281.
+    Norm of T2AA vector: (nonzero elements: 240)                  0.282476764621596.
     --------------------------------------------------------------------------------
     Largest T2 amplitudes for spin case AB:
            _       _                  _       _                  _       _           
        i   j   a   b              i   j   a   b              i   j   a   b           
     --------------------------------------------------------------------------------
-    [  2   2   1   4] 0.074976 [  2   2   2   3]-0.074895 [  0   0   1   1]-0.060598 
-    [  2   2   3   3]-0.052038 [  1   2   1   3]-0.050801 [  2   8   1   9]-0.050351 
-    [  2   6   1   7]-0.050351 [  1   2   1   4] 0.049795 [  1   8   1   9]-0.048306 
-    [  1   6   1   7]-0.048306 [  1   2   2   4] 0.046382 [  2   8   2   9]-0.040389 
+    [  2   2   1   4]-0.074976 [  2   2   2   3] 0.074895 [  0   0   1   1]-0.060598 
+    [  2   2   3   3]-0.052038 [  1   2   1   3] 0.050801 [  2   8   1   9]-0.050351 
+    [  2   6   1   7]-0.050351 [  1   2   1   4]-0.049795 [  1   8   1   9]-0.048306 
+    [  1   6   1   7]-0.048306 [  1   2   2   4]-0.046382 [  2   8   2   9]-0.040389 
     [  2   6   2   7]-0.040389 [  8   8   9   9]-0.036340 [  6   6   7   7]-0.036340 
     --------------------------------------------------------------------------------
-    Norm of T2AB vector: (nonzero elements: 405)                  0.349773820144069.
+    Norm of T2AB vector: (nonzero elements: 405)                  0.349773820148730.
     --------------------------------------------------------------------------------
     Largest T2 amplitudes for spin case BB:
        _   _   _   _              _   _   _   _              _   _   _   _           
@@ -2523,11 +2857,11 @@ Calling plugin /Users/ChenyangLi/src/forte/forte.so.
     --------------------------------------------------------------------------------
     [  1   8   1   9]-0.046421 [  1   6   1   7]-0.046421 [  2   8   1   9]-0.045724 
     [  2   6   1   7]-0.045724 [  2   8   2   9]-0.036524 [  2   6   2   7]-0.036524 
-    [  0   1   1   2]-0.034457 [  1   8   2   9]-0.030723 [  1   6   2   7]-0.030723 
-    [  1   2   1   3]-0.024443 [  6   8   7   9]-0.024096 [  0   1   1   5]-0.021081 
-    [  1   2   1   4] 0.019728 [  2   6   4   7] 0.019677 [  2   8   4   9] 0.019677 
+    [  0   1   1   2] 0.034457 [  1   8   2   9]-0.030723 [  1   6   2   7]-0.030723 
+    [  1   2   1   3] 0.024443 [  6   8   7   9]-0.024096 [  0   1   1   5]-0.021081 
+    [  1   2   1   4]-0.019728 [  2   8   4   9]-0.019677 [  2   6   4   7]-0.019677 
     --------------------------------------------------------------------------------
-    Norm of T2BB vector: (nonzero elements: 240)                  0.282476764553281.
+    Norm of T2BB vector: (nonzero elements: 240)                  0.282476764621596.
     --------------------------------------------------------------------------------
 
   ==> Possible Intruders <==
@@ -2535,12 +2869,12 @@ Calling plugin /Users/ChenyangLi/src/forte/forte.so.
     T1 amplitudes larger than 0.1000 for spin case A:
         Amplitude         Value                  Denominator              
     ----------------------------------------------------------------------
-    [  2       4    ]    0.10496035 (  0.084955 -   2.309658 =  -2.224703)
+    [  2       4    ]   -0.10496035 (  0.084955 -   2.309658 =  -2.224703)
     ----------------------------------------------------------------------
     T1 amplitudes larger than 0.1000 for spin case B:
         Amplitude         Value                  Denominator              
     ----------------------------------------------------------------------
-    [  2       4    ]    0.10496035 (  0.084955 -   2.309658 =  -2.224703)
+    [  2       4    ]   -0.10496035 (  0.084955 -   2.309658 =  -2.224703)
     ----------------------------------------------------------------------
     T2 amplitudes larger than 0.1000 for spin case AA: NULL
     T2 amplitudes larger than 0.1000 for spin case AB: NULL
@@ -2556,25 +2890,25 @@ Calling plugin /Users/ChenyangLi/src/forte/forte.so.
            ---------------------------  ---------------------  ---------------------  -----------------
     Iter.        Corr.         Delta       Hbar1      Hbar2        T1         T2        Hbar     Amp.  
     ---------------------------------------------------------------------------------------------------
-        0   -0.091033227818 -9.103e-02   1.513e-01  6.772e-01   4.446e-02  1.792e-01     2.113    0.004
-        1   -0.093189551510 -2.156e-03   1.460e-01  2.797e-01   2.188e-02  6.442e-02     2.061    0.004
-        2   -0.093389166264 -1.996e-04   1.138e-01  1.687e-01   5.939e-03  2.704e-02     2.019    0.004
-        3   -0.093540405617 -1.512e-04   1.187e-01  1.694e-01   2.604e-03  1.178e-02     2.113    0.004
-        4   -0.093532156763  8.249e-06   1.159e-01  1.583e-01   9.292e-04  5.043e-03     2.239    0.004
-        5   -0.093537913750 -5.757e-06   1.168e-01  1.614e-01   4.050e-04  2.188e-03     2.167    0.004 -> DIIS
-        6   -0.093537207105  7.066e-07   1.163e-01  1.596e-01   1.599e-04  9.441e-04     2.012    0.004 -> DIIS
-        7   -0.093535959730  1.247e-06   1.165e-01  1.601e-01   4.759e-06  1.151e-05     2.085    0.004 -> DIIS
-        8   -0.093535848115  1.116e-07   1.165e-01  1.601e-01   1.618e-06  3.840e-06     2.067    0.004 -> DIIS
-        9   -0.093535777107  7.101e-08   1.165e-01  1.601e-01   4.834e-07  1.341e-06     2.037    0.004 -> DIIS
-       10   -0.093535749482  2.762e-08   1.165e-01  1.601e-01   5.112e-08  3.300e-07     1.970    0.004 -> DIIS
-       11   -0.093535749081  4.013e-10   1.165e-01  1.601e-01   1.964e-08  1.152e-07     1.990    0.003
+        0   -0.091033227909 -9.103e-02   1.513e-01  6.772e-01   4.446e-02  1.792e-01     6.218    0.015
+        1   -0.093189551467 -2.156e-03   1.460e-01  2.797e-01   2.188e-02  6.442e-02     6.260    0.012
+        2   -0.093389166240 -1.996e-04   1.138e-01  1.687e-01   5.939e-03  2.704e-02     6.686    0.012
+        3   -0.093540405573 -1.512e-04   1.187e-01  1.694e-01   2.604e-03  1.178e-02     6.232    0.012
+        4   -0.093532156731  8.249e-06   1.159e-01  1.583e-01   9.292e-04  5.043e-03     6.213    0.011
+        5   -0.093537913713 -5.757e-06   1.168e-01  1.614e-01   4.050e-04  2.188e-03     6.204    0.013 -> DIIS
+        6   -0.093537207074  7.066e-07   1.163e-01  1.596e-01   1.599e-04  9.441e-04     6.593    0.011 -> DIIS
+        7   -0.093535959698  1.247e-06   1.165e-01  1.601e-01   4.759e-06  1.151e-05     6.277    0.013 -> DIIS
+        8   -0.093535848084  1.116e-07   1.165e-01  1.601e-01   1.618e-06  3.840e-06     6.085    0.011 -> DIIS
+        9   -0.093535777076  7.101e-08   1.165e-01  1.601e-01   4.834e-07  1.341e-06     6.518    0.011 -> DIIS
+       10   -0.093535749451  2.762e-08   1.165e-01  1.601e-01   5.112e-08  3.300e-07     6.286    0.016 -> DIIS
+       11   -0.093535749050  4.013e-10   1.165e-01  1.601e-01   1.964e-08  1.152e-07     6.474    0.016
     ---------------------------------------------------------------------------------------------------
 
   ==> MR-LDSRG(2)-QC Energy Summary <==
 
-    E0 (reference)                      =     -99.406065222746861
-    MR-LDSRG(2)-QC correlation energy   =      -0.093535749081167
-    MR-LDSRG(2)-QC total energy         =     -99.499600971828031
+    E0 (reference)                      =     -99.406065222746847
+    MR-LDSRG(2)-QC correlation energy   =      -0.093535749050044
+    MR-LDSRG(2)-QC total energy         =     -99.499600971796895
 
   ==> Final Excitation Amplitudes Summary <==
 
@@ -2582,60 +2916,60 @@ Calling plugin /Users/ChenyangLi/src/forte/forte.so.
     Largest T1 amplitudes for spin case A:
        i       a                  i       a                  i       a               
     --------------------------------------------------------------------------------
-    [  2       4    ] 0.090030 [  2       3    ]-0.084807 [  0       1    ]-0.049654 
-    [  1       4    ] 0.014035 [  0       2    ] 0.011404 [  1       3    ] 0.006105 
-    [  2       5    ]-0.002900 [  1       5    ]-0.002041 [  6       7    ]-0.001429 
+    [  2       4    ]-0.090030 [  2       3    ] 0.084807 [  0       1    ] 0.049654 
+    [  1       4    ]-0.014035 [  0       2    ]-0.011404 [  1       3    ]-0.006105 
+    [  2       5    ] 0.002900 [  1       5    ] 0.002041 [  6       7    ]-0.001429 
     [  8       9    ]-0.001429 [  0       3    ]-0.000641 [  0       4    ] 0.000540 
     [  0       5    ] 0.000252 
     --------------------------------------------------------------------------------
-    Norm of T1A vector: (nonzero elements: 13)                    0.134702653787479.
+    Norm of T1A vector: (nonzero elements: 13)                    0.134702653757854.
     --------------------------------------------------------------------------------
     Largest T1 amplitudes for spin case B:
        _       _                  _       _                  _       _               
        i       a                  i       a                  i       a               
     --------------------------------------------------------------------------------
-    [  2       4    ] 0.090030 [  2       3    ]-0.084807 [  0       1    ]-0.049654 
-    [  1       4    ] 0.014035 [  0       2    ] 0.011404 [  1       3    ] 0.006105 
-    [  2       5    ]-0.002900 [  1       5    ]-0.002041 [  6       7    ]-0.001429 
+    [  2       4    ]-0.090030 [  2       3    ] 0.084807 [  0       1    ] 0.049654 
+    [  1       4    ]-0.014035 [  0       2    ]-0.011404 [  1       3    ]-0.006105 
+    [  2       5    ] 0.002900 [  1       5    ] 0.002041 [  6       7    ]-0.001429 
     [  8       9    ]-0.001429 [  0       3    ]-0.000641 [  0       4    ] 0.000540 
     [  0       5    ] 0.000252 
     --------------------------------------------------------------------------------
-    Norm of T1B vector: (nonzero elements: 13)                    0.134702653787478.
+    Norm of T1B vector: (nonzero elements: 13)                    0.134702653757854.
     --------------------------------------------------------------------------------
     Largest T2 amplitudes for spin case AA:
        i   j   a   b              i   j   a   b              i   j   a   b           
     --------------------------------------------------------------------------------
-    [  0   1   1   2]-0.041562 [  1   8   1   9]-0.037981 [  1   6   1   7]-0.037981 
+    [  0   1   1   2] 0.041562 [  1   8   1   9]-0.037981 [  1   6   1   7]-0.037981 
     [  2   8   1   9]-0.030433 [  2   6   1   7]-0.030433 [  1   8   2   9]-0.026013 
     [  1   6   2   7]-0.026013 [  2   8   2   9]-0.025407 [  2   6   2   7]-0.025407 
-    [  6   8   7   9]-0.023078 [  1   2   1   3]-0.019986 [  0   1   1   5]-0.016433 
-    [  1   2   2   3]-0.015887 [  0   2   1   2] 0.015647 [  1   8   4   9] 0.013983 
+    [  6   8   7   9]-0.023078 [  1   2   1   3] 0.019986 [  0   1   1   5]-0.016433 
+    [  1   2   2   3] 0.015887 [  0   2   1   2]-0.015647 [  1   6   4   7]-0.013983 
     --------------------------------------------------------------------------------
-    Norm of T2AA vector: (nonzero elements: 240)                  0.228026540754986.
+    Norm of T2AA vector: (nonzero elements: 240)                  0.228026541141679.
     --------------------------------------------------------------------------------
     Largest T2 amplitudes for spin case AB:
            _       _                  _       _                  _       _           
        i   j   a   b              i   j   a   b              i   j   a   b           
     --------------------------------------------------------------------------------
-    [  0   0   1   1]-0.066649 [  2   2   2   3]-0.055486 [  1   2   1   3]-0.044936 
+    [  0   0   1   1]-0.066649 [  2   2   2   3] 0.055486 [  1   2   1   3] 0.044936 
     [  8   8   9   9]-0.041772 [  6   6   7   7]-0.041772 [  1   8   1   9]-0.041386 
     [  1   6   1   7]-0.041386 [  0   0   1   2]-0.040340 [  2   8   1   9]-0.035705 
-    [  2   6   1   7]-0.035705 [  2   2   3   3]-0.033939 [  2   2   1   4] 0.033763 
-    [  2   8   2   9]-0.031237 [  2   6   2   7]-0.031237 [  1   1   1   3] 0.030861 
+    [  2   6   1   7]-0.035705 [  2   2   3   3]-0.033939 [  2   2   1   4]-0.033763 
+    [  2   8   2   9]-0.031237 [  2   6   2   7]-0.031237 [  1   1   1   3]-0.030861 
     --------------------------------------------------------------------------------
-    Norm of T2AB vector: (nonzero elements: 405)                  0.294673030726337.
+    Norm of T2AB vector: (nonzero elements: 405)                  0.294673032494255.
     --------------------------------------------------------------------------------
     Largest T2 amplitudes for spin case BB:
        _   _   _   _              _   _   _   _              _   _   _   _           
        i   j   a   b              i   j   a   b              i   j   a   b           
     --------------------------------------------------------------------------------
-    [  0   1   1   2]-0.041562 [  1   8   1   9]-0.037981 [  1   6   1   7]-0.037981 
+    [  0   1   1   2] 0.041562 [  1   8   1   9]-0.037981 [  1   6   1   7]-0.037981 
     [  2   8   1   9]-0.030433 [  2   6   1   7]-0.030433 [  1   8   2   9]-0.026013 
     [  1   6   2   7]-0.026013 [  2   8   2   9]-0.025407 [  2   6   2   7]-0.025407 
-    [  6   8   7   9]-0.023078 [  1   2   1   3]-0.019986 [  0   1   1   5]-0.016433 
-    [  1   2   2   3]-0.015887 [  0   2   1   2] 0.015647 [  1   8   4   9] 0.013983 
+    [  6   8   7   9]-0.023078 [  1   2   1   3] 0.019986 [  0   1   1   5]-0.016433 
+    [  1   2   2   3] 0.015887 [  0   2   1   2]-0.015647 [  1   8   4   9]-0.013983 
     --------------------------------------------------------------------------------
-    Norm of T2BB vector: (nonzero elements: 240)                  0.228026540754987.
+    Norm of T2BB vector: (nonzero elements: 240)                  0.228026541141679.
     --------------------------------------------------------------------------------
 
   ==> Possible Intruders <==
@@ -2646,27 +2980,27 @@ Calling plugin /Users/ChenyangLi/src/forte/forte.so.
     T2 amplitudes larger than 0.1000 for spin case AB: NULL
     T2 amplitudes larger than 0.1000 for spin case BB: NULL
 
-  ==> De-Normal-Order the DSRG Transformed Hamiltonian <==
+  ==> De-Normal-Order DSRG Transformed Hamiltonian <==
 
-    Computing the scalar term   ...      Done. Timing      0.001 s
-    Computing the one-body term ...      Done. Timing      0.001 s
-    Updating integrals          ...      Done. Timing      0.000 s
+    Computing the scalar term                ... Done. Timing    0.004 s
+    Computing the 1-body term                ... Done. Timing    0.002 s
 
-  ==> Scalar of the DSRG Hamiltonian (WRT True Vacuum) <==
+  ==> Rotate DSRG Transformed Hamiltonian back to Original Basis <==
 
-    Scalar0                        =    -26.856128686409434
-    Scalar1                        =      0.955720218993082
-    Scalar2                        =      0.733725394109294
-    Total Scalar W/O Frozen-Core   =    -25.166683073307055
-    Total Scalar W/  Frozen-Core   =   -100.985218610265647
+    Rotating 1-body term to original basis   ... Done. Timing    0.001 s
+    Rotating 2-body term to original basis   ... Done. Timing    0.023 s
 
-  ==> Test De-Normal-Ordered Hamiltonian <==
+                -----------------------------------------------
+                  String-based Full Configuration Interaction
+                          by Francesco A. Evangelista
+                -----------------------------------------------
 
-    One-Body Energy (after)        =     -1.553983099106009
-    Two-Body Energy (after)        =     -0.135462513996368
-    Total Energy (after)           =    -99.499600971828031
-    Total Energy (before)          =    -99.499600971828031
-  Frozen Orbitals takes     0.000 s.
+  Number of electrons: 10
+  Charge: 0
+  Multiplicity: 1
+  Davidson subspace max dim: 8
+  Davidson subspace min dim: 2
+  M_s: 0
 
   ==> String Lists <==
 
@@ -2678,7 +3012,6 @@ Calling plugin /Users/ChenyangLi/src/forte/forte.so.
   Timing for NN strings     =      0.000 s
   Timing for VO strings     =      0.000 s
   Timing for OO strings     =      0.000 s
-  Timing for Knowles-Handy  =      0.000 s
   Timing for VVOO strings   =      0.000 s
   Timing for VOVO strings   =      0.000 s
   Timing for 1-hole strings =      0.000 s
@@ -2691,7 +3024,7 @@ Calling plugin /Users/ChenyangLi/src/forte/forte.so.
     Number of determinants                           4
     Symmetry                                         0
     Multiplicity                                     1
-    Number of roots                                  0
+    Number of roots                                  1
     Target root                                      0
     Trial vectors per root                          10
 
@@ -2702,12 +3035,12 @@ Calling plugin /Users/ChenyangLi/src/forte/forte.so.
   ---------------------------------------------
     Root            Energy     <S^2>   Spin
   ---------------------------------------------
-      0      -99.499600971828  0.000  singlet
-      1      -99.370804991671  2.000  triplet
-      2      -99.090220874847  0.000  singlet
-      3      -98.766884973312  0.000  singlet
+      0      -99.499600971797  0.000  singlet
+      1      -99.370804991618  2.000  triplet
+      2      -99.090220874507  0.000  singlet
+      3      -98.766884973788  0.000  singlet
   ---------------------------------------------
-  Timing for initial guess  =      0.000 s
+  Timing for initial guess  =      0.001 s
 
   Projecting out root 1
   ==> Diagonalizing Hamiltonian <==
@@ -2715,19 +3048,20 @@ Calling plugin /Users/ChenyangLi/src/forte/forte.so.
   ----------------------------------------
     Iter.      Avg. Energy       Delta_E
   ----------------------------------------
-      1      -99.499600971828  -9.950e+01
-      2      -99.499600971828  +1.421e-14
+      1      -99.499600971797  -9.950e+01
+      2      -99.499600971797  +2.842e-14
   ----------------------------------------
   The Davidson-Liu algorithm converged in 3 iterations.
 
   ==> Root No. 0 <==
 
-    20      0.95926861
-    02     -0.27468498
+    20      0.95926863
+    02     -0.27468499
 
-    Total Energy:       -99.499600971828016
+    Total Energy:       -99.499600971796880
 
-  ==> RDMs for Root No. 0 <==
+  ==> Computing RDMs for Root No. 0 <==
+
     Timing for 1-RDM: 0.000 s
     Timing for 2-RDM: 0.000 s
     Timing for 3-RDM: 0.000 s
@@ -2736,26 +3070,45 @@ Calling plugin /Users/ChenyangLi/src/forte/forte.so.
 
         1A1     1.847155      2A1     0.152845  
 
+  The following reference rotation will make the new reference and integrals in the same basis.
 
-  Warning: I am forcing density Db = Da to avoid spin symmetry breaking.
-  If this is not desired, go to mrdsrg.cc around line 190.
+  ==> Reference Transformation to Semicanonical Basis <==
+
+    Transformed 1 cumulants.
+    Transformed 2 cumulants and RDMs.
+    Transformed 3 cumulants.
+
+  ==> Semicanonicalize Orbitals <==
+
+  Took 0.000077 s to build Fock matrix
+
+  ==> Checking Fock Matrix Diagonal Blocks <==
+
+    Off-Diag. Elements       Max           2-Norm
+    ------------------------------------------------
+    Fa actv              0.0000000010   0.0000000015
+    Fb actv              0.0000000010   0.0000000015
+    ------------------------------------------------
+    Fa core              0.0000000000   0.0000000000
+    Fb core              0.0000000000   0.0000000000
+    ------------------------------------------------
+    Fa virt              0.0000000229   0.0000000531
+    Fb virt              0.0000000229   0.0000000531
+    ------------------------------------------------
+  Orbitals are already semicanonicalized.
 
   ==> Density Cumulant Summary <==
 
-    2-body               AA           AB           BB
-    -------------------------------------------------
-    max            0.070582     0.069426     0.070582
-    norm           0.141164     0.401362     0.141164
-    -------------------------------------------------
-    3-body              AAA          AAB          ABB          BBB
-    --------------------------------------------------------------
-    max            0.000000     0.059624     0.059624     0.000000
-    norm           0.000000     0.169123     0.169123     0.000000
-    --------------------------------------------------------------
-
-  ==> Semi-canonicalize Orbitals <==
-
-    Checking if orbitals are semi-canonicalized ...     OK.
+    2-body             AA           AB           BB
+    -----------------------------------------------
+    max          0.070582     0.264516     0.070582
+    norm         0.141164     0.401362     0.141164
+    -----------------------------------------------
+    3-body            AAA          AAB          ABB          BBB
+    ------------------------------------------------------------
+    max          0.000000     0.059624     0.059624     0.000000
+    norm         0.000000     0.169123     0.169123     0.000000
+    ------------------------------------------------------------
 
   ==> MRDSRG Reference Relaxation Summary <==
 
@@ -2767,24 +3120,21 @@ Calling plugin /Users/ChenyangLi/src/forte/forte.so.
         1      -99.499536853496 -2.180e-03      -99.499537532495 -1.136e-03
         2      -99.499599472139 -6.262e-05      -99.499599472505 -6.194e-05
         3      -99.499600936776 -1.465e-06      -99.499600936776 -1.464e-06
-        4      -99.499600971030 -3.425e-08      -99.499600971030 -3.425e-08
-        5      -99.499600971828 -7.981e-10      -99.499600971828 -7.981e-10
+        4      -99.499600970993 -3.422e-08      -99.499600970993 -3.422e-08
+        5      -99.499600971797 -8.037e-10      -99.499600971797 -8.037e-10
     -----------------------------------------------------------------------
-    MRDSRG Total Energy            =     -99.499600971828031
-    MRDSRG Total Energy (relaxed)  =     -99.499600971828016
+    MRDSRG Total Energy            =     -99.499600971796895
+    MRDSRG Total Energy (relaxed)  =     -99.499600971796880
 
 
   ==> Total Timings (s) for Computing Commutators <==
 
              [H1, T1]    [H1, T2]    [H2, T1]    [H2, T2]
     -----------------------------------------------------
-    -> C0       0.053       0.104       0.328       5.374
-    -> C1       0.248       1.535       2.437      34.743
-    -> C2                   4.487      10.395      97.234
+    -> C0       0.166       0.329       0.996      16.208
+    -> C1       1.026       6.055       9.001     136.207
+    -> C2                  19.381      46.057     245.929
     -----------------------------------------------------
-
-
-  Your calculation took 160.33575000 seconds
 	MRDSRG relaxed energy.............................................PASSED
 
-*** PSI4 exiting successfully. Buy a developer a beer!
+*** Psi4 exiting successfully. Buy a developer a beer!

@@ -39,11 +39,14 @@ set forte{
    dsrg_s                  0.5
    e_convergence           8
    dsrg_hbar_seq           true
-   relax_ref               none
+   relax_ref               iterate
 }
 
 energy('scf')
 compare_values(refrhf,get_variable("CURRENT ENERGY"),10,"SCF energy")
 
 energy('forte')
-compare_values(refudsrg,get_variable("UNRELAXED ENERGY"),10,"MRDSRG unrelaxed energy")
+compare_values(refudsrg,get_variable("UNRELAXED ENERGY"),8,"MRDSRG unrelaxed energy")
+compare_values(refprdsrg,get_variable("PARTIALLY RELAXED ENERGY"),8,"MRDSRG partially relaxed energy")
+compare_values(refrdsrg,get_variable("RELAXED ENERGY"),8,"MRDSRG relaxed energy")
+compare_values(reffrdsrg,get_variable("FULLY RELAXED ENERGY"),8,"MRDSRG fully relaxed energy")
