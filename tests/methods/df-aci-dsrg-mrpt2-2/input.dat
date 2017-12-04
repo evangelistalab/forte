@@ -33,23 +33,23 @@ set mcscf{
 }
 
 set forte {
-   multiplicity			   1
-   frozen_docc            [0,0,0,0]
-   restricted_docc        [0,0,0,0]
-   active                 [5,0,1,2]
-   root_sym                0
-   nroot                   1
-   aci_nroot               1
-   dsrg_s                  1.0
    int_type                df
    job_type                three-dsrg-mrpt2
    cas_type                aci
-   sigma				   0.0001
+   aci_nroot               1
    active_guess_size       1
+   sigma                   0.0001
+   multiplicity            1
+   frozen_docc             [0,0,0,0]
+   restricted_docc         [0,0,0,0]
+   active                  [5,0,1,2]
+   dsrg_s                  1.0
+   root_sym                0
+   nroot                   1
 }
 
 scf, wfn = energy('mcscf', return_wfn=True)
 energy('forte', ref_wfn = wfn)
 
-compare_values(refmcscf, scf,10,"SCF energy")
+compare_values(refmcscf,scf,10,"MCSCF energy")
 compare_values(refdsrgpt2_jk_rd, get_variable("CURRENT ENERGY"),10,"DF-DSRG-MRPT2 energy")

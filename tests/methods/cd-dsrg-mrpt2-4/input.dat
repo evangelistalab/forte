@@ -2,12 +2,8 @@
 
 import forte
 
-refrhf     = -108.98300653123336
-#refdsrgpt2 = -109.368233368547152 # semi_canonical false
-#refdsrgpt2 = -109.36841715616309
-
 refrhf     = -108.95379624015762 # cc-pVDZ
-refdsrgpt2 = -109.2504167213 # older value = -109.25041672286461 # cc-pVDZ
+refdsrgpt2 = -109.25041672286461 # cc-pVDZ
 
 memory 500 mb
 
@@ -27,7 +23,7 @@ set globals{
 }
 
 set forte{
-   job_type               three-dsrg-mrpt2 
+   job_type               three-dsrg-mrpt2
    restricted_docc        [2,0,0,0,0,2,0,0]
    active                 [1,0,1,1,0,1,1,1]
    root_sym               0
@@ -40,8 +36,8 @@ set forte{
    fci_maxiter            100
 }
 
-energy('scf')
+Escf, wfn = energy('scf', return_wfn=True)
 compare_values(refrhf,get_variable("CURRENT ENERGY"),9,"SCF energy")
 
-energy('forte')
+energy('forte', ref_wfn=wfn)
 compare_values(refdsrgpt2,get_variable("CURRENT ENERGY"),8,"DSRG-MRPT2 energy")

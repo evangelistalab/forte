@@ -340,7 +340,7 @@ void MASTER_DSRG::compute_dm_ref() {
         dipole += dm_[z]["UV"] * Gamma1_["UV"];
         dm_ref_[z] = dipole;
 
-        do_dm_dirs_.push_back(std::fabs(dipole) > 1.0e-12 ? true : false);
+        do_dm_dirs_.push_back(std::fabs(dipole) > 1.0e-15 ? true : false);
     }
 }
 

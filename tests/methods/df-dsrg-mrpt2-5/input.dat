@@ -57,5 +57,3 @@ compare_values(refmcscf, scf,10,"SCF Energy")
 
 energy('forte', ref_wfn = wfn)
 compare_values(refdsrgpt2_jk_rd, get_variable("CURRENT ENERGY"),10,"DSRG-MRPT2 energy")
-
-

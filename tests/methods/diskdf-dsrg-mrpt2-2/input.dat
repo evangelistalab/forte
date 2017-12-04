@@ -36,7 +36,6 @@ set forte {
    cas_type                FCI
 }
 
-energy('scf')
-dsrg_mrpt2 = energy('forte')
+Escf, wfn = energy('scf', return_wfn=True)
+dsrg_mrpt2 = energy('forte', ref_wfn=wfn)
 compare_values(dsrg_mrpt2, refdsrgpt2, 8, "DSRG-MRPT2 Energy")
-

@@ -42,8 +42,8 @@ set forte{
    relax_ref               none
 }
 
-energy('scf')
+Escf, wfn = energy('scf', return_wfn=True)
 compare_values(refrhf,get_variable("CURRENT ENERGY"),10,"SCF energy")
 
-energy('forte')
+energy('forte', ref_wfn=wfn)
 compare_values(refudsrg,get_variable("UNRELAXED ENERGY"),10,"MRDSRG unrelaxed energy")

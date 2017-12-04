@@ -42,7 +42,7 @@ ct_tests = ["ct-1","ct-2","ct-3","ct-4","ct-5","ct-6","ct-7-fc"]
 dsrg_tests = ["dsrg-1","dsrg-2"]
 mrdsrg_tests = ["mrdsrg-pt2-1","mrdsrg-pt2-2","mrdsrg-pt2-3","mrdsrg-pt2-4",
                 "mrdsrg-ldsrg2-qc-1","mrdsrg-ldsrg2-qc-2",
-                "mrdsrg-srgpt2-1"]
+                "mrdsrg-srgpt2-1","mrdsrg-srgpt2-2"]
 mrdsrg_df_tests = ["mrdsrg-ldsrg2-df-seq-1","mrdsrg-ldsrg2-df-seq-2","mrdsrg-ldsrg2-df-seq-3",
                    "mrdsrg-ldsrg2-df-seq-noV3-1","mrdsrg-ldsrg2-df-seq-noV3-2","mrdsrg-ldsrg2-df-seq-noV3-3"]
 dsrg_mrpt3_tests = ["dsrg-mrpt3-1","dsrg-mrpt3-2","dsrg-mrpt3-3","dsrg-mrpt3-4","dsrg-mrpt3-5",

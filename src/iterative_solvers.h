@@ -60,8 +60,7 @@ enum class SolverStatus { Converged, NotConverged, Collapse };
  *         do{
  *             dls.get_b(b);                      // solver provides a vector b
  *             ...                                // code to compute sigma = Hb
- *             add_sigma = dls.add_sigma(sigma);  // return sigma vector to
- * solver
+ *             add_sigma = dls.add_sigma(sigma);  // return sigma vector to solver
  *         } while (add_sigma);
  *         converged = dls.update();              // check convergence
  *         if (converged == Converged) break;
