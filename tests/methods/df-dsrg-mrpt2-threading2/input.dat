@@ -57,5 +57,3 @@ set_num_threads(2)
 
 energy('forte', ref_wfn = wfn)
 compare_values(refdsrgpt2, get_variable("CURRENT ENERGY"),10,"DSRG-MRPT2 energy")
-
-

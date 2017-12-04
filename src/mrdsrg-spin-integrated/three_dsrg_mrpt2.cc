@@ -489,8 +489,9 @@ double THREE_DSRG_MRPT2::compute_energy() {
 
     // use relaxation code to do SA_FULL
     if (relax_ref_ != "NONE" || multi_state_) {
-        if (my_proc == 0)
-            relax_reference_once();
+        if (my_proc == 0) {
+            form_Hbar();
+        }
     }
 
     return Etotal;
@@ -2985,9 +2986,9 @@ double THREE_DSRG_MRPT2::E_VT2_2_one_active() {
     return (Eacvv + Eccva);
 }
 
-void THREE_DSRG_MRPT2::relax_reference_once() {
+void THREE_DSRG_MRPT2::form_Hbar() {
     /// Note: if internal amplitudes are included, this function will NOT be correct.
-    print_h2("Reference Relaxation");
+    print_h2("Form DSRG-PT2 Transformed Hamiltonian");
 
     // initialize Hbar2 (Hbar1 is initialized in the end of startup function)
     ForteTimer timer;
@@ -3283,6 +3284,9 @@ void THREE_DSRG_MRPT2::relax_reference_once() {
         }
         outfile->Printf("Done. Timing: %10.3f s.", timer.elapsed());
     }
+}
+
+void THREE_DSRG_MRPT2::relax_reference_once() {
 
     auto fci_ints = compute_Heff();
 
@@ -3379,7 +3383,7 @@ std::vector<double> THREE_DSRG_MRPT2::relaxed_energy(std::shared_ptr<FCIIntegral
         int ntrial_per_root = options_.get_int("NTRIAL_PER_ROOT");
         Dimension active_dim = mo_space_info_->get_dimension("ACTIVE");
         std::shared_ptr<Molecule> molecule = Process::environment.molecule();
-        double Enuc = molecule->nuclear_repulsion_energy();
+        double Enuc = molecule->nuclear_repulsion_energy(reference_wavefunction_->get_dipole_field_strength());
         int charge = molecule->molecular_charge();
         if (options_["CHARGE"].has_changed()) {
             charge = options_.get_int("CHARGE");
@@ -3520,7 +3524,7 @@ void THREE_DSRG_MRPT2::de_normal_order() {
 
     // test if de-normal-ordering is correct
     print_h2("Test De-Normal-Ordered Hamiltonian");
-    double Etest = scalar_include_fc + molecule_->nuclear_repulsion_energy();
+    double Etest = scalar_include_fc + molecule_->nuclear_repulsion_energy(reference_wavefunction_->get_dipole_field_strength());
 
     double Etest1 = 0.0;
     Etest1 += temp1["uv"] * Gamma1_["vu"];

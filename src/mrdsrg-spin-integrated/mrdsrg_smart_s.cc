@@ -79,14 +79,14 @@ double MRDSRG::smart_s_min_delta1() {
         int h_local = h;
         while (--h_local >= 0)
             index += virt[h_local];
-        lowest_virt.emplace_back(Fa_[avirt_mos_[index]]);
+        lowest_virt.emplace_back(Fa_[virt_mos_[index]]);
     }
 
     double Edelta = 100.0, dsrg_s = 0.0;
     std::vector<int> actv_sym = mo_space_info_->symmetry("ACTIVE");
     size_t nactv = actv_sym.size();
     for (size_t i = 0; i < nactv; ++i) {
-        size_t idx = aactv_mos_[i];
+        size_t idx = actv_mos_[i];
         double diff = lowest_virt[actv_sym[i]] - Fa_[idx];
         if (Edelta > diff)
             Edelta = diff;
@@ -104,14 +104,14 @@ double MRDSRG::smart_s_max_delta1() {
         int h_local = h;
         while (--h_local >= 0)
             index += virt[h_local];
-        lowest_virt.emplace_back(Fa_[avirt_mos_[index]]);
+        lowest_virt.emplace_back(Fa_[virt_mos_[index]]);
     }
 
     double Edelta = 0.0, dsrg_s = 0.0;
     std::vector<int> actv_sym = mo_space_info_->symmetry("ACTIVE");
     size_t nactv = actv_sym.size();
     for (size_t i = 0; i < nactv; ++i) {
-        size_t idx = aactv_mos_[i];
+        size_t idx = actv_mos_[i];
         double diff = lowest_virt[actv_sym[i]] - Fa_[idx];
         if (Edelta < diff)
             Edelta = diff;
@@ -130,7 +130,7 @@ double MRDSRG::smart_s_davg_min_delta1() {
         int h_local = h;
         while (--h_local >= 0)
             index += virt[h_local];
-        lowest_virt.emplace_back(Fa_[avirt_mos_[index]]);
+        lowest_virt.emplace_back(Fa_[virt_mos_[index]]);
     }
 
     // normalize diagonal density
@@ -147,7 +147,7 @@ double MRDSRG::smart_s_davg_min_delta1() {
     // density averaged denorminator
     double Edelta = 0.0;
     for (size_t i = 0; i < nactv; ++i) {
-        size_t idx = aactv_mos_[i];
+        size_t idx = actv_mos_[i];
         double diff = lowest_virt[actv_sym[i]] - Fa_[idx];
         Edelta += diff * davg[i];
     }
@@ -165,7 +165,7 @@ double MRDSRG::smart_s_davg_max_delta1() {
         int h_local = h;
         while (--h_local >= 0)
             index += virt[h_local];
-        lowest_virt.emplace_back(Fa_[avirt_mos_[index]]);
+        lowest_virt.emplace_back(Fa_[virt_mos_[index]]);
     }
 
     // normalize diagonal density
@@ -182,7 +182,7 @@ double MRDSRG::smart_s_davg_max_delta1() {
     // density averaged denorminator
     double Edelta = 0.0;
     for (size_t i = 0; i < nactv; ++i) {
-        size_t idx = aactv_mos_[i];
+        size_t idx = actv_mos_[i];
         double diff = lowest_virt[actv_sym[i]] - Fa_[idx];
         Edelta += diff * davg[i];
     }

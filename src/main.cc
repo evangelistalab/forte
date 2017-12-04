@@ -31,7 +31,7 @@
 #include "forte_options.h"
 #include "helpers.h"
 #include "integrals/integrals.h"
-#include "sparse_ci/stl_bitset_determinant.h"
+#include "sparse_ci/determinant.h"
 #include "version.h"
 
 #ifdef HAVE_CHEMPS2
@@ -234,9 +234,9 @@ void forte_banner() {
         "    Jeffrey B. Schriber, Tianyuan Zhang, Chenxi Cai\n"
         "  ----------------------------------------------------------------------------\n",
         GIT_BRANCH, GIT_COMMIT_HASH);
-    outfile->Printf("\n  Size of STLBitsetDeterminant class: %d", sizeof(STLBitsetDeterminant));
-//    std::cout << "\n " << STLBitsetDeterminant::alfa_mask << std::endl;
-//    std::cout << "\n " << STLBitsetDeterminant::beta_mask << std::endl;
+    outfile->Printf("\n  Size of Determinant class: %d", sizeof(Determinant));
+//    std::cout << "\n " << Determinant::alfa_mask << std::endl;
+//    std::cout << "\n " << Determinant::beta_mask << std::endl;
 }
 }
 } // End Namespaces

@@ -1,4 +1,5 @@
 cmake_policy(SET CMP0048 NEW)  # project_VERSION* variables populated from project(... VERSION x.x.x) string
+
 project(forte
         VERSION 0.1
         LANGUAGES CXX C)
@@ -21,6 +22,7 @@ option_with_print(ENABLE_GA "Enable Global Arrays" OFF)
 include(autocmake_omp)
 include(autocmake_mpi)  # MPI option A
 #include(custom_static_library)
+
 
 
 #find_package(psi4 1.1 REQUIRED COMPONENTS ambit chemps2)
@@ -52,7 +54,6 @@ src/davidson.cc
 src/determinant_hashvector.cc
 src/dmrgscf.cc
 src/dmrgsolver.cc
-src/dynamic_bitset_determinant.cc
 src/dynamic_correlation.cc
 src/fci_mo.cc
 src/fcimc.cc
@@ -81,7 +82,7 @@ src/sparse_ci/stl_bitset_determinant.cc
 src/sparse_ci/stl_bitset_string.cc
 src/sparse_ci/sorted_string_list.cc
 src/sparse_ci/ui64_determinant.cc
-src/sq.cc
+src/sparse_ci/ui64_determinant_functions.cc
 src/tensorsrg.cc
 src/tensorsrg_antihermitian_commutators.cc
 src/tensorsrg_ct.cc
@@ -91,6 +92,7 @@ src/tensorsrg_save.cc
 src/tensorsrg_srg.cc
 src/v2rdm.cc
 src/aci/aci.cc
+src/aci/aci_build_F.cc
 src/aosubspace/aosubspace.cc
 src/ci-no/ci-no.cc
 src/ci-no/mrci-no.cc
@@ -137,6 +139,7 @@ src/mrdsrg-spin-integrated/mrdsrg_pt.cc
 src/mrdsrg-spin-integrated/mrdsrg_smart_s.cc
 src/mrdsrg-spin-integrated/mrdsrg_srg.cc
 src/mrdsrg-spin-integrated/three_dsrg_mrpt2.cc
+src/mrdsrg-spin-integrated/dwms_mrpt2.cc
 src/orbital-helper/localize.cc
 src/orbital-helper/unpaired_density.cc
 src/orbital-helper/iao_builder.cc
@@ -145,8 +148,6 @@ src/pci/pci.cc
 src/pci/pci_hashvec.cc
 src/pci/pci_simple.cc
 src/pci/ewci.cc
-src/libthce/thce.cc
-src/libthce/lreri.cc
 )
 
 target_link_libraries(forte PRIVATE ambit::ambit)
@@ -165,3 +166,24 @@ endif()
 if(ENABLE_GA)
     target_link_libraries(forte PRIVATE GlobalArrays::ga)
 endif()
+
+#
+# Forte tests
+#
+option(ENABLE_ForteTests "Enable Forte tests." OFF)
+
+set (CMAKE_CXX_STANDARD 11)
+
+if (ENABLE_ForteTests)
+  project (forte_tests)
+  include_directories(${CMAKE_BINARY_DIR} ${CMAKE_BINARY_DIR}/catch2/src/catch2/single_include)
+  add_executable(forte_tests
+    src/sparse_ci/ui64_determinant.cc
+    tests/code/test_determinant.cc)
+
+  project (forte_benchmarks)
+  include_directories(${CMAKE_BINARY_DIR})
+  add_executable(forte_benchmarks
+    src/sparse_ci/ui64_determinant.cc
+    tests/benchmark/determinant_benchmark.cc)
+endif (ENABLE_ForteTests)

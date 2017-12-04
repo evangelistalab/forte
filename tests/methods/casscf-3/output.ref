@@ -1,27 +1,30 @@
+
     -----------------------------------------------------------------------
           Psi4: An Open-Source Ab Initio Electronic Structure Package
-                              Psi4 0.3.430 Driver
+                               Psi4 1.2a1.dev704 
 
-                          Git: Rev {master} dc0641e dirty
+                         Git: Rev {master} a7fc050 
 
-    J. M. Turney, A. C. Simmonett, R. M. Parrish, E. G. Hohenstein,
-    F. A. Evangelista, J. T. Fermann, B. J. Mintz, L. A. Burns, J. J. Wilke,
-    M. L. Abrams, N. J. Russ, M. L. Leininger, C. L. Janssen, E. T. Seidl,
-    W. D. Allen, H. F. Schaefer, R. A. King, E. F. Valeev, C. D. Sherrill,
-    and T. D. Crawford, WIREs Comput. Mol. Sci. 2, 556-565 (2012)
-    (doi: 10.1002/wcms.93)
 
-                         Additional Contributions by
-    A. E. DePrince, M. Saitow, U. Bozkaya, A. Yu. Sokolov
+    R. M. Parrish, L. A. Burns, D. G. A. Smith, A. C. Simmonett,
+    A. E. DePrince III, E. G. Hohenstein, U. Bozkaya, A. Yu. Sokolov,
+    R. Di Remigio, R. M. Richard, J. F. Gonthier, A. M. James,
+    H. R. McAlexander, A. Kumar, M. Saitow, X. Wang, B. P. Pritchard,
+    P. Verma, H. F. Schaefer III, K. Patkowski, R. A. King, E. F. Valeev,
+    F. A. Evangelista, J. M. Turney, T. D. Crawford, and C. D. Sherrill,
+    J. Chem. Theory Comput. 13(7) pp 3185--3197 (2017).
+    (doi: 10.1021/acs.jctc.7b00174)
+
     -----------------------------------------------------------------------
 
 
-    Psi4 started on: Tue Jan 12 14:51:18 2016
+    Psi4 started on: Monday, 04 December 2017 12:16PM
 
-    Process ID:  75440
-    PSI4DATADIR: /Users/kevinhannon/Programs/psi4cmake/psi4/lib
-    Memory level set to 256.000 MB
-
+    Process ID:  33420
+    PSIDATADIR: /Users/york/src/psi4new/psi4/share/psi4
+    Memory:     500.0 MiB
+    Threads:    1
+    
   ==> Input File <==
 
 --------------------------------------------------------------------------
@@ -37,32 +40,35 @@ H 1 1.00 2 103.1
 }
 
 set {
-    scf_type        out_of_core
+    scf_type        pk
     df_basis_guess   false
     basis           3-21g
     reference       rhf
     frozen_docc     [1, 0, 0, 0]
     active          [3, 0, 1, 2]
-    e_convergence   1e-6
+    e_convergence   1e-10
     d_convergence   1e-10
+    mcscf_r_convergence 1e-8
+    mcscf_e_convergence 1e-10
 }
 
 
 casscf_psi4 = energy('casscf')
-energy('scf')
+
 set scf_type direct
 set forte {
+    job_type              casscf
     casscf_reference true
-    frozen_docc     [1, 0, 0, 0]
-    active          [3, 0, 1, 2]
-    int_type        conventional
-    FCI_ITERATIONS        40
-    CASSCF_E_CONVERGENCE  1e-7
+    frozen_docc           [1, 0, 0, 0]
+    active                [3, 0, 1, 2]
+    int_type              conventional
+    fci_maxiter           40
+    CASSCF_E_CONVERGENCE  1e-10
     CASSCF_G_CONVERGENCE  1e-6
-    CAS_TYPE             FCI
-    CASSCF_ITERATIONS    25
-    print                0
-    CASSCF_FREEZE_CORE   true
+    CAS_TYPE              FCI
+    CASSCF_ITERATIONS     25
+    print                 0
+    CASSCF_DO_DIIS        true
 }
 
 
@@ -71,21 +77,28 @@ casscf_forte = energy('forte')
 
 compare_values(ref_my_casscf, casscf_forte, 6, 'CASSCF Energy')  #TEST
 --------------------------------------------------------------------------
-/Users/kevinhannon/Programs/forte/forte.so loaded.
 
-*** tstart() called on dhcp189-173.emerson.emory.edu
-*** at Tue Jan 12 14:51:18 2016
+*** tstart() called on yorks-mac.wireless.emory.edu
+*** at Mon Dec  4 12:16:30 2017
+
+   => Loading Basis Set <=
+
+    Name: 3-21G
+    Role: ORBITAL
+    Keyword: BASIS
+    atoms 1   entry O          line    90 file /Users/york/src/psi4new/psi4/share/psi4/basis/3-21g.gbs 
+    atoms 2-3 entry H          line    21 file /Users/york/src/psi4new/psi4/share/psi4/basis/3-21g.gbs 
 
     There are an even number of electrons - assuming singlet.
-    Specify the multiplicity with the MULTP option in the
-    input if this is incorrect
+    Specify the multiplicity in the molecule input block.
 
 
          ---------------------------------------------------------
                                    SCF
-            by Justin Turney, Rob Parrish, and Andy Simmonett
+            by Justin Turney, Rob Parrish, Andy Simmonett
+                             and Daniel Smith
                               RHF Reference
-                        1 Threads,    256 MiB Core
+                        1 Threads,    500 MiB Core
          ---------------------------------------------------------
 
   ==> Geometry <==
@@ -115,18 +128,19 @@ compare_values(ref_my_casscf, casscf_forte, 6, 'CASSCF Energy')  #TEST
 
   ==> Algorithm <==
 
-  SCF Algorithm Type is OUT_OF_CORE.
+  SCF Algorithm Type is PK.
   DIIS enabled.
   MOM disabled.
   Fractional occupation disabled.
-  Guess Type is CORE.
-  Energy threshold   = 1.00e-06
+  Guess Type is SAD.
+  Energy threshold   = 1.00e-10
   Density threshold  = 1.00e-10
   Integral threshold = 0.00e+00
 
   ==> Primary Basis <==
 
   Basis Set: 3-21G
+    Blend: 3-21G
     Number of shells: 9
     Number of basis function: 13
     Number of Cartesian functions: 13
@@ -146,83 +160,53 @@ compare_values(ref_my_casscf, casscf_forte, 6, 'CASSCF Energy')  #TEST
     Total      13      13       5       5       5       0
    -------------------------------------------------------
 
-  Starting with a DF guess...
-
   ==> Integral Setup <==
 
-  ==> DFJK: Density-Fitted J/K Matrices <==
+  Using in-core PK algorithm.
+   Calculation information:
+      Number of atoms:                   3
+      Number of AO shells:               9
+      Number of primitives:             15
+      Number of atomic orbitals:        13
+      Number of basis functions:        13
 
-    J tasked:                  Yes
-    K tasked:                  Yes
-    wK tasked:                  No
-    OpenMP threads:              1
-    Integrals threads:           1
-    Memory (MB):               183
-    Algorithm:                Core
-    Integral Cache:           NONE
-    Schwarz Cutoff:          1E-12
-    Fitting Condition:       1E-12
+      Integral cutoff                 1.00e-12
+      Number of threads:                 1
 
-   => Auxiliary Basis Set <=
-
-  Basis Set: 
-    Number of shells: 30
-    Number of basis function: 96
-    Number of Cartesian functions: 96
-    Spherical Harmonics?: false
-    Max angular momentum: 3
-
-  Minimum eigenvalue in the overlap matrix is 1.1629436767E-01.
-  Using Symmetric Orthogonalization.
-  SCF Guess: Core (One-Electron) Hamiltonian.
-
-  ==> Iterations <==
-
-                           Total Energy        Delta E     RMS |[F,P]|
-
-    Occupation by irrep:
-             A1    A2    B1    B2 
-    DOCC [     3,    0,    0,    2 ]
-
-   @DF-RHF iter   1:   -66.02990358714361   -6.60299e+01   4.81881e-01 
-    Occupation by irrep:
-             A1    A2    B1    B2 
-    DOCC [     3,    0,    1,    1 ]
-
-   @DF-RHF iter   2:   -70.16670420416925   -4.13680e+00   3.19178e-01 DIIS
-   @DF-RHF iter   3:   -75.36543291154882   -5.19873e+00   8.96299e-02 DIIS
-   @DF-RHF iter   4:   -75.57357917449281   -2.08146e-01   1.41635e-02 DIIS
-   @DF-RHF iter   5:   -75.58421798557315   -1.06388e-02   4.30720e-03 DIIS
-   @DF-RHF iter   6:   -75.58470049240826   -4.82507e-04   8.95014e-04 DIIS
-   @DF-RHF iter   7:   -75.58473992763348   -3.94352e-05   2.43937e-04 DIIS
-   @DF-RHF iter   8:   -75.58474202358235   -2.09595e-06   2.58956e-05 DIIS
-   @DF-RHF iter   9:   -75.58474210172558   -7.81432e-08   5.62696e-06 DIIS
-   @DF-RHF iter  10:   -75.58474210270417   -9.78588e-10   1.18962e-06 DIIS
-   @DF-RHF iter  11:   -75.58474210273802   -3.38503e-11   6.77147e-08 DIIS
-   @DF-RHF iter  12:   -75.58474210273816   -1.42109e-13   5.48353e-09 DIIS
-   @DF-RHF iter  13:   -75.58474210273812    4.26326e-14   2.81904e-10 DIIS
-   @DF-RHF iter  14:   -75.58474210273812    0.00000e+00   1.08560e-11 DIIS
-
-  DF guess converged.
-
-  ==> Integral Setup <==
-
+  Performing in-core PK
+  Using 8372 doubles for integral storage.
+  We computed 1035 shell quartets total.
+  Whereas there are 1035 unique shell quartets.
   ==> DiskJK: Disk-Based J/K Matrices <==
 
     J tasked:                  Yes
     K tasked:                  Yes
     wK tasked:                  No
-    Memory (MB):               183
+    Memory (MB):               375
     Schwarz Cutoff:          1E-12
 
-   @RHF iter  15:   -75.58377685260588    9.65250e-04   3.61537e-05 DIIS
-   @RHF iter  16:   -75.58377687079243   -1.81866e-08   4.88541e-06 DIIS
-   @RHF iter  17:   -75.58377687195744   -1.16501e-09   3.05313e-06 DIIS
-   @RHF iter  18:   -75.58377687214788   -1.90440e-10   4.62739e-07 DIIS
-   @RHF iter  19:   -75.58377687216129   -1.34150e-11   5.56952e-08 DIIS
-   @RHF iter  20:   -75.58377687216144   -1.42109e-13   2.77145e-09 DIIS
-   @RHF iter  21:   -75.58377687216144    0.00000e+00   3.60954e-10 DIIS
-   @RHF iter  22:   -75.58377687216142    1.42109e-14   7.39558e-11 DIIS
+    OpenMP threads:              1
+  Minimum eigenvalue in the overlap matrix is 1.1629436767E-01.
+  Using Symmetric Orthogonalization.
+
+  SCF Guess: Superposition of Atomic Densities via on-the-fly atomic UHF.
+
+  ==> Iterations <==
+
+                        Total Energy        Delta E     RMS |[F,P]|
+
+   @RHF iter   0:   -75.53465492506520   -7.55347e+01   1.70591e-01 
+   @RHF iter   1:   -75.54094682009213   -6.29190e-03   3.47187e-02 
+   @RHF iter   2:   -75.57623716740157   -3.52903e-02   1.84899e-02 DIIS
+   @RHF iter   3:   -75.58315149472061   -6.91433e-03   2.75391e-03 DIIS
+   @RHF iter   4:   -75.58373248801226   -5.80993e-04   7.03929e-04 DIIS
+   @RHF iter   5:   -75.58377508436719   -4.25964e-05   1.19954e-04 DIIS
+   @RHF iter   6:   -75.58377680354882   -1.71918e-06   2.62867e-05 DIIS
+   @RHF iter   7:   -75.58377687208134   -6.85325e-08   1.38931e-06 DIIS
+   @RHF iter   8:   -75.58377687216030   -7.89555e-11   1.18392e-07 DIIS
+   @RHF iter   9:   -75.58377687216154   -1.23634e-12   1.47049e-08 DIIS
+   @RHF iter  10:   -75.58377687216155   -1.42109e-14   7.27034e-10 DIIS
+   @RHF iter  11:   -75.58377687216158   -2.84217e-14   5.81606e-11 DIIS
 
   ==> Post-Iterations <==
 
@@ -246,24 +230,18 @@ compare_values(ref_my_casscf, casscf_forte, 6, 'CASSCF Energy')  #TEST
 
   Energy converged.
 
-  @RHF Final Energy:   -75.58377687216142
+  @RHF Final Energy:   -75.58377687216158
 
    => Energetics <=
 
     Nuclear Repulsion Energy =              8.8046866186390567
-    One-Electron Energy =                -121.9294218744772138
-    Two-Electron Energy =                  37.5409583836767453
-    DFT Exchange-Correlation Energy =       0.0000000000000000
-    Empirical Dispersion Energy =           0.0000000000000000
-    PCM Polarization Energy =               0.0000000000000000
-    EFP Energy =                            0.0000000000000000
-    Total Energy =                        -75.5837768721614225
+    One-Electron Energy =                -121.9294218760775124
+    Two-Electron Energy =                  37.5409583852768804
+    Total Energy =                        -75.5837768721615788
 
-    Alert: EFP and PCM quantities not currently incorporated into SCF psivars.
+
 
 Properties will be evaluated at   0.000000,   0.000000,   0.000000 Bohr
-  ==> Properties <==
-
 
 Properties computed using the SCF density matrix
 
@@ -280,2094 +258,240 @@ Properties computed using the SCF density matrix
      X:     0.0000      Y:     0.0000      Z:     2.4579     Total:     2.4579
 
 
-  Saving occupied orbitals to File 180.
-
-*** tstop() called on dhcp189-173.emerson.emory.edu at Tue Jan 12 14:51:19 2016
+*** tstop() called on yorks-mac.wireless.emory.edu at Mon Dec  4 12:16:30 2017
 Module time:
-	user time   =       0.30 seconds =       0.01 minutes
-	system time =       0.01 seconds =       0.00 minutes
-	total time  =          1 seconds =       0.02 minutes
+	user time   =       0.36 seconds =       0.01 minutes
+	system time =       0.02 seconds =       0.00 minutes
+	total time  =          0 seconds =       0.00 minutes
 Total time:
-	user time   =       0.30 seconds =       0.01 minutes
-	system time =       0.01 seconds =       0.00 minutes
-	total time  =          1 seconds =       0.02 minutes
+	user time   =       0.36 seconds =       0.01 minutes
+	system time =       0.02 seconds =       0.00 minutes
+	total time  =          0 seconds =       0.00 minutes
+ MINTS: Wrapper to libmints.
+   by Justin Turney
+
+   Calculation information:
+      Number of threads:                 1
+      Number of atoms:                   3
+      Number of AO shells:               9
+      Number of SO shells:               7
+      Number of primitives:             15
+      Number of atomic orbitals:        13
+      Number of basis functions:        13
+
+      Number of irreps:                  4
+      Integral cutoff                 1.00e-12
+      Number of functions per irrep: [   7    0    2    4 ]
+
+ OEINTS: Overlap, kinetic, potential, dipole, and quadrupole integrals
+         stored in file 35.
+
+      Computing two-electron integrals...done
+      Computed 1270 non-zero two-electron integrals.
+        Stored in file 33.
+
+ MINTS: Wrapper to libmints.
+   by Justin Turney
+
+   Calculation information:
+      Number of threads:                 1
+      Number of atoms:                   3
+      Number of AO shells:               9
+      Number of SO shells:               7
+      Number of primitives:             15
+      Number of atomic orbitals:        13
+      Number of basis functions:        13
+
+      Number of irreps:                  4
+      Integral cutoff                 0.00e+00
+      Number of functions per irrep: [   7    0    2    4 ]
+
+ OEINTS: Overlap, kinetic, potential, dipole, and quadrupole integrals
+         stored in file 35.
+
+      Computing two-electron integrals...done
+      Computed 1270 non-zero two-electron integrals.
+        Stored in file 33.
+
 
          ---------------------------------------------------------
-                                 D E T C I  
+                Multi-Configurational Self-Consistent Field
+                            (a 'D E T C I' module)
 
-                             C. David Sherrill
-                             Matt L. Leininger
-                               18 June 1999
+                 Daniel G. A. Smith, C. David Sherrill, and
+                              Matt L. Leininger
          ---------------------------------------------------------
 
 
-DETCI PARAMETERS: 
-   EX LEVEL      =        8      H0 BLOCKSIZE =      400
-   VAL EX LEVEL  =        0      H0 GUESS SIZE=      400
-   H0COUPLINGSIZE=        0      H0 COUPLING  =       no
-   MAXITER       =       12      NUM PRINT    =       20
-   NUM ROOTS     =        1      ICORE        =        1
-   PRINT         =        1      FCI          =      yes
-   R CONV        = 1.00e-07      MIXED        =      yes
-   E CONV        = 1.00e-06      MIXED4       =      yes
-   OEI FILE      =       35      R4S          =       no
-   REPL OTF      =       no
-   TEI FILE      =       72      DIAG METHOD  =      SEM
-   PRECONDITIONER= DAVIDSON      UPDATE       = DAVIDSON
-   S             =   0.0000      Ms0          =      yes
-   MAX NUM VECS  =       13
-   RESTART       =       no
-   GUESS VECTOR  =   D FILE      OPENTYPE     =     NONE
-   REF SYM       =     auto
-   COLLAPSE SIZE =        1      HD AVG       = EVANGELISTI
-   LSE           =       no      LSE ITER     =        0
-   HD OTF        =      yes      NO DFILE     =       no
-   MPN           =       no      MPN SCHMIDT  =       no
-   ZAPTN         =       no      MPN WIGNER   =       no
-   PERT Z        =   1.0000      FOLLOW ROOT  =        0
-   NUM THREADS   =        1
-   VECS WRITE    =       no      NUM VECS WRITE =      0
-   FILTER GUESS  =       no      SF RESTRICT  =       no
-   OPDM          =      yes      TRANS DENSITY=       no
+   ==> Parameters <==
 
-   FILES         =  50 51 52 53
+    EX LEVEL       =        8      H0 BLOCKSIZE  =     1000
+    VAL EX LEVEL   =        0      H0 GUESS SIZE =     1000
+    H0COUPLINGSIZE =        0      H0 COUPLING   =       NO
+    MAXITER        =       12      NUM PRINT     =       20
+    NUM ROOTS      =        1      ICORE         =        1
+    PRINT LVL      =        1      FCI           =      YES
+    R CONV         = 1.00e-07      MIXED         =      YES
+    E CONV         = 1.00e-10      MIXED4        =      YES
+    R4S            =       NO      REPL OTF      =       NO
+    DIAG METHOD    =      SEM      FOLLOW ROOT   =        0
+    PRECONDITIONER = DAVIDSON      UPDATE        = DAVIDSON
+    S              =   0.0000      Ms0           =      YES
+    GUESS VECTOR   =  H0BLOCK      OPENTYPE      =     NONE
+    COLLAPSE SIZE  =        1      HD AVG        = EVANGELISTI
+    MAX NUM VECS   =       13      REF SYM       =     AUTO
+    IOPEN        =       NO
 
-   EX ALLOW      =  1  1  1  1  1  1  1  1 
-   STATE AVERAGE =  1(1.00) 
+    EX ALLOW       =  1  1  1  1  1  1  1  1 
+    STATE AVERAGE  =  0(1.00) 
 
-ORBITALS:
-   NMO          =       13
-   FROZEN CORE  =        1      RESTR CORE   =        0
-   FROZEN VIRT  =        0      RESTR VIRT   =        6
-   DROPPED CORE =        1      DROPPED VIRT =        6
-   EXPLICIT CORE=        0      ORBS IN CI   =        6
-   NUM ALP      =        5      NUM BET      =        5
-   NUM ALP EXPL =        4      NUM BET EXPL =        4
-   IOPEN        =       no
+   ==> CI Orbital and Space information <==
 
-   DOCC            =   3   0   1   1 
-   SOCC            =   0   0   0   0 
-
-   FROZEN DOCC     =   1   0   0   0 
-   RESTRICTED DOCC =   0   0   0   0 
-   ACTIVE          =   3   0   1   2 
-   RESTRICTED UOCC =   3   0   1   2 
-   FROZEN UOCC     =   0   0   0   0 
-         ---------------------------------------------------------
-
+   ------------------------------------------------------
+               Space    Total    A1    A2    B1    B2
+   ------------------------------------------------------
+                 Nso       13     7     0     2     4
+                 Nmo       13     7     0     2     4
+               Ndocc        5     3     0     1     1
+               Nsocc        0     0     0     0     0
+   ------------------------------------------------------
+                        MCSCF Spaces
+   ------------------------------------------------------
+         Frozen DOCC        1     1     0     0     0
+     Restricted DOCC        0     0     0     0     0
+              Active        6     3     0     1     2
+     Restricted UOCC        6     3     0     1     2
+         Frozen UOCC        0     0     0     0     0
+   ------------------------------------------------------
 
    ==> Setting up CI strings <==
 
-   There are 15 alpha and 15 beta strings
-   The CI space requires 65 (6.50E+01) determinants and 4 blocks
-
+    There are 15 alpha and 15 beta strings
+    The CI space requires 65 (6.50E+01) determinants and 4 blocks
 
    ==> Setting up MCSCF integrals <==
 
+  Using in-core PK algorithm.
+   Calculation information:
+      Number of atoms:                   3
+      Number of AO shells:               9
+      Number of primitives:             15
+      Number of atomic orbitals:        13
+      Number of basis functions:        13
+
+      Integral cutoff                 1.00e-12
+      Number of threads:                 1
+
+  Performing in-core PK
+  Using 8372 doubles for integral storage.
+  We computed 1035 shell quartets total.
+  Whereas there are 1035 unique shell quartets.
+  ==> DiskJK: Disk-Based J/K Matrices <==
+
+    J tasked:                  Yes
+    K tasked:                  Yes
+    wK tasked:                  No
+    Memory (MB):              3200
+    Schwarz Cutoff:          1E-12
+
+    OpenMP threads:              1
 
    ==> Starting MCSCF iterations <==
 
-                        Total Energy        Delta E      RMS Grad   NCI
+        Iter         Total Energy       Delta E   Orb RMS    CI RMS  NCI NORB
+   @MCSCF  1:    -75.604087404064   -2.0311e-02  1.73e-02  9.94e-14    1    1  Initial CI
+   @MCSCF  2:    -75.637349068193   -3.3262e-02  1.61e-02  4.81e-06    6    1  TS
+   @MCSCF  3:    -75.640581756666   -3.2327e-03  5.24e-03  6.29e-06    5    1  TS
+   @MCSCF  4:    -75.641025369510   -4.4361e-04  1.88e-03  2.42e-06    5    1  TS, DIIS
+   @MCSCF  5:    -75.641094296853   -6.8927e-05  8.28e-04  1.15e-06    5    1  TS, DIIS
+   @MCSCF  6:    -75.641105656479   -1.1360e-05  4.00e-04  1.75e-07    6    1  TS, DIIS
+   @MCSCF  7:    -75.641108751021   -3.0945e-06  6.49e-05  5.70e-08    6    1  TS, DIIS
+   @MCSCF  8:    -75.641108801195   -5.0174e-08  5.07e-05  9.63e-09    6    1  TS, DIIS
+   @MCSCF  9:    -75.641108834444   -3.3249e-08  1.43e-05  1.66e-08    5    1  TS, DIIS
+   @MCSCF 10:    -75.641108837797   -3.3529e-09  1.05e-06  1.03e-08    5    1  TS, DIIS
+   @MCSCF 11:    -75.641108837800   -3.6948e-12  7.61e-07  1.85e-10    6    1  TS, DIIS
+   @MCSCF 12:    -75.641108837813   -1.2221e-11  4.08e-09  7.06e-10    5    1  TS, DIIS
 
-  ## IFock (Symmetry 0) ##
-  Irrep: 1 Size: 6 x 6
+          @MCSCF has converged!
 
-                 1                   2                   3                   4                   5
+   @MCSCF Final Energy:  -75.641108837812695
 
-    1    -5.72365873954415    -0.14547605323077    -0.66636159443303    -0.24756641693799    -0.05073027899612
-    2    -0.14547605323076    -4.91045947802187     0.51706207599129     0.22813440627757    -0.93824086158618
-    3    -0.66636159443303     0.51706207599129    -2.98106499974096    -0.71984657725438     0.42576264839737
-    4    -0.24756641693799     0.22813440627757    -0.71984657725438    -2.64233336946952     0.41353148594828
-    5    -0.05073027899612    -0.93824086158618     0.42576264839737     0.41353148594828    -3.17197741694944
-    6    -0.68152241213277    -0.28134843039208    -0.65655958230552    -0.21598269300858    -0.03765051767568
+   Computing CI Semicanonical Orbitals
 
-                 6
+   ==> Energetics <==
 
-    1    -0.68152241213277
-    2    -0.28134843039208
-    3    -0.65655958230552
-    4    -0.21598269300859
-    5    -0.03765051767568
-    6    -2.09355625675621
+    SCF energy =          -75.583776872161579
+    Total MCSCF energy =  -75.641108837812695
 
+   ==> MCSCF root 0 information <==
 
+    MCSCF Root 0 energy =   -75.641108837812610
 
-  Irrep: 2 Size: 0 x 0
+   Active Space Natural occupation numbers:
 
-	(empty)
+        B1   1.999270        A1   1.998606        A1   1.975924
+        B2   1.972261        B2   0.028154        A1   0.025786
 
-  Irrep: 3 Size: 2 x 2
+   The 20 most important determinants:
 
-                 1                   2
+    *   1    0.986525  (    3,    3)  2A1X 3A1X 1B1X 1B2X 
+    *   2   -0.082341  (    6,    6)  2A1X 3A1X 1B1X 2B2X 
+    *   3   -0.051064  (    4,    6)  2A1X 3A1B 4A1A 1B1X 1B2A 2B2B 
+    *   4   -0.051064  (    6,    4)  2A1X 3A1A 4A1B 1B1X 1B2B 2B2A 
+    *   5   -0.049374  (    4,    4)  2A1X 4A1X 1B1X 1B2X 
+    *   6   -0.036490  (    9,    9)  2A1X 3A1X 4A1X 1B1X 
+    *   7   -0.033619  (   10,   10)  2A1X 1B1X 1B2X 2B2X 
+    *   8    0.032697  (    4,    5)  2A1A 3A1B 4A1X 1B1X 1B2X 
+    *   9    0.032697  (    5,    4)  2A1B 3A1A 4A1X 1B1X 1B2X 
+    *  10    0.032100  (    5,    6)  2A1B 3A1X 4A1A 1B1X 1B2A 2B2B 
+    *  11    0.032100  (    6,    5)  2A1A 3A1X 4A1B 1B1X 1B2B 2B2A 
+    *  12   -0.030857  (    5,    5)  3A1X 4A1X 1B1X 1B2X 
+    *  13    0.030587  (    9,   10)  2A1X 3A1A 4A1A 1B1X 1B2B 2B2B 
+    *  14    0.030587  (   10,    9)  2A1X 3A1B 4A1B 1B1X 1B2A 2B2A 
+    *  15   -0.020478  (    3,    7)  2A1X 3A1A 4A1B 1B1X 1B2A 2B2B 
+    *  16   -0.020478  (    7,    3)  2A1X 3A1B 4A1A 1B1X 1B2B 2B2A 
+    *  17   -0.020338  (    9,   11)  2A1A 3A1X 4A1A 1B1X 1B2B 2B2B 
+    *  18   -0.020338  (   11,    9)  2A1B 3A1X 4A1B 1B1X 1B2A 2B2A 
+    *  19   -0.017495  (   11,   11)  3A1X 1B1X 1B2X 2B2X 
+    *  20   -0.016464  (   13,   13)  2A1X 3A1X 4A1X 1B2X 
 
-    1    -5.06760467811268    -1.08107630278991
-    2    -1.08107630278991    -3.33308393813619
 
 
+Properties will be evaluated at   0.000000,   0.000000,   0.000000 Bohr
 
-  Irrep: 4 Size: 4 x 4
+Properties computed using the CASSCF density matrix
 
-                 1                   2                   3                   4
+  Nuclear Dipole Moment: (a.u.)
+     X:     0.0000      Y:     0.0000      Z:     1.0351
 
-    1    -4.76952397145730    -0.93501375058102    -0.10914488573658    -0.71867829112578
-    2    -0.93501375058102    -2.96904194671857    -0.75193811040179    -0.88685855517834
-    3    -0.10914488573658    -0.75193811040179    -2.52718351202040    -0.29679349305157
-    4    -0.71867829112578    -0.88685855517834    -0.29679349305157    -3.08861040195511
+  Electronic Dipole Moment: (a.u.)
+     X:     0.0000      Y:     0.0000      Z:    -0.1339
 
+  Dipole Moment: (a.u.)
+     X:     0.0000      Y:     0.0000      Z:     0.9012     Total:     0.9012
 
+  Dipole Moment: (Debye)
+     X:     0.0000      Y:     0.0000      Z:     2.2905     Total:     2.2905
 
-  ## AFock (Symmetry 0) ##
-  Irrep: 1 Size: 6 x 6
 
-                 1                   2                   3                   4                   5
+*** tstart() called on yorks-mac.wireless.emory.edu
+*** at Mon Dec  4 12:16:31 2017
 
-    1     4.40054446362640     0.14107467443066     0.66345854833060     0.24511260380552     0.05016420780154
-    2     0.14107467443066     4.36539461813524    -0.51901261687608    -0.22706301122738     0.93381488655382
-    3     0.66345854833060    -0.51901261687608     3.22517626709068     0.71623572996077    -0.42435440831234
-    4     0.24511260380552    -0.22706301122738     0.71623572996077     3.90081502785342    -0.41082097764819
-    5     0.05016420780154     0.93381488655382    -0.42435440831234    -0.41082097764819     5.03865361537140
-    6     0.67645159831262     0.27921562328821     0.65228726624944     0.21406602475171     0.03616468521873
+   => Loading Basis Set <=
 
-                 6
-
-    1     0.67645159831262
-    2     0.27921562328821
-    3     0.65228726624945
-    4     0.21406602475171
-    5     0.03616468521873
-    6     5.16746209564848
-
-
-
-  Irrep: 2 Size: 0 x 0
-
-	(empty)
-
-  Irrep: 3 Size: 2 x 2
-
-                 1                   2
-
-    1     4.57295033078974     1.07393856893458
-    2     1.07393856893458     5.09823257943579
-
-
-
-  Irrep: 4 Size: 4 x 4
-
-                 1                   2                   3                   4
-
-    1     4.10210066075850     0.93293181176337     0.10712914196952     0.71525155697713
-    2     0.93293181176337     3.30830237037387     0.74799151065386     0.88205261784699
-    3     0.10712914196952     0.74799151065386     3.69017556169962     0.29545970141046
-    4     0.71525155697713     0.88205261784699     0.29545970141046     5.08855265739970
-
-
-
-Printing the Q matrix
-  ## Q (Symmetry 0) ##
-  Irrep: 1 Size: 3 x 6
-
-                 1                   2                   3                   4                   5
-
-    1     8.77569637960923     0.31101084888407     1.30875453101343     0.48256488250674     0.10915139104614
-    2     0.33090593075824     8.66586705351966    -0.93892381729396    -0.42672994090821     1.84298652224394
-    3    -0.01482219705859     0.13345364747036     0.00220065664218    -0.01158357290636     0.03203706333154
-
-                 6
-
-    1     1.34362118187139
-    2     0.58607317343319
-    3     0.00766941853813
-
-
-
-  Irrep: 2 Size: 0 x 0
-
-	(empty)
-
-  Irrep: 3 Size: 1 x 2
-
-                 1                   2
-
-    1     9.14347857184930     2.14715861585209
-
-
-
-  Irrep: 4 Size: 2 x 4
-
-                 1                   2                   3                   4
-
-    1     8.10324651357244     1.79020286553393     0.19288090698337     1.39110377483567
-    2    -0.08331267183690     0.00539428190276    -0.00331518272529    -0.01422338287878
-
-
-
-  ## Gradient (Symmetry 0) ##
-  Irrep: 1 Size: 3 x 6
-
-                 1                   2                   3                   4                   5
-
-    1     0.00000000000000     0.00000000000000     0.00000000000000    -0.01680483708283     0.00420511558686
-    2     0.00000000000000     0.00000000000000     0.00000000000000     0.01301619949943    -0.02739042636013
-    3     0.00000000000000     0.00000000000000     0.00000000000000    -0.02771702337998     0.02371002300393
-
-                 6
-
-    1    -0.03264689246560
-    2     0.00906696736761
-    3    -0.01300220885569
-
-
-
-  Irrep: 2 Size: 0 x 0
-
-	(empty)
-
-  Irrep: 3 Size: 1 x 2
-
-                 1                   2
-
-    1     0.00000000000000    -0.02907022304456
-
-
-
-  Irrep: 4 Size: 2 x 4
-
-                 1                   2                   3                   4
-
-    1     0.00000000000000     0.00000000000000    -0.02168502975617    -0.04073714191987
-    2     0.00000000000000     0.00000000000000    -0.02496722504942    -0.02974398206274
-
-
-
-  ## Approximate diag hessian (Symmetry 0) ##
-  Irrep: 1 Size: 3 x 6
-
-                 1                   2                   3                   4                   5
-
-    1     1.00000000000000     1.00000000000000     1.00000000000000    10.32438415227531    12.75279645086175
-    2     1.00000000000000     1.00000000000000     1.00000000000000     7.20759904955250     9.62959794458724
-    3     1.00000000000000     1.00000000000000     1.00000000000000     0.07274328563881     0.08847791920811
-
-                 6
-
-    1    17.57304903970078
-    2    14.43712031249494
-    3     0.11971022199337
-
-
-
-  Irrep: 2 Size: 0 x 0
-
-	(empty)
-
-  Irrep: 3 Size: 1 x 2
-
-                 1                   2
-
-    1     1.00000000000000     9.03825561538681
-
-
-
-  Irrep: 4 Size: 2 x 4
-
-                 1                   2                   3                   4
-
-    1     1.00000000000000     1.00000000000000     7.31629095678477    10.63939469006462
-    2     1.00000000000000     1.00000000000000     0.07842317383664     0.10301954074017
-
-
-
-   @MCSCF Iter   1:  -75.60408740406447   -2.0311e-02   1.7269e-02   1   Initial CI
-  ## Rotation Matrix (Symmetry 0) ##
-  Irrep: 1 Size: 3 x 6
-
-                 1                   2                   3                   4                   5
-
-    1     0.00000000000000     0.00000000000000     0.00000000000000    -0.00162768421196     0.00032974066536
-    2     0.00000000000000     0.00000000000000     0.00000000000000     0.00180589949717    -0.00284439978883
-    3     0.00000000000000     0.00000000000000     0.00000000000000    -0.38102517829072     0.26797672477089
-
-                 6
-
-    1    -0.00185778190181
-    2     0.00062803157218
-    3    -0.10861402342404
-
-
-
-  Irrep: 2 Size: 0 x 0
-
-	(empty)
-
-  Irrep: 3 Size: 1 x 2
-
-                 1                   2
-
-    1     0.00000000000000    -0.00321635327453
-
-
-
-  Irrep: 4 Size: 2 x 4
-
-                 1                   2                   3                   4
-
-    1     0.00000000000000     0.00000000000000    -0.00296393758590    -0.00382889657791
-    2     0.00000000000000     0.00000000000000    -0.31836539925591    -0.28872174976743
-
-
-
-  ## IFock (Symmetry 0) ##
-  Irrep: 1 Size: 6 x 6
-
-                 1                   2                   3                   4                   5
-
-    1    -5.72631219997318    -0.14539708476661    -0.74141014986822     0.03123795832831    -0.24385944228269
-    2    -0.14539708476661    -4.91533988828171     0.75696637374667    -0.02273966032173    -0.75861533814169
-    3    -0.74141014986822     0.75696637374667    -3.81613401766247    -0.39330986157339     0.39660890038063
-    4     0.03123795832831    -0.02273966032173    -0.39330986157339    -2.17734516620376     0.07770705632477
-    5    -0.24385944228269    -0.75861533814169     0.39660890038063     0.07770705632477    -2.92574987200384
-    6    -0.59660006410177    -0.35421636204793    -0.48586218139320     0.07814078300630    -0.24609983167539
-
-                 6
-
-    1    -0.59660006410177
-    2    -0.35421636204793
-    3    -0.48586218139320
-    4     0.07814078300630
-    5    -0.24609983167539
-    6    -1.96216911635719
-
-
-
-  Irrep: 2 Size: 0 x 0
-
-	(empty)
-
-  Irrep: 3 Size: 2 x 2
-
-                 1                   2
-
-    1    -5.07454093333403    -1.07547514256639
-    2    -1.07547514256639    -3.32614768291484
-
-
-
-  Irrep: 4 Size: 4 x 4
-
-                 1                   2                   3                   4
-
-    1    -4.77360690711502    -1.08796184778579     0.22506137106453    -0.41424965958237
-    2    -1.08796184778579    -3.85958088646678    -0.40558380095016    -0.72465816233030
-    3     0.22506137106453    -0.40558380095016    -2.12960401391724     0.15633362219623
-    4    -0.41424965958237    -0.72465816233030     0.15633362219623    -2.59156802465235
-
-
-
-  ## AFock (Symmetry 0) ##
-  Irrep: 1 Size: 6 x 6
-
-                 1                   2                   3                   4                   5
-
-    1     4.41376781377662     0.14056192768857     0.74151953824630    -0.02924628997302     0.24266449373337
-    2     0.14056192768857     4.38123487517074    -0.76367889905597     0.02025196730389     0.76512146262647
-    3     0.74151953824630    -0.76367889905597     4.33448879064892     0.70981459293669    -0.77987790720432
-    4    -0.02924628997302     0.02025196730389     0.70981459293669     3.30557470082378     0.04748843747310
-    5     0.24266449373337     0.76512146262647    -0.77987790720432     0.04748843747310     4.69193053787160
-    6     0.60247573397358     0.35171113504408     0.76554367220270    -0.15282933283922     0.30661055287478
-
-                 6
-
-    1     0.60247573397358
-    2     0.35171113504408
-    3     0.76554367220270
-    4    -0.15282933283922
-    5     0.30661055287478
-    6     5.01348036238341
-
-
-
-  Irrep: 2 Size: 0 x 0
-
-	(empty)
-
-  Irrep: 3 Size: 2 x 2
-
-                 1                   2
-
-    1     4.58918193980023     1.07993834115604
-    2     1.07993834115604     5.10097953284751
-
-
-
-  Irrep: 4 Size: 4 x 4
-
-                 1                   2                   3                   4
-
-    1     4.11579305813568     1.09094515122491    -0.22228506553287     0.42275041414708
-    2     1.09094515122491     4.40520886782475     0.62346777827394     1.15899792772253
-    3    -0.22228506553287     0.62346777827394     3.21958945085035    -0.26270513584139
-    4     0.42275041414708     1.15899792772253    -0.26270513584139     4.46871906864937
-
-
-
-Printing the Q matrix
-  ## Q (Symmetry 0) ##
-  Irrep: 1 Size: 3 x 6
-
-                 1                   2                   3                   4                   5
-
-    1     8.76869228433955     0.35028815399992     1.44780186142518    -0.06005439942719     0.50634069834768
-    2     0.37365590601679     8.62492366916702    -1.38540958570357     0.05676613963898     1.47717161350710
-    3     0.00182388133315     0.10931563227297     0.04179082353249     0.00359842328893     0.00969097596872
-
-                 6
-
-    1     1.18781362901889
-    2     0.73988429744755
-    3     0.01939393050447
-
-
-
-  Irrep: 2 Size: 0 x 0
-
-	(empty)
-
-  Irrep: 3 Size: 1 x 2
-
-                 1                   2
-
-    1     9.17269765633341     2.15770364531412
-
-
-
-  Irrep: 4 Size: 2 x 4
-
-                 1                   2                   3                   4
-
-    1     8.03680152432682     2.07620220993934    -0.44196675770737     0.78531577792333
-    2    -0.04400016142793     0.05600440086476     0.00631435966361     0.01216494081165
-
-
-
-  ## Gradient (Symmetry 0) ##
-  Irrep: 1 Size: 3 x 6
-
-                 1                   2                   3                   4                   5
-
-    1     0.00000000000000     0.00000000000000     0.00000000000000     0.00453058266623     0.02398982892216
-    2     0.00000000000000     0.00000000000000     0.00000000000000     0.00634025694143    -0.03833425516265
-    3     0.00000000000000     0.00000000000000     0.00000000000000    -0.01599751033317     0.00779777656093
-
-                 6
-
-    1    -0.00776077299819
-    2     0.04150351242641
-    3    -0.00348182053896
-
-
-
-  Irrep: 2 Size: 0 x 0
-
-	(empty)
-
-  Irrep: 3 Size: 1 x 2
-
-                 1                   2
-
-    1     0.00000000000000     0.01546537165929
-
-
-
-  Irrep: 4 Size: 2 x 4
-
-                 1                   2                   3                   4
-
-    1     0.00000000000000     0.00000000000000     0.01101100886454    -0.04750466650925
-    2     0.00000000000000     0.00000000000000    -0.01609705372735    -0.01084375727605
-
-
-
-  ## Approximate diag hessian (Symmetry 0) ##
-  Irrep: 1 Size: 3 x 6
-
-                 1                   2                   3                   4                   5
-
-    1     1.00000000000000     1.00000000000000     1.00000000000000     9.76901333667869    12.31024290873362
-    2     1.00000000000000     1.00000000000000     1.00000000000000     6.66093743702294     9.18820680082915
-    3     1.00000000000000     1.00000000000000     1.00000000000000     0.15880120067319     0.19466368251265
-
-                 6
-
-    1    17.42946235092406
-    2    14.27930388435128
-    3     0.26690741692239
-
-
-
-  Irrep: 2 Size: 0 x 0
-
-	(empty)
-
-  Irrep: 3 Size: 1 x 2
-
-                 1                   2
-
-    1     1.00000000000000     9.03962176837208
-
-
-
-  Irrep: 4 Size: 2 x 4
-
-                 1                   2                   3                   4
-
-    1     1.00000000000000     1.00000000000000     7.01208397947855    10.11414167713944
-    2     1.00000000000000     1.00000000000000     0.16268688540601     0.20979685522950
-
-
-
-   @MCSCF Iter   2:  -75.63737209727911   -3.3285e-02   1.6048e-02   9   APPROX
-  ## Rotation Matrix (Symmetry 0) ##
-  Irrep: 1 Size: 3 x 6
-
-                 1                   2                   3                   4                   5
-
-    1     0.00000000000000     0.00000000000000     0.00000000000000    -0.00116391345947     0.00227851040938
-    2     0.00000000000000     0.00000000000000     0.00000000000000     0.00275775604911    -0.00701651476117
-    3     0.00000000000000     0.00000000000000     0.00000000000000    -0.48176440611365     0.30803441021217
-
-                 6
-
-    1    -0.00230304939440
-    2     0.00353458169273
-    3    -0.12165907319864
-
-
-
-  Irrep: 2 Size: 0 x 0
-
-	(empty)
-
-  Irrep: 3 Size: 1 x 2
-
-                 1                   2
-
-    1     0.00000000000000    -0.00150551049199
-
-
-
-  Irrep: 4 Size: 2 x 4
-
-                 1                   2                   3                   4
-
-    1     0.00000000000000     0.00000000000000    -0.00139364708499    -0.00852575252730
-    2     0.00000000000000     0.00000000000000    -0.41731039833911    -0.34040868885045
-
-
-
-  ## IFock (Symmetry 0) ##
-  Irrep: 1 Size: 6 x 6
-
-                 1                   2                   3                   4                   5
-
-    1    -5.72603867317227    -0.14287970378899    -0.73260275023328     0.10356196218833    -0.27899073839176
-    2    -0.14287970378899    -4.92037359542964     0.77908666760872    -0.09885192931401    -0.71812195589436
-    3    -0.73260275023328     0.77908666760872    -3.92171551487116    -0.22333634029166     0.35093360180719
-    4     0.10356196218833    -0.09885192931401    -0.22333634029166    -2.11483544098771     0.03067213551952
-    5    -0.27899073839176    -0.71812195589436     0.35093360180719     0.03067213551952    -2.88823161747123
-    6    -0.58498949782229    -0.37452497185155    -0.43398819213336     0.13051840259079    -0.27241111210535
-
-                 6
-
-    1    -0.58498949782229
-    2    -0.37452497185155
-    3    -0.43398819213336
-    4     0.13051840259079
-    5    -0.27241111210535
-    6    -1.95185541855014
-
-
-
-  Irrep: 2 Size: 0 x 0
-
-	(empty)
-
-  Irrep: 3 Size: 2 x 2
-
-                 1                   2
-
-    1    -5.07085588523145    -1.07846006691425
-    2    -1.07846006691425    -3.32983273101742
-
-
-
-  Irrep: 4 Size: 4 x 4
-
-                 1                   2                   3                   4
-
-    1    -4.77849415448172    -1.08353931711791     0.32644991437735    -0.34817013614625
-    2    -1.08353931711791    -3.99349331320431    -0.21990823163527    -0.62444334520112
-    3     0.32644991437735    -0.21990823163527    -2.06383774803706     0.23492434935595
-    4    -0.34817013614624    -0.62444334520112     0.23492434935595    -2.51853461642830
-
-
-
-  ## AFock (Symmetry 0) ##
-  Irrep: 1 Size: 6 x 6
-
-                 1                   2                   3                   4                   5
-
-    1     4.41611938118499     0.13779033690528     0.73480469308524    -0.10297185375683     0.27305873848547
-    2     0.13779033690528     4.38774850125796    -0.79064290021607     0.09621042274211     0.73289907206881
-    3     0.73480469308524    -0.79064290021607     4.55298727106717     0.58848636733100    -0.76526372200879
-    4    -0.10297185375683     0.09621042274211     0.58848636733100     3.17263792651797     0.14535255632474
-    5     0.27305873848547     0.73289907206881    -0.76526372200879     0.14535255632474     4.62380817580327
-    6     0.59323544655699     0.36370843671104     0.73561665897163    -0.23332907413565     0.34892479374549
-
-                 6
-
-    1     0.59323544655698
-    2     0.36370843671104
-    3     0.73561665897163
-    4    -0.23332907413565
-    5     0.34892479374549
-    6     4.99798375956117
-
-
-
-  Irrep: 2 Size: 0 x 0
-
-	(empty)
-
-  Irrep: 3 Size: 2 x 2
-
-                 1                   2
-
-    1     4.58801040794854     1.08177404948365
-    2     1.08177404948365     5.10748304994430
-
-
-
-  Irrep: 4 Size: 4 x 4
-
-                 1                   2                   3                   4
-
-    1     4.12222597615193     1.08973571102031    -0.32692938379924     0.36701682974775
-    2     1.08973571102031     4.63756482743294     0.48061819763316     1.11141776216607
-    3    -0.32692938379924     0.48061819763316     3.10564971667642    -0.39425951583569
-    4     0.36701682974775     1.11141776216607    -0.39425951583569     4.34927373813847
-
-
-
-Printing the Q matrix
-  ## Q (Symmetry 0) ##
-  Irrep: 1 Size: 3 x 6
-
-                 1                   2                   3                   4                   5
-
-    1     8.77110750040533     0.34661840600485     1.43023473598808    -0.20325214642440     0.56785195360735
-    2     0.37177270531277     8.63393682029769    -1.41705392926589     0.20143718578747     1.41008526010587
-    3     0.00061074553764     0.12320240668503     0.03791107233056     0.00579020615810     0.00999221177627
-
-                 6
-
-    1     1.16865775696835
-    2     0.76535809880811
-    3     0.01998674399995
-
-
-
-  Irrep: 2 Size: 0 x 0
-
-	(empty)
-
-  Irrep: 3 Size: 1 x 2
-
-                 1                   2
-
-    1     9.17079391185845     2.16143588071557
-
-
-
-  Irrep: 4 Size: 2 x 4
-
-                 1                   2                   3                   4
-
-    1     8.04691311313029     2.06681868935568    -0.64098729400165     0.67494692678650
-    2    -0.04540393150488     0.05613148168888     0.00694482658228     0.01299658796699
-
-
-
-  ## Gradient (Symmetry 0) ##
-  Irrep: 1 Size: 3 x 6
-
-                 1                   2                   3                   4                   5
-
-    1     0.00000000000000     0.00000000000000     0.00000000000000     0.00455873451782     0.00787707750389
-    2     0.00000000000000     0.00000000000000     0.00000000000000     0.00173125935785    -0.01316963440494
-    3     0.00000000000000     0.00000000000000     0.00000000000000    -0.00611495958718     0.00254070161891
-
-                 6
-
-    1     0.00026832953928
-    2     0.01137051590463
-    3    -0.00161885438015
-
-
-
-  Irrep: 2 Size: 0 x 0
-
-	(empty)
-
-  Irrep: 3 Size: 1 x 2
-
-                 1                   2
-
-    1     0.00000000000000     0.01077871684215
-
-
-
-  Irrep: 4 Size: 2 x 4
-
-                 1                   2                   3                   4
-
-    1     0.00000000000000     0.00000000000000     0.00957109498005    -0.00946544045478
-    2     0.00000000000000     0.00000000000000    -0.00589660459429    -0.00329397623890
-
-
-
-  ## Approximate diag hessian (Symmetry 0) ##
-  Irrep: 1 Size: 3 x 6
-
-                 1                   2                   3                   4                   5
-
-    1     1.00000000000000     1.00000000000000     1.00000000000000     9.48168171026371    12.18154967331434
-    2     1.00000000000000     1.00000000000000     1.00000000000000     6.38386007203820     9.06963081382861
-    3     1.00000000000000     1.00000000000000     1.00000000000000     0.15404722570530     0.19116414612426
-
-                 6
-
-    1    17.40204557890021
-    2    14.26286816941264
-    3     0.26293385254212
-
-
-
-  Irrep: 2 Size: 0 x 0
-
-	(empty)
-
-  Irrep: 3 Size: 1 x 2
-
-                 1                   2
-
-    1     1.00000000000000     9.04134166506097
-
-
-
-  Irrep: 4 Size: 2 x 4
-
-                 1                   2                   3                   4
-
-    1     1.00000000000000     1.00000000000000     6.82770492396422     9.93775606174551
-    2     1.00000000000000     1.00000000000000     0.16026382398553     0.20654406629928
-
-
-
-   @MCSCF Iter   3:  -75.64059782862292   -3.2257e-03   5.2715e-03   8   APPROX
-  ## Rotation Matrix (Symmetry 0) ##
-  Irrep: 1 Size: 3 x 6
-
-                 1                   2                   3                   4                   5
-
-    1     0.00000000000000     0.00000000000000     0.00000000000000    -0.00068311958164     0.00292515042770
-    2     0.00000000000000     0.00000000000000     0.00000000000000     0.00302894923604    -0.00846857324902
-    3     0.00000000000000     0.00000000000000     0.00000000000000    -0.52145976290560     0.32132509086764
-
-                 6
-
-    1    -0.00228762996925
-    2     0.00433179272838
-    3    -0.12781596157378
-
-
-
-  Irrep: 2 Size: 0 x 0
-
-	(empty)
-
-  Irrep: 3 Size: 1 x 2
-
-                 1                   2
-
-    1     0.00000000000000    -0.00031335149154
-
-
-
-  Irrep: 4 Size: 2 x 4
-
-                 1                   2                   3                   4
-
-    1     0.00000000000000     0.00000000000000     0.00000815558320    -0.00947822513742
-    2     0.00000000000000     0.00000000000000    -0.45410350889674    -0.35635674438125
-
-
-
-  ## IFock (Symmetry 0) ##
-  Irrep: 1 Size: 6 x 6
-
-                 1                   2                   3                   4                   5
-
-    1    -5.72567553813943    -0.14220583349435    -0.72791764664481     0.13127401012953    -0.29084975186247
-    2    -0.14220583349435    -4.92212671198403     0.78293543964770    -0.12884863271158    -0.70427164871806
-    3    -0.72791764664481     0.78293543964770    -3.95185448619815    -0.15142704071792     0.33241517605939
-    4     0.13127401012954    -0.12884863271158    -0.15142704071792    -2.09965024460077     0.01651008820974
-    5    -0.29084975186247    -0.70427164871806     0.33241517605939     0.01651008820974    -2.87656763878106
-    6    -0.58030502501661    -0.38221480392460    -0.41061270012189     0.14924307406115    -0.28070426803036
-
-                 6
-
-    1    -0.58030502501661
-    2    -0.38221480392460
-    3    -0.41061270012189
-    4     0.14924307406115
-    5    -0.28070426803036
-    6    -1.94717564077870
-
-
-
-  Irrep: 2 Size: 0 x 0
-
-	(empty)
-
-  Irrep: 3 Size: 2 x 2
-
-                 1                   2
-
-    1    -5.06828202150110    -1.08053257586458
-    2    -1.08053257586458    -3.33240659474778
-
-
-
-  Irrep: 4 Size: 4 x 4
-
-                 1                   2                   3                   4
-
-    1    -4.77963214496993    -1.07711357114483     0.36162528763477    -0.32900613756204
-    2    -1.07711357114483    -4.02799565653569    -0.14716097564511    -0.58838241999016
-    3     0.36162528763477    -0.14716097564511    -2.04776286220509     0.25806831388728
-    4    -0.32900613756204    -0.58838241999016     0.25806831388728    -2.49896916844068
-
-
-
-  ## AFock (Symmetry 0) ##
-  Irrep: 1 Size: 6 x 6
-
-                 1                   2                   3                   4                   5
-
-    1     4.41656196827888     0.13701733723389     0.73041550027424    -0.13183478109612     0.28329669736257
-    2     0.13701733723389     4.38987964753195    -0.79603900793579     0.12643463823084     0.72164546051302
-    3     0.73041550027424    -0.79603900793579     4.62979901911900     0.53039996126464    -0.75285905975140
-    4    -0.13183478109612     0.12643463823084     0.53039996126464     3.12674124032735     0.17948724023254
-    5     0.28329669736257     0.72164546051302    -0.75285905975140     0.17948724023254     4.60159925301910
-    6     0.58860064052664     0.36915322295894     0.72222005586856    -0.26490275797702     0.36384393695116
-
-                 6
-
-    1     0.58860064052664
-    2     0.36915322295894
-    3     0.72222005586856
-    4    -0.26490275797702
-    5     0.36384393695116
-    6     4.99020208785648
-
-
-
-  Irrep: 2 Size: 0 x 0
-
-	(empty)
-
-  Irrep: 3 Size: 2 x 2
-
-                 1                   2
-
-    1     4.58639245233724     1.08226823046705
-    2     1.08226823046705     5.11105635002945
-
-
-
-  Irrep: 4 Size: 4 x 4
-
-                 1                   2                   3                   4
-
-    1     4.12374674411022     1.08324123964746    -0.36440478364360     0.34989247099964
-    2     1.08324123964746     4.70907110399456     0.42027067599647     1.08780570168287
-    3    -0.36440478364360     0.42027067599647     3.06923929387422    -0.43747609765879
-    4     0.34989247099964     1.08780570168287    -0.43747609765879     4.31450330431844
-
-
-
-Printing the Q matrix
-  ## Q (Symmetry 0) ##
-  Irrep: 1 Size: 3 x 6
-
-                 1                   2                   3                   4                   5
-
-    1     8.77211205324895     0.34454685854303     1.42222445756742    -0.25901432056762     0.58806626063869
-    2     0.37015442234481     8.63907258769791    -1.42258955997928     0.25827191314786     1.38770121740618
-    3     0.00153744436714     0.12637211580399     0.03598300007793     0.00653086967923     0.01014778036354
-
-                 6
-
-    1     1.15961132728456
-    2     0.77612650211842
-    3     0.02008615787041
-
-
-
-  Irrep: 2 Size: 0 x 0
-
-	(empty)
-
-  Irrep: 3 Size: 1 x 2
-
-                 1                   2
-
-    1     9.16779907849066     2.16248111056859
-
-
-
-  Irrep: 4 Size: 2 x 4
-
-                 1                   2                   3                   4
-
-    1     8.05297355653934     2.05930582284213    -0.71164938109701     0.64315234740531
-    2    -0.04060849876528     0.05617614318239     0.00653259055225     0.01320628950237
-
-
-
-  ## Gradient (Symmetry 0) ##
-  Irrep: 1 Size: 3 x 6
-
-                 1                   2                   3                   4                   5
-
-    1     0.00000000000000     0.00000000000000     0.00000000000000     0.00260170631456     0.00176224335367
-    2     0.00000000000000     0.00000000000000     0.00000000000000     0.00045374296882    -0.00431289297047
-    3     0.00000000000000     0.00000000000000     0.00000000000000    -0.00231159891110     0.00092087051213
-
-                 6
-
-    1     0.00051812144391
-    2     0.00295583668541
-    3    -0.00081225199716
-
-
-
-  Irrep: 2 Size: 0 x 0
-
-	(empty)
-
-  Irrep: 3 Size: 1 x 2
-
-                 1                   2
-
-    1     0.00000000000000     0.00447799838909
-
-
-
-  Irrep: 4 Size: 2 x 4
-
-                 1                   2                   3                   4
-
-    1     0.00000000000000     0.00000000000000     0.00551072182333     0.00001018255849
-    2     0.00000000000000     0.00000000000000    -0.00221073601321    -0.00116004608255
-
-
-
-  ## Approximate diag hessian (Symmetry 0) ##
-  Irrep: 1 Size: 3 x 6
-
-                 1                   2                   3                   4                   5
-
-    1     1.00000000000000     1.00000000000000     1.00000000000000     9.35744821009890    12.13779256432354
-    2     1.00000000000000     1.00000000000000     1.00000000000000     6.26321713955980     9.02959611318101
-    3     1.00000000000000     1.00000000000000     1.00000000000000     0.15004769718726     0.18734536292196
-
-                 6
-
-    1    17.38820985655493
-    2    14.25364110526854
-    3     0.25777847630080
-
-
-
-  Irrep: 2 Size: 0 x 0
-
-	(empty)
-
-  Irrep: 3 Size: 1 x 2
-
-                 1                   2
-
-    1     1.00000000000000     9.04169835085665
-
-
-
-  Irrep: 4 Size: 2 x 4
-
-                 1                   2                   3                   4
-
-    1     1.00000000000000     1.00000000000000     6.74978600773628     9.88106961308495
-    2     1.00000000000000     1.00000000000000     0.15724139644046     0.20283391497977
-
-
-
-   @MCSCF Iter   4:  -75.64103225466552   -4.3443e-04   1.9010e-03   7   APPROX
-  ## Rotation Matrix (Symmetry 0) ##
-  Irrep: 1 Size: 3 x 6
-
-                 1                   2                   3                   4                   5
-
-    1     0.00000000000000     0.00000000000000     0.00000000000000    -0.00040508370517     0.00307033690575
-    2     0.00000000000000     0.00000000000000     0.00000000000000     0.00310139490712    -0.00894621288167
-    3     0.00000000000000     0.00000000000000     0.00000000000000    -0.53686552356995     0.32624045411851
-
-                 6
-
-    1    -0.00225783268430
-    2     0.00453916687675
-    3    -0.13096693061050
-
-
-
-  Irrep: 2 Size: 0 x 0
-
-	(empty)
-
-  Irrep: 3 Size: 1 x 2
-
-                 1                   2
-
-    1     0.00000000000000     0.00018190926759
-
-
-
-  Irrep: 4 Size: 2 x 4
-
-                 1                   2                   3                   4
-
-    1     0.00000000000000     0.00000000000000     0.00082458469918    -0.00947719462565
-    2     0.00000000000000     0.00000000000000    -0.46816301271226    -0.36207593627607
-
-
-
-  ## IFock (Symmetry 0) ##
-  Irrep: 1 Size: 6 x 6
-
-                 1                   2                   3                   4                   5
-
-    1    -5.72553175572238    -0.14208678684311    -0.72624750824115     0.14185591837666    -0.29508067919906
-    2    -0.14208678684311    -4.92271388504190     0.78356221315942    -0.14038698356167    -0.69926950376711
-    3    -0.72624750824115     0.78356221315942    -3.96236524315460    -0.12277734254220     0.32503955398164
-    4     0.14185591837666    -0.14038698356167    -0.12277734254220    -2.09529660898419     0.01162134587860
-    5    -0.29508067919906    -0.69926950376711     0.32503955398164     0.01162134587860    -2.87246549689371
-    6    -0.57799419930032    -0.38540678372174    -0.39999397516617     0.15620685155897    -0.28371743691424
-
-                 6
-
-    1    -0.57799419930032
-    2    -0.38540678372174
-    3    -0.39999397516617
-    4     0.15620685155897
-    5    -0.28371743691424
-    6    -1.94467727068538
-
-
-
-  Irrep: 2 Size: 0 x 0
-
-	(empty)
-
-  Irrep: 3 Size: 2 x 2
-
-                 1                   2
-
-    1    -5.06721130512745    -1.08139175663264
-    2    -1.08139175663264    -3.33347731112142
-
-
-
-  Irrep: 4 Size: 4 x 4
-
-                 1                   2                   3                   4
-
-    1    -4.77977248070312    -1.07400373979933     0.37420659616281    -0.32292182117060
-    2    -1.07400373979933    -4.03934297875881    -0.11911050419343    -0.57511522559648
-    3     0.37420659616281    -0.11911050419343    -2.04273393244136     0.26620607004086
-    4    -0.32292182117060    -0.57511522559648     0.26620607004086    -2.49251044024810
-
-
-
-  ## AFock (Symmetry 0) ##
-  Irrep: 1 Size: 6 x 6
-
-                 1                   2                   3                   4                   5
-
-    1     4.41679184109243     0.13687828582364     0.72869625183962    -0.14301585407226     0.28715678588213
-    2     0.13687828582364     4.39069804167512    -0.79718363750779     0.13811296810971     0.71747851011832
-    3     0.72869625183962    -0.79718363750779     4.65923829881090     0.50612447839940    -0.74708839968136
-    4    -0.14301585407226     0.13811296810971     0.50612447839940     3.11013380713708     0.19209096353128
-    5     0.28715678588214     0.71747851011832    -0.74708839968136     0.19209096353128     4.59369037341247
-    6     0.58622904867514     0.37178988270410     0.71710443895933    -0.27771559065970     0.36992532812272
-
-                 6
-
-    1     0.58622904867514
-    2     0.37178988270410
-    3     0.71710443895933
-    4    -0.27771559065971
-    5     0.36992532812272
-    6     4.98601151254063
-
-
-
-  Irrep: 2 Size: 0 x 0
-
-	(empty)
-
-  Irrep: 3 Size: 2 x 2
-
-                 1                   2
-
-    1     4.58580508530294     1.08245898207145
-    2     1.08245898207145     5.11260322771553
-
-
-
-  Irrep: 4 Size: 4 x 4
-
-                 1                   2                   3                   4
-
-    1     4.12406697300422     1.07963150321413    -0.37819271254551     0.34383232912016
-    2     1.07963150321413     4.73468935854731     0.39644403806026     1.07851155732013
-    3    -0.37819271254551     0.39644403806026     3.05613504024670    -0.45332790457143
-    4     0.34383232912016     1.07851155732013    -0.45332790457143     4.30262738568793
-
-
-
-Printing the Q matrix
-  ## Q (Symmetry 0) ##
-  Irrep: 1 Size: 3 x 6
-
-                 1                   2                   3                   4                   5
-
-    1     8.77279425435230     0.34380553625860     1.41981590643748    -0.28055406075446     0.59554613999947
-    2     0.36958013950675     8.64153315511722    -1.42366877444848     0.28011052289842     1.37965059592093
-    3     0.00245228689295     0.12697322478349     0.03528076379002     0.00675834929976     0.01019404459826
-
-                 6
-
-    1     1.15507588234604
-    2     0.78121096062367
-    3     0.02015438833983
-
-
-
-  Irrep: 2 Size: 0 x 0
-
-	(empty)
-
-  Irrep: 3 Size: 1 x 2
-
-                 1                   2
-
-    1     9.16672330791026     2.16288739434978
-
-
-
-  Irrep: 4 Size: 2 x 4
-
-                 1                   2                   3                   4
-
-    1     8.05583749229034     2.05726376481754    -0.73746655801849     0.63265045180720
-    2    -0.03640314326581     0.05659378992829     0.00610870732282     0.01339709714863
-
-
-
-  ## Gradient (Symmetry 0) ##
-  Irrep: 1 Size: 3 x 6
-
-                 1                   2                   3                   4                   5
-
-    1     0.00000000000000     0.00000000000000     0.00000000000000     0.00135275124966     0.00023897669909
-    2     0.00000000000000     0.00000000000000     0.00000000000000     0.00002360747442    -0.00124453195633
-    3     0.00000000000000     0.00000000000000     0.00000000000000    -0.00088615766575     0.00034324894549
-
-                 6
-
-    1     0.00042073636353
-    2     0.00089457005810
-    3    -0.00038870411856
-
-
-
-  Irrep: 2 Size: 0 x 0
-
-	(empty)
-
-  Irrep: 3 Size: 1 x 2
-
-                 1                   2
-
-    1     0.00000000000000     0.00181331393555
-
-
-
-  Irrep: 4 Size: 2 x 4
-
-                 1                   2                   3                   4
-
-    1     0.00000000000000     0.00000000000000     0.00294752509541     0.00138987132506
-    2     0.00000000000000     0.00000000000000    -0.00085811752156    -0.00043996773138
-
-
-
-  ## Approximate diag hessian (Symmetry 0) ##
-  Irrep: 1 Size: 3 x 6
-
-                 1                   2                   3                   4                   5
-
-    1     1.00000000000000     1.00000000000000     1.00000000000000     9.30763763976330    12.12170331077109
-    2     1.00000000000000     1.00000000000000     1.00000000000000     6.21461870631305     9.01482256667075
-    3     1.00000000000000     1.00000000000000     1.00000000000000     0.14818327300504     0.18548155005483
-
-                 6
-
-    1    17.38067732849912
-    2    14.24789139576067
-    3     0.25518520762463
-
-
-
-  Irrep: 2 Size: 0 x 0
-
-	(empty)
-
-  Irrep: 3 Size: 1 x 2
-
-                 1                   2
-
-    1     1.00000000000000     9.04173745451960
-
-
-
-  Irrep: 4 Size: 2 x 4
-
-                 1                   2                   3                   4
-
-    1     1.00000000000000     1.00000000000000     6.71852944980752     9.86078107071306
-    2     1.00000000000000     1.00000000000000     0.15580043090016     0.20106903222900
-
-
-
-   @MCSCF Iter   5:  -75.64109624063202   -6.3986e-05   8.5159e-04   7   APPROX, DIIS
-  ## Rotation Matrix (Symmetry 0) ##
-  Irrep: 1 Size: 3 x 6
-
-                 1                   2                   3                   4                   5
-
-    1     0.00000000000000     0.00000000000000     0.00000000000000    -0.00016672417869     0.00310266990151
-    2     0.00000000000000     0.00000000000000     0.00000000000000     0.00310762492190    -0.00917262668852
-    3     0.00000000000000     0.00000000000000     0.00000000000000    -0.54667319376021     0.32927548093355
-
-                 6
-
-    1    -0.00221813205513
-    2     0.00464213855696
-    3    -0.13346507584743
-
-
-
-  Irrep: 2 Size: 0 x 0
-
-	(empty)
-
-  Irrep: 3 Size: 1 x 2
-
-                 1                   2
-
-    1     0.00000000000000     0.00051081780335
-
-
-
-  Irrep: 4 Size: 2 x 4
-
-                 1                   2                   3                   4
-
-    1     0.00000000000000     0.00000000000000     0.00154409550988    -0.00924603216133
-    2     0.00000000000000     0.00000000000000    -0.47719601567520    -0.36566457446920
-
-
-
-  ## IFock (Symmetry 0) ##
-  Irrep: 1 Size: 6 x 6
-
-                 1                   2                   3                   4                   5
-
-    1    -5.72542940701237    -0.14206519137901    -0.72539001390535     0.14847719095378    -0.29760634329822
-    2    -0.14206519137901    -4.92297111227772     0.78359348085024    -0.14759688017373    -0.69632433410442
-    3    -0.72539001390535     0.78359348085024    -3.96892475668340    -0.10429992707084     0.32029657676432
-    4     0.14847719095378    -0.14759688017373    -0.10429992707084    -2.09299005253074     0.00871473708008
-    5    -0.29760634329822    -0.69632433410442     0.32029657676433     0.00871473708008    -2.87006672583002
-    6    -0.57622691261365    -0.38767348306210    -0.39229406445969     0.16053913903256    -0.28561055334913
-
-                 6
-
-    1    -0.57622691261365
-    2    -0.38767348306210
-    3    -0.39229406445969
-    4     0.16053913903256
-    5    -0.28561055334913
-    6    -1.94266820614791
-
-
-
-  Irrep: 2 Size: 0 x 0
-
-	(empty)
-
-  Irrep: 3 Size: 2 x 2
-
-                 1                   2
-
-    1    -5.06649975966348    -1.08196176252918
-    2    -1.08196176252918    -3.33418885658539
-
-
-
-  Irrep: 4 Size: 4 x 4
-
-                 1                   2                   3                   4
-
-    1    -4.77968122921563    -1.07180076555735     0.38171958700418    -0.31962217743834
-    2    -1.07180076555735    -4.04624016853885    -0.10111274095426    -0.56686337728172
-    3     0.38171958700418    -0.10111274095426    -2.03974833216584     0.27126040081765
-    4    -0.31962217743835    -0.56686337728172     0.27126040081765    -2.48869010223106
-
-
-
-  ## AFock (Symmetry 0) ##
-  Irrep: 1 Size: 6 x 6
-
-                 1                   2                   3                   4                   5
-
-    1     4.41698706537062     0.13685992660011     0.72770558431926    -0.15011874564126     0.28959488407784
-    2     0.13685992660011     4.39117491193187    -0.79747068254831     0.14546003681805     0.71492435111062
-    3     0.72770558431926    -0.79747068254832     4.67827492108640     0.49008922837594    -0.74309465544273
-    4    -0.15011874564126     0.14546003681805     0.49008922837594     3.09995810298213     0.19986781054596
-    5     0.28959488407784     0.71492435111062    -0.74309465544273     0.19986781054596     4.58903519893396
-    6     0.58435814991031     0.37379605707108     0.71401228622810    -0.28630178154351     0.37410417314967
-
-                 6
-
-    1     0.58435814991031
-    2     0.37379605707108
-    3     0.71401228622811
-    4    -0.28630178154351
-    5     0.37410417314967
-    6     4.98262727408683
-
-
-
-  Irrep: 2 Size: 0 x 0
-
-	(empty)
-
-  Irrep: 3 Size: 2 x 2
-
-                 1                   2
-
-    1     4.58548783636063     1.08258772413058
-    2     1.08258772413058     5.11368948938549
-
-
-
-  Irrep: 4 Size: 4 x 4
-
-                 1                   2                   3                   4
-
-    1     4.12412144878617     1.07679498278238    -0.38670834842190     0.34007399198895
-    2     1.07679498278238     4.75084506767189     0.38100735124355     1.07263378931143
-    3    -0.38670834842190     0.38100735124355     3.04787841031469    -0.46337086137040
-    4     0.34007399198895     1.07263378931143    -0.46337086137040     4.29546604553749
-
-
-
-Printing the Q matrix
-  ## Q (Symmetry 0) ##
-  Irrep: 1 Size: 3 x 6
-
-                 1                   2                   3                   4                   5
-
-    1     8.77340015585026     0.34334956249748     1.41894135300465    -0.29419775981393     0.60019165936126
-    2     0.36921017551383     8.64328889586942    -1.42413227744362     0.29376761476005     1.37487116781440
-    3     0.00340057137117     0.12678988130056     0.03493230131582     0.00685308782931     0.01017936192361
-
-                 6
-
-    1     1.15153418707206
-    2     0.78500315829532
-    3     0.02020816128671
-
-
-
-  Irrep: 2 Size: 0 x 0
-
-	(empty)
-
-  Irrep: 3 Size: 1 x 2
-
-                 1                   2
-
-    1     9.16615326861734     2.16316112692882
-
-
-
-  Irrep: 4 Size: 2 x 4
-
-                 1                   2                   3                   4
-
-    1     8.05798240167061     2.05697616157185    -0.75327965710864     0.62661902185450
-    2    -0.03204038756842     0.05721405122980     0.00565522393190     0.01362252254334
-
-
-
-  ## Gradient (Symmetry 0) ##
-  Irrep: 1 Size: 3 x 6
-
-                 1                   2                   3                   4                   5
-
-    1     0.00000000000000     0.00000000000000     0.00000000000000     0.00023734463800    -0.00023558864039
-    2     0.00000000000000     0.00000000000000     0.00000000000000    -0.00017390880789     0.00033980539951
-    3     0.00000000000000     0.00000000000000     0.00000000000000    -0.00000591464402    -0.00001187042923
-
-                 6
-
-    1     0.00016136841261
-    2    -0.00008515517399
-    3    -0.00005237974258
-
-
-
-  Irrep: 2 Size: 0 x 0
-
-	(empty)
-
-  Irrep: 3 Size: 1 x 2
-
-                 1                   2
-
-    1     0.00000000000000     0.00005456567316
-
-
-
-  Irrep: 4 Size: 2 x 4
-
-                 1                   2                   3                   4
-
-    1     0.00000000000000     0.00000000000000     0.00060283938047     0.00086311620453
-    2     0.00000000000000     0.00000000000000    -0.00001858432039    -0.00000774457241
-
-
-
-  ## Approximate diag hessian (Symmetry 0) ##
-  Irrep: 1 Size: 3 x 6
-
-                 1                   2                   3                   4                   5
-
-    1     1.00000000000000     1.00000000000000     1.00000000000000     9.27541652946458    12.11188954067946
-    2     1.00000000000000     1.00000000000000     1.00000000000000     6.18307857545230     9.00578755129862
-    3     1.00000000000000     1.00000000000000     1.00000000000000     0.14688460360269     0.18415239151027
-
-                 6
-
-    1    17.37446249865451
-    2    14.24282378107748
-    3     0.25329616692099
-
-
-
-  Irrep: 2 Size: 0 x 0
-
-	(empty)
-
-  Irrep: 3 Size: 1 x 2
-
-                 1                   2
-
-    1     1.00000000000000     9.04170178444554
-
-
-
-  Irrep: 4 Size: 2 x 4
-
-                 1                   2                   3                   4
-
-    1     1.00000000000000     1.00000000000000     6.69793186030012     9.84814572885670
-    2     1.00000000000000     1.00000000000000     0.15478096922017     0.19981564443178
-
-
-
-   @MCSCF Iter   6:  -75.64110868997528   -1.2449e-05   2.2405e-04   7   APPROX, DIIS
-  ## Rotation Matrix (Symmetry 0) ##
-  Irrep: 1 Size: 3 x 6
-
-                 1                   2                   3                   4                   5
-
-    1     0.00000000000000     0.00000000000000     0.00000000000000    -0.00012239492270     0.00307091422027
-    2     0.00000000000000     0.00000000000000     0.00000000000000     0.00306133718536    -0.00911251374386
-    3     0.00000000000000     0.00000000000000     0.00000000000000    -0.54682869772479     0.32919685948586
-
-                 6
-
-    1    -0.00220246778378
-    2     0.00463322327117
-    3    -0.13382851844506
-
-
-
-  Irrep: 2 Size: 0 x 0
-
-	(empty)
-
-  Irrep: 3 Size: 1 x 2
-
-                 1                   2
-
-    1     0.00000000000000     0.00052375143447
-
-
-
-  Irrep: 4 Size: 2 x 4
-
-                 1                   2                   3                   4
-
-    1     0.00000000000000     0.00000000000000     0.00169893608982    -0.00909952157526
-    2     0.00000000000000     0.00000000000000    -0.47747596672984    -0.36576105930649
-
-
-
-  ## IFock (Symmetry 0) ##
-  Irrep: 1 Size: 6 x 6
-
-                 1                   2                   3                   4                   5
-
-    1    -5.72541501914047    -0.14208717656271    -0.72559485678942     0.14851079609487    -0.29751328610335
-    2    -0.14208717656272    -4.92287252159270     0.78338492272222    -0.14754387287842    -0.69651441046536
-    3    -0.72559485678942     0.78338492272222    -3.96925085361869    -0.10398689424339     0.32031951041260
-    4     0.14851079609487    -0.14754387287842    -0.10398689424339    -2.09296048596395     0.00874562024025
-    5    -0.29751328610336    -0.69651441046536     0.32031951041260     0.00874562024025    -2.87020554742195
-    6    -0.57600827988663    -0.38787749125433    -0.39163453703392     0.16063314213444    -0.28563368459107
-
-                 6
-
-    1    -0.57600827988663
-    2    -0.38787749125433
-    3    -0.39163453703392
-    4     0.16063314213445
-    5    -0.28563368459107
-    6    -1.94234583274441
-
-
-
-  Irrep: 2 Size: 0 x 0
-
-	(empty)
-
-  Irrep: 3 Size: 2 x 2
-
-                 1                   2
-
-    1    -5.06647177198506    -1.08198416723740
-    2    -1.08198416723740    -3.33421684426381
-
-
-
-  Irrep: 4 Size: 4 x 4
-
-                 1                   2                   3                   4
-
-    1    -4.77956589399503    -1.07168124669397     0.38158243989302    -0.31984134040666
-    2    -1.07168124669397    -4.04655347198221    -0.10066958592138    -0.56678906405999
-    3     0.38158243989302    -0.10066958592138    -2.03956503241660     0.27142306159622
-    4    -0.31984134040666    -0.56678906405999     0.27142306159622    -2.48867543375755
-
-
-
-  ## AFock (Symmetry 0) ##
-  Irrep: 1 Size: 6 x 6
-
-                 1                   2                   3                   4                   5
-
-    1     4.41702715884690     0.13689271175165     0.72785094819808    -0.15022773582453     0.28958155003153
-    2     0.13689271175165     4.39113166595267    -0.79719040903795     0.14546147988250     0.71500999626038
-    3     0.72785094819808    -0.79719040903795     4.67894678639366     0.48979487331882    -0.74296082744652
-    4    -0.15022773582453     0.14546147988250     0.48979487331882     3.09981940360181     0.19983117053239
-    5     0.28958155003153     0.71500999626038    -0.74296082744652     0.19983117053239     4.58932266865755
-    6     0.58409166793584     0.37403105389362     0.71421105468600    -0.28677702213805     0.37435438218491
-
-                 6
-
-    1     0.58409166793584
-    2     0.37403105389362
-    3     0.71421105468600
-    4    -0.28677702213805
-    5     0.37435438218492
-    6     4.98210863158486
-
-
-
-  Irrep: 2 Size: 0 x 0
-
-	(empty)
-
-  Irrep: 3 Size: 2 x 2
-
-                 1                   2
-
-    1     4.58552888577525     1.08259727422995
-    2     1.08259727422995     5.11377614251886
-
-
-
-  Irrep: 4 Size: 4 x 4
-
-                 1                   2                   3                   4
-
-    1     4.12403572961169     1.07646722445664    -0.38676452360183     0.33999077730124
-    2     1.07646722445664     4.75147909462995     0.38065334308421     1.07263411742597
-    3    -0.38676452360183     0.38065334308421     3.04753386899233    -0.46369897275786
-    4     0.33999077730124     1.07263411742597    -0.46369897275786     4.29541343564169
-
-
-
-Printing the Q matrix
-  ## Q (Symmetry 0) ##
-  Irrep: 1 Size: 3 x 6
-
-                 1                   2                   3                   4                   5
-
-    1     8.77350130423264     0.34335538055274     1.41949651272892    -0.29437894382868     0.60012168680781
-    2     0.36917340243484     8.64341516801412    -1.42419069565236     0.29369258364093     1.37516617652070
-    3     0.00362199858847     0.12622138291749     0.03503944213721     0.00681549096015     0.01011625349073
-
-                 6
-
-    1     1.15103729587752
-    2     0.78538480576040
-    3     0.02019814426573
-
-
-
-  Irrep: 2 Size: 0 x 0
-
-	(empty)
-
-  Irrep: 3 Size: 1 x 2
-
-                 1                   2
-
-    1     9.16623597081570     2.16318004718996
-
-
-
-  Irrep: 4 Size: 2 x 4
-
-                 1                   2                   3                   4
-
-    1     8.05821017201716     2.05775755935959    -0.75327272138378     0.62678039952689
-    2    -0.03083826099017     0.05748837261746     0.00553486540006     0.01370765265990
-
-
-
-  ## Gradient (Symmetry 0) ##
-  Irrep: 1 Size: 3 x 6
-
-                 1                   2                   3                   4                   5
-
-    1     0.00000000000000     0.00000000000000     0.00000000000000    -0.00000223615375     0.00003285656348
-    2     0.00000000000000     0.00000000000000     0.00000000000000    -0.00007516697508     0.00007418121704
-    3     0.00000000000000     0.00000000000000     0.00000000000000    -0.00000376277745    -0.00001006634946
-
-                 6
-
-    1    -0.00000672320258
-    2     0.00000096351629
-    3    -0.00000290370946
-
-
-
-  Irrep: 2 Size: 0 x 0
-
-	(empty)
-
-  Irrep: 3 Size: 1 x 2
-
-                 1                   2
-
-    1     0.00000000000000     0.00000247106449
-
-
-
-  Irrep: 4 Size: 2 x 4
-
-                 1                   2                   3                   4
-
-    1     0.00000000000000     0.00000000000000     0.00002053888459    -0.00002130023361
-    2     0.00000000000000     0.00000000000000    -0.00000532704995    -0.00000166195582
-
-
-
-  ## Approximate diag hessian (Symmetry 0) ##
-  Irrep: 1 Size: 3 x 6
-
-                 1                   2                   3                   4                   5
-
-    1     1.00000000000000     1.00000000000000     1.00000000000000     9.27477521104539    12.11227213120807
-    2     1.00000000000000     1.00000000000000     1.00000000000000     6.18242034379421     9.00617578109250
-    3     1.00000000000000     1.00000000000000     1.00000000000000     0.14683279660065     0.18409328179955
-
-                 6
-
-    1    17.37346536689351
-    2    14.24189001231429
-    3     0.25318044495867
-
-
-
-  Irrep: 2 Size: 0 x 0
-
-	(empty)
-
-  Irrep: 3 Size: 1 x 2
-
-                 1                   2
-
-    1     1.00000000000000     9.04166125461623
-
-
-
-  Irrep: 4 Size: 2 x 4
-
-                 1                   2                   3                   4
-
-    1     1.00000000000000     1.00000000000000     6.69717494045290     9.84789702992001
-    2     1.00000000000000     1.00000000000000     0.15472730352591     0.19974606496595
-
-
-
-   @MCSCF Iter   7:  -75.64110883511945   -1.4514e-07   2.1811e-05   6   APPROX, DIIS
-  ## Rotation Matrix (Symmetry 0) ##
-  Irrep: 1 Size: 3 x 6
-
-                 1                   2                   3                   4                   5
-
-    1     0.00000000000000     0.00000000000000     0.00000000000000    -0.00012135214061     0.00307368486466
-    2     0.00000000000000     0.00000000000000     0.00000000000000     0.00304517022812    -0.00910132639481
-    3     0.00000000000000     0.00000000000000     0.00000000000000    -0.54688060630277     0.32913198361624
-
-                 6
-
-    1    -0.00220255173776
-    2     0.00463329262538
-    3    -0.13385479121144
-
-
-
-  Irrep: 2 Size: 0 x 0
-
-	(empty)
-
-  Irrep: 3 Size: 1 x 2
-
-                 1                   2
-
-    1     0.00000000000000     0.00052492362050
-
-
-
-  Irrep: 4 Size: 2 x 4
-
-                 1                   2                   3                   4
-
-    1     0.00000000000000     0.00000000000000     0.00170727258250    -0.00909872339944
-    2     0.00000000000000     0.00000000000000    -0.47754020858405    -0.36577957297661
-
-
-
-  ## IFock (Symmetry 0) ##
-  Irrep: 1 Size: 6 x 6
-
-                 1                   2                   3                   4                   5
-
-    1    -5.72541411917307    -0.14208385911194    -0.72561928197834     0.14855451784146    -0.29748011403404
-    2    -0.14208385911194    -4.92285254956699     0.78332708677533    -0.14752200689703    -0.69658821517583
-    3    -0.72561928197834     0.78332708677533    -3.96925162745819    -0.10390751327639     0.32038334473024
-    4     0.14855451784146    -0.14752200689703    -0.10390751327639    -2.09294685751908     0.00876707064790
-    5    -0.29748011403404    -0.69658821517582     0.32038334473024     0.00876707064790    -2.87026465395167
-    6    -0.57598634853178    -0.38788961940707    -0.39159315455349     0.16066711606205    -0.28561205427096
-
-                 6
-
-    1    -0.57598634853178
-    2    -0.38788961940707
-    3    -0.39159315455349
-    4     0.16066711606205
-    5    -0.28561205427096
-    6    -1.94232045281314
-
-
-
-  Irrep: 2 Size: 0 x 0
-
-	(empty)
-
-  Irrep: 3 Size: 2 x 2
-
-                 1                   2
-
-    1    -5.06646923540923    -1.08198619775945
-    2    -1.08198619775945    -3.33421938083964
-
-
-
-  Irrep: 4 Size: 4 x 4
-
-                 1                   2                   3                   4
-
-    1    -4.77956701714299    -1.07166388154656     0.38162678589129    -0.31982427490542
-    2    -1.07166388154656    -4.04659454863562    -0.10054740823064    -0.56673981278243
-    3     0.38162678589129    -0.10054740823064    -2.03954175251496     0.27145562955549
-    4    -0.31982427490542    -0.56673981278243     0.27145562955549    -2.48865651385782
-
-
-
-  ## AFock (Symmetry 0) ##
-  Irrep: 1 Size: 6 x 6
-
-                 1                   2                   3                   4                   5
-
-    1     4.41703053313999     0.13689060524517     0.72787717377978    -0.15027342029021     0.28954162991944
-    2     0.13689060524517     4.39111289446238    -0.79711059886597     0.14545883766010     0.71506501407006
-    3     0.72787717377978    -0.79711059886597     4.67895464130746     0.48975025228071    -0.74293952400706
-    4    -0.15027342029021     0.14545883766010     0.48975025228072     3.09975834826317     0.19978788885097
-    5     0.28954162991944     0.71506501407006    -0.74293952400706     0.19978788885097     4.58944929590434
-    6     0.58407083353314     0.37404315877923     0.71423239234614    -0.28684797411642     0.37433352727504
-
-                 6
-
-    1     0.58407083353313
-    2     0.37404315877923
-    3     0.71423239234614
-    4    -0.28684797411642
-    5     0.37433352727504
-    6     4.98206840010261
-
-
-
-  Irrep: 2 Size: 0 x 0
-
-	(empty)
-
-  Irrep: 3 Size: 2 x 2
-
-                 1                   2
-
-    1     4.58553015036517     1.08259772997878
-    2     1.08259772997878     5.11378173107331
-
-
-
-  Irrep: 4 Size: 4 x 4
-
-                 1                   2                   3                   4
-
-    1     4.12403928108318     1.07644450964031    -0.38682039401611     0.33997211204014
-    2     1.07644450964031     4.75158046577713     0.38055097686932     1.07259327312354
-    3    -0.38682039401611     0.38055097686932     3.04747212909011    -0.46376416227560
-    4     0.33997211204014     1.07259327312354    -0.46376416227560     4.29537915568741
-
-
-
-Printing the Q matrix
-  ## Q (Symmetry 0) ##
-  Irrep: 1 Size: 3 x 6
-
-                 1                   2                   3                   4                   5
-
-    1     8.77349936848542     0.34335425336519     1.41953449020893    -0.29446970561316     0.60004571047753
-    2     0.36914698225927     8.64342340632148    -1.42419633283653     0.29366770357250     1.37530435977372
-    3     0.00360015631546     0.12607276884256     0.03505868288340     0.00681002895316     0.01009565629037
-
-                 6
-
-    1     1.15099135812942
-    2     0.78538703925378
-    3     0.02018283248683
-
-
-
-  Irrep: 2 Size: 0 x 0
-
-	(empty)
-
-  Irrep: 3 Size: 1 x 2
-
-                 1                   2
-
-    1     9.16623830423782     2.16318086857515
-
-
-
-  Irrep: 4 Size: 2 x 4
-
-                 1                   2                   3                   4
-
-    1     8.05822509633595     2.05775090065384    -0.75337553318367     0.62675283370043
-    2    -0.03080699898048     0.05749422617685     0.00553151609341     0.01370945573866
-
-
-
-  ## Gradient (Symmetry 0) ##
-  Irrep: 1 Size: 3 x 6
-
-                 1                   2                   3                   4                   5
-
-    1     0.00000000000000     0.00000000000000     0.00000000000000    -0.00000879811189     0.00000951205053
-    2     0.00000000000000     0.00000000000000     0.00000000000000    -0.00002695288088     0.00003682984429
-    3     0.00000000000000     0.00000000000000     0.00000000000000    -0.00000039187852    -0.00000444442945
-
-                 6
-
-    1    -0.00000803179204
-    2    -0.00001624319774
-    3    -0.00000127908397
-
-
-
-  Irrep: 2 Size: 0 x 0
-
-	(empty)
-
-  Irrep: 3 Size: 1 x 2
-
-                 1                   2
-
-    1     0.00000000000000    -0.00000395344884
-
-
-
-  Irrep: 4 Size: 2 x 4
-
-                 1                   2                   3                   4
-
-    1     0.00000000000000     0.00000000000000    -0.00001311452018    -0.00001828352691
-    2     0.00000000000000     0.00000000000000     0.00000000602465     0.00000099059002
-
-
-
-  ## Approximate diag hessian (Symmetry 0) ##
-  Irrep: 1 Size: 3 x 6
-
-                 1                   2                   3                   4                   5
-
-    1     1.00000000000000     1.00000000000000     1.00000000000000     9.27457115036544    12.11252490982350
-    2     1.00000000000000     1.00000000000000     1.00000000000000     6.18222497566021     9.00644011293492
-    3     1.00000000000000     1.00000000000000     1.00000000000000     0.14682907599214     0.18409373105885
-
-                 6
-
-    1    17.37338797102219
-    2    14.24183517286147
-    3     0.25317316784509
-
-
-
-  Irrep: 2 Size: 0 x 0
-
-	(empty)
-
-  Irrep: 3 Size: 1 x 2
-
-                 1                   2
-
-    1     1.00000000000000     9.04165832061739
-
-
-
-  Irrep: 4 Size: 2 x 4
-
-                 1                   2                   3                   4
-
-    1     1.00000000000000     1.00000000000000     6.69701739490763     9.84783111274931
-    2     1.00000000000000     1.00000000000000     0.15472113018804     0.19973953632406
-
-
-
-   @MCSCF Iter   8:  -75.64110883731078   -2.1913e-09   1.0562e-05   5   APPROX, DIIS
-
-       MCSCF has converged!
-
-   @MCSCF Final Energy:   -75.641108837310782
-
-
-   => Energetics <=
-
-   SCF energy =              -75.583776872161422
-   Total CI energy =         -75.641108837310782
-
-
-   CI Root  1 energy =       -75.641108837310782
-
-
-The 20 most important determinants
-
-    1    0.986321  (    3,    3)  2A1X  3A1X  1B1X  1B2X  
-    2   -0.082258  (    6,    6)  2A1X  3A1X  1B1X  2B2X  
-    3    0.050772  (    4,    6)  2A1X  3A1B  4A1A  1B1X  1B2A  2B2B  
-    4    0.050772  (    6,    4)  2A1X  3A1A  4A1B  1B1X  1B2B  2B2A  
-    5   -0.048745  (    4,    4)  2A1X  4A1X  1B1X  1B2X  
-    6   -0.036487  (    9,    9)  2A1X  3A1X  4A1X  1B1X  
-    7   -0.033641  (   10,   10)  2A1X  1B1X  1B2X  2B2X  
-    8   -0.032801  (    4,    5)  2A1A  3A1B  4A1X  1B1X  1B2X  
-    9   -0.032801  (    5,    4)  2A1B  3A1A  4A1X  1B1X  1B2X  
-   10    0.032424  (    5,    6)  2A1B  3A1X  4A1A  1B1X  1B2A  2B2B  
-   11    0.032424  (    6,    5)  2A1A  3A1X  4A1B  1B1X  1B2B  2B2A  
-   12   -0.031290  (    5,    5)  3A1X  4A1X  1B1X  1B2X  
-   13   -0.030450  (    9,   10)  2A1X  3A1A  4A1A  1B1X  1B2B  2B2B  
-   14   -0.030450  (   10,    9)  2A1X  3A1B  4A1B  1B1X  1B2A  2B2A  
-   15   -0.020541  (    9,   11)  2A1A  3A1X  4A1A  1B1X  1B2B  2B2B  
-   16   -0.020541  (   11,    9)  2A1B  3A1X  4A1B  1B1X  1B2A  2B2A  
-   17    0.020322  (    3,    7)  2A1X  3A1A  4A1B  1B1X  1B2A  2B2B  
-   18    0.020322  (    7,    3)  2A1X  3A1B  4A1A  1B1X  1B2B  2B2A  
-   19   -0.017498  (   11,   11)  3A1X  1B1X  1B2X  2B2X  
-   20   -0.016470  (   13,   13)  2A1X  3A1X  4A1X  1B2X  
-
-
-
-*** tstart() called on dhcp189-173.emerson.emory.edu
-*** at Tue Jan 12 14:51:19 2016
-
-    There are an even number of electrons - assuming singlet.
-    Specify the multiplicity with the MULTP option in the
-    input if this is incorrect
+    Name: 3-21G
+    Role: ORBITAL
+    Keyword: BASIS
+    atoms 1   entry O          line    90 file /Users/york/src/psi4new/psi4/share/psi4/basis/3-21g.gbs 
+    atoms 2-3 entry H          line    21 file /Users/york/src/psi4new/psi4/share/psi4/basis/3-21g.gbs 
 
 
          ---------------------------------------------------------
                                    SCF
-            by Justin Turney, Rob Parrish, and Andy Simmonett
+            by Justin Turney, Rob Parrish, Andy Simmonett
+                             and Daniel Smith
                               RHF Reference
-                        1 Threads,    256 MiB Core
+                        1 Threads,    500 MiB Core
          ---------------------------------------------------------
 
   ==> Geometry <==
@@ -2397,23 +521,32 @@ The 20 most important determinants
 
   ==> Algorithm <==
 
-  SCF Algorithm Type is OUT_OF_CORE.
+  SCF Algorithm Type is DIRECT.
   DIIS enabled.
   MOM disabled.
   Fractional occupation disabled.
-  Guess Type is CORE.
-  Energy threshold   = 1.00e-06
+  Guess Type is SAD.
+  Energy threshold   = 1.00e-10
   Density threshold  = 1.00e-10
   Integral threshold = 0.00e+00
 
   ==> Primary Basis <==
 
   Basis Set: 3-21G
+    Blend: 3-21G
     Number of shells: 9
     Number of basis function: 13
     Number of Cartesian functions: 13
     Spherical Harmonics?: false
     Max angular momentum: 1
+
+   => Loading Basis Set <=
+
+    Name: (3-21G AUX)
+    Role: JKFIT
+    Keyword: DF_BASIS_SCF
+    atoms 1   entry O          line   323 file /Users/york/src/psi4new/psi4/share/psi4/basis/def2-svp-jkfit.gbs 
+    atoms 2-3 entry H          line    23 file /Users/york/src/psi4new/psi4/share/psi4/basis/def2-svp-jkfit.gbs 
 
   ==> Pre-Iterations <==
 
@@ -2439,7 +572,7 @@ The 20 most important determinants
     wK tasked:                  No
     OpenMP threads:              1
     Integrals threads:           1
-    Memory (MB):               183
+    Memory (MB):               375
     Algorithm:                Core
     Integral Cache:           NONE
     Schwarz Cutoff:          1E-12
@@ -2447,64 +580,56 @@ The 20 most important determinants
 
    => Auxiliary Basis Set <=
 
-  Basis Set: 
-    Number of shells: 30
-    Number of basis function: 96
-    Number of Cartesian functions: 96
+  Basis Set: (3-21G AUX)
+    Blend: DEF2-SVP-JKFIT
+    Number of shells: 37
+    Number of basis function: 133
+    Number of Cartesian functions: 133
     Spherical Harmonics?: false
-    Max angular momentum: 3
+    Max angular momentum: 4
 
   Minimum eigenvalue in the overlap matrix is 1.1629436767E-01.
   Using Symmetric Orthogonalization.
-  SCF Guess: Core (One-Electron) Hamiltonian.
+
+  SCF Guess: Superposition of Atomic Densities via on-the-fly atomic UHF.
 
   ==> Iterations <==
 
                            Total Energy        Delta E     RMS |[F,P]|
 
-    Occupation by irrep:
-             A1    A2    B1    B2 
-    DOCC [     3,    0,    0,    2 ]
-
-   @DF-RHF iter   1:   -66.02990358714362   -6.60299e+01   4.81881e-01 
-    Occupation by irrep:
-             A1    A2    B1    B2 
-    DOCC [     3,    0,    1,    1 ]
-
-   @DF-RHF iter   2:   -70.16670420416926   -4.13680e+00   3.19178e-01 DIIS
-   @DF-RHF iter   3:   -75.36543291154882   -5.19873e+00   8.96299e-02 DIIS
-   @DF-RHF iter   4:   -75.57357917449281   -2.08146e-01   1.41635e-02 DIIS
-   @DF-RHF iter   5:   -75.58421798557315   -1.06388e-02   4.30720e-03 DIIS
-   @DF-RHF iter   6:   -75.58470049240826   -4.82507e-04   8.95014e-04 DIIS
-   @DF-RHF iter   7:   -75.58473992763348   -3.94352e-05   2.43937e-04 DIIS
-   @DF-RHF iter   8:   -75.58474202358235   -2.09595e-06   2.58956e-05 DIIS
-   @DF-RHF iter   9:   -75.58474210172558   -7.81432e-08   5.62696e-06 DIIS
-   @DF-RHF iter  10:   -75.58474210270421   -9.78631e-10   1.18962e-06 DIIS
-   @DF-RHF iter  11:   -75.58474210273802   -3.38076e-11   6.77147e-08 DIIS
-   @DF-RHF iter  12:   -75.58474210273819   -1.70530e-13   5.48353e-09 DIIS
-   @DF-RHF iter  13:   -75.58474210273819    0.00000e+00   2.81904e-10 DIIS
-   @DF-RHF iter  14:   -75.58474210273815    4.26326e-14   1.08560e-11 DIIS
+   @DF-RHF iter   0:   -75.53592723204872   -7.55359e+01   1.70602e-01 
+   @DF-RHF iter   1:   -75.54103195303225   -5.10472e-03   3.46397e-02 
+   @DF-RHF iter   2:   -75.57618808941173   -3.51561e-02   1.84309e-02 DIIS
+   @DF-RHF iter   3:   -75.58307239525581   -6.88431e-03   2.76349e-03 DIIS
+   @DF-RHF iter   4:   -75.58366137991950   -5.88985e-04   7.10015e-04 DIIS
+   @DF-RHF iter   5:   -75.58370518923456   -4.38093e-05   1.20820e-04 DIIS
+   @DF-RHF iter   6:   -75.58370693111644   -1.74188e-06   2.61475e-05 DIIS
+   @DF-RHF iter   7:   -75.58370699825066   -6.71342e-08   1.40053e-06 DIIS
+   @DF-RHF iter   8:   -75.58370699833000   -7.93392e-11   1.19300e-07 DIIS
+   @DF-RHF iter   9:   -75.58370699833128   -1.27898e-12   1.51554e-08 DIIS
+   @DF-RHF iter  10:   -75.58370699833129   -1.42109e-14   7.37266e-10 DIIS
+   @DF-RHF iter  11:   -75.58370699833135   -5.68434e-14   5.94064e-11 DIIS
 
   DF guess converged.
 
   ==> Integral Setup <==
 
-  ==> DiskJK: Disk-Based J/K Matrices <==
+  ==> DirectJK: Integral-Direct J/K Matrices <==
 
     J tasked:                  Yes
     K tasked:                  Yes
     wK tasked:                  No
-    Memory (MB):               183
+    Integrals threads:           1
     Schwarz Cutoff:          1E-12
 
-   @RHF iter  15:   -75.58377685260595    9.65250e-04   3.61537e-05 DIIS
-   @RHF iter  16:   -75.58377687079242   -1.81865e-08   4.88541e-06 DIIS
-   @RHF iter  17:   -75.58377687195743   -1.16501e-09   3.05313e-06 DIIS
-   @RHF iter  18:   -75.58377687214794   -1.90511e-10   4.62739e-07 DIIS
-   @RHF iter  19:   -75.58377687216128   -1.33440e-11   5.56952e-08 DIIS
-   @RHF iter  20:   -75.58377687216147   -1.84741e-13   2.77145e-09 DIIS
-   @RHF iter  21:   -75.58377687216147    0.00000e+00   3.60954e-10 DIIS
-   @RHF iter  22:   -75.58377687216147    0.00000e+00   7.39555e-11 DIIS
+   @RHF iter  12:   -75.58377687116999   -6.98728e-05   7.94196e-06 DIIS
+   @RHF iter  13:   -75.58377687196864   -7.98650e-10   2.94053e-06 DIIS
+   @RHF iter  14:   -75.58377687215406   -1.85423e-10   5.34971e-07 DIIS
+   @RHF iter  15:   -75.58377687216122   -7.16227e-12   6.26201e-08 DIIS
+   @RHF iter  16:   -75.58377687216148   -2.55795e-13   1.77446e-08 DIIS
+   @RHF iter  17:   -75.58377687216159   -1.13687e-13   1.23138e-09 DIIS
+   @RHF iter  18:   -75.58377687216155    4.26326e-14   1.04246e-10 DIIS
+   @RHF iter  19:   -75.58377687216154    1.42109e-14   8.04818e-12 DIIS
 
   ==> Post-Iterations <==
 
@@ -2528,24 +653,19 @@ The 20 most important determinants
 
   Energy converged.
 
-  @RHF Final Energy:   -75.58377687216147
+  @RHF Final Energy:   -75.58377687216154
 
    => Energetics <=
 
     Nuclear Repulsion Energy =              8.8046866186390567
-    One-Electron Energy =                -121.9294218744772849
-    Two-Electron Energy =                  37.5409583836767666
-    DFT Exchange-Correlation Energy =       0.0000000000000000
-    Empirical Dispersion Energy =           0.0000000000000000
+    One-Electron Energy =                -121.9294218745303908
+    Two-Electron Energy =                  37.5409583837298015
     PCM Polarization Energy =               0.0000000000000000
-    EFP Energy =                            0.0000000000000000
-    Total Energy =                        -75.5837768721614651
+    Total Energy =                        -75.5837768721615362
 
     Alert: EFP and PCM quantities not currently incorporated into SCF psivars.
 
 Properties will be evaluated at   0.000000,   0.000000,   0.000000 Bohr
-  ==> Properties <==
-
 
 Properties computed using the SCF density matrix
 
@@ -2562,20 +682,41 @@ Properties computed using the SCF density matrix
      X:     0.0000      Y:     0.0000      Z:     2.4579     Total:     2.4579
 
 
-  Saving occupied orbitals to File 180.
-
-*** tstop() called on dhcp189-173.emerson.emory.edu at Tue Jan 12 14:51:19 2016
+*** tstop() called on yorks-mac.wireless.emory.edu at Mon Dec  4 12:16:31 2017
 Module time:
-	user time   =       0.30 seconds =       0.00 minutes
-	system time =       0.01 seconds =       0.00 minutes
+	user time   =       0.72 seconds =       0.01 minutes
+	system time =       0.05 seconds =       0.00 minutes
 	total time  =          0 seconds =       0.00 minutes
 Total time:
-	user time   =       0.81 seconds =       0.01 minutes
-	system time =       0.07 seconds =       0.00 minutes
+	user time   =       1.33 seconds =       0.02 minutes
+	system time =       0.27 seconds =       0.00 minutes
 	total time  =          1 seconds =       0.02 minutes
-Reading options from the FORTE block
-Calling plugin /Users/kevinhannon/Programs/forte/forte.so.
+   => Loading Basis Set <=
 
+    Name: STO-3G
+    Role: ORBITAL
+    Keyword: MINAO_BASIS
+    atoms 1   entry O          line    81 file /Users/york/src/psi4new/psi4/share/psi4/basis/sto-3g.gbs 
+    atoms 2-3 entry H          line    19 file /Users/york/src/psi4new/psi4/share/psi4/basis/sto-3g.gbs 
+
+
+Reading options from the FORTE block
+Calling plugin forte.so.
+
+
+
+  Forte
+  ----------------------------------------------------------------------------
+  A suite of quantum chemistry methods for strongly correlated electrons
+
+    git branch: master - git commit: 1c92254a
+
+  Developed by:
+    Francesco A. Evangelista, Chenyang Li, Kevin P. Hannon,
+    Jeffrey B. Schriber, Tianyuan Zhang, Chenxi Cai
+  ----------------------------------------------------------------------------
+
+  Size of Determinant class: 32
 
   ==> MO Space Information <==
 
@@ -2600,11 +741,68 @@ Calling plugin /Users/kevinhannon/Programs/forte/forte.so.
   Number of frozen occupied orbitals:          1
   Number of frozen unoccupied orbitals:        0
 
+    Molecular point group: c2v
+    Full point group: C2v
+
+    Geometry (in Angstrom), charge = 0, multiplicity = 1:
+
+       Center              X                  Y                   Z               Mass       
+    ------------   -----------------  -----------------  -----------------  -----------------
+           O          0.000000000000     0.000000000000    -0.069592187390    15.994914619560
+           H          0.000000000000    -0.783151105291     0.552239257844     1.007825032070
+           H          0.000000000000     0.783151105291     0.552239257844     1.007825032070
+
+  -AO BASIS SET INFORMATION:
+    Name                   = 3-21G
+    Blend                  = 3-21G
+    Total number of shells = 9
+    Number of primitives   = 15
+    Number of AO           = 13
+    Number of SO           = 13
+    Maximum AM             = 1
+    Spherical Harmonics    = FALSE
+
+  -Contraction Scheme:
+    Atom   Type   All Primitives // Shells:
+   ------ ------ --------------------------
+       1     O     6s 3p // 3s 2p 
+       2     H     3s // 2s 
+       3     H     3s // 2s 
+
+  ==> AO Basis Functions <==
+
+    [ 3-21G ]
+    cartesian
+    ****
+    O   1
+    S   3 1.00
+                       322.03700000           0.05923940
+                        48.43080000           0.35150000
+                        10.42060000           0.70765800
+    S   2 1.00
+                         7.40294000          -0.40445300
+                         1.57620000           1.22156000
+    P   2 1.00
+                         7.40294000           0.24458600
+                         1.57620000           0.85395500
+    S   1 1.00
+                         0.37368400           1.00000000
+    P   1 1.00
+                         0.37368400           1.00000000
+    ****
+    H   2
+    S   2 1.00
+                         5.44717800           0.15628500
+                         0.82454700           0.90469100
+    S   1 1.00
+                         0.18319200           1.00000000
+    ****
+
 
   Overall Conventional Integrals timings
 
 
-  Conventional integrals take 0.06939900 s
+  Conventional integrals take 0.08323800 s
 
                 -----------------------------------------------
                   Complete Active Space Self Consistent Field
@@ -2615,23 +813,29 @@ Calling plugin /Users/kevinhannon/Programs/forte/forte.so.
   ==> CASSCF Iteration <==
 
  iter    ||g||           Delta_E            E_CASSCF       CONV_TYPE
- E_casscf: 0.00000000
-    0   0.010768999940   75.604087394902   -75.604087394902       
-    1   0.010008230587   0.033260722354   -75.637348117256       
-    2   0.003268254971   0.003234107887   -75.640582225143       
-    3   0.001176358980   0.000443489876   -75.641025715019       
-    4   0.000516752989   0.000068726635   -75.641094441654       
-    5   0.000248502299   0.000011731074   -75.641106172728       
-    6   0.000121138007   0.000002145903   -75.641108318631       
-    7   0.000058964656   0.000000408714   -75.641108727345   DIIS
+ CSO2SO takes   0.0000 s.
+    0   0.010769074897   -75.604087404061   -75.604087404061    0.179352 s      
+ CSO2SO takes   0.0000 s.
+    1   0.010007734786   -0.033284719017   -75.637372123078    0.203033 s      
+ CSO2SO takes   0.0000 s.
+    2   0.003287386222   -0.003225709837   -75.640597832914    0.176735 s      
+ CSO2SO takes   0.0000 s.
+    3   0.001185500551   -0.000434421782   -75.641032254696    0.177701 s      
+ CSO2SO takes   0.0000 s.
+    4   0.000531029906   -0.000063985468   -75.641096240164    0.175792 s  DIIS
+ CSO2SO takes   0.0000 s.
+    5   0.000263143985   -0.000010337405   -75.641106577569    0.170724 s  DIIS
+ CSO2SO takes   0.0000 s.
+    6   0.000056339015   -0.000002233602   -75.641108811171    0.168047 s  DIIS
+ CSO2SO takes   0.0000 s.
+    7   0.000008206689   -0.000000025966   -75.641108837136    0.170731 s  DIIS
+ CSO2SO takes   0.0000 s.
+    8   0.000001899244   -0.000000000639   -75.641108837776    0.177742 s  DIIS
+ CSO2SO takes   0.0000 s.
+    9   0.000000723966   -0.000000000029   -75.641108837805    0.175597 s
 
- @E_CASSCF: = -75.641108806376 
+ A miracle has come to pass. The CASSCF iterations have converged.
+ @E(CASSCF) =   -75.641108837805 
+	CASSCF Energy.....................................................PASSED
 
-
- Norm of orbital_gradient is 0.00002882
-
- Energy difference: 0.000000079031
-
-  Your calculation took 2.25031100 seconds
-
-*** PSI4 exiting successfully. Buy a developer a beer!
+*** Psi4 exiting successfully. Buy a developer a beer!

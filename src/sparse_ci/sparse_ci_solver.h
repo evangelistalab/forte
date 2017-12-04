@@ -61,7 +61,7 @@ class SparseCISolver {
     /**
      * Diagonalize the Hamiltonian in a basis of determinants
      * @param space The basis for the CI given as a vector of
-     * STLBitsetDeterminant objects
+     * Determinant objects
      * @param nroot The number of solutions to find
      * @param diag_method The diagonalization algorithm
      * @param multiplicity The spin multiplicity of the solution (2S + 1).  1 =
@@ -70,7 +70,7 @@ class SparseCISolver {
 
     SparseCISolver(std::shared_ptr<FCIIntegrals> fci_ints) { fci_ints_ = fci_ints; }
 
-    void diagonalize_hamiltonian(const std::vector<STLBitsetDeterminant>& space,
+    void diagonalize_hamiltonian(const std::vector<Determinant>& space,
                                  SharedVector& evals, SharedMatrix& evecs, int nroot,
                                  int multiplicity, DiagonalizationMethod diag_method);
 
@@ -98,9 +98,9 @@ class SparseCISolver {
 
     /// The maximum number of iterations for the Davidson algorithm
     void set_maxiter_davidson(int value);
-    SharedMatrix build_full_hamiltonian(const std::vector<STLBitsetDeterminant>& space);
+    SharedMatrix build_full_hamiltonian(const std::vector<Determinant>& space);
     std::vector<std::pair<std::vector<int>, std::vector<double>>>
-    build_sparse_hamiltonian(const std::vector<STLBitsetDeterminant>& space);
+    build_sparse_hamiltonian(const std::vector<Determinant>& space);
 
     /// Add roots to project out during Davidson-Liu procedure
     void add_bad_states(std::vector<std::vector<std::pair<size_t, double>>>& roots);
@@ -127,7 +127,7 @@ class SparseCISolver {
 
   private:
     /// Form the full Hamiltonian and diagonalize it (for debugging)
-    void diagonalize_full(const std::vector<STLBitsetDeterminant>& space, SharedVector& evals,
+    void diagonalize_full(const std::vector<Determinant>& space, SharedVector& evals,
                           SharedMatrix& evecs, int nroot, int multiplicity);
 
     void diagonalize_mpi(const DeterminantHashVec& space, WFNOperator& op, SharedVector& evals,
@@ -149,23 +149,23 @@ class SparseCISolver {
                                 SharedVector& evals, SharedMatrix& evecs, int nroot,
                                 int multiplicity);
 
-    void diagonalize_davidson_liu_solver(const std::vector<STLBitsetDeterminant>& space,
+    void diagonalize_davidson_liu_solver(const std::vector<Determinant>& space,
                                          SharedVector& evals, SharedMatrix& evecs, int nroot,
                                          int multiplicity);
 
     //   void diagonalize_davidson_liu_string(
-    //       const std::vector<STLBitsetDeterminant>& space, SharedVector& evals,
+    //       const std::vector<Determinant>& space, SharedVector& evals,
     //       SharedMatrix& evecs, int nroot, int multiplicity, bool disk);
     /// Build the full Hamiltonian matrix
 
     std::vector<std::pair<double, std::vector<std::pair<size_t, double>>>>
-    initial_guess(const std::vector<STLBitsetDeterminant>& space, int nroot, int multiplicity);
+    initial_guess(const std::vector<Determinant>& space, int nroot, int multiplicity);
 
     std::vector<std::pair<double, std::vector<std::pair<size_t, double>>>>
     initial_guess_map(const DeterminantHashVec& space, int nroot, int multiplicity);
 
     /// The Davidson-Liu algorithm
-    bool davidson_liu_solver(const std::vector<STLBitsetDeterminant>& space,
+    bool davidson_liu_solver(const std::vector<Determinant>& space,
                              SigmaVector* sigma_vector, SharedVector Eigenvalues,
                              SharedMatrix Eigenvectors, int nroot, int multiplicity);
 

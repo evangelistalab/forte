@@ -34,6 +34,8 @@
 #include <algorithm>
 #include <vector>
 
+#include "determinant_common.h"
+
 namespace psi {
 namespace forte {
 
@@ -54,16 +56,21 @@ namespace forte {
 
 class STLBitsetDeterminant {
   public:
-    enum class SpinType { AlphaSpin, BetaSpin };
+    /// The number of bits used to represent a determinant
     static constexpr int num_det_bits = 256;
+    /// The number of bits used to represent a string (half a determinant)
     static constexpr int num_str_bits = 128;
+    /// The bitset type
     using bit_t = std::bitset<num_det_bits>;
-    const static bit_t alfa_mask;
-    const static bit_t beta_mask;
 
     // Class Constructor and Destructor
+
     /// Construct an empty determinant
-    explicit STLBitsetDeterminant(int n);
+    explicit STLBitsetDeterminant();
+    STLBitsetDeterminant(int n) = delete;
+    STLBitsetDeterminant(size_t n) = delete;
+    /// Construct a determinant from a bitset object
+    explicit STLBitsetDeterminant(const bit_t& bits);
     /// Construct the determinant from an occupation vector that
     /// specifies the alpha and beta strings.  occupation = [Ia,Ib]
     explicit STLBitsetDeterminant(const std::vector<bool>& occupation);
@@ -71,14 +78,8 @@ class STLBitsetDeterminant {
     /// specifies the alpha and beta strings.  occupation = [Ia,Ib]
     explicit STLBitsetDeterminant(const std::vector<bool>& occupation_a,
                                   const std::vector<bool>& occupation_b);
-    /// Construct a determinant from a bitset object
-    explicit STLBitsetDeterminant(const bit_t& bits, int nmo);
 
-    //    STLBitsetDeterminant(int n) = delete;
-    //    STLBitsetDeterminant(size_t n) = delete;
-
-    void copy(const STLBitsetDeterminant& rhs);
-
+    /// Return the bitset
     const bit_t& bits() const;
 
     /// Equal operator
@@ -91,18 +92,8 @@ class STLBitsetDeterminant {
     /// Reverse string ordering
     static bool reverse_less_then(const STLBitsetDeterminant& i, const STLBitsetDeterminant& j);
 
-    /// XOR operator
-    STLBitsetDeterminant operator^(const STLBitsetDeterminant& lhs) const;
-    /// XOR operator
-    STLBitsetDeterminant& operator^=(const STLBitsetDeterminant& lhs);
-    /// &= operator
-    STLBitsetDeterminant& operator&=(const STLBitsetDeterminant& lhs);
-    /// &= operator
-    STLBitsetDeterminant& operator|=(const STLBitsetDeterminant& lhs);
+    /// Flip all bits
     STLBitsetDeterminant& flip();
-
-    //    /// Get a pointer to the bits
-    //    const bit_t& bits() const;
 
     /// Return the value of an alpha bit
     bool get_alfa_bit(int n) const;
@@ -113,41 +104,34 @@ class STLBitsetDeterminant {
     void set_alfa_bit(int n, bool value);
     /// Set the value of a beta bit
     void set_beta_bit(int n, bool value);
-    //    /// Set the bits to a given bit_t
-    //    void set_bits(const bit_t& bits);
-
-    /// Switch the alpha and beta occupations
-    void spin_flip();
 
     /// Return determinant with one spin zeroed, alpha == 0
-    void zero_spin(STLBitsetDeterminant::SpinType spin_type);
+    void zero_spin(DetSpinType spin_type);
 
+    /// Count the number of alpha bits set to true
+    int count_alfa() const;
+    /// Count the number of beta bits set to true
+    int count_beta() const;
     /// Return the number of alpha/beta pairs
     int npair();
 
-    void set_count_bits(int nmo);
-    int find_nmo() const;
-
-    int count_alfa() const;
-    int count_beta() const;
-
     /// Return a vector of occupied alpha orbitals
-    std::vector<int> get_alfa_occ();
+    std::vector<int> get_alfa_occ(int norb) const;
     /// Return a vector of occupied beta orbitals
-    std::vector<int> get_beta_occ();
+    std::vector<int> get_beta_occ(int norb) const;
     /// Return a vector of virtual alpha orbitals
-    std::vector<int> get_alfa_vir();
+    std::vector<int> get_alfa_vir(int norb) const;
     /// Return a vector of virtual beta orbitals
-    std::vector<int> get_beta_vir();
+    std::vector<int> get_beta_vir(int norb) const;
 
-    /// Return a vector of occupied alpha orbitals
-    std::vector<int> get_alfa_occ() const;
-    /// Return a vector of occupied beta orbitals
-    std::vector<int> get_beta_occ() const;
-    /// Return a vector of virtual alpha orbitals
-    std::vector<int> get_alfa_vir() const;
-    /// Return a vector of virtual beta orbitals
-    std::vector<int> get_beta_vir() const;
+    //    /// Return a vector of occupied alpha orbitals
+    //    std::vector<int> get_alfa_occ() const;
+    //    /// Return a vector of occupied beta orbitals
+    //    std::vector<int> get_beta_occ() const;
+    //    /// Return a vector of virtual alpha orbitals
+    //    std::vector<int> get_alfa_vir() const;
+    //    /// Return a vector of virtual beta orbitals
+    //    std::vector<int> get_beta_vir() const;
 
     /// Set the value of an alpha bit
     double create_alfa_bit(int n);
@@ -158,22 +142,15 @@ class STLBitsetDeterminant {
     /// Set the value of a beta bit
     double destroy_beta_bit(int n);
 
-    /// Print the Slater determinant
-    void print() const;
     /// Save the Slater determinant as a string
-    std::string str() const;
-    /// Save the Slater determinant as a string
-    std::string str2() const;
+    std::string str(int n = num_str_bits) const;
 
     /// Apply S+ to this determinant
     std::vector<std::pair<STLBitsetDeterminant, double>> spin_plus() const;
     /// Apply S- to this determinant
     std::vector<std::pair<STLBitsetDeterminant, double>> spin_minus() const;
-    /// Return the eigenvalue of Sz
+    /// Return the expectation value of S_z
     double spin_z() const;
-    /// Compute the matrix element of the S^2 operator between this determinant
-    /// and a given one
-    double spin2(const STLBitsetDeterminant& rhs) const;
     /// Return the sign of a_n applied to this determinant
     double slater_sign_a(int n) const;
     double slater_sign_aa(int n, int m) const;
@@ -195,27 +172,37 @@ class STLBitsetDeterminant {
     /// Perform an beta-beta double excitation (IJ -> AB)
     double double_excitation_bb(int i, int j, int a, int b);
 
-    /// Given a set of determinant adds new elements necessary to have a spin complete set
-    void enforce_spin_completeness(std::vector<STLBitsetDeterminant>& det_space, int nmo);
-
     struct Hash {
         std::size_t operator()(const psi::forte::STLBitsetDeterminant& bs) const {
             return std::hash<bit_t>()(bs.bits_);
         }
     };
 
-  protected:
-    /// The occupation vector (does not include the frozen orbitals)
+  private:
+    /// The bits
     bit_t bits_;
-    unsigned char size_;
+    /// A mask for the alpha bits
+    const static bit_t alfa_mask;
+    /// A mask for the beta bits
+    const static bit_t beta_mask;
 };
 
-using Determinant = STLBitsetDeterminant;
-using det_vec = std::vector<STLBitsetDeterminant>;
-template <typename T = double>
-using det_hash = std::unordered_map<STLBitsetDeterminant, T, STLBitsetDeterminant::Hash>;
-using det_hash_it =
-    std::unordered_map<STLBitsetDeterminant, double, STLBitsetDeterminant::Hash>::iterator;
+/// Find the spin orbitals that are occupied in both determinants (performs a bitwise AND, &)
+STLBitsetDeterminant common_occupation(const STLBitsetDeterminant& lhs,
+                                       const STLBitsetDeterminant& rhs);
+
+/// Find the spin orbitals that are occupied only one determinant (performs a bitwise XOR, ^)
+STLBitsetDeterminant different_occupation(const STLBitsetDeterminant& lhs,
+                                          const STLBitsetDeterminant& rhs);
+
+/// Find the spin orbitals that are occupied only one determinant (performs a bitwise OR, |)
+STLBitsetDeterminant union_occupation(const STLBitsetDeterminant& lhs,
+                                      const STLBitsetDeterminant& rhs);
+
+/// Given a set of determinant adds new elements necessary to have a spin complete set
+void enforce_spin_completeness(std::vector<STLBitsetDeterminant>& det_space, int nmo);
+/// Compute the matrix element of the S^2 operator between two determinants
+double spin2(const STLBitsetDeterminant& lhs, const STLBitsetDeterminant& rhs);
 }
 } // End Namespaces
 

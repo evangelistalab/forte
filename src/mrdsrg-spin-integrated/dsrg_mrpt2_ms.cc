@@ -196,7 +196,7 @@ std::vector<std::vector<double>> DSRG_MRPT2::compute_energy_sa() {
             int irrep = options_["AVG_STATE"][n][0].to_integer();
             int multi = options_["AVG_STATE"][n][1].to_integer();
             int nstates = options_["AVG_STATE"][n][2].to_integer();
-            std::vector<psi::forte::STLBitsetDeterminant> p_space = p_spaces_[n];
+            std::vector<psi::forte::Determinant> p_space = p_spaces_[n];
 
             // print current symmetry
             std::stringstream ss;
@@ -386,7 +386,7 @@ std::vector<std::vector<double>> DSRG_MRPT2::compute_energy_xms() {
         int irrep = options_["AVG_STATE"][n][0].to_integer();
         int multi = options_["AVG_STATE"][n][1].to_integer();
         int nstates = eigens_[n].size();
-        std::vector<psi::forte::STLBitsetDeterminant> p_space = p_spaces_[n];
+        std::vector<psi::forte::Determinant> p_space = p_spaces_[n];
 
         // print current status
         std::stringstream ss;
@@ -572,7 +572,7 @@ void DSRG_MRPT2::build_eff_oei() {
 }
 
 SharedMatrix DSRG_MRPT2::xms_rotation(std::shared_ptr<FCIIntegrals> fci_ints,
-                                      std::vector<psi::forte::STLBitsetDeterminant>& p_space,
+                                      std::vector<psi::forte::Determinant>& p_space,
                                       SharedMatrix civecs, const int& irrep) {
     print_h2("Perform XMS Rotation to Reference States");
     outfile->Printf("\n");
@@ -613,8 +613,8 @@ SharedMatrix DSRG_MRPT2::xms_rotation(std::shared_ptr<FCIIntegrals> fci_ints,
     SharedMatrix Fevec(new Matrix("Fock Evec", nstates, nstates));
     SharedVector Feval(new Vector("Fock Eval", nstates));
     Fock->diagonalize(Fevec, Feval);
-    Fevec->print();
-    //    Fevec->eivprint(Feval);
+    //    Fevec->print();
+    Fevec->eivprint(Feval);
 
     // Rotate ci vecs
     SharedMatrix rcivecs(civecs->clone());
@@ -794,7 +794,7 @@ double DSRG_MRPT2::compute_ms_2nd_coupling(const std::string& name) {
 }
 
 void DSRG_MRPT2::compute_cumulants(std::shared_ptr<FCIIntegrals> fci_ints,
-                                   std::vector<STLBitsetDeterminant>& p_space, SharedMatrix evecs,
+                                   std::vector<Determinant>& p_space, SharedMatrix evecs,
                                    const int& root1, const int& root2, const int& irrep) {
     CI_RDMS ci_rdms(options_, fci_ints, p_space, evecs, root1, root2);
     ci_rdms.set_symmetry(irrep);
@@ -929,7 +929,7 @@ void DSRG_MRPT2::compute_cumulants(std::shared_ptr<FCIIntegrals> fci_ints,
 }
 
 void DSRG_MRPT2::compute_densities(std::shared_ptr<FCIIntegrals> fci_ints,
-                                   std::vector<psi::forte::STLBitsetDeterminant>& p_space,
+                                   std::vector<psi::forte::Determinant>& p_space,
                                    SharedMatrix evecs, const int& root1, const int& root2,
                                    const int& irrep) {
     CI_RDMS ci_rdms(options_, fci_ints, p_space, evecs, root1, root2);

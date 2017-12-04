@@ -374,14 +374,14 @@ void SemiCanonical::build_transformation_matrices(SharedMatrix& Ua, SharedMatrix
     }
 
 //    if( options_.get_bool("SAVE_UHF_NOS") ){
-        Ua_t.data() = UaData;
-        Ub_t.data() = UaData;
+//        Ua_t.data() = UaData;
+//        Ub_t.data() = UaData;
         
-        Ub->copy(Ua); 
+//        Ub->copy(Ua);
 //    }else{
         // copy active data to ambit tensors
         Ua_t.data() = UaData;
-//        Ub_t.data() = UbData;
+        Ub_t.data() = UbData;
 //    }
 }
 
@@ -397,6 +397,20 @@ void SemiCanonical::transform_ints(SharedMatrix& Ua, SharedMatrix& Ub) {
 
     // Transform the integrals in the new basis
     print_h2("Integral Transformation to Semicanonical Basis");
+    ints_->retransform_integrals();
+}
+
+void SemiCanonical::back_transform_ints(SharedMatrix& Ua, SharedMatrix& Ub) {
+    SharedMatrix Ca = wfn_->Ca();
+    SharedMatrix Cb = wfn_->Cb();
+    SharedMatrix Ca_new(Ca->clone());
+    SharedMatrix Cb_new(Cb->clone());
+    Ca_new->gemm(false, true, 1.0, Ca, Ua, 0.0);
+    Cb_new->gemm(false, true, 1.0, Cb, Ub, 0.0);
+    Ca->copy(Ca_new);
+    Cb->copy(Cb_new);
+
+    print_h2("Back Transformation of Semicanonical Integrals");
     ints_->retransform_integrals();
 }
 

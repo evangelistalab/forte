@@ -34,8 +34,7 @@
 #include "psi4/libmints/basisset.h"
 #include "psi4/libmints/wavefunction.h"
 #include "psi4/libqt/qt.h"
-#include "../libthce/lreri.h"
-#include "../libthce/thce.h"
+#include "psi4/lib3index/df_helper.h"
 
 #ifdef HAVE_GA
 #include <ga.h>
@@ -227,21 +226,19 @@ void DFIntegrals::gather_integrals() {
     // B_{pq}^Q -> MO without frozen core
 
     // Constructs the DF function
-    // I used this version of build as this doesn't build all the apces and
     // assume a RHF/UHF reference
-    std::shared_ptr<DFERI> df = DFERI::build(primary, auxiliary, options_);
-
+    std::shared_ptr<DF_Helper> df(new DF_Helper(primary, auxiliary));
+    df->initialize();
     // Pushes a C matrix that is ordered in pitzer ordering
     // into the C_matrix object
-    //    df->set_C(C_ord);
-    df->set_C(Ca_ao);
-    //    Ca_ = Ca_ao;
+
+    df->add_space("ALL", Ca_ao);
+    
     // set_C clears all the orbital spaces, so this creates the space
     // This space creates the total nmo_.
     // This assumes that everything is correlated.
-    df->add_space("ALL", 0, nmo_);
     // Does not add the pair_space, but says which one is should use
-    df->add_pair_space("B", "ALL", "ALL");
+    df->add_transformation("B", "ALL", "ALL", "Qpq");
     df->set_memory(Process::environment.get_memory() / 8L);
 
     // Finally computes the df integrals
@@ -251,39 +248,17 @@ void DFIntegrals::gather_integrals() {
     if (print_ > 0) {
         outfile->Printf("\n  %-36s ...", str.c_str());
     }
-    df->compute();
+    df->transform();
     if (print_ > 0) {
         outfile->Printf("...Done. Timing %15.6f s", timer.get());
     }
 
-    std::shared_ptr<psi::Tensor> B = df->ints()["B"];
-    df.reset();
+    SharedMatrix Bpq(new Matrix("Bpq", naux,nmo_ * nmo_));
 
-    FILE* Bf = B->file_pointer();
-    // SharedMatrix Bpq(new Matrix("Bpq", nmo_, nmo_ * naux));
-    SharedMatrix Bpq(new Matrix("Bpq", nmo_ * nmo_, naux));
+    Bpq = df->get_tensor("B");
 
-    // Reads the DF integrals into Bpq.  Stores them as nmo by (nmo*naux)
-
-    std::string str_seek = "Seeking DF Integrals";
-    if (print_ > 0) {
-        outfile->Printf("\n  %-36s ...", str_seek.c_str());
-    }
-    fseek(Bf, 0L, SEEK_SET);
-    if (print_ > 0) {
-        outfile->Printf("...Done. Timing %15.6f s", timer.get());
-    }
-
-    std::string str_read = "Reading DF Integrals";
-    if (print_ > 0) {
-        outfile->Printf("\n  %-36s ...", str_read.c_str());
-    }
-    fread(&(Bpq->pointer()[0][0]), sizeof(double), naux * (nmo_) * (nmo_), Bf);
-    if (print_ > 0) {
-        outfile->Printf("...Done. Timing %15.6f s", timer.get());
-    }
-
-    ThreeIntegral_ = Bpq;
+    // Store as transpose for now
+    ThreeIntegral_ = Bpq->transpose()->clone();
 }
 
 void DFIntegrals::make_diagonal_integrals() {
@@ -310,6 +285,7 @@ void DFIntegrals::deallocate() {
 void DFIntegrals::make_fock_matrix(SharedMatrix gamma_aM, SharedMatrix gamma_bM) {
     TensorType tensor_type = ambit::CoreTensor;
     ambit::Tensor ThreeIntegralTensor =
+        //ambit::Tensor::build(tensor_type, "ThreeIndex", {ncmo_, ncmo_, nthree_});
         ambit::Tensor::build(tensor_type, "ThreeIndex", {nthree_, ncmo_, ncmo_});
     ambit::Tensor gamma_a = ambit::Tensor::build(tensor_type, "Gamma_a", {ncmo_, ncmo_});
     ambit::Tensor gamma_b = ambit::Tensor::build(tensor_type, "Gamma_b", {ncmo_, ncmo_});

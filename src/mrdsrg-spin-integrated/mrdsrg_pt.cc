@@ -48,24 +48,31 @@ double MRDSRG::compute_energy_pt2() {
     outfile->Printf("\n      J. Chem. Theory Comput. 2015, 11, 2097-2108.");
     outfile->Printf("\n      J. Chem. Phys. 2017, 146, 124132.\n");
 
+    // form full 2-e integrals if using density fitting
+    if (eri_df_) {
+        std::stringstream ss;
+        ss << "DSRG-PT2 is not density fitted in MRDSRG module. Please try THREE-DSRG-MRPT2.";
+        outfile->Printf("\n  %s", ss.str().c_str());
+        outfile->Printf("\n  DSRG-PT2 of MRDSRG is mainly for testing ideas.");
+        outfile->Printf("\n  If DF/CD is insisted, please uncomment lines 62-69 of mrdsrg_pt.cc "
+                        "and recompile FORTE.");
+        outfile->Printf("\n  However, this will result in building a full set of 2e integrals.");
+        throw PSIEXCEPTION(ss.str() + "\nPlease advise the output file.");
+
+        //        V_ = BTF_->build(tensor_type_, "V", spin_cases({"gggg"}));
+        //        V_["pqrs"] = B_["gpr"] * B_["gqs"];
+        //        V_["pqrs"] -= B_["gps"] * B_["gqr"];
+
+        //        V_["pQrS"] = B_["gpr"] * B_["gQS"];
+
+        //        V_["PQRS"] = B_["gPR"] * B_["gQS"];
+        //        V_["PQRS"] -= B_["gPS"] * B_["gQR"];
+    }
+
     // create zeroth-order Hamiltonian
     H0th_ = BTF_->build(tensor_type_, "Zeroth-order H", spin_cases({"gg"}));
-    H0th_.iterate(
-        [&](const std::vector<size_t>& i, const std::vector<SpinType>& spin, double& value) {
-            if (i[0] == i[1]) {
-                if (spin[0] == AlphaSpin) {
-                    value = Fa_[i[0]];
-                } else {
-                    value = Fb_[i[0]];
-                }
-            }
-        });
-
-    // test orbitals are semi-canonicalized
-    if (!check_semicanonical()) {
-        outfile->Printf("\n    DSRG-MRPT2 is currently only formulated using "
-                        "semi-canonical orbitals!");
-        throw PSIEXCEPTION("Orbitals are not semi-canonicalized.");
+    for (const std::string& block : {"cc", "CC", "aa", "AA", "vv", "VV"}) {
+        H0th_.block(block)("pq") = F_.block(block)("pq");
     }
 
     // compute MRPT2 energy and Hbar
@@ -1177,24 +1184,31 @@ double MRDSRG::compute_energy_pt3() {
     std::vector<std::pair<std::string, double>> energy;
     energy.push_back({"E0 (reference)", Eref_});
 
+    // form full 2-e integrals if using density fitting
+    if (eri_df_) {
+        std::stringstream ss;
+        ss << "DSRG-PT3 is not density fitted in MRDSRG module. Please try DSRG-MRPT3.";
+        outfile->Printf("\n  %s", ss.str().c_str());
+        outfile->Printf("\n  DSRG-PT3 of MRDSRG is for testing correctness of DSRG-MRPT3 code.");
+        outfile->Printf("\n  If DF/CD is insisted, please uncomment lines 1198-1205 of "
+                        "mrdsrg_pt.cc and recompile FORTE.");
+        outfile->Printf("\n  However, this will result in building a full set of 2e integrals.");
+        throw PSIEXCEPTION(ss.str() + "\nPlease advise the output file.");
+
+        //        V_ = BTF_->build(tensor_type_, "V", spin_cases({"gggg"}));
+        //        V_["pqrs"] = B_["gpr"] * B_["gqs"];
+        //        V_["pqrs"] -= B_["gps"] * B_["gqr"];
+
+        //        V_["pQrS"] = B_["gpr"] * B_["gQS"];
+
+        //        V_["PQRS"] = B_["gPR"] * B_["gQS"];
+        //        V_["PQRS"] -= B_["gPS"] * B_["gQR"];
+    }
+
     // create zeroth-order Hamiltonian
     H0th_ = BTF_->build(tensor_type_, "Zeroth-order H", spin_cases({"gg"}));
-    H0th_.iterate(
-        [&](const std::vector<size_t>& i, const std::vector<SpinType>& spin, double& value) {
-            if (i[0] == i[1]) {
-                if (spin[0] == AlphaSpin) {
-                    value = Fa_[i[0]];
-                } else {
-                    value = Fb_[i[0]];
-                }
-            }
-        });
-
-    // test orbitals are semi-canonicalized
-    if (!check_semicanonical()) {
-        outfile->Printf("\n    DSRG-MRPT3 is currently only formulated using "
-                        "semi-canonical orbitals!");
-        throw PSIEXCEPTION("Orbitals are not semi-canonicalized.");
+    for (const std::string& block : {"cc", "CC", "aa", "AA", "vv", "VV"}) {
+        H0th_.block(block)("pq") = F_.block(block)("pq");
     }
 
     // create first-order bare Hamiltonian
@@ -1225,8 +1239,7 @@ double MRDSRG::compute_energy_pt3() {
     Hbar2_["pQrS"] += 0.5 * O2_["pQrS"];
     Hbar2_["PQRS"] += 0.5 * O2_["PQRS"];
 
-    std::string dsrg_op = options_.get_str("DSRG_TRANS_TYPE");
-    if (dsrg_op == "UNITARY") {
+    if (dsrg_trans_type_ == "UNITARY") {
         Hbar1_["pq"] += 0.5 * O1_["qp"];
         Hbar1_["PQ"] += 0.5 * O1_["QP"];
         Hbar2_["pqrs"] += 0.5 * O2_["rspq"];
@@ -1246,7 +1259,7 @@ double MRDSRG::compute_energy_pt3() {
     H1_T2_C0(Hbar1_, T2_, 1.0, Ept2);
     H2_T1_C0(Hbar2_, T1_, 1.0, Ept2);
     H2_T2_C0(Hbar2_, T2_, 1.0, Ept2);
-    if (dsrg_op == "UNITARY") {
+    if (dsrg_trans_type_ == "UNITARY") {
         Ept2 *= 2.0;
     }
     energy.push_back({"2nd-order correlation energy", Ept2});
@@ -1271,7 +1284,7 @@ double MRDSRG::compute_energy_pt3() {
     Hbar2nd_2["pQrS"] += O2_["pQrS"];
     Hbar2nd_2["PQRS"] += O2_["PQRS"];
 
-    if (dsrg_op == "UNITARY") {
+    if (dsrg_trans_type_ == "UNITARY") {
         Hbar2nd_1["pq"] += O1_["qp"];
         Hbar2nd_1["PQ"] += O1_["QP"];
         Hbar2nd_2["pqrs"] += O2_["rspq"];
@@ -1291,7 +1304,7 @@ double MRDSRG::compute_energy_pt3() {
     H1_T2_C0(Hbar1_, T2nd_2, 1.0, Ecorr1);
     H2_T1_C0(Hbar2_, T2nd_1, 1.0, Ecorr1);
     H2_T2_C0(Hbar2_, T2nd_2, 1.0, Ecorr1);
-    if (dsrg_op == "UNITARY") {
+    if (dsrg_trans_type_ == "UNITARY") {
         Ecorr1 *= 2.0;
         energy.push_back({"<[H~1st, A2nd]>", Ecorr1});
     } else {
@@ -1323,7 +1336,7 @@ double MRDSRG::compute_energy_pt3() {
     Hbar2nd_2["pQrS"] += O2_["pQrS"];
     Hbar2nd_2["PQRS"] += O2_["PQRS"];
 
-    if (dsrg_op == "UNITARY") {
+    if (dsrg_trans_type_ == "UNITARY") {
         Hbar2nd_1["pq"] += O1_["qp"];
         Hbar2nd_1["PQ"] += O1_["QP"];
         Hbar2nd_2["pqrs"] += O2_["rspq"];
@@ -1337,7 +1350,7 @@ double MRDSRG::compute_energy_pt3() {
     H1_T2_C0(Hbar2nd_1, T2_, 1.0, Ecorr2);
     H2_T1_C0(Hbar2nd_2, T1_, 1.0, Ecorr2);
     H2_T2_C0(Hbar2nd_2, T2_, 1.0, Ecorr2);
-    if (dsrg_op == "UNITARY") {
+    if (dsrg_trans_type_ == "UNITARY") {
         Ecorr2 *= 2.0;
         energy.push_back({"<[H~2nd, A1st]>", Ecorr2});
     } else {
@@ -1404,54 +1417,6 @@ double MRDSRG::compute_energy_pt3() {
 
     Hbar0_ = Ecorr;
     return Ecorr;
-}
-
-bool MRDSRG::check_semicanonical() {
-    outfile->Printf("\n    Checking if orbitals are semi-canonicalized ...");
-
-    H0th_.iterate(
-        [&](const std::vector<size_t>& i, const std::vector<SpinType>& spin, double& value) {
-            if (i[0] == i[1]) {
-                if (spin[0] == AlphaSpin) {
-                    value = Fa_[i[0]];
-                } else {
-                    value = Fb_[i[0]];
-                }
-            }
-        });
-
-    std::vector<std::string> blocks = diag_one_labels();
-    std::vector<double> Foff;
-    double Foff_sum = 0.0;
-    for (auto& block : blocks) {
-        size_t dim = F_.block(block).dim(0);
-        ambit::Tensor diff =
-            ambit::Tensor::build(tensor_type_, "F - H0", std::vector<size_t>(2, dim));
-        diff("pq") = F_.block(block)("pq");
-        diff("pq") -= H0th_.block(block)("pq");
-        double value = diff.norm();
-        Foff.emplace_back(value);
-        Foff_sum += value;
-    }
-
-    double threshold = 0.5 * std::sqrt(options_.get_double("E_CONVERGENCE"));
-    bool semi = false;
-    if (Foff_sum > threshold) {
-        std::string sep(2 + 16 * 3, '-');
-        outfile->Printf("\n    Warning! Orbitals are not semi-canonicalized!");
-        outfile->Printf("\n    Off-Diagonal norms of the core, active, virtual "
-                        "blocks of Fock matrix");
-        outfile->Printf("\n       %15s %15s %15s", "core", "active", "virtual");
-        outfile->Printf("\n    %s", sep.c_str());
-        outfile->Printf("\n    Fa %15.10f %15.10f %15.10f", Foff[0], Foff[1], Foff[2]);
-        outfile->Printf("\n    Fb %15.10f %15.10f %15.10f", Foff[3], Foff[4], Foff[5]);
-        outfile->Printf("\n    %s\n", sep.c_str());
-    } else {
-        outfile->Printf("     OK.");
-        semi = true;
-    }
-
-    return semi;
 }
 }
 }

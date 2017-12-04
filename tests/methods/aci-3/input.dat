@@ -6,7 +6,7 @@ import forte
 
 refscf = -2.03108138291133 #TEST
 refaci = -2.115455550510 #TEST
-refacipt2 = -2.116454724164 #TEST
+refacipt2 = -2.116454736581 #TEST
 
 molecule li2{
 0 1
@@ -26,12 +26,15 @@ set {
 }
 
 set forte {
+  multiplicity 1
+  ms 0.0
   job_type aci
   aci_SELECT_TYPE aimed_energy
   sigma 0.001000
   aci_nroot 1
   charge 0
   diag_algorithm sparse
+  active_guess_size 300
 }
 
 energy('scf')

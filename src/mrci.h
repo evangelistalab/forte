@@ -35,7 +35,7 @@
 #include "ci_rdms.h"
 #include "helpers.h"
 #include "reference.h"
-#include "sparse_ci/stl_bitset_determinant.h"
+#include "sparse_ci/determinant.h"
 #include "integrals/integrals.h"
 #include "fci/fci_integrals.h"
 #include "determinant_hashvector.h"
@@ -59,6 +59,8 @@ class MRCI : public Wavefunction {
     double compute_energy();
 
   private:
+    SharedWavefunction ref_wfn_;
+    
     std::shared_ptr<FCIIntegrals> fci_ints_;
     std::shared_ptr<MOSpaceInfo> mo_space_info_;
 

@@ -27,8 +27,10 @@
  * @END LICENSE
  */
 
-#include "ui64_determinant.h"
 #include "nmmintrin.h"
+
+#include "stl_bitset_determinant.h"
+#include "ui64_determinant.h"
 
 namespace psi {
 namespace forte {
@@ -101,7 +103,31 @@ uint64_t clear_lowest_one(uint64_t x)
     return x & (x - 1);
 }
 
+double ui64_slater_sign(uint64_t x, int n) {
+    // This implementation is 20 x times faster than one based on for loops
+    // First build a mask with n bit set. Then & with string.
+    // Example for 16 bit string
+    //                 n            (n = 5)
+    // want       11111000 00000000
+    // mask       11111111 11111111
+    // mask << 11 00000000 00011111 11 = 16 - 5
+    // mask >> 11 11111000 00000000
+    //
+    // Note: This strategy does not work when n = 0 because ~0 << 64 = ~0 (!!!)
+    // so we treat this case separately
+    if (n == 0)
+        return 1.0;
+    uint64_t mask = ~0;
+    mask = mask << (64 - n);             // make a string with n bits set
+    mask = mask >> (64 - n);             // move it right by n
+    mask = x & mask;                     // intersect with string
+    mask = ui64_bit_count(mask);         // count bits in between
+    return (mask % 2 == 0) ? 1.0 : -1.0; // compute sign
+}
+
 double ui64_slater_sign(uint64_t x, int m, int n) {
+    // This implementation is a bit faster than one based on for loops
+    // First build a mask with bit set between positions m and n. Then & with string.
     // Example for 16 bit string
     //              m  n            (m = 2, n = 5)
     // want       00011000 00000000
@@ -129,104 +155,33 @@ std::tuple<double, size_t, size_t> ui64_slater_sign_single(uint64_t l, uint64_t 
     return std::make_tuple(ui64_slater_sign(l, j, b), j, b);
 }
 
-double slater_rules_single_alpha(uint64_t Ib, uint64_t Ia, uint64_t Ja,
-                                 const std::shared_ptr<FCIIntegrals>& ints) {
-    uint64_t IJa = Ia ^ Ja;
-    uint64_t i = lowest_one_idx(IJa);
-    IJa = clear_lowest_one(IJa);
-    uint64_t a = lowest_one_idx(IJa);
+UI64Determinant::UI64Determinant() : a_(0), b_(0) {}
 
-    // Diagonal contribution
-    double matrix_element = ints->oei_b(i, a);
-    // find common bits
-    IJa = Ia & Ja;
-    for (int p = 0; p < 64; ++p) {
-        if (ui64_get_bit(Ia, p)) {
-            matrix_element += ints->tei_aa(i, p, a, p);
-        }
-        if (ui64_get_bit(Ib, p)) {
-            matrix_element += ints->tei_ab(i, p, a, p);
-        }
-    }
-    return (ui64_slater_sign(Ia, i, a) * matrix_element);
+UI64Determinant::UI64Determinant(const std::vector<bool>& occupation) : a_(0), b_(0) {
+    int size = occupation.size() / 2;
+    for (int p = 0; p < size; ++p)
+        set_alfa_bit(p, occupation[p]);
+    for (int p = 0; p < size; ++p)
+        set_beta_bit(p, occupation[size + p]);
 }
 
-double slater_rules_double_alpha_alpha(uint64_t Ia, uint64_t Ja,
-                                       const std::shared_ptr<FCIIntegrals>& ints) {
-    uint64_t IJb = Ia ^ Ja;
-
-    uint64_t Ia_sub = Ia & IJb;
-    uint64_t i = lowest_one_idx(Ia_sub);
-    Ia_sub = clear_lowest_one(Ia_sub);
-    uint64_t j = lowest_one_idx(Ia_sub);
-
-    uint64_t Ja_sub = Ja & IJb;
-    uint64_t k = lowest_one_idx(Ja_sub);
-    Ja_sub = clear_lowest_one(Ja_sub);
-    uint64_t l = lowest_one_idx(Ja_sub);
-
-    return ui64_slater_sign(Ia, i, j) * ui64_slater_sign(Ja, k, l) * ints->tei_aa(i, j, k, l);
-}
-
-double slater_rules_single_beta(uint64_t Ia, uint64_t Ib, uint64_t Jb,
-                                const std::shared_ptr<FCIIntegrals>& ints) {
-    uint64_t IJb = Ib ^ Jb;
-    uint64_t i = lowest_one_idx(IJb);
-    IJb = clear_lowest_one(IJb);
-    uint64_t a = lowest_one_idx(IJb);
-
-    // Diagonal contribution
-    double matrix_element = ints->oei_b(i, a);
-    // find common bits
-    IJb = Ib & Jb;
-    for (int p = 0; p < 64; ++p) {
-        if (ui64_get_bit(Ia, p)) {
-            matrix_element += ints->tei_ab(p, i, p, a);
-        }
-        if (ui64_get_bit(Ib, p)) {
-            matrix_element += ints->tei_bb(p, i, p, a);
-        }
-    }
-    return (ui64_slater_sign(Ib, i, a) * matrix_element);
-}
-
-double slater_rules_double_beta_beta(uint64_t Ib, uint64_t Jb,
-                                     const std::shared_ptr<FCIIntegrals>& ints) {
-    uint64_t IJb = Ib ^ Jb;
-
-    uint64_t Ib_sub = Ib & IJb;
-    uint64_t i = lowest_one_idx(Ib_sub);
-    Ib_sub = clear_lowest_one(Ib_sub);
-    uint64_t j = lowest_one_idx(Ib_sub);
-
-    uint64_t Jb_sub = Jb & IJb;
-    uint64_t k = lowest_one_idx(Jb_sub);
-    Jb_sub = clear_lowest_one(Jb_sub);
-    uint64_t l = lowest_one_idx(Jb_sub);
-
-    return ui64_slater_sign(Ib, i, j) * ui64_slater_sign(Jb, k, l) * ints->tei_bb(i, j, k, l);
-}
-
-double slater_rules_double_alpha_beta_pre(int i, int a, uint64_t Ib, uint64_t Jb,
-                                          const std::shared_ptr<FCIIntegrals>& ints) {
-    uint64_t Ib_xor_Jb = Ib ^ Jb;
-    uint64_t j = lowest_one_idx(Ib_xor_Jb);
-    Ib_xor_Jb = clear_lowest_one(Ib_xor_Jb);
-    uint64_t b = lowest_one_idx(Ib_xor_Jb);
-    return ui64_slater_sign(Ib, j, b) * ints->tei_ab(i, j, a, b);
-}
-
-UI64Determinant::UI64Determinant() {}
-UI64Determinant::UI64Determinant(const STLBitsetDeterminant& d) {
-    for (int i = 0; i < 64; ++i) {
-        set_alfa_bit(i, d.get_alfa_bit(i));
-        set_beta_bit(i, d.get_beta_bit(i));
+UI64Determinant::UI64Determinant(const std::vector<bool>& occupation_a,
+                                 const std::vector<bool>& occupation_b)
+    : a_(0), b_(0) {
+    int size = occupation_a.size();
+    for (int p = 0; p < size; ++p) {
+        set_alfa_bit(p, occupation_a[p]);
+        set_beta_bit(p, occupation_b[p]);
     }
 }
 
 UI64Determinant::bit_t UI64Determinant::get_alfa_bits() const { return a_; }
 
 UI64Determinant::bit_t UI64Determinant::get_beta_bits() const { return b_; }
+
+void UI64Determinant::set_alfa_bits(bit_t x) { a_ = x; }
+
+void UI64Determinant::set_beta_bits(bit_t x) { b_ = x; }
 
 bool UI64Determinant::get_alfa_bit(UI64Determinant::bit_t n) const {
     return (0 != (a_ & (bit_t(1) << n)));
@@ -254,16 +209,193 @@ void UI64Determinant::set_beta_bit(UI64Determinant::bit_t n, bool v) {
     }
 }
 
-UI64Determinant::bit_t UI64Determinant::get_bits(STLBitsetDeterminant::SpinType spin_type) const {
-    return (spin_type == STLBitsetDeterminant::SpinType::AlphaSpin) ? a_ : b_;
+UI64Determinant::bit_t UI64Determinant::get_bits(DetSpinType spin_type) const {
+    return (spin_type == DetSpinType::Alpha) ? a_ : b_;
 }
 
-void UI64Determinant::zero_spin(STLBitsetDeterminant::SpinType spin_type) {
-    if (spin_type == STLBitsetDeterminant::SpinType::AlphaSpin) {
+int UI64Determinant::count_alfa() const { return ui64_bit_count(a_); }
+
+int UI64Determinant::count_beta() const { return ui64_bit_count(b_); }
+
+int UI64Determinant::npair() const { return ui64_bit_count(a_ & b_); }
+
+std::vector<int> UI64Determinant::get_alfa_occ(int norb) const {
+    std::vector<int> occ;
+    for (int p = 0; p < norb; ++p) {
+        if (get_alfa_bit(p)) {
+            occ.push_back(p);
+        }
+    }
+    return occ;
+}
+
+std::vector<int> UI64Determinant::get_beta_occ(int norb) const {
+    std::vector<int> occ;
+    for (int p = 0; p < norb; ++p) {
+        if (get_beta_bit(p)) {
+            occ.push_back(p);
+        }
+    }
+    return occ;
+}
+
+std::vector<int> UI64Determinant::get_alfa_vir(int norb) const {
+    std::vector<int> vir;
+    for (int p = 0; p < norb; ++p) {
+        if (not get_alfa_bit(p)) {
+            vir.push_back(p);
+        }
+    }
+    return vir;
+}
+
+std::vector<int> UI64Determinant::get_beta_vir(int norb) const {
+    std::vector<int> vir;
+    for (int p = 0; p < norb; ++p) {
+        if (not get_beta_bit(p)) {
+            vir.push_back(p);
+        }
+    }
+    return vir;
+}
+
+double UI64Determinant::create_alfa_bit(int n) {
+    if (get_alfa_bit(n))
+        return 0.0;
+    set_alfa_bit(n, true);
+    return slater_sign_a(n);
+}
+
+double UI64Determinant::create_beta_bit(int n) {
+    if (get_beta_bit(n))
+        return 0.0;
+    set_beta_bit(n, true);
+    return slater_sign_b(n);
+}
+
+double UI64Determinant::destroy_alfa_bit(int n) {
+    if (not get_alfa_bit(n))
+        return 0.0;
+    set_alfa_bit(n, false);
+    return slater_sign_a(n);
+}
+
+double UI64Determinant::destroy_beta_bit(int n) {
+    if (not get_beta_bit(n))
+        return 0.0;
+    set_beta_bit(n, false);
+    return slater_sign_b(n);
+}
+
+void UI64Determinant::zero_spin(DetSpinType spin_type) {
+    if (spin_type == DetSpinType::Alpha) {
         a_ = bit_t(0);
     } else {
         b_ = bit_t(0);
     }
+}
+
+std::string UI64Determinant::str(int n) const {
+    std::string s;
+    s += "|";
+    for (int p = 0; p < n; ++p) {
+        if (get_alfa_bit(p) and get_beta_bit(p)) {
+            s += "2";
+        } else if (get_alfa_bit(p) and not get_beta_bit(p)) {
+            s += "+";
+        } else if (not get_alfa_bit(p) and get_beta_bit(p)) {
+            s += "-";
+        } else {
+            s += "0";
+        }
+    }
+    s += ">";
+    return s;
+}
+
+double UI64Determinant::slater_sign_a(int n) const { return ui64_slater_sign(a_, n); }
+
+double UI64Determinant::slater_sign_aa(int n, int m) const { return ui64_slater_sign(a_, n, m); }
+
+double UI64Determinant::slater_sign_b(int n) const { return ui64_slater_sign(b_, n); }
+
+double UI64Determinant::slater_sign_bb(int n, int m) const { return ui64_slater_sign(b_, n, m); }
+
+double UI64Determinant::slater_sign_aaaa(int i, int j, int a, int b) const {
+    if ((((i < a) && (j < a) && (i < b) && (j < b)) == true) ||
+        (((i < a) || (j < a) || (i < b) || (j < b)) == false)) {
+        if ((i < j) ^ (a < b)) {
+            return (-1.0 * slater_sign_aa(i, j) * slater_sign_aa(a, b));
+        } else {
+            return (slater_sign_aa(i, j) * slater_sign_aa(a, b));
+        }
+    } else {
+        if ((i < j) ^ (a < b)) {
+            return (-1.0 * slater_sign_aa(i, b) * slater_sign_aa(j, a));
+        } else {
+            return (slater_sign_aa(i, a) * slater_sign_aa(j, b));
+        }
+    }
+}
+
+double UI64Determinant::slater_sign_bbbb(int i, int j, int a, int b) const {
+    if ((((i < a) && (j < a) && (i < b) && (j < b)) == true) ||
+        (((i < a) || (j < a) || (i < b) || (j < b)) == false)) {
+        if ((i < j) ^ (a < b)) {
+            return (-1.0 * slater_sign_bb(i, j) * slater_sign_bb(a, b));
+        } else {
+            return (slater_sign_bb(i, j) * slater_sign_bb(a, b));
+        }
+    } else {
+        if ((i < j) ^ (a < b)) {
+            return (-1.0 * slater_sign_bb(i, b) * slater_sign_bb(j, a));
+        } else {
+            return (slater_sign_bb(i, a) * slater_sign_bb(j, b));
+        }
+    }
+}
+
+double UI64Determinant::single_excitation_a(int i, int a) {
+    set_alfa_bit(i, false);
+    set_alfa_bit(a, true);
+    return slater_sign_aa(i, a);
+}
+
+double UI64Determinant::single_excitation_b(int i, int a) {
+    set_beta_bit(i, false);
+    set_beta_bit(a, true);
+
+    return slater_sign_bb(i, a);
+}
+
+double UI64Determinant::double_excitation_aa(int i, int j, int a, int b) {
+    set_alfa_bit(i, false);
+    set_alfa_bit(j, false);
+    set_alfa_bit(b, true);
+    set_alfa_bit(a, true);
+    return slater_sign_aaaa(i, j, a, b);
+}
+
+double UI64Determinant::double_excitation_ab(int i, int j, int a, int b) {
+    set_alfa_bit(i, false);
+    set_beta_bit(j, false);
+    set_beta_bit(b, true);
+    set_alfa_bit(a, true);
+    return slater_sign_aa(i, a) * slater_sign_bb(j, b);
+}
+
+double UI64Determinant::double_excitation_bb(int i, int j, int a, int b) {
+    set_beta_bit(i, false);
+    set_beta_bit(j, false);
+    set_beta_bit(b, true);
+    set_beta_bit(a, true);
+    return slater_sign_bbbb(i, j, a, b);
+}
+
+UI64Determinant& UI64Determinant::flip() {
+    a_ = ~a_;
+    b_ = ~b_;
+    return *this;
 }
 
 bool UI64Determinant::less_than(const UI64Determinant& rhs, const UI64Determinant& lhs) {
@@ -295,6 +427,48 @@ bool UI64Determinant::operator<(const UI64Determinant& lhs) const {
         return false;
     }
     return a_ < lhs.a_;
+}
+
+double spin2(const UI64Determinant& lhs, const UI64Determinant& rhs) {
+    // Compute the matrix elements of the operator S^2
+    // S^2 = S- S+ + Sz (Sz + 1)
+    //     = Sz (Sz + 1) + Nbeta + Npairs - sum_pq' a+(qa) a+(pb) a-(qb) a-(pa)
+    double matrix_element = 0.0;
+
+    int nadiff = ui64_bit_count(lhs.get_alfa_bits() ^ rhs.get_alfa_bits()) / 2;
+    int nbdiff = ui64_bit_count(lhs.get_beta_bits() ^ rhs.get_beta_bits()) / 2;
+    int na = ui64_bit_count(lhs.get_alfa_bits());
+    int nb = ui64_bit_count(lhs.get_beta_bits());
+    int npair = lhs.npair();
+
+    double Ms = 0.5 * static_cast<double>(na - nb);
+
+    // PhiI = PhiJ -> S^2 = Sz (Sz + 1) + Nbeta - Npairs
+    if ((nadiff == 0) and (nbdiff == 0)) {
+        matrix_element += Ms * (Ms + 1.0) + double(nb) - double(npair);
+    }
+
+    // PhiI = a+(qa) a+(pb) a-(qb) a-(pa) PhiJ
+    if ((nadiff == 1) and (nbdiff == 1)) {
+        // Find a pair of spin coupled electrons
+        int i = -1;
+        int j = -1;
+        // The logic here is a bit complex
+        for (int p = 0; p < 64; ++p) {
+            if (rhs.get_alfa_bit(p) and lhs.get_beta_bit(p) and (not rhs.get_beta_bit(p)) and
+                (not lhs.get_alfa_bit(p)))
+                i = p;
+            if (rhs.get_beta_bit(p) and lhs.get_alfa_bit(p) and (not rhs.get_alfa_bit(p)) and
+                (not lhs.get_beta_bit(p)))
+                j = p;
+        }
+        if (i != j and i >= 0 and j >= 0) {
+            double sign = rhs.slater_sign_a(i) * rhs.slater_sign_b(j) * lhs.slater_sign_a(j) *
+                          lhs.slater_sign_b(i);
+            matrix_element -= sign;
+        }
+    }
+    return (matrix_element);
 }
 }
 }

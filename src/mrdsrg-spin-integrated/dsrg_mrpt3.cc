@@ -420,7 +420,7 @@ double DSRG_MRPT3::compute_energy() {
     // check semi-canonical orbitals
     semi_canonical_ = check_semicanonical();
     if (!semi_canonical_) {
-        outfile->Printf("\n    Orbital invariant formalism is employed for DSRG-MRPT3.");
+        outfile->Printf("\n    Orbital invariant formalism will be employed for DSRG-MRPT3.");
         U_ = ambit::BlockedTensor::build(tensor_type_, "U", spin_cases({"gg"}));
         std::vector<std::vector<double>> eigens = diagonalize_Fock_diagblocks(U_);
         Fa_ = eigens[0];
@@ -1012,7 +1012,7 @@ void DSRG_MRPT3::compute_t2() {
 
     T2_.iterate(
         [&](const std::vector<size_t>& i, const std::vector<SpinType>& spin, double& value) {
-            if (std::fabs(value) > 1.0e-12) {
+            if (std::fabs(value) > 1.0e-15) {
                 if ((spin[0] == AlphaSpin) and (spin[1] == AlphaSpin)) {
                     value *= dsrg_source_->compute_renormalized_denominator(Fa_[i[0]] + Fa_[i[1]] -
                                                                             Fa_[i[2]] - Fa_[i[3]]);
@@ -1101,7 +1101,7 @@ void DSRG_MRPT3::compute_t1() {
 
     T1_.iterate(
         [&](const std::vector<size_t>& i, const std::vector<SpinType>& spin, double& value) {
-            if (std::fabs(value) > 1.0e-12) {
+            if (std::fabs(value) > 1.0e-15) {
                 if (spin[0] == AlphaSpin) {
                     value *= dsrg_source_->compute_renormalized_denominator(Fa_[i[0]] - Fa_[i[1]]);
                 } else {
@@ -1147,7 +1147,7 @@ void DSRG_MRPT3::renormalize_V(const bool& plusone) {
     if (plusone) {
         V_.iterate(
             [&](const std::vector<size_t>& i, const std::vector<SpinType>& spin, double& value) {
-                if (std::fabs(value) > 1.0e-12) {
+                if (std::fabs(value) > 1.0e-15) {
                     if ((spin[0] == AlphaSpin) and (spin[1] == AlphaSpin)) {
                         value *= 1.0 +
                                  dsrg_source_->compute_renormalized(Fa_[i[0]] + Fa_[i[1]] -
@@ -1168,7 +1168,7 @@ void DSRG_MRPT3::renormalize_V(const bool& plusone) {
     } else {
         V_.iterate(
             [&](const std::vector<size_t>& i, const std::vector<SpinType>& spin, double& value) {
-                if (std::fabs(value) > 1.0e-12) {
+                if (std::fabs(value) > 1.0e-15) {
                     if ((spin[0] == AlphaSpin) and (spin[1] == AlphaSpin)) {
                         value *= dsrg_source_->compute_renormalized(Fa_[i[0]] + Fa_[i[1]] -
                                                                     Fa_[i[2]] - Fa_[i[3]]);
@@ -1257,7 +1257,7 @@ void DSRG_MRPT3::renormalize_F(const bool& plusone) {
 
     sum.iterate(
         [&](const std::vector<size_t>& i, const std::vector<SpinType>& spin, double& value) {
-            if (std::fabs(value) > 1.0e-12) {
+            if (std::fabs(value) > 1.0e-15) {
                 if (spin[0] == AlphaSpin) {
                     value *= dsrg_source_->compute_renormalized(Fa_[i[0]] - Fa_[i[1]]);
                 } else {
@@ -1401,7 +1401,7 @@ double DSRG_MRPT3::compute_energy_sa() {
             int irrep = options_["AVG_STATE"][n][0].to_integer();
             int multi = options_["AVG_STATE"][n][1].to_integer();
             int nstates = options_["AVG_STATE"][n][2].to_integer();
-            std::vector<psi::forte::STLBitsetDeterminant> p_space = p_spaces_[n];
+            std::vector<psi::forte::Determinant> p_space = p_spaces_[n];
 
             // print current symmetry
             std::stringstream ss;
@@ -1739,7 +1739,7 @@ void DSRG_MRPT3::transfer_integrals() {
 
     // test if de-normal-ordering is correct
     print_h2("Test De-Normal-Ordered Hamiltonian");
-    double Etest = scalar_include_fc + molecule_->nuclear_repulsion_energy();
+    double Etest = scalar_include_fc + molecule_->nuclear_repulsion_energy(reference_wavefunction_->get_dipole_field_strength());
 
     double Etest1 = 0.0;
     Etest1 += temp1["uv"] * Gamma1_["vu"];

@@ -30,7 +30,7 @@
 #define _fci_integrals_
 
 #include "../integrals/integrals.h"
-#include "../sparse_ci/stl_bitset_determinant.h"
+#include "../sparse_ci/determinant.h"
 #include "string_lists.h"
 
 namespace psi {
@@ -64,44 +64,44 @@ class FCIIntegrals {
     void set_scalar_energy(double scalar_energy) { scalar_energy_ = scalar_energy; }
 
     //    /// Initialize a determinant
-    //    STLBitsetDeterminant determinant(const STLBitsetDeterminant::bit_t& bits);
-    //    STLBitsetDeterminant determinant(const std::vector<int>& bits);
-    //    STLBitsetDeterminant determinant(const std::vector<bool>& bits);
-    //    STLBitsetDeterminant determinant();
+    //    Determinant determinant(const Determinant::bit_t& bits);
+    //    Determinant determinant(const std::vector<int>& bits);
+    //    Determinant determinant(const std::vector<bool>& bits);
+    //    Determinant determinant();
 
     /// Compute a determinant's energy
-    double energy(STLBitsetDeterminant& det);
-    double energy(const STLBitsetDeterminant& det) const;
+    double energy(Determinant& det);
+    double energy(const Determinant& det) const;
 
     /// Compute the matrix element of the Hamiltonian between this determinant
     /// and a given one
-    double slater_rules(const STLBitsetDeterminant& lhs, const STLBitsetDeterminant& rhs) const;
+    double slater_rules(const Determinant& lhs, const Determinant& rhs) const;
     /// Compute the matrix element of the Hamiltonian between this determinant
     /// and a given one
-    double slater_rules_single_alpha(const STLBitsetDeterminant& lhs,
-                                     const STLBitsetDeterminant& rhs) const;
-    double slater_rules_single_beta(const STLBitsetDeterminant& lhs,
-                                    const STLBitsetDeterminant& rhs) const;
-    double slater_rules_double_alpha_alpha(const STLBitsetDeterminant& lhs,
-                                           const STLBitsetDeterminant& rhs) const;
-    double slater_rules_double_beta_beta(const STLBitsetDeterminant& lhs,
-                                         const STLBitsetDeterminant& rhs) const;
-    double slater_rules_double_alpha_beta(const STLBitsetDeterminant& lhs,
-                                          const STLBitsetDeterminant& rhs) const;
-    double slater_rules_double_alpha_beta_pre(const STLBitsetDeterminant& lhs,
-                                              const STLBitsetDeterminant& rhs, int i, int k) const;
+    double slater_rules_single_alpha(const Determinant& lhs,
+                                     const Determinant& rhs) const;
+    double slater_rules_single_beta(const Determinant& lhs,
+                                    const Determinant& rhs) const;
+    double slater_rules_double_alpha_alpha(const Determinant& lhs,
+                                           const Determinant& rhs) const;
+    double slater_rules_double_beta_beta(const Determinant& lhs,
+                                         const Determinant& rhs) const;
+    double slater_rules_double_alpha_beta(const Determinant& lhs,
+                                          const Determinant& rhs) const;
+    double slater_rules_double_alpha_beta_pre(const Determinant& lhs,
+                                              const Determinant& rhs, int i, int k) const;
     /// Compute the matrix element of the Hamiltonian between this determinant
     /// and a given one
-    double slater_rules_single_alpha(const STLBitsetDeterminant& det, int i, int a) const;
+    double slater_rules_single_alpha(const Determinant& det, int i, int a) const;
     /// Compute the matrix element of the Hamiltonian between this determinant
     /// and a given one
-    double slater_rules_single_beta(const STLBitsetDeterminant& det, int i, int a) const;
+    double slater_rules_single_beta(const Determinant& det, int i, int a) const;
     /// Compute the matrix element of the Hamiltonian between this determinant
     /// and a given one
-    double slater_rules_single_alpha_abs(const STLBitsetDeterminant& det, int i, int a) const;
+    double slater_rules_single_alpha_abs(const Determinant& det, int i, int a) const;
     /// Compute the matrix element of the Hamiltonian between this determinant
     /// and a given one
-    double slater_rules_single_beta_abs(const STLBitsetDeterminant& det, int i, int a) const;
+    double slater_rules_single_beta_abs(const Determinant& det, int i, int a) const;
 
     /// Return the alpha effective one-electron integral
     double oei_a(size_t p, size_t q) const { return oei_a_[p * nmo_ + q]; }

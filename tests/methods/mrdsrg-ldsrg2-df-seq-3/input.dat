@@ -2,8 +2,11 @@
 
 import forte
 
-refrhf       = -2.17907771115918 # cc-pVDZ
-refdsrg      = -2.253563514096707# cc-pVDZ
+refrhf     = -2.179077711159176
+refudsrg   = -2.253563514096931 # unrelaxed
+refprdsrg  = -2.253633681241636 # partially relaxed
+refrdsrg   = -2.253662706529829 # relaxed
+reffrdsrg  = -2.253662748528925 # fully relaxed
 
 memory 500 mb
 
@@ -27,7 +30,7 @@ set globals{
 set forte{
    job_type                mrdsrg
    int_type                cholesky
-   CHOLESKY_TOLERANCE      1e-4
+   cholesky_tolerance      1e-4
    corr_level              ldsrg2
    restricted_docc         [0,0,0,0,0,0,0,0]
    active                  [1,0,0,1,0,1,1,0]
@@ -35,12 +38,12 @@ set forte{
    nroot                   1
    dsrg_s                  0.5
    e_convergence           8
-#  semi_canonical          false
    dsrg_hbar_seq           true
+   relax_ref               none
 }
 
-energy('scf')
+Escf, wfn = energy('scf', return_wfn=True)
 compare_values(refrhf,get_variable("CURRENT ENERGY"),10,"SCF energy")
 
-energy('forte')
-compare_values(refdsrg,get_variable("CURRENT ENERGY"),10,"MRDSRG energy")
+energy('forte', ref_wfn=wfn)
+compare_values(refudsrg,get_variable("UNRELAXED ENERGY"),10,"MRDSRG unrelaxed energy")

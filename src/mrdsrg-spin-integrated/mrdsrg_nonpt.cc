@@ -54,16 +54,26 @@ void MRDSRG::compute_hbar() {
     Hbar0_ = 0.0;
     Hbar1_["pq"] = F_["pq"];
     Hbar1_["PQ"] = F_["PQ"];
-    Hbar2_["pqrs"] = V_["pqrs"];
-    Hbar2_["pQrS"] = V_["pQrS"];
-    Hbar2_["PQRS"] = V_["PQRS"];
+    if (eri_df_) {
+        Hbar2_["pqrs"] = B_["gpr"] * B_["gqs"];
+        Hbar2_["pqrs"] -= B_["gps"] * B_["gqr"];
+
+        Hbar2_["pQrS"] = B_["gpr"] * B_["gQS"];
+
+        Hbar2_["PQRS"] = B_["gPR"] * B_["gQS"];
+        Hbar2_["PQRS"] -= B_["gPS"] * B_["gQR"];
+    } else {
+        Hbar2_["pqrs"] = V_["pqrs"];
+        Hbar2_["pQrS"] = V_["pQrS"];
+        Hbar2_["PQRS"] = V_["PQRS"];
+    }
 
     // temporary Hamiltonian used in every iteration
     O1_["pq"] = F_["pq"];
     O1_["PQ"] = F_["PQ"];
-    O2_["pqrs"] = V_["pqrs"];
-    O2_["pQrS"] = V_["pQrS"];
-    O2_["PQRS"] = V_["PQRS"];
+    O2_["pqrs"] = Hbar2_["pqrs"];
+    O2_["pQrS"] = Hbar2_["pQrS"];
+    O2_["PQRS"] = Hbar2_["PQRS"];
 
     // iteration variables
     bool converged = false;
@@ -391,7 +401,7 @@ void MRDSRG::compute_hbar_sequential_rotation() {
     A1["IA"] = T1_["IA"];
     A1["AI"] -= T1_["IA"];
 
-    size_t ncmo = acore_mos_.size() + aactv_mos_.size() + avirt_mos_.size();
+    size_t ncmo = core_mos_.size() + actv_mos_.size() + virt_mos_.size();
 
     SharedMatrix aA1_m(new Matrix("A1 alpha", ncmo, ncmo));
     SharedMatrix bA1_m(new Matrix("A1 beta", ncmo, ncmo));
@@ -415,6 +425,9 @@ void MRDSRG::compute_hbar_sequential_rotation() {
             value = bA1_m->get(i[0], i[1]);
     });
 
+    /// Recompute Hbar0 (ref. energy + T1 correlation), Hbar1 (Fock), and Hbar2 (aptei)
+    /// E = 0.5 * ( H["ji"] + F["ji] ) * D1["ij"] + 0.25 * V["xyuv"] * L2["uvxy"]
+
     Hbar1_["rs"] = U1["rp"] * H_["pq"] * U1["sq"];
     Hbar1_["RS"] = U1["RP"] * H_["PQ"] * U1["SQ"];
 
@@ -435,21 +448,50 @@ void MRDSRG::compute_hbar_sequential_rotation() {
         B["grs"] = U1["rp"] * B_["gpq"] * U1["sq"];
         B["gRS"] = U1["RP"] * B_["gPQ"] * U1["SQ"];
 
-        Hbar1_["pq"] += B["gpq"] * B["gji"] * Gamma1_["ij"];
-        Hbar1_["pq"] -= B["gpi"] * B["gjq"] * Gamma1_["ij"];
-        Hbar1_["pq"] += B["gpq"] * B["gJI"] * Gamma1_["IJ"];
-        Hbar1_["PQ"] += B["gji"] * B["gPQ"] * Gamma1_["ij"];
-        Hbar1_["PQ"] += B["gPQ"] * B["gJI"] * Gamma1_["IJ"];
-        Hbar1_["PQ"] -= B["gPI"] * B["gJQ"] * Gamma1_["IJ"];
+        // for simplicity, create a core-core density matrix
+        BlockedTensor D1c = BTF_->build(tensor_type_, "Gamma1 core", spin_cases({"cc"}));
+        for (size_t m = 0, nc = core_mos_.size(); m < nc; ++m) {
+            D1c.block("cc").data()[m * nc + m] = 1.0;
+            D1c.block("CC").data()[m * nc + m] = 1.0;
+        }
+
+        BlockedTensor temp = BTF_->build(tensor_type_, "B temp", {"L"});
+        temp["g"] = B["gmn"] * D1c["mn"];
+        temp["g"] += B["guv"] * Gamma1_["uv"];
+        Hbar1_["pq"] += temp["g"] * B["gpq"];
+        Hbar1_["PQ"] += temp["g"] * B["gPQ"];
+
+        temp["g"] = B["gMN"] * D1c["MN"];
+        temp["g"] += B["gUV"] * Gamma1_["UV"];
+        Hbar1_["pq"] += temp["g"] * B["gpq"];
+        Hbar1_["PQ"] += temp["g"] * B["gPQ"];
+
+        Hbar1_["pq"] -= B["gpn"] * B["gmq"] * D1c["mn"];
+        Hbar1_["pq"] -= B["gpv"] * B["guq"] * Gamma1_["uv"];
+
+        Hbar1_["PQ"] -= B["gPN"] * B["gMQ"] * D1c["MN"];
+        Hbar1_["PQ"] -= B["gPV"] * B["gUQ"] * Gamma1_["UV"];
     } else {
-        Hbar2_["pqrs"] = U1["pt"] * U1["qo"] * V_["to12"] * U1["r1"] * U1["s2"];
-        Hbar2_["pQrS"] = U1["pt"] * U1["QO"] * V_["tO19"] * U1["r1"] * U1["S9"];
+        Hbar2_["pqrs"] = U1["pt"] * U1["qo"] * V_["to45"] * U1["r4"] * U1["s5"];
+        Hbar2_["pQrS"] = U1["pt"] * U1["QO"] * V_["tO49"] * U1["r4"] * U1["S9"];
         Hbar2_["PQRS"] = U1["PT"] * U1["QO"] * V_["TO89"] * U1["R8"] * U1["S9"];
 
-        Hbar1_["pq"] += Hbar2_["pjqi"] * Gamma1_["ij"];
-        Hbar1_["pq"] += Hbar2_["pJqI"] * Gamma1_["IJ"];
-        Hbar1_["PQ"] += Hbar2_["jPiQ"] * Gamma1_["ij"];
-        Hbar1_["PQ"] += Hbar2_["PJQI"] * Gamma1_["IJ"];
+        // for simplicity, create a core-core density matrix
+        BlockedTensor D1c = BTF_->build(tensor_type_, "Gamma1 core", spin_cases({"cc"}));
+        for (size_t m = 0, nc = core_mos_.size(); m < nc; ++m) {
+            D1c.block("cc").data()[m * nc + m] = 1.0;
+            D1c.block("CC").data()[m * nc + m] = 1.0;
+        }
+
+        Hbar1_["pq"] += Hbar2_["pnqm"] * D1c["mn"];
+        Hbar1_["pq"] += Hbar2_["pNqM"] * D1c["MN"];
+        Hbar1_["pq"] += Hbar2_["pvqu"] * Gamma1_["uv"];
+        Hbar1_["pq"] += Hbar2_["pVqU"] * Gamma1_["UV"];
+
+        Hbar1_["PQ"] += Hbar2_["nPmQ"] * D1c["mn"];
+        Hbar1_["PQ"] += Hbar2_["PNQM"] * D1c["MN"];
+        Hbar1_["PQ"] += Hbar2_["vPuQ"] * Gamma1_["uv"];
+        Hbar1_["PQ"] += Hbar2_["PVQU"] * Gamma1_["UV"];
     }
 
     // compute fully contracted term from T1
@@ -460,7 +502,6 @@ void MRDSRG::compute_hbar_sequential_rotation() {
             }
         });
     }
-
     Hbar0_ += 0.5 * Hbar1_["uv"] * Gamma1_["vu"];
     Hbar0_ += 0.5 * Hbar1_["UV"] * Gamma1_["VU"];
 
@@ -476,8 +517,8 @@ void MRDSRG::compute_hbar_sequential_rotation() {
         Hbar0_ += Hbar2_["uVxY"] * Lambda2_["xYuV"];
     }
 
-    double Enuc = Process::environment.molecule()->nuclear_repulsion_energy();
-    Hbar0_ += frozen_core_energy_ + Enuc - Eref_;
+    double Enuc = Process::environment.molecule()->nuclear_repulsion_energy(reference_wavefunction_->get_dipole_field_strength());
+    Hbar0_ += Efrzc_ + Enuc - Eref_;
 
     rotation.stop();
 
@@ -487,7 +528,6 @@ void MRDSRG::compute_hbar_sequential_rotation() {
     bool converged = false;
     int maxn = options_.get_int("DSRG_RSC_NCOMM");
     double ct_threshold = options_.get_double("SRG_RSC_THRESHOLD");
-    std::string dsrg_op = options_.get_str("DSRG_TRANS_TYPE");
 
     timer comm("Hbar T2 commutator");
 
@@ -556,7 +596,7 @@ void MRDSRG::compute_hbar_sequential_rotation() {
         }
 
         // [H, A] = [H, T] + [H, T]^dagger
-        if (dsrg_op == "UNITARY") {
+        if (dsrg_trans_type_ == "UNITARY") {
             C0 *= 2.0;
             O1_["pq"] = C1_["pq"];
             O1_["PQ"] = C1_["PQ"];

@@ -54,7 +54,7 @@ dsrg_mrpt2_tests = ["mr-dsrg-pt2-1","mr-dsrg-pt2-2","mr-dsrg-pt2-3","mr-dsrg-pt2
                     "df-dsrg-mrpt2-threading1", "df-dsrg-mrpt2-threading2", "df-dsrg-mrpt2-threading4",
                     "diskdf-dsrg-mrpt2-threading1", "diskdf-dsrg-mrpt2-threading4",
                     "diskdf-dsrg-mrpt2-1", "diskdf-dsrg-mrpt2-2", "diskdf-dsrg-mrpt2-3", "diskdf-dsrg-mrpt2-4", "diskdf-dsrg-mrpt2-5",
-                    "aci-dsrg-mrpt2-1","aci-dsrg-mrpt2-2","df-aci-dsrg-mrpt2-1", "df-aci-dsrg-mrpt2-2"]
+                    "aci-dsrg-mrpt2-1","aci-dsrg-mrpt2-2","aci-dsrg-mrpt2-3","df-aci-dsrg-mrpt2-1", "df-aci-dsrg-mrpt2-2"]
 
 active_dsrgpt2_tests = ["actv-dsrg-1-C2H4-cis", "actv-dsrg-2-C2H4-cisd",
                         "actv-dsrg-5-actv-independence", "actv-dsrg-ipea-1", "actv-dsrg-ipea-2"]

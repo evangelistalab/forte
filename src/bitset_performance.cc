@@ -33,7 +33,7 @@
 
 //#include "mini-boost/boost/lexical_cast.hpp"
 
-//#include "sparse_ci/stl_bitset_determinant.h"
+//#include "sparse_ci/determinant.h"
 //#include "fci/fci_vector.h"
 
 // using namespace psi;
@@ -58,8 +58,8 @@
 //    return I;
 //}
 
-// STLBitsetDeterminant random_bitset_determinant2(int nmo, int nset) {
-//    STLBitsetDeterminant I;
+// Determinant random_bitset_determinant2(int nmo, int nset) {
+//    Determinant I;
 //    for (int k = 0; k < nset; ++k) {
 //        I.set_alfa_bit(rand() % nmo, true);
 //        I.set_beta_bit(rand() % nmo, true);
@@ -117,7 +117,7 @@
 
 // double test_bitset_determinant2_copy_constructor(int nmo, int nset,
 //                                                 int repeat) {
-//    STLBitsetDeterminant I = random_bitset_determinant2(nmo, nset);
+//    Determinant I = random_bitset_determinant2(nmo, nset);
 //    I.print();
 //    auto start = chrono::steady_clock::now();
 //    auto end = chrono::steady_clock::now();
@@ -173,8 +173,8 @@
 //}
 
 // double test_bitset_determinant2_place_in_map(int nmo, int nset, int repeat) {
-//    //    std::vector<STLBitsetDeterminant> det_vec;
-//    //    std::map<STLBitsetDeterminant,double> det_map;
+//    //    std::vector<Determinant> det_vec;
+//    //    std::map<Determinant,double> det_map;
 //    //    for (int n = 0; n < repeat; ++n){
 //    //        det_vec.push_back(random_bitset_determinant2(nmo,nset));
 //    //    }
@@ -279,8 +279,8 @@
 //}
 
 // double test_bitset_determinant2_place_in_hash(int nmo, int nset, int repeat) {
-//    std::vector<STLBitsetDeterminant> det_vec;
-//    std::unordered_map<STLBitsetDeterminant, double, STLBitsetDeterminant::Hash>
+//    std::vector<Determinant> det_vec;
+//    std::unordered_map<Determinant, double, Determinant::Hash>
 //        det_hash;
 //    for (int n = 0; n < repeat; ++n) {
 //        det_vec.push_back(random_bitset_determinant2(nmo, nset));
@@ -351,7 +351,7 @@
 //}
 
 // double test_bitset_determinant2_place_in_vector(int nmo, int nset, int repeat) {
-//    std::vector<STLBitsetDeterminant> det_vec;
+//    std::vector<Determinant> det_vec;
 //    auto start = chrono::steady_clock::now();
 //    for (int n = 0; n < repeat; ++n) {
 //        det_vec.push_back(random_bitset_determinant2(nmo, nset));
@@ -384,7 +384,7 @@
 //}
 
 // double test_bitset_determinant2_generate(int nmo, int nset, int repeat) {
-//    std::vector<STLBitsetDeterminant> det_vec;
+//    std::vector<Determinant> det_vec;
 //    auto start = chrono::steady_clock::now();
 //    for (int n = 0; n < repeat; ++n) {
 //        random_bitset_determinant2(nmo, nset);
@@ -406,7 +406,7 @@
 //        std::make_pair("DynamicBitsetDeterminant generate",
 //                       test_bitset_determinant_generate(nmo, nset, nrepeat)));
 //    test_results.push_back(
-//        std::make_pair("STLBitsetDeterminant generate",
+//        std::make_pair("Determinant generate",
 //                       test_bitset_determinant2_generate(nmo, nset, nrepeat)));
 
 //    test_results.push_back(std::make_pair(
@@ -419,7 +419,7 @@
 //        test_bitset_determinant_place_in_hash(nmo, nset, nrepeat)));
 //    if (nmo <= 256) {
 //        test_results.push_back(std::make_pair(
-//            "STLBitsetDeterminant place in hash",
+//            "Determinant place in hash",
 //            test_bitset_determinant2_place_in_hash(nmo, nset, nrepeat)));
 //    }
 //    if (nmo <= 64) {
@@ -438,7 +438,7 @@
 //        "DynamicBitsetDeterminant place in vector",
 //        test_bitset_determinant_place_in_vector(nmo, nset, nrepeat)));
 //    test_results.push_back(std::make_pair(
-//        "STLBitsetDeterminant place in vector",
+//        "Determinant place in vector",
 //        test_bitset_determinant2_place_in_vector(nmo, nset, nrepeat)));
 //    test_results.push_back(
 //        std::make_pair("bitset_256 place in vector",

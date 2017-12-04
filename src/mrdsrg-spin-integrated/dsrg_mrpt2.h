@@ -40,14 +40,15 @@
 #include "psi4/libmints/pointgrp.h"
 #include "ambit/blocked_tensor.h"
 
-#include "../mini-boost/boost/assign.hpp"
+//#include "../mini-boost/boost/assign.hpp"
+#include "../aci/aci.h"
 #include "../integrals/integrals.h"
 #include "../reference.h"
 #include "../helpers.h"
 #include "../blockedtensorfactory.h"
 #include "../mrdsrg-helper/dsrg_time.h"
 #include "../mrdsrg-helper/dsrg_source.h"
-#include "../sparse_ci/stl_bitset_determinant.h"
+#include "../sparse_ci/determinant.h"
 #include "../fci/fci_integrals.h"
 #include "master_mrdsrg.h"
 
@@ -92,21 +93,12 @@ class DSRG_MRPT2 : public MASTER_DSRG {
     }
 
     /// Set determinants in the model space
-    void set_p_spaces(const std::vector<std::vector<psi::forte::STLBitsetDeterminant>>& p_spaces) {
+    void set_p_spaces(const std::vector<std::vector<psi::forte::Determinant>>& p_spaces) {
         p_spaces_ = p_spaces;
     }
 
     /// Ignore semi-canonical testing in DSRG-MRPT2
     void set_ignore_semicanonical(bool ignore) { ignore_semicanonical_ = ignore; }
-
-    /// Set active active occupied MOs (relative to active)
-    void set_actv_occ(std::vector<size_t> actv_occ) {
-        actv_occ_mos_ = std::vector<size_t>(actv_occ);
-    }
-    /// Set active active unoccupied MOs (relative to active)
-    void set_actv_uocc(std::vector<size_t> actv_uocc) {
-        actv_uocc_mos_ = std::vector<size_t>(actv_uocc);
-    }
 
     /// Compute de-normal-ordered amplitudes and return the scalar term
     double Tamp_deGNO();
@@ -139,12 +131,7 @@ class DSRG_MRPT2 : public MASTER_DSRG {
     /// CASCI eigen values and eigen vectors for state averaging
     std::vector<std::vector<std::pair<SharedVector, double>>> eigens_;
     /// Determinants with different symmetries in the model space
-    std::vector<std::vector<psi::forte::STLBitsetDeterminant>> p_spaces_;
-
-    /// List of active active occupied MOs (relative to active)
-    std::vector<size_t> actv_occ_mos_;
-    /// List of active active unoccupied MOs (relative to active)
-    std::vector<size_t> actv_uocc_mos_;
+    std::vector<std::vector<psi::forte::Determinant>> p_spaces_;
 
     /// Fill up two-electron integrals
     void build_ints();
@@ -301,7 +288,7 @@ class DSRG_MRPT2 : public MASTER_DSRG {
     std::vector<std::vector<double>> compute_energy_xms();
     /// XMS rotation for the reference states
     SharedMatrix xms_rotation(std::shared_ptr<FCIIntegrals> fci_ints,
-                              std::vector<STLBitsetDeterminant>& p_space, SharedMatrix civecs,
+                              std::vector<Determinant>& p_space, SharedMatrix civecs,
                               const int& irrep);
 
     /// Build effective singles: T_{ia} -= T_{iu,av} * Gamma_{vu}
@@ -309,12 +296,12 @@ class DSRG_MRPT2 : public MASTER_DSRG {
 
     /// Compute density cumulants
     void compute_cumulants(std::shared_ptr<FCIIntegrals> fci_ints,
-                           std::vector<psi::forte::STLBitsetDeterminant>& p_space,
+                           std::vector<psi::forte::Determinant>& p_space,
                            SharedMatrix evecs, const int& root1, const int& root2,
                            const int& irrep);
     /// Compute denisty matrices and puts in Gamma1_, Lambda2_, and Lambda3_
     void compute_densities(std::shared_ptr<FCIIntegrals> fci_ints,
-                           std::vector<STLBitsetDeterminant>& p_space, SharedMatrix evecs,
+                           std::vector<Determinant>& p_space, SharedMatrix evecs,
                            const int& root1, const int& root2, const int& irrep);
 
     /// Compute MS coupling <M|H|N>

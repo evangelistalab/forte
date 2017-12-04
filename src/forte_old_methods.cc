@@ -66,6 +66,7 @@
 #include "mrdsrg-spin-integrated/dsrg_mrpt3.h"
 #include "mrdsrg-spin-integrated/mrdsrg.h"
 #include "mrdsrg-spin-integrated/three_dsrg_mrpt2.h"
+#include "mrdsrg-spin-integrated/dwms_mrpt2.h"
 #include "orbital-helper/localize.h"
 #include "orbital-helper/es-nos.h"
 #include "pci/ewci.h"
@@ -74,7 +75,6 @@
 #include "pci/pci_simple.h"
 #include "reference.h"
 #include "semi_canonicalize.h"
-#include "sq.h"
 #include "tensorsrg.h"
 #include "v2rdm.h"
 
@@ -122,7 +122,7 @@ void forte_old_methods(SharedWavefunction ref_wfn, Options& options,
     }
     if (options.get_bool("LOCALIZE")) {
         auto localize = std::make_shared<LOCALIZE>(ref_wfn, options, ints, mo_space_info);
-        localize->localize_orbitals();
+        localize->split_localize();
     }
 
     if (options.get_str("JOB_TYPE") == "MR-DSRG-PT2") {
@@ -200,6 +200,18 @@ void forte_old_methods(SharedWavefunction ref_wfn, Options& options,
         std::string cas_type = options.get_str("CAS_TYPE");
         int max_rdm_level = (options.get_str("THREEPDC") == "ZERO") ? 2 : 3;
 
+        size_t na = mo_space_info->get_dimension("ACTIVE").sum();
+        ambit::Tensor Ua = ambit::Tensor::build(CoreTensor, "Uactv a", {na, na});
+        ambit::Tensor Ub = ambit::Tensor::build(CoreTensor, "Uactv b", {na, na});
+        Ua.iterate([&](const std::vector<size_t>& i, double& value) {
+            if (i[0] == i[1])
+                value = 1.0;
+        });
+        Ub.iterate([&](const std::vector<size_t>& i, double& value) {
+            if (i[0] == i[1])
+                value = 1.0;
+        });
+
         if (cas_type == "CAS") {
             FCI_MO fci_mo(ref_wfn, options, ints, mo_space_info);
             fci_mo.compute_energy();
@@ -208,24 +220,22 @@ void forte_old_methods(SharedWavefunction ref_wfn, Options& options,
             if (options.get_bool("SEMI_CANONICAL")) {
                 SemiCanonical semi(ref_wfn, ints, mo_space_info);
                 semi.semicanonicalize(reference, max_rdm_level);
+                Ua = semi.Ua_t();
+                Ub = semi.Ub_t();
             }
 
+            auto mrdsrg =
+                std::make_shared<MRDSRG>(reference, ref_wfn, options, ints, mo_space_info);
+            mrdsrg->set_Uactv(Ua, Ub);
+
             if (options["AVG_STATE"].size() != 0) {
-                auto mrdsrg =
-                    std::make_shared<MRDSRG>(reference, ref_wfn, options, ints, mo_space_info);
                 mrdsrg->set_p_spaces(fci_mo.p_spaces());
                 mrdsrg->set_eigens(fci_mo.eigens());
                 mrdsrg->compute_energy_sa();
             } else {
-                auto mrdsrg =
-                    std::make_shared<MRDSRG>(reference, ref_wfn, options, ints, mo_space_info);
                 if (options.get_str("RELAX_REF") == "NONE") {
                     mrdsrg->compute_energy();
                 } else {
-                    if (options.get_str("DSRG_TRANS_TYPE") == "CC") {
-                        throw PSIEXCEPTION("Reference relaxation for CC-type DSRG "
-                                           "transformation is not implemented yet.");
-                    }
                     mrdsrg->compute_energy_relaxed();
                 }
             }
@@ -237,17 +247,17 @@ void forte_old_methods(SharedWavefunction ref_wfn, Options& options,
             if (options.get_bool("SEMI_CANONICAL")) {
                 SemiCanonical semi(ref_wfn, ints, mo_space_info);
                 semi.semicanonicalize(reference, max_rdm_level);
+                Ua = semi.Ua_t();
+                Ub = semi.Ub_t();
             }
 
             auto mrdsrg =
                 std::make_shared<MRDSRG>(reference, ref_wfn, options, ints, mo_space_info);
+            mrdsrg->set_Uactv(Ua, Ub);
+
             if (options.get_str("RELAX_REF") == "NONE") {
                 mrdsrg->compute_energy();
             } else {
-                if (options.get_str("DSRG_TRANS_TYPE") == "CC") {
-                    throw PSIEXCEPTION("Reference relaxation for CC-type DSRG transformation "
-                                       "is not implemented yet.");
-                }
                 mrdsrg->compute_energy_relaxed();
             }
         }
@@ -266,6 +276,9 @@ void forte_old_methods(SharedWavefunction ref_wfn, Options& options,
     if (options.get_str("JOB_TYPE") == "ACTIVE-DSRGPT2") {
         ACTIVE_DSRGPT2 pt(ref_wfn, options, ints, mo_space_info);
         pt.compute_energy();
+    }
+    if (options.get_str("JOB_TYPE") == "DWMS-DSRGPT2") {
+        compute_dwms_mrpt2_energy(ref_wfn, options, ints, mo_space_info);
     }
     if (options.get_str("JOB_TYPE") == "DSRG_MRPT") {
         std::string cas_type = options.get_str("CAS_TYPE");
@@ -328,7 +341,6 @@ void forte_old_methods(SharedWavefunction ref_wfn, Options& options,
                 std::make_shared<FCI_MO>(ref_wfn, options, ints, mo_space_info);
             fci_mo->compute_energy();
             Reference reference = fci_mo->reference(max_rdm_level);
-
 
             if (options.get_bool("SEMI_CANONICAL")) {
                 SemiCanonical semi(ref_wfn, ints, mo_space_info);
@@ -401,10 +413,17 @@ void forte_old_methods(SharedWavefunction ref_wfn, Options& options,
             // Transform integrals to semicanonical basis
             SemiCanonical semi(ref_wfn, ints, mo_space_info);
             semi.semicanonicalize(aci_reference, max_rdm_level);
+            Ua = semi.Ua_t();
+            Ub = semi.Ub_t();
 
             std::shared_ptr<DSRG_MRPT2> dsrg_mrpt2(
                 new DSRG_MRPT2(aci_reference, ref_wfn, options, ints, mo_space_info));
-            dsrg_mrpt2->compute_energy();
+            dsrg_mrpt2->set_Uactv(Ua, Ub);
+            if (options.get_str("RELAX_REF") != "NONE") {
+                dsrg_mrpt2->compute_energy_relaxed();
+            } else {
+                dsrg_mrpt2->compute_energy();
+            }
 
         } else if (cas_type == "DMRG") {
 #ifdef HAVE_CHEMPS2
@@ -431,6 +450,8 @@ void forte_old_methods(SharedWavefunction ref_wfn, Options& options,
             throw PSIEXCEPTION("Please set INT_TYPE  DF/CHOLESKY for THREE_DSRG");
         }
 
+        bool multi_state = options["AVG_STATE"].size() != 0;
+        bool ref_relax = options.get_str("RELAX_REF") != "NONE";
         std::string cas_type = options.get_str("CAS_TYPE");
         std::string actv_type = options.get_str("FCIMO_ACTV_TYPE");
         int max_rdm_level = (options.get_str("THREEPDC") == "ZERO") ? 2 : 3;
@@ -480,6 +501,9 @@ void forte_old_methods(SharedWavefunction ref_wfn, Options& options,
                 three_dsrg_mrpt2->set_actv_uocc(fci_mo.actv_uocc());
             }
             three_dsrg_mrpt2->compute_energy();
+            if (ref_relax || multi_state) {
+                three_dsrg_mrpt2->relax_reference_once();
+            }
 
         } else if (cas_type == "V2RDM") {
             std::shared_ptr<V2RDM> v2rdm =
@@ -490,7 +514,7 @@ void forte_old_methods(SharedWavefunction ref_wfn, Options& options,
             dsrg_mrpt2->compute_energy();
 
         } else if (cas_type == "ACI") {
-            
+
             Reference aci_reference;
             {
                 auto aci = std::make_shared<AdaptiveCI>(ref_wfn, options, ints, mo_space_info);
@@ -518,9 +542,15 @@ void forte_old_methods(SharedWavefunction ref_wfn, Options& options,
             }
             SemiCanonical semi(ref_wfn, ints, mo_space_info);
             semi.semicanonicalize(aci_reference, max_rdm_level);
+            // Ua = semi.Ua_t();
+            // Ub = semi.Ub_t();
             std::shared_ptr<THREE_DSRG_MRPT2> three_dsrg_mrpt2(
                 new THREE_DSRG_MRPT2(aci_reference, ref_wfn, options, ints, mo_space_info));
+            three_dsrg_mrpt2->set_Uactv(Ua, Ub);
             three_dsrg_mrpt2->compute_energy();
+            if (ref_relax || multi_state) {
+                three_dsrg_mrpt2->relax_reference_once();
+            }
 
         } else if (cas_type == "FCI") {
             auto fci = std::make_shared<FCI>(ref_wfn, options, ints, mo_space_info);
@@ -538,6 +568,9 @@ void forte_old_methods(SharedWavefunction ref_wfn, Options& options,
                 new THREE_DSRG_MRPT2(reference, ref_wfn, options, ints, mo_space_info));
             three_dsrg_mrpt2->set_Uactv(Ua, Ub);
             three_dsrg_mrpt2->compute_energy();
+            if (ref_relax || multi_state) {
+                three_dsrg_mrpt2->relax_reference_once();
+            }
 
         } else if (cas_type == "DMRG") {
 #ifdef HAVE_CHEMPS2
@@ -554,6 +587,9 @@ void forte_old_methods(SharedWavefunction ref_wfn, Options& options,
             std::shared_ptr<THREE_DSRG_MRPT2> three_dsrg_mrpt2(
                 new THREE_DSRG_MRPT2(dmrg_reference, ref_wfn, options, ints, mo_space_info));
             three_dsrg_mrpt2->compute_energy();
+            if (ref_relax || multi_state) {
+                three_dsrg_mrpt2->relax_reference_once();
+            }
 #endif
         }
 
@@ -647,6 +683,7 @@ void forte_old_methods(SharedWavefunction ref_wfn, Options& options,
             auto dsrg_mrpt3 =
                 std::make_shared<DSRG_MRPT3>(reference, ref_wfn, options, ints, mo_space_info);
             dsrg_mrpt3->set_Uactv(Ua, Ub);
+
             if (options.get_str("RELAX_REF") != "NONE") {
                 dsrg_mrpt3->compute_energy_relaxed();
             } else {
@@ -681,9 +718,6 @@ void forte_old_methods(SharedWavefunction ref_wfn, Options& options,
                 new SOMRDSRG(reference, ref_wfn, options, ints, mo_space_info));
             somrdsrg->compute_energy();
         }
-    }
-    if (options.get_str("JOB_TYPE") == "SQ") {
-        SqTest sqtest;
     }
 
     if (options.get_str("JOB_TYPE") == "CC") {

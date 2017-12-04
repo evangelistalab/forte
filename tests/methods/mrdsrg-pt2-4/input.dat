@@ -3,8 +3,7 @@
 import forte
 
 refmcscf     = -99.406065222746975
-refdsrgpt2   = -99.498923591476725  # old code
-refdsrgpt2   = -99.498923579082017  # new code
+refdsrgpt2   = -99.498923591476725
 
 memory 500 mb
 
@@ -51,4 +50,4 @@ Emcscf, wfn = energy('mcscf', return_wfn=True)
 compare_values(refmcscf,get_variable("CURRENT ENERGY"),10,"MCSCF energy") #TEST
 
 energy('forte', ref_wfn=wfn)
-compare_values(refdsrgpt2,get_variable("CURRENT ENERGY"),8,"MRDSRG relaxed energy") #TEST
+compare_values(refdsrgpt2,get_variable("CURRENT ENERGY"),8,"MRDSRG fully relaxed energy") #TEST

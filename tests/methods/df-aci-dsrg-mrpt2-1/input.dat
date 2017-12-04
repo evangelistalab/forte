@@ -39,25 +39,22 @@ set globals{
 }
 
 set forte {
-   frozen_docc            [2, 1, 0, 0, 0, 0, 2, 1]
-   restricted_docc        [3, 2, 1, 1, 0, 1, 2, 3]
-   active                 [1, 0, 0, 0, 0, 0, 1, 0]
-   root_sym                0
-   nroot                   1
-   multiplicity            1
-#   dsrgpt                  false
-   dsrg_s                  0.5
-   int_type                DF
-   job_type                three-dsrg-mrpt2
-   cas_type                ACI
-   sigma					   0.0
-   gamma					   0.0
+   job_type         three-dsrg-mrpt2
+   int_type         df
+   cas_type         aci
+   sigma            0.0
+   gamma            0.0
+   frozen_docc      [2, 1, 0, 0, 0, 0, 2, 1]
+   restricted_docc  [3, 2, 1, 1, 0, 1, 2, 3]
+   active           [1, 0, 0, 0, 0, 0, 1, 0]
+   dsrg_s           0.5
+   root_sym         0
+   nroot            1
+   multiplicity     1
 }
 
 scf, wfn = energy('mcscf', return_wfn=True)
-compare_values(refmcscf, scf,10,"SCF Energy")
+compare_values(refmcscf,scf,10,"SCF Energy")
 
 energy('forte', ref_wfn = wfn)
-compare_values(refdsrgpt2_jk_rd, get_variable("CURRENT ENERGY"),10,"DSRG-MRPT2 energy")
-
-
+compare_values(refdsrgpt2_jk_rd,get_variable("CURRENT ENERGY"),10,"DSRG-MRPT2 energy")

@@ -167,7 +167,7 @@ void FCI_MO::read_options() {
 
     // nuclear repulsion
     std::shared_ptr<Molecule> molecule = Process::environment.molecule();
-    e_nuc_ = molecule->nuclear_repulsion_energy();
+    e_nuc_ = molecule->nuclear_repulsion_energy(reference_wavefunction_->get_dipole_field_strength());
 
     // digonalization algorithm
     diag_algorithm_ = options_.get_str("DIAG_ALGORITHM");
@@ -621,8 +621,7 @@ void FCI_MO::form_det() {
             for (int i = 0; i != nirrep_; ++i) {
                 size_t sa = a_string[i].size();
                 for (size_t alfa = 0; alfa < sa; ++alfa) {
-                    determinant_.push_back(
-                        STLBitsetDeterminant(a_string[i][alfa], a_string[i][alfa]));
+                    determinant_.push_back(Determinant(a_string[i][alfa], a_string[i][alfa]));
                 }
             }
         }
@@ -633,8 +632,7 @@ void FCI_MO::form_det() {
             size_t sb = b_string[j].size();
             for (size_t alfa = 0; alfa < sa; ++alfa) {
                 for (size_t beta = 0; beta < sb; ++beta) {
-                    determinant_.push_back(
-                        STLBitsetDeterminant(a_string[i][alfa], b_string[j][beta]));
+                    determinant_.push_back(Determinant(a_string[i][alfa], b_string[j][beta]));
                 }
             }
         }
@@ -744,13 +742,13 @@ void FCI_MO::form_det_cis() {
     int i = symmetry ^ root_sym_;
     size_t single_size = string_singles[i].size();
     for (size_t x = 0; x < single_size; ++x) {
-        determinant_.push_back(STLBitsetDeterminant(string_singles[i][x], string_ref));
-        determinant_.push_back(STLBitsetDeterminant(string_ref, string_singles[i][x]));
+        determinant_.push_back(Determinant(string_singles[i][x], string_ref));
+        determinant_.push_back(Determinant(string_ref, string_singles[i][x]));
     }
 
     // add HF determinant at the end if root_sym = 0
     if (root_sym_ == 0) {
-        determinant_.push_back(STLBitsetDeterminant(string_ref, string_ref));
+        determinant_.push_back(Determinant(string_ref, string_ref));
     }
 
     if (!quiet_) {
@@ -828,23 +826,23 @@ void FCI_MO::form_det_cisd() {
         size_t single_size = string_singles[i].size();
         singles_size_ = 2 * single_size;
         for (size_t x = 0; x < single_size; ++x) {
-            determinant_.push_back(STLBitsetDeterminant(string_singles[i][x], string_ref));
-            determinant_.push_back(STLBitsetDeterminant(string_ref, string_singles[i][x]));
+            determinant_.push_back(Determinant(string_singles[i][x], string_ref));
+            determinant_.push_back(Determinant(string_ref, string_singles[i][x]));
         }
     } else {
         size_t single_size = string_singles_ipea[i].size();
         singles_size_ = 2 * single_size;
         for (size_t x = 0; x < single_size; ++x) {
-            determinant_.push_back(STLBitsetDeterminant(string_singles_ipea[i][x], string_ref));
-            determinant_.push_back(STLBitsetDeterminant(string_ref, string_singles_ipea[i][x]));
+            determinant_.push_back(Determinant(string_singles_ipea[i][x], string_ref));
+            determinant_.push_back(Determinant(string_ref, string_singles_ipea[i][x]));
         }
     }
 
     // doubles
     size_t double_size = string_doubles[i].size();
     for (size_t x = 0; x < double_size; ++x) {
-        determinant_.push_back(STLBitsetDeterminant(string_doubles[i][x], string_ref));
-        determinant_.push_back(STLBitsetDeterminant(string_ref, string_doubles[i][x]));
+        determinant_.push_back(Determinant(string_doubles[i][x], string_ref));
+        determinant_.push_back(Determinant(string_ref, string_doubles[i][x]));
     }
 
     for (int h = 0; h < nirrep_; ++h) {
@@ -854,17 +852,16 @@ void FCI_MO::form_det_cisd() {
 
             size_t single_size_b = string_singles[sym].size();
             for (size_t y = 0; y < single_size_b; ++y) {
-                determinant_.push_back(
-                    STLBitsetDeterminant(string_singles[h][x], string_singles[sym][y]));
+                determinant_.push_back(Determinant(string_singles[h][x], string_singles[sym][y]));
             }
 
             if (ipea_ != "NONE") {
                 size_t single_ipea_size_b = string_singles_ipea[sym].size();
                 for (size_t y = 0; y < single_ipea_size_b; ++y) {
                     determinant_.push_back(
-                        STLBitsetDeterminant(string_singles[h][x], string_singles_ipea[sym][y]));
+                        Determinant(string_singles[h][x], string_singles_ipea[sym][y]));
                     determinant_.push_back(
-                        STLBitsetDeterminant(string_singles_ipea[sym][y], string_singles[h][x]));
+                        Determinant(string_singles_ipea[sym][y], string_singles[h][x]));
                 }
             }
         }
@@ -872,7 +869,7 @@ void FCI_MO::form_det_cisd() {
 
     // add HF determinant at the end if root_sym = 0
     if (root_sym_ == 0) {
-        determinant_.push_back(STLBitsetDeterminant(string_ref, string_ref));
+        determinant_.push_back(Determinant(string_ref, string_ref));
     }
 
     if (!quiet_) {
@@ -1309,10 +1306,10 @@ void FCI_MO::Diagonalize_H_noHF(const vecdet& p_space, const int& multi, const i
                                 std::vector<pair<SharedVector, double>>& eigen) {
     // recompute RHF determinant
     std::vector<bool> string_ref = Form_String_Ref();
-    STLBitsetDeterminant rhf(string_ref, string_ref);
+    Determinant rhf(string_ref, string_ref);
 
     // test if RHF determinant is the last one in det
-    STLBitsetDeterminant det_back(p_space.back());
+    Determinant det_back(p_space.back());
     if (rhf == det_back) {
         eigen.clear();
         size_t det_size = p_space.size();
@@ -1371,14 +1368,14 @@ void FCI_MO::Diagonalize_H(const vecdet& p_space, const int& multi, const int& n
     eigen.clear();
 
     //    // use bitset determinants
-    //    STLBitsetDeterminant::set_ints(fci_ints_);
-    //    std::vector<STLBitsetDeterminant> P_space;
+    //    Determinant::set_ints(fci_ints_);
+    //    std::vector<Determinant> P_space;
     //    for (size_t x = 0; x != det_size; ++x) {
     //        std::vector<bool> alfa_bits =
     //        P_space[x].get_alfa_bits_vector_bool();
     //        std::vector<bool> beta_bits =
     //        P_space[x].get_beta_bits_vector_bool();
-    //        STLBitsetDeterminant bs_det(alfa_bits, beta_bits);
+    //        Determinant bs_det(alfa_bits, beta_bits);
     //        P_space.push_back(bs_det);
     //        //        bs_det.print();
     //    }
@@ -1617,7 +1614,7 @@ void FCI_MO::FormDensity(CI_RDMS& ci_rdms, d2& A, d2& B) {
     timer_off("FORM Density");
 }
 
-// double FCI_MO::OneOP(const STLBitsetDeterminant& J, STLBitsetDeterminant& Jnew, const size_t& p,
+// double FCI_MO::OneOP(const Determinant& J, Determinant& Jnew, const size_t& p,
 //                     const bool& sp, const size_t& q, const bool& sq) {
 //    timer_on("1PO");
 //    std::vector<vector<bool>> tmp;
@@ -1637,7 +1634,7 @@ void FCI_MO::FormDensity(CI_RDMS& ci_rdms, d2& A, d2& B) {
 //    if (!tmp[sp][p]) {
 //        sign *= CheckSign(tmp[sp], p);
 //        tmp[sp][p] = 1;
-//        Jnew = STLBitsetDeterminant(tmp[0], tmp[1]);
+//        Jnew = Determinant(tmp[0], tmp[1]);
 //        timer_off("1PO");
 //        return sign;
 //    } else {
@@ -1790,7 +1787,7 @@ void FCI_MO::print2PDC(const string& str, const d4& TwoPDC, const int& PRINT) {
     timer_off("PRINT 2-Cumulant");
 }
 
-// double FCI_MO::TwoOP(const STLBitsetDeterminant& J, STLBitsetDeterminant& Jnew, const size_t& p,
+// double FCI_MO::TwoOP(const Determinant& J, Determinant& Jnew, const size_t& p,
 //                     const bool& sp, const size_t& q, const bool& sq, const size_t& r,
 //                     const bool& sr, const size_t& s, const bool& ss) {
 //    timer_on("2PO");
@@ -1827,7 +1824,7 @@ void FCI_MO::print2PDC(const string& str, const d4& TwoPDC, const int& PRINT) {
 //    if (!tmp[sp][p]) {
 //        sign *= CheckSign(tmp[sp], p);
 //        tmp[sp][p] = 1;
-//        Jnew = STLBitsetDeterminant(tmp[0], tmp[1]);
+//        Jnew = Determinant(tmp[0], tmp[1]);
 //        timer_off("2PO");
 //        return sign;
 //    } else {
@@ -2002,7 +1999,7 @@ void FCI_MO::print2PDC(const string& str, const d4& TwoPDC, const int& PRINT) {
 
 //                size_t size = dets.size();
 //                for (size_t ket = 0; ket != size; ++ket) {
-//                    STLBitsetDeterminant Jaaa(vector<bool>(2 * ncmo_)),
+//                    Determinant Jaaa(vector<bool>(2 * ncmo_)),
 //                        Jaab(vector<bool>(2 * ncmo_)), Jabb(vector<bool>(2 * ncmo_)),
 //                        Jbbb(vector<bool>(2 * ncmo_));
 //                    double aaa = 1.0, aab = 1.0, abb = 1.0, bbb = 1.0,
@@ -2094,7 +2091,7 @@ void FCI_MO::print3PDC(const string& str, const d6& ThreePDC, const int& PRINT) 
     timer_off("PRINT 3-Cumulant");
 }
 
-// double FCI_MO::ThreeOP(const STLBitsetDeterminant& J, STLBitsetDeterminant& Jnew, const size_t&
+// double FCI_MO::ThreeOP(const Determinant& J, Determinant& Jnew, const size_t&
 // p,
 //                       const bool& sp, const size_t& q, const bool& sq, const size_t& r,
 //                       const bool& sr, const size_t& s, const bool& ss, const size_t& t,
@@ -2149,7 +2146,7 @@ void FCI_MO::print3PDC(const string& str, const d6& ThreePDC, const int& PRINT) 
 //    if (!tmp[sp][p]) {
 //        sign *= CheckSign(tmp[sp], p);
 //        tmp[sp][p] = 1;
-//        Jnew = STLBitsetDeterminant(tmp[0], tmp[1]);
+//        Jnew = Determinant(tmp[0], tmp[1]);
 //        timer_off("3PO");
 //        return sign;
 //    } else {
@@ -3130,8 +3127,8 @@ FCI_MO::compute_relaxed_osc(std::vector<BlockedTensor>& dm1, std::vector<Blocked
             }
 
             // combine p_space
-            std::vector<STLBitsetDeterminant> p_space(p_spaces_[A]);
-            std::vector<STLBitsetDeterminant>& p_space1 = p_spaces_[B];
+            std::vector<Determinant> p_space(p_spaces_[A]);
+            std::vector<Determinant>& p_space1 = p_spaces_[B];
             p_space.insert(p_space.end(), p_space1.begin(), p_space1.end());
 
             for (int i = 0; i < nroots0; ++i) {
@@ -3253,8 +3250,8 @@ FCI_MO::compute_relaxed_osc(std::vector<BlockedTensor>& dm1, std::vector<Blocked
             }
 
             // combine p_space
-            std::vector<STLBitsetDeterminant> p_space(p_spaces_[A]);
-            std::vector<STLBitsetDeterminant>& p_space1 = p_spaces_[B];
+            std::vector<Determinant> p_space(p_spaces_[A]);
+            std::vector<Determinant>& p_space1 = p_spaces_[B];
             p_space.insert(p_space.end(), p_space1.begin(), p_space1.end());
 
             for (int i = 0; i < nroots0; ++i) {
@@ -4061,70 +4058,21 @@ void FCI_MO::compute_sa_ref(const int& level) {
     // loop over all averaged states
     int nentry = sa_info_.size();
 
-    std::vector<std::vector<double>> new_weights_pentry;
+    std::vector<std::vector<double>> new_weights;
     if (options_["FCIMO_SA_WEIGHTS_GAMMA"].has_changed()) {
-        double Gamma = options_.get_double("FCIMO_SA_WEIGHTS_GAMMA");
-
-        // figure out target state
-        int entry = 0, root = 0;
-        int target_multi = options_.get_int("MULTIPLICITY");
-        int target_irrep = options_.get_int("ROOT_SYM");
-        int target_root = options_.get_int("ROOT");
-        for (int n = 0; n < nentry; ++n) {
-            int multi, irrep, nroots;
-            std::tie(irrep, multi, nroots, std::ignore) = sa_info_[n];
-            if (multi == target_multi && irrep == target_irrep) {
-                for (int i = 0; i < nroots; ++i) {
-                    if (i == target_root) {
-                        entry = n;
-                        root = i;
-                    }
-                }
-            }
-        }
-
-        double Ealpha = eigens_[entry][root].second;
-        double sum = 0.0;
-
-        for (int n = 0; n < nentry; ++n) {
-            int nroots;
-            std::tie(std::ignore, std::ignore, nroots, std::ignore) = sa_info_[n];
-
-            std::vector<double> new_weights;
-            for (int i = 0; i < nroots; ++i) {
-                double diff = Ealpha - eigens_[n][i].second;
-                double gaus = std::exp(-Gamma * diff * diff);
-                sum += gaus;
-                new_weights.push_back(gaus);
-            }
-            new_weights_pentry.push_back(new_weights);
-        }
-
-        for (auto& ws : new_weights_pentry) {
-            for (auto& w : ws) {
-                w /= sum;
-            }
-        }
+        new_weights = compute_dwms_weights();
 
         // reset the reference energy
         double Eref = 0.0;
         for (int n = 0; n < nentry; ++n) {
             int nroots;
             std::tie(std::ignore, std::ignore, nroots, std::ignore) = sa_info_[n];
-            std::vector<double> weights = new_weights_pentry[n];
+            std::vector<double> weights = new_weights[n];
             for (int i = 0; i < nroots; ++i) {
                 Eref += weights[i] * eigens_[n][i].second;
             }
         }
         Eref_ = Eref;
-
-        for (int n = 0; n < nentry; ++n) {
-            outfile->Printf("\n  n = %d, weight:", n);
-            for (const auto& x : new_weights_pentry[n]) {
-                outfile->Printf(" %10.6f", x);
-            }
-            outfile->Printf("\n");
-        }
     }
 
     for (int n = 0; n < nentry; ++n) {
@@ -4134,7 +4082,7 @@ void FCI_MO::compute_sa_ref(const int& level) {
         std::tie(irrep, std::ignore, nroots, weights) = sa_info_[n];
 
         if (options_["FCIMO_SA_WEIGHTS_GAMMA"].has_changed()) {
-            weights = new_weights_pentry[n];
+            weights = new_weights[n];
         }
 
         // prepare eigen vectors for current symmetry
@@ -4299,6 +4247,88 @@ void FCI_MO::compute_cumulant3(vector<double>& tpdm_aaa, std::vector<double>& tp
     L3bbb("pqrstu") += L1b("ps") * L1b("qu") * L1b("rt");
     L3bbb("pqrstu") += L1b("pu") * L1b("qt") * L1b("rs");
     L3bbb("pqrstu") += L1b("pt") * L1b("qs") * L1b("ru");
+}
+
+std::vector<std::vector<double>> FCI_MO::compute_dwms_weights() {
+    CharacterTable ct = Process::environment.molecule()->point_group()->char_table();
+    std::vector<std::string> irrep_symbol;
+    for (int h = 0, nirrep = this->nirrep(); h < nirrep; ++h) {
+        irrep_symbol.push_back(std::string(ct.gamma(h).symbol()));
+    }
+
+    int target_entry, target_root;
+    std::tie(target_entry,target_root) = dwms_target_;
+
+    std::vector<std::vector<double>> out_weights;
+    double a = options_.get_double("FCIMO_SA_WEIGHTS_GAMMA");
+
+    // new weights for state alpha:
+    // w_i = exp(-a * (E_alpha - E_i)^2) / sum_j exp(-a * (E_alpha - E_j)^2)
+
+    double Ealpha = eigens_[target_entry][target_root].second;
+    double wsum = 0.0;
+
+    int nentry = sa_info_.size();
+    int nroots_max = 0; // for nice printing
+    for (int n = 0; n < nentry; ++n) {
+        int nroots;
+        std::tie(std::ignore, std::ignore, nroots, std::ignore) = sa_info_[n];
+        nroots_max = nroots_max > nroots ? nroots_max : nroots;
+
+        std::vector<double> this_weights;
+        for (int i = 0; i < nroots; ++i) {
+            double Ediff = Ealpha - eigens_[n][i].second;
+            double gaussian = std::exp(-a * Ediff * Ediff);
+            wsum += gaussian;
+            this_weights.push_back(gaussian);
+        }
+        out_weights.push_back(this_weights);
+    }
+
+    for (auto& weights: out_weights) {
+        for (auto& w: weights) {
+            w /= wsum;
+        }
+    }
+
+    // print new weights
+    print_h2("New State-Averaging Weights");
+
+    if (nroots_max == 1) {
+        nroots_max = 7;
+    } else {
+        nroots_max = nroots_max > 5 ? 5 : nroots_max;
+        nroots_max *= 6;
+    }
+
+    int ltotal = 6 + 2 + 6 + 2 + 6 + 2 + nroots_max;
+    std::string blank(nroots_max - 7, ' ');
+    std::string dash(ltotal, '-');
+    outfile->Printf("\n    Irrep.  Multi.  Nroots  %sWeights", blank.c_str());
+    outfile->Printf("\n    %s", dash.c_str());
+
+    for (int m = 0; m < nentry; ++m) {
+        int irrep, multi, nroots;
+        std::vector<double>& ws = out_weights[m];
+        std::tie(irrep, multi, nroots, std::ignore) = sa_info_[m];
+
+        std::stringstream w_ss;
+        for (int wi = 0, nw = ws.size(); wi < nw; ++wi) {
+            w_ss << " " << std::fixed << std::setprecision(3) << ws[wi];
+            if (wi % 5 == 0 && wi != 0) {
+                w_ss << std::endl << std::string(24, ' ');
+            }
+        }
+
+        std::stringstream ss;
+        ss << std::setw(4) << std::right << irrep_symbol[irrep] << "    " << std::setw(4)
+           << std::right << multi << "    " << std::setw(4) << std::right << nroots
+           << "    " << std::setw(nroots_max) << w_ss.str();
+        outfile->Printf("\n    %s", ss.str().c_str());
+    }
+    outfile->Printf("\n    %s", dash.c_str());
+
+    return out_weights;
 }
 
 void FCI_MO::localize_actv_orbs() {

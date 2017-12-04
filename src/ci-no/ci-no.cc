@@ -35,7 +35,7 @@
 #include "../fci/fci_integrals.h"
 #include "../forte_options.h"
 #include "../sparse_ci/sparse_ci_solver.h"
-#include "../sparse_ci/stl_bitset_determinant.h"
+#include "../sparse_ci/determinant.h"
 #include "ci-no.h"
 //#include "../hash_vector.h"
 
@@ -352,7 +352,7 @@ CINO::diagonalize_hamiltonian(const std::vector<Determinant>& dets, int nsolutio
     outfile->Printf("\n  ----------------------------");
     for (int i = 0; i < nsolutions; ++i) {
         double energy = evals_evecs.first->get(i) + fci_ints_->scalar_energy() +
-                        molecule_->nuclear_repulsion_energy();
+                        molecule_->nuclear_repulsion_energy(reference_wavefunction_->get_dipole_field_strength());
         outfile->Printf("\n    %3d %20.10f", i, energy);
     }
     outfile->Printf("\n  ------------------------------\n");

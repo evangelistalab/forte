@@ -1,9 +1,9 @@
 
     -----------------------------------------------------------------------
           Psi4: An Open-Source Ab Initio Electronic Structure Package
-                               Psi4 1.1a2.dev288 
+                               Psi4 1.2a1.dev704 
 
-                         Git: Rev {master} e63fa60 
+                         Git: Rev {master} a7fc050 
 
 
     R. M. Parrish, L. A. Burns, D. G. A. Smith, A. C. Simmonett,
@@ -12,15 +12,16 @@
     H. R. McAlexander, A. Kumar, M. Saitow, X. Wang, B. P. Pritchard,
     P. Verma, H. F. Schaefer III, K. Patkowski, R. A. King, E. F. Valeev,
     F. A. Evangelista, J. M. Turney, T. D. Crawford, and C. D. Sherrill,
-    submitted.
+    J. Chem. Theory Comput. 13(7) pp 3185--3197 (2017).
+    (doi: 10.1021/acs.jctc.7b00174)
 
     -----------------------------------------------------------------------
 
 
-    Psi4 started on: Tuesday, 07 March 2017 04:03PM
+    Psi4 started on: Monday, 04 December 2017 03:00PM
 
-    Process ID:  43107
-    PSIDATADIR: /Users/jeffschriber/src/psi4_debug_install/share/psi4
+    Process ID:  39316
+    PSIDATADIR: /Users/york/src/psi4new/psi4/share/psi4
     Memory:     500.0 MiB
     Threads:    1
     
@@ -68,35 +69,39 @@ set globals{
 }
 
 set forte {
-   frozen_docc            [2, 1, 0, 0, 0, 0, 2, 1]
-   restricted_docc        [3, 2, 1, 1, 0, 1, 2, 3]
-   active                 [1, 0, 0, 0, 0, 0, 1, 0]
-   root_sym                0
-   nroot                   1
-   multiplicity            1
-#   dsrgpt                  false
-   dsrg_s                  0.5
-   int_type                DF
-   job_type                three-dsrg-mrpt2
-   cas_type                ACI
-   sigma					   0.0
-   gamma					   0.0
+   job_type         three-dsrg-mrpt2
+   int_type         df
+   cas_type         aci
+   sigma            0.0
+   gamma            0.0
+   frozen_docc      [2, 1, 0, 0, 0, 0, 2, 1]
+   restricted_docc  [3, 2, 1, 1, 0, 1, 2, 3]
+   active           [1, 0, 0, 0, 0, 0, 1, 0]
+   dsrg_s           0.5
+   root_sym         0
+   nroot            1
+   multiplicity     1
 }
 
 scf, wfn = energy('mcscf', return_wfn=True)
-compare_values(refmcscf, scf,10,"SCF Energy")
+compare_values(refmcscf,scf,10,"SCF Energy")
 
 energy('forte', ref_wfn = wfn)
-compare_values(refdsrgpt2_jk_rd, get_variable("CURRENT ENERGY"),10,"DSRG-MRPT2 energy")
-
-
+compare_values(refdsrgpt2_jk_rd,get_variable("CURRENT ENERGY"),10,"DSRG-MRPT2 energy")
 --------------------------------------------------------------------------
-/Users/jeffschriber/src/forte/forte.so loaded.
 
-  Memory set to 500.000 MiB by Python driver.
+  Memory set to 476.837 MiB by Python driver.
+   => Loading Basis Set <=
 
-*** tstart() called on Jeffs-MacBook-Pro-2.local
-*** at Tue Mar  7 16:03:53 2017
+    Name: STO-3G
+    Role: ORBITAL
+    Keyword: BASIS
+    atoms 1-6  entry C          line    61 file /Users/york/src/psi4new/psi4/share/psi4/basis/sto-3g.gbs 
+    atoms 7-10 entry H          line    19 file /Users/york/src/psi4new/psi4/share/psi4/basis/sto-3g.gbs 
+
+
+*** tstart() called on yorks-mac.wireless.emory.edu
+*** at Mon Dec  4 15:00:11 2017
 
 
          ------------------------------------------
@@ -128,21 +133,21 @@ compare_values(refdsrgpt2_jk_rd, get_variable("CURRENT ENERGY"),10,"DSRG-MRPT2 e
   Setting level shift to 0.000 S
   @SCF    0     -212.591783893326    -212.591783893326       0.283940323457
   Setting level shift to 0.000 S
-  @SCF    1     -223.551422907843     -10.959639014516       0.275117881171
+  @SCF    1     -223.551422907842     -10.959639014516       0.275117881171
   Setting level shift to 0.000 S
   @SCF    2     -225.634306679483      -2.082883771640       0.061051248309
   Setting level shift to 0.000 S
-  @SCF    3     -225.741973038515      -0.107666359032       0.012962175269
+  @SCF    3     -225.741973038514      -0.107666359032       0.012962175269
   Setting level shift to 0.000 S
   @SCF    4     -225.762320410909      -0.020347372394       0.006354750064
   Setting level shift to 0.000 S
   @SCF    5     -225.766510671298      -0.004190260389       0.002840537282
   Setting level shift to 0.000 S
-  @SCF    6     -225.767407075830      -0.000896404532       0.001383874861
+  @SCF    6     -225.767407075829      -0.000896404532       0.001383874861
   Setting level shift to 0.000 S/E
   @SCF    7     -225.767595763104      -0.000188687275       0.000620625385
   Setting level shift to 0.000 S/E
-  @SCF    8     -225.767646508517      -0.000050745412       0.000258338706
+  @SCF    8     -225.767646508516      -0.000050745412       0.000258338706
   Setting level shift to 0.000 S/E
   @SCF    9     -225.767646565167      -0.000000056651       0.000009056861
   Setting level shift to 0.000 S/E
@@ -196,38 +201,31 @@ compare_values(refdsrgpt2_jk_rd, get_variable("CURRENT ENERGY"),10,"DSRG-MRPT2 e
   MCSCF Execution Completed.
 
 
-*** tstop() called on Jeffs-MacBook-Pro-2.local at Tue Mar  7 16:03:53 2017
+*** tstop() called on yorks-mac.wireless.emory.edu at Mon Dec  4 15:00:12 2017
 Module time:
-	user time   =       0.25 seconds =       0.00 minutes
-	system time =       0.02 seconds =       0.00 minutes
-	total time  =          0 seconds =       0.00 minutes
+	user time   =       0.26 seconds =       0.00 minutes
+	system time =       0.03 seconds =       0.00 minutes
+	total time  =          1 seconds =       0.02 minutes
 Total time:
-	user time   =       0.25 seconds =       0.00 minutes
-	system time =       0.02 seconds =       0.00 minutes
-	total time  =          0 seconds =       0.00 minutes
+	user time   =       0.26 seconds =       0.00 minutes
+	system time =       0.03 seconds =       0.00 minutes
+	total time  =          1 seconds =       0.02 minutes
 	SCF Energy........................................................PASSED
- MINTS: Wrapper to libmints.
-   by Justin Turney
+   => Loading Basis Set <=
 
-   Calculation information:
-      Number of threads:                 1
-      Number of atoms:                  10
-      Number of AO shells:              22
-      Number of SO shells:               7
-      Number of primitives:             66
-      Number of atomic orbitals:        34
-      Number of basis functions:        34
+    Name: CC-PVDZ-RI
+    Role: RIFIT
+    Keyword: DF_BASIS_MP2
+    atoms 1-6  entry C          line   159 file /Users/york/src/psi4new/psi4/share/psi4/basis/cc-pvdz-ri.gbs 
+    atoms 7-10 entry H          line    19 file /Users/york/src/psi4new/psi4/share/psi4/basis/cc-pvdz-ri.gbs 
 
-      Number of irreps:                  8
-      Integral cutoff                 0.00e+00
-      Number of functions per irrep: [   8    6    1    2    1    2    8    6 ]
+   => Loading Basis Set <=
 
- OEINTS: Overlap, kinetic, potential, dipole, and quadrupole integrals
-         stored in file 35.
-
-      Computing two-electron integrals...done
-      Computed 26788 non-zero two-electron integrals.
-        Stored in file 33.
+    Name: STO-3G
+    Role: ORBITAL
+    Keyword: MINAO_BASIS
+    atoms 1-6  entry C          line    61 file /Users/york/src/psi4new/psi4/share/psi4/basis/sto-3g.gbs 
+    atoms 7-10 entry H          line    19 file /Users/york/src/psi4new/psi4/share/psi4/basis/sto-3g.gbs 
 
 
 Reading options from the FORTE block
@@ -235,6 +233,18 @@ Calling plugin forte.so.
 
 
 
+  Forte
+  ----------------------------------------------------------------------------
+  A suite of quantum chemistry methods for strongly correlated electrons
+
+    git branch: master - git commit: 1c92254a
+
+  Developed by:
+    Francesco A. Evangelista, Chenyang Li, Kevin P. Hannon,
+    Jeffrey B. Schriber, Tianyuan Zhang, Chenxi Cai
+  ----------------------------------------------------------------------------
+
+  Size of Determinant class: 32
 
   ==> MO Space Information <==
 
@@ -284,7 +294,8 @@ Calling plugin forte.so.
            H         -4.078218745900     2.320860214600     0.000000000000     1.007825032070
 
   -AO BASIS SET INFORMATION:
-    Name                   = file /Users/jeffschriber/src/psi4_debug_install/share/psi4/basis/sto-3g.gbs
+    Name                   = STO-3G
+    Blend                  = STO-3G
     Total number of shells = 22
     Number of primitives   = 66
     Number of AO           = 34
@@ -308,7 +319,7 @@ Calling plugin forte.so.
 
   ==> AO Basis Functions <==
 
-    [ file /Users/jeffschriber/src/psi4_debug_install/share/psi4/basis/sto-3g.gbs ]
+    [ STO-3G ]
     spherical
     ****
     C   1
@@ -353,9 +364,7 @@ Calling plugin forte.so.
  Number of auxiliary basis functions:  392
  Need 0.003376 GB to store DF integrals
 
-  Computing DF Integrals               ......Done. Timing        0.304040 s
-  Seeking DF Integrals                 ......Done. Timing        0.304618 s
-  Reading DF Integrals                 . . ....Done. Timing        0.305400 s  Using in-core PK algorithm.
+  Computing DF Integrals               ......Done. Timing        0.031512 s  Using in-core PK algorithm.
    Calculation information:
       Number of atoms:                  10
       Number of AO shells:              22
@@ -373,44 +382,194 @@ Calling plugin forte.so.
 
   Frozen-core energy           -287.156258219479 a.u.
 
-  FrozenOneBody Operator takes  0.51511100 s
+  FrozenOneBody Operator takes  0.51699000 s
   Resorting integrals after freezing core.
  Done with resorting
- Resorting integrals takes   0.01555300s
-  DFIntegrals take      0.84274700 s
-  Root 0 has overlap 1.000000
-  Saving reference for root 0
-  Setting reference root to: 0
-  Root 0 has overlap 1.000000
-  Saving reference for root 0
-  Setting reference root to: 0
+ Resorting integrals takes   0.01113100s
+  DFIntegrals take      0.90095200 s
+  Number of active alpha electrons: 1
+  Number of active beta electrons: 1
+  Maximum reference space size: 1000
+  Number of reference determinants: 2
+  Reference generated from 2 MOs
+
+        ---------------------------------------------------------------
+                      Adaptive Configuration Interaction
+          written by Jeffrey B. Schriber and Francesco A. Evangelista
+        ---------------------------------------------------------------
+
+  ==> Reference Information <==
+
+  There are 19 frozen orbitals.
+  There are 2 active orbitals.
+
+  ==> Calculation Information <==
+
+  -----------------------------------------------------------------
+    Multiplicity                             1    
+    Symmetry                                 0    
+    Number of roots                          1    
+    Root used for properties                 0    
+    Sigma (Eh)                               0.00e+00
+    Gamma (Eh^(-1))                          0.00e+00
+    Convergence threshold                    1.00e-09
+    Ms                                       0
+    Diagonalization algorithm                SOLVER
+    Determinant selection criterion          Second-order Energy
+    Selection criterion                      Aimed selection
+    Excited Algorithm                        ROOT_ORTHOGONALIZE
+    Project out spin contaminants            True
+    Enforce spin completeness of basis       True
+    Enforce complete aimed selection         True
+  -----------------------------------------------------------------
+  Using 1 threads
+  Computing wavefunction for root 0
+  Using streamlined Q-space builder.
+
+  ==> Cycle 0 <==
+
+  Initial P space dimension: 2
+  Spin-complete dimension of the P space: 2 determinants
+  Time spent building a_list   0.000019 s
+  Time spent building b_list   0.000005 s
+  Time spent building aa_list  0.000004 s
+  Time spent building bb_list  0.000003 s
+  Time spent building ab_list  0.000016 s
+  Time spent diagonalizing H:   0.000051 s
+
+    P-space  CI Energy Root   0        = -226.448927337018 Eh =   0.0000 eV
+
+  Time spent forming F space:             0.000021
+ td[0] = 2 new entries
+ td[0] = 0 repeat entries
+  Time spent merging thread F spaces:             0.000021
+  Time spent preparing PQ_space: 0.000003
+  Dimension of the SD space: 0 determinants
+  Time spent building the model space (default): 0.000089 s
+
+  Time spent building sorting list: 0.000000
+  Time spent sorting: 0.000003
+ Time spent selecting: 0.000000
+  Dimension of the P + Q space: 2 determinants
+  Time spent screening the model space: 0.000040 s
+  Spin-complete dimension of the PQ space: 2
+  Time spent building a_list   0.000005 s
+  Time spent building b_list   0.000005 s
+  Time spent building aa_list  0.000002 s
+  Time spent building bb_list  0.000001 s
+  Time spent building ab_list  0.000005 s
+  Total time spent diagonalizing H:   0.000019 s
+
+    PQ-space CI Energy Root   0        = -226.448927337018 Eh =   0.0000 eV
+    PQ-space CI Energy + EPT2 Root   0 = -226.448927337018 Eh =   0.0000 eV
+
+
+  Most important contributions to root   0:
+    0   0.770990 0.594425315           1 |02>
+    1  -0.636847 0.405574685           0 |20>
+
+  Spin state for root 0: S^2 = 0.000000, S = 0.000, singlet
+  Cycle 0 took: 0.000834 s
+
+  ==> Cycle 1 <==
+
+  Initial P space dimension: 2
+  Spin-complete dimension of the P space: 2 determinants
+  Time spent building a_list   0.000004 s
+  Time spent building b_list   0.000004 s
+  Time spent building aa_list  0.000002 s
+  Time spent building bb_list  0.000001 s
+  Time spent building ab_list  0.000005 s
+  Time spent diagonalizing H:   0.000021 s
+
+    P-space  CI Energy Root   0        = -226.448927337018 Eh =   0.0000 eV
+
+  Time spent forming F space:             0.000006
+ td[0] = 2 new entries
+ td[0] = 0 repeat entries
+  Time spent merging thread F spaces:             0.000019
+  Time spent preparing PQ_space: 0.000001
+  Dimension of the SD space: 0 determinants
+  Time spent building the model space (default): 0.000064 s
+
+  Time spent building sorting list: 0.000000
+  Time spent sorting: 0.000000
+ Time spent selecting: 0.000000
+  Dimension of the P + Q space: 2 determinants
+  Time spent screening the model space: 0.000034 s
+  Spin-complete dimension of the PQ space: 2
+  Time spent building a_list   0.000004 s
+  Time spent building b_list   0.000005 s
+  Time spent building aa_list  0.000002 s
+  Time spent building bb_list  0.000001 s
+  Time spent building ab_list  0.000004 s
+  Total time spent diagonalizing H:   0.000019 s
+
+    PQ-space CI Energy Root   0        = -226.448927337018 Eh =   0.0000 eV
+    PQ-space CI Energy + EPT2 Root   0 = -226.448927337018 Eh =   0.0000 eV
+
+  ***** Calculation Converged *****
+  Not performing spin projection.
   Saving root 0, ref_root is 0
   Number of old roots: 1
-        0                  1           0.59442531531
-        1                  0           0.00000000000
-        2                  1           0.40557468469
 
-  Highest-order excitation searched:     4  
+  ==> ACI Summary <==
 
+  Iterations required:                         1
+  Dimension of optimized determinant space:    2
+
+  * Adaptive-CI Energy Root   0        = -226.448927337018 Eh =   0.0000 eV
+  * Adaptive-CI Energy Root   0 + EPT2 = -226.448927337018 Eh =   0.0000 eV
+
+  ==> Wavefunction Information <==
+
+  Most important contributions to root   0:
+    0   0.770990 0.594425315           1 |02>
+    1  -0.636847 0.405574685           0 |20>
+
+  Spin state for root 0: S^2 = 0.000000, S = 0.000, singlet
+  Computing 3-list...     done (0.00004 s)
+  Time spent building a_list   0.000006 s
+  Time spent building b_list   0.000004 s
+  Time spent building aa_list  0.000002 s
+  Time spent building bb_list  0.000002 s
+  Time spent building ab_list  0.000005 s
+  1-RDM  took 0.000006 s (determinant)
 
   ==> NATURAL ORBITALS <==
 
         1B2u    1.188851      1Ag     0.811149  
 
 
+  2-RDMS took 0.000015 s (determinant)
+  3-RDMs took 0.000017 s (determinant)
 
-  Adaptive-CI (bitset) ran in : 0.001401 s
+  Adaptive-CI ran in : 0.002378 s
 
   Saving information for root: 0
 
-                          ----------------------------
+       -----------------------------------------------------------------
                             Semi-Canonical Orbitals
-                            Francesco A. Evangelista
-                          ----------------------------
+         Chenyang Li, Jeffrey B. Schriber and Francesco A. Evangelista
+       -----------------------------------------------------------------
 
- Took 0.066326 s to build fock matrix
+  Took 0.095098 s to build Fock matrix
 
-  ==> Integral transformation <==
+  ==> Checking Fock Matrix Diagonal Blocks <==
+
+    Off-Diag. Elements       Max           2-Norm
+    ------------------------------------------------
+    Fa actv              0.0000000000   0.0000000000
+    Fb actv              0.0000000000   0.0000000000
+    ------------------------------------------------
+    Fa core              0.1094625624   0.2616768318
+    Fb core              0.1094625624   0.2616768318
+    ------------------------------------------------
+    Fa virt              0.1048377932   0.2846465521
+    Fb virt              0.1048377932   0.2846465521
+    ------------------------------------------------
+
+  ==> Integral Transformation to Semicanonical Basis <==
     Molecular point group: d2h
     Full point group: D2h
 
@@ -430,7 +589,8 @@ Calling plugin forte.so.
            H         -4.078218745900     2.320860214600     0.000000000000     1.007825032070
 
   -AO BASIS SET INFORMATION:
-    Name                   = file /Users/jeffschriber/src/psi4_debug_install/share/psi4/basis/sto-3g.gbs
+    Name                   = STO-3G
+    Blend                  = STO-3G
     Total number of shells = 22
     Number of primitives   = 66
     Number of AO           = 34
@@ -454,7 +614,7 @@ Calling plugin forte.so.
 
   ==> AO Basis Functions <==
 
-    [ file /Users/jeffschriber/src/psi4_debug_install/share/psi4/basis/sto-3g.gbs ]
+    [ STO-3G ]
     spherical
     ****
     C   1
@@ -499,9 +659,7 @@ Calling plugin forte.so.
  Number of auxiliary basis functions:  392
  Need 0.003376 GB to store DF integrals
 
-  Computing DF Integrals               ......Done. Timing        0.368119 s
-  Seeking DF Integrals                 ......Done. Timing        0.368357 s
-  Reading DF Integrals                 . . ....Done. Timing        0.369191 s
+  Computing DF Integrals               ......Done. Timing        0.027348 s
  Integrals are about to be updated.  Using in-core PK algorithm.
    Calculation information:
       Number of atoms:                  10
@@ -520,103 +678,114 @@ Calling plugin forte.so.
 
   Frozen-core energy           -287.156258219479 a.u.
 
-  FrozenOneBody Operator takes  0.55792800 s
+  FrozenOneBody Operator takes  0.51250000 s
   Resorting integrals after freezing core.
  Done with resorting
- Resorting integrals takes   0.00841300s
-  Frozen Orbitals takes     0.569 s.
- SemiCanonicalize takes 1.040817 s.
-  Root 0 has overlap 1.000000
-  Saving reference for root 0
-  Setting reference root to: 0
-  Root 0 has overlap 1.000000
-  Saving reference for root 0
-  Setting reference root to: 0
-  Saving root 0, ref_root is 0
-  Number of old roots: 1
-        0                  1           0.59442531532
-        1                  0           0.00000000000
-        2                  1           0.40557468468
+ Resorting integrals takes   0.00972800s
+  Frozen Orbitals takes     0.523 s.
 
-  Highest-order excitation searched:     4  
+  ==> Reference Transformation to Semicanonical Basis <==
 
+    Transformed 1 cumulants.
+    Transformed 2 cumulants and RDMs.
+    Transformed 3 cumulants.
+  SemiCanonicalize takes 2.868650 s.
 
-  ==> NATURAL ORBITALS <==
+  ==> Multireference Driven Similarity Renormalization Group <==
 
-        1B2u    1.188851      1Ag     0.811149  
+    Reading DSRG options ............................ Done
+    Setting ambit MO space .......................... Done
+    Preparing tensors for density cumulants ......... Done
+    Building Fock matrix ............................ Done
 
-
-
-  Adaptive-CI (bitset) ran in : 0.000803 s
-
-  Saving information for root: 0
-
-           ---------------------------------------------------------
-             DF/CD - Driven Similarity Renormalization Group MBPT2
+                  --------------------------------------------
+                      Density Fitted / Cholesky Decomposed
+                    MR-DSRG Second-Order Perturbation Theory
                       Kevin Hannon and Chenyang (York) Li
-                                1 thread (OMP)
-           ---------------------------------------------------------
+                                    1 thread
+                  --------------------------------------------
 
-  Reference = RHF
-  Reference Energy = -226.448927337018119
+    References:
+      u-DSRG-MRPT2:      J. Chem. Theory Comput. 2015, 11, 2097.
+      DF/CD-DSRG-MRPT2:  J. Chem. Phys. 2016, 144, 204111.
+      (pr-)DSRG-MRPT2:   J. Chem. Phys. 2017, 146, 124132.
 
-  ==> Checking Orbitals <==
-
-    Checking if orbitals are semi-canonicalized ...     OK.
-    Orbitals are semi-canonicalized.
 
   ==> Calculation Information <==
 
-    Flow parameter                           5.000e-01
-    Cholesky Tolerance                       1.000e-06
-    Taylor expansion threshold               1.000e-03
-    int_type                                        DF
-    ccvv_algorithm                           FLY_AMBIT
-    ccvv_source                                 NORMAL
-    Computing T2                          ......Done. Timing        0.012538 s
-    Renormalizing V                       ......Done. Timing        0.009504 s
-    Computing T1                          ......Done. Timing        0.001482 s
-    Renormalizing F                       ......Done. Timing        0.001887 s
-    Computing <[F, T1]>                   ......Done. Timing        0.000791 s
-    Computing <[F, T2]>                   ......Done. Timing        0.002378 s
-    Computing <[V, T1]>                   ......Done. Timing        0.002221 s
-    Computing <[V, T2]> (C_2)^4 (no ccvv) ......Done. Timing        0.009808 s
- Eccvv: -0.2579288317
-    Computing <[V, T2]> (C_2)^4 ccvv      ......Done. Timing        0.023787 s
-    Computing <[V, T2]> 4HH               ......Done. Timing        0.002568 s
-    Computing <V, T2]> 4PP                ......Done. Timing        0.002368 s
-    Computing [V, T2] 4PH                 ......Done. Timing        0.009690 s
-    Computing [V, T2] λ3                  ......Done. Timing        0.005931 s
+    Flow parameter                                 5.000e-01
+    Taylor expansion threshold                     1.000e-03
+    Cholesky tolerance                             1.000e-06
+    Psi4 ref_type                                        RHF
+    Integral type                                         DF
+    Source operator                                 STANDARD
+    CCVV algorithm                                 FLY_AMBIT
+    CCVV source                                       NORMAL
+    Reference relaxation                                NONE
+    State type                                STATE-SPECIFIC
 
-  ==> DSRG-MRPT2 Energy Summary <==
+  ==> Checking Semicanonical Orbitals <==
 
-    E0 (reference)                 =   -226.448927337018119
-    <[F, T1]>                      =     -0.078777617937526
-    <[F, T2]>                      =      0.000641600079349
-    <[V, T1]>                      =      0.000121345153579
-    <[V, T2]> (C_2)^4              =     -0.371429056603146
-    <[V, T2]> C_4 (C_2)^2 HH       =      0.005673673389340
-    <[V, T2]> C_4 (C_2)^2 PP       =      0.004114080453710
-    <[V, T2]> C_4 (C_2)^2 PH       =      0.037342594067902
-    <[V, T2]> C_6 C_2              =     -0.001057756502845
-    <[V, T2]>                      =     -0.325356465195040
-    DSRG-MRPT2 correlation energy  =     -0.403371137899638
-    DSRG-MRPT2 total energy        =   -226.852298474917745
-    max(T1)                        =      0.041978982893330
-    ||T1||                         =      0.151273653336962
+    Abs. max of Fock core, active, virtual blocks (Fij, i != j)
+                  core          active         virtual
+    --------------------------------------------------
+    Fα    0.0000000000    0.0000000000    0.0000000000
+    Fβ    0.0000000000    0.0000000000    0.0000000000
+    --------------------------------------------------
+
+    1-Norm of Fock core, active, virtual blocks (Fij, i != j)
+                  core          active         virtual
+    --------------------------------------------------
+    Fα    0.0000000000    0.0000000000    0.0000000000
+    Fβ    0.0000000000    0.0000000000    0.0000000000
+    --------------------------------------------------
+
+    Orbitals are semi-canonicalized.
+
+  ==> Computing DSRG-MRPT2 Energy <==
+
+  Reference Energy = -226.448927337017750
+    Computing T2                             ...... Done. Timing        0.016259 s
+    Renormalizing V                          ...... Done. Timing        0.013903 s
+    Computing T1                             ...... Done. Timing        0.004519 s
+    Renormalizing F                          ...... Done. Timing        0.005923 s
+    Computing <[F, T1]>                      ...... Done. Timing        0.002096 s
+    Computing <[F, T2]>                      ...... Done. Timing        0.003681 s
+    Computing <[V, T1]>                      ...... Done. Timing        0.003602 s
+    Computing <[V, T2]> 4HH                  ...... Done. Timing        0.005796 s
+    Computing <V, T2]> 4PP                   ...... Done. Timing        0.005506 s
+    Computing [V, T2] 4PH                    ...... Done. Timing        0.022781 s
+    Computing [V, T2] λ3                     ...... Done. Timing        0.013366 s
+    Computing <[V, T2]> (C_2)^4 (no ccvv)    ...... Done. Timing        0.022546 s
+    Computing <[V, T2]> (C_2)^4 ccvv         ...... Done. Timing        0.066925 s
+  Eccvv: -0.2579288317
+
+  ==> DSRG-MRPT2 (DF/CD) Energy Summary <==
+
+    E0 (reference)                 =   -226.448927337017750
+    <[F, T1]>                      =     -0.078777617937737
+    <[F, T2]>                      =      0.000641600079352
+    <[V, T1]>                      =      0.000121345153582
+    <[V, T2]> C_4 (C_2)^2 HH       =      0.005673673389341
+    <[V, T2]> C_4 (C_2)^2 PP       =      0.004114080453711
+    <[V, T2]> C_4 (C_2)^2 PH       =      0.037342594067918
+    <[V, T2]> C_6 C_2              =     -0.001057756502843
+    <[V, T2]> (C_2)^4              =     -0.371429056603156
+    <[V, T2]>                      =     -0.325356465195030
+    DSRG-MRPT2 correlation energy  =     -0.403371137899834
+    DSRG-MRPT2 total energy        =   -226.852298474917575
+    max(T1)                        =      0.041978982893408
+    ||T1||                         =      0.151273653337165
 
   ==> Total Timings (s) for Computing Commutators <==
 
              [H1, T1]    [H1, T2]    [H2, T1]    [H2, T2]
     -----------------------------------------------------
-    -> C0       0.001       0.002       0.002       0.048
+    -> C0       0.002       0.004       0.004       0.124
     -> C1       0.000       0.000       0.000       0.000
     -> C2                   0.000       0.000       0.000
     -----------------------------------------------------
 
- CD/DF DSRG-MRPT2 took  1.25119 s.
-
-  Your calculation took 2.11421000 seconds
-	DSRG-MRPT2 energy.................................................PASSED
+ CD/DF DSRG-MRPT2 took  3.25667 s.	DSRG-MRPT2 energy.................................................PASSED
 
 *** Psi4 exiting successfully. Buy a developer a beer!

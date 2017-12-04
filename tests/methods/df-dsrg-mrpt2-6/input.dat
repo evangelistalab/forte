@@ -2,9 +2,9 @@
 #! Perform a DF-DSRG-MRPT2 on N2
 import forte
 
-refrhf     = -108.95379624015762 
-refdsrgpt2 = -109.25189866738
-refdsrgpt2_ref_relax = -109.253503109379110
+refrhf     = -108.95379624015762
+refdsrgpt2 = -109.251898130715603
+refdsrgpt2_ref_relax = -109.253503109377576
 
 memory 500 mb
 
@@ -39,9 +39,8 @@ set forte {
    fci_maxiter             50
 }
 
-scf = energy('scf')
-compare_values(refrhf, scf,10,"SCF energy")
+Escf, wfn = energy('scf', return_wfn=True)
+compare_values(refrhf,Escf,10,"SCF energy")
 
-energy('forte')
-compare_values(refdsrgpt2_ref_relax, get_variable("CURRENT ENERGY"),10,"DSRG-MRPT2 energy")
-
+energy('forte', ref_wfn=wfn)
+compare_values(refdsrgpt2_ref_relax,get_variable("CURRENT ENERGY"),10,"DSRG-MRPT2 energy")

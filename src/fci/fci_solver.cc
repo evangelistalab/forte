@@ -31,7 +31,7 @@
 
 #include "../mini-boost/boost/format.hpp"
 
-#include "../sparse_ci/stl_bitset_determinant.h"
+#include "../sparse_ci/determinant.h"
 #include "../iterative_solvers.h"
 
 #include "fci_solver.h"
@@ -134,7 +134,7 @@ void FCISolver::startup() {
 double FCISolver::compute_energy() {
     ForteTimer t;
 
-    double nuclear_repulsion_energy = Process::environment.molecule()->nuclear_repulsion_energy();
+    double nuclear_repulsion_energy = Process::environment.molecule()->nuclear_repulsion_energy({0,0,0});
     std::shared_ptr<FCIIntegrals> fci_ints;
     if (!provide_integrals_and_restricted_docc_) {
         fci_ints = std::make_shared<FCIIntegrals>(ints_, active_mo_, core_mo_);
@@ -357,7 +357,7 @@ double FCISolver::compute_energy() {
     return energy_;
 }
 
-void FCISolver::compute_rdms_root(const int& root) {
+void FCISolver::compute_rdms_root(int root) {
     // make sure a compute_energy is called before this
     if (C_) {
         if (root >= nroot_) {
@@ -393,7 +393,7 @@ FCISolver::initial_guess(FCIWfn& diag, size_t n, size_t multiplicity,
                          std::shared_ptr<FCIIntegrals> fci_ints) {
     ForteTimer t;
 
-    double nuclear_repulsion_energy = Process::environment.molecule()->nuclear_repulsion_energy();
+    double nuclear_repulsion_energy = Process::environment.molecule()->nuclear_repulsion_energy({0,0,0});
     double scalar_energy = fci_ints->scalar_energy();
 
     size_t ntrial = n * ntrial_per_root_;
@@ -403,7 +403,7 @@ FCISolver::initial_guess(FCIWfn& diag, size_t n, size_t multiplicity,
 
     size_t num_dets = dets.size();
 
-    std::vector<STLBitsetDeterminant> bsdets;
+    std::vector<Determinant> bsdets;
 
     // Build the full determinants
     size_t nact = active_mo_.size();
@@ -423,13 +423,13 @@ FCISolver::initial_guess(FCIWfn& diag, size_t n, size_t multiplicity,
             if (Ib_v[i])
                 Ib[i] = true;
         }
-        STLBitsetDeterminant bsdet(Ia, Ib);
+        Determinant bsdet(Ia, Ib);
         bsdets.push_back(bsdet);
     }
 
     // Make sure that the spin space is complete
-    STLBitsetDeterminant det(nact);
-    det.enforce_spin_completeness(bsdets, nact);
+    //    Determinant det(nact);
+    enforce_spin_completeness(bsdets, nact);
     if (bsdets.size() > num_dets) {
         bool* Ia = new bool[nact];
         bool* Ib = new bool[nact];
@@ -486,7 +486,7 @@ FCISolver::initial_guess(FCIWfn& diag, size_t n, size_t multiplicity,
         double S2 = 0.0;
         for (size_t I = 0; I < num_dets; ++I) {
             for (size_t J = 0; J < num_dets; ++J) {
-                const double S2IJ = bsdets[I].spin2(bsdets[J]);
+                const double S2IJ = spin2(bsdets[I], bsdets[J]);
                 S2 += evecs.get(I, r) * evecs.get(J, r) * S2IJ;
             }
             norm += std::pow(evecs.get(I, r), 2.0);
