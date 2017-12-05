@@ -3225,11 +3225,12 @@ void AdaptiveCI::spin_analysis() {
             value += 0.25 * ( l2aa[ i * nact3 + j * nact2 + i * nact + j ]
                             + l2bb[ i * nact3 + j * nact2 + i * nact + j ] 
                             - l2ab[ i * nact3 + j * nact2 + i * nact + j ] 
-                            - l2ab[ j * nact3 + i * nact2 + j * nact + i ]);
-                           // - l1a[i*nact + i] * l1a[j*nact + j] 
-                           // - l1b[i*nact + i] * l1b[j*nact + j] 
-                           // + l1a[i*nact + i] * l1b[j*nact + j] 
-                           // + l1b[i*nact + i] * l1a[j*nact + j] );
+                            - l2ab[ j * nact3 + i * nact2 + j * nact + i ]
+                          //  - l1a[i*nact + i] * l1a[j*nact + j] 
+                          //  - l1b[i*nact + i] * l1b[j*nact + j] 
+                          //  + l1a[i*nact + i] * l1b[j*nact + j] 
+                          //  + l1b[i*nact + i] * l1a[j*nact + j] 
+                            );
 
             spin_corr->set(i, j, value);
         }
@@ -3253,6 +3254,7 @@ void AdaptiveCI::spin_analysis() {
         }
         file.close();
     }
+/*
     // Build spin-correlation densities
     SharedMatrix Ca = reference_wavefunction_->Ca();
     Dimension nactpi = mo_space_info_->get_dimension("ACTIVE");
@@ -3273,6 +3275,7 @@ void AdaptiveCI::spin_analysis() {
        }
         Ca->set_column(0,actpi[i], vec);
     }
+*/
 }
 
 void AdaptiveCI::update_sigma() { sigma_ = options_.get_double("ACI_RELAX_SIGMA"); }
