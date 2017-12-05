@@ -18,9 +18,9 @@
     -----------------------------------------------------------------------
 
 
-    Psi4 started on: Monday, 04 December 2017 12:15PM
+    Psi4 started on: Monday, 04 December 2017 03:02PM
 
-    Process ID:  33277
+    Process ID:  39599
     PSIDATADIR: /Users/york/src/psi4new/psi4/share/psi4
     Memory:     500.0 MiB
     Threads:    1
@@ -34,8 +34,8 @@ import forte
 
 #refmcscf     =  -99.972055826365903 # cc-pVTZ
 #refdsrgpt2   = -100.200752137944022 # cc-pVTZ
-refmcscf     =  -99.87285247290
-refcasscf    = -99.9393153220043047
+psi4_casscf     = -99.9393092418
+forte_casscf    = -99.9393092425
 
 memory 500 mb
 
@@ -55,13 +55,16 @@ set globals{
    frozen_docc             [1, 0, 0, 0]
    restricted_docc         [1,0,1,1]
    active                  [2,0,0,0]
-   scf_type                out_of_core
+   scf_type                df
+   df_basis_mp2            cc-pvdz-ri
+   df_basis_scf            cc-pvdz-jkfit
+   mcscf_type              df
 }
-refmcscf = energy('casscf')
-energy('scf')
+psi4_casscf_computed = energy('casscf')
+compare_values(psi4_casscf_computed,psi4_casscf,6,"PSI4 CASSCF energy")
 
 
-set scf_type direct
+set scf_type df
 set forte{
    job_type                casscf
    frozen_docc             [1,0,0,0]
@@ -69,24 +72,20 @@ set forte{
    active                  [2,0,0,0]
    root_sym                0
    nroot                   1
-   cas_type                FCI
-   CASSCF_REFERENCE        TRUE
-   int_type                conventional
-   CASSCF_ITERATIONS        25
-   print                    0
-   CASSCF_DO_DIIS           false
+   cas_type                fci
+   casscf_reference        true
+   int_type                df
+   casscf_iterations       25
+   print                   0
 }
-
-#compare_values(refmcscf,get_variable("CURRENT ENERGY"),10,"MCSCF energy")
-
 casscf = energy('forte')
-compare_values(refcasscf,get_variable("CURRENT ENERGY"),6,"CASSCF energy")
+compare_values(forte_casscf,casscf,6,"FORTE CASSCF energy")
 --------------------------------------------------------------------------
 
   Memory set to 476.837 MiB by Python driver.
 
 *** tstart() called on yorks-mac.wireless.emory.edu
-*** at Mon Dec  4 12:15:24 2017
+*** at Mon Dec  4 15:02:17 2017
 
    => Loading Basis Set <=
 
@@ -131,7 +130,7 @@ compare_values(refcasscf,get_variable("CURRENT ENERGY"),6,"CASSCF energy")
 
   ==> Algorithm <==
 
-  SCF Algorithm Type is OUT_OF_CORE.
+  SCF Algorithm Type is DF.
   DIIS enabled.
   MOM disabled.
   Fractional occupation disabled.
@@ -150,6 +149,14 @@ compare_values(refcasscf,get_variable("CURRENT ENERGY"),6,"CASSCF energy")
     Spherical Harmonics?: true
     Max angular momentum: 2
 
+   => Loading Basis Set <=
+
+    Name: CC-PVDZ-JKFIT
+    Role: JKFIT
+    Keyword: DF_BASIS_SCF
+    atoms 1 entry F          line   271 file /Users/york/src/psi4new/psi4/share/psi4/basis/cc-pvdz-jkfit.gbs 
+    atoms 2 entry H          line    51 file /Users/york/src/psi4new/psi4/share/psi4/basis/cc-pvdz-jkfit.gbs 
+
   ==> Pre-Iterations <==
 
    -------------------------------------------------------
@@ -165,13 +172,28 @@ compare_values(refcasscf,get_variable("CURRENT ENERGY"),6,"CASSCF energy")
 
   ==> Integral Setup <==
 
-  ==> DiskJK: Disk-Based J/K Matrices <==
+  ==> DFJK: Density-Fitted J/K Matrices <==
 
     J tasked:                  Yes
     K tasked:                  Yes
     wK tasked:                  No
+    OpenMP threads:              1
+    Integrals threads:           1
     Memory (MB):               357
+    Algorithm:                Core
+    Integral Cache:           NONE
     Schwarz Cutoff:          1E-12
+    Fitting Condition:       1E-12
+
+   => Auxiliary Basis Set <=
+
+  Basis Set: CC-PVDZ-JKFIT
+    Blend: CC-PVDZ-JKFIT
+    Number of shells: 33
+    Number of basis function: 93
+    Number of Cartesian functions: 106
+    Spherical Harmonics?: true
+    Max angular momentum: 3
 
   Minimum eigenvalue in the overlap matrix is 1.3340269888E-01.
   Using Symmetric Orthogonalization.
@@ -180,35 +202,28 @@ compare_values(refcasscf,get_variable("CURRENT ENERGY"),6,"CASSCF energy")
 
   ==> Iterations <==
 
-                        Total Energy        Delta E     RMS |[F,P]|
+                           Total Energy        Delta E     RMS |[F,P]|
 
-   @ROHF iter   1:   -98.18650428590060   -9.81865e+01   1.45555e-01 
-   @ROHF iter   2:   -98.43700759951841   -2.50503e-01   1.12615e-01 DIIS
-   @ROHF iter   3:   -99.81222598145088   -1.37522e+00   2.42903e-02 DIIS
-   @ROHF iter   4:   -99.87157969419455   -5.93537e-02   2.26195e-03 DIIS
-   @ROHF iter   5:   -99.87266081235407   -1.08112e-03   1.33312e-03 DIIS
-   @ROHF iter   6:   -99.87284461328565   -1.83801e-04   2.41303e-04 DIIS
-   @ROHF iter   7:   -99.87285176355498   -7.15027e-06   7.12322e-05 DIIS
-   @ROHF iter   8:   -99.87285246183760   -6.98283e-07   1.07261e-05 DIIS
-   @ROHF iter   9:   -99.87285247286117   -1.10236e-08   6.21321e-07 DIIS
-   @ROHF iter  10:   -99.87285247289599   -3.48166e-11   3.29132e-08 DIIS
-   @ROHF iter  11:   -99.87285247289630   -3.12639e-13   2.32871e-09 DIIS
-   @ROHF iter  12:   -99.87285247289634   -4.26326e-14   5.57895e-10 DIIS
-   @ROHF iter  13:   -99.87285247289620    1.42109e-13   1.09705e-11 DIIS
-   @ROHF iter  14:   -99.87285247289631   -1.13687e-13   1.16715e-12 DIIS
-   @ROHF iter  15:   -99.87285247289623    8.52651e-14   5.39475e-14 DIIS
-   @ROHF iter  16:   -99.87285247289617    5.68434e-14   9.68005e-15 DIIS
-   @ROHF iter  17:   -99.87285247289620   -2.84217e-14   4.83296e-15 DIIS
-   @ROHF iter  18:   -99.87285247289631   -1.13687e-13   2.18907e-15 DIIS
-   @ROHF iter  19:   -99.87285247289621    9.94760e-14   1.34603e-15 DIIS
-   @ROHF iter  20:   -99.87285247289624   -2.84217e-14   8.56127e-16 DIIS
-   @ROHF iter  21:   -99.87285247289623    1.42109e-14   1.61801e-15 DIIS
-   @ROHF iter  22:   -99.87285247289617    5.68434e-14   1.07580e-15 DIIS
-   @ROHF iter  23:   -99.87285247289627   -9.94760e-14   1.53539e-15 DIIS
-   @ROHF iter  24:   -99.87285247289626    1.42109e-14   7.91066e-16 DIIS
-   @ROHF iter  25:   -99.87285247289620    5.68434e-14   1.47542e-15 DIIS
-   @ROHF iter  26:   -99.87285247289626   -5.68434e-14   1.12803e-15 DIIS
-   @ROHF iter  27:   -99.87285247289626    0.00000e+00   1.08373e-15 DIIS
+   @DF-ROHF iter   1:   -98.18654067384485   -9.81865e+01   1.45554e-01 
+   @DF-ROHF iter   2:   -98.43724244716807   -2.50702e-01   1.12600e-01 DIIS
+   @DF-ROHF iter   3:   -99.81220620973920   -1.37496e+00   2.42942e-02 DIIS
+   @DF-ROHF iter   4:   -99.87157723580830   -5.93710e-02   2.26267e-03 DIIS
+   @DF-ROHF iter   5:   -99.87265906545137   -1.08183e-03   1.33320e-03 DIIS
+   @DF-ROHF iter   6:   -99.87284290953134   -1.83844e-04   2.41407e-04 DIIS
+   @DF-ROHF iter   7:   -99.87285006521306   -7.15568e-06   7.12524e-05 DIIS
+   @DF-ROHF iter   8:   -99.87285076389885   -6.98686e-07   1.07219e-05 DIIS
+   @DF-ROHF iter   9:   -99.87285077491268   -1.10138e-08   6.22316e-07 DIIS
+   @DF-ROHF iter  10:   -99.87285077494781   -3.51292e-11   3.29470e-08 DIIS
+   @DF-ROHF iter  11:   -99.87285077494799   -1.84741e-13   2.32716e-09 DIIS
+   @DF-ROHF iter  12:   -99.87285077494798    1.42109e-14   5.58156e-10 DIIS
+   @DF-ROHF iter  13:   -99.87285077494803   -5.68434e-14   1.09663e-11 DIIS
+   @DF-ROHF iter  14:   -99.87285077494798    5.68434e-14   1.16589e-12 DIIS
+   @DF-ROHF iter  15:   -99.87285077494793    4.26326e-14   5.41162e-14 DIIS
+   @DF-ROHF iter  16:   -99.87285077494808   -1.42109e-13   1.07351e-14 DIIS
+   @DF-ROHF iter  17:   -99.87285077494801    7.10543e-14   6.01389e-15 DIIS
+   @DF-ROHF iter  18:   -99.87285077494798    2.84217e-14   2.31377e-15 DIIS
+   @DF-ROHF iter  19:   -99.87285077494793    4.26326e-14   1.15251e-15 DIIS
+   @DF-ROHF iter  20:   -99.87285077494793    0.00000e+00   1.06274e-15 DIIS
 
   ==> Post-Iterations <==
 
@@ -217,8 +232,8 @@ compare_values(refcasscf,get_variable("CURRENT ENERGY"),6,"CASSCF energy")
 
     Doubly Occupied:                                                      
 
-       1A1   -26.279422     2A1    -1.484580     1B2    -0.593977  
-       1B1    -0.593977     3A1    -0.565055  
+       1A1   -26.279410     2A1    -1.484572     1B1    -0.593968  
+       1B2    -0.593968     3A1    -0.565054  
 
     Singly Occupied:                                                      
 
@@ -226,11 +241,11 @@ compare_values(refcasscf,get_variable("CURRENT ENERGY"),6,"CASSCF energy")
 
     Virtual:                                                              
 
-       4A1     0.016621     5A1     0.576770     2B1     1.315282  
-       2B2     1.315282     6A1     1.463904     3B1     1.599282  
-       3B2     1.599282     7A1     1.633070     8A1     2.300773  
-       4B1     4.038213     4B2     4.038213     9A1     4.041123  
-       1A2     4.041123    10A1     4.220284  
+       4A1     0.016631     5A1     0.576874     2B1     1.315550  
+       2B2     1.315550     6A1     1.464142     3B1     1.599468  
+       3B2     1.599468     7A1     1.633209     8A1     2.301112  
+       4B1     4.038915     4B2     4.038915     9A1     4.041504  
+       1A2     4.041504    10A1     4.220351  
 
     Final Occupation by Irrep:
              A1    A2    B1    B2 
@@ -239,16 +254,17 @@ compare_values(refcasscf,get_variable("CURRENT ENERGY"),6,"CASSCF energy")
 
   Energy converged.
 
-  @ROHF Final Energy:   -99.87285247289626
+  @DF-ROHF Final Energy:   -99.87285077494793
 
    => Energetics <=
 
     Nuclear Repulsion Energy =              3.1750632515400001
-    One-Electron Energy =                -147.0618097376359401
-    Two-Electron Energy =                  44.0138940131996819
-    Total Energy =                        -99.8728524728962554
+    One-Electron Energy =                -147.0618843220248380
+    Two-Electron Energy =                  44.0139702955369003
+    PCM Polarization Energy =               0.0000000000000000
+    Total Energy =                        -99.8728507749479490
 
-
+    Alert: EFP and PCM quantities not currently incorporated into SCF psivars.
 
 Properties will be evaluated at   0.000000,   0.000000,   0.000000 Bohr
 
@@ -258,46 +274,31 @@ Properties computed using the SCF density matrix
      X:     0.0000      Y:     0.0000      Z:     1.4066
 
   Electronic Dipole Moment: (a.u.)
-     X:     0.0000      Y:     0.0000      Z:    -0.2428
+     X:     0.0000      Y:     0.0000      Z:    -0.2427
 
   Dipole Moment: (a.u.)
-     X:     0.0000      Y:     0.0000      Z:     1.1639     Total:     1.1639
+     X:     0.0000      Y:     0.0000      Z:     1.1640     Total:     1.1640
 
   Dipole Moment: (Debye)
-     X:     0.0000      Y:     0.0000      Z:     2.9583     Total:     2.9583
+     X:     0.0000      Y:     0.0000      Z:     2.9585     Total:     2.9585
 
 
-*** tstop() called on yorks-mac.wireless.emory.edu at Mon Dec  4 12:15:25 2017
+*** tstop() called on yorks-mac.wireless.emory.edu at Mon Dec  4 15:02:18 2017
 Module time:
-	user time   =       0.21 seconds =       0.00 minutes
-	system time =       0.05 seconds =       0.00 minutes
+	user time   =       0.26 seconds =       0.00 minutes
+	system time =       0.03 seconds =       0.00 minutes
 	total time  =          1 seconds =       0.02 minutes
 Total time:
-	user time   =       0.21 seconds =       0.00 minutes
-	system time =       0.05 seconds =       0.00 minutes
+	user time   =       0.26 seconds =       0.00 minutes
+	system time =       0.03 seconds =       0.00 minutes
 	total time  =          1 seconds =       0.02 minutes
- MINTS: Wrapper to libmints.
-   by Justin Turney
+   => Loading Basis Set <=
 
-   Calculation information:
-      Number of threads:                 1
-      Number of atoms:                   2
-      Number of AO shells:               9
-      Number of SO shells:               9
-      Number of primitives:             27
-      Number of atomic orbitals:        20
-      Number of basis functions:        19
-
-      Number of irreps:                  4
-      Integral cutoff                 1.00e-12
-      Number of functions per irrep: [  10    1    4    4 ]
-
- OEINTS: Overlap, kinetic, potential, dipole, and quadrupole integrals
-         stored in file 35.
-
-      Computing two-electron integrals...done
-      Computed 4125 non-zero two-electron integrals.
-        Stored in file 33.
+    Name: CC-PVDZ-JKFIT
+    Role: JKFIT
+    Keyword: DF_BASIS_SCF
+    atoms 1 entry F          line   271 file /Users/york/src/psi4new/psi4/share/psi4/basis/cc-pvdz-jkfit.gbs 
+    atoms 2 entry H          line    51 file /Users/york/src/psi4new/psi4/share/psi4/basis/cc-pvdz-jkfit.gbs 
 
 
          ---------------------------------------------------------
@@ -356,56 +357,71 @@ Warning: iopen=0,opentype!=closed. Making iopen=1
     There are 2 alpha and 2 beta strings
     The CI space requires 4 (4.00E+00) determinants and 1 blocks
 
-   ==> Setting up MCSCF integrals <==
+   ==> Setting up DF-MCSCF integrals <==
 
-  ==> DiskJK: Disk-Based J/K Matrices <==
+  ==> DFJK: Density-Fitted J/K Matrices <==
 
     J tasked:                  Yes
     K tasked:                  Yes
     wK tasked:                  No
-    Memory (MB):              3051
+    OpenMP threads:              1
+    Integrals threads:           1
+    Memory (MB):               381
+    Algorithm:                Core
+    Integral Cache:           NONE
     Schwarz Cutoff:          1E-12
+    Fitting Condition:       1E-12
+
+   => Auxiliary Basis Set <=
+
+  Basis Set: CC-PVDZ-JKFIT
+    Blend: CC-PVDZ-JKFIT
+    Number of shells: 33
+    Number of basis function: 93
+    Number of Cartesian functions: 106
+    Spherical Harmonics?: true
+    Max angular momentum: 3
 
 
-   ==> Starting MCSCF iterations <==
+   ==> Starting DF-MCSCF iterations <==
 
-        Iter         Total Energy       Delta E   Orb RMS    CI RMS  NCI NORB
-   @MCSCF  1:    -99.910210805102   -3.7358e-02  4.58e-02  1.09e-13    1    1  Initial CI
-   @MCSCF  2:    -99.936703294709   -2.6492e-02  2.20e-02  6.25e-14    2    1  TS
-   @MCSCF  3:    -99.938896403571   -2.1931e-03  7.97e-03  7.21e-14    2    1  TS
-   @MCSCF  4:    -99.939233222335   -3.3682e-04  3.25e-03  7.20e-14    2    1  TS, DIIS
-   @MCSCF  5:    -99.939297556173   -6.4334e-05  1.44e-03  7.20e-14    2    1  TS, DIIS
-   @MCSCF  6:    -99.939314708551   -1.7152e-05  3.46e-04  7.04e-14    2    1  TS, DIIS
-   @MCSCF  7:    -99.939315291937   -5.8339e-07  6.01e-05  6.93e-14    2    1  TS, DIIS
-   @MCSCF  8:    -99.939315305589   -1.3653e-08  4.74e-05  6.97e-14    2    1  TS, DIIS
-   @MCSCF  9:    -99.939315319770   -1.4181e-08  2.19e-05  6.79e-14    3    1  TS, DIIS
-   @MCSCF 10:    -99.939315322717   -2.9470e-09  9.65e-07  6.91e-14    2    1  TS, DIIS
+           Iter         Total Energy       Delta E   Orb RMS    CI RMS  NCI NORB
+   @DF-MCSCF  1:    -99.910206878219   -3.7356e-02  4.58e-02  4.45e-13    1    1  Initial CI
+   @DF-MCSCF  2:    -99.936697339974   -2.6490e-02  2.20e-02  2.58e-13    2    1  TS
+   @DF-MCSCF  3:    -99.938890417929   -2.1931e-03  7.97e-03  2.95e-13    2    1  TS
+   @DF-MCSCF  4:    -99.939227165645   -3.3675e-04  3.25e-03  2.93e-13    2    1  TS, DIIS
+   @DF-MCSCF  5:    -99.939291481057   -6.4315e-05  1.44e-03  2.91e-13    2    1  TS, DIIS
+   @DF-MCSCF  6:    -99.939308628579   -1.7148e-05  3.46e-04  2.91e-13    2    1  TS, DIIS
+   @DF-MCSCF  7:    -99.939309211768   -5.8319e-07  6.01e-05  2.90e-13    2    1  TS, DIIS
+   @DF-MCSCF  8:    -99.939309225401   -1.3633e-08  4.74e-05  2.88e-13    2    1  TS, DIIS
+   @DF-MCSCF  9:    -99.939309239604   -1.4203e-08  2.18e-05  2.88e-13    3    1  TS, DIIS
+   @DF-MCSCF 10:    -99.939309242538   -2.9336e-09  9.51e-07  2.88e-13    2    1  TS, DIIS
 
-          @MCSCF has converged!
+          @DF-MCSCF has converged!
 
-   @MCSCF Final Energy:  -99.939315322717079
+   @DF-MCSCF Final Energy:  -99.939309242537945
 
    Computing CI Semicanonical Orbitals
 
    ==> Energetics <==
 
-    SCF energy =          -99.872852472896255
-    Total MCSCF energy =  -99.939315322717079
+    SCF energy =          -99.872850774947949
+    Total MCSCF energy =  -99.939309242537945
 
    ==> MCSCF root 0 information <==
 
-    MCSCF Root 0 energy =   -99.939315322717079
+    MCSCF Root 0 energy =   -99.939309242537931
 
    Active Space Natural occupation numbers:
 
-        A1   1.823683        A1   0.176317
+        A1   1.823687        A1   0.176313
 
    The 4 most important determinants:
 
     *   1    0.950866  (    0,    0)  3A1X 
-    *   2   -0.292877  (    1,    1)  4A1X 
-    *   3   -0.070979  (    0,    1)  3A1A 4A1B 
-    *   4   -0.070979  (    1,    0)  3A1B 4A1A 
+    *   2   -0.292873  (    1,    1)  4A1X 
+    *   3   -0.070989  (    0,    1)  3A1A 4A1B 
+    *   4   -0.070989  (    1,    0)  3A1B 4A1A 
 
 
 
@@ -420,14 +436,15 @@ Properties computed using the CASSCF density matrix
      X:     0.0000      Y:     0.0000      Z:    -0.7521
 
   Dipole Moment: (a.u.)
-     X:     0.0000      Y:     0.0000      Z:     0.6545     Total:     0.6545
+     X:     0.0000      Y:     0.0000      Z:     0.6546     Total:     0.6546
 
   Dipole Moment: (Debye)
      X:     0.0000      Y:     0.0000      Z:     1.6637     Total:     1.6637
 
+	PSI4 CASSCF energy................................................PASSED
 
 *** tstart() called on yorks-mac.wireless.emory.edu
-*** at Mon Dec  4 12:15:25 2017
+*** at Mon Dec  4 15:02:18 2017
 
    => Loading Basis Set <=
 
@@ -472,196 +489,7 @@ Properties computed using the CASSCF density matrix
 
   ==> Algorithm <==
 
-  SCF Algorithm Type is OUT_OF_CORE.
-  DIIS enabled.
-  MOM disabled.
-  Fractional occupation disabled.
-  Guess Type is GWH.
-  Energy threshold   = 1.00e-15
-  Density threshold  = 1.00e-12
-  Integral threshold = 0.00e+00
-
-  ==> Primary Basis <==
-
-  Basis Set: CC-PVDZ
-    Blend: CC-PVDZ
-    Number of shells: 9
-    Number of basis function: 19
-    Number of Cartesian functions: 20
-    Spherical Harmonics?: true
-    Max angular momentum: 2
-
-  ==> Pre-Iterations <==
-
-   -------------------------------------------------------
-    Irrep   Nso     Nmo     Nalpha   Nbeta   Ndocc  Nsocc
-   -------------------------------------------------------
-     A1        10      10       0       0       0       0
-     A2         1       1       0       0       0       0
-     B1         4       4       0       0       0       0
-     B2         4       4       0       0       0       0
-   -------------------------------------------------------
-    Total      19      19       5       5       5       0
-   -------------------------------------------------------
-
-  ==> Integral Setup <==
-
-  ==> DiskJK: Disk-Based J/K Matrices <==
-
-    J tasked:                  Yes
-    K tasked:                  Yes
-    wK tasked:                  No
-    Memory (MB):               357
-    Schwarz Cutoff:          1E-12
-
-  Minimum eigenvalue in the overlap matrix is 1.3340269888E-01.
-  Using Symmetric Orthogonalization.
-
-  SCF Guess: Generalized Wolfsberg-Helmholtz.
-
-  ==> Iterations <==
-
-                        Total Energy        Delta E     RMS |[F,P]|
-
-   @ROHF iter   1:   -98.18650428590061   -9.81865e+01   1.45555e-01 
-   @ROHF iter   2:   -98.43700759951844   -2.50503e-01   1.12615e-01 DIIS
-   @ROHF iter   3:   -99.81222598145087   -1.37522e+00   2.42903e-02 DIIS
-   @ROHF iter   4:   -99.87157969419449   -5.93537e-02   2.26195e-03 DIIS
-   @ROHF iter   5:   -99.87266081235410   -1.08112e-03   1.33312e-03 DIIS
-   @ROHF iter   6:   -99.87284461328555   -1.83801e-04   2.41303e-04 DIIS
-   @ROHF iter   7:   -99.87285176355499   -7.15027e-06   7.12322e-05 DIIS
-   @ROHF iter   8:   -99.87285246183751   -6.98283e-07   1.07261e-05 DIIS
-   @ROHF iter   9:   -99.87285247286113   -1.10236e-08   6.21321e-07 DIIS
-   @ROHF iter  10:   -99.87285247289608   -3.49587e-11   3.29132e-08 DIIS
-   @ROHF iter  11:   -99.87285247289630   -2.13163e-13   2.32871e-09 DIIS
-   @ROHF iter  12:   -99.87285247289623    7.10543e-14   5.57894e-10 DIIS
-   @ROHF iter  13:   -99.87285247289627   -4.26326e-14   1.09707e-11 DIIS
-   @ROHF iter  14:   -99.87285247289624    2.84217e-14   1.16690e-12 DIIS
-   @ROHF iter  15:   -99.87285247289623    1.42109e-14   5.42501e-14 DIIS
-   @ROHF iter  16:   -99.87285247289626   -2.84217e-14   9.68589e-15 DIIS
-   @ROHF iter  17:   -99.87285247289624    1.42109e-14   5.29441e-15 DIIS
-   @ROHF iter  18:   -99.87285247289631   -7.10543e-14   2.06959e-15 DIIS
-   @ROHF iter  19:   -99.87285247289621    9.94760e-14   1.33067e-15 DIIS
-   @ROHF iter  20:   -99.87285247289631   -9.94760e-14   1.23375e-15 DIIS
-   @ROHF iter  21:   -99.87285247289623    8.52651e-14   1.13307e-15 DIIS
-   @ROHF iter  22:   -99.87285247289624   -1.42109e-14   1.10935e-15 DIIS
-   @ROHF iter  23:   -99.87285247289628   -4.26326e-14   1.01738e-15 DIIS
-   @ROHF iter  24:   -99.87285247289628    0.00000e+00   1.08201e-15 DIIS
-
-  ==> Post-Iterations <==
-
-    Orbital Energies (a.u.)
-    -----------------------
-
-    Doubly Occupied:                                                      
-
-       1A1   -26.279422     2A1    -1.484580     1B2    -0.593977  
-       1B1    -0.593977     3A1    -0.565055  
-
-    Singly Occupied:                                                      
-
-    
-
-    Virtual:                                                              
-
-       4A1     0.016621     5A1     0.576770     2B2     1.315282  
-       2B1     1.315282     6A1     1.463904     3B2     1.599282  
-       3B1     1.599282     7A1     1.633070     8A1     2.300773  
-       4B1     4.038213     4B2     4.038213     9A1     4.041123  
-       1A2     4.041123    10A1     4.220284  
-
-    Final Occupation by Irrep:
-             A1    A2    B1    B2 
-    DOCC [     3,    0,    1,    1 ]
-    SOCC [     0,    0,    0,    0 ]
-
-  Energy converged.
-
-  @ROHF Final Energy:   -99.87285247289628
-
-   => Energetics <=
-
-    Nuclear Repulsion Energy =              3.1750632515400001
-    One-Electron Energy =                -147.0618097376359970
-    Two-Electron Energy =                  44.0138940131997103
-    Total Energy =                        -99.8728524728962839
-
-
-
-Properties will be evaluated at   0.000000,   0.000000,   0.000000 Bohr
-
-Properties computed using the SCF density matrix
-
-  Nuclear Dipole Moment: (a.u.)
-     X:     0.0000      Y:     0.0000      Z:     1.4066
-
-  Electronic Dipole Moment: (a.u.)
-     X:     0.0000      Y:     0.0000      Z:    -0.2428
-
-  Dipole Moment: (a.u.)
-     X:     0.0000      Y:     0.0000      Z:     1.1639     Total:     1.1639
-
-  Dipole Moment: (Debye)
-     X:     0.0000      Y:     0.0000      Z:     2.9583     Total:     2.9583
-
-
-*** tstop() called on yorks-mac.wireless.emory.edu at Mon Dec  4 12:15:25 2017
-Module time:
-	user time   =       0.21 seconds =       0.00 minutes
-	system time =       0.05 seconds =       0.00 minutes
-	total time  =          0 seconds =       0.00 minutes
-Total time:
-	user time   =       0.63 seconds =       0.01 minutes
-	system time =       0.24 seconds =       0.00 minutes
-	total time  =          1 seconds =       0.02 minutes
-
-*** tstart() called on yorks-mac.wireless.emory.edu
-*** at Mon Dec  4 12:15:25 2017
-
-   => Loading Basis Set <=
-
-    Name: CC-PVDZ
-    Role: ORBITAL
-    Keyword: BASIS
-    atoms 1 entry F          line   228 file /Users/york/src/psi4new/psi4/share/psi4/basis/cc-pvdz.gbs 
-    atoms 2 entry H          line    22 file /Users/york/src/psi4new/psi4/share/psi4/basis/cc-pvdz.gbs 
-
-
-         ---------------------------------------------------------
-                                   SCF
-            by Justin Turney, Rob Parrish, Andy Simmonett
-                             and Daniel Smith
-                             ROHF Reference
-                        1 Threads,    476 MiB Core
-         ---------------------------------------------------------
-
-  ==> Geometry <==
-
-    Molecular point group: c2v
-    Full point group: C_inf_v
-
-    Geometry (in Angstrom), charge = 0, multiplicity = 1:
-
-       Center              X                  Y                   Z               Mass       
-    ------------   -----------------  -----------------  -----------------  -----------------
-           F          0.000000000000     0.000000000000    -0.075563346012    18.998403224000
-           H          0.000000000000     0.000000000000     1.424436653988     1.007825032070
-
-  Running in c2v symmetry.
-
-  Rotational constants: A = ************  B =      7.82847  C =      7.82847 [cm^-1]
-  Rotational constants: A = ************  B = 234691.65925  C = 234691.65925 [MHz]
-  Nuclear repulsion =    3.175063251540000
-
-  Charge       = 0
-  Multiplicity = 1
-  Electrons    = 10
-  Nalpha       = 5
-  Nbeta        = 5
-
-  ==> Algorithm <==
-
-  SCF Algorithm Type is DIRECT.
+  SCF Algorithm Type is DF.
   DIIS enabled.
   MOM disabled.
   Fractional occupation disabled.
@@ -682,7 +510,7 @@ Total time:
 
    => Loading Basis Set <=
 
-    Name: (CC-PVDZ AUX)
+    Name: CC-PVDZ-JKFIT
     Role: JKFIT
     Keyword: DF_BASIS_SCF
     atoms 1 entry F          line   271 file /Users/york/src/psi4new/psi4/share/psi4/basis/cc-pvdz-jkfit.gbs 
@@ -701,8 +529,6 @@ Total time:
     Total      19      19       5       5       5       0
    -------------------------------------------------------
 
-  Starting with a DF guess...
-
   ==> Integral Setup <==
 
   ==> DFJK: Density-Fitted J/K Matrices <==
@@ -720,7 +546,7 @@ Total time:
 
    => Auxiliary Basis Set <=
 
-  Basis Set: (CC-PVDZ AUX)
+  Basis Set: CC-PVDZ-JKFIT
     Blend: CC-PVDZ-JKFIT
     Number of shells: 33
     Number of basis function: 93
@@ -737,56 +563,34 @@ Total time:
 
                            Total Energy        Delta E     RMS |[F,P]|
 
-   @DF-ROHF iter   1:   -98.18654067384487   -9.81865e+01   1.45554e-01 
-   @DF-ROHF iter   2:   -98.43724244716813   -2.50702e-01   1.12600e-01 DIIS
-   @DF-ROHF iter   3:   -99.81220620973933   -1.37496e+00   2.42942e-02 DIIS
-   @DF-ROHF iter   4:   -99.87157723580833   -5.93710e-02   2.26267e-03 DIIS
-   @DF-ROHF iter   5:   -99.87265906545150   -1.08183e-03   1.33320e-03 DIIS
-   @DF-ROHF iter   6:   -99.87284290953146   -1.83844e-04   2.41407e-04 DIIS
-   @DF-ROHF iter   7:   -99.87285006521296   -7.15568e-06   7.12524e-05 DIIS
-   @DF-ROHF iter   8:   -99.87285076389894   -6.98686e-07   1.07219e-05 DIIS
-   @DF-ROHF iter   9:   -99.87285077491279   -1.10139e-08   6.22316e-07 DIIS
-   @DF-ROHF iter  10:   -99.87285077494786   -3.50724e-11   3.29470e-08 DIIS
-   @DF-ROHF iter  11:   -99.87285077494812   -2.55795e-13   2.32716e-09 DIIS
-   @DF-ROHF iter  12:   -99.87285077494805    7.10543e-14   5.58155e-10 DIIS
-   @DF-ROHF iter  13:   -99.87285077494801    4.26326e-14   1.09661e-11 DIIS
-   @DF-ROHF iter  14:   -99.87285077494802   -1.42109e-14   1.16630e-12 DIIS
-   @DF-ROHF iter  15:   -99.87285077494802    0.00000e+00   5.40592e-14 DIIS
-
-  DF guess converged.
-
-  ==> Integral Setup <==
-
-  ==> DirectJK: Integral-Direct J/K Matrices <==
-
-    J tasked:                  Yes
-    K tasked:                  Yes
-    wK tasked:                  No
-    Integrals threads:           1
-    Schwarz Cutoff:          1E-12
-
-   @ROHF iter  16:   -99.87285247004442   -1.69510e-06   4.52624e-06 DIIS
-   @ROHF iter  17:   -99.87285247280002   -2.75560e-09   1.02451e-06 DIIS
-   @ROHF iter  18:   -99.87285247286050   -6.04814e-11   6.20096e-07 DIIS
-   @ROHF iter  19:   -99.87285247289583   -3.53282e-11   6.11794e-08 DIIS
-   @ROHF iter  20:   -99.87285247289631   -4.83169e-13   1.45954e-08 DIIS
-   @ROHF iter  21:   -99.87285247289623    8.52651e-14   3.97845e-09 DIIS
-   @ROHF iter  22:   -99.87285247289634   -1.13687e-13   3.88935e-10 DIIS
-   @ROHF iter  23:   -99.87285247289626    8.52651e-14   3.61875e-11 DIIS
-   @ROHF iter  24:   -99.87285247289627   -1.42109e-14   3.33081e-12 DIIS
-   @ROHF iter  25:   -99.87285247289620    7.10543e-14   4.36487e-13 DIIS
-   @ROHF iter  26:   -99.87285247289627   -7.10543e-14   8.05293e-14 DIIS
-   @ROHF iter  27:   -99.87285247289634   -7.10543e-14   1.15569e-14 DIIS
-   @ROHF iter  28:   -99.87285247289633    1.42109e-14   3.17611e-15 DIIS
-   @ROHF iter  29:   -99.87285247289630    2.84217e-14   2.93664e-15 DIIS
-   @ROHF iter  30:   -99.87285247289631   -1.42109e-14   9.33459e-16 DIIS
-   @ROHF iter  31:   -99.87285247289626    5.68434e-14   9.64403e-16 DIIS
-   @ROHF iter  32:   -99.87285247289627   -1.42109e-14   1.13554e-15 DIIS
-   @ROHF iter  33:   -99.87285247289634   -7.10543e-14   1.17115e-15 DIIS
-   @ROHF iter  34:   -99.87285247289630    4.26326e-14   6.18607e-16 DIIS
-   @ROHF iter  35:   -99.87285247289634   -4.26326e-14   8.63841e-16 DIIS
-   @ROHF iter  36:   -99.87285247289631    2.84217e-14   6.20319e-16 DIIS
-   @ROHF iter  37:   -99.87285247289631    0.00000e+00   7.10329e-16 DIIS
+   @DF-ROHF iter   1:   -98.18654067384495   -9.81865e+01   1.45554e-01 
+   @DF-ROHF iter   2:   -98.43724244716816   -2.50702e-01   1.12600e-01 DIIS
+   @DF-ROHF iter   3:   -99.81220620973932   -1.37496e+00   2.42942e-02 DIIS
+   @DF-ROHF iter   4:   -99.87157723580845   -5.93710e-02   2.26267e-03 DIIS
+   @DF-ROHF iter   5:   -99.87265906545147   -1.08183e-03   1.33320e-03 DIIS
+   @DF-ROHF iter   6:   -99.87284290953143   -1.83844e-04   2.41407e-04 DIIS
+   @DF-ROHF iter   7:   -99.87285006521304   -7.15568e-06   7.12524e-05 DIIS
+   @DF-ROHF iter   8:   -99.87285076389885   -6.98686e-07   1.07219e-05 DIIS
+   @DF-ROHF iter   9:   -99.87285077491282   -1.10140e-08   6.22316e-07 DIIS
+   @DF-ROHF iter  10:   -99.87285077494785   -3.50298e-11   3.29470e-08 DIIS
+   @DF-ROHF iter  11:   -99.87285077494809   -2.41585e-13   2.32716e-09 DIIS
+   @DF-ROHF iter  12:   -99.87285077494806    2.84217e-14   5.58155e-10 DIIS
+   @DF-ROHF iter  13:   -99.87285077494811   -4.26326e-14   1.09665e-11 DIIS
+   @DF-ROHF iter  14:   -99.87285077494806    4.26326e-14   1.16656e-12 DIIS
+   @DF-ROHF iter  15:   -99.87285077494815   -8.52651e-14   5.39752e-14 DIIS
+   @DF-ROHF iter  16:   -99.87285077494812    2.84217e-14   1.05745e-14 DIIS
+   @DF-ROHF iter  17:   -99.87285077494822   -9.94760e-14   5.63886e-15 DIIS
+   @DF-ROHF iter  18:   -99.87285077494818    4.26326e-14   2.41791e-15 DIIS
+   @DF-ROHF iter  19:   -99.87285077494819   -1.42109e-14   1.93787e-15 DIIS
+   @DF-ROHF iter  20:   -99.87285077494820   -1.42109e-14   9.63170e-16 DIIS
+   @DF-ROHF iter  21:   -99.87285077494812    8.52651e-14   1.12538e-15 DIIS
+   @DF-ROHF iter  22:   -99.87285077494803    8.52651e-14   1.02678e-15 DIIS
+   @DF-ROHF iter  23:   -99.87285077494813   -9.94760e-14   1.31935e-15 DIIS
+   @DF-ROHF iter  24:   -99.87285077494806    7.10543e-14   6.67329e-16 DIIS
+   @DF-ROHF iter  25:   -99.87285077494818   -1.13687e-13   9.36396e-16 DIIS
+   @DF-ROHF iter  26:   -99.87285077494819   -1.42109e-14   5.65034e-16 DIIS
+   @DF-ROHF iter  27:   -99.87285077494812    7.10543e-14   7.25922e-16 DIIS
+   @DF-ROHF iter  28:   -99.87285077494812    0.00000e+00   8.52973e-16 DIIS
 
   ==> Post-Iterations <==
 
@@ -795,8 +599,8 @@ Total time:
 
     Doubly Occupied:                                                      
 
-       1A1   -26.279422     2A1    -1.484580     1B1    -0.593977  
-       1B2    -0.593977     3A1    -0.565055  
+       1A1   -26.279410     2A1    -1.484572     1B1    -0.593968  
+       1B2    -0.593968     3A1    -0.565054  
 
     Singly Occupied:                                                      
 
@@ -804,11 +608,11 @@ Total time:
 
     Virtual:                                                              
 
-       4A1     0.016621     5A1     0.576770     2B2     1.315282  
-       2B1     1.315282     6A1     1.463904     3B1     1.599282  
-       3B2     1.599282     7A1     1.633070     8A1     2.300773  
-       4B1     4.038213     4B2     4.038213     9A1     4.041123  
-       1A2     4.041123    10A1     4.220284  
+       4A1     0.016631     5A1     0.576874     2B1     1.315550  
+       2B2     1.315550     6A1     1.464142     3B1     1.599468  
+       3B2     1.599468     7A1     1.633209     8A1     2.301112  
+       4B1     4.038915     4B2     4.038915     9A1     4.041504  
+       1A2     4.041504    10A1     4.220351  
 
     Final Occupation by Irrep:
              A1    A2    B1    B2 
@@ -817,14 +621,14 @@ Total time:
 
   Energy converged.
 
-  @ROHF Final Energy:   -99.87285247289631
+  @DF-ROHF Final Energy:   -99.87285077494812
 
    => Energetics <=
 
     Nuclear Repulsion Energy =              3.1750632515400001
-    One-Electron Energy =                -147.0618097376360538
-    Two-Electron Energy =                  44.0138940131997387
-    Total Energy =                        -99.8728524728963123
+    One-Electron Energy =                -147.0618843220250938
+    Two-Electron Energy =                  44.0139702955369785
+    Total Energy =                        -99.8728507749481196
 
 
 
@@ -836,24 +640,32 @@ Properties computed using the SCF density matrix
      X:     0.0000      Y:     0.0000      Z:     1.4066
 
   Electronic Dipole Moment: (a.u.)
-     X:     0.0000      Y:     0.0000      Z:    -0.2428
+     X:     0.0000      Y:     0.0000      Z:    -0.2427
 
   Dipole Moment: (a.u.)
-     X:     0.0000      Y:     0.0000      Z:     1.1639     Total:     1.1639
+     X:     0.0000      Y:     0.0000      Z:     1.1640     Total:     1.1640
 
   Dipole Moment: (Debye)
-     X:     0.0000      Y:     0.0000      Z:     2.9583     Total:     2.9583
+     X:     0.0000      Y:     0.0000      Z:     2.9585     Total:     2.9585
 
 
-*** tstop() called on yorks-mac.wireless.emory.edu at Mon Dec  4 12:15:27 2017
+*** tstop() called on yorks-mac.wireless.emory.edu at Mon Dec  4 15:02:19 2017
 Module time:
-	user time   =       1.18 seconds =       0.02 minutes
+	user time   =       0.25 seconds =       0.00 minutes
 	system time =       0.03 seconds =       0.00 minutes
-	total time  =          2 seconds =       0.03 minutes
+	total time  =          1 seconds =       0.02 minutes
 Total time:
-	user time   =       1.84 seconds =       0.03 minutes
-	system time =       0.27 seconds =       0.00 minutes
-	total time  =          3 seconds =       0.05 minutes
+	user time   =       1.01 seconds =       0.02 minutes
+	system time =       0.12 seconds =       0.00 minutes
+	total time  =          2 seconds =       0.03 minutes
+   => Loading Basis Set <=
+
+    Name: CC-PVDZ-RI
+    Role: RIFIT
+    Keyword: DF_BASIS_MP2
+    atoms 1 entry F          line   273 file /Users/york/src/psi4new/psi4/share/psi4/basis/cc-pvdz-ri.gbs 
+    atoms 2 entry H          line    19 file /Users/york/src/psi4new/psi4/share/psi4/basis/cc-pvdz-ri.gbs 
+
    => Loading Basis Set <=
 
     Name: STO-3G
@@ -978,10 +790,8 @@ Calling plugin forte.so.
     ****
 
 
-  Overall Conventional Integrals timings
-
-
-  Conventional integrals take 0.16308300 s
+  DFIntegrals overall time
+  DFIntegrals take      0.16738800 s
 
                 -----------------------------------------------
                   Complete Active Space Self Consistent Field
@@ -993,26 +803,24 @@ Calling plugin forte.so.
 
  iter    ||g||           Delta_E            E_CASSCF       CONV_TYPE
  CSO2SO takes   0.0000 s.
-    0   0.028964873343   -99.910210805103   -99.910210805103    0.135963 s      
+    0   0.028966065289   -99.910206878219   -99.910206878219    0.006608 s      
  CSO2SO takes   0.0000 s.
-    1   0.013921124401   -0.026493872936   -99.936704678038    0.144315 s      
+    1   0.013920226600   -0.026491844218   -99.936698722437    0.006144 s      
  CSO2SO takes   0.0000 s.
-    2   0.005112477607   -0.002190515331   -99.938895193369    0.142485 s      
+    2   0.005112662966   -0.002190484834   -99.938889207271    0.008019 s      
  CSO2SO takes   0.0000 s.
-    3   0.002061727412   -0.000337771311   -99.939232964681    0.136937 s      
+    3   0.002061880798   -0.000337700700   -99.939226907971    0.007130 s      
  CSO2SO takes   0.0000 s.
-    4   0.000907839209   -0.000064324350   -99.939297289031    0.141427 s      
+    4   0.000907978699   -0.000064305890   -99.939291213861    0.006191 s  DIIS
  CSO2SO takes   0.0000 s.
-    5   0.000421530177   -0.000013756911   -99.939311045942    0.140202 s      
+    5   0.000421620798   -0.000013752962   -99.939304966823    0.005844 s  DIIS
  CSO2SO takes   0.0000 s.
-    6   0.000205755495   -0.000003189111   -99.939314235053    0.141795 s      
+    6   0.000065933850   -0.000004196300   -99.939309163123    0.007053 s  DIIS
  CSO2SO takes   0.0000 s.
-    7   0.000104586172   -0.000000792280   -99.939315027333    0.126354 s      
- CSO2SO takes   0.0000 s.
-    8   0.000055146368   -0.000000210238   -99.939315237571    0.129164 s
+    7   0.000011460931   -0.000000076925   -99.939309240048    0.006853 s
 
  A miracle has come to pass. The CASSCF iterations have converged.
- @E(CASSCF) =   -99.939315237571 
-	CASSCF energy.....................................................PASSED
+ @E(CASSCF) =   -99.939309240048 
+	FORTE CASSCF energy...............................................PASSED
 
 *** Psi4 exiting successfully. Buy a developer a beer!

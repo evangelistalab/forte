@@ -3,10 +3,10 @@
 import forte
 
 refcasscf    = -112.881481489535673
-refpt2       = -113.105649496912605
-refpt2_relax = -113.108902745248486
-refdm        =    0.078155
-refdm_relax  =    0.008671
+refpt2       = -113.105649460315533
+refpt2_relax = -113.108902696005927
+refdm        =    0.078159
+refdm_relax  =    0.008678
 
 molecule CO{
   0 1

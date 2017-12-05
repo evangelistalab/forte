@@ -374,14 +374,14 @@ void SemiCanonical::build_transformation_matrices(SharedMatrix& Ua, SharedMatrix
     }
 
 //    if( options_.get_bool("SAVE_UHF_NOS") ){
-        Ua_t.data() = UaData;
-        Ub_t.data() = UaData;
+//        Ua_t.data() = UaData;
+//        Ub_t.data() = UaData;
         
-        Ub->copy(Ua); 
+//        Ub->copy(Ua);
 //    }else{
         // copy active data to ambit tensors
         Ua_t.data() = UaData;
-//        Ub_t.data() = UbData;
+        Ub_t.data() = UbData;
 //    }
 }
 

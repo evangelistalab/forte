@@ -357,7 +357,7 @@ double FCISolver::compute_energy() {
     return energy_;
 }
 
-void FCISolver::compute_rdms_root(const int& root) {
+void FCISolver::compute_rdms_root(int root) {
     // make sure a compute_energy is called before this
     if (C_) {
         if (root >= nroot_) {

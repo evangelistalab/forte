@@ -224,11 +224,11 @@ class MASTER_DSRG : public DynamicCorrelationSolver {
 
     /// Scalar of the DSRG transformed Hamiltonian
     double Hbar0_;
-    /// DSRG transformed 1-body Hamiltonian (active only)
+    /// DSRG transformed 1-body Hamiltonian (active only in DSRG-PT, but full in MRDSRG)
     ambit::BlockedTensor Hbar1_;
-    /// DSRG transformed 2-body Hamiltonian (active only)
+    /// DSRG transformed 2-body Hamiltonian (active only in DSRG-PT, but full in MRDSRG)
     ambit::BlockedTensor Hbar2_;
-    /// DSRG transformed 3-body Hamiltonian (active only)
+    /// DSRG transformed 3-body Hamiltonian (active only in DSRG-PT, but full in MRDSRG)
     ambit::BlockedTensor Hbar3_;
 
     /**

@@ -18,13 +18,13 @@ set {
     active          [3, 0, 1, 2]
     e_convergence   1e-10
     d_convergence   1e-10
-    MCSCF_R_CONVERGENCE 1e-10
-    MCSCF_E_CONVERGENCE 1e-10
+    mcscf_r_convergence 1e-8
+    mcscf_e_convergence 1e-10
 }
 
 
 casscf_psi4 = energy('casscf')
-energy('scf')
+
 set scf_type direct
 set forte {
     job_type              casscf

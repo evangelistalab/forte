@@ -38,9 +38,8 @@ set forte {
    cas_type                CAS
 }
 
-scf = energy('scf')
-compare_values(refrhf, scf,10,"SCF energy")
+Escf, wfn = energy('scf', return_wfn=True)
+compare_values(refrhf,Escf,10,"SCF energy")
 
-energy('forte')
-compare_values(refdsrgpt2_jk_rd, get_variable("CURRENT ENERGY"),10,"DSRG-MRPT2 energy")
-
+energy('forte', ref_wfn=wfn)
+compare_values(refdsrgpt2_jk_rd,get_variable("CURRENT ENERGY"),10,"DSRG-MRPT2 energy")

@@ -365,7 +365,7 @@ double DSRG_MRPT2::compute_energy() {
     // check semi-canonical orbitals
     semi_canonical_ = check_semicanonical();
     if (!semi_canonical_) {
-        outfile->Printf("\n    Orbital invariant formalism is employed for DSRG-MRPT2.");
+        outfile->Printf("\n    Orbital invariant formalism will be employed for DSRG-MRPT2.");
         U_ = ambit::BlockedTensor::build(tensor_type_, "U", spin_cases({"gg"}));
         std::vector<std::vector<double>> eigens = diagonalize_Fock_diagblocks(U_);
         Fa_ = eigens[0];
@@ -569,7 +569,7 @@ void DSRG_MRPT2::compute_t2() {
 
     T2_.iterate(
         [&](const std::vector<size_t>& i, const std::vector<SpinType>& spin, double& value) {
-            if (std::fabs(value) > 1.0e-12) {
+            if (std::fabs(value) > 1.0e-15) {
                 if ((spin[0] == AlphaSpin) and (spin[1] == AlphaSpin)) {
                     value *= dsrg_source_->compute_renormalized_denominator(Fa_[i[0]] + Fa_[i[1]] -
                                                                             Fa_[i[2]] - Fa_[i[3]]);
@@ -786,7 +786,7 @@ void DSRG_MRPT2::compute_t1() {
 
     T1_.iterate(
         [&](const std::vector<size_t>& i, const std::vector<SpinType>& spin, double& value) {
-            if (std::fabs(value) > 1.0e-12) {
+            if (std::fabs(value) > 1.0e-15) {
                 if (spin[0] == AlphaSpin) {
                     value *= dsrg_source_->compute_renormalized_denominator(Fa_[i[0]] - Fa_[i[1]]);
                 } else {
@@ -874,7 +874,7 @@ void DSRG_MRPT2::renormalize_V() {
     }
 
     V_.iterate([&](const std::vector<size_t>& i, const std::vector<SpinType>& spin, double& value) {
-        if (std::fabs(value) > 1.0e-12) {
+        if (std::fabs(value) > 1.0e-15) {
             if ((spin[0] == AlphaSpin) and (spin[1] == AlphaSpin)) {
                 value *= 1.0 +
                          dsrg_source_->compute_renormalized(Fa_[i[0]] + Fa_[i[1]] - Fa_[i[2]] -
@@ -965,7 +965,7 @@ void DSRG_MRPT2::renormalize_F() {
 
     sum.iterate(
         [&](const std::vector<size_t>& i, const std::vector<SpinType>& spin, double& value) {
-            if (std::fabs(value) > 1.0e-12) {
+            if (std::fabs(value) > 1.0e-15) {
                 if (spin[0] == AlphaSpin) {
                     value *= dsrg_source_->compute_renormalized(Fa_[i[0]] - Fa_[i[1]]);
                 } else {
@@ -1761,6 +1761,7 @@ double DSRG_MRPT2::compute_energy_relaxed() {
     } else if ( options_.get_str("CAS_TYPE") == "ACI" ){
 
             AdaptiveCI aci(reference_wavefunction_, options_, ints_, mo_space_info_);
+            aci.set_fci_ints(fci_ints);
            
             Erelax = aci.compute_energy();
     } else {

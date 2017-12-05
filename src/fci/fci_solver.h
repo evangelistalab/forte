@@ -94,7 +94,7 @@ class FCISolver {
     double compute_energy();
 
     /// Compute RDMs on a given root
-    void compute_rdms_root(const int& root);
+    void compute_rdms_root(int root);
 
     /// Return a reference object
     Reference reference();

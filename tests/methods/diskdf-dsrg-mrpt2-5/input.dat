@@ -52,10 +52,8 @@ set forte {
    cas_type                FCI
 }
 
-scf = energy('scf')
+Escf, wfn = energy('scf', return_wfn=True)
 #compare_values(refmcscf, scf,10,"SCF Energy")
 
-energy('forte')
+energy('forte', ref_wfn=wfn)
 compare_values(refdsrgpt2, get_variable("CURRENT ENERGY"),10,"DSRG-MRPT2 energy")
-
-

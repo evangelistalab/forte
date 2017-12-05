@@ -2,9 +2,11 @@
 
 import forte
 
-refrhf   = -2.179077711159176
-refdsrg  = -2.253241856589615 # semi_canonical true
-refdsrg  = -2.253241869563188 # semi_canonical false
+refrhf     = -2.179077711159176
+refudsrg   = -2.253563514096931 # unrelaxed
+refprdsrg  = -2.253633681241636 # partially relaxed
+refrdsrg   = -2.253662706529829 # relaxed
+reffrdsrg  = -2.253662748528925 # fully relaxed
 
 memory 500 mb
 
@@ -36,13 +38,15 @@ set forte{
    nroot                   1
    dsrg_s                  0.5
    e_convergence           8
-   semi_canonical          false # test if mrdsrg can handle non-canonical orbitals
    dsrg_hbar_seq           true
-   dsrg_omit_v3            true
+   relax_ref               iterate
 }
 
 Escf, wfn = energy('scf', return_wfn=True)
 compare_values(refrhf,get_variable("CURRENT ENERGY"),10,"SCF energy")
 
 energy('forte', ref_wfn=wfn)
-compare_values(refdsrg,get_variable("CURRENT ENERGY"),8,"MRDSRG unrelaxed energy")
+compare_values(refudsrg,get_variable("UNRELAXED ENERGY"),8,"MRDSRG unrelaxed energy")
+compare_values(refprdsrg,get_variable("PARTIALLY RELAXED ENERGY"),8,"MRDSRG partially relaxed energy")
+compare_values(refrdsrg,get_variable("RELAXED ENERGY"),8,"MRDSRG relaxed energy")
+compare_values(reffrdsrg,get_variable("FULLY RELAXED ENERGY"),8,"MRDSRG fully relaxed energy")

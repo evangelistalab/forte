@@ -31,25 +31,22 @@ set globals{
    mcscf_type              df
 }
 psi4_casscf_computed = energy('casscf')
-compare_values(psi4_casscf_computed,psi4_casscf,6,"CASSCF energy")
+compare_values(psi4_casscf_computed,psi4_casscf,6,"PSI4 CASSCF energy")
 
 
 set scf_type df
 set forte{
-   job_type                CASSCF
+   job_type                casscf
    frozen_docc             [1,0,0,0]
    restricted_docc         [1,0,1,1]
    active                  [2,0,0,0]
    root_sym                0
    nroot                   1
-   cas_type                FCI
-   CASSCF_REFERENCE        TRUE
+   cas_type                fci
+   casscf_reference        true
    int_type                df
-   CASSCF_ITERATIONS        25
-   print                    0
+   casscf_iterations       25
+   print                   0
 }
-
-#compare_values(refmcscf,get_variable("CURRENT ENERGY"),10,"MCSCF energy")
-
 casscf = energy('forte')
-compare_values(forte_casscf,casscf,6,"CASSCF energy")
+compare_values(forte_casscf,casscf,6,"FORTE CASSCF energy")
