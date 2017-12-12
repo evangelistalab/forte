@@ -42,13 +42,10 @@ namespace psi {
 namespace forte {
 
 STLBitsetDeterminant::bit_t make_mask(int nstr_bits, bool shift) {
-    STLBitsetDeterminant::bit_t mask(0x0);
-    STLBitsetDeterminant::bit_t unit = STLBitsetDeterminant::bit_t(0x1);
+    STLBitsetDeterminant::bit_t mask;
+    int s = shift ? nstr_bits : 0;
     for (int n = 0; n < nstr_bits; ++n) {
-        mask |= unit << n;
-    }
-    if (shift) {
-        mask << nstr_bits;
+        mask[s + n] = true;
     }
     return mask;
 }
