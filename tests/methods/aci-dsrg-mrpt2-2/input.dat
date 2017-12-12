@@ -25,20 +25,20 @@ set globals{
 }
 
 set forte{
-   job_type                dsrg-mrpt2
-   frozen_docc         [0,0,0,0,0,0,0,0]
-   restricted_docc         [0,0,0,0,0,0,0,0]
-   active                  [1,0,0,1,0,1,1,0]
-   root_sym                0
-   nroot                   1
-   dsrg_s                  0.5
-   cas_type				   aci
-   sigma                    0.0
-   multiplicity            1
+   job_type         dsrg-mrpt2
+   frozen_docc      [0,0,0,0,0,0,0,0]
+   restricted_docc  [0,0,0,0,0,0,0,0]
+   active           [1,0,0,1,0,1,1,0]
+   root_sym         0
+   nroot            1
+   dsrg_s           0.5
+   cas_type         aci
+   sigma            0.0
+   multiplicity     1
 }
 
-energy('scf')
+Escf, wfn = energy('scf', return_wfn=True)
 compare_values(refrhf,get_variable("CURRENT ENERGY"),10,"SCF energy")
 
-energy('forte')
+energy('forte', ref_wfn=wfn)
 compare_values(refdsrgpt2,get_variable("CURRENT ENERGY"),10,"DSRG-MRPT2 energy")

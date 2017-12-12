@@ -1,11 +1,11 @@
 import forte
 
-refscf = -75.3790205732515943 
-refaci = -75.451687445592 
-refacipt2 = -75.452686575556 
+refscf = -75.3790205732515943
+refaci = -75.451713726091
+refacipt2 = -75.452713689259
 
-molecule C2{ 
-C  0.00000 0.00000 0.0 
+molecule C2{
+C  0.00000 0.00000 0.0
 C  0.00000 0.00000 1.24253
 }
 
@@ -21,7 +21,7 @@ set {
 
 
 set forte {
-  job_type aci 
+  job_type aci
   frozen_docc [0,0,0,0,0,0,0,0]
   restricted_docc [0,0,0,0,0,0,0,0]
   active [3,0,1,1,0,3,2,2]

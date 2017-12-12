@@ -489,8 +489,9 @@ double THREE_DSRG_MRPT2::compute_energy() {
 
     // use relaxation code to do SA_FULL
     if (relax_ref_ != "NONE" || multi_state_) {
-        if (my_proc == 0)
-            relax_reference_once();
+        if (my_proc == 0) {
+            form_Hbar();
+        }
     }
 
     return Etotal;
@@ -2985,9 +2986,9 @@ double THREE_DSRG_MRPT2::E_VT2_2_one_active() {
     return (Eacvv + Eccva);
 }
 
-void THREE_DSRG_MRPT2::relax_reference_once() {
+void THREE_DSRG_MRPT2::form_Hbar() {
     /// Note: if internal amplitudes are included, this function will NOT be correct.
-    print_h2("Reference Relaxation");
+    print_h2("Form DSRG-PT2 Transformed Hamiltonian");
 
     // initialize Hbar2 (Hbar1 is initialized in the end of startup function)
     ForteTimer timer;
@@ -3283,6 +3284,9 @@ void THREE_DSRG_MRPT2::relax_reference_once() {
         }
         outfile->Printf("Done. Timing: %10.3f s.", timer.elapsed());
     }
+}
+
+void THREE_DSRG_MRPT2::relax_reference_once() {
 
     auto fci_ints = compute_Heff();
 

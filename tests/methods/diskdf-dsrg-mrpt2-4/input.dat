@@ -45,4 +45,3 @@ compare_values(refrhf, Escf, 10, "SCF energy")
 energy('forte', ref_wfn=wfn)
 compare_values(refpt2_u, get_variable("UNRELAXED ENERGY"), 10, "unrelaxed DSRG-MRPT2 energy")
 compare_values(refpt2_pr, get_variable("CURRENT ENERGY"), 10, "DSRG-MRPT2 energy")
-

@@ -70,8 +70,6 @@ S   1   1.00
 ****
 }
 
-ref = energy('scf')
-forte_energy = energy('forte')
+Escf, wfn = energy('scf', return_wfn=True)
+forte_energy = energy('forte', ref_wfn=wfn)
 compare_values(forte_energy, refdsrgpt2, 8, "DSRG-MRPT2 Energy")
-
-

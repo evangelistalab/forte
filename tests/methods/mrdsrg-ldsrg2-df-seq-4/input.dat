@@ -1,0 +1,52 @@
+#! Generated using commit GITCOMMIT
+
+import forte
+
+refrhf     = -2.179077711159176
+refudsrg   = -2.253563514096931 # unrelaxed
+refprdsrg  = -2.253633681241636 # partially relaxed
+refrdsrg   = -2.253662706529829 # relaxed
+reffrdsrg  = -2.253662748528925 # fully relaxed
+
+memory 500 mb
+
+molecule H4{
+  0 1
+  H  0.0 0.0 0.0
+  H  0.0 0.0 0.7
+  H  0.0 1.4 0.0
+  H  0.0 1.4 0.7
+}
+
+set globals{
+   basis                   cc-pvdz
+   reference               rhf
+   scf_type                pk
+   d_convergence           12
+   e_convergence           15
+   maxiter                 300
+}
+
+set forte{
+   job_type                mrdsrg
+   int_type                cholesky
+   cholesky_tolerance      1e-4
+   corr_level              ldsrg2
+   restricted_docc         [0,0,0,0,0,0,0,0]
+   active                  [1,0,0,1,0,1,1,0]
+   root_sym                0
+   nroot                   1
+   dsrg_s                  0.5
+   e_convergence           8
+   dsrg_hbar_seq           true
+   relax_ref               iterate
+}
+
+Escf, wfn = energy('scf', return_wfn=True)
+compare_values(refrhf,get_variable("CURRENT ENERGY"),10,"SCF energy")
+
+energy('forte', ref_wfn=wfn)
+compare_values(refudsrg,get_variable("UNRELAXED ENERGY"),8,"MRDSRG unrelaxed energy")
+compare_values(refprdsrg,get_variable("PARTIALLY RELAXED ENERGY"),8,"MRDSRG partially relaxed energy")
+compare_values(refrdsrg,get_variable("RELAXED ENERGY"),8,"MRDSRG relaxed energy")
+compare_values(reffrdsrg,get_variable("FULLY RELAXED ENERGY"),8,"MRDSRG fully relaxed energy")

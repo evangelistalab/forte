@@ -15,30 +15,23 @@ molecule {
 }
 
 set globals{
-   reference    RHF
-   scf_type     pk
-   d_convergence           12
-   e_convergence           15
-   df_basis_mp2            cc-pvdz-ri
-}
-
-set mcscf{
-   docc         [2,0,0,0]
-   socc         [1,0,0,1]
-   maxiter       1000
+   reference      rhf
+   scf_type       pk
+   d_convergence  12
+   e_convergence  15
+   df_basis_mp2   cc-pvdz-ri
 }
 
 set forte{
-   restricted_docc      [2,0,0,0]
-   active               [1,0,0,1]
+   job_type              three-dsrg-mrpt2
+   int_type              df
+   cas_type              cas
+   restricted_docc       [2,0,0,0]
+   active                [1,0,0,1]
+   dsrg_s                0.5
    root_sym              0
    nroot                 1
-   dsrg_s                0.5
-   dsrgpt                true
-   int_type              df
-   job_type              three-dsrg-mrpt2
    print                 0
-   cas_type              cas
 }
 
 basis {
@@ -74,8 +67,5 @@ S   1   1.00
 ****
 }
 
-ref = energy('scf')
 forte_energy = energy('forte')
 compare_values(refdsrgpt2,get_variable("CURRENT ENERGY"),10,"DSRG-MRPT2 energy")
-
-

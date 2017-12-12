@@ -3,8 +3,7 @@
 import forte
 
 refrohf      = -15.611546532146
-refdsrgpt2   = -15.536795203327458  # old code
-refdsrgpt2   = -15.536795223549921  # new code
+refdsrgpt2   = -15.536795203311
 
 molecule {
   0 3

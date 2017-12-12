@@ -1,9 +1,9 @@
 
     -----------------------------------------------------------------------
           Psi4: An Open-Source Ab Initio Electronic Structure Package
-                               Psi4 1.2a1.dev312 
+                               Psi4 1.2a1.dev704 
 
-                         Git: Rev {master} 0ec1387 
+                         Git: Rev {master} a7fc050 
 
 
     R. M. Parrish, L. A. Burns, D. G. A. Smith, A. C. Simmonett,
@@ -12,16 +12,16 @@
     H. R. McAlexander, A. Kumar, M. Saitow, X. Wang, B. P. Pritchard,
     P. Verma, H. F. Schaefer III, K. Patkowski, R. A. King, E. F. Valeev,
     F. A. Evangelista, J. M. Turney, T. D. Crawford, and C. D. Sherrill,
-    J. Chem. Theory Comput. in press (2017).
+    J. Chem. Theory Comput. 13(7) pp 3185--3197 (2017).
     (doi: 10.1021/acs.jctc.7b00174)
 
     -----------------------------------------------------------------------
 
 
-    Psi4 started on: Tuesday, 27 June 2017 04:54PM
+    Psi4 started on: Monday, 04 December 2017 02:54PM
 
-    Process ID:  55458
-    PSIDATADIR: /Users/jeffschriber/src/psi4_debug_install/share/psi4
+    Process ID:  38866
+    PSIDATADIR: /Users/york/src/psi4new/psi4/share/psi4
     Memory:     500.0 MiB
     Threads:    1
     
@@ -55,36 +55,36 @@ set globals{
 }
 
 set forte{
-   job_type                dsrg-mrpt2
-   frozen_docc         [0,0,0,0,0,0,0,0]
-   restricted_docc         [0,0,0,0,0,0,0,0]
-   active                  [1,0,0,1,0,1,1,0]
-   root_sym                0
-   nroot                   1
-   dsrg_s                  0.5
-   cas_type				   aci
-   sigma                    0.0
-   multiplicity            1
+   job_type         dsrg-mrpt2
+   frozen_docc      [0,0,0,0,0,0,0,0]
+   restricted_docc  [0,0,0,0,0,0,0,0]
+   active           [1,0,0,1,0,1,1,0]
+   root_sym         0
+   nroot            1
+   dsrg_s           0.5
+   cas_type         aci
+   sigma            0.0
+   multiplicity     1
 }
 
-energy('scf')
+Escf, wfn = energy('scf', return_wfn=True)
 compare_values(refrhf,get_variable("CURRENT ENERGY"),10,"SCF energy")
 
-energy('forte')
+energy('forte', ref_wfn=wfn)
 compare_values(refdsrgpt2,get_variable("CURRENT ENERGY"),10,"DSRG-MRPT2 energy")
 --------------------------------------------------------------------------
 
   Memory set to 476.837 MiB by Python driver.
 
-*** tstart() called on Jeffs-MacBook-Pro-2.local
-*** at Tue Jun 27 16:54:48 2017
+*** tstart() called on yorks-mac.wireless.emory.edu
+*** at Mon Dec  4 14:54:43 2017
 
    => Loading Basis Set <=
 
     Name: CC-PVDZ
     Role: ORBITAL
     Keyword: BASIS
-    atoms 1-4 entry H          line    22 file /Users/jeffschriber/src/psi4_debug_install/share/psi4/basis/cc-pvdz.gbs 
+    atoms 1-4 entry H          line    22 file /Users/york/src/psi4new/psi4/share/psi4/basis/cc-pvdz.gbs 
 
 
          ---------------------------------------------------------
@@ -194,17 +194,18 @@ compare_values(refdsrgpt2,get_variable("CURRENT ENERGY"),10,"DSRG-MRPT2 energy")
 
                         Total Energy        Delta E     RMS |[F,P]|
 
-   @RHF iter   0:    -1.89053115060868   -1.89053e+00   4.91625e-02 
+   @RHF iter   0:    -1.89053115060867   -1.89053e+00   4.91625e-02 
    @RHF iter   1:    -2.17498638758610   -2.84455e-01   8.12248e-03 
-   @RHF iter   2:    -2.17894275946835   -3.95637e-03   1.50517e-03 DIIS
+   @RHF iter   2:    -2.17894275946834   -3.95637e-03   1.50517e-03 DIIS
    @RHF iter   3:    -2.17907752253551   -1.34763e-04   6.71864e-05 DIIS
    @RHF iter   4:    -2.17907771098363   -1.88448e-07   2.29385e-06 DIIS
-   @RHF iter   5:    -2.17907771115850   -1.74874e-10   8.98372e-08 DIIS
-   @RHF iter   6:    -2.17907771115916   -6.55032e-13   1.84767e-08 DIIS
-   @RHF iter   7:    -2.17907771115918   -2.04281e-14   1.36211e-09 DIIS
-   @RHF iter   8:    -2.17907771115918   -3.99680e-15   1.91134e-11 DIIS
-   @RHF iter   9:    -2.17907771115918    3.99680e-15   3.89584e-13 DIIS
-   @RHF iter  10:    -2.17907771115918   -4.44089e-16   4.90809e-14 DIIS
+   @RHF iter   5:    -2.17907771115850   -1.74870e-10   8.98372e-08 DIIS
+   @RHF iter   6:    -2.17907771115916   -6.57696e-13   1.84767e-08 DIIS
+   @RHF iter   7:    -2.17907771115918   -1.90958e-14   1.36211e-09 DIIS
+   @RHF iter   8:    -2.17907771115918   -1.77636e-15   1.91135e-11 DIIS
+   @RHF iter   9:    -2.17907771115917    2.66454e-15   3.89717e-13 DIIS
+   @RHF iter  10:    -2.17907771115918   -2.22045e-15   4.89739e-14 DIIS
+   @RHF iter  11:    -2.17907771115918    0.00000e+00   7.67266e-15 DIIS
 
   ==> Post-Iterations <==
 
@@ -235,8 +236,8 @@ compare_values(refdsrgpt2,get_variable("CURRENT ENERGY"),10,"DSRG-MRPT2 energy")
    => Energetics <=
 
     Nuclear Repulsion Energy =              2.9440601571290435
-    One-Electron Energy =                  -7.8377143748765752
-    Two-Electron Energy =                   2.7145765065883549
+    One-Electron Energy =                  -7.8377143748765263
+    Two-Electron Energy =                   2.7145765065883061
     Total Energy =                         -2.1790777111591768
 
 
@@ -258,213 +259,22 @@ Properties computed using the SCF density matrix
      X:     0.0000      Y:     0.0000      Z:     0.0000     Total:     0.0000
 
 
-*** tstop() called on Jeffs-MacBook-Pro-2.local at Tue Jun 27 16:54:48 2017
+*** tstop() called on yorks-mac.wireless.emory.edu at Mon Dec  4 14:54:44 2017
 Module time:
-	user time   =       0.39 seconds =       0.01 minutes
-	system time =       0.03 seconds =       0.00 minutes
-	total time  =          0 seconds =       0.00 minutes
-Total time:
-	user time   =       0.39 seconds =       0.01 minutes
-	system time =       0.03 seconds =       0.00 minutes
-	total time  =          0 seconds =       0.00 minutes
-	SCF energy........................................................PASSED
-
-*** tstart() called on Jeffs-MacBook-Pro-2.local
-*** at Tue Jun 27 16:54:48 2017
-
-   => Loading Basis Set <=
-
-    Name: CC-PVDZ
-    Role: ORBITAL
-    Keyword: BASIS
-    atoms 1-4 entry H          line    22 file /Users/jeffschriber/src/psi4_debug_install/share/psi4/basis/cc-pvdz.gbs 
-
-
-         ---------------------------------------------------------
-                                   SCF
-            by Justin Turney, Rob Parrish, Andy Simmonett
-                             and Daniel Smith
-                              RHF Reference
-                        1 Threads,    476 MiB Core
-         ---------------------------------------------------------
-
-  ==> Geometry <==
-
-    Molecular point group: d2h
-    Full point group: D2h
-
-    Geometry (in Angstrom), charge = 0, multiplicity = 1:
-
-       Center              X                  Y                   Z               Mass       
-    ------------   -----------------  -----------------  -----------------  -----------------
-           H          0.000000000000    -0.700000000000    -0.350000000000     1.007825032070
-           H          0.000000000000    -0.700000000000     0.350000000000     1.007825032070
-           H         -0.000000000000     0.700000000000    -0.350000000000     1.007825032070
-           H         -0.000000000000     0.700000000000     0.350000000000     1.007825032070
-
-  Running in d2h symmetry.
-
-  Rotational constants: A =     34.13621  B =      8.53405  C =      6.82724 [cm^-1]
-  Rotational constants: A = 1023377.76068  B = 255844.44017  C = 204675.55214 [MHz]
-  Nuclear repulsion =    2.944060157129043
-
-  Charge       = 0
-  Multiplicity = 1
-  Electrons    = 4
-  Nalpha       = 2
-  Nbeta        = 2
-
-  ==> Algorithm <==
-
-  SCF Algorithm Type is PK.
-  DIIS enabled.
-  MOM disabled.
-  Fractional occupation disabled.
-  Guess Type is SAD.
-  Energy threshold   = 1.00e-15
-  Density threshold  = 1.00e-12
-  Integral threshold = 0.00e+00
-
-  ==> Primary Basis <==
-
-  Basis Set: CC-PVDZ
-    Blend: CC-PVDZ
-    Number of shells: 12
-    Number of basis function: 20
-    Number of Cartesian functions: 20
-    Spherical Harmonics?: true
-    Max angular momentum: 1
-
-  ==> Pre-Iterations <==
-
-   -------------------------------------------------------
-    Irrep   Nso     Nmo     Nalpha   Nbeta   Ndocc  Nsocc
-   -------------------------------------------------------
-     Ag         4       4       0       0       0       0
-     B1g        1       1       0       0       0       0
-     B2g        1       1       0       0       0       0
-     B3g        4       4       0       0       0       0
-     Au         1       1       0       0       0       0
-     B1u        4       4       0       0       0       0
-     B2u        4       4       0       0       0       0
-     B3u        1       1       0       0       0       0
-   -------------------------------------------------------
-    Total      20      20       2       2       2       0
-   -------------------------------------------------------
-
-  ==> Integral Setup <==
-
-  Using in-core PK algorithm.
-   Calculation information:
-      Number of atoms:                   4
-      Number of AO shells:              12
-      Number of primitives:             20
-      Number of atomic orbitals:        20
-      Number of basis functions:        20
-
-      Integral cutoff                 1.00e-12
-      Number of threads:                 1
-
-  Performing in-core PK
-  Using 44310 doubles for integral storage.
-  We computed 3081 shell quartets total.
-  Whereas there are 3081 unique shell quartets.
-  ==> DiskJK: Disk-Based J/K Matrices <==
-
-    J tasked:                  Yes
-    K tasked:                  Yes
-    wK tasked:                  No
-    Memory (MB):               357
-    Schwarz Cutoff:          1E-12
-
-    OpenMP threads:              1
-  Minimum eigenvalue in the overlap matrix is 2.4975801198E-02.
-  Using Symmetric Orthogonalization.
-
-  SCF Guess: Superposition of Atomic Densities via on-the-fly atomic UHF.
-
-  ==> Iterations <==
-
-                        Total Energy        Delta E     RMS |[F,P]|
-
-   @RHF iter   0:    -1.89053115060868   -1.89053e+00   4.91625e-02 
-   @RHF iter   1:    -2.17498638758610   -2.84455e-01   8.12248e-03 
-   @RHF iter   2:    -2.17894275946835   -3.95637e-03   1.50517e-03 DIIS
-   @RHF iter   3:    -2.17907752253551   -1.34763e-04   6.71864e-05 DIIS
-   @RHF iter   4:    -2.17907771098363   -1.88448e-07   2.29385e-06 DIIS
-   @RHF iter   5:    -2.17907771115850   -1.74871e-10   8.98372e-08 DIIS
-   @RHF iter   6:    -2.17907771115915   -6.54143e-13   1.84767e-08 DIIS
-   @RHF iter   7:    -2.17907771115918   -2.22045e-14   1.36211e-09 DIIS
-   @RHF iter   8:    -2.17907771115918   -1.33227e-15   1.91135e-11 DIIS
-   @RHF iter   9:    -2.17907771115918    8.88178e-16   3.89706e-13 DIIS
-
-  ==> Post-Iterations <==
-
-    Orbital Energies (a.u.)
-    -----------------------
-
-    Doubly Occupied:                                                      
-
-       1Ag    -0.731109     1B2u   -0.473172  
-
-    Virtual:                                                              
-
-       1B1u    0.149152     1B3g    0.312110     2Ag     0.467948  
-       2B2u    0.487205     2B1u    0.888424     2B3g    1.029316  
-       3Ag     1.093503     1B3u    1.157482     1B1g    1.442832  
-       3B1u    1.883852     4Ag     1.902987     1B2g    1.930967  
-       3B2u    1.999378     4B2u    2.160832     1Au     2.213770  
-       3B3g    2.724004     4B1u    3.829643     4B3g    4.017613  
-
-    Final Occupation by Irrep:
-             Ag   B1g   B2g   B3g    Au   B1u   B2u   B3u 
-    DOCC [     1,    0,    0,    0,    0,    0,    1,    0 ]
-
-  Energy converged.
-
-  @RHF Final Energy:    -2.17907771115918
-
-   => Energetics <=
-
-    Nuclear Repulsion Energy =              2.9440601571290435
-    One-Electron Energy =                  -7.8377143748767049
-    Two-Electron Energy =                   2.7145765065884846
-    Total Energy =                         -2.1790777111591768
-
-
-
-Properties will be evaluated at   0.000000,   0.000000,   0.000000 Bohr
-
-Properties computed using the SCF density matrix
-
-  Nuclear Dipole Moment: (a.u.)
-     X:     0.0000      Y:     0.0000      Z:     0.0000
-
-  Electronic Dipole Moment: (a.u.)
-     X:     0.0000      Y:     0.0000      Z:     0.0000
-
-  Dipole Moment: (a.u.)
-     X:     0.0000      Y:     0.0000      Z:     0.0000     Total:     0.0000
-
-  Dipole Moment: (Debye)
-     X:     0.0000      Y:     0.0000      Z:     0.0000     Total:     0.0000
-
-
-*** tstop() called on Jeffs-MacBook-Pro-2.local at Tue Jun 27 16:54:48 2017
-Module time:
-	user time   =       0.37 seconds =       0.01 minutes
+	user time   =       0.49 seconds =       0.01 minutes
 	system time =       0.02 seconds =       0.00 minutes
-	total time  =          0 seconds =       0.00 minutes
+	total time  =          1 seconds =       0.02 minutes
 Total time:
-	user time   =       0.79 seconds =       0.01 minutes
-	system time =       0.05 seconds =       0.00 minutes
-	total time  =          0 seconds =       0.00 minutes
+	user time   =       0.49 seconds =       0.01 minutes
+	system time =       0.02 seconds =       0.00 minutes
+	total time  =          1 seconds =       0.02 minutes
+	SCF energy........................................................PASSED
    => Loading Basis Set <=
 
     Name: STO-3G
     Role: ORBITAL
     Keyword: MINAO_BASIS
-    atoms 1-4 entry H          line    19 file /Users/jeffschriber/src/psi4_debug_install/share/psi4/basis/sto-3g.gbs 
+    atoms 1-4 entry H          line    19 file /Users/york/src/psi4new/psi4/share/psi4/basis/sto-3g.gbs 
 
 
 Reading options from the FORTE block
@@ -472,6 +282,18 @@ Calling plugin forte.so.
 
 
 
+  Forte
+  ----------------------------------------------------------------------------
+  A suite of quantum chemistry methods for strongly correlated electrons
+
+    git branch: master - git commit: 1c92254a
+
+  Developed by:
+    Francesco A. Evangelista, Chenyang Li, Kevin P. Hannon,
+    Jeffrey B. Schriber, Tianyuan Zhang, Chenxi Cai
+  ----------------------------------------------------------------------------
+
+  Size of Determinant class: 32
 
   ==> MO Space Information <==
 
@@ -554,11 +376,10 @@ Calling plugin forte.so.
 	Starting second half-transformation.
 	Two-electron integral transformation complete.
 
-  Integral transformation done. 0.01329700 s
+  Integral transformation done. 0.01795400 s
   Reading the two-electron integrals from disk
   Size of two-electron integrals:   0.003576 GB
-  Conventional integrals take 0.06322600 s
-  Number of active orbitals: 4
+  Conventional integrals take 0.07484600 s
   Number of active alpha electrons: 2
   Number of active beta electrons: 2
   Maximum reference space size: 1000
@@ -586,6 +407,7 @@ Calling plugin forte.so.
     Gamma (Eh^(-1))                          1.00e+00
     Convergence threshold                    1.00e-09
     Ms                                       0
+    Diagonalization algorithm                SOLVER
     Determinant selection criterion          Second-order Energy
     Selection criterion                      Aimed selection
     Excited Algorithm                        ROOT_ORTHOGONALIZE
@@ -593,6 +415,104 @@ Calling plugin forte.so.
     Enforce spin completeness of basis       True
     Enforce complete aimed selection         True
   -----------------------------------------------------------------
+  Using 1 threads
+  Computing wavefunction for root 0
+  Using streamlined Q-space builder.
+
+  ==> Cycle 0 <==
+
+  Initial P space dimension: 12
+  Spin-complete dimension of the P space: 12 determinants
+  Time spent building a_list   0.000088 s
+  Time spent building b_list   0.000067 s
+  Time spent building aa_list  0.000054 s
+  Time spent building bb_list  0.000041 s
+  Time spent building ab_list  0.000110 s
+  Time spent diagonalizing H:   0.000234 s
+
+    P-space  CI Energy Root   0        = -2.184506407523 Eh =   0.0000 eV
+
+  Time spent forming F space:             0.000158
+ td[0] = 12 new entries
+ td[0] = 0 repeat entries
+  Time spent merging thread F spaces:             0.000028
+  Time spent preparing PQ_space: 0.000008
+  Dimension of the SD space: 0 determinants
+  Time spent building the model space (default): 0.000234 s
+
+  Time spent building sorting list: 0.000000
+  Time spent sorting: 0.000003
+ Time spent selecting: 0.000001
+  Dimension of the P + Q space: 12 determinants
+  Time spent screening the model space: 0.000036 s
+  Spin-complete dimension of the PQ space: 12
+  Time spent building a_list   0.000041 s
+  Time spent building b_list   0.000042 s
+  Time spent building aa_list  0.000024 s
+  Time spent building bb_list  0.000022 s
+  Time spent building ab_list  0.000062 s
+  Total time spent diagonalizing H:   0.000110 s
+
+    PQ-space CI Energy Root   0        = -2.184506407523 Eh =   0.0000 eV
+    PQ-space CI Energy + EPT2 Root   0 = -2.184506407523 Eh =   0.0000 eV
+
+
+  Most important contributions to root   0:
+    0   0.997743 0.995491368          11 |2002>
+    1  -0.031510 0.000992855           4 |0022>
+    2  -0.027821 0.000773993           9 |2020>
+    3  -0.026060 0.000679148           5 |--++>
+    4  -0.026060 0.000679148           6 |++-->
+    5  -0.024523 0.000601394           7 |2200>
+    6  -0.015522 0.000240937           3 |-+-+>
+    7  -0.015522 0.000240937           8 |+-+->
+    8   0.010538 0.000111057          10 |+--+>
+    9   0.010538 0.000111057           1 |-++->
+
+  Spin state for root 0: S^2 = 0.000000, S = 0.000, singlet
+  Cycle 0 took: 0.002271 s
+
+  ==> Cycle 1 <==
+
+  Initial P space dimension: 12
+  Spin-complete dimension of the P space: 12 determinants
+  Time spent building a_list   0.000042 s
+  Time spent building b_list   0.000044 s
+  Time spent building aa_list  0.000023 s
+  Time spent building bb_list  0.000022 s
+  Time spent building ab_list  0.000062 s
+  Time spent diagonalizing H:   0.000115 s
+
+    P-space  CI Energy Root   0        = -2.184506407523 Eh =   0.0000 eV
+
+  Time spent forming F space:             0.000117
+ td[0] = 12 new entries
+ td[0] = 0 repeat entries
+  Time spent merging thread F spaces:             0.000026
+  Time spent preparing PQ_space: 0.000007
+  Dimension of the SD space: 0 determinants
+  Time spent building the model space (default): 0.000183 s
+
+  Time spent building sorting list: 0.000000
+  Time spent sorting: 0.000000
+ Time spent selecting: 0.000000
+  Dimension of the P + Q space: 12 determinants
+  Time spent screening the model space: 0.000029 s
+  Spin-complete dimension of the PQ space: 12
+  Time spent building a_list   0.000041 s
+  Time spent building b_list   0.000041 s
+  Time spent building aa_list  0.000024 s
+  Time spent building bb_list  0.000022 s
+  Time spent building ab_list  0.000063 s
+  Total time spent diagonalizing H:   0.000111 s
+
+    PQ-space CI Energy Root   0        = -2.184506407523 Eh =   0.0000 eV
+    PQ-space CI Energy + EPT2 Root   0 = -2.184506407523 Eh =   0.0000 eV
+
+  ***** Calculation Converged *****
+  Not performing spin projection.
+  Saving root 0, ref_root is 0
+  Number of old roots: 1
 
   ==> ACI Summary <==
 
@@ -608,16 +528,22 @@ Calling plugin forte.so.
     0   0.997743 0.995491368          11 |2002>
     1  -0.031510 0.000992855          10 |0022>
     2  -0.027821 0.000773993           9 |2020>
-    3  -0.026060 0.000679148           8 |++-->
-    4  -0.026060 0.000679148           7 |--++>
+    3  -0.026060 0.000679148           8 |--++>
+    4  -0.026060 0.000679148           7 |++-->
     5  -0.024523 0.000601394           6 |2200>
-    6  -0.015522 0.000240937           4 |+-+->
-    7  -0.015522 0.000240937           5 |-+-+>
+    6  -0.015522 0.000240937           5 |-+-+>
+    7  -0.015522 0.000240937           4 |+-+->
     8   0.010538 0.000111057           3 |+--+>
     9   0.010538 0.000111057           2 |-++->
 
   Spin state for root 0: S^2 = 0.000000, S = 0.000, singlet
-  1-RDM  took 0.000569 s (determinant)
+  Computing 3-list...     done (0.00014 s)
+  Time spent building a_list   0.000042 s
+  Time spent building b_list   0.000043 s
+  Time spent building aa_list  0.000024 s
+  Time spent building bb_list  0.000022 s
+  Time spent building ab_list  0.000063 s
+  1-RDM  took 0.000031 s (determinant)
 
   ==> NATURAL ORBITALS <==
 
@@ -625,23 +551,35 @@ Calling plugin forte.so.
         1B3g    0.003421  
 
 
-  2-RDMS took 0.000043 s (determinant)
-  aaa size: 0
-  bbb size: 0
-  3-RDMs took 0.000400 s (determinant)
+  2-RDMS took 0.000039 s (determinant)
+  3-RDMs took 0.000328 s (determinant)
 
-  Adaptive-CI (bitset) ran in : 0.011129 s
+  Adaptive-CI ran in : 0.005295 s
 
   Saving information for root: 0
 
-              ----------------------------------------------------
+       -----------------------------------------------------------------
                             Semi-Canonical Orbitals
-                Jeffrey B. Schriber and Francesco A. Evangelista
-              ----------------------------------------------------
+         Chenyang Li, Jeffrey B. Schriber and Francesco A. Evangelista
+       -----------------------------------------------------------------
 
- Took 0.000186 s to build fock matrix
+  Took 0.000180 s to build Fock matrix
 
-  ==> Integral transformation <==
+  ==> Checking Fock Matrix Diagonal Blocks <==
+
+    Off-Diag. Elements       Max           2-Norm
+    ------------------------------------------------
+    Fa actv              0.0000000000   0.0000000000
+    Fb actv              0.0000000000   0.0000000000
+    ------------------------------------------------
+    Fa core              0.0000000000   0.0000000000
+    Fb core              0.0000000000   0.0000000000
+    ------------------------------------------------
+    Fa virt              0.0004938808   0.0011414181
+    Fb virt              0.0004938808   0.0011414181
+    ------------------------------------------------
+
+  ==> Integral Transformation to Semicanonical Basis <==
     Molecular point group: d2h
     Full point group: D2h
 
@@ -698,15 +636,28 @@ Calling plugin forte.so.
 	Starting second half-transformation.
 	Two-electron integral transformation complete.
 
-  Integral transformation done. 0.01314300 s
+  Integral transformation done. 0.01698800 s
   Reading the two-electron integrals from disk
   Size of two-electron integrals:   0.003576 GB
  Integrals are about to be updated.
   Frozen Orbitals takes     0.000 s.
- SemiCanonicalize takes 0.412776 s.
+
+  ==> Reference Transformation to Semicanonical Basis <==
+
+    Transformed 1 cumulants.
+    Transformed 2 cumulants and RDMs.
+    Transformed 3 cumulants.
+  SemiCanonicalize takes 1.965121 s.
+
+  ==> Multireference Driven Similarity Renormalization Group <==
+
+    Reading DSRG options ............................ Done
+    Setting ambit MO space .......................... Done
+    Preparing tensors for density cumulants ......... Done
+    Building Fock matrix ............................ Done
 
               ----------------------------------------------------
-                 Driven Similarity Renormalization Group MBPT2
+                    MR-DSRG Second-Order Perturbation Theory
                 Chenyang Li, Kevin Hannon, Francesco Evangelista
               ----------------------------------------------------
 
@@ -726,28 +677,38 @@ Calling plugin forte.so.
     state_type                                STATE-SPECIFIC
     form Hbar3                                         FALSE
 
-  ==> Checking Orbitals <==
+  ==> Checking Semicanonical Orbitals <==
 
+    Abs. max of Fock core, active, virtual blocks (Fij, i != j)
+                  core          active         virtual
+    --------------------------------------------------
+    Fα    0.0000000000    0.0000000000    0.0000000000
+    Fβ    0.0000000000    0.0000000000    0.0000000000
+    --------------------------------------------------
 
-  ==> Checking Orbitals <==
+    1-Norm of Fock core, active, virtual blocks (Fij, i != j)
+                  core          active         virtual
+    --------------------------------------------------
+    Fα    0.0000000000    0.0000000000    0.0000000000
+    Fβ    0.0000000000    0.0000000000    0.0000000000
+    --------------------------------------------------
 
     Orbitals are semi-canonicalized.
 
-
   ==> Computing DSRG-MRPT2 ... <==
 
-    Computing T2 amplitudes                  ...  Done. Timing        0.003229 s
-    Computing T1 amplitudes                  ...  Done. Timing        0.001860 s
-    Renormalizing two-electron integrals     ...  Done. Timing        0.001640 s
-    Renormalizing Fock matrix elements       ...  Done. Timing        0.002442 s
-    Computing <[F, T1]>                      ...  Done. Timing        0.001402 s
-    Computing <[F, T2]>                      ...  Done. Timing        0.002157 s
-    Computing <[V, T1]>                      ...  Done. Timing        0.001600 s
-    Computing <[V, T2]> (C_2)^4              ...  Done. Timing        0.010851 s
-    Computing <[V, T2]> C_4 (C_2)^2 HH       ...  Done. Timing        0.002204 s
-    Computing <[V, T2]> C_4 (C_2)^2 PP       ...  Done. Timing        0.004713 s
-    Computing <[V, T2]> C_4 (C_2)^2 PH       ...  Done. Timing        0.010353 s
-    Computing <[V, T2]> C_6 C_2              ...  Done. Timing        0.008757 s
+    Computing T2 amplitudes                  ...  Done. Timing        0.005721 s
+    Computing T1 amplitudes                  ...  Done. Timing        0.003829 s
+    Renormalizing two-electron integrals     ...  Done. Timing        0.003967 s
+    Renormalizing Fock matrix elements       ...  Done. Timing        0.003676 s
+    Computing <[F, T1]>                      ...  Done. Timing        0.001728 s
+    Computing <[F, T2]>                      ...  Done. Timing        0.003837 s
+    Computing <[V, T1]>                      ...  Done. Timing        0.003764 s
+    Computing <[V, T2]> (C_2)^4              ...  Done. Timing        0.024346 s
+    Computing <[V, T2]> C_4 (C_2)^2 HH       ...  Done. Timing        0.005480 s
+    Computing <[V, T2]> C_4 (C_2)^2 PP       ...  Done. Timing        0.006235 s
+    Computing <[V, T2]> C_4 (C_2)^2 PH       ...  Done. Timing        0.024037 s
+    Computing <[V, T2]> C_6 C_2              ...  Done. Timing        0.013977 s
 
   ==> Excitation Amplitudes Summary <==
 
@@ -760,7 +721,7 @@ Calling plugin forte.so.
     [  0       3    ]-0.000055 [ 11      14    ] 0.000029 [  6       8    ] 0.000024 
     [  6       9    ] 0.000020 [ 11      13    ] 0.000018 [ 15      17    ] 0.000017 
     --------------------------------------------------------------------------------
-    Norm of T1A vector: (nonzero elements: 12)                    0.000290412727565.
+    Norm of T1A vector: (nonzero elements: 12)                    0.000290412727544.
     --------------------------------------------------------------------------------
     Largest T1 amplitudes for spin case B:
        _       _                  _       _                  _       _               
@@ -771,7 +732,7 @@ Calling plugin forte.so.
     [  0       3    ]-0.000055 [ 11      14    ] 0.000029 [  6       8    ] 0.000024 
     [  6       9    ] 0.000020 [ 11      13    ] 0.000018 [ 15      17    ] 0.000017 
     --------------------------------------------------------------------------------
-    Norm of T1B vector: (nonzero elements: 12)                    0.000290412727565.
+    Norm of T1B vector: (nonzero elements: 12)                    0.000290412727544.
     --------------------------------------------------------------------------------
     Largest T2 amplitudes for spin case AA:
        i   j   a   b              i   j   a   b              i   j   a   b           
@@ -782,7 +743,7 @@ Calling plugin forte.so.
     [  0   6  13  15]-0.016698 [  6  15   7  16] 0.015824 [ 11  15  11  16]-0.015745 
     [  6  15   7  15] 0.015322 [  6  15   6  16]-0.013968 [ 11  15  12  16]-0.013663 
     --------------------------------------------------------------------------------
-    Norm of T2AA vector: (nonzero elements: 768)                  0.191847298506037.
+    Norm of T2AA vector: (nonzero elements: 768)                  0.191847298506049.
     --------------------------------------------------------------------------------
     Largest T2 amplitudes for spin case AB:
            _       _                  _       _                  _       _           
@@ -794,7 +755,7 @@ Calling plugin forte.so.
     [  6  15   7  15] 0.027333 [ 15  15   2   2]-0.025046 [ 15  15   7   7]-0.024228 
     [ 15  15  16  16]-0.023147 [  0   0   2   2]-0.022207 [ 11  11  12  12]-0.020791 
     --------------------------------------------------------------------------------
-    Norm of T2AB vector: (nonzero elements: 1024)                 0.268310680456804.
+    Norm of T2AB vector: (nonzero elements: 1024)                 0.268310680456818.
     --------------------------------------------------------------------------------
     Largest T2 amplitudes for spin case BB:
        _   _   _   _              _   _   _   _              _   _   _   _           
@@ -806,7 +767,7 @@ Calling plugin forte.so.
     [  0   6  13  15]-0.016698 [  6  15   7  16] 0.015824 [ 11  15  11  16]-0.015745 
     [  6  15   7  15] 0.015322 [  6  15   6  16]-0.013968 [ 11  15  12  16]-0.013663 
     --------------------------------------------------------------------------------
-    Norm of T2BB vector: (nonzero elements: 768)                  0.191847298506037.
+    Norm of T2BB vector: (nonzero elements: 768)                  0.191847298506049.
     --------------------------------------------------------------------------------
 
   ==> Possible Intruders <==
@@ -819,37 +780,34 @@ Calling plugin forte.so.
 
   ==> DSRG-MRPT2 Energy Summary <==
 
-    E0 (reference)                 =     -2.184506407522856
+    E0 (reference)                 =     -2.184506407522865
     <[F, T1]>                      =     -0.000000235988976
     <[F, T2]>                      =     -0.000004781187791
     <[V, T1]>                      =     -0.000000657217190
-    <[V, T2]> (C_2)^4              =     -0.053690996305493
+    <[V, T2]> (C_2)^4              =     -0.053690996305491
     <[V, T2]> C_4 (C_2)^2 HH       =      0.000000000000000
-    <[V, T2]> C_4 (C_2)^2 PP       =      0.002266208414590
-    <[V, T2]> C_4 (C_2)^2 PH       =     -0.002610004604878
-    <[V, T2]> C_6 C_2              =     -0.000120013480848
-    <[V, T2]>                      =     -0.054154805976630
-    DSRG-MRPT2 correlation energy  =     -0.054160480370587
-    DSRG-MRPT2 total energy        =     -2.238666887893443
-    max(T1)                        =      0.000173810102572
-    max(T2)                        =      0.042491775992233
-    ||T1||                         =      0.000410705618008
-    ||T2||                         =      0.601309618147673
+    <[V, T2]> C_4 (C_2)^2 PP       =      0.002266208414591
+    <[V, T2]> C_4 (C_2)^2 PH       =     -0.002610004604879
+    <[V, T2]> C_6 C_2              =     -0.000120013480849
+    <[V, T2]>                      =     -0.054154805976628
+    DSRG-MRPT2 correlation energy  =     -0.054160480370585
+    DSRG-MRPT2 total energy        =     -2.238666887893450
+    max(T1)                        =      0.000173810102552
+    max(T2)                        =      0.042491775992244
+    ||T1||                         =      0.000410705617979
+    ||T2||                         =      0.601309618147707
 
-  Energy took      0.064 s
+  Energy took      0.108 s
 
 
   ==> Total Timings (s) for Computing Commutators <==
 
              [H1, T1]    [H1, T2]    [H2, T1]    [H2, T2]
     -----------------------------------------------------
-    -> C0       0.001       0.002       0.002       0.037
+    -> C0       0.002       0.004       0.004       0.074
     -> C1       0.000       0.000       0.000       0.000
     -> C2                   0.000       0.000       0.000
     -----------------------------------------------------
-
-
-  Your calculation took 0.58836800 seconds
 	DSRG-MRPT2 energy.................................................PASSED
 
 *** Psi4 exiting successfully. Buy a developer a beer!

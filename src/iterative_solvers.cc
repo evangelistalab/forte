@@ -126,7 +126,7 @@ void DavidsonLiuSolver::set_project_out(std::vector<sparse_vec> project_out) {
 
 SharedVector DavidsonLiuSolver::eigenvalues() const { return lambda; }
 
-SharedMatrix DavidsonLiuSolver::eigenvectors() const { return b_; }
+SharedMatrix DavidsonLiuSolver::eigenvectors() const { return bnew; }
 
 SharedVector DavidsonLiuSolver::eigenvector(size_t n) const {
     double** v = bnew->pointer();

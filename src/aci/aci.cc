@@ -184,7 +184,7 @@ void set_ACI_options(ForteOptions& foptions) {
     /*- Save spin correlation matrix to file -*/
     foptions.add_bool("SPIN_MAT_TO_FILE", false, "Save spin correlation matrix to file");
 
-    foptions.add_str("SPIN_BASIS", "NO", "Basis for spin analysis");
+    foptions.add_str("SPIN_BASIS", "LOCAL", "Basis for spin analysis");
 
     /*- Sigma for reference relaxation -*/
     foptions.add_double("ACI_RELAX_SIGMA", 0.01, "Sigma for reference relaxation");
@@ -3165,11 +3165,12 @@ void AdaptiveCI::spin_analysis() {
         CB->copy( Cb_new );
          
     } else if (options_.get_str("SPIN_BASIS") == "LOCAL" ){
+        outfile->Printf("\n  Computing spin correlation in local basis \n");
         
         auto loc = std::make_shared<LOCALIZE>(reference_wavefunction_, options_, ints_, mo_space_info_ );
         loc->full_localize();
-        UA->copy(loc->get_U());      
-        UB->copy(loc->get_U());      
+        UA = loc->get_U()->clone();      
+        UB = loc->get_U()->clone();      
 
     } else {
         outfile->Printf("\n  Computing spin correlation in reference basis \n");
@@ -3182,8 +3183,6 @@ void AdaptiveCI::spin_analysis() {
     Ua.iterate([&](const std::vector<size_t>& i, double& value) { value = UA->get(i[0], i[1]); });
     Ub.iterate([&](const std::vector<size_t>& i, double& value) { value = UB->get(i[0], i[1]); });
 
-    ambit::Tensor U = ambit::Tensor::build(ambit::CoreTensor, "U", {nact, nact});
-    U.iterate([&](const std::vector<size_t>& i, double& value) { value = UA->get(i[0], i[1]); });
 
     //    new_dim = nact;
     // 1 rdms first
@@ -3226,21 +3225,23 @@ void AdaptiveCI::spin_analysis() {
             value += 0.25 * ( l2aa[ i * nact3 + j * nact2 + i * nact + j ]
                             + l2bb[ i * nact3 + j * nact2 + i * nact + j ] 
                             - l2ab[ i * nact3 + j * nact2 + i * nact + j ] 
-                            - l2ab[ j * nact3 + i * nact2 + j * nact + i ]);
-                           // - l1a[i*nact + i] * l1a[j*nact + j] 
-                           // - l1b[i*nact + i] * l1b[j*nact + j] 
-                           // + l1a[i*nact + i] * l1b[j*nact + j] 
-                           // + l1b[i*nact + i] * l1a[j*nact + j] );
+                            - l2ab[ j * nact3 + i * nact2 + j * nact + i ]
+                          //  - l1a[i*nact + i] * l1a[j*nact + j] 
+                          //  - l1b[i*nact + i] * l1b[j*nact + j] 
+                          //  + l1a[i*nact + i] * l1b[j*nact + j] 
+                          //  + l1b[i*nact + i] * l1a[j*nact + j] 
+                            );
 
             spin_corr->set(i, j, value);
         }
     }
+    outfile->Printf("\n");
     spin_corr->print();
     SharedMatrix spin_evecs(new Matrix(nact, nact));
     SharedVector spin_evals(new Vector(nact));
 
-    spin_corr->diagonalize(spin_evecs, spin_evals);
-    spin_evals->print();
+//    spin_corr->diagonalize(spin_evecs, spin_evals);
+//    spin_evals->print();
 
     if (options_.get_bool("SPIN_MAT_TO_FILE")) {
         std::ofstream file;
@@ -3258,22 +3259,22 @@ void AdaptiveCI::spin_analysis() {
     SharedMatrix Ca = reference_wavefunction_->Ca();
     Dimension nactpi = mo_space_info_->get_dimension("ACTIVE");
     std::vector<size_t> actpi = mo_space_info_->get_absolute_mo("ACTIVE");
-
-    SharedMatrix S_plt = std::make_shared<Matrix>("S", nact, nact);
-Ca->print();    
+    SharedMatrix Ca_copy = Ca->clone();
     for( int i = 0; i < nact; ++i ){
-        SharedVector vec = std::make_shared<Vector>(nact);
+        SharedVector vec = std::make_shared<Vector>(nmo_);
+        vec->zero();
         for( int j = 0; j < nact; ++j ){
-            auto col = Ca->get_column(0,actpi[j]);
-            for( int k = 0; k < nact; ++k ){
-                double val = col->get(k)*col->get(k)*spin_corr->get(actpi[i],actpi[j]);
-                vec->set(j, val + vec->get(actpi[j]));
+            auto col = Ca_copy->get_column(0,actpi[j]);
+            double spin = spin_corr->get(j,i);
+            for( int k = 0; k < nmo_; ++k ){
+                double val = col->get(k) * col->get(k);
+                col->set(k, val);
             } 
-        }
-        S_plt->set_column(0,i, vec);
+            col->scale(spin);
+            vec->add(col);
+       }
+        Ca->set_column(0,actpi[i], vec);
     }
-    Ca->copy(S_plt);
-S_plt->print();
 */
 }
 
