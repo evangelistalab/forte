@@ -41,11 +41,19 @@ using namespace psi;
 namespace psi {
 namespace forte {
 
+STLBitsetDeterminant::bit_t make_mask(int nstr_bits, bool shift) {
+    STLBitsetDeterminant::bit_t mask;
+    int s = shift ? nstr_bits : 0;
+    for (int n = 0; n < nstr_bits; ++n) {
+        mask[s + n] = true;
+    }
+    return mask;
+}
+
 const STLBitsetDeterminant::bit_t STLBitsetDeterminant::alfa_mask =
-    bit_t(0xFFFFFFFFFFFFFFFF) |
-    (bit_t(0xFFFFFFFFFFFFFFFF) << STLBitsetDeterminant::num_str_bits / 2);
+    make_mask(STLBitsetDeterminant::num_str_bits, false);
 const STLBitsetDeterminant::bit_t STLBitsetDeterminant::beta_mask =
-    alfa_mask << STLBitsetDeterminant::num_str_bits;
+    make_mask(STLBitsetDeterminant::num_str_bits, true);
 
 STLBitsetDeterminant::STLBitsetDeterminant() {}
 
@@ -578,5 +586,5 @@ void enforce_spin_completeness(std::vector<STLBitsetDeterminant>& det_space, int
     //    outfile->Printf("\n\n  Determinant space is spin complete.");
     //}
 }
-}
-} // end namespace
+} // namespace forte
+} // namespace psi

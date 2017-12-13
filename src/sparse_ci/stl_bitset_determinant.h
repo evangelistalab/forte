@@ -56,10 +56,11 @@ namespace forte {
 
 class STLBitsetDeterminant {
   public:
-    /// The number of bits used to represent a determinant
-    static constexpr int num_det_bits = 256;
     /// The number of bits used to represent a string (half a determinant)
     static constexpr int num_str_bits = 128;
+    /// The number of bits used to represent a determinant
+    static constexpr int num_det_bits = 2 * num_str_bits;
+
     /// The bitset type
     using bit_t = std::bitset<num_det_bits>;
 

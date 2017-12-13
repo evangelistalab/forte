@@ -76,6 +76,9 @@ void compute_dwms_mrpt2_energy(SharedWavefunction ref_wfn, Options& options,
         int multi, irrep, nroots;
         std::tie(irrep, multi, nroots, std::ignore) = sa_info[n];
 
+        // save the re-diagonalized eigen vectors
+        std::vector<SharedVector> evecs_new;
+
         for (int i = 0; i < nroots; ++i) {
             std::stringstream current_job;
             current_job << "Current Job: " << multi_label[multi - 1] << " " << irrep_symbol[irrep]
@@ -129,16 +132,34 @@ void compute_dwms_mrpt2_energy(SharedWavefunction ref_wfn, Options& options,
 
             Ept2s[n].push_back(Ept2);
 
-            // rotate integrals back to original basis (same as SA-CASSCF in step 1)
+            // since Heff is rotated to the original basis,
+            // we can safely store the relaxed eigenvectors
+            evecs_new.push_back(fci_mo->eigen()[i].first);
+
+            // rotate integrals back to original basis (i.e., same as SA-CASSCF in step 1)
             counter += 1;
             if (counter < total_nroots) {
                 semi.back_transform_ints();
             }
         }
+
+        // overlap of rediagonalized wave functions of this symmetry
+        std::string Sname = "Overlap of " + irrep_symbol[irrep];
+        SharedMatrix S(new Matrix(Sname, nroots, nroots));
+        S->identity();
+        for (int i = 0; i < nroots; ++i) {
+            for (int j = i + 1; j < nroots; ++j) {
+                double Sij = evecs_new[i]->vector_dot(evecs_new[j]);
+                S->set(i, j, Sij);
+                S->set(j, i, Sij);
+            }
+        }
+        outfile->Printf("\n\n");
+        S->print();
     }
 
     // print summary
-    print_h2("Dynamically Weighted Multi-State DSRG-PT2 Energy Summary");
+    outfile->Printf("  ==> Dynamically Weighted Multi-State DSRG-PT2 Energy Summary <==\n");
 
     auto print_energy_summary = [&](const std::string& name,
                                     const std::vector<std::vector<double>>& energy,
