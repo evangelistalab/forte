@@ -78,6 +78,7 @@ void compute_dwms_mrpt2_energy(SharedWavefunction ref_wfn, Options& options,
 
         // save the re-diagonalized eigen vectors
         std::vector<SharedVector> evecs_new;
+        std::vector<std::vector<std::pair<size_t, double>>> projected_roots;
 
         for (int i = 0; i < nroots; ++i) {
             std::stringstream current_job;
@@ -88,7 +89,7 @@ void compute_dwms_mrpt2_energy(SharedWavefunction ref_wfn, Options& options,
             outfile->Printf("\n  %s", current_job.str().c_str());
             outfile->Printf("\n  %s\n", std::string(title_size, '=').c_str());
 
-            // compute new weighted density
+            // compute new weighted density using fci_mo->eigens()
             fci_mo->set_target_dwms(n, i);
             Reference reference = fci_mo->reference(max_rdm_level);
             Erefs[n].push_back(reference.get_Eref());
@@ -125,16 +126,27 @@ void compute_dwms_mrpt2_energy(SharedWavefunction ref_wfn, Options& options,
 
             // rediagonalize the CAS Hamiltonian
             fci_mo->set_fci_int(fci_ints);
-            fci_mo->set_nroots(nroots);
+            fci_mo->set_nroots(nroots - i);
             fci_mo->set_root_sym(irrep);
-            fci_mo->set_root(i);
+            fci_mo->set_root(0);
+
+            if (i != 0) {
+                // add last root to the projection list
+                std::vector<std::pair<size_t, double>> projection;
+                for (size_t I = 0, nI = evecs_new[i - 1]->dim(); I < nI; ++I) {
+                    projection.push_back(std::make_pair(I, evecs_new[i - 1]->get(I)));
+                }
+                projected_roots.push_back(projection);
+                fci_mo->project_roots(projected_roots);
+            }
+
             double Ept2 = fci_mo->compute_ss_energy();
 
             Ept2s[n].push_back(Ept2);
 
             // since Heff is rotated to the original basis,
             // we can safely store the relaxed eigenvectors
-            evecs_new.push_back(fci_mo->eigen()[i].first);
+            evecs_new.push_back(fci_mo->eigen()[0].first);
 
             // rotate integrals back to original basis (i.e., same as SA-CASSCF in step 1)
             counter += 1;
@@ -144,8 +156,9 @@ void compute_dwms_mrpt2_energy(SharedWavefunction ref_wfn, Options& options,
         }
 
         // overlap of rediagonalized wave functions of this symmetry
-        std::string Sname = "Overlap of " + irrep_symbol[irrep];
-        SharedMatrix S(new Matrix(Sname, nroots, nroots));
+        std::string Sname = "Overlap of " + multi_label[multi - 1] + " " + irrep_symbol[irrep];
+        print_h2(Sname);
+        SharedMatrix S(new Matrix("S", nroots, nroots));
         S->identity();
         for (int i = 0; i < nroots; ++i) {
             for (int j = i + 1; j < nroots; ++j) {
@@ -154,7 +167,6 @@ void compute_dwms_mrpt2_energy(SharedWavefunction ref_wfn, Options& options,
                 S->set(j, i, Sij);
             }
         }
-        outfile->Printf("\n\n");
         S->print();
     }
 

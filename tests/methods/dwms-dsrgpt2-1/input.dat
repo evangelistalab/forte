@@ -4,7 +4,7 @@ import forte
 
 Emcscf_avg = -106.75288506058001
 Ept2_root0 = -106.93005699410999
-Ept2_root1 = -106.91457748207657
+Ept2_root1 = -106.91457784175027
 
 molecule {
   0 1

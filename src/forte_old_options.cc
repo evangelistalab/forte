@@ -291,11 +291,9 @@ void forte_old_options(Options& options) {
     //////////////////////////////////////////////////////////////
     /// OPTIONS FOR STATE-AVERAGE CASCI/CASSCF
     //////////////////////////////////////////////////////////////
-    /*- An array of states [[irrep1, multi1, nstates1], [irrep2, multi2,
-     * nstates2], ...] -*/
+    /*- An array of states [[irrep1, multi1, nstates1], [irrep2, multi2, nstates2], ...] -*/
     options.add("AVG_STATE", new ArrayType());
-    /*- An array of weights [[w1_1, w1_2, ..., w1_n], [w2_1, w2_2, ...,
-     * w2_n], ...] -*/
+    /*- An array of weights [[w1_1, w1_2, ..., w1_n], [w2_1, w2_2, ..., w2_n], ...] -*/
     options.add("AVG_WEIGHT", new ArrayType());
     /*- Monitor the CAS-CI solutions through iterations -*/
     options.add_bool("MONITOR_SA_SOLUTION", false);
