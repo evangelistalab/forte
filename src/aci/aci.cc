@@ -203,6 +203,7 @@ AdaptiveCI::AdaptiveCI(SharedWavefunction ref_wfn, Options& options,
     reference_wavefunction_ = ref_wfn;
 
     mo_symmetry_ = mo_space_info_->symmetry("ACTIVE");
+    sigma_ = options_.get_double("SIGMA");
 }
 
 AdaptiveCI::~AdaptiveCI() {}
@@ -288,7 +289,6 @@ void AdaptiveCI::startup() {
 
     // Read options
     nroot_ = options_.get_int("ACI_NROOT");
-    sigma_ = options_.get_double("SIGMA");
     gamma_ = options_.get_double("GAMMA");
     screen_thresh_ = options_.get_double("ACI_PRESCREEN_THRESHOLD");
     add_aimed_degenerate_ = options_.get_bool("ACI_ADD_AIMED_DEGENERATE");
