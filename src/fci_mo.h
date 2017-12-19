@@ -178,6 +178,11 @@ class FCI_MO : public Wavefunction {
         dwms_target_ = std::make_tuple(entry, root);
     }
 
+    /// Set projected roots
+    void project_roots(std::vector<std::vector<std::pair<size_t, double>>>& projected) {
+        projected_roots_ = projected;
+    }
+
     /// Return fci_int_ pointer
     std::shared_ptr<FCIIntegrals> fci_ints() { return fci_ints_; }
 
@@ -330,6 +335,9 @@ class FCI_MO : public Wavefunction {
     std::vector<std::tuple<int, int, int, std::vector<double>>> sa_info_;
     /// Target root for DWMS-DSRG-PT2 [tuple of sym (1st dim of sa_info_), root_number]
     std::tuple<int, int> dwms_target_;
+
+    /// Roots to be projected out in the diagonalization
+    std::vector<std::vector<std::pair<size_t, double>>> projected_roots_;
 
     /// Eigen Values and Eigen Vectors of Certain Symmetry
     std::vector<pair<SharedVector, double>> eigen_;

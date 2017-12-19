@@ -180,14 +180,6 @@ void DFIntegrals::gather_integrals() {
     if (print_ > 0) {
         outfile->Printf("\n Computing Density fitted integrals \n");
     }
-    if (options_.get_str("DF_BASIS_MP2").length() == 0) {
-        outfile->Printf("\n Please set a DF_BASIS_MP2 option to a specified "
-                        "auxiliary basis set");
-#ifdef HAVE_MPI
-        MPI_Abort(MPI_COMM_WORLD, 0);
-#endif
-        throw PSIEXCEPTION("Select a DF_BASIS_MP2 for use with DFIntegrals");
-    }
 
     std::shared_ptr<BasisSet> primary = wfn_->basisset();
     std::shared_ptr<BasisSet> auxiliary = wfn_->get_basisset("DF_BASIS_MP2");

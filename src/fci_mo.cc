@@ -1389,6 +1389,10 @@ void FCI_MO::Diagonalize_H(const vecdet& p_space, const int& multi, const int& n
     sparse_solver.set_maxiter_davidson(options_.get_int("DL_MAXITER"));
     sparse_solver.set_guess_dimension(options_.get_int("DL_GUESS_SIZE"));
     sparse_solver.set_sigma_method(sigma_method);
+    if (projected_roots_.size() != 0) {
+        sparse_solver.set_root_project(true);
+        sparse_solver.add_bad_states(projected_roots_);
+    }
     if (!quiet_) {
         sparse_solver.set_print_details(true);
     }
