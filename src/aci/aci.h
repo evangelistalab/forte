@@ -294,6 +294,10 @@ class AdaptiveCI : public Wavefunction {
     /// Print a wave function
     void print_wfn(DeterminantHashVec& space, WFNOperator& op,  SharedMatrix evecs, int nroot);
 
+    /// Batched version of find q space
+    void find_q_space_batched(DeterminantHashVec& P_space, DeterminantHashVec& PQ_space,
+                              SharedVector evals, SharedMatrix evecs);
+
     /// Streamlined version of find q space
     void default_find_q_space(DeterminantHashVec& P_space, DeterminantHashVec& PQ_space,
                               SharedVector evals, SharedMatrix evecs);
@@ -323,6 +327,8 @@ class AdaptiveCI : public Wavefunction {
                                    det_hash<std::vector<double>>& V_hash);
     void get_excited_determinants_sr(SharedMatrix evecs, DeterminantHashVec& P_space,
                                    det_hash<double>& V_hash);
+    double get_excited_determinants_batch(SharedMatrix evecs, SharedVector evals, DeterminantHashVec& P_space,
+                                   std::vector<std::pair<double, Determinant>>& F_space);
 
     /// Prune the space of determinants
     void prune_q_space(DeterminantHashVec& PQ_space, DeterminantHashVec& P_space,
