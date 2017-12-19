@@ -130,15 +130,15 @@ void compute_dwms_mrpt2_energy(SharedWavefunction ref_wfn, Options& options,
             fci_mo->set_root_sym(irrep);
             fci_mo->set_root(0);
 
+            std::vector<std::pair<size_t, double>> projection;
             if (i != 0) {
                 // add last root to the projection list
-                std::vector<std::pair<size_t, double>> projection;
                 for (size_t I = 0, nI = evecs_new[i - 1]->dim(); I < nI; ++I) {
                     projection.push_back(std::make_pair(I, evecs_new[i - 1]->get(I)));
                 }
                 projected_roots.push_back(projection);
-                fci_mo->project_roots(projected_roots);
             }
+            fci_mo->project_roots(projected_roots);
 
             double Ept2 = fci_mo->compute_ss_energy();
 
@@ -193,8 +193,9 @@ void compute_dwms_mrpt2_energy(SharedWavefunction ref_wfn, Options& options,
                 }
                 counter += 1;
             }
-            outfile->Printf("\n    %s\n", dash.c_str());
+            outfile->Printf("\n    %s", dash.c_str());
         }
+        outfile->Printf("\n");
     };
 
     print_energy_summary("Old Ref. Energy", Eref0s, false);
