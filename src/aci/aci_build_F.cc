@@ -929,17 +929,17 @@ double AdaptiveCI::get_excited_determinants_batch( SharedMatrix evecs, SharedVec
                 for (int a = 0; a < nvalpha; ++a) {
                     int aa = avir[a];
                     if ((mo_symmetry_[ii] ^ mo_symmetry_[aa]) == 0) {
-                        new_det = det;
-                        new_det.set_alfa_bit(ii, false);
-                        new_det.set_alfa_bit(aa, true);
-                        if (P_space.has_det(new_det))
-                            continue;
-                        double HIJ = fci_ints_->slater_rules_single_alpha(new_det, ii, aa) * c_I;
-                        if ((std::fabs(HIJ) >= screen_thresh_)) {
+                        // Check if the determinant goes in this bin
+                        size_t hash_val = Determinant::Hash()(new_det);
+                        if ((hash_val % nbin) == bin) {
+                            new_det = det;
+                            new_det.set_alfa_bit(ii, false);
+                            new_det.set_alfa_bit(aa, true);
+                            if (P_space.has_det(new_det))
+                                continue;
+                            double HIJ = fci_ints_->slater_rules_single_alpha(new_det, ii, aa) * c_I;
+                            if ((std::fabs(HIJ) >= screen_thresh_)) {
 
-                            // Check if the determinant goes in this bin
-                            size_t hash_val = Determinant::Hash()(new_det);
-                            if ((hash_val % nbin) == bin) {
                                 if (A_b.count(new_det) == 0) {
                                     A_b[new_det] = HIJ;
                                 } else {
@@ -956,17 +956,16 @@ double AdaptiveCI::get_excited_determinants_batch( SharedMatrix evecs, SharedVec
                 for (int a = 0; a < nvbeta; ++a) {
                     int aa = bvir[a];
                     if ((mo_symmetry_[ii] ^ mo_symmetry_[aa]) == 0) {
-                        new_det = det;
-                        new_det.set_beta_bit(ii, false);
-                        new_det.set_beta_bit(aa, true);
-                        if (P_space.has_det(new_det))
-                            continue;
-                        double HIJ = fci_ints_->slater_rules_single_beta(new_det, ii, aa) * c_I;
-                        if ((std::fabs(HIJ)  >= screen_thresh_)) {
-
-                            // Check if the determinant goes in this bin
-                            size_t hash_val = Determinant::Hash()(new_det);
-                            if ((hash_val % nbin) == bin) {
+                        // Check if the determinant goes in this bin
+                        size_t hash_val = Determinant::Hash()(new_det);
+                        if ((hash_val % nbin) == bin) {
+                            new_det = det;
+                            new_det.set_beta_bit(ii, false);
+                            new_det.set_beta_bit(aa, true);
+                            if (P_space.has_det(new_det))
+                                continue;
+                            double HIJ = fci_ints_->slater_rules_single_beta(new_det, ii, aa) * c_I;
+                            if ((std::fabs(HIJ) >= screen_thresh_)) {
                                 if (A_b.count(new_det) == 0) {
                                     A_b[new_det] = HIJ;
                                 } else {
@@ -989,16 +988,16 @@ double AdaptiveCI::get_excited_determinants_batch( SharedMatrix evecs, SharedVec
                             int bb = avir[b];
                             if ((mo_symmetry_[ii] ^ mo_symmetry_[jj] ^ mo_symmetry_[aa] ^
                                  mo_symmetry_[bb]) == 0) {
-                                new_det = det;
-                                double sign = new_det.double_excitation_aa(ii, jj, aa, bb) * c_I;
-                                if (P_space.has_det(new_det))
-                                    continue;
-                                double HIJ = fci_ints_->tei_aa(ii, jj, aa, bb) * sign;
-                                if ((std::fabs(HIJ) >= screen_thresh_)) {
+                                // Check if the determinant goes in this bin
+                                size_t hash_val = Determinant::Hash()(new_det);
+                                if ((hash_val % nbin) == bin) {
+                                    new_det = det;
+                                    double sign = new_det.double_excitation_aa(ii, jj, aa, bb) * c_I;
+                                    if (P_space.has_det(new_det))
+                                        continue;
+                                    double HIJ = fci_ints_->tei_aa(ii, jj, aa, bb) * sign;
+                                    if ((std::fabs(HIJ) >= screen_thresh_)) {
 
-                                    // Check if the determinant goes in this bin
-                                    size_t hash_val = Determinant::Hash()(new_det);
-                                    if ((hash_val % nbin) == bin) {
                                         if (A_b.count(new_det) == 0) {
                                             A_b[new_det] = HIJ;
                                         } else {
@@ -1022,16 +1021,16 @@ double AdaptiveCI::get_excited_determinants_batch( SharedMatrix evecs, SharedVec
                             int bb = bvir[b];
                             if ((mo_symmetry_[ii] ^ mo_symmetry_[jj] ^ mo_symmetry_[aa] ^
                                  mo_symmetry_[bb]) == 0) {
-                                new_det = det;
-                                double sign = new_det.double_excitation_bb(ii, jj, aa, bb);
-                                if (P_space.has_det(new_det))
-                                    continue;
-                                double HIJ = fci_ints_->tei_bb(ii, jj, aa, bb) * sign * c_I;
-                                if ((std::fabs(HIJ) >= screen_thresh_)) {
+                                // Check if the determinant goes in this bin
+                                size_t hash_val = Determinant::Hash()(new_det);
+                                if ((hash_val % nbin) == bin) {
+                                    new_det = det;
+                                    double sign = new_det.double_excitation_bb(ii, jj, aa, bb);
+                                    if (P_space.has_det(new_det))
+                                        continue;
+                                    double HIJ = fci_ints_->tei_bb(ii, jj, aa, bb) * sign * c_I;
+                                    if ((std::fabs(HIJ) >= screen_thresh_)) {
 
-                                    // Check if the determinant goes in this bin
-                                    size_t hash_val = Determinant::Hash()(new_det);
-                                    if ((hash_val % nbin) == bin) {
                                         if (A_b.count(new_det) == 0) {
                                             A_b[new_det] = HIJ;
                                         } else {
@@ -1055,13 +1054,13 @@ double AdaptiveCI::get_excited_determinants_batch( SharedMatrix evecs, SharedVec
                             int bb = bvir[b];
                             if ((mo_symmetry_[ii] ^ mo_symmetry_[jj] ^ mo_symmetry_[aa] ^
                                  mo_symmetry_[bb]) == 0) {
-                                new_det = det;
-                                double sign = new_det.double_excitation_ab(ii, jj, aa, bb);
-                                if (P_space.has_det(new_det))
-                                    continue;
-
                                 size_t hash_val = Determinant::Hash()(new_det);
                                 if ((hash_val % nbin) == bin) {
+                                    new_det = det;
+                                    double sign = new_det.double_excitation_ab(ii, jj, aa, bb);
+                                    if (P_space.has_det(new_det))
+                                        continue;
+
                                     double HIJ = fci_ints_->tei_ab(ii, jj, aa, bb) * sign * c_I;
                                     if ((std::fabs(HIJ) >= screen_thresh_)) {
 
