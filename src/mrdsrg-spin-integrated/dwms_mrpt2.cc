@@ -133,6 +133,7 @@ void compute_dwms_mrpt2_energy(SharedWavefunction ref_wfn, Options& options,
             std::vector<std::pair<size_t, double>> projection;
             if (i != 0) {
                 // add last root to the projection list
+                outfile->Printf("\n    Project out previous DWMS-DSRG-PT2 roots.\n");
                 for (size_t I = 0, nI = evecs_new[i - 1]->dim(); I < nI; ++I) {
                     projection.push_back(std::make_pair(I, evecs_new[i - 1]->get(I)));
                 }
@@ -161,7 +162,7 @@ void compute_dwms_mrpt2_energy(SharedWavefunction ref_wfn, Options& options,
         SharedMatrix S(new Matrix("S", nroots, nroots));
         S->identity();
         for (int i = 0; i < nroots; ++i) {
-            for (int j = i + 1; j < nroots; ++j) {
+            for (int j = i; j < nroots; ++j) {
                 double Sij = evecs_new[i]->vector_dot(evecs_new[j]);
                 S->set(i, j, Sij);
                 S->set(j, i, Sij);
