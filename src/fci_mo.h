@@ -183,6 +183,17 @@ class FCI_MO : public Wavefunction {
         projected_roots_ = projected;
     }
 
+    /// Set initial guess for rediagonalization in DWMS-DSRG-PT2
+    /// n: the n-th entry of sa_info_
+    /// i: the i-th root in this entry of sa_info_
+    void set_dwms_initial_guess(int n, int i) {
+        initial_guess_.clear();
+        SharedVector evec = eigens_[n][i].first;
+        for (size_t I = 0, nI = evec->dim(); I < nI; ++I) {
+            initial_guess_.push_back(std::make_pair(I, evec->get(I)));
+        }
+    }
+
     /// Return fci_int_ pointer
     std::shared_ptr<FCIIntegrals> fci_ints() { return fci_ints_; }
 
@@ -198,8 +209,7 @@ class FCI_MO : public Wavefunction {
     /// Return the vector of eigen vectors and eigen values
     std::vector<pair<SharedVector, double>> const eigen() { return eigen_; }
 
-    /// Return the vector of eigen vectors and eigen values (used in
-    /// state-average computation)
+    /// Return the vector of eigen vectors and eigen values (used in state-average computation)
     std::vector<vector<pair<SharedVector, double>>> const eigens() { return eigens_; }
 
     /// Return a vector of dominant determinant for each root
@@ -338,6 +348,9 @@ class FCI_MO : public Wavefunction {
 
     /// Roots to be projected out in the diagonalization
     std::vector<std::vector<std::pair<size_t, double>>> projected_roots_;
+
+    /// Initial guess vector
+    std::vector<std::pair<size_t, double>> initial_guess_;
 
     /// Eigen Values and Eigen Vectors of Certain Symmetry
     std::vector<pair<SharedVector, double>> eigen_;

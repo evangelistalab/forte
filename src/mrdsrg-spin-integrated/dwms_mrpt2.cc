@@ -130,16 +130,20 @@ void compute_dwms_mrpt2_energy(SharedWavefunction ref_wfn, Options& options,
             fci_mo->set_root_sym(irrep);
             fci_mo->set_root(0);
 
+            // project out previous DWMS-DSRG-PT2 roots
             std::vector<std::pair<size_t, double>> projection;
             if (i != 0) {
                 // add last root to the projection list
-                outfile->Printf("\n    Project out previous DWMS-DSRG-PT2 roots.\n");
+                outfile->Printf("\n\n    Project out previous DWMS-DSRG-PT2 roots.\n");
                 for (size_t I = 0, nI = evecs_new[i - 1]->dim(); I < nI; ++I) {
                     projection.push_back(std::make_pair(I, evecs_new[i - 1]->get(I)));
                 }
                 projected_roots.push_back(projection);
             }
             fci_mo->project_roots(projected_roots);
+
+            // set initial guess to help SparseCISolver convergence
+            fci_mo->set_dwms_initial_guess(n, i);
 
             double Ept2 = fci_mo->compute_ss_energy();
 

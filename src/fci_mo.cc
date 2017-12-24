@@ -1393,6 +1393,9 @@ void FCI_MO::Diagonalize_H(const vecdet& p_space, const int& multi, const int& n
         sparse_solver.set_root_project(true);
         sparse_solver.add_bad_states(projected_roots_);
     }
+    if (initial_guess_.size() != 0) {
+        sparse_solver.set_initial_guess(initial_guess_);
+    }
     if (!quiet_) {
         sparse_solver.set_print_details(true);
     }
