@@ -60,7 +60,7 @@ install:
 - conda config --set always_yes yes --set changeps1 no
 - conda update -q conda
 - conda info -a
-- conda create -q -n p4env python=$PYTHON_VER numpy cmake gdma libint libxc pybind11 -c psi4/label/test -c psi4 -c conda-forge
+- conda create -q -n p4env python=$PYTHON_VER numpy cmake gdma libint libxc -c psi4/label/test -c psi4
 - source activate p4env
 #- conda list
 - python -V
@@ -93,8 +93,10 @@ install:
     -DCMAKE_CXX_COMPILER=${CXX_COMPILER}
     -DCMAKE_C_COMPILER=${C_COMPILER}
     -DCMAKE_BUILD_TYPE=${BUILD_TYPE}
-    -DCMAKE_PREFIX_PATH=${HOME}/miniconda/envs/p4env:${HOME}/miniconda/envs/p4env/lib
+    -DCMAKE_PREFIX_PATH=${HOME}/miniconda/envs/p4env
     -DPYTHON_EXECUTABLE=${HOME}/miniconda/envs/p4env/bin/python
+    -DPYTHON_LIBRARY=${HOME}/miniconda/envs/p4env/lib/libpython2.7.dylib
+    -DPYTHON_INCLUDE_DIR=${HOME}/miniconda/envs/p4env/include/python2.7
     -DENABLE_gdma=ON
     -DENABLE_PLUGIN_TESTING=ON
     -DCMAKE_INSTALL_PREFIX=${HOME}/build/psi4-bin
