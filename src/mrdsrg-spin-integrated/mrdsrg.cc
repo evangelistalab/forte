@@ -503,6 +503,22 @@ double MRDSRG::compute_energy_relaxed() {
                 }
             }
 
+//            /// E = 0.5 * ( H["ji"] + F["ji] ) * D1["ij"] + 0.25 * V["xyuv"] * L2["uvxy"]
+//            Eref_ = Efrzc_ + Enuc_;
+//            for (const std::string block : {"cc", "CC"}) {
+//                for (size_t m = 0, nc = core_mos_.size(); m < nc; ++m) {
+//                    Eref_ += 0.5 * H_.block(block).data()[m * nc + m];
+//                    Eref_ += 0.5 * F_.block(block).data()[m * nc + m];
+//                }
+//            }
+//            Eref_ += 0.5 * H_["uv"] * Gamma1_["vu"];
+//            Eref_ += 0.5 * H_["UV"] * Gamma1_["VU"];
+//            Eref_ += 0.5 * F_["uv"] * Gamma1_["vu"];
+//            Eref_ += 0.5 * F_["UV"] * Gamma1_["VU"];
+//            Eref_ += 0.25 * V_["uvxy"] * Lambda2_["xyuv"];
+//            Eref_ += 0.25 * V_["UVXY"] * Lambda2_["XYUV"];
+//            Eref_ += V_["uVxY"] * Lambda2_["xYuV"];
+
             // test convergence
             if (std::fabs(Edelta_dsrg) < e_conv && std::fabs(Edelta_relax) < e_conv) {
                 converged = true;

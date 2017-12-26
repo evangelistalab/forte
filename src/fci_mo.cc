@@ -66,9 +66,6 @@ void set_FCI_MO_options(ForteOptions& foptions) {
     /*- Threshold for printing CI vectors -*/
     foptions.add_double("FCIMO_PRINT_CIVEC", 0.05, "The printing threshold for CI vectors");
 
-    /*- Automatic weight switching -*/
-    foptions.add_double("FCIMO_SA_WEIGHTS_GAMMA", 0.0, "FCIMO weight gamma");
-
     /*- Intrinsic atomic orbital analysis -*/
     foptions.add_bool("FCIMO_IAO_ANALYSIS", false, "Intrinsic atomic orbital analysis");
 
@@ -4066,7 +4063,7 @@ void FCI_MO::compute_sa_ref(const int& level) {
     int nentry = sa_info_.size();
 
     std::vector<std::vector<double>> new_weights;
-    if (options_["FCIMO_SA_WEIGHTS_GAMMA"].has_changed()) {
+    if (dwms_zeta_ >= 0.0) {
         new_weights = compute_dwms_weights();
 
         // reset the reference energy
@@ -4088,7 +4085,7 @@ void FCI_MO::compute_sa_ref(const int& level) {
         std::vector<double> weights;
         std::tie(irrep, std::ignore, nroots, weights) = sa_info_[n];
 
-        if (options_["FCIMO_SA_WEIGHTS_GAMMA"].has_changed()) {
+        if (dwms_zeta_ >= 0.0) {
             weights = new_weights[n];
         }
 
@@ -4267,10 +4264,9 @@ std::vector<std::vector<double>> FCI_MO::compute_dwms_weights() {
     std::tie(target_entry,target_root) = dwms_target_;
 
     std::vector<std::vector<double>> out_weights;
-    double a = options_.get_double("FCIMO_SA_WEIGHTS_GAMMA");
 
     // new weights for state alpha:
-    // w_i = exp(-a * (E_alpha - E_i)^2) / sum_j exp(-a * (E_alpha - E_j)^2)
+    // w_i = exp(-zeta * (E_alpha - E_i)^2) / sum_j exp(-zeta * (E_alpha - E_j)^2)
 
     double Ealpha = eigens_[target_entry][target_root].second;
     double wsum = 0.0;
@@ -4285,7 +4281,7 @@ std::vector<std::vector<double>> FCI_MO::compute_dwms_weights() {
         std::vector<double> this_weights;
         for (int i = 0; i < nroots; ++i) {
             double Ediff = Ealpha - eigens_[n][i].second;
-            double gaussian = std::exp(-a * Ediff * Ediff);
+            double gaussian = std::exp(-dwms_zeta_ * Ediff * Ediff);
             wsum += gaussian;
             this_weights.push_back(gaussian);
         }

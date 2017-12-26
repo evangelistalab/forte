@@ -173,25 +173,23 @@ class FCI_MO : public Wavefunction {
     /// Set if localize orbitals
     void set_localize_actv(bool localize) { localize_actv_ = localize; }
 
-    /// Set target root from DWMS-DSRG-PT2
-    void set_target_dwms(const int& entry, const int& root) {
-        dwms_target_ = std::make_tuple(entry, root);
-    }
-
     /// Set projected roots
     void project_roots(std::vector<std::vector<std::pair<size_t, double>>>& projected) {
         projected_roots_ = projected;
     }
 
-    /// Set initial guess for rediagonalization in DWMS-DSRG-PT2
-    /// n: the n-th entry of sa_info_
-    /// i: the i-th root in this entry of sa_info_
-    void set_dwms_initial_guess(int n, int i) {
+    /// Set target root from DWMS-DSRG-PT2
+    void set_target_dwms(const int& entry, const int& root) {
+        dwms_target_ = std::make_tuple(entry, root);
+    }
+
+    /// Set DWMS-DSRG-PT2 Gaussian cutoff for density reweighting
+    void set_dwms_zeta(double zeta) { dwms_zeta_ = zeta; }
+
+    /// Set initial guess
+    void set_initial_guess(std::vector<std::pair<size_t, double>>& guess) {
         initial_guess_.clear();
-        SharedVector evec = eigens_[n][i].first;
-        for (size_t I = 0, nI = evec->dim(); I < nI; ++I) {
-            initial_guess_.push_back(std::make_pair(I, evec->get(I)));
-        }
+        initial_guess_ = guess;
     }
 
     /// Return fci_int_ pointer
@@ -525,7 +523,9 @@ class FCI_MO : public Wavefunction {
     bool localize_actv_;
     void localize_actv_orbs();
 
-    /// Compute new weights for DWMS-DSRG
+    /// DWMS-DSRG-PT2 Gaussian cutoff (ignored if < 0)
+    double dwms_zeta_ = -1.0;
+    /// Compute new weights for DWMS-DSRG-PT2
     std::vector<std::vector<double>> compute_dwms_weights();
 
     /**

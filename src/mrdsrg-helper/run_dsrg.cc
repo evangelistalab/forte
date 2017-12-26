@@ -105,10 +105,8 @@ void set_DSRG_options(ForteOptions& foptions) {
      *    - SA_SUB:  form H_MN = <M|Hbar|N>; M, N are CAS states of interest
      *    - SA_FULL: redo a CASCI
      *  - Multi-state approach (currently only for MRPT2)
-     *    - MS:  form 2nd-order Heff_MN = <M|H|N> + 0.5 * [<M|(T_M)^+ H|N> +
-     * <M|H T_N|N>]
-     *    - XMS: rotate references such that <M|F|N> is diagonal before MS
-     * procedure -*/
+     *    - MS:  form 2nd-order Heff_MN = <M|H|N> + 0.5 * [<M|(T_M)^+ H|N> + <M|H T_N|N>]
+     *    - XMS: rotate references such that <M|F|N> is diagonal before MS procedure -*/
     foptions.add_str("DSRG_MULTI_STATE", "SA_FULL", {"SA_FULL", "SA_SUB", "MS", "XMS"},
                      "Multi-state DSRG options (MS and XMS recouple states after "
                      "single-state computations)");
