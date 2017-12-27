@@ -164,7 +164,8 @@ void FCI_MO::read_options() {
 
     // nuclear repulsion
     std::shared_ptr<Molecule> molecule = Process::environment.molecule();
-    e_nuc_ = molecule->nuclear_repulsion_energy(reference_wavefunction_->get_dipole_field_strength());
+    e_nuc_ =
+        molecule->nuclear_repulsion_energy(reference_wavefunction_->get_dipole_field_strength());
 
     // digonalization algorithm
     diag_algorithm_ = options_.get_str("DIAG_ALGORITHM");
@@ -1391,7 +1392,9 @@ void FCI_MO::Diagonalize_H(const vecdet& p_space, const int& multi, const int& n
         sparse_solver.add_bad_states(projected_roots_);
     }
     if (initial_guess_.size() != 0) {
-        sparse_solver.set_initial_guess(initial_guess_);
+        if (initial_guess_.size() == p_space.size()) {
+            sparse_solver.set_initial_guess(initial_guess_);
+        }
     }
     if (!quiet_) {
         sparse_solver.set_print_details(true);
@@ -4261,7 +4264,7 @@ std::vector<std::vector<double>> FCI_MO::compute_dwms_weights() {
     }
 
     int target_entry, target_root;
-    std::tie(target_entry,target_root) = dwms_target_;
+    std::tie(target_entry, target_root) = dwms_target_;
 
     std::vector<std::vector<double>> out_weights;
 
@@ -4288,8 +4291,8 @@ std::vector<std::vector<double>> FCI_MO::compute_dwms_weights() {
         out_weights.push_back(this_weights);
     }
 
-    for (auto& weights: out_weights) {
-        for (auto& w: weights) {
+    for (auto& weights : out_weights) {
+        for (auto& w : weights) {
             w /= wsum;
         }
     }
@@ -4325,8 +4328,8 @@ std::vector<std::vector<double>> FCI_MO::compute_dwms_weights() {
 
         std::stringstream ss;
         ss << std::setw(4) << std::right << irrep_symbol[irrep] << "    " << std::setw(4)
-           << std::right << multi << "    " << std::setw(4) << std::right << nroots
-           << "    " << std::setw(nroots_max) << w_ss.str();
+           << std::right << multi << "    " << std::setw(4) << std::right << nroots << "    "
+           << std::setw(nroots_max) << w_ss.str();
         outfile->Printf("\n    %s", ss.str().c_str());
     }
     outfile->Printf("\n    %s", dash.c_str());
@@ -4366,6 +4369,25 @@ void FCI_MO::localize_actv_orbs() {
     ambit::Tensor tei_active_bb = integral_->aptei_bb_block(idx_a_, idx_a_, idx_a_, idx_a_);
     fci_ints_->set_active_integrals(tei_active_aa, tei_active_ab, tei_active_bb);
     fci_ints_->compute_restricted_one_body_operator();
+}
+
+void FCI_MO::set_sa_info(const std::vector<std::tuple<int, int, int, std::vector<double>>>& info) {
+    int nentry = info.size();
+    if (sa_info_.size() == nentry) {
+        for (int n = 0; n < nentry; ++n) {
+            int multi, irrep, nroots;
+            std::vector<double> weights;
+            std::tie(irrep, multi, nroots, weights) = info[n];
+            if (nroots != weights.size()) {
+                outfile->Printf("\n  Irrep: %d, Multi: %d, Nroots: %d, Nweights: %d", irrep, multi,
+                                nroots, weights.size());
+                PSIEXCEPTION("Cannot set sa_info of FCI_MO: mismatching nroot and weights size.");
+            }
+        }
+        sa_info_ = info;
+    } else {
+        throw PSIEXCEPTION("Cannot set sa_info of FCI_MO: mismatching number of SA entries.");
+    }
 }
 
 // void FCI_MO::iao_analysis() {

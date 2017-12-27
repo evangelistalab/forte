@@ -32,7 +32,8 @@ void MASTER_DSRG::startup() {
 
     // read commonly used energies
     Eref_ = reference_.get_Eref();
-    Enuc_ = Process::environment.molecule()->nuclear_repulsion_energy(reference_wavefunction_->get_dipole_field_strength());
+    Enuc_ = Process::environment.molecule()->nuclear_repulsion_energy(
+        reference_wavefunction_->get_dipole_field_strength());
     Efrzc_ = ints_->frozen_core_energy();
 
     // initialize timer for commutator
@@ -355,55 +356,55 @@ std::shared_ptr<FCIIntegrals> MASTER_DSRG::compute_Heff() {
         rotate_ints_semi_to_origin("Hamiltonian", Hbar1_, Hbar2_);
     }
 
-//    if (!eri_df_) {
-//        ints_->set_print(0);
-//        ForteTimer t_int;
-//        outfile->Printf("\n    %-40s ... ", "Updating integrals");
+    //    if (!eri_df_) {
+    //        ints_->set_print(0);
+    //        ForteTimer t_int;
+    //        outfile->Printf("\n    %-40s ... ", "Updating integrals");
 
-//        // transfer integrals to ForteIntegrals
-//        ints_->set_scalar(Edsrg - Enuc_ - Efrzc_);
+    //        // transfer integrals to ForteIntegrals
+    //        ints_->set_scalar(Edsrg - Enuc_ - Efrzc_);
 
-//        // TODO: before zero hhhh integrals, is is probably good to save a copy
-//        std::vector<size_t> hole_mos = mo_space_info_->get_corr_abs_mo("GENERALIZED HOLE");
-//        for (const size_t& i : hole_mos) {
-//            for (const size_t& j : hole_mos) {
-//                ints_->set_oei(i, j, 0.0, true);
-//                ints_->set_oei(i, j, 0.0, false);
-//                for (const size_t& k : hole_mos) {
-//                    for (const size_t& l : hole_mos) {
-//                        ints_->set_tei(i, j, k, l, 0.0, true, true);
-//                        ints_->set_tei(i, j, k, l, 0.0, true, false);
-//                        ints_->set_tei(i, j, k, l, 0.0, false, false);
-//                    }
-//                }
-//            }
-//        }
+    //        // TODO: before zero hhhh integrals, is is probably good to save a copy
+    //        std::vector<size_t> hole_mos = mo_space_info_->get_corr_abs_mo("GENERALIZED HOLE");
+    //        for (const size_t& i : hole_mos) {
+    //            for (const size_t& j : hole_mos) {
+    //                ints_->set_oei(i, j, 0.0, true);
+    //                ints_->set_oei(i, j, 0.0, false);
+    //                for (const size_t& k : hole_mos) {
+    //                    for (const size_t& l : hole_mos) {
+    //                        ints_->set_tei(i, j, k, l, 0.0, true, true);
+    //                        ints_->set_tei(i, j, k, l, 0.0, true, false);
+    //                        ints_->set_tei(i, j, k, l, 0.0, false, false);
+    //                    }
+    //                }
+    //            }
+    //        }
 
-//        Hbar1_.citerate([&](const std::vector<size_t>& i, const std::vector<SpinType>& spin,
-//                            const double& value) {
-//            if (spin[0] == AlphaSpin) {
-//                ints_->set_oei(i[0], i[1], value, true);
-//            } else {
-//                ints_->set_oei(i[0], i[1], value, false);
-//            }
-//        });
+    //        Hbar1_.citerate([&](const std::vector<size_t>& i, const std::vector<SpinType>& spin,
+    //                            const double& value) {
+    //            if (spin[0] == AlphaSpin) {
+    //                ints_->set_oei(i[0], i[1], value, true);
+    //            } else {
+    //                ints_->set_oei(i[0], i[1], value, false);
+    //            }
+    //        });
 
-//        Hbar2_.citerate([&](const std::vector<size_t>& i, const std::vector<SpinType>& spin,
-//                            const double& value) {
-//            if ((spin[0] == AlphaSpin) && (spin[1] == AlphaSpin)) {
-//                ints_->set_tei(i[0], i[1], i[2], i[3], value, true, true);
-//            } else if ((spin[0] == AlphaSpin) && (spin[1] == BetaSpin)) {
-//                ints_->set_tei(i[0], i[1], i[2], i[3], value, true, false);
-//            } else if ((spin[0] == BetaSpin) && (spin[1] == BetaSpin)) {
-//                ints_->set_tei(i[0], i[1], i[2], i[3], value, false, false);
-//            }
-//        });
+    //        Hbar2_.citerate([&](const std::vector<size_t>& i, const std::vector<SpinType>& spin,
+    //                            const double& value) {
+    //            if ((spin[0] == AlphaSpin) && (spin[1] == AlphaSpin)) {
+    //                ints_->set_tei(i[0], i[1], i[2], i[3], value, true, true);
+    //            } else if ((spin[0] == AlphaSpin) && (spin[1] == BetaSpin)) {
+    //                ints_->set_tei(i[0], i[1], i[2], i[3], value, true, false);
+    //            } else if ((spin[0] == BetaSpin) && (spin[1] == BetaSpin)) {
+    //                ints_->set_tei(i[0], i[1], i[2], i[3], value, false, false);
+    //            }
+    //        });
 
-//        ints_->update_integrals(false);
+    //        ints_->update_integrals(false);
 
-//        outfile->Printf("Done. Timing %8.3f s", t_int.elapsed());
-//        ints_->set_print(print_);
-//    }
+    //        outfile->Printf("Done. Timing %8.3f s", t_int.elapsed());
+    //        ints_->set_print(print_);
+    //    }
 
     // create FCIIntegral shared_ptr
     std::shared_ptr<FCIIntegrals> fci_ints =

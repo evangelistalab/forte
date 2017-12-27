@@ -144,7 +144,6 @@ void compute_dwms_mrpt2_energy(SharedWavefunction ref_wfn, Options& options,
         }
 
         double Ept2 = dsrg_pt2->compute_energy();
-        Esa_corr = Ept2 - reference.get_Eref();
         auto fci_ints = dsrg_pt2->compute_Heff();
 
         if (algorithm == "DWMS-1") {
@@ -162,6 +161,8 @@ void compute_dwms_mrpt2_energy(SharedWavefunction ref_wfn, Options& options,
                 }
             }
         } else {
+            Esa_corr = Ept2 - reference.get_Eref();
+
             // use fci_mo and update its eigens_
             fci_mo->set_fci_int(fci_ints);
             fci_mo->set_localize_actv(false);
@@ -176,6 +177,9 @@ void compute_dwms_mrpt2_energy(SharedWavefunction ref_wfn, Options& options,
                 }
             }
         }
+
+        // important to rotate integrals back to original!
+        semi.back_transform_ints();
     }
 
     // step 3: loop over averaged states
@@ -200,6 +204,7 @@ void compute_dwms_mrpt2_energy(SharedWavefunction ref_wfn, Options& options,
             fci_mo->set_dwms_zeta(zeta);
             fci_mo->set_target_dwms(n, i);
             Reference reference = fci_mo->reference(max_rdm_level);
+            /// TODO: This is probably not the correct way to do
             double Eref = reference.get_Eref() - Esa_corr;
             reference.set_Eref(Eref);
             Erefs[n].push_back(Eref);
@@ -246,7 +251,7 @@ void compute_dwms_mrpt2_energy(SharedWavefunction ref_wfn, Options& options,
                 std::vector<std::pair<size_t, double>> projection;
                 if (i != 0) {
                     // add last root to the projection list
-                    outfile->Printf("\n\n    Project out previous DWMS-DSRG-PT2 roots.\n");
+                    outfile->Printf("\n\n  Project out previous DWMS-DSRG-PT2 roots.\n");
                     for (size_t I = 0, nI = evecs_new[i - 1]->dim(); I < nI; ++I) {
                         projection.push_back(std::make_pair(I, evecs_new[i - 1]->get(I)));
                     }

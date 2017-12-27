@@ -178,6 +178,14 @@ class FCI_MO : public Wavefunction {
         projected_roots_ = projected;
     }
 
+    /// Set initial guess
+    void set_initial_guess(std::vector<std::pair<size_t, double>>& guess) {
+        initial_guess_ = guess;
+    }
+
+    /// Set SA infomation
+    void set_sa_info(const std::vector<std::tuple<int, int, int, std::vector<double>>>& info);
+
     /// Set target root from DWMS-DSRG-PT2
     void set_target_dwms(const int& entry, const int& root) {
         dwms_target_ = std::make_tuple(entry, root);
@@ -185,12 +193,6 @@ class FCI_MO : public Wavefunction {
 
     /// Set DWMS-DSRG-PT2 Gaussian cutoff for density reweighting
     void set_dwms_zeta(double zeta) { dwms_zeta_ = zeta; }
-
-    /// Set initial guess
-    void set_initial_guess(std::vector<std::pair<size_t, double>>& guess) {
-        initial_guess_.clear();
-        initial_guess_ = guess;
-    }
 
     /// Return fci_int_ pointer
     std::shared_ptr<FCIIntegrals> fci_ints() { return fci_ints_; }
