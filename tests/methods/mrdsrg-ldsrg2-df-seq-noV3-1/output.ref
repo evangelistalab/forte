@@ -18,9 +18,9 @@
     -----------------------------------------------------------------------
 
 
-    Psi4 started on: Monday, 04 December 2017 03:38PM
+    Psi4 started on: Friday, 29 December 2017 07:52PM
 
-    Process ID:  41852
+    Process ID:  67100
     PSIDATADIR: /Users/york/src/psi4new/psi4/share/psi4
     Memory:     500.0 MiB
     Threads:    1
@@ -117,15 +117,15 @@ compare_values(refprdsrg,get_variable("PARTIALLY RELAXED ENERGY"),8, "MRDSRG par
 --------------------------------------------------------------------------
 
 *** tstart() called on yorks-mac.wireless.emory.edu
-*** at Mon Dec  4 15:38:45 2017
+*** at Fri Dec 29 19:52:49 2017
 
    => Loading Basis Set <=
 
-    Name: ANONYMOUS96383819
+    Name: ANONYMOUSA97D3554
     Role: ORBITAL
     Keyword: BASIS
-    atoms 1   entry BE         line     5 inputblock anonymous96383819 
-    atoms 2-3 entry H          line    25 inputblock anonymous96383819 
+    atoms 1   entry BE         line     5 inputblock anonymousa97d3554 
+    atoms 2-3 entry H          line    25 inputblock anonymousa97d3554 
 
 
          ---------------------------------------------------------
@@ -174,8 +174,8 @@ compare_values(refprdsrg,get_variable("PARTIALLY RELAXED ENERGY"),8, "MRDSRG par
 
   ==> Primary Basis <==
 
-  Basis Set: ANONYMOUS96383819
-    Blend: ANONYMOUS96383819
+  Basis Set: ANONYMOUSA97D3554
+    Blend: ANONYMOUSA97D3554
     Number of shells: 9
     Number of basis function: 13
     Number of Cartesian functions: 13
@@ -232,15 +232,15 @@ compare_values(refprdsrg,get_variable("PARTIALLY RELAXED ENERGY"),8, "MRDSRG par
 
    @ROHF iter   1:   -15.45433104192439   -1.54543e+01   1.04833e-01 
    @ROHF iter   2:   -15.60927248244068   -1.54941e-01   4.00568e-03 DIIS
-   @ROHF iter   3:   -15.61118408470078   -1.91160e-03   1.07044e-03 DIIS
-   @ROHF iter   4:   -15.61147726741052   -2.93183e-04   4.72731e-04 DIIS
-   @ROHF iter   5:   -15.61154512994984   -6.78625e-05   7.69087e-05 DIIS
-   @ROHF iter   6:   -15.61154648529867   -1.35535e-06   1.40030e-05 DIIS
-   @ROHF iter   7:   -15.61154653183159   -4.65329e-08   1.24662e-06 DIIS
-   @ROHF iter   8:   -15.61154653214468   -3.13097e-10   8.86151e-08 DIIS
-   @ROHF iter   9:   -15.61154653214599   -1.30385e-12   8.47164e-09 DIIS
+   @ROHF iter   3:   -15.61118408470079   -1.91160e-03   1.07044e-03 DIIS
+   @ROHF iter   4:   -15.61147726741051   -2.93183e-04   4.72731e-04 DIIS
+   @ROHF iter   5:   -15.61154512994982   -6.78625e-05   7.69087e-05 DIIS
+   @ROHF iter   6:   -15.61154648529868   -1.35535e-06   1.40030e-05 DIIS
+   @ROHF iter   7:   -15.61154653183158   -4.65329e-08   1.24662e-06 DIIS
+   @ROHF iter   8:   -15.61154653214470   -3.13118e-10   8.86151e-08 DIIS
+   @ROHF iter   9:   -15.61154653214599   -1.29319e-12   8.47164e-09 DIIS
    @ROHF iter  10:   -15.61154653214600   -7.10543e-15   7.12223e-10 DIIS
-   @ROHF iter  11:   -15.61154653214602   -2.48690e-14   9.38142e-11 DIIS
+   @ROHF iter  11:   -15.61154653214601   -1.42109e-14   9.38144e-11 DIIS
 
   ==> Post-Iterations <==
 
@@ -268,14 +268,14 @@ compare_values(refprdsrg,get_variable("PARTIALLY RELAXED ENERGY"),8, "MRDSRG par
 
   Energy converged.
 
-  @ROHF Final Energy:   -15.61154653214602
+  @ROHF Final Energy:   -15.61154653214601
 
    => Energetics <=
 
     Nuclear Repulsion Energy =              3.0313826109838984
-    One-Electron Energy =                 -26.0505763815493978
-    Two-Electron Energy =                   7.4076472384194778
-    Total Energy =                        -15.6115465321460221
+    One-Electron Energy =                 -26.0505763815493765
+    Two-Electron Energy =                   7.4076472384194663
+    Total Energy =                        -15.6115465321460132
 
 
 
@@ -296,15 +296,15 @@ Properties computed using the SCF density matrix
      X:     0.0000      Y:     0.0000      Z:    -0.2548     Total:     0.2548
 
 
-*** tstop() called on yorks-mac.wireless.emory.edu at Mon Dec  4 15:38:45 2017
+*** tstop() called on yorks-mac.wireless.emory.edu at Fri Dec 29 19:52:50 2017
 Module time:
-	user time   =       0.17 seconds =       0.00 minutes
-	system time =       0.02 seconds =       0.00 minutes
-	total time  =          0 seconds =       0.00 minutes
+	user time   =       0.16 seconds =       0.00 minutes
+	system time =       0.03 seconds =       0.00 minutes
+	total time  =          1 seconds =       0.02 minutes
 Total time:
-	user time   =       0.17 seconds =       0.00 minutes
-	system time =       0.02 seconds =       0.00 minutes
-	total time  =          0 seconds =       0.00 minutes
+	user time   =       0.16 seconds =       0.00 minutes
+	system time =       0.03 seconds =       0.00 minutes
+	total time  =          1 seconds =       0.02 minutes
 	ROHF energy.......................................................PASSED
    => Loading Basis Set <=
 
@@ -324,7 +324,7 @@ Calling plugin forte.so.
   ----------------------------------------------------------------------------
   A suite of quantum chemistry methods for strongly correlated electrons
 
-    git branch: master - git commit: 1c92254a
+    git branch: master - git commit: f15141bf
 
   Developed by:
     Francesco A. Evangelista, Chenyang Li, Kevin P. Hannon,
@@ -369,8 +369,8 @@ Calling plugin forte.so.
            H          0.000000000000    -1.275000000000     2.247359268520     1.007825032070
 
   -AO BASIS SET INFORMATION:
-    Name                   = ANONYMOUS96383819
-    Blend                  = ANONYMOUS96383819
+    Name                   = ANONYMOUSA97D3554
+    Blend                  = ANONYMOUSA97D3554
     Total number of shells = 9
     Number of primitives   = 21
     Number of AO           = 13
@@ -387,7 +387,7 @@ Calling plugin forte.so.
 
   ==> AO Basis Functions <==
 
-    [ ANONYMOUS96383819 ]
+    [ ANONYMOUSA97D3554 ]
     cartesian
     ****
    BE   1
@@ -423,7 +423,7 @@ Calling plugin forte.so.
   Cholesky integrals time
  Computing the Cholesky Vectors 
 
-    Computing CD Integrals               ......Done. Timing        0.032926 s
+    Computing CD Integrals               ......Done. Timing        0.041199 s
  Need 0.000069 GB to store cd integrals in core
 
  Number of cholesky vectors 55 to satisfy       0.000100000000 tolerance
@@ -445,9 +445,9 @@ Calling plugin forte.so.
 
   Frozen-core energy            -14.929378863416 a.u.
 
-  FrozenOneBody Operator takes  0.04350500 s
+  FrozenOneBody Operator takes  0.06036300 s
   Resorting integrals after freezing core.
-  CholeskyIntegrals take 0.08423200
+  CholeskyIntegrals take 0.10970100
 
                 -----------------------------------------------
                   String-based Full Configuration Interaction
@@ -497,7 +497,7 @@ Calling plugin forte.so.
       0      -15.483411479480  0.000  singlet
       1      -15.440217680785  0.000  singlet
   ---------------------------------------------
-  Timing for initial guess  =      0.001 s
+  Timing for initial guess  =      0.000 s
 
   ==> Diagonalizing Hamiltonian <==
 
@@ -505,7 +505,7 @@ Calling plugin forte.so.
     Iter.      Avg. Energy       Delta_E
   ----------------------------------------
       1      -15.483411479480  -1.548e+01
-      2      -15.483411479480  -3.553e-15
+      2      -15.483411479480  +0.000e+00
   ----------------------------------------
   The Davidson-Liu algorithm converged in 3 iterations.
 
@@ -514,7 +514,7 @@ Calling plugin forte.so.
     0 2     -0.91017273
     2 0      0.41422892
 
-    Total Energy:       -15.483411479480155
+    Total Energy:       -15.483411479480166
 
   ==> Computing RDMs for Root No. 0 <==
 
@@ -532,7 +532,7 @@ Calling plugin forte.so.
          Chenyang Li, Jeffrey B. Schriber and Francesco A. Evangelista
        -----------------------------------------------------------------
 
-  Took 0.005146 s to build Fock matrix
+  Took 0.004771 s to build Fock matrix
 
   ==> Checking Fock Matrix Diagonal Blocks <==
 
@@ -561,8 +561,8 @@ Calling plugin forte.so.
            H          0.000000000000    -1.275000000000     2.247359268520     1.007825032070
 
   -AO BASIS SET INFORMATION:
-    Name                   = ANONYMOUS96383819
-    Blend                  = ANONYMOUS96383819
+    Name                   = ANONYMOUSA97D3554
+    Blend                  = ANONYMOUSA97D3554
     Total number of shells = 9
     Number of primitives   = 21
     Number of AO           = 13
@@ -579,7 +579,7 @@ Calling plugin forte.so.
 
   ==> AO Basis Functions <==
 
-    [ ANONYMOUS96383819 ]
+    [ ANONYMOUSA97D3554 ]
     cartesian
     ****
    BE   1
@@ -615,7 +615,7 @@ Calling plugin forte.so.
  Integrals are about to be computed.
  Computing the Cholesky Vectors 
 
-    Computing CD Integrals               ......Done. Timing        0.029348 s
+    Computing CD Integrals               ......Done. Timing        0.033370 s
  Need 0.000069 GB to store cd integrals in core
 
  Number of cholesky vectors 55 to satisfy       0.000100000000 tolerance
@@ -638,16 +638,16 @@ Calling plugin forte.so.
 
   Frozen-core energy            -14.929378863416 a.u.
 
-  FrozenOneBody Operator takes  0.04616200 s
+  FrozenOneBody Operator takes  0.06407500 s
   Resorting integrals after freezing core.
-  Frozen Orbitals takes     0.046 s.
+  Frozen Orbitals takes     0.064 s.
 
   ==> Reference Transformation to Semicanonical Basis <==
 
     Transformed 1 cumulants.
     Transformed 2 cumulants and RDMs.
     Transformed 3 cumulants.
-  SemiCanonicalize takes 2.710057 s.
+  SemiCanonicalize takes 2.843857 s.
 
   ==> Multireference Driven Similarity Renormalization Group <==
 
@@ -655,6 +655,7 @@ Calling plugin forte.so.
     Setting ambit MO space .......................... Done
     Preparing tensors for density cumulants ......... Done
     Building Fock matrix ............................ Done
+    Checking reference energy ....................... Done
 
            ----------------------------------------------------------
              Multireference Driven Similarity Renormalization Group
@@ -715,8 +716,8 @@ Calling plugin forte.so.
 
   ==> Build Initial Amplitude from DSRG-MRPT2 <==
 
-    Computing T2 amplitudes ...          Done. Timing      0.021 s
-    Computing T1 amplitudes ...          Done. Timing      0.005 s
+    Computing T2 amplitudes ...          Done. Timing      0.022 s
+    Computing T1 amplitudes ...          Done. Timing      0.004 s
 
   ==> First-Order Excitation Amplitudes Summary <==
 
@@ -730,7 +731,7 @@ Calling plugin forte.so.
     [  1       5    ]-0.000644 [  8      11    ] 0.000513 [  0       5    ]-0.000442 
     [  8       3    ]-0.000009 [  1      10    ] 0.000004 [  8       4    ]-0.000002 
     --------------------------------------------------------------------------------
-    Norm of T1A vector: (nonzero elements: 23)                    0.048095519200794.
+    Norm of T1A vector: (nonzero elements: 23)                    0.048095519200796.
     --------------------------------------------------------------------------------
     Largest T1 amplitudes for spin case B:
        _       _                  _       _                  _       _               
@@ -742,7 +743,7 @@ Calling plugin forte.so.
     [  1       5    ]-0.000644 [  8      11    ] 0.000513 [  0       5    ]-0.000442 
     [  8       3    ]-0.000009 [  1      10    ] 0.000004 [  8       4    ]-0.000002 
     --------------------------------------------------------------------------------
-    Norm of T1B vector: (nonzero elements: 23)                    0.048095519200794.
+    Norm of T1B vector: (nonzero elements: 23)                    0.048095519200796.
     --------------------------------------------------------------------------------
     Largest T2 amplitudes for spin case AA:
        i   j   a   b              i   j   a   b              i   j   a   b           
@@ -765,7 +766,7 @@ Calling plugin forte.so.
     [  1   1   1   2]-0.025101 [  0   0   8   9]-0.023634 [  1   8   1   9] 0.023380 
     [  1   1   2   2]-0.022528 [  1   1   6   6]-0.021019 [  0   1   8   9] 0.020931 
     --------------------------------------------------------------------------------
-    Norm of T2AB vector: (nonzero elements: 733)                  0.199958026888592.
+    Norm of T2AB vector: (nonzero elements: 733)                  0.199958026888591.
     --------------------------------------------------------------------------------
     Largest T2 amplitudes for spin case BB:
        _   _   _   _              _   _   _   _              _   _   _   _           
@@ -797,23 +798,23 @@ Calling plugin forte.so.
            ---------------------------  ---------------------  ---------------------  -----------------
     Iter.        Corr.         Delta       Hbar1      Hbar2        T1         T2        Hbar     Amp.  
     ---------------------------------------------------------------------------------------------------
-        0   -0.058033993947 -5.803e-02   1.274e-01  3.999e-01   8.730e-03  3.668e-02    33.350    0.019
-        1   -0.061183061167 -3.149e-03   1.288e-01  3.878e-01   2.890e-03  9.555e-03    34.532    0.015
-        2   -0.061934559382 -7.515e-04   1.290e-01  3.858e-01   1.017e-03  3.089e-03    34.962    0.016
-        3   -0.062127083036 -1.925e-04   1.292e-01  3.855e-01   3.376e-04  1.124e-03    29.507    0.013
-        4   -0.062185430793 -5.835e-05   1.292e-01  3.854e-01   1.169e-04  4.252e-04    25.756    0.013
-        5   -0.062204872785 -1.944e-05   1.293e-01  3.854e-01   4.224e-05  1.654e-04    24.854    0.013 -> DIIS
-        6   -0.062211527747 -6.655e-06   1.293e-01  3.854e-01   1.581e-05  6.545e-05    24.766    0.014 -> DIIS
-        7   -0.062215221737 -3.694e-06   1.293e-01  3.854e-01   8.638e-08  7.809e-07    24.935    0.013 -> DIIS
-        8   -0.062215197302  2.443e-08   1.293e-01  3.854e-01   2.497e-08  1.630e-07    25.254    0.013 -> DIIS
-        9   -0.062215193303  4.000e-09   1.293e-01  3.854e-01   9.257e-09  2.456e-08    24.816    0.013
+        0   -0.058033993947 -5.803e-02   1.274e-01  3.999e-01   8.730e-03  3.668e-02    35.080    0.018
+        1   -0.061183061167 -3.149e-03   1.288e-01  3.878e-01   2.890e-03  9.555e-03    37.453    0.016
+        2   -0.061934559382 -7.515e-04   1.290e-01  3.858e-01   1.017e-03  3.089e-03    34.171    0.020
+        3   -0.062127083036 -1.925e-04   1.292e-01  3.855e-01   3.376e-04  1.124e-03    46.667    0.018
+        4   -0.062185430793 -5.835e-05   1.292e-01  3.854e-01   1.169e-04  4.252e-04    35.912    0.020
+        5   -0.062204872785 -1.944e-05   1.293e-01  3.854e-01   4.224e-05  1.654e-04    34.338    0.020 -> DIIS
+        6   -0.062211527747 -6.655e-06   1.293e-01  3.854e-01   1.581e-05  6.545e-05    35.329    0.016 -> DIIS
+        7   -0.062215221737 -3.694e-06   1.293e-01  3.854e-01   8.638e-08  7.809e-07    34.797    0.020 -> DIIS
+        8   -0.062215197302  2.443e-08   1.293e-01  3.854e-01   2.497e-08  1.630e-07    34.617    0.018 -> DIIS
+        9   -0.062215193303  4.000e-09   1.293e-01  3.854e-01   9.257e-09  2.456e-08    35.513    0.019
     ---------------------------------------------------------------------------------------------------
 
   ==> MR-LDSRG(2) Energy Summary <==
 
-    E0 (reference)                 =     -15.483411479480155
-    MR-LDSRG(2) correlation energy =      -0.062215193302528
-    MR-LDSRG(2) total energy       =     -15.545626672782683
+    E0 (reference)                 =     -15.483411479480166
+    MR-LDSRG(2) correlation energy =      -0.062215193302526
+    MR-LDSRG(2) total energy       =     -15.545626672782692
 
   ==> Final Excitation Amplitudes Summary <==
 
@@ -827,7 +828,7 @@ Calling plugin forte.so.
     [  8      11    ] 0.000648 [  0       5    ]-0.000619 [  1       5    ]-0.000532 
     [  8       3    ]-0.000012 [  8       4    ]-0.000005 [  1      10    ] 0.000005 
     --------------------------------------------------------------------------------
-    Norm of T1A vector: (nonzero elements: 23)                    0.042475742167865.
+    Norm of T1A vector: (nonzero elements: 23)                    0.042475742167867.
     --------------------------------------------------------------------------------
     Largest T1 amplitudes for spin case B:
        _       _                  _       _                  _       _               
@@ -839,7 +840,7 @@ Calling plugin forte.so.
     [  8      11    ] 0.000648 [  0       5    ]-0.000619 [  1       5    ]-0.000532 
     [  8       3    ]-0.000012 [  8       4    ]-0.000005 [  1      10    ] 0.000005 
     --------------------------------------------------------------------------------
-    Norm of T1B vector: (nonzero elements: 23)                    0.042475742167865.
+    Norm of T1B vector: (nonzero elements: 23)                    0.042475742167867.
     --------------------------------------------------------------------------------
     Largest T2 amplitudes for spin case AA:
        i   j   a   b              i   j   a   b              i   j   a   b           
@@ -887,13 +888,13 @@ Calling plugin forte.so.
 
   ==> De-Normal-Order DSRG Transformed Hamiltonian <==
 
-    Computing the scalar term                ... Done. Timing    0.007 s
-    Computing the 1-body term                ... Done. Timing    0.004 s
+    Computing the scalar term                ... Done. Timing    0.009 s
+    Computing the 1-body term                ... Done. Timing    0.005 s
 
   ==> Rotate DSRG Transformed Hamiltonian back to Original Basis <==
 
     Rotating 1-body term to original basis   ... Done. Timing    0.001 s
-    Rotating 2-body term to original basis   ... Done. Timing    0.017 s
+    Rotating 2-body term to original basis   ... Done. Timing    0.020 s
 
                 -----------------------------------------------
                   String-based Full Configuration Interaction
@@ -951,7 +952,7 @@ Calling plugin forte.so.
     Iter.      Avg. Energy       Delta_E
   ----------------------------------------
       1      -15.545638769661  -1.555e+01
-      2      -15.545638769661  -7.105e-15
+      2      -15.545638769661  +0.000e+00
   ----------------------------------------
   The Davidson-Liu algorithm converged in 3 iterations.
 
@@ -960,7 +961,7 @@ Calling plugin forte.so.
     0 2     -0.90338806
     2 0      0.42882398
 
-    Total Energy:       -15.545638769660899
+    Total Energy:       -15.545638769660902
 
   ==> Computing RDMs for Root No. 0 <==
 
@@ -973,17 +974,17 @@ Calling plugin forte.so.
 
   ==> MRDSRG Energy Summary <==
 
-    MRDSRG Total Energy (fixed)    =    -15.545626672782683
-    MRDSRG Total Energy (relaxed)  =    -15.545638769660899
+    MRDSRG Total Energy (fixed)    =    -15.545626672782692
+    MRDSRG Total Energy (relaxed)  =    -15.545638769660902
 
 
   ==> Total Timings (s) for Computing Commutators <==
 
              [H1, T1]    [H1, T2]    [H2, T1]    [H2, T2]
     -----------------------------------------------------
-    -> C0       0.000       0.418       0.000      14.230
-    -> C1       0.000       3.235       0.000      95.098
-    -> C2                  10.455       0.000     178.956
+    -> C0       0.000       0.526       0.000      18.721
+    -> C1       0.000       4.218       0.000     119.550
+    -> C2                  13.652       0.000     234.898
     -----------------------------------------------------
 	MRDSRG unrelaxed energy...........................................PASSED
 	MRDSRG partially relaxed energy...................................PASSED

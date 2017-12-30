@@ -161,6 +161,9 @@ void THREE_DSRG_MRPT2::startup() {
         outfile->Printf("\n  Warning: RELAX_REF option \"%s\" is not supported. Change to ONCE.",
                         relax_ref_.c_str());
         relax_ref_ = "ONCE";
+
+        warnings_.push_back(std::make_tuple("Unsupported RELAX_REF", "Change to ONCE",
+                                            "Change options in input.dat"));
     }
 
     if (multi_state_ && multi_state_algorithm_ != "SA_FULL") {
@@ -168,6 +171,10 @@ void THREE_DSRG_MRPT2::startup() {
                         multi_state_algorithm_.c_str());
         outfile->Printf("\n             Set DSRG_MULTI_STATE back to default SA_FULL.");
         multi_state_algorithm_ = "SA_FULL";
+
+        warnings_.push_back(std::make_tuple("Unsupported DSRG_MULTI_STATE",
+                                            "Change to SA_FULL",
+                                            "Change options in input.dat"));
     }
 
     // These two blocks of functions create a Blocked tensor
@@ -326,7 +333,7 @@ void THREE_DSRG_MRPT2::print_options_summary() {
     }
 }
 
-void THREE_DSRG_MRPT2::cleanup() { dsrg_time_.print_comm_time(); }
+void THREE_DSRG_MRPT2::cleanup() {}
 
 double THREE_DSRG_MRPT2::compute_energy() {
     Timer ComputeEnergy;
@@ -343,6 +350,10 @@ double THREE_DSRG_MRPT2::compute_energy() {
         if (!semi_canonical_) {
             outfile->Printf("\n    Warning: DF/CD-DSRG-MRPT2 only takes semi-canonical orbitals. "
                             "The code will keep running.");
+
+            warnings_.push_back(std::make_tuple("Semicanonical orbital test",
+                                                "Assume Semicanonical orbital",
+                                                "Change options in input.dat"));
         }
 
         print_h2("Computing DSRG-MRPT2 Energy");
@@ -3564,6 +3575,10 @@ bool THREE_DSRG_MRPT2::check_semicanonical() {
             outfile->Printf("\n    Warning: ignore testing of semi-canonical orbitals.");
             outfile->Printf("\n    Please inspect if the Fock diag. blocks (C, A, V) are "
                             "diagonal or not.");
+
+            warnings_.push_back(std::make_tuple("Semicanonical orbital test",
+                                                "Ignore test results",
+                                                "Post an issue for advice"));
         }
         outfile->Printf("\n");
         semi = true;

@@ -517,8 +517,7 @@ void MRDSRG::compute_hbar_sequential_rotation() {
         Hbar0_ += Hbar2_["uVxY"] * Lambda2_["xYuV"];
     }
 
-    double Enuc = Process::environment.molecule()->nuclear_repulsion_energy(reference_wavefunction_->get_dipole_field_strength());
-    Hbar0_ += Efrzc_ + Enuc - Eref_;
+    Hbar0_ += Efrzc_ + Enuc_ - Eref_;
 
     rotation.stop();
 
@@ -1004,6 +1003,19 @@ double MRDSRG::compute_energy_ldsrg2_qc() {
     std::vector<double> big_T, big_DT;
     size_t numel = vector_size_diis(T1_, blocks1, T2_, blocks2);
     BlockedTensor::set_expert_mode(true);
+
+    // initialize V_ here
+    if (eri_df_) {
+        V_ = BTF_->build(tensor_type_, "V", spin_cases({"gggg"}));
+
+        V_["pqrs"] = B_["gpr"] * B_["gqs"];
+        V_["pqrs"] -= B_["gps"] * B_["gqr"];
+
+        V_["pQrS"] = B_["gpr"] * B_["gQS"];
+
+        V_["PQRS"] = B_["gPR"] * B_["gQS"];
+        V_["PQRS"] -= B_["gPS"] * B_["gQR"];
+    }
 
     // setup DIIS
     std::shared_ptr<DIISManager> diis_manager;

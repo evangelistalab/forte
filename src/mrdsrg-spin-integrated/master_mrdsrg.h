@@ -3,6 +3,7 @@
 
 #include <cmath>
 #include <memory>
+#include <tuple>
 
 #include "ambit/tensor.h"
 #include "ambit/blocked_tensor.h"
@@ -32,7 +33,7 @@ class MASTER_DSRG : public DynamicCorrelationSolver {
                 std::shared_ptr<ForteIntegrals> ints, std::shared_ptr<MOSpaceInfo> mo_space_info);
 
     /// Destructor
-    virtual ~MASTER_DSRG() = default;
+    virtual ~MASTER_DSRG();
 
     /// Compute energy
     virtual double compute_energy() = 0;
@@ -40,19 +41,19 @@ class MASTER_DSRG : public DynamicCorrelationSolver {
     /// Compute DSRG transformed Hamiltonian
     virtual std::shared_ptr<FCIIntegrals> compute_Heff();
 
-    /// Set unitary matrix (in active space) from original to semicanonical
-    void set_Uactv(ambit::Tensor& Ua, ambit::Tensor& Ub) {
-        Uactv_ = BTF_->build(tensor_type_, "Uactv", spin_cases({"aa"}));
-        Uactv_.block("aa")("pq") = Ua("pq");
-        Uactv_.block("AA")("pq") = Ub("pq");
-    }
-
     /// Compute DSRG dressed density
     //    virtual void compute_density() = 0;
 
     /// Compute DSRG transformed dipole integrals
     //    virtual void compute_dm_eff(std::vector<double>& M0, std::vector<BlockedTensor>& M1,
     //                                std::vector<BlockedTensor>& M2) = 0;
+
+    /// Set unitary matrix (in active space) from original to semicanonical
+    void set_Uactv(ambit::Tensor& Ua, ambit::Tensor& Ub) {
+        Uactv_ = BTF_->build(tensor_type_, "Uactv", spin_cases({"aa"}));
+        Uactv_.block("aa")("pq") = Ua("pq");
+        Uactv_.block("AA")("pq") = Ub("pq");
+    }
 
     /// Set active active occupied MOs (relative to active)
     void set_actv_occ(std::vector<size_t> actv_occ) {
@@ -67,6 +68,9 @@ class MASTER_DSRG : public DynamicCorrelationSolver {
   protected:
     /// Startup function called in constructor
     void startup();
+
+    /// Warnings <description, changes in this run, how to get rid of it>
+    std::vector<std::tuple<const char*, const char*, const char*>> warnings_;
 
     // ==> settings from options <==
 
@@ -122,6 +126,16 @@ class MASTER_DSRG : public DynamicCorrelationSolver {
     double Enuc_;
     /// The frozen core energy
     double Efrzc_;
+
+    /// Initial check on reference energy
+    void check_init_reference_energy();
+
+    /// Compute reference (MK vacuum) energy from ForteIntegral and Fock_
+    double compute_reference_energy_from_ints(std::shared_ptr<ForteIntegrals> ints);
+
+    /// Compute reference (MK vacuum) energy
+    double compute_reference_energy(BlockedTensor H, BlockedTensor F, BlockedTensor V);
+    double compute_reference_energy_df(BlockedTensor H, BlockedTensor F, BlockedTensor B);
 
     // ==> MO space info <==
 

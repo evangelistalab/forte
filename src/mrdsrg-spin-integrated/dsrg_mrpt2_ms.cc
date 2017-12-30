@@ -40,8 +40,8 @@ double DSRG_MRPT2::compute_energy_multi_state() {
     // throw a waring if states with different symmetry
     int nentry = eigens_.size();
     if (nentry > 1) {
-        outfile->Printf("\n\n  Warning: States with different symmetry are "
-                        "found in the list of AVG_STATES.");
+        outfile->Printf(
+            "\n\n  Warning: States with different symmetry are found in the list of AVG_STATES.");
         outfile->Printf("\n           Each symmetry will be considered separately here.");
     }
 
@@ -461,7 +461,7 @@ std::vector<std::vector<double>> DSRG_MRPT2::compute_energy_xms() {
             build_oei();
 
             // recompute reference energy
-            Eref_ = compute_ref();
+            Eref_ = compute_reference_energy(Hoei_, F_, V_);
 
             // compute DSRG-MRPT2 energy
             double Ept2 = compute_energy();

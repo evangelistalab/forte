@@ -38,7 +38,7 @@ set forte{
   job_type           active-dsrgpt2
   int_type           df
   cas_type           cas
-  e_convergence      12
+  e_convergence      10
   dsrg_s             0.5
   internal_amp       singles_doubles
   fcimo_actv_type    cisd

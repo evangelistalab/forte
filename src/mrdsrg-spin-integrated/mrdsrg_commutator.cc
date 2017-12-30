@@ -37,7 +37,7 @@
 namespace psi {
 namespace forte {
 
-//void MRDSRG::H1_T1_C0(BlockedTensor& H1, BlockedTensor& T1, const double& alpha, double& C0) {
+// void MRDSRG::H1_T1_C0(BlockedTensor& H1, BlockedTensor& T1, const double& alpha, double& C0) {
 //    Timer timer;
 
 //    double E = 0.0;
@@ -58,7 +58,7 @@ namespace forte {
 //    dsrg_time_.add("110", timer.get());
 //}
 
-//void MRDSRG::H1_T2_C0(BlockedTensor& H1, BlockedTensor& T2, const double& alpha, double& C0) {
+// void MRDSRG::H1_T2_C0(BlockedTensor& H1, BlockedTensor& T2, const double& alpha, double& C0) {
 //    Timer timer;
 //    BlockedTensor temp;
 //    double E = 0.0;
@@ -89,7 +89,7 @@ namespace forte {
 //    dsrg_time_.add("120", timer.get());
 //}
 
-//void MRDSRG::H2_T1_C0(BlockedTensor& H2, BlockedTensor& T1, const double& alpha, double& C0) {
+// void MRDSRG::H2_T1_C0(BlockedTensor& H2, BlockedTensor& T1, const double& alpha, double& C0) {
 //    Timer timer;
 //    BlockedTensor temp;
 //    double E = 0.0;
@@ -120,7 +120,7 @@ namespace forte {
 //    dsrg_time_.add("210", timer.get());
 //}
 
-//void MRDSRG::H2_T2_C0(BlockedTensor& H2, BlockedTensor& T2, const double& alpha, double& C0) {
+// void MRDSRG::H2_T2_C0(BlockedTensor& H2, BlockedTensor& T2, const double& alpha, double& C0) {
 //    Timer timer;
 
 //    // <[Hbar2, T2]> (C_2)^4
@@ -297,8 +297,7 @@ void MRDSRG::H2_T2_C0_DF(BlockedTensor& B, BlockedTensor& T2, const double& alph
     E += 0.25 * B["gEM"] * B["gFN"] * T2["MNEF"];
     E -= 0.25 * B["gEN"] * B["gFM"] * T2["MNEF"];
 
-    BlockedTensor temp =
-                  ambit::BlockedTensor::build(tensor_type_, "temp", spin_cases({"aa"}));
+    BlockedTensor temp = ambit::BlockedTensor::build(tensor_type_, "temp", spin_cases({"aa"}));
     temp["vu"] += 0.5 * B["gem"] * B["gfu"] * T2["mvef"];
     temp["vu"] -= 0.5 * B["geu"] * B["gfm"] * T2["mvef"];
     temp["vu"] += B["gfu"] * B["gEM"] * T2["vMfE"];
@@ -469,11 +468,10 @@ void MRDSRG::H2_T2_C0_DF(BlockedTensor& B, BlockedTensor& T2, const double& alph
         temp["uvWxyZ"] -= B["gui"] * B["gWZ"] * T2["ivxy"];       //  aaAaaA from hole
         temp["uvWxyZ"] += 2.0 * B["guy"] * B["gWI"] * T2["vIxZ"]; //  aaAaaA from hole
 
-        temp["uvWxyZ"] += B["gax"] * B["gWZ"] * T2["uvay"]; //  aaAaaA from particle
-        temp["uvWxyZ"] -= B["gvx"] * B["gay"] * T2["uWaZ"]; //  aaAaaA from particle
-        temp["uvWxyZ"] += B["gvy"] * B["gax"] * T2["uWaZ"]; //  aaAaaA from particle
-        temp["uvWxyZ"] -=
-                  2.0 * B["gvx"] * B["gAZ"] * T2["uWyA"]; //  aaAaaA from particle
+        temp["uvWxyZ"] += B["gax"] * B["gWZ"] * T2["uvay"];       //  aaAaaA from particle
+        temp["uvWxyZ"] -= B["gvx"] * B["gay"] * T2["uWaZ"];       //  aaAaaA from particle
+        temp["uvWxyZ"] += B["gvy"] * B["gax"] * T2["uWaZ"];       //  aaAaaA from particle
+        temp["uvWxyZ"] -= 2.0 * B["gvx"] * B["gAZ"] * T2["uWyA"]; //  aaAaaA from particle
         E += 0.5 * temp.block("aaAaaA")("uvWxyZ") * reference_.L3aab()("xyZuvW");
 
         temp = ambit::BlockedTensor::build(tensor_type_, "temp", {"aAAaAA"});
@@ -482,11 +480,10 @@ void MRDSRG::H2_T2_C0_DF(BlockedTensor& B, BlockedTensor& T2, const double& alph
         temp["uVWxYZ"] -= B["gux"] * B["gVI"] * T2["IWYZ"];       //  aAAaAA from hole
         temp["uVWxYZ"] += 2.0 * B["gui"] * B["gVZ"] * T2["iWxY"]; //  aAAaAA from hole
 
-        temp["uVWxYZ"] += B["gux"] * B["gAY"] * T2["VWAZ"]; //  aAAaAA from particle
-        temp["uVWxYZ"] -= B["gWY"] * B["gAZ"] * T2["uVxA"]; //  aAAaAA from particle
-        temp["uVWxYZ"] += B["gWZ"] * B["gAY"] * T2["uVxA"]; //  aAAaAA from particle
-        temp["uVWxYZ"] -=
-                  2.0 * B["gax"] * B["gWY"] * T2["uVaZ"]; //  aAAaAA from particle
+        temp["uVWxYZ"] += B["gux"] * B["gAY"] * T2["VWAZ"];       //  aAAaAA from particle
+        temp["uVWxYZ"] -= B["gWY"] * B["gAZ"] * T2["uVxA"];       //  aAAaAA from particle
+        temp["uVWxYZ"] += B["gWZ"] * B["gAY"] * T2["uVxA"];       //  aAAaAA from particle
+        temp["uVWxYZ"] -= 2.0 * B["gax"] * B["gWY"] * T2["uVaZ"]; //  aAAaAA from particle
         E += 0.5 * temp.block("aAAaAA")("uVWxYZ") * reference_.L3abb()("xYZuVW");
     }
 
@@ -500,7 +497,7 @@ void MRDSRG::H2_T2_C0_DF(BlockedTensor& B, BlockedTensor& T2, const double& alph
     dsrg_time_.add("220", timer.get());
 }
 
-//void MRDSRG::H1_T1_C1(BlockedTensor& H1, BlockedTensor& T1, const double& alpha,
+// void MRDSRG::H1_T1_C1(BlockedTensor& H1, BlockedTensor& T1, const double& alpha,
 //                      BlockedTensor& C1) {
 //    Timer timer;
 
@@ -516,7 +513,7 @@ void MRDSRG::H2_T2_C0_DF(BlockedTensor& B, BlockedTensor& T2, const double& alph
 //    dsrg_time_.add("111", timer.get());
 //}
 
-//void MRDSRG::H1_T2_C1(BlockedTensor& H1, BlockedTensor& T2, const double& alpha,
+// void MRDSRG::H1_T2_C1(BlockedTensor& H1, BlockedTensor& T2, const double& alpha,
 //                      BlockedTensor& C1) {
 //    Timer timer;
 
@@ -540,7 +537,7 @@ void MRDSRG::H2_T2_C0_DF(BlockedTensor& B, BlockedTensor& T2, const double& alph
 //    dsrg_time_.add("121", timer.get());
 //}
 
-//void MRDSRG::H2_T1_C1(BlockedTensor& H2, BlockedTensor& T1, const double& alpha,
+// void MRDSRG::H2_T1_C1(BlockedTensor& H2, BlockedTensor& T1, const double& alpha,
 //                      BlockedTensor& C1) {
 //    Timer timer;
 
@@ -564,7 +561,7 @@ void MRDSRG::H2_T2_C0_DF(BlockedTensor& B, BlockedTensor& T2, const double& alph
 //    dsrg_time_.add("211", timer.get());
 //}
 
-//void MRDSRG::H2_T2_C1(BlockedTensor& H2, BlockedTensor& T2, const double& alpha,
+// void MRDSRG::H2_T2_C1(BlockedTensor& H2, BlockedTensor& T2, const double& alpha,
 //                      BlockedTensor& C1) {
 //    Timer timer;
 //    BlockedTensor temp;
@@ -745,14 +742,10 @@ void MRDSRG::H2_T2_C1_DF(BlockedTensor& B, BlockedTensor& T2, const double& alph
     C1["IR"] -= 0.5 * alpha * Gamma1_["UV"] * B["gAU"] * B["gBR"] * T2["IVAB"];
     C1["IR"] += alpha * Gamma1_["uv"] * B["gau"] * B["gBR"] * T2["vIaB"];
 
-    C1["ir"] +=
-              0.5 * alpha * T2["ijux"] * Gamma1_["xy"] * Gamma1_["uv"] * B["gvr"] * B["gyj"];
-    C1["ir"] -=
-              0.5 * alpha * T2["ijux"] * Gamma1_["xy"] * Gamma1_["uv"] * B["gvj"] * B["gyr"];
-    C1["IR"] +=
-              0.5 * alpha * T2["IJUX"] * Gamma1_["XY"] * Gamma1_["UV"] * B["gVR"] * B["gYJ"];
-    C1["IR"] -=
-              0.5 * alpha * T2["IJUX"] * Gamma1_["XY"] * Gamma1_["UV"] * B["gVJ"] * B["gYR"];
+    C1["ir"] += 0.5 * alpha * T2["ijux"] * Gamma1_["xy"] * Gamma1_["uv"] * B["gvr"] * B["gyj"];
+    C1["ir"] -= 0.5 * alpha * T2["ijux"] * Gamma1_["xy"] * Gamma1_["uv"] * B["gvj"] * B["gyr"];
+    C1["IR"] += 0.5 * alpha * T2["IJUX"] * Gamma1_["XY"] * Gamma1_["UV"] * B["gVR"] * B["gYJ"];
+    C1["IR"] -= 0.5 * alpha * T2["IJUX"] * Gamma1_["XY"] * Gamma1_["UV"] * B["gVJ"] * B["gYR"];
     temp = ambit::BlockedTensor::build(tensor_type_, "temp", {"hHaA"});
     temp["iJvY"] = T2["iJuX"] * Gamma1_["XY"] * Gamma1_["uv"];
     C1["ir"] += alpha * temp["iJvY"] * B["gvr"] * B["gYJ"];
@@ -791,14 +784,10 @@ void MRDSRG::H2_T2_C1_DF(BlockedTensor& B, BlockedTensor& T2, const double& alph
     C1["PA"] += 0.5 * alpha * Eta1_["UV"] * T2["IJAU"] * B["gPJ"] * B["gVI"];
     C1["PA"] -= alpha * Eta1_["uv"] * T2["iJuA"] * B["gvi"] * B["gPJ"];
 
-    C1["pa"] -=
-              0.5 * alpha * T2["vyab"] * Eta1_["uv"] * Eta1_["xy"] * B["gpu"] * B["gbx"];
-    C1["pa"] +=
-              0.5 * alpha * T2["vyab"] * Eta1_["uv"] * Eta1_["xy"] * B["gpx"] * B["gbu"];
-    C1["PA"] -=
-              0.5 * alpha * T2["VYAB"] * Eta1_["UV"] * Eta1_["XY"] * B["gPU"] * B["gBX"];
-    C1["PA"] +=
-              0.5 * alpha * T2["VYAB"] * Eta1_["UV"] * Eta1_["XY"] * B["gPX"] * B["gBU"];
+    C1["pa"] -= 0.5 * alpha * T2["vyab"] * Eta1_["uv"] * Eta1_["xy"] * B["gpu"] * B["gbx"];
+    C1["pa"] += 0.5 * alpha * T2["vyab"] * Eta1_["uv"] * Eta1_["xy"] * B["gpx"] * B["gbu"];
+    C1["PA"] -= 0.5 * alpha * T2["VYAB"] * Eta1_["UV"] * Eta1_["XY"] * B["gPU"] * B["gBX"];
+    C1["PA"] += 0.5 * alpha * T2["VYAB"] * Eta1_["UV"] * Eta1_["XY"] * B["gPX"] * B["gBU"];
     temp = ambit::BlockedTensor::build(tensor_type_, "temp", {"aApP"});
     temp["uXaB"] = T2["vYaB"] * Eta1_["uv"] * Eta1_["XY"];
     C1["pa"] -= alpha * B["gpu"] * B["gBX"] * temp["uXaB"];
@@ -930,7 +919,7 @@ void MRDSRG::H2_T2_C1_DF(BlockedTensor& B, BlockedTensor& T2, const double& alph
     dsrg_time_.add("221", timer.get());
 }
 
-//void MRDSRG::H1_T2_C2(BlockedTensor& H1, BlockedTensor& T2, const double& alpha,
+// void MRDSRG::H1_T2_C2(BlockedTensor& H1, BlockedTensor& T2, const double& alpha,
 //                      BlockedTensor& C2) {
 //    Timer timer;
 
@@ -981,7 +970,7 @@ void MRDSRG::H2_T2_C1_DF(BlockedTensor& B, BlockedTensor& T2, const double& alph
 //    dsrg_time_.add("122", timer.get());
 //}
 
-//void MRDSRG::H2_T1_C2(BlockedTensor& H2, BlockedTensor& T1, const double& alpha,
+// void MRDSRG::H2_T1_C2(BlockedTensor& H2, BlockedTensor& T1, const double& alpha,
 //                      BlockedTensor& C2) {
 //    Timer timer;
 
@@ -1006,7 +995,7 @@ void MRDSRG::H2_T2_C1_DF(BlockedTensor& B, BlockedTensor& T2, const double& alph
 //    dsrg_time_.add("212", timer.get());
 //}
 
-//void MRDSRG::H2_T2_C2(BlockedTensor& H2, BlockedTensor& T2, const double& alpha,
+// void MRDSRG::H2_T2_C2(BlockedTensor& H2, BlockedTensor& T2, const double& alpha,
 //                      BlockedTensor& C2) {
 //    Timer timer;
 
