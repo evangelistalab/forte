@@ -69,6 +69,18 @@ void MRDSRG::read_options() {
         throw PSIEXCEPTION(ss.str());
     }
 
+    corrlv_string_ = options_.get_str("CORR_LEVEL");
+    std::vector<std::string> available{"PT2", "PT3", "LDSRG2", "LDSRG2_QC", "LSRG2", "SRG_PT2"};
+    if (std::find(available.begin(), available.end(), corrlv_string_) != available.end()) {
+        outfile->Printf("\n  Warning: CORR_LEVEL option %s is not implemented.",
+                        corrlv_string_.c_str());
+        outfile->Printf("\n  Changed CORR_LEVEL option to PT2");
+        source_ = "PT2";
+
+        warnings_.push_back(std::make_tuple("Unsupported CORR_LEVEL", "Change to PT2",
+                                            "Change options in input.dat"));
+    }
+
     sequential_Hbar_ = options_.get_bool("DSRG_HBAR_SEQ");
     omit_V3_ = options_.get_bool("DSRG_OMIT_V3");
 }
@@ -123,7 +135,7 @@ void MRDSRG::print_options() {
         {"intruder_tamp", intruder_tamp_}};
 
     std::vector<std::pair<std::string, std::string>> calculation_info_string{
-        {"corr_level", options_.get_str("CORR_LEVEL")},
+        {"corr_level", corrlv_string_},
         {"int_type", ints_type_},
         {"source operator", source_},
         {"smart_dsrg_s", options_.get_str("SMART_DSRG_S")},
@@ -282,8 +294,7 @@ void MRDSRG::build_fock_df(BlockedTensor& H, BlockedTensor& B) {
 double MRDSRG::compute_energy() {
     // guess amplitudes when necessary
     bool initialize_T = true;
-    std::string corrlv_string = options_.get_str("CORR_LEVEL");
-    if (corrlv_string == "LSRG2" || corrlv_string == "SRG_PT2") {
+    if (corrlv_string_ == "LSRG2" || corrlv_string_ == "SRG_PT2") {
         initialize_T = false;
     }
 
@@ -306,7 +317,7 @@ double MRDSRG::compute_energy() {
     double Etotal = Eref_;
 
     // compute energy
-    switch (corrlevelmap[corrlv_string]) {
+    switch (corrlevelmap[corrlv_string_]) {
     case CORR_LV::LDSRG2: {
         Etotal += compute_energy_ldsrg2();
         break;

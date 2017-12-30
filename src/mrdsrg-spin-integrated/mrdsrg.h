@@ -126,6 +126,9 @@ class MRDSRG : public MASTER_DSRG {
 
     // => DSRG related <= //
 
+    /// Correlation level option
+    std::string corrlv_string_;
+
     /// Correlation level
     enum class CORR_LV {
         LDSRG2,
