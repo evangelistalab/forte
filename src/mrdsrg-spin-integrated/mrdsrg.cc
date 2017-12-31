@@ -71,11 +71,11 @@ void MRDSRG::read_options() {
 
     corrlv_string_ = options_.get_str("CORR_LEVEL");
     std::vector<std::string> available{"PT2", "PT3", "LDSRG2", "LDSRG2_QC", "LSRG2", "SRG_PT2"};
-    if (std::find(available.begin(), available.end(), corrlv_string_) != available.end()) {
+    if (std::find(available.begin(), available.end(), corrlv_string_) == available.end()) {
         outfile->Printf("\n  Warning: CORR_LEVEL option %s is not implemented.",
                         corrlv_string_.c_str());
         outfile->Printf("\n  Changed CORR_LEVEL option to PT2");
-        source_ = "PT2";
+        corrlv_string_ = "PT2";
 
         warnings_.push_back(std::make_tuple("Unsupported CORR_LEVEL", "Change to PT2",
                                             "Change options in input.dat"));
