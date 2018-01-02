@@ -34,5 +34,108 @@ namespace forte {
 Reference::Reference() {}
 
 Reference::~Reference() {}
+
+double Reference::compute_Eref(std::shared_ptr<ForteIntegrals> ints,
+                               std::shared_ptr<MOSpaceInfo> mo_space_info, double Enuc) {
+    // similar to MASTER_DSRG::compute_reference_energy_from_ints (use Fock and cumulants)
+    // here I form two density and directly use bare Hamiltonian
+
+    double Efrzc = ints->frozen_core_energy();
+    double E = Enuc + Efrzc;
+
+    std::vector<size_t> core_mos = mo_space_info->get_corr_abs_mo("RESTRICTED_DOCC");
+    std::vector<size_t> actv_mos = mo_space_info->get_corr_abs_mo("ACTIVE");
+    size_t ncore = core_mos.size();
+    size_t nactv = actv_mos.size();
+
+    // core 1-body: \sum_{m}^{C} h^{m}_{m}
+    for (size_t m : core_mos) {
+        E += ints->oei_a(m, m);
+        E += ints->oei_b(m, m);
+    }
+
+    // active 1-body: \sum_{uv}^{A} h^{u}_{v} * G1^{v}_{u}
+    std::vector<size_t> actv_dims{nactv, nactv};
+    ambit::Tensor Ha = ambit::Tensor::build(ambit::CoreTensor, "Ha", actv_dims);
+    ambit::Tensor Hb = ambit::Tensor::build(ambit::CoreTensor, "Hb", actv_dims);
+    for (size_t u = 0; u < nactv; ++u) {
+        size_t nu = actv_mos[u];
+        for (size_t v = 0; v < nactv; ++v) {
+            size_t nv = actv_mos[v];
+            Ha.data()[u * nactv + v] = ints->oei_a(nu, nv);
+            Hb.data()[u * nactv + v] = ints->oei_b(nu, nv);
+        }
+    }
+    E += Ha("uv") * L1a_("vu");
+    E += Hb("uv") * L1b_("vu");
+
+    // core-core 2-body: 0.5 * \sum_{mn}^{C} v^{mn}_{mn} in mini-batches
+    // 4-index tensor of core-core-core-core could be large (> 600 electrons)
+
+    ambit::Tensor I, Vtemp;
+    I = ambit::Tensor::build(ambit::CoreTensor, "I", std::vector<size_t>{1, ncore, 1, ncore});
+    I.iterate([&](const std::vector<size_t>& i, double& value) {
+        if (i[1] == i[3]) {
+            value = 1.0;
+        }
+    });
+
+    for (size_t m = 0; m < ncore; ++m) {
+        size_t nm = core_mos[m];
+
+        Vtemp = ints->aptei_aa_block({nm}, core_mos, {nm}, core_mos);
+        E += 0.5 * Vtemp("pqrs") * I("pqrs");
+
+        Vtemp = ints->aptei_ab_block({nm}, core_mos, {nm}, core_mos);
+        E += 0.5 * Vtemp("pqrs") * I("pqrs");
+
+        Vtemp = ints->aptei_ab_block(core_mos, {nm}, core_mos, {nm});
+        E += 0.5 * Vtemp("pqrs") * I("qpsr");
+
+        Vtemp = ints->aptei_bb_block({nm}, core_mos, {nm}, core_mos);
+        E += 0.5 * Vtemp("pqrs") * I("pqrs");
+    }
+
+    // core-active 2-body: \sum_{m}^{C} \sum_{uv}^{A} v^{mu}_{mv} * G1^{v}_{u}
+
+    I = ambit::Tensor::build(ambit::CoreTensor, "I", std::vector<size_t>{ncore, ncore});
+    I.iterate([&](const std::vector<size_t>& i, double& value) {
+        if (i[0] == i[1]) {
+            value = 1.0;
+        }
+    });
+
+    Vtemp = ints->aptei_aa_block(core_mos, actv_mos, core_mos, actv_mos);
+    E += Vtemp("munv") * I("mn") * L1a_("vu");
+
+    Vtemp = ints->aptei_ab_block(core_mos, actv_mos, core_mos, actv_mos);
+    E += Vtemp("munv") * I("mn") * L1b_("vu");
+
+    Vtemp = ints->aptei_ab_block(actv_mos, core_mos, actv_mos, core_mos);
+    E += Vtemp("umvn") * I("mn") * L1a_("vu");
+
+    Vtemp = ints->aptei_bb_block(core_mos, actv_mos, core_mos, actv_mos);
+    E += Vtemp("munv") * I("mn") * L1b_("vu");
+
+    // active-active 2-body: 0.25 * \sum_{uvxy}^{A} * v^{uv}_{xy} * G2^{xy}_{uv}
+    ambit::Tensor G2 = L2aa_.clone();
+    G2("pqrs") += L1a_("pr") * L1a_("qs");
+    G2("pqrs") -= L1a_("ps") * L1a_("qr");
+    Vtemp = ints->aptei_aa_block(actv_mos, actv_mos, actv_mos, actv_mos);
+    E += 0.25 * Vtemp("uvxy") * G2("uvxy");
+
+    G2 = L2ab_.clone();
+    G2("pqrs") += L1a_("pr") * L1b_("qs");
+    Vtemp = ints->aptei_ab_block(actv_mos, actv_mos, actv_mos, actv_mos);
+    E += Vtemp("uVxY") * G2("uVxY");
+
+    G2 = L2bb_.clone();
+    G2("pqrs") += L1b_("pr") * L1b_("qs");
+    G2("pqrs") -= L1b_("ps") * L1b_("qr");
+    Vtemp = ints->aptei_bb_block(actv_mos, actv_mos, actv_mos, actv_mos);
+    E += 0.25 * Vtemp("UVXY") * G2("UVXY");
+
+    return E;
+}
 }
 }
