@@ -186,6 +186,9 @@ class FCI_MO : public Wavefunction {
     /// Set SA infomation
     void set_sa_info(const std::vector<std::tuple<int, int, int, std::vector<double>>>& info);
 
+    /// Set state-averaged eigen values and vectors
+    void set_eigens(const std::vector<vector<pair<SharedVector, double>>>& eigens);
+
     /// Set target root from DWMS-DSRG-PT2
     void set_target_dwms(const int& entry, const int& root) {
         dwms_target_ = std::make_tuple(entry, root);

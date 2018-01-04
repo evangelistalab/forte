@@ -55,9 +55,8 @@ double Reference::compute_Eref(std::shared_ptr<ForteIntegrals> ints,
     }
 
     // active 1-body: \sum_{uv}^{A} h^{u}_{v} * G1^{v}_{u}
-    std::vector<size_t> actv_dims{nactv, nactv};
-    ambit::Tensor Ha = ambit::Tensor::build(ambit::CoreTensor, "Ha", actv_dims);
-    ambit::Tensor Hb = ambit::Tensor::build(ambit::CoreTensor, "Hb", actv_dims);
+    ambit::Tensor Ha = ambit::Tensor::build(ambit::CoreTensor, "Ha", {nactv, nactv});
+    ambit::Tensor Hb = ambit::Tensor::build(ambit::CoreTensor, "Hb", {nactv, nactv});
     for (size_t u = 0; u < nactv; ++u) {
         size_t nu = actv_mos[u];
         for (size_t v = 0; v < nactv; ++v) {
@@ -73,7 +72,7 @@ double Reference::compute_Eref(std::shared_ptr<ForteIntegrals> ints,
     // 4-index tensor of core-core-core-core could be large (> 600 electrons)
 
     ambit::Tensor I, Vtemp;
-    I = ambit::Tensor::build(ambit::CoreTensor, "I", std::vector<size_t>{1, ncore, 1, ncore});
+    I = ambit::Tensor::build(ambit::CoreTensor, "I", {1, ncore, 1, ncore});
     I.iterate([&](const std::vector<size_t>& i, double& value) {
         if (i[1] == i[3]) {
             value = 1.0;
@@ -98,7 +97,7 @@ double Reference::compute_Eref(std::shared_ptr<ForteIntegrals> ints,
 
     // core-active 2-body: \sum_{m}^{C} \sum_{uv}^{A} v^{mu}_{mv} * G1^{v}_{u}
 
-    I = ambit::Tensor::build(ambit::CoreTensor, "I", std::vector<size_t>{ncore, ncore});
+    I = ambit::Tensor::build(ambit::CoreTensor, "I", {ncore, ncore});
     I.iterate([&](const std::vector<size_t>& i, double& value) {
         if (i[0] == i[1]) {
             value = 1.0;

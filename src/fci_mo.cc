@@ -4390,6 +4390,21 @@ void FCI_MO::set_sa_info(const std::vector<std::tuple<int, int, int, std::vector
     }
 }
 
+void FCI_MO::set_eigens(const std::vector<vector<pair<SharedVector, double>>>& eigens) {
+    int nentry = sa_info_.size();
+    if (eigens.size() == nentry) {
+        for (int n = 0; n < nentry; ++n) {
+            int ne = std::get<2>(sa_info_[n]);
+            if (eigens[n].size() != ne) {
+                outfile->Printf("\n  Entry %d: expected size %d, got %d", n, ne, eigens[n].size());
+            }
+        }
+        eigens_ = eigens;
+    } else {
+        throw PSIEXCEPTION("Cannot set eigens of FCI_MO: mismatching number of SA entries.");
+    }
+}
+
 // void FCI_MO::iao_analysis() {
 //    // First compute intrisic atomic orbitals (copied from aci.cc)
 //    size_t nact = na_;
