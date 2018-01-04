@@ -38,7 +38,7 @@ set forte {
   nroot              1
   dsrg_s             0.5
   e_convergence      15
-  maxiter            100
+  fci_maxiter        100
   relax_ref          iterate
   ntrial_per_root    10
 # cas_type           cas

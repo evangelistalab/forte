@@ -50,5 +50,5 @@ set forte {
 Eforte, wfn_cas = energy('forte', ref_wfn=wfn_cas, return_wfn=True)
 compare_values(refpt3,get_variable("UNRELAXED ENERGY"),9,"DSRG-MRPT3 unrelaxed energy")
 compare_values(refpt3_relax,get_variable("PARTIALLY RELAXED ENERGY"),9,"DSRG-MRPT3 partially relaxed energy")
-compare_values(dmpt3,get_variable("UNRELAXED DIPOLE"),5,"DSRG-MRPT3 unrelaxed dipole moment")
-compare_values(dmpt3_relax,get_variable("PARTIALLY RELAXED DIPOLE"),5,"DSRG-MRPT3 partially relaxed dipole moment")
+compare_values(dmpt3,get_variable("UNRELAXED DIPOLE"),5,"DSRG-MRPT3 dipole moment unrelaxed ref")
+compare_values(dmpt3_relax,get_variable("PARTIALLY RELAXED DIPOLE"),5,"DSRG-MRPT3 dipole moment partially relaxed ref")
