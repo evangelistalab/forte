@@ -73,6 +73,8 @@ set globals{
 
 set forte{
   job_type           dwms-dsrgpt2
+  int_type           cholesky
+  cholesky_tolerance 12
   frozen_docc        [3,0,0,0]
   restricted_docc    [0,0,1,1]
   active             [2,0,0,0]

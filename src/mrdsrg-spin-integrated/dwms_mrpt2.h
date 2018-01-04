@@ -12,10 +12,6 @@ namespace forte {
 
 void set_DWMS_options(ForteOptions& foptions);
 
-void compute_dwms_mrpt2_energy(SharedWavefunction ref_wfn, Options& options,
-                               std::shared_ptr<ForteIntegrals> ints,
-                               std::shared_ptr<MOSpaceInfo> mo_space_info);
-
 class DWMS_DSRGPT2 : public Wavefunction {
   public:
     /**
@@ -74,15 +70,10 @@ class DWMS_DSRGPT2 : public Wavefunction {
     /// if using factorized integrals
     bool eri_df_;
 
-    //    /// total number of roots
-    //    int total_nroots_;
-
     /// energy of original SA-CASCI
     std::vector<std::vector<double>> Eref_0_;
     /// energy of SA-DSRG-PT2 (if computed)
     std::vector<std::vector<double>> Ept2_0_;
-    //    /// energy of ensemble MK vacuum
-    //    std::vector<std::vector<double>> Eref_;
     /// energy of DWMS-DSRG-PT2
     std::vector<std::vector<double>> Ept2_;
 
@@ -95,9 +86,6 @@ class DWMS_DSRGPT2 : public Wavefunction {
     /// unitary matrices (in active space) from original to semicanonical
     ambit::Tensor Ua_;
     ambit::Tensor Ub_;
-
-    //    /// fci_mo for diagonalization
-    //    std::shared_ptr<FCI_MO> fci_mo_;
 
     /// print implementaion note
     void print_note();
