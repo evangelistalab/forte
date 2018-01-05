@@ -3,8 +3,8 @@
 import forte
 
 Emcscf_avg = -106.75288506058001
-Ept2_root0 = -106.93018542906933
-Ept2_root1 = -106.91439502816371
+Ept2_root0 = -106.92994534239851
+Ept2_root1 = -106.91463499781882
 
 molecule {
   0 1
@@ -73,6 +73,8 @@ set globals{
 
 set forte{
   job_type           dwms-dsrgpt2
+  int_type           cholesky
+  cholesky_tolerance 12
   frozen_docc        [3,0,0,0]
   restricted_docc    [0,0,1,1]
   active             [2,0,0,0]

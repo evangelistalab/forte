@@ -186,13 +186,8 @@ class FCI_MO : public Wavefunction {
     /// Set SA infomation
     void set_sa_info(const std::vector<std::tuple<int, int, int, std::vector<double>>>& info);
 
-    /// Set target root from DWMS-DSRG-PT2
-    void set_target_dwms(const int& entry, const int& root) {
-        dwms_target_ = std::make_tuple(entry, root);
-    }
-
-    /// Set DWMS-DSRG-PT2 Gaussian cutoff for density reweighting
-    void set_dwms_zeta(double zeta) { dwms_zeta_ = zeta; }
+    /// Set state-averaged eigen values and vectors
+    void set_eigens(const std::vector<vector<pair<SharedVector, double>>>& eigens);
 
     /// Return fci_int_ pointer
     std::shared_ptr<FCIIntegrals> fci_ints() { return fci_ints_; }
@@ -343,8 +338,6 @@ class FCI_MO : public Wavefunction {
 
     /// State Average Information (tuple of irrep, multi, nstates, weights)
     std::vector<std::tuple<int, int, int, std::vector<double>>> sa_info_;
-    /// Target root for DWMS-DSRG-PT2 [tuple of sym (1st dim of sa_info_), root_number]
-    std::tuple<int, int> dwms_target_;
 
     /// Roots to be projected out in the diagonalization
     std::vector<std::vector<std::pair<size_t, double>>> projected_roots_;
@@ -524,11 +517,6 @@ class FCI_MO : public Wavefunction {
     /// Localize active orbitals
     bool localize_actv_;
     void localize_actv_orbs();
-
-    /// DWMS-DSRG-PT2 Gaussian cutoff (ignored if < 0)
-    double dwms_zeta_ = -1.0;
-    /// Compute new weights for DWMS-DSRG-PT2
-    std::vector<std::vector<double>> compute_dwms_weights();
 
     /**
      * @brief Return a vector of corresponding indices before the vector is

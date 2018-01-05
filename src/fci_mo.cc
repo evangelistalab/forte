@@ -4065,32 +4065,11 @@ void FCI_MO::compute_sa_ref(const int& level) {
     // loop over all averaged states
     int nentry = sa_info_.size();
 
-    std::vector<std::vector<double>> new_weights;
-    if (dwms_zeta_ >= 0.0) {
-        new_weights = compute_dwms_weights();
-
-        // reset the reference energy
-        double Eref = 0.0;
-        for (int n = 0; n < nentry; ++n) {
-            int nroots;
-            std::tie(std::ignore, std::ignore, nroots, std::ignore) = sa_info_[n];
-            std::vector<double> weights = new_weights[n];
-            for (int i = 0; i < nroots; ++i) {
-                Eref += weights[i] * eigens_[n][i].second;
-            }
-        }
-        Eref_ = Eref;
-    }
-
     for (int n = 0; n < nentry; ++n) {
         // get current nroots and weights
         int nroots, irrep;
         std::vector<double> weights;
         std::tie(irrep, std::ignore, nroots, weights) = sa_info_[n];
-
-        if (dwms_zeta_ >= 0.0) {
-            weights = new_weights[n];
-        }
 
         // prepare eigen vectors for current symmetry
         int dim = (eigens_[n][0].first)->dim();
@@ -4256,87 +4235,6 @@ void FCI_MO::compute_cumulant3(vector<double>& tpdm_aaa, std::vector<double>& tp
     L3bbb("pqrstu") += L1b("pt") * L1b("qs") * L1b("ru");
 }
 
-std::vector<std::vector<double>> FCI_MO::compute_dwms_weights() {
-    CharacterTable ct = Process::environment.molecule()->point_group()->char_table();
-    std::vector<std::string> irrep_symbol;
-    for (int h = 0, nirrep = this->nirrep(); h < nirrep; ++h) {
-        irrep_symbol.push_back(std::string(ct.gamma(h).symbol()));
-    }
-
-    int target_entry, target_root;
-    std::tie(target_entry, target_root) = dwms_target_;
-
-    std::vector<std::vector<double>> out_weights;
-
-    // new weights for state alpha:
-    // w_i = exp(-zeta * (E_alpha - E_i)^2) / sum_j exp(-zeta * (E_alpha - E_j)^2)
-
-    double Ealpha = eigens_[target_entry][target_root].second;
-    double wsum = 0.0;
-
-    int nentry = sa_info_.size();
-    int nroots_max = 0; // for nice printing
-    for (int n = 0; n < nentry; ++n) {
-        int nroots;
-        std::tie(std::ignore, std::ignore, nroots, std::ignore) = sa_info_[n];
-        nroots_max = nroots_max > nroots ? nroots_max : nroots;
-
-        std::vector<double> this_weights;
-        for (int i = 0; i < nroots; ++i) {
-            double Ediff = Ealpha - eigens_[n][i].second;
-            double gaussian = std::exp(-dwms_zeta_ * Ediff * Ediff);
-            wsum += gaussian;
-            this_weights.push_back(gaussian);
-        }
-        out_weights.push_back(this_weights);
-    }
-
-    for (auto& weights : out_weights) {
-        for (auto& w : weights) {
-            w /= wsum;
-        }
-    }
-
-    // print new weights
-    print_h2("New State-Averaging Weights");
-
-    if (nroots_max == 1) {
-        nroots_max = 7;
-    } else {
-        nroots_max = nroots_max > 5 ? 5 : nroots_max;
-        nroots_max *= 6;
-    }
-
-    int ltotal = 6 + 2 + 6 + 2 + 6 + 2 + nroots_max;
-    std::string blank(nroots_max - 7, ' ');
-    std::string dash(ltotal, '-');
-    outfile->Printf("\n    Irrep.  Multi.  Nroots  %sWeights", blank.c_str());
-    outfile->Printf("\n    %s", dash.c_str());
-
-    for (int m = 0; m < nentry; ++m) {
-        int irrep, multi, nroots;
-        std::vector<double>& ws = out_weights[m];
-        std::tie(irrep, multi, nroots, std::ignore) = sa_info_[m];
-
-        std::stringstream w_ss;
-        for (int wi = 0, nw = ws.size(); wi < nw; ++wi) {
-            w_ss << " " << std::fixed << std::setprecision(3) << ws[wi];
-            if (wi % 5 == 0 && wi != 0) {
-                w_ss << std::endl << std::string(24, ' ');
-            }
-        }
-
-        std::stringstream ss;
-        ss << std::setw(4) << std::right << irrep_symbol[irrep] << "    " << std::setw(4)
-           << std::right << multi << "    " << std::setw(4) << std::right << nroots << "    "
-           << std::setw(nroots_max) << w_ss.str();
-        outfile->Printf("\n    %s", ss.str().c_str());
-    }
-    outfile->Printf("\n    %s", dash.c_str());
-
-    return out_weights;
-}
-
 void FCI_MO::localize_actv_orbs() {
     // modified from localize.cc
     print_h2("Localizing active orbitals");
@@ -4387,6 +4285,21 @@ void FCI_MO::set_sa_info(const std::vector<std::tuple<int, int, int, std::vector
         sa_info_ = info;
     } else {
         throw PSIEXCEPTION("Cannot set sa_info of FCI_MO: mismatching number of SA entries.");
+    }
+}
+
+void FCI_MO::set_eigens(const std::vector<vector<pair<SharedVector, double>>>& eigens) {
+    int nentry = sa_info_.size();
+    if (eigens.size() == nentry) {
+        for (int n = 0; n < nentry; ++n) {
+            int ne = std::get<2>(sa_info_[n]);
+            if (eigens[n].size() != ne) {
+                outfile->Printf("\n  Entry %d: expected size %d, got %d", n, ne, eigens[n].size());
+            }
+        }
+        eigens_ = eigens;
+    } else {
+        throw PSIEXCEPTION("Cannot set eigens of FCI_MO: mismatching number of SA entries.");
     }
 }
 
