@@ -45,6 +45,7 @@
 #include "mp2_nos.h"
 #include "orbitaloptimizer.h"
 #include "sa_fcisolver.h"
+#include "semi_canonicalize.h"
 
 #ifdef HAVE_CHEMPS2
 #include "dmrgsolver.h"
@@ -241,10 +242,11 @@ void CASSCF::compute_casscf() {
                         retrans_ints.get());
     }
 
-    // if (options_.get_str("JOB_TYPE") != "CASSCF") {
-    //     SemiCanonical semi(reference_wavefunction_, options_, ints_, mo_space_info_, cas_ref_);
-    //     ints_->retransform_integrals();
-    // }
+    if (options_.get_bool("SEMI_CANONICAL")) {
+        ints_->retransform_integrals();
+        SemiCanonical semi(reference_wavefunction_, ints_, mo_space_info_);
+        semi.semicanonicalize(cas_ref_, 0);
+    }
 }
 void CASSCF::startup() {
     print_method_banner({"Complete Active Space Self Consistent Field", "Kevin Hannon"});
