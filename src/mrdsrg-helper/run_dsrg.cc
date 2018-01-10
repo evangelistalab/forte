@@ -185,6 +185,9 @@ void set_DSRG_options(ForteOptions& foptions) {
 
     /*- Omit blocks with >= 3 virtual indices -*/
     foptions.add_bool("DSRG_OMIT_V3", false, "Omit blocks with >= 3 virtual indices if true");
+
+    /*- Do Sequential MRDSRG with Brueckner orbitals -*/
+    foptions.add_bool("DSRG_SEQ_BRUECKNER", false, "Do Sequential MRDSRG with Brueckner orbitals");
 }
 
 /// A uniformed function to run DSRG related jobs

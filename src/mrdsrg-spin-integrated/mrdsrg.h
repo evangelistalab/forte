@@ -110,6 +110,9 @@ class MRDSRG : public MASTER_DSRG {
     /// Omitting blocks with >= 3 virtual indices?
     bool omit_V3_;
 
+    /// Do Sequential MRDSRG with Brueckner orbitals?
+    bool brueckner_;
+
     /// CASCI eigen values and eigen vectors for state averaging
     std::vector<std::vector<std::pair<SharedVector, double>>> eigens_;
     /// Determinants in the model space
@@ -251,8 +254,6 @@ class MRDSRG : public MASTER_DSRG {
 
     /// Compute DSRG-transformed Hamiltonian Hbar
     void compute_hbar();
-    /// Compute DSRG-transformed Hamiltonian Hbar sequentially
-    void compute_hbar_sequential();
     /// Compute DSRG-transformed Hamiltonian Hbar sequentially by orbital rotation
     void compute_hbar_sequential_rotation();
     /// Compute DSRG-transformed Hamiltonian Hbar truncated to quadratic nested
