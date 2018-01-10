@@ -83,6 +83,7 @@ void MRDSRG::read_options() {
 
     sequential_Hbar_ = options_.get_bool("DSRG_HBAR_SEQ");
     omit_V3_ = options_.get_bool("DSRG_OMIT_V3");
+    brueckner_ = options_.get_bool("DSRG_SEQ_BRUECKNER");
 }
 
 void MRDSRG::startup() {
