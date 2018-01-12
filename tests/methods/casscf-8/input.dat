@@ -1,0 +1,67 @@
+#! Generated using commit GITCOMMIT
+
+import forte
+
+refcasscf    = -109.090719613072
+refpt2       = -109.245583534390491
+refpt2_relax = -109.246090954577227
+
+molecule N2{
+  0 1
+  N
+  N  1 R
+
+  R = 1.120
+}
+
+set {
+  basis                  cc-pvdz
+  reference              rhf
+  scf_type               direct
+  maxiter                300
+  e_convergence          10
+  d_convergence          8
+  docc                   [3,0,0,0,0,2,1,1]
+  restricted_docc        [2,0,0,0,0,2,0,0]
+  active                 [1,0,1,1,0,1,1,1]
+  mcscf_maxiter          100
+  mcscf_r_convergence    8
+  mcscf_e_convergence    10
+  mcscf_diis_start       6
+}
+
+Escf, wfnSCF = energy('scf', return_wfn=True)
+Ecasscf, wfn = energy('casscf', ref_wfn=wfnSCF, return_wfn=True)
+compare_values(refcasscf,get_variable("CURRENT ENERGY"),10,"PSI4 CASSCF energy")
+
+set forte {
+  job_type             casscf
+  frozen_docc          [0,0,0,0,0,0,0,0]
+  frozen_uocc          [0,0,0,0,0,0,0,0]
+  restricted_docc      [2,0,0,0,0,2,0,0]
+  active               [1,0,1,1,0,1,1,1]
+  cas_type             cas
+  casscf_max_rotation  0.2
+  casscf_g_convergence 1.0e-8
+  casscf_e_convergence 1.0e-10
+  casscf_diis_start    5
+  casscf_diis_freq     4
+}
+Ecasscf, wfn = energy('forte', ref_wfn=wfnSCF, return_wfn=True)
+compare_values(refcasscf,get_variable("CURRENT ENERGY"),10,"FORTE CASSCF energy")
+
+set forte {
+  job_type           dsrg-mrpt2
+  frozen_docc        [1,0,0,0,0,1,0,0]
+  frozen_uocc        [0,0,0,0,0,0,0,0]
+  restricted_docc    [1,0,0,0,0,1,0,0]
+  active             [1,0,1,1,0,1,1,1]
+  root_sym           0
+  nroot              1
+  dsrg_s             0.5
+  relax_ref          once
+  cas_type           cas
+}
+
+Eforte, wfn = energy('forte', ref_wfn=wfn, return_wfn=True)
+compare_values(refpt2_relax,get_variable("CURRENT ENERGY"),8,"DSRG-MRPT2 relaxed energy")
