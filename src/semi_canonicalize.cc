@@ -243,6 +243,10 @@ bool SemiCanonical::check_fock_matrix() {
 
     // universial threshold
     double e_conv = (wfn_->options()).get_double("E_CONVERGENCE");
+    if (ints_->integral_type() == Cholesky) {
+        double threshold_cd = (wfn_->options()).get_double("CHOLESKY_TOLERANCE");
+        e_conv = (e_conv < 0.005 * threshold_cd) ? 0.005 * threshold_cd : e_conv;
+    }
     double threshold_max = 10.0 * e_conv;
 
     // loop over orbital spaces
