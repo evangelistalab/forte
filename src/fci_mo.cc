@@ -4303,6 +4303,24 @@ void FCI_MO::set_eigens(const std::vector<vector<pair<SharedVector, double>>>& e
     }
 }
 
+Reference FCI_MO::compute_densities(int root1, int root2, bool multi_state, int entry, int max_level) {
+    vecdet& p_space = determinant_;
+    std::vector<pair<SharedVector, double>>& eigen = eigen_;
+
+    if (multi_state) {
+        p_space = p_spaces_[entry];
+        eigen = eigens_[entry];
+    }
+
+
+
+    return Reference();
+}
+
+Reference FCI_MO::compute_cumulants(int root, bool multi_state, int entry, int max_level) {
+    return Reference();
+}
+
 // void FCI_MO::iao_analysis() {
 //    // First compute intrisic atomic orbitals (copied from aci.cc)
 //    size_t nact = na_;

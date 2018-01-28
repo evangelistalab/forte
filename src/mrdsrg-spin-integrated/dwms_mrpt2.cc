@@ -12,15 +12,37 @@ namespace psi {
 namespace forte {
 
 void set_DWMS_options(ForteOptions& foptions) {
+    /**
+     * Weights of state α:
+     *    Wi = exp(-ζ * (Eα - Ei)^2) / sum_j exp(-ζ * (Eα - Ej)^2)
+     *
+     * Energies (Eα, Ei, Ej) can be SA-CASCI or SA-DSRG-PT2 energies.
+     */
+
     /*- Automatic weight switching -*/
     foptions.add_double("DWMS_ZETA", 0.0, "Gaussian width cutoff for the density weights");
 
+    /*- Using what energies to compute the weight
+     * CAS: use SA-CASCI energies
+     * DSRG-PT2: use SA-DSRG-PT2 energies -*/
+    foptions.add_str("DWMS_ENERGY", "CAS", {"CAS", "DSRG-PT2"});
+
+    /*- Using what CI vectors to perform multi-state computation
+     * CAS: use SA-CASCI eigenvectors
+     * DSRG-PT2: use SA-DSRG-PT2/CASCI eigenvectors -*/
+    foptions.add_str("DWMS_CI", "CAS", {"CAS", "DSRG-PT2"});
+
     /*- DWMS algorithms
-     *  - DWMS-0: weights computed using SA-CASCI energies, non-orthogonal final solutions
-     *  - DWMS-1: weights computed using SA-CASCI energies, orthogonal final solutions
-     *  - DWMS-AVG0: weights computed using SA-DSRG-PT2 energies, non-orthogonal final solutions
-     *  - DWMS-AVG1: weights computed using SA-DSRG-PT2 energies, orthogonal final solutions -*/
-    foptions.add_str("DWMS_ALGORITHM", "DWMS-0", {"DWMS-0", "DWMS-1", "DWMS-AVG0", "DWMS-AVG1"},
+     *  - MS: multi-state (single-state single-reference)
+     *  - XMS: extended multi-state (single-state single-reference)
+     *
+     * To Be Deprecated:
+     *  - DWMS-0: weights from SA-CASCI energies, non-orthogonal final solutions
+     *  - DWMS-1: weights from SA-CASCI energies, orthogonal final solutions
+     *  - DWMS-AVG0: weights from SA-DSRG-PT2 energies, non-orthogonal final solutions
+     *  - DWMS-AVG1: weights from SA-DSRG-PT2 energies, orthogonal final solutions -*/
+    foptions.add_str("DWMS_ALGORITHM", "MS",
+                     {"MS", "XMS", "DWMS-0", "DWMS-1", "DWMS-AVG0", "DWMS-AVG1"},
                      "DWMS algorithms");
 }
 
@@ -37,13 +59,22 @@ DWMS_DSRGPT2::DWMS_DSRGPT2(SharedWavefunction ref_wfn, Options& options,
 DWMS_DSRGPT2::~DWMS_DSRGPT2() {}
 
 void DWMS_DSRGPT2::startup() {
-    print_h2("DWMS-DSRG-PT2 Options");
     zeta_ = options_.get_double("DWMS_ZETA");
     algorithm_ = options_.get_str("DWMS_ALGORITHM");
+    dwms_e_ = options_.get_str("DWMS_ENERGY");
+    dwms_ci_ = options_.get_str("DWMS_CI");
+
+    print_h2("DWMS-DSRG-PT2 Options");
     outfile->Printf("\n    DWMS ZETA          %10.2e", zeta_);
+    outfile->Printf("\n    DWMS ENERGY        %10s", dwms_e_.c_str());
+    outfile->Printf("\n    DWMS CI VECTORS    %10s", dwms_ci_.c_str());
     outfile->Printf("\n    DWMS ALGORITHM     %10s", algorithm_.c_str());
 
-    print_note();
+    if (algorithm_ == "MS" || algorithm_ == "XMS") {
+        print_note_xms();
+    } else {
+        print_note();
+    }
 
     CharacterTable ct = Process::environment.molecule()->point_group()->char_table();
     int nirrep = reference_wavefunction_->nirrep();
@@ -55,7 +86,7 @@ void DWMS_DSRGPT2::startup() {
     multi_symbol_ = std::vector<std::string>{"Singlet", "Doublet", "Triplet", "Quartet", "Quintet",
                                              "Sextet",  "Septet",  "Octet",   "Nonet",   "Decaet"};
 
-    size_t na = mo_space_info_->get_dimension("ACTIVE").sum();
+    size_t na = mo_space_info_->size("ACTIVE");
     Ua_ = ambit::Tensor::build(CoreTensor, "Uactv a", {na, na});
     Ub_ = ambit::Tensor::build(CoreTensor, "Uactv b", {na, na});
     for (size_t u = 0; u < na; ++u) {
@@ -68,8 +99,37 @@ void DWMS_DSRGPT2::startup() {
     std::string actv_type = options_.get_str("FCIMO_ACTV_TYPE");
     actv_vci_ = actv_type == "CIS" || actv_type == "CISD";
 
-    std::string int_type = options_.get_str("INT_TYPE");
-    eri_df_ = (int_type == "CHOLESKY") || (int_type == "DF") || (int_type == "DISKDF");
+    IntegralType int_type = ints_->integral_type();
+    eri_df_ = (int_type == Cholesky) || (int_type == DF) || (int_type == DiskDF);
+}
+
+void DWMS_DSRGPT2::print_note_xms() {
+    print_h2("Implementation Note on " + algorithm_);
+
+    outfile->Printf("\n  Use SA-%s energies to compute weights.", dwms_e_.c_str());
+    outfile->Printf("\n  Use SA-%s CI vectors to do %s.\n", dwms_ci_.c_str(), algorithm_.c_str());
+
+    outfile->Printf("\n  - Perform SA-CASCI using user-defined weights.");
+
+    if (dwms_ci_ == "DSRG-PT2" || dwms_e_ == "DSRG-PT2") {
+        outfile->Printf("\n  - Perform SA-DSRG-PT2/CASCI using user-defined weights.");
+    }
+
+    if (algorithm_ == "XMS") {
+        outfile->Printf("\n  - Perform XMS rotation to SA-%s CI vectors.", dwms_ci_.c_str());
+    }
+
+    outfile->Printf("\n  - Loop over symmetry entries:");
+    outfile->Printf("\n    - Initialize effective Hamiltonian Heff.");
+    outfile->Printf("\n    - Loop over averaged states:");
+    outfile->Printf("\n      - Compute new density weights if ζ is nonzero.");
+    outfile->Printf("\n      - Semicanonicalize orbitals.");
+    outfile->Printf("\n      - Put SS-DSRG-PT2 energy to diagonal of Heff.");
+    outfile->Printf("\n      - Compute couplings of Heff:");
+    outfile->Printf("\n        - De-normal-order cluster amplitudes.");
+    outfile->Printf("\n        - Compute 1, 2, 3 transition densities in semicanonical basis.");
+    outfile->Printf("\n        - <A|Heff|B> <- 0.5 * <A|Heff(B)|B>.");
+    outfile->Printf("\n  - Collect and print energies.\n");
 }
 
 void DWMS_DSRGPT2::print_note() {
@@ -164,6 +224,64 @@ std::shared_ptr<FCI_MO> DWMS_DSRGPT2::precompute_energy() {
     }
 
     // perform SA-DSRG-PT2 if needed
+    if (dwms_ci_ == "DSRG-PT2" || dwms_e_ == "DSRG-PT2") {
+        // save a copy of sa eigen vectors when necessary
+        std::vector<std::vector<std::pair<SharedVector, double>>> eigens_old;
+        if (dwms_e_ == "DSRG-PT2" && dwms_ci_ == "CAS") {
+            eigens_old = fci_mo->eigens();
+        }
+
+        Reference reference = fci_mo->reference(max_rdm_level_);
+
+        auto fci_ints = compute_dsrg_pt2(fci_mo, reference);
+
+        print_h2("Diagonalize SA-DSRG-PT2 Active Hamiltonian");
+        fci_mo->set_fci_int(fci_ints);
+        fci_mo->set_localize_actv(false);
+        fci_mo->compute_energy();
+        auto eigens = fci_mo->eigens();
+
+        // save SA-DSRG-PT2 energies and CI vectors
+        Ept2_0_.resize(nentry);
+
+        for (int n = 0; n < nentry; ++n) {
+            int nroots;
+            std::tie(std::ignore, std::ignore, nroots, std::ignore) = sa_info[n];
+            for (int i = 0; i < nroots; ++i) {
+                Ept2_0_[n].push_back(eigens[n][i].second);
+            }
+        }
+
+        // use original eigens when necessary
+        if (dwms_e_ == "DSRG-PT2" && dwms_ci_ == "CAS") {
+            fci_mo->set_eigens(eigens_old);
+        }
+    }
+
+    return fci_mo;
+}
+
+std::shared_ptr<FCI_MO> DWMS_DSRGPT2::precompute_energy_old() {
+    // perform SA-CASCI using user-defined weights
+    auto fci_mo =
+        std::make_shared<FCI_MO>(reference_wavefunction_, options_, ints_, mo_space_info_);
+    fci_mo->compute_energy();
+
+    auto sa_info = fci_mo->sa_info();
+    int nentry = sa_info.size();
+
+    // save SA-CASCI energies
+    Eref_0_.resize(nentry);
+
+    for (int n = 0; n < nentry; ++n) {
+        int nroots;
+        std::tie(std::ignore, std::ignore, nroots, std::ignore) = sa_info[n];
+        for (int i = 0; i < nroots; ++i) {
+            Eref_0_[n].push_back(fci_mo->eigens()[n][i].second);
+        }
+    }
+
+    // perform SA-DSRG-PT2 if needed
     if (algorithm_ != "DWMS-0") {
         // need to save a copy of sa eigen vectors for DWMS-1
         std::vector<std::vector<std::pair<SharedVector, double>>> eigens_old;
@@ -204,8 +322,248 @@ std::shared_ptr<FCI_MO> DWMS_DSRGPT2::precompute_energy() {
 }
 
 double DWMS_DSRGPT2::compute_energy() {
-    // perform SA-CASCI and SA-DSRG-PT2 using user-defined weights
+    if (algorithm_ == "MS" || algorithm_ == "XMS") {
+        return compute_dwms_energy();
+    } else {
+        return compute_dwms_energy_old();
+    }
+}
+
+double DWMS_DSRGPT2::compute_dwms_energy() {
+    // perform SA-CASCI or SA-DSRG-PT2 if necessary
     std::shared_ptr<FCI_MO> fci_mo = precompute_energy();
+    auto sa_info = fci_mo->sa_info();
+    int nentry = sa_info.size();
+
+    // XMS rotation for all symmetries (same orbital basis)
+    std::vector<SharedMatrix> rcivecs;
+    for (int n = 0; n < nentry; ++n) {
+        int multi, irrep, nroots;
+        std::tie(irrep, multi, nroots, std::ignore) = sa_info[n];
+
+        auto eigen = fci_mo->eigens()[n];
+        int dim = (eigen[0].first)->dim();
+        SharedMatrix civecs(new Matrix("ci vecs", dim, nroots));
+        for (int i = 0; i < nroots; ++i) {
+            civecs->set_column(0, i, (eigen[i]).first);
+        }
+
+        if (algorithm_ == "XMS") {
+            print_h2("XMS Rotation for " + multi_symbol_[multi - 1] + " " + irrep_symbol_[irrep]);
+
+            // p_space and civecs of current symmetry
+            auto p_space = fci_mo->p_spaces()[n];
+
+            // compute Fock operator within active space
+            ambit::Tensor Fa, Fb;
+            compute_Fock_actv(p_space, civecs, Fa, Fb);
+
+            // rotate CI vectors
+            rcivecs.push_back(xms_rotate_civecs(p_space, civecs, Fa, Fb));
+        } else {
+            rcivecs.push_back(civecs);
+        }
+    }
+
+    // the final DWMS-DSRG-PT2 energies
+    Ept2_.resize(nentry);
+
+    // save a copy of original orbitals
+    SharedMatrix Ca_copy(reference_wavefunction_->Ca()->clone());
+    SharedMatrix Cb_copy(reference_wavefunction_->Cb()->clone());
+
+    // loop over symmetry entries
+    for (int n = 0, counter = 0; n < nentry; ++n) {
+        int multi, irrep, nroots;
+        std::tie(irrep, multi, nroots, std::ignore) = sa_info[n];
+        Ept2_[n].resize(nroots);
+
+        // print current status
+        std::stringstream ss_entry;
+        ss_entry << "Build Effective Hamiltonian of " << multi_symbol_[multi - 1] << " "
+                 << irrep_symbol_[irrep];
+        size_t entry_title_size = ss_entry.str().size();
+        outfile->Printf("\n\n  %s", std::string(entry_title_size, '=').c_str());
+        outfile->Printf("\n  %s", ss_entry.str().c_str());
+        outfile->Printf("\n  %s\n", std::string(entry_title_size, '=').c_str());
+
+        // prepare Heff
+        SharedMatrix Heff(new Matrix(
+            "Heff " + multi_symbol_[multi - 1] + " " + irrep_symbol_[irrep], nroots, nroots));
+        SharedMatrix Heff_sym(Heff->clone());
+        Heff_sym->set_name("Heff Symmetrized");
+
+        // loop over states of current symmetry
+        for (int M = 0; M < nroots; ++M) {
+            print_h2("Compute DSRG-MRPT2 Energy of Root " + std::to_string(M));
+
+            // compute state-specific Reference
+
+            // canonicalize orbitals if density fitting
+
+            // compute state-specific DSRG-MRPT2 energy
+
+            // de-normal-order amplitudes
+
+            for (int N = 0; N < nroots; ++N) {
+                // compute 1st-order couplings <N|H|M>
+                // need to rotate transition density to semicanonical basis if density fitting
+
+                // compute 2nd-order couplings <N|H * T(M)|M>
+                // need to rotate transition density to semicanonical basis if density fitting
+            }
+
+            // rotate basis back to original if density fitting
+        }
+
+        // print effective Hamiltonian
+
+        // diagonalize Heff and print eigen vectors
+
+        // set Ept2_ and environmental value
+    }
+
+    return 0.0;
+}
+
+void DWMS_DSRGPT2::compute_Fock_actv(const det_vec& p_space, SharedMatrix civecs, ambit::Tensor Fa,
+                                     ambit::Tensor Fb) {
+    // make sure the size match
+    size_t nroots = p_space.size();
+    if (nroots != civecs->ncol()) {
+        throw PSIEXCEPTION("Inconsistent number of roots in p_space and civecs.");
+    }
+
+    // compute state-averaged density
+    outfile->Printf("\n    Compute SA density matrix with equal weights 1/%d.", nroots);
+
+    auto actv_mos = mo_space_info_->get_corr_abs_mo("ACTIVE");
+    auto core_mos = mo_space_info_->get_corr_abs_mo("RESTRICTED_DOCC");
+    auto fci_ints = std::make_shared<FCIIntegrals>(ints_, actv_mos, core_mos);
+
+    size_t nc = mo_space_info_->size("RESTRICTED_DOCC");
+    size_t na = mo_space_info_->size("ACTIVE");
+    std::vector<double> sa_opdm_a(na * na, 0.0);
+    std::vector<double> sa_opdm_b(na * na, 0.0);
+
+    for (int M = 0; M < nroots; ++M) {
+        CI_RDMS ci_rdms(options_, fci_ints, p_space, civecs, M, M);
+        std::vector<double> opdm_a, opdm_b;
+        ci_rdms.compute_1rdm(opdm_a, opdm_b);
+
+        std::transform(sa_opdm_a.begin(), sa_opdm_a.end(), opdm_a.begin(), sa_opdm_a.begin(),
+                       std::plus<double>());
+        std::transform(sa_opdm_b.begin(), sa_opdm_b.end(), opdm_b.begin(), sa_opdm_b.begin(),
+                       std::plus<double>());
+    }
+    std::for_each(sa_opdm_a.begin(), sa_opdm_a.end(), [&](double& v) { v /= nroots; });
+    std::for_each(sa_opdm_b.begin(), sa_opdm_b.end(), [&](double& v) { v /= nroots; });
+
+    ambit::Tensor Da = ambit::Tensor::build(CoreTensor, "Da", {na, na});
+    Da.data() = std::move(sa_opdm_a);
+
+    ambit::Tensor Db = ambit::Tensor::build(CoreTensor, "Db", {na, na});
+    Db.data() = std::move(sa_opdm_b);
+
+    // form Fock matrix within active space
+    Fa = ambit::Tensor::build(CoreTensor, "Fa", {na, na});
+    Fb = ambit::Tensor::build(CoreTensor, "Fb", {na, na});
+
+    Fa.iterate([&](const std::vector<size_t>& i, double& value) {
+        size_t nu = actv_mos[i[0]];
+        size_t nv = actv_mos[i[1]];
+        value = ints_->oei_a(nu, nv);
+    });
+
+    Fb.iterate([&](const std::vector<size_t>& i, double& value) {
+        size_t nu = actv_mos[i[0]];
+        size_t nv = actv_mos[i[1]];
+        value = ints_->oei_b(nu, nv);
+    });
+
+    ambit::Tensor I = ambit::Tensor::build(CoreTensor, "Identity", {nc, nc});
+    for (int m = 0; m < nc; ++m) {
+        I.data()[m * nc + m] = 1.0;
+    }
+
+    ambit::Tensor V;
+    V = ints_->aptei_aa_block(actv_mos, core_mos, actv_mos, core_mos);
+    Fa("uv") += V("umvn") * I("mn");
+
+    V = ints_->aptei_ab_block(actv_mos, core_mos, actv_mos, core_mos);
+    Fa("uv") += V("umvn") * I("mn");
+
+    V = ints_->aptei_ab_block(core_mos, actv_mos, core_mos, actv_mos);
+    Fb("uv") += V("munv") * I("mn");
+
+    V = ints_->aptei_bb_block(actv_mos, core_mos, actv_mos, core_mos);
+    Fb("uv") += V("umvn") * I("mn");
+
+    V = ints_->aptei_aa_block(actv_mos, actv_mos, actv_mos, actv_mos);
+    Fa("uv") += V("uxvy") * Da("xy");
+
+    V = ints_->aptei_ab_block(actv_mos, actv_mos, actv_mos, actv_mos);
+    Fa("uv") += V("uxvy") * Db("xy");
+    Fb("uv") += V("xuyv") * Da("xy");
+
+    V = ints_->aptei_bb_block(actv_mos, actv_mos, actv_mos, actv_mos);
+    Fb("uv") += V("uxvy") * Db("xy");
+}
+
+SharedMatrix DWMS_DSRGPT2::xms_rotate_civecs(const det_vec& p_space, SharedMatrix civecs,
+                                             ambit::Tensor Fa, ambit::Tensor Fb) {
+    int nroots = civecs->ncol();
+    outfile->Printf("\n    Build Fock matrix <M|F|N>.");
+    SharedMatrix Fock(new Matrix("Fock <M|F|N>", nroots, nroots));
+
+    auto actv_mos = mo_space_info_->get_corr_abs_mo("ACTIVE");
+    auto core_mos = mo_space_info_->get_corr_abs_mo("RESTRICTED_DOCC");
+    auto fci_ints = std::make_shared<FCIIntegrals>(ints_, actv_mos, core_mos);
+    size_t na = mo_space_info_->size("ACTIVE");
+
+    for (int M = 0; M < nroots; ++M) {
+        for (int N = M; N < nroots; ++N) {
+
+            // compute transition density
+            std::vector<double> opdm_a, opdm_b;
+            CI_RDMS ci_rdms(options_, fci_ints, p_space, civecs, M, N);
+            ci_rdms.compute_1rdm(opdm_a, opdm_b);
+
+            // put rdms in tensor format
+            ambit::Tensor Da = ambit::Tensor::build(CoreTensor, "Da", {na, na});
+            ambit::Tensor Db = ambit::Tensor::build(CoreTensor, "Da", {na, na});
+            Da.data() = std::move(opdm_a);
+            Db.data() = std::move(opdm_b);
+
+            // compute Fock elements
+            double F_MN = 0.0;
+            F_MN += Da("uv") * Fa("vu");
+            F_MN += Db("UV") * Fb("VU");
+            Fock->set(M, N, F_MN);
+            if (M != N) {
+                Fock->set(N, M, F_MN);
+            }
+        }
+    }
+    Fock->print();
+
+    // diagonalize Fock
+    SharedMatrix Fevec(new Matrix("Fock Evec", nroots, nroots));
+    SharedVector Feval(new Vector("Fock Eval", nroots));
+    Fock->diagonalize(Fevec, Feval);
+    Fevec->eivprint(Feval);
+
+    // Rotate ci vecs
+    SharedMatrix rcivecs(civecs->clone());
+    rcivecs->zero();
+    rcivecs->gemm(false, false, 1.0, civecs, Fevec, 0.0);
+
+    return rcivecs;
+}
+
+double DWMS_DSRGPT2::compute_dwms_energy_old() {
+    // perform SA-CASCI and SA-DSRG-PT2 using user-defined weights
+    std::shared_ptr<FCI_MO> fci_mo = precompute_energy_old();
     auto sa_info = fci_mo->sa_info();
     int nentry = sa_info.size();
 
