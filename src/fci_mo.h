@@ -108,8 +108,23 @@ class FCI_MO : public Wavefunction {
     /// Compute state-averaged CASCI energy
     double compute_sa_energy();
 
-    /// Returns the reference object
+    /// Return the reference object
+    /// Return averaged cumulants if AVG_STATE is not empty
     Reference reference(const int& level = 3);
+
+    /// Compute densities or transition densities
+    /// root1, root2 -- the ket and bra roots of p_space and eigen
+    /// multi_state -- grab p_spaces_ and eigens_ if true, otherwise p_space_ and eigen_
+    /// entry -- symmetry entry of p_spaces_ and eigens_ (same entry as sa_info_)
+    /// max_level -- max RDM level to be computed
+    Reference compute_densities(int root1, int root2, bool multi_state, int entry = 0, int max_level = 3);
+
+    /// Compute density cumulants
+    /// root -- root of p_space and eigen
+    /// multi_state -- grab p_spaces_ and eigens_ if true, otherwise p_space_ and eigen_
+    /// entry -- symmetry entry of p_spaces_ and eigens_ (same entry as sa_info_)
+    /// max_level -- max cumulants level to be computed
+    Reference compute_cumulants(int root, bool multi_state, int entry = 0, int max_level = 3);
 
     /// Compute dipole moments with DSRG transformed MO dipole integrals
     /// This function is used for reference relaxation and SA-MRDSRG

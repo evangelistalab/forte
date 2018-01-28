@@ -1033,7 +1033,7 @@ void CASSCF::set_up_fcimo() {
     FCI_MO cas(reference_wavefunction_, options_, ints_, mo_space_info_, fci_ints);
     cas.set_quite_mode(print_ > 0 ? false : true);
     cas.compute_energy();
-    cas_ref_ = cas.reference();
+    cas_ref_ = cas.reference(2);
     E_casscf_ = cas_ref_.get_Eref();
 }
 void CASSCF::write_orbitals_molden() {
