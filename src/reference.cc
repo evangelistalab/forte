@@ -137,7 +137,7 @@ double Reference::compute_Eref(std::shared_ptr<ForteIntegrals> ints,
     return E;
 }
 
-void Reference::set_D1(std::vector<double>& a, std::vector<double>& b, size_t nactv, bool move) {
+void Reference::set_G1(std::vector<double>& a, std::vector<double>& b, size_t nactv, bool move) {
     if (a.size() != nactv * nactv || b.size() != nactv * nactv) {
         throw PSIEXCEPTION("Inconsistent/unexpected vector size.");
     }
@@ -154,7 +154,7 @@ void Reference::set_D1(std::vector<double>& a, std::vector<double>& b, size_t na
     }
 }
 
-void Reference::set_D2(std::vector<double>& aa, std::vector<double>& ab, std::vector<double>& bb,
+void Reference::set_G2(std::vector<double>& aa, std::vector<double>& ab, std::vector<double>& bb,
                        size_t nactv, bool cumulant, bool move) {
     size_t na4 = nactv * nactv * nactv * nactv;
     if (aa.size() != na4 || ab.size() != na4 || bb.size() != na4) {
@@ -195,7 +195,7 @@ void Reference::set_D2(std::vector<double>& aa, std::vector<double>& ab, std::ve
     }
 }
 
-void Reference::set_D3(std::vector<double>& aaa, std::vector<double>& aab, std::vector<double>& abb,
+void Reference::set_G3(std::vector<double>& aaa, std::vector<double>& aab, std::vector<double>& abb,
                        std::vector<double>& bbb, size_t nactv, bool cumulant) {
     size_t na2 = nactv * nactv;
     size_t na4 = na2 * na2;

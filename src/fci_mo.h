@@ -117,14 +117,9 @@ class FCI_MO : public Wavefunction {
     /// multi_state -- grab p_spaces_ and eigens_ if true, otherwise p_space_ and eigen_
     /// entry -- symmetry entry of p_spaces_ and eigens_ (same entry as sa_info_)
     /// max_level -- max RDM level to be computed
-    Reference compute_densities(int root1, int root2, bool multi_state, int entry = 0, int max_level = 3);
-
-    /// Compute density cumulants
-    /// root -- root of p_space and eigen
-    /// multi_state -- grab p_spaces_ and eigens_ if true, otherwise p_space_ and eigen_
-    /// entry -- symmetry entry of p_spaces_ and eigens_ (same entry as sa_info_)
-    /// max_level -- max cumulants level to be computed
-    Reference compute_cumulants(int root, bool multi_state, int entry = 0, int max_level = 3);
+    /// do_cumulant -- returned Reference is filled by cumulants (not RDMs) if true
+    Reference compute_trans_density(int root1, int root2, bool multi_state, int entry = 0,
+                                    int max_level = 3, bool do_cumulant = false);
 
     /// Compute dipole moments with DSRG transformed MO dipole integrals
     /// This function is used for reference relaxation and SA-MRDSRG

@@ -41,7 +41,7 @@ void set_DWMS_options(ForteOptions& foptions) {
      *  - DWMS-1: weights from SA-CASCI energies, orthogonal final solutions
      *  - DWMS-AVG0: weights from SA-DSRG-PT2 energies, non-orthogonal final solutions
      *  - DWMS-AVG1: weights from SA-DSRG-PT2 energies, orthogonal final solutions -*/
-    foptions.add_str("DWMS_ALGORITHM", "MS",
+    foptions.add_str("DWMS_ALGORITHM", "DWMS-0",
                      {"MS", "XMS", "DWMS-0", "DWMS-1", "DWMS-AVG0", "DWMS-AVG1"},
                      "DWMS algorithms");
 }
