@@ -4303,7 +4303,20 @@ void FCI_MO::set_eigens(const std::vector<vector<pair<SharedVector, double>>>& e
     }
 }
 
-Reference FCI_MO::compute_densities(int root1, int root2, bool multi_state, int entry, int max_level) {
+Reference FCI_MO::compute_trans_density(int root1, int root2, bool multi_state, int entry,
+                                        int max_level, bool do_cumulant) {
+    if (max_level >= 4) {
+        outfile->Printf("\n  Max RDM level >= 4 is not available.");
+    }
+
+    std::string job_type = "RDM";
+    if (do_cumulant) {
+        job_type = "PDC";
+        if (root1 != root2) {
+            throw PSIEXCEPTION("Cannot compute transition cumulants.");
+        }
+    }
+
     vecdet& p_space = determinant_;
     std::vector<pair<SharedVector, double>>& eigen = eigen_;
 
@@ -4312,13 +4325,54 @@ Reference FCI_MO::compute_densities(int root1, int root2, bool multi_state, int 
         eigen = eigens_[entry];
     }
 
+    // prepare ci_rdms
+    size_t dim = p_space.size();
+    size_t eigen_size = eigen.size();
+    SharedMatrix evecs(new Matrix("evecs", dim, eigen_size));
+    for (int i = 0; i < eigen_size; ++i) {
+        evecs->set_column(0, i, (eigen_[i]).first);
+    }
+    CI_RDMS ci_rdms(options_, fci_ints_, p_space, evecs, root1, root2);
 
+    Reference ref;
+    std::vector<double> opdm_a, opdm_b;
+    std::vector<double> tpdm_aa, tpdm_ab, tpdm_bb;
+    std::vector<double> tpdm_aaa, tpdm_aab, tpdm_abb, tpdm_bbb;
 
-    return Reference();
-}
+    // 1-RDM
+    if (max_level >= 1) {
+        ForteTimer timer;
+        outfile->Printf("\n  Computing 1-RDMs ... ");
 
-Reference FCI_MO::compute_cumulants(int root, bool multi_state, int entry, int max_level) {
-    return Reference();
+        ci_rdms.compute_1rdm(opdm_a, opdm_b);
+        ref.set_G1(opdm_a, opdm_b, na_);
+
+        outfile->Printf("Done. Timing %15.6f s\n", timer.elapsed());
+    }
+
+    // 2-RDM
+    if (max_level >= 2) {
+        ForteTimer timer;
+        outfile->Printf("\n  Computing 2-RDMs ... ");
+
+        ci_rdms.compute_2rdm(tpdm_aa, tpdm_ab, tpdm_bb);
+        ref.set_G2(tpdm_aa, tpdm_ab, tpdm_bb, na_, do_cumulant);
+
+        outfile->Printf("Done. Timing %15.6f s\n", timer.elapsed());
+    }
+
+    // 3-RDM
+    if (max_level >= 3) {
+        ForteTimer timer;
+        outfile->Printf("\n  Computing 3-RDMs ... ");
+
+        ci_rdms.compute_3rdm(tpdm_aaa, tpdm_aab, tpdm_abb, tpdm_bbb);
+        ref.set_G3(tpdm_aaa, tpdm_aab, tpdm_abb, tpdm_bbb, na_, do_cumulant);
+
+        outfile->Printf("Done. Timing %15.6f s\n", timer.elapsed());
+    }
+
+    return ref;
 }
 
 // void FCI_MO::iao_analysis() {

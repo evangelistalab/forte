@@ -109,21 +109,21 @@ class Reference // : public Wavefunction
     /// a, b -- 1-RDMs of two spin cases
     /// nactv -- number of active orbitals
     /// move -- directly "move" two vectors to Tensor data if true
-    void set_D1(std::vector<double>& a, std::vector<double>& b, size_t nactv, bool move = true);
+    void set_G1(std::vector<double>& a, std::vector<double>& b, size_t nactv, bool move = true);
 
-    /// Fill 2-RDMs or 2-cumulants
+    /// Fill 2-RDMs or compute 2-cumulants
     /// aa, ab, bb -- 2-RDMs of three spin cases
     /// nactv -- number of active orbitals
     /// move -- directly "move" three vectors to Tensor data if true
     /// cumulant -- L2 will be computed and filled if true, G2 will be filled as well
-    void set_D2(std::vector<double>& aa, std::vector<double>& ab, std::vector<double>& bb,
+    void set_G2(std::vector<double>& aa, std::vector<double>& ab, std::vector<double>& bb,
                 size_t nactv, bool cumulant = true, bool move = true);
 
-    /// Fill 3-RDMs or 3-cumulants by "moving" the original four vectors
+    /// Fill 3-RDMs or compute 3-cumulants by "moving" the original four vectors
     /// aaa, aab, abb, bbb -- 3-RDMs of four spin cases
     /// nactv -- number of active orbitals
     /// cumulant -- L3 will be computed and filled if true, otherwise G3 will be filled
-    void set_D3(std::vector<double>& aaa, std::vector<double>& aab, std::vector<double>& abb,
+    void set_G3(std::vector<double>& aaa, std::vector<double>& aab, std::vector<double>& abb,
                 std::vector<double>& bbb, size_t nactv, bool cumulant = true);
 
   protected:
