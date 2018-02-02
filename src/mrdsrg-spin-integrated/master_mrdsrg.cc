@@ -714,6 +714,20 @@ void MASTER_DSRG::deGNO_ints(const std::string& name, double& H0, BlockedTensor&
     outfile->Printf("Done. Timing %8.3f s", t2.elapsed());
 }
 
+ambit::BlockedTensor MASTER_DSRG::deGNO_Tamp(BlockedTensor& T1, BlockedTensor& T2, BlockedTensor& D1) {
+    BlockedTensor T1eff = BTF_->build(tensor_type_, "T1eff from de-GNO", spin_cases({"hp"}));
+
+    T1eff["ia"] = T1["ia"];
+    T1eff["IA"] = T1["IA"];
+
+    T1eff["ia"] -= T2["iuav"] * D1["vu"];
+    T1eff["ia"] -= T2["iUaV"] * D1["VU"];
+    T1eff["IA"] -= T2["uIvA"] * D1["vu"];
+    T1eff["IA"] -= T2["IUAV"] * D1["VU"];
+
+    return T1eff;
+}
+
 void MASTER_DSRG::rotate_ints_semi_to_origin(const std::string& name, BlockedTensor& H1,
                                              BlockedTensor& H2) {
 

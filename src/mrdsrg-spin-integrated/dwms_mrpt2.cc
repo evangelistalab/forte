@@ -70,6 +70,10 @@ void DWMS_DSRGPT2::startup() {
     outfile->Printf("\n    DWMS CI VECTORS    %10s", dwms_ci_.c_str());
     outfile->Printf("\n    DWMS ALGORITHM     %10s", algorithm_.c_str());
 
+    if (zeta_ < 0.0) {
+        throw PSIEXCEPTION("DWMS_ZETA should be a value greater or equal than 0.0!");
+    }
+
     if (algorithm_ == "MS" || algorithm_ == "XMS") {
         print_note_xms();
     } else {
@@ -208,13 +212,13 @@ std::shared_ptr<FCI_MO> DWMS_DSRGPT2::precompute_energy() {
     auto fci_mo =
         std::make_shared<FCI_MO>(reference_wavefunction_, options_, ints_, mo_space_info_);
     fci_mo->compute_energy();
+    fci_ints_ = fci_mo->fci_ints();
 
     auto sa_info = fci_mo->sa_info();
     int nentry = sa_info.size();
 
     // save SA-CASCI energies
     Eref_0_.resize(nentry);
-
     for (int n = 0; n < nentry; ++n) {
         int nroots;
         std::tie(std::ignore, std::ignore, nroots, std::ignore) = sa_info[n];
@@ -233,10 +237,10 @@ std::shared_ptr<FCI_MO> DWMS_DSRGPT2::precompute_energy() {
 
         Reference reference = fci_mo->reference(max_rdm_level_);
 
-        auto fci_ints = compute_dsrg_pt2(fci_mo, reference);
+        fci_ints_ = compute_dsrg_pt2(fci_mo, reference);
 
         print_h2("Diagonalize SA-DSRG-PT2 Active Hamiltonian");
-        fci_mo->set_fci_int(fci_ints);
+        fci_mo->set_fci_int(fci_ints_);
         fci_mo->set_localize_actv(false);
         fci_mo->compute_energy();
         auto eigens = fci_mo->eigens();
@@ -261,66 +265,6 @@ std::shared_ptr<FCI_MO> DWMS_DSRGPT2::precompute_energy() {
     return fci_mo;
 }
 
-std::shared_ptr<FCI_MO> DWMS_DSRGPT2::precompute_energy_old() {
-    // perform SA-CASCI using user-defined weights
-    auto fci_mo =
-        std::make_shared<FCI_MO>(reference_wavefunction_, options_, ints_, mo_space_info_);
-    fci_mo->compute_energy();
-
-    auto sa_info = fci_mo->sa_info();
-    int nentry = sa_info.size();
-
-    // save SA-CASCI energies
-    Eref_0_.resize(nentry);
-
-    for (int n = 0; n < nentry; ++n) {
-        int nroots;
-        std::tie(std::ignore, std::ignore, nroots, std::ignore) = sa_info[n];
-        for (int i = 0; i < nroots; ++i) {
-            Eref_0_[n].push_back(fci_mo->eigens()[n][i].second);
-        }
-    }
-
-    // perform SA-DSRG-PT2 if needed
-    if (algorithm_ != "DWMS-0") {
-        // need to save a copy of sa eigen vectors for DWMS-1
-        std::vector<std::vector<std::pair<SharedVector, double>>> eigens_old;
-        if (algorithm_ == "DWMS-1") {
-            eigens_old = fci_mo->eigens();
-        }
-
-        Reference reference = fci_mo->reference(max_rdm_level_);
-
-        auto fci_ints = compute_dsrg_pt2(fci_mo, reference);
-
-        print_h2("Diagonalize SA-DSRG-PT2 Active Hamiltonian");
-        fci_mo->set_fci_int(fci_ints);
-        fci_mo->set_localize_actv(false);
-        fci_mo->compute_energy();
-        auto eigens = fci_mo->eigens();
-
-        // save SA-DSRG-PT2 energies and CI vectors
-        Ept2_0_.resize(nentry);
-        initial_guesses_.resize(nentry);
-
-        for (int n = 0; n < nentry; ++n) {
-            int nroots;
-            std::tie(std::ignore, std::ignore, nroots, std::ignore) = sa_info[n];
-            for (int i = 0; i < nroots; ++i) {
-                initial_guesses_[n].push_back(eigens[n][i].first);
-                Ept2_0_[n].push_back(eigens[n][i].second);
-            }
-        }
-
-        // use original eigens for DWMS-1
-        if (algorithm_ == "DWMS-1") {
-            fci_mo->set_eigens(eigens_old);
-        }
-    }
-
-    return fci_mo;
-}
-
 double DWMS_DSRGPT2::compute_energy() {
     if (algorithm_ == "MS" || algorithm_ == "XMS") {
         return compute_dwms_energy();
@@ -336,94 +280,248 @@ double DWMS_DSRGPT2::compute_dwms_energy() {
     int nentry = sa_info.size();
 
     // XMS rotation for all symmetries (same orbital basis)
-    std::vector<SharedMatrix> rcivecs;
-    for (int n = 0; n < nentry; ++n) {
-        int multi, irrep, nroots;
-        std::tie(irrep, multi, nroots, std::ignore) = sa_info[n];
-
-        auto eigen = fci_mo->eigens()[n];
-        int dim = (eigen[0].first)->dim();
-        SharedMatrix civecs(new Matrix("ci vecs", dim, nroots));
-        for (int i = 0; i < nroots; ++i) {
-            civecs->set_column(0, i, (eigen[i]).first);
-        }
-
-        if (algorithm_ == "XMS") {
-            print_h2("XMS Rotation for " + multi_symbol_[multi - 1] + " " + irrep_symbol_[irrep]);
-
-            // p_space and civecs of current symmetry
-            auto p_space = fci_mo->p_spaces()[n];
-
-            // compute Fock operator within active space
-            ambit::Tensor Fa, Fb;
-            compute_Fock_actv(p_space, civecs, Fa, Fb);
-
-            // rotate CI vectors
-            rcivecs.push_back(xms_rotate_civecs(p_space, civecs, Fa, Fb));
-        } else {
-            rcivecs.push_back(civecs);
-        }
+    if (algorithm_ == "XMS") {
+        fci_mo->xms_rotate_civecs();
     }
 
-    // the final DWMS-DSRG-PT2 energies
+    // prepare the final DWMS-DSRG-PT2 energies
     Ept2_.resize(nentry);
 
     // save a copy of original orbitals
     SharedMatrix Ca_copy(reference_wavefunction_->Ca()->clone());
     SharedMatrix Cb_copy(reference_wavefunction_->Cb()->clone());
 
+    // prepare Reference
+    Reference reference;
+
+    // if zeta = 0, reference and amplitudes will be the same for all states
+    // we should only compute DSRG once, from which we obtain the "effective Hamiltonian"
+    // then loop over states to obtain the couplings
+    double zero_threshold = 1.0e-8;
+    if (zeta_ < zero_threshold) {
+        outfile->Printf("\n  DWMS_ZETA = 0.0! Equal weights will be used for all states.");
+
+        //        int total_nroots = 0;
+        //        for (int n = 0; n < nentry; ++n) {
+        //            total_nroots += std::get<2>(sa_info[n]);
+        //        }
+        //        double w = 1.0 / total_nroots;
+
+        //        // form new sa_info
+        //        std::vector<std::tuple<int, int, int, std::vector<double>>> sa_info_new;
+        //        sa_info_new.resize(nentry);
+        //        for (int n = 0; n < nentry; ++n) {
+        //            int irrep, multi, nroots;
+        //            std::tie(irrep, multi, nroots, std::ignore) = sa_info[n];
+        //            sa_info_new[n] = std::make_tuple(irrep, multi, nroots, std::vector(nroots,
+        //            w));
+        //        }
+
+        //        // print new weights
+        //        print_sa_info("Original State Averaging Summary", sa_info);
+        //        print_sa_info("Reweighted State Averaging Summary", sa_info_new);
+
+        //        // compute Reference
+        //        fci_mo->set_sa_info(sa_info_new);
+        //        reference = fci_mo->reference(max_rdm_level_);
+
+        //        // update MK vacuum energy
+        //        double Enuc = Process::environment.molecule()->nuclear_repulsion_energy(
+        //                    reference_wavefunction_->get_dipole_field_strength());
+        //        reference.update_Eref(ints_, mo_space_info_, Enuc);
+    }
+
     // loop over symmetry entries
-    for (int n = 0, counter = 0; n < nentry; ++n) {
+    for (int n = 0; n < nentry; ++n) {
         int multi, irrep, nroots;
         std::tie(irrep, multi, nroots, std::ignore) = sa_info[n];
         Ept2_[n].resize(nroots);
 
         // print current status
-        std::stringstream ss_entry;
-        ss_entry << "Build Effective Hamiltonian of " << multi_symbol_[multi - 1] << " "
-                 << irrep_symbol_[irrep];
-        size_t entry_title_size = ss_entry.str().size();
+        std::string entry_name = multi_symbol_[multi - 1] + " " + irrep_symbol_[irrep];
+        std::string entry_title = "Build Effective Hamiltonian of " + entry_name;
+        size_t entry_title_size = entry_title.size();
         outfile->Printf("\n\n  %s", std::string(entry_title_size, '=').c_str());
-        outfile->Printf("\n  %s", ss_entry.str().c_str());
+        outfile->Printf("\n  %s", entry_title.c_str());
         outfile->Printf("\n  %s\n", std::string(entry_title_size, '=').c_str());
 
         // prepare Heff
-        SharedMatrix Heff(new Matrix(
-            "Heff " + multi_symbol_[multi - 1] + " " + irrep_symbol_[irrep], nroots, nroots));
-        SharedMatrix Heff_sym(Heff->clone());
-        Heff_sym->set_name("Heff Symmetrized");
+        SharedMatrix Heff(new Matrix("Heff " + entry_name, nroots, nroots));
+        SharedMatrix Heff_sym(new Matrix("Symmetrized Heff " + entry_name, nroots, nroots));
 
         // loop over states of current symmetry
         for (int M = 0; M < nroots; ++M) {
             print_h2("Compute DSRG-MRPT2 Energy of Root " + std::to_string(M));
 
-            // compute state-specific Reference
+            // compute new weights
+            std::vector<std::vector<double>>& Erefs = Eref_0_;
+            if (dwms_e_ == "DSRG-PT2") {
+                Erefs = Ept2_0_;
+            }
+            auto sa_info_new = compute_dwms_weights(sa_info, n, M, Erefs);
+            print_sa_info("Original State Averaging Summary", sa_info);
+            print_sa_info("Reweighted State Averaging Summary", sa_info_new);
+
+            // compute Reference
+            // use state-specific Reference if current weight is close to 1.0
+            std::vector<double> weights;
+            std::tie(std::ignore, std::ignore, std::ignore, weights) = sa_info_new[n];
+            if ((1.0 - weights[M]) < zero_threshold) {
+                reference = fci_mo->compute_trans_density(M, M, true, n, max_rdm_level_, true);
+            } else {
+                fci_mo->set_sa_info(sa_info_new);
+                reference = fci_mo->reference(max_rdm_level_);
+            }
+
+            // update MK vacuum energy
+            double Enuc = Process::environment.molecule()->nuclear_repulsion_energy(
+                reference_wavefunction_->get_dipole_field_strength());
+            reference.update_Eref(ints_, mo_space_info_, Enuc);
+
+            // DSRG-PT2 pointer
+            std::shared_ptr<MASTER_DSRG> dsrg_pt2;
 
             // canonicalize orbitals if density fitting
+            // because three-dsrg-mrpt2 assumes semicanonical orbitals
+            if (eri_df_) {
+                SemiCanonical semi(reference_wavefunction_, ints_, mo_space_info_);
+                semi.semicanonicalize(reference, max_rdm_level_);
+                Ua_ = semi.Ua_t();
+                Ub_ = semi.Ub_t();
+
+                dsrg_pt2 = std::make_shared<THREE_DSRG_MRPT2>(reference, reference_wavefunction_,
+                                                              options_, ints_, mo_space_info_);
+            } else {
+                dsrg_pt2 = std::make_shared<DSRG_MRPT2>(reference, reference_wavefunction_,
+                                                        options_, ints_, mo_space_info_);
+            }
 
             // compute state-specific DSRG-MRPT2 energy
+            double E = dsrg_pt2->compute_energy();
+            Heff->set(M, M, E);
+            Heff_sym->set(M, M, E);
 
-            // de-normal-order amplitudes
+            // compute 2nd-order efffective Hamiltonian for the couplings
+            print_h2("Compute couplings of 2nd-order effective Hamiltonian");
+
+            outfile->Printf("\n  Compute 2nd-order Heff = H + H * T(root %d).", M);
+            ambit::Tensor H1a, H1b, H2aa, H2ab, H2bb, H3aaa, H3aab, H3abb, H3bbb;
+            dsrg_pt2->compute_Heff_2nd_coupling(H1a, H1b, H2aa, H2ab, H2bb, H3aaa, H3aab, H3abb,
+                                                H3bbb);
+
+            // need to rotate these Heff to original basis if density fitting
+            // because CI vectors are obtained in the original orbital basis
+            if (eri_df_) {
+                ambit::Tensor temp;
+
+                temp = H1a.clone();
+                temp("rs") = Ua_("rp") * H1a("pq") * Ua_("sq");
+                H1a("pq") = temp("pq");
+
+                temp.set_name(H1b.name());
+                temp("rs") = Ub_("rp") * H1b("pq") * Ub_("sq");
+                H1b("pq") = temp("pq");
+
+                temp = H2aa.clone();
+                temp("pqrs") = Ua_("pa") * Ua_("qb") * H2aa("abcd") * Ua_("rc") * Ua_("sd");
+                H2aa("pqrs") = temp("pqrs");
+
+                temp.set_name(H2ab.name());
+                temp("pqrs") = Ua_("pa") * Ub_("qb") * H2ab("abcd") * Ua_("rc") * Ub_("sd");
+                H2ab("pqrs") = temp("pqrs");
+
+                temp.set_name(H2bb.name());
+                temp("pqrs") = Ub_("pa") * Ub_("qb") * H2bb("abcd") * Ub_("rc") * Ub_("sd");
+                H2bb("pqrs") = temp("pqrs");
+
+                temp = H3aaa.clone();
+                temp("pqrsto") = Ua_("pa") * Ua_("qb") * Ua_("rc") * H3aaa("abcdef") * Ua_("sd") *
+                                 Ua_("te") * Ua_("of");
+                H3aaa("pqrsto") = temp("pqrsto");
+
+                temp.set_name(H3aab.name());
+                temp("pqrsto") = Ua_("pa") * Ua_("qb") * Ub_("rc") * H3aab("abcdef") * Ua_("sd") *
+                                 Ua_("te") * Ub_("of");
+                H3aab("pqrsto") = temp("pqrsto");
+
+                temp.set_name(H3abb.name());
+                temp("pqrsto") = Ua_("pa") * Ub_("qb") * Ub_("rc") * H3abb("abcdef") * Ua_("sd") *
+                                 Ub_("te") * Ub_("of");
+                H3abb("pqrsto") = temp("pqrsto");
+
+                temp.set_name(H3bbb.name());
+                temp("pqrsto") = Ub_("pa") * Ub_("qb") * Ub_("rc") * H3bbb("abcdef") * Ub_("sd") *
+                                 Ub_("te") * Ub_("of");
+                H3bbb("pqrsto") = temp("pqrsto");
+            }
 
             for (int N = 0; N < nroots; ++N) {
-                // compute 1st-order couplings <N|H|M>
-                // need to rotate transition density to semicanonical basis if density fitting
+                if (M == N) {
+                    continue;
+                }
 
-                // compute 2nd-order couplings <N|H * T(M)|M>
-                // need to rotate transition density to semicanonical basis if density fitting
+                // compute transition densities
+                outfile->Printf("\n  Compute transition densities.");
+                Reference TrD = fci_mo->compute_trans_density(M, N, true, n, 3, false);
+
+                outfile->Printf("\n  Contract transition densities with Heff.");
+                double coupling = 0.0;
+                coupling += H1a("vu") * TrD.L1a()("uv");
+                coupling += H1b("vu") * TrD.L1b()("uv");
+
+                coupling += H2aa("xyuv") * TrD.g2aa()("uvxy");
+                coupling += H2ab("xYuV") * TrD.g2ab()("uVxY");
+                coupling += H2bb("XYUV") * TrD.g2bb()("UVXY");
+
+                coupling += H3aaa("uvwxyz") * TrD.g3aaa()("xyzuvw");
+                coupling += H3aab("uvwxyz") * TrD.g3aab()("xyzuvw");
+                coupling += H3abb("uvwxyz") * TrD.g3abb()("xyzuvw");
+                coupling += H3bbb("uvwxyz") * TrD.g3bbb()("xyzuvw");
+
+                Heff->add(N, M, coupling);
+                Heff_sym->add(N, M, 0.5 * coupling);
+                Heff_sym->add(M, N, 0.5 * coupling);
             }
 
             // rotate basis back to original if density fitting
+            if (eri_df_) {
+                print_h2("Back Transformation of Semicanonical Integrals");
+                SharedMatrix Ca = reference_wavefunction_->Ca();
+                SharedMatrix Cb = reference_wavefunction_->Cb();
+                Ca->copy(Ca_copy);
+                Cb->copy(Cb_copy);
+                ints_->retransform_integrals();
+            }
         }
 
         // print effective Hamiltonian
+        print_h2("Effective Hamiltonian Summary");
+        outfile->Printf("\n");
+
+        Heff->print();
+        Heff_sym->print();
 
         // diagonalize Heff and print eigen vectors
+        SharedMatrix U(new Matrix("U of Heff (Symmetrized)", nroots, nroots));
+        SharedVector Ems(new Vector("MS Energies", nroots));
+        Heff_sym->diagonalize(U, Ems);
+        U->eivprint(Ems);
 
-        // set Ept2_ and environmental value
+        // set Ept2_ value
+        for (int i = 0; i < nroots; ++i) {
+            Ept2_[n][i] = Ems->get(i);
+        }
     }
 
-    return 0.0;
+    // print energy summary
+    outfile->Printf("  ==> Dynamically Weighted Multi-State DSRG-PT2 Energy Summary <==\n");
+    print_energy_list("SA-CASCI Energy", Eref_0_, sa_info);
+    if (dwms_ci_ == "DSRG-PT2" || dwms_e_ == "DSRG-PT2") {
+        print_energy_list("SA-DSRG-PT2 Energy", Ept2_0_, sa_info);
+    }
+    print_energy_list("DWMS-DSRGP-T2 Energy", Ept2_, sa_info, true);
+
+    return Ept2_[0][0];
 }
 
 void DWMS_DSRGPT2::compute_Fock_actv(const det_vec& p_space, SharedMatrix civecs, ambit::Tensor Fa,
@@ -439,7 +537,6 @@ void DWMS_DSRGPT2::compute_Fock_actv(const det_vec& p_space, SharedMatrix civecs
 
     auto actv_mos = mo_space_info_->get_corr_abs_mo("ACTIVE");
     auto core_mos = mo_space_info_->get_corr_abs_mo("RESTRICTED_DOCC");
-    auto fci_ints = std::make_shared<FCIIntegrals>(ints_, actv_mos, core_mos);
 
     size_t nc = mo_space_info_->size("RESTRICTED_DOCC");
     size_t na = mo_space_info_->size("ACTIVE");
@@ -447,7 +544,7 @@ void DWMS_DSRGPT2::compute_Fock_actv(const det_vec& p_space, SharedMatrix civecs
     std::vector<double> sa_opdm_b(na * na, 0.0);
 
     for (int M = 0; M < nroots; ++M) {
-        CI_RDMS ci_rdms(options_, fci_ints, p_space, civecs, M, M);
+        CI_RDMS ci_rdms(options_, fci_ints_, p_space, civecs, M, M);
         std::vector<double> opdm_a, opdm_b;
         ci_rdms.compute_1rdm(opdm_a, opdm_b);
 
@@ -516,9 +613,6 @@ SharedMatrix DWMS_DSRGPT2::xms_rotate_civecs(const det_vec& p_space, SharedMatri
     outfile->Printf("\n    Build Fock matrix <M|F|N>.");
     SharedMatrix Fock(new Matrix("Fock <M|F|N>", nroots, nroots));
 
-    auto actv_mos = mo_space_info_->get_corr_abs_mo("ACTIVE");
-    auto core_mos = mo_space_info_->get_corr_abs_mo("RESTRICTED_DOCC");
-    auto fci_ints = std::make_shared<FCIIntegrals>(ints_, actv_mos, core_mos);
     size_t na = mo_space_info_->size("ACTIVE");
 
     for (int M = 0; M < nroots; ++M) {
@@ -526,7 +620,7 @@ SharedMatrix DWMS_DSRGPT2::xms_rotate_civecs(const det_vec& p_space, SharedMatri
 
             // compute transition density
             std::vector<double> opdm_a, opdm_b;
-            CI_RDMS ci_rdms(options_, fci_ints, p_space, civecs, M, N);
+            CI_RDMS ci_rdms(options_, fci_ints_, p_space, civecs, M, N);
             ci_rdms.compute_1rdm(opdm_a, opdm_b);
 
             // put rdms in tensor format
@@ -559,6 +653,193 @@ SharedMatrix DWMS_DSRGPT2::xms_rotate_civecs(const det_vec& p_space, SharedMatri
     rcivecs->gemm(false, false, 1.0, civecs, Fevec, 0.0);
 
     return rcivecs;
+}
+
+Reference DWMS_DSRGPT2::compute_Reference(CI_RDMS& ci_rdms, bool do_cumulant) {
+    size_t na = mo_space_info_->size("ACTIVE");
+
+    std::string job_type = "RDM";
+    if (do_cumulant) {
+        job_type = "PDC";
+    }
+
+    Reference ref;
+    std::vector<double> opdm_a, opdm_b;
+    std::vector<double> tpdm_aa, tpdm_ab, tpdm_bb;
+    std::vector<double> tpdm_aaa, tpdm_aab, tpdm_abb, tpdm_bbb;
+
+    // 1-RDM
+    if (max_rdm_level_ >= 1) {
+        ForteTimer timer;
+        outfile->Printf("\n  Computing 1-%ss ... ", job_type.c_str());
+
+        ci_rdms.compute_1rdm(opdm_a, opdm_b);
+        ref.set_G1(opdm_a, opdm_b, na);
+
+        outfile->Printf("Done. Timing %15.6f s\n", timer.elapsed());
+    }
+
+    // 2-RDM
+    if (max_rdm_level_ >= 2) {
+        ForteTimer timer;
+        outfile->Printf("\n  Computing 2-%ss ... ", job_type.c_str());
+
+        ci_rdms.compute_2rdm(tpdm_aa, tpdm_ab, tpdm_bb);
+        ref.set_G2(tpdm_aa, tpdm_ab, tpdm_bb, na, do_cumulant);
+
+        outfile->Printf("Done. Timing %15.6f s\n", timer.elapsed());
+    }
+
+    // 3-RDM
+    if (max_rdm_level_ >= 3) {
+        ForteTimer timer;
+        outfile->Printf("\n  Computing 3-ss ... ", job_type.c_str());
+
+        ci_rdms.compute_3rdm(tpdm_aaa, tpdm_aab, tpdm_abb, tpdm_bbb);
+        ref.set_G3(tpdm_aaa, tpdm_aab, tpdm_abb, tpdm_bbb, na, do_cumulant);
+
+        outfile->Printf("Done. Timing %15.6f s\n", timer.elapsed());
+    }
+
+    return ref;
+}
+
+void DWMS_DSRGPT2::print_sa_info(
+    const std::string& name,
+    const std::vector<std::tuple<int, int, int, std::vector<double>>>& sa_info) {
+
+    print_h2(name);
+
+    auto longer = [](const std::tuple<int, int, int, std::vector<double>>& A,
+                     const std::tuple<int, int, int, std::vector<double>>& B) {
+        return std::get<2>(A) < std::get<2>(B);
+    };
+    int max_nroots = std::get<2>(*std::max_element(sa_info.begin(), sa_info.end(), longer));
+
+    int max_line = 0;
+    if (max_nroots == 1) {
+        max_line = 7;
+    } else {
+        max_line = 6 * (max_nroots > 5 ? 5 : max_nroots);
+    }
+
+    int ltotal = 6 + 2 + 6 + 2 + 6 + 2 + max_line;
+    std::string blank(max_line - 7, ' ');
+    std::string dash(ltotal, '-');
+    outfile->Printf("\n    Irrep.  Multi.  Nroots  %sWeights", blank.c_str());
+    outfile->Printf("\n    %s", dash.c_str());
+
+    for (int n = 0, nentry = sa_info.size(); n < nentry; ++n) {
+        int irrep, multi, nroots;
+        std::vector<double> weights;
+        std::tie(irrep, multi, nroots, weights) = sa_info[n];
+
+        std::stringstream ss_w;
+        for (int i = 0, nw = weights.size(); i < nw; ++i) {
+            ss_w << " " << std::fixed << std::setprecision(3) << weights[i];
+            if (i % 5 == 0 && i != 0) {
+                ss_w << std::endl << std::string(24, ' ');
+            }
+        }
+
+        std::ostringstream oss;
+        oss << std::setw(4) << std::right << irrep_symbol_[irrep] << "    " << std::setw(4)
+            << std::right << multi << "    " << std::setw(4) << std::right << nroots << "    "
+            << std::setw(max_line) << ss_w.str();
+        outfile->Printf("\n    %s", oss.str().c_str());
+    }
+    outfile->Printf("\n    %s", dash.c_str());
+}
+
+void DWMS_DSRGPT2::print_energy_list(
+    std::string name, const std::vector<std::vector<double>>& energy,
+    const std::vector<std::tuple<int, int, int, std::vector<double>>>& sa_info, bool pass_process) {
+
+    if (sa_info.size() != energy.size()) {
+        throw PSIEXCEPTION("Mismatching sizes between energy list and sa_info list");
+    }
+
+    outfile->Printf("\n    Multi.  Irrep.  No.    %20s", name.c_str());
+    std::string dash(43, '-');
+    outfile->Printf("\n    %s", dash.c_str());
+
+    for (int n = 0, counter = 0, nentry = energy.size(); n < nentry; ++n) {
+        int irrep, multi, nroots;
+        std::tie(irrep, multi, nroots, std::ignore) = sa_info[n];
+
+        for (int i = 0; i < nroots; ++i) {
+            outfile->Printf("\n     %3d     %3s    %2d   %22.14f", multi,
+                            irrep_symbol_[irrep].c_str(), i, energy[n][i]);
+            if (pass_process) {
+                Process::environment.globals["ENERGY ROOT " + std::to_string(counter)] =
+                    energy[n][i];
+            }
+            counter += 1;
+        }
+        outfile->Printf("\n    %s", dash.c_str());
+    }
+    outfile->Printf("\n");
+}
+
+std::shared_ptr<FCI_MO> DWMS_DSRGPT2::precompute_energy_old() {
+    // perform SA-CASCI using user-defined weights
+    auto fci_mo =
+        std::make_shared<FCI_MO>(reference_wavefunction_, options_, ints_, mo_space_info_);
+    fci_mo->compute_energy();
+    fci_ints_ = fci_mo->fci_ints();
+
+    auto sa_info = fci_mo->sa_info();
+    int nentry = sa_info.size();
+
+    // save SA-CASCI energies
+    Eref_0_.resize(nentry);
+
+    for (int n = 0; n < nentry; ++n) {
+        int nroots;
+        std::tie(std::ignore, std::ignore, nroots, std::ignore) = sa_info[n];
+        for (int i = 0; i < nroots; ++i) {
+            Eref_0_[n].push_back(fci_mo->eigens()[n][i].second);
+        }
+    }
+
+    // perform SA-DSRG-PT2 if needed
+    if (algorithm_ != "DWMS-0") {
+        // need to save a copy of sa eigen vectors for DWMS-1
+        std::vector<std::vector<std::pair<SharedVector, double>>> eigens_old;
+        if (algorithm_ == "DWMS-1") {
+            eigens_old = fci_mo->eigens();
+        }
+
+        Reference reference = fci_mo->reference(max_rdm_level_);
+
+        fci_ints_ = compute_dsrg_pt2(fci_mo, reference);
+
+        print_h2("Diagonalize SA-DSRG-PT2 Active Hamiltonian");
+        fci_mo->set_fci_int(fci_ints_);
+        fci_mo->set_localize_actv(false);
+        fci_mo->compute_energy();
+        auto eigens = fci_mo->eigens();
+
+        // save SA-DSRG-PT2 energies and CI vectors
+        Ept2_0_.resize(nentry);
+        initial_guesses_.resize(nentry);
+
+        for (int n = 0; n < nentry; ++n) {
+            int nroots;
+            std::tie(std::ignore, std::ignore, nroots, std::ignore) = sa_info[n];
+            for (int i = 0; i < nroots; ++i) {
+                initial_guesses_[n].push_back(eigens[n][i].first);
+                Ept2_0_[n].push_back(eigens[n][i].second);
+            }
+        }
+
+        // use original eigens for DWMS-1
+        if (algorithm_ == "DWMS-1") {
+            fci_mo->set_eigens(eigens_old);
+        }
+    }
+
+    return fci_mo;
 }
 
 double DWMS_DSRGPT2::compute_dwms_energy_old() {
@@ -728,53 +1009,6 @@ void DWMS_DSRGPT2::print_current_title(int multi, int irrep, int root) {
     outfile->Printf("\n  %s\n", std::string(title_size, '=').c_str());
 }
 
-void DWMS_DSRGPT2::print_sa_info(
-    const std::string& name,
-    const std::vector<std::tuple<int, int, int, std::vector<double>>>& sa_info) {
-
-    print_h2(name);
-
-    auto longer = [](const std::tuple<int, int, int, std::vector<double>>& A,
-                     const std::tuple<int, int, int, std::vector<double>>& B) {
-        return std::get<2>(A) < std::get<2>(B);
-    };
-    int max_nroots = std::get<2>(*std::max_element(sa_info.begin(), sa_info.end(), longer));
-
-    int max_line = 0;
-    if (max_nroots == 1) {
-        max_line = 7;
-    } else {
-        max_line = 6 * (max_nroots > 5 ? 5 : max_nroots);
-    }
-
-    int ltotal = 6 + 2 + 6 + 2 + 6 + 2 + max_line;
-    std::string blank(max_line - 7, ' ');
-    std::string dash(ltotal, '-');
-    outfile->Printf("\n    Irrep.  Multi.  Nroots  %sWeights", blank.c_str());
-    outfile->Printf("\n    %s", dash.c_str());
-
-    for (int n = 0, nentry = sa_info.size(); n < nentry; ++n) {
-        int irrep, multi, nroots;
-        std::vector<double> weights;
-        std::tie(irrep, multi, nroots, weights) = sa_info[n];
-
-        std::stringstream ss_w;
-        for (int i = 0, nw = weights.size(); i < nw; ++i) {
-            ss_w << " " << std::fixed << std::setprecision(3) << weights[i];
-            if (i % 5 == 0 && i != 0) {
-                ss_w << std::endl << std::string(24, ' ');
-            }
-        }
-
-        std::ostringstream oss;
-        oss << std::setw(4) << std::right << irrep_symbol_[irrep] << "    " << std::setw(4)
-            << std::right << multi << "    " << std::setw(4) << std::right << nroots << "    "
-            << std::setw(max_line) << ss_w.str();
-        outfile->Printf("\n    %s", oss.str().c_str());
-    }
-    outfile->Printf("\n    %s", dash.c_str());
-}
-
 void DWMS_DSRGPT2::print_overlap(const std::vector<SharedVector>& evecs, const std::string& Sname) {
     print_h2(Sname);
     outfile->Printf("\n");
@@ -791,36 +1025,6 @@ void DWMS_DSRGPT2::print_overlap(const std::vector<SharedVector>& evecs, const s
     }
 
     S->print();
-}
-
-void DWMS_DSRGPT2::print_energy_list(
-    std::string name, const std::vector<std::vector<double>>& energy,
-    const std::vector<std::tuple<int, int, int, std::vector<double>>>& sa_info, bool pass_process) {
-
-    if (sa_info.size() != energy.size()) {
-        throw PSIEXCEPTION("Mismatching sizes between energy list and sa_info list");
-    }
-
-    outfile->Printf("\n    Multi.  Irrep.  No.    %20s", name.c_str());
-    std::string dash(43, '-');
-    outfile->Printf("\n    %s", dash.c_str());
-
-    for (int n = 0, counter = 0, nentry = energy.size(); n < nentry; ++n) {
-        int irrep, multi, nroots;
-        std::tie(irrep, multi, nroots, std::ignore) = sa_info[n];
-
-        for (int i = 0; i < nroots; ++i) {
-            outfile->Printf("\n     %3d     %3s    %2d   %22.14f", multi,
-                            irrep_symbol_[irrep].c_str(), i, energy[n][i]);
-            if (pass_process) {
-                Process::environment.globals["ENERGY ROOT " + std::to_string(counter)] =
-                    energy[n][i];
-            }
-            counter += 1;
-        }
-        outfile->Printf("\n    %s", dash.c_str());
-    }
-    outfile->Printf("\n");
 }
 }
 }

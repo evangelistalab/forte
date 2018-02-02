@@ -79,6 +79,12 @@ class Reference // : public Wavefunction
     ambit::Tensor g2bb() { return g2bb_; }
     ambit::Tensor SFg2() { return SFg2_; }
 
+    /// Obtain 3-RDMs
+    ambit::Tensor g3aaa() { return g3aaa_; }
+    ambit::Tensor g3aab() { return g3aab_; }
+    ambit::Tensor g3abb() { return g3abb_; }
+    ambit::Tensor g3bbb() { return g3bbb_; }
+
     // => Set functions <=
 
     /// Energy
