@@ -148,7 +148,7 @@ class FCI_MO : public Wavefunction {
      * @brief Rotate the SA references such that <M|F|N> is diagonal
      * @param irrep The irrep of states M and N (same irrep)
      */
-    void xms_rotate(const int& irrep);
+    void xms_rotate_civecs();
 
     /// Set fci_int_ pointer
     void set_fci_int(std::shared_ptr<FCIIntegrals> fci_ints) { fci_ints_ = fci_ints; }
@@ -480,6 +480,10 @@ class FCI_MO : public Wavefunction {
                  const string& name);
     /// Print Fock Matrix in Blocks
     void print_Fock(const string& spin, const d2& Fock);
+
+    /// Rotate the given CI vectors by XMS
+    SharedMatrix xms_rotate_this_civecs(const det_vec& p_space, SharedMatrix civecs,
+                                        ambit::Tensor Fa, ambit::Tensor Fb);
 
     /// Reference Energy
     double Eref_;

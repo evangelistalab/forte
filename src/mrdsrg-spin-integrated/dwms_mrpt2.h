@@ -70,7 +70,13 @@ class DWMS_DSRGPT2 : public Wavefunction {
     double compute_dwms_energy();
 
     /// compute Reference
-    Reference compute_Reference(const det_vec& p_space, SharedMatrix civecs);
+    Reference compute_Reference(CI_RDMS& ci_rdms, bool do_cumulant);
+
+    /// compute state-averaged Reference
+    Reference
+    compute_Reference_SA(const std::vector<det_vec>& p_spaces,
+                         const std::vector<SharedMatrix>& civecs,
+                         const std::vector<std::tuple<int, int, int, std::vector<double>>>& info);
 
     /// compute Fock matrix within the active space
     void compute_Fock_actv(const det_vec& p_space, SharedMatrix civecs, ambit::Tensor Fa,
@@ -96,6 +102,9 @@ class DWMS_DSRGPT2 : public Wavefunction {
 
     /// if using factorized integrals
     bool eri_df_;
+
+    /// a shared_ptr of FCIIntegrals (mostly used in CI_RDMS)
+    std::shared_ptr<FCIIntegrals> fci_ints_;
 
     /// energy of original SA-CASCI
     std::vector<std::vector<double>> Eref_0_;

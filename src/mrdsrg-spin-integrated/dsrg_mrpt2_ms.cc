@@ -497,6 +497,8 @@ std::vector<std::vector<double>> DSRG_MRPT2::compute_energy_xms() {
                         Heff->add(N, M, c1);
                         Heff_sym->add(M, N, c1);
                         Heff_sym->add(N, M, c1);
+
+                        outfile->Printf("\n M=%d, N=%d, c1=%.10f", M, N, c1);
                     }
 
                     // compute coupling of <N|HT|M>
@@ -507,6 +509,8 @@ std::vector<std::vector<double>> DSRG_MRPT2::compute_energy_xms() {
                     Heff->add(N, M, c2);
                     Heff_sym->add(N, M, 0.5 * c2);
                     Heff_sym->add(M, N, 0.5 * c2);
+
+                    outfile->Printf("\n M=%d, N=%d, c2=%.10f", M, N, c2);
                 }
             }
         }
@@ -793,6 +797,135 @@ double DSRG_MRPT2::compute_ms_2nd_coupling(const std::string& name) {
     return coupling;
 }
 
+void DSRG_MRPT2::compute_Heff_2nd_coupling(ambit::Tensor& H1a, ambit::Tensor& H1b,
+                                           ambit::Tensor& H2aa, ambit::Tensor& H2ab,
+                                           ambit::Tensor& H2bb, ambit::Tensor& H3aaa,
+                                           ambit::Tensor& H3aab, ambit::Tensor& H3abb,
+                                           ambit::Tensor& H3bbb) {
+    // reset Tensors
+    BlockedTensor H1 = BTF_->build(tensor_type_, "Heff1_2nd", spin_cases({"aa"}));
+    H1a = H1.block("aa");
+    H1b = H1.block("AA");
+
+    BlockedTensor H2 = BTF_->build(tensor_type_, "Heff2_2nd", spin_cases({"aaaa"}));
+    H2aa = H2.block("aaaa");
+    H2ab = H2.block("aAaA");
+    H2bb = H2.block("AAAA");
+
+    BlockedTensor H3 = BTF_->build(tensor_type_, "Heff3_2nd", spin_cases({"aaaaaa"}));
+    H3aaa = H3.block("aaaaaa");
+    H3aab = H3.block("aaAaaA");
+    H3abb = H3.block("aAAaAA");
+    H3bbb = H3.block("AAAAAA");
+
+    // de-normal-order amplitudes
+    BlockedTensor T1eff = deGNO_Tamp(T1_, T2_, Gamma1_);
+
+    // reset APTEI because it is renormalized
+    build_ints();
+
+    // "effective" one-electron integrals: hbar^p_q = h^p_q + sum_m v^{mp}_{mq}
+    Hoei_ = BTF_->build(tensor_type_, "OEI", spin_cases({"ph"}));
+    build_eff_oei();
+
+    // 1-body
+    H1["uv"] = Hoei_["uv"];
+    H1["UV"] = Hoei_["UV"];
+
+    H1["vu"] += Hoei_["eu"] * T1eff["ve"];
+    H1["VU"] += Hoei_["EU"] * T1eff["VE"];
+
+    H1["vu"] -= Hoei_["vm"] * T1eff["mu"];
+    H1["VU"] -= Hoei_["VM"] * T1eff["MU"];
+
+    H1["vu"] += V_["avmu"] * T1eff["ma"];
+    H1["vu"] += V_["vAuM"] * T1eff["MA"];
+    H1["VU"] += V_["aVmU"] * T1eff["ma"];
+    H1["VU"] += V_["AVMU"] * T1eff["MA"];
+
+    H1["vu"] += Hoei_["am"] * T2_["mvau"];
+    H1["vu"] += Hoei_["AM"] * T2_["vMuA"];
+    H1["VU"] += Hoei_["am"] * T2_["mVaU"];
+    H1["VU"] += Hoei_["AM"] * T2_["MVAU"];
+
+    H1["vu"] += 0.5 * V_["abum"] * T2_["vmab"];
+    H1["vu"] += V_["aBuM"] * T2_["vMaB"];
+    H1["VU"] += 0.5 * V_["ABUM"] * T2_["VMAB"];
+    H1["VU"] += V_["aBmU"] * T2_["mVaB"];
+
+    H1["vu"] -= 0.5 * V_["avmn"] * T2_["mnau"];
+    H1["vu"] -= V_["vAmN"] * T2_["mNuA"];
+    H1["VU"] -= 0.5 * V_["AVMN"] * T2_["MNAU"];
+    H1["VU"] -= V_["aVmN"] * T2_["mNaU"];
+
+    // 2-body
+    H2["uvxy"] = 0.25 * V_["uvxy"];
+    H2["uVxY"] = V_["uVxY"];
+    H2["UVXY"] = 0.25 * V_["UVXY"];
+
+    H2["xyuv"] += 0.5 * V_["eyuv"] * T1eff["xe"];
+    H2["xYuV"] += V_["eYuV"] * T1eff["xe"];
+    H2["xYuV"] += V_["xEuV"] * T1eff["YE"];
+    H2["XYUV"] += 0.5 * V_["EYUV"] * T1eff["XE"];
+
+    H2["xyuv"] += 0.5 * V_["xyvm"] * T1eff["mu"];
+    H2["xYuV"] -= V_["xYmV"] * T1eff["mu"];
+    H2["xYuV"] -= V_["xYuM"] * T1eff["MV"];
+    H2["XYUV"] += 0.5 * V_["XYVM"] * T1eff["MU"];
+
+    H2["xyuv"] += 0.5 * Hoei_["eu"] * T2_["xyev"];
+    H2["xYuV"] += Hoei_["eu"] * T2_["xYeV"];
+    H2["xYuV"] += Hoei_["EV"] * T2_["xYuE"];
+    H2["XYUV"] += 0.5 * Hoei_["EU"] * T2_["XYEV"];
+
+    H2["xyuv"] -= 0.5 * Hoei_["xm"] * T2_["myuv"];
+    H2["xYuV"] -= Hoei_["xm"] * T2_["mYuV"];
+    H2["xYuV"] -= Hoei_["YM"] * T2_["xMuV"];
+    H2["XYUV"] -= 0.5 * Hoei_["XM"] * T2_["MYUV"];
+
+    H2["xyuv"] -= V_["aymu"] * T2_["mxav"];
+    H2["xyuv"] -= V_["yAuM"] * T2_["xMvA"];
+    H2["xYuV"] -= V_["aYuM"] * T2_["xMaV"];
+    H2["xYuV"] -= V_["xAmV"] * T2_["mYuA"];
+    H2["xYuV"] += V_["axmu"] * T2_["mYaV"];
+    H2["xYuV"] += V_["xAuM"] * T2_["MYAV"];
+    H2["xYuV"] += V_["aYmV"] * T2_["mxau"];
+    H2["xYuV"] += V_["AYMV"] * T2_["xMuA"];
+    H2["XYUV"] -= V_["aYmU"] * T2_["mXaV"];
+    H2["XYUV"] -= V_["AYMU"] * T2_["XMAV"];
+
+    H2["xyuv"] += 0.125 * V_["xymn"] * T2_["mnuv"];
+    H2["xYuV"] += V_["xYmN"] * T2_["mNuV"];
+    H2["XYUV"] += 0.125 * V_["XYMN"] * T2_["MNUV"];
+
+    H2["xyuv"] += 0.125 * V_["abuv"] * T2_["xyab"];
+    H2["xYuV"] += V_["aBuV"] * T2_["xYaB"];
+    H2["XYUV"] += 0.125 * V_["ABUV"] * T2_["XYAB"];
+
+    // temp contract with D3
+    H3["xyzuvw"] += 0.25 * V_["yzmu"] * T2_["mxvw"];
+    H3["xyzuvw"] -= 0.25 * V_["ezuv"] * T2_["xyew"];
+
+    H3["XYZUVW"] += 0.25 * V_["YZMU"] * T2_["MXVW"];
+    H3["XYZUVW"] -= 0.25 * V_["EZUV"] * T2_["XYEW"];
+
+    H3["xyZuvW"] += 0.5 * V_["yZmW"] * T2_["mxuv"];
+    H3["xyZuvW"] += 0.5 * V_["xymu"] * T2_["mZvW"];
+    H3["xyZuvW"] += V_["yZuM"] * T2_["xMvW"];
+
+    H3["xyZuvW"] += 0.5 * V_["eZuW"] * T2_["xyev"];
+    H3["xyZuvW"] += 0.5 * V_["eyuv"] * T2_["xZeW"];
+    H3["xyZuvW"] -= V_["yEuW"] * T2_["xZvE"];
+
+    H3["xYZuVW"] += 0.5 * V_["YZMV"] * T2_["xMuW"];
+    H3["xYZuVW"] += 0.5 * V_["xZuM"] * T2_["MYVW"];
+    H3["xYZuVW"] += V_["xZmV"] * T2_["mYuW"];
+
+    H3["xYZuVW"] += 0.5 * V_["EZVW"] * T2_["xYuE"];
+    H3["xYZuVW"] += 0.5 * V_["xEuV"] * T2_["YZEW"];
+    H3["xYZuVW"] -= V_["eZuV"] * T2_["xYeW"];
+}
+
 void DSRG_MRPT2::compute_cumulants(std::shared_ptr<FCIIntegrals> fci_ints,
                                    std::vector<Determinant>& p_space, SharedMatrix evecs,
                                    const int& root1, const int& root2, const int& irrep) {
@@ -940,11 +1073,8 @@ void DSRG_MRPT2::compute_densities(std::shared_ptr<FCIIntegrals> fci_ints,
     ci_rdms.compute_1rdm(opdm_a, opdm_b);
     rotate_1rdm(opdm_a, opdm_b);
 
-    ambit::Tensor L1a = Gamma1_.block("aa");
-    ambit::Tensor L1b = Gamma1_.block("AA");
-
-    L1a.data() = std::move(opdm_a);
-    L1b.data() = std::move(opdm_b);
+    Gamma1_.block("aa").data() = std::move(opdm_a);
+    Gamma1_.block("AA").data() = std::move(opdm_b);
 
     //    (Eta1_.block("aa")).iterate([&](const std::vector<size_t>& i,double&
     //    value){
@@ -962,13 +1092,9 @@ void DSRG_MRPT2::compute_densities(std::shared_ptr<FCIIntegrals> fci_ints,
     ci_rdms.compute_2rdm(tpdm_aa, tpdm_ab, tpdm_bb);
     rotate_2rdm(tpdm_aa, tpdm_ab, tpdm_bb);
 
-    ambit::Tensor L2aa = Lambda2_.block("aaaa");
-    ambit::Tensor L2ab = Lambda2_.block("aAaA");
-    ambit::Tensor L2bb = Lambda2_.block("AAAA");
-
-    L2aa.data() = std::move(tpdm_aa);
-    L2ab.data() = std::move(tpdm_ab);
-    L2bb.data() = std::move(tpdm_bb);
+    Lambda2_.block("aaaa").data() = std::move(tpdm_aa);
+    Lambda2_.block("aAaA").data() = std::move(tpdm_ab);
+    Lambda2_.block("AAAA").data() = std::move(tpdm_bb);
 
     // 3 density
     std::vector<double> tpdm_aaa, tpdm_aab, tpdm_abb, tpdm_bbb;
