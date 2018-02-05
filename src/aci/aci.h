@@ -49,6 +49,14 @@
 #include "../orbital-helper/iao_builder.h"
 #include "../orbital-helper/localize.h"
 
+#ifdef _OPENMP
+#include <omp.h>
+#else
+#define omp_get_max_threads() 1
+#define omp_get_thread_num() 0
+#define omp_get_num_threads() 1
+#endif
+
 using d1 = std::vector<double>;
 using d2 = std::vector<d1>;
 

@@ -4,15 +4,6 @@
 namespace psi {
 namespace forte {
 
-
-#ifdef _OPENMP
-#include <omp.h>
-#else
-#define omp_get_max_threads() 1
-#define omp_get_thread_num() 0
-#define omp_get_num_threads() 1
-#endif
-
 bool pair_comp(const std::pair<double, Determinant> E1, const std::pair<double, Determinant> E2) {
     return E1.first < E2.first;
 }
@@ -872,6 +863,7 @@ double AdaptiveCI::get_excited_determinants_batch( SharedMatrix evecs, SharedVec
                                                  DeterminantHashVec& P_space,
                             std::vector<std::pair<double,Determinant>>& F_space ) {
     const size_t n_dets = P_space.size();
+    const det_hashvec& dets = P_space.wfn_hash();
 
     int nmo = fci_ints_->nmo();
     double max_mem = options_.get_double("PT2_MAX_MEM");
@@ -879,37 +871,51 @@ double AdaptiveCI::get_excited_determinants_batch( SharedMatrix evecs, SharedVec
     size_t guess_size = n_dets * nmo * nmo;
     double nbyte = (1073741824 * max_mem) / (sizeof(double));
 
-    int nbin = static_cast<int>(std::ceil(guess_size / (nbyte)));
 //    int nbin = 2;
-
-    int tid = 0;//omp_get_thread_num();
-    int ntds =1;// omp_get_num_threads();
-
-    if ((ntds > nbin)) {
-        nbin = ntds;
-    }
-
-    if (tid == 0) {
-        outfile->Printf("\n  Number of bins for exitation space:  %d", nbin);
-        outfile->Printf("\n  Number of threads: %d", ntds);
-    }
-//    size_t bin_size = n_dets / ntds;
-//    bin_size += (tid < (n_dets % ntds)) ? 1 : 0;
-//    size_t start_idx = (tid < (n_dets % ntds)) ? tid * bin_size
-//                                               : (n_dets % ntds) * (bin_size + 1) +
-//                                                     (tid - (n_dets % ntds)) * bin_size;
-//    size_t end_idx = start_idx + bin_size;
-
-    size_t start_idx = 0;
-    size_t end_idx = P_space.size();
+    int nbin = static_cast<int>(std::ceil(guess_size / (nbyte)));
 
     double total_excluded = 0.0;
-    for (int bin = 0; bin < nbin; ++bin) {
 
+    #pragma omp parallel
+    {
+        int thread_id  = omp_get_thread_num();
+        int n_threads = omp_get_max_threads();
+
+        if (n_threads >= nbin) {
+            nbin = n_threads;
+        }
+    
+        int bin_size = nbin / n_threads;
+        bin_size += (thread_id < (nbin % n_threads)) ? 1 : 0;
+        int start_idx =
+            (thread_id < (nbin % n_threads))
+               ? thread_id * bin_size
+                : (nbin % n_threads) * (bin_size + 1) + (thread_id - (nbin % n_threads)) * bin_size;
+        int end_idx = start_idx + bin_size;
+    
+        if (thread_id == 0) {
+            outfile->Printf("\n  Number of bins for exitation space:  %d", nbin);
+            outfile->Printf("\n  Number of threads: %d", n_threads);
+        }
+    
+    #pragma omp critical
+    {
+        if( thread_id == 0 ){
+            outfile->Printf("\n start:%d, end: %d, td: %d", start_idx, end_idx, thread_id);
+        }
+        if( thread_id == 1 ){
+            outfile->Printf("\n start:%d, end: %d, td: %d", start_idx, end_idx, thread_id);
+        }
+    } 
+
+    for (int bin = start_idx; bin < end_idx; ++bin) {
+        #pragma omp critical
+        {
+            outfile->Printf("\n bin:%d, td: %d", bin, thread_id);
+        }
         det_hash<double> A_b;
 
-        const det_hashvec& dets = P_space.wfn_hash();
-        for (size_t I = start_idx; I < end_idx; ++I) {
+        for (size_t I = 0; I < n_dets; ++I) {
             double c_I = evecs->get(I,0);
             const Determinant& det = dets[I];
             std::vector<int> aocc = det.get_alfa_occ(nmo);
@@ -929,16 +935,16 @@ double AdaptiveCI::get_excited_determinants_batch( SharedMatrix evecs, SharedVec
                 for (int a = 0; a < nvalpha; ++a) {
                     int aa = avir[a];
                     if ((mo_symmetry_[ii] ^ mo_symmetry_[aa]) == 0) {
-                        // Check if the determinant goes in this bin
-                        size_t hash_val = Determinant::Hash()(new_det);
-                        if ((hash_val % nbin) == bin) {
+                        double HIJ = fci_ints_->slater_rules_single_alpha(det, ii, aa) * c_I;
+                        if ((std::fabs(HIJ) >= screen_thresh_)) {
+                            // Check if the determinant goes in this bin
                             new_det = det;
                             new_det.set_alfa_bit(ii, false);
                             new_det.set_alfa_bit(aa, true);
-                            if (P_space.has_det(new_det))
-                                continue;
-                            double HIJ = fci_ints_->slater_rules_single_alpha(new_det, ii, aa) * c_I;
-                            if ((std::fabs(HIJ) >= screen_thresh_)) {
+                            size_t hash_val = Determinant::Hash()(new_det);
+                            if ( (hash_val % nbin) == bin) {
+                                if (P_space.has_det(new_det))
+                                    continue;
 
                                 if (A_b.count(new_det) == 0) {
                                     A_b[new_det] = HIJ;
@@ -956,16 +962,16 @@ double AdaptiveCI::get_excited_determinants_batch( SharedMatrix evecs, SharedVec
                 for (int a = 0; a < nvbeta; ++a) {
                     int aa = bvir[a];
                     if ((mo_symmetry_[ii] ^ mo_symmetry_[aa]) == 0) {
-                        // Check if the determinant goes in this bin
-                        size_t hash_val = Determinant::Hash()(new_det);
-                        if ((hash_val % nbin) == bin) {
+                        double HIJ = fci_ints_->slater_rules_single_beta(det, ii, aa) * c_I;
+                        if ((std::fabs(HIJ) >= screen_thresh_)) {
+                            // Check if the determinant goes in this bin
                             new_det = det;
                             new_det.set_beta_bit(ii, false);
                             new_det.set_beta_bit(aa, true);
-                            if (P_space.has_det(new_det))
-                                continue;
-                            double HIJ = fci_ints_->slater_rules_single_beta(new_det, ii, aa) * c_I;
-                            if ((std::fabs(HIJ) >= screen_thresh_)) {
+                            size_t hash_val = Determinant::Hash()(new_det);
+                            if ((hash_val % nbin) == bin) {
+                                if (P_space.has_det(new_det))
+                                    continue;
                                 if (A_b.count(new_det) == 0) {
                                     A_b[new_det] = HIJ;
                                 } else {
@@ -987,16 +993,16 @@ double AdaptiveCI::get_excited_determinants_batch( SharedMatrix evecs, SharedVec
                         for (int b = a + 1; b < nvalpha; ++b) {
                             int bb = avir[b];
                             if ((mo_symmetry_[ii] ^ mo_symmetry_[jj] ^ mo_symmetry_[aa] ^
-                                 mo_symmetry_[bb]) == 0) {
+                                mo_symmetry_[bb]) == 0) {
                                 // Check if the determinant goes in this bin
+                                new_det = det;
+                                double sign = new_det.double_excitation_aa(ii, jj, aa, bb);
                                 size_t hash_val = Determinant::Hash()(new_det);
                                 if ((hash_val % nbin) == bin) {
-                                    new_det = det;
-                                    double sign = new_det.double_excitation_aa(ii, jj, aa, bb) * c_I;
-                                    if (P_space.has_det(new_det))
-                                        continue;
-                                    double HIJ = fci_ints_->tei_aa(ii, jj, aa, bb) * sign;
+                                    double HIJ = fci_ints_->tei_aa(ii, jj, aa, bb) * sign * c_I;
                                     if ((std::fabs(HIJ) >= screen_thresh_)) {
+                                        if (P_space.has_det(new_det))
+                                            continue;
 
                                         if (A_b.count(new_det) == 0) {
                                             A_b[new_det] = HIJ;
@@ -1022,14 +1028,14 @@ double AdaptiveCI::get_excited_determinants_batch( SharedMatrix evecs, SharedVec
                             if ((mo_symmetry_[ii] ^ mo_symmetry_[jj] ^ mo_symmetry_[aa] ^
                                  mo_symmetry_[bb]) == 0) {
                                 // Check if the determinant goes in this bin
+                                new_det = det;
+                                double sign = new_det.double_excitation_bb(ii, jj, aa, bb);
                                 size_t hash_val = Determinant::Hash()(new_det);
                                 if ((hash_val % nbin) == bin) {
-                                    new_det = det;
-                                    double sign = new_det.double_excitation_bb(ii, jj, aa, bb);
-                                    if (P_space.has_det(new_det))
-                                        continue;
                                     double HIJ = fci_ints_->tei_bb(ii, jj, aa, bb) * sign * c_I;
                                     if ((std::fabs(HIJ) >= screen_thresh_)) {
+                                        if (P_space.has_det(new_det))
+                                            continue;
 
                                         if (A_b.count(new_det) == 0) {
                                             A_b[new_det] = HIJ;
@@ -1054,22 +1060,21 @@ double AdaptiveCI::get_excited_determinants_batch( SharedMatrix evecs, SharedVec
                             int bb = bvir[b];
                             if ((mo_symmetry_[ii] ^ mo_symmetry_[jj] ^ mo_symmetry_[aa] ^
                                  mo_symmetry_[bb]) == 0) {
+                                new_det = det;
+                                double sign = new_det.double_excitation_ab(ii, jj, aa, bb);
                                 size_t hash_val = Determinant::Hash()(new_det);
                                 if ((hash_val % nbin) == bin) {
-                                    new_det = det;
-                                    double sign = new_det.double_excitation_ab(ii, jj, aa, bb);
-                                    if (P_space.has_det(new_det))
-                                        continue;
 
                                     double HIJ = fci_ints_->tei_ab(ii, jj, aa, bb) * sign * c_I;
                                     if ((std::fabs(HIJ) >= screen_thresh_)) {
+                                        if (P_space.has_det(new_det))
+                                            continue;
 
                                         if (A_b.count(new_det) == 0) {
                                             A_b[new_det] = HIJ;
                                         } else {
                                             A_b[new_det] += HIJ;
                                         }
-
                                     }
                                 }
                             }
@@ -1078,43 +1083,50 @@ double AdaptiveCI::get_excited_determinants_batch( SharedMatrix evecs, SharedVec
                 }
             }
         }
+    
+
         // end iteration over reference
-        // F totally built
 
         // Put the dets/vals in a sortable list
         // Also, compute selection criteria
-        std::vector<std::pair<double,Determinant>> F_tmp; 
-        for( auto& det_p : A_b ){
-            auto& det = det_p.first;
-            double& V = det_p.second;
-
-            double delta = fci_ints_->energy(det) - evals->get(0); 
-
-            F_tmp.push_back( std::make_pair( std::fabs(0.5*(delta - sqrt(delta*delta + V*V*4.0))), det ));
-        }
-        outfile->Printf("\n  Size of F subspace: %zu dets", F_tmp.size());
-
-        // Sort the list
-        std::sort( F_tmp.begin(), F_tmp.end(), pair_comp);
-
-        // Screen
-        double b_sigma = sigma_ * (0.1/nbin);
-        outfile->Printf("\n  Using sigma = %1.5f", b_sigma);
-        double excluded = 0.0;
-        size_t ndet = 0; 
-        for( size_t I = 0, max_I = F_tmp.size(); I < max_I; ++I ){
-            double en = F_tmp[I].first;
-            Determinant& det = F_tmp[I].second;
-            if( excluded + en < b_sigma ){
-                excluded += en;
-            } else {
-                F_space.push_back( std::make_pair(en, det));
-                ndet++;
+        #pragma omp critical
+        {
+            std::vector<std::pair<double,Determinant>> F_tmp; 
+            for( auto& det_p : A_b ){
+                auto& det = det_p.first;
+                double& V = det_p.second;
+    
+                double delta = fci_ints_->energy(det) - evals->get(0); 
+    
+                F_tmp.push_back( std::make_pair( std::fabs(0.5*(delta - sqrt(delta*delta + V*V*4.0))), det ));
             }
-        }
-        outfile->Printf("\n  Added %zu dets from bin %d", ndet, bin); 
-        total_excluded += excluded;
-    }
+            outfile->Printf("\n  Size of F subspace: %zu dets", F_tmp.size());
+    
+            // Sort the list
+            std::sort( F_tmp.begin(), F_tmp.end(), pair_comp);
+    
+            // Screen
+            double b_sigma = sigma_ * (0.1/nbin);
+            outfile->Printf("\n  Using sigma = %1.5f", b_sigma);
+            double excluded = 0.0;
+            size_t ndet = 0; 
+            for( size_t I = 0, max_I = F_tmp.size(); I < max_I; ++I ){
+                double en = F_tmp[I].first;
+                Determinant& det = F_tmp[I].second;
+                if( excluded + en < b_sigma ){
+                    excluded += en;
+                } else {
+                    F_space.push_back( std::make_pair(en, det));
+                    ndet++;
+                }
+            }
+            outfile->Printf("\n  Added %zu dets from bin %d, (td %d)", ndet, bin, thread_id); 
+            total_excluded += excluded;
+
+        }// End critical
+    } // End iteration over bins
+    } // close threads
+
     outfile->Printf("\n  Screened out %1.10f Eh of correlation", total_excluded);
     return total_excluded;
 }

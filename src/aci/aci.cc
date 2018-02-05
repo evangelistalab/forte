@@ -39,13 +39,13 @@ using namespace psi;
 namespace psi {
 namespace forte {
 
-#ifdef _OPENMP
-#include <omp.h>
-#else
-#define omp_get_max_threads() 1
-#define omp_get_thread_num() 0
-#define omp_get_num_threads() 1
-#endif
+//#ifdef _OPENMP
+//#include <omp.h>
+//#else
+//#define omp_get_max_threads() 1
+//#define omp_get_thread_num() 0
+//#define omp_get_num_threads() 1
+//#endif
 
 void set_ACI_options(ForteOptions& foptions) {
     /* Convergence Threshold -*/
@@ -191,6 +191,8 @@ void set_ACI_options(ForteOptions& foptions) {
 
     /*- Control batched screeing -*/
     foptions.add_bool("ACI_BATCHED_SCREENING", false, "Control batched screeing");
+
+
 }
 
 bool pairComp(const std::pair<double, Determinant> E1, const std::pair<double, Determinant> E2) {
