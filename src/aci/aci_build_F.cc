@@ -871,7 +871,6 @@ double AdaptiveCI::get_excited_determinants_batch( SharedMatrix evecs, SharedVec
     size_t guess_size = n_dets * nmo * nmo;
     double nbyte = (1073741824 * max_mem) / (sizeof(double));
 
-//    int nbin = 2;
     int nbin = static_cast<int>(std::ceil(guess_size / (nbyte)));
 
     double total_excluded = 0.0;
@@ -884,6 +883,10 @@ double AdaptiveCI::get_excited_determinants_batch( SharedMatrix evecs, SharedVec
         if (n_threads >= nbin) {
             nbin = n_threads;
         }
+    
+        if (options_["ACI_NBATCH"].has_changed()) {
+            nbin = options_.get_int("ACI_NBATCH");
+        } 
     
         int bin_size = nbin / n_threads;
         bin_size += (thread_id < (nbin % n_threads)) ? 1 : 0;
@@ -898,21 +901,21 @@ double AdaptiveCI::get_excited_determinants_batch( SharedMatrix evecs, SharedVec
             outfile->Printf("\n  Number of threads: %d", n_threads);
         }
     
-    #pragma omp critical
-    {
-        if( thread_id == 0 ){
-            outfile->Printf("\n start:%d, end: %d, td: %d", start_idx, end_idx, thread_id);
-        }
-        if( thread_id == 1 ){
-            outfile->Printf("\n start:%d, end: %d, td: %d", start_idx, end_idx, thread_id);
-        }
-    } 
+//    #pragma omp critical
+//    {
+//        if( thread_id == 0 ){
+//            outfile->Printf("\n start:%d, end: %d, td: %d", start_idx, end_idx, thread_id);
+//        }
+//        if( thread_id == 1 ){
+//            outfile->Printf("\n start:%d, end: %d, td: %d", start_idx, end_idx, thread_id);
+//        }
+//    } 
 
     for (int bin = start_idx; bin < end_idx; ++bin) {
-        #pragma omp critical
-        {
-            outfile->Printf("\n bin:%d, td: %d", bin, thread_id);
-        }
+//        #pragma omp critical
+//        {
+//            outfile->Printf("\n bin:%d, td: %d", bin, thread_id);
+//        }
         det_hash<double> A_b;
 
         for (size_t I = 0; I < n_dets; ++I) {

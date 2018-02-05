@@ -192,7 +192,8 @@ void set_ACI_options(ForteOptions& foptions) {
     /*- Control batched screeing -*/
     foptions.add_bool("ACI_BATCHED_SCREENING", false, "Control batched screeing");
 
-
+    /*- Number of batches in screening  -*/
+    foptions.add_int("ACI_NBATCH", 1, "Number of batches in screening");
 }
 
 bool pairComp(const std::pair<double, Determinant> E1, const std::pair<double, Determinant> E2) {
