@@ -3,7 +3,7 @@
 import forte
 
 refmcscf     = -99.406065222746975
-refdsrgpt2   = -99.498923591476725
+refdsrgpt2   = -99.496189625632837
 
 memory 500 mb
 

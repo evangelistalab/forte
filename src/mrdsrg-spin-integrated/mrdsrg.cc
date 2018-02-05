@@ -58,7 +58,7 @@ MRDSRG::MRDSRG(Reference reference, SharedWavefunction ref_wfn, Options& options
 
 MRDSRG::~MRDSRG() { cleanup(); }
 
-void MRDSRG::cleanup() { dsrg_time_.print_comm_time(); }
+void MRDSRG::cleanup() {}
 
 void MRDSRG::read_options() {
     dsrg_trans_type_ = options_.get_str("DSRG_TRANS_TYPE");
@@ -67,6 +67,18 @@ void MRDSRG::read_options() {
         ss << "DSRG transformation type (" << dsrg_trans_type_
            << ") is not implemented yet. Please change to UNITARY";
         throw PSIEXCEPTION(ss.str());
+    }
+
+    corrlv_string_ = options_.get_str("CORR_LEVEL");
+    std::vector<std::string> available{"PT2", "PT3", "LDSRG2", "LDSRG2_QC", "LSRG2", "SRG_PT2"};
+    if (std::find(available.begin(), available.end(), corrlv_string_) == available.end()) {
+        outfile->Printf("\n  Warning: CORR_LEVEL option %s is not implemented.",
+                        corrlv_string_.c_str());
+        outfile->Printf("\n  Changed CORR_LEVEL option to PT2");
+        corrlv_string_ = "PT2";
+
+        warnings_.push_back(std::make_tuple("Unsupported CORR_LEVEL", "Change to PT2",
+                                            "Change options in input.dat"));
     }
 
     sequential_Hbar_ = options_.get_bool("DSRG_HBAR_SEQ");
@@ -80,20 +92,10 @@ void MRDSRG::startup() {
     // if density fitted
     if (eri_df_) {
         B_ = BTF_->build(tensor_type_, "B 3-idx", {"Lgg", "LGG"});
-        B_.iterate([&](const std::vector<size_t>& i, const std::vector<SpinType>&, double& value) {
-            value = ints_->three_integral(i[0], i[1], i[2]);
-        });
-        H_.iterate(
-            [&](const std::vector<size_t>& i, const std::vector<SpinType>& spin, double& value) {
-                if (spin[0] == AlphaSpin)
-                    value = ints_->oei_a(i[0], i[1]);
-                else
-                    value = ints_->oei_b(i[0], i[1]);
-            });
     } else {
         V_ = BTF_->build(tensor_type_, "V", spin_cases({"gggg"}));
-        build_ints();
     }
+    build_ints();
 
     // print norm and max of 2- and 3-cumulants
     print_cumulant_summary();
@@ -133,7 +135,7 @@ void MRDSRG::print_options() {
         {"intruder_tamp", intruder_tamp_}};
 
     std::vector<std::pair<std::string, std::string>> calculation_info_string{
-        {"corr_level", options_.get_str("CORR_LEVEL")},
+        {"corr_level", corrlv_string_},
         {"int_type", ints_type_},
         {"source operator", source_},
         {"smart_dsrg_s", options_.get_str("SMART_DSRG_S")},
@@ -176,15 +178,11 @@ void MRDSRG::build_ints() {
             value = ints_->oei_b(i[0], i[1]);
     });
 
-    // prepare two-electron integrals
+    // prepare two-electron integrals or three-index B
     if (eri_df_) {
-        V_["pqrs"] = B_["gpr"] * B_["gqs"];
-        V_["pqrs"] -= B_["gps"] * B_["gqr"];
-
-        V_["pQrS"] = B_["gpr"] * B_["gQS"];
-
-        V_["PQRS"] = B_["gPR"] * B_["gQS"];
-        V_["PQRS"] -= B_["gPS"] * B_["gQR"];
+        B_.iterate([&](const std::vector<size_t>& i, const std::vector<SpinType>&, double& value) {
+            value = ints_->three_integral(i[0], i[1], i[2]);
+        });
     } else {
         V_.iterate(
             [&](const std::vector<size_t>& i, const std::vector<SpinType>& spin, double& value) {
@@ -296,8 +294,7 @@ void MRDSRG::build_fock_df(BlockedTensor& H, BlockedTensor& B) {
 double MRDSRG::compute_energy() {
     // guess amplitudes when necessary
     bool initialize_T = true;
-    std::string corrlv_string = options_.get_str("CORR_LEVEL");
-    if (corrlv_string == "LSRG2" || corrlv_string == "SRG_PT2") {
+    if (corrlv_string_ == "LSRG2" || corrlv_string_ == "SRG_PT2") {
         initialize_T = false;
     }
 
@@ -320,7 +317,7 @@ double MRDSRG::compute_energy() {
     double Etotal = Eref_;
 
     // compute energy
-    switch (corrlevelmap[corrlv_string]) {
+    switch (corrlevelmap[corrlv_string_]) {
     case CORR_LV::LDSRG2: {
         Etotal += compute_energy_ldsrg2();
         break;
@@ -403,7 +400,7 @@ double MRDSRG::compute_energy_relaxed() {
 
         // start iteration
         do {
-            std::string relax_title = "MR-DSRG Ref. Relaxation Iter. " + std::to_string(cycle);
+            std::string relax_title = "MR-DSRG Reference Relaxation Iter. " + std::to_string(cycle);
             print_h2(relax_title);
 
             // compute dsrg energy
@@ -454,21 +451,7 @@ double MRDSRG::compute_energy_relaxed() {
                 Uactv_.block("AA")("pq") = semiorb.Ub_t()("pq");
 
                 // refill H_, V_, and B_ from ForteIntegrals
-                if (!eri_df_) {
-                    build_ints();
-                } else {
-                    H_.iterate([&](const std::vector<size_t>& i, const std::vector<SpinType>& spin,
-                                   double& value) {
-                        if (spin[0] == AlphaSpin)
-                            value = ints_->oei_a(i[0], i[1]);
-                        else
-                            value = ints_->oei_b(i[0], i[1]);
-                    });
-
-                    B_.iterate(
-                        [&](const std::vector<size_t>& i, const std::vector<SpinType>&,
-                            double& value) { value = ints_->three_integral(i[0], i[1], i[2]); });
-                }
+                build_ints();
 
                 // refill densities
                 build_density();
@@ -501,6 +484,13 @@ double MRDSRG::compute_energy_relaxed() {
                     Fa_ = eigens[0];
                     Fb_ = eigens[1];
                 }
+            }
+
+            // recompute reference energy (rebuild MK vacuum)
+            if (eri_df_) {
+                Eref_ = compute_reference_energy_df(H_, F_, B_);
+            } else {
+                Eref_ = compute_reference_energy(H_, F_, V_);
             }
 
             // test convergence
@@ -630,20 +620,7 @@ double MRDSRG::compute_energy_sa() {
             Uactv_.block("AA")("pq") = semiorb.Ub_t()("pq");
 
             // refill H_, V_, and B_ from ForteIntegrals
-            if (!eri_df_) {
-                build_ints();
-            } else {
-                H_.iterate([&](const std::vector<size_t>& i, const std::vector<SpinType>& spin,
-                               double& value) {
-                    if (spin[0] == AlphaSpin)
-                        value = ints_->oei_a(i[0], i[1]);
-                    else
-                        value = ints_->oei_b(i[0], i[1]);
-                });
-
-                B_.iterate([&](const std::vector<size_t>& i, const std::vector<SpinType>&,
-                               double& value) { value = ints_->three_integral(i[0], i[1], i[2]); });
-            }
+            build_ints();
 
             // refill densities
             build_density();
@@ -675,6 +652,13 @@ double MRDSRG::compute_energy_sa() {
                 Fa_ = eigens[0];
                 Fb_ = eigens[1];
             }
+        }
+
+        // recompute reference energy (rebuild MK vacuum)
+        if (eri_df_) {
+            Eref_ = compute_reference_energy_df(H_, F_, B_);
+        } else {
+            Eref_ = compute_reference_energy(H_, F_, V_);
         }
 
         // test convergence

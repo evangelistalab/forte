@@ -18,9 +18,9 @@
     -----------------------------------------------------------------------
 
 
-    Psi4 started on: Monday, 04 December 2017 12:15PM
+    Psi4 started on: Friday, 29 December 2017 06:23PM
 
-    Process ID:  33342
+    Process ID:  64193
     PSIDATADIR: /Users/york/src/psi4new/psi4/share/psi4
     Memory:     500.0 MiB
     Threads:    1
@@ -110,15 +110,15 @@ compare_values(refdsrgpt2,get_variable("CURRENT ENERGY"),10,"DSRG-MRPT2 energy")
 --------------------------------------------------------------------------
    => Loading Basis Set <=
 
-    Name: ANONYMOUS84B7FC81
+    Name: ANONYMOUS93586E26
     Role: ORBITAL
     Keyword: BASIS
-    atoms 1   entry BE         line     5 inputblock anonymous84b7fc81 
-    atoms 2-3 entry H          line    25 inputblock anonymous84b7fc81 
+    atoms 1   entry BE         line     5 inputblock anonymous93586e26 
+    atoms 2-3 entry H          line    25 inputblock anonymous93586e26 
 
 
 *** tstart() called on yorks-mac.wireless.emory.edu
-*** at Mon Dec  4 12:15:48 2017
+*** at Fri Dec 29 18:23:20 2017
 
 
          ------------------------------------------
@@ -576,13 +576,13 @@ compare_values(refdsrgpt2,get_variable("CURRENT ENERGY"),10,"DSRG-MRPT2 energy")
   MCSCF Execution Completed.
 
 
-*** tstop() called on yorks-mac.wireless.emory.edu at Mon Dec  4 12:15:48 2017
+*** tstop() called on yorks-mac.wireless.emory.edu at Fri Dec 29 18:23:20 2017
 Module time:
-	user time   =       0.07 seconds =       0.00 minutes
+	user time   =       0.08 seconds =       0.00 minutes
 	system time =       0.03 seconds =       0.00 minutes
 	total time  =          0 seconds =       0.00 minutes
 Total time:
-	user time   =       0.07 seconds =       0.00 minutes
+	user time   =       0.08 seconds =       0.00 minutes
 	system time =       0.03 seconds =       0.00 minutes
 	total time  =          0 seconds =       0.00 minutes
 	MCSCF energy......................................................PASSED
@@ -604,7 +604,7 @@ Calling plugin forte.so.
   ----------------------------------------------------------------------------
   A suite of quantum chemistry methods for strongly correlated electrons
 
-    git branch: master - git commit: 1c92254a
+    git branch: master - git commit: f15141bf
 
   Developed by:
     Francesco A. Evangelista, Chenyang Li, Kevin P. Hannon,
@@ -647,8 +647,8 @@ Calling plugin forte.so.
            H          0.000000000000    -1.390000000000     2.043053880473     1.007825032070
 
   -AO BASIS SET INFORMATION:
-    Name                   = ANONYMOUS84B7FC81
-    Blend                  = ANONYMOUS84B7FC81
+    Name                   = ANONYMOUS93586E26
+    Blend                  = ANONYMOUS93586E26
     Total number of shells = 9
     Number of primitives   = 21
     Number of AO           = 13
@@ -665,7 +665,7 @@ Calling plugin forte.so.
 
   ==> AO Basis Functions <==
 
-    [ ANONYMOUS84B7FC81 ]
+    [ ANONYMOUS93586E26 ]
     spherical
     ****
    BE   1
@@ -709,10 +709,10 @@ Calling plugin forte.so.
 	Starting second half-transformation.
 	Two-electron integral transformation complete.
 
-  Integral transformation done. 0.01237700 s
+  Integral transformation done. 0.01264600 s
   Reading the two-electron integrals from disk
   Size of two-electron integrals:   0.000638 GB
-  Conventional integrals take 0.04768100 s
+  Conventional integrals take 0.04880200 s
 
               ---------------------------------------------------
                 Complete Active Space Configuration Interaction
@@ -736,8 +736,8 @@ Calling plugin forte.so.
     CORE                          [    2     0     0     0 ]
     ACTIVE                        [    1     0     0     1 ]
     VIRTUAL                       [    4     0     2     3 ]
-  Forming alpha and beta strings      ...  Done. Timing        0.000055 s
-  Forming determinants                ...  Done. Timing        0.000019 s
+  Forming alpha and beta strings      ...  Done. Timing        0.000058 s
+  Forming determinants                ...  Done. Timing        0.000018 s
 
   ==> Determinants Summary <==
 
@@ -747,7 +747,7 @@ Calling plugin forte.so.
     number of determinants              =     2
 
   Diagonalizing Hamiltonian           ...
-  Found 2 roots with 2S+1 = 1 *  Done. Timing        0.000245 s
+  Found 2 roots with 2S+1 = 1 *  Done. Timing        0.000248 s
 
   * * * * * * * * * * * * * * * * *
   *  CI Vectors & Configurations  *
@@ -767,7 +767,7 @@ Calling plugin forte.so.
   Only print nonzero (> 1.0e-5) elements.
   Permanent dipole moments (a.u.) 0 -> 0:  X:  0.0000  Y: -0.0000  Z: -1.5540  Total:  1.5540
 
-  Computing 1-, 2- and 3-cumulants ... Done. Timing        0.011364 s
+  Computing 1-, 2- and 3-cumulants ... Done. Timing        0.011024 s
 
 
        -----------------------------------------------------------------
@@ -775,7 +775,7 @@ Calling plugin forte.so.
          Chenyang Li, Jeffrey B. Schriber and Francesco A. Evangelista
        -----------------------------------------------------------------
 
-  Took 0.000084 s to build Fock matrix
+  Took 0.000061 s to build Fock matrix
 
   ==> Checking Fock Matrix Diagonal Blocks <==
 
@@ -798,6 +798,7 @@ Calling plugin forte.so.
     Setting ambit MO space .......................... Done
     Preparing tensors for density cumulants ......... Done
     Building Fock matrix ............................ Done
+    Checking reference energy ....................... Done
 
               ----------------------------------------------------
                     MR-DSRG Second-Order Perturbation Theory
@@ -840,18 +841,18 @@ Calling plugin forte.so.
 
   ==> Computing DSRG-MRPT2 ... <==
 
-    Computing T2 amplitudes                  ...  Done. Timing        0.011020 s
-    Computing T1 amplitudes                  ...  Done. Timing        0.004166 s
-    Renormalizing two-electron integrals     ...  Done. Timing        0.001424 s
-    Renormalizing Fock matrix elements       ...  Done. Timing        0.003343 s
-    Computing <[F, T1]>                      ...  Done. Timing        0.001836 s
-    Computing <[F, T2]>                      ...  Done. Timing        0.003498 s
-    Computing <[V, T1]>                      ...  Done. Timing        0.003578 s
-    Computing <[V, T2]> (C_2)^4              ...  Done. Timing        0.022893 s
-    Computing <[V, T2]> C_4 (C_2)^2 HH       ...  Done. Timing        0.005230 s
-    Computing <[V, T2]> C_4 (C_2)^2 PP       ...  Done. Timing        0.005549 s
-    Computing <[V, T2]> C_4 (C_2)^2 PH       ...  Done. Timing        0.022515 s
-    Computing <[V, T2]> C_6 C_2              ...  Done. Timing        0.009423 s
+    Computing T2 amplitudes                  ...  Done. Timing        0.007221 s
+    Computing T1 amplitudes                  ...  Done. Timing        0.003229 s
+    Renormalizing two-electron integrals     ...  Done. Timing        0.001416 s
+    Renormalizing Fock matrix elements       ...  Done. Timing        0.004673 s
+    Computing <[F, T1]>                      ...  Done. Timing        0.002776 s
+    Computing <[F, T2]>                      ...  Done. Timing        0.004359 s
+    Computing <[V, T1]>                      ...  Done. Timing        0.003635 s
+    Computing <[V, T2]> (C_2)^4              ...  Done. Timing        0.025782 s
+    Computing <[V, T2]> C_4 (C_2)^2 HH       ...  Done. Timing        0.005489 s
+    Computing <[V, T2]> C_4 (C_2)^2 PP       ...  Done. Timing        0.005679 s
+    Computing <[V, T2]> C_4 (C_2)^2 PH       ...  Done. Timing        0.022161 s
+    Computing <[V, T2]> C_6 C_2              ...  Done. Timing        0.010042 s
 
   ==> Excitation Amplitudes Summary <==
 
@@ -862,8 +863,10 @@ Calling plugin forte.so.
     [  2       4    ] 0.419524 [  2       3    ] 0.240357 [  2       5    ]-0.149095 
     [  1       2    ]-0.010361 [  9      10    ] 0.006691 [  9      11    ]-0.002598 
     [  2       6    ] 0.001953 [  0       2    ] 0.000087 [  9      12    ]-0.000037 
+    [  1       4    ]-0.000000 [  1       5    ] 0.000000 [  0       6    ]-0.000000 
+    [  1       6    ] 0.000000 
     --------------------------------------------------------------------------------
-    Norm of T1A vector: (nonzero elements: 9)                     0.506126013831370.
+    Norm of T1A vector: (nonzero elements: 13)                    0.506126013831370.
     --------------------------------------------------------------------------------
     Largest T1 amplitudes for spin case B:
        _       _                  _       _                  _       _               
@@ -872,8 +875,10 @@ Calling plugin forte.so.
     [  2       4    ] 0.419524 [  2       3    ] 0.240357 [  2       5    ]-0.149095 
     [  1       2    ]-0.010361 [  9      10    ] 0.006691 [  9      11    ]-0.002598 
     [  2       6    ] 0.001953 [  0       2    ] 0.000087 [  9      12    ]-0.000037 
+    [  1       4    ]-0.000000 [  1       5    ] 0.000000 [  0       6    ]-0.000000 
+    [  1       6    ] 0.000000 
     --------------------------------------------------------------------------------
-    Norm of T1B vector: (nonzero elements: 9)                     0.506126013831371.
+    Norm of T1B vector: (nonzero elements: 13)                    0.506126013831371.
     --------------------------------------------------------------------------------
     Largest T2 amplitudes for spin case AA:
        i   j   a   b              i   j   a   b              i   j   a   b           
@@ -970,14 +975,14 @@ Calling plugin forte.so.
     ||T1||                         =      0.715770273030157
     ||T2||                         =      1.979739159772517
 
-  Energy took      0.100 s
+  Energy took      0.102 s
 
 
   ==> Total Timings (s) for Computing Commutators <==
 
              [H1, T1]    [H1, T2]    [H2, T1]    [H2, T2]
     -----------------------------------------------------
-    -> C0       0.002       0.004       0.004       0.066
+    -> C0       0.003       0.004       0.004       0.069
     -> C1       0.000       0.000       0.000       0.000
     -> C2                   0.000       0.000       0.000
     -----------------------------------------------------

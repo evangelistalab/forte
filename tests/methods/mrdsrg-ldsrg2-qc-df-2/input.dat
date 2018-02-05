@@ -18,7 +18,6 @@ set globals{
    basis                  3-21g
    reference              twocon
    scf_type               cd
-   CHOLESKY_TOLERANCE     1e-4
    e_convergence          8
    maxiter                100
    docc                   [3,0,1,1]
@@ -36,7 +35,7 @@ set mcscf{
 set forte{
    job_type               mrdsrg
    int_type               cholesky
-   CHOLESKY_TOLERANCE     1e-4
+   cholesky_tolerance     1e-4
    corr_level             ldsrg2_qc
    frozen_docc            [1,0,0,0]
    restricted_docc        [1,0,1,1]

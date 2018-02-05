@@ -18,9 +18,9 @@
     -----------------------------------------------------------------------
 
 
-    Psi4 started on: Friday, 01 December 2017 02:20AM
+    Psi4 started on: Friday, 29 December 2017 06:47PM
 
-    Process ID:   2264
+    Process ID:  65180
     PSIDATADIR: /Users/york/src/psi4new/psi4/share/psi4
     Memory:     500.0 MiB
     Threads:    1
@@ -33,7 +33,7 @@
 import forte
 
 refmcscf     = -99.406065222746975
-refdsrgpt2   = -99.498923591476725
+refdsrgpt2   = -99.496189625632837
 
 memory 500 mb
 
@@ -93,8 +93,8 @@ compare_values(refdsrgpt2,get_variable("CURRENT ENERGY"),8,"MRDSRG fully relaxed
     atoms 2 entry H          line    21 file /Users/york/src/psi4new/psi4/share/psi4/basis/3-21g.gbs 
 
 
-*** tstart() called on Yorks-Mac.local
-*** at Fri Dec  1 02:20:04 2017
+*** tstart() called on yorks-mac.wireless.emory.edu
+*** at Fri Dec 29 18:47:37 2017
 
 
          ------------------------------------------
@@ -408,13 +408,13 @@ compare_values(refdsrgpt2,get_variable("CURRENT ENERGY"),8,"MRDSRG fully relaxed
   MCSCF Execution Completed.
 
 
-*** tstop() called on Yorks-Mac.local at Fri Dec  1 02:20:04 2017
+*** tstop() called on yorks-mac.wireless.emory.edu at Fri Dec 29 18:47:37 2017
 Module time:
-	user time   =       0.08 seconds =       0.00 minutes
+	user time   =       0.09 seconds =       0.00 minutes
 	system time =       0.04 seconds =       0.00 minutes
 	total time  =          0 seconds =       0.00 minutes
 Total time:
-	user time   =       0.08 seconds =       0.00 minutes
+	user time   =       0.09 seconds =       0.00 minutes
 	system time =       0.04 seconds =       0.00 minutes
 	total time  =          0 seconds =       0.00 minutes
 	MCSCF energy......................................................PASSED
@@ -436,7 +436,7 @@ Calling plugin forte.so.
   ----------------------------------------------------------------------------
   A suite of quantum chemistry methods for strongly correlated electrons
 
-    git branch: master - git commit: 1c92254a
+    git branch: master - git commit: f15141bf
 
   Developed by:
     Francesco A. Evangelista, Chenyang Li, Kevin P. Hannon,
@@ -536,7 +536,7 @@ Calling plugin forte.so.
 	Starting second half-transformation.
 	Two-electron integral transformation complete.
 
-  Integral transformation done. 0.01002400 s
+  Integral transformation done. 0.01688400 s
   Reading the two-electron integrals from disk
   Size of two-electron integrals:   0.000327 GB  Using in-core PK algorithm.
    Calculation information:
@@ -556,9 +556,9 @@ Calling plugin forte.so.
 
   Frozen-core energy            -75.818535536959 a.u.
 
-  FrozenOneBody Operator takes  0.04348200 s
+  FrozenOneBody Operator takes  0.05653000 s
   Resorting integrals after freezing core.
-  Conventional integrals take 0.09920100 s
+  Conventional integrals take 0.11375600 s
 
               ---------------------------------------------------
                 Complete Active Space Configuration Interaction
@@ -582,8 +582,8 @@ Calling plugin forte.so.
     CORE                          [    1     0     1     1 ]
     ACTIVE                        [    2     0     0     0 ]
     VIRTUAL                       [    3     0     1     1 ]
-  Forming alpha and beta strings      ...  Done. Timing        0.000050 s
-  Forming determinants                ...  Done. Timing        0.000019 s
+  Forming alpha and beta strings      ...  Done. Timing        0.000063 s
+  Forming determinants                ...  Done. Timing        0.000021 s
 
   ==> Determinants Summary <==
 
@@ -594,7 +594,7 @@ Calling plugin forte.so.
 
   Diagonalizing Hamiltonian           ...
   Found 3 roots with 2S+1 = 1 *
-  Found 1 roots with 2S+1 = 3  Done. Timing        0.000599 s
+  Found 1 roots with 2S+1 = 3  Done. Timing        0.000391 s
 
   * * * * * * * * * * * * * * * * *
   *  CI Vectors & Configurations  *
@@ -614,7 +614,7 @@ Calling plugin forte.so.
   Only print nonzero (> 1.0e-5) elements.
   Permanent dipole moments (a.u.) 0 -> 0:  X:  0.0000  Y:  0.0000  Z:  0.4944  Total:  0.4944
 
-  Computing 1-, 2- and 3-cumulants ... Done. Timing        0.013162 s
+  Computing 1-, 2- and 3-cumulants ... Done. Timing        0.016713 s
 
 
        -----------------------------------------------------------------
@@ -622,7 +622,7 @@ Calling plugin forte.so.
          Chenyang Li, Jeffrey B. Schriber and Francesco A. Evangelista
        -----------------------------------------------------------------
 
-  Took 0.000085 s to build Fock matrix
+  Took 0.000091 s to build Fock matrix
 
   ==> Checking Fock Matrix Diagonal Blocks <==
 
@@ -704,7 +704,7 @@ Calling plugin forte.so.
 	Starting second half-transformation.
 	Two-electron integral transformation complete.
 
-  Integral transformation done. 0.01101500 s
+  Integral transformation done. 0.01422300 s
   Reading the two-electron integrals from disk
   Size of two-electron integrals:   0.000327 GB
  Integrals are about to be updated.  Using in-core PK algorithm.
@@ -725,16 +725,16 @@ Calling plugin forte.so.
 
   Frozen-core energy            -75.818535536959 a.u.
 
-  FrozenOneBody Operator takes  0.04213000 s
+  FrozenOneBody Operator takes  0.04789600 s
   Resorting integrals after freezing core.
-  Frozen Orbitals takes     0.043 s.
+  Frozen Orbitals takes     0.049 s.
 
   ==> Reference Transformation to Semicanonical Basis <==
 
     Transformed 1 cumulants.
     Transformed 2 cumulants and RDMs.
     Transformed 3 cumulants.
-  SemiCanonicalize takes 2.702699 s.
+  SemiCanonicalize takes 3.431417 s.
 
   ==> Multireference Driven Similarity Renormalization Group <==
 
@@ -742,6 +742,7 @@ Calling plugin forte.so.
     Setting ambit MO space .......................... Done
     Preparing tensors for density cumulants ......... Done
     Building Fock matrix ............................ Done
+    Checking reference energy ....................... Done
 
            ----------------------------------------------------------
              Multireference Driven Similarity Renormalization Group
@@ -800,13 +801,13 @@ Calling plugin forte.so.
     omit blocks of >= 3 virtual indices           FALSE
 
 
-  ==> MR-DSRG Ref. Relaxation Iter. 0 <==
+  ==> MR-DSRG Reference Relaxation Iter. 0 <==
 
 
   ==> Build Initial Amplitude from DSRG-MRPT2 <==
 
-    Computing T2 amplitudes ...          Done. Timing      0.005 s
-    Computing T1 amplitudes ...          Done. Timing      0.004 s
+    Computing T2 amplitudes ...          Done. Timing      0.008 s
+    Computing T1 amplitudes ...          Done. Timing      0.008 s
 
   ==> First-Order Excitation Amplitudes Summary <==
 
@@ -905,13 +906,13 @@ Calling plugin forte.so.
 
   ==> De-Normal-Order DSRG Transformed Hamiltonian <==
 
-    Computing the scalar term                ... Done. Timing    0.011 s
-    Computing the 1-body term                ... Done. Timing    0.006 s
+    Computing the scalar term                ... Done. Timing    0.017 s
+    Computing the 1-body term                ... Done. Timing    0.007 s
 
   ==> Rotate DSRG Transformed Hamiltonian back to Original Basis <==
 
     Rotating 1-body term to original basis   ... Done. Timing    0.001 s
-    Rotating 2-body term to original basis   ... Done. Timing    0.023 s
+    Rotating 2-body term to original basis   ... Done. Timing    0.034 s
 
               ---------------------------------------------------
                 Complete Active Space Configuration Interaction
@@ -935,8 +936,8 @@ Calling plugin forte.so.
     CORE                          [    1     0     1     1 ]
     ACTIVE                        [    2     0     0     0 ]
     VIRTUAL                       [    3     0     1     1 ]
-  Forming alpha and beta strings      ...  Done. Timing        0.000031 s
-  Forming determinants                ...  Done. Timing        0.000012 s
+  Forming alpha and beta strings      ...  Done. Timing        0.000054 s
+  Forming determinants                ...  Done. Timing        0.000022 s
 
   ==> Determinants Summary <==
 
@@ -947,7 +948,7 @@ Calling plugin forte.so.
 
   Diagonalizing Hamiltonian           ...
   Found 3 roots with 2S+1 = 1 *
-  Found 1 roots with 2S+1 = 3  Done. Timing        0.000305 s
+  Found 1 roots with 2S+1 = 3  Done. Timing        0.000620 s
 
   * * * * * * * * * * * * * * * * *
   *  CI Vectors & Configurations  *
@@ -967,7 +968,7 @@ Calling plugin forte.so.
   Only print nonzero (> 1.0e-5) elements.
   Permanent dipole moments (a.u.) 0 -> 0:  X:  0.0000  Y:  0.0000  Z:  0.9110  Total:  0.9110
 
-  Computing 1-, 2- and 3-cumulants ... Done. Timing        0.014417 s
+  Computing 1-, 2- and 3-cumulants ... Done. Timing        0.020397 s
 
   The following reference rotation will make the new reference and integrals in the same basis.
 
@@ -979,7 +980,7 @@ Calling plugin forte.so.
 
   ==> Semicanonicalize Orbitals <==
 
-  Took 0.000083 s to build Fock matrix
+  Took 0.000074 s to build Fock matrix
 
   ==> Checking Fock Matrix Diagonal Blocks <==
 
@@ -1061,7 +1062,7 @@ Calling plugin forte.so.
 	Starting second half-transformation.
 	Two-electron integral transformation complete.
 
-  Integral transformation done. 0.01046500 s
+  Integral transformation done. 0.01567500 s
   Reading the two-electron integrals from disk
   Size of two-electron integrals:   0.000327 GB
  Integrals are about to be updated.  Using in-core PK algorithm.
@@ -1082,16 +1083,16 @@ Calling plugin forte.so.
 
   Frozen-core energy            -75.818535536959 a.u.
 
-  FrozenOneBody Operator takes  0.05383300 s
+  FrozenOneBody Operator takes  0.04892300 s
   Resorting integrals after freezing core.
-  Frozen Orbitals takes     0.055 s.
+  Frozen Orbitals takes     0.050 s.
 
   ==> Reference Transformation to Semicanonical Basis <==
 
     Transformed 1 cumulants.
     Transformed 2 cumulants and RDMs.
     Transformed 3 cumulants.
-  SemiCanonicalize takes 2.729622 s.
+  SemiCanonicalize takes 3.259169 s.
 
   ==> Density Cumulant Summary <==
 
@@ -1106,13 +1107,13 @@ Calling plugin forte.so.
     norm         0.000000     0.156509     0.156509     0.000000
     ------------------------------------------------------------
 
-  ==> MR-DSRG Ref. Relaxation Iter. 1 <==
+  ==> MR-DSRG Reference Relaxation Iter. 1 <==
 
 
   ==> Build Initial Amplitude from DSRG-MRPT2 <==
 
-    Computing T2 amplitudes ...          Done. Timing      0.005 s
-    Computing T1 amplitudes ...          Done. Timing      0.005 s
+    Computing T2 amplitudes ...          Done. Timing      0.006 s
+    Computing T1 amplitudes ...          Done. Timing      0.004 s
 
   ==> First-Order Excitation Amplitudes Summary <==
 
@@ -1201,18 +1202,18 @@ Calling plugin forte.so.
 
   ==> DSRG-MRPT2 Energy Summary <==
 
-    E0 (reference)                 =    -99.406065222746903
+    E0 (reference)                 =    -99.403472327612832
     <[F, A1]>                      =     -0.009013327770105
     <[F, A2]>                      =      0.008218875094519
     <[V, A1]>                      =      0.009228566371679
     <[V, A2]>                      =     -0.101165611248475
     DSRG-MRPT2 correlation energy  =     -0.092731497552381
-    DSRG-MRPT2 total energy        =    -99.498796720299282
+    DSRG-MRPT2 total energy        =    -99.496203825165210
 
   ==> De-Normal-Order DSRG Transformed Hamiltonian <==
 
-    Computing the scalar term                ... Done. Timing    0.011 s
-    Computing the 1-body term                ... Done. Timing    0.006 s
+    Computing the scalar term                ... Done. Timing    0.012 s
+    Computing the 1-body term                ... Done. Timing    0.007 s
 
   ==> Rotate DSRG Transformed Hamiltonian back to Original Basis <==
 
@@ -1241,8 +1242,8 @@ Calling plugin forte.so.
     CORE                          [    1     0     1     1 ]
     ACTIVE                        [    2     0     0     0 ]
     VIRTUAL                       [    3     0     1     1 ]
-  Forming alpha and beta strings      ...  Done. Timing        0.000030 s
-  Forming determinants                ...  Done. Timing        0.000025 s
+  Forming alpha and beta strings      ...  Done. Timing        0.000050 s
+  Forming determinants                ...  Done. Timing        0.000019 s
 
   ==> Determinants Summary <==
 
@@ -1253,7 +1254,7 @@ Calling plugin forte.so.
 
   Diagonalizing Hamiltonian           ...
   Found 3 roots with 2S+1 = 1 *
-  Found 1 roots with 2S+1 = 3  Done. Timing        0.000291 s
+  Found 1 roots with 2S+1 = 3  Done. Timing        0.000461 s
 
   * * * * * * * * * * * * * * * * *
   *  CI Vectors & Configurations  *
@@ -1264,7 +1265,7 @@ Calling plugin forte.so.
     20          0.9635119349
     02         -0.2593952346
 
-    Total Energy:   -99.498797953293831
+    Total Energy:   -99.496205058159759
 
 
 
@@ -1273,7 +1274,7 @@ Calling plugin forte.so.
   Only print nonzero (> 1.0e-5) elements.
   Permanent dipole moments (a.u.) 0 -> 0:  X:  0.0000  Y:  0.0000  Z:  0.5969  Total:  0.5969
 
-  Computing 1-, 2- and 3-cumulants ... Done. Timing        0.013798 s
+  Computing 1-, 2- and 3-cumulants ... Done. Timing        0.014638 s
 
   The following reference rotation will make the new reference and integrals in the same basis.
 
@@ -1285,7 +1286,7 @@ Calling plugin forte.so.
 
   ==> Semicanonicalize Orbitals <==
 
-  Took 0.000138 s to build Fock matrix
+  Took 0.000093 s to build Fock matrix
 
   ==> Checking Fock Matrix Diagonal Blocks <==
 
@@ -1367,7 +1368,7 @@ Calling plugin forte.so.
 	Starting second half-transformation.
 	Two-electron integral transformation complete.
 
-  Integral transformation done. 0.01054600 s
+  Integral transformation done. 0.01710000 s
   Reading the two-electron integrals from disk
   Size of two-electron integrals:   0.000327 GB
  Integrals are about to be updated.  Using in-core PK algorithm.
@@ -1388,16 +1389,16 @@ Calling plugin forte.so.
 
   Frozen-core energy            -75.818535536959 a.u.
 
-  FrozenOneBody Operator takes  0.04443900 s
+  FrozenOneBody Operator takes  0.06489100 s
   Resorting integrals after freezing core.
-  Frozen Orbitals takes     0.045 s.
+  Frozen Orbitals takes     0.068 s.
 
   ==> Reference Transformation to Semicanonical Basis <==
 
     Transformed 1 cumulants.
     Transformed 2 cumulants and RDMs.
     Transformed 3 cumulants.
-  SemiCanonicalize takes 2.612896 s.
+  SemiCanonicalize takes 4.556103 s.
 
   ==> Density Cumulant Summary <==
 
@@ -1412,13 +1413,13 @@ Calling plugin forte.so.
     norm         0.000000     0.155248     0.155248     0.000000
     ------------------------------------------------------------
 
-  ==> MR-DSRG Ref. Relaxation Iter. 2 <==
+  ==> MR-DSRG Reference Relaxation Iter. 2 <==
 
 
   ==> Build Initial Amplitude from DSRG-MRPT2 <==
 
     Computing T2 amplitudes ...          Done. Timing      0.006 s
-    Computing T1 amplitudes ...          Done. Timing      0.005 s
+    Computing T1 amplitudes ...          Done. Timing      0.018 s
 
   ==> First-Order Excitation Amplitudes Summary <==
 
@@ -1507,23 +1508,23 @@ Calling plugin forte.so.
 
   ==> DSRG-MRPT2 Energy Summary <==
 
-    E0 (reference)                 =    -99.406065222746903
+    E0 (reference)                 =    -99.403334878839871
     <[F, A1]>                      =     -0.008963777389960
     <[F, A2]>                      =      0.008182925372235
     <[V, A1]>                      =      0.009186530415244
     <[V, A2]>                      =     -0.101260809319649
     DSRG-MRPT2 correlation energy  =     -0.092855130922131
-    DSRG-MRPT2 total energy        =    -99.498920353669035
+    DSRG-MRPT2 total energy        =    -99.496190009762003
 
   ==> De-Normal-Order DSRG Transformed Hamiltonian <==
 
-    Computing the scalar term                ... Done. Timing    0.012 s
+    Computing the scalar term                ... Done. Timing    0.014 s
     Computing the 1-body term                ... Done. Timing    0.008 s
 
   ==> Rotate DSRG Transformed Hamiltonian back to Original Basis <==
 
     Rotating 1-body term to original basis   ... Done. Timing    0.001 s
-    Rotating 2-body term to original basis   ... Done. Timing    0.026 s
+    Rotating 2-body term to original basis   ... Done. Timing    0.034 s
 
               ---------------------------------------------------
                 Complete Active Space Configuration Interaction
@@ -1547,8 +1548,8 @@ Calling plugin forte.so.
     CORE                          [    1     0     1     1 ]
     ACTIVE                        [    2     0     0     0 ]
     VIRTUAL                       [    3     0     1     1 ]
-  Forming alpha and beta strings      ...  Done. Timing        0.000042 s
-  Forming determinants                ...  Done. Timing        0.000018 s
+  Forming alpha and beta strings      ...  Done. Timing        0.000050 s
+  Forming determinants                ...  Done. Timing        0.000019 s
 
   ==> Determinants Summary <==
 
@@ -1559,7 +1560,7 @@ Calling plugin forte.so.
 
   Diagonalizing Hamiltonian           ...
   Found 3 roots with 2S+1 = 1 *
-  Found 1 roots with 2S+1 = 3  Done. Timing        0.000469 s
+  Found 1 roots with 2S+1 = 3  Done. Timing        0.000471 s
 
   * * * * * * * * * * * * * * * * *
   *  CI Vectors & Configurations  *
@@ -1570,7 +1571,7 @@ Calling plugin forte.so.
     20          0.9641931285
     02         -0.2600329968
 
-    Total Energy:   -99.498920354449766
+    Total Energy:   -99.496190010542733
 
 
 
@@ -1579,7 +1580,7 @@ Calling plugin forte.so.
   Only print nonzero (> 1.0e-5) elements.
   Permanent dipole moments (a.u.) 0 -> 0:  X:  0.0000  Y:  0.0000  Z:  0.6346  Total:  0.6346
 
-  Computing 1-, 2- and 3-cumulants ... Done. Timing        0.016737 s
+  Computing 1-, 2- and 3-cumulants ... Done. Timing        0.021458 s
 
   The following reference rotation will make the new reference and integrals in the same basis.
 
@@ -1591,7 +1592,7 @@ Calling plugin forte.so.
 
   ==> Semicanonicalize Orbitals <==
 
-  Took 0.000054 s to build Fock matrix
+  Took 0.000088 s to build Fock matrix
 
   ==> Checking Fock Matrix Diagonal Blocks <==
 
@@ -1673,7 +1674,7 @@ Calling plugin forte.so.
 	Starting second half-transformation.
 	Two-electron integral transformation complete.
 
-  Integral transformation done. 0.01391600 s
+  Integral transformation done. 0.03246600 s
   Reading the two-electron integrals from disk
   Size of two-electron integrals:   0.000327 GB
  Integrals are about to be updated.  Using in-core PK algorithm.
@@ -1694,16 +1695,16 @@ Calling plugin forte.so.
 
   Frozen-core energy            -75.818535536959 a.u.
 
-  FrozenOneBody Operator takes  0.04801200 s
+  FrozenOneBody Operator takes  0.09163800 s
   Resorting integrals after freezing core.
-  Frozen Orbitals takes     0.049 s.
+  Frozen Orbitals takes     0.093 s.
 
   ==> Reference Transformation to Semicanonical Basis <==
 
     Transformed 1 cumulants.
     Transformed 2 cumulants and RDMs.
     Transformed 3 cumulants.
-  SemiCanonicalize takes 2.850717 s.
+  SemiCanonicalize takes 5.145717 s.
 
   ==> Density Cumulant Summary <==
 
@@ -1718,13 +1719,13 @@ Calling plugin forte.so.
     norm         0.000000     0.155216     0.155216     0.000000
     ------------------------------------------------------------
 
-  ==> MR-DSRG Ref. Relaxation Iter. 3 <==
+  ==> MR-DSRG Reference Relaxation Iter. 3 <==
 
 
   ==> Build Initial Amplitude from DSRG-MRPT2 <==
 
     Computing T2 amplitudes ...          Done. Timing      0.006 s
-    Computing T1 amplitudes ...          Done. Timing      0.005 s
+    Computing T1 amplitudes ...          Done. Timing      0.007 s
 
   ==> First-Order Excitation Amplitudes Summary <==
 
@@ -1813,23 +1814,23 @@ Calling plugin forte.so.
 
   ==> DSRG-MRPT2 Energy Summary <==
 
-    E0 (reference)                 =    -99.406065222746903
+    E0 (reference)                 =    -99.403331348811705
     <[F, A1]>                      =     -0.008962603017283
     <[F, A2]>                      =      0.008182063021768
     <[V, A1]>                      =      0.009185511759473
     <[V, A2]>                      =     -0.101263258200142
     DSRG-MRPT2 correlation energy  =     -0.092858286436183
-    DSRG-MRPT2 total energy        =    -99.498923509183086
+    DSRG-MRPT2 total energy        =    -99.496189635247887
 
   ==> De-Normal-Order DSRG Transformed Hamiltonian <==
 
-    Computing the scalar term                ... Done. Timing    0.013 s
-    Computing the 1-body term                ... Done. Timing    0.006 s
+    Computing the scalar term                ... Done. Timing    0.029 s
+    Computing the 1-body term                ... Done. Timing    0.017 s
 
   ==> Rotate DSRG Transformed Hamiltonian back to Original Basis <==
 
-    Rotating 1-body term to original basis   ... Done. Timing    0.002 s
-    Rotating 2-body term to original basis   ... Done. Timing    0.024 s
+    Rotating 1-body term to original basis   ... Done. Timing    0.013 s
+    Rotating 2-body term to original basis   ... Done. Timing    0.082 s
 
               ---------------------------------------------------
                 Complete Active Space Configuration Interaction
@@ -1853,8 +1854,8 @@ Calling plugin forte.so.
     CORE                          [    1     0     1     1 ]
     ACTIVE                        [    2     0     0     0 ]
     VIRTUAL                       [    3     0     1     1 ]
-  Forming alpha and beta strings      ...  Done. Timing        0.000032 s
-  Forming determinants                ...  Done. Timing        0.000013 s
+  Forming alpha and beta strings      ...  Done. Timing        0.000047 s
+  Forming determinants                ...  Done. Timing        0.000018 s
 
   ==> Determinants Summary <==
 
@@ -1865,7 +1866,7 @@ Calling plugin forte.so.
 
   Diagonalizing Hamiltonian           ...
   Found 3 roots with 2S+1 = 1 *
-  Found 1 roots with 2S+1 = 3  Done. Timing        0.000318 s
+  Found 1 roots with 2S+1 = 3  Done. Timing        0.000543 s
 
   * * * * * * * * * * * * * * * * *
   *  CI Vectors & Configurations  *
@@ -1876,7 +1877,7 @@ Calling plugin forte.so.
     20          0.9642077687
     02         -0.2600465182
 
-    Total Energy:   -99.498923509183584
+    Total Energy:   -99.496189635248385
 
 
 
@@ -1885,7 +1886,7 @@ Calling plugin forte.so.
   Only print nonzero (> 1.0e-5) elements.
   Permanent dipole moments (a.u.) 0 -> 0:  X:  0.0000  Y:  0.0000  Z:  0.6355  Total:  0.6355
 
-  Computing 1-, 2- and 3-cumulants ... Done. Timing        0.020168 s
+  Computing 1-, 2- and 3-cumulants ... Done. Timing        0.035181 s
 
   The following reference rotation will make the new reference and integrals in the same basis.
 
@@ -1897,7 +1898,7 @@ Calling plugin forte.so.
 
   ==> Semicanonicalize Orbitals <==
 
-  Took 0.000080 s to build Fock matrix
+  Took 0.000092 s to build Fock matrix
 
   ==> Checking Fock Matrix Diagonal Blocks <==
 
@@ -1979,7 +1980,7 @@ Calling plugin forte.so.
 	Starting second half-transformation.
 	Two-electron integral transformation complete.
 
-  Integral transformation done. 0.01310400 s
+  Integral transformation done. 0.02197700 s
   Reading the two-electron integrals from disk
   Size of two-electron integrals:   0.000327 GB
  Integrals are about to be updated.  Using in-core PK algorithm.
@@ -2000,16 +2001,16 @@ Calling plugin forte.so.
 
   Frozen-core energy            -75.818535536959 a.u.
 
-  FrozenOneBody Operator takes  0.04351100 s
+  FrozenOneBody Operator takes  0.11137400 s
   Resorting integrals after freezing core.
-  Frozen Orbitals takes     0.044 s.
+  Frozen Orbitals takes     0.114 s.
 
   ==> Reference Transformation to Semicanonical Basis <==
 
     Transformed 1 cumulants.
     Transformed 2 cumulants and RDMs.
     Transformed 3 cumulants.
-  SemiCanonicalize takes 2.725705 s.
+  SemiCanonicalize takes 5.145782 s.
 
   ==> Density Cumulant Summary <==
 
@@ -2024,13 +2025,13 @@ Calling plugin forte.so.
     norm         0.000000     0.155216     0.155216     0.000000
     ------------------------------------------------------------
 
-  ==> MR-DSRG Ref. Relaxation Iter. 4 <==
+  ==> MR-DSRG Reference Relaxation Iter. 4 <==
 
 
   ==> Build Initial Amplitude from DSRG-MRPT2 <==
 
-    Computing T2 amplitudes ...          Done. Timing      0.004 s
-    Computing T1 amplitudes ...          Done. Timing      0.005 s
+    Computing T2 amplitudes ...          Done. Timing      0.006 s
+    Computing T1 amplitudes ...          Done. Timing      0.006 s
 
   ==> First-Order Excitation Amplitudes Summary <==
 
@@ -2119,23 +2120,23 @@ Calling plugin forte.so.
 
   ==> DSRG-MRPT2 Energy Summary <==
 
-    E0 (reference)                 =    -99.406065222746903
+    E0 (reference)                 =    -99.403331258909787
     <[F, A1]>                      =     -0.008962572205191
     <[F, A2]>                      =      0.008182040496787
     <[V, A1]>                      =      0.009185485162086
     <[V, A2]>                      =     -0.101263320176736
     DSRG-MRPT2 correlation energy  =     -0.092858366723054
-    DSRG-MRPT2 total energy        =    -99.498923589469953
+    DSRG-MRPT2 total energy        =    -99.496189625632837
 
   ==> De-Normal-Order DSRG Transformed Hamiltonian <==
 
-    Computing the scalar term                ... Done. Timing    0.017 s
-    Computing the 1-body term                ... Done. Timing    0.011 s
+    Computing the scalar term                ... Done. Timing    0.012 s
+    Computing the 1-body term                ... Done. Timing    0.007 s
 
   ==> Rotate DSRG Transformed Hamiltonian back to Original Basis <==
 
     Rotating 1-body term to original basis   ... Done. Timing    0.001 s
-    Rotating 2-body term to original basis   ... Done. Timing    0.048 s
+    Rotating 2-body term to original basis   ... Done. Timing    0.029 s
 
               ---------------------------------------------------
                 Complete Active Space Configuration Interaction
@@ -2159,8 +2160,8 @@ Calling plugin forte.so.
     CORE                          [    1     0     1     1 ]
     ACTIVE                        [    2     0     0     0 ]
     VIRTUAL                       [    3     0     1     1 ]
-  Forming alpha and beta strings      ...  Done. Timing        0.000044 s
-  Forming determinants                ...  Done. Timing        0.000020 s
+  Forming alpha and beta strings      ...  Done. Timing        0.000056 s
+  Forming determinants                ...  Done. Timing        0.000022 s
 
   ==> Determinants Summary <==
 
@@ -2171,7 +2172,7 @@ Calling plugin forte.so.
 
   Diagonalizing Hamiltonian           ...
   Found 3 roots with 2S+1 = 1 *
-  Found 1 roots with 2S+1 = 3  Done. Timing        0.000479 s
+  Found 1 roots with 2S+1 = 3  Done. Timing        0.000547 s
 
   * * * * * * * * * * * * * * * * *
   *  CI Vectors & Configurations  *
@@ -2182,7 +2183,7 @@ Calling plugin forte.so.
     20          0.9642081463
     02         -0.2600468678
 
-    Total Energy:   -99.498923589469953
+    Total Energy:   -99.496189625632837
 
 
 
@@ -2191,7 +2192,7 @@ Calling plugin forte.so.
   Only print nonzero (> 1.0e-5) elements.
   Permanent dipole moments (a.u.) 0 -> 0:  X:  0.0000  Y:  0.0000  Z:  0.6356  Total:  0.6356
 
-  Computing 1-, 2- and 3-cumulants ... Done. Timing        0.018505 s
+  Computing 1-, 2- and 3-cumulants ... Done. Timing        0.018785 s
 
   The following reference rotation will make the new reference and integrals in the same basis.
 
@@ -2203,7 +2204,7 @@ Calling plugin forte.so.
 
   ==> Semicanonicalize Orbitals <==
 
-  Took 0.000086 s to build Fock matrix
+  Took 0.000089 s to build Fock matrix
 
   ==> Checking Fock Matrix Diagonal Blocks <==
 
@@ -2233,215 +2234,6 @@ Calling plugin forte.so.
     norm         0.000000     0.155216     0.155216     0.000000
     ------------------------------------------------------------
 
-  ==> MR-DSRG Ref. Relaxation Iter. 5 <==
-
-
-  ==> Build Initial Amplitude from DSRG-MRPT2 <==
-
-    Computing T2 amplitudes ...          Done. Timing      0.006 s
-    Computing T1 amplitudes ...          Done. Timing      0.005 s
-
-  ==> First-Order Excitation Amplitudes Summary <==
-
-    Active Indices:    1    2 
-    Largest T1 amplitudes for spin case A:
-       i       a                  i       a                  i       a               
-    --------------------------------------------------------------------------------
-    [  2       4    ]-0.105905 [  2       3    ] 0.094589 [  0       1    ] 0.041424 
-    [  1       4    ]-0.020395 [  1       3    ]-0.007294 [  0       2    ]-0.007282 
-    [  2       5    ] 0.005666 [  1       5    ] 0.003120 [  6       7    ]-0.002698 
-    [  8       9    ]-0.002698 [  0       5    ] 0.001478 [  0       4    ]-0.000097 
-    [  0       3    ] 0.000024 
-    --------------------------------------------------------------------------------
-    Norm of T1A vector: (nonzero elements: 13)                    0.149865947167935.
-    --------------------------------------------------------------------------------
-    Largest T1 amplitudes for spin case B:
-       _       _                  _       _                  _       _               
-       i       a                  i       a                  i       a               
-    --------------------------------------------------------------------------------
-    [  2       4    ]-0.105905 [  2       3    ] 0.094589 [  0       1    ] 0.041424 
-    [  1       4    ]-0.020395 [  1       3    ]-0.007294 [  0       2    ]-0.007282 
-    [  2       5    ] 0.005666 [  1       5    ] 0.003120 [  6       7    ]-0.002698 
-    [  8       9    ]-0.002698 [  0       5    ] 0.001478 [  0       4    ]-0.000097 
-    [  0       3    ] 0.000024 
-    --------------------------------------------------------------------------------
-    Norm of T1B vector: (nonzero elements: 13)                    0.149865947167935.
-    --------------------------------------------------------------------------------
-    Largest T2 amplitudes for spin case AA:
-       i   j   a   b              i   j   a   b              i   j   a   b           
-    --------------------------------------------------------------------------------
-    [  1   8   1   9]-0.046265 [  1   6   1   7]-0.046265 [  2   8   1   9]-0.045845 
-    [  2   6   1   7]-0.045845 [  2   8   2   9]-0.036691 [  2   6   2   7]-0.036691 
-    [  0   1   1   2] 0.034519 [  1   8   2   9]-0.030704 [  1   6   2   7]-0.030704 
-    [  1   2   1   3] 0.024379 [  6   8   7   9]-0.024099 [  0   1   1   5]-0.021009 
-    [  2   8   4   9]-0.019714 [  2   6   4   7]-0.019714 [  1   2   1   4]-0.019697 
-    --------------------------------------------------------------------------------
-    Norm of T2AA vector: (nonzero elements: 240)                  0.282563370358230.
-    --------------------------------------------------------------------------------
-    Largest T2 amplitudes for spin case AB:
-           _       _                  _       _                  _       _           
-       i   j   a   b              i   j   a   b              i   j   a   b           
-    --------------------------------------------------------------------------------
-    [  2   2   1   4]-0.075181 [  2   2   2   3] 0.074529 [  0   0   1   1]-0.060770 
-    [  2   2   3   3]-0.052163 [  1   2   1   3] 0.050801 [  2   8   1   9]-0.050475 
-    [  2   6   1   7]-0.050475 [  1   2   1   4]-0.049614 [  1   8   1   9]-0.048137 
-    [  1   6   1   7]-0.048137 [  1   2   2   4]-0.046361 [  2   8   2   9]-0.040571 
-    [  2   6   2   7]-0.040571 [  8   8   9   9]-0.036345 [  6   6   7   7]-0.036345 
-    --------------------------------------------------------------------------------
-    Norm of T2AB vector: (nonzero elements: 405)                  0.349759585164065.
-    --------------------------------------------------------------------------------
-    Largest T2 amplitudes for spin case BB:
-       _   _   _   _              _   _   _   _              _   _   _   _           
-       i   j   a   b              i   j   a   b              i   j   a   b           
-    --------------------------------------------------------------------------------
-    [  1   8   1   9]-0.046265 [  1   6   1   7]-0.046265 [  2   8   1   9]-0.045845 
-    [  2   6   1   7]-0.045845 [  2   8   2   9]-0.036691 [  2   6   2   7]-0.036691 
-    [  0   1   1   2] 0.034519 [  1   8   2   9]-0.030704 [  1   6   2   7]-0.030704 
-    [  1   2   1   3] 0.024379 [  6   8   7   9]-0.024099 [  0   1   1   5]-0.021009 
-    [  2   8   4   9]-0.019714 [  2   6   4   7]-0.019714 [  1   2   1   4]-0.019697 
-    --------------------------------------------------------------------------------
-    Norm of T2BB vector: (nonzero elements: 240)                  0.282563370358230.
-    --------------------------------------------------------------------------------
-
-  ==> Possible Intruders <==
-
-    T1 amplitudes larger than 0.1000 for spin case A:
-        Amplitude         Value                  Denominator              
-    ----------------------------------------------------------------------
-    [  2       4    ]   -0.10590543 (  0.087998 -   2.314757 =  -2.226759)
-    ----------------------------------------------------------------------
-    T1 amplitudes larger than 0.1000 for spin case B:
-        Amplitude         Value                  Denominator              
-    ----------------------------------------------------------------------
-    [  2       4    ]   -0.10590543 (  0.087998 -   2.314757 =  -2.226759)
-    ----------------------------------------------------------------------
-    T2 amplitudes larger than 0.1000 for spin case AA: NULL
-    T2 amplitudes larger than 0.1000 for spin case AB: NULL
-    T2 amplitudes larger than 0.1000 for spin case BB: NULL
-
-  ==> Second-Order Perturbation DSRG-MRPT2 <==
-
-    Reference:
-      J. Chem. Theory Comput. 2015, 11, 2097-2108.
-      J. Chem. Phys. 2017, 146, 124132.
-
-
-  ==> DSRG-MRPT2 Energy Summary <==
-
-    E0 (reference)                 =    -99.406065222746903
-    <[F, A1]>                      =     -0.008962571442896
-    <[F, A2]>                      =      0.008182039941770
-    <[V, A1]>                      =      0.009185484500200
-    <[V, A2]>                      =     -0.101263321753724
-    DSRG-MRPT2 correlation energy  =     -0.092858368754649
-    DSRG-MRPT2 total energy        =    -99.498923591501551
-
-  ==> De-Normal-Order DSRG Transformed Hamiltonian <==
-
-    Computing the scalar term                ... Done. Timing    0.012 s
-    Computing the 1-body term                ... Done. Timing    0.006 s
-
-  ==> Rotate DSRG Transformed Hamiltonian back to Original Basis <==
-
-    Rotating 1-body term to original basis   ... Done. Timing    0.001 s
-    Rotating 2-body term to original basis   ... Done. Timing    0.026 s
-
-              ---------------------------------------------------
-                Complete Active Space Configuration Interaction
-                                  Chenyang Li
-              ---------------------------------------------------
-
-
-  ==> Input Summary <==
-
-    No. a electrons in active      =     1
-    No. b electrons in active      =     1
-    multiplicity                   =     1
-    spin ms (2 * Sz)               =     0
-
-  ==> Orbital Spaces <==
-
-    TOTAL MO                      [    7     0     2     2 ]
-    FROZEN CORE                   [    1     0     0     0 ]
-    FROZEN VIRTUAL                [    0     0     0     0 ]
-    CORRELATED MO                 [    6     0     2     2 ]
-    CORE                          [    1     0     1     1 ]
-    ACTIVE                        [    2     0     0     0 ]
-    VIRTUAL                       [    3     0     1     1 ]
-  Forming alpha and beta strings      ...  Done. Timing        0.000031 s
-  Forming determinants                ...  Done. Timing        0.000012 s
-
-  ==> Determinants Summary <==
-
-    number of alpha active electrons    =     1
-    number of beta active electrons     =     1
-    root symmetry (zero based)          =     0
-    number of determinants              =     4
-
-  Diagonalizing Hamiltonian           ...
-  Found 3 roots with 2S+1 = 1 *
-  Found 1 roots with 2S+1 = 3  Done. Timing        0.000336 s
-
-  * * * * * * * * * * * * * * * * *
-  *  CI Vectors & Configurations  *
-  * * * * * * * * * * * * * * * * *
-
-  ==> Root No. 0 <==
-
-    20          0.9642081652
-    02         -0.2600468859
-
-    Total Energy:   -99.498923591501594
-
-
-
-  ==> Permanent Dipole Moments (A1) <==
-
-  Only print nonzero (> 1.0e-5) elements.
-  Permanent dipole moments (a.u.) 0 -> 0:  X:  0.0000  Y:  0.0000  Z:  0.6356  Total:  0.6356
-
-  Computing 1-, 2- and 3-cumulants ... Done. Timing        0.016665 s
-
-  The following reference rotation will make the new reference and integrals in the same basis.
-
-  ==> Reference Transformation to Semicanonical Basis <==
-
-    Transformed 1 cumulants.
-    Transformed 2 cumulants and RDMs.
-    Transformed 3 cumulants.
-
-  ==> Semicanonicalize Orbitals <==
-
-  Took 0.000065 s to build Fock matrix
-
-  ==> Checking Fock Matrix Diagonal Blocks <==
-
-    Off-Diag. Elements       Max           2-Norm
-    ------------------------------------------------
-    Fa actv              0.0000000020   0.0000000029
-    Fb actv              0.0000000020   0.0000000029
-    ------------------------------------------------
-    Fa core              0.0000000000   0.0000000000
-    Fb core              0.0000000000   0.0000000000
-    ------------------------------------------------
-    Fa virt              0.0000000478   0.0000001084
-    Fb virt              0.0000000478   0.0000001084
-    ------------------------------------------------
-  Orbitals are already semicanonicalized.
-
-  ==> Density Cumulant Summary <==
-
-    2-body             AA           AB           BB
-    -----------------------------------------------
-    max          0.063544     0.251403     0.063544
-    norm         0.127087     0.378468     0.127087
-    -----------------------------------------------
-    3-body            AAA          AAB          ABB          BBB
-    ------------------------------------------------------------
-    max          0.000000     0.054779     0.054779     0.000000
-    norm         0.000000     0.155216     0.155216     0.000000
-    ------------------------------------------------------------
-
   ==> MRDSRG Reference Relaxation Summary <==
 
                   Fixed Ref. (a.u.)               Relaxed Ref. (a.u.)      
@@ -2449,23 +2241,22 @@ Calling plugin forte.so.
     Iter.      Total Energy        Delta        Total Energy        Delta  
     -----------------------------------------------------------------------
         0      -99.494994197864 -9.949e+01      -99.496756047238 -9.950e+01
-        1      -99.498796720299 -3.803e-03      -99.498797953294 -2.042e-03
-        2      -99.498920353669 -1.236e-04      -99.498920354450 -1.224e-04
-        3      -99.498923509183 -3.156e-06      -99.498923509184 -3.155e-06
-        4      -99.498923589470 -8.029e-08      -99.498923589470 -8.029e-08
-        5      -99.498923591502 -2.032e-09      -99.498923591502 -2.032e-09
+        1      -99.496203825165 -1.210e-03      -99.496205058160  5.510e-04
+        2      -99.496190009762  1.382e-05      -99.496190010543  1.505e-05
+        3      -99.496189635248  3.745e-07      -99.496189635248  3.753e-07
+        4      -99.496189625633  9.615e-09      -99.496189625633  9.616e-09
     -----------------------------------------------------------------------
-    MRDSRG Total Energy            =     -99.498923591501551
-    MRDSRG Total Energy (relaxed)  =     -99.498923591501594
+    MRDSRG Total Energy            =     -99.496189625632837
+    MRDSRG Total Energy (relaxed)  =     -99.496189625632837
 
 
   ==> Total Timings (s) for Computing Commutators <==
 
              [H1, T1]    [H1, T2]    [H2, T1]    [H2, T2]
     -----------------------------------------------------
-    -> C0       0.027       0.107       0.000       1.147
-    -> C1       0.092       0.501       0.373       5.143
-    -> C2                   1.717       1.838      11.044
+    -> C0       0.028       0.142       0.000       1.576
+    -> C1       0.110       0.606       0.458       7.047
+    -> C2                   2.320       2.195      12.650
     -----------------------------------------------------
 	MRDSRG fully relaxed energy.......................................PASSED
 

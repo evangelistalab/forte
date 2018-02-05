@@ -30,44 +30,34 @@
 #define _reference_h_
 
 #include "psi4/libmints/wavefunction.h"
-
 #include <ambit/tensor.h>
+#include "integrals/integrals.h"
+#include "helpers.h"
 
 namespace psi {
 namespace forte {
 
 class Reference // : public Wavefunction
 {
-  protected:
-    /// Reference energy = FCI_energy + frozen_core_energy + restricted_docc +
-    /// nuclear_replusion
-    double Eref_;
-    /// Frozen_core_energy
-
-    /// Density cumulants
-    ambit::Tensor L1a_;
-    ambit::Tensor L1b_;
-    ambit::Tensor L2aa_;
-    ambit::Tensor L2ab_;
-    ambit::Tensor L2bb_;
-    ambit::Tensor L3aaa_;
-    ambit::Tensor L3aab_;
-    ambit::Tensor L3abb_;
-    ambit::Tensor L3bbb_;
-
-    /// The 2-RDMs
-    ambit::Tensor g2aa_;
-    ambit::Tensor g2ab_;
-    ambit::Tensor g2bb_;
-    /// The Spin-free 2-RDM
-    ambit::Tensor SFg2_;
-
   public:
     /// Default constructor
     Reference();
 
     /// Destructor
     ~Reference();
+
+    /// Recompute reference energy using ints and L1a_, L1b_, L2aa_, L2ab_, L2bb_
+    /// ints          -- pointer to ForteIntegrals
+    /// mo_space_info -- pointer to MOSpaceInfo
+    /// Enuc          -- nuclear repulsion energy
+    double compute_Eref(std::shared_ptr<ForteIntegrals> ints,
+                        std::shared_ptr<MOSpaceInfo> mo_space_info, double Enuc);
+
+    /// Update Eref_ (referene energy) by recomputing it
+    void update_Eref(std::shared_ptr<ForteIntegrals> ints,
+                     std::shared_ptr<MOSpaceInfo> mo_space_info, double Enuc) {
+        Eref_ = compute_Eref(ints, mo_space_info, Enuc);
+    }
 
     /// Obtain reference energy
     double get_Eref() { return Eref_; }
@@ -107,6 +97,28 @@ class Reference // : public Wavefunction
     void set_g2bb(ambit::Tensor g2bb) { g2bb_ = g2bb; }
     /// Spin-free 2-RDM
     void set_SFg2(ambit::Tensor SFg2) { SFg2_ = SFg2; }
+
+  protected:
+    /// Reference energy (include frozen-core and nuclear repulsion)
+    double Eref_;
+
+    /// Density cumulants
+    ambit::Tensor L1a_;
+    ambit::Tensor L1b_;
+    ambit::Tensor L2aa_;
+    ambit::Tensor L2ab_;
+    ambit::Tensor L2bb_;
+    ambit::Tensor L3aaa_;
+    ambit::Tensor L3aab_;
+    ambit::Tensor L3abb_;
+    ambit::Tensor L3bbb_;
+
+    /// The 2-RDMs
+    ambit::Tensor g2aa_;
+    ambit::Tensor g2ab_;
+    ambit::Tensor g2bb_;
+    /// The Spin-free 2-RDM
+    ambit::Tensor SFg2_;
 };
 }
 } // End Namespaces

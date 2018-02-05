@@ -18,6 +18,22 @@ MASTER_DSRG::MASTER_DSRG(Reference reference, SharedWavefunction ref_wfn, Option
     startup();
 }
 
+MASTER_DSRG::~MASTER_DSRG() {
+    dsrg_time_.print_comm_time();
+
+    if (warnings_.size() != 0) {
+        print_h2("DSRG Warnings");
+
+        outfile->Printf("\n  %32s  %32s  %32s", "Description", "This Run", "Solution");
+        outfile->Printf("\n  %s", std::string(100, '-').c_str());
+        for (auto& x : warnings_) {
+            outfile->Printf("\n  %32s  %32s  %32s", std::get<0>(x), std::get<1>(x), std::get<2>(x));
+        }
+        outfile->Printf("\n  %s", std::string(100, '-').c_str());
+        outfile->Printf("\n\n");
+    }
+}
+
 void MASTER_DSRG::startup() {
     print_h2("Multireference Driven Similarity Renormalization Group");
 
@@ -32,7 +48,8 @@ void MASTER_DSRG::startup() {
 
     // read commonly used energies
     Eref_ = reference_.get_Eref();
-    Enuc_ = Process::environment.molecule()->nuclear_repulsion_energy(reference_wavefunction_->get_dipole_field_strength());
+    Enuc_ = Process::environment.molecule()->nuclear_repulsion_energy(
+        reference_wavefunction_->get_dipole_field_strength());
     Efrzc_ = ints_->frozen_core_energy();
 
     // initialize timer for commutator
@@ -48,6 +65,9 @@ void MASTER_DSRG::startup() {
     if (do_dm_) {
         init_dm_ints();
     }
+
+    // recompute reference energy from ForteIntegral and check consistency with Reference
+    check_init_reference_energy();
 }
 
 void MASTER_DSRG::read_options() {
@@ -74,6 +94,9 @@ void MASTER_DSRG::read_options() {
         outfile->Printf("\n  Warning: SOURCE option %s is not implemented.", source_.c_str());
         outfile->Printf("\n  Changed SOURCE option to STANDARD");
         source_ = "STANDARD";
+
+        warnings_.push_back(std::make_tuple("Unsupported SOURCE", "Change to STANDARD",
+                                            "Change options in input.dat"));
     }
     if (source_ == "STANDARD") {
         dsrg_source_ = std::make_shared<STD_SOURCE>(s_, taylor_threshold_);
@@ -205,6 +228,8 @@ void MASTER_DSRG::build_fock_from_ints(std::shared_ptr<ForteIntegrals> ints, Blo
     size_t ncmo = mo_space_info_->size("CORRELATED");
     F = BTF_->build(tensor_type_, "Fock", spin_cases({"gg"}));
 
+    // for convenience, directly call make_fock_matrix in ForteIntegral
+
     SharedMatrix D1a(new Matrix("D1a", ncmo, ncmo));
     SharedMatrix D1b(new Matrix("D1b", ncmo, ncmo));
     for (size_t m = 0, ncore = core_mos_.size(); m < ncore; m++) {
@@ -242,6 +267,155 @@ void MASTER_DSRG::fill_Fdiag(BlockedTensor& F, std::vector<double>& Fa, std::vec
             Fb[i[0]] = value;
         }
     });
+}
+
+void MASTER_DSRG::check_init_reference_energy() {
+    outfile->Printf("\n    Checking reference energy ....................... ");
+    double E = compute_reference_energy_from_ints(ints_);
+    outfile->Printf("Done");
+
+    double econv = options_.get_double("E_CONVERGENCE");
+    econv = econv < 1.0e-12 ? 1.0e-12 : econv;
+    if (fabs(E - Eref_) > 10.0 * econv) {
+        outfile->Printf("\n    Warning! Inconsistent reference energy!");
+        outfile->Printf("\n    Read from Reference class:            %.12f", Eref_);
+        outfile->Printf("\n    Recomputed using Reference densities: %.12f", E);
+        outfile->Printf("\n    Reference energy (MK vacuum) is set to recomputed value.");
+
+        warnings_.push_back(std::make_tuple("Inconsistent ref. energy", "Use recomputed value",
+                                            "A bug? Post an issue."));
+        Eref_ = E;
+    }
+}
+
+double MASTER_DSRG::compute_reference_energy_from_ints(std::shared_ptr<ForteIntegrals> ints) {
+    BlockedTensor H = BTF_->build(tensor_type_, "OEI", spin_cases({"cc", "aa"}), true);
+    H.iterate([&](const std::vector<size_t>& i, const std::vector<SpinType>& spin, double& value) {
+        if (spin[0] == AlphaSpin) {
+            value = ints->oei_a(i[0], i[1]);
+        } else {
+            value = ints->oei_b(i[0], i[1]);
+        }
+    });
+
+    BlockedTensor V = BTF_->build(tensor_type_, "APEI", spin_cases({"aaaa"}), true);
+    V.block("aaaa")("prqs") =
+        ints->aptei_aa_block(actv_mos_, actv_mos_, actv_mos_, actv_mos_)("prqs");
+    V.block("aAaA")("prqs") =
+        ints->aptei_ab_block(actv_mos_, actv_mos_, actv_mos_, actv_mos_)("prqs");
+    V.block("AAAA")("prqs") =
+        ints->aptei_bb_block(actv_mos_, actv_mos_, actv_mos_, actv_mos_)("prqs");
+
+    // form Fock in batches
+    // in cc block, only the diagonal elements are useful
+    BlockedTensor F = BTF_->build(tensor_type_, "Fock pruned", spin_cases({"cc", "aa"}), true);
+    F["ij"] = H["ij"];
+    F["IJ"] = H["IJ"];
+    F["uv"] += V["uxvy"] * Gamma1_["xy"];
+    F["uv"] += V["uXvY"] * Gamma1_["XY"];
+    F["UV"] += V["xUyV"] * Gamma1_["xy"];
+    F["UV"] += V["UXVY"] * Gamma1_["XY"];
+
+    // an identity tensor of shape 1 * nc * 1 * nc for F["mm"] <- sum_{n} V["mnmn"]
+    size_t nc = core_mos_.size();
+    std::vector<size_t> Idims {1, nc, 1, nc};
+    ambit::Tensor I = ambit::Tensor::build(tensor_type_, "I", Idims);
+    I.iterate([&](const std::vector<size_t>& i, double& value) {
+        if (i[1] == i[3]) {
+            value = 1.0;
+        }
+    });
+
+    // an temp tensor of shape 1 * 1
+    ambit::Tensor O = ambit::Tensor::build(tensor_type_, "ONE", std::vector<size_t>{1, 1});
+    O.data()[0] = 1.0;
+
+    ambit::Tensor Vtemp;
+    for (size_t m = 0; m < nc; ++m) {
+        size_t nm = core_mos_[m];
+        Vtemp = ints->aptei_aa_block({nm}, core_mos_, {nm}, core_mos_);
+        F.block("cc").data()[m * nc + m] += Vtemp("pqrs") * I("pqrs");
+
+        Vtemp = ints->aptei_ab_block({nm}, core_mos_, {nm}, core_mos_);
+        F.block("cc").data()[m * nc + m] += Vtemp("pqrs") * I("pqrs");
+
+        Vtemp = ints->aptei_ab_block(core_mos_, {nm}, core_mos_, {nm});
+        F.block("CC").data()[m * nc + m] += Vtemp("pqrs") * I("qpsr");
+
+        Vtemp = ints->aptei_bb_block({nm}, core_mos_, {nm}, core_mos_);
+        F.block("CC").data()[m * nc + m] += Vtemp("pqrs") * I("pqrs");
+    }
+
+    Vtemp = ints->aptei_aa_block(core_mos_, actv_mos_, core_mos_, actv_mos_);
+    F.block("cc")("pq") += Vtemp("prqs") * Gamma1_.block("aa")("rs");
+    F.block("aa")("pq") += Vtemp("rpsq") * I("irjs") * O("ij");
+
+    Vtemp = ints->aptei_ab_block(core_mos_, actv_mos_, core_mos_, actv_mos_);
+    F.block("cc")("pq") += Vtemp("prqs") * Gamma1_.block("AA")("rs");
+    F.block("AA")("pq") += Vtemp("rpsq") * I("irjs") * O("ij");
+
+    Vtemp = ints->aptei_ab_block(actv_mos_, core_mos_, actv_mos_, core_mos_);
+    F.block("CC")("pq") += Vtemp("rpsq") * Gamma1_.block("aa")("rs");
+    F.block("aa")("pq") += Vtemp("prqs") * I("irjs") * O("ij");
+
+    Vtemp = ints->aptei_bb_block(core_mos_, actv_mos_, core_mos_, actv_mos_);
+    F.block("CC")("pq") += Vtemp("prqs") * Gamma1_.block("AA")("rs");
+    F.block("AA")("pq") += Vtemp("rpsq") * I("irjs") * O("ij");
+
+    return compute_reference_energy(H, F, V);
+}
+
+double MASTER_DSRG::compute_reference_energy(BlockedTensor H, BlockedTensor F, BlockedTensor V) {
+    /// H: bare OEI; F: Fock; V: bare APTEI.
+    /// E = 0.5 * ( H["ij"] + F["ij"] ) * L1["ji"] + 0.25 * V["xyuv"] * L2["uvxy"]
+
+    double E = Efrzc_ + Enuc_;
+
+    for (const std::string block : {"cc", "CC"}) {
+        for (size_t m = 0, nc = core_mos_.size(); m < nc; ++m) {
+            E += 0.5 * H.block(block).data()[m * nc + m];
+            E += 0.5 * F.block(block).data()[m * nc + m];
+        }
+    }
+
+    E += 0.5 * H["uv"] * Gamma1_["vu"];
+    E += 0.5 * H["UV"] * Gamma1_["VU"];
+    E += 0.5 * F["uv"] * Gamma1_["vu"];
+    E += 0.5 * F["UV"] * Gamma1_["VU"];
+
+    E += 0.25 * V["uvxy"] * Lambda2_["xyuv"];
+    E += 0.25 * V["UVXY"] * Lambda2_["XYUV"];
+    E += V["uVxY"] * Lambda2_["xYuV"];
+
+    return E;
+}
+
+double MASTER_DSRG::compute_reference_energy_df(BlockedTensor H, BlockedTensor F, BlockedTensor B) {
+    /// H: bare OEI; F: Fock; V: bare APTEI; B: DF three-index
+    /// E = 0.5 * ( H["ij"] + F["ij"] ) * L1["ji"] + 0.25 * V["xyuv"] * L2["uvxy"]
+    /// V["pqrs"] = <pq||rs> = (pr|qs) - (ps|qr); (pr|qs) ~= B["Lpr"] * B["Lqs"]
+
+    double E = Efrzc_ + Enuc_;
+
+    for (const std::string block : {"cc", "CC"}) {
+        for (size_t m = 0, nc = core_mos_.size(); m < nc; ++m) {
+            E += 0.5 * H.block(block).data()[m * nc + m];
+            E += 0.5 * F.block(block).data()[m * nc + m];
+        }
+    }
+
+    E += 0.5 * H["uv"] * Gamma1_["vu"];
+    E += 0.5 * H["UV"] * Gamma1_["VU"];
+    E += 0.5 * F["uv"] * Gamma1_["vu"];
+    E += 0.5 * F["UV"] * Gamma1_["VU"];
+
+    E += 0.25 * B["gux"] * B["gvy"] * Lambda2_["xyuv"];
+    E -= 0.25 * B["guy"] * B["gvx"] * Lambda2_["xyuv"];
+    E += 0.25 * B["gUX"] * B["gVY"] * Lambda2_["XYUV"];
+    E -= 0.25 * B["gUY"] * B["gVX"] * Lambda2_["XYUV"];
+    E += B["gux"] * B["gVY"] * Lambda2_["xYuV"];
+
+    return E;
 }
 
 void MASTER_DSRG::init_dm_ints() {
@@ -355,55 +529,55 @@ std::shared_ptr<FCIIntegrals> MASTER_DSRG::compute_Heff() {
         rotate_ints_semi_to_origin("Hamiltonian", Hbar1_, Hbar2_);
     }
 
-//    if (!eri_df_) {
-//        ints_->set_print(0);
-//        ForteTimer t_int;
-//        outfile->Printf("\n    %-40s ... ", "Updating integrals");
+    //    if (!eri_df_) {
+    //        ints_->set_print(0);
+    //        ForteTimer t_int;
+    //        outfile->Printf("\n    %-40s ... ", "Updating integrals");
 
-//        // transfer integrals to ForteIntegrals
-//        ints_->set_scalar(Edsrg - Enuc_ - Efrzc_);
+    //        // transfer integrals to ForteIntegrals
+    //        ints_->set_scalar(Edsrg - Enuc_ - Efrzc_);
 
-//        // TODO: before zero hhhh integrals, is is probably good to save a copy
-//        std::vector<size_t> hole_mos = mo_space_info_->get_corr_abs_mo("GENERALIZED HOLE");
-//        for (const size_t& i : hole_mos) {
-//            for (const size_t& j : hole_mos) {
-//                ints_->set_oei(i, j, 0.0, true);
-//                ints_->set_oei(i, j, 0.0, false);
-//                for (const size_t& k : hole_mos) {
-//                    for (const size_t& l : hole_mos) {
-//                        ints_->set_tei(i, j, k, l, 0.0, true, true);
-//                        ints_->set_tei(i, j, k, l, 0.0, true, false);
-//                        ints_->set_tei(i, j, k, l, 0.0, false, false);
-//                    }
-//                }
-//            }
-//        }
+    //        // TODO: before zero hhhh integrals, is is probably good to save a copy
+    //        std::vector<size_t> hole_mos = mo_space_info_->get_corr_abs_mo("GENERALIZED HOLE");
+    //        for (const size_t& i : hole_mos) {
+    //            for (const size_t& j : hole_mos) {
+    //                ints_->set_oei(i, j, 0.0, true);
+    //                ints_->set_oei(i, j, 0.0, false);
+    //                for (const size_t& k : hole_mos) {
+    //                    for (const size_t& l : hole_mos) {
+    //                        ints_->set_tei(i, j, k, l, 0.0, true, true);
+    //                        ints_->set_tei(i, j, k, l, 0.0, true, false);
+    //                        ints_->set_tei(i, j, k, l, 0.0, false, false);
+    //                    }
+    //                }
+    //            }
+    //        }
 
-//        Hbar1_.citerate([&](const std::vector<size_t>& i, const std::vector<SpinType>& spin,
-//                            const double& value) {
-//            if (spin[0] == AlphaSpin) {
-//                ints_->set_oei(i[0], i[1], value, true);
-//            } else {
-//                ints_->set_oei(i[0], i[1], value, false);
-//            }
-//        });
+    //        Hbar1_.citerate([&](const std::vector<size_t>& i, const std::vector<SpinType>& spin,
+    //                            const double& value) {
+    //            if (spin[0] == AlphaSpin) {
+    //                ints_->set_oei(i[0], i[1], value, true);
+    //            } else {
+    //                ints_->set_oei(i[0], i[1], value, false);
+    //            }
+    //        });
 
-//        Hbar2_.citerate([&](const std::vector<size_t>& i, const std::vector<SpinType>& spin,
-//                            const double& value) {
-//            if ((spin[0] == AlphaSpin) && (spin[1] == AlphaSpin)) {
-//                ints_->set_tei(i[0], i[1], i[2], i[3], value, true, true);
-//            } else if ((spin[0] == AlphaSpin) && (spin[1] == BetaSpin)) {
-//                ints_->set_tei(i[0], i[1], i[2], i[3], value, true, false);
-//            } else if ((spin[0] == BetaSpin) && (spin[1] == BetaSpin)) {
-//                ints_->set_tei(i[0], i[1], i[2], i[3], value, false, false);
-//            }
-//        });
+    //        Hbar2_.citerate([&](const std::vector<size_t>& i, const std::vector<SpinType>& spin,
+    //                            const double& value) {
+    //            if ((spin[0] == AlphaSpin) && (spin[1] == AlphaSpin)) {
+    //                ints_->set_tei(i[0], i[1], i[2], i[3], value, true, true);
+    //            } else if ((spin[0] == AlphaSpin) && (spin[1] == BetaSpin)) {
+    //                ints_->set_tei(i[0], i[1], i[2], i[3], value, true, false);
+    //            } else if ((spin[0] == BetaSpin) && (spin[1] == BetaSpin)) {
+    //                ints_->set_tei(i[0], i[1], i[2], i[3], value, false, false);
+    //            }
+    //        });
 
-//        ints_->update_integrals(false);
+    //        ints_->update_integrals(false);
 
-//        outfile->Printf("Done. Timing %8.3f s", t_int.elapsed());
-//        ints_->set_print(print_);
-//    }
+    //        outfile->Printf("Done. Timing %8.3f s", t_int.elapsed());
+    //        ints_->set_print(print_);
+    //    }
 
     // create FCIIntegral shared_ptr
     std::shared_ptr<FCIIntegrals> fci_ints =

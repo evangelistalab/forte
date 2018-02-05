@@ -109,7 +109,7 @@ class SparseCISolver {
     void set_force_diag(bool value);
 
     /// Set the size of the guess space
-    void set_guess_dimension(size_t value) { dl_guess_ = value; };
+    void set_guess_dimension(size_t value) { dl_guess_ = value; }
 
     /// Set the maximum amount of memory (in number of doubles)
     void set_max_memory(size_t value);

@@ -173,15 +173,21 @@ class FCI_MO : public Wavefunction {
     /// Set if localize orbitals
     void set_localize_actv(bool localize) { localize_actv_ = localize; }
 
-    /// Set target root from DWMS-DSRG-PT2
-    void set_target_dwms(const int& entry, const int& root) {
-        dwms_target_ = std::make_tuple(entry, root);
-    }
-
     /// Set projected roots
     void project_roots(std::vector<std::vector<std::pair<size_t, double>>>& projected) {
         projected_roots_ = projected;
     }
+
+    /// Set initial guess
+    void set_initial_guess(std::vector<std::pair<size_t, double>>& guess) {
+        initial_guess_ = guess;
+    }
+
+    /// Set SA infomation
+    void set_sa_info(const std::vector<std::tuple<int, int, int, std::vector<double>>>& info);
+
+    /// Set state-averaged eigen values and vectors
+    void set_eigens(const std::vector<vector<pair<SharedVector, double>>>& eigens);
 
     /// Return fci_int_ pointer
     std::shared_ptr<FCIIntegrals> fci_ints() { return fci_ints_; }
@@ -198,8 +204,7 @@ class FCI_MO : public Wavefunction {
     /// Return the vector of eigen vectors and eigen values
     std::vector<pair<SharedVector, double>> const eigen() { return eigen_; }
 
-    /// Return the vector of eigen vectors and eigen values (used in
-    /// state-average computation)
+    /// Return the vector of eigen vectors and eigen values (used in state-average computation)
     std::vector<vector<pair<SharedVector, double>>> const eigens() { return eigens_; }
 
     /// Return a vector of dominant determinant for each root
@@ -333,11 +338,12 @@ class FCI_MO : public Wavefunction {
 
     /// State Average Information (tuple of irrep, multi, nstates, weights)
     std::vector<std::tuple<int, int, int, std::vector<double>>> sa_info_;
-    /// Target root for DWMS-DSRG-PT2 [tuple of sym (1st dim of sa_info_), root_number]
-    std::tuple<int, int> dwms_target_;
 
     /// Roots to be projected out in the diagonalization
     std::vector<std::vector<std::pair<size_t, double>>> projected_roots_;
+
+    /// Initial guess vector
+    std::vector<std::pair<size_t, double>> initial_guess_;
 
     /// Eigen Values and Eigen Vectors of Certain Symmetry
     std::vector<pair<SharedVector, double>> eigen_;
@@ -511,9 +517,6 @@ class FCI_MO : public Wavefunction {
     /// Localize active orbitals
     bool localize_actv_;
     void localize_actv_orbs();
-
-    /// Compute new weights for DWMS-DSRG
-    std::vector<std::vector<double>> compute_dwms_weights();
 
     /**
      * @brief Return a vector of corresponding indices before the vector is

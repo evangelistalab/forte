@@ -87,6 +87,9 @@ void DSRG_MRPT2::startup() {
         outfile->Printf("\n\n  Warning: RELAX_REF option \"%s\" is not supported. Change to ONCE.",
                         relax_ref_.c_str());
         relax_ref_ = "ONCE";
+
+        warnings_.push_back(std::make_tuple("Unsupported RELAX_REF", "Change to ONCE",
+                                            "Change options in input.dat"));
     }
 
     // Prepare Hbar
@@ -270,6 +273,10 @@ bool DSRG_MRPT2::check_semicanonical() {
             outfile->Printf("\n    Warning: ignore testing of semi-canonical orbitals.");
             outfile->Printf("\n    Please inspect if the Fock diag. blocks (C, A, V) are "
                             "diagonal or not.");
+
+            warnings_.push_back(std::make_tuple("Semicanonical orbital test",
+                                                "Ignore test results",
+                                                "Post an issue for advice."));
         }
         outfile->Printf("\n");
         semi = true;
@@ -327,7 +334,7 @@ void DSRG_MRPT2::print_options_summary() {
     }
 }
 
-void DSRG_MRPT2::cleanup() { dsrg_time_.print_comm_time(); }
+void DSRG_MRPT2::cleanup() {}
 
 double DSRG_MRPT2::compute_ref() {
     Timer timer;
@@ -380,7 +387,6 @@ double DSRG_MRPT2::compute_energy() {
     T2_ = BTF_->build(tensor_type_, "T2 Amplitudes", spin_cases({"hhpp"}));
     compute_t2();
     compute_t1();
-
 
     // Compute effective integrals
     renormalize_V();
@@ -1492,86 +1498,88 @@ void DSRG_MRPT2::compute_dm1d_pt2(BlockedTensor& M, double& Mbar0, BlockedTensor
                                   BlockedTensor& Mbar2) {
     /// Mbar = M + [M, A] + 0.5 * [[M, A], A]
 
-//    BlockedTensor D1 = BTF_->build(tensor_type_, "D1", spin_cases({"gg"}), true);
-//    for (const auto& block : {"cc", "CC"}) {
-//        D1.block(block).iterate([&](const std::vector<size_t>& i, double& value) {
-//            if (i[0] == i[1]) {
-//                value = 1.0;
-//            }
-//        });
-//    }
-//    D1["uv"] = Gamma1_["uv"];
-//    D1["UV"] = Gamma1_["UV"];
+    //    BlockedTensor D1 = BTF_->build(tensor_type_, "D1", spin_cases({"gg"}), true);
+    //    for (const auto& block : {"cc", "CC"}) {
+    //        D1.block(block).iterate([&](const std::vector<size_t>& i, double& value) {
+    //            if (i[0] == i[1]) {
+    //                value = 1.0;
+    //            }
+    //        });
+    //    }
+    //    D1["uv"] = Gamma1_["uv"];
+    //    D1["UV"] = Gamma1_["UV"];
 
-//    D1["ij"] -= 0.5 * T2_["jnab"] * T2_["inab"];
-//    D1["ij"] -= T2_["jNaB"] * T2_["iNaB"];
-//    D1["IJ"] -= 0.5 * T2_["JNAB"] * T2_["INAB"];
-//    D1["IJ"] -= T2_["nJaB"] * T2_["nIaB"];
+    //    D1["ij"] -= 0.5 * T2_["jnab"] * T2_["inab"];
+    //    D1["ij"] -= T2_["jNaB"] * T2_["iNaB"];
+    //    D1["IJ"] -= 0.5 * T2_["JNAB"] * T2_["INAB"];
+    //    D1["IJ"] -= T2_["nJaB"] * T2_["nIaB"];
 
-//    D1["ab"] += 0.5 * T2_["mnbc"] * T2_["mnac"];
-//    D1["ab"] += T2_["mNbC"] * T2_["mNaC"];
-//    D1["AB"] += 0.5 * T2_["MNBC"] * T2_["MNAC"];
-//    D1["AB"] += T2_["mNcB"] * T2_["mNcA"];
+    //    D1["ab"] += 0.5 * T2_["mnbc"] * T2_["mnac"];
+    //    D1["ab"] += T2_["mNbC"] * T2_["mNaC"];
+    //    D1["AB"] += 0.5 * T2_["MNBC"] * T2_["MNAC"];
+    //    D1["AB"] += T2_["mNcB"] * T2_["mNcA"];
 
-//    // transform D1 with a irrep SharedMatrix
-//    SharedMatrix SOdens(new Matrix("SO density ", this->nmopi(), this->nmopi()));
+    //    // transform D1 with a irrep SharedMatrix
+    //    SharedMatrix SOdens(new Matrix("SO density ", this->nmopi(), this->nmopi()));
 
-//    for (const auto& pair: mo_space_info_->get_relative_mo("FROZEN_DOCC")) {
-//        size_t h = pair.first;
-//        size_t i = pair.second;
-//        SOdens->set(h, i, i, 1.0);
-//    }
+    //    for (const auto& pair: mo_space_info_->get_relative_mo("FROZEN_DOCC")) {
+    //        size_t h = pair.first;
+    //        size_t i = pair.second;
+    //        SOdens->set(h, i, i, 1.0);
+    //    }
 
-//    std::map<size_t, std::pair<size_t, size_t>> momap;
-//    for (const std::string& block: {"RESTRICTED_DOCC", "ACTIVE", "RESTRICTED_UOCC"}) {
-//        size_t size = mo_space_info_->size(block);
-//        for (size_t i = 0; i < size; ++i) {
-//            momap[mo_space_info_->get_corr_abs_mo(block)[i]] = mo_space_info_->get_relative_mo(block)[i];
-//        }
-//    }
+    //    std::map<size_t, std::pair<size_t, size_t>> momap;
+    //    for (const std::string& block: {"RESTRICTED_DOCC", "ACTIVE", "RESTRICTED_UOCC"}) {
+    //        size_t size = mo_space_info_->size(block);
+    //        for (size_t i = 0; i < size; ++i) {
+    //            momap[mo_space_info_->get_corr_abs_mo(block)[i]] =
+    //            mo_space_info_->get_relative_mo(block)[i];
+    //        }
+    //    }
 
-//    D1.citerate(
-//        [&](const std::vector<size_t>& i, const std::vector<SpinType>& spin, const double& value) {
-//            if (spin[0] == AlphaSpin) {
-//                size_t h0 = momap[i[0]].first;
-//                size_t m0 = momap[i[0]].second;
-//                size_t h1 = momap[i[1]].first;
-//                size_t m1 = momap[i[1]].second;
-//                if (h0 == h1) {
-//                    SOdens->set(h0, m0, m1, value);
-//                }
-//            }
-//        });
+    //    D1.citerate(
+    //        [&](const std::vector<size_t>& i, const std::vector<SpinType>& spin, const double&
+    //        value) {
+    //            if (spin[0] == AlphaSpin) {
+    //                size_t h0 = momap[i[0]].first;
+    //                size_t m0 = momap[i[0]].second;
+    //                size_t h1 = momap[i[1]].first;
+    //                size_t m1 = momap[i[1]].second;
+    //                if (h0 == h1) {
+    //                    SOdens->set(h0, m0, m1, value);
+    //                }
+    //            }
+    //        });
 
-//    SOdens->back_transform(this->Ca());
+    //    SOdens->back_transform(this->Ca());
 
-//    SharedMatrix sotoao(this->aotoso()->transpose());
-//    size_t nao = sotoao->coldim(0);
-//    SharedMatrix AOdens(new Matrix("AO density ", nao, nao));
-//    AOdens->remove_symmetry(SOdens, sotoao);
+    //    SharedMatrix sotoao(this->aotoso()->transpose());
+    //    size_t nao = sotoao->coldim(0);
+    //    SharedMatrix AOdens(new Matrix("AO density ", nao, nao));
+    //    AOdens->remove_symmetry(SOdens, sotoao);
 
-//    std::vector<SharedMatrix> aodipole_ints = ints_->AOdipole_ints();
-//    std::vector<double> de(4, 0.0);
-//    for (int i = 0; i < 3; ++i) {
-//        de[i] = 2.0 * AOdens->vector_dot(aodipole_ints[i]); // 2.0 for beta spin
-//        de[3] += de[i] * de[i];
-//    }
-//    de[3] = sqrt(de[3]);
+    //    std::vector<SharedMatrix> aodipole_ints = ints_->AOdipole_ints();
+    //    std::vector<double> de(4, 0.0);
+    //    for (int i = 0; i < 3; ++i) {
+    //        de[i] = 2.0 * AOdens->vector_dot(aodipole_ints[i]); // 2.0 for beta spin
+    //        de[3] += de[i] * de[i];
+    //    }
+    //    de[3] = sqrt(de[3]);
 
-//    outfile->Printf("\n  Permanent dipole moments (a.u.):  X: %7.5f  Y: "
-//                    "%7.5f  Z: %7.5f  Total: %7.5f", de[0], de[1], de[2], de[3]);
+    //    outfile->Printf("\n  Permanent dipole moments (a.u.):  X: %7.5f  Y: "
+    //                    "%7.5f  Z: %7.5f  Total: %7.5f", de[0], de[1], de[2], de[3]);
 
-//    double correct = 0.0;
-//    correct -= 0.5 * M["ji"] * T2_["jnab"] * T2_["inab"];
-//    correct -= M["ji"] * T2_["jNaB"] * T2_["iNaB"];
-//    correct -= M["JI"] * T2_["nJaB"] * T2_["nIaB"];
-//    correct -= 0.5 * M["JI"] * T2_["JNAB"] * T2_["INAB"];
+    //    double correct = 0.0;
+    //    correct -= 0.5 * M["ji"] * T2_["jnab"] * T2_["inab"];
+    //    correct -= M["ji"] * T2_["jNaB"] * T2_["iNaB"];
+    //    correct -= M["JI"] * T2_["nJaB"] * T2_["nIaB"];
+    //    correct -= 0.5 * M["JI"] * T2_["JNAB"] * T2_["INAB"];
 
-//    correct += 0.5 * M["ab"] * T2_["mnbc"] * T2_["mnac"];
-//    correct += M["ab"] * T2_["mNbC"] * T2_["mNaC"];
-//    correct += M["AB"] * T2_["mNcB"] * T2_["mNcA"];
-//    correct += 0.5 * M["AB"] * T2_["MNBC"] * T2_["MNAC"];
-//    outfile->Printf("\n  Correct value: %.15f", correct);
+    //    correct += 0.5 * M["ab"] * T2_["mnbc"] * T2_["mnac"];
+    //    correct += M["ab"] * T2_["mNbC"] * T2_["mNaC"];
+    //    correct += M["AB"] * T2_["mNcB"] * T2_["mNcA"];
+    //    correct += 0.5 * M["AB"] * T2_["MNBC"] * T2_["MNAC"];
+    //    outfile->Printf("\n  Correct value: %.15f", correct);
 
     // compute [M, A] fully contracted terms
     // 2.0 accounts for [M, T]^dag
@@ -1758,12 +1766,12 @@ double DSRG_MRPT2::compute_energy_relaxed() {
                 dm_relax = fci_mo.compute_relaxed_dm(Mbar0_, Mbar1_, Mbar2_);
             }
         }
-    } else if ( options_.get_str("CAS_TYPE") == "ACI" ){
+    } else if (options_.get_str("CAS_TYPE") == "ACI") {
 
-            AdaptiveCI aci(reference_wavefunction_, options_, ints_, mo_space_info_);
-            aci.set_fci_ints(fci_ints);
-           
-            Erelax = aci.compute_energy();
+        AdaptiveCI aci(reference_wavefunction_, options_, ints_, mo_space_info_);
+        aci.set_fci_ints(fci_ints);
+
+        Erelax = aci.compute_energy();
     } else {
         // it is simpler here to call FCI instead of FCISolver
         FCI fci(reference_wavefunction_, options_, ints_, mo_space_info_, fci_ints);
@@ -1810,7 +1818,7 @@ double DSRG_MRPT2::compute_energy_relaxed() {
     return Erelax;
 }
 
-//ambit::BlockedTensor DSRG_MRPT2::compute_OE_density(BlockedTensor& T1, BlockedTensor& T2,
+// ambit::BlockedTensor DSRG_MRPT2::compute_OE_density(BlockedTensor& T1, BlockedTensor& T2,
 //                                                    BlockedTensor& D1, BlockedTensor& D2,
 //                                                    BlockedTensor& D3, const bool& transition) {
 //    BlockedTensor O = BTF_->build(tensor_type_, "OE D1", spin_cases({"gg"}));
@@ -2162,7 +2170,9 @@ void DSRG_MRPT2::transfer_integrals() {
 
     // test if de-normal-ordering is correct
     print_h2("Test De-Normal-Ordered Hamiltonian");
-    double Etest = scalar_include_fc + molecule_->nuclear_repulsion_energy(reference_wavefunction_->get_dipole_field_strength());
+    double Etest =
+        scalar_include_fc +
+        molecule_->nuclear_repulsion_energy(reference_wavefunction_->get_dipole_field_strength());
 
     double Etest1 = 0.0;
     if (!form_hbar3) {

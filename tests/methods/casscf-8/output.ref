@@ -1,0 +1,3038 @@
+
+    -----------------------------------------------------------------------
+          Psi4: An Open-Source Ab Initio Electronic Structure Package
+                               Psi4 1.2a1.dev704 
+
+                         Git: Rev {master} a7fc050 
+
+
+    R. M. Parrish, L. A. Burns, D. G. A. Smith, A. C. Simmonett,
+    A. E. DePrince III, E. G. Hohenstein, U. Bozkaya, A. Yu. Sokolov,
+    R. Di Remigio, R. M. Richard, J. F. Gonthier, A. M. James,
+    H. R. McAlexander, A. Kumar, M. Saitow, X. Wang, B. P. Pritchard,
+    P. Verma, H. F. Schaefer III, K. Patkowski, R. A. King, E. F. Valeev,
+    F. A. Evangelista, J. M. Turney, T. D. Crawford, and C. D. Sherrill,
+    J. Chem. Theory Comput. 13(7) pp 3185--3197 (2017).
+    (doi: 10.1021/acs.jctc.7b00174)
+
+    -----------------------------------------------------------------------
+
+
+    Psi4 started on: Friday, 05 January 2018 11:56PM
+
+    Process ID:  56983
+    PSIDATADIR: /Users/york/src/psi4new/psi4/share/psi4
+    Memory:     500.0 MiB
+    Threads:    1
+    
+  ==> Input File <==
+
+--------------------------------------------------------------------------
+#! Generated using commit GITCOMMIT
+
+import forte
+
+refcasscf    = -109.090719613072
+refpt2       = -109.245583534390491
+refpt2_relax = -109.246090954577227
+
+molecule N2{
+  0 1
+  N
+  N  1 R
+
+  R = 1.120
+}
+
+set {
+  basis                  cc-pvdz
+  reference              rhf
+  scf_type               direct
+  maxiter                300
+  e_convergence          10
+  d_convergence          8
+  docc                   [3,0,0,0,0,2,1,1]
+  restricted_docc        [2,0,0,0,0,2,0,0]
+  active                 [1,0,1,1,0,1,1,1]
+  mcscf_maxiter          100
+  mcscf_r_convergence    8
+  mcscf_e_convergence    10
+  mcscf_diis_start       6
+}
+
+Escf, wfnSCF = energy('scf', return_wfn=True)
+Ecasscf, wfn = energy('casscf', ref_wfn=wfnSCF, return_wfn=True)
+compare_values(refcasscf,get_variable("CURRENT ENERGY"),10,"PSI4 CASSCF energy")
+
+set forte {
+  job_type             casscf
+  frozen_docc          [0,0,0,0,0,0,0,0]
+  frozen_uocc          [0,0,0,0,0,0,0,0]
+  restricted_docc      [2,0,0,0,0,2,0,0]
+  active               [1,0,1,1,0,1,1,1]
+  cas_type             cas
+  casscf_max_rotation  0.2
+  casscf_g_convergence 1.0e-8
+  casscf_e_convergence 1.0e-10
+  casscf_diis_start    5
+  casscf_diis_freq     4
+}
+Ecasscf, wfn = energy('forte', ref_wfn=wfnSCF, return_wfn=True)
+compare_values(refcasscf,get_variable("CURRENT ENERGY"),10,"FORTE CASSCF energy")
+
+set forte {
+  job_type           dsrg-mrpt2
+  frozen_docc        [1,0,0,0,0,1,0,0]
+  frozen_uocc        [0,0,0,0,0,0,0,0]
+  restricted_docc    [1,0,0,0,0,1,0,0]
+  active             [1,0,1,1,0,1,1,1]
+  root_sym           0
+  nroot              1
+  dsrg_s             0.5
+  relax_ref          once
+  cas_type           cas
+}
+
+Eforte, wfn = energy('forte', ref_wfn=wfn, return_wfn=True)
+compare_values(refpt2_relax,get_variable("CURRENT ENERGY"),8,"DSRG-MRPT2 relaxed energy")
+--------------------------------------------------------------------------
+
+*** tstart() called on yorks-mac.wireless.emory.edu
+*** at Fri Jan  5 23:56:46 2018
+
+   => Loading Basis Set <=
+
+    Name: CC-PVDZ
+    Role: ORBITAL
+    Keyword: BASIS
+    atoms 1-2 entry N          line   168 file /Users/york/src/psi4new/psi4/share/psi4/basis/cc-pvdz.gbs 
+
+
+         ---------------------------------------------------------
+                                   SCF
+            by Justin Turney, Rob Parrish, Andy Simmonett
+                             and Daniel Smith
+                              RHF Reference
+                        1 Threads,    500 MiB Core
+         ---------------------------------------------------------
+
+  ==> Geometry <==
+
+    Molecular point group: d2h
+    Full point group: D_inf_h
+
+    Geometry (in Angstrom), charge = 0, multiplicity = 1:
+
+       Center              X                  Y                   Z               Mass       
+    ------------   -----------------  -----------------  -----------------  -----------------
+           N          0.000000000000     0.000000000000    -0.560000000000    14.003074004780
+           N          0.000000000000     0.000000000000     0.560000000000    14.003074004780
+
+  Running in d2h symmetry.
+
+  Rotational constants: A = ************  B =      1.91941  C =      1.91941 [cm^-1]
+  Rotational constants: A = ************  B =  57542.37227  C =  57542.37227 [MHz]
+  Nuclear repulsion =   23.151502875812497
+
+  Charge       = 0
+  Multiplicity = 1
+  Electrons    = 14
+  Nalpha       = 7
+  Nbeta        = 7
+
+  ==> Algorithm <==
+
+  SCF Algorithm Type is DIRECT.
+  DIIS enabled.
+  MOM disabled.
+  Fractional occupation disabled.
+  Guess Type is SAD.
+  Energy threshold   = 1.00e-10
+  Density threshold  = 1.00e-08
+  Integral threshold = 0.00e+00
+
+  ==> Primary Basis <==
+
+  Basis Set: CC-PVDZ
+    Blend: CC-PVDZ
+    Number of shells: 12
+    Number of basis function: 28
+    Number of Cartesian functions: 30
+    Spherical Harmonics?: true
+    Max angular momentum: 2
+
+   => Loading Basis Set <=
+
+    Name: (CC-PVDZ AUX)
+    Role: JKFIT
+    Keyword: DF_BASIS_SCF
+    atoms 1-2 entry N          line   171 file /Users/york/src/psi4new/psi4/share/psi4/basis/cc-pvdz-jkfit.gbs 
+
+  ==> Pre-Iterations <==
+
+   -------------------------------------------------------
+    Irrep   Nso     Nmo     Nalpha   Nbeta   Ndocc  Nsocc
+   -------------------------------------------------------
+     Ag         7       7       3       3       3       0
+     B1g        1       1       0       0       0       0
+     B2g        3       3       0       0       0       0
+     B3g        3       3       0       0       0       0
+     Au         1       1       0       0       0       0
+     B1u        7       7       2       2       2       0
+     B2u        3       3       1       1       1       0
+     B3u        3       3       1       1       1       0
+   -------------------------------------------------------
+    Total      28      28       7       7       7       0
+   -------------------------------------------------------
+
+  Starting with a DF guess...
+
+  ==> Integral Setup <==
+
+  ==> DFJK: Density-Fitted J/K Matrices <==
+
+    J tasked:                  Yes
+    K tasked:                  Yes
+    wK tasked:                  No
+    OpenMP threads:              1
+    Integrals threads:           1
+    Memory (MB):               375
+    Algorithm:                Core
+    Integral Cache:           NONE
+    Schwarz Cutoff:          1E-12
+    Fitting Condition:       1E-12
+
+   => Auxiliary Basis Set <=
+
+  Basis Set: (CC-PVDZ AUX)
+    Blend: CC-PVDZ-JKFIT
+    Number of shells: 48
+    Number of basis function: 140
+    Number of Cartesian functions: 162
+    Spherical Harmonics?: true
+    Max angular momentum: 3
+
+  Minimum eigenvalue in the overlap matrix is 6.6806606693E-03.
+  Using Symmetric Orthogonalization.
+
+  SCF Guess: Superposition of Atomic Densities via on-the-fly atomic UHF.
+
+  ==> Iterations <==
+
+                           Total Energy        Delta E     RMS |[F,P]|
+
+   @DF-RHF iter   0:  -108.99535675845959   -1.08995e+02   1.90476e-01 
+   @DF-RHF iter   1:  -108.93514513206041    6.02116e-02   1.43835e-02 
+   @DF-RHF iter   2:  -108.94839868345773   -1.32536e-02   3.32875e-03 DIIS
+   @DF-RHF iter   3:  -108.94921251451061   -8.13831e-04   8.13920e-04 DIIS
+   @DF-RHF iter   4:  -108.94927647218968   -6.39577e-05   5.66988e-05 DIIS
+   @DF-RHF iter   5:  -108.94927672487276   -2.52683e-07   7.23071e-06 DIIS
+   @DF-RHF iter   6:  -108.94927673024235   -5.36959e-09   1.07741e-06 DIIS
+   @DF-RHF iter   7:  -108.94927673039035   -1.48006e-10   1.04494e-07 DIIS
+   @DF-RHF iter   8:  -108.94927673039136   -1.00897e-12   5.53860e-09 DIIS
+
+  DF guess converged.
+
+  ==> Integral Setup <==
+
+  ==> DirectJK: Integral-Direct J/K Matrices <==
+
+    J tasked:                  Yes
+    K tasked:                  Yes
+    wK tasked:                  No
+    Integrals threads:           1
+    Schwarz Cutoff:          1E-12
+
+   @RHF iter   9:  -108.94959169191661   -3.14962e-04   6.59028e-05 DIIS
+   @RHF iter  10:  -108.94959194813060   -2.56214e-07   1.22358e-05 DIIS
+   @RHF iter  11:  -108.94959195699455   -8.86395e-09   2.69688e-06 DIIS
+   @RHF iter  12:  -108.94959195761444   -6.19892e-10   4.26444e-07 DIIS
+   @RHF iter  13:  -108.94959195763110   -1.66551e-11   6.37445e-08 DIIS
+   @RHF iter  14:  -108.94959195763150   -3.97904e-13   5.26210e-09 DIIS
+
+  ==> Post-Iterations <==
+
+    Orbital Energies (a.u.)
+    -----------------------
+
+    Doubly Occupied:                                                      
+
+       1Ag   -15.693462     1B1u  -15.690468     2Ag    -1.454830  
+       2B1u   -0.781291     3Ag    -0.624240     1B2u   -0.598860  
+       1B3u   -0.598860  
+
+    Virtual:                                                              
+
+       1B3g    0.163970     1B2g    0.163970     3B1u    0.586976  
+       4Ag     0.828451     2B3u    0.878361     2B2u    0.878361  
+       5Ag     0.989711     2B2g    1.046086     2B3g    1.046086  
+       4B1u    1.110749     5B1u    1.621145     1B1g    1.764773  
+       6Ag     1.764773     3B3u    1.859907     3B2u    1.859907  
+       1Au     2.283869     6B1u    2.283869     7Ag     2.847752  
+       3B3g    2.971337     3B2g    2.971337     7B1u    3.237511  
+
+    Final Occupation by Irrep:
+             Ag   B1g   B2g   B3g    Au   B1u   B2u   B3u 
+    DOCC [     3,    0,    0,    0,    0,    2,    1,    1 ]
+
+  Energy converged.
+
+  @RHF Final Energy:  -108.94959195763150
+
+   => Energetics <=
+
+    Nuclear Repulsion Energy =             23.1515028758124970
+    One-Electron Energy =                -193.3181686126825412
+    Two-Electron Energy =                  61.2170737792385395
+    Total Energy =                       -108.9495919576314975
+
+
+
+Properties will be evaluated at   0.000000,   0.000000,   0.000000 Bohr
+
+Properties computed using the SCF density matrix
+
+  Nuclear Dipole Moment: (a.u.)
+     X:     0.0000      Y:     0.0000      Z:     0.0000
+
+  Electronic Dipole Moment: (a.u.)
+     X:     0.0000      Y:     0.0000      Z:     0.0000
+
+  Dipole Moment: (a.u.)
+     X:     0.0000      Y:     0.0000      Z:     0.0000     Total:     0.0000
+
+  Dipole Moment: (Debye)
+     X:     0.0000      Y:     0.0000      Z:     0.0000     Total:     0.0000
+
+
+*** tstop() called on yorks-mac.wireless.emory.edu at Fri Jan  5 23:56:47 2018
+Module time:
+	user time   =       1.29 seconds =       0.02 minutes
+	system time =       0.04 seconds =       0.00 minutes
+	total time  =          1 seconds =       0.02 minutes
+Total time:
+	user time   =       1.29 seconds =       0.02 minutes
+	system time =       0.04 seconds =       0.00 minutes
+	total time  =          1 seconds =       0.02 minutes
+ MINTS: Wrapper to libmints.
+   by Justin Turney
+
+   Calculation information:
+      Number of threads:                 1
+      Number of atoms:                   2
+      Number of AO shells:              12
+      Number of SO shells:               6
+      Number of primitives:             44
+      Number of atomic orbitals:        30
+      Number of basis functions:        28
+
+      Number of irreps:                  8
+      Integral cutoff                 0.00e+00
+      Number of functions per irrep: [   7    1    3    3    1    7    3    3 ]
+
+ OEINTS: Overlap, kinetic, potential, dipole, and quadrupole integrals
+         stored in file 35.
+
+      Computing two-electron integrals...done
+      Computed 10669 non-zero two-electron integrals.
+        Stored in file 33.
+
+
+         ---------------------------------------------------------
+                Multi-Configurational Self-Consistent Field
+                            (a 'D E T C I' module)
+
+                 Daniel G. A. Smith, C. David Sherrill, and
+                              Matt L. Leininger
+         ---------------------------------------------------------
+
+
+   ==> Parameters <==
+
+    EX LEVEL       =        6      H0 BLOCKSIZE  =     1000
+    VAL EX LEVEL   =        0      H0 GUESS SIZE =     1000
+    H0COUPLINGSIZE =        0      H0 COUPLING   =       NO
+    MAXITER        =       12      NUM PRINT     =       20
+    NUM ROOTS      =        1      ICORE         =        1
+    PRINT LVL      =        1      FCI           =      YES
+    R CONV         = 1.00e-07      MIXED         =      YES
+    E CONV         = 1.00e-10      MIXED4        =      YES
+    R4S            =       NO      REPL OTF      =       NO
+    DIAG METHOD    =      SEM      FOLLOW ROOT   =        0
+    PRECONDITIONER = DAVIDSON      UPDATE        = DAVIDSON
+    S              =   0.0000      Ms0           =      YES
+    GUESS VECTOR   =  H0BLOCK      OPENTYPE      =     NONE
+    COLLAPSE SIZE  =        1      HD AVG        = EVANGELISTI
+    MAX NUM VECS   =       13      REF SYM       =     AUTO
+    IOPEN        =       NO
+
+    EX ALLOW       =  1  1  1  1  1  1 
+    STATE AVERAGE  =  0(1.00) 
+
+   ==> CI Orbital and Space information <==
+
+   ------------------------------------------------------------------------------
+               Space    Total    Ag   B1g   B2g   B3g    Au   B1u   B2u   B3u
+   ------------------------------------------------------------------------------
+                 Nso       28     7     1     3     3     1     7     3     3
+                 Nmo       28     7     1     3     3     1     7     3     3
+               Ndocc        7     3     0     0     0     0     2     1     1
+               Nsocc        0     0     0     0     0     0     0     0     0
+   ------------------------------------------------------------------------------
+                                    MCSCF Spaces
+   ------------------------------------------------------------------------------
+         Frozen DOCC        0     0     0     0     0     0     0     0     0
+     Restricted DOCC        4     2     0     0     0     0     2     0     0
+              Active        6     1     0     1     1     0     1     1     1
+     Restricted UOCC       18     4     1     2     2     1     4     2     2
+         Frozen UOCC        0     0     0     0     0     0     0     0     0
+   ------------------------------------------------------------------------------
+
+   ==> Setting up CI strings <==
+
+    There are 20 alpha and 20 beta strings
+    The CI space requires 56 (5.60E+01) determinants and 8 blocks
+
+   ==> Setting up MCSCF integrals <==
+
+  ==> DirectJK: Integral-Direct J/K Matrices <==
+
+    J tasked:                  Yes
+    K tasked:                  Yes
+    wK tasked:                  No
+    Integrals threads:           1
+    Schwarz Cutoff:          1E-12
+
+
+   ==> Starting MCSCF iterations <==
+
+        Iter         Total Energy       Delta E   Orb RMS    CI RMS  NCI NORB
+   @MCSCF  1:   -109.021728886347   -1.0902e+02  2.26e-02  3.30e-13    1    1  Initial CI
+      Warning! Maxstep = 1.40, scaling to 0.50
+   @MCSCF  2:   -109.043406503719   -2.1678e-02  2.08e-02  1.17e-05    6    1  TS
+      Warning! Maxstep = 0.61, scaling to 0.50
+   @MCSCF  3:   -109.072862815546   -2.9456e-02  1.53e-02  6.52e-06    7    1  TS
+   @MCSCF  4:   -109.085216218207   -1.2353e-02  6.84e-03  5.60e-06    7    1  TS
+   @MCSCF  5:   -109.088712956507   -3.4967e-03  4.13e-03  4.41e-06    6    1  TS
+   @MCSCF  6:   -109.089967055423   -1.2541e-03  3.19e-03  2.21e-06    6    1  TS
+   @MCSCF  7:   -109.090441534075   -4.7448e-04  2.24e-03  2.32e-06    6    1  TS, DIIS
+   @MCSCF  8:   -109.090618333527   -1.7680e-04  1.49e-03  1.67e-06    6    1  TS, DIIS
+   @MCSCF  9:   -109.090661070557   -4.2737e-05  9.06e-04  9.24e-07    7    1  TS, DIIS
+   @MCSCF 10:   -109.090702404771   -4.1334e-05  5.02e-04  1.89e-07    7    1  TS, DIIS
+   @MCSCF 11:   -109.090718009296   -1.5605e-05  1.54e-04  1.43e-07    7    1  TS, DIIS
+   @MCSCF 12:   -109.090719602497   -1.5932e-06  1.23e-05  5.79e-08    7    1  TS, DIIS
+   @MCSCF 13:   -109.090719611235   -8.7374e-09  5.07e-06  2.05e-09    7    1  TS, DIIS
+   @MCSCF 14:   -109.090719613036   -1.8015e-09  7.54e-07  1.40e-09    7    1  TS, DIIS
+   @MCSCF 15:   -109.090719613072   -3.5470e-11  4.07e-08  2.26e-10    7    1  TS, DIIS
+   @MCSCF 16:   -109.090719613072   -1.1369e-13  5.29e-09  1.10e-11    7    1  TS, DIIS
+
+          @MCSCF has converged!
+
+   @MCSCF Final Energy: -109.090719613071769
+
+   Computing CI Semicanonical Orbitals
+
+   ==> Energetics <==
+
+    SCF energy =            0.000000000000000
+    Total MCSCF energy = -109.090719613071769
+
+   ==> MCSCF root 0 information <==
+
+    MCSCF Root 0 energy =  -109.090719613071769
+
+   Active Space Natural occupation numbers:
+
+        Ag   1.980741       B2u   1.937634       B3u   1.937634
+       B2g   0.062272       B3g   0.062272       B1u   0.019445
+
+   The 20 most important determinants:
+
+    *   1    0.964794  (    5,    5)  3AgX 1B2uX 1B3uX 
+    *   2   -0.125899  (   11,   11)  3AgX 1B2gX 1B2uX 
+    *   3   -0.125899  (   12,   12)  3AgX 1B3gX 1B3uX 
+    *   4    0.079185  (   11,   12)  3AgX 1B2gA 1B3gB 1B2uA 1B3uB 
+    *   5    0.079185  (   12,   11)  3AgX 1B2gB 1B3gA 1B2uB 1B3uA 
+    *   6    0.049436  (    2,    5)  3AgX 1B2gA 1B3gA 1B2uB 1B3uB 
+    *   7    0.049436  (    5,    2)  3AgX 1B2gB 1B3gB 1B2uA 1B3uA 
+    *   8   -0.048612  (   13,   13)  3B1uX 1B2uX 1B3uX 
+    *   9    0.044354  (   12,   13)  3AgA 1B3gA 3B1uB 1B2uB 1B3uX 
+    *  10    0.044354  (   13,   12)  3AgB 1B3gB 3B1uA 1B2uA 1B3uX 
+    *  11   -0.044354  (   11,   13)  3AgA 1B2gA 3B1uB 1B2uX 1B3uB 
+    *  12   -0.044354  (   13,   11)  3AgB 1B2gB 3B1uA 1B2uX 1B3uA 
+    *  13    0.034165  (    2,    2)  3AgX 1B2gX 1B3gX 
+    *  14    0.029749  (   14,   15)  3AgX 1B2gB 1B3gA 1B2uA 1B3uB 
+    *  15    0.029749  (   15,   14)  3AgX 1B2gA 1B3gB 1B2uB 1B3uA 
+    *  16   -0.028687  (    4,    5)  3AgB 1B3gA 3B1uA 1B2uB 1B3uX 
+    *  17   -0.028687  (    5,    4)  3AgA 1B3gB 3B1uB 1B2uA 1B3uX 
+    *  18    0.028687  (    3,    5)  3AgB 1B2gA 3B1uA 1B2uX 1B3uB 
+    *  19    0.028687  (    5,    3)  3AgA 1B2gB 3B1uB 1B2uX 1B3uA 
+    *  20   -0.016965  (   14,   14)  3AgX 1B3gX 1B2uX 
+
+
+
+Properties will be evaluated at   0.000000,   0.000000,   0.000000 Bohr
+
+Properties computed using the CASSCF density matrix
+
+  Nuclear Dipole Moment: (a.u.)
+     X:     0.0000      Y:     0.0000      Z:     0.0000
+
+  Electronic Dipole Moment: (a.u.)
+     X:     0.0000      Y:     0.0000      Z:     0.0000
+
+  Dipole Moment: (a.u.)
+     X:     0.0000      Y:     0.0000      Z:     0.0000     Total:     0.0000
+
+  Dipole Moment: (Debye)
+     X:     0.0000      Y:     0.0000      Z:     0.0000     Total:     0.0000
+
+	PSI4 CASSCF energy................................................PASSED
+   => Loading Basis Set <=
+
+    Name: STO-3G
+    Role: ORBITAL
+    Keyword: MINAO_BASIS
+    atoms 1-2 entry N          line    71 file /Users/york/src/psi4new/psi4/share/psi4/basis/sto-3g.gbs 
+
+
+Reading options from the FORTE block
+Calling plugin forte.so.
+
+
+
+  Forte
+  ----------------------------------------------------------------------------
+  A suite of quantum chemistry methods for strongly correlated electrons
+
+    git branch: dwms - git commit: 7f6d1b1d
+
+  Developed by:
+    Francesco A. Evangelista, Chenyang Li, Kevin P. Hannon,
+    Jeffrey B. Schriber, Tianyuan Zhang, Chenxi Cai
+  ----------------------------------------------------------------------------
+
+  Size of Determinant class: 32
+
+  ==> MO Space Information <==
+
+  Read options for space FROZEN_DOCC
+  Read options for space RESTRICTED_DOCC
+  Read options for space ACTIVE
+  Read options for space FROZEN_UOCC
+  -------------------------------------------------------------------------
+                       Ag   B1g   B2g   B3g    Au   B1u   B2u   B3u   Sum
+  -------------------------------------------------------------------------
+    FROZEN_DOCC         0     0     0     0     0     0     0     0     0
+    RESTRICTED_DOCC     2     0     0     0     0     2     0     0     4
+    ACTIVE              1     0     1     1     0     1     1     1     6
+    RESTRICTED_UOCC     4     1     2     2     1     4     2     2    18
+    FROZEN_UOCC         0     0     0     0     0     0     0     0     0
+    Total               7     1     3     3     1     7     3     3    28
+  -------------------------------------------------------------------------
+
+  ==> Integral Transformation <==
+
+  Number of molecular orbitals:               28
+  Number of correlated molecular orbitals:    28
+  Number of frozen occupied orbitals:          0
+  Number of frozen unoccupied orbitals:        0
+
+    Molecular point group: d2h
+    Full point group: D_inf_h
+
+    Geometry (in Angstrom), charge = 0, multiplicity = 1:
+
+       Center              X                  Y                   Z               Mass       
+    ------------   -----------------  -----------------  -----------------  -----------------
+           N          0.000000000000     0.000000000000    -0.560000000000    14.003074004780
+           N          0.000000000000     0.000000000000     0.560000000000    14.003074004780
+
+  -AO BASIS SET INFORMATION:
+    Name                   = CC-PVDZ
+    Blend                  = CC-PVDZ
+    Total number of shells = 12
+    Number of primitives   = 44
+    Number of AO           = 30
+    Number of SO           = 28
+    Maximum AM             = 2
+    Spherical Harmonics    = TRUE
+
+  -Contraction Scheme:
+    Atom   Type   All Primitives // Shells:
+   ------ ------ --------------------------
+       1     N     17s 4p 1d // 3s 2p 1d 
+       2     N     17s 4p 1d // 3s 2p 1d 
+
+  ==> AO Basis Functions <==
+
+    [ CC-PVDZ ]
+    spherical
+    ****
+    N   1
+    S   8 1.00
+                      9046.00000000           0.00070000
+                      1357.00000000           0.00538900
+                       309.30000000           0.02740600
+                        87.73000000           0.10320700
+                        28.56000000           0.27872300
+                        10.21000000           0.44854000
+                         3.83800000           0.27823800
+                         0.74660000           0.01544000
+    S   8 1.00
+                      9046.00000000          -0.00015300
+                      1357.00000000          -0.00120800
+                       309.30000000          -0.00599200
+                        87.73000000          -0.02454400
+                        28.56000000          -0.06745900
+                        10.21000000          -0.15807800
+                         3.83800000          -0.12183100
+                         0.74660000           0.54900300
+    S   1 1.00
+                         0.22480000           1.00000000
+    P   3 1.00
+                        13.55000000           0.03991900
+                         2.91700000           0.21716900
+                         0.79730000           0.51031900
+    P   1 1.00
+                         0.21850000           1.00000000
+    D   1 1.00
+                         0.81700000           1.00000000
+    ****
+
+
+  Overall Conventional Integrals timings
+
+	Presorting SO-basis two-electron integrals.
+	Sorting File: SO Ints (nn|nn) nbuckets = 1
+	Transforming the one-electron integrals and constructing Fock matrices
+	Starting first half-transformation.
+	Sorting half-transformed integrals.
+	First half integral transformation complete.
+	Starting second half-transformation.
+	Two-electron integral transformation complete.
+
+  Integral transformation done. 0.03477300 s
+  Reading the two-electron integrals from disk
+  Size of two-electron integrals:   0.013739 GB
+  Conventional integrals take 0.20200200 s
+
+                -----------------------------------------------
+                  Complete Active Space Self Consistent Field
+                                 Kevin Hannon
+                -----------------------------------------------
+
+     JK takes 0.03979 s to initialize while using DIRECT
+
+  ==> CASSCF Iteration <==
+
+ iter    ||g||           Delta_E            E_CASSCF       CONV_TYPE
+ CSO2SO takes   0.0000 s.
+
+ Transform Integrals takes 0.21531600 s.
+
+  Performing a CAS with CAS
+
+              ---------------------------------------------------
+                Complete Active Space Configuration Interaction
+                                  Chenyang Li
+              ---------------------------------------------------
+
+
+  ==> Input Summary <==
+
+    No. a electrons in active      =     3
+    No. b electrons in active      =     3
+    multiplicity                   =     1
+    spin ms (2 * Sz)               =     0
+
+  ==> Orbital Spaces <==
+
+    TOTAL MO                      [    7     1     3     3     1     7     3     3 ]
+    FROZEN CORE                   [    0     0     0     0     0     0     0     0 ]
+    FROZEN VIRTUAL                [    0     0     0     0     0     0     0     0 ]
+    CORRELATED MO                 [    7     1     3     3     1     7     3     3 ]
+    CORE                          [    2     0     0     0     0     2     0     0 ]
+    ACTIVE                        [    1     0     1     1     0     1     1     1 ]
+    VIRTUAL                       [    4     1     2     2     1     4     2     2 ]
+  Forming alpha and beta strings      ...  Done. Timing        0.000092 s
+  Forming determinants                ...  Done. Timing        0.000042 s
+
+  ==> Determinants Summary <==
+
+    number of alpha active electrons    =     3
+    number of beta active electrons     =     3
+    root symmetry (zero based)          =     0
+    number of determinants              =    56
+
+  Diagonalizing Hamiltonian           ...
+  Found 32 roots with 2S+1 = 1 *
+  Found 18 roots with 2S+1 = 3
+  Found 6 roots with 2S+1 = 5  Done. Timing        0.029474 s
+
+  * * * * * * * * * * * * * * * * *
+  *  CI Vectors & Configurations  *
+  * * * * * * * * * * * * * * * * *
+
+  ==> Root No. 0 <==
+
+    2 0 0 0 2 2          0.9706654405
+    2 2 0 0 2 0         -0.1243885996
+    2 0 2 0 0 2         -0.1243885996
+    2 b a 0 b a          0.0820433328
+    2 a b 0 a b          0.0820433328
+    2 a a 0 b b          0.0557769769
+    2 b b 0 a a          0.0557769769
+
+    Total Energy:   -109.021728886346494
+
+
+
+  ==> Permanent Dipole Moments (Ag) <==
+
+  Only print nonzero (> 1.0e-5) elements.
+
+  Computing 1-, 2- and 3-cumulants ... Done. Timing        0.100603 s
+
+
+ CAS took 0.267828 seconds.
+
+ FormFockIntermediates took 0.13498000 s.
+
+ FormOrbitalGradient took 0.00062700 s.
+
+ FormDiagHessian took 0.00005700 s.
+
+ Update function takes 0.13573700 s
+    0   0.009453211079   -109.021728886346   -109.021728886346    0.620631 s      
+ CSO2SO takes   0.0000 s.
+
+ Transform Integrals takes 0.22137300 s.
+
+  Performing a CAS with CAS
+
+              ---------------------------------------------------
+                Complete Active Space Configuration Interaction
+                                  Chenyang Li
+              ---------------------------------------------------
+
+
+  ==> Input Summary <==
+
+    No. a electrons in active      =     3
+    No. b electrons in active      =     3
+    multiplicity                   =     1
+    spin ms (2 * Sz)               =     0
+
+  ==> Orbital Spaces <==
+
+    TOTAL MO                      [    7     1     3     3     1     7     3     3 ]
+    FROZEN CORE                   [    0     0     0     0     0     0     0     0 ]
+    FROZEN VIRTUAL                [    0     0     0     0     0     0     0     0 ]
+    CORRELATED MO                 [    7     1     3     3     1     7     3     3 ]
+    CORE                          [    2     0     0     0     0     2     0     0 ]
+    ACTIVE                        [    1     0     1     1     0     1     1     1 ]
+    VIRTUAL                       [    4     1     2     2     1     4     2     2 ]
+  Forming alpha and beta strings      ...  Done. Timing        0.000124 s
+  Forming determinants                ...  Done. Timing        0.000062 s
+
+  ==> Determinants Summary <==
+
+    number of alpha active electrons    =     3
+    number of beta active electrons     =     3
+    root symmetry (zero based)          =     0
+    number of determinants              =    56
+
+  Diagonalizing Hamiltonian           ...
+  Found 32 roots with 2S+1 = 1 *
+  Found 18 roots with 2S+1 = 3
+  Found 6 roots with 2S+1 = 5  Done. Timing        0.035297 s
+
+  * * * * * * * * * * * * * * * * *
+  *  CI Vectors & Configurations  *
+  * * * * * * * * * * * * * * * * *
+
+  ==> Root No. 0 <==
+
+    2 0 0 0 2 2          0.9682377847
+    2 0 2 0 0 2         -0.1282088607
+    2 2 0 0 2 0         -0.1282088607
+    2 b a 0 b a          0.0836235368
+    2 a b 0 a b          0.0836235368
+    2 a a 0 b b          0.0557401220
+    2 b b 0 a a          0.0557401220
+
+    Total Energy:   -109.030034254459153
+
+
+
+  ==> Permanent Dipole Moments (Ag) <==
+
+  Only print nonzero (> 1.0e-5) elements.
+
+  Computing 1-, 2- and 3-cumulants ... Done. Timing        0.106632 s
+
+
+ CAS took 0.280953 seconds.
+
+ FormFockIntermediates took 0.13165000 s.
+
+ FormOrbitalGradient took 0.00053800 s.
+
+ FormDiagHessian took 0.00005300 s.
+
+ Update function takes 0.13230700 s
+    1   0.009129955576   -0.008305368113   -109.030034254459    0.636560 s      
+ CSO2SO takes   0.0000 s.
+
+ Transform Integrals takes 0.22867800 s.
+
+  Performing a CAS with CAS
+
+              ---------------------------------------------------
+                Complete Active Space Configuration Interaction
+                                  Chenyang Li
+              ---------------------------------------------------
+
+
+  ==> Input Summary <==
+
+    No. a electrons in active      =     3
+    No. b electrons in active      =     3
+    multiplicity                   =     1
+    spin ms (2 * Sz)               =     0
+
+  ==> Orbital Spaces <==
+
+    TOTAL MO                      [    7     1     3     3     1     7     3     3 ]
+    FROZEN CORE                   [    0     0     0     0     0     0     0     0 ]
+    FROZEN VIRTUAL                [    0     0     0     0     0     0     0     0 ]
+    CORRELATED MO                 [    7     1     3     3     1     7     3     3 ]
+    CORE                          [    2     0     0     0     0     2     0     0 ]
+    ACTIVE                        [    1     0     1     1     0     1     1     1 ]
+    VIRTUAL                       [    4     1     2     2     1     4     2     2 ]
+  Forming alpha and beta strings      ...  Done. Timing        0.000065 s
+  Forming determinants                ...  Done. Timing        0.000033 s
+
+  ==> Determinants Summary <==
+
+    number of alpha active electrons    =     3
+    number of beta active electrons     =     3
+    root symmetry (zero based)          =     0
+    number of determinants              =    56
+
+  Diagonalizing Hamiltonian           ...
+  Found 32 roots with 2S+1 = 1 *
+  Found 18 roots with 2S+1 = 3
+  Found 6 roots with 2S+1 = 5  Done. Timing        0.029638 s
+
+  * * * * * * * * * * * * * * * * *
+  *  CI Vectors & Configurations  *
+  * * * * * * * * * * * * * * * * *
+
+  ==> Root No. 0 <==
+
+    2 0 0 0 2 2         -0.9659262437
+    2 0 2 0 0 2          0.1311057037
+    2 2 0 0 2 0          0.1311057037
+    2 b a 0 b a         -0.0845218435
+    2 a b 0 a b         -0.0845218435
+    2 a a 0 b b         -0.0552344908
+    2 b b 0 a a         -0.0552344908
+
+    Total Energy:   -109.040306048448713
+
+
+
+  ==> Permanent Dipole Moments (Ag) <==
+
+  Only print nonzero (> 1.0e-5) elements.
+
+  Computing 1-, 2- and 3-cumulants ... Done. Timing        0.093981 s
+
+
+ CAS took 0.260634 seconds.
+
+ FormFockIntermediates took 0.13102900 s.
+
+ FormOrbitalGradient took 0.00046400 s.
+
+ FormDiagHessian took 0.00005400 s.
+
+ Update function takes 0.13161300 s
+    2   0.008673262921   -0.010271793990   -109.040306048449    0.622594 s      
+ CSO2SO takes   0.0000 s.
+
+ Transform Integrals takes 0.22431500 s.
+
+  Performing a CAS with CAS
+
+              ---------------------------------------------------
+                Complete Active Space Configuration Interaction
+                                  Chenyang Li
+              ---------------------------------------------------
+
+
+  ==> Input Summary <==
+
+    No. a electrons in active      =     3
+    No. b electrons in active      =     3
+    multiplicity                   =     1
+    spin ms (2 * Sz)               =     0
+
+  ==> Orbital Spaces <==
+
+    TOTAL MO                      [    7     1     3     3     1     7     3     3 ]
+    FROZEN CORE                   [    0     0     0     0     0     0     0     0 ]
+    FROZEN VIRTUAL                [    0     0     0     0     0     0     0     0 ]
+    CORRELATED MO                 [    7     1     3     3     1     7     3     3 ]
+    CORE                          [    2     0     0     0     0     2     0     0 ]
+    ACTIVE                        [    1     0     1     1     0     1     1     1 ]
+    VIRTUAL                       [    4     1     2     2     1     4     2     2 ]
+  Forming alpha and beta strings      ...  Done. Timing        0.000068 s
+  Forming determinants                ...  Done. Timing        0.000035 s
+
+  ==> Determinants Summary <==
+
+    number of alpha active electrons    =     3
+    number of beta active electrons     =     3
+    root symmetry (zero based)          =     0
+    number of determinants              =    56
+
+  Diagonalizing Hamiltonian           ...
+  Found 32 roots with 2S+1 = 1 *
+  Found 18 roots with 2S+1 = 3
+  Found 6 roots with 2S+1 = 5  Done. Timing        0.031169 s
+
+  * * * * * * * * * * * * * * * * *
+  *  CI Vectors & Configurations  *
+  * * * * * * * * * * * * * * * * *
+
+  ==> Root No. 0 <==
+
+    2 0 0 0 2 2         -0.9640916788
+    2 0 2 0 0 2          0.1325095056
+    2 2 0 0 2 0          0.1325095056
+    2 b a 0 b a         -0.0844810684
+    2 a b 0 a b         -0.0844810684
+    2 a a 0 b b         -0.0542597456
+    2 b b 0 a a         -0.0542597456
+
+    Total Energy:   -109.052609884846731
+
+
+
+  ==> Permanent Dipole Moments (Ag) <==
+
+  Only print nonzero (> 1.0e-5) elements.
+
+  Computing 1-, 2- and 3-cumulants ... Done. Timing        0.098354 s
+
+
+ CAS took 0.268555 seconds.
+
+ FormFockIntermediates took 0.13895200 s.
+
+ FormOrbitalGradient took 0.00046600 s.
+
+ FormDiagHessian took 0.00005300 s.
+
+ Update function takes 0.13953400 s
+    3   0.008016477466   -0.012303836398   -109.052609884847    0.634024 s      
+ CSO2SO takes   0.0000 s.
+
+ Transform Integrals takes 0.21715900 s.
+
+  Performing a CAS with CAS
+
+              ---------------------------------------------------
+                Complete Active Space Configuration Interaction
+                                  Chenyang Li
+              ---------------------------------------------------
+
+
+  ==> Input Summary <==
+
+    No. a electrons in active      =     3
+    No. b electrons in active      =     3
+    multiplicity                   =     1
+    spin ms (2 * Sz)               =     0
+
+  ==> Orbital Spaces <==
+
+    TOTAL MO                      [    7     1     3     3     1     7     3     3 ]
+    FROZEN CORE                   [    0     0     0     0     0     0     0     0 ]
+    FROZEN VIRTUAL                [    0     0     0     0     0     0     0     0 ]
+    CORRELATED MO                 [    7     1     3     3     1     7     3     3 ]
+    CORE                          [    2     0     0     0     0     2     0     0 ]
+    ACTIVE                        [    1     0     1     1     0     1     1     1 ]
+    VIRTUAL                       [    4     1     2     2     1     4     2     2 ]
+  Forming alpha and beta strings      ...  Done. Timing        0.000208 s
+  Forming determinants                ...  Done. Timing        0.000069 s
+
+  ==> Determinants Summary <==
+
+    number of alpha active electrons    =     3
+    number of beta active electrons     =     3
+    root symmetry (zero based)          =     0
+    number of determinants              =    56
+
+  Diagonalizing Hamiltonian           ...
+  Found 32 roots with 2S+1 = 1 *
+  Found 18 roots with 2S+1 = 3
+  Found 6 roots with 2S+1 = 5  Done. Timing        0.031600 s
+
+  * * * * * * * * * * * * * * * * *
+  *  CI Vectors & Configurations  *
+  * * * * * * * * * * * * * * * * *
+
+  ==> Root No. 0 <==
+
+    2 0 0 0 2 2          0.9630998526
+    2 2 0 0 2 0         -0.1319118778
+    2 0 2 0 0 2         -0.1319118778
+    2 b a 0 b a          0.0833084140
+    2 a b 0 a b          0.0833084140
+    2 a a 0 b b          0.0527787678
+    2 b b 0 a a          0.0527787678
+
+    Total Energy:   -109.066668435866532
+
+
+
+  ==> Permanent Dipole Moments (Ag) <==
+
+  Only print nonzero (> 1.0e-5) elements.
+
+  Computing 1-, 2- and 3-cumulants ... Done. Timing        0.093877 s
+
+
+ CAS took 0.269036 seconds.
+
+ FormFockIntermediates took 0.14215900 s.
+
+ FormOrbitalGradient took 0.00046400 s.
+
+ FormDiagHessian took 0.00005400 s.
+
+ Update function takes 0.14274200 s
+    4   0.006993614243   -0.014058551020   -109.066668435867    0.630587 s      
+ CSO2SO takes   0.0000 s.
+
+ Transform Integrals takes 0.22004000 s.
+
+  Performing a CAS with CAS
+
+              ---------------------------------------------------
+                Complete Active Space Configuration Interaction
+                                  Chenyang Li
+              ---------------------------------------------------
+
+
+  ==> Input Summary <==
+
+    No. a electrons in active      =     3
+    No. b electrons in active      =     3
+    multiplicity                   =     1
+    spin ms (2 * Sz)               =     0
+
+  ==> Orbital Spaces <==
+
+    TOTAL MO                      [    7     1     3     3     1     7     3     3 ]
+    FROZEN CORE                   [    0     0     0     0     0     0     0     0 ]
+    FROZEN VIRTUAL                [    0     0     0     0     0     0     0     0 ]
+    CORRELATED MO                 [    7     1     3     3     1     7     3     3 ]
+    CORE                          [    2     0     0     0     0     2     0     0 ]
+    ACTIVE                        [    1     0     1     1     0     1     1     1 ]
+    VIRTUAL                       [    4     1     2     2     1     4     2     2 ]
+  Forming alpha and beta strings      ...  Done. Timing        0.000066 s
+  Forming determinants                ...  Done. Timing        0.000033 s
+
+  ==> Determinants Summary <==
+
+    number of alpha active electrons    =     3
+    number of beta active electrons     =     3
+    root symmetry (zero based)          =     0
+    number of determinants              =    56
+
+  Diagonalizing Hamiltonian           ...
+  Found 32 roots with 2S+1 = 1 *
+  Found 18 roots with 2S+1 = 3
+  Found 6 roots with 2S+1 = 5  Done. Timing        0.030226 s
+
+  * * * * * * * * * * * * * * * * *
+  *  CI Vectors & Configurations  *
+  * * * * * * * * * * * * * * * * *
+
+  ==> Root No. 0 <==
+
+    2 0 0 0 2 2          0.9631563424
+    2 2 0 0 2 0         -0.1295693301
+    2 0 2 0 0 2         -0.1295693301
+    2 b a 0 b a          0.0813208218
+    2 a b 0 a b          0.0813208218
+    2 a a 0 b b          0.0510065252
+    2 b b 0 a a          0.0510065252
+
+    Total Energy:   -109.081086620606115
+
+
+
+  ==> Permanent Dipole Moments (Ag) <==
+
+  Only print nonzero (> 1.0e-5) elements.
+
+  Computing 1-, 2- and 3-cumulants ... Done. Timing        0.096196 s
+
+
+ CAS took 0.263982 seconds.
+
+ FormFockIntermediates took 0.13270300 s.
+
+ FormOrbitalGradient took 0.00046200 s.
+
+ FormDiagHessian took 0.00005400 s.
+
+ Update function takes 0.13328400 s
+    5   0.004826917107   -0.014418184740   -109.081086620606    0.618915 s      
+ CSO2SO takes   0.0000 s.
+
+ Transform Integrals takes 0.22841000 s.
+
+  Performing a CAS with CAS
+
+              ---------------------------------------------------
+                Complete Active Space Configuration Interaction
+                                  Chenyang Li
+              ---------------------------------------------------
+
+
+  ==> Input Summary <==
+
+    No. a electrons in active      =     3
+    No. b electrons in active      =     3
+    multiplicity                   =     1
+    spin ms (2 * Sz)               =     0
+
+  ==> Orbital Spaces <==
+
+    TOTAL MO                      [    7     1     3     3     1     7     3     3 ]
+    FROZEN CORE                   [    0     0     0     0     0     0     0     0 ]
+    FROZEN VIRTUAL                [    0     0     0     0     0     0     0     0 ]
+    CORRELATED MO                 [    7     1     3     3     1     7     3     3 ]
+    CORE                          [    2     0     0     0     0     2     0     0 ]
+    ACTIVE                        [    1     0     1     1     0     1     1     1 ]
+    VIRTUAL                       [    4     1     2     2     1     4     2     2 ]
+  Forming alpha and beta strings      ...  Done. Timing        0.000065 s
+  Forming determinants                ...  Done. Timing        0.000033 s
+
+  ==> Determinants Summary <==
+
+    number of alpha active electrons    =     3
+    number of beta active electrons     =     3
+    root symmetry (zero based)          =     0
+    number of determinants              =    56
+
+  Diagonalizing Hamiltonian           ...
+  Found 32 roots with 2S+1 = 1 *
+  Found 18 roots with 2S+1 = 3
+  Found 6 roots with 2S+1 = 5  Done. Timing        0.029974 s
+
+  * * * * * * * * * * * * * * * * *
+  *  CI Vectors & Configurations  *
+  * * * * * * * * * * * * * * * * *
+
+  ==> Root No. 0 <==
+
+    2 0 0 0 2 2         -0.9640701660
+    2 2 0 0 2 0          0.1269959127
+    2 0 2 0 0 2          0.1269959127
+    2 b a 0 b a         -0.0797606332
+    2 a b 0 a b         -0.0797606332
+    2 a a 0 b b         -0.0500123088
+    2 b b 0 a a         -0.0500123088
+
+    Total Energy:   -109.087864545049925
+
+
+
+  ==> Permanent Dipole Moments (Ag) <==
+
+  Only print nonzero (> 1.0e-5) elements.
+
+  Computing 1-, 2- and 3-cumulants ... Done. Timing        0.099267 s
+
+
+ CAS took 0.263939 seconds.
+
+ FormFockIntermediates took 0.13512000 s.
+
+ FormOrbitalGradient took 0.00084000 s.
+
+ FormDiagHessian took 0.00010000 s.
+
+ Update function takes 0.13616400 s
+    6   0.002662108484   -0.006777924444   -109.087864545050    0.630503 s      
+ CSO2SO takes   0.0000 s.
+
+ Transform Integrals takes 0.21605000 s.
+
+  Performing a CAS with CAS
+
+              ---------------------------------------------------
+                Complete Active Space Configuration Interaction
+                                  Chenyang Li
+              ---------------------------------------------------
+
+
+  ==> Input Summary <==
+
+    No. a electrons in active      =     3
+    No. b electrons in active      =     3
+    multiplicity                   =     1
+    spin ms (2 * Sz)               =     0
+
+  ==> Orbital Spaces <==
+
+    TOTAL MO                      [    7     1     3     3     1     7     3     3 ]
+    FROZEN CORE                   [    0     0     0     0     0     0     0     0 ]
+    FROZEN VIRTUAL                [    0     0     0     0     0     0     0     0 ]
+    CORRELATED MO                 [    7     1     3     3     1     7     3     3 ]
+    CORE                          [    2     0     0     0     0     2     0     0 ]
+    ACTIVE                        [    1     0     1     1     0     1     1     1 ]
+    VIRTUAL                       [    4     1     2     2     1     4     2     2 ]
+  Forming alpha and beta strings      ...  Done. Timing        0.000100 s
+  Forming determinants                ...  Done. Timing        0.000049 s
+
+  ==> Determinants Summary <==
+
+    number of alpha active electrons    =     3
+    number of beta active electrons     =     3
+    root symmetry (zero based)          =     0
+    number of determinants              =    56
+
+  Diagonalizing Hamiltonian           ...
+  Found 32 roots with 2S+1 = 1 *
+  Found 18 roots with 2S+1 = 3
+  Found 6 roots with 2S+1 = 5  Done. Timing        0.034465 s
+
+  * * * * * * * * * * * * * * * * *
+  *  CI Vectors & Configurations  *
+  * * * * * * * * * * * * * * * * *
+
+  ==> Root No. 0 <==
+
+    2 0 0 0 2 2         -0.9644741724
+    2 0 2 0 0 2          0.1259486496
+    2 2 0 0 2 0          0.1259486496
+    2 b a 0 b a         -0.0791917796
+    2 a b 0 a b         -0.0791917796
+
+    Total Energy:   -109.089622599901418
+
+
+
+  ==> Permanent Dipole Moments (Ag) <==
+
+  Only print nonzero (> 1.0e-5) elements.
+
+  Computing 1-, 2- and 3-cumulants ... Done. Timing        0.094483 s
+
+
+ CAS took 0.270723 seconds.
+
+ FormFockIntermediates took 0.13240700 s.
+
+ FormOrbitalGradient took 0.00046300 s.
+
+ FormDiagHessian took 0.00005300 s.
+
+ Update function takes 0.13298600 s
+    7   0.002229287584   -0.001758054851   -109.089622599901    0.621510 s      
+ CSO2SO takes   0.0000 s.
+
+ Transform Integrals takes 0.23495100 s.
+
+  Performing a CAS with CAS
+
+              ---------------------------------------------------
+                Complete Active Space Configuration Interaction
+                                  Chenyang Li
+              ---------------------------------------------------
+
+
+  ==> Input Summary <==
+
+    No. a electrons in active      =     3
+    No. b electrons in active      =     3
+    multiplicity                   =     1
+    spin ms (2 * Sz)               =     0
+
+  ==> Orbital Spaces <==
+
+    TOTAL MO                      [    7     1     3     3     1     7     3     3 ]
+    FROZEN CORE                   [    0     0     0     0     0     0     0     0 ]
+    FROZEN VIRTUAL                [    0     0     0     0     0     0     0     0 ]
+    CORRELATED MO                 [    7     1     3     3     1     7     3     3 ]
+    CORE                          [    2     0     0     0     0     2     0     0 ]
+    ACTIVE                        [    1     0     1     1     0     1     1     1 ]
+    VIRTUAL                       [    4     1     2     2     1     4     2     2 ]
+  Forming alpha and beta strings      ...  Done. Timing        0.000076 s
+  Forming determinants                ...  Done. Timing        0.000033 s
+
+  ==> Determinants Summary <==
+
+    number of alpha active electrons    =     3
+    number of beta active electrons     =     3
+    root symmetry (zero based)          =     0
+    number of determinants              =    56
+
+  Diagonalizing Hamiltonian           ...
+  Found 32 roots with 2S+1 = 1 *
+  Found 18 roots with 2S+1 = 3
+  Found 6 roots with 2S+1 = 5  Done. Timing        0.029491 s
+
+  * * * * * * * * * * * * * * * * *
+  *  CI Vectors & Configurations  *
+  * * * * * * * * * * * * * * * * *
+
+  ==> Root No. 0 <==
+
+    2 0 0 0 2 2          0.9646392394
+    2 2 0 0 2 0         -0.1257629123
+    2 0 2 0 0 2         -0.1257629123
+    2 b a 0 b a          0.0790945380
+    2 a b 0 a b          0.0790945380
+
+    Total Energy:   -109.090290075521480
+
+
+
+  ==> Permanent Dipole Moments (Ag) <==
+
+  Only print nonzero (> 1.0e-5) elements.
+
+  Computing 1-, 2- and 3-cumulants ... Done. Timing        0.098683 s
+
+
+ CAS took 0.269682 seconds.
+
+ FormFockIntermediates took 0.13620700 s.
+
+ FormOrbitalGradient took 0.00046400 s.
+
+ FormDiagHessian took 0.00005400 s.
+
+ Update function takes 0.13679000 s
+    8   0.001658882089   -0.000667475620   -109.090290075521    0.643187 s      
+ CSO2SO takes   0.0000 s.
+
+ Transform Integrals takes 0.21953400 s.
+
+  Performing a CAS with CAS
+
+              ---------------------------------------------------
+                Complete Active Space Configuration Interaction
+                                  Chenyang Li
+              ---------------------------------------------------
+
+
+  ==> Input Summary <==
+
+    No. a electrons in active      =     3
+    No. b electrons in active      =     3
+    multiplicity                   =     1
+    spin ms (2 * Sz)               =     0
+
+  ==> Orbital Spaces <==
+
+    TOTAL MO                      [    7     1     3     3     1     7     3     3 ]
+    FROZEN CORE                   [    0     0     0     0     0     0     0     0 ]
+    FROZEN VIRTUAL                [    0     0     0     0     0     0     0     0 ]
+    CORRELATED MO                 [    7     1     3     3     1     7     3     3 ]
+    CORE                          [    2     0     0     0     0     2     0     0 ]
+    ACTIVE                        [    1     0     1     1     0     1     1     1 ]
+    VIRTUAL                       [    4     1     2     2     1     4     2     2 ]
+  Forming alpha and beta strings      ...  Done. Timing        0.000067 s
+  Forming determinants                ...  Done. Timing        0.000034 s
+
+  ==> Determinants Summary <==
+
+    number of alpha active electrons    =     3
+    number of beta active electrons     =     3
+    root symmetry (zero based)          =     0
+    number of determinants              =    56
+
+  Diagonalizing Hamiltonian           ...
+  Found 32 roots with 2S+1 = 1 *
+  Found 18 roots with 2S+1 = 3
+  Found 6 roots with 2S+1 = 5  Done. Timing        0.030339 s
+
+  * * * * * * * * * * * * * * * * *
+  *  CI Vectors & Configurations  *
+  * * * * * * * * * * * * * * * * *
+
+  ==> Root No. 0 <==
+
+    2 0 0 0 2 2          0.9647125762
+    2 0 2 0 0 2         -0.1257652491
+    2 2 0 0 2 0         -0.1257652491
+    2 b a 0 b a          0.0791020269
+    2 a b 0 a b          0.0791020269
+
+    Total Energy:   -109.090560389121606
+
+
+
+  ==> Permanent Dipole Moments (Ag) <==
+
+  Only print nonzero (> 1.0e-5) elements.
+
+  Computing 1-, 2- and 3-cumulants ... Done. Timing        0.098606 s
+
+
+ CAS took 0.262475 seconds.
+
+ FormFockIntermediates took 0.13296700 s.
+
+ FormOrbitalGradient took 0.00052500 s.
+
+ FormDiagHessian took 0.00005400 s.
+
+ Update function takes 0.13366000 s
+    9   0.000985922790   -0.000270313600   -109.090560389122    0.617486 s  DIIS
+ CSO2SO takes   0.0000 s.
+
+ Transform Integrals takes 0.22349000 s.
+
+  Performing a CAS with CAS
+
+              ---------------------------------------------------
+                Complete Active Space Configuration Interaction
+                                  Chenyang Li
+              ---------------------------------------------------
+
+
+  ==> Input Summary <==
+
+    No. a electrons in active      =     3
+    No. b electrons in active      =     3
+    multiplicity                   =     1
+    spin ms (2 * Sz)               =     0
+
+  ==> Orbital Spaces <==
+
+    TOTAL MO                      [    7     1     3     3     1     7     3     3 ]
+    FROZEN CORE                   [    0     0     0     0     0     0     0     0 ]
+    FROZEN VIRTUAL                [    0     0     0     0     0     0     0     0 ]
+    CORRELATED MO                 [    7     1     3     3     1     7     3     3 ]
+    CORE                          [    2     0     0     0     0     2     0     0 ]
+    ACTIVE                        [    1     0     1     1     0     1     1     1 ]
+    VIRTUAL                       [    4     1     2     2     1     4     2     2 ]
+  Forming alpha and beta strings      ...  Done. Timing        0.000065 s
+  Forming determinants                ...  Done. Timing        0.000033 s
+
+  ==> Determinants Summary <==
+
+    number of alpha active electrons    =     3
+    number of beta active electrons     =     3
+    root symmetry (zero based)          =     0
+    number of determinants              =    56
+
+  Diagonalizing Hamiltonian           ...
+  Found 32 roots with 2S+1 = 1 *
+  Found 18 roots with 2S+1 = 3
+  Found 6 roots with 2S+1 = 5  Done. Timing        0.035985 s
+
+  * * * * * * * * * * * * * * * * *
+  *  CI Vectors & Configurations  *
+  * * * * * * * * * * * * * * * * *
+
+  ==> Root No. 0 <==
+
+    2 0 0 0 2 2         -0.9647512295
+    2 0 2 0 0 2          0.1258006433
+    2 2 0 0 2 0          0.1258006433
+    2 b a 0 b a         -0.0791261377
+    2 a b 0 a b         -0.0791261377
+
+    Total Energy:   -109.090663603382040
+
+
+
+  ==> Permanent Dipole Moments (Ag) <==
+
+  Only print nonzero (> 1.0e-5) elements.
+
+  Computing 1-, 2- and 3-cumulants ... Done. Timing        0.097245 s
+
+
+ CAS took 0.270956 seconds.
+
+ FormFockIntermediates took 0.14038600 s.
+
+ FormOrbitalGradient took 0.00046800 s.
+
+ FormDiagHessian took 0.00005400 s.
+
+ Update function takes 0.14097400 s
+   10   0.000509718138   -0.000103214260   -109.090663603382    0.637183 s  DIIS
+ CSO2SO takes   0.0000 s.
+
+ Transform Integrals takes 0.22275400 s.
+
+  Performing a CAS with CAS
+
+              ---------------------------------------------------
+                Complete Active Space Configuration Interaction
+                                  Chenyang Li
+              ---------------------------------------------------
+
+
+  ==> Input Summary <==
+
+    No. a electrons in active      =     3
+    No. b electrons in active      =     3
+    multiplicity                   =     1
+    spin ms (2 * Sz)               =     0
+
+  ==> Orbital Spaces <==
+
+    TOTAL MO                      [    7     1     3     3     1     7     3     3 ]
+    FROZEN CORE                   [    0     0     0     0     0     0     0     0 ]
+    FROZEN VIRTUAL                [    0     0     0     0     0     0     0     0 ]
+    CORRELATED MO                 [    7     1     3     3     1     7     3     3 ]
+    CORE                          [    2     0     0     0     0     2     0     0 ]
+    ACTIVE                        [    1     0     1     1     0     1     1     1 ]
+    VIRTUAL                       [    4     1     2     2     1     4     2     2 ]
+  Forming alpha and beta strings      ...  Done. Timing        0.000066 s
+  Forming determinants                ...  Done. Timing        0.000033 s
+
+  ==> Determinants Summary <==
+
+    number of alpha active electrons    =     3
+    number of beta active electrons     =     3
+    root symmetry (zero based)          =     0
+    number of determinants              =    56
+
+  Diagonalizing Hamiltonian           ...
+  Found 32 roots with 2S+1 = 1 *
+  Found 18 roots with 2S+1 = 3
+  Found 6 roots with 2S+1 = 5  Done. Timing        0.029822 s
+
+  * * * * * * * * * * * * * * * * *
+  *  CI Vectors & Configurations  *
+  * * * * * * * * * * * * * * * * *
+
+  ==> Root No. 0 <==
+
+    2 0 0 0 2 2         -0.9647720779
+    2 2 0 0 2 0          0.1258324072
+    2 0 2 0 0 2          0.1258324072
+    2 b a 0 b a         -0.0791462238
+    2 a b 0 a b         -0.0791462238
+
+    Total Energy:   -109.090700589682186
+
+
+
+  ==> Permanent Dipole Moments (Ag) <==
+
+  Only print nonzero (> 1.0e-5) elements.
+
+  Computing 1-, 2- and 3-cumulants ... Done. Timing        0.094656 s
+
+
+ CAS took 0.258780 seconds.
+
+ FormFockIntermediates took 0.14424600 s.
+
+ FormOrbitalGradient took 0.00046400 s.
+
+ FormDiagHessian took 0.00005300 s.
+
+ Update function takes 0.14482600 s
+   11   0.000246740291   -0.000036986300   -109.090700589682    0.628012 s  DIIS
+ CSO2SO takes   0.0000 s.
+
+ Transform Integrals takes 0.21645800 s.
+
+  Performing a CAS with CAS
+
+              ---------------------------------------------------
+                Complete Active Space Configuration Interaction
+                                  Chenyang Li
+              ---------------------------------------------------
+
+
+  ==> Input Summary <==
+
+    No. a electrons in active      =     3
+    No. b electrons in active      =     3
+    multiplicity                   =     1
+    spin ms (2 * Sz)               =     0
+
+  ==> Orbital Spaces <==
+
+    TOTAL MO                      [    7     1     3     3     1     7     3     3 ]
+    FROZEN CORE                   [    0     0     0     0     0     0     0     0 ]
+    FROZEN VIRTUAL                [    0     0     0     0     0     0     0     0 ]
+    CORRELATED MO                 [    7     1     3     3     1     7     3     3 ]
+    CORE                          [    2     0     0     0     0     2     0     0 ]
+    ACTIVE                        [    1     0     1     1     0     1     1     1 ]
+    VIRTUAL                       [    4     1     2     2     1     4     2     2 ]
+  Forming alpha and beta strings      ...  Done. Timing        0.000095 s
+  Forming determinants                ...  Done. Timing        0.000050 s
+
+  ==> Determinants Summary <==
+
+    number of alpha active electrons    =     3
+    number of beta active electrons     =     3
+    root symmetry (zero based)          =     0
+    number of determinants              =    56
+
+  Diagonalizing Hamiltonian           ...
+  Found 32 roots with 2S+1 = 1 *
+  Found 18 roots with 2S+1 = 3
+  Found 6 roots with 2S+1 = 5  Done. Timing        0.029954 s
+
+  * * * * * * * * * * * * * * * * *
+  *  CI Vectors & Configurations  *
+  * * * * * * * * * * * * * * * * *
+
+  ==> Root No. 0 <==
+
+    2 0 0 0 2 2         -0.9647829584
+    2 0 2 0 0 2          0.1258559338
+    2 2 0 0 2 0          0.1258559338
+    2 b a 0 b a         -0.0791603464
+    2 a b 0 a b         -0.0791603464
+
+    Total Energy:   -109.090713304119561
+
+
+
+  ==> Permanent Dipole Moments (Ag) <==
+
+  Only print nonzero (> 1.0e-5) elements.
+
+  Computing 1-, 2- and 3-cumulants ... Done. Timing        0.100769 s
+
+
+ CAS took 0.266840 seconds.
+
+ FormFockIntermediates took 0.13806200 s.
+
+ FormOrbitalGradient took 0.00048800 s.
+
+ FormDiagHessian took 0.00005300 s.
+
+ Update function takes 0.13866900 s
+   12   0.000119487098   -0.000012714437   -109.090713304120    0.624076 s  DIIS
+ CSO2SO takes   0.0000 s.
+
+ Transform Integrals takes 0.22226700 s.
+
+  Performing a CAS with CAS
+
+              ---------------------------------------------------
+                Complete Active Space Configuration Interaction
+                                  Chenyang Li
+              ---------------------------------------------------
+
+
+  ==> Input Summary <==
+
+    No. a electrons in active      =     3
+    No. b electrons in active      =     3
+    multiplicity                   =     1
+    spin ms (2 * Sz)               =     0
+
+  ==> Orbital Spaces <==
+
+    TOTAL MO                      [    7     1     3     3     1     7     3     3 ]
+    FROZEN CORE                   [    0     0     0     0     0     0     0     0 ]
+    FROZEN VIRTUAL                [    0     0     0     0     0     0     0     0 ]
+    CORRELATED MO                 [    7     1     3     3     1     7     3     3 ]
+    CORE                          [    2     0     0     0     0     2     0     0 ]
+    ACTIVE                        [    1     0     1     1     0     1     1     1 ]
+    VIRTUAL                       [    4     1     2     2     1     4     2     2 ]
+  Forming alpha and beta strings      ...  Done. Timing        0.000077 s
+  Forming determinants                ...  Done. Timing        0.000037 s
+
+  ==> Determinants Summary <==
+
+    number of alpha active electrons    =     3
+    number of beta active electrons     =     3
+    root symmetry (zero based)          =     0
+    number of determinants              =    56
+
+  Diagonalizing Hamiltonian           ...
+  Found 32 roots with 2S+1 = 1 *
+  Found 18 roots with 2S+1 = 3
+  Found 6 roots with 2S+1 = 5  Done. Timing        0.041723 s
+
+  * * * * * * * * * * * * * * * * *
+  *  CI Vectors & Configurations  *
+  * * * * * * * * * * * * * * * * *
+
+  ==> Root No. 0 <==
+
+    2 0 0 0 2 2         -0.9647936965
+    2 0 2 0 0 2          0.1258977148
+    2 2 0 0 2 0          0.1258977148
+    2 b a 0 b a         -0.0791840284
+    2 a b 0 a b         -0.0791840284
+
+    Total Energy:   -109.090719582826722
+
+
+
+  ==> Permanent Dipole Moments (Ag) <==
+
+  Only print nonzero (> 1.0e-5) elements.
+
+  Computing 1-, 2- and 3-cumulants ... Done. Timing        0.098537 s
+
+
+ CAS took 0.277153 seconds.
+
+ FormFockIntermediates took 0.13656900 s.
+
+ FormOrbitalGradient took 0.00046300 s.
+
+ FormDiagHessian took 0.00005400 s.
+
+ Update function takes 0.13715200 s
+   13   0.000042918375   -0.000006278707   -109.090719582827    0.638308 s  DIIS
+ CSO2SO takes   0.0000 s.
+
+ Transform Integrals takes 0.22743700 s.
+
+  Performing a CAS with CAS
+
+              ---------------------------------------------------
+                Complete Active Space Configuration Interaction
+                                  Chenyang Li
+              ---------------------------------------------------
+
+
+  ==> Input Summary <==
+
+    No. a electrons in active      =     3
+    No. b electrons in active      =     3
+    multiplicity                   =     1
+    spin ms (2 * Sz)               =     0
+
+  ==> Orbital Spaces <==
+
+    TOTAL MO                      [    7     1     3     3     1     7     3     3 ]
+    FROZEN CORE                   [    0     0     0     0     0     0     0     0 ]
+    FROZEN VIRTUAL                [    0     0     0     0     0     0     0     0 ]
+    CORRELATED MO                 [    7     1     3     3     1     7     3     3 ]
+    CORE                          [    2     0     0     0     0     2     0     0 ]
+    ACTIVE                        [    1     0     1     1     0     1     1     1 ]
+    VIRTUAL                       [    4     1     2     2     1     4     2     2 ]
+  Forming alpha and beta strings      ...  Done. Timing        0.000065 s
+  Forming determinants                ...  Done. Timing        0.000032 s
+
+  ==> Determinants Summary <==
+
+    number of alpha active electrons    =     3
+    number of beta active electrons     =     3
+    root symmetry (zero based)          =     0
+    number of determinants              =    56
+
+  Diagonalizing Hamiltonian           ...
+  Found 32 roots with 2S+1 = 1 *
+  Found 18 roots with 2S+1 = 3
+  Found 6 roots with 2S+1 = 5  Done. Timing        0.036200 s
+
+  * * * * * * * * * * * * * * * * *
+  *  CI Vectors & Configurations  *
+  * * * * * * * * * * * * * * * * *
+
+  ==> Root No. 0 <==
+
+    2 0 0 0 2 2         -0.9647933864
+    2 0 2 0 0 2          0.1258989472
+    2 2 0 0 2 0          0.1258989472
+    2 b a 0 b a         -0.0791848204
+    2 a b 0 a b         -0.0791848204
+
+    Total Energy:   -109.090719604788362
+
+
+
+  ==> Permanent Dipole Moments (Ag) <==
+
+  Only print nonzero (> 1.0e-5) elements.
+
+  Computing 1-, 2- and 3-cumulants ... Done. Timing        0.096472 s
+
+
+ CAS took 0.277865 seconds.
+
+ FormFockIntermediates took 0.14253800 s.
+
+ FormOrbitalGradient took 0.00046500 s.
+
+ FormDiagHessian took 0.00005400 s.
+
+ Update function takes 0.14312000 s
+   14   0.000023585939   -0.000000021962   -109.090719604788    0.650170 s  DIIS
+ CSO2SO takes   0.0000 s.
+
+ Transform Integrals takes 0.21513900 s.
+
+  Performing a CAS with CAS
+
+              ---------------------------------------------------
+                Complete Active Space Configuration Interaction
+                                  Chenyang Li
+              ---------------------------------------------------
+
+
+  ==> Input Summary <==
+
+    No. a electrons in active      =     3
+    No. b electrons in active      =     3
+    multiplicity                   =     1
+    spin ms (2 * Sz)               =     0
+
+  ==> Orbital Spaces <==
+
+    TOTAL MO                      [    7     1     3     3     1     7     3     3 ]
+    FROZEN CORE                   [    0     0     0     0     0     0     0     0 ]
+    FROZEN VIRTUAL                [    0     0     0     0     0     0     0     0 ]
+    CORRELATED MO                 [    7     1     3     3     1     7     3     3 ]
+    CORE                          [    2     0     0     0     0     2     0     0 ]
+    ACTIVE                        [    1     0     1     1     0     1     1     1 ]
+    VIRTUAL                       [    4     1     2     2     1     4     2     2 ]
+  Forming alpha and beta strings      ...  Done. Timing        0.000065 s
+  Forming determinants                ...  Done. Timing        0.000033 s
+
+  ==> Determinants Summary <==
+
+    number of alpha active electrons    =     3
+    number of beta active electrons     =     3
+    root symmetry (zero based)          =     0
+    number of determinants              =    56
+
+  Diagonalizing Hamiltonian           ...
+  Found 32 roots with 2S+1 = 1 *
+  Found 18 roots with 2S+1 = 3
+  Found 6 roots with 2S+1 = 5  Done. Timing        0.029823 s
+
+  * * * * * * * * * * * * * * * * *
+  *  CI Vectors & Configurations  *
+  * * * * * * * * * * * * * * * * *
+
+  ==> Root No. 0 <==
+
+    2 0 0 0 2 2         -0.9647935368
+    2 2 0 0 2 0          0.1258990610
+    2 0 2 0 0 2          0.1258990610
+    2 b a 0 b a         -0.0791849976
+    2 a b 0 a b         -0.0791849976
+
+    Total Energy:   -109.090719611209110
+
+
+
+  ==> Permanent Dipole Moments (Ag) <==
+
+  Only print nonzero (> 1.0e-5) elements.
+
+  Computing 1-, 2- and 3-cumulants ... Done. Timing        0.093990 s
+
+
+ CAS took 0.258840 seconds.
+
+ FormFockIntermediates took 0.14782800 s.
+
+ FormOrbitalGradient took 0.00048500 s.
+
+ FormDiagHessian took 0.00005400 s.
+
+ Update function takes 0.14842900 s
+   15   0.000011272885   -0.000000006421   -109.090719611209    0.624115 s  DIIS
+ CSO2SO takes   0.0000 s.
+
+ Transform Integrals takes 0.22015300 s.
+
+  Performing a CAS with CAS
+
+              ---------------------------------------------------
+                Complete Active Space Configuration Interaction
+                                  Chenyang Li
+              ---------------------------------------------------
+
+
+  ==> Input Summary <==
+
+    No. a electrons in active      =     3
+    No. b electrons in active      =     3
+    multiplicity                   =     1
+    spin ms (2 * Sz)               =     0
+
+  ==> Orbital Spaces <==
+
+    TOTAL MO                      [    7     1     3     3     1     7     3     3 ]
+    FROZEN CORE                   [    0     0     0     0     0     0     0     0 ]
+    FROZEN VIRTUAL                [    0     0     0     0     0     0     0     0 ]
+    CORRELATED MO                 [    7     1     3     3     1     7     3     3 ]
+    CORE                          [    2     0     0     0     0     2     0     0 ]
+    ACTIVE                        [    1     0     1     1     0     1     1     1 ]
+    VIRTUAL                       [    4     1     2     2     1     4     2     2 ]
+  Forming alpha and beta strings      ...  Done. Timing        0.000065 s
+  Forming determinants                ...  Done. Timing        0.000054 s
+
+  ==> Determinants Summary <==
+
+    number of alpha active electrons    =     3
+    number of beta active electrons     =     3
+    root symmetry (zero based)          =     0
+    number of determinants              =    56
+
+  Diagonalizing Hamiltonian           ...
+  Found 32 roots with 2S+1 = 1 *
+  Found 18 roots with 2S+1 = 3
+  Found 6 roots with 2S+1 = 5  Done. Timing        0.029719 s
+
+  * * * * * * * * * * * * * * * * *
+  *  CI Vectors & Configurations  *
+  * * * * * * * * * * * * * * * * *
+
+  ==> Root No. 0 <==
+
+    2 0 0 0 2 2         -0.9647937361
+    2 2 0 0 2 0          0.1258989225
+    2 0 2 0 0 2          0.1258989225
+    2 b a 0 b a         -0.0791849850
+    2 a b 0 a b         -0.0791849850
+
+    Total Energy:   -109.090719612573480
+
+
+
+  ==> Permanent Dipole Moments (Ag) <==
+
+  Only print nonzero (> 1.0e-5) elements.
+
+  Computing 1-, 2- and 3-cumulants ... Done. Timing        0.094700 s
+
+
+ CAS took 0.283948 seconds.
+
+ FormFockIntermediates took 0.13235100 s.
+
+ FormOrbitalGradient took 0.00047800 s.
+
+ FormDiagHessian took 0.00005500 s.
+
+ Update function takes 0.13296100 s
+   16   0.000005423109   -0.000000001364   -109.090719612573    0.638889 s  DIIS
+ CSO2SO takes   0.0000 s.
+
+ Transform Integrals takes 0.21624600 s.
+
+  Performing a CAS with CAS
+
+              ---------------------------------------------------
+                Complete Active Space Configuration Interaction
+                                  Chenyang Li
+              ---------------------------------------------------
+
+
+  ==> Input Summary <==
+
+    No. a electrons in active      =     3
+    No. b electrons in active      =     3
+    multiplicity                   =     1
+    spin ms (2 * Sz)               =     0
+
+  ==> Orbital Spaces <==
+
+    TOTAL MO                      [    7     1     3     3     1     7     3     3 ]
+    FROZEN CORE                   [    0     0     0     0     0     0     0     0 ]
+    FROZEN VIRTUAL                [    0     0     0     0     0     0     0     0 ]
+    CORRELATED MO                 [    7     1     3     3     1     7     3     3 ]
+    CORE                          [    2     0     0     0     0     2     0     0 ]
+    ACTIVE                        [    1     0     1     1     0     1     1     1 ]
+    VIRTUAL                       [    4     1     2     2     1     4     2     2 ]
+  Forming alpha and beta strings      ...  Done. Timing        0.000066 s
+  Forming determinants                ...  Done. Timing        0.000035 s
+
+  ==> Determinants Summary <==
+
+    number of alpha active electrons    =     3
+    number of beta active electrons     =     3
+    root symmetry (zero based)          =     0
+    number of determinants              =    56
+
+  Diagonalizing Hamiltonian           ...
+  Found 32 roots with 2S+1 = 1 *
+  Found 18 roots with 2S+1 = 3
+  Found 6 roots with 2S+1 = 5  Done. Timing        0.029176 s
+
+  * * * * * * * * * * * * * * * * *
+  *  CI Vectors & Configurations  *
+  * * * * * * * * * * * * * * * * *
+
+  ==> Root No. 0 <==
+
+    2 0 0 0 2 2         -0.9647938855
+    2 0 2 0 0 2          0.1258989250
+    2 2 0 0 2 0          0.1258989250
+    2 b a 0 b a         -0.0791849972
+    2 a b 0 a b         -0.0791849972
+
+    Total Energy:   -109.090719613064266
+
+
+
+  ==> Permanent Dipole Moments (Ag) <==
+
+  Only print nonzero (> 1.0e-5) elements.
+
+  Computing 1-, 2- and 3-cumulants ... Done. Timing        0.101036 s
+
+
+ CAS took 0.269513 seconds.
+
+ FormFockIntermediates took 0.13748000 s.
+
+ FormOrbitalGradient took 0.00048200 s.
+
+ FormDiagHessian took 0.00005400 s.
+
+ Update function takes 0.13809100 s
+   17   0.000001949755   -0.000000000491   -109.090719613064    0.625504 s  DIIS
+ CSO2SO takes   0.0000 s.
+
+ Transform Integrals takes 0.22966000 s.
+
+  Performing a CAS with CAS
+
+              ---------------------------------------------------
+                Complete Active Space Configuration Interaction
+                                  Chenyang Li
+              ---------------------------------------------------
+
+
+  ==> Input Summary <==
+
+    No. a electrons in active      =     3
+    No. b electrons in active      =     3
+    multiplicity                   =     1
+    spin ms (2 * Sz)               =     0
+
+  ==> Orbital Spaces <==
+
+    TOTAL MO                      [    7     1     3     3     1     7     3     3 ]
+    FROZEN CORE                   [    0     0     0     0     0     0     0     0 ]
+    FROZEN VIRTUAL                [    0     0     0     0     0     0     0     0 ]
+    CORRELATED MO                 [    7     1     3     3     1     7     3     3 ]
+    CORE                          [    2     0     0     0     0     2     0     0 ]
+    ACTIVE                        [    1     0     1     1     0     1     1     1 ]
+    VIRTUAL                       [    4     1     2     2     1     4     2     2 ]
+  Forming alpha and beta strings      ...  Done. Timing        0.000067 s
+  Forming determinants                ...  Done. Timing        0.000034 s
+
+  ==> Determinants Summary <==
+
+    number of alpha active electrons    =     3
+    number of beta active electrons     =     3
+    root symmetry (zero based)          =     0
+    number of determinants              =    56
+
+  Diagonalizing Hamiltonian           ...
+  Found 32 roots with 2S+1 = 1 *
+  Found 18 roots with 2S+1 = 3
+  Found 6 roots with 2S+1 = 5  Done. Timing        0.041560 s
+
+  * * * * * * * * * * * * * * * * *
+  *  CI Vectors & Configurations  *
+  * * * * * * * * * * * * * * * * *
+
+  ==> Root No. 0 <==
+
+    2 0 0 0 2 2         -0.9647938915
+    2 2 0 0 2 0          0.1258989135
+    2 0 2 0 0 2          0.1258989135
+    2 b a 0 b a         -0.0791849917
+    2 a b 0 a b         -0.0791849917
+
+    Total Energy:   -109.090719613069297
+
+
+
+  ==> Permanent Dipole Moments (Ag) <==
+
+  Only print nonzero (> 1.0e-5) elements.
+
+  Computing 1-, 2- and 3-cumulants ... Done. Timing        0.097248 s
+
+
+ CAS took 0.275378 seconds.
+
+ FormFockIntermediates took 0.13774800 s.
+
+ FormOrbitalGradient took 0.00047700 s.
+
+ FormDiagHessian took 0.00005400 s.
+
+ Update function takes 0.13835600 s
+   18   0.000001105103   -0.000000000005   -109.090719613069    0.645066 s  DIIS
+ CSO2SO takes   0.0000 s.
+
+ Transform Integrals takes 0.21978200 s.
+
+  Performing a CAS with CAS
+
+              ---------------------------------------------------
+                Complete Active Space Configuration Interaction
+                                  Chenyang Li
+              ---------------------------------------------------
+
+
+  ==> Input Summary <==
+
+    No. a electrons in active      =     3
+    No. b electrons in active      =     3
+    multiplicity                   =     1
+    spin ms (2 * Sz)               =     0
+
+  ==> Orbital Spaces <==
+
+    TOTAL MO                      [    7     1     3     3     1     7     3     3 ]
+    FROZEN CORE                   [    0     0     0     0     0     0     0     0 ]
+    FROZEN VIRTUAL                [    0     0     0     0     0     0     0     0 ]
+    CORRELATED MO                 [    7     1     3     3     1     7     3     3 ]
+    CORE                          [    2     0     0     0     0     2     0     0 ]
+    ACTIVE                        [    1     0     1     1     0     1     1     1 ]
+    VIRTUAL                       [    4     1     2     2     1     4     2     2 ]
+  Forming alpha and beta strings      ...  Done. Timing        0.000066 s
+  Forming determinants                ...  Done. Timing        0.000034 s
+
+  ==> Determinants Summary <==
+
+    number of alpha active electrons    =     3
+    number of beta active electrons     =     3
+    root symmetry (zero based)          =     0
+    number of determinants              =    56
+
+  Diagonalizing Hamiltonian           ...
+  Found 32 roots with 2S+1 = 1 *
+  Found 18 roots with 2S+1 = 3
+  Found 6 roots with 2S+1 = 5  Done. Timing        0.032077 s
+
+  * * * * * * * * * * * * * * * * *
+  *  CI Vectors & Configurations  *
+  * * * * * * * * * * * * * * * * *
+
+  ==> Root No. 0 <==
+
+    2 0 0 0 2 2          0.9647938921
+    2 0 2 0 0 2         -0.1258989127
+    2 2 0 0 2 0         -0.1258989127
+    2 b a 0 b a          0.0791849910
+    2 a b 0 a b          0.0791849910
+
+    Total Energy:   -109.090719613070945
+
+
+
+  ==> Permanent Dipole Moments (Ag) <==
+
+  Only print nonzero (> 1.0e-5) elements.
+
+  Computing 1-, 2- and 3-cumulants ... Done. Timing        0.097747 s
+
+
+ CAS took 0.270567 seconds.
+
+ FormFockIntermediates took 0.13216300 s.
+
+ FormOrbitalGradient took 0.00046200 s.
+
+ FormDiagHessian took 0.00005400 s.
+
+ Update function takes 0.13274600 s
+   19   0.000000608618   -0.000000000002   -109.090719613071    0.624752 s  DIIS
+ CSO2SO takes   0.0000 s.
+
+ Transform Integrals takes 0.21526800 s.
+
+  Performing a CAS with CAS
+
+              ---------------------------------------------------
+                Complete Active Space Configuration Interaction
+                                  Chenyang Li
+              ---------------------------------------------------
+
+
+  ==> Input Summary <==
+
+    No. a electrons in active      =     3
+    No. b electrons in active      =     3
+    multiplicity                   =     1
+    spin ms (2 * Sz)               =     0
+
+  ==> Orbital Spaces <==
+
+    TOTAL MO                      [    7     1     3     3     1     7     3     3 ]
+    FROZEN CORE                   [    0     0     0     0     0     0     0     0 ]
+    FROZEN VIRTUAL                [    0     0     0     0     0     0     0     0 ]
+    CORRELATED MO                 [    7     1     3     3     1     7     3     3 ]
+    CORE                          [    2     0     0     0     0     2     0     0 ]
+    ACTIVE                        [    1     0     1     1     0     1     1     1 ]
+    VIRTUAL                       [    4     1     2     2     1     4     2     2 ]
+  Forming alpha and beta strings      ...  Done. Timing        0.000067 s
+  Forming determinants                ...  Done. Timing        0.000033 s
+
+  ==> Determinants Summary <==
+
+    number of alpha active electrons    =     3
+    number of beta active electrons     =     3
+    root symmetry (zero based)          =     0
+    number of determinants              =    56
+
+  Diagonalizing Hamiltonian           ...
+  Found 32 roots with 2S+1 = 1 *
+  Found 18 roots with 2S+1 = 3
+  Found 6 roots with 2S+1 = 5  Done. Timing        0.031073 s
+
+  * * * * * * * * * * * * * * * * *
+  *  CI Vectors & Configurations  *
+  * * * * * * * * * * * * * * * * *
+
+  ==> Root No. 0 <==
+
+    2 0 0 0 2 2         -0.9647938919
+    2 2 0 0 2 0          0.1258989137
+    2 0 2 0 0 2          0.1258989137
+    2 b a 0 b a         -0.0791849913
+    2 a b 0 a b         -0.0791849913
+
+    Total Energy:   -109.090719613071400
+
+
+
+  ==> Permanent Dipole Moments (Ag) <==
+
+  Only print nonzero (> 1.0e-5) elements.
+
+  Computing 1-, 2- and 3-cumulants ... Done. Timing        0.106672 s
+
+
+ CAS took 0.267011 seconds.
+
+ FormFockIntermediates took 0.12966700 s.
+
+ FormOrbitalGradient took 0.00047600 s.
+
+ FormDiagHessian took 0.00005600 s.
+
+ Update function takes 0.13027600 s
+   20   0.000000335091   -0.000000000000   -109.090719613071    0.614338 s  DIIS
+ CSO2SO takes   0.0000 s.
+
+ Transform Integrals takes 0.22052800 s.
+
+  Performing a CAS with CAS
+
+              ---------------------------------------------------
+                Complete Active Space Configuration Interaction
+                                  Chenyang Li
+              ---------------------------------------------------
+
+
+  ==> Input Summary <==
+
+    No. a electrons in active      =     3
+    No. b electrons in active      =     3
+    multiplicity                   =     1
+    spin ms (2 * Sz)               =     0
+
+  ==> Orbital Spaces <==
+
+    TOTAL MO                      [    7     1     3     3     1     7     3     3 ]
+    FROZEN CORE                   [    0     0     0     0     0     0     0     0 ]
+    FROZEN VIRTUAL                [    0     0     0     0     0     0     0     0 ]
+    CORRELATED MO                 [    7     1     3     3     1     7     3     3 ]
+    CORE                          [    2     0     0     0     0     2     0     0 ]
+    ACTIVE                        [    1     0     1     1     0     1     1     1 ]
+    VIRTUAL                       [    4     1     2     2     1     4     2     2 ]
+  Forming alpha and beta strings      ...  Done. Timing        0.000065 s
+  Forming determinants                ...  Done. Timing        0.000033 s
+
+  ==> Determinants Summary <==
+
+    number of alpha active electrons    =     3
+    number of beta active electrons     =     3
+    root symmetry (zero based)          =     0
+    number of determinants              =    56
+
+  Diagonalizing Hamiltonian           ...
+  Found 32 roots with 2S+1 = 1 *
+  Found 18 roots with 2S+1 = 3
+  Found 6 roots with 2S+1 = 5  Done. Timing        0.032788 s
+
+  * * * * * * * * * * * * * * * * *
+  *  CI Vectors & Configurations  *
+  * * * * * * * * * * * * * * * * *
+
+  ==> Root No. 0 <==
+
+    2 0 0 0 2 2         -0.9647938923
+    2 2 0 0 2 0          0.1258989136
+    2 0 2 0 0 2          0.1258989136
+    2 b a 0 b a         -0.0791849914
+    2 a b 0 a b         -0.0791849914
+
+    Total Energy:   -109.090719613071599
+
+
+
+  ==> Permanent Dipole Moments (Ag) <==
+
+  Only print nonzero (> 1.0e-5) elements.
+
+  Computing 1-, 2- and 3-cumulants ... Done. Timing        0.101249 s
+
+
+ CAS took 0.271098 seconds.
+
+ FormFockIntermediates took 0.12825100 s.
+
+ FormOrbitalGradient took 0.00046200 s.
+
+ FormDiagHessian took 0.00005300 s.
+
+ Update function takes 0.12882900 s
+   21   0.000000010404   -0.000000000000   -109.090719613072    0.622103 s  DIIS
+ CSO2SO takes   0.0000 s.
+
+ Transform Integrals takes 0.21170400 s.
+
+  Performing a CAS with CAS
+
+              ---------------------------------------------------
+                Complete Active Space Configuration Interaction
+                                  Chenyang Li
+              ---------------------------------------------------
+
+
+  ==> Input Summary <==
+
+    No. a electrons in active      =     3
+    No. b electrons in active      =     3
+    multiplicity                   =     1
+    spin ms (2 * Sz)               =     0
+
+  ==> Orbital Spaces <==
+
+    TOTAL MO                      [    7     1     3     3     1     7     3     3 ]
+    FROZEN CORE                   [    0     0     0     0     0     0     0     0 ]
+    FROZEN VIRTUAL                [    0     0     0     0     0     0     0     0 ]
+    CORRELATED MO                 [    7     1     3     3     1     7     3     3 ]
+    CORE                          [    2     0     0     0     0     2     0     0 ]
+    ACTIVE                        [    1     0     1     1     0     1     1     1 ]
+    VIRTUAL                       [    4     1     2     2     1     4     2     2 ]
+  Forming alpha and beta strings      ...  Done. Timing        0.000067 s
+  Forming determinants                ...  Done. Timing        0.000034 s
+
+  ==> Determinants Summary <==
+
+    number of alpha active electrons    =     3
+    number of beta active electrons     =     3
+    root symmetry (zero based)          =     0
+    number of determinants              =    56
+
+  Diagonalizing Hamiltonian           ...
+  Found 32 roots with 2S+1 = 1 *
+  Found 18 roots with 2S+1 = 3
+  Found 6 roots with 2S+1 = 5  Done. Timing        0.029226 s
+
+  * * * * * * * * * * * * * * * * *
+  *  CI Vectors & Configurations  *
+  * * * * * * * * * * * * * * * * *
+
+  ==> Root No. 0 <==
+
+    2 0 0 0 2 2         -0.9647938923
+    2 2 0 0 2 0          0.1258989137
+    2 0 2 0 0 2          0.1258989137
+    2 b a 0 b a         -0.0791849915
+    2 a b 0 a b         -0.0791849915
+
+    Total Energy:   -109.090719613071627
+
+
+
+  ==> Permanent Dipole Moments (Ag) <==
+
+  Only print nonzero (> 1.0e-5) elements.
+
+  Computing 1-, 2- and 3-cumulants ... Done. Timing        0.091978 s
+
+
+ CAS took 0.250187 seconds.
+
+ FormFockIntermediates took 0.12928300 s.
+
+ FormOrbitalGradient took 0.00046800 s.
+
+ FormDiagHessian took 0.00005300 s.
+
+ Update function takes 0.12986900 s
+   22   0.000000005465   -0.000000000000   -109.090719613072    0.593288 s
+
+ A miracle has come to pass. The CASSCF iterations have converged.
+ @E(CASSCF) =  -109.090719613072 
+
+ Overall retranformation of integrals takes 0.0000 s.
+    Molecular point group: d2h
+    Full point group: D_inf_h
+
+    Geometry (in Angstrom), charge = 0, multiplicity = 1:
+
+       Center              X                  Y                   Z               Mass       
+    ------------   -----------------  -----------------  -----------------  -----------------
+           N          0.000000000000     0.000000000000    -0.560000000000    14.003074004780
+           N          0.000000000000     0.000000000000     0.560000000000    14.003074004780
+
+  -AO BASIS SET INFORMATION:
+    Name                   = CC-PVDZ
+    Blend                  = CC-PVDZ
+    Total number of shells = 12
+    Number of primitives   = 44
+    Number of AO           = 30
+    Number of SO           = 28
+    Maximum AM             = 2
+    Spherical Harmonics    = TRUE
+
+  -Contraction Scheme:
+    Atom   Type   All Primitives // Shells:
+   ------ ------ --------------------------
+       1     N     17s 4p 1d // 3s 2p 1d 
+       2     N     17s 4p 1d // 3s 2p 1d 
+
+  ==> AO Basis Functions <==
+
+    [ CC-PVDZ ]
+    spherical
+    ****
+    N   1
+    S   8 1.00
+                      9046.00000000           0.00070000
+                      1357.00000000           0.00538900
+                       309.30000000           0.02740600
+                        87.73000000           0.10320700
+                        28.56000000           0.27872300
+                        10.21000000           0.44854000
+                         3.83800000           0.27823800
+                         0.74660000           0.01544000
+    S   8 1.00
+                      9046.00000000          -0.00015300
+                      1357.00000000          -0.00120800
+                       309.30000000          -0.00599200
+                        87.73000000          -0.02454400
+                        28.56000000          -0.06745900
+                        10.21000000          -0.15807800
+                         3.83800000          -0.12183100
+                         0.74660000           0.54900300
+    S   1 1.00
+                         0.22480000           1.00000000
+    P   3 1.00
+                        13.55000000           0.03991900
+                         2.91700000           0.21716900
+                         0.79730000           0.51031900
+    P   1 1.00
+                         0.21850000           1.00000000
+    D   1 1.00
+                         0.81700000           1.00000000
+    ****
+
+
+ Integrals are about to be computed.	Presorting SO-basis two-electron integrals.
+	Sorting File: SO Ints (nn|nn) nbuckets = 1
+	Transforming the one-electron integrals and constructing Fock matrices
+	Starting first half-transformation.
+	Sorting half-transformed integrals.
+	First half integral transformation complete.
+	Starting second half-transformation.
+	Two-electron integral transformation complete.
+
+  Integral transformation done. 0.02954600 s
+  Reading the two-electron integrals from disk
+  Size of two-electron integrals:   0.013739 GB
+ Integrals are about to be updated.
+  Frozen Orbitals takes     0.000 s.
+
+       -----------------------------------------------------------------
+                            Semi-Canonical Orbitals
+         Chenyang Li, Jeffrey B. Schriber and Francesco A. Evangelista
+       -----------------------------------------------------------------
+
+  Took 0.000951 s to build Fock matrix
+
+  ==> Checking Fock Matrix Diagonal Blocks <==
+
+    Off-Diag. Elements       Max           2-Norm
+    ------------------------------------------------
+    Fa actv              0.0000000000   0.0000000000
+    Fb actv              0.0000000000   0.0000000000
+    ------------------------------------------------
+    Fa core              0.0391433265   0.0555078754
+    Fb core              0.0391433265   0.0555078754
+    ------------------------------------------------
+    Fa virt              0.3242583902   0.6173461779
+    Fb virt              0.3242583902   0.6173461779
+    ------------------------------------------------
+
+  ==> Integral Transformation to Semicanonical Basis <==
+    Molecular point group: d2h
+    Full point group: D_inf_h
+
+    Geometry (in Angstrom), charge = 0, multiplicity = 1:
+
+       Center              X                  Y                   Z               Mass       
+    ------------   -----------------  -----------------  -----------------  -----------------
+           N          0.000000000000     0.000000000000    -0.560000000000    14.003074004780
+           N          0.000000000000     0.000000000000     0.560000000000    14.003074004780
+
+  -AO BASIS SET INFORMATION:
+    Name                   = CC-PVDZ
+    Blend                  = CC-PVDZ
+    Total number of shells = 12
+    Number of primitives   = 44
+    Number of AO           = 30
+    Number of SO           = 28
+    Maximum AM             = 2
+    Spherical Harmonics    = TRUE
+
+  -Contraction Scheme:
+    Atom   Type   All Primitives // Shells:
+   ------ ------ --------------------------
+       1     N     17s 4p 1d // 3s 2p 1d 
+       2     N     17s 4p 1d // 3s 2p 1d 
+
+  ==> AO Basis Functions <==
+
+    [ CC-PVDZ ]
+    spherical
+    ****
+    N   1
+    S   8 1.00
+                      9046.00000000           0.00070000
+                      1357.00000000           0.00538900
+                       309.30000000           0.02740600
+                        87.73000000           0.10320700
+                        28.56000000           0.27872300
+                        10.21000000           0.44854000
+                         3.83800000           0.27823800
+                         0.74660000           0.01544000
+    S   8 1.00
+                      9046.00000000          -0.00015300
+                      1357.00000000          -0.00120800
+                       309.30000000          -0.00599200
+                        87.73000000          -0.02454400
+                        28.56000000          -0.06745900
+                        10.21000000          -0.15807800
+                         3.83800000          -0.12183100
+                         0.74660000           0.54900300
+    S   1 1.00
+                         0.22480000           1.00000000
+    P   3 1.00
+                        13.55000000           0.03991900
+                         2.91700000           0.21716900
+                         0.79730000           0.51031900
+    P   1 1.00
+                         0.21850000           1.00000000
+    D   1 1.00
+                         0.81700000           1.00000000
+    ****
+
+
+ Integrals are about to be computed.	Presorting SO-basis two-electron integrals.
+	Sorting File: SO Ints (nn|nn) nbuckets = 1
+	Transforming the one-electron integrals and constructing Fock matrices
+	Starting first half-transformation.
+	Sorting half-transformed integrals.
+	First half integral transformation complete.
+	Starting second half-transformation.
+	Two-electron integral transformation complete.
+
+  Integral transformation done. 0.03997900 s
+  Reading the two-electron integrals from disk
+  Size of two-electron integrals:   0.013739 GB
+ Integrals are about to be updated.
+  Frozen Orbitals takes     0.000 s.
+  SemiCanonicalize takes 0.215721 s.	FORTE CASSCF energy...............................................PASSED
+   => Loading Basis Set <=
+
+    Name: STO-3G
+    Role: ORBITAL
+    Keyword: MINAO_BASIS
+    atoms 1-2 entry N          line    71 file /Users/york/src/psi4new/psi4/share/psi4/basis/sto-3g.gbs 
+
+
+Reading options from the FORTE block
+Calling plugin forte.so.
+
+
+
+  Forte
+  ----------------------------------------------------------------------------
+  A suite of quantum chemistry methods for strongly correlated electrons
+
+    git branch: dwms - git commit: 7f6d1b1d
+
+  Developed by:
+    Francesco A. Evangelista, Chenyang Li, Kevin P. Hannon,
+    Jeffrey B. Schriber, Tianyuan Zhang, Chenxi Cai
+  ----------------------------------------------------------------------------
+
+  Size of Determinant class: 32
+
+  ==> MO Space Information <==
+
+  Read options for space FROZEN_DOCC
+  Read options for space RESTRICTED_DOCC
+  Read options for space ACTIVE
+  Read options for space FROZEN_UOCC
+ Removing orbital 0
+ Removing orbital 15
+  -------------------------------------------------------------------------
+                       Ag   B1g   B2g   B3g    Au   B1u   B2u   B3u   Sum
+  -------------------------------------------------------------------------
+    FROZEN_DOCC         1     0     0     0     0     1     0     0     2
+    RESTRICTED_DOCC     1     0     0     0     0     1     0     0     2
+    ACTIVE              1     0     1     1     0     1     1     1     6
+    RESTRICTED_UOCC     4     1     2     2     1     4     2     2    18
+    FROZEN_UOCC         0     0     0     0     0     0     0     0     0
+    Total               7     1     3     3     1     7     3     3    28
+  -------------------------------------------------------------------------
+
+  ==> Integral Transformation <==
+
+  Number of molecular orbitals:               28
+  Number of correlated molecular orbitals:    26
+  Number of frozen occupied orbitals:          2
+  Number of frozen unoccupied orbitals:        0
+
+    Molecular point group: d2h
+    Full point group: D_inf_h
+
+    Geometry (in Angstrom), charge = 0, multiplicity = 1:
+
+       Center              X                  Y                   Z               Mass       
+    ------------   -----------------  -----------------  -----------------  -----------------
+           N          0.000000000000     0.000000000000    -0.560000000000    14.003074004780
+           N          0.000000000000     0.000000000000     0.560000000000    14.003074004780
+
+  -AO BASIS SET INFORMATION:
+    Name                   = CC-PVDZ
+    Blend                  = CC-PVDZ
+    Total number of shells = 12
+    Number of primitives   = 44
+    Number of AO           = 30
+    Number of SO           = 28
+    Maximum AM             = 2
+    Spherical Harmonics    = TRUE
+
+  -Contraction Scheme:
+    Atom   Type   All Primitives // Shells:
+   ------ ------ --------------------------
+       1     N     17s 4p 1d // 3s 2p 1d 
+       2     N     17s 4p 1d // 3s 2p 1d 
+
+  ==> AO Basis Functions <==
+
+    [ CC-PVDZ ]
+    spherical
+    ****
+    N   1
+    S   8 1.00
+                      9046.00000000           0.00070000
+                      1357.00000000           0.00538900
+                       309.30000000           0.02740600
+                        87.73000000           0.10320700
+                        28.56000000           0.27872300
+                        10.21000000           0.44854000
+                         3.83800000           0.27823800
+                         0.74660000           0.01544000
+    S   8 1.00
+                      9046.00000000          -0.00015300
+                      1357.00000000          -0.00120800
+                       309.30000000          -0.00599200
+                        87.73000000          -0.02454400
+                        28.56000000          -0.06745900
+                        10.21000000          -0.15807800
+                         3.83800000          -0.12183100
+                         0.74660000           0.54900300
+    S   1 1.00
+                         0.22480000           1.00000000
+    P   3 1.00
+                        13.55000000           0.03991900
+                         2.91700000           0.21716900
+                         0.79730000           0.51031900
+    P   1 1.00
+                         0.21850000           1.00000000
+    D   1 1.00
+                         0.81700000           1.00000000
+    ****
+
+
+  Overall Conventional Integrals timings
+
+	Presorting SO-basis two-electron integrals.
+	Sorting File: SO Ints (nn|nn) nbuckets = 1
+	Transforming the one-electron integrals and constructing Fock matrices
+	Starting first half-transformation.
+	Sorting half-transformed integrals.
+	First half integral transformation complete.
+	Starting second half-transformation.
+	Two-electron integral transformation complete.
+
+  Integral transformation done. 0.02856400 s
+  Reading the two-electron integrals from disk
+  Size of two-electron integrals:   0.013739 GB
+  Frozen-core energy           -100.804452562755 a.u.
+
+  FrozenOneBody Operator takes  0.17642300 s
+  Resorting integrals after freezing core.
+  Conventional integrals take 0.39075400 s
+
+              ---------------------------------------------------
+                Complete Active Space Configuration Interaction
+                                  Chenyang Li
+              ---------------------------------------------------
+
+
+  ==> Input Summary <==
+
+    No. a electrons in active      =     3
+    No. b electrons in active      =     3
+    multiplicity                   =     1
+    spin ms (2 * Sz)               =     0
+
+  ==> Orbital Spaces <==
+
+    TOTAL MO                      [    7     1     3     3     1     7     3     3 ]
+    FROZEN CORE                   [    1     0     0     0     0     1     0     0 ]
+    FROZEN VIRTUAL                [    0     0     0     0     0     0     0     0 ]
+    CORRELATED MO                 [    6     1     3     3     1     6     3     3 ]
+    CORE                          [    1     0     0     0     0     1     0     0 ]
+    ACTIVE                        [    1     0     1     1     0     1     1     1 ]
+    VIRTUAL                       [    4     1     2     2     1     4     2     2 ]
+  Forming alpha and beta strings      ...  Done. Timing        0.000072 s
+  Forming determinants                ...  Done. Timing        0.000033 s
+
+  ==> Determinants Summary <==
+
+    number of alpha active electrons    =     3
+    number of beta active electrons     =     3
+    root symmetry (zero based)          =     0
+    number of determinants              =    56
+
+  Diagonalizing Hamiltonian           ...
+  Found 32 roots with 2S+1 = 1 *
+  Found 18 roots with 2S+1 = 3
+  Found 6 roots with 2S+1 = 5  Done. Timing        0.031388 s
+
+  * * * * * * * * * * * * * * * * *
+  *  CI Vectors & Configurations  *
+  * * * * * * * * * * * * * * * * *
+
+  ==> Root No. 0 <==
+
+    2 0 0 0 2 2          0.9647938923
+    2 2 0 0 2 0         -0.1258989137
+    2 0 2 0 0 2         -0.1258989137
+    2 b a 0 b a          0.0791849915
+    2 a b 0 a b          0.0791849915
+
+    Total Energy:   -109.090719613071599
+
+
+
+  ==> Permanent Dipole Moments (Ag) <==
+
+  Only print nonzero (> 1.0e-5) elements.
+
+  Computing 1-, 2- and 3-cumulants ... Done. Timing        0.096837 s
+
+
+       -----------------------------------------------------------------
+                            Semi-Canonical Orbitals
+         Chenyang Li, Jeffrey B. Schriber and Francesco A. Evangelista
+       -----------------------------------------------------------------
+
+  Took 0.000835 s to build Fock matrix
+
+  ==> Checking Fock Matrix Diagonal Blocks <==
+
+    Off-Diag. Elements       Max           2-Norm
+    ------------------------------------------------
+    Fa actv              0.0000000000   0.0000000000
+    Fb actv              0.0000000000   0.0000000000
+    ------------------------------------------------
+    Fa core              0.0000000000   0.0000000000
+    Fb core              0.0000000000   0.0000000000
+    ------------------------------------------------
+    Fa virt              0.0000000000   0.0000000000
+    Fb virt              0.0000000000   0.0000000000
+    ------------------------------------------------
+  Orbitals are already semicanonicalized.
+
+  ==> Multireference Driven Similarity Renormalization Group <==
+
+    Reading DSRG options ............................ Done
+    Setting ambit MO space .......................... Done
+    Preparing tensors for density cumulants ......... Done
+    Building Fock matrix ............................ Done
+    Checking reference energy ....................... Done
+
+              ----------------------------------------------------
+                    MR-DSRG Second-Order Perturbation Theory
+                Chenyang Li, Kevin Hannon, Francesco Evangelista
+              ----------------------------------------------------
+
+    References:
+      u-DSRG-MRPT2:    J. Chem. Theory Comput. 2015, 11, 2097.
+      (pr-)DSRG-MRPT2: J. Chem. Phys. 2017, 146, 124132.
+
+  ==> Calculation Information <==
+
+    ntamp                                                 15
+    flow parameter                                 5.000e-01
+    taylor expansion threshold                     1.000e-03
+    intruder_tamp                                  1.000e-01
+    int_type                                    CONVENTIONAL
+    source operator                                 STANDARD
+    reference relaxation                                ONCE
+    state_type                                STATE-SPECIFIC
+    form Hbar3                                         FALSE
+
+  ==> Checking Semicanonical Orbitals <==
+
+    Abs. max of Fock core, active, virtual blocks (Fij, i != j)
+                  core          active         virtual
+    --------------------------------------------------
+    Fα    0.0000000000    0.0000000000    0.0000000000
+    Fβ    0.0000000000    0.0000000000    0.0000000000
+    --------------------------------------------------
+
+    1-Norm of Fock core, active, virtual blocks (Fij, i != j)
+                  core          active         virtual
+    --------------------------------------------------
+    Fα    0.0000000000    0.0000000000    0.0000000000
+    Fβ    0.0000000000    0.0000000000    0.0000000000
+    --------------------------------------------------
+
+    Orbitals are semi-canonicalized.
+
+  ==> Computing DSRG-MRPT2 ... <==
+
+    Computing T2 amplitudes                  ...  Done. Timing        0.024510 s
+    Computing T1 amplitudes                  ...  Done. Timing        0.004268 s
+    Renormalizing two-electron integrals     ...  Done. Timing        0.020931 s
+    Renormalizing Fock matrix elements       ...  Done. Timing        0.005345 s
+    Computing <[F, T1]>                      ...  Done. Timing        0.001841 s
+    Computing <[F, T2]>                      ...  Done. Timing        0.004395 s
+    Computing <[V, T1]>                      ...  Done. Timing        0.004434 s
+    Computing <[V, T2]> (C_2)^4              ...  Done. Timing        0.026795 s
+    Computing <[V, T2]> C_4 (C_2)^2 HH       ...  Done. Timing        0.006088 s
+    Computing <[V, T2]> C_4 (C_2)^2 PP       ...  Done. Timing        0.007654 s
+    Computing <[V, T2]> C_4 (C_2)^2 PH       ...  Done. Timing        0.027770 s
+    Computing <[V, T2]> C_6 C_2              ...  Done. Timing        0.050779 s
+
+  ==> Excitation Amplitudes Summary <==
+
+    Active Indices:    1    7   10   15   20   23 
+    Largest T1 amplitudes for spin case A:
+       i       a                  i       a                  i       a               
+    --------------------------------------------------------------------------------
+    [ 15      19    ] 0.206369 [  7       8    ] 0.088075 [ 10      11    ] 0.088075 
+    [ 10      12    ]-0.055795 [  7       9    ]-0.055795 [ 15      16    ]-0.054970 
+    [ 15      17    ]-0.034635 [ 23      24    ] 0.012747 [ 20      21    ] 0.012747 
+    [  0       1    ] 0.010253 [ 23      25    ]-0.007472 [ 20      22    ]-0.007472 
+    [  1       2    ]-0.003554 [  1       5    ]-0.003201 [ 14      15    ]-0.001716 
+    --------------------------------------------------------------------------------
+    Norm of T1A vector: (nonzero elements: 22)                    0.262904194920180.
+    --------------------------------------------------------------------------------
+    Largest T1 amplitudes for spin case B:
+       _       _                  _       _                  _       _               
+       i       a                  i       a                  i       a               
+    --------------------------------------------------------------------------------
+    [ 15      19    ] 0.206369 [  7       8    ] 0.088075 [ 10      11    ] 0.088075 
+    [ 10      12    ]-0.055795 [  7       9    ]-0.055795 [ 15      16    ]-0.054970 
+    [ 15      17    ]-0.034635 [ 23      24    ] 0.012747 [ 20      21    ] 0.012747 
+    [  0       1    ] 0.010253 [ 23      25    ]-0.007472 [ 20      22    ]-0.007472 
+    [  1       2    ]-0.003554 [  1       5    ]-0.003201 [ 14      15    ]-0.001716 
+    --------------------------------------------------------------------------------
+    Norm of T1B vector: (nonzero elements: 22)                    0.262904194920180.
+    --------------------------------------------------------------------------------
+    Largest T2 amplitudes for spin case AA:
+       i   j   a   b              i   j   a   b              i   j   a   b           
+    --------------------------------------------------------------------------------
+    [ 15  20  15  21] 0.068641 [ 15  23  15  24] 0.068641 [  1  20   1  21] 0.059587 
+    [  1  23   1  24] 0.059587 [  7  20   7  21] 0.052993 [ 10  23  10  24] 0.052993 
+    [  0  15   3  15] 0.047253 [ 20  23  21  23] 0.045451 [ 20  23  20  24] 0.045451 
+    [  1  15   2  15]-0.043762 [ 14  15  15  16] 0.042568 [  1  20   2  20]-0.041319 
+    [  1  23   2  23]-0.041319 [  1   7   2   7]-0.040643 [  1  10   2  10]-0.040643 
+    --------------------------------------------------------------------------------
+    Norm of T2AA vector: (nonzero elements: 3676)                 0.696700201841951.
+    --------------------------------------------------------------------------------
+    Largest T2 amplitudes for spin case AB:
+           _       _                  _       _                  _       _           
+       i   j   a   b              i   j   a   b              i   j   a   b           
+    --------------------------------------------------------------------------------
+    [ 15  20  15  21] 0.079673 [ 15  23  15  24] 0.079673 [  1   1   1   2]-0.075501 
+    [  1  15   2  15]-0.074044 [  1  20   1  21] 0.072492 [  1  23   1  24] 0.072492 
+    [ 15  15  15  19] 0.064734 [ 10  20  10  21] 0.063559 [  7  23   7  24] 0.063559 
+    [  1  15   1  19] 0.061837 [  7  20   7  21] 0.056868 [ 10  23  10  24] 0.056868 
+    [  0  15   3  15] 0.056113 [ 20  20  20  21] 0.050682 [ 23  23  23  24] 0.050682 
+    --------------------------------------------------------------------------------
+    Norm of T2AB vector: (nonzero elements: 4440)                 0.698988018503615.
+    --------------------------------------------------------------------------------
+    Largest T2 amplitudes for spin case BB:
+       _   _   _   _              _   _   _   _              _   _   _   _           
+       i   j   a   b              i   j   a   b              i   j   a   b           
+    --------------------------------------------------------------------------------
+    [ 15  20  15  21] 0.068641 [ 15  23  15  24] 0.068641 [  1  20   1  21] 0.059587 
+    [  1  23   1  24] 0.059587 [  7  20   7  21] 0.052993 [ 10  23  10  24] 0.052993 
+    [  0  15   3  15] 0.047253 [ 20  23  21  23] 0.045451 [ 20  23  20  24] 0.045451 
+    [  1  15   2  15]-0.043762 [ 14  15  15  16] 0.042568 [  1  20   2  20]-0.041319 
+    [  1  23   2  23]-0.041319 [  1   7   2   7]-0.040643 [  1  10   2  10]-0.040643 
+    --------------------------------------------------------------------------------
+    Norm of T2BB vector: (nonzero elements: 3676)                 0.696700201841951.
+    --------------------------------------------------------------------------------
+
+  ==> Possible Intruders <==
+
+    T1 amplitudes larger than 0.1000 for spin case A:
+        Amplitude         Value                  Denominator              
+    ----------------------------------------------------------------------
+    [ 15      19    ]    0.20636905 (  1.200555 -   3.143773 =  -1.943218)
+    ----------------------------------------------------------------------
+    T1 amplitudes larger than 0.1000 for spin case B:
+        Amplitude         Value                  Denominator              
+    ----------------------------------------------------------------------
+    [ 15      19    ]    0.20636905 (  1.200555 -   3.143773 =  -1.943218)
+    ----------------------------------------------------------------------
+    T2 amplitudes larger than 0.1000 for spin case AA: NULL
+    T2 amplitudes larger than 0.1000 for spin case AB: NULL
+    T2 amplitudes larger than 0.1000 for spin case BB: NULL
+
+  ==> DSRG-MRPT2 Energy Summary <==
+
+    E0 (reference)                 =   -109.090719613071599
+    <[F, T1]>                      =     -0.011901934289669
+    <[F, T2]>                      =      0.011970170504637
+    <[V, T1]>                      =      0.010332792055612
+    <[V, T2]> (C_2)^4              =     -0.200242544621644
+    <[V, T2]> C_4 (C_2)^2 HH       =      0.003160123893342
+    <[V, T2]> C_4 (C_2)^2 PP       =      0.012828135317337
+    <[V, T2]> C_4 (C_2)^2 PH       =      0.023265300620378
+    <[V, T2]> C_6 C_2              =     -0.004275964291332
+    <[V, T2]>                      =     -0.165264949081918
+    DSRG-MRPT2 correlation energy  =     -0.154863920811338
+    DSRG-MRPT2 total energy        =   -109.245583533882936
+    max(T1)                        =      0.206369054435958
+    max(T2)                        =      0.079673394534425
+    ||T1||                         =      0.371802678060899
+    ||T2||                         =      1.710298027403315
+
+  Energy took      0.212 s
+
+
+  ==> De-Normal-Order DSRG Transformed Hamiltonian <==
+
+    Computing the scalar term                ... Done. Timing    0.002 s
+    Computing the 1-body term                ... Done. Timing    0.001 s
+
+  ==> Rotate DSRG Transformed Hamiltonian back to Original Basis <==
+
+    Rotating 1-body term to original basis   ... Done. Timing    0.001 s
+    Rotating 2-body term to original basis   ... Done. Timing    0.018 s
+
+              ---------------------------------------------------
+                Complete Active Space Configuration Interaction
+                                  Chenyang Li
+              ---------------------------------------------------
+
+
+  ==> Input Summary <==
+
+    No. a electrons in active      =     3
+    No. b electrons in active      =     3
+    multiplicity                   =     1
+    spin ms (2 * Sz)               =     0
+
+  ==> Orbital Spaces <==
+
+    TOTAL MO                      [    7     1     3     3     1     7     3     3 ]
+    FROZEN CORE                   [    1     0     0     0     0     1     0     0 ]
+    FROZEN VIRTUAL                [    0     0     0     0     0     0     0     0 ]
+    CORRELATED MO                 [    6     1     3     3     1     6     3     3 ]
+    CORE                          [    1     0     0     0     0     1     0     0 ]
+    ACTIVE                        [    1     0     1     1     0     1     1     1 ]
+    VIRTUAL                       [    4     1     2     2     1     4     2     2 ]
+  Forming alpha and beta strings      ...  Done. Timing        0.000097 s
+  Forming determinants                ...  Done. Timing        0.000043 s
+
+  ==> Determinants Summary <==
+
+    number of alpha active electrons    =     3
+    number of beta active electrons     =     3
+    root symmetry (zero based)          =     0
+    number of determinants              =    56
+
+  Diagonalizing Hamiltonian           ...
+  Found 32 roots with 2S+1 = 1 *
+  Found 18 roots with 2S+1 = 3
+  Found 6 roots with 2S+1 = 5  Done. Timing        0.029880 s
+
+  * * * * * * * * * * * * * * * * *
+  *  CI Vectors & Configurations  *
+  * * * * * * * * * * * * * * * * *
+
+  ==> Root No. 0 <==
+
+    2 0 0 0 2 2          0.9680602369
+    2 0 2 0 0 2         -0.1208742859
+    2 2 0 0 2 0         -0.1208742859
+    2 b a 0 b a          0.0770833733
+    2 a b 0 a b          0.0770833733
+
+    Total Energy:   -109.246090954212931
+
+
+
+  ==> Permanent Dipole Moments (Ag) <==
+
+  Only print nonzero (> 1.0e-5) elements.
+
+
+  ==> DSRG-MRPT2 Energy Summary <==
+
+    DSRG-MRPT2 Total Energy (fixed)   =   -109.245583533882936
+    DSRG-MRPT2 Total Energy (relaxed) =   -109.246090954212931
+
+
+  ==> Total Timings (s) for Computing Commutators <==
+
+             [H1, T1]    [H1, T2]    [H2, T1]    [H2, T2]
+    -----------------------------------------------------
+    -> C0       0.002       0.004       0.004       0.119
+    -> C1       0.001       0.011       0.007       0.163
+    -> C2                   0.015       0.008       0.064
+    -----------------------------------------------------
+	DSRG-MRPT2 relaxed energy.........................................PASSED
+
+*** Psi4 exiting successfully. Buy a developer a beer!

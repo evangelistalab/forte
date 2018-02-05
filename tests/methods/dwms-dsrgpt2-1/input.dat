@@ -3,8 +3,8 @@
 import forte
 
 Emcscf_avg = -106.75288506058001
-Ept2_root0 = -106.93005699410999
-Ept2_root1 = -106.91457784175027
+Ept2_root0 = -106.93005699411140
+Ept2_root1 = -106.91457748207812
 
 molecule {
   0 1
@@ -81,7 +81,7 @@ set forte{
   e_convergence      10
   cas_type           cas
   avg_state          [[0,1,2]]
-  fcimo_sa_weights_gamma 100.0
+  dwms_zeta          100.0
 }
 
 Emcscf, wfn = energy('casscf', return_wfn=True)

@@ -153,6 +153,9 @@ void DSRG_MRPT3::startup() {
         outfile->Printf("\n\n  Warning: RELAX_REF option \"%s\" is not supported. Change to ONCE.",
                         relax_ref_.c_str());
         relax_ref_ = "ONCE";
+
+        warnings_.push_back(std::make_tuple("Unsupported RELAX_REF", "Change to ONCE",
+                                            "Change options in input.dat"));
     }
 
     if (relax_ref_ != "NONE" || multi_state_) {
@@ -175,6 +178,9 @@ void DSRG_MRPT3::startup() {
                             multi_state_algorithm_.c_str());
             outfile->Printf("\n             Set DSRG_MULTI_STATE back to default SA_FULL.");
             multi_state_algorithm_ = "SA_FULL";
+
+            warnings_.push_back(std::make_tuple("Unsupported DSRG_MULTI_STATE", "Change to SA_FULL",
+                                                "Change options in input.dat"));
         }
     }
 
@@ -373,6 +379,9 @@ bool DSRG_MRPT3::check_semicanonical() {
             outfile->Printf("\n    Warning: ignore testing of semi-canonical orbitals.");
             outfile->Printf(
                 "\n    Please inspect if the Fock diag. blocks (C, A, V) are diagonal or not.");
+
+            warnings_.push_back(std::make_tuple("Semicanonical orbital test", "Ignore test results",
+                                                "Post an issue for advice."));
         }
         semi = true;
     }
@@ -414,7 +423,7 @@ void DSRG_MRPT3::print_options_summary() {
     }
 }
 
-void DSRG_MRPT3::cleanup() { dsrg_time_.print_comm_time(); }
+void DSRG_MRPT3::cleanup() {}
 
 double DSRG_MRPT3::compute_energy() {
     // check semi-canonical orbitals
@@ -1739,7 +1748,7 @@ void DSRG_MRPT3::transfer_integrals() {
 
     // test if de-normal-ordering is correct
     print_h2("Test De-Normal-Ordered Hamiltonian");
-    double Etest = scalar_include_fc + molecule_->nuclear_repulsion_energy(reference_wavefunction_->get_dipole_field_strength());
+    double Etest = scalar_include_fc + Enuc_;
 
     double Etest1 = 0.0;
     Etest1 += temp1["uv"] * Gamma1_["vu"];

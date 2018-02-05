@@ -278,7 +278,8 @@ void forte_old_methods(SharedWavefunction ref_wfn, Options& options,
         pt.compute_energy();
     }
     if (options.get_str("JOB_TYPE") == "DWMS-DSRGPT2") {
-        compute_dwms_mrpt2_energy(ref_wfn, options, ints, mo_space_info);
+        DWMS_DSRGPT2 dwms(ref_wfn, options, ints, mo_space_info);
+        dwms.compute_energy();
     }
     if (options.get_str("JOB_TYPE") == "DSRG_MRPT") {
         std::string cas_type = options.get_str("CAS_TYPE");

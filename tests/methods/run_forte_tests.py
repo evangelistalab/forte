@@ -52,7 +52,6 @@ dsrg_mrpt2_tests = ["mr-dsrg-pt2-1","mr-dsrg-pt2-2","mr-dsrg-pt2-3","mr-dsrg-pt2
                     "dsrg-mrpt2-6","dsrg-mrpt2-7-casscf-natorbs","dsrg-mrpt2-8-sa",
                     "dsrg-mrpt2-9-xms","dsrg-mrpt2-10-CO","dsrg-mrpt2-11-sa-C2H4",
                     "dsrg-mrpt2-12-localized-actv",
-                    "dwms-dsrgpt2-1",
                     "cd-dsrg-mrpt2-1","cd-dsrg-mrpt2-2","cd-dsrg-mrpt2-3","cd-dsrg-mrpt2-4",
                     "cd-dsrg-mrpt2-5","cd-dsrg-mrpt2-6","cd-dsrg-mrpt2-7-sa",
                     "df-dsrg-mrpt2-1","df-dsrg-mrpt2-2","df-dsrg-mrpt2-3","df-dsrg-mrpt2-4",
@@ -65,14 +64,15 @@ dsrg_mrpt2_tests = ["mr-dsrg-pt2-1","mr-dsrg-pt2-2","mr-dsrg-pt2-3","mr-dsrg-pt2
 active_dsrgpt2_tests = ["actv-dsrg-1-C2H4-cis", "actv-dsrg-2-C2H4-cisd", "actv-dsrg-3-C4H6-cisd",
                         "actv-dsrg-4-C4H6-triplet", "actv-dsrg-5-actv-independence",
                         "actv-dsrg-size-intensive", "actv-dsrg-ipea-1", "actv-dsrg-ipea-2"]
+dwms_dsrgpt2_tests = ["dwms-dsrgpt2-1","dwms-dsrgpt2-2","dwms-dsrgpt2-3","dwms-dsrgpt2-4"]
 
 casscf_tests = ["casscf", "casscf-2","casscf-3", "casscf-4", "casscf-5", "casscf-6", "casscf-7",
                 "df-casscf-1"]
 dmrg_tests = ["dmrgscf-1", "df-dmrgscf-1", "cd-dmrgscf-1", "dmrg-dsrg-mrpt2-1", "dmrg-dsrg-mrpt2-2"]
 
 #tests =  fci_tests + casscf_tests + dsrg_mrpt2_tests + adaptive_ci_tests + pci_tests + fciqmc_tests + ct_tests + dsrg_tests
-#tests =  fci_tests + casscf_tests + dsrg_mrpt2_tests + dmrg_tests + mrdsrg_tests + adaptive_ci_tests + pci_tests
-tests = fci_tests + casscf_tests + dsrg_mrpt2_tests + active_dsrgpt2_tests + dsrg_mrpt3_tests + mrdsrg_tests + mrdsrg_df_tests + adaptive_ci_tests + pci_tests + pci_hashvec_tests
+tests = fci_tests + casscf_tests + dsrg_mrpt2_tests + dsrg_mrpt3_tests + mrdsrg_tests + mrdsrg_df_tests + adaptive_ci_tests + pci_tests + pci_hashvec_tests
+tests += active_dsrgpt2_tests + dwms_dsrgpt2_tests
 
 maindir = os.getcwd()
 if len(sys.argv) == 1:
