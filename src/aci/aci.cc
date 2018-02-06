@@ -805,7 +805,7 @@ void AdaptiveCI::find_q_space_batched(DeterminantHashVec& P_space, DeterminantHa
 
     if (!quiet_mode_) {
         outfile->Printf("\n  %s: %zu determinants", "Dimension of the truncated SD space", F_space.size());
-        outfile->Printf("\n  %s: %f s\n", "Time spent building the model space (default)",
+        outfile->Printf("\n  %s: %f s\n", "Time spent building the external space (default)",
                         build.get());
     }
 
@@ -881,7 +881,7 @@ void AdaptiveCI::default_find_q_space(DeterminantHashVec& P_space, DeterminantHa
 
     if (!quiet_mode_) {
         outfile->Printf("\n  %s: %zu determinants", "Dimension of the truncated SD space", V_hash.size());
-        outfile->Printf("\n  %s: %f s\n", "Time spent building the model space (default)",
+        outfile->Printf("\n  %s: %f s\n", "Time spent building the external space (default)",
                         build.get());
     }
 
@@ -975,7 +975,7 @@ void AdaptiveCI::find_q_space(DeterminantHashVec& P_space, DeterminantHashVec& P
 
     if (!quiet_mode_) {
         outfile->Printf("\n  %s: %zu determinants", "Dimension of the SD space", V_hash.size());
-        outfile->Printf("\n  %s: %f s\n", "Time spent building the model space", t_ms_build.get());
+        outfile->Printf("\n  %s: %f s\n", "Time spent building the external space", t_ms_build.get());
     }
 
     // This will contain all the determinants
@@ -2136,7 +2136,7 @@ void AdaptiveCI::compute_aci(DeterminantHashVec& PQ_space, SharedMatrix& PQ_evec
             print_wfn(P_space, op_, P_evecs, num_ref_roots);
 
         // Step 2. Find determinants in the Q space
-
+Timer build_space;
         if (options_.get_bool("ACI_BATCHED_SCREENING")){
             find_q_space_batched(P_space, PQ_space, P_evals, P_evecs);
         } else if (streamline_qspace_) {
@@ -2144,7 +2144,7 @@ void AdaptiveCI::compute_aci(DeterminantHashVec& PQ_space, SharedMatrix& PQ_evec
         } else {
             find_q_space(P_space, PQ_space, num_ref_roots, P_evals, P_evecs);
         }
-
+outfile->Printf("\n  Time spent building the model space: %1.6f", build_space.get());
         // Check if P+Q space is spin complete
         if (spin_complete_) {
             PQ_space.make_spin_complete(ncmo_); // <- xsize

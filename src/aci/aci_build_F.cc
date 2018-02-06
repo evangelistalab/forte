@@ -886,6 +886,7 @@ double AdaptiveCI::get_excited_determinants_batch( SharedMatrix evecs, SharedVec
         if (options_["ACI_NBATCH"].has_changed()) {
             nbin = options_.get_int("ACI_NBATCH");
         } 
+        std::vector<std::pair<double,Determinant>> F_td;
     
         int bin_size = nbin / n_threads;
         bin_size += (thread_id < (nbin % n_threads)) ? 1 : 0;
@@ -916,44 +917,50 @@ double AdaptiveCI::get_excited_determinants_batch( SharedMatrix evecs, SharedVec
             // 1. Build the full bin-subset
             det_hash<double> A_b = get_bin_F_space(bin,nbin,evecs,P_space);
 
-            #pragma omp critical
-            {
             // 2. Put the dets/vals in a sortable list (F_tmp)
-                std::vector<std::pair<double,Determinant>> F_tmp; 
-                for( auto& det_p : A_b ){
-                    auto& det = det_p.first;
-                    double& V = det_p.second;
+            std::vector<std::pair<double,Determinant>> F_tmp; 
+            for( auto& det_p : A_b ){
+                auto& det = det_p.first;
+                double& V = det_p.second;
         
-                    double delta = fci_ints_->energy(det) - evals->get(0); 
+                double delta = fci_ints_->energy(det) - evals->get(0); 
         
-                    F_tmp.push_back( std::make_pair( std::fabs(0.5*(delta - sqrt(delta*delta + V*V*4.0))), det ));
+                F_tmp.push_back( std::make_pair( std::fabs(0.5*(delta - sqrt(delta*delta + V*V*4.0))), det ));
+            }
+            outfile->Printf("\n  Size of F subspace: %zu dets (bin %d)", F_tmp.size(), bin);
+        
+            // 3. Sort the list
+            std::sort( F_tmp.begin(), F_tmp.end(), pair_comp);
+        
+            // 4. Screen subspaces
+            double b_sigma = sigma_ * (0.1/nbin);
+//            outfile->Printf("\n  Using sigma = %1.5f", b_sigma);
+            double excluded = 0.0;
+            size_t ndet = 0; 
+            for( size_t I = 0, max_I = F_tmp.size(); I < max_I; ++I ){
+                double en = F_tmp[I].first;
+                Determinant& det = F_tmp[I].second;
+                if( excluded + en < b_sigma ){
+                    excluded += en;
+                } else {
+                    F_td.push_back(std::make_pair(en, det));
+                    ndet++;
                 }
-                outfile->Printf("\n  Size of F subspace: %zu dets", F_tmp.size());
-        
-                // 3. Sort the list
-                std::sort( F_tmp.begin(), F_tmp.end(), pair_comp);
-        
-                // 4. Screen subspaces
-                double b_sigma = sigma_ * (0.1/nbin);
-                outfile->Printf("\n  Using sigma = %1.5f", b_sigma);
-                double excluded = 0.0;
-                size_t ndet = 0; 
-                for( size_t I = 0, max_I = F_tmp.size(); I < max_I; ++I ){
-                    double en = F_tmp[I].first;
-                    Determinant& det = F_tmp[I].second;
-                    if( excluded + en < b_sigma ){
-                        excluded += en;
-                    } else {
-                // 5. Merge selected determinants in Q space
-                        F_space.push_back( std::make_pair(en, det));
-                        ndet++;
-                    }
-                }
-                outfile->Printf("\n  Added %zu dets from bin %d, (td %d)", ndet, bin, thread_id); 
-                total_excluded += excluded;
+            }
+            outfile->Printf("\n  Added %zu dets from bin %d, (td %d)", ndet, bin, thread_id); 
+            total_excluded += excluded;
 
-            } // End critical
         } // End iteration over bins
+
+
+        //6. Merge thread spaces
+        #pragma omp critical
+        {
+            for( auto& pair : F_td ){
+                F_space.push_back(pair);
+            }
+        }
+
     } // close threads
 
     outfile->Printf("\n  Screened out %1.10f Eh of correlation", total_excluded);
@@ -996,13 +1003,9 @@ det_hash<double> AdaptiveCI::get_bin_F_space( int bin, int nbin, SharedMatrix ev
                 new_det.set_alfa_bit(aa, true);
                 size_t hash_val = Determinant::Hash()(new_det);
                 if ( (hash_val % nbin) == bin) {
-                if ((mo_symmetry_[ii] ^ mo_symmetry_[aa]) == 0) {
-                    double HIJ = fci_ints_->slater_rules_single_alpha(det, ii, aa) * c_I;
-                    if ((std::fabs(HIJ) >= screen_thresh_)) {
-                        // Check if the determinant goes in this bin
-                           // if (P_space.has_det(new_det))
-                           //     continue;
-
+                    if ((mo_symmetry_[ii] ^ mo_symmetry_[aa]) == 0) {
+                        double HIJ = fci_ints_->slater_rules_single_alpha(det, ii, aa) * c_I;
+                        if ((std::fabs(HIJ) >= screen_thresh_)) {
                             if (A_b.count(new_det) == 0) {
                                 A_b[new_det] = HIJ;
                             } else {
@@ -1024,11 +1027,9 @@ det_hash<double> AdaptiveCI::get_bin_F_space( int bin, int nbin, SharedMatrix ev
                 new_det.set_beta_bit(aa, true);
                 size_t hash_val = Determinant::Hash()(new_det);
                 if ((hash_val % nbin) == bin) {
-                if ((mo_symmetry_[ii] ^ mo_symmetry_[aa]) == 0) {
-                    double HIJ = fci_ints_->slater_rules_single_beta(det, ii, aa) * c_I;
-                    if ((std::fabs(HIJ) >= screen_thresh_)) {
-                           // if (P_space.has_det(new_det))
-                           //     continue;
+                    if ((mo_symmetry_[ii] ^ mo_symmetry_[aa]) == 0) {
+                        double HIJ = fci_ints_->slater_rules_single_beta(det, ii, aa) * c_I;
+                        if ((std::fabs(HIJ) >= screen_thresh_)) {
                             if (A_b.count(new_det) == 0) {
                                 A_b[new_det] = HIJ;
                             } else {
@@ -1058,9 +1059,6 @@ det_hash<double> AdaptiveCI::get_bin_F_space( int bin, int nbin, SharedMatrix ev
                             mo_symmetry_[bb]) == 0) {
                                 double HIJ = fci_ints_->tei_aa(ii, jj, aa, bb) * sign * c_I;
                                 if ((std::fabs(HIJ) >= screen_thresh_)) {
-                           //         if (P_space.has_det(new_det))
-                           //             continue;
-
                                     if (A_b.count(new_det) == 0) {
                                         A_b[new_det] = HIJ;
                                     } else {
@@ -1091,9 +1089,6 @@ det_hash<double> AdaptiveCI::get_bin_F_space( int bin, int nbin, SharedMatrix ev
                                  mo_symmetry_[bb]) == 0) {
                                 double HIJ = fci_ints_->tei_bb(ii, jj, aa, bb) * sign * c_I;
                                 if ((std::fabs(HIJ) >= screen_thresh_)) {
-                           //         if (P_space.has_det(new_det))
-                           //             continue;
-
                                     if (A_b.count(new_det) == 0) {
                                         A_b[new_det] = HIJ;
                                     } else {
@@ -1119,14 +1114,11 @@ det_hash<double> AdaptiveCI::get_bin_F_space( int bin, int nbin, SharedMatrix ev
                         double sign = new_det.double_excitation_ab(ii, jj, aa, bb);
                         size_t hash_val = Determinant::Hash()(new_det);
                         if ((hash_val % nbin) == bin) {
-                        if ((mo_symmetry_[ii] ^ mo_symmetry_[jj] ^ mo_symmetry_[aa] ^
-                             mo_symmetry_[bb]) == 0) {
+                            if ((mo_symmetry_[ii] ^ mo_symmetry_[jj] ^ mo_symmetry_[aa] ^
+                                 mo_symmetry_[bb]) == 0) {
 
                                 double HIJ = fci_ints_->tei_ab(ii, jj, aa, bb) * sign * c_I;
                                 if ((std::fabs(HIJ) >= screen_thresh_)) {
-                           //         if (P_space.has_det(new_det))
-                           //             continue;
-
                                     if (A_b.count(new_det) == 0) {
                                         A_b[new_det] = HIJ;
                                     } else {
@@ -1143,7 +1135,7 @@ det_hash<double> AdaptiveCI::get_bin_F_space( int bin, int nbin, SharedMatrix ev
 
     // Remove duplicates
     for( det_hashvec::iterator it = dets.begin(), endit = dets.end(); it != endit; ++it) {
-        A_b.erase(*it);
+        A_b[*it] = 0.0;
     }  
 
     return A_b;
