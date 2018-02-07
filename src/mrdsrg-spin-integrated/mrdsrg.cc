@@ -365,7 +365,7 @@ double MRDSRG::compute_energy_relaxed() {
         Edsrg = compute_energy();
 
         // compute de-normal-ordered all-active DSRG transformed Hamiltonian
-        auto fci_ints = compute_Heff();
+        auto fci_ints = compute_Heff_actv();
 
         if (cas_type == "CAS") {
             FCI_MO fci_mo(reference_wavefunction_, options_, ints_, mo_space_info_, fci_ints);
@@ -411,7 +411,7 @@ double MRDSRG::compute_energy_relaxed() {
             Edelta_dsrg_vec.push_back(Edelta_dsrg);
 
             // compute de-normal-ordered all-active DSRG transformed Hamiltonian
-            auto fci_ints = compute_Heff();
+            auto fci_ints = compute_Heff_actv();
 
             /// NOTE: For consistant CI coefficients, compute_Heff will rotate Hbar to the basis
             /// before semicanonicalization!
@@ -578,7 +578,7 @@ double MRDSRG::compute_energy_sa() {
         Edelta_dsrg_sa_vec.push_back(Edelta_dsrg);
 
         // compute de-normal-ordered all-active DSRG transformed Hamiltonian
-        auto fci_ints = compute_Heff();
+        auto fci_ints = compute_Heff_actv();
 
         // diagonalize the Hamiltonian
         auto fci_mo = std::make_shared<FCI_MO>(reference_wavefunction_, options_, ints_,

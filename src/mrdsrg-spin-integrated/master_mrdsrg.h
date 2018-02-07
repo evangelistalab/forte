@@ -39,7 +39,7 @@ class MASTER_DSRG : public DynamicCorrelationSolver {
     virtual double compute_energy() = 0;
 
     /// Compute DSRG transformed Hamiltonian
-    virtual std::shared_ptr<FCIIntegrals> compute_Heff();
+    virtual std::shared_ptr<FCIIntegrals> compute_Heff_actv();
 
     /// Compute second-order effective Hamiltonian couplings (child class overrides)
     /// <M|H + HA(N)|N> = Heff1 * TrD1 + Heff2 * TrD2 + Heff3 * TrD3 if CAS
@@ -57,6 +57,9 @@ class MASTER_DSRG : public DynamicCorrelationSolver {
     /// Compute DSRG transformed dipole integrals
     //    virtual void compute_dm_eff(std::vector<double>& M0, std::vector<BlockedTensor>& M1,
     //                                std::vector<BlockedTensor>& M2) = 0;
+
+    /// Return the Hbar of a given order
+    std::vector<ambit::Tensor> Hbar(int n);
 
     /// Set unitary matrix (in active space) from original to semicanonical
     void set_Uactv(ambit::Tensor& Ua, ambit::Tensor& Ub) {
