@@ -69,6 +69,9 @@ class DWMS_DSRGPT2 : public Wavefunction {
     /// compute MS or XMS energies
     double compute_dwms_energy();
 
+    /// compute DWSA energies
+    double compute_dwsa_energy();
+
     /// compute Reference
     Reference compute_Reference(CI_RDMS& ci_rdms, bool do_cumulant);
 

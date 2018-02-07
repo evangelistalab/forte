@@ -3298,7 +3298,7 @@ void THREE_DSRG_MRPT2::form_Hbar() {
 
 void THREE_DSRG_MRPT2::relax_reference_once() {
 
-    auto fci_ints = compute_Heff();
+    auto fci_ints = compute_Heff_actv();
 
     std::vector<double> E_relaxed = relaxed_energy(fci_ints);
 

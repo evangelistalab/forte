@@ -102,7 +102,7 @@ std::vector<std::vector<double>> DSRG_MRPT2::compute_energy_sa() {
         "17-et",   "18-et",   "19-et",   "20-et",   "21-et",   "22-et",  "23-et",  "24-et"};
 
     // obtain the all-active DSRG transformed Hamiltonian
-    auto fci_ints = compute_Heff();
+    auto fci_ints = compute_Heff_actv();
 
     // get effective one-electron integral (DSRG transformed)
     BlockedTensor oei = BTF_->build(tensor_type_, "temp1", spin_cases({"aa"}));

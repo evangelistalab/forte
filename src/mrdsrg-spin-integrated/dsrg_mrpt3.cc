@@ -1304,7 +1304,7 @@ double DSRG_MRPT3::compute_energy_sa() {
     compute_energy();
 
     // obtain active-only transformed intergals
-    std::shared_ptr<FCIIntegrals> fci_ints = compute_Heff();
+    std::shared_ptr<FCIIntegrals> fci_ints = compute_Heff_actv();
 
     //    // transfer integrals
     //    transfer_integrals();
@@ -1579,7 +1579,7 @@ double DSRG_MRPT3::compute_energy_relaxed() {
     std::map<std::string, std::vector<double>> dm_relax;
 
     // obtain the all-active DSRG transformed Hamiltonian
-    auto fci_ints = compute_Heff();
+    auto fci_ints = compute_Heff_actv();
 
     if (options_.get_str("CAS_TYPE") == "CAS") {
         FCI_MO fci_mo(reference_wavefunction_, options_, ints_, mo_space_info_, fci_ints);

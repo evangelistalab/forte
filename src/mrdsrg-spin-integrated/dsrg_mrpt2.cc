@@ -1736,7 +1736,7 @@ double DSRG_MRPT2::compute_energy_relaxed() {
     std::map<std::string, std::vector<double>> dm_relax;
 
     // obtain the all-active DSRG transformed Hamiltonian
-    auto fci_ints = compute_Heff();
+    auto fci_ints = compute_Heff_actv();
 
     // diagonalize Hbar depending on CAS_TYPE
     if (options_.get_str("CAS_TYPE") == "CAS") {

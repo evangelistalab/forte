@@ -42,7 +42,7 @@ void set_DWMS_options(ForteOptions& foptions) {
      *  - DWMS-AVG0: weights from SA-DSRG-PT2 energies, non-orthogonal final solutions
      *  - DWMS-AVG1: weights from SA-DSRG-PT2 energies, orthogonal final solutions -*/
     foptions.add_str("DWMS_ALGORITHM", "DWMS-0",
-                     {"MS", "XMS", "DWMS-0", "DWMS-1", "DWMS-AVG0", "DWMS-AVG1"},
+                     {"MS", "XMS", "SA", "DWMS-0", "DWMS-1", "DWMS-AVG0", "DWMS-AVG1"},
                      "DWMS algorithms");
 }
 
@@ -199,7 +199,7 @@ std::shared_ptr<FCIIntegrals> DWMS_DSRGPT2::compute_dsrg_pt2(std::shared_ptr<FCI
     }
 
     dsrg_pt2->compute_energy();
-    auto fci_ints = dsrg_pt2->compute_Heff();
+    auto fci_ints = dsrg_pt2->compute_Heff_actv();
 
     // rotate integrals back to original
     semi.back_transform_ints();
@@ -268,9 +268,181 @@ std::shared_ptr<FCI_MO> DWMS_DSRGPT2::precompute_energy() {
 double DWMS_DSRGPT2::compute_energy() {
     if (algorithm_ == "MS" || algorithm_ == "XMS") {
         return compute_dwms_energy();
+    } else if (algorithm_ == "SA") {
+        return compute_dwsa_energy();
     } else {
         return compute_dwms_energy_old();
     }
+}
+
+double DWMS_DSRGPT2::compute_dwsa_energy() {
+    // perform SA-CASCI or SA-DSRG-PT2 if necessary
+    std::shared_ptr<FCI_MO> fci_mo = precompute_energy();
+    auto sa_info = fci_mo->sa_info();
+    int nentry = sa_info.size();
+    bool do_hbar3 = options_.get_bool("FORM_HBAR3");
+
+    // prepare the final DWMS-DSRG-PT2 energies
+    Ept2_.resize(nentry);
+
+    // save a copy of original orbitals
+    SharedMatrix Ca_copy(reference_wavefunction_->Ca()->clone());
+    SharedMatrix Cb_copy(reference_wavefunction_->Cb()->clone());
+
+    // loop over symmetry entries
+    for (int n = 0; n < nentry; ++n) {
+        int multi, irrep, nroots;
+        std::tie(irrep, multi, nroots, std::ignore) = sa_info[n];
+        Ept2_[n].resize(nroots);
+
+        // print current status
+        std::string entry_name = multi_symbol_[multi - 1] + " " + irrep_symbol_[irrep];
+        std::string entry_title = "Build Effective Hamiltonian of " + entry_name;
+        size_t entry_title_size = entry_title.size();
+        outfile->Printf("\n\n  %s", std::string(entry_title_size, '=').c_str());
+        outfile->Printf("\n  %s", entry_title.c_str());
+        outfile->Printf("\n  %s\n", std::string(entry_title_size, '=').c_str());
+
+        // prepare Heff
+        SharedMatrix Heff(new Matrix("Heff " + entry_name, nroots, nroots));
+        SharedMatrix Heff_sym(new Matrix("Symmetrized Heff " + entry_name, nroots, nroots));
+
+        // loop over states of current symmetry
+        for (int M = 0; M < nroots; ++M) {
+            print_h2("Compute DSRG-MRPT2 Energy of Root " + std::to_string(M));
+
+            // compute new weights
+            std::vector<std::vector<double>>& Erefs = Eref_0_;
+            if (dwms_e_ == "DSRG-PT2") {
+                Erefs = Ept2_0_;
+            }
+            auto sa_info_new = compute_dwms_weights(sa_info, n, M, Erefs);
+            print_sa_info("Original State Averaging Summary", sa_info);
+            print_sa_info("Reweighted State Averaging Summary", sa_info_new);
+
+            // compute Reference
+            std::vector<double> weights;
+            std::tie(std::ignore, std::ignore, std::ignore, weights) = sa_info_new[n];
+            fci_mo->set_sa_info(sa_info_new);
+            Reference reference = fci_mo->reference(max_rdm_level_);
+
+            // update MK vacuum energy
+            double Enuc = Process::environment.molecule()->nuclear_repulsion_energy(
+                reference_wavefunction_->get_dipole_field_strength());
+            reference.update_Eref(ints_, mo_space_info_, Enuc);
+
+            // DSRG-PT2 pointer
+            std::shared_ptr<MASTER_DSRG> dsrg_pt2;
+
+            // canonicalize orbitals if density fitting
+            // because three-dsrg-mrpt2 assumes semicanonical orbitals
+            if (eri_df_) {
+                SemiCanonical semi(reference_wavefunction_, ints_, mo_space_info_);
+                semi.semicanonicalize(reference, max_rdm_level_);
+                Ua_ = semi.Ua_t();
+                Ub_ = semi.Ub_t();
+
+                dsrg_pt2 = std::make_shared<THREE_DSRG_MRPT2>(reference, reference_wavefunction_,
+                                                              options_, ints_, mo_space_info_);
+                dsrg_pt2->set_Uactv(Ua_, Ub_);
+            } else {
+                dsrg_pt2 = std::make_shared<DSRG_MRPT2>(reference, reference_wavefunction_,
+                                                        options_, ints_, mo_space_info_);
+            }
+
+            // compute state-specific DSRG-MRPT2 energy
+            double E = dsrg_pt2->compute_energy();
+            Heff->set(M, M, E);
+            Heff_sym->set(M, M, E);
+
+            // compute 2nd-order efffective Hamiltonian for the couplings
+            auto fci_ints = dsrg_pt2->compute_Heff_actv();
+
+            for (int N = 0; N < nroots; ++N) {
+                std::string msg = "densities";
+                if (M == N) {
+                    msg = "transition densities";
+                }
+
+                // compute transition densities
+                outfile->Printf("\n  Compute %s.", msg.c_str());
+                Reference TrD;
+                if (do_hbar3) {
+                    TrD = fci_mo->compute_trans_density(M, N, true, n, 3, false);
+                } else {
+                    TrD = fci_mo->compute_trans_density(M, N, true, n, 2, false);
+                }
+
+                outfile->Printf("\n  Contract %s with Heff.", msg.c_str());
+                double coupling = 0.0;
+
+                auto Hbar_vec = dsrg_pt2->Hbar(1);
+                coupling += Hbar_vec[0]("vu") * TrD.L1a()("uv");
+                coupling += Hbar_vec[1]("vu") * TrD.L1b()("uv");
+
+                Hbar_vec = dsrg_pt2->Hbar(2);
+                coupling += Hbar_vec[0]("xyuv") * TrD.g2aa()("uvxy");
+                coupling += Hbar_vec[1]("xYuV") * TrD.g2ab()("uVxY");
+                coupling += Hbar_vec[2]("XYUV") * TrD.g2bb()("UVXY");
+
+                if (do_hbar3) {
+                    Hbar_vec = dsrg_pt2->Hbar(3);
+                    coupling += Hbar_vec[0]("uvwxyz") * TrD.g3aaa()("xyzuvw");
+                    coupling += Hbar_vec[1]("uvwxyz") * TrD.g3aab()("xyzuvw");
+                    coupling += Hbar_vec[2]("uvwxyz") * TrD.g3abb()("xyzuvw");
+                    coupling += Hbar_vec[3]("uvwxyz") * TrD.g3bbb()("xyzuvw");
+                }
+
+                if (M == N) {
+                    double shift = ints_->frozen_core_energy() + Enuc + fci_ints->scalar_energy();
+                    Heff->set(M, M, coupling + shift);
+                    Heff_sym->set(M, M, coupling + shift);
+                } else {
+                    Heff->set(N, M, coupling);
+                    Heff_sym->add(N, M, 0.5 * coupling);
+                    Heff_sym->add(M, N, 0.5 * coupling);
+                }
+            }
+
+            // rotate basis back to original if density fitting
+            if (eri_df_) {
+                print_h2("Back Transformation of Semicanonical Integrals");
+                SharedMatrix Ca = reference_wavefunction_->Ca();
+                SharedMatrix Cb = reference_wavefunction_->Cb();
+                Ca->copy(Ca_copy);
+                Cb->copy(Cb_copy);
+                ints_->retransform_integrals();
+            }
+        }
+
+        // print effective Hamiltonian
+        print_h2("Effective Hamiltonian Summary");
+        outfile->Printf("\n");
+
+        Heff->print();
+        Heff_sym->print();
+
+        // diagonalize Heff and print eigen vectors
+        SharedMatrix U(new Matrix("U of Heff (Symmetrized)", nroots, nroots));
+        SharedVector Ems(new Vector("MS Energies", nroots));
+        Heff_sym->diagonalize(U, Ems);
+        U->eivprint(Ems);
+
+        // set Ept2_ value
+        for (int i = 0; i < nroots; ++i) {
+            Ept2_[n][i] = Ems->get(i);
+        }
+    }
+
+    // print energy summary
+    outfile->Printf("  ==> Dynamically Weighted Multi-State DSRG-PT2 Energy Summary <==\n");
+    print_energy_list("SA-CASCI Energy", Eref_0_, sa_info);
+    if (dwms_ci_ == "DSRG-PT2" || dwms_e_ == "DSRG-PT2") {
+        print_energy_list("SA-DSRG-PT2 Energy", Ept2_0_, sa_info);
+    }
+    print_energy_list("DWMS-DSRGP-T2 Energy", Ept2_, sa_info, true);
+
+    return Ept2_[0][0];
 }
 
 double DWMS_DSRGPT2::compute_dwms_energy() {
