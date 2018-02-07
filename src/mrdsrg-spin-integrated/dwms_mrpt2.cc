@@ -351,9 +351,7 @@ double DWMS_DSRGPT2::compute_dwsa_energy() {
             }
 
             // compute state-specific DSRG-MRPT2 energy
-            double E = dsrg_pt2->compute_energy();
-            Heff->set(M, M, E);
-            Heff_sym->set(M, M, E);
+            dsrg_pt2->compute_energy();
 
             // compute 2nd-order efffective Hamiltonian for the couplings
             auto fci_ints = dsrg_pt2->compute_Heff_actv();
@@ -381,16 +379,16 @@ double DWMS_DSRGPT2::compute_dwsa_energy() {
                 coupling += Hbar_vec[1]("vu") * TrD.L1b()("uv");
 
                 Hbar_vec = dsrg_pt2->Hbar(2);
-                coupling += Hbar_vec[0]("xyuv") * TrD.g2aa()("uvxy");
+                coupling += 0.25 * Hbar_vec[0]("xyuv") * TrD.g2aa()("uvxy");
                 coupling += Hbar_vec[1]("xYuV") * TrD.g2ab()("uVxY");
-                coupling += Hbar_vec[2]("XYUV") * TrD.g2bb()("UVXY");
+                coupling += 0.25 * Hbar_vec[2]("XYUV") * TrD.g2bb()("UVXY");
 
                 if (do_hbar3) {
                     Hbar_vec = dsrg_pt2->Hbar(3);
-                    coupling += Hbar_vec[0]("uvwxyz") * TrD.g3aaa()("xyzuvw");
-                    coupling += Hbar_vec[1]("uvwxyz") * TrD.g3aab()("xyzuvw");
-                    coupling += Hbar_vec[2]("uvwxyz") * TrD.g3abb()("xyzuvw");
-                    coupling += Hbar_vec[3]("uvwxyz") * TrD.g3bbb()("xyzuvw");
+                    coupling += (1.0 / 36) * Hbar_vec[0]("uvwxyz") * TrD.g3aaa()("xyzuvw");
+                    coupling += 0.25 * Hbar_vec[1]("uvwxyz") * TrD.g3aab()("xyzuvw");
+                    coupling += 0.25 * Hbar_vec[2]("uvwxyz") * TrD.g3abb()("xyzuvw");
+                    coupling += (1.0 / 36) * Hbar_vec[3]("uvwxyz") * TrD.g3bbb()("xyzuvw");
                 }
 
                 if (M == N) {
