@@ -216,6 +216,75 @@ std::vector<int> STLBitsetDeterminant::get_beta_vir(int norb) const {
     return orbs;
 }
 
+std::vector<std::vector<int>> STLBitsetDeterminant::get_asym_occ(int norb, std::shared_ptr<MOSpaceInfo> mo_info) const { 
+
+    size_t nirrep = mo_info->nirrep();
+    std::vector<std::vector<int>> occ(nirrep);
+
+    Dimension act_mo = mo_info->get_dimension("ACTIVE");
+    int abs = 0;
+    for( int h = 0; h < nirrep; ++h ){
+        for( int p = 0; p < act_mo[h]; ++p ){
+            if (ALFA(abs)) {
+                occ[h].push_back(abs);
+            }
+            abs++;
+        }
+    }
+    return occ;
+}
+
+std::vector<std::vector<int>> STLBitsetDeterminant::get_bsym_occ(int norb, std::shared_ptr<MOSpaceInfo> mo_info) const { 
+    size_t nirrep = mo_info->nirrep();
+    std::vector<std::vector<int>> occ(nirrep);
+
+    Dimension act_mo = mo_info->get_dimension("ACTIVE");
+    int abs = 0;
+    for( int h = 0; h < nirrep; ++h ){
+        for( int p = 0; p < act_mo[h]; ++p ){
+            if (BETA(abs)) {
+                occ[h].push_back(abs);
+            }
+            abs++;
+        }
+    }
+    return occ;
+}
+
+std::vector<std::vector<int>> STLBitsetDeterminant::get_asym_vir(int norb, std::shared_ptr<MOSpaceInfo> mo_info) const { 
+    size_t nirrep = mo_info->nirrep();
+    std::vector<std::vector<int>> occ(nirrep);
+
+    Dimension act_mo = mo_info->get_dimension("ACTIVE");
+    int abs = 0;
+    for( int h = 0; h < nirrep; ++h ){
+        for( int p = 0; p < act_mo[h]; ++p ){
+            if (!ALFA(abs)) {
+                occ[h].push_back(abs);
+            }
+            abs++;
+        }
+    }
+    return occ;
+}
+
+std::vector<std::vector<int>> STLBitsetDeterminant::get_bsym_vir(int norb, std::shared_ptr<MOSpaceInfo> mo_info) const { 
+    size_t nirrep = mo_info->nirrep();
+    std::vector<std::vector<int>> occ(nirrep);
+
+    Dimension act_mo = mo_info->get_dimension("ACTIVE");
+    int abs = 0;
+    for( int h = 0; h < nirrep; ++h ){
+        for( int p = 0; p < act_mo[h]; ++p ){
+            if (!BETA(abs)) {
+                occ[h].push_back(abs);
+            }
+            abs++;
+        }
+    }
+    return occ;
+}
+
 double STLBitsetDeterminant::create_alfa_bit(int n) {
     if (ALFA(n))
         return 0.0;
