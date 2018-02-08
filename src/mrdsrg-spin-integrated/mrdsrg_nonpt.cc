@@ -263,6 +263,8 @@ void MRDSRG::compute_hbar_sequential_rotation() {
         if (brueckner_) {
             B_["gpq"] = B["gpq"];
             B_["gPQ"] = B["gPQ"];
+            // build Fock matrix
+            build_fock_df(H_, B_);
         }
 
         // for simplicity, create a core-core density matrix
@@ -297,6 +299,8 @@ void MRDSRG::compute_hbar_sequential_rotation() {
             V_["pqrs"] = Hbar2_["pqrs"];
             V_["pQrS"] = Hbar2_["pQrS"];
             V_["PQRS"] = Hbar2_["PQRS"];
+            // build Fock matrix
+            build_fock(H_, V_);
         }
 
         // for simplicity, create a core-core density matrix
