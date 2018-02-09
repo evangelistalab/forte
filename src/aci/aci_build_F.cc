@@ -871,9 +871,8 @@ double AdaptiveCI::get_excited_determinants_batch( SharedMatrix evecs, SharedVec
     double max_mem = options_.get_double("PT2_MAX_MEM");
 
     size_t guess_size = n_dets * nmo * nmo;
-    double nbyte = (1073741824 * max_mem) / (sizeof(double));
-
-    int nbin = static_cast<int>(std::ceil(guess_size / (nbyte)));
+    double guess_mem = guess_size * 400.0e-7; //Est of map size in MB
+    int nruns = static_cast<int>(std::ceil(guess_mem/max_mem));
 
     double total_excluded = 0.0;
 
@@ -881,13 +880,23 @@ double AdaptiveCI::get_excited_determinants_batch( SharedMatrix evecs, SharedVec
     {
         int thread_id  = omp_get_thread_num();
         int n_threads = omp_get_max_threads();
+        int nbin = nruns*n_threads;    
+        if( thread_id == 0 ){
+            outfile->Printf("\n  Setting nbin to %d based on estimated memory (%6.3f MB)", nbin, guess_mem);
+        }
 
         if (n_threads >= nbin) {
             nbin = n_threads;
+            if( thread_id == 0 ){
+                outfile->Printf("\n  WARNING: Batching not required, use another algorithm");
+            }
         }
     
         if (options_["ACI_NBATCH"].has_changed()) {
             nbin = options_.get_int("ACI_NBATCH");
+            if( thread_id == 0 ){
+                outfile->Printf("\n  Overwriting nbin to %d based on user input", nbin);
+            }
         } 
         std::vector<std::pair<double,Determinant>> F_td;
     
@@ -904,16 +913,6 @@ double AdaptiveCI::get_excited_determinants_batch( SharedMatrix evecs, SharedVec
             outfile->Printf("\n  Number of threads: %d", n_threads);
         }
     
-//    #pragma omp critical
-//    {
-//        if( thread_id == 0 ){
-//            outfile->Printf("\n start:%d, end: %d, td: %d", start_idx, end_idx, thread_id);
-//        }
-//        if( thread_id == 1 ){
-//            outfile->Printf("\n start:%d, end: %d, td: %d", start_idx, end_idx, thread_id);
-//        }
-//    } 
-
         // Loop over bins
         for (int bin = start_idx; bin < end_idx; ++bin) {
 
@@ -1000,56 +999,17 @@ det_hash<double> AdaptiveCI::get_bin_F_space( int bin, int nbin, SharedMatrix ev
     for (size_t I = 0; I < n_dets; ++I) {
         double c_I = evecs->get(I,0);
         const Determinant& det = dets[I];
-        //std::vector<int> aocc = det.get_alfa_occ(nmo);
-        //std::vector<int> bocc = det.get_beta_occ(nmo);
-        //std::vector<int> avir = det.get_alfa_vir(nmo);
-        //std::vector<int> bvir = det.get_beta_vir(nmo);
 
         std::vector<std::vector<int>> noalpha = det.get_asym_occ(nmo,mo_space_info_);
         std::vector<std::vector<int>> nobeta  = det.get_bsym_occ(nmo,mo_space_info_);
         std::vector<std::vector<int>> nvalpha = det.get_asym_vir(nmo,mo_space_info_);
         std::vector<std::vector<int>> nvbeta  = det.get_bsym_vir(nmo,mo_space_info_);
 
-//    if( I == 0){
-//        outfile->Printf("\n  %s", det.str().c_str());
-//        for( int i = 0; i < nirrep_; ++i ){
-//            outfile->Printf("\n [%d] aocc",i); 
-//            auto& vec = noalpha[i];
-//            for( int j = 0; j < vec.size(); ++j ){
-//                outfile->Printf(" %d", vec[j]);
-//            }
-//        }
-//        for( int i = 0; i < nirrep_; ++i ){
-//            outfile->Printf("\n [%d] bocc",i); 
-//            auto& vec = nobeta[i];
-//            for( int j = 0; j < vec.size(); ++j ){
-//                outfile->Printf("\n  %d", vec[j]);
-//            }
-//        }
-//        for( int i = 0; i < nirrep_; ++i ){
-//            outfile->Printf("\n [%d] avir",i); 
-//            auto& vec = nvalpha[i];
-//            for( int j = 0; j < vec.size(); ++j ){
-//                outfile->Printf("\n  %d",vec[j]);
-//            }
-//        }
-//        for( int i = 0; i < nirrep_; ++i ){
-//            outfile->Printf("\n [%d] bvir",i); 
-//            auto& vec = nvbeta[i];
-//            for( int j = 0; j < vec.size(); ++j ){
-//                outfile->Printf("\n  %d",vec[j]);
-//            }
-//        }
-//    }
-        
-
         Determinant new_det(det);
         // Generate alpha excitations
         for( int h = 0; h < nirrep_; ++h){
             for (auto& ii : noalpha[h]) {
-                //int ii = aocc[i];
                 for (auto& aa : nvalpha[h]) {
-                   // int aa = avir[a];
                     new_det = det;
                     new_det.set_alfa_bit(ii, false);
                     new_det.set_alfa_bit(aa, true);
@@ -1068,9 +1028,7 @@ det_hash<double> AdaptiveCI::get_bin_F_space( int bin, int nbin, SharedMatrix ev
             }
             // Generate beta excitations
             for (auto& ii : nobeta[h]) {
-                //int ii = bocc[i];
                 for (auto& aa : nvbeta[h]) {
-                    //int aa = bvir[a];
                     // Check if the determinant goes in this bin
                     new_det = det;
                     new_det.set_beta_bit(ii, false);
