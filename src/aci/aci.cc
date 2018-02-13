@@ -194,6 +194,12 @@ void set_ACI_options(ForteOptions& foptions) {
 
     /*- Number of batches in screening  -*/
     foptions.add_int("ACI_NBATCH", 1, "Number of batches in screening");
+ 
+    /*- Sets max memory for batching algorithm (MB) -*/
+    foptions.add_int("ACI_MAX_MEM", 1000, "Sets max memory for batching algorithm (MB)");
+
+    /*- Scales sigma in batched algorithm -*/
+    foptions.add_double("ACI_SCALE_SIGMA", 0.8, "Scales sigma in batched algorithm");
 }
 
 bool pairComp(const std::pair<double, Determinant> E1, const std::pair<double, Determinant> E2) {
