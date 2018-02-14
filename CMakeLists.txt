@@ -176,8 +176,6 @@ set (CMAKE_CXX_STANDARD 11)
 
 if (ENABLE_ForteTests)
   project (forte_tests)
-  find_package(ambit REQUIRED)
-  target_link_libraries(forte_tests PRIVATE ambit::ambit)
   include_directories(${CMAKE_BINARY_DIR} ${CMAKE_BINARY_DIR}/catch2/src/catch2/single_include)
   add_executable(forte_tests
     src/sparse_ci/ui64_determinant.cc
