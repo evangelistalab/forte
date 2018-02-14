@@ -216,12 +216,11 @@ std::vector<int> STLBitsetDeterminant::get_beta_vir(int norb) const {
     return orbs;
 }
 
-std::vector<std::vector<int>> STLBitsetDeterminant::get_asym_occ(int norb, std::shared_ptr<MOSpaceInfo> mo_info) const { 
+std::vector<std::vector<int>> STLBitsetDeterminant::get_asym_occ(int norb, std::vector<int> act_mo) const { 
 
-    size_t nirrep = mo_info->nirrep();
+    size_t nirrep = act_mo.size();
     std::vector<std::vector<int>> occ(nirrep);
 
-    Dimension act_mo = mo_info->get_dimension("ACTIVE");
     int abs = 0;
     for( int h = 0; h < nirrep; ++h ){
         for( int p = 0; p < act_mo[h]; ++p ){
@@ -234,11 +233,10 @@ std::vector<std::vector<int>> STLBitsetDeterminant::get_asym_occ(int norb, std::
     return occ;
 }
 
-std::vector<std::vector<int>> STLBitsetDeterminant::get_bsym_occ(int norb, std::shared_ptr<MOSpaceInfo> mo_info) const { 
-    size_t nirrep = mo_info->nirrep();
+std::vector<std::vector<int>> STLBitsetDeterminant::get_bsym_occ(int norb, std::vector<int> act_mo) const { 
+    size_t nirrep = act_mo.size();
     std::vector<std::vector<int>> occ(nirrep);
 
-    Dimension act_mo = mo_info->get_dimension("ACTIVE");
     int abs = 0;
     for( int h = 0; h < nirrep; ++h ){
         for( int p = 0; p < act_mo[h]; ++p ){
@@ -251,11 +249,10 @@ std::vector<std::vector<int>> STLBitsetDeterminant::get_bsym_occ(int norb, std::
     return occ;
 }
 
-std::vector<std::vector<int>> STLBitsetDeterminant::get_asym_vir(int norb, std::shared_ptr<MOSpaceInfo> mo_info) const { 
-    size_t nirrep = mo_info->nirrep();
+std::vector<std::vector<int>> STLBitsetDeterminant::get_asym_vir(int norb, std::vector<int> act_mo) const { 
+    size_t nirrep = act_mo.size();
     std::vector<std::vector<int>> occ(nirrep);
 
-    Dimension act_mo = mo_info->get_dimension("ACTIVE");
     int abs = 0;
     for( int h = 0; h < nirrep; ++h ){
         for( int p = 0; p < act_mo[h]; ++p ){
@@ -268,11 +265,10 @@ std::vector<std::vector<int>> STLBitsetDeterminant::get_asym_vir(int norb, std::
     return occ;
 }
 
-std::vector<std::vector<int>> STLBitsetDeterminant::get_bsym_vir(int norb, std::shared_ptr<MOSpaceInfo> mo_info) const { 
-    size_t nirrep = mo_info->nirrep();
+std::vector<std::vector<int>> STLBitsetDeterminant::get_bsym_vir(int norb, std::vector<int> act_mo) const { 
+    size_t nirrep = act_mo.size();
     std::vector<std::vector<int>> occ(nirrep);
 
-    Dimension act_mo = mo_info->get_dimension("ACTIVE");
     int abs = 0;
     for( int h = 0; h < nirrep; ++h ){
         for( int p = 0; p < act_mo[h]; ++p ){
