@@ -980,17 +980,17 @@ det_hash<double> AdaptiveCI::get_bin_F_space( int bin, int nbin, SharedMatrix ev
     const size_t n_dets = P_space.size();
     const det_hashvec& dets = P_space.wfn_hash();
     int nmo = fci_ints_->nmo();
-
+    std::vector<int> act_mo = mo_space_info_->get_dimension("ACTIVE").blocks();
     det_hash<double> A_b;
 
     // Loop over P space determinants
     for (size_t I = 0; I < n_dets; ++I) {
         double c_I = evecs->get(I,0);
         const Determinant& det = dets[I];
-        std::vector<std::vector<int>> noalpha = det.get_asym_occ(nmo,mo_space_info_);
-        std::vector<std::vector<int>> nobeta  = det.get_bsym_occ(nmo,mo_space_info_);
-        std::vector<std::vector<int>> nvalpha = det.get_asym_vir(nmo,mo_space_info_);
-        std::vector<std::vector<int>> nvbeta  = det.get_bsym_vir(nmo,mo_space_info_);
+        std::vector<std::vector<int>> noalpha = det.get_asym_occ(nmo,act_mo);
+        std::vector<std::vector<int>> nobeta  = det.get_bsym_occ(nmo,act_mo);
+        std::vector<std::vector<int>> nvalpha = det.get_asym_vir(nmo,act_mo);
+        std::vector<std::vector<int>> nvbeta  = det.get_bsym_vir(nmo,act_mo);
 
         std::vector<int> aocc = det.get_alfa_occ(nmo);
         std::vector<int> bocc = det.get_beta_occ(nmo);
