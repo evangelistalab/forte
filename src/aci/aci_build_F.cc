@@ -992,17 +992,16 @@ det_hash<double> AdaptiveCI::get_bin_F_space( int bin, int nbin, SharedMatrix ev
         std::vector<std::vector<int>> nvalpha = det.get_asym_vir(nmo,act_mo);
         std::vector<std::vector<int>> nvbeta  = det.get_bsym_vir(nmo,act_mo);
 
-        std::vector<int> aocc = det.get_alfa_occ(nmo);
-        std::vector<int> bocc = det.get_beta_occ(nmo);
-        std::vector<int> avir = det.get_alfa_vir(nmo);
-        std::vector<int> bvir = det.get_beta_vir(nmo);
-
-
         Determinant new_det(det);
         // Generate alpha excitations
         for( int h = 0; h < nirrep_; ++h){
-            for (auto& ii : noalpha[h]) {
-                for (auto& aa : nvalpha[h]) {
+            
+            // Precompute indices
+            const auto& noalpha_h = noalpha[h];
+            const auto& nvalpha_h = nvalpha[h];
+
+            for (auto& ii : noalpha_h) {
+                for (auto& aa : nvalpha_h) {
                     new_det = det;
                     new_det.set_alfa_bit(ii, false);
                     new_det.set_alfa_bit(aa, true);
@@ -1016,8 +1015,10 @@ det_hash<double> AdaptiveCI::get_bin_F_space( int bin, int nbin, SharedMatrix ev
                 }
             }
             // Generate beta excitations
-            for (auto& ii : nobeta[h]) {
-                for (auto& aa : nvbeta[h]) {
+            const auto& nobeta_h = nobeta[h];
+            const auto& nvbeta_h = nvbeta[h];
+            for (auto& ii : nobeta_h) {
+                for (auto& aa : nvbeta_h) {
                     // Check if the determinant goes in this bin
                     new_det = det;
                     new_det.set_beta_bit(ii, false);
@@ -1038,15 +1039,27 @@ det_hash<double> AdaptiveCI::get_bin_F_space( int bin, int nbin, SharedMatrix ev
                     int sp = p^q^r;
                     if( sp < r) continue;
 
+                    // Precompute index lists
+                    const auto& noalpha_p = noalpha[p];
+                    const auto& noalpha_q = noalpha[q];
+                    const auto& nvalpha_r = nvalpha[r];
+                    const auto& nvalpha_s = nvalpha[sp];
+
+                    int max_i = noalpha_p.size();
+                    int max_j = noalpha_q.size();
+                    int max_a = nvalpha_r.size();
+                    int max_b = nvalpha_s.size();
+
+
                     // Generate aa excitations
-                    for (int i = 0, max_i = noalpha[p].size(); i < max_i; ++i) {
-                        int ii = noalpha[p][i];
-                        for (int j = (p == q ? i + 1 : 0), maxj = noalpha[q].size(); j < maxj; ++j) {
-                            int jj = noalpha[q][j];
-                            for (int a = 0, max_a = nvalpha[r].size(); a < max_a; ++a) {
-                                int aa = nvalpha[r][a];
-                                for (int b = (r == sp ? a + 1 : 0), maxb = nvalpha[sp].size(); b < maxb; ++b) {
-                                    int bb = nvalpha[sp][b];
+                    for (int i = 0; i < max_i; ++i) {
+                        int ii = noalpha_p[i];
+                        for (int j = (p == q ? i + 1 : 0); j < max_j; ++j) {
+                            int jj = noalpha_q[j];
+                            for (int a = 0; a < max_a; ++a) {
+                                int aa = nvalpha_r[a];
+                                for (int b = (r == sp ? a + 1 : 0); b < max_b; ++b) {
+                                    int bb = nvalpha_s[b];
 
                                     // Check if the determinant goes in this bin
                                     new_det = det;
@@ -1063,14 +1076,24 @@ det_hash<double> AdaptiveCI::get_bin_F_space( int bin, int nbin, SharedMatrix ev
                         }
                     }
                     // Generate bb excitations
-                    for (int i = 0, max_i = nobeta[p].size(); i < max_i; ++i) {
-                        int ii = nobeta[p][i];
-                        for (int j = (p == q ? i + 1 : 0), maxj = nobeta[q].size(); j < maxj; ++j) {
-                            int jj = nobeta[q][j];
-                            for (int a = 0, max_a = nvbeta[r].size(); a < max_a; ++a) {
-                                int aa = nvbeta[r][a];
-                                for (int b = (r == sp ? a + 1 : 0), maxb = nvbeta[sp].size(); b < maxb; ++b) {
-                                    int bb = nvbeta[sp][b];
+                    const auto& nobeta_p = nobeta[p];
+                    const auto& nobeta_q = nobeta[q];
+                    const auto& nvbeta_r = nvbeta[r];
+                    const auto& nvbeta_s = nvbeta[sp];
+
+                    max_i = nobeta_p.size();
+                    max_j = nobeta_q.size();
+                    max_a = nvbeta_r.size();
+                    max_b = nvbeta_s.size();
+
+                    for (int i = 0; i < max_i; ++i) {
+                        int ii = nobeta_p[i];
+                        for (int j = (p == q ? i + 1 : 0); j < max_j; ++j) {
+                            int jj = nobeta_q[j];
+                            for (int a = 0; a < max_a; ++a) {
+                                int aa = nvbeta_r[a];
+                                for (int b = (r == sp ? a + 1 : 0); b < max_b; ++b) {
+                                    int bb = nvbeta_s[b];
                                     // Check if the determinant goes in this bin
                                     new_det = det;
                                     double sign = new_det.double_excitation_bb(ii, jj, aa, bb);
@@ -1092,11 +1115,15 @@ det_hash<double> AdaptiveCI::get_bin_F_space( int bin, int nbin, SharedMatrix ev
             for ( int q = 0; q < nirrep_; ++q){
                 for ( int r = 0; r < nirrep_; ++r){
                     int sp = p^q^r;
+                    const auto& noalpha_p = noalpha[p];
+                    const auto& nobeta_q = nobeta[q];
+                    const auto& nvalpha_r = nvalpha[r];
+                    const auto& nvbeta_s = nvbeta[sp];
                     // Generate ab excitations
-                    for (auto& ii : noalpha[p]) {
-                        for (auto& jj : nobeta[q]) {
-                            for (auto& aa : nvalpha[r]) {
-                                for (auto& bb : nvbeta[sp]) {
+                    for (auto& ii : noalpha_p) {
+                        for (auto& jj : nobeta_q) {
+                            for (auto& aa : nvalpha_r) {
+                                for (auto& bb : nvbeta_s) {
                                     new_det = det;
                                     double sign = new_det.double_excitation_ab(ii, jj, aa, bb);
                                     size_t hash_val = Determinant::Hash()(new_det);
