@@ -75,9 +75,21 @@ void SemiCanonical::startup() {
     Ua_ = SharedMatrix(new Matrix("Ua", nmopi_, nmopi_));
     Ub_ = SharedMatrix(new Matrix("Ub", nmopi_, nmopi_));
 
+    Ua_->identity();
+    Ub_->identity();
+
     // Preapare orbital rotation matrix, which transforms only active MOs
     Ua_t_ = ambit::Tensor::build(ambit::CoreTensor, "Ua", {nact_, nact_});
     Ub_t_ = ambit::Tensor::build(ambit::CoreTensor, "Ub", {nact_, nact_});
+
+    Ua_t_.iterate([&](const std::vector<size_t>& i, double& value) {
+        if (i[0] == i[1])
+            value = 1.0;
+    });
+    Ub_t_.iterate([&](const std::vector<size_t>& i, double& value) {
+        if (i[0] == i[1])
+            value = 1.0;
+    });
 
     // dimension map
     mo_dims_["core"] = rdocc_;
@@ -170,18 +182,6 @@ void SemiCanonical::semicanonicalize(Reference& reference, const int& max_rdm_le
     bool semi = check_fock_matrix();
 
     if (semi) {
-        // set all U to identity
-        Ua_->identity();
-        Ub_->identity();
-
-        Ua_t_.iterate([&](const std::vector<size_t>& i, double& value) {
-            if (i[0] == i[1])
-                value = 1.0;
-        });
-        Ub_t_.iterate([&](const std::vector<size_t>& i, double& value) {
-            if (i[0] == i[1])
-                value = 1.0;
-        });
         outfile->Printf("\n  Orbitals are already semicanonicalized.");
     } else {
         // 2. Build transformation matrices from diagononalizing blocks in F
@@ -373,16 +373,17 @@ void SemiCanonical::build_transformation_matrices(SharedMatrix& Ua, SharedMatrix
         }
     }
 
-//    if( options_.get_bool("SAVE_UHF_NOS") ){
-//        Ua_t.data() = UaData;
-//        Ub_t.data() = UaData;
-        
-//        Ub->copy(Ua);
-//    }else{
-        // copy active data to ambit tensors
+    // copy active data to ambit tensors
+    // temporary fix of DF integrals until both Ca and Cb are considered in DF integrals.
+    auto type = ints_->integral_type();
+    if (type == DF || type == DiskDF || type == Cholesky) {
+        Ub->copy(Ua);
+        Ua_t.data() = UaData;
+        Ub_t.data() = UaData;
+    } else {
         Ua_t.data() = UaData;
         Ub_t.data() = UbData;
-//    }
+    }
 }
 
 void SemiCanonical::transform_ints(SharedMatrix& Ua, SharedMatrix& Ub) {
