@@ -1010,11 +1010,7 @@ det_hash<double> AdaptiveCI::get_bin_F_space( int bin, int nbin, SharedMatrix ev
                     if ( (hash_val % nbin) == bin) {
                         double HIJ = fci_ints_->slater_rules_single_alpha(det, ii, aa) * c_I;
                         if ((std::fabs(HIJ) >= screen_thresh_)) {
-                            if (A_b.count(new_det) == 0) {
-                                A_b[new_det] = HIJ;
-                            } else {
-                                A_b[new_det] += HIJ;
-                            }
+                            A_b[new_det] += HIJ;
                         }
                     }
                 }
@@ -1030,11 +1026,7 @@ det_hash<double> AdaptiveCI::get_bin_F_space( int bin, int nbin, SharedMatrix ev
                     if ((hash_val % nbin) == bin) {
                         double HIJ = fci_ints_->slater_rules_single_beta(det, ii, aa) * c_I;
                         if ((std::fabs(HIJ) >= screen_thresh_)) {
-                            if (A_b.count(new_det) == 0) {
-                                A_b[new_det] = HIJ;
-                            } else {
-                                A_b[new_det] += HIJ;
-                            }
+                            A_b[new_det] += HIJ;
                         }
                     }
                 }
@@ -1063,11 +1055,7 @@ det_hash<double> AdaptiveCI::get_bin_F_space( int bin, int nbin, SharedMatrix ev
                                     if ((hash_val % nbin) == bin) {
                                         double HIJ = fci_ints_->tei_aa(ii, jj, aa, bb) * sign * c_I;
                                         if ((std::fabs(HIJ) >= screen_thresh_)) {
-                                            if (A_b.count(new_det) == 0) {
-                                                A_b[new_det] = HIJ;
-                                            } else {
-                                                A_b[new_det] +=  HIJ;
-                                            }
+                                            A_b[new_det] +=  HIJ;
                                         }
                                     }
                                 }
@@ -1090,11 +1078,7 @@ det_hash<double> AdaptiveCI::get_bin_F_space( int bin, int nbin, SharedMatrix ev
                                     if ((hash_val % nbin) == bin) {
                                         double HIJ = fci_ints_->tei_bb(ii, jj, aa, bb) * sign * c_I;
                                         if ((std::fabs(HIJ) >= screen_thresh_)) {
-                                            if (A_b.count(new_det) == 0) {
-                                                A_b[new_det] = HIJ;
-                                            } else {
-                                                A_b[new_det] +=  HIJ;
-                                            }
+                                            A_b[new_det] +=  HIJ;
                                         }
                                     }
                                 }
@@ -1119,11 +1103,7 @@ det_hash<double> AdaptiveCI::get_bin_F_space( int bin, int nbin, SharedMatrix ev
                                     if ((hash_val % nbin) == bin) {
                                         double HIJ = fci_ints_->tei_ab(ii, jj, aa, bb) * sign * c_I;
                                         if ((std::fabs(HIJ) >= screen_thresh_)) {
-                                            if (A_b.count(new_det) == 0) {
-                                                A_b[new_det] = HIJ;
-                                            } else {
-                                                A_b[new_det] += HIJ;
-                                            }
+                                            A_b[new_det] += HIJ;
                                         }
                                     }
                                 }
