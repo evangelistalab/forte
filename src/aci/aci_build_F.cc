@@ -920,7 +920,7 @@ double AdaptiveCI::get_excited_determinants_batch( SharedMatrix evecs, SharedVec
             Timer sp;
             // 1. Build the full bin-subset
             det_hash<double> A_b = get_bin_F_space(bin,nbin,evecs,P_space);
-            outfile->Printf("\n F subspace (bin %d) takes %1.6f s",bin, sp.get()); 
+            outfile->Printf("\n  F subspace (bin %d) takes %1.6f s",bin, sp.get()); 
 
             // 2. Put the dets/vals in a sortable list (F_tmp)
             std::vector<std::pair<double,Determinant>> F_tmp; 

@@ -37,22 +37,19 @@ set globals{
 
 set forte {
   multiplicity 1
-  frozen_docc            [2,1,0,0,0,0,2,1]
-  restricted_docc	  [3,2,0,0,0,0,2,3]
-  active                 [1,0,1,2,1,2,1,0]
-  root_sym               0
-  aci_nroot                  1
-  job_type               aci
-  sigma	                  0.001
-  aci_select_type            aimed_energy	 
-  aci_enforce_spin_complete  true
-  aci_add_aimed_degenerate false
+  frozen_docc                       [2,1,0,0,0,0,2,1]
+  restricted_docc	                [3,2,0,0,0,0,2,3]
+  active                            [1,0,1,2,1,2,1,0]
+  root_sym                          0
+  aci_nroot                         1
+  job_type                          aci
+  sigma	                            0.001
+  aci_add_aimed_degenerate          false
   aci_project_out_spin_contaminants false
-  diag_algorithm full
-  aci_batched_screening true
-  aci_nbatch 2
-#  aci_scale_sigma 0.0
-  active_guess_size 100
+  diag_algorithm                    full
+  aci_batched_screening             true
+  aci_nbatch                        2
+  active_guess_size                 100
 }
 set_num_threads(1)
 
