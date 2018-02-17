@@ -623,6 +623,12 @@ void WFNOperator::build_strings(DeterminantHashVec& wfn) {
 void WFNOperator::op_s_lists(DeterminantHashVec& wfn) {
     timer ops("Single sub. lists");
 
+    if( !quiet_ ){
+        print_h2("Computing Coupling Lists");
+        outfile->Printf("  --------------------------------");
+    }
+
+
     // Get a reference to the determinants
     const det_hashvec& dets = wfn.wfn_hash();
     Timer ann;
@@ -667,7 +673,7 @@ void WFNOperator::op_s_lists(DeterminantHashVec& wfn) {
     }
 
     if (!quiet_) {
-        outfile->Printf("\n  Time spent building a_list   %1.6f s", ann.get());
+        outfile->Printf("\n        α          %7.6f s", ann.get());
     }
     Timer bnn;
     for (size_t a = 0, max_a = alpha_strings_.size(); a < max_a; ++a) {
@@ -706,7 +712,7 @@ void WFNOperator::op_s_lists(DeterminantHashVec& wfn) {
         }
     }
     if (!quiet_) {
-        outfile->Printf("\n  Time spent building b_list   %1.6f s", bnn.get());
+        outfile->Printf("\n        β          %7.6f s", bnn.get());
     }
 }
 
@@ -873,7 +879,7 @@ void WFNOperator::tp_s_lists(DeterminantHashVec& wfn) {
         }
     }
     if (!quiet_) {
-        outfile->Printf("\n  Time spent building aa_list  %1.6f s", aa.get());
+        outfile->Printf("\n        αα         %7.6f s", aa.get());
     }
     // Generate beta-beta coupling list
     Timer bb;
@@ -927,7 +933,7 @@ void WFNOperator::tp_s_lists(DeterminantHashVec& wfn) {
         }
     }
     if (!quiet_) {
-        outfile->Printf("\n  Time spent building bb_list  %1.6f s", bb.get());
+        outfile->Printf("\n        ββ         %7.6f s", bb.get());
     }
 
     Timer ab;
@@ -981,7 +987,8 @@ void WFNOperator::tp_s_lists(DeterminantHashVec& wfn) {
         // }
     }
     if (!quiet_) {
-        outfile->Printf("\n  Time spent building ab_list  %1.6f s", ab.get());
+        outfile->Printf("\n        αβ         %7.6f s", ab.get());
+        outfile->Printf("\n  --------------------------------");
     }
 }
 
