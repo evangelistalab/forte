@@ -75,6 +75,9 @@ void SemiCanonical::startup() {
     Ua_ = SharedMatrix(new Matrix("Ua", nmopi_, nmopi_));
     Ub_ = SharedMatrix(new Matrix("Ub", nmopi_, nmopi_));
 
+    Ua_->identity();
+    Ub_->identity();
+
     // Preapare orbital rotation matrix, which transforms only active MOs
     Ua_t_ = ambit::Tensor::build(ambit::CoreTensor, "Ua", {nact_, nact_});
     Ub_t_ = ambit::Tensor::build(ambit::CoreTensor, "Ub", {nact_, nact_});

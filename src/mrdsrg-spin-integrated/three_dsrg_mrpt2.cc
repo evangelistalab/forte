@@ -3387,6 +3387,11 @@ std::vector<double> THREE_DSRG_MRPT2::relaxed_energy(std::shared_ptr<FCIIntegral
         double relaxed_aci_en = aci.compute_energy();
         Erelax.push_back(relaxed_aci_en);
 
+        // Compute relaxed NOs
+        if( options_.get_bool("ACI_NO") ){
+            aci.compute_nos();
+        }
+
     } else {
 
         // common (SS and SA) setup of FCISolver
