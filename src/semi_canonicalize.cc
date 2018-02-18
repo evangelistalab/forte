@@ -172,11 +172,9 @@ void SemiCanonical::semicanonicalize(Reference& reference, const int& max_rdm_le
     // Check Fock matrix
     bool semi = check_fock_matrix();
 
-    // Set U to identity
-    set_U_to_identity();
-
     if (semi) {
         outfile->Printf("\n  Orbitals are already semicanonicalized.");
+        set_U_to_identity();
     } else {
         // 2. Build transformation matrices from diagononalizing blocks in F
         build_transformation_matrices(Ua_, Ub_, Ua_t_, Ub_t_);
