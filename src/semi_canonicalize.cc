@@ -75,21 +75,12 @@ void SemiCanonical::startup() {
     Ua_ = SharedMatrix(new Matrix("Ua", nmopi_, nmopi_));
     Ub_ = SharedMatrix(new Matrix("Ub", nmopi_, nmopi_));
 
-    Ua_->identity();
-    Ub_->identity();
-
     // Preapare orbital rotation matrix, which transforms only active MOs
     Ua_t_ = ambit::Tensor::build(ambit::CoreTensor, "Ua", {nact_, nact_});
     Ub_t_ = ambit::Tensor::build(ambit::CoreTensor, "Ub", {nact_, nact_});
 
-    Ua_t_.iterate([&](const std::vector<size_t>& i, double& value) {
-        if (i[0] == i[1])
-            value = 1.0;
-    });
-    Ub_t_.iterate([&](const std::vector<size_t>& i, double& value) {
-        if (i[0] == i[1])
-            value = 1.0;
-    });
+    // Initialize U to identity
+    set_U_to_identity();
 
     // dimension map
     mo_dims_["core"] = rdocc_;
@@ -180,6 +171,9 @@ void SemiCanonical::semicanonicalize(Reference& reference, const int& max_rdm_le
 
     // Check Fock matrix
     bool semi = check_fock_matrix();
+
+    // Set U to identity
+    set_U_to_identity();
 
     if (semi) {
         outfile->Printf("\n  Orbitals are already semicanonicalized.");
@@ -295,6 +289,27 @@ bool SemiCanonical::check_fock_matrix() {
     }
 
     return semi;
+}
+
+void SemiCanonical::set_U_to_identity() {
+    Ua_->identity();
+    Ub_->identity();
+
+    Ua_t_.iterate([&](const std::vector<size_t>& i, double& value) {
+        if (i[0] == i[1]) {
+            value = 1.0;
+        } else {
+            value = 0.0;
+        }
+    });
+
+    Ub_t_.iterate([&](const std::vector<size_t>& i, double& value) {
+        if (i[0] == i[1]) {
+            value = 1.0;
+        } else {
+            value = 0.0;
+        }
+    });
 }
 
 void SemiCanonical::build_transformation_matrices(SharedMatrix& Ua, SharedMatrix& Ub,
