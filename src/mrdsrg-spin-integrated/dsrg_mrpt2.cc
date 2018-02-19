@@ -389,8 +389,10 @@ double DSRG_MRPT2::compute_energy() {
     compute_t1();
 
     // Compute effective integrals
-    renormalize_V();
-    renormalize_F();
+    if (options_.get_bool("DSRGPT")) {
+        renormalize_V();
+        renormalize_F();
+    }
     if (print_ > 1)
         F_.print(stdout);
     if (print_ > 2) {

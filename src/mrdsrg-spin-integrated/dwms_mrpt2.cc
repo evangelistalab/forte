@@ -25,12 +25,12 @@ void set_DWMS_options(ForteOptions& foptions) {
     /*- Using what energies to compute the weight
      * CAS: use SA-CASCI energies
      * DSRG-PT2: use SA-DSRG-PT2 energies -*/
-    foptions.add_str("DWMS_ENERGY", "CAS", {"CAS", "DSRG-PT2"});
+    foptions.add_str("DWMS_ENERGY", "CAS", {"CAS", "DSRG-PT2"}, "Energies to compute dynamic weights");
 
     /*- Using what CI vectors to perform multi-state computation
      * CAS: use SA-CASCI eigenvectors
      * DSRG-PT2: use SA-DSRG-PT2/CASCI eigenvectors -*/
-    foptions.add_str("DWMS_CI", "CAS", {"CAS", "DSRG-PT2"});
+    foptions.add_str("DWMS_CI", "CAS", {"CAS", "DSRG-PT2"}, "CI vectors to compute dynamic weights");
 
     /*- DWMS algorithms
      *  - MS: multi-state (single-state single-reference)
