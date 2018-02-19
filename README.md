@@ -4,6 +4,8 @@
 [![Documentation Status](https://readthedocs.org/projects/forte/badge/?version=latest)](http://forte.readthedocs.io/en/latest/?badge=latest)
 
 #### Code Authors: Evangelistalab
+
+#### Manual (http://forte.readthedocs.io/)
 #### Web: evangelistalab.org
 
 Forte is an open-source plugin to Psi4 (https://github.com/psi4/psi4) that implements a variety of quantum chemistry methods
