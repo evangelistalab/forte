@@ -297,19 +297,11 @@ void SemiCanonical::set_U_to_identity() {
     Ub_->identity();
 
     Ua_t_.iterate([&](const std::vector<size_t>& i, double& value) {
-        if (i[0] == i[1]) {
-            value = 1.0;
-        } else {
-            value = 0.0;
-        }
+        value = (i[0] == i[1]) ? 1.0 : 0.0;
     });
 
     Ub_t_.iterate([&](const std::vector<size_t>& i, double& value) {
-        if (i[0] == i[1]) {
-            value = 1.0;
-        } else {
-            value = 0.0;
-        }
+        value = (i[0] == i[1]) ? 1.0 : 0.0;
     });
 }
 
