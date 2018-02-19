@@ -150,6 +150,9 @@ class SemiCanonical {
     /// Unitary matrix for beta orbital rotation in the active space
     ambit::Tensor Ub_t_;
 
+    /// Set Ua_, Ub_, Ua_t_, and Ub_t_ to identity
+    void set_U_to_identity();
+
     /// Build the generalized fock matrix
     void build_fock_matrix(Reference& reference);
 
