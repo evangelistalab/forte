@@ -416,8 +416,11 @@ double MRDSRG::compute_energy_relaxed() {
             /// NOTE: For consistant CI coefficients, compute_Heff will rotate Hbar to the basis
             /// before semicanonicalization!
             /// This means we need to transform the new reference to the old semicanonical basis.
+            ///
+            /// ints_ -- semicanonical basis
+            /// fci_ints -- original basis
 
-            // diagonalize the Hamiltonian
+            // diagonalize the Hamiltonian using fci_ints
             Etemp = Erelax;
             if (cas_type == "CAS") {
                 FCI_MO fci_mo(reference_wavefunction_, options_, ints_, mo_space_info_, fci_ints);
