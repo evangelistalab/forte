@@ -393,7 +393,7 @@ double MRDSRG::compute_energy_relaxed() {
 
         // iteration variables
         int cycle = 0, maxiter = options_.get_int("MAXITER_RELAX_REF");
-        double e_conv = options_.get_double("E_CONVERGENCE");
+        double e_conv = options_.get_double("RELAX_E_CONVERGENCE");
         std::vector<double> Edsrg_vec, Erelax_vec;
         std::vector<double> Edelta_dsrg_vec, Edelta_relax_vec;
         bool converged = false, failed = false;
@@ -563,7 +563,7 @@ double MRDSRG::compute_energy_sa() {
     // iteration variables
     double Edsrg_sa = 0.0, Erelax_sa = 0.0;
     int cycle = 0, maxiter = options_.get_int("MAXITER_RELAX_REF");
-    double e_conv = options_.get_double("E_CONVERGENCE");
+    double e_conv = options_.get_double("RELAX_E_CONVERGENCE");
     std::vector<double> Edsrg_sa_vec, Erelax_sa_vec;
     std::vector<double> Edelta_dsrg_sa_vec, Edelta_relax_sa_vec;
     bool converged = false, failed = false;
