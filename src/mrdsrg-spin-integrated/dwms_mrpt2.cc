@@ -25,12 +25,14 @@ void set_DWMS_options(ForteOptions& foptions) {
     /*- Using what energies to compute the weight
      * CAS: use SA-CASCI energies
      * DSRG-PT2: use SA-DSRG-PT2 energies -*/
-    foptions.add_str("DWMS_ENERGY", "CAS", {"CAS", "DSRG-PT2"}, "Energies to compute dynamic weights");
+    foptions.add_str("DWMS_ENERGY", "CAS", {"CAS", "DSRG-PT2"},
+                     "Energies to compute dynamic weights");
 
     /*- Using what CI vectors to perform multi-state computation
      * CAS: use SA-CASCI eigenvectors
      * DSRG-PT2: use SA-DSRG-PT2/CASCI eigenvectors -*/
-    foptions.add_str("DWMS_CI", "CAS", {"CAS", "DSRG-PT2"}, "CI vectors to compute dynamic weights");
+    foptions.add_str("DWMS_CI", "CAS", {"CAS", "DSRG-PT2"},
+                     "CI vectors to compute dynamic weights");
 
     /*- DWMS algorithms
      *  - MS: multi-state (single-state single-reference)
@@ -285,9 +287,6 @@ double DWMS_DSRGPT2::compute_dwsa_energy() {
     // prepare the final DWMS-DSRG-PT2 energies
     Ept2_.resize(nentry);
 
-    std::vector<std::vector<double>> Ept2_x;
-    Ept2_x.resize(nentry);
-
     // save a copy of original orbitals
     SharedMatrix Ca_copy(reference_wavefunction_->Ca()->clone());
     SharedMatrix Cb_copy(reference_wavefunction_->Cb()->clone());
@@ -297,8 +296,6 @@ double DWMS_DSRGPT2::compute_dwsa_energy() {
         int multi, irrep, nroots;
         std::tie(irrep, multi, nroots, std::ignore) = sa_info[n];
         Ept2_[n].resize(nroots);
-
-        Ept2_x[n].resize(nroots);
 
         // print current status
         std::string entry_name = multi_symbol_[multi - 1] + " " + irrep_symbol_[irrep];
@@ -311,9 +308,6 @@ double DWMS_DSRGPT2::compute_dwsa_energy() {
         // prepare Heff
         SharedMatrix Heff(new Matrix("Heff " + entry_name, nroots, nroots));
         SharedMatrix Heff_sym(new Matrix("Symmetrized Heff " + entry_name, nroots, nroots));
-
-        SharedMatrix Heff_x(new Matrix("Heffx " + entry_name, nroots, nroots));
-        SharedMatrix Heff_sym_x(new Matrix("Symmetrized Heffx " + entry_name, nroots, nroots));
 
         // loop over states of current symmetry
         for (int M = 0; M < nroots; ++M) {
@@ -364,54 +358,15 @@ double DWMS_DSRGPT2::compute_dwsa_energy() {
             // compute 2nd-order efffective Hamiltonian for the couplings
             auto fci_ints = dsrg_pt2->compute_Heff_actv();
 
-            // TODO: This is a HACK here.
-            outfile->Printf("\n  Compute 2nd-order Heff = H + H * T(root %d).", M);
-            ambit::Tensor H1a, H1b, H2aa, H2ab, H2bb, H3aaa, H3aab, H3abb, H3bbb;
-            dsrg_pt2->compute_Heff_2nd_coupling(H1a, H1b, H2aa, H2ab, H2bb, H3aaa, H3aab, H3abb,
-                                                H3bbb);
-            if (eri_df_) {
-                ambit::Tensor temp;
-
-                temp = H1a.clone();
-                temp("rs") = Ua_("rp") * H1a("pq") * Ua_("sq");
-                H1a("pq") = temp("pq");
-
-                temp.set_name(H1b.name());
-                temp("rs") = Ub_("rp") * H1b("pq") * Ub_("sq");
-                H1b("pq") = temp("pq");
-
-                temp = H2aa.clone();
-                temp("pqrs") = Ua_("pa") * Ua_("qb") * H2aa("abcd") * Ua_("rc") * Ua_("sd");
-                H2aa("pqrs") = temp("pqrs");
-
-                temp.set_name(H2ab.name());
-                temp("pqrs") = Ua_("pa") * Ub_("qb") * H2ab("abcd") * Ua_("rc") * Ub_("sd");
-                H2ab("pqrs") = temp("pqrs");
-
-                temp.set_name(H2bb.name());
-                temp("pqrs") = Ub_("pa") * Ub_("qb") * H2bb("abcd") * Ub_("rc") * Ub_("sd");
-                H2bb("pqrs") = temp("pqrs");
-
-                temp = H3aaa.clone();
-                temp("pqrsto") = Ua_("pa") * Ua_("qb") * Ua_("rc") * H3aaa("abcdef") * Ua_("sd") *
-                                 Ua_("te") * Ua_("of");
-                H3aaa("pqrsto") = temp("pqrsto");
-
-                temp.set_name(H3aab.name());
-                temp("pqrsto") = Ua_("pa") * Ua_("qb") * Ub_("rc") * H3aab("abcdef") * Ua_("sd") *
-                                 Ua_("te") * Ub_("of");
-                H3aab("pqrsto") = temp("pqrsto");
-
-                temp.set_name(H3abb.name());
-                temp("pqrsto") = Ua_("pa") * Ub_("qb") * Ub_("rc") * H3abb("abcdef") * Ua_("sd") *
-                                 Ub_("te") * Ub_("of");
-                H3abb("pqrsto") = temp("pqrsto");
-
-                temp.set_name(H3bbb.name());
-                temp("pqrsto") = Ub_("pa") * Ub_("qb") * Ub_("rc") * H3bbb("abcdef") * Ub_("sd") *
-                                 Ub_("te") * Ub_("of");
-                H3bbb("pqrsto") = temp("pqrsto");
-            }
+            outfile->Printf("\n!!!! H1a norm   %25.15f", dsrg_pt2->Hbar(1)[0].norm());
+            outfile->Printf("\n!!!! H1b norm   %25.15f", dsrg_pt2->Hbar(1)[1].norm());
+            outfile->Printf("\n!!!! H2aa norm  %25.15f", dsrg_pt2->Hbar(2)[0].norm());
+            outfile->Printf("\n!!!! H2ab norm  %25.15f", dsrg_pt2->Hbar(2)[1].norm());
+            outfile->Printf("\n!!!! H2bb norm  %25.15f", dsrg_pt2->Hbar(2)[2].norm());
+            outfile->Printf("\n!!!! H3aaa norm %25.15f", dsrg_pt2->Hbar(3)[0].norm());
+            outfile->Printf("\n!!!! H3aab norm %25.15f", dsrg_pt2->Hbar(3)[1].norm());
+            outfile->Printf("\n!!!! H3abb norm %25.15f", dsrg_pt2->Hbar(3)[2].norm());
+            outfile->Printf("\n!!!! H3bbb norm %25.15f", dsrg_pt2->Hbar(3)[3].norm());
 
             for (int N = 0; N < nroots; ++N) {
                 std::string msg = "densities";
@@ -452,32 +407,10 @@ double DWMS_DSRGPT2::compute_dwsa_energy() {
                     double shift = ints_->frozen_core_energy() + Enuc + fci_ints->scalar_energy();
                     Heff->set(M, M, coupling + shift);
                     Heff_sym->set(M, M, coupling + shift);
-                    Heff_x->set(M, M, coupling + shift);
-                    Heff_sym_x->set(M, M, coupling + shift);
                 } else {
                     Heff->set(N, M, coupling);
                     Heff_sym->add(N, M, 0.5 * coupling);
                     Heff_sym->add(M, N, 0.5 * coupling);
-
-                    outfile->Printf("\n  Contract transition densities with Heff.");
-                    double coupling_x = 0.0;
-                    coupling_x += H1a("vu") * TrD.L1a()("uv");
-                    coupling_x += H1b("vu") * TrD.L1b()("uv");
-
-                    coupling_x += H2aa("xyuv") * TrD.g2aa()("uvxy");
-                    coupling_x += H2ab("xYuV") * TrD.g2ab()("uVxY");
-                    coupling_x += H2bb("XYUV") * TrD.g2bb()("UVXY");
-
-                    if (do_hbar3) {
-                        coupling_x += H3aaa("uvwxyz") * TrD.g3aaa()("xyzuvw");
-                        coupling_x += H3aab("uvwxyz") * TrD.g3aab()("xyzuvw");
-                        coupling_x += H3abb("uvwxyz") * TrD.g3abb()("xyzuvw");
-                        coupling_x += H3bbb("uvwxyz") * TrD.g3bbb()("xyzuvw");
-                    }
-
-                    Heff_x->add(N, M, coupling_x);
-                    Heff_sym_x->add(N, M, 0.5 * coupling_x);
-                    Heff_sym_x->add(M, N, 0.5 * coupling_x);
                 }
             }
 
@@ -509,21 +442,6 @@ double DWMS_DSRGPT2::compute_dwsa_energy() {
         for (int i = 0; i < nroots; ++i) {
             Ept2_[n][i] = Ems->get(i);
         }
-
-        // TODO: This is a HACK.
-        Heff_x->print();
-        Heff_sym_x->print();
-
-        // diagonalize Heff and print eigen vectors
-        SharedMatrix U_x(new Matrix("U of Heff (Symmetrized)", nroots, nroots));
-        SharedVector Ems_x(new Vector("MS Energies", nroots));
-        Heff_sym_x->diagonalize(U_x, Ems_x);
-        U_x->eivprint(Ems_x);
-
-        // set Ept2_ value
-        for (int i = 0; i < nroots; ++i) {
-            Ept2_x[n][i] = Ems_x->get(i);
-        }
     }
 
     // print energy summary
@@ -533,7 +451,6 @@ double DWMS_DSRGPT2::compute_dwsa_energy() {
         print_energy_list("SA-DSRG-PT2 Energy", Ept2_0_, sa_info);
     }
     print_energy_list("DWSA-DSRGP-T2 Energy", Ept2_, sa_info, true);
-    print_energy_list("DWMS-DSRGP-T2 Energy", Ept2_x, sa_info, true);
 
     return Ept2_[0][0];
 }
@@ -565,35 +482,6 @@ double DWMS_DSRGPT2::compute_dwms_energy() {
     double zero_threshold = 1.0e-8;
     if (zeta_ < zero_threshold) {
         outfile->Printf("\n  DWMS_ZETA = 0.0! Equal weights will be used for all states.");
-
-        //        int total_nroots = 0;
-        //        for (int n = 0; n < nentry; ++n) {
-        //            total_nroots += std::get<2>(sa_info[n]);
-        //        }
-        //        double w = 1.0 / total_nroots;
-
-        //        // form new sa_info
-        //        std::vector<std::tuple<int, int, int, std::vector<double>>> sa_info_new;
-        //        sa_info_new.resize(nentry);
-        //        for (int n = 0; n < nentry; ++n) {
-        //            int irrep, multi, nroots;
-        //            std::tie(irrep, multi, nroots, std::ignore) = sa_info[n];
-        //            sa_info_new[n] = std::make_tuple(irrep, multi, nroots, std::vector(nroots,
-        //            w));
-        //        }
-
-        //        // print new weights
-        //        print_sa_info("Original State Averaging Summary", sa_info);
-        //        print_sa_info("Reweighted State Averaging Summary", sa_info_new);
-
-        //        // compute Reference
-        //        fci_mo->set_sa_info(sa_info_new);
-        //        reference = fci_mo->reference(max_rdm_level_);
-
-        //        // update MK vacuum energy
-        //        double Enuc = Process::environment.molecule()->nuclear_repulsion_energy(
-        //                    reference_wavefunction_->get_dipole_field_strength());
-        //        reference.update_Eref(ints_, mo_space_info_, Enuc);
     }
 
     // loop over symmetry entries
@@ -663,16 +551,26 @@ double DWMS_DSRGPT2::compute_dwms_energy() {
 
             // compute state-specific DSRG-MRPT2 energy
             double E = dsrg_pt2->compute_energy();
-            Heff->set(M, M, E);
-            Heff_sym->set(M, M, E);
+            //            Heff->set(M, M, E);
+            //            Heff_sym->set(M, M, E);
 
             // compute 2nd-order efffective Hamiltonian for the couplings
             print_h2("Compute couplings of 2nd-order effective Hamiltonian");
 
             outfile->Printf("\n  Compute 2nd-order Heff = H + H * T(root %d).", M);
             ambit::Tensor H1a, H1b, H2aa, H2ab, H2bb, H3aaa, H3aab, H3abb, H3bbb;
-            dsrg_pt2->compute_Heff_2nd_coupling(H1a, H1b, H2aa, H2ab, H2bb, H3aaa, H3aab, H3abb,
+            double H0;
+            dsrg_pt2->compute_Heff_2nd_coupling(H0, H1a, H1b, H2aa, H2ab, H2bb, H3aaa, H3aab, H3abb,
                                                 H3bbb);
+            outfile->Printf("\n!!!! H1a norm   %25.15f", H1a.norm());
+            outfile->Printf("\n!!!! H1b norm   %25.15f", H1b.norm());
+            outfile->Printf("\n!!!! H2aa norm  %25.15f", H2aa.norm());
+            outfile->Printf("\n!!!! H2ab norm  %25.15f", H2ab.norm());
+            outfile->Printf("\n!!!! H2bb norm  %25.15f", H2bb.norm());
+            outfile->Printf("\n!!!! H3aaa norm %25.15f", H3aaa.norm());
+            outfile->Printf("\n!!!! H3aab norm %25.15f", H3aab.norm());
+            outfile->Printf("\n!!!! H3abb norm %25.15f", H3abb.norm());
+            outfile->Printf("\n!!!! H3bbb norm %25.15f", H3bbb.norm());
 
             // need to rotate these Heff to original basis if density fitting
             // because CI vectors are obtained in the original orbital basis
@@ -721,9 +619,9 @@ double DWMS_DSRGPT2::compute_dwms_energy() {
             }
 
             for (int N = 0; N < nroots; ++N) {
-                if (M == N) {
-                    continue;
-                }
+                //                if (M == N) {
+                //                    continue;
+                //                }
 
                 // compute transition densities
                 outfile->Printf("\n  Compute transition densities.");
@@ -731,19 +629,22 @@ double DWMS_DSRGPT2::compute_dwms_energy() {
 
                 outfile->Printf("\n  Contract transition densities with Heff.");
                 double coupling = 0.0;
+                if (M == N) {
+                    coupling = ints_->frozen_core_energy() + Enuc + H0;
+                }
                 coupling += H1a("vu") * TrD.L1a()("uv");
                 coupling += H1b("vu") * TrD.L1b()("uv");
 
-                coupling += H2aa("xyuv") * TrD.g2aa()("uvxy");
+                coupling += 0.25 * H2aa("xyuv") * TrD.g2aa()("uvxy");
                 coupling += H2ab("xYuV") * TrD.g2ab()("uVxY");
-                coupling += H2bb("XYUV") * TrD.g2bb()("UVXY");
+                coupling += 0.25 * H2bb("XYUV") * TrD.g2bb()("UVXY");
 
-                coupling += H3aaa("uvwxyz") * TrD.g3aaa()("xyzuvw");
-                coupling += H3aab("uvwxyz") * TrD.g3aab()("xyzuvw");
-                coupling += H3abb("uvwxyz") * TrD.g3abb()("xyzuvw");
-                coupling += H3bbb("uvwxyz") * TrD.g3bbb()("xyzuvw");
+                coupling += 1.0 / 36.0 * H3aaa("uvwxyz") * TrD.g3aaa()("xyzuvw");
+                coupling += 0.25 * H3aab("uvwxyz") * TrD.g3aab()("xyzuvw");
+                coupling += 0.25 * H3abb("uvwxyz") * TrD.g3abb()("xyzuvw");
+                coupling += 1.0 / 36.0 * H3bbb("uvwxyz") * TrD.g3bbb()("xyzuvw");
 
-                Heff->add(N, M, coupling);
+                Heff->set(N, M, coupling);
                 Heff_sym->add(N, M, 0.5 * coupling);
                 Heff_sym->add(M, N, 0.5 * coupling);
             }

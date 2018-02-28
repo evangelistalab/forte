@@ -3484,7 +3484,7 @@ std::vector<double> THREE_DSRG_MRPT2::relaxed_energy(std::shared_ptr<FCIIntegral
     return Erelax;
 }
 
-void THREE_DSRG_MRPT2::compute_Heff_2nd_coupling(ambit::Tensor& H1a, ambit::Tensor& H1b,
+void THREE_DSRG_MRPT2::compute_Heff_2nd_coupling(double& H0, ambit::Tensor& H1a, ambit::Tensor& H1b,
                                                  ambit::Tensor& H2aa, ambit::Tensor& H2ab,
                                                  ambit::Tensor& H2bb, ambit::Tensor& H3aaa,
                                                  ambit::Tensor& H3aab, ambit::Tensor& H3abb,

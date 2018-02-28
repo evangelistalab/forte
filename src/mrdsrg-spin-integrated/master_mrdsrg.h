@@ -43,7 +43,7 @@ class MASTER_DSRG : public DynamicCorrelationSolver {
 
     /// Compute second-order effective Hamiltonian couplings (child class overrides)
     /// <M|H + HA(N)|N> = Heff1 * TrD1 + Heff2 * TrD2 + Heff3 * TrD3 if CAS
-    virtual void compute_Heff_2nd_coupling(ambit::Tensor& H1a, ambit::Tensor& H1b,
+    virtual void compute_Heff_2nd_coupling(double& H0, ambit::Tensor& H1a, ambit::Tensor& H1b,
                                            ambit::Tensor& H2aa, ambit::Tensor& H2ab,
                                            ambit::Tensor& H2bb, ambit::Tensor& H3aaa,
                                            ambit::Tensor& H3aab, ambit::Tensor& H3abb,

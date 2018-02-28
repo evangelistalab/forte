@@ -797,7 +797,7 @@ double DSRG_MRPT2::compute_ms_2nd_coupling(const std::string& name) {
     return coupling;
 }
 
-void DSRG_MRPT2::compute_Heff_2nd_coupling(ambit::Tensor& H1a, ambit::Tensor& H1b,
+void DSRG_MRPT2::compute_Heff_2nd_coupling(double& H0, ambit::Tensor& H1a, ambit::Tensor& H1b,
                                            ambit::Tensor& H2aa, ambit::Tensor& H2ab,
                                            ambit::Tensor& H2bb, ambit::Tensor& H3aaa,
                                            ambit::Tensor& H3aab, ambit::Tensor& H3abb,
@@ -828,10 +828,39 @@ void DSRG_MRPT2::compute_Heff_2nd_coupling(ambit::Tensor& H1a, ambit::Tensor& H1
     Hoei_ = BTF_->build(tensor_type_, "OEI", spin_cases({"ph"}));
     build_eff_oei();
 
-    // 1-body
+    // set H1 and H2 to bare Hamiltonian
     H1["uv"] = Hoei_["uv"];
     H1["UV"] = Hoei_["UV"];
 
+    H2["uvxy"] = V_["uvxy"];
+    H2["uVxY"] = V_["uVxY"];
+    H2["UVXY"] = V_["UVXY"];
+
+    // scalar term from bare Hamiltonian
+    H0 = 0.0;
+    size_t ncore = core_mos_.size();
+    for (int m = 0; m < ncore; ++m) {
+        size_t nm = core_mos_[m];
+        H0 += ints_->oei_a(nm, nm);
+        H0 += ints_->oei_b(nm, nm);
+
+        for (int n = 0; n < ncore; ++n) {
+            size_t nn = core_mos_[n];
+            H0 += 0.5 * ints_->aptei_aa(nm, nn, nm, nn);
+            H0 += 0.5 * ints_->aptei_bb(nm, nn, nm, nn);
+            H0 += ints_->aptei_ab(nm, nn, nm, nn);
+        }
+    }
+
+    // scalar from [H, T]
+    H0 += Hoei_["am"] * T1eff["ma"];
+    H0 += Hoei_["AM"] * T1eff["MA"];
+
+    H0 += 0.25 * V_["abmn"] * T2_["mnab"];
+    H0 += V_["aBmN"] * T2_["mNaB"];
+    H0 += 0.25 * V_["ABMN"] * T2_["MNAB"];
+
+    // 1-body
     H1["vu"] += Hoei_["eu"] * T1eff["ve"];
     H1["VU"] += Hoei_["EU"] * T1eff["VE"];
 
@@ -843,87 +872,104 @@ void DSRG_MRPT2::compute_Heff_2nd_coupling(ambit::Tensor& H1a, ambit::Tensor& H1
     H1["VU"] += V_["aVmU"] * T1eff["ma"];
     H1["VU"] += V_["AVMU"] * T1eff["MA"];
 
-    H1["vu"] += Hoei_["am"] * T2_["mvau"];
+    H1["vu"] += Hoei_["am"] * T2_["vmua"];
     H1["vu"] += Hoei_["AM"] * T2_["vMuA"];
     H1["VU"] += Hoei_["am"] * T2_["mVaU"];
-    H1["VU"] += Hoei_["AM"] * T2_["MVAU"];
+    H1["VU"] += Hoei_["AM"] * T2_["VMUA"];
 
     H1["vu"] += 0.5 * V_["abum"] * T2_["vmab"];
     H1["vu"] += V_["aBuM"] * T2_["vMaB"];
-    H1["VU"] += 0.5 * V_["ABUM"] * T2_["VMAB"];
     H1["VU"] += V_["aBmU"] * T2_["mVaB"];
+    H1["VU"] += 0.5 * V_["ABUM"] * T2_["VMAB"];
 
     H1["vu"] -= 0.5 * V_["avmn"] * T2_["mnau"];
     H1["vu"] -= V_["vAmN"] * T2_["mNuA"];
-    H1["VU"] -= 0.5 * V_["AVMN"] * T2_["MNAU"];
     H1["VU"] -= V_["aVmN"] * T2_["mNaU"];
+    H1["VU"] -= 0.5 * V_["AVMN"] * T2_["MNAU"];
 
     // 2-body
-    H2["uvxy"] = 0.25 * V_["uvxy"];
-    H2["uVxY"] = V_["uVxY"];
-    H2["UVXY"] = 0.25 * V_["UVXY"];
+    BlockedTensor temp = BTF_->build(tensor_type_, "temp", {"aaaa", "AAAA"});
 
-    H2["xyuv"] += 0.5 * V_["eyuv"] * T1eff["xe"];
+    temp["xyuv"] = V_["eyuv"] * T1eff["xe"];
+    temp["XYUV"] = V_["EYUV"] * T1eff["XE"];
+
+    H2["xyuv"] += temp["xyuv"];
+    H2["XYUV"] += temp["XYUV"];
+    H2["xyuv"] -= temp["yxuv"];
+    H2["XYUV"] -= temp["YXUV"];
+
     H2["xYuV"] += V_["eYuV"] * T1eff["xe"];
     H2["xYuV"] += V_["xEuV"] * T1eff["YE"];
-    H2["XYUV"] += 0.5 * V_["EYUV"] * T1eff["XE"];
 
-    H2["xyuv"] += 0.5 * V_["xyvm"] * T1eff["mu"];
+    temp["xyuv"] = V_["xymv"] * T1eff["mu"];
+    temp["XYUV"] = V_["XYMV"] * T1eff["MU"];
+
+    H2["xyuv"] -= temp["xyuv"];
+    H2["XYUV"] -= temp["XYUV"];
+    H2["xyuv"] += temp["xyvu"];
+    H2["XYUV"] += temp["XYVU"];
+
     H2["xYuV"] -= V_["xYmV"] * T1eff["mu"];
     H2["xYuV"] -= V_["xYuM"] * T1eff["MV"];
-    H2["XYUV"] += 0.5 * V_["XYVM"] * T1eff["MU"];
 
-    H2["xyuv"] += 0.5 * Hoei_["eu"] * T2_["xyev"];
+    temp["xyuv"] = Hoei_["eu"] * T2_["xyev"];
+    temp["XYUV"] = Hoei_["EU"] * T2_["XYEV"];
+
+    H2["xyuv"] += temp["xyuv"];
+    H2["XYUV"] += temp["XYUV"];
+    H2["xyuv"] -= temp["xyvu"];
+    H2["XYUV"] -= temp["XYVU"];
+
     H2["xYuV"] += Hoei_["eu"] * T2_["xYeV"];
     H2["xYuV"] += Hoei_["EV"] * T2_["xYuE"];
-    H2["XYUV"] += 0.5 * Hoei_["EU"] * T2_["XYEV"];
 
-    H2["xyuv"] -= 0.5 * Hoei_["xm"] * T2_["myuv"];
+    temp["xyuv"] = Hoei_["xm"] * T2_["myuv"];
+    temp["XYUV"] = Hoei_["XM"] * T2_["MYUV"];
+
+    H2["xyuv"] -= temp["xyuv"];
+    H2["XYUV"] -= temp["XYUV"];
+    H2["xyuv"] += temp["yxuv"];
+    H2["XYUV"] += temp["YXUV"];
+
     H2["xYuV"] -= Hoei_["xm"] * T2_["mYuV"];
     H2["xYuV"] -= Hoei_["YM"] * T2_["xMuV"];
-    H2["XYUV"] -= 0.5 * Hoei_["XM"] * T2_["MYUV"];
 
-    H2["xyuv"] -= V_["aymu"] * T2_["mxav"];
-    H2["xyuv"] -= V_["yAuM"] * T2_["xMvA"];
-    H2["xYuV"] -= V_["aYuM"] * T2_["xMaV"];
-    H2["xYuV"] -= V_["xAmV"] * T2_["mYuA"];
-    H2["xYuV"] += V_["axmu"] * T2_["mYaV"];
-    H2["xYuV"] += V_["xAuM"] * T2_["MYAV"];
-    H2["xYuV"] += V_["aYmV"] * T2_["mxau"];
-    H2["xYuV"] += V_["AYMV"] * T2_["xMuA"];
-    H2["XYUV"] -= V_["aYmU"] * T2_["mXaV"];
-    H2["XYUV"] -= V_["AYMU"] * T2_["XMAV"];
-
-    H2["xyuv"] += 0.125 * V_["xymn"] * T2_["mnuv"];
-    H2["xYuV"] += V_["xYmN"] * T2_["mNuV"];
-    H2["XYUV"] += 0.125 * V_["XYMN"] * T2_["MNUV"];
-
-    H2["xyuv"] += 0.125 * V_["abuv"] * T2_["xyab"];
+    H2["xyuv"] += 0.5 * V_["abuv"] * T2_["xyab"];
     H2["xYuV"] += V_["aBuV"] * T2_["xYaB"];
-    H2["XYUV"] += 0.125 * V_["ABUV"] * T2_["XYAB"];
+    H2["XYUV"] += 0.5 * V_["ABUV"] * T2_["XYAB"];
 
-    // temp contract with D3
-    H3["xyzuvw"] += 0.25 * V_["yzmu"] * T2_["mxvw"];
-    H3["xyzuvw"] -= 0.25 * V_["ezuv"] * T2_["xyew"];
+    H2["xyuv"] -= 0.5 * V_["xyij"] * T2_["ijuv"];
+    H2["xYuV"] -= V_["xYiJ"] * T2_["iJuV"];
+    H2["XYUV"] -= 0.5 * V_["XYIJ"] * T2_["IJUV"];
 
-    H3["XYZUVW"] += 0.25 * V_["YZMU"] * T2_["MXVW"];
-    H3["XYZUVW"] -= 0.25 * V_["EZUV"] * T2_["XYEW"];
+    H2["xyuv"] += V_["xyim"] * T2_["imuv"];
+    H2["xYuV"] += V_["xYiM"] * T2_["iMuV"];
+    H2["xYuV"] += V_["xYmI"] * T2_["mIuV"];
+    H2["XYUV"] += V_["XYIM"] * T2_["IMUV"];
 
-    H3["xyZuvW"] += 0.5 * V_["yZmW"] * T2_["mxuv"];
-    H3["xyZuvW"] += 0.5 * V_["xymu"] * T2_["mZvW"];
-    H3["xyZuvW"] += V_["yZuM"] * T2_["xMvW"];
+    temp["xyuv"] = V_["ayum"] * T2_["xmav"];
+    temp["xyuv"] += V_["yAuM"] * T2_["xMvA"];
+    temp["XYUV"] = V_["aYmU"] * T2_["mXaV"];
+    temp["XYUV"] += V_["AYUM"] * T2_["XMAV"];
 
-    H3["xyZuvW"] += 0.5 * V_["eZuW"] * T2_["xyev"];
-    H3["xyZuvW"] += 0.5 * V_["eyuv"] * T2_["xZeW"];
-    H3["xyZuvW"] -= V_["yEuW"] * T2_["xZvE"];
+    H2["xyuv"] -= temp["xyuv"];
+    H2["XYUV"] -= temp["XYUV"];
+    H2["xyuv"] += temp["yxuv"];
+    H2["XYUV"] += temp["YXUV"];
+    H2["xyuv"] += temp["xyvu"];
+    H2["XYUV"] += temp["XYVU"];
+    H2["xyuv"] -= temp["yxvu"];
+    H2["XYUV"] -= temp["YXVU"];
 
-    H3["xYZuVW"] += 0.5 * V_["YZMV"] * T2_["xMuW"];
-    H3["xYZuVW"] += 0.5 * V_["xZuM"] * T2_["MYVW"];
-    H3["xYZuVW"] += V_["xZmV"] * T2_["mYuW"];
+    H2["xYuV"] -= V_["aYuM"] * T2_["xMaV"];
+    H2["xYuV"] += V_["xaum"] * T2_["mYaV"];
+    H2["xYuV"] += V_["xAuM"] * T2_["MYAV"];
+    H2["xYuV"] += V_["aYmV"] * T2_["xmua"];
+    H2["xYuV"] += V_["AYMV"] * T2_["xMuA"];
+    H2["xYuV"] -= V_["xAmV"] * T2_["mYuA"];
 
-    H3["xYZuVW"] += 0.5 * V_["EZVW"] * T2_["xYuE"];
-    H3["xYZuVW"] += 0.5 * V_["xEuV"] * T2_["YZEW"];
-    H3["xYZuVW"] -= V_["eZuV"] * T2_["xYeW"];
+    // 3-body
+    H2_T2_C3(V_, T2_, 1.0, H3, true);
 }
 
 void DSRG_MRPT2::compute_cumulants(std::shared_ptr<FCIIntegrals> fci_ints,

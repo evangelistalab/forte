@@ -163,8 +163,8 @@ void MASTER_DSRG::set_ambit_MOSpace() {
     bvirt_label_ = "V";
 
     // add Ambit index labels
-    BTF_->add_mo_space(acore_label_, "mn", core_mos_, AlphaSpin);
-    BTF_->add_mo_space(bcore_label_, "MN", core_mos_, BetaSpin);
+    BTF_->add_mo_space(acore_label_, "m,n,c1,c2", core_mos_, AlphaSpin);
+    BTF_->add_mo_space(bcore_label_, "M,N,C1,C2", core_mos_, BetaSpin);
     BTF_->add_mo_space(aactv_label_, "uvwxyz123", actv_mos_, AlphaSpin);
     BTF_->add_mo_space(bactv_label_, "UVWXYZ!@#", actv_mos_, BetaSpin);
     BTF_->add_mo_space(avirt_label_, "ef", virt_mos_, AlphaSpin);
@@ -1613,7 +1613,8 @@ void MASTER_DSRG::H2_T2_C3(BlockedTensor& H2, BlockedTensor& T2, const double& a
         C3["ZXYUWV"] -= temp["XYZUVW"];
         C3["XZYUWV"] += temp["XYZUVW"];
     } else {
-        temp = ambit::BlockedTensor::build(tensor_type_, "temp", {"gghppg"});
+//        temp = ambit::BlockedTensor::build(tensor_type_, "temp", {"gghppg"});
+        temp = ambit::BlockedTensor::build(tensor_type_, "temp", {"hhhpph"});
         temp["rsjabq"] -= H2["rsqi"] * T2["ijab"];
         C3["rsjabq"] += alpha * temp["rsjabq"];
         C3["rjsabq"] -= alpha * temp["rsjabq"];
@@ -1625,7 +1626,8 @@ void MASTER_DSRG::H2_T2_C3(BlockedTensor& H2, BlockedTensor& T2, const double& a
         C3["rjsqab"] -= alpha * temp["rsjabq"];
         C3["jrsqab"] += alpha * temp["rsjabq"];
 
-        temp = ambit::BlockedTensor::build(tensor_type_, "temp", {"hhgggp"});
+//        temp = ambit::BlockedTensor::build(tensor_type_, "temp", {"hhgggp"});
+        temp = ambit::BlockedTensor::build(tensor_type_, "temp", {"hhhhhp"});
         temp["ijspqb"] += H2["aspq"] * T2["ijba"];
         C3["ijspqb"] += alpha * temp["ijspqb"];
         C3["isjpqb"] -= alpha * temp["ijspqb"];
@@ -1637,7 +1639,8 @@ void MASTER_DSRG::H2_T2_C3(BlockedTensor& H2, BlockedTensor& T2, const double& a
         C3["isjbpq"] -= alpha * temp["ijspqb"];
         C3["sijbpq"] += alpha * temp["ijspqb"];
 
-        temp = ambit::BlockedTensor::build(tensor_type_, "temp", {"GGHPPG"});
+//        temp = ambit::BlockedTensor::build(tensor_type_, "temp", {"GGHPPG"});
+        temp = ambit::BlockedTensor::build(tensor_type_, "temp", {"HHHPPH"});
         temp["RSJABQ"] -= H2["RSQI"] * T2["IJAB"];
         C3["RSJABQ"] += alpha * temp["RSJABQ"];
         C3["RJSABQ"] -= alpha * temp["RSJABQ"];
@@ -1649,7 +1652,8 @@ void MASTER_DSRG::H2_T2_C3(BlockedTensor& H2, BlockedTensor& T2, const double& a
         C3["RJSQAB"] -= alpha * temp["RSJABQ"];
         C3["JRSQAB"] += alpha * temp["RSJABQ"];
 
-        temp = ambit::BlockedTensor::build(tensor_type_, "temp", {"HHGGGP"});
+//        temp = ambit::BlockedTensor::build(tensor_type_, "temp", {"HHGGGP"});
+        temp = ambit::BlockedTensor::build(tensor_type_, "temp", {"HHHHHP"});
         temp["IJSPQB"] += H2["ASPQ"] * T2["IJBA"];
         C3["IJSPQB"] += alpha * temp["IJSPQB"];
         C3["ISJPQB"] -= alpha * temp["IJSPQB"];
@@ -1672,7 +1676,8 @@ void MASTER_DSRG::H2_T2_C3(BlockedTensor& H2, BlockedTensor& T2, const double& a
     if (active_only) {
         temp = ambit::BlockedTensor::build(tensor_type_, "temp", {"aAaaAa"});
     } else {
-        temp = ambit::BlockedTensor::build(tensor_type_, "temp", {"gGhpPg"});
+//        temp = ambit::BlockedTensor::build(tensor_type_, "temp", {"gGhpPg"});
+        temp = ambit::BlockedTensor::build(tensor_type_, "temp", {"hHhpPh"});
     }
     temp["rSjaBq"] += H2["rSqI"] * T2["jIaB"];
     C3["rjSaqB"] += alpha * temp["rSjaBq"];
@@ -1690,7 +1695,8 @@ void MASTER_DSRG::H2_T2_C3(BlockedTensor& H2, BlockedTensor& T2, const double& a
     if (active_only) {
         temp.zero();
     } else {
-        temp = ambit::BlockedTensor::build(tensor_type_, "temp", {"hHggGp"});
+//        temp = ambit::BlockedTensor::build(tensor_type_, "temp", {"hHggGp"});
+        temp = ambit::BlockedTensor::build(tensor_type_, "temp", {"hHhhHp"});
     }
     temp["iJspQb"] -= H2["sApQ"] * T2["iJbA"];
     C3["isJpbQ"] += alpha * temp["iJspQb"];
@@ -1702,7 +1708,8 @@ void MASTER_DSRG::H2_T2_C3(BlockedTensor& H2, BlockedTensor& T2, const double& a
     if (active_only) {
         temp = ambit::BlockedTensor::build(tensor_type_, "temp", {"aAAaAA"});
     } else {
-        temp = ambit::BlockedTensor::build(tensor_type_, "temp", {"gGHpPG"});
+//        temp = ambit::BlockedTensor::build(tensor_type_, "temp", {"gGHpPG"});
+        temp = ambit::BlockedTensor::build(tensor_type_, "temp", {"hHHpPH"});
     }
     temp["rSJaBQ"] += H2["rSiQ"] * T2["iJaB"];
     C3["rSJaBQ"] += alpha * temp["rSJaBQ"];
@@ -1720,7 +1727,8 @@ void MASTER_DSRG::H2_T2_C3(BlockedTensor& H2, BlockedTensor& T2, const double& a
     if (active_only) {
         temp.zero();
     } else {
-        temp = ambit::BlockedTensor::build(tensor_type_, "temp", {"hHGgGP"});
+//        temp = ambit::BlockedTensor::build(tensor_type_, "temp", {"hHGgGP"});
+        temp = ambit::BlockedTensor::build(tensor_type_, "temp", {"hHHhHP"});
     }
     temp["iJSpQB"] -= H2["aSpQ"] * T2["iJaB"];
     C3["iJSpQB"] += alpha * temp["iJSpQB"];
