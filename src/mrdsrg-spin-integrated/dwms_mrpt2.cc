@@ -631,43 +631,44 @@ double DWMS_DSRGPT2::compute_dwms_energy() {
 
                 outfile->Printf("\n  Contract %s with Heff.", msg.c_str());
                 double coupling = 0.0;
+
+                coupling += H1a("vu") * TrD.L1a()("uv");
+                coupling += H1b("vu") * TrD.L1b()("uv");
+
+                coupling += 0.25 * H2aa("xyuv") * TrD.g2aa()("uvxy");
+                coupling += H2ab("xYuV") * TrD.g2ab()("uVxY");
+                coupling += 0.25 * H2bb("XYUV") * TrD.g2bb()("UVXY");
+
+                coupling += 1.0 / 36.0 * H3aaa("uvwxyz") * TrD.g3aaa()("xyzuvw");
+                coupling += 0.25 * H3aab("uvwxyz") * TrD.g3aab()("xyzuvw");
+                coupling += 0.25 * H3abb("uvwxyz") * TrD.g3abb()("xyzuvw");
+                coupling += 1.0 / 36.0 * H3bbb("uvwxyz") * TrD.g3bbb()("xyzuvw");
+
                 if (M == N) {
-                    coupling = fci_ints->scalar_energy();
+                    double Ediag = fci_ints->scalar_energy();
 
                     auto Hbar_vec = dsrg_pt2->Hbar(1);
-                    coupling += Hbar_vec[0]("vu") * TrD.L1a()("uv");
-                    coupling += Hbar_vec[1]("vu") * TrD.L1b()("uv");
+                    Ediag += Hbar_vec[0]("vu") * TrD.L1a()("uv");
+                    Ediag += Hbar_vec[1]("vu") * TrD.L1b()("uv");
 
                     Hbar_vec = dsrg_pt2->Hbar(2);
-                    coupling += 0.25 * Hbar_vec[0]("xyuv") * TrD.g2aa()("uvxy");
-                    coupling += Hbar_vec[1]("xYuV") * TrD.g2ab()("uVxY");
-                    coupling += 0.25 * Hbar_vec[2]("XYUV") * TrD.g2bb()("UVXY");
+                    Ediag += 0.25 * Hbar_vec[0]("xyuv") * TrD.g2aa()("uvxy");
+                    Ediag += Hbar_vec[1]("xYuV") * TrD.g2ab()("uVxY");
+                    Ediag += 0.25 * Hbar_vec[2]("XYUV") * TrD.g2bb()("UVXY");
 
                     Hbar_vec = dsrg_pt2->Hbar(3);
-                    coupling += (1.0 / 36) * Hbar_vec[0]("uvwxyz") * TrD.g3aaa()("xyzuvw");
-                    coupling += 0.25 * Hbar_vec[1]("uvwxyz") * TrD.g3aab()("xyzuvw");
-                    coupling += 0.25 * Hbar_vec[2]("uvwxyz") * TrD.g3abb()("xyzuvw");
-                    coupling += (1.0 / 36) * Hbar_vec[3]("uvwxyz") * TrD.g3bbb()("xyzuvw");
+                    Ediag += (1.0 / 36) * Hbar_vec[0]("uvwxyz") * TrD.g3aaa()("xyzuvw");
+                    Ediag += 0.25 * Hbar_vec[1]("uvwxyz") * TrD.g3aab()("xyzuvw");
+                    Ediag += 0.25 * Hbar_vec[2]("uvwxyz") * TrD.g3abb()("xyzuvw");
+                    Ediag += (1.0 / 36) * Hbar_vec[3]("uvwxyz") * TrD.g3bbb()("xyzuvw");
 
                     double shift = ints_->frozen_core_energy() + Enuc;
-                    Heff->set(M, M, coupling + shift);
-                    Heff_sym->set(M, M, coupling + shift);
+                    Heff->set(M, M, Ediag + shift);
+                    Heff_sym->set(M, M, Ediag + shift);
 
-                    double Ediff = coupling - H0;
+                    double Ediff = Ediag - H0 - coupling;
                     outfile->Printf("\n  Difference between real and pseudo E2nd: %20.15f", Ediff);
                 } else {
-                    coupling += H1a("vu") * TrD.L1a()("uv");
-                    coupling += H1b("vu") * TrD.L1b()("uv");
-
-                    coupling += 0.25 * H2aa("xyuv") * TrD.g2aa()("uvxy");
-                    coupling += H2ab("xYuV") * TrD.g2ab()("uVxY");
-                    coupling += 0.25 * H2bb("XYUV") * TrD.g2bb()("UVXY");
-
-                    coupling += 1.0 / 36.0 * H3aaa("uvwxyz") * TrD.g3aaa()("xyzuvw");
-                    coupling += 0.25 * H3aab("uvwxyz") * TrD.g3aab()("xyzuvw");
-                    coupling += 0.25 * H3abb("uvwxyz") * TrD.g3abb()("xyzuvw");
-                    coupling += 1.0 / 36.0 * H3bbb("uvwxyz") * TrD.g3bbb()("xyzuvw");
-
                     Heff->set(N, M, coupling);
                     Heff_sym->add(N, M, 0.5 * coupling);
                     Heff_sym->add(M, N, 0.5 * coupling);
