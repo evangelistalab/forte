@@ -33,7 +33,8 @@ set forte {
   job_type = aci
   multiplicity 1
   aci_select_type amp
-  frozen_docc [1,0,0,0,0,1,0,0]
+  frozen_docc [1,0,0,0,0,0,0,0]
+  restricted_docc [0,0,0,0,0,1,0,0]
   root_sym 0
   sigma 0.01
   aci_nroot 1
