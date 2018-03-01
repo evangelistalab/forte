@@ -443,11 +443,6 @@ double AdaptiveCI::compute_energy() {
     outfile->Printf("\n  ==> Reference Information <==\n");
     outfile->Printf("\n  There are %d frozen orbitals.", nfrzc_);
     outfile->Printf("\n  There are %zu active orbitals.\n", nact_);
-    //       reference_determinant_.print();
-    //        outfile->Printf("\n  REFERENCE ENERGY:         %1.12f",
-    //                        reference_determinant_.energy() +
-    //                            nuclear_repulsion_energy_ +
-    //                            fci_ints_->scalar_energy());
     print_info();
     if (!quiet_mode_) {
         outfile->Printf("\n  Using %d threads", omp_get_max_threads());
@@ -1761,42 +1756,6 @@ void AdaptiveCI::print_nos() {
         }
     }
 }
-// TODO: move to operator.cc
-// void AdaptiveCI::compute_H_expectation_val( const
-// std::vector<Determinant>& space, SharedVector& evals, const
-// SharedMatrix evecs, int nroot, DiagonalizationMethod diag_method)
-//{
-//    size_t space_size = space.size();
-//    SparseCISolver ssolver;
-//
-//    evals->zero();
-//
-//    if( (space_size <= 200) or (diag_method == Full) ){
-//        outfile->Printf("\n  Using full algorithm.");
-//        SharedMatrix Hd = ssolver.build_full_hamiltonian( space );
-//        for( int n = 0; n < nroot; ++n){
-//            for( size_t I = 0; I < space_size; ++I){
-//                for( size_t J = 0; J < space_size; ++J){
-//                    evals->add(n, evecs->get(I,n) * Hd->get(I,J) *
-//                    evecs->get(J,n) );
-//                }
-//            }
-//        }
-//    }else{
-//        outfile->Printf("\n  Using sparse algorithm.");
-//        auto Hs = ssolver.build_sparse_hamiltonian( space );
-//        for( int n = 0; n < nroot; ++n){
-//            for( size_t I = 0; I < space_size; ++I){
-//                std::vector<double> H_val = Hs[I].second;
-//                std::vector<int> Hidx = Hs[I].first;
-//                for( size_t J = 0, max_J = H_val.size(); J < max_J; ++J){
-//                    evals->add(n, evecs->get(I,n) * H_val[J] *
-//                    evecs->get(Hidx[J],n) );
-//                }
-//            }
-//        }
-//    }
-//}
 
 /*
 void AdaptiveCI::convert_to_string(const std::vector<Determinant>& space) {
