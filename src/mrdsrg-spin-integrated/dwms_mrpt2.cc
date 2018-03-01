@@ -352,21 +352,21 @@ double DWMS_DSRGPT2::compute_dwsa_energy() {
                                                         options_, ints_, mo_space_info_);
             }
 
-            // compute state-specific DSRG-MRPT2 energy
+            // compute biased state-averaged DSRG-MRPT2 energy
             dsrg_pt2->compute_energy();
 
             // compute 2nd-order efffective Hamiltonian for the couplings
             auto fci_ints = dsrg_pt2->compute_Heff_actv();
 
-//            outfile->Printf("\n!!!! H1a norm   %25.15f", dsrg_pt2->Hbar(1)[0].norm());
-//            outfile->Printf("\n!!!! H1b norm   %25.15f", dsrg_pt2->Hbar(1)[1].norm());
-//            outfile->Printf("\n!!!! H2aa norm  %25.15f", dsrg_pt2->Hbar(2)[0].norm());
-//            outfile->Printf("\n!!!! H2ab norm  %25.15f", dsrg_pt2->Hbar(2)[1].norm());
-//            outfile->Printf("\n!!!! H2bb norm  %25.15f", dsrg_pt2->Hbar(2)[2].norm());
-//            outfile->Printf("\n!!!! H3aaa norm %25.15f", dsrg_pt2->Hbar(3)[0].norm());
-//            outfile->Printf("\n!!!! H3aab norm %25.15f", dsrg_pt2->Hbar(3)[1].norm());
-//            outfile->Printf("\n!!!! H3abb norm %25.15f", dsrg_pt2->Hbar(3)[2].norm());
-//            outfile->Printf("\n!!!! H3bbb norm %25.15f", dsrg_pt2->Hbar(3)[3].norm());
+            //            outfile->Printf("\n!!!! H1a norm   %25.15f", dsrg_pt2->Hbar(1)[0].norm());
+            //            outfile->Printf("\n!!!! H1b norm   %25.15f", dsrg_pt2->Hbar(1)[1].norm());
+            //            outfile->Printf("\n!!!! H2aa norm  %25.15f", dsrg_pt2->Hbar(2)[0].norm());
+            //            outfile->Printf("\n!!!! H2ab norm  %25.15f", dsrg_pt2->Hbar(2)[1].norm());
+            //            outfile->Printf("\n!!!! H2bb norm  %25.15f", dsrg_pt2->Hbar(2)[2].norm());
+            //            outfile->Printf("\n!!!! H3aaa norm %25.15f", dsrg_pt2->Hbar(3)[0].norm());
+            //            outfile->Printf("\n!!!! H3aab norm %25.15f", dsrg_pt2->Hbar(3)[1].norm());
+            //            outfile->Printf("\n!!!! H3abb norm %25.15f", dsrg_pt2->Hbar(3)[2].norm());
+            //            outfile->Printf("\n!!!! H3bbb norm %25.15f", dsrg_pt2->Hbar(3)[3].norm());
 
             for (int N = 0; N < nroots; ++N) {
                 std::string msg = "densities";
@@ -549,10 +549,11 @@ double DWMS_DSRGPT2::compute_dwms_energy() {
                                                         options_, ints_, mo_space_info_);
             }
 
-            // compute state-specific DSRG-MRPT2 energy
-            double E = dsrg_pt2->compute_energy();
-            //            Heff->set(M, M, E);
-            //            Heff_sym->set(M, M, E);
+            // compute biased state-averaged DSRG-MRPT2 energy
+            dsrg_pt2->compute_energy();
+
+            // compute 2nd-order efffective Hamiltonian for the couplings
+            auto fci_ints = dsrg_pt2->compute_Heff_actv();
 
             // compute 2nd-order efffective Hamiltonian for the couplings
             print_h2("Compute couplings of 2nd-order effective Hamiltonian");
@@ -562,15 +563,15 @@ double DWMS_DSRGPT2::compute_dwms_energy() {
             double H0;
             dsrg_pt2->compute_Heff_2nd_coupling(H0, H1a, H1b, H2aa, H2ab, H2bb, H3aaa, H3aab, H3abb,
                                                 H3bbb);
-//            outfile->Printf("\n!!!! H1a norm   %25.15f", H1a.norm());
-//            outfile->Printf("\n!!!! H1b norm   %25.15f", H1b.norm());
-//            outfile->Printf("\n!!!! H2aa norm  %25.15f", H2aa.norm());
-//            outfile->Printf("\n!!!! H2ab norm  %25.15f", H2ab.norm());
-//            outfile->Printf("\n!!!! H2bb norm  %25.15f", H2bb.norm());
-//            outfile->Printf("\n!!!! H3aaa norm %25.15f", H3aaa.norm());
-//            outfile->Printf("\n!!!! H3aab norm %25.15f", H3aab.norm());
-//            outfile->Printf("\n!!!! H3abb norm %25.15f", H3abb.norm());
-//            outfile->Printf("\n!!!! H3bbb norm %25.15f", H3bbb.norm());
+            //            outfile->Printf("\n!!!! H1a norm   %25.15f", H1a.norm());
+            //            outfile->Printf("\n!!!! H1b norm   %25.15f", H1b.norm());
+            //            outfile->Printf("\n!!!! H2aa norm  %25.15f", H2aa.norm());
+            //            outfile->Printf("\n!!!! H2ab norm  %25.15f", H2ab.norm());
+            //            outfile->Printf("\n!!!! H2bb norm  %25.15f", H2bb.norm());
+            //            outfile->Printf("\n!!!! H3aaa norm %25.15f", H3aaa.norm());
+            //            outfile->Printf("\n!!!! H3aab norm %25.15f", H3aab.norm());
+            //            outfile->Printf("\n!!!! H3abb norm %25.15f", H3abb.norm());
+            //            outfile->Printf("\n!!!! H3bbb norm %25.15f", H3bbb.norm());
 
             // need to rotate these Heff to original basis if density fitting
             // because CI vectors are obtained in the original orbital basis
@@ -619,34 +620,58 @@ double DWMS_DSRGPT2::compute_dwms_energy() {
             }
 
             for (int N = 0; N < nroots; ++N) {
-                //                if (M == N) {
-                //                    continue;
-                //                }
+                std::string msg = "densities";
+                if (M == N) {
+                    msg = "transition densities";
+                }
 
                 // compute transition densities
-                outfile->Printf("\n  Compute transition densities.");
+                outfile->Printf("\n  Compute %s.", msg.c_str());
                 Reference TrD = fci_mo->compute_trans_density(M, N, true, n, 3, false);
 
-                outfile->Printf("\n  Contract transition densities with Heff.");
+                outfile->Printf("\n  Contract %s with Heff.", msg.c_str());
                 double coupling = 0.0;
                 if (M == N) {
-                    coupling = ints_->frozen_core_energy() + Enuc + H0;
+                    coupling = fci_ints->scalar_energy();
+
+                    auto Hbar_vec = dsrg_pt2->Hbar(1);
+                    coupling += Hbar_vec[0]("vu") * TrD.L1a()("uv");
+                    coupling += Hbar_vec[1]("vu") * TrD.L1b()("uv");
+
+                    Hbar_vec = dsrg_pt2->Hbar(2);
+                    coupling += 0.25 * Hbar_vec[0]("xyuv") * TrD.g2aa()("uvxy");
+                    coupling += Hbar_vec[1]("xYuV") * TrD.g2ab()("uVxY");
+                    coupling += 0.25 * Hbar_vec[2]("XYUV") * TrD.g2bb()("UVXY");
+
+                    Hbar_vec = dsrg_pt2->Hbar(3);
+                    coupling += (1.0 / 36) * Hbar_vec[0]("uvwxyz") * TrD.g3aaa()("xyzuvw");
+                    coupling += 0.25 * Hbar_vec[1]("uvwxyz") * TrD.g3aab()("xyzuvw");
+                    coupling += 0.25 * Hbar_vec[2]("uvwxyz") * TrD.g3abb()("xyzuvw");
+                    coupling += (1.0 / 36) * Hbar_vec[3]("uvwxyz") * TrD.g3bbb()("xyzuvw");
+
+                    double shift = ints_->frozen_core_energy() + Enuc;
+                    Heff->set(M, M, coupling + shift);
+                    Heff_sym->set(M, M, coupling + shift);
+
+                    double Ediff = coupling - (ints_->frozen_core_energy() + Enuc + H0);
+                    outfile->Printf("\n  Difference between real and pseudo E2nd: %20.15f", Ediff);
+                } else {
+                    coupling += H1a("vu") * TrD.L1a()("uv");
+                    coupling += H1b("vu") * TrD.L1b()("uv");
+
+                    coupling += 0.25 * H2aa("xyuv") * TrD.g2aa()("uvxy");
+                    coupling += H2ab("xYuV") * TrD.g2ab()("uVxY");
+                    coupling += 0.25 * H2bb("XYUV") * TrD.g2bb()("UVXY");
+
+                    coupling += 1.0 / 36.0 * H3aaa("uvwxyz") * TrD.g3aaa()("xyzuvw");
+                    coupling += 0.25 * H3aab("uvwxyz") * TrD.g3aab()("xyzuvw");
+                    coupling += 0.25 * H3abb("uvwxyz") * TrD.g3abb()("xyzuvw");
+                    coupling += 1.0 / 36.0 * H3bbb("uvwxyz") * TrD.g3bbb()("xyzuvw");
+
+                    Heff->set(N, M, coupling);
+                    Heff_sym->add(N, M, 0.5 * coupling);
+                    Heff_sym->add(M, N, 0.5 * coupling);
                 }
-                coupling += H1a("vu") * TrD.L1a()("uv");
-                coupling += H1b("vu") * TrD.L1b()("uv");
-
-                coupling += 0.25 * H2aa("xyuv") * TrD.g2aa()("uvxy");
-                coupling += H2ab("xYuV") * TrD.g2ab()("uVxY");
-                coupling += 0.25 * H2bb("XYUV") * TrD.g2bb()("UVXY");
-
-                coupling += 1.0 / 36.0 * H3aaa("uvwxyz") * TrD.g3aaa()("xyzuvw");
-                coupling += 0.25 * H3aab("uvwxyz") * TrD.g3aab()("xyzuvw");
-                coupling += 0.25 * H3abb("uvwxyz") * TrD.g3abb()("xyzuvw");
-                coupling += 1.0 / 36.0 * H3bbb("uvwxyz") * TrD.g3bbb()("xyzuvw");
-
-                Heff->set(N, M, coupling);
-                Heff_sym->add(N, M, 0.5 * coupling);
-                Heff_sym->add(M, N, 0.5 * coupling);
             }
 
             // rotate basis back to original if density fitting
