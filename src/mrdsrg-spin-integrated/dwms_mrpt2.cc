@@ -653,7 +653,7 @@ double DWMS_DSRGPT2::compute_dwms_energy() {
                     Heff->set(M, M, coupling + shift);
                     Heff_sym->set(M, M, coupling + shift);
 
-                    double Ediff = coupling - (ints_->frozen_core_energy() + Enuc + H0);
+                    double Ediff = coupling - H0;
                     outfile->Printf("\n  Difference between real and pseudo E2nd: %20.15f", Ediff);
                 } else {
                     coupling += H1a("vu") * TrD.L1a()("uv");
