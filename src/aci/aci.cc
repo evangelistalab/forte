@@ -1619,7 +1619,7 @@ void AdaptiveCI::save_dets_to_file(DeterminantHashVec& space, SharedMatrix evecs
     // Use for single-root calculations only
     const det_hashvec& detmap = space.wfn_hash();
     for (size_t i = 0, max_i = detmap.size(); i < max_i; ++i) {
-        det_list_ << detmap[i].str(ncmo_).c_str() << " " << std::fabs(evecs->get(i, 0)) << " ";
+        det_list_ << detmap[i].str(nact_).c_str() << " " << std::fabs(evecs->get(i, 0)) << " ";
         //	for(size_t J = 0, maxJ = space.size(); J < maxJ; ++J){
         //		det_list_ << space[I].slater_rules(space[J]) << " ";
         //	}
@@ -1969,7 +1969,7 @@ void AdaptiveCI::compute_aci(DeterminantHashVec& PQ_space, SharedMatrix& PQ_evec
         Determinant det = initial_reference_[0];
         Determinant detb(det);
         std::vector<int> avir = det.get_alfa_vir(nact_); // TODO check this
-        outfile->Printf("\n  %s", det.str(ncmo_).c_str());
+        outfile->Printf("\n  %s", det.str(nact_).c_str());
         outfile->Printf("\n  Freezing alpha orbital %d", hole_);
         outfile->Printf("\n  Exciting electron from %d to %d", hole_, avir[particle]);
         det.set_alfa_bit(hole_, false);
@@ -1982,8 +1982,8 @@ void AdaptiveCI::compute_aci(DeterminantHashVec& PQ_space, SharedMatrix& PQ_evec
                 break;
             }
         }
-        outfile->Printf("\n  %s", det.str(ncmo_).c_str());
-        outfile->Printf("\n  %s", detb.str(ncmo_).c_str());
+        outfile->Printf("\n  %s", det.str(nact_).c_str());
+        outfile->Printf("\n  %s", detb.str(nact_).c_str());
         P_space.add(det);
         P_space.add(detb);
     }
@@ -2153,7 +2153,7 @@ Timer build_space;
 outfile->Printf("\n  Time spent building the model space: %1.6f", build_space.get());
         // Check if P+Q space is spin complete
         if (spin_complete_) {
-            PQ_space.make_spin_complete(ncmo_); // <- xsize
+            PQ_space.make_spin_complete(nact_); // <- xsize
             if (!quiet_mode_)
                 outfile->Printf("\n  Spin-complete dimension of the PQ space: %zu",
                                 PQ_space.size());
