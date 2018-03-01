@@ -358,15 +358,15 @@ double DWMS_DSRGPT2::compute_dwsa_energy() {
             // compute 2nd-order efffective Hamiltonian for the couplings
             auto fci_ints = dsrg_pt2->compute_Heff_actv();
 
-            outfile->Printf("\n!!!! H1a norm   %25.15f", dsrg_pt2->Hbar(1)[0].norm());
-            outfile->Printf("\n!!!! H1b norm   %25.15f", dsrg_pt2->Hbar(1)[1].norm());
-            outfile->Printf("\n!!!! H2aa norm  %25.15f", dsrg_pt2->Hbar(2)[0].norm());
-            outfile->Printf("\n!!!! H2ab norm  %25.15f", dsrg_pt2->Hbar(2)[1].norm());
-            outfile->Printf("\n!!!! H2bb norm  %25.15f", dsrg_pt2->Hbar(2)[2].norm());
-            outfile->Printf("\n!!!! H3aaa norm %25.15f", dsrg_pt2->Hbar(3)[0].norm());
-            outfile->Printf("\n!!!! H3aab norm %25.15f", dsrg_pt2->Hbar(3)[1].norm());
-            outfile->Printf("\n!!!! H3abb norm %25.15f", dsrg_pt2->Hbar(3)[2].norm());
-            outfile->Printf("\n!!!! H3bbb norm %25.15f", dsrg_pt2->Hbar(3)[3].norm());
+//            outfile->Printf("\n!!!! H1a norm   %25.15f", dsrg_pt2->Hbar(1)[0].norm());
+//            outfile->Printf("\n!!!! H1b norm   %25.15f", dsrg_pt2->Hbar(1)[1].norm());
+//            outfile->Printf("\n!!!! H2aa norm  %25.15f", dsrg_pt2->Hbar(2)[0].norm());
+//            outfile->Printf("\n!!!! H2ab norm  %25.15f", dsrg_pt2->Hbar(2)[1].norm());
+//            outfile->Printf("\n!!!! H2bb norm  %25.15f", dsrg_pt2->Hbar(2)[2].norm());
+//            outfile->Printf("\n!!!! H3aaa norm %25.15f", dsrg_pt2->Hbar(3)[0].norm());
+//            outfile->Printf("\n!!!! H3aab norm %25.15f", dsrg_pt2->Hbar(3)[1].norm());
+//            outfile->Printf("\n!!!! H3abb norm %25.15f", dsrg_pt2->Hbar(3)[2].norm());
+//            outfile->Printf("\n!!!! H3bbb norm %25.15f", dsrg_pt2->Hbar(3)[3].norm());
 
             for (int N = 0; N < nroots; ++N) {
                 std::string msg = "densities";
@@ -562,15 +562,15 @@ double DWMS_DSRGPT2::compute_dwms_energy() {
             double H0;
             dsrg_pt2->compute_Heff_2nd_coupling(H0, H1a, H1b, H2aa, H2ab, H2bb, H3aaa, H3aab, H3abb,
                                                 H3bbb);
-            outfile->Printf("\n!!!! H1a norm   %25.15f", H1a.norm());
-            outfile->Printf("\n!!!! H1b norm   %25.15f", H1b.norm());
-            outfile->Printf("\n!!!! H2aa norm  %25.15f", H2aa.norm());
-            outfile->Printf("\n!!!! H2ab norm  %25.15f", H2ab.norm());
-            outfile->Printf("\n!!!! H2bb norm  %25.15f", H2bb.norm());
-            outfile->Printf("\n!!!! H3aaa norm %25.15f", H3aaa.norm());
-            outfile->Printf("\n!!!! H3aab norm %25.15f", H3aab.norm());
-            outfile->Printf("\n!!!! H3abb norm %25.15f", H3abb.norm());
-            outfile->Printf("\n!!!! H3bbb norm %25.15f", H3bbb.norm());
+//            outfile->Printf("\n!!!! H1a norm   %25.15f", H1a.norm());
+//            outfile->Printf("\n!!!! H1b norm   %25.15f", H1b.norm());
+//            outfile->Printf("\n!!!! H2aa norm  %25.15f", H2aa.norm());
+//            outfile->Printf("\n!!!! H2ab norm  %25.15f", H2ab.norm());
+//            outfile->Printf("\n!!!! H2bb norm  %25.15f", H2bb.norm());
+//            outfile->Printf("\n!!!! H3aaa norm %25.15f", H3aaa.norm());
+//            outfile->Printf("\n!!!! H3aab norm %25.15f", H3aab.norm());
+//            outfile->Printf("\n!!!! H3abb norm %25.15f", H3abb.norm());
+//            outfile->Printf("\n!!!! H3bbb norm %25.15f", H3bbb.norm());
 
             // need to rotate these Heff to original basis if density fitting
             // because CI vectors are obtained in the original orbital basis

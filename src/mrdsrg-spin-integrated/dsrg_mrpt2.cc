@@ -490,37 +490,37 @@ double DSRG_MRPT2::compute_energy() {
     if (relax_ref_ != "NONE" || multi_state_) {
         BlockedTensor C1 = BTF_->build(tensor_type_, "C1", spin_cases({"aa"}));
         BlockedTensor C2 = BTF_->build(tensor_type_, "C2", spin_cases({"aaaa"}));
-        H1_T1_C1aa(F_, T1_, 1.0, C1);
-        H1_T2_C1aa(F_, T2_, 1.0, C1);
-        H2_T1_C1aa(V_, T1_, 1.0, C1);
-        H2_T2_C1aa(V_, T2_, 1.0, C1);
-        H1_T2_C2aaaa(F_, T2_, 1.0, C2);
-        H2_T1_C2aaaa(V_, T1_, 1.0, C2);
-        H2_T2_C2aaaa(V_, T2_, 1.0, C2);
+        H1_T1_C1aa(F_, T1_, 0.5, C1);
+        H1_T2_C1aa(F_, T2_, 0.5, C1);
+        H2_T1_C1aa(V_, T1_, 0.5, C1);
+        H2_T2_C1aa(V_, T2_, 0.5, C1);
+        H1_T2_C2aaaa(F_, T2_, 0.5, C2);
+        H2_T1_C2aaaa(V_, T1_, 0.5, C2);
+        H2_T2_C2aaaa(V_, T2_, 0.5, C2);
 
         Hbar1_["ij"] += C1["ij"];
-//        Hbar1_["ij"] += C1["ji"];
+        Hbar1_["ij"] += C1["ji"];
         Hbar1_["IJ"] += C1["IJ"];
-//        Hbar1_["IJ"] += C1["JI"];
+        Hbar1_["IJ"] += C1["JI"];
         Hbar2_["ijkl"] += C2["ijkl"];
-//        Hbar2_["ijkl"] += C2["klij"];
+        Hbar2_["ijkl"] += C2["klij"];
         Hbar2_["iJkL"] += C2["iJkL"];
-//        Hbar2_["iJkL"] += C2["kLiJ"];
+        Hbar2_["iJkL"] += C2["kLiJ"];
         Hbar2_["IJKL"] += C2["IJKL"];
-//        Hbar2_["IJKL"] += C2["KLIJ"];
+        Hbar2_["IJKL"] += C2["KLIJ"];
 
         if (options_.get_bool("FORM_HBAR3")) {
             BlockedTensor C3 = BTF_->build(tensor_type_, "C3", spin_cases({"aaaaaa"}));
-            H2_T2_C3aaaaaa(V_, T2_, 1.0, C3);
+            H2_T2_C3aaaaaa(V_, T2_, 0.5, C3);
 
             Hbar3_["uvwxyz"] += C3["uvwxyz"];
-//            Hbar3_["uvwxyz"] += C3["xyzuvw"];
+            Hbar3_["uvwxyz"] += C3["xyzuvw"];
             Hbar3_["uvWxyZ"] += C3["uvWxyZ"];
-//            Hbar3_["uvWxyZ"] += C3["xyZuvW"];
+            Hbar3_["uvWxyZ"] += C3["xyZuvW"];
             Hbar3_["uVWxYZ"] += C3["uVWxYZ"];
-//            Hbar3_["uVWxYZ"] += C3["xYZuVW"];
+            Hbar3_["uVWxYZ"] += C3["xYZuVW"];
             Hbar3_["UVWXYZ"] += C3["UVWXYZ"];
-//            Hbar3_["UVWXYZ"] += C3["XYZUVW"];
+            Hbar3_["UVWXYZ"] += C3["XYZUVW"];
         }
     }
 
