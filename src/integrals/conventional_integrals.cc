@@ -122,13 +122,13 @@ void ConventionalIntegrals::transform_integrals() {
     // Call IntegralTransform asking for integrals over restricted or
     // unrestricted orbitals
     if (restricted_) {
-        ints_ = new IntegralTransform(wfn_, spaces, IntegralTransform::Restricted,
-                                      IntegralTransform::DPDOnly, IntegralTransform::PitzerOrder,
-                                      IntegralTransform::None);
+        ints_ = new IntegralTransform(wfn_, spaces, IntegralTransform::TransformationType::Restricted,
+                                      IntegralTransform::OutputType::DPDOnly, IntegralTransform::MOOrdering::PitzerOrder,
+                                      IntegralTransform::FrozenOrbitals::None);
     } else {
-        ints_ = new IntegralTransform(wfn_, spaces, IntegralTransform::Unrestricted,
-                                      IntegralTransform::DPDOnly, IntegralTransform::PitzerOrder,
-                                      IntegralTransform::None);
+        ints_ = new IntegralTransform(wfn_, spaces, IntegralTransform::TransformationType::Unrestricted,
+                                      IntegralTransform::OutputType::DPDOnly, IntegralTransform::MOOrdering::PitzerOrder,
+                                      IntegralTransform::FrozenOrbitals::None);
     }
 
     // Keep the SO integrals on disk in case we want to retransform them
