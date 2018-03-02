@@ -443,11 +443,6 @@ double AdaptiveCI::compute_energy() {
     outfile->Printf("\n  ==> Reference Information <==\n");
     outfile->Printf("\n  There are %d frozen orbitals.", nfrzc_);
     outfile->Printf("\n  There are %zu active orbitals.\n", nact_);
-    //       reference_determinant_.print();
-    //        outfile->Printf("\n  REFERENCE ENERGY:         %1.12f",
-    //                        reference_determinant_.energy() +
-    //                            nuclear_repulsion_energy_ +
-    //                            fci_ints_->scalar_energy());
     print_info();
     if (!quiet_mode_) {
         outfile->Printf("\n  Using %d threads", omp_get_max_threads());
@@ -1619,7 +1614,7 @@ void AdaptiveCI::save_dets_to_file(DeterminantHashVec& space, SharedMatrix evecs
     // Use for single-root calculations only
     const det_hashvec& detmap = space.wfn_hash();
     for (size_t i = 0, max_i = detmap.size(); i < max_i; ++i) {
-        det_list_ << detmap[i].str(ncmo_).c_str() << " " << std::fabs(evecs->get(i, 0)) << " ";
+        det_list_ << detmap[i].str(nact_).c_str() << " " << std::fabs(evecs->get(i, 0)) << " ";
         //	for(size_t J = 0, maxJ = space.size(); J < maxJ; ++J){
         //		det_list_ << space[I].slater_rules(space[J]) << " ";
         //	}
@@ -1761,42 +1756,6 @@ void AdaptiveCI::print_nos() {
         }
     }
 }
-// TODO: move to operator.cc
-// void AdaptiveCI::compute_H_expectation_val( const
-// std::vector<Determinant>& space, SharedVector& evals, const
-// SharedMatrix evecs, int nroot, DiagonalizationMethod diag_method)
-//{
-//    size_t space_size = space.size();
-//    SparseCISolver ssolver;
-//
-//    evals->zero();
-//
-//    if( (space_size <= 200) or (diag_method == Full) ){
-//        outfile->Printf("\n  Using full algorithm.");
-//        SharedMatrix Hd = ssolver.build_full_hamiltonian( space );
-//        for( int n = 0; n < nroot; ++n){
-//            for( size_t I = 0; I < space_size; ++I){
-//                for( size_t J = 0; J < space_size; ++J){
-//                    evals->add(n, evecs->get(I,n) * Hd->get(I,J) *
-//                    evecs->get(J,n) );
-//                }
-//            }
-//        }
-//    }else{
-//        outfile->Printf("\n  Using sparse algorithm.");
-//        auto Hs = ssolver.build_sparse_hamiltonian( space );
-//        for( int n = 0; n < nroot; ++n){
-//            for( size_t I = 0; I < space_size; ++I){
-//                std::vector<double> H_val = Hs[I].second;
-//                std::vector<int> Hidx = Hs[I].first;
-//                for( size_t J = 0, max_J = H_val.size(); J < max_J; ++J){
-//                    evals->add(n, evecs->get(I,n) * H_val[J] *
-//                    evecs->get(Hidx[J],n) );
-//                }
-//            }
-//        }
-//    }
-//}
 
 /*
 void AdaptiveCI::convert_to_string(const std::vector<Determinant>& space) {
@@ -1969,7 +1928,7 @@ void AdaptiveCI::compute_aci(DeterminantHashVec& PQ_space, SharedMatrix& PQ_evec
         Determinant det = initial_reference_[0];
         Determinant detb(det);
         std::vector<int> avir = det.get_alfa_vir(nact_); // TODO check this
-        outfile->Printf("\n  %s", det.str(ncmo_).c_str());
+        outfile->Printf("\n  %s", det.str(nact_).c_str());
         outfile->Printf("\n  Freezing alpha orbital %d", hole_);
         outfile->Printf("\n  Exciting electron from %d to %d", hole_, avir[particle]);
         det.set_alfa_bit(hole_, false);
@@ -1982,8 +1941,8 @@ void AdaptiveCI::compute_aci(DeterminantHashVec& PQ_space, SharedMatrix& PQ_evec
                 break;
             }
         }
-        outfile->Printf("\n  %s", det.str(ncmo_).c_str());
-        outfile->Printf("\n  %s", detb.str(ncmo_).c_str());
+        outfile->Printf("\n  %s", det.str(nact_).c_str());
+        outfile->Printf("\n  %s", detb.str(nact_).c_str());
         P_space.add(det);
         P_space.add(detb);
     }
@@ -2153,7 +2112,7 @@ Timer build_space;
 outfile->Printf("\n  Time spent building the model space: %1.6f", build_space.get());
         // Check if P+Q space is spin complete
         if (spin_complete_) {
-            PQ_space.make_spin_complete(ncmo_); // <- xsize
+            PQ_space.make_spin_complete(nact_); // <- xsize
             if (!quiet_mode_)
                 outfile->Printf("\n  Spin-complete dimension of the PQ space: %zu",
                                 PQ_space.size());
