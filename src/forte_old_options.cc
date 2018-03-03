@@ -169,6 +169,9 @@ void forte_old_options(Options& options) {
     /*- The energy convergence criterion -*/
     options.add_double("E_CONVERGENCE", 1.0e-8);
 
+    /*- The energy relaxation convergence criterion -*/
+    options.add_double("RELAX_E_CONVERGENCE", 1.0e-8);
+
     /*- The number of roots computed -*/
     options.add_int("NROOT", 1);
 
