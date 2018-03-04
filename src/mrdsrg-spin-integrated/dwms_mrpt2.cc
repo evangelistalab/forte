@@ -44,7 +44,7 @@ void set_DWMS_options(ForteOptions& foptions) {
      *  - DWMS-AVG0: weights from SA-DSRG-PT2 energies, non-orthogonal final solutions
      *  - DWMS-AVG1: weights from SA-DSRG-PT2 energies, orthogonal final solutions -*/
     foptions.add_str("DWMS_ALGORITHM", "DWMS-0",
-                     {"MS", "XMS", "SA", "DWMS-0", "DWMS-1", "DWMS-AVG0", "DWMS-AVG1"},
+                     {"MS", "XMS", "SA", "XSA", "DWMS-0", "DWMS-1", "DWMS-AVG0", "DWMS-AVG1"},
                      "DWMS algorithms");
 }
 
@@ -270,7 +270,7 @@ std::shared_ptr<FCI_MO> DWMS_DSRGPT2::precompute_energy() {
 double DWMS_DSRGPT2::compute_energy() {
     if (algorithm_ == "MS" || algorithm_ == "XMS") {
         return compute_dwms_energy();
-    } else if (algorithm_ == "SA") {
+    } else if (algorithm_ == "SA" || algorithm_ == "XSA") {
         return compute_dwsa_energy();
     } else {
         return compute_dwms_energy_old();
@@ -283,6 +283,10 @@ double DWMS_DSRGPT2::compute_dwsa_energy() {
     auto sa_info = fci_mo->sa_info();
     int nentry = sa_info.size();
     bool do_hbar3 = options_.get_bool("FORM_HBAR3");
+
+    if (algorithm_ == "XSA") {
+        fci_mo->xms_rotate_civecs();
+    }
 
     // prepare the final DWMS-DSRG-PT2 energies
     Ept2_.resize(nentry);
