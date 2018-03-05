@@ -62,6 +62,11 @@ def parse_input():
             default=None,
             help="""The GA install directory.""",
             metavar='PATH')
+    group.add_argument('--bit64',
+            action='store',
+            default=False,
+            help="""Use int representation of determinants""",
+            metavar='PATH')
 
     return parser.parse_args()
 
@@ -104,7 +109,10 @@ def generate_cmakelist(args):
     forte_cmakelists += '\nendif()\n'
     
     forte_cmakelists += '\ninclude(cmake/git-version.cmake)'
-
+    
+    if(args.bit64):
+        forte_cmakelists  += '\nadd_definitions(-DSMALL_BITSET)'
+        forte_cmakelists += '\nset(SMALL_BITSET True)'
 
     #Check for MPI
     if(args.mpi):
