@@ -147,7 +147,7 @@ class UI64Determinant {
 
     struct Hash {
         std::size_t operator()(const psi::forte::UI64Determinant& bs) const {
-            return bs.a_ * 31 + bs.b_;
+            return (bs.a_ << 31) + bs.b_;
         }
     };
 
