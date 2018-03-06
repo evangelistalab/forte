@@ -47,63 +47,68 @@ class FCIWfn {
     FCIWfn(std::shared_ptr<StringLists> lists, size_t symmetry);
     ~FCIWfn();
 
-    //    // Simple operation
+    /// Print this vector
     void print();
+    /// Zero this vector
     void zero();
-    /// The size of the CI basis
+    /// Return the size of the CI basis
     size_t size() const { return ndet_; }
 
     /// Copy the wave function object
     void copy(FCIWfn& wfn);
-    /// Copy the coefficient from a Vector object
+    /// Copy the coefficients from a Vector object
     void copy(SharedVector vec);
-    /// Copy the wave function object
+    /// Copy the coefficients to a Vector object
     void copy_to(SharedVector vec);
 
     /// Form the diagonal part of the Hamiltonian
     void form_H_diagonal(std::shared_ptr<FCIIntegrals> fci_ints);
 
-    //    double approximate_spin(double )
-
-    //    /// Initial guess
-    //    void initial_guess(FCIWfn& diag, size_t num_dets = 100);
-
-    ////    void set_to(Determinant& det);
+    /// Set the value from a vector of (irrep, string a, string b, coefficient) tuples
     void set(std::vector<std::tuple<size_t, size_t, size_t, double>>& sparse_vec);
-    //    double get(int n);
-    //    void plus_equal(double factor,FCIWfn& wfn);
-    //    void scale(double factor);
+
+    /// Return the norm
     double norm(double power = 2.0);
-    ////    void normalize_wrt(Determinant& det);
+
+    /// Normalize
     void normalize();
+
+    /// Dot product with another vector
     double dot(FCIWfn& wfn);
     double dot(std::shared_ptr<FCIWfn>& wfn);
 
+    /// Return the alpha one-particle density matrix
     std::vector<double>& opdm_a() { return opdm_a_; }
+    /// Return the beta one-particle density matrix
     std::vector<double>& opdm_b() { return opdm_b_; }
+    /// Return the alpha-alpha two-particle density matrix
     std::vector<double>& tpdm_aa() { return tpdm_aa_; }
+    /// Return the alpha-beta two-particle density matrix
     std::vector<double>& tpdm_ab() { return tpdm_ab_; }
+    /// Return the beta-beta two-particle density matrix
     std::vector<double>& tpdm_bb() { return tpdm_bb_; }
+    /// Return the alpha-alpha-alpha three-particle density matrix
     std::vector<double>& tpdm_aaa() { return tpdm_aaa_; }
+    /// Return the alpha-alpha-beta three-particle density matrix
     std::vector<double>& tpdm_aab() { return tpdm_aab_; }
+    /// Return the alpha-beta-beta three-particle density matrix
     std::vector<double>& tpdm_abb() { return tpdm_abb_; }
+    /// Return the beta-beta-beta three-particle density matrix
     std::vector<double>& tpdm_bbb() { return tpdm_bbb_; }
 
-    //    void randomize();
-    ////    double get_coefficient(Determinant& det);
-    //    double norm2();
-    //    double min_element();
-    //    double max_element();
-    //    std::vector<int> get_important(double alpha);
-
-    // Operations on the wave function
+    // Appy the Hamiltonian to this vector
     void Hamiltonian(FCIWfn& result, std::shared_ptr<FCIIntegrals> fci_ints,
                      RequiredLists required_lists);
 
+    /// Compute the energy from the RDMs
     double energy_from_rdms(std::shared_ptr<FCIIntegrals> fci_ints);
 
+    /// Compute the RDMs
     void compute_rdms(int max_order = 2);
+
+    /// Test the RDMSs
     void rdm_test();
+
     /// Print the natural_orbitals from FCIWFN
     /// Assume user specifed active space
     void print_natural_orbitals(std::shared_ptr<MOSpaceInfo>);
@@ -111,14 +116,18 @@ class FCIWfn {
     /// Return the elements with the smallest value
     /// This function returns the tuple (C_I,irrep,Ia,Ib)
     std::vector<std::tuple<double, size_t, size_t, size_t>> min_elements(size_t num_dets);
+
     /// Return the elements with the largest absolute value
     /// This function returns the tuple (|C_I|,C_I,irrep,Ia,Ib)
     std::vector<std::tuple<double, double, size_t, size_t, size_t>>
     max_abs_elements(size_t num_dets);
 
-    // Temporary memory allocation
+    /// Allocate temporary memory
     static void allocate_temp_space(std::shared_ptr<StringLists> lists_, int print_);
+    /// Release temporary memory
     static void release_temp_space();
+
+    /// Set the print level
     void set_print(int print) { print_ = print; }
 
   private:
@@ -134,8 +143,6 @@ class FCIWfn {
     Dimension cmopi_;
     /// The offset array for cmopi_
     std::vector<size_t> cmopi_offset_;
-    //    /// The mapping between correlated molecular orbitals and all orbitals
-    //    std::vector<size_t> cmo_to_mo_;
     /// The number of determinants
     size_t ndet_;
     /// The number of determinants per irrep
@@ -145,7 +152,6 @@ class FCIWfn {
 
     /// The string list
     std::shared_ptr<StringLists> lists_;
-    // Graphs
     /// The alpha string graph
     GraphPtr alfa_graph_;
     /// The beta string graph
@@ -167,8 +173,6 @@ class FCIWfn {
     static SharedMatrix C1;
     static SharedMatrix Y1;
     static size_t sizeC1;
-    //    static FCIWfn* tmp_wfn1;
-    //    static FCIWfn* tmp_wfn2;
 
     // Timers
     static double hdiag_timer;
@@ -197,18 +201,6 @@ class FCIWfn {
                 ncmo_ * ncmo_ * ncmo_ * r + ncmo_ * ncmo_ * s + ncmo_ * t + u);
     }
 
-    //    double oei_aa(size_t p, size_t q) const {return fci_ints_->oei_a(ncmo_
-    //    * p + q);}
-    //    double oei_bb(size_t p, size_t q) const {return fci_ints_->oei_b(ncmo_
-    //    * p + q);}
-
-    //    double tei_aaaa(size_t p, size_t q, size_t r, size_t s) const {return
-    //    fci_ints_->tei_aa(tei_index(p,q,r,s));}
-    //    double tei_aabb(size_t p, size_t q, size_t r, size_t s) const {return
-    //    fci_ints_->tei_ab(tei_index(p,q,r,s));}
-    //    double tei_bbbb(size_t p, size_t q, size_t r, size_t s) const {return
-    //    fci_ints_->tei_ab(tei_index(p,q,r,s));}
-
     void H0(FCIWfn& result, std::shared_ptr<FCIIntegrals> fci_ints);
     void H1(FCIWfn& result, std::shared_ptr<FCIIntegrals> fci_ints, bool alfa);
     void H2_aabb(FCIWfn& result, std::shared_ptr<FCIIntegrals> fci_ints);
@@ -225,10 +217,3 @@ class FCIWfn {
 }
 
 #endif // _fci_vector_
-
-////    DetAddress get_det_address(Determinant& det) {
-////        int sym = alfa_graph_->sym(det.get_alfa_bits());
-////        size_t alfa_string = alfa_graph_->rel_add(det.get_alfa_bits());
-////        size_t beta_string = beta_graph_->rel_add(det.get_beta_bits());
-////        return DetAddress(sym,alfa_string,beta_string);
-////    };
