@@ -68,7 +68,7 @@ double DSRG_MRPT2::compute_energy_multi_state() {
     std::string dash(41, '-');
     outfile->Printf("\n    %s", dash.c_str());
 
-    for (int n = 0; n < nentry; ++n) {
+    for (int n = 0, counter = 0; n < nentry; ++n) {
         int irrep = options_["AVG_STATE"][n][0].to_integer();
         int multi = options_["AVG_STATE"][n][1].to_integer();
         int nstates = options_["AVG_STATE"][n][2].to_integer();
@@ -76,6 +76,7 @@ double DSRG_MRPT2::compute_energy_multi_state() {
         for (int i = 0; i < nstates; ++i) {
             outfile->Printf("\n     %3d     %3s    %2d   %20.12f", multi,
                             irrep_symbol[irrep].c_str(), i, Edsrg_ms[n][i]);
+            Process::environment.globals["ENERGY ROOT " + std::to_string(counter)] = Edsrg_ms[n][i];
         }
         outfile->Printf("\n    %s", dash.c_str());
     }
@@ -497,8 +498,6 @@ std::vector<std::vector<double>> DSRG_MRPT2::compute_energy_xms() {
                         Heff->add(N, M, c1);
                         Heff_sym->add(M, N, c1);
                         Heff_sym->add(N, M, c1);
-
-                        outfile->Printf("\n M=%d, N=%d, c1=%.10f", M, N, c1);
                     }
 
                     // compute coupling of <N|HT|M>
@@ -509,8 +508,6 @@ std::vector<std::vector<double>> DSRG_MRPT2::compute_energy_xms() {
                     Heff->add(N, M, c2);
                     Heff_sym->add(N, M, 0.5 * c2);
                     Heff_sym->add(M, N, 0.5 * c2);
-
-                    outfile->Printf("\n M=%d, N=%d, c2=%.10f", M, N, c2);
                 }
             }
         }
@@ -686,112 +683,130 @@ double DSRG_MRPT2::compute_ms_2nd_coupling(const std::string& name) {
 
     double coupling = 0.0;
 
-    // temp contract with D1
-    BlockedTensor temp = BTF_->build(tensor_type_, "temp", spin_cases({"aa"}), true);
-    temp["vu"] += Hoei_["eu"] * T1eff_["ve"];
-    temp["VU"] += Hoei_["EU"] * T1eff_["VE"];
+    // H1 contract with D1
+    BlockedTensor H1 = BTF_->build(tensor_type_, "Heff1_2nd", spin_cases({"aa"}));
+    H1["vu"] += Hoei_["eu"] * T1eff_["ve"];
+    H1["VU"] += Hoei_["EU"] * T1eff_["VE"];
 
-    temp["vu"] -= Hoei_["vm"] * T1eff_["mu"];
-    temp["VU"] -= Hoei_["VM"] * T1eff_["MU"];
+    H1["vu"] -= Hoei_["vm"] * T1eff_["mu"];
+    H1["VU"] -= Hoei_["VM"] * T1eff_["MU"];
 
-    temp["vu"] += V_["avmu"] * T1eff_["ma"];
-    temp["vu"] += V_["vAuM"] * T1eff_["MA"];
-    temp["VU"] += V_["aVmU"] * T1eff_["ma"];
-    temp["VU"] += V_["AVMU"] * T1eff_["MA"];
+    H1["vu"] += V_["avmu"] * T1eff_["ma"];
+    H1["vu"] += V_["vAuM"] * T1eff_["MA"];
+    H1["VU"] += V_["aVmU"] * T1eff_["ma"];
+    H1["VU"] += V_["AVMU"] * T1eff_["MA"];
 
-    temp["vu"] += Hoei_["am"] * T2_["mvau"];
-    temp["vu"] += Hoei_["AM"] * T2_["vMuA"];
-    temp["VU"] += Hoei_["am"] * T2_["mVaU"];
-    temp["VU"] += Hoei_["AM"] * T2_["MVAU"];
+    H1["vu"] += Hoei_["am"] * T2_["vmua"];
+    H1["vu"] += Hoei_["AM"] * T2_["vMuA"];
+    H1["VU"] += Hoei_["am"] * T2_["mVaU"];
+    H1["VU"] += Hoei_["AM"] * T2_["VMUA"];
 
-    temp["vu"] += 0.5 * V_["abum"] * T2_["vmab"];
-    temp["vu"] += V_["aBuM"] * T2_["vMaB"];
-    temp["VU"] += 0.5 * V_["ABUM"] * T2_["VMAB"];
-    temp["VU"] += V_["aBmU"] * T2_["mVaB"];
+    H1["vu"] += 0.5 * V_["abum"] * T2_["vmab"];
+    H1["vu"] += V_["aBuM"] * T2_["vMaB"];
+    H1["VU"] += V_["aBmU"] * T2_["mVaB"];
+    H1["VU"] += 0.5 * V_["ABUM"] * T2_["VMAB"];
 
-    temp["vu"] -= 0.5 * V_["avmn"] * T2_["mnau"];
-    temp["vu"] -= V_["vAmN"] * T2_["mNuA"];
-    temp["VU"] -= 0.5 * V_["AVMN"] * T2_["MNAU"];
-    temp["VU"] -= V_["aVmN"] * T2_["mNaU"];
+    H1["vu"] -= 0.5 * V_["avmn"] * T2_["mnau"];
+    H1["vu"] -= V_["vAmN"] * T2_["mNuA"];
+    H1["VU"] -= V_["aVmN"] * T2_["mNaU"];
+    H1["VU"] -= 0.5 * V_["AVMN"] * T2_["MNAU"];
 
-    coupling += temp["vu"] * Gamma1_["uv"];
-    coupling += temp["VU"] * Gamma1_["UV"];
+    coupling += H1["vu"] * Gamma1_["uv"];
+    coupling += H1["VU"] * Gamma1_["UV"];
 
-    // temp contract with D2
-    temp = BTF_->build(tensor_type_, "temp", spin_cases({"aaaa"}), true);
-    temp["xyuv"] += 0.5 * V_["eyuv"] * T1eff_["xe"];
-    temp["xYuV"] += V_["eYuV"] * T1eff_["xe"];
-    temp["xYuV"] += V_["xEuV"] * T1eff_["YE"];
-    temp["XYUV"] += 0.5 * V_["EYUV"] * T1eff_["XE"];
+    // H2 contract with D2
+    BlockedTensor H2 = BTF_->build(tensor_type_, "Heff2_2nd", spin_cases({"aaaa"}));
+    BlockedTensor temp = BTF_->build(tensor_type_, "temp", {"aaaa", "AAAA"}, true);
+    temp["xyuv"] = V_["eyuv"] * T1eff_["xe"];
+    temp["XYUV"] = V_["EYUV"] * T1eff_["XE"];
 
-    temp["xyuv"] += 0.5 * V_["xyvm"] * T1eff_["mu"];
-    temp["xYuV"] -= V_["xYmV"] * T1eff_["mu"];
-    temp["xYuV"] -= V_["xYuM"] * T1eff_["MV"];
-    temp["XYUV"] += 0.5 * V_["XYVM"] * T1eff_["MU"];
+    H2["xyuv"] += temp["xyuv"];
+    H2["XYUV"] += temp["XYUV"];
+    H2["xyuv"] -= temp["yxuv"];
+    H2["XYUV"] -= temp["YXUV"];
 
-    temp["xyuv"] += 0.5 * Hoei_["eu"] * T2_["xyev"];
-    temp["xYuV"] += Hoei_["eu"] * T2_["xYeV"];
-    temp["xYuV"] += Hoei_["EV"] * T2_["xYuE"];
-    temp["XYUV"] += 0.5 * Hoei_["EU"] * T2_["XYEV"];
+    H2["xYuV"] += V_["eYuV"] * T1eff_["xe"];
+    H2["xYuV"] += V_["xEuV"] * T1eff_["YE"];
 
-    temp["xyuv"] -= 0.5 * Hoei_["xm"] * T2_["myuv"];
-    temp["xYuV"] -= Hoei_["xm"] * T2_["mYuV"];
-    temp["xYuV"] -= Hoei_["YM"] * T2_["xMuV"];
-    temp["XYUV"] -= 0.5 * Hoei_["XM"] * T2_["MYUV"];
+    temp["xyuv"] = V_["xymv"] * T1eff_["mu"];
+    temp["XYUV"] = V_["XYMV"] * T1eff_["MU"];
 
-    temp["xyuv"] -= V_["aymu"] * T2_["mxav"];
-    temp["xyuv"] -= V_["yAuM"] * T2_["xMvA"];
-    temp["xYuV"] -= V_["aYuM"] * T2_["xMaV"];
-    temp["xYuV"] -= V_["xAmV"] * T2_["mYuA"];
-    temp["xYuV"] += V_["axmu"] * T2_["mYaV"];
-    temp["xYuV"] += V_["xAuM"] * T2_["MYAV"];
-    temp["xYuV"] += V_["aYmV"] * T2_["mxau"];
-    temp["xYuV"] += V_["AYMV"] * T2_["xMuA"];
-    temp["XYUV"] -= V_["aYmU"] * T2_["mXaV"];
-    temp["XYUV"] -= V_["AYMU"] * T2_["XMAV"];
+    H2["xyuv"] -= temp["xyuv"];
+    H2["XYUV"] -= temp["XYUV"];
+    H2["xyuv"] += temp["xyvu"];
+    H2["XYUV"] += temp["XYVU"];
 
-    temp["xyuv"] += 0.125 * V_["xymn"] * T2_["mnuv"];
-    temp["xYuV"] += V_["xYmN"] * T2_["mNuV"];
-    temp["XYUV"] += 0.125 * V_["XYMN"] * T2_["MNUV"];
+    H2["xYuV"] -= V_["xYmV"] * T1eff_["mu"];
+    H2["xYuV"] -= V_["xYuM"] * T1eff_["MV"];
 
-    temp["xyuv"] += 0.125 * V_["abuv"] * T2_["xyab"];
-    temp["xYuV"] += V_["aBuV"] * T2_["xYaB"];
-    temp["XYUV"] += 0.125 * V_["ABUV"] * T2_["XYAB"];
+    temp["xyuv"] = Hoei_["eu"] * T2_["xyev"];
+    temp["XYUV"] = Hoei_["EU"] * T2_["XYEV"];
 
-    coupling += temp["xyuv"] * Lambda2_["uvxy"];
-    coupling += temp["xYuV"] * Lambda2_["uVxY"];
-    coupling += temp["XYUV"] * Lambda2_["UVXY"];
+    H2["xyuv"] += temp["xyuv"];
+    H2["XYUV"] += temp["XYUV"];
+    H2["xyuv"] -= temp["xyvu"];
+    H2["XYUV"] -= temp["XYVU"];
 
-    // temp contract with D3
-    temp = BTF_->build(tensor_type_, "temp", {"aaaaaa"}, true);
-    temp["xyzuvw"] += 0.25 * V_["yzmu"] * T2_["mxvw"];
-    temp["xyzuvw"] -= 0.25 * V_["ezuv"] * T2_["xyew"];
-    coupling += temp.block("aaaaaa")("uvwxyz") * reference_.L3aaa()("xyzuvw");
+    H2["xYuV"] += Hoei_["eu"] * T2_["xYeV"];
+    H2["xYuV"] += Hoei_["EV"] * T2_["xYuE"];
 
-    temp = BTF_->build(tensor_type_, "temp", {"AAAAAA"}, true);
-    temp["XYZUVW"] += 0.25 * V_["YZMU"] * T2_["MXVW"];
-    temp["XYZUVW"] -= 0.25 * V_["EZUV"] * T2_["XYEW"];
-    coupling += temp.block("AAAAAA")("UVWXYZ") * reference_.L3bbb()("XYZUVW");
+    temp["xyuv"] = Hoei_["xm"] * T2_["myuv"];
+    temp["XYUV"] = Hoei_["XM"] * T2_["MYUV"];
 
-    temp = BTF_->build(tensor_type_, "temp", {"aaAaaA"}, true);
-    temp["xyZuvW"] += 0.5 * V_["yZmW"] * T2_["mxuv"];
-    temp["xyZuvW"] += 0.5 * V_["xymu"] * T2_["mZvW"];
-    temp["xyZuvW"] += V_["yZuM"] * T2_["xMvW"];
+    H2["xyuv"] -= temp["xyuv"];
+    H2["XYUV"] -= temp["XYUV"];
+    H2["xyuv"] += temp["yxuv"];
+    H2["XYUV"] += temp["YXUV"];
 
-    temp["xyZuvW"] += 0.5 * V_["eZuW"] * T2_["xyev"];
-    temp["xyZuvW"] += 0.5 * V_["eyuv"] * T2_["xZeW"];
-    temp["xyZuvW"] -= V_["yEuW"] * T2_["xZvE"];
-    coupling += temp.block("aaAaaA")("uvWxyZ") * reference_.L3aab()("xyZuvW");
+    H2["xYuV"] -= Hoei_["xm"] * T2_["mYuV"];
+    H2["xYuV"] -= Hoei_["YM"] * T2_["xMuV"];
 
-    temp = BTF_->build(tensor_type_, "temp", {"aAAaAA"}, true);
-    temp["xYZuVW"] += 0.5 * V_["YZMV"] * T2_["xMuW"];
-    temp["xYZuVW"] += 0.5 * V_["xZuM"] * T2_["MYVW"];
-    temp["xYZuVW"] += V_["xZmV"] * T2_["mYuW"];
+    H2["xyuv"] += 0.5 * V_["abuv"] * T2_["xyab"];
+    H2["xYuV"] += V_["aBuV"] * T2_["xYaB"];
+    H2["XYUV"] += 0.5 * V_["ABUV"] * T2_["XYAB"];
 
-    temp["xYZuVW"] += 0.5 * V_["EZVW"] * T2_["xYuE"];
-    temp["xYZuVW"] += 0.5 * V_["xEuV"] * T2_["YZEW"];
-    temp["xYZuVW"] -= V_["eZuV"] * T2_["xYeW"];
-    coupling += temp.block("aAAaAA")("uVWxYZ") * reference_.L3abb()("xYZuVW");
+    H2["xyuv"] -= 0.5 * V_["xyij"] * T2_["ijuv"];
+    H2["xYuV"] -= V_["xYiJ"] * T2_["iJuV"];
+    H2["XYUV"] -= 0.5 * V_["XYIJ"] * T2_["IJUV"];
+
+    H2["xyuv"] += V_["xyim"] * T2_["imuv"];
+    H2["xYuV"] += V_["xYiM"] * T2_["iMuV"];
+    H2["xYuV"] += V_["xYmI"] * T2_["mIuV"];
+    H2["XYUV"] += V_["XYIM"] * T2_["IMUV"];
+
+    temp["xyuv"] = V_["ayum"] * T2_["xmav"];
+    temp["xyuv"] += V_["yAuM"] * T2_["xMvA"];
+    temp["XYUV"] = V_["aYmU"] * T2_["mXaV"];
+    temp["XYUV"] += V_["AYUM"] * T2_["XMAV"];
+
+    H2["xyuv"] -= temp["xyuv"];
+    H2["XYUV"] -= temp["XYUV"];
+    H2["xyuv"] += temp["yxuv"];
+    H2["XYUV"] += temp["YXUV"];
+    H2["xyuv"] += temp["xyvu"];
+    H2["XYUV"] += temp["XYVU"];
+    H2["xyuv"] -= temp["yxvu"];
+    H2["XYUV"] -= temp["YXVU"];
+
+    H2["xYuV"] -= V_["aYuM"] * T2_["xMaV"];
+    H2["xYuV"] += V_["xaum"] * T2_["mYaV"];
+    H2["xYuV"] += V_["xAuM"] * T2_["MYAV"];
+    H2["xYuV"] += V_["aYmV"] * T2_["xmua"];
+    H2["xYuV"] += V_["AYMV"] * T2_["xMuA"];
+    H2["xYuV"] -= V_["xAmV"] * T2_["mYuA"];
+
+    coupling += 0.25 * H2["xyuv"] * Lambda2_["uvxy"];
+    coupling += H2["xYuV"] * Lambda2_["uVxY"];
+    coupling += 0.25 * H2["XYUV"] * Lambda2_["UVXY"];
+
+    // H3 contract with D3
+    BlockedTensor H3 = BTF_->build(tensor_type_, "Heff3_2nd", spin_cases({"aaaaaa"}));
+    H2_T2_C3(V_, T2_, 1.0, H3, true);
+
+    coupling += 1.0 / 36.0 * H3.block("aaaaaa")("uvwxyz") * reference_.L3aaa()("xyzuvw");
+    coupling += 1.0 / 36.0 * H3.block("AAAAAA")("UVWXYZ") * reference_.L3bbb()("XYZUVW");
+    coupling += 0.25 * H3.block("aaAaaA")("uvWxyZ") * reference_.L3aab()("xyZuvW");
+    coupling += 0.25 * H3.block("aAAaAA")("uVWxYZ") * reference_.L3abb()("xYZuVW");
 
     outfile->Printf("  Done. Timing %15.6f s", timer.get());
     return coupling;

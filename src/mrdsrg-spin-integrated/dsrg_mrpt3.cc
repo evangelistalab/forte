@@ -1551,7 +1551,7 @@ double DSRG_MRPT3::compute_energy_sa() {
     std::string dash(41, '-');
     outfile->Printf("\n    %s", dash.c_str());
 
-    for (int n = 0; n < nentry; ++n) {
+    for (int n = 0, counter = 0; n < nentry; ++n) {
         int irrep = options_["AVG_STATE"][n][0].to_integer();
         int multi = options_["AVG_STATE"][n][1].to_integer();
         int nstates = options_["AVG_STATE"][n][2].to_integer();
@@ -1559,6 +1559,7 @@ double DSRG_MRPT3::compute_energy_sa() {
         for (int i = 0; i < nstates; ++i) {
             outfile->Printf("\n     %3d     %3s    %2d   %20.12f", multi,
                             irrep_symbol[irrep].c_str(), i, Edsrg_sa[n][i]);
+            Process::environment.globals["ENERGY ROOT " + std::to_string(counter)] = Edsrg_sa[n][i];
         }
         outfile->Printf("\n    %s", dash.c_str());
     }

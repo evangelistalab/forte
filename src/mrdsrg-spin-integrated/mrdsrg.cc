@@ -726,14 +726,16 @@ double MRDSRG::compute_energy_sa() {
     print_h2("Final-Step Results");
     outfile->Printf("\n    Multi.  Irrep.  No.    MR-DSRG Energy");
     outfile->Printf("\n    %s", dash1.c_str());
-    for (int n = 0; n < nentry; ++n) {
+    auto& Esa = Edsrg_vec[Edsrg_vec.size() - 1];
+    for (int n = 0, counter = 0; n < nentry; ++n) {
         int irrep = options_["AVG_STATE"][n][0].to_integer();
         int multi = options_["AVG_STATE"][n][1].to_integer();
         int nstates = options_["AVG_STATE"][n][2].to_integer();
 
         for (int i = 0; i < nstates; ++i) {
             outfile->Printf("\n     %3d     %3s    %2d   %20.12f*", multi,
-                            irrep_symbol[irrep].c_str(), i, Edsrg_vec[Edsrg_vec.size() - 1][n][i]);
+                            irrep_symbol[irrep].c_str(), i, Esa[n][i]);
+            Process::environment.globals["ENERGY ROOT " + std::to_string(counter)] = Esa[n][i];
         }
         outfile->Printf("\n    %s", dash1.c_str());
     }
