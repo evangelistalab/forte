@@ -1212,16 +1212,16 @@ det_hash<double> AdaptiveCI::get_bin_F_space2( int bin, int nbin, SharedMatrix e
         int n_threads = omp_get_num_threads();
         int thread_id = omp_get_thread_num();
 
-        int bin_size = n_dets / n_threads;
-        bin_size += (thread_id < (n_dets % n_threads)) ? 1 : 0;
-        int start_idx =
-            (thread_id < (n_dets % n_threads))
-               ? thread_id * bin_size
-                : (n_dets % n_threads) * (bin_size + 1) + (thread_id - (n_dets % n_threads)) * bin_size;
-        int end_idx = start_idx + bin_size;
+  //      int bin_size = n_dets / n_threads;
+  //      bin_size += (thread_id < (n_dets % n_threads)) ? 1 : 0;
+  //      int start_idx =
+  //          (thread_id < (n_dets % n_threads))
+  //             ? thread_id * bin_size
+  //              : (n_dets % n_threads) * (bin_size + 1) + (thread_id - (n_dets % n_threads)) * bin_size;
+  //      int end_idx = start_idx + bin_size;
 
         // Loop over P space determinants
-        for (size_t I = start_idx; I < end_idx; ++I) {
+        for (size_t I = thread_id; I < n_dets; I += n_threads ) {
             double c_I = evecs->get(I,0);
             const Determinant& det = dets[I];
             std::vector<std::vector<int>> noalpha = det.get_asym_occ(nmo,act_mo);
@@ -1382,12 +1382,12 @@ det_hash<double> AdaptiveCI::get_bin_F_space2( int bin, int nbin, SharedMatrix e
         // merge spaces
         #pragma omp critical
         {
-Timer merge;
+//Timer merge;
             for( auto& pair : A_b ){
                 bin_f_space[pair.first] += pair.second;
            
              }
-outfile->Printf("\n  Time spent merging (bin %d), %1.6f", bin, merge.get());
+//outfile->Printf("\n  Time spent merging (bin %d), %1.6f", bin, merge.get());
         }
 
     } // close threads
