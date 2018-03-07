@@ -33,6 +33,7 @@
 #include <cstdint>
 #include <memory>
 #include <vector>
+#include <bitset>
 
 #include "determinant_common.h"
 
@@ -147,7 +148,11 @@ class UI64Determinant {
 
     struct Hash {
         std::size_t operator()(const psi::forte::UI64Determinant& bs) const {
-            return (bs.a_ << 31) + bs.b_;
+         //   return (bs.a_ << 32) + bs.b_;
+         //   return (bs.a_ * 31) + bs.b_;
+            std::bitset<128> big = static_cast<std::bitset<128>>(bs.a_);
+            big = (big << 64) | static_cast<std::bitset<128>>(bs.b_);
+            return std::hash<std::bitset<128>>()(big);
         }
     };
 
