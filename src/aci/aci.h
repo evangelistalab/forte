@@ -345,8 +345,6 @@ class AdaptiveCI : public Wavefunction {
                                     DeterminantHashVec& P_space); 
     det_hash<double> get_bin_F_space2(int bin, int nbin, SharedMatrix evecs,
                                     DeterminantHashVec& P_space); 
-    det_hash<double> get_bin_F_space_sym2(int bin, int nbin, SharedMatrix evecs,
-                                    DeterminantHashVec& P_space); 
 
     /// Prune the space of determinants
     void prune_q_space(DeterminantHashVec& PQ_space, DeterminantHashVec& P_space,

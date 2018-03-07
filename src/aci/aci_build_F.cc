@@ -1139,43 +1139,52 @@ double AdaptiveCI::get_excited_determinants_batch2( SharedMatrix evecs, SharedVe
     } 
     
     // Loop over bins
+    outfile->Printf(    "\n -----------------------------------------");
     for (int bin = 0; bin < nbin; ++bin) {
-
+        outfile->Printf("\n                Bin %d", bin);
         Timer sp;
         // 1. Build the full bin-subset // all threading in here
         det_hash<double> A_b = get_bin_F_space2(bin,nbin,evecs,P_space);
-        outfile->Printf("\n  F subspace (bin %d) takes %1.6f s",bin, sp.get()); 
+        outfile->Printf("\n    Build F                %10.6f ", sp.get()); 
 
         // 2. Put the dets/vals in a sortable list (F_tmp)
-Timer bint;
+        Timer bint;
+
+        //get sizes
         size_t subspace_size = A_b.size();
         std::vector<std::pair<double,Determinant>> F_tmp(subspace_size); 
-        size_t idx = 0;
-        for( auto& det_p : A_b ){
-            auto& det = det_p.first;
-            double& V = det_p.second;
+        #pragma omp parallel
+        {
+            int ntd = omp_get_num_threads();
+            int tid = omp_get_thread_num();
+            int idx = 0;
+
+            for( auto& det_p : A_b ){
+                if( (idx % ntd) == tid ){
+                    auto& det = det_p.first;
+                    double& V = det_p.second;
     
-            double delta = fci_ints_->energy(det) - evals->get(0); 
+                    double delta = fci_ints_->energy(det) - evals->get(0); 
     
-            F_tmp[idx] =  std::make_pair( std::fabs(0.5*(delta - sqrt(delta*delta + V*V*4.0))), det );
-            idx++;
+                    F_tmp[idx] =  std::make_pair( std::fabs(0.5*(delta - sqrt(delta*delta + V*V*4.0))), det );
+                }
+                idx++;
+            }
         }
         A_b.clear();
-        outfile->Printf("\n  Size of F subspace: %zu dets (bin %d)", F_tmp.size(), bin);
-outfile->Printf("\n Time spent computing criteria and building vector: %1.6f", bint.get()); 
+        outfile->Printf("\n    Build criteria vector  %10.6f", bint.get()); 
 
         // 3. Sort the list
-Timer sortt;
+        Timer sortt;
         std::sort( F_tmp.begin(), F_tmp.end(), pair_comp);
     
-outfile->Printf("\n Time spent sorting: %1.6f", sortt.get());
+        outfile->Printf("\n    Sort vector            %10.6f", sortt.get());
 
         // 4. Screen subspaces
-Timer screener;
+        Timer screener;
         double b_sigma = sigma_ * (aci_scale/nbin);
 //        outfile->Printf("\n  Using sigma = %1.5f", b_sigma);
         double excluded = 0.0;
-        size_t ndet = 0; 
         for( size_t I = 0, max_I = F_tmp.size(); I < max_I; ++I ){
             double en = F_tmp[I].first;
             Determinant& det = F_tmp[I].second;
@@ -1183,14 +1192,14 @@ Timer screener;
                 excluded += en;
             } else {
                 F_space.push_back(std::make_pair(en, det));
-                ndet++;
             }
         }
-        outfile->Printf("\n  Added %zu dets from bin %d", ndet, bin); 
         total_excluded += excluded;
-outfile->Printf("\n  Time spent screening: %1.6f", screener.get());
+        outfile->Printf("\n    Screening              %10.6f", screener.get());
+        outfile->Printf("\n    Added %zu dets of %zu from bin %d", F_space.size(), subspace_size,bin); 
     } // End iteration over bins
 
+    outfile->Printf(    "\n ------------------------------------");
     outfile->Printf("\n  Screened out %1.10f Eh of correlation", total_excluded);
     return total_excluded;
 }
@@ -1206,22 +1215,29 @@ det_hash<double> AdaptiveCI::get_bin_F_space2( int bin, int nbin, SharedMatrix e
     int nmo = fci_ints_->nmo();
     std::vector<int> act_mo = mo_space_info_->get_dimension("ACTIVE").blocks();
 
+    std::vector<det_hash<double>> A_b_t;
     #pragma omp parallel
     {
-        det_hash<double> A_b;
         int n_threads = omp_get_num_threads();
         int thread_id = omp_get_thread_num();
 
-  //      int bin_size = n_dets / n_threads;
-  //      bin_size += (thread_id < (n_dets % n_threads)) ? 1 : 0;
-  //      int start_idx =
-  //          (thread_id < (n_dets % n_threads))
-  //             ? thread_id * bin_size
-  //              : (n_dets % n_threads) * (bin_size + 1) + (thread_id - (n_dets % n_threads)) * bin_size;
-  //      int end_idx = start_idx + bin_size;
+        #pragma omp critical
+        {
+            A_b_t.resize(n_threads);
+        }
+
+        det_hash<double>& A_b = A_b_t[thread_id];
+
+        int bin_size = n_dets / n_threads;
+        bin_size += (thread_id < (n_dets % n_threads)) ? 1 : 0;
+        int start_idx =
+            (thread_id < (n_dets % n_threads))
+               ? thread_id * bin_size
+                : (n_dets % n_threads) * (bin_size + 1) + (thread_id - (n_dets % n_threads)) * bin_size;
+        int end_idx = start_idx + bin_size;
 
         // Loop over P space determinants
-        for (size_t I = thread_id; I < n_dets; I += n_threads ) {
+        for (size_t I = start_idx; I < end_idx; ++I ) {
             double c_I = evecs->get(I,0);
             const Determinant& det = dets[I];
             std::vector<std::vector<int>> noalpha = det.get_asym_occ(nmo,act_mo);
@@ -1379,23 +1395,35 @@ det_hash<double> AdaptiveCI::get_bin_F_space2( int bin, int nbin, SharedMatrix e
             }
         }// end loop over reference
 
-        // merge spaces
-        #pragma omp critical
-        {
-//Timer merge;
-            for( auto& pair : A_b ){
-                bin_f_space[pair.first] += pair.second;
-           
-             }
-//outfile->Printf("\n  Time spent merging (bin %d), %1.6f", bin, merge.get());
-        }
+        // Remove duplicates
+        for( det_hashvec::iterator it = dets.begin(), endit = dets.end(); it != endit; ++it) {
+            A_b_t[thread_id][*it] = 0.0;
+        }  
 
+        // parallel merge
+        for( int n = 2; n <= n_threads; n *=2 ){
+
+            #pragma omp barrier
+
+            if( ((thread_id % n) == 0) and (thread_id != (n_threads-1) )){
+               for( auto& pair : A_b_t[thread_id + (0.5*n) ] ){
+                    A_b_t[thread_id][pair.first] += pair.second;
+                }
+            }
+            if( ((thread_id % n) == 0) and (thread_id == (n_threads-1) )){
+                for( auto& pair : A_b_t[thread_id] ){
+                    bin_f_space[pair.first] += pair.second;
+                }
+            }
+        }
+        if( thread_id == 0 ){
+            for( auto& pair : A_b_t[0] ){
+                bin_f_space[pair.first] += pair.second;
+            }
+        }
+    
     } // close threads
 
-    // Remove duplicates
-    for( det_hashvec::iterator it = dets.begin(), endit = dets.end(); it != endit; ++it) {
-        bin_f_space[*it] = 0.0;
-    }  
 
     return bin_f_space;
 }
