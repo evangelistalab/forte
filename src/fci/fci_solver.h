@@ -127,7 +127,7 @@ class FCISolver {
     /// Print the Natural Orbitals
     void set_print_no(bool value) { print_no_ = value; }
     /// Return a FCIWfn
-    std::shared_ptr<FCIWfn> get_FCIWFN() { return C_; }
+    std::shared_ptr<FCIVector> get_FCIWFN() { return C_; }
 
     /// Return eigen vectors
     SharedMatrix eigen_vecs() { return eigen_vecs_; }
@@ -162,7 +162,7 @@ class FCISolver {
     double energy_;
 
     /// The FCI wave function
-    std::shared_ptr<FCIWfn> C_;
+    std::shared_ptr<FCIVector> C_;
 
     /// Eigen vectors
     SharedMatrix eigen_vecs_;
@@ -212,7 +212,7 @@ class FCISolver {
 
     /// Initial CI wave function guess
     std::vector<std::pair<int, std::vector<std::tuple<size_t, size_t, size_t, double>>>>
-    initial_guess(FCIWfn& diag, size_t n, size_t multiplicity,
+    initial_guess(FCIVector& diag, size_t n, size_t multiplicity,
                   std::shared_ptr<FCIIntegrals> fci_ints);
     /// The options object
     Options& options_;

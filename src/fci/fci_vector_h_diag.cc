@@ -36,7 +36,7 @@
 namespace psi {
 namespace forte {
 
-void FCIWfn::form_H_diagonal(std::shared_ptr<FCIIntegrals> fci_ints) {
+void FCIVector::form_H_diagonal(std::shared_ptr<FCIIntegrals> fci_ints) {
     ForteTimer t;
 
     int wfn_sym = symmetry_;
@@ -89,7 +89,7 @@ void FCIWfn::form_H_diagonal(std::shared_ptr<FCIIntegrals> fci_ints) {
     }
 }
 
-double FCIWfn::determinant_energy(bool*& Ia, bool*& Ib, int n,
+double FCIVector::determinant_energy(bool*& Ia, bool*& Ib, int n,
                                   std::shared_ptr<FCIIntegrals> fci_ints) {
     double energy(fci_ints->scalar_energy() + fci_ints->frozen_core_energy());
 
@@ -110,7 +110,7 @@ double FCIWfn::determinant_energy(bool*& Ia, bool*& Ib, int n,
     return (energy);
 }
 
-std::vector<std::tuple<double, size_t, size_t, size_t>> FCIWfn::min_elements(size_t num_dets) {
+std::vector<std::tuple<double, size_t, size_t, size_t>> FCIVector::min_elements(size_t num_dets) {
     num_dets = std::min(num_dets, ndet_);
 
     double emax = std::numeric_limits<double>::max();
@@ -148,7 +148,7 @@ std::vector<std::tuple<double, size_t, size_t, size_t>> FCIWfn::min_elements(siz
 }
 
 std::vector<std::tuple<double, double, size_t, size_t, size_t>>
-FCIWfn::max_abs_elements(size_t num_dets) {
+FCIVector::max_abs_elements(size_t num_dets) {
     num_dets = std::min(num_dets, ndet_);
 
     std::vector<std::tuple<double, double, size_t, size_t, size_t>> dets(num_dets);

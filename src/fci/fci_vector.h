@@ -42,10 +42,10 @@
 namespace psi {
 namespace forte {
 
-class FCIWfn {
+class FCIVector {
   public:
-    FCIWfn(std::shared_ptr<StringLists> lists, size_t symmetry);
-    ~FCIWfn();
+    FCIVector(std::shared_ptr<StringLists> lists, size_t symmetry);
+    ~FCIVector();
 
     /// Print this vector
     void print();
@@ -57,7 +57,7 @@ class FCIWfn {
     std::vector<SharedMatrix> C() {return C_;}
 
     /// Copy the wave function object
-    void copy(FCIWfn& wfn);
+    void copy(FCIVector& wfn);
     /// Copy the coefficients from a Vector object
     void copy(SharedVector vec);
     /// Copy the coefficients to a Vector object
@@ -76,8 +76,8 @@ class FCIWfn {
     void normalize();
 
     /// Dot product with another vector
-    double dot(FCIWfn& wfn);
-    double dot(std::shared_ptr<FCIWfn>& wfn);
+    double dot(FCIVector& wfn);
+    double dot(std::shared_ptr<FCIVector>& wfn);
 
     /// Return the alpha one-particle density matrix
     std::vector<double>& opdm_a() { return opdm_a_; }
@@ -99,7 +99,7 @@ class FCIWfn {
     std::vector<double>& tpdm_bbb() { return tpdm_bbb_; }
 
     // Appy the Hamiltonian to this vector
-    void Hamiltonian(FCIWfn& result, std::shared_ptr<FCIIntegrals> fci_ints,
+    void Hamiltonian(FCIVector& result, std::shared_ptr<FCIIntegrals> fci_ints,
                      RequiredLists required_lists);
 
     /// Compute the energy from the RDMs
@@ -205,10 +205,10 @@ class FCIWfn {
                 ncmo_ * ncmo_ * ncmo_ * r + ncmo_ * ncmo_ * s + ncmo_ * t + u);
     }
 
-    void H0(FCIWfn& result, std::shared_ptr<FCIIntegrals> fci_ints);
-    void H1(FCIWfn& result, std::shared_ptr<FCIIntegrals> fci_ints, bool alfa);
-    void H2_aabb(FCIWfn& result, std::shared_ptr<FCIIntegrals> fci_ints);
-    void H2_aaaa2(FCIWfn& result, std::shared_ptr<FCIIntegrals> fci_ints, bool alfa);
+    void H0(FCIVector& result, std::shared_ptr<FCIIntegrals> fci_ints);
+    void H1(FCIVector& result, std::shared_ptr<FCIIntegrals> fci_ints, bool alfa);
+    void H2_aabb(FCIVector& result, std::shared_ptr<FCIIntegrals> fci_ints);
+    void H2_aaaa2(FCIVector& result, std::shared_ptr<FCIIntegrals> fci_ints, bool alfa);
 
     void compute_1rdm(std::vector<double>& rdm, bool alfa);
     void compute_2rdm_aa(std::vector<double>& rdm, bool alfa);

@@ -41,7 +41,7 @@ class ForteIntegrals;
 class MOSpaceInfo;
 class Reference;
 class FCISolver;
-class FCIWfn;
+class FCIVector;
 
 /// Set the options for the FCI method
 void set_FCI_options(ForteOptions& foptions);

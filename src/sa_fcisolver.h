@@ -57,7 +57,7 @@ class SA_FCISolver {
 
     void set_integrals(std::shared_ptr<ForteIntegrals> ints) { ints_ = ints; }
 
-    std::vector<std::shared_ptr<FCIWfn>> StateAveragedCISolution() { return SA_C_; }
+    std::vector<std::shared_ptr<FCIVector>> StateAveragedCISolution() { return SA_C_; }
 
   private:
     /// Options from Psi4
@@ -71,7 +71,7 @@ class SA_FCISolver {
     std::shared_ptr<MOSpaceInfo> mo_space_info_;
 
     /// A vector of the averaged FCI solutions
-    std::vector<std::shared_ptr<FCIWfn>> SA_C_;
+    std::vector<std::shared_ptr<FCIVector>> SA_C_;
 
     /// The vector that contains states and weights information
     std::vector<std::tuple<int, int, int, std::vector<double>>> parsed_options_;

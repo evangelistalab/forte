@@ -155,11 +155,11 @@ double FCISolver::compute_energy() {
         }
     }
 
-    FCIWfn::allocate_temp_space(lists_, print_);
+    FCIVector::allocate_temp_space(lists_, print_);
 
-    FCIWfn Hdiag(lists_, symmetry_);
-    C_ = std::make_shared<FCIWfn>(lists_, symmetry_);
-    FCIWfn HC(lists_, symmetry_);
+    FCIVector Hdiag(lists_, symmetry_);
+    C_ = std::make_shared<FCIVector>(lists_, symmetry_);
+    FCIVector HC(lists_, symmetry_);
     C_->set_print(print_);
 
     size_t fci_size = Hdiag.size();
@@ -395,7 +395,7 @@ void FCISolver::compute_rdms_root(int root) {
 }
 
 std::vector<std::pair<int, std::vector<std::tuple<size_t, size_t, size_t, double>>>>
-FCISolver::initial_guess(FCIWfn& diag, size_t n, size_t multiplicity,
+FCISolver::initial_guess(FCIVector& diag, size_t n, size_t multiplicity,
                          std::shared_ptr<FCIIntegrals> fci_ints) {
     ForteTimer t;
 

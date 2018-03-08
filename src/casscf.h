@@ -168,7 +168,7 @@ class CASSCF : public Wavefunction {
     ambit::Tensor tei_paaa_;
     int print_;
     /// The CISolutions per iteration
-    std::vector<std::vector<std::shared_ptr<FCIWfn>>> CISolutions_;
+    std::vector<std::vector<std::shared_ptr<FCIVector>>> CISolutions_;
 };
 }
 }

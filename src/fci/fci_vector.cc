@@ -37,20 +37,20 @@
 namespace psi {
 namespace forte {
 
-SharedMatrix FCIWfn::C1;
-SharedMatrix FCIWfn::Y1;
-size_t FCIWfn::sizeC1 = 0;
+SharedMatrix FCIVector::C1;
+SharedMatrix FCIVector::Y1;
+size_t FCIVector::sizeC1 = 0;
 // FCIWfn* FCIWfn::tmp_wfn1 = nullptr;
 // FCIWfn* FCIWfn::tmp_wfn2 = nullptr;
 
-double FCIWfn::hdiag_timer = 0.0;
-double FCIWfn::h1_aa_timer = 0.0;
-double FCIWfn::h1_bb_timer = 0.0;
-double FCIWfn::h2_aaaa_timer = 0.0;
-double FCIWfn::h2_aabb_timer = 0.0;
-double FCIWfn::h2_bbbb_timer = 0.0;
+double FCIVector::hdiag_timer = 0.0;
+double FCIVector::h1_aa_timer = 0.0;
+double FCIVector::h1_bb_timer = 0.0;
+double FCIVector::h2_aaaa_timer = 0.0;
+double FCIVector::h2_aabb_timer = 0.0;
+double FCIVector::h2_bbbb_timer = 0.0;
 
-void FCIWfn::allocate_temp_space(std::shared_ptr<StringLists> lists_, int print_) {
+void FCIVector::allocate_temp_space(std::shared_ptr<StringLists> lists_, int print_) {
     // TODO Avoid allocating and deallocating these temp
 
     size_t nirreps = lists_->nirrep();
@@ -74,20 +74,20 @@ void FCIWfn::allocate_temp_space(std::shared_ptr<StringLists> lists_, int print_
     sizeC1 = maxC1 * maxC1 * static_cast<size_t>(sizeof(double));
 }
 
-void FCIWfn::release_temp_space() {}
+void FCIVector::release_temp_space() {}
 
-FCIWfn::FCIWfn(std::shared_ptr<StringLists> lists, size_t symmetry)
+FCIVector::FCIVector(std::shared_ptr<StringLists> lists, size_t symmetry)
     : symmetry_(symmetry), lists_(lists), alfa_graph_(lists_->alfa_graph()),
       beta_graph_(lists_->beta_graph()) {
     startup();
 }
 
-FCIWfn::~FCIWfn() { cleanup(); }
+FCIVector::~FCIVector() { cleanup(); }
 
 ///**
 // * Copy data from moinfo and allocate the memory
 // */
-void FCIWfn::startup() {
+void FCIVector::startup() {
 
     nirrep_ = lists_->nirrep();
     ncmo_ = lists_->ncmo();
@@ -116,7 +116,7 @@ void FCIWfn::startup() {
 /**
  * Dellocate the memory
  */
-void FCIWfn::cleanup() {}
+void FCIVector::cleanup() {}
 
 ///**
 // * Set the wave function to a single Slater determinant
@@ -140,13 +140,13 @@ void FCIWfn::cleanup() {}
 /**
  * Set the wave function to another wave function
  */
-void FCIWfn::copy(FCIWfn& wfn) {
+void FCIVector::copy(FCIVector& wfn) {
     for (int alfa_sym = 0; alfa_sym < nirrep_; ++alfa_sym) {
         C_[alfa_sym]->copy(wfn.C_[alfa_sym]);
     }
 }
 
-void FCIWfn::copy(SharedVector vec) {
+void FCIVector::copy(SharedVector vec) {
     size_t I = 0;
     for (int alfa_sym = 0; alfa_sym < nirrep_; ++alfa_sym) {
         int beta_sym = alfa_sym ^ symmetry_;
@@ -162,7 +162,7 @@ void FCIWfn::copy(SharedVector vec) {
     }
 }
 
-void FCIWfn::copy_to(SharedVector vec) {
+void FCIVector::copy_to(SharedVector vec) {
     size_t I = 0;
     for (int alfa_sym = 0; alfa_sym < nirrep_; ++alfa_sym) {
         int beta_sym = alfa_sym ^ symmetry_;
@@ -178,7 +178,7 @@ void FCIWfn::copy_to(SharedVector vec) {
     }
 }
 
-void FCIWfn::set(std::vector<std::tuple<size_t, size_t, size_t, double>>& sparse_vec) {
+void FCIVector::set(std::vector<std::tuple<size_t, size_t, size_t, double>>& sparse_vec) {
     zero();
     double C;
     size_t h, Ia, Ib;
@@ -281,7 +281,7 @@ void FCIWfn::set(std::vector<std::tuple<size_t, size_t, size_t, double>>& sparse
 /**
  * Normalize the wave function without changing the phase
  */
-void FCIWfn::normalize() {
+void FCIVector::normalize() {
     double factor = norm(2.0);
     for (int alfa_sym = 0; alfa_sym < nirrep_; ++alfa_sym) {
         int beta_sym = alfa_sym ^ symmetry_;
@@ -317,13 +317,13 @@ void FCIWfn::normalize() {
 /**
  * Zero the wave function
  */
-void FCIWfn::zero() {
+void FCIVector::zero() {
     for (SharedMatrix C_h : C_) {
         C_h->zero();
     }
 }
 
-void FCIWfn::print_natural_orbitals(std::shared_ptr<MOSpaceInfo> mo_space_info) {
+void FCIVector::print_natural_orbitals(std::shared_ptr<MOSpaceInfo> mo_space_info) {
     print_h2("NATURAL ORBITALS");
     Dimension active_dim = mo_space_info->get_dimension("ACTIVE");
 
@@ -412,7 +412,7 @@ void FCIWfn::print_natural_orbitals(std::shared_ptr<MOSpaceInfo> mo_space_info) 
 /**
  * Compute the 2-norm of the wave function
  */
-double FCIWfn::norm(double power) {
+double FCIVector::norm(double power) {
     double norm = 0.0;
     for (int alfa_sym = 0; alfa_sym < nirrep_; ++alfa_sym) {
         int beta_sym = alfa_sym ^ symmetry_;
@@ -431,7 +431,7 @@ double FCIWfn::norm(double power) {
 /**
  * Compute the dot product with another wave function
  */
-double FCIWfn::dot(FCIWfn& wfn) {
+double FCIVector::dot(FCIVector& wfn) {
     double dot = 0.0;
     for (int alfa_sym = 0; alfa_sym < nirrep_; ++alfa_sym) {
         dot += C_[alfa_sym]->vector_dot(wfn.C_[alfa_sym]);
@@ -451,7 +451,7 @@ double FCIWfn::dot(FCIWfn& wfn) {
     //            }
     //        }
 }
-double FCIWfn::dot(std::shared_ptr<FCIWfn>& wfn) {
+double FCIVector::dot(std::shared_ptr<FCIVector>& wfn) {
     double dot = 0.0;
     for (int alfa_sym = 0; alfa_sym < nirrep_; ++alfa_sym) {
         dot += C_[alfa_sym]->vector_dot(wfn->C_[alfa_sym]);
@@ -604,7 +604,7 @@ double FCIWfn::dot(std::shared_ptr<FCIWfn>& wfn) {
 /**
  * Print the non-zero contributions to the wave function
  */
-void FCIWfn::print() {
+void FCIVector::print() {
     // print the non-zero elements of the wave function
     size_t det = 0;
     for (int alfa_sym = 0; alfa_sym < nirrep_; ++alfa_sym) {

@@ -783,7 +783,7 @@ void CASSCF::set_up_fci() {
 
     E_casscf_ = fcisolver.compute_energy();
     /// Get the CIVector for each iteration
-    std::vector<std::shared_ptr<FCIWfn>> FCIWfnSolution(1);
+    std::vector<std::shared_ptr<FCIVector>> FCIWfnSolution(1);
     FCIWfnSolution.push_back(fcisolver.get_FCIWFN());
     CISolutions_.push_back(FCIWfnSolution);
 
