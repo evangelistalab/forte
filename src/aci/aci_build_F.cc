@@ -1254,9 +1254,8 @@ det_hash<double> AdaptiveCI::get_bin_F_space2( int bin, int nbin, SharedMatrix e
                 const auto& nvalpha_h = nvalpha[h];
 
                 for (auto& ii : noalpha_h) {
+                    new_det.set_alfa_bit(ii, false);
                     for (auto& aa : nvalpha_h) {
-                        new_det = det;
-                        new_det.set_alfa_bit(ii, false);
                         new_det.set_alfa_bit(aa, true);
                         size_t hash_val = Determinant::Hash()(new_det);
                         if ( (hash_val % nbin) == bin) {
@@ -1265,16 +1264,16 @@ det_hash<double> AdaptiveCI::get_bin_F_space2( int bin, int nbin, SharedMatrix e
                                 A_b[new_det] += HIJ;
                             }
                         }
+                        new_det.set_alfa_bit(aa, false);
                     }
+                    new_det.set_alfa_bit(ii, true);
                 }
                 // Generate beta excitations
                 const auto& nobeta_h = nobeta[h];
                 const auto& nvbeta_h = nvbeta[h];
                 for (auto& ii : nobeta_h) {
+                    new_det.set_beta_bit(ii, false);
                     for (auto& aa : nvbeta_h) {
-                        // Check if the determinant goes in this bin
-                        new_det = det;
-                        new_det.set_beta_bit(ii, false);
                         new_det.set_beta_bit(aa, true);
                         size_t hash_val = Determinant::Hash()(new_det);
                         if ((hash_val % nbin) == bin) {
@@ -1283,18 +1282,20 @@ det_hash<double> AdaptiveCI::get_bin_F_space2( int bin, int nbin, SharedMatrix e
                                 A_b[new_det] += HIJ;
                             }
                         }
+                        new_det.set_beta_bit(aa, false);
                     }
+                    new_det.set_beta_bit(ii, true);
                 }
             }
             for ( int p = 0; p < nirrep_; ++p){
+                const auto& noalpha_p = noalpha[p];
                 for ( int q = p; q < nirrep_; ++q){
+                    const auto& noalpha_q = noalpha[q];
                     for ( int r = 0; r < nirrep_; ++r){
                         int sp = p^q^r;
                         if( sp < r) continue;
 
                         // Precompute index lists
-                        const auto& noalpha_p = noalpha[p];
-                        const auto& noalpha_q = noalpha[q];
                         const auto& nvalpha_r = nvalpha[r];
                         const auto& nvalpha_s = nvalpha[sp];
 
@@ -1307,26 +1308,31 @@ det_hash<double> AdaptiveCI::get_bin_F_space2( int bin, int nbin, SharedMatrix e
                         // Generate aa excitations
                         for (int i = 0; i < max_i; ++i) {
                             int ii = noalpha_p[i];
+                            new_det.set_alfa_bit(ii,false);
                             for (int j = (p == q ? i + 1 : 0); j < max_j; ++j) {
                                 int jj = noalpha_q[j];
+                                new_det.set_alfa_bit(jj,false);
                                 for (int a = 0; a < max_a; ++a) {
                                     int aa = nvalpha_r[a];
+                                    new_det.set_alfa_bit(aa,true);
                                     for (int b = (r == sp ? a + 1 : 0); b < max_b; ++b) {
                                         int bb = nvalpha_s[b];
-
-                                        // Check if the determinant goes in this bin
-                                        new_det = det;
-                                        double sign = new_det.double_excitation_aa(ii, jj, aa, bb);
+                                        new_det.set_alfa_bit(bb,true);
                                         size_t hash_val = Determinant::Hash()(new_det);
                                         if ((hash_val % nbin) == bin) {
+                                            double sign = det.slater_sign_aaaa(ii,jj,aa,bb);
                                             double HIJ = fci_ints_->tei_aa(ii, jj, aa, bb) * sign * c_I;
                                             if ((std::fabs(HIJ) >= screen_thresh_)) {
                                                 A_b[new_det] +=  HIJ;
                                             }
                                         }
+                                        new_det.set_alfa_bit(bb,false);
                                     }
+                                    new_det.set_alfa_bit(aa,false);
                                 }
+                                new_det.set_alfa_bit(jj,true);
                             }
+                            new_det.set_alfa_bit(ii,true);
                         }
                         // Generate bb excitations
                         const auto& nobeta_p = nobeta[p];
@@ -1341,54 +1347,68 @@ det_hash<double> AdaptiveCI::get_bin_F_space2( int bin, int nbin, SharedMatrix e
 
                         for (int i = 0; i < max_i; ++i) {
                             int ii = nobeta_p[i];
+                            new_det.set_beta_bit(ii,false);
                             for (int j = (p == q ? i + 1 : 0); j < max_j; ++j) {
                                 int jj = nobeta_q[j];
+                                new_det.set_beta_bit(jj,false);
                                 for (int a = 0; a < max_a; ++a) {
                                     int aa = nvbeta_r[a];
+                                    new_det.set_beta_bit(aa,true);
                                     for (int b = (r == sp ? a + 1 : 0); b < max_b; ++b) {
                                         int bb = nvbeta_s[b];
+                                        new_det.set_beta_bit(bb,true);
                                         // Check if the determinant goes in this bin
-                                        new_det = det;
-                                        double sign = new_det.double_excitation_bb(ii, jj, aa, bb);
                                         size_t hash_val = Determinant::Hash()(new_det);
                                         if ((hash_val % nbin) == bin) {
+                                            double sign = det.slater_sign_bbbb(ii,jj,aa,bb);
                                             double HIJ = fci_ints_->tei_bb(ii, jj, aa, bb) * sign * c_I;
                                             if ((std::fabs(HIJ) >= screen_thresh_)) {
                                                 A_b[new_det] +=  HIJ;
                                             }
                                         }
+                                        new_det.set_beta_bit(bb,false);
                                     }
+                                    new_det.set_beta_bit(aa,false);
                                 }
+                                new_det.set_beta_bit(jj,true);
                             }
+                            new_det.set_beta_bit(ii,true);
                         }
                     }
                 }
             }
             for ( int p = 0; p < nirrep_; ++p){
+                const auto& noalpha_p = noalpha[p];
                 for ( int q = 0; q < nirrep_; ++q){
+                    const auto& nobeta_q = nobeta[q];
                     for ( int r = 0; r < nirrep_; ++r){
                         int sp = p^q^r;
-                        const auto& noalpha_p = noalpha[p];
-                        const auto& nobeta_q = nobeta[q];
                         const auto& nvalpha_r = nvalpha[r];
                         const auto& nvbeta_s = nvbeta[sp];
                         // Generate ab excitations
                         for (auto& ii : noalpha_p) {
-                            for (auto& jj : nobeta_q) {
-                                for (auto& aa : nvalpha_r) {
+                            new_det.set_alfa_bit(ii,false);
+                            for (auto& aa : nvalpha_r) {
+                                new_det.set_alfa_bit(aa,true);
+                                for (auto& jj : nobeta_q) {
+                                    new_det.set_beta_bit(jj,false);
                                     for (auto& bb : nvbeta_s) {
-                                        new_det = det;
-                                        double sign = new_det.double_excitation_ab(ii, jj, aa, bb);
+                                        new_det.set_beta_bit(bb,true);
                                         size_t hash_val = Determinant::Hash()(new_det);
                                         if ((hash_val % nbin) == bin) {
+                                            double sign = new_det.slater_sign_aa(ii,aa) * new_det.slater_sign_bb(jj,bb);
                                             double HIJ = fci_ints_->tei_ab(ii, jj, aa, bb) * sign * c_I;
                                             if ((std::fabs(HIJ) >= screen_thresh_)) {
                                                 A_b[new_det] += HIJ;
                                             }
                                         }
+                                        new_det.set_beta_bit(bb,false);
                                     }
+                                    new_det.set_beta_bit(jj,true);
                                 }
+                                new_det.set_alfa_bit(aa,false);
                             }
+                            new_det.set_alfa_bit(ii,true);
                         }
                     }
                 }
