@@ -148,8 +148,14 @@ class UI64Determinant {
 
     struct Hash {
         std::size_t operator()(const psi::forte::UI64Determinant& bs) const {
-         //   return (bs.a_ << 32) + bs.b_;
-            return (bs.a_ * 31) + bs.b_;
+    
+         //   return bs.a_ + bs.b_;
+        
+         //   return ((bs.a_ * 31) + bs.b_) ;
+          //  return ((bs.a_ * 31) + bs.b_) % 7561 ;
+          //  return ((bs.a_ * 31) + bs.b_) % 999331;
+            return ((bs.a_ * 31) + bs.b_) %  13466917;
+           // return ((bs.a_ * 31) + bs.b_) % 1405695061;
           //  std::bitset<128> big = static_cast<std::bitset<128>>(bs.a_);
           //  big = (big << 64) | static_cast<std::bitset<128>>(bs.b_);
           //  return std::hash<std::bitset<128>>()(big);
