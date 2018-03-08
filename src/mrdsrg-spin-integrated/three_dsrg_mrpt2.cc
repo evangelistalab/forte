@@ -286,6 +286,10 @@ void THREE_DSRG_MRPT2::startup() {
             Hbar2_ = BTF_->build(tensor_type_, "Two-body Hbar", spin_cases({"aaaa"}));
             Hbar1_["uv"] = F_["uv"];
             Hbar1_["UV"] = F_["UV"];
+
+            if (options_.get_bool("FORM_HBAR3")) {
+                Hbar3_ = BTF_->build(tensor_type_, "3-body Hbar", spin_cases({"aaaaaa"}));
+            }
         }
     }
 }
@@ -317,6 +321,12 @@ void THREE_DSRG_MRPT2::print_options_summary() {
     if (internal_amp_) {
         calculation_info_string.push_back({"Internal_amp", options_.get_str("INTERNAL_AMP")});
         calculation_info_string.push_back({"Internal_amp_select", internal_amp_select_});
+    }
+
+    if (options_.get_bool("FORM_HBAR3")) {
+        calculation_info_string.push_back({"form Hbar3", "TRUE"});
+    } else {
+        calculation_info_string.push_back({"form Hbar3", "FALSE"});
     }
 
     // Print some information
@@ -3293,6 +3303,20 @@ void THREE_DSRG_MRPT2::form_Hbar() {
             }
         }
         outfile->Printf("Done. Timing: %10.3f s.", timer.elapsed());
+    }
+
+    if (options_.get_bool("FORM_HBAR3")) {
+        BlockedTensor C3 = BTF_->build(tensor_type_, "C3", spin_cases({"aaaaaa"}));
+        H2_T2_C3(V_, T2_, 0.5, C3, true);
+
+        Hbar3_["uvwxyz"] += C3["uvwxyz"];
+        Hbar3_["uvwxyz"] += C3["xyzuvw"];
+        Hbar3_["uvWxyZ"] += C3["uvWxyZ"];
+        Hbar3_["uvWxyZ"] += C3["xyZuvW"];
+        Hbar3_["uVWxYZ"] += C3["uVWxYZ"];
+        Hbar3_["uVWxYZ"] += C3["xYZuVW"];
+        Hbar3_["UVWXYZ"] += C3["UVWXYZ"];
+        Hbar3_["UVWXYZ"] += C3["XYZUVW"];
     }
 }
 
