@@ -49,10 +49,14 @@ class FCIWfn {
 
     /// Print this vector
     void print();
+    /// Generate histogram vector of coefficients
+    void SortCoef();
     /// Zero this vector
     void zero();
     /// Return the size of the CI basis
     size_t size() const { return ndet_; }
+
+    std::vector<SharedMatrix> C() {return C_; }
 
     /// Copy the wave function object
     void copy(FCIWfn& wfn);
@@ -76,6 +80,8 @@ class FCIWfn {
     /// Dot product with another vector
     double dot(FCIWfn& wfn);
     double dot(std::shared_ptr<FCIWfn>& wfn);
+
+    std::vector<int> histo_;
 
     /// Return the alpha one-particle density matrix
     std::vector<double>& opdm_a() { return opdm_a_; }

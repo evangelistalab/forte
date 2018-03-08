@@ -82,6 +82,7 @@ FCIWfn::FCIWfn(std::shared_ptr<StringLists> lists, size_t symmetry)
     startup();
 }
 
+
 FCIWfn::~FCIWfn() { cleanup(); }
 
 ///**
@@ -620,6 +621,32 @@ void FCIWfn::print() {
                 ++det;
             }
         }
+    }
+}
+
+void FCIWfn::SortCoef() {
+    histo_.resize(10);
+    for (int alfa_sym = 0; alfa_sym < nirrep_; ++alfa_sym) {
+        int beta_sym = alfa_sym ^ symmetry_;
+        double** C_prime = C_[alfa_sym]->pointer();
+        for (size_t Ia = 0; Ia < alfa_graph_->strpi(alfa_sym); ++Ia) {
+            for (size_t Ib = 0; Ib < beta_graph_->strpi(beta_sym); ++Ib) {
+              double term = log10(std::fabs(C_prime[Ia][Ib]));
+              if(term >= -1) histo_[0] += 1;
+              else if((term < -1) && (term >= -2)) histo_[1] += 1;
+              else if((term < -2) && (term >= -3)) histo_[2] += 1;
+              else if((term < -3) && (term >= -4)) histo_[3] += 1;
+              else if((term < -4) && (term >= -5)) histo_[4] += 1;
+              else if((term < -5) && (term >= -6)) histo_[5] += 1;
+              else if((term < -6) && (term >= -7)) histo_[6] += 1;
+              else if((term < -7) && (term >= -8)) histo_[7] += 1;
+              else if((term < -8) && (term >= -9)) histo_[8] += 1;
+              else histo_[9] += 1;
+            }
+        }
+    }
+    for(int n=0; n<10; n++){
+      outfile->Printf("bin [%2d]: number of determinants [%4d] \n", n, histo_[n]);
     }
 }
 
