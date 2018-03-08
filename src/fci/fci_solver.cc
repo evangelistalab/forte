@@ -329,6 +329,12 @@ double FCISolver::compute_energy() {
         }
     }
 
+    outfile->Printf("I am here!");
+    C_->print();
+
+    std::vector<SharedMatrix> C = C_->C();
+    C[0]->print();
+
     // Compute the RDMs
     compute_rdms_root(root_);
     //    C_->copy(dls.eigenvector(root_));

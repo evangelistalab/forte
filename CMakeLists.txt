@@ -23,8 +23,6 @@ include(autocmake_omp)
 include(autocmake_mpi)  # MPI option A
 #include(custom_static_library)
 
-
-
 #find_package(psi4 1.1 REQUIRED COMPONENTS ambit chemps2)
 find_package(psi4 1.0 REQUIRED)
 
@@ -151,6 +149,7 @@ src/pci/ewci.cc
 )
 
 target_link_libraries(forte PRIVATE ambit::ambit)
+
 if(TARGET CheMPS2::chemps2)
     target_link_libraries(forte PRIVATE CheMPS2::chemps2)
 endif()

@@ -54,6 +54,8 @@ class FCIWfn {
     /// Return the size of the CI basis
     size_t size() const { return ndet_; }
 
+    std::vector<SharedMatrix> C() {return C_;}
+
     /// Copy the wave function object
     void copy(FCIWfn& wfn);
     /// Copy the coefficients from a Vector object
@@ -157,7 +159,9 @@ class FCIWfn {
     /// The beta string graph
     GraphPtr beta_graph_;
     /// Coefficient matrix stored in block-matrix form
+    /// Each element of this vector is block of a given irrep
     std::vector<SharedMatrix> C_;
+
     std::vector<double> opdm_a_;
     std::vector<double> opdm_b_;
     std::vector<double> tpdm_aa_;

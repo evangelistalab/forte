@@ -20,7 +20,7 @@ timing_re = re.compile(r"Psi4 exiting successfully. Buy a developer a beer!")
 psi4command = ""
 
 
-print "Running forte tests using the psi4 executable found in:\n  %s\n" % psi4command
+print("Running forte tests using the psi4 executable found in:\n  %s\n" % psi4command)
 
 fci_tests = ["fci-1","fci-2","fci-3","fci-4","fci-5","fci-7","fci-rdms-1","fci-rdms-2","fci-one-electron","fci-ex-1",
              "fci-ecp-1","fci-ecp-2"]
@@ -74,7 +74,7 @@ if len(sys.argv) == 1:
     p = subprocess.Popen(cmd, stdout=subprocess.PIPE)
     res = p.stdout.readlines()
     if len(res) == 0:
-        print "Could not detect your PSI4 executable.  Please specify its location."
+        print("Could not detect your PSI4 executable.  Please specify its location.")
         exit(1)
     psi4command = res[0][:-1]
 elif len(sys.argv) == 2:
@@ -82,12 +82,12 @@ elif len(sys.argv) == 2:
 #elif len(sys.argv) == 3:
 #    tests = sys.argv[2]
 
-print "Running forte tests using the psi4 executable found in:\n  %s\n" % psi4command
+print ("Running forte tests using the psi4 executable found in:\n  %s\n" % psi4command)
 
 
 test_results = {}
 for d in tests:
-    print "Running test %s" % d.upper()
+    print("Running test %s" % d.upper())
 
     os.chdir(d)
     successful = True
@@ -107,7 +107,7 @@ for d in tests:
             test_results[d] = "PASSED"
         else:
             test_results[d] = "FAILED"
-        print out
+        print(out)
     os.chdir(maindir)
 
 
@@ -123,19 +123,19 @@ for d in tests:
     filler = "." * (81 - len(d + msg))
     summary.append("        %s%s%s" % (d.upper(),filler,msg))
 
-print "Summary:"
-print " " * 8 + "-" * 72
-print "\n".join(summary)
-print " " * 8 + "-" * 72
+print('Summary:')
+print(' ' * 8 + '-' * 72)
+print('\n'.join(summary))
+print(' ' * 8 + '-' * 72)
 
 test_result_log = open("test_results","w+")
 test_result_log.write("\n".join(summary))
 
 nfailed = len(failed)
 if nfailed == 0:
-    print "Tests: All passed\n"
+    print('Tests: All passed\n')
 else:
-    print "Tests: %d passed and %d failed\n" % (len(tests) -  nfailed,nfailed)
+    print('Tests: %d passed and %d failed\n' % (len(tests) -  nfailed,nfailed))
     # Get the current date and time
     dt = datetime.datetime.now()
     now = dt.strftime("%Y-%m-%d-%H:%M")
