@@ -329,11 +329,78 @@ double FCISolver::compute_energy() {
         }
     }
 
-    outfile->Printf("I am here!");
-    C_->print();
+    ///////////////////////// NEW SORTING AND MATRIX EXPLORATION //////////////////////////
 
-    std::vector<SharedMatrix> C = C_->C();
-    C[0]->print();
+    outfile->Printf("\n I am here - aroonie! \n");
+    //C_->print();
+
+    //std::vector<SharedMatrix> C = C_->C();
+
+    //int num_irep_dim = C.size();
+    // a vector of 'smart' pointers (objecs that holds momory location as hexidecimal value) to matricies
+    //for(int i=0; i<num_irep_dim; i++){
+      //C[i]->print();
+    //}
+
+    C_->SortCoef();
+
+    //C[0]->print();
+    //C[1]->print();
+    //C[2]->print();
+    //C[3]->print();
+    //C[4]->print();
+    // "fci_solver::print() takes the pointers and reads them, then prints the values associated with their
+    // matricies"
+
+
+
+    // why not ?
+    //C_[0]->print();
+    // OR
+    // double** C_prime = C_[0]->pointer();
+
+    // what type of object is C_ if not a vector of pointers to matricies?
+
+
+    //double** C_prime = C[0]->pointer();
+    //what is this 'pointer();' function and where is it declared? What does it do?
+
+
+
+    //outfile->Printf("\n %15.9f", C_prime[0][0]);
+
+    /*
+
+    std::vector<int> histo_(10);
+    for (int alfa_sym = 0; alfa_sym < nirrep_; ++alfa_sym) {
+      int beta_sym = alfa_sym ^ symmetry_;
+      double** C_prime = C[alfa_sym]->pointer();
+      for(size_t i = 0; i < alfa_graph_->strpi(alfa_sym); ++i){
+        for(size_t j = 0; j < beta_graph_->strpi(beta_sym); ++j){
+          double term = log10(std::fabs(C_prime[i][j]));
+          if(term => -1) histo_[0] += 1;
+          if((term < -1) && (term => -2)) histo_[1] += 1;
+          if((term < -2) && (term => -3)) histo_[2] += 1;
+          if((term < -3) && (term => -4)) histo_[3] += 1;
+          if((term < -4) && (term => -5)) histo_[4] += 1;
+          if((term < -5) && (term => -6)) histo_[5] += 1;
+          if((term < -6) && (term => -7)) histo__[6] += 1;
+          if((term < -7) && (term => -8)) histo_[7] += 1;
+          if((term < -8) && (term => -9)) histo_[8] += 1;
+          if(term < -9) histo_[9] += 1;
+        }
+      }
+    }
+
+    for(int n: histo_){
+      outfile->printf("bin [%2d] number if dets [%4d] \n", n, histo_[n]);
+    }
+
+    */
+
+    // does this mean define Cprime
+
+    ///////////////////////// NEW SORTING AND MATRIX EXPLORATION //////////////////////////
 
     // Compute the RDMs
     compute_rdms_root(root_);

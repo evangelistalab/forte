@@ -49,6 +49,8 @@ class FCIVector {
 
     /// Print this vector
     void print();
+    /// Generate histogram vector of coefficients
+    void SortCoef();
     /// Zero this vector
     void zero();
     /// Return the size of the CI basis
@@ -78,6 +80,8 @@ class FCIVector {
     /// Dot product with another vector
     double dot(FCIVector& wfn);
     double dot(std::shared_ptr<FCIVector>& wfn);
+
+    std::vector<int> histo_;
 
     /// Return the alpha one-particle density matrix
     std::vector<double>& opdm_a() { return opdm_a_; }
