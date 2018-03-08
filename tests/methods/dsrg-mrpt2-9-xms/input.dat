@@ -5,8 +5,8 @@ import forte
 refmcscf   = -106.752885060582
 refpt2sub  = -106.990277098987
 refpt2full = -106.990992385754
-refpt2ms   = -106.986872321455
-refpt2xms  = -106.989915738225
+refpt2ms   = -106.989495562679
+refpt2xms  = -106.989466062352
 refvalues  = [refpt2sub, refpt2full, refpt2ms, refpt2xms]
 
 molecule {

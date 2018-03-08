@@ -6,6 +6,7 @@
 #include "../integrals/integrals.h"
 #include "../helpers.h"
 #include "../fci_mo.h"
+#include "../sparse_ci/determinant.h"
 
 namespace psi {
 namespace forte {
@@ -46,12 +47,47 @@ class DWMS_DSRGPT2 : public Wavefunction {
     /// DWMS algorithm
     std::string algorithm_;
 
+    /// use what energies to determine the weights
+    std::string dwms_e_;
+
+    /// use what CI vectors to perform multi-state computation
+    std::string dwms_ci_;
+
+    /// precompute energy -- SA-CASCI or SA-DSRG-PT2
+    std::shared_ptr<FCI_MO> precompute_energy_old();
+
     /// precompute energy -- SA-CASCI or SA-DSRG-PT2
     std::shared_ptr<FCI_MO> precompute_energy();
 
     /// perform DSRG-PT2 computation and return the dressed integrals within active space
     std::shared_ptr<FCIIntegrals> compute_dsrg_pt2(std::shared_ptr<FCI_MO> fci_mo,
                                                    Reference& reference);
+
+    /// compute DWMS energies by diagonalizing separate Hamiltonians
+    double compute_dwms_energy_old();
+
+    /// compute MS or XMS energies
+    double compute_dwms_energy();
+
+    /// compute DWSA energies
+    double compute_dwsa_energy();
+
+    /// compute Reference
+    Reference compute_Reference(CI_RDMS& ci_rdms, bool do_cumulant);
+
+    /// compute state-averaged Reference
+    Reference
+    compute_Reference_SA(const std::vector<det_vec>& p_spaces,
+                         const std::vector<SharedMatrix>& civecs,
+                         const std::vector<std::tuple<int, int, int, std::vector<double>>>& info);
+
+    /// compute Fock matrix within the active space
+    void compute_Fock_actv(const det_vec& p_space, SharedMatrix civecs, ambit::Tensor Fa,
+                           ambit::Tensor Fb);
+
+    /// rotate CI vectors according to XMS
+    SharedMatrix xms_rotate_civecs(const det_vec& p_space, SharedMatrix civecs, ambit::Tensor Fa,
+                                   ambit::Tensor Fb);
 
     /// initial guesses if DWMS-1 or DWMS-AVG1
     std::vector<std::vector<SharedVector>> initial_guesses_;
@@ -69,6 +105,9 @@ class DWMS_DSRGPT2 : public Wavefunction {
 
     /// if using factorized integrals
     bool eri_df_;
+
+    /// a shared_ptr of FCIIntegrals (mostly used in CI_RDMS)
+    std::shared_ptr<FCIIntegrals> fci_ints_;
 
     /// energy of original SA-CASCI
     std::vector<std::vector<double>> Eref_0_;
@@ -89,6 +128,9 @@ class DWMS_DSRGPT2 : public Wavefunction {
 
     /// print implementaion note
     void print_note();
+
+    /// print implementation note on MS or XMS
+    void print_note_xms();
 
     /// print current job title
     void print_current_title(int multi, int irrep, int root);

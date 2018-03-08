@@ -68,6 +68,14 @@ void MASTER_DSRG::startup() {
 
     // recompute reference energy from ForteIntegral and check consistency with Reference
     check_init_reference_energy();
+
+    // initialize Uactv_ to identity
+    Uactv_ = BTF_->build(tensor_type_, "Uactv", spin_cases({"aa"}));
+    Uactv_.iterate([&](const std::vector<size_t>& i, const std::vector<SpinType>&, double& value) {
+        if (i[0] == i[1]) {
+            value = 1.0;
+        }
+    });
 }
 
 void MASTER_DSRG::read_options() {
@@ -318,7 +326,7 @@ double MASTER_DSRG::compute_reference_energy_from_ints(std::shared_ptr<ForteInte
 
     // an identity tensor of shape 1 * nc * 1 * nc for F["mm"] <- sum_{n} V["mnmn"]
     size_t nc = core_mos_.size();
-    std::vector<size_t> Idims {1, nc, 1, nc};
+    std::vector<size_t> Idims{1, nc, 1, nc};
     ambit::Tensor I = ambit::Tensor::build(tensor_type_, "I", Idims);
     I.iterate([&](const std::vector<size_t>& i, double& value) {
         if (i[1] == i[3]) {
@@ -518,7 +526,7 @@ void MASTER_DSRG::compute_dm_ref() {
     }
 }
 
-std::shared_ptr<FCIIntegrals> MASTER_DSRG::compute_Heff() {
+std::shared_ptr<FCIIntegrals> MASTER_DSRG::compute_Heff_actv() {
     // de-normal-order DSRG transformed Hamiltonian
     double Edsrg = Eref_ + Hbar0_;
     if (options_.get_bool("FORM_HBAR3")) {
@@ -528,56 +536,6 @@ std::shared_ptr<FCIIntegrals> MASTER_DSRG::compute_Heff() {
         deGNO_ints("Hamiltonian", Edsrg, Hbar1_, Hbar2_);
         rotate_ints_semi_to_origin("Hamiltonian", Hbar1_, Hbar2_);
     }
-
-    //    if (!eri_df_) {
-    //        ints_->set_print(0);
-    //        ForteTimer t_int;
-    //        outfile->Printf("\n    %-40s ... ", "Updating integrals");
-
-    //        // transfer integrals to ForteIntegrals
-    //        ints_->set_scalar(Edsrg - Enuc_ - Efrzc_);
-
-    //        // TODO: before zero hhhh integrals, is is probably good to save a copy
-    //        std::vector<size_t> hole_mos = mo_space_info_->get_corr_abs_mo("GENERALIZED HOLE");
-    //        for (const size_t& i : hole_mos) {
-    //            for (const size_t& j : hole_mos) {
-    //                ints_->set_oei(i, j, 0.0, true);
-    //                ints_->set_oei(i, j, 0.0, false);
-    //                for (const size_t& k : hole_mos) {
-    //                    for (const size_t& l : hole_mos) {
-    //                        ints_->set_tei(i, j, k, l, 0.0, true, true);
-    //                        ints_->set_tei(i, j, k, l, 0.0, true, false);
-    //                        ints_->set_tei(i, j, k, l, 0.0, false, false);
-    //                    }
-    //                }
-    //            }
-    //        }
-
-    //        Hbar1_.citerate([&](const std::vector<size_t>& i, const std::vector<SpinType>& spin,
-    //                            const double& value) {
-    //            if (spin[0] == AlphaSpin) {
-    //                ints_->set_oei(i[0], i[1], value, true);
-    //            } else {
-    //                ints_->set_oei(i[0], i[1], value, false);
-    //            }
-    //        });
-
-    //        Hbar2_.citerate([&](const std::vector<size_t>& i, const std::vector<SpinType>& spin,
-    //                            const double& value) {
-    //            if ((spin[0] == AlphaSpin) && (spin[1] == AlphaSpin)) {
-    //                ints_->set_tei(i[0], i[1], i[2], i[3], value, true, true);
-    //            } else if ((spin[0] == AlphaSpin) && (spin[1] == BetaSpin)) {
-    //                ints_->set_tei(i[0], i[1], i[2], i[3], value, true, false);
-    //            } else if ((spin[0] == BetaSpin) && (spin[1] == BetaSpin)) {
-    //                ints_->set_tei(i[0], i[1], i[2], i[3], value, false, false);
-    //            }
-    //        });
-
-    //        ints_->update_integrals(false);
-
-    //        outfile->Printf("Done. Timing %8.3f s", t_int.elapsed());
-    //        ints_->set_print(print_);
-    //    }
 
     // create FCIIntegral shared_ptr
     std::shared_ptr<FCIIntegrals> fci_ints =
@@ -714,6 +672,21 @@ void MASTER_DSRG::deGNO_ints(const std::string& name, double& H0, BlockedTensor&
     outfile->Printf("Done. Timing %8.3f s", t2.elapsed());
 }
 
+ambit::BlockedTensor MASTER_DSRG::deGNO_Tamp(BlockedTensor& T1, BlockedTensor& T2,
+                                             BlockedTensor& D1) {
+    BlockedTensor T1eff = BTF_->build(tensor_type_, "T1eff from de-GNO", spin_cases({"hp"}));
+
+    T1eff["ia"] = T1["ia"];
+    T1eff["IA"] = T1["IA"];
+
+    T1eff["ia"] -= T2["iuav"] * D1["vu"];
+    T1eff["ia"] -= T2["iUaV"] * D1["VU"];
+    T1eff["IA"] -= T2["uIvA"] * D1["vu"];
+    T1eff["IA"] -= T2["IUAV"] * D1["VU"];
+
+    return T1eff;
+}
+
 void MASTER_DSRG::rotate_ints_semi_to_origin(const std::string& name, BlockedTensor& H1,
                                              BlockedTensor& H2) {
 
@@ -791,6 +764,25 @@ void MASTER_DSRG::rotate_ints_semi_to_origin(const std::string& name, BlockedTen
         Ub("pa") * Ub("qb") * Ub("rc") * temp("abcijk") * Ub("si") * Ub("tj") * Ub("uk");
 
     outfile->Printf("Done. Timing %8.3f s", timer.elapsed());
+}
+
+std::vector<ambit::Tensor> MASTER_DSRG::Hbar(int n) {
+    std::vector<ambit::Tensor> out;
+    if (n == 1) {
+        out = {Hbar1_.block("aa"), Hbar1_.block("AA")};
+    } else if (n == 2) {
+        out = {Hbar2_.block("aaaa"), Hbar2_.block("aAaA"), Hbar2_.block("AAAA")};
+    } else if (n == 3) {
+        if (options_.get_bool("FORM_HBAR3")) {
+            out = {Hbar3_.block("aaaaaa"), Hbar3_.block("aaAaaA"), Hbar3_.block("aAAaAA"),
+                   Hbar3_.block("AAAAAA")};
+        } else {
+            throw PSIEXCEPTION("Hbar3 is not formed. Check your code.");
+        }
+    } else {
+        throw PSIEXCEPTION("Only 1, 2, and 3 Hbar are in Tensor format.");
+    }
+    return out;
 }
 
 void MASTER_DSRG::H1_T1_C0(BlockedTensor& H1, BlockedTensor& T1, const double& alpha, double& C0) {

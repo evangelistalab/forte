@@ -284,8 +284,7 @@ void DFIntegrals::make_fock_matrix(SharedMatrix gamma_aM, SharedMatrix gamma_bM)
     ambit::Tensor fock_a = ambit::Tensor::build(tensor_type, "Fock_a", {ncmo_, ncmo_});
     ambit::Tensor fock_b = ambit::Tensor::build(tensor_type, "Fock_b", {ncmo_, ncmo_});
 
-    // ThreeIntegralTensor.iterate([&](const std::vector<size_t>& i,double&
-    // value){
+    // ThreeIntegralTensor.iterate([&](const std::vector<size_t>& i, double& value){
     //    value = ThreeIntegral_->get(i[0],i[1]*aptei_idx_ + i[2]);
     //});
     std::vector<size_t> vQ(nthree_);

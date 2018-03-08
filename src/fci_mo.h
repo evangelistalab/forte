@@ -108,8 +108,18 @@ class FCI_MO : public Wavefunction {
     /// Compute state-averaged CASCI energy
     double compute_sa_energy();
 
-    /// Returns the reference object
+    /// Return the reference object
+    /// Return averaged cumulants if AVG_STATE is not empty
     Reference reference(const int& level = 3);
+
+    /// Compute densities or transition densities
+    /// root1, root2 -- the ket and bra roots of p_space and eigen
+    /// multi_state -- grab p_spaces_ and eigens_ if true, otherwise p_space_ and eigen_
+    /// entry -- symmetry entry of p_spaces_ and eigens_ (same entry as sa_info_)
+    /// max_level -- max RDM level to be computed
+    /// do_cumulant -- returned Reference is filled by cumulants (not RDMs) if true
+    Reference compute_trans_density(int root1, int root2, bool multi_state, int entry = 0,
+                                    int max_level = 3, bool do_cumulant = false);
 
     /// Compute dipole moments with DSRG transformed MO dipole integrals
     /// This function is used for reference relaxation and SA-MRDSRG
@@ -138,7 +148,7 @@ class FCI_MO : public Wavefunction {
      * @brief Rotate the SA references such that <M|F|N> is diagonal
      * @param irrep The irrep of states M and N (same irrep)
      */
-    void xms_rotate(const int& irrep);
+    void xms_rotate_civecs();
 
     /// Set fci_int_ pointer
     void set_fci_int(std::shared_ptr<FCIIntegrals> fci_ints) { fci_ints_ = fci_ints; }
@@ -470,6 +480,10 @@ class FCI_MO : public Wavefunction {
                  const string& name);
     /// Print Fock Matrix in Blocks
     void print_Fock(const string& spin, const d2& Fock);
+
+    /// Rotate the given CI vectors by XMS
+    SharedMatrix xms_rotate_this_civecs(const det_vec& p_space, SharedMatrix civecs,
+                                        ambit::Tensor Fa, ambit::Tensor Fb);
 
     /// Reference Energy
     double Eref_;

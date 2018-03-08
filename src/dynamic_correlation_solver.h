@@ -29,7 +29,7 @@ class DynamicCorrelationSolver : public Wavefunction {
     virtual double compute_energy() = 0;
 
     /// Compute dressed Hamiltonian
-    virtual std::shared_ptr<FCIIntegrals> compute_Heff() = 0;
+    virtual std::shared_ptr<FCIIntegrals> compute_Heff_actv() = 0;
 
     /// Destructor
     virtual ~DynamicCorrelationSolver() = default;

@@ -3935,85 +3935,159 @@ double FCI_MO::compute_sa_energy() {
     return Ecas_sa;
 }
 
-// TODO this function probably should not be here.
-void FCI_MO::xms_rotate(const int& irrep) {
+void FCI_MO::xms_rotate_civecs() {
+    if (eigens_.size() != sa_info_.size()) {
+        throw PSIEXCEPTION(
+            "Cannot do XMS rotation due to inconsistent size. Is SA-CASCI computed?");
+    }
     int nentry = eigens_.size();
-    for (int i = 0; i < nentry; ++i) {
-        int this_irrep = options_["AVG_STATE"][i][0].to_integer();
-        if (this_irrep != irrep) {
-            continue;
-        } else {
-            size_t nelement = na_ * na_;
-            auto& eigen = eigens_[i];
-            int nroots = eigen.size();
-            SharedMatrix Fock_MN(new Matrix("Fock_MN", nroots, nroots));
 
-            int dim = (eigen[0].first)->dim();
-            SharedMatrix evecs(new Matrix("evecs", dim, nroots));
-            for (int M = 0; M < nroots; ++M) {
-                evecs->set_column(0, M, (eigen[M]).first);
-            }
+    // title
+    print_h2("XMS Rotation of All CI Vectors");
 
-            // compute matrix elements of Fock_MN
-            for (int M = 0; M < nroots; ++M) {
-                for (int N = M; N < nroots; ++N) {
+    // symmetry symbols
+    CharacterTable ct = Process::environment.molecule()->point_group()->char_table();
+    std::vector<std::string> irrep_symbol(nirrep_);
+    for (int h = 0; h < nirrep_; ++h) {
+        irrep_symbol[h] = std::string(ct.gamma(h).symbol());
+    }
 
-                    // compute density
-                    CI_RDMS ci_rdms(options_, fci_ints_, determinant_, evecs, M, N);
-                    ci_rdms.set_symmetry(irrep);
-                    std::vector<double> opdm_a(nelement, 0.0);
-                    std::vector<double> opdm_b(nelement, 0.0);
-                    ci_rdms.compute_1rdm(opdm_a, opdm_b);
+    std::vector<std::string> multi_symbol{"Singlet", "Doublet", "Triplet", "Quartet", "Quintet",
+                                          "Sextet",  "Septet",  "Octet",   "Nonet",   "Decaet"};
 
-                    // contract density with SA-Fock
-                    double fuv = 0.0;
-                    for (size_t u = 0; u < na_; ++u) {
-                        size_t nu = idx_a_[u];
+    // form averaged density (all roots equal weight)
+    int total_nroots = 0;
+    for (int n = 0; n < nentry; ++n) {
+        total_nroots += std::get<2>(sa_info_[n]);
+    }
+    double w = 1.0 / total_nroots;
+    outfile->Printf("\n  Set equal states weights to %.4f = 1/%d.", w, total_nroots);
 
-                        for (size_t v = 0; v < na_; ++v) {
-                            size_t nv = idx_a_[v];
+    auto sa_info0 = sa_info();
+    sa_info_.resize(nentry);
+    for (int n = 0; n < nentry; ++n) {
+        int irrep, multi, nroots;
+        std::tie(irrep, multi, nroots, std::ignore) = sa_info0[n];
+        sa_info_[n] = std::make_tuple(irrep, multi, nroots, std::vector<double>(nroots, w));
+    }
+    compute_sa_ref(1);
+    sa_info_ = sa_info0;
 
-                            fuv += Fa_[nu][nv] * opdm_a[v * na_ + u];
-                            fuv += Fb_[nu][nv] * opdm_b[v * na_ + u];
-                        }
-                    }
+    // form averaged Fock matrix
+    outfile->Printf("  Form averaged Fock matrix.");
+    ambit::Tensor Fa = ambit::Tensor::build(CoreTensor, "Fa", {na_, na_});
+    ambit::Tensor Fb = ambit::Tensor::build(CoreTensor, "Fb", {na_, na_});
 
-                    if (M == N) {
-                        Fock_MN->set(M, M, fuv); // ignored core part (a constant shift)
-                    } else {
-                        Fock_MN->set(M, N, fuv);
-                        Fock_MN->set(N, M, fuv);
-                    }
-                }
-            }
+    Fa.iterate([&](const std::vector<size_t>& i, double& value) {
+        size_t nu = idx_a_[i[0]];
+        size_t nv = idx_a_[i[1]];
+        value = integral_->oei_a(nu, nv);
+    });
 
-            // diaognalize Fock_MN
-            SharedMatrix Fvecs(new Matrix("Fock_MN evecs", nroots, nroots));
-            SharedVector Fvals(new Vector("Fock_MN evals", nroots));
-            Fock_MN->diagonalize(Fvecs, Fvals);
-            //            Fvecs->eivprint(Fvals);
+    Fb.iterate([&](const std::vector<size_t>& i, double& value) {
+        size_t nu = idx_a_[i[0]];
+        size_t nv = idx_a_[i[1]];
+        value = integral_->oei_b(nu, nv);
+    });
 
-            // rotate eigen vectors
-            evecs = SharedMatrix(new Matrix("evecs", dim, nroots));
-            for (int M = 0; M < nroots; ++M) {
-                evecs->set_column(0, M, (eigen[M]).first);
-            }
-            SharedMatrix rvecs(new Matrix("Rotated evecs", dim, nroots));
-            rvecs->gemm(false, false, 1.0, evecs, Fvecs, 0.0);
+    ambit::Tensor I = ambit::Tensor::build(CoreTensor, "Identity", {nc_, nc_});
+    for (int m = 0; m < nc_; ++m) {
+        I.data()[m * nc_ + m] = 1.0;
+    }
 
-            //            // recompute reference energies
-            //            ambit::Tensor tei_active_aa =
-            //            integral_->aptei_aa_block(idx_a_, idx_a_, idx_a_,
-            //            idx_a_);
-            //            ambit::Tensor tei_active_ab =
-            //            integral_->aptei_ab_block(idx_a_, idx_a_, idx_a_,
-            //            idx_a_);
-            //            ambit::Tensor tei_active_bb =
-            //            integral_->aptei_bb_block(idx_a_, idx_a_, idx_a_,
-            //            idx_a_);
-            //            fci_ints_->
+    ambit::Tensor V;
+    V = integral_->aptei_aa_block(idx_a_, idx_c_, idx_a_, idx_c_);
+    Fa("uv") += V("umvn") * I("mn");
+
+    V = integral_->aptei_ab_block(idx_a_, idx_c_, idx_a_, idx_c_);
+    Fa("uv") += V("umvn") * I("mn");
+
+    V = integral_->aptei_ab_block(idx_c_, idx_a_, idx_c_, idx_a_);
+    Fb("uv") += V("munv") * I("mn");
+
+    V = integral_->aptei_bb_block(idx_a_, idx_c_, idx_a_, idx_c_);
+    Fb("uv") += V("umvn") * I("mn");
+
+    V = integral_->aptei_aa_block(idx_a_, idx_a_, idx_a_, idx_a_);
+    Fa("uv") += V("uxvy") * L1a("xy");
+
+    V = integral_->aptei_ab_block(idx_a_, idx_a_, idx_a_, idx_a_);
+    Fa("uv") += V("uxvy") * L1b("xy");
+    Fb("uv") += V("xuyv") * L1a("xy");
+
+    V = integral_->aptei_bb_block(idx_a_, idx_a_, idx_a_, idx_a_);
+    Fb("uv") += V("uxvy") * L1b("xy");
+
+    // XMS rotation for all symmetries
+    for (int n = 0; n < nentry; ++n) {
+        int multi, irrep, nroots;
+        std::tie(irrep, multi, nroots, std::ignore) = sa_info_[n];
+
+        outfile->Printf("\n  XMS Rotation for %s %s.\n", multi_symbol[multi - 1].c_str(),
+                        irrep_symbol[irrep].c_str());
+
+        // put eigen vectors of current symmetry entry to SharedMatrix form
+        auto& eigen = eigens_[n];
+        int dim = (eigen[0].first)->dim();
+        SharedMatrix civecs(new Matrix("ci vecs", dim, nroots));
+        for (int i = 0; i < nroots; ++i) {
+            civecs->set_column(0, i, (eigen[i]).first);
+        }
+
+        // compute averaged Fock matrix between states <M|F|N>
+        SharedMatrix rcivecs = xms_rotate_this_civecs(p_spaces_[n], civecs, Fa, Fb);
+
+        // put in eigens_
+        for (int i = 0; i < nroots; ++i) {
+            eigens_[n][i] = std::make_pair<SharedVector, double>(rcivecs->get_column(0, i), 0.0);
         }
     }
+}
+
+SharedMatrix FCI_MO::xms_rotate_this_civecs(const det_vec& p_space, SharedMatrix civecs,
+                                            ambit::Tensor Fa, ambit::Tensor Fb) {
+    int nroots = civecs->ncol();
+    outfile->Printf("\n");
+    SharedMatrix Fock(new Matrix("Fock <M|F|N>", nroots, nroots));
+
+    for (int M = 0; M < nroots; ++M) {
+        for (int N = M; N < nroots; ++N) {
+
+            // compute transition density
+            std::vector<double> opdm_a, opdm_b;
+            CI_RDMS ci_rdms(options_, fci_ints_, p_space, civecs, M, N);
+            ci_rdms.compute_1rdm(opdm_a, opdm_b);
+
+            // put rdms in tensor format
+            ambit::Tensor Da = ambit::Tensor::build(CoreTensor, "Da", {na_, na_});
+            ambit::Tensor Db = ambit::Tensor::build(CoreTensor, "Da", {na_, na_});
+            Da.data() = std::move(opdm_a);
+            Db.data() = std::move(opdm_b);
+
+            // compute Fock elements
+            double F_MN = 0.0;
+            F_MN += Da("uv") * Fa("vu");
+            F_MN += Db("UV") * Fb("VU");
+            Fock->set(M, N, F_MN);
+            if (M != N) {
+                Fock->set(N, M, F_MN);
+            }
+        }
+    }
+    Fock->print();
+
+    // diagonalize Fock
+    SharedMatrix Fevec(new Matrix("Fock Evec", nroots, nroots));
+    SharedVector Feval(new Vector("Fock Eval", nroots));
+    Fock->diagonalize(Fevec, Feval);
+    Fevec->eivprint(Feval);
+
+    // Rotate CI vectors
+    SharedMatrix rcivecs(civecs->clone());
+    rcivecs->zero();
+    rcivecs->gemm(false, false, 1.0, civecs, Fevec, 0.0);
+
+    return rcivecs;
 }
 
 void FCI_MO::compute_sa_ref(const int& level) {
@@ -4027,7 +4101,7 @@ void FCI_MO::compute_sa_ref(const int& level) {
                 name = "1-, 2- and 3-";
             }
         }
-        outfile->Printf("\n  Computing %scumulants ... ", name.c_str());
+        outfile->Printf("\n  Computing state-averaged %scumulants ... ", name.c_str());
     }
 
     // prepare averaged densities
@@ -4303,6 +4377,81 @@ void FCI_MO::set_eigens(const std::vector<vector<pair<SharedVector, double>>>& e
     }
 }
 
+Reference FCI_MO::compute_trans_density(int root1, int root2, bool multi_state, int entry,
+                                        int max_level, bool do_cumulant) {
+    if (max_level >= 4) {
+        outfile->Printf("\n  Max RDM level >= 4 is not available.");
+    }
+
+    std::string job_type = "RDM";
+    if (do_cumulant) {
+        job_type = "PDC";
+        if (root1 != root2) {
+            throw PSIEXCEPTION("Cannot compute transition cumulants.");
+        }
+    }
+    if (root1 != root2) {
+        job_type = "TrDM";
+    }
+
+    vecdet& p_space = determinant_;
+    std::vector<pair<SharedVector, double>>& eigen = eigen_;
+
+    if (multi_state) {
+        p_space = p_spaces_[entry];
+        eigen = eigens_[entry];
+    }
+
+    // prepare ci_rdms
+    size_t dim = p_space.size();
+    size_t eigen_size = eigen.size();
+    SharedMatrix evecs(new Matrix("evecs", dim, eigen_size));
+    for (int i = 0; i < eigen_size; ++i) {
+        evecs->set_column(0, i, (eigen_[i]).first);
+    }
+    CI_RDMS ci_rdms(options_, fci_ints_, p_space, evecs, root1, root2);
+
+    Reference ref;
+    std::vector<double> opdm_a, opdm_b;
+    std::vector<double> tpdm_aa, tpdm_ab, tpdm_bb;
+    std::vector<double> tpdm_aaa, tpdm_aab, tpdm_abb, tpdm_bbb;
+
+    // 1-RDM
+    if (max_level >= 1) {
+        ForteTimer timer;
+        outfile->Printf("\n  Computing 1-%ss ... ", job_type.c_str());
+
+        ci_rdms.compute_1rdm(opdm_a, opdm_b);
+        ref.set_G1(opdm_a, opdm_b, na_);
+
+        outfile->Printf("Done. Timing %15.6f s", timer.elapsed());
+    }
+
+    // 2-RDM
+    if (max_level >= 2) {
+        ForteTimer timer;
+        outfile->Printf("\n  Computing 2-%ss ... ", job_type.c_str());
+
+        ci_rdms.compute_2rdm(tpdm_aa, tpdm_ab, tpdm_bb);
+        ref.set_G2(tpdm_aa, tpdm_ab, tpdm_bb, na_, do_cumulant);
+
+        outfile->Printf("Done. Timing %15.6f s", timer.elapsed());
+    }
+
+    // 3-RDM
+    if (max_level >= 3) {
+        ForteTimer timer;
+        outfile->Printf("\n  Computing 3-%ss ... ", job_type.c_str());
+
+        ci_rdms.compute_3rdm(tpdm_aaa, tpdm_aab, tpdm_abb, tpdm_bbb);
+        ref.set_G3(tpdm_aaa, tpdm_aab, tpdm_abb, tpdm_bbb, na_, do_cumulant);
+
+        outfile->Printf("Done. Timing %15.6f s", timer.elapsed());
+    }
+
+    return ref;
+}
+
 // void FCI_MO::iao_analysis() {
 //    // First compute intrisic atomic orbitals (copied from aci.cc)
 //    size_t nact = na_;
@@ -4351,7 +4500,8 @@ void FCI_MO::set_eigens(const std::vector<vector<pair<SharedVector, double>>>& e
 //    outfile->Printf("\n");
 
 //    ambit::Tensor U = ambit::Tensor::build(ambit::CoreTensor, "U", {nact, nact});
-//    U.iterate([&](const std::vector<size_t>& i, double& value) { value = UA->get(i[0], i[1]); });
+//    U.iterate([&](const std::vector<size_t>& i, double& value) { value = UA->get(i[0], i[1]);
+//    });
 
 //    // obtain density
 //    size_t nact2 = nact * nact;
@@ -4417,13 +4567,17 @@ void FCI_MO::set_eigens(const std::vector<vector<pair<SharedVector, double>>>& e
 //            std::vector<double>& l2bb = L2bb.data();
 
 //            // form occupation correlation
-//            std::string name_aa = "MO <n_i n_j> aa " + std::to_string(i) + irrep_symbol[irrep];
-//            std::string name_ab = "MO <n_i n_j> ab " + std::to_string(i) + irrep_symbol[irrep];
+//            std::string name_aa = "MO <n_i n_j> aa " + std::to_string(i) +
+//            irrep_symbol[irrep];
+//            std::string name_ab = "MO <n_i n_j> ab " + std::to_string(i) +
+//            irrep_symbol[irrep];
 //            SharedMatrix Daa(new Matrix(name_aa, nact, nact));
 //            SharedMatrix Dab(new Matrix(name_ab, nact, nact));
 
-//            name_aa = "MO <n_i n_j> - <n_i><n_j> aa " + std::to_string(i) + irrep_symbol[irrep];
-//            name_ab = "MO <n_i n_j> - <n_i><n_j> ab " + std::to_string(i) + irrep_symbol[irrep];
+//            name_aa = "MO <n_i n_j> - <n_i><n_j> aa " + std::to_string(i) +
+//            irrep_symbol[irrep];
+//            name_ab = "MO <n_i n_j> - <n_i><n_j> ab " + std::to_string(i) +
+//            irrep_symbol[irrep];
 //            SharedMatrix Caa(new Matrix(name_aa, nact, nact));
 //            SharedMatrix Cab(new Matrix(name_ab, nact, nact));
 
@@ -4462,8 +4616,10 @@ void FCI_MO::set_eigens(const std::vector<vector<pair<SharedVector, double>>>& e
 //            TDaa->set_name(name_aa);
 //            TDab->set_name(name_ab);
 
-//            name_aa = "IAO <n_i n_j> - <n_i><n_j> aa " + std::to_string(i) + irrep_symbol[irrep];
-//            name_ab = "IAO <n_i n_j> - <n_i><n_j> ab " + std::to_string(i) + irrep_symbol[irrep];
+//            name_aa = "IAO <n_i n_j> - <n_i><n_j> aa " + std::to_string(i) +
+//            irrep_symbol[irrep];
+//            name_ab = "IAO <n_i n_j> - <n_i><n_j> ab " + std::to_string(i) +
+//            irrep_symbol[irrep];
 //            TCaa->set_name(name_aa);
 //            TCab->set_name(name_ab);
 
@@ -4474,10 +4630,12 @@ void FCI_MO::set_eigens(const std::vector<vector<pair<SharedVector, double>>>& e
 
 //            //            // transform densities
 //            //            ambit::Tensor L1aT =
-//            //                ambit::Tensor::build(ambit::CoreTensor, "Transformed L1a", {nact,
+//            //                ambit::Tensor::build(ambit::CoreTensor, "Transformed L1a",
+//            {nact,
 //            //                nact});
 //            //            ambit::Tensor L1bT =
-//            //                ambit::Tensor::build(ambit::CoreTensor, "Transformed L1b", {nact,
+//            //                ambit::Tensor::build(ambit::CoreTensor, "Transformed L1b",
+//            {nact,
 //            //                nact});
 //            //            L1aT("pq") = U("ap") * L1a("ab") * U("bq");
 //            //            L1bT("pq") = U("ap") * L1b("ab") * U("bq");
@@ -4485,18 +4643,24 @@ void FCI_MO::set_eigens(const std::vector<vector<pair<SharedVector, double>>>& e
 //            //            ambit::Tensor L2aaT = ambit::Tensor::build(ambit::CoreTensor,
 //            "Transformed
 //            //            L2aa",
-//            //                                                       {nact, nact, nact, nact});
+//            //                                                       {nact, nact, nact,
+//            nact});
 //            //            ambit::Tensor L2abT = ambit::Tensor::build(ambit::CoreTensor,
 //            "Transformed
 //            //            L2ab",
-//            //                                                       {nact, nact, nact, nact});
+//            //                                                       {nact, nact, nact,
+//            nact});
 //            //            ambit::Tensor L2bbT = ambit::Tensor::build(ambit::CoreTensor,
 //            "Transformed
 //            //            L2bb",
-//            //                                                       {nact, nact, nact, nact});
-//            //            L2aaT("pqrs") = U("ap") * U("bq") * L2aa("abcd") * U("cr") * U("ds");
-//            //            L2abT("pqrs") = U("ap") * U("bq") * L2ab("abcd") * U("cr") * U("ds");
-//            //            L2bbT("pqrs") = U("ap") * U("bq") * L2bb("abcd") * U("cr") * U("ds");
+//            //                                                       {nact, nact, nact,
+//            nact});
+//            //            L2aaT("pqrs") = U("ap") * U("bq") * L2aa("abcd") * U("cr") *
+//            U("ds");
+//            //            L2abT("pqrs") = U("ap") * U("bq") * L2ab("abcd") * U("cr") *
+//            U("ds");
+//            //            L2bbT("pqrs") = U("ap") * U("bq") * L2bb("abcd") * U("cr") *
+//            U("ds");
 
 //            //            std::vector<double>& l1a = L1aT.data();
 //            //            std::vector<double>& l1b = L1bT.data();

@@ -365,7 +365,7 @@ double MRDSRG::compute_energy_relaxed() {
         Edsrg = compute_energy();
 
         // compute de-normal-ordered all-active DSRG transformed Hamiltonian
-        auto fci_ints = compute_Heff();
+        auto fci_ints = compute_Heff_actv();
 
         if (cas_type == "CAS") {
             FCI_MO fci_mo(reference_wavefunction_, options_, ints_, mo_space_info_, fci_ints);
@@ -411,7 +411,7 @@ double MRDSRG::compute_energy_relaxed() {
             Edelta_dsrg_vec.push_back(Edelta_dsrg);
 
             // compute de-normal-ordered all-active DSRG transformed Hamiltonian
-            auto fci_ints = compute_Heff();
+            auto fci_ints = compute_Heff_actv();
 
             /// NOTE: For consistant CI coefficients, compute_Heff will rotate Hbar to the basis
             /// before semicanonicalization!
@@ -581,7 +581,7 @@ double MRDSRG::compute_energy_sa() {
         Edelta_dsrg_sa_vec.push_back(Edelta_dsrg);
 
         // compute de-normal-ordered all-active DSRG transformed Hamiltonian
-        auto fci_ints = compute_Heff();
+        auto fci_ints = compute_Heff_actv();
 
         // diagonalize the Hamiltonian
         auto fci_mo = std::make_shared<FCI_MO>(reference_wavefunction_, options_, ints_,
@@ -726,14 +726,16 @@ double MRDSRG::compute_energy_sa() {
     print_h2("Final-Step Results");
     outfile->Printf("\n    Multi.  Irrep.  No.    MR-DSRG Energy");
     outfile->Printf("\n    %s", dash1.c_str());
-    for (int n = 0; n < nentry; ++n) {
+    auto& Esa = Edsrg_vec[Edsrg_vec.size() - 1];
+    for (int n = 0, counter = 0; n < nentry; ++n) {
         int irrep = options_["AVG_STATE"][n][0].to_integer();
         int multi = options_["AVG_STATE"][n][1].to_integer();
         int nstates = options_["AVG_STATE"][n][2].to_integer();
 
         for (int i = 0; i < nstates; ++i) {
             outfile->Printf("\n     %3d     %3s    %2d   %20.12f*", multi,
-                            irrep_symbol[irrep].c_str(), i, Edsrg_vec[Edsrg_vec.size() - 1][n][i]);
+                            irrep_symbol[irrep].c_str(), i, Esa[n][i]);
+            Process::environment.globals["ENERGY ROOT " + std::to_string(counter)] = Esa[n][i];
         }
         outfile->Printf("\n    %s", dash1.c_str());
     }

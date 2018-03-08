@@ -75,6 +75,14 @@ class DSRG_MRPT2 : public MASTER_DSRG {
     /// Compute the DSRG-MRPT2 energy
     virtual double compute_energy();
 
+    /// Compute second-order effective Hamiltonian couplings
+    /// <M|H + HA(N)|N> = Heff1 * TrD1 + Heff2 * TrD2 + Heff3 * TrD3 if CAS
+    virtual void compute_Heff_2nd_coupling(double& H0, ambit::Tensor& H1a, ambit::Tensor& H1b,
+                                           ambit::Tensor& H2aa, ambit::Tensor& H2ab,
+                                           ambit::Tensor& H2bb, ambit::Tensor& H3aaa,
+                                           ambit::Tensor& H3aab, ambit::Tensor& H3abb,
+                                           ambit::Tensor& H3bbb);
+
     /// Compute one-electron density of DSRG
     /// Important: T1 and T2 are de-normal-ordered!
     ambit::BlockedTensor compute_OE_density(BlockedTensor& T1, BlockedTensor& T2, BlockedTensor& D1,
@@ -296,13 +304,12 @@ class DSRG_MRPT2 : public MASTER_DSRG {
 
     /// Compute density cumulants
     void compute_cumulants(std::shared_ptr<FCIIntegrals> fci_ints,
-                           std::vector<psi::forte::Determinant>& p_space,
-                           SharedMatrix evecs, const int& root1, const int& root2,
-                           const int& irrep);
+                           std::vector<psi::forte::Determinant>& p_space, SharedMatrix evecs,
+                           const int& root1, const int& root2, const int& irrep);
     /// Compute denisty matrices and puts in Gamma1_, Lambda2_, and Lambda3_
     void compute_densities(std::shared_ptr<FCIIntegrals> fci_ints,
-                           std::vector<Determinant>& p_space, SharedMatrix evecs,
-                           const int& root1, const int& root2, const int& irrep);
+                           std::vector<Determinant>& p_space, SharedMatrix evecs, const int& root1,
+                           const int& root2, const int& irrep);
 
     /// Compute MS coupling <M|H|N>
     double compute_ms_1st_coupling(const std::string& name);

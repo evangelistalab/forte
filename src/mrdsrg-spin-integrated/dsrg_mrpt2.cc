@@ -389,8 +389,10 @@ double DSRG_MRPT2::compute_energy() {
     compute_t1();
 
     // Compute effective integrals
-    renormalize_V();
-    renormalize_F();
+    if (options_.get_bool("DSRGPT")) {
+        renormalize_V();
+        renormalize_F();
+    }
     if (print_ > 1)
         F_.print(stdout);
     if (print_ > 2) {
@@ -1736,7 +1738,7 @@ double DSRG_MRPT2::compute_energy_relaxed() {
     std::map<std::string, std::vector<double>> dm_relax;
 
     // obtain the all-active DSRG transformed Hamiltonian
-    auto fci_ints = compute_Heff();
+    auto fci_ints = compute_Heff_actv();
 
     // diagonalize Hbar depending on CAS_TYPE
     if (options_.get_str("CAS_TYPE") == "CAS") {

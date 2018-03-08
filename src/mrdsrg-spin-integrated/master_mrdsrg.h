@@ -39,7 +39,17 @@ class MASTER_DSRG : public DynamicCorrelationSolver {
     virtual double compute_energy() = 0;
 
     /// Compute DSRG transformed Hamiltonian
-    virtual std::shared_ptr<FCIIntegrals> compute_Heff();
+    virtual std::shared_ptr<FCIIntegrals> compute_Heff_actv();
+
+    /// Compute second-order effective Hamiltonian couplings (child class overrides)
+    /// <M|H + HA(N)|N> = Heff1 * TrD1 + Heff2 * TrD2 + Heff3 * TrD3 if CAS
+    virtual void compute_Heff_2nd_coupling(double& H0, ambit::Tensor& H1a, ambit::Tensor& H1b,
+                                           ambit::Tensor& H2aa, ambit::Tensor& H2ab,
+                                           ambit::Tensor& H2bb, ambit::Tensor& H3aaa,
+                                           ambit::Tensor& H3aab, ambit::Tensor& H3abb,
+                                           ambit::Tensor& H3bbb) {
+        throw PSIEXCEPTION("Child class should override this function");
+    }
 
     /// Compute DSRG dressed density
     //    virtual void compute_density() = 0;
@@ -47,6 +57,9 @@ class MASTER_DSRG : public DynamicCorrelationSolver {
     /// Compute DSRG transformed dipole integrals
     //    virtual void compute_dm_eff(std::vector<double>& M0, std::vector<BlockedTensor>& M1,
     //                                std::vector<BlockedTensor>& M2) = 0;
+
+    /// Return the Hbar of a given order
+    std::vector<ambit::Tensor> Hbar(int n);
 
     /// Set unitary matrix (in active space) from original to semicanonical
     void set_Uactv(ambit::Tensor& Ua, ambit::Tensor& Ub) {
@@ -257,6 +270,14 @@ class MASTER_DSRG : public DynamicCorrelationSolver {
      */
     void deGNO_ints(const std::string& name, double& H0, BlockedTensor& H1, BlockedTensor& H2,
                     BlockedTensor& H3);
+
+    /**
+     * De-normal-order the T1 and T2 amplitudes and return the effective T1
+     * T1eff = T1 - T2["ivau"] * D1["uv"]
+     *
+     * This assumes no internal amplitudes !!!
+     */
+    ambit::BlockedTensor deGNO_Tamp(BlockedTensor& T1, BlockedTensor& T2, BlockedTensor& D1);
 
     // ==> dipole moment <==
 
