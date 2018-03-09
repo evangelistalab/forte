@@ -154,11 +154,12 @@ class UI64Determinant {
          //   return ((bs.a_ * 31) + bs.b_) ;
           //  return ((bs.a_ * 31) + bs.b_) % 7561 ;
           //  return ((bs.a_ * 31) + bs.b_) % 999331;
-            return ((bs.a_ * 31) + bs.b_) %  13466917;
+   //       return ((std::hash<bit_t>()(bs.a_) * 13466917) + std::hash<bit_t>()(bs.b_)) % 1405695061;
+          return ((bs.a_ * 13466917) + bs.b_) % 1405695061;
            // return ((bs.a_ * 31) + bs.b_) % 1405695061;
-          //  std::bitset<128> big = static_cast<std::bitset<128>>(bs.a_);
-          //  big = (big << 64) | static_cast<std::bitset<128>>(bs.b_);
-          //  return std::hash<std::bitset<128>>()(big);
+           // std::bitset<128> big = bs.a_;
+           // big = (big << 64) | static_cast<std::bitset<128>>(bs.b_);
+           // return std::hash<std::bitset<128>>()(big);
         }
     };
 

@@ -1158,13 +1158,13 @@ double AdaptiveCI::get_excited_determinants_batch2( SharedMatrix evecs, SharedVe
             int ntd = omp_get_num_threads();
             int tid = omp_get_thread_num();
             int idx = 0;
-
+            double E0 = evals->get(0);
             for( auto& det_p : A_b ){
                 if( (idx % ntd) == tid ){
                     auto& det = det_p.first;
                     double& V = det_p.second;
     
-                    double delta = fci_ints_->energy(det) - evals->get(0); 
+                    double delta = fci_ints_->energy(det) - E0; 
     
                     F_tmp[idx] =  std::make_pair( std::fabs(0.5*(delta - sqrt(delta*delta + V*V*4.0))), det );
                 }
@@ -1183,7 +1183,6 @@ double AdaptiveCI::get_excited_determinants_batch2( SharedMatrix evecs, SharedVe
         // 4. Screen subspaces
         Timer screener;
         double b_sigma = sigma_ * (aci_scale/nbin);
-//        outfile->Printf("\n  Using sigma = %1.5f", b_sigma);
         double excluded = 0.0;
         for( size_t I = 0, max_I = F_tmp.size(); I < max_I; ++I ){
             double en = F_tmp[I].first;
@@ -1237,6 +1236,7 @@ det_hash<double> AdaptiveCI::get_bin_F_space2( int bin, int nbin, SharedMatrix e
         int end_idx = start_idx + bin_size;
 
         // Loop over P space determinants
+Timer build;
         for (size_t I = start_idx; I < end_idx; ++I ) {
             double c_I = evecs->get(I,0);
             const Determinant& det = dets[I];
@@ -1414,13 +1414,17 @@ det_hash<double> AdaptiveCI::get_bin_F_space2( int bin, int nbin, SharedMatrix e
                 }
             }
         }// end loop over reference
-
+outfile->Printf("\n  Build: %1.6f", build.get());
         // Remove duplicates
+Timer remove;
         for( det_hashvec::iterator it = dets.begin(), endit = dets.end(); it != endit; ++it) {
-            A_b_t[thread_id][*it] = 0.0;
+            A_b_t[thread_id].erase(*it);
+        //    A_b_t[thread_id][*it] = 0.0;
         }  
+outfile->Printf("\n  Remove: %1.6f", remove.get());
 
         // parallel merge
+Timer merge;
         for( int n = 2; n <= n_threads; n *=2 ){
 
             #pragma omp barrier
@@ -1441,6 +1445,7 @@ det_hash<double> AdaptiveCI::get_bin_F_space2( int bin, int nbin, SharedMatrix e
                 bin_f_space[pair.first] += pair.second;
             }
         }
+outfile->Printf("\n  Merge: %1.6f", merge.get());
     
     } // close threads
 
