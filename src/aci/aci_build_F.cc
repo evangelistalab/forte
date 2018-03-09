@@ -1236,7 +1236,7 @@ det_hash<double> AdaptiveCI::get_bin_F_space2( int bin, int nbin, SharedMatrix e
         int end_idx = start_idx + bin_size;
 
         // Loop over P space determinants
-Timer build;
+//Timer build;
         for (size_t I = start_idx; I < end_idx; ++I ) {
             double c_I = evecs->get(I,0);
             const Determinant& det = dets[I];
@@ -1414,41 +1414,28 @@ Timer build;
                 }
             }
         }// end loop over reference
-outfile->Printf("\n  Build: %1.6f", build.get());
+//if( thread_id == 0)
+//outfile->Printf("\n  Build: %1.6f", build.get());
         // Remove duplicates
-Timer remove;
+//Timer remove;
         for( det_hashvec::iterator it = dets.begin(), endit = dets.end(); it != endit; ++it) {
             A_b_t[thread_id].erase(*it);
         //    A_b_t[thread_id][*it] = 0.0;
         }  
-outfile->Printf("\n  Remove: %1.6f", remove.get());
+//if( thread_id == 0)
+//outfile->Printf("\n  Remove: %1.6f", remove.get());
 
-        // parallel merge
-Timer merge;
-        for( int n = 2; n <= n_threads; n *=2 ){
-
-            #pragma omp barrier
-
-            if( ((thread_id % n) == 0) and (thread_id != (n_threads-1) )){
-               for( auto& pair : A_b_t[thread_id + (0.5*n) ] ){
-                    A_b_t[thread_id][pair.first] += pair.second;
-                }
-            }
-            if( ((thread_id % n) == 0) and (thread_id == (n_threads-1) )){
-                for( auto& pair : A_b_t[thread_id] ){
-                    bin_f_space[pair.first] += pair.second;
-                }
-            }
-        }
-        if( thread_id == 0 ){
-            for( auto& pair : A_b_t[0] ){
-                bin_f_space[pair.first] += pair.second;
-            }
-        }
-outfile->Printf("\n  Merge: %1.6f", merge.get());
+//Timer merge;
+#pragma omp critical
+{
+     for( auto& pair : A_b_t[thread_id] ){
+         bin_f_space[pair.first] += pair.second;
+     }
+}   
+//if( thread_id == 0)
+//outfile->Printf("\n  Merge: %1.6f", merge.get());
     
     } // close threads
-
 
     return bin_f_space;
 }
