@@ -336,13 +336,21 @@ double FCISolver::compute_energy() {
 
     //std::vector<SharedMatrix> C = C_->C();
 
+    SharedMatrix block = C_->coefficients_blocks()[0];
+
+    int nirrep = block->nirrep();
+    Dimension rowspi = block->rowspi();
+    outfile->Printf("\n C[0] has %d irreps\n",nirrep);
+    rowspi.print();
+
+
     //int num_irep_dim = C.size();
     // a vector of 'smart' pointers (objecs that holds momory location as hexidecimal value) to matricies
     //for(int i=0; i<num_irep_dim; i++){
       //C[i]->print();
     //}
 
-    C_->SortCoef();
+//    C_->SortCoef();
 
     //C[0]->print();
     //C[1]->print();
