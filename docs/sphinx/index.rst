@@ -12,14 +12,15 @@ Forte is an open-source suite of quantum chemistry methods for strongly
 correlated electrons.
 
 .. toctree::
-   :maxdepth: 2
+   :maxdepth: 3
    :caption: Contents:
 
    overview
    running_forte
    basics
    mospaceinfo
-   fci
+   methods/fci
+   programming/index
    aci
    pci
    aosubspace
