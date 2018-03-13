@@ -623,7 +623,7 @@ void FCIVector::print() {
     }
 }
 
-void FCIWfn::SortCoef() {
+void FCIVector::SortCoef() {
     histo_.resize(10);
     for (int alfa_sym = 0; alfa_sym < nirrep_; ++alfa_sym) {
         int beta_sym = alfa_sym ^ symmetry_;

@@ -329,30 +329,17 @@ double FCISolver::compute_energy() {
         }
     }
 
-    ///////////////////////// NEW SORTING AND MATRIX EXPLORATION //////////////////////////
+    ///////////////////////// NEW SORTING AND MATRIX EXPLORATION BEGIN //////////////////////////
 
     outfile->Printf("\n I am here - aroonie! \n");
+
+    //C_->SortCoef();
     //C_->print();
 
-    //std::vector<SharedMatrix> C = C_->C();
+    std::vector<SharedMatrix> C = C_->C();
 
     //int num_irep_dim = C.size();
     // a vector of 'smart' pointers (objecs that holds momory location as hexidecimal value) to matricies
-    //for(int i=0; i<num_irep_dim; i++){
-      //C[i]->print();
-    //}
-
-    C_->SortCoef();
-
-    //C[0]->print();
-    //C[1]->print();
-    //C[2]->print();
-    //C[3]->print();
-    //C[4]->print();
-    // "fci_solver::print() takes the pointers and reads them, then prints the values associated with their
-    // matricies"
-
-
 
     // why not ?
     //C_[0]->print();
@@ -361,46 +348,68 @@ double FCISolver::compute_energy() {
 
     // what type of object is C_ if not a vector of pointers to matricies?
 
-
     //double** C_prime = C[0]->pointer();
     //what is this 'pointer();' function and where is it declared? What does it do?
 
+    auto u_p = std::make_shared<Matrix>("u_p", C[0]->rowspi(), C[0]->rowspi());
+    auto s_p = std::make_shared<Vector>("s_p", C[0]->colspi());
+    auto v_p = std::make_shared<Matrix>("v_p", C[0]->colspi(), C[0]->colspi());
 
+    C[0]->svd(u_p, s_p, v_p);
+    //u_->print();
+    //s_p->print();
+    //v_->print();
 
-    //outfile->Printf("\n %15.9f", C_prime[0][0]);
+    int rank_ef = 0;
+    double sv_temp = s_p->get(0);
+    int sv_dim = s_p->dim(0);
+    double tao = 0.0000025;
+    while(sv_temp > tao){
+      rank_ef++;
+      sv_temp = s_p->get(rank_ef);
+    }
 
+    outfile->Printf("reduced rank is %1d \n", rank_ef);
+    outfile->Printf("total rank is %1d \n", sv_dim);
+
+    //reset small values of s_ to zero!
+    for(int i = rank_ef; i < sv_dim; i++){
+      s_p->set(i,0);
+    }
+
+    auto sig_mat = std::make_shared<Matrix>("sig_mat", sv_dim, sv_dim);
+    sig_mat->set(0.0);
+    sig_mat->set_diagonal(s_p);
+
+    //check to make sure things work properly
+    //s_p->print();
+    //sig_mat->print();
+
+    //worry about making truncated SVD matricies later (using slice?)
     /*
+    auto u_pp = std::make_shared<Matrix>("u_pp", rank_ef, rank_ef);
+    auto s_pp = std::make_shared<Vector>("s_pp", rank_ef);
+    auto v_pp = std::make_shared<Matrix>("v_pp", rank_ef, rank_ef);
 
-    std::vector<int> histo_(10);
-    for (int alfa_sym = 0; alfa_sym < nirrep_; ++alfa_sym) {
-      int beta_sym = alfa_sym ^ symmetry_;
-      double** C_prime = C[alfa_sym]->pointer();
-      for(size_t i = 0; i < alfa_graph_->strpi(alfa_sym); ++i){
-        for(size_t j = 0; j < beta_graph_->strpi(beta_sym); ++j){
-          double term = log10(std::fabs(C_prime[i][j]));
-          if(term => -1) histo_[0] += 1;
-          if((term < -1) && (term => -2)) histo_[1] += 1;
-          if((term < -2) && (term => -3)) histo_[2] += 1;
-          if((term < -3) && (term => -4)) histo_[3] += 1;
-          if((term < -4) && (term => -5)) histo_[4] += 1;
-          if((term < -5) && (term => -6)) histo_[5] += 1;
-          if((term < -6) && (term => -7)) histo__[6] += 1;
-          if((term < -7) && (term => -8)) histo_[7] += 1;
-          if((term < -8) && (term => -9)) histo_[8] += 1;
-          if(term < -9) histo_[9] += 1;
-        }
-      }
-    }
-
-    for(int n: histo_){
-      outfile->printf("bin [%2d] number if dets [%4d] \n", n, histo_[n]);
-    }
-
+    Dimension(0, "begin");
+    Dimension(rank_ef, "end");
+    s__ = s__->get_block({begin, end});
     */
 
-    // does this mean define Cprime
+    //do matrix multimplication to get reduced rank C_ matrix
+    auto tmp = std::make_shared<Matrix>("tmp", sv_dim, sv_dim);
+    auto C_red_rank = std::make_shared<Matrix>("C_red_rank", sv_dim, sv_dim);
+    tmp->gemm(false, false, 1.0, u_p, sig_mat, 0.0);
+    C_red_rank->gemm(false, true, 1.0, tmp, v_p, 0.0);
 
-    ///////////////////////// NEW SORTING AND MATRIX EXPLORATION //////////////////////////
+    C_red_rank->print();
+
+
+
+
+
+
+    ///////////////////////// NEW SORTING AND MATRIX EXPLORATION END //////////////////////////
 
     // Compute the RDMs
     compute_rdms_root(root_);
