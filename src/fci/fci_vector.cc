@@ -5,7 +5,8 @@
  * that implements a variety of quantum chemistry methods for strongly
  * correlated electrons.
  *
- * Copyright (c) 2012-2017 by its authors (see COPYING, COPYING.LESSER, AUTHORS).
+ * Copyright (c) 2012-2017 by its authors (see COPYING, COPYING.LESSER,
+ * AUTHORS).
  *
  * The copyrights for code used from other parties are included in
  * the corresponding files.
@@ -26,10 +27,10 @@
  * @END LICENSE
  */
 
-#include "psi4/libpsi4util/process.h"
 #include "psi4/libmints/matrix.h"
 #include "psi4/libmints/molecule.h"
 #include "psi4/libmints/pointgrp.h"
+#include "psi4/libpsi4util/process.h"
 
 #include "../helpers.h"
 #include "fci_vector.h"
@@ -50,28 +51,29 @@ double FCIVector::h2_aaaa_timer = 0.0;
 double FCIVector::h2_aabb_timer = 0.0;
 double FCIVector::h2_bbbb_timer = 0.0;
 
-void FCIVector::allocate_temp_space(std::shared_ptr<StringLists> lists_, int print_) {
-    // TODO Avoid allocating and deallocating these temp
+void FCIVector::allocate_temp_space(std::shared_ptr<StringLists> lists_,
+                                    int print_) {
+  // TODO Avoid allocating and deallocating these temp
 
-    size_t nirreps = lists_->nirrep();
-    size_t maxC1 = 0;
-    for (size_t Ia_sym = 0; Ia_sym < nirreps; ++Ia_sym) {
-        maxC1 = std::max(maxC1, lists_->alfa_graph()->strpi(Ia_sym));
-    }
-    for (size_t Ib_sym = 0; Ib_sym < nirreps; ++Ib_sym) {
-        maxC1 = std::max(maxC1, lists_->beta_graph()->strpi(Ib_sym));
-    }
+  size_t nirreps = lists_->nirrep();
+  size_t maxC1 = 0;
+  for (size_t Ia_sym = 0; Ia_sym < nirreps; ++Ia_sym) {
+    maxC1 = std::max(maxC1, lists_->alfa_graph()->strpi(Ia_sym));
+  }
+  for (size_t Ib_sym = 0; Ib_sym < nirreps; ++Ib_sym) {
+    maxC1 = std::max(maxC1, lists_->beta_graph()->strpi(Ib_sym));
+  }
 
-    // Allocate the temporary arrays C1 and Y1 with the largest sizes
-    C1 = SharedMatrix(new Matrix("C1", maxC1, maxC1));
-    Y1 = SharedMatrix(new Matrix("Y1", maxC1, maxC1));
+  // Allocate the temporary arrays C1 and Y1 with the largest sizes
+  C1 = SharedMatrix(new Matrix("C1", maxC1, maxC1));
+  Y1 = SharedMatrix(new Matrix("Y1", maxC1, maxC1));
 
-    if (print_)
-        outfile->Printf("\n  Allocating memory for the Hamiltonian algorithm. "
-                        "Size: 2 x %zu x %zu.   Memory: %8.6f GB",
-                        maxC1, maxC1, to_gb(2 * maxC1 * maxC1));
+  if (print_)
+    outfile->Printf("\n  Allocating memory for the Hamiltonian algorithm. "
+                    "Size: 2 x %zu x %zu.   Memory: %8.6f GB",
+                    maxC1, maxC1, to_gb(2 * maxC1 * maxC1));
 
-    sizeC1 = maxC1 * maxC1 * static_cast<size_t>(sizeof(double));
+  sizeC1 = maxC1 * maxC1 * static_cast<size_t>(sizeof(double));
 }
 
 void FCIVector::release_temp_space() {}
@@ -79,7 +81,7 @@ void FCIVector::release_temp_space() {}
 FCIVector::FCIVector(std::shared_ptr<StringLists> lists, size_t symmetry)
     : symmetry_(symmetry), lists_(lists), alfa_graph_(lists_->alfa_graph()),
       beta_graph_(lists_->beta_graph()) {
-    startup();
+  startup();
 }
 
 FCIVector::~FCIVector() { cleanup(); }
@@ -89,28 +91,28 @@ FCIVector::~FCIVector() { cleanup(); }
 // */
 void FCIVector::startup() {
 
-    nirrep_ = lists_->nirrep();
-    ncmo_ = lists_->ncmo();
-    cmopi_ = lists_->cmopi();
-    cmopi_offset_ = lists_->cmopi_offset();
-    //    cmo_to_mo_ = lists_->cmo_to_mo();
+  nirrep_ = lists_->nirrep();
+  ncmo_ = lists_->ncmo();
+  cmopi_ = lists_->cmopi();
+  cmopi_offset_ = lists_->cmopi_offset();
+  //    cmo_to_mo_ = lists_->cmo_to_mo();
 
-    ndet_ = 0;
-    for (int alfa_sym = 0; alfa_sym < nirrep_; ++alfa_sym) {
-        int beta_sym = alfa_sym ^ symmetry_;
-        size_t detpi = alfa_graph_->strpi(alfa_sym) * beta_graph_->strpi(beta_sym);
-        ndet_ += detpi;
-        detpi_.push_back(detpi);
-    }
+  ndet_ = 0;
+  for (int alfa_sym = 0; alfa_sym < nirrep_; ++alfa_sym) {
+    int beta_sym = alfa_sym ^ symmetry_;
+    size_t detpi = alfa_graph_->strpi(alfa_sym) * beta_graph_->strpi(beta_sym);
+    ndet_ += detpi;
+    detpi_.push_back(detpi);
+  }
 
-    // Allocate the symmetry blocks of the wave function
-    for (int alfa_sym = 0; alfa_sym < nirrep_; ++alfa_sym) {
-        int beta_sym = alfa_sym ^ symmetry_;
-        //    outfile->Printf("\n\n  Block %d: allocate %d *
-        //    %d",alfa_sym,(int)alfa_graph_->strpi(alfa_sym),(int)beta_graph_->strpi(beta_sym));
-        C_.push_back(SharedMatrix(
-            new Matrix("C", alfa_graph_->strpi(alfa_sym), beta_graph_->strpi(beta_sym))));
-    }
+  // Allocate the symmetry blocks of the wave function
+  for (int alfa_sym = 0; alfa_sym < nirrep_; ++alfa_sym) {
+    int beta_sym = alfa_sym ^ symmetry_;
+    //    outfile->Printf("\n\n  Block %d: allocate %d *
+    //    %d",alfa_sym,(int)alfa_graph_->strpi(alfa_sym),(int)beta_graph_->strpi(beta_sym));
+    C_.push_back(SharedMatrix(new Matrix("C", alfa_graph_->strpi(alfa_sym),
+                                         beta_graph_->strpi(beta_sym))));
+  }
 }
 
 /**
@@ -140,52 +142,53 @@ void FCIVector::cleanup() {}
 /**
  * Set the wave function to another wave function
  */
-void FCIVector::copy(FCIVector& wfn) {
-    for (int alfa_sym = 0; alfa_sym < nirrep_; ++alfa_sym) {
-        C_[alfa_sym]->copy(wfn.C_[alfa_sym]);
-    }
+void FCIVector::copy(FCIVector &wfn) {
+  for (int alfa_sym = 0; alfa_sym < nirrep_; ++alfa_sym) {
+    C_[alfa_sym]->copy(wfn.C_[alfa_sym]);
+  }
 }
 
 void FCIVector::copy(SharedVector vec) {
-    size_t I = 0;
-    for (int alfa_sym = 0; alfa_sym < nirrep_; ++alfa_sym) {
-        int beta_sym = alfa_sym ^ symmetry_;
-        size_t maxIa = alfa_graph_->strpi(alfa_sym);
-        size_t maxIb = beta_graph_->strpi(beta_sym);
-        double** C_ha = C_[alfa_sym]->pointer();
-        for (size_t Ia = 0; Ia < maxIa; ++Ia) {
-            for (size_t Ib = 0; Ib < maxIb; ++Ib) {
-                C_ha[Ia][Ib] = vec->get(I);
-                I += 1;
-            }
-        }
+  size_t I = 0;
+  for (int alfa_sym = 0; alfa_sym < nirrep_; ++alfa_sym) {
+    int beta_sym = alfa_sym ^ symmetry_;
+    size_t maxIa = alfa_graph_->strpi(alfa_sym);
+    size_t maxIb = beta_graph_->strpi(beta_sym);
+    double **C_ha = C_[alfa_sym]->pointer();
+    for (size_t Ia = 0; Ia < maxIa; ++Ia) {
+      for (size_t Ib = 0; Ib < maxIb; ++Ib) {
+        C_ha[Ia][Ib] = vec->get(I);
+        I += 1;
+      }
     }
+  }
 }
 
 void FCIVector::copy_to(SharedVector vec) {
-    size_t I = 0;
-    for (int alfa_sym = 0; alfa_sym < nirrep_; ++alfa_sym) {
-        int beta_sym = alfa_sym ^ symmetry_;
-        size_t maxIa = alfa_graph_->strpi(alfa_sym);
-        size_t maxIb = beta_graph_->strpi(beta_sym);
-        double** C_ha = C_[alfa_sym]->pointer();
-        for (size_t Ia = 0; Ia < maxIa; ++Ia) {
-            for (size_t Ib = 0; Ib < maxIb; ++Ib) {
-                vec->set(I, C_ha[Ia][Ib]);
-                I += 1;
-            }
-        }
+  size_t I = 0;
+  for (int alfa_sym = 0; alfa_sym < nirrep_; ++alfa_sym) {
+    int beta_sym = alfa_sym ^ symmetry_;
+    size_t maxIa = alfa_graph_->strpi(alfa_sym);
+    size_t maxIb = beta_graph_->strpi(beta_sym);
+    double **C_ha = C_[alfa_sym]->pointer();
+    for (size_t Ia = 0; Ia < maxIa; ++Ia) {
+      for (size_t Ib = 0; Ib < maxIb; ++Ib) {
+        vec->set(I, C_ha[Ia][Ib]);
+        I += 1;
+      }
     }
+  }
 }
 
-void FCIVector::set(std::vector<std::tuple<size_t, size_t, size_t, double>>& sparse_vec) {
-    zero();
-    double C;
-    size_t h, Ia, Ib;
-    for (auto& el : sparse_vec) {
-        std::tie(h, Ia, Ib, C) = el;
-        C_[h]->set(Ia, Ib, C);
-    }
+void FCIVector::set(
+    std::vector<std::tuple<size_t, size_t, size_t, double>> &sparse_vec) {
+  zero();
+  double C;
+  size_t h, Ia, Ib;
+  for (auto &el : sparse_vec) {
+    std::tie(h, Ia, Ib, C) = el;
+    C_[h]->set(Ia, Ib, C);
+  }
 }
 
 ///**
@@ -269,31 +272,28 @@ void FCIVector::set(std::vector<std::tuple<size_t, size_t, size_t, double>>& spa
 ////    size_t maxIb = beta_graph_->strpi(beta_sym);
 ////    for(size_t Ia = 0; Ia < maxIa; ++Ia){
 ////      for(size_t Ib = 0; Ib < maxIb; ++Ib){
-////        list.push_back(std::make_pair(std::fabs(coefficients[h][Ia][Ib]),k));
-////        k++;
-////      }
-////    }
-////  }
-////  sort(list.begin(),list.end(),std::greater<pair<double,int> >());
-////  return list;
+//// list.push_back(std::make_pair(std::fabs(coefficients[h][Ia][Ib]),k)); /
+/// k++; /      } /    } /  } /
+/// sort(list.begin(),list.end(),std::greater<pair<double,int> >()); /  return
+/// list;
 ////}
 
 /**
  * Normalize the wave function without changing the phase
  */
 void FCIVector::normalize() {
-    double factor = norm(2.0);
-    for (int alfa_sym = 0; alfa_sym < nirrep_; ++alfa_sym) {
-        int beta_sym = alfa_sym ^ symmetry_;
-        size_t maxIa = alfa_graph_->strpi(alfa_sym);
-        size_t maxIb = beta_graph_->strpi(beta_sym);
-        double** C_ha = C_[alfa_sym]->pointer();
-        for (size_t Ia = 0; Ia < maxIa; ++Ia) {
-            for (size_t Ib = 0; Ib < maxIb; ++Ib) {
-                C_ha[Ia][Ib] /= factor;
-            }
-        }
+  double factor = norm(2.0);
+  for (int alfa_sym = 0; alfa_sym < nirrep_; ++alfa_sym) {
+    int beta_sym = alfa_sym ^ symmetry_;
+    size_t maxIa = alfa_graph_->strpi(alfa_sym);
+    size_t maxIb = beta_graph_->strpi(beta_sym);
+    double **C_ha = C_[alfa_sym]->pointer();
+    for (size_t Ia = 0; Ia < maxIa; ++Ia) {
+      for (size_t Ib = 0; Ib < maxIb; ++Ib) {
+        C_ha[Ia][Ib] /= factor;
+      }
     }
+  }
 }
 
 ///**
@@ -318,61 +318,65 @@ void FCIVector::normalize() {
  * Zero the wave function
  */
 void FCIVector::zero() {
-    for (SharedMatrix C_h : C_) {
-        C_h->zero();
-    }
+  for (SharedMatrix C_h : C_) {
+    C_h->zero();
+  }
 }
 
-void FCIVector::print_natural_orbitals(std::shared_ptr<MOSpaceInfo> mo_space_info) {
-    print_h2("NATURAL ORBITALS");
-    Dimension active_dim = mo_space_info->get_dimension("ACTIVE");
+void FCIVector::print_natural_orbitals(
+    std::shared_ptr<MOSpaceInfo> mo_space_info) {
+  print_h2("NATURAL ORBITALS");
+  Dimension active_dim = mo_space_info->get_dimension("ACTIVE");
 
-    size_t na = alfa_graph_->nones();
-    size_t nb = beta_graph_->nones();
+  size_t na = alfa_graph_->nones();
+  size_t nb = beta_graph_->nones();
 
-    auto opdm = std::make_shared<Matrix>(new Matrix("OPDM", active_dim, active_dim));
+  auto opdm =
+      std::make_shared<Matrix>(new Matrix("OPDM", active_dim, active_dim));
 
-    int offset = 0;
-    for (int h = 0; h < nirrep_; h++) {
-        for (int u = 0; u < active_dim[h]; u++) {
-            for (int v = 0; v < active_dim[h]; v++) {
-                double gamma_uv = 0.0;
-                if (na > 0) {
-                    gamma_uv += opdm_a_[(u + offset) * ncmo_ + v + offset];
-                }
-                if (nb > 0) {
-                    gamma_uv += opdm_b_[(u + offset) * ncmo_ + v + offset];
-                }
-                opdm->set(h, u, v, gamma_uv);
-            }
+  int offset = 0;
+  for (int h = 0; h < nirrep_; h++) {
+    for (int u = 0; u < active_dim[h]; u++) {
+      for (int v = 0; v < active_dim[h]; v++) {
+        double gamma_uv = 0.0;
+        if (na > 0) {
+          gamma_uv += opdm_a_[(u + offset) * ncmo_ + v + offset];
         }
-        offset += active_dim[h];
-    }
-
-    auto OCC = std::make_shared<Vector>("Occupation numbers", active_dim);
-    auto NO = std::make_shared<Matrix>("MO -> NO transformation", active_dim, active_dim);
-
-    opdm->diagonalize(NO, OCC, descending);
-    std::vector<std::pair<double, std::pair<int, int>>> vec_irrep_occupation;
-    for (int h = 0; h < nirrep_; h++) {
-        for (int u = 0; u < active_dim[h]; u++) {
-            auto irrep_occ = std::make_pair(OCC->get(h, u), std::make_pair(h, u + 1));
-            vec_irrep_occupation.push_back(irrep_occ);
+        if (nb > 0) {
+          gamma_uv += opdm_b_[(u + offset) * ncmo_ + v + offset];
         }
+        opdm->set(h, u, v, gamma_uv);
+      }
     }
-    CharacterTable ct = Process::environment.molecule()->point_group()->char_table();
-    std::sort(vec_irrep_occupation.begin(), vec_irrep_occupation.end(),
-              std::greater<std::pair<double, std::pair<int, int>>>());
+    offset += active_dim[h];
+  }
 
-    int count = 0;
-    outfile->Printf("\n    ");
-    for (auto vec : vec_irrep_occupation) {
-        outfile->Printf(" %4d%-4s%11.6f  ", vec.second.second, ct.gamma(vec.second.first).symbol(),
-                        vec.first);
-        if (count++ % 3 == 2 && count != vec_irrep_occupation.size())
-            outfile->Printf("\n    ");
+  auto OCC = std::make_shared<Vector>("Occupation numbers", active_dim);
+  auto NO = std::make_shared<Matrix>("MO -> NO transformation", active_dim,
+                                     active_dim);
+
+  opdm->diagonalize(NO, OCC, descending);
+  std::vector<std::pair<double, std::pair<int, int>>> vec_irrep_occupation;
+  for (int h = 0; h < nirrep_; h++) {
+    for (int u = 0; u < active_dim[h]; u++) {
+      auto irrep_occ = std::make_pair(OCC->get(h, u), std::make_pair(h, u + 1));
+      vec_irrep_occupation.push_back(irrep_occ);
     }
-    outfile->Printf("\n");
+  }
+  CharacterTable ct =
+      Process::environment.molecule()->point_group()->char_table();
+  std::sort(vec_irrep_occupation.begin(), vec_irrep_occupation.end(),
+            std::greater<std::pair<double, std::pair<int, int>>>());
+
+  int count = 0;
+  outfile->Printf("\n    ");
+  for (auto vec : vec_irrep_occupation) {
+    outfile->Printf(" %4d%-4s%11.6f  ", vec.second.second,
+                    ct.gamma(vec.second.first).symbol(), vec.first);
+    if (count++ % 3 == 2 && count != vec_irrep_occupation.size())
+      outfile->Printf("\n    ");
+  }
+  outfile->Printf("\n");
 }
 
 ///**
@@ -413,50 +417,50 @@ void FCIVector::print_natural_orbitals(std::shared_ptr<MOSpaceInfo> mo_space_inf
  * Compute the 2-norm of the wave function
  */
 double FCIVector::norm(double power) {
-    double norm = 0.0;
-    for (int alfa_sym = 0; alfa_sym < nirrep_; ++alfa_sym) {
-        int beta_sym = alfa_sym ^ symmetry_;
-        size_t maxIa = alfa_graph_->strpi(alfa_sym);
-        size_t maxIb = beta_graph_->strpi(beta_sym);
-        double** C_ha = C_[alfa_sym]->pointer();
-        for (size_t Ia = 0; Ia < maxIa; ++Ia) {
-            for (size_t Ib = 0; Ib < maxIb; ++Ib) {
-                norm += std::pow(std::fabs(C_ha[Ia][Ib]), power);
-            }
-        }
+  double norm = 0.0;
+  for (int alfa_sym = 0; alfa_sym < nirrep_; ++alfa_sym) {
+    int beta_sym = alfa_sym ^ symmetry_;
+    size_t maxIa = alfa_graph_->strpi(alfa_sym);
+    size_t maxIb = beta_graph_->strpi(beta_sym);
+    double **C_ha = C_[alfa_sym]->pointer();
+    for (size_t Ia = 0; Ia < maxIa; ++Ia) {
+      for (size_t Ib = 0; Ib < maxIb; ++Ib) {
+        norm += std::pow(std::fabs(C_ha[Ia][Ib]), power);
+      }
     }
-    return std::pow(norm, 1.0 / power);
+  }
+  return std::pow(norm, 1.0 / power);
 }
 
 /**
  * Compute the dot product with another wave function
  */
-double FCIVector::dot(FCIVector& wfn) {
-    double dot = 0.0;
-    for (int alfa_sym = 0; alfa_sym < nirrep_; ++alfa_sym) {
-        dot += C_[alfa_sym]->vector_dot(wfn.C_[alfa_sym]);
-    }
-    return (dot);
+double FCIVector::dot(FCIVector &wfn) {
+  double dot = 0.0;
+  for (int alfa_sym = 0; alfa_sym < nirrep_; ++alfa_sym) {
+    dot += C_[alfa_sym]->vector_dot(wfn.C_[alfa_sym]);
+  }
+  return (dot);
 
-    //        int beta_sym = alfa_sym ^ symmetry_;
-    //        size_t maxIa = alfa_graph_->strpi(alfa_sym);
-    //        size_t maxIb = beta_graph_->strpi(beta_sym);
+  //        int beta_sym = alfa_sym ^ symmetry_;
+  //        size_t maxIa = alfa_graph_->strpi(alfa_sym);
+  //        size_t maxIb = beta_graph_->strpi(beta_sym);
 
-    //        double** Ca = C_[alfa_sym]->pointer();
-    //        double** Cb = wfn.C_[alfa_sym]->pointer();
-    //        for(size_t Ia = 0; Ia < maxIa; ++Ia){
-    //            for(size_t Ib = 0; Ib < maxIb; ++Ib){
-    //                dot += coefficients[alfa_sym][Ia][Ib] *
-    //                wfn.coefficients[alfa_sym][Ia][Ib];
-    //            }
-    //        }
+  //        double** Ca = C_[alfa_sym]->pointer();
+  //        double** Cb = wfn.C_[alfa_sym]->pointer();
+  //        for(size_t Ia = 0; Ia < maxIa; ++Ia){
+  //            for(size_t Ib = 0; Ib < maxIb; ++Ib){
+  //                dot += coefficients[alfa_sym][Ia][Ib] *
+  //                wfn.coefficients[alfa_sym][Ia][Ib];
+  //            }
+  //        }
 }
-double FCIVector::dot(std::shared_ptr<FCIVector>& wfn) {
-    double dot = 0.0;
-    for (int alfa_sym = 0; alfa_sym < nirrep_; ++alfa_sym) {
-        dot += C_[alfa_sym]->vector_dot(wfn->C_[alfa_sym]);
-    }
-    return (dot);
+double FCIVector::dot(std::shared_ptr<FCIVector> &wfn) {
+  double dot = 0.0;
+  for (int alfa_sym = 0; alfa_sym < nirrep_; ++alfa_sym) {
+    dot += C_[alfa_sym]->vector_dot(wfn->C_[alfa_sym]);
+  }
+  return (dot);
 }
 
 ///**
@@ -605,48 +609,45 @@ double FCIVector::dot(std::shared_ptr<FCIVector>& wfn) {
  * Print the non-zero contributions to the wave function
  */
 void FCIVector::print() {
-    // print the non-zero elements of the wave function
-    size_t det = 0;
-    for (int alfa_sym = 0; alfa_sym < nirrep_; ++alfa_sym) {
-        int beta_sym = alfa_sym ^ symmetry_;
-        double** C_ha = C_[alfa_sym]->pointer();
-        for (size_t Ia = 0; Ia < alfa_graph_->strpi(alfa_sym); ++Ia) {
-            for (size_t Ib = 0; Ib < beta_graph_->strpi(beta_sym); ++Ib) {
-                if (std::fabs(C_ha[Ia][Ib]) > 1.0e-9) {
-                    outfile->Printf("\n  %15.9f [%1d][%2d][%2d] (%d)", C_ha[Ia][Ib], alfa_sym,
-                                    static_cast<int>(Ia), static_cast<int>(Ib),
-                                    static_cast<int>(det));
-                }
-                ++det;
-            }
+  // print the non-zero elements of the wave function
+  size_t det = 0;
+  for (int alfa_sym = 0; alfa_sym < nirrep_; ++alfa_sym) {
+    int beta_sym = alfa_sym ^ symmetry_;
+    double **C_ha = C_[alfa_sym]->pointer();
+    for (size_t Ia = 0; Ia < alfa_graph_->strpi(alfa_sym); ++Ia) {
+      for (size_t Ib = 0; Ib < beta_graph_->strpi(beta_sym); ++Ib) {
+        if (std::fabs(C_ha[Ia][Ib]) > 1.0e-9) {
+          outfile->Printf("\n  %15.9f [%1d][%2d][%2d] (%d)", C_ha[Ia][Ib],
+                          alfa_sym, static_cast<int>(Ia), static_cast<int>(Ib),
+                          static_cast<int>(det));
         }
+        ++det;
+      }
     }
+  }
 }
 
 void FCIVector::SortCoef() {
-    histo_.resize(10);
-    for (int alfa_sym = 0; alfa_sym < nirrep_; ++alfa_sym) {
-        int beta_sym = alfa_sym ^ symmetry_;
-        double** C_prime = C_[alfa_sym]->pointer();
-        for (size_t Ia = 0; Ia < alfa_graph_->strpi(alfa_sym); ++Ia) {
-            for (size_t Ib = 0; Ib < beta_graph_->strpi(beta_sym); ++Ib) {
-              double term = log10(std::fabs(C_prime[Ia][Ib]));
-              if(term >= -1) histo_[0] += 1;
-              else if((term < -1) && (term >= -2)) histo_[1] += 1;
-              else if((term < -2) && (term >= -3)) histo_[2] += 1;
-              else if((term < -3) && (term >= -4)) histo_[3] += 1;
-              else if((term < -4) && (term >= -5)) histo_[4] += 1;
-              else if((term < -5) && (term >= -6)) histo_[5] += 1;
-              else if((term < -6) && (term >= -7)) histo_[6] += 1;
-              else if((term < -7) && (term >= -8)) histo_[7] += 1;
-              else if((term < -8) && (term >= -9)) histo_[8] += 1;
-              else histo_[9] += 1;
-            }
+  histo_.resize(10);
+  for (int alfa_sym = 0; alfa_sym < nirrep_; ++alfa_sym) {
+    int beta_sym = alfa_sym ^ symmetry_;
+    double **C_prime = C_[alfa_sym]->pointer();
+    for (size_t Ia = 0; Ia < alfa_graph_->strpi(alfa_sym); ++Ia) {
+      for (size_t Ib = 0; Ib < beta_graph_->strpi(beta_sym); ++Ib) {
+        int bin = -static_cast<int>(log10(std::fabs(C_prime[Ia][Ib])));
+        if (bin < 0) {
+          histo_[0] += 1;
+        } else if (bin > 9) {
+          histo_[9] += 1;
+        } else {
+          histo_[bin] += 1;
         }
+      }
     }
-    for(int n=0; n<10; n++){
-      outfile->Printf("bin [%2d]: number of determinants [%4d] \n", n, histo_[n]);
-    }
+  }
+  for (int n = 0; n < 10; n++) {
+    outfile->Printf("bin [%2d]: number of determinants [%4d] \n", n, histo_[n]);
+  }
 }
 
 ///**
@@ -752,5 +753,5 @@ void FCIVector::SortCoef() {
 //    }
 //  } // End loop over h
 //}
-}
-}
+} // namespace forte
+} // namespace psi

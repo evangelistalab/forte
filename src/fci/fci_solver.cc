@@ -336,7 +336,15 @@ double FCISolver::compute_energy() {
     //C_->SortCoef();
     //C_->print();
 
-    std::vector<SharedMatrix> C = C_->C();
+    std::vector<SharedMatrix> C = C_->coefficients_blocks();
+
+    SharedMatrix block = C_->coefficients_blocks()[0];
+
+    int nirrep = block->nirrep();
+    Dimension rowspi = block->rowspi();
+    outfile->Printf("\n C[0] has %d irreps\n",nirrep);
+    rowspi.print();
+
 
     //int num_irep_dim = C.size();
     // a vector of 'smart' pointers (objecs that holds momory location as hexidecimal value) to matricies
@@ -351,59 +359,73 @@ double FCISolver::compute_energy() {
     //double** C_prime = C[0]->pointer();
     //what is this 'pointer();' function and where is it declared? What does it do?
 
-    auto u_p = std::make_shared<Matrix>("u_p", C[0]->rowspi(), C[0]->rowspi());
-    auto s_p = std::make_shared<Vector>("s_p", C[0]->colspi());
-    auto v_p = std::make_shared<Matrix>("v_p", C[0]->colspi(), C[0]->colspi());
+    //for(int n; n<nirrep; n++){
 
-    C[0]->svd(u_p, s_p, v_p);
-    //u_->print();
-    //s_p->print();
-    //v_->print();
+      auto u_p = std::make_shared<Matrix>("u_p", C[0]->rowspi(), C[0]->rowspi());
+      auto s_p = std::make_shared<Vector>("s_p", C[0]->colspi());
+      auto v_p = std::make_shared<Matrix>("v_p", C[0]->colspi(), C[0]->colspi());
 
-    int rank_ef = 0;
-    double sv_temp = s_p->get(0);
-    int sv_dim = s_p->dim(0);
-    double tao = 0.0000025;
-    while(sv_temp > tao){
-      rank_ef++;
-      sv_temp = s_p->get(rank_ef);
-    }
+      C[0]->svd(u_p, s_p, v_p);
+      //u_->print();
+      //s_p->print();
+      //v_->print();
 
-    outfile->Printf("reduced rank is %1d \n", rank_ef);
-    outfile->Printf("total rank is %1d \n", sv_dim);
+      int rank_ef = 0;
+      double sv_temp = s_p->get(0);
+      int sv_dim = s_p->dim(0);
+      double tao = 0.0000025;
+      while(sv_temp > tao){
+        rank_ef++;
+        sv_temp = s_p->get(rank_ef);
+      }
 
-    //reset small values of s_ to zero!
-    for(int i = rank_ef; i < sv_dim; i++){
-      s_p->set(i,0);
-    }
+      outfile->Printf("reduced rank is %1d \n", rank_ef);
+      outfile->Printf("total rank is %1d \n", sv_dim);
 
-    auto sig_mat = std::make_shared<Matrix>("sig_mat", sv_dim, sv_dim);
-    sig_mat->set(0.0);
-    sig_mat->set_diagonal(s_p);
+      //reset small values of s_ to zero!
+      for(int i = rank_ef; i < sv_dim; i++){
+        s_p->set(i,0);
+      }
 
-    //check to make sure things work properly
-    //s_p->print();
-    //sig_mat->print();
+      ////
 
-    //worry about making truncated SVD matricies later (using slice?)
-    /*
-    auto u_pp = std::make_shared<Matrix>("u_pp", rank_ef, rank_ef);
-    auto s_pp = std::make_shared<Vector>("s_pp", rank_ef);
-    auto v_pp = std::make_shared<Matrix>("v_pp", rank_ef, rank_ef);
+      double norm_sum = 0.0;
+      for(int i=0; i < s_p->dim(); i++){
+        norm_sum += (s_p->get(i))*(s_p->get(i));
+      }
 
-    Dimension(0, "begin");
-    Dimension(rank_ef, "end");
-    s__ = s__->get_block({begin, end});
-    */
+      outfile->Printf("norm_sum is: %f",norm_sum);
 
-    //do matrix multimplication to get reduced rank C_ matrix
-    auto tmp = std::make_shared<Matrix>("tmp", sv_dim, sv_dim);
-    auto C_red_rank = std::make_shared<Matrix>("C_red_rank", sv_dim, sv_dim);
-    tmp->gemm(false, false, 1.0, u_p, sig_mat, 0.0);
-    C_red_rank->gemm(false, true, 1.0, tmp, v_p, 0.0);
+      ////
 
-    C_red_rank->print();
+      auto sig_mat = std::make_shared<Matrix>("sig_mat", sv_dim, sv_dim);
+      sig_mat->set(0.0);
+      sig_mat->set_diagonal(s_p);
 
+      //check to make sure things work properly
+      //s_p->print();
+      //sig_mat->print();
+
+      //worry about making truncated SVD matricies later (using slice?)
+      /*
+      auto u_pp = std::make_shared<Matrix>("u_pp", rank_ef, rank_ef);
+      auto s_pp = std::make_shared<Vector>("s_pp", rank_ef);
+      auto v_pp = std::make_shared<Matrix>("v_pp", rank_ef, rank_ef);
+
+      Dimension(0, "begin");
+      Dimension(rank_ef, "end");
+      s__ = s__->get_block({begin, end});
+      */
+
+      //do matrix multimplication to get reduced rank C_ matrix
+      auto tmp = std::make_shared<Matrix>("tmp", sv_dim, sv_dim);
+      auto C_red_rank = std::make_shared<Matrix>("C_red_rank", sv_dim, sv_dim);
+      tmp->gemm(false, false, 1.0, u_p, sig_mat, 0.0);
+      C_red_rank->gemm(false, true, 1.0, tmp, v_p, 0.0);
+
+      C_red_rank->print();
+
+    //}
 
 
 

@@ -56,7 +56,7 @@ class FCIVector {
     /// Return the size of the CI basis
     size_t size() const { return ndet_; }
 
-    std::vector<SharedMatrix> C() {return C_;}
+    std::vector<SharedMatrix> coefficients_blocks() {return C_;}
 
     /// Copy the wave function object
     void copy(FCIVector& wfn);
