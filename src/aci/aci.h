@@ -339,11 +339,15 @@ class AdaptiveCI : public Wavefunction {
                                    std::vector<std::pair<double, Determinant>>& F_space);
     double get_excited_determinants_batch2(SharedMatrix evecs, SharedVector evals, DeterminantHashVec& P_space,
                                    std::vector<std::pair<double, Determinant>>& F_space);
+    double get_excited_determinants_batchv(SharedMatrix evecs, SharedVector evals, DeterminantHashVec& P_space,
+                                   std::vector<std::pair<double, Determinant>>& F_space);
 
     /// Builds excited determinants in batch
     det_hash<double> get_bin_F_space(int bin, int nbin, SharedMatrix evecs,
                                     DeterminantHashVec& P_space); 
     det_hash<double> get_bin_F_space2(int bin, int nbin, SharedMatrix evecs,
+                                    DeterminantHashVec& P_space); 
+    std::vector<std::pair<Determinant,double>> get_bin_F_spacev(int bin, int nbin, SharedMatrix evecs,
                                     DeterminantHashVec& P_space); 
 
     /// Prune the space of determinants
