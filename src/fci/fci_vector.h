@@ -56,7 +56,11 @@ class FCIVector {
     /// Return the size of the CI basis
     size_t size() const { return ndet_; }
 
-    std::vector<SharedMatrix> coefficients_blocks() {return C_;}
+    /// Return the vector coefficients as a vector of matrices
+    std::vector<SharedMatrix> coefficients_blocks() { return C_; }
+
+    /// Set the vector coefficients to a given vector of matrices
+    void set_coefficient_blocks(std::vector<SharedMatrix> C) { C_ = C; }
 
     /// Copy the wave function object
     void copy(FCIVector& wfn);
@@ -221,7 +225,7 @@ class FCIVector {
     void compute_3rdm_aab(std::vector<double>& rdm);
     void compute_3rdm_abb(std::vector<double>& rdm);
 };
-}
-}
+} // namespace forte
+} // namespace psi
 
 #endif // _fci_vector_

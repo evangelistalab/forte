@@ -130,11 +130,12 @@ void FCISolver::startup() {
 
 /*
  * See Appendix A in J. Comput. Chem. 2001 vol. 22 (13) pp. 1574-1589
-*/
+ */
 double FCISolver::compute_energy() {
     ForteTimer t;
 
-    double nuclear_repulsion_energy = Process::environment.molecule()->nuclear_repulsion_energy({0,0,0});
+    double nuclear_repulsion_energy =
+        Process::environment.molecule()->nuclear_repulsion_energy({0, 0, 0});
     std::shared_ptr<FCIIntegrals> fci_ints;
     if (!provide_integrals_and_restricted_docc_) {
         fci_ints = std::make_shared<FCIIntegrals>(ints_, active_mo_, core_mo_);
@@ -333,67 +334,94 @@ double FCISolver::compute_energy() {
 
     outfile->Printf("\n I am here - aroonie! \n");
 
-    //C_->SortCoef();
-    //C_->print();
-
+    // C_->SortCoef();
+    // C_->print();
     std::vector<SharedMatrix> C = C_->coefficients_blocks();
+    std::vector<SharedMatrix> C_red_rank;
 
-    SharedMatrix block = C_->coefficients_blocks()[0];
+    double norm_C = 0.0;
+    for (auto C_h : C) {
+        norm_C += C_h->sum_of_squares();
+    }
+    outfile->Printf("\n ||C|| = %20.12f", std::sqrt(norm_C));
 
-    int nirrep = block->nirrep();
-    Dimension rowspi = block->rowspi();
-    outfile->Printf("\n C[0] has %d irreps\n",nirrep);
-    rowspi.print();
+    outfile->Printf("\n irrep red  full        ||C - C_rr||\n");
+    double tao = 0.1;
+
+    int nirrep = C.size();
+    int total_rank = 0;
+    int total_red_rank = 0;
+    for (int h = 0; h < nirrep; h++) {
+        int nrow = C[h]->rowdim();
+        int ncol = C[h]->coldim();
+
+        auto u_p = std::make_shared<Matrix>("u_p", nrow, nrow);
+        auto s_p = std::make_shared<Vector>("s_p", std::min(ncol, nrow));
+        auto v_p = std::make_shared<Matrix>("v_p", ncol, ncol);
+
+        C[h]->svd(u_p, s_p, v_p);
+
+        int rank_ef = std::min(ncol, nrow);
+        for (int i = 0; i < std::min(ncol, nrow); i++) {
+            if (s_p->get(i) < tao) {
+                rank_ef = i;
+                break;
+            }
+        }
+
+        total_rank += std::min(ncol, nrow);
+        total_red_rank += rank_ef;
+
+        // Copy diagonal of s_p to a matrix
+        auto sig_mat = std::make_shared<Matrix>("sig_mat", nrow, ncol);
+        for (int i = 0; i < rank_ef; i++) {
+            sig_mat->set(i, i, s_p->get(i));
+        }
+
+        auto C_red_rank_h = Matrix::triplet(u_p, sig_mat, v_p, false, false, false);
+        C_red_rank.push_back(C_red_rank_h);
+
+        auto C_diff = C[h]->clone();
+        C_diff->subtract(C_red_rank_h);
+        double norm = std::sqrt(C_diff->sum_of_squares());
+
+        outfile->Printf(" %1d %6d %6d %20.12f \n", h, rank_ef, std::min(ncol, nrow), norm);
+    }
+    outfile->Printf("   %6d %6d\n", total_red_rank, total_rank);
 
 
-    //int num_irep_dim = C.size();
-    // a vector of 'smart' pointers (objecs that holds momory location as hexidecimal value) to matricies
-
-    // why not ?
-    //C_[0]->print();
-    // OR
-    // double** C_prime = C_[0]->pointer();
-
-    // what type of object is C_ if not a vector of pointers to matricies?
-
-    //double** C_prime = C[0]->pointer();
-    //what is this 'pointer();' function and where is it declared? What does it do?
-
-    auto u_p = std::make_shared<Matrix>("u_p", C[0]->rowspi(), C[0]->rowspi());
-    auto s_p = std::make_shared<Vector>("s_p", C[0]->colspi());
-    auto v_p = std::make_shared<Matrix>("v_p", C[0]->colspi(), C[0]->colspi());
-
-    C[0]->svd(u_p, s_p, v_p);
-    //u_->print();
-    //s_p->print();
-    //v_->print();
-
-    int rank_ef = 0;
-    double sv_temp = s_p->get(0);
-    int sv_dim = s_p->dim(0);
-    double tao = 0.0000025;
-    while(sv_temp > tao){
-      rank_ef++;
-      sv_temp = s_p->get(rank_ef);
+    double norm_C_red_rank = 0.0;
+    for (auto C_red_rank_h : C_red_rank) {
+        norm_C_red_rank += C_red_rank_h->sum_of_squares();
+    }
+    norm_C_red_rank = std::sqrt(norm_C_red_rank);
+    for (auto C_red_rank_h : C_red_rank) {
+        C_red_rank_h->scale(1. / norm_C_red_rank);
     }
 
-    outfile->Printf("reduced rank is %1d \n", rank_ef);
-    outfile->Printf("total rank is %1d \n", sv_dim);
-
-    //reset small values of s_ to zero!
-    for(int i = rank_ef; i < sv_dim; i++){
-      s_p->set(i,0);
+    {
+        double norm_C_red_rank = 0.0;
+        for (auto C_red_rank_h : C_red_rank) {
+            norm_C_red_rank += C_red_rank_h->sum_of_squares();
+        }
+        norm_C_red_rank = std::sqrt(norm_C_red_rank);
+        outfile->Printf("\n ||C|| = %20.12f", std::sqrt(norm_C_red_rank));
     }
 
-    auto sig_mat = std::make_shared<Matrix>("sig_mat", sv_dim, sv_dim);
-    sig_mat->set(0.0);
-    sig_mat->set_diagonal(s_p);
+    // Compute the energy
 
-    //check to make sure things work properly
-    //s_p->print();
-    //sig_mat->print();
+    C_->set_coefficient_blocks(C_red_rank);
+    // HC = H C
+    C_->Hamiltonian(HC, fci_ints, twoSubstituitionVVOO);
+    // E = C^T HC
+    double E_red_rank = HC.dot(C_) + nuclear_repulsion_energy;
 
-    //worry about making truncated SVD matricies later (using slice?)
+    outfile->Printf("\n E_ref_rank = %20.12f",E_red_rank);
+    // check to make sure things work properly
+    // s_p->print();
+    // sig_mat->print();
+
+    // worry about making truncated SVD matricies later (using slice?)
     /*
     auto u_pp = std::make_shared<Matrix>("u_pp", rank_ef, rank_ef);
     auto s_pp = std::make_shared<Vector>("s_pp", rank_ef);
@@ -404,18 +432,13 @@ double FCISolver::compute_energy() {
     s__ = s__->get_block({begin, end});
     */
 
-    //do matrix multimplication to get reduced rank C_ matrix
-    auto tmp = std::make_shared<Matrix>("tmp", sv_dim, sv_dim);
-    auto C_red_rank = std::make_shared<Matrix>("C_red_rank", sv_dim, sv_dim);
-    tmp->gemm(false, false, 1.0, u_p, sig_mat, 0.0);
-    C_red_rank->gemm(false, true, 1.0, tmp, v_p, 0.0);
+    // do matrix multimplication to get reduced rank C_ matrix
+    //    auto tmp = std::make_shared<Matrix>("tmp", sv_dim, sv_dim);
+    //    auto C_red_rank = std::make_shared<Matrix>("C_red_rank", sv_dim, sv_dim);
+    //    tmp->gemm(false, false, 1.0, u_p, sig_mat, 0.0);
+    //    C_red_rank->gemm(false, true, 1.0, tmp, v_p, 0.0);
 
-    C_red_rank->print();
-
-
-
-
-
+    //    C_red_rank->print();
 
     ///////////////////////// NEW SORTING AND MATRIX EXPLORATION END //////////////////////////
 
@@ -483,7 +506,8 @@ FCISolver::initial_guess(FCIVector& diag, size_t n, size_t multiplicity,
                          std::shared_ptr<FCIIntegrals> fci_ints) {
     ForteTimer t;
 
-    double nuclear_repulsion_energy = Process::environment.molecule()->nuclear_repulsion_energy({0,0,0});
+    double nuclear_repulsion_energy =
+        Process::environment.molecule()->nuclear_repulsion_energy({0, 0, 0});
     double scalar_energy = fci_ints->scalar_energy();
 
     size_t ntrial = n * ntrial_per_root_;
@@ -841,5 +865,5 @@ Reference FCISolver::reference() {
 
     return fci_ref;
 }
-}
-}
+} // namespace forte
+} // namespace psi
