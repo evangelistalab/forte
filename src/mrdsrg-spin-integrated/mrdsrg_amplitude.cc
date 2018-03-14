@@ -37,6 +37,47 @@
 namespace psi {
 namespace forte {
 
+void MRDSRG::brueckner_t1_rotate() {
+    outfile->Printf("\n\n  ==> Computing the Brueckner orbitals <==\n");
+
+    timer rotation("Brueckner T1 rotation");
+
+    ambit::BlockedTensor A1;
+    A1 = BTF_->build(tensor_type_, "A1 Amplitudes", spin_cases({"gg"}));
+    A1["ia"] = T1_["ia"];
+    A1["ai"] -= T1_["ia"];
+    A1["IA"] = T1_["IA"];
+    A1["AI"] -= T1_["IA"];
+
+    size_t ncmo = core_mos_.size() + actv_mos_.size() + virt_mos_.size();
+
+    SharedMatrix aA1_m(new Matrix("A1 alpha", ncmo, ncmo));
+    SharedMatrix bA1_m(new Matrix("A1 beta", ncmo, ncmo));
+    A1.iterate([&](const std::vector<size_t>& i, const std::vector<SpinType>& spin, double& value) {
+        if (spin[0] == AlphaSpin)
+            aA1_m->set(i[0], i[1], value);
+        else
+            bA1_m->set(i[0], i[1], value);
+    });
+
+    // >=3 is required for high energy convergence
+    aA1_m->expm(3);
+    bA1_m->expm(3);
+
+    aA1_m->print_out();
+
+    SharedMatrix Ca = reference_wavefunction_->Ca();
+    Ca->print_out();
+    SharedMatrix Cb = reference_wavefunction_->Cb();
+    SharedMatrix Ca_new(Ca->clone());
+    SharedMatrix Cb_new(Cb->clone());
+    Ca_new->gemm(false, true, 1.0, Ca, aA1_m, 0.0);
+    Cb_new->gemm(false, true, 1.0, Cb, bA1_m, 0.0);
+    Ca->copy(Ca_new);
+    Ca->print_out();
+    Cb->copy(Cb_new);
+}
+
 void MRDSRG::guess_t(BlockedTensor& V, BlockedTensor& T2, BlockedTensor& F, BlockedTensor& T1) {
     // if fully decouple core-core-virtual-virtual block
     std::string ccvv_source = options_.get_str("CCVV_SOURCE");
