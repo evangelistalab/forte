@@ -343,14 +343,72 @@ double FCISolver::compute_energy() {
     for (auto C_h : C) {
         norm_C += C_h->sum_of_squares();
     }
-    outfile->Printf("\n ||C|| = %20.12f", std::sqrt(norm_C));
-
-    outfile->Printf("\n irrep red  full        ||C - C_rr||\n");
-    double tao = 0.1;
 
     int nirrep = C.size();
     int total_rank = 0;
     int total_red_rank = 0;
+
+    //// norm based cuttoff scheme BEGIN
+
+    ///would like a way to generate the tao value based on the norm %
+    //Best way to initalize a vector with correct size?
+
+    int all_sig_dim = 0;
+
+    for (int h = 0; h < nirrep; h++) {
+      all_sig_dim += std::min(C[h]->rowdim(), C[h]->coldim());
+    }
+
+    std::vector<double> all_sig(all_sig_dim);
+    int sig_counter = 0;
+
+    for (int h = 0; h < nirrep; h++) {
+      int nrow = C[h]->rowdim();
+      int ncol = C[h]->coldim();
+
+      auto u_p = std::make_shared<Matrix>("u_p", nrow, nrow);
+      auto s_p = std::make_shared<Vector>("s_p", std::min(ncol, nrow));
+      auto v_p = std::make_shared<Matrix>("v_p", ncol, ncol);
+
+      C[h]->svd(u_p, s_p, v_p);
+
+      for(int i = 0; i < std::min(ncol, nrow); i++){
+        all_sig[sig_counter] = s_p->get(i);
+        sig_counter++;
+      }
+    }
+
+    std::sort(all_sig.begin(), all_sig.end());
+    double noorm = 0.0;
+    for(int k=0; k < all_sig_dim; k++){
+      outfile->Printf("\n element [%6d] of all_sig is: %20.12f ",k, all_sig[k]);
+      noorm += all_sig[k]*all_sig[k];
+    }
+    outfile->Printf("\n ");
+    outfile->Printf("noorm: %20.12f \n",noorm);
+
+    double norm_cut = 0.0005;
+    double sig_sum = 0;
+    double tao_norm;
+    for(int i=0; i<all_sig_dim; i++){
+      sig_sum += all_sig[i]*all_sig[i];
+      if(sig_sum > norm_cut){
+        tao_norm = all_sig[i];
+        break;
+      }
+    }
+
+    outfile->Printf("tao_norm: %20.12f \n",tao_norm);
+
+    //// norm based cuttoff scheme END
+
+    //double tao = 0.1;
+    double tao = tao_norm;
+
+    outfile->Printf("\n ||C|| = %20.12f", std::sqrt(norm_C));
+
+    outfile->Printf("\n irrep red  full        ||C - C_rr||\n");
+
     for (int h = 0; h < nirrep; h++) {
         int nrow = C[h]->rowdim();
         int ncol = C[h]->coldim();
@@ -430,7 +488,9 @@ double FCISolver::compute_energy() {
       double norm_sum = 0.0;
       for(int i=0; i < s_p->dim(); i++){
         norm_sum += (s_p->get(i))*(s_p->get(i));
+
       }
+    */
 
     // do matrix multimplication to get reduced rank C_ matrix
     //    auto tmp = std::make_shared<Matrix>("tmp", sv_dim, sv_dim);
