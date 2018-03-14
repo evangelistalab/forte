@@ -1329,7 +1329,6 @@ Timer build;
                                         new_det.set_alfa_bit(bb,true);
                                         size_t hash_val = Determinant::Hash()(new_det);
                                         if ((hash_val % nbin) == bin) {
-                                        //    double sign = det.slater_sign_aaaa(ii,jj,aa,bb);
                                             double HIJ = fci_ints_->tei_aa(ii, jj, aa, bb) * c_I;
                                             if ((std::fabs(HIJ) >= screen_thresh_)) {
                                                 A_b[new_det] +=  (HIJ * det.slater_sign_aaaa(ii,jj,aa,bb));
@@ -1369,7 +1368,6 @@ Timer build;
                                         // Check if the determinant goes in this bin
                                         size_t hash_val = Determinant::Hash()(new_det);
                                         if ((hash_val % nbin) == bin) {
-                                            //double sign = det.slater_sign_bbbb(ii,jj,aa,bb);
                                             double HIJ = fci_ints_->tei_bb(ii, jj, aa, bb) * c_I;
                                             if ((std::fabs(HIJ) >= screen_thresh_)) {
                                                 A_b[new_det] += (HIJ * det.slater_sign_bbbb(ii,jj,aa,bb));
@@ -1405,7 +1403,6 @@ Timer build;
                                         new_det.set_beta_bit(bb,true);
                                         size_t hash_val = Determinant::Hash()(new_det);
                                         if ((hash_val % nbin) == bin) {
-                                            //double sign = new_det.slater_sign_aa(ii,aa) * new_det.slater_sign_bb(jj,bb);
                                             double HIJ = fci_ints_->tei_ab(ii, jj, aa, bb) * c_I;
                                             if ((std::fabs(HIJ) >= screen_thresh_)) {
                                                 A_b[new_det] += (HIJ*new_det.slater_sign_aa(ii,aa) * new_det.slater_sign_bb(jj,bb));
