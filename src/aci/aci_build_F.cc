@@ -1214,6 +1214,7 @@ det_hash<double> AdaptiveCI::get_bin_F_space2( int bin, int nbin, SharedMatrix e
                                                  DeterminantHashVec& P_space) {
 
     det_hash<double> bin_f_space;
+Timer build;
     
     const size_t n_dets = P_space.size();
     const det_hashvec& dets = P_space.wfn_hash();
@@ -1245,7 +1246,6 @@ det_hash<double> AdaptiveCI::get_bin_F_space2( int bin, int nbin, SharedMatrix e
 //        size_t guess = (n_dets/nbin) * std::ceil(nmo*nmo*0.5);
 //       outfile->Printf("\n Guessing %zu dets in bin %d", guess, bin); 
 //        A_b.reserve(guess);
-
         for (size_t I = start_idx; I < end_idx; ++I ) {
             double c_I = evecs->get(I,0);
             const Determinant& det = dets[I];
@@ -1329,10 +1329,10 @@ det_hash<double> AdaptiveCI::get_bin_F_space2( int bin, int nbin, SharedMatrix e
                                         new_det.set_alfa_bit(bb,true);
                                         size_t hash_val = Determinant::Hash()(new_det);
                                         if ((hash_val % nbin) == bin) {
-                                            double sign = det.slater_sign_aaaa(ii,jj,aa,bb);
-                                            double HIJ = fci_ints_->tei_aa(ii, jj, aa, bb) * sign * c_I;
+                                        //    double sign = det.slater_sign_aaaa(ii,jj,aa,bb);
+                                            double HIJ = fci_ints_->tei_aa(ii, jj, aa, bb) * c_I;
                                             if ((std::fabs(HIJ) >= screen_thresh_)) {
-                                                A_b[new_det] +=  HIJ;
+                                                A_b[new_det] +=  (HIJ * det.slater_sign_aaaa(ii,jj,aa,bb));
                                             }
                                         }
                                         new_det.set_alfa_bit(bb,false);
@@ -1369,10 +1369,10 @@ det_hash<double> AdaptiveCI::get_bin_F_space2( int bin, int nbin, SharedMatrix e
                                         // Check if the determinant goes in this bin
                                         size_t hash_val = Determinant::Hash()(new_det);
                                         if ((hash_val % nbin) == bin) {
-                                            double sign = det.slater_sign_bbbb(ii,jj,aa,bb);
-                                            double HIJ = fci_ints_->tei_bb(ii, jj, aa, bb) * sign * c_I;
+                                            //double sign = det.slater_sign_bbbb(ii,jj,aa,bb);
+                                            double HIJ = fci_ints_->tei_bb(ii, jj, aa, bb) * c_I;
                                             if ((std::fabs(HIJ) >= screen_thresh_)) {
-                                                A_b[new_det] +=  HIJ;
+                                                A_b[new_det] += (HIJ * det.slater_sign_bbbb(ii,jj,aa,bb));
                                             }
                                         }
                                         new_det.set_beta_bit(bb,false);
@@ -1405,10 +1405,10 @@ det_hash<double> AdaptiveCI::get_bin_F_space2( int bin, int nbin, SharedMatrix e
                                         new_det.set_beta_bit(bb,true);
                                         size_t hash_val = Determinant::Hash()(new_det);
                                         if ((hash_val % nbin) == bin) {
-                                            double sign = new_det.slater_sign_aa(ii,aa) * new_det.slater_sign_bb(jj,bb);
-                                            double HIJ = fci_ints_->tei_ab(ii, jj, aa, bb) * sign * c_I;
+                                            //double sign = new_det.slater_sign_aa(ii,aa) * new_det.slater_sign_bb(jj,bb);
+                                            double HIJ = fci_ints_->tei_ab(ii, jj, aa, bb) * c_I;
                                             if ((std::fabs(HIJ) >= screen_thresh_)) {
-                                                A_b[new_det] += HIJ;
+                                                A_b[new_det] += (HIJ*new_det.slater_sign_aa(ii,aa) * new_det.slater_sign_bb(jj,bb));
                                             }
                                         }
                                         new_det.set_beta_bit(bb,false);
@@ -1428,14 +1428,20 @@ det_hash<double> AdaptiveCI::get_bin_F_space2( int bin, int nbin, SharedMatrix e
         for( det_hashvec::iterator it = dets.begin(), endit = dets.end(); it != endit; ++it) {
             A_b_t[thread_id].erase(*it);
         }  
+if( thread_id == 0 )
+    outfile->Printf("\n  Build: %1.6f", build.get());
 
+Timer merge;
 #pragma omp critical
 {
      for( auto& pair : A_b_t[thread_id] ){
          bin_f_space[pair.first] += pair.second;
      }
 }   
-    
+#pragma omp barrier    
+if( thread_id == 0 )
+    outfile->Printf("\n  Merge: %1.6f", merge.get());
+
     } // close threads
 
     return bin_f_space;
