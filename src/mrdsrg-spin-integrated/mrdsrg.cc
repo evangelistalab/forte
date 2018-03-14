@@ -83,6 +83,7 @@ void MRDSRG::read_options() {
 
     sequential_Hbar_ = options_.get_bool("DSRG_HBAR_SEQ");
     omit_V3_ = options_.get_bool("DSRG_OMIT_V3");
+    brueckner_ = options_.get_bool("DSRG_BRUECKNER");
 }
 
 void MRDSRG::startup() {
@@ -320,6 +321,9 @@ double MRDSRG::compute_energy() {
     switch (corrlevelmap[corrlv_string_]) {
     case CORR_LV::LDSRG2: {
         Etotal += compute_energy_ldsrg2();
+        if (brueckner_) {
+            brueckner_t1_rotate();
+        }
         break;
     }
     case CORR_LV::LDSRG2_QC: {
