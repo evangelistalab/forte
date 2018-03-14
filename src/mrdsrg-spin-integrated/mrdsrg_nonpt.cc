@@ -238,11 +238,6 @@ void MRDSRG::compute_hbar_sequential_rotation() {
     Hbar1_["rs"] = U1["rp"] * H_["pq"] * U1["sq"];
     Hbar1_["RS"] = U1["RP"] * H_["PQ"] * U1["SQ"];
 
-    if (brueckner_) {
-        H_["pq"] = Hbar1_["pq"];
-        H_["PQ"] = Hbar1_["PQ"];
-    }
-
     Hbar0_ = 0.0;
     for (const std::string block : {"cc", "CC"}) {
         Hbar1_.block(block).iterate([&](const std::vector<size_t>& i, double& value) {
@@ -259,13 +254,6 @@ void MRDSRG::compute_hbar_sequential_rotation() {
         B = BTF_->build(tensor_type_, "B 3-idx", {"Lgg", "LGG"});
         B["grs"] = U1["rp"] * B_["gpq"] * U1["sq"];
         B["gRS"] = U1["RP"] * B_["gPQ"] * U1["SQ"];
-
-        if (brueckner_) {
-            B_["gpq"] = B["gpq"];
-            B_["gPQ"] = B["gPQ"];
-            // build Fock matrix
-            build_fock_df(H_, B_);
-        }
 
         // for simplicity, create a core-core density matrix
         BlockedTensor D1c = BTF_->build(tensor_type_, "Gamma1 core", spin_cases({"cc"}));
@@ -294,14 +282,6 @@ void MRDSRG::compute_hbar_sequential_rotation() {
         Hbar2_["pqrs"] = U1["pt"] * U1["qo"] * V_["to45"] * U1["r4"] * U1["s5"];
         Hbar2_["pQrS"] = U1["pt"] * U1["QO"] * V_["tO49"] * U1["r4"] * U1["S9"];
         Hbar2_["PQRS"] = U1["PT"] * U1["QO"] * V_["TO89"] * U1["R8"] * U1["S9"];
-
-        if (brueckner_) {
-            V_["pqrs"] = Hbar2_["pqrs"];
-            V_["pQrS"] = Hbar2_["pQrS"];
-            V_["PQRS"] = Hbar2_["PQRS"];
-            // build Fock matrix
-            build_fock(H_, V_);
-        }
 
         // for simplicity, create a core-core density matrix
         BlockedTensor D1c = BTF_->build(tensor_type_, "Gamma1 core", spin_cases({"cc"}));
