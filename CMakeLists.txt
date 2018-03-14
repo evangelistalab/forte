@@ -98,6 +98,7 @@ src/fci/binary_graph.cc
 src/fci/fci.cc
 src/fci/fci_integrals.cc
 src/fci/fci_solver.cc
+src/fci/fci_solver_svd.cc
 src/fci/fci_vector.cc
 src/fci/fci_vector_h_diag.cc
 src/fci/fci_vector_hamiltonian.cc

@@ -216,6 +216,9 @@ class FCISolver {
                   std::shared_ptr<FCIIntegrals> fci_ints);
     /// The options object
     Options& options_;
+
+    /// Decompose and reconstruct the FCI wave function
+    void fci_svd(FCIVector& HC, std::shared_ptr<FCIIntegrals> fci_ints, double fci_energy);
 };
 }
 }
