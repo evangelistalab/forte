@@ -175,6 +175,14 @@ Matrix tensor_to_matrix(ambit::Tensor t, Dimension dims);
 SharedMatrix tensor_to_matrix(ambit::Tensor t);
 
 /**
+ * @brief full matrix to matrix in symmetry blocks
+ * @param m The full matrix, orbital ordered by symmetry
+ * @param dims Dimensions of the symmetry blocks of matrix
+ * @return A copy of the matrix data in symmetry blocked form
+ */
+SharedMatrix full_to_sym_matrix(SharedMatrix m, Dimension dims);
+
+/**
  * @brief print_method_banner Print a banner
  * @param text A vector of strings to print in the banner. Each string is a
  * line.

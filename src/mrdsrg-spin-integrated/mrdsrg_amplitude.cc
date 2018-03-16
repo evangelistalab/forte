@@ -60,21 +60,50 @@ void MRDSRG::brueckner_t1_rotate() {
             bA1_m->set(i[0], i[1], value);
     });
 
+    Dimension fdocc_dim = mo_space_info_->get_dimension("FROZEN_DOCC");
+    Dimension corr_dim = mo_space_info_->get_dimension("CORRELATED");
+    Dimension fuocc_dim = mo_space_info_->get_dimension("FROZEN_UOCC");
+    Dimension all_dim = mo_space_info_->get_dimension("ALL");
+
+    aA1_m = full_to_sym_matrix(aA1_m, corr_dim);
+    bA1_m = full_to_sym_matrix(bA1_m, corr_dim);
+
     // >=3 is required for high energy convergence
     aA1_m->expm(3);
     bA1_m->expm(3);
 
-    aA1_m->print_out();
+    SharedMatrix aA1_all(new Matrix("A1 alpha", all_dim, all_dim));
+    SharedMatrix bA1_all(new Matrix("A1 alpha", all_dim, all_dim));
+
+    for (size_t h = 0; h < static_cast<size_t>(all_dim.n()); ++h) {
+        size_t offset = 0;
+        for (size_t p = 0; p < static_cast<size_t>(fdocc_dim[h]); ++p) {
+            aA1_all->set(h, p, p, 1.0);
+            bA1_all->set(h, p, p, 1.0);
+        }
+        offset += fdocc_dim[h];
+        for (size_t p = 0; p < static_cast<size_t>(corr_dim[h]); ++p) {
+            for (size_t q = 0; q < static_cast<size_t>(corr_dim[h]); ++q) {
+                double value = aA1_m->get(h, p, q);
+                aA1_all->set(h, p + offset, q + offset, value);
+                value = bA1_m->get(h, p, q);
+                bA1_all->set(h, p + offset, q + offset, value);
+            }
+        }
+        offset += corr_dim[h];
+        for (size_t p = 0; p < static_cast<size_t>(fuocc_dim[h]); ++p) {
+            aA1_all->set(h, p + offset, p + offset, 1.0);
+            bA1_all->set(h, p + offset, p + offset, 1.0);
+        }
+    }
 
     SharedMatrix Ca = reference_wavefunction_->Ca();
-    Ca->print_out();
     SharedMatrix Cb = reference_wavefunction_->Cb();
     SharedMatrix Ca_new(Ca->clone());
     SharedMatrix Cb_new(Cb->clone());
-    Ca_new->gemm(false, true, 1.0, Ca, aA1_m, 0.0);
-    Cb_new->gemm(false, true, 1.0, Cb, bA1_m, 0.0);
+    Ca_new->gemm(false, true, 1.0, Ca, aA1_all, 0.0);
+    Cb_new->gemm(false, true, 1.0, Cb, bA1_all, 0.0);
     Ca->copy(Ca_new);
-    Ca->print_out();
     Cb->copy(Cb_new);
 }
 
