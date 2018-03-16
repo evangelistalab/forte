@@ -321,7 +321,7 @@ double MRDSRG::compute_energy() {
     switch (corrlevelmap[corrlv_string_]) {
     case CORR_LV::LDSRG2: {
         Etotal += compute_energy_ldsrg2();
-        if (brueckner_) {
+        if (brueckner_ and relax_ref_ == "NONE") {
             brueckner_t1_rotate();
         }
         break;
