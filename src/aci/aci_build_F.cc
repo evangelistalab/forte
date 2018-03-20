@@ -1131,8 +1131,11 @@ double AdaptiveCI::get_excited_determinants_batch2( SharedMatrix evecs, SharedVe
     double max_mem = options_.get_double("ACI_MAX_MEM");
     double aci_scale = options_.get_double("ACI_SCALE_SIGMA");
 
-    size_t guess_size = n_dets * nmo * nmo;
-    double guess_mem = guess_size * 400.0e-7; //Est of map size in MB
+    size_t nocc2 = nalpha_ * nalpha_;
+    size_t nvir2 = (nmo - nalpha_) *(nmo-nalpha_);    
+    size_t guess_size = n_dets * nocc2 * nvir2;
+    // outfile->Printf("\n  guess_size: %zu o: %zu, v: %zu", guess_size, nocc2, nvir2);
+    double guess_mem = guess_size * (4.0 + double(Determinant::num_det_bits)) * 1.25e-7 * 1.4; //Est of map size in MB
     int nruns = static_cast<int>(std::ceil(guess_mem/max_mem));
 
     double total_excluded = 0.0;
