@@ -185,6 +185,10 @@ void set_DSRG_options(ForteOptions& foptions) {
 
     /*- Omit blocks with >= 3 virtual indices -*/
     foptions.add_bool("DSRG_OMIT_V3", false, "Omit blocks with >= 3 virtual indices if true");
+
+    /*- Print eigenvalues of 1-body effective H -*/
+    foptions.add_bool("PRINT_1BODY_EVALS", false, "Omit blocks with >= 3 virtual indices");
+
 }
 
 /// A uniformed function to run DSRG related jobs
