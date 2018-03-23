@@ -428,6 +428,18 @@ void AdaptiveCI::print_info() {
         outfile->Printf("\n    %-40s %s", str_dim.first.c_str(), str_dim.second.c_str());
     }
     outfile->Printf("\n  %s", std::string(65, '-').c_str());
+
+    if( options_.get_bool("PRINT_1BODY_EVALS")){
+        outfile->Printf("\n  Reference orbital energies:");
+        std::shared_ptr<Vector> epsilon_a = reference_wavefunction_->epsilon_a();
+
+        auto actmo = mo_space_info_->get_absolute_mo("ACTIVE");
+
+        for( int n =0, maxn = actmo.size(); n < maxn; ++n ){
+            outfile->Printf("\n   %da: %1.6f ", n, epsilon_a->get(actmo[n]));
+        }
+
+    }
 }
 
 double AdaptiveCI::compute_energy() {
@@ -3246,6 +3258,7 @@ void AdaptiveCI::spin_analysis() {
 
     // Now form the spin correlation
     SharedMatrix spin_corr(new Matrix("Spin Correlation", nact, nact));
+    SharedMatrix spin_fluct(new Matrix("Spin Fluctuation", nact, nact));
 
     std::vector<double> l1a(L1aT.data());
     std::vector<double> l1b(L1bT.data());
@@ -3266,20 +3279,24 @@ void AdaptiveCI::spin_analysis() {
             value += 0.25 * ( l2aa[ i * nact3 + j * nact2 + i * nact + j ]
                             + l2bb[ i * nact3 + j * nact2 + i * nact + j ] 
                             - l2ab[ i * nact3 + j * nact2 + i * nact + j ] 
-                            - l2ab[ j * nact3 + i * nact2 + j * nact + i ]
-                          //  - l1a[i*nact + i] * l1a[j*nact + j] 
-                          //  - l1b[i*nact + i] * l1b[j*nact + j] 
-                          //  + l1a[i*nact + i] * l1b[j*nact + j] 
-                          //  + l1b[i*nact + i] * l1a[j*nact + j] 
-                            );
+                            - l2ab[ j * nact3 + i * nact2 + j * nact + i ]);
 
             spin_corr->set(i, j, value);
+            value -= 0.25 * ( l1a[i*nact + i] * l1a[j*nact + j] 
+                            + l1b[i*nact + i] * l1b[j*nact + j] 
+                            - l1a[i*nact + i] * l1b[j*nact + j] 
+                            - l1b[i*nact + i] * l1a[j*nact + j] 
+                            );
+            spin_fluct->set(i,j,value);
         }
     }
     outfile->Printf("\n");
     spin_corr->print();
+    spin_fluct->print();
     SharedMatrix spin_evecs(new Matrix(nact, nact));
     SharedVector spin_evals(new Vector(nact));
+    SharedMatrix spin_evecs2(new Matrix(nact, nact));
+    SharedVector spin_evals2(new Vector(nact));
 
 //    spin_corr->diagonalize(spin_evecs, spin_evals);
 //    spin_evals->print();
@@ -3294,6 +3311,15 @@ void AdaptiveCI::spin_analysis() {
             file << "\n";
         }
         file.close();
+        std::ofstream file2;
+        file.open("spin_fluct.txt", std::ofstream::out | std::ofstream::trunc);
+        for (int i = 0; i < nact; ++i) {
+            for (int j = 0; j < nact; ++j) {
+                file << std::setw(12) << std::setprecision(6) << spin_fluct->get(i, j) << " ";
+            }
+            file2 << "\n";
+        }
+        file2.close();
     }
 /*
     // Build spin-correlation densities
