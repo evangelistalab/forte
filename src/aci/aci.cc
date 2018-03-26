@@ -2055,7 +2055,7 @@ void AdaptiveCI::compute_aci(DeterminantHashVec& PQ_space, SharedMatrix& PQ_evec
             op_.build_strings(P_space);
             op_.op_lists(P_space);
             op_.tp_lists(P_space);
-        } else {
+        } else if ( diag_method_ != Dynamic) {
             op_.clear_op_s_lists();
             op_.clear_tp_s_lists();
             op_.build_strings(P_space);
@@ -2147,7 +2147,7 @@ outfile->Printf("\n  Time spent building the model space: %1.6f", build_space.ge
             outfile->Printf("\n  Time spent building strings      %1.6f s", str.get());
             op_.op_lists(PQ_space);
             op_.tp_lists(PQ_space);
-        } else {
+        } else if ( diag_method_ != Dynamic ) {
             op_.clear_op_s_lists();
             op_.clear_tp_s_lists();
             op_.build_strings(PQ_space);
@@ -3039,13 +3039,15 @@ void AdaptiveCI::add_external_excitations(DeterminantHashVec& ref) {
     SharedMatrix final_evecs;
     SharedVector final_evals;
 
-    op_.clear_op_s_lists();
-    op_.clear_tp_s_lists();
+        op_.clear_op_s_lists();
+        op_.clear_tp_s_lists();
 
-    WFNOperator op(mo_symmetry_, fci_ints);
-    op.build_strings(ref);
-    op.op_s_lists(ref);
-    op.tp_s_lists(ref);
+        WFNOperator op(mo_symmetry_, fci_ints);
+    if( diag_method_ != Dynamic ){
+        op.build_strings(ref);
+        op.op_s_lists(ref);
+        op.tp_s_lists(ref);
+    }
 
     // Diagonalize full space
 
