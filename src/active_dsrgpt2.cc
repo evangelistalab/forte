@@ -954,7 +954,7 @@ double ACTIVE_DSRGPT2::compute_energy_old() {
 
                     // transform integrals
                     outfile->Printf("\n\n");
-                    std::vector<size_t> idx_a = fci_mo_->idx_a_;
+                    std::vector<size_t> idx_a = fci_mo_->actv_mos_;
                     fci_mo_->integral_->retransform_integrals();
                     ambit::Tensor tei_active_aa =
                         fci_mo_->integral_->aptei_aa_block(idx_a, idx_a, idx_a, idx_a);
@@ -1024,7 +1024,7 @@ double ACTIVE_DSRGPT2::compute_energy_old() {
 
                     // transform integrals
                     outfile->Printf("\n\n");
-                    std::vector<size_t> idx_a = fci_mo_->idx_a_;
+                    std::vector<size_t> idx_a = fci_mo_->actv_mos_;
                     fci_mo_->integral_->retransform_integrals();
                     ambit::Tensor tei_active_aa =
                         fci_mo_->integral_->aptei_aa_block(idx_a, idx_a, idx_a, idx_a);
