@@ -27,6 +27,9 @@
  */
 
 #include <numeric>
+#include <iostream>
+#include <fstream>
+#include <sys/stat.h>
 
 #include "psi4/psi4-dec.h"
 
@@ -36,6 +39,8 @@
 #include "psi4/libmints/wavefunction.h"
 #include "psi4/libmints/writer.h"
 #include "psi4/libmints/writer_file_prefix.h"
+#include "psi4/libpsio/psio.hpp"
+#include "psi4/libpsio/psio.h"
 
 #include "helpers.h"
 
@@ -340,12 +345,52 @@ Matrix tensor_to_matrix(ambit::Tensor t, Dimension dims) {
     }
     return M_sym;
 }
+
 SharedMatrix tensor_to_matrix(ambit::Tensor t) {
     size_t size1 = t.dim(0);
     size_t size2 = t.dim(1);
     SharedMatrix M(new Matrix("M", size1, size2));
     t.iterate([&](const std::vector<size_t>& i, double& value) { M->set(i[0], i[1], value); });
     return M;
+}
+
+void write_disk_vector_double(const std::string& filename, const std::vector<double>& data) {
+    // check if file exists or not
+    struct stat buf;
+    bool exist = stat(filename.c_str(), &buf) == 0;
+    if (exist) {
+        std::stringstream error;
+        error << "File " << filename << " already exists.";
+        throw PSIEXCEPTION(error.str().c_str());
+    }
+
+    // write data to file
+    // for convenience, write the size to file as well
+    // note that &vector<T>[0] is a pointer to type T.
+    std::ofstream out(filename.c_str(), std::ios_base::binary);
+    size_t data_size = data.size();
+    out.write(reinterpret_cast<char*>(&data_size), sizeof(size_t));
+    out.write(reinterpret_cast<const char*>(&data[0]), data_size * sizeof(double));
+
+    out.close();
+}
+
+void read_disk_vector_double(const std::string& filename, std::vector<double>& data) {
+    // check if file exists or not
+    std::ifstream in(filename.c_str(), std::ios_base::binary);
+    if (!in.good()) {
+        std::stringstream error;
+        error << "File " << filename << " does not exist.";
+        throw PSIEXCEPTION(error.str().c_str());
+    }
+
+    // read file to data
+    size_t data_size;
+    in.read(reinterpret_cast<char*>(&data_size), sizeof(size_t));
+    data.resize(data_size);
+    in.read(reinterpret_cast<char*>(&data[0]), data_size * sizeof(double));
+
+    in.close();
 }
 
 std::pair<double, std::string> to_xb(size_t nele, size_t type_size) {
