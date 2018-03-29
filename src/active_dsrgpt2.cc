@@ -632,7 +632,7 @@ double ACTIVE_DSRGPT2::compute_energy() {
             // if the reference oscillator strength is nonzero
             if (do_osc) {
                 Timer osc_pt2;
-                outfile->Printf("\n  Computing V%s-DSRG-PT2 oscillator strength ...",
+                outfile->Printf("\n\n  Computing V%s-DSRG-PT2 oscillator strength ...",
                                 ref_type_.c_str());
                 compute_osc_pt2(h, i_real, Tde, T1, T2);
                 //                        compute_osc_pt2_dets(h, i_real, Tde, T1, T2);
@@ -705,7 +705,6 @@ void ACTIVE_DSRGPT2::rotate_amp(SharedMatrix Ua, SharedMatrix Ub, ambit::Blocked
             }
         });
     }
-    U.print();
 
     // rotate amplitudes
     BlockedTensor temp = ambit::BlockedTensor::build(CoreTensor, "Temp T2", T2.block_labels());
