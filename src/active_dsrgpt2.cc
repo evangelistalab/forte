@@ -513,10 +513,10 @@ double ACTIVE_DSRGPT2::compute_energy() {
             Reference reference = fci_mo_->reference(1);
             semi->semicanonicalize(reference, 1, true, false);
 
-            Uas.emplace_back(semi->Ua());
-            Ubs.emplace_back(semi->Ub());
-            Uas_t.emplace_back(semi->Ua_t());
-            Ubs_t.emplace_back(semi->Ub_t());
+            Uas.emplace_back(semi->Ua()->clone());
+            Ubs.emplace_back(semi->Ub()->clone());
+            Uas_t.emplace_back(semi->Ua_t().clone());
+            Ubs_t.emplace_back(semi->Ub_t().clone());
         }
 
         // fill in dominant_dets_
@@ -583,8 +583,13 @@ double ACTIVE_DSRGPT2::compute_energy() {
             reference.set_Eref(Eref);
 
             // manually rotate the reference and integrals
-            semi->transform_ints(Uas[i], Ubs[i]);
             semi->transform_reference(Uas_t[i], Ubs_t[i], reference, max_cu_level);
+            print_h2("Integral Transformation to Semicanonical Basis");
+            SharedMatrix Ca = reference_wavefunction_->Ca();
+            SharedMatrix Cb = reference_wavefunction_->Cb();
+            Ca->gemm(false, false, 1.0, Ca0, Uas[i], 0.0);
+            Cb->gemm(false, false, 1.0, Cb0, Ubs[i], 0.0);
+            ints_->retransform_integrals();
 
             // obtain the name of transition type
             std::string trans_name = transition_type(0, 0, i_real, h);
