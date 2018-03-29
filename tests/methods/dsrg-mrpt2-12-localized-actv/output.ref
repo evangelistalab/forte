@@ -18,9 +18,9 @@
     -----------------------------------------------------------------------
 
 
-    Psi4 started on: Friday, 29 December 2017 09:43PM
+    Psi4 started on: Monday, 26 March 2018 10:57PM
 
-    Process ID:  71070
+    Process ID:  62809
     PSIDATADIR: /Users/york/src/psi4new/psi4/share/psi4
     Memory:     500.0 MiB
     Threads:    1
@@ -77,6 +77,7 @@ set forte{
   avg_state           [[0,1,6]]
   rotate_mos          [1,17,20]
   dsrg_dipole         true
+  semi_canonical      false
 }
 E0ag, wfn = energy('forte', ref_wfn=wfn, return_wfn=True)
 compare_values(r_0ag, E0ag, 8, "abs. energy of singlet 0Ag")
@@ -88,8 +89,8 @@ psi4.print_out("but ForteIntegrals are in SEMI-CANONICAL basis.")
 
   Memory set to 953.674 MiB by Python driver.
 
-*** tstart() called on yorks-mac.wireless.emory.edu
-*** at Fri Dec 29 21:43:34 2017
+*** tstart() called on dhcp189-207.emerson.emory.edu
+*** at Mon Mar 26 22:57:51 2018
 
    => Loading Basis Set <=
 
@@ -206,18 +207,18 @@ psi4.print_out("but ForteIntegrals are in SEMI-CANONICAL basis.")
 
                         Total Energy        Delta E     RMS |[F,P]|
 
-   @RHF iter   0:  -156.88943773141091   -1.56889e+02   4.38802e-02 
-   @RHF iter   1:  -154.71857490499764    2.17086e+00   3.31958e-03 
-   @RHF iter   2:  -154.79484470757470   -7.62698e-02   1.15148e-03 DIIS
-   @RHF iter   3:  -154.80645264497736   -1.16079e-02   5.77068e-04 DIIS
-   @RHF iter   4:  -154.80877643611393   -2.32379e-03   1.75145e-04 DIIS
-   @RHF iter   5:  -154.80917978990914   -4.03354e-04   3.90909e-05 DIIS
-   @RHF iter   6:  -154.80920030062975   -2.05107e-05   9.63389e-06 DIIS
-   @RHF iter   7:  -154.80920133983665   -1.03921e-06   2.93671e-06 DIIS
-   @RHF iter   8:  -154.80920145064420   -1.10808e-07   7.27259e-07 DIIS
-   @RHF iter   9:  -154.80920145819240   -7.54821e-09   9.87078e-08 DIIS
-   @RHF iter  10:  -154.80920145831260   -1.20195e-10   2.06347e-08 DIIS
-   @RHF iter  11:  -154.80920145831823   -5.62750e-12   4.97314e-09 DIIS
+   @RHF iter   0:  -157.22797356060687   -1.57228e+02   4.41665e-02 
+   @RHF iter   1:  -154.74319359471579    2.48478e+00   3.13439e-03 
+   @RHF iter   2:  -154.80203768774504   -5.88441e-02   9.08990e-04 DIIS
+   @RHF iter   3:  -154.80801619101993   -5.97850e-03   4.07957e-04 DIIS
+   @RHF iter   4:  -154.80900032288980   -9.84132e-04   1.31298e-04 DIIS
+   @RHF iter   5:  -154.80917937591951   -1.79053e-04   4.03654e-05 DIIS
+   @RHF iter   6:  -154.80919980811598   -2.04322e-05   1.13726e-05 DIIS
+   @RHF iter   7:  -154.80920138968719   -1.58157e-06   2.21694e-06 DIIS
+   @RHF iter   8:  -154.80920145429178   -6.46046e-08   5.12693e-07 DIIS
+   @RHF iter   9:  -154.80920145821173   -3.91995e-09   8.48123e-08 DIIS
+   @RHF iter  10:  -154.80920145831377   -1.02034e-10   1.86760e-08 DIIS
+   @RHF iter  11:  -154.80920145831828   -4.51905e-12   4.37864e-09 DIIS
 
   ==> Post-Iterations <==
 
@@ -265,14 +266,14 @@ psi4.print_out("but ForteIntegrals are in SEMI-CANONICAL basis.")
 
   Energy converged.
 
-  @RHF Final Energy:  -154.80920145831823
+  @RHF Final Energy:  -154.80920145831828
 
    => Energetics <=
 
     Nuclear Repulsion Energy =            103.5160937733975146
-    One-Electron Energy =                -412.1830885515253726
-    Two-Electron Energy =                 153.8577933198096162
-    Total Energy =                       -154.8092014583182277
+    One-Electron Energy =                -412.1830887393801390
+    Two-Electron Energy =                 153.8577935076643257
+    Total Energy =                       -154.8092014583182845
 
 
 
@@ -293,15 +294,15 @@ Properties computed using the SCF density matrix
      X:    -0.0000      Y:     0.0000      Z:    -0.0000     Total:     0.0000
 
 
-*** tstop() called on yorks-mac.wireless.emory.edu at Fri Dec 29 21:43:39 2017
+*** tstop() called on dhcp189-207.emerson.emory.edu at Mon Mar 26 22:57:55 2018
 Module time:
-	user time   =       3.98 seconds =       0.07 minutes
-	system time =       0.11 seconds =       0.00 minutes
-	total time  =          5 seconds =       0.08 minutes
+	user time   =       4.33 seconds =       0.07 minutes
+	system time =       0.23 seconds =       0.00 minutes
+	total time  =          4 seconds =       0.07 minutes
 Total time:
-	user time   =       3.98 seconds =       0.07 minutes
-	system time =       0.11 seconds =       0.00 minutes
-	total time  =          5 seconds =       0.08 minutes
+	user time   =       4.33 seconds =       0.07 minutes
+	system time =       0.23 seconds =       0.00 minutes
+	total time  =          4 seconds =       0.07 minutes
 	SCF energy........................................................PASSED
    => Loading Basis Set <=
 
@@ -321,7 +322,7 @@ Calling plugin forte.so.
   ----------------------------------------------------------------------------
   A suite of quantum chemistry methods for strongly correlated electrons
 
-    git branch: master - git commit: f15141bf
+    git branch: dwms - git commit: f5527b7b
 
   Developed by:
     Francesco A. Evangelista, Chenyang Li, Kevin P. Hannon,
@@ -564,7 +565,7 @@ Calling plugin forte.so.
 	Starting second half-transformation.
 	Two-electron integral transformation complete.
 
-  Integral transformation done. 5.60704000 s
+  Integral transformation done. 6.36129600 s
   Reading the two-electron integrals from disk
   Size of two-electron integrals:   1.222659 GB  Using in-core PK algorithm.
    Calculation information:
@@ -582,11 +583,11 @@ Calling plugin forte.so.
   We computed 385288 shell quartets total.
   Whereas there are 408156 unique shell quartets.
 
-  Frozen-core energy           -176.777110788204 a.u.
+  Frozen-core energy           -176.777110788129 a.u.
 
-  FrozenOneBody Operator takes  2.64017900 s
+  FrozenOneBody Operator takes  3.01600800 s
   Resorting integrals after freezing core.
-  Conventional integrals take 22.41891100 s
+  Conventional integrals take 25.07230000 s
 
               ---------------------------------------------------
                 Complete Active Space Configuration Interaction
@@ -628,13 +629,13 @@ Calling plugin forte.so.
     Maxiter     =        1000
 
     Iteration                   Metric       Residual
-    @PM    0   1.0574597223523818E+00              -
-    @PM    1   4.8820673619520267E+00   3.616788E+00
-    @PM    2   4.9436766333332516E+00   1.261950E-02
-    @PM    3   4.9438175566860432E+00   2.850578E-05
-    @PM    4   4.9438175713061181E+00   2.957244E-09
-    @PM    5   4.9438175714111221E+00   2.123946E-11
-    @PM    6   4.9438175714112651E+00   2.892435E-14
+    @PM    0   1.0574597623569157E+00              -
+    @PM    1   4.8820673842380131E+00   3.616788E+00
+    @PM    2   4.9436766323315329E+00   1.261950E-02
+    @PM    3   4.9438175556346486E+00   2.850577E-05
+    @PM    4   4.9438175702547209E+00   2.957243E-09
+    @PM    5   4.9438175703597285E+00   2.124018E-11
+    @PM    6   4.9438175703598697E+00   2.856504E-14
 
     PM Localizer converged.
 
@@ -836,7 +837,7 @@ Calling plugin forte.so.
 	Starting second half-transformation.
 	Two-electron integral transformation complete.
 
-  Integral transformation done. 6.19768900 s
+  Integral transformation done. 7.52872900 s
   Reading the two-electron integrals from disk
   Size of two-electron integrals:   1.222659 GB
  Integrals are about to be updated.  Using in-core PK algorithm.
@@ -855,25 +856,25 @@ Calling plugin forte.so.
   We computed 385288 shell quartets total.
   Whereas there are 408156 unique shell quartets.
 
-  Frozen-core energy           -176.777110788204 a.u.
+  Frozen-core energy           -176.777110788129 a.u.
 
-  FrozenOneBody Operator takes  2.69847800 s
+  FrozenOneBody Operator takes  2.85802700 s
   Resorting integrals after freezing core.
-  Frozen Orbitals takes     5.598 s.
-  Forming alpha and beta strings      ...  Done. Timing        0.000094 s
-  Forming determinants                ...  Done. Timing        0.000035 s
+  Frozen Orbitals takes     5.792 s.
+  Forming alpha and beta strings      ...  Done. Timing        0.000146 s
+  Forming determinants                ...  Done. Timing        0.000063 s
 
   ==> Determinants Summary <==
 
-    number of alpha active electrons    =     2
-    number of beta active electrons     =     2
-    root symmetry (zero based)          =     0
-    number of determinants              =    36
+    number of alpha active electrons         =     2
+    number of beta active electrons          =     2
+    root symmetry (zero based)               =     0
+    number of determinants                   =    36
 
   Diagonalizing Hamiltonian           ...
   Found 20 roots with 2S+1 = 1 *
   Found 15 roots with 2S+1 = 3
-  Found 1 roots with 2S+1 = 5  Done. Timing        0.014290 s
+  Found 1 roots with 2S+1 = 5  Done. Timing        0.015732 s
 
   * * * * * * * * * * * * * * * * *
   *  CI Vectors & Configurations  *
@@ -881,200 +882,200 @@ Calling plugin forte.so.
 
   ==> Root No. 0 <==
 
-    baba         -0.3518159583
-    abab         -0.3518159583
-    baab         -0.2920325071
-    abba         -0.2920325071
-    02ab          0.2213329733
-    02ba          0.2213329733
-    ba20          0.2213329709
-    ab20          0.2213329709
-    ba02          0.2202758051
-    ab02          0.2202758051
-    20ba          0.2202758026
-    20ab          0.2202758026
-    0202         -0.1678261869
-    2020         -0.1678261831
-    0220         -0.1379776547
-    2002         -0.1372330808
-    2ba0         -0.1040256215
-    2ab0         -0.1040256215
-    0ba2         -0.1040256203
-    0ab2         -0.1040256203
-    a2b0          0.0710337152
-    b2a0          0.0710337152
-    0a2b          0.0710337138
-    0b2a          0.0710337138
-    2a0b          0.0633394283
-    2b0a          0.0633394283
-    b0a2          0.0633394269
-    a0b2          0.0633394269
-    aabb         -0.0597834512
-    bbaa         -0.0597834512
-    b20a         -0.0520806029
-    a20b         -0.0520806029
-    b02a         -0.0520806011
-    a02b         -0.0520806011
+    abab         -0.3518159588
+    baba         -0.3518159588
+    baab         -0.2920325068
+    abba         -0.2920325068
+    02ba          0.2213329694
+    02ab          0.2213329694
+    ba20          0.2213329669
+    ab20          0.2213329669
+    ab02          0.2202758086
+    ba02          0.2202758086
+    20ab          0.2202758061
+    20ba          0.2202758061
+    0202         -0.1678261866
+    2020         -0.1678261829
+    0220         -0.1379776496
+    2002         -0.1372330851
+    2ba0         -0.1040256224
+    2ab0         -0.1040256224
+    0ab2         -0.1040256212
+    0ba2         -0.1040256212
+    b2a0          0.0710337144
+    a2b0          0.0710337144
+    0b2a          0.0710337130
+    0a2b          0.0710337130
+    2b0a          0.0633394295
+    2a0b          0.0633394295
+    b0a2          0.0633394281
+    a0b2          0.0633394281
+    aabb         -0.0597834520
+    bbaa         -0.0597834520
+    b20a         -0.0520806030
+    a20b         -0.0520806030
+    a02b         -0.0520806012
+    b02a         -0.0520806012
 
-    Total Energy:   -154.847006095790107
+    Total Energy:   -154.847006096078417
 
 
   ==> Root No. 1 <==
 
-    aabb          0.4608161432
-    bbaa          0.4608161432
-    abba         -0.2928884581
-    baab         -0.2928884581
-    2ab0          0.2496735790
-    2ba0          0.2496735790
-    0ba2          0.2496735775
-    0ab2          0.2496735775
-    baba          0.1679276851
-    abab          0.1679276851
-    2b0a         -0.0898687286
-    2a0b         -0.0898687286
-    b0a2         -0.0898687280
-    a0b2         -0.0898687280
-    02ba          0.0728959516
-    02ab          0.0728959516
-    ab20          0.0728959509
-    ba20          0.0728959509
-    0220         -0.0683278318
-    ab02          0.0610862677
-    ba02          0.0610862677
-    20ba          0.0610862669
-    20ab          0.0610862669
-    2002         -0.0570532253
-    b2a0         -0.0543169916
-    a2b0         -0.0543169916
-    0b2a         -0.0543169910
-    0a2b         -0.0543169910
+    aabb         -0.4608161427
+    bbaa         -0.4608161427
+    baab          0.2928884588
+    abba          0.2928884588
+    2ba0         -0.2496735793
+    2ab0         -0.2496735793
+    0ab2         -0.2496735778
+    0ba2         -0.2496735778
+    abab         -0.1679276839
+    baba         -0.1679276839
+    2a0b          0.0898687296
+    2b0a          0.0898687296
+    a0b2          0.0898687290
+    b0a2          0.0898687290
+    02ba         -0.0728959497
+    02ab         -0.0728959497
+    ba20         -0.0728959490
+    ab20         -0.0728959490
+    0220          0.0683278281
+    ba02         -0.0610862708
+    ab02         -0.0610862708
+    20ba         -0.0610862701
+    20ab         -0.0610862701
+    2002          0.0570532293
+    a2b0          0.0543169903
+    b2a0          0.0543169903
+    0b2a          0.0543169897
+    0a2b          0.0543169897
 
-    Total Energy:   -154.590268106961275
+    Total Energy:   -154.590268107879467
 
 
   ==> Root No. 2 <==
 
-    0202         -0.3180428244
-    2020          0.3180428228
-    ba20         -0.2144785489
-    ab20         -0.2144785489
-    02ba          0.2144785466
-    02ab          0.2144785466
-    20ab         -0.1940459219
-    20ba         -0.1940459219
-    ab02          0.1940459197
-    ba02          0.1940459197
-    a20b         -0.1891677205
-    b20a         -0.1891677205
-    a02b          0.1891677181
-    b02a          0.1891677181
-    b2a0          0.1790644606
-    a2b0          0.1790644606
-    0a2b         -0.1790644604
-    0b2a         -0.1790644604
-    2b0a          0.1596261132
-    2a0b          0.1596261132
-    a0b2         -0.1596261130
-    b0a2         -0.1596261130
-    0ab2          0.1467022923
-    0ba2          0.1467022923
-    2ba0         -0.1467022902
-    2ab0         -0.1467022902
+    0202         -0.3180428243
+    2020          0.3180428226
+    ba20         -0.2144785430
+    ab20         -0.2144785430
+    02ba          0.2144785406
+    02ab          0.2144785406
+    20ba         -0.1940459273
+    20ab         -0.1940459273
+    ab02          0.1940459252
+    ba02          0.1940459252
+    b20a         -0.1891677207
+    a20b         -0.1891677207
+    a02b          0.1891677183
+    b02a          0.1891677183
+    b2a0          0.1790644568
+    a2b0          0.1790644568
+    0b2a         -0.1790644566
+    0a2b         -0.1790644566
+    2a0b          0.1596261177
+    2b0a          0.1596261177
+    a0b2         -0.1596261175
+    b0a2         -0.1596261175
+    0ab2          0.1467022932
+    0ba2          0.1467022932
+    2ba0         -0.1467022912
+    2ab0         -0.1467022912
 
-    Total Energy:   -154.546370524472110
+    Total Energy:   -154.546370524513009
 
 
   ==> Root No. 3 <==
 
-    2002          0.3452921484
-    0220         -0.3290974742
-    02ab          0.2846757240
-    02ba          0.2846757240
-    ab20          0.2846757235
-    ba20          0.2846757235
-    ba02         -0.2838414981
-    ab02         -0.2838414981
-    20ba         -0.2838414962
-    20ab         -0.2838414962
-    a2b0          0.1429105570
-    b2a0          0.1429105570
-    0a2b          0.1429105557
-    0b2a          0.1429105557
-    2a0b         -0.0709180948
-    2b0a         -0.0709180948
-    b0a2         -0.0709180931
-    a0b2         -0.0709180931
-    b20a         -0.0560385489
-    a20b         -0.0560385489
-    a02b         -0.0560385485
-    b02a         -0.0560385485
-    2020         -0.0501742736
-    0202         -0.0501742732
+    2002          0.3452921599
+    0220         -0.3290974641
+    02ba          0.2846757248
+    02ab          0.2846757248
+    ba20          0.2846757242
+    ab20          0.2846757242
+    ba02         -0.2838414990
+    ab02         -0.2838414990
+    20ba         -0.2838414971
+    20ab         -0.2838414971
+    a2b0          0.1429105557
+    b2a0          0.1429105557
+    0b2a          0.1429105544
+    0a2b          0.1429105544
+    2b0a         -0.0709180969
+    2a0b         -0.0709180969
+    b0a2         -0.0709180952
+    a0b2         -0.0709180952
+    a20b         -0.0560385477
+    b20a         -0.0560385477
+    a02b         -0.0560385473
+    b02a         -0.0560385473
+    2020         -0.0501742734
+    0202         -0.0501742730
 
-    Total Energy:   -154.453714765391339
+    Total Energy:   -154.453714764486591
 
 
   ==> Root No. 4 <==
 
-    a20b         -0.2922658207
-    b20a         -0.2922658207
-    b02a         -0.2922658193
-    a02b         -0.2922658193
-    abab          0.2625271846
-    baba          0.2625271846
-    2020         -0.2213025467
-    0202         -0.2213025449
-    b0a2          0.1955977695
-    a0b2          0.1955977695
-    2b0a          0.1955977687
-    2a0b          0.1955977687
-    0a2b          0.1885265360
-    0b2a          0.1885265360
-    a2b0          0.1885265347
-    b2a0          0.1885265347
-    aabb          0.1587898360
-    bbaa          0.1587898360
-    abba          0.1037373486
-    baab          0.1037373486
-    0220          0.0897159590
-    2200         -0.0841094493
-    0022         -0.0841094471
-    2002         -0.0670476251
-    20ba          0.0589681444
-    20ab          0.0589681444
-    ba02          0.0589681418
-    ab02          0.0589681418
+    a20b          0.2922658215
+    b20a          0.2922658215
+    b02a          0.2922658201
+    a02b          0.2922658201
+    abab         -0.2625271874
+    baba         -0.2625271874
+    2020          0.2213025498
+    0202          0.2213025480
+    b0a2         -0.1955977726
+    a0b2         -0.1955977726
+    2b0a         -0.1955977719
+    2a0b         -0.1955977719
+    0b2a         -0.1885265317
+    0a2b         -0.1885265317
+    a2b0         -0.1885265304
+    b2a0         -0.1885265304
+    aabb         -0.1587898329
+    bbaa         -0.1587898329
+    baab         -0.1037373545
+    abba         -0.1037373545
+    0220         -0.0897159479
+    2200          0.0841094501
+    0022          0.0841094479
+    2002          0.0670476223
+    20ba         -0.0589681410
+    20ab         -0.0589681410
+    ab02         -0.0589681384
+    ba02         -0.0589681384
 
-    Total Energy:   -154.380572075691987
+    Total Energy:   -154.380572075632784
 
 
   ==> Root No. 5 <==
 
-    0ba2          0.3317621437
-    0ab2          0.3317621437
-    2ab0         -0.3317621428
-    2ba0         -0.3317621428
-    0202          0.2669401082
-    2020         -0.2669401041
-    2a0b          0.1994260985
-    2b0a          0.1994260985
-    a0b2         -0.1994260975
-    b0a2         -0.1994260975
-    ba20          0.1829444321
-    ab20          0.1829444321
-    02ab         -0.1829444316
-    02ba         -0.1829444316
-    20ab          0.1343638048
-    20ba          0.1343638048
-    ab02         -0.1343638047
-    ba02         -0.1343638047
-    b2a0          0.1051912148
-    a2b0          0.1051912148
-    0a2b         -0.1051912139
-    0b2a         -0.1051912139
+    0ab2          0.3317621441
+    0ba2          0.3317621441
+    2ab0         -0.3317621432
+    2ba0         -0.3317621432
+    0202          0.2669401101
+    2020         -0.2669401060
+    2b0a          0.1994261003
+    2a0b          0.1994261003
+    a0b2         -0.1994260993
+    b0a2         -0.1994260993
+    ab20          0.1829444249
+    ba20          0.1829444249
+    02ab         -0.1829444244
+    02ba         -0.1829444244
+    20ba          0.1343638128
+    20ab          0.1343638128
+    ba02         -0.1343638127
+    ab02         -0.1343638127
+    b2a0          0.1051912113
+    a2b0          0.1051912113
+    0b2a         -0.1051912104
+    0a2b         -0.1051912104
 
-    Total Energy:   -154.367491280069743
+    Total Energy:   -154.367491279870336
 
 
 
@@ -1086,14 +1087,14 @@ Calling plugin forte.so.
   ==> Transition Dipole Moments (A -> A) <==
 
   Only print nonzero (> 1.0e-5) elements.
-  Transition dipole moments (a.u.) 0 -> 2:  X:  1.6290  Y: -1.6638  Z:  0.0000  Total:  2.3285
-  Transition dipole moments (a.u.) 0 -> 5:  X: -1.0148  Y: -0.2110  Z: -0.0000  Total:  1.0365
-  Transition dipole moments (a.u.) 1 -> 2:  X: -0.0255  Y:  0.6797  Z:  0.0000  Total:  0.6802
-  Transition dipole moments (a.u.) 1 -> 5:  X: -0.5529  Y:  1.5571  Z:  0.0000  Total:  1.6523
-  Transition dipole moments (a.u.) 2 -> 3:  X:  0.5209  Y: -0.6364  Z: -0.0000  Total:  0.8224
-  Transition dipole moments (a.u.) 2 -> 4:  X:  2.1948  Y: -2.9538  Z: -0.0000  Total:  3.6799
+  Transition dipole moments (a.u.) 0 -> 2:  X:  1.6290  Y: -1.6638  Z: -0.0000  Total:  2.3285
+  Transition dipole moments (a.u.) 0 -> 5:  X: -1.0148  Y: -0.2110  Z:  0.0000  Total:  1.0365
+  Transition dipole moments (a.u.) 1 -> 2:  X:  0.0255  Y: -0.6797  Z:  0.0000  Total:  0.6802
+  Transition dipole moments (a.u.) 1 -> 5:  X:  0.5529  Y: -1.5571  Z:  0.0000  Total:  1.6523
+  Transition dipole moments (a.u.) 2 -> 3:  X:  0.5209  Y: -0.6364  Z:  0.0000  Total:  0.8224
+  Transition dipole moments (a.u.) 2 -> 4:  X: -2.1948  Y:  2.9538  Z: -0.0000  Total:  3.6799
   Transition dipole moments (a.u.) 3 -> 5:  X: -0.1903  Y:  0.1026  Z: -0.0000  Total:  0.2162
-  Transition dipole moments (a.u.) 4 -> 5:  X:  0.1755  Y: -1.1414  Z: -0.0000  Total:  1.1549
+  Transition dipole moments (a.u.) 4 -> 5:  X: -0.1755  Y:  1.1414  Z: -0.0000  Total:  1.1549
 
 
   ==> Oscillator Strength (A -> A) <==
@@ -1108,262 +1109,31 @@ Calling plugin forte.so.
   Oscillator strength (a.u.) 3 -> 5:  X:  0.0021  Y:  0.0006  Z:  0.0000  Total:  0.0027
   Oscillator strength (a.u.) 4 -> 5:  X:  0.0003  Y:  0.0114  Z:  0.0000  Total:  0.0116
 
-  Total Energy (averaged over 6 states): -154.530903808062760
-
-  Computing 1-, 2- and 3-cumulants ... Done. Timing        0.028763 s
+  Total Energy (averaged over 6 states): -154.530903808076772
 
 
-       -----------------------------------------------------------------
-                            Semi-Canonical Orbitals
-         Chenyang Li, Jeffrey B. Schriber and Francesco A. Evangelista
-       -----------------------------------------------------------------
+  ==> Compute State-Averaged Cumulants <==
 
-  Took 0.019598 s to build Fock matrix
-
-  ==> Checking Fock Matrix Diagonal Blocks <==
-
-    Off-Diag. Elements       Max           2-Norm
-    ------------------------------------------------
-    Fa actv              0.1929908390   0.4411615703
-    Fb actv              0.1929908390   0.4411615703
-    ------------------------------------------------
-    Fa core              0.0120219971   0.0285393502
-    Fb core              0.0120219971   0.0285393502
-    ------------------------------------------------
-    Fa virt              0.0103499035   0.0926399075
-    Fb virt              0.0103499035   0.0926399075
-    ------------------------------------------------
-
-  ==> Integral Transformation to Semicanonical Basis <==
-    Molecular point group: c1
-    Full point group: C2h
-
-    Geometry (in Angstrom), charge = 0, multiplicity = 1:
-
-       Center              X                  Y                   Z               Mass       
-    ------------   -----------------  -----------------  -----------------  -----------------
-           H          1.080977000000    -2.558832000000     0.000000000000     1.007825032070
-           H         -1.080977000000     2.558832000000     0.000000000000     1.007825032070
-           H          2.103773000000    -1.017723000000     0.000000000000     1.007825032070
-           H         -2.103773000000     1.017723000000     0.000000000000     1.007825032070
-           H         -0.973565000000    -1.219040000000     0.000000000000     1.007825032070
-           H          0.973565000000     1.219040000000     0.000000000000     1.007825032070
-           C          0.000000000000     0.728881000000     0.000000000000    12.000000000000
-           C          0.000000000000    -0.728881000000     0.000000000000    12.000000000000
-           C          1.117962000000    -1.474815000000     0.000000000000    12.000000000000
-           C         -1.117962000000     1.474815000000     0.000000000000    12.000000000000
-
-  -AO BASIS SET INFORMATION:
-    Name                   = DEF2-SVP
-    Blend                  = DEF2-SVP
-    Total number of shells = 42
-    Number of primitives   = 78
-    Number of AO           = 90
-    Number of SO           = 86
-    Maximum AM             = 2
-    Spherical Harmonics    = TRUE
-
-  -Contraction Scheme:
-    Atom   Type   All Primitives // Shells:
-   ------ ------ --------------------------
-       1     H     4s 1p // 2s 1p 
-       2     H     4s 1p // 2s 1p 
-       3     H     4s 1p // 2s 1p 
-       4     H     4s 1p // 2s 1p 
-       5     H     4s 1p // 2s 1p 
-       6     H     4s 1p // 2s 1p 
-       7     C     7s 4p 1d // 3s 2p 1d 
-       8     C     7s 4p 1d // 3s 2p 1d 
-       9     C     7s 4p 1d // 3s 2p 1d 
-      10     C     7s 4p 1d // 3s 2p 1d 
-
-  ==> AO Basis Functions <==
-
-    [ DEF2-SVP ]
-    spherical
-    ****
-    H   1
-    S   3 1.00
-                        13.01070100           0.01968216
-                         1.96225720           0.13796524
-                         0.44453796           0.47831935
-    S   1 1.00
-                         0.12194962           1.00000000
-    P   1 1.00
-                         0.80000000           1.00000000
-    ****
-    H   2
-    S   3 1.00
-                        13.01070100           0.01968216
-                         1.96225720           0.13796524
-                         0.44453796           0.47831935
-    S   1 1.00
-                         0.12194962           1.00000000
-    P   1 1.00
-                         0.80000000           1.00000000
-    ****
-    H   3
-    S   3 1.00
-                        13.01070100           0.01968216
-                         1.96225720           0.13796524
-                         0.44453796           0.47831935
-    S   1 1.00
-                         0.12194962           1.00000000
-    P   1 1.00
-                         0.80000000           1.00000000
-    ****
-    H   4
-    S   3 1.00
-                        13.01070100           0.01968216
-                         1.96225720           0.13796524
-                         0.44453796           0.47831935
-    S   1 1.00
-                         0.12194962           1.00000000
-    P   1 1.00
-                         0.80000000           1.00000000
-    ****
-    H   5
-    S   3 1.00
-                        13.01070100           0.01968216
-                         1.96225720           0.13796524
-                         0.44453796           0.47831935
-    S   1 1.00
-                         0.12194962           1.00000000
-    P   1 1.00
-                         0.80000000           1.00000000
-    ****
-    H   6
-    S   3 1.00
-                        13.01070100           0.01968216
-                         1.96225720           0.13796524
-                         0.44453796           0.47831935
-    S   1 1.00
-                         0.12194962           1.00000000
-    P   1 1.00
-                         0.80000000           1.00000000
-    ****
-    C   7
-    S   5 1.00
-                      1238.40169380           0.00545688
-                       186.29004992           0.04063841
-                        42.25117635           0.18025594
-                        11.67655793           0.46315122
-                         3.59305065           0.44087173
-    S   1 1.00
-                         0.40245147           1.00000000
-    S   1 1.00
-                         0.13090183           1.00000000
-    P   3 1.00
-                         9.46809706           0.03838787
-                         2.01035451           0.21117025
-                         0.54771005           0.51328172
-    P   1 1.00
-                         0.15268614           1.00000000
-    D   1 1.00
-                         0.80000000           1.00000000
-    ****
-    C   8
-    S   5 1.00
-                      1238.40169380           0.00545688
-                       186.29004992           0.04063841
-                        42.25117635           0.18025594
-                        11.67655793           0.46315122
-                         3.59305065           0.44087173
-    S   1 1.00
-                         0.40245147           1.00000000
-    S   1 1.00
-                         0.13090183           1.00000000
-    P   3 1.00
-                         9.46809706           0.03838787
-                         2.01035451           0.21117025
-                         0.54771005           0.51328172
-    P   1 1.00
-                         0.15268614           1.00000000
-    D   1 1.00
-                         0.80000000           1.00000000
-    ****
-    C   9
-    S   5 1.00
-                      1238.40169380           0.00545688
-                       186.29004992           0.04063841
-                        42.25117635           0.18025594
-                        11.67655793           0.46315122
-                         3.59305065           0.44087173
-    S   1 1.00
-                         0.40245147           1.00000000
-    S   1 1.00
-                         0.13090183           1.00000000
-    P   3 1.00
-                         9.46809706           0.03838787
-                         2.01035451           0.21117025
-                         0.54771005           0.51328172
-    P   1 1.00
-                         0.15268614           1.00000000
-    D   1 1.00
-                         0.80000000           1.00000000
-    ****
-    C  10
-    S   5 1.00
-                      1238.40169380           0.00545688
-                       186.29004992           0.04063841
-                        42.25117635           0.18025594
-                        11.67655793           0.46315122
-                         3.59305065           0.44087173
-    S   1 1.00
-                         0.40245147           1.00000000
-    S   1 1.00
-                         0.13090183           1.00000000
-    P   3 1.00
-                         9.46809706           0.03838787
-                         2.01035451           0.21117025
-                         0.54771005           0.51328172
-    P   1 1.00
-                         0.15268614           1.00000000
-    D   1 1.00
-                         0.80000000           1.00000000
-    ****
-
-
- Integrals are about to be computed.	Presorting SO-basis two-electron integrals.
-	Sorting File: SO Ints (nn|nn) nbuckets = 1
-	Transforming the one-electron integrals and constructing Fock matrices
-	Starting first half-transformation.
-	Sorting half-transformed integrals.
-	First half integral transformation complete.
-	Starting second half-transformation.
-	Two-electron integral transformation complete.
-
-  Integral transformation done. 6.09953400 s
-  Reading the two-electron integrals from disk
-  Size of two-electron integrals:   1.222659 GB
- Integrals are about to be updated.  Using in-core PK algorithm.
-   Calculation information:
-      Number of atoms:                  10
-      Number of AO shells:              42
-      Number of primitives:             78
-      Number of atomic orbitals:        90
-      Number of basis functions:        86
-
-      Integral cutoff                 1.00e-12
-      Number of threads:                 1
-
-  Performing in-core PK
-  Using 13998822 doubles for integral storage.
-  We computed 385288 shell quartets total.
-  Whereas there are 408156 unique shell quartets.
-
-  Frozen-core energy           -176.777110788204 a.u.
-
-  FrozenOneBody Operator takes  2.64729100 s
-  Resorting integrals after freezing core.
-  Frozen Orbitals takes     5.482 s.
-
-  ==> Reference Transformation to Semicanonical Basis <==
-
-    Transformed 1 cumulants.
-    Transformed 2 cumulants and RDMs.
-    Transformed 3 cumulants.
-  SemiCanonicalize takes 22.585991 s.
+  Computing  1RDM (0-0) of Doublet A ... Done. Timing        0.000394 s
+  Computing  2RDM (0-0) of Doublet A ... Done. Timing        0.000495 s
+  Computing  3RDM (0-0) of Doublet A ... Done. Timing        0.000534 s
+  Computing  1RDM (1-1) of Doublet A ... Done. Timing        0.000278 s
+  Computing  2RDM (1-1) of Doublet A ... Done. Timing        0.000358 s
+  Computing  3RDM (1-1) of Doublet A ... Done. Timing        0.000651 s
+  Computing  1RDM (2-2) of Doublet A ... Done. Timing        0.000306 s
+  Computing  2RDM (2-2) of Doublet A ... Done. Timing        0.000346 s
+  Computing  3RDM (2-2) of Doublet A ... Done. Timing        0.000473 s
+  Computing  1RDM (3-3) of Doublet A ... Done. Timing        0.000242 s
+  Computing  2RDM (3-3) of Doublet A ... Done. Timing        0.000458 s
+  Computing  3RDM (3-3) of Doublet A ... Done. Timing        0.000473 s
+  Computing  1RDM (4-4) of Doublet A ... Done. Timing        0.000258 s
+  Computing  2RDM (4-4) of Doublet A ... Done. Timing        0.000336 s
+  Computing  3RDM (4-4) of Doublet A ... Done. Timing        0.000557 s
+  Computing  1RDM (5-5) of Doublet A ... Done. Timing        0.000255 s
+  Computing  2RDM (5-5) of Doublet A ... Done. Timing        0.000341 s
+  Computing  3RDM (5-5) of Doublet A ... Done. Timing        0.000474 s
+  Adding wedge product for 2-cumulants ... Done. Timing        0.000995 s
+  Adding wedge product for 3-cumulants ... Done. Timing        0.018660 s
 
   ==> Multireference Driven Similarity Renormalization Group <==
 
@@ -1401,33 +1171,35 @@ Calling plugin forte.so.
     Abs. max of Fock core, active, virtual blocks (Fij, i != j)
                   core          active         virtual
     --------------------------------------------------
-    Fα    0.0000000000    0.0000000000    0.0000000000
-    Fβ    0.0000000000    0.0000000000    0.0000000000
+    Fα    0.0120219971    0.1929908390    0.0103499050
+    Fβ    0.0120219971    0.1929908390    0.0103499050
     --------------------------------------------------
 
     1-Norm of Fock core, active, virtual blocks (Fij, i != j)
                   core          active         virtual
     --------------------------------------------------
-    Fα    0.0000000000    0.0000000000    0.0000000000
-    Fβ    0.0000000000    0.0000000000    0.0000000000
+    Fα    0.1181577455    1.0981591066    2.5679759497
+    Fβ    0.1181577455    1.0981591066    2.5679759497
     --------------------------------------------------
 
-    Orbitals are semi-canonicalized.
+    Warning! Orbitals are not semi-canonicalized!
+    Energy is reliable about to the same digit as max(|Fij|, i != j).
+    Orbital invariant formalism will be employed for DSRG-MRPT2.
 
   ==> Computing DSRG-MRPT2 ... <==
 
-    Computing T2 amplitudes                  ...  Done. Timing        0.615074 s
-    Computing T1 amplitudes                  ...  Done. Timing        0.005357 s
-    Renormalizing two-electron integrals     ...  Done. Timing        0.559077 s
-    Renormalizing Fock matrix elements       ...  Done. Timing        0.005526 s
-    Computing <[F, T1]>                      ...  Done. Timing        0.001752 s
-    Computing <[F, T2]>                      ...  Done. Timing        0.009166 s
-    Computing <[V, T1]>                      ...  Done. Timing        0.004849 s
-    Computing <[V, T2]> (C_2)^4              ...  Done. Timing        0.092181 s
-    Computing <[V, T2]> C_4 (C_2)^2 HH       ...  Done. Timing        0.005479 s
-    Computing <[V, T2]> C_4 (C_2)^2 PP       ...  Done. Timing        0.007806 s
-    Computing <[V, T2]> C_4 (C_2)^2 PH       ...  Done. Timing        0.033281 s
-    Computing <[V, T2]> C_6 C_2              ...  Done. Timing        0.014727 s
+    Computing T2 amplitudes                  ...  Done. Timing        2.750443 s
+    Computing T1 amplitudes                  ...  Done. Timing        0.026715 s
+    Renormalizing two-electron integrals     ...  Done. Timing        2.668193 s
+    Renormalizing Fock matrix elements       ...  Done. Timing        0.028144 s
+    Computing <[F, T1]>                      ...  Done. Timing        0.001874 s
+    Computing <[F, T2]>                      ...  Done. Timing        0.004115 s
+    Computing <[V, T1]>                      ...  Done. Timing        0.004259 s
+    Computing <[V, T2]> (C_2)^4              ...  Done. Timing        0.096060 s
+    Computing <[V, T2]> C_4 (C_2)^2 HH       ...  Done. Timing        0.005753 s
+    Computing <[V, T2]> C_4 (C_2)^2 PP       ...  Done. Timing        0.008161 s
+    Computing <[V, T2]> C_4 (C_2)^2 PH       ...  Done. Timing        0.036268 s
+    Computing <[V, T2]> C_6 C_2              ...  Done. Timing        0.018061 s
 
   ==> Excitation Amplitudes Summary <==
 
@@ -1435,60 +1207,60 @@ Calling plugin forte.so.
     Largest T1 amplitudes for spin case A:
        i       a                  i       a                  i       a               
     --------------------------------------------------------------------------------
-    [ 11      31    ]-0.005339 [  1      23    ]-0.004441 [ 12      30    ]-0.004134 
-    [  0      22    ]-0.003883 [  6      22    ]-0.003324 [  7      37    ] 0.003301 
-    [  5      34    ]-0.003098 [  4      19    ] 0.002861 [ 12      28    ]-0.002771 
-    [  1      25    ] 0.002762 [  9      48    ]-0.002745 [  6      24    ] 0.002678 
-    [  8      34    ]-0.002633 [ 10      46    ]-0.002630 [ 11      71    ] 0.002542 
+    [  1      23    ]-0.004157 [  0      22    ] 0.003764 [  6      22    ]-0.003316 
+    [  5      35    ]-0.003306 [  7      37    ]-0.003276 [ 11      30    ] 0.003063 
+    [ 10      30    ] 0.003063 [  9      31    ]-0.003051 [ 12      31    ] 0.003051 
+    [  4      19    ] 0.002887 [  1      25    ] 0.002857 [  6      24    ]-0.002799 
+    [  8      35    ]-0.002528 [ 11      31    ] 0.002486 [ 10      31    ]-0.002486 
     --------------------------------------------------------------------------------
-    Norm of T1A vector: (nonzero elements: 710)                   0.019098673506089.
+    Norm of T1A vector: (nonzero elements: 933)                   0.019098674094457.
     --------------------------------------------------------------------------------
     Largest T1 amplitudes for spin case B:
        _       _                  _       _                  _       _               
        i       a                  i       a                  i       a               
     --------------------------------------------------------------------------------
-    [ 11      31    ]-0.005339 [  1      23    ]-0.004441 [ 12      30    ]-0.004134 
-    [  0      22    ]-0.003883 [  6      22    ]-0.003324 [  7      37    ] 0.003301 
-    [  5      34    ]-0.003098 [  4      19    ] 0.002861 [ 12      28    ]-0.002771 
-    [  1      25    ] 0.002762 [  9      48    ]-0.002745 [  6      24    ] 0.002678 
-    [  8      34    ]-0.002633 [ 10      46    ]-0.002630 [ 11      71    ] 0.002542 
+    [  1      23    ]-0.004157 [  0      22    ] 0.003764 [  6      22    ]-0.003316 
+    [  5      35    ]-0.003306 [  7      37    ]-0.003276 [ 11      30    ] 0.003063 
+    [ 10      30    ] 0.003063 [  9      31    ]-0.003051 [ 12      31    ] 0.003051 
+    [  4      19    ] 0.002887 [  1      25    ] 0.002857 [  6      24    ]-0.002799 
+    [  8      35    ]-0.002528 [ 11      31    ] 0.002486 [ 10      31    ]-0.002486 
     --------------------------------------------------------------------------------
-    Norm of T1B vector: (nonzero elements: 710)                   0.019098673506089.
+    Norm of T1B vector: (nonzero elements: 933)                   0.019098674094457.
     --------------------------------------------------------------------------------
     Largest T2 amplitudes for spin case AA:
        i   j   a   b              i   j   a   b              i   j   a   b           
     --------------------------------------------------------------------------------
-    [  0   9   9  22]-0.019158 [ 11  12  12  48]-0.017872 [  6   9  10  23]-0.016437 
-    [ 10  12  11  48] 0.014073 [  6  10   9  23]-0.013993 [  7  10  10  37] 0.013677 
-    [  1   9  10  22]-0.013641 [  6   9  11  39]-0.013303 [  3   9   9  32]-0.012494 
-    [  7   9   9  18] 0.012420 [  6  11   9  39]-0.012290 [ 10  11  12  48] 0.012219 
-    [  9  12  10  48]-0.012212 [  7   9   9  37] 0.011937 [  0  10  10  22]-0.011917 
+    [  6  10  10  23]-0.016945 [  6  11  11  23] 0.016945 [  0   9   9  22] 0.016321 
+    [  0  12  12  22] 0.016321 [  6   9   9  39] 0.015546 [  6  12  12  39] 0.015546 
+    [ 11  12  11  48]-0.013250 [  9  10  10  48]-0.013250 [  7  10  10  37]-0.012973 
+    [  7  11  11  37]-0.012973 [  3  12  12  32]-0.012737 [  3   9   9  32]-0.012737 
+    [  4  12  12  19] 0.012711 [  4   9   9  19] 0.012711 [  8  12  12  38]-0.012472 
     --------------------------------------------------------------------------------
-    Norm of T2AA vector: (nonzero elements: 561644)               0.468612826918108.
+    Norm of T2AA vector: (nonzero elements: 900217)               0.468612827386991.
     --------------------------------------------------------------------------------
     Largest T2 amplitudes for spin case AB:
            _       _                  _       _                  _       _           
        i   j   a   b              i   j   a   b              i   j   a   b           
     --------------------------------------------------------------------------------
-    [  0   0   9   9]-0.020662 [ 12  12  30  30]-0.020191 [ 10  10  10  28]-0.019080 
-    [  9   9   9  26]-0.018988 [  9  11   9  31] 0.018625 [  9  12   9  30] 0.018477 
-    [ 10  10  28  28]-0.018449 [ 10  11  10  31] 0.018305 [  1   1  10  10]-0.018051 
-    [ 11  11  31  31]-0.016524 [  0   1   9  10]-0.016254 [ 11  11  28  28]-0.015956 
-    [ 11  11  11  31] 0.015500 [  9  12  26  30] 0.015382 [  9  10  10  26]-0.014667 
+    [ 12  12  12  30]-0.032476 [  9   9   9  30]-0.032476 [ 10  10  10  28]-0.028162 
+    [ 11  11  11  28]-0.028162 [ 12  12  30  30]-0.025057 [  9   9  30  30]-0.025057 
+    [ 10  10  28  28]-0.022480 [ 11  11  28  28]-0.022480 [  9   9   9  31] 0.021838 
+    [ 12  12  12  31]-0.021838 [ 10  10  10  31] 0.021356 [ 11  11  11  31]-0.021356 
+    [ 12  12  12  26] 0.018317 [  9   9   9  26]-0.018317 [ 10  10  10  26] 0.017922 
     --------------------------------------------------------------------------------
-    Norm of T2AB vector: (nonzero elements: 632073)               0.502912637315685.
+    Norm of T2AB vector: (nonzero elements: 900345)               0.502912637862355.
     --------------------------------------------------------------------------------
     Largest T2 amplitudes for spin case BB:
        _   _   _   _              _   _   _   _              _   _   _   _           
        i   j   a   b              i   j   a   b              i   j   a   b           
     --------------------------------------------------------------------------------
-    [  0   9   9  22]-0.019158 [ 11  12  12  48]-0.017872 [  6   9  10  23]-0.016437 
-    [ 10  12  11  48] 0.014073 [  6  10   9  23]-0.013993 [  7  10  10  37] 0.013677 
-    [  1   9  10  22]-0.013641 [  6   9  11  39]-0.013303 [  3   9   9  32]-0.012494 
-    [  7   9   9  18] 0.012420 [  6  11   9  39]-0.012290 [ 10  11  12  48] 0.012219 
-    [  9  12  10  48]-0.012212 [  7   9   9  37] 0.011937 [  0  10  10  22]-0.011917 
+    [  6  10  10  23]-0.016945 [  6  11  11  23] 0.016945 [  0   9   9  22] 0.016321 
+    [  0  12  12  22] 0.016321 [  6   9   9  39] 0.015546 [  6  12  12  39] 0.015546 
+    [ 11  12  11  48]-0.013250 [  9  10  10  48]-0.013250 [  7  10  10  37]-0.012973 
+    [  7  11  11  37]-0.012973 [  3  12  12  32]-0.012737 [  3   9   9  32]-0.012737 
+    [  4  12  12  19] 0.012711 [  4   9   9  19] 0.012711 [  8  12  12  38]-0.012472 
     --------------------------------------------------------------------------------
-    Norm of T2BB vector: (nonzero elements: 561644)               0.468612826918107.
+    Norm of T2BB vector: (nonzero elements: 900219)               0.468612827386991.
     --------------------------------------------------------------------------------
 
   ==> Possible Intruders <==
@@ -1501,31 +1273,31 @@ Calling plugin forte.so.
 
   ==> DSRG-MRPT2 Energy Summary <==
 
-    E0 (reference)                 =   -154.530903808062760
-    <[F, T1]>                      =     -0.001998487769245
-    <[F, T2]>                      =     -0.000222244042906
-    <[V, T1]>                      =     -0.000123854602820
-    <[V, T2]> (C_2)^4              =     -0.557532912698537
-    <[V, T2]> C_4 (C_2)^2 HH       =      0.000554725712039
-    <[V, T2]> C_4 (C_2)^2 PP       =      0.004245862021500
-    <[V, T2]> C_4 (C_2)^2 PH       =      0.019961714753282
-    <[V, T2]> C_6 C_2              =     -0.000012524303882
-    <[V, T2]>                      =     -0.532783134515597
-    DSRG-MRPT2 correlation energy  =     -0.535127720930569
-    DSRG-MRPT2 total energy        =   -155.066031528993335
-    max(T1)                        =      0.005338597307484
-    max(T2)                        =      0.020661983335761
-    ||T1||                         =      0.027009603095647
-    ||T2||                         =      1.204524987782168
+    E0 (reference)                 =   -154.530903808076772
+    <[F, T1]>                      =     -0.001998487882142
+    <[F, T2]>                      =     -0.000222244004785
+    <[V, T1]>                      =     -0.000123854536679
+    <[V, T2]> (C_2)^4              =     -0.557532913395136
+    <[V, T2]> C_4 (C_2)^2 HH       =      0.000554725711980
+    <[V, T2]> C_4 (C_2)^2 PP       =      0.004245862024620
+    <[V, T2]> C_4 (C_2)^2 PH       =      0.019961714833046
+    <[V, T2]> C_6 C_2              =     -0.000012524301656
+    <[V, T2]>                      =     -0.532783135127146
+    DSRG-MRPT2 correlation energy  =     -0.535127721550751
+    DSRG-MRPT2 total energy        =   -155.066031529627537
+    max(T1)                        =      0.004157096600740
+    max(T2)                        =      0.032475565220414
+    ||T1||                         =      0.027009603927724
+    ||T2||                         =      1.204524989059982
 
-  Energy took      3.145 s
+  Energy took      9.142 s
 
 
   ==> Transforming Dipole Integrals ...  <==
 
-    Computing direction X          ...  Done. Timing        1.714729 s
-    Computing direction Y          ...  Done. Timing        1.742664 s
-    Computing direction Z          ...  Done. Timing        1.725778 s
+    Computing direction X          ...  Done. Timing        1.902908 s
+    Computing direction Y          ...  Done. Timing        1.881044 s
+    Computing direction Z          ...  Done. Timing        2.019173 s
 
   ==> DSRG-MRPT2 (unrelaxed) Dipole Moments (a.u.) <==
 
@@ -1553,7 +1325,7 @@ Calling plugin forte.so.
   ==> Rotate DSRG Transformed Hamiltonian back to Original Basis <==
 
     Rotating 1-body term to original basis   ... Done. Timing    0.001 s
-    Rotating 2-body term to original basis   ... Done. Timing    0.018 s
+    Rotating 2-body term to original basis   ... Done. Timing    0.019 s
 
               ---------------------------------------------------
                 Complete Active Space Configuration Interaction
@@ -1587,20 +1359,20 @@ Calling plugin forte.so.
     Total number of states: 6
     ------------------------------------------------------------
 
-  Forming alpha and beta strings      ...  Done. Timing        0.000048 s
-  Forming determinants                ...  Done. Timing        0.000025 s
+  Forming alpha and beta strings      ...  Done. Timing        0.000049 s
+  Forming determinants                ...  Done. Timing        0.000029 s
 
   ==> Determinants Summary <==
 
-    number of alpha active electrons    =     2
-    number of beta active electrons     =     2
-    root symmetry (zero based)          =     0
-    number of determinants              =    36
+    number of alpha active electrons         =     2
+    number of beta active electrons          =     2
+    root symmetry (zero based)               =     0
+    number of determinants                   =    36
 
   Diagonalizing Hamiltonian           ...
   Found 20 roots with 2S+1 = 1 *
   Found 15 roots with 2S+1 = 3
-  Found 1 roots with 2S+1 = 5  Done. Timing        0.016484 s
+  Found 1 roots with 2S+1 = 5  Done. Timing        0.013503 s
 
   * * * * * * * * * * * * * * * * *
   *  CI Vectors & Configurations  *
@@ -1608,241 +1380,227 @@ Calling plugin forte.so.
 
   ==> Root No. 0 <==
 
-    baba         -0.3322937595
-    abab         -0.3322937595
+    baba         -0.3322937596
+    abab         -0.3322937596
     baab         -0.2762988306
     abba         -0.2762988306
-    ab02          0.2260292446
-    ba02          0.2260292446
-    20ab          0.2260292423
-    20ba          0.2260292423
-    02ab          0.2239541099
-    02ba          0.2239541099
-    ba20          0.2239541075
-    ab20          0.2239541075
+    ab02          0.2260292450
+    ba02          0.2260292450
+    20ab          0.2260292427
+    20ba          0.2260292427
+    02ab          0.2239541096
+    02ba          0.2239541096
+    ba20          0.2239541072
+    ab20          0.2239541072
     0202         -0.1814399569
     2020         -0.1814399532
-    2002         -0.1556787203
-    0220         -0.1509630402
-    2ba0         -0.1062060040
-    2ab0         -0.1062060040
-    0ba2         -0.1062060029
-    0ab2         -0.1062060029
-    a2b0          0.0761925458
-    b2a0          0.0761925458
-    0a2b          0.0761925444
-    0b2a          0.0761925444
+    2002         -0.1556787209
+    0220         -0.1509630397
+    2ba0         -0.1062060037
+    2ab0         -0.1062060037
+    0ba2         -0.1062060027
+    0ab2         -0.1062060027
+    a2b0          0.0761925456
+    b2a0          0.0761925456
+    0a2b          0.0761925442
+    0b2a          0.0761925442
     2a0b          0.0702871746
     2b0a          0.0702871746
     b0a2          0.0702871732
     a0b2          0.0702871732
     b20a         -0.0592201365
     a20b         -0.0592201365
-    b02a         -0.0592201347
-    a02b         -0.0592201347
-    aabb         -0.0559949289
-    bbaa         -0.0559949289
+    b02a         -0.0592201346
+    a02b         -0.0592201346
+    aabb         -0.0559949290
+    bbaa         -0.0559949290
 
-    Total Energy:   -155.350467801039827
+    Total Energy:   -155.350467801899981
 
 
   ==> Root No. 1 <==
 
-    0202         -0.3198421018
-    2020          0.3198421003
-    ba20         -0.2018056771
-    ab20         -0.2018056771
-    02ba          0.2018056747
-    02ab          0.2018056747
-    a20b         -0.1985617714
-    b20a         -0.1985617714
-    a02b          0.1985617690
-    b02a          0.1985617690
-    20ab         -0.1886593888
-    20ba         -0.1886593888
-    ab02          0.1886593866
-    ba02          0.1886593866
-    a2b0          0.1795347853
-    b2a0          0.1795347853
-    0a2b         -0.1795347852
-    0b2a         -0.1795347852
+    0202         -0.3198421022
+    2020          0.3198421008
+    ba20         -0.2018056768
+    ab20         -0.2018056768
+    02ba          0.2018056745
+    02ab          0.2018056745
+    a20b         -0.1985617718
+    b20a         -0.1985617718
+    a02b          0.1985617694
+    b02a          0.1985617694
+    20ab         -0.1886593891
+    20ba         -0.1886593891
+    ab02          0.1886593869
+    ba02          0.1886593869
+    a2b0          0.1795347850
+    b2a0          0.1795347850
+    0b2a         -0.1795347848
+    0a2b         -0.1795347848
     2a0b          0.1670843113
     2b0a          0.1670843113
     a0b2         -0.1670843112
     b0a2         -0.1670843112
-    0ab2          0.1466975657
-    0ba2          0.1466975657
-    2ab0         -0.1466975636
-    2ba0         -0.1466975636
-    2200         -0.0535865965
-    0022          0.0535865946
+    0ab2          0.1466975648
+    0ba2          0.1466975648
+    2ab0         -0.1466975627
+    2ba0         -0.1466975627
+    2200         -0.0535865964
+    0022          0.0535865945
 
-    Total Energy:   -155.096341308208878
+    Total Energy:   -155.096341308946990
 
 
   ==> Root No. 2 <==
 
-    aabb         -0.4213474383
-    bbaa         -0.4213474383
-    2ab0         -0.2754520645
-    2ba0         -0.2754520645
-    0ab2         -0.2754520634
-    0ba2         -0.2754520634
+    aabb         -0.4213474388
+    bbaa         -0.4213474388
+    2ab0         -0.2754520639
+    2ba0         -0.2754520639
+    0ab2         -0.2754520629
+    0ba2         -0.2754520629
     baab          0.2706615680
     abba          0.2706615680
-    abab         -0.1506858703
-    baba         -0.1506858703
-    2b0a          0.1141042021
-    2a0b          0.1141042021
-    b0a2          0.1141042015
-    a0b2          0.1141042015
-    0220          0.1019576686
-    02ba         -0.0922410644
-    02ab         -0.0922410644
-    ab20         -0.0922410636
-    ba20         -0.0922410636
-    b2a0          0.0704318270
-    a2b0          0.0704318270
-    0b2a          0.0704318264
-    0a2b          0.0704318264
-    2002          0.0605223008
-    0202          0.0574968756
-    2020          0.0574968749
-    ab02         -0.0572644792
-    ba02         -0.0572644792
-    20ab         -0.0572644784
-    20ba         -0.0572644784
+    baba         -0.1506858707
+    abab         -0.1506858707
+    2b0a          0.1141042025
+    2a0b          0.1141042025
+    b0a2          0.1141042019
+    a0b2          0.1141042019
+    0220          0.1019576689
+    02ba         -0.0922410647
+    02ab         -0.0922410647
+    ab20         -0.0922410639
+    ba20         -0.0922410639
+    b2a0          0.0704318264
+    a2b0          0.0704318264
+    0b2a          0.0704318259
+    0a2b          0.0704318259
+    2002          0.0605223002
+    0202          0.0574968757
+    2020          0.0574968750
+    ab02         -0.0572644786
+    ba02         -0.0572644786
+    20ab         -0.0572644779
+    20ba         -0.0572644779
 
-    Total Energy:   -155.094274390221642
+    Total Energy:   -155.094274390682301
 
 
   ==> Root No. 3 <==
 
-    2002         -0.3849765248
-    0220          0.3534367770
-    ba02          0.2839541458
-    ab02          0.2839541458
+    2002         -0.3849765259
+    0220          0.3534367762
+    ba02          0.2839541459
+    ab02          0.2839541459
     20ab          0.2839541441
     20ba          0.2839541441
     02ab         -0.2754131489
     02ba         -0.2754131489
     ab20         -0.2754131479
     ba20         -0.2754131479
-    b2a0         -0.1270930933
-    a2b0         -0.1270930933
-    0a2b         -0.1270930919
-    0b2a         -0.1270930919
+    b2a0         -0.1270930928
+    a2b0         -0.1270930928
+    0a2b         -0.1270930915
+    0b2a         -0.1270930915
     2a0b          0.0832504807
     2b0a          0.0832504807
     b0a2          0.0832504792
     a0b2          0.0832504792
 
-    Total Energy:   -155.004913442699944
+    Total Energy:   -155.004913443200678
 
 
   ==> Root No. 4 <==
 
-    a20b         -0.3081757889
-    b20a         -0.3081757889
-    b02a         -0.3081757877
-    a02b         -0.3081757877
-    abab          0.2684061194
-    baba          0.2684061194
-    2020         -0.2285674159
-    0202         -0.2285674137
-    0a2b          0.1850269560
-    0b2a          0.1850269560
-    a2b0          0.1850269545
-    b2a0          0.1850269545
-    b0a2          0.1746538477
-    a0b2          0.1746538477
-    2b0a          0.1746538465
-    2a0b          0.1746538465
-    aabb          0.1737092889
-    bbaa          0.1737092889
+    a20b         -0.3081757897
+    b20a         -0.3081757897
+    b02a         -0.3081757885
+    a02b         -0.3081757885
+    abab          0.2684061189
+    baba          0.2684061189
+    2020         -0.2285674162
+    0202         -0.2285674140
+    0a2b          0.1850269558
+    0b2a          0.1850269558
+    a2b0          0.1850269543
+    b2a0          0.1850269543
+    b0a2          0.1746538473
+    a0b2          0.1746538473
+    2b0a          0.1746538461
+    2a0b          0.1746538461
+    aabb          0.1737092881
+    bbaa          0.1737092881
     2200         -0.1100932763
-    0022         -0.1100932742
-    abba          0.0946968305
-    baab          0.0946968305
-    0220          0.0702925429
+    0022         -0.1100932741
+    abba          0.0946968308
+    baab          0.0946968308
+    0220          0.0702925419
 
-    Total Energy:   -154.938783421140670
+    Total Energy:   -154.938783422262134
 
 
   ==> Root No. 5 <==
 
-    0ba2         -0.3234226061
-    0ab2         -0.3234226061
-    2ab0          0.3234226052
-    2ba0          0.3234226052
-    0202         -0.2870728067
-    2020          0.2870728026
-    2a0b         -0.1843330803
-    2b0a         -0.1843330803
-    b0a2          0.1843330793
-    a0b2          0.1843330793
-    ba20         -0.1729608446
-    ab20         -0.1729608446
-    02ab          0.1729608440
-    02ba          0.1729608440
-    20ab         -0.1515348050
-    20ba         -0.1515348050
-    ab02          0.1515348047
-    ba02          0.1515348047
-    b2a0         -0.1240157922
-    a2b0         -0.1240157922
-    0a2b          0.1240157914
-    0b2a          0.1240157914
+    0ba2         -0.3234226054
+    0ab2         -0.3234226054
+    2ab0          0.3234226045
+    2ba0          0.3234226045
+    0202         -0.2870728064
+    2020          0.2870728022
+    2a0b         -0.1843330810
+    2b0a         -0.1843330810
+    a0b2          0.1843330800
+    b0a2          0.1843330800
+    ba20         -0.1729608440
+    ab20         -0.1729608440
+    02ab          0.1729608434
+    02ba          0.1729608434
+    20ba         -0.1515348058
+    20ab         -0.1515348058
+    ba02          0.1515348055
+    ab02          0.1515348055
+    b2a0         -0.1240157927
+    a2b0         -0.1240157927
+    0b2a          0.1240157919
+    0a2b          0.1240157919
 
-    Total Energy:   -154.918541240150432
+    Total Energy:   -154.918541239975809
 
 
 
   ==> Permanent Dipole Moments (A) <==
 
   Only print nonzero (> 1.0e-5) elements.
-  Permanent dipole moments (a.u.) 0 -> 0:  X: -3.9776  Y:  8.1607  Z:  0.0000  Total:  9.0785
-  Permanent dipole moments (a.u.) 1 -> 1:  X:  0.2796  Y:  2.7036  Z:  0.0000  Total:  2.7180
-  Permanent dipole moments (a.u.) 2 -> 2:  X:  0.1409  Y:  1.7863  Z:  0.0000  Total:  1.7918
-  Permanent dipole moments (a.u.) 3 -> 3:  X: -2.0012  Y:  4.1213  Z:  0.0000  Total:  4.5815
-  Permanent dipole moments (a.u.) 4 -> 4:  X:  1.4739  Y:  0.1758  Z:  0.0000  Total:  1.4843
-  Permanent dipole moments (a.u.) 5 -> 5:  X: -3.8782  Y:  5.0375  Z:  0.0000  Total:  6.3574
 
 
   ==> Transition Dipole Moments (A -> A) <==
 
   Only print nonzero (> 1.0e-5) elements.
-  Transition dipole moments (a.u.) 0 -> 1:  X:  0.0001  Y: -0.0002  Z: -0.0000  Total:  0.0003
-  Transition dipole moments (a.u.) 0 -> 2:  X:  0.6402  Y: -0.4578  Z: -0.0000  Total:  0.7871
-  Transition dipole moments (a.u.) 0 -> 3:  X:  0.0454  Y: -0.1131  Z:  0.0000  Total:  0.1219
-  Transition dipole moments (a.u.) 0 -> 4:  X: -0.9898  Y:  1.6037  Z:  0.0000  Total:  1.8845
-  Transition dipole moments (a.u.) 0 -> 5:  X:  0.0002  Y: -0.0003  Z: -0.0000  Total:  0.0004
-  Transition dipole moments (a.u.) 1 -> 2:  X:  0.0006  Y: -0.0009  Z: -0.0000  Total:  0.0011
-  Transition dipole moments (a.u.) 1 -> 3:  X:  0.0087  Y: -0.0128  Z: -0.0000  Total:  0.0155
-  Transition dipole moments (a.u.) 1 -> 4:  X:  0.0006  Y: -0.0008  Z: -0.0000  Total:  0.0010
-  Transition dipole moments (a.u.) 1 -> 5:  X: -0.0821  Y:  0.1665  Z: -0.0000  Total:  0.1856
-  Transition dipole moments (a.u.) 2 -> 3:  X:  0.0791  Y: -0.0630  Z: -0.0000  Total:  0.1011
-  Transition dipole moments (a.u.) 2 -> 4:  X: -2.6586  Y:  2.8849  Z:  0.0000  Total:  3.9231
-  Transition dipole moments (a.u.) 2 -> 5:  X:  0.0011  Y: -0.0016  Z: -0.0000  Total:  0.0020
-  Transition dipole moments (a.u.) 3 -> 4:  X: -0.1369  Y:  0.1490  Z:  0.0000  Total:  0.2024
-  Transition dipole moments (a.u.) 3 -> 5:  X:  0.0089  Y: -0.0130  Z: -0.0000  Total:  0.0158
-  Transition dipole moments (a.u.) 4 -> 5:  X: -0.0001  Y:  0.0002  Z:  0.0000  Total:  0.0002
+  Transition dipole moments (a.u.) 0 -> 1:  X:  1.7026  Y: -1.7762  Z: -0.0000  Total:  2.4604
+  Transition dipole moments (a.u.) 0 -> 5:  X:  1.0868  Y:  0.1991  Z: -0.0000  Total:  1.1049
+  Transition dipole moments (a.u.) 1 -> 2:  X:  0.0927  Y: -0.9017  Z:  0.0000  Total:  0.9064
+  Transition dipole moments (a.u.) 1 -> 3:  X: -0.2836  Y:  0.3774  Z: -0.0000  Total:  0.4720
+  Transition dipole moments (a.u.) 1 -> 4:  X:  2.2911  Y: -3.0158  Z:  0.0000  Total:  3.7873
+  Transition dipole moments (a.u.) 2 -> 5:  X: -0.6684  Y:  1.7912  Z: -0.0000  Total:  1.9119
+  Transition dipole moments (a.u.) 3 -> 5:  X: -0.0750  Y:  0.0021  Z: -0.0000  Total:  0.0751
+  Transition dipole moments (a.u.) 4 -> 5:  X: -0.1283  Y:  0.9025  Z: -0.0000  Total:  0.9115
 
 
   ==> Oscillator Strength (A -> A) <==
 
   Only print nonzero (> 1.0e-5) elements.
-  Oscillator strength (a.u.) 0 -> 2:  X:  0.0700  Y:  0.0358  Z:  0.0000  Total:  0.1058
-  Oscillator strength (a.u.) 0 -> 3:  X:  0.0005  Y:  0.0029  Z:  0.0000  Total:  0.0034
-  Oscillator strength (a.u.) 0 -> 4:  X:  0.2689  Y:  0.7058  Z:  0.0000  Total:  0.9747
-  Oscillator strength (a.u.) 1 -> 3:  X:  0.0000  Y:  0.0000  Z:  0.0000  Total:  0.0000
-  Oscillator strength (a.u.) 1 -> 5:  X:  0.0008  Y:  0.0033  Z:  0.0000  Total:  0.0041
-  Oscillator strength (a.u.) 2 -> 3:  X:  0.0004  Y:  0.0002  Z:  0.0000  Total:  0.0006
-  Oscillator strength (a.u.) 2 -> 4:  X:  0.7327  Y:  0.8627  Z:  0.0000  Total:  1.5954
-  Oscillator strength (a.u.) 3 -> 4:  X:  0.0008  Y:  0.0010  Z:  0.0000  Total:  0.0018
-  Oscillator strength (a.u.) 3 -> 5:  X:  0.0000  Y:  0.0000  Z:  0.0000  Total:  0.0000
+  Oscillator strength (a.u.) 0 -> 1:  X:  0.4911  Y:  0.5345  Z:  0.0000  Total:  1.0256
+  Oscillator strength (a.u.) 0 -> 5:  X:  0.3401  Y:  0.0114  Z:  0.0000  Total:  0.3515
+  Oscillator strength (a.u.) 1 -> 2:  X:  0.0000  Y:  0.0011  Z:  0.0000  Total:  0.0011
+  Oscillator strength (a.u.) 1 -> 3:  X:  0.0049  Y:  0.0087  Z:  0.0000  Total:  0.0136
+  Oscillator strength (a.u.) 1 -> 4:  X:  0.5514  Y:  0.9553  Z:  0.0000  Total:  1.5067
+  Oscillator strength (a.u.) 2 -> 5:  X:  0.0523  Y:  0.3759  Z:  0.0000  Total:  0.4282
+  Oscillator strength (a.u.) 3 -> 5:  X:  0.0003  Y:  0.0000  Z:  0.0000  Total:  0.0003
+  Oscillator strength (a.u.) 4 -> 5:  X:  0.0002  Y:  0.0110  Z:  0.0000  Total:  0.0112
 
-  Total Energy (averaged over 6 states): -155.067220267243556
+  Total Energy (averaged over 6 states): -155.067220267827992
 
 
   ==> De-Normal-Order DSRG Transformed Dipole X Integrals <==
@@ -1853,7 +1611,7 @@ Calling plugin forte.so.
   ==> Rotate DSRG Transformed Dipole X Integrals back to Original Basis <==
 
     Rotating 1-body term to original basis   ... Done. Timing    0.001 s
-    Rotating 2-body term to original basis   ... Done. Timing    0.017 s
+    Rotating 2-body term to original basis   ... Done. Timing    0.020 s
 
   ==> De-Normal-Order DSRG Transformed Dipole Y Integrals <==
 
@@ -1863,7 +1621,7 @@ Calling plugin forte.so.
   ==> Rotate DSRG Transformed Dipole Y Integrals back to Original Basis <==
 
     Rotating 1-body term to original basis   ... Done. Timing    0.001 s
-    Rotating 2-body term to original basis   ... Done. Timing    0.017 s
+    Rotating 2-body term to original basis   ... Done. Timing    0.019 s
 
   ==> De-Normal-Order DSRG Transformed Dipole Z Integrals <==
 
@@ -1873,7 +1631,7 @@ Calling plugin forte.so.
   ==> Rotate DSRG Transformed Dipole Z Integrals back to Original Basis <==
 
     Rotating 1-body term to original basis   ... Done. Timing    0.001 s
-    Rotating 2-body term to original basis   ... Done. Timing    0.017 s
+    Rotating 2-body term to original basis   ... Done. Timing    0.026 s
 
   ==> SA-DSRG-PT2 Dipole Moment (in a.u.) Summary <==
 
@@ -1912,21 +1670,21 @@ Calling plugin forte.so.
 
     Multi.  Irrep.  No.    DSRG-MRPT2 Energy
     -----------------------------------------
-       1       A     0      -155.350467801040
-       1       A     1      -155.096341308209
-       1       A     2      -155.094274390222
-       1       A     3      -155.004913442700
-       1       A     4      -154.938783421141
-       1       A     5      -154.918541240150
+       1       A     0      -155.350467801900
+       1       A     1      -155.096341308947
+       1       A     2      -155.094274390682
+       1       A     3      -155.004913443201
+       1       A     4      -154.938783422262
+       1       A     5      -154.918541239976
     -----------------------------------------
 
   ==> Total Timings (s) for Computing Commutators <==
 
              [H1, T1]    [H1, T2]    [H2, T1]    [H2, T2]
     -----------------------------------------------------
-    -> C0       0.013       0.034       0.016       0.642
-    -> C1       0.026       0.491       0.033       0.710
-    -> C2                   3.045       0.024       0.225
+    -> C0       0.016       0.034       0.016       0.679
+    -> C1       0.026       0.533       0.035       0.764
+    -> C2                   3.463       0.026       0.236
     -----------------------------------------------------
 	abs. energy of singlet 0Ag........................................PASSED
 

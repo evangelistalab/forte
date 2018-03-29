@@ -47,10 +47,9 @@ set forte{
   avg_state           [[0,1,6]]
   rotate_mos          [1,17,20]
   dsrg_dipole         true
+  semi_canonical      false # a trick to make  ForteIntegral
+                            # and FCIIntegral in the same basis
+                            # for re-diagonalization
 }
 E0ag, wfn = energy('forte', ref_wfn=wfn, return_wfn=True)
 compare_values(r_0ag, E0ag, 8, "abs. energy of singlet 0Ag")
-
-psi4.print_out("\nNote the second CASCI does not print meaningful dipoles.")
-psi4.print_out("\nThis is because the FCIIntegrals are in LOCALIZED basis ")
-psi4.print_out("but ForteIntegrals are in SEMI-CANONICAL basis.")
