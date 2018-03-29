@@ -457,7 +457,7 @@ std::vector<std::vector<double>> DSRG_MRPT2::compute_energy_xms() {
             build_eff_oei();
 
             // build effective singles resulting from de-normal-ordering
-            build_T1eff_deGNO();
+            T1eff_ = deGNO_Tamp(T1_, T2_, Gamma1_);
 
             // compute couplings between states
             print_h2("Compute Couplings with State " + std::to_string(M));
@@ -603,39 +603,39 @@ SharedMatrix DSRG_MRPT2::xms_rotation(std::shared_ptr<FCIIntegrals> fci_ints,
     return rcivecs;
 }
 
-double DSRG_MRPT2::Tamp_deGNO() {
-    // de-normal-order T1
-    build_T1eff_deGNO();
+//double DSRG_MRPT2::Tamp_deGNO() {
+//    // de-normal-order T1
+//    build_T1eff_deGNO();
 
-    double out = 0.0;
-    if (internal_amp_) {
-        // the scalar term of amplitudes when de-normal-ordering
-        out -= T1_["uv"] * Gamma1_["vu"];
-        out -= T1_["UV"] * Gamma1_["VU"];
+//    double out = 0.0;
+//    if (internal_amp_) {
+//        // the scalar term of amplitudes when de-normal-ordering
+//        out -= T1_["uv"] * Gamma1_["vu"];
+//        out -= T1_["UV"] * Gamma1_["VU"];
 
-        out -= 0.25 * T2_["xyuv"] * Lambda2_["uvxy"];
-        out -= 0.25 * T2_["XYUV"] * Lambda2_["UVXY"];
-        out -= T2_["xYuV"] * Lambda2_["uVxY"];
+//        out -= 0.25 * T2_["xyuv"] * Lambda2_["uvxy"];
+//        out -= 0.25 * T2_["XYUV"] * Lambda2_["UVXY"];
+//        out -= T2_["xYuV"] * Lambda2_["uVxY"];
 
-        out += 0.5 * T2_["xyuv"] * Gamma1_["ux"] * Gamma1_["vy"];
-        out += 0.5 * T2_["XYUV"] * Gamma1_["UX"] * Gamma1_["VY"];
-        out += T2_["xYuV"] * Gamma1_["ux"] * Gamma1_["VY"];
-    }
+//        out += 0.5 * T2_["xyuv"] * Gamma1_["ux"] * Gamma1_["vy"];
+//        out += 0.5 * T2_["XYUV"] * Gamma1_["UX"] * Gamma1_["VY"];
+//        out += T2_["xYuV"] * Gamma1_["ux"] * Gamma1_["VY"];
+//    }
 
-    return out;
-}
+//    return out;
+//}
 
-void DSRG_MRPT2::build_T1eff_deGNO() {
-    T1eff_ = BTF_->build(tensor_type_, "Effective T1 from de-GNO", spin_cases({"hp"}));
+//void DSRG_MRPT2::build_T1eff_deGNO() {
+//    T1eff_ = BTF_->build(tensor_type_, "Effective T1 from de-GNO", spin_cases({"hp"}));
 
-    T1eff_["ia"] = T1_["ia"];
-    T1eff_["IA"] = T1_["IA"];
+//    T1eff_["ia"] = T1_["ia"];
+//    T1eff_["IA"] = T1_["IA"];
 
-    T1eff_["ia"] -= T2_["iuav"] * Gamma1_["vu"];
-    T1eff_["ia"] -= T2_["iUaV"] * Gamma1_["VU"];
-    T1eff_["IA"] -= T2_["uIvA"] * Gamma1_["vu"];
-    T1eff_["IA"] -= T2_["IUAV"] * Gamma1_["VU"];
-}
+//    T1eff_["ia"] -= T2_["iuav"] * Gamma1_["vu"];
+//    T1eff_["ia"] -= T2_["iUaV"] * Gamma1_["VU"];
+//    T1eff_["IA"] -= T2_["uIvA"] * Gamma1_["vu"];
+//    T1eff_["IA"] -= T2_["IUAV"] * Gamma1_["VU"];
+//}
 
 double DSRG_MRPT2::compute_ms_1st_coupling(const std::string& name) {
     Timer timer;

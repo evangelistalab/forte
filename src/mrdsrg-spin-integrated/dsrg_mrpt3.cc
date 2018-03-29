@@ -367,31 +367,6 @@ void DSRG_MRPT3::build_fock_full() {
     });
 }
 
-bool DSRG_MRPT3::check_semicanonical() {
-    bool semi = check_semi_orbs();
-    if (ignore_semicanonical_) {
-        std::string actv_type = options_.get_str("FCIMO_ACTV_TYPE");
-        if (actv_type == "CIS" || actv_type == "CISD") {
-            outfile->Printf("\n    It is OK for Fock (active) not being diagonal because %s "
-                            "active space is incomplete.",
-                            actv_type.c_str());
-            outfile->Printf("\n    Please inspect if the Fock diag. blocks (C, AH, AP, V) "
-                            "are diagonal or not in the prior CI step.");
-
-        } else {
-            outfile->Printf("\n    Warning: ignore testing of semi-canonical orbitals.");
-            outfile->Printf(
-                "\n    Please inspect if the Fock diag. blocks (C, A, V) are diagonal or not.");
-
-            warnings_.push_back(std::make_tuple("Semicanonical orbital test", "Ignore test results",
-                                                "Post an issue for advice."));
-        }
-        semi = true;
-    }
-
-    return semi;
-}
-
 void DSRG_MRPT3::print_options_summary() {
     // Print a summary
     std::vector<std::pair<std::string, int>> calculation_info_int{{"ntamp", ntamp_}};
@@ -430,7 +405,7 @@ void DSRG_MRPT3::cleanup() {}
 
 double DSRG_MRPT3::compute_energy() {
     // check semi-canonical orbitals
-    semi_canonical_ = check_semicanonical();
+    semi_canonical_ = check_semi_orbs();
     if (!semi_canonical_) {
         outfile->Printf("\n    Orbital invariant formalism will be employed for DSRG-MRPT3.");
         U_ = ambit::BlockedTensor::build(tensor_type_, "U", spin_cases({"gg"}));
@@ -521,6 +496,7 @@ double DSRG_MRPT3::compute_energy() {
     outfile->Printf("\n      Hbar1st = H1st + [H0th, A1st]");
     outfile->Printf("\n      Hbar2nd = 0.5 * [H1st + Hbar1st, A1st] + [H0th, A2nd]");
 
+    Process::environment.globals["UNRELAXED ENERGY"] = Etotal;
     Process::environment.globals["CURRENT ENERGY"] = Etotal;
 
     // compute DSRG dipole integrals part 2

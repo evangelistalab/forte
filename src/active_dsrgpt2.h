@@ -46,11 +46,11 @@
 
 #include "helpers.h"
 #include "integrals/integrals.h"
-#include "mrdsrg-spin-integrated/dsrg_mrpt2.h"
-#include "mrdsrg-spin-integrated/dsrg_mrpt3.h"
-#include "mrdsrg-spin-integrated/three_dsrg_mrpt2.h"
 #include "reference.h"
 #include "sparse_ci/determinant.h"
+#include "mrdsrg-spin-integrated/master_mrdsrg.h"
+#include "mrdsrg-spin-integrated/dsrg_mrpt2.h"
+#include "mrdsrg-spin-integrated/three_dsrg_mrpt2.h"
 
 namespace psi {
 namespace forte {
@@ -125,8 +125,17 @@ class ACTIVE_DSRGPT2 : public Wavefunction {
     std::vector<std::vector<Determinant>> dominant_dets_;
 
     /// Compute the excitaion type based on ref_det
-    std::string compute_ex_type(const Determinant& det1,
-                                const Determinant& ref_det);
+    std::string compute_ex_type(const Determinant& det1, const Determinant& ref_det);
+
+    /// Compute unrelaxed DSRG-MRPT2 energy and return energy value
+    double compute_dsrg_mrpt2_energy(std::shared_ptr<MASTER_DSRG>& dsrg, Reference& reference);
+
+    /// Set FCI_MO parameters
+    void set_fcimo_params(int nroots, int root, int multiplicity);
+
+    /// Rotate amplitudes
+    void rotate_amp(SharedMatrix Ua, SharedMatrix Ub, ambit::BlockedTensor& T1,
+                    ambit::BlockedTensor& T2);
 
     /** Precompute all energies to
      *  1) determine excitation type
@@ -161,8 +170,8 @@ class ACTIVE_DSRGPT2 : public Wavefunction {
 
     /// Compute VCIS/VCISD transition dipole from root0 -> root1
     Vector4 compute_td_ref_root(std::shared_ptr<FCIIntegrals> fci_ints,
-                                const std::vector<Determinant>& p_space,
-                                SharedMatrix evecs, const int& root0, const int& root1);
+                                const std::vector<Determinant>& p_space, SharedMatrix evecs,
+                                const int& root0, const int& root1);
     /// Compute VCIS/VCISD oscillator strength
     /// Only compute root_0 of eigen0 -> root_n of eigen0 or eigen1
     /// eigen0 and eigen1 are assumed to be different by default
@@ -258,25 +267,24 @@ class ACTIVE_DSRGPT2 : public Wavefunction {
     */
 
     /// transform the reference determinants of size nactive to size nmo with Pitzer ordering
-    std::map<Determinant, double>
-    p_space_actv_to_nmo(const std::vector<Determinant>& p_space, SharedVector wfn);
+    std::map<Determinant, double> p_space_actv_to_nmo(const std::vector<Determinant>& p_space,
+                                                      SharedVector wfn);
 
     /// generate excited determinants from the reference
-    std::map<Determinant, double>
-    excited_wfn_1st(const std::map<Determinant, double>& ref, ambit::BlockedTensor& T1,
-                    ambit::BlockedTensor& T2);
+    std::map<Determinant, double> excited_wfn_1st(const std::map<Determinant, double>& ref,
+                                                  ambit::BlockedTensor& T1,
+                                                  ambit::BlockedTensor& T2);
 
     /// compute pt2 oscillator strength using determinants
     void compute_osc_pt2_dets(const int& irrep, const int& root, const double& Tde_x,
                               ambit::BlockedTensor& T1_x, ambit::BlockedTensor& T2_x);
 
     /// generate singly excited determinants from the reference
-    std::map<Determinant, double>
-    excited_ref(const std::map<Determinant, double>& ref, const int& p, const int& q);
+    std::map<Determinant, double> excited_ref(const std::map<Determinant, double>& ref,
+                                              const int& p, const int& q);
 
     /// compute overlap between two wavefunctions
-    double compute_overlap(std::map<Determinant, double> wfn1,
-                           std::map<Determinant, double> wfn2);
+    double compute_overlap(std::map<Determinant, double> wfn1, std::map<Determinant, double> wfn2);
 
     /// compute pt2 oscillator strength using determinants overlap
     void compute_osc_pt2_overlap(const int& irrep, const int& root, const double& Tde_x,

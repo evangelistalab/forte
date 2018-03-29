@@ -6,9 +6,12 @@
 
 #include "dwms_mrpt2.h"
 #include "master_mrdsrg.h"
-#include "../helpers/printing.h"
+#include "dsrg_mrpt2.h"
+#include "dsrg_mrpt3.h"
+#include "three_dsrg_mrpt2.h"
 #include "../fci_mo.h"
 #include "../semi_canonicalize.h"
+#include "../helpers/printing.h"
 
 namespace psi {
 namespace forte {

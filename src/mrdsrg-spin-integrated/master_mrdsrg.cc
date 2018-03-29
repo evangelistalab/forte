@@ -1756,6 +1756,22 @@ void MASTER_DSRG::H2_T2_C3(BlockedTensor& H2, BlockedTensor& T2, const double& a
 bool MASTER_DSRG::check_semi_orbs() {
     print_h2("Checking Semicanonical Orbitals");
 
+    std::string actv_type = options_.get_str("FCIMO_ACTV_TYPE");
+    if (actv_type == "CIS" || actv_type == "CISD") {
+        std::string job_type = options_.get_str("JOB_TYPE");
+        bool fci_mo = options_.get_str("CAS_TYPE") == "CAS";
+        if ((job_type == "MRDSRG" || job_type == "DSRG-MRPT3") && fci_mo) {
+            std::stringstream ss;
+            ss << "Unsupported FCIMO_ACTV_TYPE for " << job_type << " code.";
+            throw PSIEXCEPTION(ss.str());
+        }
+
+        outfile->Printf("\n    Incomplete active space %s is detected.", actv_type.c_str());
+        outfile->Printf("\n    Please make sure Semicanonical class has been called.");
+        outfile->Printf("\n    Abort checking semicanonical orbitals.");
+        return true;
+    }
+
     BlockedTensor Fd = BTF_->build(tensor_type_, "Fd", spin_cases({"cc", "aa", "vv"}));
     Fd["pq"] = Fock_["pq"];
     Fd["PQ"] = Fock_["PQ"];
@@ -1806,7 +1822,6 @@ bool MASTER_DSRG::check_semi_orbs() {
         outfile->Printf("\n    Orbitals are semi-canonicalized.");
     } else {
         outfile->Printf("\n    Warning! Orbitals are not semi-canonicalized!");
-        outfile->Printf("\n    Energy is reliable about to the same digit as max(|Fij|, i != j).");
     }
 
     return semi;

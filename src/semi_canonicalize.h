@@ -62,7 +62,7 @@ class SemiCanonical {
 
     /// Transform all cumulants, rebuild 2-RDMs using 2-cumulants
     void transform_reference(ambit::Tensor& Ua, ambit::Tensor& Ub, Reference& reference,
-                             const int& rdm_level);
+                             const int& max_rdm_level);
 
     /// Back transform integrals
     /// Ua and Ub rotate non-semicanonical to semicanonical

@@ -74,24 +74,27 @@ class THREE_DSRG_MRPT2 : public MASTER_DSRG {
                                            ambit::Tensor& H3aab, ambit::Tensor& H3abb,
                                            ambit::Tensor& H3bbb);
 
+    /// Return de-normal-ordered T1 amplitudes
+    virtual ambit::BlockedTensor get_T1deGNO(double& T0deGNO);
+
+    /// Return T2 amplitudes
+    virtual ambit::BlockedTensor get_T2(const std::vector<std::string>& blocks);
+
     /// Allow the reference to relax
     void relax_reference_once();
 
-    /// Ignore semi-canonical testing in DSRG-MRPT2
-    void ignore_semicanonical(bool ignore) { ignore_semicanonical_ = ignore; }
+//    /// Compute de-normal-ordered amplitudes and return the scalar term
+//    double Tamp_deGNO();
 
-    /// Compute de-normal-ordered amplitudes and return the scalar term
-    double Tamp_deGNO();
-
-    /// Return a BlockedTensor of T1 amplitudes
-    ambit::BlockedTensor get_T1(const std::vector<std::string>& blocks);
-    ambit::BlockedTensor get_T1() { return T1_; }
-    /// Return a BlockedTensor of de-normal-ordered T1 amplitudes
-    ambit::BlockedTensor get_T1deGNO(const std::vector<std::string>& blocks);
-    ambit::BlockedTensor get_T1deGNO() { return T1eff_; }
-    /// Return a BlockedTensor of T2 amplitudes
-    ambit::BlockedTensor get_T2(const std::vector<std::string>& blocks);
-    ambit::BlockedTensor get_T2() { return T2_; }
+//    /// Return a BlockedTensor of T1 amplitudes
+//    ambit::BlockedTensor get_T1(const std::vector<std::string>& blocks);
+//    ambit::BlockedTensor get_T1() { return T1_; }
+//    /// Return a BlockedTensor of de-normal-ordered T1 amplitudes
+//    ambit::BlockedTensor get_T1deGNO(const std::vector<std::string>& blocks);
+//    ambit::BlockedTensor get_T1deGNO() { return T1eff_; }
+//    /// Return a BlockedTensor of T2 amplitudes
+//    ambit::BlockedTensor get_T2(const std::vector<std::string>& blocks);
+//    ambit::BlockedTensor get_T2() { return T2_; }
 
     /// Rotate orbital basis for amplitudes according to unitary matrix U
     /// @param U unitary matrix from FCI_MO (INCLUDES frozen orbitals)
@@ -258,10 +261,6 @@ class THREE_DSRG_MRPT2 : public MASTER_DSRG {
 
     /// Are orbitals semi-canonicalized?
     bool semi_canonical_;
-    /// Check if orbitals are semi-canonicalized
-    bool check_semicanonical();
-    /// Ignore semi-canonical testing
-    bool ignore_semicanonical_ = false;
     /// Unitary matrix to block diagonal Fock
     ambit::BlockedTensor U_;
     /// Diagonalize the diagonal blocks of the Fock matrix

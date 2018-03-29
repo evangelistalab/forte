@@ -58,6 +58,16 @@ class MASTER_DSRG : public DynamicCorrelationSolver {
     //    virtual void compute_dm_eff(std::vector<double>& M0, std::vector<BlockedTensor>& M1,
     //                                std::vector<BlockedTensor>& M2) = 0;
 
+    /// Return de-normal-ordered T1 amplitudes
+    virtual ambit::BlockedTensor get_T1deGNO(double& T0deGNO) {
+        throw PSIEXCEPTION("Child class should override this function");
+    }
+
+    /// Return T2 amplitudes
+    virtual ambit::BlockedTensor get_T2(const std::vector<std::string>& blocks) {
+        throw PSIEXCEPTION("Child class should override this function");
+    }
+
     /// Return the Hbar of a given order
     std::vector<ambit::Tensor> Hbar(int n);
 

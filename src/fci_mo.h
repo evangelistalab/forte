@@ -33,6 +33,7 @@
 #include <string>
 #include <tuple>
 #include <vector>
+#include <utility>
 #include <unordered_set>
 
 #include "ambit/tensor.h"
@@ -107,26 +108,29 @@ class FCI_MO : public Wavefunction {
     /// max_level -- max RDM level to be computed
     /// do_cumulant -- returned Reference is filled by cumulants (not RDMs) if true
     Reference transition_reference(int root1, int root2, bool multi_state, int entry = 0,
-                                    int max_level = 3, bool do_cumulant = false, bool disk = true);
+                                   int max_level = 3, bool do_cumulant = false, bool disk = true);
 
     /// Compute dipole moments with DSRG transformed MO dipole integrals
     /// This function is used for reference relaxation and SA-MRDSRG
     /// This function should be in RUN_DSRG
     std::map<std::string, std::vector<double>>
-    compute_ref_relaxed_dm(const std::vector<double>& dm0, std::vector<BlockedTensor>& dm1,
-                           std::vector<BlockedTensor>& dm2);
+    compute_ref_relaxed_dm(const std::vector<double>& dm0, std::vector<ambit::BlockedTensor>& dm1,
+                           std::vector<ambit::BlockedTensor>& dm2);
     std::map<std::string, std::vector<double>>
-    compute_ref_relaxed_dm(const std::vector<double>& dm0, std::vector<BlockedTensor>& dm1,
-                           std::vector<BlockedTensor>& dm2, std::vector<BlockedTensor>& dm3);
+    compute_ref_relaxed_dm(const std::vector<double>& dm0, std::vector<ambit::BlockedTensor>& dm1,
+                           std::vector<ambit::BlockedTensor>& dm2,
+                           std::vector<ambit::BlockedTensor>& dm3);
 
     /// Compute oscillator strengths using DSRG transformed MO dipole integrals
     /// This function is used for SA-MRDSRG
     /// This function should be in RUN_DSRG
     std::map<std::string, std::vector<double>>
-    compute_ref_relaxed_osc(std::vector<BlockedTensor>& dm1, std::vector<BlockedTensor>& dm2);
+    compute_ref_relaxed_osc(std::vector<ambit::BlockedTensor>& dm1,
+                            std::vector<ambit::BlockedTensor>& dm2);
     std::map<std::string, std::vector<double>>
-    compute_ref_relaxed_osc(std::vector<BlockedTensor>& dm1, std::vector<BlockedTensor>& dm2,
-                            std::vector<BlockedTensor>& dm3);
+    compute_ref_relaxed_osc(std::vector<ambit::BlockedTensor>& dm1,
+                            std::vector<ambit::BlockedTensor>& dm2,
+                            std::vector<ambit::BlockedTensor>& dm3);
 
     /// Compute Fock (stored in ForteIntegal) using this->Da_
     void compute_Fock_ints();
@@ -175,7 +179,7 @@ class FCI_MO : public Wavefunction {
     void set_sa_info(const std::vector<std::tuple<int, int, int, std::vector<double>>>& info);
 
     /// Set state-averaged eigen values and vectors
-    void set_eigens(const std::vector<vector<pair<SharedVector, double>>>& eigens);
+    void set_eigens(const std::vector<std::vector<std::pair<SharedVector, double>>>& eigens);
 
     /// Return fci_int_ pointer
     std::shared_ptr<FCIIntegrals> fci_ints() { return fci_ints_; }
@@ -187,13 +191,15 @@ class FCI_MO : public Wavefunction {
     std::vector<vecdet> p_spaces() { return p_spaces_; }
 
     /// Return the orbital extents of the current state
-    std::vector<vector<vector<double>>> orb_extents() { return compute_orbital_extents(); }
+    std::vector<std::vector<std::vector<double>>> orb_extents() {
+        return compute_orbital_extents();
+    }
 
     /// Return the vector of eigen vectors and eigen values
-    std::vector<pair<SharedVector, double>> const eigen() { return eigen_; }
+    std::vector<std::pair<SharedVector, double>> const eigen() { return eigen_; }
 
     /// Return the vector of eigen vectors and eigen values (used in state-average computation)
-    std::vector<vector<pair<SharedVector, double>>> const eigens() {
+    std::vector<std::vector<std::pair<SharedVector, double>>> const eigens() {
         safe_to_read_density_files_ = false;
         return eigens_;
     }
@@ -296,7 +302,7 @@ class FCI_MO : public Wavefunction {
     long int nbeta_;
 
     /// Active Space Type: CAS, CIS, CISD
-    string actv_space_type_;
+    std::string actv_space_type_;
 
     /// Form Determiants Space
     void form_p_space();
@@ -313,17 +319,17 @@ class FCI_MO : public Wavefunction {
     size_t singles_size_;
 
     /// Orbital Strings
-    std::vector<vector<vector<bool>>> Form_String(const int& active_elec,
-                                                  const bool& print = false);
+    std::vector<std::vector<std::vector<bool>>> Form_String(const int& active_elec,
+                                                            const bool& print = false);
     std::vector<bool> Form_String_Ref(const bool& print = false);
-    std::vector<vector<vector<bool>>> Form_String_Singles(const std::vector<bool>& ref_string,
-                                                          const bool& print = false);
-    std::vector<vector<vector<bool>>> Form_String_Doubles(const std::vector<bool>& ref_string,
-                                                          const bool& print = false);
-    std::vector<vector<vector<bool>>> Form_String_IP(const std::vector<bool>& ref_string,
-                                                     const bool& print = false);
-    std::vector<vector<vector<bool>>> Form_String_EA(const std::vector<bool>& ref_string,
-                                                     const bool& print = false);
+    std::vector<std::vector<std::vector<bool>>>
+    Form_String_Singles(const std::vector<bool>& ref_string, const bool& print = false);
+    std::vector<std::vector<std::vector<bool>>>
+    Form_String_Doubles(const std::vector<bool>& ref_string, const bool& print = false);
+    std::vector<std::vector<std::vector<bool>>> Form_String_IP(const std::vector<bool>& ref_string,
+                                                               const bool& print = false);
+    std::vector<std::vector<std::vector<bool>>> Form_String_EA(const std::vector<bool>& ref_string,
+                                                               const bool& print = false);
 
     /// Choice of Roots
     int nroot_; // number of roots
@@ -339,22 +345,22 @@ class FCI_MO : public Wavefunction {
     std::vector<std::pair<size_t, double>> initial_guess_;
 
     /// Eigen Values and Eigen Vectors of Certain Symmetry
-    std::vector<pair<SharedVector, double>> eigen_;
+    std::vector<std::pair<SharedVector, double>> eigen_;
     /// A List of Eigen Values and Vectors for State Average
-    std::vector<vector<pair<SharedVector, double>>> eigens_;
+    std::vector<std::vector<std::pair<SharedVector, double>>> eigens_;
     /// The algorithm for diagonalization
     std::string diag_algorithm_;
 
     /// Diagonalize the Hamiltonian
     void Diagonalize_H(const vecdet& P_space, const int& multi, const int& nroot,
-                       std::vector<pair<SharedVector, double>>& eigen);
+                       std::vector<std::pair<SharedVector, double>>& eigen);
     /// Diagonalize the Hamiltonian without the HF determinant
     void Diagonalize_H_noHF(const vecdet& p_space, const int& multi, const int& nroot,
-                            std::vector<pair<SharedVector, double>>& eigen);
+                            std::vector<std::pair<SharedVector, double>>& eigen);
 
     /// Print the CI Vectors and Configurations (figure out the dominant determinants)
     void print_CI(const int& nroot, const double& CI_threshold,
-                  const std::vector<pair<SharedVector, double>>& eigen, const vecdet& det);
+                  const std::vector<std::pair<SharedVector, double>>& eigen, const vecdet& det);
 
     /// Semi-canonicalize orbitals
     bool semi_;
@@ -402,16 +408,17 @@ class FCI_MO : public Wavefunction {
     void compute_rdm(CI_RDMS& ci_rdms, int rdm_level, int irrep, int multi, int root1, int root2,
                      const std::vector<std::shared_ptr<std::vector<double>>>& data, bool disk);
 
-    std::deque<ambit::Tensor> compute_n_rdm(const vecdet& p_space, SharedMatrix evecs, int rdm_level,
-                                     int root1, int root2, int irrep, int multi, bool disk);
+    std::deque<ambit::Tensor> compute_n_rdm(const vecdet& p_space, SharedMatrix evecs,
+                                            int rdm_level, int root1, int root2, int irrep,
+                                            int multi, bool disk);
 
     /// Print Functions
-    void print_d2(const string& str, const d2& OnePD);
-    void print2PDC(const string& str, const d4& TwoPDC, const int& PRINT);
-    void print3PDC(const string& str, const d6& ThreePDC, const int& PRINT);
+    void print_d2(const std::string& str, const d2& OnePD);
+    void print2PDC(const std::string& str, const d4& TwoPDC, const int& PRINT);
+    void print3PDC(const std::string& str, const d6& ThreePDC, const int& PRINT);
 
     /// Print Density Matrix (Active ONLY)
-    void print_density(const string& spin, const d2& density);
+    void print_density(const std::string& spin, const d2& density);
     /// Form Density Matrix
     void FormDensity(CI_RDMS& ci_rdms, d2& A, d2& B);
     /// Check Density Matrix
@@ -419,7 +426,7 @@ class FCI_MO : public Wavefunction {
     /// Fill in L1a, L1b from Da_, Db_
     void fill_density();
     /// Fill in L1a, L1b, Da_, Db_ from the RDM Vectors
-    void fill_density(vector<double>& opdm_a, std::vector<double>& opdm_b);
+    void fill_density(std::vector<double>& opdm_a, std::vector<double>& opdm_b);
     /// Fill in non-tensor quantities D1a_ and D1b_ using ambit tensors
     void fill_one_cumulant(ambit::Tensor& L1a, ambit::Tensor& L1b);
 
@@ -431,25 +438,26 @@ class FCI_MO : public Wavefunction {
     /// Fill in L2aa, L2ab and L2bb from L2aa_, L2ab_, and L2bb_
     void fill_cumulant2();
     /// Add wedge product of L1 to L2
-    void add_wedge_cu2(const ambit::Tensor &L1a, const ambit::Tensor &L1b, ambit::Tensor& L2aa,
+    void add_wedge_cu2(const ambit::Tensor& L1a, const ambit::Tensor& L1b, ambit::Tensor& L2aa,
                        ambit::Tensor& L2ab, ambit::Tensor& L2bb);
     /// Fill in non-tensor quantities L2aa_, L2ab_, and L2bb_ using ambit tensors
     void fill_two_cumulant(ambit::Tensor& L2aa, ambit::Tensor& L2ab, ambit::Tensor& L2bb);
 
     /// Form 3-Particle Density Cumulant
-    void FormCumulant3(CI_RDMS& ci_rdms, d6& AAA, d6& AAB, d6& ABB, d6& BBB, string& DC);
+    void FormCumulant3(CI_RDMS& ci_rdms, d6& AAA, d6& AAB, d6& ABB, d6& BBB, std::string& DC);
     void FormCumulant3AAA(const std::vector<double>& tpdm_aaa, const std::vector<double>& tpdm_bbb,
-                          d6& AAA, d6& BBB, string& DC);
+                          d6& AAA, d6& BBB, std::string& DC);
     void FormCumulant3AAB(const std::vector<double>& tpdm_aab, const std::vector<double>& tpdm_abb,
-                          d6& AAB, d6& ABB, string& DC);
+                          d6& AAB, d6& ABB, std::string& DC);
     void FormCumulant3_DIAG(const vecdet& determinants, const int& root, d6& AAA, d6& AAB, d6& ABB,
                             d6& BBB);
     /// Fill in L3aaa, L3aab, L3abb, L3bbb from L3aaa_, L3aab_, L3abb_, L3bbb_
     void fill_cumulant3();
     /// Add wedge product of L1 and L2 to L3
-    void add_wedge_cu3(const ambit::Tensor& L1a, const ambit::Tensor& L1b, const ambit::Tensor& L2aa,
-                       const ambit::Tensor& L2ab, const ambit::Tensor& L2bb, ambit::Tensor& L3aaa,
-                       ambit::Tensor& L3aab, ambit::Tensor& L3abb, ambit::Tensor& L3bbb);
+    void add_wedge_cu3(const ambit::Tensor& L1a, const ambit::Tensor& L1b,
+                       const ambit::Tensor& L2aa, const ambit::Tensor& L2ab,
+                       const ambit::Tensor& L2bb, ambit::Tensor& L3aaa, ambit::Tensor& L3aab,
+                       ambit::Tensor& L3abb, ambit::Tensor& L3bbb);
     /// Fill in non-tensor quantities L3aaa_, L3aab_, L3abb_ and L3bbb_ using ambit tensors
     void fill_three_cumulant(ambit::Tensor& L3aaa, ambit::Tensor& L3aab, ambit::Tensor& L3abb,
                              ambit::Tensor& L3bbb);
@@ -475,11 +483,11 @@ class FCI_MO : public Wavefunction {
     void Form_Fock(d2& A, d2& B);
     void Check_Fock(const d2& A, const d2& B, const double& E, size_t& count);
     void Check_FockBlock(const d2& A, const d2& B, const double& E, size_t& count,
-                         const size_t& dim, const std::vector<size_t>& idx, const string& str);
+                         const size_t& dim, const std::vector<size_t>& idx, const std::string& str);
     void BD_Fock(const d2& Fa, const d2& Fb, SharedMatrix& Ua, SharedMatrix& Ub,
-                 const string& name);
+                 const std::string& name);
     /// Print Fock Matrix in Blocks
-    void print_Fock(const string& spin, const d2& Fock);
+    void print_Fock(const std::string& spin, const d2& Fock);
 
     /// Rotate the given CI vectors by XMS
     SharedMatrix xms_rotate_this_civecs(const det_vec& p_space, SharedMatrix civecs,
@@ -516,11 +524,13 @@ class FCI_MO : public Wavefunction {
 
     /// Compute dipole (or transition dipole) using DSRG transformed MO dipole integrals (dm)
     /// and densities (or transition densities, D)
-    double ref_relaxed_dm_helper(const double& dm0, BlockedTensor& dm1, BlockedTensor& dm2,
-                                 BlockedTensor& D1, BlockedTensor& D2);
-    double ref_relaxed_dm_helper(const double& dm0, BlockedTensor& dm1, BlockedTensor& dm2,
-                                 BlockedTensor& dm3, BlockedTensor& D1, BlockedTensor& D2,
-                                 BlockedTensor& D3);
+    double ref_relaxed_dm_helper(const double& dm0, ambit::BlockedTensor& dm1,
+                                 ambit::BlockedTensor& dm2, ambit::BlockedTensor& D1,
+                                 ambit::BlockedTensor& D2);
+    double ref_relaxed_dm_helper(const double& dm0, ambit::BlockedTensor& dm1,
+                                 ambit::BlockedTensor& dm2, ambit::BlockedTensor& dm3,
+                                 ambit::BlockedTensor& D1, ambit::BlockedTensor& D2,
+                                 ambit::BlockedTensor& D3);
 
     /// Compute RDMs at given order and put into BlockedTensor format
     ambit::BlockedTensor compute_n_rdm(CI_RDMS& cirdm, const int& order);
@@ -561,7 +571,7 @@ class FCI_MO : public Wavefunction {
     double CheckSign(const std::vector<bool>& I, const int& n) {
         timer_on("Check Sign");
         size_t count = 0;
-        for (vector<bool>::const_iterator iter = I.begin(); iter != I.begin() + n; ++iter) {
+        for (std::vector<bool>::const_iterator iter = I.begin(); iter != I.begin() + n; ++iter) {
             if (*iter)
                 ++count;
         }
@@ -583,8 +593,9 @@ class FCI_MO : public Wavefunction {
     void print_det(const vecdet& dets);
 
     /// Print occupations of strings
-    void print_occupation_strings_perirrep(std::string name,
-                                           const vector<vector<vector<bool>>>& string);
+    void
+    print_occupation_strings_perirrep(std::string name,
+                                      const std::vector<std::vector<std::vector<bool>>>& string);
 
     /// Permutations for 3-PDC
     double P3DDD(const d2& Density, const size_t& p, const size_t& q, const size_t& r,

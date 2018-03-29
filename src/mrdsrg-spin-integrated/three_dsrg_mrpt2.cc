@@ -143,12 +143,6 @@ void THREE_DSRG_MRPT2::startup() {
     internal_amp_ = options_.get_str("INTERNAL_AMP") != "NONE";
     internal_amp_select_ = options_.get_str("INTERNAL_AMP_SELECT");
 
-    // ignore semicanonical test
-    std::string actv_type = options_.get_str("FCIMO_ACTV_TYPE");
-    if (actv_type != "COMPLETE" && actv_type != "DOCI") {
-        ignore_semicanonical_ = true;
-    }
-
     rdoccpi_ = mo_space_info_->get_dimension("RESTRICTED_DOCC");
     actvpi_ = mo_space_info_->get_dimension("ACTIVE");
     ruoccpi_ = mo_space_info_->get_dimension("RESTRICTED_UOCC");
@@ -356,10 +350,13 @@ double THREE_DSRG_MRPT2::compute_energy() {
 
     if (my_proc == 0) {
         // check semi-canonical orbitals
-        semi_canonical_ = check_semicanonical();
+        semi_canonical_ = check_semi_orbs();
         if (!semi_canonical_) {
-            outfile->Printf("\n    Warning: DF/CD-DSRG-MRPT2 only takes semi-canonical orbitals. "
-                            "The code will keep running.");
+            outfile->Printf("\n    Warning: DF/CD-DSRG-MRPT2 only takes semi-canonical orbitals.");
+            outfile->Printf("\n    Energy is reliable to similar digit as max(|Fij|), i != j.");
+            outfile->Printf("\n    Please make sure SEMI_CANONICAL option is set to TRUE.");
+            outfile->Printf("\n    Please check previous lines from Semicanonical class.");
+            outfile->Printf("\n    The code will keep running.");
 
             warnings_.push_back(std::make_tuple("Semicanonical orbital test",
                                                 "Assume Semicanonical orbital",
@@ -3832,32 +3829,6 @@ void THREE_DSRG_MRPT2::de_normal_order() {
     }
 }
 
-bool THREE_DSRG_MRPT2::check_semicanonical() {
-    bool semi = check_semi_orbs();
-    if (ignore_semicanonical_) {
-        std::string actv_type = options_.get_str("FCIMO_ACTV_TYPE");
-        if (actv_type == "CIS" || actv_type == "CISD") {
-            outfile->Printf("\n    It is OK for Fock (active) not being diagonal because %s "
-                            "active space is incomplete.",
-                            actv_type.c_str());
-            outfile->Printf("\n    Please inspect if the Fock diag. blocks (C, AH, AP, V) "
-                            "are diagonal or not in the prior CI step.");
-
-        } else {
-            outfile->Printf("\n    Warning: ignore testing of semi-canonical orbitals.");
-            outfile->Printf("\n    Please inspect if the Fock diag. blocks (C, A, V) are "
-                            "diagonal or not.");
-
-            warnings_.push_back(std::make_tuple("Semicanonical orbital test", "Ignore test results",
-                                                "Post an issue for advice"));
-        }
-        outfile->Printf("\n");
-        semi = true;
-    }
-
-    return semi;
-}
-
 std::vector<std::vector<double>> THREE_DSRG_MRPT2::diagonalize_Fock_diagblocks(BlockedTensor& U) {
     // diagonal blocks identifiers (C-A-V ordering)
     std::vector<std::string> blocks{"cc", "aa", "vv", "CC", "AA", "VV"};
@@ -4013,62 +3984,83 @@ void THREE_DSRG_MRPT2::combine_tensor(ambit::Tensor& tens, ambit::Tensor& tens_h
     }
 }
 
-double THREE_DSRG_MRPT2::Tamp_deGNO() {
-    // de-normal-order T1
-    T1eff_ = BTF_->build(tensor_type_, "Effective T1 from de-GNO", spin_cases({"hp"}));
+ambit::BlockedTensor THREE_DSRG_MRPT2::get_T1deGNO(double& T0deGNO) {
+    ambit::BlockedTensor T1eff = deGNO_Tamp(T1_, T2_, Gamma1_);
 
-    T1eff_["ia"] = T1_["ia"];
-    T1eff_["IA"] = T1_["IA"];
-
-    T1eff_["ia"] -= T2_["iuav"] * Gamma1_["vu"];
-    T1eff_["ia"] -= T2_["iUaV"] * Gamma1_["VU"];
-    T1eff_["IA"] -= T2_["uIvA"] * Gamma1_["vu"];
-    T1eff_["IA"] -= T2_["IUAV"] * Gamma1_["VU"];
-
-    double out = 0.0;
+    T0deGNO = 0.0;
     if (internal_amp_) {
         // the scalar term of amplitudes when de-normal-ordering
-        out -= T1_["uv"] * Gamma1_["vu"];
-        out -= T1_["UV"] * Gamma1_["VU"];
+        T0deGNO -= T1_["uv"] * Gamma1_["vu"];
+        T0deGNO -= T1_["UV"] * Gamma1_["VU"];
 
-        out -= 0.25 * T2_["xyuv"] * Lambda2_["uvxy"];
-        out -= 0.25 * T2_["XYUV"] * Lambda2_["UVXY"];
-        out -= T2_["xYuV"] * Lambda2_["uVxY"];
+        T0deGNO -= 0.25 * T2_["xyuv"] * Lambda2_["uvxy"];
+        T0deGNO -= 0.25 * T2_["XYUV"] * Lambda2_["UVXY"];
+        T0deGNO -= T2_["xYuV"] * Lambda2_["uVxY"];
 
-        out += 0.5 * T2_["xyuv"] * Gamma1_["ux"] * Gamma1_["vy"];
-        out += 0.5 * T2_["XYUV"] * Gamma1_["UX"] * Gamma1_["VY"];
-        out += T2_["xYuV"] * Gamma1_["ux"] * Gamma1_["VY"];
+        T0deGNO += 0.5 * T2_["xyuv"] * Gamma1_["ux"] * Gamma1_["vy"];
+        T0deGNO += 0.5 * T2_["XYUV"] * Gamma1_["UX"] * Gamma1_["VY"];
+        T0deGNO += T2_["xYuV"] * Gamma1_["ux"] * Gamma1_["VY"];
     }
 
-    return out;
+    return T1eff;
 }
 
-ambit::BlockedTensor THREE_DSRG_MRPT2::get_T1(const std::vector<std::string>& blocks) {
-    for (const std::string& block : blocks) {
-        if (!T1_.is_block(block)) {
-            std::string error = "Error from T1(blocks): cannot find block " + block;
-            throw PSIEXCEPTION(error);
-        }
-    }
-    ambit::BlockedTensor out = ambit::BlockedTensor::build(tensor_type_, "T1 selected", blocks);
-    out["ia"] = T1_["ia"];
-    out["IA"] = T1_["IA"];
-    return out;
-}
+//double THREE_DSRG_MRPT2::Tamp_deGNO() {
+//    // de-normal-order T1
+//    T1eff_ = BTF_->build(tensor_type_, "Effective T1 from de-GNO", spin_cases({"hp"}));
 
-ambit::BlockedTensor THREE_DSRG_MRPT2::get_T1deGNO(const std::vector<std::string>& blocks) {
-    for (const std::string& block : blocks) {
-        if (!T1eff_.is_block(block)) {
-            std::string error = "Error from T1deGNO(blocks): cannot find block " + block;
-            throw PSIEXCEPTION(error);
-        }
-    }
-    ambit::BlockedTensor out =
-        ambit::BlockedTensor::build(tensor_type_, "T1deGNO selected", blocks);
-    out["ia"] = T1eff_["ia"];
-    out["IA"] = T1eff_["IA"];
-    return out;
-}
+//    T1eff_["ia"] = T1_["ia"];
+//    T1eff_["IA"] = T1_["IA"];
+
+//    T1eff_["ia"] -= T2_["iuav"] * Gamma1_["vu"];
+//    T1eff_["ia"] -= T2_["iUaV"] * Gamma1_["VU"];
+//    T1eff_["IA"] -= T2_["uIvA"] * Gamma1_["vu"];
+//    T1eff_["IA"] -= T2_["IUAV"] * Gamma1_["VU"];
+
+//    double out = 0.0;
+//    if (internal_amp_) {
+//        // the scalar term of amplitudes when de-normal-ordering
+//        out -= T1_["uv"] * Gamma1_["vu"];
+//        out -= T1_["UV"] * Gamma1_["VU"];
+
+//        out -= 0.25 * T2_["xyuv"] * Lambda2_["uvxy"];
+//        out -= 0.25 * T2_["XYUV"] * Lambda2_["UVXY"];
+//        out -= T2_["xYuV"] * Lambda2_["uVxY"];
+
+//        out += 0.5 * T2_["xyuv"] * Gamma1_["ux"] * Gamma1_["vy"];
+//        out += 0.5 * T2_["XYUV"] * Gamma1_["UX"] * Gamma1_["VY"];
+//        out += T2_["xYuV"] * Gamma1_["ux"] * Gamma1_["VY"];
+//    }
+
+//    return out;
+//}
+
+//ambit::BlockedTensor THREE_DSRG_MRPT2::get_T1(const std::vector<std::string>& blocks) {
+//    for (const std::string& block : blocks) {
+//        if (!T1_.is_block(block)) {
+//            std::string error = "Error from T1(blocks): cannot find block " + block;
+//            throw PSIEXCEPTION(error);
+//        }
+//    }
+//    ambit::BlockedTensor out = ambit::BlockedTensor::build(tensor_type_, "T1 selected", blocks);
+//    out["ia"] = T1_["ia"];
+//    out["IA"] = T1_["IA"];
+//    return out;
+//}
+
+//ambit::BlockedTensor THREE_DSRG_MRPT2::get_T1deGNO(const std::vector<std::string>& blocks) {
+//    for (const std::string& block : blocks) {
+//        if (!T1eff_.is_block(block)) {
+//            std::string error = "Error from T1deGNO(blocks): cannot find block " + block;
+//            throw PSIEXCEPTION(error);
+//        }
+//    }
+//    ambit::BlockedTensor out =
+//        ambit::BlockedTensor::build(tensor_type_, "T1deGNO selected", blocks);
+//    out["ia"] = T1eff_["ia"];
+//    out["IA"] = T1eff_["IA"];
+//    return out;
+//}
 
 ambit::BlockedTensor THREE_DSRG_MRPT2::get_T2(const std::vector<std::string>& blocks) {
     for (const std::string& block : blocks) {
