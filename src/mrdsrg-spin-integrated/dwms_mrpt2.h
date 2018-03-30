@@ -57,33 +57,32 @@ class DWMS_DSRGPT2 : public Wavefunction {
     /// form Hbar3 for DSRG-MRPT2
     bool do_hbar3_;
 
-    //    /// use what energies to determine the weights
-    //    std::string dwms_e_;
+    /// nuclear repulsion energy
+    double Enuc_;
 
-    //    /// use what CI vectors to perform multi-state computation
-    //    std::string dwms_ci_;
+    /// compute MS or XMS energies
+    double compute_dwms_energy(std::shared_ptr<FCI_MO>& fci_mo);
 
-    /// precompute energy -- CASCI or SA-DSRG-PT2
-    std::shared_ptr<FCI_MO> precompute_energy_old();
+    /// compute DWSA energies
+    double compute_dwsa_energy(std::shared_ptr<FCI_MO>& fci_mo);
 
-    /// precompute energy -- CASCI or SA-DSRG-PT2
+    /// precompute energy -- CASCI or SA-DSRG-PT2/3
     std::shared_ptr<FCI_MO> precompute_energy();
 
-    /// perform DSRG-PT2 computation and return the dressed integrals within active space
+    /// perform DSRG-PT2/3 computation and return the dressed integrals within active space
     std::shared_ptr<FCIIntegrals> compute_dsrg_pt(std::shared_ptr<MASTER_DSRG>& dsrg_pt,
                                                   Reference& reference, std::string level = "PT2");
 
+    /// perform a macro DSRG-PT2/3 computation
+    std::shared_ptr<FCIIntegrals> compute_macro_dsrg_pt(std::shared_ptr<MASTER_DSRG>& dsrg_pt,
+                                                        std::shared_ptr<FCI_MO> fci_mo, int entry,
+                                                        int root);
+
     /// compute DWMS energies by diagonalizing separate Hamiltonians
-    double compute_dwms_energy_separated_H();
+    double compute_dwms_energy_separated_H(std::shared_ptr<FCI_MO>& fci_mo);
 
-    /// compute MS or XMS energies
-    double compute_dwms_energy();
-
-    /// compute DWSA energies
-    double compute_dwsa_energy();
-
-    /// compute Reference
-    Reference compute_Reference(CI_RDMS& ci_rdms, bool do_cumulant);
+    /// precompute energy -- CASCI or SA-DSRG-PT2
+    std::shared_ptr<FCI_MO> precompute_energy_old();
 
     /// compute state-averaged Reference
     Reference

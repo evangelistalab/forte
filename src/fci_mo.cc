@@ -3625,7 +3625,7 @@ std::deque<ambit::Tensor> FCI_MO::compute_n_rdm(const vecdet& p_space, SharedMat
     job_name = std::to_string(rdm_level) + job_name;
     timer_on(job_name);
     outfile->Printf("\n  Computing %5s (%d-%d) of %s %s ... ", job_name.c_str(), root1, root2,
-                    multi_symbols_[multi].c_str(), irrep_symbols_[irrep].c_str());
+                    multi_symbols_[multi - 1].c_str(), irrep_symbols_[irrep].c_str());
     ForteTimer timer;
 
     std::vector<std::string> names;
