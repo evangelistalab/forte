@@ -44,13 +44,13 @@
 #include "ambit/blocked_tensor.h"
 #include "ambit/tensor.h"
 
-#include "helpers.h"
-#include "integrals/integrals.h"
-#include "reference.h"
-#include "sparse_ci/determinant.h"
-#include "mrdsrg-spin-integrated/master_mrdsrg.h"
-#include "mrdsrg-spin-integrated/dsrg_mrpt2.h"
-#include "mrdsrg-spin-integrated/three_dsrg_mrpt2.h"
+#include "../helpers.h"
+#include "../integrals/integrals.h"
+#include "../reference.h"
+#include "../sparse_ci/determinant.h"
+#include "master_mrdsrg.h"
+#include "dsrg_mrpt2.h"
+#include "three_dsrg_mrpt2.h"
 
 namespace psi {
 namespace forte {

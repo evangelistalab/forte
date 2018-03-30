@@ -43,7 +43,7 @@
 #include "fci/fci_integrals.h"
 #include "fci_mo.h"
 #include "semi_canonicalize.h"
-#include "mrdsrg-spin-integrated/master_mrdsrg.h"
+#include "master_mrdsrg.h"
 #include "active_dsrgpt2.h"
 #include "boost/format.hpp"
 #include "helpers/printing.h"

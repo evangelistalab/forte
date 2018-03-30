@@ -42,7 +42,6 @@
 #include "psi4/psifiles.h"
 
 #include "aci/aci.h"
-#include "active_dsrgpt2.h"
 #include "blockedtensorfactory.h"
 #include "casscf.h"
 #include "cc.h"
@@ -66,6 +65,7 @@
 #include "mrdsrg-spin-integrated/dsrg_mrpt3.h"
 #include "mrdsrg-spin-integrated/mrdsrg.h"
 #include "mrdsrg-spin-integrated/three_dsrg_mrpt2.h"
+#include "mrdsrg-spin-integrated/active_dsrgpt2.h"
 #include "mrdsrg-spin-integrated/dwms_mrpt2.h"
 #include "orbital-helper/localize.h"
 #include "orbital-helper/es-nos.h"
