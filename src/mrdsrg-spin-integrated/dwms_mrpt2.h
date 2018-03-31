@@ -92,20 +92,6 @@ class DWMS_DSRGPT2 : public Wavefunction {
     /// precompute energy -- CASCI or SA-DSRG-PT2
     std::shared_ptr<FCI_MO> precompute_energy_old();
 
-    /// compute state-averaged Reference
-    Reference
-    compute_Reference_SA(const std::vector<det_vec>& p_spaces,
-                         const std::vector<SharedMatrix>& civecs,
-                         const std::vector<std::tuple<int, int, int, std::vector<double>>>& info);
-
-    /// compute Fock matrix within the active space
-    void compute_Fock_actv(const det_vec& p_space, SharedMatrix civecs, ambit::Tensor Fa,
-                           ambit::Tensor Fb);
-
-    /// rotate CI vectors according to XMS
-    SharedMatrix xms_rotate_civecs(const det_vec& p_space, SharedMatrix civecs, ambit::Tensor Fa,
-                                   ambit::Tensor Fb);
-
     /// initial guesses if DWMS-1 or DWMS-AVG1
     std::vector<std::vector<SharedVector>> initial_guesses_;
 
@@ -151,6 +137,9 @@ class DWMS_DSRGPT2 : public Wavefunction {
 
     /// print implementation note on SA or XSA
     void print_note_sa();
+
+    /// print title
+    void print_title(const std::string& title);
 
     /// print current job title
     void print_current_title(int multi, int irrep, int root);

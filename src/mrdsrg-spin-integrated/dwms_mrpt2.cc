@@ -390,10 +390,7 @@ double DWMS_DSRGPT2::compute_dwsa_energy(std::shared_ptr<FCI_MO>& fci_mo) {
         // print current status
         std::string entry_name = multi_symbol_[multi - 1] + " " + irrep_symbol_[irrep];
         std::string entry_title = "Build Effective Hamiltonian of " + entry_name;
-        size_t entry_title_size = entry_title.size();
-        outfile->Printf("\n\n  %s", std::string(entry_title_size, '=').c_str());
-        outfile->Printf("\n  %s", entry_title.c_str());
-        outfile->Printf("\n  %s\n", std::string(entry_title_size, '=').c_str());
+        print_title(entry_title);
 
         // prepare Heff
         SharedMatrix Heff(new Matrix("Heff " + entry_name, nroots, nroots));
@@ -503,10 +500,7 @@ double DWMS_DSRGPT2::compute_dwms_energy(std::shared_ptr<FCI_MO>& fci_mo) {
         // print current status
         std::string entry_name = multi_symbol_[multi - 1] + " " + irrep_symbol_[irrep];
         std::string entry_title = "Build Effective Hamiltonian of " + entry_name;
-        size_t entry_title_size = entry_title.size();
-        outfile->Printf("\n\n  %s", std::string(entry_title_size, '=').c_str());
-        outfile->Printf("\n  %s", entry_title.c_str());
-        outfile->Printf("\n  %s\n", std::string(entry_title_size, '=').c_str());
+        print_title(entry_title);
 
         // prepare Heff
         SharedMatrix Heff(new Matrix("Heff " + entry_name, nroots, nroots));
@@ -683,186 +677,6 @@ double DWMS_DSRGPT2::contract_Heff_3TrDM(ambit::Tensor& H3aaa, ambit::Tensor& H3
 
     return coupling;
 }
-
-void DWMS_DSRGPT2::compute_Fock_actv(const det_vec& p_space, SharedMatrix civecs, ambit::Tensor Fa,
-                                     ambit::Tensor Fb) {
-    // make sure the size match
-    size_t nroots = p_space.size();
-    if (nroots != civecs->ncol()) {
-        throw PSIEXCEPTION("Inconsistent number of roots in p_space and civecs.");
-    }
-
-    // compute state-averaged density
-    outfile->Printf("\n    Compute SA density matrix with equal weights 1/%d.", nroots);
-
-    auto actv_mos = mo_space_info_->get_corr_abs_mo("ACTIVE");
-    auto core_mos = mo_space_info_->get_corr_abs_mo("RESTRICTED_DOCC");
-
-    size_t nc = mo_space_info_->size("RESTRICTED_DOCC");
-    size_t na = mo_space_info_->size("ACTIVE");
-    std::vector<double> sa_opdm_a(na * na, 0.0);
-    std::vector<double> sa_opdm_b(na * na, 0.0);
-
-    for (int M = 0; M < nroots; ++M) {
-        CI_RDMS ci_rdms(options_, fci_ints_, p_space, civecs, M, M);
-        std::vector<double> opdm_a, opdm_b;
-        ci_rdms.compute_1rdm(opdm_a, opdm_b);
-
-        std::transform(sa_opdm_a.begin(), sa_opdm_a.end(), opdm_a.begin(), sa_opdm_a.begin(),
-                       std::plus<double>());
-        std::transform(sa_opdm_b.begin(), sa_opdm_b.end(), opdm_b.begin(), sa_opdm_b.begin(),
-                       std::plus<double>());
-    }
-    std::for_each(sa_opdm_a.begin(), sa_opdm_a.end(), [&](double& v) { v /= nroots; });
-    std::for_each(sa_opdm_b.begin(), sa_opdm_b.end(), [&](double& v) { v /= nroots; });
-
-    ambit::Tensor Da = ambit::Tensor::build(CoreTensor, "Da", {na, na});
-    Da.data() = std::move(sa_opdm_a);
-
-    ambit::Tensor Db = ambit::Tensor::build(CoreTensor, "Db", {na, na});
-    Db.data() = std::move(sa_opdm_b);
-
-    // form Fock matrix within active space
-    Fa = ambit::Tensor::build(CoreTensor, "Fa", {na, na});
-    Fb = ambit::Tensor::build(CoreTensor, "Fb", {na, na});
-
-    Fa.iterate([&](const std::vector<size_t>& i, double& value) {
-        size_t nu = actv_mos[i[0]];
-        size_t nv = actv_mos[i[1]];
-        value = ints_->oei_a(nu, nv);
-    });
-
-    Fb.iterate([&](const std::vector<size_t>& i, double& value) {
-        size_t nu = actv_mos[i[0]];
-        size_t nv = actv_mos[i[1]];
-        value = ints_->oei_b(nu, nv);
-    });
-
-    ambit::Tensor I = ambit::Tensor::build(CoreTensor, "Identity", {nc, nc});
-    for (int m = 0; m < nc; ++m) {
-        I.data()[m * nc + m] = 1.0;
-    }
-
-    ambit::Tensor V;
-    V = ints_->aptei_aa_block(actv_mos, core_mos, actv_mos, core_mos);
-    Fa("uv") += V("umvn") * I("mn");
-
-    V = ints_->aptei_ab_block(actv_mos, core_mos, actv_mos, core_mos);
-    Fa("uv") += V("umvn") * I("mn");
-
-    V = ints_->aptei_ab_block(core_mos, actv_mos, core_mos, actv_mos);
-    Fb("uv") += V("munv") * I("mn");
-
-    V = ints_->aptei_bb_block(actv_mos, core_mos, actv_mos, core_mos);
-    Fb("uv") += V("umvn") * I("mn");
-
-    V = ints_->aptei_aa_block(actv_mos, actv_mos, actv_mos, actv_mos);
-    Fa("uv") += V("uxvy") * Da("xy");
-
-    V = ints_->aptei_ab_block(actv_mos, actv_mos, actv_mos, actv_mos);
-    Fa("uv") += V("uxvy") * Db("xy");
-    Fb("uv") += V("xuyv") * Da("xy");
-
-    V = ints_->aptei_bb_block(actv_mos, actv_mos, actv_mos, actv_mos);
-    Fb("uv") += V("uxvy") * Db("xy");
-}
-
-SharedMatrix DWMS_DSRGPT2::xms_rotate_civecs(const det_vec& p_space, SharedMatrix civecs,
-                                             ambit::Tensor Fa, ambit::Tensor Fb) {
-    int nroots = civecs->ncol();
-    outfile->Printf("\n    Build Fock matrix <M|F|N>.");
-    SharedMatrix Fock(new Matrix("Fock <M|F|N>", nroots, nroots));
-
-    size_t na = mo_space_info_->size("ACTIVE");
-
-    for (int M = 0; M < nroots; ++M) {
-        for (int N = M; N < nroots; ++N) {
-
-            // compute transition density
-            std::vector<double> opdm_a, opdm_b;
-            CI_RDMS ci_rdms(options_, fci_ints_, p_space, civecs, M, N);
-            ci_rdms.compute_1rdm(opdm_a, opdm_b);
-
-            // put rdms in tensor format
-            ambit::Tensor Da = ambit::Tensor::build(CoreTensor, "Da", {na, na});
-            ambit::Tensor Db = ambit::Tensor::build(CoreTensor, "Da", {na, na});
-            Da.data() = std::move(opdm_a);
-            Db.data() = std::move(opdm_b);
-
-            // compute Fock elements
-            double F_MN = 0.0;
-            F_MN += Da("uv") * Fa("vu");
-            F_MN += Db("UV") * Fb("VU");
-            Fock->set(M, N, F_MN);
-            if (M != N) {
-                Fock->set(N, M, F_MN);
-            }
-        }
-    }
-    Fock->print();
-
-    // diagonalize Fock
-    SharedMatrix Fevec(new Matrix("Fock Evec", nroots, nroots));
-    SharedVector Feval(new Vector("Fock Eval", nroots));
-    Fock->diagonalize(Fevec, Feval);
-    Fevec->eivprint(Feval);
-
-    // Rotate ci vecs
-    SharedMatrix rcivecs(civecs->clone());
-    rcivecs->zero();
-    rcivecs->gemm(false, false, 1.0, civecs, Fevec, 0.0);
-
-    return rcivecs;
-}
-
-// Reference DWMS_DSRGPT2::compute_Reference(CI_RDMS& ci_rdms, bool do_cumulant) {
-//    size_t na = mo_space_info_->size("ACTIVE");
-
-//    std::string job_type = "RDM";
-//    if (do_cumulant) {
-//        job_type = "PDC";
-//    }
-
-//    Reference ref;
-//    std::vector<double> opdm_a, opdm_b;
-//    std::vector<double> tpdm_aa, tpdm_ab, tpdm_bb;
-//    std::vector<double> tpdm_aaa, tpdm_aab, tpdm_abb, tpdm_bbb;
-
-//    // 1-RDM
-//    if (max_rdm_level_ >= 1) {
-//        ForteTimer timer;
-//        outfile->Printf("\n  Computing 1-%ss ... ", job_type.c_str());
-
-//        ci_rdms.compute_1rdm(opdm_a, opdm_b);
-//        ref.set_G1(opdm_a, opdm_b, na);
-
-//        outfile->Printf("Done. Timing %15.6f s\n", timer.elapsed());
-//    }
-
-//    // 2-RDM
-//    if (max_rdm_level_ >= 2) {
-//        ForteTimer timer;
-//        outfile->Printf("\n  Computing 2-%ss ... ", job_type.c_str());
-
-//        ci_rdms.compute_2rdm(tpdm_aa, tpdm_ab, tpdm_bb);
-//        ref.set_G2(tpdm_aa, tpdm_ab, tpdm_bb, na, do_cumulant);
-
-//        outfile->Printf("Done. Timing %15.6f s\n", timer.elapsed());
-//    }
-
-//    // 3-RDM
-//    if (max_rdm_level_ >= 3) {
-//        ForteTimer timer;
-//        outfile->Printf("\n  Computing 3-ss ... ", job_type.c_str());
-
-//        ci_rdms.compute_3rdm(tpdm_aaa, tpdm_aab, tpdm_abb, tpdm_bbb);
-//        ref.set_G3(tpdm_aaa, tpdm_aab, tpdm_abb, tpdm_bbb, na, do_cumulant);
-
-//        outfile->Printf("Done. Timing %15.6f s\n", timer.elapsed());
-//    }
-
-//    return ref;
-//}
 
 void DWMS_DSRGPT2::print_sa_info(
     const std::string& name,
@@ -1157,6 +971,13 @@ std::vector<std::tuple<int, int, int, std::vector<double>>> DWMS_DSRGPT2::comput
     }
 
     return out;
+}
+
+void DWMS_DSRGPT2::print_title(const std::string &title){
+    size_t title_size = title.size();
+    outfile->Printf("\n\n  %s", std::string(title_size, '=').c_str());
+    outfile->Printf("\n  %s", title.c_str());
+    outfile->Printf("\n  %s\n", std::string(title_size, '=').c_str());
 }
 
 void DWMS_DSRGPT2::print_current_title(int multi, int irrep, int root) {
