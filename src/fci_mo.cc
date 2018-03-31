@@ -3652,6 +3652,7 @@ std::deque<ambit::Tensor> FCI_MO::compute_n_rdm(const vecdet& p_space, SharedMat
 
     if (safe_to_read_density_files_ && files_exist) {
         for (int i = 0; i < ntensors; ++i) {
+            outfile->Printf("Reading ... ");
             read_disk_vector_double(filenames[i], out[i].data());
         }
     } else {
@@ -3672,6 +3673,7 @@ std::deque<ambit::Tensor> FCI_MO::compute_n_rdm(const vecdet& p_space, SharedMat
 
         if (disk) {
             for (int i = 0; i < ntensors; ++i) {
+                outfile->Printf("Writing ... ");
                 write_disk_vector_double(filenames[i], out[i].data());
                 density_files_.insert(filenames[i]);
             }

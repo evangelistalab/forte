@@ -91,6 +91,9 @@ void DWMS_DSRGPT2::startup() {
     if (algorithm_ == "SA" || algorithm_ == "XSA") {
         print_note_sa();
     } else if (algorithm_ == "MS" || algorithm_ == "XMS") {
+        if (dwms_corrlv_ == "PT3") {
+            throw PSIEXCEPTION("DWMS-DSRG-PT3 does not support MS or XMS algorithm yet.");
+        }
         print_note_ms();
     } else {
         print_note();
@@ -428,20 +431,15 @@ double DWMS_DSRGPT2::compute_dwsa_energy(std::shared_ptr<FCI_MO>& fci_mo) {
                 double coupling = 0.0;
 
                 auto Hbar_vec = dsrg_pt->Hbar(1);
-                coupling += Hbar_vec[0]("vu") * TrD.L1a()("uv");
-                coupling += Hbar_vec[1]("vu") * TrD.L1b()("uv");
+                coupling += contract_Heff_1TrDM(Hbar_vec[0], Hbar_vec[1], TrD, false);
 
                 Hbar_vec = dsrg_pt->Hbar(2);
-                coupling += 0.25 * Hbar_vec[0]("xyuv") * TrD.g2aa()("uvxy");
-                coupling += Hbar_vec[1]("xYuV") * TrD.g2ab()("uVxY");
-                coupling += 0.25 * Hbar_vec[2]("XYUV") * TrD.g2bb()("UVXY");
+                coupling += contract_Heff_2TrDM(Hbar_vec[0], Hbar_vec[1], Hbar_vec[2], TrD, false);
 
                 if (do_hbar3_) {
                     Hbar_vec = dsrg_pt->Hbar(3);
-                    coupling += (1.0 / 36) * Hbar_vec[0]("uvwxyz") * TrD.g3aaa()("xyzuvw");
-                    coupling += 0.25 * Hbar_vec[1]("uvwxyz") * TrD.g3aab()("xyzuvw");
-                    coupling += 0.25 * Hbar_vec[2]("uvwxyz") * TrD.g3abb()("xyzuvw");
-                    coupling += (1.0 / 36) * Hbar_vec[3]("uvwxyz") * TrD.g3bbb()("xyzuvw");
+                    coupling += contract_Heff_3TrDM(Hbar_vec[0], Hbar_vec[1], Hbar_vec[2],
+                                                    Hbar_vec[3], TrD, false);
                 }
 
                 if (M == N) {
@@ -484,19 +482,16 @@ double DWMS_DSRGPT2::compute_dwms_energy(std::shared_ptr<FCI_MO>& fci_mo) {
     int nentry = sa_info.size();
     Ept_.resize(nentry);
 
-    // save a copy of original orbitals
-    SharedMatrix Ca_copy(reference_wavefunction_->Ca()->clone());
-    SharedMatrix Cb_copy(reference_wavefunction_->Cb()->clone());
+    std::shared_ptr<MASTER_DSRG> dsrg_pt2;
+    std::shared_ptr<FCIIntegrals> fci_ints;
 
-    // prepare Reference
-    Reference reference;
+    // if zeta == 0, just transform Hamiltonian once
+    if (zeta_ == 0) {
+        print_h2("Important Note of DW-DSRG");
+        outfile->Printf("\n  DWMS_ZETA is detected to be 0.0.");
+        outfile->Printf("\n  The bare Hamiltonian will be transformed ONLY once.");
 
-    // if zeta = 0, reference and amplitudes will be the same for all states
-    // we should only compute DSRG once, from which we obtain the "effective Hamiltonian"
-    // then loop over states to obtain the couplings
-    double zero_threshold = 1.0e-8;
-    if (zeta_ < zero_threshold) {
-        outfile->Printf("\n  DWMS_ZETA = 0.0! Equal weights will be used for all states.");
+        fci_ints = compute_macro_dsrg_pt(dsrg_pt2, fci_mo, 0, 0);
     }
 
     // loop over symmetry entries
@@ -519,67 +514,24 @@ double DWMS_DSRGPT2::compute_dwms_energy(std::shared_ptr<FCI_MO>& fci_mo) {
 
         // loop over states of current symmetry
         for (int M = 0; M < nroots; ++M) {
-            print_h2("Compute DSRG-MR" + dwms_corrlv_ + " Energy of Root " + std::to_string(M));
 
-            // compute new weights
-            std::vector<std::vector<double>>& Erefs = (dwms_ref_ == "CASCI") ? Eref_0_ : Ept_0_;
-            auto sa_info_new = compute_dwms_weights(sa_info, n, M, Erefs);
-            print_sa_info("Original State Averaging Summary", sa_info);
-            print_sa_info("Reweighted State Averaging Summary", sa_info_new);
-
-            // compute Reference
-            fci_mo->set_sa_info(sa_info_new);
-            reference = fci_mo->reference(max_rdm_level_);
-
-            // update MK vacuum energy
-            double Enuc = Process::environment.molecule()->nuclear_repulsion_energy(
-                reference_wavefunction_->get_dipole_field_strength());
-            reference.update_Eref(ints_, mo_space_info_, Enuc);
-
-            // DSRG-PT2 pointer
-            std::shared_ptr<MASTER_DSRG> dsrg_pt2;
-
-            // canonicalize orbitals if density fitting
-            // because three-dsrg-mrpt2 assumes semicanonical orbitals
-            if (eri_df_) {
-                SemiCanonical semi(reference_wavefunction_, ints_, mo_space_info_);
-                semi.semicanonicalize(reference, max_rdm_level_);
-                Ua_ = semi.Ua_t();
-                Ub_ = semi.Ub_t();
-
-                dsrg_pt2 = std::make_shared<THREE_DSRG_MRPT2>(reference, reference_wavefunction_,
-                                                              options_, ints_, mo_space_info_);
-            } else {
-                dsrg_pt2 = std::make_shared<DSRG_MRPT2>(reference, reference_wavefunction_,
-                                                        options_, ints_, mo_space_info_);
+            // transform bare Hamiltonian for each root
+            if (zeta_ != 0.0) {
+                print_h2("Compute DSRG-MR" + dwms_corrlv_ + " Energy of Root " + std::to_string(M));
+                fci_ints = compute_macro_dsrg_pt(dsrg_pt2, fci_mo, n, M);
             }
-
-            // compute biased state-averaged DSRG-MRPT2 energy
-            dsrg_pt2->compute_energy();
-
-            // compute 2nd-order efffective Hamiltonian for the couplings
-            auto fci_ints = dsrg_pt2->compute_Heff_actv();
 
             // compute 2nd-order efffective Hamiltonian for the couplings
             print_h2("Compute couplings of 2nd-order effective Hamiltonian");
 
             outfile->Printf("\n  Compute 2nd-order Heff = H + H * T(root %d).", M);
-            ambit::Tensor H1a, H1b, H2aa, H2ab, H2bb, H3aaa, H3aab, H3abb, H3bbb;
             double H0;
+            ambit::Tensor H1a, H1b, H2aa, H2ab, H2bb, H3aaa, H3aab, H3abb, H3bbb;
             dsrg_pt2->compute_Heff_2nd_coupling(H0, H1a, H1b, H2aa, H2ab, H2bb, H3aaa, H3aab, H3abb,
                                                 H3bbb);
-            //            outfile->Printf("\n!!!! H1a norm   %25.15f", H1a.norm());
-            //            outfile->Printf("\n!!!! H1b norm   %25.15f", H1b.norm());
-            //            outfile->Printf("\n!!!! H2aa norm  %25.15f", H2aa.norm());
-            //            outfile->Printf("\n!!!! H2ab norm  %25.15f", H2ab.norm());
-            //            outfile->Printf("\n!!!! H2bb norm  %25.15f", H2bb.norm());
-            //            outfile->Printf("\n!!!! H3aaa norm %25.15f", H3aaa.norm());
-            //            outfile->Printf("\n!!!! H3aab norm %25.15f", H3aab.norm());
-            //            outfile->Printf("\n!!!! H3abb norm %25.15f", H3abb.norm());
-            //            outfile->Printf("\n!!!! H3bbb norm %25.15f", H3bbb.norm());
 
-            // need to rotate these Heff to original basis if density fitting
-            // because CI vectors are obtained in the original orbital basis
+            // rotate Heff to original basis if DF
+            // no need to do this if not DF since "invariant" form is used in DSRG-MRPT2/3
             if (eri_df_) {
                 ambit::Tensor temp;
 
@@ -625,69 +577,51 @@ double DWMS_DSRGPT2::compute_dwms_energy(std::shared_ptr<FCI_MO>& fci_mo) {
             }
 
             for (int N = 0; N < nroots; ++N) {
-                std::string msg = "densities";
-                if (M == N) {
-                    msg = "transition densities";
-                }
+                std::string msg = (M == N) ? "densities" : "transition densities";
 
                 // compute transition densities
                 outfile->Printf("\n  Compute %s.", msg.c_str());
-                Reference TrD = fci_mo->transition_reference(M, N, true, n, 3, false);
+                Reference TrD = (M <= N) ? fci_mo->transition_reference(M, N, true, n, 3, false)
+                                         : fci_mo->transition_reference(N, M, true, n, 3, false);
+                bool transpose = (M <= N) ? false : true;
 
                 outfile->Printf("\n  Contract %s with Heff.", msg.c_str());
                 double coupling = 0.0;
 
-                coupling += H1a("vu") * TrD.L1a()("uv");
-                coupling += H1b("vu") * TrD.L1b()("uv");
-
-                coupling += 0.25 * H2aa("xyuv") * TrD.g2aa()("uvxy");
-                coupling += H2ab("xYuV") * TrD.g2ab()("uVxY");
-                coupling += 0.25 * H2bb("XYUV") * TrD.g2bb()("UVXY");
-
-                coupling += 1.0 / 36.0 * H3aaa("uvwxyz") * TrD.g3aaa()("xyzuvw");
-                coupling += 0.25 * H3aab("uvwxyz") * TrD.g3aab()("xyzuvw");
-                coupling += 0.25 * H3abb("uvwxyz") * TrD.g3abb()("xyzuvw");
-                coupling += 1.0 / 36.0 * H3bbb("uvwxyz") * TrD.g3bbb()("xyzuvw");
+                coupling += contract_Heff_1TrDM(H1a, H1b, TrD, transpose);
+                coupling += contract_Heff_2TrDM(H2aa, H2ab, H2bb, TrD, transpose);
+                coupling += contract_Heff_3TrDM(H3aaa, H3aab, H3abb, H3bbb, TrD, transpose);
 
                 if (M == N) {
                     double Ediag = fci_ints->scalar_energy();
 
                     auto Hbar_vec = dsrg_pt2->Hbar(1);
-                    Ediag += Hbar_vec[0]("vu") * TrD.L1a()("uv");
-                    Ediag += Hbar_vec[1]("vu") * TrD.L1b()("uv");
+                    Ediag += contract_Heff_1TrDM(Hbar_vec[0], Hbar_vec[1], TrD, transpose);
 
                     Hbar_vec = dsrg_pt2->Hbar(2);
-                    Ediag += 0.25 * Hbar_vec[0]("xyuv") * TrD.g2aa()("uvxy");
-                    Ediag += Hbar_vec[1]("xYuV") * TrD.g2ab()("uVxY");
-                    Ediag += 0.25 * Hbar_vec[2]("XYUV") * TrD.g2bb()("UVXY");
+                    Ediag +=
+                        contract_Heff_2TrDM(Hbar_vec[0], Hbar_vec[1], Hbar_vec[2], TrD, transpose);
 
-                    Hbar_vec = dsrg_pt2->Hbar(3);
-                    Ediag += (1.0 / 36) * Hbar_vec[0]("uvwxyz") * TrD.g3aaa()("xyzuvw");
-                    Ediag += 0.25 * Hbar_vec[1]("uvwxyz") * TrD.g3aab()("xyzuvw");
-                    Ediag += 0.25 * Hbar_vec[2]("uvwxyz") * TrD.g3abb()("xyzuvw");
-                    Ediag += (1.0 / 36) * Hbar_vec[3]("uvwxyz") * TrD.g3bbb()("xyzuvw");
+                    if (do_hbar3_) {
+                        Hbar_vec = dsrg_pt2->Hbar(3);
+                        Ediag += contract_Heff_3TrDM(Hbar_vec[0], Hbar_vec[1], Hbar_vec[2],
+                                                     Hbar_vec[3], TrD, transpose);
 
-                    double shift = ints_->frozen_core_energy() + Enuc;
+                        double Ediff = Ediag - H0 - coupling;
+                        outfile->Printf("\n\n  Energy difference of root %d", M);
+                        outfile->Printf("\n    Real 2nd-order energy:   %20.15f", Ediag);
+                        outfile->Printf("\n    Pseudo 2nd-order energy: %20.15f", H0 + coupling);
+                        outfile->Printf("\n    Energy difference:       %20.15f", Ediff);
+                    }
+
+                    double shift = ints_->frozen_core_energy() + Enuc_;
                     Heff->set(M, M, Ediag + shift);
                     Heff_sym->set(M, M, Ediag + shift);
-
-                    double Ediff = Ediag - H0 - coupling;
-                    outfile->Printf("\n  Difference between real and pseudo E2nd: %20.15f", Ediff);
                 } else {
                     Heff->set(N, M, coupling);
                     Heff_sym->add(N, M, 0.5 * coupling);
                     Heff_sym->add(M, N, 0.5 * coupling);
                 }
-            }
-
-            // rotate basis back to original if density fitting
-            if (eri_df_) {
-                print_h2("Back Transformation of Semicanonical Integrals");
-                SharedMatrix Ca = reference_wavefunction_->Ca();
-                SharedMatrix Cb = reference_wavefunction_->Cb();
-                Ca->copy(Ca_copy);
-                Cb->copy(Cb_copy);
-                ints_->retransform_integrals();
             }
         }
 
@@ -711,6 +645,43 @@ double DWMS_DSRGPT2::compute_dwms_energy(std::shared_ptr<FCI_MO>& fci_mo) {
     }
 
     return Ept_[0][0];
+}
+
+double DWMS_DSRGPT2::contract_Heff_1TrDM(ambit::Tensor& H1a, ambit::Tensor& H1b, Reference& TrD,
+                                         bool transpose) {
+    double coupling = 0.0;
+    std::string indices = transpose ? "vu" : "uv";
+
+    coupling += H1a("vu") * TrD.L1a()(indices);
+    coupling += H1b("vu") * TrD.L1b()(indices);
+
+    return coupling;
+}
+
+double DWMS_DSRGPT2::contract_Heff_2TrDM(ambit::Tensor& H2aa, ambit::Tensor& H2ab,
+                                         ambit::Tensor& H2bb, Reference& TrD, bool transpose) {
+    double coupling = 0.0;
+    std::string indices = transpose ? "uvxy" : "xyuv";
+
+    coupling += 0.25 * H2aa("uvxy") * TrD.g2aa()(indices);
+    coupling += H2ab("uvxy") * TrD.g2ab()(indices);
+    coupling += 0.25 * H2bb("uvxy") * TrD.g2bb()(indices);
+
+    return coupling;
+}
+
+double DWMS_DSRGPT2::contract_Heff_3TrDM(ambit::Tensor& H3aaa, ambit::Tensor& H3aab,
+                                         ambit::Tensor& H3abb, ambit::Tensor& H3bbb, Reference& TrD,
+                                         bool transpose) {
+    double coupling = 0.0;
+    std::string indices = transpose ? "uvwxyz" : "xyzuvw";
+
+    coupling += 1.0 / 36.0 * H3aaa("uvwxyz") * TrD.g3aaa()(indices);
+    coupling += 0.25 * H3aab("uvwxyz") * TrD.g3aab()(indices);
+    coupling += 0.25 * H3abb("uvwxyz") * TrD.g3abb()(indices);
+    coupling += 1.0 / 36.0 * H3bbb("uvwxyz") * TrD.g3bbb()(indices);
+
+    return coupling;
 }
 
 void DWMS_DSRGPT2::compute_Fock_actv(const det_vec& p_space, SharedMatrix civecs, ambit::Tensor Fa,

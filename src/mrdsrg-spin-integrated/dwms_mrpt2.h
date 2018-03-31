@@ -78,6 +78,14 @@ class DWMS_DSRGPT2 : public Wavefunction {
                                                         std::shared_ptr<FCI_MO> fci_mo, int entry,
                                                         int root);
 
+    /// contract H with transition densities
+    double contract_Heff_1TrDM(ambit::Tensor& H1a, ambit::Tensor& H1b, Reference& TrD,
+                               bool transpose);
+    double contract_Heff_2TrDM(ambit::Tensor& H2aa, ambit::Tensor& H2ab, ambit::Tensor& H2bb,
+                               Reference& TrD, bool transpose);
+    double contract_Heff_3TrDM(ambit::Tensor& H3aaa, ambit::Tensor& H3aab, ambit::Tensor& H3abb,
+                               ambit::Tensor& H3bbb, Reference& TrD, bool transpose);
+
     /// compute DWMS energies by diagonalizing separate Hamiltonians
     double compute_dwms_energy_separated_H(std::shared_ptr<FCI_MO>& fci_mo);
 
