@@ -330,10 +330,29 @@ double FCISolver::compute_energy() {
         }
     }
 
+    outfile->Printf("\n /////////////// TILES BEGIN /////////////////////\n");
+    double fci_nergy = dls.eigenvalues()->get(root_) + nuclear_repulsion_energy;
+    fci_svd_tiles(HC, fci_ints, fci_nergy, 10, 0.001);
+    outfile->Printf("\n /////////////// TILES END /////////////////////\n");
+
     if (options_.get_bool("FCI_SVD")){
         double fci_energy = dls.eigenvalues()->get(root_) + nuclear_repulsion_energy;
-        fci_svd(HC,fci_ints,fci_energy);
+        fci_svd(HC,fci_ints,fci_energy, options_.get_double("FCI_SVD_TAU"));
     }
+
+
+
+/*
+    if (options_.get_bool("FCI_SVD_MANY_TAU")){
+        double fci_energy = dls.eigenvalues()->get(root_) + nuclear_repulsion_energy;
+        double TAU_MIN = options_.get_bool("FCI_SVD_TAU");
+        for(int i = 0; i < options_.get_double("HOW_MANY_TAU"); i++){
+          Tau = TAU_MIN + i*options_.get_double("DEL_TAU");
+          fci_svd(HC,fci_ints,fci_energy,Tau);
+        }
+
+    }
+*/
 
     // Compute the RDMs
     compute_rdms_root(root_);

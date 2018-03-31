@@ -218,7 +218,8 @@ class FCISolver {
     Options& options_;
 
     /// Decompose and reconstruct the FCI wave function
-    void fci_svd(FCIVector& HC, std::shared_ptr<FCIIntegrals> fci_ints, double fci_energy);
+    void fci_svd(FCIVector& HC, std::shared_ptr<FCIIntegrals> fci_ints, double fci_energy, double TAU);
+    void fci_svd_tiles(FCIVector& HC, std::shared_ptr<FCIIntegrals> fci_ints, double fci_energy, int tile_dim, double OMEGA);
 };
 }
 }
