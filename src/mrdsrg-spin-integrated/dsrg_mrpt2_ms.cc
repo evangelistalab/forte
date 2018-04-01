@@ -278,7 +278,8 @@ std::vector<std::vector<double>> DSRG_MRPT2::compute_energy_sa() {
 
                         BlockedTensor D2 =
                             BTF_->build(tensor_type_, "D2", spin_cases({"aaaa"}), true);
-                        ci_rdms.compute_2rdm(D2.block("aaaa").data(), D2.block("aAaA").data(), D2.block("AAAA").data());
+                        ci_rdms.compute_2rdm(D2.block("aaaa").data(), D2.block("aAaA").data(),
+                                             D2.block("AAAA").data());
 
                         double H_AB = 0.0;
                         H_AB += oei["uv"] * D1["uv"];
@@ -291,8 +292,9 @@ std::vector<std::vector<double>> DSRG_MRPT2::compute_energy_sa() {
                         if (options_.get_bool("FORM_HBAR3")) {
                             BlockedTensor D3 =
                                 BTF_->build(tensor_type_, "D3", spin_cases({"aaaaaa"}), true);
-                            ci_rdms.compute_3rdm(D3.block("aaaaaa").data(), D3.block("aaAaaA").data(),
-                                                 D3.block("aAAaAA").data(), D3.block("AAAAAA").data());
+                            ci_rdms.compute_3rdm(
+                                D3.block("aaaaaa").data(), D3.block("aaAaaA").data(),
+                                D3.block("aAAaAA").data(), D3.block("AAAAAA").data());
 
                             H_AB += (1.0 / 36) * Hbar3_["xyzuvw"] * D3["uvwxyz"];
                             H_AB += (1.0 / 36) * Hbar3_["XYZUVW"] * D3["UVWXYZ"];
@@ -388,28 +390,24 @@ std::vector<std::vector<double>> DSRG_MRPT2::compute_energy_xms() {
                 // recompute state-averaged density
                 outfile->Printf("\n    Recompute SA density matrix of %s with equal weights.",
                                 ss.str().c_str());
-                size_t na = actv_mos_.size();
-                size_t na2 = na * na;
-                std::vector<double> sa_opdm_a(na2, 0.0);
-                std::vector<double> sa_opdm_b(na2, 0.0);
+                Gamma1_.zero();
+                ambit::Tensor L1a = Gamma1_.block("aa");
+                ambit::Tensor L1b = Gamma1_.block("AA");
+
+                ambit::Tensor D1a = L1a.clone();
+                ambit::Tensor D1b = L1b.clone();
 
                 for (int M = 0; M < nstates; ++M) {
-                    CI_RDMS ci_rdms(fci_ints, p_space, civecs, M, M);
-                    std::vector<double> opdm_a(na2, 0.0);
-                    std::vector<double> opdm_b(na2, 0.0);
-                    ci_rdms.compute_1rdm(opdm_a, opdm_b);
-
-                    std::transform(sa_opdm_a.begin(), sa_opdm_a.end(), opdm_a.begin(),
-                                   sa_opdm_a.begin(), std::plus<double>());
-                    std::transform(sa_opdm_b.begin(), sa_opdm_b.end(), opdm_b.begin(),
-                                   sa_opdm_b.begin(), std::plus<double>());
+                    CI_RDMS ci_rdms(options_, fci_ints, p_space, civecs, M, M);
+                    ci_rdms.compute_1rdm(D1a.data(), D1b.data());
+                    L1a("pq") += D1a("pq");
+                    L1b("pq") += D1b("pq");
                 }
-                std::for_each(sa_opdm_a.begin(), sa_opdm_a.end(), [&](double& v) { v /= nstates; });
-                std::for_each(sa_opdm_b.begin(), sa_opdm_b.end(), [&](double& v) { v /= nstates; });
 
-                rotate_1rdm(sa_opdm_a, sa_opdm_b);
-                Gamma1_.block("aa").data() = std::move(sa_opdm_a);
-                Gamma1_.block("AA").data() = std::move(sa_opdm_b);
+                L1a.scale(1.0 / nstates);
+                L1b.scale(1.0 / nstates);
+
+                rotate_1rdm(L1a, L1b);
 
                 // rebuild Fock matrix
                 build_fock();
@@ -565,21 +563,17 @@ SharedMatrix DSRG_MRPT2::xms_rotation(std::shared_ptr<FCIIntegrals> fci_ints,
         for (int N = M; N < nstates; ++N) {
 
             // compute transition density
-            CI_RDMS ci_rdms(fci_ints, p_space, civecs, M, N);
+            CI_RDMS ci_rdms(options_, fci_ints, p_space, civecs, M, N);
 
-            std::vector<double> opdm_a, opdm_b;
-            ci_rdms.compute_1rdm(opdm_a, opdm_b);
-            rotate_1rdm(opdm_a, opdm_b);
-
-            // put rdms in tensor format
-            BlockedTensor D1 = BTF_->build(tensor_type_, "D1", spin_cases({"aa"}), true);
-            D1.block("aa").data() = std::move(opdm_a);
-            D1.block("AA").data() = std::move(opdm_b);
+            ambit::Tensor D1a = Gamma1_.block("aa").clone();
+            ambit::Tensor D1b = Gamma1_.block("aa").clone();
+            ci_rdms.compute_1rdm(D1a.data(), D1b.data());
+            rotate_1rdm(D1a, D1b);
 
             // compute Fock elements
             double F_MN = 0.0;
-            F_MN += D1["uv"] * F_["vu"];
-            F_MN += D1["UV"] * F_["VU"];
+            F_MN += D1a("uv") * F_.block("aa")("vu");
+            F_MN += D1b("UV") * F_.block("AA")("VU");
             Fock->set(M, N, F_MN);
             if (M != N) {
                 Fock->set(N, M, F_MN);
@@ -592,7 +586,6 @@ SharedMatrix DSRG_MRPT2::xms_rotation(std::shared_ptr<FCIIntegrals> fci_ints,
     SharedMatrix Fevec(new Matrix("Fock Evec", nstates, nstates));
     SharedVector Feval(new Vector("Fock Eval", nstates));
     Fock->diagonalize(Fevec, Feval);
-    //    Fevec->print();
     Fevec->eivprint(Feval);
 
     // Rotate ci vecs
@@ -603,7 +596,7 @@ SharedMatrix DSRG_MRPT2::xms_rotation(std::shared_ptr<FCIIntegrals> fci_ints,
     return rcivecs;
 }
 
-//double DSRG_MRPT2::Tamp_deGNO() {
+// double DSRG_MRPT2::Tamp_deGNO() {
 //    // de-normal-order T1
 //    build_T1eff_deGNO();
 
@@ -625,7 +618,7 @@ SharedMatrix DSRG_MRPT2::xms_rotation(std::shared_ptr<FCIIntegrals> fci_ints,
 //    return out;
 //}
 
-//void DSRG_MRPT2::build_T1eff_deGNO() {
+// void DSRG_MRPT2::build_T1eff_deGNO() {
 //    T1eff_ = BTF_->build(tensor_type_, "Effective T1 from de-GNO", spin_cases({"hp"}));
 
 //    T1eff_["ia"] = T1_["ia"];
@@ -971,15 +964,10 @@ void DSRG_MRPT2::compute_cumulants(std::shared_ptr<FCIIntegrals> fci_ints,
     CI_RDMS ci_rdms(fci_ints, p_space, evecs, root1, root2);
 
     // 1 cumulant
-    std::vector<double> opdm_a, opdm_b;
-    ci_rdms.compute_1rdm(opdm_a, opdm_b);
-    rotate_1rdm(opdm_a, opdm_b);
-
     ambit::Tensor L1a = Gamma1_.block("aa");
     ambit::Tensor L1b = Gamma1_.block("AA");
-
-    L1a.data() = std::move(opdm_a);
-    L1b.data() = std::move(opdm_b);
+    ci_rdms.compute_1rdm(L1a.data(), L1b.data());
+    rotate_1rdm(L1a, L1b);
 
     (Eta1_.block("aa")).iterate([&](const std::vector<size_t>& i, double& value) {
         value = i[0] == i[1] ? 1.0 : 0.0;
@@ -991,17 +979,11 @@ void DSRG_MRPT2::compute_cumulants(std::shared_ptr<FCIIntegrals> fci_ints,
     Eta1_.block("AA")("pq") -= Gamma1_.block("AA")("pq");
 
     // 2 cumulant
-    std::vector<double> tpdm_aa, tpdm_ab, tpdm_bb;
-    ci_rdms.compute_2rdm(tpdm_aa, tpdm_ab, tpdm_bb);
-    rotate_2rdm(tpdm_aa, tpdm_ab, tpdm_bb);
-
     ambit::Tensor L2aa = Lambda2_.block("aaaa");
     ambit::Tensor L2ab = Lambda2_.block("aAaA");
     ambit::Tensor L2bb = Lambda2_.block("AAAA");
-
-    L2aa.data() = std::move(tpdm_aa);
-    L2ab.data() = std::move(tpdm_ab);
-    L2bb.data() = std::move(tpdm_bb);
+    ci_rdms.compute_2rdm(L2aa.data(), L2ab.data(), L2bb.data());
+    rotate_2rdm(L2aa, L2ab, L2bb);
 
     L2aa("pqrs") -= L1a("pr") * L1a("qs");
     L2aa("pqrs") += L1a("ps") * L1a("qr");
@@ -1013,23 +995,12 @@ void DSRG_MRPT2::compute_cumulants(std::shared_ptr<FCIIntegrals> fci_ints,
 
     // 3 cumulant
     if (options_.get_str("THREEPDC") != "ZERO") {
-        std::vector<double> tpdm_aaa, tpdm_aab, tpdm_abb, tpdm_bbb;
-        ci_rdms.compute_3rdm(tpdm_aaa, tpdm_aab, tpdm_abb, tpdm_bbb);
-        rotate_3rdm(tpdm_aaa, tpdm_aab, tpdm_abb, tpdm_bbb);
-
         ambit::Tensor L3aaa = reference_.L3aaa();
         ambit::Tensor L3aab = reference_.L3aab();
         ambit::Tensor L3abb = reference_.L3abb();
         ambit::Tensor L3bbb = reference_.L3bbb();
-        //        ambit::Tensor L3aaa = Lambda3_.block("aaaaaa");
-        //        ambit::Tensor L3aab = Lambda3_.block("aaAaaA");
-        //        ambit::Tensor L3abb = Lambda3_.block("aAAaAA");
-        //        ambit::Tensor L3bbb = Lambda3_.block("AAAAAA");
-
-        L3aaa.data() = std::move(tpdm_aaa);
-        L3aab.data() = std::move(tpdm_aab);
-        L3abb.data() = std::move(tpdm_abb);
-        L3bbb.data() = std::move(tpdm_bbb);
+        ci_rdms.compute_3rdm(L3aaa.data(), L3aab.data(), L3abb.data(), L3bbb.data());
+        rotate_3rdm(L3aaa, L3aab, L3abb, L3bbb);
 
         // - step 1: aaa
         L3aaa("pqrstu") -= L1a("ps") * L2aa("qrtu");
@@ -1106,131 +1077,75 @@ void DSRG_MRPT2::compute_densities(std::shared_ptr<FCIIntegrals> fci_ints,
     CI_RDMS ci_rdms(fci_ints, p_space, evecs, root1, root2);
 
     // 1 density
-    std::vector<double> opdm_a, opdm_b;
-    ci_rdms.compute_1rdm(opdm_a, opdm_b);
-    rotate_1rdm(opdm_a, opdm_b);
-
-    Gamma1_.block("aa").data() = std::move(opdm_a);
-    Gamma1_.block("AA").data() = std::move(opdm_b);
-
-    //    (Eta1_.block("aa")).iterate([&](const std::vector<size_t>& i,double&
-    //    value){
-    //        value = i[0] == i[1] ? 1.0 : 0.0;
-    //    });
-    //    (Eta1_.block("AA")).iterate([&](const std::vector<size_t>& i,double&
-    //    value){
-    //        value = i[0] == i[1] ? 1.0 : 0.0;
-    //    });
-    //    Eta1_.block("aa")("pq") -= Gamma1_.block("aa")("pq");
-    //    Eta1_.block("AA")("pq") -= Gamma1_.block("AA")("pq");
+    ambit::Tensor L1a = Gamma1_.block("aa");
+    ambit::Tensor L1b = Gamma1_.block("AA");
+    ci_rdms.compute_1rdm(L1a.data(), L1b.data());
+    rotate_1rdm(L1a, L1b);
 
     // 2 density
-    std::vector<double> tpdm_aa, tpdm_ab, tpdm_bb;
-    ci_rdms.compute_2rdm(tpdm_aa, tpdm_ab, tpdm_bb);
-    rotate_2rdm(tpdm_aa, tpdm_ab, tpdm_bb);
-
-    Lambda2_.block("aaaa").data() = std::move(tpdm_aa);
-    Lambda2_.block("aAaA").data() = std::move(tpdm_ab);
-    Lambda2_.block("AAAA").data() = std::move(tpdm_bb);
+    ambit::Tensor L2aa = Lambda2_.block("aaaa");
+    ambit::Tensor L2ab = Lambda2_.block("aAaA");
+    ambit::Tensor L2bb = Lambda2_.block("AAAA");
+    ci_rdms.compute_2rdm(L2aa.data(), L2ab.data(), L2bb.data());
+    rotate_2rdm(L2aa, L2ab, L2bb);
 
     // 3 density
-    std::vector<double> tpdm_aaa, tpdm_aab, tpdm_abb, tpdm_bbb;
-    ci_rdms.compute_3rdm(tpdm_aaa, tpdm_aab, tpdm_abb, tpdm_bbb);
-    rotate_3rdm(tpdm_aaa, tpdm_aab, tpdm_abb, tpdm_bbb);
-
     ambit::Tensor L3aaa = reference_.L3aaa();
     ambit::Tensor L3aab = reference_.L3aab();
     ambit::Tensor L3abb = reference_.L3abb();
     ambit::Tensor L3bbb = reference_.L3bbb();
-    //        ambit::Tensor L3aaa = Lambda3_.block("aaaaaa");
-    //        ambit::Tensor L3aab = Lambda3_.block("aaAaaA");
-    //        ambit::Tensor L3abb = Lambda3_.block("aAAaAA");
-    //        ambit::Tensor L3bbb = Lambda3_.block("AAAAAA");
-
-    L3aaa.data() = std::move(tpdm_aaa);
-    L3aab.data() = std::move(tpdm_aab);
-    L3abb.data() = std::move(tpdm_abb);
-    L3bbb.data() = std::move(tpdm_bbb);
+    ci_rdms.compute_3rdm(L3aaa.data(), L3aab.data(), L3abb.data(), L3bbb.data());
+    rotate_3rdm(L3aaa, L3aab, L3abb, L3bbb);
 }
 
-void DSRG_MRPT2::rotate_1rdm(std::vector<double>& opdm_a, std::vector<double>& opdm_b) {
-    size_t na = actv_mos_.size();
-    if ((na * na != opdm_a.size()) || (na * na != opdm_b.size())) {
-        throw PSIEXCEPTION("Cannot rotate 1RDM in DSRG_MRPT2.");
-    }
-
+void DSRG_MRPT2::rotate_1rdm(ambit::Tensor& L1a, ambit::Tensor& L1b) {
+    ambit::Tensor temp;
     ambit::Tensor Ua = Uactv_.block("aa");
     ambit::Tensor Ub = Uactv_.block("AA");
 
-    ambit::Tensor temp = ambit::Tensor::build(tensor_type_, "temp", {na, na});
-    ambit::Tensor D = ambit::Tensor::build(tensor_type_, "D1", {na, na});
+    temp = L1a.clone();
+    L1a("pq") = Ua("ap") * temp("ab") * Ua("bq");
 
-    temp.data() = std::move(opdm_a);
-    D("pq") = Ua("ap") * temp("ab") * Ua("bq");
-    opdm_a = D.data();
-
-    temp.data() = std::move(opdm_b);
-    D("PQ") = Ub("AP") * temp("AB") * Ub("BQ");
-    opdm_b = D.data();
+    temp = L1b.clone();
+    L1b("PQ") = Ub("AP") * temp("AB") * Ub("BQ");
 }
 
-void DSRG_MRPT2::rotate_2rdm(std::vector<double>& tpdm_aa, std::vector<double>& tpdm_ab,
-                             std::vector<double>& tpdm_bb) {
-    size_t na = actv_mos_.size();
-    size_t na4 = na * na * na * na;
-    if ((na4 != tpdm_aa.size()) || (na4 != tpdm_ab.size()) || (na4 != tpdm_bb.size())) {
-        throw PSIEXCEPTION("Cannot rotate 2RDM in DSRG_MRPT2.");
-    }
-
+void DSRG_MRPT2::rotate_2rdm(ambit::Tensor& L2aa, ambit::Tensor& L2ab, ambit::Tensor& L2bb) {
+    ambit::Tensor temp;
     ambit::Tensor Ua = Uactv_.block("aa");
     ambit::Tensor Ub = Uactv_.block("AA");
 
-    ambit::Tensor temp = ambit::Tensor::build(tensor_type_, "temp", {na, na, na, na});
-    ambit::Tensor D = ambit::Tensor::build(tensor_type_, "D2", {na, na, na, na});
+    temp = L2aa.clone();
+    L2aa("pqrs") = Ua("ap") * Ua("bq") * temp("abcd") * Ua("cr") * Ua("ds");
 
-    temp.data() = std::move(tpdm_aa);
-    D("pqrs") = Ua("ap") * Ua("bq") * temp("abcd") * Ua("cr") * Ua("ds");
-    tpdm_aa = D.data();
+    temp = L2ab.clone();
+    L2ab("pQrS") = Ua("ap") * Ub("BQ") * temp("aBcD") * Ua("cr") * Ub("DS");
 
-    temp.data() = std::move(tpdm_ab);
-    D("pQrS") = Ua("ap") * Ub("BQ") * temp("aBcD") * Ua("cr") * Ub("DS");
-    tpdm_ab = D.data();
-
-    temp.data() = std::move(tpdm_bb);
-    D("PQRS") = Ub("AP") * Ub("BQ") * temp("ABCD") * Ub("CR") * Ub("DS");
-    tpdm_bb = D.data();
+    temp = L2bb.clone();
+    L2bb("PQRS") = Ub("AP") * Ub("BQ") * temp("ABCD") * Ub("CR") * Ub("DS");
 }
 
-void DSRG_MRPT2::rotate_3rdm(std::vector<double>& tpdm_aaa, std::vector<double>& tpdm_aab,
-                             std::vector<double>& tpdm_abb, std::vector<double>& tpdm_bbb) {
-    size_t na = actv_mos_.size();
-    size_t na6 = na * na * na * na * na * na;
-    if ((na6 != tpdm_aaa.size()) || (na6 != tpdm_aab.size()) || (na6 != tpdm_abb.size()) ||
-        (na6 != tpdm_bbb.size())) {
-        throw PSIEXCEPTION("Cannot rotate 3RDM in DSRG_MRPT2.");
-    }
-
+void DSRG_MRPT2::rotate_3rdm(ambit::Tensor& L3aaa, ambit::Tensor& L3aab, ambit::Tensor& L3abb,
+                             ambit::Tensor& L3bbb) {
+    ambit::Tensor temp;
     ambit::Tensor Ua = Uactv_.block("aa");
     ambit::Tensor Ub = Uactv_.block("AA");
 
-    ambit::Tensor temp = ambit::Tensor::build(tensor_type_, "temp", {na, na, na, na, na, na});
-    ambit::Tensor D = ambit::Tensor::build(tensor_type_, "D3", {na, na, na, na, na, na});
+    temp = L3aaa.clone();
+    L3aaa("pqrstu") =
+        Ua("ap") * Ua("bq") * Ua("cr") * temp("abcijk") * Ua("is") * Ua("jt") * Ua("ku");
 
-    temp.data() = std::move(tpdm_aaa);
-    D("pqrstu") = Ua("ap") * Ua("bq") * Ua("cr") * temp("abcijk") * Ua("is") * Ua("jt") * Ua("ku");
-    tpdm_aaa = D.data();
+    temp = L3aab.clone();
+    L3aab("pqRstU") =
+        Ua("ap") * Ua("bq") * Ub("CR") * temp("abCijK") * Ua("is") * Ua("jt") * Ub("KU");
 
-    temp.data() = std::move(tpdm_aab);
-    D("pqRstU") = Ua("ap") * Ua("bq") * Ub("CR") * temp("abCijK") * Ua("is") * Ua("jt") * Ub("KU");
-    tpdm_aab = D.data();
+    temp = L3abb.clone();
+    L3abb("pQRsTU") =
+        Ua("ap") * Ub("BQ") * Ub("CR") * temp("aBCiJK") * Ua("is") * Ub("JT") * Ub("KU");
 
-    temp.data() = std::move(tpdm_abb);
-    D("pQRsTU") = Ua("ap") * Ub("BQ") * Ub("CR") * temp("aBCiJK") * Ua("is") * Ub("JT") * Ub("KU");
-    tpdm_abb = D.data();
-
-    temp.data() = std::move(tpdm_bbb);
-    D("PQRSTU") = Ub("AP") * Ub("BQ") * Ub("CR") * temp("ABCIJK") * Ub("IS") * Ub("JT") * Ub("KU");
-    tpdm_bbb = D.data();
+    temp = L3bbb.clone();
+    L3bbb("PQRSTU") =
+        Ub("AP") * Ub("BQ") * Ub("CR") * temp("ABCIJK") * Ub("IS") * Ub("JT") * Ub("KU");
 }
 }
 }

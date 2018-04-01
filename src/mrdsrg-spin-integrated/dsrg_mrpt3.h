@@ -277,11 +277,8 @@ class DSRG_MRPT3 : public MASTER_DSRG {
 
     /// Rotate RDMs computed by eigens_ (in original basis) to semicanonical basis
     /// so that they are in the same basis as amplitudes (in semicanonical basis)
-    void rotate_1rdm(std::vector<double>& opdm_a, std::vector<double>& opdm_b);
-    void rotate_2rdm(std::vector<double>& tpdm_aa, std::vector<double>& tpdm_ab,
-                     std::vector<double>& tpdm_bb);
-    void rotate_3rdm(std::vector<double>& tpdm_aaa, std::vector<double>& tpdm_aab,
-                     std::vector<double>& tpdm_abb, std::vector<double>& tpdm_bbb);
+    void rotate_1rdm(ambit::Tensor& L1a, ambit::Tensor& L1b);
+    void rotate_2rdm(ambit::Tensor& L2aa, ambit::Tensor& L2ab, ambit::Tensor& L2bb);
 
     // => Dipole related <= //
 

@@ -1467,26 +1467,22 @@ double DSRG_MRPT3::compute_energy_sa() {
                         // compute rdms
                         CI_RDMS ci_rdms(fci_ints, p_space, evecs, A, B);
 
-                        std::vector<double> opdm_a, opdm_b;
-                        std::vector<double> tpdm_aa, tpdm_ab, tpdm_bb;
+                        ambit::BlockedTensor D1, D2;
+                        D1 = BTF_->build(tensor_type_, "D1", spin_cases({"aa"}), true);
+                        D2 = BTF_->build(tensor_type_, "D2", spin_cases({"aaaa"}), true);
 
-                        ci_rdms.compute_1rdm(opdm_a, opdm_b);
-                        ci_rdms.compute_2rdm(tpdm_aa, tpdm_ab, tpdm_bb);
+                        ambit::Tensor D1a, D1b, D2aa, D2ab, D2bb;
+                        D1a = D1.block("aa");
+                        D1b = D1.block("AA");
+                        D2aa = D2.block("aaaa");
+                        D2ab = D2.block("aAaA");
+                        D2bb = D2.block("AAAA");
 
-                        rotate_1rdm(opdm_a, opdm_b);
-                        rotate_2rdm(tpdm_aa, tpdm_ab, tpdm_bb);
+                        ci_rdms.compute_1rdm(D1a.data(), D1b.data());
+                        rotate_1rdm(D1a, D1b);
 
-                        // put rdms in tensor format
-                        BlockedTensor D1 =
-                            BTF_->build(tensor_type_, "D1", spin_cases({"aa"}), true);
-                        D1.block("aa").data() = std::move(opdm_a);
-                        D1.block("AA").data() = std::move(opdm_b);
-
-                        BlockedTensor D2 =
-                            BTF_->build(tensor_type_, "D2", spin_cases({"aaaa"}), true);
-                        D2.block("aaaa").data() = std::move(tpdm_aa);
-                        D2.block("aAaA").data() = std::move(tpdm_ab);
-                        D2.block("AAAA").data() = std::move(tpdm_bb);
+                        ci_rdms.compute_2rdm(D2aa.data(), D2ab.data(), D2bb.data());
+                        rotate_2rdm(D2aa, D2ab, D2bb);
 
                         double H_AB = 0.0;
                         H_AB += oei["uv"] * D1["uv"];
@@ -5717,84 +5713,31 @@ ambit::Tensor DSRG_MRPT3::sub_block(ambit::Tensor& T,
     return Ts;
 }
 
-void DSRG_MRPT3::rotate_1rdm(std::vector<double>& opdm_a, std::vector<double>& opdm_b) {
-    size_t na = actv_mos_.size();
-    if ((na * na != opdm_a.size()) || (na * na != opdm_b.size())) {
-        throw PSIEXCEPTION("Cannot rotate 1RDM in DSRG_MRPT2.");
-    }
-
+void DSRG_MRPT3::rotate_1rdm(ambit::Tensor& L1a, ambit::Tensor& L1b) {
+    ambit::Tensor temp;
     ambit::Tensor Ua = Uactv_.block("aa");
     ambit::Tensor Ub = Uactv_.block("AA");
 
-    ambit::Tensor temp = ambit::Tensor::build(tensor_type_, "temp", {na, na});
-    ambit::Tensor D = ambit::Tensor::build(tensor_type_, "D1", {na, na});
+    temp = L1a.clone();
+    L1a("pq") = Ua("ap") * temp("ab") * Ua("bq");
 
-    temp.data() = std::move(opdm_a);
-    D("pq") = Ua("ap") * temp("ab") * Ua("bq");
-    opdm_a = D.data();
-
-    temp.data() = std::move(opdm_b);
-    D("PQ") = Ub("AP") * temp("AB") * Ub("BQ");
-    opdm_b = D.data();
+    temp = L1b.clone();
+    L1b("PQ") = Ub("AP") * temp("AB") * Ub("BQ");
 }
 
-void DSRG_MRPT3::rotate_2rdm(std::vector<double>& tpdm_aa, std::vector<double>& tpdm_ab,
-                             std::vector<double>& tpdm_bb) {
-    size_t na = actv_mos_.size();
-    size_t na4 = na * na * na * na;
-    if ((na4 != tpdm_aa.size()) || (na4 != tpdm_ab.size()) || (na4 != tpdm_bb.size())) {
-        throw PSIEXCEPTION("Cannot rotate 2RDM in DSRG_MRPT2.");
-    }
-
+void DSRG_MRPT3::rotate_2rdm(ambit::Tensor& L2aa, ambit::Tensor& L2ab, ambit::Tensor& L2bb) {
+    ambit::Tensor temp;
     ambit::Tensor Ua = Uactv_.block("aa");
     ambit::Tensor Ub = Uactv_.block("AA");
 
-    ambit::Tensor temp = ambit::Tensor::build(tensor_type_, "temp", {na, na, na, na});
-    ambit::Tensor D = ambit::Tensor::build(tensor_type_, "D2", {na, na, na, na});
+    temp = L2aa.clone();
+    L2aa("pqrs") = Ua("ap") * Ua("bq") * temp("abcd") * Ua("cr") * Ua("ds");
 
-    temp.data() = std::move(tpdm_aa);
-    D("pqrs") = Ua("ap") * Ua("bq") * temp("abcd") * Ua("cr") * Ua("ds");
-    tpdm_aa = D.data();
+    temp = L2ab.clone();
+    L2ab("pQrS") = Ua("ap") * Ub("BQ") * temp("aBcD") * Ua("cr") * Ub("DS");
 
-    temp.data() = std::move(tpdm_ab);
-    D("pQrS") = Ua("ap") * Ub("BQ") * temp("aBcD") * Ua("cr") * Ub("DS");
-    tpdm_ab = D.data();
-
-    temp.data() = std::move(tpdm_bb);
-    D("PQRS") = Ub("AP") * Ub("BQ") * temp("ABCD") * Ub("CR") * Ub("DS");
-    tpdm_bb = D.data();
-}
-
-void DSRG_MRPT3::rotate_3rdm(std::vector<double>& tpdm_aaa, std::vector<double>& tpdm_aab,
-                             std::vector<double>& tpdm_abb, std::vector<double>& tpdm_bbb) {
-    size_t na = actv_mos_.size();
-    size_t na6 = na * na * na * na * na * na;
-    if ((na6 != tpdm_aaa.size()) || (na6 != tpdm_aab.size()) || (na6 != tpdm_abb.size()) ||
-        (na6 != tpdm_bbb.size())) {
-        throw PSIEXCEPTION("Cannot rotate 3RDM in DSRG_MRPT2.");
-    }
-
-    ambit::Tensor Ua = Uactv_.block("aa");
-    ambit::Tensor Ub = Uactv_.block("AA");
-
-    ambit::Tensor temp = ambit::Tensor::build(tensor_type_, "temp", {na, na, na, na, na, na});
-    ambit::Tensor D = ambit::Tensor::build(tensor_type_, "D3", {na, na, na, na, na, na});
-
-    temp.data() = std::move(tpdm_aaa);
-    D("pqrstu") = Ua("ap") * Ua("bq") * Ua("cr") * temp("abcijk") * Ua("is") * Ua("jt") * Ua("ku");
-    tpdm_aaa = D.data();
-
-    temp.data() = std::move(tpdm_aab);
-    D("pqRstU") = Ua("ap") * Ua("bq") * Ub("CR") * temp("abCijK") * Ua("is") * Ua("jt") * Ub("KU");
-    tpdm_aab = D.data();
-
-    temp.data() = std::move(tpdm_abb);
-    D("pQRsTU") = Ua("ap") * Ub("BQ") * Ub("CR") * temp("aBCiJK") * Ua("is") * Ub("JT") * Ub("KU");
-    tpdm_abb = D.data();
-
-    temp.data() = std::move(tpdm_bbb);
-    D("PQRSTU") = Ub("AP") * Ub("BQ") * Ub("CR") * temp("ABCIJK") * Ub("IS") * Ub("JT") * Ub("KU");
-    tpdm_bbb = D.data();
+    temp = L2bb.clone();
+    L2bb("PQRS") = Ub("AP") * Ub("BQ") * temp("ABCD") * Ub("CR") * Ub("DS");
 }
 }
 } // End Namespaces
