@@ -141,9 +141,6 @@ class DWMS_DSRGPT2 : public Wavefunction {
     /// print title
     void print_title(const std::string& title);
 
-    /// print current job title
-    void print_current_title(int multi, int irrep, int root);
-
     /// print sa_info
     void print_sa_info(const std::string& name,
                        const std::vector<std::tuple<int, int, int, std::vector<double>>>& sa_info);

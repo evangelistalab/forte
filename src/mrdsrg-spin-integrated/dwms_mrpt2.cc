@@ -44,12 +44,9 @@ void set_DWMS_options(ForteOptions& foptions) {
      *  - XMS: extended multi-state (single-state single-reference)
      *
      * To Be Deprecated:
-     *  - DWMS-0: weights from CASCI energies, non-orthogonal final solutions
-     *  - DWMS-1: weights from CASCI energies, orthogonal final solutions
-     *  - DWMS-AVG0: weights from SA-DSRG-PT2 energies, non-orthogonal final solutions
-     *  - DWMS-AVG1: weights from SA-DSRG-PT2 energies, orthogonal final solutions -*/
-    foptions.add_str("DWMS_ALGORITHM", "DWMS-0",
-                     {"MS", "XMS", "SA", "XSA", "DWMS-0", "DWMS-1", "DWMS-AVG0", "DWMS-AVG1"},
+     *  - SH-0: separated diagonalizations, non-orthogonal final solutions
+     *  - SH-1: separated diagonalizations, orthogonal final solutions -*/
+    foptions.add_str("DWMS_ALGORITHM", "DWMS-0", {"MS", "XMS", "SA", "XSA", "SH-0", "SH-1"},
                      "DWMS algorithms");
 }
 
@@ -255,12 +252,17 @@ std::shared_ptr<FCI_MO> DWMS_DSRGPT2::precompute_energy() {
     auto sa_info = fci_mo->sa_info();
     int nentry = sa_info.size();
 
-    // save CASCI energies
-    Eref_0_.resize(nentry);
+    std::vector<int> nrootspi(nentry);
     for (int n = 0; n < nentry; ++n) {
         int nroots;
         std::tie(std::ignore, std::ignore, nroots, std::ignore) = sa_info[n];
-        for (int i = 0; i < nroots; ++i) {
+        nrootspi[n] = nroots;
+    }
+
+    // save CASCI energies
+    Eref_0_.resize(nentry);
+    for (int n = 0; n < nentry; ++n) {
+        for (int i = 0, nroots = nrootspi[n]; i < nroots; ++i) {
             Eref_0_[n].push_back(eigens[n][i].second);
         }
     }
@@ -281,10 +283,18 @@ std::shared_ptr<FCI_MO> DWMS_DSRGPT2::precompute_energy() {
         // save SA-DSRG-PT2/3 energies
         Ept_0_.resize(nentry);
         for (int n = 0; n < nentry; ++n) {
-            int nroots;
-            std::tie(std::ignore, std::ignore, nroots, std::ignore) = sa_info[n];
-            for (int i = 0; i < nroots; ++i) {
+            for (int i = 0, nroots = nrootspi[n]; i < nroots; ++i) {
                 Ept_0_[n].push_back(eigens[n][i].second);
+            }
+        }
+    }
+
+    // save CI vectors if orthogonalized separated diagonalizations
+    if (algorithm_ == "SH-1") {
+        initial_guesses_.resize(nentry);
+        for (int n = 0; n < nentry; ++n) {
+            for (int i = 0, nroots = nrootspi[n]; i < nroots; ++i) {
+                initial_guesses_[n].push_back(eigens[n][i].first);
             }
         }
     }
@@ -745,171 +755,88 @@ void DWMS_DSRGPT2::print_energy_list(
     outfile->Printf("\n");
 }
 
-// std::shared_ptr<FCI_MO> DWMS_DSRGPT2::precompute_energy_old() {
-//    // perform SA-CASCI using user-defined weights
-//    auto fci_mo =
-//        std::make_shared<FCI_MO>(reference_wavefunction_, options_, ints_, mo_space_info_);
-//    fci_mo->compute_energy();
-//    fci_ints_ = fci_mo->fci_ints();
+double DWMS_DSRGPT2::compute_dwms_energy_separated_H(std::shared_ptr<FCI_MO>& fci_mo) {
+    // the final DWMS-DSRG-PT2 energies
+    auto sa_info = fci_mo->sa_info();
+    int nentry = sa_info.size();
+    Ept_.resize(nentry);
 
-//    auto sa_info = fci_mo->sa_info();
-//    int nentry = sa_info.size();
+    std::shared_ptr<MASTER_DSRG> dsrg_pt;
 
-//    // save SA-CASCI energies
-//    Eref_0_.resize(nentry);
+    // loop over averaged states
+    for (int n = 0; n < nentry; ++n) {
+        int multi, irrep, nroots;
+        std::tie(irrep, multi, nroots, std::ignore) = sa_info[n];
+        Ept_[n].resize(nroots);
 
-//    for (int n = 0; n < nentry; ++n) {
-//        int nroots;
-//        std::tie(std::ignore, std::ignore, nroots, std::ignore) = sa_info[n];
-//        for (int i = 0; i < nroots; ++i) {
-//            Eref_0_[n].push_back(fci_mo->eigens()[n][i].second);
-//        }
-//    }
+        // save the re-diagonalized eigen vectors
+        std::vector<SharedVector> evecs_new;
+        evecs_new.resize(nroots);
 
-//    // perform SA-DSRG-PT2 if needed
-//    if (algorithm_ != "DWMS-0") {
-//        // need to save a copy of sa eigen vectors for DWMS-1
-//        std::vector<std::vector<std::pair<SharedVector, double>>> eigens_old;
-//        if (algorithm_ == "DWMS-1") {
-//            eigens_old = fci_mo->eigens();
-//        }
+        // save the previous projected roots
+        std::vector<std::vector<std::pair<size_t, double>>> projected_roots;
 
-//        Reference reference = fci_mo->reference(max_rdm_level_);
+        for (int i = 0; i < nroots; ++i) {
+            // print current title
+            std::stringstream current_job;
+            current_job << "Current Job: " << multi_symbol_[multi - 1] << " "
+                        << irrep_symbol_[irrep] << ", root " << i;
+            print_title(current_job.str());
 
-//        fci_ints_ = compute_dsrg_pt(fci_mo, reference);
+            // compute DSRG-PT2 transformed Hamiltonian
+            auto fci_ints = compute_macro_dsrg_pt(dsrg_pt, fci_mo, n, i);
 
-//        print_h2("Diagonalize SA-DSRG-PT2 Active Hamiltonian");
-//        fci_mo->set_fci_int(fci_ints_);
-//        fci_mo->set_localize_actv(false);
-//        fci_mo->compute_energy();
-//        auto eigens = fci_mo->eigens();
+            // diagonalize the DSRG active Hamiltonian for each root
+            print_h2("Diagonalize DWMS(sH)-DSRG Active Hamiltonian");
+            fci_mo->set_fci_int(fci_ints);
+            fci_mo->set_root_sym(irrep);
 
-//        // save SA-DSRG-PT2 energies and CI vectors
-//        Ept_0_.resize(nentry);
-//        initial_guesses_.resize(nentry);
+            if (algorithm_ == "SH-1") {
+                fci_mo->set_nroots(nroots - i);
+                fci_mo->set_root(0);
 
-//        for (int n = 0; n < nentry; ++n) {
-//            int nroots;
-//            std::tie(std::ignore, std::ignore, nroots, std::ignore) = sa_info[n];
-//            for (int i = 0; i < nroots; ++i) {
-//                initial_guesses_[n].push_back(eigens[n][i].first);
-//                Ept_0_[n].push_back(eigens[n][i].second);
-//            }
-//        }
+                // project out previous DWMS-DSRG-PT2 roots
+                if (i != 0) {
+                    outfile->Printf("\n\n  Project out previous DWMS-DSRG-PT2 roots.\n");
+                }
+                fci_mo->project_roots(projected_roots);
 
-//        // use original eigens for DWMS-1
-//        if (algorithm_ == "DWMS-1") {
-//            fci_mo->set_eigens(eigens_old);
-//        }
-//    }
+                // set initial guess to help SparseCISolver convergence
+                std::vector<std::pair<size_t, double>> guess;
+                for (size_t I = 0, nI = initial_guesses_[n][i]->dim(); I < nI; ++I) {
+                    guess.push_back(std::make_pair(I, initial_guesses_[n][i]->get(I)));
+                }
+                fci_mo->set_initial_guess(guess);
 
-//    return fci_mo;
-//}
+                // diagonalize DSRG-PT2 active Hamiltonian
+                Ept_[n][i] = fci_mo->compute_ss_energy();
 
-// double DWMS_DSRGPT2::compute_dwms_energy_separated_H() {
-//    // perform SA-CASCI and SA-DSRG-PT2 using user-defined weights
-//    std::shared_ptr<FCI_MO> fci_mo = precompute_energy_old();
-//    auto sa_info = fci_mo->sa_info();
-//    int nentry = sa_info.size();
+                // since Heff is rotated to the original basis, we can safely store the CI vectors
+                evecs_new[i] = fci_mo->eigen()[0].first;
 
-//    // the final DWMS-DSRG-PT2 energies
-//    Ept_.resize(nentry);
+                // append current CI vectors to the projection list
+                std::vector<std::pair<size_t, double>> projection;
+                for (size_t I = 0, nI = evecs_new[i]->dim(); I < nI; ++I) {
+                    projection.push_back(std::make_pair(I, evecs_new[i]->get(I)));
+                }
+                projected_roots.push_back(projection);
+            } else {
+                fci_mo->set_nroots(nroots);
+                fci_mo->set_root(i);
+                Ept_[n][i] = fci_mo->compute_ss_energy();
 
-//    // loop over averaged states
-//    for (int n = 0; n < nentry; ++n) {
-//        int multi, irrep, nroots;
-//        std::tie(irrep, multi, nroots, std::ignore) = sa_info[n];
-//        Ept_[n].resize(nroots);
+                // since Heff is rotated to the original basis, we can safely store the CI vectors
+                evecs_new[i] = fci_mo->eigen()[i].first;
+            }
+        }
 
-//        // save the re-diagonalized eigen vectors
-//        std::vector<SharedVector> evecs_new;
-//        evecs_new.resize(nroots);
+        // form and print overlap
+        std::string Sname = "Overlap of " + multi_symbol_[multi - 1] + " " + irrep_symbol_[irrep];
+        print_overlap(evecs_new, Sname);
+    }
 
-//        // save the previous projected roots
-//        std::vector<std::vector<std::pair<size_t, double>>> projected_roots;
-
-//        for (int i = 0; i < nroots; ++i) {
-//            print_current_title(multi, irrep, i);
-
-//            // compute new weights
-//            std::vector<std::vector<double>>& Erefs = Eref_0_;
-//            if (algorithm_.find("AVG") != std::string::npos) {
-//                Erefs = Ept_0_;
-//            }
-//            auto sa_info_new = compute_dwms_weights(sa_info, n, i, Erefs);
-//            print_sa_info("Original State Averaging Summary", sa_info);
-//            print_sa_info("Reweighted State Averaging Summary", sa_info_new);
-
-//            // compute Reference
-//            fci_mo->set_sa_info(sa_info_new);
-//            Reference reference = fci_mo->reference(max_rdm_level_);
-
-//            double Enuc = Process::environment.molecule()->nuclear_repulsion_energy(
-//                reference_wavefunction_->get_dipole_field_strength());
-//            reference.update_Eref(ints_, mo_space_info_, Enuc);
-
-//            // compute DSRG-PT2 transformed Hamiltonian
-//            auto fci_ints = compute_dsrg_pt(fci_mo, reference);
-
-//            // prepare for diagonalizing the DSRG-PT2 active Hamiltonian
-//            print_h2("Diagonalize DWMS-DSRG-PT2 Active Hamiltonian");
-//            fci_mo->set_fci_int(fci_ints);
-//            fci_mo->set_root_sym(irrep);
-
-//            if (algorithm_ == "DWMS-1" || algorithm_ == "DWMS-AVG1") {
-//                fci_mo->set_nroots(nroots - i);
-//                fci_mo->set_root(0);
-
-//                // project out previous DWMS-DSRG-PT2 roots
-//                if (i != 0) {
-//                    outfile->Printf("\n\n  Project out previous DWMS-DSRG-PT2 roots.\n");
-//                }
-//                fci_mo->project_roots(projected_roots);
-
-//                // set initial guess to help SparseCISolver convergence
-//                std::vector<std::pair<size_t, double>> guess;
-//                for (size_t I = 0, nI = initial_guesses_[n][i]->dim(); I < nI; ++I) {
-//                    guess.push_back(std::make_pair(I, initial_guesses_[n][i]->get(I)));
-//                }
-//                fci_mo->set_initial_guess(guess);
-//            } else {
-//                fci_mo->set_nroots(nroots);
-//                fci_mo->set_root(i);
-//            }
-
-//            // finally diagonalize DSRG-PT2 active Hamiltonian
-//            Ept_[n][i] = fci_mo->compute_ss_energy();
-
-//            // since Heff is rotated to the original basis, we can safely store the CI vectors
-//            if (algorithm_ == "DWMS-1" || algorithm_ == "DWMS-AVG1") {
-//                evecs_new[i] = fci_mo->eigen()[0].first;
-
-//                // append current CI vectors to the projection list
-//                std::vector<std::pair<size_t, double>> projection;
-//                for (size_t I = 0, nI = evecs_new[i]->dim(); I < nI; ++I) {
-//                    projection.push_back(std::make_pair(I, evecs_new[i]->get(I)));
-//                }
-//                projected_roots.push_back(projection);
-//            } else {
-//                evecs_new[i] = fci_mo->eigen()[i].first;
-//            }
-//        }
-
-//        // form and print overlap
-//        std::string Sname = "Overlap of " + multi_symbol_[multi - 1] + " " + irrep_symbol_[irrep];
-//        print_overlap(evecs_new, Sname);
-//    }
-
-//    // print energy summary
-//    outfile->Printf("  ==> Dynamically Weighted Multi-State DSRG-PT2 Energy Summary <==\n");
-//    print_energy_list("SA-CASCI Energy", Eref_0_, sa_info);
-//    if (algorithm_ != "DWMS-0") {
-//        print_energy_list("SA-DSRG-PT2 Energy", Ept_0_, sa_info);
-//    }
-//    print_energy_list("DWMS-DSRGPT2 Energy", Ept_, sa_info, true);
-
-//    return Ept_[0][0];
-//}
+    return Ept_[0][0];
+}
 
 std::vector<std::tuple<int, int, int, std::vector<double>>> DWMS_DSRGPT2::compute_dwms_weights(
     const std::vector<std::tuple<int, int, int, std::vector<double>>>& sa_info, int entry, int root,
@@ -967,16 +894,6 @@ void DWMS_DSRGPT2::print_title(const std::string& title) {
     size_t title_size = title.size();
     outfile->Printf("\n\n  %s", std::string(title_size, '=').c_str());
     outfile->Printf("\n  %s", title.c_str());
-    outfile->Printf("\n  %s\n", std::string(title_size, '=').c_str());
-}
-
-void DWMS_DSRGPT2::print_current_title(int multi, int irrep, int root) {
-    std::stringstream current_job;
-    current_job << "Current Job: " << multi_symbol_[multi - 1] << " " << irrep_symbol_[irrep]
-                << ", root " << root;
-    size_t title_size = current_job.str().size();
-    outfile->Printf("\n\n  %s", std::string(title_size, '=').c_str());
-    outfile->Printf("\n  %s", current_job.str().c_str());
     outfile->Printf("\n  %s\n", std::string(title_size, '=').c_str());
 }
 
