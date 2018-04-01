@@ -222,11 +222,10 @@ double DWMS_DSRGPT2::compute_energy() {
     }
 
     // compute energy
-    std::string name = "DWMS-DSRG-";
+    std::string name = "DW-DSRG-" + algorithm_;
     if (algorithm_ == "MS" || algorithm_ == "XMS") {
         compute_dwms_energy(fci_mo);
     } else if (algorithm_ == "SA" || algorithm_ == "XSA") {
-        name = "DWSA-DSRG-";
         compute_dwsa_energy(fci_mo);
     } else {
         name = "DWMS(sH)-DSRG-";
@@ -236,11 +235,11 @@ double DWMS_DSRGPT2::compute_energy() {
     // print energy summary
     print_h2("Dynamically Weighted Driven Similarity Renormalization Group Energy Summary");
     auto sa_info = fci_mo->sa_info();
-    print_energy_list("CASCI Energy", Eref_0_, sa_info);
+    print_energy_list("CASCI", Eref_0_, sa_info);
     if (dwms_ref_ != "CASCI") {
-        print_energy_list("SA-DSRG-" + dwms_ref_ + " Energy", Ept_0_, sa_info);
+        print_energy_list("SA-DSRG-" + dwms_ref_, Ept_0_, sa_info);
     }
-    print_energy_list(name + dwms_corrlv_ + " Energy", Ept_, sa_info, true);
+    print_energy_list(name + dwms_corrlv_, Ept_, sa_info, true);
 
     return Ept_[0][0];
 }

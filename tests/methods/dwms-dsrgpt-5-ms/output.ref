@@ -1,0 +1,3274 @@
+
+    -----------------------------------------------------------------------
+          Psi4: An Open-Source Ab Initio Electronic Structure Package
+                               Psi4 1.2a1.dev939 
+
+                         Git: Rev {master} b05c0bb 
+
+
+    R. M. Parrish, L. A. Burns, D. G. A. Smith, A. C. Simmonett,
+    A. E. DePrince III, E. G. Hohenstein, U. Bozkaya, A. Yu. Sokolov,
+    R. Di Remigio, R. M. Richard, J. F. Gonthier, A. M. James,
+    H. R. McAlexander, A. Kumar, M. Saitow, X. Wang, B. P. Pritchard,
+    P. Verma, H. F. Schaefer III, K. Patkowski, R. A. King, E. F. Valeev,
+    F. A. Evangelista, J. M. Turney, T. D. Crawford, and C. D. Sherrill,
+    J. Chem. Theory Comput. 13(7) pp 3185--3197 (2017).
+    (doi: 10.1021/acs.jctc.7b00174)
+
+    -----------------------------------------------------------------------
+
+
+    Psi4 started on: Sunday, 01 April 2018 05:42PM
+
+    Process ID:  23334
+    PSIDATADIR: /Users/york/src/psi4new/psi4/share/psi4
+    Memory:     500.0 MiB
+    Threads:    1
+    
+  ==> Input File <==
+
+--------------------------------------------------------------------------
+#! Generated using commit GITCOMMIT
+
+import forte
+
+Emcscf_avg  = -106.75288506058001
+Ept2_root0  = -106.989495562677
+Ept2_root1  = -106.980156573537
+Ept2_root0x = -106.989466062346
+Ept2_root1x = -106.980175825857
+
+def compare_energy_local(name, xms=False):
+    Eref0, Eref1 = Ept2_root0, Ept2_root1
+    if xms:
+        Eref0, Eref1 = Ept2_root0x, Ept2_root1x
+    E0 = get_variable("ENERGY ROOT 0")
+    E1 = get_variable("ENERGY ROOT 1")
+    compare_values(Eref0, E0, 8, name+"-DSRG-PT2 energy on root 0")
+    compare_values(Eref1, E1, 8, name+"-DSRG-PT2 energy on root 1")
+
+molecule {
+  0 1
+  Li
+  F  1 R
+  R = 10.000
+
+  units bohr
+}
+
+basis {
+  assign Li Li-cc-pvdz
+  assign F  aug-cc-pvdz
+[ Li-cc-pvdz ]
+spherical
+****
+Li     0
+S   8   1.00
+   1469.0000000              0.0007660
+    220.5000000              0.0058920
+     50.2600000              0.0296710
+     14.2400000              0.1091800
+      4.5810000              0.2827890
+      1.5800000              0.4531230
+      0.5640000              0.2747740
+      0.0734500              0.0097510
+S   8   1.00
+   1469.0000000             -0.0001200
+    220.5000000             -0.0009230
+     50.2600000             -0.0046890
+     14.2400000             -0.0176820
+      4.5810000             -0.0489020
+      1.5800000             -0.0960090
+      0.5640000             -0.1363800
+      0.0734500              0.5751020
+S   1   1.00
+      0.0280500              1.0000000
+P   3   1.00
+      1.5340000              0.0227840
+      0.2749000              0.1391070
+      0.0736200              0.5003750
+P   1   1.00
+      0.0240300              1.0000000
+D   1   1.00
+      0.1239000              1.0000000
+****
+}
+
+set globals{
+  reference           rhf
+  scf_type            out_of_core
+  maxiter             300
+  e_convergence       10
+  d_convergence       10
+  docc                [4,0,1,1]
+  restricted_docc     [3,0,1,1]
+  active              [2,0,0,0]
+  mcscf_r_convergence 7
+  mcscf_e_convergence 10
+  mcscf_maxiter       250
+  mcscf_diis_start    6
+  num_roots           2
+  follow_root         2
+  avg_states          [0,1]
+}
+
+Emcscf, wfn = energy('casscf', return_wfn=True)
+compare_values(Emcscf_avg,get_variable("CURRENT ENERGY"),8,"SA-CASSCF energy")
+
+set forte{
+  job_type           dsrg-mrpt2
+  frozen_docc        [2,0,0,0]
+  restricted_docc    [1,0,0,0]
+  active             [3,0,2,2]
+  dsrg_s             0.5
+  maxiter            50
+  e_convergence      10
+  cas_type           cas
+  avg_state          [[0,1,2]]
+  dsrg_multi_state   ms
+  form_hbar3         true
+}
+energy('forte', ref_wfn=wfn)
+compare_energy_local("MS", False)
+
+set forte{
+  job_type           dwms-dsrgpt2
+  dwms_algorithm     ms
+  dwms_zeta          1.0e10
+}
+energy('forte', ref_wfn=wfn)
+compare_energy_local("DWMS", False)
+
+set forte{
+  job_type         dsrg-mrpt2
+  dsrg_multi_state xms
+}
+energy('forte', ref_wfn=wfn)
+compare_energy_local("XMS", True)
+
+set forte{
+  job_type        dwms-dsrgpt2
+  dwms_algorithm  xms
+}
+energy('forte', ref_wfn=wfn)
+compare_energy_local("DWXMS", True)
+--------------------------------------------------------------------------
+
+*** tstart() called on dhcp189-132.emerson.emory.edu
+*** at Sun Apr  1 17:42:54 2018
+
+   => Loading Basis Set <=
+
+    Name: ANONYMOUS13654D2E
+    Role: ORBITAL
+    Keyword: BASIS
+    atoms 1 entry LI         line     5 inputblock li-cc-pvdz 
+    atoms 2 entry F          line   286 file /Users/york/src/psi4new/psi4/share/psi4/basis/aug-cc-pvdz.gbs 
+
+
+         ---------------------------------------------------------
+                                   SCF
+            by Justin Turney, Rob Parrish, Andy Simmonett
+                             and Daniel Smith
+                              RHF Reference
+                        1 Threads,    500 MiB Core
+         ---------------------------------------------------------
+
+  ==> Geometry <==
+
+    Molecular point group: c2v
+    Full point group: C_inf_v
+
+    Geometry (in Bohr), charge = 0, multiplicity = 1:
+
+       Center              X                  Y                   Z               Mass       
+    ------------   -----------------  -----------------  -----------------  -----------------
+          LI          0.000000000000     0.000000000000    -7.303031224277     7.016004548000
+           F          0.000000000000     0.000000000000     2.696968775723    18.998403224000
+
+  Running in c2v symmetry.
+
+  Rotational constants: A = ************  B =      0.11749  C =      0.11749 [cm^-1]
+  Rotational constants: A = ************  B =   3522.26409  C =   3522.26409 [MHz]
+  Nuclear repulsion =    2.700000000000000
+
+  Charge       = 0
+  Multiplicity = 1
+  Electrons    = 12
+  Nalpha       = 6
+  Nbeta        = 6
+
+  ==> Algorithm <==
+
+  SCF Algorithm Type is OUT_OF_CORE.
+  DIIS enabled.
+  MOM disabled.
+  Fractional occupation disabled.
+  Guess Type is SAD.
+  Energy threshold   = 1.00e-10
+  Density threshold  = 1.00e-10
+  Integral threshold = 0.00e+00
+
+  ==> Primary Basis <==
+
+  Basis Set: ANONYMOUS13654D2E
+    Blend: AUG-CC-PVDZ + LI-CC-PVDZ
+    Number of shells: 15
+    Number of basis function: 37
+    Number of Cartesian functions: 40
+    Spherical Harmonics?: true
+    Max angular momentum: 2
+
+  ==> Pre-Iterations <==
+
+   -------------------------------------------------------
+    Irrep   Nso     Nmo     Nalpha   Nbeta   Ndocc  Nsocc
+   -------------------------------------------------------
+     A1        18      18       4       4       4       0
+     A2         3       3       0       0       0       0
+     B1         8       8       1       1       1       0
+     B2         8       8       1       1       1       0
+   -------------------------------------------------------
+    Total      37      37       6       6       6       0
+   -------------------------------------------------------
+
+  ==> Integral Setup <==
+
+  ==> DiskJK: Disk-Based J/K Matrices <==
+
+    J tasked:                  Yes
+    K tasked:                  Yes
+    wK tasked:                  No
+    Memory (MB):               375
+    Schwarz Cutoff:          1E-12
+
+  Minimum eigenvalue in the overlap matrix is 8.8020111411E-02.
+  Using Symmetric Orthogonalization.
+
+  SCF Guess: Superposition of Atomic Densities via on-the-fly atomic UHF.
+
+  ==> Iterations <==
+
+                        Total Energy        Delta E     RMS |[F,P]|
+
+   @RHF iter   0:  -106.49243849010250   -1.06492e+02   4.41641e-03 
+   @RHF iter   1:  -106.67531561935699   -1.82877e-01   2.14611e-02 
+   @RHF iter   2:  -105.54391759021546    1.13140e+00   5.79652e-02 DIIS
+   @RHF iter   3:  -106.73990819159900   -1.19599e+00   1.07810e-02 DIIS
+   @RHF iter   4:  -106.76331726463214   -2.34091e-02   2.28209e-03 DIIS
+   @RHF iter   5:  -106.76471112006860   -1.39386e-03   6.44993e-04 DIIS
+   @RHF iter   6:  -106.76484619546932   -1.35075e-04   1.83827e-04 DIIS
+   @RHF iter   7:  -106.76485600700826   -9.81154e-06   2.43064e-05 DIIS
+   @RHF iter   8:  -106.76485633757436   -3.30566e-07   3.27244e-06 DIIS
+   @RHF iter   9:  -106.76485635034859   -1.27742e-08   2.09181e-06 DIIS
+   @RHF iter  10:  -106.76485635166064   -1.31205e-09   3.99827e-07 DIIS
+   @RHF iter  11:  -106.76485635173387   -7.32285e-11   9.00309e-08 DIIS
+   @RHF iter  12:  -106.76485635173819   -4.32010e-12   3.41589e-09 DIIS
+   @RHF iter  13:  -106.76485635173809    9.94760e-14   5.87109e-10 DIIS
+   @RHF iter  14:  -106.76485635173809    0.00000e+00   6.54593e-11 DIIS
+
+  ==> Post-Iterations <==
+
+    Orbital Energies (a.u.)
+    -----------------------
+
+    Doubly Occupied:                                                      
+
+       1A1   -25.949822     2A1    -2.691664     3A1    -1.181713  
+       1B1    -0.282869     1B2    -0.282869     4A1    -0.281733  
+
+    Virtual:                                                              
+
+       5A1    -0.102315     2B1    -0.034308     2B2    -0.034308  
+       6A1    -0.017926     7A1     0.059038     3B1     0.069758  
+       3B2     0.069758     8A1     0.115169     9A1     0.230550  
+       1A2     0.230550    10A1     0.235491     4B1     0.236544  
+       4B2     0.236544     5B1     0.414969     5B2     0.414969  
+      11A1     0.434294    12A1     0.463808    13A1     1.634017  
+       6B2     1.634417     6B1     1.634417     2A2     1.636003  
+      14A1     1.636003     7B1     1.968778     7B2     1.968778  
+      15A1     1.981773    16A1     2.604672    17A1     5.197522  
+       8B2     5.197552     8B1     5.197552    18A1     5.198222  
+       3A2     5.198222  
+
+    Final Occupation by Irrep:
+             A1    A2    B1    B2 
+    DOCC [     4,    0,    1,    1 ]
+
+  Energy converged.
+
+  @RHF Final Energy:  -106.76485635173809
+
+   => Energetics <=
+
+    Nuclear Repulsion Energy =              2.7000000000000002
+    One-Electron Energy =                -157.5883761454533101
+    Two-Electron Energy =                  48.1235197937152321
+    PCM Polarization Energy =               0.0000000000000000
+    Total Energy =                       -106.7648563517380893
+
+    Alert: EFP and PCM quantities not currently incorporated into SCF psivars.
+
+Properties will be evaluated at   0.000000,   0.000000,   0.000000 Bohr
+
+Properties computed using the SCF density matrix
+
+  Nuclear Dipole Moment: (a.u.)
+     X:     0.0000      Y:     0.0000      Z:     2.3636
+
+  Electronic Dipole Moment: (a.u.)
+     X:     0.0000      Y:     0.0000      Z:   -12.2800
+
+  Dipole Moment: (a.u.)
+     X:     0.0000      Y:     0.0000      Z:    -9.9163     Total:     9.9163
+
+  Dipole Moment: (Debye)
+     X:     0.0000      Y:     0.0000      Z:   -25.2048     Total:    25.2048
+
+
+*** tstop() called on dhcp189-132.emerson.emory.edu at Sun Apr  1 17:42:55 2018
+Module time:
+	user time   =       0.78 seconds =       0.01 minutes
+	system time =       0.09 seconds =       0.00 minutes
+	total time  =          1 seconds =       0.02 minutes
+Total time:
+	user time   =       0.78 seconds =       0.01 minutes
+	system time =       0.09 seconds =       0.00 minutes
+	total time  =          1 seconds =       0.02 minutes
+ MINTS: Wrapper to libmints.
+   by Justin Turney
+
+   Calculation information:
+      Number of threads:                 1
+      Number of atoms:                   2
+      Number of AO shells:              15
+      Number of SO shells:              15
+      Number of primitives:             47
+      Number of atomic orbitals:        40
+      Number of basis functions:        37
+
+      Number of irreps:                  4
+      Integral cutoff                 1.00e-12
+      Number of functions per irrep: [  18    3    8    8 ]
+
+ OEINTS: Overlap, kinetic, potential, dipole, and quadrupole integrals
+         stored in file 35.
+
+      Computing two-electron integrals...done
+      Computed 54201 non-zero two-electron integrals.
+        Stored in file 33.
+
+
+         ---------------------------------------------------------
+                Multi-Configurational Self-Consistent Field
+                            (a 'D E T C I' module)
+
+                 Daniel G. A. Smith, C. David Sherrill, and
+                              Matt L. Leininger
+         ---------------------------------------------------------
+
+
+   ==> Parameters <==
+
+    EX LEVEL       =        2      H0 BLOCKSIZE  =     1000
+    VAL EX LEVEL   =        0      H0 GUESS SIZE =     1000
+    H0COUPLINGSIZE =        0      H0 COUPLING   =       NO
+    MAXITER        =       12      NUM PRINT     =       20
+    NUM ROOTS      =        2      ICORE         =        1
+    PRINT LVL      =        1      FCI           =      YES
+    R CONV         = 1.00e-07      MIXED         =      YES
+    E CONV         = 1.00e-10      MIXED4        =      YES
+    R4S            =       NO      REPL OTF      =       NO
+    DIAG METHOD    =      SEM      FOLLOW ROOT   =        2
+    PRECONDITIONER = DAVIDSON      UPDATE        = DAVIDSON
+    S              =   0.0000      Ms0           =      YES
+    GUESS VECTOR   =  H0BLOCK      OPENTYPE      =     NONE
+    COLLAPSE SIZE  =        1      HD AVG        = EVANGELISTI
+    MAX NUM VECS   =       26      REF SYM       =     AUTO
+    IOPEN        =       NO
+
+    EX ALLOW       =  1  1 
+    STATE AVERAGE  =  0(0.50)  1(0.50) 
+
+   ==> CI Orbital and Space information <==
+
+   ------------------------------------------------------
+               Space    Total    A1    A2    B1    B2
+   ------------------------------------------------------
+                 Nso       37    18     3     8     8
+                 Nmo       37    18     3     8     8
+               Ndocc        6     4     0     1     1
+               Nsocc        0     0     0     0     0
+   ------------------------------------------------------
+                        MCSCF Spaces
+   ------------------------------------------------------
+         Frozen DOCC        0     0     0     0     0
+     Restricted DOCC        5     3     0     1     1
+              Active        2     2     0     0     0
+     Restricted UOCC       30    13     3     7     7
+         Frozen UOCC        0     0     0     0     0
+   ------------------------------------------------------
+
+   ==> Setting up CI strings <==
+
+    There are 2 alpha and 2 beta strings
+    The CI space requires 4 (4.00E+00) determinants and 1 blocks
+
+   ==> Setting up MCSCF integrals <==
+
+  ==> DiskJK: Disk-Based J/K Matrices <==
+
+    J tasked:                  Yes
+    K tasked:                  Yes
+    wK tasked:                  No
+    Memory (MB):              3200
+    Schwarz Cutoff:          1E-12
+
+
+   ==> Starting MCSCF iterations <==
+
+        Iter         Total Energy       Delta E   Orb RMS    CI RMS  NCI NORB
+(sem_iter): H0block_->H0b_diag[1][1] - H0block_->H0b_diag[2][1] = -0.707107 - 0.707107 = -1.414214 > 1.0E-8
+   @MCSCF  1:   -106.719655499262    4.5201e-02  7.73e-02  5.29e-09    1    1  Initial CI
+   @MCSCF  2:   -106.743591142789   -2.3936e-02  4.80e-02  1.19e-10    1    1  TS
+   @MCSCF  3:   -106.749720768723   -6.1296e-03  2.62e-02  3.19e-10    1    1  TS
+   @MCSCF  4:   -106.751831448333   -2.1107e-03  1.47e-02  2.32e-10    1    1  TS
+   @MCSCF  5:   -106.752507379056   -6.7593e-04  8.16e-03  2.57e-10    1    1  TS
+   @MCSCF  6:   -106.752745372779   -2.3799e-04  4.54e-03  2.46e-10    1    1  TS
+   @MCSCF  7:   -106.752830377812   -8.5005e-05  2.53e-03  2.53e-10    1    1  TS, DIIS
+   @MCSCF  8:   -106.752862680787   -3.2303e-05  1.41e-03  2.49e-10    1    1  TS, DIIS
+   @MCSCF  9:   -106.752859178868    3.5019e-06  2.51e-03  2.54e-10    1    1  TS, DIIS
+   @MCSCF 10:   -106.752877030142   -1.7851e-05  1.46e-03  2.51e-10    2    1  TS, DIIS
+   @MCSCF 11:   -106.752884415165   -7.3850e-06  4.11e-04  2.52e-10    1    1  TS, DIIS
+   @MCSCF 12:   -106.752885012207   -5.9704e-07  1.12e-04  2.52e-10    1    1  TS, DIIS
+   @MCSCF 13:   -106.752885060801   -4.8594e-08  7.10e-07  2.52e-10    1    1  TS, DIIS
+   @MCSCF 14:   -106.752885060799    2.5580e-12  1.11e-06  2.52e-10    1    1  TS, DIIS
+   @MCSCF 15:   -106.752885060803   -4.5475e-12  3.42e-09  2.52e-10    1    1  TS, DIIS
+
+          @MCSCF has converged!
+
+   @MCSCF Final Energy: -106.752885060803322
+
+   Computing CI Semicanonical Orbitals
+
+   ==> Energetics <==
+
+    SCF energy =         -106.764856351738089
+    Total MCSCF energy = -106.752885060803322
+
+   ==> MCSCF root 0 information <==
+
+    MCSCF Root 0 energy =  -106.772344531633095
+
+   Active Space Natural occupation numbers:
+
+        A1   1.177995        A1   0.822005
+
+   The 4 most important determinants:
+
+    *   1   -0.699843  (    1,    0)  4A1B 5A1A 
+    *   2   -0.699843  (    0,    1)  4A1A 5A1B 
+    *   3   -0.142097  (    0,    0)  4A1X 
+    *   4    0.015730  (    1,    1)  5A1X 
+
+
+   ==> MCSCF root 1 information <==
+
+    MCSCF Root 1 energy =  -106.733425589972356
+
+   Active Space Natural occupation numbers:
+
+        A1   1.999870        A1   0.000130
+
+   The 4 most important determinants:
+
+    *   1   -0.989853  (    0,    0)  4A1X 
+    *   2    0.100467  (    1,    0)  4A1B 5A1A 
+    *   3    0.100467  (    0,    1)  4A1A 5A1B 
+    *   4   -0.002053  (    1,    1)  5A1X 
+
+
+
+Properties will be evaluated at   0.000000,   0.000000,   0.000000 Bohr
+
+Properties computed using the CASSCF density matrix
+
+  Nuclear Dipole Moment: (a.u.)
+     X:     0.0000      Y:     0.0000      Z:     2.3636
+
+  Electronic Dipole Moment: (a.u.)
+     X:     0.0000      Y:     0.0000      Z:    -7.3349
+
+  Dipole Moment: (a.u.)
+     X:     0.0000      Y:     0.0000      Z:    -4.9713     Total:     4.9713
+
+  Dipole Moment: (Debye)
+     X:     0.0000      Y:     0.0000      Z:   -12.6357     Total:    12.6357
+
+	SA-CASSCF energy..................................................PASSED
+   => Loading Basis Set <=
+
+    Name: STO-3G
+    Role: ORBITAL
+    Keyword: MINAO_BASIS
+    atoms 1 entry LI         line    31 file /Users/york/src/psi4new/psi4/share/psi4/basis/sto-3g.gbs 
+    atoms 2 entry F          line    91 file /Users/york/src/psi4new/psi4/share/psi4/basis/sto-3g.gbs 
+
+
+Reading options from the FORTE block
+Calling plugin forte.so.
+
+
+
+  Forte
+  ----------------------------------------------------------------------------
+  A suite of quantum chemistry methods for strongly correlated electrons
+
+    git branch: dwsa-dsrg-pt - git commit: 5258b91f
+
+  Developed by:
+    Francesco A. Evangelista, Chenyang Li, Kevin P. Hannon,
+    Jeffrey B. Schriber, Tianyuan Zhang, Chenxi Cai
+  ----------------------------------------------------------------------------
+
+  Size of Determinant class: 32
+
+  ==> MO Space Information <==
+
+  Read options for space FROZEN_DOCC
+  Read options for space RESTRICTED_DOCC
+  Read options for space ACTIVE
+ Removing orbital 0
+ Removing orbital 1
+  -------------------------------------------------
+                       A1    A2    B1    B2   Sum
+  -------------------------------------------------
+    FROZEN_DOCC         2     0     0     0     2
+    RESTRICTED_DOCC     1     0     0     0     1
+    ACTIVE              3     0     2     2     7
+    RESTRICTED_UOCC    12     3     6     6    27
+    FROZEN_UOCC         0     0     0     0     0
+    Total              18     3     8     8    37
+  -------------------------------------------------
+
+  ==> Integral Transformation <==
+
+  Number of molecular orbitals:               37
+  Number of correlated molecular orbitals:    35
+  Number of frozen occupied orbitals:          2
+  Number of frozen unoccupied orbitals:        0
+
+
+  Overall Conventional Integrals timings
+
+	Presorting SO-basis two-electron integrals.
+	Sorting File: SO Ints (nn|nn) nbuckets = 1
+	Transforming the one-electron integrals and constructing Fock matrices
+	Starting first half-transformation.
+	Sorting half-transformed integrals.
+	First half integral transformation complete.
+	Starting second half-transformation.
+	Two-electron integral transformation complete.
+
+  Integral transformation done. 0.09237500 s
+  Reading the two-electron integrals from disk
+  Size of two-electron integrals:   0.041891 GB
+  Frozen-core energy            -84.713599407174 a.u.
+
+  FrozenOneBody Operator takes  0.26364900 s
+  Resorting integrals after freezing core.
+  Conventional integrals take 0.82039200 s
+
+              ---------------------------------------------------
+                Complete Active Space Configuration Interaction
+                                  Chenyang Li
+              ---------------------------------------------------
+
+
+  ==> Input Summary <==
+
+    No. a electrons in active      =     3
+    No. b electrons in active      =     3
+    multiplicity                   =     1
+    spin ms (2 * Sz)               =     0
+
+  ==> Orbital Spaces <==
+
+    TOTAL MO                      [   18     3     8     8 ]
+    FROZEN CORE                   [    2     0     0     0 ]
+    FROZEN VIRTUAL                [    0     0     0     0 ]
+    CORRELATED MO                 [   16     3     8     8 ]
+    CORE                          [    1     0     0     0 ]
+    ACTIVE                        [    3     0     2     2 ]
+    VIRTUAL                       [   12     3     6     6 ]
+
+  ==> State Averaging Summary <==
+
+    Irrep.  Multi.  Nstates      Weights
+    ------------------------------------
+      A1       1        2    0.500 0.500
+    ------------------------------------
+    Total number of states: 2
+    ------------------------------------
+
+  Forming alpha and beta strings      ...  Done. Timing        0.000187 s
+  Forming determinants                ...  Done. Timing        0.000223 s
+
+  ==> Determinants Summary <==
+
+    number of alpha active electrons         =     3
+    number of beta active electrons          =     3
+    root symmetry (zero based)               =     0
+    number of determinants                   =   321
+
+  Diagonalizing Hamiltonian           ...
+
+  ==> Computing Coupling Lists <==
+  --------------------------------
+        α          0.001421 s
+        β          0.001371 s
+        αα         0.001431 s
+        ββ         0.001480 s
+        αβ         0.002914 s
+  --------------------------------
+
+  Davidson-Liu solver algorithm
+  Using SPARSE sigma builder
+  Initial guess space is incomplete!
+  Trying to add 25 determinant(s).  25 determinant(s) added.
+  Initial guess found 89 solutions with 2S+1 = 1 *
+  Initial guess found 103 solutions with 2S+1 = 3  
+  Initial guess found 30 solutions with 2S+1 = 5  
+  Initial guess found 3 solutions with 2S+1 = 7  
+  Adding guess 0 (multiplicity = 1.000000)
+  Adding guess 1 (multiplicity = 1.000000)
+  Adding guess 2 (multiplicity = 1.000000)
+  Adding guess 3 (multiplicity = 1.000000)
+
+  ==> Diagonalizing Hamiltonian <==
+
+  ----------------------------------------
+    Iter.      Avg. Energy       Delta_E
+  ----------------------------------------
+      1      -97.331220979569  -9.733e+01
+      2      -97.331220979569  -5.542e-13
+  ----------------------------------------
+  The Davidson-Liu algorithm converged in 3 iterations.
+  Davidson-Liu procedure took  0.340685 s  Done. Timing        0.352017 s
+
+  * * * * * * * * * * * * * * * * *
+  *  CI Vectors & Configurations  *
+  * * * * * * * * * * * * * * * * *
+
+  ==> Root No. 0 <==
+
+    ba0 20 20          0.6992227066
+    ab0 20 20          0.6992227066
+    200 20 20          0.1460778803
+
+    Total Energy:   -106.772573835130359
+
+
+  ==> Root No. 1 <==
+
+    200 20 20         -0.9609078851
+    b0a 20 20         -0.1530225595
+    a0b 20 20         -0.1530225595
+    ba0 20 20          0.1034192684
+    ab0 20 20          0.1034192684
+
+    Total Energy:   -106.735798150984763
+
+
+
+  ==> Permanent Dipole Moments (A1) <==
+
+  Only print nonzero (> 1.0e-5) elements.
+  Permanent dipole moments (a.u.) 0 -> 0:  X:  0.0000  Y:  0.0000  Z: -0.2189  Total:  0.2189
+  Permanent dipole moments (a.u.) 1 -> 1:  X:  0.0000  Y:  0.0000  Z: -8.9753  Total:  8.9753
+
+
+  ==> Transition Dipole Moments (A1 -> A1) <==
+
+  Only print nonzero (> 1.0e-5) elements.
+  Transition dipole moments (a.u.) 0 -> 1:  X:  0.0000  Y:  0.0000  Z:  1.7577  Total:  1.7577
+
+
+  ==> Oscillator Strength (A1 -> A1) <==
+
+  Only print nonzero (> 1.0e-5) elements.
+  Oscillator strength (a.u.) 0 -> 1:  X:  0.0000  Y:  0.0000  Z:  0.0757  Total:  0.0757
+
+  Total Energy (averaged over 2 states): -106.754185993057561
+
+
+  ==> Compute State-Averaged Cumulants <==
+
+  Computing  1RDM (0-0) of Singlet A1 ... Done. Timing        0.004275 s
+  Computing  2RDM (0-0) of Singlet A1 ... Done. Timing        0.008365 s
+  Computing  3RDM (0-0) of Singlet A1 ... Done. Timing        0.024907 s
+  Computing  1RDM (1-1) of Singlet A1 ... Done. Timing        0.003777 s
+  Computing  2RDM (1-1) of Singlet A1 ... Done. Timing        0.006471 s
+  Computing  3RDM (1-1) of Singlet A1 ... Done. Timing        0.020641 s
+  Adding wedge product for 2-cumulants ... Done. Timing        0.001867 s
+  Adding wedge product for 3-cumulants ... Done. Timing        0.226600 s
+
+       -----------------------------------------------------------------
+                            Semi-Canonical Orbitals
+         Chenyang Li, Jeffrey B. Schriber and Francesco A. Evangelista
+       -----------------------------------------------------------------
+
+  Took 0.003342 s to build Fock matrix
+
+  ==> Checking Fock Matrix Diagonal Blocks <==
+
+    Off-Diag. Elements       Max           2-Norm
+    ------------------------------------------------
+    Fa actv              0.0121026513   0.0209836207
+    Fb actv              0.0121026513   0.0209836207
+    ------------------------------------------------
+    Fa core              0.0000000000   0.0000000000
+    Fb core              0.0000000000   0.0000000000
+    ------------------------------------------------
+    Fa virt              0.0035447897   0.0172040970
+    Fb virt              0.0035447897   0.0172040970
+    ------------------------------------------------
+
+  ==> Integral Transformation to Semicanonical Basis <==
+
+ Integrals are about to be computed.	Presorting SO-basis two-electron integrals.
+	Sorting File: SO Ints (nn|nn) nbuckets = 1
+	Transforming the one-electron integrals and constructing Fock matrices
+	Starting first half-transformation.
+	Sorting half-transformed integrals.
+	First half integral transformation complete.
+	Starting second half-transformation.
+	Two-electron integral transformation complete.
+
+  Integral transformation done. 0.08725100 s
+  Reading the two-electron integrals from disk
+  Size of two-electron integrals:   0.041891 GB
+ Integrals are about to be updated.
+  Frozen-core energy            -84.713599407174 a.u.
+
+  FrozenOneBody Operator takes  0.26809900 s
+  Resorting integrals after freezing core.
+  Frozen Orbitals takes     0.356 s.
+
+  ==> Reference Transformation to Semicanonical Basis <==
+
+    Transformed 1 cumulants.
+    Transformed 2 cumulants and RDMs.
+    Transformed 3 cumulants.
+  SemiCanonicalize takes 3.052930 s.
+
+  ==> Multireference Driven Similarity Renormalization Group <==
+
+    Reading DSRG options ............................ Done
+    Setting ambit MO space .......................... Done
+    Preparing tensors for density cumulants ......... Done
+    Building Fock matrix ............................ Done
+    Checking reference energy ....................... Done
+
+              ----------------------------------------------------
+                    MR-DSRG Second-Order Perturbation Theory
+                Chenyang Li, Kevin Hannon, Francesco Evangelista
+              ----------------------------------------------------
+
+    References:
+      u-DSRG-MRPT2:    J. Chem. Theory Comput. 2015, 11, 2097.
+      (pr-)DSRG-MRPT2: J. Chem. Phys. 2017, 146, 124132.
+
+  ==> Calculation Information <==
+
+    ntamp                                                 15
+    flow parameter                                 5.000e-01
+    taylor expansion threshold                     1.000e-03
+    intruder_tamp                                  1.000e-01
+    int_type                                    CONVENTIONAL
+    source operator                                 STANDARD
+    reference relaxation                                NONE
+    state_type                                   MULTI-STATE
+    multi-state type                                      MS
+    form Hbar3                                          TRUE
+
+  ==> Build Effective Hamiltonian (Singlet A1) <==
+
+
+
+  ==> Compute DSRG-MRPT2 Energy of State 0 <==
+
+
+  ==> Checking Semicanonical Orbitals <==
+
+    Abs. max of Fock core, active, virtual blocks (Fij, i != j)
+                  core          active         virtual
+    --------------------------------------------------
+    Fα    0.0000000000    0.0132777431    0.0562981999
+    Fβ    0.0000000000    0.0132777431    0.0562981999
+    --------------------------------------------------
+
+    1-Norm of Fock core, active, virtual blocks (Fij, i != j)
+                  core          active         virtual
+    --------------------------------------------------
+    Fα    0.0000000000    0.0841450204    1.5983934941
+    Fβ    0.0000000000    0.0841450204    1.5983934941
+    --------------------------------------------------
+
+    Warning! Orbitals are not semi-canonicalized!
+    Orbital invariant formalism will be employed for DSRG-MRPT2.
+
+  ==> Computing DSRG-MRPT2 ... <==
+
+    Computing T2 amplitudes                  ...  Done. Timing        0.592072 s
+    Computing T1 amplitudes                  ...  Done. Timing        0.028043 s
+    Renormalizing two-electron integrals     ...  Done. Timing        0.582453 s
+    Renormalizing Fock matrix elements       ...  Done. Timing        0.027708 s
+    Computing <[F, T1]>                      ...  Done. Timing        0.001944 s
+    Computing <[F, T2]>                      ...  Done. Timing        0.005959 s
+    Computing <[V, T1]>                      ...  Done. Timing        0.005651 s
+    Computing <[V, T2]> (C_2)^4              ...  Done. Timing        0.036224 s
+    Computing <[V, T2]> C_4 (C_2)^2 HH       ...  Done. Timing        0.007100 s
+    Computing <[V, T2]> C_4 (C_2)^2 PP       ...  Done. Timing        0.009902 s
+    Computing <[V, T2]> C_4 (C_2)^2 PH       ...  Done. Timing        0.038602 s
+    Computing <[V, T2]> C_6 C_2              ...  Done. Timing        0.134893 s
+
+  ==> Excitation Amplitudes Summary <==
+
+    Active Indices:    1    2    3   19   20   27   28 
+    Largest T1 amplitudes for spin case A:
+       i       a                  i       a                  i       a               
+    --------------------------------------------------------------------------------
+    [ 27      33    ]-0.034055 [ 19      25    ]-0.034055 [ 19      23    ] 0.020039 
+    [ 27      31    ] 0.020039 [  0      13    ]-0.017934 [  0       8    ]-0.014541 
+    [  1      12    ]-0.013606 [  0       9    ] 0.011608 [ 19      22    ] 0.007974 
+    [ 27      30    ] 0.007974 [  1       9    ] 0.005449 [  1       8    ] 0.003550 
+    [  1       6    ]-0.003436 [  0       5    ] 0.003023 [  0       6    ]-0.002946 
+    --------------------------------------------------------------------------------
+    Norm of T1A vector: (nonzero elements: 75)                    0.064893854190594.
+    --------------------------------------------------------------------------------
+    Largest T1 amplitudes for spin case B:
+       _       _                  _       _                  _       _               
+       i       a                  i       a                  i       a               
+    --------------------------------------------------------------------------------
+    [ 27      33    ]-0.034055 [ 19      25    ]-0.034055 [ 19      23    ] 0.020039 
+    [ 27      31    ] 0.020039 [  0      13    ]-0.017934 [  0       8    ]-0.014541 
+    [  1      12    ]-0.013606 [  0       9    ] 0.011608 [ 19      22    ] 0.007974 
+    [ 27      30    ] 0.007974 [  1       9    ] 0.005449 [  1       8    ] 0.003550 
+    [  1       6    ]-0.003436 [  0       5    ] 0.003023 [  0       6    ]-0.002946 
+    --------------------------------------------------------------------------------
+    Norm of T1B vector: (nonzero elements: 75)                    0.064893854190594.
+    --------------------------------------------------------------------------------
+    Largest T2 amplitudes for spin case AA:
+       i   j   a   b              i   j   a   b              i   j   a   b           
+    --------------------------------------------------------------------------------
+    [  1  19  12  19] 0.074486 [  1  27  12  27] 0.074486 [ 19  27  19  33] 0.070722 
+    [ 19  27  25  27] 0.070722 [  1  27   1  33] 0.068103 [  1  19   1  25] 0.068103 
+    [ 19  27  19  31]-0.041091 [ 19  27  23  27]-0.041091 [  1  27   1  31]-0.039911 
+    [  1  19   1  23]-0.039911 [  0  19  13  19] 0.035008 [  0  27  13  27] 0.035008 
+    [  0   1   1  13]-0.033750 [  0  19   8  19] 0.027964 [  0  27   8  27] 0.027964 
+    --------------------------------------------------------------------------------
+    Norm of T2AA vector: (nonzero elements: 18639)                0.484857361793106.
+    --------------------------------------------------------------------------------
+    Largest T2 amplitudes for spin case AB:
+           _       _                  _       _                  _       _           
+       i   j   a   b              i   j   a   b              i   j   a   b           
+    --------------------------------------------------------------------------------
+    [  1   1   1  12] 0.084504 [ 27  27  27  33] 0.083959 [ 19  19  19  25] 0.083959 
+    [  1  19  12  19] 0.079246 [  1  27  12  27] 0.079246 [  0   0  19  19]-0.076411 
+    [  0   0  27  27]-0.076411 [ 19  27  19  33] 0.075134 [ 19  27  25  27] 0.075134 
+    [  1  27   1  33] 0.072051 [  1  19   1  25] 0.072051 [  0   0   1   1]-0.064797 
+    [ 19  19  19  23]-0.051007 [ 27  27  27  31]-0.051007 [ 19  27  19  31]-0.044397 
+    --------------------------------------------------------------------------------
+    Norm of T2AB vector: (nonzero elements: 19007)                0.500534881325520.
+    --------------------------------------------------------------------------------
+    Largest T2 amplitudes for spin case BB:
+       _   _   _   _              _   _   _   _              _   _   _   _           
+       i   j   a   b              i   j   a   b              i   j   a   b           
+    --------------------------------------------------------------------------------
+    [  1  19  12  19] 0.074486 [  1  27  12  27] 0.074486 [ 19  27  19  33] 0.070722 
+    [ 19  27  25  27] 0.070722 [  1  27   1  33] 0.068103 [  1  19   1  25] 0.068103 
+    [ 19  27  19  31]-0.041091 [ 19  27  23  27]-0.041091 [  1  27   1  31]-0.039911 
+    [  1  19   1  23]-0.039911 [  0  19  13  19] 0.035008 [  0  27  13  27] 0.035008 
+    [  0   1   1  13]-0.033750 [  0  27   8  27] 0.027964 [  0  19   8  19] 0.027964 
+    --------------------------------------------------------------------------------
+    Norm of T2BB vector: (nonzero elements: 18633)                0.484857361793106.
+    --------------------------------------------------------------------------------
+
+  ==> Possible Intruders <==
+
+    T1 amplitudes larger than 0.1000 for spin case A: NULL
+    T1 amplitudes larger than 0.1000 for spin case B: NULL
+    T2 amplitudes larger than 0.1000 for spin case AA: NULL
+    T2 amplitudes larger than 0.1000 for spin case AB: NULL
+    T2 amplitudes larger than 0.1000 for spin case BB: NULL
+
+  ==> DSRG-MRPT2 Energy Summary <==
+
+    E0 (reference)                 =   -106.772573835130473
+    <[F, T1]>                      =     -0.025349234150396
+    <[F, T2]>                      =     -0.002399498707040
+    <[V, T1]>                      =     -0.002381027251471
+    <[V, T2]> (C_2)^4              =     -0.238312825342818
+    <[V, T2]> C_4 (C_2)^2 HH       =      0.002763052534454
+    <[V, T2]> C_4 (C_2)^2 PP       =      0.013930087978586
+    <[V, T2]> C_4 (C_2)^2 PH       =      0.039136488957399
+    <[V, T2]> C_6 C_2              =     -0.000033454148442
+    <[V, T2]>                      =     -0.182516650020822
+    DSRG-MRPT2 correlation energy  =     -0.212646410129728
+    DSRG-MRPT2 total energy        =   -106.985220245260194
+    max(T1)                        =      0.034055290158844
+    max(T2)                        =      0.084504217915012
+    ||T1||                         =      0.091773768711000
+    ||T2||                         =      1.213389464378257
+
+  Energy took      1.557 s
+
+
+  ==> Compute Couplings with State 0 <==
+
+    Computing coupling of <1|H|0>            ...  Done. Timing        0.002181 s
+    Computing coupling of <1|HT|0>           ...  Done. Timing        0.591409 s
+
+  ==> Compute DSRG-MRPT2 Energy of State 1 <==
+
+
+  ==> Checking Semicanonical Orbitals <==
+
+    Abs. max of Fock core, active, virtual blocks (Fij, i != j)
+                  core          active         virtual
+    --------------------------------------------------
+    Fα    0.0000000000    0.0132777431    0.0562981999
+    Fβ    0.0000000000    0.0132777431    0.0562981999
+    --------------------------------------------------
+
+    1-Norm of Fock core, active, virtual blocks (Fij, i != j)
+                  core          active         virtual
+    --------------------------------------------------
+    Fα    0.0000000000    0.0841450204    1.5983934941
+    Fβ    0.0000000000    0.0841450204    1.5983934941
+    --------------------------------------------------
+
+    Warning! Orbitals are not semi-canonicalized!
+    Orbital invariant formalism will be employed for DSRG-MRPT2.
+
+  ==> Computing DSRG-MRPT2 ... <==
+
+    Computing T2 amplitudes                  ...  Done. Timing        0.577932 s
+    Computing T1 amplitudes                  ...  Done. Timing        0.030954 s
+    Renormalizing two-electron integrals     ...  Done. Timing        0.585677 s
+    Renormalizing Fock matrix elements       ...  Done. Timing        0.030061 s
+    Computing <[F, T1]>                      ...  Done. Timing        0.001754 s
+    Computing <[F, T2]>                      ...  Done. Timing        0.006331 s
+    Computing <[V, T1]>                      ...  Done. Timing        0.007502 s
+    Computing <[V, T2]> (C_2)^4              ...  Done. Timing        0.035876 s
+    Computing <[V, T2]> C_4 (C_2)^2 HH       ...  Done. Timing        0.007489 s
+    Computing <[V, T2]> C_4 (C_2)^2 PP       ...  Done. Timing        0.009914 s
+    Computing <[V, T2]> C_4 (C_2)^2 PH       ...  Done. Timing        0.038689 s
+    Computing <[V, T2]> C_6 C_2              ...  Done. Timing        0.126092 s
+
+  ==> Excitation Amplitudes Summary <==
+
+    Active Indices:    1    2    3   19   20   27   28 
+    Largest T1 amplitudes for spin case A:
+       i       a                  i       a                  i       a               
+    --------------------------------------------------------------------------------
+    [ 27      33    ] 0.029806 [ 19      25    ] 0.029806 [  1      12    ] 0.023286 
+    [  0      13    ] 0.015153 [ 27      31    ]-0.012466 [ 19      23    ]-0.012466 
+    [  0       8    ] 0.012192 [  0       9    ]-0.010030 [  1       9    ]-0.008698 
+    [  1       8    ]-0.006456 [  1       6    ] 0.005942 [ 27      30    ]-0.004942 
+    [ 19      22    ]-0.004942 [  0       6    ] 0.002709 [  0       5    ]-0.002559 
+    --------------------------------------------------------------------------------
+    Norm of T1A vector: (nonzero elements: 75)                    0.057912742501572.
+    --------------------------------------------------------------------------------
+    Largest T1 amplitudes for spin case B:
+       _       _                  _       _                  _       _               
+       i       a                  i       a                  i       a               
+    --------------------------------------------------------------------------------
+    [ 27      33    ] 0.029806 [ 19      25    ] 0.029806 [  1      12    ] 0.023286 
+    [  0      13    ] 0.015153 [ 27      31    ]-0.012466 [ 19      23    ]-0.012466 
+    [  0       8    ] 0.012192 [  0       9    ]-0.010030 [  1       9    ]-0.008698 
+    [  1       8    ]-0.006456 [  1       6    ] 0.005942 [ 27      30    ]-0.004942 
+    [ 19      22    ]-0.004942 [  0       6    ] 0.002709 [  0       5    ]-0.002559 
+    --------------------------------------------------------------------------------
+    Norm of T1B vector: (nonzero elements: 75)                    0.057912742501572.
+    --------------------------------------------------------------------------------
+    Largest T2 amplitudes for spin case AA:
+       i   j   a   b              i   j   a   b              i   j   a   b           
+    --------------------------------------------------------------------------------
+    [ 19  27  19  33] 0.072931 [ 19  27  25  27] 0.072931 [  1  19  12  19] 0.072092 
+    [  1  27  12  27] 0.072092 [  1  27   1  33] 0.070231 [  1  19   1  25] 0.070231 
+    [  0  19  13  19] 0.035099 [  0  27  13  27] 0.035099 [  0   1   1  13]-0.033781 
+    [ 19  27  23  27]-0.029835 [ 19  27  19  31]-0.029835 [  1  19   1  23]-0.028962 
+    [  1  27   1  31]-0.028962 [  0  19   8  19] 0.027871 [  0  27   8  27] 0.027871 
+    --------------------------------------------------------------------------------
+    Norm of T2AA vector: (nonzero elements: 18633)                0.469839468235171.
+    --------------------------------------------------------------------------------
+    Largest T2 amplitudes for spin case AB:
+           _       _                  _       _                  _       _           
+       i   j   a   b              i   j   a   b              i   j   a   b           
+    --------------------------------------------------------------------------------
+    [ 27  27  27  33] 0.086603 [ 19  19  19  25] 0.086603 [  1   1   1  12] 0.081839 
+    [ 19  27  19  33] 0.077488 [ 19  27  25  27] 0.077488 [  1  19  12  19] 0.076715 
+    [  1  27  12  27] 0.076715 [  0   0  19  19]-0.076410 [  0   0  27  27]-0.076410 
+    [  1  27   1  33] 0.074309 [  1  19   1  25] 0.074309 [  0   0   1   1]-0.073833 
+    [  0  19  13  19] 0.041633 [  0  27  13  27] 0.041633 [ 19  19  19  23]-0.037005 
+    --------------------------------------------------------------------------------
+    Norm of T2AB vector: (nonzero elements: 19007)                0.487437964857369.
+    --------------------------------------------------------------------------------
+    Largest T2 amplitudes for spin case BB:
+       _   _   _   _              _   _   _   _              _   _   _   _           
+       i   j   a   b              i   j   a   b              i   j   a   b           
+    --------------------------------------------------------------------------------
+    [ 19  27  19  33] 0.072931 [ 19  27  25  27] 0.072931 [  1  19  12  19] 0.072092 
+    [  1  27  12  27] 0.072092 [  1  27   1  33] 0.070231 [  1  19   1  25] 0.070231 
+    [  0  19  13  19] 0.035099 [  0  27  13  27] 0.035099 [  0   1   1  13]-0.033781 
+    [ 19  27  23  27]-0.029835 [ 19  27  19  31]-0.029835 [  1  19   1  23]-0.028962 
+    [  1  27   1  31]-0.028962 [  0  19   8  19] 0.027871 [  0  27   8  27] 0.027871 
+    --------------------------------------------------------------------------------
+    Norm of T2BB vector: (nonzero elements: 18629)                0.469839468235172.
+    --------------------------------------------------------------------------------
+
+  ==> Possible Intruders <==
+
+    T1 amplitudes larger than 0.1000 for spin case A: NULL
+    T1 amplitudes larger than 0.1000 for spin case B: NULL
+    T2 amplitudes larger than 0.1000 for spin case AA: NULL
+    T2 amplitudes larger than 0.1000 for spin case AB: NULL
+    T2 amplitudes larger than 0.1000 for spin case BB: NULL
+
+  ==> DSRG-MRPT2 Energy Summary <==
+
+    E0 (reference)                 =   -106.735798150984607
+    <[F, T1]>                      =     -0.021446551278611
+    <[F, T2]>                      =      0.000053474860231
+    <[V, T1]>                      =      0.000053913692843
+    <[V, T2]> (C_2)^4              =     -0.227666218539023
+    <[V, T2]> C_4 (C_2)^2 HH       =      0.000021205281437
+    <[V, T2]> C_4 (C_2)^2 PP       =      0.000051493539900
+    <[V, T2]> C_4 (C_2)^2 PH       =      0.000293295238162
+    <[V, T2]> C_6 C_2              =      0.000005647215554
+    <[V, T2]>                      =     -0.227294577263970
+    DSRG-MRPT2 correlation energy  =     -0.248633739989508
+    DSRG-MRPT2 total energy        =   -106.984431890974122
+    max(T1)                        =      0.029806329359695
+    max(T2)                        =      0.086603368587001
+    ||T1||                         =      0.081900985879944
+    ||T2||                         =      1.179780204173723
+
+  Energy took      1.545 s
+
+
+  !!! Echo from DSRG_TIME !!!
+  Time code 223 is already there. Create nothing.
+
+  ==> Compute Couplings with State 1 <==
+
+    Computing coupling of <0|HT|1>           ...  Done. Timing        0.676308 s
+
+  ==> Effective Hamiltonian Summary <==
+
+  ## Heff Singlet A1 (Symmetry 0) ##
+  Irrep: 1 Size: 2 x 2
+
+                 1                   2
+
+    1  -106.98522024526019     0.00453526476610
+    2     0.00477039027304  -106.98443189097412
+
+
+
+  ## Heff (Symmetrized) Singlet A1 (Symmetry 0) ##
+  Irrep: 1 Size: 2 x 2
+
+                 1                   2
+
+    1  -106.98522024526019     0.00465282751957
+    2     0.00465282751957  -106.98443189097412
+
+
+
+  ## U of Heff (Symmetrized) with eigenvalues ##
+ Irrep: 1
+
+           1           2
+
+    1  -0.7363475  -0.6766035
+    2   0.6766035  -0.7363475
+
+     -106.9894956-106.9801566
+
+
+
+  ==> Multi-State DSRG-MRPT2 Energy Summary <==
+
+    Multi.  Irrep.  No.    DSRG-MRPT2 Energy
+    -----------------------------------------
+       1      A1     0      -106.989495562688
+       1      A1     1      -106.980156573546
+    -----------------------------------------
+
+  ==> DSRG_TIME for Computing Commutators in Seconds <==
+
+    ==================================
+    Time for [A1,B1] -> C0:      0.004
+    Time for [A1,B2] -> C0:      0.012
+    Time for [A2,B1] -> C0:      0.013
+    Time for [A2,B2] -> C0:      0.445
+    Time for [A1,B1] -> C1:      0.003
+    Time for [A1,B2] -> C1:      0.029
+    Time for [A2,B1] -> C1:      0.017
+    Time for [A2,B2] -> C1:      0.430
+    Time for [A1,B2] -> C2:      0.025
+    Time for [A2,B1] -> C2:      0.021
+    Time for [A2,B2] -> C2:      0.178
+    Time for [A2,B2] -> C3:      1.589
+    ==================================	MS-DSRG-PT2 energy on root 0......................................PASSED
+	MS-DSRG-PT2 energy on root 1......................................PASSED
+   => Loading Basis Set <=
+
+    Name: STO-3G
+    Role: ORBITAL
+    Keyword: MINAO_BASIS
+    atoms 1 entry LI         line    31 file /Users/york/src/psi4new/psi4/share/psi4/basis/sto-3g.gbs 
+    atoms 2 entry F          line    91 file /Users/york/src/psi4new/psi4/share/psi4/basis/sto-3g.gbs 
+
+
+Reading options from the FORTE block
+Calling plugin forte.so.
+
+
+
+  Forte
+  ----------------------------------------------------------------------------
+  A suite of quantum chemistry methods for strongly correlated electrons
+
+    git branch: dwsa-dsrg-pt - git commit: 5258b91f
+
+  Developed by:
+    Francesco A. Evangelista, Chenyang Li, Kevin P. Hannon,
+    Jeffrey B. Schriber, Tianyuan Zhang, Chenxi Cai
+  ----------------------------------------------------------------------------
+
+  Size of Determinant class: 32
+
+  ==> MO Space Information <==
+
+  Read options for space FROZEN_DOCC
+  Read options for space RESTRICTED_DOCC
+  Read options for space ACTIVE
+ Removing orbital 0
+ Removing orbital 1
+  -------------------------------------------------
+                       A1    A2    B1    B2   Sum
+  -------------------------------------------------
+    FROZEN_DOCC         2     0     0     0     2
+    RESTRICTED_DOCC     1     0     0     0     1
+    ACTIVE              3     0     2     2     7
+    RESTRICTED_UOCC    12     3     6     6    27
+    FROZEN_UOCC         0     0     0     0     0
+    Total              18     3     8     8    37
+  -------------------------------------------------
+
+  ==> Integral Transformation <==
+
+  Number of molecular orbitals:               37
+  Number of correlated molecular orbitals:    35
+  Number of frozen occupied orbitals:          2
+  Number of frozen unoccupied orbitals:        0
+
+
+  Overall Conventional Integrals timings
+
+	Presorting SO-basis two-electron integrals.
+	Sorting File: SO Ints (nn|nn) nbuckets = 1
+	Transforming the one-electron integrals and constructing Fock matrices
+	Starting first half-transformation.
+	Sorting half-transformed integrals.
+	First half integral transformation complete.
+	Starting second half-transformation.
+	Two-electron integral transformation complete.
+
+  Integral transformation done. 0.08670800 s
+  Reading the two-electron integrals from disk
+  Size of two-electron integrals:   0.041891 GB
+  Frozen-core energy            -84.713599407174 a.u.
+
+  FrozenOneBody Operator takes  0.30854500 s
+  Resorting integrals after freezing core.
+  Conventional integrals take 0.88539600 s
+
+        ----------------------------------------------------------------
+          Dynamically Weighted Driven Similarity Renormalization Group
+                        Multi-State Perturbation Theory
+                                  Chenyang Li
+        ----------------------------------------------------------------
+
+
+  ==> DWMS-DSRG Options <==
+
+    CORRELATION LEVEL         PT2
+    ZETA VALUE           1.00e+10
+    REFERENCE               CASCI
+    ALGORITHM                  MS
+
+  ==> Implementation Note on MS <==
+
+  - Perform CASCI using user-defined weights.
+  - Loop over symmetry entries:
+    - Initialize effective Hamiltonian Heff.
+    - Loop over averaged states:
+      - Compute new density weights if ζ is nonzero.
+      - Semicanonicalize orbitals.
+      - Put SS-DSRG-PT2 energy to diagonal of Heff.
+      - Compute couplings of Heff:
+        - De-normal-order cluster amplitudes.
+        - Compute 1, 2, 3 transition densities in semicanonical basis.
+        - <A|Heff|B> <- 0.5 * <A|Heff(B)|B>.
+  - Collect and print energies.
+
+
+              ---------------------------------------------------
+                Complete Active Space Configuration Interaction
+                                  Chenyang Li
+              ---------------------------------------------------
+
+
+  ==> Input Summary <==
+
+    No. a electrons in active      =     3
+    No. b electrons in active      =     3
+    multiplicity                   =     1
+    spin ms (2 * Sz)               =     0
+
+  ==> Orbital Spaces <==
+
+    TOTAL MO                      [   18     3     8     8 ]
+    FROZEN CORE                   [    2     0     0     0 ]
+    FROZEN VIRTUAL                [    0     0     0     0 ]
+    CORRELATED MO                 [   16     3     8     8 ]
+    CORE                          [    1     0     0     0 ]
+    ACTIVE                        [    3     0     2     2 ]
+    VIRTUAL                       [   12     3     6     6 ]
+
+  ==> State Averaging Summary <==
+
+    Irrep.  Multi.  Nstates      Weights
+    ------------------------------------
+      A1       1        2    0.500 0.500
+    ------------------------------------
+    Total number of states: 2
+    ------------------------------------
+
+  Forming alpha and beta strings      ...  Done. Timing        0.000208 s
+  Forming determinants                ...  Done. Timing        0.000164 s
+
+  ==> Determinants Summary <==
+
+    number of alpha active electrons         =     3
+    number of beta active electrons          =     3
+    root symmetry (zero based)               =     0
+    number of determinants                   =   321
+
+  Diagonalizing Hamiltonian           ...
+
+  ==> Computing Coupling Lists <==
+  --------------------------------
+        α          0.001718 s
+        β          0.001633 s
+        αα         0.001470 s
+        ββ         0.001555 s
+        αβ         0.003708 s
+  --------------------------------
+
+  Davidson-Liu solver algorithm
+  Using SPARSE sigma builder
+  Initial guess space is incomplete!
+  Trying to add 13 determinant(s).  13 determinant(s) added.
+  Initial guess found 85 solutions with 2S+1 = 1 *
+  Initial guess found 97 solutions with 2S+1 = 3  
+  Initial guess found 28 solutions with 2S+1 = 5  
+  Initial guess found 3 solutions with 2S+1 = 7  
+  Adding guess 0 (multiplicity = 1.000000)
+  Adding guess 1 (multiplicity = 1.000000)
+  Adding guess 2 (multiplicity = 1.000000)
+  Adding guess 3 (multiplicity = 1.000000)
+
+  ==> Diagonalizing Hamiltonian <==
+
+  ----------------------------------------
+    Iter.      Avg. Energy       Delta_E
+  ----------------------------------------
+      1      -97.331220979559  -9.733e+01
+      2      -97.331220979569  -1.040e-11
+  ----------------------------------------
+  The Davidson-Liu algorithm converged in 3 iterations.
+  Davidson-Liu procedure took  0.343094 s  Done. Timing        0.356309 s
+
+  * * * * * * * * * * * * * * * * *
+  *  CI Vectors & Configurations  *
+  * * * * * * * * * * * * * * * * *
+
+  ==> Root No. 0 <==
+
+    ba0 20 20          0.6920313777
+    ab0 20 20          0.6920313777
+    200 20 20         -0.1530457794
+    b0a 20 20          0.0911659506
+    a0b 20 20          0.0911659506
+
+    Total Energy:   -106.772573835130245
+
+
+  ==> Root No. 1 <==
+
+    200 20 20         -0.9671204523
+    ba0 20 20         -0.1227651012
+    ab0 20 20         -0.1227651012
+    b0a 20 20          0.1164954162
+    a0b 20 20          0.1164954162
+
+    Total Energy:   -106.735798150984635
+
+
+
+  ==> Permanent Dipole Moments (A1) <==
+
+  Only print nonzero (> 1.0e-5) elements.
+  Permanent dipole moments (a.u.) 0 -> 0:  X:  0.0000  Y:  0.0000  Z: -0.2189  Total:  0.2189
+  Permanent dipole moments (a.u.) 1 -> 1:  X:  0.0000  Y:  0.0000  Z: -8.9753  Total:  8.9753
+
+
+  ==> Transition Dipole Moments (A1 -> A1) <==
+
+  Only print nonzero (> 1.0e-5) elements.
+  Transition dipole moments (a.u.) 0 -> 1:  X:  0.0000  Y:  0.0000  Z: -1.7577  Total:  1.7577
+
+
+  ==> Oscillator Strength (A1 -> A1) <==
+
+  Only print nonzero (> 1.0e-5) elements.
+  Oscillator strength (a.u.) 0 -> 1:  X:  0.0000  Y:  0.0000  Z:  0.0757  Total:  0.0757
+
+  Total Energy (averaged over 2 states): -106.754185993057433
+
+
+  =========================================
+  Build Effective Hamiltonian of Singlet A1
+  =========================================
+
+
+  ==> Compute DSRG-MRPT2 Energy of Root 0 <==
+
+
+  ==> Original State Averaging Summary <==
+
+    Irrep.  Multi.  Nroots       Weights
+    ------------------------------------
+      A1       1       2     0.500 0.500
+    ------------------------------------
+
+  ==> Reweighted State Averaging Summary <==
+
+    Irrep.  Multi.  Nroots       Weights
+    ------------------------------------
+      A1       1       2     1.000 0.000
+    ------------------------------------
+
+  ==> Compute State-Averaged Cumulants <==
+
+  Computing  1RDM (0-0) of Singlet A1 ... Writing ... Done. Timing        0.005885 s
+  Computing  2RDM (0-0) of Singlet A1 ... Writing ... Done. Timing        0.009938 s
+  Computing  3RDM (0-0) of Singlet A1 ... Writing ... Done. Timing        0.027055 s
+  Computing  1RDM (1-1) of Singlet A1 ... Writing ... Done. Timing        0.003765 s
+  Computing  2RDM (1-1) of Singlet A1 ... Writing ... Done. Timing        0.009366 s
+  Computing  3RDM (1-1) of Singlet A1 ... Writing ... Done. Timing        0.031530 s
+  Adding wedge product for 2-cumulants ... Done. Timing        0.001325 s
+  Adding wedge product for 3-cumulants ... Done. Timing        0.238705 s
+
+  ==> Multireference Driven Similarity Renormalization Group <==
+
+    Reading DSRG options ............................ Done
+    Setting ambit MO space .......................... Done
+    Preparing tensors for density cumulants ......... Done
+    Building Fock matrix ............................ Done
+    Checking reference energy ....................... Done
+
+              ----------------------------------------------------
+                    MR-DSRG Second-Order Perturbation Theory
+                Chenyang Li, Kevin Hannon, Francesco Evangelista
+              ----------------------------------------------------
+
+    References:
+      u-DSRG-MRPT2:    J. Chem. Theory Comput. 2015, 11, 2097.
+      (pr-)DSRG-MRPT2: J. Chem. Phys. 2017, 146, 124132.
+
+  ==> Calculation Information <==
+
+    ntamp                                                 15
+    flow parameter                                 5.000e-01
+    taylor expansion threshold                     1.000e-03
+    intruder_tamp                                  1.000e-01
+    int_type                                    CONVENTIONAL
+    source operator                                 STANDARD
+    reference relaxation                                NONE
+    state_type                                   MULTI-STATE
+    multi-state type                                      MS
+    form Hbar3                                          TRUE
+
+  ==> Checking Semicanonical Orbitals <==
+
+    Abs. max of Fock core, active, virtual blocks (Fij, i != j)
+                  core          active         virtual
+    --------------------------------------------------
+    Fα    0.0000000000    0.0132777431    0.0562981999
+    Fβ    0.0000000000    0.0132777431    0.0562981999
+    --------------------------------------------------
+
+    1-Norm of Fock core, active, virtual blocks (Fij, i != j)
+                  core          active         virtual
+    --------------------------------------------------
+    Fα    0.0000000000    0.0841450196    1.5983934943
+    Fβ    0.0000000000    0.0841450196    1.5983934943
+    --------------------------------------------------
+
+    Warning! Orbitals are not semi-canonicalized!
+    Orbital invariant formalism will be employed for DSRG-MRPT2.
+
+  ==> Computing DSRG-MRPT2 ... <==
+
+    Computing T2 amplitudes                  ...  Done. Timing        0.572409 s
+    Computing T1 amplitudes                  ...  Done. Timing        0.033327 s
+    Renormalizing two-electron integrals     ...  Done. Timing        0.593037 s
+    Renormalizing Fock matrix elements       ...  Done. Timing        0.031701 s
+    Computing <[F, T1]>                      ...  Done. Timing        0.001855 s
+    Computing <[F, T2]>                      ...  Done. Timing        0.006431 s
+    Computing <[V, T1]>                      ...  Done. Timing        0.005702 s
+    Computing <[V, T2]> (C_2)^4              ...  Done. Timing        0.035527 s
+    Computing <[V, T2]> C_4 (C_2)^2 HH       ...  Done. Timing        0.007153 s
+    Computing <[V, T2]> C_4 (C_2)^2 PP       ...  Done. Timing        0.010781 s
+    Computing <[V, T2]> C_4 (C_2)^2 PH       ...  Done. Timing        0.036734 s
+    Computing <[V, T2]> C_6 C_2              ...  Done. Timing        0.124561 s
+
+  ==> Excitation Amplitudes Summary <==
+
+    Active Indices:    1    2    3   19   20   27   28 
+    Largest T1 amplitudes for spin case A:
+       i       a                  i       a                  i       a               
+    --------------------------------------------------------------------------------
+    [ 27      33    ]-0.034055 [ 19      25    ]-0.034055 [ 19      23    ] 0.020039 
+    [ 27      31    ] 0.020039 [  0      13    ]-0.017934 [  0       8    ]-0.014541 
+    [  1      12    ]-0.013606 [  0       9    ] 0.011608 [ 19      22    ] 0.007974 
+    [ 27      30    ] 0.007974 [  1       9    ] 0.005449 [  1       8    ] 0.003550 
+    [  1       6    ]-0.003436 [  0       5    ] 0.003023 [  0       6    ]-0.002946 
+    --------------------------------------------------------------------------------
+    Norm of T1A vector: (nonzero elements: 75)                    0.064893854197815.
+    --------------------------------------------------------------------------------
+    Largest T1 amplitudes for spin case B:
+       _       _                  _       _                  _       _               
+       i       a                  i       a                  i       a               
+    --------------------------------------------------------------------------------
+    [ 27      33    ]-0.034055 [ 19      25    ]-0.034055 [ 19      23    ] 0.020039 
+    [ 27      31    ] 0.020039 [  0      13    ]-0.017934 [  0       8    ]-0.014541 
+    [  1      12    ]-0.013606 [  0       9    ] 0.011608 [ 19      22    ] 0.007974 
+    [ 27      30    ] 0.007974 [  1       9    ] 0.005449 [  1       8    ] 0.003550 
+    [  1       6    ]-0.003436 [  0       5    ] 0.003023 [  0       6    ]-0.002946 
+    --------------------------------------------------------------------------------
+    Norm of T1B vector: (nonzero elements: 75)                    0.064893854197815.
+    --------------------------------------------------------------------------------
+    Largest T2 amplitudes for spin case AA:
+       i   j   a   b              i   j   a   b              i   j   a   b           
+    --------------------------------------------------------------------------------
+    [  1  19  12  19] 0.074486 [  1  27  12  27] 0.074486 [ 19  27  19  33] 0.070722 
+    [ 19  27  25  27] 0.070722 [  1  27   1  33] 0.068103 [  1  19   1  25] 0.068103 
+    [ 19  27  19  31]-0.041091 [ 19  27  23  27]-0.041091 [  1  27   1  31]-0.039911 
+    [  1  19   1  23]-0.039911 [  0  19  13  19] 0.035008 [  0  27  13  27] 0.035008 
+    [  0   1   1  13]-0.033750 [  0  27   8  27] 0.027964 [  0  19   8  19] 0.027964 
+    --------------------------------------------------------------------------------
+    Norm of T2AA vector: (nonzero elements: 18639)                0.484857361792773.
+    --------------------------------------------------------------------------------
+    Largest T2 amplitudes for spin case AB:
+           _       _                  _       _                  _       _           
+       i   j   a   b              i   j   a   b              i   j   a   b           
+    --------------------------------------------------------------------------------
+    [  1   1   1  12] 0.084504 [ 27  27  27  33] 0.083959 [ 19  19  19  25] 0.083959 
+    [  1  19  12  19] 0.079246 [  1  27  12  27] 0.079246 [  0   0  19  19]-0.076411 
+    [  0   0  27  27]-0.076411 [ 19  27  19  33] 0.075134 [ 19  27  25  27] 0.075134 
+    [  1  27   1  33] 0.072051 [  1  19   1  25] 0.072051 [  0   0   1   1]-0.064797 
+    [ 19  19  19  23]-0.051007 [ 27  27  27  31]-0.051007 [ 19  27  19  31]-0.044397 
+    --------------------------------------------------------------------------------
+    Norm of T2AB vector: (nonzero elements: 19007)                0.500534881325179.
+    --------------------------------------------------------------------------------
+    Largest T2 amplitudes for spin case BB:
+       _   _   _   _              _   _   _   _              _   _   _   _           
+       i   j   a   b              i   j   a   b              i   j   a   b           
+    --------------------------------------------------------------------------------
+    [  1  19  12  19] 0.074486 [  1  27  12  27] 0.074486 [ 19  27  19  33] 0.070722 
+    [ 19  27  25  27] 0.070722 [  1  27   1  33] 0.068103 [  1  19   1  25] 0.068103 
+    [ 19  27  19  31]-0.041091 [ 19  27  23  27]-0.041091 [  1  27   1  31]-0.039911 
+    [  1  19   1  23]-0.039911 [  0  19  13  19] 0.035008 [  0  27  13  27] 0.035008 
+    [  0   1   1  13]-0.033750 [  0  27   8  27] 0.027964 [  0  19   8  19] 0.027964 
+    --------------------------------------------------------------------------------
+    Norm of T2BB vector: (nonzero elements: 18639)                0.484857361792773.
+    --------------------------------------------------------------------------------
+
+  ==> Possible Intruders <==
+
+    T1 amplitudes larger than 0.1000 for spin case A: NULL
+    T1 amplitudes larger than 0.1000 for spin case B: NULL
+    T2 amplitudes larger than 0.1000 for spin case AA: NULL
+    T2 amplitudes larger than 0.1000 for spin case AB: NULL
+    T2 amplitudes larger than 0.1000 for spin case BB: NULL
+
+  ==> DSRG-MRPT2 Energy Summary <==
+
+    E0 (reference)                 =   -106.772573835130487
+    <[F, T1]>                      =     -0.025349234152406
+    <[F, T2]>                      =     -0.002399498708928
+    <[V, T1]>                      =     -0.002381027251849
+    <[V, T2]> (C_2)^4              =     -0.238312825342674
+    <[V, T2]> C_4 (C_2)^2 HH       =      0.002763052534381
+    <[V, T2]> C_4 (C_2)^2 PP       =      0.013930087978711
+    <[V, T2]> C_4 (C_2)^2 PH       =      0.039136488947546
+    <[V, T2]> C_6 C_2              =     -0.000033454150226
+    <[V, T2]>                      =     -0.182516650032263
+    DSRG-MRPT2 correlation energy  =     -0.212646410145445
+    DSRG-MRPT2 total energy        =   -106.985220245275926
+    max(T1)                        =      0.034055290165382
+    max(T2)                        =      0.084504217914769
+    ||T1||                         =      0.091773768721212
+    ||T2||                         =      1.213389464377428
+
+  Energy took      1.540 s
+
+
+  ==> De-Normal-Order DSRG Transformed Hamiltonian <==
+
+    Computing the scalar term                ... Done. Timing    0.067 s
+    Computing the 1-body term                ... Done. Timing    0.063 s
+    Computing the 2-body term                ... Done. Timing    0.030 s
+
+  ==> Rotate DSRG Transformed Hamiltonian back to Original Basis <==
+
+    Rotating 1-body term to original basis   ... Done. Timing    0.001 s
+    Rotating 2-body term to original basis   ... Done. Timing    0.022 s
+    Rotating 3-body to original basis        ... Done. Timing    2.265 s
+
+  ==> Compute couplings of 2nd-order effective Hamiltonian <==
+
+  Compute 2nd-order Heff = H + H * T(root 0).
+  Compute densities.
+  Computing  1RDM (0-0) of Singlet A1 ... Reading ... Done. Timing        0.000146 s
+  Computing  2RDM (0-0) of Singlet A1 ... Reading ... Done. Timing        0.000255 s
+  Computing  3RDM (0-0) of Singlet A1 ... Reading ... Done. Timing        0.007454 s
+  Contract densities with Heff.
+
+  Energy difference of root 0
+    Real 2nd-order energy:    -24.971620838101593
+    Pseudo 2nd-order energy:  -24.962769897317557
+    Energy difference:         -0.008850940784038
+  Compute transition densities.
+  Computing 1TrDM (0-1) of Singlet A1 ... Writing ... Done. Timing        0.003841 s
+  Computing 2TrDM (0-1) of Singlet A1 ... Writing ... Done. Timing        0.009311 s
+  Computing 3TrDM (0-1) of Singlet A1 ... Writing ... Done. Timing        0.032525 s
+  Contract transition densities with Heff.
+
+  ==> Compute DSRG-MRPT2 Energy of Root 1 <==
+
+
+  ==> Original State Averaging Summary <==
+
+    Irrep.  Multi.  Nroots       Weights
+    ------------------------------------
+      A1       1       2     1.000 0.000
+    ------------------------------------
+
+  ==> Reweighted State Averaging Summary <==
+
+    Irrep.  Multi.  Nroots       Weights
+    ------------------------------------
+      A1       1       2     0.000 1.000
+    ------------------------------------
+
+  ==> Compute State-Averaged Cumulants <==
+
+  Computing  1RDM (0-0) of Singlet A1 ... Reading ... Done. Timing        0.000109 s
+  Computing  2RDM (0-0) of Singlet A1 ... Reading ... Done. Timing        0.000157 s
+  Computing  3RDM (0-0) of Singlet A1 ... Reading ... Done. Timing        0.005402 s
+  Computing  1RDM (1-1) of Singlet A1 ... Reading ... Done. Timing        0.000118 s
+  Computing  2RDM (1-1) of Singlet A1 ... Reading ... Done. Timing        0.000164 s
+  Computing  3RDM (1-1) of Singlet A1 ... Reading ... Done. Timing        0.005103 s
+  Adding wedge product for 2-cumulants ... Done. Timing        0.001088 s
+  Adding wedge product for 3-cumulants ... Done. Timing        0.233474 s
+
+  ==> Multireference Driven Similarity Renormalization Group <==
+
+    Reading DSRG options ............................ Done
+    Setting ambit MO space .......................... Done
+    Preparing tensors for density cumulants ......... Done
+    Building Fock matrix ............................ Done
+    Checking reference energy ....................... Done
+
+              ----------------------------------------------------
+                    MR-DSRG Second-Order Perturbation Theory
+                Chenyang Li, Kevin Hannon, Francesco Evangelista
+              ----------------------------------------------------
+
+    References:
+      u-DSRG-MRPT2:    J. Chem. Theory Comput. 2015, 11, 2097.
+      (pr-)DSRG-MRPT2: J. Chem. Phys. 2017, 146, 124132.
+
+  ==> Calculation Information <==
+
+    ntamp                                                 15
+    flow parameter                                 5.000e-01
+    taylor expansion threshold                     1.000e-03
+    intruder_tamp                                  1.000e-01
+    int_type                                    CONVENTIONAL
+    source operator                                 STANDARD
+    reference relaxation                                NONE
+    state_type                                   MULTI-STATE
+    multi-state type                                      MS
+    form Hbar3                                          TRUE
+
+  ==> DSRG_TIME for Computing Commutators in Seconds <==
+
+    ==================================
+    Time for [A1,B1] -> C0:      0.002
+    Time for [A1,B2] -> C0:      0.006
+    Time for [A2,B1] -> C0:      0.006
+    Time for [A2,B2] -> C0:      0.215
+    Time for [A1,B1] -> C1:      0.002
+    Time for [A1,B2] -> C1:      0.014
+    Time for [A2,B1] -> C1:      0.010
+    Time for [A2,B2] -> C1:      0.219
+    Time for [A1,B2] -> C2:      0.014
+    Time for [A2,B1] -> C2:      0.011
+    Time for [A2,B2] -> C2:      0.085
+    Time for [A2,B2] -> C3:      0.758
+    ==================================
+
+  ==> Checking Semicanonical Orbitals <==
+
+    Abs. max of Fock core, active, virtual blocks (Fij, i != j)
+                  core          active         virtual
+    --------------------------------------------------
+    Fα    0.0000000000    0.0132777431    0.0562981999
+    Fβ    0.0000000000    0.0132777431    0.0562981999
+    --------------------------------------------------
+
+    1-Norm of Fock core, active, virtual blocks (Fij, i != j)
+                  core          active         virtual
+    --------------------------------------------------
+    Fα    0.0000000000    0.0841450205    1.5983934963
+    Fβ    0.0000000000    0.0841450205    1.5983934963
+    --------------------------------------------------
+
+    Warning! Orbitals are not semi-canonicalized!
+    Orbital invariant formalism will be employed for DSRG-MRPT2.
+
+  ==> Computing DSRG-MRPT2 ... <==
+
+    Computing T2 amplitudes                  ...  Done. Timing        0.582803 s
+    Computing T1 amplitudes                  ...  Done. Timing        0.031621 s
+    Renormalizing two-electron integrals     ...  Done. Timing        0.583166 s
+    Renormalizing Fock matrix elements       ...  Done. Timing        0.030443 s
+    Computing <[F, T1]>                      ...  Done. Timing        0.001880 s
+    Computing <[F, T2]>                      ...  Done. Timing        0.006991 s
+    Computing <[V, T1]>                      ...  Done. Timing        0.005576 s
+    Computing <[V, T2]> (C_2)^4              ...  Done. Timing        0.037025 s
+    Computing <[V, T2]> C_4 (C_2)^2 HH       ...  Done. Timing        0.007070 s
+    Computing <[V, T2]> C_4 (C_2)^2 PP       ...  Done. Timing        0.009872 s
+    Computing <[V, T2]> C_4 (C_2)^2 PH       ...  Done. Timing        0.042333 s
+    Computing <[V, T2]> C_6 C_2              ...  Done. Timing        0.130065 s
+
+  ==> Excitation Amplitudes Summary <==
+
+    Active Indices:    1    2    3   19   20   27   28 
+    Largest T1 amplitudes for spin case A:
+       i       a                  i       a                  i       a               
+    --------------------------------------------------------------------------------
+    [ 19      25    ] 0.029806 [ 27      33    ] 0.029806 [  1      12    ] 0.023286 
+    [  0      13    ] 0.015153 [ 19      23    ]-0.012466 [ 27      31    ]-0.012466 
+    [  0       8    ] 0.012192 [  0       9    ]-0.010030 [  1       9    ]-0.008698 
+    [  1       8    ]-0.006456 [  1       6    ] 0.005942 [ 19      22    ]-0.004942 
+    [ 27      30    ]-0.004942 [  0       6    ] 0.002709 [  0       5    ]-0.002559 
+    --------------------------------------------------------------------------------
+    Norm of T1A vector: (nonzero elements: 75)                    0.057912742584907.
+    --------------------------------------------------------------------------------
+    Largest T1 amplitudes for spin case B:
+       _       _                  _       _                  _       _               
+       i       a                  i       a                  i       a               
+    --------------------------------------------------------------------------------
+    [ 19      25    ] 0.029806 [ 27      33    ] 0.029806 [  1      12    ] 0.023286 
+    [  0      13    ] 0.015153 [ 19      23    ]-0.012466 [ 27      31    ]-0.012466 
+    [  0       8    ] 0.012192 [  0       9    ]-0.010030 [  1       9    ]-0.008698 
+    [  1       8    ]-0.006456 [  1       6    ] 0.005942 [ 19      22    ]-0.004942 
+    [ 27      30    ]-0.004942 [  0       6    ] 0.002709 [  0       5    ]-0.002559 
+    --------------------------------------------------------------------------------
+    Norm of T1B vector: (nonzero elements: 75)                    0.057912742584907.
+    --------------------------------------------------------------------------------
+    Largest T2 amplitudes for spin case AA:
+       i   j   a   b              i   j   a   b              i   j   a   b           
+    --------------------------------------------------------------------------------
+    [ 19  27  25  27] 0.072931 [ 19  27  19  33] 0.072931 [  1  19  12  19] 0.072092 
+    [  1  27  12  27] 0.072092 [  1  19   1  25] 0.070231 [  1  27   1  33] 0.070231 
+    [  0  19  13  19] 0.035099 [  0  27  13  27] 0.035099 [  0   1   1  13]-0.033781 
+    [ 19  27  19  31]-0.029835 [ 19  27  23  27]-0.029835 [  1  27   1  31]-0.028962 
+    [  1  19   1  23]-0.028962 [  0  27   8  27] 0.027871 [  0  19   8  19] 0.027871 
+    --------------------------------------------------------------------------------
+    Norm of T2AA vector: (nonzero elements: 18637)                0.469839468223751.
+    --------------------------------------------------------------------------------
+    Largest T2 amplitudes for spin case AB:
+           _       _                  _       _                  _       _           
+       i   j   a   b              i   j   a   b              i   j   a   b           
+    --------------------------------------------------------------------------------
+    [ 19  19  19  25] 0.086603 [ 27  27  27  33] 0.086603 [  1   1   1  12] 0.081839 
+    [ 19  27  25  27] 0.077488 [ 19  27  19  33] 0.077488 [  1  19  12  19] 0.076715 
+    [  1  27  12  27] 0.076715 [  0   0  27  27]-0.076410 [  0   0  19  19]-0.076410 
+    [  1  19   1  25] 0.074309 [  1  27   1  33] 0.074309 [  0   0   1   1]-0.073833 
+    [  0  19  13  19] 0.041633 [  0  27  13  27] 0.041633 [ 27  27  27  31]-0.037005 
+    --------------------------------------------------------------------------------
+    Norm of T2AB vector: (nonzero elements: 19007)                0.487437964847579.
+    --------------------------------------------------------------------------------
+    Largest T2 amplitudes for spin case BB:
+       _   _   _   _              _   _   _   _              _   _   _   _           
+       i   j   a   b              i   j   a   b              i   j   a   b           
+    --------------------------------------------------------------------------------
+    [ 19  27  25  27] 0.072931 [ 19  27  19  33] 0.072931 [  1  19  12  19] 0.072092 
+    [  1  27  12  27] 0.072092 [  1  19   1  25] 0.070231 [  1  27   1  33] 0.070231 
+    [  0  19  13  19] 0.035099 [  0  27  13  27] 0.035099 [  0   1   1  13]-0.033781 
+    [ 19  27  19  31]-0.029835 [ 19  27  23  27]-0.029835 [  1  27   1  31]-0.028962 
+    [  1  19   1  23]-0.028962 [  0  27   8  27] 0.027871 [  0  19   8  19] 0.027871 
+    --------------------------------------------------------------------------------
+    Norm of T2BB vector: (nonzero elements: 18629)                0.469839468223751.
+    --------------------------------------------------------------------------------
+
+  ==> Possible Intruders <==
+
+    T1 amplitudes larger than 0.1000 for spin case A: NULL
+    T1 amplitudes larger than 0.1000 for spin case B: NULL
+    T2 amplitudes larger than 0.1000 for spin case AA: NULL
+    T2 amplitudes larger than 0.1000 for spin case AB: NULL
+    T2 amplitudes larger than 0.1000 for spin case BB: NULL
+
+  ==> DSRG-MRPT2 Energy Summary <==
+
+    E0 (reference)                 =   -106.735798150984579
+    <[F, T1]>                      =     -0.021446551342073
+    <[F, T2]>                      =      0.000053474856922
+    <[V, T1]>                      =      0.000053913689384
+    <[V, T2]> (C_2)^4              =     -0.227666218487103
+    <[V, T2]> C_4 (C_2)^2 HH       =      0.000021205281072
+    <[V, T2]> C_4 (C_2)^2 PP       =      0.000051493538300
+    <[V, T2]> C_4 (C_2)^2 PH       =      0.000293295226131
+    <[V, T2]> C_6 C_2              =      0.000005647214629
+    <[V, T2]>                      =     -0.227294577226970
+    DSRG-MRPT2 correlation energy  =     -0.248633740022736
+    DSRG-MRPT2 total energy        =   -106.984431891007318
+    max(T1)                        =      0.029806329403037
+    max(T2)                        =      0.086603368588436
+    ||T1||                         =      0.081900985997797
+    ||T2||                         =      1.179780204148447
+
+  Energy took      1.554 s
+
+
+  ==> De-Normal-Order DSRG Transformed Hamiltonian <==
+
+    Computing the scalar term                ... Done. Timing    0.075 s
+    Computing the 1-body term                ... Done. Timing    0.067 s
+    Computing the 2-body term                ... Done. Timing    0.028 s
+
+  ==> Rotate DSRG Transformed Hamiltonian back to Original Basis <==
+
+    Rotating 1-body term to original basis   ... Done. Timing    0.001 s
+    Rotating 2-body term to original basis   ... Done. Timing    0.023 s
+    Rotating 3-body to original basis        ... Done. Timing    2.225 s
+
+  ==> Compute couplings of 2nd-order effective Hamiltonian <==
+
+  Compute 2nd-order Heff = H + H * T(root 1).
+  Compute transition densities.
+  Computing 1TrDM (0-1) of Singlet A1 ... Reading ... Done. Timing        0.000117 s
+  Computing 2TrDM (0-1) of Singlet A1 ... Reading ... Done. Timing        0.000169 s
+  Computing 3TrDM (0-1) of Singlet A1 ... Reading ... Done. Timing        0.007208 s
+  Contract transition densities with Heff.
+  Compute densities.
+  Computing  1RDM (1-1) of Singlet A1 ... Reading ... Done. Timing        0.000167 s
+  Computing  2RDM (1-1) of Singlet A1 ... Reading ... Done. Timing        0.000250 s
+  Computing  3RDM (1-1) of Singlet A1 ... Reading ... Done. Timing        0.006080 s
+  Contract densities with Heff.
+
+  Energy difference of root 1
+    Real 2nd-order energy:    -24.970832483832993
+    Pseudo 2nd-order energy:  -24.962096980773666
+    Energy difference:         -0.008735503059327
+
+  ==> Effective Hamiltonian Summary <==
+
+  ## Heff Singlet A1 (Symmetry 0) ##
+  Irrep: 1 Size: 2 x 2
+
+                 1                   2
+
+    1  -106.98522024527591    -0.00453526477574
+    2    -0.00477039028307  -106.98443189100732
+
+
+
+  ## Symmetrized Heff Singlet A1 (Symmetry 0) ##
+  Irrep: 1 Size: 2 x 2
+
+                 1                   2
+
+    1  -106.98522024527591    -0.00465282752941
+    2    -0.00465282752941  -106.98443189100732
+
+
+
+  ## U of Heff (Symmetrized) with eigenvalues ##
+ Irrep: 1
+
+           1           2
+
+    1  -0.7363475   0.6766035
+    2  -0.6766035  -0.7363475
+
+     -106.9894956-106.9801566
+
+
+
+  ==> DSRG_TIME for Computing Commutators in Seconds <==
+
+    ==================================
+    Time for [A1,B1] -> C0:      0.002
+    Time for [A1,B2] -> C0:      0.007
+    Time for [A2,B1] -> C0:      0.006
+    Time for [A2,B2] -> C0:      0.227
+    Time for [A1,B1] -> C1:      0.002
+    Time for [A1,B2] -> C1:      0.014
+    Time for [A2,B1] -> C1:      0.009
+    Time for [A2,B2] -> C1:      0.221
+    Time for [A1,B2] -> C2:      0.014
+    Time for [A2,B1] -> C2:      0.011
+    Time for [A2,B2] -> C2:      0.093
+    Time for [A2,B2] -> C3:      0.763
+    ==================================
+
+  ==> Dynamically Weighted Driven Similarity Renormalization Group Energy Summary <==
+
+    Multi.  Irrep.  No.                   CASCI
+    -------------------------------------------
+       1      A1     0      -106.77257383513025
+       1      A1     1      -106.73579815098464
+    -------------------------------------------
+
+    Multi.  Irrep.  No.           DW-DSRG-MSPT2
+    -------------------------------------------
+       1      A1     0      -106.98949556272150
+       1      A1     1      -106.98015657356173
+    -------------------------------------------
+	DWMS-DSRG-PT2 energy on root 0....................................PASSED
+	DWMS-DSRG-PT2 energy on root 1....................................PASSED
+   => Loading Basis Set <=
+
+    Name: STO-3G
+    Role: ORBITAL
+    Keyword: MINAO_BASIS
+    atoms 1 entry LI         line    31 file /Users/york/src/psi4new/psi4/share/psi4/basis/sto-3g.gbs 
+    atoms 2 entry F          line    91 file /Users/york/src/psi4new/psi4/share/psi4/basis/sto-3g.gbs 
+
+
+Reading options from the FORTE block
+Calling plugin forte.so.
+
+
+
+  Forte
+  ----------------------------------------------------------------------------
+  A suite of quantum chemistry methods for strongly correlated electrons
+
+    git branch: dwsa-dsrg-pt - git commit: 5258b91f
+
+  Developed by:
+    Francesco A. Evangelista, Chenyang Li, Kevin P. Hannon,
+    Jeffrey B. Schriber, Tianyuan Zhang, Chenxi Cai
+  ----------------------------------------------------------------------------
+
+  Size of Determinant class: 32
+
+  ==> MO Space Information <==
+
+  Read options for space FROZEN_DOCC
+  Read options for space RESTRICTED_DOCC
+  Read options for space ACTIVE
+ Removing orbital 0
+ Removing orbital 1
+  -------------------------------------------------
+                       A1    A2    B1    B2   Sum
+  -------------------------------------------------
+    FROZEN_DOCC         2     0     0     0     2
+    RESTRICTED_DOCC     1     0     0     0     1
+    ACTIVE              3     0     2     2     7
+    RESTRICTED_UOCC    12     3     6     6    27
+    FROZEN_UOCC         0     0     0     0     0
+    Total              18     3     8     8    37
+  -------------------------------------------------
+
+  ==> Integral Transformation <==
+
+  Number of molecular orbitals:               37
+  Number of correlated molecular orbitals:    35
+  Number of frozen occupied orbitals:          2
+  Number of frozen unoccupied orbitals:        0
+
+
+  Overall Conventional Integrals timings
+
+	Presorting SO-basis two-electron integrals.
+	Sorting File: SO Ints (nn|nn) nbuckets = 1
+	Transforming the one-electron integrals and constructing Fock matrices
+	Starting first half-transformation.
+	Sorting half-transformed integrals.
+	First half integral transformation complete.
+	Starting second half-transformation.
+	Two-electron integral transformation complete.
+
+  Integral transformation done. 0.08376800 s
+  Reading the two-electron integrals from disk
+  Size of two-electron integrals:   0.041891 GB
+  Frozen-core energy            -84.713599407174 a.u.
+
+  FrozenOneBody Operator takes  0.26764800 s
+  Resorting integrals after freezing core.
+  Conventional integrals take 0.79181400 s
+
+              ---------------------------------------------------
+                Complete Active Space Configuration Interaction
+                                  Chenyang Li
+              ---------------------------------------------------
+
+
+  ==> Input Summary <==
+
+    No. a electrons in active      =     3
+    No. b electrons in active      =     3
+    multiplicity                   =     1
+    spin ms (2 * Sz)               =     0
+
+  ==> Orbital Spaces <==
+
+    TOTAL MO                      [   18     3     8     8 ]
+    FROZEN CORE                   [    2     0     0     0 ]
+    FROZEN VIRTUAL                [    0     0     0     0 ]
+    CORRELATED MO                 [   16     3     8     8 ]
+    CORE                          [    1     0     0     0 ]
+    ACTIVE                        [    3     0     2     2 ]
+    VIRTUAL                       [   12     3     6     6 ]
+
+  ==> State Averaging Summary <==
+
+    Irrep.  Multi.  Nstates      Weights
+    ------------------------------------
+      A1       1        2    0.500 0.500
+    ------------------------------------
+    Total number of states: 2
+    ------------------------------------
+
+  Forming alpha and beta strings      ...  Done. Timing        0.000091 s
+  Forming determinants                ...  Done. Timing        0.000134 s
+
+  ==> Determinants Summary <==
+
+    number of alpha active electrons         =     3
+    number of beta active electrons          =     3
+    root symmetry (zero based)               =     0
+    number of determinants                   =   321
+
+  Diagonalizing Hamiltonian           ...
+
+  ==> Computing Coupling Lists <==
+  --------------------------------
+        α          0.002138 s
+        β          0.001530 s
+        αα         0.001467 s
+        ββ         0.001150 s
+        αβ         0.003355 s
+  --------------------------------
+
+  Davidson-Liu solver algorithm
+  Using SPARSE sigma builder
+  Initial guess space is incomplete!
+  Trying to add 13 determinant(s).  13 determinant(s) added.
+  Initial guess found 85 solutions with 2S+1 = 1 *
+  Initial guess found 97 solutions with 2S+1 = 3  
+  Initial guess found 28 solutions with 2S+1 = 5  
+  Initial guess found 3 solutions with 2S+1 = 7  
+  Adding guess 0 (multiplicity = 1.000000)
+  Adding guess 1 (multiplicity = 1.000000)
+  Adding guess 2 (multiplicity = 1.000000)
+  Adding guess 3 (multiplicity = 1.000000)
+
+  ==> Diagonalizing Hamiltonian <==
+
+  ----------------------------------------
+    Iter.      Avg. Energy       Delta_E
+  ----------------------------------------
+      1      -97.331220979559  -9.733e+01
+      2      -97.331220979569  -1.040e-11
+  ----------------------------------------
+  The Davidson-Liu algorithm converged in 3 iterations.
+  Davidson-Liu procedure took  0.304058 s  Done. Timing        0.316630 s
+
+  * * * * * * * * * * * * * * * * *
+  *  CI Vectors & Configurations  *
+  * * * * * * * * * * * * * * * * *
+
+  ==> Root No. 0 <==
+
+    ba0 20 20          0.6920313777
+    ab0 20 20          0.6920313777
+    200 20 20         -0.1530457794
+    b0a 20 20          0.0911659506
+    a0b 20 20          0.0911659506
+
+    Total Energy:   -106.772573835130245
+
+
+  ==> Root No. 1 <==
+
+    200 20 20         -0.9671204523
+    ba0 20 20         -0.1227651012
+    ab0 20 20         -0.1227651012
+    b0a 20 20          0.1164954162
+    a0b 20 20          0.1164954162
+
+    Total Energy:   -106.735798150984635
+
+
+
+  ==> Permanent Dipole Moments (A1) <==
+
+  Only print nonzero (> 1.0e-5) elements.
+  Permanent dipole moments (a.u.) 0 -> 0:  X:  0.0000  Y:  0.0000  Z: -0.2189  Total:  0.2189
+  Permanent dipole moments (a.u.) 1 -> 1:  X:  0.0000  Y:  0.0000  Z: -8.9753  Total:  8.9753
+
+
+  ==> Transition Dipole Moments (A1 -> A1) <==
+
+  Only print nonzero (> 1.0e-5) elements.
+  Transition dipole moments (a.u.) 0 -> 1:  X:  0.0000  Y:  0.0000  Z: -1.7577  Total:  1.7577
+
+
+  ==> Oscillator Strength (A1 -> A1) <==
+
+  Only print nonzero (> 1.0e-5) elements.
+  Oscillator strength (a.u.) 0 -> 1:  X:  0.0000  Y:  0.0000  Z:  0.0757  Total:  0.0757
+
+  Total Energy (averaged over 2 states): -106.754185993057433
+
+
+  ==> Compute State-Averaged Cumulants <==
+
+  Computing  1RDM (0-0) of Singlet A1 ... Done. Timing        0.004023 s
+  Computing  2RDM (0-0) of Singlet A1 ... Done. Timing        0.008532 s
+  Computing  3RDM (0-0) of Singlet A1 ... Done. Timing        0.024207 s
+  Computing  1RDM (1-1) of Singlet A1 ... Done. Timing        0.004481 s
+  Computing  2RDM (1-1) of Singlet A1 ... Done. Timing        0.008226 s
+  Computing  3RDM (1-1) of Singlet A1 ... Done. Timing        0.020700 s
+  Adding wedge product for 2-cumulants ... Done. Timing        0.001748 s
+  Adding wedge product for 3-cumulants ... Done. Timing        0.234789 s
+
+       -----------------------------------------------------------------
+                            Semi-Canonical Orbitals
+         Chenyang Li, Jeffrey B. Schriber and Francesco A. Evangelista
+       -----------------------------------------------------------------
+
+  Took 0.002582 s to build Fock matrix
+
+  ==> Checking Fock Matrix Diagonal Blocks <==
+
+    Off-Diag. Elements       Max           2-Norm
+    ------------------------------------------------
+    Fa actv              0.0000000001   0.0000000002
+    Fb actv              0.0000000001   0.0000000002
+    ------------------------------------------------
+    Fa core              0.0000000000   0.0000000000
+    Fb core              0.0000000000   0.0000000000
+    ------------------------------------------------
+    Fa virt              0.0000000000   0.0000000001
+    Fb virt              0.0000000000   0.0000000001
+    ------------------------------------------------
+  Orbitals are already semicanonicalized.
+
+  ==> Multireference Driven Similarity Renormalization Group <==
+
+    Reading DSRG options ............................ Done
+    Setting ambit MO space .......................... Done
+    Preparing tensors for density cumulants ......... Done
+    Building Fock matrix ............................ Done
+    Checking reference energy ....................... Done
+
+              ----------------------------------------------------
+                    MR-DSRG Second-Order Perturbation Theory
+                Chenyang Li, Kevin Hannon, Francesco Evangelista
+              ----------------------------------------------------
+
+    References:
+      u-DSRG-MRPT2:    J. Chem. Theory Comput. 2015, 11, 2097.
+      (pr-)DSRG-MRPT2: J. Chem. Phys. 2017, 146, 124132.
+
+  ==> Calculation Information <==
+
+    ntamp                                                 15
+    flow parameter                                 5.000e-01
+    taylor expansion threshold                     1.000e-03
+    intruder_tamp                                  1.000e-01
+    int_type                                    CONVENTIONAL
+    source operator                                 STANDARD
+    reference relaxation                                NONE
+    state_type                                   MULTI-STATE
+    multi-state type                                     XMS
+    form Hbar3                                          TRUE
+
+  ==> Build Effective Hamiltonian (Singlet A1) <==
+
+
+
+  ==> Perform XMS Rotation to Reference States <==
+
+  ## Fock (Symmetry 0) ##
+  Irrep: 1 Size: 2 x 2
+
+                 1                   2
+
+    1    -2.46501187005820    -0.03396033385908
+    2    -0.03396033385908    -2.68634334056886
+
+
+
+  ## Fock Evec with eigenvalues ##
+ Irrep: 1
+
+           1           2
+
+    1   0.1483259  -0.9889385
+    2   0.9889385   0.1483259
+
+       -2.6914369  -2.4599183
+
+
+
+  ==> Compute DSRG-MRPT2 Energy of State 0 <==
+
+
+  ==> Checking Semicanonical Orbitals <==
+
+    Abs. max of Fock core, active, virtual blocks (Fij, i != j)
+                  core          active         virtual
+    --------------------------------------------------
+    Fα    0.0000000000    0.0171842378    0.0589929196
+    Fβ    0.0000000000    0.0171842378    0.0589929196
+    --------------------------------------------------
+
+    1-Norm of Fock core, active, virtual blocks (Fij, i != j)
+                  core          active         virtual
+    --------------------------------------------------
+    Fα    0.0000000000    0.0869576987    1.6554257153
+    Fβ    0.0000000000    0.0869576987    1.6554257153
+    --------------------------------------------------
+
+    Warning! Orbitals are not semi-canonicalized!
+    Orbital invariant formalism will be employed for DSRG-MRPT2.
+
+  ==> Computing DSRG-MRPT2 ... <==
+
+    Computing T2 amplitudes                  ...  Done. Timing        0.600334 s
+    Computing T1 amplitudes                  ...  Done. Timing        0.028886 s
+    Renormalizing two-electron integrals     ...  Done. Timing        0.643556 s
+    Renormalizing Fock matrix elements       ...  Done. Timing        0.032149 s
+    Computing <[F, T1]>                      ...  Done. Timing        0.002029 s
+    Computing <[F, T2]>                      ...  Done. Timing        0.005881 s
+    Computing <[V, T1]>                      ...  Done. Timing        0.005509 s
+    Computing <[V, T2]> (C_2)^4              ...  Done. Timing        0.041359 s
+    Computing <[V, T2]> C_4 (C_2)^2 HH       ...  Done. Timing        0.007078 s
+    Computing <[V, T2]> C_4 (C_2)^2 PP       ...  Done. Timing        0.012338 s
+    Computing <[V, T2]> C_4 (C_2)^2 PH       ...  Done. Timing        0.043891 s
+    Computing <[V, T2]> C_6 C_2              ...  Done. Timing        0.131549 s
+
+  ==> Excitation Amplitudes Summary <==
+
+    Active Indices:    1    2    3   19   20   27   28 
+    Largest T1 amplitudes for spin case A:
+       i       a                  i       a                  i       a               
+    --------------------------------------------------------------------------------
+    [ 19      25    ] 0.030809 [ 27      33    ] 0.030809 [  1      12    ] 0.023781 
+    [  0      13    ] 0.015647 [ 19      23    ]-0.012794 [ 27      31    ]-0.012794 
+    [  0       8    ] 0.012583 [  0       9    ]-0.010391 [  1       9    ]-0.009000 
+    [  1       8    ]-0.006590 [  1       6    ] 0.006201 [ 19      22    ]-0.005063 
+    [ 27      30    ]-0.005063 [  0       6    ] 0.002874 [  0       5    ]-0.002617 
+    --------------------------------------------------------------------------------
+    Norm of T1A vector: (nonzero elements: 75)                    0.059684731191087.
+    --------------------------------------------------------------------------------
+    Largest T1 amplitudes for spin case B:
+       _       _                  _       _                  _       _               
+       i       a                  i       a                  i       a               
+    --------------------------------------------------------------------------------
+    [ 19      25    ] 0.030809 [ 27      33    ] 0.030809 [  1      12    ] 0.023781 
+    [  0      13    ] 0.015647 [ 19      23    ]-0.012794 [ 27      31    ]-0.012794 
+    [  0       8    ] 0.012583 [  0       9    ]-0.010391 [  1       9    ]-0.009000 
+    [  1       8    ]-0.006590 [  1       6    ] 0.006201 [ 19      22    ]-0.005063 
+    [ 27      30    ]-0.005063 [  0       6    ] 0.002874 [  0       5    ]-0.002617 
+    --------------------------------------------------------------------------------
+    Norm of T1B vector: (nonzero elements: 75)                    0.059684731191087.
+    --------------------------------------------------------------------------------
+    Largest T2 amplitudes for spin case AA:
+       i   j   a   b              i   j   a   b              i   j   a   b           
+    --------------------------------------------------------------------------------
+    [ 19  27  19  33] 0.072976 [ 19  27  25  27] 0.072976 [  1  19  12  19] 0.072038 
+    [  1  27  12  27] 0.072038 [  1  19   1  25] 0.070273 [  1  27   1  33] 0.070273 
+    [  0  19  13  19] 0.035102 [  0  27  13  27] 0.035102 [  0   1   1  13]-0.033783 
+    [ 19  27  19  31]-0.029617 [ 19  27  23  27]-0.029617 [  1  27   1  31]-0.028745 
+    [  1  19   1  23]-0.028745 [  0  27   8  27] 0.027853 [  0  19   8  19] 0.027853 
+    --------------------------------------------------------------------------------
+    Norm of T2AA vector: (nonzero elements: 18645)                0.469566253045868.
+    --------------------------------------------------------------------------------
+    Largest T2 amplitudes for spin case AB:
+           _       _                  _       _                  _       _           
+       i   j   a   b              i   j   a   b              i   j   a   b           
+    --------------------------------------------------------------------------------
+    [ 19  19  19  25] 0.086658 [ 27  27  27  33] 0.086658 [  1   1   1  12] 0.081777 
+    [ 19  27  19  33] 0.077536 [ 19  27  25  27] 0.077536 [  1  19  12  19] 0.076657 
+    [  1  27  12  27] 0.076657 [  0   0  27  27]-0.076411 [  0   0  19  19]-0.076411 
+    [  1  19   1  25] 0.074354 [  1  27   1  33] 0.074354 [  0   0   1   1]-0.073920 
+    [  0  19  13  19] 0.041635 [  0  27  13  27] 0.041635 [ 27  27  27  31]-0.036731 
+    --------------------------------------------------------------------------------
+    Norm of T2AB vector: (nonzero elements: 19007)                0.487196159910744.
+    --------------------------------------------------------------------------------
+    Largest T2 amplitudes for spin case BB:
+       _   _   _   _              _   _   _   _              _   _   _   _           
+       i   j   a   b              i   j   a   b              i   j   a   b           
+    --------------------------------------------------------------------------------
+    [ 19  27  25  27] 0.072976 [ 19  27  19  33] 0.072976 [  1  19  12  19] 0.072038 
+    [  1  27  12  27] 0.072038 [  1  19   1  25] 0.070273 [  1  27   1  33] 0.070273 
+    [  0  19  13  19] 0.035102 [  0  27  13  27] 0.035102 [  0   1   1  13]-0.033783 
+    [ 19  27  19  31]-0.029617 [ 19  27  23  27]-0.029617 [  1  27   1  31]-0.028745 
+    [  1  19   1  23]-0.028745 [  0  19   8  19] 0.027853 [  0  27   8  27] 0.027853 
+    --------------------------------------------------------------------------------
+    Norm of T2BB vector: (nonzero elements: 18641)                0.469566253045868.
+    --------------------------------------------------------------------------------
+
+  ==> Possible Intruders <==
+
+    T1 amplitudes larger than 0.1000 for spin case A: NULL
+    T1 amplitudes larger than 0.1000 for spin case B: NULL
+    T2 amplitudes larger than 0.1000 for spin case AA: NULL
+    T2 amplitudes larger than 0.1000 for spin case AB: NULL
+    T2 amplitudes larger than 0.1000 for spin case BB: NULL
+
+  ==> DSRG-MRPT2 Energy Summary <==
+
+    E0 (reference)                 =   -106.736607236610396
+    <[F, T1]>                      =     -0.022838282234230
+    <[F, T2]>                      =      0.000044422538276
+    <[V, T1]>                      =      0.000042964495772
+    <[V, T2]> (C_2)^4              =     -0.226635051401445
+    <[V, T2]> C_4 (C_2)^2 HH       =      0.000014315156412
+    <[V, T2]> C_4 (C_2)^2 PP       =      0.000040192781648
+    <[V, T2]> C_4 (C_2)^2 PH       =      0.000194049599923
+    <[V, T2]> C_6 C_2              =      0.000004614479268
+    <[V, T2]>                      =     -0.226381879384195
+    DSRG-MRPT2 correlation energy  =     -0.249132774584376
+    DSRG-MRPT2 total energy        =   -106.985740011194778
+    max(T1)                        =      0.030809054144028
+    max(T2)                        =      0.086657805626619
+    ||T1||                         =      0.084406956317028
+    ||T2||                         =      1.179162976405794
+
+  Energy took      1.638 s
+
+
+  ==> Compute Couplings with State 0 <==
+
+    Computing coupling of <1|H|0>            ...  Done. Timing        0.003567 s
+    Computing coupling of <1|HT|0>           ...  Done. Timing        0.624187 s
+
+  ==> Compute DSRG-MRPT2 Energy of State 1 <==
+
+
+  ==> Checking Semicanonical Orbitals <==
+
+    Abs. max of Fock core, active, virtual blocks (Fij, i != j)
+                  core          active         virtual
+    --------------------------------------------------
+    Fα    0.0000000000    0.0171842377    0.0589929195
+    Fβ    0.0000000000    0.0171842377    0.0589929195
+    --------------------------------------------------
+
+    1-Norm of Fock core, active, virtual blocks (Fij, i != j)
+                  core          active         virtual
+    --------------------------------------------------
+    Fα    0.0000000000    0.0869576977    1.6554257133
+    Fβ    0.0000000000    0.0869576977    1.6554257133
+    --------------------------------------------------
+
+    Warning! Orbitals are not semi-canonicalized!
+    Orbital invariant formalism will be employed for DSRG-MRPT2.
+
+  ==> Computing DSRG-MRPT2 ... <==
+
+    Computing T2 amplitudes                  ...  Done. Timing        0.575989 s
+    Computing T1 amplitudes                  ...  Done. Timing        0.034402 s
+    Renormalizing two-electron integrals     ...  Done. Timing        0.624965 s
+    Renormalizing Fock matrix elements       ...  Done. Timing        0.029963 s
+    Computing <[F, T1]>                      ...  Done. Timing        0.001945 s
+    Computing <[F, T2]>                      ...  Done. Timing        0.007528 s
+    Computing <[V, T1]>                      ...  Done. Timing        0.006657 s
+    Computing <[V, T2]> (C_2)^4              ...  Done. Timing        0.038774 s
+    Computing <[V, T2]> C_4 (C_2)^2 HH       ...  Done. Timing        0.006751 s
+    Computing <[V, T2]> C_4 (C_2)^2 PP       ...  Done. Timing        0.010536 s
+    Computing <[V, T2]> C_4 (C_2)^2 PH       ...  Done. Timing        0.040240 s
+    Computing <[V, T2]> C_6 C_2              ...  Done. Timing        0.140134 s
+
+  ==> Excitation Amplitudes Summary <==
+
+    Active Indices:    1    2    3   19   20   27   28 
+    Largest T1 amplitudes for spin case A:
+       i       a                  i       a                  i       a               
+    --------------------------------------------------------------------------------
+    [ 27      33    ]-0.034981 [ 19      25    ]-0.034981 [ 19      23    ] 0.020709 
+    [ 27      31    ] 0.020709 [  0      13    ]-0.018422 [  0       8    ]-0.014932 
+    [  1      12    ]-0.014127 [  0       9    ] 0.011965 [ 19      22    ] 0.008257 
+    [ 27      30    ] 0.008257 [  1       9    ] 0.005788 [  1       6    ]-0.003964 
+    [  1       8    ] 0.003676 [  0       6    ]-0.003124 [  0       5    ] 0.003083 
+    --------------------------------------------------------------------------------
+    Norm of T1A vector: (nonzero elements: 75)                    0.066842826250206.
+    --------------------------------------------------------------------------------
+    Largest T1 amplitudes for spin case B:
+       _       _                  _       _                  _       _               
+       i       a                  i       a                  i       a               
+    --------------------------------------------------------------------------------
+    [ 27      33    ]-0.034981 [ 19      25    ]-0.034981 [ 19      23    ] 0.020709 
+    [ 27      31    ] 0.020709 [  0      13    ]-0.018422 [  0       8    ]-0.014932 
+    [  1      12    ]-0.014127 [  0       9    ] 0.011965 [ 19      22    ] 0.008257 
+    [ 27      30    ] 0.008257 [  1       9    ] 0.005788 [  1       6    ]-0.003964 
+    [  1       8    ] 0.003676 [  0       6    ]-0.003124 [  0       5    ] 0.003083 
+    --------------------------------------------------------------------------------
+    Norm of T1B vector: (nonzero elements: 75)                    0.066842826250206.
+    --------------------------------------------------------------------------------
+    Largest T2 amplitudes for spin case AA:
+       i   j   a   b              i   j   a   b              i   j   a   b           
+    --------------------------------------------------------------------------------
+    [  1  19  12  19] 0.074524 [  1  27  12  27] 0.074524 [ 19  27  19  33] 0.070697 
+    [ 19  27  25  27] 0.070697 [  1  27   1  33] 0.068080 [  1  19   1  25] 0.068080 
+    [ 19  27  19  31]-0.041229 [ 19  27  23  27]-0.041229 [  1  27   1  31]-0.040047 
+    [  1  19   1  23]-0.040047 [  0  19  13  19] 0.035008 [  0  27  13  27] 0.035008 
+    [  0   1   1  13]-0.033752 [  0  19   8  19] 0.027954 [  0  27   8  27] 0.027954 
+    --------------------------------------------------------------------------------
+    Norm of T2AA vector: (nonzero elements: 18635)                0.485105158705027.
+    --------------------------------------------------------------------------------
+    Largest T2 amplitudes for spin case AB:
+           _       _                  _       _                  _       _           
+       i   j   a   b              i   j   a   b              i   j   a   b           
+    --------------------------------------------------------------------------------
+    [  1   1   1  12] 0.084548 [ 19  19  19  25] 0.083930 [ 27  27  27  33] 0.083930 
+    [  1  19  12  19] 0.079287 [  1  27  12  27] 0.079287 [  0   0  19  19]-0.076411 
+    [  0   0  27  27]-0.076411 [ 19  27  19  33] 0.075108 [ 19  27  25  27] 0.075108 
+    [  1  27   1  33] 0.072027 [  1  19   1  25] 0.072027 [  0   0   1   1]-0.064612 
+    [ 27  27  27  31]-0.051177 [ 19  19  19  23]-0.051177 [ 19  27  19  31]-0.044545 
+    --------------------------------------------------------------------------------
+    Norm of T2AB vector: (nonzero elements: 19007)                0.500753141474214.
+    --------------------------------------------------------------------------------
+    Largest T2 amplitudes for spin case BB:
+       _   _   _   _              _   _   _   _              _   _   _   _           
+       i   j   a   b              i   j   a   b              i   j   a   b           
+    --------------------------------------------------------------------------------
+    [  1  19  12  19] 0.074524 [  1  27  12  27] 0.074524 [ 19  27  19  33] 0.070697 
+    [ 19  27  25  27] 0.070697 [  1  27   1  33] 0.068080 [  1  19   1  25] 0.068080 
+    [ 19  27  19  31]-0.041229 [ 19  27  23  27]-0.041229 [  1  27   1  31]-0.040047 
+    [  1  19   1  23]-0.040047 [  0  19  13  19] 0.035008 [  0  27  13  27] 0.035008 
+    [  0   1   1  13]-0.033752 [  0  19   8  19] 0.027954 [  0  27   8  27] 0.027954 
+    --------------------------------------------------------------------------------
+    Norm of T2BB vector: (nonzero elements: 18639)                0.485105158705028.
+    --------------------------------------------------------------------------------
+
+  ==> Possible Intruders <==
+
+    T1 amplitudes larger than 0.1000 for spin case A: NULL
+    T1 amplitudes larger than 0.1000 for spin case B: NULL
+    T2 amplitudes larger than 0.1000 for spin case AA: NULL
+    T2 amplitudes larger than 0.1000 for spin case AB: NULL
+    T2 amplitudes larger than 0.1000 for spin case BB: NULL
+
+  ==> DSRG-MRPT2 Energy Summary <==
+
+    E0 (reference)                 =   -106.771764749504655
+    <[F, T1]>                      =     -0.026881547144804
+    <[F, T2]>                      =     -0.002526963879831
+    <[V, T1]>                      =     -0.002526739742981
+    <[V, T2]> (C_2)^4              =     -0.237807061019403
+    <[V, T2]> C_4 (C_2)^2 HH       =      0.002832637703604
+    <[V, T2]> C_4 (C_2)^2 PP       =      0.014400755420917
+    <[V, T2]> C_4 (C_2)^2 PH       =      0.040365051073610
+    <[V, T2]> C_6 C_2              =      0.000006740024805
+    <[V, T2]>                      =     -0.180201876796466
+    DSRG-MRPT2 correlation energy  =     -0.212137127564082
+    DSRG-MRPT2 total energy        =   -106.983901877068732
+    max(T1)                        =      0.034981282316108
+    max(T2)                        =      0.084548493725820
+    ||T1||                         =      0.094530031430389
+    ||T2||                         =      1.213947636757713
+
+  Energy took      1.609 s
+
+
+  !!! Echo from DSRG_TIME !!!
+  Time code 223 is already there. Create nothing.
+
+  ==> Compute Couplings with State 1 <==
+
+    Computing coupling of <0|HT|1>           ...  Done. Timing        0.590594 s
+
+  ==> Effective Hamiltonian Summary <==
+
+  ## Heff Singlet A1 (Symmetry 0) ##
+  Irrep: 1 Size: 2 x 2
+
+                 1                   2
+
+    1  -106.98574001119478     0.00449562256430
+    2     0.00461095512834  -106.98390187706873
+
+
+
+  ## Heff (Symmetrized) Singlet A1 (Symmetry 0) ##
+  Irrep: 1 Size: 2 x 2
+
+                 1                   2
+
+    1  -106.98574001119478     0.00455328884632
+    2     0.00455328884632  -106.98390187706873
+
+
+
+  ## U of Heff (Symmetrized) with eigenvalues ##
+ Irrep: 1
+
+           1           2
+
+    1  -0.7739046  -0.6333022
+    2   0.6333022  -0.7739046
+
+     -106.9894661-106.9801758
+
+
+
+  ==> Multi-State DSRG-MRPT2 Energy Summary <==
+
+    Multi.  Irrep.  No.    DSRG-MRPT2 Energy
+    -----------------------------------------
+       1      A1     0      -106.989466062385
+       1      A1     1      -106.980175825879
+    -----------------------------------------
+
+  ==> DSRG_TIME for Computing Commutators in Seconds <==
+
+    ==================================
+    Time for [A1,B1] -> C0:      0.004
+    Time for [A1,B2] -> C0:      0.013
+    Time for [A2,B1] -> C0:      0.012
+    Time for [A2,B2] -> C0:      0.473
+    Time for [A1,B1] -> C1:      0.004
+    Time for [A1,B2] -> C1:      0.030
+    Time for [A2,B1] -> C1:      0.018
+    Time for [A2,B2] -> C1:      0.456
+    Time for [A1,B2] -> C2:      0.024
+    Time for [A2,B1] -> C2:      0.024
+    Time for [A2,B2] -> C2:      0.189
+    Time for [A2,B2] -> C3:      1.595
+    ==================================	XMS-DSRG-PT2 energy on root 0.....................................PASSED
+	XMS-DSRG-PT2 energy on root 1.....................................PASSED
+   => Loading Basis Set <=
+
+    Name: STO-3G
+    Role: ORBITAL
+    Keyword: MINAO_BASIS
+    atoms 1 entry LI         line    31 file /Users/york/src/psi4new/psi4/share/psi4/basis/sto-3g.gbs 
+    atoms 2 entry F          line    91 file /Users/york/src/psi4new/psi4/share/psi4/basis/sto-3g.gbs 
+
+
+Reading options from the FORTE block
+Calling plugin forte.so.
+
+
+
+  Forte
+  ----------------------------------------------------------------------------
+  A suite of quantum chemistry methods for strongly correlated electrons
+
+    git branch: dwsa-dsrg-pt - git commit: 5258b91f
+
+  Developed by:
+    Francesco A. Evangelista, Chenyang Li, Kevin P. Hannon,
+    Jeffrey B. Schriber, Tianyuan Zhang, Chenxi Cai
+  ----------------------------------------------------------------------------
+
+  Size of Determinant class: 32
+
+  ==> MO Space Information <==
+
+  Read options for space FROZEN_DOCC
+  Read options for space RESTRICTED_DOCC
+  Read options for space ACTIVE
+ Removing orbital 0
+ Removing orbital 1
+  -------------------------------------------------
+                       A1    A2    B1    B2   Sum
+  -------------------------------------------------
+    FROZEN_DOCC         2     0     0     0     2
+    RESTRICTED_DOCC     1     0     0     0     1
+    ACTIVE              3     0     2     2     7
+    RESTRICTED_UOCC    12     3     6     6    27
+    FROZEN_UOCC         0     0     0     0     0
+    Total              18     3     8     8    37
+  -------------------------------------------------
+
+  ==> Integral Transformation <==
+
+  Number of molecular orbitals:               37
+  Number of correlated molecular orbitals:    35
+  Number of frozen occupied orbitals:          2
+  Number of frozen unoccupied orbitals:        0
+
+
+  Overall Conventional Integrals timings
+
+	Presorting SO-basis two-electron integrals.
+	Sorting File: SO Ints (nn|nn) nbuckets = 1
+	Transforming the one-electron integrals and constructing Fock matrices
+	Starting first half-transformation.
+	Sorting half-transformed integrals.
+	First half integral transformation complete.
+	Starting second half-transformation.
+	Two-electron integral transformation complete.
+
+  Integral transformation done. 0.08555200 s
+  Reading the two-electron integrals from disk
+  Size of two-electron integrals:   0.041891 GB
+  Frozen-core energy            -84.713599407174 a.u.
+
+  FrozenOneBody Operator takes  0.28281100 s
+  Resorting integrals after freezing core.
+  Conventional integrals take 0.82990200 s
+
+        ----------------------------------------------------------------
+          Dynamically Weighted Driven Similarity Renormalization Group
+                        Multi-State Perturbation Theory
+                                  Chenyang Li
+        ----------------------------------------------------------------
+
+
+  ==> DWMS-DSRG Options <==
+
+    CORRELATION LEVEL         PT2
+    ZETA VALUE           1.00e+10
+    REFERENCE               CASCI
+    ALGORITHM                 XMS
+
+  ==> Implementation Note on XMS <==
+
+  - Perform CASCI using user-defined weights.
+  - Perform XMS rotation on reference CI vectors.
+  - Loop over symmetry entries:
+    - Initialize effective Hamiltonian Heff.
+    - Loop over averaged states:
+      - Compute new density weights if ζ is nonzero.
+      - Semicanonicalize orbitals.
+      - Put SS-DSRG-PT2 energy to diagonal of Heff.
+      - Compute couplings of Heff:
+        - De-normal-order cluster amplitudes.
+        - Compute 1, 2, 3 transition densities in semicanonical basis.
+        - <A|Heff|B> <- 0.5 * <A|Heff(B)|B>.
+  - Collect and print energies.
+
+
+              ---------------------------------------------------
+                Complete Active Space Configuration Interaction
+                                  Chenyang Li
+              ---------------------------------------------------
+
+
+  ==> Input Summary <==
+
+    No. a electrons in active      =     3
+    No. b electrons in active      =     3
+    multiplicity                   =     1
+    spin ms (2 * Sz)               =     0
+
+  ==> Orbital Spaces <==
+
+    TOTAL MO                      [   18     3     8     8 ]
+    FROZEN CORE                   [    2     0     0     0 ]
+    FROZEN VIRTUAL                [    0     0     0     0 ]
+    CORRELATED MO                 [   16     3     8     8 ]
+    CORE                          [    1     0     0     0 ]
+    ACTIVE                        [    3     0     2     2 ]
+    VIRTUAL                       [   12     3     6     6 ]
+
+  ==> State Averaging Summary <==
+
+    Irrep.  Multi.  Nstates      Weights
+    ------------------------------------
+      A1       1        2    0.500 0.500
+    ------------------------------------
+    Total number of states: 2
+    ------------------------------------
+
+  Forming alpha and beta strings      ...  Done. Timing        0.000104 s
+  Forming determinants                ...  Done. Timing        0.000135 s
+
+  ==> Determinants Summary <==
+
+    number of alpha active electrons         =     3
+    number of beta active electrons          =     3
+    root symmetry (zero based)               =     0
+    number of determinants                   =   321
+
+  Diagonalizing Hamiltonian           ...
+
+  ==> Computing Coupling Lists <==
+  --------------------------------
+        α          0.001396 s
+        β          0.001950 s
+        αα         0.001271 s
+        ββ         0.001096 s
+        αβ         0.003792 s
+  --------------------------------
+
+  Davidson-Liu solver algorithm
+  Using SPARSE sigma builder
+  Initial guess space is incomplete!
+  Trying to add 13 determinant(s).  13 determinant(s) added.
+  Initial guess found 85 solutions with 2S+1 = 1 *
+  Initial guess found 97 solutions with 2S+1 = 3  
+  Initial guess found 28 solutions with 2S+1 = 5  
+  Initial guess found 3 solutions with 2S+1 = 7  
+  Adding guess 0 (multiplicity = 1.000000)
+  Adding guess 1 (multiplicity = 1.000000)
+  Adding guess 2 (multiplicity = 1.000000)
+  Adding guess 3 (multiplicity = 1.000000)
+
+  ==> Diagonalizing Hamiltonian <==
+
+  ----------------------------------------
+    Iter.      Avg. Energy       Delta_E
+  ----------------------------------------
+      1      -97.331220979559  -9.733e+01
+      2      -97.331220979569  -1.040e-11
+  ----------------------------------------
+  The Davidson-Liu algorithm converged in 3 iterations.
+  Davidson-Liu procedure took  0.324641 s  Done. Timing        0.336618 s
+
+  * * * * * * * * * * * * * * * * *
+  *  CI Vectors & Configurations  *
+  * * * * * * * * * * * * * * * * *
+
+  ==> Root No. 0 <==
+
+    ba0 20 20          0.6920313777
+    ab0 20 20          0.6920313777
+    200 20 20         -0.1530457794
+    b0a 20 20          0.0911659506
+    a0b 20 20          0.0911659506
+
+    Total Energy:   -106.772573835130245
+
+
+  ==> Root No. 1 <==
+
+    200 20 20         -0.9671204523
+    ba0 20 20         -0.1227651012
+    ab0 20 20         -0.1227651012
+    b0a 20 20          0.1164954162
+    a0b 20 20          0.1164954162
+
+    Total Energy:   -106.735798150984635
+
+
+
+  ==> Permanent Dipole Moments (A1) <==
+
+  Only print nonzero (> 1.0e-5) elements.
+  Permanent dipole moments (a.u.) 0 -> 0:  X:  0.0000  Y:  0.0000  Z: -0.2189  Total:  0.2189
+  Permanent dipole moments (a.u.) 1 -> 1:  X:  0.0000  Y:  0.0000  Z: -8.9753  Total:  8.9753
+
+
+  ==> Transition Dipole Moments (A1 -> A1) <==
+
+  Only print nonzero (> 1.0e-5) elements.
+  Transition dipole moments (a.u.) 0 -> 1:  X:  0.0000  Y:  0.0000  Z: -1.7577  Total:  1.7577
+
+
+  ==> Oscillator Strength (A1 -> A1) <==
+
+  Only print nonzero (> 1.0e-5) elements.
+  Oscillator strength (a.u.) 0 -> 1:  X:  0.0000  Y:  0.0000  Z:  0.0757  Total:  0.0757
+
+  Total Energy (averaged over 2 states): -106.754185993057433
+
+
+  ==> XMS Rotation of All CI Vectors <==
+
+  Set equal states weights to 0.5000 = 1/2.
+
+  ==> Compute State-Averaged Cumulants <==
+
+  Computing  1RDM (0-0) of Singlet A1 ... Writing ... Done. Timing        0.004211 s
+  Computing  1RDM (1-1) of Singlet A1 ... Writing ... Done. Timing        0.004062 s  Form averaged Fock matrix.
+  XMS Rotation for Singlet A1.
+
+  ## Fock <M|F|N> (Symmetry 0) ##
+  Irrep: 1 Size: 2 x 2
+
+                 1                   2
+
+    1    -2.46501187005820    -0.03396033385908
+    2    -0.03396033385908    -2.68634334056886
+
+
+
+  ## Fock Evec with eigenvalues ##
+ Irrep: 1
+
+           1           2
+
+    1   0.1483259  -0.9889385
+    2   0.9889385   0.1483259
+
+       -2.6914369  -2.4599183
+
+
+
+  =========================================
+  Build Effective Hamiltonian of Singlet A1
+  =========================================
+
+
+  ==> Compute DSRG-MRPT2 Energy of Root 0 <==
+
+
+  ==> Original State Averaging Summary <==
+
+    Irrep.  Multi.  Nroots       Weights
+    ------------------------------------
+      A1       1       2     0.500 0.500
+    ------------------------------------
+
+  ==> Reweighted State Averaging Summary <==
+
+    Irrep.  Multi.  Nroots       Weights
+    ------------------------------------
+      A1       1       2     1.000 0.000
+    ------------------------------------
+
+  ==> Compute State-Averaged Cumulants <==
+
+  Computing  1RDM (0-0) of Singlet A1 ... 
+  Deleted files from disk for 1RDM(0-0) of Singlet A1.Writing ... Done. Timing        0.004949 s
+  Computing  2RDM (0-0) of Singlet A1 ... Writing ... Done. Timing        0.007039 s
+  Computing  3RDM (0-0) of Singlet A1 ... Writing ... Done. Timing        0.030173 s
+  Computing  1RDM (1-1) of Singlet A1 ... 
+  Deleted files from disk for 1RDM(1-1) of Singlet A1.Writing ... Done. Timing        0.005047 s
+  Computing  2RDM (1-1) of Singlet A1 ... Writing ... Done. Timing        0.007727 s
+  Computing  3RDM (1-1) of Singlet A1 ... Writing ... Done. Timing        0.030424 s
+  Adding wedge product for 2-cumulants ... Done. Timing        0.001894 s
+  Adding wedge product for 3-cumulants ... Done. Timing        0.397426 s
+
+  ==> Multireference Driven Similarity Renormalization Group <==
+
+    Reading DSRG options ............................ Done
+    Setting ambit MO space .......................... Done
+    Preparing tensors for density cumulants ......... Done
+    Building Fock matrix ............................ Done
+    Checking reference energy ....................... Done
+
+              ----------------------------------------------------
+                    MR-DSRG Second-Order Perturbation Theory
+                Chenyang Li, Kevin Hannon, Francesco Evangelista
+              ----------------------------------------------------
+
+    References:
+      u-DSRG-MRPT2:    J. Chem. Theory Comput. 2015, 11, 2097.
+      (pr-)DSRG-MRPT2: J. Chem. Phys. 2017, 146, 124132.
+
+  ==> Calculation Information <==
+
+    ntamp                                                 15
+    flow parameter                                 5.000e-01
+    taylor expansion threshold                     1.000e-03
+    intruder_tamp                                  1.000e-01
+    int_type                                    CONVENTIONAL
+    source operator                                 STANDARD
+    reference relaxation                                NONE
+    state_type                                   MULTI-STATE
+    multi-state type                                     XMS
+    form Hbar3                                          TRUE
+
+  ==> Checking Semicanonical Orbitals <==
+
+    Abs. max of Fock core, active, virtual blocks (Fij, i != j)
+                  core          active         virtual
+    --------------------------------------------------
+    Fα    0.0000000000    0.0171842378    0.0589929196
+    Fβ    0.0000000000    0.0171842378    0.0589929196
+    --------------------------------------------------
+
+    1-Norm of Fock core, active, virtual blocks (Fij, i != j)
+                  core          active         virtual
+    --------------------------------------------------
+    Fα    0.0000000000    0.0869576987    1.6554257153
+    Fβ    0.0000000000    0.0869576987    1.6554257153
+    --------------------------------------------------
+
+    Warning! Orbitals are not semi-canonicalized!
+    Orbital invariant formalism will be employed for DSRG-MRPT2.
+
+  ==> Computing DSRG-MRPT2 ... <==
+
+    Computing T2 amplitudes                  ...  Done. Timing        0.632862 s
+    Computing T1 amplitudes                  ...  Done. Timing        0.030920 s
+    Renormalizing two-electron integrals     ...  Done. Timing        0.595389 s
+    Renormalizing Fock matrix elements       ...  Done. Timing        0.032545 s
+    Computing <[F, T1]>                      ...  Done. Timing        0.002106 s
+    Computing <[F, T2]>                      ...  Done. Timing        0.005716 s
+    Computing <[V, T1]>                      ...  Done. Timing        0.005605 s
+    Computing <[V, T2]> (C_2)^4              ...  Done. Timing        0.040058 s
+    Computing <[V, T2]> C_4 (C_2)^2 HH       ...  Done. Timing        0.007082 s
+    Computing <[V, T2]> C_4 (C_2)^2 PP       ...  Done. Timing        0.009913 s
+    Computing <[V, T2]> C_4 (C_2)^2 PH       ...  Done. Timing        0.040263 s
+    Computing <[V, T2]> C_6 C_2              ...  Done. Timing        0.134346 s
+
+  ==> Excitation Amplitudes Summary <==
+
+    Active Indices:    1    2    3   19   20   27   28 
+    Largest T1 amplitudes for spin case A:
+       i       a                  i       a                  i       a               
+    --------------------------------------------------------------------------------
+    [ 19      25    ] 0.030809 [ 27      33    ] 0.030809 [  1      12    ] 0.023781 
+    [  0      13    ] 0.015647 [ 19      23    ]-0.012794 [ 27      31    ]-0.012794 
+    [  0       8    ] 0.012583 [  0       9    ]-0.010391 [  1       9    ]-0.009000 
+    [  1       8    ]-0.006590 [  1       6    ] 0.006201 [ 19      22    ]-0.005063 
+    [ 27      30    ]-0.005063 [  0       6    ] 0.002874 [  0       5    ]-0.002617 
+    --------------------------------------------------------------------------------
+    Norm of T1A vector: (nonzero elements: 75)                    0.059684731191087.
+    --------------------------------------------------------------------------------
+    Largest T1 amplitudes for spin case B:
+       _       _                  _       _                  _       _               
+       i       a                  i       a                  i       a               
+    --------------------------------------------------------------------------------
+    [ 19      25    ] 0.030809 [ 27      33    ] 0.030809 [  1      12    ] 0.023781 
+    [  0      13    ] 0.015647 [ 19      23    ]-0.012794 [ 27      31    ]-0.012794 
+    [  0       8    ] 0.012583 [  0       9    ]-0.010391 [  1       9    ]-0.009000 
+    [  1       8    ]-0.006590 [  1       6    ] 0.006201 [ 19      22    ]-0.005063 
+    [ 27      30    ]-0.005063 [  0       6    ] 0.002874 [  0       5    ]-0.002617 
+    --------------------------------------------------------------------------------
+    Norm of T1B vector: (nonzero elements: 75)                    0.059684731191087.
+    --------------------------------------------------------------------------------
+    Largest T2 amplitudes for spin case AA:
+       i   j   a   b              i   j   a   b              i   j   a   b           
+    --------------------------------------------------------------------------------
+    [ 19  27  19  33] 0.072976 [ 19  27  25  27] 0.072976 [  1  19  12  19] 0.072038 
+    [  1  27  12  27] 0.072038 [  1  27   1  33] 0.070273 [  1  19   1  25] 0.070273 
+    [  0  19  13  19] 0.035102 [  0  27  13  27] 0.035102 [  0   1   1  13]-0.033783 
+    [ 19  27  19  31]-0.029617 [ 19  27  23  27]-0.029617 [  1  27   1  31]-0.028745 
+    [  1  19   1  23]-0.028745 [  0  27   8  27] 0.027853 [  0  19   8  19] 0.027853 
+    --------------------------------------------------------------------------------
+    Norm of T2AA vector: (nonzero elements: 18641)                0.469566253045868.
+    --------------------------------------------------------------------------------
+    Largest T2 amplitudes for spin case AB:
+           _       _                  _       _                  _       _           
+       i   j   a   b              i   j   a   b              i   j   a   b           
+    --------------------------------------------------------------------------------
+    [ 19  19  19  25] 0.086658 [ 27  27  27  33] 0.086658 [  1   1   1  12] 0.081777 
+    [ 19  27  19  33] 0.077536 [ 19  27  25  27] 0.077536 [  1  19  12  19] 0.076657 
+    [  1  27  12  27] 0.076657 [  0   0  27  27]-0.076411 [  0   0  19  19]-0.076411 
+    [  1  27   1  33] 0.074354 [  1  19   1  25] 0.074354 [  0   0   1   1]-0.073920 
+    [  0  19  13  19] 0.041635 [  0  27  13  27] 0.041635 [ 27  27  27  31]-0.036731 
+    --------------------------------------------------------------------------------
+    Norm of T2AB vector: (nonzero elements: 19007)                0.487196159910743.
+    --------------------------------------------------------------------------------
+    Largest T2 amplitudes for spin case BB:
+       _   _   _   _              _   _   _   _              _   _   _   _           
+       i   j   a   b              i   j   a   b              i   j   a   b           
+    --------------------------------------------------------------------------------
+    [ 19  27  19  33] 0.072976 [ 19  27  25  27] 0.072976 [  1  19  12  19] 0.072038 
+    [  1  27  12  27] 0.072038 [  1  19   1  25] 0.070273 [  1  27   1  33] 0.070273 
+    [  0  19  13  19] 0.035102 [  0  27  13  27] 0.035102 [  0   1   1  13]-0.033783 
+    [ 19  27  19  31]-0.029617 [ 19  27  23  27]-0.029617 [  1  27   1  31]-0.028745 
+    [  1  19   1  23]-0.028745 [  0  27   8  27] 0.027853 [  0  19   8  19] 0.027853 
+    --------------------------------------------------------------------------------
+    Norm of T2BB vector: (nonzero elements: 18639)                0.469566253045868.
+    --------------------------------------------------------------------------------
+
+  ==> Possible Intruders <==
+
+    T1 amplitudes larger than 0.1000 for spin case A: NULL
+    T1 amplitudes larger than 0.1000 for spin case B: NULL
+    T2 amplitudes larger than 0.1000 for spin case AA: NULL
+    T2 amplitudes larger than 0.1000 for spin case AB: NULL
+    T2 amplitudes larger than 0.1000 for spin case BB: NULL
+
+  ==> DSRG-MRPT2 Energy Summary <==
+
+    E0 (reference)                 =   -106.736607236610382
+    <[F, T1]>                      =     -0.022838282234230
+    <[F, T2]>                      =      0.000044422538276
+    <[V, T1]>                      =      0.000042964495772
+    <[V, T2]> (C_2)^4              =     -0.226635051401445
+    <[V, T2]> C_4 (C_2)^2 HH       =      0.000014315156412
+    <[V, T2]> C_4 (C_2)^2 PP       =      0.000040192781648
+    <[V, T2]> C_4 (C_2)^2 PH       =      0.000194049599923
+    <[V, T2]> C_6 C_2              =      0.000004614479268
+    <[V, T2]>                      =     -0.226381879384194
+    DSRG-MRPT2 correlation energy  =     -0.249132774584376
+    DSRG-MRPT2 total energy        =   -106.985740011194764
+    max(T1)                        =      0.030809054144028
+    max(T2)                        =      0.086657805626619
+    ||T1||                         =      0.084406956317028
+    ||T2||                         =      1.179162976405794
+
+  Energy took      1.620 s
+
+
+  ==> De-Normal-Order DSRG Transformed Hamiltonian <==
+
+    Computing the scalar term                ... Done. Timing    0.068 s
+    Computing the 1-body term                ... Done. Timing    0.066 s
+    Computing the 2-body term                ... Done. Timing    0.029 s
+
+  ==> Rotate DSRG Transformed Hamiltonian back to Original Basis <==
+
+    Rotating 1-body term to original basis   ... Done. Timing    0.001 s
+    Rotating 2-body term to original basis   ... Done. Timing    0.022 s
+    Rotating 3-body to original basis        ... Done. Timing    2.270 s
+
+  ==> Compute couplings of 2nd-order effective Hamiltonian <==
+
+  Compute 2nd-order Heff = H + H * T(root 0).
+  Compute densities.
+  Computing  1RDM (0-0) of Singlet A1 ... Reading ... Done. Timing        0.000117 s
+  Computing  2RDM (0-0) of Singlet A1 ... Reading ... Done. Timing        0.000166 s
+  Computing  3RDM (0-0) of Singlet A1 ... Reading ... Done. Timing        0.008702 s
+  Contract densities with Heff.
+
+  Energy difference of root 0
+    Real 2nd-order energy:    -24.972140604020442
+    Pseudo 2nd-order energy:  -24.963412964183178
+    Energy difference:         -0.008727639837264
+  Compute transition densities.
+  Computing 1TrDM (0-1) of Singlet A1 ... Writing ... Done. Timing        0.004065 s
+  Computing 2TrDM (0-1) of Singlet A1 ... Writing ... Done. Timing        0.009572 s
+  Computing 3TrDM (0-1) of Singlet A1 ... Writing ... Done. Timing        0.027770 s
+  Contract transition densities with Heff.
+
+  ==> Compute DSRG-MRPT2 Energy of Root 1 <==
+
+
+  ==> Original State Averaging Summary <==
+
+    Irrep.  Multi.  Nroots       Weights
+    ------------------------------------
+      A1       1       2     1.000 0.000
+    ------------------------------------
+
+  ==> Reweighted State Averaging Summary <==
+
+    Irrep.  Multi.  Nroots       Weights
+    ------------------------------------
+      A1       1       2     0.000 1.000
+    ------------------------------------
+
+  ==> Compute State-Averaged Cumulants <==
+
+  Computing  1RDM (0-0) of Singlet A1 ... Reading ... Done. Timing        0.000136 s
+  Computing  2RDM (0-0) of Singlet A1 ... Reading ... Done. Timing        0.000309 s
+  Computing  3RDM (0-0) of Singlet A1 ... Reading ... Done. Timing        0.005380 s
+  Computing  1RDM (1-1) of Singlet A1 ... Reading ... Done. Timing        0.000185 s
+  Computing  2RDM (1-1) of Singlet A1 ... Reading ... Done. Timing        0.000201 s
+  Computing  3RDM (1-1) of Singlet A1 ... Reading ... Done. Timing        0.006047 s
+  Adding wedge product for 2-cumulants ... Done. Timing        0.001193 s
+  Adding wedge product for 3-cumulants ... Done. Timing        0.279414 s
+
+  ==> Multireference Driven Similarity Renormalization Group <==
+
+    Reading DSRG options ............................ Done
+    Setting ambit MO space .......................... Done
+    Preparing tensors for density cumulants ......... Done
+    Building Fock matrix ............................ Done
+    Checking reference energy ....................... Done
+
+              ----------------------------------------------------
+                    MR-DSRG Second-Order Perturbation Theory
+                Chenyang Li, Kevin Hannon, Francesco Evangelista
+              ----------------------------------------------------
+
+    References:
+      u-DSRG-MRPT2:    J. Chem. Theory Comput. 2015, 11, 2097.
+      (pr-)DSRG-MRPT2: J. Chem. Phys. 2017, 146, 124132.
+
+  ==> Calculation Information <==
+
+    ntamp                                                 15
+    flow parameter                                 5.000e-01
+    taylor expansion threshold                     1.000e-03
+    intruder_tamp                                  1.000e-01
+    int_type                                    CONVENTIONAL
+    source operator                                 STANDARD
+    reference relaxation                                NONE
+    state_type                                   MULTI-STATE
+    multi-state type                                     XMS
+    form Hbar3                                          TRUE
+
+  ==> DSRG_TIME for Computing Commutators in Seconds <==
+
+    ==================================
+    Time for [A1,B1] -> C0:      0.002
+    Time for [A1,B2] -> C0:      0.006
+    Time for [A2,B1] -> C0:      0.006
+    Time for [A2,B2] -> C0:      0.232
+    Time for [A1,B1] -> C1:      0.002
+    Time for [A1,B2] -> C1:      0.014
+    Time for [A2,B1] -> C1:      0.010
+    Time for [A2,B2] -> C1:      0.218
+    Time for [A1,B2] -> C2:      0.015
+    Time for [A2,B1] -> C2:      0.010
+    Time for [A2,B2] -> C2:      0.085
+    Time for [A2,B2] -> C3:      0.780
+    ==================================
+
+  ==> Checking Semicanonical Orbitals <==
+
+    Abs. max of Fock core, active, virtual blocks (Fij, i != j)
+                  core          active         virtual
+    --------------------------------------------------
+    Fα    0.0000000000    0.0171842377    0.0589929195
+    Fβ    0.0000000000    0.0171842377    0.0589929195
+    --------------------------------------------------
+
+    1-Norm of Fock core, active, virtual blocks (Fij, i != j)
+                  core          active         virtual
+    --------------------------------------------------
+    Fα    0.0000000000    0.0869576977    1.6554257133
+    Fβ    0.0000000000    0.0869576977    1.6554257133
+    --------------------------------------------------
+
+    Warning! Orbitals are not semi-canonicalized!
+    Orbital invariant formalism will be employed for DSRG-MRPT2.
+
+  ==> Computing DSRG-MRPT2 ... <==
+
+    Computing T2 amplitudes                  ...  Done. Timing        0.639589 s
+    Computing T1 amplitudes                  ...  Done. Timing        0.030565 s
+    Renormalizing two-electron integrals     ...  Done. Timing        0.609749 s
+    Renormalizing Fock matrix elements       ...  Done. Timing        0.038845 s
+    Computing <[F, T1]>                      ...  Done. Timing        0.003860 s
+    Computing <[F, T2]>                      ...  Done. Timing        0.008328 s
+    Computing <[V, T1]>                      ...  Done. Timing        0.007600 s
+    Computing <[V, T2]> (C_2)^4              ...  Done. Timing        0.037896 s
+    Computing <[V, T2]> C_4 (C_2)^2 HH       ...  Done. Timing        0.007909 s
+    Computing <[V, T2]> C_4 (C_2)^2 PP       ...  Done. Timing        0.013889 s
+    Computing <[V, T2]> C_4 (C_2)^2 PH       ...  Done. Timing        0.040079 s
+    Computing <[V, T2]> C_6 C_2              ...  Done. Timing        0.134336 s
+
+  ==> Excitation Amplitudes Summary <==
+
+    Active Indices:    1    2    3   19   20   27   28 
+    Largest T1 amplitudes for spin case A:
+       i       a                  i       a                  i       a               
+    --------------------------------------------------------------------------------
+    [ 27      33    ]-0.034981 [ 19      25    ]-0.034981 [ 19      23    ] 0.020709 
+    [ 27      31    ] 0.020709 [  0      13    ]-0.018422 [  0       8    ]-0.014932 
+    [  1      12    ]-0.014127 [  0       9    ] 0.011965 [ 19      22    ] 0.008257 
+    [ 27      30    ] 0.008257 [  1       9    ] 0.005788 [  1       6    ]-0.003964 
+    [  1       8    ] 0.003676 [  0       6    ]-0.003124 [  0       5    ] 0.003083 
+    --------------------------------------------------------------------------------
+    Norm of T1A vector: (nonzero elements: 75)                    0.066842826250205.
+    --------------------------------------------------------------------------------
+    Largest T1 amplitudes for spin case B:
+       _       _                  _       _                  _       _               
+       i       a                  i       a                  i       a               
+    --------------------------------------------------------------------------------
+    [ 27      33    ]-0.034981 [ 19      25    ]-0.034981 [ 19      23    ] 0.020709 
+    [ 27      31    ] 0.020709 [  0      13    ]-0.018422 [  0       8    ]-0.014932 
+    [  1      12    ]-0.014127 [  0       9    ] 0.011965 [ 19      22    ] 0.008257 
+    [ 27      30    ] 0.008257 [  1       9    ] 0.005788 [  1       6    ]-0.003964 
+    [  1       8    ] 0.003676 [  0       6    ]-0.003124 [  0       5    ] 0.003083 
+    --------------------------------------------------------------------------------
+    Norm of T1B vector: (nonzero elements: 75)                    0.066842826250205.
+    --------------------------------------------------------------------------------
+    Largest T2 amplitudes for spin case AA:
+       i   j   a   b              i   j   a   b              i   j   a   b           
+    --------------------------------------------------------------------------------
+    [  1  19  12  19] 0.074524 [  1  27  12  27] 0.074524 [ 19  27  19  33] 0.070697 
+    [ 19  27  25  27] 0.070697 [  1  27   1  33] 0.068080 [  1  19   1  25] 0.068080 
+    [ 19  27  19  31]-0.041229 [ 19  27  23  27]-0.041229 [  1  27   1  31]-0.040047 
+    [  1  19   1  23]-0.040047 [  0  19  13  19] 0.035008 [  0  27  13  27] 0.035008 
+    [  0   1   1  13]-0.033752 [  0  19   8  19] 0.027954 [  0  27   8  27] 0.027954 
+    --------------------------------------------------------------------------------
+    Norm of T2AA vector: (nonzero elements: 18643)                0.485105158705027.
+    --------------------------------------------------------------------------------
+    Largest T2 amplitudes for spin case AB:
+           _       _                  _       _                  _       _           
+       i   j   a   b              i   j   a   b              i   j   a   b           
+    --------------------------------------------------------------------------------
+    [  1   1   1  12] 0.084548 [ 19  19  19  25] 0.083930 [ 27  27  27  33] 0.083930 
+    [  1  19  12  19] 0.079287 [  1  27  12  27] 0.079287 [  0   0  19  19]-0.076411 
+    [  0   0  27  27]-0.076411 [ 19  27  19  33] 0.075108 [ 19  27  25  27] 0.075108 
+    [  1  27   1  33] 0.072027 [  1  19   1  25] 0.072027 [  0   0   1   1]-0.064612 
+    [ 27  27  27  31]-0.051177 [ 19  19  19  23]-0.051177 [ 19  27  19  31]-0.044545 
+    --------------------------------------------------------------------------------
+    Norm of T2AB vector: (nonzero elements: 19007)                0.500753141474214.
+    --------------------------------------------------------------------------------
+    Largest T2 amplitudes for spin case BB:
+       _   _   _   _              _   _   _   _              _   _   _   _           
+       i   j   a   b              i   j   a   b              i   j   a   b           
+    --------------------------------------------------------------------------------
+    [  1  19  12  19] 0.074524 [  1  27  12  27] 0.074524 [ 19  27  19  33] 0.070697 
+    [ 19  27  25  27] 0.070697 [  1  27   1  33] 0.068080 [  1  19   1  25] 0.068080 
+    [ 19  27  19  31]-0.041229 [ 19  27  23  27]-0.041229 [  1  27   1  31]-0.040047 
+    [  1  19   1  23]-0.040047 [  0  19  13  19] 0.035008 [  0  27  13  27] 0.035008 
+    [  0   1   1  13]-0.033752 [  0  19   8  19] 0.027954 [  0  27   8  27] 0.027954 
+    --------------------------------------------------------------------------------
+    Norm of T2BB vector: (nonzero elements: 18635)                0.485105158705028.
+    --------------------------------------------------------------------------------
+
+  ==> Possible Intruders <==
+
+    T1 amplitudes larger than 0.1000 for spin case A: NULL
+    T1 amplitudes larger than 0.1000 for spin case B: NULL
+    T2 amplitudes larger than 0.1000 for spin case AA: NULL
+    T2 amplitudes larger than 0.1000 for spin case AB: NULL
+    T2 amplitudes larger than 0.1000 for spin case BB: NULL
+
+  ==> DSRG-MRPT2 Energy Summary <==
+
+    E0 (reference)                 =   -106.771764749504683
+    <[F, T1]>                      =     -0.026881547144804
+    <[F, T2]>                      =     -0.002526963879831
+    <[V, T1]>                      =     -0.002526739742981
+    <[V, T2]> (C_2)^4              =     -0.237807061019403
+    <[V, T2]> C_4 (C_2)^2 HH       =      0.002832637703604
+    <[V, T2]> C_4 (C_2)^2 PP       =      0.014400755420917
+    <[V, T2]> C_4 (C_2)^2 PH       =      0.040365051073611
+    <[V, T2]> C_6 C_2              =      0.000006740024805
+    <[V, T2]>                      =     -0.180201876796466
+    DSRG-MRPT2 correlation energy  =     -0.212137127564082
+    DSRG-MRPT2 total energy        =   -106.983901877068760
+    max(T1)                        =      0.034981282316108
+    max(T2)                        =      0.084548493725820
+    ||T1||                         =      0.094530031430389
+    ||T2||                         =      1.213947636757714
+
+  Energy took      1.680 s
+
+
+  ==> De-Normal-Order DSRG Transformed Hamiltonian <==
+
+    Computing the scalar term                ... Done. Timing    0.061 s
+    Computing the 1-body term                ... Done. Timing    0.065 s
+    Computing the 2-body term                ... Done. Timing    0.028 s
+
+  ==> Rotate DSRG Transformed Hamiltonian back to Original Basis <==
+
+    Rotating 1-body term to original basis   ... Done. Timing    0.001 s
+    Rotating 2-body term to original basis   ... Done. Timing    0.023 s
+    Rotating 3-body to original basis        ... Done. Timing    2.322 s
+
+  ==> Compute couplings of 2nd-order effective Hamiltonian <==
+
+  Compute 2nd-order Heff = H + H * T(root 1).
+  Compute transition densities.
+  Computing 1TrDM (0-1) of Singlet A1 ... Reading ... Done. Timing        0.000128 s
+  Computing 2TrDM (0-1) of Singlet A1 ... Reading ... Done. Timing        0.000162 s
+  Computing 3TrDM (0-1) of Singlet A1 ... Reading ... Done. Timing        0.007916 s
+  Contract transition densities with Heff.
+  Compute densities.
+  Computing  1RDM (1-1) of Singlet A1 ... Reading ... Done. Timing        0.000101 s
+  Computing  2RDM (1-1) of Singlet A1 ... Reading ... Done. Timing        0.000158 s
+  Computing  3RDM (1-1) of Singlet A1 ... Reading ... Done. Timing        0.006078 s
+  Contract densities with Heff.
+
+  Energy difference of root 1
+    Real 2nd-order energy:    -24.970302469894438
+    Pseudo 2nd-order energy:  -24.961374651055742
+    Energy difference:         -0.008927818838696
+
+  ==> Effective Hamiltonian Summary <==
+
+  ## Heff Singlet A1 (Symmetry 0) ##
+  Irrep: 1 Size: 2 x 2
+
+                 1                   2
+
+    1  -106.98574001119476     0.00449562256430
+    2     0.00461095512834  -106.98390187706876
+
+
+
+  ## Symmetrized Heff Singlet A1 (Symmetry 0) ##
+  Irrep: 1 Size: 2 x 2
+
+                 1                   2
+
+    1  -106.98574001119476     0.00455328884632
+    2     0.00455328884632  -106.98390187706876
+
+
+
+  ## U of Heff (Symmetrized) with eigenvalues ##
+ Irrep: 1
+
+           1           2
+
+    1  -0.7739046  -0.6333022
+    2   0.6333022  -0.7739046
+
+     -106.9894661-106.9801758
+
+
+
+  ==> DSRG_TIME for Computing Commutators in Seconds <==
+
+    ==================================
+    Time for [A1,B1] -> C0:      0.004
+    Time for [A1,B2] -> C0:      0.032
+    Time for [A2,B1] -> C0:      0.008
+    Time for [A2,B2] -> C0:      0.234
+    Time for [A1,B1] -> C1:      0.001
+    Time for [A1,B2] -> C1:      0.012
+    Time for [A2,B1] -> C1:      0.010
+    Time for [A2,B2] -> C1:      0.227
+    Time for [A1,B2] -> C2:      0.012
+    Time for [A2,B1] -> C2:      0.010
+    Time for [A2,B2] -> C2:      0.092
+    Time for [A2,B2] -> C3:      0.765
+    ==================================
+
+  ==> Dynamically Weighted Driven Similarity Renormalization Group Energy Summary <==
+
+    Multi.  Irrep.  No.                   CASCI
+    -------------------------------------------
+       1      A1     0      -106.77257383513025
+       1      A1     1      -106.73579815098464
+    -------------------------------------------
+
+    Multi.  Irrep.  No.          DW-DSRG-XMSPT2
+    -------------------------------------------
+       1      A1     0      -106.98946606238476
+       1      A1     1      -106.98017582587875
+    -------------------------------------------
+	DWXMS-DSRG-PT2 energy on root 0...................................PASSED
+	DWXMS-DSRG-PT2 energy on root 1...................................PASSED
+
+*** Psi4 exiting successfully. Buy a developer a beer!
