@@ -3189,6 +3189,7 @@ void FCI_MO::xms_rotate_civecs() {
         sa_info_[n] = std::make_tuple(irrep, multi, nroots, std::vector<double>(nroots, w));
     }
     compute_sa_ref(1);
+    safe_to_read_density_files_ = false;
     sa_info_ = sa_info0;
 
     // form averaged Fock matrix
@@ -3651,8 +3652,8 @@ std::deque<ambit::Tensor> FCI_MO::compute_n_rdm(const vecdet& p_space, SharedMat
     bool files_exist = check_density_files(rdm_level, irrep, multi, root1, root2);
 
     if (safe_to_read_density_files_ && files_exist) {
+        outfile->Printf("Reading ... ");
         for (int i = 0; i < ntensors; ++i) {
-            outfile->Printf("Reading ... ");
             read_disk_vector_double(filenames[i], out[i].data());
         }
     } else {
@@ -3672,8 +3673,8 @@ std::deque<ambit::Tensor> FCI_MO::compute_n_rdm(const vecdet& p_space, SharedMat
         }
 
         if (disk) {
+            outfile->Printf("Writing ... ");
             for (int i = 0; i < ntensors; ++i) {
-                outfile->Printf("Writing ... ");
                 write_disk_vector_double(filenames[i], out[i].data());
                 density_files_.insert(filenames[i]);
             }
@@ -3717,7 +3718,7 @@ Reference FCI_MO::transition_reference(int root1, int root2, bool multi_state, i
     size_t eigen_size = eigen.size();
     SharedMatrix evecs(new Matrix("evecs", dim, eigen_size));
     for (int i = 0; i < eigen_size; ++i) {
-        evecs->set_column(0, i, (eigen_[i]).first);
+        evecs->set_column(0, i, (eigen[i]).first);
     }
 
     Reference ref;

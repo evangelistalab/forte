@@ -59,7 +59,7 @@ dsrg_mrpt2_tests = ["mr-dsrg-pt2-1","mr-dsrg-pt2-2","mr-dsrg-pt2-3","mr-dsrg-pt2
 
 active_dsrgpt2_tests = ["actv-dsrg-1-C2H4-cis", "actv-dsrg-2-C2H4-cisd",
                         "actv-dsrg-5-actv-independence", "actv-dsrg-ipea-1", "actv-dsrg-ipea-2"]
-dwms_dsrgpt2_tests = ["dwms-dsrgpt2-1-sa"]
+dwms_dsrgpt_tests = ["dwms-dsrgpt-1-sa"]
 
 casscf_tests = ["casscf", "casscf-2","casscf-3", "casscf-4", "casscf-5", "casscf-6", "casscf-7", "df-casscf-1"]
 dmrg_tests = ["dmrgscf-1", "df-dmrgscf-1", "cd-dmrgscf-1", "dmrg-dsrg-mrpt2-1", "dmrg-dsrg-mrpt2-2"]
@@ -146,11 +146,11 @@ else:
     # Get the current date and time
     dt = datetime.datetime.now()
     now = dt.strftime("%Y-%m-%d-%H:%M")
-   
+
     print("The following tests failed:")
     for failed_test in failed:
         print("  %s" % failed_test)
-    
+
 print("\nTotal time: %6.1f s\n" % total_time)
 if nfailed > 0:
     failed_log = open("failed_tests","w")

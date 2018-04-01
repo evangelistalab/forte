@@ -83,18 +83,18 @@ class THREE_DSRG_MRPT2 : public MASTER_DSRG {
     /// Allow the reference to relax
     void relax_reference_once();
 
-//    /// Compute de-normal-ordered amplitudes and return the scalar term
-//    double Tamp_deGNO();
+    //    /// Compute de-normal-ordered amplitudes and return the scalar term
+    //    double Tamp_deGNO();
 
-//    /// Return a BlockedTensor of T1 amplitudes
-//    ambit::BlockedTensor get_T1(const std::vector<std::string>& blocks);
-//    ambit::BlockedTensor get_T1() { return T1_; }
-//    /// Return a BlockedTensor of de-normal-ordered T1 amplitudes
-//    ambit::BlockedTensor get_T1deGNO(const std::vector<std::string>& blocks);
-//    ambit::BlockedTensor get_T1deGNO() { return T1eff_; }
-//    /// Return a BlockedTensor of T2 amplitudes
-//    ambit::BlockedTensor get_T2(const std::vector<std::string>& blocks);
-//    ambit::BlockedTensor get_T2() { return T2_; }
+    //    /// Return a BlockedTensor of T1 amplitudes
+    //    ambit::BlockedTensor get_T1(const std::vector<std::string>& blocks);
+    //    ambit::BlockedTensor get_T1() { return T1_; }
+    //    /// Return a BlockedTensor of de-normal-ordered T1 amplitudes
+    //    ambit::BlockedTensor get_T1deGNO(const std::vector<std::string>& blocks);
+    //    ambit::BlockedTensor get_T1deGNO() { return T1eff_; }
+    //    /// Return a BlockedTensor of T2 amplitudes
+    //    ambit::BlockedTensor get_T2(const std::vector<std::string>& blocks);
+    //    ambit::BlockedTensor get_T2() { return T2_; }
 
     /// Rotate orbital basis for amplitudes according to unitary matrix U
     /// @param U unitary matrix from FCI_MO (INCLUDES frozen orbitals)
@@ -237,19 +237,23 @@ class THREE_DSRG_MRPT2 : public MASTER_DSRG {
     /// Form Hbar for reference relaxation
     void form_Hbar();
 
+    /// Compute Hbar1 from core contraction when doing DiskDF
+    void compute_Hbar1C_diskDF(ambit::BlockedTensor& Hbar1);
+    /// Compute Hbar1 from virtual contraction when doing DiskDF
+    void compute_Hbar1V_diskDF(ambit::BlockedTensor& Hbar1);
+
     std::vector<double> relaxed_energy(std::shared_ptr<FCIIntegrals> fci_ints);
 
     /// Print detailed timings
     bool detail_time_ = false;
 
-//    /// This function will remove the indices that do not have at least one
-//    /// active index
-//    /// This function generates all possible MO spaces and spin components
-//    /// Param:  std::string is the lables - "cav"
-//    /// Will take a string like cav and generate all possible combinations of
-//    /// this
-//    /// for a four character string
-//    std::shared_ptr<BlockedTensorFactory> BTF_;
+    //    /// This function will remove the indices that do not have at least one
+    //    /// active index
+    //    /// This function generates all possible MO spaces and spin components
+    //    /// Param:  std::string is the lables - "cav"
+    //    /// Will take a string like cav and generate all possible combinations of
+    //    /// this for a four character string
+    //    std::shared_ptr<BlockedTensorFactory> BTF_;
 
     /// Integral type (DF, CD, DISKDF)
     IntegralType integral_type_;
