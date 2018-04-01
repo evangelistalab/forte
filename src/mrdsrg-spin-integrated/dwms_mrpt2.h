@@ -89,10 +89,7 @@ class DWMS_DSRGPT2 : public Wavefunction {
     /// compute DWMS energies by diagonalizing separate Hamiltonians
     double compute_dwms_energy_separated_H(std::shared_ptr<FCI_MO>& fci_mo);
 
-    /// precompute energy -- CASCI or SA-DSRG-PT2
-    std::shared_ptr<FCI_MO> precompute_energy_old();
-
-    /// initial guesses if DWMS-1 or DWMS-AVG1
+    /// initial guesses if separate diagonalizations and require orthogonalized final CI vectors
     std::vector<std::vector<SharedVector>> initial_guesses_;
 
     /// compute DWMS weights and return a new sa_info
@@ -102,9 +99,6 @@ class DWMS_DSRGPT2 : public Wavefunction {
 
     /// max level computed for reduced density in DSRG
     int max_rdm_level_;
-
-    /// active space type vcis or vcisd if true
-    bool actv_vci_;
 
     /// if using factorized integrals
     bool eri_df_;
