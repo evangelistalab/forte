@@ -1106,7 +1106,7 @@ void DSRG_MRPT2::rotate_1rdm(ambit::Tensor& L1a, ambit::Tensor& L1b) {
     temp = L1a.clone();
     L1a("pq") = Ua("ap") * temp("ab") * Ua("bq");
 
-    temp = L1b.clone();
+    temp("pq") = L1b("pq");
     L1b("PQ") = Ub("AP") * temp("AB") * Ub("BQ");
 }
 
@@ -1118,10 +1118,10 @@ void DSRG_MRPT2::rotate_2rdm(ambit::Tensor& L2aa, ambit::Tensor& L2ab, ambit::Te
     temp = L2aa.clone();
     L2aa("pqrs") = Ua("ap") * Ua("bq") * temp("abcd") * Ua("cr") * Ua("ds");
 
-    temp = L2ab.clone();
+    temp("pqrs") = L2ab("pqrs");
     L2ab("pQrS") = Ua("ap") * Ub("BQ") * temp("aBcD") * Ua("cr") * Ub("DS");
 
-    temp = L2bb.clone();
+    temp("pqrs") = L2bb("pqrs");
     L2bb("PQRS") = Ub("AP") * Ub("BQ") * temp("ABCD") * Ub("CR") * Ub("DS");
 }
 
@@ -1135,15 +1135,15 @@ void DSRG_MRPT2::rotate_3rdm(ambit::Tensor& L3aaa, ambit::Tensor& L3aab, ambit::
     L3aaa("pqrstu") =
         Ua("ap") * Ua("bq") * Ua("cr") * temp("abcijk") * Ua("is") * Ua("jt") * Ua("ku");
 
-    temp = L3aab.clone();
+    temp("pqrstu") = L3aab("pqrstu");
     L3aab("pqRstU") =
         Ua("ap") * Ua("bq") * Ub("CR") * temp("abCijK") * Ua("is") * Ua("jt") * Ub("KU");
 
-    temp = L3abb.clone();
+    temp("pqrstu") = L3abb("pqrstu");
     L3abb("pQRsTU") =
         Ua("ap") * Ub("BQ") * Ub("CR") * temp("aBCiJK") * Ua("is") * Ub("JT") * Ub("KU");
 
-    temp = L3bbb.clone();
+    temp("pqrstu") = L3bbb("pqrstu");
     L3bbb("PQRSTU") =
         Ub("AP") * Ub("BQ") * Ub("CR") * temp("ABCIJK") * Ub("IS") * Ub("JT") * Ub("KU");
 }

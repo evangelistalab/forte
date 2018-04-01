@@ -529,44 +529,35 @@ double DWMS_DSRGPT2::compute_dwms_energy(std::shared_ptr<FCI_MO>& fci_mo) {
                 ambit::Tensor temp;
 
                 temp = H1a.clone();
-                temp("rs") = Ua_("rp") * H1a("pq") * Ua_("sq");
-                H1a("pq") = temp("pq");
+                H1a("rs") = Ua_("rp") * temp("pq") * Ua_("sq");
 
-                temp.set_name(H1b.name());
-                temp("rs") = Ub_("rp") * H1b("pq") * Ub_("sq");
-                H1b("pq") = temp("pq");
+                temp("pq") = H1b("pq");
+                H1b("rs") = Ub_("rp") * temp("pq") * Ub_("sq");
 
                 temp = H2aa.clone();
-                temp("pqrs") = Ua_("pa") * Ua_("qb") * H2aa("abcd") * Ua_("rc") * Ua_("sd");
-                H2aa("pqrs") = temp("pqrs");
+                H2aa("pqrs") = Ua_("pa") * Ua_("qb") * temp("abcd") * Ua_("rc") * Ua_("sd");
 
-                temp.set_name(H2ab.name());
-                temp("pqrs") = Ua_("pa") * Ub_("qb") * H2ab("abcd") * Ua_("rc") * Ub_("sd");
-                H2ab("pqrs") = temp("pqrs");
+                temp("pqrs") = H2ab("pqrs");
+                H2ab("pqrs") = Ua_("pa") * Ub_("qb") * temp("abcd") * Ua_("rc") * Ub_("sd");
 
-                temp.set_name(H2bb.name());
-                temp("pqrs") = Ub_("pa") * Ub_("qb") * H2bb("abcd") * Ub_("rc") * Ub_("sd");
-                H2bb("pqrs") = temp("pqrs");
+                temp("pqrs") = H2bb("pqrs");
+                H2bb("pqrs") = Ub_("pa") * Ub_("qb") * temp("abcd") * Ub_("rc") * Ub_("sd");
 
                 temp = H3aaa.clone();
-                temp("pqrsto") = Ua_("pa") * Ua_("qb") * Ua_("rc") * H3aaa("abcdef") * Ua_("sd") *
-                                 Ua_("te") * Ua_("of");
-                H3aaa("pqrsto") = temp("pqrsto");
+                H3aaa("pqrsto") = Ua_("pa") * Ua_("qb") * Ua_("rc") * temp("abcdef") * Ua_("sd") *
+                                  Ua_("te") * Ua_("of");
 
-                temp.set_name(H3aab.name());
-                temp("pqrsto") = Ua_("pa") * Ua_("qb") * Ub_("rc") * H3aab("abcdef") * Ua_("sd") *
-                                 Ua_("te") * Ub_("of");
-                H3aab("pqrsto") = temp("pqrsto");
+                temp("pqrsto") = H3aab("pqrsto");
+                H3aab("pqrsto") = Ua_("pa") * Ua_("qb") * Ub_("rc") * temp("abcdef") * Ua_("sd") *
+                                  Ua_("te") * Ub_("of");
 
-                temp.set_name(H3abb.name());
-                temp("pqrsto") = Ua_("pa") * Ub_("qb") * Ub_("rc") * H3abb("abcdef") * Ua_("sd") *
-                                 Ub_("te") * Ub_("of");
-                H3abb("pqrsto") = temp("pqrsto");
+                temp("pqrsto") = H3abb("pqrsto");
+                H3abb("pqrsto") = Ua_("pa") * Ub_("qb") * Ub_("rc") * temp("abcdef") * Ua_("sd") *
+                                  Ub_("te") * Ub_("of");
 
-                temp.set_name(H3bbb.name());
-                temp("pqrsto") = Ub_("pa") * Ub_("qb") * Ub_("rc") * H3bbb("abcdef") * Ub_("sd") *
-                                 Ub_("te") * Ub_("of");
-                H3bbb("pqrsto") = temp("pqrsto");
+                temp("pqrsto") = H3bbb("pqrsto");
+                H3bbb("pqrsto") = Ub_("pa") * Ub_("qb") * Ub_("rc") * temp("abcdef") * Ub_("sd") *
+                                  Ub_("te") * Ub_("of");
             }
 
             for (int N = 0; N < nroots; ++N) {
@@ -972,7 +963,7 @@ std::vector<std::tuple<int, int, int, std::vector<double>>> DWMS_DSRGPT2::comput
     return out;
 }
 
-void DWMS_DSRGPT2::print_title(const std::string &title){
+void DWMS_DSRGPT2::print_title(const std::string& title) {
     size_t title_size = title.size();
     outfile->Printf("\n\n  %s", std::string(title_size, '=').c_str());
     outfile->Printf("\n  %s", title.c_str());
