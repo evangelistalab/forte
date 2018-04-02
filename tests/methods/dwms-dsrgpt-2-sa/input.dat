@@ -3,9 +3,11 @@ memory 1 gb
 
 import forte
 
-Emcscf_avg = -106.75289569194828
-Ept2_root0 = -106.99125923711713
-Ept2_root1 = -106.98231128648528
+Emcscf_avg      = -106.75289569194828
+Ept2_root0      = -106.99125923711713
+Ept2_root1      = -106.98231128648528
+Ept2xsa_root0   = -106.99130493088082
+Ept2xsa_root1   = -106.98228339820706
 Ept2Hbar3_root0 = -106.99141638213850
 Ept2Hbar3_root1 = -106.98226280118608
 
@@ -99,8 +101,19 @@ E1 = get_variable("ENERGY ROOT 1")
 compare_values(Ept2_root0,E0,8,"DWSA-DSRG-PT2 (DF) energy on root 0")
 compare_values(Ept2_root1,E1,8,"DWSA-DSRG-PT2 (DF) energy on root 1")
 
+set forte {
+  dwms_algorithm xsa
+}
+
+energy('forte', ref_wfn=wfn)
+E0 = get_variable("ENERGY ROOT 0")
+E1 = get_variable("ENERGY ROOT 1")
+compare_values(Ept2xsa_root0,E0,8,"DWXSA-DSRG-PT2 (DF) energy on root 0")
+compare_values(Ept2xsa_root1,E1,8,"DWXSA-DSRG-PT2 (DF) energy on root 1")
+
 set forte{
-  form_hbar3 true
+  dwms_algorithm sa
+  form_hbar3     true
 }
 
 energy('forte', ref_wfn=wfn)
