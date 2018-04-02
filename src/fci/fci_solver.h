@@ -220,6 +220,14 @@ class FCISolver {
     /// Decompose and reconstruct the FCI wave function
     void fci_svd(FCIVector& HC, std::shared_ptr<FCIIntegrals> fci_ints, double fci_energy, double TAU);
     void fci_svd_tiles(FCIVector& HC, std::shared_ptr<FCIIntegrals> fci_ints, double fci_energy, int tile_dim, double OMEGA);
+    void add_to_sig_vect(std::vector<std::tuple<double, int, int, int> >& sorted_sigma,
+                         std::vector<SharedMatrix> C,
+                         std::vector<int> b_r,
+                         std::vector<int> e_r,
+                         std::vector<int> b_c,
+                         std::vector<int> e_c,
+                         int dim, int n, int d,
+                         int h, int i, int j);
 };
 }
 }

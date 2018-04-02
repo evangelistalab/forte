@@ -330,10 +330,20 @@ double FCISolver::compute_energy() {
         }
     }
 
+    std::vector<SharedMatrix> C_temp = C_->coefficients_blocks();
+    //SharedVector temp_HC(new Vector("temp_HC", fci_size));
+    //HC.copy_to(temp_HC);
+
+
     outfile->Printf("\n /////////////// TILES BEGIN /////////////////////\n");
     double fci_nergy = dls.eigenvalues()->get(root_) + nuclear_repulsion_energy;
-    fci_svd_tiles(HC, fci_ints, fci_nergy, 10, 0.001);
+    fci_svd_tiles(HC, fci_ints, fci_nergy, 10, 0.0001);
     outfile->Printf("\n /////////////// TILES END /////////////////////\n");
+
+    C_->set_coefficient_blocks(C_temp);
+    // Need to reset HC also...
+    //HC.copy(temp_HC);
+    //C_->Hamiltonian(HC, fci_ints, twoSubstituitionVVOO);
 
     if (options_.get_bool("FCI_SVD")){
         double fci_energy = dls.eigenvalues()->get(root_) + nuclear_repulsion_energy;
