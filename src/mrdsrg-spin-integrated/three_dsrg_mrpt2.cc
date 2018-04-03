@@ -3060,15 +3060,22 @@ void THREE_DSRG_MRPT2::form_Hbar() {
 
     // Again, the below block assume V[ijab] = V[iJaB] - V[iJbA]
     if (integral_type_ == DiskDF) {
+        C1.zero();
+
         Timer timer3;
         outfile->Printf("\n    %-40s ... ", "Computing DISKDF Hbar C");
-        compute_Hbar1C_diskDF(Hbar1_);
+        compute_Hbar1C_diskDF(C1);
         outfile->Printf("Done. Timing: %10.3f s.", timer3.get());
 
         Timer timer4;
         outfile->Printf("\n    %-40s ... ", "Computing DISKDF Hbar V");
-        compute_Hbar1V_diskDF(Hbar1_);
+        compute_Hbar1V_diskDF(C1);
         outfile->Printf("Done. Timing: %10.3f s.", timer4.get());
+
+        Hbar1_["uv"] += 0.5 * C1["uv"];
+        Hbar1_["uv"] += 0.5 * C1["vu"];
+        Hbar1_["UV"] += 0.5 * C1["UV"];
+        Hbar1_["UV"] += 0.5 * C1["VU"];
     }
 
     if ( options_.get_bool("PRINT_1BODY_EVALS") ){
