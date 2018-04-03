@@ -1,0 +1,122 @@
+#! Generated using commit GITCOMMIT
+memory 1 gb
+
+import forte
+
+Emcscf_avg  = -106.75288506043458
+Ept2_root0  = -106.99105155349822
+Ept2_root1  = -106.98190175726542
+Ept2x_root0 = -106.99114382058899
+Ept2x_root1 = -106.98177660270036
+Ept3_root0  = -106.99078972769603
+Ept3_root1  = -106.98150633200973
+
+molecule {
+  0 1
+  Li
+  F  1 R
+  R = 10.000
+
+  units bohr
+}
+
+basis {
+  assign Li Li-cc-pvdz
+  assign F  aug-cc-pvdz
+[ Li-cc-pvdz ]
+spherical
+****
+Li     0
+S   8   1.00
+   1469.0000000              0.0007660
+    220.5000000              0.0058920
+     50.2600000              0.0296710
+     14.2400000              0.1091800
+      4.5810000              0.2827890
+      1.5800000              0.4531230
+      0.5640000              0.2747740
+      0.0734500              0.0097510
+S   8   1.00
+   1469.0000000             -0.0001200
+    220.5000000             -0.0009230
+     50.2600000             -0.0046890
+     14.2400000             -0.0176820
+      4.5810000             -0.0489020
+      1.5800000             -0.0960090
+      0.5640000             -0.1363800
+      0.0734500              0.5751020
+S   1   1.00
+      0.0280500              1.0000000
+P   3   1.00
+      1.5340000              0.0227840
+      0.2749000              0.1391070
+      0.0736200              0.5003750
+P   1   1.00
+      0.0240300              1.0000000
+D   1   1.00
+      0.1239000              1.0000000
+****
+}
+
+set globals{
+  reference           rhf
+  scf_type            pk
+  maxiter             300
+  e_convergence       10
+  d_convergence       10
+  docc                [4,0,1,1]
+  restricted_docc     [3,0,1,1]
+  active              [2,0,0,0]
+  mcscf_r_convergence 7
+  mcscf_e_convergence 10
+  mcscf_maxiter       250
+  mcscf_diis_start    6
+  num_roots           2
+  follow_root         2
+  avg_states          [0,1]
+}
+
+Emcscf, wfn = energy('casscf', return_wfn=True)
+compare_values(Emcscf_avg,get_variable("CURRENT ENERGY"),8,"SA-CASSCF energy")
+
+set forte{
+  job_type           dwms-dsrgpt2
+  frozen_docc        [2,0,0,0]
+  restricted_docc    [1,0,0,0]
+  active             [3,0,2,2]
+  dsrg_s             0.5
+  maxiter            50
+  e_convergence      10
+  cas_type           cas
+  avg_state          [[0,1,2]]
+  dwms_algorithm     ms
+  dwms_zeta          1000.0
+  dwms_reference     pt2
+}
+
+energy('forte', ref_wfn=wfn)
+E0 = get_variable("ENERGY ROOT 0")
+E1 = get_variable("ENERGY ROOT 1")
+compare_values(Ept2_root0,E0,8,"DWMS-DSRG-PT2 (PT2 REFERENCE) energy on root 0")
+compare_values(Ept2_root1,E1,8,"DWMS-DSRG-PT2 (PT2 REFERENCE) energy on root 1")
+
+set forte {
+  dwms_algorithm xms
+}
+
+energy('forte', ref_wfn=wfn)
+E0 = get_variable("ENERGY ROOT 0")
+E1 = get_variable("ENERGY ROOT 1")
+compare_values(Ept2x_root0,E0,8,"DWXMS-DSRG-PT2 (PT2 REFERENCE) energy on root 0")
+compare_values(Ept2x_root1,E1,8,"DWXMS-DSRG-PT2 (PT2 REFERENCE) energy on root 1")
+
+set forte {
+  dwms_algorithm ms
+  dwms_reference pt3
+}
+
+energy('forte', ref_wfn=wfn)
+E0 = get_variable("ENERGY ROOT 0")
+E1 = get_variable("ENERGY ROOT 1")
+compare_values(Ept3_root0,E0,8,"DWMS-DSRG-PT2 (PT3 REFERENCE) energy on root 0")
+compare_values(Ept3_root1,E1,8,"DWMS-DSRG-PT2 (PT3 REFERENCE) energy on root 1")
