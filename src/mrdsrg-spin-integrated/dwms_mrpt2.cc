@@ -54,6 +54,7 @@ DWMS_DSRGPT2::DWMS_DSRGPT2(SharedWavefunction ref_wfn, Options& options,
                            std::shared_ptr<ForteIntegrals> ints,
                            std::shared_ptr<MOSpaceInfo> mo_space_info)
     : Wavefunction(options), ints_(ints), mo_space_info_(mo_space_info) {
+    shallow_copy(ref_wfn);
     reference_wavefunction_ = ref_wfn;
 
     print_method_banner({"Dynamically Weighted Driven Similarity Renormalization Group",
@@ -107,8 +108,8 @@ void DWMS_DSRGPT2::startup() {
                                              "Sextet",  "Septet",  "Octet",   "Nonet",   "Decaet"};
 
     size_t na = mo_space_info_->size("ACTIVE");
-    Ua_ = ambit::Tensor::build(CoreTensor, "Uactv a", {na, na});
-    Ub_ = ambit::Tensor::build(CoreTensor, "Uactv b", {na, na});
+    Ua_ = ambit::Tensor::build(ambit::CoreTensor, "Uactv a", {na, na});
+    Ub_ = ambit::Tensor::build(ambit::CoreTensor, "Uactv b", {na, na});
     for (size_t u = 0; u < na; ++u) {
         Ua_.data()[u * na + u] = 1.0;
         Ub_.data()[u * na + u] = 1.0;
@@ -126,6 +127,9 @@ void DWMS_DSRGPT2::startup() {
 
     Enuc_ = Process::environment.molecule()->nuclear_repulsion_energy(
         reference_wavefunction_->get_dipole_field_strength());
+
+    Ca_copy_ = Ca_->clone();
+    Cb_copy_ = Cb_->clone();
 }
 
 void DWMS_DSRGPT2::print_note_sa() {
@@ -219,6 +223,7 @@ double DWMS_DSRGPT2::compute_energy() {
     }
 
     // compute energy
+    do_semi_ = false;
     std::string name = "DW-DSRG-" + algorithm_;
     if (algorithm_ == "MS" || algorithm_ == "XMS") {
         compute_dwms_energy(fci_mo);
@@ -306,16 +311,10 @@ std::shared_ptr<FCIIntegrals> DWMS_DSRGPT2::compute_dsrg_pt(std::shared_ptr<MAST
                                                             Reference& reference,
                                                             std::string level) {
     // use semicanonical orbitals only for THREE-DSRG-MRPT2
-    bool do_semi = (level == "PT2") && eri_df_;
-
-    // save a copy of original orbitals
-    SharedMatrix Ca_copy, Cb_copy;
+    do_semi_ = (level == "PT2") && eri_df_;
 
     // compute dsrg-pt2/3 energy
-    if (do_semi) {
-        Ca_copy = SharedMatrix(reference_wavefunction_->Ca()->clone());
-        Cb_copy = SharedMatrix(reference_wavefunction_->Cb()->clone());
-
+    if (do_semi_) {
         SemiCanonical semi(reference_wavefunction_, ints_, mo_space_info_);
         semi.semicanonicalize(reference, max_rdm_level_);
         Ua_ = semi.Ua_t();
@@ -336,16 +335,6 @@ std::shared_ptr<FCIIntegrals> DWMS_DSRGPT2::compute_dsrg_pt(std::shared_ptr<MAST
 
     dsrg_pt->compute_energy();
     auto fci_ints = dsrg_pt->compute_Heff_actv();
-
-    // rotate integrals back to original for THREE-DSRG-MRPT2
-    if (do_semi) {
-        print_h2("Transformation Semicanonical Integrals Back to Original");
-        SharedMatrix Ca = reference_wavefunction_->Ca();
-        SharedMatrix Cb = reference_wavefunction_->Cb();
-        Ca->copy(Ca_copy);
-        Cb->copy(Cb_copy);
-        ints_->retransform_integrals();
-    }
 
     return fci_ints;
 }
@@ -411,6 +400,9 @@ double DWMS_DSRGPT2::compute_dwsa_energy(std::shared_ptr<FCI_MO>& fci_mo) {
             // transform bare Hamiltonian for each root
             if (zeta_ != 0.0) {
                 print_h2("Compute DSRG-MR" + dwms_corrlv_ + " Energy of Root " + std::to_string(M));
+                if (do_semi_) {
+                    transform_ints0();
+                }
                 fci_ints = compute_macro_dsrg_pt(dsrg_pt, fci_mo, n, M);
             }
 
@@ -458,6 +450,10 @@ double DWMS_DSRGPT2::compute_dwsa_energy(std::shared_ptr<FCI_MO>& fci_mo) {
                     Heff_sym->add(M, N, 0.5 * coupling);
                 }
             }
+
+            if (zeta_ != 0.0) {
+                dsrg_pt = nullptr;
+            }
         }
 
         // print effective Hamiltonian
@@ -492,7 +488,7 @@ double DWMS_DSRGPT2::compute_dwms_energy(std::shared_ptr<FCI_MO>& fci_mo) {
     std::shared_ptr<FCIIntegrals> fci_ints;
 
     // if zeta == 0, just transform Hamiltonian once
-    if (zeta_ == 0) {
+    if (zeta_ == 0.0) {
         print_h2("Important Note of DW-DSRG");
         outfile->Printf("\n  DWMS_ZETA is detected to be 0.0.");
         outfile->Printf("\n  The bare Hamiltonian will be transformed ONLY once.");
@@ -521,6 +517,9 @@ double DWMS_DSRGPT2::compute_dwms_energy(std::shared_ptr<FCI_MO>& fci_mo) {
             // transform bare Hamiltonian for each root
             if (zeta_ != 0.0) {
                 print_h2("Compute DSRG-MR" + dwms_corrlv_ + " Energy of Root " + std::to_string(M));
+                if (do_semi_) {
+                    transform_ints0();
+                }
                 fci_ints = compute_macro_dsrg_pt(dsrg_pt2, fci_mo, n, M);
             }
 
@@ -535,39 +534,11 @@ double DWMS_DSRGPT2::compute_dwms_energy(std::shared_ptr<FCI_MO>& fci_mo) {
 
             // rotate Heff to original basis if DF
             // no need to do this if not DF since "invariant" form is used in DSRG-MRPT2/3
-            if (eri_df_) {
-                ambit::Tensor temp;
-
-                temp = H1a.clone();
-                H1a("rs") = Ua_("rp") * temp("pq") * Ua_("sq");
-
-                temp("pq") = H1b("pq");
-                H1b("rs") = Ub_("rp") * temp("pq") * Ub_("sq");
-
-                temp = H2aa.clone();
-                H2aa("pqrs") = Ua_("pa") * Ua_("qb") * temp("abcd") * Ua_("rc") * Ua_("sd");
-
-                temp("pqrs") = H2ab("pqrs");
-                H2ab("pqrs") = Ua_("pa") * Ub_("qb") * temp("abcd") * Ua_("rc") * Ub_("sd");
-
-                temp("pqrs") = H2bb("pqrs");
-                H2bb("pqrs") = Ub_("pa") * Ub_("qb") * temp("abcd") * Ub_("rc") * Ub_("sd");
-
-                temp = H3aaa.clone();
-                H3aaa("pqrsto") = Ua_("pa") * Ua_("qb") * Ua_("rc") * temp("abcdef") * Ua_("sd") *
-                                  Ua_("te") * Ua_("of");
-
-                temp("pqrsto") = H3aab("pqrsto");
-                H3aab("pqrsto") = Ua_("pa") * Ua_("qb") * Ub_("rc") * temp("abcdef") * Ua_("sd") *
-                                  Ua_("te") * Ub_("of");
-
-                temp("pqrsto") = H3abb("pqrsto");
-                H3abb("pqrsto") = Ua_("pa") * Ub_("qb") * Ub_("rc") * temp("abcdef") * Ua_("sd") *
-                                  Ub_("te") * Ub_("of");
-
-                temp("pqrsto") = H3bbb("pqrsto");
-                H3bbb("pqrsto") = Ub_("pa") * Ub_("qb") * Ub_("rc") * temp("abcdef") * Ub_("sd") *
-                                  Ub_("te") * Ub_("of");
+            if (do_semi_) {
+                outfile->Printf("\n  Transform Heff_2nd to original basis.");
+                rotate_H1(H1a, H1b);
+                rotate_H2(H2aa, H2ab, H2bb);
+                rotate_H3(H3aaa, H3aab, H3abb, H3bbb);
             }
 
             for (int N = 0; N < nroots; ++N) {
@@ -601,11 +572,14 @@ double DWMS_DSRGPT2::compute_dwms_energy(std::shared_ptr<FCI_MO>& fci_mo) {
                         Ediag += contract_Heff_3TrDM(Hbar_vec[0], Hbar_vec[1], Hbar_vec[2],
                                                      Hbar_vec[3], TrD, transpose);
 
-                        double Ediff = Ediag - H0 - coupling;
-                        outfile->Printf("\n\n  Energy difference of root %d", M);
-                        outfile->Printf("\n    Real 2nd-order energy:   %20.15f", Ediag);
-                        outfile->Printf("\n    Pseudo 2nd-order energy: %20.15f", H0 + coupling);
-                        outfile->Printf("\n    Energy difference:       %20.15f", Ediff);
+                        if (!do_semi_) {
+                            double Ediff = Ediag - H0 - coupling;
+                            outfile->Printf("\n\n  Energy difference of root %d", M);
+                            outfile->Printf("\n    Real 2nd-order energy:   %20.15f", Ediag);
+                            outfile->Printf("\n    Pseudo 2nd-order energy: %20.15f",
+                                            H0 + coupling);
+                            outfile->Printf("\n    Energy difference:       %20.15f", Ediff);
+                        }
                     }
 
                     double shift = ints_->frozen_core_energy() + Enuc_;
@@ -616,6 +590,10 @@ double DWMS_DSRGPT2::compute_dwms_energy(std::shared_ptr<FCI_MO>& fci_mo) {
                     Heff_sym->add(N, M, 0.5 * coupling);
                     Heff_sym->add(M, N, 0.5 * coupling);
                 }
+            }
+
+            if (zeta_ != 0.0) {
+                dsrg_pt2 = nullptr;
             }
         }
 
@@ -639,6 +617,44 @@ double DWMS_DSRGPT2::compute_dwms_energy(std::shared_ptr<FCI_MO>& fci_mo) {
     }
 
     return Ept_[0][0];
+}
+
+void DWMS_DSRGPT2::rotate_H1(ambit::Tensor& H1a, ambit::Tensor& H1b) {
+    ambit::Tensor temp = H1a.clone();
+    H1a("rs") = Ua_("rp") * temp("pq") * Ua_("sq");
+
+    temp("pq") = H1b("pq");
+    H1b("rs") = Ub_("rp") * temp("pq") * Ub_("sq");
+}
+
+void DWMS_DSRGPT2::rotate_H2(ambit::Tensor& H2aa, ambit::Tensor& H2ab, ambit::Tensor& H2bb) {
+    ambit::Tensor temp = H2aa.clone();
+    H2aa("pqrs") = Ua_("pa") * Ua_("qb") * temp("abcd") * Ua_("rc") * Ua_("sd");
+
+    temp("pqrs") = H2ab("pqrs");
+    H2ab("pqrs") = Ua_("pa") * Ub_("qb") * temp("abcd") * Ua_("rc") * Ub_("sd");
+
+    temp("pqrs") = H2bb("pqrs");
+    H2bb("pqrs") = Ub_("pa") * Ub_("qb") * temp("abcd") * Ub_("rc") * Ub_("sd");
+}
+
+void DWMS_DSRGPT2::rotate_H3(ambit::Tensor& H3aaa, ambit::Tensor& H3aab, ambit::Tensor& H3abb,
+                             ambit::Tensor& H3bbb) {
+    ambit::Tensor temp = H3aaa.clone();
+    H3aaa("pqrsto") =
+        Ua_("pa") * Ua_("qb") * Ua_("rc") * temp("abcdef") * Ua_("sd") * Ua_("te") * Ua_("of");
+
+    temp("pqrsto") = H3aab("pqrsto");
+    H3aab("pqrsto") =
+        Ua_("pa") * Ua_("qb") * Ub_("rc") * temp("abcdef") * Ua_("sd") * Ua_("te") * Ub_("of");
+
+    temp("pqrsto") = H3abb("pqrsto");
+    H3abb("pqrsto") =
+        Ua_("pa") * Ub_("qb") * Ub_("rc") * temp("abcdef") * Ua_("sd") * Ub_("te") * Ub_("of");
+
+    temp("pqrsto") = H3bbb("pqrsto");
+    H3bbb("pqrsto") =
+        Ub_("pa") * Ub_("qb") * Ub_("rc") * temp("abcdef") * Ub_("sd") * Ub_("te") * Ub_("of");
 }
 
 double DWMS_DSRGPT2::contract_Heff_1TrDM(ambit::Tensor& H1a, ambit::Tensor& H1b, Reference& TrD,
@@ -761,8 +777,6 @@ double DWMS_DSRGPT2::compute_dwms_energy_separated_H(std::shared_ptr<FCI_MO>& fc
     int nentry = sa_info.size();
     Ept_.resize(nentry);
 
-    std::shared_ptr<MASTER_DSRG> dsrg_pt;
-
     // loop over averaged states
     for (int n = 0; n < nentry; ++n) {
         int multi, irrep, nroots;
@@ -784,6 +798,10 @@ double DWMS_DSRGPT2::compute_dwms_energy_separated_H(std::shared_ptr<FCI_MO>& fc
             print_title(current_job.str());
 
             // compute DSRG-PT2 transformed Hamiltonian
+            if (do_semi_) {
+                transform_ints0();
+            }
+            std::shared_ptr<MASTER_DSRG> dsrg_pt;
             auto fci_ints = compute_macro_dsrg_pt(dsrg_pt, fci_mo, n, i);
 
             // diagonalize the DSRG active Hamiltonian for each root
@@ -888,6 +906,13 @@ std::vector<std::tuple<int, int, int, std::vector<double>>> DWMS_DSRGPT2::comput
     }
 
     return out;
+}
+
+void DWMS_DSRGPT2::transform_ints0() {
+    print_h2("Transformation Integrals Back to Original");
+    Ca_->copy(Ca_copy_);
+    Cb_->copy(Cb_copy_);
+    ints_->retransform_integrals();
 }
 
 void DWMS_DSRGPT2::print_title(const std::string& title) {

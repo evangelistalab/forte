@@ -3167,7 +3167,7 @@ void THREE_DSRG_MRPT2::set_Ufull( SharedMatrix& Ua, SharedMatrix& Ub ){
     outfile->Printf("\n done");
 }
 
-void THREE_DSRG_MRPT2::compute_Hbar1C_diskDF(ambit::BlockedTensor& Hbar1) {
+void THREE_DSRG_MRPT2::compute_Hbar1C_diskDF(ambit::BlockedTensor& Hbar1, bool scaleV) {
     /**
      * AVCC and VACC Blocks of APTEI
      *
@@ -3241,10 +3241,12 @@ void THREE_DSRG_MRPT2::compute_Hbar1C_diskDF(ambit::BlockedTensor& Hbar1) {
 
         // scale V := V * (1 + e^{-s * D * D})
         // TODO: test if this needs to be parallelized
-        V.iterate([&](const std::vector<size_t>& i, double& value) {
-            double D = Fa_[virt_mos_[i[0]]] + Fz - Fa_[core_mos_[i[1]]] - Fa_[core_mos_[i[2]]];
-            value += value * dsrg_source_->compute_renormalized(D);
-        });
+        if (scaleV) {
+            V.iterate([&](const std::vector<size_t>& i, double& value) {
+                double D = Fa_[virt_mos_[i[0]]] + Fz - Fa_[core_mos_[i[1]]] - Fa_[core_mos_[i[2]]];
+                value += value * dsrg_source_->compute_renormalized(D);
+            });
+        }
 
         /// => loop active index for T <=
         for (size_t w = 0; w < nactive_; ++w) {
@@ -3284,15 +3286,13 @@ void THREE_DSRG_MRPT2::compute_Hbar1C_diskDF(ambit::BlockedTensor& Hbar1) {
             double hbar = 0.0;
             hbar += V("emn") * T("emn");       // J
             hbar -= 0.5 * V("emn") * T("enm"); // K
-            Hbar1.block("aa").data()[w * nactive_ + z] -= hbar;
-            Hbar1.block("aa").data()[z * nactive_ + w] -= hbar;
-            Hbar1.block("AA").data()[w * nactive_ + z] -= hbar;
-            Hbar1.block("AA").data()[z * nactive_ + w] -= hbar;
+            Hbar1.block("aa").data()[z * nactive_ + w] -= 2.0 * hbar;
+            Hbar1.block("AA").data()[z * nactive_ + w] -= 2.0 * hbar;
         }
     }
 }
 
-void THREE_DSRG_MRPT2::compute_Hbar1V_diskDF(ambit::BlockedTensor& Hbar1) {
+void THREE_DSRG_MRPT2::compute_Hbar1V_diskDF(ambit::BlockedTensor& Hbar1, bool scaleV) {
     /**
      * VVAC and VVCA Blocks of APTEI
      *
@@ -3366,10 +3366,12 @@ void THREE_DSRG_MRPT2::compute_Hbar1V_diskDF(ambit::BlockedTensor& Hbar1) {
 
         // scale V := V * (1 + e^{-s * D * D})
         // TODO: test if this needs to be parallelized
-        V.iterate([&](const std::vector<size_t>& i, double& value) {
-            double D = Fa_[virt_mos_[i[1]]] + Fa_[virt_mos_[i[2]]] - Fa_[core_mos_[i[0]]] - Fw;
-            value += value * dsrg_source_->compute_renormalized(D);
-        });
+        if (scaleV) {
+            V.iterate([&](const std::vector<size_t>& i, double& value) {
+                double D = Fa_[virt_mos_[i[1]]] + Fa_[virt_mos_[i[2]]] - Fa_[core_mos_[i[0]]] - Fw;
+                value += value * dsrg_source_->compute_renormalized(D);
+            });
+        }
 
         for (size_t z = 0; z < nactive_; ++z) {
             size_t nz = actv_mos_[z];
@@ -3408,10 +3410,8 @@ void THREE_DSRG_MRPT2::compute_Hbar1V_diskDF(ambit::BlockedTensor& Hbar1) {
             double hbar = 0.0;
             hbar += V("mef") * T("mef");       // J
             hbar -= 0.5 * V("mef") * T("mfe"); // K
-            Hbar1.block("aa").data()[w * nactive_ + z] += hbar;
-            Hbar1.block("aa").data()[z * nactive_ + w] += hbar;
-            Hbar1.block("AA").data()[w * nactive_ + z] += hbar;
-            Hbar1.block("AA").data()[z * nactive_ + w] += hbar;
+            Hbar1.block("aa").data()[z * nactive_ + w] += 2.0 * hbar;
+            Hbar1.block("AA").data()[z * nactive_ + w] += 2.0 * hbar;
         }
     }
 }
@@ -3589,6 +3589,9 @@ void THREE_DSRG_MRPT2::compute_Heff_2nd_coupling(double& H0, ambit::Tensor& H1a,
     H3abb = H3.block("aAAaAA");
     H3bbb = H3.block("AAAAAA");
 
+    // ignore scalar term
+    H0 = 0.0;
+
     // de-normal-order amplitudes
     BlockedTensor T1eff = deGNO_Tamp(T1_, T2_, Gamma1_);
 
@@ -3612,7 +3615,7 @@ void THREE_DSRG_MRPT2::compute_Heff_2nd_coupling(double& H0, ambit::Tensor& H1a,
     Hoei["PQ"] = H_["PQ"];
 
     // add core contribution to Hoei
-    ambit::Tensor temp, I;
+    ambit::Tensor Vtemp, I;
     size_t nc = core_mos_.size();
     I = ambit::Tensor::build(tensor_type_, "I", std::vector<size_t>{nc, nc});
     I.iterate([&](const std::vector<size_t>& i, double& value) {
@@ -3621,17 +3624,17 @@ void THREE_DSRG_MRPT2::compute_Heff_2nd_coupling(double& H0, ambit::Tensor& H1a,
         }
     });
 
-    temp = ints_->aptei_aa_block(core_mos_, actv_mos_, core_mos_, actv_mos_);
-    Hoei.block("aa")("pq") += temp("mpnq") * I("mn");
+    Vtemp = ints_->aptei_aa_block(core_mos_, actv_mos_, core_mos_, actv_mos_);
+    Hoei.block("aa")("pq") += Vtemp("mpnq") * I("mn");
 
-    temp = ints_->aptei_ab_block(actv_mos_, core_mos_, actv_mos_, core_mos_);
-    Hoei.block("aa")("pq") += temp("pmqn") * I("mn");
+    Vtemp = ints_->aptei_ab_block(actv_mos_, core_mos_, actv_mos_, core_mos_);
+    Hoei.block("aa")("pq") += Vtemp("pmqn") * I("mn");
 
-    temp = ints_->aptei_ab_block(core_mos_, actv_mos_, core_mos_, actv_mos_);
-    Hoei.block("AA")("pq") += temp("mpnq") * I("mn");
+    Vtemp = ints_->aptei_ab_block(core_mos_, actv_mos_, core_mos_, actv_mos_);
+    Hoei.block("AA")("pq") += Vtemp("mpnq") * I("mn");
 
-    temp = ints_->aptei_bb_block(core_mos_, actv_mos_, core_mos_, actv_mos_);
-    Hoei.block("AA")("pq") += temp("mpnq") * I("mn");
+    Vtemp = ints_->aptei_bb_block(core_mos_, actv_mos_, core_mos_, actv_mos_);
+    Hoei.block("AA")("pq") += Vtemp("mpnq") * I("mn");
 
     I = ambit::Tensor::build(tensor_type_, "I", std::vector<size_t>{1, 1});
     I.data()[0] = 1.0;
@@ -3642,17 +3645,17 @@ void THREE_DSRG_MRPT2::compute_Heff_2nd_coupling(double& H0, ambit::Tensor& H1a,
             std::vector<size_t>& mos1 = label_to_spacemo_[block[0]];
             std::vector<size_t>& mos2 = label_to_spacemo_[block[1]];
 
-            temp = ints_->aptei_aa_block({m}, mos1, {m}, mos2);
-            Hoei.block(block)("pq") += temp("mpnq") * I("mn");
+            Vtemp = ints_->aptei_aa_block({m}, mos1, {m}, mos2);
+            Hoei.block(block)("pq") += Vtemp("mpnq") * I("mn");
 
-            temp = ints_->aptei_ab_block(mos1, {m}, mos2, {m});
-            Hoei.block(block)("pq") += temp("pmqn") * I("mn");
+            Vtemp = ints_->aptei_ab_block(mos1, {m}, mos2, {m});
+            Hoei.block(block)("pq") += Vtemp("pmqn") * I("mn");
 
-            temp = ints_->aptei_ab_block({m}, mos1, {m}, mos2);
-            Hoei.block(block_beta)("pq") += temp("mpnq") * I("mn");
+            Vtemp = ints_->aptei_ab_block({m}, mos1, {m}, mos2);
+            Hoei.block(block_beta)("pq") += Vtemp("mpnq") * I("mn");
 
-            temp = ints_->aptei_bb_block({m}, mos1, {m}, mos2);
-            Hoei.block(block_beta)("pq") += temp("mpnq") * I("mn");
+            Vtemp = ints_->aptei_bb_block({m}, mos1, {m}, mos2);
+            Hoei.block(block_beta)("pq") += Vtemp("mpnq") * I("mn");
         }
     }
 
@@ -3687,76 +3690,97 @@ void THREE_DSRG_MRPT2::compute_Heff_2nd_coupling(double& H0, ambit::Tensor& H1a,
     H1["VU"] -= V_["aVmN"] * T2_["mNaU"];
 
     if (integral_type_ == DiskDF) {
-        compute_Hbar1C_diskDF(H1);
-        compute_Hbar1V_diskDF(H1);
+        compute_Hbar1C_diskDF(H1, false);
+        compute_Hbar1V_diskDF(H1, false);
     }
 
     // 2-body
-    H2["uvxy"] = 0.25 * V_["uvxy"];
+    H2["uvxy"] = V_["uvxy"];
     H2["uVxY"] = V_["uVxY"];
-    H2["UVXY"] = 0.25 * V_["UVXY"];
+    H2["UVXY"] = V_["UVXY"];
 
-    H2["xyuv"] += 0.5 * V_["eyuv"] * T1eff["xe"];
+    BlockedTensor temp = BTF_->build(tensor_type_, "temp", {"aaaa", "AAAA"});
+
+    temp["xyuv"] = V_["eyuv"] * T1eff["xe"];
+    temp["XYUV"] = V_["EYUV"] * T1eff["XE"];
+
+    H2["xyuv"] += temp["xyuv"];
+    H2["XYUV"] += temp["XYUV"];
+    H2["xyuv"] -= temp["yxuv"];
+    H2["XYUV"] -= temp["YXUV"];
+
     H2["xYuV"] += V_["eYuV"] * T1eff["xe"];
     H2["xYuV"] += V_["xEuV"] * T1eff["YE"];
-    H2["XYUV"] += 0.5 * V_["EYUV"] * T1eff["XE"];
 
-    H2["xyuv"] += 0.5 * V_["xyvm"] * T1eff["mu"];
+    temp["xyuv"] = V_["xymv"] * T1eff["mu"];
+    temp["XYUV"] = V_["XYMV"] * T1eff["MU"];
+
+    H2["xyuv"] -= temp["xyuv"];
+    H2["XYUV"] -= temp["XYUV"];
+    H2["xyuv"] += temp["xyvu"];
+    H2["XYUV"] += temp["XYVU"];
+
     H2["xYuV"] -= V_["xYmV"] * T1eff["mu"];
     H2["xYuV"] -= V_["xYuM"] * T1eff["MV"];
-    H2["XYUV"] += 0.5 * V_["XYVM"] * T1eff["MU"];
 
-    H2["xyuv"] += 0.5 * Hoei["eu"] * T2_["xyev"];
+    temp["xyuv"] = Hoei["eu"] * T2_["xyev"];
+    temp["XYUV"] = Hoei["EU"] * T2_["XYEV"];
+
+    H2["xyuv"] += temp["xyuv"];
+    H2["XYUV"] += temp["XYUV"];
+    H2["xyuv"] -= temp["xyvu"];
+    H2["XYUV"] -= temp["XYVU"];
+
     H2["xYuV"] += Hoei["eu"] * T2_["xYeV"];
     H2["xYuV"] += Hoei["EV"] * T2_["xYuE"];
-    H2["XYUV"] += 0.5 * Hoei["EU"] * T2_["XYEV"];
 
-    H2["xyuv"] -= 0.5 * Hoei["xm"] * T2_["myuv"];
+    temp["xyuv"] = Hoei["xm"] * T2_["myuv"];
+    temp["XYUV"] = Hoei["XM"] * T2_["MYUV"];
+
+    H2["xyuv"] -= temp["xyuv"];
+    H2["XYUV"] -= temp["XYUV"];
+    H2["xyuv"] += temp["yxuv"];
+    H2["XYUV"] += temp["YXUV"];
+
     H2["xYuV"] -= Hoei["xm"] * T2_["mYuV"];
     H2["xYuV"] -= Hoei["YM"] * T2_["xMuV"];
-    H2["XYUV"] -= 0.5 * Hoei["XM"] * T2_["MYUV"];
 
-    H2["xyuv"] -= V_["aymu"] * T2_["mxav"];
-    H2["xyuv"] -= V_["yAuM"] * T2_["xMvA"];
-    H2["xYuV"] -= V_["aYuM"] * T2_["xMaV"];
-    H2["xYuV"] -= V_["xAmV"] * T2_["mYuA"];
-    H2["xYuV"] += V_["axmu"] * T2_["mYaV"];
-    H2["xYuV"] += V_["xAuM"] * T2_["MYAV"];
-    H2["xYuV"] += V_["aYmV"] * T2_["mxau"];
-    H2["xYuV"] += V_["AYMV"] * T2_["xMuA"];
-    H2["XYUV"] -= V_["aYmU"] * T2_["mXaV"];
-    H2["XYUV"] -= V_["AYMU"] * T2_["XMAV"];
-
-    H2["xyuv"] += 0.125 * V_["xymn"] * T2_["mnuv"];
-    H2["xYuV"] += V_["xYmN"] * T2_["mNuV"];
-    H2["XYUV"] += 0.125 * V_["XYMN"] * T2_["MNUV"];
-
-    H2["xyuv"] += 0.125 * V_["abuv"] * T2_["xyab"];
+    H2["xyuv"] += 0.5 * V_["abuv"] * T2_["xyab"];
     H2["xYuV"] += V_["aBuV"] * T2_["xYaB"];
-    H2["XYUV"] += 0.125 * V_["ABUV"] * T2_["XYAB"];
+    H2["XYUV"] += 0.5 * V_["ABUV"] * T2_["XYAB"];
 
-    // temp contract with D3
-    H3["xyzuvw"] += 0.25 * V_["yzmu"] * T2_["mxvw"];
-    H3["xyzuvw"] -= 0.25 * V_["ezuv"] * T2_["xyew"];
+    H2["xyuv"] -= 0.5 * V_["xyij"] * T2_["ijuv"];
+    H2["xYuV"] -= V_["xYiJ"] * T2_["iJuV"];
+    H2["XYUV"] -= 0.5 * V_["XYIJ"] * T2_["IJUV"];
 
-    H3["XYZUVW"] += 0.25 * V_["YZMU"] * T2_["MXVW"];
-    H3["XYZUVW"] -= 0.25 * V_["EZUV"] * T2_["XYEW"];
+    H2["xyuv"] += V_["xyim"] * T2_["imuv"];
+    H2["xYuV"] += V_["xYiM"] * T2_["iMuV"];
+    H2["xYuV"] += V_["xYmI"] * T2_["mIuV"];
+    H2["XYUV"] += V_["XYIM"] * T2_["IMUV"];
 
-    H3["xyZuvW"] += 0.5 * V_["yZmW"] * T2_["mxuv"];
-    H3["xyZuvW"] += 0.5 * V_["xymu"] * T2_["mZvW"];
-    H3["xyZuvW"] += V_["yZuM"] * T2_["xMvW"];
+    temp["xyuv"] = V_["ayum"] * T2_["xmav"];
+    temp["xyuv"] += V_["yAuM"] * T2_["xMvA"];
+    temp["XYUV"] = V_["aYmU"] * T2_["mXaV"];
+    temp["XYUV"] += V_["AYUM"] * T2_["XMAV"];
 
-    H3["xyZuvW"] += 0.5 * V_["eZuW"] * T2_["xyev"];
-    H3["xyZuvW"] += 0.5 * V_["eyuv"] * T2_["xZeW"];
-    H3["xyZuvW"] -= V_["yEuW"] * T2_["xZvE"];
+    H2["xyuv"] -= temp["xyuv"];
+    H2["XYUV"] -= temp["XYUV"];
+    H2["xyuv"] += temp["yxuv"];
+    H2["XYUV"] += temp["YXUV"];
+    H2["xyuv"] += temp["xyvu"];
+    H2["XYUV"] += temp["XYVU"];
+    H2["xyuv"] -= temp["yxvu"];
+    H2["XYUV"] -= temp["YXVU"];
 
-    H3["xYZuVW"] += 0.5 * V_["YZMV"] * T2_["xMuW"];
-    H3["xYZuVW"] += 0.5 * V_["xZuM"] * T2_["MYVW"];
-    H3["xYZuVW"] += V_["xZmV"] * T2_["mYuW"];
+    H2["xYuV"] -= V_["aYuM"] * T2_["xMaV"];
+    H2["xYuV"] += V_["xaum"] * T2_["mYaV"];
+    H2["xYuV"] += V_["xAuM"] * T2_["MYAV"];
+    H2["xYuV"] += V_["aYmV"] * T2_["xmua"];
+    H2["xYuV"] += V_["AYMV"] * T2_["xMuA"];
+    H2["xYuV"] -= V_["xAmV"] * T2_["mYuA"];
 
-    H3["xYZuVW"] += 0.5 * V_["EZVW"] * T2_["xYuE"];
-    H3["xYZuVW"] += 0.5 * V_["xEuV"] * T2_["YZEW"];
-    H3["xYZuVW"] -= V_["eZuV"] * T2_["xYeW"];
+    // 3-body
+    H2_T2_C3(V_, T2_, 1.0, H3, true);
 }
 
 void THREE_DSRG_MRPT2::de_normal_order() {

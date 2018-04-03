@@ -57,14 +57,18 @@ class DWMS_DSRGPT2 : public Wavefunction {
     /// form Hbar3 for DSRG-MRPT2
     bool do_hbar3_;
 
+    /// transform integrals to semicanonical basis (only PT2 when DF)
+    bool do_semi_;
+
+    /// save a copy of original orbitals
+    SharedMatrix Ca_copy_;
+    SharedMatrix Cb_copy_;
+
+    /// transform integrals to original basis
+    void transform_ints0();
+
     /// nuclear repulsion energy
     double Enuc_;
-
-    /// compute MS or XMS energies
-    double compute_dwms_energy(std::shared_ptr<FCI_MO>& fci_mo);
-
-    /// compute DWSA energies
-    double compute_dwsa_energy(std::shared_ptr<FCI_MO>& fci_mo);
 
     /// precompute energy -- CASCI or SA-DSRG-PT2/3
     std::shared_ptr<FCI_MO> precompute_energy();
@@ -77,6 +81,18 @@ class DWMS_DSRGPT2 : public Wavefunction {
     std::shared_ptr<FCIIntegrals> compute_macro_dsrg_pt(std::shared_ptr<MASTER_DSRG>& dsrg_pt,
                                                         std::shared_ptr<FCI_MO> fci_mo, int entry,
                                                         int root);
+
+    /// compute DWSA energies
+    double compute_dwsa_energy(std::shared_ptr<FCI_MO>& fci_mo);
+
+    /// compute MS or XMS energies
+    double compute_dwms_energy(std::shared_ptr<FCI_MO>& fci_mo);
+
+    /// rotate 2nd-order effective Hamiltonian from semicanonical to original
+    void rotate_H1(ambit::Tensor& H1a, ambit::Tensor& H1b);
+    void rotate_H2(ambit::Tensor& H2aa, ambit::Tensor& H2ab, ambit::Tensor& H2bb);
+    void rotate_H3(ambit::Tensor& H3aaa, ambit::Tensor& H3aab, ambit::Tensor& H3abb,
+                   ambit::Tensor& H3bbb);
 
     /// contract H with transition densities
     double contract_Heff_1TrDM(ambit::Tensor& H1a, ambit::Tensor& H1b, Reference& TrD,
