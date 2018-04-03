@@ -46,7 +46,7 @@ void set_DWMS_options(ForteOptions& foptions) {
      * To Be Deprecated:
      *  - SH-0: separated diagonalizations, non-orthogonal final solutions
      *  - SH-1: separated diagonalizations, orthogonal final solutions -*/
-    foptions.add_str("DWMS_ALGORITHM", "DWMS-0", {"MS", "XMS", "SA", "XSA", "SH-0", "SH-1"},
+    foptions.add_str("DWMS_ALGORITHM", "SA", {"MS", "XMS", "SA", "XSA", "SH-0", "SH-1"},
                      "DWMS algorithms");
 }
 
