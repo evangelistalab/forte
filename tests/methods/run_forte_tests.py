@@ -64,7 +64,9 @@ dsrg_mrpt2_tests = ["mr-dsrg-pt2-1","mr-dsrg-pt2-2","mr-dsrg-pt2-3","mr-dsrg-pt2
 active_dsrgpt2_tests = ["actv-dsrg-1-C2H4-cis", "actv-dsrg-2-C2H4-cisd", "actv-dsrg-3-C4H6-cisd",
                         "actv-dsrg-4-C4H6-triplet", "actv-dsrg-5-actv-independence",
                         "actv-dsrg-size-intensive", "actv-dsrg-ipea-1", "actv-dsrg-ipea-2"]
-dwms_dsrgpt_tests = ["dwms-dsrgpt-1-sa", "dwms-dsrgpt-5-ms", "dwms-dsrgpt-8-separated"]
+dwms_dsrgpt_tests = ["dwms-dsrgpt-1-sa", "dwms-dsrgpt-2-sa", "dwms-dsrgpt-3-sa", "dwms-dsrgpt-4-sa",
+                     "dwms-dsrgpt-5-ms", "dwms-dsrgpt-6-ms", "dwms-dsrgpt-7-ms",
+                     "dwms-dsrgpt-8-separated", "dwms-dsrgpt-9-sa-C6H6"]
 
 casscf_tests = ["casscf", "casscf-2","casscf-3", "casscf-4", "casscf-5", "casscf-6", "casscf-7",
                 "df-casscf-1"]
