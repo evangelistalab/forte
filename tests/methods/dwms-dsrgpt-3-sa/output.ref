@@ -18,9 +18,9 @@
     -----------------------------------------------------------------------
 
 
-    Psi4 started on: Monday, 02 April 2018 04:34PM
+    Psi4 started on: Monday, 02 April 2018 11:08PM
 
-    Process ID:   5722
+    Process ID:  13297
     PSIDATADIR: /Users/york/src/psi4new/psi4/share/psi4
     Memory:     500.0 MiB
     Threads:    1
@@ -156,11 +156,11 @@ compare_values(Ept3xsa_root1,E1,8,"DWXSA-DSRG-PT3 (CD) energy on root 1")
   Memory set to 953.674 MiB by Python driver.
 
 *** tstart() called on dhcp189-216.emerson.emory.edu
-*** at Mon Apr  2 16:34:58 2018
+*** at Mon Apr  2 23:08:12 2018
 
    => Loading Basis Set <=
 
-    Name: ANONYMOUSA64423C9
+    Name: ANONYMOUS4742C1A3
     Role: ORBITAL
     Keyword: BASIS
     atoms 1 entry LI         line     5 inputblock li-cc-pvdz 
@@ -212,7 +212,7 @@ compare_values(Ept3xsa_root1,E1,8,"DWXSA-DSRG-PT3 (CD) energy on root 1")
 
   ==> Primary Basis <==
 
-  Basis Set: ANONYMOUSA64423C9
+  Basis Set: ANONYMOUS4742C1A3
     Blend: AUG-CC-PVDZ + LI-CC-PVDZ
     Number of shells: 15
     Number of basis function: 37
@@ -268,22 +268,21 @@ compare_values(Ept3xsa_root1,E1,8,"DWXSA-DSRG-PT3 (CD) energy on root 1")
 
                         Total Energy        Delta E     RMS |[F,P]|
 
-   @RHF iter   0:  -106.46629982219062   -1.06466e+02   4.32681e-03 
-   @RHF iter   1:  -106.67409764913558   -2.07798e-01   2.16236e-02 
-   @RHF iter   2:  -105.52704242274633    1.14706e+00   6.05206e-02 DIIS
-   @RHF iter   3:  -106.74559059579222   -1.21855e+00   9.34588e-03 DIIS
-   @RHF iter   4:  -106.76361235466769   -1.80218e-02   1.98973e-03 DIIS
-   @RHF iter   5:  -106.76470687940990   -1.09452e-03   6.54783e-04 DIIS
-   @RHF iter   6:  -106.76484240087100   -1.35521e-04   2.01429e-04 DIIS
-   @RHF iter   7:  -106.76485561897377   -1.32181e-05   4.24278e-05 DIIS
-   @RHF iter   8:  -106.76485633713897   -7.18165e-07   4.20165e-06 DIIS
-   @RHF iter   9:  -106.76485635100229   -1.38633e-08   1.56161e-06 DIIS
-   @RHF iter  10:  -106.76485635164505   -6.42757e-10   5.38256e-07 DIIS
-   @RHF iter  11:  -106.76485635173069   -8.56346e-11   1.27445e-07 DIIS
-   @RHF iter  12:  -106.76485635173727   -6.57963e-12   6.54154e-09 DIIS
-   @RHF iter  13:  -106.76485635173736   -9.94760e-14   1.19194e-09 DIIS
-   @RHF iter  14:  -106.76485635173734    2.84217e-14   3.49205e-10 DIIS
-   @RHF iter  15:  -106.76485635173731    2.84217e-14   8.49745e-11 DIIS
+   @RHF iter   0:  -106.49243849010175   -1.06492e+02   4.41641e-03 
+   @RHF iter   1:  -106.67531561935651   -1.82877e-01   2.14611e-02 
+   @RHF iter   2:  -105.54391759021478    1.13140e+00   5.79652e-02 DIIS
+   @RHF iter   3:  -106.73990819159854   -1.19599e+00   1.07810e-02 DIIS
+   @RHF iter   4:  -106.76331726463158   -2.34091e-02   2.28209e-03 DIIS
+   @RHF iter   5:  -106.76471112006809   -1.39386e-03   6.44993e-04 DIIS
+   @RHF iter   6:  -106.76484619546872   -1.35075e-04   1.83827e-04 DIIS
+   @RHF iter   7:  -106.76485600700777   -9.81154e-06   2.43064e-05 DIIS
+   @RHF iter   8:  -106.76485633757383   -3.30566e-07   3.27244e-06 DIIS
+   @RHF iter   9:  -106.76485635034794   -1.27741e-08   2.09181e-06 DIIS
+   @RHF iter  10:  -106.76485635166017   -1.31223e-09   3.99827e-07 DIIS
+   @RHF iter  11:  -106.76485635173333   -7.31575e-11   9.00309e-08 DIIS
+   @RHF iter  12:  -106.76485635173758   -4.24905e-12   3.41589e-09 DIIS
+   @RHF iter  13:  -106.76485635173759   -1.42109e-14   5.87109e-10 DIIS
+   @RHF iter  14:  -106.76485635173761   -1.42109e-14   6.54591e-11 DIIS
 
   ==> Post-Iterations <==
 
@@ -315,15 +314,15 @@ compare_values(Ept3xsa_root1,E1,8,"DWXSA-DSRG-PT3 (CD) energy on root 1")
 
   Energy converged.
 
-  @RHF Final Energy:  -106.76485635173731
+  @RHF Final Energy:  -106.76485635173761
 
    => Energetics <=
 
     Nuclear Repulsion Energy =              2.7000000000000002
-    One-Electron Energy =                -157.5883761461954293
-    Two-Electron Energy =                  48.1235197944581259
+    One-Electron Energy =                -157.5883761454535659
+    Two-Electron Energy =                  48.1235197937159711
     PCM Polarization Energy =               0.0000000000000000
-    Total Energy =                       -106.7648563517373077
+    Total Energy =                       -106.7648563517376061
 
     Alert: EFP and PCM quantities not currently incorporated into SCF psivars.
 
@@ -344,13 +343,13 @@ Properties computed using the SCF density matrix
      X:     0.0000      Y:     0.0000      Z:   -25.2048     Total:    25.2048
 
 
-*** tstop() called on dhcp189-216.emerson.emory.edu at Mon Apr  2 16:34:59 2018
+*** tstop() called on dhcp189-216.emerson.emory.edu at Mon Apr  2 23:08:13 2018
 Module time:
-	user time   =       0.62 seconds =       0.01 minutes
+	user time   =       0.60 seconds =       0.01 minutes
 	system time =       0.04 seconds =       0.00 minutes
 	total time  =          1 seconds =       0.02 minutes
 Total time:
-	user time   =       0.62 seconds =       0.01 minutes
+	user time   =       0.60 seconds =       0.01 minutes
 	system time =       0.04 seconds =       0.00 minutes
 	total time  =          1 seconds =       0.02 minutes
  MINTS: Wrapper to libmints.
@@ -486,36 +485,36 @@ Total time:
 
         Iter         Total Energy       Delta E   Orb RMS    CI RMS  NCI NORB
 (sem_iter): H0block_->H0b_diag[1][1] - H0block_->H0b_diag[2][1] = -0.707107 - 0.707107 = -1.414214 > 1.0E-8
-   @MCSCF  1:   -106.719655499367    4.5201e-02  7.73e-02  5.33e-09    1    1  Initial CI
-   @MCSCF  2:   -106.743591142924   -2.3936e-02  4.80e-02  1.20e-10    1    1  TS
-   @MCSCF  3:   -106.749720768282   -6.1296e-03  2.62e-02  3.24e-10    1    1  TS
-   @MCSCF  4:   -106.751831447911   -2.1107e-03  1.47e-02  2.36e-10    1    1  TS
-   @MCSCF  5:   -106.752507378612   -6.7593e-04  8.16e-03  2.61e-10    1    1  TS
-   @MCSCF  6:   -106.752745372334   -2.3799e-04  4.54e-03  2.50e-10    1    1  TS
-   @MCSCF  7:   -106.752830377364   -8.5005e-05  2.53e-03  2.57e-10    1    1  TS, DIIS
-   @MCSCF  8:   -106.752862680339   -3.2303e-05  1.41e-03  2.53e-10    1    1  TS, DIIS
-   @MCSCF  9:   -106.752859178419    3.5019e-06  2.51e-03  2.58e-10    1    1  TS, DIIS
-   @MCSCF 10:   -106.752877029692   -1.7851e-05  1.46e-03  2.54e-10    2    1  TS, DIIS
-   @MCSCF 11:   -106.752884414715   -7.3850e-06  4.11e-04  2.56e-10    1    1  TS, DIIS
-   @MCSCF 12:   -106.752885011757   -5.9704e-07  1.12e-04  2.56e-10    1    1  TS, DIIS
-   @MCSCF 13:   -106.752885060352   -4.8595e-08  7.10e-07  2.56e-10    1    1  TS, DIIS
-   @MCSCF 14:   -106.752885060349    2.7143e-12  1.11e-06  2.55e-10    1    1  TS, DIIS
-   @MCSCF 15:   -106.752885060354   -4.6043e-12  3.42e-09  2.56e-10    1    1  TS, DIIS
+   @MCSCF  1:   -106.719655499289    4.5201e-02  7.73e-02  3.29e-09    1    1  Initial CI
+   @MCSCF  2:   -106.743591142817   -2.3936e-02  4.80e-02  7.20e-11    1    1  TS
+   @MCSCF  3:   -106.749720768638   -6.1296e-03  2.62e-02  1.94e-10    1    1  TS
+   @MCSCF  4:   -106.751831448251   -2.1107e-03  1.47e-02  1.41e-10    1    1  TS
+   @MCSCF  5:   -106.752507378970   -6.7593e-04  8.16e-03  1.56e-10    1    1  TS
+   @MCSCF  6:   -106.752745372693   -2.3799e-04  4.54e-03  1.49e-10    1    1  TS
+   @MCSCF  7:   -106.752830377725   -8.5005e-05  2.53e-03  1.53e-10    1    1  TS, DIIS
+   @MCSCF  8:   -106.752862680700   -3.2303e-05  1.41e-03  1.51e-10    1    1  TS, DIIS
+   @MCSCF  9:   -106.752859178781    3.5019e-06  2.51e-03  1.54e-10    1    1  TS, DIIS
+   @MCSCF 10:   -106.752877030055   -1.7851e-05  1.46e-03  1.52e-10    2    1  TS, DIIS
+   @MCSCF 11:   -106.752884415078   -7.3850e-06  4.11e-04  1.53e-10    1    1  TS, DIIS
+   @MCSCF 12:   -106.752885012120   -5.9704e-07  1.12e-04  1.53e-10    1    1  TS, DIIS
+   @MCSCF 13:   -106.752885060714   -4.8594e-08  7.10e-07  1.53e-10    1    1  TS, DIIS
+   @MCSCF 14:   -106.752885060711    2.6006e-12  1.11e-06  1.53e-10    1    1  TS, DIIS
+   @MCSCF 15:   -106.752885060716   -4.5759e-12  3.42e-09  1.53e-10    1    1  TS, DIIS
 
           @MCSCF has converged!
 
-   @MCSCF Final Energy: -106.752885060353520
+   @MCSCF Final Energy: -106.752885060715954
 
    Computing CI Semicanonical Orbitals
 
    ==> Energetics <==
 
-    SCF energy =         -106.764856351737308
-    Total MCSCF energy = -106.752885060353520
+    SCF energy =         -106.764856351737606
+    Total MCSCF energy = -106.752885060715954
 
    ==> MCSCF root 0 information <==
 
-    MCSCF Root 0 energy =  -106.772344530769658
+    MCSCF Root 0 energy =  -106.772344531465166
 
    Active Space Natural occupation numbers:
 
@@ -523,15 +522,15 @@ Total time:
 
    The 4 most important determinants:
 
-    *   1   -0.699843  (    0,    1)  4A1A 5A1B 
-    *   2   -0.699843  (    1,    0)  4A1B 5A1A 
+    *   1   -0.699843  (    1,    0)  4A1B 5A1A 
+    *   2   -0.699843  (    0,    1)  4A1A 5A1B 
     *   3   -0.142097  (    0,    0)  4A1X 
     *   4    0.015730  (    1,    1)  5A1X 
 
 
    ==> MCSCF root 1 information <==
 
-    MCSCF Root 1 energy =  -106.733425589938463
+    MCSCF Root 1 energy =  -106.733425589966117
 
    Active Space Natural occupation numbers:
 
@@ -540,8 +539,8 @@ Total time:
    The 4 most important determinants:
 
     *   1   -0.989853  (    0,    0)  4A1X 
-    *   2    0.100467  (    0,    1)  4A1A 5A1B 
-    *   3    0.100467  (    1,    0)  4A1B 5A1A 
+    *   2    0.100467  (    1,    0)  4A1B 5A1A 
+    *   3    0.100467  (    0,    1)  4A1A 5A1B 
     *   4   -0.002053  (    1,    1)  5A1X 
 
 
@@ -627,7 +626,7 @@ Calling plugin forte.so.
 	Starting second half-transformation.
 	Two-electron integral transformation complete.
 
-  Integral transformation done. 0.07719100 s
+  Integral transformation done. 0.07860600 s
   Reading the two-electron integrals from disk
   Size of two-electron integrals:   0.041891 GB  Using in-core PK algorithm.
    Calculation information:
@@ -647,9 +646,9 @@ Calling plugin forte.so.
 
   Frozen-core energy            -84.713599407175 a.u.
 
-  FrozenOneBody Operator takes  0.23029200 s
+  FrozenOneBody Operator takes  0.26447600 s
   Resorting integrals after freezing core.
-  Conventional integrals take 0.71290000 s
+  Conventional integrals take 0.75700200 s
 
         ----------------------------------------------------------------
           Dynamically Weighted Driven Similarity Renormalization Group
@@ -713,8 +712,8 @@ Calling plugin forte.so.
     Total number of states: 2
     ------------------------------------
 
-  Forming alpha and beta strings      ...  Done. Timing        0.000112 s
-  Forming determinants                ...  Done. Timing        0.000141 s
+  Forming alpha and beta strings      ...  Done. Timing        0.000114 s
+  Forming determinants                ...  Done. Timing        0.000139 s
 
   ==> Determinants Summary <==
 
@@ -727,11 +726,11 @@ Calling plugin forte.so.
 
   ==> Computing Coupling Lists <==
   --------------------------------
-        α          0.001215 s
-        β          0.001203 s
-        αα         0.001043 s
-        ββ         0.001030 s
-        αβ         0.002662 s
+        α          0.001230 s
+        β          0.001200 s
+        αα         0.001046 s
+        ββ         0.001036 s
+        αβ         0.002840 s
   --------------------------------
 
   Davidson-Liu solver algorithm
@@ -752,11 +751,11 @@ Calling plugin forte.so.
   ----------------------------------------
     Iter.      Avg. Energy       Delta_E
   ----------------------------------------
-      1      -97.331220979500  -9.733e+01
-      2      -97.331220979500  -4.974e-13
+      1      -97.331220979556  -9.733e+01
+      2      -97.331220979556  -5.258e-13
   ----------------------------------------
   The Davidson-Liu algorithm converged in 3 iterations.
-  Davidson-Liu procedure took  0.298330 s  Done. Timing        0.307823 s
+  Davidson-Liu procedure took  0.292657 s  Done. Timing        0.302391 s
 
   * * * * * * * * * * * * * * * * *
   *  CI Vectors & Configurations  *
@@ -764,22 +763,22 @@ Calling plugin forte.so.
 
   ==> Root No. 0 <==
 
-    ba0 20 20          0.6992227066
-    ab0 20 20          0.6992227066
-    200 20 20          0.1460778802
+    ba0 20 20         -0.6992227066
+    ab0 20 20         -0.6992227066
+    200 20 20         -0.1460778803
 
-    Total Energy:   -106.772573835154262
+    Total Energy:   -106.772573835135518
 
 
   ==> Root No. 1 <==
 
-    200 20 20          0.9609078851
-    b0a 20 20          0.1530225597
-    a0b 20 20          0.1530225597
-    ba0 20 20         -0.1034192683
-    ab0 20 20         -0.1034192683
+    200 20 20         -0.9609078851
+    b0a 20 20         -0.1530225595
+    a0b 20 20         -0.1530225595
+    ba0 20 20          0.1034192684
+    ab0 20 20          0.1034192684
 
-    Total Energy:   -106.735798150965906
+    Total Energy:   -106.735798150981566
 
 
 
@@ -801,7 +800,7 @@ Calling plugin forte.so.
   Only print nonzero (> 1.0e-5) elements.
   Oscillator strength (a.u.) 0 -> 1:  X:  0.0000  Y:  0.0000  Z:  0.0757  Total:  0.0757
 
-  Total Energy (averaged over 2 states): -106.754185993060076
+  Total Energy (averaged over 2 states): -106.754185993058542
 
 
   =========================================
@@ -828,14 +827,14 @@ Calling plugin forte.so.
 
   ==> Compute State-Averaged Cumulants <==
 
-  Computing  1RDM (0-0) of Singlet A1 ... Writing ... Done. Timing        0.003458 s
-  Computing  2RDM (0-0) of Singlet A1 ... Writing ... Done. Timing        0.006360 s
-  Computing  3RDM (0-0) of Singlet A1 ... Writing ... Done. Timing        0.023833 s
-  Computing  1RDM (1-1) of Singlet A1 ... Writing ... Done. Timing        0.003433 s
-  Computing  2RDM (1-1) of Singlet A1 ... Writing ... Done. Timing        0.006421 s
-  Computing  3RDM (1-1) of Singlet A1 ... Writing ... Done. Timing        0.021084 s
-  Adding wedge product for 2-cumulants ... Done. Timing        0.001455 s
-  Adding wedge product for 3-cumulants ... Done. Timing        0.209233 s
+  Computing  1RDM (0-0) of Singlet A1 ... Writing ... Done. Timing        0.003405 s
+  Computing  2RDM (0-0) of Singlet A1 ... Writing ... Done. Timing        0.006384 s
+  Computing  3RDM (0-0) of Singlet A1 ... Writing ... Done. Timing        0.022787 s
+  Computing  1RDM (1-1) of Singlet A1 ... Writing ... Done. Timing        0.003359 s
+  Computing  2RDM (1-1) of Singlet A1 ... Writing ... Done. Timing        0.006382 s
+  Computing  3RDM (1-1) of Singlet A1 ... Writing ... Done. Timing        0.021279 s
+  Adding wedge product for 2-cumulants ... Done. Timing        0.002100 s
+  Adding wedge product for 3-cumulants ... Done. Timing        0.226634 s
 
   ==> Multireference Driven Similarity Renormalization Group <==
 
@@ -891,8 +890,8 @@ Calling plugin forte.so.
     1-Norm of Fock core, active, virtual blocks (Fij, i != j)
                   core          active         virtual
     --------------------------------------------------
-    Fα    0.0000000000    0.0275850781    1.0176866897
-    Fβ    0.0000000000    0.0275850781    1.0176866897
+    Fα    0.0000000000    0.0275850781    1.0176866890
+    Fβ    0.0000000000    0.0275850781    1.0176866890
     --------------------------------------------------
 
     Warning! Orbitals are not semi-canonicalized!
@@ -900,42 +899,42 @@ Calling plugin forte.so.
 
   ==> First-Order Amplitudes <==
 
-    Computing T2 amplitudes                  ...  Done. Timing      0.436 s
+    Computing T2 amplitudes                  ...  Done. Timing      0.434 s
     Computing T1 amplitudes                  ...  Done. Timing      0.019 s
     Active Indices:    1    2    3   19   20   27   28 
     Largest T1 amplitudes for spin case A:
        i       a                  i       a                  i       a               
     --------------------------------------------------------------------------------
-    [ 19      25    ]-0.021257 [ 27      33    ]-0.021257 [ 27      31    ] 0.012150 
-    [ 19      23    ] 0.012150 [  0      13    ] 0.011163 [  0       8    ]-0.008820 
-    [  0       9    ] 0.007513 [  1      12    ]-0.005861 [ 27      30    ]-0.003528 
-    [ 19      22    ]-0.003528 [  1       9    ]-0.002335 [  0       5    ] 0.001763 
+    [ 19      25    ]-0.021257 [ 27      33    ]-0.021257 [ 19      23    ] 0.012150 
+    [ 27      31    ] 0.012150 [  0      13    ] 0.011163 [  0       8    ]-0.008820 
+    [  0       9    ] 0.007513 [  1      12    ]-0.005861 [ 19      22    ]-0.003528 
+    [ 27      30    ]-0.003528 [  1       9    ]-0.002335 [  0       5    ] 0.001763 
     [  0       6    ]-0.001749 [  2       5    ] 0.001537 [  1      10    ]-0.001476 
     --------------------------------------------------------------------------------
-    Norm of T1A vector: (nonzero elements: 75)                    0.039354624039191.
+    Norm of T1A vector: (nonzero elements: 75)                    0.039354624022757.
     --------------------------------------------------------------------------------
     Largest T1 amplitudes for spin case B:
        _       _                  _       _                  _       _               
        i       a                  i       a                  i       a               
     --------------------------------------------------------------------------------
-    [ 19      25    ]-0.021257 [ 27      33    ]-0.021257 [ 27      31    ] 0.012150 
-    [ 19      23    ] 0.012150 [  0      13    ] 0.011163 [  0       8    ]-0.008820 
-    [  0       9    ] 0.007513 [  1      12    ]-0.005861 [ 27      30    ]-0.003528 
-    [ 19      22    ]-0.003528 [  1       9    ]-0.002335 [  0       5    ] 0.001763 
+    [ 19      25    ]-0.021257 [ 27      33    ]-0.021257 [ 19      23    ] 0.012150 
+    [ 27      31    ] 0.012150 [  0      13    ] 0.011163 [  0       8    ]-0.008820 
+    [  0       9    ] 0.007513 [  1      12    ]-0.005861 [ 19      22    ]-0.003528 
+    [ 27      30    ]-0.003528 [  1       9    ]-0.002335 [  0       5    ] 0.001763 
     [  0       6    ]-0.001749 [  2       5    ] 0.001537 [  1      10    ]-0.001476 
     --------------------------------------------------------------------------------
-    Norm of T1B vector: (nonzero elements: 75)                    0.039354624039191.
+    Norm of T1B vector: (nonzero elements: 75)                    0.039354624022757.
     --------------------------------------------------------------------------------
     Largest T2 amplitudes for spin case AA:
        i   j   a   b              i   j   a   b              i   j   a   b           
     --------------------------------------------------------------------------------
-    [  1  19  12  19] 0.074236 [  1  27  12  27] 0.074236 [ 19  27  25  27] 0.071187 
-    [ 19  27  19  33] 0.071187 [  1  19   1  25] 0.068689 [  1  27   1  33] 0.068689 
+    [  1  19  12  19] 0.074236 [  1  27  12  27] 0.074236 [ 19  27  19  33] 0.071187 
+    [ 19  27  25  27] 0.071187 [  1  27   1  33] 0.068689 [  1  19   1  25] 0.068689 
     [ 19  27  19  31]-0.040284 [ 19  27  23  27]-0.040284 [  1  27   1  31]-0.039196 
     [  1  19   1  23]-0.039196 [  0  19  13  19]-0.035084 [  0  27  13  27]-0.035084 
-    [  0   1   1  13] 0.033894 [  0  27   8  27] 0.027266 [  0  19   8  19] 0.027266 
+    [  0   1   1  13] 0.033894 [  0  19   8  19] 0.027266 [  0  27   8  27] 0.027266 
     --------------------------------------------------------------------------------
-    Norm of T2AA vector: (nonzero elements: 18633)                0.482035650699682.
+    Norm of T2AA vector: (nonzero elements: 18635)                0.482035650698280.
     --------------------------------------------------------------------------------
     Largest T2 amplitudes for spin case AB:
            _       _                  _       _                  _       _           
@@ -943,23 +942,23 @@ Calling plugin forte.so.
     --------------------------------------------------------------------------------
     [ 19  19  19  25] 0.084515 [ 27  27  27  33] 0.084515 [  1   1   1  12] 0.084417 
     [  1  19  12  19] 0.078987 [  1  27  12  27] 0.078987 [  0   0  19  19]-0.076415 
-    [  0   0  27  27]-0.076415 [ 19  27  25  27] 0.075630 [ 19  27  19  33] 0.075630 
-    [  1  19   1  25] 0.072674 [  1  27   1  33] 0.072674 [  0   0   1   1]-0.067128 
-    [ 27  27  27  31]-0.050019 [ 19  19  19  23]-0.050019 [ 19  27  19  31]-0.043529 
+    [  0   0  27  27]-0.076415 [ 19  27  19  33] 0.075630 [ 19  27  25  27] 0.075630 
+    [  1  27   1  33] 0.072674 [  1  19   1  25] 0.072674 [  0   0   1   1]-0.067128 
+    [ 19  19  19  23]-0.050019 [ 27  27  27  31]-0.050019 [ 19  27  19  31]-0.043529 
     --------------------------------------------------------------------------------
-    Norm of T2AB vector: (nonzero elements: 19007)                0.498061623687372.
+    Norm of T2AB vector: (nonzero elements: 19007)                0.498061623685866.
     --------------------------------------------------------------------------------
     Largest T2 amplitudes for spin case BB:
        _   _   _   _              _   _   _   _              _   _   _   _           
        i   j   a   b              i   j   a   b              i   j   a   b           
     --------------------------------------------------------------------------------
-    [  1  19  12  19] 0.074236 [  1  27  12  27] 0.074236 [ 19  27  25  27] 0.071187 
-    [ 19  27  19  33] 0.071187 [  1  19   1  25] 0.068689 [  1  27   1  33] 0.068689 
+    [  1  19  12  19] 0.074236 [  1  27  12  27] 0.074236 [ 19  27  19  33] 0.071187 
+    [ 19  27  25  27] 0.071187 [  1  27   1  33] 0.068689 [  1  19   1  25] 0.068689 
     [ 19  27  19  31]-0.040284 [ 19  27  23  27]-0.040284 [  1  27   1  31]-0.039196 
     [  1  19   1  23]-0.039196 [  0  19  13  19]-0.035084 [  0  27  13  27]-0.035084 
-    [  0   1   1  13] 0.033894 [  0  27   8  27] 0.027266 [  0  19   8  19] 0.027266 
+    [  0   1   1  13] 0.033894 [  0  19   8  19] 0.027266 [  0  27   8  27] 0.027266 
     --------------------------------------------------------------------------------
-    Norm of T2BB vector: (nonzero elements: 18637)                0.482035650699682.
+    Norm of T2BB vector: (nonzero elements: 18645)                0.482035650698280.
     --------------------------------------------------------------------------------
 
   ==> Possible Intruders <==
@@ -972,23 +971,23 @@ Calling plugin forte.so.
 
   ==> Computing 3rd-Order Energy Contribution (1/3) <==
 
-    Computing 3rd-order energy (1/3)         ...  Done. Timing      1.430 s
-    Computing integrals for ref. relaxation  ...  Done. Timing      0.279 s
+    Computing 3rd-order energy (1/3)         ...  Done. Timing      1.404 s
+    Computing integrals for ref. relaxation  ...  Done. Timing      0.282 s
 
   ==> Computing 2nd-Order Correlation Energy <==
 
-    Renormalizing two-electron integrals     ...  Done. Timing      0.481 s
-    Renormalizing Fock matrix elements       ...  Done. Timing      0.024 s
-    Computing 2nd-order energy               ...  Done. Timing      0.193 s
-    Computing integrals for ref. relaxation  ...  Done. Timing      0.284 s
+    Renormalizing two-electron integrals     ...  Done. Timing      0.472 s
+    Renormalizing Fock matrix elements       ...  Done. Timing      0.023 s
+    Computing 2nd-order energy               ...  Done. Timing      0.189 s
+    Computing integrals for ref. relaxation  ...  Done. Timing      0.280 s
 
   ==> Computing 3rd-Order Energy Contribution (2/3) <==
 
-    Preparing 2nd-order amplitudes           ...  Done. Timing      3.988 s
-    Computing T2 amplitudes                  ...  Done. Timing      0.448 s
-    Computing T1 amplitudes                  ...  Done. Timing      0.019 s
-    Computing 3rd-order energy (2/3)         ...  Done. Timing      0.191 s
-    Computing integrals for ref. relaxation  ...  Done. Timing      0.280 s
+    Preparing 2nd-order amplitudes           ...  Done. Timing      4.027 s
+    Computing T2 amplitudes                  ...  Done. Timing      0.433 s
+    Computing T1 amplitudes                  ...  Done. Timing      0.025 s
+    Computing 3rd-order energy (2/3)         ...  Done. Timing      0.204 s
+    Computing integrals for ref. relaxation  ...  Done. Timing      0.277 s
 
   ==> Second-Order Amplitudes Summary <==
 
@@ -996,79 +995,79 @@ Calling plugin forte.so.
     Largest T1 amplitudes for spin case A:
        i       a                  i       a                  i       a               
     --------------------------------------------------------------------------------
-    [ 27      33    ] 0.018056 [ 19      25    ] 0.018056 [ 27      31    ]-0.011863 
-    [ 19      23    ]-0.011863 [  0       8    ] 0.006226 [  0       9    ]-0.005182 
-    [  0      13    ]-0.004532 [ 27      30    ] 0.003480 [ 19      22    ] 0.003480 
+    [ 19      25    ] 0.018056 [ 27      33    ] 0.018056 [ 19      23    ]-0.011863 
+    [ 27      31    ]-0.011863 [  0       8    ] 0.006226 [  0       9    ]-0.005182 
+    [  0      13    ]-0.004532 [ 19      22    ] 0.003480 [ 27      30    ] 0.003480 
     [  1       9    ] 0.002940 [  1       8    ] 0.002709 [  1       6    ]-0.001928 
     [  1      12    ] 0.001442 [  0       6    ] 0.001243 [  0       5    ]-0.001180 
     --------------------------------------------------------------------------------
-    Norm of T1A vector: (nonzero elements: 75)                    0.032741418159053.
+    Norm of T1A vector: (nonzero elements: 75)                    0.032741418148910.
     --------------------------------------------------------------------------------
     Largest T1 amplitudes for spin case B:
        _       _                  _       _                  _       _               
        i       a                  i       a                  i       a               
     --------------------------------------------------------------------------------
-    [ 27      33    ] 0.018056 [ 19      25    ] 0.018056 [ 27      31    ]-0.011863 
-    [ 19      23    ]-0.011863 [  0       8    ] 0.006226 [  0       9    ]-0.005182 
-    [  0      13    ]-0.004532 [ 27      30    ] 0.003480 [ 19      22    ] 0.003480 
+    [ 19      25    ] 0.018056 [ 27      33    ] 0.018056 [ 19      23    ]-0.011863 
+    [ 27      31    ]-0.011863 [  0       8    ] 0.006226 [  0       9    ]-0.005182 
+    [  0      13    ]-0.004532 [ 19      22    ] 0.003480 [ 27      30    ] 0.003480 
     [  1       9    ] 0.002940 [  1       8    ] 0.002709 [  1       6    ]-0.001928 
     [  1      12    ] 0.001442 [  0       6    ] 0.001243 [  0       5    ]-0.001180 
     --------------------------------------------------------------------------------
-    Norm of T1B vector: (nonzero elements: 75)                    0.032741418159053.
+    Norm of T1B vector: (nonzero elements: 75)                    0.032741418148910.
     --------------------------------------------------------------------------------
     Largest T2 amplitudes for spin case AA:
        i   j   a   b              i   j   a   b              i   j   a   b           
     --------------------------------------------------------------------------------
-    [  1  27  12  27]-0.031348 [  1  19  12  19]-0.031348 [  1  19   1  25]-0.020736 
-    [  1  27   1  33]-0.020736 [ 19  27  25  27]-0.019079 [ 19  27  19  33]-0.019079 
+    [  1  27  12  27]-0.031348 [  1  19  12  19]-0.031348 [  1  27   1  33]-0.020736 
+    [  1  19   1  25]-0.020736 [ 19  27  19  33]-0.019079 [ 19  27  25  27]-0.019079 
     [ 19  27  19  31] 0.014449 [ 19  27  23  27] 0.014449 [  0   1   1  13]-0.012302 
     [  1  27   1  31] 0.011966 [  1  19   1  23] 0.011966 [  0  27  13  27] 0.011673 
-    [  0  19  13  19] 0.011673 [  1  27   9  27]-0.010744 [  1  19   9  19]-0.010744 
+    [  0  19  13  19] 0.011673 [  1  19   9  19]-0.010744 [  1  27   9  27]-0.010744 
     --------------------------------------------------------------------------------
-    Norm of T2AA vector: (nonzero elements: 18639)                0.153464900980990.
+    Norm of T2AA vector: (nonzero elements: 18638)                0.153464900998434.
     --------------------------------------------------------------------------------
     Largest T2 amplitudes for spin case AB:
            _       _                  _       _                  _       _           
        i   j   a   b              i   j   a   b              i   j   a   b           
     --------------------------------------------------------------------------------
-    [  1   1   1  12]-0.028597 [  1  19  12  19]-0.028519 [  1  27  12  27]-0.028519 
-    [  1  19   1  25]-0.017415 [  1  27   1  33]-0.017415 [  0   0   1   1]-0.017071 
-    [ 19  27  25  27]-0.015150 [ 19  27  19  33]-0.015150 [ 19  27  19  31] 0.013765 
+    [  1   1   1  12]-0.028597 [  1  27  12  27]-0.028519 [  1  19  12  19]-0.028519 
+    [  1  27   1  33]-0.017415 [  1  19   1  25]-0.017415 [  0   0   1   1]-0.017071 
+    [ 19  27  19  33]-0.015150 [ 19  27  25  27]-0.015150 [ 19  27  19  31] 0.013765 
     [ 19  27  23  27] 0.013765 [ 27  27  27  31] 0.013472 [ 19  19  19  23] 0.013472 
-    [  1  27   1  31] 0.010885 [  1  19   1  23] 0.010885 [  1  27   9  27]-0.010438 
+    [  1  27   1  31] 0.010885 [  1  19   1  23] 0.010885 [  1  19   9  19]-0.010438 
     --------------------------------------------------------------------------------
-    Norm of T2AB vector: (nonzero elements: 19007)                0.117098504058085.
+    Norm of T2AB vector: (nonzero elements: 19007)                0.117098504066831.
     --------------------------------------------------------------------------------
     Largest T2 amplitudes for spin case BB:
        _   _   _   _              _   _   _   _              _   _   _   _           
        i   j   a   b              i   j   a   b              i   j   a   b           
     --------------------------------------------------------------------------------
-    [  1  27  12  27]-0.031348 [  1  19  12  19]-0.031348 [  1  19   1  25]-0.020736 
-    [  1  27   1  33]-0.020736 [ 19  27  25  27]-0.019079 [ 19  27  19  33]-0.019079 
+    [  1  27  12  27]-0.031348 [  1  19  12  19]-0.031348 [  1  27   1  33]-0.020736 
+    [  1  19   1  25]-0.020736 [ 19  27  19  33]-0.019079 [ 19  27  25  27]-0.019079 
     [ 19  27  19  31] 0.014449 [ 19  27  23  27] 0.014449 [  0   1   1  13]-0.012302 
-    [  1  27   1  31] 0.011966 [  1  19   1  23] 0.011966 [  0  19  13  19] 0.011673 
-    [  0  27  13  27] 0.011673 [  1  27   9  27]-0.010744 [  1  19   9  19]-0.010744 
+    [  1  27   1  31] 0.011966 [  1  19   1  23] 0.011966 [  0  27  13  27] 0.011673 
+    [  0  19  13  19] 0.011673 [  1  19   9  19]-0.010744 [  1  27   9  27]-0.010744 
     --------------------------------------------------------------------------------
-    Norm of T2BB vector: (nonzero elements: 18641)                0.153464900980990.
+    Norm of T2BB vector: (nonzero elements: 18642)                0.153464900998434.
     --------------------------------------------------------------------------------
 
   ==> Computing 3rd-Order Energy Contribution (3/3) <==
 
     Renormalizing Fock matrix elements       ...  Done. Timing      0.024 s
-    Renormalizing two-electron integrals     ...  Done. Timing      0.479 s
-    Computing 3rd-order energy (3/3)         ...  Done. Timing      0.194 s
-    Computing integrals for ref. relaxation  ...  Done. Timing      0.280 s
+    Renormalizing two-electron integrals     ...  Done. Timing      0.478 s
+    Computing 3rd-order energy (3/3)         ...  Done. Timing      0.232 s
+    Computing integrals for ref. relaxation  ...  Done. Timing      0.296 s
 
   ==> DSRG-MRPT3 Energy Summary <==
 
-    E0 (reference)                      =   -106.765017536768298
-    2nd-order corr. energy              =     -0.220669733569540
-    3rd-order corr. energy part 1       =      0.004471143089560
-    3rd-order corr. energy part 2       =      0.010970766217126
-    3rd-order corr. energy part 3       =      0.003380494481919
-    3rd-order corr. energy              =      0.018822403788605
-    DSRG-MRPT3 corr. energy             =     -0.201847329780935
-    DSRG-MRPT3 total energy             =   -106.966864866549230
+    E0 (reference)                      =   -106.765017536741141
+    2nd-order corr. energy              =     -0.220669733615794
+    3rd-order corr. energy part 1       =      0.004471143089203
+    3rd-order corr. energy part 2       =      0.010970766229506
+    3rd-order corr. energy part 3       =      0.003380494483265
+    3rd-order corr. energy              =      0.018822403801974
+    DSRG-MRPT3 corr. energy             =     -0.201847329813819
+    DSRG-MRPT3 total energy             =   -106.966864866554957
 
     Notes:
       3rd-order energy part 1: -1.0 / 12.0 * [[[H0th, A1st], A1st], A1st]
@@ -1085,18 +1084,28 @@ Calling plugin forte.so.
   ==> Rotate DSRG Transformed Hamiltonian back to Original Basis <==
 
     Rotating 1-body term to original basis   ... Done. Timing    0.001 s
-    Rotating 2-body term to original basis   ... Done. Timing    0.017 s
+    Rotating 2-body term to original basis   ... Done. Timing    0.018 s
 
   ==> Compute Elements of Effective Hamiltonian <==
 
   Compute densities of 0->0.
-  Computing  1RDM (0-0) of Singlet A1 ... Reading ... Done. Timing        0.000127 s
-  Computing  2RDM (0-0) of Singlet A1 ... Reading ... Done. Timing        0.000166 s
+  Computing  1RDM (0-0) of Singlet A1 ... Reading ... Done. Timing        0.000133 s
+  Computing  2RDM (0-0) of Singlet A1 ... Reading ... Done. Timing        0.000183 s
   Contract densities with Heff.
   Compute transition densities of 0->1.
-  Computing 1TrDM (0-1) of Singlet A1 ... Writing ... Done. Timing        0.003285 s
-  Computing 2TrDM (0-1) of Singlet A1 ... Writing ... Done. Timing        0.006241 s
+  Computing 1TrDM (0-1) of Singlet A1 ... Writing ... Done. Timing        0.003489 s
+  Computing 2TrDM (0-1) of Singlet A1 ... Writing ... Done. Timing        0.007741 s
   Contract transition densities with Heff.
+
+  ==> Total Timings (s) for Computing Commutators <==
+
+             [H1, T1]    [H1, T2]    [H2, T1]    [H2, T2]
+    -----------------------------------------------------
+    -> C0       0.007       0.020       0.022       0.761
+    -> C1       0.012       0.098       0.147       2.072
+    -> C2                   0.274       0.364       2.381
+    -----------------------------------------------------
+
 
   ==> Compute DSRG-MRPT3 Energy of Root 1 <==
 
@@ -1117,14 +1126,14 @@ Calling plugin forte.so.
 
   ==> Compute State-Averaged Cumulants <==
 
-  Computing  1RDM (0-0) of Singlet A1 ... Reading ... Done. Timing        0.000106 s
-  Computing  2RDM (0-0) of Singlet A1 ... Reading ... Done. Timing        0.000162 s
-  Computing  3RDM (0-0) of Singlet A1 ... Reading ... Done. Timing        0.006295 s
-  Computing  1RDM (1-1) of Singlet A1 ... Reading ... Done. Timing        0.000112 s
-  Computing  2RDM (1-1) of Singlet A1 ... Reading ... Done. Timing        0.000164 s
-  Computing  3RDM (1-1) of Singlet A1 ... Reading ... Done. Timing        0.004851 s
-  Adding wedge product for 2-cumulants ... Done. Timing        0.001036 s
-  Adding wedge product for 3-cumulants ... Done. Timing        0.194083 s
+  Computing  1RDM (0-0) of Singlet A1 ... Reading ... Done. Timing        0.000121 s
+  Computing  2RDM (0-0) of Singlet A1 ... Reading ... Done. Timing        0.000174 s
+  Computing  3RDM (0-0) of Singlet A1 ... Reading ... Done. Timing        0.006444 s
+  Computing  1RDM (1-1) of Singlet A1 ... Reading ... Done. Timing        0.000117 s
+  Computing  2RDM (1-1) of Singlet A1 ... Reading ... Done. Timing        0.000169 s
+  Computing  3RDM (1-1) of Singlet A1 ... Reading ... Done. Timing        0.006128 s
+  Adding wedge product for 2-cumulants ... Done. Timing        0.001181 s
+  Adding wedge product for 3-cumulants ... Done. Timing        0.246740 s
 
   ==> Multireference Driven Similarity Renormalization Group <==
 
@@ -1168,30 +1177,20 @@ Calling plugin forte.so.
     Energy part 1 min                                1.73 MB
     Energy part 2 min                               13.73 MB
 
-  ==> Total Timings (s) for Computing Commutators <==
-
-             [H1, T1]    [H1, T2]    [H2, T1]    [H2, T2]
-    -----------------------------------------------------
-    -> C0       0.007       0.021       0.020       0.722
-    -> C1       0.012       0.097       0.146       2.062
-    -> C2                   0.275       0.364       2.325
-    -----------------------------------------------------
-
-
   ==> Checking Semicanonical Orbitals <==
 
     Abs. max of Fock core, active, virtual blocks (Fij, i != j)
                   core          active         virtual
     --------------------------------------------------
-    Fα    0.0000000000    0.0180095724    0.0281964715
-    Fβ    0.0000000000    0.0180095724    0.0281964715
+    Fα    0.0000000000    0.0180095724    0.0281964714
+    Fβ    0.0000000000    0.0180095724    0.0281964714
     --------------------------------------------------
 
     1-Norm of Fock core, active, virtual blocks (Fij, i != j)
                   core          active         virtual
     --------------------------------------------------
-    Fα    0.0000000000    0.0832197458    0.7785473355
-    Fβ    0.0000000000    0.0832197458    0.7785473355
+    Fα    0.0000000000    0.0832197457    0.7785473338
+    Fβ    0.0000000000    0.0832197457    0.7785473338
     --------------------------------------------------
 
     Warning! Orbitals are not semi-canonicalized!
@@ -1199,66 +1198,66 @@ Calling plugin forte.so.
 
   ==> First-Order Amplitudes <==
 
-    Computing T2 amplitudes                  ...  Done. Timing      0.424 s
-    Computing T1 amplitudes                  ...  Done. Timing      0.019 s
+    Computing T2 amplitudes                  ...  Done. Timing      0.468 s
+    Computing T1 amplitudes                  ...  Done. Timing      0.020 s
     Active Indices:    1    2    3   19   20   27   28 
     Largest T1 amplitudes for spin case A:
        i       a                  i       a                  i       a               
     --------------------------------------------------------------------------------
-    [ 19      25    ] 0.016353 [ 27      33    ] 0.016353 [  1      12    ] 0.015936 
-    [  0      13    ]-0.008358 [ 19      23    ]-0.007759 [ 27      31    ]-0.007759 
+    [ 27      33    ] 0.016353 [ 19      25    ] 0.016353 [  1      12    ] 0.015936 
+    [  0      13    ]-0.008358 [ 27      31    ]-0.007759 [ 19      23    ]-0.007759 
     [  0       8    ] 0.006538 [  1       9    ] 0.006015 [  0       9    ]-0.005835 
-    [  1       8    ] 0.004748 [  1       6    ]-0.004032 [ 19      22    ] 0.002364 
-    [ 27      30    ] 0.002364 [  0       6    ] 0.001553 [  0       1    ]-0.001530 
+    [  1       8    ] 0.004748 [  1       6    ]-0.004032 [ 27      30    ] 0.002364 
+    [ 19      22    ] 0.002364 [  0       6    ] 0.001553 [  0       1    ]-0.001530 
     --------------------------------------------------------------------------------
-    Norm of T1A vector: (nonzero elements: 75)                    0.034033576633544.
+    Norm of T1A vector: (nonzero elements: 75)                    0.034033576577975.
     --------------------------------------------------------------------------------
     Largest T1 amplitudes for spin case B:
        _       _                  _       _                  _       _               
        i       a                  i       a                  i       a               
     --------------------------------------------------------------------------------
-    [ 19      25    ] 0.016353 [ 27      33    ] 0.016353 [  1      12    ] 0.015936 
-    [  0      13    ]-0.008358 [ 19      23    ]-0.007759 [ 27      31    ]-0.007759 
+    [ 27      33    ] 0.016353 [ 19      25    ] 0.016353 [  1      12    ] 0.015936 
+    [  0      13    ]-0.008358 [ 27      31    ]-0.007759 [ 19      23    ]-0.007759 
     [  0       8    ] 0.006538 [  1       9    ] 0.006015 [  0       9    ]-0.005835 
-    [  1       8    ] 0.004748 [  1       6    ]-0.004032 [ 19      22    ] 0.002364 
-    [ 27      30    ] 0.002364 [  0       6    ] 0.001553 [  0       1    ]-0.001530 
+    [  1       8    ] 0.004748 [  1       6    ]-0.004032 [ 27      30    ] 0.002364 
+    [ 19      22    ] 0.002364 [  0       6    ] 0.001553 [  0       1    ]-0.001530 
     --------------------------------------------------------------------------------
-    Norm of T1B vector: (nonzero elements: 75)                    0.034033576633544.
+    Norm of T1B vector: (nonzero elements: 75)                    0.034033576577975.
     --------------------------------------------------------------------------------
     Largest T2 amplitudes for spin case AA:
        i   j   a   b              i   j   a   b              i   j   a   b           
     --------------------------------------------------------------------------------
-    [  1  19  12  19] 0.072818 [  1  27  12  27] 0.072818 [ 19  27  25  27] 0.072468 
-    [ 19  27  19  33] 0.072468 [  1  19   1  25] 0.069925 [  1  27   1  33] 0.069925 
+    [  1  19  12  19] 0.072818 [  1  27  12  27] 0.072818 [ 19  27  19  33] 0.072468 
+    [ 19  27  25  27] 0.072468 [  1  27   1  33] 0.069925 [  1  19   1  25] 0.069925 
     [  0  19  13  19]-0.035134 [  0  27  13  27]-0.035134 [  0   1   1  13] 0.033909 
-    [ 19  27  19  31]-0.033399 [ 19  27  23  27]-0.033399 [  1  27   1  31]-0.032488 
-    [  1  19   1  23]-0.032488 [  0  27   8  27] 0.027223 [  0  19   8  19] 0.027223 
+    [ 19  27  23  27]-0.033399 [ 19  27  19  31]-0.033399 [  1  19   1  23]-0.032488 
+    [  1  27   1  31]-0.032488 [  0  19   8  19] 0.027223 [  0  27   8  27] 0.027223 
     --------------------------------------------------------------------------------
-    Norm of T2AA vector: (nonzero elements: 18639)                0.473046862142681.
+    Norm of T2AA vector: (nonzero elements: 18643)                0.473046862149257.
     --------------------------------------------------------------------------------
     Largest T2 amplitudes for spin case AB:
            _       _                  _       _                  _       _           
        i   j   a   b              i   j   a   b              i   j   a   b           
     --------------------------------------------------------------------------------
-    [ 19  19  19  25] 0.086048 [ 27  27  27  33] 0.086048 [  1   1   1  12] 0.082835 
-    [  1  19  12  19] 0.077487 [  1  27  12  27] 0.077487 [ 19  27  25  27] 0.076995 
-    [ 19  27  19  33] 0.076995 [  0   0  27  27]-0.076415 [  0   0  19  19]-0.076415 
-    [  1  19   1  25] 0.073986 [  1  27   1  33] 0.073986 [  0   0   1   1]-0.072626 
-    [  0  19  13  19]-0.041690 [  0  27  13  27]-0.041690 [ 27  27  27  31]-0.041455 
+    [ 27  27  27  33] 0.086048 [ 19  19  19  25] 0.086048 [  1   1   1  12] 0.082835 
+    [  1  19  12  19] 0.077487 [  1  27  12  27] 0.077487 [ 19  27  19  33] 0.076995 
+    [ 19  27  25  27] 0.076995 [  0   0  19  19]-0.076415 [  0   0  27  27]-0.076415 
+    [  1  27   1  33] 0.073986 [  1  19   1  25] 0.073986 [  0   0   1   1]-0.072626 
+    [  0  19  13  19]-0.041690 [  0  27  13  27]-0.041690 [ 19  19  19  23]-0.041455 
     --------------------------------------------------------------------------------
-    Norm of T2AB vector: (nonzero elements: 19007)                0.490236989777555.
+    Norm of T2AB vector: (nonzero elements: 19007)                0.490236989782916.
     --------------------------------------------------------------------------------
     Largest T2 amplitudes for spin case BB:
        _   _   _   _              _   _   _   _              _   _   _   _           
        i   j   a   b              i   j   a   b              i   j   a   b           
     --------------------------------------------------------------------------------
-    [  1  19  12  19] 0.072818 [  1  27  12  27] 0.072818 [ 19  27  25  27] 0.072468 
-    [ 19  27  19  33] 0.072468 [  1  19   1  25] 0.069925 [  1  27   1  33] 0.069925 
+    [  1  19  12  19] 0.072818 [  1  27  12  27] 0.072818 [ 19  27  19  33] 0.072468 
+    [ 19  27  25  27] 0.072468 [  1  27   1  33] 0.069925 [  1  19   1  25] 0.069925 
     [  0  19  13  19]-0.035134 [  0  27  13  27]-0.035134 [  0   1   1  13] 0.033909 
-    [ 19  27  19  31]-0.033399 [ 19  27  23  27]-0.033399 [  1  27   1  31]-0.032488 
-    [  1  19   1  23]-0.032488 [  0  27   8  27] 0.027223 [  0  19   8  19] 0.027223 
+    [ 19  27  23  27]-0.033399 [ 19  27  19  31]-0.033399 [  1  19   1  23]-0.032488 
+    [  1  27   1  31]-0.032488 [  0  19   8  19] 0.027223 [  0  27   8  27] 0.027223 
     --------------------------------------------------------------------------------
-    Norm of T2BB vector: (nonzero elements: 18643)                0.473046862142681.
+    Norm of T2BB vector: (nonzero elements: 18637)                0.473046862149258.
     --------------------------------------------------------------------------------
 
   ==> Possible Intruders <==
@@ -1271,23 +1270,23 @@ Calling plugin forte.so.
 
   ==> Computing 3rd-Order Energy Contribution (1/3) <==
 
-    Computing 3rd-order energy (1/3)         ...  Done. Timing      1.399 s
-    Computing integrals for ref. relaxation  ...  Done. Timing      0.272 s
+    Computing 3rd-order energy (1/3)         ...  Done. Timing      1.585 s
+    Computing integrals for ref. relaxation  ...  Done. Timing      0.290 s
 
   ==> Computing 2nd-Order Correlation Energy <==
 
-    Renormalizing two-electron integrals     ...  Done. Timing      0.469 s
-    Renormalizing Fock matrix elements       ...  Done. Timing      0.023 s
-    Computing 2nd-order energy               ...  Done. Timing      0.187 s
-    Computing integrals for ref. relaxation  ...  Done. Timing      0.278 s
+    Renormalizing two-electron integrals     ...  Done. Timing      0.526 s
+    Renormalizing Fock matrix elements       ...  Done. Timing      0.026 s
+    Computing 2nd-order energy               ...  Done. Timing      0.222 s
+    Computing integrals for ref. relaxation  ...  Done. Timing      0.333 s
 
   ==> Computing 3rd-Order Energy Contribution (2/3) <==
 
-    Preparing 2nd-order amplitudes           ...  Done. Timing      3.898 s
-    Computing T2 amplitudes                  ...  Done. Timing      0.427 s
-    Computing T1 amplitudes                  ...  Done. Timing      0.019 s
-    Computing 3rd-order energy (2/3)         ...  Done. Timing      0.187 s
-    Computing integrals for ref. relaxation  ...  Done. Timing      0.271 s
+    Preparing 2nd-order amplitudes           ...  Done. Timing      4.204 s
+    Computing T2 amplitudes                  ...  Done. Timing      0.475 s
+    Computing T1 amplitudes                  ...  Done. Timing      0.021 s
+    Computing 3rd-order energy (2/3)         ...  Done. Timing      0.203 s
+    Computing integrals for ref. relaxation  ...  Done. Timing      0.296 s
 
   ==> Second-Order Amplitudes Summary <==
 
@@ -1295,79 +1294,79 @@ Calling plugin forte.so.
     Largest T1 amplitudes for spin case A:
        i       a                  i       a                  i       a               
     --------------------------------------------------------------------------------
-    [ 27      33    ] 0.004586 [ 19      25    ] 0.004586 [  1      12    ]-0.004519 
-    [ 27      31    ]-0.004208 [ 19      23    ]-0.004208 [  0      13    ] 0.002971 
-    [  0       8    ] 0.002871 [  0       9    ]-0.002438 [ 27      30    ] 0.001203 
-    [ 19      22    ] 0.001203 [  3      12    ] 0.000704 [  1       9    ] 0.000681 
+    [ 19      25    ] 0.004586 [ 27      33    ] 0.004586 [  1      12    ]-0.004519 
+    [ 19      23    ]-0.004208 [ 27      31    ]-0.004208 [  0      13    ] 0.002971 
+    [  0       8    ] 0.002871 [  0       9    ]-0.002438 [ 19      22    ] 0.001203 
+    [ 27      30    ] 0.001203 [  3      12    ] 0.000704 [  1       9    ] 0.000681 
     [  1       8    ] 0.000644 [  0       6    ] 0.000605 [  0       5    ]-0.000533 
     --------------------------------------------------------------------------------
-    Norm of T1A vector: (nonzero elements: 75)                    0.011270073618954.
+    Norm of T1A vector: (nonzero elements: 75)                    0.011270073621844.
     --------------------------------------------------------------------------------
     Largest T1 amplitudes for spin case B:
        _       _                  _       _                  _       _               
        i       a                  i       a                  i       a               
     --------------------------------------------------------------------------------
-    [ 27      33    ] 0.004586 [ 19      25    ] 0.004586 [  1      12    ]-0.004519 
-    [ 27      31    ]-0.004208 [ 19      23    ]-0.004208 [  0      13    ] 0.002971 
-    [  0       8    ] 0.002871 [  0       9    ]-0.002438 [ 27      30    ] 0.001203 
-    [ 19      22    ] 0.001203 [  3      12    ] 0.000704 [  1       9    ] 0.000681 
+    [ 19      25    ] 0.004586 [ 27      33    ] 0.004586 [  1      12    ]-0.004519 
+    [ 19      23    ]-0.004208 [ 27      31    ]-0.004208 [  0      13    ] 0.002971 
+    [  0       8    ] 0.002871 [  0       9    ]-0.002438 [ 19      22    ] 0.001203 
+    [ 27      30    ] 0.001203 [  3      12    ] 0.000704 [  1       9    ] 0.000681 
     [  1       8    ] 0.000644 [  0       6    ] 0.000605 [  0       5    ]-0.000533 
     --------------------------------------------------------------------------------
-    Norm of T1B vector: (nonzero elements: 75)                    0.011270073618955.
+    Norm of T1B vector: (nonzero elements: 75)                    0.011270073621844.
     --------------------------------------------------------------------------------
     Largest T2 amplitudes for spin case AA:
        i   j   a   b              i   j   a   b              i   j   a   b           
     --------------------------------------------------------------------------------
-    [  1  19  12  19]-0.030364 [  1  27  12  27]-0.030364 [ 19  27  25  27]-0.026673 
-    [ 19  27  19  33]-0.026673 [  1  19   1  25]-0.025794 [  1  27   1  33]-0.025794 
-    [  0  19  13  19] 0.014557 [  0  27  13  27] 0.014557 [  0   1   1  13]-0.014205 
+    [  1  27  12  27]-0.030364 [  1  19  12  19]-0.030364 [ 19  27  19  33]-0.026673 
+    [ 19  27  25  27]-0.026673 [  1  27   1  33]-0.025794 [  1  19   1  25]-0.025794 
+    [  0  27  13  27] 0.014557 [  0  19  13  19] 0.014557 [  0   1   1  13]-0.014205 
     [ 19  27  19  31] 0.012866 [ 19  27  23  27] 0.012866 [  1  27   1  31] 0.011829 
-    [  1  19   1  23] 0.011829 [  0  27   8  27]-0.010323 [  0  19   8  19]-0.010323 
+    [  1  19   1  23] 0.011829 [  0  19   8  19]-0.010323 [  0  27   8  27]-0.010323 
     --------------------------------------------------------------------------------
-    Norm of T2AA vector: (nonzero elements: 18642)                0.169060684861039.
+    Norm of T2AA vector: (nonzero elements: 18640)                0.169060684856694.
     --------------------------------------------------------------------------------
     Largest T2 amplitudes for spin case AB:
            _       _                  _       _                  _       _           
        i   j   a   b              i   j   a   b              i   j   a   b           
     --------------------------------------------------------------------------------
-    [  1  19  12  19]-0.027238 [  1  27  12  27]-0.027238 [ 19  27  25  27]-0.023182 
-    [ 19  27  19  33]-0.023182 [  1   1   1  12]-0.022967 [  1  19   1  25]-0.022526 
-    [  1  27   1  33]-0.022526 [ 19  19  19  25]-0.018356 [ 27  27  27  33]-0.018356 
-    [ 19  27  19  31] 0.012178 [ 19  27  23  27] 0.012178 [ 27  27  27  31] 0.011704 
-    [ 19  19  19  23] 0.011704 [  1  27   1  31] 0.011051 [  1  19   1  23] 0.011051 
+    [  1  27  12  27]-0.027238 [  1  19  12  19]-0.027238 [ 19  27  19  33]-0.023182 
+    [ 19  27  25  27]-0.023182 [  1   1   1  12]-0.022967 [  1  27   1  33]-0.022526 
+    [  1  19   1  25]-0.022526 [ 27  27  27  33]-0.018356 [ 19  19  19  25]-0.018356 
+    [ 19  27  19  31] 0.012178 [ 19  27  23  27] 0.012178 [ 19  19  19  23] 0.011704 
+    [ 27  27  27  31] 0.011704 [  1  27   1  31] 0.011051 [  1  19   1  23] 0.011051 
     --------------------------------------------------------------------------------
-    Norm of T2AB vector: (nonzero elements: 19007)                0.123656230271338.
+    Norm of T2AB vector: (nonzero elements: 19007)                0.123656230269259.
     --------------------------------------------------------------------------------
     Largest T2 amplitudes for spin case BB:
        _   _   _   _              _   _   _   _              _   _   _   _           
        i   j   a   b              i   j   a   b              i   j   a   b           
     --------------------------------------------------------------------------------
-    [  1  19  12  19]-0.030364 [  1  27  12  27]-0.030364 [ 19  27  25  27]-0.026673 
-    [ 19  27  19  33]-0.026673 [  1  19   1  25]-0.025794 [  1  27   1  33]-0.025794 
-    [  0  19  13  19] 0.014557 [  0  27  13  27] 0.014557 [  0   1   1  13]-0.014205 
+    [  1  27  12  27]-0.030364 [  1  19  12  19]-0.030364 [ 19  27  19  33]-0.026673 
+    [ 19  27  25  27]-0.026673 [  1  27   1  33]-0.025794 [  1  19   1  25]-0.025794 
+    [  0  27  13  27] 0.014557 [  0  19  13  19] 0.014557 [  0   1   1  13]-0.014205 
     [ 19  27  19  31] 0.012866 [ 19  27  23  27] 0.012866 [  1  27   1  31] 0.011829 
-    [  1  19   1  23] 0.011829 [  0  27   8  27]-0.010323 [  0  19   8  19]-0.010323 
+    [  1  19   1  23] 0.011829 [  0  19   8  19]-0.010323 [  0  27   8  27]-0.010323 
     --------------------------------------------------------------------------------
-    Norm of T2BB vector: (nonzero elements: 18643)                0.169060684861039.
+    Norm of T2BB vector: (nonzero elements: 18644)                0.169060684856694.
     --------------------------------------------------------------------------------
 
   ==> Computing 3rd-Order Energy Contribution (3/3) <==
 
-    Renormalizing Fock matrix elements       ...  Done. Timing      0.023 s
-    Renormalizing two-electron integrals     ...  Done. Timing      0.472 s
-    Computing 3rd-order energy (3/3)         ...  Done. Timing      0.188 s
-    Computing integrals for ref. relaxation  ...  Done. Timing      0.278 s
+    Renormalizing Fock matrix elements       ...  Done. Timing      0.026 s
+    Renormalizing two-electron integrals     ...  Done. Timing      0.727 s
+    Computing 3rd-order energy (3/3)         ...  Done. Timing      0.221 s
+    Computing integrals for ref. relaxation  ...  Done. Timing      0.303 s
 
   ==> DSRG-MRPT3 Energy Summary <==
 
-    E0 (reference)                      =   -106.743354449352069
-    2nd-order corr. energy              =     -0.241891751515307
-    3rd-order corr. energy part 1       =     -0.000081414212920
-    3rd-order corr. energy part 2       =      0.012122979407100
-    3rd-order corr. energy part 3       =      0.001521332393390
-    3rd-order corr. energy              =      0.013562897587569
-    DSRG-MRPT3 corr. energy             =     -0.228328853927738
-    DSRG-MRPT3 total energy             =   -106.971683303279804
+    E0 (reference)                      =   -106.743354449375559
+    2nd-order corr. energy              =     -0.241891751504772
+    3rd-order corr. energy part 1       =     -0.000081414209739
+    3rd-order corr. energy part 2       =      0.012122979409492
+    3rd-order corr. energy part 3       =      0.001521332395112
+    3rd-order corr. energy              =      0.013562897594865
+    DSRG-MRPT3 corr. energy             =     -0.228328853909907
+    DSRG-MRPT3 total energy             =   -106.971683303285459
 
     Notes:
       3rd-order energy part 1: -1.0 / 12.0 * [[[H0th, A1st], A1st], A1st]
@@ -1384,18 +1383,28 @@ Calling plugin forte.so.
   ==> Rotate DSRG Transformed Hamiltonian back to Original Basis <==
 
     Rotating 1-body term to original basis   ... Done. Timing    0.001 s
-    Rotating 2-body term to original basis   ... Done. Timing    0.017 s
+    Rotating 2-body term to original basis   ... Done. Timing    0.018 s
 
   ==> Compute Elements of Effective Hamiltonian <==
 
   Compute transition densities of 1->0. Use Hermiticity of Hbar.
-  Computing 1TrDM (0-1) of Singlet A1 ... Reading ... Done. Timing        0.000104 s
+  Computing 1TrDM (0-1) of Singlet A1 ... Reading ... Done. Timing        0.000106 s
   Computing 2TrDM (0-1) of Singlet A1 ... Reading ... Done. Timing        0.000167 s
   Contract transition densities with Heff.
   Compute densities of 1->1.
   Computing  1RDM (1-1) of Singlet A1 ... Reading ... Done. Timing        0.000078 s
-  Computing  2RDM (1-1) of Singlet A1 ... Reading ... Done. Timing        0.000160 s
+  Computing  2RDM (1-1) of Singlet A1 ... Reading ... Done. Timing        0.000164 s
   Contract densities with Heff.
+
+  ==> Total Timings (s) for Computing Commutators <==
+
+             [H1, T1]    [H1, T2]    [H2, T1]    [H2, T2]
+    -----------------------------------------------------
+    -> C0       0.007       0.021       0.021       0.801
+    -> C1       0.014       0.119       0.151       2.271
+    -> C2                   0.315       0.385       2.521
+    -----------------------------------------------------
+
 
   ==> Effective Hamiltonian Summary <==
 
@@ -1404,8 +1413,8 @@ Calling plugin forte.so.
 
                  1                   2
 
-    1  -106.96175622859315    -0.00727898739230
-    2    -0.00809892215563  -106.97581793737922
+    1  -106.96175622858648    -0.00727898739777
+    2    -0.00809892216095  -106.97581793739714
 
 
 
@@ -1414,8 +1423,8 @@ Calling plugin forte.so.
 
                  1                   2
 
-    1  -106.96175622859315    -0.00768895477396
-    2    -0.00768895477396  -106.97581793737922
+    1  -106.96175622858648    -0.00768895477936
+    2    -0.00768895477936  -106.97581793739714
 
 
 
@@ -1431,28 +1440,18 @@ Calling plugin forte.so.
 
 
 
-  ==> Total Timings (s) for Computing Commutators <==
-
-             [H1, T1]    [H1, T2]    [H2, T1]    [H2, T2]
-    -----------------------------------------------------
-    -> C0       0.006       0.019       0.019       0.703
-    -> C1       0.012       0.096       0.143       2.040
-    -> C2                   0.268       0.367       2.286
-    -----------------------------------------------------
-
-
   ==> Dynamically Weighted Driven Similarity Renormalization Group Energy Summary <==
 
     Multi.  Irrep.  No.                   CASCI
     -------------------------------------------
-       1      A1     0      -106.77257383515426
-       1      A1     1      -106.73579815096591
+       1      A1     0      -106.77257383513552
+       1      A1     1      -106.73579815098157
     -------------------------------------------
 
     Multi.  Irrep.  No.           DW-DSRG-SAPT3
     -------------------------------------------
-       1      A1     0      -106.97920595715819
-       1      A1     1      -106.95836820881418
+       1      A1     0      -106.97920595717609
+       1      A1     1      -106.95836820880754
     -------------------------------------------
 	DWSA-DSRG-PT3 energy on root 0....................................PASSED
 	DWSA-DSRG-PT3 energy on root 1....................................PASSED
@@ -1512,16 +1511,16 @@ Calling plugin forte.so.
   Cholesky integrals time
  Computing the Cholesky Vectors 
 
-    Computing CD Integrals               ......Done. Timing        0.715550 s
+    Computing CD Integrals               ......Done. Timing        0.802016 s
  Need 0.003743 GB to store cd integrals in core
 
  Number of cholesky vectors 367 to satisfy       0.000000000100 tolerance
 
   Frozen-core energy            -84.713599407176 a.u.
 
-  FrozenOneBody Operator takes  0.75812400 s
+  FrozenOneBody Operator takes  0.81136700 s
   Resorting integrals after freezing core.
-  CholeskyIntegrals take 1.64620800
+  CholeskyIntegrals take 1.80874900
 
         ----------------------------------------------------------------
           Dynamically Weighted Driven Similarity Renormalization Group
@@ -1585,8 +1584,8 @@ Calling plugin forte.so.
     Total number of states: 2
     ------------------------------------
 
-  Forming alpha and beta strings      ...  Done. Timing        0.000099 s
-  Forming determinants                ...  Done. Timing        0.000136 s
+  Forming alpha and beta strings      ...  Done. Timing        0.000094 s
+  Forming determinants                ...  Done. Timing        0.000138 s
 
   ==> Determinants Summary <==
 
@@ -1599,11 +1598,11 @@ Calling plugin forte.so.
 
   ==> Computing Coupling Lists <==
   --------------------------------
-        α          0.001200 s
-        β          0.001191 s
-        αα         0.001025 s
-        ββ         0.001028 s
-        αβ         0.002757 s
+        α          0.001250 s
+        β          0.001255 s
+        αα         0.001212 s
+        ββ         0.001068 s
+        αβ         0.002800 s
   --------------------------------
 
   Davidson-Liu solver algorithm
@@ -1624,11 +1623,11 @@ Calling plugin forte.so.
   ----------------------------------------
     Iter.      Avg. Energy       Delta_E
   ----------------------------------------
-      1      -97.331220979500  -9.733e+01
-      2      -97.331220979500  -5.400e-13
+      1      -97.331220979556  -9.733e+01
+      2      -97.331220979556  -5.400e-13
   ----------------------------------------
   The Davidson-Liu algorithm converged in 3 iterations.
-  Davidson-Liu procedure took  0.300303 s  Done. Timing        0.309791 s
+  Davidson-Liu procedure took  0.318434 s  Done. Timing        0.328390 s
 
   * * * * * * * * * * * * * * * * *
   *  CI Vectors & Configurations  *
@@ -1636,22 +1635,22 @@ Calling plugin forte.so.
 
   ==> Root No. 0 <==
 
-    ba0 20 20         -0.6992227066
-    ab0 20 20         -0.6992227066
-    200 20 20         -0.1460778802
+    ba0 20 20          0.6992227066
+    ab0 20 20          0.6992227066
+    200 20 20          0.1460778803
 
-    Total Energy:   -106.772573835154205
+    Total Energy:   -106.772573835135489
 
 
   ==> Root No. 1 <==
 
-    200 20 20          0.9609078851
-    b0a 20 20          0.1530225598
-    a0b 20 20          0.1530225598
-    ba0 20 20         -0.1034192683
-    ab0 20 20         -0.1034192683
+    200 20 20         -0.9609078851
+    b0a 20 20         -0.1530225596
+    a0b 20 20         -0.1530225596
+    ba0 20 20          0.1034192684
+    ab0 20 20          0.1034192684
 
-    Total Energy:   -106.735798150966332
+    Total Energy:   -106.735798150981935
 
 
 
@@ -1673,7 +1672,7 @@ Calling plugin forte.so.
   Only print nonzero (> 1.0e-5) elements.
   Oscillator strength (a.u.) 0 -> 1:  X:  0.0000  Y:  0.0000  Z:  0.0757  Total:  0.0757
 
-  Total Energy (averaged over 2 states): -106.754185993060275
+  Total Energy (averaged over 2 states): -106.754185993058712
 
 
   =========================================
@@ -1700,14 +1699,14 @@ Calling plugin forte.so.
 
   ==> Compute State-Averaged Cumulants <==
 
-  Computing  1RDM (0-0) of Singlet A1 ... Writing ... Done. Timing        0.003347 s
-  Computing  2RDM (0-0) of Singlet A1 ... Writing ... Done. Timing        0.006309 s
-  Computing  3RDM (0-0) of Singlet A1 ... Writing ... Done. Timing        0.022088 s
-  Computing  1RDM (1-1) of Singlet A1 ... Writing ... Done. Timing        0.003375 s
-  Computing  2RDM (1-1) of Singlet A1 ... Writing ... Done. Timing        0.006300 s
-  Computing  3RDM (1-1) of Singlet A1 ... Writing ... Done. Timing        0.021301 s
-  Adding wedge product for 2-cumulants ... Done. Timing        0.001175 s
-  Adding wedge product for 3-cumulants ... Done. Timing        0.204336 s
+  Computing  1RDM (0-0) of Singlet A1 ... Writing ... Done. Timing        0.003417 s
+  Computing  2RDM (0-0) of Singlet A1 ... Writing ... Done. Timing        0.006556 s
+  Computing  3RDM (0-0) of Singlet A1 ... Writing ... Done. Timing        0.025505 s
+  Computing  1RDM (1-1) of Singlet A1 ... Writing ... Done. Timing        0.003443 s
+  Computing  2RDM (1-1) of Singlet A1 ... Writing ... Done. Timing        0.007105 s
+  Computing  3RDM (1-1) of Singlet A1 ... Writing ... Done. Timing        0.025827 s
+  Adding wedge product for 2-cumulants ... Done. Timing        0.001157 s
+  Adding wedge product for 3-cumulants ... Done. Timing        0.226276 s
 
   ==> Multireference Driven Similarity Renormalization Group <==
 
@@ -1757,15 +1756,15 @@ Calling plugin forte.so.
     Abs. max of Fock core, active, virtual blocks (Fij, i != j)
                   core          active         virtual
     --------------------------------------------------
-    Fα    0.0000000000    0.0061957302    0.0349387896
-    Fβ    0.0000000000    0.0061957302    0.0349387896
+    Fα    0.0000000000    0.0061957302    0.0349387895
+    Fβ    0.0000000000    0.0061957302    0.0349387895
     --------------------------------------------------
 
     1-Norm of Fock core, active, virtual blocks (Fij, i != j)
                   core          active         virtual
     --------------------------------------------------
-    Fα    0.0000000000    0.0275850781    1.0176866899
-    Fβ    0.0000000000    0.0275850781    1.0176866899
+    Fα    0.0000000000    0.0275850781    1.0176866892
+    Fβ    0.0000000000    0.0275850781    1.0176866892
     --------------------------------------------------
 
     Warning! Orbitals are not semi-canonicalized!
@@ -1773,8 +1772,8 @@ Calling plugin forte.so.
 
   ==> First-Order Amplitudes <==
 
-    Computing T2 amplitudes                  ...  Done. Timing      0.437 s
-    Computing T1 amplitudes                  ...  Done. Timing      0.020 s
+    Computing T2 amplitudes                  ...  Done. Timing      0.496 s
+    Computing T1 amplitudes                  ...  Done. Timing      0.024 s
     Active Indices:    1    2    3   19   20   27   28 
     Largest T1 amplitudes for spin case A:
        i       a                  i       a                  i       a               
@@ -1785,7 +1784,7 @@ Calling plugin forte.so.
     [ 19      22    ]-0.003528 [  1       9    ]-0.002335 [  0       5    ] 0.001763 
     [  0       6    ]-0.001749 [  2       5    ] 0.001537 [  1      10    ]-0.001476 
     --------------------------------------------------------------------------------
-    Norm of T1A vector: (nonzero elements: 75)                    0.039354624038835.
+    Norm of T1A vector: (nonzero elements: 75)                    0.039354624022547.
     --------------------------------------------------------------------------------
     Largest T1 amplitudes for spin case B:
        _       _                  _       _                  _       _               
@@ -1797,7 +1796,7 @@ Calling plugin forte.so.
     [ 19      22    ]-0.003528 [  1       9    ]-0.002335 [  0       5    ] 0.001763 
     [  0       6    ]-0.001749 [  2       5    ] 0.001537 [  1      10    ]-0.001476 
     --------------------------------------------------------------------------------
-    Norm of T1B vector: (nonzero elements: 75)                    0.039354624038835.
+    Norm of T1B vector: (nonzero elements: 75)                    0.039354624022547.
     --------------------------------------------------------------------------------
     Largest T2 amplitudes for spin case AA:
        i   j   a   b              i   j   a   b              i   j   a   b           
@@ -1808,7 +1807,7 @@ Calling plugin forte.so.
     [  1  19   1  23]-0.039196 [  0  19  13  19]-0.035084 [  0  27  13  27]-0.035084 
     [  0   1   1  13] 0.033894 [  0  27   8  27] 0.027266 [  0  19   8  19] 0.027266 
     --------------------------------------------------------------------------------
-    Norm of T2AA vector: (nonzero elements: 18640)                0.482035650702703.
+    Norm of T2AA vector: (nonzero elements: 18635)                0.482035650701311.
     --------------------------------------------------------------------------------
     Largest T2 amplitudes for spin case AB:
            _       _                  _       _                  _       _           
@@ -1820,7 +1819,7 @@ Calling plugin forte.so.
     [  1  19   1  25] 0.072674 [  1  27   1  33] 0.072674 [  0   0   1   1]-0.067128 
     [ 27  27  27  31]-0.050019 [ 19  19  19  23]-0.050019 [ 19  27  19  31]-0.043529 
     --------------------------------------------------------------------------------
-    Norm of T2AB vector: (nonzero elements: 19007)                0.498061623690075.
+    Norm of T2AB vector: (nonzero elements: 19007)                0.498061623688579.
     --------------------------------------------------------------------------------
     Largest T2 amplitudes for spin case BB:
        _   _   _   _              _   _   _   _              _   _   _   _           
@@ -1832,7 +1831,7 @@ Calling plugin forte.so.
     [  1  19   1  23]-0.039196 [  0  19  13  19]-0.035084 [  0  27  13  27]-0.035084 
     [  0   1   1  13] 0.033894 [  0  27   8  27] 0.027266 [  0  19   8  19] 0.027266 
     --------------------------------------------------------------------------------
-    Norm of T2BB vector: (nonzero elements: 18640)                0.482035650702703.
+    Norm of T2BB vector: (nonzero elements: 18635)                0.482035650701311.
     --------------------------------------------------------------------------------
 
   ==> Possible Intruders <==
@@ -1845,23 +1844,23 @@ Calling plugin forte.so.
 
   ==> Computing 3rd-Order Energy Contribution (1/3) <==
 
-    Computing 3rd-order energy (1/3)         ...  Done. Timing      1.446 s
-    Computing integrals for ref. relaxation  ...  Done. Timing      0.279 s
+    Computing 3rd-order energy (1/3)         ...  Done. Timing      1.536 s
+    Computing integrals for ref. relaxation  ...  Done. Timing      0.297 s
 
   ==> Computing 2nd-Order Correlation Energy <==
 
-    Renormalizing two-electron integrals     ...  Done. Timing      0.477 s
-    Renormalizing Fock matrix elements       ...  Done. Timing      0.023 s
-    Computing 2nd-order energy               ...  Done. Timing      0.193 s
-    Computing integrals for ref. relaxation  ...  Done. Timing      0.282 s
+    Renormalizing two-electron integrals     ...  Done. Timing      0.514 s
+    Renormalizing Fock matrix elements       ...  Done. Timing      0.025 s
+    Computing 2nd-order energy               ...  Done. Timing      0.206 s
+    Computing integrals for ref. relaxation  ...  Done. Timing      0.300 s
 
   ==> Computing 3rd-Order Energy Contribution (2/3) <==
 
-    Preparing 2nd-order amplitudes           ...  Done. Timing      2.933 s
-    Computing T2 amplitudes                  ...  Done. Timing      0.491 s
-    Computing T1 amplitudes                  ...  Done. Timing      0.027 s
-    Computing 3rd-order energy (2/3)         ...  Done. Timing      0.219 s
-    Computing integrals for ref. relaxation  ...  Done. Timing      0.279 s
+    Preparing 2nd-order amplitudes           ...  Done. Timing      3.258 s
+    Computing T2 amplitudes                  ...  Done. Timing      0.456 s
+    Computing T1 amplitudes                  ...  Done. Timing      0.020 s
+    Computing 3rd-order energy (2/3)         ...  Done. Timing      0.199 s
+    Computing integrals for ref. relaxation  ...  Done. Timing      0.289 s
 
   ==> Second-Order Amplitudes Summary <==
 
@@ -1875,7 +1874,7 @@ Calling plugin forte.so.
     [  1       9    ] 0.002940 [  1       8    ] 0.002709 [  1       6    ]-0.001928 
     [  1      12    ] 0.001442 [  0       6    ] 0.001243 [  0       5    ]-0.001180 
     --------------------------------------------------------------------------------
-    Norm of T1A vector: (nonzero elements: 75)                    0.032741418159058.
+    Norm of T1A vector: (nonzero elements: 75)                    0.032741418148960.
     --------------------------------------------------------------------------------
     Largest T1 amplitudes for spin case B:
        _       _                  _       _                  _       _               
@@ -1887,7 +1886,7 @@ Calling plugin forte.so.
     [  1       9    ] 0.002940 [  1       8    ] 0.002709 [  1       6    ]-0.001928 
     [  1      12    ] 0.001442 [  0       6    ] 0.001243 [  0       5    ]-0.001180 
     --------------------------------------------------------------------------------
-    Norm of T1B vector: (nonzero elements: 75)                    0.032741418159058.
+    Norm of T1B vector: (nonzero elements: 75)                    0.032741418148960.
     --------------------------------------------------------------------------------
     Largest T2 amplitudes for spin case AA:
        i   j   a   b              i   j   a   b              i   j   a   b           
@@ -1898,7 +1897,7 @@ Calling plugin forte.so.
     [  1  19   1  23] 0.011966 [  1  27   1  31] 0.011966 [  0  19  13  19] 0.011673 
     [  0  27  13  27] 0.011673 [  1  19   9  19]-0.010744 [  1  27   9  27]-0.010744 
     --------------------------------------------------------------------------------
-    Norm of T2AA vector: (nonzero elements: 18642)                0.153464900982350.
+    Norm of T2AA vector: (nonzero elements: 18637)                0.153464900999759.
     --------------------------------------------------------------------------------
     Largest T2 amplitudes for spin case AB:
            _       _                  _       _                  _       _           
@@ -1910,7 +1909,7 @@ Calling plugin forte.so.
     [ 19  27  19  31] 0.013765 [ 19  19  19  23] 0.013472 [ 27  27  27  31] 0.013472 
     [  1  19   1  23] 0.010885 [  1  27   1  31] 0.010885 [  1  19   9  19]-0.010438 
     --------------------------------------------------------------------------------
-    Norm of T2AB vector: (nonzero elements: 19007)                0.117098504059412.
+    Norm of T2AB vector: (nonzero elements: 19007)                0.117098504068147.
     --------------------------------------------------------------------------------
     Largest T2 amplitudes for spin case BB:
        _   _   _   _              _   _   _   _              _   _   _   _           
@@ -1922,26 +1921,26 @@ Calling plugin forte.so.
     [  1  19   1  23] 0.011966 [  1  27   1  31] 0.011966 [  0  19  13  19] 0.011673 
     [  0  27  13  27] 0.011673 [  1  19   9  19]-0.010744 [  1  27   9  27]-0.010744 
     --------------------------------------------------------------------------------
-    Norm of T2BB vector: (nonzero elements: 18643)                0.153464900982350.
+    Norm of T2BB vector: (nonzero elements: 18639)                0.153464900999759.
     --------------------------------------------------------------------------------
 
   ==> Computing 3rd-Order Energy Contribution (3/3) <==
 
-    Renormalizing Fock matrix elements       ...  Done. Timing      0.024 s
-    Renormalizing two-electron integrals     ...  Done. Timing      0.480 s
-    Computing 3rd-order energy (3/3)         ...  Done. Timing      0.193 s
-    Computing integrals for ref. relaxation  ...  Done. Timing      0.277 s
+    Renormalizing Fock matrix elements       ...  Done. Timing      0.025 s
+    Renormalizing two-electron integrals     ...  Done. Timing      0.491 s
+    Computing 3rd-order energy (3/3)         ...  Done. Timing      0.209 s
+    Computing integrals for ref. relaxation  ...  Done. Timing      0.304 s
 
   ==> DSRG-MRPT3 Energy Summary <==
 
-    E0 (reference)                      =   -106.765017536768099
-    2nd-order corr. energy              =     -0.220669733569628
-    3rd-order corr. energy part 1       =      0.004471143089578
-    3rd-order corr. energy part 2       =      0.010970766216982
-    3rd-order corr. energy part 3       =      0.003380494481969
-    3rd-order corr. energy              =      0.018822403788528
-    DSRG-MRPT3 corr. energy             =     -0.201847329781100
-    DSRG-MRPT3 total energy             =   -106.966864866549201
+    E0 (reference)                      =   -106.765017536741055
+    2nd-order corr. energy              =     -0.220669733615836
+    3rd-order corr. energy part 1       =      0.004471143089231
+    3rd-order corr. energy part 2       =      0.010970766229358
+    3rd-order corr. energy part 3       =      0.003380494483317
+    3rd-order corr. energy              =      0.018822403801907
+    DSRG-MRPT3 corr. energy             =     -0.201847329813930
+    DSRG-MRPT3 total energy             =   -106.966864866554985
 
     Notes:
       3rd-order energy part 1: -1.0 / 12.0 * [[[H0th, A1st], A1st], A1st]
@@ -1952,7 +1951,7 @@ Calling plugin forte.so.
 
   ==> De-Normal-Order DSRG Transformed Hamiltonian <==
 
-    Computing the scalar term                ... Done. Timing    0.003 s
+    Computing the scalar term                ... Done. Timing    0.002 s
     Computing the 1-body term                ... Done. Timing    0.001 s
 
   ==> Rotate DSRG Transformed Hamiltonian back to Original Basis <==
@@ -1963,13 +1962,23 @@ Calling plugin forte.so.
   ==> Compute Elements of Effective Hamiltonian <==
 
   Compute densities of 0->0.
-  Computing  1RDM (0-0) of Singlet A1 ... Reading ... Done. Timing        0.000107 s
-  Computing  2RDM (0-0) of Singlet A1 ... Reading ... Done. Timing        0.000171 s
+  Computing  1RDM (0-0) of Singlet A1 ... Reading ... Done. Timing        0.000108 s
+  Computing  2RDM (0-0) of Singlet A1 ... Reading ... Done. Timing        0.000184 s
   Contract densities with Heff.
   Compute transition densities of 0->1.
-  Computing 1TrDM (0-1) of Singlet A1 ... Writing ... Done. Timing        0.003951 s
-  Computing 2TrDM (0-1) of Singlet A1 ... Writing ... Done. Timing        0.006320 s
+  Computing 1TrDM (0-1) of Singlet A1 ... Writing ... Done. Timing        0.003447 s
+  Computing 2TrDM (0-1) of Singlet A1 ... Writing ... Done. Timing        0.006826 s
   Contract transition densities with Heff.
+
+  ==> Total Timings (s) for Computing Commutators <==
+
+             [H1, T1]    [H1, T2]    [H2, T1]    [H2, T2]
+    -----------------------------------------------------
+    -> C0       0.007       0.021       0.019       0.774
+    -> C1       0.013       0.106       0.215       2.207
+    -> C2                   0.295       0.472       2.414
+    -----------------------------------------------------
+
 
   ==> Compute DSRG-MRPT3 Energy of Root 1 <==
 
@@ -1990,14 +1999,14 @@ Calling plugin forte.so.
 
   ==> Compute State-Averaged Cumulants <==
 
-  Computing  1RDM (0-0) of Singlet A1 ... Reading ... Done. Timing        0.000103 s
-  Computing  2RDM (0-0) of Singlet A1 ... Reading ... Done. Timing        0.000168 s
-  Computing  3RDM (0-0) of Singlet A1 ... Reading ... Done. Timing        0.006334 s
-  Computing  1RDM (1-1) of Singlet A1 ... Reading ... Done. Timing        0.000139 s
-  Computing  2RDM (1-1) of Singlet A1 ... Reading ... Done. Timing        0.000178 s
-  Computing  3RDM (1-1) of Singlet A1 ... Reading ... Done. Timing        0.004743 s
-  Adding wedge product for 2-cumulants ... Done. Timing        0.001041 s
-  Adding wedge product for 3-cumulants ... Done. Timing        0.192434 s
+  Computing  1RDM (0-0) of Singlet A1 ... Reading ... Done. Timing        0.000115 s
+  Computing  2RDM (0-0) of Singlet A1 ... Reading ... Done. Timing        0.000174 s
+  Computing  3RDM (0-0) of Singlet A1 ... Reading ... Done. Timing        0.005105 s
+  Computing  1RDM (1-1) of Singlet A1 ... Reading ... Done. Timing        0.000117 s
+  Computing  2RDM (1-1) of Singlet A1 ... Reading ... Done. Timing        0.000172 s
+  Computing  3RDM (1-1) of Singlet A1 ... Reading ... Done. Timing        0.005131 s
+  Adding wedge product for 2-cumulants ... Done. Timing        0.001039 s
+  Adding wedge product for 3-cumulants ... Done. Timing        0.225796 s
 
   ==> Multireference Driven Similarity Renormalization Group <==
 
@@ -2042,30 +2051,20 @@ Calling plugin forte.so.
     Energy part 1 min                                1.73 MB
     Energy part 2 min                                1.73 MB
 
-  ==> Total Timings (s) for Computing Commutators <==
-
-             [H1, T1]    [H1, T2]    [H2, T1]    [H2, T2]
-    -----------------------------------------------------
-    -> C0       0.007       0.020       0.021       0.754
-    -> C1       0.012       0.100       0.210       1.989
-    -> C2                   0.274       0.429       2.231
-    -----------------------------------------------------
-
-
   ==> Checking Semicanonical Orbitals <==
 
     Abs. max of Fock core, active, virtual blocks (Fij, i != j)
                   core          active         virtual
     --------------------------------------------------
-    Fα    0.0000000000    0.0180095724    0.0281964716
-    Fβ    0.0000000000    0.0180095724    0.0281964716
+    Fα    0.0000000000    0.0180095724    0.0281964715
+    Fβ    0.0000000000    0.0180095724    0.0281964715
     --------------------------------------------------
 
     1-Norm of Fock core, active, virtual blocks (Fij, i != j)
                   core          active         virtual
     --------------------------------------------------
-    Fα    0.0000000000    0.0832197458    0.7785473354
-    Fβ    0.0000000000    0.0832197458    0.7785473354
+    Fα    0.0000000000    0.0832197457    0.7785473337
+    Fβ    0.0000000000    0.0832197457    0.7785473337
     --------------------------------------------------
 
     Warning! Orbitals are not semi-canonicalized!
@@ -2073,8 +2072,8 @@ Calling plugin forte.so.
 
   ==> First-Order Amplitudes <==
 
-    Computing T2 amplitudes                  ...  Done. Timing      0.426 s
-    Computing T1 amplitudes                  ...  Done. Timing      0.019 s
+    Computing T2 amplitudes                  ...  Done. Timing      0.452 s
+    Computing T1 amplitudes                  ...  Done. Timing      0.020 s
     Active Indices:    1    2    3   19   20   27   28 
     Largest T1 amplitudes for spin case A:
        i       a                  i       a                  i       a               
@@ -2085,7 +2084,7 @@ Calling plugin forte.so.
     [  1       8    ] 0.004748 [  1       6    ]-0.004032 [ 19      22    ] 0.002364 
     [ 27      30    ] 0.002364 [  0       6    ] 0.001553 [  0       1    ]-0.001530 
     --------------------------------------------------------------------------------
-    Norm of T1A vector: (nonzero elements: 75)                    0.034033576631044.
+    Norm of T1A vector: (nonzero elements: 75)                    0.034033576575160.
     --------------------------------------------------------------------------------
     Largest T1 amplitudes for spin case B:
        _       _                  _       _                  _       _               
@@ -2097,7 +2096,7 @@ Calling plugin forte.so.
     [  1       8    ] 0.004748 [  1       6    ]-0.004032 [ 19      22    ] 0.002364 
     [ 27      30    ] 0.002364 [  0       6    ] 0.001553 [  0       1    ]-0.001530 
     --------------------------------------------------------------------------------
-    Norm of T1B vector: (nonzero elements: 75)                    0.034033576631044.
+    Norm of T1B vector: (nonzero elements: 75)                    0.034033576575160.
     --------------------------------------------------------------------------------
     Largest T2 amplitudes for spin case AA:
        i   j   a   b              i   j   a   b              i   j   a   b           
@@ -2108,7 +2107,7 @@ Calling plugin forte.so.
     [ 19  27  19  31]-0.033399 [ 19  27  23  27]-0.033399 [  1  27   1  31]-0.032488 
     [  1  19   1  23]-0.032488 [  0  19   8  19] 0.027223 [  0  27   8  27] 0.027223 
     --------------------------------------------------------------------------------
-    Norm of T2AA vector: (nonzero elements: 18642)                0.473046862145918.
+    Norm of T2AA vector: (nonzero elements: 18640)                0.473046862152537.
     --------------------------------------------------------------------------------
     Largest T2 amplitudes for spin case AB:
            _       _                  _       _                  _       _           
@@ -2120,7 +2119,7 @@ Calling plugin forte.so.
     [  1  19   1  25] 0.073986 [  1  27   1  33] 0.073986 [  0   0   1   1]-0.072626 
     [  0  19  13  19]-0.041690 [  0  27  13  27]-0.041690 [ 27  27  27  31]-0.041455 
     --------------------------------------------------------------------------------
-    Norm of T2AB vector: (nonzero elements: 19007)                0.490236989780331.
+    Norm of T2AB vector: (nonzero elements: 19007)                0.490236989785726.
     --------------------------------------------------------------------------------
     Largest T2 amplitudes for spin case BB:
        _   _   _   _              _   _   _   _              _   _   _   _           
@@ -2132,7 +2131,7 @@ Calling plugin forte.so.
     [ 19  27  19  31]-0.033399 [ 19  27  23  27]-0.033399 [  1  27   1  31]-0.032488 
     [  1  19   1  23]-0.032488 [  0  19   8  19] 0.027223 [  0  27   8  27] 0.027223 
     --------------------------------------------------------------------------------
-    Norm of T2BB vector: (nonzero elements: 18642)                0.473046862145918.
+    Norm of T2BB vector: (nonzero elements: 18640)                0.473046862152537.
     --------------------------------------------------------------------------------
 
   ==> Possible Intruders <==
@@ -2145,23 +2144,23 @@ Calling plugin forte.so.
 
   ==> Computing 3rd-Order Energy Contribution (1/3) <==
 
-    Computing 3rd-order energy (1/3)         ...  Done. Timing      1.481 s
-    Computing integrals for ref. relaxation  ...  Done. Timing      0.275 s
+    Computing 3rd-order energy (1/3)         ...  Done. Timing      1.516 s
+    Computing integrals for ref. relaxation  ...  Done. Timing      0.288 s
 
   ==> Computing 2nd-Order Correlation Energy <==
 
-    Renormalizing two-electron integrals     ...  Done. Timing      0.471 s
-    Renormalizing Fock matrix elements       ...  Done. Timing      0.023 s
-    Computing 2nd-order energy               ...  Done. Timing      0.189 s
-    Computing integrals for ref. relaxation  ...  Done. Timing      0.279 s
+    Renormalizing two-electron integrals     ...  Done. Timing      0.491 s
+    Renormalizing Fock matrix elements       ...  Done. Timing      0.025 s
+    Computing 2nd-order energy               ...  Done. Timing      0.193 s
+    Computing integrals for ref. relaxation  ...  Done. Timing      0.288 s
 
   ==> Computing 3rd-Order Energy Contribution (2/3) <==
 
-    Preparing 2nd-order amplitudes           ...  Done. Timing      2.896 s
-    Computing T2 amplitudes                  ...  Done. Timing      0.424 s
-    Computing T1 amplitudes                  ...  Done. Timing      0.019 s
-    Computing 3rd-order energy (2/3)         ...  Done. Timing      0.187 s
-    Computing integrals for ref. relaxation  ...  Done. Timing      0.272 s
+    Preparing 2nd-order amplitudes           ...  Done. Timing      2.999 s
+    Computing T2 amplitudes                  ...  Done. Timing      0.450 s
+    Computing T1 amplitudes                  ...  Done. Timing      0.020 s
+    Computing 3rd-order energy (2/3)         ...  Done. Timing      0.196 s
+    Computing integrals for ref. relaxation  ...  Done. Timing      0.285 s
 
   ==> Second-Order Amplitudes Summary <==
 
@@ -2170,24 +2169,24 @@ Calling plugin forte.so.
        i       a                  i       a                  i       a               
     --------------------------------------------------------------------------------
     [ 27      33    ] 0.004586 [ 19      25    ] 0.004586 [  1      12    ]-0.004519 
-    [ 19      23    ]-0.004208 [ 27      31    ]-0.004208 [  0      13    ] 0.002971 
+    [ 27      31    ]-0.004208 [ 19      23    ]-0.004208 [  0      13    ] 0.002971 
     [  0       8    ] 0.002871 [  0       9    ]-0.002438 [ 27      30    ] 0.001203 
     [ 19      22    ] 0.001203 [  3      12    ] 0.000704 [  1       9    ] 0.000681 
     [  1       8    ] 0.000644 [  0       6    ] 0.000605 [  0       5    ]-0.000533 
     --------------------------------------------------------------------------------
-    Norm of T1A vector: (nonzero elements: 75)                    0.011270073619603.
+    Norm of T1A vector: (nonzero elements: 75)                    0.011270073622558.
     --------------------------------------------------------------------------------
     Largest T1 amplitudes for spin case B:
        _       _                  _       _                  _       _               
        i       a                  i       a                  i       a               
     --------------------------------------------------------------------------------
     [ 27      33    ] 0.004586 [ 19      25    ] 0.004586 [  1      12    ]-0.004519 
-    [ 19      23    ]-0.004208 [ 27      31    ]-0.004208 [  0      13    ] 0.002971 
+    [ 27      31    ]-0.004208 [ 19      23    ]-0.004208 [  0      13    ] 0.002971 
     [  0       8    ] 0.002871 [  0       9    ]-0.002438 [ 27      30    ] 0.001203 
     [ 19      22    ] 0.001203 [  3      12    ] 0.000704 [  1       9    ] 0.000681 
     [  1       8    ] 0.000644 [  0       6    ] 0.000605 [  0       5    ]-0.000533 
     --------------------------------------------------------------------------------
-    Norm of T1B vector: (nonzero elements: 75)                    0.011270073619603.
+    Norm of T1B vector: (nonzero elements: 75)                    0.011270073622558.
     --------------------------------------------------------------------------------
     Largest T2 amplitudes for spin case AA:
        i   j   a   b              i   j   a   b              i   j   a   b           
@@ -2198,7 +2197,7 @@ Calling plugin forte.so.
     [ 19  27  23  27] 0.012866 [ 19  27  19  31] 0.012866 [  1  27   1  31] 0.011829 
     [  1  19   1  23] 0.011829 [  0  27   8  27]-0.010323 [  0  19   8  19]-0.010323 
     --------------------------------------------------------------------------------
-    Norm of T2AA vector: (nonzero elements: 18644)                0.169060684861746.
+    Norm of T2AA vector: (nonzero elements: 18641)                0.169060684857315.
     --------------------------------------------------------------------------------
     Largest T2 amplitudes for spin case AB:
            _       _                  _       _                  _       _           
@@ -2210,7 +2209,7 @@ Calling plugin forte.so.
     [ 19  27  23  27] 0.012178 [ 19  27  19  31] 0.012178 [ 19  19  19  23] 0.011704 
     [ 27  27  27  31] 0.011704 [  1  27   1  31] 0.011051 [  1  19   1  23] 0.011051 
     --------------------------------------------------------------------------------
-    Norm of T2AB vector: (nonzero elements: 19007)                0.123656230272288.
+    Norm of T2AB vector: (nonzero elements: 19007)                0.123656230270153.
     --------------------------------------------------------------------------------
     Largest T2 amplitudes for spin case BB:
        _   _   _   _              _   _   _   _              _   _   _   _           
@@ -2222,26 +2221,26 @@ Calling plugin forte.so.
     [ 19  27  23  27] 0.012866 [ 19  27  19  31] 0.012866 [  1  27   1  31] 0.011829 
     [  1  19   1  23] 0.011829 [  0  27   8  27]-0.010323 [  0  19   8  19]-0.010323 
     --------------------------------------------------------------------------------
-    Norm of T2BB vector: (nonzero elements: 18645)                0.169060684861746.
+    Norm of T2BB vector: (nonzero elements: 18642)                0.169060684857315.
     --------------------------------------------------------------------------------
 
   ==> Computing 3rd-Order Energy Contribution (3/3) <==
 
-    Renormalizing Fock matrix elements       ...  Done. Timing      0.023 s
-    Renormalizing two-electron integrals     ...  Done. Timing      0.476 s
-    Computing 3rd-order energy (3/3)         ...  Done. Timing      0.207 s
-    Computing integrals for ref. relaxation  ...  Done. Timing      0.282 s
+    Renormalizing Fock matrix elements       ...  Done. Timing      0.025 s
+    Renormalizing two-electron integrals     ...  Done. Timing      0.489 s
+    Computing 3rd-order energy (3/3)         ...  Done. Timing      0.215 s
+    Computing integrals for ref. relaxation  ...  Done. Timing      0.291 s
 
   ==> DSRG-MRPT3 Energy Summary <==
 
-    E0 (reference)                      =   -106.743354449352637
-    2nd-order corr. energy              =     -0.241891751513398
-    3rd-order corr. energy part 1       =     -0.000081414212767
-    3rd-order corr. energy part 2       =      0.012122979406297
-    3rd-order corr. energy part 3       =      0.001521332393254
-    3rd-order corr. energy              =      0.013562897586784
-    DSRG-MRPT3 corr. energy             =     -0.228328853926614
-    DSRG-MRPT3 total energy             =   -106.971683303279249
+    E0 (reference)                      =   -106.743354449376142
+    2nd-order corr. energy              =     -0.241891751502773
+    3rd-order corr. energy part 1       =     -0.000081414209567
+    3rd-order corr. energy part 2       =      0.012122979408668
+    3rd-order corr. energy part 3       =      0.001521332394981
+    3rd-order corr. energy              =      0.013562897594083
+    DSRG-MRPT3 corr. energy             =     -0.228328853908690
+    DSRG-MRPT3 total energy             =   -106.971683303284834
 
     Notes:
       3rd-order energy part 1: -1.0 / 12.0 * [[[H0th, A1st], A1st], A1st]
@@ -2263,13 +2262,23 @@ Calling plugin forte.so.
   ==> Compute Elements of Effective Hamiltonian <==
 
   Compute transition densities of 1->0. Use Hermiticity of Hbar.
-  Computing 1TrDM (0-1) of Singlet A1 ... Reading ... Done. Timing        0.000106 s
-  Computing 2TrDM (0-1) of Singlet A1 ... Reading ... Done. Timing        0.000168 s
+  Computing 1TrDM (0-1) of Singlet A1 ... Reading ... Done. Timing        0.000120 s
+  Computing 2TrDM (0-1) of Singlet A1 ... Reading ... Done. Timing        0.000172 s
   Contract transition densities with Heff.
   Compute densities of 1->1.
-  Computing  1RDM (1-1) of Singlet A1 ... Reading ... Done. Timing        0.000079 s
-  Computing  2RDM (1-1) of Singlet A1 ... Reading ... Done. Timing        0.000161 s
+  Computing  1RDM (1-1) of Singlet A1 ... Reading ... Done. Timing        0.000081 s
+  Computing  2RDM (1-1) of Singlet A1 ... Reading ... Done. Timing        0.000165 s
   Contract densities with Heff.
+
+  ==> Total Timings (s) for Computing Commutators <==
+
+             [H1, T1]    [H1, T2]    [H2, T1]    [H2, T2]
+    -----------------------------------------------------
+    -> C0       0.007       0.020       0.019       0.756
+    -> C1       0.012       0.101       0.210       2.072
+    -> C2                   0.280       0.445       2.296
+    -----------------------------------------------------
+
 
   ==> Effective Hamiltonian Summary <==
 
@@ -2278,8 +2287,8 @@ Calling plugin forte.so.
 
                  1                   2
 
-    1  -106.96175622859332     0.00727898739424
-    2     0.00809892215771  -106.97581793737859
+    1  -106.96175622858681     0.00727898739980
+    2     0.00809892216315  -106.97581793739634
 
 
 
@@ -2288,8 +2297,8 @@ Calling plugin forte.so.
 
                  1                   2
 
-    1  -106.96175622859332     0.00768895477597
-    2     0.00768895477597  -106.97581793737859
+    1  -106.96175622858681     0.00768895478147
+    2     0.00768895478147  -106.97581793739634
 
 
 
@@ -2305,28 +2314,18 @@ Calling plugin forte.so.
 
 
 
-  ==> Total Timings (s) for Computing Commutators <==
-
-             [H1, T1]    [H1, T2]    [H2, T1]    [H2, T2]
-    -----------------------------------------------------
-    -> C0       0.006       0.021       0.021       0.719
-    -> C1       0.012       0.096       0.210       1.975
-    -> C2                   0.269       0.426       2.260
-    -----------------------------------------------------
-
-
   ==> Dynamically Weighted Driven Similarity Renormalization Group Energy Summary <==
 
     Multi.  Irrep.  No.                   CASCI
     -------------------------------------------
-       1      A1     0      -106.77257383515420
-       1      A1     1      -106.73579815096633
+       1      A1     0      -106.77257383513549
+       1      A1     1      -106.73579815098194
     -------------------------------------------
 
     Multi.  Irrep.  No.           DW-DSRG-SAPT3
     -------------------------------------------
-       1      A1     0      -106.97920595715918
-       1      A1     1      -106.95836820881273
+       1      A1     0      -106.97920595717704
+       1      A1     1      -106.95836820880611
     -------------------------------------------
 	DWSA-DSRG-PT3 (CD) energy on root 0...............................PASSED
 	DWSA-DSRG-PT3 (CD) energy on root 1...............................PASSED
@@ -2386,16 +2385,16 @@ Calling plugin forte.so.
   Cholesky integrals time
  Computing the Cholesky Vectors 
 
-    Computing CD Integrals               ......Done. Timing        0.717582 s
+    Computing CD Integrals               ......Done. Timing        0.740516 s
  Need 0.003743 GB to store cd integrals in core
 
  Number of cholesky vectors 367 to satisfy       0.000000000100 tolerance
 
   Frozen-core energy            -84.713599407176 a.u.
 
-  FrozenOneBody Operator takes  0.75688400 s
+  FrozenOneBody Operator takes  0.83263500 s
   Resorting integrals after freezing core.
-  CholeskyIntegrals take 1.64559600
+  CholeskyIntegrals take 1.74977700
 
         ----------------------------------------------------------------
           Dynamically Weighted Driven Similarity Renormalization Group
@@ -2459,8 +2458,8 @@ Calling plugin forte.so.
     Total number of states: 2
     ------------------------------------
 
-  Forming alpha and beta strings      ...  Done. Timing        0.000100 s
-  Forming determinants                ...  Done. Timing        0.000137 s
+  Forming alpha and beta strings      ...  Done. Timing        0.000182 s
+  Forming determinants                ...  Done. Timing        0.000150 s
 
   ==> Determinants Summary <==
 
@@ -2473,11 +2472,11 @@ Calling plugin forte.so.
 
   ==> Computing Coupling Lists <==
   --------------------------------
-        α          0.001204 s
-        β          0.001198 s
-        αα         0.001034 s
-        ββ         0.001026 s
-        αβ         0.002815 s
+        α          0.001253 s
+        β          0.001244 s
+        αα         0.001077 s
+        ββ         0.001064 s
+        αβ         0.002793 s
   --------------------------------
 
   Davidson-Liu solver algorithm
@@ -2498,11 +2497,11 @@ Calling plugin forte.so.
   ----------------------------------------
     Iter.      Avg. Energy       Delta_E
   ----------------------------------------
-      1      -97.331220979500  -9.733e+01
-      2      -97.331220979500  -5.400e-13
+      1      -97.331220979556  -9.733e+01
+      2      -97.331220979556  -5.400e-13
   ----------------------------------------
   The Davidson-Liu algorithm converged in 3 iterations.
-  Davidson-Liu procedure took  0.315941 s  Done. Timing        0.325465 s
+  Davidson-Liu procedure took  0.342152 s  Done. Timing        0.351956 s
 
   * * * * * * * * * * * * * * * * *
   *  CI Vectors & Configurations  *
@@ -2510,22 +2509,22 @@ Calling plugin forte.so.
 
   ==> Root No. 0 <==
 
-    ba0 20 20         -0.6992227066
-    ab0 20 20         -0.6992227066
-    200 20 20         -0.1460778802
+    ba0 20 20          0.6992227066
+    ab0 20 20          0.6992227066
+    200 20 20          0.1460778803
 
-    Total Energy:   -106.772573835154205
+    Total Energy:   -106.772573835135489
 
 
   ==> Root No. 1 <==
 
-    200 20 20          0.9609078851
-    b0a 20 20          0.1530225598
-    a0b 20 20          0.1530225598
-    ba0 20 20         -0.1034192683
-    ab0 20 20         -0.1034192683
+    200 20 20         -0.9609078851
+    b0a 20 20         -0.1530225596
+    a0b 20 20         -0.1530225596
+    ba0 20 20          0.1034192684
+    ab0 20 20          0.1034192684
 
-    Total Energy:   -106.735798150966332
+    Total Energy:   -106.735798150981935
 
 
 
@@ -2547,7 +2546,7 @@ Calling plugin forte.so.
   Only print nonzero (> 1.0e-5) elements.
   Oscillator strength (a.u.) 0 -> 1:  X:  0.0000  Y:  0.0000  Z:  0.0757  Total:  0.0757
 
-  Total Energy (averaged over 2 states): -106.754185993060275
+  Total Energy (averaged over 2 states): -106.754185993058712
 
 
   ==> XMS Rotation of All CI Vectors <==
@@ -2556,8 +2555,8 @@ Calling plugin forte.so.
 
   ==> Compute State-Averaged Cumulants <==
 
-  Computing  1RDM (0-0) of Singlet A1 ... Writing ... Done. Timing        0.003366 s
-  Computing  1RDM (1-1) of Singlet A1 ... Writing ... Done. Timing        0.003212 s  Form averaged Fock matrix.
+  Computing  1RDM (0-0) of Singlet A1 ... Writing ... Done. Timing        0.004133 s
+  Computing  1RDM (1-1) of Singlet A1 ... Writing ... Done. Timing        0.003330 s  Form averaged Fock matrix.
   XMS Rotation for Singlet A1.
 
   ## Fock <M|F|N> (Symmetry 0) ##
@@ -2565,8 +2564,8 @@ Calling plugin forte.so.
 
                  1                   2
 
-    1    -2.46501187086355     0.03396033373662
-    2     0.03396033373662    -2.68634334122441
+    1    -2.46501187082479     0.03396033377366
+    2     0.03396033377366    -2.68634334122607
 
 
 
@@ -2607,15 +2606,15 @@ Calling plugin forte.so.
   ==> Compute State-Averaged Cumulants <==
 
   Computing  1RDM (0-0) of Singlet A1 ... 
-  Deleted files from disk for 1RDM(0-0) of Singlet A1.Writing ... Done. Timing        0.003572 s
-  Computing  2RDM (0-0) of Singlet A1 ... Writing ... Done. Timing        0.006438 s
-  Computing  3RDM (0-0) of Singlet A1 ... Writing ... Done. Timing        0.023033 s
+  Deleted files from disk for 1RDM(0-0) of Singlet A1.Writing ... Done. Timing        0.003911 s
+  Computing  2RDM (0-0) of Singlet A1 ... Writing ... Done. Timing        0.007147 s
+  Computing  3RDM (0-0) of Singlet A1 ... Writing ... Done. Timing        0.025053 s
   Computing  1RDM (1-1) of Singlet A1 ... 
-  Deleted files from disk for 1RDM(1-1) of Singlet A1.Writing ... Done. Timing        0.003627 s
-  Computing  2RDM (1-1) of Singlet A1 ... Writing ... Done. Timing        0.006313 s
-  Computing  3RDM (1-1) of Singlet A1 ... Writing ... Done. Timing        0.021862 s
-  Adding wedge product for 2-cumulants ... Done. Timing        0.001044 s
-  Adding wedge product for 3-cumulants ... Done. Timing        0.205004 s
+  Deleted files from disk for 1RDM(1-1) of Singlet A1.Writing ... Done. Timing        0.003933 s
+  Computing  2RDM (1-1) of Singlet A1 ... Writing ... Done. Timing        0.010065 s
+  Computing  3RDM (1-1) of Singlet A1 ... Writing ... Done. Timing        0.025421 s
+  Adding wedge product for 2-cumulants ... Done. Timing        0.001093 s
+  Adding wedge product for 3-cumulants ... Done. Timing        0.234160 s
 
   ==> Multireference Driven Similarity Renormalization Group <==
 
@@ -2672,8 +2671,8 @@ Calling plugin forte.so.
     1-Norm of Fock core, active, virtual blocks (Fij, i != j)
                   core          active         virtual
     --------------------------------------------------
-    Fα    0.0000000000    0.0915912522    0.8109992880
-    Fβ    0.0000000000    0.0915912522    0.8109992880
+    Fα    0.0000000000    0.0915912521    0.8109992863
+    Fβ    0.0000000000    0.0915912521    0.8109992863
     --------------------------------------------------
 
     Warning! Orbitals are not semi-canonicalized!
@@ -2681,8 +2680,8 @@ Calling plugin forte.so.
 
   ==> First-Order Amplitudes <==
 
-    Computing T2 amplitudes                  ...  Done. Timing      0.433 s
-    Computing T1 amplitudes                  ...  Done. Timing      0.019 s
+    Computing T2 amplitudes                  ...  Done. Timing      0.470 s
+    Computing T1 amplitudes                  ...  Done. Timing      0.020 s
     Active Indices:    1    2    3   19   20   27   28 
     Largest T1 amplitudes for spin case A:
        i       a                  i       a                  i       a               
@@ -2693,7 +2692,7 @@ Calling plugin forte.so.
     [  1       8    ] 0.004834 [  1       6    ]-0.004214 [ 19      22    ] 0.002436 
     [ 27      30    ] 0.002436 [  0       6    ] 0.001653 [  0       1    ]-0.001463 
     --------------------------------------------------------------------------------
-    Norm of T1A vector: (nonzero elements: 75)                    0.035084609676080.
+    Norm of T1A vector: (nonzero elements: 75)                    0.035084609621088.
     --------------------------------------------------------------------------------
     Largest T1 amplitudes for spin case B:
        _       _                  _       _                  _       _               
@@ -2705,7 +2704,7 @@ Calling plugin forte.so.
     [  1       8    ] 0.004834 [  1       6    ]-0.004214 [ 19      22    ] 0.002436 
     [ 27      30    ] 0.002436 [  0       6    ] 0.001653 [  0       1    ]-0.001463 
     --------------------------------------------------------------------------------
-    Norm of T1B vector: (nonzero elements: 75)                    0.035084609676080.
+    Norm of T1B vector: (nonzero elements: 75)                    0.035084609621088.
     --------------------------------------------------------------------------------
     Largest T2 amplitudes for spin case AA:
        i   j   a   b              i   j   a   b              i   j   a   b           
@@ -2716,7 +2715,7 @@ Calling plugin forte.so.
     [ 19  27  19  31]-0.033274 [ 19  27  23  27]-0.033274 [  1  27   1  31]-0.032363 
     [  1  19   1  23]-0.032363 [  0  19   8  19] 0.027217 [  0  27   8  27] 0.027217 
     --------------------------------------------------------------------------------
-    Norm of T2AA vector: (nonzero elements: 18641)                0.472881526610398.
+    Norm of T2AA vector: (nonzero elements: 18642)                0.472881526616826.
     --------------------------------------------------------------------------------
     Largest T2 amplitudes for spin case AB:
            _       _                  _       _                  _       _           
@@ -2728,7 +2727,7 @@ Calling plugin forte.so.
     [  1  19   1  25] 0.074010 [  1  27   1  33] 0.074010 [  0   0   1   1]-0.072697 
     [  0  19  13  19]-0.041691 [  0  27  13  27]-0.041691 [ 27  27  27  31]-0.041299 
     --------------------------------------------------------------------------------
-    Norm of T2AB vector: (nonzero elements: 19007)                0.490091783945110.
+    Norm of T2AB vector: (nonzero elements: 19007)                0.490091783950337.
     --------------------------------------------------------------------------------
     Largest T2 amplitudes for spin case BB:
        _   _   _   _              _   _   _   _              _   _   _   _           
@@ -2740,7 +2739,7 @@ Calling plugin forte.so.
     [ 19  27  19  31]-0.033274 [ 19  27  23  27]-0.033274 [  1  27   1  31]-0.032363 
     [  1  19   1  23]-0.032363 [  0  19   8  19] 0.027217 [  0  27   8  27] 0.027217 
     --------------------------------------------------------------------------------
-    Norm of T2BB vector: (nonzero elements: 18641)                0.472881526610398.
+    Norm of T2BB vector: (nonzero elements: 18642)                0.472881526616826.
     --------------------------------------------------------------------------------
 
   ==> Possible Intruders <==
@@ -2753,23 +2752,23 @@ Calling plugin forte.so.
 
   ==> Computing 3rd-Order Energy Contribution (1/3) <==
 
-    Computing 3rd-order energy (1/3)         ...  Done. Timing      1.443 s
-    Computing integrals for ref. relaxation  ...  Done. Timing      0.279 s
+    Computing 3rd-order energy (1/3)         ...  Done. Timing      1.526 s
+    Computing integrals for ref. relaxation  ...  Done. Timing      0.316 s
 
   ==> Computing 2nd-Order Correlation Energy <==
 
-    Renormalizing two-electron integrals     ...  Done. Timing      0.483 s
-    Renormalizing Fock matrix elements       ...  Done. Timing      0.024 s
-    Computing 2nd-order energy               ...  Done. Timing      0.194 s
-    Computing integrals for ref. relaxation  ...  Done. Timing      0.284 s
+    Renormalizing two-electron integrals     ...  Done. Timing      0.554 s
+    Renormalizing Fock matrix elements       ...  Done. Timing      0.032 s
+    Computing 2nd-order energy               ...  Done. Timing      0.218 s
+    Computing integrals for ref. relaxation  ...  Done. Timing      0.322 s
 
   ==> Computing 3rd-Order Energy Contribution (2/3) <==
 
-    Preparing 2nd-order amplitudes           ...  Done. Timing      2.954 s
-    Computing T2 amplitudes                  ...  Done. Timing      0.433 s
+    Preparing 2nd-order amplitudes           ...  Done. Timing      3.227 s
+    Computing T2 amplitudes                  ...  Done. Timing      0.449 s
     Computing T1 amplitudes                  ...  Done. Timing      0.020 s
-    Computing 3rd-order energy (2/3)         ...  Done. Timing      0.191 s
-    Computing integrals for ref. relaxation  ...  Done. Timing      0.279 s
+    Computing 3rd-order energy (2/3)         ...  Done. Timing      0.206 s
+    Computing integrals for ref. relaxation  ...  Done. Timing      0.286 s
 
   ==> Second-Order Amplitudes Summary <==
 
@@ -2783,7 +2782,7 @@ Calling plugin forte.so.
     [ 19      22    ] 0.001167 [  3      12    ] 0.000736 [  1       9    ] 0.000643 
     [  1       8    ] 0.000620 [  0       6    ] 0.000580 [  0       5    ]-0.000521 
     --------------------------------------------------------------------------------
-    Norm of T1A vector: (nonzero elements: 75)                    0.011018534539920.
+    Norm of T1A vector: (nonzero elements: 75)                    0.011018534542080.
     --------------------------------------------------------------------------------
     Largest T1 amplitudes for spin case B:
        _       _                  _       _                  _       _               
@@ -2795,7 +2794,7 @@ Calling plugin forte.so.
     [ 19      22    ] 0.001167 [  3      12    ] 0.000736 [  1       9    ] 0.000643 
     [  1       8    ] 0.000620 [  0       6    ] 0.000580 [  0       5    ]-0.000521 
     --------------------------------------------------------------------------------
-    Norm of T1B vector: (nonzero elements: 75)                    0.011018534539920.
+    Norm of T1B vector: (nonzero elements: 75)                    0.011018534542080.
     --------------------------------------------------------------------------------
     Largest T2 amplitudes for spin case AA:
        i   j   a   b              i   j   a   b              i   j   a   b           
@@ -2806,7 +2805,7 @@ Calling plugin forte.so.
     [ 19  27  23  27] 0.012838 [ 19  27  19  31] 0.012838 [  1  27   1  31] 0.011808 
     [  1  19   1  23] 0.011808 [  0  27   8  27]-0.010316 [  0  19   8  19]-0.010316 
     --------------------------------------------------------------------------------
-    Norm of T2AA vector: (nonzero elements: 18641)                0.169261666365943.
+    Norm of T2AA vector: (nonzero elements: 18640)                0.169261666361716.
     --------------------------------------------------------------------------------
     Largest T2 amplitudes for spin case AB:
            _       _                  _       _                  _       _           
@@ -2818,7 +2817,7 @@ Calling plugin forte.so.
     [ 19  27  23  27] 0.012151 [ 19  27  19  31] 0.012151 [ 19  19  19  23] 0.011676 
     [ 27  27  27  31] 0.011676 [  1  27   1  31] 0.011033 [  1  19   1  23] 0.011033 
     --------------------------------------------------------------------------------
-    Norm of T2AB vector: (nonzero elements: 19007)                0.123776663487060.
+    Norm of T2AB vector: (nonzero elements: 19007)                0.123776663484986.
     --------------------------------------------------------------------------------
     Largest T2 amplitudes for spin case BB:
        _   _   _   _              _   _   _   _              _   _   _   _           
@@ -2830,26 +2829,26 @@ Calling plugin forte.so.
     [ 19  27  23  27] 0.012838 [ 19  27  19  31] 0.012838 [  1  27   1  31] 0.011808 
     [  1  19   1  23] 0.011808 [  0  27   8  27]-0.010316 [  0  19   8  19]-0.010316 
     --------------------------------------------------------------------------------
-    Norm of T2BB vector: (nonzero elements: 18644)                0.169261666365943.
+    Norm of T2BB vector: (nonzero elements: 18642)                0.169261666361716.
     --------------------------------------------------------------------------------
 
   ==> Computing 3rd-Order Energy Contribution (3/3) <==
 
     Renormalizing Fock matrix elements       ...  Done. Timing      0.024 s
-    Renormalizing two-electron integrals     ...  Done. Timing      0.480 s
-    Computing 3rd-order energy (3/3)         ...  Done. Timing      0.193 s
-    Computing integrals for ref. relaxation  ...  Done. Timing      0.278 s
+    Renormalizing two-electron integrals     ...  Done. Timing      0.502 s
+    Computing 3rd-order energy (3/3)         ...  Done. Timing      0.191 s
+    Computing integrals for ref. relaxation  ...  Done. Timing      0.281 s
 
   ==> DSRG-MRPT3 Energy Summary <==
 
-    E0 (reference)                      =   -106.743831049392867
-    2nd-order corr. energy              =     -0.242193568236564
-    3rd-order corr. energy part 1       =     -0.000150497150642
-    3rd-order corr. energy part 2       =      0.012118428905944
-    3rd-order corr. energy part 3       =      0.001488586565119
-    3rd-order corr. energy              =      0.013456518320420
-    DSRG-MRPT3 corr. energy             =     -0.228737049916144
-    DSRG-MRPT3 total energy             =   -106.972568099309015
+    E0 (reference)                      =   -106.743831049416031
+    2nd-order corr. energy              =     -0.242193568225785
+    3rd-order corr. energy part 1       =     -0.000150497147537
+    3rd-order corr. energy part 2       =      0.012118428908249
+    3rd-order corr. energy part 3       =      0.001488586566793
+    3rd-order corr. energy              =      0.013456518327505
+    DSRG-MRPT3 corr. energy             =     -0.228737049898280
+    DSRG-MRPT3 total energy             =   -106.972568099314316
 
     Notes:
       3rd-order energy part 1: -1.0 / 12.0 * [[[H0th, A1st], A1st], A1st]
@@ -2866,18 +2865,28 @@ Calling plugin forte.so.
   ==> Rotate DSRG Transformed Hamiltonian back to Original Basis <==
 
     Rotating 1-body term to original basis   ... Done. Timing    0.001 s
-    Rotating 2-body term to original basis   ... Done. Timing    0.017 s
+    Rotating 2-body term to original basis   ... Done. Timing    0.018 s
 
   ==> Compute Elements of Effective Hamiltonian <==
 
   Compute densities of 0->0.
-  Computing  1RDM (0-0) of Singlet A1 ... Reading ... Done. Timing        0.000108 s
-  Computing  2RDM (0-0) of Singlet A1 ... Reading ... Done. Timing        0.000169 s
+  Computing  1RDM (0-0) of Singlet A1 ... Reading ... Done. Timing        0.000104 s
+  Computing  2RDM (0-0) of Singlet A1 ... Reading ... Done. Timing        0.000165 s
   Contract densities with Heff.
   Compute transition densities of 0->1.
-  Computing 1TrDM (0-1) of Singlet A1 ... Writing ... Done. Timing        0.003291 s
-  Computing 2TrDM (0-1) of Singlet A1 ... Writing ... Done. Timing        0.006276 s
+  Computing 1TrDM (0-1) of Singlet A1 ... Writing ... Done. Timing        0.003293 s
+  Computing 2TrDM (0-1) of Singlet A1 ... Writing ... Done. Timing        0.006314 s
   Contract transition densities with Heff.
+
+  ==> Total Timings (s) for Computing Commutators <==
+
+             [H1, T1]    [H1, T2]    [H2, T1]    [H2, T2]
+    -----------------------------------------------------
+    -> C0       0.007       0.020       0.020       0.782
+    -> C1       0.014       0.105       0.230       2.194
+    -> C2                   0.297       0.480       2.364
+    -----------------------------------------------------
+
 
   ==> Compute DSRG-MRPT3 Energy of Root 1 <==
 
@@ -2898,14 +2907,14 @@ Calling plugin forte.so.
 
   ==> Compute State-Averaged Cumulants <==
 
-  Computing  1RDM (0-0) of Singlet A1 ... Reading ... Done. Timing        0.000104 s
-  Computing  2RDM (0-0) of Singlet A1 ... Reading ... Done. Timing        0.000166 s
-  Computing  3RDM (0-0) of Singlet A1 ... Reading ... Done. Timing        0.006437 s
-  Computing  1RDM (1-1) of Singlet A1 ... Reading ... Done. Timing        0.000138 s
-  Computing  2RDM (1-1) of Singlet A1 ... Reading ... Done. Timing        0.000176 s
-  Computing  3RDM (1-1) of Singlet A1 ... Reading ... Done. Timing        0.004744 s
-  Adding wedge product for 2-cumulants ... Done. Timing        0.001051 s
-  Adding wedge product for 3-cumulants ... Done. Timing        0.193142 s
+  Computing  1RDM (0-0) of Singlet A1 ... Reading ... Done. Timing        0.000114 s
+  Computing  2RDM (0-0) of Singlet A1 ... Reading ... Done. Timing        0.000167 s
+  Computing  3RDM (0-0) of Singlet A1 ... Reading ... Done. Timing        0.005095 s
+  Computing  1RDM (1-1) of Singlet A1 ... Reading ... Done. Timing        0.000124 s
+  Computing  2RDM (1-1) of Singlet A1 ... Reading ... Done. Timing        0.000164 s
+  Computing  3RDM (1-1) of Singlet A1 ... Reading ... Done. Timing        0.004789 s
+  Adding wedge product for 2-cumulants ... Done. Timing        0.001046 s
+  Adding wedge product for 3-cumulants ... Done. Timing        0.198302 s
 
   ==> Multireference Driven Similarity Renormalization Group <==
 
@@ -2950,16 +2959,6 @@ Calling plugin forte.so.
     Energy part 1 min                                1.73 MB
     Energy part 2 min                                1.73 MB
 
-  ==> Total Timings (s) for Computing Commutators <==
-
-             [H1, T1]    [H1, T2]    [H2, T1]    [H2, T2]
-    -----------------------------------------------------
-    -> C0       0.006       0.020       0.019       0.729
-    -> C1       0.012       0.098       0.211       2.017
-    -> C2                   0.272       0.433       2.223
-    -----------------------------------------------------
-
-
   ==> Checking Semicanonical Orbitals <==
 
     Abs. max of Fock core, active, virtual blocks (Fij, i != j)
@@ -2972,8 +2971,8 @@ Calling plugin forte.so.
     1-Norm of Fock core, active, virtual blocks (Fij, i != j)
                   core          active         virtual
     --------------------------------------------------
-    Fα    0.0000000000    0.0208157400    1.0498491913
-    Fβ    0.0000000000    0.0208157400    1.0498491913
+    Fα    0.0000000000    0.0208157400    1.0498491906
+    Fβ    0.0000000000    0.0208157400    1.0498491906
     --------------------------------------------------
 
     Warning! Orbitals are not semi-canonicalized!
@@ -2981,7 +2980,7 @@ Calling plugin forte.so.
 
   ==> First-Order Amplitudes <==
 
-    Computing T2 amplitudes                  ...  Done. Timing      0.427 s
+    Computing T2 amplitudes                  ...  Done. Timing      0.537 s
     Computing T1 amplitudes                  ...  Done. Timing      0.019 s
     Active Indices:    1    2    3   19   20   27   28 
     Largest T1 amplitudes for spin case A:
@@ -2993,7 +2992,7 @@ Calling plugin forte.so.
     [ 19      22    ]-0.003647 [  1       9    ]-0.002535 [  0       6    ]-0.001852 
     [  0       5    ] 0.001797 [  1       8    ]-0.001559 [  2       5    ] 0.001530 
     --------------------------------------------------------------------------------
-    Norm of T1A vector: (nonzero elements: 75)                    0.040467443288142.
+    Norm of T1A vector: (nonzero elements: 75)                    0.040467443272846.
     --------------------------------------------------------------------------------
     Largest T1 amplitudes for spin case B:
        _       _                  _       _                  _       _               
@@ -3005,7 +3004,7 @@ Calling plugin forte.so.
     [ 19      22    ]-0.003647 [  1       9    ]-0.002535 [  0       6    ]-0.001852 
     [  0       5    ] 0.001797 [  1       8    ]-0.001559 [  2       5    ] 0.001530 
     --------------------------------------------------------------------------------
-    Norm of T1B vector: (nonzero elements: 75)                    0.040467443288142.
+    Norm of T1B vector: (nonzero elements: 75)                    0.040467443272846.
     --------------------------------------------------------------------------------
     Largest T2 amplitudes for spin case AA:
        i   j   a   b              i   j   a   b              i   j   a   b           
@@ -3016,7 +3015,7 @@ Calling plugin forte.so.
     [  1  19   1  23]-0.039291 [  0  19  13  19]-0.035084 [  0  27  13  27]-0.035084 
     [  0   1   1  13] 0.033895 [  0  27   8  27] 0.027263 [  0  19   8  19] 0.027263 
     --------------------------------------------------------------------------------
-    Norm of T2AA vector: (nonzero elements: 18639)                0.482191484138198.
+    Norm of T2AA vector: (nonzero elements: 18641)                0.482191484136992.
     --------------------------------------------------------------------------------
     Largest T2 amplitudes for spin case AB:
            _       _                  _       _                  _       _           
@@ -3028,7 +3027,7 @@ Calling plugin forte.so.
     [  1  19   1  25] 0.072658 [  1  27   1  33] 0.072658 [  0   0   1   1]-0.067024 
     [ 27  27  27  31]-0.050136 [ 19  19  19  23]-0.050136 [ 19  27  19  31]-0.043631 
     --------------------------------------------------------------------------------
-    Norm of T2AB vector: (nonzero elements: 19007)                0.498198260975898.
+    Norm of T2AB vector: (nonzero elements: 19007)                0.498198260974570.
     --------------------------------------------------------------------------------
     Largest T2 amplitudes for spin case BB:
        _   _   _   _              _   _   _   _              _   _   _   _           
@@ -3040,7 +3039,7 @@ Calling plugin forte.so.
     [  1  19   1  23]-0.039291 [  0  19  13  19]-0.035084 [  0  27  13  27]-0.035084 
     [  0   1   1  13] 0.033895 [  0  27   8  27] 0.027263 [  0  19   8  19] 0.027263 
     --------------------------------------------------------------------------------
-    Norm of T2BB vector: (nonzero elements: 18639)                0.482191484138198.
+    Norm of T2BB vector: (nonzero elements: 18641)                0.482191484136992.
     --------------------------------------------------------------------------------
 
   ==> Possible Intruders <==
@@ -3053,23 +3052,23 @@ Calling plugin forte.so.
 
   ==> Computing 3rd-Order Energy Contribution (1/3) <==
 
-    Computing 3rd-order energy (1/3)         ...  Done. Timing      1.412 s
-    Computing integrals for ref. relaxation  ...  Done. Timing      0.273 s
+    Computing 3rd-order energy (1/3)         ...  Done. Timing      1.458 s
+    Computing integrals for ref. relaxation  ...  Done. Timing      0.284 s
 
   ==> Computing 2nd-Order Correlation Energy <==
 
-    Renormalizing two-electron integrals     ...  Done. Timing      0.468 s
-    Renormalizing Fock matrix elements       ...  Done. Timing      0.023 s
-    Computing 2nd-order energy               ...  Done. Timing      0.190 s
-    Computing integrals for ref. relaxation  ...  Done. Timing      0.281 s
+    Renormalizing two-electron integrals     ...  Done. Timing      0.513 s
+    Renormalizing Fock matrix elements       ...  Done. Timing      0.025 s
+    Computing 2nd-order energy               ...  Done. Timing      0.203 s
+    Computing integrals for ref. relaxation  ...  Done. Timing      0.311 s
 
   ==> Computing 3rd-Order Energy Contribution (2/3) <==
 
-    Preparing 2nd-order amplitudes           ...  Done. Timing      2.894 s
-    Computing T2 amplitudes                  ...  Done. Timing      0.424 s
+    Preparing 2nd-order amplitudes           ...  Done. Timing      3.012 s
+    Computing T2 amplitudes                  ...  Done. Timing      0.437 s
     Computing T1 amplitudes                  ...  Done. Timing      0.019 s
-    Computing 3rd-order energy (2/3)         ...  Done. Timing      0.187 s
-    Computing integrals for ref. relaxation  ...  Done. Timing      0.273 s
+    Computing 3rd-order energy (2/3)         ...  Done. Timing      0.190 s
+    Computing integrals for ref. relaxation  ...  Done. Timing      0.277 s
 
   ==> Second-Order Amplitudes Summary <==
 
@@ -3083,7 +3082,7 @@ Calling plugin forte.so.
     [  1       9    ] 0.002990 [  1       8    ] 0.002740 [  1       6    ]-0.001959 
     [  1      12    ] 0.001553 [  0       6    ] 0.001253 [  0       5    ]-0.001184 
     --------------------------------------------------------------------------------
-    Norm of T1A vector: (nonzero elements: 75)                    0.033099671038719.
+    Norm of T1A vector: (nonzero elements: 75)                    0.033099671029078.
     --------------------------------------------------------------------------------
     Largest T1 amplitudes for spin case B:
        _       _                  _       _                  _       _               
@@ -3095,7 +3094,7 @@ Calling plugin forte.so.
     [  1       9    ] 0.002990 [  1       8    ] 0.002740 [  1       6    ]-0.001959 
     [  1      12    ] 0.001553 [  0       6    ] 0.001253 [  0       5    ]-0.001184 
     --------------------------------------------------------------------------------
-    Norm of T1B vector: (nonzero elements: 75)                    0.033099671038719.
+    Norm of T1B vector: (nonzero elements: 75)                    0.033099671029078.
     --------------------------------------------------------------------------------
     Largest T2 amplitudes for spin case AA:
        i   j   a   b              i   j   a   b              i   j   a   b           
@@ -3106,7 +3105,7 @@ Calling plugin forte.so.
     [  1  19   1  23] 0.011956 [  1  27   1  31] 0.011956 [  0  19  13  19] 0.011635 
     [  0  27  13  27] 0.011635 [  1  19   9  19]-0.010737 [  1  27   9  27]-0.010737 
     --------------------------------------------------------------------------------
-    Norm of T2AA vector: (nonzero elements: 18641)                0.153290415038202.
+    Norm of T2AA vector: (nonzero elements: 18644)                0.153290415055401.
     --------------------------------------------------------------------------------
     Largest T2 amplitudes for spin case AB:
            _       _                  _       _                  _       _           
@@ -3118,7 +3117,7 @@ Calling plugin forte.so.
     [ 19  27  23  27] 0.013786 [ 27  27  27  31] 0.013498 [ 19  19  19  23] 0.013498 
     [  1  19   1  23] 0.010870 [  1  27   1  31] 0.010870 [  1  19   9  19]-0.010435 
     --------------------------------------------------------------------------------
-    Norm of T2AB vector: (nonzero elements: 19007)                0.117088350772884.
+    Norm of T2AB vector: (nonzero elements: 19007)                0.117088350781530.
     --------------------------------------------------------------------------------
     Largest T2 amplitudes for spin case BB:
        _   _   _   _              _   _   _   _              _   _   _   _           
@@ -3130,26 +3129,26 @@ Calling plugin forte.so.
     [  1  19   1  23] 0.011956 [  1  27   1  31] 0.011956 [  0  19  13  19] 0.011635 
     [  0  27  13  27] 0.011635 [  1  19   9  19]-0.010737 [  1  27   9  27]-0.010737 
     --------------------------------------------------------------------------------
-    Norm of T2BB vector: (nonzero elements: 18643)                0.153290415038202.
+    Norm of T2BB vector: (nonzero elements: 18643)                0.153290415055401.
     --------------------------------------------------------------------------------
 
   ==> Computing 3rd-Order Energy Contribution (3/3) <==
 
-    Renormalizing Fock matrix elements       ...  Done. Timing      0.023 s
-    Renormalizing two-electron integrals     ...  Done. Timing      0.468 s
-    Computing 3rd-order energy (3/3)         ...  Done. Timing      0.188 s
-    Computing integrals for ref. relaxation  ...  Done. Timing      0.279 s
+    Renormalizing Fock matrix elements       ...  Done. Timing      0.026 s
+    Renormalizing two-electron integrals     ...  Done. Timing      0.541 s
+    Computing 3rd-order energy (3/3)         ...  Done. Timing      0.219 s
+    Computing integrals for ref. relaxation  ...  Done. Timing      0.357 s
 
   ==> DSRG-MRPT3 Energy Summary <==
 
-    E0 (reference)                      =   -106.764540936727869
-    2nd-order corr. energy              =     -0.220366153144538
-    3rd-order corr. energy part 1       =      0.004554610721578
-    3rd-order corr. energy part 2       =      0.011035282161236
-    3rd-order corr. energy part 3       =      0.003434865897743
-    3rd-order corr. energy              =      0.019024758780558
-    DSRG-MRPT3 corr. energy             =     -0.201341394363981
-    DSRG-MRPT3 total energy             =   -106.965882331091848
+    E0 (reference)                      =   -106.764540936701138
+    2nd-order corr. energy              =     -0.220366153190924
+    3rd-order corr. energy part 1       =      0.004554610721329
+    3rd-order corr. energy part 2       =      0.011035282173715
+    3rd-order corr. energy part 3       =      0.003434865899140
+    3rd-order corr. energy              =      0.019024758794183
+    DSRG-MRPT3 corr. energy             =     -0.201341394396741
+    DSRG-MRPT3 total energy             =   -106.965882331097873
 
     Notes:
       3rd-order energy part 1: -1.0 / 12.0 * [[[H0th, A1st], A1st], A1st]
@@ -3171,13 +3170,23 @@ Calling plugin forte.so.
   ==> Compute Elements of Effective Hamiltonian <==
 
   Compute transition densities of 1->0. Use Hermiticity of Hbar.
-  Computing 1TrDM (0-1) of Singlet A1 ... Reading ... Done. Timing        0.000104 s
-  Computing 2TrDM (0-1) of Singlet A1 ... Reading ... Done. Timing        0.000167 s
+  Computing 1TrDM (0-1) of Singlet A1 ... Reading ... Done. Timing        0.000103 s
+  Computing 2TrDM (0-1) of Singlet A1 ... Reading ... Done. Timing        0.000168 s
   Contract transition densities with Heff.
   Compute densities of 1->1.
-  Computing  1RDM (1-1) of Singlet A1 ... Reading ... Done. Timing        0.000078 s
-  Computing  2RDM (1-1) of Singlet A1 ... Reading ... Done. Timing        0.000162 s
+  Computing  1RDM (1-1) of Singlet A1 ... Reading ... Done. Timing        0.000080 s
+  Computing  2RDM (1-1) of Singlet A1 ... Reading ... Done. Timing        0.000166 s
   Contract densities with Heff.
+
+  ==> Total Timings (s) for Computing Commutators <==
+
+             [H1, T1]    [H1, T2]    [H2, T1]    [H2, T2]
+    -----------------------------------------------------
+    -> C0       0.007       0.020       0.019       0.755
+    -> C1       0.012       0.102       0.212       2.057
+    -> C2                   0.294       0.436       2.342
+    -----------------------------------------------------
+
 
   ==> Effective Hamiltonian Summary <==
 
@@ -3186,8 +3195,8 @@ Calling plugin forte.so.
 
                  1                   2
 
-    1  -106.97740829519743    -0.00384786109251
-    2    -0.00423866832489  -106.96002009856576
+    1  -106.97740829521722    -0.00384786109266
+    2    -0.00423866832441  -106.96002009855698
 
 
 
@@ -3196,8 +3205,8 @@ Calling plugin forte.so.
 
                  1                   2
 
-    1  -106.97740829519743    -0.00404326470870
-    2    -0.00404326470870  -106.96002009856576
+    1  -106.97740829521722    -0.00404326470853
+    2    -0.00404326470853  -106.96002009855698
 
 
 
@@ -3213,28 +3222,18 @@ Calling plugin forte.so.
 
 
 
-  ==> Total Timings (s) for Computing Commutators <==
-
-             [H1, T1]    [H1, T2]    [H2, T1]    [H2, T2]
-    -----------------------------------------------------
-    -> C0       0.006       0.020       0.019       0.705
-    -> C1       0.012       0.095       0.206       1.982
-    -> C2                   0.272       0.427       2.181
-    -----------------------------------------------------
-
-
   ==> Dynamically Weighted Driven Similarity Renormalization Group Energy Summary <==
 
     Multi.  Irrep.  No.                   CASCI
     -------------------------------------------
-       1      A1     0      -106.77257383515420
-       1      A1     1      -106.73579815096633
+       1      A1     0      -106.77257383513549
+       1      A1     1      -106.73579815098194
     -------------------------------------------
 
     Multi.  Irrep.  No.          DW-DSRG-XSAPT3
     -------------------------------------------
-       1      A1     0      -106.97830248844110
-       1      A1     1      -106.95912590532210
+       1      A1     0      -106.97830248845949
+       1      A1     1      -106.95912590531469
     -------------------------------------------
 	DWXSA-DSRG-PT3 (CD) energy on root 0..............................PASSED
 	DWXSA-DSRG-PT3 (CD) energy on root 1..............................PASSED
