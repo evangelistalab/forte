@@ -113,15 +113,14 @@ class AdaptiveCI : public Wavefunction {
     void set_aci_ints(SharedWavefunction ref_Wfn, std::shared_ptr<ForteIntegrals> ints);
 
     void semi_canonicalize();
-    void set_fci_ints( std::shared_ptr<FCIIntegrals> fci_ints );
+    void set_fci_ints(std::shared_ptr<FCIIntegrals> fci_ints);
 
     void upcast_reference(DeterminantHashVec& ref);
     void add_external_excitations(DeterminantHashVec& ref);
 
-
     // Update sigma
     void update_sigma();
-    
+
   private:
     // ==> Class data <==
 
@@ -242,8 +241,7 @@ class AdaptiveCI : public Wavefunction {
     /// A map of determinants in the P space
     std::unordered_map<Determinant, int, Determinant::Hash> P_space_map_;
     /// A History of Determinants
-    std::unordered_map<Determinant, std::vector<std::pair<size_t, std::string>>,
-                       Determinant::Hash>
+    std::unordered_map<Determinant, std::vector<std::pair<size_t, std::string>>, Determinant::Hash>
         det_history_;
     /// Stream for printing determinant coefficients
     std::ofstream det_list_;
@@ -300,7 +298,7 @@ class AdaptiveCI : public Wavefunction {
     void print_info();
 
     /// Print a wave function
-    void print_wfn(DeterminantHashVec& space, WFNOperator& op,  SharedMatrix evecs, int nroot);
+    void print_wfn(DeterminantHashVec& space, WFNOperator& op, SharedMatrix evecs, int nroot);
 
     /// Batched version of find q space
     void find_q_space_batched(DeterminantHashVec& P_space, DeterminantHashVec& PQ_space,
@@ -332,23 +330,31 @@ class AdaptiveCI : public Wavefunction {
                                    det_hash<std::vector<double>>& V_hash);
     /// Get excited determinants with a specified hole
     void get_core_excited_determinants(SharedMatrix evecs, DeterminantHashVec& P_space,
-                                   det_hash<std::vector<double>>& V_hash);
+                                       det_hash<std::vector<double>>& V_hash);
     void get_excited_determinants_sr(SharedMatrix evecs, DeterminantHashVec& P_space,
-                                   det_hash<double>& V_hash);
-    double get_excited_determinants_batch(SharedMatrix evecs, SharedVector evals, DeterminantHashVec& P_space,
-                                   std::vector<std::pair<double, Determinant>>& F_space);
-    double get_excited_determinants_batch2(SharedMatrix evecs, SharedVector evals, DeterminantHashVec& P_space,
-                                   std::vector<std::pair<double, Determinant>>& F_space);
-    double get_excited_determinants_batchv(SharedMatrix evecs, SharedVector evals, DeterminantHashVec& P_space,
-                                   std::vector<std::pair<double, Determinant>>& F_space);
+                                     det_hash<double>& V_hash);
+    double get_excited_determinants_batch(SharedMatrix evecs, SharedVector evals,
+                                          DeterminantHashVec& P_space,
+                                          std::vector<std::pair<double, Determinant>>& F_space);
+    double get_excited_determinants_batch2(SharedMatrix evecs, SharedVector evals,
+                                           DeterminantHashVec& P_space,
+                                           std::vector<std::pair<double, Determinant>>& F_space);
+    double get_excited_determinants_batch3(SharedMatrix evecs, SharedVector evals,
+                                           DeterminantHashVec& P_space,
+                                           std::vector<std::pair<double, Determinant>>& F_space);
+    double get_excited_determinants_batchv(SharedMatrix evecs, SharedVector evals,
+                                           DeterminantHashVec& P_space,
+                                           std::vector<std::pair<double, Determinant>>& F_space);
 
     /// Builds excited determinants in batch
     det_hash<double> get_bin_F_space(int bin, int nbin, SharedMatrix evecs,
-                                    DeterminantHashVec& P_space); 
+                                     DeterminantHashVec& P_space);
     det_hash<double> get_bin_F_space2(int bin, int nbin, SharedMatrix evecs,
-                                    DeterminantHashVec& P_space); 
-    std::vector<std::pair<Determinant,double>> get_bin_F_spacev(int bin, int nbin, SharedMatrix evecs,
-                                    DeterminantHashVec& P_space); 
+                                      DeterminantHashVec& P_space);
+    det_hash<double> get_bin_F_space3(int bin, int nbin, SharedMatrix evecs,
+                                      DeterminantHashVec& P_space);
+    std::vector<std::pair<Determinant, double>>
+    get_bin_F_spacev(int bin, int nbin, SharedMatrix evecs, DeterminantHashVec& P_space);
 
     /// Prune the space of determinants
     void prune_q_space(DeterminantHashVec& PQ_space, DeterminantHashVec& P_space,
@@ -373,14 +379,14 @@ class AdaptiveCI : public Wavefunction {
     void full_spin_transform(DeterminantHashVec& det_space, SharedMatrix cI, int nroot);
 
     /// Check for spin contamination
-    double compute_spin_contamination(DeterminantHashVec& space, WFNOperator& op, SharedMatrix evecs, int nroot);
-
+    double compute_spin_contamination(DeterminantHashVec& space, WFNOperator& op,
+                                      SharedMatrix evecs, int nroot);
 
     /// Save coefficients of lowest-root determinant
     void save_dets_to_file(DeterminantHashVec& space, SharedMatrix evecs);
     /// Compute the Davidson correction
-    std::vector<double> davidson_correction(std::vector<Determinant>& P_dets,
-                                            SharedVector P_evals, SharedMatrix PQ_evecs,
+    std::vector<double> davidson_correction(std::vector<Determinant>& P_dets, SharedVector P_evals,
+                                            SharedMatrix PQ_evecs,
                                             std::vector<Determinant>& PQ_dets,
                                             SharedVector PQ_evals);
 
@@ -427,11 +433,11 @@ class AdaptiveCI : public Wavefunction {
     DeterminantHashVec approximate_wfn(DeterminantHashVec& PQ_space, SharedMatrix& evecs,
                                        SharedVector& PQ_evals, SharedMatrix& new_evecs);
 
-    std::vector<std::pair<size_t, double>>
-    dl_initial_guess(std::vector<Determinant>& old_dets,
-                     std::vector<Determinant>& dets, SharedMatrix& evecs, int nroot);
+    std::vector<std::pair<size_t, double>> dl_initial_guess(std::vector<Determinant>& old_dets,
+                                                            std::vector<Determinant>& dets,
+                                                            SharedMatrix& evecs, int nroot);
 
-    std::vector<std::tuple<double,int,int>> sym_labeled_orbitals(std::string type);
+    std::vector<std::tuple<double, int, int>> sym_labeled_orbitals(std::string type);
 
     void spin_analysis();
 
@@ -447,7 +453,7 @@ class AdaptiveCI : public Wavefunction {
     //    nroots);
 };
 
-}
-} // End Namespaces
+} // namespace forte
+} // namespace psi
 
 #endif // _adaptive_ci_h_

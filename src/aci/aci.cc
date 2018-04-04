@@ -194,7 +194,7 @@ void set_ACI_options(ForteOptions& foptions) {
 
     /*- Number of batches in screening  -*/
     foptions.add_int("ACI_NBATCH", 1, "Number of batches in screening");
- 
+
     /*- Sets max memory for batching algorithm (MB) -*/
     foptions.add_int("ACI_MAX_MEM", 1000, "Sets max memory for batching algorithm (MB)");
 
@@ -222,7 +222,8 @@ AdaptiveCI::~AdaptiveCI() {}
 
 void AdaptiveCI::set_fci_ints(std::shared_ptr<FCIIntegrals> fci_ints) {
     fci_ints_ = fci_ints;
-    nuclear_repulsion_energy_ = molecule_->nuclear_repulsion_energy(reference_wavefunction_->get_dipole_field_strength());
+    nuclear_repulsion_energy_ =
+        molecule_->nuclear_repulsion_energy(reference_wavefunction_->get_dipole_field_strength());
     set_ints_ = true;
 }
 
@@ -242,7 +243,8 @@ void AdaptiveCI::set_aci_ints(SharedWavefunction ref_wfn, std::shared_ptr<ForteI
     fci_ints_->set_active_integrals(tei_active_aa, tei_active_ab, tei_active_bb);
     fci_ints_->compute_restricted_one_body_operator();
 
-    nuclear_repulsion_energy_ = molecule_->nuclear_repulsion_energy(reference_wavefunction_->get_dipole_field_strength());
+    nuclear_repulsion_energy_ =
+        molecule_->nuclear_repulsion_energy(reference_wavefunction_->get_dipole_field_strength());
 }
 
 void AdaptiveCI::startup() {
@@ -429,16 +431,15 @@ void AdaptiveCI::print_info() {
     }
     outfile->Printf("\n  %s", std::string(65, '-').c_str());
 
-    if( options_.get_bool("PRINT_1BODY_EVALS")){
+    if (options_.get_bool("PRINT_1BODY_EVALS")) {
         outfile->Printf("\n  Reference orbital energies:");
         std::shared_ptr<Vector> epsilon_a = reference_wavefunction_->epsilon_a();
 
         auto actmo = mo_space_info_->get_absolute_mo("ACTIVE");
 
-        for( int n =0, maxn = actmo.size(); n < maxn; ++n ){
+        for (int n = 0, maxn = actmo.size(); n < maxn; ++n) {
             outfile->Printf("\n   %da: %1.6f ", n, epsilon_a->get(actmo[n]));
         }
-
     }
 }
 
@@ -755,9 +756,8 @@ void AdaptiveCI::print_final(DeterminantHashVec& dets, SharedMatrix& PQ_evecs,
                         abs_energy, exc_energy);
         outfile->Printf("\n  * Adaptive-CI Energy Root %3d + EPT2 = %.12f Eh = %8.4f eV", i,
                         abs_energy + multistate_pt2_energy_correction_[i],
-                        exc_energy +
-                            pc_hartree2ev * (multistate_pt2_energy_correction_[i] -
-                                             multistate_pt2_energy_correction_[0]));
+                        exc_energy + pc_hartree2ev * (multistate_pt2_energy_correction_[i] -
+                                                      multistate_pt2_energy_correction_[0]));
         //    	if(options_.get_str("SIZE_CORRECTION") == "DAVIDSON" ){
         //        outfile->Printf("\n  * Adaptive-CI Energy Root %3d + D1   =
         //        %.12f Eh = %8.4f eV",i,abs_energy + davidson[i],
@@ -810,15 +810,16 @@ void AdaptiveCI::find_q_space_batched(DeterminantHashVec& P_space, DeterminantHa
     outfile->Printf("\n  Using batched Q_space algorithm");
 
     std::vector<std::pair<double, Determinant>> F_space;
-    double remainder = get_excited_determinants_batch2( evecs, evals, P_space, F_space ); 
-    //double remainder = get_excited_determinants_batchv( evecs, evals, P_space, F_space ); 
+    double remainder = get_excited_determinants_batch2(evecs, evals, P_space, F_space);
+    // double remainder = get_excited_determinants_batchv( evecs, evals, P_space, F_space );
 
     PQ_space.clear();
     external_wfn_.clear();
     PQ_space.swap(P_space);
 
     if (!quiet_mode_) {
-        outfile->Printf("\n  %s: %zu determinants", "Dimension of the truncated SD space", F_space.size());
+        outfile->Printf("\n  %s: %zu determinants", "Dimension of the truncated SD space",
+                        F_space.size());
         outfile->Printf("\n  %s: %f s\n", "Time spent building the external space (default)",
                         build.get());
     }
@@ -891,8 +892,6 @@ void AdaptiveCI::default_find_q_space(DeterminantHashVec& P_space, DeterminantHa
     PQ_space.swap(P_space);
     outfile->Printf("\n  Time spent preparing PQ_space: %1.6f", erase.get());
 
-
-
     if (!quiet_mode_) {
         outfile->Printf("\n  %s: %zu determinants", "Dimension of the SD space", V_hash.size());
         outfile->Printf("\n  %s: %f s\n", "Time spent building the external space (default)",
@@ -903,7 +902,8 @@ void AdaptiveCI::default_find_q_space(DeterminantHashVec& P_space, DeterminantHa
 
     // Compute criteria for all dets, store them all
     Determinant zero_det; // <- xsize (nact_);
-    std::vector<std::pair<double, Determinant>> F_space(V_hash.size(),std::make_pair(0.0, zero_det));
+    std::vector<std::pair<double, Determinant>> F_space(V_hash.size(),
+                                                        std::make_pair(0.0, zero_det));
     Timer build_sort;
     size_t max = V_hash.size();
 #pragma omp parallel
@@ -911,7 +911,7 @@ void AdaptiveCI::default_find_q_space(DeterminantHashVec& P_space, DeterminantHa
         int num_thread = omp_get_max_threads();
         int tid = omp_get_thread_num();
         size_t N = 0;
-       // sorted_dets.reserve(max);
+        // sorted_dets.reserve(max);
         for (const auto& I : V_hash) {
             if ((N % num_thread) == tid) {
                 double delta = fci_ints_->energy(I.first) - evals->get(0);
@@ -989,7 +989,8 @@ void AdaptiveCI::find_q_space(DeterminantHashVec& P_space, DeterminantHashVec& P
 
     if (!quiet_mode_) {
         outfile->Printf("\n  %s: %zu determinants", "Dimension of the SD space", V_hash.size());
-        outfile->Printf("\n  %s: %f s\n", "Time spent building the external space", t_ms_build.get());
+        outfile->Printf("\n  %s: %f s\n", "Time spent building the external space",
+                        t_ms_build.get());
     }
 
     // This will contain all the determinants
@@ -1195,7 +1196,6 @@ double AdaptiveCI::root_select(int nroot, std::vector<double>& C1, std::vector<d
 
     return select_value;
 }
-
 
 bool AdaptiveCI::check_convergence(std::vector<std::vector<double>>& energy_history,
                                    SharedVector evals) {
@@ -2055,7 +2055,7 @@ void AdaptiveCI::compute_aci(DeterminantHashVec& PQ_space, SharedMatrix& PQ_evec
             op_.build_strings(P_space);
             op_.op_lists(P_space);
             op_.tp_lists(P_space);
-        } else if ( diag_method_ != Dynamic) {
+        } else if (diag_method_ != Dynamic) {
             op_.clear_op_s_lists();
             op_.clear_tp_s_lists();
             op_.build_strings(P_space);
@@ -2114,15 +2114,15 @@ void AdaptiveCI::compute_aci(DeterminantHashVec& PQ_space, SharedMatrix& PQ_evec
             print_wfn(P_space, op_, P_evecs, num_ref_roots);
 
         // Step 2. Find determinants in the Q space
-Timer build_space;
-        if (options_.get_bool("ACI_BATCHED_SCREENING")){
+        Timer build_space;
+        if (options_.get_bool("ACI_BATCHED_SCREENING")) {
             find_q_space_batched(P_space, PQ_space, P_evals, P_evecs);
         } else if (streamline_qspace_) {
             default_find_q_space(P_space, PQ_space, P_evals, P_evecs);
         } else {
             find_q_space(P_space, PQ_space, num_ref_roots, P_evals, P_evecs);
         }
-outfile->Printf("\n  Time spent building the model space: %1.6f", build_space.get());
+        outfile->Printf("\n  Time spent building the model space: %1.6f", build_space.get());
         // Check if P+Q space is spin complete
         if (spin_complete_) {
             PQ_space.make_spin_complete(nact_); // <- xsize
@@ -2147,7 +2147,7 @@ outfile->Printf("\n  Time spent building the model space: %1.6f", build_space.ge
             outfile->Printf("\n  Time spent building strings      %1.6f s", str.get());
             op_.op_lists(PQ_space);
             op_.tp_lists(PQ_space);
-        } else if ( diag_method_ != Dynamic ) {
+        } else if (diag_method_ != Dynamic) {
             op_.clear_op_s_lists();
             op_.clear_tp_s_lists();
             op_.build_strings(PQ_space);
@@ -3039,11 +3039,11 @@ void AdaptiveCI::add_external_excitations(DeterminantHashVec& ref) {
     SharedMatrix final_evecs;
     SharedVector final_evals;
 
-        op_.clear_op_s_lists();
-        op_.clear_tp_s_lists();
+    op_.clear_op_s_lists();
+    op_.clear_tp_s_lists();
 
-        WFNOperator op(mo_symmetry_, fci_ints);
-    if( diag_method_ != Dynamic ){
+    WFNOperator op(mo_symmetry_, fci_ints);
+    if (diag_method_ != Dynamic) {
         op.build_strings(ref);
         op.op_s_lists(ref);
         op.tp_s_lists(ref);
@@ -3216,16 +3216,17 @@ void AdaptiveCI::spin_analysis() {
         SharedMatrix Ca_new = Matrix::doublet(CA, Ua_full, false, false);
         SharedMatrix Cb_new = Matrix::doublet(CB, Ub_full, false, false);
 
-        CA->copy( Ca_new );
-        CB->copy( Cb_new );
-         
-    } else if (options_.get_str("SPIN_BASIS") == "LOCAL" ){
+        CA->copy(Ca_new);
+        CB->copy(Cb_new);
+
+    } else if (options_.get_str("SPIN_BASIS") == "LOCAL") {
         outfile->Printf("\n  Computing spin correlation in local basis \n");
-        
-        auto loc = std::make_shared<LOCALIZE>(reference_wavefunction_, options_, ints_, mo_space_info_ );
+
+        auto loc =
+            std::make_shared<LOCALIZE>(reference_wavefunction_, options_, ints_, mo_space_info_);
         loc->full_localize();
-        UA = loc->get_U()->clone();      
-        UB = loc->get_U()->clone();      
+        UA = loc->get_U()->clone();
+        UB = loc->get_U()->clone();
 
     } else {
         outfile->Printf("\n  Computing spin correlation in reference basis \n");
@@ -3237,7 +3238,6 @@ void AdaptiveCI::spin_analysis() {
     ambit::Tensor Ub = ambit::Tensor::build(ambit::CoreTensor, "U", {nact, nact});
     Ua.iterate([&](const std::vector<size_t>& i, double& value) { value = UA->get(i[0], i[1]); });
     Ub.iterate([&](const std::vector<size_t>& i, double& value) { value = UB->get(i[0], i[1]); });
-
 
     //    new_dim = nact;
     // 1 rdms first
@@ -3271,25 +3271,24 @@ void AdaptiveCI::spin_analysis() {
     for (int i = 0; i < nact; ++i) {
         for (int j = 0; j < nact; ++j) {
             double value = 0.0;
-            if( i == j ){
-                value += 0.75 * (l1a[nact*i + j] + l1b[nact*i + j]);
+            if (i == j) {
+                value += 0.75 * (l1a[nact * i + j] + l1b[nact * i + j]);
             }
-           
-            value -= 0.5  * ( l2ab[ i * nact3 + j * nact2 + j * nact + i ] 
-                            + l2ab[ j * nact3 + i * nact2 + i * nact + j ] );
 
-            value += 0.25 * ( l2aa[ i * nact3 + j * nact2 + i * nact + j ]
-                            + l2bb[ i * nact3 + j * nact2 + i * nact + j ] 
-                            - l2ab[ i * nact3 + j * nact2 + i * nact + j ] 
-                            - l2ab[ j * nact3 + i * nact2 + j * nact + i ]);
+            value -= 0.5 * (l2ab[i * nact3 + j * nact2 + j * nact + i] +
+                            l2ab[j * nact3 + i * nact2 + i * nact + j]);
+
+            value += 0.25 * (l2aa[i * nact3 + j * nact2 + i * nact + j] +
+                             l2bb[i * nact3 + j * nact2 + i * nact + j] -
+                             l2ab[i * nact3 + j * nact2 + i * nact + j] -
+                             l2ab[j * nact3 + i * nact2 + j * nact + i]);
 
             spin_corr->set(i, j, value);
-            value -= 0.25 * ( l1a[i*nact + i] * l1a[j*nact + j] 
-                            + l1b[i*nact + i] * l1b[j*nact + j] 
-                            - l1a[i*nact + i] * l1b[j*nact + j] 
-                            - l1b[i*nact + i] * l1a[j*nact + j] 
-                            );
-            spin_fluct->set(i,j,value);
+            value -=
+                0.25 *
+                (l1a[i * nact + i] * l1a[j * nact + j] + l1b[i * nact + i] * l1b[j * nact + j] -
+                 l1a[i * nact + i] * l1b[j * nact + j] - l1b[i * nact + i] * l1a[j * nact + j]);
+            spin_fluct->set(i, j, value);
         }
     }
     outfile->Printf("\n");
@@ -3300,8 +3299,8 @@ void AdaptiveCI::spin_analysis() {
     SharedMatrix spin_evecs2(new Matrix(nact, nact));
     SharedVector spin_evals2(new Vector(nact));
 
-//    spin_corr->diagonalize(spin_evecs, spin_evals);
-//    spin_evals->print();
+    //    spin_corr->diagonalize(spin_evecs, spin_evals);
+    //    spin_evals->print();
 
     if (options_.get_bool("SPIN_MAT_TO_FILE")) {
         std::ofstream file;
@@ -3323,30 +3322,30 @@ void AdaptiveCI::spin_analysis() {
         }
         file2.close();
     }
-/*
-    // Build spin-correlation densities
-    SharedMatrix Ca = reference_wavefunction_->Ca();
-    Dimension nactpi = mo_space_info_->get_dimension("ACTIVE");
-    std::vector<size_t> actpi = mo_space_info_->get_absolute_mo("ACTIVE");
-    SharedMatrix Ca_copy = Ca->clone();
-    for( int i = 0; i < nact; ++i ){
-        SharedVector vec = std::make_shared<Vector>(nmo_);
-        vec->zero();
-        for( int j = 0; j < nact; ++j ){
-            auto col = Ca_copy->get_column(0,actpi[j]);
-            double spin = spin_corr->get(j,i);
-            for( int k = 0; k < nmo_; ++k ){
-                double val = col->get(k) * col->get(k);
-                col->set(k, val);
-            } 
-            col->scale(spin);
-            vec->add(col);
-       }
-        Ca->set_column(0,actpi[i], vec);
-    }
-*/
+    /*
+        // Build spin-correlation densities
+        SharedMatrix Ca = reference_wavefunction_->Ca();
+        Dimension nactpi = mo_space_info_->get_dimension("ACTIVE");
+        std::vector<size_t> actpi = mo_space_info_->get_absolute_mo("ACTIVE");
+        SharedMatrix Ca_copy = Ca->clone();
+        for( int i = 0; i < nact; ++i ){
+            SharedVector vec = std::make_shared<Vector>(nmo_);
+            vec->zero();
+            for( int j = 0; j < nact; ++j ){
+                auto col = Ca_copy->get_column(0,actpi[j]);
+                double spin = spin_corr->get(j,i);
+                for( int k = 0; k < nmo_; ++k ){
+                    double val = col->get(k) * col->get(k);
+                    col->set(k, val);
+                }
+                col->scale(spin);
+                vec->add(col);
+           }
+            Ca->set_column(0,actpi[i], vec);
+        }
+    */
 }
 
 void AdaptiveCI::update_sigma() { sigma_ = options_.get_double("ACI_RELAX_SIGMA"); }
-}
-} // EndNamespaces
+} // namespace forte
+} // namespace psi

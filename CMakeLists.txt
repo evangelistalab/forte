@@ -23,7 +23,7 @@ include(autocmake_omp)
 include(autocmake_mpi)  # MPI option A
 #include(custom_static_library)
 
-
+add_definitions(-DSMALL_BITSET)
 
 #find_package(psi4 1.1 REQUIRED COMPONENTS ambit chemps2)
 find_package(psi4 1.0 REQUIRED)
