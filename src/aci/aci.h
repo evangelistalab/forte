@@ -351,7 +351,7 @@ class AdaptiveCI : public Wavefunction {
                                      DeterminantHashVec& P_space);
     det_hash<double> get_bin_F_space2(int bin, int nbin, SharedMatrix evecs,
                                       DeterminantHashVec& P_space);
-    det_hash<double> get_bin_F_space3(int bin, int nbin, SharedMatrix evecs,
+    std::pair<std::vector<std::vector<std::pair<Determinant, double> > >, std::vector<size_t> > get_bin_F_space3(int bin, int nbin, SharedMatrix evecs,
                                       DeterminantHashVec& P_space);
     std::vector<std::pair<Determinant, double>>
     get_bin_F_spacev(int bin, int nbin, SharedMatrix evecs, DeterminantHashVec& P_space);
