@@ -62,7 +62,6 @@ namespace forte {
 void set_FCI_MO_options(ForteOptions& foptions);
 
 class FCI_MO : public Wavefunction {
-    friend class ACTIVE_DSRGPT2;
 
   public:
     /**

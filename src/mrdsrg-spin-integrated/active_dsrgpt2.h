@@ -79,7 +79,6 @@ class ACTIVE_DSRGPT2 : public Wavefunction {
 
     /// Compute energy
     double compute_energy();
-    double compute_energy_old();
 
   private:
     /// Basic Preparation
@@ -90,9 +89,6 @@ class ACTIVE_DSRGPT2 : public Wavefunction {
 
     /// MO space info
     std::shared_ptr<MOSpaceInfo> mo_space_info_;
-
-    /// Name of the code
-    std::string code_name_;
 
     /// Multiplicity
     int multiplicity_;
@@ -137,19 +133,6 @@ class ACTIVE_DSRGPT2 : public Wavefunction {
     void rotate_amp(SharedMatrix Ua, SharedMatrix Ub, ambit::BlockedTensor& T1,
                     ambit::BlockedTensor& T2);
 
-    /** Precompute all energies to
-     *  1) determine excitation type
-     *  2) obtain original orbital extent
-     *  3) determine %T1 in CISD
-     *  4) obtain unitary matrices that semicanonicalize the orbitals
-     *  5) compute VCIS or VCISD oscillator strength
-     */
-    void precompute_energy();
-
-    /// Unitary matrices that semicanonicalize orbitals of each state
-    std::vector<std::vector<SharedMatrix>> Uaorbs_;
-    std::vector<std::vector<SharedMatrix>> Uborbs_;
-
     /// Rotate to semicanonical orbitals and pass to this
     void rotate_orbs(SharedMatrix Ca0, SharedMatrix Cb0, SharedMatrix Ua, SharedMatrix Ub);
 
@@ -158,8 +141,6 @@ class ACTIVE_DSRGPT2 : public Wavefunction {
 
     /// MO dipole integrals in C1 Pitzer ordering in the original basis
     std::vector<SharedMatrix> modipole_ints_;
-    /// Compute MO dipole integrals from libmints using the current orbitals
-    void compute_modipole();
 
     /// Active indices in C1 symmetry per irrep
     std::vector<std::vector<size_t>> actvIdxC1_;
@@ -242,8 +223,6 @@ class ACTIVE_DSRGPT2 : public Wavefunction {
     /// Format a double to string
     std::string format_double(const double& value, const int& width, const int& precision,
                               const bool& scientific = false);
-    /// Rename a file
-    void rename_file(const std::string& oldName, const std::string& newName);
 
     /// Orbital extents of original orbitals
     std::vector<double> orb_extents_;
@@ -251,12 +230,6 @@ class ACTIVE_DSRGPT2 : public Wavefunction {
     /// Flatten the structure of orbital extents in fci_mo and return a vector of <r^2>
     std::vector<double>
     flatten_fci_orbextents(const std::vector<std::vector<std::vector<double>>>& fci_orb_extents);
-
-    /// Test if a file exist or not
-    bool is_file_exist(const std::string& name) {
-        struct stat buffer;
-        return (stat(name.c_str(), &buffer) == 0);
-    }
 
     // ==> debug functions for pt2 oscillator strength <==
 
