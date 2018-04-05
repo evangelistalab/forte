@@ -32,7 +32,6 @@
 #include <iomanip>
 #include <numeric>
 #include <sstream>
-#include <deque>
 
 #include "psi4/libmints/dipole.h"
 #include "psi4/libmints/oeprop.h"
@@ -1374,10 +1373,10 @@ void FCI_MO::print_Fock(const string& spin, const d2& Fock) {
 
     std::vector<size_t> idx_ah, idx_ap;
     if (actv_space_type_ == "CIS" || actv_space_type_ == "CISD") {
-        for (int i = 0; i < actv_hole_mos_.size(); ++i) {
+        for (int i = 0, hsize = actv_hole_mos_.size(); i < hsize; ++i) {
             idx_ah.push_back(actv_mos_[actv_hole_mos_[i]]);
         }
-        for (int i = 0; i < actv_part_mos_.size(); ++i) {
+        for (int i = 0, psize = actv_part_mos_.size(); i < psize; ++i) {
             idx_ap.push_back(actv_mos_[actv_part_mos_[i]]);
         }
         print_Fock_block("AH", "AH", idx_ah, idx_ah);
@@ -2305,59 +2304,54 @@ Reference FCI_MO::reference(const int& level) {
 
 void FCI_MO::compute_ref(const int& level) {
     timer_on("Compute Ref");
-    Timer tcu;
     if (!quiet_) {
-        std::string name = "1-";
-        if (level >= 2) {
-            name = "1- and 2-";
-            if (level >= 3) {
-                name = "1-, 2- and 3-";
-            }
-        }
-        outfile->Printf("\n  Computing %scumulants ... ", name.c_str());
+        print_h2("Compute State-Specific Cumulants");
     }
 
-    // prepare ci_rdms
+    // prepare eigen vectors for ci_rdms
     int dim = (eigen_[0].first)->dim();
     size_t eigen_size = eigen_.size();
     SharedMatrix evecs(new Matrix("evecs", dim, eigen_size));
     for (int i = 0; i < eigen_size; ++i) {
         evecs->set_column(0, i, (eigen_[i]).first);
     }
-    CI_RDMS ci_rdms(fci_ints_, determinant_, evecs, root_, root_);
 
     // compute 1-RDM
-    L1a = ambit::Tensor::build(ambit::CoreTensor, "L1a", {nactv_, nactv_});
-    L1b = ambit::Tensor::build(ambit::CoreTensor, "L1b", {nactv_, nactv_});
-    ci_rdms.compute_1rdm(L1a.data(), L1b.data());
+    auto D1 = compute_n_rdm(determinant_, evecs, 1, root_, root_, root_sym_, multi_, false);
+    L1a = D1[0];
+    L1b = D1[1];
 
     // compute 2-RDM
     if (level >= 2) {
-        L2aa = ambit::Tensor::build(ambit::CoreTensor, "L2aa", {nactv_, nactv_, nactv_, nactv_});
-        L2ab = ambit::Tensor::build(ambit::CoreTensor, "L2ab", {nactv_, nactv_, nactv_, nactv_});
-        L2bb = ambit::Tensor::build(ambit::CoreTensor, "L2bb", {nactv_, nactv_, nactv_, nactv_});
-
-        ci_rdms.compute_2rdm(L2aa.data(), L2ab.data(), L2bb.data());
+        auto D2 = compute_n_rdm(determinant_, evecs, 2, root_, root_, root_sym_, multi_, false);
+        L2aa = D2[0];
+        L2ab = D2[1];
+        L2bb = D2[2];
         add_wedge_cu2(L1a, L1b, L2aa, L2ab, L2bb);
     }
 
     // compute 3-RDM
     std::string threepdc = options_.get_str("THREEPDC");
     if (threepdc != "ZERO" && level >= 3) {
-        L3aaa = ambit::Tensor::build(ambit::CoreTensor, "L3aaa", std::vector<size_t>(6, nactv_));
-        L3aab = ambit::Tensor::build(ambit::CoreTensor, "L3aab", std::vector<size_t>(6, nactv_));
-        L3abb = ambit::Tensor::build(ambit::CoreTensor, "L3abb", std::vector<size_t>(6, nactv_));
-        L3bbb = ambit::Tensor::build(ambit::CoreTensor, "L3bbb", std::vector<size_t>(6, nactv_));
-
         if (threepdc == "MK") {
-            ci_rdms.compute_3rdm(L3aaa.data(), L3aab.data(), L3abb.data(), L3bbb.data());
+            auto D3 = compute_n_rdm(determinant_, evecs, 3, root_, root_, root_sym_, multi_, false);
+            L3aaa = D3[0];
+            L3aab = D3[1];
+            L3abb = D3[2];
+            L3bbb = D3[3];
+        } else {
+            L3aaa =
+                ambit::Tensor::build(ambit::CoreTensor, "L3aaa", std::vector<size_t>(6, nactv_));
+            L3aab =
+                ambit::Tensor::build(ambit::CoreTensor, "L3aab", std::vector<size_t>(6, nactv_));
+            L3abb =
+                ambit::Tensor::build(ambit::CoreTensor, "L3abb", std::vector<size_t>(6, nactv_));
+            L3bbb =
+                ambit::Tensor::build(ambit::CoreTensor, "L3bbb", std::vector<size_t>(6, nactv_));
         }
         add_wedge_cu3(L1a, L1b, L2aa, L2ab, L2bb, L3aaa, L3aab, L3abb, L3bbb);
     }
 
-    if (!quiet_) {
-        outfile->Printf("Done. Timing %15.6f s\n", tcu.get());
-    }
     timer_off("Compute Ref");
 }
 
@@ -3053,9 +3047,9 @@ void FCI_MO::set_eigens(const std::vector<vector<pair<SharedVector, double>>>& e
     }
 }
 
-std::deque<ambit::Tensor> FCI_MO::compute_n_rdm(const vecdet& p_space, SharedMatrix evecs,
-                                                int rdm_level, int root1, int root2, int irrep,
-                                                int multi, bool disk) {
+std::vector<ambit::Tensor> FCI_MO::compute_n_rdm(const vecdet& p_space, SharedMatrix evecs,
+                                                 int rdm_level, int root1, int root2, int irrep,
+                                                 int multi, bool disk) {
     if (rdm_level > 3 || rdm_level < 1) {
         throw PSIEXCEPTION("Incorrect RDM_LEVEL. Check your code!");
     }
@@ -3078,10 +3072,11 @@ std::deque<ambit::Tensor> FCI_MO::compute_n_rdm(const vecdet& p_space, SharedMat
 
     int ntensors = rdm_level + 1;
 
-    std::deque<ambit::Tensor> out;
+    std::vector<ambit::Tensor> out;
+    out.reserve(ntensors);
     for (int i = 0; i < ntensors; ++i) {
-        out.push_back(ambit::Tensor::build(ambit::CoreTensor, names[i],
-                                           std::vector<size_t>(2 * rdm_level, nactv_)));
+        out.emplace_back(ambit::Tensor::build(ambit::CoreTensor, names[i],
+                                              std::vector<size_t>(2 * rdm_level, nactv_)));
     }
 
     auto filenames = density_filenames_generator(rdm_level, irrep, multi, root1, root2);

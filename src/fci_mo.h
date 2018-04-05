@@ -394,16 +394,16 @@ class FCI_MO : public Wavefunction {
     void remove_density_files(int rdm_level, int irrep, int multi, int root1, int root2);
     void clean_all_density_files();
 
-    std::deque<ambit::Tensor> compute_n_rdm(const vecdet& p_space, SharedMatrix evecs,
-                                            int rdm_level, int root1, int root2, int irrep,
-                                            int multi, bool disk);
+    std::vector<ambit::Tensor> compute_n_rdm(const vecdet& p_space, SharedMatrix evecs,
+                                             int rdm_level, int root1, int root2, int irrep,
+                                             int multi, bool disk);
 
     /// Print Functions
     void print2PDC(const std::string& str, const d4& TwoPDC, const int& PRINT);
     void print3PDC(const std::string& str, const d6& ThreePDC, const int& PRINT);
 
     /// Print Density Matrix (Active ONLY)
-    void print_density(const std::string& spin, const d2& density);    
+    void print_density(const std::string& spin, const d2& density);
 
     /// Fill in non-tensor cumulants used in the naive MR-DSRG-PT2 code
     void fill_naive_cumulants(Reference& ref, const int& level);
