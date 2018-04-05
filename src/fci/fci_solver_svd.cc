@@ -59,6 +59,7 @@ void FCISolver::add_to_sig_vect(std::vector<std::tuple<double, int, int, int> >&
                                  int dim, int n, int d,
                                  int h, int i, int j)
 {
+  //prepare dimension objects
   b_r[0] = i*dim;
   e_r[0] = i*dim + n;
   b_c[0] = j*dim;
@@ -76,24 +77,73 @@ void FCISolver::add_to_sig_vect(std::vector<std::tuple<double, int, int, int> >&
   // get matrix block
   auto M = C[h]->get_block(row_slice, col_slice);
 
-  int nrow_M = M->rowdim();
-  //std::cout << M->rowdim() << std::endl;
-  int ncol_M = M->coldim();
-
-  auto u = std::make_shared<Matrix>("u", n, d);
+  auto u = std::make_shared<Matrix>("u", n, n);
   auto s = std::make_shared<Vector>("s", std::min(n, d));
   auto v = std::make_shared<Matrix>("v", d, d);
 
   M->svd(u, s, v);
-  s->print();
+  //s->print();
 
+  // add to sigma vector
   for (int k = 0; k < std::min(n, d); k++) {
-      // This is a different copy of sorted_sigma, need it to be the same copy!!!!
       sorted_sigma.push_back(std::make_tuple(s->get(k), h, i, j));
   }
-  outfile->Printf("\n size of sigma vect: %4d h: %4d i: %4d j: %4d",sorted_sigma.size(),h,i,j);
+  //outfile->Printf("\n size of sigma vect: %4d h: %4d i: %4d j: %4d",sorted_sigma.size(),h,i,j);
 }
 
+
+void FCISolver::patch_Cmat(std::vector<std::tuple<double, int, int, int> >& sorted_sigma,
+                                 std::vector<SharedMatrix>& C,
+                                 std::vector<std::vector<std::vector<int> > > rank_tile_inirrep,
+                                 std::vector<int> b_r,
+                                 std::vector<int> e_r,
+                                 std::vector<int> b_c,
+                                 std::vector<int> e_c,
+                                 int dim, int n, int d,
+                                 int h, int i, int j,
+                                 int& N_par)
+{
+  //prepare dimension objects
+  b_r[0] = i*dim;
+  e_r[0] = i*dim + n;
+  b_c[0] = j*dim;
+  e_c[0] = j*dim + d;
+
+  Dimension begin_row(b_r);
+  Dimension end_row(e_r);
+  Dimension begin_col(b_c);
+  Dimension end_col(e_c);
+
+  // make slice objects
+  Slice row_slice(begin_row, end_row);
+  Slice col_slice(begin_col, end_col);
+
+  // get matrix block
+  auto M = C[h]->get_block(row_slice, col_slice);
+
+  auto u = std::make_shared<Matrix>("u", n, n);
+  auto s = std::make_shared<Vector>("s", std::min(n, d));
+  auto v = std::make_shared<Matrix>("v", d, d);
+
+  M->svd(u, s, v);
+  //s->print();
+
+  //rebuild sigma as matrix
+  auto sig_mat = std::make_shared<Matrix>("sig_mat", n, d);
+  int rank_ef = rank_tile_inirrep[h][i][j];
+  for (int l = 0; l < rank_ef; l++) {
+      sig_mat->set(l, l, s->get(l));
+  }
+
+  //count paramaters
+  N_par += rank_ef*(n + d);
+
+  //rebuild M with reduced rank
+  auto M_red_rank = Matrix::triplet(u, sig_mat, v, false, false, false);
+
+  //splice M_red_rank back into C
+  C[h]->set_block(row_slice, col_slice, M_red_rank);
+}
 
 
 void FCISolver::fci_svd_tiles(FCIVector& HC, std::shared_ptr<FCIIntegrals> fci_ints, double fci_energy, int dim, double OMEGA)
@@ -102,7 +152,7 @@ void FCISolver::fci_svd_tiles(FCIVector& HC, std::shared_ptr<FCIIntegrals> fci_i
       Process::environment.molecule()->nuclear_repulsion_energy({0, 0, 0});
 
     std::vector<SharedMatrix> C = C_->coefficients_blocks();
-    std::vector<SharedMatrix> C_tiled_rr;
+    std::vector<SharedMatrix> C_tiled_rr = C_->coefficients_blocks();
 
     int nirrep = C.size();
     int total_rank = 0;
@@ -126,17 +176,12 @@ void FCISolver::fci_svd_tiles(FCIVector& HC, std::shared_ptr<FCIIntegrals> fci_i
         // loop over irreps
         int ncol = C[h]->rowdim();
         int nrow = C[h]->coldim();
-        //outfile->Printf("\nncol in h: %6d\n", ncol);
-        //outfile->Printf("\nnrow in h: %6d\n", nrow);
+
         int nt_cols = ncol/dim;
         int nt_rows = nrow/dim;
-        //outfile->Printf("\nnt_col in h: %6d\n", nt_cols);
-        //outfile->Printf("\nnt_row in h: %6d\n", nt_rows);
 
         int last_col_dim = ncol%dim;
         int last_row_dim = nrow%dim;
-        //outfile->Printf("\nlast_col_dim in h: %6d\n", last_col_dim);
-        //outfile->Printf("\nlast_row_dim in h: %6d\n", last_row_dim);
 
         int n_sing_vals_h = dim*nt_cols*nt_rows
                              + last_col_dim*nt_rows
@@ -146,9 +191,8 @@ void FCISolver::fci_svd_tiles(FCIVector& HC, std::shared_ptr<FCIIntegrals> fci_i
         size_of_ssv += n_sing_vals_h;
         rank_tile_inirrep[h].resize(nt_rows+1);
 
-
-        outfile->Printf("\n-------------------- NEXT IRREP --------------------\n");
-        C[h]->print();
+        //outfile->Printf("\n-------------------- NEXT IRREP --------------------\n");
+        //C[h]->print();
 
         for(int i=0; i<nt_rows+1; i++){
           // allocate memory for sorting vector
@@ -156,166 +200,37 @@ void FCISolver::fci_svd_tiles(FCIVector& HC, std::shared_ptr<FCIIntegrals> fci_i
           for(int j=0; j<nt_cols+1; j++){
             // make dimension objects
             if(j == nt_cols && i == nt_rows){
-              // make dimension objects for case of very last tile
+              // case of very last tile
               add_to_sig_vect(sorted_sigma, C, b_r, e_r, b_c, e_c, dim, last_row_dim, last_col_dim, h, i, j);
-/*
-              b_r[0] = i*dim;
-              e_r[0] = i*dim + last_row_dim;
-              b_c[0] = j*dim;
-              e_c[0] = j*dim + last_col_dim;
-
-              Dimension begin_row(b_r);
-              Dimension end_row(e_r);
-              Dimension begin_col(b_c);
-              Dimension end_col(e_c);
-
-              // make slice objects
-              Slice row_slice(begin_row, end_row);
-              Slice col_slice(begin_col, end_col);
-
-              // get matrix block
-              auto M = C[h]->get_block(row_slice, col_slice);
-
-              int nrow_M = M->rowdim();
-              //std::cout << M->rowdim() << std::endl;
-              int ncol_M = M->coldim();
-
-              auto u = std::make_shared<Matrix>("u", last_row_dim, last_col_dim);
-              auto s = std::make_shared<Vector>("s", std::min(last_row_dim, last_col_dim));
-              auto v = std::make_shared<Matrix>("v", last_col_dim, last_col_dim);
-
-              M->svd(u, s, v);
-              s->print();
-
-              for (int k = 0; k < std::min(last_row_dim, last_col_dim); k++) {
-                  sorted_sigma.push_back(std::make_tuple(s->get(k), h, i, j));
-              }
-*/
 
             } else if(j == nt_cols){
-              // make dimension objects for case of last tile colum
-              // add_to_sig_vect(sorted_sigma, C, b_r, e_r, b_c, e_c, dim, last_row_dim, last_col_dim, h, i, j);
-              b_r[0] = i*dim;
-              e_r[0] = i*dim + dim;
-              b_c[0] = j*dim;
-              e_c[0] = j*dim + last_col_dim;
-
-              Dimension begin_row(b_r);
-              Dimension end_row(e_r);
-              Dimension begin_col(b_c);
-              Dimension end_col(e_c);
-
-              // make slice objects
-              Slice row_slice(begin_row, end_row);
-              Slice col_slice(begin_col, end_col);
-
-              // get matrix block
-              auto M = C[h]->get_block(row_slice, col_slice);
-
-              int nrow_M = M->rowdim();
-              //std::cout << M->rowdim() << std::endl;
-              int ncol_M = M->coldim();
-
-              auto u = std::make_shared<Matrix>("u", dim, last_col_dim);
-              auto s = std::make_shared<Vector>("s", std::min(dim, last_col_dim));
-              auto v = std::make_shared<Matrix>("v", last_col_dim, last_col_dim);
-
-              M->svd(u, s, v);
-              s->print();
-
-              for (int k = 0; k < std::min(dim, last_col_dim); k++) {
-                  sorted_sigma.push_back(std::make_tuple(s->get(k), h, i, j));
-              }
+              // case of last tile colum
+              add_to_sig_vect(sorted_sigma, C, b_r, e_r, b_c, e_c, dim, dim, last_col_dim, h, i, j);
 
             } else if(i == nt_rows){
-
-              // make dimension objects for case of last tile row
-              //add_to_sig_vect(sorted_sigma, C, b_r, e_r, b_c, e_c, dim, last_row_dim, last_col_dim, h, i, j);
-              b_r[0] = i*dim;
-              e_r[0] = i*dim + last_row_dim;
-              b_c[0] = j*dim;
-              e_c[0] = j*dim + dim;
-
-              Dimension begin_row(b_r);
-              Dimension end_row(e_r);
-              Dimension begin_col(b_c);
-              Dimension end_col(e_c);
-
-              // make slice objects
-              Slice row_slice(begin_row, end_row);
-              Slice col_slice(begin_col, end_col);
-
-              // get matrix block
-              auto M = C[h]->get_block(row_slice, col_slice);
-
-              int nrow_M = M->rowdim();
-              //std::cout << M->rowdim() << std::endl;
-              int ncol_M = M->coldim();
-
-              auto u = std::make_shared<Matrix>("u", last_row_dim, dim);
-              auto s = std::make_shared<Vector>("s", std::min(last_row_dim, dim));
-              auto v = std::make_shared<Matrix>("v", dim, dim);
-
-              M->svd(u, s, v);
-              s->print();
-
-              for (int k = 0; k < std::min(last_row_dim, dim); k++) {
-                  sorted_sigma.push_back(std::make_tuple(s->get(k), h, i, j));
-              }
-
+              // case of last tile row
+              add_to_sig_vect(sorted_sigma, C, b_r, e_r, b_c, e_c, dim, last_row_dim, dim, h, i, j);
 
             } else {
-
-            // make dimension objects
-            //add_to_sig_vect(sorted_sigma, C, b_r, e_r, b_c, e_c, dim, last_row_dim, last_col_dim, h, i, j);
-
-            b_r[0] = i*dim;
-            e_r[0] = i*dim + dim;
-            b_c[0] = j*dim;
-            e_c[0] = j*dim + dim;
-
-            Dimension begin_row(b_r);
-            Dimension end_row(e_r);
-            Dimension begin_col(b_c);
-            Dimension end_col(e_c);
-
-            // make slice objects
-            Slice row_slice(begin_row, end_row);
-            Slice col_slice(begin_col, end_col);
-
-            // get matrix block
-            auto M = C[h]->get_block(row_slice, col_slice);
-
-            int nrow_M = M->rowdim();
-            //std::cout << M->rowdim() << std::endl;
-            int ncol_M = M->coldim();
-
-            auto u = std::make_shared<Matrix>("u", dim, dim);
-            auto s = std::make_shared<Vector>("s", dim);
-            auto v = std::make_shared<Matrix>("v", dim, dim);
-
-            M->svd(u, s, v);
-            s->print();
-
-            for (int k = 0; k < dim ; k++) {
-                sorted_sigma.push_back(std::make_tuple(s->get(k), h, i, j));
-            }
+              // most cases (main block of tiles of dim x dim)
+              add_to_sig_vect(sorted_sigma, C, b_r, e_r, b_c, e_c, dim, dim, dim, h, i, j);
           }
           //outfile->Printf("\nh dim: %6d  i dim: %6d  j dim: %6d  ",rank_tile_inirrep.size(), rank_tile_inirrep[h].size(), rank_tile_inirrep[h][i].size());
-          } // end j
-        } // end i
-    } // end h
+          }
+        }
+    }
 
     /////////////////////////////////// check status ////////////////////////////////////
 
     std::sort(sorted_sigma.rbegin(), sorted_sigma.rend());
     double sigma_norm = 0.0;
 
-    outfile->Printf("\n    singular value      irrep");
-    outfile->Printf("\n--------------------------------");
+    outfile->Printf("\n");
+    //outfile->Printf("\n        singular value    irrep      tile(i)     tile(j)");
+    //outfile->Printf("\n------------------------------------------------------------");
 
     for (auto sigma_h : sorted_sigma) {
-        outfile->Printf("\n   %20.12f      %d", std::get<0>(sigma_h), std::get<1>(sigma_h));
+        //outfile->Printf("\n   %20.12f      %d      %d      %d", std::get<0>(sigma_h), std::get<1>(sigma_h), std::get<2>(sigma_h), std::get<3>(sigma_h));
         sigma_norm += std::pow(std::get<0>(sigma_h), 2.0);
     }
 
@@ -328,11 +243,6 @@ void FCISolver::fci_svd_tiles(FCIVector& HC, std::shared_ptr<FCIIntegrals> fci_i
     double norm_cut = 1.0 - OMEGA;
     double sig_sum = 0;
     double omega_norm;
-    //std::vector<int> rank_irrep(nirrep, 0);
-
-
-    //std::tuple<int, int, int, int> rank_tile_inirrep;
-
 
     for (auto sigma_h : sorted_sigma) {
         rank_tile_inirrep[std::get<1>(sigma_h)][std::get<2>(sigma_h)][std::get<3>(sigma_h)] += 1;
@@ -341,39 +251,40 @@ void FCISolver::fci_svd_tiles(FCIVector& HC, std::shared_ptr<FCIIntegrals> fci_i
             break;
         }
     }
-/*
-    for(int h = 0; h<8; h++){
-      for(int i = 0; i<2; i++){
-        for(int j = 0; j<2; j++){
-          outfile->Printf("\nfor irrep: %6d in tile: %6d,%6d the red rank is: %6d", h,i,j,rank_tile_inirrep[h][i][j]);
+
+    outfile->Printf("\n  irrep     tile(i)     tile(j)     red rank");
+    outfile->Printf("\n------------------------------------------------------------");
+
+    outfile->Printf("\n");
+    for(int h = 0; h<nirrep; h++){
+      for(int i = 0; i<rank_tile_inirrep[h].size(); i++){
+        for(int j = 0; j<rank_tile_inirrep[h][i].size(); j++){
+          outfile->Printf("\n  %6d     %6d     %6d     %6d", h,i,j,rank_tile_inirrep[h][i][j]);
         }
       }
     }
-*/
+
     ///// PRE MATRIX TILER END /////
 
     ///// MAIN MATRIX TILER BEGIN /////
 
     int N_par = 0;
 
+    outfile->Printf("\n");
     outfile->Printf("\n///////////////////////////// REBUILDING RED RANK TILES //////////////////////////////////////\n");
+    outfile->Printf("\n");
 
     //now reduce rank accordingly!
     for (int h=0; h<nirrep; h++) {
         // loop over irreps
-        int ncol = C[h]->rowdim();
-        int nrow = C[h]->coldim();
-        //outfile->Printf("\nncol in h: %6d\n", ncol);
-        //outfile->Printf("\nnrow in h: %6d\n", nrow);
+        int ncol = C_tiled_rr[h]->rowdim();
+        int nrow = C_tiled_rr[h]->coldim();
+
         int nt_cols = ncol/dim;
         int nt_rows = nrow/dim;
-        //outfile->Printf("\nnt_col in h: %6d\n", nt_cols);
-        //outfile->Printf("\nnt_row in h: %6d\n", nt_rows);
 
         int last_col_dim = ncol%dim;
         int last_row_dim = nrow%dim;
-        //outfile->Printf("\nlast_col_dim in h: %6d\n", last_col_dim);
-        //outfile->Printf("\nlast_row_dim in h: %6d\n", last_row_dim);
 
         int n_sing_vals_h = dim*nt_cols*nt_rows
                              + last_col_dim*nt_rows
@@ -383,9 +294,7 @@ void FCISolver::fci_svd_tiles(FCIVector& HC, std::shared_ptr<FCIIntegrals> fci_i
         size_of_ssv += n_sing_vals_h;
         rank_tile_inirrep[h].resize(nt_rows+1);
 
-
-        outfile->Printf("\n-------------------- NEXT IRREP --------------------\n");
-        C[h]->print();
+        //outfile->Printf("\n-------------------- NEXT IRREP --------------------\n");
 
         for(int i=0; i<nt_rows+1; i++){
           // allocate memory for sorting vector
@@ -394,218 +303,62 @@ void FCISolver::fci_svd_tiles(FCIVector& HC, std::shared_ptr<FCIIntegrals> fci_i
             // make dimension objects
             if(j == nt_cols && i == nt_rows){
               // make dimension objects for case of very last tile
-              //add_to_sig_vect(sorted_sigma, C, b_r, e_r, b_c, e_c, dim, last_row_dim, last_col_dim, h, i, j);
-
-              b_r[0] = i*dim;
-              e_r[0] = i*dim + last_row_dim;
-              b_c[0] = j*dim;
-              e_c[0] = j*dim + last_col_dim;
-
-              Dimension begin_row(b_r);
-              Dimension end_row(e_r);
-              Dimension begin_col(b_c);
-              Dimension end_col(e_c);
-
-              // make slice objects
-              Slice row_slice(begin_row, end_row);
-              Slice col_slice(begin_col, end_col);
-
-              // get matrix block
-              auto M = C[h]->get_block(row_slice, col_slice);
-
-              int nrow_M = M->rowdim();
-              int ncol_M = M->coldim();
-
-              auto u = std::make_shared<Matrix>("u", last_row_dim, last_row_dim);
-              auto s = std::make_shared<Vector>("s", std::min(last_row_dim, last_col_dim));
-              auto v = std::make_shared<Matrix>("v", last_col_dim, last_col_dim);
-
-              M->svd(u, s, v);
-              s->print();
-
-              //rebuild sigma as matrix
-              auto sig_mat = std::make_shared<Matrix>("sig_mat", last_row_dim, last_col_dim);
-              int rank_ef = rank_tile_inirrep[h][i][j];
-              for (int l = 0; l < rank_ef; l++) {
-                  sig_mat->set(l, l, s->get(l));
-              }
-
-              //count paramaters
-              N_par += rank_ef*(last_row_dim + last_col_dim);
-
-              //rebuild M with reduced rank
-              auto M_red_rank = Matrix::triplet(u, sig_mat, v, false, false, false);
-
-              //spice M_red_rank back into C
-              C[h]->set_block(row_slice, col_slice, M_red_rank);
-
+              patch_Cmat(sorted_sigma, C_tiled_rr, rank_tile_inirrep, b_r, e_r, b_c, e_c, dim, last_row_dim, last_col_dim, h, i, j, N_par);
             } else if(j == nt_cols){
               // make dimension objects for case of last tile colum
-              // add_to_sig_vect(sorted_sigma, C, b_r, e_r, b_c, e_c, dim, last_row_dim, last_col_dim, h, i, j);
-              b_r[0] = i*dim;
-              e_r[0] = i*dim + dim;
-              b_c[0] = j*dim;
-              e_c[0] = j*dim + last_col_dim;
-
-              Dimension begin_row(b_r);
-              Dimension end_row(e_r);
-              Dimension begin_col(b_c);
-              Dimension end_col(e_c);
-
-              // make slice objects
-              Slice row_slice(begin_row, end_row);
-              Slice col_slice(begin_col, end_col);
-
-              // get matrix block
-              auto M = C[h]->get_block(row_slice, col_slice);
-
-              int nrow_M = M->rowdim();
-              //std::cout << M->rowdim() << std::endl;
-              int ncol_M = M->coldim();
-
-              auto u = std::make_shared<Matrix>("u", dim, dim);
-              auto s = std::make_shared<Vector>("s", std::min(dim, last_col_dim));
-              auto v = std::make_shared<Matrix>("v", last_col_dim, last_col_dim);
-
-              M->svd(u, s, v);
-              outfile->Printf("\nI ameeee here");
-              s->print();
-
-              //rebuild sigma as matrix
-              auto sig_mat = std::make_shared<Matrix>("sig_mat", dim, last_col_dim);
-              int rank_ef = rank_tile_inirrep[h][i][j];
-              for (int l = 0; l < rank_ef; l++) {
-                  sig_mat->set(l, l, s->get(l));
-                  outfile->Printf("\nI ame here, l: %6d",l);
-              }
-
-              //count paramaters
-              N_par += rank_ef*(dim + last_col_dim);
-
-              //rebuild M with reduced rank
-              auto M_red_rank = Matrix::triplet(u, sig_mat, v, false, false, false);
-
-              //spice M_red_rank back into C
-              C[h]->set_block(row_slice, col_slice, M_red_rank);
-
+              patch_Cmat(sorted_sigma, C_tiled_rr, rank_tile_inirrep, b_r, e_r, b_c, e_c, dim, dim, last_col_dim, h, i, j, N_par);
             } else if(i == nt_rows){
-
               // make dimension objects for case of last tile row
-              //add_to_sig_vect(sorted_sigma, C, b_r, e_r, b_c, e_c, dim, last_row_dim, last_col_dim, h, i, j);
-              b_r[0] = i*dim;
-              e_r[0] = i*dim + last_row_dim;
-              b_c[0] = j*dim;
-              e_c[0] = j*dim + dim;
-
-              Dimension begin_row(b_r);
-              Dimension end_row(e_r);
-              Dimension begin_col(b_c);
-              Dimension end_col(e_c);
-
-              // make slice objects
-              Slice row_slice(begin_row, end_row);
-              Slice col_slice(begin_col, end_col);
-
-              // get matrix block
-              auto M = C[h]->get_block(row_slice, col_slice);
-
-              int nrow_M = M->rowdim();
-              //std::cout << M->rowdim() << std::endl;
-              int ncol_M = M->coldim();
-
-              auto u = std::make_shared<Matrix>("u", last_row_dim, last_row_dim);
-              auto s = std::make_shared<Vector>("s", std::min(last_row_dim, dim));
-              auto v = std::make_shared<Matrix>("v", dim, dim);
-
-              M->svd(u, s, v);
-              s->print();
-
-              //rebuild sigma as matrix
-              auto sig_mat = std::make_shared<Matrix>("sig_mat", last_row_dim, dim);
-              int rank_ef = rank_tile_inirrep[h][i][j];
-              for (int l = 0; l < rank_ef; l++) {
-                  sig_mat->set(l, l, s->get(l));
-              }
-
-              //count paramaters
-              N_par += rank_ef*(last_row_dim + dim);
-
-              //rebuild M with reduced rank
-              auto M_red_rank = Matrix::triplet(u, sig_mat, v, false, false, false);
-
-              //spice M_red_rank back into C
-              C[h]->set_block(row_slice, col_slice, M_red_rank);
-
+              patch_Cmat(sorted_sigma, C_tiled_rr, rank_tile_inirrep, b_r, e_r, b_c, e_c, dim, last_row_dim, dim, h, i, j, N_par);
             } else {
-
-            // make dimension objects
-            //add_to_sig_vect(sorted_sigma, C, b_r, e_r, b_c, e_c, dim, last_row_dim, last_col_dim, h, i, j);
-
-            b_r[0] = i*dim;
-            e_r[0] = i*dim + dim;
-            b_c[0] = j*dim;
-            e_c[0] = j*dim + dim;
-
-            Dimension begin_row(b_r);
-            Dimension end_row(e_r);
-            Dimension begin_col(b_c);
-            Dimension end_col(e_c);
-
-            // make slice objects
-            Slice row_slice(begin_row, end_row);
-            Slice col_slice(begin_col, end_col);
-
-            // get matrix block
-            auto M = C[h]->get_block(row_slice, col_slice);
-
-            int nrow_M = M->rowdim();
-            //std::cout << M->rowdim() << std::endl;
-            int ncol_M = M->coldim();
-
-            auto u = std::make_shared<Matrix>("u", dim, dim);
-            auto s = std::make_shared<Vector>("s", dim);
-            auto v = std::make_shared<Matrix>("v", dim, dim);
-
-            M->svd(u, s, v);
-            s->print();
-
-            //rebuild sigma as matrix
-            auto sig_mat = std::make_shared<Matrix>("sig_mat", dim, dim);
-            int rank_ef = rank_tile_inirrep[h][i][j];
-            for (int l = 0; l < rank_ef; l++) {
-                sig_mat->set(l, l, s->get(l));
-                outfile->Printf("\nI ame here, l: %6d",l);
-            }
-
-            //count paramaters
-            N_par += rank_ef*(dim + dim);
-
-            //rebuild M with reduced rank
-            auto M_red_rank = Matrix::triplet(u, sig_mat, v, false, false, false);
-
-            //spice M_red_rank back into C
-            C[h]->set_block(row_slice, col_slice, M_red_rank);
-          }
+              // make dimension objects
+              patch_Cmat(sorted_sigma, C_tiled_rr, rank_tile_inirrep, b_r, e_r, b_c, e_c, dim, dim, dim, h, i, j, N_par);
+              }
           //outfile->Printf("\nh dim: %6d  i dim: %6d  j dim: %6d  ",rank_tile_inirrep.size(), rank_tile_inirrep[h].size(), rank_tile_inirrep[h][i].size());
           } // end j
         } // end i
-    //C[h]->print();
     } // end h
 
+    //re-normalize
+
+    double norm_C_tiled_rr = 0.0;
+    for (auto C_tiled_rr_h : C_tiled_rr) {
+        norm_C_tiled_rr += C_tiled_rr_h->sum_of_squares();
+    }
+    norm_C_tiled_rr = std::sqrt(norm_C_tiled_rr);
+    for (auto C_tiled_rr_h : C_tiled_rr) {
+        C_tiled_rr_h->scale(1. / norm_C_tiled_rr);
+    }
+
+/*
+    outfile->Printf("\n irrep red        ||C - C_rr||\n");
+
+    for(int h = 0; h<nirrep; h++){
+      auto C_diff = C[h]->clone();
+      C_diff->subtract(C_tiled_rr[h]);
+      double norm = std::sqrt(C_diff->sum_of_squares());
+      outfile->Printf(" %1d %20.12f \n", h, norm);
+      //outfile->Printf("\n //// C ////\n");
+      //C[h]->print();
+      //outfile->Printf("\n //// C_tiled_rr ////\n");
+      //C_tiled_rr[h]->print();
+    }
+*/
     // Compute the energy
 
-    C_->set_coefficient_blocks(C);
+    C_->set_coefficient_blocks(C_tiled_rr);
     // HC = H C
     C_->Hamiltonian(HC, fci_ints, twoSubstituitionVVOO);
     // E = C^T HC
     double E_red_rank = HC.dot(C_) + nuclear_repulsion_energy;
 
     outfile->Printf("\n OMEGA             = %20.12f", OMEGA);
+    outfile->Printf("\n tile size         =     %6d", dim);
     outfile->Printf("\n E_fci             = %20.12f", fci_energy);
     outfile->Printf("\n E_red_rank        = %20.12f", E_red_rank);
     outfile->Printf("\n Delta(E_red_rank) = %20.12f", E_red_rank-fci_energy);
-    outfile->Printf("\n Npar              =     %6d", N_par);
-    //outfile->Printf("\n Nsto              =     %6d", N_sto);
+    outfile->Printf("\n Npar              =     %6d", N_par/2);
+    outfile->Printf("\n Nsto              =     %6d", N_par/2);
 
     ///// MAIN MATRIX TILER END /////
 
@@ -622,8 +375,12 @@ void FCISolver::fci_svd(FCIVector& HC, std::shared_ptr<FCIIntegrals> fci_ints, d
     std::vector<SharedMatrix> C = C_->coefficients_blocks();
     std::vector<SharedMatrix> C_red_rank;
 
+    //outfile->Printf("\n");
+    //outfile->Printf("\n PRINTING CLEAN C MATRICIES\n");
+
     double norm_C = 0.0;
     for (auto C_h : C) {
+        //C_h->print();
         norm_C += C_h->sum_of_squares();
     }
 
@@ -631,21 +388,6 @@ void FCISolver::fci_svd(FCIVector& HC, std::shared_ptr<FCIIntegrals> fci_ints, d
     int total_rank = 0;
     int total_red_rank = 0;
 
-    //// norm based cuttoff scheme BEGIN
-
-    /// would like a way to generate the tao value based on the norm %
-    // Best way to initalize a vector with correct size?
-
-    //    int all_sig_dim = 0;
-
-    //    for (int h = 0; h < nirrep; h++) {
-    //      all_sig_dim += std::min(C[h]->rowdim(), C[h]->coldim());
-    //    }
-
-    //    std::vector<double> all_sig(all_sig_dim);
-    //    int sig_counter = 0;
-
-    //    std::vector<double> all_sig;
     std::vector<std::pair<double, int>> sorted_sigma; // [(sigma_i, irrep)]
 
     for (int h = 0; h < nirrep; h++) {
@@ -659,10 +401,7 @@ void FCISolver::fci_svd(FCIVector& HC, std::shared_ptr<FCIIntegrals> fci_ints, d
         C[h]->svd(u_p, s_p, v_p);
 
         for (int i = 0; i < std::min(ncol, nrow); i++) {
-            //            all_sig.push_back(s_p->get(i));
             sorted_sigma.push_back(std::make_pair(s_p->get(i), h));
-            //        all_sig[sig_counter] = s_p->get(i);
-            //        sig_counter++;
         }
     }
 
@@ -754,6 +493,7 @@ void FCISolver::fci_svd(FCIVector& HC, std::shared_ptr<FCIIntegrals> fci_ints, d
 
     int N_sto = N_par;
 
+    // re-normalize C_red_rank
     double norm_C_red_rank = 0.0;
     for (auto C_red_rank_h : C_red_rank) {
         norm_C_red_rank += C_red_rank_h->sum_of_squares();
@@ -763,10 +503,14 @@ void FCISolver::fci_svd(FCIVector& HC, std::shared_ptr<FCIIntegrals> fci_ints, d
         C_red_rank_h->scale(1. / norm_C_red_rank);
     }
 
+    outfile->Printf("\n");
+    outfile->Printf("\n PRINTING RR C MATRICIES\n");
+
     {
         double norm_C_red_rank = 0.0;
         for (auto C_red_rank_h : C_red_rank) {
             norm_C_red_rank += C_red_rank_h->sum_of_squares();
+            //C_red_rank_h->print();
         }
         norm_C_red_rank = std::sqrt(norm_C_red_rank);
         outfile->Printf("\n ||C|| = %20.12f", std::sqrt(norm_C_red_rank));

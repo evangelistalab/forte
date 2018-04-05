@@ -22,6 +22,10 @@ set {
 set forte {
   job_type fci
   fci_svd true
+  fci_svd_tile true
+  fci_svd_tile_type cumulative
+  fci_svd_N_tiles 10
+  fci_svd_omega 0.001
   fci_svd_type cumulative
   fci_svd_tau 0.001
 }

@@ -48,6 +48,10 @@ void set_FCI_options(ForteOptions& foptions) {
     foptions.add_bool("FCI_SVD", false, "Decompose and reconstruct the FCI wave function");
     foptions.add_str("FCI_SVD_TYPE", "THRESHOLD", {"THRESHOLD","CUMULATIVE"}, "Type of FCI decomposition");
     foptions.add_double("FCI_SVD_TAU", 0.0, "SVD threshold");
+    foptions.add_bool("FCI_SVD_TILE", false, "Decompose and reconstruct the FCI wave function with tiles");
+    foptions.add_str("FCI_SVD_TILE_TYPE", "THRESHOLD", {"THRESHOLD","CUMULATIVE"}, "Type of FCI-tile decomposition");
+    foptions.add_double("FCI_SVD_OMEGA", 0.0, "SVD-tile threshold");
+    foptions.add_int("FCI_SVD_N_TILES", 0, "SVD-tile number of tiles");
     foptions.add_int("FCI_NTRIAL_PER_ROOT", 10,
                      "The number of trial guess vectors to generate per root");
 }

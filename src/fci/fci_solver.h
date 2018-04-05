@@ -228,6 +228,17 @@ class FCISolver {
                          std::vector<int> e_c,
                          int dim, int n, int d,
                          int h, int i, int j);
+    void patch_Cmat(std::vector<std::tuple<double, int, int, int> >& sorted_sigma,
+                         std::vector<SharedMatrix>& C,
+                         std::vector<std::vector<std::vector<int> > > rank_tile_inirrep,
+                         std::vector<int> b_r,
+                         std::vector<int> e_r,
+                         std::vector<int> b_c,
+                         std::vector<int> e_c,
+                         int dim, int n, int d,
+                         int h, int i, int j,
+                         int& N_par);
+
 };
 }
 }
