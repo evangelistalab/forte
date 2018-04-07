@@ -65,7 +65,7 @@ src/davidson.cc
 src/determinant_hashvector.cc
 src/dmrgscf.cc
 src/dmrgsolver.cc
-src/dynamic_correlation.cc
+src/dynamic_correlation_solver.cc
 src/fci_mo.cc
 src/fcimc.cc
 src/finite_temperature.cc
