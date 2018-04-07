@@ -69,9 +69,7 @@ class SemiCanonical {
     void back_transform_ints(SharedMatrix& Ua, SharedMatrix& Ub);
 
     /// Back transform integrals
-    void back_transform_ints() {
-        back_transform_ints(Ua_, Ub_);
-    }
+    void back_transform_ints() { back_transform_ints(Ua_, Ub_); }
 
     /// Set active hole and particle dimensions
     void set_actv_dims(const Dimension& actv_docc, const Dimension& actv_virt);

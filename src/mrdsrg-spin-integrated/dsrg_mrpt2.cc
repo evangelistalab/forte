@@ -2789,7 +2789,6 @@ void DSRG_MRPT2::combine_tensor(ambit::Tensor& tens, ambit::Tensor& tens_h, cons
     }
 }
 
-
 ambit::BlockedTensor DSRG_MRPT2::get_T1deGNO(double& T0deGNO) {
     ambit::BlockedTensor T1eff = deGNO_Tamp(T1_, T2_, Gamma1_);
 

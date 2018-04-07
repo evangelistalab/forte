@@ -302,13 +302,11 @@ void SemiCanonical::set_U_to_identity() {
     Ua_->identity();
     Ub_->identity();
 
-    Ua_t_.iterate([&](const std::vector<size_t>& i, double& value) {
-        value = (i[0] == i[1]) ? 1.0 : 0.0;
-    });
+    Ua_t_.iterate(
+        [&](const std::vector<size_t>& i, double& value) { value = (i[0] == i[1]) ? 1.0 : 0.0; });
 
-    Ub_t_.iterate([&](const std::vector<size_t>& i, double& value) {
-        value = (i[0] == i[1]) ? 1.0 : 0.0;
-    });
+    Ub_t_.iterate(
+        [&](const std::vector<size_t>& i, double& value) { value = (i[0] == i[1]) ? 1.0 : 0.0; });
 }
 
 void SemiCanonical::build_transformation_matrices(SharedMatrix& Ua, SharedMatrix& Ub,

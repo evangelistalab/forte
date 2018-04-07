@@ -368,7 +368,9 @@ double V2RDM::compute_ref_energy() {
     /* Eref = sum_{m} h^{m}_{m} + 0.5 * sum_{mn} v^{mn}_{mn}
               + \sum_{uv} ( h^{u}_{v} + \sum_{m} v^{mu}_{mv} ) * D^{v}_{u}
               + 0.25 * \sum_{uvxy} v^{xy}_{uv} * D^{uv}_{xy} */
-    double Eref = frozen_core_energy_ + molecule_->nuclear_repulsion_energy(reference_wavefunction_->get_dipole_field_strength());
+    double Eref =
+        frozen_core_energy_ +
+        molecule_->nuclear_repulsion_energy(reference_wavefunction_->get_dipole_field_strength());
     size_t ncore = core_mos_.size();
     size_t nactv = actv_mos_.size();
 
