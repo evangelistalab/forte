@@ -1132,10 +1132,15 @@ AdaptiveCI::get_excited_determinants_batch3(SharedMatrix evecs, SharedVector eva
     double max_mem = options_.get_double("ACI_MAX_MEM");
     double aci_scale = options_.get_double("ACI_SCALE_SIGMA");
 
-    size_t nocc2 = nalpha_ * nalpha_;
-    size_t nvir2 = (nmo - nalpha_) * (nmo - nalpha_);
-    size_t guess_size = n_dets * nocc2 * nvir2;
-    // outfile->Printf("\n  guess_size: %zu o: %zu, v: %zu", guess_size, nocc2, nvir2);
+    // Guess the total memory needed to store all singles and doubles out of all dets
+    size_t nsingle_a = nalpha_ * (ncmo_ - nalpha_);
+    size_t nsingle_b = nbeta_ * (ncmo_ - nbeta_);
+    size_t ndouble_aa = nalpha_ * (nalpha_ - 1) * (ncmo_ - nalpha_) * (ncmo_ - nalpha_ - 1) / 4;
+    size_t ndouble_bb = nbeta_ * (nbeta_ - 1) * (ncmo_ - nbeta_) * (ncmo_ - nbeta_ - 1) / 4;
+    size_t ndouble_ab = nsingle_a * nsingle_b;
+    size_t nexcitations = nsingle_a + nsingle_b + ndouble_aa + ndouble_bb + ndouble_ab;
+
+    size_t guess_size = n_dets * nexcitations;
     double guess_mem = guess_size * (4.0 + double(Determinant::num_det_bits)) * 1.25e-7 *
                        1.4; // Est of map size in MB
     int nruns = static_cast<int>(std::ceil(guess_mem / max_mem));
@@ -1595,8 +1600,8 @@ AdaptiveCI::get_bin_F_space3(int bin, int nbin, SharedMatrix evecs, DeterminantH
         // Loop over P space determinants
         size_t guess_a = nalpha_ * (ncmo_ - nalpha_);
         size_t guess_b = nbeta_ * (ncmo_ - nbeta_);
-        size_t guess_aa = guess_a * guess_a / 4;
-        size_t guess_bb = guess_b * guess_b / 4;
+        size_t guess_aa = nalpha_ * (nalpha_ - 1) * (ncmo_ - nalpha_) * (ncmo_ - nalpha_ - 1) / 4;
+        size_t guess_bb = nbeta_ * (nbeta_ - 1) * (ncmo_ - nbeta_) * (ncmo_ - nbeta_ - 1) / 4;
         size_t guess_ab = guess_a * guess_b;
 
         size_t guess = (n_dets / nbin) * (guess_a + guess_b + guess_aa + guess_bb + guess_ab);
