@@ -1370,7 +1370,6 @@ det_hash<double> AdaptiveCI::get_bin_F_space2(int bin, int nbin, SharedMatrix ev
             Determinant new_det(det);
             // Generate alpha excitations
             for (int h = 0; h < nirrep_; ++h) {
-
                 // Precompute indices
                 const auto& noalpha_h = noalpha[h];
                 const auto& nvalpha_h = nvalpha[h];
@@ -1557,7 +1556,6 @@ det_hash<double> AdaptiveCI::get_bin_F_space2(int bin, int nbin, SharedMatrix ev
 #pragma omp barrier
         if (thread_id == 0)
             outfile->Printf("\n  Merge: %1.6f", merge.get());
-
     } // close threads
 
     return bin_f_space;
@@ -1568,7 +1566,6 @@ AdaptiveCI::get_bin_F_space3(int bin, int nbin, SharedMatrix evecs, DeterminantH
 
     det_hash<double> bin_f_space;
     Timer build;
-
     const size_t n_dets = P_space.size();
     const det_hashvec& dets = P_space.wfn_hash();
     int nmo = fci_ints_->nmo();
@@ -1750,6 +1747,7 @@ AdaptiveCI::get_bin_F_space3(int bin, int nbin, SharedMatrix evecs, DeterminantH
                     }
                 }
             }
+
             for (int p = 0; p < nirrep_; ++p) {
                 const auto& noalpha_p = noalpha[p];
                 for (int q = 0; q < nirrep_; ++q) {

@@ -3039,8 +3039,8 @@ void AdaptiveCI::add_external_excitations(DeterminantHashVec& ref) {
     SharedMatrix final_evecs;
     SharedVector final_evals;
 
-    op_.clear_op_s_lists();
-    op_.clear_tp_s_lists();
+        op_.clear_op_s_lists();
+        op_.clear_tp_s_lists();
 
     WFNOperator op(mo_symmetry_, fci_ints);
     if (diag_method_ != Dynamic) {
@@ -3274,7 +3274,6 @@ void AdaptiveCI::spin_analysis() {
             if (i == j) {
                 value += 0.75 * (l1a[nact * i + j] + l1b[nact * i + j]);
             }
-
             value -= 0.5 * (l2ab[i * nact3 + j * nact2 + j * nact + i] +
                             l2ab[j * nact3 + i * nact2 + i * nact + j]);
 
