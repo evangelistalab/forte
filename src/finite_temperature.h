@@ -26,6 +26,7 @@
  * @END LICENSE
  */
 
+/* DISABLED DUE TO CHANGES IN THE HANDLING OF SCF IN PSI4
 #ifndef ALTERNATIVESCASSCF_H
 #define ALTERNATIVESCASSCF_H
 
@@ -134,3 +135,4 @@ class FiniteTemperatureHF : public scf::RHF {
 }
 }
 #endif // ALTERNATIVESCASSCF_H
+*/
