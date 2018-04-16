@@ -21,9 +21,6 @@ timing_re = re.compile(r"Psi4 exiting successfully. Buy a developer a beer!")
 
 psi4command = ""
 
-
-print("Running forte tests using the psi4 executable found in:\n  %s\n" % psi4command)
-
 fci_tests = ["fci-1","fci-2","fci-3","fci-4","fci-5","fci-7","fci-rdms-1","fci-rdms-2","fci-one-electron","fci-ex-1",
              "fci-ecp-1","fci-ecp-2"]
 
@@ -86,7 +83,6 @@ elif len(sys.argv) == 2:
 
 print("Running forte tests using the psi4 executable found in:\n  %s\n" % psi4command)
 
-
 test_results = {}
 test_time = {}
 for d in tests:
@@ -97,7 +93,7 @@ for d in tests:
     successful = True
     # Run psi
     try:
-        out = subprocess.getoutput([psi4command])
+        out = subprocess.check_output([psi4command])
     except:
         # something went wrong
         successful = False
@@ -111,7 +107,7 @@ for d in tests:
             test_results[d] = "PASSED"
         else:
             test_results[d] = "FAILED"
-        print(str(out))
+        print(out.decode("utf-8"))
     os.chdir(maindir)
     end = time.time()
     test_time[d] = end - start
