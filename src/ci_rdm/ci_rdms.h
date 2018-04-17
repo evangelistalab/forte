@@ -279,7 +279,6 @@ class CI_RDMS {
     // Generate three-particle map
     void get_three_map();
 
-
     //*- Functions for Dynamic RDM builds -*//
 
     // Function to fill 3rdm with all (or half of all) permutations of the 6 indices
