@@ -33,6 +33,9 @@
 namespace psi {
 namespace forte {
 
+SortedStringList_UI64::SortedStringList_UI64(){}
+
+
 SortedStringList_UI64::SortedStringList_UI64(const DeterminantHashVec& space,
                                              std::shared_ptr<FCIIntegrals> fci_ints,
                                              DetSpinType sorted_string_spin) {

@@ -37,7 +37,7 @@
 #include "psi4/physconst.h"
 
 #include "../forte_options.h"
-#include "../ci_rdms.h"
+#include "../ci_rdm/ci_rdms.h"
 #include "../ci_reference.h"
 #include "../fci/fci_integrals.h"
 #include "../mrpt2.h"

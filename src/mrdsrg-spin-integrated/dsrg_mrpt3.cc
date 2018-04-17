@@ -1486,8 +1486,7 @@ double DSRG_MRPT3::compute_energy_sa() {
                     for (int B = A; B < nstates; ++B) {
 
                         // compute rdms
-                        CI_RDMS ci_rdms(options_, fci_ints, p_space, evecs, A, B);
-                        ci_rdms.set_symmetry(irrep);
+                        CI_RDMS ci_rdms(fci_ints, p_space, evecs, A, B);
 
                         std::vector<double> opdm_a, opdm_b;
                         std::vector<double> tpdm_aa, tpdm_ab, tpdm_bb;

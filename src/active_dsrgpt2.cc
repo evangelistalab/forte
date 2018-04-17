@@ -322,7 +322,7 @@ void ACTIVE_DSRGPT2::precompute_energy() {
                 // reform density and Fock matrix only for i > 0
                 // because root is set to 0 previously
                 if (i != 0) {
-                    CI_RDMS rdms(options_, fci_mo_->fci_ints_, fci_mo_->determinant_, evecs, i, i);
+                    CI_RDMS rdms(fci_mo_->fci_ints_, fci_mo_->determinant_, evecs, i, i);
 
                     fci_mo_->FormDensity(rdms, fci_mo_->Da_, fci_mo_->Db_);
                     fci_mo_->Form_Fock(fci_mo_->Fa_, fci_mo_->Fb_);
@@ -498,7 +498,7 @@ Vector4 ACTIVE_DSRGPT2::compute_td_ref_root(std::shared_ptr<FCIIntegrals> fci_in
     size_t nmo = nmopi.sum();
 
     // obtain MO transition density
-    CI_RDMS ci_rdms(options_, fci_ints, p_space, evecs, root0, root1);
+    CI_RDMS ci_rdms(fci_ints, p_space, evecs, root0, root1);
     std::vector<double> opdm_a(nactv * nactv, 0.0);
     std::vector<double> opdm_b(nactv * nactv, 0.0);
     ci_rdms.compute_1rdm(opdm_a, opdm_b);
@@ -1210,7 +1210,7 @@ void ACTIVE_DSRGPT2::compute_osc_pt2(const int& irrep, const int& root, const do
     }
 
     // step 2: use CI_RDMS to compute transition density
-    CI_RDMS ci_rdms(options_, fci_mo_->fci_ints(), p_space, evecs, 0, n);
+    CI_RDMS ci_rdms(fci_mo_->fci_ints(), p_space, evecs, 0, n);
 
     std::vector<double> opdm_a, opdm_b;
     ci_rdms.compute_1rdm(opdm_a, opdm_b);
@@ -1762,7 +1762,7 @@ void ACTIVE_DSRGPT2::compute_osc_pt2_dets(const int& irrep, const int& root, con
     }
 
     // step 4: compute one transition density using CIRDMS
-    CI_RDMS rdms(options_, fci_mo_->fci_ints(), p_space, evecs, 0, 1);
+    CI_RDMS rdms(fci_mo_->fci_ints(), p_space, evecs, 0, 1);
     size_t ncmo = mo_space_info_->size("CORRELATED");
     size_t ncmo2 = ncmo * ncmo;
     std::vector<double> tdm_a(ncmo2, 0.0);
@@ -1797,7 +1797,7 @@ void ACTIVE_DSRGPT2::compute_osc_pt2_dets(const int& irrep, const int& root, con
     }
 
     // step 4: compute one transition density using CIRDMS
-    CI_RDMS rdms1(options_, fci_mo_->fci_ints(), p_space, evecs, 1, 0);
+    CI_RDMS rdms1(fci_mo_->fci_ints(), p_space, evecs, 1, 0);
     std::vector<double> todm_a(ncmo2, 0.0);
     std::vector<double> todm_b(ncmo2, 0.0);
     rdms1.compute_1rdm(todm_a, todm_b);

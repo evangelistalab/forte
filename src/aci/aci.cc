@@ -628,12 +628,13 @@ double AdaptiveCI::compute_energy() {
     //  }
 
     //** Compute the RDMs **//
-    if (options_.get_int("ACI_MAX_RDM") >= 3 or (rdm_level_ >= 3)) {
+/*    if (options_.get_int("ACI_MAX_RDM") >= 3 or (rdm_level_ >= 3)) {
         outfile->Printf("\n  Computing 3-list...    ");
         Timer l3;
         op_.three_s_lists(final_wfn_);
         outfile->Printf(" done (%1.5f s)", l3.get());
     }
+*/
     SharedMatrix new_evecs;
     if (ex_alg_ == "ROOT_COMBINE") {
         compute_rdms(fci_ints_, full_space, op_c, PQ_evecs, 0, 0);
@@ -653,8 +654,8 @@ double AdaptiveCI::compute_energy() {
     } else {
         op_.clear_op_s_lists();
         op_.clear_tp_s_lists();
-        op_.op_s_lists(final_wfn_);
-        op_.tp_s_lists(final_wfn_);
+//        op_.op_s_lists(final_wfn_);
+//        op_.tp_s_lists(final_wfn_);
         compute_rdms(fci_ints_, final_wfn_, op_, PQ_evecs, 0, 0);
     }
 
@@ -1674,7 +1675,7 @@ void AdaptiveCI::set_max_rdm(int rdm) {
 Reference AdaptiveCI::reference() {
     // const std::vector<Determinant>& final_wfn =
     //     final_wfn_.determinants();
-    CI_RDMS ci_rdms(options_, final_wfn_, fci_ints_, evecs_, 0, 0);
+    CI_RDMS ci_rdms(final_wfn_, fci_ints_, evecs_, 0, 0);
     ci_rdms.set_max_rdm(rdm_level_);
     Reference aci_ref = ci_rdms.reference(ordm_a_, ordm_b_, trdm_aa_, trdm_ab_, trdm_bb_, trdm_aaa_,
                                           trdm_aab_, trdm_abb_, trdm_bbb_);
@@ -2300,8 +2301,11 @@ void AdaptiveCI::compute_rdms(std::shared_ptr<FCIIntegrals> fci_ints, Determinan
     trdm_abb_.clear();
     trdm_bbb_.clear();
 
-    CI_RDMS ci_rdms_(options_, dets, fci_ints, PQ_evecs, root1, root2);
-    ci_rdms_.set_max_rdm(rdm_level_);
+    CI_RDMS ci_rdms_(dets, fci_ints, PQ_evecs, root1, root2);
+    ci_rdms_.compute_rdms_dynamic(ordm_a_, ordm_b_, trdm_aa_, trdm_ab_, trdm_bb_,
+                                    trdm_aaa_,trdm_aab_,trdm_abb_,trdm_bbb_);
+
+ /*   ci_rdms_.set_max_rdm(rdm_level_);
     if (rdm_level_ >= 1) {
         Timer one_r;
         ci_rdms_.compute_1rdm(ordm_a_, ordm_b_, op);
@@ -2320,12 +2324,12 @@ void AdaptiveCI::compute_rdms(std::shared_ptr<FCIIntegrals> fci_ints, Determinan
         Timer tr;
         ci_rdms_.compute_3rdm(trdm_aaa_, trdm_aab_, trdm_abb_, trdm_bbb_, op);
         outfile->Printf("\n  3-RDMs took %2.6f s (determinant)", tr.get());
-
         if (options_.get_bool("ACI_TEST_RDMS")) {
+*/
             ci_rdms_.rdm_test(ordm_a_, ordm_b_, trdm_aa_, trdm_bb_, trdm_ab_, trdm_aaa_, trdm_aab_,
                               trdm_abb_, trdm_bbb_);
-        }
-    }
+   //     }
+   // }
 
     if (approx_rdm_ and (rdm_level_ >= 2)) {
         outfile->Printf("\n  Computing energy with new RDMs");

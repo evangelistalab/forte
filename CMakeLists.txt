@@ -1,189 +1,165 @@
-cmake_policy(SET CMP0048 NEW)  # project_VERSION* variables populated from project(... VERSION x.x.x) string
-
-project(forte
-        VERSION 0.1
-        LANGUAGES CXX C)
-set(forte_AUTHORS      "Francesco A. Evangelista and Group")
-set(forte_DESCRIPTION  "Quantum Chemistry Methods for Strongly Correlated Electrons plugin to Psi4")
-set(forte_URL          "https://github.com/evangelistalab/forte")
-set(forte_LICENSE      "GPL-3.0+")
+#
+# @BEGIN LICENSE
+#
+# forte_template by Psi4 Developer, a plugin to:
+#
+# Psi4: an open-source quantum chemistry software package
+#
+# Copyright (c) 2007-2017 The Psi4 Developers.
+#
+# The copyrights for code used from other parties are included in
+# the corresponding files.
+#
+# This file is part of Psi4.
+#
+# Psi4 is free software; you can redistribute it and/or modify
+# it under the terms of the GNU Lesser General Public License as published by
+# the Free Software Foundation, version 3.
+#
+# Psi4 is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU Lesser General Public License for more details.
+#
+# You should have received a copy of the GNU Lesser General Public License along
+# with Psi4; if not, write to the Free Software Foundation, Inc.,
+# 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
+#
+# @END LICENSE
+#
 
 cmake_minimum_required(VERSION 3.1 FATAL_ERROR)
-list(APPEND CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/cmake)
 
-include(psi4OptionsTools)
+project(forte_template CXX)
 
-option_with_print(ENABLE_CheMPS2 "Enable CheMPS2 solver." OFF)
-option_with_print(ENABLE_OPENMP "Enable threadsafe linking to OpenMP parallelized programs." ON)
-option_with_print(ENABLE_MPI "Enable MPI parallelization" OFF)
-option_with_print(ENABLE_GA "Enable Global Arrays" OFF)
-#option_with_print(ENABLE_GENERIC "Enable mostly static linking in shared library" OFF)
+find_package(psi4 1.1 REQUIRED)
 
-include(autocmake_omp)
-include(autocmake_mpi)  # MPI option A
-#include(custom_static_library)
-
-add_definitions(-DSMALL_BITSET)
-
-#find_package(psi4 1.1 REQUIRED COMPONENTS ambit chemps2)
-find_package(psi4 1.0 REQUIRED)
-
-find_package(TargetLAPACK REQUIRED)
-find_package(ambit REQUIRED)
-if(ENABLE_CheMPS2)
-    find_package(CheMPS2 1.8.3 CONFIG REQUIRED)
+find_package(OpenMP)
+if (OPENMP_FOUND)
+    set (CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${OpenMP_C_FLAGS}")
+    set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${OpenMP_CXX_FLAGS}")
 endif()
 
-# Including custom cmake rules
-include(cmake/clang-cxx-dev-tools.cmake)
 include(cmake/git-version.cmake)
+add_definitions(-DSMALL_BITSET)
+set(SMALL_BITSET True)
+link_directories(/Users/jeffschriber/src/ambit_install/lib)
+include_directories(/Users/jeffschriber/src/ambit_install/include)
+include_directories(src/mini-boost)
 
-# List of CC files
 add_psi4_plugin(forte
-src/active_dsrgpt2.cc
-src/active_space_solver.cc
-src/ao_helper.cc
-src/avas.cc
-src/bitset_performance.cc
-src/blockedtensorfactory.cc
-src/casscf.cc
-src/cc.cc
-src/ci_rdms.cc
-src/ci_reference.cc
-src/davidson.cc
-src/determinant_hashvector.cc
-src/dmrgscf.cc
-src/dmrgsolver.cc
-src/dynamic_correlation.cc
-src/fci_mo.cc
-src/fcimc.cc
-src/finite_temperature.cc
-src/forte_old_methods.cc
-src/forte_old_options.cc
-src/forte_options.cc
-src/helpers.cc
-src/iterative_solvers.cc
 src/main.cc
-src/mcsrgpt2_mo.cc
-src/methodbase.cc
-src/mp2_nos.cc
-src/mrci.cc
-src/mrpt2.cc
-src/operator.cc
-src/options.cc
-src/orbitaloptimizer.cc
-src/reference.cc
-src/sa_fcisolver.cc
-src/semi_canonicalize.cc
-src/sparse_ci/sparse_ci_solver.cc
-src/sparse_ci/sigma_vector.cc
-src/sparse_ci/sigma_vector_dynamic.cc
-src/sparse_ci/stl_bitset_determinant.cc
-src/sparse_ci/stl_bitset_string.cc
-src/sparse_ci/sorted_string_list.cc
-src/sparse_ci/ui64_determinant.cc
-src/sparse_ci/ui64_determinant_functions.cc
-src/tensorsrg.cc
+src/determinant_hashvector.cc
 src/tensorsrg_antihermitian_commutators.cc
-src/tensorsrg_ct.cc
-src/tensorsrg_full_commutator.cc
-src/tensorsrg_hermitian_commutator.cc
-src/tensorsrg_save.cc
-src/tensorsrg_srg.cc
+src/casscf.cc
+src/active_space_solver.cc
+src/mcsrgpt2_mo.cc
+src/fci_mo.cc
+src/methodbase.cc
 src/v2rdm.cc
-src/aci/aci.cc
-src/aci/aci_build_F.cc
-src/aosubspace/aosubspace.cc
-src/ci-no/ci-no.cc
-src/ci-no/mrci-no.cc
-src/fci/binary_graph.cc
-src/fci/fci.cc
-src/fci/fci_integrals.cc
-src/fci/fci_solver.cc
-src/fci/fci_vector.cc
-src/fci/fci_vector_h_diag.cc
-src/fci/fci_vector_hamiltonian.cc
-src/fci/fci_vector_rdm.cc
-src/fci/string_hole_list.cc
-src/fci/string_lists.cc
-src/fci/string_oo_list.cc
-src/fci/string_vo_list.cc
-src/fci/string_vvoo_list.cc
-src/integrals/cholesky_integrals.cc
-src/integrals/conventional_integrals.cc
-src/integrals/df_integrals.cc
-src/integrals/diskdf_integrals.cc
-src/integrals/distribute_df_integrals.cc
-src/integrals/integrals.cc
-src/integrals/own_integrals.cc
-src/integrals/parallel_ccvv_algorithms.cc
-src/integrals/paralleldfmo.cc
-src/mrdsrg-helper/dsrg_source.cc
-src/mrdsrg-helper/dsrg_time.cc
-src/mrdsrg-helper/run_dsrg.cc
-src/mrdsrg-so/mrdsrg_so.cc
-src/mrdsrg-so/so-mrdsrg.cc
-src/mrdsrg-spin-adapted/dsrg_mrpt.cc
-src/mrdsrg-spin-adapted/dsrg_mrpt_2nd.cc
-src/mrdsrg-spin-adapted/dsrg_mrpt_amp.cc
-src/mrdsrg-spin-adapted/dsrg_mrpt_comm.cc
-src/mrdsrg-spin-integrated/master_mrdsrg.cc
-src/mrdsrg-spin-integrated/dsrg_mrpt2.cc
-src/mrdsrg-spin-integrated/dsrg_mrpt2_ms.cc
-src/mrdsrg-spin-integrated/dsrg_mrpt3.cc
-src/mrdsrg-spin-integrated/mrdsrg.cc
-src/mrdsrg-spin-integrated/mrdsrg_amplitude.cc
-src/mrdsrg-spin-integrated/mrdsrg_commutator.cc
-src/mrdsrg-spin-integrated/mrdsrg_nonpt.cc
-src/mrdsrg-spin-integrated/mrdsrg_pt.cc
-src/mrdsrg-spin-integrated/mrdsrg_smart_s.cc
-src/mrdsrg-spin-integrated/mrdsrg_srg.cc
-src/mrdsrg-spin-integrated/three_dsrg_mrpt2.cc
-src/mrdsrg-spin-integrated/dwms_mrpt2.cc
+src/tensorsrg.cc
+src/helpers.cc
+src/tensorsrg_ct.cc
+src/blockedtensorfactory.cc
+src/sa_fcisolver.cc
+src/dmrgsolver.cc
+src/davidson.cc
+src/reference.cc
+src/finite_temperature.cc
+src/semi_canonicalize.cc
+src/iterative_solvers.cc
+src/mrci.cc
+src/tensorsrg_srg.cc
+src/tensorsrg_full_commutator.cc
+src/dmrgscf.cc
+src/tensorsrg_save.cc
+src/bitset_performance.cc
+src/operator.cc
+src/dynamic_correlation.cc
+src/active_dsrgpt2.cc
+src/ao_helper.cc
+src/forte_options.cc
+src/mrpt2.cc
+src/tensorsrg_hermitian_commutator.cc
+src/forte_old_options.cc
+src/cc.cc
+src/options.cc
+src/avas.cc
+src/forte_old_methods.cc
+src/ci_reference.cc
+src/fcimc.cc
+src/orbitaloptimizer.cc
+src/mp2_nos.cc
+src/pci/ewci.cc
+src/pci/pci_hashvec.cc
+src/pci/pci_simple.cc
+src/pci/pci.cc
+src/orbital-helper/es-nos.cc
 src/orbital-helper/localize.cc
 src/orbital-helper/unpaired_density.cc
 src/orbital-helper/iao_builder.cc
-src/orbital-helper/es-nos.cc
-src/pci/pci.cc
-src/pci/pci_hashvec.cc
-src/pci/pci_simple.cc
-src/pci/ewci.cc
+src/fci/string_vvoo_list.cc
+src/fci/fci.cc
+src/fci/fci_vector_hamiltonian.cc
+src/fci/string_vo_list.cc
+src/fci/fci_vector.cc
+src/fci/fci_solver.cc
+src/fci/binary_graph.cc
+src/fci/fci_vector_h_diag.cc
+src/fci/string_hole_list.cc
+src/fci/string_oo_list.cc
+src/fci/string_lists.cc
+src/fci/fci_vector_rdm.cc
+src/fci/fci_integrals.cc
+src/ci-no/ci-no.cc
+src/ci-no/mrci-no.cc
+src/sparse_ci/sigma_vector.cc
+src/sparse_ci/sorted_string_list.cc
+src/sparse_ci/sigma_vector_dynamic.cc
+src/sparse_ci/sparse_ci_solver.cc
+src/sparse_ci/ui64_determinant_functions.cc
+src/sparse_ci/stl_bitset_determinant.cc
+src/sparse_ci/csrmatrix.cc
+src/sparse_ci/ui64_determinant.cc
+src/sparse_ci/stl_bitset_string.cc
+src/mrdsrg-spin-adapted/dsrg_mrpt_amp.cc
+src/mrdsrg-spin-adapted/dsrg_mrpt_2nd.cc
+src/mrdsrg-spin-adapted/dsrg_mrpt.cc
+src/mrdsrg-spin-adapted/dsrg_mrpt_comm.cc
+src/mrdsrg-spin-integrated/dsrg_mrpt3.cc
+src/mrdsrg-spin-integrated/mrdsrg_commutator.cc
+src/mrdsrg-spin-integrated/mrdsrg_nonpt.cc
+src/mrdsrg-spin-integrated/three_dsrg_mrpt2.cc
+src/mrdsrg-spin-integrated/dsrg_mrpt2.cc
+src/mrdsrg-spin-integrated/mrdsrg_pt.cc
+src/mrdsrg-spin-integrated/dsrg_mrpt2_ms.cc
+src/mrdsrg-spin-integrated/master_mrdsrg.cc
+src/mrdsrg-spin-integrated/mrdsrg_smart_s.cc
+src/mrdsrg-spin-integrated/mrdsrg.cc
+src/mrdsrg-spin-integrated/mrdsrg_amplitude.cc
+src/mrdsrg-spin-integrated/mrdsrg_srg.cc
+src/mrdsrg-spin-integrated/dwms_mrpt2.cc
+src/aci/aci_build_F.cc
+src/aci/aci.cc
+src/mrdsrg-helper/run_dsrg.cc
+src/mrdsrg-helper/dsrg_time.cc
+src/mrdsrg-helper/dsrg_source.cc
+src/integrals/paralleldfmo.cc
+src/integrals/integrals.cc
+src/integrals/own_integrals.cc
+src/integrals/df_integrals.cc
+src/integrals/conventional_integrals.cc
+src/integrals/diskdf_integrals.cc
+src/integrals/parallel_ccvv_algorithms.cc
+src/integrals/distribute_df_integrals.cc
+src/integrals/cholesky_integrals.cc
+src/mrdsrg-so/so-mrdsrg.cc
+src/mrdsrg-so/mrdsrg_so.cc
+src/aosubspace/aosubspace.cc
+src/ci_rdm/ci_rdms.cc
+src/ci_rdm/ci_rdms_dynamic.cc
 )
-
-target_link_libraries(forte PRIVATE ambit::ambit)
-if(TARGET CheMPS2::chemps2)
-    target_link_libraries(forte PRIVATE CheMPS2::chemps2)
+    target_link_libraries(forte PRIVATE ambit)
+if (MPI_FOUND)
+    target_link_libraries(forte PRIVATE ${MPI_LIBRARIES})
 endif()
-
-target_include_directories(forte PRIVATE src/mini-boost)
-
-if(ENABLE_MPI)
-    target_link_libraries(forte PRIVATE ${MPI_CXX_LIBRARIES})  # MPI option A
-    #target_link_libraries(forte PRIVATE MPI::MPI_CXX)  # MPI option B
-    #target_add_definitions(forte PRIVATE HAVE_MPI)  # MPI option B
-endif()
-
-if(ENABLE_GA)
-    target_link_libraries(forte PRIVATE GlobalArrays::ga)
-endif()
-
-#
-# Forte tests
-#
-option(ENABLE_ForteTests "Enable Forte tests." OFF)
-
-set (CMAKE_CXX_STANDARD 11)
-
-if (ENABLE_ForteTests)
-  project (forte_tests)
-  include_directories(${CMAKE_BINARY_DIR} ${CMAKE_BINARY_DIR}/catch2/src/catch2/single_include)
-  add_executable(forte_tests
-    src/sparse_ci/ui64_determinant.cc
-    tests/code/test_determinant.cc)
-
-  project (forte_benchmarks)
-  include_directories(${CMAKE_BINARY_DIR})
-  add_executable(forte_benchmarks
-    src/sparse_ci/ui64_determinant.cc
-    tests/benchmark/determinant_benchmark.cc)
-endif (ENABLE_ForteTests)
