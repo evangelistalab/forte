@@ -2328,8 +2328,8 @@ void AdaptiveCI::compute_rdms(std::shared_ptr<FCIIntegrals> fci_ints, Determinan
 
             ci_rdms_.rdm_test(ordm_a_, ordm_b_, trdm_aa_, trdm_bb_, trdm_ab_, trdm_aaa_, trdm_aab_,
                               trdm_abb_, trdm_bbb_);
-   //     }
-   // }
+        }
+    }
 
     if (approx_rdm_ and (rdm_level_ >= 2)) {
         outfile->Printf("\n  Computing energy with new RDMs");
