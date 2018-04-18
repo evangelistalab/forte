@@ -258,6 +258,10 @@ class CI_RDMS {
 
     // Generate three-particle map
     void get_three_map();
+
+    // Fill 3rdm
+    void fill_3rdm( std::vector<double>& tprdm, double value, int p, int q, int r, int s, int t, int u );
+
 };
 }
 } // End namepaces
