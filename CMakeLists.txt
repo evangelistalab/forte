@@ -1,4 +1,4 @@
-cmake_policy(SET CMP0048 NEW)  # project_VERSION* variables populated from project(... VERSION x.x.x) string
+ke_policy(SET CMP0048 NEW)  # project_VERSION* variables populated from project(... VERSION x.x.x) string
 
 project(forte
         VERSION 0.1
@@ -48,7 +48,8 @@ src/bitset_performance.cc
 src/blockedtensorfactory.cc
 src/casscf.cc
 src/cc.cc
-src/ci_rdms.cc
+src/ci_rdm/ci_rdms.cc
+src/ci_rdm/ci_rdms_dynamic.cc
 src/ci_reference.cc
 src/davidson.cc
 src/determinant_hashvector.cc
