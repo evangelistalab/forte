@@ -90,6 +90,14 @@ void CI_RDMS::compute_rdms_dynamic(std::vector<double>& oprdm_a,
                 tprdm_aa[p*ncmo3_ + q*ncmo2_ + q*ncmo_ + p] -= CIa;
                 tprdm_aa[q*ncmo3_ + p*ncmo2_ + p*ncmo_ + q] -= CIa;
                 det_ac = clear_lowest_one(det_ac);
+
+                uint64_t det_acc(det_ac);
+                while(det_acc > 0 ){
+                    int r = lowest_one_idx(det_acc);
+                    fill_3rdm(tprdm_aaa, CIa, p,q,r,p,q,r,true);
+                    det_acc = clear_lowest_one(det_acc);
+                }
+
             }
             det_a = clear_lowest_one(det_a);
     
@@ -179,7 +187,22 @@ void CI_RDMS::compute_rdms_dynamic(std::vector<double>& oprdm_a,
                         tprdm_ab[p*ncmo3_ + n*ncmo2_ + q*ncmo_ + n] += value;
                         tprdm_ab[q*ncmo3_ + n*ncmo2_ + p*ncmo_ + n] += value;
                         Ibc = clear_lowest_one(Ibc);
-                    }
+                    } 
+                    //3-rdm
+                    uint64_t Iacc(Ia);
+                    Iacc ^= Ia_sub;                     
+                    while( ui64_bit_count(Iacc) > 0){ 
+                        uint64_t n = lowest_one_idx(Iacc);
+                        uint64_t I_n = Iacc;
+                        I_n = clear_lowest_one(I_n);
+                        for( int idx = 0; idx < ui64_bit_count(I_n); ++idx){
+                            uint64_t m = lowest_one_idx(I_n);
+                            fill_3rdm(tprdm_aaa, value, p,m,n,q,m,n);
+                            I_n = clear_lowest_one(I_n);
+                        }
+                        Iacc = clear_lowest_one(Iacc);
+                    } 
+                    
 
                 } else if( ndiff == 4 ) {
                     // 2-rdm
@@ -377,7 +400,7 @@ void CI_RDMS::compute_rdms_dynamic(std::vector<double>& oprdm_a,
 
 
 
-void CI_RDMS::fill_3rdm(std::vector<double>& tprdm, double el, int p, int q, int r, int s, int t, int u) {
+void CI_RDMS::fill_3rdm(std::vector<double>& tprdm, double el, int p, int q, int r, int s, int t, int u, bool half) {
 
     tprdm[p * ncmo5_ + q * ncmo4_ + r * ncmo3_ + s * ncmo2_ + t * ncmo_ + u] += el;
     tprdm[p * ncmo5_ + q * ncmo4_ + r * ncmo3_ + s * ncmo2_ + u * ncmo_ + t] -= el;
@@ -421,47 +444,49 @@ void CI_RDMS::fill_3rdm(std::vector<double>& tprdm, double el, int p, int q, int
     tprdm[r * ncmo5_ + q * ncmo4_ + p * ncmo3_ + t * ncmo2_ + s * ncmo_ + u] += el;
     tprdm[r * ncmo5_ + q * ncmo4_ + p * ncmo3_ + t * ncmo2_ + u * ncmo_ + s] -= el;
 
-    tprdm[s * ncmo5_ + t * ncmo4_ + u * ncmo3_ + p * ncmo2_ + q * ncmo_ + r] += el;
-    tprdm[s * ncmo5_ + u * ncmo4_ + t * ncmo3_ + p * ncmo2_ + q * ncmo_ + r] -= el;
-    tprdm[u * ncmo5_ + t * ncmo4_ + s * ncmo3_ + p * ncmo2_ + q * ncmo_ + r] -= el;
-    tprdm[u * ncmo5_ + s * ncmo4_ + t * ncmo3_ + p * ncmo2_ + q * ncmo_ + r] += el;
-    tprdm[t * ncmo5_ + s * ncmo4_ + u * ncmo3_ + p * ncmo2_ + q * ncmo_ + r] -= el;
-    tprdm[t * ncmo5_ + u * ncmo4_ + s * ncmo3_ + p * ncmo2_ + q * ncmo_ + r] += el;
+    if( !half ){
+        tprdm[s * ncmo5_ + t * ncmo4_ + u * ncmo3_ + p * ncmo2_ + q * ncmo_ + r] += el;
+        tprdm[s * ncmo5_ + u * ncmo4_ + t * ncmo3_ + p * ncmo2_ + q * ncmo_ + r] -= el;
+        tprdm[u * ncmo5_ + t * ncmo4_ + s * ncmo3_ + p * ncmo2_ + q * ncmo_ + r] -= el;
+        tprdm[u * ncmo5_ + s * ncmo4_ + t * ncmo3_ + p * ncmo2_ + q * ncmo_ + r] += el;
+        tprdm[t * ncmo5_ + s * ncmo4_ + u * ncmo3_ + p * ncmo2_ + q * ncmo_ + r] -= el;
+        tprdm[t * ncmo5_ + u * ncmo4_ + s * ncmo3_ + p * ncmo2_ + q * ncmo_ + r] += el;
 
-    tprdm[s * ncmo5_ + t * ncmo4_ + u * ncmo3_ + p * ncmo2_ + r * ncmo_ + q] -= el;
-    tprdm[s * ncmo5_ + u * ncmo4_ + t * ncmo3_ + p * ncmo2_ + r * ncmo_ + q] += el;
-    tprdm[u * ncmo5_ + t * ncmo4_ + s * ncmo3_ + p * ncmo2_ + r * ncmo_ + q] += el;
-    tprdm[u * ncmo5_ + s * ncmo4_ + t * ncmo3_ + p * ncmo2_ + r * ncmo_ + q] -= el;
-    tprdm[t * ncmo5_ + s * ncmo4_ + u * ncmo3_ + p * ncmo2_ + r * ncmo_ + q] += el;
-    tprdm[t * ncmo5_ + u * ncmo4_ + s * ncmo3_ + p * ncmo2_ + r * ncmo_ + q] -= el;
+        tprdm[s * ncmo5_ + t * ncmo4_ + u * ncmo3_ + p * ncmo2_ + r * ncmo_ + q] -= el;
+        tprdm[s * ncmo5_ + u * ncmo4_ + t * ncmo3_ + p * ncmo2_ + r * ncmo_ + q] += el;
+        tprdm[u * ncmo5_ + t * ncmo4_ + s * ncmo3_ + p * ncmo2_ + r * ncmo_ + q] += el;
+        tprdm[u * ncmo5_ + s * ncmo4_ + t * ncmo3_ + p * ncmo2_ + r * ncmo_ + q] -= el;
+        tprdm[t * ncmo5_ + s * ncmo4_ + u * ncmo3_ + p * ncmo2_ + r * ncmo_ + q] += el;
+        tprdm[t * ncmo5_ + u * ncmo4_ + s * ncmo3_ + p * ncmo2_ + r * ncmo_ + q] -= el;
 
-    tprdm[s * ncmo5_ + t * ncmo4_ + u * ncmo3_ + q * ncmo2_ + p * ncmo_ + r] -= el;
-    tprdm[s * ncmo5_ + u * ncmo4_ + t * ncmo3_ + q * ncmo2_ + p * ncmo_ + r] += el;
-    tprdm[u * ncmo5_ + t * ncmo4_ + s * ncmo3_ + q * ncmo2_ + p * ncmo_ + r] += el;
-    tprdm[u * ncmo5_ + s * ncmo4_ + t * ncmo3_ + q * ncmo2_ + p * ncmo_ + r] -= el;
-    tprdm[t * ncmo5_ + s * ncmo4_ + u * ncmo3_ + q * ncmo2_ + p * ncmo_ + r] += el;
-    tprdm[t * ncmo5_ + u * ncmo4_ + s * ncmo3_ + q * ncmo2_ + p * ncmo_ + r] -= el;
+        tprdm[s * ncmo5_ + t * ncmo4_ + u * ncmo3_ + q * ncmo2_ + p * ncmo_ + r] -= el;
+        tprdm[s * ncmo5_ + u * ncmo4_ + t * ncmo3_ + q * ncmo2_ + p * ncmo_ + r] += el;
+        tprdm[u * ncmo5_ + t * ncmo4_ + s * ncmo3_ + q * ncmo2_ + p * ncmo_ + r] += el;
+        tprdm[u * ncmo5_ + s * ncmo4_ + t * ncmo3_ + q * ncmo2_ + p * ncmo_ + r] -= el;
+        tprdm[t * ncmo5_ + s * ncmo4_ + u * ncmo3_ + q * ncmo2_ + p * ncmo_ + r] += el;
+        tprdm[t * ncmo5_ + u * ncmo4_ + s * ncmo3_ + q * ncmo2_ + p * ncmo_ + r] -= el;
 
-    tprdm[s * ncmo5_ + t * ncmo4_ + u * ncmo3_ + q * ncmo2_ + r * ncmo_ + p] += el;
-    tprdm[s * ncmo5_ + u * ncmo4_ + t * ncmo3_ + q * ncmo2_ + r * ncmo_ + p] -= el;
-    tprdm[u * ncmo5_ + t * ncmo4_ + s * ncmo3_ + q * ncmo2_ + r * ncmo_ + p] -= el;
-    tprdm[u * ncmo5_ + s * ncmo4_ + t * ncmo3_ + q * ncmo2_ + r * ncmo_ + p] += el;
-    tprdm[t * ncmo5_ + s * ncmo4_ + u * ncmo3_ + q * ncmo2_ + r * ncmo_ + p] -= el;
-    tprdm[t * ncmo5_ + u * ncmo4_ + s * ncmo3_ + q * ncmo2_ + r * ncmo_ + p] += el;
+        tprdm[s * ncmo5_ + t * ncmo4_ + u * ncmo3_ + q * ncmo2_ + r * ncmo_ + p] += el;
+        tprdm[s * ncmo5_ + u * ncmo4_ + t * ncmo3_ + q * ncmo2_ + r * ncmo_ + p] -= el;
+        tprdm[u * ncmo5_ + t * ncmo4_ + s * ncmo3_ + q * ncmo2_ + r * ncmo_ + p] -= el;
+        tprdm[u * ncmo5_ + s * ncmo4_ + t * ncmo3_ + q * ncmo2_ + r * ncmo_ + p] += el;
+        tprdm[t * ncmo5_ + s * ncmo4_ + u * ncmo3_ + q * ncmo2_ + r * ncmo_ + p] -= el;
+        tprdm[t * ncmo5_ + u * ncmo4_ + s * ncmo3_ + q * ncmo2_ + r * ncmo_ + p] += el;
 
-    tprdm[s * ncmo5_ + t * ncmo4_ + u * ncmo3_ + r * ncmo2_ + p * ncmo_ + q] += el;
-    tprdm[s * ncmo5_ + u * ncmo4_ + t * ncmo3_ + r * ncmo2_ + p * ncmo_ + q] -= el;
-    tprdm[u * ncmo5_ + t * ncmo4_ + s * ncmo3_ + r * ncmo2_ + p * ncmo_ + q] -= el;
-    tprdm[u * ncmo5_ + s * ncmo4_ + t * ncmo3_ + r * ncmo2_ + p * ncmo_ + q] += el;
-    tprdm[t * ncmo5_ + s * ncmo4_ + u * ncmo3_ + r * ncmo2_ + p * ncmo_ + q] -= el;
-    tprdm[t * ncmo5_ + u * ncmo4_ + s * ncmo3_ + r * ncmo2_ + p * ncmo_ + q] += el;
+        tprdm[s * ncmo5_ + t * ncmo4_ + u * ncmo3_ + r * ncmo2_ + p * ncmo_ + q] += el;
+        tprdm[s * ncmo5_ + u * ncmo4_ + t * ncmo3_ + r * ncmo2_ + p * ncmo_ + q] -= el;
+        tprdm[u * ncmo5_ + t * ncmo4_ + s * ncmo3_ + r * ncmo2_ + p * ncmo_ + q] -= el;
+        tprdm[u * ncmo5_ + s * ncmo4_ + t * ncmo3_ + r * ncmo2_ + p * ncmo_ + q] += el;
+        tprdm[t * ncmo5_ + s * ncmo4_ + u * ncmo3_ + r * ncmo2_ + p * ncmo_ + q] -= el;
+        tprdm[t * ncmo5_ + u * ncmo4_ + s * ncmo3_ + r * ncmo2_ + p * ncmo_ + q] += el;
 
-    tprdm[s * ncmo5_ + t * ncmo4_ + u * ncmo3_ + r * ncmo2_ + q * ncmo_ + p] -= el;
-    tprdm[s * ncmo5_ + u * ncmo4_ + t * ncmo3_ + r * ncmo2_ + q * ncmo_ + p] += el;
-    tprdm[u * ncmo5_ + t * ncmo4_ + s * ncmo3_ + r * ncmo2_ + q * ncmo_ + p] += el;
-    tprdm[u * ncmo5_ + s * ncmo4_ + t * ncmo3_ + r * ncmo2_ + q * ncmo_ + p] -= el;
-    tprdm[t * ncmo5_ + s * ncmo4_ + u * ncmo3_ + r * ncmo2_ + q * ncmo_ + p] += el;
-    tprdm[t * ncmo5_ + u * ncmo4_ + s * ncmo3_ + r * ncmo2_ + q * ncmo_ + p] -= el;
+        tprdm[s * ncmo5_ + t * ncmo4_ + u * ncmo3_ + r * ncmo2_ + q * ncmo_ + p] -= el;
+        tprdm[s * ncmo5_ + u * ncmo4_ + t * ncmo3_ + r * ncmo2_ + q * ncmo_ + p] += el;
+        tprdm[u * ncmo5_ + t * ncmo4_ + s * ncmo3_ + r * ncmo2_ + q * ncmo_ + p] += el;
+        tprdm[u * ncmo5_ + s * ncmo4_ + t * ncmo3_ + r * ncmo2_ + q * ncmo_ + p] -= el;
+        tprdm[t * ncmo5_ + s * ncmo4_ + u * ncmo3_ + r * ncmo2_ + q * ncmo_ + p] += el;
+        tprdm[t * ncmo5_ + u * ncmo4_ + s * ncmo3_ + r * ncmo2_ + q * ncmo_ + p] -= el;
+    }
 }
 
 

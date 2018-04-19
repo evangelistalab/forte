@@ -260,7 +260,7 @@ class CI_RDMS {
     void get_three_map();
 
     // Fill 3rdm
-    void fill_3rdm( std::vector<double>& tprdm, double value, int p, int q, int r, int s, int t, int u );
+    void fill_3rdm( std::vector<double>& tprdm, double value, int p, int q, int r, int s, int t, int u , bool half = false);
 
 };
 }
