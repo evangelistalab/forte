@@ -628,13 +628,13 @@ double AdaptiveCI::compute_energy() {
     //  }
 
     //** Compute the RDMs **//
-/*    if (options_.get_int("ACI_MAX_RDM") >= 3 or (rdm_level_ >= 3)) {
+    if (options_.get_int("ACI_MAX_RDM") >= 3 or (rdm_level_ >= 3)) {
         outfile->Printf("\n  Computing 3-list...    ");
         Timer l3;
         op_.three_s_lists(final_wfn_);
         outfile->Printf(" done (%1.5f s)", l3.get());
     }
-*/
+
     SharedMatrix new_evecs;
     if (ex_alg_ == "ROOT_COMBINE") {
         compute_rdms(fci_ints_, full_space, op_c, PQ_evecs, 0, 0);
@@ -654,8 +654,8 @@ double AdaptiveCI::compute_energy() {
     } else {
         op_.clear_op_s_lists();
         op_.clear_tp_s_lists();
-//        op_.op_s_lists(final_wfn_);
-//        op_.tp_s_lists(final_wfn_);
+        op_.op_s_lists(final_wfn_);
+        op_.tp_s_lists(final_wfn_);
         compute_rdms(fci_ints_, final_wfn_, op_, PQ_evecs, 0, 0);
     }
 
@@ -2302,8 +2302,10 @@ void AdaptiveCI::compute_rdms(std::shared_ptr<FCIIntegrals> fci_ints, Determinan
     trdm_bbb_.clear();
 
     CI_RDMS ci_rdms_(dets, fci_ints, PQ_evecs, root1, root2);
-//    ci_rdms_.compute_rdms_dynamic(ordm_a_, ordm_b_, trdm_aa_, trdm_ab_, trdm_bb_,
-//                                    trdm_aaa_,trdm_aab_,trdm_abb_,trdm_bbb_);
+   // ci_rdms_.compute_rdms_dynamic(ordm_a_, ordm_b_, trdm_aa_, trdm_ab_, trdm_bb_,
+   //                                 trdm_aaa_,trdm_aab_,trdm_abb_,trdm_bbb_);
+   // ci_rdms_.rdm_test(ordm_a_, ordm_b_, trdm_aa_, trdm_bb_, trdm_ab_, trdm_aaa_, trdm_aab_,
+   //                   trdm_abb_, trdm_bbb_);
 
     ci_rdms_.set_max_rdm(rdm_level_);
     if (rdm_level_ >= 1) {
@@ -2319,6 +2321,8 @@ void AdaptiveCI::compute_rdms(std::shared_ptr<FCIIntegrals> fci_ints, Determinan
         Timer two_r;
         ci_rdms_.compute_2rdm(trdm_aa_, trdm_ab_, trdm_bb_, op);
         outfile->Printf("\n  2-RDMS took %2.6f s (determinant)", two_r.get());
+        double en = ci_rdms_.get_energy(ordm_a_, ordm_b_, trdm_aa_, trdm_bb_, trdm_ab_);
+        outfile->Printf("\n  Energy from approximate RDM:  %1.12f", en);
     }
     if (rdm_level_ >= 3) {
         Timer tr;
