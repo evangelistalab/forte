@@ -561,16 +561,15 @@ double DWMS_DSRGPT2::compute_dwms_energy(std::shared_ptr<FCI_MO>& fci_mo) {
                     double Ediag = fci_ints->scalar_energy();
 
                     auto Hbar_vec = dsrg_pt2->Hbar(1);
-                    Ediag += contract_Heff_1TrDM(Hbar_vec[0], Hbar_vec[1], TrD, transpose);
+                    Ediag += contract_Heff_1TrDM(Hbar_vec[0], Hbar_vec[1], TrD, false);
 
                     Hbar_vec = dsrg_pt2->Hbar(2);
-                    Ediag +=
-                        contract_Heff_2TrDM(Hbar_vec[0], Hbar_vec[1], Hbar_vec[2], TrD, transpose);
+                    Ediag += contract_Heff_2TrDM(Hbar_vec[0], Hbar_vec[1], Hbar_vec[2], TrD, false);
 
                     if (do_hbar3_) {
                         Hbar_vec = dsrg_pt2->Hbar(3);
                         Ediag += contract_Heff_3TrDM(Hbar_vec[0], Hbar_vec[1], Hbar_vec[2],
-                                                     Hbar_vec[3], TrD, transpose);
+                                                     Hbar_vec[3], TrD, false);
 
                         if (!do_semi_) {
                             double Ediff = Ediag - H0 - coupling;
