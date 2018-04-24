@@ -67,11 +67,6 @@ CI_RDMS::CI_RDMS(DeterminantHashVec& wfn, std::shared_ptr<FCIIntegrals> fci_ints
     na_ = det.count_alfa();
     nb_ = det.count_beta();
     
-//    if( dyn ){
-//        a_sorted_string_list_ = SortedStringList_UI64(wfn, fci_ints, DetSpinType::Alpha); 
-//        b_sorted_string_list_ = SortedStringList_UI64(wfn, fci_ints, DetSpinType::Beta); 
-//    }
-
 }
 
 CI_RDMS::~CI_RDMS() {}
@@ -140,7 +135,7 @@ double CI_RDMS::get_energy(std::vector<double>& oprdm_a, std::vector<double>& op
             }
         }
     }
-    double total_energy = nuc_rep + scalar_energy + energy_1rdm + energy_2rdm;
+    double total_energy =  nuc_rep + scalar_energy + energy_1rdm + energy_2rdm;
 
     if (print_) {
         outfile->Printf("\n  Total Energy: %25.15f\n", total_energy);
@@ -1772,6 +1767,7 @@ Reference CI_RDMS::reference(std::vector<double>& oprdm_a, std::vector<double>& 
         L2bb("pqrs") += L1b("ps") * L1b("qr");
 
         double energy = get_energy(oprdm_a, oprdm_b, tprdm_aa, tprdm_bb, tprdm_ab);
+        outfile->Printf("\n  energy: %1.9f", energy);
 
         ci_ref.set_Eref(energy);
         ci_ref.set_L1a(L1a);
@@ -1911,7 +1907,6 @@ void CI_RDMS::rdm_test(std::vector<double>& oprdm_a, std::vector<double>& oprdm_
                        std::vector<double>& tprdm_bbb) {
 
     const det_hashvec& det_space = wfn_.wfn_hash();
-
     double error_1rdm_a = 0.0;
     for (size_t p = 0; p < ncmo_; ++p) {
         for (size_t q = 0; q < ncmo_; ++q) {
@@ -1983,16 +1978,16 @@ void CI_RDMS::rdm_test(std::vector<double>& oprdm_a, std::vector<double>& oprdm_
                     if (std::fabs(rdm) > 1.0e-12) {
                         error_2rdm_aa +=
                             std::fabs(rdm - tprdm_aa[p * ncmo3_ + q * ncmo2_ + r * ncmo_ + s]);
-                        //   outfile->Printf("\n  D2(aaaa)[%3lu][%3lu][%3lu][%3lu] = %18.12lf
-                        //   (%18.12lf,%18.12lf)",
-                        //   p,q,r,s,rdm-tprdm_aa[p*ncmo3_+q*ncmo2_+r*ncmo_+s],rdm,tprdm_aa[p*ncmo3_+q*ncmo2_+r*ncmo_+s]);
+                        if( std::fabs(rdm-tprdm_aa[p*ncmo3_+q*ncmo2_+r*ncmo_+s]) > 1.0e-12){
+                            outfile->Printf("\n  D2(aaaa)[%3lu][%3lu][%3lu][%3lu] = %18.12lf (%18.12lf,%18.12lf)",
+                            p,q,r,s,rdm-tprdm_aa[p*ncmo3_+q*ncmo2_+r*ncmo_+s],rdm,tprdm_aa[p*ncmo3_+q*ncmo2_+r*ncmo_+s]);
+                        }
                     }
                 }
             }
         }
     }
     outfile->Printf("\n    AAAA 2-RDM Error :   %2.15f", error_2rdm_aa);
-
     double error_2rdm_bb = 0.0;
     for (size_t p = 0; p < ncmo_; ++p) {
         for (size_t q = 0; q < ncmo_; ++q) {
@@ -2015,16 +2010,16 @@ void CI_RDMS::rdm_test(std::vector<double>& oprdm_a, std::vector<double>& oprdm_
                     if (std::fabs(rdm) > 1.0e-12) {
                         error_2rdm_bb +=
                             std::fabs(rdm - tprdm_bb[p * ncmo3_ + q * ncmo2_ + r * ncmo_ + s]);
-                        // outfile->Printf("\n  D2(bbbb)[%3lu][%3lu][%3lu][%3lu]
-                        // = %18.12lf (%18.12lf,%18.12lf)",
-                        // p,q,r,s,rdm-tprdm_bb[p*ncmo3_+q*ncmo2_+r*ncmo_+s],rdm,tprdm_bb[p*ncmo3_+q*ncmo2_+r*ncmo_+s]);
+                        if( std::fabs(rdm-tprdm_bb[p*ncmo3_+q*ncmo2_+r*ncmo_+s]) > 1.0e-12){
+                            outfile->Printf("\n  D2(bbbb)[%3lu][%3lu][%3lu][%3lu] = %18.12lf (%18.12lf,%18.12lf)",
+                            p,q,r,s,rdm-tprdm_bb[p*ncmo3_+q*ncmo2_+r*ncmo_+s],rdm,tprdm_bb[p*ncmo3_+q*ncmo2_+r*ncmo_+s]);
+                        }
                     }
                 }
             }
         }
     }
     outfile->Printf("\n    BBBB 2-RDM Error :   %2.15f", error_2rdm_bb);
-
     double error_2rdm_ab = 0.0;
     for (size_t p = 0; p < ncmo_; ++p) {
         for (size_t q = 0; q < ncmo_; ++q) {
@@ -2047,9 +2042,10 @@ void CI_RDMS::rdm_test(std::vector<double>& oprdm_a, std::vector<double>& oprdm_
                     if (std::fabs(rdm) > 1.0e-12) {
                         error_2rdm_ab +=
                             std::fabs(rdm - tprdm_ab[p * ncmo3_ + q * ncmo2_ + r * ncmo_ + s]);
-                        // outfile->Printf("\n  D2(abab)[%3lu][%3lu][%3lu][%3lu]
-                        // = %18.12lf (%18.12lf,%18.12lf)",
-                        // p,q,r,s,rdm-tprdm_ab[p*ncmo3_+q*ncmo2_+r*ncmo_+s],rdm,tprdm_ab[p*ncmo3_+q*ncmo2_+r*ncmo_+s]);
+                        if( std::fabs(rdm-tprdm_ab[p*ncmo3_+q*ncmo2_+r*ncmo_+s]) > 1.0e-12){
+                            outfile->Printf("\n  D2(abab)[%3lu][%3lu][%3lu][%3lu] = %18.12lf (%18.12lf,%18.12lf)",
+                            p,q,r,s,rdm-tprdm_ab[p*ncmo3_+q*ncmo2_+r*ncmo_+s],rdm,tprdm_ab[p*ncmo3_+q*ncmo2_+r*ncmo_+s]);
+                        }
                     }
                 }
             }
@@ -2090,11 +2086,11 @@ void CI_RDMS::rdm_test(std::vector<double>& oprdm_a, std::vector<double>& oprdm_
                                 double rdm_comp =
                                     tprdm_aaa[p * ncmo4_ * ncmo_ + q * ncmo4_ + r * ncmo3_ +
                                               s * ncmo2_ + t * ncmo_ + a];
-                                //  outfile->Printf("\n
-                                //  D3(aaaaaa)[%3lu][%3lu][%3lu][%3lu][%3lu][%3lu] = %18.12lf
-                                //  (%18.12lf,%18.12lf)",
-                                //  p,q,r,s,t,a,rdm-rdm_comp,rdm,rdm_comp);
+                                if( rdm-rdm_comp> 1.0e-12) {
+                                outfile->Printf("\nD3(aaaaaa)[%3lu][%3lu][%3lu][%3lu][%3lu][%3lu] = %18.12lf    (%18.12lf,%18.12lf)",
+                                p,q,r,s,t,a,rdm-rdm_comp,rdm,rdm_comp);
                                 error_3rdm_aaa += std::fabs(rdm - rdm_comp);
+                                }
                             }
                         }
                     }
@@ -2136,10 +2132,10 @@ void CI_RDMS::rdm_test(std::vector<double>& oprdm_a, std::vector<double>& oprdm_
                                 double rdm_comp =
                                     tprdm_aab[p * ncmo4_ * ncmo_ + q * ncmo4_ + r * ncmo3_ +
                                               s * ncmo2_ + t * ncmo_ + a];
-                                // outfile->Printf("\n
-                                // D3(aabaab)[%3lu][%3lu][%3lu][%3lu][%3lu][%3lu] = %18.12lf
-                                // (%18.12lf,%18.12lf)",
-                                // p,q,r,s,t,a,rdm-rdm_comp,rdm,rdm_comp);
+                                if( rdm-rdm_comp> 1.0e-12) {
+                                 outfile->Printf("\n D3(aabaab)[%3lu][%3lu][%3lu][%3lu][%3lu][%3lu] = %18.12lf (%18.12lf,%18.12lf)",
+                                 p,q,r,s,t,a,rdm-rdm_comp,rdm,rdm_comp);
+                                }
                                 error_3rdm_aab += std::fabs(rdm - rdm_comp);
                             }
                         }
@@ -2183,11 +2179,10 @@ void CI_RDMS::rdm_test(std::vector<double>& oprdm_a, std::vector<double>& oprdm_
                                 double rdm_comp =
                                     tprdm_abb[p * ncmo4_ * ncmo_ + q * ncmo4_ + r * ncmo3_ +
                                               s * ncmo2_ + t * ncmo_ + a];
-                                //                                   outfile->Printf("\n
-                                //                                   D3(abbabb)[%3lu][%3lu][%3lu][%3lu][%3lu][%3lu]
-                                //                                   = %18.12lf
-                                //                                   (%18.12lf,%18.12lf)",
-                                //                                                   p,q,r,s,t,a,rdm-rdm_comp,rdm,rdm_comp);
+                                if( rdm-rdm_comp> 1.0e-12) {
+                                outfile->Printf("\nD3(abbabb)[%3lu][%3lu][%3lu][%3lu][%3lu][%3lu] = %18.12lf (%18.12lf,%18.12lf)",
+                                                p,q,r,s,t,a,rdm-rdm_comp,rdm,rdm_comp);
+                                }
                                 error_3rdm_abb += std::fabs(rdm - rdm_comp);
                             }
                         }
@@ -2231,11 +2226,11 @@ void CI_RDMS::rdm_test(std::vector<double>& oprdm_a, std::vector<double>& oprdm_
                                 double rdm_comp =
                                     tprdm_bbb[p * ncmo4_ * ncmo_ + q * ncmo4_ + r * ncmo3_ +
                                               s * ncmo2_ + t * ncmo_ + a];
-                                // outfile->Printf("\n
-                                // D3(bbbbbb)[%3lu][%3lu][%3lu][%3lu][%3lu][%3lu] = %18.12lf
-                                // (%18.12lf,%18.12lf)",
-                                // p,q,r,s,t,a,rdm-rdm_comp,rdm,rdm_comp);
-                                error_3rdm_bbb += std::fabs(rdm - rdm_comp);
+                                if( rdm-rdm_comp> 1.0e-12) {
+                                 outfile->Printf("\n D3(bbbbbb)[%3lu][%3lu][%3lu][%3lu][%3lu][%3lu] = %18.12lf (%18.12lf,%18.12lf)",
+                                 p,q,r,s,t,a,rdm-rdm_comp,rdm,rdm_comp);
+                                    error_3rdm_bbb += std::fabs(rdm - rdm_comp);
+                                }
                             }
                         }
                     }

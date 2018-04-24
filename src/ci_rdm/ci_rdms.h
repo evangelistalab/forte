@@ -261,7 +261,9 @@ class CI_RDMS {
 
     // Fill 3rdm
     void fill_3rdm( std::vector<double>& tprdm, double value, int p, int q, int r, int s, int t, int u , bool half = false);
-
+    void make_ab(std::vector<double>& tprdm_aab, std::vector<double>& tprdm_abb );
+    void make_ab(SortedStringList_UI64 a_sorted_string_list_,const  std::vector<UI64Determinant::bit_t>& sorted_astr,const std::vector<UI64Determinant>& sorted_a_dets, 
+                std::vector<double>& tprdm_ab, std::vector<double>& tprdm_aab,std::vector<double>& tprdm_abb);
 };
 }
 } // End namepaces
