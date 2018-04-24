@@ -628,11 +628,14 @@ double AdaptiveCI::compute_energy() {
     //  }
 
     //** Compute the RDMs **//
+
+    double list_time = 0.0;
     if (options_.get_int("ACI_MAX_RDM") >= 3 or (rdm_level_ >= 3)) {
         outfile->Printf("\n  Computing 3-list...    ");
         Timer l3;
         op_.three_s_lists(final_wfn_);
         outfile->Printf(" done (%1.5f s)", l3.get());
+        list_time += l3.get();
     }
 
     SharedMatrix new_evecs;
@@ -652,12 +655,36 @@ double AdaptiveCI::compute_energy() {
         compute_rdms(fci_ints_, approx, op_, new_evecs, 0, 0);
 
     } else {
+        Timer totaltt;
         op_.clear_op_s_lists();
         op_.clear_tp_s_lists();
         op_.op_s_lists(final_wfn_);
         op_.tp_s_lists(final_wfn_);
         compute_rdms(fci_ints_, final_wfn_, op_, PQ_evecs, 0, 0);
+        list_time += totaltt.get();
+        outfile->Printf("\n  Lists and RDMS (list) took %1.6f", list_time);
     }
+
+    ordm_a_.clear();
+    ordm_b_.clear();
+
+    trdm_aa_.clear();
+    trdm_ab_.clear();
+    trdm_bb_.clear();
+
+    trdm_aaa_.clear();
+    trdm_aab_.clear();
+    trdm_abb_.clear();
+    trdm_bbb_.clear();
+
+   // Timer dyn;
+   // CI_RDMS ci_rdms_(final_wfn_, fci_ints_, PQ_evecs, 0, 0);
+   // ci_rdms_.compute_rdms_dynamic(ordm_a_, ordm_b_, trdm_aa_, trdm_ab_, trdm_bb_,
+   //                                 trdm_aaa_,trdm_aab_,trdm_abb_,trdm_bbb_);
+   // double dt = dyn.get();
+   // outfile->Printf("\n  RDMS (bits) took           %1.6f", dt);
+   // ci_rdms_.rdm_test(ordm_a_, ordm_b_, trdm_aa_, trdm_bb_, trdm_ab_,
+   //             trdm_aaa_,trdm_aab_,trdm_abb_,trdm_bbb_);
 
     // if( approx_rdm_ ){
     //     approximate_rdm( final_wfn_, PQ_evecs,);
@@ -811,7 +838,7 @@ void AdaptiveCI::find_q_space_batched(DeterminantHashVec& P_space, DeterminantHa
     outfile->Printf("\n  Using batched Q_space algorithm");
 
     std::vector<std::pair<double, Determinant>> F_space;
-    double remainder = get_excited_determinants_batch3(evecs, evals, P_space, F_space);
+    double remainder = get_excited_determinants_batch2(evecs, evals, P_space, F_space);
     // double remainder = get_excited_determinants_batchv( evecs, evals, P_space, F_space );
 
     PQ_space.clear();
@@ -2302,16 +2329,14 @@ void AdaptiveCI::compute_rdms(std::shared_ptr<FCIIntegrals> fci_ints, Determinan
     trdm_bbb_.clear();
 
     CI_RDMS ci_rdms_(dets, fci_ints, PQ_evecs, root1, root2);
-   // ci_rdms_.compute_rdms_dynamic(ordm_a_, ordm_b_, trdm_aa_, trdm_ab_, trdm_bb_,
-   //                                 trdm_aaa_,trdm_aab_,trdm_abb_,trdm_bbb_);
-   // ci_rdms_.rdm_test(ordm_a_, ordm_b_, trdm_aa_, trdm_bb_, trdm_ab_, trdm_aaa_, trdm_aab_,
-   //                   trdm_abb_, trdm_bbb_);
 
+    double total_time = 0.0;
     ci_rdms_.set_max_rdm(rdm_level_);
     if (rdm_level_ >= 1) {
         Timer one_r;
         ci_rdms_.compute_1rdm(ordm_a_, ordm_b_, op);
         outfile->Printf("\n  1-RDM  took %2.6f s (determinant)", one_r.get());
+        total_time += one_r.get();
 
         if (options_.get_bool("ACI_PRINT_NO")) {
             print_nos();
@@ -2321,13 +2346,13 @@ void AdaptiveCI::compute_rdms(std::shared_ptr<FCIIntegrals> fci_ints, Determinan
         Timer two_r;
         ci_rdms_.compute_2rdm(trdm_aa_, trdm_ab_, trdm_bb_, op);
         outfile->Printf("\n  2-RDMS took %2.6f s (determinant)", two_r.get());
-        double en = ci_rdms_.get_energy(ordm_a_, ordm_b_, trdm_aa_, trdm_bb_, trdm_ab_);
-        outfile->Printf("\n  Energy from approximate RDM:  %1.12f", en);
+        total_time += two_r.get();
     }
     if (rdm_level_ >= 3) {
         Timer tr;
         ci_rdms_.compute_3rdm(trdm_aaa_, trdm_aab_, trdm_abb_, trdm_bbb_, op);
         outfile->Printf("\n  3-RDMs took %2.6f s (determinant)", tr.get());
+        total_time += tr.get();
         if (options_.get_bool("ACI_TEST_RDMS")) {
 
             ci_rdms_.rdm_test(ordm_a_, ordm_b_, trdm_aa_, trdm_bb_, trdm_ab_, trdm_aaa_, trdm_aab_,
@@ -2341,6 +2366,9 @@ void AdaptiveCI::compute_rdms(std::shared_ptr<FCIIntegrals> fci_ints, Determinan
         double en = ci_rdms_.get_energy(ordm_a_, ordm_b_, trdm_aa_, trdm_bb_, trdm_ab_);
         outfile->Printf("\n  Energy from approximate RDM:  %1.12f", en);
     }
+    outfile->Printf("\n\n  RDMS (list) took           %1.6f", total_time);
+   // ci_rdms_.rdm_test(ordm_a_, ordm_b_, trdm_aa_, trdm_bb_, trdm_ab_, trdm_aaa_, trdm_aab_,
+   //                   trdm_abb_, trdm_bbb_);
 }
 
 void AdaptiveCI::add_bad_roots(DeterminantHashVec& dets) {

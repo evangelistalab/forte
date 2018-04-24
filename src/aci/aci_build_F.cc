@@ -1350,14 +1350,14 @@ det_hash<double> AdaptiveCI::get_bin_F_space2(int bin, int nbin, SharedMatrix ev
         int end_idx = start_idx + bin_size;
 
         // Loop over P space determinants
-        size_t guess_a = nalpha_ * (ncmo_ - nalpha_);
-        size_t guess_b = nbeta_ * (ncmo_ - nbeta_);
-        size_t guess_aa = guess_a * guess_a / 4;
-        size_t guess_bb = guess_b * guess_b / 4;
-        size_t guess_ab = guess_a * guess_b;
+       // size_t guess_a = nalpha_ * (ncmo_ - nalpha_);
+       // size_t guess_b = nbeta_ * (ncmo_ - nbeta_);
+       // size_t guess_aa = guess_a * guess_a / 4;
+       // size_t guess_bb = guess_b * guess_b / 4;
+       // size_t guess_ab = guess_a * guess_b;
 
-        size_t guess = (n_dets / nbin) * (guess_a + guess_b + guess_aa + guess_bb + guess_ab);
-        outfile->Printf("\n Guessing %zu dets in bin %d", guess, bin);
+       // size_t guess = (n_dets / nbin) * (guess_a + guess_b + guess_aa + guess_bb + guess_ab);
+       // outfile->Printf("\n Guessing %zu dets in bin %d", guess, bin);
         //        A_b.reserve(guess);
         for (size_t I = start_idx; I < end_idx; ++I) {
             double c_I = evecs->get(I, 0);
@@ -1537,7 +1537,7 @@ det_hash<double> AdaptiveCI::get_bin_F_space2(int bin, int nbin, SharedMatrix ev
             }
         } // end loop over reference
 
-        outfile->Printf("\n  Added %zu dets", A_b.size());
+        //outfile->Printf("\n  Added %zu dets", A_b.size());
 
         // Remove duplicates
         for (det_hashvec::iterator it = dets.begin(), endit = dets.end(); it != endit; ++it) {
