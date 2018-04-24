@@ -21,12 +21,6 @@ timing_re = re.compile(r"Psi4 exiting successfully. Buy a developer a beer!")
 
 psi4command = ""
 
-<<<<<<< HEAD
-
-print("Running forte tests using the psi4 executable found in:\n  %s\n" % psi4command)
-
-=======
->>>>>>> 41fb3b4644b00274d79702a3bb24f88861840f4d
 fci_tests = ["fci-1","fci-2","fci-3","fci-4","fci-5","fci-7","fci-rdms-1","fci-rdms-2","fci-one-electron","fci-ex-1",
              "fci-ecp-1","fci-ecp-2"]
 
@@ -87,12 +81,7 @@ elif len(sys.argv) == 2:
 #elif len(sys.argv) == 3:
 #    tests = sys.argv[2]
 
-<<<<<<< HEAD
-print ("Running forte tests using the psi4 executable found in:\n  %s\n" % psi4command)
-
-=======
 print("Running forte tests using the psi4 executable found in:\n  %s\n" % psi4command)
->>>>>>> 41fb3b4644b00274d79702a3bb24f88861840f4d
 
 test_results = {}
 test_time = {}
@@ -118,11 +107,7 @@ for d in tests:
             test_results[d] = "PASSED"
         else:
             test_results[d] = "FAILED"
-<<<<<<< HEAD
-        print(out)
-=======
         print(out.decode("utf-8"))
->>>>>>> 41fb3b4644b00274d79702a3bb24f88861840f4d
     os.chdir(maindir)
     end = time.time()
     test_time[d] = end - start
@@ -136,16 +121,6 @@ for d in tests:
     elif test_results[d] == "FAILED":
         msg = bcolors.FAIL + "FAILED" + bcolors.ENDC
         failed.append(d)
-<<<<<<< HEAD
-
-    filler = "." * (81 - len(d + msg))
-    summary.append("        %s%s%s" % (d.upper(),filler,msg))
-
-print('Summary:')
-print(' ' * 8 + '-' * 72)
-print('\n'.join(summary))
-print(' ' * 8 + '-' * 72)
-=======
     duration = test_time[d]
     total_time += duration
     filler = "." * max(0,67 - len(d + msg))
@@ -157,22 +132,15 @@ print("    TEST" + ' ' * 57 + 'RESULT TIME (s)')
 print(" " * 4 + "-" * 76)
 print("\n".join(summary))
 print(" " * 4 + "=" * 76)
->>>>>>> 41fb3b4644b00274d79702a3bb24f88861840f4d
 
 test_result_log = open("test_results","w+")
 test_result_log.write("\n".join(summary))
 
 nfailed = len(failed)
 if nfailed == 0:
-<<<<<<< HEAD
-    print('Tests: All passed\n')
-else:
-    print('Tests: %d passed and %d failed\n' % (len(tests) -  nfailed,nfailed))
-=======
     print("Tests: All passed\n")
 else:
     print("Tests: %d passed and %d failed\n" % (len(tests) -  nfailed,nfailed))
->>>>>>> 41fb3b4644b00274d79702a3bb24f88861840f4d
     # Get the current date and time
     dt = datetime.datetime.now()
     now = dt.strftime("%Y-%m-%d-%H:%M")
