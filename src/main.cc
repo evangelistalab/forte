@@ -57,7 +57,7 @@ namespace forte {
  * @brief Read options from the input file. Called by psi4 before everything
  * else.
  */
-extern "C" int read_options(std::string name, Options& options) {
+extern "C" PSI_API int read_options(std::string name, Options& options) {
 
     ForteOptions foptions; // <<
 
@@ -76,7 +76,7 @@ extern "C" int read_options(std::string name, Options& options) {
 /**
  * @brief The main forte function.
  */
-extern "C" SharedWavefunction forte(SharedWavefunction ref_wfn, Options& options) {
+extern "C" PSI_API SharedWavefunction forte(SharedWavefunction ref_wfn, Options& options) {
     // Start a timer
     timer total_time("Forte");
 

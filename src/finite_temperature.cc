@@ -26,6 +26,8 @@
  * @END LICENSE
  */
 
+/* DISABLED DUE TO CHANGES IN THE HANDLING OF SCF IN PSI4
+
 #include <numeric>
 #include <vector>
 
@@ -289,3 +291,4 @@ void FiniteTemperatureHF::form_G() {
 void FiniteTemperatureHF::form_D() { D_ = Matrix::doublet(C_occ_folded_, C_occ_a_, false, true); }
 }
 }
+*/

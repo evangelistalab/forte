@@ -99,11 +99,11 @@ void forte_old_methods(SharedWavefunction ref_wfn, Options& options,
                        std::shared_ptr<ForteIntegrals> ints,
                        std::shared_ptr<MOSpaceInfo> mo_space_info, int my_proc) {
     timer method_timer("Method");
-    if (options.get_str("ALTERNATIVE_CASSCF") == "FTHF") {
-        auto FTHF = std::make_shared<FiniteTemperatureHF>(ref_wfn, options, mo_space_info);
-        FTHF->compute_energy();
-        ints->retransform_integrals();
-    }
+//    if (options.get_str("ALTERNATIVE_CASSCF") == "FTHF") {
+//        auto FTHF = std::make_shared<FiniteTemperatureHF>(ref_wfn, options, mo_space_info);
+//        FTHF->compute_energy();
+//        ints->retransform_integrals();
+//    }
 
     if (options.get_bool("CASSCF_REFERENCE") == true or options.get_str("JOB_TYPE") == "CASSCF") {
         auto casscf = std::make_shared<CASSCF>(ref_wfn, options, ints, mo_space_info);
