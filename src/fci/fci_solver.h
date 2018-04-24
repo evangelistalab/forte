@@ -219,7 +219,29 @@ class FCISolver {
 
     /// Decompose and reconstruct the FCI wave function
     void fci_svd(FCIVector& HC, std::shared_ptr<FCIIntegrals> fci_ints, double fci_energy, double TAU);
+
     void fci_svd_tiles(FCIVector& HC, std::shared_ptr<FCIIntegrals> fci_ints, double fci_energy, int tile_dim, double OMEGA);
+
+    void string_stats(std::vector<SharedMatrix> C);
+
+    void string_trimmer(std::vector<SharedMatrix>& C, double sum_cut, FCIVector& HC,
+                        std::shared_ptr<FCIIntegrals> fci_ints, double fci_energy);
+
+    void tile_chopper(std::vector<SharedMatrix>& C, double tile_norm_cut,
+                      FCIVector& HC, std::shared_ptr<FCIIntegrals> fci_ints,
+                      double fci_energy, int dim);
+
+    void zero_tile(std::vector<SharedMatrix>& C,
+                   std::vector<int> b_r,
+                   std::vector<int> e_r,
+                   std::vector<int> b_c,
+                   std::vector<int> e_c,
+                   double tile_norm_cut,
+                   int dim, int n, int d,
+                   int h, int i, int j, int& Npar );
+
+    void py_mat_print(SharedMatrix C_h, const std::string& input);
+
     void add_to_sig_vect(std::vector<std::tuple<double, int, int, int> >& sorted_sigma,
                          std::vector<SharedMatrix> C,
                          std::vector<int> b_r,
@@ -228,6 +250,7 @@ class FCISolver {
                          std::vector<int> e_c,
                          int dim, int n, int d,
                          int h, int i, int j);
+
     void patch_Cmat(std::vector<std::tuple<double, int, int, int> >& sorted_sigma,
                          std::vector<SharedMatrix>& C,
                          std::vector<std::vector<std::vector<int> > > rank_tile_inirrep,

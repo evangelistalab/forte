@@ -43,6 +43,9 @@
 
 #include "psi4/psi4-dec.h"
 
+#include <iostream>
+#include <fstream>
+
 using namespace psi;
 
 // extern double h1_aa_timer;
@@ -330,14 +333,43 @@ double FCISolver::compute_energy() {
         }
     }
 
-    std::vector<SharedMatrix> C_temp_clone(nirrep_);
+    //////////////////////////////////////////// FCI-SVD //////////////////////////////////////////////
 
-    if (options_.get_bool("FCI_SVD_TILE") && options_.get_bool("FCI_SVD")){
-        std::vector<SharedMatrix> C_temp = C_->coefficients_blocks();
-        for(int h=0; h<nirrep_; h++){
-          C_temp_clone[h] = C_temp[h]->clone();
-        }
+    std::vector<SharedMatrix> C_temp_clone(nirrep_);
+    std::vector<SharedMatrix> C_temp = C_->coefficients_blocks();
+
+    string_stats(C_temp);
+
+    for(int h=0; h<nirrep_; h++){
+      C_temp_clone[h] = C_temp[h]->clone();
     }
+
+    //print unadultarated C matrix
+    py_mat_print(C_temp[0], "FCI_Cmat.dat");
+
+
+    //if(options_.get_bool("FCI_TILE_CHOPPER")){
+      outfile->Printf("\n /////////////// TILE CHOPPER BEGIN /////////////////////\n");
+      double fci_nergy = dls.eigenvalues()->get(root_) + nuclear_repulsion_energy;
+      tile_chopper(C_temp, 1e-5, HC, fci_ints, fci_nergy, 5);
+      //reset C_ global
+      C_->set_coefficient_blocks(C_temp_clone);
+      outfile->Printf("\n /////////////// TILE CHOPPER END /////////////////////\n");
+    //}
+
+
+    if(options_.get_bool("FCI_STRING_TRIMMER")){
+      outfile->Printf("\n /////////////// TRIMMER BEGIN /////////////////////\n");
+      double fci_nergy = dls.eigenvalues()->get(root_) + nuclear_repulsion_energy;
+      string_trimmer(C_temp, options_.get_double("FCI_ST_CUT"), HC, fci_ints, fci_nergy);
+      //reset C_ global
+      C_->set_coefficient_blocks(C_temp_clone);
+      outfile->Printf("\n /////////////// TRIMMER END /////////////////////\n");
+    }
+
+    // if (options_.get_bool("FCI_STRING_TRIMMER")){
+    //     C_->set_coefficient_blocks(C_temp_clone);
+    // }
 
     if (options_.get_bool("FCI_SVD_TILE")){
         outfile->Printf("\n /////////////// TILES BEGIN /////////////////////\n");
@@ -346,16 +378,46 @@ double FCISolver::compute_energy() {
         outfile->Printf("\n /////////////// TILES END /////////////////////\n");
     }
 
+    py_mat_print(C_temp[0], "C_tiled.dat");
+
+    // std::ofstream myfile2;
+    // myfile2.open ("C_full_tile.dat");
+    // for(int h=0; h<nirrep_; h++){
+    //   for (int i=0; i<C_temp[h]->coldim(); i++){
+    //     myfile2 << "\n";
+    //     for (int j=0; j<C_temp[h]->rowdim(); j++){
+    //         myfile2 << C_temp[h]->get(i,j) << " ";
+    //     }
+    //   }
+    // }
+    // myfile2.close();
+
     if (options_.get_bool("FCI_SVD_TILE") && options_.get_bool("FCI_SVD")){
         C_->set_coefficient_blocks(C_temp_clone);
     }
 
     if (options_.get_bool("FCI_SVD")){
+        outfile->Printf("\n /////////////// FULL SVD BEGIN /////////////////////\n");
         double fci_energy = dls.eigenvalues()->get(root_) + nuclear_repulsion_energy;
         fci_svd(HC,fci_ints,fci_energy, options_.get_double("FCI_SVD_TAU"));
+        outfile->Printf("\n /////////////// FULL SVD END /////////////////////\n");
     }
 
+    py_mat_print(C_temp[0], "C_full_tile.dat");
 
+    // std::ofstream myfile3;
+    // myfile3.open ("C_tiled.dat");
+    // for(int h=0; h<nirrep_; h++){
+    //   for (int i=0; i<C_temp[h]->coldim(); i++){
+    //     myfile3 << "\n";
+    //     for (int j=0; j<C_temp[h]->rowdim(); j++){
+    //         myfile3 << C_temp[h]->get(i,j) << " ";
+    //     }
+    //   }
+    // }
+    // myfile3.close();
+
+    //////////////////////////////////////////// FCI-SVD END //////////////////////////////////////////////
 
 /*
     if (options_.get_bool("FCI_SVD_MANY_TAU")){

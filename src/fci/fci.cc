@@ -45,6 +45,8 @@ void set_FCI_options(ForteOptions& foptions) {
     foptions.add_int("FCI_MAX_RDM", 1, "The number of trial guess vectors to generate per root");
     foptions.add_bool("FCI_TEST_RDMS", false, "Test the FCI reduced density matrices?");
     foptions.add_bool("FCI_PRINT_NO", false, "Print the NO from the rdm of FCI");
+    foptions.add_bool("FCI_STRING_TRIMMER", false, "Trim out unimportant strings based on some cutoff");
+    foptions.add_double("FCI_ST_CUT", 0.0, "String trimmer threshold");
     foptions.add_bool("FCI_SVD", false, "Decompose and reconstruct the FCI wave function");
     foptions.add_str("FCI_SVD_TYPE", "THRESHOLD", {"THRESHOLD","CUMULATIVE"}, "Type of FCI decomposition");
     foptions.add_double("FCI_SVD_TAU", 0.0, "SVD threshold");
