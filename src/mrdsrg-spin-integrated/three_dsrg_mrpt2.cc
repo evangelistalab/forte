@@ -3149,8 +3149,10 @@ void THREE_DSRG_MRPT2::relax_reference_once() {
             int nstates = options_["AVG_STATE"][n][2].to_integer();
 
             for (int i = 0; i < nstates; ++i) {
+                int ni = i + offset;
                 outfile->Printf("\n     %3d     %3s    %2d   %20.12f", multi,
-                                irrep_symbol[irrep].c_str(), i, E_relaxed[i + offset]);
+                                irrep_symbol[irrep].c_str(), i, E_relaxed[ni]);
+                Process::environment.globals["ENERGY ROOT " + std::to_string(ni)] = E_relaxed[ni];
             }
             outfile->Printf("\n    %s", dash.c_str());
 
