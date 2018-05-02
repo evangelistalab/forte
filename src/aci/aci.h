@@ -238,6 +238,8 @@ class AdaptiveCI : public Wavefunction {
     /// The CI coeffiecients
     SharedMatrix evecs_;
 
+    bool build_lists_;
+
     /// A map of determinants in the P space
     std::unordered_map<Determinant, int, Determinant::Hash> P_space_map_;
     /// A History of Determinants

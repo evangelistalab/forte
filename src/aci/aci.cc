@@ -200,6 +200,9 @@ void set_ACI_options(ForteOptions& foptions) {
 
     /*- Scales sigma in batched algorithm -*/
     foptions.add_double("ACI_SCALE_SIGMA", 0.5, "Scales sigma in batched algorithm");
+
+    /*- Computes RDMs without coupling lists -*/
+    foptions.add_bool("ACI_DIRECT_RDMS", false, "Computes RDMs without coupling lists"); 
 }
 
 bool pairComp(const std::pair<double, Determinant> E1, const std::pair<double, Determinant> E2) {
@@ -387,6 +390,13 @@ void AdaptiveCI::startup() {
 
         streamline_qspace_ = true;
     }
+
+    // Decide when to compute coupling lists
+    build_lists_ = true;
+    if( diag_method_ == Dynamic ){
+        build_lists_ = false;
+    }
+
 }
 
 void AdaptiveCI::print_info() {
@@ -550,10 +560,12 @@ double AdaptiveCI::compute_energy() {
         }
 
         outfile->Printf("\n  Size of combined space: %zu", dim);
-
-        op_c.build_strings(full_space);
-        op_c.op_lists(full_space);
-        op_c.tp_lists(full_space);
+    
+        if( build_lists_ ){
+            op_c.build_strings(full_space);
+            op_c.op_lists(full_space);
+            op_c.tp_lists(full_space);
+        }
 
         SparseCISolver sparse_solver(fci_ints_);
         sparse_solver.set_parallel(true);
@@ -581,20 +593,22 @@ double AdaptiveCI::compute_energy() {
         outfile->Printf("\n  Adding singles");
 
         op_.add_singles(final_wfn_);
-        if (sigma_method == "HZ") {
-            op_.clear_op_lists();
-            op_.clear_tp_lists();
-            Timer str;
-            op_.build_strings(final_wfn_);
-            outfile->Printf("\n  Time spent building strings      %1.6f s", str.get());
-            op_.op_lists(final_wfn_);
-            op_.tp_lists(final_wfn_);
-        } else {
-            op_.clear_op_s_lists();
-            op_.clear_tp_s_lists();
-            op_.build_strings(final_wfn_);
-            op_.op_s_lists(final_wfn_);
-            op_.tp_s_lists(final_wfn_);
+        if( build_lists_ ){
+            if (sigma_method == "HZ") {
+                op_.clear_op_lists();
+                op_.clear_tp_lists();
+                Timer str;
+                op_.build_strings(final_wfn_);
+                outfile->Printf("\n  Time spent building strings      %1.6f s", str.get());
+                op_.op_lists(final_wfn_);
+                op_.tp_lists(final_wfn_);
+            } else {
+                op_.clear_op_s_lists();
+                op_.clear_tp_s_lists();
+                op_.build_strings(final_wfn_);
+                op_.op_s_lists(final_wfn_);
+                op_.tp_s_lists(final_wfn_);
+            }
         }
 
         SparseCISolver sparse_solver(fci_ints_);
@@ -628,9 +642,8 @@ double AdaptiveCI::compute_energy() {
     //  }
 
     //** Compute the RDMs **//
-
     double list_time = 0.0;
-    if (options_.get_int("ACI_MAX_RDM") >= 3 or (rdm_level_ >= 3)) {
+    if ((options_.get_int("ACI_MAX_RDM") >= 3 or (rdm_level_ >= 3)) and !(options_.get_bool("ACI_DIRECT_RDMS")) ) {
         outfile->Printf("\n  Computing 3-list...    ");
         Timer l3;
         op_.three_s_lists(final_wfn_);
@@ -646,45 +659,28 @@ double AdaptiveCI::compute_energy() {
         DeterminantHashVec approx = approximate_wfn(final_wfn_, PQ_evecs, PQ_evals, new_evecs);
         //    WFNOperator op1(mo_space_info_);
         //    op1.op_lists(approx);
-        op_.clear_op_lists();
-        op_.clear_tp_lists();
-        op_.build_strings(approx);
-        op_.op_lists(approx);
+        if( !(options_.get_bool("ACI_DIRECT_RDMS")) ){
+            op_.clear_op_lists();
+            op_.clear_tp_lists();
+            op_.build_strings(approx);
+            op_.op_lists(approx);
+        }
         outfile->Printf("\n  Size of approx: %zu  size of var: %zu", approx.size(),
                         final_wfn_.size());
         compute_rdms(fci_ints_, approx, op_, new_evecs, 0, 0);
 
     } else {
         Timer totaltt;
-        op_.clear_op_s_lists();
-        op_.clear_tp_s_lists();
-        op_.op_s_lists(final_wfn_);
-        op_.tp_s_lists(final_wfn_);
+        if( !(options_.get_bool("ACI_DIRECT_RDMS")) ){
+            op_.clear_op_s_lists();
+            op_.clear_tp_s_lists();
+            op_.op_s_lists(final_wfn_);
+            op_.tp_s_lists(final_wfn_);
+        }
         compute_rdms(fci_ints_, final_wfn_, op_, PQ_evecs, 0, 0);
         list_time += totaltt.get();
-        outfile->Printf("\n  Lists and RDMS (list) took %1.6f", list_time);
+        outfile->Printf("\n  RDMS took %1.6f", list_time);
     }
-
-    ordm_a_.clear();
-    ordm_b_.clear();
-
-    trdm_aa_.clear();
-    trdm_ab_.clear();
-    trdm_bb_.clear();
-
-    trdm_aaa_.clear();
-    trdm_aab_.clear();
-    trdm_abb_.clear();
-    trdm_bbb_.clear();
-
-   // Timer dyn;
-   // CI_RDMS ci_rdms_(final_wfn_, fci_ints_, PQ_evecs, 0, 0);
-   // ci_rdms_.compute_rdms_dynamic(ordm_a_, ordm_b_, trdm_aa_, trdm_ab_, trdm_bb_,
-   //                                 trdm_aaa_,trdm_aab_,trdm_abb_,trdm_bbb_);
-   // double dt = dyn.get();
-   // outfile->Printf("\n  RDMS (bits) took           %1.6f", dt);
-   // ci_rdms_.rdm_test(ordm_a_, ordm_b_, trdm_aa_, trdm_bb_, trdm_ab_,
-   //             trdm_aaa_,trdm_aab_,trdm_abb_,trdm_bbb_);
 
     // if( approx_rdm_ ){
     //     approximate_rdm( final_wfn_, PQ_evecs,);
@@ -735,11 +731,13 @@ void AdaptiveCI::diagonalize_final_and_compute_rdms() {
     SharedMatrix final_evecs;
     SharedVector final_evals;
 
-    op_.clear_op_s_lists();
-    op_.clear_tp_s_lists();
-    op_.build_strings(final_wfn_);
-    op_.op_s_lists(final_wfn_);
-    op_.tp_s_lists(final_wfn_);
+    if( build_lists_ ){
+        op_.clear_op_s_lists();
+        op_.clear_tp_s_lists();
+        op_.build_strings(final_wfn_);
+        op_.op_s_lists(final_wfn_);
+        op_.tp_s_lists(final_wfn_);
+    }
 
     SparseCISolver sparse_solver(fci_ints_);
     sparse_solver.set_parallel(true);
@@ -756,11 +754,13 @@ void AdaptiveCI::diagonalize_final_and_compute_rdms() {
 
     print_final(final_wfn_, final_evecs, final_evals);
 
-    op_.clear_op_s_lists();
-    op_.clear_tp_s_lists();
-    op_.op_lists(final_wfn_);
-    op_.tp_lists(final_wfn_);
-    op_.three_s_lists(final_wfn_);
+    if( options_.get_bool("ACI_DIRECT_RDMS") == false ){
+        op_.clear_op_s_lists();
+        op_.clear_tp_s_lists();
+        op_.op_lists(final_wfn_);
+        op_.tp_lists(final_wfn_);
+        op_.three_s_lists(final_wfn_);
+    }
 
     compute_rdms(fci_ints_, final_wfn_, op_, final_evecs, 0, 0);
 }
@@ -2330,34 +2330,41 @@ void AdaptiveCI::compute_rdms(std::shared_ptr<FCIIntegrals> fci_ints, Determinan
 
     CI_RDMS ci_rdms_(dets, fci_ints, PQ_evecs, root1, root2);
 
-    double total_time = 0.0;
+//    double total_time = 0.0;
     ci_rdms_.set_max_rdm(rdm_level_);
-    if (rdm_level_ >= 1) {
-        Timer one_r;
-        ci_rdms_.compute_1rdm(ordm_a_, ordm_b_, op);
-        outfile->Printf("\n  1-RDM  took %2.6f s (determinant)", one_r.get());
-        total_time += one_r.get();
 
-        if (options_.get_bool("ACI_PRINT_NO")) {
-            print_nos();
+    
+    if(options_.get_bool("ACI_DIRECT_RDMS") ){
+        Timer dyn;
+        CI_RDMS ci_rdms_(final_wfn_, fci_ints_, PQ_evecs, 0, 0);
+        ci_rdms_.compute_rdms_dynamic(ordm_a_, ordm_b_, trdm_aa_, trdm_ab_, trdm_bb_,
+                                        trdm_aaa_,trdm_aab_,trdm_abb_,trdm_bbb_);
+        double dt = dyn.get();
+        outfile->Printf("\n  RDMS (bits) took           %1.6f", dt);
+    } else {
+        if (rdm_level_ >= 1) {
+            Timer one_r;
+            ci_rdms_.compute_1rdm(ordm_a_, ordm_b_, op);
+            outfile->Printf("\n  1-RDM  took %2.6f s (determinant)", one_r.get());
+
+            if (options_.get_bool("ACI_PRINT_NO")) {
+                print_nos();
+            }
+        }
+        if (rdm_level_ >= 2) {
+            Timer two_r;
+            ci_rdms_.compute_2rdm(trdm_aa_, trdm_ab_, trdm_bb_, op);
+            outfile->Printf("\n  2-RDMS took %2.6f s (determinant)", two_r.get());
+        }
+        if (rdm_level_ >= 3) {
+            Timer tr;
+            ci_rdms_.compute_3rdm(trdm_aaa_, trdm_aab_, trdm_abb_, trdm_bbb_, op);
+            outfile->Printf("\n  3-RDMs took %2.6f s (determinant)", tr.get());
         }
     }
-    if (rdm_level_ >= 2) {
-        Timer two_r;
-        ci_rdms_.compute_2rdm(trdm_aa_, trdm_ab_, trdm_bb_, op);
-        outfile->Printf("\n  2-RDMS took %2.6f s (determinant)", two_r.get());
-        total_time += two_r.get();
-    }
-    if (rdm_level_ >= 3) {
-        Timer tr;
-        ci_rdms_.compute_3rdm(trdm_aaa_, trdm_aab_, trdm_abb_, trdm_bbb_, op);
-        outfile->Printf("\n  3-RDMs took %2.6f s (determinant)", tr.get());
-        total_time += tr.get();
-        if (options_.get_bool("ACI_TEST_RDMS")) {
-
-            ci_rdms_.rdm_test(ordm_a_, ordm_b_, trdm_aa_, trdm_bb_, trdm_ab_, trdm_aaa_, trdm_aab_,
-                              trdm_abb_, trdm_bbb_);
-        }
+    if (options_.get_bool("ACI_TEST_RDMS")) {
+        ci_rdms_.rdm_test(ordm_a_, ordm_b_, trdm_aa_, trdm_bb_, trdm_ab_, trdm_aaa_, trdm_aab_,
+                          trdm_abb_, trdm_bbb_);
     }
 
     if (approx_rdm_ and (rdm_level_ >= 2)) {
@@ -2366,7 +2373,7 @@ void AdaptiveCI::compute_rdms(std::shared_ptr<FCIIntegrals> fci_ints, Determinan
         double en = ci_rdms_.get_energy(ordm_a_, ordm_b_, trdm_aa_, trdm_bb_, trdm_ab_);
         outfile->Printf("\n  Energy from approximate RDM:  %1.12f", en);
     }
-    outfile->Printf("\n\n  RDMS (list) took           %1.6f", total_time);
+   // outfile->Printf("\n\n  RDMS (list) took           %1.6f", total_time);
    // ci_rdms_.rdm_test(ordm_a_, ordm_b_, trdm_aa_, trdm_bb_, trdm_ab_, trdm_aaa_, trdm_aab_,
    //                   trdm_abb_, trdm_bbb_);
 }
