@@ -91,10 +91,10 @@ void SparseCISolver::diagonalize_hamiltonian_map(const DeterminantHashVec& space
         diagonalize_full(dets, evals, evecs, nroot, multiplicity);
     } else if (diag_method == Sparse) {
         diagonalize_dl_sparse(space, op, evals, evecs, nroot, multiplicity);
-    } else if (diag_method == MPI) {
-        diagonalize_mpi(space, op, evals, evecs, nroot, multiplicity);
-    } else if (diag_method == Direct) {
-        diagonalize_dl_direct(space, op, evals, evecs, nroot, multiplicity);
+//    } else if (diag_method == MPI) {
+//        diagonalize_mpi(space, op, evals, evecs, nroot, multiplicity);
+//    } else if (diag_method == Direct) {
+//        diagonalize_dl_direct(space, op, evals, evecs, nroot, multiplicity);
     } else if (diag_method == Dynamic) {
         diagonalize_dl_dynamic(space, op, evals, evecs, nroot, multiplicity);
     } else {

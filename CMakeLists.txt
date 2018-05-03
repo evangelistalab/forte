@@ -26,7 +26,7 @@ include(autocmake_mpi)  # MPI option A
 
 
 #find_package(psi4 1.1 REQUIRED COMPONENTS ambit chemps2)
-find_package(psi4 1.0 REQUIRED)
+find_package(psi4 1.1 REQUIRED)
 
 find_package(TargetLAPACK REQUIRED)
 find_package(ambit REQUIRED)
