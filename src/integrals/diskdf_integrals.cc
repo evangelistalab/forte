@@ -474,7 +474,7 @@ void DISKDFIntegrals::gather_integrals() {
     // Constructs the DF function
     // I used this version of build as this doesn't build all the apces and
     // assume a RHF/UHF reference
-    df_ = std::make_shared<DF_Helper>(primary,auxiliary);
+    df_ = std::make_shared<DFHelper>(primary,auxiliary);
     df_->initialize();
     df_->set_MO_core(false);
     // set_C clears all the orbital spaces, so this creates the space
