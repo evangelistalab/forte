@@ -294,6 +294,8 @@ void MASTER_DSRG::check_init_reference_energy() {
                                             "A bug? Post an issue."));
         Eref_ = E;
     }
+
+    Process::environment.globals["DSRG REFERENCE ENERGY"] = Eref_;
 }
 
 double MASTER_DSRG::compute_reference_energy_from_ints(std::shared_ptr<ForteIntegrals> ints) {
