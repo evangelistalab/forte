@@ -158,6 +158,10 @@ endif()
 
 target_include_directories(forte PRIVATE src/mini-boost)
 
+## 64bit implementation
+add_definitions(-DSMALL_BITSET)
+set(SMALL_BITSET true)
+
 if(ENABLE_MPI)
     target_link_libraries(forte PRIVATE ${MPI_CXX_LIBRARIES})  # MPI option A
     #target_link_libraries(forte PRIVATE MPI::MPI_CXX)  # MPI option B
