@@ -104,7 +104,7 @@ void AtomicOrbitalHelper::Compute_AO_Screen(std::shared_ptr<BasisSet>& primary) 
 void AtomicOrbitalHelper::Estimate_TransAO_Screen(std::shared_ptr<BasisSet>& primary,
                                                   std::shared_ptr<BasisSet>& auxiliary) {
     Compute_Psuedo_Density();
-    std::shared_ptr<JK> jk(new DFJK(primary, auxiliary));
+    std::shared_ptr<JK> jk(new MemDFJK(primary, auxiliary));
     jk->initialize();
     jk->compute();
     SharedMatrix AO_Trans_Screen(new Matrix("AOTrans", weights_, nbf_ * nbf_));
