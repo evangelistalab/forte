@@ -366,6 +366,21 @@ SharedMatrix tensor_to_matrix(ambit::Tensor t) {
     return M;
 }
 
+SharedMatrix full_to_sym_matrix(SharedMatrix m, Dimension dims) {
+    SharedMatrix M_sym(new Matrix(m->name(), dims, dims));
+    size_t offset = 0;
+    for (size_t h = 0; h < static_cast<size_t>(dims.n()); ++h) {
+        for (size_t p = 0; p < static_cast<size_t>(dims[h]); ++p) {
+            for (size_t q = 0; q < static_cast<size_t>(dims[h]); ++q) {
+                double value = m->get(p + offset, q + offset);
+                M_sym->set(h, p, q, value);
+            }
+        }
+        offset += dims[h];
+    }
+    return M_sym;
+}
+
 std::pair<double, std::string> to_xb(size_t nele, size_t type_size) {
     // map the size
     std::map<std::string, double> to_XB;
