@@ -2079,9 +2079,9 @@ void AdaptiveCI::compute_aci(DeterminantHashVec& PQ_space, SharedMatrix& PQ_evec
         }
 
         // Use spin projection to ensure the P space is spin pure
-        if ((spin_projection == 1 or spin_projection == 3) and P_space.size() <= 200) {
-            project_determinant_space(P_space, P_evecs, P_evals, num_ref_roots);
-        }
+       // if ((spin_projection == 1 or spin_projection == 3) and P_space.size() <= 200) {
+       //     project_determinant_space(P_space, P_evecs, P_evals, num_ref_roots);
+       // }
 
         // Print the energy
         if (!quiet_mode_) {
@@ -2157,9 +2157,9 @@ outfile->Printf("\n  Time spent building the model space: %1.6f", build_space.ge
         //        old_evecs = PQ_evecs->clone();
 
         // Ensure the solutions are spin-pure
-        if ((spin_projection == 1 or spin_projection == 3) and PQ_space.size() <= 200) {
-            project_determinant_space(PQ_space, PQ_evecs, PQ_evals, num_ref_roots);
-        }
+       // if ((spin_projection == 1 or spin_projection == 3) and PQ_space.size() <= 200) {
+       //     project_determinant_space(PQ_space, PQ_evecs, PQ_evals, num_ref_roots);
+       // }
 
         if (!quiet_mode_) {
             // Print the energy
@@ -2244,11 +2244,11 @@ outfile->Printf("\n  Time spent building the model space: %1.6f", build_space.ge
     //     det_list_.close();
 
     // Ensure the solutions are spin-pure
-    if ((spin_projection == 2 or spin_projection == 3) and PQ_space.size() <= 200) {
-        project_determinant_space(PQ_space, PQ_evecs, PQ_evals, nroot_);
-    } else if (!quiet_mode_) {
-        outfile->Printf("\n  Not performing spin projection.");
-    }
+   // if ((spin_projection == 2 or spin_projection == 3) and PQ_space.size() <= 200) {
+   //     project_determinant_space(PQ_space, PQ_evecs, PQ_evals, nroot_);
+   // } else if (!quiet_mode_) {
+   //     outfile->Printf("\n  Not performing spin projection.");
+   // }
 }
 
 std::vector<std::pair<size_t, double>>

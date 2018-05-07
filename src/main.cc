@@ -33,6 +33,7 @@
 #include "integrals/integrals.h"
 #include "sparse_ci/determinant.h"
 #include "version.h"
+#include "psi4/psi4-dec.h"
 
 #ifdef HAVE_CHEMPS2
 #include "dmrgscf.h"
@@ -57,7 +58,8 @@ namespace forte {
  * @brief Read options from the input file. Called by psi4 before everything
  * else.
  */
-extern "C" PSI_API int read_options(std::string name, Options& options) {
+extern "C" PSI_API 
+int read_options(std::string name, Options& options) {
 
     ForteOptions foptions; // <<
 
@@ -106,7 +108,6 @@ extern "C" PSI_API SharedWavefunction forte(SharedWavefunction ref_wfn, Options&
     }
 
     forte_cleanup();
-
     return ref_wfn;
 }
 

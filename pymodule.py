@@ -69,3 +69,4 @@ def run_forte(name, **kwargs):
 
 # Integration with driver routines
 psi4.driver.procedures['energy']['forte'] = run_forte
+
