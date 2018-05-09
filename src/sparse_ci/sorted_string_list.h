@@ -49,6 +49,7 @@ class SortedStringList_UI64 {
                           DetSpinType sorted_string_spin);
 
     SortedStringList_UI64();
+    ~SortedStringList_UI64();
 
     const std::vector<UI64Determinant>& sorted_dets() const;
     const std::vector<UI64Determinant::bit_t>& sorted_half_dets() const;

@@ -50,10 +50,6 @@ void CI_RDMS::compute_rdms_dynamic(std::vector<double>& oprdm_a,
                                    std::vector<double>& tprdm_abb,
                                    std::vector<double>& tprdm_bbb){
 
-    SortedStringList_UI64 a_sorted_string_list_(wfn_, fci_ints_, DetSpinType::Alpha);
-    SortedStringList_UI64 b_sorted_string_list_(wfn_, fci_ints_, DetSpinType::Beta);
-
-
 
     oprdm_a.resize(ncmo2_,0.0);
     oprdm_b.resize(ncmo2_,0.0);
@@ -67,6 +63,11 @@ void CI_RDMS::compute_rdms_dynamic(std::vector<double>& oprdm_a,
     tprdm_abb.resize(ncmo5_*ncmo_, 0.0);
     tprdm_bbb.resize(ncmo5_*ncmo_, 0.0);
 
+
+
+
+    SortedStringList_UI64 a_sorted_string_list_(wfn_, fci_ints_, DetSpinType::Alpha);
+    SortedStringList_UI64 b_sorted_string_list_(wfn_, fci_ints_, DetSpinType::Beta);
     const std::vector<UI64Determinant::bit_t>& sorted_bstr = b_sorted_string_list_.sorted_half_dets();
     size_t num_bstr = sorted_bstr.size();
     const auto& sorted_b_dets = b_sorted_string_list_.sorted_dets();
@@ -165,8 +166,8 @@ Timer diag;
         } 
     }
 outfile->Printf("\n  Diag takes %1.6f", diag.get());
-Timer aaa;
-
+    
+    Timer aaa;
     //-* All Alpha RDMs *-//
 
     // loop through all beta strings
@@ -176,7 +177,6 @@ Timer aaa;
 
         UI64Determinant::bit_t Ia;
         UI64Determinant::bit_t Ja;
-        UI64Determinant::bit_t IJa;
         size_t first_I = range_I.first;
         size_t last_I = range_I.second;
         
@@ -186,7 +186,8 @@ Timer aaa;
             double CI = evecs_->get(b_sorted_string_list_.add(I),root1_);
             for( size_t J = I+1; J < last_I; ++J ){
                 Ja = sorted_b_dets[J].get_alfa_bits();
-                IJa = Ia ^ Ja;
+                UI64Determinant::bit_t IJa = Ia ^ Ja;
+
                 int ndiff = ui64_bit_count(IJa);
 
                 if( ndiff == 2 ){
@@ -202,9 +203,9 @@ Timer aaa;
                     oprdm_a[q * ncmo_ + p] += value;
 
                     // 2-rdm
-                    uint64_t Iac(Ia);
+                    auto Iac = Ia;
                     Iac ^= Ia_sub;                     
-                    for( int nbit_a = 0; nbit_a < na_; nbit_a++){ 
+                    for( int nbit_a = 1; nbit_a < na_; nbit_a++){ 
                         uint64_t m = lowest_one_idx(Iac);
                         tprdm_aa[p*ncmo3_ + m*ncmo2_ + q*ncmo_ + m] += value;
                         tprdm_aa[m*ncmo3_ + p*ncmo2_ + q*ncmo_ + m] -= value;
@@ -218,8 +219,8 @@ Timer aaa;
 
                         Iac = clear_lowest_one(Iac);
 
-                        uint64_t Ibc = Ib;
-                        for( int idx = 0; idx < nb_; ++idx){
+                       auto Ibc = Ib;
+                       for( int idx = 0; idx < nb_; ++idx){
                             uint64_t n = lowest_one_idx(Ibc);
                             tprdm_aab[p*ncmo5_ + m*ncmo4_ + n*ncmo3_ + q*ncmo2_ + m*ncmo_ + n] += value;
                             tprdm_aab[p*ncmo5_ + m*ncmo4_ + n*ncmo3_ + m*ncmo2_ + q*ncmo_ + n] -= value;
@@ -231,8 +232,7 @@ Timer aaa;
                             tprdm_aab[m*ncmo5_ + q*ncmo4_ + n*ncmo3_ + m*ncmo2_ + p*ncmo_ + n] += value;
                             tprdm_aab[m*ncmo5_ + q*ncmo4_ + n*ncmo3_ + p*ncmo2_ + m*ncmo_ + n] -= value;
                             Ibc = clear_lowest_one(Ibc);
-                        } 
-    
+                        }
                     }
                     auto Ibc = Ib;
                     for( int nidx = 0; nidx < nb_; ++nidx ){
@@ -259,11 +259,11 @@ Timer aaa;
                     } 
                     //3-rdm
                     uint64_t Iacc = Ia^Ia_sub;                     
-                    for( int id = 0; id < na_; ++id){ 
+                    for( int id = 1; id < na_; ++id){ 
                         uint64_t n = lowest_one_idx(Iacc);
-                        uint64_t I_n = Iacc;
-                        I_n = clear_lowest_one(I_n);
+                        uint64_t I_n = clear_lowest_one(Iacc);
                         for( int idd = id+1; idd < na_; ++idd){ 
+                       // while( I_n > 0 ){
                             uint64_t m = lowest_one_idx(I_n);
                             fill_3rdm(tprdm_aaa, value, p,n,m,q,n,m, false);
                             I_n = clear_lowest_one(I_n);
@@ -346,8 +346,8 @@ Timer aaa;
     }
 outfile->Printf("\n all alpha takes %1.6f", aaa.get());
 
-    //*- All beta RDMs -*//
-Timer bbb;
+    //- All beta RDMs -//
+    Timer bbb;
     // loop through all alpha strings
     const std::vector<UI64Determinant::bit_t>& sorted_astr = a_sorted_string_list_.sorted_half_dets();
     size_t num_astr = sorted_astr.size();
@@ -380,7 +380,7 @@ Timer bbb;
                     double value = Csq * ui64_slater_sign(Ib,p,q);
                     oprdm_b[p * ncmo_ + q] += value;
                     oprdm_b[q * ncmo_ + p] += value;
-                    uint64_t Ibc(Ib);
+                    auto Ibc = Ib;
                     Ibc ^= Ib_sub;                     
                     for( int ndb = 1; ndb < nb_; ++ndb ){
                         uint64_t m = lowest_one_idx(Ibc);
@@ -411,7 +411,7 @@ Timer bbb;
                             Iac = clear_lowest_one(Iac);
                         }
                     }
-                    auto Iac(Ia);
+                    auto Iac = Ia;
                     for( int nidx = 0; nidx < na_; ++nidx ){
                         uint64_t n = lowest_one_idx(Iac); 
                         tprdm_ab[n*ncmo3_ + p*ncmo2_ + n*ncmo_ + q] += value;
@@ -437,10 +437,12 @@ Timer bbb;
                     uint64_t Ibcc(Ib);
                     Ibcc ^= Ib_sub;                     
                     for(int ndb = 1; ndb < nb_; ++ndb) {
+                    //while(Ibcc >0){
                         uint64_t n = lowest_one_idx(Ibcc);
                         Ibcc = clear_lowest_one(Ibcc);
                         uint64_t I_n = Ibcc;
-                        for(int ndbb = ndb; ndbb < nb_; ++ndbb) {
+                        for(int ndbb = ndb+1; ndbb < nb_; ++ndbb) {
+                        //while( I_n > 0){
                             uint64_t m = lowest_one_idx(I_n);
                             fill_3rdm(tprdm_bbb, value, p,m,n,q,m,n, false);
                             I_n = clear_lowest_one(I_n);
@@ -470,7 +472,7 @@ Timer bbb;
                     tprdm_bb[s*ncmo3_ + r*ncmo2_ + q*ncmo_ + p] += value; 
 
                     // 3-rdm
-                    uint64_t Ibc(Ib);
+                    uint64_t Ibc = Ib;
                     Ibc ^= Ib_sub;                     
                     for(int ndb = 1; ndb < nb_; ++ndb) {
                         uint64_t n = lowest_one_idx(Ibc);

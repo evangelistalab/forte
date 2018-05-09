@@ -2335,12 +2335,12 @@ void AdaptiveCI::compute_rdms(std::shared_ptr<FCIIntegrals> fci_ints, Determinan
 
     
     if(options_.get_bool("ACI_DIRECT_RDMS") ){
-        Timer dyn;
-        CI_RDMS ci_rdms_(final_wfn_, fci_ints_, PQ_evecs, 0, 0);
+       // Timer dyn;
+     //   CI_RDMS ci_rdms_(final_wfn_, fci_ints_, PQ_evecs, 0, 0);
         ci_rdms_.compute_rdms_dynamic(ordm_a_, ordm_b_, trdm_aa_, trdm_ab_, trdm_bb_,
                                         trdm_aaa_,trdm_aab_,trdm_abb_,trdm_bbb_);
-        double dt = dyn.get();
-        outfile->Printf("\n  RDMS (bits) took           %1.6f", dt);
+       // double dt = dyn.get();
+       // outfile->Printf("\n  RDMS (bits) took           %1.6f", dt);
     } else {
         if (rdm_level_ >= 1) {
             Timer one_r;
@@ -3082,11 +3082,11 @@ void AdaptiveCI::add_external_excitations(DeterminantHashVec& ref) {
     SharedMatrix final_evecs;
     SharedVector final_evals;
 
-        op_.clear_op_s_lists();
-        op_.clear_tp_s_lists();
 
     WFNOperator op(mo_symmetry_, fci_ints);
     if (diag_method_ != Dynamic) {
+        op_.clear_op_s_lists();
+        op_.clear_tp_s_lists();
         op.build_strings(ref);
         op.op_s_lists(ref);
         op.tp_s_lists(ref);

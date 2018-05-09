@@ -106,6 +106,8 @@ SortedStringList_UI64::SortedStringList_UI64(const DeterminantHashVec& space,
  //                   double(num_dets_) / double(sorted_half_dets_.size()));
 }
 
+SortedStringList_UI64::~SortedStringList_UI64(){}
+
 const std::vector<UI64Determinant>& SortedStringList_UI64::sorted_dets() const {
     return sorted_dets_;
 }
