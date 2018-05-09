@@ -1,0 +1,56 @@
+#! Generated using commit GITCOMMIT
+
+import forte
+memory 500 mb
+
+refcasscf    = -108.951281238972939
+refdsrgpt3   = -109.195144606677843
+
+molecule N2{
+  0 1
+  N
+  N  1 R
+  R = 1.50
+}
+
+set globals{
+  basis                  cc-pvtz
+  reference              rhf
+  scf_type               out_of_core
+  maxiter                300
+  e_convergence          10
+  d_convergence          8
+  docc                   [3,0,0,0,0,2,1,1]
+  restricted_docc        [2,0,0,0,0,2,0,0]
+  active                 [1,0,1,1,0,1,1,1]
+  mcscf_maxiter          100
+  mcscf_r_convergence    8
+  mcscf_e_convergence    10
+  mcscf_diis_start       8
+}
+
+set forte{
+  job_type               dsrg-mrpt3
+  frozen_docc            [1,0,0,0,0,1,0,0]
+  frozen_uocc            [0,0,0,0,0,0,0,0]
+  restricted_docc        [1,0,0,0,0,1,0,0]
+  active                 [1,0,1,1,0,1,1,1]
+  cas_type               aci
+  sigma                  0.0
+  root_sym               0
+  nroot                  1
+  dsrg_s                 1.0
+  relax_ref              once
+  maxiter                100
+  e_convergence          10
+  semi_canonical         false
+  int_type               cholesky
+  cholesky_tolerance     1e-8
+  print_time_profile     true
+}
+
+Ecasscf, wfn = energy('casscf', return_wfn=True)
+compare_values(refcasscf,get_variable("CURRENT ENERGY"),9,"MCSCF energy") #TEST
+
+energy('forte', ref_wfn=wfn)
+compare_values(refdsrgpt3,get_variable("CURRENT ENERGY"),7,"DSRG-MRPT3 relaxed energy") #TEST
