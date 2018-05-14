@@ -163,8 +163,8 @@ void FCISolver::tile_chopper(std::vector<SharedMatrix>& C, double tile_norm_cut,
     outfile->Printf("\n Tile Norm Cut     = %20.12f", tile_norm_cut);
     outfile->Printf("\n Norm              = %20.12f", Norm);
     outfile->Printf("\n E_fci             = %20.12f", fci_energy);
-    outfile->Printf("\n E_block_chop      = %20.12f", E_block_chop);
-    outfile->Printf("\n Delta(E_blk_chp)  = %20.12f", E_block_chop-fci_energy);
+    outfile->Printf("\n E_tile_chop       = %20.12f", E_block_chop);
+    outfile->Printf("\n Delta(E_tle_chp)  = %20.12f", E_block_chop-fci_energy);
     outfile->Printf("\n Npar blk_chp      =     %6d", Npar);
     outfile->Printf("\n Nsto blk_chp      =     %6d", Nsto);
     outfile->Printf("\n");
@@ -716,9 +716,9 @@ void FCISolver::fci_svd_tiles(FCIVector& HC, std::shared_ptr<FCIIntegrals> fci_i
     outfile->Printf("\n OMEGA             = %20.12f", OMEGA);
     outfile->Printf("\n tile size         =     %6d", dim);
     outfile->Printf("\n E_fci             = %20.12f", fci_energy);
-    outfile->Printf("\n E_red_rank        = %20.12f", E_red_rank);
-    outfile->Printf("\n Delta(E_red_rank) = %20.12f", E_red_rank-fci_energy);
-    outfile->Printf("\n Npar              =     %6d", N_par/2);
+    outfile->Printf("\n E_tiled_rr        = %20.12f", E_red_rank);
+    outfile->Printf("\n Delta(E_tiled_rr) = %20.12f", E_red_rank-fci_energy);
+    outfile->Printf("\n Npar trr          =     %6d", N_par/2);
     outfile->Printf("\n Nsto              =     %6d", N_par/2);
 
     ///// MAIN MATRIX TILER END /////
@@ -791,6 +791,8 @@ void FCISolver::fci_svd(FCIVector& HC, std::shared_ptr<FCIIntegrals> fci_ints, d
     double sig_sum = 0;
     double tao_norm;
     std::vector<int> rank_irrep(nirrep, 0);
+    std::vector<int> rank_ef_inirrep(nirrep,0);
+
     for (auto sigma_h : sorted_sigma) {
         rank_irrep[sigma_h.second] += 1;
         sig_sum += std::pow(sigma_h.first, 2.0);
@@ -835,6 +837,8 @@ void FCISolver::fci_svd(FCIVector& HC, std::shared_ptr<FCIIntegrals> fci_ints, d
             rank_ef = rank_irrep[h];
         }
 
+        rank_ef_inirrep[h] = rank_ef;
+
         total_rank += std::min(ncol, nrow);
         total_red_rank += rank_ef;
 
@@ -869,8 +873,8 @@ void FCISolver::fci_svd(FCIVector& HC, std::shared_ptr<FCIIntegrals> fci_ints, d
         C_red_rank_h->scale(1. / norm_C_red_rank);
     }
 
-    outfile->Printf("\n");
-    outfile->Printf("\n PRINTING RR C MATRICIES\n");
+    //outfile->Printf("\n");
+    //outfile->Printf("\n PRINTING RR C MATRICIES\n");
 
     {
         double norm_C_red_rank = 0.0;
@@ -894,8 +898,71 @@ void FCISolver::fci_svd(FCIVector& HC, std::shared_ptr<FCIIntegrals> fci_ints, d
     outfile->Printf("\n E_fci             = %20.12f", fci_energy);
     outfile->Printf("\n E_red_rank        = %20.12f", E_red_rank);
     outfile->Printf("\n Delta(E_red_rank) = %20.12f", E_red_rank-fci_energy);
-    outfile->Printf("\n Npar              =     %6d", N_par);
+    outfile->Printf("\n Npar frr          =     %6d", N_par);
     outfile->Printf("\n Nsto              =     %6d", N_sto);
+
+    ////testing purturbation idea...////
+    // std::vector<SharedMatrix> C_rr_p;
+    // std::vector<SharedMatrix> C_sum;
+    // //first SVD C_red_rank..
+    // for(int h=0; h<nirrep; h++){
+    //   int nrow = C_red_rank[h]->rowdim();
+    //   int ncol = C_red_rank[h]->coldim();
+    //
+    //   auto u_p = std::make_shared<Matrix>("u_p", nrow, nrow);
+    //   auto s_p = std::make_shared<Vector>("s_p", std::min(ncol, nrow));
+    //   auto v_p = std::make_shared<Matrix>("v_p", ncol, ncol);
+    //
+    //   C_red_rank[h]->svd(u_p, s_p, v_p);
+    //
+    //   //now build the 'inverse' sigma matrix
+    //   auto sig_mat = std::make_shared<Matrix>("sig_mat", nrow, ncol);
+    //   std::cout << '\n' << "rank_ef " << rank_ef_inirrep[h] << std::endl;
+    //   std::cout << '\n' << "total rank " << rank_irrep[h] << std::endl;
+    //   for(int i = 60; i < 252; i++) {
+    //     sig_mat->set(i, i, s_p->get(i));
+    //   }
+    //
+    //   auto C_rr_p_h = Matrix::triplet(u_p, sig_mat, v_p, false, false, false);
+    //   C_rr_p.push_back(C_rr_p_h);
+    //
+    //   //add prime matrix to C_rr
+    //   auto C_sum_h = C_red_rank[h]->clone();
+    //   C_sum_h->add(C_rr_p_h);
+    //   C_sum.push_back(C_sum_h);
+    //
+    //   // auto C_diff = C[h]->clone();
+    //   // C_diff->subtract(C_red_rank_h);
+    //   // double norm = std::sqrt(C_diff->sum_of_squares());
+    //
+    // }
+    // C_rr_p[0]->print();
+    //
+    // // re-normalize C_sum
+    // std::cout << '\n' << "dim of C_sum " << C_sum.size() << std::endl;
+    // double norm_C_sum = 0.0;
+    // for (auto C_sum_h : C_sum) {
+    //     norm_C_sum += C_sum_h->sum_of_squares();
+    // }
+    // norm_C_sum = std::sqrt(norm_C_sum);
+    // for (auto C_sum_h : C_sum) {
+    //     C_sum_h->scale(1. / norm_C_sum);
+    // }
+    //
+    // //re-compute energy...
+    // C_->set_coefficient_blocks(C_sum);
+    // // HC = H C
+    // C_->Hamiltonian(HC, fci_ints, twoSubstituitionVVOO);
+    // // E = C^T HC
+    // double E_pert = HC.dot(C_) + nuclear_repulsion_energy;
+    //
+    // outfile->Printf("\nI get here!");
+    //
+    // outfile->Printf("\n //////// HERE WE GO! ////////");
+    // outfile->Printf("\n Tau               = %20.12f", TAU);
+    // outfile->Printf("\n E_fci             = %20.12f", fci_energy);
+    // outfile->Printf("\n E_pert            = %20.12f", E_pert);
+    // outfile->Printf("\n Delta(E_red_rank) = %20.12f", E_pert-fci_energy);
 
 }
 

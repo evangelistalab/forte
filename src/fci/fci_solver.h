@@ -93,6 +93,8 @@ class FCISolver {
     /// Compute the FCI energy
     double compute_energy();
 
+    //double compute_energy_in_subspace();
+
     /// Compute RDMs on a given root
     void compute_rdms_root(int root);
 
@@ -216,6 +218,8 @@ class FCISolver {
                   std::shared_ptr<FCIIntegrals> fci_ints);
     /// The options object
     Options& options_;
+
+    double subspace_energy();
 
     /// Decompose and reconstruct the FCI wave function
     void fci_svd(FCIVector& HC, std::shared_ptr<FCIIntegrals> fci_ints, double fci_energy, double TAU);

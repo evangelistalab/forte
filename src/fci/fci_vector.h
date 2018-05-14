@@ -62,12 +62,18 @@ class FCIVector {
     /// Set the vector coefficients to a given vector of matrices
     void set_coefficient_blocks(std::vector<SharedMatrix> C) { C_ = C; }
 
+    //SharedMatrix make_mat() {return HC;}
+
     /// Copy the wave function object
     void copy(FCIVector& wfn);
     /// Copy the coefficients from a Vector object
     void copy(SharedVector vec);
+    /// Copy the coefficients from a Matrix object
+    void copy_mat(SharedMatrix mat);
     /// Copy the coefficients to a Vector object
     void copy_to(SharedVector vec);
+    /// Copy the coefficients to a Matrix object
+    void copy_to_mat(SharedMatrix vec);
 
     /// Form the diagonal part of the Hamiltonian
     void form_H_diagonal(std::shared_ptr<FCIIntegrals> fci_ints);

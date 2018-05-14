@@ -134,7 +134,307 @@ void FCISolver::startup() {
 /*
  * See Appendix A in J. Comput. Chem. 2001 vol. 22 (13) pp. 1574-1589
  */
+//  double FCISolver::compute_energy_in_subspace() {
+//
+// }
+
+
 double FCISolver::compute_energy() {
+if(options_.get_bool("SUBSPACE_ENERGY")){
+
+  //subspace_energy();
+
+  ForteTimer t;
+
+  double nuclear_repulsion_energy =
+      Process::environment.molecule()->nuclear_repulsion_energy({0, 0, 0});
+  std::shared_ptr<FCIIntegrals> fci_ints;
+  if (!provide_integrals_and_restricted_docc_) {
+      fci_ints = std::make_shared<FCIIntegrals>(ints_, active_mo_, core_mo_);
+      ambit::Tensor tei_active_aa =
+          ints_->aptei_aa_block(active_mo_, active_mo_, active_mo_, active_mo_);
+      ambit::Tensor tei_active_ab =
+          ints_->aptei_ab_block(active_mo_, active_mo_, active_mo_, active_mo_);
+      ambit::Tensor tei_active_bb =
+          ints_->aptei_bb_block(active_mo_, active_mo_, active_mo_, active_mo_);
+      fci_ints->set_active_integrals(tei_active_aa, tei_active_ab, tei_active_bb);
+      fci_ints->compute_restricted_one_body_operator();
+  } else {
+      if (fci_ints_ == nullptr) {
+          outfile->Printf("\n You said you would specify integrals and restricted_docc");
+          throw PSIEXCEPTION("Need to set the fci_ints in your code");
+      } else {
+          fci_ints = fci_ints_;
+      }
+  }
+
+  FCIVector::allocate_temp_space(lists_, print_);
+
+  FCIVector Hdiag(lists_, symmetry_);
+  C_ = std::make_shared<FCIVector>(lists_, symmetry_);
+  FCIVector HC(lists_, symmetry_);
+  C_->set_print(print_);
+
+  size_t fci_size = Hdiag.size();
+  Hdiag.form_H_diagonal(fci_ints);
+
+  SharedVector b(new Vector("b", fci_size));
+  SharedVector sigma(new Vector("sigma", fci_size));
+  SharedMatrix X(new Matrix("X", std::sqrt(fci_size), std::sqrt(fci_size)));
+
+  Hdiag.copy_to(sigma);
+
+  DavidsonLiuSolver dls(fci_size, nroot_);
+  dls.set_e_convergence(options_.get_double("E_CONVERGENCE"));
+  dls.set_print_level(print_);
+  dls.set_collapse_per_root(collapse_per_root_);
+  dls.set_subspace_per_root(subspace_per_root_);
+  dls.startup(sigma);
+
+  size_t guess_size = dls.collapse_size();
+  auto guess = initial_guess(Hdiag, guess_size, multiplicity_, fci_ints);
+
+  std::vector<int> guess_list;
+  for (size_t g = 0; g < guess.size(); ++g) {
+      if (guess[g].first == multiplicity_)
+          guess_list.push_back(g);
+  }
+
+  // number of guess to be used
+  size_t nguess = std::min(guess_list.size(), guess_size);
+
+  if (nguess == 0) {
+      throw PSIEXCEPTION("\n\n  Found zero FCI guesses with the requested "
+                         "multiplicity.\n\n");
+  }
+
+  for (size_t n = 0; n < nguess; ++n) {
+      HC.set(guess[guess_list[n]].second);
+      HC.copy_to(sigma);
+      dls.add_guess(sigma);
+  }
+
+  // Prepare a list of bad roots to project out and pass them to the solver
+  std::vector<std::vector<std::pair<size_t, double>>> bad_roots;
+  int gr = 0;
+  for (auto& g : guess) {
+      if (g.first != multiplicity_) {
+          if (print_ > 0) {
+              outfile->Printf("\n  Projecting out root %d", gr);
+          }
+          HC.set(g.second);
+          HC.copy_to(sigma);
+          std::vector<std::pair<size_t, double>> bad_root;
+          for (size_t I = 0; I < fci_size; ++I) {
+              if (std::fabs(sigma->get(I)) > 1.0e-12) {
+                  bad_root.push_back(std::make_pair(I, sigma->get(I)));
+              }
+          }
+          bad_roots.push_back(bad_root);
+      }
+      gr += 1;
+  }
+  dls.set_project_out(bad_roots);
+
+  SolverStatus converged = SolverStatus::NotConverged;
+
+  if (print_) {
+      outfile->Printf("\n  ==> Diagonalizing Hamiltonian <==\n");
+      outfile->Printf("\n  ----------------------------------------");
+      outfile->Printf("\n    Iter.      Avg. Energy       Delta_E");
+      outfile->Printf("\n  ----------------------------------------");
+  }
+
+  double old_avg_energy = 0.0;
+  int real_cycle = 1;
+  for (int cycle = 0; cycle < fci_iterations_; ++cycle) {
+      bool add_sigma = true;
+      do {
+          int tile_size = 10;
+
+          dls.get_b(b);
+          C_->copy(b);
+
+          //for zeroing the bi matrix for tiles other than A
+          std::vector<SharedMatrix> b_dummy = C_->coefficients_blocks();
+          for(auto b_h : b_dummy){
+            //C_h is linked to C_
+            for(int i=0; i<b_h->coldim(); i++){
+              for(int j=0; j<b_h->rowdim(); j++){
+                if(i > tile_size || j > tile_size) b_h->set(i,j,0);
+              }
+            }
+          }
+          if(real_cycle == 5) {py_mat_print(b_dummy[0],"b_dummy_5.dat");}
+          py_mat_print(b_dummy[0],"b_dummy.dat");
+
+          C_->Hamiltonian(HC, fci_ints, twoSubstituitionVVOO);
+
+          //zero coupled blocks
+          HC.copy_to_mat(X);
+          if(cycle == 0) {py_mat_print(X,"X_0_pre_cut.dat");}
+          if(real_cycle == 5) {py_mat_print(X,"X_5_pre_cut.dat");}
+          if(real_cycle == 10) {py_mat_print(X,"X_10_pre_cut.dat");}
+          if(real_cycle == 20) {py_mat_print(X,"X_20_pre_cut.dat");}
+
+          //X_h is linked to X
+          for(int i=0; i<X->coldim(); i++){
+            for(int j=0; j<X->rowdim(); j++){
+              if(i > tile_size || j > tile_size) X->set(i,j,0);
+            }
+          }
+
+          HC.copy_mat(X);
+          if(real_cycle == 5) {py_mat_print(X,"X_5.dat");}
+          py_mat_print(X,"X.dat");
+
+          HC.copy_to(sigma);
+          py_mat_print(X,"X.dat");
+          add_sigma = dls.add_sigma(sigma);
+      } while (add_sigma);
+
+      //a lot of things happen here...?
+      converged = dls.update();
+
+      if (converged != SolverStatus::Collapse) {
+          double avg_energy = 0.0;
+          for (int r = 0; r < nroot_; ++r) {
+              avg_energy += dls.eigenvalues()->get(r) + nuclear_repulsion_energy;
+          }
+          avg_energy /= static_cast<double>(nroot_);
+          if (print_) {
+              outfile->Printf("\n    %3d  %20.12f  %+.3e", real_cycle, avg_energy,
+                              avg_energy - old_avg_energy);
+          }
+          old_avg_energy = avg_energy;
+          real_cycle++;
+      }
+
+      if (converged == SolverStatus::Converged)
+          break;
+  }
+
+  if (print_) {
+      outfile->Printf("\n  ----------------------------------------");
+      if (converged == SolverStatus::Converged) {
+          outfile->Printf("\n  The Davidson-Liu algorithm converged in %d iterations.",
+                          real_cycle);
+      }
+  }
+
+  if (converged == SolverStatus::NotConverged) {
+      outfile->Printf("\n  FCI did not converge!");
+      throw PSIEXCEPTION("FCI did not converge. Try increasing FCI_ITERATIONS.");
+  }
+
+  // Compute final eigenvectors
+  dls.get_results();
+
+  // Copy eigen values and eigen vectors
+  eigen_vals_ = dls.eigenvalues();
+  eigen_vecs_ = dls.eigenvectors();
+
+  // Print determinants
+  if (print_) {
+      for (int r = 0; r < nroot_; ++r) {
+          outfile->Printf("\n\n  ==> Root No. %d <==\n", r);
+
+          C_->copy(dls.eigenvector(r));
+          //make and print C Matrix
+          std::vector<SharedMatrix> C_dummy = C_->coefficients_blocks();
+          //py_mat_print(b_dummy,"b_dummy_final.dat");
+          py_mat_print(C_dummy[0],"C_dummy_final.dat");
+
+          {
+            double norm_C = 0.0;
+            for (auto C_h : C_dummy) {
+                //C_h->print();
+                norm_C += C_h->sum_of_squares();
+            }
+            std::cout<< "||C|| : " << norm_C << std::endl;
+          }
+
+          std::vector<std::tuple<double, double, size_t, size_t, size_t>> dets_config =
+              C_->max_abs_elements(guess_size * ntrial_per_root_);
+          Dimension nactvpi = mo_space_info_->get_dimension("ACTIVE");
+
+          for (auto& det_config : dets_config) {
+              double ci_abs, ci;
+              size_t h, add_Ia, add_Ib;
+              std::tie(ci_abs, ci, h, add_Ia, add_Ib) = det_config;
+
+              if (ci_abs < 0.1)
+                  continue;
+
+              std::bitset<128> Ia_v = lists_->alfa_str(h, add_Ia);
+              std::bitset<128> Ib_v = lists_->beta_str(h ^ symmetry_, add_Ib);
+
+              outfile->Printf("\n    ");
+              size_t offset = 0;
+              for (int h = 0; h < nirrep_; ++h) {
+                  for (int k = 0; k < nactvpi[h]; ++k) {
+                      size_t i = k + offset;
+                      bool a = Ia_v[i];
+                      bool b = Ib_v[i];
+                      if (a == b) {
+                          outfile->Printf("%d", a ? 2 : 0);
+                      } else {
+                          outfile->Printf("%c", a ? 'a' : 'b');
+                      }
+                  }
+                  if (nactvpi[h] != 0)
+                      outfile->Printf(" ");
+                  offset += nactvpi[h];
+              }
+              outfile->Printf("%15.8f", ci);
+          }
+
+          double root_energy = dls.eigenvalues()->get(r) + nuclear_repulsion_energy;
+          outfile->Printf("\n\n    Total Energy: %25.15f", root_energy);
+      }
+  }
+
+  /*
+      if (options_.get_bool("FCI_SVD_MANY_TAU")){
+          double fci_energy = dls.eigenvalues()->get(root_) + nuclear_repulsion_energy;
+          double TAU_MIN = options_.get_bool("FCI_SVD_TAU");
+          for(int i = 0; i < options_.get_double("HOW_MANY_TAU"); i++){
+            Tau = TAU_MIN + i*options_.get_double("DEL_TAU");
+            fci_svd(HC,fci_ints,fci_energy,Tau);
+          }
+
+      }
+  */
+
+      // Compute the RDMs
+      compute_rdms_root(root_);
+      //    C_->copy(dls.eigenvector(root_));
+      //    if (print_) {
+      //        std::string title_rdm = "Computing RDMs for Root No. " + std::to_string(root_);
+      //        print_h2(title_rdm);
+      //    }
+      //    C_->compute_rdms(max_rdm_level_);
+
+      if (print_ > 1 && max_rdm_level_ > 1) {
+          C_->energy_from_rdms(fci_ints);
+      }
+
+      //    // Optionally, test the RDMs
+      //    if (test_rdms_) {
+      //        C_->rdm_test();
+      //    }
+
+      //    // Print the NO if energy converged
+      //    if (print_no_ || print_ > 0) {
+      //        C_->print_natural_orbitals(mo_space_info_);
+      //    }
+
+      energy_ = dls.eigenvalues()->get(root_) + nuclear_repulsion_energy;
+
+      return energy_;
+
+} else {
+
     ForteTimer t;
 
     double nuclear_repulsion_energy =
@@ -335,87 +635,95 @@ double FCISolver::compute_energy() {
 
     //////////////////////////////////////////// FCI-SVD //////////////////////////////////////////////
 
-    std::vector<SharedMatrix> C_temp_clone(nirrep_);
+
+    // std::vector<SharedMatrix> C_zero_test = C_->coefficients_blocks();
+    // for(auto C_zh : C_zero_test){
+    //   C_zh->set(0.0);
+    // }
+    // C_->set_coefficient_blocks(C_zero_test);
+
+    //std::vector<SharedMatrix> C_temp_clone(nirrep_);
     std::vector<SharedMatrix> C_temp = C_->coefficients_blocks();
 
-    string_stats(C_temp);
+    std::vector<SharedMatrix> C_temp_clone_tc(nirrep_);
+    std::vector<SharedMatrix> C_temp_clone_st(nirrep_);
+    std::vector<SharedMatrix> C_temp_clone_tile_svd(nirrep_);
+    std::vector<SharedMatrix> C_temp_clone_full_svd(nirrep_);
 
-    for(int h=0; h<nirrep_; h++){
-      C_temp_clone[h] = C_temp[h]->clone();
-    }
-
+    //string_stats(C_temp);
     //print unadultarated C matrix
     py_mat_print(C_temp[0], "FCI_Cmat.dat");
 
+    // for(int h=0; h<nirrep_; h++){
+    //   C_temp_clone[h] = C_temp[h]->clone();
+    // }
 
-    //if(options_.get_bool("FCI_TILE_CHOPPER")){
-      outfile->Printf("\n /////////////// TILE CHOPPER BEGIN /////////////////////\n");
+    if(options_.get_bool("FCI_TILE_CHOPPER")){
+      for(int h=0; h<nirrep_; h++){
+        C_temp_clone_tc[h] = C_temp[h]->clone();
+      }
+    }
+
+    if(options_.get_bool("FCI_STRING_TRIMMER")){
+      for(int h=0; h<nirrep_; h++){
+        C_temp_clone_st[h] = C_temp[h]->clone();
+      }
+    }
+
+    if(options_.get_bool("FCI_SVD_TILE")){
+      for(int h=0; h<nirrep_; h++){
+        C_temp_clone_tile_svd[h] = C_temp[h]->clone();
+      }
+    }
+
+    if(options_.get_bool("FCI_SVD")){
+      for(int h=0; h<nirrep_; h++){
+        C_temp_clone_full_svd[h] = C_temp[h]->clone();
+      }
+    }
+
+    // for(int h=0; h<nirrep_; h++){
+    //   C_temp_clone[h] = C_temp[h]->clone();
+    //   C_temp_clone_st[h] = C_temp[h]->clone();
+    //   C_temp_clone_tc[h] = C_temp[h]->clone();
+    //
+    //   C_temp_clone_tile_svd[h] = C_temp[h]->clone();
+    //   C_temp_clone_full_svd[h] = C_temp[h]->clone();
+    // }
+
+    if(options_.get_bool("FCI_TILE_CHOPPER")){
       double fci_nergy = dls.eigenvalues()->get(root_) + nuclear_repulsion_energy;
-      tile_chopper(C_temp, 1e-5, HC, fci_ints, fci_nergy, 5);
+      tile_chopper(C_temp, options_.get_double("FCI_TC_CUT"), HC, fci_ints, fci_nergy, 5);
       //reset C_ global
-      C_->set_coefficient_blocks(C_temp_clone);
-      outfile->Printf("\n /////////////// TILE CHOPPER END /////////////////////\n");
-    //}
+      C_->set_coefficient_blocks(C_temp_clone_tc);
+      C_temp = C_->coefficients_blocks();
+    }
 
 
     if(options_.get_bool("FCI_STRING_TRIMMER")){
-      outfile->Printf("\n /////////////// TRIMMER BEGIN /////////////////////\n");
       double fci_nergy = dls.eigenvalues()->get(root_) + nuclear_repulsion_energy;
       string_trimmer(C_temp, options_.get_double("FCI_ST_CUT"), HC, fci_ints, fci_nergy);
       //reset C_ global
-      C_->set_coefficient_blocks(C_temp_clone);
-      outfile->Printf("\n /////////////// TRIMMER END /////////////////////\n");
+      C_->set_coefficient_blocks(C_temp_clone_st);
     }
 
-    // if (options_.get_bool("FCI_STRING_TRIMMER")){
-    //     C_->set_coefficient_blocks(C_temp_clone);
-    // }
 
     if (options_.get_bool("FCI_SVD_TILE")){
-        outfile->Printf("\n /////////////// TILES BEGIN /////////////////////\n");
         double fci_nergy = dls.eigenvalues()->get(root_) + nuclear_repulsion_energy;
         fci_svd_tiles(HC, fci_ints, fci_nergy, options_.get_int("FCI_SVD_N_TILES"), options_.get_double("FCI_SVD_OMEGA"));
-        outfile->Printf("\n /////////////// TILES END /////////////////////\n");
+        C_->set_coefficient_blocks(C_temp_clone_tile_svd);
     }
 
     py_mat_print(C_temp[0], "C_tiled.dat");
 
-    // std::ofstream myfile2;
-    // myfile2.open ("C_full_tile.dat");
-    // for(int h=0; h<nirrep_; h++){
-    //   for (int i=0; i<C_temp[h]->coldim(); i++){
-    //     myfile2 << "\n";
-    //     for (int j=0; j<C_temp[h]->rowdim(); j++){
-    //         myfile2 << C_temp[h]->get(i,j) << " ";
-    //     }
-    //   }
-    // }
-    // myfile2.close();
-
-    if (options_.get_bool("FCI_SVD_TILE") && options_.get_bool("FCI_SVD")){
-        C_->set_coefficient_blocks(C_temp_clone);
-    }
-
     if (options_.get_bool("FCI_SVD")){
-        outfile->Printf("\n /////////////// FULL SVD BEGIN /////////////////////\n");
         double fci_energy = dls.eigenvalues()->get(root_) + nuclear_repulsion_energy;
         fci_svd(HC,fci_ints,fci_energy, options_.get_double("FCI_SVD_TAU"));
-        outfile->Printf("\n /////////////// FULL SVD END /////////////////////\n");
+        C_->set_coefficient_blocks(C_temp_clone_full_svd);
     }
 
     py_mat_print(C_temp[0], "C_full_tile.dat");
 
-    // std::ofstream myfile3;
-    // myfile3.open ("C_tiled.dat");
-    // for(int h=0; h<nirrep_; h++){
-    //   for (int i=0; i<C_temp[h]->coldim(); i++){
-    //     myfile3 << "\n";
-    //     for (int j=0; j<C_temp[h]->rowdim(); j++){
-    //         myfile3 << C_temp[h]->get(i,j) << " ";
-    //     }
-    //   }
-    // }
-    // myfile3.close();
 
     //////////////////////////////////////////// FCI-SVD END //////////////////////////////////////////////
 
@@ -457,6 +765,7 @@ double FCISolver::compute_energy() {
     energy_ = dls.eigenvalues()->get(root_) + nuclear_repulsion_energy;
 
     return energy_;
+  }
 }
 
 void FCISolver::compute_rdms_root(int root) {

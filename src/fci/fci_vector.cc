@@ -164,6 +164,22 @@ void FCIVector::copy(SharedVector vec) {
   }
 }
 
+void FCIVector::copy_mat(SharedMatrix mat) {
+  size_t I = 0;
+  for (int alfa_sym = 0; alfa_sym < nirrep_; ++alfa_sym) {
+    int beta_sym = alfa_sym ^ symmetry_;
+    size_t maxIa = alfa_graph_->strpi(alfa_sym);
+    size_t maxIb = beta_graph_->strpi(beta_sym);
+    double **C_ha = C_[alfa_sym]->pointer();
+    for (size_t Ia = 0; Ia < maxIa; ++Ia) {
+      for (size_t Ib = 0; Ib < maxIb; ++Ib) {
+        C_ha[Ia][Ib] = mat->get(Ia, Ib);
+        I += 1;
+      }
+    }
+  }
+}
+
 void FCIVector::copy_to(SharedVector vec) {
   size_t I = 0;
   for (int alfa_sym = 0; alfa_sym < nirrep_; ++alfa_sym) {
@@ -175,6 +191,20 @@ void FCIVector::copy_to(SharedVector vec) {
       for (size_t Ib = 0; Ib < maxIb; ++Ib) {
         vec->set(I, C_ha[Ia][Ib]);
         I += 1;
+      }
+    }
+  }
+}
+
+void FCIVector::copy_to_mat(SharedMatrix mat) {
+  for (int alfa_sym = 0; alfa_sym < nirrep_; ++alfa_sym) {
+    int beta_sym = alfa_sym ^ symmetry_;
+    size_t maxIa = alfa_graph_->strpi(alfa_sym);
+    size_t maxIb = beta_graph_->strpi(beta_sym);
+    double **C_ha = C_[alfa_sym]->pointer();
+    for (size_t Ia = 0; Ia < maxIa; ++Ia) {
+      for (size_t Ib = 0; Ib < maxIb; ++Ib) {
+        mat->set(Ia, Ib, C_ha[Ia][Ib]);
       }
     }
   }
