@@ -1396,6 +1396,8 @@ std::vector<std::pair<double, double>> AdaptiveCI::compute_spin(DeterminantHashV
     // op.build_strings(space);
     // op.op_lists(space);
     // op.tp_lists(space);
+
+    std::vector<std::pair<double, double>> spin_vec(nroot);
     if (options_.get_str("SIGMA_BUILD_TYPE") == "HZ") {
         op.clear_op_s_lists();
         op.clear_tp_s_lists();
@@ -1404,13 +1406,19 @@ std::vector<std::pair<double, double>> AdaptiveCI::compute_spin(DeterminantHashV
         op.tp_lists(space);
     }
 
-    std::vector<std::pair<double, double>> spin_vec(nroot);
-    for (int n = 0; n < nroot_; ++n) {
-        double S2 = op.s2(space, evecs, n);
-        double S = std::fabs(0.5 * (std::sqrt(1.0 + 4.0 * S2) - 1.0));
-        spin_vec[n] = std::make_pair(S, S2);
+    if ( !build_lists_ ) {
+        for (int n = 0; n < nroot_; ++n) {
+            double S2 = op.s2_direct(space, evecs, n);
+            double S = std::fabs(0.5 * (std::sqrt(1.0 + 4.0 * S2) - 1.0));
+            spin_vec[n] = std::make_pair(S, S2);
+        } 
+    } else {
+        for (int n = 0; n < nroot_; ++n) {
+            double S2 = op.s2(space, evecs, n);
+            double S = std::fabs(0.5 * (std::sqrt(1.0 + 4.0 * S2) - 1.0));
+            spin_vec[n] = std::make_pair(S, S2);
+        }
     }
-
     return spin_vec;
 }
 
