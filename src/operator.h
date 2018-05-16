@@ -33,6 +33,7 @@
 #include "fci/fci_integrals.h"
 #include "determinant_hashvector.h"
 #include "sparse_ci/determinant.h"
+#include "sparse_ci/sorted_string_list.h"
 #include "helpers.h"
 
 namespace psi {
@@ -86,6 +87,7 @@ class WFNOperator {
 
     /// Compute total spin expectation value <|S^2|>
     double s2(DeterminantHashVec& wfn, SharedMatrix& evecs, int root);
+    double s2_direct(DeterminantHashVec& wfn, SharedMatrix& evecs, int root);
 
     void build_strings(DeterminantHashVec& wfn);
 
