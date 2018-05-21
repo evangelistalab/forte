@@ -2347,6 +2347,7 @@ void AdaptiveCI::compute_rdms(std::shared_ptr<FCIIntegrals> fci_ints, Determinan
      //   CI_RDMS ci_rdms_(final_wfn_, fci_ints_, PQ_evecs, 0, 0);
         ci_rdms_.compute_rdms_dynamic(ordm_a_, ordm_b_, trdm_aa_, trdm_ab_, trdm_bb_,
                                         trdm_aaa_,trdm_aab_,trdm_abb_,trdm_bbb_);
+                print_nos();
        // double dt = dyn.get();
        // outfile->Printf("\n  RDMS (bits) took           %1.6f", dt);
     } else {
