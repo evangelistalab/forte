@@ -40,6 +40,9 @@ class DWMS_DSRGPT2 : public Wavefunction {
 
     /// preparation
     void startup();
+    void read_options();
+    void test_options();
+    void print_options();
 
     /// gaussian cutoff for density reweighting
     double zeta_;
@@ -53,6 +56,9 @@ class DWMS_DSRGPT2 : public Wavefunction {
 
     /// DWMS correlation level
     std::string dwms_corrlv_;
+
+    /// Consider X(αβ) = A(β) - A(α) in SA algorithm
+    bool dwms_sa_damp_;
 
     /// form Hbar3 for DSRG-MRPT2
     bool do_hbar3_;
@@ -139,14 +145,14 @@ class DWMS_DSRGPT2 : public Wavefunction {
     ambit::Tensor Ua_;
     ambit::Tensor Ub_;
 
-    /// print implementaion note on separated H scheme
-    void print_note();
-
+    /// print implementation note
+    void print_impl_note();
+    /// print implementation note on separated H scheme
+    void print_impl_note_sH();
     /// print implementation note on MS or XMS
-    void print_note_ms();
-
+    void print_impl_note_ms();
     /// print implementation note on SA or XSA
-    void print_note_sa();
+    void print_impl_note_sa();
 
     /// print title
     void print_title(const std::string& title);

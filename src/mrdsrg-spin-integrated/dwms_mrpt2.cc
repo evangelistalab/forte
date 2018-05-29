@@ -48,6 +48,10 @@ void set_DWMS_options(ForteOptions& foptions) {
      *  - SH-1: separated diagonalizations, orthogonal final solutions -*/
     foptions.add_str("DWMS_ALGORITHM", "SA", {"MS", "XMS", "SA", "XSA", "SH-0", "SH-1"},
                      "DWMS algorithms");
+
+    /*- Consider X(αβ) = A(β) - A(α) in SA algorithm if set to true -*/
+    foptions.add_bool("DWMS_SA_DAMP", false,
+                      "Consider amplitudes difference between states in SA algorithm");
 }
 
 DWMS_DSRGPT2::DWMS_DSRGPT2(SharedWavefunction ref_wfn, Options& options,
@@ -65,37 +69,14 @@ DWMS_DSRGPT2::DWMS_DSRGPT2(SharedWavefunction ref_wfn, Options& options,
 DWMS_DSRGPT2::~DWMS_DSRGPT2() {}
 
 void DWMS_DSRGPT2::startup() {
-    dwms_corrlv_ = options_.get_str("DWMS_CORRLV");
-    zeta_ = options_.get_double("DWMS_ZETA");
-    algorithm_ = options_.get_str("DWMS_ALGORITHM");
-    dwms_ref_ = options_.get_str("DWMS_REFERENCE");
+    read_options();
+    test_options();
+    print_options();
 
-    print_h2("DWMS-DSRG Options");
-    outfile->Printf("\n    CORRELATION LEVEL  %10s", dwms_corrlv_.c_str());
-    outfile->Printf("\n    ZETA VALUE         %10.2e", zeta_);
-    outfile->Printf("\n    REFERENCE          %10s", dwms_ref_.c_str());
-    outfile->Printf("\n    ALGORITHM          %10s", algorithm_.c_str());
+    print_impl_note();
 
-    if (zeta_ < 0.0) {
-        throw PSIEXCEPTION("DWMS_ZETA should be a value greater or equal than 0.0!");
-    }
-
-    do_hbar3_ = options_.get_bool("FORM_HBAR3");
-    if (do_hbar3_ && dwms_ref_ == "PT3") {
-        throw PSIEXCEPTION("DSRG-MRPT3 does not support FORM_HBAR3 yet!");
-    }
-
-    print_h2("Implementation Note on " + algorithm_);
-    if (algorithm_ == "SA" || algorithm_ == "XSA") {
-        print_note_sa();
-    } else if (algorithm_ == "MS" || algorithm_ == "XMS") {
-        if (dwms_corrlv_ == "PT3") {
-            throw PSIEXCEPTION("DWMS-DSRG-PT3 does not support MS or XMS algorithm yet.");
-        }
-        print_note_ms();
-    } else {
-        print_note();
-    }
+    Enuc_ = Process::environment.molecule()->nuclear_repulsion_energy(
+        reference_wavefunction_->get_dipole_field_strength());
 
     CharacterTable ct = Process::environment.molecule()->point_group()->char_table();
     int nirrep = reference_wavefunction_->nirrep();
@@ -115,31 +96,85 @@ void DWMS_DSRGPT2::startup() {
         Ub_.data()[u * na + u] = 1.0;
     }
 
+    Ca_copy_ = Ca_->clone();
+    Cb_copy_ = Cb_->clone();
+}
+
+void DWMS_DSRGPT2::read_options() {
+    dwms_corrlv_ = options_.get_str("DWMS_CORRLV");
+    zeta_ = options_.get_double("DWMS_ZETA");
+    algorithm_ = options_.get_str("DWMS_ALGORITHM");
+    dwms_ref_ = options_.get_str("DWMS_REFERENCE");
+    dwms_sa_damp_ = options_.get_bool("DWMS_SA_DAMP");
+
+    do_hbar3_ = options_.get_bool("FORM_HBAR3");
     max_rdm_level_ = (options_.get_str("THREEPDC") == "ZERO") ? 2 : 3;
+
+    IntegralType int_type = ints_->integral_type();
+    eri_df_ = (int_type == Cholesky) || (int_type == DF) || (int_type == DiskDF);
+}
+
+void DWMS_DSRGPT2::print_options() {
+    print_h2("DWMS-DSRG Options");
+    outfile->Printf("\n    CORRELATION LEVEL  %10s", dwms_corrlv_.c_str());
+    outfile->Printf("\n    ZETA VALUE         %10.2e", zeta_);
+    outfile->Printf("\n    REFERENCE          %10s", dwms_ref_.c_str());
+    outfile->Printf("\n    ALGORITHM          %10s", algorithm_.c_str());
+
+    if (algorithm_ == "SA" || algorithm_ == "XSA") {
+        std::string damps = dwms_sa_damp_ ? "TRUE" : "FALSE";
+        outfile->Printf("\n    DO DELTA AMPS      %10s", damps.c_str());
+    }
+}
+
+void DWMS_DSRGPT2::test_options() {
+    if (zeta_ < 0.0) {
+        throw PSIEXCEPTION("DWMS_ZETA should be a value greater or equal than 0.0!");
+    }
 
     std::string actv_type = options_.get_str("FCIMO_ACTV_TYPE");
     if (actv_type == "CIS" || actv_type == "CISD") {
         throw PSIEXCEPTION("VCIS and VCISD are not supported for DWMS-DSRG-PT yet!");
     }
 
-    IntegralType int_type = ints_->integral_type();
-    eri_df_ = (int_type == Cholesky) || (int_type == DF) || (int_type == DiskDF);
+    if (dwms_ref_ == "PT3" || dwms_corrlv_ == "PT3") {
+        if (do_hbar3_) {
+            throw PSIEXCEPTION("DSRG-MRPT3 does not support FORM_HBAR3 yet!");
+        }
 
-    Enuc_ = Process::environment.molecule()->nuclear_repulsion_energy(
-        reference_wavefunction_->get_dipole_field_strength());
+        if (algorithm_ == "MS" || algorithm_ == "XMS") {
+            throw PSIEXCEPTION("DWMS-DSRG-PT3 does not support MS or XMS algorithm yet!");
+        }
 
-    Ca_copy_ = Ca_->clone();
-    Cb_copy_ = Cb_->clone();
+        if (dwms_sa_damp_) {
+            throw PSIEXCEPTION("DSRG-MRPT3 does not support DWMS_SA_DAMP = TRUE!");
+        }
+    }
+
+    if (dwms_sa_damp_ && eri_df_) {
+        throw PSIEXCEPTION("DF-DSRG-MRPT2 does not support DWMS_SA_DAMP = TRUE!");
+    }
 }
 
-void DWMS_DSRGPT2::print_note_sa() {
+void DWMS_DSRGPT2::print_impl_note() {
+    print_h2("Implementation Note on " + algorithm_);
+    if (algorithm_ == "SA" || algorithm_ == "XSA") {
+        print_impl_note_sa();
+    } else if (algorithm_ == "MS" || algorithm_ == "XMS") {
+        print_impl_note_ms();
+    } else {
+        print_impl_note_sH();
+    }
+}
+
+void DWMS_DSRGPT2::print_impl_note_sa() {
     outfile->Printf("\n  - Perform CASCI using user-defined weights.");
 
     if (dwms_ref_ != "CASCI") {
         outfile->Printf("\n  - Perform SA-DSRG-%s using user-defined weights.", dwms_ref_.c_str());
     }
 
-    if (algorithm_ == "XMS") {
+    if (algorithm_ == "XSA") {
         outfile->Printf("\n  - Perform XMS rotation on reference CI vectors.");
     }
 
@@ -156,7 +191,7 @@ void DWMS_DSRGPT2::print_note_sa() {
     outfile->Printf("\n  - Collect and print energies.\n");
 }
 
-void DWMS_DSRGPT2::print_note_ms() {
+void DWMS_DSRGPT2::print_impl_note_ms() {
     outfile->Printf("\n  - Perform CASCI using user-defined weights.");
 
     if (dwms_ref_ != "CASCI") {
@@ -180,7 +215,7 @@ void DWMS_DSRGPT2::print_note_ms() {
     outfile->Printf("\n  - Collect and print energies.\n");
 }
 
-void DWMS_DSRGPT2::print_note() {
+void DWMS_DSRGPT2::print_impl_note_sH() {
     bool avg = algorithm_.find("AVG") != std::string::npos;
 
     outfile->Printf("\n  - Perform CASCI using user-defined weights.");
