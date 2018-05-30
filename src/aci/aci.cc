@@ -641,6 +641,11 @@ double AdaptiveCI::compute_energy() {
     }
     //  }
 
+
+   // for( size_t I = 0; I < dim; ++I ){
+   //     outfile->Printf("\n  %1.6f  %s", PQ_evecs->get(I,0), final_wfn_.get_det(I).str().c_str());
+   // }
+
     //** Compute the RDMs **//
     double list_time = 0.0;
     if ((options_.get_int("ACI_MAX_RDM") >= 3 or (rdm_level_ >= 3)) and !(options_.get_bool("ACI_DIRECT_RDMS")) ) {
@@ -674,6 +679,9 @@ double AdaptiveCI::compute_energy() {
         if( !(options_.get_bool("ACI_DIRECT_RDMS")) ){
             op_.clear_op_s_lists();
             op_.clear_tp_s_lists();
+            if( diag_method_ == Dynamic ){
+                op_.build_strings(final_wfn_);
+            }
             op_.op_s_lists(final_wfn_);
             op_.tp_s_lists(final_wfn_);
         }
