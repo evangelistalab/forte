@@ -62,6 +62,26 @@ class CI_RDMS {
 
     ~CI_RDMS();
 
+    //*** Notes on RDM class:
+    // All rdms are stored in spin-labeled vector format.
+    // They are accessed in the standard way. E.g., for the alpha/alpha 2-RDM, 
+    // the element corresponding to p,q,r,s would be accessed with:
+    // tp2rdm_aa[p*ncmo^(3) + q*nmco^(2) + r*ncmo + s], where ncmo is the number
+    // of active orbitals.
+
+    // The most efficient algorithms use coupling lists to fill the
+    // RDM vectors, and functions exist below to build each order RDM in this way.
+    // Note that if the coupling lists are already present, you should pass the
+    // corresponding WFNOperator object to avoid recomputing them.
+
+    // In cases where these coupling lists are prohibitively large, a dynamic
+    // build is also available. This code relies on the UI64Determinant class, 
+    // so be sure this is enabled. Also, the most efficient algorithm computes
+    // all RDMs (1,2 and 3) in one function, but soon I'll write functions to grab
+    // separate RDMs (however, these should be avoided). 
+    //***
+
+
     // Return a reference object
     Reference reference(std::vector<double>& oprdm_a, std::vector<double>& oprdm_b,
                         std::vector<double>& tprdm_aa, std::vector<double>& tprdm_bb,
@@ -259,9 +279,13 @@ class CI_RDMS {
     // Generate three-particle map
     void get_three_map();
 
-    // Fill 3rdm
+
+    //*- Functions for Dynamic RDM builds -*//
+
+    // Function to fill 3rdm with all (or half of all) permutations of the 6 indices
     void fill_3rdm( std::vector<double>& tprdm, double value, int p, int q, int r, int s, int t, int u , bool half = false);
-    void make_ab(std::vector<double>& tprdm_aab, std::vector<double>& tprdm_abb );
+
+    // Function to build non-trivial mixed-spin components of 1-, 2-, and 3- RDMs
     void make_ab(SortedStringList_UI64 a_sorted_string_list_,const  std::vector<UI64Determinant::bit_t>& sorted_astr,const std::vector<UI64Determinant>& sorted_a_dets, 
                 std::vector<double>& tprdm_ab, std::vector<double>& tprdm_aab,std::vector<double>& tprdm_abb);
 };

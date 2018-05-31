@@ -33,7 +33,7 @@
 #include <cstdint>
 #include <memory>
 #include <vector>
-#include <bitset>
+//#include <bitset>
 
 #include "determinant_common.h"
 
@@ -148,18 +148,7 @@ class UI64Determinant {
 
     struct Hash {
         std::size_t operator()(const psi::forte::UI64Determinant& bs) const {
-    
-         //   return bs.a_ + bs.b_;
-        
-         //   return ((bs.a_ * 31) + bs.b_) ;
-          //  return ((bs.a_ * 31) + bs.b_) % 7561 ;
-          //  return ((bs.a_ * 31) + bs.b_) % 999331;
-   //       return ((std::hash<bit_t>()(bs.a_) * 13466917) + std::hash<bit_t>()(bs.b_)) % 1405695061;
           return ((bs.a_ * 13466917) + bs.b_) % 1405695061;
-           // return ((bs.a_ * 31) + bs.b_) % 1405695061;
-           // std::bitset<128> big = bs.a_;
-           // big = (big << 64) | static_cast<std::bitset<128>>(bs.b_);
-           // return std::hash<std::bitset<128>>()(big);
         }
     };
 
@@ -174,8 +163,11 @@ bool ui64_get_bit(uint64_t x, uint64_t n);
 uint64_t lowest_one_idx(uint64_t x);
 uint64_t clear_lowest_one(uint64_t x);
 
+// Computes the sign of a_m a_n applied to determinant x
 double ui64_slater_sign(uint64_t x, int m, int n);
+// Computes the sign of a_m applied to determinant x
 double ui64_slater_sign(uint64_t x, int m);
+
 std::tuple<double, size_t, size_t> ui64_slater_sign_single(uint64_t l, uint64_t r);
 
 double slater_rules_single_alpha(uint64_t Ib, uint64_t Ia, uint64_t Ja,
