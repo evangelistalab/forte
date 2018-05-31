@@ -846,7 +846,7 @@ void AdaptiveCI::find_q_space_batched(DeterminantHashVec& P_space, DeterminantHa
     outfile->Printf("\n  Using batched Q_space algorithm");
 
     std::vector<std::pair<double, Determinant>> F_space;
-    double remainder = get_excited_determinants_batch2(evecs, evals, P_space, F_space);
+    double remainder = get_excited_determinants_batch(evecs, evals, P_space, F_space);
     // double remainder = get_excited_determinants_batchv( evecs, evals, P_space, F_space );
 
     PQ_space.clear();
@@ -1016,7 +1016,7 @@ void AdaptiveCI::find_q_space(DeterminantHashVec& P_space, DeterminantHashVec& P
     // This hash saves the determinant coupling to the model space eigenfunction
     det_hash<std::vector<double>> V_hash;
     if (options_.get_bool("ACI_LOW_MEM_SCREENING")) {
-        get_excited_determinants2(nroot_, evecs, P_space, V_hash);
+        get_excited_determinants_seq(nroot_, evecs, P_space, V_hash);
     } else if ((options_.get_str("ACI_EX_TYPE") == "CORE") and (root_ > 0)) {
         get_core_excited_determinants(evecs, P_space, V_hash);
     } else {

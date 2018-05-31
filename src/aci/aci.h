@@ -277,7 +277,7 @@ class AdaptiveCI : public Wavefunction {
     double screen_space_;
     double spin_trans_;
 
-    // The RMDS
+    // The RDMS
     std::vector<double> ordm_a_;
     std::vector<double> ordm_b_;
     std::vector<double> trdm_aa_;
@@ -324,41 +324,50 @@ class AdaptiveCI : public Wavefunction {
     /// version
     void find_q_space_single_root(int nroot, SharedVector evals, SharedMatrix evecs);
 
-    /// Alternate/experimental determinant generator
+    /// Basic determinant generator (threaded, no batching, all determinants stored)
     void get_excited_determinants(int nroot, SharedMatrix evecs, DeterminantHashVec& P_space,
                                   det_hash<std::vector<double>>& V_hash);
-    /// Alternate/experimental determinant generator
-    void get_excited_determinants2(int nroot, SharedMatrix evecs, DeterminantHashVec& P_space,
+
+    /// Alternate/experimental determinant generator (threaded, each thread builds part of F)
+    void get_excited_determinants_seq(int nroot, SharedMatrix evecs, DeterminantHashVec& P_space,
                                    det_hash<std::vector<double>>& V_hash);
     /// Get excited determinants with a specified hole
     void get_core_excited_determinants(SharedMatrix evecs, DeterminantHashVec& P_space,
                                        det_hash<std::vector<double>>& V_hash);
+
+    // Optimized for a single root
     void get_excited_determinants_sr(SharedMatrix evecs, DeterminantHashVec& P_space,
                                      det_hash<double>& V_hash);
-    double get_excited_determinants_batch(SharedMatrix evecs, SharedVector evals,
+
+    // Primitive batching algorithm, each thread does one bin, to be removed
+    double get_excited_determinants_batch_old(SharedMatrix evecs, SharedVector evals,
                                           DeterminantHashVec& P_space,
                                           std::vector<std::pair<double, Determinant>>& F_space);
-    double get_excited_determinants_batch2(SharedMatrix evecs, SharedVector evals,
-                                           DeterminantHashVec& P_space,
-                                           std::vector<std::pair<double, Determinant>>& F_space);
-    double get_excited_determinants_batch3(SharedMatrix evecs, SharedVector evals,
-                                           DeterminantHashVec& P_space,
-                                           std::vector<std::pair<double, Determinant>>& F_space);
-    double get_excited_determinants_batchv(SharedMatrix evecs, SharedVector evals,
+
+    // (DEFAULT in batching) Optimized batching algorithm, prescreens the batches to significantly reduce storage, based on hashes
+    double get_excited_determinants_batch(SharedMatrix evecs, SharedVector evals,
                                            DeterminantHashVec& P_space,
                                            std::vector<std::pair<double, Determinant>>& F_space);
 
-    /// Builds excited determinants in batch
-    det_hash<double> get_bin_F_space(int bin, int nbin, SharedMatrix evecs,
+    // Gets excited determinants using sorting of vectors
+    double get_excited_determinants_batch_vecsort(SharedMatrix evecs, SharedVector evals,
+                                           DeterminantHashVec& P_space,
+                                           std::vector<std::pair<double, Determinant>>& F_space);
+
+    /// Builds excited determinants for a bin, no threading, hash-based, to be removed
+    det_hash<double> get_bin_F_space_old(int bin, int nbin, SharedMatrix evecs,
                                      DeterminantHashVec& P_space);
-    det_hash<double> get_bin_F_space2(int bin, int nbin,double E0, SharedMatrix evecs,
-                                      DeterminantHashVec& P_space);
-    std::pair<std::vector<std::vector<std::pair<Determinant, double>>>, std::vector<size_t>>
-    get_bin_F_space3(int bin, int nbin, SharedMatrix evecs, DeterminantHashVec& P_space);
-    std::vector<std::pair<Determinant, double>>
-    get_bin_F_spacev(int bin, int nbin, SharedMatrix evecs, DeterminantHashVec& P_space);
 
-    double prescreen_F(int bin, int nbin, double E0, SharedMatrix evecs,DeterminantHashVec& P_space);
+    /// (DEFAULT)  Builds excited determinants for a bin, uses all threads, hash-based
+    det_hash<double> get_bin_F_space(int bin, int nbin,double E0, SharedMatrix evecs,
+                                      DeterminantHashVec& P_space);
+
+    /// Builds excited determinants in batch using sorting of vectors
+    std::pair<std::vector<std::vector<std::pair<Determinant, double>>>, std::vector<size_t>>
+    get_bin_F_space_vecsort(int bin, int nbin, SharedMatrix evecs, DeterminantHashVec& P_space);
+
+    /// Prescreening algorithm, aware of sigma, very experimental
+    // double prescreen_F(int bin, int nbin, double E0, SharedMatrix evecs,DeterminantHashVec& P_space);
 
     /// Prune the space of determinants
     void prune_q_space(DeterminantHashVec& PQ_space, DeterminantHashVec& P_space,
