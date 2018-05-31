@@ -33,6 +33,9 @@
 namespace psi {
 namespace forte {
 
+SortedStringList_UI64::SortedStringList_UI64(){}
+
+
 SortedStringList_UI64::SortedStringList_UI64(const DeterminantHashVec& space,
                                              std::shared_ptr<FCIIntegrals> fci_ints,
                                              DetSpinType sorted_string_spin) {
@@ -55,8 +58,8 @@ SortedStringList_UI64::SortedStringList_UI64(const DeterminantHashVec& space,
         //        std::sort(sorted_dets_.begin(), sorted_dets_.end());
     }
 
-    outfile->Printf("\n\n Sorted determinants (%zu,%s)\n", num_dets_,
-                    sorted_string_spin == DetSpinType::Alpha ? "Alpha" : "Beta");
+//    outfile->Printf("\n\n Sorted determinants (%zu,%s)\n", num_dets_,
+//                    sorted_string_spin == DetSpinType::Alpha ? "Alpha" : "Beta");
     // Find the unique strings and their range
 
     sorted_spin_type_ =
@@ -93,15 +96,17 @@ SortedStringList_UI64::SortedStringList_UI64(const DeterminantHashVec& space,
         max_per_string = std::max(max_per_string, range);
     }
 
-    outfile->Printf("\n\n  SortedStringList_UI64 Summary:");
-    outfile->Printf("\n    Number of determinants: %zu", num_dets_);
-    outfile->Printf("\n    Number of strings:      %zu (%.2f %%)", sorted_half_dets_.size(),
-                    100.0 * double(sorted_half_dets_.size()) / double(num_dets_));
-    outfile->Printf("\n    Max block size:         %zu", max_per_string);
-    outfile->Printf("\n    Min block size:         %zu", min_per_string);
-    outfile->Printf("\n    Avg block size:         %0.f\n",
-                    double(num_dets_) / double(sorted_half_dets_.size()));
+ //   outfile->Printf("\n\n  SortedStringList_UI64 Summary:");
+ //   outfile->Printf("\n    Number of determinants: %zu", num_dets_);
+ //   outfile->Printf("\n    Number of strings:      %zu (%.2f %%)", sorted_half_dets_.size(),
+ //                   100.0 * double(sorted_half_dets_.size()) / double(num_dets_));
+ //   outfile->Printf("\n    Max block size:         %zu", max_per_string);
+ //   outfile->Printf("\n    Min block size:         %zu", min_per_string);
+ //   outfile->Printf("\n    Avg block size:         %0.f\n",
+ //                   double(num_dets_) / double(sorted_half_dets_.size()));
 }
+
+SortedStringList_UI64::~SortedStringList_UI64(){}
 
 const std::vector<UI64Determinant>& SortedStringList_UI64::sorted_dets() const {
     return sorted_dets_;

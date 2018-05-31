@@ -3047,6 +3047,8 @@ void THREE_DSRG_MRPT2::form_Hbar() {
     Hbar2_["UVXY"] += C2["XYUV"];
     outfile->Printf("Done. Timing: %10.3f s.", timer.elapsed());
 
+
+
     if (integral_type_ == DiskDF) {
         /**
          * AVCC and VACC Blocks of APTEI
@@ -3295,6 +3297,25 @@ void THREE_DSRG_MRPT2::form_Hbar() {
         }
         outfile->Printf("Done. Timing: %10.3f s.", timer.elapsed());
     }
+
+    if ( options_.get_bool("PRINT_1BODY_EVALS") ){
+
+        SharedMatrix Hb1 = std::make_shared<Matrix>("HB1", nactive_, nactive_); 
+        
+        for( int p = 0; p < nactive_; ++p ){
+            for( int q = 0; q < nactive_; ++q ){
+                Hb1->set(p,q, Hbar1_.block("aa").data()[p * nactive_ + q]); 
+            }
+        }
+
+        SharedMatrix evecs = std::make_shared<Matrix>("evecs", nactive_, nactive_);
+        SharedVector evals = std::make_shared<Vector>("Eigenvalues of Hbar1", nactive_);
+
+        Hb1->diagonalize(evecs, evals);
+    
+        evals->print();
+    }
+
 }
 
 void THREE_DSRG_MRPT2::relax_reference_once() {
