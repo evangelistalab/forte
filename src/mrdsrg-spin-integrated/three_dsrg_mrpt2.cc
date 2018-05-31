@@ -4033,7 +4033,6 @@ void THREE_DSRG_MRPT2::combine_tensor(ambit::Tensor& tens, ambit::Tensor& tens_h
 ambit::BlockedTensor THREE_DSRG_MRPT2::get_T1deGNO(double& T0deGNO) {
     ambit::BlockedTensor T1eff = deGNO_Tamp(T1_, T2_, Gamma1_);
 
-    T0deGNO = 0.0;
     if (internal_amp_) {
         // the scalar term of amplitudes when de-normal-ordering
         T0deGNO -= T1_["uv"] * Gamma1_["vu"];

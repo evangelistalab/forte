@@ -1755,6 +1755,139 @@ void MASTER_DSRG::H2_T2_C3(BlockedTensor& H2, BlockedTensor& T2, const double& a
     dsrg_time_.add("223", timer.get());
 }
 
+dsrgHeff MASTER_DSRG::commutator_HT_noGNO(ambit::BlockedTensor H1, ambit::BlockedTensor H2,
+                                          ambit::BlockedTensor T1, ambit::BlockedTensor T2) {
+    dsrgHeff Heff;
+
+    Heff.H1 = BTF_->build(tensor_type_, "[H,T]1", spin_cases({"aa"}));
+    Heff.H2 = BTF_->build(tensor_type_, "[H,T]2", spin_cases({"aaaa"}));
+    Heff.H3 = BTF_->build(tensor_type_, "[H,T]3", spin_cases({"aaaaaa"}));
+
+    // scalar
+    double& H0 = Heff.H0;
+    H0 += H1["am"] * T1["ma"];
+    H0 += H1["AM"] * T1["MA"];
+
+    H0 += 0.25 * H2["abmn"] * T2["mnab"];
+    H0 += H2["aBmN"] * T2["mNaB"];
+    H0 += 0.25 * H2["ABMN"] * T2["MNAB"];
+
+    // 1-body
+    ambit::BlockedTensor& C1 = Heff.H1;
+    C1["vu"] += H1["eu"] * T1["ve"];
+    C1["VU"] += H1["EU"] * T1["VE"];
+
+    C1["vu"] -= H1["vm"] * T1["mu"];
+    C1["VU"] -= H1["VM"] * T1["MU"];
+
+    C1["vu"] += H2["avmu"] * T1["ma"];
+    C1["vu"] += H2["vAuM"] * T1["MA"];
+    C1["VU"] += H2["aVmU"] * T1["ma"];
+    C1["VU"] += H2["AVMU"] * T1["MA"];
+
+    C1["vu"] += H1["am"] * T2["vmua"];
+    C1["vu"] += H1["AM"] * T2["vMuA"];
+    C1["VU"] += H1["am"] * T2["mVaU"];
+    C1["VU"] += H1["AM"] * T2["VMUA"];
+
+    C1["vu"] += 0.5 * H2["abum"] * T2["vmab"];
+    C1["vu"] += H2["aBuM"] * T2["vMaB"];
+    C1["VU"] += H2["aBmU"] * T2["mVaB"];
+    C1["VU"] += 0.5 * H2["ABUM"] * T2["VMAB"];
+
+    C1["vu"] -= 0.5 * H2["avmn"] * T2["mnau"];
+    C1["vu"] -= H2["vAmN"] * T2["mNuA"];
+    C1["VU"] -= H2["aVmN"] * T2["mNaU"];
+    C1["VU"] -= 0.5 * H2["AVMN"] * T2["MNAU"];
+
+    // 2-body
+    ambit::BlockedTensor& C2 = Heff.H2;
+    BlockedTensor temp = BTF_->build(tensor_type_, "temp", {"aaaa", "AAAA"});
+
+    temp["xyuv"] = H2["eyuv"] * T1["xe"];
+    temp["XYUV"] = H2["EYUV"] * T1["XE"];
+
+    C2["xyuv"] += temp["xyuv"];
+    C2["XYUV"] += temp["XYUV"];
+    C2["xyuv"] -= temp["yxuv"];
+    C2["XYUV"] -= temp["YXUV"];
+
+    C2["xYuV"] += H2["eYuV"] * T1["xe"];
+    C2["xYuV"] += H2["xEuV"] * T1["YE"];
+
+    temp["xyuv"] = H2["xymv"] * T1["mu"];
+    temp["XYUV"] = H2["XYMV"] * T1["MU"];
+
+    C2["xyuv"] -= temp["xyuv"];
+    C2["XYUV"] -= temp["XYUV"];
+    C2["xyuv"] += temp["xyvu"];
+    C2["XYUV"] += temp["XYVU"];
+
+    C2["xYuV"] -= H2["xYmV"] * T1["mu"];
+    C2["xYuV"] -= H2["xYuM"] * T1["MV"];
+
+    temp["xyuv"] = H1["eu"] * T2["xyev"];
+    temp["XYUV"] = H1["EU"] * T2["XYEV"];
+
+    C2["xyuv"] += temp["xyuv"];
+    C2["XYUV"] += temp["XYUV"];
+    C2["xyuv"] -= temp["xyvu"];
+    C2["XYUV"] -= temp["XYVU"];
+
+    C2["xYuV"] += H1["eu"] * T2["xYeV"];
+    C2["xYuV"] += H1["EV"] * T2["xYuE"];
+
+    temp["xyuv"] = H1["xm"] * T2["myuv"];
+    temp["XYUV"] = H1["XM"] * T2["MYUV"];
+
+    C2["xyuv"] -= temp["xyuv"];
+    C2["XYUV"] -= temp["XYUV"];
+    C2["xyuv"] += temp["yxuv"];
+    C2["XYUV"] += temp["YXUV"];
+
+    C2["xYuV"] -= H1["xm"] * T2["mYuV"];
+    C2["xYuV"] -= H1["YM"] * T2["xMuV"];
+
+    C2["xyuv"] += 0.5 * H2["abuv"] * T2["xyab"];
+    C2["xYuV"] += H2["aBuV"] * T2["xYaB"];
+    C2["XYUV"] += 0.5 * H2["ABUV"] * T2["XYAB"];
+
+    C2["xyuv"] -= 0.5 * H2["xyij"] * T2["ijuv"];
+    C2["xYuV"] -= H2["xYiJ"] * T2["iJuV"];
+    C2["XYUV"] -= 0.5 * H2["XYIJ"] * T2["IJUV"];
+
+    C2["xyuv"] += H2["xyim"] * T2["imuv"];
+    C2["xYuV"] += H2["xYiM"] * T2["iMuV"];
+    C2["xYuV"] += H2["xYmI"] * T2["mIuV"];
+    C2["XYUV"] += H2["XYIM"] * T2["IMUV"];
+
+    temp["xyuv"] = H2["ayum"] * T2["xmav"];
+    temp["xyuv"] += H2["yAuM"] * T2["xMvA"];
+    temp["XYUV"] = H2["aYmU"] * T2["mXaV"];
+    temp["XYUV"] += H2["AYUM"] * T2["XMAV"];
+
+    C2["xyuv"] -= temp["xyuv"];
+    C2["XYUV"] -= temp["XYUV"];
+    C2["xyuv"] += temp["yxuv"];
+    C2["XYUV"] += temp["YXUV"];
+    C2["xyuv"] += temp["xyvu"];
+    C2["XYUV"] += temp["XYVU"];
+    C2["xyuv"] -= temp["yxvu"];
+    C2["XYUV"] -= temp["YXVU"];
+
+    C2["xYuV"] -= H2["aYuM"] * T2["xMaV"];
+    C2["xYuV"] += H2["xaum"] * T2["mYaV"];
+    C2["xYuV"] += H2["xAuM"] * T2["MYAV"];
+    C2["xYuV"] += H2["aYmV"] * T2["xmua"];
+    C2["xYuV"] += H2["AYMV"] * T2["xMuA"];
+    C2["xYuV"] -= H2["xAmV"] * T2["mYuA"];
+
+    // 3-body
+    H2_T2_C3(H2, T2, 1.0, Heff.H3, true);
+
+    return Heff;
+}
+
 bool MASTER_DSRG::check_semi_orbs() {
     print_h2("Checking Semicanonical Orbitals");
 

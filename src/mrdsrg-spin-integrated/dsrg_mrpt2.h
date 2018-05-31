@@ -88,6 +88,13 @@ class DSRG_MRPT2 : public MASTER_DSRG {
 
     /// Return T2 amplitudes
     virtual ambit::BlockedTensor get_T2(const std::vector<std::string>& blocks);
+    virtual ambit::BlockedTensor get_T2() { return T2_; }
+
+    /// Return de-normal-ordered 1-body renormalized 1st-order Hamiltonian
+    virtual ambit::BlockedTensor get_RH1deGNO();
+
+    /// Return 2-body renormalized 1st-order Hamiltonian
+    virtual ambit::BlockedTensor get_RH2() { return V_; }
 
     /// Compute one-electron density of DSRG
     /// Important: T1 and T2 are de-normal-ordered!
@@ -111,18 +118,18 @@ class DSRG_MRPT2 : public MASTER_DSRG {
         p_spaces_ = p_spaces;
     }
 
-//    /// Compute de-normal-ordered amplitudes and return the scalar term
-//    double Tamp_deGNO();
+    //    /// Compute de-normal-ordered amplitudes and return the scalar term
+    //    double Tamp_deGNO();
 
-//    /// Return a BlockedTensor of T1 amplitudes
-//    ambit::BlockedTensor get_T1(const std::vector<std::string>& blocks);
-//    ambit::BlockedTensor get_T1() { return T1_; }
-//    /// Return a BlockedTensor of de-normal-ordered T1 amplitudes
-//    ambit::BlockedTensor get_T1deGNOa(const std::vector<std::string>& blocks);
-//    ambit::BlockedTensor get_T1deGNO() { return T1eff_; }
-//    /// Return a BlockedTensor of T2 amplitudes
-//    ambit::BlockedTensor get_T2(const std::vector<std::string>& blocks);
-//    ambit::BlockedTensor get_T2() { return T2_; }
+    //    /// Return a BlockedTensor of T1 amplitudes
+    //    ambit::BlockedTensor get_T1(const std::vector<std::string>& blocks);
+    //    ambit::BlockedTensor get_T1() { return T1_; }
+    //    /// Return a BlockedTensor of de-normal-ordered T1 amplitudes
+    //    ambit::BlockedTensor get_T1deGNOa(const std::vector<std::string>& blocks);
+    //    ambit::BlockedTensor get_T1deGNO() { return T1eff_; }
+    //    /// Return a BlockedTensor of T2 amplitudes
+    //    ambit::BlockedTensor get_T2(const std::vector<std::string>& blocks);
+    //    ambit::BlockedTensor get_T2() { return T2_; }
 
     /// Rotate orbital basis for amplitudes according to unitary matrix U
     /// @param U unitary matrix from FCI_MO (INCLUDES frozen orbitals)
@@ -319,7 +326,8 @@ class DSRG_MRPT2 : public MASTER_DSRG {
     /// so that they are in the same basis as amplitudes (in semicanonical basis)
     void rotate_1rdm(ambit::Tensor& L1a, ambit::Tensor& L1b);
     void rotate_2rdm(ambit::Tensor& L2aa, ambit::Tensor& L2ab, ambit::Tensor& L2bb);
-    void rotate_3rdm(ambit::Tensor& L3aaa, ambit::Tensor& L3aab, ambit::Tensor& L3abb, ambit::Tensor& L3bbb);
+    void rotate_3rdm(ambit::Tensor& L3aaa, ambit::Tensor& L3aab, ambit::Tensor& L3abb,
+                     ambit::Tensor& L3bbb);
 };
 }
 } // End Namespaces

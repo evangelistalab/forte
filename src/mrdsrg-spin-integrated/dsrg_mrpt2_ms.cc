@@ -788,22 +788,6 @@ void DSRG_MRPT2::compute_Heff_2nd_coupling(double& H0, ambit::Tensor& H1a, ambit
                                            ambit::Tensor& H2bb, ambit::Tensor& H3aaa,
                                            ambit::Tensor& H3aab, ambit::Tensor& H3abb,
                                            ambit::Tensor& H3bbb) {
-    // reset Tensors
-    BlockedTensor H1 = BTF_->build(tensor_type_, "Heff1_2nd", spin_cases({"aa"}));
-    H1a = H1.block("aa");
-    H1b = H1.block("AA");
-
-    BlockedTensor H2 = BTF_->build(tensor_type_, "Heff2_2nd", spin_cases({"aaaa"}));
-    H2aa = H2.block("aaaa");
-    H2ab = H2.block("aAaA");
-    H2bb = H2.block("AAAA");
-
-    BlockedTensor H3 = BTF_->build(tensor_type_, "Heff3_2nd", spin_cases({"aaaaaa"}));
-    H3aaa = H3.block("aaaaaa");
-    H3aab = H3.block("aaAaaA");
-    H3abb = H3.block("aAAaAA");
-    H3bbb = H3.block("AAAAAA");
-
     // de-normal-order amplitudes
     BlockedTensor T1eff = deGNO_Tamp(T1_, T2_, Gamma1_);
 
@@ -814,16 +798,10 @@ void DSRG_MRPT2::compute_Heff_2nd_coupling(double& H0, ambit::Tensor& H1a, ambit
     Hoei_ = BTF_->build(tensor_type_, "OEI", spin_cases({"ph"}));
     build_eff_oei();
 
-    // set H1 and H2 to bare Hamiltonian
-    H1["uv"] = Hoei_["uv"];
-    H1["UV"] = Hoei_["UV"];
+    dsrgHeff Heff = commutator_HT_noGNO(Hoei_, V_, T1eff, T2_);
 
-    H2["uvxy"] = V_["uvxy"];
-    H2["uVxY"] = V_["uVxY"];
-    H2["UVXY"] = V_["UVXY"];
-
-    // scalar term from bare Hamiltonian
-    H0 = 0.0;
+    // add contributions from bare Hamiltonian
+    H0 = Heff.H0;
     size_t ncore = core_mos_.size();
     for (int m = 0; m < ncore; ++m) {
         size_t nm = core_mos_[m];
@@ -838,124 +816,27 @@ void DSRG_MRPT2::compute_Heff_2nd_coupling(double& H0, ambit::Tensor& H1a, ambit
         }
     }
 
-    // scalar from [H, T]
-    H0 += Hoei_["am"] * T1eff["ma"];
-    H0 += Hoei_["AM"] * T1eff["MA"];
+    auto& H1 = Heff.H1;
+    H1["uv"] += Hoei_["uv"];
+    H1["UV"] += Hoei_["UV"];
 
-    H0 += 0.25 * V_["abmn"] * T2_["mnab"];
-    H0 += V_["aBmN"] * T2_["mNaB"];
-    H0 += 0.25 * V_["ABMN"] * T2_["MNAB"];
+    H1a = H1.block("aa");
+    H1b = H1.block("AA");
 
-    // 1-body
-    H1["vu"] += Hoei_["eu"] * T1eff["ve"];
-    H1["VU"] += Hoei_["EU"] * T1eff["VE"];
+    auto& H2 = Heff.H2;
+    H2["uvxy"] += V_["uvxy"];
+    H2["uVxY"] += V_["uVxY"];
+    H2["UVXY"] += V_["UVXY"];
 
-    H1["vu"] -= Hoei_["vm"] * T1eff["mu"];
-    H1["VU"] -= Hoei_["VM"] * T1eff["MU"];
+    H2aa = H2.block("aaaa");
+    H2ab = H2.block("aAaA");
+    H2bb = H2.block("AAAA");
 
-    H1["vu"] += V_["avmu"] * T1eff["ma"];
-    H1["vu"] += V_["vAuM"] * T1eff["MA"];
-    H1["VU"] += V_["aVmU"] * T1eff["ma"];
-    H1["VU"] += V_["AVMU"] * T1eff["MA"];
-
-    H1["vu"] += Hoei_["am"] * T2_["vmua"];
-    H1["vu"] += Hoei_["AM"] * T2_["vMuA"];
-    H1["VU"] += Hoei_["am"] * T2_["mVaU"];
-    H1["VU"] += Hoei_["AM"] * T2_["VMUA"];
-
-    H1["vu"] += 0.5 * V_["abum"] * T2_["vmab"];
-    H1["vu"] += V_["aBuM"] * T2_["vMaB"];
-    H1["VU"] += V_["aBmU"] * T2_["mVaB"];
-    H1["VU"] += 0.5 * V_["ABUM"] * T2_["VMAB"];
-
-    H1["vu"] -= 0.5 * V_["avmn"] * T2_["mnau"];
-    H1["vu"] -= V_["vAmN"] * T2_["mNuA"];
-    H1["VU"] -= V_["aVmN"] * T2_["mNaU"];
-    H1["VU"] -= 0.5 * V_["AVMN"] * T2_["MNAU"];
-
-    // 2-body
-    BlockedTensor temp = BTF_->build(tensor_type_, "temp", {"aaaa", "AAAA"});
-
-    temp["xyuv"] = V_["eyuv"] * T1eff["xe"];
-    temp["XYUV"] = V_["EYUV"] * T1eff["XE"];
-
-    H2["xyuv"] += temp["xyuv"];
-    H2["XYUV"] += temp["XYUV"];
-    H2["xyuv"] -= temp["yxuv"];
-    H2["XYUV"] -= temp["YXUV"];
-
-    H2["xYuV"] += V_["eYuV"] * T1eff["xe"];
-    H2["xYuV"] += V_["xEuV"] * T1eff["YE"];
-
-    temp["xyuv"] = V_["xymv"] * T1eff["mu"];
-    temp["XYUV"] = V_["XYMV"] * T1eff["MU"];
-
-    H2["xyuv"] -= temp["xyuv"];
-    H2["XYUV"] -= temp["XYUV"];
-    H2["xyuv"] += temp["xyvu"];
-    H2["XYUV"] += temp["XYVU"];
-
-    H2["xYuV"] -= V_["xYmV"] * T1eff["mu"];
-    H2["xYuV"] -= V_["xYuM"] * T1eff["MV"];
-
-    temp["xyuv"] = Hoei_["eu"] * T2_["xyev"];
-    temp["XYUV"] = Hoei_["EU"] * T2_["XYEV"];
-
-    H2["xyuv"] += temp["xyuv"];
-    H2["XYUV"] += temp["XYUV"];
-    H2["xyuv"] -= temp["xyvu"];
-    H2["XYUV"] -= temp["XYVU"];
-
-    H2["xYuV"] += Hoei_["eu"] * T2_["xYeV"];
-    H2["xYuV"] += Hoei_["EV"] * T2_["xYuE"];
-
-    temp["xyuv"] = Hoei_["xm"] * T2_["myuv"];
-    temp["XYUV"] = Hoei_["XM"] * T2_["MYUV"];
-
-    H2["xyuv"] -= temp["xyuv"];
-    H2["XYUV"] -= temp["XYUV"];
-    H2["xyuv"] += temp["yxuv"];
-    H2["XYUV"] += temp["YXUV"];
-
-    H2["xYuV"] -= Hoei_["xm"] * T2_["mYuV"];
-    H2["xYuV"] -= Hoei_["YM"] * T2_["xMuV"];
-
-    H2["xyuv"] += 0.5 * V_["abuv"] * T2_["xyab"];
-    H2["xYuV"] += V_["aBuV"] * T2_["xYaB"];
-    H2["XYUV"] += 0.5 * V_["ABUV"] * T2_["XYAB"];
-
-    H2["xyuv"] -= 0.5 * V_["xyij"] * T2_["ijuv"];
-    H2["xYuV"] -= V_["xYiJ"] * T2_["iJuV"];
-    H2["XYUV"] -= 0.5 * V_["XYIJ"] * T2_["IJUV"];
-
-    H2["xyuv"] += V_["xyim"] * T2_["imuv"];
-    H2["xYuV"] += V_["xYiM"] * T2_["iMuV"];
-    H2["xYuV"] += V_["xYmI"] * T2_["mIuV"];
-    H2["XYUV"] += V_["XYIM"] * T2_["IMUV"];
-
-    temp["xyuv"] = V_["ayum"] * T2_["xmav"];
-    temp["xyuv"] += V_["yAuM"] * T2_["xMvA"];
-    temp["XYUV"] = V_["aYmU"] * T2_["mXaV"];
-    temp["XYUV"] += V_["AYUM"] * T2_["XMAV"];
-
-    H2["xyuv"] -= temp["xyuv"];
-    H2["XYUV"] -= temp["XYUV"];
-    H2["xyuv"] += temp["yxuv"];
-    H2["XYUV"] += temp["YXUV"];
-    H2["xyuv"] += temp["xyvu"];
-    H2["XYUV"] += temp["XYVU"];
-    H2["xyuv"] -= temp["yxvu"];
-    H2["XYUV"] -= temp["YXVU"];
-
-    H2["xYuV"] -= V_["aYuM"] * T2_["xMaV"];
-    H2["xYuV"] += V_["xaum"] * T2_["mYaV"];
-    H2["xYuV"] += V_["xAuM"] * T2_["MYAV"];
-    H2["xYuV"] += V_["aYmV"] * T2_["xmua"];
-    H2["xYuV"] += V_["AYMV"] * T2_["xMuA"];
-    H2["xYuV"] -= V_["xAmV"] * T2_["mYuA"];
-
-    // 3-body
-    H2_T2_C3(V_, T2_, 1.0, H3, true);
+    auto& H3 = Heff.H3;
+    H3aaa = H3.block("aaaaaa");
+    H3aab = H3.block("aaAaaA");
+    H3abb = H3.block("aAAaAA");
+    H3bbb = H3.block("AAAAAA");
 }
 
 void DSRG_MRPT2::compute_cumulants(std::shared_ptr<FCIIntegrals> fci_ints,

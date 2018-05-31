@@ -16,6 +16,7 @@
 #include "../blockedtensorfactory.h"
 #include "../mrdsrg-helper/dsrg_source.h"
 #include "../mrdsrg-helper/dsrg_time.h"
+#include "../mrdsrg-helper/dsrg_tensors.h"
 
 using namespace ambit;
 namespace psi {
@@ -51,6 +52,10 @@ class MASTER_DSRG : public DynamicCorrelationSolver {
         throw PSIEXCEPTION("Child class should override this function");
     }
 
+    /// Compute [H, T] without using MK-GNO
+    dsrgHeff commutator_HT_noGNO(ambit::BlockedTensor H1, ambit::BlockedTensor H2,
+                                 ambit::BlockedTensor T1, ambit::BlockedTensor T2);
+
     /// Compute DSRG dressed density
     //    virtual void compute_density() = 0;
 
@@ -67,6 +72,17 @@ class MASTER_DSRG : public DynamicCorrelationSolver {
     virtual ambit::BlockedTensor get_T2(const std::vector<std::string>& blocks) {
         throw PSIEXCEPTION("Child class should override this function");
     }
+    virtual ambit::BlockedTensor get_T2() {
+        throw PSIEXCEPTION("Child class should override this function");
+    }
+
+    /// Return de-normal-ordered 1-body renormalized 1st-order Hamiltonian
+    virtual ambit::BlockedTensor get_RH1deGNO() {
+        throw PSIEXCEPTION("Only used in non-DF DSRG-MRPT2");
+    }
+
+    /// Return 2-body renormalized 1st-order Hamiltonian
+    virtual ambit::BlockedTensor get_RH2() { throw PSIEXCEPTION("Only used in non-DF DSRG-MRPT2"); }
 
     /// Return the Hbar of a given order
     std::vector<ambit::Tensor> Hbar(int n);

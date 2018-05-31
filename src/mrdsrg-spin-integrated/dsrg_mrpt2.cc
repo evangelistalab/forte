@@ -2792,7 +2792,6 @@ void DSRG_MRPT2::combine_tensor(ambit::Tensor& tens, ambit::Tensor& tens_h, cons
 ambit::BlockedTensor DSRG_MRPT2::get_T1deGNO(double& T0deGNO) {
     ambit::BlockedTensor T1eff = deGNO_Tamp(T1_, T2_, Gamma1_);
 
-    T0deGNO = 0.0;
     if (internal_amp_) {
         // the scalar term of amplitudes when de-normal-ordering
         T0deGNO -= T1_["uv"] * Gamma1_["vu"];
@@ -2822,6 +2821,20 @@ ambit::BlockedTensor DSRG_MRPT2::get_T2(const std::vector<std::string>& blocks) 
     out["iJaB"] = T2_["iJaB"];
     out["IJAB"] = T2_["IJAB"];
     return out;
+}
+
+ambit::BlockedTensor DSRG_MRPT2::get_RH1deGNO() {
+    ambit::BlockedTensor RH1eff = BTF_->build(tensor_type_, "RH1 from deGNO", spin_cases({"ph"}));
+
+    RH1eff["ai"] = F_["ai"];
+    RH1eff["AI"] = F_["AI"];
+
+    RH1eff["ai"] -= V_["auiv"] * Gamma1_["vu"];
+    RH1eff["ai"] -= V_["aUiV"] * Gamma1_["VU"];
+    RH1eff["AI"] -= V_["uAvI"] * Gamma1_["vu"];
+    RH1eff["AI"] -= V_["AUIV"] * Gamma1_["VU"];
+
+    return RH1eff;
 }
 
 void DSRG_MRPT2::rotate_amp(SharedMatrix Ua, SharedMatrix Ub, const bool& transpose,

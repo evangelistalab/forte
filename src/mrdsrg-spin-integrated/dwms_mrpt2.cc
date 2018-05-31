@@ -50,8 +50,8 @@ void set_DWMS_options(ForteOptions& foptions) {
                      "DWMS algorithms");
 
     /*- Consider X(αβ) = A(β) - A(α) in SA algorithm if set to true -*/
-    foptions.add_bool("DWMS_SA_DAMP", false,
-                      "Consider amplitudes difference between states in SA algorithm");
+    foptions.add_bool("DWMS_SA_DAMP", false, "Consider amplitudes difference between states in SA "
+                                             "algorithm, testing in non-DF DSRG-MRPT2");
 }
 
 DWMS_DSRGPT2::DWMS_DSRGPT2(SharedWavefunction ref_wfn, Options& options,
@@ -105,7 +105,7 @@ void DWMS_DSRGPT2::read_options() {
     zeta_ = options_.get_double("DWMS_ZETA");
     algorithm_ = options_.get_str("DWMS_ALGORITHM");
     dwms_ref_ = options_.get_str("DWMS_REFERENCE");
-    dwms_sa_damp_ = options_.get_bool("DWMS_SA_DAMP");
+    do_delta_amp_ = options_.get_bool("DWMS_SA_DAMP");
 
     do_hbar3_ = options_.get_bool("FORM_HBAR3");
     max_rdm_level_ = (options_.get_str("THREEPDC") == "ZERO") ? 2 : 3;
@@ -122,7 +122,7 @@ void DWMS_DSRGPT2::print_options() {
     outfile->Printf("\n    ALGORITHM          %10s", algorithm_.c_str());
 
     if (algorithm_ == "SA" || algorithm_ == "XSA") {
-        std::string damps = dwms_sa_damp_ ? "TRUE" : "FALSE";
+        std::string damps = do_delta_amp_ ? "TRUE" : "FALSE";
         outfile->Printf("\n    DO DELTA AMPS      %10s", damps.c_str());
     }
 }
@@ -146,12 +146,12 @@ void DWMS_DSRGPT2::test_options() {
             throw PSIEXCEPTION("DWMS-DSRG-PT3 does not support MS or XMS algorithm yet!");
         }
 
-        if (dwms_sa_damp_) {
+        if (do_delta_amp_) {
             throw PSIEXCEPTION("DSRG-MRPT3 does not support DWMS_SA_DAMP = TRUE!");
         }
     }
 
-    if (dwms_sa_damp_ && eri_df_) {
+    if (do_delta_amp_ && eri_df_) {
         throw PSIEXCEPTION("DF-DSRG-MRPT2 does not support DWMS_SA_DAMP = TRUE!");
     }
 }
@@ -429,6 +429,9 @@ double DWMS_DSRGPT2::compute_dwsa_energy(std::shared_ptr<FCI_MO>& fci_mo) {
         SharedMatrix Heff(new Matrix("Heff " + entry_name, nroots, nroots));
         SharedMatrix Heff_sym(new Matrix("Symmetrized Heff " + entry_name, nroots, nroots));
 
+        // vector of T1, T2, and summed 1st-order Hbar
+        std::vector<ambit::BlockedTensor> T1s, T2s, RH1s, RH2s;
+
         // loop over states of current symmetry
         for (int M = 0; M < nroots; ++M) {
 
@@ -439,6 +442,14 @@ double DWMS_DSRGPT2::compute_dwsa_energy(std::shared_ptr<FCI_MO>& fci_mo) {
                     transform_ints0();
                 }
                 fci_ints = compute_macro_dsrg_pt(dsrg_pt, fci_mo, n, M);
+
+                if (do_delta_amp_) {
+                    double temp = 0.0;
+                    T1s.push_back(dsrg_pt->get_T1deGNO(temp));
+                    T2s.push_back(dsrg_pt->get_T2());
+                    RH1s.push_back(dsrg_pt->get_RH1deGNO());
+                    RH2s.push_back(dsrg_pt->get_RH2());
+                }
             }
 
             print_h2("Compute Elements of Effective Hamiltonian");
@@ -489,6 +500,11 @@ double DWMS_DSRGPT2::compute_dwsa_energy(std::shared_ptr<FCI_MO>& fci_mo) {
             if (zeta_ != 0.0) {
                 dsrg_pt = nullptr;
             }
+        }
+
+        // TODO: loop M, half N
+        if (do_delta_amp_) {
+
         }
 
         // print effective Hamiltonian
@@ -562,7 +578,7 @@ double DWMS_DSRGPT2::compute_dwms_energy(std::shared_ptr<FCI_MO>& fci_mo) {
             print_h2("Compute couplings of 2nd-order effective Hamiltonian");
 
             outfile->Printf("\n  Compute 2nd-order Heff = H + H * T(root %d).", M);
-            double H0;
+            double H0 = 0.0;
             ambit::Tensor H1a, H1b, H2aa, H2ab, H2bb, H3aaa, H3aab, H3abb, H3bbb;
             dsrg_pt2->compute_Heff_2nd_coupling(H0, H1a, H1b, H2aa, H2ab, H2bb, H3aaa, H3aab, H3abb,
                                                 H3bbb);
