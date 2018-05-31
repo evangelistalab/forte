@@ -390,8 +390,12 @@ double DSRG_MRPT2::compute_energy() {
     compute_t1();
 
     // Compute effective integrals
-    renormalize_V();
-    renormalize_F();
+    if (options_.get_bool("DSRGPT")) {
+        renormalize_V();
+        renormalize_F();
+    } else {
+        outfile->Printf("\n    Ignore [H0th, A1st] in DSRG-MRPT2!");
+    }
     if (print_ > 1)
         F_.print(stdout);
     if (print_ > 2) {
@@ -1737,7 +1741,7 @@ double DSRG_MRPT2::compute_energy_relaxed() {
     std::map<std::string, std::vector<double>> dm_relax;
 
     // obtain the all-active DSRG transformed Hamiltonian
-    auto fci_ints = compute_Heff();
+    auto fci_ints = compute_Heff_actv();
 
     // diagonalize Hbar depending on CAS_TYPE
     if (options_.get_str("CAS_TYPE") == "CAS") {
@@ -1762,9 +1766,9 @@ double DSRG_MRPT2::compute_energy_relaxed() {
 
             // compute permanent dipoles
             if (options_.get_bool("FORM_MBAR3")) {
-                dm_relax = fci_mo.compute_relaxed_dm(Mbar0_, Mbar1_, Mbar2_, Mbar3_);
+                dm_relax = fci_mo.compute_ref_relaxed_dm(Mbar0_, Mbar1_, Mbar2_, Mbar3_);
             } else {
-                dm_relax = fci_mo.compute_relaxed_dm(Mbar0_, Mbar1_, Mbar2_);
+                dm_relax = fci_mo.compute_ref_relaxed_dm(Mbar0_, Mbar1_, Mbar2_);
             }
         }
     } else if (options_.get_str("CAS_TYPE") == "ACI") {

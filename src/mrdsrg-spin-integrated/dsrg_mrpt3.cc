@@ -1307,7 +1307,7 @@ double DSRG_MRPT3::compute_energy_sa() {
     compute_energy();
 
     // obtain active-only transformed intergals
-    std::shared_ptr<FCIIntegrals> fci_ints = compute_Heff();
+    std::shared_ptr<FCIIntegrals> fci_ints = compute_Heff_actv();
 
     //    // transfer integrals
     //    transfer_integrals();
@@ -1369,7 +1369,7 @@ double DSRG_MRPT3::compute_energy_sa() {
             }
 
             // compute permanent dipoles
-            auto dm_relax = fci_mo.compute_relaxed_dm(Mbar0_, Mbar1_, Mbar2_);
+            auto dm_relax = fci_mo.compute_ref_relaxed_dm(Mbar0_, Mbar1_, Mbar2_);
 
             print_h2("SA-DSRG-PT3 Dipole Moment (in a.u.) Summary");
             outfile->Printf("\n    %14s  %10s  %10s  %10s", "State", "X", "Y", "Z");
@@ -1387,7 +1387,7 @@ double DSRG_MRPT3::compute_energy_sa() {
             outfile->Printf("\n    %s", dash.c_str());
 
             // oscillator strength
-            auto osc = fci_mo.compute_relaxed_osc(Mbar1_, Mbar2_);
+            auto osc = fci_mo.compute_ref_relaxed_osc(Mbar1_, Mbar2_);
 
             print_h2("SA-DSRG-PT3 Oscillator Strength (in a.u.) Summary");
             outfile->Printf("\n    %32s  %10s  %10s  %10s  %10s", "State", "X", "Y", "Z", "Total");
@@ -1553,7 +1553,7 @@ double DSRG_MRPT3::compute_energy_sa() {
     std::string dash(41, '-');
     outfile->Printf("\n    %s", dash.c_str());
 
-    for (int n = 0; n < nentry; ++n) {
+    for (int n = 0, counter = 0; n < nentry; ++n) {
         int irrep = options_["AVG_STATE"][n][0].to_integer();
         int multi = options_["AVG_STATE"][n][1].to_integer();
         int nstates = options_["AVG_STATE"][n][2].to_integer();
@@ -1561,6 +1561,8 @@ double DSRG_MRPT3::compute_energy_sa() {
         for (int i = 0; i < nstates; ++i) {
             outfile->Printf("\n     %3d     %3s    %2d   %20.12f", multi,
                             irrep_symbol[irrep].c_str(), i, Edsrg_sa[n][i]);
+            Process::environment.globals["ENERGY ROOT " + std::to_string(counter)] = Edsrg_sa[n][i];
+            ++counter;
         }
         outfile->Printf("\n    %s", dash.c_str());
     }
@@ -1581,7 +1583,7 @@ double DSRG_MRPT3::compute_energy_relaxed() {
     std::map<std::string, std::vector<double>> dm_relax;
 
     // obtain the all-active DSRG transformed Hamiltonian
-    auto fci_ints = compute_Heff();
+    auto fci_ints = compute_Heff_actv();
 
     if (options_.get_str("CAS_TYPE") == "CAS") {
         FCI_MO fci_mo(reference_wavefunction_, options_, ints_, mo_space_info_, fci_ints);
@@ -1599,7 +1601,7 @@ double DSRG_MRPT3::compute_energy_relaxed() {
             }
 
             // compute permanent dipoles
-            dm_relax = fci_mo.compute_relaxed_dm(Mbar0_, Mbar1_, Mbar2_);
+            dm_relax = fci_mo.compute_ref_relaxed_dm(Mbar0_, Mbar1_, Mbar2_);
         }
     } else if (options_.get_str("CAS_TYPE") == "ACI" ){
         AdaptiveCI aci(reference_wavefunction_, options_, ints_, mo_space_info_);

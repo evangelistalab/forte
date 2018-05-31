@@ -136,5 +136,181 @@ double Reference::compute_Eref(std::shared_ptr<ForteIntegrals> ints,
 
     return E;
 }
+
+//void Reference::set_G1(std::vector<double>& a, std::vector<double>& b, size_t nactv, bool move) {
+//    if (a.size() != nactv * nactv || b.size() != nactv * nactv) {
+//        throw PSIEXCEPTION("Inconsistent/unexpected vector size.");
+//    }
+
+//    L1a_ = ambit::Tensor::build(ambit::CoreTensor, "L1a", {nactv, nactv});
+//    L1b_ = ambit::Tensor::build(ambit::CoreTensor, "L1b", {nactv, nactv});
+
+//    if (move) {
+//        L1a_.data() = std::move(a);
+//        L1b_.data() = std::move(b);
+//    } else {
+//        L1a_.data() = a;
+//        L1b_.data() = b;
+//    }
+//}
+
+//void Reference::set_G2(std::vector<double>& aa, std::vector<double>& ab, std::vector<double>& bb,
+//                       size_t nactv, bool cumulant, bool move) {
+//    size_t na4 = nactv * nactv * nactv * nactv;
+//    if (aa.size() != na4 || ab.size() != na4 || bb.size() != na4) {
+//        throw PSIEXCEPTION("Inconsistent/unexpected vector size.");
+//    }
+//    if (cumulant) {
+//        if (L1a_.numel() != nactv * nactv || L1b_.numel() != nactv * nactv) {
+//            throw PSIEXCEPTION("Cannot compute 2-cumulants. Incorrect L1a/L1b size.");
+//        }
+//    }
+
+//    g2aa_ = ambit::Tensor::build(ambit::CoreTensor, "G2aa", {nactv, nactv, nactv, nactv});
+//    g2ab_ = ambit::Tensor::build(ambit::CoreTensor, "G2ab", {nactv, nactv, nactv, nactv});
+//    g2bb_ = ambit::Tensor::build(ambit::CoreTensor, "G2bb", {nactv, nactv, nactv, nactv});
+
+//    if (move) {
+//        g2aa_.data() = std::move(aa);
+//        g2ab_.data() = std::move(ab);
+//        g2bb_.data() = std::move(bb);
+//    } else {
+//        g2aa_.data() = aa;
+//        g2ab_.data() = ab;
+//        g2bb_.data() = bb;
+//    }
+
+//    if (cumulant) {
+//        L2aa_ = g2aa_.clone();
+//        L2ab_ = g2ab_.clone();
+//        L2bb_ = g2bb_.clone();
+
+//        L2aa_("pqrs") -= L1a_("pr") * L1a_("qs");
+//        L2aa_("pqrs") += L1a_("ps") * L1a_("qr");
+
+//        L2bb_("pqrs") -= L1b_("pr") * L1b_("qs");
+//        L2bb_("pqrs") += L1b_("ps") * L1b_("qr");
+
+//        L2ab_("pqrs") -= L1a_("pr") * L1b_("qs");
+//    }
+//}
+
+//void Reference::set_G3(std::vector<double>& aaa, std::vector<double>& aab, std::vector<double>& abb,
+//                       std::vector<double>& bbb, size_t nactv, bool cumulant) {
+//    size_t na2 = nactv * nactv;
+//    size_t na4 = na2 * na2;
+//    size_t na6 = na2 * na4;
+//    if (aaa.size() != na6 || aab.size() != na6 || abb.size() != na6 || bbb.size() != na6) {
+//        throw PSIEXCEPTION("Inconsistent/unexpected vector size.");
+//    }
+//    if (cumulant) {
+//        if (L1a_.numel() != na2 || L1b_.numel() != na2) {
+//            throw PSIEXCEPTION("Cannot compute 3-cumulants. Incorrect L1a/L1b size.");
+//        }
+//        if (L2aa_.numel() != na4 || L2ab_.numel() != na4 || L2bb_.numel() != na4) {
+//            throw PSIEXCEPTION("Cannot compute 3-cumulants. Incorrect L2aa/L2ab/L2bb size.");
+//        }
+//    }
+
+//    if (cumulant) {
+//        // aaa
+//        L3aaa_ = ambit::Tensor::build(ambit::CoreTensor, "L3aaa",
+//                                      {nactv, nactv, nactv, nactv, nactv, nactv});
+//        L3aaa_.data() = std::move(aaa);
+
+//        L3aaa_("pqrstu") -= L1a_("ps") * L2aa_("qrtu");
+//        L3aaa_("pqrstu") += L1a_("pt") * L2aa_("qrsu");
+//        L3aaa_("pqrstu") += L1a_("pu") * L2aa_("qrts");
+
+//        L3aaa_("pqrstu") -= L1a_("qt") * L2aa_("prsu");
+//        L3aaa_("pqrstu") += L1a_("qs") * L2aa_("prtu");
+//        L3aaa_("pqrstu") += L1a_("qu") * L2aa_("prst");
+
+//        L3aaa_("pqrstu") -= L1a_("ru") * L2aa_("pqst");
+//        L3aaa_("pqrstu") += L1a_("rs") * L2aa_("pqut");
+//        L3aaa_("pqrstu") += L1a_("rt") * L2aa_("pqsu");
+
+//        L3aaa_("pqrstu") -= L1a_("ps") * L1a_("qt") * L1a_("ru");
+//        L3aaa_("pqrstu") -= L1a_("pt") * L1a_("qu") * L1a_("rs");
+//        L3aaa_("pqrstu") -= L1a_("pu") * L1a_("qs") * L1a_("rt");
+
+//        L3aaa_("pqrstu") += L1a_("ps") * L1a_("qu") * L1a_("rt");
+//        L3aaa_("pqrstu") += L1a_("pu") * L1a_("qt") * L1a_("rs");
+//        L3aaa_("pqrstu") += L1a_("pt") * L1a_("qs") * L1a_("ru");
+
+//        // aab
+//        L3aab_ = ambit::Tensor::build(ambit::CoreTensor, "L3aab",
+//                                      {nactv, nactv, nactv, nactv, nactv, nactv});
+//        L3aab_.data() = std::move(aab);
+
+//        L3aab_("pqRstU") -= L1a_("ps") * L2ab_("qRtU");
+//        L3aab_("pqRstU") += L1a_("pt") * L2ab_("qRsU");
+
+//        L3aab_("pqRstU") -= L1a_("qt") * L2ab_("pRsU");
+//        L3aab_("pqRstU") += L1a_("qs") * L2ab_("pRtU");
+
+//        L3aab_("pqRstU") -= L1b_("RU") * L2aa_("pqst");
+
+//        L3aab_("pqRstU") -= L1a_("ps") * L1a_("qt") * L1b_("RU");
+//        L3aab_("pqRstU") += L1a_("pt") * L1a_("qs") * L1b_("RU");
+
+//        // abb
+//        L3abb_ = ambit::Tensor::build(ambit::CoreTensor, "L3abb",
+//                                      {nactv, nactv, nactv, nactv, nactv, nactv});
+//        L3abb_.data() = std::move(abb);
+
+//        L3abb_("pQRsTU") -= L1a_("ps") * L2bb_("QRTU");
+
+//        L3abb_("pQRsTU") -= L1b_("QT") * L2ab_("pRsU");
+//        L3abb_("pQRsTU") += L1b_("QU") * L2ab_("pRsT");
+
+//        L3abb_("pQRsTU") -= L1b_("RU") * L2ab_("pQsT");
+//        L3abb_("pQRsTU") += L1b_("RT") * L2ab_("pQsU");
+
+//        L3abb_("pQRsTU") -= L1a_("ps") * L1b_("QT") * L1b_("RU");
+//        L3abb_("pQRsTU") += L1a_("ps") * L1b_("QU") * L1b_("RT");
+
+//        // bbb
+//        L3bbb_ = ambit::Tensor::build(ambit::CoreTensor, "L3bbb",
+//                                      {nactv, nactv, nactv, nactv, nactv, nactv});
+//        L3bbb_.data() = std::move(bbb);
+
+//        L3bbb_("pqrstu") -= L1b_("ps") * L2bb_("qrtu");
+//        L3bbb_("pqrstu") += L1b_("pt") * L2bb_("qrsu");
+//        L3bbb_("pqrstu") += L1b_("pu") * L2bb_("qrts");
+
+//        L3bbb_("pqrstu") -= L1b_("qt") * L2bb_("prsu");
+//        L3bbb_("pqrstu") += L1b_("qs") * L2bb_("prtu");
+//        L3bbb_("pqrstu") += L1b_("qu") * L2bb_("prst");
+
+//        L3bbb_("pqrstu") -= L1b_("ru") * L2bb_("pqst");
+//        L3bbb_("pqrstu") += L1b_("rs") * L2bb_("pqut");
+//        L3bbb_("pqrstu") += L1b_("rt") * L2bb_("pqsu");
+
+//        L3bbb_("pqrstu") -= L1b_("ps") * L1b_("qt") * L1b_("ru");
+//        L3bbb_("pqrstu") -= L1b_("pt") * L1b_("qu") * L1b_("rs");
+//        L3bbb_("pqrstu") -= L1b_("pu") * L1b_("qs") * L1b_("rt");
+
+//        L3bbb_("pqrstu") += L1b_("ps") * L1b_("qu") * L1b_("rt");
+//        L3bbb_("pqrstu") += L1b_("pu") * L1b_("qt") * L1b_("rs");
+//        L3bbb_("pqrstu") += L1b_("pt") * L1b_("qs") * L1b_("ru");
+//    } else {
+//        g3aaa_ = ambit::Tensor::build(ambit::CoreTensor, "G3aaa",
+//                                      {nactv, nactv, nactv, nactv, nactv, nactv});
+//        g3aaa_.data() = std::move(aaa);
+
+//        g3aab_ = ambit::Tensor::build(ambit::CoreTensor, "G3aab",
+//                                      {nactv, nactv, nactv, nactv, nactv, nactv});
+//        g3aab_.data() = std::move(aab);
+
+//        g3abb_ = ambit::Tensor::build(ambit::CoreTensor, "G3abb",
+//                                      {nactv, nactv, nactv, nactv, nactv, nactv});
+//        g3abb_.data() = std::move(abb);
+
+//        g3bbb_ = ambit::Tensor::build(ambit::CoreTensor, "G3bbb",
+//                                      {nactv, nactv, nactv, nactv, nactv, nactv});
+//        g3bbb_.data() = std::move(bbb);
+//    }
+//}
 }
 }
