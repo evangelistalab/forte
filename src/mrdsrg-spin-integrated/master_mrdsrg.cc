@@ -1760,8 +1760,19 @@ dsrgHeff MASTER_DSRG::commutator_HT_noGNO(ambit::BlockedTensor H1, ambit::Blocke
     dsrgHeff Heff;
 
     Heff.H1 = BTF_->build(tensor_type_, "[H,T]1", spin_cases({"aa"}));
+    Heff.H1a = Heff.H1.block("aa");
+    Heff.H1b = Heff.H1.block("AA");
+
     Heff.H2 = BTF_->build(tensor_type_, "[H,T]2", spin_cases({"aaaa"}));
+    Heff.H2aa = Heff.H2.block("aaaa");
+    Heff.H2ab = Heff.H2.block("aAaA");
+    Heff.H2bb = Heff.H2.block("AAAA");
+
     Heff.H3 = BTF_->build(tensor_type_, "[H,T]3", spin_cases({"aaaaaa"}));
+    Heff.H3aaa = Heff.H3.block("aaaaaa");
+    Heff.H3aab = Heff.H3.block("aaAaaA");
+    Heff.H3abb = Heff.H3.block("aAAaAA");
+    Heff.H3bbb = Heff.H3.block("AAAAAA");
 
     // scalar
     double& H0 = Heff.H0;

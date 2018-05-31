@@ -21,8 +21,11 @@ class dsrg_tensors {
 struct dsrgHeff {
     double H0 = 0.0;
     ambit::BlockedTensor H1, H2, H3;
-};
 
+    ambit::Tensor H1a, H1b;
+    ambit::Tensor H2aa, H2ab, H2bb;
+    ambit::Tensor H3aaa, H3aab, H3abb, H3bbb;
+};
 }
 }
 #endif // DSRG_TENSORS_H

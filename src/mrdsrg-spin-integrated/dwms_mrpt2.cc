@@ -50,8 +50,9 @@ void set_DWMS_options(ForteOptions& foptions) {
                      "DWMS algorithms");
 
     /*- Consider X(αβ) = A(β) - A(α) in SA algorithm if set to true -*/
-    foptions.add_bool("DWMS_SA_DAMP", false, "Consider amplitudes difference between states in SA "
-                                             "algorithm, testing in non-DF DSRG-MRPT2");
+    foptions.add_bool("DWMS_DELTA_AMP", false,
+                      "Consider amplitudes difference between states in SA "
+                      "algorithm, testing in non-DF DSRG-MRPT2");
 }
 
 DWMS_DSRGPT2::DWMS_DSRGPT2(SharedWavefunction ref_wfn, Options& options,
@@ -105,9 +106,10 @@ void DWMS_DSRGPT2::read_options() {
     zeta_ = options_.get_double("DWMS_ZETA");
     algorithm_ = options_.get_str("DWMS_ALGORITHM");
     dwms_ref_ = options_.get_str("DWMS_REFERENCE");
-    do_delta_amp_ = options_.get_bool("DWMS_SA_DAMP");
+    do_delta_amp_ = options_.get_bool("DWMS_DELTA_AMP");
 
     do_hbar3_ = options_.get_bool("FORM_HBAR3");
+    max_hbar_level_ = do_hbar3_ ? 3 : 2;
     max_rdm_level_ = (options_.get_str("THREEPDC") == "ZERO") ? 2 : 3;
 
     IntegralType int_type = ints_->integral_type();
@@ -141,18 +143,21 @@ void DWMS_DSRGPT2::test_options() {
         if (do_hbar3_) {
             throw PSIEXCEPTION("DSRG-MRPT3 does not support FORM_HBAR3 yet!");
         }
-
         if (algorithm_ == "MS" || algorithm_ == "XMS") {
             throw PSIEXCEPTION("DWMS-DSRG-PT3 does not support MS or XMS algorithm yet!");
         }
-
         if (do_delta_amp_) {
-            throw PSIEXCEPTION("DSRG-MRPT3 does not support DWMS_SA_DAMP = TRUE!");
+            throw PSIEXCEPTION("DSRG-MRPT3 does not support DWMS_DELTA_AMP = TRUE!");
         }
     }
 
-    if (do_delta_amp_ && eri_df_) {
-        throw PSIEXCEPTION("DF-DSRG-MRPT2 does not support DWMS_SA_DAMP = TRUE!");
+    if (do_delta_amp_) {
+        if (eri_df_) {
+            throw PSIEXCEPTION("DF-DSRG-MRPT2 does not support DWMS_DELTA_AMP = TRUE!");
+        }
+        if (!do_hbar3_) {
+            throw PSIEXCEPTION("3-body terms should be included when DWMS_DELTA_AMP = TRUE!");
+        }
     }
 }
 
@@ -427,7 +432,6 @@ double DWMS_DSRGPT2::compute_dwsa_energy(std::shared_ptr<FCI_MO>& fci_mo) {
 
         // prepare Heff
         SharedMatrix Heff(new Matrix("Heff " + entry_name, nroots, nroots));
-        SharedMatrix Heff_sym(new Matrix("Symmetrized Heff " + entry_name, nroots, nroots));
 
         // vector of T1, T2, and summed 1st-order Hbar
         std::vector<ambit::BlockedTensor> T1s, T2s, RH1s, RH2s;
@@ -465,11 +469,7 @@ double DWMS_DSRGPT2::compute_dwsa_energy(std::shared_ptr<FCI_MO>& fci_mo) {
 
                 // compute transition densities
                 Reference TrD;
-                if (do_hbar3_) {
-                    TrD = fci_mo->transition_reference(MM, NN, true, n, 3, false);
-                } else {
-                    TrD = fci_mo->transition_reference(MM, NN, true, n, 2, false);
-                }
+                TrD = fci_mo->transition_reference(MM, NN, true, n, max_hbar_level_, false);
 
                 outfile->Printf("\n  Contract %s with Heff.", msg.c_str());
                 double coupling = 0.0;
@@ -489,36 +489,72 @@ double DWMS_DSRGPT2::compute_dwsa_energy(std::shared_ptr<FCI_MO>& fci_mo) {
                 if (M == N) {
                     double shift = ints_->frozen_core_energy() + Enuc_ + fci_ints->scalar_energy();
                     Heff->set(M, M, coupling + shift);
-                    Heff_sym->set(M, M, coupling + shift);
                 } else {
-                    Heff->set(N, M, coupling);
-                    Heff_sym->add(N, M, 0.5 * coupling);
-                    Heff_sym->add(M, N, 0.5 * coupling);
+                    Heff->add(N, M, 0.5 * coupling);
+                    Heff->add(M, N, 0.5 * coupling);
                 }
             }
 
-            if (zeta_ != 0.0) {
-                dsrg_pt = nullptr;
-            }
-        }
-
-        // TODO: loop M, half N
-        if (do_delta_amp_) {
-
+            //            if (zeta_ != 0.0) {
+            //                dsrg_pt = nullptr;
+            //            }
         }
 
         // print effective Hamiltonian
         print_h2("Effective Hamiltonian Summary");
         outfile->Printf("\n");
-
         Heff->print();
-        Heff_sym->print();
 
         // diagonalize Heff and print eigen vectors
-        SharedMatrix U(new Matrix("U of Heff (Symmetrized)", nroots, nroots));
+        SharedMatrix U(new Matrix("U of Heff", nroots, nroots));
         SharedVector Ems(new Vector("MS Energies", nroots));
-        Heff_sym->diagonalize(U, Ems);
+        Heff->diagonalize(U, Ems);
         U->eivprint(Ems);
+
+        // corrections to Heff from delta amplitudes
+        if (do_delta_amp_ && do_hbar3_) {
+            outfile->Printf("\n  Compute corrections of Heff due to delta amplitudes.");
+            for (int M = 0; M < nroots; ++M) {
+                auto& T1M = T1s[M];
+                auto& T2M = T2s[M];
+                for (int N = M + 1; N < nroots; ++N) {
+                    Reference TrD =
+                        fci_mo->transition_reference(M, N, true, n, max_hbar_level_, false);
+
+                    T1M["ia"] -= T1s[N]["ia"];
+                    T1M["IA"] -= T1s[N]["IA"];
+                    T2M["ijab"] -= T2s[N]["ijab"];
+                    T2M["iJaB"] -= T2s[N]["iJaB"];
+                    T2M["IJAB"] -= T2s[N]["IJAB"];
+
+                    double coupling = 0.0;
+                    dsrgHeff H = dsrg_pt->commutator_HT_noGNO(RH1s[N], RH2s[N], T1M, T2M);
+                    coupling += contract_Heff_1TrDM(H.H1a, H.H1b, TrD, false);
+                    coupling += contract_Heff_2TrDM(H.H2aa, H.H2ab, H.H2bb, TrD, false);
+                    coupling += contract_Heff_3TrDM(H.H3aaa, H.H3aab, H.H3abb, H.H3bbb, TrD, false);
+
+                    H = dsrg_pt->commutator_HT_noGNO(RH1s[M], RH2s[M], T1M, T2M);
+                    coupling -= contract_Heff_1TrDM(H.H1a, H.H1b, TrD, true);
+                    coupling -= contract_Heff_2TrDM(H.H2aa, H.H2ab, H.H2bb, TrD, true);
+                    coupling -= contract_Heff_3TrDM(H.H3aaa, H.H3aab, H.H3abb, H.H3bbb, TrD, true);
+
+                    Heff->add(N, M, 0.5 * coupling);
+                    Heff->add(M, N, 0.5 * coupling);
+
+                    T1M["ia"] += T1s[N]["ia"];
+                    T1M["IA"] += T1s[N]["IA"];
+                    T2M["ijab"] += T2s[N]["ijab"];
+                    T2M["iJaB"] += T2s[N]["iJaB"];
+                    T2M["IJAB"] += T2s[N]["IJAB"];
+                }
+            }
+
+            print_h2("Delta Amplitudes Corrected Effective Hamiltonian");
+            outfile->Printf("\n");
+            Heff->print();
+            Heff->diagonalize(U, Ems);
+            U->eivprint(Ems);
+        }
 
         // set Ept_ value
         for (int i = 0; i < nroots; ++i) {

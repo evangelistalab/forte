@@ -58,10 +58,12 @@ class DWMS_DSRGPT2 : public Wavefunction {
     std::string dwms_corrlv_;
 
     /// Consider X(αβ) = A(β) - A(α) in SA algorithm
-    bool dwms_sa_damp_;
+    bool do_delta_amp_;
 
     /// form Hbar3 for DSRG-MRPT2
     bool do_hbar3_;
+    /// max body of Hbar computed
+    int max_hbar_level_;
 
     /// transform integrals to semicanonical basis (only PT2 when DF)
     bool do_semi_;
