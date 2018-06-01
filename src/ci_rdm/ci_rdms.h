@@ -35,13 +35,14 @@
 #include "psi4/libmints/wavefunction.h"
 #include "psi4/liboptions/liboptions.h"
 
-#include "determinant_hashvector.h"
-#include "helpers.h"
-#include "operator.h"
-#include "reference.h"
-#include "sparse_ci/determinant.h"
-#include "fci/string_lists.h"
-#include "fci/fci_integrals.h"
+#include "../determinant_hashvector.h"
+#include "../helpers.h"
+#include "../operator.h"
+#include "../reference.h"
+#include "../sparse_ci/determinant.h"
+#include "../sparse_ci/sorted_string_list.h"
+#include "../fci/string_lists.h"
+#include "../fci/fci_integrals.h"
 
 namespace psi {
 namespace forte {
@@ -52,14 +53,34 @@ class CI_RDMS {
     using det_hash_it = det_hash::iterator;
 
     // Class constructor and destructor
-    CI_RDMS(Options& options, std::shared_ptr<FCIIntegrals> fci_ints,
+    CI_RDMS(std::shared_ptr<FCIIntegrals> fci_ints,
             const std::vector<Determinant>& det_space, SharedMatrix evecs, int root1,
             int root2);
 
-    CI_RDMS(Options& options, DeterminantHashVec& wfn, std::shared_ptr<FCIIntegrals> fci_ints,
-            SharedMatrix evecs, int root1, int root2);
+    CI_RDMS(DeterminantHashVec& wfn, std::shared_ptr<FCIIntegrals> fci_ints,
+            SharedMatrix evecs, int root1, int root2, bool dyn = false);
 
     ~CI_RDMS();
+
+    //*** Notes on RDM class:
+    // All rdms are stored in spin-labeled vector format.
+    // They are accessed in the standard way. E.g., for the alpha/alpha 2-RDM, 
+    // the element corresponding to p,q,r,s would be accessed with:
+    // tp2rdm_aa[p*ncmo^(3) + q*nmco^(2) + r*ncmo + s], where ncmo is the number
+    // of active orbitals.
+
+    // The most efficient algorithms use coupling lists to fill the
+    // RDM vectors, and functions exist below to build each order RDM in this way.
+    // Note that if the coupling lists are already present, you should pass the
+    // corresponding WFNOperator object to avoid recomputing them.
+
+    // In cases where these coupling lists are prohibitively large, a dynamic
+    // build is also available. This code relies on the UI64Determinant class, 
+    // so be sure this is enabled. Also, the most efficient algorithm computes
+    // all RDMs (1,2 and 3) in one function, but soon I'll write functions to grab
+    // separate RDMs (however, these should be avoided). 
+    //***
+
 
     // Return a reference object
     Reference reference(std::vector<double>& oprdm_a, std::vector<double>& oprdm_b,
@@ -77,6 +98,9 @@ class CI_RDMS {
     void compute_2rdm(std::vector<double>& tprdm_aa, std::vector<double>& tprdm_ab,
                       std::vector<double>& tprdm_bb);
 
+//    void compute_2rdm_dynamic(std::vector<double>& tprdm_aa, std::vector<double>& tprdm_ab,
+//                      std::vector<double>& tprdm_bb);
+
     void compute_2rdm(std::vector<double>& tprdm_aa, std::vector<double>& tprdm_ab,
                       std::vector<double>& tprdm_bb, WFNOperator& op);
     //    void compute_2rdm_str(std::vector<double>& tprdm_aa,
@@ -85,6 +109,9 @@ class CI_RDMS {
     void compute_3rdm(std::vector<double>& tprdm_aaa, std::vector<double>& tprdm_aab,
                       std::vector<double>& tprdm_abb, std::vector<double>& tprdm_bbb);
 
+//    void compute_3rdm_dynamic(std::vector<double>& tprdm_aaa, std::vector<double>& tprdm_aab,
+//                      std::vector<double>& tprdm_abb, std::vector<double>& tprdm_bbb);
+
     void compute_3rdm(std::vector<double>& tprdm_aaa, std::vector<double>& tprdm_aab,
                       std::vector<double>& tprdm_abb, std::vector<double>& tprdm_bbb,
                       WFNOperator& op);
@@ -92,6 +119,15 @@ class CI_RDMS {
     //                          std::vector<double>& tprdm_aab,
     //                          std::vector<double>& tprdm_abb,
     //                          std::vector<double>& tprdm_bbb);
+    void compute_rdms_dynamic(std::vector<double>& oprdm_a, 
+                              std::vector<double>& oprdm_b,
+                              std::vector<double>& tprdm_aa,
+                              std::vector<double>& tprdm_ab,
+                              std::vector<double>& tprdm_bb,
+                              std::vector<double>& tprdm_aaa,
+                              std::vector<double>& tprdm_aab,
+                              std::vector<double>& tprdm_abb,
+                              std::vector<double>& tprdm_bbb);
 
     double get_energy(std::vector<double>& oprdm_a, std::vector<double>& oprdm_b,
                       std::vector<double>& tprdm_aa, std::vector<double>& tprdm_bb,
@@ -107,16 +143,12 @@ class CI_RDMS {
 
     void set_max_rdm(int rdm);
 
-    void set_symmetry(int sym) { symmetry_ = sym; }
-
     // Convert to strings
     void convert_to_string(std::vector<Determinant>& space);
 
   private:
     /* Class Variables*/
 
-    // The options object
-    Options& options_;
     // The FCI integrals
     std::shared_ptr<FCIIntegrals> fci_ints_;
     // The MOSpaceInfo object
@@ -133,9 +165,6 @@ class CI_RDMS {
 
     // Buffer to access cre_list
     std::vector<std::vector<size_t>> cre_list_buffer_;
-
-    // The wavefunction symmetry
-    int symmetry_;
 
     // The number of alpha electrons
     size_t na_;
@@ -168,6 +197,11 @@ class CI_RDMS {
     bool print_;
 
     int max_rdm_;
+
+    // Objects for dynamic builds
+//    SortedStringList_UI64 a_sorted_string_list_;
+//    SortedStringList_UI64 b_sorted_string_list_;
+
 
     // The list of a_p |N>
     std::vector<std::vector<std::pair<size_t, short>>> a_ann_list_;
@@ -244,6 +278,16 @@ class CI_RDMS {
 
     // Generate three-particle map
     void get_three_map();
+
+
+    //*- Functions for Dynamic RDM builds -*//
+
+    // Function to fill 3rdm with all (or half of all) permutations of the 6 indices
+    void fill_3rdm( std::vector<double>& tprdm, double value, int p, int q, int r, int s, int t, int u , bool half = false);
+
+    // Function to build non-trivial mixed-spin components of 1-, 2-, and 3- RDMs
+    void make_ab(SortedStringList_UI64 a_sorted_string_list_,const  std::vector<UI64Determinant::bit_t>& sorted_astr,const std::vector<UI64Determinant>& sorted_a_dets, 
+                std::vector<double>& tprdm_ab, std::vector<double>& tprdm_aab,std::vector<double>& tprdm_abb);
 };
 }
 } // End namepaces

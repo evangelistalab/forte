@@ -37,7 +37,7 @@
 #include "psi4/libqt/qt.h"
 #include "psi4/libmints/dipole.h"
 
-#include "../ci_rdms.h"
+#include "../ci_rdm/ci_rdms.h"
 #include "../fci/fci.h"
 #include "../mini-boost/boost/format.hpp"
 #include "../fci_mo.h"

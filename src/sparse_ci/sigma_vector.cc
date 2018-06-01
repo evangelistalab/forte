@@ -757,7 +757,8 @@ void SigmaVectorWfn2::compute_sigma(SharedVector sigma, SharedVector b) {
             }
         }
     }
-    const det_hashvec& dets = space_.wfn_hash();
+
+    auto& dets = space_.wfn_hash();
 
 #pragma omp parallel
     {
@@ -776,7 +777,7 @@ void SigmaVectorWfn2::compute_sigma(SharedVector sigma, SharedVector b) {
         size_t end_idx = start_idx + bin_size;
 
         for (size_t J = start_idx; J < end_idx; ++J) {
-            sigma_t[J] += diag_[J] * b_p[J]; // Make DDOT
+            sigma_p[J] += diag_[J] * b_p[J]; // Make DDOT
         }
 
         // a singles
@@ -784,11 +785,15 @@ void SigmaVectorWfn2::compute_sigma(SharedVector sigma, SharedVector b) {
         size_t start_a_idx = 0;
         for (size_t K = start_a_idx, max_K = end_a_idx; K < max_K; ++K) {
             if ((K % num_thread) == tid) {
-                for (auto& detJ : a_list_[K]) { // Each gives unique J
+                const std::vector<std::pair<size_t, short>>& c_dets = a_list_[K];
+                size_t max_det = c_dets.size();
+                for (size_t det = 0; det < max_det; ++det) {
+                    auto& detJ = c_dets[det];
                     const size_t J = detJ.first;
                     const size_t p = std::abs(detJ.second) - 1;
                     double sign_p = detJ.second > 0.0 ? 1.0 : -1.0;
-                    for (auto& detI : a_list_[K]) {
+                    for (size_t det2 = det+1; det2 < max_det; ++det2) {
+                        auto& detI = c_dets[det2];
                         const size_t q = std::abs(detI.second) - 1;
                         if (p != q) {
                             const size_t I = detI.first;
@@ -797,6 +802,7 @@ void SigmaVectorWfn2::compute_sigma(SharedVector sigma, SharedVector b) {
                                 fci_ints_->slater_rules_single_alpha_abs(dets[J], p, q) * sign_p *
                                 sign_q;
                             sigma_t[I] += HIJ * b_p[J];
+                            sigma_t[J] += HIJ * b_p[I];
                         }
                     }
                 }
@@ -809,11 +815,15 @@ void SigmaVectorWfn2::compute_sigma(SharedVector sigma, SharedVector b) {
         for (size_t K = start_b_idx, max_K = end_b_idx; K < max_K; ++K) {
             // aa singles
             if ((K % num_thread) == tid) {
-                for (auto& detJ : b_list_[K]) {
+                const std::vector<std::pair<size_t, short>>& c_dets = b_list_[K];
+                size_t max_det = c_dets.size();
+                for (size_t det = 0; det < max_det; ++det) {
+                    auto& detJ = c_dets[det];
                     const size_t J = detJ.first;
                     const size_t p = std::abs(detJ.second) - 1;
                     double sign_p = detJ.second > 0.0 ? 1.0 : -1.0;
-                    for (auto& detI : b_list_[K]) {
+                    for (size_t det2 = det+1; det2 < max_det; ++det2) {
+                        auto& detI = c_dets[det2];
                         const size_t q = std::abs(detI.second) - 1;
                         if (p != q) {
                             const size_t I = detI.first;
@@ -822,6 +832,7 @@ void SigmaVectorWfn2::compute_sigma(SharedVector sigma, SharedVector b) {
                                 fci_ints_->slater_rules_single_beta_abs(dets[J], p, q) * sign_p *
                                 sign_q;
                             sigma_t[I] += HIJ * b_p[J];
+                            sigma_t[J] += HIJ * b_p[I];
                         }
                     }
                 }
@@ -840,12 +851,15 @@ void SigmaVectorWfn2::compute_sigma(SharedVector sigma, SharedVector b) {
         for (size_t K = 0, max_K = aa_size; K < max_K; ++K) {
             if ((K % num_thread) == tid) {
                 const std::vector<std::tuple<size_t, short, short>>& c_dets = aa_list_[K];
-                for (auto& detJ : c_dets) {
+                size_t max_det = c_dets.size();
+                for (size_t det = 0; det < max_det; ++det) {
+                    auto& detJ = c_dets[det];
                     size_t J = std::get<0>(detJ);
                     short p = std::abs(std::get<1>(detJ)) - 1;
                     short q = std::get<2>(detJ);
                     double sign_p = std::get<1>(detJ) > 0.0 ? 1.0 : -1.0;
-                    for (auto& detI : c_dets) {
+                    for (size_t det2 = det+1; det2 < max_det; ++det2) {
+                        auto& detI = c_dets[det2];
                         short r = std::abs(std::get<1>(detI)) - 1;
                         short s = std::get<2>(detI);
                         if ((p != r) and (q != s) and (p != s) and (q != r)) {
@@ -853,6 +867,7 @@ void SigmaVectorWfn2::compute_sigma(SharedVector sigma, SharedVector b) {
                             double sign_q = std::get<1>(detI) > 0.0 ? 1.0 : -1.0;
                             double HIJ = sign_p * sign_q * fci_ints_->tei_aa(p, q, r, s);
                             sigma_t[I] += HIJ * b_p[J];
+                            sigma_t[J] += HIJ * b_p[I];
                         }
                     }
                 }
@@ -861,14 +876,17 @@ void SigmaVectorWfn2::compute_sigma(SharedVector sigma, SharedVector b) {
 
         // BB doubles
         for (size_t K = 0, max_K = bb_list_.size(); K < max_K; ++K) {
-            const std::vector<std::tuple<size_t, short, short>>& c_dets = bb_list_[K];
             if ((K % num_thread) == tid) {
-                for (auto& detJ : c_dets) {
+                const std::vector<std::tuple<size_t, short, short>>& c_dets = bb_list_[K];
+                size_t max_det = c_dets.size();
+                for (size_t det = 0; det < max_det; ++det) {
+                    auto& detJ = c_dets[det];
                     size_t J = std::get<0>(detJ);
                     short p = std::abs(std::get<1>(detJ)) - 1;
                     short q = std::get<2>(detJ);
                     double sign_p = std::get<1>(detJ) > 0.0 ? 1.0 : -1.0;
-                    for (auto& detI : c_dets) {
+                    for (size_t det2 = det+1; det2 < max_det; ++det2) {
+                        auto& detI = c_dets[det2];
                         short r = std::abs(std::get<1>(detI)) - 1;
                         short s = std::get<2>(detI);
                         if ((p != r) and (q != s) and (p != s) and (q != r)) {
@@ -876,6 +894,7 @@ void SigmaVectorWfn2::compute_sigma(SharedVector sigma, SharedVector b) {
                             double sign_q = std::get<1>(detI) > 0.0 ? 1.0 : -1.0;
                             double HIJ = sign_p * sign_q * fci_ints_->tei_bb(p, q, r, s);
                             sigma_t[I] += HIJ * b_p[J];
+                            sigma_t[J] += HIJ * b_p[I];
                         }
                     }
                 }
@@ -891,14 +910,16 @@ void SigmaVectorWfn2::compute_sigma(SharedVector sigma, SharedVector b) {
                     short p = std::abs(std::get<1>(detJ)) - 1;
                     short q = std::get<2>(detJ);
                     double sign_p = std::get<1>(detJ) > 0.0 ? 1.0 : -1.0;
-                    for (auto& detI : c_dets) {
-                        short r = std::abs(std::get<1>(detI)) - 1;
-                        short s = std::get<2>(detI);
+                    for (size_t det2 = det+1; det2 < max_det; ++det2) {
+                            auto& detI = c_dets[det2];
+                            short r = std::abs(std::get<1>(detI)) - 1;
+                            short s = std::get<2>(detI);
                         if ((p != r) and (q != s)) {
                             size_t I = std::get<0>(detI);
                             double sign_q = std::get<1>(detI) > 0.0 ? 1.0 : -1.0;
                             double HIJ = sign_p * sign_q * fci_ints_->tei_ab(p, q, r, s);
                             sigma_t[I] += HIJ * b_p[J];
+                            sigma_t[J] += HIJ * b_p[I];
                         }
                     }
                 }

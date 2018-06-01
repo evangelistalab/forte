@@ -123,7 +123,7 @@ void ESNO::compute_nos() {
     // build 1 rdm
 
     outfile->Printf("\n  Computing 1RDM");
-    CI_RDMS ci_rdms(options_, reference_, fci_ints_, evecs, 0, 0);
+    CI_RDMS ci_rdms(reference_, fci_ints_, evecs, 0, 0);
     ci_rdms.set_max_rdm(1);
 
     size_t ncmo = mo_space_info_->size("GENERALIZED PARTICLE");

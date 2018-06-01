@@ -48,7 +48,8 @@ src/bitset_performance.cc
 src/blockedtensorfactory.cc
 src/casscf.cc
 src/cc.cc
-src/ci_rdms.cc
+src/ci_rdm/ci_rdms.cc
+src/ci_rdm/ci_rdms_dynamic.cc
 src/ci_reference.cc
 src/davidson.cc
 src/determinant_hashvector.cc
@@ -156,6 +157,10 @@ if(TARGET CheMPS2::chemps2)
 endif()
 
 target_include_directories(forte PRIVATE src/mini-boost)
+
+## 64bit implementation
+add_definitions(-DSMALL_BITSET)
+set(SMALL_BITSET true)
 
 if(ENABLE_MPI)
     target_link_libraries(forte PRIVATE ${MPI_CXX_LIBRARIES})  # MPI option A

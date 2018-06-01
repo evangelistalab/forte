@@ -28,7 +28,7 @@
 
 #include <iomanip>
 
-#include "../ci_rdms.h"
+#include "../ci_rdm/ci_rdms.h"
 #include "../fci/fci_solver.h"
 #include "../fci_mo.h"
 #include "dsrg_mrpt2.h"
@@ -266,8 +266,7 @@ std::vector<std::vector<double>> DSRG_MRPT2::compute_energy_sa() {
                     for (int B = A; B < nstates; ++B) {
 
                         // compute rdms
-                        CI_RDMS ci_rdms(options_, fci_ints, p_space, evecs, A, B);
-                        ci_rdms.set_symmetry(irrep);
+                        CI_RDMS ci_rdms(fci_ints, p_space, evecs, A, B);
 
                         std::vector<double> opdm_a, opdm_b;
                         ci_rdms.compute_1rdm(opdm_a, opdm_b);
@@ -413,8 +412,7 @@ std::vector<std::vector<double>> DSRG_MRPT2::compute_energy_xms() {
                 std::vector<double> sa_opdm_b(na2, 0.0);
 
                 for (int M = 0; M < nstates; ++M) {
-                    CI_RDMS ci_rdms(options_, fci_ints, p_space, civecs, M, M);
-                    ci_rdms.set_symmetry(irrep);
+                    CI_RDMS ci_rdms(fci_ints, p_space, civecs, M, M);
                     std::vector<double> opdm_a(na2, 0.0);
                     std::vector<double> opdm_b(na2, 0.0);
                     ci_rdms.compute_1rdm(opdm_a, opdm_b);
@@ -585,8 +583,7 @@ SharedMatrix DSRG_MRPT2::xms_rotation(std::shared_ptr<FCIIntegrals> fci_ints,
         for (int N = M; N < nstates; ++N) {
 
             // compute transition density
-            CI_RDMS ci_rdms(options_, fci_ints, p_space, civecs, M, N);
-            ci_rdms.set_symmetry(irrep);
+            CI_RDMS ci_rdms(fci_ints, p_space, civecs, M, N);
 
             std::vector<double> opdm_a, opdm_b;
             ci_rdms.compute_1rdm(opdm_a, opdm_b);
@@ -796,8 +793,7 @@ double DSRG_MRPT2::compute_ms_2nd_coupling(const std::string& name) {
 void DSRG_MRPT2::compute_cumulants(std::shared_ptr<FCIIntegrals> fci_ints,
                                    std::vector<Determinant>& p_space, SharedMatrix evecs,
                                    const int& root1, const int& root2, const int& irrep) {
-    CI_RDMS ci_rdms(options_, fci_ints, p_space, evecs, root1, root2);
-    ci_rdms.set_symmetry(irrep);
+    CI_RDMS ci_rdms(fci_ints, p_space, evecs, root1, root2);
 
     // 1 cumulant
     std::vector<double> opdm_a, opdm_b;
@@ -932,8 +928,7 @@ void DSRG_MRPT2::compute_densities(std::shared_ptr<FCIIntegrals> fci_ints,
                                    std::vector<psi::forte::Determinant>& p_space,
                                    SharedMatrix evecs, const int& root1, const int& root2,
                                    const int& irrep) {
-    CI_RDMS ci_rdms(options_, fci_ints, p_space, evecs, root1, root2);
-    ci_rdms.set_symmetry(irrep);
+    CI_RDMS ci_rdms(fci_ints, p_space, evecs, root1, root2);
 
     // 1 density
     std::vector<double> opdm_a, opdm_b;

@@ -2623,7 +2623,7 @@ void FCI_MO::compute_permanent_dipole() {
     for (int A = 0; A < nroot_; ++A) {
         std::string trans_name = std::to_string(A) + " -> " + std::to_string(A);
 
-        CI_RDMS ci_rdms(options_, fci_ints_, determinant_, evecs, A, A);
+        CI_RDMS ci_rdms(fci_ints_, determinant_, evecs, A, A);
         std::vector<double> opdm_a(na_ * na_, 0.0);
         std::vector<double> opdm_b(na_ * na_, 0.0);
         ci_rdms.compute_1rdm(opdm_a, opdm_b);
@@ -2740,7 +2740,7 @@ void FCI_MO::compute_transition_dipole() {
         for (int B = A + 1; B < nroot_; ++B) {
             std::string trans_name = std::to_string(A) + " -> " + std::to_string(B);
 
-            CI_RDMS ci_rdms(options_, fci_ints_, determinant_, evecs, A, B);
+            CI_RDMS ci_rdms(fci_ints_, determinant_, evecs, A, B);
             std::vector<double> opdm_a(na_ * na_, 0.0);
             std::vector<double> opdm_b(na_ * na_, 0.0);
             ci_rdms.compute_1rdm(opdm_a, opdm_b);
@@ -2877,8 +2877,7 @@ FCI_MO::compute_relaxed_dm(const std::vector<double>& dm0, std::vector<BlockedTe
         }
 
         // CI_RDMS for the targeted root
-        CI_RDMS ci_rdms(options_, fci_ints_, determinant_, evecs, root_, root_);
-        ci_rdms.set_symmetry(root_sym_);
+        CI_RDMS ci_rdms(fci_ints_, determinant_, evecs, root_, root_);
 
         if (dm0_sum > 1.0e-12) {
             // compute RDMS and put into BlockedTensor format
@@ -2915,8 +2914,7 @@ FCI_MO::compute_relaxed_dm(const std::vector<double>& dm0, std::vector<BlockedTe
                 std::string name = generate_name(multi, i, irrep);
                 std::vector<double> dm(3, 0.0);
 
-                CI_RDMS ci_rdms(options_, fci_ints_, p_spaces_[n], evecs, i, i);
-                ci_rdms.set_symmetry(irrep);
+                CI_RDMS ci_rdms(fci_ints_, p_spaces_[n], evecs, i, i);
 
                 if (dm0_sum > 1.0e-12) {
                     // compute RDMS and put into BlockedTensor format
@@ -2981,8 +2979,7 @@ FCI_MO::compute_relaxed_dm(const std::vector<double>& dm0, std::vector<BlockedTe
         }
 
         // CI_RDMS for the targeted root
-        CI_RDMS ci_rdms(options_, fci_ints_, determinant_, evecs, root_, root_);
-        ci_rdms.set_symmetry(root_sym_);
+        CI_RDMS ci_rdms(fci_ints_, determinant_, evecs, root_, root_);
 
         if (dm0_sum > 1.0e-12) {
             // compute RDMS and put into BlockedTensor format
@@ -3020,8 +3017,7 @@ FCI_MO::compute_relaxed_dm(const std::vector<double>& dm0, std::vector<BlockedTe
                 std::string name = generate_name(multi, i, irrep);
                 std::vector<double> dm(3, 0.0);
 
-                CI_RDMS ci_rdms(options_, fci_ints_, p_spaces_[n], evecs, i, i);
-                ci_rdms.set_symmetry(irrep);
+                CI_RDMS ci_rdms(fci_ints_, p_spaces_[n], evecs, i, i);
 
                 if (dm0_sum > 1.0e-12) {
                     // compute RDMS and put into BlockedTensor format
@@ -3089,7 +3085,7 @@ FCI_MO::compute_relaxed_osc(std::vector<BlockedTensor>& dm1, std::vector<Blocked
                 double Eex = eigens_[A][j].second - eigens_[A][i].second;
                 std::vector<double> osc(3, 0.0);
 
-                CI_RDMS ci_rdms(options_, fci_ints_, p_spaces_[A], evecs0, i, j);
+                CI_RDMS ci_rdms(fci_ints_, p_spaces_[A], evecs0, i, j);
 
                 ambit::BlockedTensor D1 = compute_n_rdm(ci_rdms, 1);
                 ambit::BlockedTensor D2 = compute_n_rdm(ci_rdms, 2);
@@ -3145,7 +3141,7 @@ FCI_MO::compute_relaxed_osc(std::vector<BlockedTensor>& dm1, std::vector<Blocked
                     double Eex = eigens_[B][j].second - eigens_[A][i].second;
                     std::vector<double> osc(3, 0.0);
 
-                    CI_RDMS ci_rdms(options_, fci_ints_, p_space, evecs, i, j + nroots0);
+                    CI_RDMS ci_rdms(fci_ints_, p_space, evecs, i, j + nroots0);
 
                     ambit::BlockedTensor D1 = compute_n_rdm(ci_rdms, 1);
                     ambit::BlockedTensor D2 = compute_n_rdm(ci_rdms, 2);
@@ -3211,7 +3207,7 @@ FCI_MO::compute_relaxed_osc(std::vector<BlockedTensor>& dm1, std::vector<Blocked
                 double Eex = eigens_[A][j].second - eigens_[A][i].second;
                 std::vector<double> osc(3, 0.0);
 
-                CI_RDMS ci_rdms(options_, fci_ints_, p_spaces_[A], evecs0, i, j);
+                CI_RDMS ci_rdms(fci_ints_, p_spaces_[A], evecs0, i, j);
 
                 ambit::BlockedTensor D1 = compute_n_rdm(ci_rdms, 1);
                 ambit::BlockedTensor D2 = compute_n_rdm(ci_rdms, 2);
@@ -3268,7 +3264,7 @@ FCI_MO::compute_relaxed_osc(std::vector<BlockedTensor>& dm1, std::vector<Blocked
                     double Eex = eigens_[B][j].second - eigens_[A][i].second;
                     std::vector<double> osc(3, 0.0);
 
-                    CI_RDMS ci_rdms(options_, fci_ints_, p_space, evecs, i, j + nroots0);
+                    CI_RDMS ci_rdms(fci_ints_, p_space, evecs, i, j + nroots0);
 
                     ambit::BlockedTensor D1 = compute_n_rdm(ci_rdms, 1);
                     ambit::BlockedTensor D2 = compute_n_rdm(ci_rdms, 2);
@@ -3556,7 +3552,7 @@ void FCI_MO::compute_ref(const int& level) {
     for (int i = 0; i < eigen_size; ++i) {
         evecs->set_column(0, i, (eigen_[i]).first);
     }
-    CI_RDMS ci_rdms(options_, fci_ints_, determinant_, evecs, root_, root_);
+    CI_RDMS ci_rdms(fci_ints_, determinant_, evecs, root_, root_);
 
     // compute 1-RDM
     std::vector<double> opdm_a, opdm_b;
@@ -3875,7 +3871,6 @@ double FCI_MO::compute_sa_energy() {
     //                // compute density
     //                CI_RDMS ci_rdms
     //                (options_,fci_ints_,determinant_,evecs,M,N);
-    //                ci_rdms.set_symmetry(irrep);
     //                std::vector<double> opdm_a (nelement, 0.0);
     //                std::vector<double> opdm_b (nelement, 0.0);
     //                ci_rdms.compute_1rdm(opdm_a,opdm_b);
@@ -3959,8 +3954,7 @@ void FCI_MO::xms_rotate(const int& irrep) {
                 for (int N = M; N < nroots; ++N) {
 
                     // compute density
-                    CI_RDMS ci_rdms(options_, fci_ints_, determinant_, evecs, M, N);
-                    ci_rdms.set_symmetry(irrep);
+                    CI_RDMS ci_rdms(fci_ints_, determinant_, evecs, M, N);
                     std::vector<double> opdm_a(nelement, 0.0);
                     std::vector<double> opdm_b(nelement, 0.0);
                     ci_rdms.compute_1rdm(opdm_a, opdm_b);
@@ -4081,8 +4075,7 @@ void FCI_MO::compute_sa_ref(const int& level) {
 
         for (int i = 0; i < nroots; ++i) {
             double weight = weights[i];
-            CI_RDMS ci_rdms(options_, fci_ints_, p_spaces_[n], evecs, i, i);
-            ci_rdms.set_symmetry(irrep);
+            CI_RDMS ci_rdms(fci_ints_, p_spaces_[n], evecs, i, i);
 
             // compute 1-RDMs
             std::vector<double> opdm_a, opdm_b;
@@ -4393,7 +4386,6 @@ void FCI_MO::set_eigens(const std::vector<vector<pair<SharedVector, double>>>& e
 
 //        for (int i = 0; i < nroots; ++i) {
 //            CI_RDMS ci_rdms(options_, fci_ints_, p_spaces_[n], evecs, i, i);
-//            ci_rdms.set_symmetry(irrep);
 
 //            // compute 1-RDMs
 //            std::vector<double> opdm_a, opdm_b;

@@ -366,8 +366,6 @@ double WFNOperator::s2(DeterminantHashVec& wfn, SharedMatrix& evecs, int root) {
         double ms = 0.5 * static_cast<double>(na - nb);
         S2 += (ms * ms + ms + static_cast<double>(nb) - static_cast<double>(npair)) *
               evecs->get(i, root) * evecs->get(i, root);
-        // if ((npair == nb) or (npair == na))
-        //     continue;
     }
 
     // Loop directly through all determinants with
@@ -401,6 +399,81 @@ double WFNOperator::s2(DeterminantHashVec& wfn, SharedMatrix& evecs, int root) {
     S2 = std::fabs(S2);
     return S2;
 }
+
+double WFNOperator::s2_direct(DeterminantHashVec& wfn, SharedMatrix& evecs, int root ){
+    double S2 = 0.0;
+    const det_hashvec& wfn_map = wfn.wfn_hash();
+
+    for (size_t i = 0, max_i = wfn_map.size(); i < max_i; ++i) {
+        // Compute diagonal
+        // PhiI = PhiJ
+        Determinant PhiI(wfn_map[i]);
+        int npair = PhiI.npair();
+        int na = PhiI.count_alfa();
+        int nb = PhiI.count_beta();
+        double ms = 0.5 * static_cast<double>(na - nb);
+        S2 += (ms * ms + ms + static_cast<double>(nb) - static_cast<double>(npair)) *
+              evecs->get(i, root) * evecs->get(i, root);
+    }
+        
+
+    // abab contribution
+    SortedStringList_UI64 a_sorted_string_list(wfn, fci_ints_, DetSpinType::Alpha);
+    const auto& sorted_half_dets = a_sorted_string_list.sorted_half_dets();
+    const auto& sorted_dets = a_sorted_string_list.sorted_dets();
+    UI64Determinant::bit_t detIJa_common;
+    UI64Determinant::bit_t Ib;
+    UI64Determinant::bit_t Jb;
+    UI64Determinant::bit_t IJb;
+    
+    for( const auto& detIa : sorted_half_dets){
+        const auto& range_I = a_sorted_string_list.range(detIa);
+        size_t first_I = range_I.first;
+        size_t last_I = range_I.second;
+
+        for( const auto& detJa : sorted_half_dets){
+            detIJa_common = detIa ^ detJa;
+            int ndiff = ui64_bit_count(detIJa_common);
+            if( ndiff == 2 ){
+                int i, a;
+                for (int p = 0; p < ncmo_; ++p) {
+                    const bool la_p = ui64_get_bit(detIa, p);
+                    const bool ra_p = ui64_get_bit(detJa, p);
+                    if (la_p ^ ra_p) {
+                        i = la_p ? p : i;
+                        a = ra_p ? p : a;
+                    }
+                }
+                double sign_ia = ui64_slater_sign(detIa, i, a);
+                const auto& range_J = a_sorted_string_list.range(detJa);
+                size_t first_J = range_J.first;
+                size_t last_J = range_J.second;
+                for (size_t posI = first_I; posI < last_I; ++posI) {
+                    Ib = sorted_dets[posI].get_beta_bits();
+                    double CI = evecs->get(a_sorted_string_list.add(posI),root);
+                    for (size_t posJ = first_J; posJ < last_J; ++posJ) {
+                        Jb = sorted_dets[posJ].get_beta_bits();
+                        IJb = Jb ^ Ib;
+                        int ndiff = ui64_bit_count(IJb);
+                        if (ndiff == 2) {
+                            auto Ib_sub = Ib & IJb;
+                            auto j = lowest_one_idx(Ib_sub);
+                            auto Jb_sub = Jb & IJb;
+                            auto b = lowest_one_idx(Jb_sub);
+                            if ( (i!=j) and (a != b) and (i == b) and (j == a)) {
+                                double sign = sign_ia * ui64_slater_sign(Ib,j,b);
+                                S2 -= sign * CI * evecs->get(a_sorted_string_list.add(posJ), root);                 
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    return std::fabs(S2);
+}
+
 
 void WFNOperator::add_singles(DeterminantHashVec& wfn) {
     const det_hashvec& wfn_map = wfn.wfn_hash();
