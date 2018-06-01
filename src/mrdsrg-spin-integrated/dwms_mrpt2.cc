@@ -139,21 +139,20 @@ void DWMS_DSRGPT2::test_options() {
         throw PSIEXCEPTION("VCIS and VCISD are not supported for DWMS-DSRG-PT yet!");
     }
 
-    if (dwms_ref_ == "PT3" || dwms_corrlv_ == "PT3") {
-        if (do_hbar3_) {
-            throw PSIEXCEPTION("DSRG-MRPT3 does not support FORM_HBAR3 yet!");
-        }
-        if (algorithm_ == "MS" || algorithm_ == "XMS") {
-            throw PSIEXCEPTION("DWMS-DSRG-PT3 does not support MS or XMS algorithm yet!");
-        }
-        if (do_delta_amp_) {
-            throw PSIEXCEPTION("DSRG-MRPT3 does not support DWMS_DELTA_AMP = TRUE!");
-        }
+    if (do_hbar3_ && (dwms_ref_ == "PT3" || dwms_corrlv_ == "PT3")) {
+        throw PSIEXCEPTION("DSRG-MRPT3 does not support FORM_HBAR3 yet!");
+    }
+
+    if (dwms_corrlv_ == "PT3" && (algorithm_ == "MS" || algorithm_ == "XMS")) {
+        throw PSIEXCEPTION("DWMS-DSRG-PT3 does not support MS or XMS algorithm yet!");
     }
 
     if (do_delta_amp_) {
-        if (eri_df_) {
+        if (eri_df_ && dwms_corrlv_ == "PT2") {
             throw PSIEXCEPTION("DF-DSRG-MRPT2 does not support DWMS_DELTA_AMP = TRUE!");
+        }
+        if (dwms_corrlv_ == "PT3") {
+            throw PSIEXCEPTION("DSRG-MRPT3 does not support DWMS_DELTA_AMP = TRUE!");
         }
         if (!do_hbar3_) {
             throw PSIEXCEPTION("3-body terms should be included when DWMS_DELTA_AMP = TRUE!");
