@@ -38,7 +38,7 @@
 
 #include "ambit/tensor.h"
 
-#include "ci_rdms.h"
+#include "ci_rdm/ci_rdms.h"
 #include "helpers.h"
 #include "integrals/integrals.h"
 #include "reference.h"
