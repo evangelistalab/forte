@@ -398,7 +398,7 @@ std::vector<std::vector<double>> DSRG_MRPT2::compute_energy_xms() {
                 ambit::Tensor D1b = L1b.clone();
 
                 for (int M = 0; M < nstates; ++M) {
-                    CI_RDMS ci_rdms(options_, fci_ints, p_space, civecs, M, M);
+                    CI_RDMS ci_rdms(fci_ints, p_space, civecs, M, M);
                     ci_rdms.compute_1rdm(D1a.data(), D1b.data());
                     L1a("pq") += D1a("pq");
                     L1b("pq") += D1b("pq");
@@ -563,7 +563,7 @@ SharedMatrix DSRG_MRPT2::xms_rotation(std::shared_ptr<FCIIntegrals> fci_ints,
         for (int N = M; N < nstates; ++N) {
 
             // compute transition density
-            CI_RDMS ci_rdms(options_, fci_ints, p_space, civecs, M, N);
+            CI_RDMS ci_rdms(fci_ints, p_space, civecs, M, N);
 
             ambit::Tensor D1a = Gamma1_.block("aa").clone();
             ambit::Tensor D1b = Gamma1_.block("aa").clone();

@@ -1469,7 +1469,7 @@ void FCI_MO::compute_permanent_dipole() {
     for (int A = 0; A < nroot_; ++A) {
         std::string trans_name = std::to_string(A) + " -> " + std::to_string(A);
 
-        CI_RDMS ci_rdms(options_, fci_ints_, determinant_, evecs, A, A);
+        CI_RDMS ci_rdms(fci_ints_, determinant_, evecs, A, A);
         std::vector<double> opdm_a, opdm_b;
         ci_rdms.compute_1rdm(opdm_a, opdm_b);
 
@@ -1589,7 +1589,7 @@ void FCI_MO::compute_transition_dipole() {
         for (int B = A + 1; B < nroot_; ++B) {
             std::string trans_name = std::to_string(A) + " -> " + std::to_string(B);
 
-            CI_RDMS ci_rdms(options_, fci_ints_, determinant_, evecs, A, B);
+            CI_RDMS ci_rdms(fci_ints_, determinant_, evecs, A, B);
             std::vector<double> opdm_a, opdm_b;
             ci_rdms.compute_1rdm(opdm_a, opdm_b);
 
@@ -1622,7 +1622,7 @@ void FCI_MO::compute_transition_dipole() {
 
     //    // use oeprop
     //    for(int A = 0; A < nroot_; ++A){
-    //        CI_RDMS ci_rdms (options_,fci_ints_,determinant_,evecs,0,A);
+    //        CI_RDMS ci_rdms (fci_ints_,determinant_,evecs,0,A);
     //        std::vector<double> opdm_a (na_ * na_, 0.0);
     //        std::vector<double> opdm_b (na_ * na_, 0.0);
     //        ci_rdms.compute_1rdm(opdm_a, opdm_b);
@@ -2779,7 +2779,7 @@ SharedMatrix FCI_MO::xms_rotate_this_civecs(const det_vec& p_space, SharedMatrix
             // compute transition density
             ambit::Tensor Da = ambit::Tensor::build(CoreTensor, "Da", {nactv_, nactv_});
             ambit::Tensor Db = ambit::Tensor::build(CoreTensor, "Da", {nactv_, nactv_});
-            CI_RDMS ci_rdms(options_, fci_ints_, p_space, civecs, M, N);
+            CI_RDMS ci_rdms(fci_ints_, p_space, civecs, M, N);
             ci_rdms.compute_1rdm(Da.data(), Db.data());
 
             // compute Fock elements
@@ -3088,7 +3088,7 @@ std::vector<ambit::Tensor> FCI_MO::compute_n_rdm(const vecdet& p_space, SharedMa
             read_disk_vector_double(filenames[i], out[i].data());
         }
     } else {
-        CI_RDMS ci_rdms(options_, fci_ints_, p_space, evecs, root1, root2);
+        CI_RDMS ci_rdms(fci_ints_, p_space, evecs, root1, root2);
 
         if (rdm_level == 1) {
             ci_rdms.compute_1rdm(out[0].data(), out[1].data());
