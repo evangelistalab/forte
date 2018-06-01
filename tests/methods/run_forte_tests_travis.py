@@ -61,11 +61,12 @@ dwms_dsrgpt2_tests = ["dwms-dsrgpt2-1","dwms-dsrgpt2-2","dwms-dsrgpt2-3","dwms-d
 
 casscf_tests = ["casscf", "casscf-2","casscf-3", "casscf-4", "casscf-5", "casscf-6", "casscf-7", "df-casscf-1"]
 dmrg_tests = ["dmrgscf-1", "df-dmrgscf-1", "cd-dmrgscf-1", "dmrg-dsrg-mrpt2-1", "dmrg-dsrg-mrpt2-2"]
+cino_test = ["ci-no-1"]
 
 #tests =  fci_tests + casscf_tests + dsrg_mrpt2_tests + adaptive_ci_tests + pci_tests + fciqmc_tests + ct_tests + dsrg_tests
 #tests =  fci_tests + casscf_tests + dsrg_mrpt2_tests + dmrg_tests + mrdsrg_tests + adaptive_ci_tests + pci_tests
 tests = fci_tests + casscf_tests + dsrg_mrpt2_tests + dsrg_mrpt3_tests + mrdsrg_tests + adaptive_ci_tests + pci_tests + pci_hashvec_tests
-tests += active_dsrgpt2_tests + dwms_dsrgpt2_tests
+tests += active_dsrgpt2_tests + dwms_dsrgpt2_tests + cino_test
 
 maindir = os.getcwd()
 if len(sys.argv) == 1:
