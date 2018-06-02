@@ -46,9 +46,11 @@ void set_FCI_options(ForteOptions& foptions) {
     foptions.add_bool("FCI_TEST_RDMS", false, "Test the FCI reduced density matrices?");
     foptions.add_bool("FCI_PRINT_NO", false, "Print the NO from the rdm of FCI");
 
-    foptions.add_bool("SUBSPACE_ENERGY", false, "Use only a small block of C for variational optemization");
+    foptions.add_bool("CHUNK_SPACE_ENERGY", false, "Use only a small block of C for variational optemization");
+    foptions.add_bool("SOLVE_IN_SUBSPACE", false, "Solve for a subspace after selection via block chop or string trim");
 
     foptions.add_bool("FCI_TILE_CHOPPER", false, "Chop out unimportant tiles based on some cutoff");
+    foptions.add_int("FCI_TC_DIM", 0, "Chop tiles into this size");
     foptions.add_double("FCI_TC_CUT", 0.0, "Tile Chopper threshold");
 
     foptions.add_bool("FCI_STRING_TRIMMER", false, "Trim out unimportant strings based on some cutoff");
@@ -58,10 +60,12 @@ void set_FCI_options(ForteOptions& foptions) {
     foptions.add_str("FCI_SVD_TYPE", "THRESHOLD", {"THRESHOLD","CUMULATIVE"}, "Type of FCI decomposition");
     foptions.add_double("FCI_SVD_TAU", 0.0, "SVD threshold");
 
+
+    // Says SVD N tiles but means dimension of SVD tile!
     foptions.add_bool("FCI_SVD_TILE", false, "Decompose and reconstruct the FCI wave function with tiles");
     foptions.add_str("FCI_SVD_TILE_TYPE", "THRESHOLD", {"THRESHOLD","CUMULATIVE"}, "Type of FCI-tile decomposition");
     foptions.add_double("FCI_SVD_OMEGA", 0.0, "SVD-tile threshold");
-    foptions.add_int("FCI_SVD_N_TILES", 0, "SVD-tile number of tiles");
+    foptions.add_int("FCI_SVD_N_TILES", 0, "SVD-tile tile dimension");
 
     foptions.add_int("FCI_NTRIAL_PER_ROOT", 10,
                      "The number of trial guess vectors to generate per root");

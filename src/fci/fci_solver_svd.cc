@@ -147,7 +147,7 @@ void FCISolver::tile_chopper(std::vector<SharedMatrix>& C, double tile_norm_cut,
     }
 
     //print Block Sparse C
-    py_mat_print(C[0], "C_block_chopped.dat");
+    py_mat_print(C[0], "C_tc.mat");
 
     //compute energy
 
@@ -165,8 +165,9 @@ void FCISolver::tile_chopper(std::vector<SharedMatrix>& C, double tile_norm_cut,
     outfile->Printf("\n E_fci             = %20.12f", fci_energy);
     outfile->Printf("\n E_tile_chop       = %20.12f", E_block_chop);
     outfile->Printf("\n Delta(E_tle_chp)  = %20.12f", E_block_chop-fci_energy);
-    outfile->Printf("\n Npar blk_chp      =     %6d", Npar);
-    outfile->Printf("\n Nsto blk_chp      =     %6d", Nsto);
+    outfile->Printf("\n TC Dim            =     %6d", dim);
+    outfile->Printf("\n Npar tle_chp      =     %6d", Npar);
+    outfile->Printf("\n Nsto tle_chp      =     %6d", Nsto);
     outfile->Printf("\n");
 }
 
@@ -213,8 +214,8 @@ void FCISolver::string_trimmer(std::vector<SharedMatrix>& C, double sum_cut, FCI
         // for(int i=0; i<C_h->coldim(); i++){
         //   //C_h->set(i,j,0);
         //   N_par--;
-        }
       }
+    }
 
 
     //set blocks
@@ -242,7 +243,7 @@ void FCISolver::string_trimmer(std::vector<SharedMatrix>& C, double sum_cut, FCI
   }
 
   //Print MATRIX
-  py_mat_print(C[0], "Cmat_trimmed.dat");
+  py_mat_print(C[0], "C_st.mat");
 
   //Compute energy
 
@@ -259,9 +260,9 @@ void FCISolver::string_trimmer(std::vector<SharedMatrix>& C, double sum_cut, FCI
   outfile->Printf("\n Norm              = %20.12f", Norm);
   outfile->Printf("\n E_fci             = %20.12f", fci_energy);
   outfile->Printf("\n E_red_rank        = %20.12f", E_string_trim);
-  outfile->Printf("\n Delta(E_red_rank) = %20.12f", E_string_trim-fci_energy);
-  outfile->Printf("\n Npar              =     %6d", N_par);
-  outfile->Printf("\n Nsto              =     %6d", N_sto);
+  outfile->Printf("\n Delta(E_st)       = %20.12f", E_string_trim-fci_energy);
+  outfile->Printf("\n Npar st           =     %6d", N_par);
+  outfile->Printf("\n Nsto st           =     %6d", N_sto);
   outfile->Printf("\n");
 }
 
@@ -299,6 +300,7 @@ void FCISolver::string_stats(std::vector<SharedMatrix> C)
           C_Ia_nuses[i]++;
         }
       }
+
       //std::cout << "  Om_a:  " << Om_a << std::endl;
       Om_a = -std::log10(Om_a);
       //std::cout << "i: " << i << "  Om_a:  " << Om_a << std::endl;
@@ -631,9 +633,9 @@ void FCISolver::fci_svd_tiles(FCIVector& HC, std::shared_ptr<FCIIntegrals> fci_i
 
     int N_par = 0;
 
-    outfile->Printf("\n");
-    outfile->Printf("\n///////////////////////////// REBUILDING RED RANK TILES //////////////////////////////////////\n");
-    outfile->Printf("\n");
+    // outfile->Printf("\n");
+    // outfile->Printf("\n///////////////////////////// REBUILDING RED RANK TILES //////////////////////////////////////\n");
+    // outfile->Printf("\n");
 
     //now reduce rank accordingly!
     for (int h=0; h<nirrep; h++) {
@@ -707,19 +709,23 @@ void FCISolver::fci_svd_tiles(FCIVector& HC, std::shared_ptr<FCIIntegrals> fci_i
 */
     // Compute the energy
 
+    //Print MATRIX
+    py_mat_print(C_tiled_rr[0],"C_svd_t.mat");
+
     C_->set_coefficient_blocks(C_tiled_rr);
     // HC = H C
     C_->Hamiltonian(HC, fci_ints, twoSubstituitionVVOO);
     // E = C^T HC
     double E_red_rank = HC.dot(C_) + nuclear_repulsion_energy;
 
+    outfile->Printf("\n////////////////// Tile SVD /////////////////\n");
     outfile->Printf("\n OMEGA             = %20.12f", OMEGA);
     outfile->Printf("\n tile size         =     %6d", dim);
     outfile->Printf("\n E_fci             = %20.12f", fci_energy);
     outfile->Printf("\n E_tiled_rr        = %20.12f", E_red_rank);
     outfile->Printf("\n Delta(E_tiled_rr) = %20.12f", E_red_rank-fci_energy);
-    outfile->Printf("\n Npar trr          =     %6d", N_par/2);
-    outfile->Printf("\n Nsto              =     %6d", N_par/2);
+    outfile->Printf("\n Npar trr          =     %6d", N_par);
+    outfile->Printf("\n Nsto trr          =     %6d", N_par);
 
     ///// MAIN MATRIX TILER END /////
 
@@ -888,18 +894,22 @@ void FCISolver::fci_svd(FCIVector& HC, std::shared_ptr<FCIIntegrals> fci_ints, d
 
     // Compute the energy
 
+    //Print Matrix
+    py_mat_print(C_red_rank[0],"C_svd_f.mat");
+
     C_->set_coefficient_blocks(C_red_rank);
     // HC = H C
     C_->Hamiltonian(HC, fci_ints, twoSubstituitionVVOO);
     // E = C^T HC
     double E_red_rank = HC.dot(C_) + nuclear_repulsion_energy;
 
+    outfile->Printf("\n////////////////// Full SVD /////////////////\n");
     outfile->Printf("\n Tau               = %20.12f", TAU);
     outfile->Printf("\n E_fci             = %20.12f", fci_energy);
     outfile->Printf("\n E_red_rank        = %20.12f", E_red_rank);
     outfile->Printf("\n Delta(E_red_rank) = %20.12f", E_red_rank-fci_energy);
-    outfile->Printf("\n Npar frr          =     %6d", N_par);
-    outfile->Printf("\n Nsto              =     %6d", N_sto);
+    outfile->Printf("\n Npar frr          =     %6d", N_par*2); //this gives full number of parameters
+    outfile->Printf("\n Nsto frr          =     %6d", N_sto*2);
 
     ////testing purturbation idea...////
     // std::vector<SharedMatrix> C_rr_p;
