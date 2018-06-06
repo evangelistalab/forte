@@ -31,7 +31,8 @@
 #include "psi4/libmints/pointgrp.h"
 #include "psi4/psi4-dec.h"
 
-#include "../ci_rdm/ci_rdms.h"
+
+#include "../ci_rdms.h"
 #include "../fci/fci_integrals.h"
 #include "../forte_options.h"
 #include "../sparse_ci/sparse_ci_solver.h"
@@ -68,8 +69,14 @@ void set_CINO_options(ForteOptions& foptions) {
     foptions.add_int("CINO_NROOT", 1, "The number of roots computed");
     foptions.add_array("CINO_ROOTS_PER_IRREP",
                        "The number of excited states per irreducible representation");
-    foptions.add_double("CINO_THRESHOLD", 0.99,
-                        "The fraction of NOs to include in the active space");
+    foptions.add_double("CINO_THRESHOLD_OCC", 0.99,
+                        "The fraction of NOs to include in the active occupied space");
+    foptions.add_double("CINO_THRESHOLD_VIR", 0.99,
+                        "The fraction of NOs to include in the active virtual space");
+    foptions.add_int("CINO_NUM_ACTIVE_OCC", 0, "Allows the user to specify the "
+                                               "number of active occupied orbitals per irreducible representation ");
+    foptions.add_int("CINO_NUM_ACTIVE_VIR", 0, "Allows the user to specify the "
+                                               "number of active virtual orbitals per irreducible representation ");
     foptions.add_int("ACI_MAX_RDM", 1, "Order of RDM to compute");
     /*- Type of spin projection
      * 0 - None
@@ -565,28 +572,55 @@ void CINO::find_active_space_and_transform(
     std::sort(sorted_aocc.rbegin(), sorted_aocc.rend());
     std::sort(sorted_avir.rbegin(), sorted_avir.rend());
 
-    double cino_threshold = options_.get_double("CINO_THRESHOLD");
+    double cino_threshold_occ = options_.get_double("CINO_THRESHOLD_OCC");
+    double cino_threshold_vir = options_.get_double("CINO_THRESHOLD_VIR");
+    int cino_num_active_occ = options_.get_int("CINO_NUM_ACTIVE_OCC");
+    int cino_num_active_vir = options_.get_int("CINO_NUM_ACTIVE_VIR");
 
     Dimension nactv_occ(nirrep_);
-    double partial_sum_o = 0.0;
-    for (auto& non_h_p : sorted_aocc) {
-        double w = std::get<0>(non_h_p);
-        int h = std::get<1>(non_h_p);
-        partial_sum_o += w;
-        nactv_occ[h] += 1;
-        if (partial_sum_o / sum_o > cino_threshold)
-            break;
+    if (cino_num_active_occ > 0) {
+        int count = 0;
+        for (const auto& non_h_p : sorted_aocc) {
+            ++count;
+            if (count > cino_num_active_occ)
+                break;
+            int h = std::get<1>(non_h_p);
+            nactv_occ[h] += 1;
+        }
     }
 
     Dimension nactv_vir(nirrep_);
-    double partial_sum_v = 0.0;
-    for (auto& non_h_p : sorted_avir) {
-        double w = std::get<0>(non_h_p);
-        int h = std::get<1>(non_h_p);
-        partial_sum_v += w;
-        nactv_vir[h] += 1;
-        if (partial_sum_v / sum_v > cino_threshold)
-            break;
+    if (cino_num_active_vir > 0) {
+        int count = 0;
+        for (const auto& non_h_p : sorted_avir) {
+            ++count;
+            if (count > cino_num_active_vir)
+                break;
+            int h = std::get<1>(non_h_p);
+            nactv_vir[h] += 1;
+        }
+    }
+    if (cino_threshold_occ > 0){
+        double partial_sum_o = 0.0;
+        for (auto& non_h_p : sorted_aocc) {
+            double w = std::get<0>(non_h_p);
+            int h = std::get<1>(non_h_p);
+            partial_sum_o += w;
+            nactv_occ[h] += 1;
+            if (partial_sum_o / sum_o > cino_threshold_occ)
+                break;
+        }
+    }
+    if (cino_threshold_vir > 0){
+        double partial_sum_v = 0.0;
+        for (auto& non_h_p : sorted_avir) {
+            double w = std::get<0>(non_h_p);
+            int h = std::get<1>(non_h_p);
+            partial_sum_v += w;
+            nactv_vir[h] += 1;
+            if (partial_sum_v / sum_v > cino_threshold_vir)
+                break;
+        }
     }
 
     outfile->Printf("\n  Number of active occupied MOs per irrep: %s",
