@@ -31,6 +31,7 @@
 
 #include "../integrals/integrals.h"
 #include "../sparse_ci/determinant.h"
+#include "../sparse_ci/ui64_determinant.h"
 #include "string_lists.h"
 
 namespace psi {
@@ -74,6 +75,9 @@ class FCIIntegrals {
     /// Compute a determinant's energy
     double energy(Determinant& det);
     double energy(const Determinant& det) const;
+
+    /// Using bit operations
+    double energy_bit(const Determinant& det) const;
 
     /// Compute the matrix element of the Hamiltonian between this determinant
     /// and a given one
