@@ -32,7 +32,7 @@
 #include "psi4/psi4-dec.h"
 
 
-#include "../ci_rdms.h"
+#include"../ci_rdm/ci_rdms.h"
 #include "../fci/fci_integrals.h"
 #include "../forte_options.h"
 #include "../sparse_ci/sparse_ci_solver.h"
