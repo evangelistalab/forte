@@ -66,14 +66,91 @@ void FCISolver::py_mat_print(SharedMatrix C_h, const std::string& input)
   myfile1.close();
 }
 
-void FCISolver::tile_chopper(std::vector<SharedMatrix>& C, double tile_norm_cut,
+bool FCISolver::pairCompare(const std::pair<double, int>& firstElem, const std::pair<double, int>& secondElem)
+{
+    return firstElem.first > secondElem.first;
+}
+
+void FCISolver::basis_cluster(std::vector<SharedMatrix>& C, std::vector<std::pair<double, int> >& st_vec)
+{
+  // fill vectors of pairs for ij indicies using Calph^2, the sorted order will be the i'j' indicies
+  for(auto C_h: C){
+    // for alpha strings
+    for(int i=0; i<C_h->coldim(); i++){
+      st_vec[i].second = i;
+      for(int j=0; j<C_h->rowdim(); j++){
+        st_vec[i].first += std::pow(C_h->get(i,j), 2);
+      }
+    }
+  }
+
+  std::sort(st_vec.begin(), st_vec.end(), pairCompare);
+
+  // allocate a new matrix C'
+  std::vector<SharedMatrix> Cprime(nirrep_);
+  for(int h=0; h<nirrep_; h++){
+    // would be better if I could just allocate the 'empty' Sh.Mat.
+    Cprime[h] = C[h]->clone();
+  }
+
+  // edit C to use new clustered basis order
+  for(int h=0; h<nirrep_; h++){
+    for(int i=0; i<C[h]->coldim(); i++){
+      for(int j=0; j<C[h]->rowdim(); j++){
+        Cprime[h]->set(i, j, C[h]->get(st_vec[i].second, st_vec[j].second) );
+      }
+    }
+  }
+
+  py_mat_print(Cprime[0], "Cprime.mat");
+
+  //set C as Cprime...
+  for(int h=0; h<nirrep_; h++){
+    C[h]->copy(Cprime[h]);
+  }
+}
+
+void FCISolver::rev_basis_cluster(std::vector<SharedMatrix>& C, std::vector<std::pair<double, int> > st_vec)
+{
+  // allocate a new matrix C'
+  std::vector<SharedMatrix> Cprime(nirrep_);
+  for(int h=0; h<nirrep_; h++){
+    // would be better if I could just allocate the 'empty' Sh.Mat.
+    Cprime[h] = C[h]->clone();
+  }
+
+  // reset C to use old un-clustered basis order
+  for(int h=0; h<nirrep_; h++){
+    for(int i=0; i<C[h]->coldim(); i++){
+      for(int j=0; j<C[h]->rowdim(); j++){
+        Cprime[h]->set(st_vec[i].second, st_vec[j].second, C[h]->get(i, j) );
+      }
+    }
+  }
+
+  py_mat_print(Cprime[0], "C_rebased.mat");
+
+  //set C as Cprime...
+  for(int h=0; h<nirrep_; h++){
+    C[h]->copy(Cprime[h]);
+  }
+}
+
+
+void FCISolver::tile_chopper(std::vector<SharedMatrix>& C, double ETA,
                              FCIVector& HC, std::shared_ptr<FCIIntegrals> fci_ints,
                              double fci_energy, int dim)
 {
   double nuclear_repulsion_energy =
       Process::environment.molecule()->nuclear_repulsion_energy({0, 0, 0});
 
-    //std::vector<SharedMatrix> C = C_->coefficients_blocks();
+    // allocate memorey for string vector, for now to handle C1 symmetry
+    std::vector<std::pair<double, int> > st_vec(C[0]->coldim());
+
+    // optional clustering of basis here
+    if(options_.get_bool("FCI_CLUSTER_BASIS")){
+      basis_cluster(C, st_vec);
+    }
 
     int nirrep = C.size();
 
@@ -82,13 +159,97 @@ void FCISolver::tile_chopper(std::vector<SharedMatrix>& C, double tile_norm_cut,
     std::vector<int> b_c(1);
     std::vector<int> e_c(1);
 
+    std::vector<std::tuple<double, int, int, int> > sorted_tiles;
+
     //find total number of parameters
     int Npar = 0;
     for( auto C_h: C){
       Npar += (C_h->rowdim()) * (C_h->coldim());
     }
 
+    //find and sort tiles by tile_factor
+    for (int h=0; h<nirrep; h++) {
+      // loop over irreps
+      int ncol = C[h]->rowdim();
+      int nrow = C[h]->coldim();
 
+      int nt_cols = ncol/dim; //is actually 1 less than total # of colums UNLESS last_col_dim = 0
+      int nt_rows = nrow/dim;
+
+      int last_col_dim = ncol%dim;
+      int last_row_dim = nrow%dim;
+
+      // in cases mat can be tiled perfectly (/w out remainder)
+      if(last_col_dim == 0 || last_row_dim == 0){
+        for(int i=0; i<nt_rows; i++){
+          for(int j=0; j<nt_cols; j++){
+            add_to_tle_vect(C, b_r, e_r, b_c, e_c, dim, dim, dim, h, i, j, sorted_tiles);
+          }
+        }
+      } else { // if not a perfect fit...
+
+        //std::cout << "nt_cols:  "  << nt_cols <<std::endl;
+
+        for(int i=0; i<nt_rows+1; i++){
+          for(int j=0; j<nt_cols+1; j++){
+            // make dimension objects
+            //std::cout << "I get here i: " << i << "  j:  " << j <<std::endl;
+            if(j == nt_cols && i == nt_rows){
+              // make dimension objects for case of very last tile
+              add_to_tle_vect(C, b_r, e_r, b_c, e_c, dim, last_row_dim, last_col_dim, h, i, j, sorted_tiles);
+
+            } else if(j == nt_cols){
+              //std::cout << "I get here i: " << i << "  j:  " << j <<std::endl;
+              // case of last tile colum
+              add_to_tle_vect(C, b_r, e_r, b_c, e_c, dim, dim, last_col_dim, h, i, j, sorted_tiles);
+
+            } else if(i == nt_rows){
+              // case of last tile row
+              add_to_tle_vect(C, b_r, e_r, b_c, e_c, dim, last_row_dim, dim, h, i, j, sorted_tiles);
+
+            } else {
+              // most cases (main block of tiles of dim x dim)
+              add_to_tle_vect(C, b_r, e_r, b_c, e_c, dim, dim, dim, h, i, j, sorted_tiles);
+              //std::cout << "I get here i: " << i << "  j:  " << j <<std::endl;
+              }
+          //outfile->Printf("\nh dim: %6d  i dim: %6d  j dim: %6d  ",rank_tile_inirrep.size(), rank_tile_inirrep[h].size(), rank_tile_inirrep[h][i].size());
+          }
+        }
+      } // end else
+    } // end h
+
+    //re-define tile_norm_cut
+    double area_norm = 0.0;
+
+    std::sort(sorted_tiles.rbegin(), sorted_tiles.rend());
+
+    // outfile->Printf("\n");
+    // outfile->Printf("\n        t norm value    irrep      tile(i)     tile(j)");
+    // outfile->Printf("\n------------------------------------------------------------");
+
+    area_norm = 0.0;
+    for (auto T : sorted_tiles) {
+        //outfile->Printf("\n   %20.12f      %d      %d      %d", std::get<0>(T), std::get<1>(T), std::get<2>(T), std::get<3>(T));
+        area_norm += std::get<0>(T);
+    }
+
+    // outfile->Printf("\n");
+    // outfile->Printf("\n Norm of tiles: %20.12f ", area_norm);
+
+    // find cutoff ETA
+    double norm_cut = 1.0 - ETA;
+    double tile_norm_sum = 0;
+    int eta_counter = 0;
+
+    for (auto T : sorted_tiles) {
+        eta_counter++;
+        tile_norm_sum += std::get<0>(T);
+        if (tile_norm_sum > norm_cut * area_norm) {
+            break;
+        }
+    }
+
+    double tile_norm_cut = std::get<0>(sorted_tiles[eta_counter]);
 
     for (int h=0; h<nirrep; h++) {
       // loop over irreps
@@ -102,33 +263,41 @@ void FCISolver::tile_chopper(std::vector<SharedMatrix>& C, double tile_norm_cut,
       int last_row_dim = nrow%dim;
 
       //std::cout << "nt_cols:  "  << nt_cols <<std::endl;
-
-      for(int i=0; i<nt_rows+1; i++){
-        for(int j=0; j<nt_cols+1; j++){
-          // make dimension objects
-          //std::cout << "I get here i: " << i << "  j:  " << j <<std::endl;
-          if(j == nt_cols && i == nt_rows){
-            // make dimension objects for case of very last tile
-            zero_tile(C, b_r, e_r, b_c, e_c, tile_norm_cut, dim, last_row_dim, last_col_dim, h, i, j, Npar);
-
-          } else if(j == nt_cols){
-            //std::cout << "I get here i: " << i << "  j:  " << j <<std::endl;
-            // case of last tile colum
-            zero_tile(C, b_r, e_r, b_c, e_c, tile_norm_cut, dim, dim, last_col_dim, h, i, j, Npar);
-
-
-          } else if(i == nt_rows){
-            // case of last tile row
-            zero_tile(C, b_r, e_r, b_c, e_c, tile_norm_cut, dim, last_row_dim, dim, h, i, j, Npar);
-
-          } else {
-            // most cases (main block of tiles of dim x dim)
+      // in cases mat can be tiled perfectly (/w out remainder)
+      if(last_col_dim == 0 || last_row_dim == 0){
+        for(int i=0; i<nt_rows; i++){
+          for(int j=0; j<nt_cols; j++){
             zero_tile(C, b_r, e_r, b_c, e_c, tile_norm_cut, dim, dim, dim, h, i, j, Npar);
-            //std::cout << "I get here i: " << i << "  j:  " << j <<std::endl;
-            }
-        //outfile->Printf("\nh dim: %6d  i dim: %6d  j dim: %6d  ",rank_tile_inirrep.size(), rank_tile_inirrep[h].size(), rank_tile_inirrep[h][i].size());
+          }
         }
-      }
+      } else {
+
+        for(int i=0; i<nt_rows+1; i++){
+          for(int j=0; j<nt_cols+1; j++){
+            // make dimension objects
+            //std::cout << "I get here i: " << i << "  j:  " << j <<std::endl;
+            if(j == nt_cols && i == nt_rows){
+              // make dimension objects for case of very last tile
+              zero_tile(C, b_r, e_r, b_c, e_c, tile_norm_cut, dim, last_row_dim, last_col_dim, h, i, j, Npar);
+
+            } else if(j == nt_cols){
+              //std::cout << "I get here i: " << i << "  j:  " << j <<std::endl;
+              // case of last tile colum
+              zero_tile(C, b_r, e_r, b_c, e_c, tile_norm_cut, dim, dim, last_col_dim, h, i, j, Npar);
+
+            } else if(i == nt_rows){
+              // case of last tile row
+              zero_tile(C, b_r, e_r, b_c, e_c, tile_norm_cut, dim, last_row_dim, dim, h, i, j, Npar);
+
+            } else {
+              // most cases (main block of tiles of dim x dim)
+              zero_tile(C, b_r, e_r, b_c, e_c, tile_norm_cut, dim, dim, dim, h, i, j, Npar);
+              //std::cout << "I get here i: " << i << "  j:  " << j <<std::endl;
+              }
+          //outfile->Printf("\nh dim: %6d  i dim: %6d  j dim: %6d  ",rank_tile_inirrep.size(), rank_tile_inirrep[h].size(), rank_tile_inirrep[h][i].size());
+          }
+        }
+      } // end else
     }
 
     //re-nomralize Wfn
@@ -146,6 +315,11 @@ void FCISolver::tile_chopper(std::vector<SharedMatrix>& C, double tile_norm_cut,
       Norm += C_h->sum_of_squares();
     }
 
+    // Re-order basis from clustered form
+    if(options_.get_bool("FCI_CLUSTER_BASIS")){
+      rev_basis_cluster(C, st_vec);
+    }
+
     //print Block Sparse C
     py_mat_print(C[0], "C_tc.mat");
 
@@ -160,7 +334,7 @@ void FCISolver::tile_chopper(std::vector<SharedMatrix>& C, double tile_norm_cut,
 
     outfile->Printf("\n////////////////// Tile Chopper /////////////////");
     outfile->Printf("\n");
-    outfile->Printf("\n Tile Norm Cut     = %20.12f", tile_norm_cut);
+    outfile->Printf("\n ETA               = %20.12f", ETA);
     outfile->Printf("\n Norm              = %20.12f", Norm);
     outfile->Printf("\n E_fci             = %20.12f", fci_energy);
     outfile->Printf("\n E_tile_chop       = %20.12f", E_block_chop);
@@ -171,17 +345,56 @@ void FCISolver::tile_chopper(std::vector<SharedMatrix>& C, double tile_norm_cut,
     outfile->Printf("\n");
 }
 
-void FCISolver::string_trimmer(std::vector<SharedMatrix>& C, double sum_cut, FCIVector& HC, std::shared_ptr<FCIIntegrals> fci_ints, double fci_energy)
+void FCISolver::string_trimmer(std::vector<SharedMatrix>& C, double DELTA, FCIVector& HC, std::shared_ptr<FCIIntegrals> fci_ints, double fci_energy)
 {
   double nuclear_repulsion_energy =
       Process::environment.molecule()->nuclear_repulsion_energy({0, 0, 0});
+
+  std::vector<std::pair<double, int> > sorted_strings;
+
+  for(auto C_h: C){
+    // for alpha strings
+    for(int i=0; i<C_h->coldim(); i++){
+      double temp = 0.0;
+      for(int j=0; j<C_h->rowdim(); j++){
+        temp += std::pow(C_h->get(i,j), 2);
+      }
+      sorted_strings.push_back(std::make_pair(temp, i));
+    }
+  }
+
+  std::sort(sorted_strings.begin(), sorted_strings.end(), pairCompare);
+
+  double st_norm = 0.0;
+  for (auto ST : sorted_strings) {
+      //outfile->Printf("\n   %20.12f      %d      %d      %d", std::get<0>(T), std::get<1>(T), std::get<2>(T), std::get<3>(T));
+      st_norm += ST.first;
+  }
+
+  // outfile->Printf("\n");
+  // outfile->Printf("\n Norm of tiles: %20.12f ", area_norm);
+
+  // find cutoff ETA
+  double norm_cut = 1.0 - DELTA;
+  double string_norm_sum = 0;
+  int delta_counter = 0;
+
+  for (auto ST : sorted_strings) {
+      delta_counter++;
+      string_norm_sum += ST.first;
+      if (string_norm_sum > norm_cut * st_norm) {
+          break;
+      }
+  }
+
+  double sum_cut = sorted_strings[delta_counter].first;
 
   double Om_a;
   double Om_b;
 
   int N_par = 0;
-  std::vector<int> Ia_bool(252, 1);
-  std::vector<int> Ib_bool(252, 1);
+  std::vector<int> Ia_bool(C[0]->coldim(), 1);
+  std::vector<int> Ib_bool(C[0]->rowdim(), 1);
 
   // for(auto C_h: C){
   //   N_par += C_h->rowdim() * C_h->coldim();
@@ -256,7 +469,7 @@ void FCISolver::string_trimmer(std::vector<SharedMatrix>& C, double sum_cut, FCI
 
   outfile->Printf("\n////////////////// String Trimmer /////////////////");
   outfile->Printf("\n");
-  outfile->Printf("\n Sum Cut           = %20.12f", sum_cut);
+  outfile->Printf("\n DELTA             = %20.12f", DELTA);
   outfile->Printf("\n Norm              = %20.12f", Norm);
   outfile->Printf("\n E_fci             = %20.12f", fci_energy);
   outfile->Printf("\n E_red_rank        = %20.12f", E_string_trim);
@@ -384,14 +597,53 @@ void FCISolver::zero_tile(std::vector<SharedMatrix>& C,
   // get matrix block
   auto M = C[h]->get_block(row_slice, col_slice);
 
-  double area_factor = (n*d) / (dim*dim);
-  double tile_factor = (M->sum_of_squares()) / area_factor;
+  double area_factor = ((double)n*(double)d) / ((double)dim*(double)dim);
+  double tile_factor = M->sum_of_squares() / area_factor;
 
   if(tile_factor < tile_norm_cut){
     M->set(0.0);
     C[h]->set_block(row_slice, col_slice, M);
     Npar -= n*d;
   }
+
+}
+
+void FCISolver::add_to_tle_vect(std::vector<SharedMatrix>& C,
+                                 std::vector<int> b_r,
+                                 std::vector<int> e_r,
+                                 std::vector<int> b_c,
+                                 std::vector<int> e_c,
+                                 int dim, int n, int d,
+                                 int h, int i, int j,
+                                 std::vector<std::tuple<double, int, int, int> >& sorted_tiles)
+{
+  //prepare dimension objects
+  b_r[0] = i*dim;
+  e_r[0] = i*dim + n;
+  b_c[0] = j*dim;
+  e_c[0] = j*dim + d;
+
+  Dimension begin_row(b_r);
+  Dimension end_row(e_r);
+  Dimension begin_col(b_c);
+  Dimension end_col(e_c);
+
+  // make slice objects
+  Slice row_slice(begin_row, end_row);
+  Slice col_slice(begin_col, end_col);
+
+  // get matrix block
+  auto M = C[h]->get_block(row_slice, col_slice);
+
+  //if(n == 0 || d == 0){std::cout << "\nrought ro! i:  " << i << "  j:  " << std::endl; }
+
+  double area_factor = ((double)n*(double)d) / ((double)dim*(double)dim);
+  double tile_factor = M->sum_of_squares() / area_factor;
+
+  if(area_factor < 0.001){std::cout << "\nrought ro! n:  " << n << "  d:  " << d << " val:  "<< (n*d) / (dim*dim)<< std::endl; }
+  //if(M->sum_of_squares() > 0.5){std::cout << "\nrought ro! i:  " << i << "  j:  " << j << " val:  "<< M->sum_of_squares() << std::endl; }
+
+  sorted_tiles.push_back(std::make_tuple(tile_factor, h, i, j));
 
 }
 
@@ -495,6 +747,13 @@ void FCISolver::fci_svd_tiles(FCIVector& HC, std::shared_ptr<FCIIntegrals> fci_i
 {
   double nuclear_repulsion_energy =
       Process::environment.molecule()->nuclear_repulsion_energy({0, 0, 0});
+
+    std::vector<SharedMatrix> C_link = C_->coefficients_blocks();
+    std::vector<std::pair<double, int> > st_vec1(C_link[0]->coldim());
+
+    if(options_.get_bool("FCI_CLUSTER_BASIS")){
+      basis_cluster(C_link, st_vec1);
+    }
 
     std::vector<SharedMatrix> C = C_->coefficients_blocks();
     std::vector<SharedMatrix> C_tiled_rr = C_->coefficients_blocks();
@@ -634,7 +893,7 @@ void FCISolver::fci_svd_tiles(FCIVector& HC, std::shared_ptr<FCIIntegrals> fci_i
     int N_par = 0;
 
     // outfile->Printf("\n");
-    // outfile->Printf("\n///////////////////////////// REBUILDING RED RANK TILES //////////////////////////////////////\n");
+    // outfile->Printf("\n//////////////////// REBUILDING RED RANK TILES ////////////////////\n");
     // outfile->Printf("\n");
 
     //now reduce rank accordingly!
@@ -710,9 +969,20 @@ void FCISolver::fci_svd_tiles(FCIVector& HC, std::shared_ptr<FCIIntegrals> fci_i
     // Compute the energy
 
     //Print MATRIX
+
+    if(options_.get_bool("FCI_CLUSTER_BASIS")){
+      rev_basis_cluster(C_tiled_rr, st_vec1);
+    }
+
     py_mat_print(C_tiled_rr[0],"C_svd_t.mat");
 
+    // if(options_.get_bool("FCI_CLUSTER_BASIS")){
+    //   rev_basis_cluster(C_tiled_rr,st_vec2);
+    // }
+
     C_->set_coefficient_blocks(C_tiled_rr);
+
+
     // HC = H C
     C_->Hamiltonian(HC, fci_ints, twoSubstituitionVVOO);
     // E = C^T HC

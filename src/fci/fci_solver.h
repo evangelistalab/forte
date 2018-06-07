@@ -228,10 +228,10 @@ class FCISolver {
 
     void string_stats(std::vector<SharedMatrix> C);
 
-    void string_trimmer(std::vector<SharedMatrix>& C, double sum_cut, FCIVector& HC,
+    void string_trimmer(std::vector<SharedMatrix>& C, double DELTA, FCIVector& HC,
                         std::shared_ptr<FCIIntegrals> fci_ints, double fci_energy);
 
-    void tile_chopper(std::vector<SharedMatrix>& C, double tile_norm_cut,
+    void tile_chopper(std::vector<SharedMatrix>& C, double ETA,
                       FCIVector& HC, std::shared_ptr<FCIIntegrals> fci_ints,
                       double fci_energy, int dim);
 
@@ -255,6 +255,15 @@ class FCISolver {
                          int dim, int n, int d,
                          int h, int i, int j);
 
+    void add_to_tle_vect(std::vector<SharedMatrix>& C,
+                         std::vector<int> b_r,
+                         std::vector<int> e_r,
+                         std::vector<int> b_c,
+                         std::vector<int> e_c,
+                         int dim, int n, int d,
+                         int h, int i, int j,
+                         std::vector<std::tuple<double, int, int, int> >& sorted_tiles);
+
     void patch_Cmat(std::vector<std::tuple<double, int, int, int> >& sorted_sigma,
                          std::vector<SharedMatrix>& C,
                          std::vector<std::vector<std::vector<int> > > rank_tile_inirrep,
@@ -265,6 +274,12 @@ class FCISolver {
                          int dim, int n, int d,
                          int h, int i, int j,
                          int& N_par);
+
+    void basis_cluster(std::vector<SharedMatrix>& C, std::vector<std::pair<double, int> >& st_vec);
+
+    void rev_basis_cluster(std::vector<SharedMatrix>& C, std::vector<std::pair<double, int> > st_vec);
+
+    static bool pairCompare(const std::pair<double, int>& firstElem, const std::pair<double, int>& secondElem);
 
 };
 }

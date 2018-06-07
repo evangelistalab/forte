@@ -50,11 +50,12 @@ void set_FCI_options(ForteOptions& foptions) {
     foptions.add_bool("SOLVE_IN_SUBSPACE", false, "Solve for a subspace after selection via block chop or string trim");
 
     foptions.add_bool("FCI_TILE_CHOPPER", false, "Chop out unimportant tiles based on some cutoff");
+    foptions.add_bool("FCI_CLUSTER_BASIS", false, "Cluster the FCI basis");
     foptions.add_int("FCI_TC_DIM", 0, "Chop tiles into this size");
-    foptions.add_double("FCI_TC_CUT", 0.0, "Tile Chopper threshold");
+    foptions.add_double("FCI_TC_ETA", 0.0, "Tile Chopper threshold");
 
     foptions.add_bool("FCI_STRING_TRIMMER", false, "Trim out unimportant strings based on some cutoff");
-    foptions.add_double("FCI_ST_CUT", 0.0, "String trimmer threshold");
+    foptions.add_double("FCI_ST_DELTA", 0.0, "String trimmer threshold");
 
     foptions.add_bool("FCI_SVD", false, "Decompose and reconstruct the FCI wave function");
     foptions.add_str("FCI_SVD_TYPE", "THRESHOLD", {"THRESHOLD","CUMULATIVE"}, "Type of FCI decomposition");

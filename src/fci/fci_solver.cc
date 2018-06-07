@@ -659,14 +659,6 @@ if(options_.get_bool("CHUNK_SPACE_ENERGY")){
 
     //////////////////////////////////////////// FCI-SVD //////////////////////////////////////////////
 
-
-    // std::vector<SharedMatrix> C_zero_test = C_->coefficients_blocks();
-    // for(auto C_zh : C_zero_test){
-    //   C_zh->set(0.0);
-    // }
-    // C_->set_coefficient_blocks(C_zero_test);
-
-    //std::vector<SharedMatrix> C_temp_clone(nirrep_);
     std::vector<SharedMatrix> C_temp = C_->coefficients_blocks();
 
     std::vector<SharedMatrix> C_temp_clone_tc(nirrep_);
@@ -675,12 +667,9 @@ if(options_.get_bool("CHUNK_SPACE_ENERGY")){
     std::vector<SharedMatrix> C_temp_clone_full_svd(nirrep_);
 
     string_stats(C_temp);
+
     //print unadultarated C matrix
     py_mat_print(C_temp[0], "C_fci.mat");
-
-    // for(int h=0; h<nirrep_; h++){
-    //   C_temp_clone[h] = C_temp[h]->clone();
-    // }
 
     if(options_.get_bool("FCI_TILE_CHOPPER")){
       for(int h=0; h<nirrep_; h++){
@@ -706,24 +695,11 @@ if(options_.get_bool("CHUNK_SPACE_ENERGY")){
       }
     }
 
-    // for(int h=0; h<nirrep_; h++){
-    //   C_temp_clone[h] = C_temp[h]->clone();
-    //   C_temp_clone_st[h] = C_temp[h]->clone();
-    //   C_temp_clone_tc[h] = C_temp[h]->clone();
-    //
-    //   C_temp_clone_tile_svd[h] = C_temp[h]->clone();
-    //   C_temp_clone_full_svd[h] = C_temp[h]->clone();
-    // }
 
     if(options_.get_bool("FCI_TILE_CHOPPER")){
       double fci_nergy = dls.eigenvalues()->get(root_) + nuclear_repulsion_energy;
-      tile_chopper(C_temp, options_.get_double("FCI_TC_CUT"), HC, fci_ints, fci_nergy, options_.get_int("FCI_TC_DIM"));
+      tile_chopper(C_temp, options_.get_double("FCI_TC_ETA"), HC, fci_ints, fci_nergy, options_.get_int("FCI_TC_DIM"));
       //options_.get_int("FCI_TC_DIM")
-
-      //reset C_ global
-      //C_->set_coefficient_blocks(C_temp_clone_tc);
-      //reset C_temp
-      //C_temp = C_->coefficients_blocks();
 
       //set Y if solving Variationally in a Subspace
       if(options_.get_bool("SOLVE_IN_SUBSPACE")){
@@ -751,7 +727,7 @@ if(options_.get_bool("CHUNK_SPACE_ENERGY")){
 
     if(options_.get_bool("FCI_STRING_TRIMMER")){
       double fci_nergy = dls.eigenvalues()->get(root_) + nuclear_repulsion_energy;
-      string_trimmer(C_temp, options_.get_double("FCI_ST_CUT"), HC, fci_ints, fci_nergy);
+      string_trimmer(C_temp, options_.get_double("FCI_ST_DELTA"), HC, fci_ints, fci_nergy);
 
       //set Y if solving Variationally in a Subspace
       //WARNING: if both bc and st are set to true, subspace variation will calculate only energy for st!
@@ -792,7 +768,7 @@ if(options_.get_bool("CHUNK_SPACE_ENERGY")){
     //py_mat_print(C_temp[0], "C_full_tile.dat");
 
 
-    //////////////////////////////////////////// FCI-SVD END //////////////////////////////////////////////
+    ////////////////////////////////// FCI-SVD END /////////////////////////////////////
 
 /*
     if (options_.get_bool("FCI_SVD_MANY_TAU")){
