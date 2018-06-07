@@ -68,6 +68,11 @@ void set_FCI_options(ForteOptions& foptions) {
     foptions.add_double("FCI_SVD_OMEGA", 0.0, "SVD-tile threshold");
     foptions.add_int("FCI_SVD_N_TILES", 0, "SVD-tile tile dimension");
 
+    foptions.add_bool("FCI_MANY_TAU", false, "Use multipe tau values");
+    foptions.add_double("FCI_MT_MIN", 0.0, "minimum for many Tau threshold");
+    foptions.add_double("FCI_DEL_TAU", 0.0, "change in Tau Value for each iteration");
+    foptions.add_int("FCI_HOW_MANY_TAUS", 0, "number of Tau values to use");
+
     foptions.add_int("FCI_NTRIAL_PER_ROOT", 10,
                      "The number of trial guess vectors to generate per root");
 }

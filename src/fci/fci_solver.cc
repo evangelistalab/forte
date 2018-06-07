@@ -770,17 +770,131 @@ if(options_.get_bool("CHUNK_SPACE_ENERGY")){
 
     ////////////////////////////////// FCI-SVD END /////////////////////////////////////
 
-/*
-    if (options_.get_bool("FCI_SVD_MANY_TAU")){
+
+    if (options_.get_bool("FCI_MANY_TAU")){
         double fci_energy = dls.eigenvalues()->get(root_) + nuclear_repulsion_energy;
-        double TAU_MIN = options_.get_bool("FCI_SVD_TAU");
-        for(int i = 0; i < options_.get_double("HOW_MANY_TAU"); i++){
-          Tau = TAU_MIN + i*options_.get_double("DEL_TAU");
-          fci_svd(HC,fci_ints,fci_energy,Tau);
+        double TAU_MIN = options_.get_double("FCI_MT_MIN");
+
+        outfile->Printf("\n\n /////////////// ==> BEGINNING TAU ITERATIONS <== /////////////////\n\n");
+
+        for(int i = 0; i < options_.get_double("FCI_HOW_MANY_TAUS"); i++){
+
+          double Tau = TAU_MIN + i*options_.get_double("FCI_DEL_TAU");
+
+          outfile->Printf("\n\n =====================> TAU = %20.12f <=====================\n", Tau);
+          outfile->Printf("     -----------------------------------------------------------\n", Tau);
+
+          std::vector<SharedMatrix> C_temp = C_->coefficients_blocks();
+
+          std::vector<SharedMatrix> C_temp_clone_tc(nirrep_);
+          std::vector<SharedMatrix> C_temp_clone_st(nirrep_);
+          std::vector<SharedMatrix> C_temp_clone_tile_svd(nirrep_);
+          std::vector<SharedMatrix> C_temp_clone_full_svd(nirrep_);
+
+          string_stats(C_temp);
+
+          //print unadultarated C matrix
+          py_mat_print(C_temp[0], "C_fci.mat");
+
+          if(options_.get_bool("FCI_TILE_CHOPPER")){
+            for(int h=0; h<nirrep_; h++){
+              C_temp_clone_tc[h] = C_temp[h]->clone();
+            }
+          }
+
+          if(options_.get_bool("FCI_STRING_TRIMMER")){
+            for(int h=0; h<nirrep_; h++){
+              C_temp_clone_st[h] = C_temp[h]->clone();
+            }
+          }
+
+          if(options_.get_bool("FCI_SVD_TILE")){
+            for(int h=0; h<nirrep_; h++){
+              C_temp_clone_tile_svd[h] = C_temp[h]->clone();
+            }
+          }
+
+          if(options_.get_bool("FCI_SVD")){
+            for(int h=0; h<nirrep_; h++){
+              C_temp_clone_full_svd[h] = C_temp[h]->clone();
+            }
+          }
+
+
+          if(options_.get_bool("FCI_TILE_CHOPPER")){
+            double fci_nergy = dls.eigenvalues()->get(root_) + nuclear_repulsion_energy;
+            tile_chopper(C_temp, Tau, HC, fci_ints, fci_nergy, options_.get_int("FCI_TC_DIM"));
+            //options_.get_int("FCI_TC_DIM")
+
+            //set Y if solving Variationally in a Subspace
+            if(options_.get_bool("SOLVE_IN_SUBSPACE")){
+              for(auto C_h : C_temp){
+                //C_h is linked to C_
+                for(int i=0; i<C_h->coldim(); i++){
+                  for(int j=0; j<C_h->rowdim(); j++){
+                    if(C_h->get(i,j) == 0.0){
+                      Y->set(i,j,0.0);
+                    } else {
+                      Y->set(i,j,1.0);
+                    }
+                  }
+                }
+              }
+            }
+
+            //reset C_ global
+            C_->set_coefficient_blocks(C_temp_clone_tc);
+            //reset C_temp
+            C_temp = C_->coefficients_blocks();
+
+          }
+
+
+          if(options_.get_bool("FCI_STRING_TRIMMER")){
+            double fci_nergy = dls.eigenvalues()->get(root_) + nuclear_repulsion_energy;
+            string_trimmer(C_temp, Tau, HC, fci_ints, fci_nergy);
+
+            //set Y if solving Variationally in a Subspace
+            //WARNING: if both bc and st are set to true, subspace variation will calculate only energy for st!
+            if(options_.get_bool("SOLVE_IN_SUBSPACE")){
+              for(auto C_h : C_temp){
+                //C_h is linked to C_
+                for(int i=0; i<C_h->coldim(); i++){
+                  for(int j=0; j<C_h->rowdim(); j++){
+                    if(C_h->get(i,j) == 0.0){
+                      Y->set(i,j,0.0);
+                    } else {
+                      Y->set(i,j,1.0);
+                    }
+                  }
+                }
+              }
+            }
+
+            //reset C_ global
+            C_->set_coefficient_blocks(C_temp_clone_st);
+          }
+
+
+          if (options_.get_bool("FCI_SVD_TILE")){
+              double fci_nergy = dls.eigenvalues()->get(root_) + nuclear_repulsion_energy;
+              fci_svd_tiles(HC, fci_ints, fci_nergy, options_.get_int("FCI_SVD_N_TILES"), Tau);
+              C_->set_coefficient_blocks(C_temp_clone_tile_svd);
+          }
+
+          //py_mat_print(C_temp[0], "C_tiled.dat");
+
+          if (options_.get_bool("FCI_SVD")){
+              double fci_energy = dls.eigenvalues()->get(root_) + nuclear_repulsion_energy;
+              fci_svd(HC,fci_ints,fci_energy, Tau);
+              C_->set_coefficient_blocks(C_temp_clone_full_svd);
+          }
+
+          //py_mat_print(C_temp[0], "C_full_tile.dat");
         }
 
     }
-*/
+
 
     //////////////////////// VAR SUBSPACE SOLVER BEGIN //////////////////////////
 
