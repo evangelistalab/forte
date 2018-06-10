@@ -592,6 +592,22 @@ void forte_old_methods(SharedWavefunction ref_wfn, Options& options,
                 three_dsrg_mrpt2->relax_reference_once();
             }
 #endif
+        } else if (cas_type == "CASSCF") {
+            auto casscf = std::make_shared<CASSCF>(ref_wfn, options, ints, mo_space_info);
+            casscf->compute_casscf();
+            Reference casscf_reference = casscf->casscf_reference();
+
+            if (options.get_bool("SEMI_CANONICAL")) {
+                SemiCanonical semi(ref_wfn, ints, mo_space_info);
+                semi.semicanonicalize(casscf_reference, max_rdm_level);
+            }
+
+            std::shared_ptr<THREE_DSRG_MRPT2> three_dsrg_mrpt2(
+                new THREE_DSRG_MRPT2(casscf_reference, ref_wfn, options, ints, mo_space_info));
+            three_dsrg_mrpt2->compute_energy();
+            if (ref_relax || multi_state) {
+                three_dsrg_mrpt2->relax_reference_once();
+            }
         }
 
         outfile->Printf("\n CD/DF DSRG-MRPT2 took %8.5f s.", all_three_dsrg_mrpt2.get());
