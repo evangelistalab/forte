@@ -119,26 +119,26 @@ void OrbitalOptimizer::startup() {
     nirrep_ = mo_space_info_->nirrep();
     nsopi_ = wfn_->nsopi();
 
-    if (options_.get_str("CAS_TYPE") == "FCI") {
+    if (options_.get_str("CASSCF_CI_SOLVER") == "FCI") {
         cas_ = true;
-    } else if (options_.get_str("CAS_TYPE") == "CAS") {
+    } else if (options_.get_str("CASSCF_CI_SOLVER") == "CAS") {
         if (options_.get_str("FCIMO_ACTV_TYPE") != "COMPLETE") {
             cas_ = false;
         } else {
             cas_ = true;
         }
-    } else if (options_.get_str("CAS_TYPE") == "ACI") {
-        if (options_.get_double("SIGMA") == 0.0 and options_.get_double("GAMMA") == 0.0) {
+    } else if (options_.get_str("CASSCF_CI_SOLVER") == "ACI") {
+        if (options_.get_double("SIGMA") == 0.0) {
             cas_ = true;
         } else {
             cas_ = true;
         }
-    } else if (options_.get_str("CAS_TYPE") == "DMRG") {
+    } else if (options_.get_str("CASSCF_CI_SOLVER") == "DMRG") {
         cas_ = true;
     } else {
-        outfile->Printf("\n\n Please set your CAS_TYPE to either FCI, CAS, ACI, or DMRG");
-        outfile->Printf("\n\n You set your CAS_TYPE to %s.", options_.get_str("CAS_TYPE").c_str());
-        throw PSIEXCEPTION("You did not specify your CAS_TYPE correctly.");
+        outfile->Printf("\n\n Please set your CASSCF_CI_SOLVER to either FCI, CAS, ACI, or DMRG");
+        outfile->Printf("\n\n You set your CASSCF_CI_SOLVER to %s.", options_.get_str("CASSCF_CI_SOLVER").c_str());
+        throw PSIEXCEPTION("You did not specify your CASSCF_CI_SOLVER correctly.");
     }
     cas_ = true;
 }

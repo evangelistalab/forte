@@ -3378,9 +3378,16 @@ std::vector<double> THREE_DSRG_MRPT2::relaxed_energy(std::shared_ptr<FCIIntegral
 
     // reference relaxation
     std::vector<double> Erelax;
+    std::string cas_type;
+
+    if( options_.get_str("CAS_TYPE") == "CASSCF" ){
+        cas_type = options_.get_str("CASSCF_CI_SOLVER");
+    } else {
+        cas_type = options_.get_str("CAS_TYPE");
+    }
 
     // check CAS_TYPE to decide diagonalization code
-    if (options_.get_str("CAS_TYPE") == "CAS") {
+    if (cas_type == "CAS") {
 
         FCI_MO fci_mo(reference_wavefunction_, options_, ints_, mo_space_info_, fci_ints);
         fci_mo.set_localize_actv(false);
@@ -3401,7 +3408,7 @@ std::vector<double> THREE_DSRG_MRPT2::relaxed_energy(std::shared_ptr<FCIIntegral
             }
         }
 
-    } else if (options_.get_str("CAS_TYPE") == "ACI") {
+    } else if (cas_type == "ACI") {
 
         // Only do ground state ACI for now
         AdaptiveCI aci(reference_wavefunction_, options_, ints_, mo_space_info_);

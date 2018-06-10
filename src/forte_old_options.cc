@@ -245,6 +245,9 @@ void forte_old_options(Options& options) {
     //////////////////////////////////////////////////////////////
     ///         OPTIONS FOR THE CASSCF CODE
     //////////////////////////////////////////////////////////////
+
+    /*- The CI solver to use -*/
+    options.add_str("CASSCF_CI_SOLVER", "CAS");
     /* - Run a FCI followed by CASSCF computation -*/
     options.add_bool("CASSCF_REFERENCE", false);
     /* - The number of iterations for CASSCF -*/
