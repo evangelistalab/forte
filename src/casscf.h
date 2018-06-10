@@ -71,6 +71,9 @@ class CASSCF : public Wavefunction {
     ambit::Tensor gamma2() { return gamma2_; }
     double compute_energy() { return E_casscf_; }
 
+    /// Return a reference object
+    Reference casscf_reference();
+
   private:
     /// The active one RDM in the MO basis
     ambit::Tensor gamma1_;

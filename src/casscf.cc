@@ -130,7 +130,7 @@ void CASSCF::compute_casscf() {
         /// If CASSCF_DEBUG_PRINTING is on, will compare CAS-CI with SPIN-FREE RDM
         E_casscf_old = E_casscf_;
         if (print_ > 0) {
-            outfile->Printf("\n\n  Performing a CAS with %s", options_.get_str("CAS_TYPE").c_str());
+            outfile->Printf("\n\n  Performing a CAS with %s", options_.get_str("CASSCF_CI_SOLVER").c_str());
         }
         Timer cas_timer;
         /// Perform a DMRG-CI, ACI, FCI inside an active space
@@ -217,7 +217,7 @@ void CASSCF::compute_casscf() {
         if (iter >= diis_start && do_diis == true && g_norm < diis_gradient_norm) {
             diis_start_label = "DIIS";
         }
-        outfile->Printf("\n %4d   %10.12f   %10.12f   %10.12f  %10.6f s  %4s", iter, g_norm, Ediff,
+        outfile->Printf("\n %4d   %10.12f   %10.12f   %10.12f  %10.6f s  %4s ~", iter, g_norm, Ediff,
                         E_casscf_, casscf_total_iter.get(), diis_start_label.c_str());
     }
     // if(casscf_debug_print_)
@@ -231,22 +231,23 @@ void CASSCF::compute_casscf() {
     diis_manager.reset();
 
     if (iter_con.size() == size_t(maxiter) && maxiter > 1) {
-        outfile->Printf("\n CASSCF did not converged");
-        throw PSIEXCEPTION("CASSCF did not converged.");
+        outfile->Printf("\n CASSCF did not converge");
+        throw PSIEXCEPTION("CASSCF did not converge.");
     }
     Process::environment.globals["CURRENT ENERGY"] = E_casscf_;
     Process::environment.globals["CASSCF_ENERGY"] = E_casscf_;
     Timer retrans_ints;
+    ints_->retransform_integrals();
     if (print_ > 0) {
         outfile->Printf("\n Overall retranformation of integrals takes %6.4f s.\n",
                         retrans_ints.get());
     }
 
-    if (options_.get_bool("SEMI_CANONICAL")) {
-        ints_->retransform_integrals();
-        SemiCanonical semi(reference_wavefunction_, ints_, mo_space_info_);
-        semi.semicanonicalize(cas_ref_, 0);
-    }
+   // if (options_.get_bool("SEMI_CANONICAL")) {
+   //     ints_->retransform_integrals();
+   //     SemiCanonical semi(reference_wavefunction_, ints_, mo_space_info_);
+   //     semi.semicanonicalize(cas_ref_, 0);
+   // }
 }
 void CASSCF::startup() {
     print_method_banner({"Complete Active Space Self Consistent Field", "Kevin Hannon"});
@@ -341,27 +342,27 @@ void CASSCF::cas_ci() {
     if (print_ > 0) {
         quiet = false;
     }
-    if (options_.get_str("CAS_TYPE") == "FCI") {
+    if (options_.get_str("CASSCF_CI_SOLVER") == "FCI") {
         // Used to grab the computed energy and RDMs.
         if (options_["AVG_STATE"].size() == 0) {
             set_up_fci();
         } else {
             set_up_sa_fci();
         }
-    } else if (options_.get_str("CAS_TYPE") == "CAS") {
+    } else if (options_.get_str("CASSCF_CI_SOLVER") == "CAS") {
         set_up_fcimo();
-    } else if (options_.get_str("CAS_TYPE") == "ACI") {
+    } else if (options_.get_str("CASSCF_CI_SOLVER") == "ACI") {
         ints_->retransform_integrals();
         AdaptiveCI aci(reference_wavefunction_, options_, ints_, mo_space_info_);
-        aci.set_max_rdm(2);
+        aci.set_max_rdm(3);
         aci.set_quiet(quiet);
         aci.compute_energy();
         cas_ref_ = aci.reference();
         E_casscf_ = cas_ref_.get_Eref();
-    } else if (options_.get_str("CAS_TYPE") == "DMRG") {
+    } else if (options_.get_str("CASSCF_CI_SOLVER") == "DMRG") {
 #ifdef HAVE_CHEMPS2
         DMRGSolver dmrg(reference_wavefunction_, options_, mo_space_info_, ints_);
-        dmrg.set_max_rdm(2);
+        dmrg.set_max_rdm(3);
         dmrg.spin_free_rdm(true);
         std::pair<ambit::Tensor, std::vector<double>> integral_pair = CI_Integrals();
         dmrg.set_up_integrals(integral_pair.first, integral_pair.second);
@@ -390,7 +391,7 @@ void CASSCF::cas_ci() {
 
     L2bb("pqrs") += L1b("pr") * L1b("qs");
     L2bb("pqrs") -= L1b("ps") * L1b("qr");
-    if (options_.get_str("CAS_TYPE") == "DMRG")
+    if (options_.get_str("CASSCF_CI_SOLVER") == "DMRG")
         L2aa.scale(0.5);
 
     ambit::Tensor gamma2 = ambit::Tensor::build(ambit::CoreTensor, "gamma2", {na_, na_, na_, na_});
@@ -413,7 +414,7 @@ void CASSCF::cas_ci() {
     gamma_no_spin("i,j") = (gamma1a("i,j") + gamma1b("i,j"));
 
     gamma1_ = gamma_no_spin;
-    if (options_.get_str("CAS_TYPE") == "DMRG") {
+    if (options_.get_str("CASSCF_CI_SOLVER") == "DMRG") {
         gamma2_ = cas_ref_.SFg2();
     }
 }
@@ -712,7 +713,7 @@ void CASSCF::set_up_fci() {
                         options_.get_int("ROOT_SYM"), ints_, mo_space_info_,
                         options_.get_int("NTRIAL_PER_ROOT"), options_.get_int("PRINT"), options_);
     // tweak some options
-    fcisolver.set_max_rdm_level(2);
+    fcisolver.set_max_rdm_level(3);
     fcisolver.set_nroot(options_.get_int("NROOT"));
     fcisolver.set_root(options_.get_int("ROOT"));
     fcisolver.set_test_rdms(options_.get_bool("FCI_TEST_RDMS"));
@@ -1070,5 +1071,10 @@ std::pair<ambit::Tensor, std::vector<double>> CASSCF::CI_Integrals() {
         std::make_pair(active_ab, oei_vector[0]);
     return pair_return;
 }
+
+Reference CASSCF::casscf_reference() {
+    return cas_ref_;    
+}
+
 }
 }
