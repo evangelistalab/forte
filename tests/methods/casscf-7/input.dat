@@ -38,7 +38,7 @@ set forte {
     dsrg_s                    0.5
     int_type                   conventional
     cholesky_tolerance         1e-10
-    cas_type                   FCI
+    casscf_ci_solver           FCI
     root_sym                   0
     nroot                      1
     root                       0

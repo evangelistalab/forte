@@ -44,7 +44,7 @@ set forte{
    CASSCF_G_CONVERGENCE 1e-6
    CASSCF_E_CONVERGENCE 1e-8
    CASSCF_DEBUG_PRINTING  false
-   CAS_TYPE               FCI
+   CASSCF_CI_SOLVER       FCI
    CASSCF_DO_DIIS         true
 
 }

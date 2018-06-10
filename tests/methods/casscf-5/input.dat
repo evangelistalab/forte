@@ -51,7 +51,7 @@ set forte {
    nroot                   1
    multiplicity            1
    int_type                conventional
-   cas_type                FCI
+   casscf_ci_solver        FCI
    casscf_reference        true
    CASSCF_ITERATIONS       50
    print                    0

@@ -47,6 +47,7 @@ set forte{
    CASSCF_ITERATIONS        25
    print                    0
    CASSCF_DO_DIIS           false
+   casscf_ci_solver         aci
    sigma                    0.0
    gamma                    0.0
    job_type                 CASSCF
