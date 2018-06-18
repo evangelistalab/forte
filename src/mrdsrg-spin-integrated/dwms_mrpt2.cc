@@ -493,10 +493,6 @@ double DWMS_DSRGPT2::compute_dwsa_energy(std::shared_ptr<FCI_MO>& fci_mo) {
                     Heff->add(M, N, 0.5 * coupling);
                 }
             }
-
-            //            if (zeta_ != 0.0) {
-            //                dsrg_pt = nullptr;
-            //            }
         }
 
         // print effective Hamiltonian
