@@ -74,6 +74,8 @@ class CASSCF : public Wavefunction {
     /// Return a reference object
     Reference casscf_reference();
 
+    /// check the cas_ci energy with spin-free RDM
+    double cas_check(Reference cas);
   private:
     /// The active one RDM in the MO basis
     ambit::Tensor gamma1_;
@@ -89,6 +91,8 @@ class CASSCF : public Wavefunction {
     std::shared_ptr<ForteIntegrals> ints_;
     /// The mo_space_info
     std::shared_ptr<MOSpaceInfo> mo_space_info_;
+
+    std::shared_ptr<Wavefunction> reference_wavefunction_;
 
     /// The dimension for number of molecular orbitals (CORRELATED or ALL)
     Dimension nmopi_;
@@ -127,8 +131,6 @@ class CASSCF : public Wavefunction {
     void set_up_sa_fci();
     /// Set up FCI_MO
     void set_up_fcimo();
-    /// check the cas_ci energy with spin-free RDM
-    double cas_check(Reference cas);
     /// Read all the mospace info and assign correct dimensions
     void startup();
     /// Compute overlap between old_c and new_c
@@ -145,6 +147,9 @@ class CASSCF : public Wavefunction {
     std::shared_ptr<Matrix> set_frozen_core_orbitals();
     /// Compute the restricted_one_body operator for FCI(done also in
     /// OrbitalOptimizer)
+
+    // Recompute reference
+    void cas_ci_final();
 
     std::vector<std::vector<double>> compute_restricted_docc_operator();
 
@@ -172,6 +177,7 @@ class CASSCF : public Wavefunction {
     int print_;
     /// The CISolutions per iteration
     std::vector<std::vector<std::shared_ptr<FCIWfn>>> CISolutions_;
+    std::shared_ptr<FCIIntegrals> get_ci_integrals();
 };
 }
 }
