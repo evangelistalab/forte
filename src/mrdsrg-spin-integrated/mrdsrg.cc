@@ -373,6 +373,14 @@ double MRDSRG::compute_energy_relaxed() {
             FCI_MO fci_mo(reference_wavefunction_, options_, ints_, mo_space_info_, fci_ints);
             fci_mo.set_localize_actv(false);
             Erelax = fci_mo.compute_energy();
+        } else if (cas_type == "ACI" ){
+            AdaptiveCI aci(reference_wavefunction_, options_, ints_, mo_space_info_);
+            aci.set_fci_ints(fci_ints);
+            if( options_["ACI_RELAX_SIGMA"].has_changed() ){
+                aci.update_sigma();
+            }
+            Erelax = aci.compute_energy();
+        
         } else {
             FCI fci(reference_wavefunction_, options_, ints_, mo_space_info_, fci_ints);
             fci.set_max_rdm_level(1);
@@ -430,6 +438,14 @@ double MRDSRG::compute_energy_relaxed() {
                 Erelax = fci_mo.compute_energy();
 
                 reference_ = fci_mo.reference(max_rdm_level);
+            } else if (cas_type == "ACI" ){
+                AdaptiveCI aci(reference_wavefunction_, options_, ints_, mo_space_info_);
+                aci.set_fci_ints(fci_ints);
+                if( options_["ACI_RELAX_SIGMA"].has_changed() ){
+                    aci.update_sigma();
+                }
+                Erelax = aci.compute_energy();
+                reference_ = aci.reference();
             } else {
                 FCI fci(reference_wavefunction_, options_, ints_, mo_space_info_, fci_ints);
                 fci.set_max_rdm_level(max_rdm_level);
