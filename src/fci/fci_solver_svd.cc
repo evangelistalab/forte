@@ -221,6 +221,13 @@ void FCISolver::tile_chopper(std::vector<SharedMatrix>& C, double ETA,
     //re-define tile_norm_cut
     double area_norm = 0.0;
 
+    // for (auto T : sorted_tiles) {
+    //     outfile->Printf("\n   %20.12f      %d      %d      %d", std::get<0>(T), std::get<1>(T), std::get<2>(T), std::get<3>(T));
+    //     area_norm += std::get<0>(T);
+    // }
+
+    outfile->Printf("\n");
+
     std::sort(sorted_tiles.rbegin(), sorted_tiles.rend());
 
     // outfile->Printf("\n");
@@ -238,18 +245,51 @@ void FCISolver::tile_chopper(std::vector<SharedMatrix>& C, double ETA,
 
     // find cutoff ETA
     double norm_cut = 1.0 - ETA;
-    double tile_norm_sum = 0;
+    double tile_norm_sum = 0.0;
     int eta_counter = 0;
+    double diff_val;
 
     for (auto T : sorted_tiles) {
-        eta_counter++;
         tile_norm_sum += std::get<0>(T);
         if (tile_norm_sum > norm_cut * area_norm) {
             break;
         }
+        eta_counter++;
+        //std::cout << "ETA Count :  " << eta_counter << std::endl;
+        //std::cout << "tle norm sum :  " << tile_norm_sum << std::endl;
+        //std::cout << "N tiles  " << sorted_tiles.size() << std::endl;
+        if(eta_counter < sorted_tiles.size()){
+          diff_val = std::get<0>(sorted_tiles[eta_counter - 1]) - std::get<0>(sorted_tiles[eta_counter]);
+          //std::cout << "count-1 - count :  " << diff_val << std::endl;
+        }
     }
 
-    double tile_norm_cut = std::get<0>(sorted_tiles[eta_counter]);
+    // std::cout << "ETA Count :  " << eta_counter << std::endl;
+    // std::cout << "tle norm cut :  " << std::get<0>(sorted_tiles[eta_counter]) << std::endl;
+    // std::cout << "N tiles  " << sorted_tiles.size() << std::endl;
+
+
+    double tile_norm_cut;
+    if(eta_counter == sorted_tiles.size() ) {
+      tile_norm_cut = 0.0;
+    } else if (eta_counter < sorted_tiles.size() ) {
+
+      if(diff_val < 1e-16 /* OPTION */){ // in case s_t[eta_counter-1] is very close in value to s_t[eta_counter]
+
+        if(eta_counter == sorted_tiles.size() - 1){ // again include all tiles if we make it to 2nd to last one
+          tile_norm_cut = 0.0;
+        } else { // inclue the almost same valed tiles
+          double diff_val2 = std::get<0>(sorted_tiles[eta_counter]) - std::get<0>(sorted_tiles[eta_counter+1]);
+          tile_norm_cut =  tile_norm_cut = std::get<0>(sorted_tiles[eta_counter]) + 0.5*diff_val2;
+          //std::cout << "Close Tile inclueded! : " << eta_counter << std::endl;
+        }
+
+      } else { // buisness as usual
+        tile_norm_cut = std::get<0>(sorted_tiles[eta_counter-1]) + 0.5*diff_val;
+      }
+    } else {
+      std::cout << "WOAH, should be a seg fault ..." << std::endl;
+    }
 
     for (int h=0; h<nirrep; h++) {
       // loop over irreps
@@ -335,6 +375,7 @@ void FCISolver::tile_chopper(std::vector<SharedMatrix>& C, double ETA,
     outfile->Printf("\n////////////////// Tile Chopper /////////////////");
     outfile->Printf("\n");
     outfile->Printf("\n ETA               = %20.12f", ETA);
+    outfile->Printf("\n tile cutoff       = %20.12f", tile_norm_cut);
     outfile->Printf("\n Norm              = %20.12f", Norm);
     outfile->Printf("\n E_fci             = %20.12f", fci_energy);
     outfile->Printf("\n E_tile_chop       = %20.12f", E_block_chop);
@@ -363,12 +404,19 @@ void FCISolver::string_trimmer(std::vector<SharedMatrix>& C, double DELTA, FCIVe
     }
   }
 
+  // for (auto T : sorted_strings) {
+  //     outfile->Printf("\n   %20.12f      %d      ", T.first, T.second);
+  //     //st_norm += ST.first;
+  // }
+
+  outfile->Printf("\n");
+
   std::sort(sorted_strings.begin(), sorted_strings.end(), pairCompare);
 
   double st_norm = 0.0;
-  for (auto ST : sorted_strings) {
-      //outfile->Printf("\n   %20.12f      %d      %d      %d", std::get<0>(T), std::get<1>(T), std::get<2>(T), std::get<3>(T));
-      st_norm += ST.first;
+  for (auto T : sorted_strings) {
+      //outfile->Printf("\n   %20.12f      %d      ", T.first, T.second);
+      st_norm += T.first;
   }
 
   // outfile->Printf("\n");
@@ -378,6 +426,7 @@ void FCISolver::string_trimmer(std::vector<SharedMatrix>& C, double DELTA, FCIVe
   double norm_cut = 1.0 - DELTA;
   double string_norm_sum = 0;
   int delta_counter = 0;
+  double diff_val;
 
   for (auto ST : sorted_strings) {
       delta_counter++;
@@ -385,9 +434,37 @@ void FCISolver::string_trimmer(std::vector<SharedMatrix>& C, double DELTA, FCIVe
       if (string_norm_sum > norm_cut * st_norm) {
           break;
       }
+      //std::cout << "ETA Count :  " << delta_counter << std::endl;
+      //std::cout << "string norm sum :  " << string_norm_sum << std::endl;
+      //std::cout << "N strings  " << sorted_strings.size() << std::endl;
+      if(delta_counter < sorted_strings.size()){
+        diff_val = sorted_strings[delta_counter - 1].first - sorted_strings[delta_counter].first;
+        //std::cout << "count-1 - count :  " << diff_val << std::endl;
+      }
   }
 
-  double sum_cut = sorted_strings[delta_counter].first;
+  //double sum_cut = sorted_strings[delta_counter-1].first;
+  double sum_cut;
+  if(delta_counter == sorted_strings.size() ) {
+    sum_cut = 0.0;
+  } else if (delta_counter < sorted_strings.size() ) {
+    //sum_cut = sorted_strings[delta_counter-1].first;
+      if(diff_val < 1e-16 /* OPTION */){ // in case s_s[delta_counter-1] is very close in value to s_s[delta_counter]
+
+        if(delta_counter == sorted_strings.size() - 1){ // again include all strings if we make it to 2nd to last one
+          sum_cut = 0.0;
+        } else { // inclue the 'almost' same valed strings
+          double diff_val2 = sorted_strings[delta_counter].first - sorted_strings[delta_counter+1].first;
+          sum_cut = sorted_strings[delta_counter].first + 0.5*diff_val2;
+          //std::cout << "Close string inclueded! : " << delta_counter << std::endl;
+        }
+
+      } else { // buisness as usual
+        sum_cut = sorted_strings[delta_counter-1].first + 0.5*diff_val;
+      }
+  } else {
+    std::cout << "WOAH, should be a seg fault ..." << std::endl;
+  }
 
   double Om_a;
   double Om_b;
@@ -470,6 +547,7 @@ void FCISolver::string_trimmer(std::vector<SharedMatrix>& C, double DELTA, FCIVe
   outfile->Printf("\n////////////////// String Trimmer /////////////////");
   outfile->Printf("\n");
   outfile->Printf("\n DELTA             = %20.12f", DELTA);
+  outfile->Printf("\n string cutoff     = %20.12f", sum_cut);
   outfile->Printf("\n Norm              = %20.12f", Norm);
   outfile->Printf("\n E_fci             = %20.12f", fci_energy);
   outfile->Printf("\n E_red_rank        = %20.12f", E_string_trim);
@@ -722,7 +800,7 @@ void FCISolver::patch_Cmat(std::vector<std::tuple<double, int, int, int> >& sort
   auto s = std::make_shared<Vector>("s", std::min(n, d));
   auto v = std::make_shared<Matrix>("v", d, d);
 
-  M->svd(u, s, v);
+  M->svd_a(u, s, v);
   //s->print();
 
   //rebuild sigma as matrix
@@ -735,11 +813,20 @@ void FCISolver::patch_Cmat(std::vector<std::tuple<double, int, int, int> >& sort
   //count paramaters
   N_par += rank_ef*(n + d);
 
+  //std::cout << "i: " << i << "  j:  " << j << " n: " << n << "  d:  " << d <<"  rank eff:  " << rank_ef << std::endl;
+
   //rebuild M with reduced rank
   auto M_red_rank = Matrix::triplet(u, sig_mat, v, false, false, false);
 
+  // auto M_clone = M->clone();
+  // M_clone->subtract(M_red_rank);
+  // std::cout << "\ntile diff: " << M_clone->sum_of_squares() << std::endl;
+
   //splice M_red_rank back into C
   C[h]->set_block(row_slice, col_slice, M_red_rank);
+
+
+
 }
 
 
@@ -798,30 +885,40 @@ void FCISolver::fci_svd_tiles(FCIVector& HC, std::shared_ptr<FCIIntegrals> fci_i
         //outfile->Printf("\n-------------------- NEXT IRREP --------------------\n");
         //C[h]->print();
 
-        for(int i=0; i<nt_rows+1; i++){
-          // allocate memory for sorting vector
-          rank_tile_inirrep[h][i].resize(nt_cols+1);
-          for(int j=0; j<nt_cols+1; j++){
-            // make dimension objects
-            if(j == nt_cols && i == nt_rows){
-              // case of very last tile
-              add_to_sig_vect(sorted_sigma, C, b_r, e_r, b_c, e_c, dim, last_row_dim, last_col_dim, h, i, j);
+        // in cases mat can be tiled perfectly (/w out remainder)
+        // if(last_col_dim == 0 || last_row_dim == 0){
+        //   for(int i=0; i<nt_rows; i++){
+        //     for(int j=0; j<nt_cols; j++){
+        //       add_to_sig_vect(sorted_sigma, C, b_r, e_r, b_c, e_c, dim, dim, dim, h, i, j);
+        //     }
+        //   }
+        // } else { // if not a perfect fit...
 
-            } else if(j == nt_cols){
-              // case of last tile colum
-              add_to_sig_vect(sorted_sigma, C, b_r, e_r, b_c, e_c, dim, dim, last_col_dim, h, i, j);
+          for(int i=0; i<nt_rows+1; i++){
+            // allocate memory for sorting vector
+            rank_tile_inirrep[h][i].resize(nt_cols+1); //why I get seg fault...
+            for(int j=0; j<nt_cols+1; j++){
+              // make dimension objects
+              if(j == nt_cols && i == nt_rows){
+                // case of very last tile
+                add_to_sig_vect(sorted_sigma, C, b_r, e_r, b_c, e_c, dim, last_row_dim, last_col_dim, h, i, j);
 
-            } else if(i == nt_rows){
-              // case of last tile row
-              add_to_sig_vect(sorted_sigma, C, b_r, e_r, b_c, e_c, dim, last_row_dim, dim, h, i, j);
+              } else if(j == nt_cols){
+                // case of last tile colum
+                add_to_sig_vect(sorted_sigma, C, b_r, e_r, b_c, e_c, dim, dim, last_col_dim, h, i, j);
 
-            } else {
-              // most cases (main block of tiles of dim x dim)
-              add_to_sig_vect(sorted_sigma, C, b_r, e_r, b_c, e_c, dim, dim, dim, h, i, j);
+              } else if(i == nt_rows){
+                // case of last tile row
+                add_to_sig_vect(sorted_sigma, C, b_r, e_r, b_c, e_c, dim, last_row_dim, dim, h, i, j);
+
+              } else {
+                // most cases (main block of tiles of dim x dim)
+                add_to_sig_vect(sorted_sigma, C, b_r, e_r, b_c, e_c, dim, dim, dim, h, i, j);
+              }
+            //outfile->Printf("\nh dim: %6d  i dim: %6d  j dim: %6d  ",rank_tile_inirrep.size(), rank_tile_inirrep[h].size(), rank_tile_inirrep[h][i].size());
+            }
           }
-          //outfile->Printf("\nh dim: %6d  i dim: %6d  j dim: %6d  ",rank_tile_inirrep.size(), rank_tile_inirrep[h].size(), rank_tile_inirrep[h][i].size());
-          }
-        }
+      //} // end else
     }
 
     /////////////////////////////////// check status ////////////////////////////////////
@@ -829,9 +926,9 @@ void FCISolver::fci_svd_tiles(FCIVector& HC, std::shared_ptr<FCIIntegrals> fci_i
     std::sort(sorted_sigma.rbegin(), sorted_sigma.rend());
     double sigma_norm = 0.0;
 
-    outfile->Printf("\n");
-    //outfile->Printf("\n        singular value    irrep      tile(i)     tile(j)");
-    //outfile->Printf("\n------------------------------------------------------------");
+    // outfile->Printf("\n");
+    // outfile->Printf("\n        singular value    irrep      tile(i)     tile(j)");
+    // outfile->Printf("\n------------------------------------------------------------");
 
     for (auto sigma_h : sorted_sigma) {
         //outfile->Printf("\n   %20.12f      %d      %d      %d", std::get<0>(sigma_h), std::get<1>(sigma_h), std::get<2>(sigma_h), std::get<3>(sigma_h));
@@ -917,28 +1014,37 @@ void FCISolver::fci_svd_tiles(FCIVector& HC, std::shared_ptr<FCIIntegrals> fci_i
         rank_tile_inirrep[h].resize(nt_rows+1);
 
         //outfile->Printf("\n-------------------- NEXT IRREP --------------------\n");
+        // in cases mat can be tiled perfectly (/w out remainder)
+        // if(last_col_dim == 0 || last_row_dim == 0){
+        //   for(int i=0; i<nt_rows; i++){
+        //     for(int j=0; j<nt_cols; j++){
+        //       patch_Cmat(sorted_sigma, C_tiled_rr, rank_tile_inirrep, b_r, e_r, b_c, e_c, dim, dim, dim, h, i, j, N_par);
+        //     }
+        //   }
+        // } else {
 
-        for(int i=0; i<nt_rows+1; i++){
-          // allocate memory for sorting vector
-          rank_tile_inirrep[h][i].resize(nt_cols+1);
-          for(int j=0; j<nt_cols+1; j++){
-            // make dimension objects
-            if(j == nt_cols && i == nt_rows){
-              // make dimension objects for case of very last tile
-              patch_Cmat(sorted_sigma, C_tiled_rr, rank_tile_inirrep, b_r, e_r, b_c, e_c, dim, last_row_dim, last_col_dim, h, i, j, N_par);
-            } else if(j == nt_cols){
-              // make dimension objects for case of last tile colum
-              patch_Cmat(sorted_sigma, C_tiled_rr, rank_tile_inirrep, b_r, e_r, b_c, e_c, dim, dim, last_col_dim, h, i, j, N_par);
-            } else if(i == nt_rows){
-              // make dimension objects for case of last tile row
-              patch_Cmat(sorted_sigma, C_tiled_rr, rank_tile_inirrep, b_r, e_r, b_c, e_c, dim, last_row_dim, dim, h, i, j, N_par);
-            } else {
+          for(int i=0; i<nt_rows+1; i++){
+            // allocate memory for sorting vector
+            rank_tile_inirrep[h][i].resize(nt_cols+1);
+            for(int j=0; j<nt_cols+1; j++){
               // make dimension objects
-              patch_Cmat(sorted_sigma, C_tiled_rr, rank_tile_inirrep, b_r, e_r, b_c, e_c, dim, dim, dim, h, i, j, N_par);
-              }
-          //outfile->Printf("\nh dim: %6d  i dim: %6d  j dim: %6d  ",rank_tile_inirrep.size(), rank_tile_inirrep[h].size(), rank_tile_inirrep[h][i].size());
-          } // end j
-        } // end i
+              if(j == nt_cols && i == nt_rows){
+                // make dimension objects for case of very last tile
+                patch_Cmat(sorted_sigma, C_tiled_rr, rank_tile_inirrep, b_r, e_r, b_c, e_c, dim, last_row_dim, last_col_dim, h, i, j, N_par);
+              } else if(j == nt_cols){
+                // make dimension objects for case of last tile colum
+                patch_Cmat(sorted_sigma, C_tiled_rr, rank_tile_inirrep, b_r, e_r, b_c, e_c, dim, dim, last_col_dim, h, i, j, N_par);
+              } else if(i == nt_rows){
+                // make dimension objects for case of last tile row
+                patch_Cmat(sorted_sigma, C_tiled_rr, rank_tile_inirrep, b_r, e_r, b_c, e_c, dim, last_row_dim, dim, h, i, j, N_par);
+              } else {
+                // make dimension objects
+                patch_Cmat(sorted_sigma, C_tiled_rr, rank_tile_inirrep, b_r, e_r, b_c, e_c, dim, dim, dim, h, i, j, N_par);
+                }
+            //outfile->Printf("\nh dim: %6d  i dim: %6d  j dim: %6d  ",rank_tile_inirrep.size(), rank_tile_inirrep[h].size(), rank_tile_inirrep[h][i].size());
+            } // end j
+          } // end i
+        //} // end else
     } // end h
 
     //re-normalize
