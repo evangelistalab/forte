@@ -139,7 +139,7 @@ void FCISolver::rev_basis_cluster(std::vector<SharedMatrix>& C, std::vector<std:
 
 void FCISolver::tile_chopper(std::vector<SharedMatrix>& C, double ETA,
                              FCIVector& HC, std::shared_ptr<FCIIntegrals> fci_ints,
-                             double fci_energy, int dim)
+                             double fci_energy, int dim, std::vector<double>& Tau_info)
 {
   double nuclear_repulsion_energy =
       Process::environment.molecule()->nuclear_repulsion_energy({0, 0, 0});
@@ -371,6 +371,10 @@ void FCISolver::tile_chopper(std::vector<SharedMatrix>& C, double ETA,
     double E_block_chop = HC.dot(C_) + nuclear_repulsion_energy;
 
     int Nsto = Npar;
+    //double Npar_db = Npar;
+
+    Tau_info.push_back(Npar);
+    Tau_info.push_back(E_block_chop-fci_energy);
 
     outfile->Printf("\n////////////////// Tile Chopper /////////////////");
     outfile->Printf("\n");
@@ -386,7 +390,7 @@ void FCISolver::tile_chopper(std::vector<SharedMatrix>& C, double ETA,
     outfile->Printf("\n");
 }
 
-void FCISolver::string_trimmer(std::vector<SharedMatrix>& C, double DELTA, FCIVector& HC, std::shared_ptr<FCIIntegrals> fci_ints, double fci_energy)
+void FCISolver::string_trimmer(std::vector<SharedMatrix>& C, double DELTA, FCIVector& HC, std::shared_ptr<FCIIntegrals> fci_ints, double fci_energy, std::vector<double>& Tau_info)
 {
   double nuclear_repulsion_energy =
       Process::environment.molecule()->nuclear_repulsion_energy({0, 0, 0});
@@ -543,6 +547,10 @@ void FCISolver::string_trimmer(std::vector<SharedMatrix>& C, double DELTA, FCIVe
   double E_string_trim = HC.dot(C_) + nuclear_repulsion_energy;
 
   int N_sto = N_par;
+  //double Npar_db = Npar;
+
+  Tau_info.push_back(N_par);
+  Tau_info.push_back(E_string_trim-fci_energy);
 
   outfile->Printf("\n////////////////// String Trimmer /////////////////");
   outfile->Printf("\n");
@@ -830,7 +838,7 @@ void FCISolver::patch_Cmat(std::vector<std::tuple<double, int, int, int> >& sort
 }
 
 
-void FCISolver::fci_svd_tiles(FCIVector& HC, std::shared_ptr<FCIIntegrals> fci_ints, double fci_energy, int dim, double OMEGA)
+void FCISolver::fci_svd_tiles(FCIVector& HC, std::shared_ptr<FCIIntegrals> fci_ints, double fci_energy, int dim, double OMEGA, std::vector<double>& Tau_info)
 {
   double nuclear_repulsion_energy =
       Process::environment.molecule()->nuclear_repulsion_energy({0, 0, 0});
@@ -1094,6 +1102,11 @@ void FCISolver::fci_svd_tiles(FCIVector& HC, std::shared_ptr<FCIIntegrals> fci_i
     // E = C^T HC
     double E_red_rank = HC.dot(C_) + nuclear_repulsion_energy;
 
+    //double Npar_db = Npar;
+
+    Tau_info.push_back(N_par);
+    Tau_info.push_back(E_red_rank-fci_energy);
+
     outfile->Printf("\n////////////////// Tile SVD /////////////////\n");
     outfile->Printf("\n OMEGA             = %20.12f", OMEGA);
     outfile->Printf("\n tile size         =     %6d", dim);
@@ -1110,7 +1123,7 @@ void FCISolver::fci_svd_tiles(FCIVector& HC, std::shared_ptr<FCIIntegrals> fci_i
 
 
 
-void FCISolver::fci_svd(FCIVector& HC, std::shared_ptr<FCIIntegrals> fci_ints, double fci_energy, double TAU)
+void FCISolver::fci_svd(FCIVector& HC, std::shared_ptr<FCIIntegrals> fci_ints, double fci_energy, double TAU, std::vector<double>& Tau_info)
 {
   double nuclear_repulsion_energy =
       Process::environment.molecule()->nuclear_repulsion_energy({0, 0, 0});
@@ -1278,6 +1291,11 @@ void FCISolver::fci_svd(FCIVector& HC, std::shared_ptr<FCIIntegrals> fci_ints, d
     C_->Hamiltonian(HC, fci_ints, twoSubstituitionVVOO);
     // E = C^T HC
     double E_red_rank = HC.dot(C_) + nuclear_repulsion_energy;
+
+    //double Npar_db = Npar;
+
+    Tau_info.push_back(N_par*2);
+    Tau_info.push_back(E_red_rank-fci_energy);
 
     outfile->Printf("\n////////////////// Full SVD /////////////////\n");
     outfile->Printf("\n Tau               = %20.12f", TAU);

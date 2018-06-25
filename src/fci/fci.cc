@@ -49,6 +49,8 @@ void set_FCI_options(ForteOptions& foptions) {
     foptions.add_bool("CHUNK_SPACE_ENERGY", false, "Use only a small block of C for variational optemization");
     foptions.add_bool("SOLVE_IN_SUBSPACE", false, "Solve for a subspace after selection via block chop or string trim");
 
+    foptions.add_bool("FCI_SINGLE_TAU", true, "Use only a sinle value of Tau for the compression procedure");
+
     foptions.add_bool("FCI_TILE_CHOPPER", false, "Chop out unimportant tiles based on some cutoff");
     foptions.add_bool("FCI_CLUSTER_BASIS", false, "Cluster the FCI basis");
     foptions.add_int("FCI_TC_DIM", 0, "Chop tiles into this size");

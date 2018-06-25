@@ -222,18 +222,18 @@ class FCISolver {
     double subspace_energy();
 
     /// Decompose and reconstruct the FCI wave function
-    void fci_svd(FCIVector& HC, std::shared_ptr<FCIIntegrals> fci_ints, double fci_energy, double TAU);
+    void fci_svd(FCIVector& HC, std::shared_ptr<FCIIntegrals> fci_ints, double fci_energy, double TAU, std::vector<double>& Tau_info);
 
-    void fci_svd_tiles(FCIVector& HC, std::shared_ptr<FCIIntegrals> fci_ints, double fci_energy, int tile_dim, double OMEGA);
+    void fci_svd_tiles(FCIVector& HC, std::shared_ptr<FCIIntegrals> fci_ints, double fci_energy, int tile_dim, double OMEGA, std::vector<double>& Tau_info);
 
     void string_stats(std::vector<SharedMatrix> C);
 
     void string_trimmer(std::vector<SharedMatrix>& C, double DELTA, FCIVector& HC,
-                        std::shared_ptr<FCIIntegrals> fci_ints, double fci_energy);
+                        std::shared_ptr<FCIIntegrals> fci_ints, double fci_energy, std::vector<double>& Tau_info);
 
     void tile_chopper(std::vector<SharedMatrix>& C, double ETA,
                       FCIVector& HC, std::shared_ptr<FCIIntegrals> fci_ints,
-                      double fci_energy, int dim);
+                      double fci_energy, int dim, std::vector<double>& Tau_info);
 
     void zero_tile(std::vector<SharedMatrix>& C,
                    std::vector<int> b_r,
