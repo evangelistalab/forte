@@ -3325,8 +3325,9 @@ void THREE_DSRG_MRPT2::form_Hbar() {
 
 void THREE_DSRG_MRPT2::relax_reference_once() {
 
+outfile->Printf("\n Computing ints for Heff");
     auto fci_ints = compute_Heff();
-
+outfile->Printf("\n done");
     std::vector<double> E_relaxed = relaxed_energy(fci_ints);
 
     if (options_["AVG_STATE"].size() == 0) {
