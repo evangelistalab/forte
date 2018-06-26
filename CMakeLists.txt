@@ -32,7 +32,10 @@ find_package(TargetLAPACK REQUIRED)
 find_package(ambit REQUIRED)
 if(ENABLE_CheMPS2)
     find_package(CheMPS2 1.8.3 CONFIG REQUIRED)
+    add_definitions(-DHAVE_CHEMPS2)
+    set(HAVE_CHEMPS2 true)
 endif()
+
 
 # Including custom cmake rules
 include(cmake/clang-cxx-dev-tools.cmake)
