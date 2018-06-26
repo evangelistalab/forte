@@ -1172,13 +1172,13 @@ AdaptiveCI::get_excited_determinants_batch_vecsort(SharedMatrix evecs, SharedVec
             auto& A_b = A_b_t.first[tid];
             //                        int idx = 0;
             double E0 = evals->get(0);
+//            outfile->Printf("\n td %d, Ab: %zu, abt: %zu", tid ,A_b.size(), A_b_t.second[tid]);
             for (size_t I = 0, max_I = A_b_t.second[tid]; I < max_I; I++) {
                 auto& pair = A_b[I];
                 double& V = pair.second;
                 if (V != 0.0) {
                     auto& det = pair.first;
                     double delta = fci_ints_->energy_bit(det) - E0;
-                  //  double delta = fci_ints_->energy(det) - E0;
                     V = std::fabs(0.5 * (delta - sqrt(delta * delta + V * V * 4.0)));
                 }
             }
@@ -1199,17 +1199,20 @@ AdaptiveCI::get_excited_determinants_batch_vecsort(SharedMatrix evecs, SharedVec
         outfile->Printf("\n    Sort vector            %10.6f", sortt.get());
 
         // 4. Screen subspaces
+        // Can it be done without recombining/resorting?
         Timer screener;
         // single-thread algorithm
         double b_sigma = sigma_ * (aci_scale / nbin);
         double excluded = 0.0;
         size_t total_size = 0;
         int n = 0;
+        det_hash<int> test;
         for( auto& A_b : A_b_t.first ){
             //auto& A_b = A_b_t.first[0];
             for (size_t I = 0, max_I = A_b_t.second[n]; I < max_I; ++I) {
                 double en = A_b[I].second;
-                //            Determinant& det = A_b[I].second;
+                Determinant& det = A_b[I].first;
+                test[det] = 1;
                 if (excluded + en < b_sigma) {
                     excluded += en;
                 } else {
@@ -1217,9 +1220,10 @@ AdaptiveCI::get_excited_determinants_batch_vecsort(SharedMatrix evecs, SharedVec
                 }
             }
             total_excluded += excluded;
-            total_size += A_b.size();
+            total_size += A_b_t.second[n];
             n++;
         }
+        outfile->Printf("\n    unique dets: %zu", test.size());
         outfile->Printf("\n    Screening              %10.6f", screener.get());
         outfile->Printf("\n    Added %zu dets of %zu from bin %d", F_space.size(), total_size, bin);
     } // End iteration over bins
@@ -2101,10 +2105,10 @@ AdaptiveCI::get_bin_F_space_vecsort(int bin, int nbin, SharedMatrix evecs, Deter
         size_t num_new_dets = vec_A_b.size();
 
         //        outfile->Printf("\n  Added %zu dets", A_b.size());
-        if( thread_id == 0 ){
+//        if( thread_id == 0 ){
             outfile->Printf("\n  Time spent forming vec_A_b: %1.6f", build.get());
             outfile->Printf("\n  Generated %zu determinants out of %zu guessed", num_new_dets, guess);
-        }
+  //      }
 
         // Sort the determinant contributions
         Timer F_sort;
@@ -2140,7 +2144,7 @@ AdaptiveCI::get_bin_F_space_vecsort(int bin, int nbin, SharedMatrix evecs, Deter
             }
         }
         vec_A_b[pos] = std::make_pair(d, sum);
-        pos += 1;
+        pos += (pos == 0) ? 0 : 1;
 
         #pragma omp critical
         outfile->Printf("\n  Time spent combining unique elements of vec_A_b: %1.6f",
@@ -2161,8 +2165,8 @@ AdaptiveCI::get_bin_F_space_vecsort(int bin, int nbin, SharedMatrix evecs, Deter
         std::sort(sorted_dets.begin(), sorted_dets.end());
 
         // Remove duplicates and merge
-#pragma omp critical
-        {
+      //  #pragma omp critical
+      //  {
 
             size_t ref_size = sorted_dets.size();
             size_t ref_pos = 0;
@@ -2191,13 +2195,51 @@ AdaptiveCI::get_bin_F_space_vecsort(int bin, int nbin, SharedMatrix evecs, Deter
             //            for (size_t I = det_pos; I < det_size; I++) {
             //                bin_f_space[vec_A_b[I].first] += vec_A_b[I].second;
             //            }
-        }
+   //     }
 
-#pragma omp barrier
         if (thread_id == 0)
             outfile->Printf("\n  Merge: %1.6f", merge.get());
-
     } // close threads
+
+
+    // Account for duplicates between threads by adding
+    // to thread 0, and zeroing other threads
+
+    int ntd = vec_A_b_t.size();
+    if( ntd > 1 ){
+        auto& vec_ref = vec_A_b_t[0];
+        for( int td = 1; td < ntd; ++td ){
+
+            auto& vec_td = vec_A_b_t[td];
+
+            size_t ref_size = vec_ref.size();
+            size_t ref_pos = 0;
+            size_t td_size = vec_td.size();
+            size_t td_pos = 0;
+
+            Determinant ref_head = vec_ref[0].first;
+            Determinant td_head = vec_td[0].first;
+            // run through the vectors
+            while ((ref_pos < ref_size) and (td_pos < td_size)) {
+                ref_head = vec_ref[ref_pos].first;
+                td_head = vec_td[td_pos].first;
+                if (ref_head < td_head) {
+                    ref_pos += 1;
+                } else if (td_head < ref_head) {
+                    td_pos += 1;
+                } else {
+                    // found a match
+                    double& V = vec_td[td_pos].second;
+
+                    vec_ref[ref_pos].second += V;
+                    //vec_td[ref_pos].second = 0;
+                    V = 0.0;
+                    td_pos += 1;
+                    ref_pos += 1;
+                }
+            }
+        }
+    }
 
     return std::make_pair(vec_A_b_t, dets_t);
 }

@@ -848,7 +848,7 @@ void AdaptiveCI::find_q_space_batched(DeterminantHashVec& P_space, DeterminantHa
 
     std::vector<std::pair<double, Determinant>> F_space;
     double remainder = get_excited_determinants_batch(evecs, evals, P_space, F_space);
-   //  double remainder = get_excited_determinants_batch_vecsort( evecs, evals, P_space, F_space );
+    //double remainder = get_excited_determinants_batch_vecsort( evecs, evals, P_space, F_space );
 
     PQ_space.clear();
     external_wfn_.clear();
