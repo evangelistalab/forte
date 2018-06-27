@@ -1207,22 +1207,38 @@ AdaptiveCI::get_excited_determinants_batch_vecsort(SharedMatrix evecs, SharedVec
         size_t total_size = 0;
         int n = 0;
         det_hash<int> test;
-        for( auto& A_b : A_b_t.first ){
-            //auto& A_b = A_b_t.first[0];
-            for (size_t I = 0, max_I = A_b_t.second[n]; I < max_I; ++I) {
-                double en = A_b[I].second;
-                Determinant& det = A_b[I].first;
-                test[det] = 1;
-                if (excluded + en < b_sigma) {
-                    excluded += en;
-                } else {
-                    F_space.push_back(std::make_pair(en, A_b[I].first));
-                }
-            }
-            total_excluded += excluded;
-            total_size += A_b_t.second[n];
-            n++;
+
+        std::vector<Determinant> current_det (A_b_t.size());
+        std::vector<double> current_en (A_b_t.size());
+        std::vector<size_t> det_dims(A_b_t.size());
+        for( int d = 0; d < A_b_t.size(); ++d){
+            det_dims[d] = A_b_t[d].size();
         }
+
+        size_t min_dim = std::min(det_dims.begin(), det_dims.end()); 
+        for( int idx = 0; idx < min_dim; ++idx ){ 
+            
+        }
+
+        //for( auto& A_b : A_b_t.first ){
+        //    //auto& A_b = A_b_t.first[0];
+        //    for (size_t I = 0, max_I = A_b_t.second[n]; I < max_I; ++I) {
+
+        //        double en = A_b[I].second;
+        //        Determinant& det = A_b[I].first;
+        //        test[det] = 1;
+        //        if (excluded + en < b_sigma) {
+        //            excluded += en;
+        //        } else {
+        //            F_space.push_back(std::make_pair(en, A_b[I].first));
+        //        }
+        //    }
+        //    total_excluded += excluded;
+        //    total_size += A_b_t.second[n];
+        //    n++;
+        //}
+
+
         outfile->Printf("\n    unique dets: %zu", test.size());
         outfile->Printf("\n    Screening              %10.6f", screener.get());
         outfile->Printf("\n    Added %zu dets of %zu from bin %d", F_space.size(), total_size, bin);
