@@ -32,7 +32,9 @@
 #include "psi4/libiwl/iwl.hpp"
 #include "psi4/libmints/factory.h"
 #include "psi4/libmints/matrix.h"
+#include "psi4/libmints/molecule.h"
 #include "psi4/libmints/mintshelper.h"
+#include "psi4/libmints/pointgrp.h"
 #include "psi4/libmints/typedefs.h"
 #include "psi4/libmints/wavefunction.h"
 #include "psi4/libpsio/psio.hpp"
@@ -118,7 +120,7 @@ void DMRGSolver::compute_reference(double* one_rdm, double* two_rdm, double* thr
     dmrg_ref.set_L1b(gamma1_a);
     /// Form 2_rdms
     {
-        gamma2_dmrg.iterate([&](const ::vector<size_t>& i, double& value) {
+        gamma2_dmrg.iterate([&](const std::vector<size_t>& i, double& value) {
             value = two_rdm[i[0] * na * na * na + i[1] * na * na + i[2] * na + i[3]];
         });
         if (spin_free_rdm_) {
@@ -160,7 +162,7 @@ void DMRGSolver::compute_reference(double* one_rdm, double* two_rdm, double* thr
             ambit::Tensor::build(ambit::CoreTensor, "Gamma3_aab", {na, na, na, na, na, na});
         ambit::Tensor gamma3_abb =
             ambit::Tensor::build(ambit::CoreTensor, "Gamma2_abb", {na, na, na, na, na, na});
-        gamma3_dmrg.iterate([&](const ::vector<size_t>& i, double& value) {
+        gamma3_dmrg.iterate([&](const std::vector<size_t>& i, double& value) {
             value = three_rdm[i[0] * na * na * na * na * na + i[1] * na * na * na * na +
                               i[2] * na * na * na + i[3] * na * na + i[4] * na + i[5]];
         });
@@ -269,8 +271,8 @@ void DMRGSolver::compute_energy() {
     const int nmo = mo_space_info_->size("ALL");
     const int nirrep = mo_space_info_->nirrep();
     Dimension orbspi = mo_space_info_->get_dimension("ALL");
-    int* docc = wfn_->doccpi();
-    int* socc = wfn_->soccpi();
+    const int* docc = wfn_->doccpi();
+    const int* socc = wfn_->soccpi();
     if (wfn_irrep < 0) {
         throw PSIEXCEPTION("Option ROOT_SYM (integer) may not be smaller than zero!");
     }
@@ -346,14 +348,16 @@ void DMRGSolver::compute_energy() {
     for (int cnt = 0; cnt < nirrep; cnt++) {
         nElectrons += 2 * docc[cnt] + socc[cnt];
     }
-    (*outfile) << "nElectrons  = " << nElectrons << endl;
+    //(*outfile) << "nElectrons  = " << nElectrons << endl;
+    outfile->Printf("\nnElectrons = %d", nElectrons);
 
     // Number of electrons in the active space
     int nDMRGelectrons = nElectrons;
     for (int cnt = 0; cnt < nirrep; cnt++) {
         nDMRGelectrons -= 2 * frozen_docc[cnt];
     }
-    (*outfile) << "nEl. active = " << nDMRGelectrons << endl;
+    //(*outfile) << "nEl. active = " << nDMRGelectrons << endl;
+    outfile->Printf("\nnEl. active = %d", nDMRGelectrons);
 
     // Create the CheMPS2::Hamiltonian --> fill later
     const size_t nOrbDMRG = mo_space_info_->size("ACTIVE");
@@ -528,13 +532,17 @@ int DMRGSolver::chemps2_groupnumber(const string SymmLabel) {
         }
     } while ((!stopFindGN) && (SyGroup < magic_number_max_groups_chemps2));
 
-    (*outfile) << "Psi4 symmetry group was found to be <" << SymmLabel.c_str() << ">." << endl;
+    //(*outfile) << "Psi4 symmetry group was found to be <" << SymmLabel.c_str() << ">." << endl;
+    outfile->Printf("\nPsi4 symmetry group was found to be <%s>",SymmLabel.c_str());
     if (SyGroup >= magic_number_max_groups_chemps2) {
-        (*outfile) << "CheMPS2 did not recognize this symmetry group name. "
-                      "CheMPS2 only knows:"
-                   << endl;
+        // (*outfile) << "CheMPS2 did not recognize this symmetry group name. "
+        //               "CheMPS2 only knows:"
+        //            << endl;
+        outfile->Printf("\nCheMPS2 did not recognize this symmetry group name. "
+                        "CheMPS2 only knows:");
         for (int cnt = 0; cnt < magic_number_max_groups_chemps2; cnt++) {
-            (*outfile) << "   <" << (CheMPS2::Irreps::getGroupName(cnt)).c_str() << ">" << endl;
+            //(*outfile) << "   <" << (CheMPS2::Irreps::getGroupName(cnt)).c_str() << ">" << endl;
+            outfile->Printf("   <%s>",(CheMPS2::Irreps::getGroupName(cnt)).c_str());
         }
         throw PSIEXCEPTION("CheMPS2 did not recognize the symmetry group name!");
     }
@@ -562,7 +570,9 @@ std::vector<double> DMRGSolver::one_body_operator() {
     /// This section of code computes the fock matrix for the
     /// INACTIVE_DOCC("RESTRICTED_DOCC")
 
-    std::shared_ptr<JK> JK_inactive = JK::build_JK(wfn_->basisset(), wfn_->options());
+    //std::shared_ptr<JK> JK_inactive = JK::build_JK(wfn_->basisset(), wfn_->options());
+    std::shared_ptr<JK> JK_inactive = JK::build_JK(wfn_->basisset(), wfn_->get_basisset("DF_BASIS_MP2"), wfn_->options());
+
 
     JK_inactive->set_memory(Process::environment.get_memory() * 0.8);
     JK_inactive->initialize();
@@ -625,7 +635,7 @@ std::vector<double> DMRGSolver::one_body_operator() {
         }
     }
     Dimension restricted_docc = mo_space_info_->get_dimension("INACTIVE_DOCC");
-    double E_restricted = Process::environment.molecule()->nuclear_repulsion_energy(wfn->get_dipole_field_strength());
+    double E_restricted = Process::environment.molecule()->nuclear_repulsion_energy(wfn_->get_dipole_field_strength());
     for (int h = 0; h < nirrep; h++) {
         for (int rd = 0; rd < restricted_docc[h]; rd++) {
             E_restricted += Hcore->get(h, rd, rd) + F_restricted->get(h, rd, rd);

@@ -434,7 +434,7 @@ void forte_old_methods(SharedWavefunction ref_wfn, Options& options,
             Reference dmrg_reference = dmrg.reference();
             // if (options.get_bool("SEMI_CANONICAL") and !options.get_bool("CASSCF_REFERENCE")) {
             if (options.get_bool("SEMI_CANONICAL")) {
-                SemiCanonical semi(ref_wfn, options, ints, mo_space_info, dmrg_reference);
+                SemiCanonical semi(ref_wfn, ints, mo_space_info);
                 semi.semicanonicalize(dmrg_reference, max_rdm_level);
             }
             std::shared_ptr<DSRG_MRPT2> dsrg_mrpt2(
@@ -581,7 +581,7 @@ void forte_old_methods(SharedWavefunction ref_wfn, Options& options,
 
             Reference dmrg_reference = dmrg.reference();
             if (options.get_bool("SEMI_CANONICAL")) {
-                SemiCanonical semi(ref_wfn, options, ints, mo_space_info, dmrg_reference);
+                SemiCanonical semi(ref_wfn, ints, mo_space_info);
                 semi.semicanonicalize(dmrg_reference, max_rdm_level);
             }
 

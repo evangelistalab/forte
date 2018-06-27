@@ -28,6 +28,9 @@
 
 #ifdef HAVE_CHEMPS2
 
+#include "psi4/libpsi4util/process.h"
+#include "psi4/libmints/molecule.h"
+
 #include "psi4/libdpd/dpd.h"
 #include "psi4/libiwl/iwl.hpp"
 #include "psi4/libmints/typedefs.h"
@@ -48,6 +51,9 @@
 #include <fstream>
 #include <iostream>
 #include <stdlib.h>
+
+#include <sys/types.h>
+#include <sys/stat.h>
 
 #include "chemps2/CASSCF.h"
 #include "chemps2/EdmistonRuedenberg.h"
@@ -88,13 +94,17 @@ int DMRGSCF::chemps2_groupnumber(const string SymmLabel) {
         }
     } while ((!stopFindGN) && (SyGroup < magic_number_max_groups_chemps2));
 
-    (*outfile) << "Psi4 symmetry group was found to be <" << SymmLabel.c_str() << ">." << endl;
+    //(*outfile) << "Psi4 symmetry group was found to be <" << SymmLabel.c_str() << ">." << std::endl;
+    outfile->Printf("\nPsi4 symmetry group was found to be <%s>", SymmLabel.c_str());
     if (SyGroup >= magic_number_max_groups_chemps2) {
-        (*outfile) << "CheMPS2 did not recognize this symmetry group name. "
-                      "CheMPS2 only knows:"
-                   << endl;
+        // (*outfile) << "CheMPS2 did not recognize this symmetry group name. "
+        //               "CheMPS2 only knows:"
+        //            << std::endl;
+        outfile->Printf("\nCheMPS2 did not recognize this symmetry group name. "
+                      "CheMPS2 only knows:");
         for (int cnt = 0; cnt < magic_number_max_groups_chemps2; cnt++) {
-            (*outfile) << "   <" << (CheMPS2::Irreps::getGroupName(cnt)).c_str() << ">" << endl;
+            //(*outfile) << "   <" << (CheMPS2::Irreps::getGroupName(cnt)).c_str() << ">" << std::endl;
+            outfile->Printf("\n   <%s>", (CheMPS2::Irreps::getGroupName(cnt)).c_str());
         }
         throw PSIEXCEPTION("CheMPS2 did not recognize the symmetry group name!");
     }
@@ -104,13 +114,13 @@ int DMRGSCF::chemps2_groupnumber(const string SymmLabel) {
 void DMRGSCF::buildTmatrix(CheMPS2::DMRGSCFmatrix* theTmatrix, CheMPS2::DMRGSCFindices* iHandler,
                            std::shared_ptr<PSIO> psio, SharedMatrix Cmat) {
 
-    const int nirrep = this->nirrep();
-    const int nmo = this->nmo();
+    const int nirrep = reference_wavefunction_->nirrep();
+    const int nmo = reference_wavefunction_->nmo();
     const int nTriMo = nmo * (nmo + 1) / 2;
-    const int nso = this->nso();
+    const int nso = reference_wavefunction_->nso();
     const int nTriSo = nso * (nso + 1) / 2;
-    int* mopi = this->nmopi();
-    int* sopi = this->nsopi();
+    const int* mopi = reference_wavefunction_->nmopi();
+    const int* sopi = reference_wavefunction_->nsopi();
     double* work1 = new double[nTriSo];
     double* work2 = new double[nTriSo];
     IWL::read_one(psio.get(), PSIF_OEI, PSIF_SO_T, work1, nTriSo, 0, 0, "outfile");
@@ -138,11 +148,11 @@ void DMRGSCF::buildTmatrix(CheMPS2::DMRGSCFmatrix* theTmatrix, CheMPS2::DMRGSCFi
 void DMRGSCF::buildJK(SharedMatrix MO_RDM, SharedMatrix MO_JK, SharedMatrix Cmat,
                       std::shared_ptr<JK> myJK) {
 
-    const int nso = this->nso();
-    int* nsopi = this->nsopi();
-    const int nmo = this->nmo();
-    int* nmopi = this->nmopi();
-    const int nirrep = this->nirrep();
+    const int nso = reference_wavefunction_->nso();
+    const int* nsopi = reference_wavefunction_->nsopi();
+    const int nmo = reference_wavefunction_->nmo();
+    const int* nmopi = reference_wavefunction_->nmopi();
+    const int nirrep = reference_wavefunction_->nirrep();
 
     // nso can be different from nmo
     SharedMatrix SO_RDM;
@@ -248,7 +258,7 @@ void DMRGSCF::buildHamDMRG(std::shared_ptr<IntegralTransform> ints,
     // OEI are not updated !!!!!
     ints->transform_tei(Aorbs_ptr, Aorbs_ptr, Aorbs_ptr, Aorbs_ptr);
     dpd_set_default(ints->get_dpd_id());
-    const int nirrep = this->nirrep();
+    const int nirrep = reference_wavefunction_->nirrep();
 
     // Econstant and one-electron integrals
     {
@@ -325,16 +335,16 @@ void DMRGSCF::fillRotatedTEI_coulomb(std::shared_ptr<IntegralTransform> ints,
     // OEI are not updated !!!!!
     ints->transform_tei(OAorbs_ptr, OAorbs_ptr, MOSpace::all, MOSpace::all);
     dpd_set_default(ints->get_dpd_id());
-    const int nirrep = this->nirrep();
+    const int nirrep = reference_wavefunction_->nirrep();
 
     // One-electron integrals
     {
-        const int nmo = this->nmo();
+        const int nmo = reference_wavefunction_->nmo();
         const int nTriMo = nmo * (nmo + 1) / 2;
-        const int nso = this->nso();
+        const int nso = reference_wavefunction_->nso();
         const int nTriSo = nso * (nso + 1) / 2;
-        int* mopi = this->nmopi();
-        int* sopi = this->nsopi();
+        const int* mopi = reference_wavefunction_->nmopi();
+        const int* sopi = reference_wavefunction_->nsopi();
         double* work1 = new double[nTriSo];
         double* work2 = new double[nTriSo];
         IWL::read_one(psio.get(), PSIF_OEI, PSIF_SO_T, work1, nTriSo, 0, 0, "outfile");
@@ -352,8 +362,8 @@ void DMRGSCF::fillRotatedTEI_coulomb(std::shared_ptr<IntegralTransform> ints,
         moOei = SharedMatrix(new Matrix("MO OEI", nirrep, mopi, mopi));
 
         soOei->set(work1);
-        half->gemm(true, false, 1.0, this->Ca(), soOei, 0.0);
-        moOei->gemm(false, false, 1.0, half, this->Ca(), 0.0);
+        half->gemm(true, false, 1.0, reference_wavefunction_->Ca(), soOei, 0.0);
+        moOei->gemm(false, false, 1.0, half, reference_wavefunction_->Ca(), 0.0);
         delete[] work1;
 
         copyPSIMXtoCHEMPS2MX(moOei, iHandler, theTmatrix);
@@ -467,8 +477,8 @@ void DMRGSCF::update_WFNco(SharedMatrix Coeff_orig, CheMPS2::DMRGSCFindices* iHa
 
     // copyCHEMPS2MXtoPSIMX( Coeff_orig, iHandler, work1 );
     copyUNITARYtoPSIMX(unitary, iHandler, work2);
-    this->Ca()->gemm(false, true, 1.0, Coeff_orig, work2, 0.0);
-    this->Cb()->copy(this->Ca());
+    reference_wavefunction_->Ca()->gemm(false, true, 1.0, Coeff_orig, work2, 0.0);
+    reference_wavefunction_->Cb()->copy(reference_wavefunction_->Ca());
 }
 
 double DMRGSCF::compute_energy() {
@@ -535,11 +545,11 @@ double DMRGSCF::compute_energy() {
      ****************************************/
 
     const int SyGroup = chemps2_groupnumber(Process::environment.molecule()->sym_label());
-    const int nmo = this->nmo();
-    const int nirrep = this->nirrep();
-    int* orbspi = this->nmopi();
-    int* docc = this->doccpi();
-    int* socc = this->soccpi();
+    const int nmo = reference_wavefunction_->nmo();
+    const int nirrep = reference_wavefunction_->nirrep();
+    const int* orbspi = reference_wavefunction_->nmopi();
+    const int* docc = reference_wavefunction_->doccpi();
+    const int* socc = reference_wavefunction_->soccpi();
     if (wfn_irrep < 0) {
         throw PSIEXCEPTION("Option WFN_IRREP (integer) may not be smaller than zero!");
     }
@@ -622,43 +632,64 @@ double DMRGSCF::compute_energy() {
             virtualsOK = false;
         }
     }
-    (*outfile) << "wfn_irrep   = " << wfn_irrep << endl;
-    (*outfile) << "wfn_multp   = " << wfn_multp << endl;
-    (*outfile) << "numOrbitals = [ " << orbspi[0];
+    //(*outfile) << "wfn_irrep   = " << wfn_irrep << std::endl;
+    outfile->Printf("\nwfn_irrep   = %d", wfn_irrep);
+    //(*outfile) << "wfn_multp   = " << wfn_multp << std::endl;
+    outfile->Printf("\nwfn_multp   = %d", wfn_multp);
+    //(*outfile) << "numOrbitals = [ %d" << orbspi[0];
+    outfile->Printf("\nnumOrbitals = [ %d", orbspi[0]);
     for (int cnt = 1; cnt < nirrep; cnt++) {
-        (*outfile) << " , " << orbspi[cnt];
+        //(*outfile) << " , " << orbspi[cnt];
+        outfile->Printf(" , %d", orbspi[cnt]);
     }
-    (*outfile) << " ]" << endl;
-    (*outfile) << "R(O)HF DOCC = [ " << docc[0];
+    //(*outfile) << " ]" << std::endl;
+    outfile->Printf(" ]");
+    //(*outfile) << "R(O)HF DOCC = [ " << docc[0];
+    outfile->Printf("\nR(O)HF DOCC = [ %d", docc[0]);
     for (int cnt = 1; cnt < nirrep; cnt++) {
-        (*outfile) << " , " << docc[cnt];
+        //(*outfile) << " , " << docc[cnt];
+        outfile->Printf(" , %d", docc[cnt]);
     }
-    (*outfile) << " ]" << endl;
-    (*outfile) << "R(O)HF SOCC = [ " << socc[0];
+    //(*outfile) << " ]" << std::endl;
+    outfile->Printf(" ]");
+    //(*outfile) << "R(O)HF SOCC = [ " << socc[0];
+    outfile->Printf("\nR(O)HF SOCC = [ %d", socc[0]);
     for (int cnt = 1; cnt < nirrep; cnt++) {
-        (*outfile) << " , " << socc[cnt];
+        //(*outfile) << " , " << socc[cnt];
+        outfile->Printf(" , %d", socc[cnt]);
     }
-    (*outfile) << " ]" << endl;
-    (*outfile) << "frozen_docc = [ " << frozen_docc[0];
+    //(*outfile) << " ]" << std::endl;
+    outfile->Printf(" ]");
+    //(*outfile) << "frozen_docc = [ " << frozen_docc[0];
+    outfile->Printf("\nfrozen_docc = [ %d", frozen_docc[0]);
     for (int cnt = 1; cnt < nirrep; cnt++) {
-        (*outfile) << " , " << frozen_docc[cnt];
+        //(*outfile) << " , " << frozen_docc[cnt];
+        outfile->Printf(" , %d", frozen_docc[cnt]);
     }
-    (*outfile) << " ]" << endl;
-    (*outfile) << "active      = [ " << active[0];
+    //(*outfile) << " ]" << std::endl;
+    outfile->Printf(" ]");
+    //(*outfile) << "active      = [ " << active[0];
+    outfile->Printf("\nactive      = [ %d", active[0]);
     for (int cnt = 1; cnt < nirrep; cnt++) {
-        (*outfile) << " , " << active[cnt];
+        //(*outfile) << " , " << active[cnt];
+        outfile->Printf(" , %d", active[cnt]);
     }
-    (*outfile) << " ]" << endl;
-    (*outfile) << "virtual     = [ " << nvirtual[0];
+    //(*outfile) << " ]" << std::endl;
+    outfile->Printf(" ]");
+    //(*outfile) << "virtual     = [ " << nvirtual[0];
+    outfile->Printf("\nvirtual      = [ %d", nvirtual[0]);
     for (int cnt = 1; cnt < nirrep; cnt++) {
-        (*outfile) << " , " << nvirtual[cnt];
+        //(*outfile) << " , " << nvirtual[cnt];
+        outfile->Printf(" , %d", nvirtual[cnt]);
     }
-    (*outfile) << " ]" << endl;
+    //(*outfile) << " ]" << std::endl;
+    outfile->Printf(" ]");
     if (!virtualsOK) {
         throw PSIEXCEPTION("For at least one irrep: frozen_docc[ irrep ] + "
                            "active[ irrep ] > numOrbitals[ irrep ]!");
     }
-    (*outfile) << "DMRGSCF computation run with " << dmrg_iterations_ << "iterations" << endl;
+    //(*outfile) << "DMRGSCF computation run with " << dmrg_iterations_ << "iterations" << std::endl;
+    outfile->Printf("\n\nDMRGSCF computation run with %d iterations", dmrg_iterations_);
 
     /**********************************************
      *   Create another bit of DMRGSCF preamble   *
@@ -694,14 +725,16 @@ double DMRGSCF::compute_energy() {
     for (int cnt = 0; cnt < nirrep; cnt++) {
         nElectrons += 2 * docc[cnt] + socc[cnt];
     }
-    (*outfile) << "nElectrons  = " << nElectrons << endl;
+    //(*outfile) << "nElectrons  = " << nElectrons << std::endl;
+    outfile->Printf("\nnElectrons = %d", nElectrons);
 
     // Number of electrons in the active space
     int nDMRGelectrons = nElectrons;
     for (int cnt = 0; cnt < nirrep; cnt++) {
         nDMRGelectrons -= 2 * frozen_docc[cnt];
     }
-    (*outfile) << "nEl. active = " << nDMRGelectrons << endl;
+    //(*outfile) << "nEl. active = " << nDMRGelectrons << std::endl;
+    outfile->Printf("\nnEl. active = %d", nDMRGelectrons);
 
     // Create the CheMPS2::Hamiltonian --> fill later
     int* orbitalIrreps = new int[nOrbDMRG];
@@ -774,22 +807,34 @@ double DMRGSCF::compute_energy() {
     // CheMPS2 requires RHF or ROHF orbitals.
     std::shared_ptr<IntegralTransform> ints;
     ints = std::shared_ptr<IntegralTransform>(
-        new IntegralTransform(reference_wavefunction_, spaces, IntegralTransform::Restricted));
+        new IntegralTransform(reference_wavefunction_, spaces, IntegralTransform::TransformationType::Restricted));
     ints->set_keep_iwl_so_ints(true);
     ints->set_keep_dpd_so_ints(true);
     // ints->set_print(6);
 
-    (*outfile) << "###########################################################" << endl;
-    (*outfile) << "###                                                     ###" << endl;
-    (*outfile) << "###                       DMRG-SCF                      ###" << endl;
-    (*outfile) << "###                                                     ###" << endl;
-    (*outfile) << "###            CheMPS2 by Sebastian Wouters             ###" << endl;
-    (*outfile) << "###        https://github.com/SebWouters/CheMPS2        ###" << endl;
-    (*outfile) << "###   Comput. Phys. Commun. 185 (6), 1501-1514 (2014)   ###" << endl;
-    (*outfile) << "###                                                     ###" << endl;
-    (*outfile) << "###########################################################" << endl;
-    (*outfile) << endl;
-    (*outfile) << "Number of variables in the x-matrix = " << unitary->getNumVariablesX() << endl;
+    // (*outfile) << "###########################################################" << std::endl;
+    // (*outfile) << "###                                                     ###" << std::endl;
+    // (*outfile) << "###                       DMRG-SCF                      ###" << std::endl;
+    // (*outfile) << "###                                                     ###" << std::endl;
+    // (*outfile) << "###            CheMPS2 by Sebastian Wouters             ###" << std::endl;
+    // (*outfile) << "###        https://github.com/SebWouters/CheMPS2        ###" << std::endl;
+    // (*outfile) << "###   Comput. Phys. Commun. 185 (6), 1501-1514 (2014)   ###" << std::endl;
+    // (*outfile) << "###                                                     ###" << std::endl;
+    // (*outfile) << "###########################################################" << std::endl;
+    // (*outfile) << std::endl;
+    // (*outfile) << "Number of variables in the x-matrix = " << unitary->getNumVariablesX() << std::endl;
+
+    outfile->Printf("\n###########################################################");
+    outfile->Printf("\n###                                                     ###");
+    outfile->Printf("\n###                       DMRG-SCF                      ###");
+    outfile->Printf("\n###                                                     ###");
+    outfile->Printf("\n###            CheMPS2 by Sebastian Wouters             ###");
+    outfile->Printf("\n###        https://github.com/SebWouters/CheMPS2        ###");
+    outfile->Printf("\n###   Comput. Phys. Commun. 185 (6), 1501-1514 (2014)   ###");
+    outfile->Printf("\n###                                                     ###");
+    outfile->Printf("\n###########################################################");
+    outfile->Printf("\n");
+    outfile->Printf("Number of variables in the x-matrix = %d", unitary->getNumVariablesX());
 
     // Convergence variables
     double gradNorm = 1.0;
@@ -848,9 +893,9 @@ double DMRGSCF::compute_energy() {
 
     int nIterations = 0;
 
-    /********************************
+    /* *******************************
      ***   Actual DMRGSCF loops   ***
-     //********************************/
+     ******************************* */
     while ((gradNorm > dmrgscf_convergence) && (nIterations < dmrg_iterations_)) {
 
         nIterations++;
@@ -860,23 +905,25 @@ double DMRGSCF::compute_energy() {
 
             std::ofstream capturing;
             std::streambuf* cout_buffer;
-            string chemps2filename = outfile_name + ".chemps2";
-            (*outfile) << "CheMPS2 output is temporarily written to the file " << chemps2filename
-                       << " and will be copied here." << endl;
-            capturing.open(chemps2filename.c_str(), ios::trunc); // truncate
-            cout_buffer = cout.rdbuf(capturing.rdbuf());
+            std::string chemps2filename = outfile_name + ".chemps2";
+            // (*outfile) << "CheMPS2 output is temporarily written to the file " << chemps2filename
+            //            << " and will be copied here." << std::endl;
+            outfile->Printf("\nCheMPS2 output is temporarily written to the file %s and will be copied here.",
+                             chemps2filename.c_str());
+            capturing.open(chemps2filename.c_str(), std::ios::trunc); // truncate
+            cout_buffer = std::cout.rdbuf(capturing.rdbuf());
 
             unitary->updateUnitary(mem1, mem2, theupdate, true, true); // multiply = compact = true
             if ((dmrgscf_do_diis) && (updateNorm <= dmrgscf_diis_branch)) {
                 if (dmrgscf_active_space.compare("NO") == 0) {
-                    cout << "DIIS has started. Active space not rotated to NOs "
+                    std::cout << "DIIS has started. Active space not rotated to NOs "
                             "anymore!"
-                         << endl;
+                         << std::endl;
                 }
                 if (dmrgscf_active_space.compare("LOC") == 0) {
-                    cout << "DIIS has started. Active space not rotated to "
+                    std::cout << "DIIS has started. Active space not rotated to "
                             "localized orbitals anymore!"
-                         << endl;
+                         << std::endl;
                 }
                 if (theDIIS == NULL) {
                     theDIIS = new CheMPS2::DIIS(theDIISvectorParamSize, unitary->getNumVariablesX(),
@@ -891,14 +938,15 @@ double DMRGSCF::compute_energy() {
                                        false); // multiply = compact = false
             }
 
-            cout.rdbuf(cout_buffer);
+            std::cout.rdbuf(cout_buffer);
             capturing.close();
             std::ifstream copying;
-            copying.open(chemps2filename, ios::in); // read only
+            copying.open(chemps2filename, std::ios::in); // read only
             if (copying.is_open()) {
                 string line;
                 while (getline(copying, line)) {
-                    (*outfile) << line << endl;
+                    //(*outfile) << line << std::endl;
+                    outfile->Printf("\n %s", line.c_str());
                 }
                 copying.close();
             }
@@ -925,10 +973,12 @@ double DMRGSCF::compute_energy() {
             std::ofstream capturing;
             std::streambuf* cout_buffer;
             string chemps2filename = outfile_name + ".chemps2";
-            (*outfile) << "CheMPS2 output is temporarily written to the file " << chemps2filename
-                       << " and will be copied here." << endl;
-            capturing.open(chemps2filename.c_str(), ios::trunc); // truncate
-            cout_buffer = cout.rdbuf(capturing.rdbuf());
+            // (*outfile) << "CheMPS2 output is temporarily written to the file " << chemps2filename
+            //            << " and will be copied here." << std::endl;
+            outfile->Printf("\nCheMPS2 output is temporarily written to the file %s and will be copied here.",
+                             chemps2filename.c_str());
+            capturing.open(chemps2filename.c_str(), std::ios::trunc); // truncate
+            cout_buffer = std::cout.rdbuf(capturing.rdbuf());
 
             theLocalizer->Optimize(mem1, mem2, dmrgscf_loc_random);
             theLocalizer->FiedlerExchange(maxlinsize, mem1, mem2);
@@ -936,14 +986,15 @@ double DMRGSCF::compute_energy() {
                                                            mem1);
             unitary->rotateActiveSpaceVectors(mem1, mem2);
 
-            cout.rdbuf(cout_buffer);
+            std::cout.rdbuf(cout_buffer);
             capturing.close();
             std::ifstream copying;
-            copying.open(chemps2filename, ios::in); // read only
+            copying.open(chemps2filename, std::ios::in); // read only
             if (copying.is_open()) {
                 string line;
                 while (getline(copying, line)) {
-                    (*outfile) << line << endl;
+                    //(*outfile) << line << std::endl;
+                    outfile->Printf("\n %s", line.c_str());
                 }
                 copying.close();
             }
@@ -953,9 +1004,11 @@ double DMRGSCF::compute_energy() {
             buildTmatrix(theTmatrix, iHandler, psio, this->Ca());
             buildQmatOCC(theQmatOCC, iHandler, work1, work2, this->Ca(), myJK);
             buildHamDMRG(ints, Aorbs_ptr, theTmatrix, theQmatOCC, iHandler, HamDMRG, psio);
-            (*outfile) << "Rotated the active space to localized orbitals, "
-                          "sorted according to the exchange matrix."
-                       << endl;
+            // (*outfile) << "Rotated the active space to localized orbitals, "
+            //               "sorted according to the exchange matrix."
+            //            << std::endl;
+            outfile->Printf("Rotated the active space to localized orbitals, "
+                             "sorted according to the exchange matrix.");
         }
 
         // Do the DMRG sweeps, and calculate the 2DM
@@ -963,10 +1016,12 @@ double DMRGSCF::compute_energy() {
             std::ofstream capturing;
             std::streambuf* cout_buffer;
             string chemps2filename = outfile_name + ".chemps2";
-            (*outfile) << "CheMPS2 output is temporarily written to the file " << chemps2filename
-                       << " and will be copied here." << endl;
-            capturing.open(chemps2filename.c_str(), ios::trunc); // truncate
-            cout_buffer = cout.rdbuf(capturing.rdbuf());
+            // (*outfile) << "CheMPS2 output is temporarily written to the file " << chemps2filename
+            //            << " and will be copied here." << std::endl;
+            outfile->Printf("\nCheMPS2 output is temporarily written to the file %s and will be copied here.",
+                             chemps2filename.c_str());
+            capturing.open(chemps2filename.c_str(), std::ios::trunc); // truncate
+            cout_buffer = std::cout.rdbuf(capturing.rdbuf());
 
             for (int cnt = 0; cnt < nOrbDMRG_pow4; cnt++) {
                 DMRG2DM[cnt] = 0.0;
@@ -1011,14 +1066,15 @@ double DMRGSCF::compute_energy() {
             }
             delete theDMRG;
 
-            cout.rdbuf(cout_buffer);
+            std::cout.rdbuf(cout_buffer);
             capturing.close();
             std::ifstream copying;
-            copying.open(chemps2filename, ios::in); // read only
+            copying.open(chemps2filename, std::ios::in); // read only
             if (copying.is_open()) {
                 string line;
                 while (getline(copying, line)) {
-                    (*outfile) << line << endl;
+                    //(*outfile) << line << std::endl;
+                    outfile->Printf("\n %s", line.c_str());
                 }
                 copying.close();
             }
@@ -1036,9 +1092,11 @@ double DMRGSCF::compute_energy() {
             wfn_co_updated = true;
             buildTmatrix(theTmatrix, iHandler, psio, this->Ca());
             buildQmatOCC(theQmatOCC, iHandler, work1, work2, this->Ca(), myJK);
-            (*outfile) << "Rotated the active space to natural orbitals, "
-                          "sorted according to the NOON."
-                       << endl;
+            // (*outfile) << "Rotated the active space to natural orbitals, "
+            //               "sorted according to the NOON."
+            //            << std::endl;
+            outfile->Printf("Rotated the active space to natural orbitals, "
+                            "sorted according to the NOON.");
         }
 
         if (dmrg_iterations_ == nIterations) {
@@ -1060,10 +1118,12 @@ double DMRGSCF::compute_energy() {
             std::ofstream capturing;
             std::streambuf* cout_buffer;
             string chemps2filename = outfile_name + ".chemps2";
-            (*outfile) << "CheMPS2 output is temporarily written to the file " << chemps2filename
-                       << " and will be copied here." << endl;
-            capturing.open(chemps2filename.c_str(), ios::trunc); // truncate
-            cout_buffer = cout.rdbuf(capturing.rdbuf());
+            // (*outfile) << "CheMPS2 output is temporarily written to the file " << chemps2filename
+            //            << " and will be copied here." << std::endl;
+            outfile->Printf("\nCheMPS2 output is temporarily written to the file %s and will be copied here.",
+                             chemps2filename.c_str());
+            capturing.open(chemps2filename.c_str(), std::ios::trunc); // truncate
+            cout_buffer = std::cout.rdbuf(capturing.rdbuf());
 
             CheMPS2::CASSCF::buildFmat(theFmatrix, theTmatrix, theQmatOCC, theQmatACT, iHandler,
                                        theRotatedTEI, DMRG2DM, DMRG1DM);
@@ -1072,14 +1132,15 @@ double DMRGSCF::compute_energy() {
             CheMPS2::CASSCF::augmentedHessianNR(theFmatrix, wmattilde, iHandler, unitary, theupdate,
                                                 &updateNorm, &gradNorm);
 
-            cout.rdbuf(cout_buffer);
+            std::cout.rdbuf(cout_buffer);
             capturing.close();
             std::ifstream copying;
-            copying.open(chemps2filename, ios::in); // read only
+            copying.open(chemps2filename, std::ios::in); // read only
             if (copying.is_open()) {
                 string line;
                 while (getline(copying, line)) {
-                    (*outfile) << line << endl;
+                    //(*outfile) << line << std::endl;
+                    outfile->Printf("\n %s", line.c_str());
                 }
                 copying.close();
             }
@@ -1164,7 +1225,7 @@ void DMRGSCF::compute_reference(double* one_rdm, double* two_rdm, double* three_
     dmrg_ref.set_L1b(gamma1_a);
     /// Form 2_rdms
     {
-        gamma2_dmrg.iterate([&](const ::vector<size_t>& i, double& value) {
+        gamma2_dmrg.iterate([&](const std::vector<size_t>& i, double& value) {
             value = two_rdm[i[0] * na * na * na + i[1] * na * na + i[2] * na + i[3]];
         });
         /// gamma2_aa = 1 / 6 * (Gamma2(pqrs) - Gamma2(pqsr))
@@ -1202,7 +1263,7 @@ void DMRGSCF::compute_reference(double* one_rdm, double* two_rdm, double* three_
             ambit::Tensor::build(ambit::CoreTensor, "Gamma3_aab", {na, na, na, na, na, na});
         ambit::Tensor gamma3_abb =
             ambit::Tensor::build(ambit::CoreTensor, "Gamma2_abb", {na, na, na, na, na, na});
-        gamma3_dmrg.iterate([&](const ::vector<size_t>& i, double& value) {
+        gamma3_dmrg.iterate([&](const std::vector<size_t>& i, double& value) {
             value = three_rdm[i[0] * na * na * na * na * na + i[1] * na * na * na * na +
                               i[2] * na * na * na + i[3] * na * na + i[4] * na + i[5]];
         });
