@@ -34,7 +34,7 @@
 #include "psi4/libmints/basisset.h"
 #include "psi4/libmints/wavefunction.h"
 #include "psi4/libqt/qt.h"
-#include "psi4/lib3index/df_helper.h"
+#include "psi4/lib3index/dfhelper.h"
 
 #ifdef HAVE_GA
 #include <ga.h>
@@ -219,13 +219,13 @@ void DFIntegrals::gather_integrals() {
 
     // Constructs the DF function
     // assume a RHF/UHF reference
-    std::shared_ptr<DF_Helper> df(new DF_Helper(primary, auxiliary));
+    std::shared_ptr<DFHelper> df(new DFHelper(primary, auxiliary));
     df->initialize();
     // Pushes a C matrix that is ordered in pitzer ordering
     // into the C_matrix object
 
     df->add_space("ALL", Ca_ao);
-    
+
     // set_C clears all the orbital spaces, so this creates the space
     // This space creates the total nmo_.
     // This assumes that everything is correlated.

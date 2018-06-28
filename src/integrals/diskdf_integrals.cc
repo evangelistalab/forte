@@ -131,16 +131,16 @@ double DISKDFIntegrals::aptei_aa(size_t p, size_t q, size_t r, size_t s) {
     SharedMatrix B1(new Matrix(1,nthree_));
     SharedMatrix B2(new Matrix(1,nthree_));
 
-    df_->fill_tensor("B",B1, A_range, p_range, r_range ); 
-    df_->fill_tensor("B",B2, A_range, q_range, s_range ); 
+    df_->fill_tensor("B",B1, A_range, p_range, r_range );
+    df_->fill_tensor("B",B2, A_range, q_range, s_range );
 
     vpqrsalphaC = B1->vector_dot(B2);
 
     B1->zero();
     B2->zero();
 
-    df_->fill_tensor("B",B1, A_range, p_range, s_range ); 
-    df_->fill_tensor("B",B2, A_range, q_range, r_range ); 
+    df_->fill_tensor("B",B1, A_range, p_range, s_range );
+    df_->fill_tensor("B",B2, A_range, q_range, r_range );
 
     vpqrsalphaE = B1->vector_dot(B2);
 
@@ -170,8 +170,8 @@ double DISKDFIntegrals::aptei_ab(size_t p, size_t q, size_t r, size_t s) {
     SharedMatrix B1(new Matrix(1,nthree_));
     SharedMatrix B2(new Matrix(1,nthree_));
 
-    df_->fill_tensor("B",B1, A_range, p_range, r_range ); 
-    df_->fill_tensor("B",B2, A_range, q_range, s_range ); 
+    df_->fill_tensor("B",B1, A_range, p_range, r_range );
+    df_->fill_tensor("B",B2, A_range, q_range, s_range );
 
     vpqrsalphaC = B1->vector_dot(B2);
 
@@ -204,16 +204,16 @@ double DISKDFIntegrals::aptei_bb(size_t p, size_t q, size_t r, size_t s) {
     SharedMatrix B1(new Matrix(1,nthree_));
     SharedMatrix B2(new Matrix(1,nthree_));
 
-    df_->fill_tensor("B",B1, A_range, p_range, r_range ); 
-    df_->fill_tensor("B",B2, A_range, q_range, s_range ); 
+    df_->fill_tensor("B",B1, A_range, p_range, r_range );
+    df_->fill_tensor("B",B2, A_range, q_range, s_range );
 
     vpqrsalphaC = B1->vector_dot(B2);
 
     B1->zero();
     B2->zero();
 
-    df_->fill_tensor("B",B1, A_range, p_range, s_range ); 
-    df_->fill_tensor("B",B2, A_range, q_range, r_range ); 
+    df_->fill_tensor("B",B1, A_range, p_range, s_range );
+    df_->fill_tensor("B",B2, A_range, q_range, r_range );
 
     vpqrsalphaE = B1->vector_dot(B2);
 
@@ -320,10 +320,10 @@ double DISKDFIntegrals::three_integral(size_t A, size_t p, size_t q) {
     std::vector<size_t> A_range = {A,A+1};
     std::vector<size_t> p_range = {pn,pn+1};
     std::vector<size_t> q_range = {qn,qn+1};
-    
+
     double* Apq;
 
-    df_->fill_tensor("B",Apq, A_range, p_range, q_range ); 
+    df_->fill_tensor("B",Apq, A_range, p_range, q_range );
 
     double value = *Apq;
 
@@ -361,7 +361,7 @@ ambit::Tensor DISKDFIntegrals::three_integral_block(const std::vector<size_t>& A
             std::vector<size_t> p_range = {pn, pn + 1};
             std::vector<size_t> q_range = {0, nmo_};
 
-            df_->fill_tensor("B", Aq, A_range, p_range, q_range); 
+            df_->fill_tensor("B", Aq, A_range, p_range, q_range);
             p_by_Aq.push_back(Aq);
         }
         if (frozen_core) {
@@ -405,7 +405,7 @@ ambit::Tensor DISKDFIntegrals::three_integral_block(const std::vector<size_t>& A
                 std::vector<size_t> q_range = {qn, qn };
 
                 double* A_chunk;// = new double[A.size()];
-            
+
                 df_->fill_tensor("B", A_chunk, A_range, p_range, q_range);
 
                 for (size_t a = 0; a < A.size(); a++) {
@@ -474,7 +474,7 @@ void DISKDFIntegrals::gather_integrals() {
     // Constructs the DF function
     // I used this version of build as this doesn't build all the apces and
     // assume a RHF/UHF reference
-    df_ = std::make_shared<DF_Helper>(primary,auxiliary);
+    df_ = std::make_shared<DFHelper>(primary,auxiliary);
     df_->initialize();
     df_->set_MO_core(false);
     // set_C clears all the orbital spaces, so this creates the space
@@ -697,11 +697,11 @@ ambit::Tensor DISKDFIntegrals::three_integral_block_two_index(const std::vector<
                                                               const std::vector<size_t>& q) {
 
     ambit::Tensor ReturnTensor = ambit::Tensor::build(tensor_type_, "Return", {A.size(), q.size()});
- 
+
     size_t p_max, p_min;
     bool frozen_core = false;
     if (frzcpi_.sum() && aptei_idx_ == ncmo_) {
-        frozen_core = true; 
+        frozen_core = true;
         p_min = cmotomo_[p];
         p_max = p_min +1;
     } else {
@@ -712,11 +712,11 @@ ambit::Tensor DISKDFIntegrals::three_integral_block_two_index(const std::vector<
     if (nthree_ == A.size()) {
 
         std::vector<size_t> arange = {0, nthree_};
-        std::vector<size_t> qrange = {0, nmo_}; 
-        std::vector<size_t> prange = {p_min, p_max}; 
+        std::vector<size_t> qrange = {0, nmo_};
+        std::vector<size_t> prange = {p_min, p_max};
 
         std::shared_ptr<Matrix> Aq(new Matrix("Aq", nthree_, nmo_));
-        df_->fill_tensor("B", Aq, arange, prange, qrange ); 
+        df_->fill_tensor("B", Aq, arange, prange, qrange );
 
         if (frozen_core) {
             ReturnTensor.iterate([&](const std::vector<size_t>& i, double& value) {
