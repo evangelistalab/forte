@@ -571,7 +571,7 @@ std::vector<double> DMRGSolver::one_body_operator() {
     /// INACTIVE_DOCC("RESTRICTED_DOCC")
 
     //std::shared_ptr<JK> JK_inactive = JK::build_JK(wfn_->basisset(), wfn_->options());
-    std::shared_ptr<JK> JK_inactive = JK::build_JK(wfn_->basisset(), wfn_->get_basisset("DF_BASIS_MP2"), wfn_->options());
+    std::shared_ptr<JK> JK_inactive = JK::build_JK(wfn_->basisset(), wfn_->get_basisset("DF_BASIS_SCF"), wfn_->options());
 
 
     JK_inactive->set_memory(Process::environment.get_memory() * 0.8);

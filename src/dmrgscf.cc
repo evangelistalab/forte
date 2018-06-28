@@ -905,7 +905,7 @@ double DMRGSCF::compute_energy() {
 
             std::ofstream capturing;
             std::streambuf* cout_buffer;
-            std::string chemps2filename = outfile_name + ".chemps2";
+            std::string chemps2filename = /* "outfile_name" +*/ ".chemps2";
             // (*outfile) << "CheMPS2 output is temporarily written to the file " << chemps2filename
             //            << " and will be copied here." << std::endl;
             outfile->Printf("\nCheMPS2 output is temporarily written to the file %s and will be copied here.",
@@ -972,7 +972,7 @@ double DMRGSCF::compute_energy() {
 
             std::ofstream capturing;
             std::streambuf* cout_buffer;
-            string chemps2filename = outfile_name + ".chemps2";
+            string chemps2filename = /* "outfile_name" +*/ ".chemps2";
             // (*outfile) << "CheMPS2 output is temporarily written to the file " << chemps2filename
             //            << " and will be copied here." << std::endl;
             outfile->Printf("\nCheMPS2 output is temporarily written to the file %s and will be copied here.",
@@ -1015,7 +1015,7 @@ double DMRGSCF::compute_energy() {
         {
             std::ofstream capturing;
             std::streambuf* cout_buffer;
-            string chemps2filename = outfile_name + ".chemps2";
+            string chemps2filename = /* "outfile_name" +*/ ".chemps2";
             // (*outfile) << "CheMPS2 output is temporarily written to the file " << chemps2filename
             //            << " and will be copied here." << std::endl;
             outfile->Printf("\nCheMPS2 output is temporarily written to the file %s and will be copied here.",
@@ -1117,7 +1117,7 @@ double DMRGSCF::compute_energy() {
         {
             std::ofstream capturing;
             std::streambuf* cout_buffer;
-            string chemps2filename = outfile_name + ".chemps2";
+            string chemps2filename = /* "outfile_name"  +*/ ".chemps2";
             // (*outfile) << "CheMPS2 output is temporarily written to the file " << chemps2filename
             //            << " and will be copied here." << std::endl;
             outfile->Printf("\nCheMPS2 output is temporarily written to the file %s and will be copied here.",
