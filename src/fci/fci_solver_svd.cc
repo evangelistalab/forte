@@ -249,6 +249,8 @@ void FCISolver::tile_chopper(std::vector<SharedMatrix>& C, double ETA,
     int eta_counter = 0;
     double diff_val;
 
+    //std::cout << "\n ==> NEW TAU : " << ETA << " <===  " << std::endl;
+
     for (auto T : sorted_tiles) {
         tile_norm_sum += std::get<0>(T);
         if (tile_norm_sum > norm_cut * area_norm) {
@@ -257,13 +259,15 @@ void FCISolver::tile_chopper(std::vector<SharedMatrix>& C, double ETA,
         eta_counter++;
         //std::cout << "ETA Count :  " << eta_counter << std::endl;
         //std::cout << "tle norm sum :  " << tile_norm_sum << std::endl;
-        //std::cout << "N tiles  " << sorted_tiles.size() << std::endl;
+        //std::cout << "N tiles :  " << sorted_tiles.size() << std::endl;
         if(eta_counter < sorted_tiles.size()){
           diff_val = std::get<0>(sorted_tiles[eta_counter - 1]) - std::get<0>(sorted_tiles[eta_counter]);
-          //std::cout << "count-1 - count :  " << diff_val << std::endl;
+          //std::cout << "==> vec[count-1] - vec[count] :  " << diff_val << std::endl;
         }
     }
 
+    //std::cout << " I get here and the 13th - 14th: vec[12] - vec[13]  " << diff_val << std::endl;
+    //std::cout << " I get here and the (c-1)th - (c)th: vec[c-2] - vec[c-1]  " << diff_val << std::endl;
     // std::cout << "ETA Count :  " << eta_counter << std::endl;
     // std::cout << "tle norm cut :  " << std::get<0>(sorted_tiles[eta_counter]) << std::endl;
     // std::cout << "N tiles  " << sorted_tiles.size() << std::endl;
@@ -273,23 +277,32 @@ void FCISolver::tile_chopper(std::vector<SharedMatrix>& C, double ETA,
     if(eta_counter == sorted_tiles.size() ) {
       tile_norm_cut = 0.0;
     } else if (eta_counter < sorted_tiles.size() ) {
-
+      //std::cout << "eta_counter less than sorted_tiles.size" << std::endl;
       if(diff_val < 1e-16 /* OPTION */){ // in case s_t[eta_counter-1] is very close in value to s_t[eta_counter]
 
         if(eta_counter == sorted_tiles.size() - 1){ // again include all tiles if we make it to 2nd to last one
           tile_norm_cut = 0.0;
+          //std::cout << "  ==> Included all tiles b/c last-1 was very close to last! : " << eta_counter << std::endl;
         } else { // inclue the almost same valed tiles
           double diff_val2 = std::get<0>(sorted_tiles[eta_counter]) - std::get<0>(sorted_tiles[eta_counter+1]);
-          tile_norm_cut =  tile_norm_cut = std::get<0>(sorted_tiles[eta_counter]) + 0.5*diff_val2;
-          //std::cout << "Close Tile inclueded! : " << eta_counter << std::endl;
+          tile_norm_cut =  tile_norm_cut = std::get<0>(sorted_tiles[eta_counter]) - 0.5*diff_val2;
+          //std::cout << "  ==> Close Tile inclueded! : " << eta_counter << std::endl;
         }
 
       } else { // buisness as usual
-        tile_norm_cut = std::get<0>(sorted_tiles[eta_counter-1]) + 0.5*diff_val;
+        tile_norm_cut = std::get<0>(sorted_tiles[eta_counter-1]) - 0.5*diff_val;
+        //std::cout << "  ==> Buisness as usual : " << eta_counter << std::endl;
+        //std::cout << "  ==> tnc : " << tile_norm_cut << std::endl;
+        //std::cout << "  ==> last included : " << std::get<0>(sorted_tiles[eta_counter-1]) << std::endl;
+        //std::cout << "  ==> first excluded : " << std::get<0>(sorted_tiles[eta_counter]) << std::endl;
+
       }
     } else {
       std::cout << "WOAH, should be a seg fault ..." << std::endl;
     }
+
+
+
 
     for (int h=0; h<nirrep; h++) {
       // loop over irreps
@@ -432,20 +445,26 @@ void FCISolver::string_trimmer(std::vector<SharedMatrix>& C, double DELTA, FCIVe
   int delta_counter = 0;
   double diff_val;
 
+  //std::cout << "\n ==> NEW TAU : " << DELTA << " <===  " << std::endl;
+
   for (auto ST : sorted_strings) {
-      delta_counter++;
       string_norm_sum += ST.first;
       if (string_norm_sum > norm_cut * st_norm) {
           break;
       }
-      //std::cout << "ETA Count :  " << delta_counter << std::endl;
-      //std::cout << "string norm sum :  " << string_norm_sum << std::endl;
-      //std::cout << "N strings  " << sorted_strings.size() << std::endl;
+      delta_counter++;
+      // std::cout << "ETA Count :  " << delta_counter << std::endl;
+      // std::cout << "string norm sum :  " << string_norm_sum << std::endl;
+      // std::cout << "N strings  " << sorted_strings.size() << std::endl;
       if(delta_counter < sorted_strings.size()){
         diff_val = sorted_strings[delta_counter - 1].first - sorted_strings[delta_counter].first;
-        //std::cout << "count-1 - count :  " << diff_val << std::endl;
+        //std::cout << "vec[count-1] - vec[count] :  " << diff_val << std::endl;
       }
   }
+
+  // std::cout << "Delta Count :  " << delta_counter << std::endl;
+  // std::cout << "str norm cut :  " << sorted_strings[delta_counter].first << std::endl;
+  // std::cout << "N Strings :  " << sorted_strings.size() << std::endl;
 
   //double sum_cut = sorted_strings[delta_counter-1].first;
   double sum_cut;
@@ -459,12 +478,17 @@ void FCISolver::string_trimmer(std::vector<SharedMatrix>& C, double DELTA, FCIVe
           sum_cut = 0.0;
         } else { // inclue the 'almost' same valed strings
           double diff_val2 = sorted_strings[delta_counter].first - sorted_strings[delta_counter+1].first;
-          sum_cut = sorted_strings[delta_counter].first + 0.5*diff_val2;
-          //std::cout << "Close string inclueded! : " << delta_counter << std::endl;
+          sum_cut = sorted_strings[delta_counter].first - 0.5*diff_val2;
+          //std::cout << "==> Close string inclueded! : " << delta_counter << std::endl;
         }
 
       } else { // buisness as usual
-        sum_cut = sorted_strings[delta_counter-1].first + 0.5*diff_val;
+        sum_cut = sorted_strings[delta_counter-1].first - 0.5*diff_val;
+        // std::cout << "  ==> Buisness as usual : " << delta_counter << std::endl;
+        // std::cout << "  ==> tnc : " << sum_cut << std::endl;
+        // std::cout << "  ==> last included : " << sorted_strings[delta_counter-1].first << std::endl;
+        // std::cout << "  ==> first excluded : " << sorted_strings[delta_counter].first << std::endl;
+
       }
   } else {
     std::cout << "WOAH, should be a seg fault ..." << std::endl;
