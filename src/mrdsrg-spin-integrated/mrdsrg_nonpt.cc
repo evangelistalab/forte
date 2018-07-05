@@ -671,7 +671,7 @@ double MRDSRG::compute_energy_ldsrg2() {
     // figure out off-diagonal block labels for Hbar2
     std::vector<std::string> blocks2 = od_two_labels_hhpp();
 
-    if (omit_V3_) {
+    if (nivo_) {
         // Generate blocks for Hbar2_, O2_ and C2_
         std::vector<std::string> blocks_exclude_V3;
         for (std::string s0 : {"c", "a", "v"}) {

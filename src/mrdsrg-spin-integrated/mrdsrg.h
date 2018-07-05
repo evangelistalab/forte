@@ -108,7 +108,7 @@ class MRDSRG : public MASTER_DSRG {
     bool sequential_Hbar_;
 
     /// Omitting blocks with >= 3 virtual indices?
-    bool omit_V3_;
+    bool nivo_;
 
     /// CASCI eigen values and eigen vectors for state averaging
     std::vector<std::vector<std::pair<SharedVector, double>>> eigens_;

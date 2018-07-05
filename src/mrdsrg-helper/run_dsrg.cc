@@ -184,7 +184,7 @@ void set_DSRG_options(ForteOptions& foptions) {
     foptions.add_bool("DSRG_HBAR_SEQ", false, "Evaluate H_bar sequentially if true");
 
     /*- Omit blocks with >= 3 virtual indices -*/
-    foptions.add_bool("DSRG_OMIT_V3", false, "Omit blocks with >= 3 virtual indices if true");
+    foptions.add_bool("DSRG_NIVO", false, "NIVO approximation: Omit tensor blocks with >= 3 virtual indices if true");
 
     /*- Print eigenvalues of 1-body effective H -*/
     foptions.add_bool("PRINT_1BODY_EVALS", false, "Print eigenvalues of 1-body effective H");
