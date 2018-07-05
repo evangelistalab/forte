@@ -288,6 +288,18 @@ namespace forte {
 //    dsrg_time_.add("220", timer.get());
 //}
 
+void MRDSRG::H2_T1_C0_DF(BlockedTensor& B, BlockedTensor& T1, const double& alpha, double& C0) {
+
+}
+
+void MRDSRG::H2_T1_C1_DF(BlockedTensor& B, BlockedTensor& T1, const double& alpha, BlockedTensor& C1) {
+
+}
+
+void MRDSRG::H2_T1_C2_DF(BlockedTensor& B, BlockedTensor& T1, const double& alpha, BlockedTensor& C2) {
+
+}
+
 void MRDSRG::H2_T2_C0_DF(BlockedTensor& B, BlockedTensor& T2, const double& alpha, double& C0) {
     Timer timer;
 
