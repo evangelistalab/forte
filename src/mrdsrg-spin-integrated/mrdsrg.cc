@@ -496,6 +496,8 @@ double MRDSRG::compute_energy_relaxed() {
                 Eref_ = compute_reference_energy(H_, F_, V_);
             }
 
+            outfile->Printf("\n\n  Updated reference energy E0 = %23.15f", Eref_);
+
             // test convergence
             if (std::fabs(Edelta_dsrg) < e_conv && std::fabs(Edelta_relax) < e_conv) {
                 converged = true;
