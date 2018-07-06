@@ -90,6 +90,14 @@ extern "C" PSI_API SharedWavefunction forte(SharedWavefunction ref_wfn, Options&
     // Make a MOSpaceInfo object
     auto mo_space_info = make_mo_space_info(ref_wfn, options);
 
+    // Sanity check
+    if( (4 * sizeof(Determinant)) < mo_space_info->size("ACTIVE") ){
+        outfile->Printf("\n  FATAL:  The active space you requested (%d) is larger than allowed by the determinant class (%d)!",
+                        mo_space_info->size("ACTIVE"),4 * sizeof(Determinant));
+        outfile->Printf("\n          Please check your input and/or recompile Forte with a larger determinant dimension");
+        exit(1);
+    }
+
     // Make a subspace object
     SharedMatrix Ps = make_aosubspace_projector(ref_wfn, options);
 

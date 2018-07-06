@@ -31,7 +31,7 @@
 #include "psi4/libmints/pointgrp.h"
 #include "psi4/psi4-dec.h"
 
-#include "../ci_rdms.h"
+#include "../ci_rdm/ci_rdms.h"
 #include "../fci/fci_integrals.h"
 #include "../forte_options.h"
 #include "../sparse_ci/sparse_ci_solver.h"
@@ -539,7 +539,7 @@ MRCINO::build_density_matrix(const std::vector<Determinant>& dets, SharedMatrix 
         template_a_.clear();
         template_b_.clear();
 
-        CI_RDMS ci_rdms_(options_, fci_ints_, dets, evecs, i, i);
+        CI_RDMS ci_rdms_(fci_ints_, dets, evecs, i, i);
         ci_rdms_.set_max_rdm(rdm_level_);
         if (rdm_level_ >= 1) {
             Timer one_r;

@@ -271,7 +271,7 @@ void ForteIntegrals::compute_frozen_one_body_operator() {
 #endif
     } else {
         if (options_.get_str("SCF_TYPE") == "DF") {
-            JK_core = JK::build_JK(wfn_->basisset(), wfn_->get_basisset("DF_BASIS_MP2"), options_);
+            JK_core = JK::build_JK(wfn_->basisset(), wfn_->get_basisset("DF_BASIS_MP2"), options_, "MEM_DF");
         } else {
             JK_core = JK::build_JK(wfn_->basisset(), BasisSet::zero_ao_basis_set(), options_);
         }

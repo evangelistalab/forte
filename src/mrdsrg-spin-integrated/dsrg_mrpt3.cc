@@ -1486,8 +1486,7 @@ double DSRG_MRPT3::compute_energy_sa() {
                     for (int B = A; B < nstates; ++B) {
 
                         // compute rdms
-                        CI_RDMS ci_rdms(options_, fci_ints, p_space, evecs, A, B);
-                        ci_rdms.set_symmetry(irrep);
+                        CI_RDMS ci_rdms(fci_ints, p_space, evecs, A, B);
 
                         std::vector<double> opdm_a, opdm_b;
                         std::vector<double> tpdm_aa, tpdm_ab, tpdm_bb;
@@ -1599,6 +1598,14 @@ double DSRG_MRPT3::compute_energy_relaxed() {
             // compute permanent dipoles
             dm_relax = fci_mo.compute_relaxed_dm(Mbar0_, Mbar1_, Mbar2_);
         }
+    } else if (options_.get_str("CAS_TYPE") == "ACI" ){
+        AdaptiveCI aci(reference_wavefunction_, options_, ints_, mo_space_info_);
+        aci.set_fci_ints(fci_ints);
+        if( options_["ACI_RELAX_SIGMA"].has_changed()){
+            aci.update_sigma();
+        }
+        Erelax = aci.compute_energy();
+
     } else {
         // it is simpler here to call FCI instead of FCISolver
         FCI fci(reference_wavefunction_, options_, ints_, mo_space_info_, fci_ints);
