@@ -3,7 +3,7 @@
 import forte
 
 refrhf     = -2.179077711159176
-refudsrg   = -2.253568693434167 # unrelaxed
+refudsrg   = -2.253243771416615 # unrelaxed
 
 memory 500 mb
 
