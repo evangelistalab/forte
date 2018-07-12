@@ -672,7 +672,7 @@ if(options_.get_bool("CHUNK_SPACE_ENERGY")){
       string_stats(C_temp);
 
       //print unadultarated C matrix
-      py_mat_print(C_temp[0], "C_fci.mat");
+      //py_mat_print(C_temp[0], "C_fci.mat");
 
       if(options_.get_bool("FCI_TILE_CHOPPER")){
         for(int h=0; h<nirrep_; h++){
@@ -808,7 +808,7 @@ if(options_.get_bool("CHUNK_SPACE_ENERGY")){
           string_stats(C_temp);
 
           //print unadultarated C matrix
-          py_mat_print(C_temp[0], "C_fci.mat");
+          //py_mat_print(C_temp[0], "C_fci.mat");
 
           if(options_.get_bool("FCI_TILE_CHOPPER")){
             for(int h=0; h<nirrep_; h++){

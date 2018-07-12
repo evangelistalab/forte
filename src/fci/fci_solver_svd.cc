@@ -102,7 +102,7 @@ void FCISolver::basis_cluster(std::vector<SharedMatrix>& C, std::vector<std::pai
     }
   }
 
-  py_mat_print(Cprime[0], "Cprime.mat");
+  // py_mat_print(Cprime[0], "Cprime.mat");
 
   //set C as Cprime...
   for(int h=0; h<nirrep_; h++){
@@ -128,7 +128,7 @@ void FCISolver::rev_basis_cluster(std::vector<SharedMatrix>& C, std::vector<std:
     }
   }
 
-  py_mat_print(Cprime[0], "C_rebased.mat");
+  // py_mat_print(Cprime[0], "C_rebased.mat");
 
   //set C as Cprime...
   for(int h=0; h<nirrep_; h++){
@@ -374,7 +374,7 @@ void FCISolver::tile_chopper(std::vector<SharedMatrix>& C, double ETA,
     }
 
     //print Block Sparse C
-    py_mat_print(C[0], "C_tc.mat");
+    //py_mat_print(C[0], "C_tc.mat");
 
     //compute energy
 
@@ -561,7 +561,7 @@ void FCISolver::string_trimmer(std::vector<SharedMatrix>& C, double DELTA, FCIVe
   }
 
   //Print MATRIX
-  py_mat_print(C[0], "C_st.mat");
+  //py_mat_print(C[0], "C_st.mat");
 
   //Compute energy
 
@@ -1112,7 +1112,7 @@ void FCISolver::fci_svd_tiles(FCIVector& HC, std::shared_ptr<FCIIntegrals> fci_i
       rev_basis_cluster(C_tiled_rr, st_vec1);
     }
 
-    py_mat_print(C_tiled_rr[0],"C_svd_t.mat");
+    //py_mat_print(C_tiled_rr[0],"C_svd_t.mat");
 
     // if(options_.get_bool("FCI_CLUSTER_BASIS")){
     //   rev_basis_cluster(C_tiled_rr,st_vec2);
@@ -1182,8 +1182,8 @@ void FCISolver::fci_svd(FCIVector& HC, std::shared_ptr<FCIIntegrals> fci_ints, d
 
         std::string mat_file_U = "U_mat_ft_irrep_" + std::to_string(h);
         std::string mat_file_V = "V_mat_ft_irrep_" + std::to_string(h);
-        py_mat_print(u_p, mat_file_U);
-        py_mat_print(v_p, mat_file_V);
+        //py_mat_print(u_p, mat_file_U);
+        //py_mat_print(v_p, mat_file_V);
 
         for (int i = 0; i < std::min(ncol, nrow); i++) {
             sorted_sigma.push_back(std::make_pair(s_p->get(i), h));
@@ -1308,7 +1308,7 @@ void FCISolver::fci_svd(FCIVector& HC, std::shared_ptr<FCIIntegrals> fci_ints, d
     // Compute the energy
 
     //Print Matrix
-    py_mat_print(C_red_rank[0],"C_svd_f.mat");
+    //py_mat_print(C_red_rank[0],"C_svd_f.mat");
 
     C_->set_coefficient_blocks(C_red_rank);
     // HC = H C
