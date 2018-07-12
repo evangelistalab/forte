@@ -359,6 +359,7 @@ void DMRGSolver::compute_energy() {
     //(*outfile) << "nEl. active = " << nDMRGelectrons << endl;
     outfile->Printf("\nnEl. active = %d", nDMRGelectrons);
 
+
     // Create the CheMPS2::Hamiltonian --> fill later
     const size_t nOrbDMRG = mo_space_info_->size("ACTIVE");
     int* orbitalIrreps = new int[nOrbDMRG];
@@ -466,6 +467,28 @@ void DMRGSolver::compute_energy() {
         outfile->Printf("\n Overall DMRG RDM computation took %6.5f s.", DMRGRDMs.get());
         outfile->Printf("\n @DMRG Energy = %8.12f", Energy);
         Process::environment.globals["CURRENT ENERGY"] = Energy;
+
+        // *** PRINTING NUMBER OF PARAMETERS *** //
+        const int L_sites = mo_space_info_->size("ACTIVE");
+        outfile->Printf("\n Number of DMRG sites %0.d", L_sites);
+        outfile->Printf("\n Max Virtual Dimension D %0.d", OptScheme->get_D(3));
+
+        int N_par_DMRG = 0;
+        int Max_D = OptScheme->get_D(3);
+        for(int i=0; i < L_sites-1; i++){ // so first site, represented by rank 2 tensor
+          if(i == 0){ // first site reperesented by rank 2 tensor
+            N_par_DMRG += 4 * std::min(std::min(std::pow(4, i), std::pow(4, L_sites-i)), (double)Max_D);
+          } else if(i == L_sites - 2){ // last site also represented by rank 2 tensor
+            N_par_DMRG += 4 * std::min(std::min(std::pow(4, i), std::pow(4, L_sites-i)), (double)Max_D);
+          } else { // in the middle of the site lattice, represented by rank 3 tensors
+            int j = i - 1;
+            N_par_DMRG += 4 * std::min( std::min(std::pow(4, j), std::pow(4, L_sites-j)), (double)Max_D)
+                            * std::min( std::min(std::pow(4, i), std::pow(4, L_sites-i)), (double)Max_D);
+          }
+        }
+
+        outfile->Printf("\n @Npar DMRG %d", N_par_DMRG);
+
         // if(dmrgscf_state_avg)
         //{
         //    DMRGCI->calc_rdms_and_correlations(max_rdm_ > 2 ? true : false);
