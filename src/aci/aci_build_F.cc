@@ -1243,7 +1243,7 @@ AdaptiveCI::get_excited_determinants_batch_vecsort(SharedMatrix evecs, SharedVec
 
 
         //for( auto& A_b : A_b_t.first ){
-        Timer sc;
+       // Timer sc;
 
         int num_threads = A_b_t.second.size();
         std::vector<std::pair<std::pair<Determinant,double>,int>> criteria(num_threads);
@@ -1284,7 +1284,7 @@ AdaptiveCI::get_excited_determinants_batch_vecsort(SharedMatrix evecs, SharedVec
         }
         total_excluded += excluded;
 
-        outfile->Printf("\n  Screened unimportant: %1.6f", sc.get());
+      //  outfile->Printf("\n  Screened unimportant: %1.6f", sc.get());
         // Now add the remainder to the model space
         Timer fill;
         for( int i = 0; i < num_threads; ++i ){
@@ -1299,7 +1299,7 @@ AdaptiveCI::get_excited_determinants_batch_vecsort(SharedMatrix evecs, SharedVec
             } 
             total_size += A_b_t.second[i];
         }        
-        outfile->Printf("\n  Fill: %1.6f", fill.get());
+        outfile->Printf("\n    Fill vector              %1.6f", fill.get());
 
         outfile->Printf("\n    Screening              %10.6f", screener.get());
         outfile->Printf("\n    Added %zu dets of %zu from bin %d", F_space.size(), total_size, bin);
@@ -2183,8 +2183,8 @@ AdaptiveCI::get_bin_F_space_vecsort(int bin, int nbin, SharedMatrix evecs, Deter
 
         //        outfile->Printf("\n  Added %zu dets", A_b.size());
 //        if( thread_id == 0 ){
-            outfile->Printf("\n  Time spent forming vec_A_b: %1.6f", build.get());
-            outfile->Printf("\n  Generated %zu determinants out of %zu guessed", num_new_dets, guess);
+  //          outfile->Printf("\n  Time spent forming vec_A_b: %1.6f", build.get());
+  //          outfile->Printf("\n  Generated %zu determinants out of %zu guessed", num_new_dets, guess);
   //      }
 
         // Sort the determinant contributions
@@ -2195,9 +2195,9 @@ AdaptiveCI::get_bin_F_space_vecsort(int bin, int nbin, SharedMatrix evecs, Deter
             vec_A_b.begin(), vec_A_b.begin() + num_new_dets,
             [](const std::pair<Determinant, double>& a,
                const std::pair<Determinant, double>& b) -> bool { return a.first < b.first; });
-        if( thread_id == 0 ){
-            outfile->Printf("\n  Time spent sorting vec_A_b: %1.6f", F_sort.get());
-        }
+        //if( thread_id == 0 ){
+        //    outfile->Printf("\n  Time spent sorting vec_A_b: %1.6f", F_sort.get());
+        //}
         //        for (int i = 0; i < num_new_dets; i++){
         //            auto& p = vec_A_b[i];
         //            outfile->Printf("\n%s %20.12f",p.first.str().c_str(),p.second);
@@ -2223,9 +2223,9 @@ AdaptiveCI::get_bin_F_space_vecsort(int bin, int nbin, SharedMatrix evecs, Deter
         vec_A_b[pos] = std::make_pair(d, sum);
         pos += (pos == 0) ? 0 : 1;
 
-        #pragma omp critical
-        outfile->Printf("\n  Time spent combining unique elements of vec_A_b: %1.6f",
-                        Combine.get());
+     //   #pragma omp critical
+     //   outfile->Printf("\n  Time spent combining unique elements of vec_A_b: %1.6f",
+     //                   Combine.get());
 
         // store the number of unique determinants
         dets_t[thread_id] = pos;
