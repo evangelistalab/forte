@@ -204,6 +204,10 @@ void set_ACI_options(ForteOptions& foptions) {
 
     /*- Computes RDMs without coupling lists -*/
     foptions.add_bool("ACI_DIRECT_RDMS", false, "Computes RDMs without coupling lists"); 
+
+
+    //temp
+    foptions.add_str("ACI_BATCH_ALG", "HASH", "Algorithm to use for batching");
 }
 
 bool pairComp(const std::pair<double, Determinant> E1, const std::pair<double, Determinant> E2) {
@@ -847,8 +851,12 @@ void AdaptiveCI::find_q_space_batched(DeterminantHashVec& P_space, DeterminantHa
     outfile->Printf("\n  Using batched Q_space algorithm");
 
     std::vector<std::pair<double, Determinant>> F_space;
-    double remainder = get_excited_determinants_batch(evecs, evals, P_space, F_space);
-    //double remainder = get_excited_determinants_batch_vecsort( evecs, evals, P_space, F_space );
+    double remainder = 0.0; 
+    if( options_.get_str("ACI_BATCH_ALG") == "HASH"){
+        remainder = get_excited_determinants_batch(evecs, evals, P_space, F_space);
+    } else {
+        remainder = get_excited_determinants_batch_vecsort( evecs, evals, P_space, F_space );
+    }
 
     PQ_space.clear();
     external_wfn_.clear();
