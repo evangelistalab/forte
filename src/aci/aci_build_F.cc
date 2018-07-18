@@ -1207,16 +1207,18 @@ AdaptiveCI::get_excited_determinants_batch_vecsort(SharedMatrix evecs, SharedVec
         size_t total_size = 0;
         det_hash<int> test;
 
-        // Test threaded det generation
 /*
+        // Test threaded det generation
         std::vector<std::pair<Determinant,double>> master;
 #pragma omp parallel
         {
             int tid = omp_get_thread_num();
 
             auto& A_b = A_b_t.first[tid];
+        
             #pragma omp critical
             {
+                outfile->Printf("\n Ab(%d) size = %zu", tid, A_b.size());
                 for (size_t I = 0, max_I = A_b_t.second[tid]; I < max_I; ++I) {
                     master.push_back( A_b[I] );
                 }
@@ -1241,55 +1243,77 @@ AdaptiveCI::get_excited_determinants_batch_vecsort(SharedMatrix evecs, SharedVec
         total_size = master.size();
 */
 
-
-        //for( auto& A_b : A_b_t.first ){
-       // Timer sc;
+        Timer sc;
 
         int num_threads = A_b_t.second.size();
         std::vector<std::pair<std::pair<Determinant,double>,int>> criteria(num_threads);
         std::vector<size_t> indices(num_threads, 0);
         bool include = false;
-            
+        int count = 0; 
+
+        std::vector<int> good_threads;
+        for( int i = 0; i < num_threads; ++i ){
+            if( A_b_t.first[i].size() > 0 ){
+                good_threads.push_back(i);
+            }
+        }
+
         while( !include ){
             // Get lowest energy determinant from each thread
-
-            for( int i = 0; i < num_threads; ++i ){
+            for( int& i : good_threads ){
                 size_t index = indices[i];
-    
                 const auto& A_b = A_b_t.first[i];
+//                if( count == 0 ){
+//                    outfile->Printf("\n Ab(%d) size = %zu, second = %zu", i, A_b.size(), A_b_t.second[i]);
+//                }
                 criteria[i] = std::make_pair(A_b[index], i);
             }
         
-        //    outfile->Printf("\n indices: ");
-        //    for( int i = 0; i < num_threads; ++i ){
-        //        outfile->Printf(" %zu", indices[i]);
-        //    }   
             // Sort the lowest criteria
             std::sort(criteria.begin(), criteria.end(),
                 [](const std::pair<std::pair<Determinant, double>,int>& a,
                    const std::pair<std::pair<Determinant, double>,int>& b) -> bool {
                     return a.first.second < b.first.second;
                 });
+//            outfile->Printf("\n");
+//            for( int i = 0; i < num_threads; ++i ){
+//                outfile->Printf("\n   (%d, %d, %1.12f)", criteria[i].second, indices[i], criteria[i].first.second);
+//            }
 
             // Add or remove lowest one
             auto& pair = criteria[0].first;
-            const double&  en = pair.second;
+            double en = pair.second;
             if (excluded + en < b_sigma) {
                 excluded += en;
                 size_t s_td = criteria[0].second;
                 indices[s_td]++;
+//                outfile->Printf("\n %d: (%zu)  %1.14f",s_td, count, en);
             } else {
                 include = true;
             }
+
+            good_threads.clear();
+            for( int i = 0; i < num_threads; ++i ){
+                size_t idx = indices[i];
+                size_t max = A_b_t.second[i];
+//                outfile->Printf("\n  td:%d idx: %d max:%d", i, idx, max);
+                if( (idx < max) and (max > 0) ){
+                    good_threads.push_back(i);
+//                    outfile->Printf("\n keep thread %d", i);
+                } else {
+                    double& val = criteria[i].first.second;
+                    val = 1.0;
+                }    
+            }
+            count++;                
+
         }
         total_excluded += excluded;
-
-      //  outfile->Printf("\n  Screened unimportant: %1.6f", sc.get());
         // Now add the remainder to the model space
         Timer fill;
-        for( int i = 0; i < num_threads; ++i ){
+        for( int& i : good_threads ){
             auto& A_b = A_b_t.first[i];
-            size_t start = indices[i];
+            size_t start = indices[i] ;
             F_space.reserve( F_space.size() + A_b_t.second[i] );
             for( int I = start, end = A_b_t.second[i]; I < end; ++I ){
                 auto& pair = A_b[I];
