@@ -1190,17 +1190,17 @@ AdaptiveCI::get_excited_determinants_batch_vecsort(SharedMatrix evecs, SharedVec
         outfile->Printf("\n    Build criteria vector  %10.6f", bint.get());
 
         // 3. Sort the list
-        Timer sortt;
-#pragma omp parallel
-        {
-            int tid = omp_get_thread_num();
-            std::sort(A_b_t.first[tid].begin(), A_b_t.first[tid].begin() + A_b_t.second[tid],
-                      [](const std::pair<Determinant, double>& a,
-                         const std::pair<Determinant, double>& b) -> bool {
-                          return a.second < b.second;
-                      });
-        }
-        outfile->Printf("\n    Sort vector            %10.6f", sortt.get());
+      //  Timer sortt;
+      //  #pragma omp parallel
+      //  {
+      //      int tid = omp_get_thread_num();
+      //      std::sort(A_b_t.first[tid].begin(), A_b_t.first[tid].begin() + A_b_t.second[tid],
+      //                [](const std::pair<Determinant, double>& a,
+      //                   const std::pair<Determinant, double>& b) -> bool {
+      //                    return a.second < b.second;
+      //                });
+      //  }
+      //  outfile->Printf("\n    Sort vector            %10.6f", sortt.get());
 
         // 4. Screen subspaces
         // Can it be done without recombining/resorting?
@@ -1209,11 +1209,14 @@ AdaptiveCI::get_excited_determinants_batch_vecsort(SharedMatrix evecs, SharedVec
         double b_sigma = sigma_ * (aci_scale / nbin);
         double excluded = 0.0;
         size_t total_size = 0;
-        det_hash<int> test;
 
-/*
+        for( size_t& s : A_b_t.second ){
+            total_size += s;
+        }
+
         // Test threaded det generation
         std::vector<std::pair<Determinant,double>> master;
+        master.reserve(total_size);
 #pragma omp parallel
         {
             int tid = omp_get_thread_num();
@@ -1222,7 +1225,7 @@ AdaptiveCI::get_excited_determinants_batch_vecsort(SharedMatrix evecs, SharedVec
         
             #pragma omp critical
             {
-                outfile->Printf("\n Ab(%d) size = %zu", tid, A_b.size());
+        //        outfile->Printf("\n Ab(%d) size = %zu", tid, A_b.size());
                 for (size_t I = 0, max_I = A_b_t.second[tid]; I < max_I; ++I) {
                     master.push_back( A_b[I] );
                 }
@@ -1244,9 +1247,8 @@ AdaptiveCI::get_excited_determinants_batch_vecsort(SharedMatrix evecs, SharedVec
             }
         }
         total_excluded += excluded;
-        total_size = master.size();
-*/
 
+/*
         Timer sc;
 
         int num_threads = A_b_t.second.size();
@@ -1325,9 +1327,9 @@ AdaptiveCI::get_excited_determinants_batch_vecsort(SharedMatrix evecs, SharedVec
                 const auto& det = pair.first;
                 F_space.push_back(std::make_pair(en,det));
             } 
-            total_size += A_b_t.second[i];
         }        
         outfile->Printf("\n    Fill vector              %1.6f", fill.get());
+*/
 
         outfile->Printf("\n    Screening              %10.6f", screener.get());
         outfile->Printf("\n    Added %zu dets of %zu from bin %d", F_space.size(), total_size, bin);
@@ -2273,9 +2275,9 @@ AdaptiveCI::get_bin_F_space_vecsort(int bin, int nbin, SharedMatrix evecs, Deter
         }
         std::sort(sorted_dets.begin(), sorted_dets.end());
 
-        // Remove duplicates and merge
-      //  #pragma omp critical
-      //  {
+      // Remove duplicates and merge
+    //  #pragma omp critical
+    //  {
 
             size_t ref_size = sorted_dets.size();
             size_t ref_pos = 0;
@@ -2313,7 +2315,7 @@ AdaptiveCI::get_bin_F_space_vecsort(int bin, int nbin, SharedMatrix evecs, Deter
 
     // Account for duplicates between threads by adding
     // to thread 0, and zeroing other threads
-
+    Timer merget;
     int ntd = vec_A_b_t.size();
     if( ntd > 1 ){
         //auto& vec_ref = vec_A_b_t[0];
@@ -2353,7 +2355,7 @@ AdaptiveCI::get_bin_F_space_vecsort(int bin, int nbin, SharedMatrix evecs, Deter
             }
         }
     }
-
+outfile->Printf("\n  Inter-thread merge: %1.6f", merget.get());
     return std::make_pair(vec_A_b_t, dets_t);
 }
 
