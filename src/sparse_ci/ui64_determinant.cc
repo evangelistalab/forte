@@ -37,13 +37,20 @@ namespace forte {
 
 #define USE_builtin_popcountll 1
 
+/**
+ * @brief compute the parity (+/-) of an unsigned 64 bit integer
+ * @param number x
+ * @return the parity of x
+ */
+double parity(uint64_t x) { return (x % 2 == 0) ? 1.0 : -1.0; }
+
 bool ui64_get_bit(uint64_t x, uint64_t n) { return (0 != (x & (uint64_t(1) << n))); }
 
 uint64_t ui64_bit_count(uint64_t x) {
     return _mm_popcnt_u64(x);
 #ifdef USE_builtin_popcountll
-// optimized version using popcnt
- return __builtin_popcountll(x);
+    // optimized version using popcnt
+    return __builtin_popcountll(x);
 #else
     // version based on bitwise operations
     x = (0x5555555555555555UL & x) + (0x5555555555555555UL & (x >> 1));
@@ -287,14 +294,15 @@ double UI64Determinant::destroy_beta_bit(int n) {
     return slater_sign_b(n);
 }
 
-std::vector<std::vector<int>> UI64Determinant::get_asym_occ(int norb, std::vector<int> act_mo) const { 
+std::vector<std::vector<int>> UI64Determinant::get_asym_occ(int norb,
+                                                            std::vector<int> act_mo) const {
 
     size_t nirrep = act_mo.size();
     std::vector<std::vector<int>> occ(nirrep);
 
     int abs = 0;
-    for( int h = 0; h < nirrep; ++h ){
-        for( int p = 0; p < act_mo[h]; ++p ){
+    for (int h = 0; h < nirrep; ++h) {
+        for (int p = 0; p < act_mo[h]; ++p) {
             if (get_alfa_bit(abs)) {
                 occ[h].push_back(abs);
             }
@@ -304,13 +312,14 @@ std::vector<std::vector<int>> UI64Determinant::get_asym_occ(int norb, std::vecto
     return occ;
 }
 
-std::vector<std::vector<int>> UI64Determinant::get_bsym_occ(int norb, std::vector<int> act_mo) const { 
+std::vector<std::vector<int>> UI64Determinant::get_bsym_occ(int norb,
+                                                            std::vector<int> act_mo) const {
     size_t nirrep = act_mo.size();
     std::vector<std::vector<int>> occ(nirrep);
 
     int abs = 0;
-    for( int h = 0; h < nirrep; ++h ){
-        for( int p = 0; p < act_mo[h]; ++p ){
+    for (int h = 0; h < nirrep; ++h) {
+        for (int p = 0; p < act_mo[h]; ++p) {
             if (get_beta_bit(abs)) {
                 occ[h].push_back(abs);
             }
@@ -320,13 +329,14 @@ std::vector<std::vector<int>> UI64Determinant::get_bsym_occ(int norb, std::vecto
     return occ;
 }
 
-std::vector<std::vector<int>> UI64Determinant::get_asym_vir(int norb, std::vector<int> act_mo) const { 
+std::vector<std::vector<int>> UI64Determinant::get_asym_vir(int norb,
+                                                            std::vector<int> act_mo) const {
     size_t nirrep = act_mo.size();
     std::vector<std::vector<int>> occ(nirrep);
 
     int abs = 0;
-    for( int h = 0; h < nirrep; ++h ){
-        for( int p = 0; p < act_mo[h]; ++p ){
+    for (int h = 0; h < nirrep; ++h) {
+        for (int p = 0; p < act_mo[h]; ++p) {
             if (not get_alfa_bit(abs)) {
                 occ[h].push_back(abs);
             }
@@ -336,13 +346,14 @@ std::vector<std::vector<int>> UI64Determinant::get_asym_vir(int norb, std::vecto
     return occ;
 }
 
-std::vector<std::vector<int>> UI64Determinant::get_bsym_vir(int norb, std::vector<int> act_mo) const { 
+std::vector<std::vector<int>> UI64Determinant::get_bsym_vir(int norb,
+                                                            std::vector<int> act_mo) const {
     size_t nirrep = act_mo.size();
     std::vector<std::vector<int>> occ(nirrep);
 
     int abs = 0;
-    for( int h = 0; h < nirrep; ++h ){
-        for( int p = 0; p < act_mo[h]; ++p ){
+    for (int h = 0; h < nirrep; ++h) {
+        for (int p = 0; p < act_mo[h]; ++p) {
             if (not get_beta_bit(abs)) {
                 occ[h].push_back(abs);
             }
@@ -381,7 +392,9 @@ double UI64Determinant::slater_sign_a(int n) const { return ui64_slater_sign(a_,
 
 double UI64Determinant::slater_sign_aa(int n, int m) const { return ui64_slater_sign(a_, n, m); }
 
-double UI64Determinant::slater_sign_b(int n) const { return ui64_slater_sign(b_, n); }
+double UI64Determinant::slater_sign_b(int n) const {
+    return ui64_slater_sign(b_, n) * (ui64_bit_count(a_) % 2 == 0 ? 1.0 : -1.0);
+}
 
 double UI64Determinant::slater_sign_bb(int n, int m) const { return ui64_slater_sign(b_, n, m); }
 
@@ -534,5 +547,5 @@ double spin2(const UI64Determinant& lhs, const UI64Determinant& rhs) {
     }
     return (matrix_element);
 }
-}
-}
+} // namespace forte
+} // namespace psi
