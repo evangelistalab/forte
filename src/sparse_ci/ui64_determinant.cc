@@ -27,7 +27,7 @@
  * @END LICENSE
  */
 
-#include "nmmintrin.h"
+#include "x86intrin.h"
 
 #include "stl_bitset_determinant.h"
 #include "ui64_determinant.h"
@@ -50,7 +50,7 @@ uint64_t ui64_bit_count(uint64_t x) {
     return _mm_popcnt_u64(x);
 #ifdef USE_builtin_popcountll
     // optimized version using popcnt
-    return __builtin_popcountll(x);
+//    return __builtin_popcountll(x);
 #else
     // version based on bitwise operations
     x = (0x5555555555555555UL & x) + (0x5555555555555555UL & (x >> 1));
