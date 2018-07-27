@@ -866,8 +866,7 @@ void forte_old_methods(SharedWavefunction ref_wfn, Options& options,
     }
 
     if (options.get_str("JOB_TYPE") == "TEST_AMBIT") {
-        auto ambit_test = std::make_shared<AMBIT_TEST>();
-        ambit_test->compute_energy();
+        AMBIT_TEST::test_ambit();
     }
 }
 }

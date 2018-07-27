@@ -37,14 +37,69 @@
 
 namespace psi {
 namespace forte {
+namespace AMBIT_TEST {
 
-AMBIT_TEST::AMBIT_TEST() {}
+#include <ambit/tensor.h>
+#include <cstring>
+#include <cstdlib>
+//#include <cstdio>
+#include <cmath>
+//#include <utility>
+#include <stdexcept>
 
-AMBIT_TEST::~AMBIT_TEST() {}
+#define MAXTWO 10
+#define MAXFOUR 10
 
-Tensor AMBIT_TEST::build_and_fill(const std::string& name, const ambit::Dimension& dims,
-                                  double matrix[MAXTWO]) {
-    Tensor T = Tensor::build(CoreTensor, name, dims);
+//#define ANSI_COLOR_RED "\x1b[31m"
+//#define ANSI_COLOR_GREEN "\x1b[32m"
+//#define ANSI_COLOR_YELLOW "\x1b[33m"
+//#define ANSI_COLOR_BLUE "\x1b[34m"
+//#define ANSI_COLOR_MAGENTA "\x1b[35m"
+//#define ANSI_COLOR_CYAN "\x1b[36m"
+//#define ANSI_COLOR_RESET "\x1b[0m"
+
+double a1[MAXTWO];
+double a2[MAXTWO][MAXTWO];
+double b2[MAXTWO][MAXTWO];
+double c2[MAXTWO][MAXTWO];
+double d2[MAXTWO][MAXTWO];
+double e2[MAXTWO][MAXTWO];
+double a4[MAXFOUR][MAXFOUR][MAXFOUR][MAXFOUR];
+double b4[MAXFOUR][MAXFOUR][MAXFOUR][MAXFOUR];
+double c4[MAXFOUR][MAXFOUR][MAXFOUR][MAXFOUR];
+double d4[MAXFOUR][MAXFOUR][MAXFOUR][MAXFOUR];
+double e4[MAXFOUR][MAXFOUR][MAXFOUR][MAXFOUR];
+
+using namespace ambit;
+
+enum TestResult
+{
+    kPass,
+    kFail,
+    kException
+};
+
+/// Initialize a tensor and a 2-dim matrix with random numbers
+void initialize_random(Tensor &tensor, double matrix[MAXTWO]);
+std::pair<double, double> difference(Tensor &tensor, double matrix[MAXTWO]);
+
+void initialize_random(Tensor &tensor, double matrix[MAXTWO][MAXTWO]);
+std::pair<double, double> difference(Tensor &tensor,
+                                     double matrix[MAXTWO][MAXTWO]);
+
+void initialize_random(Tensor &tensor,
+                       double matrix[MAXFOUR][MAXFOUR][MAXFOUR][MAXFOUR]);
+std::pair<double, double>
+difference(Tensor &tensor, double matrix[MAXFOUR][MAXFOUR][MAXFOUR][MAXFOUR]);
+
+double zero = 1.0e-09;
+
+TensorType tensor_type = CoreTensor;
+
+Tensor build_and_fill(const std::string &name, const ambit::Dimension &dims,
+                      double matrix[MAXTWO])
+{
+    Tensor T = Tensor::build(tensor_type, name, dims);
     initialize_random(T, matrix);
     std::pair<double, double> a_diff = difference(T, matrix);
     if (std::fabs(a_diff.second) > zero)
@@ -52,9 +107,10 @@ Tensor AMBIT_TEST::build_and_fill(const std::string& name, const ambit::Dimensio
     return T;
 }
 
-Tensor AMBIT_TEST::build_and_fill(const std::string& name, const ambit::Dimension& dims,
-                                  double matrix[MAXTWO][MAXTWO]) {
-    Tensor T = Tensor::build(CoreTensor, name, dims);
+Tensor build_and_fill(const std::string &name, const ambit::Dimension &dims,
+                      double matrix[MAXTWO][MAXTWO])
+{
+    Tensor T = Tensor::build(tensor_type, name, dims);
     initialize_random(T, matrix);
     std::pair<double, double> a_diff = difference(T, matrix);
     if (std::fabs(a_diff.second) > zero)
@@ -62,9 +118,10 @@ Tensor AMBIT_TEST::build_and_fill(const std::string& name, const ambit::Dimensio
     return T;
 }
 
-Tensor AMBIT_TEST::build_and_fill(const std::string& name, const ambit::Dimension& dims,
-                                  double matrix[MAXFOUR][MAXFOUR][MAXFOUR][MAXFOUR]) {
-    Tensor T = Tensor::build(CoreTensor, name, dims);
+Tensor build_and_fill(const std::string &name, const ambit::Dimension &dims,
+                      double matrix[MAXFOUR][MAXFOUR][MAXFOUR][MAXFOUR])
+{
+    Tensor T = Tensor::build(tensor_type, name, dims);
     initialize_random(T, matrix);
     std::pair<double, double> a_diff = difference(T, matrix);
     if (std::fabs(a_diff.second) > zero)
@@ -72,24 +129,29 @@ Tensor AMBIT_TEST::build_and_fill(const std::string& name, const ambit::Dimensio
     return T;
 }
 
-void AMBIT_TEST::initialize_random(Tensor& tensor, double matrix[MAXTWO]) {
+void initialize_random(Tensor &tensor, double matrix[MAXTWO])
+{
     std::srand(0);
     size_t n0 = tensor.dims()[0];
-    std::vector<double>& vec = tensor.data();
-    for (size_t i = 0; i < n0; ++i) {
+    std::vector<double> &vec = tensor.data();
+    for (size_t i = 0; i < n0; ++i)
+    {
         double randnum = double(std::rand()) / double(RAND_MAX);
         matrix[i] = randnum;
         vec[i] = randnum;
     }
 }
 
-void AMBIT_TEST::initialize_random(Tensor& tensor, double matrix[MAXTWO][MAXTWO]) {
+void initialize_random(Tensor &tensor, double matrix[MAXTWO][MAXTWO])
+{
     std::srand(0);
     size_t n0 = tensor.dims()[0];
     size_t n1 = tensor.dims()[1];
-    std::vector<double>& vec = tensor.data();
-    for (size_t i = 0, ij = 0; i < n0; ++i) {
-        for (size_t j = 0; j < n1; ++j, ++ij) {
+    std::vector<double> &vec = tensor.data();
+    for (size_t i = 0, ij = 0; i < n0; ++i)
+    {
+        for (size_t j = 0; j < n1; ++j, ++ij)
+        {
             double randnum = double(std::rand()) / double(RAND_MAX);
             matrix[i][j] = randnum;
             vec[ij] = randnum;
@@ -97,14 +159,16 @@ void AMBIT_TEST::initialize_random(Tensor& tensor, double matrix[MAXTWO][MAXTWO]
     }
 }
 
-std::pair<double, double> AMBIT_TEST::difference(Tensor& tensor, double matrix[MAXTWO]) {
+std::pair<double, double> difference(Tensor &tensor, double matrix[MAXTWO])
+{
     size_t n0 = tensor.dims()[0];
 
-    const std::vector<double>& result = tensor.data();
+    const std::vector<double> &result = tensor.data();
 
     double sum_diff = 0.0;
     double max_diff = 0.0;
-    for (size_t i = 0; i < n0; ++i) {
+    for (size_t i = 0; i < n0; ++i)
+    {
         double diff = std::fabs(matrix[i] - result[i]);
         sum_diff += diff;
         max_diff = std::max(diff, max_diff);
@@ -112,16 +176,20 @@ std::pair<double, double> AMBIT_TEST::difference(Tensor& tensor, double matrix[M
     return std::make_pair(sum_diff, max_diff);
 }
 
-std::pair<double, double> AMBIT_TEST::difference(Tensor& tensor, double matrix[MAXTWO][MAXTWO]) {
+std::pair<double, double> difference(Tensor &tensor,
+                                     double matrix[MAXTWO][MAXTWO])
+{
     size_t n0 = tensor.dims()[0];
     size_t n1 = tensor.dims()[1];
 
-    const std::vector<double>& result = tensor.data();
+    const std::vector<double> &result = tensor.data();
 
     double sum_diff = 0.0;
     double max_diff = 0.0;
-    for (size_t i = 0, ij = 0; i < n0; ++i) {
-        for (size_t j = 0; j < n1; ++j, ++ij) {
+    for (size_t i = 0, ij = 0; i < n0; ++i)
+    {
+        for (size_t j = 0; j < n1; ++j, ++ij)
+        {
             double diff = std::fabs(matrix[i][j] - result[ij]);
             sum_diff += diff;
             max_diff = std::max(diff, max_diff);
@@ -130,19 +198,24 @@ std::pair<double, double> AMBIT_TEST::difference(Tensor& tensor, double matrix[M
     return std::make_pair(sum_diff, max_diff);
 }
 
-void AMBIT_TEST::initialize_random(Tensor& tensor,
-                                   double matrix[MAXFOUR][MAXFOUR][MAXFOUR][MAXFOUR]) {
+void initialize_random(Tensor &tensor,
+                       double matrix[MAXFOUR][MAXFOUR][MAXFOUR][MAXFOUR])
+{
     std::srand(0);
     size_t n0 = tensor.dims()[0];
     size_t n1 = tensor.dims()[1];
     size_t n2 = tensor.dims()[2];
     size_t n3 = tensor.dims()[3];
 
-    std::vector<double>& vec = tensor.data();
-    for (size_t i = 0, ijkl = 0; i < n0; ++i) {
-        for (size_t j = 0; j < n1; ++j) {
-            for (size_t k = 0; k < n2; ++k) {
-                for (size_t l = 0; l < n3; ++l, ++ijkl) {
+    std::vector<double> &vec = tensor.data();
+    for (size_t i = 0, ijkl = 0; i < n0; ++i)
+    {
+        for (size_t j = 0; j < n1; ++j)
+        {
+            for (size_t k = 0; k < n2; ++k)
+            {
+                for (size_t l = 0; l < n3; ++l, ++ijkl)
+                {
                     double randnum = double(std::rand()) / double(RAND_MAX);
                     matrix[i][j][k][l] = randnum;
                     vec[ijkl] = randnum;
@@ -153,21 +226,26 @@ void AMBIT_TEST::initialize_random(Tensor& tensor,
 }
 
 std::pair<double, double>
-AMBIT_TEST::difference(Tensor& tensor, double matrix[MAXFOUR][MAXFOUR][MAXFOUR][MAXFOUR]) {
+difference(Tensor &tensor, double matrix[MAXFOUR][MAXFOUR][MAXFOUR][MAXFOUR])
+{
     size_t n0 = tensor.dims()[0];
     size_t n1 = tensor.dims()[1];
     size_t n2 = tensor.dims()[2];
     size_t n3 = tensor.dims()[3];
 
-    const std::vector<double>& result = tensor.data();
+    const std::vector<double> &result = tensor.data();
 
     double sum_diff = 0.0;
     double max_diff = 0.0;
 
-    for (size_t i = 0, ijkl = 0; i < n0; ++i) {
-        for (size_t j = 0; j < n1; ++j) {
-            for (size_t k = 0; k < n2; ++k) {
-                for (size_t l = 0; l < n3; ++l, ++ijkl) {
+    for (size_t i = 0, ijkl = 0; i < n0; ++i)
+    {
+        for (size_t j = 0; j < n1; ++j)
+        {
+            for (size_t k = 0; k < n2; ++k)
+            {
+                for (size_t l = 0; l < n3; ++l, ++ijkl)
+                {
                     double diff = std::fabs(matrix[i][j][k][l] - result[ijkl]);
                     sum_diff += diff;
                     max_diff = std::max(diff, max_diff);
@@ -178,7 +256,7 @@ AMBIT_TEST::difference(Tensor& tensor, double matrix[MAXFOUR][MAXFOUR][MAXFOUR][
     return std::make_pair(sum_diff, max_diff);
 }
 
-double AMBIT_TEST::test_C_equal_A_B(std::string c_ind, std::string a_ind, std::string b_ind,
+double test_C_equal_A_B(std::string c_ind, std::string a_ind, std::string b_ind,
                         std::vector<int> c_dim, std::vector<int> a_dim,
                         std::vector<int> b_dim)
 {
@@ -218,7 +296,7 @@ double AMBIT_TEST::test_C_equal_A_B(std::string c_ind, std::string a_ind, std::s
     return difference(C, c2).second;
 }
 
-double AMBIT_TEST::test_wrapper()
+double test_wrapper()
 {
     double max_error = 0.0, current_error = 0.0;
 
@@ -250,7 +328,7 @@ double AMBIT_TEST::test_wrapper()
     return max_error;
 }
 
-double AMBIT_TEST::test_Cij_plus_equal_Aik_Bkj()
+double test_Cij_plus_equal_Aik_Bkj()
 {
     size_t ni = 9;
     size_t nj = 6;
@@ -276,7 +354,7 @@ double AMBIT_TEST::test_Cij_plus_equal_Aik_Bkj()
     return difference(C, c2).second;
 }
 
-double AMBIT_TEST::test_Cij_minus_equal_Aik_Bkj()
+double test_Cij_minus_equal_Aik_Bkj()
 {
     size_t ni = 9;
     size_t nj = 6;
@@ -302,7 +380,7 @@ double AMBIT_TEST::test_Cij_minus_equal_Aik_Bkj()
     return difference(C, c2).second;
 }
 
-double AMBIT_TEST::test_Cij_equal_Aik_Bkj()
+double test_Cij_equal_Aik_Bkj()
 {
     size_t ni = 9;
     size_t nj = 6;
@@ -330,7 +408,7 @@ double AMBIT_TEST::test_Cij_equal_Aik_Bkj()
     return difference(C, c2).second;
 }
 
-double AMBIT_TEST::test_Cij_equal_Aik_Bjk()
+double test_Cij_equal_Aik_Bjk()
 {
     size_t ni = 9;
     size_t nj = 6;
@@ -357,7 +435,7 @@ double AMBIT_TEST::test_Cij_equal_Aik_Bjk()
     return difference(C, c2).second;
 }
 
-double AMBIT_TEST::test_Cijkl_equal_Aijab_Bklab()
+double test_Cijkl_equal_Aijab_Bklab()
 {
     size_t ni = 9;
     size_t nj = 6;
@@ -395,7 +473,7 @@ double AMBIT_TEST::test_Cijkl_equal_Aijab_Bklab()
     return difference(C, c4).second;
 }
 
-double AMBIT_TEST::test_Cikjl_equal_Aijab_Bklab()
+double test_Cikjl_equal_Aijab_Bklab()
 {
     size_t ni = 9;
     size_t nj = 6;
@@ -433,7 +511,7 @@ double AMBIT_TEST::test_Cikjl_equal_Aijab_Bklab()
     return difference(C, c4).second;
 }
 
-double AMBIT_TEST::test_Cij_equal_Aiabc_Bjabc()
+double test_Cij_equal_Aiabc_Bjabc()
 {
     size_t ni = 9;
     size_t nj = 6;
@@ -467,7 +545,7 @@ double AMBIT_TEST::test_Cij_equal_Aiabc_Bjabc()
     return difference(C, c2).second;
 }
 
-double AMBIT_TEST::test_Cij_minus_equal_Aij_Bij()
+double test_Cij_minus_equal_Aij_Bij()
 {
     size_t ni = 9;
     size_t nj = 6;
@@ -489,7 +567,7 @@ double AMBIT_TEST::test_Cij_minus_equal_Aij_Bij()
     return difference(C, c2).second;
 }
 
-double AMBIT_TEST::test_Dij_plus_equal_Aij_Bij_Cij()
+double test_Dij_plus_equal_Aij_Bij_Cij()
 {
     size_t ni = 9;
     size_t nj = 6;
@@ -512,7 +590,7 @@ double AMBIT_TEST::test_Dij_plus_equal_Aij_Bij_Cij()
     return difference(D, d2).second;
 }
 
-double AMBIT_TEST::test_E_abcd_equal_Aijab_Bklcd_C_jl_D_ik()
+double test_E_abcd_equal_Aijab_Bklcd_C_jl_D_ik()
 {
     size_t ni = 9;
     size_t nj = 6;
@@ -562,7 +640,7 @@ double AMBIT_TEST::test_E_abcd_equal_Aijab_Bklcd_C_jl_D_ik()
     return difference(E, e4).second;
 }
 
-double AMBIT_TEST::test_C_equal_2_A()
+double test_C_equal_2_A()
 {
     size_t ni = 9;
     size_t nj = 6;
@@ -583,7 +661,7 @@ double AMBIT_TEST::test_C_equal_2_A()
     return difference(C, c2).second;
 }
 
-double AMBIT_TEST::test_C_plus_equal_2_A()
+double test_C_plus_equal_2_A()
 {
     size_t ni = 9;
     size_t nj = 6;
@@ -604,7 +682,7 @@ double AMBIT_TEST::test_C_plus_equal_2_A()
     return difference(C, c2).second;
 }
 
-double AMBIT_TEST::test_C_minus_equal_2_A()
+double test_C_minus_equal_2_A()
 {
     size_t ni = 9;
     size_t nj = 6;
@@ -625,7 +703,7 @@ double AMBIT_TEST::test_C_minus_equal_2_A()
     return difference(C, c2).second;
 }
 
-double AMBIT_TEST::test_C_times_equal_2()
+double test_C_times_equal_2()
 {
     size_t ni = 9;
     size_t nj = 6;
@@ -645,7 +723,7 @@ double AMBIT_TEST::test_C_times_equal_2()
     return difference(C, c2).second;
 }
 
-double AMBIT_TEST::test_C_divide_equal_2()
+double test_C_divide_equal_2()
 {
     size_t ni = 9;
     size_t nj = 6;
@@ -665,7 +743,7 @@ double AMBIT_TEST::test_C_divide_equal_2()
     return difference(C, c2).second;
 }
 
-double AMBIT_TEST::test_Cij_equal_Aji()
+double test_Cij_equal_Aji()
 {
     size_t ni = 9;
     size_t nj = 6;
@@ -686,7 +764,7 @@ double AMBIT_TEST::test_Cij_equal_Aji()
     return difference(C, c2).second;
 }
 
-double AMBIT_TEST::test_Cijkl_equal_Akijl()
+double test_Cijkl_equal_Akijl()
 {
     size_t ni = 9;
     size_t nj = 6;
@@ -715,7 +793,7 @@ double AMBIT_TEST::test_Cijkl_equal_Akijl()
     return difference(C, c4).second;
 }
 
-double AMBIT_TEST::test_Cijkl_equal_Akilj()
+double test_Cijkl_equal_Akilj()
 {
     size_t ni = 9;
     size_t nj = 6;
@@ -744,7 +822,7 @@ double AMBIT_TEST::test_Cijkl_equal_Akilj()
     return difference(C, c4).second;
 }
 
-double AMBIT_TEST::test_Cij_equal_Cij()
+double test_Cij_equal_Cij()
 {
     size_t ni = 9;
     size_t nj = 6;
@@ -757,7 +835,7 @@ double AMBIT_TEST::test_Cij_equal_Cij()
     return 0.0;
 }
 
-double AMBIT_TEST::test_syev()
+double test_syev()
 {
     size_t ni = 9;
 
@@ -773,7 +851,7 @@ double AMBIT_TEST::test_syev()
     return 0.0;
 }
 
-double AMBIT_TEST::test_geev()
+double test_geev()
 {
     size_t ni = 9;
 
@@ -791,7 +869,7 @@ double AMBIT_TEST::test_geev()
     return 0.0;
 }
 
-double AMBIT_TEST::test_Cilkj_equal_Aibaj_Bblak()
+double test_Cilkj_equal_Aibaj_Bblak()
 {
     size_t ni = 9;
     size_t nj = 6;
@@ -829,7 +907,7 @@ double AMBIT_TEST::test_Cilkj_equal_Aibaj_Bblak()
     return difference(C, c4).second;
 }
 
-double AMBIT_TEST::test_Cljik_equal_Abija_Blbak()
+double test_Cljik_equal_Abija_Blbak()
 {
     size_t ni = 9;
     size_t nj = 6;
@@ -867,7 +945,7 @@ double AMBIT_TEST::test_Cljik_equal_Abija_Blbak()
     return difference(C, c4).second;
 }
 
-double AMBIT_TEST::test_Cij_equal_Aij_plus_Bij()
+double test_Cij_equal_Aij_plus_Bij()
 {
     size_t ni = 9;
     size_t nj = 6;
@@ -889,7 +967,7 @@ double AMBIT_TEST::test_Cij_equal_Aij_plus_Bij()
     return difference(C, c2).second;
 }
 
-double AMBIT_TEST::test_Dij_equal_Aij_plus_Bij_plus_Cij()
+double test_Dij_equal_Aij_plus_Bij_plus_Cij()
 {
     size_t ni = 9, nj = 6;
 
@@ -912,7 +990,7 @@ double AMBIT_TEST::test_Dij_equal_Aij_plus_Bij_plus_Cij()
     return difference(D, d2).second;
 }
 
-double AMBIT_TEST::test_Cij_equal_Aij_minus_Bij()
+double test_Cij_equal_Aij_minus_Bij()
 {
     size_t ni = 9;
     size_t nj = 6;
@@ -934,7 +1012,7 @@ double AMBIT_TEST::test_Cij_equal_Aij_minus_Bij()
     return difference(C, c2).second;
 }
 
-double AMBIT_TEST::test_Dij_equal_Aij_minus_Bij_plus_Cij()
+double test_Dij_equal_Aij_minus_Bij_plus_Cij()
 {
     size_t ni = 9, nj = 6;
 
@@ -957,7 +1035,7 @@ double AMBIT_TEST::test_Dij_equal_Aij_minus_Bij_plus_Cij()
     return difference(D, d2).second;
 }
 
-double AMBIT_TEST::test_Dij_equal_Aij_times_Bij_plus_Cij()
+double test_Dij_equal_Aij_times_Bij_plus_Cij()
 {
     size_t ni = 9, nj = 6;
 
@@ -980,7 +1058,7 @@ double AMBIT_TEST::test_Dij_equal_Aij_times_Bij_plus_Cij()
     return difference(D, d2).second;
 }
 
-double AMBIT_TEST::test_Dij_equal_Bij_plus_Cij_times_Aij()
+double test_Dij_equal_Bij_plus_Cij_times_Aij()
 {
     size_t ni = 9, nj = 6;
 
@@ -1003,7 +1081,7 @@ double AMBIT_TEST::test_Dij_equal_Bij_plus_Cij_times_Aij()
     return difference(D, d2).second;
 }
 
-double AMBIT_TEST::test_F_equal_D_times_2g_minus_g()
+double test_F_equal_D_times_2g_minus_g()
 {
     size_t ni = 9, nj = 9, nk = 9, nl = 9;
 
@@ -1032,7 +1110,7 @@ double AMBIT_TEST::test_F_equal_D_times_2g_minus_g()
     return difference(F, a2).second;
 }
 
-double AMBIT_TEST::test_Dij_equal_2_times_Aij_plus_Bij()
+double test_Dij_equal_2_times_Aij_plus_Bij()
 {
     size_t ni = 9, nj = 6;
 
@@ -1054,7 +1132,7 @@ double AMBIT_TEST::test_Dij_equal_2_times_Aij_plus_Bij()
     return difference(C, c2).second;
 }
 
-double AMBIT_TEST::test_Dij_equal_negate_Aij_plus_Bij()
+double test_Dij_equal_negate_Aij_plus_Bij()
 {
     size_t ni = 9, nj = 6;
 
@@ -1076,7 +1154,7 @@ double AMBIT_TEST::test_Dij_equal_negate_Aij_plus_Bij()
     return difference(C, c2).second;
 }
 
-double AMBIT_TEST::test_power()
+double test_power()
 {
     size_t ni = 9;
 
@@ -1089,7 +1167,7 @@ double AMBIT_TEST::test_power()
     return 0;
 }
 
-double AMBIT_TEST::test_dot_product()
+double test_dot_product()
 {
     size_t ni = 9, nj = 6;
 
@@ -1111,7 +1189,7 @@ double AMBIT_TEST::test_dot_product()
     return std::fabs(C - c);
 }
 
-double AMBIT_TEST::test_dot_product2()
+double test_dot_product2()
 {
     size_t ni = 9, nj = 6;
 
@@ -1133,7 +1211,7 @@ double AMBIT_TEST::test_dot_product2()
     return std::fabs(C - c);
 }
 
-double AMBIT_TEST::test_dot_product3()
+double test_dot_product3()
 {
     size_t ni = 9, nj = 6, nk = 5;
 
@@ -1141,7 +1219,7 @@ double AMBIT_TEST::test_dot_product3()
     Tensor B = build_and_fill("B", {ni, nk}, b2);
 
     // Test if the user attempts to use the correct indices with wrong
-    // dimensions
+    // ambit::Dimensions
     double C = A("ij") * B("ij");
     double c = 0.0;
 
@@ -1156,7 +1234,7 @@ double AMBIT_TEST::test_dot_product3()
     return std::fabs(C - c);
 }
 
-double AMBIT_TEST::test_dot_product4()
+double test_dot_product4()
 {
     size_t ni = 9, nj = 6;
 
@@ -1179,7 +1257,7 @@ double AMBIT_TEST::test_dot_product4()
     return std::fabs(D - d);
 }
 
-double AMBIT_TEST::test_dot_product5()
+double test_dot_product5()
 {
     size_t ni = 9, nj = 6, nk = 7;
 
@@ -1204,7 +1282,7 @@ double AMBIT_TEST::test_dot_product5()
     return std::fabs(D - d);
 }
 
-double AMBIT_TEST::test_dot_product6()
+double test_dot_product6()
 {
     size_t ni = 9, nj = 6, nk = 7, nl = 5, nm = 8;
 
@@ -1235,7 +1313,7 @@ double AMBIT_TEST::test_dot_product6()
     return std::fabs(D - d);
 }
 
-double AMBIT_TEST::test_chain_multiply()
+double test_chain_multiply()
 {
     size_t ni = 9, nj = 6, nk = 4, nl = 5;
 
@@ -1265,7 +1343,7 @@ double AMBIT_TEST::test_chain_multiply()
     return difference(D, d2).second;
 }
 
-double AMBIT_TEST::test_chain_multiply2()
+double test_chain_multiply2()
 {
     size_t ni = 5;
     size_t nj = 6;
@@ -1311,7 +1389,7 @@ double AMBIT_TEST::test_chain_multiply2()
     return difference(D4, d4).second;
 }
 
-double AMBIT_TEST::test_chain_multiply3()
+double test_chain_multiply3()
 {
     size_t ni = 5;
     size_t nj = 6;
@@ -1356,7 +1434,7 @@ double AMBIT_TEST::test_chain_multiply3()
     return difference(D4, d4).second;
 }
 
-double AMBIT_TEST::test_chain_multiply4()
+double test_chain_multiply4()
 {
     size_t ni = 5;
     size_t nj = 6;
@@ -1400,7 +1478,7 @@ double AMBIT_TEST::test_chain_multiply4()
 
     return difference(D4, d4).second;
 }
-double AMBIT_TEST::test_slice2()
+double test_slice2()
 {
     size_t ni = 7;
     size_t nj = 7;
@@ -1430,7 +1508,7 @@ double AMBIT_TEST::test_slice2()
     return difference(C, c2).second;
 }
 
-double AMBIT_TEST::test_Cijkl_equal_Aijab_Bklab_batched()
+double test_Cijkl_equal_Aijab_Bklab_batched()
 {
     size_t ni = 2;
     size_t nj = 6;
@@ -1469,7 +1547,7 @@ double AMBIT_TEST::test_Cijkl_equal_Aijab_Bklab_batched()
     return difference(C, c4).second;
 }
 
-double AMBIT_TEST::test_chain_multiply2_batched()
+double test_chain_multiply2_batched()
 {
     size_t ni = 5;
     size_t nj = 6;
@@ -1515,7 +1593,7 @@ double AMBIT_TEST::test_chain_multiply2_batched()
     return difference(D4, d4).second;
 }
 
-double AMBIT_TEST::test_chain_multiply3_batched()
+double test_chain_multiply3_batched()
 {
     size_t ni = 5;
     size_t nj = 6;
@@ -1560,7 +1638,7 @@ double AMBIT_TEST::test_chain_multiply3_batched()
     return difference(D4, d4).second;
 }
 
-double AMBIT_TEST::test_chain_multiply4_batched()
+double test_chain_multiply4_batched()
 {
     size_t ni = 5;
     size_t nj = 6;
@@ -1605,7 +1683,7 @@ double AMBIT_TEST::test_chain_multiply4_batched()
     return difference(D4, d4).second;
 }
 
-double AMBIT_TEST::test_batched()
+double test_batched()
 {
     size_t ni = 5;
     size_t nj = 6;
@@ -1652,7 +1730,7 @@ double AMBIT_TEST::test_batched()
     return difference(D4, d4).second;
 }
 
-double AMBIT_TEST::test_batched_with_factor()
+double test_batched_with_factor()
 {
     size_t no = 2;
 
@@ -1691,7 +1769,7 @@ double AMBIT_TEST::test_batched_with_factor()
     return difference(C, c4).second;
 }
 
-double AMBIT_TEST::test_batched_with_factor_permute()
+double test_batched_with_factor_permute()
 {
     size_t no = 4;
 
@@ -1730,35 +1808,9 @@ double AMBIT_TEST::test_batched_with_factor_permute()
     return difference(C, c4).second;
 }
 
-//double AMBIT_TEST::test_Cij_equal_Aik_Bkj(size_t ni, size_t nj, size_t nk) {
-
-//    Tensor A = build_and_fill("A", {ni, nk}, a2);
-//    Tensor B = build_and_fill("B", {nk, nj}, b2);
-//    Tensor C = build_and_fill("C", {ni, nj}, c2);
-
-//    C("ij") = A("ik") * B("kj");
-
-//    for (size_t i = 0; i < ni; ++i) {
-//        for (size_t j = 0; j < nj; ++j) {
-//            c2[i][j] = 0.0;
-//            for (size_t k = 0; k < nk; ++k) {
-//                c2[i][j] += a2[i][k] * b2[k][j];
-//            }
-//        }
-//    }
-
-//    return difference(C, c2).second;
-//}
-
-double AMBIT_TEST::compute_energy() {
-    outfile->Printf("\n\n==> Tests ambit <==\n\n");
-
-//    size_t ni = 54, nj = 63, nk = 42;
-//    double error = test_Cij_equal_Aik_Bkj(ni, nj, nk);
-
-//    outfile->Printf(
-//        "  C(\"ij\") = A(\"ik\") * B(\"kj\"): ni=%d, nj=%d, nk=%d  error=%.2e %s\n", ni, nj,
-//        nk, fabs(error), fabs(error) > zero ? "Failed" : "Passed");
+int test_ambit()
+{
+    srand(time(nullptr));
 
 //    ambit::initialize(argc, argv);
 
@@ -1878,13 +1930,16 @@ double AMBIT_TEST::compute_energy() {
 
     std::vector<std::tuple<std::string, TestResult, double>> results;
 
-    printf("\n %-50s %12s %s", "Description", "Max. error", "Result");
-    printf("\n %s", std::string(83, '-').c_str());
+//    printf(ANSI_COLOR_RESET);
+    outfile->Printf("\n\n==> TEST AMBIT <==\n");
+
+    outfile->Printf("\n %-50s %12s %s", "Description", "Max. error", "Result");
+    outfile->Printf("\n %s", std::string(83, '-').c_str());
 
     bool success = true;
     for (auto test_function : test_functions)
     {
-        printf("\n %-60s", std::get<2>(test_function));
+        outfile->Printf("\n %-60s", std::get<2>(test_function));
         double result = 0.0;
         TestResult tresult = kPass, report_result = kPass;
         std::string exception;
@@ -1910,30 +1965,32 @@ double AMBIT_TEST::compute_energy() {
                 exception = e.what();
             }
         }
-        printf(" %7e", result);
+        outfile->Printf(" %7e", result);
         switch (tresult)
         {
         case kPass:
-            printf(" Passed");
+            outfile->Printf(" Passed");
             break;
         case kFail:
-            printf(" Failed");
+            outfile->Printf(" Failed");
             break;
         default:
-            printf(" Exception");
+            outfile->Printf(" Exception");
         }
 
         if (report_result == kException)
-            printf("\n    Unexpected: %s", exception.c_str());
+            outfile->Printf("\n    Unexpected: %s", exception.c_str());
         if (report_result != kPass)
             success = false;
     }
-    printf("\n %s", std::string(83, '-').c_str());
-    printf("\n Tests: %s\n", success ? "All passed" : "Some failed");
+    outfile->Printf("\n %s", std::string(83, '-').c_str());
+    outfile->Printf("\n Tests: %s\n", success ? "All passed" : "Some failed");
 
 //    ambit::finalize();
 
-    return 0.0;
+    return success ? EXIT_SUCCESS : EXIT_FAILURE;
+}
+
 }
 }
 }
