@@ -50,6 +50,41 @@ class AMBIT_TEST {
 
     /// Compute the ambit tests
     double compute_energy();
+
+  private:
+    static const size_t MAXTWO = 1024;
+    static const size_t MAXFOUR = 10;
+    constexpr static const double zero = 1e-10;
+    double a1[MAXTWO];
+    double a2[MAXTWO][MAXTWO];
+    double b2[MAXTWO][MAXTWO];
+    double c2[MAXTWO][MAXTWO];
+    double d2[MAXTWO][MAXTWO];
+    double e2[MAXTWO][MAXTWO];
+    double a4[MAXFOUR][MAXFOUR][MAXFOUR][MAXFOUR];
+    double b4[MAXFOUR][MAXFOUR][MAXFOUR][MAXFOUR];
+    double c4[MAXFOUR][MAXFOUR][MAXFOUR][MAXFOUR];
+    double d4[MAXFOUR][MAXFOUR][MAXFOUR][MAXFOUR];
+    double e4[MAXFOUR][MAXFOUR][MAXFOUR][MAXFOUR];
+
+    Tensor build_and_fill(const std::string& name, const ambit::Dimension& dims, double matrix[MAXTWO]);
+
+    Tensor build_and_fill(const std::string& name, const ambit::Dimension& dims,
+                          double matrix[MAXTWO][MAXTWO]);
+
+    Tensor build_and_fill(const std::string& name, const ambit::Dimension& dims,
+                          double matrix[MAXFOUR][MAXFOUR][MAXFOUR][MAXFOUR]);
+
+    void initialize_random(Tensor& tensor, double matrix[MAXTWO]);
+    std::pair<double, double> difference(Tensor& tensor, double matrix[MAXTWO]);
+
+    void initialize_random(Tensor& tensor, double matrix[MAXTWO][MAXTWO]);
+    std::pair<double, double> difference(Tensor& tensor, double matrix[MAXTWO][MAXTWO]);
+
+    void initialize_random(Tensor& tensor, double matrix[MAXFOUR][MAXFOUR][MAXFOUR][MAXFOUR]);
+    std::pair<double, double> difference(Tensor& tensor,
+                                         double matrix[MAXFOUR][MAXFOUR][MAXFOUR][MAXFOUR]);
+    double test_Cij_equal_Aik_Bkj(size_t ni, size_t nj, size_t nk);
 };
 }
 }
