@@ -121,6 +121,7 @@ class AdaptiveCI : public Wavefunction {
     // Update sigma
     void update_sigma();
 
+    void unpaired_density();
   private:
     // ==> Class data <==
 
@@ -453,7 +454,6 @@ class AdaptiveCI : public Wavefunction {
     std::vector<std::tuple<double, int, int>> sym_labeled_orbitals(std::string type);
 
     void spin_analysis();
-
     //    int david2(double **A, int N, int M, double *eps, double **v,double
     //    cutoff, int print);
     //    /// Perform a Davidson-Liu diagonalization

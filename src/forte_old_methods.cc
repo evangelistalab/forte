@@ -143,6 +143,9 @@ void forte_old_methods(SharedWavefunction ref_wfn, Options& options,
             aci->upcast_reference(wfn);
             aci->add_external_excitations(wfn);
         }
+        if( options.get_bool("UNPAIRED_DENSITY")){
+            aci->unpaired_density();
+        }
     }
     if (options.get_str("JOB_TYPE") == "PCI") {
         auto pci = std::make_shared<ProjectorCI>(ref_wfn, options, ints, mo_space_info);
@@ -557,30 +560,31 @@ void forte_old_methods(SharedWavefunction ref_wfn, Options& options,
         } else if (cas_type == "ACI") {
 
             Reference aci_reference;
-            {
-                auto aci = std::make_shared<AdaptiveCI>(ref_wfn, options, ints, mo_space_info);
-                aci->set_quiet(true);
-                aci->set_max_rdm(max_rdm_level);
-                aci->compute_energy();
-                aci_reference = aci->reference();
-                if (options.get_bool("ACI_NO")) {
-                    aci->compute_nos();
-                }
-                if (options.get_bool("ACI_ADD_EXTERNAL_EXCITATIONS")) {
-                    DeterminantHashVec wfn = aci->get_wavefunction();
-                    aci->upcast_reference(wfn);
-                }
-                if (options.get_bool("ESNOS")) {
-                    auto aci_wfn = aci->get_wavefunction();
-                    ESNO esno(ref_wfn, options, ints, mo_space_info, aci_wfn);
-                    esno.compute_nos();
-                    auto aci2 = std::make_shared<AdaptiveCI>(ref_wfn, options, ints, mo_space_info);
-                    aci2->set_quiet(true);
-                    aci2->set_max_rdm(max_rdm_level);
-                    aci2->compute_energy();
-                    aci_reference = aci2->reference();
-                }
+            auto aci = std::make_shared<AdaptiveCI>(ref_wfn, options, ints, mo_space_info);
+            aci->set_quiet(true);
+            aci->set_max_rdm(max_rdm_level);
+            aci->compute_energy();
+            aci_reference = aci->reference();
+            if (options.get_bool("ACI_NO")) {
+                aci->compute_nos();
             }
+            if (options.get_bool("ACI_ADD_EXTERNAL_EXCITATIONS")) {
+                DeterminantHashVec wfn = aci->get_wavefunction();
+                aci->upcast_reference(wfn);
+            }
+            if (options.get_bool("ESNOS")) {
+                auto aci_wfn = aci->get_wavefunction();
+                ESNO esno(ref_wfn, options, ints, mo_space_info, aci_wfn);
+                esno.compute_nos();
+                auto aci2 = std::make_shared<AdaptiveCI>(ref_wfn, options, ints, mo_space_info);
+                aci2->set_quiet(true);
+                aci2->set_max_rdm(max_rdm_level);
+                aci2->compute_energy();
+                aci_reference = aci2->reference();
+            }
+            //if( options.get_bool("UNPAIRED_DENSITY")){
+            //    aci->unpaired_density();
+            //}
             SemiCanonical semi(ref_wfn, ints, mo_space_info);
             semi.semicanonicalize(aci_reference, max_rdm_level);
             Ua = semi.Ua_t();
@@ -592,6 +596,11 @@ void forte_old_methods(SharedWavefunction ref_wfn, Options& options,
             if (ref_relax || multi_state) {
                 three_dsrg_mrpt2->relax_reference_once();
             }
+
+            if( options.get_bool("UNPAIRED_DENSITY")){
+                aci->unpaired_density();
+            }
+
 
         } else if (cas_type == "FCI") {
             auto fci = std::make_shared<FCI>(ref_wfn, options, ints, mo_space_info);

@@ -722,15 +722,20 @@ double AdaptiveCI::compute_energy() {
         spin_analysis();
     }
 
-    if (options_.get_bool("UNPAIRED_DENSITY")) {
-        UPDensity density(reference_wavefunction_, mo_space_info_);
-        density.compute_unpaired_density(ordm_a_, ordm_b_);
-    }
+//    if (options_.get_bool("UNPAIRED_DENSITY")) {
+//        UPDensity density(reference_wavefunction_, mo_space_info_);
+//        density.compute_unpaired_density(ordm_a_, ordm_b_);
+//    }
 
     outfile->Printf("\n\n  %s: %f s", "Adaptive-CI ran in ", aci_elapse.get());
     outfile->Printf("\n\n  %s: %d", "Saving information for root", options_.get_int("ACI_ROOT"));
     return PQ_evals->get(options_.get_int("ACI_ROOT")) + nuclear_repulsion_energy_ +
            fci_ints_->scalar_energy();
+}
+
+void AdaptiveCI::unpaired_density(){
+    UPDensity density(reference_wavefunction_, mo_space_info_);
+    density.compute_unpaired_density(ordm_a_, ordm_b_);
 }
 
 void AdaptiveCI::diagonalize_final_and_compute_rdms() {
