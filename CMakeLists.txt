@@ -1,5 +1,6 @@
 cmake_policy(SET CMP0048 NEW)  # project_VERSION* variables populated from project(... VERSION x.x.x) string
 
+
 project(forte
         VERSION 0.1
         LANGUAGES CXX C)
@@ -24,12 +25,14 @@ include(autocmake_mpi)  # MPI option A
 #include(custom_static_library)
 
 # Check if compiles SSE4.2 popcnt
-check_cxx_source_compiles("
+check_cxx_source_compiles(
+"
 #include <nmmintrin.h>
 int main() {
   return _mm_popcnt_u64(0);
 }
-"  HAVE_SSE42)
+"
+HAVE_SSE42)
 
 #find_package(psi4 1.1 REQUIRED COMPONENTS ambit chemps2)
 find_package(psi4 1.1 REQUIRED)
@@ -43,6 +46,13 @@ endif()
 # Including custom cmake rules
 include(cmake/clang-cxx-dev-tools.cmake)
 include(cmake/git-version.cmake)
+
+
+check_cxx_compiler_flag("-msse4.2" SSE42_FLAG)
+if(SSE42_FLAG)
+    message("-- Adding SSE4.2 Flag")
+    set(CMAKE_CXX_FLAGS "-msse4.2")
+endif()
 
 # List of CC files
 add_psi4_plugin(forte
@@ -164,7 +174,7 @@ endif()
 
 target_include_directories(forte PRIVATE src/mini-boost)
 #if(HAVE_SSE42)
-target_compile_options(forte PRIVATE "-msse4.2")
+#target_compile_options(forte PRIVATE "-msse4.2")
 #message(STATUS "Found SSE4.2")
 #endif()
 
