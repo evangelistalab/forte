@@ -23,7 +23,13 @@ include(autocmake_omp)
 include(autocmake_mpi)  # MPI option A
 #include(custom_static_library)
 
-
+# Check if compiles SSE4.2 popcnt
+check_cxx_source_compiles("
+#include <nmmintrin.h>
+int main() {
+  return _mm_popcnt_u64(0);
+}
+"  HAVE_SSE42)
 
 #find_package(psi4 1.1 REQUIRED COMPONENTS ambit chemps2)
 find_package(psi4 1.1 REQUIRED)
@@ -157,6 +163,10 @@ if(TARGET CheMPS2::chemps2)
 endif()
 
 target_include_directories(forte PRIVATE src/mini-boost)
+#if(HAVE_SSE42)
+target_compile_options(forte PRIVATE "-msse4.2")
+#message(STATUS "Found SSE4.2")
+#endif()
 
 ## 64bit implementation
 add_definitions(-DSMALL_BITSET)

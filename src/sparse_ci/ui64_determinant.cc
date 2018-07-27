@@ -27,7 +27,11 @@
  * @END LICENSE
  */
 
-#include "x86intrin.h"
+/**
+ * \ingroup Sparse CI
+ */
+
+#include <nmmintrin.h>
 
 #include "stl_bitset_determinant.h"
 #include "ui64_determinant.h"
@@ -44,8 +48,19 @@ namespace forte {
  */
 double parity(uint64_t x) { return (x % 2 == 0) ? 1.0 : -1.0; }
 
+/**
+ * @brief return the value of bit in a uint64_t
+ * @param x the integer to test
+ * @param n the position of the bit
+ * @return the value of the bit
+ */
 bool ui64_get_bit(uint64_t x, uint64_t n) { return (0 != (x & (uint64_t(1) << n))); }
 
+/**
+ * @brief count the number of bit set to 1 in a uint64_t
+ * @param x the integer to test
+ * @return the number of bit that are set
+ */
 uint64_t ui64_bit_count(uint64_t x) {
     return _mm_popcnt_u64(x);
 #ifdef USE_builtin_popcountll
