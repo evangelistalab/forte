@@ -27,11 +27,10 @@
  * @END LICENSE
  */
 
-/**
- * \ingroup Sparse CI
- */
-
+#ifdef __SSE4_2__
 #include <nmmintrin.h>
+#endif
+
 
 #include "stl_bitset_determinant.h"
 #include "ui64_determinant.h"
@@ -63,10 +62,10 @@ bool ui64_get_bit(uint64_t x, uint64_t n) { return (0 != (x & (uint64_t(1) << n)
  */
 uint64_t ui64_bit_count(uint64_t x) {
 #ifdef __SSE4_2__
-    return __builtin_popcountll(x);
+    return _mm_popcnt_u64(x);
+//    return __builtin_popcountll(x);
 #else
 //#ifdef SSE42_FLAG
-    return _mm_popcnt_u64(x);
 //#ifdef USE_builtin_popcountll
     // optimized version using popcnt
 //    return __builtin_popcountll(x);
