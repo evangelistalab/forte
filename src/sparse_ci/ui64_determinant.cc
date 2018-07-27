@@ -56,6 +56,8 @@ bool ui64_get_bit(uint64_t x, uint64_t n) { return (0 != (x & (uint64_t(1) << n)
  * @brief count the number of bit set to 1 in a uint64_t
  * @param x the integer to test
  * @return the number of bit that are set
+ *
+ * If available, this function uses SSE4.2 instructions (_mm_popcnt_u64) to speed up the evaluation.
  */
 uint64_t ui64_bit_count(uint64_t x) {
 #ifdef __SSE4_2__
