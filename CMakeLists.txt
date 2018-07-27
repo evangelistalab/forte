@@ -195,7 +195,7 @@ endif()
 #
 # Forte tests
 #
-option(ENABLE_ForteTests "Enable Forte tests." OFF)
+option(ENABLE_ForteTests "Enable Forte tests." ON)
 
 set (CMAKE_CXX_STANDARD 11)
 
