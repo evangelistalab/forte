@@ -62,11 +62,15 @@ bool ui64_get_bit(uint64_t x, uint64_t n) { return (0 != (x & (uint64_t(1) << n)
  * @return the number of bit that are set
  */
 uint64_t ui64_bit_count(uint64_t x) {
+#ifdef __SSE4_2__
+    return __builtin_popcountll(x);
+#else
+//#ifdef SSE42_FLAG
     return _mm_popcnt_u64(x);
-#ifdef USE_builtin_popcountll
+//#ifdef USE_builtin_popcountll
     // optimized version using popcnt
 //    return __builtin_popcountll(x);
-#else
+//#else
     // version based on bitwise operations
     x = (0x5555555555555555UL & x) + (0x5555555555555555UL & (x >> 1));
     x = (0x3333333333333333UL & x) + (0x3333333333333333UL & (x >> 2));
