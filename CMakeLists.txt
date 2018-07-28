@@ -1,5 +1,8 @@
-cmake_policy(SET CMP0048 NEW)  # project_VERSION* variables populated from project(... VERSION x.x.x) string
+if (POLICY CMP0025)
+  cmake_policy(SET CMP0025 NEW)
+endif ()
 
+cmake_policy(SET CMP0048 NEW)  # project_VERSION* variables populated from project(... VERSION x.x.x) string
 
 project(forte
         VERSION 0.1
@@ -8,6 +11,7 @@ set(forte_AUTHORS      "Francesco A. Evangelista and Group")
 set(forte_DESCRIPTION  "Quantum Chemistry Methods for Strongly Correlated Electrons plugin to Psi4")
 set(forte_URL          "https://github.com/evangelistalab/forte")
 set(forte_LICENSE      "GPL-3.0+")
+set (CMAKE_CXX_STANDARD 11)
 
 cmake_minimum_required(VERSION 3.1 FATAL_ERROR)
 list(APPEND CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/cmake)
@@ -24,16 +28,6 @@ include(autocmake_omp)
 include(autocmake_mpi)  # MPI option A
 #include(custom_static_library)
 
-# Check if compiles SSE4.2 popcnt
-check_cxx_source_compiles(
-"
-#include <nmmintrin.h>
-int main() {
-  return _mm_popcnt_u64(0);
-}
-"
-HAVE_SSE42)
-
 #find_package(psi4 1.1 REQUIRED COMPONENTS ambit chemps2)
 find_package(psi4 1.1 REQUIRED)
 
@@ -47,7 +41,7 @@ endif()
 include(cmake/clang-cxx-dev-tools.cmake)
 include(cmake/git-version.cmake)
 
-
+# Check if we can compile with SSE4.2
 check_cxx_compiler_flag("-msse4.2" SSE42_FLAG)
 if(SSE42_FLAG)
     message("-- Adding SSE4.2 Flag")
@@ -197,7 +191,6 @@ endif()
 #
 option(ENABLE_ForteTests "Enable Forte tests." ON)
 
-set (CMAKE_CXX_STANDARD 11)
 
 if (ENABLE_ForteTests)
   project (forte_tests)
@@ -211,4 +204,5 @@ if (ENABLE_ForteTests)
   add_executable(forte_benchmarks
     src/sparse_ci/ui64_determinant.cc
     tests/benchmark/determinant_benchmark.cc)
+  
 endif (ENABLE_ForteTests)

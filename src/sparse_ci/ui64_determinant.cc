@@ -61,9 +61,9 @@ bool ui64_get_bit(uint64_t x, uint64_t n) { return (0 != (x & (uint64_t(1) << n)
  */
 uint64_t ui64_bit_count(uint64_t x) {
 #ifdef __SSE4_2__
+    // this version is 2.6 times faster than the one below
     return _mm_popcnt_u64(x);
 #else
-    // version based on bitwise operations
     x = (0x5555555555555555UL & x) + (0x5555555555555555UL & (x >> 1));
     x = (0x3333333333333333UL & x) + (0x3333333333333333UL & (x >> 2));
     x = (0x0f0f0f0f0f0f0f0fUL & x) + (0x0f0f0f0f0f0f0f0fUL & (x >> 4));
@@ -85,6 +85,13 @@ uint64_t ui64_bit_count(uint64_t x) {
     //    x = ((x>>4) + x) & 0x0f0f0f0f0f0f0f0fUL; // 0-8 in 8 bits
     //    x *= 0x0101010101010101UL;
     //    return x>>56;
+
+    // version based on bitwise operations from http://answerqueen.com/1m/g29dmjwx1m
+    //    x = x - ((x >> 1) & (uint64_t)~(uint64_t)0/3);                           // temp
+    //    x = (x & (uint64_t)~(uint64_t)0/15*3) + ((x >> 2) & (uint64_t)~(uint64_t)0/15*3);      //
+    //    temp x = (x + (x >> 4)) & (uint64_t)~(uint64_t)0/255*15;                      // temp x =
+    //    (uint64_t)(x * ((uint64_t)~(uint64_t)0/255)) >> (sizeof(uint64_t) - 1) * CHAR_BIT; //
+    //    count
 }
 
 /// Returns the index of the least significant 1-bit of x, or if x is zero, returns ~0.
