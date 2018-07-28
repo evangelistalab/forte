@@ -144,7 +144,16 @@ void forte_old_methods(SharedWavefunction ref_wfn, Options& options,
             aci->add_external_excitations(wfn);
         }
         if( options.get_bool("UNPAIRED_DENSITY")){
-            aci->unpaired_density();
+            SharedMatrix Ua;
+            SharedMatrix Ub;
+
+            Ua = ref_wfn->Ca()->clone();
+            Ub = ref_wfn->Ca()->clone();
+
+            Ua->identity();
+            Ub->identity();
+
+            aci->unpaired_density(Ua, Ub);
         }
     }
     if (options.get_str("JOB_TYPE") == "PCI") {
@@ -598,7 +607,9 @@ void forte_old_methods(SharedWavefunction ref_wfn, Options& options,
             }
 
             if( options.get_bool("UNPAIRED_DENSITY")){
-                aci->unpaired_density();
+                SharedMatrix Uam = semi.Ua();
+                SharedMatrix Ubm = semi.Ub();
+                aci->unpaired_density(Uam, Ubm);
             }
 
 

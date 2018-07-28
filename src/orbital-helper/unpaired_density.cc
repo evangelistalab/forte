@@ -42,14 +42,15 @@
 namespace psi {
 namespace forte {
 
-UPDensity::UPDensity(std::shared_ptr<Wavefunction> wfn, std::shared_ptr<MOSpaceInfo> mo_space_info)
-    : wfn_(wfn), mo_space_info_(mo_space_info) {}
+UPDensity::UPDensity(std::shared_ptr<Wavefunction> wfn, std::shared_ptr<MOSpaceInfo> mo_space_info, SharedMatrix Ua, SharedMatrix Ub)
+    : wfn_(wfn), mo_space_info_(mo_space_info), Uas_(Ua), Ubs_(Ub) {}
 
 void UPDensity::compute_unpaired_density(std::vector<double>& oprdm_a,
                                          std::vector<double>& oprdm_b) {
 
     Dimension nactpi = mo_space_info_->get_dimension("ACTIVE");
     Dimension nmopi = wfn_->nmopi();
+    Dimension ncmopi = mo_space_info_->get_dimension("CORRELATED");
     size_t nirrep = wfn_->nirrep();
     Dimension rdocc = mo_space_info_->get_dimension("RESTRICTED_DOCC");
     Dimension fdocc = mo_space_info_->get_dimension("FROZEN_DOCC");
@@ -70,6 +71,8 @@ void UPDensity::compute_unpaired_density(std::vector<double>& oprdm_a,
         }
         offset += nactpi[h];
     }
+//    opdm_a->transform(Uas_);
+//    opdm_b->transform(Ubs_);
 
     SharedVector OCC_A(new Vector("ALPHA NOCC", nirrep, nactpi));
     SharedVector OCC_B(new Vector("BETA NOCC", nirrep, nactpi));
@@ -81,22 +84,31 @@ void UPDensity::compute_unpaired_density(std::vector<double>& oprdm_a,
 
     // Build the transformation matrix
     // Only build density for active orbitals
-    Matrix Ua("Ua", nmopi, nmopi);
-    Matrix Ub("Ub", nmopi, nmopi);
+    SharedMatrix Ua(new Matrix("Ua", nmopi, nmopi));
+    SharedMatrix Ub(new Matrix("Ub", nmopi, nmopi));
 
-    Ua.zero();
-    Ub.zero();
+//    Ua->identity();
+//    Ub->identity();
+    Ua->zero();
+    Ub->zero();
 
     for (int h = 0; h < nirrep; ++h) {
         size_t irrep_offset = fdocc[h] + rdocc[h];
 
         for (int p = 0; p < nactpi[h]; ++p) {
             for (int q = 0; q < nactpi[h]; ++q) {
-                Ua.set(h, p + irrep_offset, q + irrep_offset, NO_A->get(h, p, q));
-                Ub.set(h, p + irrep_offset, q + irrep_offset, NO_B->get(h, p, q));
+                Ua->set(h, p + irrep_offset, q + irrep_offset, NO_A->get(h, p, q));
+                Ub->set(h, p + irrep_offset, q + irrep_offset, NO_B->get(h, p, q));
             }
         }
     }
+
+    
+    SharedMatrix tmp_a(new Matrix("ta", nmopi, nmopi));
+    SharedMatrix tmp_b(new Matrix("tb", nmopi, nmopi));
+
+    tmp_a->gemm(true,false,1.0,Uas_,Ua,0.0);
+    tmp_b->gemm(true,false,1.0,Ubs_,Ub,0.0);
 
     // Transform the orbital coefficients
     SharedMatrix Ca = wfn_->Ca();
@@ -108,9 +120,11 @@ void UPDensity::compute_unpaired_density(std::vector<double>& oprdm_a,
     Ca_new->zero();
     Cb_new->zero();
 
-    Ca_new->gemm(false, false, 1.0, Ca, Ua, 0.0);
-    Cb_new->gemm(false, false, 1.0, Cb, Ub, 0.0);
+    Ca_new->gemm(false, false, 1.0, Ca, tmp_a, 0.0);
+    Cb_new->gemm(false, false, 1.0, Cb, tmp_b, 0.0);
 
+//    Ca->copy(Ca_new);
+//    Cb->copy(Cb_new);
     // Scale active NOs by unpaired-e criteria
     for (int h = 0; h < nirrep; ++h) {
         int offset = fdocc[h] + rdocc[h];
@@ -118,6 +132,7 @@ void UPDensity::compute_unpaired_density(std::vector<double>& oprdm_a,
             double n_p = OCC_A->get(p) + OCC_B->get(p);
 
             double up_el = n_p * (2.0 - n_p);
+//            double up_el = n_p * n_p * (2.0 - n_p ) * (2.0 - n_p);
             outfile->Printf("\n  Weight for orbital (%d,%d): %1.5f", h, p, up_el);
             Ca_new->scale_column(h, offset + p, up_el);
             Cb_new->scale_column(h, offset + p, up_el);

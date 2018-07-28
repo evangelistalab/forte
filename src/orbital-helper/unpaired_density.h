@@ -43,7 +43,7 @@ namespace forte {
 
 class UPDensity {
   public:
-    UPDensity(std::shared_ptr<Wavefunction> wfn, std::shared_ptr<MOSpaceInfo> mo_space_info);
+    UPDensity(std::shared_ptr<Wavefunction> wfn, std::shared_ptr<MOSpaceInfo> mo_space_info, SharedMatrix Ua, SharedMatrix Ub);
 
     ~UPDensity();
 
@@ -52,6 +52,8 @@ class UPDensity {
   private:
     std::shared_ptr<Wavefunction> wfn_;
     std::shared_ptr<MOSpaceInfo> mo_space_info_;
+    SharedMatrix Uas_;
+    SharedMatrix Ubs_;
 };
 }
 } // End Namespaces

@@ -121,7 +121,8 @@ class AdaptiveCI : public Wavefunction {
     // Update sigma
     void update_sigma();
 
-    void unpaired_density();
+    void unpaired_density(SharedMatrix Ua, SharedMatrix Ub);
+    void unpaired_density(ambit::Tensor Ua, ambit::Tensor Ub);
   private:
     // ==> Class data <==
 
