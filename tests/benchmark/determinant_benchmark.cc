@@ -52,7 +52,7 @@ UI64Determinant det_test =
     make_det_from_string("1001100000000000000000000000000000000000000000000000000000010000",
                          "0001000000000000001000000000000000000000000000000000000000000001");
 
-BENCHMARK(UI64Determinant, count, 10, 1000) {
+BENCHMARK(UI64Determinant, count, 10, 10000) {
     det_test.count_alfa();
     det_test.count_beta();
 }
