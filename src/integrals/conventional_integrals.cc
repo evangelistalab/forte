@@ -382,9 +382,6 @@ void ConventionalIntegrals::resort_integrals_after_freezing() {
     // Resort the integrals
     resort_two(one_electron_integrals_a, cmo2mo);
     resort_two(one_electron_integrals_b, cmo2mo);
-    resort_two(diagonal_aphys_tei_aa, cmo2mo);
-    resort_two(diagonal_aphys_tei_ab, cmo2mo);
-    resort_two(diagonal_aphys_tei_bb, cmo2mo);
 
     resort_four(aphys_tei_aa, cmo2mo);
     resort_four(aphys_tei_ab, cmo2mo);
@@ -415,13 +412,6 @@ void ConventionalIntegrals::resort_four(double*& tei, std::vector<size_t>& map) 
 }
 
 void ConventionalIntegrals::make_diagonal_integrals() {
-    for (size_t p = 0; p < aptei_idx_; ++p) {
-        for (size_t q = 0; q < aptei_idx_; ++q) {
-            diagonal_aphys_tei_aa[p * aptei_idx_ + q] = aptei_aa(p, q, p, q);
-            diagonal_aphys_tei_ab[p * aptei_idx_ + q] = aptei_ab(p, q, p, q);
-            diagonal_aphys_tei_bb[p * aptei_idx_ + q] = aptei_bb(p, q, p, q);
-        }
-    }
 }
 
 void ConventionalIntegrals::make_fock_matrix(SharedMatrix gamma_a, SharedMatrix gamma_b) {

@@ -207,18 +207,6 @@ class ForteIntegrals {
     virtual ambit::Tensor three_integral_block_two_index(const std::vector<size_t>& A, size_t p,
                                                          const std::vector<size_t>& q) = 0;
 
-    /// The diagonal antisymmetrixed alpha-alpha two-electron integrals in
-    /// physicist notation <pq||pq>
-    virtual double diag_aptei_aa(size_t p, size_t q) = 0;
-
-    /// The diagonal antisymmetrixed alpha-beta two-electron integrals in
-    /// physicist notation <pq||pq>
-    virtual double diag_aptei_ab(size_t p, size_t q) = 0;
-
-    /// The diagonal antisymmetrixed beta-beta two-electron integrals in
-    /// physicist notation <pq||pq>
-    virtual double diag_aptei_bb(size_t p, size_t q) = 0;
-
     /// Make a Fock matrix computed with respect to a given determinant
     virtual void make_fock_matrix(SharedMatrix gamma_a, SharedMatrix gamma_b) = 0;
 
@@ -356,11 +344,6 @@ class ForteIntegrals {
     std::vector<double> fock_matrix_a;
     std::vector<double> fock_matrix_b;
 
-    /// Diagonal two-electron integrals (<pq||pq>) stored as a vector
-    std::vector<double> diagonal_aphys_tei_aa;
-    std::vector<double> diagonal_aphys_tei_ab;
-    std::vector<double> diagonal_aphys_tei_bb;
-
     // ==> Class private functions <==
 
     void startup();
@@ -456,15 +439,6 @@ class ConventionalIntegrals : public ForteIntegrals {
                                          const std::vector<size_t>& r,
                                          const std::vector<size_t>& s);
 
-    virtual double diag_aptei_aa(size_t p, size_t q) {
-        return diagonal_aphys_tei_aa[p * aptei_idx_ + q];
-    }
-    virtual double diag_aptei_ab(size_t p, size_t q) {
-        return diagonal_aphys_tei_ab[p * aptei_idx_ + q];
-    }
-    virtual double diag_aptei_bb(size_t p, size_t q) {
-        return diagonal_aphys_tei_bb[p * aptei_idx_ + q];
-    }
     virtual double three_integral(size_t, size_t, size_t) {
         outfile->Printf("\n Oh no!, you tried to grab a ThreeIntegral but this "
                         "is not there!!");
@@ -555,15 +529,6 @@ class CholeskyIntegrals : public ForteIntegrals {
                                          const std::vector<size_t>& r,
                                          const std::vector<size_t>& s);
 
-    virtual double diag_aptei_aa(size_t p, size_t q) {
-        return diagonal_aphys_tei_aa[p * aptei_idx_ + q];
-    }
-    virtual double diag_aptei_ab(size_t p, size_t q) {
-        return diagonal_aphys_tei_ab[p * aptei_idx_ + q];
-    }
-    virtual double diag_aptei_bb(size_t p, size_t q) {
-        return diagonal_aphys_tei_bb[p * aptei_idx_ + q];
-    }
     virtual double three_integral(size_t A, size_t p, size_t q) {
         return ThreeIntegral_->get(p * aptei_idx_ + q, A);
     }
@@ -633,15 +598,6 @@ class DFIntegrals : public ForteIntegrals {
                                          const std::vector<size_t>& r,
                                          const std::vector<size_t>& s);
 
-    virtual double diag_aptei_aa(size_t p, size_t q) {
-        return diagonal_aphys_tei_aa[p * aptei_idx_ + q];
-    }
-    virtual double diag_aptei_ab(size_t p, size_t q) {
-        return diagonal_aphys_tei_ab[p * aptei_idx_ + q];
-    }
-    virtual double diag_aptei_bb(size_t p, size_t q) {
-        return diagonal_aphys_tei_bb[p * aptei_idx_ + q];
-    }
     virtual double three_integral(size_t A, size_t p, size_t q) {
         return ThreeIntegral_->get(p * aptei_idx_ + q, A);
     }
