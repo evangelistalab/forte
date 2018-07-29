@@ -85,13 +85,6 @@ DFIntegrals::DFIntegrals(psi::Options& options, SharedWavefunction ref_wfn,
 DFIntegrals::~DFIntegrals() { deallocate(); }
 
 void DFIntegrals::allocate() {
-    // Allocate the memory required to store the one-electron integrals
-    // Allocate the memory required to store the two-electron integrals
-    diagonal_aphys_tei_aa = new double[nmo_ * nmo_];
-    diagonal_aphys_tei_ab = new double[nmo_ * nmo_];
-    diagonal_aphys_tei_bb = new double[nmo_ * nmo_];
-
-    // qt_pitzer_ = new int[nmo_];
 }
 
 double DFIntegrals::aptei_aa(size_t p, size_t q, size_t r, size_t s) {
@@ -264,14 +257,6 @@ void DFIntegrals::make_diagonal_integrals() {
 }
 
 void DFIntegrals::deallocate() {
-
-    // Deallocate the memory required to store the one-electron integrals
-    // Allocate the memory required to store the two-electron integrals
-
-    delete[] diagonal_aphys_tei_aa;
-    delete[] diagonal_aphys_tei_ab;
-    delete[] diagonal_aphys_tei_bb;
-    // delete[] qt_pitzer_;
 }
 
 void DFIntegrals::make_fock_matrix(SharedMatrix gamma_aM, SharedMatrix gamma_bM) {

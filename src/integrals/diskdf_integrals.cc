@@ -95,13 +95,6 @@ DISKDFIntegrals::DISKDFIntegrals(psi::Options& options, SharedWavefunction ref_w
 DISKDFIntegrals::~DISKDFIntegrals() { deallocate(); }
 
 void DISKDFIntegrals::allocate() {
-    // Allocate the memory required to store the one-electron integrals
-    // Allocate the memory required to store the two-electron integrals
-    diagonal_aphys_tei_aa = new double[nmo_ * nmo_];
-    diagonal_aphys_tei_ab = new double[nmo_ * nmo_];
-    diagonal_aphys_tei_bb = new double[nmo_ * nmo_];
-
-    // qt_pitzer_ = new int[nmo_];
 }
 
 double DISKDFIntegrals::aptei_aa(size_t p, size_t q, size_t r, size_t s) {
@@ -515,14 +508,8 @@ void DISKDFIntegrals::make_diagonal_integrals() {
 }
 
 void DISKDFIntegrals::deallocate() {
-
-    // Deallocate the memory required to store the one-electron integrals
-    // Allocate the memory required to store the two-electron integrals
-
-    delete[] diagonal_aphys_tei_aa;
-    delete[] diagonal_aphys_tei_ab;
-    delete[] diagonal_aphys_tei_bb;
 }
+
 void DISKDFIntegrals::make_fock_matrix(SharedMatrix gamma_aM, SharedMatrix gamma_bM) {
     // Efficient calculation of fock matrix from disk
     // Since gamma_aM is very sparse (diagonal elements of core and active
