@@ -69,15 +69,6 @@ class CustomIntegrals : public ForteIntegrals {
                                          const std::vector<size_t>& r,
                                          const std::vector<size_t>& s);
 
-    virtual double diag_aptei_aa(size_t p, size_t q) {
-        return diagonal_aphys_tei_aa[p * aptei_idx_ + q];
-    }
-    virtual double diag_aptei_ab(size_t p, size_t q) {
-        return diagonal_aphys_tei_ab[p * aptei_idx_ + q];
-    }
-    virtual double diag_aptei_bb(size_t p, size_t q) {
-        return diagonal_aphys_tei_bb[p * aptei_idx_ + q];
-    }
     virtual double three_integral(size_t, size_t, size_t) {
         outfile->Printf("\n Oh no!, you tried to grab a ThreeIntegral but this "
                         "is not there!!");
@@ -113,8 +104,6 @@ class CustomIntegrals : public ForteIntegrals {
     // Allocates memory for a antisymmetrized tei (nmo_^4)
     virtual void allocate();
     virtual void deallocate();
-    // Calculates the diagonal integrals from aptei
-    virtual void make_diagonal_integrals();
     virtual void resort_integrals_after_freezing();
     virtual void resort_four(double*& tei, std::vector<size_t>& map);
     void resort_four(std::vector<double>& tei, std::vector<size_t>& map);
@@ -132,9 +121,6 @@ class CustomIntegrals : public ForteIntegrals {
     std::vector<double> aphys_tei_aa;
     std::vector<double> aphys_tei_ab;
     std::vector<double> aphys_tei_bb;
-    std::vector<double> diagonal_aphys_tei_aa;
-    std::vector<double> diagonal_aphys_tei_ab;
-    std::vector<double> diagonal_aphys_tei_bb;
 };
 
 } // namespace forte

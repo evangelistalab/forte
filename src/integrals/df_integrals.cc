@@ -71,7 +71,6 @@ DFIntegrals::DFIntegrals(psi::Options& options, SharedWavefunction ref_wfn,
 #endif
     if (my_proc == 0) {
         gather_integrals();
-        make_diagonal_integrals();
         if (ncmo_ < nmo_) {
             freeze_core_orbitals();
             // Set the new value of the number of orbitals to be used in
@@ -244,9 +243,6 @@ void DFIntegrals::gather_integrals() {
 
     // Store as transpose for now
     ThreeIntegral_ = Bpq->transpose()->clone();
-}
-
-void DFIntegrals::make_diagonal_integrals() {
 }
 
 void DFIntegrals::deallocate() {

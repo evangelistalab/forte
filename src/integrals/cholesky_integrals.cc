@@ -65,7 +65,6 @@ CholeskyIntegrals::CholeskyIntegrals(psi::Options& options, SharedWavefunction r
     Timer CholInt;
     allocate();
     gather_integrals();
-    make_diagonal_integrals();
     if (ncmo_ < nmo_) {
         freeze_core_orbitals();
         // Set the new value of the number of orbitals to be used in indexing
@@ -76,8 +75,6 @@ CholeskyIntegrals::CholeskyIntegrals(psi::Options& options, SharedWavefunction r
 }
 
 CholeskyIntegrals::~CholeskyIntegrals() { deallocate(); }
-void CholeskyIntegrals::make_diagonal_integrals() {
-}
 
 double CholeskyIntegrals::aptei_aa(size_t p, size_t q, size_t r, size_t s) {
     double vpqrsalphaC = 0.0;

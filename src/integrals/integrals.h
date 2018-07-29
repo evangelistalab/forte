@@ -237,9 +237,11 @@ class ForteIntegrals {
     /// Expert Option: just try and use three_integral
     virtual double** three_integral_pointer() = 0;
 
-    /// Tell which integrals were used
+    /// Return the type of integral used
     IntegralType integral_type() { return integral_type_; }
+    /// Return the one-body symmetry integrals
     SharedMatrix OneBody_symm() { return OneBody_symm_; }
+    /// Return the one-body AO integrals
     SharedMatrix OneBodyAO() { return OneIntsAO_; }
     /// Set to either delete frozen core integrals or keep them
     void keep_frozen_core_integrals(IntegralFrozenCore keep_frozen_core) {
@@ -310,9 +312,20 @@ class ForteIntegrals {
     /// nfzcpi - nfzvpi.
     Dimension ncmopi_;
 
+    /// The number of orbitals used in indexing routines (nmo or ncmo if core orbitals are frozen)
+    /// The correct value is set by the integrals class
     size_t aptei_idx_;
+    /// The number of symmetry orbitals
     size_t nso_;
-    static bool have_omp_;
+
+    // OMP
+    // Is OMP available?
+#ifdef _OPENMP
+    static const bool have_omp_ = true;
+#else
+    static const bool have_omp_ = false;
+#endif
+    /// The number of OMP threads
     int num_threads_;
 
     /// Number of one electron integrals
@@ -359,8 +372,6 @@ class ForteIntegrals {
 
     /// Deallocate memory
     virtual void deallocate();
-
-    virtual void make_diagonal_integrals() = 0;
 
     /// This function manages freezing core and virtual orbitals
     void freeze_core_orbitals();
@@ -467,7 +478,6 @@ class ConventionalIntegrals : public ForteIntegrals {
     virtual size_t nthree() const { throw PSIEXCEPTION("Wrong Int_Type"); }
 
   private:
-
     /// Transform the integrals
     void transform_integrals();
 
@@ -475,8 +485,6 @@ class ConventionalIntegrals : public ForteIntegrals {
     // Allocates memory for a antisymmetrized tei (nmo_^4)
     virtual void allocate();
     virtual void deallocate();
-    // Calculates the diagonal integrals from aptei
-    virtual void make_diagonal_integrals();
     virtual void resort_integrals_after_freezing();
     virtual void resort_four(double*& tei, std::vector<size_t>& map);
     virtual void resort_three(std::shared_ptr<Matrix>&, std::vector<size_t>&) {}
@@ -554,7 +562,6 @@ class CholeskyIntegrals : public ForteIntegrals {
     /// Allocates diagonal integrals
     virtual void allocate();
     virtual void deallocate();
-    virtual void make_diagonal_integrals();
     virtual void resort_three(std::shared_ptr<Matrix>& threeint, std::vector<size_t>& map);
     virtual void resort_integrals_after_freezing();
     void transform_integrals();
@@ -618,8 +625,6 @@ class DFIntegrals : public ForteIntegrals {
     virtual void gather_integrals();
     virtual void allocate();
     virtual void deallocate();
-    // Grabs DF integrals with new Ca coefficients
-    virtual void make_diagonal_integrals();
     virtual void resort_three(std::shared_ptr<Matrix>& threeint, std::vector<size_t>& map);
     virtual void resort_integrals_after_freezing();
     virtual void resort_four(double*&, std::vector<size_t>&) {}
@@ -684,8 +689,6 @@ class DISKDFIntegrals : public ForteIntegrals {
     virtual void gather_integrals();
     virtual void allocate();
     virtual void deallocate();
-    // Grabs DF integrals with new Ca coefficients
-    virtual void make_diagonal_integrals();
     virtual void resort_three(std::shared_ptr<Matrix>& threeint, std::vector<size_t>& map);
     virtual void resort_integrals_after_freezing();
     virtual void resort_four(double*&, std::vector<size_t>&) {}
@@ -753,8 +756,6 @@ class DistDFIntegrals : public ForteIntegrals {
     virtual void gather_integrals();
     virtual void allocate();
     virtual void deallocate();
-    // Grabs DF integrals with new Ca coefficients
-    virtual void make_diagonal_integrals() {}
     virtual void resort_three(std::shared_ptr<Matrix>& /*threeint*/, std::vector<size_t>& /*map*/) {
     }
     virtual void resort_integrals_after_freezing() {}
@@ -846,7 +847,6 @@ class OwnIntegrals : public ForteIntegrals {
     virtual void gather_integrals() {}
     virtual void allocate() {}
     virtual void deallocate() {}
-    virtual void make_diagonal_integrals() {}
     virtual void resort_three(std::shared_ptr<Matrix>& /*threeint*/, std::vector<size_t>& /*map*/) {
     }
     virtual void resort_integrals_after_freezing() {}
