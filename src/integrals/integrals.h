@@ -467,8 +467,6 @@ class ConventionalIntegrals : public ForteIntegrals {
     virtual size_t nthree() const { throw PSIEXCEPTION("Wrong Int_Type"); }
 
   private:
-    /// Wavefunction object
-    SharedWavefunction wfn_;
 
     /// Transform the integrals
     void transform_integrals();
@@ -551,8 +549,6 @@ class CholeskyIntegrals : public ForteIntegrals {
     SharedMatrix L_ao_;
 
   private:
-    /// Wavefuntion object
-    SharedWavefunction wfn_;
     /// Computes Cholesky integrals
     virtual void gather_integrals();
     /// Allocates diagonal integrals
@@ -619,8 +615,6 @@ class DFIntegrals : public ForteIntegrals {
     virtual size_t nthree() const { return nthree_; }
 
   private:
-    SharedWavefunction wfn_;
-
     virtual void gather_integrals();
     virtual void allocate();
     virtual void deallocate();
@@ -687,7 +681,6 @@ class DISKDFIntegrals : public ForteIntegrals {
     virtual size_t nthree() const { return nthree_; }
 
   private:
-    SharedWavefunction wfn_;
     virtual void gather_integrals();
     virtual void allocate();
     virtual void deallocate();
@@ -757,7 +750,6 @@ class DistDFIntegrals : public ForteIntegrals {
     virtual int ga_handle() { return DistDF_ga_; }
 
   private:
-    SharedWavefunction wfn_;
     virtual void gather_integrals();
     virtual void allocate();
     virtual void deallocate();
@@ -851,7 +843,6 @@ class OwnIntegrals : public ForteIntegrals {
     virtual size_t nthree() const { return 1; }
 
   private:
-    SharedWavefunction wfn_;
     virtual void gather_integrals() {}
     virtual void allocate() {}
     virtual void deallocate() {}
