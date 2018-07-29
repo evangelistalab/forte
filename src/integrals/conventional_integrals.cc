@@ -63,7 +63,6 @@ ConventionalIntegrals::ConventionalIntegrals(psi::Options& options, SharedWavefu
     allocate();
 
     gather_integrals();
-    make_diagonal_integrals();
     if (ncmo_ < nmo_) {
         freeze_core_orbitals();
         // Set the new value of the number of orbitals to be used in indexing
@@ -409,9 +408,6 @@ void ConventionalIntegrals::resort_four(double*& tei, std::vector<size_t>& map) 
     // Delete old integrals and assign the pointer
     delete[] tei;
     tei = temp_ints;
-}
-
-void ConventionalIntegrals::make_diagonal_integrals() {
 }
 
 void ConventionalIntegrals::make_fock_matrix(SharedMatrix gamma_a, SharedMatrix gamma_b) {

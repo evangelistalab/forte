@@ -64,8 +64,6 @@ CustomIntegrals::CustomIntegrals(psi::Options& options, SharedWavefunction ref_w
 
     gather_integrals();
 
-    make_diagonal_integrals();
-
     if (ncmo_ < nmo_) {
         freeze_core_orbitals();
         // Set the new value of the number of orbitals to be used in indexing
@@ -83,10 +81,6 @@ void CustomIntegrals::allocate() {
     aphys_tei_aa.resize(num_aptei);
     aphys_tei_ab.resize(num_aptei);
     aphys_tei_bb.resize(num_aptei);
-
-    diagonal_aphys_tei_aa.resize(aptei_idx_ * aptei_idx_);
-    diagonal_aphys_tei_ab.resize(aptei_idx_ * aptei_idx_);
-    diagonal_aphys_tei_bb.resize(aptei_idx_ * aptei_idx_);
 }
 
 void CustomIntegrals::deallocate() {
@@ -206,9 +200,6 @@ void CustomIntegrals::resort_integrals_after_freezing() {
     // Resort the integrals
     resort_two(one_electron_integrals_a, cmo2mo);
     resort_two(one_electron_integrals_b, cmo2mo);
-    resort_two(diagonal_aphys_tei_aa, cmo2mo);
-    resort_two(diagonal_aphys_tei_ab, cmo2mo);
-    resort_two(diagonal_aphys_tei_bb, cmo2mo);
 
     resort_four(aphys_tei_aa, cmo2mo);
     resort_four(aphys_tei_ab, cmo2mo);
@@ -255,16 +246,6 @@ void CustomIntegrals::resort_four(std::vector<double>& tei, std::vector<size_t>&
     }
     // Swap old integrals with new
     tei.swap(temp_ints);
-}
-
-void CustomIntegrals::make_diagonal_integrals() {
-    for (size_t p = 0; p < aptei_idx_; ++p) {
-        for (size_t q = 0; q < aptei_idx_; ++q) {
-            diagonal_aphys_tei_aa[p * aptei_idx_ + q] = aptei_aa(p, q, p, q);
-            diagonal_aphys_tei_ab[p * aptei_idx_ + q] = aptei_ab(p, q, p, q);
-            diagonal_aphys_tei_bb[p * aptei_idx_ + q] = aptei_bb(p, q, p, q);
-        }
-    }
 }
 
 void CustomIntegrals::make_fock_matrix(SharedMatrix gamma_a, SharedMatrix gamma_b) {

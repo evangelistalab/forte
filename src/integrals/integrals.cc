@@ -327,7 +327,6 @@ void ForteIntegrals::compute_frozen_one_body_operator() {
 
 void ForteIntegrals::update_integrals(bool freeze_core) {
     Timer freezeOrbs;
-    make_diagonal_integrals();
     if (freeze_core) {
         if (ncmo_ < nmo_) {
             freeze_core_orbitals();
