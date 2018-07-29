@@ -55,7 +55,7 @@ class MOSpaceInfo;
 /// This decides the type of transformation: resticted vs. unrestricted
 enum IntegralSpinRestriction { RestrictedMOs, UnrestrictedMOs };
 enum IntegralFrozenCore { RemoveFrozenMOs, KeepFrozenMOs };
-enum IntegralType { ConventionalInts, DF, Cholesky, DiskDF, DistDF, Own, Custom };
+enum IntegralType { Conventional, DF, Cholesky, DiskDF, DistDF, Own, Custom };
 // The integrals implementation is in a cc file for each class.
 // DFIntegrals->df_integrals.cc
 

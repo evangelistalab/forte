@@ -61,11 +61,9 @@ namespace forte {
 
 #ifdef _OPENMP
 #include <omp.h>
-bool ForteIntegrals::have_omp_ = true;
 #else
 #define omp_get_max_threads() 1
 #define omp_get_thread_num() 0
-bool ForteIntegrals::have_omp_ = false;
 #endif
 
 void set_INT_options(ForteOptions& foptions) {
@@ -111,7 +109,6 @@ void ForteIntegrals::startup() {
     if (not wfn_) {
         outfile->Printf("\n  No wave function object found!  Run a scf "
                         "calculation first!\n");
-
         exit(1);
     }
 

@@ -60,8 +60,6 @@ DFIntegrals::DFIntegrals(psi::Options& options, SharedWavefunction ref_wfn,
     // If code calls constructor print things
     // But if someone calls retransform integrals do not print it
 
-    wfn_ = ref_wfn;
-
     outfile->Printf("\n  DFIntegrals overall time");
     Timer DFInt;
     allocate();
