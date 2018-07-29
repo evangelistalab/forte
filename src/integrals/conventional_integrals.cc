@@ -76,16 +76,10 @@ ConventionalIntegrals::ConventionalIntegrals(psi::Options& options, SharedWavefu
 ConventionalIntegrals::~ConventionalIntegrals() { deallocate(); }
 
 void ConventionalIntegrals::allocate() {
-    // Allocate the memory required to store the one-electron integrals
-
     // Allocate the memory required to store the two-electron integrals
     aphys_tei_aa = new double[num_aptei];
     aphys_tei_ab = new double[num_aptei];
     aphys_tei_bb = new double[num_aptei];
-
-    diagonal_aphys_tei_aa = new double[aptei_idx_ * aptei_idx_];
-    diagonal_aphys_tei_ab = new double[aptei_idx_ * aptei_idx_];
-    diagonal_aphys_tei_bb = new double[aptei_idx_ * aptei_idx_];
 }
 
 void ConventionalIntegrals::deallocate() {
@@ -97,12 +91,6 @@ void ConventionalIntegrals::deallocate() {
     delete[] aphys_tei_aa;
     delete[] aphys_tei_ab;
     delete[] aphys_tei_bb;
-
-    delete[] diagonal_aphys_tei_aa;
-    delete[] diagonal_aphys_tei_ab;
-    delete[] diagonal_aphys_tei_bb;
-
-    // delete[] qt_pitzer_;
 }
 
 void ConventionalIntegrals::transform_integrals() {

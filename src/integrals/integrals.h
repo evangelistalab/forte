@@ -55,7 +55,7 @@ class MOSpaceInfo;
 /// This decides the type of transformation: resticted vs. unrestricted
 enum IntegralSpinRestriction { RestrictedMOs, UnrestrictedMOs };
 enum IntegralFrozenCore { RemoveFrozenMOs, KeepFrozenMOs };
-enum IntegralType { ConventionalInts, DF, Cholesky, DiskDF, DistDF, Own };
+enum IntegralType { ConventionalInts, DF, Cholesky, DiskDF, DistDF, Own, Custom };
 // The integrals implementation is in a cc file for each class.
 // DFIntegrals->df_integrals.cc
 
@@ -95,7 +95,6 @@ class ForteIntegrals {
 
     /// Return the number of irreducible representations
     int nirrep() const { return nirrep_; }
-
 
     /// Return the number of frozen core orbitals per irrep
     Dimension& frzcpi() { return frzcpi_; }
@@ -139,35 +138,26 @@ class ForteIntegrals {
     double get_fock_b(size_t p, size_t q) { return fock_matrix_b[p * aptei_idx_ + q]; }
 
     /// Get the alpha fock matrix in std::vector format
-    /// It seems to me (York) ncmo_ will always be the same as aptei_idx_
-    std::vector<double> get_fock_a() const {
-        std::vector<double> fock_stl(fock_matrix_a, fock_matrix_a + ncmo_ * ncmo_);
-        return fock_stl;
-    }
+    std::vector<double> get_fock_a() const { return fock_matrix_a; }
 
     /// Get the beta fock matrix in std::vector format
-    std::vector<double> get_fock_b() const {
-        std::vector<double> fock_stl(fock_matrix_b, fock_matrix_b + ncmo_ * ncmo_);
-        return fock_stl;
-    }
+    std::vector<double> get_fock_b() const { return fock_matrix_b; }
 
-    /// Set the alpha fock matrix using a std::vector
+    /// Set the alpha fock matrix
     void set_fock_a(const std::vector<double>& fock_stl) {
-        size_t fock_size = fock_stl.size();
-        if (fock_size > ncmo_ * ncmo_) {
+        if (fock_stl.size() > ncmo_ * ncmo_) {
             throw PSIEXCEPTION("Cannot fill in fock_matrix_a because the vector is out-of-range.");
         } else {
-            std::copy(fock_stl.begin(), fock_stl.end(), fock_matrix_a);
+            fock_matrix_a = fock_stl;
         }
     }
 
-    /// Set the beta fock matrix using a std::vector
+    /// Set the beta fock matrix
     void set_fock_b(const std::vector<double>& fock_stl) {
-        size_t fock_size = fock_stl.size();
-        if (fock_size > ncmo_ * ncmo_) {
+        if (fock_stl.size() > ncmo_ * ncmo_) {
             throw PSIEXCEPTION("Cannot fill in fock_matrix_b because the vector is out-of-range.");
         } else {
-            std::copy(fock_stl.begin(), fock_stl.end(), fock_matrix_b);
+            fock_matrix_b = fock_stl;
         }
     }
 
@@ -277,12 +267,12 @@ class ForteIntegrals {
     std::vector<SharedMatrix> AOdipole_ints() { return AOdipole_ints_; }
 
     /**
-      * Compute MO dipole integrals
-      * @param alpha if true, compute MO dipole using Ca, else Cb
-      * @param resort if true, MOdipole ints are sorted to Pitzer order, otherwise in C1 order
-      * @return a vector of MOdipole ints in X, Y, Z order,
-      *         each of which is a nmo by nmo SharedMatrix
-      */
+     * Compute MO dipole integrals
+     * @param alpha if true, compute MO dipole using Ca, else Cb
+     * @param resort if true, MOdipole ints are sorted to Pitzer order, otherwise in C1 order
+     * @return a vector of MOdipole ints in X, Y, Z order,
+     *         each of which is a nmo by nmo SharedMatrix
+     */
     std::vector<SharedMatrix> compute_MOdipole_ints(const bool& alpha = true,
                                                     const bool& resort = false);
 
@@ -350,16 +340,24 @@ class ForteIntegrals {
     std::vector<int> pair_irrep_map;
     std::vector<int> pair_index_map;
 
+    /// Scalar energy term
     double scalar_;
+
     /// The MOSpaceInfo object
     std::shared_ptr<MOSpaceInfo> mo_space_info_;
 
     /// One-electron integrals stored as a vector
-    double* one_electron_integrals_a;
-    double* one_electron_integrals_b;
+    std::vector<double> one_electron_integrals_a;
+    std::vector<double> one_electron_integrals_b;
 
-    double* fock_matrix_a;
-    double* fock_matrix_b;
+    /// Fock matrix stored as a vector
+    std::vector<double> fock_matrix_a;
+    std::vector<double> fock_matrix_b;
+
+    /// Diagonal two-electron integrals (<pq||pq>) stored as a vector
+    std::vector<double> diagonal_aphys_tei_aa;
+    std::vector<double> diagonal_aphys_tei_ab;
+    std::vector<double> diagonal_aphys_tei_bb;
 
     // ==> Class private functions <==
 
@@ -367,7 +365,7 @@ class ForteIntegrals {
 
     void transform_one_electron_integrals();
 
-    void resort_two(double*& ints, std::vector<size_t>& map);
+    void resort_two(std::vector<double>& ints, std::vector<size_t>& map);
 
     // ==> Class private virtual functions <==
 
@@ -399,7 +397,7 @@ class ForteIntegrals {
     /// computes/reads integrals
     virtual void gather_integrals() = 0;
     /// The B tensor
-   // std::shared_ptr<psi::Tensor> B_;
+    // std::shared_ptr<psi::Tensor> B_;
     std::shared_ptr<DFHelper> df_;
 
     /// The mapping from correlated to actual MO
@@ -523,9 +521,6 @@ class ConventionalIntegrals : public ForteIntegrals {
     double* aphys_tei_aa;
     double* aphys_tei_ab;
     double* aphys_tei_bb;
-    double* diagonal_aphys_tei_aa;
-    double* diagonal_aphys_tei_ab;
-    double* diagonal_aphys_tei_bb;
 };
 
 /// Classes written by Kevin Hannon
@@ -606,9 +601,6 @@ class CholeskyIntegrals : public ForteIntegrals {
         throw PSIEXCEPTION("No four integrals to sort");
     }
     std::shared_ptr<Matrix> ThreeIntegral_;
-    double* diagonal_aphys_tei_aa;
-    double* diagonal_aphys_tei_ab;
-    double* diagonal_aphys_tei_bb;
     size_t nthree_ = 0;
 };
 
@@ -681,11 +673,9 @@ class DFIntegrals : public ForteIntegrals {
     virtual void resort_four(double*&, std::vector<size_t>&) {}
 
     std::shared_ptr<Matrix> ThreeIntegral_;
-    double* diagonal_aphys_tei_aa;
-    double* diagonal_aphys_tei_ab;
-    double* diagonal_aphys_tei_bb;
     size_t nthree_ = 0;
 };
+
 /// A DiskDFIntegrals class for avoiding the storage of the ThreeIntegral tensor
 /// Assumes that the DFIntegrals are stored in a binary file generated by
 /// DF_Helper
@@ -750,9 +740,6 @@ class DISKDFIntegrals : public ForteIntegrals {
     virtual void resort_four(double*&, std::vector<size_t>&) {}
 
     std::shared_ptr<Matrix> ThreeIntegral_;
-    double* diagonal_aphys_tei_aa;
-    double* diagonal_aphys_tei_ab;
-    double* diagonal_aphys_tei_bb;
     size_t nthree_ = 0;
 };
 
@@ -827,9 +814,6 @@ class DistDFIntegrals : public ForteIntegrals {
     int DistDF_ga_;
 
     std::shared_ptr<Matrix> ThreeIntegral_;
-    double* diagonal_aphys_tei_aa;
-    double* diagonal_aphys_tei_ab;
-    double* diagonal_aphys_tei_bb;
     size_t nthree_ = 0;
     /// Assuming integrals are stored on disk
     /// Reads the block of integrals present for each process
@@ -840,6 +824,7 @@ class DistDFIntegrals : public ForteIntegrals {
     void test_distributed_integrals();
 };
 #endif
+
 /// This class is used if the user wants to generate their own integrals for
 /// their method.
 /// This would be very useful for CI based methods (the integrals class is
@@ -919,7 +904,8 @@ class OwnIntegrals : public ForteIntegrals {
     virtual void resort_four(double*&, std::vector<size_t>&) {}
     ambit::Tensor blank_tensor_;
 };
-}
-} // End Namespaces
+
+} // namespace forte
+} // namespace psi
 
 #endif // _integrals_h_

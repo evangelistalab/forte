@@ -122,6 +122,7 @@ src/fci/string_vo_list.cc
 src/fci/string_vvoo_list.cc
 src/integrals/cholesky_integrals.cc
 src/integrals/conventional_integrals.cc
+src/integrals/custom_integrals.cc
 src/integrals/df_integrals.cc
 src/integrals/diskdf_integrals.cc
 src/integrals/distribute_df_integrals.cc

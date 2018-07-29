@@ -152,41 +152,35 @@ void ForteIntegrals::startup() {
 }
 
 void ForteIntegrals::ForteIntegrals::allocate() {
-    // Allocate the memory required to store the one-electron integrals
-    one_electron_integrals_a = new double[nmo_ * nmo_];
-    one_electron_integrals_b = new double[nmo_ * nmo_];
+    // Allocate the memory required to store the one-electron integrals, fock matrices, diagonal two
+    // electrons integrals
+    one_electron_integrals_a.assign(nmo_ * nmo_,0.0);
+    one_electron_integrals_b.assign(nmo_ * nmo_,0.0);
 
-    fock_matrix_a = new double[nmo_ * nmo_];
-    fock_matrix_b = new double[nmo_ * nmo_];
+    fock_matrix_a.assign(nmo_ * nmo_,0.0);
+    fock_matrix_b.assign(nmo_ * nmo_,0.0);
+
+    diagonal_aphys_tei_aa.assign(nmo_ * nmo_,0.0);
+    diagonal_aphys_tei_ab.assign(nmo_ * nmo_,0.0);
+    diagonal_aphys_tei_bb.assign(nmo_ * nmo_,0.0);
 }
 
 void ForteIntegrals::ForteIntegrals::deallocate() {
-    // Deallocate the memory required to store the one-electron integrals
-    delete[] one_electron_integrals_a;
-    delete[] one_electron_integrals_b;
-
-    delete[] fock_matrix_a;
-    delete[] fock_matrix_b;
 }
 
-void ForteIntegrals::ForteIntegrals::resort_two(double*& ints, std::vector<size_t>& map) {
+void ForteIntegrals::ForteIntegrals::resort_two(std::vector<double>& ints, std::vector<size_t>& map) {
     // Store the integrals in a temporary array of dimension nmo x nmo
-    double* temp_ints = new double[nmo_ * nmo_];
-    for (size_t p = 0; p < nmo_ * nmo_; ++p) {
-        temp_ints[p] = 0.0;
-    }
+    std::vector<double> temp_ints(nmo_ * nmo_, 0.0);
     for (size_t p = 0; p < ncmo_; ++p) {
         for (size_t q = 0; q < ncmo_; ++q) {
             temp_ints[p * ncmo_ + q] = ints[map[p] * nmo_ + map[q]];
         }
     }
-    // Delete old integrals and assign the pointer
-    delete[] ints;
-    ints = temp_ints;
+    ints.swap(temp_ints);
 }
 
 void ForteIntegrals::ForteIntegrals::set_oei(double** ints, bool alpha) {
-    double* p_oei = alpha ? one_electron_integrals_a : one_electron_integrals_b;
+    std::vector<double>& p_oei = alpha ? one_electron_integrals_a : one_electron_integrals_b;
     for (size_t p = 0; p < aptei_idx_; ++p) {
         for (size_t q = 0; q < aptei_idx_; ++q) {
             p_oei[p * aptei_idx_ + q] = ints[p][q];
@@ -195,7 +189,7 @@ void ForteIntegrals::ForteIntegrals::set_oei(double** ints, bool alpha) {
 }
 
 void ForteIntegrals::set_oei(size_t p, size_t q, double value, bool alpha) {
-    double* p_oei = alpha ? one_electron_integrals_a : one_electron_integrals_b;
+    std::vector<double>& p_oei = alpha ? one_electron_integrals_a : one_electron_integrals_b;
     p_oei[p * aptei_idx_ + q] = value;
 }
 

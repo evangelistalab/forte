@@ -300,23 +300,9 @@ void CholeskyIntegrals::transform_integrals() {
 }
 
 void CholeskyIntegrals::allocate() {
-    // Allocate the memory required to store the one-electron integrals
-
-    // Allocate the memory required to store the two-electron integrals
-    diagonal_aphys_tei_aa = new double[nmo_ * nmo_];
-    diagonal_aphys_tei_ab = new double[nmo_ * nmo_];
-    diagonal_aphys_tei_bb = new double[nmo_ * nmo_];
 }
 
 void CholeskyIntegrals::deallocate() {
-
-    // Deallocate the memory required to store the one-electron integrals
-
-    delete[] diagonal_aphys_tei_aa;
-    delete[] diagonal_aphys_tei_ab;
-    delete[] diagonal_aphys_tei_bb;
-
-    // delete[] qt_pitzer_;
 }
 
 void CholeskyIntegrals::make_fock_matrix(SharedMatrix gamma_aM, SharedMatrix gamma_bM) {
@@ -342,8 +328,8 @@ void CholeskyIntegrals::make_fock_matrix(SharedMatrix gamma_aM, SharedMatrix gam
                 sizeof(double) * nthree_ * ncmo_ * ncmo_);
     std::memcpy(&gamma_a.data()[0], gamma_aM->pointer()[0], sizeof(double) * ncmo_ * ncmo_);
     std::memcpy(&gamma_b.data()[0], gamma_bM->pointer()[0], sizeof(double) * ncmo_ * ncmo_);
-    std::memcpy(&fock_a.data()[0], one_electron_integrals_a, sizeof(double) * ncmo_ * ncmo_);
-    std::memcpy(&fock_b.data()[0], one_electron_integrals_b, sizeof(double) * ncmo_ * ncmo_);
+    fock_a.data() = one_electron_integrals_a;
+    fock_b.data() = one_electron_integrals_b;
 
     // fock_a.iterate([&](const std::vector<size_t>& i,double& value){
     //    value = one_electron_integrals_a[i[0] * aptei_idx_ + i[1]];
@@ -367,8 +353,10 @@ void CholeskyIntegrals::make_fock_matrix(SharedMatrix gamma_aM, SharedMatrix gam
     // fock_b.iterate([&](const std::vector<size_t>& i,double& value){
     //    fock_matrix_b[i[0] * aptei_idx_ + i[1]] = value;
     //});
-    std::memcpy(fock_matrix_a, &fock_a.data()[0], sizeof(double) * ncmo_ * ncmo_);
-    std::memcpy(fock_matrix_b, &fock_b.data()[0], sizeof(double) * ncmo_ * ncmo_);
+    fock_matrix_a = fock_a.data();
+    fock_matrix_b = fock_b.data();
+//    std::memcpy(fock_matrix_a, &fock_a.data()[0], sizeof(double) * ncmo_ * ncmo_);
+//    std::memcpy(fock_matrix_b, &fock_b.data()[0], sizeof(double) * ncmo_ * ncmo_);
 }
 
 void CholeskyIntegrals::resort_integrals_after_freezing() {
