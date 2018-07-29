@@ -157,8 +157,8 @@ void ForteIntegrals::ForteIntegrals::allocate() {
     one_electron_integrals_a.assign(nmo_ * nmo_,0.0);
     one_electron_integrals_b.assign(nmo_ * nmo_,0.0);
 
-    fock_matrix_a.assign(nmo_ * nmo_,0.0);
-    fock_matrix_b.assign(nmo_ * nmo_,0.0);
+    fock_matrix_a.assign(ncmo_ * ncmo_,0.0);
+    fock_matrix_b.assign(ncmo_ * ncmo_,0.0);
 }
 
 void ForteIntegrals::ForteIntegrals::deallocate() {
