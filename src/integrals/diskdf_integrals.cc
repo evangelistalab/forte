@@ -486,26 +486,6 @@ void DISKDFIntegrals::gather_integrals() {
     outfile->Printf("...Done. Timing %15.6f s", timer.get());
 }
 
-void DISKDFIntegrals::make_diagonal_integrals() {
-    /// TODO:  Need to rewrite this to avoid using aptei_aa.
-    Timer MakeDiagonalIntegrals;
-    // for(size_t p = 0; p < nmo_; ++p){
-    //    for(size_t q = 0; q < nmo_; ++q){
-    //        //diagonal_aphys_tei_aa[p * nmo_ + q] = aptei_aa(p,q,p,q);
-    //        //diagonal_aphys_tei_ab[p * nmo_ + q] = aptei_ab(p,q,p,q);
-    //        //diagonal_aphys_tei_bb[p * nmo_ + q] = aptei_bb(p,q,p,q);
-    //        diagonal_aphys_tei_aa[p * nmo_ + q] = 0.0;
-    //        diagonal_aphys_tei_ab[p * nmo_ + q] = 0.0;
-    //        diagonal_aphys_tei_bb[p * nmo_ + q] = 0.0;
-
-    //    }
-    //}
-    if (print_) {
-        outfile->Printf("\n Make diagonal integrals in DISKDF took %6.6f s",
-                        MakeDiagonalIntegrals.get());
-    }
-}
-
 void DISKDFIntegrals::deallocate() {
 }
 
