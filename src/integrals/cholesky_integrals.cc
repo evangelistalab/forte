@@ -58,8 +58,6 @@ CholeskyIntegrals::CholeskyIntegrals(psi::Options& options, SharedWavefunction r
                                      std::shared_ptr<MOSpaceInfo> mo_space_info)
     : ForteIntegrals(options, ref_wfn, restricted, resort_frozen_core, mo_space_info) {
 
-    wfn_ = ref_wfn;
-
     integral_type_ = Cholesky;
     outfile->Printf("\n  Cholesky integrals time");
     Timer CholInt;

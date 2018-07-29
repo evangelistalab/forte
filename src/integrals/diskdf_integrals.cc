@@ -55,8 +55,6 @@ DISKDFIntegrals::DISKDFIntegrals(psi::Options& options, SharedWavefunction ref_w
                                  std::shared_ptr<MOSpaceInfo> mo_space_info)
     : ForteIntegrals(options, ref_wfn, restricted, resort_frozen_core, mo_space_info) {
 
-    wfn_ = ref_wfn;
-
     integral_type_ = DiskDF;
     outfile->Printf("\n  DISKDFIntegrals overall time");
     Timer DFInt;

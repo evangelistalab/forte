@@ -43,20 +43,19 @@ namespace psi {
 namespace forte {
 
 /**
-     * @brief ConventionalIntegrals::ConventionalIntegrals
-     * @param options - psi options class
-     * @param restricted - type of integral transformation
-     * @param resort_frozen_core -
-     */
+ * @brief ConventionalIntegrals::ConventionalIntegrals
+ * @param options - psi options class
+ * @param restricted - type of integral transformation
+ * @param resort_frozen_core -
+ */
 ConventionalIntegrals::ConventionalIntegrals(psi::Options& options, SharedWavefunction ref_wfn,
                                              IntegralSpinRestriction restricted,
                                              IntegralFrozenCore resort_frozen_core,
                                              std::shared_ptr<MOSpaceInfo> mo_space_info)
     : ForteIntegrals(options, ref_wfn, restricted, resort_frozen_core, mo_space_info),
       ints_(nullptr) {
-    integral_type_ = ConventionalInts;
 
-    wfn_ = ref_wfn;
+    integral_type_ = Conventional;
 
     outfile->Printf("\n  Overall Conventional Integrals timings\n\n");
     Timer ConvTime;
@@ -109,13 +108,15 @@ void ConventionalIntegrals::transform_integrals() {
     // Call IntegralTransform asking for integrals over restricted or
     // unrestricted orbitals
     if (restricted_) {
-        ints_ = new IntegralTransform(wfn_, spaces, IntegralTransform::TransformationType::Restricted,
-                                      IntegralTransform::OutputType::DPDOnly, IntegralTransform::MOOrdering::PitzerOrder,
-                                      IntegralTransform::FrozenOrbitals::None);
+        ints_ = new IntegralTransform(
+            wfn_, spaces, IntegralTransform::TransformationType::Restricted,
+            IntegralTransform::OutputType::DPDOnly, IntegralTransform::MOOrdering::PitzerOrder,
+            IntegralTransform::FrozenOrbitals::None);
     } else {
-        ints_ = new IntegralTransform(wfn_, spaces, IntegralTransform::TransformationType::Unrestricted,
-                                      IntegralTransform::OutputType::DPDOnly, IntegralTransform::MOOrdering::PitzerOrder,
-                                      IntegralTransform::FrozenOrbitals::None);
+        ints_ = new IntegralTransform(
+            wfn_, spaces, IntegralTransform::TransformationType::Unrestricted,
+            IntegralTransform::OutputType::DPDOnly, IntegralTransform::MOOrdering::PitzerOrder,
+            IntegralTransform::FrozenOrbitals::None);
     }
 
     // Keep the SO integrals on disk in case we want to retransform them
@@ -446,5 +447,5 @@ void ConventionalIntegrals::make_fock_matrix(SharedMatrix gamma_a, SharedMatrix 
         }
     }
 }
-}
-} // End namespaces for psi and forte
+} // namespace forte
+} // namespace psi

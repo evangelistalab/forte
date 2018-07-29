@@ -56,8 +56,6 @@ CustomIntegrals::CustomIntegrals(psi::Options& options, SharedWavefunction ref_w
     : ForteIntegrals(options, ref_wfn, restricted, resort_frozen_core, mo_space_info) {
     integral_type_ = Custom;
 
-    wfn_ = ref_wfn;
-
     outfile->Printf("\n  Using Custom integrals\n\n");
 
     allocate();

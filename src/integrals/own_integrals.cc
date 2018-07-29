@@ -56,6 +56,7 @@ OwnIntegrals::OwnIntegrals(psi::Options& options, SharedWavefunction ref_wfn,
         aptei_idx_ = ncmo_;
     }
 }
+
 OwnIntegrals::~OwnIntegrals() {}
 }
 }
