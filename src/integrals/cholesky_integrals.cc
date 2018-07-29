@@ -77,13 +77,6 @@ CholeskyIntegrals::CholeskyIntegrals(psi::Options& options, SharedWavefunction r
 
 CholeskyIntegrals::~CholeskyIntegrals() { deallocate(); }
 void CholeskyIntegrals::make_diagonal_integrals() {
-    for (size_t p = 0; p < nmo_; ++p) {
-        for (size_t q = 0; q < nmo_; ++q) {
-            diagonal_aphys_tei_aa[p * nmo_ + q] = aptei_aa(p, q, p, q);
-            diagonal_aphys_tei_ab[p * nmo_ + q] = aptei_ab(p, q, p, q);
-            diagonal_aphys_tei_bb[p * nmo_ + q] = aptei_bb(p, q, p, q);
-        }
-    }
 }
 
 double CholeskyIntegrals::aptei_aa(size_t p, size_t q, size_t r, size_t s) {
@@ -377,10 +370,6 @@ void CholeskyIntegrals::resort_integrals_after_freezing() {
     // Resort the integrals
     resort_two(one_electron_integrals_a, cmo2mo);
     resort_two(one_electron_integrals_b, cmo2mo);
-    resort_two(diagonal_aphys_tei_aa, cmo2mo);
-    resort_two(diagonal_aphys_tei_ab, cmo2mo);
-    resort_two(diagonal_aphys_tei_bb, cmo2mo);
-
     resort_three(ThreeIntegral_, cmo2mo);
 }
 void CholeskyIntegrals::resort_three(std::shared_ptr<Matrix>& threeint, std::vector<size_t>& map) {

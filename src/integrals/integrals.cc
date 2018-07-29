@@ -159,10 +159,6 @@ void ForteIntegrals::ForteIntegrals::allocate() {
 
     fock_matrix_a.assign(nmo_ * nmo_,0.0);
     fock_matrix_b.assign(nmo_ * nmo_,0.0);
-
-    diagonal_aphys_tei_aa.assign(nmo_ * nmo_,0.0);
-    diagonal_aphys_tei_ab.assign(nmo_ * nmo_,0.0);
-    diagonal_aphys_tei_bb.assign(nmo_ * nmo_,0.0);
 }
 
 void ForteIntegrals::ForteIntegrals::deallocate() {

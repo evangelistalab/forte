@@ -247,13 +247,6 @@ void DFIntegrals::gather_integrals() {
 }
 
 void DFIntegrals::make_diagonal_integrals() {
-    for (size_t p = 0; p < nmo_; ++p) {
-        for (size_t q = 0; q < nmo_; ++q) {
-            diagonal_aphys_tei_aa[p * nmo_ + q] = aptei_aa(p, q, p, q);
-            diagonal_aphys_tei_ab[p * nmo_ + q] = aptei_ab(p, q, p, q);
-            diagonal_aphys_tei_bb[p * nmo_ + q] = aptei_bb(p, q, p, q);
-        }
-    }
 }
 
 void DFIntegrals::deallocate() {
@@ -364,9 +357,6 @@ void DFIntegrals::resort_integrals_after_freezing() {
     // Resort the integrals
     resort_two(one_electron_integrals_a, cmo2mo);
     resort_two(one_electron_integrals_b, cmo2mo);
-    resort_two(diagonal_aphys_tei_aa, cmo2mo);
-    resort_two(diagonal_aphys_tei_ab, cmo2mo);
-    resort_two(diagonal_aphys_tei_bb, cmo2mo);
 
     resort_three(ThreeIntegral_, cmo2mo);
 
