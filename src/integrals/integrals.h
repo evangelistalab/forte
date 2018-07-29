@@ -145,7 +145,8 @@ class ForteIntegrals {
 
     /// Set the alpha fock matrix
     void set_fock_a(const std::vector<double>& fock_stl) {
-        if (fock_stl.size() > ncmo_ * ncmo_) {
+        size_t fock_size = fock_stl.size();
+        if (fock_size > ncmo_ * ncmo_) {
             throw PSIEXCEPTION("Cannot fill in fock_matrix_a because the vector is out-of-range.");
         } else {
             fock_matrix_a = fock_stl;
@@ -154,7 +155,8 @@ class ForteIntegrals {
 
     /// Set the beta fock matrix
     void set_fock_b(const std::vector<double>& fock_stl) {
-        if (fock_stl.size() > ncmo_ * ncmo_) {
+        size_t fock_size = fock_stl.size();
+        if (fock_size > ncmo_ * ncmo_) {
             throw PSIEXCEPTION("Cannot fill in fock_matrix_b because the vector is out-of-range.");
         } else {
             fock_matrix_b = fock_stl;
