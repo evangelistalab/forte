@@ -76,24 +76,22 @@ void ConventionalIntegrals::transform_integrals() {
     // For now, we'll just transform for closed shells and generate all
     // integrals.
     std::vector<std::shared_ptr<MOSpace>> spaces;
-
-    // TODO: transform only the orbitals within an energy range to save time on
-    // this step.
     spaces.push_back(MOSpace::all);
 
-    // If the integral
-     if (integral_transform_)
-         integral_transform_.reset();
+    // Reset the integral transform object if one was opened before
+    if (integral_transform_){
+        integral_transform_.reset();
+    }
 
     // Call IntegralTransform asking for integrals over restricted or
     // unrestricted orbitals
     if (restricted_) {
-        integral_transform_ = std::make_shared<IntegralTransform>(
+        integral_transform_ = new IntegralTransform(
             wfn_, spaces, IntegralTransform::TransformationType::Restricted,
             IntegralTransform::OutputType::DPDOnly, IntegralTransform::MOOrdering::PitzerOrder,
             IntegralTransform::FrozenOrbitals::None);
     } else {
-        integral_transform_ = std::make_shared<IntegralTransform>(
+        integral_transform_ = new IntegralTransform(
             wfn_, spaces, IntegralTransform::TransformationType::Unrestricted,
             IntegralTransform::OutputType::DPDOnly, IntegralTransform::MOOrdering::PitzerOrder,
             IntegralTransform::FrozenOrbitals::None);
@@ -236,84 +234,83 @@ void ConventionalIntegrals::gather_integrals() {
         throw PSIEXCEPTION("Unrestricted orbitals are currently disabled in "
                            "ConventionalIntegrals");
 
+        //        std::vector<double> two_electron_integrals(num_tei_, 0.0);
+        //        // Alpha-alpha integrals
 
-//        std::vector<double> two_electron_integrals(num_tei_, 0.0);
-//        // Alpha-alpha integrals
+        //        // Read the integrals
+        //        struct iwlbuf V_AAAA;
+        //        iwl_buf_init(&V_AAAA, PSIF_MO_AA_TEI, 0.0, 1, 1);
+        //        iwl_buf_rd_all(&V_AAAA, two_electron_integrals, myioff, myioff, 0, myioff, 0,
+        //        "outfile"); iwl_buf_close(&V_AAAA, 1);
 
-//        // Read the integrals
-//        struct iwlbuf V_AAAA;
-//        iwl_buf_init(&V_AAAA, PSIF_MO_AA_TEI, 0.0, 1, 1);
-//        iwl_buf_rd_all(&V_AAAA, two_electron_integrals, myioff, myioff, 0, myioff, 0, "outfile");
-//        iwl_buf_close(&V_AAAA, 1);
+        //        for (size_t p = 0; p < nmo_; ++p) {
+        //            for (size_t q = 0; q < nmo_; ++q) {
+        //                for (size_t r = 0; r < nmo_; ++r) {
+        //                    for (size_t s = 0; s < nmo_; ++s) {
+        //                        // <pq||rs> = <pq|rs> - <pq|sr> = (pr|qs) -
+        //                        (ps | qr) double direct = two_electron_integrals[INDEX4(p, r, q,
+        //                        s)]; double exchange = two_electron_integrals[INDEX4(p, s, q, r)];
+        //                        size_t index = aptei_index(p, q, r, s);
+        //                        aphys_tei_aa[index] = direct - exchange;
+        //                    }
+        //                }
+        //            }
+        //        }
 
-//        for (size_t p = 0; p < nmo_; ++p) {
-//            for (size_t q = 0; q < nmo_; ++q) {
-//                for (size_t r = 0; r < nmo_; ++r) {
-//                    for (size_t s = 0; s < nmo_; ++s) {
-//                        // <pq||rs> = <pq|rs> - <pq|sr> = (pr|qs) -
-//                        (ps | qr) double direct = two_electron_integrals[INDEX4(p, r, q, s)];
-//                        double exchange = two_electron_integrals[INDEX4(p, s, q, r)];
-//                        size_t index = aptei_index(p, q, r, s);
-//                        aphys_tei_aa[index] = direct - exchange;
-//                    }
-//                }
-//            }
-//        }
+        //        // Beta-beta integrals
+        //        // Zero the memory, because iwl_buf_rd_all copies only the nonzero entries
+        //        std::fill(two_electron_integrals.begin(), two_electron_integrals.end(), 0.0);
 
-//        // Beta-beta integrals
-//        // Zero the memory, because iwl_buf_rd_all copies only the nonzero entries
-//        std::fill(two_electron_integrals.begin(), two_electron_integrals.end(), 0.0);
+        //        // Read the integrals
+        //        struct iwlbuf V_BBBB;
+        //        iwl_buf_init(&V_BBBB, PSIF_MO_BB_TEI, 0.0, 1, 1);
+        //        iwl_buf_rd_all(&V_BBBB, two_electron_integrals, myioff, myioff, 0, myioff, 0,
+        //        "outfile"); iwl_buf_close(&V_BBBB, 1);
 
-//        // Read the integrals
-//        struct iwlbuf V_BBBB;
-//        iwl_buf_init(&V_BBBB, PSIF_MO_BB_TEI, 0.0, 1, 1);
-//        iwl_buf_rd_all(&V_BBBB, two_electron_integrals, myioff, myioff, 0, myioff, 0, "outfile");
-//        iwl_buf_close(&V_BBBB, 1);
+        //        for (size_t p = 0; p < nmo_; ++p) {
+        //            for (size_t q = 0; q < nmo_; ++q) {
+        //                for (size_t r = 0; r < nmo_; ++r) {
+        //                    for (size_t s = 0; s < nmo_; ++s) {
+        //                        // <pq||rs> = <pq|rs> - <pq|sr> = (pr|qs) -
+        //                        (ps | qr) double direct = two_electron_integrals[INDEX4(p, r, q,
+        //                        s)]; double exchange = two_electron_integrals[INDEX4(p, s, q, r)];
+        //                        size_t index = aptei_index(p, q, r, s);
+        //                        aphys_tei_bb[index] = direct - exchange;
+        //                    }
+        //                }
+        //            }
+        //        }
 
-//        for (size_t p = 0; p < nmo_; ++p) {
-//            for (size_t q = 0; q < nmo_; ++q) {
-//                for (size_t r = 0; r < nmo_; ++r) {
-//                    for (size_t s = 0; s < nmo_; ++s) {
-//                        // <pq||rs> = <pq|rs> - <pq|sr> = (pr|qs) -
-//                        (ps | qr) double direct = two_electron_integrals[INDEX4(p, r, q, s)];
-//                        double exchange = two_electron_integrals[INDEX4(p, s, q, r)];
-//                        size_t index = aptei_index(p, q, r, s);
-//                        aphys_tei_bb[index] = direct - exchange;
-//                    }
-//                }
-//            }
-//        }
+        //        // Alpha-beta integrals
+        //        Matrix Tei(num_oei, num_oei);
+        //        double** two_electron_integrals_ab = Tei.pointer();
+        //        // Zero the memory, because iwl_buf_rd_all copies only the
+        //        nonzero entries for (size_t pq = 0; pq < num_oei; ++pq) {
+        //            for (size_t rs = 0; rs < num_oei; ++rs) {
+        //                two_electron_integrals_ab[pq][rs] = 0.0;
+        //            }
+        //        }
 
-//        // Alpha-beta integrals
-//        Matrix Tei(num_oei, num_oei);
-//        double** two_electron_integrals_ab = Tei.pointer();
-//        // Zero the memory, because iwl_buf_rd_all copies only the
-//        nonzero entries for (size_t pq = 0; pq < num_oei; ++pq) {
-//            for (size_t rs = 0; rs < num_oei; ++rs) {
-//                two_electron_integrals_ab[pq][rs] = 0.0;
-//            }
-//        }
+        //        // Read the integrals
+        //        struct iwlbuf V_AABB;
+        //        iwl_buf_init(&V_AABB, PSIF_MO_AB_TEI, 0.0, 1, 1);
+        //        iwl_buf_rd_all2(&V_AABB, two_electron_integrals_ab, myioff, myioff, 0, myioff, 0,
+        //                        "outfile");
+        //        iwl_buf_close(&V_AABB, 1);
 
-//        // Read the integrals
-//        struct iwlbuf V_AABB;
-//        iwl_buf_init(&V_AABB, PSIF_MO_AB_TEI, 0.0, 1, 1);
-//        iwl_buf_rd_all2(&V_AABB, two_electron_integrals_ab, myioff, myioff, 0, myioff, 0,
-//                        "outfile");
-//        iwl_buf_close(&V_AABB, 1);
-
-//        for (size_t p = 0; p < nmo_; ++p) {
-//            for (size_t q = 0; q < nmo_; ++q) {
-//                for (size_t r = 0; r < nmo_; ++r) {
-//                    for (size_t s = 0; s < nmo_; ++s) {
-//                        // <pq||rs> = <pq|rs> - <pq|sr> = (pr|qs) -
-//                        (ps | qr) double direct =
-//                            two_electron_integrals_ab[INDEX2(p, r)][INDEX2(q, s)];
-//                        size_t index = aptei_index(p, q, r, s);
-//                        aphys_tei_ab[index] = direct;
-//                    }
-//                }
-//            }
-//        }
+        //        for (size_t p = 0; p < nmo_; ++p) {
+        //            for (size_t q = 0; q < nmo_; ++q) {
+        //                for (size_t r = 0; r < nmo_; ++r) {
+        //                    for (size_t s = 0; s < nmo_; ++s) {
+        //                        // <pq||rs> = <pq|rs> - <pq|sr> = (pr|qs) -
+        //                        (ps | qr) double direct =
+        //                            two_electron_integrals_ab[INDEX2(p, r)][INDEX2(q, s)];
+        //                        size_t index = aptei_index(p, q, r, s);
+        //                        aphys_tei_ab[index] = direct;
+        //                    }
+        //                }
+        //            }
+        //        }
     }
 }
 
@@ -329,7 +326,7 @@ void ConventionalIntegrals::resort_integrals_after_freezing() {
 
 void ConventionalIntegrals::resort_four(std::vector<double>& tei, std::vector<size_t>& map) {
     // Store the integrals in a temporary array
-    size_t num_aptei_corr = ncmo_ * ncmo_ * ncmo_ * ncmo_;
+    size_t num_aptei_corr = nmo_ * nmo_ * nmo_ * nmo_;
     std::vector<double> temp_ints(num_aptei_corr, 0.0);
     for (size_t p = 0; p < ncmo_; ++p) {
         for (size_t q = 0; q < ncmo_; ++q) {

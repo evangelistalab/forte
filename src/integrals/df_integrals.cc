@@ -62,7 +62,7 @@ DFIntegrals::DFIntegrals(psi::Options& options, SharedWavefunction ref_wfn,
 
     outfile->Printf("\n  DFIntegrals overall time");
     Timer DFInt;
-    allocate();
+
     int my_proc = 0;
 #ifdef HAVE_GA
     my_proc = GA_Nodeid();
