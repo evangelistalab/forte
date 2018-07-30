@@ -513,7 +513,6 @@ class CholeskyIntegrals : public ForteIntegrals {
   private:
     /// Computes Cholesky integrals
     virtual void gather_integrals();
-    /// Allocates diagonal integrals
     virtual void resort_three(std::shared_ptr<Matrix>& threeint, std::vector<size_t>& map);
     virtual void resort_integrals_after_freezing();
     void transform_integrals();

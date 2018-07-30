@@ -57,7 +57,6 @@ DISKDFIntegrals::DISKDFIntegrals(psi::Options& options, SharedWavefunction ref_w
     integral_type_ = DiskDF;
     outfile->Printf("\n  DISKDFIntegrals overall time");
     Timer DFInt;
-    allocate();
 
     int my_proc = 0;
 #ifdef HAVE_GA

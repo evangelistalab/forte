@@ -38,7 +38,7 @@
 
 #include "custom_integrals.h"
 
-#define ID(x) ints_->DPD_ID(x)
+//#define ID(x) ints_->DPD_ID(x)
 
 namespace psi {
 namespace forte {

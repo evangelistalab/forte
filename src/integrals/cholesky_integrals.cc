@@ -60,7 +60,6 @@ CholeskyIntegrals::CholeskyIntegrals(psi::Options& options, SharedWavefunction r
     integral_type_ = Cholesky;
     outfile->Printf("\n  Cholesky integrals time");
     Timer CholInt;
-    allocate();
     gather_integrals();
     freeze_core_orbitals();
 

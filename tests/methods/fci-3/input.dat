@@ -3,7 +3,7 @@
 import forte
 
 refscf = -7.862246310410
-reffci = -9.696581880925145
+reffci = -7.696581880925145
 
 molecule {
 0 1
