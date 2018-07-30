@@ -305,8 +305,8 @@ void CholeskyIntegrals::make_fock_matrix(SharedMatrix gamma_aM, SharedMatrix gam
                 sizeof(double) * nthree_ * ncmo_ * ncmo_);
     std::memcpy(&gamma_a.data()[0], gamma_aM->pointer()[0], sizeof(double) * ncmo_ * ncmo_);
     std::memcpy(&gamma_b.data()[0], gamma_bM->pointer()[0], sizeof(double) * ncmo_ * ncmo_);
-    fock_a.data() = one_electron_integrals_a;
-    fock_b.data() = one_electron_integrals_b;
+    fock_a.data() = one_electron_integrals_a_;
+    fock_b.data() = one_electron_integrals_b_;
 
     // fock_a.iterate([&](const std::vector<size_t>& i,double& value){
     //    value = one_electron_integrals_a[i[0] * aptei_idx_ + i[1]];
@@ -330,8 +330,8 @@ void CholeskyIntegrals::make_fock_matrix(SharedMatrix gamma_aM, SharedMatrix gam
     // fock_b.iterate([&](const std::vector<size_t>& i,double& value){
     //    fock_matrix_b[i[0] * aptei_idx_ + i[1]] = value;
     //});
-    fock_matrix_a = fock_a.data();
-    fock_matrix_b = fock_b.data();
+    fock_matrix_a_ = fock_a.data();
+    fock_matrix_b_ = fock_b.data();
     //    std::memcpy(fock_matrix_a, &fock_a.data()[0], sizeof(double) * ncmo_ * ncmo_);
     //    std::memcpy(fock_matrix_b, &fock_b.data()[0], sizeof(double) * ncmo_ * ncmo_);
 }

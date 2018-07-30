@@ -111,22 +111,22 @@ class ForteIntegrals {
     double scalar() const { return scalar_; }
 
     /// The alpha one-electron integrals
-    double oei_a(size_t p, size_t q) { return one_electron_integrals_a[p * aptei_idx_ + q]; }
+    double oei_a(size_t p, size_t q) { return one_electron_integrals_a_[p * aptei_idx_ + q]; }
 
     /// The beta one-electron integrals
-    double oei_b(size_t p, size_t q) { return one_electron_integrals_b[p * aptei_idx_ + q]; }
+    double oei_b(size_t p, size_t q) { return one_electron_integrals_b_[p * aptei_idx_ + q]; }
 
     /// Get the alpha fock matrix elements
-    double get_fock_a(size_t p, size_t q) { return fock_matrix_a[p * aptei_idx_ + q]; }
+    double get_fock_a(size_t p, size_t q) { return fock_matrix_a_[p * aptei_idx_ + q]; }
 
     /// Get the beta fock matrix elements
-    double get_fock_b(size_t p, size_t q) { return fock_matrix_b[p * aptei_idx_ + q]; }
+    double get_fock_b(size_t p, size_t q) { return fock_matrix_b_[p * aptei_idx_ + q]; }
 
     /// Get the alpha fock matrix in std::vector format
-    std::vector<double> get_fock_a() const { return fock_matrix_a; }
+    std::vector<double> get_fock_a() const { return fock_matrix_a_; }
 
     /// Get the beta fock matrix in std::vector format
-    std::vector<double> get_fock_b() const { return fock_matrix_b; }
+    std::vector<double> get_fock_b() const { return fock_matrix_b_; }
 
     /// Set the alpha fock matrix
     void set_fock_a(const std::vector<double>& fock_stl) {
@@ -134,7 +134,7 @@ class ForteIntegrals {
         if (fock_size != ncmo_ * ncmo_) {
             throw PSIEXCEPTION("Cannot fill in fock_matrix_a because the vector is out-of-range.");
         } else {
-            fock_matrix_a = fock_stl;
+            fock_matrix_a_ = fock_stl;
         }
     }
 
@@ -144,15 +144,9 @@ class ForteIntegrals {
         if (fock_size != ncmo_ * ncmo_) {
             throw PSIEXCEPTION("Cannot fill in fock_matrix_b because the vector is out-of-range.");
         } else {
-            fock_matrix_b = fock_stl;
+            fock_matrix_b_ = fock_stl;
         }
     }
-
-    /// The alpha diagonal fock matrix integrals
-    double diag_fock_a(size_t p) { return fock_matrix_a[p * aptei_idx_ + p]; }
-
-    /// The beta diagonal fock matrix integrals
-    double diag_fock_b(size_t p) { return fock_matrix_b[p * aptei_idx_ + p]; }
 
     /// The antisymmetrixed alpha-alpha two-electron integrals in physicist
     /// notation <pq||rs>
@@ -168,8 +162,7 @@ class ForteIntegrals {
     /// Grab a block of the integrals and return a tensor
     /// p, q, r, s correspond to the vector of indices you want for your tensor
     /// if p, q, r, s is equal to an array of all of the mos, then this will
-    /// return
-    /// a tensor of nmo^4.
+    /// return a tensor of dimension nmo^4.
     virtual ambit::Tensor aptei_aa_block(const std::vector<size_t>& p, const std::vector<size_t>& q,
                                          const std::vector<size_t>& r,
                                          const std::vector<size_t>& s) = 0;
@@ -182,7 +175,7 @@ class ForteIntegrals {
                                          const std::vector<size_t>& r,
                                          const std::vector<size_t>& s) = 0;
 
-    virtual double three_integral(size_t A, size_t p, size_t q) = 0;
+    //    virtual double three_integral(size_t A, size_t p, size_t q) = 0;
 
     virtual ambit::Tensor three_integral_block(const std::vector<size_t>& A,
                                                const std::vector<size_t>& p,
@@ -301,15 +294,12 @@ class ForteIntegrals {
     /// The number of OMP threads
     int num_threads_;
 
-    /// Number of one electron integrals
-    size_t num_oei;
-
     /// Number of two electron integrals in chemist notation (pq|rs)
-    size_t num_tei;
+    size_t num_tei_;
 
     /// The number of antisymmetrized two-electron integrals in physicist
     /// notation <pq||rs>
-    size_t num_aptei;
+    size_t num_aptei_;
 
     /// Frozen-core energy
     double frozen_core_energy_;
@@ -321,16 +311,16 @@ class ForteIntegrals {
     std::shared_ptr<MOSpaceInfo> mo_space_info_;
 
     /// Full one-electron integrals stored as a vector (includes frozen orbitals)
-    std::vector<double> full_one_electron_integrals_a;
-    std::vector<double> full_one_electron_integrals_b;
+    std::vector<double> full_one_electron_integrals_a_;
+    std::vector<double> full_one_electron_integrals_b_;
 
     /// One-electron integrals stored as a vector
-    std::vector<double> one_electron_integrals_a;
-    std::vector<double> one_electron_integrals_b;
+    std::vector<double> one_electron_integrals_a_;
+    std::vector<double> one_electron_integrals_b_;
 
     /// Fock matrix stored as a vector
-    std::vector<double> fock_matrix_a;
-    std::vector<double> fock_matrix_b;
+    std::vector<double> fock_matrix_a_;
+    std::vector<double> fock_matrix_b_;
 
     /// The B tensor
     // std::shared_ptr<psi::Tensor> B_;
@@ -415,11 +405,11 @@ class ConventionalIntegrals : public ForteIntegrals {
                                          const std::vector<size_t>& r,
                                          const std::vector<size_t>& s);
 
-    virtual double three_integral(size_t, size_t, size_t) {
-        outfile->Printf("\n Oh no!, you tried to grab a ThreeIntegral but this "
-                        "is not there!!");
-        throw PSIEXCEPTION("INT_TYPE=DF/CHOLESKY to use ThreeIntegral");
-    }
+    //    virtual double three_integral(size_t, size_t, size_t) {
+    //        outfile->Printf("\n Oh no!, you tried to grab a ThreeIntegral but this "
+    //                        "is not there!!");
+    //        throw PSIEXCEPTION("INT_TYPE=DF/CHOLESKY to use ThreeIntegral");
+    //    }
     virtual ambit::Tensor three_integral_block(const std::vector<size_t>&,
                                                const std::vector<size_t>&,
                                                const std::vector<size_t>&) {
@@ -499,7 +489,7 @@ class CholeskyIntegrals : public ForteIntegrals {
                                          const std::vector<size_t>& r,
                                          const std::vector<size_t>& s);
 
-    virtual double three_integral(size_t A, size_t p, size_t q) {
+    double three_integral(size_t A, size_t p, size_t q) {
         return ThreeIntegral_->get(p * aptei_idx_ + q, A);
     }
     virtual double** three_integral_pointer() { return ThreeIntegral_->pointer(); }
@@ -557,7 +547,7 @@ class DFIntegrals : public ForteIntegrals {
                                          const std::vector<size_t>& r,
                                          const std::vector<size_t>& s);
 
-    virtual double three_integral(size_t A, size_t p, size_t q) {
+    double three_integral(size_t A, size_t p, size_t q) {
         return ThreeIntegral_->get(p * aptei_idx_ + q, A);
     }
     virtual ambit::Tensor three_integral_block(const std::vector<size_t>& A,
@@ -618,7 +608,7 @@ class DISKDFIntegrals : public ForteIntegrals {
     virtual double diag_aptei_aa(size_t p, size_t q);
     virtual double diag_aptei_ab(size_t p, size_t q);
     virtual double diag_aptei_bb(size_t p, size_t q);
-    virtual double three_integral(size_t A, size_t p, size_t q);
+    //    virtual double three_integral(size_t A, size_t p, size_t q);
     virtual double** three_integral_pointer() { return (ThreeIntegral_->pointer()); }
     /// Read a block of the DFIntegrals and return an Ambit tensor of size A by
     /// p by q

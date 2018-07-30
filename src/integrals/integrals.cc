@@ -105,8 +105,7 @@ void ForteIntegrals::startup() {
     std::shared_ptr<PSIO> psio(_default_psio_lib_);
 
     if (not wfn_) {
-        outfile->Printf("\n  No wave function object found!  Run a scf "
-                        "calculation first!\n");
+        outfile->Printf("\n  No wave function object found!  Run a scf calculation first!\n");
         exit(1);
     }
 
@@ -143,9 +142,8 @@ void ForteIntegrals::startup() {
     // This is important!  Set the indexing to work using the number of
     // molecular integrals
     aptei_idx_ = nmo_;
-    num_oei = INDEX2(nmo_ - 1, nmo_ - 1) + 1;
-    num_tei = INDEX4(nmo_ - 1, nmo_ - 1, nmo_ - 1, nmo_ - 1) + 1;
-    num_aptei = nmo_ * nmo_ * nmo_ * nmo_;
+    num_tei_ = INDEX4(nmo_ - 1, nmo_ - 1, nmo_ - 1, nmo_ - 1) + 1;
+    num_aptei_ = nmo_ * nmo_ * nmo_ * nmo_;
     num_threads_ = omp_get_max_threads();
     print_ = options_.get_int("PRINT");
     /// If MO_ROTATE is set in option, call rotate_mos.
@@ -158,14 +156,14 @@ void ForteIntegrals::startup() {
 
 void ForteIntegrals::allocate() {
     // full one-electron integrals
-    full_one_electron_integrals_a.assign(nmo_ * nmo_, 0.0);
-    full_one_electron_integrals_b.assign(nmo_ * nmo_, 0.0);
+    full_one_electron_integrals_a_.assign(nmo_ * nmo_, 0.0);
+    full_one_electron_integrals_b_.assign(nmo_ * nmo_, 0.0);
 
     // these will hold only the correlated part
-    one_electron_integrals_a.assign(ncmo_ * ncmo_, 0.0);
-    one_electron_integrals_b.assign(ncmo_ * ncmo_, 0.0);
-    fock_matrix_a.assign(ncmo_ * ncmo_, 0.0);
-    fock_matrix_b.assign(ncmo_ * ncmo_, 0.0);
+    one_electron_integrals_a_.assign(ncmo_ * ncmo_, 0.0);
+    one_electron_integrals_b_.assign(ncmo_ * ncmo_, 0.0);
+    fock_matrix_a_.assign(ncmo_ * ncmo_, 0.0);
+    fock_matrix_b_.assign(ncmo_ * ncmo_, 0.0);
 }
 
 void ForteIntegrals::transform_one_electron_integrals() {
@@ -195,16 +193,16 @@ void ForteIntegrals::transform_one_electron_integrals() {
     OneBody_symm_ = Ha;
 
     // zero these vectors
-    std::fill(full_one_electron_integrals_a.begin(), full_one_electron_integrals_a.end(), 0.0);
-    std::fill(full_one_electron_integrals_b.begin(), full_one_electron_integrals_b.end(), 0.0);
+    std::fill(full_one_electron_integrals_a_.begin(), full_one_electron_integrals_a_.end(), 0.0);
+    std::fill(full_one_electron_integrals_b_.begin(), full_one_electron_integrals_b_.end(), 0.0);
 
     // Read the one-electron integrals (T + V, restricted)
     int offset = 0;
     for (int h = 0; h < nirrep_; ++h) {
         for (int p = 0; p < nmopi_[h]; ++p) {
             for (int q = 0; q < nmopi_[h]; ++q) {
-                full_one_electron_integrals_a[(p + offset) * nmo_ + q + offset] = Ha->get(h, p, q);
-                full_one_electron_integrals_b[(p + offset) * nmo_ + q + offset] = Hb->get(h, p, q);
+                full_one_electron_integrals_a_[(p + offset) * nmo_ + q + offset] = Ha->get(h, p, q);
+                full_one_electron_integrals_b_[(p + offset) * nmo_ + q + offset] = Hb->get(h, p, q);
             }
         }
         offset += nmopi_[h];
@@ -213,16 +211,16 @@ void ForteIntegrals::transform_one_electron_integrals() {
     // Copy the correlated part into one_electron_integrals_a/one_electron_integrals_b
     for (size_t p = 0; p < ncmo_; ++p) {
         for (size_t q = 0; q < ncmo_; ++q) {
-            one_electron_integrals_a[p * ncmo_ + q] =
-                full_one_electron_integrals_a[cmotomo_[p] * nmo_ + cmotomo_[q]];
-            one_electron_integrals_b[p * ncmo_ + q] =
-                full_one_electron_integrals_b[cmotomo_[p] * nmo_ + cmotomo_[q]];
+            one_electron_integrals_a_[p * ncmo_ + q] =
+                full_one_electron_integrals_a_[cmotomo_[p] * nmo_ + cmotomo_[q]];
+            one_electron_integrals_b_[p * ncmo_ + q] =
+                full_one_electron_integrals_b_[cmotomo_[p] * nmo_ + cmotomo_[q]];
         }
     }
 }
 
 void ForteIntegrals::set_oei(double** ints, bool alpha) {
-    std::vector<double>& p_oei = alpha ? one_electron_integrals_a : one_electron_integrals_b;
+    std::vector<double>& p_oei = alpha ? one_electron_integrals_a_ : one_electron_integrals_b_;
     for (size_t p = 0; p < aptei_idx_; ++p) {
         for (size_t q = 0; q < aptei_idx_; ++q) {
             p_oei[p * aptei_idx_ + q] = ints[p][q];
@@ -231,7 +229,7 @@ void ForteIntegrals::set_oei(double** ints, bool alpha) {
 }
 
 void ForteIntegrals::set_oei(size_t p, size_t q, double value, bool alpha) {
-    std::vector<double>& p_oei = alpha ? one_electron_integrals_a : one_electron_integrals_b;
+    std::vector<double>& p_oei = alpha ? one_electron_integrals_a_ : one_electron_integrals_b_;
     p_oei[p * aptei_idx_ + q] = value;
 }
 
@@ -307,9 +305,9 @@ void ForteIntegrals::compute_frozen_one_body_operator() {
                 // the index of p and q in the full block of irrep h
                 size_t p_full = cmotomo_[p + corr_offset] - full_offset;
                 size_t q_full = cmotomo_[q + corr_offset] - full_offset;
-                one_electron_integrals_a[(p + corr_offset) * ncmo_ + (q + corr_offset)] +=
+                one_electron_integrals_a_[(p + corr_offset) * ncmo_ + (q + corr_offset)] +=
                     F_core->get(h, p_full, q_full);
-                one_electron_integrals_b[(p + corr_offset) * ncmo_ + (q + corr_offset)] +=
+                one_electron_integrals_b_[(p + corr_offset) * ncmo_ + (q + corr_offset)] +=
                     F_core->get(h, p_full, q_full);
             }
         }
