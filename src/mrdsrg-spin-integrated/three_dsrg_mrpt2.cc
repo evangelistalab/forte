@@ -2628,10 +2628,12 @@ double THREE_DSRG_MRPT2::E_VT2_2_core() {
     BlockedTensor v = BTF_->build(tensor_type_, "Vccvv", spin_cases({"ccvv"}));
 
     BlockedTensor ThreeIntegral = BTF_->build(tensor_type_, "ThreeInt", {"Lph", "LPH"});
-    ThreeIntegral.iterate([&](const std::vector<size_t>& i, const std::vector<SpinType>&,
-                              double& value) {
-//        value = ints_->three_integral(i[0], i[1], i[2]);
-    });
+    fill_three_index_ints(ThreeIntegral);
+
+//    ThreeIntegral.iterate([&](const std::vector<size_t>& i, const std::vector<SpinType>&,
+//                              double& value) {
+////        value = ints_->three_integral(i[0], i[1], i[2]);
+//    });
 
     v("mnef") = ThreeIntegral("gem") * ThreeIntegral("gfn");
     v("mnef") -= ThreeIntegral("gfm") * ThreeIntegral("gen");
