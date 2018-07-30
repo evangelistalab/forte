@@ -67,7 +67,7 @@ CholeskyIntegrals::CholeskyIntegrals(psi::Options& options, SharedWavefunction r
     outfile->Printf("\n  CholeskyIntegrals take %8.8f", CholInt.get());
 }
 
-CholeskyIntegrals::~CholeskyIntegrals() { deallocate(); }
+CholeskyIntegrals::~CholeskyIntegrals() {}
 
 double CholeskyIntegrals::aptei_aa(size_t p, size_t q, size_t r, size_t s) {
     double vpqrsalphaC = 0.0;
@@ -281,10 +281,6 @@ void CholeskyIntegrals::transform_integrals() {
         ThreeIntegral_->set(i[1] * nmo_ + i[2], i[0], value);
     });
 }
-
-void CholeskyIntegrals::allocate() {}
-
-void CholeskyIntegrals::deallocate() {}
 
 void CholeskyIntegrals::make_fock_matrix(SharedMatrix gamma_aM, SharedMatrix gamma_bM) {
     TensorType tensor_type = CoreTensor;

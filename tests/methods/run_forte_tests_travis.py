@@ -20,7 +20,6 @@ timing_re = re.compile(r"Your calculation took (\d+.\d+) seconds")
 timing_re = re.compile(r"Psi4 exiting successfully. Buy a developer a beer!")
 
 psi4command = ""
-
 fci_tests = ["fci-1","fci-2","fci-3","fci-4","fci-5","fci-7","fci-rdms-1","fci-rdms-2","fci-one-electron","fci-ex-1",
              "fci-ecp-1","fci-ecp-2"]
 
@@ -144,7 +143,12 @@ else:
     # Get the current date and time
     dt = datetime.datetime.now()
     now = dt.strftime("%Y-%m-%d-%H:%M")
-print("Total time: %6.1f s\n" % total_time)
+   
+    print("The following tests failed:")
+    for failed_test in failed:
+        print("  %s" % failed_test)
+    
+print("\nTotal time: %6.1f s\n" % total_time)
 if nfailed > 0:
     failed_log = open("failed_tests","w")
     failed_log.write("# %s\n" % now)

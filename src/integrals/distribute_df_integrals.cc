@@ -87,7 +87,7 @@ DistDFIntegrals::DistDFIntegrals(psi::Options& options, SharedWavefunction ref_w
     outfile->Printf("\n  DistDFIntegrals take %15.8f s", DFInt.get());
 }
 
-DistDFIntegrals::~DistDFIntegrals() { deallocate(); }
+DistDFIntegrals::~DistDFIntegrals() { }
 void DistDFIntegrals::test_distributed_integrals() {
     outfile->Printf("\n Computing Density fitted integrals \n");
 

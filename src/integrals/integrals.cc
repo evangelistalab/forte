@@ -98,7 +98,7 @@ ForteIntegrals::ForteIntegrals(psi::Options& options, SharedWavefunction ref_wfn
     build_AOdipole_ints();
 }
 
-ForteIntegrals::~ForteIntegrals() { deallocate(); }
+ForteIntegrals::~ForteIntegrals() {}
 
 void ForteIntegrals::startup() {
     // Grab the global (default) PSIO object, for file I/O
@@ -167,8 +167,6 @@ void ForteIntegrals::allocate() {
     fock_matrix_a.assign(ncmo_ * ncmo_, 0.0);
     fock_matrix_b.assign(ncmo_ * ncmo_, 0.0);
 }
-
-void ForteIntegrals::deallocate() {}
 
 void ForteIntegrals::transform_one_electron_integrals() {
     // Now we want the reference (SCF) wavefunction

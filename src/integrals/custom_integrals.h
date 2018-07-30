@@ -102,10 +102,7 @@ class CustomIntegrals : public ForteIntegrals {
 
     virtual void gather_integrals();
     // Allocates memory for a antisymmetrized tei (nmo_^4)
-    virtual void allocate();
-    virtual void deallocate();
     virtual void resort_integrals_after_freezing();
-    virtual void resort_four(double*& tei, std::vector<size_t>& map);
     void resort_four(std::vector<double>& tei, std::vector<size_t>& map);
 
     virtual void resort_three(std::shared_ptr<Matrix>&, std::vector<size_t>&) {}

@@ -64,7 +64,13 @@ enum IntegralType { Conventional, DF, Cholesky, DiskDF, DistDF, Own, Custom };
 void set_INT_options(ForteOptions& foptions);
 
 /**
- * Integrals: transforms and stores the integrals in Pitzer ordering
+ * @brief The ForteIntegrals class is a base class for transforming and storing MO integrals
+ *
+ * ForteIntegrals provides a common interface for reading one- and two-electron integrals
+ * in the MO basis.
+ * This class also takes care of removing frozen core and virtual orbitals (excluded from
+ * any treatment of correlation energy) and forming the modified one-electron operator,
+ * which includes contributions from doubly occupied frozen orbitals.
  */
 class ForteIntegrals {
   public:
@@ -73,38 +79,20 @@ class ForteIntegrals {
     /**
      * Constructor
      * @param options The main options object
+     * @param ref_wfn The reference wave function object
      * @param restricted Select a restricted or unrestricted transformation
-     * (RestrictedMOs = restricted, UnrestrictedMOs = unrestricted).
+     * @param mo_space_info The MOSpaceInfo object
      */
     ForteIntegrals(psi::Options& options, SharedWavefunction ref_wfn,
-                   IntegralSpinRestriction restricted,
-                   std::shared_ptr<MOSpaceInfo> mo_space_info);
+                   IntegralSpinRestriction restricted, std::shared_ptr<MOSpaceInfo> mo_space_info);
 
     /// Destructor
     virtual ~ForteIntegrals();
 
+  public:
     // ==> Class Interface <==
 
-    /// I (York) am not sure why these are private, maybe they can be removed.
-  private:
-    /// Return the total number of molecular orbitals (this number includes frozen MOs)
-    size_t nmo() const { return nmo_; }
-
-    /// Return the number of irreducible representations
-    int nirrep() const { return nirrep_; }
-
-    /// Return the number of frozen core orbitals per irrep
-    Dimension& frzcpi() { return frzcpi_; }
-    /// Return the number of frozen virtual orbitals per irrep
-    Dimension& frzvpi() { return frzvpi_; }
-
-    /// The number of correlated MOs per irrep (non frozen).  This is nmopi -
-    /// nfzcpi - nfzvpi.
-    Dimension& ncmopi() { return ncmopi_; }
-
-  public:
-    /// Return the total number of correlated molecular orbitals (this number
-    /// excludes frozen MOs)
+    /// Return the total number of correlated molecular orbitals (this number excludes frozen MOs)
     size_t ncmo() const { return ncmo_; }
 
     /// Set printing level
@@ -279,13 +267,11 @@ class ForteIntegrals {
     /// The number of MOs, including the ones that are frozen.
     size_t nmo_;
 
-    /// The number of auxiliary basis functions if DF
-    /// The number of cholesky vectors
-    /// The number of cholesky/auxiliary
-    /// Three Index Shared Matrix
-    /// The number of correlated MOs (excluding frozen).  This is nmo - nfzc -
-    /// nfzv.
+    /// The number of correlated MOs (excluding frozen).  This is nmo - nfzc - nfzv.
     size_t ncmo_;
+
+    /// The mapping from correlated MO to full MO (frozen + correlated)
+    std::vector<size_t> cmotomo_;
 
     /// The number of symmetrized AOs per irrep.
     Dimension nsopi_;
@@ -327,8 +313,6 @@ class ForteIntegrals {
 
     /// Frozen-core energy
     double frozen_core_energy_;
-    std::vector<int> pair_irrep_map;
-    std::vector<int> pair_index_map;
 
     /// Scalar energy term
     double scalar_;
@@ -348,51 +332,14 @@ class ForteIntegrals {
     std::vector<double> fock_matrix_a;
     std::vector<double> fock_matrix_b;
 
-    // ==> Class private functions <==
-
-    void startup();
-
-    void transform_one_electron_integrals();
-
-    // ==> Class private virtual functions <==
-
-    /// Allocate the memory required to store the one-electron integrals and fock matrices
-    virtual void allocate();
-
-    /// Deallocate memory
-    virtual void deallocate();
-
-    /// This function manages freezing core and virtual orbitals
-    void freeze_core_orbitals();
-
-    /// Compute the one-body operator modified by the frozen core orbitals
-    void compute_frozen_one_body_operator();
-
-    /// Remove the doubly occupied and virtual orbitals and resort the rest so
-    /// that
-    /// we are left only with ncmo = nmo - nfzc - nfzv
-    virtual void resort_integrals_after_freezing() = 0;
-
-    virtual void resort_three(std::shared_ptr<Matrix>&, std::vector<size_t>& map) = 0;
-    virtual void resort_four(double*& tei, std::vector<size_t>& map) = 0;
-    /// Function used to rotate MOs during contructor
-    void rotate_mos();
-
-    /// Look at CD/DF/Conventional to see implementation
-    /// computes/reads integrals
-    virtual void gather_integrals() = 0;
     /// The B tensor
     // std::shared_ptr<psi::Tensor> B_;
     std::shared_ptr<DFHelper> df_;
 
-    /// The mapping from correlated MO to full MO (frozen + correlated)
-    std::vector<size_t> cmotomo_;
     /// The type of tensor that ambit uses -> CoreTensor
     ambit::TensorType tensor_type_ = ambit::CoreTensor;
     /// How much memory each integral takes up
     double int_mem_;
-    //    / The Cmatrix in a symmetry aware basis
-    //    SharedMatrix Ca_;
     /// Control printing of timings
     int print_;
     /// The One Electron Integrals (T + V) in SO Basis
@@ -406,6 +353,36 @@ class ForteIntegrals {
     /// Compute MO dipole integrals
     std::vector<SharedMatrix> MOdipole_ints_helper(SharedMatrix Cao, SharedVector epsilon,
                                                    const bool& resort);
+
+    // ==> Class private functions <==
+
+    /// Class initializer
+    void startup();
+
+    /// Allocate the memory required to store the one-electron integrals and fock matrices
+    void allocate();
+
+    /// Transform the one-electron integrals
+    void transform_one_electron_integrals();
+
+    /// This function manages freezing core and virtual orbitals
+    void freeze_core_orbitals();
+
+    /// Compute the one-body operator modified by the frozen core orbitals
+    void compute_frozen_one_body_operator();
+
+    /// Function used to rotate MOs during contructor
+    void rotate_mos();
+
+    // ==> Class private virtual functions <==
+
+    /// Computes/reads two-electron integrals (see CD/DF/Conventional classes for implementation)
+    virtual void gather_integrals() = 0;
+
+    /// Remove the doubly occupied and virtual orbitals and resort the rest so
+    /// that we are left only with ncmo = nmo - nfzc - nfzv
+    virtual void resort_integrals_after_freezing() = 0;
+    virtual void resort_three(std::shared_ptr<Matrix>&, std::vector<size_t>& map) = 0;
 };
 
 /**
@@ -469,12 +446,10 @@ class ConventionalIntegrals : public ForteIntegrals {
     /// Transform the integrals
     void transform_integrals();
 
+    void resort_four(std::vector<double>& tei, std::vector<size_t>& map);
+
     virtual void gather_integrals();
-    // Allocates memory for a antisymmetrized tei (nmo_^4)
-    virtual void allocate();
-    virtual void deallocate();
     virtual void resort_integrals_after_freezing();
-    virtual void resort_four(double*& tei, std::vector<size_t>& map);
     virtual void resort_three(std::shared_ptr<Matrix>&, std::vector<size_t>&) {}
     virtual void set_tei(size_t p, size_t q, size_t r, size_t s, double value, bool alpha1,
                          bool alpha2);
@@ -486,11 +461,12 @@ class ConventionalIntegrals : public ForteIntegrals {
     }
 
     /// The IntegralTransform object used by this class
-    IntegralTransform* ints_;
+    std::shared_ptr<IntegralTransform> integral_transform_;
 
-    double* aphys_tei_aa;
-    double* aphys_tei_ab;
-    double* aphys_tei_bb;
+    /// Two-electron integrals stored as a vector
+    std::vector<double> aphys_tei_aa;
+    std::vector<double> aphys_tei_ab;
+    std::vector<double> aphys_tei_bb;
 };
 
 /// Classes written by Kevin Hannon
@@ -548,16 +524,9 @@ class CholeskyIntegrals : public ForteIntegrals {
     /// Computes Cholesky integrals
     virtual void gather_integrals();
     /// Allocates diagonal integrals
-    virtual void allocate();
-    virtual void deallocate();
     virtual void resort_three(std::shared_ptr<Matrix>& threeint, std::vector<size_t>& map);
     virtual void resort_integrals_after_freezing();
     void transform_integrals();
-    /// This is not used in Cholesky, but I have to have implementations for
-    /// derived classes.
-    virtual void resort_four(double*&, std::vector<size_t>&) {
-        throw PSIEXCEPTION("No four integrals to sort");
-    }
     std::shared_ptr<Matrix> ThreeIntegral_;
     size_t nthree_ = 0;
 };
@@ -570,8 +539,7 @@ class CholeskyIntegrals : public ForteIntegrals {
 class DFIntegrals : public ForteIntegrals {
   public:
     DFIntegrals(psi::Options& options, SharedWavefunction ref_wfn,
-                IntegralSpinRestriction restricted,
-                std::shared_ptr<MOSpaceInfo> mo_space_info);
+                IntegralSpinRestriction restricted, std::shared_ptr<MOSpaceInfo> mo_space_info);
     virtual double aptei_aa(size_t p, size_t q, size_t r, size_t s);
     virtual double aptei_ab(size_t p, size_t q, size_t r, size_t s);
     virtual double aptei_bb(size_t p, size_t q, size_t r, size_t s);
@@ -611,8 +579,6 @@ class DFIntegrals : public ForteIntegrals {
 
   private:
     virtual void gather_integrals();
-    virtual void allocate();
-    virtual void deallocate();
     virtual void resort_three(std::shared_ptr<Matrix>& threeint, std::vector<size_t>& map);
     virtual void resort_integrals_after_freezing();
     virtual void resort_four(double*&, std::vector<size_t>&) {}
@@ -629,8 +595,7 @@ class DFIntegrals : public ForteIntegrals {
 class DISKDFIntegrals : public ForteIntegrals {
   public:
     DISKDFIntegrals(psi::Options& options, SharedWavefunction ref_wfn,
-                    IntegralSpinRestriction restricted,
-                    std::shared_ptr<MOSpaceInfo> mo_space_info);
+                    IntegralSpinRestriction restricted, std::shared_ptr<MOSpaceInfo> mo_space_info);
 
     /// aptei_xy functions are slow.  try to use three_integral_block
 
@@ -675,11 +640,8 @@ class DISKDFIntegrals : public ForteIntegrals {
 
   private:
     virtual void gather_integrals();
-    virtual void allocate();
-    virtual void deallocate();
     virtual void resort_three(std::shared_ptr<Matrix>& threeint, std::vector<size_t>& map);
     virtual void resort_integrals_after_freezing();
-    virtual void resort_four(double*&, std::vector<size_t>&) {}
 
     std::shared_ptr<Matrix> ThreeIntegral_;
     size_t nthree_ = 0;
@@ -689,8 +651,7 @@ class DISKDFIntegrals : public ForteIntegrals {
 class DistDFIntegrals : public ForteIntegrals {
   public:
     DistDFIntegrals(psi::Options& options, SharedWavefunction ref_wfn,
-                    IntegralSpinRestriction restricted,
-                    std::shared_ptr<MOSpaceInfo> mo_space_info);
+                    IntegralSpinRestriction restricted, std::shared_ptr<MOSpaceInfo> mo_space_info);
 
     virtual void retransform_integrals();
     /// aptei_xy functions are slow.  try to use three_integral_block
@@ -742,12 +703,9 @@ class DistDFIntegrals : public ForteIntegrals {
 
   private:
     virtual void gather_integrals();
-    virtual void allocate();
-    virtual void deallocate();
     virtual void resort_three(std::shared_ptr<Matrix>& /*threeint*/, std::vector<size_t>& /*map*/) {
     }
     virtual void resort_integrals_after_freezing() {}
-    virtual void resort_four(double*&, std::vector<size_t>&) {}
 
     /// This is the handle for GA
     int DistDF_ga_;
@@ -773,8 +731,7 @@ class DistDFIntegrals : public ForteIntegrals {
 class OwnIntegrals : public ForteIntegrals {
   public:
     OwnIntegrals(psi::Options& options, SharedWavefunction ref_wfn,
-                 IntegralSpinRestriction restricted,
-                 std::shared_ptr<MOSpaceInfo> mo_space_info);
+                 IntegralSpinRestriction restricted, std::shared_ptr<MOSpaceInfo> mo_space_info);
 
     virtual void retransform_integrals() {}
     /// aptei_xy functions are slow.  try to use three_integral_block
@@ -833,12 +790,9 @@ class OwnIntegrals : public ForteIntegrals {
 
   private:
     virtual void gather_integrals() {}
-    virtual void allocate() {}
-    virtual void deallocate() {}
     virtual void resort_three(std::shared_ptr<Matrix>& /*threeint*/, std::vector<size_t>& /*map*/) {
     }
     virtual void resort_integrals_after_freezing() {}
-    virtual void resort_four(double*&, std::vector<size_t>&) {}
     ambit::Tensor blank_tensor_;
 };
 
