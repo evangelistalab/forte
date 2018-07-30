@@ -298,18 +298,6 @@ void ForteIntegrals::compute_frozen_one_body_operator() {
     F_core->scale(2.0);
     F_core->subtract(K_core);
     F_core->transform(Ca);
-    int offset = 0;
-    for (int h = 0; h < nirrep_; h++) {
-        for (int p = 0; p < nmopi[h]; ++p) {
-            for (int q = 0; q < nmopi[h]; ++q) {
-                one_electron_integrals_a[(p + offset) * nmo_ + (q + offset)] +=
-                    F_core->get(h, p, q);
-                one_electron_integrals_b[(p + offset) * nmo_ + (q + offset)] +=
-                    F_core->get(h, p, q);
-            }
-        }
-        offset += nmopi[h];
-    }
 
     // This loop grabs only the correlated part of the correction
     int full_offset = 0;
@@ -321,9 +309,9 @@ void ForteIntegrals::compute_frozen_one_body_operator() {
                 // the index of p and q in the full block of irrep h
                 size_t p_full = cmotomo_[p + corr_offset] - full_offset;
                 size_t q_full = cmotomo_[q + corr_offset] - full_offset;
-                one_electron_integrals_a[(p + offset) * nmo_ + (q + offset)] +=
+                one_electron_integrals_a[(p + corr_offset) * nmo_ + (q + corr_offset)] +=
                     F_core->get(h, p_full, q_full);
-                one_electron_integrals_b[(p + offset) * nmo_ + (q + offset)] +=
+                one_electron_integrals_b[(p + corr_offset) * nmo_ + (q + corr_offset)] +=
                     F_core->get(h, p_full, q_full);
             }
         }
