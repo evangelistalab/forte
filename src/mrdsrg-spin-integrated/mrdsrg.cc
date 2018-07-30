@@ -956,7 +956,7 @@ double MRDSRG::compute_energy_sa() {
 //    if (std::fabs(Etest - Eref_ - Hbar0_) > 100.0 * options_.get_double("E_CONVERGENCE")) {
 //        throw PSIEXCEPTION("De-normal-odering failed.");
 //    } else {
-//        ints_->update_integrals(false);
+//    //    ints_->update_integrals(false); <- this should not be here
 //    }
 //}
 
@@ -980,7 +980,6 @@ void MRDSRG::reset_ints(BlockedTensor& H, BlockedTensor& V) {
                 ints_->set_tei(i[0], i[1], i[2], i[3], value, false, false);
             }
         });
-    ints_->update_integrals(false);
 }
 
 std::vector<std::vector<double>> MRDSRG::diagonalize_Fock_diagblocks(BlockedTensor& U) {

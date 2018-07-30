@@ -51,26 +51,14 @@ namespace forte {
 
 DISKDFIntegrals::DISKDFIntegrals(psi::Options& options, SharedWavefunction ref_wfn,
                                  IntegralSpinRestriction restricted,
-                                 IntegralFrozenCore resort_frozen_core,
                                  std::shared_ptr<MOSpaceInfo> mo_space_info)
-    : ForteIntegrals(options, ref_wfn, restricted, resort_frozen_core, mo_space_info) {
+    : ForteIntegrals(options, ref_wfn, restricted, mo_space_info) {
 
     integral_type_ = DiskDF;
     outfile->Printf("\n  DISKDFIntegrals overall time");
     Timer DFInt;
     allocate();
 
-    // Form a correlated mo to mo before I create integrals
-    std::vector<size_t> cmo2mo;
-    for (int h = 0, q = 0; h < nirrep_; ++h) {
-        q += frzcpi_[h]; // skip the frozen core
-        for (int r = 0; r < ncmopi_[h]; ++r) {
-            cmo2mo.push_back(q);
-            q++;
-        }
-        q += frzvpi_[h]; // skip the frozen virtual
-    }
-    cmotomo_ = cmo2mo;
     int my_proc = 0;
 #ifdef HAVE_GA
     my_proc = GA_Nodeid();
@@ -644,14 +632,6 @@ void DISKDFIntegrals::resort_integrals_after_freezing() {
     outfile->Printf("\n  Resorting integrals after freezing core.");
 
     // Create an array that maps the CMOs to the MOs (cmo2mo).
-
-    // Resort the integrals
-    resort_two(one_electron_integrals_a, cmotomo_);
-    resort_two(one_electron_integrals_b, cmotomo_);
-    // resort_two(diagonal_aphys_tei_aa,cmotomo_);
-    // resort_two(diagonal_aphys_tei_ab,cmotomo_);
-    // resort_two(diagonal_aphys_tei_bb,cmotomo_);
-
     // resort_three(ThreeIntegral_,cmo2mo);
 
     outfile->Printf("\n Resorting integrals takes   %8.8fs", resort_integrals.get());

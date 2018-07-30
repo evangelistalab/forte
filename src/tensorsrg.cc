@@ -309,8 +309,6 @@ void TensorSRG::transfer_integrals() {
     });
 
     outfile->Printf("\n  <H> = %24.12f", Esth + molecule()->nuclear_repulsion_energy(ref_wfn_->get_dipole_field_strength()));
-
-    ints_->update_integrals(false);
 }
 }
 } // EndNamespaces

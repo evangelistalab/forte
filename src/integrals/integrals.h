@@ -54,10 +54,11 @@ class MOSpaceInfo;
 
 /// This decides the type of transformation: resticted vs. unrestricted
 enum IntegralSpinRestriction { RestrictedMOs, UnrestrictedMOs };
-enum IntegralFrozenCore { RemoveFrozenMOs, KeepFrozenMOs };
+
+/// This decides the type of integral
+/// The integrals implementation is in a cc file for each class.
+/// DFIntegrals->df_integrals.cc
 enum IntegralType { Conventional, DF, Cholesky, DiskDF, DistDF, Own, Custom };
-// The integrals implementation is in a cc file for each class.
-// DFIntegrals->df_integrals.cc
 
 /// Set integrals options
 void set_INT_options(ForteOptions& foptions);
@@ -74,13 +75,9 @@ class ForteIntegrals {
      * @param options The main options object
      * @param restricted Select a restricted or unrestricted transformation
      * (RestrictedMOs = restricted, UnrestrictedMOs = unrestricted).
-     * @param resort_frozen_core Determines if the the integral with frozen
-     * index are removed
-     *        (RemoveFrozenMOs = remove and resort, KeepFrozenMOs = keep all the
-     * integrals).
      */
     ForteIntegrals(psi::Options& options, SharedWavefunction ref_wfn,
-                   IntegralSpinRestriction restricted, IntegralFrozenCore resort_frozen_core,
+                   IntegralSpinRestriction restricted,
                    std::shared_ptr<MOSpaceInfo> mo_space_info);
 
     /// Destructor
@@ -230,8 +227,6 @@ class ForteIntegrals {
     virtual void set_tei(size_t p, size_t q, size_t r, size_t s, double value, bool alpha1,
                          bool alpha2) = 0;
 
-    void update_integrals(bool freeze_core = true);
-
     /// Update the integrals with a new set of MO coefficients
     virtual void retransform_integrals();
     /// Expert Option: just try and use three_integral
@@ -243,11 +238,6 @@ class ForteIntegrals {
     SharedMatrix OneBody_symm() { return OneBody_symm_; }
     /// Return the one-body AO integrals
     SharedMatrix OneBodyAO() { return OneIntsAO_; }
-    /// Set to either delete frozen core integrals or keep them
-    void keep_frozen_core_integrals(IntegralFrozenCore keep_frozen_core) {
-        resort_frozen_core_ = keep_frozen_core;
-    }
-    IntegralFrozenCore frozen_core_integrals() { return resort_frozen_core_; }
 
     virtual int ga_handle() { return 0; }
 
@@ -282,9 +272,6 @@ class ForteIntegrals {
 
     /// Are we doing a spin-restricted computation?
     IntegralSpinRestriction restricted_;
-
-    /// Do we have to resort the integrals to eliminate frozen orbitals?
-    IntegralFrozenCore resort_frozen_core_;
 
     /// Number of irreps
     int nirrep_;
@@ -349,6 +336,10 @@ class ForteIntegrals {
     /// The MOSpaceInfo object
     std::shared_ptr<MOSpaceInfo> mo_space_info_;
 
+    /// Full one-electron integrals stored as a vector (includes frozen orbitals)
+    std::vector<double> full_one_electron_integrals_a;
+    std::vector<double> full_one_electron_integrals_b;
+
     /// One-electron integrals stored as a vector
     std::vector<double> one_electron_integrals_a;
     std::vector<double> one_electron_integrals_b;
@@ -363,11 +354,9 @@ class ForteIntegrals {
 
     void transform_one_electron_integrals();
 
-    void resort_two(std::vector<double>& ints, std::vector<size_t>& map);
-
     // ==> Class private virtual functions <==
 
-    /// Allocate memory
+    /// Allocate the memory required to store the one-electron integrals and fock matrices
     virtual void allocate();
 
     /// Deallocate memory
@@ -396,8 +385,7 @@ class ForteIntegrals {
     // std::shared_ptr<psi::Tensor> B_;
     std::shared_ptr<DFHelper> df_;
 
-    /// The mapping from correlated to actual MO
-    /// Basically gives the original ordering back
+    /// The mapping from correlated MO to full MO (frozen + correlated)
     std::vector<size_t> cmotomo_;
     /// The type of tensor that ambit uses -> CoreTensor
     ambit::TensorType tensor_type_ = ambit::CoreTensor;
@@ -430,7 +418,7 @@ class ConventionalIntegrals : public ForteIntegrals {
     /// Contructor of the class.  Calls std::shared_ptr<ForteIntegrals> ints
     /// constructor
     ConventionalIntegrals(psi::Options& options, SharedWavefunction ref_wfn,
-                          IntegralSpinRestriction restricted, IntegralFrozenCore resort_frozen_core,
+                          IntegralSpinRestriction restricted,
                           std::shared_ptr<MOSpaceInfo> mo_space_info);
     virtual ~ConventionalIntegrals();
 
@@ -515,7 +503,7 @@ class ConventionalIntegrals : public ForteIntegrals {
 class CholeskyIntegrals : public ForteIntegrals {
   public:
     CholeskyIntegrals(psi::Options& options, SharedWavefunction ref_wfn,
-                      IntegralSpinRestriction restricted, IntegralFrozenCore resort_frozen_core,
+                      IntegralSpinRestriction restricted,
                       std::shared_ptr<MOSpaceInfo> mo_space_info);
     virtual ~CholeskyIntegrals();
     /// aptei_x will grab antisymmetriced integrals and creates DF/CD integrals
@@ -582,7 +570,7 @@ class CholeskyIntegrals : public ForteIntegrals {
 class DFIntegrals : public ForteIntegrals {
   public:
     DFIntegrals(psi::Options& options, SharedWavefunction ref_wfn,
-                IntegralSpinRestriction restricted, IntegralFrozenCore resort_frozen_core,
+                IntegralSpinRestriction restricted,
                 std::shared_ptr<MOSpaceInfo> mo_space_info);
     virtual double aptei_aa(size_t p, size_t q, size_t r, size_t s);
     virtual double aptei_ab(size_t p, size_t q, size_t r, size_t s);
@@ -641,7 +629,7 @@ class DFIntegrals : public ForteIntegrals {
 class DISKDFIntegrals : public ForteIntegrals {
   public:
     DISKDFIntegrals(psi::Options& options, SharedWavefunction ref_wfn,
-                    IntegralSpinRestriction restricted, IntegralFrozenCore resort_frozen_core,
+                    IntegralSpinRestriction restricted,
                     std::shared_ptr<MOSpaceInfo> mo_space_info);
 
     /// aptei_xy functions are slow.  try to use three_integral_block
@@ -701,7 +689,7 @@ class DISKDFIntegrals : public ForteIntegrals {
 class DistDFIntegrals : public ForteIntegrals {
   public:
     DistDFIntegrals(psi::Options& options, SharedWavefunction ref_wfn,
-                    IntegralSpinRestriction restricted, IntegralFrozenCore resort_frozen_core,
+                    IntegralSpinRestriction restricted,
                     std::shared_ptr<MOSpaceInfo> mo_space_info);
 
     virtual void retransform_integrals();
@@ -785,7 +773,7 @@ class DistDFIntegrals : public ForteIntegrals {
 class OwnIntegrals : public ForteIntegrals {
   public:
     OwnIntegrals(psi::Options& options, SharedWavefunction ref_wfn,
-                 IntegralSpinRestriction restricted, IntegralFrozenCore resort_frozen_core,
+                 IntegralSpinRestriction restricted,
                  std::shared_ptr<MOSpaceInfo> mo_space_info);
 
     virtual void retransform_integrals() {}

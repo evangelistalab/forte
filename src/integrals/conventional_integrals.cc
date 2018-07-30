@@ -50,9 +50,8 @@ namespace forte {
  */
 ConventionalIntegrals::ConventionalIntegrals(psi::Options& options, SharedWavefunction ref_wfn,
                                              IntegralSpinRestriction restricted,
-                                             IntegralFrozenCore resort_frozen_core,
                                              std::shared_ptr<MOSpaceInfo> mo_space_info)
-    : ForteIntegrals(options, ref_wfn, restricted, resort_frozen_core, mo_space_info),
+    : ForteIntegrals(options, ref_wfn, restricted, mo_space_info),
       ints_(nullptr) {
 
     integral_type_ = Conventional;
@@ -366,26 +365,10 @@ void ConventionalIntegrals::resort_integrals_after_freezing() {
     if (print_ > 0) {
         outfile->Printf("\n  Resorting integrals after freezing core.");
     }
-
-    // Create an array that maps the CMOs to the MOs (cmo2mo).
-    std::vector<size_t> cmo2mo;
-    for (int h = 0, q = 0; h < nirrep_; ++h) {
-        q += frzcpi_[h]; // skip the frozen core
-        for (int r = 0; r < ncmopi_[h]; ++r) {
-            cmo2mo.push_back(q);
-            q++;
-        }
-        q += frzvpi_[h]; // skip the frozen virtual
-    }
-    cmotomo_ = (cmo2mo);
-
-    // Resort the integrals
-    resort_two(one_electron_integrals_a, cmo2mo);
-    resort_two(one_electron_integrals_b, cmo2mo);
-
-    resort_four(aphys_tei_aa, cmo2mo);
-    resort_four(aphys_tei_ab, cmo2mo);
-    resort_four(aphys_tei_bb, cmo2mo);
+    // Resort the four-index integrals
+    resort_four(aphys_tei_aa, cmotomo_);
+    resort_four(aphys_tei_ab, cmotomo_);
+    resort_four(aphys_tei_bb, cmotomo_);
 }
 
 void ConventionalIntegrals::resort_four(double*& tei, std::vector<size_t>& map) {
