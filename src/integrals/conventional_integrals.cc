@@ -86,12 +86,12 @@ void ConventionalIntegrals::transform_integrals() {
     // Call IntegralTransform asking for integrals over restricted or
     // unrestricted orbitals
     if (restricted_) {
-        integral_transform_ = new IntegralTransform(
+        integral_transform_ = std::make_shared<IntegralTransform>(
             wfn_, spaces, IntegralTransform::TransformationType::Restricted,
             IntegralTransform::OutputType::DPDOnly, IntegralTransform::MOOrdering::PitzerOrder,
             IntegralTransform::FrozenOrbitals::None);
     } else {
-        integral_transform_ = new IntegralTransform(
+        integral_transform_ = std::make_shared<IntegralTransform>(
             wfn_, spaces, IntegralTransform::TransformationType::Unrestricted,
             IntegralTransform::OutputType::DPDOnly, IntegralTransform::MOOrdering::PitzerOrder,
             IntegralTransform::FrozenOrbitals::None);
