@@ -37,7 +37,7 @@
 #include "../blockedtensorfactory.h"
 #include "integrals.h"
 
-#define ID(x) ints_->DPD_ID(x)
+#define ID(x) integral_transform_->DPD_ID(x)
 
 namespace psi {
 namespace forte {
@@ -51,39 +51,25 @@ namespace forte {
 ConventionalIntegrals::ConventionalIntegrals(psi::Options& options, SharedWavefunction ref_wfn,
                                              IntegralSpinRestriction restricted,
                                              std::shared_ptr<MOSpaceInfo> mo_space_info)
-    : ForteIntegrals(options, ref_wfn, restricted, mo_space_info),
-      ints_(nullptr) {
+    : ForteIntegrals(options, ref_wfn, restricted, mo_space_info) {
 
     integral_type_ = Conventional;
 
     outfile->Printf("\n  Overall Conventional Integrals timings\n\n");
     Timer ConvTime;
-    allocate();
+
+    // Allocate the memory required to store the two-electron integrals
+    aphys_tei_aa.assign(num_aptei, 0.0);
+    aphys_tei_ab.assign(num_aptei, 0.0);
+    aphys_tei_bb.assign(num_aptei, 0.0);
+
     gather_integrals();
     freeze_core_orbitals();
 
     outfile->Printf("\n  Conventional integrals take %8.8f s", ConvTime.get());
 }
 
-ConventionalIntegrals::~ConventionalIntegrals() { deallocate(); }
-
-void ConventionalIntegrals::allocate() {
-    // Allocate the memory required to store the two-electron integrals
-    aphys_tei_aa = new double[num_aptei];
-    aphys_tei_ab = new double[num_aptei];
-    aphys_tei_bb = new double[num_aptei];
-}
-
-void ConventionalIntegrals::deallocate() {
-    // Deallocate the integral transform object if needed
-    if (ints_ != nullptr)
-        delete ints_;
-
-    // Allocate the memory required to store the two-electron integrals
-    delete[] aphys_tei_aa;
-    delete[] aphys_tei_ab;
-    delete[] aphys_tei_bb;
-}
+ConventionalIntegrals::~ConventionalIntegrals() {}
 
 void ConventionalIntegrals::transform_integrals() {
 
@@ -95,30 +81,26 @@ void ConventionalIntegrals::transform_integrals() {
     // this step.
     spaces.push_back(MOSpace::all);
 
-    // If the integral
-    if (ints_ != nullptr)
-        delete ints_;
-
     // Call IntegralTransform asking for integrals over restricted or
     // unrestricted orbitals
     if (restricted_) {
-        ints_ = new IntegralTransform(
+        integral_transform_ = std::make_shared<IntegralTransform>(
             wfn_, spaces, IntegralTransform::TransformationType::Restricted,
             IntegralTransform::OutputType::DPDOnly, IntegralTransform::MOOrdering::PitzerOrder,
             IntegralTransform::FrozenOrbitals::None);
     } else {
-        ints_ = new IntegralTransform(
+        integral_transform_ = std::make_shared<IntegralTransform>(
             wfn_, spaces, IntegralTransform::TransformationType::Unrestricted,
             IntegralTransform::OutputType::DPDOnly, IntegralTransform::MOOrdering::PitzerOrder,
             IntegralTransform::FrozenOrbitals::None);
     }
 
     // Keep the SO integrals on disk in case we want to retransform them
-    ints_->set_keep_iwl_so_ints(true);
+    integral_transform_->set_keep_iwl_so_ints(true);
     Timer int_timer;
-    ints_->transform_tei(MOSpace::all, MOSpace::all, MOSpace::all, MOSpace::all);
+    integral_transform_->transform_tei(MOSpace::all, MOSpace::all, MOSpace::all, MOSpace::all);
 
-    dpd_set_default(ints_->get_dpd_id());
+    dpd_set_default(integral_transform_->get_dpd_id());
     if (print_ > 0) {
         outfile->Printf("\n  Integral transformation done. %8.8f s", int_timer.get());
     }
@@ -174,15 +156,13 @@ ambit::Tensor ConventionalIntegrals::aptei_bb_block(const std::vector<size_t>& p
 
 void ConventionalIntegrals::set_tei(size_t p, size_t q, size_t r, size_t s, double value,
                                     bool alpha1, bool alpha2) {
-    double* p_tei;
-    if (alpha1 == true and alpha2 == true)
-        p_tei = aphys_tei_aa;
-    if (alpha1 == true and alpha2 == false)
-        p_tei = aphys_tei_ab;
-    if (alpha1 == false and alpha2 == false)
-        p_tei = aphys_tei_bb;
     size_t index = aptei_index(p, q, r, s);
-    p_tei[index] = value;
+    if (alpha1 == true and alpha2 == true)
+        aphys_tei_aa[index] = value;
+    if (alpha1 == true and alpha2 == false)
+        aphys_tei_ab[index] = value;
+    if (alpha1 == false and alpha2 == false)
+        aphys_tei_bb[index] = value;
 }
 
 void ConventionalIntegrals::gather_integrals() {
@@ -366,12 +346,10 @@ void ConventionalIntegrals::resort_integrals_after_freezing() {
     resort_four(aphys_tei_bb, cmotomo_);
 }
 
-void ConventionalIntegrals::resort_four(double*& tei, std::vector<size_t>& map) {
+void ConventionalIntegrals::resort_four(std::vector<double>& tei, std::vector<size_t>& map) {
     // Store the integrals in a temporary array
-    double* temp_ints = new double[num_aptei];
-    for (size_t p = 0; p < num_aptei; ++p) {
-        temp_ints[p] = 0.0;
-    }
+    size_t num_aptei_corr = ncmo_ * ncmo_ * ncmo_ * ncmo_;
+    std::vector<double> temp_ints(num_aptei_corr, 0.0);
     for (size_t p = 0; p < ncmo_; ++p) {
         for (size_t q = 0; q < ncmo_; ++q) {
             for (size_t r = 0; r < ncmo_; ++r) {
@@ -384,9 +362,7 @@ void ConventionalIntegrals::resort_four(double*& tei, std::vector<size_t>& map) 
             }
         }
     }
-    // Delete old integrals and assign the pointer
-    delete[] tei;
-    tei = temp_ints;
+    temp_ints.swap(tei);
 }
 
 void ConventionalIntegrals::make_fock_matrix(SharedMatrix gamma_a, SharedMatrix gamma_b) {

@@ -72,10 +72,7 @@ DISKDFIntegrals::DISKDFIntegrals(psi::Options& options, SharedWavefunction ref_w
     }
 }
 
-DISKDFIntegrals::~DISKDFIntegrals() { deallocate(); }
-
-void DISKDFIntegrals::allocate() {
-}
+DISKDFIntegrals::~DISKDFIntegrals() {}
 
 double DISKDFIntegrals::aptei_aa(size_t p, size_t q, size_t r, size_t s) {
     size_t pn, qn, rn, sn;
@@ -465,9 +462,6 @@ void DISKDFIntegrals::gather_integrals() {
     outfile->Printf("\n    %-36s ...", str.c_str());
     df_->transform();
     outfile->Printf("...Done. Timing %15.6f s", timer.get());
-}
-
-void DISKDFIntegrals::deallocate() {
 }
 
 void DISKDFIntegrals::make_fock_matrix(SharedMatrix gamma_aM, SharedMatrix gamma_bM) {

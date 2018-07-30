@@ -74,10 +74,7 @@ DFIntegrals::DFIntegrals(psi::Options& options, SharedWavefunction ref_wfn,
     outfile->Printf("\n  DFIntegrals take %15.8f s", DFInt.get());
 }
 
-DFIntegrals::~DFIntegrals() { deallocate(); }
-
-void DFIntegrals::allocate() {
-}
+DFIntegrals::~DFIntegrals() {}
 
 double DFIntegrals::aptei_aa(size_t p, size_t q, size_t r, size_t s) {
     double vpqrsalphaC = 0.0;
@@ -210,7 +207,7 @@ void DFIntegrals::gather_integrals() {
     // into the C_matrix object
 
     df->add_space("ALL", Ca_ao);
-    
+
     // set_C clears all the orbital spaces, so this creates the space
     // This space creates the total nmo_.
     // This assumes that everything is correlated.
@@ -230,7 +227,7 @@ void DFIntegrals::gather_integrals() {
         outfile->Printf("...Done. Timing %15.6f s", timer.get());
     }
 
-    SharedMatrix Bpq(new Matrix("Bpq", naux,nmo_ * nmo_));
+    SharedMatrix Bpq(new Matrix("Bpq", naux, nmo_ * nmo_));
 
     Bpq = df->get_tensor("B");
 
@@ -238,13 +235,10 @@ void DFIntegrals::gather_integrals() {
     ThreeIntegral_ = Bpq->transpose()->clone();
 }
 
-void DFIntegrals::deallocate() {
-}
-
 void DFIntegrals::make_fock_matrix(SharedMatrix gamma_aM, SharedMatrix gamma_bM) {
     TensorType tensor_type = ambit::CoreTensor;
     ambit::Tensor ThreeIntegralTensor =
-        //ambit::Tensor::build(tensor_type, "ThreeIndex", {ncmo_, ncmo_, nthree_});
+        // ambit::Tensor::build(tensor_type, "ThreeIndex", {ncmo_, ncmo_, nthree_});
         ambit::Tensor::build(tensor_type, "ThreeIndex", {nthree_, ncmo_, ncmo_});
     ambit::Tensor gamma_a = ambit::Tensor::build(tensor_type, "Gamma_a", {ncmo_, ncmo_});
     ambit::Tensor gamma_b = ambit::Tensor::build(tensor_type, "Gamma_b", {ncmo_, ncmo_});
@@ -337,5 +331,5 @@ void DFIntegrals::resort_integrals_after_freezing() {
         outfile->Printf("\n Resorting integrals takes   %8.8fs", resort_integrals.get());
     }
 }
-}
-}
+} // namespace forte
+} // namespace psi

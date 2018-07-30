@@ -57,27 +57,17 @@ CustomIntegrals::CustomIntegrals(psi::Options& options, SharedWavefunction ref_w
 
     outfile->Printf("\n  Using Custom integrals\n\n");
 
-    allocate();
+    // Allocate the memory required to store the two-electron integrals
+    aphys_tei_aa.resize(num_aptei);
+    aphys_tei_ab.resize(num_aptei);
+    aphys_tei_bb.resize(num_aptei);
 
     gather_integrals();
 
     freeze_core_orbitals();
 }
 
-CustomIntegrals::~CustomIntegrals() { deallocate(); }
-
-void CustomIntegrals::allocate() {
-    // Allocate the memory required to store the one-electron integrals
-
-    // Allocate the memory required to store the two-electron integrals
-    aphys_tei_aa.resize(num_aptei);
-    aphys_tei_ab.resize(num_aptei);
-    aphys_tei_bb.resize(num_aptei);
-}
-
-void CustomIntegrals::deallocate() {
-    // nothing to deallocate
-}
+CustomIntegrals::~CustomIntegrals() {}
 
 double CustomIntegrals::aptei_aa(size_t p, size_t q, size_t r, size_t s) {
     return aphys_tei_aa[aptei_index(p, q, r, s)];
@@ -182,32 +172,10 @@ void CustomIntegrals::resort_integrals_after_freezing() {
     resort_four(aphys_tei_bb, cmotomo_);
 }
 
-void CustomIntegrals::resort_four(double*& tei, std::vector<size_t>& map) {
-    // Store the integrals in a temporary array
-    double* temp_ints = new double[num_aptei];
-    for (size_t p = 0; p < num_aptei; ++p) {
-        temp_ints[p] = 0.0;
-    }
-    for (size_t p = 0; p < ncmo_; ++p) {
-        for (size_t q = 0; q < ncmo_; ++q) {
-            for (size_t r = 0; r < ncmo_; ++r) {
-                for (size_t s = 0; s < ncmo_; ++s) {
-                    size_t pqrs_cmo = ncmo_ * ncmo_ * ncmo_ * p + ncmo_ * ncmo_ * q + ncmo_ * r + s;
-                    size_t pqrs_mo =
-                        nmo_ * nmo_ * nmo_ * map[p] + nmo_ * nmo_ * map[q] + nmo_ * map[r] + map[s];
-                    temp_ints[pqrs_cmo] = tei[pqrs_mo];
-                }
-            }
-        }
-    }
-    // Delete old integrals and assign the pointer
-    delete[] tei;
-    tei = temp_ints;
-}
-
 void CustomIntegrals::resort_four(std::vector<double>& tei, std::vector<size_t>& map) {
     // Store the integrals in a temporary array
-    std::vector<double> temp_ints(num_aptei, 0.0);
+    size_t num_aptei_corr = ncmo_ * ncmo_ * ncmo_ * ncmo_;
+    std::vector<double> temp_ints(num_aptei_corr, 0.0);
     for (size_t p = 0; p < ncmo_; ++p) {
         for (size_t q = 0; q < ncmo_; ++q) {
             for (size_t r = 0; r < ncmo_; ++r) {
@@ -220,8 +188,7 @@ void CustomIntegrals::resort_four(std::vector<double>& tei, std::vector<size_t>&
             }
         }
     }
-    // Swap old integrals with new
-    tei.swap(temp_ints);
+    temp_ints.swap(tei);
 }
 
 void CustomIntegrals::make_fock_matrix(SharedMatrix gamma_a, SharedMatrix gamma_b) {
