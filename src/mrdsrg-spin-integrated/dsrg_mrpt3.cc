@@ -97,9 +97,11 @@ void DSRG_MRPT3::startup() {
     // if density fitted
     if (eri_df_) {
         B_ = BTF_->build(tensor_type_, "B 3-idx", {"Lgg", "LGG"});
-        B_.iterate([&](const std::vector<size_t>& i, const std::vector<SpinType>&, double& value) {
-//            value = ints_->three_integral(i[0], i[1], i[2]);
-        });
+        fill_three_index_ints(B_);
+
+        ///        B_.iterate([&](const std::vector<size_t>& i, const std::vector<SpinType>&, double& value) {
+////            value = ints_->three_integral(i[0], i[1], i[2]);
+//        });
 
         size_t sL = aux_mos_.size();
         nelement += sL * sg * sg;

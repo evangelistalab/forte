@@ -258,6 +258,11 @@ class MASTER_DSRG : public DynamicCorrelationSolver {
     void deGNO_ints(const std::string& name, double& H0, BlockedTensor& H1, BlockedTensor& H2,
                     BlockedTensor& H3);
 
+    /**
+     * Fill the tensor T with three-index DF or CD integrals
+     */
+    void fill_three_index_ints(ambit::BlockedTensor T);
+
     // ==> dipole moment <==
 
     /// Compute dipole or not
