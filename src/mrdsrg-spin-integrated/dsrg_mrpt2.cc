@@ -2223,8 +2223,6 @@ void DSRG_MRPT2::transfer_integrals() {
 
     if (std::fabs(Etest - Eref_ - Hbar0_) > 100.0 * options_.get_double("E_CONVERGENCE")) {
         throw PSIEXCEPTION("De-normal-odering failed.");
-    } else {
-        ints_->update_integrals(false);
     }
 }
 

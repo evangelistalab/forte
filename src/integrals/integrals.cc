@@ -87,11 +87,9 @@ void set_INT_options(ForteOptions& foptions) {
 
 ForteIntegrals::ForteIntegrals(psi::Options& options, SharedWavefunction ref_wfn,
                                IntegralSpinRestriction restricted,
-                               IntegralFrozenCore resort_frozen_core,
                                std::shared_ptr<MOSpaceInfo> mo_space_info)
-    : options_(options), wfn_(ref_wfn), restricted_(restricted),
-      resort_frozen_core_(resort_frozen_core), frozen_core_energy_(0.0), scalar_(0.0),
-      mo_space_info_(mo_space_info) {
+    : options_(options), wfn_(ref_wfn), restricted_(restricted), frozen_core_energy_(0.0),
+      scalar_(0.0), mo_space_info_(mo_space_info) {
     // Copy the Wavefunction object
 
     startup();
@@ -125,6 +123,16 @@ void ForteIntegrals::startup() {
 
     ncmo_ = ncmopi_.sum();
 
+    // Create an array that maps the CMOs to the MOs (cmotomo_).
+    for (int h = 0, q = 0; h < nirrep_; ++h) {
+        q += frzcpi_[h]; // skip the frozen core
+        for (int r = 0; r < ncmopi_[h]; ++r) {
+            cmotomo_.push_back(q);
+            q++;
+        }
+        q += frzvpi_[h]; // skip the frozen virtual
+    }
+
     outfile->Printf("\n\n  ==> Integral Transformation <==\n");
     outfile->Printf("\n  Number of molecular orbitals:            %5d", nmopi_.sum());
     outfile->Printf("\n  Number of correlated molecular orbitals: %5zu", ncmo_);
@@ -148,43 +156,19 @@ void ForteIntegrals::startup() {
     }
 }
 
-void ForteIntegrals::ForteIntegrals::allocate() {
-    // Allocate the memory required to store the one-electron integrals, fock matrices, diagonal two
-    // electrons integrals
-    one_electron_integrals_a.assign(nmo_ * nmo_,0.0);
-    one_electron_integrals_b.assign(nmo_ * nmo_,0.0);
+void ForteIntegrals::allocate() {
+    // full one-electron integrals
+    full_one_electron_integrals_a.assign(nmo_ * nmo_, 0.0);
+    full_one_electron_integrals_b.assign(nmo_ * nmo_, 0.0);
 
-    fock_matrix_a.assign(ncmo_ * ncmo_,0.0);
-    fock_matrix_b.assign(ncmo_ * ncmo_,0.0);
+    // these will hold only the correlated part
+    one_electron_integrals_a.assign(ncmo_ * ncmo_, 0.0);
+    one_electron_integrals_b.assign(ncmo_ * ncmo_, 0.0);
+    fock_matrix_a.assign(ncmo_ * ncmo_, 0.0);
+    fock_matrix_b.assign(ncmo_ * ncmo_, 0.0);
 }
 
-void ForteIntegrals::ForteIntegrals::deallocate() {
-}
-
-void ForteIntegrals::ForteIntegrals::resort_two(std::vector<double>& ints, std::vector<size_t>& map) {
-    // Store the integrals in a temporary array of dimension nmo x nmo
-    std::vector<double> temp_ints(nmo_ * nmo_, 0.0);
-    for (size_t p = 0; p < ncmo_; ++p) {
-        for (size_t q = 0; q < ncmo_; ++q) {
-            temp_ints[p * ncmo_ + q] = ints[map[p] * nmo_ + map[q]];
-        }
-    }
-    ints.swap(temp_ints);
-}
-
-void ForteIntegrals::ForteIntegrals::set_oei(double** ints, bool alpha) {
-    std::vector<double>& p_oei = alpha ? one_electron_integrals_a : one_electron_integrals_b;
-    for (size_t p = 0; p < aptei_idx_; ++p) {
-        for (size_t q = 0; q < aptei_idx_; ++q) {
-            p_oei[p * aptei_idx_ + q] = ints[p][q];
-        }
-    }
-}
-
-void ForteIntegrals::set_oei(size_t p, size_t q, double value, bool alpha) {
-    std::vector<double>& p_oei = alpha ? one_electron_integrals_a : one_electron_integrals_b;
-    p_oei[p * aptei_idx_ + q] = value;
-}
+void ForteIntegrals::deallocate() {}
 
 void ForteIntegrals::transform_one_electron_integrals() {
     // Now we want the reference (SCF) wavefunction
@@ -212,22 +196,45 @@ void ForteIntegrals::transform_one_electron_integrals() {
 
     OneBody_symm_ = Ha;
 
-    for (size_t pq = 0; pq < nmo_ * nmo_; ++pq)
-        one_electron_integrals_a[pq] = 0.0;
-    for (size_t pq = 0; pq < nmo_ * nmo_; ++pq)
-        one_electron_integrals_b[pq] = 0.0;
+    // zero these vectors
+    std::fill(full_one_electron_integrals_a.begin(), full_one_electron_integrals_a.end(), 0.0);
+    std::fill(full_one_electron_integrals_b.begin(), full_one_electron_integrals_b.end(), 0.0);
 
     // Read the one-electron integrals (T + V, restricted)
     int offset = 0;
     for (int h = 0; h < nirrep_; ++h) {
         for (int p = 0; p < nmopi_[h]; ++p) {
             for (int q = 0; q < nmopi_[h]; ++q) {
-                one_electron_integrals_a[(p + offset) * nmo_ + q + offset] = Ha->get(h, p, q);
-                one_electron_integrals_b[(p + offset) * nmo_ + q + offset] = Hb->get(h, p, q);
+                full_one_electron_integrals_a[(p + offset) * nmo_ + q + offset] = Ha->get(h, p, q);
+                full_one_electron_integrals_b[(p + offset) * nmo_ + q + offset] = Hb->get(h, p, q);
             }
         }
         offset += nmopi_[h];
     }
+
+    // Copy the correlated part into one_electron_integrals_a/one_electron_integrals_b
+    for (size_t p = 0; p < ncmo_; ++p) {
+        for (size_t q = 0; q < ncmo_; ++q) {
+            one_electron_integrals_a[p * ncmo_ + q] =
+                full_one_electron_integrals_a[cmotomo_[p] * nmo_ + cmotomo_[q]];
+            one_electron_integrals_b[p * ncmo_ + q] =
+                full_one_electron_integrals_b[cmotomo_[p] * nmo_ + cmotomo_[q]];
+        }
+    }
+}
+
+void ForteIntegrals::set_oei(double** ints, bool alpha) {
+    std::vector<double>& p_oei = alpha ? one_electron_integrals_a : one_electron_integrals_b;
+    for (size_t p = 0; p < aptei_idx_; ++p) {
+        for (size_t q = 0; q < aptei_idx_; ++q) {
+            p_oei[p * aptei_idx_ + q] = ints[p][q];
+        }
+    }
+}
+
+void ForteIntegrals::set_oei(size_t p, size_t q, double value, bool alpha) {
+    std::vector<double>& p_oei = alpha ? one_electron_integrals_a : one_electron_integrals_b;
+    p_oei[p * aptei_idx_ + q] = value;
 }
 
 void ForteIntegrals::compute_frozen_one_body_operator() {
@@ -258,7 +265,8 @@ void ForteIntegrals::compute_frozen_one_body_operator() {
 #endif
     } else {
         if (options_.get_str("SCF_TYPE") == "DF") {
-            JK_core = JK::build_JK(wfn_->basisset(), wfn_->get_basisset("DF_BASIS_MP2"), options_, "MEM_DF");
+            JK_core = JK::build_JK(wfn_->basisset(), wfn_->get_basisset("DF_BASIS_MP2"), options_,
+                                   "MEM_DF");
         } else {
             JK_core = JK::build_JK(wfn_->basisset(), BasisSet::zero_ao_basis_set(), options_);
         }
@@ -302,6 +310,27 @@ void ForteIntegrals::compute_frozen_one_body_operator() {
         }
         offset += nmopi[h];
     }
+
+    // This loop grabs only the correlated part of the correction
+    int full_offset = 0;
+    int corr_offset = 0;
+    //    int full_offset = 0;
+    for (int h = 0; h < nirrep_; h++) {
+        for (int p = 0; p < ncmopi[h]; ++p) {
+            for (int q = 0; q < ncmopi[h]; ++q) {
+                // the index of p and q in the full block of irrep h
+                size_t p_full = cmotomo_[p + corr_offset] - full_offset;
+                size_t q_full = cmotomo_[q + corr_offset] - full_offset;
+                one_electron_integrals_a[(p + offset) * nmo_ + (q + offset)] +=
+                    F_core->get(h, p_full, q_full);
+                one_electron_integrals_b[(p + offset) * nmo_ + (q + offset)] +=
+                    F_core->get(h, p_full, q_full);
+            }
+        }
+        full_offset += nmopi[h];
+        corr_offset += ncmopi[h];
+    }
+
     F_core->add(OneBody_symm_);
 
     frozen_core_energy_ = 0.0;
@@ -322,21 +351,6 @@ void ForteIntegrals::compute_frozen_one_body_operator() {
     }
 }
 
-void ForteIntegrals::update_integrals(bool freeze_core) {
-    Timer freezeOrbs;
-    if (freeze_core) {
-        if (ncmo_ < nmo_) {
-            freeze_core_orbitals();
-            if (resort_frozen_core_ == RemoveFrozenMOs) {
-                aptei_idx_ = ncmo_;
-            }
-        }
-    }
-    if (print_) {
-        outfile->Printf("\n  Frozen Orbitals takes %9.3f s.", freezeOrbs.get());
-    }
-}
-
 void ForteIntegrals::retransform_integrals() {
     aptei_idx_ = nmo_;
     transform_one_electron_integrals();
@@ -348,14 +362,19 @@ void ForteIntegrals::retransform_integrals() {
         outfile->Printf("\n Integrals are about to be computed.");
         gather_integrals();
         outfile->Printf("\n Integrals are about to be updated.");
-        update_integrals();
+        freeze_core_orbitals();
     }
 }
 
 void ForteIntegrals::freeze_core_orbitals() {
-    compute_frozen_one_body_operator();
-    if (resort_frozen_core_ == RemoveFrozenMOs) {
+    Timer freezeOrbs;
+    if (ncmo_ < nmo_) {
+        compute_frozen_one_body_operator();
         resort_integrals_after_freezing();
+        aptei_idx_ = ncmo_;
+    }
+    if (print_) {
+        outfile->Printf("\n  Frozen Orbitals takes %9.3f s.", freezeOrbs.get());
     }
 }
 
@@ -397,7 +416,7 @@ void ForteIntegrals::rotate_mos() {
         C_new->set_column(mo_group[0], mo_group[1], C_mo2);
     }
     C_old->copy(C_new);
-    
+
     SharedMatrix Cb_old = wfn_->Cb();
     Cb_old->copy(C_new);
 }
@@ -532,5 +551,5 @@ ForteIntegrals::MOdipole_ints_helper(SharedMatrix Cao, SharedVector epsilon, con
 
     return MOdipole_ints;
 }
-}
-}
+} // namespace forte
+} // namespace psi

@@ -573,8 +573,6 @@ std::shared_ptr<FCIIntegrals> MASTER_DSRG::compute_Heff() {
     //            }
     //        });
 
-    //        ints_->update_integrals(false);
-
     //        outfile->Printf("Done. Timing %8.3f s", t_int.elapsed());
     //        ints_->set_print(print_);
     //    }

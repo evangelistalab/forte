@@ -47,16 +47,15 @@ namespace psi {
 namespace forte {
 
 /**
-     * @brief CholeskyIntegrals::CholeskyIntegrals
-     * @param options - psi options class
-     * @param restricted - type of integral transformation
-     * @param resort_frozen_core -
-     */
+ * @brief CholeskyIntegrals::CholeskyIntegrals
+ * @param options - psi options class
+ * @param restricted - type of integral transformation
+ * @param resort_frozen_core -
+ */
 CholeskyIntegrals::CholeskyIntegrals(psi::Options& options, SharedWavefunction ref_wfn,
                                      IntegralSpinRestriction restricted,
-                                     IntegralFrozenCore resort_frozen_core,
                                      std::shared_ptr<MOSpaceInfo> mo_space_info)
-    : ForteIntegrals(options, ref_wfn, restricted, resort_frozen_core, mo_space_info) {
+    : ForteIntegrals(options, ref_wfn, restricted, mo_space_info) {
 
     integral_type_ = Cholesky;
     outfile->Printf("\n  Cholesky integrals time");
@@ -287,11 +286,9 @@ void CholeskyIntegrals::transform_integrals() {
     });
 }
 
-void CholeskyIntegrals::allocate() {
-}
+void CholeskyIntegrals::allocate() {}
 
-void CholeskyIntegrals::deallocate() {
-}
+void CholeskyIntegrals::deallocate() {}
 
 void CholeskyIntegrals::make_fock_matrix(SharedMatrix gamma_aM, SharedMatrix gamma_bM) {
     TensorType tensor_type = CoreTensor;
@@ -343,29 +340,16 @@ void CholeskyIntegrals::make_fock_matrix(SharedMatrix gamma_aM, SharedMatrix gam
     //});
     fock_matrix_a = fock_a.data();
     fock_matrix_b = fock_b.data();
-//    std::memcpy(fock_matrix_a, &fock_a.data()[0], sizeof(double) * ncmo_ * ncmo_);
-//    std::memcpy(fock_matrix_b, &fock_b.data()[0], sizeof(double) * ncmo_ * ncmo_);
+    //    std::memcpy(fock_matrix_a, &fock_a.data()[0], sizeof(double) * ncmo_ * ncmo_);
+    //    std::memcpy(fock_matrix_b, &fock_b.data()[0], sizeof(double) * ncmo_ * ncmo_);
 }
 
 void CholeskyIntegrals::resort_integrals_after_freezing() {
-    outfile->Printf("\n  Resorting integrals after freezing core.");
-
-    // Create an array that maps the CMOs to the MOs (cmo2mo).
-    std::vector<size_t> cmo2mo;
-    for (int h = 0, q = 0; h < nirrep_; ++h) {
-        q += frzcpi_[h]; // skip the frozen core
-        for (int r = 0; r < ncmopi_[h]; ++r) {
-            cmo2mo.push_back(q);
-            q++;
-        }
-        q += frzvpi_[h]; // skip the frozen virtual
+    if (print_ > 0) {
+        outfile->Printf("\n  Resorting integrals after freezing core.");
     }
-    cmotomo_ = (cmo2mo);
-
-    // Resort the integrals
-    resort_two(one_electron_integrals_a, cmo2mo);
-    resort_two(one_electron_integrals_b, cmo2mo);
-    resort_three(ThreeIntegral_, cmo2mo);
+    // Resort the three-index integrals
+    resort_three(ThreeIntegral_, cmotomo_);
 }
 void CholeskyIntegrals::resort_three(std::shared_ptr<Matrix>& threeint, std::vector<size_t>& map) {
     // Create a temperature threeint matrix
@@ -394,5 +378,5 @@ void CholeskyIntegrals::set_tei(size_t, size_t, size_t, size_t, double, bool, bo
     outfile->Printf("\n If you are using this, you are ruining the advantages of DF/CD");
     throw PSIEXCEPTION("Don't use DF/CD if you use set_tei");
 }
-}
-}
+} // namespace forte
+} // namespace psi

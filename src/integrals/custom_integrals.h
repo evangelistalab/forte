@@ -49,7 +49,7 @@ class CustomIntegrals : public ForteIntegrals {
     /// Contructor of the class.  Calls std::shared_ptr<ForteIntegrals> ints
     /// constructor
     CustomIntegrals(psi::Options& options, SharedWavefunction ref_wfn,
-                    IntegralSpinRestriction restricted, IntegralFrozenCore resort_frozen_core,
+                    IntegralSpinRestriction restricted,
                     std::shared_ptr<MOSpaceInfo> mo_space_info);
     virtual ~CustomIntegrals();
 

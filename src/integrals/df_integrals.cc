@@ -53,9 +53,9 @@ namespace forte {
 // Generates DF Integrals.  Freezes Core orbitals, computes integrals, and
 // resorts integrals.  Also computes fock matrix
 DFIntegrals::DFIntegrals(psi::Options& options, SharedWavefunction ref_wfn,
-                         IntegralSpinRestriction restricted, IntegralFrozenCore resort_frozen_core,
+                         IntegralSpinRestriction restricted,
                          std::shared_ptr<MOSpaceInfo> mo_space_info)
-    : ForteIntegrals(options, ref_wfn, restricted, resort_frozen_core, mo_space_info) {
+    : ForteIntegrals(options, ref_wfn, restricted, mo_space_info) {
     integral_type_ = DF;
     // If code calls constructor print things
     // But if someone calls retransform integrals do not print it
@@ -336,23 +336,7 @@ void DFIntegrals::resort_integrals_after_freezing() {
         outfile->Printf("\n  Resorting integrals after freezing core.");
     }
 
-    // Create an array that maps the CMOs to the MOs (cmo2mo).
-    std::vector<size_t> cmo2mo;
-    for (int h = 0, q = 0; h < nirrep_; ++h) {
-        q += frzcpi_[h]; // skip the frozen core
-        for (int r = 0; r < ncmopi_[h]; ++r) {
-            cmo2mo.push_back(q);
-            q++;
-        }
-        q += frzvpi_[h]; // skip the frozen virtual
-    }
-    cmotomo_ = (cmo2mo);
-
-    // Resort the integrals
-    resort_two(one_electron_integrals_a, cmo2mo);
-    resort_two(one_electron_integrals_b, cmo2mo);
-
-    resort_three(ThreeIntegral_, cmo2mo);
+    resort_three(ThreeIntegral_, cmotomo_);
 
     if (print_ > 0) {
         outfile->Printf("\n Resorting integrals takes   %8.8fs", resort_integrals.get());
