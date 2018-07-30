@@ -81,6 +81,10 @@ void ConventionalIntegrals::transform_integrals() {
     // this step.
     spaces.push_back(MOSpace::all);
 
+    // If the integral
+     if (integral_transform_)
+         integral_transform_.reset();
+
     // Call IntegralTransform asking for integrals over restricted or
     // unrestricted orbitals
     if (restricted_) {
