@@ -66,12 +66,7 @@ DISKDFIntegrals::DISKDFIntegrals(psi::Options& options, SharedWavefunction ref_w
 
     if (my_proc == 0) {
         gather_integrals();
-        if (ncmo_ < nmo_) {
-            freeze_core_orbitals();
-            // Set the new value of the number of orbitals to be used in
-            // indexing routines
-            aptei_idx_ = ncmo_;
-        }
+        freeze_core_orbitals();
 
         outfile->Printf("\n  DISKDFIntegrals take %15.8f s", DFInt.get());
     }

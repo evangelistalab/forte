@@ -59,14 +59,9 @@ ConventionalIntegrals::ConventionalIntegrals(psi::Options& options, SharedWavefu
     outfile->Printf("\n  Overall Conventional Integrals timings\n\n");
     Timer ConvTime;
     allocate();
-
     gather_integrals();
-    if (ncmo_ < nmo_) {
-        freeze_core_orbitals();
-        // Set the new value of the number of orbitals to be used in indexing
-        // routines
-        aptei_idx_ = ncmo_;
-    }
+    freeze_core_orbitals();
+
     outfile->Printf("\n  Conventional integrals take %8.8f s", ConvTime.get());
 }
 

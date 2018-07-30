@@ -316,8 +316,8 @@ void ForteIntegrals::compute_frozen_one_body_operator() {
     int corr_offset = 0;
     //    int full_offset = 0;
     for (int h = 0; h < nirrep_; h++) {
-        for (int p = 0; p < ncmopi[h]; ++p) {
-            for (int q = 0; q < ncmopi[h]; ++q) {
+        for (int p = 0; p < ncmopi_[h]; ++p) {
+            for (int q = 0; q < ncmopi_[h]; ++q) {
                 // the index of p and q in the full block of irrep h
                 size_t p_full = cmotomo_[p + corr_offset] - full_offset;
                 size_t q_full = cmotomo_[q + corr_offset] - full_offset;
@@ -327,8 +327,8 @@ void ForteIntegrals::compute_frozen_one_body_operator() {
                     F_core->get(h, p_full, q_full);
             }
         }
-        full_offset += nmopi[h];
-        corr_offset += ncmopi[h];
+        full_offset += nmopi_[h];
+        corr_offset += ncmopi_[h];
     }
 
     F_core->add(OneBody_symm_);

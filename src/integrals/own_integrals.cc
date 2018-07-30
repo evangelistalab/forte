@@ -48,12 +48,7 @@ OwnIntegrals::OwnIntegrals(psi::Options& options, SharedWavefunction ref_wfn,
     wfn_ = ref_wfn;
 
     outfile->Printf("\n Avoiding Generation of Integrals");
-    if (ncmo_ < nmo_) {
-        freeze_core_orbitals();
-        // Set the new value of the number of orbitals to be used in indexing
-        // routines
-        aptei_idx_ = ncmo_;
-    }
+//    freeze_core_orbitals();
 }
 
 OwnIntegrals::~OwnIntegrals() {}
