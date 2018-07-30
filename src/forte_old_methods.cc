@@ -603,14 +603,19 @@ void forte_old_methods(SharedWavefunction ref_wfn, Options& options,
             three_dsrg_mrpt2->set_Uactv(Ua, Ub);
             three_dsrg_mrpt2->compute_energy();
             if (ref_relax || multi_state) {
+                if( options.get_bool("UNPAIRED_DENSITY") ){
+                    SharedMatrix Ua_f = semi.Ua();
+                    SharedMatrix Ub_f = semi.Ub();
+                    three_dsrg_mrpt2->set_Ufull(Ua_f, Ub_f);
+                }
                 three_dsrg_mrpt2->relax_reference_once();
             }
 
-            if( options.get_bool("UNPAIRED_DENSITY")){
-                SharedMatrix Uam = semi.Ua();
-                SharedMatrix Ubm = semi.Ub();
-                aci->unpaired_density(Uam, Ubm);
-            }
+          //  if( options.get_bool("UNPAIRED_DENSITY")){
+          //      SharedMatrix Uam = semi.Ua();
+          //      SharedMatrix Ubm = semi.Ub();
+          //      aci->unpaired_density(Uam, Ubm);
+          //  }
 
 
         } else if (cas_type == "FCI") {

@@ -90,6 +90,7 @@ class THREE_DSRG_MRPT2 : public MASTER_DSRG {
     void rotate_amp(SharedMatrix Ua, SharedMatrix Ub, const bool& transpose = false,
                     const bool& t1eff = false);
 
+    void set_Ufull( SharedMatrix& Ua, SharedMatrix& Ub );
   protected:
     // => Class data <= //
 
@@ -126,6 +127,10 @@ class THREE_DSRG_MRPT2 : public MASTER_DSRG {
     std::vector<double> Fa_;
     /// List of eigenvalues for fock beta
     std::vector<double> Fb_;
+
+    /// Semicanonical Transformation matrices
+    SharedMatrix Ua_full_;
+    SharedMatrix Ub_full_;
 
     // => Tensors <= //
     ambit::BlockedTensor H_;

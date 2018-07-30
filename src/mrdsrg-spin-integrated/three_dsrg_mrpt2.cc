@@ -3375,6 +3375,19 @@ outfile->Printf("\n done");
     }
 }
 
+void THREE_DSRG_MRPT2::set_Ufull( SharedMatrix& Ua, SharedMatrix& Ub ){
+    outfile->Printf("\n here");
+
+    Dimension nmopi = mo_space_info_->get_dimension("ALL");
+
+    Ua_full_.reset(new Matrix("Ua", nmopi, nmopi));
+    Ub_full_.reset(new Matrix("Ub", nmopi, nmopi));
+
+    Ua_full_->copy(Ua);
+    Ub_full_->copy(Ub);
+    outfile->Printf("\n done");
+}
+
 std::vector<double> THREE_DSRG_MRPT2::relaxed_energy(std::shared_ptr<FCIIntegrals> fci_ints) {
 
     // reference relaxation
@@ -3424,6 +3437,10 @@ std::vector<double> THREE_DSRG_MRPT2::relaxed_energy(std::shared_ptr<FCIIntegral
         // Compute relaxed NOs
         if( options_.get_bool("ACI_NO") ){
             aci.compute_nos();
+        }
+        if( options_.get_bool("UNPAIRED_DENSITY") ){
+
+            aci.unpaired_density(Ua_full_, Ub_full_);
         }
 
     } else {
