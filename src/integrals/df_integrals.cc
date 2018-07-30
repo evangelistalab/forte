@@ -262,11 +262,11 @@ void DFIntegrals::make_fock_matrix(SharedMatrix gamma_aM, SharedMatrix gamma_bM)
         [&](const std::vector<size_t>& i, double& value) { value = gamma_bM->get(i[0], i[1]); });
 
     fock_a.iterate([&](const std::vector<size_t>& i, double& value) {
-        value = one_electron_integrals_a[i[0] * aptei_idx_ + i[1]];
+        value = one_electron_integrals_a_[i[0] * aptei_idx_ + i[1]];
     });
 
     fock_b.iterate([&](const std::vector<size_t>& i, double& value) {
-        value = one_electron_integrals_b[i[0] * aptei_idx_ + i[1]];
+        value = one_electron_integrals_b_[i[0] * aptei_idx_ + i[1]];
     });
 
     /// Changing the Q_pr * Q_qs  to Q_rp * Q_sq for convience for reading
@@ -284,10 +284,10 @@ void DFIntegrals::make_fock_matrix(SharedMatrix gamma_aM, SharedMatrix gamma_bM)
     fock_b("p,q") += ThreeIntegralTensor("Q,p,q") * ThreeIntegralTensor("Q,r,s") * gamma_a("r,s");
 
     fock_a.iterate([&](const std::vector<size_t>& i, double& value) {
-        fock_matrix_a[i[0] * aptei_idx_ + i[1]] = value;
+        fock_matrix_a_[i[0] * aptei_idx_ + i[1]] = value;
     });
     fock_b.iterate([&](const std::vector<size_t>& i, double& value) {
-        fock_matrix_b[i[0] * aptei_idx_ + i[1]] = value;
+        fock_matrix_b_[i[0] * aptei_idx_ + i[1]] = value;
     });
 
     /// Form with JK builders

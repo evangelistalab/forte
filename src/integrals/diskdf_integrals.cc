@@ -278,29 +278,29 @@ ambit::Tensor DISKDFIntegrals::aptei_bb_block(const std::vector<size_t>& p,
     }
     return ReturnTensor;
 }
-double DISKDFIntegrals::three_integral(size_t A, size_t p, size_t q) {
-    size_t pn, qn;
-    if (frzcpi_.sum() > 0 && ncmo_ == aptei_idx_) {
-        pn = cmotomo_[p];
-        qn = cmotomo_[q];
-    } else {
-        pn = p;
-        qn = q;
-    }
-    std::vector<size_t> A_range = {A,A+1};
-    std::vector<size_t> p_range = {pn,pn+1};
-    std::vector<size_t> q_range = {qn,qn+1};
+//double DISKDFIntegrals::three_integral(size_t A, size_t p, size_t q) {
+//    size_t pn, qn;
+//    if (frzcpi_.sum() > 0 && ncmo_ == aptei_idx_) {
+//        pn = cmotomo_[p];
+//        qn = cmotomo_[q];
+//    } else {
+//        pn = p;
+//        qn = q;
+//    }
+//    std::vector<size_t> A_range = {A,A+1};
+//    std::vector<size_t> p_range = {pn,pn+1};
+//    std::vector<size_t> q_range = {qn,qn+1};
     
-    double* Apq;
+//    double* Apq;
 
-    df_->fill_tensor("B",Apq, A_range, p_range, q_range ); 
+//    df_->fill_tensor("B",Apq, A_range, p_range, q_range );
 
-    double value = *Apq;
+//    double value = *Apq;
 
-    delete[] Apq;
+//    delete[] Apq;
 
-    return value;
-}
+//    return value;
+//}
 ambit::Tensor DISKDFIntegrals::three_integral_block(const std::vector<size_t>& A,
                                                     const std::vector<size_t>& p,
                                                     const std::vector<size_t>& q) {
@@ -484,11 +484,11 @@ void DISKDFIntegrals::make_fock_matrix(SharedMatrix gamma_aM, SharedMatrix gamma
     std::vector<size_t> generalized_hole = mo_space_info_->get_corr_abs_mo("GENERALIZED HOLE");
 
     fock_a.iterate([&](const std::vector<size_t>& i, double& value) {
-        value = one_electron_integrals_a[i[0] * aptei_idx_ + i[1]];
+        value = one_electron_integrals_a_[i[0] * aptei_idx_ + i[1]];
     });
 
     fock_b.iterate([&](const std::vector<size_t>& i, double& value) {
-        value = one_electron_integrals_b[i[0] * aptei_idx_ + i[1]];
+        value = one_electron_integrals_b_[i[0] * aptei_idx_ + i[1]];
     });
 
     std::vector<size_t> A(nthree_);
@@ -601,10 +601,10 @@ void DISKDFIntegrals::make_fock_matrix(SharedMatrix gamma_aM, SharedMatrix gamma
         A_block.clear();
     }
     fock_a.iterate([&](const std::vector<size_t>& i, double& value) {
-        fock_matrix_a[i[0] * aptei_idx_ + i[1]] = value;
+        fock_matrix_a_[i[0] * aptei_idx_ + i[1]] = value;
     });
     fock_b.iterate([&](const std::vector<size_t>& i, double& value) {
-        fock_matrix_b[i[0] * aptei_idx_ + i[1]] = value;
+        fock_matrix_b_[i[0] * aptei_idx_ + i[1]] = value;
     });
 
     if (num_block != 1) {

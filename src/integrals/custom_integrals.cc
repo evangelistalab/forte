@@ -58,9 +58,9 @@ CustomIntegrals::CustomIntegrals(psi::Options& options, SharedWavefunction ref_w
     outfile->Printf("\n  Using Custom integrals\n\n");
 
     // Allocate the memory required to store the two-electron integrals
-    aphys_tei_aa.resize(num_aptei);
-    aphys_tei_ab.resize(num_aptei);
-    aphys_tei_bb.resize(num_aptei);
+    aphys_tei_aa.resize(num_aptei_);
+    aphys_tei_ab.resize(num_aptei_);
+    aphys_tei_bb.resize(num_aptei_);
 
     gather_integrals();
 
@@ -132,16 +132,16 @@ void CustomIntegrals::gather_integrals() {
 
     for (size_t p = 0; p < nmo_; ++p) {
         for (size_t q = 0; q < nmo_; ++q) {
-            one_electron_integrals_a[p * nmo_ + q] = 0.0;
-            one_electron_integrals_b[p * nmo_ + q] = 0.0;
+            one_electron_integrals_a_[p * nmo_ + q] = 0.0;
+            one_electron_integrals_b_[p * nmo_ + q] = 0.0;
         }
     }
 
-    for (size_t pqrs = 0; pqrs < num_aptei; ++pqrs)
+    for (size_t pqrs = 0; pqrs < num_aptei_; ++pqrs)
         aphys_tei_aa[pqrs] = 0.0;
-    for (size_t pqrs = 0; pqrs < num_aptei; ++pqrs)
+    for (size_t pqrs = 0; pqrs < num_aptei_; ++pqrs)
         aphys_tei_ab[pqrs] = 0.0;
-    for (size_t pqrs = 0; pqrs < num_aptei; ++pqrs)
+    for (size_t pqrs = 0; pqrs < num_aptei_; ++pqrs)
         aphys_tei_bb[pqrs] = 0.0;
 
     // Store the integrals
@@ -194,8 +194,8 @@ void CustomIntegrals::resort_four(std::vector<double>& tei, std::vector<size_t>&
 void CustomIntegrals::make_fock_matrix(SharedMatrix gamma_a, SharedMatrix gamma_b) {
     for (size_t p = 0; p < ncmo_; ++p) {
         for (size_t q = 0; q < ncmo_; ++q) {
-            fock_matrix_a[p * ncmo_ + q] = oei_a(p, q);
-            fock_matrix_b[p * ncmo_ + q] = oei_b(p, q);
+            fock_matrix_a_[p * ncmo_ + q] = oei_a(p, q);
+            fock_matrix_b_[p * ncmo_ + q] = oei_b(p, q);
         }
     }
     double zero = 1e-12;
@@ -206,8 +206,8 @@ void CustomIntegrals::make_fock_matrix(SharedMatrix gamma_a, SharedMatrix gamma_
             if (std::fabs(gamma_a_rs) > zero) {
                 for (size_t p = 0; p < ncmo_; ++p) {
                     for (size_t q = 0; q < ncmo_; ++q) {
-                        fock_matrix_a[p * ncmo_ + q] += aptei_aa(p, r, q, s) * gamma_a_rs;
-                        fock_matrix_b[p * ncmo_ + q] += aptei_ab(r, p, s, q) * gamma_a_rs;
+                        fock_matrix_a_[p * ncmo_ + q] += aptei_aa(p, r, q, s) * gamma_a_rs;
+                        fock_matrix_b_[p * ncmo_ + q] += aptei_ab(r, p, s, q) * gamma_a_rs;
                     }
                 }
             }
@@ -219,8 +219,8 @@ void CustomIntegrals::make_fock_matrix(SharedMatrix gamma_a, SharedMatrix gamma_
             if (std::fabs(gamma_b_rs) > zero) {
                 for (size_t p = 0; p < ncmo_; ++p) {
                     for (size_t q = 0; q < ncmo_; ++q) {
-                        fock_matrix_a[p * ncmo_ + q] += aptei_ab(p, r, q, s) * gamma_b_rs;
-                        fock_matrix_b[p * ncmo_ + q] += aptei_bb(p, r, q, s) * gamma_b_rs;
+                        fock_matrix_a_[p * ncmo_ + q] += aptei_ab(p, r, q, s) * gamma_b_rs;
+                        fock_matrix_b_[p * ncmo_ + q] += aptei_bb(p, r, q, s) * gamma_b_rs;
                     }
                 }
             }
