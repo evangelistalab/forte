@@ -309,9 +309,9 @@ void ForteIntegrals::compute_frozen_one_body_operator() {
                 // the index of p and q in the full block of irrep h
                 size_t p_full = cmotomo_[p + corr_offset] - full_offset;
                 size_t q_full = cmotomo_[q + corr_offset] - full_offset;
-                one_electron_integrals_a[(p + corr_offset) * nmo_ + (q + corr_offset)] +=
+                one_electron_integrals_a[(p + corr_offset) * ncmo_ + (q + corr_offset)] +=
                     F_core->get(h, p_full, q_full);
-                one_electron_integrals_b[(p + corr_offset) * nmo_ + (q + corr_offset)] +=
+                one_electron_integrals_b[(p + corr_offset) * ncmo_ + (q + corr_offset)] +=
                     F_core->get(h, p_full, q_full);
             }
         }
