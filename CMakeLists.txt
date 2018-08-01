@@ -168,10 +168,6 @@ if(TARGET CheMPS2::chemps2)
 endif()
 
 target_include_directories(forte PRIVATE src/mini-boost)
-#if(HAVE_SSE42)
-#target_compile_options(forte PRIVATE "-msse4.2")
-#message(STATUS "Found SSE4.2")
-#endif()
 
 ## 64bit implementation
 add_definitions(-DSMALL_BITSET)
