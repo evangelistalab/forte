@@ -281,6 +281,10 @@ class FCISolver {
 
     static bool pairCompare(const std::pair<double, int>& firstElem, const std::pair<double, int>& secondElem);
 
+    void twomulent_correlation(std::vector<double>& Tau_2RCM_cor_info);
+
+    void entanglement_info_1orb(std::vector<std::vector<double> >& Tau_1oee_info);
+
 };
 }
 }

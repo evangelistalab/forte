@@ -612,6 +612,8 @@ if(options_.get_bool("CHUNK_SPACE_ENERGY")){
 
     // Print determinants
     if (print_) {
+        std::ofstream myfile_re;
+        myfile_re.open ("root_energy.dat");
         for (int r = 0; r < nroot_; ++r) {
             outfile->Printf("\n\n  ==> Root No. %d <==\n", r);
 
@@ -654,7 +656,12 @@ if(options_.get_bool("CHUNK_SPACE_ENERGY")){
             double root_energy = dls.eigenvalues()->get(r) + nuclear_repulsion_energy;
             true_fci_energy = dls.eigenvalues()->get(r) + nuclear_repulsion_energy;
             outfile->Printf("\n\n    Total Energy: %25.15f", root_energy);
+            // want to print multiple root energies to a file
+            myfile_re << root_energy << " ";
+
+
         }
+        myfile_re.close();
     }
 
     //////////////////////////////////////////// FCI-SVD //////////////////////////////////////////////
@@ -777,20 +784,48 @@ if(options_.get_bool("CHUNK_SPACE_ENERGY")){
     }
 
 
-    ////////////////////////////////// FCI-SVD END /////////////////////////////////////
+    ////////////////////////////////// FCI-SVD SINGLE TAU END /////////////////////////////////////
 
 
     if (options_.get_bool("FCI_MANY_TAU")){
         double fci_energy = dls.eigenvalues()->get(root_) + nuclear_repulsion_energy;
         double TAU_MIN = options_.get_double("FCI_MT_MIN");
 
+        //for compression information
         std::vector<std::vector<double> > compr_info;
+        //for correlation info via ||2-RCM's||_F
+        std::vector<std::vector<double> > twoRCM_cor_info;
+        // FCI single orbitl entropies
+         std::vector<std::vector<double> > FCI_1oee_info(4);
+        FCI_1oee_info[0].resize(active_mo_.size());
+        FCI_1oee_info[1].resize(active_mo_.size());
+        FCI_1oee_info[2].resize(active_mo_.size());
+        FCI_1oee_info[3].resize(active_mo_.size());
+
+
+        //get & print info for FCI correlation measures in output file
+        std::vector<double> FCI_2RCM_cor_info;
+
+        //std::cout << "I get here 1" <<std::endl;
+
+        twomulent_correlation(FCI_2RCM_cor_info);
+
+        double FCI_2RCM_Fnorm_sq = FCI_2RCM_cor_info[0];
+        //std::cout << "FCI 2mulant Fnorm: " << FCI_2RCM_Fnorm_sq << std::endl;
+
+
 
         outfile->Printf("\n\n /////////////// ==> BEGINNING TAU ITERATIONS <== /////////////////\n\n");
 
         for(int i = 0; i < options_.get_double("FCI_HOW_MANY_TAUS"); i++){
 
           std::vector<double> Tau_info;
+          std::vector<double> Tau_2RCM_cor_info;
+          Tau_2RCM_cor_info.push_back(FCI_2RCM_Fnorm_sq); // sets first elemnt of vector every tau iter.
+
+          //for 1 orbital entanglement information (print full file after every tau iteration)
+          std::vector<std::vector<double> > Tau_1oee_info;
+
 
           double Tau = TAU_MIN + i*options_.get_double("FCI_DEL_TAU");
           Tau_info.push_back(Tau);
@@ -856,6 +891,9 @@ if(options_.get_bool("CHUNK_SPACE_ENERGY")){
               }
             }
 
+            //use modified C_ to get correlation/entanglement info
+            twomulent_correlation(Tau_2RCM_cor_info);
+            entanglement_info_1orb(Tau_1oee_info);
             //reset C_ global
             C_->set_coefficient_blocks(C_temp_clone_tc);
             //reset C_temp
@@ -885,6 +923,8 @@ if(options_.get_bool("CHUNK_SPACE_ENERGY")){
               }
             }
 
+            twomulent_correlation(Tau_2RCM_cor_info);
+            entanglement_info_1orb(Tau_1oee_info);
             //reset C_ global
             C_->set_coefficient_blocks(C_temp_clone_st);
           }
@@ -893,6 +933,8 @@ if(options_.get_bool("CHUNK_SPACE_ENERGY")){
           if (options_.get_bool("FCI_SVD_TILE")){
               double fci_nergy = dls.eigenvalues()->get(root_) + nuclear_repulsion_energy;
               fci_svd_tiles(HC, fci_ints, fci_nergy, options_.get_int("FCI_SVD_N_TILES"), Tau, Tau_info);
+              twomulent_correlation(Tau_2RCM_cor_info);
+              entanglement_info_1orb(Tau_1oee_info);
               C_->set_coefficient_blocks(C_temp_clone_tile_svd);
           }
 
@@ -901,22 +943,69 @@ if(options_.get_bool("CHUNK_SPACE_ENERGY")){
           if (options_.get_bool("FCI_SVD")){
               double fci_energy = dls.eigenvalues()->get(root_) + nuclear_repulsion_energy;
               fci_svd(HC,fci_ints,fci_energy, Tau, Tau_info);
+              twomulent_correlation(Tau_2RCM_cor_info);
+              entanglement_info_1orb(Tau_1oee_info);
               C_->set_coefficient_blocks(C_temp_clone_full_svd);
           }
 
           //py_mat_print(C_temp[0], "C_full_tile.dat");
           compr_info.push_back(Tau_info);
-        }
+          twoRCM_cor_info.push_back(Tau_2RCM_cor_info);
 
-    std::ofstream myfile;
-    myfile.open ("Compression.dat");
+
+          std::ofstream my_1oee_file;
+          my_1oee_file.open ("Tau_"+std::to_string(Tau)+"_1oee.dat");
+          for(int i=0; i < Tau_1oee_info.size(); i++){
+            for(int j=0; j < Tau_1oee_info[i].size(); j++){
+              my_1oee_file << Tau_1oee_info[i][j] << " ";
+            }
+            my_1oee_file << "\n";
+          }
+          my_1oee_file.close();
+
+          std::ofstream my_1oee_dif_file;
+          my_1oee_dif_file.open ("Tau_"+std::to_string(Tau)+"_1oee_dif.dat");
+          for(int i=0; i < Tau_1oee_info.size(); i++){
+            //if(Tau == 0.0){FCI_1oee_info[i].push_back(Tau_1oee_info[i]);}
+            for(int j=0; j < Tau_1oee_info[i].size(); j++){
+              if(Tau == 0.0){FCI_1oee_info[i][j] = Tau_1oee_info[i][j];}
+              my_1oee_dif_file << FCI_1oee_info[i][j] - Tau_1oee_info[i][j] << " ";
+            }
+            my_1oee_dif_file << "\n";
+          }
+          my_1oee_file.close();
+
+        } //ent Tau loop
+
+    std::ofstream my_2RCM_file;
+    my_2RCM_file.open ("2RCM_Fnorm_sq.dat");
+    for(int i=0; i < twoRCM_cor_info.size(); i++){
+      for(int j=0; j < twoRCM_cor_info[i].size(); j++){
+        my_2RCM_file << twoRCM_cor_info[i][j] << " ";
+      }
+      my_2RCM_file << "\n";
+    }
+    my_2RCM_file.close();
+
+    std::ofstream my_2RCM_dif_file;
+    my_2RCM_dif_file.open ("2RCM_Fnorm_sq_dif.dat");
+    for(int i=0; i < twoRCM_cor_info.size(); i++){
+      for(int j=0; j < twoRCM_cor_info[i].size(); j++){
+        my_2RCM_dif_file << twoRCM_cor_info[0][0] - twoRCM_cor_info[i][j] << " ";
+      }
+      my_2RCM_dif_file << "\n";
+    }
+    my_2RCM_dif_file.close();
+
+    std::ofstream my_comp_info_file;
+    my_comp_info_file.open ("Compression.dat");
     for(int i=0; i < compr_info.size(); i++){
       for(int j=0; j < compr_info[i].size(); j++){
-        myfile << compr_info[i][j] << " ";
+        my_comp_info_file << compr_info[i][j] << " ";
       }
-      myfile << "\n";
+      my_comp_info_file << "\n";
     }
-    myfile.close();
+    my_comp_info_file.close();
 
     }
 

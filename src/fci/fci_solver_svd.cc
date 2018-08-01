@@ -35,6 +35,7 @@
 #include "../iterative_solvers.h"
 
 #include "fci_solver.h"
+#include "fci_vector.h"
 
 #ifdef HAVE_GA
 #include <ga.h>
@@ -134,6 +135,142 @@ void FCISolver::rev_basis_cluster(std::vector<SharedMatrix>& C, std::vector<std:
   for(int h=0; h<nirrep_; h++){
     C[h]->copy(Cprime[h]);
   }
+}
+
+//will each time write a file (ment for use with single tau run..)
+void FCISolver::twomulent_correlation(std::vector<double>& Tau_2RCM_cor_info){
+
+  C_->compute_rdms();
+
+  size_t nact = active_mo_.size();
+  //size_t nact = active_dim_.sum();
+  size_t nact2 = nact * nact;
+  size_t nact3 = nact2 * nact;
+  size_t nact4 = nact3 * nact;
+  size_t nact5 = nact4 * nact;
+
+  //if (max_rdm_level_ >= 1) {
+
+      // One-particle density matrices in the active space
+      std::vector<double>& opdm_a = C_->opdm_a();
+      //std::cout << opdm_a.size() << std::endl;
+
+      std::vector<double>& opdm_b = C_->opdm_b();
+      ambit::Tensor L1a = ambit::Tensor::build(ambit::CoreTensor, "L1a", {nact, nact});
+      ambit::Tensor L1b = ambit::Tensor::build(ambit::CoreTensor, "L1b", {nact, nact});
+      if (na_ >= 1) {
+          L1a.iterate([&](const std::vector<size_t>& i, double& value) {
+              value = opdm_a[i[0] * nact + i[1]];
+          });
+      }
+      if (nb_ >= 1) {
+          L1b.iterate([&](const std::vector<size_t>& i, double& value) {
+              value = opdm_b[i[0] * nact + i[1]];
+          });
+      }
+
+      //if (max_rdm_level_ >= 2) {
+
+          //std::cout << "I get here 2" <<std::endl;
+          // Two-particle density matrices in the active space
+          ambit::Tensor L2aa =
+              ambit::Tensor::build(ambit::CoreTensor, "L2aa", {nact, nact, nact, nact});
+          ambit::Tensor L2ab =
+              ambit::Tensor::build(ambit::CoreTensor, "L2ab", {nact, nact, nact, nact});
+          ambit::Tensor L2bb =
+              ambit::Tensor::build(ambit::CoreTensor, "L2bb", {nact, nact, nact, nact});
+          ambit::Tensor g2aa =
+              ambit::Tensor::build(ambit::CoreTensor, "L2aa", {nact, nact, nact, nact});
+          ambit::Tensor g2ab =
+              ambit::Tensor::build(ambit::CoreTensor, "L2ab", {nact, nact, nact, nact});
+          ambit::Tensor g2bb =
+              ambit::Tensor::build(ambit::CoreTensor, "L2bb", {nact, nact, nact, nact});
+
+
+          if (na_ >= 2) {
+              std::vector<double>& tpdm_aa = C_->tpdm_aa();
+              L2aa.iterate([&](const std::vector<size_t>& i, double& value) {
+                  value = tpdm_aa[i[0] * nact3 + i[1] * nact2 + i[2] * nact + i[3]];
+              });
+          }
+          if ((na_ >= 1) and (nb_ >= 1)) {
+              std::vector<double>& tpdm_ab = C_->tpdm_ab();
+              L2ab.iterate([&](const std::vector<size_t>& i, double& value) {
+                  value = tpdm_ab[i[0] * nact3 + i[1] * nact2 + i[2] * nact + i[3]];
+              });
+          }
+          if (nb_ >= 2) {
+              std::vector<double>& tpdm_bb = C_->tpdm_bb();
+              L2bb.iterate([&](const std::vector<size_t>& i, double& value) {
+                  value = tpdm_bb[i[0] * nact3 + i[1] * nact2 + i[2] * nact + i[3]];
+              });
+          }
+          g2aa.copy(L2aa);
+          g2ab.copy(L2ab);
+          g2bb.copy(L2bb);
+
+          // Convert the 2-RDMs to 2-RCMs
+          L2aa("pqrs") -= L1a("pr") * L1a("qs");
+          L2aa("pqrs") += L1a("ps") * L1a("qr");
+
+          L2ab("pqrs") -= L1a("pr") * L1b("qs");
+
+          L2bb("pqrs") -= L1b("pr") * L1b("qs");
+          L2bb("pqrs") += L1b("ps") * L1b("qr");
+
+          std::vector<double> twoRCMaa = L2aa.data();
+          std::vector<double> twoRCMab = L2ab.data();
+          std::vector<double> twoRCMbb = L2bb.data();
+
+          double Cumu_Fnorm_sq = 0.0;
+          for(int i = 0; i < nact4; i++){
+            //double idx = i*nact3 + i*nact2 + i*nact + i;
+            double temp = twoRCMaa[i] + twoRCMab[i] + twoRCMbb[i];
+            temp *= temp;
+            Cumu_Fnorm_sq += temp;
+          }
+          //std::cout << "I get here 3" <<std::endl;
+          Tau_2RCM_cor_info.push_back(Cumu_Fnorm_sq);
+      //}
+   //}
+}
+
+//will add to a vector to allow a file similar to Compression.dat to be written
+void FCISolver::entanglement_info_1orb(std::vector<std::vector<double> >& Tau_1oee_info){
+  //size_t nact = active_mo_.size();
+
+  C_->compute_rdms();
+  size_t nact = active_dim_.sum();
+  size_t nact2 = nact * nact;
+  size_t nact3 = nact2 * nact;
+  size_t nact4 = nact3 * nact;
+  size_t nact5 = nact4 * nact;
+
+  std::vector<double>& opdm_a = C_->opdm_a();
+  std::vector<double>& opdm_b = C_->opdm_b();
+  std::vector<double>& tpdm_ab = C_->tpdm_ab();
+
+  //std::cout << "I GET HERE 2" << std::endl;
+  //std::cout << "nact: "<< nact << std::endl;
+
+
+  std::vector<double> one_orb_ee(nact);
+  for(int i=0; i<nact; i++){
+    //std::cout << "I GET HERE 3" << std::endl;
+    double idx1 = i*nact + i;
+    double idx2 = i*nact3 + i*nact2 + i*nact + i;
+
+    //TEST
+    //std::cout << "OPDM_a("<< i <<"): " << opdm_a[idx1] << std::endl;
+    //END TEST
+    double value = (1.0-opdm_a[idx1]-opdm_b[idx1]+tpdm_ab[idx2])*std::log(1.0-opdm_a[idx1]-opdm_b[idx1]+tpdm_ab[idx2])
+                 + (opdm_a[idx1] - tpdm_ab[idx2])*std::log(opdm_a[idx1] - tpdm_ab[idx2])
+                 + (opdm_b[idx1] - tpdm_ab[idx2])*std::log(opdm_b[idx1] - tpdm_ab[idx2])
+                 + (tpdm_ab[idx2])*std::log(tpdm_ab[idx2]);
+    value *= -1.0;
+    one_orb_ee[i] = value;
+  }
+  Tau_1oee_info.push_back(one_orb_ee);
 }
 
 
