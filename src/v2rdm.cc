@@ -26,11 +26,17 @@
  * @END LICENSE
  */
 
-#include "v2rdm.h"
-#include "mini-boost/boost/format.hpp"
-#include "psi4/libmints/molecule.h"
 #include <fstream>
 #include <iostream>
+
+#include "mini-boost/boost/format.hpp"
+#include "psi4/liboptions/liboptions.h"
+#include "psi4/libmints/dimension.h"
+#include "psi4/libmints/molecule.h"
+#include "psi4/libpsi4util/PsiOutStream.h"
+#include "psi4/psi4-dec.h"
+
+#include "v2rdm.h"
 
 namespace psi {
 namespace forte {

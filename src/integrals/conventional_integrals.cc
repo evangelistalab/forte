@@ -31,11 +31,14 @@
 #include "psi4/libdpd/dpd.h"
 #include "psi4/libmints/mintshelper.h"
 #include "psi4/libpsio/psio.hpp"
+#include "psi4/libtrans/integraltransform.h"
 #include "psi4/psi4-dec.h"
 #include "psi4/psifiles.h"
 
 #include "../blockedtensorfactory.h"
-#include "integrals.h"
+#include "../helpers.h"
+
+#include "conventional_integrals.h"
 
 #define ID(x) integral_transform_->DPD_ID(x)
 
@@ -79,7 +82,7 @@ void ConventionalIntegrals::transform_integrals() {
     spaces.push_back(MOSpace::all);
 
     // Reset the integral transform object if one was opened before
-    if (integral_transform_){
+    if (integral_transform_) {
         integral_transform_.reset();
     }
 
@@ -154,6 +157,25 @@ ambit::Tensor ConventionalIntegrals::aptei_bb_block(const std::vector<size_t>& p
         value = aptei_bb(p[i[0]], q[i[1]], r[i[2]], s[i[3]]);
     });
     return ReturnTensor;
+}
+
+ambit::Tensor ConventionalIntegrals::three_integral_block(const std::vector<size_t>&,
+                                                          const std::vector<size_t>&,
+                                                          const std::vector<size_t>&) {
+    outfile->Printf("\n Oh no!, you tried to grab a ThreeIntegral but this "
+                    "is not there!!");
+    throw PSIEXCEPTION("INT_TYPE=DF/CHOLESKY to use ThreeIntegral");
+}
+
+ ambit::Tensor ConventionalIntegrals::three_integral_block_two_index(const std::vector<size_t>&, size_t,
+                                                     const std::vector<size_t>&) {
+    outfile->Printf("\n Oh no! this isn't here");
+    throw PSIEXCEPTION("INT_TYPE=DISKDF");
+}
+
+ double** ConventionalIntegrals::three_integral_pointer() {
+    outfile->Printf("\n Doh! There is no Three_integral here.  Use DF/CD");
+    throw PSIEXCEPTION("INT_TYPE=DF/CHOLESKY to use ThreeIntegral!");
 }
 
 void ConventionalIntegrals::set_tei(size_t p, size_t q, size_t r, size_t s, double value,

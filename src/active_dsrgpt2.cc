@@ -36,6 +36,8 @@
 #include "psi4/libmints/pointgrp.h"
 #include "psi4/libmints/dipole.h"
 #include "psi4/libmints/petitelist.h"
+#include "psi4/libmints/dimension.h"
+
 #include "psi4/physconst.h"
 
 #include "../fci/fci_integrals.h"

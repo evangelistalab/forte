@@ -30,16 +30,17 @@
 #include <cstring>
 
 #include "psi4/libpsi4util/process.h"
+#include "psi4/libmints/basisset.h"
 #include "psi4/libmints/wavefunction.h"
 #include "psi4/libmints/integral.h"
+#include "psi4/libmints/matrix.h"
 #include "psi4/libmints/sieve.h"
 #include "psi4/lib3index/cholesky.h"
-#include "psi4/libmints/basisset.h"
 #include "psi4/libpsio/psio.hpp"
 #include "psi4/libqt/qt.h"
 #include "psi4/psifiles.h"
 
-#include "integrals.h"
+#include "cholesky_integrals.h"
 
 using namespace ambit;
 
@@ -139,6 +140,12 @@ ambit::Tensor CholeskyIntegrals::three_integral_block(const std::vector<size_t>&
         value = three_integral(A[i[0]], p[i[1]], q[i[2]]);
     });
     return ReturnTensor;
+}
+
+ambit::Tensor CholeskyIntegrals::three_integral_block_two_index(const std::vector<size_t>&, size_t,
+                                                                const std::vector<size_t>&) {
+    outfile->Printf("\n Oh no! this isn't here");
+    throw PSIEXCEPTION("INT_TYPE=DISKDF");
 }
 
 void CholeskyIntegrals::gather_integrals() {

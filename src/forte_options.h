@@ -48,7 +48,7 @@ using double_opt_t = std::tuple<std::string, double, std::string>;
 // ("label", default value, "description",vector<"allowed values">)
 using str_opt_t = std::tuple<std::string, std::string, std::string, std::vector<std::string>>;
 
-// For the attay type stores:
+// For the array type stores:
 // ("label", "description")
 using array_opt_t = std::tuple<std::string, std::string>;
 
@@ -110,6 +110,12 @@ class ForteOptions {
     /// Add the options to psi4's options class
     void add_psi4_options(Options& options);
 
+    /**
+     * @brief Generate documentation for the options registered with this object
+     * @return A string with a list of options
+     */
+    std::string generate_documentation() const;
+
   private:
     std::vector<bool_opt_t> bool_opts_;
     std::vector<int_opt_t> int_opts_;
@@ -117,7 +123,7 @@ class ForteOptions {
     std::vector<str_opt_t> str_opts_;
     std::vector<array_opt_t> array_opts_;
 };
-}
-} // End Namespaces
+} // namespace forte
+} // namespace psi
 
 #endif // _forte_options_h_

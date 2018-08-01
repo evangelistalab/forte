@@ -34,6 +34,8 @@
 #include "psi4/libmints/matrix.h"
 #include "psi4/libmints/vector.h"
 
+#include "psi4/libpsi4util/PsiOutStream.h"
+
 #include "../blockedtensorfactory.h"
 #include "helpers.h"
 #include "mp2_nos.h"

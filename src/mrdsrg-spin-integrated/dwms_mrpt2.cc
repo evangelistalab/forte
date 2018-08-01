@@ -2,6 +2,7 @@
 #include <sstream>
 
 #include "psi4/libmints/molecule.h"
+#include "psi4/libmints/dimension.h"
 
 #include "dwms_mrpt2.h"
 #include "master_mrdsrg.h"
