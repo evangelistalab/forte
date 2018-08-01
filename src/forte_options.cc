@@ -69,21 +69,6 @@ void ForteOptions::add_psi4_options(Options& options) {
 }
 
 std::string ForteOptions::generate_documentation() const {
-    //    // For the bool, int, and double types store:
-    //    // ("label", default value, "description")
-    //    using bool_opt_t = std::tuple<std::string, bool, std::string>;
-    //    using int_opt_t = std::tuple<std::string, int, std::string>;
-    //    using double_opt_t = std::tuple<std::string, double, std::string>;
-
-    //    // For the string type stores:
-    //    // ("label", default value, "description",vector<"allowed values">)
-    //    using str_opt_t = std::tuple<std::string, std::string, std::string,
-    //    std::vector<std::string>>;
-
-    //    // For the array type stores:
-    //    // ("label", "description")
-    //    using array_opt_t = std::tuple<std::string, std::string>;
-
     std::vector<std::pair<std::string, std::string>> option_docs_list;
 
     for (const auto& opt : bool_opts_) {
@@ -150,7 +135,6 @@ std::string ForteOptions::generate_documentation() const {
 
 std::string rst_bold(const std::string& s) { return "**" + s + "**"; }
 
-//"label", default value, "description",vector<"allowed values">)
 std::string option_formatter(const std::string& type, const std::string& label,
                              const std::string& default_value, const std::string& description,
                              const std::string& allowed_values) {
@@ -164,19 +148,6 @@ std::string option_formatter(const std::string& type, const std::string& label,
         s += "* Allowed values: " + allowed_values;
     }
 
-    //**INT_TYPE**
-
-    // If one is going to use THREE-DSRG-MRPT2, this keyword needs to be set to either DF or
-    // CHOLESKY.  The default value for integrals is actually conventional, but the code won't work
-    // if conventional is used.
-
-    // INT_TYPE tells what type of integrals will be used in the calculation
-
-    //* Type: string
-
-    //* Possible Values: DF, CHOLESKY
-
-    //* Default: CONVENTIONAL
     return s;
 }
 

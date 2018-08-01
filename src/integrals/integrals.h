@@ -38,7 +38,6 @@
 
 #include "psi4/libmints/typedefs.h"
 #include "ambit/blocked_tensor.h"
-//#include "psi4/libmints/matrix.h"
 
 namespace psi {
 
