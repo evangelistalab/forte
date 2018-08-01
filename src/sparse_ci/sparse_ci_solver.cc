@@ -27,6 +27,7 @@
  */
 
 #include <cmath>
+#include <algorithm>
 
 #include "psi4/libciomr/libciomr.h"
 #include "psi4/libmints/matrix.h"
