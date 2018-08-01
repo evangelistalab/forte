@@ -30,6 +30,9 @@
 #include <map>
 #include <vector>
 
+#include "psi4/psi4-dec.h"
+#include "psi4/libpsi4util/PsiOutStream.h"
+
 #include "../helpers.h"
 #include "../mini-boost/boost/format.hpp"
 #include "mrdsrg.h"

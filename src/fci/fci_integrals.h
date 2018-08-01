@@ -34,6 +34,8 @@
 #include "string_lists.h"
 
 namespace psi {
+class Dimension;
+
 namespace forte {
 
 enum FCIIntegralsType { Active, Correlated };

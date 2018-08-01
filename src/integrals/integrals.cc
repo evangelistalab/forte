@@ -85,7 +85,7 @@ void set_INT_options(ForteOptions& foptions) {
     foptions.add_bool("PRINT_INTS", false, "Print the one- and two-electron integrals?");
 }
 
-ForteIntegrals::ForteIntegrals(psi::Options& options, SharedWavefunction ref_wfn,
+ForteIntegrals::ForteIntegrals(psi::Options& options, std::shared_ptr<Wavefunction> ref_wfn,
                                IntegralSpinRestriction restricted,
                                std::shared_ptr<MOSpaceInfo> mo_space_info)
     : options_(options), wfn_(ref_wfn), restricted_(restricted), frozen_core_energy_(0.0),
@@ -216,6 +216,25 @@ void ForteIntegrals::transform_one_electron_integrals() {
             one_electron_integrals_b_[p * ncmo_ + q] =
                 full_one_electron_integrals_b_[cmotomo_[p] * nmo_ + cmotomo_[q]];
         }
+    }
+}
+
+void ForteIntegrals::set_fock_a(const std::vector<double>& fock_stl) {
+    size_t fock_size = fock_stl.size();
+    if (fock_size != ncmo_ * ncmo_) {
+        throw PSIEXCEPTION("Cannot fill in fock_matrix_a because the vector is out-of-range.");
+    } else {
+        fock_matrix_a_ = fock_stl;
+    }
+}
+
+/// Set the beta fock matrix
+void ForteIntegrals::set_fock_b(const std::vector<double>& fock_stl) {
+    size_t fock_size = fock_stl.size();
+    if (fock_size != ncmo_ * ncmo_) {
+        throw PSIEXCEPTION("Cannot fill in fock_matrix_b because the vector is out-of-range.");
+    } else {
+        fock_matrix_b_ = fock_stl;
     }
 }
 

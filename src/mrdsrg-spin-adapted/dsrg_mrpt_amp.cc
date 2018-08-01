@@ -28,6 +28,8 @@
 
 #include "../mini-boost/boost/format.hpp"
 
+#include "psi4/libpsi4util/PsiOutStream.h"
+
 #include "dsrg_mrpt.h"
 
 namespace psi {

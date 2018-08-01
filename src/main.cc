@@ -26,13 +26,21 @@
  * @END LICENSE
  */
 
+#include <fstream>
+
 #include "aosubspace/aosubspace.h"
 #include "avas.h"
 #include "forte_options.h"
 #include "helpers.h"
 #include "integrals/integrals.h"
+#include "integrals/cholesky_integrals.h"
+#include "integrals/df_integrals.h"
+#include "integrals/diskdf_integrals.h"
+#include "integrals/conventional_integrals.h"
+#include "integrals/own_integrals.h"
 #include "sparse_ci/determinant.h"
 #include "version.h"
+#include "psi4/libpsi4util/PsiOutStream.h"
 #include "psi4/psi4-dec.h"
 
 #ifdef HAVE_CHEMPS2
@@ -55,8 +63,7 @@ namespace psi {
 namespace forte {
 
 /**
- * @brief Read options from the input file. Called by psi4 before everything
- * else.
+ * @brief Read options from the input file. Called by psi4 before everything else.
  */
 extern "C" PSI_API int read_options(std::string name, Options& options) {
 
@@ -64,11 +71,18 @@ extern "C" PSI_API int read_options(std::string name, Options& options) {
 
     forte_options(name, foptions);
 
-    if (name == "FORTE" || options.read_globals()) {
+    //    if (name == "FORTE" || options.read_globals()) {
+    if (name == "FORTE") {
         // Old way (deprecated) to pass options to Psi4
         forte_old_options(options);
         // New way to pass options to Psi4
         foptions.add_psi4_options(options);
+    }
+    if (options.get_str("JOB_TYPE") == "DOCUMENTATION") {
+        std::ofstream docs;
+        docs.open ("options.rst");
+        docs << foptions.generate_documentation();
+        docs.close();
     }
 
     return true;
@@ -105,8 +119,9 @@ extern "C" PSI_API SharedWavefunction forte(SharedWavefunction ref_wfn, Options&
     // Transform the orbitals
     make_avas(ref_wfn, options, Ps);
 
-    // Transform integrals and run forte only if necessary
-    if (options.get_str("JOB_TYPE") != "NONE") {
+    std::string job_type = options.get_str("JOB_TYPE");
+    if (job_type != "NONE") {
+        // Transform integrals and run forte only if necessary
         // Make an integral object
         auto ints = make_forte_integrals(ref_wfn, options, mo_space_info);
 

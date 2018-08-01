@@ -26,8 +26,11 @@
  * @END LICENSE
  */
 
-#include "dsrg_mrpt.h"
 #include <utility>
+
+#include "dsrg_mrpt.h"
+
+#include "psi4/libpsi4util/PsiOutStream.h"
 
 namespace psi {
 namespace forte {

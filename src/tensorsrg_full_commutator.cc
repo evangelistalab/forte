@@ -28,6 +28,8 @@
 
 #include <cmath>
 
+#include "psi4/libpsi4util/PsiOutStream.h"
+
 #include "helpers.h"
 #include "tensorsrg.h"
 

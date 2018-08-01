@@ -44,6 +44,7 @@
 #endif
 
 #include "../blockedtensorfactory.h"
+#include "diskdf_integrals.h"
 
 using namespace ambit;
 namespace psi {
@@ -609,10 +610,6 @@ void DISKDFIntegrals::make_fock_matrix(SharedMatrix gamma_aM, SharedMatrix gamma
     if (num_block != 1) {
         outfile->Printf("\n Created Fock matrix %8.8f s", block_read.get());
     }
-}
-
-void DISKDFIntegrals::resort_three(SharedMatrix&, std::vector<size_t>&) {
-    outfile->Printf("No need to resort a file.  dummy!");
 }
 
 void DISKDFIntegrals::resort_integrals_after_freezing() {

@@ -27,6 +27,8 @@
  * @END LICENSE
  */
 
+#include "psi4/libpsi4util/PsiOutStream.h"
+
 #include "../helpers.h"
 #include "../mini-boost/boost/format.hpp"
 #include "../mini-boost/boost/numeric/odeint.hpp"

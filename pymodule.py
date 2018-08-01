@@ -42,7 +42,6 @@ def run_forte(name, **kwargs):
     kwargs = p4util.kwargs_lower(kwargs)
 
     # Your plugin's psi4 run sequence goes here
-    psi4.core.set_local_option('MYPLUGIN', 'PRINT', 1)
 
     # Compute a SCF reference, a wavefunction is return which holds the molecule used, orbitals
     # Fock matrices, and more

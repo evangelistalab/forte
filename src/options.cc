@@ -70,30 +70,32 @@ void forte_options(std::string name, ForteOptions& foptions) {
      *  - THREE-DSRG-MRPT2 A DF/CD based DSRG-MRPT2 code.  Very fast
      *  - CASSCF A AO based CASSCF code by Kevin Hannon
     -*/
-    foptions.add_str("JOB_TYPE", "NONE", {"NONE",
-                                          "ACI",
-                                          "PCI",
-                                          "CAS",
-                                          "DMRG",
-                                          "SR-DSRG",
-                                          "SR-DSRG-ACI",
-                                          "SR-DSRG-PCI",
-                                          "TENSORSRG",
-                                          "TENSORSRG-CI",
-                                          "DSRG-MRPT2",
-                                          "DSRG-MRPT3",
-                                          "MR-DSRG-PT2",
-                                          "THREE-DSRG-MRPT2",
-                                          "SOMRDSRG",
-                                          "MRDSRG",
-                                          "MRDSRG_SO",
-                                          "CASSCF",
-                                          "ACTIVE-DSRGPT2",
-                                          "DWMS-DSRGPT2",
-                                          "DSRG_MRPT",
-                                          "TASKS",
-                                          "CC",
-                                          "NOJOB"},
+    foptions.add_str("JOB_TYPE", "NONE",
+                     {"NONE",
+                      "ACI",
+                      "PCI",
+                      "CAS",
+                      "DMRG",
+                      "SR-DSRG",
+                      "SR-DSRG-ACI",
+                      "SR-DSRG-PCI",
+                      "TENSORSRG",
+                      "TENSORSRG-CI",
+                      "DSRG-MRPT2",
+                      "DSRG-MRPT3",
+                      "MR-DSRG-PT2",
+                      "THREE-DSRG-MRPT2",
+                      "SOMRDSRG",
+                      "MRDSRG",
+                      "MRDSRG_SO",
+                      "CASSCF",
+                      "ACTIVE-DSRGPT2",
+                      "DWMS-DSRGPT2",
+                      "DSRG_MRPT",
+                      "TASKS",
+                      "CC",
+                      "NOJOB",
+                      "DOCUMENTATION"},
                      "Specify the job type");
 
     foptions.add_str("MINAO_BASIS", "STO-3G", "The basis used to define an orbital subspace");
@@ -104,8 +106,8 @@ void forte_options(std::string name, ForteOptions& foptions) {
 
     foptions.add_str("ACTIVE_REF_TYPE", "CAS", "Initial guess for active space wave functions");
 }
-}
-}
+} // namespace forte
+} // namespace psi
 
 // if (name == "FORTE" || options.read_globals()) {
 
