@@ -588,6 +588,13 @@ void DMRGSolver::compute_energy() {
       outfile->Printf("\nSingle Orb EE Si(%i) = %8.12f", k, one_orb_ee[k]);
     }
 
+    std::ofstream my_1oee_file;
+    my_1oee_file.open ("1oee.dat");
+    for(int i=0; i < one_orb_ee.size(); i++){
+        my_1oee_file << one_orb_ee[i] << " ";
+    }
+    my_1oee_file.close();
+
 
 
                     //////////////////////////////////////////
