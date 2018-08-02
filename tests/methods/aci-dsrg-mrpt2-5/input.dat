@@ -1,0 +1,80 @@
+import forte
+
+memory 2 gb
+
+escf = -304.9057795487569251
+efix = -305.390029670099807 
+eaci = -305.398101399846553 
+
+molecule ene2{
+0 1
+
+    C            0.335863347908    -0.638024351991     0.000000000207
+    H            1.432938644893    -0.620850793123     0.000000000280
+    C           -0.296842800370    -1.839541056853     0.000000000164
+    H           -1.393739522764    -1.860704439495     0.000000000280
+    C            0.383204758655    -3.118962138239     0.000000000233
+    H            1.479554406702    -3.087254985300     0.000000001289
+    C           -0.237579194060    -4.313790051647    -0.000000000740
+    H            0.325161338012    -5.249189944735    -0.000000000503
+    H           -1.329245280272    -4.386987205251    -0.000000001655
+    C           -0.335863360640     0.638024352182     0.000000000468
+    H           -1.432938656420     0.620850793004     0.000000000922
+    C            0.296842792408     1.839541055584     0.000000000041
+    H            1.393739512934     1.860704430863    -0.000000000539
+    C           -0.383204755743     3.118962141979     0.000000000141
+    H           -1.479554404938     3.087254999541     0.000000000472
+    C            0.237579209937     4.313790049182    -0.000000000431
+    H            1.329245296894     4.386987192215    -0.000000001010
+    H           -0.325161312367     5.249189949931    -0.000000000534
+
+units angstrom
+symmetry c1
+}
+
+set {
+  basis sto-3g 
+  df_basis_mp2 cc-pvdz-ri 
+  df_basis_scf cc-pvdz-jkfit 
+  scf_type df
+  guess sad
+  maxiter 500
+  e_convergence 10
+  d_convergence 10
+  r_convergence 10
+  reference rhf
+}
+
+set forte {
+  multiplicity 1
+  int_type df
+  job_type three-dsrg-mrpt2
+  frozen_docc      [8]
+  restricted_docc  [17]
+  active           [8]
+  cas_type aci
+  sigma 0.001
+  diag_algorithm dynamic
+  aci_direct_rdms true
+  aci_batched_screening true
+  aci_batch_alg vector
+  aci_nbatch 4
+  nroot 1
+  root_sym 0
+  charge 0
+  print_no true
+  relax_ref once
+}
+
+set_num_threads(8)
+
+e, scf_wfn = energy('scf', return_wfn=True)
+
+compare_values(escf,get_variable("CURRENT ENERGY"), 9, "SCF energy") 
+
+energy('forte', ref_wfn=scf_wfn)
+compare_values(efix,get_variable("UNRELAXED ENERGY"), 9, "ACI-DSRG-MRPT2 fixed energy")
+compare_values(eaci,get_variable("CURRENT ENERGY"), 9, "ACI-DSRG-MRPT2 relaxed energy") 
+
+
+
