@@ -535,6 +535,65 @@ void DMRGSolver::compute_energy() {
     }
     dmrg_ref_.set_Eref(Energy);
 
+                    //////////////////////////////////////////
+                    ////// Print Corralation Info Begin //////
+                    //////////////////////////////////////////
+
+    // will involve dmrg_ref_.L1a.data();
+    size_t nact = mo_space_info_->size("ACTIVE");
+    size_t nact2 = nact * nact;
+    size_t nact3 = nact2 * nact;
+    size_t nact4 = nact3 * nact;
+
+    // for the cumulant norm..
+    std::vector<double> twoRCMaa = dmrg_ref_.L2aa().data();
+    std::vector<double> twoRCMab = dmrg_ref_.L2ab().data();
+    std::vector<double> twoRCMbb = dmrg_ref_.L2bb().data();
+
+    double Cumu_Fnorm_sq = 0.0;
+    for(int i = 0; i < nact4; i++){
+      //double idx = i*nact3 + i*nact2 + i*nact + i;
+      double temp = twoRCMaa[i] + twoRCMab[i] + twoRCMbb[i];
+      temp *= temp;
+      Cumu_Fnorm_sq += temp;
+    }
+    //std::cout << "I get here 3" <<std::endl;
+    outfile->Printf("\n ||2Lam||F^2: %8.12f", Cumu_Fnorm_sq);
+
+
+
+    // for the single orbital entanglement info
+    std::vector<double>& opdm_a = dmrg_ref_.L1a().data();
+    std::vector<double>& opdm_b = dmrg_ref_.L1b().data();
+    std::vector<double>& tpdm_ab = dmrg_ref_.g2ab().data();
+
+    std::vector<double> one_orb_ee(nact);
+    for(int i=0; i<nact; i++){
+      //std::cout << "I GET HERE 3" << std::endl;
+      double idx1 = i*nact + i;
+      double idx2 = i*nact3 + i*nact2 + i*nact + i;
+
+      //TEST
+      //std::cout << "OPDM_a("<< i <<"): " << opdm_a[idx1] << std::endl;
+      //END TEST
+      double value = (1.0-opdm_a[idx1]-opdm_b[idx1]+tpdm_ab[idx2])*std::log(1.0-opdm_a[idx1]-opdm_b[idx1]+tpdm_ab[idx2])
+                   + (opdm_a[idx1] - tpdm_ab[idx2])*std::log(opdm_a[idx1] - tpdm_ab[idx2])
+                   + (opdm_b[idx1] - tpdm_ab[idx2])*std::log(opdm_b[idx1] - tpdm_ab[idx2])
+                   + (tpdm_ab[idx2])*std::log(tpdm_ab[idx2]);
+      value *= -1.0;
+      one_orb_ee[i] = value;
+    }
+
+    for(int k = 0; k<nact; k++){
+      outfile->Printf("\nSingle Orb EE Si(%i) = %8.12f", k, one_orb_ee[k]);
+    }
+
+
+
+                    //////////////////////////////////////////
+                    ////// Print Corralation Info End ////////
+                    //////////////////////////////////////////
+
     delete[] DMRG1DM;
     delete[] DMRG2DM;
     delete[] orbitalIrreps;
