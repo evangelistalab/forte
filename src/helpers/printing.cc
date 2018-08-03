@@ -26,34 +26,40 @@
  * @END LICENSE
  */
 
-#include <cmath>
-#include <numeric>
+#include <vector>
 
-#include "psi4/libmints/basisset.h"
-#include "psi4/libqt/qt.h"
+#include "psi4/psi4-dec.h"
 #include "psi4/libpsi4util/PsiOutStream.h"
-#include "psi4/libpsi4util/exception.h"
 
-#include "../blockedtensorfactory.h"
-
-#include "own_integrals.h"
+#include "printing.h"
 
 namespace psi {
 namespace forte {
 
-OwnIntegrals::OwnIntegrals(psi::Options& options, SharedWavefunction ref_wfn,
-                           IntegralSpinRestriction restricted,
-                           std::shared_ptr<MOSpaceInfo> mo_space_info)
-    : ForteIntegrals(options, ref_wfn, restricted, mo_space_info) {
-    integral_type_ = Own;
-    // If code calls constructor print things
-    // But if someone calls retransform integrals do not print it
-    print_info();
+void print_method_banner(const std::vector<std::string>& text, const std::string& separator) {
+    size_t max_width = 80;
 
-    outfile->Printf("\n Avoiding Generation of Integrals");
-    //    freeze_core_orbitals();
+    size_t width = 0;
+    for (auto& line : text) {
+        width = std::max(width, line.size());
+    }
+
+    std::string tab((max_width - width - 4) / 2, ' ');
+    std::string header(width + 4, char(separator[0]));
+
+    outfile->Printf("\n\n%s%s\n", tab.c_str(), header.c_str());
+    for (auto& line : text) {
+        size_t padding = 2 + (width - line.size()) / 2;
+        std::string padding_str(padding, ' ');
+        outfile->Printf("%s%s%s\n", tab.c_str(), padding_str.c_str(), line.c_str());
+    }
+    outfile->Printf("%s%s\n", tab.c_str(), header.c_str());
 }
 
-OwnIntegrals::~OwnIntegrals() {}
+void print_timing(const std::string& text, double seconds) {
+    std::string padding(43 - text.size(), ' ');
+    outfile->Printf("\n  Timing for %s: %s%9.3f s.", text.c_str(), padding.c_str(), seconds);
+}
+
 } // namespace forte
 } // namespace psi

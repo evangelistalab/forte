@@ -37,7 +37,7 @@
 #include "psi4/libpsi4util/PsiOutStream.h"
 
 #include "../blockedtensorfactory.h"
-#include "helpers.h"
+#include "../helpers/printing.h"
 #include "mp2_nos.h"
 
 using namespace ambit;

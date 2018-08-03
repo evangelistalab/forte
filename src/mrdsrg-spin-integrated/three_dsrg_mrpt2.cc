@@ -53,6 +53,7 @@
 
 #include "../ao_helper.h"
 #include "../blockedtensorfactory.h"
+#include "../helpers/printing.h"
 #include "../fci/fci_solver.h"
 #include "../fci/fci_vector.h"
 #include "../fci_mo.h"

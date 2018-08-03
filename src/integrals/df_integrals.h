@@ -85,13 +85,19 @@ class DFIntegrals : public ForteIntegrals {
     virtual size_t nthree() const { return nthree_; }
 
   private:
-    virtual void gather_integrals();
-    void resort_three(std::shared_ptr<Matrix>& threeint, std::vector<size_t>& map);
-    virtual void resort_integrals_after_freezing();
-    virtual void resort_four(double*&, std::vector<size_t>&) {}
+    // ==> Class data <==
 
     std::shared_ptr<Matrix> ThreeIntegral_;
     size_t nthree_ = 0;
+
+    // ==> Class private functions <==
+
+    void resort_three(std::shared_ptr<Matrix>& threeint, std::vector<size_t>& map);
+
+    // ==> Class private virtual functions <==
+
+    virtual void gather_integrals();
+    virtual void resort_integrals_after_freezing();
 };
 
 } // namespace forte

@@ -33,7 +33,7 @@
 #include "psi4/libpsi4util/process.h"
 #include "psi4/libmints/molecule.h"
 
-#include "../helpers.h"
+#include "../helpers/printing.h"
 #include "mrdsrg_so.h"
 
 namespace psi {

@@ -120,6 +120,7 @@ src/fci/string_lists.cc
 src/fci/string_oo_list.cc
 src/fci/string_vo_list.cc
 src/fci/string_vvoo_list.cc
+src/helpers/printing.cc
 src/integrals/cholesky_integrals.cc
 src/integrals/conventional_integrals.cc
 src/integrals/custom_integrals.cc

@@ -26,34 +26,26 @@
  * @END LICENSE
  */
 
-#include <cmath>
-#include <numeric>
-
-#include "psi4/libmints/basisset.h"
-#include "psi4/libqt/qt.h"
-#include "psi4/libpsi4util/PsiOutStream.h"
-#include "psi4/libpsi4util/exception.h"
-
-#include "../blockedtensorfactory.h"
-
-#include "own_integrals.h"
+#ifndef _printing_h_
+#define _printing_h_
 
 namespace psi {
+
+class Options;
+
 namespace forte {
 
-OwnIntegrals::OwnIntegrals(psi::Options& options, SharedWavefunction ref_wfn,
-                           IntegralSpinRestriction restricted,
-                           std::shared_ptr<MOSpaceInfo> mo_space_info)
-    : ForteIntegrals(options, ref_wfn, restricted, mo_space_info) {
-    integral_type_ = Own;
-    // If code calls constructor print things
-    // But if someone calls retransform integrals do not print it
-    print_info();
+/**
+ * @brief print_method_banner Print a banner
+ * @param text A vector of strings to print in the banner. Each string is a
+ * line.
+ * @param separator A string The separator used in the banner (defalut = "-").
+ */
+void print_method_banner(const std::vector<std::string>& text, const std::string& separator = "-");
 
-    outfile->Printf("\n Avoiding Generation of Integrals");
-    //    freeze_core_orbitals();
+void print_timing(const std::string& text, double seconds);
+
 }
+} // End Namespaces
 
-OwnIntegrals::~OwnIntegrals() {}
-} // namespace forte
-} // namespace psi
+#endif // _helpers_h_

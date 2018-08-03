@@ -54,12 +54,13 @@ class DISKDFIntegrals : public ForteIntegrals {
 
     /// aptei_xy functions are slow.  try to use three_integral_block
 
+    // ==> Class public virtual functions <==
+
     virtual double aptei_aa(size_t p, size_t q, size_t r, size_t s);
     virtual double aptei_ab(size_t p, size_t q, size_t r, size_t s);
     virtual double aptei_bb(size_t p, size_t q, size_t r, size_t s);
 
-    /// Reads the antisymmetrized alpha-alpha chunck and returns an
-    /// ambit::Tensor
+    /// Reads the antisymmetrized alpha-alpha chunck and returns an ambit::Tensor
     virtual ambit::Tensor aptei_aa_block(const std::vector<size_t>& p, const std::vector<size_t>& q,
                                          const std::vector<size_t>& r,
                                          const std::vector<size_t>& s);
@@ -73,10 +74,8 @@ class DISKDFIntegrals : public ForteIntegrals {
     virtual double diag_aptei_aa(size_t p, size_t q);
     virtual double diag_aptei_ab(size_t p, size_t q);
     virtual double diag_aptei_bb(size_t p, size_t q);
-    //    virtual double three_integral(size_t A, size_t p, size_t q);
     virtual double** three_integral_pointer() { return (ThreeIntegral_->pointer()); }
-    /// Read a block of the DFIntegrals and return an Ambit tensor of size A by
-    /// p by q
+    /// Read a block of the DFIntegrals and return an Ambit tensor of size A by p by q
     virtual ambit::Tensor three_integral_block(const std::vector<size_t>& A,
                                                const std::vector<size_t>& p,
                                                const std::vector<size_t>& q);
@@ -94,11 +93,17 @@ class DISKDFIntegrals : public ForteIntegrals {
     virtual size_t nthree() const { return nthree_; }
 
   private:
-    virtual void gather_integrals();
-    virtual void resort_integrals_after_freezing();
+    // ==> Class data <==
+
     std::shared_ptr<DFHelper> df_;
     std::shared_ptr<Matrix> ThreeIntegral_;
     size_t nthree_ = 0;
+
+    // ==> Class private virtual functions <==
+
+    virtual void gather_integrals();
+    virtual void resort_integrals_after_freezing();
+
 };
 
 } // namespace forte

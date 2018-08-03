@@ -57,7 +57,7 @@ ConventionalIntegrals::ConventionalIntegrals(psi::Options& options, SharedWavefu
     : ForteIntegrals(options, ref_wfn, restricted, mo_space_info) {
 
     integral_type_ = Conventional;
-
+    print_info();
     outfile->Printf("\n  Overall Conventional Integrals timings\n\n");
     Timer ConvTime;
 
@@ -167,13 +167,14 @@ ambit::Tensor ConventionalIntegrals::three_integral_block(const std::vector<size
     throw PSIEXCEPTION("INT_TYPE=DF/CHOLESKY to use ThreeIntegral");
 }
 
- ambit::Tensor ConventionalIntegrals::three_integral_block_two_index(const std::vector<size_t>&, size_t,
-                                                     const std::vector<size_t>&) {
+ambit::Tensor ConventionalIntegrals::three_integral_block_two_index(const std::vector<size_t>&,
+                                                                    size_t,
+                                                                    const std::vector<size_t>&) {
     outfile->Printf("\n Oh no! this isn't here");
     throw PSIEXCEPTION("INT_TYPE=DISKDF");
 }
 
- double** ConventionalIntegrals::three_integral_pointer() {
+double** ConventionalIntegrals::three_integral_pointer() {
     outfile->Printf("\n Doh! There is no Three_integral here.  Use DF/CD");
     throw PSIEXCEPTION("INT_TYPE=DF/CHOLESKY to use ThreeIntegral!");
 }

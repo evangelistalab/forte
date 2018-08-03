@@ -90,13 +90,20 @@ class CholeskyIntegrals : public ForteIntegrals {
     SharedMatrix L_ao_;
 
   private:
-    /// Computes Cholesky integrals
-    virtual void gather_integrals();
-    virtual void resort_integrals_after_freezing();
-    void resort_three(std::shared_ptr<Matrix>& threeint, std::vector<size_t>& map);
-    void transform_integrals();
+    // ==> Class data <==
+
     std::shared_ptr<Matrix> ThreeIntegral_;
     size_t nthree_ = 0;
+
+    // ==> Class private functions <==
+
+    void resort_three(std::shared_ptr<Matrix>& threeint, std::vector<size_t>& map);
+    void transform_integrals();
+
+    // ==> Class private virtual functions <==
+
+    virtual void gather_integrals();
+    virtual void resort_integrals_after_freezing();
 };
 
 } // namespace forte

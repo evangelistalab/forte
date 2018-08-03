@@ -33,7 +33,6 @@
 #include "psi4/libiwl/iwl.h"
 #include "psi4/libpsio/psio.hpp"
 #include "integrals/integrals.h"
-#include "helpers.h"
 #include "reference.h"
 
 #define PSIF_V2RDM_D2AA 270

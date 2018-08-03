@@ -45,6 +45,7 @@
 #include "semi_canonicalize.h"
 #include "active_dsrgpt2.h"
 #include "mini-boost/boost/format.hpp"
+#include "../helpers/printing.h"
 
 namespace psi {
 namespace forte {

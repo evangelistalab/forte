@@ -55,7 +55,7 @@ CustomIntegrals::CustomIntegrals(psi::Options& options, SharedWavefunction ref_w
                                  std::shared_ptr<MOSpaceInfo> mo_space_info)
     : ForteIntegrals(options, ref_wfn, restricted, mo_space_info) {
     integral_type_ = Custom;
-
+    print_info();
     outfile->Printf("\n  Using Custom integrals\n\n");
 
     // Allocate the memory required to store the two-electron integrals
