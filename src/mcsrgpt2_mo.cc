@@ -26,11 +26,6 @@
  * @END LICENSE
  */
 
-#include "mcsrgpt2_mo.h"
-#include "semi_canonicalize.h"
-#include "mini-boost/boost/algorithm/string/predicate.hpp"
-#include "mini-boost/boost/format.hpp"
-#include "psi4/libqt/qt.h"
 #include <algorithm>
 #include <ctype.h>
 #include <fstream>
@@ -38,6 +33,15 @@
 #include <numeric>
 #include <string>
 #include <utility>
+
+#include "mini-boost/boost/algorithm/string/predicate.hpp"
+#include "mini-boost/boost/format.hpp"
+
+#include "psi4/libqt/qt.h"
+
+#include "mcsrgpt2_mo.h"
+#include "semi_canonicalize.h"
+#include "../helpers/printing.h"
 
 #define Delta(i, j) ((i == j) ? 1 : 0)
 

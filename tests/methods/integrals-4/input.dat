@@ -1,0 +1,36 @@
+#! Generated using commit GITCOMMIT
+
+import forte
+
+refscf = -112.67064846447627
+reffci = -112.744149947609273
+
+molecule {
+0 1
+C
+O 1 R
+R = 2.5
+units bohr
+}
+
+set {
+  basis cc-pVDZ
+  df_basis_mp2 cc-pVDZ-RI
+  scf_type pk
+  e_convergence 14
+}
+
+set forte {
+  job_type fci
+  int_type df
+  frozen_docc      [2 ,0 ,0 ,0]
+  restricted_docc  [2 ,0 ,0 ,0]
+  active           [2 ,2 ,2 ,2]
+  e_convergence 12
+}
+
+energy('scf')
+compare_values(refscf, get_variable("CURRENT ENERGY"),10, "SCF energy") #TEST
+
+energy('forte')
+compare_values(reffci, get_variable("CURRENT ENERGY"),10, "FCI energy") #TEST

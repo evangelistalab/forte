@@ -30,11 +30,14 @@
 #include <iostream>
 
 #include "mini-boost/boost/format.hpp"
+
 #include "psi4/liboptions/liboptions.h"
 #include "psi4/libmints/dimension.h"
 #include "psi4/libmints/molecule.h"
 #include "psi4/libpsi4util/PsiOutStream.h"
 #include "psi4/psi4-dec.h"
+
+#include "../helpers/printing.h"
 
 #include "v2rdm.h"
 

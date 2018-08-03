@@ -35,7 +35,7 @@
 
 #include "../fci/fci.h"
 #include "../fci_mo.h"
-#include "../helpers.h"
+#include "../helpers/printing.h"
 #include "../semi_canonicalize.h"
 #include "../mini-boost/boost/format.hpp"
 #include "../mp2_nos.h"

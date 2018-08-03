@@ -45,6 +45,7 @@
 #endif
 
 #include "../blockedtensorfactory.h"
+#include "../helpers/printing.h"
 #include "df_integrals.h"
 
 using namespace ambit;
@@ -60,9 +61,9 @@ DFIntegrals::DFIntegrals(psi::Options& options, SharedWavefunction ref_wfn,
     integral_type_ = DF;
     // If code calls constructor print things
     // But if someone calls retransform integrals do not print it
-
+    print_info();
     outfile->Printf("\n  DFIntegrals overall time");
-    Timer DFInt;
+    Timer int_timer;
 
     int my_proc = 0;
 #ifdef HAVE_GA
@@ -72,7 +73,7 @@ DFIntegrals::DFIntegrals(psi::Options& options, SharedWavefunction ref_wfn,
         gather_integrals();
         freeze_core_orbitals();
     }
-    outfile->Printf("\n  DFIntegrals take %15.8f s", DFInt.get());
+    print_timing("computing density-fitted integrals", int_timer.get());
 }
 
 DFIntegrals::~DFIntegrals() {}
@@ -320,14 +321,11 @@ void DFIntegrals::resort_three(SharedMatrix& threeint, std::vector<size_t>& map)
 
     // This copies the resorted integrals and the data is changed to the sorted
     // matrix
-    if (print_ > 0) {
-        outfile->Printf("\n Done with resorting");
-    }
     threeint->copy(temp_threeint);
 }
 
 void DFIntegrals::resort_integrals_after_freezing() {
-    Timer resort_integrals;
+    Timer timer_resort;
     if (print_ > 0) {
         outfile->Printf("\n  Resorting integrals after freezing core.");
     }
@@ -335,7 +333,7 @@ void DFIntegrals::resort_integrals_after_freezing() {
     resort_three(ThreeIntegral_, cmotomo_);
 
     if (print_ > 0) {
-        outfile->Printf("\n Resorting integrals takes   %8.8fs", resort_integrals.get());
+        print_timing("resorting DF integrals", timer_resort.get());
     }
 }
 } // namespace forte

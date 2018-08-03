@@ -42,6 +42,7 @@
 #include "../mini-boost/boost/format.hpp"
 #include "../fci_mo.h"
 #include "../fci/fci_solver.h"
+#include "../helpers/printing.h"
 #include "dsrg_mrpt2.h"
 
 using namespace ambit;

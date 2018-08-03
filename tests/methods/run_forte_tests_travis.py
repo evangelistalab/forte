@@ -23,6 +23,8 @@ psi4command = ""
 fci_tests = ["fci-1","fci-2","fci-3","fci-4","fci-5","fci-7","fci-rdms-1","fci-rdms-2","fci-one-electron","fci-ex-1",
              "fci-ecp-1","fci-ecp-2"]
 
+integrals_tests = ["integrals-1","integrals-2","integrals-3","integrals-4","integrals-5"]
+
 lambda_ci_tests = ["casci-1","casci-2","casci-3","casci-4",
                      "casci-5-fc","casci-6-fc","casci-7-fc","casci-8-fc",
                      "lambda+sd-ci-1","lambda+sd-ci-2"]
@@ -63,7 +65,7 @@ dmrg_tests = ["dmrgscf-1", "df-dmrgscf-1", "cd-dmrgscf-1", "dmrg-dsrg-mrpt2-1", 
 
 #tests =  fci_tests + casscf_tests + dsrg_mrpt2_tests + adaptive_ci_tests + pci_tests + fciqmc_tests + ct_tests + dsrg_tests
 #tests =  fci_tests + casscf_tests + dsrg_mrpt2_tests + dmrg_tests + mrdsrg_tests + adaptive_ci_tests + pci_tests
-tests = fci_tests + casscf_tests + dsrg_mrpt2_tests + dsrg_mrpt3_tests + mrdsrg_tests + adaptive_ci_tests + pci_tests + pci_hashvec_tests
+tests = integrals_tests + fci_tests + casscf_tests + dsrg_mrpt2_tests + dsrg_mrpt3_tests + mrdsrg_tests + adaptive_ci_tests + pci_tests + pci_hashvec_tests
 tests += active_dsrgpt2_tests + dwms_dsrgpt2_tests
 
 maindir = os.getcwd()

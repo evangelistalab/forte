@@ -83,22 +83,10 @@ class ConventionalIntegrals : public ForteIntegrals {
 
     virtual size_t nthree() const { throw PSIEXCEPTION("Wrong Int_Type"); }
 
-  private:
-    /// Transform the integrals
-    void transform_integrals();
-
-    void resort_four(std::vector<double>& tei, std::vector<size_t>& map);
-
-    virtual void gather_integrals();
-    virtual void resort_integrals_after_freezing();
     virtual void set_tei(size_t p, size_t q, size_t r, size_t s, double value, bool alpha1,
                          bool alpha2);
-
-    /// An addressing function to retrieve the two-electron integrals
-    size_t aptei_index(size_t p, size_t q, size_t r, size_t s) {
-        return aptei_idx_ * aptei_idx_ * aptei_idx_ * p + aptei_idx_ * aptei_idx_ * q +
-               aptei_idx_ * r + s;
-    }
+  private:
+    // ==> Class data <==
 
     /// The IntegralTransform object used by this class
     std::shared_ptr<IntegralTransform> integral_transform_;
@@ -107,6 +95,24 @@ class ConventionalIntegrals : public ForteIntegrals {
     std::vector<double> aphys_tei_aa;
     std::vector<double> aphys_tei_ab;
     std::vector<double> aphys_tei_bb;
+
+    // ==> Class private functions <==
+
+    /// Transform the integrals
+    void transform_integrals();
+    void resort_four(std::vector<double>& tei, std::vector<size_t>& map);
+
+    /// An addressing function to for two-electron integrals
+    /// @return the address of the integral <pq|rs> or <pq||rs>
+    size_t aptei_index(size_t p, size_t q, size_t r, size_t s) {
+        return aptei_idx_ * aptei_idx_ * aptei_idx_ * p + aptei_idx_ * aptei_idx_ * q +
+               aptei_idx_ * r + s;
+    }
+
+    // ==> Class private virtual functions <==
+
+    virtual void gather_integrals();
+    virtual void resort_integrals_after_freezing();
 };
 
 } // namespace forte

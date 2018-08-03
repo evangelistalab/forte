@@ -40,6 +40,7 @@
 #include "psi4/libqt/qt.h"
 #include "psi4/psifiles.h"
 
+#include "../helpers/printing.h"
 #include "cholesky_integrals.h"
 
 using namespace ambit;
@@ -59,12 +60,11 @@ CholeskyIntegrals::CholeskyIntegrals(psi::Options& options, SharedWavefunction r
     : ForteIntegrals(options, ref_wfn, restricted, mo_space_info) {
 
     integral_type_ = Cholesky;
-    outfile->Printf("\n  Cholesky integrals time");
-    Timer CholInt;
+    print_info();
+    Timer int_timer;
     gather_integrals();
     freeze_core_orbitals();
-
-    outfile->Printf("\n  CholeskyIntegrals take %8.8f", CholInt.get());
+    print_timing("computing Cholesky integrals", int_timer.get());
 }
 
 CholeskyIntegrals::~CholeskyIntegrals() {}

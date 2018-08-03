@@ -49,8 +49,7 @@ class CustomIntegrals : public ForteIntegrals {
     /// Contructor of the class.  Calls std::shared_ptr<ForteIntegrals> ints
     /// constructor
     CustomIntegrals(psi::Options& options, SharedWavefunction ref_wfn,
-                    IntegralSpinRestriction restricted,
-                    std::shared_ptr<MOSpaceInfo> mo_space_info);
+                    IntegralSpinRestriction restricted, std::shared_ptr<MOSpaceInfo> mo_space_info);
     virtual ~CustomIntegrals();
 
     /// Grabs the antisymmetriced TEI - assumes storage in aphy_tei_*
@@ -94,30 +93,31 @@ class CustomIntegrals : public ForteIntegrals {
 
     virtual void make_fock_matrix(SharedMatrix gamma_a, SharedMatrix gamma_b);
 
-    virtual size_t nthree() const { throw PSIEXCEPTION("Wrong Int_Type"); }
+    virtual size_t nthree() const { throw PSIEXCEPTION("Wrong Integral type"); }
 
-  private:
-    /// Wavefunction object
-    SharedWavefunction wfn_;
-
-    virtual void gather_integrals();
-    // Allocates memory for a antisymmetrized tei (nmo_^4)
-    virtual void resort_integrals_after_freezing();
-    void resort_four(std::vector<double>& tei, std::vector<size_t>& map);
-
-    virtual void resort_three(std::shared_ptr<Matrix>&, std::vector<size_t>&) {}
     virtual void set_tei(size_t p, size_t q, size_t r, size_t s, double value, bool alpha1,
                          bool alpha2);
+  private:
+    // ==> Class data <==
 
-    /// An addressing function to retrieve the two-electron integrals
+    std::vector<double> aphys_tei_aa;
+    std::vector<double> aphys_tei_ab;
+    std::vector<double> aphys_tei_bb;
+
+    // ==> Class private functions <==
+
+    void resort_four(std::vector<double>& tei, std::vector<size_t>& map);
+    /// An addressing function to for two-electron integrals
+    /// @return the address of the integral <pq|rs> or <pq||rs>
     size_t aptei_index(size_t p, size_t q, size_t r, size_t s) {
         return aptei_idx_ * aptei_idx_ * aptei_idx_ * p + aptei_idx_ * aptei_idx_ * q +
                aptei_idx_ * r + s;
     }
 
-    std::vector<double> aphys_tei_aa;
-    std::vector<double> aphys_tei_ab;
-    std::vector<double> aphys_tei_bb;
+    // ==> Class private virtual functions <==
+
+    virtual void gather_integrals();
+    virtual void resort_integrals_after_freezing();
 };
 
 } // namespace forte

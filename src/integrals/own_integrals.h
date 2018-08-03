@@ -108,9 +108,14 @@ class OwnIntegrals : public ForteIntegrals {
     virtual size_t nthree() const { return 1; }
 
   private:
+    // ==> Class data <==
+
+    ambit::Tensor blank_tensor_;
+
+    // ==> Class private virtual functions <==
+
     virtual void gather_integrals() {}
     virtual void resort_integrals_after_freezing() {}
-    ambit::Tensor blank_tensor_;
 };
 
 } // namespace forte

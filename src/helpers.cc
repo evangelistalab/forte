@@ -222,13 +222,15 @@ void MOSpaceInfo::read_options(Options& options) {
     std::iota(vec.begin(), vec.end(), 0);
 
     // Remove the frozen core/virtuals
-    for (MOInfo& mo_info : mo_spaces_["FROZEN_DOCC"].second) {
-        outfile->Printf("\n Removing orbital %d", std::get<0>(mo_info));
+    std::vector<int> removed_list;
+    for (MOInfo& mo_info : mo_spaces_["FROZEN_DOCC"].second) {        
         vec.erase(std::remove(vec.begin(), vec.end(), std::get<0>(mo_info)), vec.end());
+        removed_list.push_back(std::get<0>(mo_info));
     }
     for (MOInfo& mo_info : mo_spaces_["FROZEN_UOCC"].second) {
         vec.erase(std::remove(vec.begin(), vec.end(), std::get<0>(mo_info)), vec.end());
-    }
+    }   
+//    outfile->Printf("\n Removed orbitals %d", std::get<0>(mo_info));
 
     mo_to_cmo_.assign(nmopi_.sum(), 1000000000);
     for (size_t n = 0; n < vec.size(); ++n) {
@@ -287,25 +289,7 @@ std::pair<SpaceInfo, bool> MOSpaceInfo::read_mo_space(const std::string& space, 
     return std::make_pair(space_info, read);
 }
 
-void print_method_banner(const std::vector<std::string>& text, const std::string& separator) {
-    size_t max_width = 80;
 
-    size_t width = 0;
-    for (auto& line : text) {
-        width = std::max(width, line.size());
-    }
-
-    std::string tab((max_width - width - 4) / 2, ' ');
-    std::string header(width + 4, char(separator[0]));
-
-    outfile->Printf("\n\n%s%s\n", tab.c_str(), header.c_str());
-    for (auto& line : text) {
-        size_t padding = 2 + (width - line.size()) / 2;
-        std::string padding_str(padding, ' ');
-        outfile->Printf("%s%s%s\n", tab.c_str(), padding_str.c_str(), line.c_str());
-    }
-    outfile->Printf("%s%s\n", tab.c_str(), header.c_str());
-}
 
 void print_h2(const std::string& text, const std::string& left_separator,
               const std::string& right_separator) {

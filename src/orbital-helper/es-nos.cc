@@ -32,6 +32,7 @@
 #include "psi4/libmints/wavefunction.h"
 #include "psi4/liboptions/liboptions.h"
 
+#include "../helpers/printing.h"
 #include "es-nos.h"
 
 namespace psi {

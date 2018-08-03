@@ -33,6 +33,11 @@
 #include <numeric>
 #include <sstream>
 
+#include "psi4/libmints/dipole.h"
+#include "psi4/libmints/oeprop.h"
+#include "psi4/libmints/petitelist.h"
+#include "psi4/libmints/local.h"
+
 #include "determinant_hashvector.h"
 #include "fci/fci_vector.h"
 #include "fci_mo.h"
@@ -41,10 +46,7 @@
 #include "operator.h"
 #include "semi_canonicalize.h"
 #include "orbital-helper/iao_builder.h"
-#include "psi4/libmints/dipole.h"
-#include "psi4/libmints/oeprop.h"
-#include "psi4/libmints/petitelist.h"
-#include "psi4/libmints/local.h"
+#include "../helpers/printing.h"
 
 namespace psi {
 namespace forte {

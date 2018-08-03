@@ -45,6 +45,7 @@
 #include "../blockedtensorfactory.h"
 #include "../forte_options.h"
 #include "../helpers.h"
+#include "../helpers/printing.h"
 #include "integrals.h"
 #include "memory.h"
 
@@ -65,6 +66,14 @@ namespace forte {
 #define omp_get_max_threads() 1
 #define omp_get_thread_num() 0
 #endif
+
+std::map<IntegralType, std::string> int_type_label{{Conventional, "Conventional"},
+                                                   {DF, "Density fitting"},
+                                                   {Cholesky, "Cholesky decomposition"},
+                                                   {DiskDF, "Disk-based density fitting"},
+                                                   {DistDF, "Distributed density fitting"},
+                                                   {Own, "Own"},
+                                                   {Custom, "Custom"}};
 
 void set_INT_options(ForteOptions& foptions) {
     /*- The algorithm used to screen the determinant
@@ -90,7 +99,6 @@ ForteIntegrals::ForteIntegrals(psi::Options& options, std::shared_ptr<Wavefuncti
                                std::shared_ptr<MOSpaceInfo> mo_space_info)
     : options_(options), wfn_(ref_wfn), restricted_(restricted), frozen_core_energy_(0.0),
       scalar_(0.0), mo_space_info_(mo_space_info) {
-    // Copy the Wavefunction object
 
     startup();
     allocate();
@@ -132,12 +140,6 @@ void ForteIntegrals::startup() {
         q += frzvpi_[h]; // skip the frozen virtual
     }
 
-    outfile->Printf("\n\n  ==> Integral Transformation <==\n");
-    outfile->Printf("\n  Number of molecular orbitals:            %5d", nmopi_.sum());
-    outfile->Printf("\n  Number of correlated molecular orbitals: %5zu", ncmo_);
-    outfile->Printf("\n  Number of frozen occupied orbitals:      %5d", frzcpi_.sum());
-    outfile->Printf("\n  Number of frozen unoccupied orbitals:    %5d\n\n", frzvpi_.sum());
-
     // Indexing
     // This is important!  Set the indexing to work using the number of
     // molecular integrals
@@ -173,7 +175,7 @@ void ForteIntegrals::transform_one_electron_integrals() {
     SharedMatrix T = SharedMatrix(wfn_->matrix_factory()->create_matrix(PSIF_SO_T));
     SharedMatrix V = SharedMatrix(wfn_->matrix_factory()->create_matrix(PSIF_SO_V));
 
-    MintsHelper mints(wfn_);
+    MintsHelper mints(wfn_->basisset(), options_, 0); // 0 here is to avoid printing of basis info
     T = mints.so_kinetic();
     V = mints.so_potential();
 
@@ -253,7 +255,7 @@ void ForteIntegrals::set_oei(size_t p, size_t q, double value, bool alpha) {
 }
 
 void ForteIntegrals::compute_frozen_one_body_operator() {
-    Timer FrozenOneBody;
+    Timer timer_frozen_one_body;
 
     Dimension frozen_dim = mo_space_info_->get_dimension("FROZEN_DOCC");
     Dimension nmopi = mo_space_info_->get_dimension("ALL");
@@ -349,8 +351,8 @@ void ForteIntegrals::compute_frozen_one_body_operator() {
 
     if (print_ > 0) {
         outfile->Printf("\n  Frozen-core energy        %20.12f a.u.", frozen_core_energy_);
-
-        outfile->Printf("\n\n  FrozenOneBody Operator takes  %8.8f s", FrozenOneBody.get());
+        print_timing("frozen one-body operator",timer_frozen_one_body.get());
+//        outfile->Printf("\n  Timing for the frozen one-body operator  %9.3f s.", timer_frozen_one_body.get());
     }
 }
 
@@ -370,14 +372,14 @@ void ForteIntegrals::retransform_integrals() {
 }
 
 void ForteIntegrals::freeze_core_orbitals() {
-    Timer freezeOrbs;
+    Timer freeze_timer;
     if (ncmo_ < nmo_) {
         compute_frozen_one_body_operator();
         resort_integrals_after_freezing();
         aptei_idx_ = ncmo_;
     }
     if (print_) {
-        outfile->Printf("\n  Frozen Orbitals takes %9.3f s.", freezeOrbs.get());
+        print_timing("freezing core and virtual orbitals",freeze_timer.get());
     }
 }
 
@@ -422,6 +424,15 @@ void ForteIntegrals::rotate_mos() {
 
     SharedMatrix Cb_old = wfn_->Cb();
     Cb_old->copy(C_new);
+}
+
+void ForteIntegrals::print_info() {
+    outfile->Printf("\n\n  ==> Integral Transformation <==\n");
+    outfile->Printf("\n  Number of molecular orbitals:            %10d", nmopi_.sum());
+    outfile->Printf("\n  Number of correlated molecular orbitals: %10zu", ncmo_);
+    outfile->Printf("\n  Number of frozen occupied orbitals:      %10d", frzcpi_.sum());
+    outfile->Printf("\n  Number of frozen unoccupied orbitals:    %10d", frzvpi_.sum());
+    outfile->Printf("\n  Two-electron integral type:              %10s\n\n", int_type_label[integral_type()].c_str());
 }
 
 void ForteIntegrals::print_ints() {
