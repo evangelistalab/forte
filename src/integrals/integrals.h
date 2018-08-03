@@ -30,8 +30,8 @@
 #ifndef _integrals_h_
 #define _integrals_h_
 
-#define PAIRINDEX(i, j) ((i > j) ? (ioff[(i)] + (j)) : (ioff[(j)] + (i)))
-#define four(i, j, k, l) PAIRINDEX(PAIRINDEX(i, j), PAIRINDEX(k, l))
+//#define PAIRINDEX(i, j) ((i > j) ? (ioff[(i)] + (j)) : (ioff[(j)] + (i)))
+//#define four(i, j, k, l) PAIRINDEX(PAIRINDEX(i, j), PAIRINDEX(k, l))
 
 #include <iostream>
 #include <vector>
@@ -157,8 +157,6 @@ class ForteIntegrals {
     virtual ambit::Tensor aptei_bb_block(const std::vector<size_t>& p, const std::vector<size_t>& q,
                                          const std::vector<size_t>& r,
                                          const std::vector<size_t>& s) = 0;
-
-    //    virtual double three_integral(size_t A, size_t p, size_t q) = 0;
 
     virtual ambit::Tensor three_integral_block(const std::vector<size_t>& A,
                                                const std::vector<size_t>& p,
@@ -305,10 +303,6 @@ class ForteIntegrals {
     /// Fock matrix stored as a vector
     std::vector<double> fock_matrix_a_;
     std::vector<double> fock_matrix_b_;
-
-    /// The B tensor
-    // std::shared_ptr<psi::Tensor> B_;
-    // remove this from general class    std::shared_ptr<DFHelper> df_;
 
     /// The type of tensor that ambit uses -> CoreTensor
     ambit::TensorType tensor_type_ = ambit::CoreTensor;
