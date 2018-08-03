@@ -695,7 +695,7 @@ double AdaptiveCI::compute_energy() {
             op_.op_s_lists(final_wfn_);
             op_.tp_s_lists(final_wfn_);
         }
-        compute_rdms(fci_ints_, final_wfn_, op_, PQ_evecs, 0, 0);
+        compute_rdms(fci_ints_, final_wfn_, op_, PQ_evecs, ref_root_, ref_root_);
         list_time += totaltt.get();
         outfile->Printf("\n  RDMS took %1.6f", list_time);
     }
@@ -1749,7 +1749,7 @@ void AdaptiveCI::set_max_rdm(int rdm) {
 Reference AdaptiveCI::reference() {
     // const std::vector<Determinant>& final_wfn =
     //     final_wfn_.determinants();
-    CI_RDMS ci_rdms(final_wfn_, fci_ints_, evecs_, 0, 0);
+    CI_RDMS ci_rdms(final_wfn_, fci_ints_, evecs_, ref_root_, ref_root_);
     ci_rdms.set_max_rdm(rdm_level_);
     Reference aci_ref = ci_rdms.reference(ordm_a_, ordm_b_, trdm_aa_, trdm_ab_, trdm_bb_, trdm_aaa_,
                                           trdm_aab_, trdm_abb_, trdm_bbb_);
