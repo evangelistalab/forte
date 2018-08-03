@@ -209,7 +209,7 @@ DISKDFIntegrals::aptei_aa_block(const std::vector<size_t>& p, const std::vector<
         ambit::Tensor::build(tensor_type_, "Return", {p.size(), q.size(), r.size(), s.size()});
     ReturnTensor("p,q,r,s") = ThreeIntpr("A,p,r") * ThreeIntqs("A,q,s");
 
-    /// If p != q != r !=s need to form the Exchane part separately
+    /// If p != q != r !=s need to form the Exchange part separately
     if (r != s) {
         ambit::Tensor ThreeIntpsK =
             ambit::Tensor::build(tensor_type_, "ThreeIntK", {nthree_, p.size(), s.size()});
@@ -278,29 +278,7 @@ ambit::Tensor DISKDFIntegrals::aptei_bb_block(const std::vector<size_t>& p,
     }
     return ReturnTensor;
 }
-//double DISKDFIntegrals::three_integral(size_t A, size_t p, size_t q) {
-//    size_t pn, qn;
-//    if (frzcpi_.sum() > 0 && ncmo_ == aptei_idx_) {
-//        pn = cmotomo_[p];
-//        qn = cmotomo_[q];
-//    } else {
-//        pn = p;
-//        qn = q;
-//    }
-//    std::vector<size_t> A_range = {A,A+1};
-//    std::vector<size_t> p_range = {pn,pn+1};
-//    std::vector<size_t> q_range = {qn,qn+1};
-    
-//    double* Apq;
 
-//    df_->fill_tensor("B",Apq, A_range, p_range, q_range );
-
-//    double value = *Apq;
-
-//    delete[] Apq;
-
-//    return value;
-//}
 ambit::Tensor DISKDFIntegrals::three_integral_block(const std::vector<size_t>& A,
                                                     const std::vector<size_t>& p,
                                                     const std::vector<size_t>& q) {
@@ -392,8 +370,8 @@ ambit::Tensor DISKDFIntegrals::three_integral_block(const std::vector<size_t>& A
 }
 
 void DISKDFIntegrals::set_tei(size_t, size_t, size_t, size_t, double, bool, bool) {
-    outfile->Printf("\n If you are using this, you are ruining the advantages of DF/CD");
-    throw PSIEXCEPTION("Don't use DF/CD if you use set_tei");
+    outfile->Printf("\n  DISKDFIntegrals::set_tei : DISKDF integrals are read only");
+    throw PSIEXCEPTION("DISKDFIntegrals::set_tei : DISKDF integrals are read only");
 }
 
 void DISKDFIntegrals::gather_integrals() {
