@@ -60,9 +60,10 @@ install:
 - conda config --set always_yes yes --set changeps1 no
 - conda update -q conda
 - conda info -a
-- conda create -q -n p4env python=$PYTHON_VER numpy cmake gdma libint libxc gau2grid pylibefp -c psi4/label/test -c psi4
+- conda create -q -n p4env python=$PYTHON_VER numpy cmake gdma libint libxc gau2grid -c psi4/label/test -c psi4
 - source activate p4env
 #- conda list
+- conda install pylibefp -c psi4/label/dev
 - python -V
 - pyenv global system 3.6
 - pip install deepdiff
