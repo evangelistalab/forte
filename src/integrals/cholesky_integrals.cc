@@ -214,7 +214,7 @@ void CholeskyIntegrals::gather_integrals() {
     } else {
         std::string str = "Computing CD Integrals";
         if (print_) {
-            outfile->Printf("\n    %-36s ...", str.c_str());
+            outfile->Printf("\n  %-36s ...", str.c_str());
         }
         Ch->choleskify();
         nthree_ = Ch->Q();
@@ -234,8 +234,8 @@ void CholeskyIntegrals::gather_integrals() {
     int_mem_ = (nthree_ * nbf * nbf * sizeof(double) / 1073741824.0);
 
     if (print_) {
-        outfile->Printf("\n Number of cholesky vectors %d to satisfy %20.12f tolerance\n", nthree_,
-                        tol_cd);
+        outfile->Printf("\n  Number of Cholesky vectors required for %.3e tolerance: %d\n",
+                        tol_cd, nthree_);
     }
     transform_integrals();
 }
