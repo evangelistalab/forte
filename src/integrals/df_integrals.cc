@@ -46,14 +46,14 @@
 
 #include "../blockedtensorfactory.h"
 #include "../helpers/printing.h"
+#include "../helpers/memory.h"
+
 #include "df_integrals.h"
 
 using namespace ambit;
 namespace psi {
 namespace forte {
-// Class for the DF Integrals
-// Generates DF Integrals.  Freezes Core orbitals, computes integrals, and
-// resorts integrals.  Also computes fock matrix
+
 DFIntegrals::DFIntegrals(psi::Options& options, SharedWavefunction ref_wfn,
                          IntegralSpinRestriction restricted,
                          std::shared_ptr<MOSpaceInfo> mo_space_info)
@@ -62,7 +62,6 @@ DFIntegrals::DFIntegrals(psi::Options& options, SharedWavefunction ref_wfn,
     // If code calls constructor print things
     // But if someone calls retransform integrals do not print it
     print_info();
-    outfile->Printf("\n  DFIntegrals overall time");
     Timer int_timer;
 
     int my_proc = 0;
@@ -168,7 +167,7 @@ void DFIntegrals::set_tei(size_t, size_t, size_t, size_t, double, bool, bool) {
 void DFIntegrals::gather_integrals() {
 
     if (print_ > 0) {
-        outfile->Printf("\n Computing Density fitted integrals \n");
+        outfile->Printf("\n  Computing Density fitted integrals \n");
     }
 
     std::shared_ptr<BasisSet> primary = wfn_->basisset();
@@ -178,9 +177,10 @@ void DFIntegrals::gather_integrals() {
     size_t naux = auxiliary->nbf();
     nthree_ = naux;
     if (print_ > 0) {
-        outfile->Printf("\n Number of auxiliary basis functions:  %u", naux);
-        outfile->Printf("\n Need %8.6f GB to store DF integrals\n",
-                        (nprim * nprim * naux * sizeof(double) / 1073741824.0));
+        outfile->Printf("\n  Number of auxiliary basis functions:  %u", naux);
+        auto mem_info = to_xb2<double>(nprim * nprim * naux);
+        outfile->Printf("\n  Need %.2f %s to store DF integrals\n", mem_info.first,
+                        mem_info.second.c_str());
     }
 
     Dimension nsopi_ = wfn_->nsopi();
@@ -232,7 +232,8 @@ void DFIntegrals::gather_integrals() {
     }
     df->transform();
     if (print_ > 0) {
-        outfile->Printf("...Done. Timing %15.6f s", timer.get());
+        outfile->Printf("...Done.");
+        print_timing("density-fitting transformation", timer.get());
     }
 
     SharedMatrix Bpq(new Matrix("Bpq", naux, nmo_ * nmo_));

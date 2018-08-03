@@ -26,30 +26,44 @@
  * @END LICENSE
  */
 
-#ifndef _printing_h_
-#define _printing_h_
+#ifndef _memory_h_
+#define _memory_h_
 
 namespace psi {
-
-class Options;
-
 namespace forte {
 
 /**
- * @brief print_method_banner Print a banner for a method
- * @param text A vector of strings to print in the banner. Each string is a line.
- * @param separator A string The separator used in the banner (defalut = "-").
+ * @brief Compute the memory requirement to store a given number of elements
+ * @param T The type of the data stored
+ * @param n The number of elements for storage
+ * @return A pair (size, "unit") with the size given in appropriate unit (B, KB, MB, GB, TB, PB)
  */
-void print_method_banner(const std::vector<std::string>& text, const std::string& separator = "-");
+template <typename T>
+std::pair<double, std::string> to_xb2(size_t nele) {
+    constexpr size_t type_size = sizeof(T);
+    // map the size
+    std::map<std::string, double> to_XB;
+    to_XB["B"] = 1.0;
+    to_XB["KB"] = 1000.0; // use 1000.0 for safety
+    to_XB["MB"] = 1000000.0;
+    to_XB["GB"] = 1000000000.0;
+    to_XB["TB"] = 1000000000000.0;
+    to_XB["PB"] = 1000000000000000.0;
 
-/**
- * @brief print_timing Print the string "Timing for <text>: <padding> X.XXX s." to the output file
- * @param text The text that comes after "Timing for"
- * @param seconds The timing in seconds
- */
-void print_timing(const std::string& text, double seconds);
+    // convert to appropriate unit
+    size_t bytes = nele * type_size;
+    std::pair<double, std::string> out;
+    for (auto& XB : to_XB) {
+        double xb = bytes / XB.second;
+        if (xb >= 0.9 && xb < 900.0) {
+            out = std::make_pair(xb, XB.first);
+            break;
+        }
+    }
+    return out;
+}
 
 }
 } // End Namespaces
 
-#endif // _helpers_h_
+#endif // _memory_h_

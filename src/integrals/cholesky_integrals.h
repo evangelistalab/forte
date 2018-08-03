@@ -41,12 +41,11 @@ namespace forte {
 class ForteOptions;
 class MOSpaceInfo;
 
-/// Classes written by Kevin Hannon
-///
+/// Class written by Kevin Hannon
 /**
- * @brief The CholeskyIntegrals:  An interface that computes the cholesky
- * integrals,
- * freezes the core, and creates fock matrices from determinant classes
+ * @brief The CholeskyIntegrals class approximates two-electron integrals via Cholesky decomposition
+ *
+ * This class assumes the Cholesky tensors can be stored in memory.
  */
 class CholeskyIntegrals : public ForteIntegrals {
   public:

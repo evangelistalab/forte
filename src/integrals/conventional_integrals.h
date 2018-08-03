@@ -43,9 +43,9 @@ class ForteOptions;
 class MOSpaceInfo;
 
 /**
- * @brief The ConventionalIntegrals class is an interface to calculate the
- * conventional integrals
- * Assumes storage of all tei and stores in core.
+ * @brief The ConventionalIntegrals class computes and transforms conventional two-electron integrals.
+ *
+ * This class assumes the two-electron integrals can be stored in memory.
  */
 class ConventionalIntegrals : public ForteIntegrals {
   public:

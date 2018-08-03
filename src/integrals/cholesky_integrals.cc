@@ -41,6 +41,7 @@
 #include "psi4/psifiles.h"
 
 #include "../helpers/printing.h"
+#include "../helpers/memory.h"
 #include "cholesky_integrals.h"
 
 using namespace ambit;
@@ -48,12 +49,6 @@ using namespace ambit;
 namespace psi {
 namespace forte {
 
-/**
- * @brief CholeskyIntegrals::CholeskyIntegrals
- * @param options - psi options class
- * @param restricted - type of integral transformation
- * @param resort_frozen_core -
- */
 CholeskyIntegrals::CholeskyIntegrals(psi::Options& options, SharedWavefunction ref_wfn,
                                      IntegralSpinRestriction restricted,
                                      std::shared_ptr<MOSpaceInfo> mo_space_info)
@@ -150,7 +145,7 @@ ambit::Tensor CholeskyIntegrals::three_integral_block_two_index(const std::vecto
 
 void CholeskyIntegrals::gather_integrals() {
     if (print_) {
-        outfile->Printf("\n Computing the Cholesky Vectors \n");
+        outfile->Printf("\n  Computing the Cholesky Vectors \n");
     }
     std::shared_ptr<BasisSet> primary = wfn_->basisset();
     size_t nbf = primary->nbf();
@@ -206,13 +201,14 @@ void CholeskyIntegrals::gather_integrals() {
             outfile->Printf("\n");
             std::string str = "Computing CD Integrals";
             if (print_) {
-                outfile->Printf("\n    %-36s ...", str.c_str());
+                outfile->Printf("\n  %-36s ...", str.c_str());
             }
             Ch->choleskify();
             nthree_ = Ch->Q();
             L_ao_ = Ch->L();
             if (print_) {
-                outfile->Printf("...Done. Timing %15.6f s", timer.get());
+                outfile->Printf("...Done.");
+                print_timing("cholesky transformation", timer.get());
             }
         }
     } else {
@@ -224,14 +220,16 @@ void CholeskyIntegrals::gather_integrals() {
         nthree_ = Ch->Q();
         L_ao_ = Ch->L();
         if (print_) {
-            outfile->Printf("...Done. Timing %15.6f s", timer.get());
+            outfile->Printf("...Done.");
+            print_timing("cholesky transformation", timer.get());
         }
     }
 
     // The number of vectors required to do cholesky factorization
     if (print_) {
-        outfile->Printf("\n Need %8.6f GB to store cd integrals in core\n",
-                        nthree_ * nbf * nbf * sizeof(double) / 1073741824.0);
+        auto mem_info = to_xb2<double>(nthree_ * nbf * nbf);
+        outfile->Printf("\n  Need %.2f %s to store CD integrals in core\n", mem_info.first,
+                        mem_info.second.c_str());
     }
     int_mem_ = (nthree_ * nbf * nbf * sizeof(double) / 1073741824.0);
 

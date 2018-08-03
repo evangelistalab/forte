@@ -17,7 +17,7 @@ set {
   basis cc-pVDZ
   df_basis_mp2 cc-pVDZ-RI
   scf_type pk
-  e_convergence 14
+  e_convergence 13
 }
 
 set forte {

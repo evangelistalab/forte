@@ -42,9 +42,9 @@ class ForteOptions;
 class MOSpaceInfo;
 
 /**
- * @brief The DFIntegrals class - interface to get DF integrals, freeze core and
- * resort,
- * make fock matrices, and grab information about the space
+ * @brief The DFIntegrals class approximates two-electron integrals via density fitting
+ *
+ * This class assumes the density-fitting tensors can be stored in memory.
  */
 class DFIntegrals : public ForteIntegrals {
   public:
