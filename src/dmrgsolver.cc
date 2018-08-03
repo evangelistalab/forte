@@ -469,6 +469,8 @@ void DMRGSolver::compute_energy() {
         Process::environment.globals["CURRENT ENERGY"] = Energy;
 
         // *** PRINTING NUMBER OF PARAMETERS *** //
+        int Npar_DMRG_SA = DMRGCI->getMPS()->gKappa2index(DMRGCI->getMPS()->gNKappa());
+
         const int L_sites = mo_space_info_->size("ACTIVE");
         outfile->Printf("\n Number of DMRG sites %0.d", L_sites);
         outfile->Printf("\n Max Virtual Dimension D %0.d", OptScheme->get_D(3));
@@ -582,6 +584,19 @@ void DMRGSolver::compute_energy() {
                    + (tpdm_ab[idx2])*std::log(tpdm_ab[idx2]);
       value *= -1.0;
       one_orb_ee[i] = value;
+
+      // double val1 = (1.0 - opdm_a[idx1] - opdm_b[idx1] + tpdm_ab[idx2]);
+      // double val2 = (opdm_a[idx1] - tpdm_ab[idx2]);
+      // double val3 = (opdm_b[idx1] - tpdm_ab[idx2]);
+      // double val4 = (tpdm_ab[idx2]);
+
+      // std::cout << "(" << i << ")" << "  1RDM_a_val:  " << opdm_a[i] << std::endl;
+      // std::cout << " (" << i << ")" << "  1RDM_b_val:  " << opdm_b[i] << std::endl;
+      // std::cout << "  (" << i << ")" << "  2RDM_ab_val:  " << tpdm_ab[i] << std::endl;
+      // std::cout << "(" << i << ")" << "  val1:  " << val1 << std::endl;
+      // std::cout << " (" << i << ")" << "  val2:  " << val2 << std::endl;
+      // std::cout << "  (" << i << ")" << "  val3:  " << val3 << std::endl;
+      // std::cout << "   (" << i << ")" << "  val4:  " << val4 << std::endl;
     }
 
     for(int k = 0; k<nact; k++){
