@@ -78,20 +78,17 @@ the :math:`b` tensor can be fully stored on disk.
 Integral Selection Keywords
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-These keywords are actually controlled by the integral class so they affect all areas of the code, not just THREE-DSRG-MRPT2.
+The following keywords control the integral class and affect all computations that run in Forte:
 
 **INT_TYPE**
 
-If one is going to use THREE-DSRG-MRPT2, this keyword needs to be set to either DF or CHOLESKY.
-The default value for integrals is actually conventional, but the code won't work if conventional is used.
-
-INT_TYPE tells what type of integrals will be used in the calculation
+``INT_TYPE`` selects the integral type used in the calculation
 
 * Type: string
 
-* Possible Values:  ``CONVENTIONAL``, ``DF``, ``CHOLESKY``, ``DISKDF``
+* Default: ``CONVENTIONAL``
 
-* Default: CONVENTIONAL
+* Possible Values:  ``CONVENTIONAL``, ``DF``, ``CHOLESKY``, ``DISKDF``
 
 **CHOLESKY_TOLERANCE**
 
@@ -105,9 +102,9 @@ The tolerance for the cholesky decomposition:
 
 **DF_BASIS_MP2**
 
-The type of basis set used for DF.  This keyword needs to be placed in the globals section.
-A common advice for these is to use the basis set designed for the primary basis set, for example,
-cc-pVDZ should use cc-pVDZ-RI.
+The basis set used for DF.  This keyword needs to be placed in the globals section of a Psi4 input.
+This basis should be one of the RI basis sets designed for a given primary basis, for example,
+when using ``BASIS = cc-pVDZ`` you should use ``BASIS = cc-pVDZ-RI``.
 
 * Type: string specifing basis set
 
