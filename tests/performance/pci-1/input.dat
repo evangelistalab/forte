@@ -12,7 +12,7 @@ molecule li2{
 }
 
 set {
-  basis cc-pVDZ
+  basis cc-pVTZ
   scf_type pk
   e_convergence 10
 }
@@ -22,11 +22,11 @@ set forte {
   nroot 1
   charge 0
   PCI_tau 1.0
-  PCI_spawning_threshold 0.00001
+  PCI_spawning_threshold 0.00002
   PCI_ENERGY_ESTIMATE_FREQ 1
   PCI_GENERATOR wall-chebyshev
   PCI_maxbeta 100000.00
-  PCI_e_convergence 7
+  PCI_e_convergence 5
   PCI_FAST_EVAR false
 }
 
