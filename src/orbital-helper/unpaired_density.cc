@@ -38,12 +38,16 @@
 #include "psi4/liboptions/liboptions.h"
 
 #include "unpaired_density.h"
+#include "localize.h"
 
 namespace psi {
 namespace forte {
 
-UPDensity::UPDensity(std::shared_ptr<Wavefunction> wfn, std::shared_ptr<MOSpaceInfo> mo_space_info, SharedMatrix Ua, SharedMatrix Ub)
-    : wfn_(wfn), mo_space_info_(mo_space_info), Uas_(Ua), Ubs_(Ub) {}
+UPDensity::UPDensity(std::shared_ptr<Wavefunction> wfn, 
+                    std::shared_ptr<ForteIntegrals> ints,
+                    std::shared_ptr<MOSpaceInfo> mo_space_info, 
+                    Options& options, SharedMatrix Ua, SharedMatrix Ub)
+    : options_(options),wfn_(wfn), ints_(ints), mo_space_info_(mo_space_info), Uas_(Ua), Ubs_(Ub) {}
 
 void UPDensity::compute_unpaired_density(std::vector<double>& oprdm_a,
                                          std::vector<double>& oprdm_b) {
@@ -56,6 +60,7 @@ void UPDensity::compute_unpaired_density(std::vector<double>& oprdm_a,
     Dimension fdocc = mo_space_info_->get_dimension("FROZEN_DOCC");
 
     size_t nact = nactpi.sum();
+    size_t nmo = nmopi.sum();
 
     // First compute natural orbitals
     std::shared_ptr<Matrix> opdm_a(new Matrix("OPDM_A", nirrep, nactpi, nactpi));
@@ -96,50 +101,123 @@ void UPDensity::compute_unpaired_density(std::vector<double>& oprdm_a,
         size_t irrep_offset = fdocc[h] + rdocc[h];
 
         for (int p = 0; p < nactpi[h]; ++p) {
-            for (int q = 0; q < nactpi[h]; ++q) {
-                Ua->set(h, p + irrep_offset, q + irrep_offset, NO_A->get(h, p, q));
-                Ub->set(h, p + irrep_offset, q + irrep_offset, NO_B->get(h, p, q));
-            }
+           // for (int q = 0; q < nactpi[h]; ++q) {
+                Ua->set(h, p + irrep_offset, p + irrep_offset, 1.0);
+                Ub->set(h, p + irrep_offset, p + irrep_offset, 1.0);
+          //  }
         }
     }
 
-    
-    SharedMatrix tmp_a(new Matrix("ta", nmopi, nmopi));
-    SharedMatrix tmp_b(new Matrix("tb", nmopi, nmopi));
+   // 
+   // SharedMatrix tmp_a(new Matrix("ta", nmopi, nmopi));
+   // SharedMatrix tmp_b(new Matrix("tb", nmopi, nmopi));
 
-    tmp_a->gemm(true,false,1.0,Uas_,Ua,0.0);
-    tmp_b->gemm(true,false,1.0,Ubs_,Ub,0.0);
+   // tmp_a->gemm(true,false,1.0,Uas_,Ua,0.0);
+   // tmp_b->gemm(true,false,1.0,Ubs_,Ub,0.0);
 
-    // Transform the orbital coefficients
+   // // Transform the orbital coefficients
+   // SharedMatrix Ca = wfn_->Ca();
+   // SharedMatrix Cb = wfn_->Cb();
+
+   // SharedMatrix Ca_new(new Matrix("Ca_new", nmopi, nmopi));
+   // SharedMatrix Cb_new(new Matrix("Cb_new", nmopi, nmopi));
+
+   // Ca_new->zero();
+   // Cb_new->zero();
+
+   // Ca_new->gemm(false, false, 1.0, Ca, tmp_a, 0.0);
+   // Cb_new->gemm(false, false, 1.0, Cb, tmp_b, 0.0);
+
+// //   Ca->copy(Ca_new);
+// //   Cb->copy(Cb_new);
+   // // Scale active NOs by unpaired-e criteria
+   // for (int h = 0; h < nirrep; ++h) {
+   //     int offset = fdocc[h] + rdocc[h];
+   //     for (int p = 0; p < nactpi[h]; ++p) {
+   //         double n_p = OCC_A->get(p) + OCC_B->get(p);
+   //         double up_el = n_p * (2.0 - n_p);
+// //           double up_el = n_p * n_p * (2.0 - n_p ) * (2.0 - n_p);
+   //         outfile->Printf("\n  Weight for orbital (%d,%d): %1.5f", h, p, up_el);
+   //         Ca_new->scale_column(h, offset + p, up_el);
+   //         Cb_new->scale_column(h, offset + p, up_el);
+   //     }
+   // }
+
+   // // Form the new density
+
+   // SharedMatrix Da = wfn_->Da();
+   // SharedMatrix Db = wfn_->Db();
+
+   // SharedMatrix Da_new(new Matrix("Da_new", nmopi, nmopi));
+   // SharedMatrix Db_new(new Matrix("Db_new", nmopi, nmopi));
+
+   // Da_new->gemm(false, true, 1.0, Ca_new, Ca_new, 0.0);
+   // Db_new->gemm(false, true, 1.0, Cb_new, Cb_new, 0.0);
+
+   // Da->copy(Da_new);
+   // Db->copy(Db_new);
+
+
+    // Compute atom-based unpaired contributions
+    SharedMatrix Ua_act(new Matrix(nact, nact));
+
+    //relocalize to atoms
+    auto loc = std::make_shared<LOCALIZE>(wfn_, options_, ints_, mo_space_info_);
+    loc->full_localize();
+    Ua_act = loc->get_U()->clone();
+    SharedMatrix Noinv( NO_A->clone());
+    Noinv->invert();
+    SharedMatrix Ua_act_r = Matrix::doublet(Noinv, Ua_act,  false, false);
+
+    double total = 0.0;
+    std::vector<double> scales(nact);
+    for( int i = 0; i < nact; ++i ){
+        double value = 0.0;
+        for (int h = 0; h < nirrep; ++h) {
+            int offset = fdocc[h] + rdocc[h];
+            for (int p = 0; p < nactpi[h]; ++p) {
+//                double n_p = OCC_A->get(p) + OCC_B->get(p);
+                double n_p = OCC_A->get(p);
+                double up_el = n_p * (1.0 - n_p);
+
+                value += up_el *  Ua_act_r->get(p,i) * Ua_act_r->get(p,i);
+            }
+        }
+        scales[i] = value;
+        total += value;
+        outfile->Printf("\n  MO %d:  %1.6f",i, value);
+    }
+    outfile->Printf("\n  Total unpaired electrons: %1.4f", total);
+
+
     SharedMatrix Ca = wfn_->Ca();
     SharedMatrix Cb = wfn_->Cb();
 
-    SharedMatrix Ca_new(new Matrix("Ca_new", nmopi, nmopi));
-    SharedMatrix Cb_new(new Matrix("Cb_new", nmopi, nmopi));
+//    SharedMatrix Ca_new(new Matrix("Ca_new", nmopi, nmopi));
+//    SharedMatrix Cb_new(new Matrix("Cb_new", nmopi, nmopi));
+    
+//    Ca_new = Ca->clone();
+//    Cb_new = Cb->clone();
+//    
+//    Ca_new->print();
+//    Ca_new->gemm(false,false,1.0, Ca_new, Ua,0.0);
+//    Cb_new->gemm(false,false,1.0, Cb_new, Ub,0.0);
 
-    Ca_new->zero();
-    Cb_new->zero();
-
-    Ca_new->gemm(false, false, 1.0, Ca, tmp_a, 0.0);
-    Cb_new->gemm(false, false, 1.0, Cb, tmp_b, 0.0);
-
-//    Ca->copy(Ca_new);
-//    Cb->copy(Cb_new);
-    // Scale active NOs by unpaired-e criteria
+    SharedMatrix Ca_new = Matrix::doublet(Ca->clone(), Ua, false, false);
+    SharedMatrix Cb_new = Matrix::doublet(Cb->clone(), Ub, false, false);
+    
     for (int h = 0; h < nirrep; ++h) {
         int offset = fdocc[h] + rdocc[h];
         for (int p = 0; p < nactpi[h]; ++p) {
-            double n_p = OCC_A->get(p) + OCC_B->get(p);
-
-            double up_el = n_p * (2.0 - n_p);
+            //double n_p = OCC_A->get(p) + OCC_B->get(p);
+            //double up_el = n_p * (2.0 - n_p);
+            double up_el = scales[p];
 //            double up_el = n_p * n_p * (2.0 - n_p ) * (2.0 - n_p);
-            outfile->Printf("\n  Weight for orbital (%d,%d): %1.5f", h, p, up_el);
+//            outfile->Printf("\n  Weight for orbital (%d,%d): %1.5f", h, p, up_el);
             Ca_new->scale_column(h, offset + p, up_el);
             Cb_new->scale_column(h, offset + p, up_el);
         }
     }
-
-    // Form the new density
 
     SharedMatrix Da = wfn_->Da();
     SharedMatrix Db = wfn_->Db();
@@ -152,6 +230,63 @@ void UPDensity::compute_unpaired_density(std::vector<double>& oprdm_a,
 
     Da->copy(Da_new);
     Db->copy(Db_new);
+    
+//    std::shared_ptr<IAOBuilder> IAO =
+//            IAOBuilder::build(wfn_->basisset(),
+//                              wfn_->get_basisset("MINAO_BASIS"), Ca, options_);
+//    outfile->Printf("\n  Computing IAOs\n");
+//    std::map<std::string, SharedMatrix> iao_info = IAO->build_iaos();
+//    SharedMatrix iao_orbs(iao_info["A"]->clone());
+//
+//    SharedMatrix Cainv(Ca->clone());
+//    Cainv->invert();
+//    SharedMatrix iao_coeffs = Matrix::doublet(Cainv, iao_orbs, false, false);
+//
+//    size_t new_dim = iao_orbs->colspi()[0];
+//    size_t new_dim2 = new_dim * new_dim;
+//    size_t new_dim3 = new_dim2 * new_dim;
+//
+//    auto labels = IAO->print_IAO(iao_orbs, new_dim, nmo, wfn_);
+//
+//    outfile->Printf("\n label size: %zu", labels.size());
+//
+//    std::vector<int> IAO_inds;
+//    for (int i = 0; i < labels.size(); ++i) {
+//        std::string label = labels[i];
+//        if (label.find("z") != std::string::npos) {
+//            IAO_inds.push_back(i);
+//        }
+//    }
+//    std::vector<size_t> active_mo = mo_space_info_->get_absolute_mo("ACTIVE");
+//    for (int i = 0; i < nact; ++i) {
+//        int idx = IAO_inds[i];
+//        outfile->Printf("\n Using IAO %d", idx);
+//        for (int j = 0; j < nact; ++j) {
+//            int mo = active_mo[j];
+//            Ua_act->set(j, i, iao_coeffs->get(mo, idx));
+//        }
+//    }
+//
+//    SharedMatrix Noinv( NO_A->clone());
+//    Noinv->invert();
+//
+//    SharedMatrix Ua_act_r = Matrix::doublet(Noinv, Ua_act,  false, false);
+//
+////    Ua_act_r->print();
+//    for( int i = 0; i < IAO_inds.size(); ++i ){
+//        double value = 0.0;
+//        for (int h = 0; h < nirrep; ++h) {
+//            int offset = fdocc[h] + rdocc[h];
+//            for (int p = 0; p < nactpi[h]; ++p) {
+//                double n_p = OCC_A->get(p) + OCC_B->get(p);
+//                double up_el = n_p * (2.0 - n_p);
+//
+//                value += up_el*  Ua_act_r->get(p,i) * Ua_act_r->get(p,i);
+//            }
+//        }
+//        outfile->Printf("\n  IAO %d:  %1.6f",IAO_inds[i], value);
+//    }
+
 }
 
 UPDensity::~UPDensity() {}

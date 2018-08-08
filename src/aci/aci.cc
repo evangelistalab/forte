@@ -734,7 +734,7 @@ double AdaptiveCI::compute_energy() {
 }
 
 void AdaptiveCI::unpaired_density(SharedMatrix Ua, SharedMatrix Ub){
-    UPDensity density(reference_wavefunction_, mo_space_info_, Ua, Ub);
+    UPDensity density(reference_wavefunction_, ints_, mo_space_info_, options_, Ua, Ub);
     density.compute_unpaired_density(ordm_a_, ordm_b_);
 }
 void AdaptiveCI::unpaired_density(ambit::Tensor Ua, ambit::Tensor Ub){
@@ -748,7 +748,7 @@ void AdaptiveCI::unpaired_density(ambit::Tensor Ua, ambit::Tensor Ub){
     Uam->copy(am);
     Ubm->copy(bm);
 
-    UPDensity density(reference_wavefunction_, mo_space_info_, Uam, Ubm);
+    UPDensity density(reference_wavefunction_, ints_, mo_space_info_, options_, Uam, Ubm);
     density.compute_unpaired_density(ordm_a_, ordm_b_);
 }
 

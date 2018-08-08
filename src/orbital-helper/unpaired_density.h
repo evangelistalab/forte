@@ -36,6 +36,7 @@
 #include "../helpers.h"
 #include "../integrals/integrals.h"
 #include "../reference.h"
+#include "iao_builder.h"
 
 namespace psi {
 
@@ -43,13 +44,17 @@ namespace forte {
 
 class UPDensity {
   public:
-    UPDensity(std::shared_ptr<Wavefunction> wfn, std::shared_ptr<MOSpaceInfo> mo_space_info, SharedMatrix Ua, SharedMatrix Ub);
+    UPDensity(std::shared_ptr<Wavefunction> wfn, std::shared_ptr<ForteIntegrals> ints, 
+              std::shared_ptr<MOSpaceInfo> mo_space_info, 
+              Options& options, SharedMatrix Ua, SharedMatrix Ub);
 
     ~UPDensity();
 
     void compute_unpaired_density(std::vector<double>& ordm_a, std::vector<double>& ordm_b);
 
   private:
+    Options& options_;
+    std::shared_ptr<ForteIntegrals> ints_;
     std::shared_ptr<Wavefunction> wfn_;
     std::shared_ptr<MOSpaceInfo> mo_space_info_;
     SharedMatrix Uas_;
