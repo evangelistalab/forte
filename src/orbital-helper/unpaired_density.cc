@@ -66,6 +66,7 @@ void UPDensity::compute_unpaired_density(std::vector<double>& oprdm_a,
     std::shared_ptr<Matrix> opdm_a(new Matrix("OPDM_A", nirrep, nactpi, nactpi));
     std::shared_ptr<Matrix> opdm_b(new Matrix("OPDM_B", nirrep, nactpi, nactpi));
 
+    // Put 1-RDM into Shared matrix
     int offset = 0;
     for (int h = 0; h < nirrep; ++h) {
         for (int u = 0; u < nactpi[h]; ++u) {
@@ -79,6 +80,8 @@ void UPDensity::compute_unpaired_density(std::vector<double>& oprdm_a,
 //    opdm_a->transform(Uas_);
 //    opdm_b->transform(Ubs_);
 
+
+    // Diagonalize the 1-RDMs
     SharedVector OCC_A(new Vector("ALPHA NOCC", nirrep, nactpi));
     SharedVector OCC_B(new Vector("BETA NOCC", nirrep, nactpi));
     SharedMatrix NO_A(new Matrix(nirrep, nactpi, nactpi));
@@ -92,14 +95,14 @@ void UPDensity::compute_unpaired_density(std::vector<double>& oprdm_a,
     SharedMatrix Ua(new Matrix("Ua", nmopi, nmopi));
     SharedMatrix Ub(new Matrix("Ub", nmopi, nmopi));
 
-//    Ua->identity();
-//    Ub->identity();
     Ua->zero();
     Ub->zero();
 
+
+    // This Ua/Ub build will ensure that the density only includes active orbitals
+    // If natural orbitals are desired, change the 1.0 to NO_a->get(p,q)
     for (int h = 0; h < nirrep; ++h) {
         size_t irrep_offset = fdocc[h] + rdocc[h];
-
         for (int p = 0; p < nactpi[h]; ++p) {
            // for (int q = 0; q < nactpi[h]; ++q) {
                 Ua->set(h, p + irrep_offset, p + irrep_offset, 1.0);
@@ -108,60 +111,16 @@ void UPDensity::compute_unpaired_density(std::vector<double>& oprdm_a,
         }
     }
 
-   // 
-   // SharedMatrix tmp_a(new Matrix("ta", nmopi, nmopi));
-   // SharedMatrix tmp_b(new Matrix("tb", nmopi, nmopi));
+    /// ** Compute atom-based unpaired contributions
 
-   // tmp_a->gemm(true,false,1.0,Uas_,Ua,0.0);
-   // tmp_b->gemm(true,false,1.0,Ubs_,Ub,0.0);
+    // ** This will be done in a completely localized basis
+    // ** This code has only been tested for pz (pi) orbitals, beware!
 
-   // // Transform the orbital coefficients
-   // SharedMatrix Ca = wfn_->Ca();
-   // SharedMatrix Cb = wfn_->Cb();
-
-   // SharedMatrix Ca_new(new Matrix("Ca_new", nmopi, nmopi));
-   // SharedMatrix Cb_new(new Matrix("Cb_new", nmopi, nmopi));
-
-   // Ca_new->zero();
-   // Cb_new->zero();
-
-   // Ca_new->gemm(false, false, 1.0, Ca, tmp_a, 0.0);
-   // Cb_new->gemm(false, false, 1.0, Cb, tmp_b, 0.0);
-
-// //   Ca->copy(Ca_new);
-// //   Cb->copy(Cb_new);
-   // // Scale active NOs by unpaired-e criteria
-   // for (int h = 0; h < nirrep; ++h) {
-   //     int offset = fdocc[h] + rdocc[h];
-   //     for (int p = 0; p < nactpi[h]; ++p) {
-   //         double n_p = OCC_A->get(p) + OCC_B->get(p);
-   //         double up_el = n_p * (2.0 - n_p);
-// //           double up_el = n_p * n_p * (2.0 - n_p ) * (2.0 - n_p);
-   //         outfile->Printf("\n  Weight for orbital (%d,%d): %1.5f", h, p, up_el);
-   //         Ca_new->scale_column(h, offset + p, up_el);
-   //         Cb_new->scale_column(h, offset + p, up_el);
-   //     }
-   // }
-
-   // // Form the new density
-
-   // SharedMatrix Da = wfn_->Da();
-   // SharedMatrix Db = wfn_->Db();
-
-   // SharedMatrix Da_new(new Matrix("Da_new", nmopi, nmopi));
-   // SharedMatrix Db_new(new Matrix("Db_new", nmopi, nmopi));
-
-   // Da_new->gemm(false, true, 1.0, Ca_new, Ca_new, 0.0);
-   // Db_new->gemm(false, true, 1.0, Cb_new, Cb_new, 0.0);
-
-   // Da->copy(Da_new);
-   // Db->copy(Db_new);
-
-
-    // Compute atom-based unpaired contributions
     SharedMatrix Ua_act(new Matrix(nact, nact));
 
     //relocalize to atoms
+
+    // Grab matrix that takes the transforms from the NO basis to our local basis
     auto loc = std::make_shared<LOCALIZE>(wfn_, options_, ints_, mo_space_info_);
     loc->full_localize();
     Ua_act = loc->get_U()->clone();
@@ -169,6 +128,8 @@ void UPDensity::compute_unpaired_density(std::vector<double>& oprdm_a,
     Noinv->invert();
     SharedMatrix Ua_act_r = Matrix::doublet(Noinv, Ua_act,  false, false);
 
+
+    // Compute sum(p,i) n_i * ( 1 - n_i ) * (U_p,i)^2
     double total = 0.0;
     std::vector<double> scales(nact);
     for( int i = 0; i < nact; ++i ){
@@ -190,18 +151,10 @@ void UPDensity::compute_unpaired_density(std::vector<double>& oprdm_a,
     outfile->Printf("\n  Total unpaired electrons: %1.4f", total);
 
 
+    // Build the density using scaled columns of C
+
     SharedMatrix Ca = wfn_->Ca();
     SharedMatrix Cb = wfn_->Cb();
-
-//    SharedMatrix Ca_new(new Matrix("Ca_new", nmopi, nmopi));
-//    SharedMatrix Cb_new(new Matrix("Cb_new", nmopi, nmopi));
-    
-//    Ca_new = Ca->clone();
-//    Cb_new = Cb->clone();
-//    
-//    Ca_new->print();
-//    Ca_new->gemm(false,false,1.0, Ca_new, Ua,0.0);
-//    Cb_new->gemm(false,false,1.0, Cb_new, Ub,0.0);
 
     SharedMatrix Ca_new = Matrix::doublet(Ca->clone(), Ua, false, false);
     SharedMatrix Cb_new = Matrix::doublet(Cb->clone(), Ub, false, false);
@@ -231,6 +184,7 @@ void UPDensity::compute_unpaired_density(std::vector<double>& oprdm_a,
     Da->copy(Da_new);
     Db->copy(Db_new);
     
+// This is for IAOs, don't really need it
 //    std::shared_ptr<IAOBuilder> IAO =
 //            IAOBuilder::build(wfn_->basisset(),
 //                              wfn_->get_basisset("MINAO_BASIS"), Ca, options_);
@@ -265,26 +219,6 @@ void UPDensity::compute_unpaired_density(std::vector<double>& oprdm_a,
 //            int mo = active_mo[j];
 //            Ua_act->set(j, i, iao_coeffs->get(mo, idx));
 //        }
-//    }
-//
-//    SharedMatrix Noinv( NO_A->clone());
-//    Noinv->invert();
-//
-//    SharedMatrix Ua_act_r = Matrix::doublet(Noinv, Ua_act,  false, false);
-//
-////    Ua_act_r->print();
-//    for( int i = 0; i < IAO_inds.size(); ++i ){
-//        double value = 0.0;
-//        for (int h = 0; h < nirrep; ++h) {
-//            int offset = fdocc[h] + rdocc[h];
-//            for (int p = 0; p < nactpi[h]; ++p) {
-//                double n_p = OCC_A->get(p) + OCC_B->get(p);
-//                double up_el = n_p * (2.0 - n_p);
-//
-//                value += up_el*  Ua_act_r->get(p,i) * Ua_act_r->get(p,i);
-//            }
-//        }
-//        outfile->Printf("\n  IAO %d:  %1.6f",IAO_inds[i], value);
 //    }
 
 }
