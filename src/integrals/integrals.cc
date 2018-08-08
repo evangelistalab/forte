@@ -81,7 +81,7 @@ void set_INT_options(ForteOptions& foptions) {
      *  - DF Density fitted two-electron integrals
      *  - CHOLESKY Cholesky decomposed two-electron integrals -*/
     foptions.add_str("INT_TYPE", "CONVENTIONAL",
-                     {"CONVENTIONAL", "DF", "CHOLESKY", "DISKDF", "DISTDF", "ALL", "OWNINTEGRALS"},
+    {"CONVENTIONAL", "DF", "CHOLESKY", "DISKDF", "DISTDF", "OWNINTEGRALS", "CUSTOM"},
                      "The integral type");
 
     /*- The screening for JK builds and DF libraries -*/
@@ -122,8 +122,6 @@ void ForteIntegrals::startup() {
     nmo_ = wfn_->nmo();
     nsopi_ = wfn_->nsopi();
     nmopi_ = wfn_->nmopi();
-    frzcpi_ = wfn_->frzcpi();
-    frzvpi_ = wfn_->frzvpi();
     frzcpi_ = mo_space_info_->get_dimension("FROZEN_DOCC");
     frzvpi_ = mo_space_info_->get_dimension("FROZEN_UOCC");
     ncmopi_ = mo_space_info_->get_dimension("CORRELATED");

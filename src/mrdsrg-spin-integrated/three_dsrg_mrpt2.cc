@@ -367,15 +367,15 @@ double THREE_DSRG_MRPT2::compute_energy() {
         } else {
             // we only store V and T2 with at least two active indices
             outfile->Printf("\n    %-40s ...", "Computing minimal T2");
-            ForteTimer T2timer;
+            Timer T2timer;
             T2_ = compute_T2_minimal(BTF_->spin_cases_avoid(no_hhpp_, 2));
-            outfile->Printf("... Done. Timing %15.6f s", T2timer.elapsed());
+            outfile->Printf("... Done. Timing %15.6f s", T2timer.get());
 
             outfile->Printf("\n    %-40s ...", "Renormalizing minimal V");
-            ForteTimer Vtimer;
+            Timer Vtimer;
             std::vector<std::string> list_of_pphh_V = BTF_->generate_indices("vac", "pphh");
             V_ = compute_V_minimal(BTF_->spin_cases_avoid(list_of_pphh_V, 2));
-            outfile->Printf("... Done. Timing %15.6f s", Vtimer.elapsed());
+            outfile->Printf("... Done. Timing %15.6f s", Vtimer.get());
         }
 
         // compute T1
@@ -539,7 +539,7 @@ double THREE_DSRG_MRPT2::compute_ref() {
 
 void THREE_DSRG_MRPT2::compute_t2() {
     outfile->Printf("\n    %-40s ...", "Computing T2");
-    ForteTimer timer;
+    Timer timer;
 
     T2_["ijab"] = V_["abij"];
     T2_["iJaB"] = V_["aBiJ"];
@@ -666,7 +666,7 @@ void THREE_DSRG_MRPT2::compute_t2() {
         T2_.block("AAAA").zero();
     }
 
-    outfile->Printf("... Done. Timing %15.6f s", timer.elapsed());
+    outfile->Printf("... Done. Timing %15.6f s", timer.get());
 }
 
 ambit::BlockedTensor
@@ -674,20 +674,20 @@ THREE_DSRG_MRPT2::compute_T2_minimal(const std::vector<std::string>& t2_spaces) 
     ambit::BlockedTensor T2min;
 
     T2min = BTF_->build(tensor_type_, "T2min", t2_spaces, true);
-    ForteTimer timer_b_min;
+    Timer timer_b_min;
     ambit::BlockedTensor ThreeInt = compute_B_minimal(t2_spaces);
     if (detail_time_)
-        outfile->Printf("\n Took %8.4f s to compute_B_minimal", timer_b_min.elapsed());
-    ForteTimer v_t2;
+        outfile->Printf("\n Took %8.4f s to compute_B_minimal", timer_b_min.get());
+    Timer v_t2;
     T2min["ijab"] = (ThreeInt["gia"] * ThreeInt["gjb"]);
     T2min["ijab"] -= (ThreeInt["gib"] * ThreeInt["gja"]);
     T2min["IJAB"] = (ThreeInt["gIA"] * ThreeInt["gJB"]);
     T2min["IJAB"] -= (ThreeInt["gIB"] * ThreeInt["gJA"]);
     T2min["iJaB"] = (ThreeInt["gia"] * ThreeInt["gJB"]);
     if (detail_time_)
-        outfile->Printf("\n Took %8.4f s to compute T2 from B", v_t2.elapsed());
+        outfile->Printf("\n Took %8.4f s to compute T2 from B", v_t2.get());
 
-    ForteTimer t2_iterate;
+    Timer t2_iterate;
     T2min.iterate(
         [&](const std::vector<size_t>& i, const std::vector<SpinType>& spin, double& value) {
             if (spin[0] == AlphaSpin && spin[1] == AlphaSpin) {
@@ -702,7 +702,7 @@ THREE_DSRG_MRPT2::compute_T2_minimal(const std::vector<std::string>& t2_spaces) 
             }
         });
     if (detail_time_)
-        outfile->Printf("\n T2 iteration takes %8.4f s", t2_iterate.elapsed());
+        outfile->Printf("\n T2 iteration takes %8.4f s", t2_iterate.get());
 
     // internal amplitudes (AA->AA)
     std::string internal_amp = options_.get_str("INTERNAL_AMP");
@@ -820,23 +820,23 @@ ambit::BlockedTensor THREE_DSRG_MRPT2::compute_V_minimal(const std::vector<std::
                                                          bool renormalize) {
     ambit::BlockedTensor Vmin = BTF_->build(tensor_type_, "Vmin", spaces, true);
     ambit::BlockedTensor ThreeInt;
-    ForteTimer computeB;
+    Timer computeB;
     ThreeInt = compute_B_minimal(spaces);
     if (detail_time_) {
-        outfile->Printf("\n  Compute B minimal takes %8.6f s", computeB.elapsed());
+        outfile->Printf("\n  Compute B minimal takes %8.6f s", computeB.get());
     }
-    ForteTimer ComputeV;
+    Timer ComputeV;
     Vmin["abij"] = ThreeInt["gai"] * ThreeInt["gbj"];
     Vmin["abij"] -= ThreeInt["gaj"] * ThreeInt["gbi"];
     Vmin["ABIJ"] = ThreeInt["gAI"] * ThreeInt["gBJ"];
     Vmin["ABIJ"] -= ThreeInt["gAJ"] * ThreeInt["gBI"];
     Vmin["aBiJ"] = ThreeInt["gai"] * ThreeInt["gBJ"];
     if (detail_time_) {
-        outfile->Printf("\n  Compute V from B takes %8.6f s", ComputeV.elapsed());
+        outfile->Printf("\n  Compute V from B takes %8.6f s", ComputeV.get());
     }
 
     if (renormalize) {
-        ForteTimer RenormV;
+        Timer RenormV;
         Vmin.iterate(
             [&](const std::vector<size_t>& i, const std::vector<SpinType>& spin, double& value) {
                 if ((spin[0] == AlphaSpin) and (spin[1] == AlphaSpin)) {
@@ -857,7 +857,7 @@ ambit::BlockedTensor THREE_DSRG_MRPT2::compute_V_minimal(const std::vector<std::
                 }
             });
         if (detail_time_) {
-            outfile->Printf("\n  RenormalizeV takes %8.6f s.", RenormV.elapsed());
+            outfile->Printf("\n  RenormalizeV takes %8.6f s.", RenormV.get());
         }
     }
     return Vmin;
@@ -938,7 +938,7 @@ ambit::BlockedTensor THREE_DSRG_MRPT2::compute_B_minimal(const std::vector<std::
 
 void THREE_DSRG_MRPT2::compute_t1() {
     outfile->Printf("\n    %-40s ...", "Computing T1");
-    ForteTimer timer;
+    Timer timer;
     BlockedTensor temp = BTF_->build(tensor_type_, "temp", spin_cases({"aa"}), true);
     temp["xu"] = Gamma1_["xu"] * Delta1_["xu"];
     temp["XU"] = Gamma1_["XU"] * Delta1_["XU"];
@@ -1003,7 +1003,7 @@ void THREE_DSRG_MRPT2::compute_t1() {
         T1_.block("aa").zero();
     }
 
-    outfile->Printf("... Done. Timing %15.6f s", timer.elapsed());
+    outfile->Printf("... Done. Timing %15.6f s", timer.get());
 }
 
 void THREE_DSRG_MRPT2::check_t1() {
@@ -1013,7 +1013,7 @@ void THREE_DSRG_MRPT2::check_t1() {
 }
 
 void THREE_DSRG_MRPT2::renormalize_V() {
-    ForteTimer timer;
+    Timer timer;
     outfile->Printf("\n    %-40s ...", "Renormalizing V");
 
     V_.iterate([&](const std::vector<size_t>& i, const std::vector<SpinType>& spin, double& value) {
@@ -1032,11 +1032,11 @@ void THREE_DSRG_MRPT2::renormalize_V() {
         }
     });
 
-    outfile->Printf("... Done. Timing %15.6f s", timer.elapsed());
+    outfile->Printf("... Done. Timing %15.6f s", timer.get());
 }
 
 void THREE_DSRG_MRPT2::renormalize_F() {
-    ForteTimer timer;
+    Timer timer;
     outfile->Printf("\n    %-40s ...", "Renormalizing F");
 
     BlockedTensor temp_aa = BTF_->build(tensor_type_, "temp_aa", spin_cases({"aa"}), true);
@@ -1066,11 +1066,11 @@ void THREE_DSRG_MRPT2::renormalize_F() {
     F_["EM"] += temp2["ME"];
     F_["EU"] += temp2["UE"];
     F_["UM"] += temp2["MU"];
-    outfile->Printf("... Done. Timing %15.6f s", timer.elapsed());
+    outfile->Printf("... Done. Timing %15.6f s", timer.get());
 }
 
 double THREE_DSRG_MRPT2::E_FT1() {
-    ForteTimer timer;
+    Timer timer;
     outfile->Printf("\n    %-40s ...", "Computing <[F, T1]>");
 
     double E = 0.0;
@@ -1090,13 +1090,13 @@ double THREE_DSRG_MRPT2::E_FT1() {
         E -= F_["YU"] * T1_["UX"] * Gamma1_["XY"];
     }
 
-    outfile->Printf("... Done. Timing %15.6f s", timer.elapsed());
-    dsrg_time_.add("110", timer.elapsed());
+    outfile->Printf("... Done. Timing %15.6f s", timer.get());
+    dsrg_time_.add("110", timer.get());
     return E;
 }
 
 double THREE_DSRG_MRPT2::E_VT1() {
-    ForteTimer timer;
+    Timer timer;
     outfile->Printf("\n    %-40s ...", "Computing <[V, T1]>");
 
     double E = 0.0;
@@ -1136,13 +1136,13 @@ double THREE_DSRG_MRPT2::E_VT1() {
         E += temp["uVxY"] * Lambda2_["xYuV"];
     }
 
-    outfile->Printf("... Done. Timing %15.6f s", timer.elapsed());
-    dsrg_time_.add("210", timer.elapsed());
+    outfile->Printf("... Done. Timing %15.6f s", timer.get());
+    dsrg_time_.add("210", timer.get());
     return E;
 }
 
 double THREE_DSRG_MRPT2::E_FT2() {
-    ForteTimer timer;
+    Timer timer;
     outfile->Printf("\n    %-40s ...", "Computing <[F, T2]>");
 
     double E = 0.0;
@@ -1182,8 +1182,8 @@ double THREE_DSRG_MRPT2::E_FT2() {
         E += temp["uVxY"] * Lambda2_["xYuV"];
     }
 
-    outfile->Printf("... Done. Timing %15.6f s", timer.elapsed());
-    dsrg_time_.add("120", timer.elapsed());
+    outfile->Printf("... Done. Timing %15.6f s", timer.get());
+    dsrg_time_.add("120", timer.get());
     return E;
 }
 
@@ -1194,7 +1194,7 @@ double THREE_DSRG_MRPT2::E_VT2_2() {
     my_proc = MPI::COMM_WORLD.Get_rank();
 #endif
     ambit::BlockedTensor temp = BTF_->build(tensor_type_, "temp", {"aa", "AA"});
-    ForteTimer timer;
+    Timer timer;
     if (my_proc == 0) {
         outfile->Printf("\n    %-40s ...", "Computing <[V, T2]> (C_2)^4 (no ccvv)");
         // TODO: Implement these without storing V and/or T2 by using blocking
@@ -1268,13 +1268,13 @@ double THREE_DSRG_MRPT2::E_VT2_2() {
         // outfile->Printf("\n V_{VE}^{XW} * T2_{UE}^{YZ} * G1 * E1: %8.6f", E);
 
         // Calculates all but ccvv, cCvV, and CCVV energies
-        outfile->Printf("... Done. Timing %15.6f s", timer.elapsed());
+        outfile->Printf("... Done. Timing %15.6f s", timer.get());
     }
 
     // Calculates all but ccvv, cCvV, and CCVV energies
     double Eccvv = 0.0;
     std::string ccvv_algorithm = options_.get_str("ccvv_algorithm");
-    ForteTimer ccvv_timer;
+    Timer ccvv_timer;
     if (my_proc == 0) {
         outfile->Printf("\n    %-40s ...", "Computing <[V, T2]> (C_2)^4 ccvv");
     }
@@ -1335,7 +1335,7 @@ double THREE_DSRG_MRPT2::E_VT2_2() {
     }
 
     if (my_proc == 0) {
-        outfile->Printf("... Done. Timing %15.6f s", ccvv_timer.elapsed());
+        outfile->Printf("... Done. Timing %15.6f s", ccvv_timer.get());
         outfile->Printf("\n  Eccvv: %8.10f", Eccvv);
     }
 
@@ -1371,12 +1371,12 @@ double THREE_DSRG_MRPT2::E_VT2_2() {
         E += temp["UVXY"] * T2_["XYUV"];
     }
 
-    dsrg_time_.add("220", timer.elapsed());
+    dsrg_time_.add("220", timer.get());
     return (E + Eccvv);
 }
 
 double THREE_DSRG_MRPT2::E_VT2_4HH() {
-    ForteTimer timer;
+    Timer timer;
     outfile->Printf("\n    %-40s ...", "Computing <[V, T2]> 4HH");
 
     double E = 0.0;
@@ -1410,13 +1410,13 @@ double THREE_DSRG_MRPT2::E_VT2_4HH() {
         E += Lambda2_["xYuV"] * temp["uVxY"];
     }
 
-    outfile->Printf("... Done. Timing %15.6f s", timer.elapsed());
-    dsrg_time_.add("220", timer.elapsed());
+    outfile->Printf("... Done. Timing %15.6f s", timer.get());
+    dsrg_time_.add("220", timer.get());
     return E;
 }
 
 double THREE_DSRG_MRPT2::E_VT2_4PP() {
-    ForteTimer timer;
+    Timer timer;
     outfile->Printf("\n    %-40s ...", "Computing <V, T2]> 4PP");
 
     double E = 0.0;
@@ -1450,13 +1450,13 @@ double THREE_DSRG_MRPT2::E_VT2_4PP() {
         E += Lambda2_["XYUV"] * temp["UVXY"];
     }
 
-    outfile->Printf("... Done. Timing %15.6f s", timer.elapsed());
-    dsrg_time_.add("220", timer.elapsed());
+    outfile->Printf("... Done. Timing %15.6f s", timer.get());
+    dsrg_time_.add("220", timer.get());
     return E;
 }
 
 double THREE_DSRG_MRPT2::E_VT2_4PH() {
-    ForteTimer timer;
+    Timer timer;
     outfile->Printf("\n    %-40s ...", "Computing [V, T2] 4PH");
 
     double E = 0.0;
@@ -1530,13 +1530,13 @@ double THREE_DSRG_MRPT2::E_VT2_4PH() {
         E += temp["uVxY"] * Lambda2_["xYuV"];
     }
 
-    outfile->Printf("... Done. Timing %15.6f s", timer.elapsed());
-    dsrg_time_.add("220", timer.elapsed());
+    outfile->Printf("... Done. Timing %15.6f s", timer.get());
+    dsrg_time_.add("220", timer.get());
     return E;
 }
 
 double THREE_DSRG_MRPT2::E_VT2_6() {
-    ForteTimer timer;
+    Timer timer;
     outfile->Printf("\n    %-40s  ...", "Computing [V, T2] λ3");
     double E = 0.0;
 
@@ -1709,7 +1709,7 @@ double THREE_DSRG_MRPT2::E_VT2_6() {
         }
     }
 
-    outfile->Printf("... Done. Timing %15.6f s", timer.elapsed());
+    outfile->Printf("... Done. Timing %15.6f s", timer.get());
     return E;
 }
 
@@ -2197,7 +2197,7 @@ double THREE_DSRG_MRPT2::E_VT2_2_batch_core() {
             }
             size_t m_size = m_batch.size();
             size_t n_size = n_batch.size();
-            ForteTimer Core_Loop;
+            Timer Core_Loop;
 #pragma omp parallel for schedule(runtime) reduction(+ : Ealpha, Emixed)
             for (size_t mn = 0; mn < m_size * n_size; ++mn) {
                 int thread = 0;
@@ -2280,7 +2280,7 @@ double THREE_DSRG_MRPT2::E_VT2_2_batch_core() {
                 }
             }
             outfile->Printf("\n Batch_core loop per Mbatch: %d and Nbatch: %d takes %8.8f",
-                            m_blocks, n_blocks, Core_Loop.elapsed());
+                            m_blocks, n_blocks, Core_Loop.get());
         }
     }
     // return (Ealpha + Ebeta + Emixed);
@@ -2552,7 +2552,7 @@ double THREE_DSRG_MRPT2::E_VT2_2_batch_virtual() {
             }
             size_t e_size = e_batch.size();
             size_t f_size = f_batch.size();
-            ForteTimer Virtual_loop;
+            Timer Virtual_loop;
 #pragma omp parallel for schedule(runtime) reduction(+ : Ealpha, Emixed)
             for (size_t ef = 0; ef < e_size * f_size; ++ef) {
                 int thread = 0;
@@ -2617,7 +2617,7 @@ double THREE_DSRG_MRPT2::E_VT2_2_batch_virtual() {
             if (debug_print)
                 outfile->Printf("\n Virtual loop OpenMP timing for e_batch: %d "
                                 "and f_batch: %d takes %8.8f",
-                                e_blocks, f_blocks, Virtual_loop.elapsed());
+                                e_blocks, f_blocks, Virtual_loop.get());
         }
     }
     // return (Ealpha + Ebeta + Emixed);
@@ -2731,7 +2731,7 @@ double THREE_DSRG_MRPT2::E_VT2_2_one_active() {
     std::vector<ambit::Tensor> tempTaa;
     std::vector<ambit::Tensor> tempTAA;
 
-    ForteTimer ccvaTimer;
+    Timer ccvaTimer;
     for (int thread = 0; thread < nthread; thread++) {
         Bm_Qe.push_back(ambit::Tensor::build(tensor_type_, "BemQ", {nthree_, nvirtual_}));
         Bm_Qf.push_back(ambit::Tensor::build(tensor_type_, "Bmq", {nthree_, nvirtual_}));
@@ -2866,7 +2866,7 @@ double THREE_DSRG_MRPT2::E_VT2_2_one_active() {
     Eacvv += tempTaa_all("v,u") * Gamma1_aa("v,u");
 
     if (print_ > 0) {
-        outfile->Printf("\n\n  CAVV computation takes %8.8f", ccvaTimer.elapsed());
+        outfile->Printf("\n\n  CAVV computation takes %8.8f", ccvaTimer.get());
     }
 
     std::vector<ambit::Tensor> Bm_vQ;
@@ -2883,7 +2883,7 @@ double THREE_DSRG_MRPT2::E_VT2_2_one_active() {
     ambit::Tensor BmvQ_swapped =
         ambit::Tensor::build(tensor_type_, "Bm_vQ", {ncore_, nthree_, nactive_});
     BmvQ_swapped("m, Q, u") = BmvQ("Q, m, u");
-    ForteTimer cavvTimer;
+    Timer cavvTimer;
     for (int thread = 0; thread < nthread; thread++) {
         Bm_vQ.push_back(ambit::Tensor::build(tensor_type_, "BemQ", {nthree_, nactive_}));
         Bn_eQ.push_back(ambit::Tensor::build(tensor_type_, "Bf_uQ", {nthree_, nvirtual_}));
@@ -2996,7 +2996,7 @@ double THREE_DSRG_MRPT2::E_VT2_2_one_active() {
     Eccva += tempTaa_all("vu") * Eta1_aa("uv");
     Eccva += tempTAA_all("VU") * Eta1_AA("UV");
     if (print_ > 0) {
-        outfile->Printf("\n\n  CCVA takes %8.8f", cavvTimer.elapsed());
+        outfile->Printf("\n\n  CCVA takes %8.8f", cavvTimer.get());
     }
 
     return (Eacvv + Eccva);
@@ -3007,7 +3007,7 @@ void THREE_DSRG_MRPT2::form_Hbar() {
     print_h2("Form DSRG-PT2 Transformed Hamiltonian");
 
     // initialize Hbar2 (Hbar1 is initialized in the end of startup function)
-    ForteTimer timer;
+    Timer timer;
     outfile->Printf("\n    %-40s ... ", "Initalizing Hbar");
     BlockedTensor Bactv = compute_B_minimal({"aaaa", "aAaA", "AAAA"});
     Hbar2_["pqrs"] = Bactv["gpr"] * Bactv["gqs"];
@@ -3015,7 +3015,7 @@ void THREE_DSRG_MRPT2::form_Hbar() {
     Hbar2_["PQRS"] = Bactv["gPR"] * Bactv["gQS"];
     Hbar2_["PQRS"] -= Bactv["gPS"] * Bactv["gQR"];
     Hbar2_["qPsR"] = Bactv["gPR"] * Bactv["gqs"];
-    outfile->Printf("Done. Timing: %10.3f s.", timer.elapsed());
+    outfile->Printf("Done. Timing: %10.3f s.", timer.get());
 
     /**
      * Implementation Notes
@@ -3028,7 +3028,7 @@ void THREE_DSRG_MRPT2::form_Hbar() {
      * IMPORTANT: I (York) use spin adapted form for the last two cases!!!
      **/
 
-    timer.reset();
+    Timer timer2;
     outfile->Printf("\n    %-40s ... ", "Computing all-active Hbar");
     BlockedTensor C1 = BTF_->build(tensor_type_, "C1", spin_cases({"aa"}));
     BlockedTensor C2 = BTF_->build(tensor_type_, "C2", spin_cases({"aaaa"}));
@@ -3050,7 +3050,7 @@ void THREE_DSRG_MRPT2::form_Hbar() {
     Hbar2_["uVxY"] += C2["xYuV"];
     Hbar2_["UVXY"] += C2["UVXY"];
     Hbar2_["UVXY"] += C2["XYUV"];
-    outfile->Printf("Done. Timing: %10.3f s.", timer.elapsed());
+    outfile->Printf("Done. Timing: %10.3f s.", timer2.get());
 
 
 
@@ -3083,7 +3083,7 @@ void THREE_DSRG_MRPT2::form_Hbar() {
          * 4. Remember to include Hermitian adjoint of [V, T] to Hbar1!
          **/
 
-        timer.reset();
+        Timer timer3;
         outfile->Printf("\n    %-40s ... ", "Computing DISKDF Hbar C");
 
         size_t nc2 = ncore_ * ncore_;
@@ -3181,7 +3181,7 @@ void THREE_DSRG_MRPT2::form_Hbar() {
                 Hbar1_.block("AA").data()[z * nactive_ + w] -= hbar;
             }
         }
-        outfile->Printf("Done. Timing: %10.3f s.", timer.elapsed());
+        outfile->Printf("Done. Timing: %10.3f s.", timer3.get());
 
         /**
          * VVAC and VVCA Blocks of APTEI
@@ -3212,7 +3212,7 @@ void THREE_DSRG_MRPT2::form_Hbar() {
          * 4. Remember to include Hermitian adjoint of [V, T] to Hbar1!
          **/
 
-        timer.reset();
+        Timer timer4;
         outfile->Printf("\n    %-40s ... ", "Computing DISKDF Hbar V");
 
         size_t nv2 = nvirtual_ * nvirtual_;
@@ -3300,7 +3300,7 @@ void THREE_DSRG_MRPT2::form_Hbar() {
                 Hbar1_.block("AA").data()[z * nactive_ + w] += hbar;
             }
         }
-        outfile->Printf("Done. Timing: %10.3f s.", timer.elapsed());
+        outfile->Printf("Done. Timing: %10.3f s.", timer4.get());
     }
 
     if ( options_.get_bool("PRINT_1BODY_EVALS") ){
@@ -3515,7 +3515,7 @@ void THREE_DSRG_MRPT2::de_normal_order() {
     print_h2("De-Normal-Order the DSRG Transformed Hamiltonian");
 
     // compute scalar term
-    ForteTimer t_scalar;
+    Timer t_scalar;
     std::string str = "Computing the scalar term   ...";
     outfile->Printf("\n    %-35s", str.c_str());
     double scalar0 = Eref_ + Hbar0_ - Enuc_ - Efrzc_;
@@ -3536,10 +3536,10 @@ void THREE_DSRG_MRPT2::de_normal_order() {
     scalar2 -= Hbar2_["xYuV"] * Lambda2_["uVxY"];
 
     double scalar = scalar0 + scalar1 + scalar2;
-    outfile->Printf("  Done. Timing %10.3f s", t_scalar.elapsed());
+    outfile->Printf("  Done. Timing %10.3f s", t_scalar.get());
 
     // compute one-body term
-    ForteTimer t_one;
+    Timer t_one;
     str = "Computing the one-body term ...";
     outfile->Printf("\n    %-35s", str.c_str());
     BlockedTensor temp1 = BTF_->build(tensor_type_, "temp1", spin_cases({"aa"}));
@@ -3551,7 +3551,7 @@ void THREE_DSRG_MRPT2::de_normal_order() {
     temp1["UV"] -= Hbar2_["UXVY"] * Gamma1_["YX"];
     aone_eff_ = temp1.block("aa").data();
     bone_eff_ = temp1.block("AA").data();
-    outfile->Printf("  Done. Timing %10.3f s", t_one.elapsed());
+    outfile->Printf("  Done. Timing %10.3f s", t_one.get());
     ints_->set_scalar(scalar);
 
     // print scalar

@@ -530,7 +530,7 @@ void ProjectorCI_Simple::print_characteristic_function() {
 
 double ProjectorCI_Simple::compute_energy() {
     timer_on("PCI:Energy");
-    ForteTimer t_apici;
+    Timer t_apici;
     old_max_one_HJI_ = 1e100;
     new_max_one_HJI_ = 1e100;
     old_max_two_HJI_ = 1e100;
@@ -779,7 +779,7 @@ double ProjectorCI_Simple::compute_energy() {
 
     outfile->Printf("\n\n  * Size of CI space                    = %zu", C.size());
 
-    outfile->Printf("\n\n  %s: %f s", "Projector-CI (bitset) ran in  ", t_apici.elapsed());
+    outfile->Printf("\n\n  %s: %f s", "Projector-CI (bitset) ran in  ", t_apici.get());
 
     if (print_full_wavefunction_) {
         print_wfn(dets, C, C.size());

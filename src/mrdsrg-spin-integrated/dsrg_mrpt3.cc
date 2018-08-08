@@ -471,7 +471,7 @@ double DSRG_MRPT3::compute_energy() {
         Mbar0_pt2_ = std::vector<double>{dm_ref_[0], dm_ref_[1], dm_ref_[2]};
         Mbar0_pt2c_ = std::vector<double>{dm_ref_[0], dm_ref_[1], dm_ref_[2]};
         for (int i = 0; i < 3; ++i) {
-            ForteTimer timer;
+            Timer timer;
             std::string name = "Computing direction " + dm_dirs_[i];
             outfile->Printf("\n    %-40s ...", name.c_str());
 
@@ -485,7 +485,7 @@ double DSRG_MRPT3::compute_energy() {
             }
             Mbar0_pt2_[i] = Mbar0_pt2c_[i];
 
-            outfile->Printf("  Done. Timing %10.3f s", timer.elapsed());
+            outfile->Printf("  Done. Timing %10.3f s", timer.get());
         }
     }
 
@@ -527,7 +527,7 @@ double DSRG_MRPT3::compute_energy() {
     if (do_dm_) {
         print_h2("Computing 3rd-Order Dipole Moment Contribution (2/2)");
         for (int i = 0; i < 3; ++i) {
-            ForteTimer timer;
+            Timer timer;
             std::string name = "Computing direction " + dm_dirs_[i];
             outfile->Printf("\n    %-40s ...", name.c_str());
 
@@ -535,7 +535,7 @@ double DSRG_MRPT3::compute_energy() {
                 compute_dm1d_pt3_2(dm_[i], Mbar0_[i], Mbar0_pt2c_[i], Mbar1_[i], Mbar2_[i]);
             }
 
-            outfile->Printf("  Done. Timing %10.3f s", timer.elapsed());
+            outfile->Printf("  Done. Timing %10.3f s", timer.get());
         }
         print_dm_pt3();
     }
@@ -552,18 +552,18 @@ double DSRG_MRPT3::compute_energy_pt2() {
 
     // Compute DSRG-MRPT2 correlation energy
     double Ept2 = 0.0;
-    ForteTimer t1;
+    Timer t1;
     std::string str = "Computing 2nd-order energy";
     outfile->Printf("\n    %-40s ...", str.c_str());
     H1_T1_C0(F_, T1_, 1.0, Ept2);
     H1_T2_C0(F_, T2_, 1.0, Ept2);
     H2_T1_C0(V_, T1_, 1.0, Ept2);
     H2_T2_C0(V_, T2_, 1.0, Ept2);
-    outfile->Printf("  Done. Timing %10.3f s", t1.elapsed());
+    outfile->Printf("  Done. Timing %10.3f s", t1.get());
 
     // relax reference
     if (relax_ref_ != "NONE" || multi_state_) {
-        ForteTimer t2;
+        Timer t2;
         str = "Computing integrals for ref. relaxation";
         outfile->Printf("\n    %-40s ...", str.c_str());
 
@@ -588,7 +588,7 @@ double DSRG_MRPT3::compute_energy_pt2() {
         Hbar2_["UVXY"] += C2["UVXY"];
         Hbar2_["UVXY"] += C2["XYUV"];
 
-        outfile->Printf("  Done. Timing %10.3f s", t2.elapsed());
+        outfile->Printf("  Done. Timing %10.3f s", t2.get());
     }
 
     return Ept2;
@@ -597,7 +597,7 @@ double DSRG_MRPT3::compute_energy_pt2() {
 double DSRG_MRPT3::compute_energy_pt3_1() {
     print_h2("Computing 3rd-Order Energy Contribution (1/3)");
 
-    ForteTimer t1;
+    Timer t1;
     std::string str = "Computing 3rd-order energy (1/3)";
     outfile->Printf("\n    %-40s ...", str.c_str());
 
@@ -739,10 +739,10 @@ double DSRG_MRPT3::compute_energy_pt3_1() {
     H2_T1_C0(O2_, T1_, factor, Ereturn);
     H2_T2_C0(O2_, T2_, factor, Ereturn);
 
-    outfile->Printf("  Done. Timing %10.3f s", t1.elapsed());
+    outfile->Printf("  Done. Timing %10.3f s", t1.get());
 
     if (relax_ref_ != "NONE" || multi_state_) {
-        ForteTimer t2;
+        Timer t2;
         str = "Computing integrals for ref. relaxation";
         outfile->Printf("\n    %-40s ...", str.c_str());
 
@@ -768,7 +768,7 @@ double DSRG_MRPT3::compute_energy_pt3_1() {
         Hbar2_["UVXY"] += C2["UVXY"];
         Hbar2_["UVXY"] += C2["XYUV"];
 
-        outfile->Printf("  Done. Timing %10.3f s", t2.elapsed());
+        outfile->Printf("  Done. Timing %10.3f s", t2.get());
     }
 
     return Ereturn;
@@ -777,7 +777,7 @@ double DSRG_MRPT3::compute_energy_pt3_1() {
 double DSRG_MRPT3::compute_energy_pt3_2() {
     print_h2("Computing 3rd-Order Energy Contribution (2/3)");
 
-    ForteTimer t1;
+    Timer t1;
     std::string str = "Preparing 2nd-order amplitudes";
     outfile->Printf("\n    %-40s ...", str.c_str());
 
@@ -878,7 +878,7 @@ double DSRG_MRPT3::compute_energy_pt3_2() {
             V_["ABIJ"] += O2_["IJAB"];
         }
     }
-    outfile->Printf("  Done. Timing %10.3f s", t1.elapsed());
+    outfile->Printf("  Done. Timing %10.3f s", t1.get());
 
     // Step 2: compute amplitdes
     //     a) save 1st-order amplitudes for later use
@@ -895,7 +895,7 @@ double DSRG_MRPT3::compute_energy_pt3_2() {
     compute_t1();
 
     // compute energy from 0.5 * [[H1st + Hbar1st, A1st], A2nd]
-    ForteTimer t2;
+    Timer t2;
     str = "Computing 3rd-order energy (2/3)";
     outfile->Printf("\n    %-40s ...", str.c_str());
     double Ereturn = 0.0;
@@ -903,10 +903,10 @@ double DSRG_MRPT3::compute_energy_pt3_2() {
     H1_T2_C0(O1, T2_, 1.0, Ereturn);
     H2_T1_C0(O2, T1_, 1.0, Ereturn);
     H2_T2_C0(O2, T2_, 1.0, Ereturn);
-    outfile->Printf("  Done. Timing %10.3f s", t2.elapsed());
+    outfile->Printf("  Done. Timing %10.3f s", t2.get());
 
     if (relax_ref_ != "NONE" || multi_state_) {
-        ForteTimer t3;
+        Timer t3;
         str = "Computing integrals for ref. relaxation";
         outfile->Printf("\n    %-40s ...", str.c_str());
 
@@ -932,7 +932,7 @@ double DSRG_MRPT3::compute_energy_pt3_2() {
         Hbar2_["UVXY"] += A2["UVXY"];
         Hbar2_["UVXY"] += A2["XYUV"];
 
-        outfile->Printf("  Done. Timing %10.3f s", t3.elapsed());
+        outfile->Printf("  Done. Timing %10.3f s", t3.get());
     }
 
     // analyze amplitudes
@@ -959,18 +959,18 @@ double DSRG_MRPT3::compute_energy_pt3_3() {
 
     // compute energy of 0.5 * [Hbar2nd, A1st]
     double Ereturn = 0.0;
-    ForteTimer t1;
+    Timer t1;
     std::string str = "Computing 3rd-order energy (3/3)";
     outfile->Printf("\n    %-40s ...", str.c_str());
     H1_T1_C0(F_, O1_, 1.0, Ereturn);
     H1_T2_C0(F_, O2_, 1.0, Ereturn);
     H2_T1_C0(V_, O1_, 1.0, Ereturn);
     H2_T2_C0(V_, O2_, 1.0, Ereturn);
-    outfile->Printf("  Done. Timing %10.3f s", t1.elapsed());
+    outfile->Printf("  Done. Timing %10.3f s", t1.get());
 
     // relax reference
     if (relax_ref_ != "NONE" || multi_state_) {
-        ForteTimer t2;
+        Timer t2;
         str = "Computing integrals for ref. relaxation";
         outfile->Printf("\n    %-40s ...", str.c_str());
 
@@ -995,14 +995,14 @@ double DSRG_MRPT3::compute_energy_pt3_3() {
         Hbar2_["UVXY"] += C2["UVXY"];
         Hbar2_["UVXY"] += C2["XYUV"];
 
-        outfile->Printf("  Done. Timing %10.3f s", t2.elapsed());
+        outfile->Printf("  Done. Timing %10.3f s", t2.get());
     }
 
     return Ereturn;
 }
 
 void DSRG_MRPT3::compute_t2() {
-    ForteTimer timer;
+    Timer timer;
     std::string str = "Computing T2 amplitudes";
     outfile->Printf("\n    %-40s ...", str.c_str());
 
@@ -1054,11 +1054,11 @@ void DSRG_MRPT3::compute_t2() {
 
     // no internal amplitudes, otherwise need to zero them
 
-    outfile->Printf("  Done. Timing %10.3f s", timer.elapsed());
+    outfile->Printf("  Done. Timing %10.3f s", timer.get());
 }
 
 void DSRG_MRPT3::compute_t1() {
-    ForteTimer timer;
+    Timer timer;
     std::string str = "Computing T1 amplitudes";
     outfile->Printf("\n    %-40s ...", str.c_str());
 
@@ -1136,11 +1136,11 @@ void DSRG_MRPT3::compute_t1() {
 
     // no internal amplitudes, otherwise need to zero them
 
-    outfile->Printf("  Done. Timing %10.3f s", timer.elapsed());
+    outfile->Printf("  Done. Timing %10.3f s", timer.get());
 }
 
 void DSRG_MRPT3::renormalize_V(const bool& plusone) {
-    ForteTimer timer;
+    Timer timer;
     std::string str = "Renormalizing two-electron integrals";
     outfile->Printf("\n    %-40s ...", str.c_str());
 
@@ -1209,11 +1209,11 @@ void DSRG_MRPT3::renormalize_V(const bool& plusone) {
         V_["ABKL"] = tempV["ABIJ"] * U_["JL"] * U_["IK"];
     }
 
-    outfile->Printf("  Done. Timing %10.3f s", timer.elapsed());
+    outfile->Printf("  Done. Timing %10.3f s", timer.get());
 }
 
 void DSRG_MRPT3::renormalize_F(const bool& plusone) {
-    ForteTimer timer;
+    Timer timer;
     std::string str = "Renormalizing Fock matrix elements";
     outfile->Printf("\n    %-40s ...", str.c_str());
 
@@ -1299,7 +1299,7 @@ void DSRG_MRPT3::renormalize_F(const bool& plusone) {
         F_["AI"] = sum["AI"];
     }
 
-    outfile->Printf("  Done. Timing %10.3f s", timer.elapsed());
+    outfile->Printf("  Done. Timing %10.3f s", timer.get());
 }
 
 double DSRG_MRPT3::compute_energy_sa() {
@@ -1660,7 +1660,7 @@ void DSRG_MRPT3::transfer_integrals() {
     print_h2("De-Normal-Order the DSRG Transformed Hamiltonian");
 
     // compute scalar term (all active only)
-    ForteTimer t_scalar;
+    Timer t_scalar;
     std::string str = "Computing the scalar term";
     outfile->Printf("\n    %-40s ...", str.c_str());
     double scalar0 = Eref_ + Hbar0_ - Enuc_ - Efrzc_;
@@ -1681,10 +1681,10 @@ void DSRG_MRPT3::transfer_integrals() {
     scalar2 -= Hbar2_["xYuV"] * Lambda2_["uVxY"];
 
     double scalar = scalar0 + scalar1 + scalar2;
-    outfile->Printf("  Done. Timing %10.3f s", t_scalar.elapsed());
+    outfile->Printf("  Done. Timing %10.3f s", t_scalar.get());
 
     // compute one-body term
-    ForteTimer t_one;
+    Timer t_one;
     str = "Computing the one-body term";
     outfile->Printf("\n    %-40s ...", str.c_str());
     BlockedTensor temp1 = BTF_->build(tensor_type_, "temp1", spin_cases({"aa"}));
@@ -1698,10 +1698,10 @@ void DSRG_MRPT3::transfer_integrals() {
         aone_eff_ = temp1.block("aa").data();
         bone_eff_ = temp1.block("AA").data();
     }
-    outfile->Printf("  Done. Timing %10.3f s", t_one.elapsed());
+    outfile->Printf("  Done. Timing %10.3f s", t_one.get());
 
     // update integrals
-    ForteTimer t_int;
+    Timer t_int;
     str = "Updating integrals";
     outfile->Printf("\n    %-40s ...", str.c_str());
     ints_->set_scalar(scalar);
@@ -1745,7 +1745,7 @@ void DSRG_MRPT3::transfer_integrals() {
             }
         });
     }
-    outfile->Printf("  Done. Timing %10.3f s", t_int.elapsed());
+    outfile->Printf("  Done. Timing %10.3f s", t_int.get());
 
     // print scalar
     double scalar_include_fc = scalar + ints_->frozen_core_energy();
@@ -2306,7 +2306,7 @@ void DSRG_MRPT3::compute_dm1d_pt3_2(BlockedTensor& M, double& Mbar0, double& Mba
 
 void DSRG_MRPT3::V_T1_C1_DF(BlockedTensor& B, BlockedTensor& T1, const double& alpha,
                             BlockedTensor& C1) {
-    ForteTimer timer;
+    Timer timer;
 
     BlockedTensor temp = BTF_->build(tensor_type_, "temp VT1->C1 DF", {"L"}, true);
     temp["g"] += T1["ma"] * B["gam"];
@@ -2336,14 +2336,14 @@ void DSRG_MRPT3::V_T1_C1_DF(BlockedTensor& B, BlockedTensor& T1, const double& a
     C1["QP"] += alpha * temp["gPY"] * B["gQY"];
 
     if (print_ > 2) {
-        outfile->Printf("\n    Time for [H2, T1] -> C1 : %12.3f", timer.elapsed());
+        outfile->Printf("\n    Time for [H2, T1] -> C1 : %12.3f", timer.get());
     }
-    dsrg_time_.add("211", timer.elapsed());
+    dsrg_time_.add("211", timer.get());
 }
 
 void DSRG_MRPT3::V_T1_C2_DF(BlockedTensor& B, BlockedTensor& T1, const double& alpha,
                             BlockedTensor& C2) {
-    ForteTimer timer;
+    Timer timer;
 
     BlockedTensor temp = BTF_->build(tensor_type_, "temp VT1->C2 DF", {"Lhg"}, true);
     temp["gip"] = T1["ia"] * B["gpa"];
@@ -2378,14 +2378,14 @@ void DSRG_MRPT3::V_T1_C2_DF(BlockedTensor& B, BlockedTensor& T1, const double& a
     C2["sRpA"] -= alpha * temp["gRA"] * B["gsp"];
 
     if (print_ > 2) {
-        outfile->Printf("\n    Time for [H2, T1] -> C2 : %12.3f", timer.elapsed());
+        outfile->Printf("\n    Time for [H2, T1] -> C2 : %12.3f", timer.get());
     }
-    dsrg_time_.add("212", timer.elapsed());
+    dsrg_time_.add("212", timer.get());
 }
 
 void DSRG_MRPT3::V_T2_C1_DF(BlockedTensor& B, BlockedTensor& T2, const double& alpha,
                             BlockedTensor& C1) {
-    ForteTimer timer;
+    Timer timer;
     BlockedTensor temp;
 
     // [Hbar2, T2] (C_2)^3 -> C1 particle contractions
@@ -2629,14 +2629,14 @@ void DSRG_MRPT3::V_T2_C1_DF(BlockedTensor& B, BlockedTensor& T2, const double& a
     }
 
     if (print_ > 2) {
-        outfile->Printf("\n    Time for [H2, T2] -> C1 : %12.3f", timer.elapsed());
+        outfile->Printf("\n    Time for [H2, T2] -> C1 : %12.3f", timer.get());
     }
-    dsrg_time_.add("221", timer.elapsed());
+    dsrg_time_.add("221", timer.get());
 }
 
 void DSRG_MRPT3::V_T2_C2_DF(BlockedTensor& B, BlockedTensor& T2, const double& alpha,
                             BlockedTensor& C2) {
-    ForteTimer timer;
+    Timer timer;
 
     size_t c = core_mos_.size();
     size_t a = actv_mos_.size();
@@ -3222,9 +3222,9 @@ void DSRG_MRPT3::V_T2_C2_DF(BlockedTensor& B, BlockedTensor& T2, const double& a
     }
 
     if (print_ > 2) {
-        outfile->Printf("\n    Time for [H2, T2] -> C2 : %12.3f", timer.elapsed());
+        outfile->Printf("\n    Time for [H2, T2] -> C2 : %12.3f", timer.get());
     }
-    dsrg_time_.add("222", timer.elapsed());
+    dsrg_time_.add("222", timer.get());
 }
 
 void DSRG_MRPT3::V_T2_C2_DF_AA(BlockedTensor& B, BlockedTensor& T2, const double& alpha,

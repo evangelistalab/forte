@@ -55,27 +55,27 @@ void FCIWfn::compute_rdms(int max_order) {
     size_t nb = beta_graph_->nones();
 
     if (max_order >= 1) {
-        ForteTimer t;
+        Timer t;
         if (na >= 1)
             compute_1rdm(opdm_a_, true);
         if (nb >= 1)
             compute_1rdm(opdm_b_, false);
-        rdm_timing.push_back(t.elapsed());
+        rdm_timing.push_back(t.get());
     }
 
     if (max_order >= 2) {
-        ForteTimer t;
+        Timer t;
         if (na >= 2)
             compute_2rdm_aa(tpdm_aa_, true);
         if (nb >= 2)
             compute_2rdm_aa(tpdm_bb_, false);
         if ((na >= 1) and (nb >= 1))
             compute_2rdm_ab(tpdm_ab_);
-        rdm_timing.push_back(t.elapsed());
+        rdm_timing.push_back(t.get());
     }
 
     if (max_order >= 3) {
-        ForteTimer t;
+        Timer t;
         if (na >= 3)
             compute_3rdm_aaa(tpdm_aaa_, true);
         if (nb >= 3)
@@ -84,7 +84,7 @@ void FCIWfn::compute_rdms(int max_order) {
             compute_3rdm_aab(tpdm_aab_);
         if ((na >= 1) and (nb >= 2))
             compute_3rdm_abb(tpdm_abb_);
-        rdm_timing.push_back(t.elapsed());
+        rdm_timing.push_back(t.get());
     }
 
     if (max_order >= 4) {

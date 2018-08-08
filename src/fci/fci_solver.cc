@@ -132,7 +132,7 @@ void FCISolver::startup() {
  * See Appendix A in J. Comput. Chem. 2001 vol. 22 (13) pp. 1574-1589
 */
 double FCISolver::compute_energy() {
-    ForteTimer t;
+    Timer t;
 
     double nuclear_repulsion_energy = Process::environment.molecule()->nuclear_repulsion_energy({0,0,0});
     std::shared_ptr<FCIIntegrals> fci_ints;
@@ -391,7 +391,7 @@ void FCISolver::compute_rdms_root(int root) {
 std::vector<std::pair<int, std::vector<std::tuple<size_t, size_t, size_t, double>>>>
 FCISolver::initial_guess(FCIWfn& diag, size_t n, size_t multiplicity,
                          std::shared_ptr<FCIIntegrals> fci_ints) {
-    ForteTimer t;
+    Timer t;
 
     double nuclear_repulsion_energy = Process::environment.molecule()->nuclear_repulsion_energy({0,0,0});
     double scalar_energy = fci_ints->scalar_energy();
@@ -516,7 +516,7 @@ FCISolver::initial_guess(FCIWfn& diag, size_t n, size_t multiplicity,
         outfile->Printf("\n  ---------------------------------------------");
         outfile->Printf("\n%s", to_string(table, "\n").c_str());
         outfile->Printf("\n  ---------------------------------------------");
-        outfile->Printf("\n  Timing for initial guess  = %10.3f s\n", t.elapsed());
+        outfile->Printf("\n  Timing for initial guess  = %10.3f s\n", t.get());
     }
 
     return guess;

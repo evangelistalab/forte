@@ -64,12 +64,10 @@ DISKDFIntegrals::DISKDFIntegrals(psi::Options& options, SharedWavefunction ref_w
 #ifdef HAVE_GA
     my_proc = GA_Nodeid();
 #endif
-
     if (my_proc == 0) {
         gather_integrals();
         freeze_core_orbitals();
-
-        print_timing("computing disk-based density-fitted integrals", int_timer.get());
+        print_timing("disk-based density-fitted integrals", int_timer.get());
     }
 }
 
@@ -392,8 +390,8 @@ void DISKDFIntegrals::gather_integrals() {
     size_t nprim = primary->nbf();
     size_t naux = auxiliary->nbf();
     nthree_ = naux;
-    outfile->Printf("\n Number of auxiliary basis functions:  %u", naux);
-    outfile->Printf("\n Need %8.6f GB to store DF integrals\n",
+    outfile->Printf("\n  Number of auxiliary basis functions:  %u", naux);
+    outfile->Printf("\n  Need %8.6f GB to store DF integrals\n",
                     (nprim * nprim * naux * sizeof(double) / 1073741824.0));
     int_mem_ = (nprim * nprim * naux * sizeof(double));
 

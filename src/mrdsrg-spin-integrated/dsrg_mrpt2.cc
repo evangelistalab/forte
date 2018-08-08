@@ -528,7 +528,7 @@ double DSRG_MRPT2::compute_energy() {
         print_h2("Transforming Dipole Integrals ... ");
         Mbar0_ = std::vector<double>{dm_ref_[0], dm_ref_[1], dm_ref_[2]};
         for (int i = 0; i < 3; ++i) {
-            ForteTimer timer;
+            Timer timer;
             std::string name = "Computing direction " + dm_dirs_[i];
             outfile->Printf("\n    %-30s ...", name.c_str());
 
@@ -545,7 +545,7 @@ double DSRG_MRPT2::compute_energy() {
                 }
             }
 
-            outfile->Printf("  Done. Timing %15.6f s", timer.elapsed());
+            outfile->Printf("  Done. Timing %15.6f s", timer.get());
         }
         print_dm_pt2();
     }

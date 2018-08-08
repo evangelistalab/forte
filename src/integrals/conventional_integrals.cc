@@ -70,6 +70,8 @@ ConventionalIntegrals::ConventionalIntegrals(psi::Options& options, SharedWavefu
     freeze_core_orbitals();
 
     outfile->Printf("\n  Conventional integrals take %8.8f s", ConvTime.get());
+
+    print_ints();
 }
 
 ConventionalIntegrals::~ConventionalIntegrals() {}

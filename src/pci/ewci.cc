@@ -547,7 +547,7 @@ void ElementwiseCI::print_characteristic_function() {
 
 double ElementwiseCI::compute_energy() {
     timer_on("EWCI:Energy");
-    ForteTimer t_apici;
+    Timer t_apici;
 
     // Increase the root counter (ground state = 0)
     current_root_ += 1;
@@ -785,7 +785,7 @@ double ElementwiseCI::compute_energy() {
     }
 
     outfile->Printf("\n  %s: %f s\n", "ElementwiseCI (bitset) steps finished in  ",
-                    t_apici.elapsed());
+                    t_apici.get());
 
     timer_on("EWCI:<E>end_v");
     if (fast_variational_estimate_) {
@@ -805,7 +805,7 @@ double ElementwiseCI::compute_energy() {
     outfile->Printf("\n  * 1st order perturbation   Energy     = %18.12f Eh", 1,
                     var_energy - approx_energy_);
 
-    outfile->Printf("\n\n  %s: %f s", "ElementwiseCI (bitset) ran in  ", t_apici.elapsed());
+    outfile->Printf("\n\n  %s: %f s", "ElementwiseCI (bitset) ran in  ", t_apici.get());
 
     if (current_root_ < nroot_ - 1) {
         save_wfn(dets_hashvec, C, solutions_);
