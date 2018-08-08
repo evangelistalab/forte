@@ -268,24 +268,6 @@ void apply_permutation_in_place(
 /**
   * @brief A timer class
   */
-class ForteTimer {
-  public:
-    ForteTimer();
-
-    /// Return the elapsed time in seconds
-    double elapsed();
-
-    /// Reset timer to now
-    void reset() { t_start_ = std::chrono::high_resolution_clock::now(); }
-
-  private:
-    std::chrono::high_resolution_clock::time_point t_start_;
-    std::chrono::high_resolution_clock::time_point t_end_;
-};
-
-/**
-  * @brief A timer class
-  */
 class timer {
   public:
     timer(const std::string& name) : name_(name) { timer_on(name_); }

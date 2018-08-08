@@ -27,6 +27,7 @@
  */
 
 #include <cmath>
+#include <fstream>
 
 #include "psi4/libdpd/dpd.h"
 #include "psi4/libmints/mintshelper.h"
@@ -35,11 +36,15 @@
 #include "psi4/psi4-dec.h"
 #include "psi4/psifiles.h"
 
+#include "../helpers.h"
 #include "../blockedtensorfactory.h"
+#include "../helpers/string_algorithms.h"
 
 #include "custom_integrals.h"
 
-//#define ID(x) ints_->DPD_ID(x)
+#define IOFFINDEX(i) (i * (i + 1) / 2)
+#define PAIRINDEX(i, j) ((i > j) ? (IOFFINDEX(i) + (j)) : (IOFFINDEX(j) + (i)))
+#define four(i, j, k, l) PAIRINDEX(PAIRINDEX(i, j), PAIRINDEX(k, l))
 
 namespace psi {
 namespace forte {
@@ -58,14 +63,11 @@ CustomIntegrals::CustomIntegrals(psi::Options& options, SharedWavefunction ref_w
     print_info();
     outfile->Printf("\n  Using Custom integrals\n\n");
 
-    // Allocate the memory required to store the two-electron integrals
-    aphys_tei_aa.resize(num_aptei_);
-    aphys_tei_ab.resize(num_aptei_);
-    aphys_tei_bb.resize(num_aptei_);
-
     gather_integrals();
 
     freeze_core_orbitals();
+
+    print_ints();
 }
 
 CustomIntegrals::~CustomIntegrals() {}
@@ -118,6 +120,25 @@ ambit::Tensor CustomIntegrals::aptei_bb_block(const std::vector<size_t>& p,
     return ReturnTensor;
 }
 
+ambit::Tensor CustomIntegrals::three_integral_block(const std::vector<size_t>&,
+                                                    const std::vector<size_t>&,
+                                                    const std::vector<size_t>&) {
+    outfile->Printf("\n Oh no!, you tried to grab a ThreeIntegral but this "
+                    "is not there!!");
+    throw PSIEXCEPTION("INT_TYPE=DF/CHOLESKY to use ThreeIntegral");
+}
+
+ambit::Tensor CustomIntegrals::three_integral_block_two_index(const std::vector<size_t>&, size_t,
+                                                              const std::vector<size_t>&) {
+    outfile->Printf("\n Oh no! this isn't here");
+    throw PSIEXCEPTION("INT_TYPE=DISKDF");
+}
+
+double** CustomIntegrals::three_integral_pointer() {
+    outfile->Printf("\n Doh! There is no Three_integral here.  Use DF/CD");
+    throw PSIEXCEPTION("INT_TYPE=DF/CHOLESKY to use ThreeIntegral!");
+}
+
 void CustomIntegrals::set_tei(size_t p, size_t q, size_t r, size_t s, double value, bool alpha1,
                               bool alpha2) {
     size_t index = aptei_index(p, q, r, s);
@@ -130,20 +151,88 @@ void CustomIntegrals::set_tei(size_t p, size_t q, size_t r, size_t s, double val
 }
 
 void CustomIntegrals::gather_integrals() {
+    // Read the integrals from a file
+    std::string filename("INTDUMP");
+    std::ifstream file(filename);
 
-    for (size_t p = 0; p < nmo_; ++p) {
-        for (size_t q = 0; q < nmo_; ++q) {
-            one_electron_integrals_a_[p * nmo_ + q] = 0.0;
-            one_electron_integrals_b_[p * nmo_ + q] = 0.0;
+    if (not file.is_open()) {
+    }
+    std::string str((std::istreambuf_iterator<char>(file)), std::istreambuf_iterator<char>());
+
+    std::vector<std::string> lines = split_string(str, "\n");
+
+    std::string open_tag("&FCI");
+    std::string close_tag("&END");
+
+    int norb = 0;
+    int nelec = 0;
+    int ms2 = 0;
+    bool uhf = false;
+    std::vector<int> orbsym;
+    std::vector<double> two_electron_integrals_chemist;
+
+    bool parsing_section = false;
+    for (const auto& line : lines) {
+        outfile->Printf("\n%s", line.c_str());
+        if (line.find(close_tag) != std::string::npos) {
+            parsing_section = false;
+            // now we know how many orbitals are there and we can allocate memory for the one- and
+            // two-electron integrals
+            custom_integrals_allocate(norb, nelec, orbsym);
+            two_electron_integrals_chemist.assign(num_tei_, 0.0);
+        } else if (line.find(open_tag) != std::string::npos) {
+            parsing_section = true;
+        } else {
+            if (parsing_section) {
+                std::vector<std::string> split_line = split_string(line, "=");
+                if (split_line[0] == "NORB") {
+                    split_line[1].pop_back();
+                    norb = stoi(split_line[1]);
+                }
+                if (split_line[0] == "NELEC") {
+                    split_line[1].pop_back();
+                    nelec = stoi(split_line[1]);
+                }
+                if (split_line[0] == "MS2") {
+                    split_line[1].pop_back();
+                    ms2 = stoi(split_line[1]);
+                }
+                if (split_line[0] == "ORBSYM") {
+                    split_line[1].pop_back();
+                    std::vector<std::string> vals = split_string(split_line[1], ",");
+                    for (const auto& val : vals) {
+                        orbsym.push_back(stoi(val));
+                    }
+                }
+            } else {
+                if (line.size() > 10) {
+                    std::vector<std::string> split_line = split_string(line, " ");
+                    double integral = stoi(split_line[0]);
+                    int p = stoi(split_line[1]);
+                    int q = stoi(split_line[2]);
+                    int r = stoi(split_line[3]);
+                    int s = stoi(split_line[4]);
+
+                    if (q == 0) {
+                        // orbital energies, skip them
+                    } else if ((r == 0) and (s == 0)) {
+                        // one-electron integrals
+                        full_one_electron_integrals_a_[(p - 1) * aptei_idx_ + q - 1] = integral;
+                        full_one_electron_integrals_b_[(p - 1) * aptei_idx_ + q - 1] = integral;
+                        full_one_electron_integrals_a_[(q - 1) * aptei_idx_ + p - 1] = integral;
+                        full_one_electron_integrals_b_[(q - 1) * aptei_idx_ + p - 1] = integral;
+                        one_electron_integrals_a_[(p - 1) * aptei_idx_ + q - 1] = integral;
+                        one_electron_integrals_b_[(p - 1) * aptei_idx_ + q - 1] = integral;
+                        one_electron_integrals_a_[(q - 1) * aptei_idx_ + p - 1] = integral;
+                        one_electron_integrals_b_[(q - 1) * aptei_idx_ + p - 1] = integral;
+                    } else {
+                        // two-electron integrals
+                        two_electron_integrals_chemist[four(p, q, r, s)] = integral;
+                    }
+                }
+            }
         }
     }
-
-    for (size_t pqrs = 0; pqrs < num_aptei_; ++pqrs)
-        aphys_tei_aa[pqrs] = 0.0;
-    for (size_t pqrs = 0; pqrs < num_aptei_; ++pqrs)
-        aphys_tei_ab[pqrs] = 0.0;
-    for (size_t pqrs = 0; pqrs < num_aptei_; ++pqrs)
-        aphys_tei_bb[pqrs] = 0.0;
 
     // Store the integrals
     for (size_t p = 0; p < nmo_; ++p) {
@@ -151,8 +240,8 @@ void CustomIntegrals::gather_integrals() {
             for (size_t r = 0; r < nmo_; ++r) {
                 for (size_t s = 0; s < nmo_; ++s) {
                     // <pq||rs> = <pq|rs> - <pq|sr> = (pr|qs) - (ps|qr)
-                    double direct = 0.0;
-                    double exchange = 0.0;
+                    double direct = two_electron_integrals_chemist[INDEX4(p, r, q, s)];
+                    double exchange = two_electron_integrals_chemist[INDEX4(p, s, q, r)];
                     size_t index = aptei_index(p, q, r, s);
                     aphys_tei_aa[index] = direct - exchange;
                     aphys_tei_ab[index] = direct;
@@ -161,6 +250,106 @@ void CustomIntegrals::gather_integrals() {
             }
         }
     }
+
+    //    std::string s(std::istreambuf_iterator<char>(file >> std::skipws),
+    //                   std::istreambuf_iterator<char>());
+
+    //    std::copy(std::istream_iterator<std::string>(file),
+    //              std::istream_iterator<std::string>(),
+    //              std::back_inserter(lines));
+
+    //    outfile->Printf("%s",s.c_str());
+
+    //    for (size_t p = 0; p < nmo_; ++p) {
+    //        for (size_t q = 0; q < nmo_; ++q) {
+    //            one_electron_integrals_a_[p * nmo_ + q] = 0.0;
+    //            one_electron_integrals_b_[p * nmo_ + q] = 0.0;
+    //        }
+    //    }
+
+    //    for (size_t pqrs = 0; pqrs < num_aptei_; ++pqrs)
+    //        aphys_tei_aa[pqrs] = 0.0;
+    //    for (size_t pqrs = 0; pqrs < num_aptei_; ++pqrs)
+    //        aphys_tei_ab[pqrs] = 0.0;
+    //    for (size_t pqrs = 0; pqrs < num_aptei_; ++pqrs)
+    //        aphys_tei_bb[pqrs] = 0.0;
+
+    //    // Store the integrals
+    //    for (size_t p = 0; p < nmo_; ++p) {
+    //        for (size_t q = 0; q < nmo_; ++q) {
+    //            for (size_t r = 0; r < nmo_; ++r) {
+    //                for (size_t s = 0; s < nmo_; ++s) {
+    //                    // <pq||rs> = <pq|rs> - <pq|sr> = (pr|qs) - (ps|qr)
+    //                    double direct = 0.0;
+    //                    double exchange = 0.0;
+    //                    size_t index = aptei_index(p, q, r, s);
+    //                    aphys_tei_aa[index] = direct - exchange;
+    //                    aphys_tei_ab[index] = direct;
+    //                    aphys_tei_bb[index] = direct - exchange;
+    //                }
+    //            }
+    //        }
+    //    }
+}
+
+void CustomIntegrals::custom_integrals_allocate(int norb, int nelec,
+                                                const std::vector<int>& orbsym) {
+    auto result = std::max_element(orbsym.begin(), orbsym.end());
+    nirrep_ = *result; // set the number of irreps
+    nso_ = norb;
+    nmo_ = norb;
+    std::vector<int> nmopi(nirrep_, 0);
+    for (int sym : orbsym) {
+        nmopi[sym - 1] += 1;
+    }
+    nsopi_ = nmopi;
+    nmopi_ = nmopi;
+
+    frzcpi_ = mo_space_info_->get_dimension("FROZEN_DOCC");
+    frzvpi_ = mo_space_info_->get_dimension("FROZEN_UOCC");
+    ncmopi_ = mo_space_info_->get_dimension("CORRELATED");
+
+    ncmo_ = ncmopi_.sum();
+
+    // Create an array that maps the CMOs to the MOs (cmotomo_).
+    for (int h = 0, q = 0; h < nirrep_; ++h) {
+        q += frzcpi_[h]; // skip the frozen core
+        for (int r = 0; r < ncmopi_[h]; ++r) {
+            cmotomo_.push_back(q);
+            q++;
+        }
+        q += frzvpi_[h]; // skip the frozen virtual
+    }
+
+    // Indexing
+    // This is important!  Set the indexing to work using the number of
+    // molecular integrals
+    aptei_idx_ = nmo_;
+    num_tei_ = INDEX4(nmo_ - 1, nmo_ - 1, nmo_ - 1, nmo_ - 1) + 1;
+    num_aptei_ = nmo_ * nmo_ * nmo_ * nmo_;
+    //    num_threads_ = omp_get_max_threads();
+    print_ = options_.get_int("PRINT");
+    /// If MO_ROTATE is set in option, call rotate_mos.
+    /// Wasn't really sure where to put this function, but since, integrals is
+    /// always called, this seems like a good spot.
+    if (options_["ROTATE_MOS"].size() > 0) {
+        outfile->Printf("\n  The option ROTATE_MOS is not supported with custom integrals\n");
+        exit(1);
+    }
+    // full one-electron integrals
+    full_one_electron_integrals_a_.assign(nmo_ * nmo_, 0.0);
+    full_one_electron_integrals_b_.assign(nmo_ * nmo_, 0.0);
+
+    // these will hold only the correlated part
+    one_electron_integrals_a_.assign(ncmo_ * ncmo_, 0.0);
+    one_electron_integrals_b_.assign(ncmo_ * ncmo_, 0.0);
+    fock_matrix_a_.assign(ncmo_ * ncmo_, 0.0);
+    fock_matrix_b_.assign(ncmo_ * ncmo_, 0.0);
+
+    // Allocate the memory required to store the two-electron integrals
+    aphys_tei_aa.resize(num_aptei_);
+    aphys_tei_ab.resize(num_aptei_);
+    aphys_tei_bb.resize(num_aptei_);
 }
 
 void CustomIntegrals::resort_integrals_after_freezing() {

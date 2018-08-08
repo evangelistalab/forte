@@ -68,28 +68,12 @@ class CustomIntegrals : public ForteIntegrals {
                                          const std::vector<size_t>& r,
                                          const std::vector<size_t>& s);
 
-    virtual double three_integral(size_t, size_t, size_t) {
-        outfile->Printf("\n Oh no!, you tried to grab a ThreeIntegral but this "
-                        "is not there!!");
-        throw PSIEXCEPTION("INT_TYPE=DF/CHOLESKY to use ThreeIntegral");
-    }
     virtual ambit::Tensor three_integral_block(const std::vector<size_t>&,
                                                const std::vector<size_t>&,
-                                               const std::vector<size_t>&) {
-        outfile->Printf("\n Oh no!, you tried to grab a ThreeIntegral but this "
-                        "is not there!!");
-        throw PSIEXCEPTION("INT_TYPE=DF/CHOLESKY to use ThreeIntegral");
-    }
+                                               const std::vector<size_t>&);
     virtual ambit::Tensor three_integral_block_two_index(const std::vector<size_t>&, size_t,
-                                                         const std::vector<size_t>&) {
-        outfile->Printf("\n Oh no! this isn't here");
-        throw PSIEXCEPTION("INT_TYPE=DISKDF");
-    }
-
-    virtual double** three_integral_pointer() {
-        outfile->Printf("\n Doh! There is no Three_integral here.  Use DF/CD");
-        throw PSIEXCEPTION("INT_TYPE=DF/CHOLESKY to use ThreeIntegral!");
-    }
+                                                         const std::vector<size_t>&);
+    virtual double** three_integral_pointer();
 
     virtual void make_fock_matrix(SharedMatrix gamma_a, SharedMatrix gamma_b);
 
@@ -97,9 +81,12 @@ class CustomIntegrals : public ForteIntegrals {
 
     virtual void set_tei(size_t p, size_t q, size_t r, size_t s, double value, bool alpha1,
                          bool alpha2);
+
   private:
     // ==> Class data <==
 
+    /// Used to store the two-electron integrals (pq|rs) in chemist notation with 8-fold symmetry
+    /// and addressed with the function four(p,q,r,s)
     std::vector<double> aphys_tei_aa;
     std::vector<double> aphys_tei_ab;
     std::vector<double> aphys_tei_bb;
@@ -113,6 +100,8 @@ class CustomIntegrals : public ForteIntegrals {
         return aptei_idx_ * aptei_idx_ * aptei_idx_ * p + aptei_idx_ * aptei_idx_ * q +
                aptei_idx_ * r + s;
     }
+    /// Set the number of orbitals and allocate the memory
+    void custom_integrals_allocate(int norb, int nelec, const std::vector<int>& orbsym);
 
     // ==> Class private virtual functions <==
 

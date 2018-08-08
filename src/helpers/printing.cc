@@ -26,6 +26,7 @@
  * @END LICENSE
  */
 
+#include <algorithm>
 #include <vector>
 
 #include "psi4/psi4-dec.h"
@@ -57,8 +58,15 @@ void print_method_banner(const std::vector<std::string>& text, const std::string
 }
 
 void print_timing(const std::string& text, double seconds) {
-    std::string padding(43 - text.size(), ' ');
-    outfile->Printf("\n  Timing for %s: %s%9.3f s.", text.c_str(), padding.c_str(), seconds);
+    int nspaces = 43 - static_cast<int>(text.size());
+    if (nspaces >= 0) {
+        std::string padding(nspaces, ' ');
+        outfile->Printf("\n  Timing for %s: %s%9.3f s.", text.c_str(), padding.c_str(), seconds);
+    } else {
+        outfile->Printf("\n  void print_timing(...): Cannot fit the following string\n%s\n",
+                        text.c_str());
+        exit(1);
+    }
 }
 
 } // namespace forte

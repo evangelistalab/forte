@@ -11,7 +11,7 @@ set(forte_AUTHORS      "Francesco A. Evangelista and Group")
 set(forte_DESCRIPTION  "Quantum Chemistry Methods for Strongly Correlated Electrons plugin to Psi4")
 set(forte_URL          "https://github.com/evangelistalab/forte")
 set(forte_LICENSE      "GPL-3.0+")
-set (CMAKE_CXX_STANDARD 11)
+set(CMAKE_CXX_STANDARD 11)
 
 cmake_minimum_required(VERSION 3.1 FATAL_ERROR)
 list(APPEND CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/cmake)
@@ -121,6 +121,7 @@ src/fci/string_oo_list.cc
 src/fci/string_vo_list.cc
 src/fci/string_vvoo_list.cc
 src/helpers/printing.cc
+src/helpers/string_algorithms.cc
 src/integrals/cholesky_integrals.cc
 src/integrals/conventional_integrals.cc
 src/integrals/custom_integrals.cc

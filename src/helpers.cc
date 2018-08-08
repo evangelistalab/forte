@@ -182,7 +182,7 @@ void MOSpaceInfo::read_options(Options& options) {
                             "orbital spaces.  Total unassigned MOs for irrep "
                             "%d is %d.",
                             h, unassigned[h]);
-        exit(1);
+            exit(1);
         }
     }
 
@@ -223,14 +223,14 @@ void MOSpaceInfo::read_options(Options& options) {
 
     // Remove the frozen core/virtuals
     std::vector<int> removed_list;
-    for (MOInfo& mo_info : mo_spaces_["FROZEN_DOCC"].second) {        
+    for (MOInfo& mo_info : mo_spaces_["FROZEN_DOCC"].second) {
         vec.erase(std::remove(vec.begin(), vec.end(), std::get<0>(mo_info)), vec.end());
         removed_list.push_back(std::get<0>(mo_info));
     }
     for (MOInfo& mo_info : mo_spaces_["FROZEN_UOCC"].second) {
         vec.erase(std::remove(vec.begin(), vec.end(), std::get<0>(mo_info)), vec.end());
-    }   
-//    outfile->Printf("\n Removed orbitals %d", std::get<0>(mo_info));
+    }
+    //    outfile->Printf("\n Removed orbitals %d", std::get<0>(mo_info));
 
     mo_to_cmo_.assign(nmopi_.sum(), 1000000000);
     for (size_t n = 0; n < vec.size(); ++n) {
@@ -288,8 +288,6 @@ std::pair<SpaceInfo, bool> MOSpaceInfo::read_mo_space(const std::string& space, 
     SpaceInfo space_info(space_dim, vec_mo_info);
     return std::make_pair(space_info, read);
 }
-
-
 
 void print_h2(const std::string& text, const std::string& left_separator,
               const std::string& right_separator) {
@@ -410,14 +408,5 @@ std::pair<std::vector<int>, std::vector<int>> split_up_tasks(size_t size_of_task
     return my_lists;
 }
 
-using namespace std::chrono;
-
-ForteTimer::ForteTimer() { t_start_ = std::chrono::high_resolution_clock::now(); }
-
-/// Return the elapsed time in seconds
-double ForteTimer::elapsed() {
-    t_end_ = high_resolution_clock::now();
-    return duration_cast<duration<double>>(t_end_ - t_start_).count();
-}
-}
-} // End Namespaces
+} // namespace forte
+} // namespace psi

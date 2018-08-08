@@ -34,6 +34,7 @@
 #include "helpers.h"
 #include "integrals/integrals.h"
 #include "integrals/cholesky_integrals.h"
+#include "integrals/custom_integrals.h"
 #include "integrals/df_integrals.h"
 #include "integrals/diskdf_integrals.h"
 #include "integrals/conventional_integrals.h"
@@ -228,6 +229,8 @@ std::shared_ptr<ForteIntegrals> make_forte_integrals(SharedWavefunction ref_wfn,
 #ifdef HAVE_GA
         ints = std::make_shared<DistDFIntegrals>(options, ref_wfn, UnrestrictedMOs, mo_space_info);
 #endif
+    } else if (options.get_str("INT_TYPE") == "CUSTOM") {
+        ints = std::make_shared<CustomIntegrals>(options, ref_wfn, UnrestrictedMOs, mo_space_info);
     } else if (options.get_str("INT_TYPE") == "OWNINTEGRALS") {
         ints = std::make_shared<OwnIntegrals>(options, ref_wfn, UnrestrictedMOs, mo_space_info);
     } else {

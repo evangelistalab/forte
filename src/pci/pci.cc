@@ -873,7 +873,7 @@ void Wall_Chebyshev_generator_coefs(std::vector<double>& coefs, int order, doubl
 
 double ProjectorCI::compute_energy() {
     timer_on("PCI:Energy");
-    ForteTimer t_apici;
+    Timer t_apici;
     old_max_one_HJI_ = 1e100;
     new_max_one_HJI_ = 1e100;
     old_max_two_HJI_ = 1e100;
@@ -1149,7 +1149,7 @@ double ProjectorCI::compute_energy() {
         outfile->Printf("\n  * Schwarz prescreening succeed       = %zu", schwarz_succ_);
     }
 
-    outfile->Printf("\n\n  %s: %f s", "Projector-CI (bitset) ran in  ", t_apici.elapsed());
+    outfile->Printf("\n\n  %s: %f s", "Projector-CI (bitset) ran in  ", t_apici.get());
 
     if (print_full_wavefunction_) {
         print_wfn(dets, C, C.size());
@@ -2332,7 +2332,7 @@ void ProjectorCI::propagate_DavidsonLiu(det_vec& dets, std::vector<double>& C,
     double var_energy = estimate_var_energy_sparse(dets, C, 1.0e-14);
     outfile->Printf("\n  * Adaptive-CI Variational Energy     = %.12f Eh", var_energy);
     //    outfile->Printf("\n  %s: %f s","Time spent diagonalizing
-    //    H",t_davidson.elapsed());
+    //    H",t_davidson.get());
 }
 
 void ProjectorCI::apply_tau_H_symm_det_dynamic(

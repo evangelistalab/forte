@@ -28,7 +28,7 @@
 
 #include "psi4/libqt/qt.h"
 
-#include "../helpers.h"
+#include "psi4/libpsi4util/libpsi4util.h"
 #include "fci_vector.h"
 
 namespace psi {
@@ -47,33 +47,33 @@ void FCIWfn::Hamiltonian(FCIWfn& result, std::shared_ptr<FCIIntegrals> fci_ints,
     { H0(result, fci_ints); }
     // H1_aa
     {
-        ForteTimer t;
+        Timer t;
         H1(result, fci_ints, true);
-        h1_aa_timer += t.elapsed();
+        h1_aa_timer += t.get();
     }
     // H1_bb
     {
-        ForteTimer t;
+        Timer t;
         H1(result, fci_ints, false);
-        h1_bb_timer += t.elapsed();
+        h1_bb_timer += t.get();
     }
     // H2_aabb
     {
-        ForteTimer t;
+        Timer t;
         H2_aabb(result, fci_ints);
-        h2_aabb_timer += t.elapsed();
+        h2_aabb_timer += t.get();
     }
     // H2_aaaa
     {
-        ForteTimer t;
+        Timer t;
         H2_aaaa2(result, fci_ints, true);
-        h2_aaaa_timer += t.elapsed();
+        h2_aaaa_timer += t.get();
     }
     // H2_bbbb
     {
-        ForteTimer t;
+        Timer t;
         H2_aaaa2(result, fci_ints, false);
-        h2_bbbb_timer += t.elapsed();
+        h2_bbbb_timer += t.get();
     }
 }
 
