@@ -66,8 +66,6 @@ CustomIntegrals::CustomIntegrals(psi::Options& options, SharedWavefunction ref_w
     gather_integrals();
 
     freeze_core_orbitals();
-
-    print_ints();
 }
 
 CustomIntegrals::~CustomIntegrals() {}
