@@ -200,9 +200,9 @@ void DSRG_MRPT::H2_T2_C0_L1(BlockedTensor& H2, BlockedTensor& T2, const double& 
     temp.zero();
     temp.set_name("temp_aaav_caaa");
     temp["uxyv"] += 0.5 * H2["xwve"] * T2["yzue"] * L1_["wz"];
-    temp["uxyv"] -= 0.25 * H2["xwve"] * T2["zyue"] * L1_["wz"];
+    temp["uxyv"] -= 0.25 * H2["wxve"] * T2["yzue"] * L1_["wz"];
     temp["uxyv"] += 0.5 * H2["mxvz"] * T2["myuw"] * Eta1_["wz"];
-    temp["uxyv"] -= 0.25 * H2["mxvz"] * T2["mywu"] * Eta1_["wz"];
+    temp["uxyv"] -= 0.25 * H2["xmvz"] * T2["myuw"] * Eta1_["wz"];
     E += temp["uxyv"] * Eta1_["uv"] * L1_["xy"];
 
     E *= alpha;
