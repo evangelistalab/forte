@@ -8,7 +8,7 @@
 Two-electron Integral Types
 ===========================
 
-.. codeauthor:: Kevin P. Hannoni, Chenyang Li, Francesco A. Evangelista
+.. codeauthor:: Kevin P. Hannon, Chenyang Li, Francesco A. Evangelista
 .. sectionauthor:: Kevin P. Hannon and Francesco A. Evangelista
 
 Forte can handle different types of exact and approximate two-electron integrals.
