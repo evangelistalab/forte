@@ -175,6 +175,7 @@ void set_ACI_options(ForteOptions& foptions) {
 
     /*- Do spin analysis? -*/
     foptions.add_bool("ACI_SPIN_ANALYSIS", false, "Do spin correlation analysis");
+    foptions.add_bool("ACI_RELAXED_SPIN", false, "Do spin correlation analysis for relaxed wave function");
 
     /*- Print IAOs -*/
     foptions.add_bool("PRINT_IAOS", true, "Print IAOs");
@@ -718,7 +719,7 @@ double AdaptiveCI::compute_energy() {
     //  }
 
     // printf( "\n%1.5f\n", aci_elapse.get());
-    if (options_.get_bool("ACI_SPIN_ANALYSIS")) {
+    if (options_.get_bool("ACI_SPIN_ANALYSIS") and !(options_.get_bool("ACI_RELAXED_SPIN")) ){
         spin_analysis();
     }
 

@@ -3438,6 +3438,10 @@ std::vector<double> THREE_DSRG_MRPT2::relaxed_energy(std::shared_ptr<FCIIntegral
         if( options_.get_bool("ACI_NO") ){
             aci.compute_nos();
         }
+        if( options_.get_bool("ACI_SPIN_ANALYSIS") ){
+            aci.spin_analysis();
+        }
+
         if( options_.get_bool("UNPAIRED_DENSITY") ){
 
             aci.unpaired_density(Ua_full_, Ub_full_);

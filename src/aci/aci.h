@@ -123,6 +123,7 @@ class AdaptiveCI : public Wavefunction {
 
     void unpaired_density(SharedMatrix Ua, SharedMatrix Ub);
     void unpaired_density(ambit::Tensor Ua, ambit::Tensor Ub);
+    void spin_analysis();
   private:
     // ==> Class data <==
 
@@ -454,7 +455,6 @@ class AdaptiveCI : public Wavefunction {
 
     std::vector<std::tuple<double, int, int>> sym_labeled_orbitals(std::string type);
 
-    void spin_analysis();
     //    int david2(double **A, int N, int M, double *eps, double **v,double
     //    cutoff, int print);
     //    /// Perform a Davidson-Liu diagonalization
