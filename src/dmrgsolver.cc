@@ -469,27 +469,51 @@ void DMRGSolver::compute_energy() {
         Process::environment.globals["CURRENT ENERGY"] = Energy;
 
         // *** PRINTING NUMBER OF PARAMETERS *** //
-        int Npar_DMRG_SA = DMRGCI->getMPS()->gKappa2index(DMRGCI->getMPS()->gNKappa());
+        //int Npar_DMRG_SA = (*(DMRGCI->getMPS())) ->gKappa2index((*(DMRGCI->getMPS()))->gNKappa());
 
-        const int L_sites = mo_space_info_->size("ACTIVE");
-        outfile->Printf("\n Number of DMRG sites %0.d", L_sites);
-        outfile->Printf("\n Max Virtual Dimension D %0.d", OptScheme->get_D(3));
-
-        int N_par_DMRG = 0;
-        int Max_D = OptScheme->get_D(3);
-        for(int i=0; i < L_sites-1; i++){ // so first site, represented by rank 2 tensor
-          if(i == 0){ // first site reperesented by rank 2 tensor
-            N_par_DMRG += 4 * std::min(std::min(std::pow(4, i), std::pow(4, L_sites-i)), (double)Max_D);
-          } else if(i == L_sites - 2){ // last site also represented by rank 2 tensor
-            N_par_DMRG += 4 * std::min(std::min(std::pow(4, i), std::pow(4, L_sites-i)), (double)Max_D);
-          } else { // in the middle of the site lattice, represented by rank 3 tensors
-            int j = i - 1;
-            N_par_DMRG += 4 * std::min( std::min(std::pow(4, j), std::pow(4, L_sites-j)), (double)Max_D)
-                            * std::min( std::min(std::pow(4, i), std::pow(4, L_sites-i)), (double)Max_D);
-          }
+        int num_var = 0;
+        for ( int site = 0; site < mo_space_info_->size("ACTIVE"); site++ ){
+          //num_var += MPS[ site ]->gKappa2index( MPS[ site ]->gNKappa() );
+          num_var += (DMRGCI->getMPS())[ site ]->gKappa2index( (DMRGCI->getMPS())[ site ]->gNKappa() );
         }
 
-        outfile->Printf("\n @Npar DMRG %d", N_par_DMRG);
+
+        //int * mystery_var =
+
+        //std::cout << "NKappa: " << (*(DMRGCI->getMPS()))->gNKappa() << std::endl;
+        //std::cout << "storage jump of kappa = 0: " << (*(DMRGCI->getMPS()))->gKappa2index(0) << std::endl;
+        //std::cout << "storage jump of kappa = 1: " << (*(DMRGCI->getMPS()))->gKappa2index(1) << std::endl;
+        //std::cout << "storage jump of kappa = 2: " << (*(DMRGCI->getMPS()))->gKappa2index(2) << std::endl;
+        //std::cout << "storage jump of kappa = 3: " << (*(DMRGCI->getMPS()))->gKappa2index(3) << std::endl;
+
+        //std::cout << "actual element: " << ((*(DMRGCI->getMPS()))->gStorage())[6] << std::endl;
+
+
+        outfile->Printf("\n @Npar DMRG SA %0.d", num_var);
+
+        // const int L_sites = mo_space_info_->size("ACTIVE");
+        // outfile->Printf("\n Number of DMRG sites %0.d", L_sites);
+        // outfile->Printf("\n Max Virtual Dimension D %0.d", OptScheme->get_D(3));
+        //
+        // int N_par_DMRG = 0;
+        // int Max_D = OptScheme->get_D(3);
+        // for(int i=0; i < L_sites-1; i++){ // so first site, represented by rank 2 tensor
+        //   if(i == 0){ // first site reperesented by rank 2 tensor
+        //     N_par_DMRG += 4 * std::min(std::min(std::pow(4, i), std::pow(4, L_sites-i)), (double)Max_D);
+        //   } else if(i == L_sites - 2){ // last site also represented by rank 2 tensor
+        //     N_par_DMRG += 4 * std::min(std::min(std::pow(4, i), std::pow(4, L_sites-i)), (double)Max_D);
+        //   } else { // in the middle of the site lattice, represented by rank 3 tensors
+        //     int j = i - 1;
+        //     N_par_DMRG += 4 * std::min( std::min(std::pow(4, j), std::pow(4, L_sites-j)), (double)Max_D)
+        //                     * std::min( std::min(std::pow(4, i), std::pow(4, L_sites-i)), (double)Max_D);
+        //   }
+        // }
+
+        //N_par_DMRG = DMRGCI->get_num_mps_var();
+
+
+
+        //outfile->Printf("\n @Npar DMRG %d", N_par_DMRG);
 
         // if(dmrgscf_state_avg)
         //{
@@ -560,7 +584,7 @@ void DMRGSolver::compute_energy() {
       Cumu_Fnorm_sq += temp;
     }
     //std::cout << "I get here 3" <<std::endl;
-    outfile->Printf("\n ||2Lam||F^2: %8.12f", Cumu_Fnorm_sq);
+    outfile->Printf("\n @||2Lam||F^2: %8.12f", Cumu_Fnorm_sq);
 
 
 
@@ -600,7 +624,7 @@ void DMRGSolver::compute_energy() {
     }
 
     for(int k = 0; k<nact; k++){
-      outfile->Printf("\nSingle Orb EE Si(%i) = %8.12f", k, one_orb_ee[k]);
+      outfile->Printf("\n  Single Orb EE Si(%i) = %8.12f", k, one_orb_ee[k]);
     }
 
     std::ofstream my_1oee_file;
@@ -609,6 +633,16 @@ void DMRGSolver::compute_energy() {
         my_1oee_file << one_orb_ee[i] << " ";
     }
     my_1oee_file.close();
+
+    std::ofstream my_MI_file;
+    my_MI_file.open ("MutualInfo.dat");
+    for(int i=0; i < nact; i++){
+      for(int j=0; j < nact; j++){
+        my_MI_file << DMRGCI->getCorrelations()->getMutualInformation_HAM(i,j) << " ";
+      }
+      my_MI_file << "\n";
+    }
+    my_MI_file.close();
 
 
 
