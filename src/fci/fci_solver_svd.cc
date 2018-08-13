@@ -335,9 +335,9 @@ void FCISolver::entanglement_info_1orb(std::vector<std::vector<double> >& Tau_1o
     double idx1 = i*nact + i;
     double idx2 = i*nact3 + i*nact2 + i*nact + i;
 
-    std::cout << "(" << i << ")" << "  1RDM_a_val:  " << oneRDM_a[i] << std::endl;
-    std::cout << " (" << i << ")" << "  1RDM_b_val:  " << oneRDM_b[i] << std::endl;
-    std::cout << "  (" << i << ")" << "  2RDM_ab_val:  " << twoRDM_ab[i] << std::endl;
+    // std::cout << "(" << i << ")" << "  1RDM_a_val:  " << oneRDM_a[i] << std::endl;
+    // std::cout << " (" << i << ")" << "  1RDM_b_val:  " << oneRDM_b[i] << std::endl;
+    // std::cout << "  (" << i << ")" << "  2RDM_ab_val:  " << twoRDM_ab[i] << std::endl;
 
     //TEST
     //std::cout << "OPDM_a("<< i <<"): " << opdm_a[idx1] << std::endl;
@@ -353,10 +353,10 @@ void FCISolver::entanglement_info_1orb(std::vector<std::vector<double> >& Tau_1o
     double val3 = (oneRDM_b[idx1] - twoRDM_ab[idx2]);
     double val4 = (twoRDM_ab[idx2]);
 
-    std::cout << "(" << i << ")" << "  val1:  " << val1 << std::endl;
-    std::cout << " (" << i << ")" << "  val2:  " << val2 << std::endl;
-    std::cout << "  (" << i << ")" << "  val3:  " << val3 << std::endl;
-    std::cout << "   (" << i << ")" << "  val4:  " << val4 << std::endl;
+    // std::cout << "(" << i << ")" << "  val1:  " << val1 << std::endl;
+    // std::cout << " (" << i << ")" << "  val2:  " << val2 << std::endl;
+    // std::cout << "  (" << i << ")" << "  val3:  " << val3 << std::endl;
+    // std::cout << "   (" << i << ")" << "  val4:  " << val4 << std::endl;
 
     double value = (1.0-oneRDM_a[idx1]-oneRDM_b[idx1]+twoRDM_ab[idx2])*std::log(1.0-oneRDM_a[idx1]-oneRDM_b[idx1]+twoRDM_ab[idx2])
                  + (oneRDM_a[idx1] - twoRDM_ab[idx2])*std::log(oneRDM_a[idx1] - twoRDM_ab[idx2])

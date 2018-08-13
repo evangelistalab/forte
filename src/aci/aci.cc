@@ -194,7 +194,7 @@ void set_ACI_options(ForteOptions& foptions) {
 
     /*- Number of batches in screening  -*/
     foptions.add_int("ACI_NBATCH", 1, "Number of batches in screening");
- 
+
     /*- Sets max memory for batching algorithm (MB) -*/
     foptions.add_int("ACI_MAX_MEM", 1000, "Sets max memory for batching algorithm (MB)");
 
@@ -645,6 +645,36 @@ double AdaptiveCI::compute_energy() {
         compute_rdms(fci_ints_, final_wfn_, op_, PQ_evecs, 0, 0);
     }
 
+    // Add fuction to print Fnorm of 2mulant //
+
+    //new
+    //CI_RDMS CI_rdms(options_, dets, fci_ints, PQ_evecs, root1, root2);
+    //ci_rdms_.set_max_rdm(rdm_level_);
+
+    CI_RDMS CI_rdms(options_, final_wfn_, fci_ints_, evecs_, 0, 0);
+    CI_rdms.set_max_rdm(rdm_level_);
+    Reference ACI_ref = CI_rdms.reference(ordm_a_, ordm_b_, trdm_aa_, trdm_ab_, trdm_bb_, trdm_aaa_,
+                                          trdm_aab_, trdm_abb_, trdm_bbb_);
+
+
+    std::vector<double> twoRCMaa = (ACI_ref.L2aa()).data();
+    std::vector<double> twoRCMab = (ACI_ref.L2ab()).data();
+    std::vector<double> twoRCMbb = (ACI_ref.L2bb()).data();
+
+    double Cumu_Fnorm_sq = 0.0;
+
+    int rdm_dim = twoRCMaa.size();
+
+    for(int i = 0; i < rdm_dim; i++){
+      //double idx = i*nact3 + i*nact2 + i*nact + i;
+      double temp = twoRCMaa[i] + twoRCMab[i] + twoRCMbb[i];
+      temp *= temp;
+      Cumu_Fnorm_sq += temp;
+    }
+    //std::cout << "I get here 3" <<std::endl;
+    outfile->Printf("\n  @ ||2mulant||_F^2 : %.12f",Cumu_Fnorm_sq);
+
+
     // if( approx_rdm_ ){
     //     approximate_rdm( final_wfn_, PQ_evecs,);
     // }
@@ -798,7 +828,7 @@ void AdaptiveCI::find_q_space_batched(DeterminantHashVec& P_space, DeterminantHa
     outfile->Printf("\n  Using batched Q_space algorithm");
 
     std::vector<std::pair<double, Determinant>> F_space;
-    double remainder = get_excited_determinants_batch( evecs, evals, P_space, F_space ); 
+    double remainder = get_excited_determinants_batch( evecs, evals, P_space, F_space );
 
     PQ_space.clear();
     external_wfn_.clear();
@@ -3203,14 +3233,14 @@ void AdaptiveCI::spin_analysis() {
 
         CA->copy( Ca_new );
         CB->copy( Cb_new );
-         
+
     } else if (options_.get_str("SPIN_BASIS") == "LOCAL" ){
         outfile->Printf("\n  Computing spin correlation in local basis \n");
-        
+
         auto loc = std::make_shared<LOCALIZE>(reference_wavefunction_, options_, ints_, mo_space_info_ );
         loc->full_localize();
-        UA = loc->get_U()->clone();      
-        UB = loc->get_U()->clone();      
+        UA = loc->get_U()->clone();
+        UB = loc->get_U()->clone();
 
     } else {
         outfile->Printf("\n  Computing spin correlation in reference basis \n");
@@ -3258,18 +3288,18 @@ void AdaptiveCI::spin_analysis() {
             if( i == j ){
                 value += 0.75 * (l1a[nact*i + j] + l1b[nact*i + j]);
             }
-           
-            value -= 0.5  * ( l2ab[ i * nact3 + j * nact2 + j * nact + i ] 
+
+            value -= 0.5  * ( l2ab[ i * nact3 + j * nact2 + j * nact + i ]
                             + l2ab[ j * nact3 + i * nact2 + i * nact + j ] );
 
             value += 0.25 * ( l2aa[ i * nact3 + j * nact2 + i * nact + j ]
-                            + l2bb[ i * nact3 + j * nact2 + i * nact + j ] 
-                            - l2ab[ i * nact3 + j * nact2 + i * nact + j ] 
+                            + l2bb[ i * nact3 + j * nact2 + i * nact + j ]
+                            - l2ab[ i * nact3 + j * nact2 + i * nact + j ]
                             - l2ab[ j * nact3 + i * nact2 + j * nact + i ]
-                          //  - l1a[i*nact + i] * l1a[j*nact + j] 
-                          //  - l1b[i*nact + i] * l1b[j*nact + j] 
-                          //  + l1a[i*nact + i] * l1b[j*nact + j] 
-                          //  + l1b[i*nact + i] * l1a[j*nact + j] 
+                          //  - l1a[i*nact + i] * l1a[j*nact + j]
+                          //  - l1b[i*nact + i] * l1b[j*nact + j]
+                          //  + l1a[i*nact + i] * l1b[j*nact + j]
+                          //  + l1b[i*nact + i] * l1a[j*nact + j]
                             );
 
             spin_corr->set(i, j, value);
@@ -3309,7 +3339,7 @@ void AdaptiveCI::spin_analysis() {
             for( int k = 0; k < nmo_; ++k ){
                 double val = col->get(k) * col->get(k);
                 col->set(k, val);
-            } 
+            }
             col->scale(spin);
             vec->add(col);
        }
