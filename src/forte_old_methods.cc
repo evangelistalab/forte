@@ -596,10 +596,11 @@ void forte_old_methods(SharedWavefunction ref_wfn, Options& options,
             //}
             SemiCanonical semi(ref_wfn, ints, mo_space_info);
             semi.semicanonicalize(aci_reference, max_rdm_level);
-            Ua = semi.Ua_t();
-            Ub = semi.Ub_t();
+            //Ua = semi.Ua_t();
+            //Ub = semi.Ub_t();
             std::shared_ptr<THREE_DSRG_MRPT2> three_dsrg_mrpt2(
                 new THREE_DSRG_MRPT2(aci_reference, ref_wfn, options, ints, mo_space_info));
+
             three_dsrg_mrpt2->set_Uactv(Ua, Ub);
             three_dsrg_mrpt2->compute_energy();
             if (ref_relax || multi_state) {
