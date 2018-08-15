@@ -53,6 +53,8 @@
 #include <fstream>
 #include <iostream>
 #include <stdlib.h>
+#include <cstdio>
+#include <cstring>
 
 #include "chemps2/CASSCF.h"
 #include "chemps2/EdmistonRuedenberg.h"
