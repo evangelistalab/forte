@@ -56,6 +56,7 @@ src/determinant_hashvector.cc
 src/dmrgscf.cc
 src/dmrgsolver.cc
 src/dynamic_correlation.cc
+src/embedding.cc
 src/fci_mo.cc
 src/fcimc.cc
 src/finite_temperature.cc

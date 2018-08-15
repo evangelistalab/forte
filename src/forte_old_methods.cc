@@ -49,6 +49,7 @@
 #include "ci-no/ci-no.h"
 #include "ci-no/mrci-no.h"
 #include "determinant_hashvector.h"
+#include "embedding.h"
 #include "fci/fci.h"
 #include "fci/fci_solver.h"
 #include "fci/fci_integrals.h"
@@ -777,6 +778,11 @@ void forte_old_methods(SharedWavefunction ref_wfn, Options& options,
         DeterminantHashVec reference = aci->get_wavefunction();
         auto mrci = std::make_shared<MRCI>(ref_wfn, options, ints, mo_space_info, reference);
         mrci->compute_energy();
+    }
+
+    if (options.get_str("JOB_TYPE") == "EMBEDDING") {
+        auto emb = std::make_shared<Embedding>(ref_wfn, options, ints, mo_space_info);
+        emb->compute_energy();
     }
 }
 }
