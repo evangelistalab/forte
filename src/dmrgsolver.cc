@@ -32,7 +32,9 @@
 #include "psi4/libiwl/iwl.hpp"
 #include "psi4/libmints/factory.h"
 #include "psi4/libmints/matrix.h"
+#include "psi4/libmints/molecule.h"
 #include "psi4/libmints/mintshelper.h"
+#include "psi4/libmints/pointgrp.h"
 #include "psi4/libmints/typedefs.h"
 #include "psi4/libmints/wavefunction.h"
 #include "psi4/libpsio/psio.hpp"
@@ -53,7 +55,6 @@
 #include <stdlib.h>
 #include <cstdio>
 #include <cstring>
-
 
 #include "chemps2/CASSCF.h"
 #include "chemps2/EdmistonRuedenberg.h"
@@ -121,7 +122,7 @@ void DMRGSolver::compute_reference(double* one_rdm, double* two_rdm, double* thr
     dmrg_ref.set_L1b(gamma1_a);
     /// Form 2_rdms
     {
-        gamma2_dmrg.iterate([&](const ::vector<size_t>& i, double& value) {
+        gamma2_dmrg.iterate([&](const std::vector<size_t>& i, double& value) {
             value = two_rdm[i[0] * na * na * na + i[1] * na * na + i[2] * na + i[3]];
         });
         if (spin_free_rdm_) {
@@ -163,7 +164,7 @@ void DMRGSolver::compute_reference(double* one_rdm, double* two_rdm, double* thr
             ambit::Tensor::build(ambit::CoreTensor, "Gamma3_aab", {na, na, na, na, na, na});
         ambit::Tensor gamma3_abb =
             ambit::Tensor::build(ambit::CoreTensor, "Gamma2_abb", {na, na, na, na, na, na});
-        gamma3_dmrg.iterate([&](const ::vector<size_t>& i, double& value) {
+        gamma3_dmrg.iterate([&](const std::vector<size_t>& i, double& value) {
             value = three_rdm[i[0] * na * na * na * na * na + i[1] * na * na * na * na +
                               i[2] * na * na * na + i[3] * na * na + i[4] * na + i[5]];
         });
@@ -272,8 +273,8 @@ void DMRGSolver::compute_energy() {
     const int nmo = mo_space_info_->size("ALL");
     const int nirrep = mo_space_info_->nirrep();
     Dimension orbspi = mo_space_info_->get_dimension("ALL");
-    int* docc = wfn_->doccpi();
-    int* socc = wfn_->soccpi();
+    const int* docc = wfn_->doccpi();
+    const int* socc = wfn_->soccpi();
     if (wfn_irrep < 0) {
         throw PSIEXCEPTION("Option ROOT_SYM (integer) may not be smaller than zero!");
     }
@@ -349,14 +350,17 @@ void DMRGSolver::compute_energy() {
     for (int cnt = 0; cnt < nirrep; cnt++) {
         nElectrons += 2 * docc[cnt] + socc[cnt];
     }
-    (*outfile) << "nElectrons  = " << nElectrons << endl;
+    //(*outfile) << "nElectrons  = " << nElectrons << endl;
+    outfile->Printf("\nnElectrons = %d", nElectrons);
 
     // Number of electrons in the active space
     int nDMRGelectrons = nElectrons;
     for (int cnt = 0; cnt < nirrep; cnt++) {
         nDMRGelectrons -= 2 * frozen_docc[cnt];
     }
-    (*outfile) << "nEl. active = " << nDMRGelectrons << endl;
+    //(*outfile) << "nEl. active = " << nDMRGelectrons << endl;
+    outfile->Printf("\nnEl. active = %d", nDMRGelectrons);
+
 
     // Create the CheMPS2::Hamiltonian --> fill later
     const size_t nOrbDMRG = mo_space_info_->size("ACTIVE");
@@ -465,6 +469,54 @@ void DMRGSolver::compute_energy() {
         outfile->Printf("\n Overall DMRG RDM computation took %6.5f s.", DMRGRDMs.get());
         outfile->Printf("\n @DMRG Energy = %8.12f", Energy);
         Process::environment.globals["CURRENT ENERGY"] = Energy;
+
+        // *** PRINTING NUMBER OF PARAMETERS *** //
+        //int Npar_DMRG_SA = (*(DMRGCI->getMPS())) ->gKappa2index((*(DMRGCI->getMPS()))->gNKappa());
+
+        int num_var = 0;
+        for ( int site = 0; site < mo_space_info_->size("ACTIVE"); site++ ){
+          //num_var += MPS[ site ]->gKappa2index( MPS[ site ]->gNKappa() );
+          num_var += (DMRGCI->getMPS())[ site ]->gKappa2index( (DMRGCI->getMPS())[ site ]->gNKappa() );
+        }
+
+
+        //int * mystery_var =
+
+        //std::cout << "NKappa: " << (*(DMRGCI->getMPS()))->gNKappa() << std::endl;
+        //std::cout << "storage jump of kappa = 0: " << (*(DMRGCI->getMPS()))->gKappa2index(0) << std::endl;
+        //std::cout << "storage jump of kappa = 1: " << (*(DMRGCI->getMPS()))->gKappa2index(1) << std::endl;
+        //std::cout << "storage jump of kappa = 2: " << (*(DMRGCI->getMPS()))->gKappa2index(2) << std::endl;
+        //std::cout << "storage jump of kappa = 3: " << (*(DMRGCI->getMPS()))->gKappa2index(3) << std::endl;
+
+        //std::cout << "actual element: " << ((*(DMRGCI->getMPS()))->gStorage())[6] << std::endl;
+
+
+        outfile->Printf("\n @Npar DMRG SA %0.d", num_var);
+
+        // const int L_sites = mo_space_info_->size("ACTIVE");
+        // outfile->Printf("\n Number of DMRG sites %0.d", L_sites);
+        // outfile->Printf("\n Max Virtual Dimension D %0.d", OptScheme->get_D(3));
+        //
+        // int N_par_DMRG = 0;
+        // int Max_D = OptScheme->get_D(3);
+        // for(int i=0; i < L_sites-1; i++){ // so first site, represented by rank 2 tensor
+        //   if(i == 0){ // first site reperesented by rank 2 tensor
+        //     N_par_DMRG += 4 * std::min(std::min(std::pow(4, i), std::pow(4, L_sites-i)), (double)Max_D);
+        //   } else if(i == L_sites - 2){ // last site also represented by rank 2 tensor
+        //     N_par_DMRG += 4 * std::min(std::min(std::pow(4, i), std::pow(4, L_sites-i)), (double)Max_D);
+        //   } else { // in the middle of the site lattice, represented by rank 3 tensors
+        //     int j = i - 1;
+        //     N_par_DMRG += 4 * std::min( std::min(std::pow(4, j), std::pow(4, L_sites-j)), (double)Max_D)
+        //                     * std::min( std::min(std::pow(4, i), std::pow(4, L_sites-i)), (double)Max_D);
+        //   }
+        // }
+
+        //N_par_DMRG = DMRGCI->get_num_mps_var();
+
+
+
+        //outfile->Printf("\n @Npar DMRG %d", N_par_DMRG);
+
         // if(dmrgscf_state_avg)
         //{
         //    DMRGCI->calc_rdms_and_correlations(max_rdm_ > 2 ? true : false);
@@ -511,6 +563,95 @@ void DMRGSolver::compute_energy() {
     }
     dmrg_ref_.set_Eref(Energy);
 
+                    //////////////////////////////////////////
+                    ////// Print Corralation Info Begin //////
+                    //////////////////////////////////////////
+
+    // will involve dmrg_ref_.L1a.data();
+    size_t nact = mo_space_info_->size("ACTIVE");
+    size_t nact2 = nact * nact;
+    size_t nact3 = nact2 * nact;
+    size_t nact4 = nact3 * nact;
+
+    // for the cumulant norm..
+    std::vector<double> twoRCMaa = dmrg_ref_.L2aa().data();
+    std::vector<double> twoRCMab = dmrg_ref_.L2ab().data();
+    std::vector<double> twoRCMbb = dmrg_ref_.L2bb().data();
+
+    double Cumu_Fnorm_sq = 0.0;
+    for(int i = 0; i < nact4; i++){
+      //double idx = i*nact3 + i*nact2 + i*nact + i;
+      double temp = twoRCMaa[i] + twoRCMab[i] + twoRCMbb[i];
+      temp *= temp;
+      Cumu_Fnorm_sq += temp;
+    }
+    //std::cout << "I get here 3" <<std::endl;
+    outfile->Printf("\n @||2Lam||F^2: %8.12f", Cumu_Fnorm_sq);
+
+
+
+    // for the single orbital entanglement info
+    std::vector<double>& opdm_a = dmrg_ref_.L1a().data();
+    std::vector<double>& opdm_b = dmrg_ref_.L1b().data();
+    std::vector<double>& tpdm_ab = dmrg_ref_.g2ab().data();
+
+    std::vector<double> one_orb_ee(nact);
+    for(int i=0; i<nact; i++){
+      //std::cout << "I GET HERE 3" << std::endl;
+      double idx1 = i*nact + i;
+      double idx2 = i*nact3 + i*nact2 + i*nact + i;
+
+      //TEST
+      //std::cout << "OPDM_a("<< i <<"): " << opdm_a[idx1] << std::endl;
+      //END TEST
+      double value = (1.0-opdm_a[idx1]-opdm_b[idx1]+tpdm_ab[idx2])*std::log(1.0-opdm_a[idx1]-opdm_b[idx1]+tpdm_ab[idx2])
+                   + (opdm_a[idx1] - tpdm_ab[idx2])*std::log(opdm_a[idx1] - tpdm_ab[idx2])
+                   + (opdm_b[idx1] - tpdm_ab[idx2])*std::log(opdm_b[idx1] - tpdm_ab[idx2])
+                   + (tpdm_ab[idx2])*std::log(tpdm_ab[idx2]);
+      value *= -1.0;
+      one_orb_ee[i] = value;
+
+      // double val1 = (1.0 - opdm_a[idx1] - opdm_b[idx1] + tpdm_ab[idx2]);
+      // double val2 = (opdm_a[idx1] - tpdm_ab[idx2]);
+      // double val3 = (opdm_b[idx1] - tpdm_ab[idx2]);
+      // double val4 = (tpdm_ab[idx2]);
+
+      // std::cout << "(" << i << ")" << "  1RDM_a_val:  " << opdm_a[i] << std::endl;
+      // std::cout << " (" << i << ")" << "  1RDM_b_val:  " << opdm_b[i] << std::endl;
+      // std::cout << "  (" << i << ")" << "  2RDM_ab_val:  " << tpdm_ab[i] << std::endl;
+      // std::cout << "(" << i << ")" << "  val1:  " << val1 << std::endl;
+      // std::cout << " (" << i << ")" << "  val2:  " << val2 << std::endl;
+      // std::cout << "  (" << i << ")" << "  val3:  " << val3 << std::endl;
+      // std::cout << "   (" << i << ")" << "  val4:  " << val4 << std::endl;
+    }
+
+    for(int k = 0; k<nact; k++){
+      outfile->Printf("\n  Single Orb EE Si(%i) = %8.12f", k, one_orb_ee[k]);
+    }
+
+    std::ofstream my_1oee_file;
+    my_1oee_file.open ("1oee.dat");
+    for(int i=0; i < one_orb_ee.size(); i++){
+        my_1oee_file << one_orb_ee[i] << " ";
+    }
+    my_1oee_file.close();
+
+    std::ofstream my_MI_file;
+    my_MI_file.open ("MutualInfo.dat");
+    for(int i=0; i < nact; i++){
+      for(int j=0; j < nact; j++){
+        my_MI_file << DMRGCI->getCorrelations()->getMutualInformation_HAM(i,j) << " ";
+      }
+      my_MI_file << "\n";
+    }
+    my_MI_file.close();
+
+
+
+                    //////////////////////////////////////////
+                    ////// Print Corralation Info End ////////
+                    //////////////////////////////////////////
+
     delete[] DMRG1DM;
     delete[] DMRG2DM;
     delete[] orbitalIrreps;
@@ -531,13 +672,17 @@ int DMRGSolver::chemps2_groupnumber(const string SymmLabel) {
         }
     } while ((!stopFindGN) && (SyGroup < magic_number_max_groups_chemps2));
 
-    (*outfile) << "Psi4 symmetry group was found to be <" << SymmLabel.c_str() << ">." << endl;
+    //(*outfile) << "Psi4 symmetry group was found to be <" << SymmLabel.c_str() << ">." << endl;
+    outfile->Printf("\nPsi4 symmetry group was found to be <%s>",SymmLabel.c_str());
     if (SyGroup >= magic_number_max_groups_chemps2) {
-        (*outfile) << "CheMPS2 did not recognize this symmetry group name. "
-                      "CheMPS2 only knows:"
-                   << endl;
+        // (*outfile) << "CheMPS2 did not recognize this symmetry group name. "
+        //               "CheMPS2 only knows:"
+        //            << endl;
+        outfile->Printf("\nCheMPS2 did not recognize this symmetry group name. "
+                        "CheMPS2 only knows:");
         for (int cnt = 0; cnt < magic_number_max_groups_chemps2; cnt++) {
-            (*outfile) << "   <" << (CheMPS2::Irreps::getGroupName(cnt)).c_str() << ">" << endl;
+            //(*outfile) << "   <" << (CheMPS2::Irreps::getGroupName(cnt)).c_str() << ">" << endl;
+            outfile->Printf("   <%s>",(CheMPS2::Irreps::getGroupName(cnt)).c_str());
         }
         throw PSIEXCEPTION("CheMPS2 did not recognize the symmetry group name!");
     }
@@ -565,7 +710,9 @@ std::vector<double> DMRGSolver::one_body_operator() {
     /// This section of code computes the fock matrix for the
     /// INACTIVE_DOCC("RESTRICTED_DOCC")
 
-    std::shared_ptr<JK> JK_inactive = JK::build_JK(wfn_->basisset(), wfn_->options());
+    //std::shared_ptr<JK> JK_inactive = JK::build_JK(wfn_->basisset(), wfn_->options());
+    std::shared_ptr<JK> JK_inactive = JK::build_JK(wfn_->basisset(), wfn_->get_basisset("DF_BASIS_SCF"), wfn_->options());
+
 
     JK_inactive->set_memory(Process::environment.get_memory() * 0.8);
     JK_inactive->initialize();
@@ -628,7 +775,7 @@ std::vector<double> DMRGSolver::one_body_operator() {
         }
     }
     Dimension restricted_docc = mo_space_info_->get_dimension("INACTIVE_DOCC");
-    double E_restricted = Process::environment.molecule()->nuclear_repulsion_energy(wfn->get_dipole_field_strength());
+    double E_restricted = Process::environment.molecule()->nuclear_repulsion_energy(wfn_->get_dipole_field_strength());
     for (int h = 0; h < nirrep; h++) {
         for (int rd = 0; rd < restricted_docc[h]; rd++) {
             E_restricted += Hcore->get(h, rd, rd) + F_restricted->get(h, rd, rd);
