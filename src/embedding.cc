@@ -467,8 +467,8 @@ std::map<std::string, SharedMatrix> Embedding::localize(SharedWavefunction wfn, 
 		std::map<std::string, SharedMatrix> ret = iaobd->build_iaos();
 		outfile->Printf("\n ------ IAO coeffs! ------ \n");
 		ret["A"]->print();
-		//outfile->Printf("iao build U");
-		//ret["U"]->print();
+		outfile->Printf("\n ------ IAO rotation matrix U ------ \n");
+		ret["U"]->print();
 
 		SharedMatrix Cocc = build_Cocc(wfn->Ca(), nirrep, nmopi, noccpi);
 		SharedMatrix Focc = build_Focc(wfn->Fa(), nirrep, nmopi, noccpi);
@@ -510,6 +510,8 @@ std::map<std::string, SharedMatrix> Embedding::localize(SharedWavefunction wfn, 
 double Embedding::compute_energy() {
 		// Initialize calculation ~
 		// Require a molecule in wfn object with subset A and B!
+	int methods = 1; //0: use small matrix, 1: use large matrix and zero env, env block 
+
 		std::shared_ptr<Molecule> mol = ref_wfn_->molecule();
 		int nfrag = mol->nfragments();
 
@@ -544,9 +546,10 @@ double Embedding::compute_energy() {
 		SharedMatrix C_A = Separate_orbital_subset(ref_wfn_, natom_sys, Loc, 2);
 
 		C_A->print();
-		//4. create wfn_A with basis and C_A
+		//4. create wfn of system with basis and C_A
 		//SharedWavefunction wfn_env(new Wavefunction(molecule_, basisset_));
-		//wfn_env->deep_copy(ref_wfn_); //Save a copy of the original wfn!!
+		//deep_copy(ref_wfn_); //Save a copy of the original wfn!!
+		//wfn_env = ref_wfn_;
 		SharedMatrix C_origin((new Matrix("Saved Coeffs", nirrep_, nmopi_, nmopi_)));
 		C_origin->copy(ref_wfn_->Ca());
 		SharedMatrix S_origin((new Matrix("Saved Overlaps", nirrep_, nmopi_, nmopi_)));
@@ -562,57 +565,112 @@ double Embedding::compute_energy() {
 
 		outfile->Printf("\n ****** Setting up system wavefunction ****** \n");
 
-		//set Ca
-		Ca_->copy(C_A);
-
 		//rotate S
-		SharedMatrix S_sys = Matrix::triplet(Loc["Trans"], S_origin, Loc["Trans"], true, false, false);
-		S_->copy(S_sys);
+		SharedMatrix S_iao = Matrix::triplet(Loc["Trans"], S_origin, Loc["Trans"], true, false, false);
 
 		//rotate h
-		SharedMatrix h_sys = Matrix::triplet(Loc["Trans"], H_origin, Loc["Trans"], true, false, false);
-		H_->copy(h_sys); //wfn now have a iao based h_sys without embedding
+		SharedMatrix h_iao = Matrix::triplet(Loc["Trans"], H_origin, Loc["Trans"], true, false, false);
 
 		//rotate F
-		SharedMatrix F_sys = Matrix::triplet(Loc["Trans"], Fa_origin, Loc["Trans"], true, false, false);
-		Fa_->copy(F_sys);
+		SharedMatrix F_iao = Matrix::triplet(Loc["Trans"], Fa_origin, Loc["Trans"], true, false, false);
 
 		//set molecule
 		//molecule_ = mol_sys;
 		//(*molecule_) = *mol_sys;
 		mol_sys->print();
-		ref_wfn_->molecule() = mol_sys;
+		//ref_wfn_->molecule() = mol_sys;
+		ref_wfn_->molecule()->print();
+		molecule_->set_ghost_fragment(1);
 		ref_wfn_->molecule()->print();
 
-		//Now ref_wfn_ has been wfn of system (with full basis)!
-		outfile->Printf("\n ****** System wavefunction Set! ****** \n");
-		ref_wfn_->molecule()->print();
-		ref_wfn_->S()->print();
-		ref_wfn_->Ca()->print();
+		//Test and truncate matrixes!
+			Dimension nmo_sys_pi = ref_wfn_->nmopi();
+			Dimension nzeropi = ref_wfn_->nmopi();
+			for (int h = 0; h < nirrep_; ++h) {
+				nmo_sys_pi[h] = C_A->colspi()[h];
+				nzeropi[h] = nmopi_[h] - nmopi_[h];
+			}
+			Slice sys(nzeropi, nmo_sys_pi);
 
-		//5. Evaluate G(A + B) and G(A), evaluate and project h A-in-B (function)
-		SharedMatrix Ga(new Matrix("G_sys", nirrep_, nmopi_, nmopi_));
-		build_G(ref_wfn_, Ca_, Ga, options_, 0); //build G(A)
-		outfile->Printf("\n ------ Building system G(A) ------ \n");
-		Ca_->print();
-		Ga->print();
+			SharedMatrix h_sys = h_iao;
+			if (methods == 0) { //Use small matrix, truncate every matrix to sys,sys block
+				//Set Coeffs
+				Ca_->copy(C_A->get_block(sys, sys));
 
-		SharedMatrix Gab(new Matrix("G_all", nirrep_, nmopi_, nmopi_));
-		build_G(ref_wfn_, C_origin, Gab, options_, 0); //build G(A+B)
-		outfile->Printf("\n ------ Building system and environment G(A+B) ------ \n");
-		C_origin->print();
-		Gab->print();
+				//Set overlaps
+				S_->copy(S_iao->get_block(sys, sys));
 
-		SharedMatrix C_iao_all = Matrix::doublet(C_origin, Loc["Trans"], false, false);
-		SharedMatrix Gab_iao(new Matrix("G_all_rotate", nirrep_, nmopi_, nmopi_));
-		outfile->Printf("\n ------ Checkpoint: iao G(A+B), should equal ------ \n");
-		build_G(ref_wfn_, C_iao_all, Gab_iao, options_, 0); //build G(A+B) in iao, test whether they are the same!
-		Gab_iao->print();
+				//Set hcore
+				h_sys->copy(h_iao->get_block(sys, sys));
+				H_->copy(h_sys); //wfn now have a iao based h_sys without embedding
 
-		outfile->Printf("\n ------ Building H A-in-B ------ \n");
-		h_sys->add(Gab);
-		h_sys->subtract(Ga);  //build h A-in-B !!
-		h_sys->print();
+				//Set Fock
+				Fa_->copy(F_iao->get_block(sys, sys));
+
+				//Now ref_wfn_ has been wfn of system (with full basis)!
+				outfile->Printf("\n ****** System wavefunction Set! ****** \n");
+				ref_wfn_->molecule()->print();
+				ref_wfn_->S()->print();
+				ref_wfn_->Ca()->print();
+				ref_wfn_->Fa()->print();
+			}
+
+			if (methods == 1) { //Use Large matrix, put other parts zero, use 7*14 Coeff matrix
+				//Set Coeffs
+				Ca_->copy(C_A);
+
+				//Set overlaps
+				SharedMatrix Stmp = S_iao->get_block(sys, sys);
+				S_->zero();
+				S_->add(Stmp);
+				outfile->Printf("\n ------ S iao truncated to system block (large matrix) ------ \n");
+
+				//Set hcore
+				SharedMatrix htmp = h_iao->get_block(sys, sys);
+				h_sys->zero();
+				h_sys->add(htmp);
+				H_->copy(h_sys); 
+				//wfn now have a iao based h_sys without embedding
+
+				//Set Fock
+				outfile->Printf("\n ------ F rotated to iao ------ \n");
+				F_iao->print();
+				SharedMatrix Ftmp = F_iao->get_block(sys, sys);
+				Ftmp->print();
+				Fa_->zero();
+				Fa_->print();
+				Fa_->add(Ftmp);
+				Fa_->print();
+
+				//Now ref_wfn_ has been wfn of system (with full basis)!
+				outfile->Printf("\n ****** System wavefunction Set! ****** \n");
+				ref_wfn_->molecule()->print();
+				ref_wfn_->S()->print();
+				ref_wfn_->Ca()->print();
+				ref_wfn_->Fa()->print();
+			}
+
+			//5. Evaluate G(A + B) and G(A), evaluate and project h A-in-B (function)
+			SharedMatrix Ga(new Matrix("G_sys", nirrep_, nmopi_, nmopi_));
+			build_G(ref_wfn_, Ca_, Ga, options_, 0); //build G(A)
+			outfile->Printf("\n ------ Building system G(A) ------ \n");
+			Ga->print();
+
+			SharedMatrix Gab(new Matrix("G_all", nirrep_, nmopi_, nmopi_));
+			build_G(ref_wfn_, C_origin, Gab, options_, 0); //build G(A+B)
+			outfile->Printf("\n ------ Building system and environment G(A+B) ------ \n");
+			Gab->print();
+
+			SharedMatrix C_iao_all = Matrix::doublet(C_origin, Loc["Trans"], false, false);
+			SharedMatrix Gab_iao(new Matrix("G_all_rotate", nirrep_, nmopi_, nmopi_));
+			outfile->Printf("\n ------ Checkpoint: iao G(A+B), should equal ------ \n");
+			build_G(ref_wfn_, C_iao_all, Gab_iao, options_, 0); //build G(A+B) in iao, test whether they are the same!
+			Gab_iao->print();
+
+			outfile->Printf("\n ------ Building H A-in-B ------ \n");
+			h_sys->add(Gab);
+			h_sys->subtract(Ga);  //build h A-in-B !!
+			h_sys->print();
 
 		//6. Compute (cheap environment method) energy for system A, with h A-in-B
 		outfile->Printf("\n ------ calculating E_sys_cheap ------ \n");
