@@ -478,6 +478,8 @@ std::map<std::string, SharedMatrix> Embedding::localize(SharedWavefunction wfn, 
 		//ret_loc["L_local"]->print();
 		//outfile->Printf("iao build localized charge matrix \n");
 		//ret_loc["Q"]->print();
+		outfile->Printf("\n ------ IAO rotation matrix U (localizer) ------ \n");
+		ret_loc["U"]->print();
 
 		std::vector<std::string> iaolabel = iaobd->print_IAO(ret["A"], ret_loc["U"]->colspi()[0], wfn->basisset()->nbf(), wfn);
 
@@ -575,13 +577,13 @@ double Embedding::compute_energy() {
 		SharedMatrix F_iao = Matrix::triplet(Loc["Trans"], Fa_origin, Loc["Trans"], true, false, false);
 
 		//set molecule
-		//molecule_ = mol_sys;
 		//(*molecule_) = *mol_sys;
 		mol_sys->print();
+		molecule_ = mol_sys;
 		//ref_wfn_->molecule() = mol_sys;
 		ref_wfn_->molecule()->print();
 		molecule_->set_ghost_fragment(1);
-		ref_wfn_->molecule()->print();
+		//ref_wfn_->molecule()->print();
 
 		//Test and truncate matrixes!
 			Dimension nmo_sys_pi = ref_wfn_->nmopi();
@@ -594,6 +596,9 @@ double Embedding::compute_energy() {
 
 			SharedMatrix h_sys = h_iao;
 			if (methods == 0) { //Use small matrix, truncate every matrix to sys,sys block
+				//This method doesn't work for now! change build_G() soon to make it adjust 
+				//size of matrix according to C->rowspi()
+
 				//Set Coeffs
 				Ca_->copy(C_A->get_block(sys, sys));
 
@@ -620,15 +625,25 @@ double Embedding::compute_energy() {
 				Ca_->copy(C_A);
 
 				//Set overlaps
+				//outfile->Printf("\n ------ S Original ------ \n");
+				//S_->print();
+				//outfile->Printf("\n ------ S IAO ------ \n");
+				//S_iao->print();
 				SharedMatrix Stmp = S_iao->get_block(sys, sys);
 				S_->zero();
-				S_->add(Stmp);
+				S_->set_block(sys, sys, Stmp);
+
+				//put 1 in env,env block diagonal to ensure decomposition quality
+				for (int i = C_A->colspi()[0]; i < nmopi_[0]; ++i) {
+					S_->set(0, i, i, 1.0);
+				}
 				outfile->Printf("\n ------ S iao truncated to system block (large matrix) ------ \n");
+				S_->print();
 
 				//Set hcore
 				SharedMatrix htmp = h_iao->get_block(sys, sys);
 				h_sys->zero();
-				h_sys->add(htmp);
+				h_sys->set_block(sys, sys, htmp);
 				H_->copy(h_sys); 
 				//wfn now have a iao based h_sys without embedding
 
@@ -639,7 +654,7 @@ double Embedding::compute_energy() {
 				Ftmp->print();
 				Fa_->zero();
 				Fa_->print();
-				Fa_->add(Ftmp);
+				Fa_->set_block(sys, sys, Ftmp);
 				Fa_->print();
 
 				//Now ref_wfn_ has been wfn of system (with full basis)!
