@@ -146,7 +146,8 @@ void build_G(SharedWavefunction wfn, SharedMatrix C, SharedMatrix G, Options& op
 		// JK_core->set_allow_desymmetrization(true);
 		JK_occ->set_do_K(true);
 
-		SharedMatrix C_occ = build_Cocc(C, nirrep, nmopi, noccpi);
+		SharedMatrix C_occ = build_Cocc(C, nirrep, nmopi, noccpi); 
+		//Known problem: when building system G, here we should use system nmopi and system noccpi !!!
 
 		std::vector<std::shared_ptr<Matrix>>& Cl = JK_occ->C_left();
 		std::vector<std::shared_ptr<Matrix>>& Cr = JK_occ->C_right();
@@ -513,6 +514,7 @@ double Embedding::compute_energy() {
 		// Initialize calculation ~
 		// Require a molecule in wfn object with subset A and B!
 	int methods = 1; //0: use small matrix, 1: use large matrix and zero env, env block 
+	int methodC = 1; //0: use n*2n C, with env basis, 1: use n*n C, without env basis. when methods = 1, methodC can only be 1
 
 		std::shared_ptr<Molecule> mol = ref_wfn_->molecule();
 		int nfrag = mol->nfragments();
@@ -613,18 +615,35 @@ double Embedding::compute_energy() {
 				//Set Fock
 				Fa_->copy(F_iao->get_block(sys, sys));
 
+				//Set dimensions and MO_space_info
+				nmopi_ = nmo_sys_pi;
+				doccpi_[0] = 5; //Only for water-dimer water_sys!!!
+
 				//Now ref_wfn_ has been wfn of system (with full basis)!
 				outfile->Printf("\n ****** System wavefunction Set! ****** \n");
 				ref_wfn_->molecule()->print();
 				ref_wfn_->S()->print();
 				ref_wfn_->Ca()->print();
+				ref_wfn_->H()->print();
 				ref_wfn_->Fa()->print();
+				outfile->Printf("Number of system occupied orbital: %d", ref_wfn_->doccpi()[0]);
+				outfile->Printf("Size of calculation matrix: %d", ref_wfn_->nmopi()[0]);
+
+				//Test all matrix here, should be 7*7!!! Known problem here.
 			}
 
 			if (methods == 1) { //Use Large matrix, put other parts zero, use 7*14 (14*14 with zero) Coeff matrix
 				//Set Coeffs
 				Ca_->zero();
-				Ca_->set_block(sys, allmo, C_A);
+
+				if (methodC == 1) {
+					SharedMatrix Ctmp = C_A->get_block(sys, sys);
+					Ca_->set_block(sys, sys, Ctmp);
+				}
+
+				if (methodC == 0) {
+					Ca_->set_block(sys, allmo, C_A);
+				}
 
 				//Set overlaps
 				//outfile->Printf("\n ------ S Original ------ \n");
@@ -654,14 +673,26 @@ double Embedding::compute_energy() {
 				SharedMatrix Ftmp = F_iao->get_block(sys, sys);
 				Fa_->zero();
 				Fa_->set_block(sys, sys, Ftmp);
-				Fa_->print();
+				//Fa_->print();
+
+				//Set dimensions
+				Dimension docc_sys_pi = doccpi_;
+				docc_sys_pi[0] = 5;
+				ref_wfn_->force_doccpi(docc_sys_pi);
+				//doccpi_[0] = 5;
+				//ref_wfn_->doccpi()[0] = 5; //Only for water-dimer water_sys!!!
+
+				//Set MO_space_info
 
 				//Now ref_wfn_ has been wfn of system (with full basis)!
 				outfile->Printf("\n ****** System wavefunction Set! ****** \n");
 				ref_wfn_->molecule()->print();
-				//ref_wfn_->S()->print();
-				//ref_wfn_->Ca()->print();
-				//ref_wfn_->Fa()->print();
+				ref_wfn_->S()->print();
+				ref_wfn_->Ca()->print();
+				ref_wfn_->H()->print();
+				ref_wfn_->Fa()->print();
+				outfile->Printf("Number of system occupied orbital: %d", ref_wfn_->doccpi()[0]);
+				outfile->Printf("Size of calculation matrix: %d", ref_wfn_->nmopi()[0]);
 			}
 
 			//5. Evaluate G(A + B) and G(A), evaluate and project h A-in-B (function)
