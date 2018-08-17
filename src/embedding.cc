@@ -593,6 +593,7 @@ double Embedding::compute_energy() {
 				nzeropi[h] = nmopi_[h] - nmopi_[h];
 			}
 			Slice sys(nzeropi, nmo_sys_pi);
+			Slice allmo(nzeropi, nmopi_);
 
 			SharedMatrix h_sys = h_iao;
 			if (methods == 0) { //Use small matrix, truncate every matrix to sys,sys block
@@ -620,9 +621,10 @@ double Embedding::compute_energy() {
 				ref_wfn_->Fa()->print();
 			}
 
-			if (methods == 1) { //Use Large matrix, put other parts zero, use 7*14 Coeff matrix
+			if (methods == 1) { //Use Large matrix, put other parts zero, use 7*14 (14*14 with zero) Coeff matrix
 				//Set Coeffs
-				Ca_->copy(C_A);
+				Ca_->zero();
+				Ca_->set_block(sys, allmo, C_A);
 
 				//Set overlaps
 				//outfile->Printf("\n ------ S Original ------ \n");
@@ -648,30 +650,27 @@ double Embedding::compute_energy() {
 				//wfn now have a iao based h_sys without embedding
 
 				//Set Fock
-				outfile->Printf("\n ------ F rotated to iao ------ \n");
-				F_iao->print();
+				outfile->Printf("\n ------ F rotated to iao, and truncate to system block ------ \n");
 				SharedMatrix Ftmp = F_iao->get_block(sys, sys);
-				Ftmp->print();
 				Fa_->zero();
-				Fa_->print();
 				Fa_->set_block(sys, sys, Ftmp);
 				Fa_->print();
 
 				//Now ref_wfn_ has been wfn of system (with full basis)!
 				outfile->Printf("\n ****** System wavefunction Set! ****** \n");
 				ref_wfn_->molecule()->print();
-				ref_wfn_->S()->print();
-				ref_wfn_->Ca()->print();
-				ref_wfn_->Fa()->print();
+				//ref_wfn_->S()->print();
+				//ref_wfn_->Ca()->print();
+				//ref_wfn_->Fa()->print();
 			}
 
 			//5. Evaluate G(A + B) and G(A), evaluate and project h A-in-B (function)
-			SharedMatrix Ga(new Matrix("G_sys", nirrep_, nmopi_, nmopi_));
+			SharedMatrix Ga(new Matrix("G_sys", nirrep_, Ca_->rowspi(), Ca_->colspi()));
 			build_G(ref_wfn_, Ca_, Ga, options_, 0); //build G(A)
 			outfile->Printf("\n ------ Building system G(A) ------ \n");
 			Ga->print();
 
-			SharedMatrix Gab(new Matrix("G_all", nirrep_, nmopi_, nmopi_));
+			SharedMatrix Gab(new Matrix("G_all", nirrep_, C_origin->rowspi(), C_origin->colspi()));
 			build_G(ref_wfn_, C_origin, Gab, options_, 0); //build G(A+B)
 			outfile->Printf("\n ------ Building system and environment G(A+B) ------ \n");
 			Gab->print();
