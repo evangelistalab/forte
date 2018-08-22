@@ -35,21 +35,22 @@ if len(sys.argv) == 1:
     p = subprocess.Popen(cmd, stdout=subprocess.PIPE)
     res = p.stdout.readlines()
     if len(res) == 0:
-        print "Could not detect your PSI4 executable.  Please specify its location."
+        print("Could not detect your PSI4 executable.  Please specify its location.")
         exit(1)
     psi4command = res[0][:-1]
 elif len(sys.argv) == 2:
     psi4command = sys.argv[1]
 
-print "Running test using psi4 executable found in:\n%s" % psi4command
+print("Running test using psi4 executable found in:\n%s" % psi4command)
 
 maindir = os.getcwd()
 
 # Run and collect timings from output files
-print "\nRun and collect timings from output files:"
+print("\nRun and collect timings from output files:")
 timing_info = []
 for d in tests:
     os.chdir(d)
+    print("Running test %-s" % (d.upper(),))
     subprocess.call([psi4command])
     timing = open("output.dat").read()
     m = timing_re.search(timing)
@@ -58,9 +59,9 @@ for d in tests:
         timing_info.append((d,m.groups()[0]))
         message =  bcolors.OKGREEN + "PASSED" + bcolors.ENDC + " took " + timing_info[-1][1]
     else:
-        message = bcolors.FAIL + "FAILED" + bcolors.ENDC
+        message = bcolors.FAIL + "FAILED" + bcolors.ENDC + " took " + timing_info[-1][1]
     filler = " " * (66 - len(d))
-    print "        %-s%s%s" % (d.upper(),filler,message)
+    print("        %-s%s%s" % (d.upper(),filler,message))
     os.chdir(maindir)
 
 # Get the current date and time
@@ -69,11 +70,11 @@ now = dt.strftime("%Y-%m-%d-%H:%M")
 output = open("timings-%s.txt" % now,"w+")
 
 # Collect all the timings
-print "\nTimings:"
+print("\nTimings:")
 for nt in timing_info:
     name = nt[0]
     timing = nt[1]
     filler = " " * (64 - len(name))
     str = "%-s%s%s" % (name.upper(),filler,timing)
     output.write(str + "\n")
-    print "        " + str
+    print("        " + str)
