@@ -21,6 +21,7 @@ correlated electrons.
    mospaceinfo
    integrals
    methods/fci
+   methods/dsrg
    programming/index
    aci
    pci
