@@ -27,6 +27,7 @@ class bcolors:
     ENDC = '\033[0m'
 
 timing_re = re.compile(r"Psi4 wall time for execution: (\d+:\d+:\d+.\d+)")
+error_re = re.compile(r"TestComparisonError")
 
 psi4command = ""
 
@@ -54,12 +55,20 @@ for d in tests:
     subprocess.call([psi4command])
     timing = open("output.dat").read()
     m = timing_re.search(timing)
+    m2 = error_re.search(timing)
     message = ""
-    if m:
-        timing_info.append((d,m.groups()[0]))
-        message =  bcolors.OKGREEN + "PASSED" + bcolors.ENDC + " took " + timing_info[-1][1]
+    if m2:
+        if m:
+            timing_info.append((d,m.groups()[0]))
+            message = bcolors.FAIL + "FAILED" + bcolors.ENDC + " took " + timing_info[-1][1]
+        else:
+            message = bcolors.FAIL + "FAILED" + bcolors.ENDC
     else:
-        message = bcolors.FAIL + "FAILED" + bcolors.ENDC + " took " + timing_info[-1][1]
+        if m:
+            timing_info.append((d,m.groups()[0]))
+            message =  bcolors.OKGREEN + "PASSED" + bcolors.ENDC + " took " + timing_info[-1][1]
+        else:
+            message = bcolors.FAIL + "FAILED" + bcolors.ENDC + " took " + timing_info[-1][1]
     filler = " " * (66 - len(d))
     print("        %-s%s%s" % (d.upper(),filler,message))
     os.chdir(maindir)

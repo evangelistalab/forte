@@ -16,6 +16,7 @@ units bohr
 set {
   basis 6-311G
   scf_type pk
+  docc [2,0,0,0,0,1,0,0]
   e_convergence 12
 }
 
