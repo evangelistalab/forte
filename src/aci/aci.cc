@@ -3350,12 +3350,28 @@ void AdaptiveCI::spin_analysis() {
     // Now form the spin correlation
     SharedMatrix spin_corr(new Matrix("Spin Correlation", nact, nact));
     SharedMatrix spin_fluct(new Matrix("Spin Fluctuation", nact, nact));
+    SharedMatrix spin_z(new Matrix("Spin-z Correlation", nact, nact));
 
     std::vector<double> l1a(L1aT.data());
     std::vector<double> l1b(L1bT.data());
     std::vector<double> l2aa(L2aaT.data());
     std::vector<double> l2ab(L2abT.data());
     std::vector<double> l2bb(L2bbT.data());
+    for (int i = 0; i < nact; ++i) {
+        for (int j = 0; j < nact; ++j) {
+            double value = ( l2aa[i * nact3 + j * nact2 + i * nact + j] +
+                                    l2bb[i * nact3 + j * nact2 + i * nact + j] -
+                                    l2ab[i * nact3 + j * nact2 + i * nact + j] -
+                                    l2ab[j * nact3 + i * nact2 + j * nact + i] );
+            if( i == j ){
+                value += ( l1a[nact * i + j] + l1b[nact * i + j] );
+            }
+
+            value +=  (l1a[nact*i +i] -  l1b[nact*i +i]) * (l1a[nact*j +j] -  l1b[nact*j +j]); 
+
+            spin_z->set(i,j,value); 
+        }
+    }
 
     for (int i = 0; i < nact; ++i) {
         for (int j = 0; j < nact; ++j) {
@@ -3380,8 +3396,9 @@ void AdaptiveCI::spin_analysis() {
         }
     }
     outfile->Printf("\n");
-    spin_corr->print();
+   // spin_corr->print();
     spin_fluct->print();
+    spin_z->print();
     SharedMatrix spin_evecs(new Matrix(nact, nact));
     SharedVector spin_evals(new Vector(nact));
     SharedMatrix spin_evecs2(new Matrix(nact, nact));
