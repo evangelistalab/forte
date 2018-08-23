@@ -26,8 +26,8 @@
  * @END LICENSE
  */
 
-#ifndef _embedding_h_
-#define _embedding_h_
+#ifndef _ownscf_h_
+#define _ownscf_h_
 
 #include "psi4/libmints/molecule.h"
 #include "psi4/libmints/wavefunction.h"
@@ -48,38 +48,38 @@ namespace psi {
 
 namespace forte {
 
-	void set_EMBEDDING_options(ForteOptions& foptions);
+	void set_SCF_options(ForteOptions& foptions);
 
 /**
- * @brief The Embedding class
+ * @brief The OwnSCF class
  * Computes embedding excitation with iao
  */
-class Embedding : public Wavefunction {
+class OwnSCF : public Wavefunction {
   public:
     // => Constructor <= //
-    Embedding(SharedWavefunction ref_wfn, Options& options, std::shared_ptr<ForteIntegrals> ints,
-              std::shared_ptr<MOSpaceInfo> mo_space_info);
+    OwnSCF(SharedWavefunction ref_wfn, Options& options, std::shared_ptr<ForteIntegrals> ints,
+                  std::shared_ptr<MOSpaceInfo> mo_space_info);
 
-    ~Embedding();
+    ~OwnSCF();
 
     double compute_energy();
 
   private:
     void startup();
 
-    double do_env(SharedWavefunction wfn, SharedMatrix h, Options& options);
-
-    double do_sys(SharedWavefunction wfn, SharedMatrix h, Options& options);
-
-    std::map<std::string, SharedMatrix> localize(SharedWavefunction wfn, Options& options);
-
     std::shared_ptr<MOSpaceInfo> mo_space_info_;
 
     std::shared_ptr<ForteIntegrals> ints_;
 
     SharedWavefunction ref_wfn_;
-};
-} // namespace forte
-} // namespace psi
 
-#endif // _embedding_h_
+	double E_conv_;
+
+	double D_conv_;
+
+	int Maxcyc_;
+};
+}
+} // End Namespaces
+
+#endif // _ownscf_h_

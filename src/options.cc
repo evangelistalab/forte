@@ -30,6 +30,8 @@
 #include "avas.h"
 #include "ci-no/ci-no.h"
 #include "ci-no/mrci-no.h"
+#include "embedding.h"
+#include "ownscf.h"
 #include "fci/fci_solver.h"
 #include "fci/fci.h"
 #include "fci_mo.h"
@@ -57,6 +59,8 @@ void forte_options(std::string name, ForteOptions& foptions) {
     set_FCI_MO_options(foptions);
     set_DSRG_options(foptions);
     set_DWMS_options(foptions);
+    set_EMBEDDING_options(foptions);
+    set_SCF_options(foptions);
 
     // General options
 

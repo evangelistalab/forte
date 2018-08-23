@@ -13,14 +13,82 @@ H   1.680398  -0.373741   0.758561
 symmetry c1
 }
 
+molecule water_sys{
+0 1
+O  -1.551007  -0.114520   0.000000
+H  -1.934259   0.762503   0.000000
+H  -0.599677   0.040712   0.000000
+symmetry c1
+}
+
+#****** Calculate environment method ******
+activate(water_dimer)
 set {
   basis         sto-3g
   scf_type      pk
   e_convergence 10
 }
 
+#Test results/ calculate other env method here, dft, for example
 set forte {
-  job_type Embedding
+  job_type ownscf
 }
 
-energy('forte')
+E, ori_wfn = energy('forte', return_wfn=True)
+
+# ****** Create embedded system wfn ******
+set forte {
+  job_type Embedding
+  SYS_DOCC 5
+}
+
+E_test, wfn_mod = energy('forte', ref_wfn=ori_wfn, return_wfn=True)
+
+activate(water_sys)
+E_sys_ref, wfn_sys = energy('scf', return_wfn=True)
+
+# ****** Set modified(embedded) matrices ******
+wfn_sys.Ca().print_out()
+wfn_mod.Ca().print_out()
+
+Ca_sys = wfn_sys.Ca()
+Ca_mod = wfn_mod.Ca()
+Ca_sys = Ca_mod
+
+wfn_sys.Ca().print_out()
+
+Fa_sys = wfn_sys.Fa()
+Fa_mod = wfn_mod.Fa()
+Fa_sys = Fa_mod
+
+Da_sys = wfn_sys.Da()
+Da_mod = wfn_mod.Da()
+Da_sys = Da_mod
+
+H_sys = wfn_sys.H()
+H_mod = wfn_mod.H()
+H_sys = H_mod
+
+# ****** Calculate cheap system method ******
+set forte {
+  job_type ownscf
+}
+
+E_cheap_sys = energy('forte')
+
+# ****** Calculate expensive system method ******
+set forte {
+  job_type             active-dsrgpt2
+  frozen_docc          [0]
+  rotate_mos           [1,1,5]
+  restricted_docc      [4]
+  active               [3]
+  dsrg_s               0.5
+  cas_type             cas
+  fcimo_actv_type      full
+  nrootpi              [3]
+  d_convergence        10
+}
+
+E_exp_sys, wfn_fin = energy('forte', ref_wfn=wfn_sys, return_wfn=True)
+
