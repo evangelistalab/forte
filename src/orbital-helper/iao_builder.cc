@@ -369,7 +369,7 @@ std::vector<std::string> IAOBuilder::print_IAO(SharedMatrix A_, int nmin, int nb
     //    iao_inds.push_back(ind);
     // }
     //cube.compute_orbitals(A_nbf, iao_inds,iao_labs, "iao");
-     
+	outfile->Printf("\n Hello World #1.3 \n");
     std::vector<std::string> duplicates;
     int basis_conts_size =  all_basis_conts.size();
     int all_iao_size = all_iao_contributions.size();
@@ -397,9 +397,12 @@ std::vector<std::string> IAOBuilder::print_IAO(SharedMatrix A_, int nmin, int nb
   	    }
     }
 
+	outfile->Printf("\n Hello World #1.4 \n");
     std::sort(iao_sum.begin(),iao_sum.end());
     int iao_sum_size = iao_sum.size();
+	outfile->Printf("\n Hello World #1.4.1 \n");
     for(int i = 0; i < nmin; ++i){
+	outfile->Printf("\n Hello World #1.4.1.1 \n");
 	std::vector<std::tuple<double,int,std::string>> iao_max_contributions;
     double a = 0.0;
 	for(int j = 0; j < iao_sum_size; ++j){
@@ -414,17 +417,20 @@ std::vector<std::string> IAOBuilder::print_IAO(SharedMatrix A_, int nmin, int nb
 	   else{}
         //outfile->Printf("Saved Tuple: (%d,%.2f,%s)\n",iao_sum[i].get<0>(),iao_sum[i].get<1>(),iao_sum[i].get<2>().c_str());
 	}
+	outfile->Printf("\n Hello World #1.4.1.2 \n");
 	std::sort(iao_max_contributions.begin(),iao_max_contributions.end());
+	outfile->Printf("\n Hello World #1.4.1.3 \n");
 	std::reverse(iao_max_contributions.begin(),iao_max_contributions.end());
+	outfile->Printf("\n Hello World #1.4.1.4 \n");
 	outfile->Printf("IAO%d -> %s(%.2f) \n", std::get<1>(iao_max_contributions[0]), std::get<2>(iao_max_contributions[0]).c_str(),std::get<0>(iao_max_contributions[0]));
 	iao_labs.push_back(std::get<2>(iao_max_contributions[0]).c_str());
     }
-    
+	outfile->Printf("\n Hello World #1.5 \n");
     for (int ind = 0; ind < nmin ; ++ind){
         iao_inds.push_back(ind);
      }
     cube.compute_orbitals(A_nbf, iao_inds,iao_labs, "iao");
- 
+	outfile->Printf("\n Hello World #1.6 \n");
     //A_->print();
     //A_nbf->print();
     return iao_labs;

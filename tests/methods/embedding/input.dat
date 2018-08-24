@@ -29,12 +29,7 @@ set {
   e_convergence 10
 }
 
-#Test results/ calculate other env method here, dft, for example
-set forte {
-  job_type ownscf
-}
-
-E, ori_wfn = energy('forte', return_wfn=True)
+E, ori_wfn = energy('scf', return_wfn=True)
 
 # ****** Create embedded system wfn ******
 set forte {
@@ -48,33 +43,33 @@ activate(water_sys)
 E_sys_ref, wfn_sys = energy('scf', return_wfn=True)
 
 # ****** Set modified(embedded) matrices ******
-wfn_sys.Ca().print_out()
-wfn_mod.Ca().print_out()
-
 Ca_sys = wfn_sys.Ca()
 Ca_mod = wfn_mod.Ca()
-Ca_sys = Ca_mod
-
-wfn_sys.Ca().print_out()
+Ca_sys.copy(Ca_mod)
 
 Fa_sys = wfn_sys.Fa()
 Fa_mod = wfn_mod.Fa()
-Fa_sys = Fa_mod
+Fa_sys.copy(Fa_mod)
 
 Da_sys = wfn_sys.Da()
 Da_mod = wfn_mod.Da()
-Da_sys = Da_mod
+Da_sys.copy(Da_mod)
 
 H_sys = wfn_sys.H()
 H_mod = wfn_mod.H()
-H_sys = H_mod
+H_sys.copy(H_mod)
+
+S_sys = wfn_sys.S()
+S_mod = wfn_mod.S()
+S_sys.copy(S_mod)
 
 # ****** Calculate cheap system method ******
 set forte {
   job_type ownscf
+#  INTEGRAL_METHOD mints
 }
 
-E_cheap_sys = energy('forte')
+E_cheap_sys, wfn_sys_ready = energy('forte', ref_wfn=wfn_sys, return_wfn=True)
 
 # ****** Calculate expensive system method ******
 set forte {
@@ -90,5 +85,5 @@ set forte {
   d_convergence        10
 }
 
-E_exp_sys, wfn_fin = energy('forte', ref_wfn=wfn_sys, return_wfn=True)
+E_exp_sys, wfn_fin = energy('forte', ref_wfn=wfn_sys_ready, return_wfn=True)
 

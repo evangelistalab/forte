@@ -315,25 +315,40 @@ std::map<std::string, SharedMatrix> Embedding::localize(SharedWavefunction wfn, 
         std::map<std::string, SharedMatrix> ret = iaobd->build_iaos();
         outfile->Printf("\n ------ IAO coeffs! ------ \n");
         ret["A"]->print();
-        outfile->Printf("\n ------ IAO rotation matrix U ------ \n");
+        outfile->Printf("\n ------ IAO rotation matrix U automate ------ \n");
         ret["U"]->print();
+		outfile->Printf("\n ------ IAO rotation matrix U manual ------ \n");
+		SharedMatrix Ctmp((new Matrix("Saved Coeffs", nirrep, nmopi, nmopi)));
+		Ctmp->copy(wfn->Ca());
+		Ctmp->general_invert();
+		SharedMatrix U = Matrix::doublet(Ctmp, ret["A"], false, false);
+		U->print();
+		//U->general_invert();
+		//U->print();
 
         SharedMatrix Cocc = build_Cocc(wfn->Ca(), nirrep, nmopi, noccpi);
         SharedMatrix Focc = build_Focc(wfn->Fa(), nirrep, nmopi, noccpi);
         std::vector<int> ranges = {};
         std::map<std::string, SharedMatrix> ret_loc = iaobd->localize(Cocc, Focc, ranges);
-        // outfile->Printf("iao build C localized\n");
-        // ret_loc["L_local"]->print();
-        // outfile->Printf("iao build localized charge matrix \n");
-        // ret_loc["Q"]->print();
+        outfile->Printf("iao build C occ\n");
+        ret_loc["L"]->print();
+        //outfile->Printf("iao build localized charge matrix \n");
+        //ret_loc["Q"]->print();
         outfile->Printf("\n ------ IAO rotation matrix U (localizer) ------ \n");
         ret_loc["U"]->print();
 
-        std::vector<std::string> iaolabel =
-            iaobd->print_IAO(ret["A"], ret_loc["U"]->colspi()[0], wfn->basisset()->nbf(), wfn);
+		SharedMatrix C_loc = Matrix::doublet(wfn->Ca(), ret_loc["U"]);
+		outfile->Printf("iao build C all\n");
+		C_loc->print();
 
+		outfile->Printf("\n Hello World #1 \n");
+        std::vector<std::string> iaolabel =
+            iaobd->print_IAO(C_loc, ret_loc["U"]->colspi()[0], wfn->basisset()->nbf(), wfn);
+
+		outfile->Printf("\n Hello World #2 \n");
         int sizelab = iaolabel.size();
         std::vector<int> index_label = {};
+		outfile->Printf("Hello World #3");
         for (int i = 0; i < sizelab; ++i) {
             std::string tmps = iaolabel[i];
             char tmp = tmps.at(0);
@@ -342,15 +357,17 @@ std::map<std::string, SharedMatrix> Embedding::localize(SharedWavefunction wfn, 
             outfile->Printf("\n IAO orbital: %s, Atom number %d \n", tmps.c_str(), tmpint);
             index_label.push_back(tmpint);
         }
+		outfile->Printf("Hello World #4");
 
         SharedMatrix Ind(new Matrix("Index Matrix", nirrep, nmopi, nmopi));
         for (int i = 0; i < nmopi[0]; ++i) {
             Ind->set(0, i, i, index_label[i]);
         }
 
+		outfile->Printf("Hello World #5");
         ret_loc["I"] = Ind;
-        ret_loc["IAO"] = ret["A"];
-        ret_loc["Trans"] = ret["U"];
+        ret_loc["IAO"] = C_loc;
+        ret_loc["Trans"] = U;
 
         return ret_loc;
     }
@@ -419,13 +436,13 @@ double Embedding::compute_energy() {
     outfile->Printf("\n ****** Setting up system wavefunction ****** \n");
 
     // rotate S
-    SharedMatrix S_iao = Matrix::triplet(Loc["Trans"], S_origin, Loc["Trans"], true, false, false);
-
+    SharedMatrix S_iao = Matrix::triplet(Loc["U"], S_origin, Loc["U"], true, false, false);
+	
     // rotate h
-    SharedMatrix h_iao = Matrix::triplet(Loc["Trans"], H_origin, Loc["Trans"], true, false, false);
+    SharedMatrix h_iao = Matrix::triplet(Loc["U"], H_origin, Loc["U"], true, false, false);
 
     // rotate F
-    SharedMatrix F_iao = Matrix::triplet(Loc["Trans"], Fa_origin, Loc["Trans"], true, false, false);
+    SharedMatrix F_iao = Matrix::triplet(Loc["U"], Fa_origin, Loc["U"], true, false, false);
 
     // set molecule
     //(*molecule_) = *mol_sys;
@@ -449,6 +466,8 @@ double Embedding::compute_energy() {
     Dimension docc_sys_pi = doccpi_;
     docc_sys_pi[0] = options_.get_int("SYS_DOCC");
 
+	outfile->Printf(" ------ H IAO origin ------ \n");
+	h_iao->print();
     SharedMatrix h_sys = h_iao;
     if (options_.get_str("SYSTEM_MATRIX") ==
         "SYS") { // Use small matrix, truncate every matrix to sys,sys block
@@ -489,7 +508,6 @@ double Embedding::compute_energy() {
         outfile->Printf("Number of system occupied orbital: %d", ref_wfn_->doccpi()[0]);
         outfile->Printf("Size of calculation matrix: %d", ref_wfn_->nmopi()[0]);
 
-        // Test all matrix here, should be 7*7!!! Known problem here.
     }
 
     if (options_.get_str("SYSTEM_MATRIX") ==
@@ -567,7 +585,7 @@ double Embedding::compute_energy() {
     outfile->Printf("\n ------ Building system and environment G(A+B) ------ \n");
     Gab->print();
 
-    SharedMatrix C_iao_all = Matrix::doublet(C_origin, Loc["Trans"], false, false);
+    SharedMatrix C_iao_all = Matrix::doublet(C_origin, Loc["U"], false, false);
     SharedMatrix Gab_iao(new Matrix("G_all_rotate", nirrep_, nmopi_, nmopi_));
     outfile->Printf("\n ------ Checkpoint: iao G(A+B), should equal ------ \n");
     build_G(ref_wfn_, C_iao_all, Gab_iao, options_, 0); //build G(A+B) in iao, test whether
@@ -599,8 +617,17 @@ double Embedding::compute_energy() {
 
     SharedMatrix Gab_sys = Gab->get_block(sys, sys);
     outfile->Printf("\n ------ Building H A-in-B ------ \n");
+	outfile->Printf(" ------ H IAO ------ \n");
+	h_iao->print();
+	outfile->Printf(" ------ H IAO sys ------ \n");
+	h_sys->print();
+	outfile->Printf(" ------ G A+B ------ \n");
+	Gab_sys->print();
     h_sys->add(Gab_sys);
+	outfile->Printf(" ------ G A ------ \n");
+	Ga->print();
     h_sys->subtract(Ga); // build h A-in-B !!
+	outfile->Printf(" ------ H IAO sys emb ------ \n");
     h_sys->print();
 
     // 6. Compute (cheap environment method) energy for system A, with h A-in-B

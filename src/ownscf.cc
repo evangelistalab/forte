@@ -203,6 +203,8 @@ double do_HF(SharedWavefunction wfn, SharedMatrix hcore, int nirrep, Dimension n
 
     // HF calculation for environment
     outfile->Printf("\n \n Hartree-Fock SCF calculation for given h_core in embedding \n");
+	outfile->Printf(" The input Hcore is: \n");
+	hcore->print();
 
     Fock->copy(hcore);
 
@@ -223,6 +225,7 @@ double do_HF(SharedWavefunction wfn, SharedMatrix hcore, int nirrep, Dimension n
     double eps = 0.0;
     double E_scf = 0.0;
     double Etmp = 0.0;
+	double Echeck = 0.0;
     SharedMatrix C_star(new Matrix("C*", nirrep, nmopi, nmopi));
     SharedVector epis(new Vector("Eigens", nirrep, nmopi));
     SharedMatrix Fock_uv(new Matrix("Fock uv", nirrep, nmopi, nmopi));
@@ -257,6 +260,7 @@ double do_HF(SharedWavefunction wfn, SharedMatrix hcore, int nirrep, Dimension n
 
         // calculate energy here
         build_D_scf(C_iter, noccpi, D_iter);
+		Echeck = Etmp;
         Etmp = E_scf;
 
         hpF->zero();
@@ -279,11 +283,22 @@ double do_HF(SharedWavefunction wfn, SharedMatrix hcore, int nirrep, Dimension n
 
         Fock->add(hcore);
         Fock->add(G);
+
+		double epsh = fabs(E_scf - Echeck); //check if scf ran into bounce!
+		if (epsh < 100.0*E_conv) {
+			//bouncing! Use average fock of recent two step (Fn+1 + Fn)/2!
+			Fock->add(Fock_uv);
+			Fock->scale(0.5);
+		}
+
         ++count;
     }
     // Write to wfn, modify this for open-shell in the future
+	outfile->Printf("\n !!!!!! SCF calculation ended !!!!!! \n");
+	wfn->Ca()->copy(C_iter);
     wfn->Fa()->copy(Fock_uv);
     wfn->Da()->copy(D_iter);
+	wfn->epsilon_a() = epis;
     // Return SCF energy
     return E_scf;
 }
