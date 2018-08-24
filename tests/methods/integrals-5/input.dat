@@ -15,7 +15,7 @@ units bohr
 
 set {
   basis cc-pVDZ
-  df_basis_scf cc-pVDZ-RI #JKFit
+  df_basis_scf cc-pVDZ-JKFit
   df_basis_mp2 cc-pVDZ-RI
   scf_type df # make sure we use DF in the SCF
   e_convergence 14
