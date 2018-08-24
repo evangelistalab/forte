@@ -2,30 +2,6 @@ language: cpp
 sudo: false
 matrix:
   include:
-#  - os: linux
-#    compiler: gcc
-#    addons: &3
-#      apt:
-#        sources:
-#        - ubuntu-toolchain-r-test
-#        - george-edison55-precise-backports
-#        packages:
-#        - python-numpy
-#        - cmake
-#        - cmake-data
-#        - liblapack-dev
-#        - libhdf5-serial-dev
-#        - g++-4.9
-#        - gcc-4.9
-#        - gfortran-4.9
-#    env:
-#      - CXX_COMPILER='g++-4.9'
-#      - PYTHON_VER='2.7'
-#      - C_COMPILER='gcc-4.9'
-#      - Fortran_COMPILER='gfortran-4.9'
-#      - BUILD_TYPE='release'
-#      - NAME='gcc'
-#      - VERSION='4.9'
   - os: linux
     compiler: clang
     addons: &1
@@ -46,7 +22,8 @@ matrix:
       - Fortran_COMPILER='gfortran'
       - BUILD_TYPE='Debug'
       - NAME='clang'
-      - VERSION='3.6'  - os: linux
+      - VERSION='3.6'
+  - os: linux
     compiler: clang
     addons: &2
       apt:
