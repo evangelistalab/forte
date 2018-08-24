@@ -1,4 +1,4 @@
-#! Generated using commit GITCOMMIT
+#! Test conventional integrals with frozen core and virtuals
 
 import forte
 
@@ -21,14 +21,13 @@ set {
 
 set forte {
   job_type fci
+  int_type conventional
   frozen_docc      [2 ,0 ,0 ,0]
   restricted_docc  [2 ,0 ,0 ,0]
   active           [2 ,2 ,2 ,2]
   e_convergence 12
 }
 
-energy('scf')
-compare_values(refscf, get_variable("CURRENT ENERGY"),10, "SCF energy") #TEST
-
 energy('forte')
+compare_values(refscf, get_variable("SCF TOTAL ENERGY"),10, "SCF energy") #TEST
 compare_values(reffci, get_variable("CURRENT ENERGY"),10, "FCI energy") #TEST

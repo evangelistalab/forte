@@ -226,7 +226,7 @@ void DFIntegrals::gather_integrals() {
     // Finally computes the df integrals
     // Does the timings also
     Timer timer;
-    std::string str = "Computing DF Integrals";
+    std::string str = "Transforming DF Integrals";
     if (print_ > 0) {
         outfile->Printf("\n  %-36s ...", str.c_str());
     }
@@ -234,6 +234,7 @@ void DFIntegrals::gather_integrals() {
     if (print_ > 0) {
         outfile->Printf("...Done.");
         print_timing("density-fitting transformation", timer.get());
+        outfile->Printf("\n");
     }
 
     SharedMatrix Bpq(new Matrix("Bpq", naux, nmo_ * nmo_));

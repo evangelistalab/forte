@@ -1,9 +1,9 @@
-#! Generated using commit GITCOMMIT
+#! Test disk density-fitted integrals with frozen core and virtuals
 
 import forte
 
-refscf = -112.67064846447627
-reffci = -112.744149947609273
+refscf = -112.67042224989703
+reffci = -112.746078217488062
 
 molecule {
 0 1
@@ -15,8 +15,9 @@ units bohr
 
 set {
   basis cc-pVDZ
-  scf_type pk
+  df_basis_scf cc-pVDZ-RI #JKFit
   df_basis_mp2 cc-pVDZ-RI
+  scf_type df # make sure we use DF in the SCF
   e_convergence 14
 }
 
@@ -29,8 +30,6 @@ set forte {
   e_convergence 12
 }
 
-energy('scf')
-compare_values(refscf, get_variable("CURRENT ENERGY"),10, "SCF energy") #TEST
-
 energy('forte')
-compare_values(reffci, get_variable("CURRENT ENERGY"),10, "FCI energy") #TEST
+#compare_values(refscf, get_variable("SCF TOTAL ENERGY"),10, "SCF energy") #TEST
+compare_values(reffci, get_variable("CURRENT ENERGY"),9, "FCI energy") #TEST
