@@ -33,10 +33,13 @@
 /// to matrix factory.
 /// All blockedTensor functions with strings should be placed here
 /// Creates MO SPACES
-#include "ambit/blocked_tensor.h"
-#include "integrals/integrals.h"
 #include <vector>
 #include <tuple>
+
+#include "ambit/blocked_tensor.h"
+#include "psi4/libmints/dimension.h"
+
+#include "integrals/integrals.h"
 
 namespace psi {
 namespace forte {

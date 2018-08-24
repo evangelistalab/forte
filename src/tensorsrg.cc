@@ -35,6 +35,9 @@
 #include "psi4/libmints/molecule.h"
 #include "psi4/libmints/wavefunction.h"
 
+#include "psi4/libpsi4util/PsiOutStream.h"
+#include "psi4/psi4-dec.h"
+
 #include "helpers.h"
 #include "tensorsrg.h"
 
@@ -309,8 +312,6 @@ void TensorSRG::transfer_integrals() {
     });
 
     outfile->Printf("\n  <H> = %24.12f", Esth + molecule()->nuclear_repulsion_energy(ref_wfn_->get_dipole_field_strength()));
-
-    ints_->update_integrals(false);
 }
 }
 } // EndNamespaces

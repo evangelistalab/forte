@@ -531,7 +531,7 @@ std::shared_ptr<FCIIntegrals> MASTER_DSRG::compute_Heff() {
 
     //    if (!eri_df_) {
     //        ints_->set_print(0);
-    //        ForteTimer t_int;
+    //        Timer t_int;
     //        outfile->Printf("\n    %-40s ... ", "Updating integrals");
 
     //        // transfer integrals to ForteIntegrals
@@ -573,9 +573,7 @@ std::shared_ptr<FCIIntegrals> MASTER_DSRG::compute_Heff() {
     //            }
     //        });
 
-    //        ints_->update_integrals(false);
-
-    //        outfile->Printf("Done. Timing %8.3f s", t_int.elapsed());
+    //        outfile->Printf("Done. Timing %8.3f s", t_int.get());
     //        ints_->set_print(print_);
     //    }
 
@@ -596,7 +594,7 @@ void MASTER_DSRG::deGNO_ints(const std::string& name, double& H0, BlockedTensor&
     print_h2("De-Normal-Order DSRG Transformed " + name);
 
     // compute scalar
-    ForteTimer t0;
+    Timer t0;
     outfile->Printf("\n    %-40s ... ", "Computing the scalar term");
 
     // scalar from H1
@@ -615,17 +613,17 @@ void MASTER_DSRG::deGNO_ints(const std::string& name, double& H0, BlockedTensor&
     scalar2 -= H2["xYuV"] * Lambda2_["uVxY"];
 
     H0 += scalar1 + scalar2;
-    outfile->Printf("Done. Timing %8.3f s", t0.elapsed());
+    outfile->Printf("Done. Timing %8.3f s", t0.get());
 
     // compute 1-body term
-    ForteTimer t1;
+    Timer t1;
     outfile->Printf("\n    %-40s ... ", "Computing the 1-body term");
 
     H1["uv"] -= H2["uxvy"] * Gamma1_["yx"];
     H1["uv"] -= H2["uXvY"] * Gamma1_["YX"];
     H1["UV"] -= H2["xUyV"] * Gamma1_["yx"];
     H1["UV"] -= H2["UXVY"] * Gamma1_["YX"];
-    outfile->Printf("Done. Timing %8.3f s", t1.elapsed());
+    outfile->Printf("Done. Timing %8.3f s", t1.get());
 }
 
 void MASTER_DSRG::deGNO_ints(const std::string& name, double& H0, BlockedTensor& H1,
@@ -633,7 +631,7 @@ void MASTER_DSRG::deGNO_ints(const std::string& name, double& H0, BlockedTensor&
     print_h2("De-Normal-Order DSRG Transformed " + name);
 
     // compute scalar
-    ForteTimer t0;
+    Timer t0;
     outfile->Printf("\n    %-40s ... ", "Computing the scalar term");
 
     // scalar from H1
@@ -672,10 +670,10 @@ void MASTER_DSRG::deGNO_ints(const std::string& name, double& H0, BlockedTensor&
     scalar3 -= 0.5 * H3["xYZuVW"] * Gamma1_["ux"] * Gamma1_["VY"] * Gamma1_["WZ"];
 
     H0 += scalar1 + scalar2 + scalar3;
-    outfile->Printf("Done. Timing %8.3f s", t0.elapsed());
+    outfile->Printf("Done. Timing %8.3f s", t0.get());
 
     // compute 1-body term
-    ForteTimer t1;
+    Timer t1;
     outfile->Printf("\n    %-40s ... ", "Computing the 1-body term");
 
     // 1-body from H2
@@ -700,10 +698,10 @@ void MASTER_DSRG::deGNO_ints(const std::string& name, double& H0, BlockedTensor&
     H1["UV"] -= 0.25 * H3["UXYVWZ"] * Lambda2_["WZXY"];
     H1["UV"] -= 0.25 * H3["xyUwzV"] * Lambda2_["wzxy"];
     H1["UV"] -= H3["xUYwVZ"] * Lambda2_["wZxY"];
-    outfile->Printf("Done. Timing %8.3f s", t1.elapsed());
+    outfile->Printf("Done. Timing %8.3f s", t1.get());
 
     // compute 2-body term
-    ForteTimer t2;
+    Timer t2;
     outfile->Printf("\n    %-40s ... ", "Computing the 2-body term");
     H2["xyuv"] -= H3["xyzuvw"] * Gamma1_["wz"];
     H2["xyuv"] -= H3["xyZuvW"] * Gamma1_["WZ"];
@@ -711,7 +709,20 @@ void MASTER_DSRG::deGNO_ints(const std::string& name, double& H0, BlockedTensor&
     H2["xYuV"] -= H3["xzYuwV"] * Gamma1_["wz"];
     H2["XYUV"] -= H3["XYZUVW"] * Gamma1_["WZ"];
     H2["XYUV"] -= H3["zXYwUV"] * Gamma1_["wz"];
-    outfile->Printf("Done. Timing %8.3f s", t2.elapsed());
+    outfile->Printf("Done. Timing %8.3f s", t2.get());
+}
+
+void MASTER_DSRG::fill_three_index_ints(ambit::BlockedTensor T)
+{
+    const auto& block_labels = T.block_labels();
+    for (const std::string& string_block : block_labels) {
+        auto mo_to_index = BTF_->get_mo_to_index();
+        std::vector<size_t> first_index = mo_to_index[string_block.substr(0,1)];
+        std::vector<size_t> second_index = mo_to_index[string_block.substr(1,1)];
+        std::vector<size_t> third_index = mo_to_index[string_block.substr(2,1)];
+        ambit::Tensor block = ints_->three_integral_block(first_index,second_index,third_index);
+        T.block(string_block).copy(block);
+    }
 }
 
 void MASTER_DSRG::rotate_ints_semi_to_origin(const std::string& name, BlockedTensor& H1,
@@ -722,16 +733,16 @@ void MASTER_DSRG::rotate_ints_semi_to_origin(const std::string& name, BlockedTen
     ambit::Tensor Ua = Uactv_.block("aa");
     ambit::Tensor Ub = Uactv_.block("AA");
 
-    ForteTimer timer;
+    Timer timer;
     outfile->Printf("\n    %-40s ... ", "Rotating 1-body term to original basis");
     temp = H1.block("aa").clone(tensor_type_);
     H1.block("aa")("pq") = Ua("pu") * temp("uv") * Ua("qv");
 
     temp = H1.block("AA").clone(tensor_type_);
     H1.block("AA")("PQ") = Ub("PU") * temp("UV") * Ub("QV");
-    outfile->Printf("Done. Timing %8.3f s", timer.elapsed());
+    outfile->Printf("Done. Timing %8.3f s", timer.get());
 
-    timer.reset();
+    Timer timer2;
     outfile->Printf("\n    %-40s ... ", "Rotating 2-body term to original basis");
     temp = H2.block("aaaa").clone(tensor_type_);
     H2.block("aaaa")("pqrs") = Ua("pa") * Ua("qb") * temp("abcd") * Ua("rc") * Ua("sd");
@@ -741,7 +752,7 @@ void MASTER_DSRG::rotate_ints_semi_to_origin(const std::string& name, BlockedTen
 
     temp = H2.block("AAAA").clone(tensor_type_);
     H2.block("AAAA")("PQRS") = Ub("PA") * Ub("QB") * temp("ABCD") * Ub("RC") * Ub("SD");
-    outfile->Printf("Done. Timing %8.3f s", timer.elapsed());
+    outfile->Printf("Done. Timing %8.3f s", timer2.get());
 }
 
 void MASTER_DSRG::rotate_ints_semi_to_origin(const std::string& name, BlockedTensor& H1,
@@ -751,16 +762,16 @@ void MASTER_DSRG::rotate_ints_semi_to_origin(const std::string& name, BlockedTen
     ambit::Tensor Ua = Uactv_.block("aa");
     ambit::Tensor Ub = Uactv_.block("AA");
 
-    ForteTimer timer;
+    Timer timer;
     outfile->Printf("\n    %-40s ... ", "Rotating 1-body term to original basis");
     temp = H1.block("aa").clone(tensor_type_);
     H1.block("aa")("pq") = Ua("pu") * temp("uv") * Ua("qv");
 
     temp = H1.block("AA").clone(tensor_type_);
     H1.block("AA")("PQ") = Ub("PU") * temp("UV") * Ub("QV");
-    outfile->Printf("Done. Timing %8.3f s", timer.elapsed());
+    outfile->Printf("Done. Timing %8.3f s", timer.get());
 
-    timer.reset();
+    Timer timer2;
     outfile->Printf("\n    %-40s ... ", "Rotating 2-body term to original basis");
     temp = H2.block("aaaa").clone(tensor_type_);
     H2.block("aaaa")("pqrs") = Ua("pa") * Ua("qb") * temp("abcd") * Ua("rc") * Ua("sd");
@@ -770,9 +781,9 @@ void MASTER_DSRG::rotate_ints_semi_to_origin(const std::string& name, BlockedTen
 
     temp = H2.block("AAAA").clone(tensor_type_);
     H2.block("AAAA")("PQRS") = Ub("PA") * Ub("QB") * temp("ABCD") * Ub("RC") * Ub("SD");
-    outfile->Printf("Done. Timing %8.3f s", timer.elapsed());
+    outfile->Printf("Done. Timing %8.3f s", timer2.get());
 
-    timer.reset();
+    Timer timer3;
     outfile->Printf("\n    %-40s ... ", "Rotating 3-body to original basis");
     temp = H3.block("aaaaaa").clone(tensor_type_);
     H3.block("aaaaaa")("pqrstu") =
@@ -790,11 +801,11 @@ void MASTER_DSRG::rotate_ints_semi_to_origin(const std::string& name, BlockedTen
     H3.block("AAAAAA")("pqrstu") =
         Ub("pa") * Ub("qb") * Ub("rc") * temp("abcijk") * Ub("si") * Ub("tj") * Ub("uk");
 
-    outfile->Printf("Done. Timing %8.3f s", timer.elapsed());
+    outfile->Printf("Done. Timing %8.3f s", timer3.get());
 }
 
 void MASTER_DSRG::H1_T1_C0(BlockedTensor& H1, BlockedTensor& T1, const double& alpha, double& C0) {
-    ForteTimer timer;
+    Timer timer;
 
     double E = 0.0;
     E += H1["em"] * T1["me"];
@@ -809,13 +820,13 @@ void MASTER_DSRG::H1_T1_C0(BlockedTensor& H1, BlockedTensor& T1, const double& a
     C0 += E;
 
     if (print_ > 2) {
-        outfile->Printf("\n    Time for [H1, T1] -> C0 : %12.3f", timer.elapsed());
+        outfile->Printf("\n    Time for [H1, T1] -> C0 : %12.3f", timer.get());
     }
-    dsrg_time_.add("110", timer.elapsed());
+    dsrg_time_.add("110", timer.get());
 }
 
 void MASTER_DSRG::H1_T2_C0(BlockedTensor& H1, BlockedTensor& T2, const double& alpha, double& C0) {
-    ForteTimer timer;
+    Timer timer;
     BlockedTensor temp;
     double E = 0.0;
 
@@ -840,13 +851,13 @@ void MASTER_DSRG::H1_T2_C0(BlockedTensor& H1, BlockedTensor& T2, const double& a
     C0 += E;
 
     if (print_ > 2) {
-        outfile->Printf("\n    Time for [H1, T2] -> C0 : %12.3f", timer.elapsed());
+        outfile->Printf("\n    Time for [H1, T2] -> C0 : %12.3f", timer.get());
     }
-    dsrg_time_.add("120", timer.elapsed());
+    dsrg_time_.add("120", timer.get());
 }
 
 void MASTER_DSRG::H2_T1_C0(BlockedTensor& H2, BlockedTensor& T1, const double& alpha, double& C0) {
-    ForteTimer timer;
+    Timer timer;
     BlockedTensor temp;
     double E = 0.0;
 
@@ -871,13 +882,13 @@ void MASTER_DSRG::H2_T1_C0(BlockedTensor& H2, BlockedTensor& T1, const double& a
     C0 += E;
 
     if (print_ > 2) {
-        outfile->Printf("\n    Time for [H2, T1] -> C0 : %12.3f", timer.elapsed());
+        outfile->Printf("\n    Time for [H2, T1] -> C0 : %12.3f", timer.get());
     }
-    dsrg_time_.add("210", timer.elapsed());
+    dsrg_time_.add("210", timer.get());
 }
 
 void MASTER_DSRG::H2_T2_C0(BlockedTensor& H2, BlockedTensor& T2, const double& alpha, double& C0) {
-    ForteTimer timer;
+    Timer timer;
 
     // <[Hbar2, T2]> (C_2)^4
     double E = H2["eFmN"] * T2["mNeF"];
@@ -1037,14 +1048,14 @@ void MASTER_DSRG::H2_T2_C0(BlockedTensor& H2, BlockedTensor& T2, const double& a
     C0 += E;
 
     if (print_ > 2) {
-        outfile->Printf("\n    Time for [H2, T2] -> C0 : %12.3f", timer.elapsed());
+        outfile->Printf("\n    Time for [H2, T2] -> C0 : %12.3f", timer.get());
     }
-    dsrg_time_.add("220", timer.elapsed());
+    dsrg_time_.add("220", timer.get());
 }
 
 void MASTER_DSRG::H1_T1_C1(BlockedTensor& H1, BlockedTensor& T1, const double& alpha,
                            BlockedTensor& C1) {
-    ForteTimer timer;
+    Timer timer;
 
     C1["ip"] += alpha * H1["ap"] * T1["ia"];
     C1["qa"] -= alpha * T1["ia"] * H1["qi"];
@@ -1052,9 +1063,9 @@ void MASTER_DSRG::H1_T1_C1(BlockedTensor& H1, BlockedTensor& T1, const double& a
     C1["QA"] -= alpha * T1["IA"] * H1["QI"];
 
     if (print_ > 2) {
-        outfile->Printf("\n    Time for [H1, T1] -> C1 : %12.3f", timer.elapsed());
+        outfile->Printf("\n    Time for [H1, T1] -> C1 : %12.3f", timer.get());
     }
-    dsrg_time_.add("111", timer.elapsed());
+    dsrg_time_.add("111", timer.get());
 }
 
 // void MASTER_DSRG::H1_T1_C1aa(BlockedTensor& H1, BlockedTensor& T1, const double& alpha,
@@ -1104,7 +1115,7 @@ void MASTER_DSRG::H1_T1_C1(BlockedTensor& H1, BlockedTensor& T1, const double& a
 
 void MASTER_DSRG::H1_T2_C1(BlockedTensor& H1, BlockedTensor& T2, const double& alpha,
                            BlockedTensor& C1) {
-    ForteTimer timer;
+    Timer timer;
 
     C1["ia"] += alpha * H1["bm"] * T2["imab"];
     C1["ia"] += alpha * H1["bu"] * Gamma1_["uv"] * T2["ivab"];
@@ -1121,9 +1132,9 @@ void MASTER_DSRG::H1_T2_C1(BlockedTensor& H1, BlockedTensor& T2, const double& a
     C1["IA"] -= alpha * H1["VJ"] * Gamma1_["UV"] * T2["IJAU"];
 
     if (print_ > 2) {
-        outfile->Printf("\n    Time for [H1, T2] -> C1 : %12.3f", timer.elapsed());
+        outfile->Printf("\n    Time for [H1, T2] -> C1 : %12.3f", timer.get());
     }
-    dsrg_time_.add("121", timer.elapsed());
+    dsrg_time_.add("121", timer.get());
 }
 
 // void MASTER_DSRG::H1_T2_C1aa(BlockedTensor& H1, BlockedTensor& T2, const double& alpha,
@@ -1162,7 +1173,7 @@ void MASTER_DSRG::H1_T2_C1(BlockedTensor& H1, BlockedTensor& T2, const double& a
 
 void MASTER_DSRG::H2_T1_C1(BlockedTensor& H2, BlockedTensor& T1, const double& alpha,
                            BlockedTensor& C1) {
-    ForteTimer timer;
+    Timer timer;
 
     C1["qp"] += alpha * T1["ma"] * H2["qapm"];
     C1["qp"] += alpha * T1["xe"] * Gamma1_["yx"] * H2["qepy"];
@@ -1179,9 +1190,9 @@ void MASTER_DSRG::H2_T1_C1(BlockedTensor& H2, BlockedTensor& T1, const double& a
     C1["QP"] -= alpha * T1["MU"] * Gamma1_["UV"] * H2["QVPM"];
 
     if (print_ > 2) {
-        outfile->Printf("\n    Time for [H2, T1] -> C1 : %12.3f", timer.elapsed());
+        outfile->Printf("\n    Time for [H2, T1] -> C1 : %12.3f", timer.get());
     }
-    dsrg_time_.add("211", timer.elapsed());
+    dsrg_time_.add("211", timer.get());
 }
 
 // void MASTER_DSRG::H2_T1_C1aa(BlockedTensor& H2, BlockedTensor& T1, const double& alpha,
@@ -1258,7 +1269,7 @@ void MASTER_DSRG::H2_T1_C1(BlockedTensor& H2, BlockedTensor& T1, const double& a
 
 void MASTER_DSRG::H2_T2_C1(BlockedTensor& H2, BlockedTensor& T2, const double& alpha,
                            BlockedTensor& C1) {
-    ForteTimer timer;
+    Timer timer;
     BlockedTensor temp;
 
     /// max intermediate: a * a * p * p
@@ -1414,14 +1425,14 @@ void MASTER_DSRG::H2_T2_C1(BlockedTensor& H2, BlockedTensor& T2, const double& a
     C1["QS"] -= alpha * temp["MU"] * H2["UQMS"];
 
     if (print_ > 2) {
-        outfile->Printf("\n    Time for [H2, T2] -> C1 : %12.3f", timer.elapsed());
+        outfile->Printf("\n    Time for [H2, T2] -> C1 : %12.3f", timer.get());
     }
-    dsrg_time_.add("221", timer.elapsed());
+    dsrg_time_.add("221", timer.get());
 }
 
 void MASTER_DSRG::H1_T2_C2(BlockedTensor& H1, BlockedTensor& T2, const double& alpha,
                            BlockedTensor& C2) {
-    ForteTimer timer;
+    Timer timer;
 
     C2["ijpb"] += alpha * T2["ijab"] * H1["ap"];
     C2["ijap"] += alpha * T2["ijab"] * H1["bp"];
@@ -1439,14 +1450,14 @@ void MASTER_DSRG::H1_T2_C2(BlockedTensor& H1, BlockedTensor& T2, const double& a
     C2["IQAB"] -= alpha * T2["IJAB"] * H1["QJ"];
 
     if (print_ > 2) {
-        outfile->Printf("\n    Time for [H1, T2] -> C2 : %12.3f", timer.elapsed());
+        outfile->Printf("\n    Time for [H1, T2] -> C2 : %12.3f", timer.get());
     }
-    dsrg_time_.add("122", timer.elapsed());
+    dsrg_time_.add("122", timer.get());
 }
 
 void MASTER_DSRG::H2_T1_C2(BlockedTensor& H2, BlockedTensor& T1, const double& alpha,
                            BlockedTensor& C2) {
-    ForteTimer timer;
+    Timer timer;
 
     C2["irpq"] += alpha * T1["ia"] * H2["arpq"];
     C2["ripq"] += alpha * T1["ia"] * H2["rapq"];
@@ -1464,14 +1475,14 @@ void MASTER_DSRG::H2_T1_C2(BlockedTensor& H2, BlockedTensor& T1, const double& a
     C2["RSPA"] -= alpha * T1["IA"] * H2["RSPI"];
 
     if (print_ > 2) {
-        outfile->Printf("\n    Time for [H2, T1] -> C2 : %12.3f", timer.elapsed());
+        outfile->Printf("\n    Time for [H2, T1] -> C2 : %12.3f", timer.get());
     }
-    dsrg_time_.add("212", timer.elapsed());
+    dsrg_time_.add("212", timer.get());
 }
 
 void MASTER_DSRG::H2_T2_C2(BlockedTensor& H2, BlockedTensor& T2, const double& alpha,
                            BlockedTensor& C2) {
-    ForteTimer timer;
+    Timer timer;
 
     /// max intermediate: g * g * p * p
 
@@ -1580,14 +1591,14 @@ void MASTER_DSRG::H2_T2_C2(BlockedTensor& H2, BlockedTensor& T2, const double& a
     C2["iQaS"] -= alpha * Gamma1_["XY"] * T2["iJaX"] * H2["YQJS"];
 
     if (print_ > 2) {
-        outfile->Printf("\n    Time for [H2, T2] -> C2 : %12.3f", timer.elapsed());
+        outfile->Printf("\n    Time for [H2, T2] -> C2 : %12.3f", timer.get());
     }
-    dsrg_time_.add("222", timer.elapsed());
+    dsrg_time_.add("222", timer.get());
 }
 
 void MASTER_DSRG::H2_T2_C3(BlockedTensor& H2, BlockedTensor& T2, const double& alpha,
                            BlockedTensor& C3, const bool& active_only) {
-    ForteTimer timer;
+    Timer timer;
 
     /// Potentially be as large as p * p * h * g * g * g
 
@@ -1743,9 +1754,9 @@ void MASTER_DSRG::H2_T2_C3(BlockedTensor& H2, BlockedTensor& T2, const double& a
     C3["iSJbPQ"] -= alpha * H2["ASPQ"] * T2["iJbA"];
 
     if (print_ > 2) {
-        outfile->Printf("\n    Time for [H2, T2] -> C3 : %12.3f", timer.elapsed());
+        outfile->Printf("\n    Time for [H2, T2] -> C3 : %12.3f", timer.get());
     }
-    dsrg_time_.add("223", timer.elapsed());
+    dsrg_time_.add("223", timer.get());
 }
 
 bool MASTER_DSRG::check_semi_orbs() {

@@ -1,0 +1,13 @@
+#! Generated using commit GITCOMMIT
+
+import forte
+
+set {
+  basis sto-3g
+}
+
+set forte {
+  job_type documentation
+}
+
+energy('forte')

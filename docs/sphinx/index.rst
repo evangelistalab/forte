@@ -19,6 +19,7 @@ correlated electrons.
    running_forte
    basics
    mospaceinfo
+   integrals
    methods/fci
    programming/index
    aci
@@ -26,6 +27,7 @@ correlated electrons.
    aosubspace
    dsrg-mrpt
    mr-dsrg
+   options
 
 Indices and tables
 ==================

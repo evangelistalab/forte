@@ -36,8 +36,10 @@
 #include "psi4/libmints/matrix.h"
 #include "psi4/libmints/vector.h"
 
+#include "psi4/libpsi4util/PsiOutStream.h"
+
 #include "../blockedtensorfactory.h"
-#include "helpers.h"
+#include "../helpers/printing.h"
 #include "semi_canonicalize.h"
 
 namespace psi {

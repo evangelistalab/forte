@@ -33,6 +33,7 @@
 #include <vector>
 
 #include "psi4/libdiis/diismanager.h"
+#include "psi4/libpsi4util/PsiOutStream.h"
 
 #include "../helpers.h"
 #include "../mini-boost/boost/format.hpp"
@@ -263,7 +264,7 @@ std::vector<std::pair<std::string, double>> MRDSRG::compute_energy_pt2_FdiagV() 
     // start iteration
     do {
         // compute Hbar
-        ForteTimer t_hbar;
+        Timer t_hbar;
         Hbar1_["pq"] = F_["pq"];
         Hbar1_["PQ"] = F_["PQ"];
         Hbar1_["pq"] -= H0th_["pq"];
@@ -297,16 +298,16 @@ std::vector<std::pair<std::string, double>> MRDSRG::compute_energy_pt2_FdiagV() 
         Hbar2_["pQrS"] += O2_["rSpQ"];
         Hbar2_["PQRS"] += O2_["RSPQ"];
 
-        double time_hbar = t_hbar.elapsed();
+        double time_hbar = t_hbar.get();
 
         // compute norms of off-diagonal Hbar
         double Hbar1od = Hbar1od_norm(blocks1);
         double Hbar2od = Hbar2od_norm(blocks2);
 
         // update amplitudes
-        ForteTimer t_amp;
+        Timer t_amp;
         update_t();
-        double time_amp = t_amp.elapsed();
+        double time_amp = t_amp.get();
 
         // copy amplitudes to the big vector
         big_T = copy_amp_diis(T1_, blocks1, T2_, blocks2);
@@ -504,7 +505,7 @@ std::vector<std::pair<std::string, double>> MRDSRG::compute_energy_pt2_FdiagVdia
     // start iteration
     do {
         // compute Hbar
-        ForteTimer t_hbar;
+        Timer t_hbar;
         Hbar1_["pq"] = F_["pq"];
         Hbar1_["PQ"] = F_["PQ"];
         Hbar1_["pq"] -= H0th_["pq"];
@@ -538,16 +539,16 @@ std::vector<std::pair<std::string, double>> MRDSRG::compute_energy_pt2_FdiagVdia
         Hbar2_["pQrS"] += O2_["rSpQ"];
         Hbar2_["PQRS"] += O2_["RSPQ"];
 
-        double time_hbar = t_hbar.elapsed();
+        double time_hbar = t_hbar.get();
 
         // compute norms of off-diagonal Hbar
         double Hbar1od = Hbar1od_norm(blocks1);
         double Hbar2od = Hbar2od_norm(blocks2);
 
         // update amplitudes
-        ForteTimer t_amp;
+        Timer t_amp;
         update_t();
-        double time_amp = t_amp.elapsed();
+        double time_amp = t_amp.get();
 
         // copy amplitudes to the big vector
         big_T = copy_amp_diis(T1_, blocks1, T2_, blocks2);
@@ -711,7 +712,7 @@ std::vector<std::pair<std::string, double>> MRDSRG::compute_energy_pt2_FdiagVdia
         // start iteration
         do {
             // compute Hbar
-            ForteTimer t_hbar;
+            Timer t_hbar;
             Hbar1_["pq"] = C1_["pq"];
             Hbar1_["PQ"] = C1_["PQ"];
             Hbar2_["pqrs"] = C2_["pqrs"];
@@ -739,16 +740,16 @@ std::vector<std::pair<std::string, double>> MRDSRG::compute_energy_pt2_FdiagVdia
             Hbar2_["pQrS"] += O2_["rSpQ"];
             Hbar2_["PQRS"] += O2_["RSPQ"];
 
-            double time_hbar = t_hbar.elapsed();
+            double time_hbar = t_hbar.get();
 
             // compute norms of off-diagonal Hbar
             double Hbar1od = Hbar1od_norm(blocks1);
             double Hbar2od = Hbar2od_norm(blocks2);
 
             // update amplitudes
-            ForteTimer t_amp;
+            Timer t_amp;
             update_t();
-            double time_amp = t_amp.elapsed();
+            double time_amp = t_amp.get();
 
             // copy amplitudes to the big vector
             big_T = copy_amp_diis(T1_, blocks1, T2_, blocks2);
@@ -884,7 +885,7 @@ std::vector<std::pair<std::string, double>> MRDSRG::compute_energy_pt2_Ffull() {
     // start iteration
     do {
         // compute Hbar
-        ForteTimer t_hbar;
+        Timer t_hbar;
         Hbar1_.zero();
         Hbar2_["pqrs"] = V_["pqrs"];
         Hbar2_["pQrS"] = V_["pQrS"];
@@ -914,16 +915,16 @@ std::vector<std::pair<std::string, double>> MRDSRG::compute_energy_pt2_Ffull() {
         Hbar0_ = 2 * C0;
         double Edelta = Hbar0_ - Ecorr;
         Ecorr = Hbar0_;
-        double time_hbar = t_hbar.elapsed();
+        double time_hbar = t_hbar.get();
 
         // compute norms of off-diagonal Hbar
         double Hbar1od = Hbar1od_norm(blocks1);
         double Hbar2od = Hbar2od_norm(blocks2);
 
         // update amplitudes
-        ForteTimer t_amp;
+        Timer t_amp;
         update_t();
-        double time_amp = t_amp.elapsed();
+        double time_amp = t_amp.get();
 
         // copy amplitudes to the big vector
         big_T = copy_amp_diis(T1_, blocks1, T2_, blocks2);
@@ -1040,7 +1041,7 @@ std::vector<std::pair<std::string, double>> MRDSRG::compute_energy_pt2_Ffull() {
     // start iteration
     do {
         // compute Hbar
-        ForteTimer t_hbar;
+        Timer t_hbar;
 
         Hbar1_["pq"] = O1_["pq"];
         Hbar1_["PQ"] = O1_["PQ"];
@@ -1078,16 +1079,16 @@ std::vector<std::pair<std::string, double>> MRDSRG::compute_energy_pt2_Ffull() {
         Hbar0_ = 2 * C0;
         double Edelta = Hbar0_ - Ecorr;
         Ecorr = Hbar0_;
-        double time_hbar = t_hbar.elapsed();
+        double time_hbar = t_hbar.get();
 
         // compute norms of off-diagonal Hbar
         double Hbar1od = Hbar1od_norm(blocks1);
         double Hbar2od = Hbar2od_norm(blocks2);
 
         // update amplitudes
-        ForteTimer t_amp;
+        Timer t_amp;
         update_t();
-        double time_amp = t_amp.elapsed();
+        double time_amp = t_amp.get();
 
         // copy amplitudes to the big vector
         big_T = copy_amp_diis(T1_, blocks1, T2_, blocks2);

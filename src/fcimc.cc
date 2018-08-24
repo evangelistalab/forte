@@ -430,7 +430,7 @@ double FCIQMC::compute_energy() {
     //    %zu",nzerospawn_);
 
     //    outfile->Printf("\n\n  %s: %f s","Adaptive Path-Integral CI (bitset)
-    //    ran in ",t_apici.elapsed());
+    //    ran in ",t_apici.get());
 
     compute_var_energy(walkers);
     outfile->Printf("\n\n  * FCIQMC Variational Energy        = %.12f Eh", Evar_);

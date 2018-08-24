@@ -30,6 +30,10 @@
 #include <numeric>
 #include <vector>
 
+#include "psi4/libpsi4util/PsiOutStream.h"
+#include "psi4/libpsi4util/libpsi4util.h"
+#include "psi4/psi4-dec.h"
+
 #include "../helpers.h"
 #include "fci_vector.h"
 
@@ -37,7 +41,7 @@ namespace psi {
 namespace forte {
 
 void FCIWfn::form_H_diagonal(std::shared_ptr<FCIIntegrals> fci_ints) {
-    ForteTimer t;
+    Timer t;
 
     int wfn_sym = symmetry_;
     int n = ncmo_;
@@ -83,7 +87,7 @@ void FCIWfn::form_H_diagonal(std::shared_ptr<FCIIntegrals> fci_ints) {
 
     } while (std::next_permutation(Ia, Ia + n));
 
-    hdiag_timer += t.elapsed();
+    hdiag_timer += t.get();
     if (print_) {
         outfile->Printf("\n  Timing for Hdiag          = %10.3f s", hdiag_timer);
     }

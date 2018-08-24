@@ -73,17 +73,6 @@ DistDFIntegrals::DistDFIntegrals(psi::Options& options, SharedWavefunction ref_w
 #define omp_get_max_threads() 1
     allocate();
 
-    // Form a correlated mo to mo before I create integrals
-    std::vector<size_t> cmo2mo;
-    for (int h = 0, q = 0; h < nirrep_; ++h) {
-        q += frzcpi_[h]; // skip the frozen core
-        for (int r = 0; r < ncmopi_[h]; ++r) {
-            cmo2mo.push_back(q);
-            q++;
-        }
-        q += frzvpi_[h]; // skip the frozen virtual
-    }
-    cmotomo_ = cmo2mo;
     int my_proc = 0;
 #ifdef HAVE_GA
     my_proc = GA_Nodeid();
@@ -93,18 +82,12 @@ DistDFIntegrals::DistDFIntegrals(psi::Options& options, SharedWavefunction ref_w
     if (my_proc == 0) {
         test_distributed_integrals();
     }
-    // make_diagonal_integrals();
-    if (ncmo_ < nmo_) {
-        freeze_core_orbitals();
-        // Set the new value of the number of orbitals to be used in indexing
-        // routines
-        aptei_idx_ = ncmo_;
-    }
+    freeze_core_orbitals();
 
     outfile->Printf("\n  DistDFIntegrals take %15.8f s", DFInt.get());
 }
 
-DistDFIntegrals::~DistDFIntegrals() { deallocate(); }
+DistDFIntegrals::~DistDFIntegrals() { }
 void DistDFIntegrals::test_distributed_integrals() {
     outfile->Printf("\n Computing Density fitted integrals \n");
 
@@ -493,7 +476,7 @@ void DistDFIntegrals::retransform_integrals() {
     outfile->Printf("\n Integrals are about to be computed.");
     gather_integrals();
     outfile->Printf("\n Integrals are about to be updated.");
-    update_integrals();
+    freeze_core_orbitals();
 }
 }
 }

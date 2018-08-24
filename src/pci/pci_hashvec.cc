@@ -506,7 +506,7 @@ void ProjectorCI_HashVec::print_characteristic_function() {
 
 double ProjectorCI_HashVec::compute_energy() {
     timer_on("PCI:Energy");
-    ForteTimer t_apici;
+    Timer t_apici;
 
     // Increase the root counter (ground state = 0)
     current_root_ += 1;
@@ -736,7 +736,7 @@ double ProjectorCI_HashVec::compute_energy() {
     }
 
     outfile->Printf("\n  %s: %f s\n", "Projector-CI (bitset) steps finished in  ",
-                    t_apici.elapsed());
+                    t_apici.get());
 
     timer_on("PCI:<E>end_v");
     if (fast_variational_estimate_) {
@@ -756,7 +756,7 @@ double ProjectorCI_HashVec::compute_energy() {
     outfile->Printf("\n  * 1st order perturbation   Energy     = %18.12f Eh", 1,
                     var_energy - approx_energy_);
 
-    outfile->Printf("\n\n  %s: %f s", "Projector-CI (bitset) ran in  ", t_apici.elapsed());
+    outfile->Printf("\n\n  %s: %f s", "Projector-CI (bitset) ran in  ", t_apici.get());
 
     if (current_root_ < nroot_ - 1) {
         save_wfn(dets_hashvec, C, solutions_);

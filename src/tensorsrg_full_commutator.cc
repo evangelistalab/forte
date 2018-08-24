@@ -28,6 +28,9 @@
 
 #include <cmath>
 
+#include "psi4/libpsi4util/PsiOutStream.h"
+#include "psi4/libpsi4util/libpsi4util.h"
+
 #include "helpers.h"
 #include "tensorsrg.h"
 
@@ -98,21 +101,21 @@ void TensorSRG::full_commutator_A_B_C_SRC_fourth_order(double factor, BlockedTen
 
 void TensorSRG::full_commutator_A1_B1_C0(BlockedTensor& A, BlockedTensor& B, double alpha,
                                          double& C) {
-    ForteTimer t;
+    Timer t;
     C += alpha * A["qi"] * B["iq"];
     C -= alpha * B["qi"] * A["iq"];
     C += alpha * A["QI"] * B["IQ"];
     C -= alpha * B["QI"] * A["IQ"];
 
     if (print_ > 2) {
-        outfile->Printf("\n  Time for [A1,B1] -> C0 : %.4f", t.elapsed());
+        outfile->Printf("\n  Time for [A1,B1] -> C0 : %.4f", t.get());
     }
-    //    time_comm_A1_B1_C0 += t.elapsed();
+    //    time_comm_A1_B1_C0 += t.get();
 }
 
 void TensorSRG::full_commutator_A1_B1_C1(BlockedTensor& A, BlockedTensor& B, double alpha,
                                          BlockedTensor& C) {
-    ForteTimer t;
+    Timer t;
 
     C["qp"] += alpha * A["rp"] * B["qr"];
     C["qp"] -= alpha * B["rp"] * A["qr"];
@@ -121,9 +124,9 @@ void TensorSRG::full_commutator_A1_B1_C1(BlockedTensor& A, BlockedTensor& B, dou
     C["QP"] -= alpha * B["RP"] * A["QR"];
 
     if (print_ > 2) {
-        outfile->Printf("\n  Time for [A1,B1] -> C1 : %.4f", t.elapsed());
+        outfile->Printf("\n  Time for [A1,B1] -> C1 : %.4f", t.get());
     }
-    //    time_comm_A1_B1_C1 += t.elapsed();
+    //    time_comm_A1_B1_C1 += t.get();
 }
 
 void TensorSRG::full_commutator_A1_B2_C0(BlockedTensor& A, BlockedTensor& B, double alpha,
@@ -131,7 +134,7 @@ void TensorSRG::full_commutator_A1_B2_C0(BlockedTensor& A, BlockedTensor& B, dou
 
 void TensorSRG::full_commutator_A1_B2_C1(BlockedTensor& A, BlockedTensor& B, double alpha,
                                          BlockedTensor& C) {
-    ForteTimer t;
+    Timer t;
     C["qp"] += alpha * A["ai"] * B["qipa"];
     C["qp"] -= alpha * A["ia"] * B["qapi"];
     C["qp"] += alpha * A["AI"] * B["qIpA"];
@@ -143,14 +146,14 @@ void TensorSRG::full_commutator_A1_B2_C1(BlockedTensor& A, BlockedTensor& B, dou
     C["QP"] -= alpha * A["IA"] * B["AQIP"];
 
     if (print_ > 2) {
-        outfile->Printf("\n  Time for [A1,B2] -> C1 : %.4f", t.elapsed());
+        outfile->Printf("\n  Time for [A1,B2] -> C1 : %.4f", t.get());
     }
-    time_comm_A1_B2_C1 += t.elapsed();
+    time_comm_A1_B2_C1 += t.get();
 }
 
 void TensorSRG::full_commutator_A1_B2_C2(BlockedTensor& A, BlockedTensor& B, double alpha,
                                          BlockedTensor& C) {
-    ForteTimer t;
+    Timer t;
 
     C["rspq"] += alpha * A["tp"] * B["rstq"];
     C["rspq"] += alpha * A["tq"] * B["rspt"];
@@ -168,14 +171,14 @@ void TensorSRG::full_commutator_A1_B2_C2(BlockedTensor& A, BlockedTensor& B, dou
     C["RSPQ"] -= alpha * A["ST"] * B["RTPQ"];
 
     if (print_ > 2) {
-        outfile->Printf("\n  Time for [A1,B2] -> C2 : %.4f", t.elapsed());
+        outfile->Printf("\n  Time for [A1,B2] -> C2 : %.4f", t.get());
     }
-    time_comm_A1_B2_C2 += t.elapsed();
+    time_comm_A1_B2_C2 += t.get();
 }
 
 void TensorSRG::full_commutator_A2_B2_C0(BlockedTensor& A, BlockedTensor& B, double alpha,
                                          double& C) {
-    ForteTimer t;
+    Timer t;
 
     C += alpha * 0.25 * A["abij"] * B["ijab"];
     C += alpha * 1.0 * A["aBiJ"] * B["iJaB"];
@@ -185,14 +188,14 @@ void TensorSRG::full_commutator_A2_B2_C0(BlockedTensor& A, BlockedTensor& B, dou
     C -= alpha * 0.25 * B["ABIJ"] * A["IJAB"];
 
     if (print_ > 2) {
-        outfile->Printf("\n  Time for [A2,B2] -> C0 : %.4f", t.elapsed());
+        outfile->Printf("\n  Time for [A2,B2] -> C0 : %.4f", t.get());
     }
-    time_comm_A2_B2_C0 += t.elapsed();
+    time_comm_A2_B2_C0 += t.get();
 }
 
 void TensorSRG::full_commutator_A2_B2_C1(BlockedTensor& A, BlockedTensor& B, double alpha,
                                          BlockedTensor& C) {
-    ForteTimer t;
+    Timer t;
 
     C["qp"] += +0.5 * alpha * A["ijap"] * B["aqij"];
     C["qp"] -= +0.5 * alpha * B["ijap"] * A["aqij"];
@@ -218,14 +221,14 @@ void TensorSRG::full_commutator_A2_B2_C1(BlockedTensor& A, BlockedTensor& B, dou
     C["QP"] += +1.0 * alpha * A["aBiP"] * B["iQaB"];
     C["QP"] -= +1.0 * alpha * B["aBiP"] * A["iQaB"];
     if (print_ > 2) {
-        outfile->Printf("\n  Time for [A2,B2] -> C1 : %.4f", t.elapsed());
+        outfile->Printf("\n  Time for [A2,B2] -> C1 : %.4f", t.get());
     }
-    time_comm_A2_B2_C1 += t.elapsed();
+    time_comm_A2_B2_C1 += t.get();
 }
 
 void TensorSRG::full_commutator_A2_B2_C2(BlockedTensor& A, BlockedTensor& B, double alpha,
                                          BlockedTensor& C) {
-    ForteTimer t;
+    Timer t;
 
     // AAAA case (these work only in the single-reference case)
     // Term I
@@ -307,9 +310,9 @@ void TensorSRG::full_commutator_A2_B2_C2(BlockedTensor& A, BlockedTensor& B, dou
     C["RSPQ"] -= alpha * A["iSaQ"] * B["aRiP"];
 
     if (print_ > 2) {
-        outfile->Printf("\n  Time for [A2,B2] -> C2 : %.4f", t.elapsed());
+        outfile->Printf("\n  Time for [A2,B2] -> C2 : %.4f", t.get());
     }
-    time_comm_A2_B2_C2 += t.elapsed();
+    time_comm_A2_B2_C2 += t.get();
 }
 }
 }

@@ -31,7 +31,7 @@
 
 #include "psi4/libpsi4util/process.h"
 #include "psi4/libmints/basisset.h"
-#include "psi4/libmints/basisset.h"
+#include "psi4/libmints/matrix.h"
 #include "psi4/libmints/wavefunction.h"
 #include "psi4/libqt/qt.h"
 #include "psi4/lib3index/dfhelper.h"
@@ -45,54 +45,37 @@
 #endif
 
 #include "../blockedtensorfactory.h"
+#include "../helpers/printing.h"
+#include "../helpers/memory.h"
+
+#include "df_integrals.h"
 
 using namespace ambit;
 namespace psi {
 namespace forte {
-// Class for the DF Integrals
-// Generates DF Integrals.  Freezes Core orbitals, computes integrals, and
-// resorts integrals.  Also computes fock matrix
+
 DFIntegrals::DFIntegrals(psi::Options& options, SharedWavefunction ref_wfn,
-                         IntegralSpinRestriction restricted, IntegralFrozenCore resort_frozen_core,
+                         IntegralSpinRestriction restricted,
                          std::shared_ptr<MOSpaceInfo> mo_space_info)
-    : ForteIntegrals(options, ref_wfn, restricted, resort_frozen_core, mo_space_info) {
+    : ForteIntegrals(options, ref_wfn, restricted, mo_space_info) {
     integral_type_ = DF;
     // If code calls constructor print things
     // But if someone calls retransform integrals do not print it
+    print_info();
+    Timer int_timer;
 
-    wfn_ = ref_wfn;
-
-    outfile->Printf("\n  DFIntegrals overall time");
-    Timer DFInt;
-    allocate();
     int my_proc = 0;
 #ifdef HAVE_GA
     my_proc = GA_Nodeid();
 #endif
     if (my_proc == 0) {
         gather_integrals();
-        make_diagonal_integrals();
-        if (ncmo_ < nmo_) {
-            freeze_core_orbitals();
-            // Set the new value of the number of orbitals to be used in
-            // indexing routines
-            aptei_idx_ = ncmo_;
-        }
+        freeze_core_orbitals();
     }
-    outfile->Printf("\n  DFIntegrals take %15.8f s", DFInt.get());
+    print_timing("computing density-fitted integrals", int_timer.get());
 }
 
-DFIntegrals::~DFIntegrals() { deallocate(); }
-
-void DFIntegrals::allocate() {
-    // Allocate the memory required to store the one-electron integrals
-    // Allocate the memory required to store the two-electron integrals
-    diagonal_aphys_tei_aa = new double[nmo_ * nmo_];
-    diagonal_aphys_tei_ab = new double[nmo_ * nmo_];
-    diagonal_aphys_tei_bb = new double[nmo_ * nmo_];
-
-    // qt_pitzer_ = new int[nmo_];
-}
+DFIntegrals::~DFIntegrals() {}
 
 double DFIntegrals::aptei_aa(size_t p, size_t q, size_t r, size_t s) {
     double vpqrsalphaC = 0.0;
@@ -170,6 +153,12 @@ ambit::Tensor DFIntegrals::three_integral_block(const std::vector<size_t>& A,
     return ReturnTensor;
 }
 
+ambit::Tensor DFIntegrals::three_integral_block_two_index(const std::vector<size_t>&, size_t,
+                                                          const std::vector<size_t>&) {
+    outfile->Printf("\n Oh no! this isn't here");
+    throw PSIEXCEPTION("INT_TYPE=DISKDF");
+}
+
 void DFIntegrals::set_tei(size_t, size_t, size_t, size_t, double, bool, bool) {
     outfile->Printf("\n If you are using this, you are ruining the advantages of DF/CD");
     throw PSIEXCEPTION("Don't use DF/CD if you use set_tei");
@@ -178,7 +167,7 @@ void DFIntegrals::set_tei(size_t, size_t, size_t, size_t, double, bool, bool) {
 void DFIntegrals::gather_integrals() {
 
     if (print_ > 0) {
-        outfile->Printf("\n Computing Density fitted integrals \n");
+        outfile->Printf("\n  Computing Density fitted integrals \n");
     }
 
     std::shared_ptr<BasisSet> primary = wfn_->basisset();
@@ -188,9 +177,10 @@ void DFIntegrals::gather_integrals() {
     size_t naux = auxiliary->nbf();
     nthree_ = naux;
     if (print_ > 0) {
-        outfile->Printf("\n Number of auxiliary basis functions:  %u", naux);
-        outfile->Printf("\n Need %8.6f GB to store DF integrals\n",
-                        (nprim * nprim * naux * sizeof(double) / 1073741824.0));
+        outfile->Printf("\n  Number of auxiliary basis functions:  %u", naux);
+        auto mem_info = to_xb2<double>(nprim * nprim * naux);
+        outfile->Printf("\n  Need %.2f %s to store DF integrals\n", mem_info.first,
+                        mem_info.second.c_str());
     }
 
     Dimension nsopi_ = wfn_->nsopi();
@@ -225,7 +215,7 @@ void DFIntegrals::gather_integrals() {
     // into the C_matrix object
 
     df->add_space("ALL", Ca_ao);
-    
+
     // set_C clears all the orbital spaces, so this creates the space
     // This space creates the total nmo_.
     // This assumes that everything is correlated.
@@ -236,16 +226,18 @@ void DFIntegrals::gather_integrals() {
     // Finally computes the df integrals
     // Does the timings also
     Timer timer;
-    std::string str = "Computing DF Integrals";
+    std::string str = "Transforming DF Integrals";
     if (print_ > 0) {
         outfile->Printf("\n  %-36s ...", str.c_str());
     }
     df->transform();
     if (print_ > 0) {
-        outfile->Printf("...Done. Timing %15.6f s", timer.get());
+        outfile->Printf("...Done.");
+        print_timing("density-fitting transformation", timer.get());
+        outfile->Printf("\n");
     }
 
-    SharedMatrix Bpq(new Matrix("Bpq", naux,nmo_ * nmo_));
+    SharedMatrix Bpq(new Matrix("Bpq", naux, nmo_ * nmo_));
 
     Bpq = df->get_tensor("B");
 
@@ -253,31 +245,10 @@ void DFIntegrals::gather_integrals() {
     ThreeIntegral_ = Bpq->transpose()->clone();
 }
 
-void DFIntegrals::make_diagonal_integrals() {
-    for (size_t p = 0; p < nmo_; ++p) {
-        for (size_t q = 0; q < nmo_; ++q) {
-            diagonal_aphys_tei_aa[p * nmo_ + q] = aptei_aa(p, q, p, q);
-            diagonal_aphys_tei_ab[p * nmo_ + q] = aptei_ab(p, q, p, q);
-            diagonal_aphys_tei_bb[p * nmo_ + q] = aptei_bb(p, q, p, q);
-        }
-    }
-}
-
-void DFIntegrals::deallocate() {
-
-    // Deallocate the memory required to store the one-electron integrals
-    // Allocate the memory required to store the two-electron integrals
-
-    delete[] diagonal_aphys_tei_aa;
-    delete[] diagonal_aphys_tei_ab;
-    delete[] diagonal_aphys_tei_bb;
-    // delete[] qt_pitzer_;
-}
-
 void DFIntegrals::make_fock_matrix(SharedMatrix gamma_aM, SharedMatrix gamma_bM) {
     TensorType tensor_type = ambit::CoreTensor;
     ambit::Tensor ThreeIntegralTensor =
-        //ambit::Tensor::build(tensor_type, "ThreeIndex", {ncmo_, ncmo_, nthree_});
+        // ambit::Tensor::build(tensor_type, "ThreeIndex", {ncmo_, ncmo_, nthree_});
         ambit::Tensor::build(tensor_type, "ThreeIndex", {nthree_, ncmo_, ncmo_});
     ambit::Tensor gamma_a = ambit::Tensor::build(tensor_type, "Gamma_a", {ncmo_, ncmo_});
     ambit::Tensor gamma_b = ambit::Tensor::build(tensor_type, "Gamma_b", {ncmo_, ncmo_});
@@ -301,11 +272,11 @@ void DFIntegrals::make_fock_matrix(SharedMatrix gamma_aM, SharedMatrix gamma_bM)
         [&](const std::vector<size_t>& i, double& value) { value = gamma_bM->get(i[0], i[1]); });
 
     fock_a.iterate([&](const std::vector<size_t>& i, double& value) {
-        value = one_electron_integrals_a[i[0] * aptei_idx_ + i[1]];
+        value = one_electron_integrals_a_[i[0] * aptei_idx_ + i[1]];
     });
 
     fock_b.iterate([&](const std::vector<size_t>& i, double& value) {
-        value = one_electron_integrals_b[i[0] * aptei_idx_ + i[1]];
+        value = one_electron_integrals_b_[i[0] * aptei_idx_ + i[1]];
     });
 
     /// Changing the Q_pr * Q_qs  to Q_rp * Q_sq for convience for reading
@@ -323,10 +294,10 @@ void DFIntegrals::make_fock_matrix(SharedMatrix gamma_aM, SharedMatrix gamma_bM)
     fock_b("p,q") += ThreeIntegralTensor("Q,p,q") * ThreeIntegralTensor("Q,r,s") * gamma_a("r,s");
 
     fock_a.iterate([&](const std::vector<size_t>& i, double& value) {
-        fock_matrix_a[i[0] * aptei_idx_ + i[1]] = value;
+        fock_matrix_a_[i[0] * aptei_idx_ + i[1]] = value;
     });
     fock_b.iterate([&](const std::vector<size_t>& i, double& value) {
-        fock_matrix_b[i[0] * aptei_idx_ + i[1]] = value;
+        fock_matrix_b_[i[0] * aptei_idx_ + i[1]] = value;
     });
 
     /// Form with JK builders
@@ -352,42 +323,20 @@ void DFIntegrals::resort_three(SharedMatrix& threeint, std::vector<size_t>& map)
 
     // This copies the resorted integrals and the data is changed to the sorted
     // matrix
-    if (print_ > 0) {
-        outfile->Printf("\n Done with resorting");
-    }
     threeint->copy(temp_threeint);
 }
 
 void DFIntegrals::resort_integrals_after_freezing() {
-    Timer resort_integrals;
+    Timer timer_resort;
     if (print_ > 0) {
         outfile->Printf("\n  Resorting integrals after freezing core.");
     }
 
-    // Create an array that maps the CMOs to the MOs (cmo2mo).
-    std::vector<size_t> cmo2mo;
-    for (int h = 0, q = 0; h < nirrep_; ++h) {
-        q += frzcpi_[h]; // skip the frozen core
-        for (int r = 0; r < ncmopi_[h]; ++r) {
-            cmo2mo.push_back(q);
-            q++;
-        }
-        q += frzvpi_[h]; // skip the frozen virtual
-    }
-    cmotomo_ = (cmo2mo);
-
-    // Resort the integrals
-    resort_two(one_electron_integrals_a, cmo2mo);
-    resort_two(one_electron_integrals_b, cmo2mo);
-    resort_two(diagonal_aphys_tei_aa, cmo2mo);
-    resort_two(diagonal_aphys_tei_ab, cmo2mo);
-    resort_two(diagonal_aphys_tei_bb, cmo2mo);
-
-    resort_three(ThreeIntegral_, cmo2mo);
+    resort_three(ThreeIntegral_, cmotomo_);
 
     if (print_ > 0) {
-        outfile->Printf("\n Resorting integrals takes   %8.8fs", resort_integrals.get());
+        print_timing("resorting DF integrals", timer_resort.get());
     }
 }
-}
-}
+} // namespace forte
+} // namespace psi

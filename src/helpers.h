@@ -175,14 +175,6 @@ Matrix tensor_to_matrix(ambit::Tensor t, Dimension dims);
 SharedMatrix tensor_to_matrix(ambit::Tensor t);
 
 /**
- * @brief print_method_banner Print a banner
- * @param text A vector of strings to print in the banner. Each string is a
- * line.
- * @param separator A string The separator used in the banner (defalut = "-").
- */
-void print_method_banner(const std::vector<std::string>& text, const std::string& separator = "-");
-
-/**
  * @brief view_modified_orbitals Write orbitals using molden
  * @param Ca  The Ca matrix to be viewed with MOLDEN
  * @param diag_F -> The Orbital energies (diagonal elements of Fock operator)
@@ -272,24 +264,6 @@ void apply_permutation_in_place(
         }
     }
 }
-
-/**
-  * @brief A timer class
-  */
-class ForteTimer {
-  public:
-    ForteTimer();
-
-    /// Return the elapsed time in seconds
-    double elapsed();
-
-    /// Reset timer to now
-    void reset() { t_start_ = std::chrono::high_resolution_clock::now(); }
-
-  private:
-    std::chrono::high_resolution_clock::time_point t_start_;
-    std::chrono::high_resolution_clock::time_point t_end_;
-};
 
 /**
   * @brief A timer class

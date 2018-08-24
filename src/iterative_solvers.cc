@@ -29,6 +29,7 @@
 #include <cmath>
 
 #include "psi4/libpsi4util/PsiOutStream.h"
+#include "psi4/libpsi4util/libpsi4util.h"
 
 #include "helpers.h"
 #include "iterative_solvers.h"
@@ -147,7 +148,7 @@ SolverStatus DavidsonLiuSolver::update() {
 
     PRINT_VARS("update")
 
-    ForteTimer t_davidson;
+    Timer t_davidson;
 
     // form and diagonalize mini-matrix
     G->zero();
@@ -205,7 +206,7 @@ SolverStatus DavidsonLiuSolver::update() {
 
     iter_++;
 
-    timing_ += t_davidson.elapsed();
+    timing_ += t_davidson.get();
 
     return SolverStatus::NotConverged;
 }

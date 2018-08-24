@@ -35,7 +35,7 @@
 
 #include "../fci/fci.h"
 #include "../fci_mo.h"
-#include "../helpers.h"
+#include "../helpers/printing.h"
 #include "../semi_canonicalize.h"
 #include "../mini-boost/boost/format.hpp"
 #include "../mp2_nos.h"
@@ -180,9 +180,11 @@ void MRDSRG::build_ints() {
 
     // prepare two-electron integrals or three-index B
     if (eri_df_) {
-        B_.iterate([&](const std::vector<size_t>& i, const std::vector<SpinType>&, double& value) {
-            value = ints_->three_integral(i[0], i[1], i[2]);
-        });
+        fill_three_index_ints(B_);
+
+//        B_.iterate([&](const std::vector<size_t>& i, const std::vector<SpinType>&, double& value) {
+////            value = ints_->three_integral(i[0], i[1], i[2]);
+//        });
     } else {
         V_.iterate(
             [&](const std::vector<size_t>& i, const std::vector<SpinType>& spin, double& value) {
@@ -956,7 +958,7 @@ double MRDSRG::compute_energy_sa() {
 //    if (std::fabs(Etest - Eref_ - Hbar0_) > 100.0 * options_.get_double("E_CONVERGENCE")) {
 //        throw PSIEXCEPTION("De-normal-odering failed.");
 //    } else {
-//        ints_->update_integrals(false);
+//    //    ints_->update_integrals(false); <- this should not be here
 //    }
 //}
 
@@ -980,7 +982,6 @@ void MRDSRG::reset_ints(BlockedTensor& H, BlockedTensor& V) {
                 ints_->set_tei(i[0], i[1], i[2], i[3], value, false, false);
             }
         });
-    ints_->update_integrals(false);
 }
 
 std::vector<std::vector<double>> MRDSRG::diagonalize_Fock_diagblocks(BlockedTensor& U) {

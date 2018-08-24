@@ -1,0 +1,34 @@
+#! Test cholesky integrals (loose tolerance) with frozen core and virtuals
+
+import forte
+
+refscf = -112.67064846447627
+reffci = -112.744470816610502
+
+molecule {
+0 1
+C
+O 1 R
+R = 2.5
+units bohr
+}
+
+set {
+  basis cc-pVDZ
+  scf_type pk
+  e_convergence 14
+}
+
+set forte {
+  job_type fci
+  int_type cholesky
+  cholesky_tolerance 1.0e-6
+  frozen_docc      [2 ,0 ,0 ,0]
+  restricted_docc  [2 ,0 ,0 ,0]
+  active           [2 ,2 ,2 ,2]
+  e_convergence 12
+}
+
+energy('forte')
+compare_values(refscf, get_variable("SCF TOTAL ENERGY"),10, "SCF energy") #TEST
+compare_values(reffci, get_variable("CURRENT ENERGY"),10, "FCI energy") #TEST

@@ -30,6 +30,8 @@
 
 #include "psi4/libpsi4util/process.h"
 #include "psi4/libdiis/diismanager.h"
+#include "psi4/libpsi4util/PsiOutStream.h"
+#include "psi4/psi4-dec.h"
 
 #include "tensorsrg.h"
 

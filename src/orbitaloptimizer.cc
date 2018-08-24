@@ -26,7 +26,7 @@
  * @END LICENSE
  */
 
-#include "orbitaloptimizer.h"
+#include "psi4/liboptions/liboptions.h"
 #include "ambit/blocked_tensor.h"
 #include "fci/fci_solver.h"
 #include "helpers.h"
@@ -37,6 +37,10 @@
 #include "psi4/libmints/matrix.h"
 #include "psi4/libqt/qt.h"
 #include "psi4/psifiles.h"
+#include "psi4/libpsi4util/PsiOutStream.h"
+
+#include "orbitaloptimizer.h"
+
 #include "reference.h"
 using namespace psi;
 

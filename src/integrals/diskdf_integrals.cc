@@ -44,6 +44,8 @@
 #endif
 
 #include "../blockedtensorfactory.h"
+#include "../helpers/printing.h"
+#include "diskdf_integrals.h"
 
 using namespace ambit;
 namespace psi {
@@ -51,58 +53,25 @@ namespace forte {
 
 DISKDFIntegrals::DISKDFIntegrals(psi::Options& options, SharedWavefunction ref_wfn,
                                  IntegralSpinRestriction restricted,
-                                 IntegralFrozenCore resort_frozen_core,
                                  std::shared_ptr<MOSpaceInfo> mo_space_info)
-    : ForteIntegrals(options, ref_wfn, restricted, resort_frozen_core, mo_space_info) {
-
-    wfn_ = ref_wfn;
+    : ForteIntegrals(options, ref_wfn, restricted, mo_space_info) {
 
     integral_type_ = DiskDF;
-    outfile->Printf("\n  DISKDFIntegrals overall time");
-    Timer DFInt;
-    allocate();
+    print_info();
+    Timer int_timer;
 
-    // Form a correlated mo to mo before I create integrals
-    std::vector<size_t> cmo2mo;
-    for (int h = 0, q = 0; h < nirrep_; ++h) {
-        q += frzcpi_[h]; // skip the frozen core
-        for (int r = 0; r < ncmopi_[h]; ++r) {
-            cmo2mo.push_back(q);
-            q++;
-        }
-        q += frzvpi_[h]; // skip the frozen virtual
-    }
-    cmotomo_ = cmo2mo;
     int my_proc = 0;
 #ifdef HAVE_GA
     my_proc = GA_Nodeid();
 #endif
-
     if (my_proc == 0) {
         gather_integrals();
-        // make_diagonal_integrals();
-        if (ncmo_ < nmo_) {
-            freeze_core_orbitals();
-            // Set the new value of the number of orbitals to be used in
-            // indexing routines
-            aptei_idx_ = ncmo_;
-        }
-
-        outfile->Printf("\n  DISKDFIntegrals take %15.8f s", DFInt.get());
+        freeze_core_orbitals();
+        print_timing("disk-based density-fitted integrals", int_timer.get());
     }
 }
 
-DISKDFIntegrals::~DISKDFIntegrals() { deallocate(); }
-
-void DISKDFIntegrals::allocate() {
-    // Allocate the memory required to store the one-electron integrals
-    // Allocate the memory required to store the two-electron integrals
-    diagonal_aphys_tei_aa = new double[nmo_ * nmo_];
-    diagonal_aphys_tei_ab = new double[nmo_ * nmo_];
-    diagonal_aphys_tei_bb = new double[nmo_ * nmo_];
-
-    // qt_pitzer_ = new int[nmo_];
-}
+DISKDFIntegrals::~DISKDFIntegrals() {}
 
 double DISKDFIntegrals::aptei_aa(size_t p, size_t q, size_t r, size_t s) {
     size_t pn, qn, rn, sn;
@@ -120,27 +89,27 @@ double DISKDFIntegrals::aptei_aa(size_t p, size_t q, size_t r, size_t s) {
     }
 
     std::vector<size_t> A_range = {0, nthree_};
-    std::vector<size_t> p_range = {pn,pn+1};
-    std::vector<size_t> q_range = {qn,qn+1};
-    std::vector<size_t> r_range = {rn,rn+1};
-    std::vector<size_t> s_range = {sn,sn+1};
+    std::vector<size_t> p_range = {pn, pn + 1};
+    std::vector<size_t> q_range = {qn, qn + 1};
+    std::vector<size_t> r_range = {rn, rn + 1};
+    std::vector<size_t> s_range = {sn, sn + 1};
 
     double vpqrsalphaC = 0.0;
     double vpqrsalphaE = 0.0;
 
-    SharedMatrix B1(new Matrix(1,nthree_));
-    SharedMatrix B2(new Matrix(1,nthree_));
+    SharedMatrix B1(new Matrix(1, nthree_));
+    SharedMatrix B2(new Matrix(1, nthree_));
 
-    df_->fill_tensor("B",B1, A_range, p_range, r_range ); 
-    df_->fill_tensor("B",B2, A_range, q_range, s_range ); 
+    df_->fill_tensor("B", B1, A_range, p_range, r_range);
+    df_->fill_tensor("B", B2, A_range, q_range, s_range);
 
     vpqrsalphaC = B1->vector_dot(B2);
 
     B1->zero();
     B2->zero();
 
-    df_->fill_tensor("B",B1, A_range, p_range, s_range ); 
-    df_->fill_tensor("B",B2, A_range, q_range, r_range ); 
+    df_->fill_tensor("B", B1, A_range, p_range, s_range);
+    df_->fill_tensor("B", B2, A_range, q_range, r_range);
 
     vpqrsalphaE = B1->vector_dot(B2);
 
@@ -161,17 +130,17 @@ double DISKDFIntegrals::aptei_ab(size_t p, size_t q, size_t r, size_t s) {
         sn = s;
     }
     std::vector<size_t> A_range = {0, nthree_};
-    std::vector<size_t> p_range = {pn,pn+1};
-    std::vector<size_t> q_range = {qn,qn+1};
-    std::vector<size_t> r_range = {rn,rn+1};
-    std::vector<size_t> s_range = {sn,sn+1};
+    std::vector<size_t> p_range = {pn, pn + 1};
+    std::vector<size_t> q_range = {qn, qn + 1};
+    std::vector<size_t> r_range = {rn, rn + 1};
+    std::vector<size_t> s_range = {sn, sn + 1};
 
     double vpqrsalphaC = 0.0;
-    SharedMatrix B1(new Matrix(1,nthree_));
-    SharedMatrix B2(new Matrix(1,nthree_));
+    SharedMatrix B1(new Matrix(1, nthree_));
+    SharedMatrix B2(new Matrix(1, nthree_));
 
-    df_->fill_tensor("B",B1, A_range, p_range, r_range ); 
-    df_->fill_tensor("B",B2, A_range, q_range, s_range ); 
+    df_->fill_tensor("B", B1, A_range, p_range, r_range);
+    df_->fill_tensor("B", B2, A_range, q_range, s_range);
 
     vpqrsalphaC = B1->vector_dot(B2);
 
@@ -193,27 +162,27 @@ double DISKDFIntegrals::aptei_bb(size_t p, size_t q, size_t r, size_t s) {
         sn = s;
     }
     std::vector<size_t> A_range = {0, nthree_};
-    std::vector<size_t> p_range = {pn,pn+1};
-    std::vector<size_t> q_range = {qn,qn+1};
-    std::vector<size_t> r_range = {rn,rn+1};
-    std::vector<size_t> s_range = {sn,sn+1};
+    std::vector<size_t> p_range = {pn, pn + 1};
+    std::vector<size_t> q_range = {qn, qn + 1};
+    std::vector<size_t> r_range = {rn, rn + 1};
+    std::vector<size_t> s_range = {sn, sn + 1};
 
     double vpqrsalphaC = 0.0;
     double vpqrsalphaE = 0.0;
 
-    SharedMatrix B1(new Matrix(1,nthree_));
-    SharedMatrix B2(new Matrix(1,nthree_));
+    SharedMatrix B1(new Matrix(1, nthree_));
+    SharedMatrix B2(new Matrix(1, nthree_));
 
-    df_->fill_tensor("B",B1, A_range, p_range, r_range ); 
-    df_->fill_tensor("B",B2, A_range, q_range, s_range ); 
+    df_->fill_tensor("B", B1, A_range, p_range, r_range);
+    df_->fill_tensor("B", B2, A_range, q_range, s_range);
 
     vpqrsalphaC = B1->vector_dot(B2);
 
     B1->zero();
     B2->zero();
 
-    df_->fill_tensor("B",B1, A_range, p_range, s_range ); 
-    df_->fill_tensor("B",B2, A_range, q_range, r_range ); 
+    df_->fill_tensor("B", B1, A_range, p_range, s_range);
+    df_->fill_tensor("B", B2, A_range, q_range, r_range);
 
     vpqrsalphaE = B1->vector_dot(B2);
 
@@ -239,7 +208,7 @@ DISKDFIntegrals::aptei_aa_block(const std::vector<size_t>& p, const std::vector<
         ambit::Tensor::build(tensor_type_, "Return", {p.size(), q.size(), r.size(), s.size()});
     ReturnTensor("p,q,r,s") = ThreeIntpr("A,p,r") * ThreeIntqs("A,q,s");
 
-    /// If p != q != r !=s need to form the Exchane part separately
+    /// If p != q != r !=s need to form the Exchange part separately
     if (r != s) {
         ambit::Tensor ThreeIntpsK =
             ambit::Tensor::build(tensor_type_, "ThreeIntK", {nthree_, p.size(), s.size()});
@@ -308,29 +277,7 @@ ambit::Tensor DISKDFIntegrals::aptei_bb_block(const std::vector<size_t>& p,
     }
     return ReturnTensor;
 }
-double DISKDFIntegrals::three_integral(size_t A, size_t p, size_t q) {
-    size_t pn, qn;
-    if (frzcpi_.sum() > 0 && ncmo_ == aptei_idx_) {
-        pn = cmotomo_[p];
-        qn = cmotomo_[q];
-    } else {
-        pn = p;
-        qn = q;
-    }
-    std::vector<size_t> A_range = {A,A+1};
-    std::vector<size_t> p_range = {pn,pn+1};
-    std::vector<size_t> q_range = {qn,qn+1};
-    
-    double* Apq;
 
-    df_->fill_tensor("B",Apq, A_range, p_range, q_range ); 
-
-    double value = *Apq;
-
-    delete[] Apq;
-
-    return value;
-}
 ambit::Tensor DISKDFIntegrals::three_integral_block(const std::vector<size_t>& A,
                                                     const std::vector<size_t>& p,
                                                     const std::vector<size_t>& q) {
@@ -361,7 +308,7 @@ ambit::Tensor DISKDFIntegrals::three_integral_block(const std::vector<size_t>& A
             std::vector<size_t> p_range = {pn, pn + 1};
             std::vector<size_t> q_range = {0, nmo_};
 
-            df_->fill_tensor("B", Aq, A_range, p_range, q_range); 
+            df_->fill_tensor("B", Aq, A_range, p_range, q_range);
             p_by_Aq.push_back(Aq);
         }
         if (frozen_core) {
@@ -401,11 +348,11 @@ ambit::Tensor DISKDFIntegrals::three_integral_block(const std::vector<size_t>& A
                 qn = frozen_core ? cmotomo_[q_block] : q_block;
 
                 std::vector<size_t> A_range = {A[0], A.size()};
-                std::vector<size_t> p_range = {pn, pn };
-                std::vector<size_t> q_range = {qn, qn };
+                std::vector<size_t> p_range = {pn, pn};
+                std::vector<size_t> q_range = {qn, qn};
 
-                double* A_chunk;// = new double[A.size()];
-            
+                double* A_chunk; // = new double[A.size()];
+
                 df_->fill_tensor("B", A_chunk, A_range, p_range, q_range);
 
                 for (size_t a = 0; a < A.size(); a++) {
@@ -422,8 +369,8 @@ ambit::Tensor DISKDFIntegrals::three_integral_block(const std::vector<size_t>& A
 }
 
 void DISKDFIntegrals::set_tei(size_t, size_t, size_t, size_t, double, bool, bool) {
-    outfile->Printf("\n If you are using this, you are ruining the advantages of DF/CD");
-    throw PSIEXCEPTION("Don't use DF/CD if you use set_tei");
+    outfile->Printf("\n  DISKDFIntegrals::set_tei : DISKDF integrals are read only");
+    throw PSIEXCEPTION("DISKDFIntegrals::set_tei : DISKDF integrals are read only");
 }
 
 void DISKDFIntegrals::gather_integrals() {
@@ -443,8 +390,8 @@ void DISKDFIntegrals::gather_integrals() {
     size_t nprim = primary->nbf();
     size_t naux = auxiliary->nbf();
     nthree_ = naux;
-    outfile->Printf("\n Number of auxiliary basis functions:  %u", naux);
-    outfile->Printf("\n Need %8.6f GB to store DF integrals\n",
+    outfile->Printf("\n  Number of auxiliary basis functions:  %u", naux);
+    outfile->Printf("\n  Need %8.6f GB to store DF integrals\n",
                     (nprim * nprim * naux * sizeof(double) / 1073741824.0));
     int_mem_ = (nprim * nprim * naux * sizeof(double));
 
@@ -474,7 +421,7 @@ void DISKDFIntegrals::gather_integrals() {
     // Constructs the DF function
     // I used this version of build as this doesn't build all the apces and
     // assume a RHF/UHF reference
-    df_ = std::make_shared<DFHelper>(primary,auxiliary);
+    df_ = std::make_shared<DFHelper>(primary, auxiliary);
     df_->initialize();
     df_->set_MO_core(false);
     // set_C clears all the orbital spaces, so this creates the space
@@ -494,35 +441,6 @@ void DISKDFIntegrals::gather_integrals() {
     outfile->Printf("...Done. Timing %15.6f s", timer.get());
 }
 
-void DISKDFIntegrals::make_diagonal_integrals() {
-    /// TODO:  Need to rewrite this to avoid using aptei_aa.
-    Timer MakeDiagonalIntegrals;
-    // for(size_t p = 0; p < nmo_; ++p){
-    //    for(size_t q = 0; q < nmo_; ++q){
-    //        //diagonal_aphys_tei_aa[p * nmo_ + q] = aptei_aa(p,q,p,q);
-    //        //diagonal_aphys_tei_ab[p * nmo_ + q] = aptei_ab(p,q,p,q);
-    //        //diagonal_aphys_tei_bb[p * nmo_ + q] = aptei_bb(p,q,p,q);
-    //        diagonal_aphys_tei_aa[p * nmo_ + q] = 0.0;
-    //        diagonal_aphys_tei_ab[p * nmo_ + q] = 0.0;
-    //        diagonal_aphys_tei_bb[p * nmo_ + q] = 0.0;
-
-    //    }
-    //}
-    if (print_) {
-        outfile->Printf("\n Make diagonal integrals in DISKDF took %6.6f s",
-                        MakeDiagonalIntegrals.get());
-    }
-}
-
-void DISKDFIntegrals::deallocate() {
-
-    // Deallocate the memory required to store the one-electron integrals
-    // Allocate the memory required to store the two-electron integrals
-
-    delete[] diagonal_aphys_tei_aa;
-    delete[] diagonal_aphys_tei_ab;
-    delete[] diagonal_aphys_tei_bb;
-}
 void DISKDFIntegrals::make_fock_matrix(SharedMatrix gamma_aM, SharedMatrix gamma_bM) {
     // Efficient calculation of fock matrix from disk
     // Since gamma_aM is very sparse (diagonal elements of core and active
@@ -543,11 +461,11 @@ void DISKDFIntegrals::make_fock_matrix(SharedMatrix gamma_aM, SharedMatrix gamma
     std::vector<size_t> generalized_hole = mo_space_info_->get_corr_abs_mo("GENERALIZED HOLE");
 
     fock_a.iterate([&](const std::vector<size_t>& i, double& value) {
-        value = one_electron_integrals_a[i[0] * aptei_idx_ + i[1]];
+        value = one_electron_integrals_a_[i[0] * aptei_idx_ + i[1]];
     });
 
     fock_b.iterate([&](const std::vector<size_t>& i, double& value) {
-        value = one_electron_integrals_b[i[0] * aptei_idx_ + i[1]];
+        value = one_electron_integrals_b_[i[0] * aptei_idx_ + i[1]];
     });
 
     std::vector<size_t> A(nthree_);
@@ -660,10 +578,10 @@ void DISKDFIntegrals::make_fock_matrix(SharedMatrix gamma_aM, SharedMatrix gamma
         A_block.clear();
     }
     fock_a.iterate([&](const std::vector<size_t>& i, double& value) {
-        fock_matrix_a[i[0] * aptei_idx_ + i[1]] = value;
+        fock_matrix_a_[i[0] * aptei_idx_ + i[1]] = value;
     });
     fock_b.iterate([&](const std::vector<size_t>& i, double& value) {
-        fock_matrix_b[i[0] * aptei_idx_ + i[1]] = value;
+        fock_matrix_b_[i[0] * aptei_idx_ + i[1]] = value;
     });
 
     if (num_block != 1) {
@@ -671,23 +589,11 @@ void DISKDFIntegrals::make_fock_matrix(SharedMatrix gamma_aM, SharedMatrix gamma
     }
 }
 
-void DISKDFIntegrals::resort_three(SharedMatrix&, std::vector<size_t>&) {
-    outfile->Printf("No need to resort a file.  dummy!");
-}
-
 void DISKDFIntegrals::resort_integrals_after_freezing() {
     Timer resort_integrals;
     outfile->Printf("\n  Resorting integrals after freezing core.");
 
     // Create an array that maps the CMOs to the MOs (cmo2mo).
-
-    // Resort the integrals
-    resort_two(one_electron_integrals_a, cmotomo_);
-    resort_two(one_electron_integrals_b, cmotomo_);
-    // resort_two(diagonal_aphys_tei_aa,cmotomo_);
-    // resort_two(diagonal_aphys_tei_ab,cmotomo_);
-    // resort_two(diagonal_aphys_tei_bb,cmotomo_);
-
     // resort_three(ThreeIntegral_,cmo2mo);
 
     outfile->Printf("\n Resorting integrals takes   %8.8fs", resort_integrals.get());
@@ -697,26 +603,26 @@ ambit::Tensor DISKDFIntegrals::three_integral_block_two_index(const std::vector<
                                                               const std::vector<size_t>& q) {
 
     ambit::Tensor ReturnTensor = ambit::Tensor::build(tensor_type_, "Return", {A.size(), q.size()});
- 
+
     size_t p_max, p_min;
     bool frozen_core = false;
     if (frzcpi_.sum() && aptei_idx_ == ncmo_) {
-        frozen_core = true; 
+        frozen_core = true;
         p_min = cmotomo_[p];
-        p_max = p_min +1;
+        p_max = p_min + 1;
     } else {
         p_min = p;
-        p_max = p_min +1;
+        p_max = p_min + 1;
     }
 
     if (nthree_ == A.size()) {
 
         std::vector<size_t> arange = {0, nthree_};
-        std::vector<size_t> qrange = {0, nmo_}; 
-        std::vector<size_t> prange = {p_min, p_max}; 
+        std::vector<size_t> qrange = {0, nmo_};
+        std::vector<size_t> prange = {p_min, p_max};
 
         std::shared_ptr<Matrix> Aq(new Matrix("Aq", nthree_, nmo_));
-        df_->fill_tensor("B", Aq, arange, prange, qrange ); 
+        df_->fill_tensor("B", Aq, arange, prange, qrange);
 
         if (frozen_core) {
             ReturnTensor.iterate([&](const std::vector<size_t>& i, double& value) {
@@ -753,5 +659,5 @@ double DISKDFIntegrals::diag_aptei_bb(size_t, size_t) {
     outfile->Printf("\n Bribe Kevin with things and he will implement it if it is needed");
     throw PSIEXCEPTION("diag_aptei_bb is not implemented for DISKDF");
 }
-}
-}
+} // namespace forte
+} // namespace psi

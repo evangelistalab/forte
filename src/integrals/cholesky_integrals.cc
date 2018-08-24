@@ -30,61 +30,39 @@
 #include <cstring>
 
 #include "psi4/libpsi4util/process.h"
+#include "psi4/libmints/basisset.h"
 #include "psi4/libmints/wavefunction.h"
 #include "psi4/libmints/integral.h"
+#include "psi4/libmints/matrix.h"
 #include "psi4/libmints/sieve.h"
 #include "psi4/lib3index/cholesky.h"
-#include "psi4/libmints/basisset.h"
 #include "psi4/libpsio/psio.hpp"
 #include "psi4/libqt/qt.h"
 #include "psi4/psifiles.h"
 
-#include "integrals.h"
+#include "../helpers/printing.h"
+#include "../helpers/memory.h"
+#include "cholesky_integrals.h"
 
 using namespace ambit;
 
 namespace psi {
 namespace forte {
 
-/**
-     * @brief CholeskyIntegrals::CholeskyIntegrals
-     * @param options - psi options class
-     * @param restricted - type of integral transformation
-     * @param resort_frozen_core -
-     */
 CholeskyIntegrals::CholeskyIntegrals(psi::Options& options, SharedWavefunction ref_wfn,
                                      IntegralSpinRestriction restricted,
-                                     IntegralFrozenCore resort_frozen_core,
                                      std::shared_ptr<MOSpaceInfo> mo_space_info)
-    : ForteIntegrals(options, ref_wfn, restricted, resort_frozen_core, mo_space_info) {
-
-    wfn_ = ref_wfn;
+    : ForteIntegrals(options, ref_wfn, restricted, mo_space_info) {
 
     integral_type_ = Cholesky;
-    outfile->Printf("\n  Cholesky integrals time");
-    Timer CholInt;
-    allocate();
+    print_info();
+    Timer int_timer;
     gather_integrals();
-    make_diagonal_integrals();
-    if (ncmo_ < nmo_) {
-        freeze_core_orbitals();
-        // Set the new value of the number of orbitals to be used in indexing
-        // routines
-        aptei_idx_ = ncmo_;
-    }
-    outfile->Printf("\n  CholeskyIntegrals take %8.8f", CholInt.get());
+    freeze_core_orbitals();
+    print_timing("computing Cholesky integrals", int_timer.get());
 }
 
-CholeskyIntegrals::~CholeskyIntegrals() { deallocate(); }
-void CholeskyIntegrals::make_diagonal_integrals() {
-    for (size_t p = 0; p < nmo_; ++p) {
-        for (size_t q = 0; q < nmo_; ++q) {
-            diagonal_aphys_tei_aa[p * nmo_ + q] = aptei_aa(p, q, p, q);
-            diagonal_aphys_tei_ab[p * nmo_ + q] = aptei_ab(p, q, p, q);
-            diagonal_aphys_tei_bb[p * nmo_ + q] = aptei_bb(p, q, p, q);
-        }
-    }
-}
+CholeskyIntegrals::~CholeskyIntegrals() {}
 
 double CholeskyIntegrals::aptei_aa(size_t p, size_t q, size_t r, size_t s) {
     double vpqrsalphaC = 0.0;
@@ -159,9 +137,15 @@ ambit::Tensor CholeskyIntegrals::three_integral_block(const std::vector<size_t>&
     return ReturnTensor;
 }
 
+ambit::Tensor CholeskyIntegrals::three_integral_block_two_index(const std::vector<size_t>&, size_t,
+                                                                const std::vector<size_t>&) {
+    outfile->Printf("\n Oh no! this isn't here");
+    throw PSIEXCEPTION("INT_TYPE=DISKDF");
+}
+
 void CholeskyIntegrals::gather_integrals() {
     if (print_) {
-        outfile->Printf("\n Computing the Cholesky Vectors \n");
+        outfile->Printf("\n  Computing the Cholesky Vectors \n");
     }
     std::shared_ptr<BasisSet> primary = wfn_->basisset();
     size_t nbf = primary->nbf();
@@ -217,38 +201,41 @@ void CholeskyIntegrals::gather_integrals() {
             outfile->Printf("\n");
             std::string str = "Computing CD Integrals";
             if (print_) {
-                outfile->Printf("\n    %-36s ...", str.c_str());
+                outfile->Printf("\n  %-36s ...", str.c_str());
             }
             Ch->choleskify();
             nthree_ = Ch->Q();
             L_ao_ = Ch->L();
             if (print_) {
-                outfile->Printf("...Done. Timing %15.6f s", timer.get());
+                outfile->Printf("...Done.");
+                print_timing("cholesky transformation", timer.get());
             }
         }
     } else {
         std::string str = "Computing CD Integrals";
         if (print_) {
-            outfile->Printf("\n    %-36s ...", str.c_str());
+            outfile->Printf("\n  %-36s ...", str.c_str());
         }
         Ch->choleskify();
         nthree_ = Ch->Q();
         L_ao_ = Ch->L();
         if (print_) {
-            outfile->Printf("...Done. Timing %15.6f s", timer.get());
+            outfile->Printf("...Done.");
+            print_timing("cholesky transformation", timer.get());
         }
     }
 
     // The number of vectors required to do cholesky factorization
     if (print_) {
-        outfile->Printf("\n Need %8.6f GB to store cd integrals in core\n",
-                        nthree_ * nbf * nbf * sizeof(double) / 1073741824.0);
+        auto mem_info = to_xb2<double>(nthree_ * nbf * nbf);
+        outfile->Printf("\n  Need %.2f %s to store CD integrals in core\n", mem_info.first,
+                        mem_info.second.c_str());
     }
     int_mem_ = (nthree_ * nbf * nbf * sizeof(double) / 1073741824.0);
 
     if (print_) {
-        outfile->Printf("\n Number of cholesky vectors %d to satisfy %20.12f tolerance\n", nthree_,
-                        tol_cd);
+        outfile->Printf("\n  Number of Cholesky vectors required for %.3e tolerance: %d\n",
+                        tol_cd, nthree_);
     }
     transform_integrals();
 }
@@ -299,26 +286,6 @@ void CholeskyIntegrals::transform_integrals() {
     });
 }
 
-void CholeskyIntegrals::allocate() {
-    // Allocate the memory required to store the one-electron integrals
-
-    // Allocate the memory required to store the two-electron integrals
-    diagonal_aphys_tei_aa = new double[nmo_ * nmo_];
-    diagonal_aphys_tei_ab = new double[nmo_ * nmo_];
-    diagonal_aphys_tei_bb = new double[nmo_ * nmo_];
-}
-
-void CholeskyIntegrals::deallocate() {
-
-    // Deallocate the memory required to store the one-electron integrals
-
-    delete[] diagonal_aphys_tei_aa;
-    delete[] diagonal_aphys_tei_ab;
-    delete[] diagonal_aphys_tei_bb;
-
-    // delete[] qt_pitzer_;
-}
-
 void CholeskyIntegrals::make_fock_matrix(SharedMatrix gamma_aM, SharedMatrix gamma_bM) {
     TensorType tensor_type = CoreTensor;
     ambit::Tensor ThreeIntegralTensor =
@@ -342,8 +309,8 @@ void CholeskyIntegrals::make_fock_matrix(SharedMatrix gamma_aM, SharedMatrix gam
                 sizeof(double) * nthree_ * ncmo_ * ncmo_);
     std::memcpy(&gamma_a.data()[0], gamma_aM->pointer()[0], sizeof(double) * ncmo_ * ncmo_);
     std::memcpy(&gamma_b.data()[0], gamma_bM->pointer()[0], sizeof(double) * ncmo_ * ncmo_);
-    std::memcpy(&fock_a.data()[0], one_electron_integrals_a, sizeof(double) * ncmo_ * ncmo_);
-    std::memcpy(&fock_b.data()[0], one_electron_integrals_b, sizeof(double) * ncmo_ * ncmo_);
+    fock_a.data() = one_electron_integrals_a_;
+    fock_b.data() = one_electron_integrals_b_;
 
     // fock_a.iterate([&](const std::vector<size_t>& i,double& value){
     //    value = one_electron_integrals_a[i[0] * aptei_idx_ + i[1]];
@@ -367,33 +334,18 @@ void CholeskyIntegrals::make_fock_matrix(SharedMatrix gamma_aM, SharedMatrix gam
     // fock_b.iterate([&](const std::vector<size_t>& i,double& value){
     //    fock_matrix_b[i[0] * aptei_idx_ + i[1]] = value;
     //});
-    std::memcpy(fock_matrix_a, &fock_a.data()[0], sizeof(double) * ncmo_ * ncmo_);
-    std::memcpy(fock_matrix_b, &fock_b.data()[0], sizeof(double) * ncmo_ * ncmo_);
+    fock_matrix_a_ = fock_a.data();
+    fock_matrix_b_ = fock_b.data();
+    //    std::memcpy(fock_matrix_a, &fock_a.data()[0], sizeof(double) * ncmo_ * ncmo_);
+    //    std::memcpy(fock_matrix_b, &fock_b.data()[0], sizeof(double) * ncmo_ * ncmo_);
 }
 
 void CholeskyIntegrals::resort_integrals_after_freezing() {
-    outfile->Printf("\n  Resorting integrals after freezing core.");
-
-    // Create an array that maps the CMOs to the MOs (cmo2mo).
-    std::vector<size_t> cmo2mo;
-    for (int h = 0, q = 0; h < nirrep_; ++h) {
-        q += frzcpi_[h]; // skip the frozen core
-        for (int r = 0; r < ncmopi_[h]; ++r) {
-            cmo2mo.push_back(q);
-            q++;
-        }
-        q += frzvpi_[h]; // skip the frozen virtual
+    if (print_ > 0) {
+        outfile->Printf("\n  Resorting integrals after freezing core.");
     }
-    cmotomo_ = (cmo2mo);
-
-    // Resort the integrals
-    resort_two(one_electron_integrals_a, cmo2mo);
-    resort_two(one_electron_integrals_b, cmo2mo);
-    resort_two(diagonal_aphys_tei_aa, cmo2mo);
-    resort_two(diagonal_aphys_tei_ab, cmo2mo);
-    resort_two(diagonal_aphys_tei_bb, cmo2mo);
-
-    resort_three(ThreeIntegral_, cmo2mo);
+    // Resort the three-index integrals
+    resort_three(ThreeIntegral_, cmotomo_);
 }
 void CholeskyIntegrals::resort_three(std::shared_ptr<Matrix>& threeint, std::vector<size_t>& map) {
     // Create a temperature threeint matrix
@@ -422,5 +374,5 @@ void CholeskyIntegrals::set_tei(size_t, size_t, size_t, size_t, double, bool, bo
     outfile->Printf("\n If you are using this, you are ruining the advantages of DF/CD");
     throw PSIEXCEPTION("Don't use DF/CD if you use set_tei");
 }
-}
-}
+} // namespace forte
+} // namespace psi

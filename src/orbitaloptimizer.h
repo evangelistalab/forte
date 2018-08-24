@@ -26,8 +26,9 @@
  * @END LICENSE
  */
 
-#ifndef ORBITALOPTIMIZER_H
-#define ORBITALOPTIMIZER_H
+#ifndef _orbital_optimizer_h_
+#define _orbital_optimizer_h_
+
 #include "ambit/blocked_tensor.h"
 #include "reference.h"
 #include "helpers.h"
@@ -38,6 +39,9 @@
 using namespace psi;
 
 namespace psi {
+
+class Options;
+
 namespace forte {
 
 /**
@@ -270,6 +274,6 @@ class PostCASSCFOrbitalOptimizer : public OrbitalOptimizer {
     ambit::Tensor pu_qv_;
     virtual void form_fock_intermediates();
 };
-}
-}
-#endif // ORBITALOPTIMIZER_H
+} // namespace forte
+} // namespace psi
+#endif // _orbital_optimizer_h_

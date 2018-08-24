@@ -26,14 +26,7 @@
  * @END LICENSE
  */
 
-/*
- *  string_oo_list.cpp
- *  Capriccio
- *
- *  Created by Francesco Evangelista on 3/13/09.
- *  Copyright 2009 __MyCompanyName__. All rights reserved.
- *
- */
+#include <algorithm>
 
 #include "string_lists.h"
 

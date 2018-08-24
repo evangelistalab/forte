@@ -26,6 +26,8 @@
  * @END LICENSE
  */
 
+#include "psi4/libpsi4util/PsiOutStream.h"
+
 #include "dsrg_mrpt.h"
 
 namespace psi {

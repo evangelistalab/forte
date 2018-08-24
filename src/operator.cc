@@ -26,9 +26,13 @@
  * @END LICENSE
  */
 
+#include <cmath>
+
+#include "psi4/libmints/dimension.h"
+
 #include "operator.h"
 #include "forte-def.h"
-#include <cmath>
+
 
 #ifdef _OPENMP
 #include <omp.h>

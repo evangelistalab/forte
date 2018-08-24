@@ -36,6 +36,8 @@
 #include "psi4/libmints/pointgrp.h"
 #include "psi4/libmints/dipole.h"
 #include "psi4/libmints/petitelist.h"
+#include "psi4/libmints/dimension.h"
+
 #include "psi4/physconst.h"
 
 #include "../fci/fci_integrals.h"
@@ -43,6 +45,7 @@
 #include "semi_canonicalize.h"
 #include "active_dsrgpt2.h"
 #include "mini-boost/boost/format.hpp"
+#include "../helpers/printing.h"
 
 namespace psi {
 namespace forte {

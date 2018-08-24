@@ -26,13 +26,22 @@
  * @END LICENSE
  */
 
+#include <fstream>
+
 #include "aosubspace/aosubspace.h"
 #include "avas.h"
 #include "forte_options.h"
 #include "helpers.h"
 #include "integrals/integrals.h"
+#include "integrals/cholesky_integrals.h"
+#include "integrals/custom_integrals.h"
+#include "integrals/df_integrals.h"
+#include "integrals/diskdf_integrals.h"
+#include "integrals/conventional_integrals.h"
+#include "integrals/own_integrals.h"
 #include "sparse_ci/determinant.h"
 #include "version.h"
+#include "psi4/libpsi4util/PsiOutStream.h"
 #include "psi4/psi4-dec.h"
 
 #ifdef HAVE_CHEMPS2
@@ -55,21 +64,26 @@ namespace psi {
 namespace forte {
 
 /**
- * @brief Read options from the input file. Called by psi4 before everything
- * else.
+ * @brief Read options from the input file. Called by psi4 before everything else.
  */
-extern "C" PSI_API 
-int read_options(std::string name, Options& options) {
+extern "C" PSI_API int read_options(std::string name, Options& options) {
 
     ForteOptions foptions; // <<
 
     forte_options(name, foptions);
 
-    if (name == "FORTE" || options.read_globals()) {
+    //    if (name == "FORTE" || options.read_globals()) {
+    if (name == "FORTE") {
         // Old way (deprecated) to pass options to Psi4
         forte_old_options(options);
         // New way to pass options to Psi4
         foptions.add_psi4_options(options);
+    }
+    if (options.get_str("JOB_TYPE") == "DOCUMENTATION") {
+        std::ofstream docs;
+        docs.open ("options.rst");
+        docs << foptions.generate_documentation();
+        docs.close();
     }
 
     return true;
@@ -91,10 +105,12 @@ extern "C" PSI_API SharedWavefunction forte(SharedWavefunction ref_wfn, Options&
     auto mo_space_info = make_mo_space_info(ref_wfn, options);
 
     // Sanity check
-    if( (4 * sizeof(Determinant)) < mo_space_info->size("ACTIVE") ){
-        outfile->Printf("\n  FATAL:  The active space you requested (%d) is larger than allowed by the determinant class (%d)!",
-                        mo_space_info->size("ACTIVE"),4 * sizeof(Determinant));
-        outfile->Printf("\n          Please check your input and/or recompile Forte with a larger determinant dimension");
+    if ((4 * sizeof(Determinant)) < mo_space_info->size("ACTIVE")) {
+        outfile->Printf("\n  FATAL:  The active space you requested (%d) is larger than allowed by "
+                        "the determinant class (%d)!",
+                        mo_space_info->size("ACTIVE"), 4 * sizeof(Determinant));
+        outfile->Printf("\n          Please check your input and/or recompile Forte with a larger "
+                        "determinant dimension");
         exit(1);
     }
 
@@ -104,8 +120,9 @@ extern "C" PSI_API SharedWavefunction forte(SharedWavefunction ref_wfn, Options&
     // Transform the orbitals
     make_avas(ref_wfn, options, Ps);
 
-    // Transform integrals and run forte only if necessary
-    if (options.get_str("JOB_TYPE") != "NONE") {
+    std::string job_type = options.get_str("JOB_TYPE");
+    if (job_type != "NONE") {
+        // Transform integrals and run forte only if necessary
         // Make an integral object
         auto ints = make_forte_integrals(ref_wfn, options, mo_space_info);
 
@@ -199,25 +216,23 @@ std::shared_ptr<ForteIntegrals> make_forte_integrals(SharedWavefunction ref_wfn,
     timer int_timer("Integrals");
     std::shared_ptr<ForteIntegrals> ints;
     if (options.get_str("INT_TYPE") == "CHOLESKY") {
-        ints = std::make_shared<CholeskyIntegrals>(options, ref_wfn, UnrestrictedMOs,
-                                                   RemoveFrozenMOs, mo_space_info);
+        ints =
+            std::make_shared<CholeskyIntegrals>(options, ref_wfn, UnrestrictedMOs, mo_space_info);
     } else if (options.get_str("INT_TYPE") == "DF") {
-        ints = std::make_shared<DFIntegrals>(options, ref_wfn, UnrestrictedMOs, RemoveFrozenMOs,
-                                             mo_space_info);
+        ints = std::make_shared<DFIntegrals>(options, ref_wfn, UnrestrictedMOs, mo_space_info);
     } else if (options.get_str("INT_TYPE") == "DISKDF") {
-        ints = std::make_shared<DISKDFIntegrals>(options, ref_wfn, UnrestrictedMOs, RemoveFrozenMOs,
-                                                 mo_space_info);
+        ints = std::make_shared<DISKDFIntegrals>(options, ref_wfn, UnrestrictedMOs, mo_space_info);
     } else if (options.get_str("INT_TYPE") == "CONVENTIONAL") {
         ints = std::make_shared<ConventionalIntegrals>(options, ref_wfn, UnrestrictedMOs,
-                                                       RemoveFrozenMOs, mo_space_info);
+                                                       mo_space_info);
     } else if (options.get_str("INT_TYPE") == "DISTDF") {
 #ifdef HAVE_GA
-        ints = std::make_shared<DistDFIntegrals>(options, ref_wfn, UnrestrictedMOs, RemoveFrozenMOs,
-                                                 mo_space_info);
+        ints = std::make_shared<DistDFIntegrals>(options, ref_wfn, UnrestrictedMOs, mo_space_info);
 #endif
+    } else if (options.get_str("INT_TYPE") == "CUSTOM") {
+        ints = std::make_shared<CustomIntegrals>(options, ref_wfn, UnrestrictedMOs, mo_space_info);
     } else if (options.get_str("INT_TYPE") == "OWNINTEGRALS") {
-        ints = std::make_shared<OwnIntegrals>(options, ref_wfn, UnrestrictedMOs, RemoveFrozenMOs,
-                                              mo_space_info);
+        ints = std::make_shared<OwnIntegrals>(options, ref_wfn, UnrestrictedMOs, mo_space_info);
     } else {
         outfile->Printf("\n Please check your int_type. Choices are CHOLESKY, DF, DISKDF , "
                         "DISTRIBUTEDDF Effective, CONVENTIONAL or OwnIntegrals");
@@ -244,8 +259,8 @@ void forte_banner() {
         "  ----------------------------------------------------------------------------\n",
         GIT_BRANCH, GIT_COMMIT_HASH);
     outfile->Printf("\n  Size of Determinant class: %d", sizeof(Determinant));
-//    std::cout << "\n " << Determinant::alfa_mask << std::endl;
-//    std::cout << "\n " << Determinant::beta_mask << std::endl;
+    //    std::cout << "\n " << Determinant::alfa_mask << std::endl;
+    //    std::cout << "\n " << Determinant::beta_mask << std::endl;
 }
-}
-} // End Namespaces
+} // namespace forte
+} // namespace psi

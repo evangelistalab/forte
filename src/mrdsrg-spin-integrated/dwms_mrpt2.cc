@@ -2,9 +2,11 @@
 #include <sstream>
 
 #include "psi4/libmints/molecule.h"
+#include "psi4/libmints/dimension.h"
 
 #include "dwms_mrpt2.h"
 #include "master_mrdsrg.h"
+#include "../helpers/printing.h"
 #include "../fci_mo.h"
 #include "../semi_canonicalize.h"
 

@@ -1,0 +1,35 @@
+#! Test density-fitted integrals with frozen core and virtuals
+
+import forte
+
+refscf = -112.67042224989703
+reffci = -112.746078217488062
+
+molecule {
+0 1
+C
+O 1 R
+R = 2.5
+units bohr
+}
+
+set {
+  basis cc-pVDZ
+  df_basis_scf cc-pVDZ-JKfit
+  df_basis_mp2 cc-pVDZ-RI
+  scf_type df
+  e_convergence 13
+}
+
+set forte {
+  job_type fci
+  int_type df
+  frozen_docc      [2 ,0 ,0 ,0]
+  restricted_docc  [2 ,0 ,0 ,0]
+  active           [2 ,2 ,2 ,2]
+  e_convergence 12
+}
+
+energy('forte')
+compare_values(refscf, get_variable("SCF TOTAL ENERGY"),10, "SCF energy") #TEST
+compare_values(reffci, get_variable("CURRENT ENERGY"),9, "FCI energy") #TEST
