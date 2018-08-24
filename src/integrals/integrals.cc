@@ -81,7 +81,7 @@ void set_INT_options(ForteOptions& foptions) {
      *  - DF Density fitted two-electron integrals
      *  - CHOLESKY Cholesky decomposed two-electron integrals -*/
     foptions.add_str("INT_TYPE", "CONVENTIONAL",
-    {"CONVENTIONAL", "DF", "CHOLESKY", "DISKDF", "DISTDF", "OWNINTEGRALS", "CUSTOM"},
+                     {"CONVENTIONAL", "DF", "CHOLESKY", "DISKDF", "DISTDF", "OWNINTEGRALS"},
                      "The integral type");
 
     /*- The screening for JK builds and DF libraries -*/
@@ -280,8 +280,13 @@ void ForteIntegrals::compute_frozen_one_body_operator() {
 #endif
     } else {
         if (options_.get_str("SCF_TYPE") == "DF") {
-            JK_core = JK::build_JK(wfn_->basisset(), wfn_->get_basisset("DF_BASIS_MP2"), options_,
-                                   "MEM_DF");
+            if ((integral_type_ == DF) or (integral_type_ == DiskDF)) {
+                JK_core = JK::build_JK(wfn_->basisset(), wfn_->get_basisset("DF_BASIS_MP2"),
+                                       options_, "MEM_DF");
+            } else {
+                throw PSIEXCEPTION("Trying to compute the frozen one-body operator with MEM_DF but "
+                                   "using a non-DF integral type");
+            }
         } else {
             JK_core = JK::build_JK(wfn_->basisset(), BasisSet::zero_ao_basis_set(), options_);
         }
@@ -349,8 +354,9 @@ void ForteIntegrals::compute_frozen_one_body_operator() {
 
     if (print_ > 0) {
         outfile->Printf("\n  Frozen-core energy        %20.12f a.u.", frozen_core_energy_);
-        print_timing("frozen one-body operator",timer_frozen_one_body.get());
-//        outfile->Printf("\n  Timing for the frozen one-body operator  %9.3f s.", timer_frozen_one_body.get());
+        print_timing("frozen one-body operator", timer_frozen_one_body.get());
+        //        outfile->Printf("\n  Timing for the frozen one-body operator  %9.3f s.",
+        //        timer_frozen_one_body.get());
     }
 }
 
@@ -377,7 +383,7 @@ void ForteIntegrals::freeze_core_orbitals() {
         aptei_idx_ = ncmo_;
     }
     if (print_) {
-        print_timing("freezing core and virtual orbitals",freeze_timer.get());
+        print_timing("freezing core and virtual orbitals", freeze_timer.get());
     }
 }
 
@@ -430,7 +436,8 @@ void ForteIntegrals::print_info() {
     outfile->Printf("\n  Number of correlated molecular orbitals: %10zu", ncmo_);
     outfile->Printf("\n  Number of frozen occupied orbitals:      %10d", frzcpi_.sum());
     outfile->Printf("\n  Number of frozen unoccupied orbitals:    %10d", frzvpi_.sum());
-    outfile->Printf("\n  Two-electron integral type:              %10s\n\n", int_type_label[integral_type()].c_str());
+    outfile->Printf("\n  Two-electron integral type:              %10s\n\n",
+                    int_type_label[integral_type()].c_str());
 }
 
 void ForteIntegrals::print_ints() {

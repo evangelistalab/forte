@@ -30,9 +30,6 @@
 #ifndef _integrals_h_
 #define _integrals_h_
 
-//#define PAIRINDEX(i, j) ((i > j) ? (ioff[(i)] + (j)) : (ioff[(j)] + (i)))
-//#define four(i, j, k, l) PAIRINDEX(PAIRINDEX(i, j), PAIRINDEX(k, l))
-
 #include <iostream>
 #include <vector>
 
@@ -52,15 +49,24 @@ namespace forte {
 class ForteOptions;
 class MOSpaceInfo;
 
-/// This decides the type of transformation: resticted vs. unrestricted
+/**
+ * @brief The IntegralSpinRestriction enum
+ *
+ * This is used to distinguish between restricted/unrestricted computations
+ */
 enum IntegralSpinRestriction { RestrictedMOs, UnrestrictedMOs };
 
-/// This decides the type of integral
-/// The integrals implementation is in a cc file for each class.
-/// DFIntegrals->df_integrals.cc
+/**
+ * @brief The IntegralType enum
+ *
+ * This decides the type of integral used in a Forte computation
+ */
 enum IntegralType { Conventional, DF, Cholesky, DiskDF, DistDF, Own, Custom };
 
-/// Set integrals options
+/**
+ * @brief Add the options that control the integral class
+ * @param foptions
+ */
 void set_INT_options(ForteOptions& foptions);
 
 /**
@@ -71,13 +77,25 @@ void set_INT_options(ForteOptions& foptions);
  * This class also takes care of removing frozen core and virtual orbitals (excluded from
  * any treatment of correlation energy) and forming the modified one-electron operator,
  * which includes contributions from doubly occupied frozen orbitals.
+ *
+ * One electron integrals include kinetic, nuclear potential, and frozen core potential and are
+ * stored as
+ *
+ *     h_pq = <phi_p|h|phi_q>.
+ *
+ * Two electron integrals are returned as antisymmetrized integrals in physicist notation
+ * (<pq||rs>), and are accessed as
+ *
+ *     aptei(p,q,r,s) = <pq||rs> = <pq|rs> - <pq|sr> = (pr|qs) - (ps|qr),
+ *
+ * where (pr|qs) is a two electron integral in chemist notation.
  */
 class ForteIntegrals {
   public:
     // ==> Class Constructor and Destructor <==
 
     /**
-     * Constructor
+     * @brief Class constructor
      * @param options The main options object
      * @param ref_wfn The reference wave function object
      * @param restricted Select a restricted or unrestricted transformation
@@ -91,6 +109,20 @@ class ForteIntegrals {
 
   public:
     // ==> Class Interface <==
+
+    /// Return the total number of molecular orbitals (this number includes frozen MOs)
+    size_t nmo() const { return nmo_; }
+
+    /// Return the number of irreducible representations
+    int nirrep() const { return nirrep_; }
+
+    /// Return the number of frozen core orbitals per irrep
+    Dimension& frzcpi() { return frzcpi_; }
+    /// Return the number of frozen virtual orbitals per irrep
+    Dimension& frzvpi() { return frzvpi_; }
+
+    /// The number of correlated MOs per irrep (non frozen).  This is nmopi - nfzcpi - nfzvpi.
+    Dimension& ncmopi() { return ncmopi_; }
 
     /// Return the total number of correlated molecular orbitals (this number excludes frozen MOs)
     size_t ncmo() const { return ncmo_; }
