@@ -289,7 +289,7 @@ namespace forte {
 //}
 
 void MRDSRG::H2_T1_C0_DF(BlockedTensor& B, BlockedTensor& T1, const double& alpha, double& C0) {
-    ForteTimer timer;
+    Timer timer;
     BlockedTensor temp;
     double E = 0.0;
 
@@ -318,13 +318,13 @@ void MRDSRG::H2_T1_C0_DF(BlockedTensor& B, BlockedTensor& T1, const double& alph
     C0 += E;
 
     if (print_ > 2) {
-        outfile->Printf("\n    Time for [H2, T1] -> C0 : %12.3f", timer.elapsed());
+        outfile->Printf("\n    Time for [H2, T1] -> C0 : %12.3f", timer.get());
     }
-    dsrg_time_.add("210", timer.elapsed());
+    dsrg_time_.add("210", timer.get());
 }
 
 void MRDSRG::H2_T1_C1_DF(BlockedTensor& B, BlockedTensor& T1, const double& alpha, BlockedTensor& C1) {
-    ForteTimer timer;
+    Timer timer;
 
     C1["qp"] += alpha * T1["ma"] * B["gqp"] * B["gam"];
     C1["qp"] -= alpha * T1["ma"] * B["gqm"] * B["gap"];
@@ -347,13 +347,13 @@ void MRDSRG::H2_T1_C1_DF(BlockedTensor& B, BlockedTensor& T1, const double& alph
     C1["QP"] += alpha * T1["MU"] * Gamma1_["UV"] * B["gQM"] * B["gVP"];
 
     if (print_ > 2) {
-        outfile->Printf("\n    Time for [H2, T1] -> C1 : %12.3f", timer.elapsed());
+        outfile->Printf("\n    Time for [H2, T1] -> C1 : %12.3f", timer.get());
     }
-    dsrg_time_.add("211", timer.elapsed());
+    dsrg_time_.add("211", timer.get());
 }
 
 void MRDSRG::H2_T1_C2_DF(BlockedTensor& B, BlockedTensor& T1, const double& alpha, BlockedTensor& C2) {
-    ForteTimer timer;
+    Timer timer;
 
     C2["irpq"] += alpha * T1["ia"] * B["gap"] * B["grq"];
     C2["irpq"] -= alpha * T1["ia"] * B["gaq"] * B["grp"];
@@ -379,9 +379,9 @@ void MRDSRG::H2_T1_C2_DF(BlockedTensor& B, BlockedTensor& T1, const double& alph
     C2["RSPA"] += alpha * T1["IA"] * B["gRI"] * B["gSP"];
 
     if (print_ > 2) {
-        outfile->Printf("\n    Time for [H2, T1] -> C2 : %12.3f", timer.elapsed());
+        outfile->Printf("\n    Time for [H2, T1] -> C2 : %12.3f", timer.get());
     }
-    dsrg_time_.add("212", timer.elapsed());
+    dsrg_time_.add("212", timer.get());
 }
 
 void MRDSRG::H2_T2_C0_DF(BlockedTensor& B, BlockedTensor& T2, const double& alpha, double& C0) {
