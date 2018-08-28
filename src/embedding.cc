@@ -305,7 +305,7 @@ std::map<std::string, SharedMatrix> Embedding::localize(SharedWavefunction wfn, 
     Dimension nmopi = wfn->nmopi();
     Dimension noccpi = wfn->doccpi();
 
-    if (options_.get_str("LOCALIZATION_METHOD") == "IAO") {
+    if (options_.get_str("LOCALIZATION_METHOD") == "IAO"|| options_.get_str("LOCALIZATION_METHOD") == "IAO_IBO") {
         // IAO localization
         outfile->Printf("\n Coeffs before localization \n");
         wfn->Ca()->print();
@@ -342,8 +342,15 @@ std::map<std::string, SharedMatrix> Embedding::localize(SharedWavefunction wfn, 
 		C_loc->print();
 
 		outfile->Printf("\n Hello World #1 \n");
+		SharedMatrix C_ret = Ctmp;
+		if (options_.get_str("LOCALIZATION_METHOD") == "IAO") {
+			C_ret->copy(ret["A"]);
+		}
+		if (options_.get_str("LOCALIZATION_METHOD") == "IAO_IBO") {
+			C_ret->copy(C_loc);
+		}
         std::vector<std::string> iaolabel =
-            iaobd->print_IAO(C_loc, ret_loc["U"]->colspi()[0], wfn->basisset()->nbf(), wfn);
+            iaobd->print_IAO(C_ret, ret_loc["U"]->colspi()[0], wfn->basisset()->nbf(), wfn);
 
 		outfile->Printf("\n Hello World #2 \n");
         int sizelab = iaolabel.size();
@@ -365,9 +372,14 @@ std::map<std::string, SharedMatrix> Embedding::localize(SharedWavefunction wfn, 
         }
 
 		outfile->Printf("Hello World #5");
-        ret_loc["I"] = Ind;
-        ret_loc["IAO"] = C_loc;
-        ret_loc["Trans"] = U;
+		ret_loc["I"] = Ind;
+		ret_loc["IAO"] = C_ret;
+		if (options_.get_str("LOCALIZATION_METHOD") == "IAO") {
+			ret_loc["Trans"] = U;
+		}
+		if (options_.get_str("LOCALIZATION_METHOD") == "IAO_IBO") {
+			ret_loc["Trans"] = ret_loc["U"];
+		}
 
         return ret_loc;
     }
@@ -436,22 +448,38 @@ double Embedding::compute_energy() {
     outfile->Printf("\n ****** Setting up system wavefunction ****** \n");
 
     // rotate S
-    SharedMatrix S_iao = Matrix::triplet(Loc["U"], S_origin, Loc["U"], true, false, false);
+    SharedMatrix S_iao = Matrix::triplet(Loc["Trans"], S_origin, Loc["Trans"], true, false, false);
 	
     // rotate h
-    SharedMatrix h_iao = Matrix::triplet(Loc["U"], H_origin, Loc["U"], true, false, false);
+    SharedMatrix h_iao = Matrix::triplet(Loc["Trans"], H_origin, Loc["Trans"], true, false, false);
 
     // rotate F
-    SharedMatrix F_iao = Matrix::triplet(Loc["U"], Fa_origin, Loc["U"], true, false, false);
+    SharedMatrix F_iao = Matrix::triplet(Loc["Trans"], Fa_origin, Loc["Trans"], true, false, false);
 
-    // set molecule
+	//Unitary test passed
+    // set molecule, failed
     //(*molecule_) = *mol_sys;
     mol_sys->print();
-    molecule_ = mol_sys;
+    //molecule_ = mol_sys;
     // ref_wfn_->molecule() = mol_sys;
     ref_wfn_->molecule()->print();
     // molecule_->set_ghost_fragment(1);
     // ref_wfn_->molecule()->print();
+
+	//Build environment G A+B
+	SharedMatrix Dab(new Matrix("D A + B", nirrep_, nmopi_, nmopi_));
+	build_D(Loc["IAO"], doccpi_, Dab);
+	Dab->print();
+	SharedMatrix Gab = build_G_withD(ref_wfn_, Dab);
+	Gab->print();
+
+	/* Test transformation, if IAO rotation changes G_uv: passed
+	SharedMatrix Dab_ref(new Matrix("D A + B", nirrep_, nmopi_, nmopi_));
+	build_D(C_origin, doccpi_, Dab_ref);
+	Dab_ref->print();
+	SharedMatrix Gab_ref = build_G_withD(ref_wfn_, Dab);
+	Gab_ref->print();
+	*/
 
     // Test and truncate matrixes!
     Dimension nmo_sys_pi = ref_wfn_->nmopi();
@@ -468,12 +496,56 @@ double Embedding::compute_energy() {
 
 	outfile->Printf(" ------ H IAO origin ------ \n");
 	h_iao->print();
+	//Swap Matrices here
+	
+	int thresh = natom_sys + 1;
+	int count_swap = 0;
+	for (int i = 0; i < nmopi_[0]; ++i) {
+		if (Loc["I"]->get(0, i, i) < thresh) {
+			if (i == count_swap) {
+				//do nothing and continue
+			}
+			else {
+				outfile->Printf("Swap %d and %d \n", i, count_swap);
+				h_iao->swap_rows(0, i, count_swap);
+				h_iao->swap_columns(0, i, count_swap);
+				S_iao->swap_rows(0, i, count_swap);
+				S_iao->swap_columns(0, i, count_swap);
+				F_iao->swap_rows(0, i, count_swap);
+				F_iao->swap_columns(0, i, count_swap);
+				Gab->swap_rows(0, i, count_swap);
+				Gab->swap_columns(0, i, count_swap);
+				//Loc["U"]->swap_rows(0, i, count_swap);
+				//Loc["U"]->swap_columns(0, i, count_swap);
+				++count_swap;
+			}
+		}
+	}
+
+	/* Debug only! test how the order of orbitals influence calculation
+	outfile->Printf(" ------ Test @ swapt ! ------ \n");
+	h_iao->print();
+	S_iao->print();
+	S_iao->swap_rows(0, 0, 3);
+	S_iao->swap_columns(0, 0, 3);
+	h_iao->swap_rows(0, 0, 3);
+	h_iao->swap_columns(0, 0, 3);
+	h_iao->print();
+	S_iao->print();
+	C_A->swap_columns(0, 0, 3);
+	*/
+
+	/*
+	H_->copy(h_iao); //debug only! test whether iao rotation changes the HF energy: passed!
+	S_->copy(S_iao);
+	Ca_->copy(Loc["IAO"]);
+	Fa_->copy(F_iao);
+	*/
+
     SharedMatrix h_sys = h_iao;
     if (options_.get_str("SYSTEM_MATRIX") ==
         "SYS") { // Use small matrix, truncate every matrix to sys,sys block
-        // This method doesn't work for now! change build_G() soon to make it adjust
-        // size of matrix according to C->rowspi()
-
+		
         // Set Coeffs
         Ca_->copy(C_A->get_block(sys, sys));
 
@@ -574,40 +646,9 @@ double Embedding::compute_energy() {
 
     // 5. Evaluate G(A + B) and G(A), evaluate and project h A-in-B (function)
 
-    /*
-    SharedMatrix Ga(new Matrix("G_sys", nirrep_, Ca_->rowspi(), Ca_->colspi()));
-    build_G(ref_wfn_, Ca_, Ga, options_, 1); //build G(A)
-    outfile->Printf("\n ------ Building system G(A) ------ \n");
-    Ga->print();
-
-    SharedMatrix Gab(new Matrix("G_all", nirrep_, C_origin->rowspi(), C_origin->colspi()));
-    build_G(ref_wfn_, C_origin, Gab, options_, 0); //build G(A+B)
-    outfile->Printf("\n ------ Building system and environment G(A+B) ------ \n");
-    Gab->print();
-
-    SharedMatrix C_iao_all = Matrix::doublet(C_origin, Loc["U"], false, false);
-    SharedMatrix Gab_iao(new Matrix("G_all_rotate", nirrep_, nmopi_, nmopi_));
-    outfile->Printf("\n ------ Checkpoint: iao G(A+B), should equal ------ \n");
-    build_G(ref_wfn_, C_iao_all, Gab_iao, options_, 0); //build G(A+B) in iao, test whether
-    they are the same! Gab_iao->print();
-    */
-
-    SharedMatrix Dab(new Matrix("D A + B", nirrep_, nmopi_, nmopi_));
-    build_D(C_origin, doccpi_, Dab);
-    Dab->print();
-    SharedMatrix Gab = build_G_withD(ref_wfn_, Dab);
-
-    /*
-    SharedMatrix Gab_ref(new Matrix("G reference", nirrep_, nmopi_, nmopi_));
-    build_G(ref_wfn_, C_origin, Gab_ref, options_, 0);
-    outfile->Printf("\n Checkpoint: G_ref and Gab should equal \n");
-    Gab->print();
-    Gab_ref->print();
-    */
-
     // ref_wfn_->force_doccpi(docc_sys_pi); //Only for water-dimer water_sys!!!
-
-    SharedMatrix Da(new Matrix("D A", nirrep_, nmo_sys_pi, nmo_sys_pi));
+	
+    SharedMatrix Da(new Matrix("D A", nirrep_, nmo_sys_pi, nmo_sys_pi)); //Change back to nmo_sys_pi after tests!
     build_D(Ca_, docc_sys_pi, Da);
     Da->print();
     SharedMatrix Ga = build_G_withD(ref_wfn_, Da);
@@ -617,8 +658,8 @@ double Embedding::compute_energy() {
 
     SharedMatrix Gab_sys = Gab->get_block(sys, sys);
     outfile->Printf("\n ------ Building H A-in-B ------ \n");
-	outfile->Printf(" ------ H IAO ------ \n");
-	h_iao->print();
+	//outfile->Printf(" ------ H IAO ------ \n");
+	//h_iao->print();
 	outfile->Printf(" ------ H IAO sys ------ \n");
 	h_sys->print();
 	outfile->Printf(" ------ G A+B ------ \n");
@@ -627,26 +668,26 @@ double Embedding::compute_energy() {
 	outfile->Printf(" ------ G A ------ \n");
 	Ga->print();
     h_sys->subtract(Ga); // build h A-in-B !!
-	outfile->Printf(" ------ H IAO sys emb ------ \n");
+	outfile->Printf(" ------ H IAO sys emb A-in-B ------ \n");
     h_sys->print();
 
     // 6. Compute (cheap environment method) energy for system A, with h A-in-B
     // Known issue: JKbuilder and Mintshelper will die if the size of basis and size of matrix
     // discoherent!
-    outfile->Printf("\n ------ calculating E_sys_cheap ------ \n");
+    //outfile->Printf("\n ------ calculating E_sys_cheap ------ \n");
     double E_sys_cheap = do_env(ref_wfn_, h_sys, options_);
-    double E_sys_ref = do_env(ref_wfn_, H_, options_);
+    //double E_sys_ref = do_env(ref_wfn_, H_, options_);
     H_->copy(h_sys); // set H in wfn to be embedded h_sys
 
     // 7. Compute （expensive system method) energy for system A, with h A-in-B
-    outfile->Printf("\n ------ calculating E_sys_exp ------ \n");
-    double E_sys_exp = do_sys(ref_wfn_, h_sys, options_);
+    //outfile->Printf("\n ------ calculating E_sys_exp ------ \n");
+    //double E_sys_exp = do_sys(ref_wfn_, h_sys, options_);
 
     // Return (now environment) Energy
     // double E_embedding = E_tot - E_sys_cheap + E_sys_exp;
-    outfile->Printf(
-        "\n ------ (insert method string here) Cheap method system energy: E = %8.8f ------ \n",
-        E_sys_cheap);
+    //outfile->Printf(
+    //    "\n ------ (insert method string here) Cheap method system energy: E = %8.8f ------ \n",
+    //    E_sys_cheap);
     return E_sys_cheap;
 }
 

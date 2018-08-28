@@ -189,7 +189,7 @@ void build_G(SharedWavefunction wfn, SharedMatrix C, SharedMatrix G, Options& op
     }
 }
 
-double do_HF(SharedWavefunction wfn, SharedMatrix hcore, int nirrep, Dimension nmopi,
+std::map<std::string, SharedMatrix> do_HF(SharedWavefunction wfn, SharedMatrix hcore, int nirrep, Dimension nmopi,
              Dimension noccpi, int Maxcyc, double E_conv, Options& options) {
 
     // Hartree-Fock calculation with given core hamiltonian hcore
@@ -295,19 +295,35 @@ double do_HF(SharedWavefunction wfn, SharedMatrix hcore, int nirrep, Dimension n
     }
     // Write to wfn, modify this for open-shell in the future
 	outfile->Printf("\n !!!!!! SCF calculation ended !!!!!! \n");
-	wfn->Ca()->copy(C_iter);
-    wfn->Fa()->copy(Fock_uv);
-    wfn->Da()->copy(D_iter);
-	wfn->epsilon_a() = epis;
+	std::map<std::string, SharedMatrix> scf_ret;
+	scf_ret["Ca"] = C_iter;
+	scf_ret["Fa"] = Fock_uv;
+	scf_ret["Da"] = D_iter;
+	SharedMatrix eorb(new Matrix("orbital energy", nirrep, nmopi, nmopi));
+	eorb->set_diagonal(epis);
+	SharedMatrix escf(new Matrix("SCF energy", nirrep, nmopi, nmopi));
+	escf->set(0, 0, 0, E_scf);
+	scf_ret["epis"] = eorb;
+	scf_ret["escf"] = escf;
     // Return SCF energy
-    return E_scf;
+    return scf_ret;
 }
 
 double OwnSCF::compute_energy() {
     // run HF calculation
-    double E = do_HF(ref_wfn_, ref_wfn_->H(), nirrep_, nmopi_, doccpi_, Maxcyc_, E_conv_, options_);
+	std::map<std::string, SharedMatrix> scf_calc = do_HF(ref_wfn_, ref_wfn_->H(), nirrep_, nmopi_, doccpi_, Maxcyc_, E_conv_, options_);
+	energy_ = scf_calc["escf"]->get(0, 0, 0);
+	outfile->Printf("The SCF energy stored to wfn is %8.8f", ref_wfn_->reference_energy());
+	for (int h = 0; h < nirrep_; ++h) {
+		for (int i = 0; i < nmopi_[h]; ++i) {
+			epsilon_a_->set(h, i, scf_calc["epis"]->get(h, i, i));
+		}
+	}
+	Ca_->copy(scf_calc["Ca"]);
+	Da_->copy(scf_calc["Da"]);
+	Fa_->copy(scf_calc["Fa"]);
 
-    return E;
+    return scf_calc["escf"]->get(0, 0, 0);
 }
 
 OwnSCF::~OwnSCF() {}

@@ -35,12 +35,14 @@ E, ori_wfn = energy('scf', return_wfn=True)
 set forte {
   job_type Embedding
   SYS_DOCC 5
+  LOCALIZATION_METHOD IAO_IBO
 }
 
 E_test, wfn_mod = energy('forte', ref_wfn=ori_wfn, return_wfn=True)
 
 activate(water_sys)
 E_sys_ref, wfn_sys = energy('scf', return_wfn=True)
+wfn_sys.H().print_out()
 
 # ****** Set modified(embedded) matrices ******
 Ca_sys = wfn_sys.Ca()
@@ -72,18 +74,6 @@ set forte {
 E_cheap_sys, wfn_sys_ready = energy('forte', ref_wfn=wfn_sys, return_wfn=True)
 
 # ****** Calculate expensive system method ******
-set forte {
-  job_type             active-dsrgpt2
-  frozen_docc          [0]
-  rotate_mos           [1,1,5]
-  restricted_docc      [4]
-  active               [3]
-  dsrg_s               0.5
-  cas_type             cas
-  fcimo_actv_type      full
-  nrootpi              [3]
-  d_convergence        10
-}
 
-E_exp_sys, wfn_fin = energy('forte', ref_wfn=wfn_sys_ready, return_wfn=True)
+E_exp_sys = energy('mp2', ref_wfn=wfn_sys_ready)
 
