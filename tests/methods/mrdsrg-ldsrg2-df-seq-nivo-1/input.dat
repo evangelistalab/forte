@@ -74,7 +74,7 @@ set forte {
   maxiter                100
   e_convergence          8
   dsrg_hbar_seq          true
-  dsrg_omit_v3           true
+  dsrg_nivo              true
   relax_ref              once
 }
 

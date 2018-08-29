@@ -288,6 +288,102 @@ namespace forte {
 //    dsrg_time_.add("220", timer.get());
 //}
 
+void MRDSRG::H2_T1_C0_DF(BlockedTensor& B, BlockedTensor& T1, const double& alpha, double& C0) {
+    Timer timer;
+    BlockedTensor temp;
+    double E = 0.0;
+
+    temp = ambit::BlockedTensor::build(tensor_type_, "temp", {"aaaa"});
+    temp["uvxy"] += B["gex"] * B["gvy"] * T1["ue"];
+    temp["uvxy"] -= B["gey"] * B["gvx"] * T1["ue"];
+    temp["uvxy"] -= B["gum"] * B["gvy"] * T1["mx"];
+    temp["uvxy"] += B["guy"] * B["gvm"] * T1["mx"];
+    E += 0.5 * temp["uvxy"] * Lambda2_["xyuv"];
+
+    temp = ambit::BlockedTensor::build(tensor_type_, "temp", {"AAAA"});
+    temp["UVXY"] += B["gEX"] * B["gVY"] * T1["UE"];
+    temp["UVXY"] -= B["gEY"] * B["gVX"] * T1["UE"];
+    temp["UVXY"] -= B["gUM"] * B["gVY"] * T1["MX"];
+    temp["UVXY"] += B["gUY"] * B["gVM"] * T1["MX"];
+    E += 0.5 * temp["UVXY"] * Lambda2_["XYUV"];
+
+    temp = ambit::BlockedTensor::build(tensor_type_, "temp", {"aAaA"});
+    temp["uVxY"] += B["gex"] * B["gVY"] * T1["ue"];
+    temp["uVxY"] += B["gux"] * B["gEY"] * T1["VE"];
+    temp["uVxY"] -= B["gum"] * B["gVY"] * T1["mx"];
+    temp["uVxY"] -= B["gux"] * B["gVM"] * T1["MY"];
+    E += temp["uVxY"] * Lambda2_["xYuV"];
+
+    E *= alpha;
+    C0 += E;
+
+    if (print_ > 2) {
+        outfile->Printf("\n    Time for [H2, T1] -> C0 : %12.3f", timer.get());
+    }
+    dsrg_time_.add("210", timer.get());
+}
+
+void MRDSRG::H2_T1_C1_DF(BlockedTensor& B, BlockedTensor& T1, const double& alpha, BlockedTensor& C1) {
+    Timer timer;
+
+    C1["qp"] += alpha * T1["ma"] * B["gqp"] * B["gam"];
+    C1["qp"] -= alpha * T1["ma"] * B["gqm"] * B["gap"];
+    C1["qp"] += alpha * T1["xe"] * Gamma1_["yx"] * B["gqp"] * B["gey"];
+    C1["qp"] -= alpha * T1["xe"] * Gamma1_["yx"] * B["gqy"] * B["gep"];
+    C1["qp"] -= alpha * T1["mu"] * Gamma1_["uv"] * B["gqp"] * B["gvm"];
+    C1["qp"] += alpha * T1["mu"] * Gamma1_["uv"] * B["gqm"] * B["gvp"];
+    C1["qp"] += alpha * T1["MA"] * B["gqp"] * B["gAM"];
+    C1["qp"] += alpha * T1["XE"] * Gamma1_["YX"] * B["gqp"] * B["gEY"];
+    C1["qp"] -= alpha * T1["MU"] * Gamma1_["UV"] * B["gqp"] * B["gVM"];
+
+    C1["QP"] += alpha * T1["ma"] * B["gam"] * B["gQP"];
+    C1["QP"] += alpha * T1["xe"] * Gamma1_["yx"] * B["gey"] * B["gQP"];
+    C1["QP"] -= alpha * T1["mu"] * Gamma1_["uv"] * B["gvm"] * B["gQP"];
+    C1["QP"] += alpha * T1["MA"] * B["gQP"] * B["gAM"];
+    C1["QP"] -= alpha * T1["MA"] * B["gQM"] * B["gAP"];
+    C1["QP"] += alpha * T1["XE"] * Gamma1_["YX"] * B["gQP"] * B["gEY"];
+    C1["QP"] -= alpha * T1["XE"] * Gamma1_["YX"] * B["gQY"] * B["gEP"];
+    C1["QP"] -= alpha * T1["MU"] * Gamma1_["UV"] * B["gQP"] * B["gVM"];
+    C1["QP"] += alpha * T1["MU"] * Gamma1_["UV"] * B["gQM"] * B["gVP"];
+
+    if (print_ > 2) {
+        outfile->Printf("\n    Time for [H2, T1] -> C1 : %12.3f", timer.get());
+    }
+    dsrg_time_.add("211", timer.get());
+}
+
+void MRDSRG::H2_T1_C2_DF(BlockedTensor& B, BlockedTensor& T1, const double& alpha, BlockedTensor& C2) {
+    Timer timer;
+
+    C2["irpq"] += alpha * T1["ia"] * B["gap"] * B["grq"];
+    C2["irpq"] -= alpha * T1["ia"] * B["gaq"] * B["grp"];
+    C2["ripq"] += alpha * T1["ia"] * B["grp"] * B["gaq"];
+    C2["ripq"] -= alpha * T1["ia"] * B["grq"] * B["gap"];
+    C2["rsaq"] -= alpha * T1["ia"] * B["gri"] * B["gsq"];
+    C2["rsaq"] += alpha * T1["ia"] * B["grq"] * B["gsi"];
+    C2["rspa"] -= alpha * T1["ia"] * B["grp"] * B["gsi"];
+    C2["rspa"] += alpha * T1["ia"] * B["gri"] * B["gsp"];
+
+    C2["iRpQ"] += alpha * T1["ia"] * B["gap"] * B["gRQ"];
+    C2["rIpQ"] += alpha * T1["IA"] * B["grp"] * B["gAQ"];
+    C2["rSaQ"] -= alpha * T1["ia"] * B["gri"] * B["gSQ"];
+    C2["rSpA"] -= alpha * T1["IA"] * B["grp"] * B["gSI"];
+
+    C2["IRPQ"] += alpha * T1["IA"] * B["gAP"] * B["gRQ"];
+    C2["IRPQ"] -= alpha * T1["IA"] * B["gAQ"] * B["gRP"];
+    C2["RIPQ"] += alpha * T1["IA"] * B["gRP"] * B["gAQ"];
+    C2["RIPQ"] -= alpha * T1["IA"] * B["gRQ"] * B["gAP"];
+    C2["RSAQ"] -= alpha * T1["IA"] * B["gRI"] * B["gSQ"];
+    C2["RSAQ"] += alpha * T1["IA"] * B["gRQ"] * B["gSI"];
+    C2["RSPA"] -= alpha * T1["IA"] * B["gRP"] * B["gSI"];
+    C2["RSPA"] += alpha * T1["IA"] * B["gRI"] * B["gSP"];
+
+    if (print_ > 2) {
+        outfile->Printf("\n    Time for [H2, T1] -> C2 : %12.3f", timer.get());
+    }
+    dsrg_time_.add("212", timer.get());
+}
+
 void MRDSRG::H2_T2_C0_DF(BlockedTensor& B, BlockedTensor& T2, const double& alpha, double& C0) {
     Timer timer;
 

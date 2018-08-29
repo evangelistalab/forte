@@ -82,7 +82,7 @@ void MRDSRG::read_options() {
     }
 
     sequential_Hbar_ = options_.get_bool("DSRG_HBAR_SEQ");
-    omit_V3_ = options_.get_bool("DSRG_OMIT_V3");
+    nivo_ = options_.get_bool("DSRG_NIVO");
 }
 
 void MRDSRG::startup() {
@@ -153,7 +153,7 @@ void MRDSRG::print_options() {
     calculation_info_string.push_back(
         {"sequential dsrg transformation", true_false_string(sequential_Hbar_)});
     calculation_info_string.push_back(
-        {"omit blocks of >= 3 virtual indices", true_false_string(omit_V3_)});
+        {"omit blocks of >= 3 virtual indices", true_false_string(nivo_)});
 
     // print some information
     print_h2("Calculation Information");

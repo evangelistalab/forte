@@ -66,14 +66,14 @@ void MRDSRG::compute_hbar() {
         Hbar2_["pqrs"] = V_["pqrs"];
         Hbar2_["pQrS"] = V_["pQrS"];
         Hbar2_["PQRS"] = V_["PQRS"];
+        O2_["pqrs"] = Hbar2_["pqrs"];
+        O2_["pQrS"] = Hbar2_["pQrS"];
+        O2_["PQRS"] = Hbar2_["PQRS"];
     }
 
     // temporary Hamiltonian used in every iteration
     O1_["pq"] = F_["pq"];
     O1_["PQ"] = F_["PQ"];
-    O2_["pqrs"] = Hbar2_["pqrs"];
-    O2_["pQrS"] = Hbar2_["pQrS"];
-    O2_["PQRS"] = Hbar2_["PQRS"];
 
     // iteration variables
     bool converged = false;
@@ -100,17 +100,34 @@ void MRDSRG::compute_hbar() {
         // zero-body
         H1_T1_C0(O1_, T1_, factor, C0);
         H1_T2_C0(O1_, T2_, factor, C0);
-        H2_T1_C0(O2_, T1_, factor, C0);
-        H2_T2_C0(O2_, T2_, factor, C0);
+        if (n == 1 && eri_df_) {
+            H2_T1_C0_DF(B_, T1_, factor, C0);
+            H2_T2_C0_DF(B_, T2_, factor, C0);
+        } else {
+            H2_T1_C0(O2_, T1_, factor, C0);
+            H2_T2_C0(O2_, T2_, factor, C0);
+        }
         // one-body
         H1_T1_C1(O1_, T1_, factor, C1_);
         H1_T2_C1(O1_, T2_, factor, C1_);
-        H2_T1_C1(O2_, T1_, factor, C1_);
+        if (n == 1 && eri_df_) {
+            H2_T1_C1_DF(B_, T1_, factor, C1_);
+        } else {
+            H2_T1_C1(O2_, T1_, factor, C1_);
+        }
         if (options_.get_str("SRG_COMM") == "STANDARD") {
-            H2_T2_C1(O2_, T2_, factor, C1_);
+            if (n == 1 && eri_df_) {
+                H2_T2_C1_DF(B_, T2_, factor, C1_);
+            } else {
+                H2_T2_C1(O2_, T2_, factor, C1_);
+            }
         } else if (options_.get_str("SRG_COMM") == "FO") {
             BlockedTensor C1p = BTF_->build(tensor_type_, "C1p", spin_cases({"gg"}));
-            H2_T2_C1(O2_, T2_, factor, C1p);
+            if (n == 1 && eri_df_) {
+                H2_T2_C1_DF(B_, T2_, factor, C1p);
+            } else {
+                H2_T2_C1(O2_, T2_, factor, C1p);
+            }
             C1p.block("cc").scale(2.0);
             C1p.block("aa").scale(2.0);
             C1p.block("vv").scale(2.0);
@@ -138,8 +155,13 @@ void MRDSRG::compute_hbar() {
             O1_.block("AA").scale(0.5);
             O1_.block("VV").scale(0.5);
         }
-        H2_T1_C2(O2_, T1_, factor, C2_);
-        H2_T2_C2(O2_, T2_, factor, C2_);
+        if (n == 1 && eri_df_) {
+            H2_T1_C2_DF(B_, T1_, factor, C2_);
+            H2_T2_C2_DF(B_, T2_, factor, C2_);
+        } else {
+            H2_T1_C2(O2_, T1_, factor, C2_);
+            H2_T2_C2(O2_, T2_, factor, C2_);
+        }
 
         // printing level
         if (print_ > 2) {
@@ -671,7 +693,7 @@ double MRDSRG::compute_energy_ldsrg2() {
     // figure out off-diagonal block labels for Hbar2
     std::vector<std::string> blocks2 = od_two_labels_hhpp();
 
-    if (omit_V3_) {
+    if (nivo_) {
         // Generate blocks for Hbar2_, O2_ and C2_
         std::vector<std::string> blocks_exclude_V3;
         for (std::string s0 : {"c", "a", "v"}) {
