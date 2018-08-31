@@ -15,6 +15,7 @@ matrix:
         - clang-3.6
         - libhdf5-serial-dev
         - gfortran
+        - g++-4.9
     env:
       - CXX_COMPILER='clang++-3.6'
       - PYTHON_VER='3.6'
@@ -104,7 +105,7 @@ install:
 - conda config --set always_yes yes --set changeps1 no
 - conda update -q conda
 - conda info -a
-- conda create -q -n p4env python=$PYTHON_VER numpy cmake gdma libint libxc gau2grid -c psi4/label/test -c psi4
+- conda create -q -n p4env python=$PYTHON_VER numpy cmake gdma pylibefp libint libxc gau2grid -c psi4/label/test -c psi4
 - source activate p4env
 #- conda list
 - conda install pylibefp -c psi4/label/dev
