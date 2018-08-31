@@ -8,7 +8,7 @@ import forte
 memory 500 mb
 
 refrohf   =  -229.41829880360117
-refdsrgpt2 =  -230.159459991573641
+refdsrgpt2 = -230.164010017177958 
 
 molecule mbenzyne{
   0 3

@@ -2,8 +2,8 @@
 
 import forte
 
-refscf = -14.54873910108353
-reffci = -14.595808852754054
+refscf = -14.7844187667536939
+reffci = -14.854408715827343
 
 molecule {
 0 1
@@ -16,6 +16,7 @@ units bohr
 set {
   basis 6-311G
   scf_type pk
+  docc [2,0,0,0,0,1,0,0]
   e_convergence 12
 }
 
@@ -24,4 +25,7 @@ set forte {
 }
 
 energy('scf')
+compare_values(refscf,get_variable("CURRENT ENERGY"),10,"SCF energy")
+
 energy('forte')
+compare_values(reffci,get_variable("CURRENT ENERGY"),10,"FCI energy")
