@@ -33,7 +33,7 @@
 #include "test_ambit.h"
 
 #include <cstdlib>
-#include <iostream>
+#include <limits>
 
 namespace psi {
 namespace forte {
@@ -1808,7 +1808,7 @@ double test_batched_with_factor_permute()
     return difference(C, c4).second;
 }
 
-int test_ambit()
+bool test_ambit()
 {
     srand(time(nullptr));
 
@@ -1930,11 +1930,12 @@ int test_ambit()
 
     ::std::vector<::std::tuple<::std::string, TestResult, double>> results;
 
-//    printf(ANSI_COLOR_RESET);
     outfile->Printf("\n\n==> TEST AMBIT <==\n");
 
     outfile->Printf("\n %-50s %12s %s", "Description", "Max. error", "Result");
     outfile->Printf("\n %s", ::std::string(83, '-').c_str());
+
+    double max_error = 0.0;
 
     bool success = true;
     for (auto test_function : test_functions)
@@ -1946,6 +1947,7 @@ int test_ambit()
         try
         {
             result = ::std::get<1>(test_function)();
+            max_error = ::std::max(result, max_error);
 
             // Did the test pass based on returned value?
             tresult = ::std::fabs(result) < zero ? kPass : kFail;
@@ -1962,6 +1964,7 @@ int test_ambit()
 
             if (report_result == kException)
             {
+                max_error = ::std::numeric_limits<double>::max();
                 exception = e.what();
             }
         }
@@ -1986,9 +1989,9 @@ int test_ambit()
     outfile->Printf("\n %s", ::std::string(83, '-').c_str());
     outfile->Printf("\n Tests: %s\n", success ? "All passed" : "Some failed");
 
-//    ambit::finalize();
+    Process::environment.globals["AMBIT MAX ERROR"] = max_error;
 
-    return success ? EXIT_SUCCESS : EXIT_FAILURE;
+    return success;
 }
 
 }

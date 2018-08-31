@@ -18,4 +18,4 @@ set forte {
   job_type test_ambit
 }
 energy('forte')
-
+compare_values(0.0, get_variable("AMBIT MAX ERROR"), 10, "Ambit max error") #TEST

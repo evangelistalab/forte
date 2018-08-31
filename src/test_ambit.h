@@ -39,7 +39,7 @@ namespace psi {
 namespace forte {
 namespace AMBIT_TEST {
 
-int test_ambit();
+bool test_ambit();
 
 }
 }
