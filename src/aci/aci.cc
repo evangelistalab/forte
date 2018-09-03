@@ -521,6 +521,10 @@ double AdaptiveCI::compute_energy() {
             root_ = i;
         }
 
+        if( (options_.get_str("ACI_EX_TYPE") == "CORE") and (i > 0) ){
+            ref_root_ = i-1; 
+        }
+
         compute_aci(PQ_space, PQ_evecs, PQ_evals);
 
         if (ex_alg_ == "ROOT_COMBINE") {
@@ -715,8 +719,6 @@ double AdaptiveCI::compute_energy() {
     Process::environment.globals["CURRENT ENERGY"] = root_energy;
     Process::environment.globals["ACI ENERGY"] = root_energy;
     Process::environment.globals["ACI+PT2 ENERGY"] = root_energy_pt2;
-    //  if(!quiet_mode_){
-    //  }
 
     // printf( "\n%1.5f\n", aci_elapse.get());
     if (options_.get_bool("ACI_SPIN_ANALYSIS") and !(options_.get_bool("ACI_RELAXED_SPIN")) ){
@@ -2004,7 +2006,7 @@ void AdaptiveCI::compute_aci(DeterminantHashVec& PQ_space, SharedMatrix& PQ_evec
         int nf_orb = options_.get_int("ACI_NFROZEN_CORE");
         int ncstate = options_.get_int("ACI_ROOTS_PER_CORE");
 
-        if (((root_ - 1) > ncstate) and (root_ > 1)) {
+        if (((root_) > ncstate) and (root_ > 1)) {
             hole_++;
         }
         int particle = (root_ - 1) - (hole_ * ncstate);
