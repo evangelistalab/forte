@@ -175,6 +175,7 @@ void set_ACI_options(ForteOptions& foptions) {
 
     /*- Do spin analysis? -*/
     foptions.add_bool("ACI_SPIN_ANALYSIS", false, "Do spin correlation analysis");
+    foptions.add_bool("ACI_RELAXED_SPIN", false, "Do spin correlation analysis for relaxed wave function");
 
     /*- Print IAOs -*/
     foptions.add_bool("PRINT_IAOS", true, "Print IAOs");
@@ -204,6 +205,10 @@ void set_ACI_options(ForteOptions& foptions) {
 
     /*- Computes RDMs without coupling lists -*/
     foptions.add_bool("ACI_DIRECT_RDMS", false, "Computes RDMs without coupling lists"); 
+
+
+    //temp
+    foptions.add_str("ACI_BATCH_ALG", "HASH", "Algorithm to use for batching");
 }
 
 bool pairComp(const std::pair<double, Determinant> E1, const std::pair<double, Determinant> E2) {
@@ -516,6 +521,10 @@ double AdaptiveCI::compute_energy() {
             root_ = i;
         }
 
+        if( (options_.get_str("ACI_EX_TYPE") == "CORE") and (i > 0) ){
+            ref_root_ = i-1; 
+        }
+
         compute_aci(PQ_space, PQ_evecs, PQ_evals);
 
         if (ex_alg_ == "ROOT_COMBINE") {
@@ -710,23 +719,40 @@ double AdaptiveCI::compute_energy() {
     Process::environment.globals["CURRENT ENERGY"] = root_energy;
     Process::environment.globals["ACI ENERGY"] = root_energy;
     Process::environment.globals["ACI+PT2 ENERGY"] = root_energy_pt2;
-    //  if(!quiet_mode_){
-    //  }
 
     // printf( "\n%1.5f\n", aci_elapse.get());
-    if (options_.get_bool("ACI_SPIN_ANALYSIS")) {
+    if (options_.get_bool("ACI_SPIN_ANALYSIS") and !(options_.get_bool("ACI_RELAXED_SPIN")) ){
         spin_analysis();
     }
 
-    if (options_.get_bool("UNPAIRED_DENSITY")) {
-        UPDensity density(reference_wavefunction_, mo_space_info_);
-        density.compute_unpaired_density(ordm_a_, ordm_b_);
-    }
+//    if (options_.get_bool("UNPAIRED_DENSITY")) {
+//        UPDensity density(reference_wavefunction_, mo_space_info_);
+//        density.compute_unpaired_density(ordm_a_, ordm_b_);
+//    }
 
     outfile->Printf("\n\n  %s: %f s", "Adaptive-CI ran in ", aci_elapse.get());
     outfile->Printf("\n\n  %s: %d", "Saving information for root", options_.get_int("ACI_ROOT"));
     return PQ_evals->get(options_.get_int("ACI_ROOT")) + nuclear_repulsion_energy_ +
            fci_ints_->scalar_energy();
+}
+
+void AdaptiveCI::unpaired_density(SharedMatrix Ua, SharedMatrix Ub){
+    UPDensity density(reference_wavefunction_, ints_, mo_space_info_, options_, Ua, Ub);
+    density.compute_unpaired_density(ordm_a_, ordm_b_);
+}
+void AdaptiveCI::unpaired_density(ambit::Tensor Ua, ambit::Tensor Ub){
+
+    Matrix am = tensor_to_matrix(Ua, nactpi_);
+    Matrix bm = tensor_to_matrix(Ub, nactpi_);
+
+    SharedMatrix Uam(new Matrix(nactpi_, nactpi_));
+    SharedMatrix Ubm(new Matrix(nactpi_, nactpi_));
+
+    Uam->copy(am);
+    Ubm->copy(bm);
+
+    UPDensity density(reference_wavefunction_, ints_, mo_space_info_, options_, Uam, Ubm);
+    density.compute_unpaired_density(ordm_a_, ordm_b_);
 }
 
 void AdaptiveCI::diagonalize_final_and_compute_rdms() {
@@ -847,8 +873,12 @@ void AdaptiveCI::find_q_space_batched(DeterminantHashVec& P_space, DeterminantHa
     outfile->Printf("\n  Using batched Q_space algorithm");
 
     std::vector<std::pair<double, Determinant>> F_space;
-    double remainder = get_excited_determinants_batch(evecs, evals, P_space, F_space);
-    // double remainder = get_excited_determinants_batchv( evecs, evals, P_space, F_space );
+    double remainder = 0.0; 
+    if( options_.get_str("ACI_BATCH_ALG") == "HASH"){
+        remainder = get_excited_determinants_batch(evecs, evals, P_space, F_space);
+    } else {
+        remainder = get_excited_determinants_batch_vecsort( evecs, evals, P_space, F_space );
+    }
 
     PQ_space.clear();
     external_wfn_.clear();
@@ -1976,7 +2006,7 @@ void AdaptiveCI::compute_aci(DeterminantHashVec& PQ_space, SharedMatrix& PQ_evec
         int nf_orb = options_.get_int("ACI_NFROZEN_CORE");
         int ncstate = options_.get_int("ACI_ROOTS_PER_CORE");
 
-        if (((root_ - 1) > ncstate) and (root_ > 1)) {
+        if (((root_) > ncstate) and (root_ > 1)) {
             hole_++;
         }
         int particle = (root_ - 1) - (hole_ * ncstate);
@@ -3322,12 +3352,28 @@ void AdaptiveCI::spin_analysis() {
     // Now form the spin correlation
     SharedMatrix spin_corr(new Matrix("Spin Correlation", nact, nact));
     SharedMatrix spin_fluct(new Matrix("Spin Fluctuation", nact, nact));
+    SharedMatrix spin_z(new Matrix("Spin-z Correlation", nact, nact));
 
     std::vector<double> l1a(L1aT.data());
     std::vector<double> l1b(L1bT.data());
     std::vector<double> l2aa(L2aaT.data());
     std::vector<double> l2ab(L2abT.data());
     std::vector<double> l2bb(L2bbT.data());
+    for (int i = 0; i < nact; ++i) {
+        for (int j = 0; j < nact; ++j) {
+            double value = ( l2aa[i * nact3 + j * nact2 + i * nact + j] +
+                                    l2bb[i * nact3 + j * nact2 + i * nact + j] -
+                                    l2ab[i * nact3 + j * nact2 + i * nact + j] -
+                                    l2ab[j * nact3 + i * nact2 + j * nact + i] );
+            if( i == j ){
+                value += ( l1a[nact * i + j] + l1b[nact * i + j] );
+            }
+
+            value +=  (l1a[nact*i +i] -  l1b[nact*i +i]) * (l1a[nact*j +j] -  l1b[nact*j +j]); 
+
+            spin_z->set(i,j,value); 
+        }
+    }
 
     for (int i = 0; i < nact; ++i) {
         for (int j = 0; j < nact; ++j) {
@@ -3352,8 +3398,9 @@ void AdaptiveCI::spin_analysis() {
         }
     }
     outfile->Printf("\n");
-    spin_corr->print();
+   // spin_corr->print();
     spin_fluct->print();
+    spin_z->print();
     SharedMatrix spin_evecs(new Matrix(nact, nact));
     SharedVector spin_evals(new Vector(nact));
     SharedMatrix spin_evecs2(new Matrix(nact, nact));

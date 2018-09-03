@@ -1133,14 +1133,18 @@ AdaptiveCI::get_excited_determinants_batch_vecsort(SharedMatrix evecs, SharedVec
     double aci_scale = options_.get_double("ACI_SCALE_SIGMA");
 
     // Guess the total memory needed to store all singles and doubles out of all dets
-    size_t nsingle_a = nalpha_ * (ncmo_ - nalpha_);
-    size_t nsingle_b = nbeta_ * (ncmo_ - nbeta_);
-    size_t ndouble_aa = nalpha_ * (nalpha_ - 1) * (ncmo_ - nalpha_) * (ncmo_ - nalpha_ - 1) / 4;
-    size_t ndouble_bb = nbeta_ * (nbeta_ - 1) * (ncmo_ - nbeta_) * (ncmo_ - nbeta_ - 1) / 4;
-    size_t ndouble_ab = nsingle_a * nsingle_b;
-    size_t nexcitations = nsingle_a + nsingle_b + ndouble_aa + ndouble_bb + ndouble_ab;
+//    size_t nsingle_a = nalpha_ * (ncmo_ - nalpha_);
+//    size_t nsingle_b = nbeta_ * (ncmo_ - nbeta_);
+//    size_t ndouble_aa = nalpha_ * (nalpha_ - 1) * (ncmo_ - nalpha_) * (ncmo_ - nalpha_ - 1) / 4;
+//    size_t ndouble_bb = nbeta_ * (nbeta_ - 1) * (ncmo_ - nbeta_) * (ncmo_ - nbeta_ - 1) / 4;
+//    size_t ndouble_ab = nsingle_a * nsingle_b;
+//    size_t nexcitations = nsingle_a + nsingle_b + ndouble_aa + ndouble_bb + ndouble_ab;
+//    size_t guess_size = n_dets * nexcitations;
 
-    size_t guess_size = n_dets * nexcitations;
+    size_t nocc2 = nalpha_ * nalpha_;
+    size_t nvir2 = (nmo - nalpha_) * (nmo - nalpha_);
+    size_t guess_size = n_dets * nocc2 * nvir2;
+
     double guess_mem = guess_size * (4.0 + double(Determinant::num_det_bits)) * 1.25e-7 *
                        1.4; // Est of map size in MB
     int nruns = static_cast<int>(std::ceil(guess_mem / max_mem));
@@ -1172,12 +1176,13 @@ AdaptiveCI::get_excited_determinants_batch_vecsort(SharedMatrix evecs, SharedVec
             auto& A_b = A_b_t.first[tid];
             //                        int idx = 0;
             double E0 = evals->get(0);
+//            outfile->Printf("\n td %d, Ab: %zu, abt: %zu", tid ,A_b.size(), A_b_t.second[tid]);
             for (size_t I = 0, max_I = A_b_t.second[tid]; I < max_I; I++) {
                 auto& pair = A_b[I];
                 double& V = pair.second;
                 if (V != 0.0) {
                     auto& det = pair.first;
-                    double delta = fci_ints_->energy(det) - E0;
+                    double delta = fci_ints_->energy_bit(det) - E0;
                     V = std::fabs(0.5 * (delta - sqrt(delta * delta + V * V * 4.0)));
                 }
             }
@@ -1185,37 +1190,149 @@ AdaptiveCI::get_excited_determinants_batch_vecsort(SharedMatrix evecs, SharedVec
         outfile->Printf("\n    Build criteria vector  %10.6f", bint.get());
 
         // 3. Sort the list
-        Timer sortt;
-#pragma omp parallel
-        {
-            int tid = omp_get_thread_num();
-            std::sort(A_b_t.first[tid].begin(), A_b_t.first[tid].begin() + A_b_t.second[tid],
-                      [](const std::pair<Determinant, double>& a,
-                         const std::pair<Determinant, double>& b) -> bool {
-                          return a.second < b.second;
-                      });
-        }
-        outfile->Printf("\n    Sort vector            %10.6f", sortt.get());
+      //  Timer sortt;
+      //  #pragma omp parallel
+      //  {
+      //      int tid = omp_get_thread_num();
+      //      std::sort(A_b_t.first[tid].begin(), A_b_t.first[tid].begin() + A_b_t.second[tid],
+      //                [](const std::pair<Determinant, double>& a,
+      //                   const std::pair<Determinant, double>& b) -> bool {
+      //                    return a.second < b.second;
+      //                });
+      //  }
+      //  outfile->Printf("\n    Sort vector            %10.6f", sortt.get());
 
         // 4. Screen subspaces
+        // Can it be done without recombining/resorting?
         Timer screener;
         // single-thread algorithm
         double b_sigma = sigma_ * (aci_scale / nbin);
         double excluded = 0.0;
+        size_t total_size = 0;
 
-        auto& A_b = A_b_t.first[0];
-        for (size_t I = 0, max_I = A_b_t.second[0]; I < max_I; ++I) {
-            double en = A_b[I].second;
-            //            Determinant& det = A_b[I].second;
+        for( size_t& s : A_b_t.second ){
+            total_size += s;
+        }
+
+        // Test threaded det generation
+        std::vector<std::pair<Determinant,double>> master;
+        master.reserve(total_size);
+#pragma omp parallel
+        {
+            int tid = omp_get_thread_num();
+
+            auto& A_b = A_b_t.first[tid];
+        
+            #pragma omp critical
+            {
+        //        outfile->Printf("\n Ab(%d) size = %zu", tid, A_b.size());
+                for (size_t I = 0, max_I = A_b_t.second[tid]; I < max_I; ++I) {
+                    master.push_back( A_b[I] );
+                }
+            }
+        }
+        std::sort(master.begin(), master.end(),
+                  [](const std::pair<Determinant, double>& a,
+                     const std::pair<Determinant, double>& b) -> bool {
+                      return a.second < b.second;
+                  });
+
+        for( auto& pair : master ){
+            const double& en = pair.second;
+            const auto& det = pair.first;    
             if (excluded + en < b_sigma) {
                 excluded += en;
             } else {
-                F_space.push_back(std::make_pair(en, A_b[I].first));
+                F_space.push_back(std::make_pair(en, det));
             }
         }
         total_excluded += excluded;
+
+/*
+        Timer sc;
+
+        int num_threads = A_b_t.second.size();
+        std::vector<std::pair<std::pair<Determinant,double>,int>> criteria(num_threads);
+        std::vector<size_t> indices(num_threads, 0);
+        bool include = false;
+        int count = 0; 
+
+        std::vector<int> good_threads;
+        for( int i = 0; i < num_threads; ++i ){
+            if( A_b_t.first[i].size() > 0 ){
+                good_threads.push_back(i);
+            }
+        }
+
+        while( !include ){
+            // Get lowest energy determinant from each thread
+            for( int& i : good_threads ){
+                size_t index = indices[i];
+                const auto& A_b = A_b_t.first[i];
+//                if( count == 0 ){
+//                    outfile->Printf("\n Ab(%d) size = %zu, second = %zu", i, A_b.size(), A_b_t.second[i]);
+//                }
+                criteria[i] = std::make_pair(A_b[index], i);
+            }
+        
+            // Sort the lowest criteria
+            std::sort(criteria.begin(), criteria.end(),
+                [](const std::pair<std::pair<Determinant, double>,int>& a,
+                   const std::pair<std::pair<Determinant, double>,int>& b) -> bool {
+                    return a.first.second < b.first.second;
+                });
+//            outfile->Printf("\n");
+//            for( int i = 0; i < num_threads; ++i ){
+//                outfile->Printf("\n   (%d, %d, %1.12f)", criteria[i].second, indices[i], criteria[i].first.second);
+//            }
+
+            // Add or remove lowest one
+            auto& pair = criteria[0].first;
+            double en = pair.second;
+            if (excluded + en < b_sigma) {
+                excluded += en;
+                size_t s_td = criteria[0].second;
+                indices[s_td]++;
+//                outfile->Printf("\n %d: (%zu)  %1.14f",s_td, count, en);
+            } else {
+                include = true;
+            }
+
+            good_threads.clear();
+            for( int i = 0; i < num_threads; ++i ){
+                size_t idx = indices[i];
+                size_t max = A_b_t.second[i];
+//                outfile->Printf("\n  td:%d idx: %d max:%d", i, idx, max);
+                if( (idx < max) and (max > 0) ){
+                    good_threads.push_back(i);
+//                    outfile->Printf("\n keep thread %d", i);
+                } else {
+                    double& val = criteria[i].first.second;
+                    val = 1.0;
+                }    
+            }
+            count++;                
+
+        }
+        total_excluded += excluded;
+        // Now add the remainder to the model space
+        Timer fill;
+        for( int& i : good_threads ){
+            auto& A_b = A_b_t.first[i];
+            size_t start = indices[i] ;
+            F_space.reserve( F_space.size() + A_b_t.second[i] );
+            for( int I = start, end = A_b_t.second[i]; I < end; ++I ){
+                auto& pair = A_b[I];
+                const double& en = pair.second;
+                const auto& det = pair.first;
+                F_space.push_back(std::make_pair(en,det));
+            } 
+        }        
+        outfile->Printf("\n    Fill vector              %1.6f", fill.get());
+*/
+
         outfile->Printf("\n    Screening              %10.6f", screener.get());
-        outfile->Printf("\n    Added %zu dets of %zu from bin %d", F_space.size(), A_b.size(), bin);
+        outfile->Printf("\n    Added %zu dets of %zu from bin %d", F_space.size(), total_size, bin);
     } // End iteration over bins
 
     outfile->Printf("\n ------------------------------------");
@@ -1281,7 +1398,8 @@ AdaptiveCI::get_excited_determinants_batch(SharedMatrix evecs, SharedVector eval
                     auto& det = pair.first;
                     double& V = pair.second;
 
-                    double delta = fci_ints_->energy(det) - E0;
+                    //double delta = fci_ints_->energy(det) - E0;
+                    double delta = fci_ints_->energy_bit(det) - E0;
 
                     F_tmp[idx] = std::make_pair(
                         std::fabs(0.5 * (delta - sqrt(delta * delta + V * V * 4.0))), det);
@@ -1882,7 +2000,7 @@ AdaptiveCI::get_bin_F_space_vecsort(int bin, int nbin, SharedMatrix evecs, Deter
         int n_threads = omp_get_num_threads();
         int thread_id = omp_get_thread_num();
 
-#pragma omp critical
+        #pragma omp critical
         {
             vec_A_b_t.resize(n_threads);
             dets_t.resize(n_threads);
@@ -1899,14 +2017,18 @@ AdaptiveCI::get_bin_F_space_vecsort(int bin, int nbin, SharedMatrix evecs, Deter
         int end_idx = start_idx + bin_size;
 
         // Loop over P space determinants
-        size_t guess_a = nalpha_ * (ncmo_ - nalpha_);
-        size_t guess_b = nbeta_ * (ncmo_ - nbeta_);
-        size_t guess_aa = nalpha_ * (nalpha_ - 1) * (ncmo_ - nalpha_) * (ncmo_ - nalpha_ - 1) / 4;
-        size_t guess_bb = nbeta_ * (nbeta_ - 1) * (ncmo_ - nbeta_) * (ncmo_ - nbeta_ - 1) / 4;
-        size_t guess_ab = guess_a * guess_b;
+       // size_t guess_a = nalpha_ * (ncmo_ - nalpha_);
+       // size_t guess_b = nbeta_ * (ncmo_ - nbeta_);
+       // size_t guess_aa = nalpha_ * (nalpha_ - 1) * (ncmo_ - nalpha_) * (ncmo_ - nalpha_ - 1) / 4;
+       // size_t guess_bb = nbeta_ * (nbeta_ - 1) * (ncmo_ - nbeta_) * (ncmo_ - nbeta_ - 1) / 4;
+       // size_t guess_ab = guess_a * guess_b;
 
-        size_t guess = (n_dets / nbin) * (guess_a + guess_b + guess_aa + guess_bb + guess_ab);
-        outfile->Printf("\n Guessing %zu dets in bin %d", guess, bin);
+       // size_t guess = (n_dets / nbin) * (guess_a + guess_b + guess_aa + guess_bb + guess_ab);
+
+        size_t nocc2 = nalpha_ * nalpha_;
+        size_t nvir2 = (nmo - nalpha_) * (nmo - nalpha_);
+        size_t guess = (n_dets / nbin) * nocc2 * nvir2;
+       // outfile->Printf("\n Guessing %zu dets in bin %d", guess, bin);
         vec_A_b.reserve(guess);
         //        A_b.reserve(guess);
         for (size_t I = start_idx; I < end_idx; ++I) {
@@ -2094,8 +2216,10 @@ AdaptiveCI::get_bin_F_space_vecsort(int bin, int nbin, SharedMatrix evecs, Deter
         size_t num_new_dets = vec_A_b.size();
 
         //        outfile->Printf("\n  Added %zu dets", A_b.size());
-        outfile->Printf("\n  Time spent forming vec_A_b: %1.6f", build.get());
-        outfile->Printf("\n  Generated %zu determinants out of %zu guessed", num_new_dets, guess);
+//        if( thread_id == 0 ){
+  //          outfile->Printf("\n  Time spent forming vec_A_b: %1.6f", build.get());
+  //          outfile->Printf("\n  Generated %zu determinants out of %zu guessed", num_new_dets, guess);
+  //      }
 
         // Sort the determinant contributions
         Timer F_sort;
@@ -2105,8 +2229,9 @@ AdaptiveCI::get_bin_F_space_vecsort(int bin, int nbin, SharedMatrix evecs, Deter
             vec_A_b.begin(), vec_A_b.begin() + num_new_dets,
             [](const std::pair<Determinant, double>& a,
                const std::pair<Determinant, double>& b) -> bool { return a.first < b.first; });
-        outfile->Printf("\n  Time spent sorting vec_A_b: %1.6f", F_sort.get());
-
+        //if( thread_id == 0 ){
+        //    outfile->Printf("\n  Time spent sorting vec_A_b: %1.6f", F_sort.get());
+        //}
         //        for (int i = 0; i < num_new_dets; i++){
         //            auto& p = vec_A_b[i];
         //            outfile->Printf("\n%s %20.12f",p.first.str().c_str(),p.second);
@@ -2130,9 +2255,11 @@ AdaptiveCI::get_bin_F_space_vecsort(int bin, int nbin, SharedMatrix evecs, Deter
             }
         }
         vec_A_b[pos] = std::make_pair(d, sum);
-        pos += 1;
-        outfile->Printf("\n  Time spent combining unique elements of vec_A_b: %1.6f",
-                        Combine.get());
+        pos += (pos == 0) ? 0 : 1;
+
+     //   #pragma omp critical
+     //   outfile->Printf("\n  Time spent combining unique elements of vec_A_b: %1.6f",
+     //                   Combine.get());
 
         // store the number of unique determinants
         dets_t[thread_id] = pos;
@@ -2148,9 +2275,9 @@ AdaptiveCI::get_bin_F_space_vecsort(int bin, int nbin, SharedMatrix evecs, Deter
         }
         std::sort(sorted_dets.begin(), sorted_dets.end());
 
-        // Remove duplicates and merge
-#pragma omp critical
-        {
+      // Remove duplicates and merge
+    //  #pragma omp critical
+    //  {
 
             size_t ref_size = sorted_dets.size();
             size_t ref_pos = 0;
@@ -2179,14 +2306,56 @@ AdaptiveCI::get_bin_F_space_vecsort(int bin, int nbin, SharedMatrix evecs, Deter
             //            for (size_t I = det_pos; I < det_size; I++) {
             //                bin_f_space[vec_A_b[I].first] += vec_A_b[I].second;
             //            }
-        }
+   //     }
 
-#pragma omp barrier
         if (thread_id == 0)
             outfile->Printf("\n  Merge: %1.6f", merge.get());
-
     } // close threads
 
+
+    // Account for duplicates between threads by adding
+    // to thread 0, and zeroing other threads
+    Timer merget;
+    int ntd = vec_A_b_t.size();
+    if( ntd > 1 ){
+        //auto& vec_ref = vec_A_b_t[0];
+        //for( int td = 1; td < ntd; ++td ){
+        for( int td1 = 0; td1 < ntd; ++td1 ){
+            auto& vec_ref = vec_A_b_t[td1];
+            for( int td2 = td1 + 1; td2 < ntd; ++td2 ){
+
+                auto& vec_td = vec_A_b_t[td2];
+
+                size_t ref_size = vec_ref.size();
+                size_t ref_pos = 0;
+                size_t td_size = vec_td.size();
+                size_t td_pos = 0;
+
+                Determinant ref_head = vec_ref[0].first;
+                Determinant td_head = vec_td[0].first;
+                // run through the vectors
+                while ((ref_pos < ref_size) and (td_pos < td_size)) {
+                    ref_head = vec_ref[ref_pos].first;
+                    td_head = vec_td[td_pos].first;
+                    if (ref_head < td_head) {
+                        ref_pos += 1;
+                    } else if (td_head < ref_head) {
+                        td_pos += 1;
+                    } else {
+                        // found a match
+                        double& V = vec_td[td_pos].second;
+
+                        vec_ref[ref_pos].second += V;
+                        //vec_td[ref_pos].second = 0;
+                        V = 0.0;
+                        td_pos += 1;
+                        ref_pos += 1;
+                    }
+                }
+            }
+        }
+    }
+outfile->Printf("\n  Inter-thread merge: %1.6f", merget.get());
     return std::make_pair(vec_A_b_t, dets_t);
 }
 

@@ -39,7 +39,7 @@ set forte{
    active                  [2,0,0,0]
    root_sym                0
    nroot                   1
-   cas_type                FCI
+   casscf_ci_solver        FCI
    CASSCF_REFERENCE        TRUE
    int_type                conventional
    CASSCF_ITERATIONS        25

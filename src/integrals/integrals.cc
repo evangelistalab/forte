@@ -449,24 +449,27 @@ void ForteIntegrals::print_ints() {
     Matrix ha(" Alpha one-electron integrals (T + V_{en})", nmo_, nmo_);
     for (size_t p = 0; p < nmo_; ++p) {
         for (size_t q = 0; q < nmo_; ++q) {
-            ha.set(p, q, oei_a(p, q));
-            //            outfile->Printf("\n  h[%6d][%6d] = %20.12f", p, q, oei_a(p, q));
+     //       ha.set(p, q, oei_a(p, q));
+                if( std::abs(oei_a(p,q)) >= 1e-14 ) 
+                        outfile->Printf("\n  h[%6d][%6d] = %20.12f", p, q, oei_a(p, q));
         }
     }
-    ha.print();
+  //  ha.print();
 
     outfile->Printf("\n  Beta one-electron integrals (T + V_{en})");
     for (size_t p = 0; p < nmo_; ++p) {
         for (size_t q = 0; q < nmo_; ++q) {
+                if( std::abs(oei_b(p,q)) >= 1e-14 ) 
             outfile->Printf("\n  h[%6d][%6d] = %20.12f", p, q, oei_b(p, q));
         }
     }
-
+/*
     outfile->Printf("\n  Alpha-alpha two-electron integrals <pq||rs>");
     for (size_t p = 0; p < nmo_; ++p) {
         for (size_t q = 0; q < nmo_; ++q) {
             for (size_t r = 0; r < nmo_; ++r) {
                 for (size_t s = 0; s < nmo_; ++s) {
+                if( std::abs(aptei_aa(p,q,r,s)) >= 1e-14 ) 
                     outfile->Printf("\n  v[%6d][%6d][%6d][%6d] = %20.12f", p, q, r, s,
                                     aptei_aa(p, q, r, s));
                 }
@@ -479,6 +482,7 @@ void ForteIntegrals::print_ints() {
         for (size_t q = 0; q < nmo_; ++q) {
             for (size_t r = 0; r < nmo_; ++r) {
                 for (size_t s = 0; s < nmo_; ++s) {
+                if( std::abs(aptei_ab(p,q,r,s)) >= 1e-14 ) 
                     outfile->Printf("\n  v[%6d][%6d][%6d][%6d] = %20.12f", p, q, r, s,
                                     aptei_ab(p, q, r, s));
                 }
@@ -490,12 +494,14 @@ void ForteIntegrals::print_ints() {
         for (size_t q = 0; q < nmo_; ++q) {
             for (size_t r = 0; r < nmo_; ++r) {
                 for (size_t s = 0; s < nmo_; ++s) {
+                if( std::abs(aptei_bb(p,q,r,s)) >= 1e-14 ) 
                     outfile->Printf("\n  v[%6d][%6d][%6d][%6d] = %20.12f", p, q, r, s,
                                     aptei_bb(p, q, r, s));
                 }
             }
         }
     }
+*/
 }
 
 void ForteIntegrals::build_AOdipole_ints() {

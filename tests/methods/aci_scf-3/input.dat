@@ -47,9 +47,9 @@ set forte {
   root_sym               0
   nroot                  1
   sigma	                 0.001
-  enforce_spin_complete   true
+  aci_enforce_spin_complete   true
   casscf_reference       true
-  cas_type                ACI
+  casscf_ci_solver        ACI
   job_type                casscf
   print_no               true
   casscf_iterations       50

@@ -3325,8 +3325,9 @@ void THREE_DSRG_MRPT2::form_Hbar() {
 
 void THREE_DSRG_MRPT2::relax_reference_once() {
 
+outfile->Printf("\n Computing ints for Heff");
     auto fci_ints = compute_Heff();
-
+outfile->Printf("\n done");
     std::vector<double> E_relaxed = relaxed_energy(fci_ints);
 
     if (options_["AVG_STATE"].size() == 0) {
@@ -3374,13 +3375,33 @@ void THREE_DSRG_MRPT2::relax_reference_once() {
     }
 }
 
+void THREE_DSRG_MRPT2::set_Ufull( SharedMatrix& Ua, SharedMatrix& Ub ){
+    outfile->Printf("\n here");
+
+    Dimension nmopi = mo_space_info_->get_dimension("ALL");
+
+    Ua_full_.reset(new Matrix("Ua", nmopi, nmopi));
+    Ub_full_.reset(new Matrix("Ub", nmopi, nmopi));
+
+    Ua_full_->copy(Ua);
+    Ub_full_->copy(Ub);
+    outfile->Printf("\n done");
+}
+
 std::vector<double> THREE_DSRG_MRPT2::relaxed_energy(std::shared_ptr<FCIIntegrals> fci_ints) {
 
     // reference relaxation
     std::vector<double> Erelax;
+    std::string cas_type;
+
+    if( options_.get_str("CAS_TYPE") == "CASSCF" ){
+        cas_type = options_.get_str("CASSCF_CI_SOLVER");
+    } else {
+        cas_type = options_.get_str("CAS_TYPE");
+    }
 
     // check CAS_TYPE to decide diagonalization code
-    if (options_.get_str("CAS_TYPE") == "CAS") {
+    if (cas_type == "CAS") {
 
         FCI_MO fci_mo(reference_wavefunction_, options_, ints_, mo_space_info_, fci_ints);
         fci_mo.set_localize_actv(false);
@@ -3401,7 +3422,7 @@ std::vector<double> THREE_DSRG_MRPT2::relaxed_energy(std::shared_ptr<FCIIntegral
             }
         }
 
-    } else if (options_.get_str("CAS_TYPE") == "ACI") {
+    } else if (cas_type == "ACI") {
 
         // Only do ground state ACI for now
         AdaptiveCI aci(reference_wavefunction_, options_, ints_, mo_space_info_);
@@ -3416,6 +3437,14 @@ std::vector<double> THREE_DSRG_MRPT2::relaxed_energy(std::shared_ptr<FCIIntegral
         // Compute relaxed NOs
         if( options_.get_bool("ACI_NO") ){
             aci.compute_nos();
+        }
+        if( options_.get_bool("ACI_SPIN_ANALYSIS") ){
+            aci.spin_analysis();
+        }
+
+        if( options_.get_bool("UNPAIRED_DENSITY") ){
+
+            aci.unpaired_density(Ua_full_, Ub_full_);
         }
 
     } else {

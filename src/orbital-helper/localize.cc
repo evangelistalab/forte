@@ -49,6 +49,10 @@ LOCALIZE::LOCALIZE(std::shared_ptr<Wavefunction> wfn, Options& options,
     nrst_ = mo_space_info->size("RESTRICTED_DOCC");
     namo_ = mo_space_info->size("ACTIVE");
 
+    if( wfn_->nirrep() > 1 ){
+        throw PSIEXCEPTION("\n\n ERROR: Localizer only implemented for C1 symmetry!");
+    }
+
     int nel = 0;
     int natom = Process::environment.molecule()->natom();
     for (int i = 0; i < natom; i++) {

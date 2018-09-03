@@ -65,7 +65,6 @@ void CI_RDMS::compute_rdms_dynamic(std::vector<double>& oprdm_a,
 
 
 
-
     SortedStringList_UI64 a_sorted_string_list_(wfn_, fci_ints_, DetSpinType::Alpha);
     SortedStringList_UI64 b_sorted_string_list_(wfn_, fci_ints_, DetSpinType::Beta);
     const std::vector<UI64Determinant::bit_t>& sorted_bstr = b_sorted_string_list_.sorted_half_dets();

@@ -187,6 +187,47 @@ void FCIIntegrals::set_active_integrals_and_restricted_docc() {
     tei_bb_ = act_bb.data();
     RestrictedOneBodyOperator(oei_a_, oei_b_);
 }
+double FCIIntegrals::energy_bit(const Determinant& det) const {
+    double energy = frozen_core_energy_;
+    uint64_t Ia = det.get_alfa_bits();
+    uint64_t Ib = det.get_beta_bits();
+
+    int naocc = det.count_alfa(); 
+    int nbocc = det.count_beta(); 
+    
+    for(int A = 0; A < naocc; ++A ){
+        int p = lowest_one_idx( Ia );
+        energy += oei_a_[p * nmo_ + p];
+        Ia = clear_lowest_one(Ia);    
+        uint64_t Iac = Ia;
+
+        for( int AA = A+1; AA < naocc; ++AA ){
+            int q = lowest_one_idx(Iac);
+            energy += tei_aa_[p*nmo3_ + q*nmo2_ + p*nmo_ + q];
+            Iac = clear_lowest_one(Iac);
+        }
+       
+        uint64_t Ibc = Ib;
+        for( int B = 0; B < nbocc; ++B ){
+            int q = lowest_one_idx(Ibc);
+            energy += tei_ab_[p*nmo3_ + q*nmo2_ + p*nmo_ + q];
+            Ibc = clear_lowest_one(Ibc); 
+        } 
+    }
+
+    for( int B = 0; B < nbocc; ++B ){
+        int p = lowest_one_idx(Ib);
+        energy += oei_b_[p*nmo_ + p];
+        Ib = clear_lowest_one(Ib);
+        uint64_t Ibc = Ib;
+        for( int BB = B+1; BB < nbocc; ++BB ) {
+            int q = lowest_one_idx(Ibc);
+            energy += tei_bb_[p*nmo3_ + q*nmo2_ + p*nmo_ + q];
+            Ibc = clear_lowest_one(Ibc);
+        } 
+    }
+    return energy;
+}
 
 double FCIIntegrals::energy(const Determinant& det) const {
     double energy = frozen_core_energy_;
