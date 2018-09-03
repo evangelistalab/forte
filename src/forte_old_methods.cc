@@ -49,7 +49,6 @@
 #include "ci-no/ci-no.h"
 #include "ci-no/mrci-no.h"
 #include "determinant_hashvector.h"
-#include "embedding.h"
 #include "fci/fci.h"
 #include "fci/fci_solver.h"
 #include "fci/fci_integrals.h"
@@ -70,7 +69,6 @@
 #include "mrdsrg-spin-integrated/dwms_mrpt2.h"
 #include "orbital-helper/localize.h"
 #include "orbital-helper/es-nos.h"
-#include "ownscf.h"
 #include "pci/ewci.h"
 #include "pci/pci.h"
 #include "pci/pci_hashvec.h"
@@ -779,15 +777,6 @@ void forte_old_methods(SharedWavefunction ref_wfn, Options& options,
         DeterminantHashVec reference = aci->get_wavefunction();
         auto mrci = std::make_shared<MRCI>(ref_wfn, options, ints, mo_space_info, reference);
         mrci->compute_energy();
-    }
-
-    if (options.get_str("JOB_TYPE") == "EMBEDDING") {
-        auto emb = std::make_shared<Embedding>(ref_wfn, options, ints, mo_space_info);
-        emb->compute_energy();
-    }
-    if (options.get_str("JOB_TYPE") == "OWNSCF") {
-        auto scf = std::make_shared<OwnSCF>(ref_wfn, options, ints, mo_space_info);
-        scf->compute_energy();
     }
 }
 }

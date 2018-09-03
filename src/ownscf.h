@@ -57,7 +57,7 @@ namespace forte {
 class OwnSCF : public Wavefunction {
   public:
     // => Constructor <= //
-    OwnSCF(SharedWavefunction ref_wfn, Options& options, std::shared_ptr<ForteIntegrals> ints,
+    OwnSCF(SharedWavefunction ref_wfn, Options& options, 
                   std::shared_ptr<MOSpaceInfo> mo_space_info);
 
     ~OwnSCF();
@@ -68,8 +68,6 @@ class OwnSCF : public Wavefunction {
     void startup();
 
     std::shared_ptr<MOSpaceInfo> mo_space_info_;
-
-    std::shared_ptr<ForteIntegrals> ints_;
 
     SharedWavefunction ref_wfn_;
 

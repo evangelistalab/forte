@@ -57,7 +57,7 @@ namespace forte {
 class Embedding : public Wavefunction {
   public:
     // => Constructor <= //
-    Embedding(SharedWavefunction ref_wfn, Options& options, std::shared_ptr<ForteIntegrals> ints,
+    Embedding(SharedWavefunction ref_wfn, Options& options, 
               std::shared_ptr<MOSpaceInfo> mo_space_info);
 
     ~Embedding();
@@ -74,8 +74,6 @@ class Embedding : public Wavefunction {
     std::map<std::string, SharedMatrix> localize(SharedWavefunction wfn, Options& options);
 
     std::shared_ptr<MOSpaceInfo> mo_space_info_;
-
-    std::shared_ptr<ForteIntegrals> ints_;
 
     SharedWavefunction ref_wfn_;
 };

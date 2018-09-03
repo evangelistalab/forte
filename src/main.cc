@@ -34,6 +34,8 @@
 #include "sparse_ci/determinant.h"
 #include "version.h"
 #include "psi4/psi4-dec.h"
+#include "embedding.h"
+#include "ownscf.h"
 
 #ifdef HAVE_CHEMPS2
 #include "dmrgscf.h"
@@ -98,22 +100,34 @@ extern "C" PSI_API SharedWavefunction forte(SharedWavefunction ref_wfn, Options&
         exit(1);
     }
 
-    // Make a subspace object
-    SharedMatrix Ps = make_aosubspace_projector(ref_wfn, options);
+	if (options.get_str("JOB_TYPE") == "EMBEDDING" || options.get_str("JOB_TYPE") == "OWNSCF") {
+		if (options.get_str("JOB_TYPE") == "EMBEDDING") {
+			auto emb = std::make_shared<Embedding>(ref_wfn, options, mo_space_info);
+			emb->compute_energy();
+		}
+		if (options.get_str("JOB_TYPE") == "OWNSCF") {
+			auto scf = std::make_shared<OwnSCF>(ref_wfn, options, mo_space_info);
+			scf->compute_energy();
+		}
+	}
+	else {
+		// Make a subspace object
+		SharedMatrix Ps = make_aosubspace_projector(ref_wfn, options);
 
-    // Transform the orbitals
-    make_avas(ref_wfn, options, Ps);
+		// Transform the orbitals
+		make_avas(ref_wfn, options, Ps);
 
-    // Transform integrals and run forte only if necessary
-    if (options.get_str("JOB_TYPE") != "NONE") {
-        // Make an integral object
-        auto ints = make_forte_integrals(ref_wfn, options, mo_space_info);
+		// Transform integrals and run forte only if necessary
+		if (options.get_str("JOB_TYPE") != "NONE") {
+			// Make an integral object
+			auto ints = make_forte_integrals(ref_wfn, options, mo_space_info);
 
-        // Compute energy
-        forte_old_methods(ref_wfn, options, ints, mo_space_info, my_proc);
+			// Compute energy
+			forte_old_methods(ref_wfn, options, ints, mo_space_info, my_proc);
 
-        //        outfile->Printf("\n\n  Your calculation took %.8f seconds\n", total_time.get());
-    }
+			//        outfile->Printf("\n\n  Your calculation took %.8f seconds\n", total_time.get());
+		}
+	}
 
     forte_cleanup();
     return ref_wfn;

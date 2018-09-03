@@ -44,9 +44,8 @@ namespace forte {
 // using namespace ambit;
 
 Embedding::Embedding(SharedWavefunction ref_wfn, Options& options,
-                     std::shared_ptr<ForteIntegrals> ints,
                      std::shared_ptr<MOSpaceInfo> mo_space_info)
-    : Wavefunction(options), ints_(ints), mo_space_info_(mo_space_info) {
+    : Wavefunction(options), mo_space_info_(mo_space_info) {
 
     shallow_copy(ref_wfn);
     ref_wfn_ = ref_wfn;
@@ -503,6 +502,7 @@ double Embedding::compute_energy() {
     docc_sys_pi[0] = options_.get_int("SYS_DOCC");
 
 	//Swap Matrices here, build sys, env type matrix
+	SharedMatrix C_iao = Loc["IAO"]->get_block(allmo,allmo);
 	int thresh = natom_sys + 1;
 	int count_swap = 0;
 	for (int i = 0; i < nmopi_[0]; ++i) {
@@ -513,10 +513,10 @@ double Embedding::compute_energy() {
 			else {
 				outfile->Printf("Swap %d and %d \n", i, count_swap);
 				Loc["IAO"]->swap_columns(0, i, count_swap);
-				Loc["Trans"]->swap_columns(0, i, count_swap);
-				Loc["Trans"]->swap_rows(0, i, count_swap);
-				++count_swap;
+				//Loc["Trans"]->swap_columns(0, i, count_swap);
+				//Loc["Trans"]->swap_rows(0, i, count_swap);
 			}
+			++count_swap;
 		}
 	}
 
@@ -681,14 +681,11 @@ double Embedding::compute_energy() {
     // 6. Compute (cheap environment method) energy for system A, with h A-in-B
     // Known issue: JKbuilder and Mintshelper will die if the size of basis and size of matrix
     // discoherent!
-	SharedMatrix TestS = Matrix::triplet(C_origin, S_origin, C_origin, true, false, false);
-	SharedMatrix TestF = Matrix::triplet(C_origin, Fa_origin, C_origin, true, false, false);
-	TestS->print();
-	TestF->print();
     //outfile->Printf("\n ------ calculating E_sys_cheap ------ \n");
-    double E_sys_cheap = do_env(ref_wfn_, h_sys, options_);
+    double E_sys_cheap = 0.0;
     //double E_sys_ref = do_env(ref_wfn_, H_, options_);
 	if (options_.get_str("MATRIX_BASIS") == "AO") {
+		outfile->Printf("\n All output Matrix in AO basis \n");
 		H_->copy(h_sys->get_block(sys, sys)); // set H in wfn to be embedded h_sys
 		Ca_->copy(C_origin->get_block(sys, sys));
 		S_->copy(S_origin->get_block(sys, sys));
@@ -697,18 +694,23 @@ double Embedding::compute_energy() {
 	}
 	if (options_.get_str("MATRIX_BASIS") == "IAO_IBO") {
 		//rotate to IAO and get system block, index needed, not working now!
+		outfile->Printf("\n All output Matrix in IBO basis \n");
 		Ca_->copy(C_A->get_block(sys, sys));
 		S_->copy(Matrix::triplet(Loc["IAO"], S_origin, Loc["IAO"], true, false, false)->get_block(sys, sys));
 		H_->copy(Matrix::triplet(Loc["IAO"], h_sys, Loc["IAO"], true, false, false)->get_block(sys, sys));
-		Fa_->copy(Matrix::triplet(Loc["IAO"], Fab, Loc["IAO"], true, false, false)->get_block(sys, sys));
+		Fa_->copy(Matrix::triplet(Loc["IAO"], h_sys, Loc["IAO"], true, false, false)->get_block(sys, sys));
 		build_D(Ca_, docc_sys_pi, Da);
 		Da_->copy(Da->get_block(sys, sys));
-		SharedMatrix Ssee = Matrix::triplet(Loc["IAO"], S_origin, Loc["IAO"], true, false, false);
-		Ssee->print();
-		SharedMatrix Hsee = Matrix::triplet(Loc["IAO"], h_sys, Loc["IAO"], true, false, false);
-		Hsee->print();
-		SharedMatrix Fsee = Matrix::triplet(Loc["IAO"], Fab, Loc["IAO"], true, false, false);
-		Fsee->print();
+		outfile->Printf("\n Print those matrices \n");
+		S_->print();
+		H_->print();
+		Fa_->print();
+		Da_->print();
+		outfile->Printf("\n Comparison \n");
+		Da->print();
+		build_D(C_A, docc_sys_pi, Da);
+		Da->print();
+		Dab->print();
 	}
 
     // 7. Compute （expensive system method) energy for system A, with h A-in-B

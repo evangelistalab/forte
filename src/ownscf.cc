@@ -41,9 +41,9 @@ namespace forte {
 
 // using namespace ambit;
 
-OwnSCF::OwnSCF(SharedWavefunction ref_wfn, Options& options, std::shared_ptr<ForteIntegrals> ints,
+OwnSCF::OwnSCF(SharedWavefunction ref_wfn, Options& options,
                std::shared_ptr<MOSpaceInfo> mo_space_info)
-    : Wavefunction(options), ints_(ints), mo_space_info_(mo_space_info) {
+    : Wavefunction(options), mo_space_info_(mo_space_info) {
 
     shallow_copy(ref_wfn);
     ref_wfn_ = ref_wfn;
