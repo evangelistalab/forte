@@ -2,6 +2,8 @@ if (POLICY CMP0025)
   cmake_policy(SET CMP0025 NEW)
 endif ()
 
+cmake_policy(SET CMP0048 NEW)  # project_VERSION* variables populated from project(... VERSION x.x.x) string
+
 project(forte
         VERSION 0.1
         LANGUAGES CXX C)
