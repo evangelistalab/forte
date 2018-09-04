@@ -30,9 +30,9 @@ molecule water_dimer{
      H  -0.599677   0.040712   0.000000
      --
      0 1
-     O   100.350625   0.111469   0.000000
-     H   100.680398  -0.373741  -0.758561
-     H   100.680398  -0.373741   0.758561
+     O   1.350625   0.111469   0.000000
+     H   1.680398  -0.373741  -0.758561
+     H   1.680398  -0.373741   0.758561
 
      units angstrom
      no_reorient
@@ -94,7 +94,7 @@ set forte {
   dsrg_s               0.5
   cas_type             cas
   fcimo_actv_type      full
-  nrootpi              [3]
+  nrootpi              [4]
   d_convergence        10
 }
 
@@ -102,8 +102,19 @@ E_exp_sys, wfn_fin = energy('forte', ref_wfn=ref_wfn_ownscf, return_wfn=True)
 
 # ****** Calculate expensive system method ******
 # ****** Create embedded system wfn ******
+activate(water_dimer)
+set {
+  basis         sto-3g
+  scf_type      pk
+  e_convergence 10
+  d_convergence 10
+}
+
+E, ori_wfn_2 = energy('scf', return_wfn=True)
+
 set forte {
   job_type Embedding
+  rotate_mos []
   SYS_DOCC 5
   LOCALIZATION_METHOD IAO_IBO
   SYSTEM_MATRIX ALL
@@ -111,22 +122,32 @@ set forte {
   MATRIX_BASIS IAO_IBO
 }
 
-E_test, wfn_mod_iao = energy('forte', ref_wfn=ori_wfn, return_wfn=True)
+E_test, wfn_mod_iao = energy('forte', ref_wfn=ori_wfn_2, return_wfn=True)
 
 # ****** Set modified(embedded) matrices ******
-set_wfn_mod(wfn_sys, wfn_mod_iao)
+activate(water_sys)
+
+set {
+  basis         sto-3g
+  scf_type      pk
+  e_convergence 10
+  d_convergence 10
+}
+
+E_sys_ref_2, wfn_sys_2 = energy('scf', return_wfn=True)
+set_wfn_mod(wfn_sys_2, wfn_mod_iao)
 
 set forte {
   job_type             active-dsrgpt2
   frozen_docc          [0]
-  #rotate_mos           [1,1,5]
+  rotate_mos           [1,1,5]
   restricted_docc      [4]
   active               [3]
   dsrg_s               0.5
   cas_type             cas
   fcimo_actv_type      full
-  nrootpi              [3]
+  nrootpi              [4]
   d_convergence        10
 }
 
-E_exp_sys, wfn_fin = energy('forte', ref_wfn=wfn_sys, return_wfn=True)
+E_exp_sys, wfn_fin = energy('forte', ref_wfn=wfn_sys_2, return_wfn=True)
