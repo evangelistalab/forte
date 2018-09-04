@@ -40,7 +40,6 @@ namespace forte {
 namespace AMBIT_TEST {
 
 bool test_ambit();
-
 }
 }
 }

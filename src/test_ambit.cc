@@ -26,6 +26,12 @@
  * @END LICENSE
  */
 
+/*
+ * The code in is file is copied and adapted from the Ambit test code.
+ * (https://github.com/jturney/ambit/blob/master/test/test_operators.cc)
+ * Credit to the authors of Ambit.
+ */
+
 #include "psi4/psi4-dec.h"
 #include "psi4/libpsio/psio.hpp"
 #include "psi4/libpsi4util/process.h"
@@ -42,21 +48,11 @@ namespace AMBIT_TEST {
 #include <ambit/tensor.h>
 #include <cstring>
 #include <cstdlib>
-//#include <cstdio>
 #include <cmath>
-//#include <utility>
 #include <stdexcept>
 
 #define MAXTWO 10
 #define MAXFOUR 10
-
-//#define ANSI_COLOR_RED "\x1b[31m"
-//#define ANSI_COLOR_GREEN "\x1b[32m"
-//#define ANSI_COLOR_YELLOW "\x1b[33m"
-//#define ANSI_COLOR_BLUE "\x1b[34m"
-//#define ANSI_COLOR_MAGENTA "\x1b[35m"
-//#define ANSI_COLOR_CYAN "\x1b[36m"
-//#define ANSI_COLOR_RESET "\x1b[0m"
 
 double a1[MAXTWO];
 double a2[MAXTWO][MAXTWO];
@@ -724,11 +720,6 @@ double test_syev() {
 
     auto result = C.syev(DescendingEigenvalue);
 
-    //    Tensor vectors = result["eigenvectors"];
-
-    //    result["eigenvectors"].print(stdout, 1);
-    //    result["eigenvalues"].print(stdout, 1);
-
     return 0.0;
 }
 
@@ -738,13 +729,6 @@ double test_geev() {
     Tensor C = build_and_fill("C", {ni, ni}, c2);
 
     auto result = C.geev(AscendingEigenvalue);
-
-    //    Tensor vectors = result["eigenvectors"];
-
-    //    result["v"].print(stdout, 1);
-    //    result["u"].print(stdout, 1);
-    //    result["lambda"].print(stdout, 1);
-    //    result["lambda i"].print(stdout, 1);
 
     return 0.0;
 }
@@ -996,8 +980,6 @@ double test_power() {
     Tensor C = build_and_fill("C", {ni, ni}, c2);
 
     Tensor A = C.power(-0.5);
-
-    //    A.print(stdout, true);
 
     return 0;
 }
@@ -1535,8 +1517,6 @@ double test_batched_with_factor_permute() {
 
 bool test_ambit() {
     srand(time(nullptr));
-
-    //    ambit::initialize(argc, argv);
 
     auto test_functions = {
         //            Expectation,  test function,  User friendly description
