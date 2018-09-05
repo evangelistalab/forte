@@ -76,6 +76,7 @@
 #include "reference.h"
 #include "semi_canonicalize.h"
 #include "tensorsrg.h"
+#include "test_ambit.h"
 #include "v2rdm.h"
 
 #ifdef HAVE_CHEMPS2
@@ -862,6 +863,10 @@ void forte_old_methods(SharedWavefunction ref_wfn, Options& options,
         DeterminantHashVec reference = aci->get_wavefunction();
         auto mrci = std::make_shared<MRCI>(ref_wfn, options, ints, mo_space_info, reference);
         mrci->compute_energy();
+    }
+
+    if (options.get_str("JOB_TYPE") == "TEST_AMBIT") {
+        AMBIT_TEST::test_ambit();
     }
 }
 }
