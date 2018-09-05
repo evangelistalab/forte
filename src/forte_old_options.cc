@@ -207,6 +207,8 @@ void forte_old_options(Options& options) {
 
     /*- Use localized basis? -*/
     options.add_bool("LOCALIZE", false);
+    /*- Use fully localized basis? -*/
+    options.add_bool("FULLY_LOCALIZE", false);
     /*- Type of localization -*/
     options.add_str("LOCALIZE_TYPE", "PIPEK_MEZEY", "BOYS");
 

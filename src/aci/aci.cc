@@ -647,10 +647,6 @@ double AdaptiveCI::compute_energy() {
 
     // Add fuction to print Fnorm of 2mulant //
 
-    //new
-    //CI_RDMS CI_rdms(options_, dets, fci_ints, PQ_evecs, root1, root2);
-    //ci_rdms_.set_max_rdm(rdm_level_);
-
     CI_RDMS CI_rdms(options_, final_wfn_, fci_ints_, evecs_, 0, 0);
     CI_rdms.set_max_rdm(rdm_level_);
     Reference ACI_ref = CI_rdms.reference(ordm_a_, ordm_b_, trdm_aa_, trdm_ab_, trdm_bb_, trdm_aaa_,
@@ -673,6 +669,44 @@ double AdaptiveCI::compute_energy() {
     }
     //std::cout << "I get here 3" <<std::endl;
     outfile->Printf("\n  @ ||2mulant||_F^2 : %.12f",Cumu_Fnorm_sq);
+
+
+    // Add fuction to print single orbital entanglement info //
+
+    std::vector<double> oneRDM_a = (ACI_ref.L1a()).data();
+    std::vector<double> oneRDM_b = (ACI_ref.L1b()).data();
+    std::vector<double> twoRDM_ab = (ACI_ref.g2ab()).data();
+
+    std::vector<double> one_orb_ee(nact_);
+    size_t nact_2 = nact_ * nact_;
+    size_t nact_3 = nact_2 * nact_;
+    size_t nact_4 = nact_3 * nact_;
+    size_t nact_5 = nact_4 * nact_;
+    for(int i=0; i<nact_; i++){
+      //std::cout << "I GET HERE 3" << std::endl;
+      double idx1 = i*nact_ + i;
+      double idx2 = i*nact_3 + i*nact_2 + i*nact_ + i;
+
+      double val1 = (1.0 - oneRDM_a[idx1] - oneRDM_b[idx1] + twoRDM_ab[idx2]);
+      double val2 = (oneRDM_a[idx1] - twoRDM_ab[idx2]);
+      double val3 = (oneRDM_b[idx1] - twoRDM_ab[idx2]);
+      double val4 = (twoRDM_ab[idx2]);
+
+      double value = (1.0-oneRDM_a[idx1]-oneRDM_b[idx1]+twoRDM_ab[idx2])*std::log(1.0-oneRDM_a[idx1]-oneRDM_b[idx1]+twoRDM_ab[idx2])
+                   + (oneRDM_a[idx1] - twoRDM_ab[idx2])*std::log(oneRDM_a[idx1] - twoRDM_ab[idx2])
+                   + (oneRDM_b[idx1] - twoRDM_ab[idx2])*std::log(oneRDM_b[idx1] - twoRDM_ab[idx2])
+                   + (twoRDM_ab[idx2])*std::log(twoRDM_ab[idx2]);
+      value *= -1.0;
+
+      one_orb_ee[i] = value;
+    }
+
+    std::ofstream my_1oee_file;
+    my_1oee_file.open ("1oee.dat");
+    for(int i=0; i < one_orb_ee.size(); i++){
+        my_1oee_file << one_orb_ee[i] << " ";
+    }
+    my_1oee_file.close();
 
 
     // if( approx_rdm_ ){

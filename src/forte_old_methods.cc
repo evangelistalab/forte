@@ -124,6 +124,10 @@ void forte_old_methods(SharedWavefunction ref_wfn, Options& options,
         auto localize = std::make_shared<LOCALIZE>(ref_wfn, options, ints, mo_space_info);
         localize->split_localize();
     }
+    if (options.get_bool("FULLY_LOCALIZE")) {
+        auto localize = std::make_shared<LOCALIZE>(ref_wfn, options, ints, mo_space_info);
+        localize->full_localize();
+    }
 
     if (options.get_str("JOB_TYPE") == "MR-DSRG-PT2") {
         MCSRGPT2_MO mcsrgpt2_mo(ref_wfn, options, ints, mo_space_info);
