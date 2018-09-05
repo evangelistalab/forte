@@ -24,6 +24,30 @@ matrix:
       - BUILD_TYPE='Debug'
       - NAME='clang'
       - VERSION='3.6'
+      - SMALL_BITSET=true
+  - os: linux
+    compiler: clang
+    addons: &1
+      apt:
+        sources:
+        - llvm-toolchain-precise-3.6
+        - ubuntu-toolchain-r-test
+        - george-edison55-precise-backports
+        packages:
+        - liblapack-dev
+        - clang-3.6
+        - libhdf5-serial-dev
+        - gfortran
+        - g++-4.9
+    env:
+      - CXX_COMPILER='clang++-3.6'
+      - PYTHON_VER='3.6'
+      - C_COMPILER='clang-3.6'
+      - Fortran_COMPILER='gfortran'
+      - BUILD_TYPE='Debug'
+      - NAME='clang'
+      - VERSION='3.6'
+      - SMALL_BITSET=false
 # - os: linux
 #   compiler: clang
 #   addons: &2
@@ -156,7 +180,7 @@ install:
 # Compile forte
 - cd ${HOME}/build/evangelistalab/forte
 - FORTE_CMAKE_COM=$(psi4 --plugin-compile)
-- $FORTE_CMAKE_COM -Dambit_DIR=/home/travis/build/ambit-bin/share/cmake/ambit/ -DCMAKE_BUILD_TYPE=${BUILD_TYPE} -DENABLE_ForteTests=ON
+- $FORTE_CMAKE_COM -Dambit_DIR=/home/travis/build/ambit-bin/share/cmake/ambit/ -DCMAKE_BUILD_TYPE=${BUILD_TYPE} -DSMALL_BITSET=true -DENABLE_ForteTests=ON
 - make -j2
 - export PYTHONPATH="${HOME}/build/evangelistalab:$PYTHONPATH"
 - hash -r
