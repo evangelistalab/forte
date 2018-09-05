@@ -232,6 +232,8 @@ void DMRGSolver::compute_energy() {
     const int wfn_irrep = options_.get_int("ROOT_SYM");
     const int wfn_multp = options_.get_int("MULTIPLICITY");
     int* dmrg_states = options_.get_int_array("DMRG_STATES");
+    const bool reorder_orbs = options_.get_bool("REORDER_ORBS");
+    int* dmrg_custom_orb_order = options_.get_int_array("DMRG_CUSTOM_ORB_ORDER");
     const int ndmrg_states = options_["DMRG_STATES"].size();
     double* dmrg_econv = options_.get_double_array("DMRG_ECONV");
     const int ndmrg_econv = options_["DMRG_ECONV"].size();
@@ -386,6 +388,14 @@ void DMRGSolver::compute_energy() {
                            "compatible with all symmetry sectors!");
     }
     Prob->SetupReorderD2h();
+
+    // the list of ints for reordering
+    if(options_.get_bool("REORDER_ORBS")){
+        Prob->setup_reorder_custom(dmrg_custom_orb_order);
+        // for(int i=0; i<mo_space_info_->size("ACTIVE"); i++){
+        //   std::cout << "\n f2: " << Prob->gf2(i) << std::endl;
+        // }
+    }
 
     /// If one does not provide integrals when they call solver, compute them
     /// yourself

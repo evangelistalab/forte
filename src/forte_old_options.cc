@@ -207,6 +207,8 @@ void forte_old_options(Options& options) {
 
     /*- Use localized basis? -*/
     options.add_bool("LOCALIZE", false);
+    /*- Use fully localized basis? -*/
+    options.add_bool("FULLY_LOCALIZE", false);
     /*- Type of localization -*/
     options.add_str("LOCALIZE_TYPE", "PIPEK_MEZEY", "BOYS");
 
@@ -329,6 +331,10 @@ void forte_old_options(Options& options) {
     options.add_int("DMRG_WFN_IRREP", -1);
     /*- FrozenDocc for DMRG (frozen means restricted) -*/
     options.add_array("DMRG_FROZEN_DOCC");
+    /*- Use Custom Orbital Ordering for DMRG? -*/
+    options.add_bool("REORDER_ORBS", false);
+    /*- Custom Orbital Ordering for DMRG -*/
+    options.add_array("DMRG_CUSTOM_ORB_ORDER");
 
     /*- The number of reduced renormalized basis states to be
         retained during successive DMRG instructions -*/
