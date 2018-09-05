@@ -45,12 +45,6 @@ namespace psi {
 namespace forte {
 namespace AMBIT_TEST {
 
-#include <ambit/tensor.h>
-#include <cstring>
-#include <cstdlib>
-#include <cmath>
-#include <stdexcept>
-
 #define MAXTWO 10
 #define MAXFOUR 10
 
