@@ -72,11 +72,7 @@ class FCIIntegrals {
     //    Determinant determinant();
 
     /// Compute a determinant's energy
-    double energy(Determinant& det);
     double energy(const Determinant& det) const;
-
-    /// Using bit operations
-    double energy_bit(const Determinant& det) const;
 
     /// Compute the matrix element of the Hamiltonian between this determinant
     /// and a given one
