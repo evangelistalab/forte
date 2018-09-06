@@ -98,6 +98,7 @@ src/base_classes/mo_space_info.cc
 src/base_classes/orbital_transform.cc
 src/sci/aci.cc
 src/sci/aci_build_F.cc
+src/sci/tdaci.cc
 src/sci/asci.cc
 src/sci/fci_mo.cc
 src/sci/mrpt2.cc

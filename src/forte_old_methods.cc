@@ -41,6 +41,7 @@
 #include "psi4/psifiles.h"
 
 #include "base_classes/rdms.h"
+#include "sci/tdaci.h"
 #include "base_classes/scf_info.h"
 #include "base_classes/mo_space_info.h"
 #include "base_classes/state_info.h"
