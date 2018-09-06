@@ -59,7 +59,7 @@ STLBitsetString::STLBitsetString(const std::vector<bool>& occupation) {
     }
 }
 
-STLBitsetString::STLBitsetString(const std::bitset<128>& bits) { bits_ = bits; }
+STLBitsetString::STLBitsetString(const bit_t& bits) { bits_ = bits; }
 
 bool STLBitsetString::operator==(const STLBitsetString& lhs) const { return (bits_ == lhs.bits_); }
 
@@ -78,7 +78,7 @@ STLBitsetString STLBitsetString::operator^(const STLBitsetString& lhs) const {
     return ndet;
 }
 
-const std::bitset<128>& STLBitsetString::bits() const { return bits_; }
+const STLBitsetString::bit_t& STLBitsetString::bits() const { return bits_; }
 
 bool STLBitsetString::get_bit(int n) const { return bits_[n]; }
 

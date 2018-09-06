@@ -34,6 +34,7 @@
 
 #include "../integrals/integrals.h"
 #include "../fci/fci_integrals.h"
+#include "../sparse_ci/determinant.h"
 
 namespace psi {
 namespace forte {
@@ -54,7 +55,7 @@ namespace forte {
  */
 class STLBitsetString {
   public:
-    using bit_t = std::bitset<128>;
+    using bit_t = std::bitset<Determinant::num_str_bits>;
 
     // Class Constructor and Destructor
     /// Construct an empty occupation string
@@ -64,7 +65,7 @@ class STLBitsetString {
     explicit STLBitsetString(const std::vector<int>& occupation);
     explicit STLBitsetString(const std::vector<bool>& occupation);
     /// Construnct a determinant from a bitset object
-    explicit STLBitsetString(const std::bitset<128>& bits);
+    explicit STLBitsetString(const bit_t& bits);
 
     /// Equal operator
     bool operator==(const STLBitsetString& lhs) const;
@@ -77,7 +78,7 @@ class STLBitsetString {
     void set_nmo(int nmo);
 
     /// Get a pointer to the alpha bits
-    const std::bitset<128>& bits() const;
+    const bit_t& bits() const;
 
     /// Return the value of a bit
     bool get_bit(int n) const;

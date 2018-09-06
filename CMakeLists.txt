@@ -23,6 +23,7 @@ option_with_print(ENABLE_OPENMP "Enable threadsafe linking to OpenMP parallelize
 option_with_print(ENABLE_MPI "Enable MPI parallelization" OFF)
 option_with_print(ENABLE_GA "Enable Global Arrays" OFF)
 #option_with_print(ENABLE_GENERIC "Enable mostly static linking in shared library" OFF)
+option_with_print(MAX_DET_ORB "Set the maximum number of orbitals (spin adapted) in a determinant." 64)
 
 include(autocmake_omp)
 include(autocmake_mpi)  # MPI option A
@@ -173,7 +174,6 @@ target_include_directories(forte PRIVATE src/mini-boost)
 
 ## 64bit implementation
 add_definitions(-DSMALL_BITSET)
-set(SMALL_BITSET true)
 
 if(ENABLE_MPI)
     target_link_libraries(forte PRIVATE ${MPI_CXX_LIBRARIES})  # MPI option A
