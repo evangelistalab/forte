@@ -225,15 +225,15 @@ void enforce_spin_completeness(std::vector<UI64Determinant>& det_space, int nmo)
     //}
 }
 
-//template <>
-//UI64Determinant make_det<UI64Determinant, STLBitsetDeterminant>(const STLBitsetDeterminant& d) {
-//    UI64Determinant ui64_d;
-//    for (int i = 0; i < 64; ++i) {
-//        ui64_d.set_alfa_bit(i, d.get_alfa_bit(i));
-//        ui64_d.set_beta_bit(i, d.get_beta_bit(i));
-//    }
-//    return ui64_d;
-//}
+template <>
+UI64Determinant make_det<UI64Determinant, STLBitsetDeterminant>(const STLBitsetDeterminant& d) {
+    UI64Determinant ui64_d;
+    for (int i = 0; i < 64; ++i) {
+        ui64_d.set_alfa_bit(i, d.get_alfa_bit(i));
+        ui64_d.set_beta_bit(i, d.get_beta_bit(i));
+    }
+    return ui64_d;
+}
 
 template <> UI64Determinant make_det<UI64Determinant, UI64Determinant>(const UI64Determinant& d) {
     return d;
