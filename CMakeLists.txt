@@ -102,6 +102,7 @@ src/tensorsrg_full_commutator.cc
 src/tensorsrg_hermitian_commutator.cc
 src/tensorsrg_save.cc
 src/tensorsrg_srg.cc
+src/test_ambit.cc
 src/v2rdm.cc
 src/aci/aci.cc
 src/aci/aci_build_F.cc
