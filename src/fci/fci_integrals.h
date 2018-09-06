@@ -31,7 +31,6 @@
 
 #include "../integrals/integrals.h"
 #include "../sparse_ci/determinant.h"
-#include "../sparse_ci/ui64_determinant.h"
 #include "string_lists.h"
 
 namespace psi {

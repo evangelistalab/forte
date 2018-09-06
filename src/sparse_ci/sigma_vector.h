@@ -34,7 +34,7 @@
 #include "../determinant_hashvector.h"
 #include "../fci/fci_integrals.h"
 #include "../operator.h"
-#include "stl_bitset_determinant.h"
+#include "determinant.h"
 
 #ifdef HAVE_MPI
 #include <mpi.h>

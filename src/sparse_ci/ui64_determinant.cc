@@ -31,7 +31,7 @@
 #include <nmmintrin.h>
 #endif
 
-#include "stl_bitset_determinant.h"
+#include <string>
 #include "ui64_determinant.h"
 
 namespace psi {
