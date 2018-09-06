@@ -235,8 +235,8 @@ void enforce_spin_completeness(std::vector<UI64Determinant>& det_space, int nmo)
 //    return ui64_d;
 //}
 
-//template <> UI64Determinant make_det<UI64Determinant, UI64Determinant>(const UI64Determinant& d) {
-//    return d;
-//}
+template <> UI64Determinant make_det<UI64Determinant, UI64Determinant>(const UI64Determinant& d) {
+    return d;
+}
 }
 }

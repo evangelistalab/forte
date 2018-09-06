@@ -12,7 +12,6 @@ set(forte_DESCRIPTION  "Quantum Chemistry Methods for Strongly Correlated Electr
 set(forte_URL          "https://github.com/evangelistalab/forte")
 set(forte_LICENSE      "GPL-3.0+")
 set(CMAKE_CXX_STANDARD 11)
-set(MAX_DET_ORB        64)
 
 cmake_minimum_required(VERSION 3.1 FATAL_ERROR)
 list(APPEND CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/cmake)
@@ -23,6 +22,7 @@ option_with_print(ENABLE_CheMPS2 "Enable CheMPS2 solver." OFF)
 option_with_print(ENABLE_OPENMP "Enable threadsafe linking to OpenMP parallelized programs." ON)
 option_with_print(ENABLE_MPI "Enable MPI parallelization" OFF)
 option_with_print(ENABLE_GA "Enable Global Arrays" OFF)
+option_with_print(MAX_DET_ORB  "Set the maximum number of orbitals (spin adapted) in a determinant."  64)
 #option_with_print(ENABLE_GENERIC "Enable mostly static linking in shared library" OFF)
 
 include(autocmake_omp)
@@ -174,7 +174,7 @@ endif()
 target_include_directories(forte PRIVATE src/mini-boost)
 
 ## 64bit implementation
-if(${MAX_DET_ORB} LESS_EQUAL 64)
+if(MAX_DET_ORB LESS_EQUAL 64)
     add_definitions(-DSMALL_BITSET)
 else()
     add_definitions(-DMAX_DET_ORB=${MAX_DET_ORB})
