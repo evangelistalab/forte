@@ -693,14 +693,27 @@ double Embedding::compute_energy() {
 		Da_->copy(Da->get_block(sys, sys));
 	}
 	if (options_.get_str("MATRIX_BASIS") == "IAO_IBO") {
-		//rotate to IAO and get system block, index needed, not working now!
+		//rotate to IAO and get system block
 		outfile->Printf("\n All output Matrix in IBO basis \n");
 		Ca_->copy(C_A->get_block(sys, sys));
 		S_->copy(Matrix::triplet(Loc["IAO"], S_origin, Loc["IAO"], true, false, false)->get_block(sys, sys));
 		H_->copy(Matrix::triplet(Loc["IAO"], h_sys, Loc["IAO"], true, false, false)->get_block(sys, sys));
-		Fa_->copy(Matrix::triplet(Loc["IAO"], h_sys, Loc["IAO"], true, false, false)->get_block(sys, sys));
+		Fa_->copy(Matrix::triplet(Loc["IAO"], Fab, Loc["IAO"], true, false, false)->get_block(sys, sys));
+		
+		//Semi-canonicalization
+		SharedMatrix Utran(new Matrix("Utran", nirrep_, nmo_sys_pi, nmo_sys_pi));
+		SharedVector F_diag(new Vector("F_diag", nirrep_, nmo_sys_pi));
+		Fa_->diagonalize(Utran, F_diag);
+		Ca_->copy(Matrix::doublet(Ca_, Utran, false, false));
+		S_->copy(Matrix::triplet(Utran, S_, Utran, true, false, false));
+		H_->copy(Matrix::triplet(Utran, H_, Utran, true, false, false));
+		Fa_->copy(Matrix::triplet(Utran, Fa_, Utran, true, false, false));
+		outfile->Printf("\n Test semi-canonicalized F, should be diagonal \n");
+		Fa_->print();
+
 		build_D(Ca_, docc_sys_pi, Da);
 		Da_->copy(Da->get_block(sys, sys));
+
 		outfile->Printf("\n Print those matrices \n");
 		S_->print();
 		H_->print();

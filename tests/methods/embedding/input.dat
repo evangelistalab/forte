@@ -85,20 +85,11 @@ set forte {
 
 E_cheap_sys, ref_wfn_ownscf = energy('forte', ref_wfn=wfn_sys, return_wfn=True)
 
-set forte {
-  job_type             active-dsrgpt2
-  frozen_docc          [0]
-  rotate_mos           [1,1,5]
-  restricted_docc      [4]
-  active               [3]
-  dsrg_s               0.5
-  cas_type             cas
-  fcimo_actv_type      full
-  nrootpi              [4]
-  d_convergence        10
+set {
+  mp2_type conv
 }
 
-E_exp_sys, wfn_fin = energy('forte', ref_wfn=ref_wfn_ownscf, return_wfn=True)
+E_exp_sys = energy('mp2', ref_wfn=ref_wfn_ownscf)
 
 # ****** Calculate expensive system method ******
 # ****** Create embedded system wfn ******
@@ -114,7 +105,6 @@ E, ori_wfn_2 = energy('scf', return_wfn=True)
 
 set forte {
   job_type Embedding
-  rotate_mos []
   SYS_DOCC 5
   LOCALIZATION_METHOD IAO_IBO
   SYSTEM_MATRIX ALL
@@ -138,16 +128,14 @@ E_sys_ref_2, wfn_sys_2 = energy('scf', return_wfn=True)
 set_wfn_mod(wfn_sys_2, wfn_mod_iao)
 
 set forte {
-  job_type             active-dsrgpt2
-  frozen_docc          [0]
-  rotate_mos           [1,1,5]
-  restricted_docc      [4]
-  active               [3]
-  dsrg_s               0.5
-  cas_type             cas
-  fcimo_actv_type      full
-  nrootpi              [4]
-  d_convergence        10
+  job_type ownscf
+#  INTEGRAL_METHOD mints
 }
 
-E_exp_sys, wfn_fin = energy('forte', ref_wfn=wfn_sys_2, return_wfn=True)
+E_cheap_sys, wfn_ownscf_2 = energy('forte', ref_wfn=wfn_sys_2, return_wfn=True)
+
+set {
+  mp2_type conv
+}
+
+E_exp_sys = energy('mp2', ref_wfn=wfn_ownscf_2)
