@@ -24,7 +24,7 @@ matrix:
       - BUILD_TYPE='Debug'
       - NAME='clang'
       - VERSION='3.6'
-      - SMALL_BITSET=true
+      - MAX_DET_ORB=64
   - os: linux
     compiler: clang
     addons: &1
@@ -47,7 +47,7 @@ matrix:
       - BUILD_TYPE='Debug'
       - NAME='clang'
       - VERSION='3.6'
-      - SMALL_BITSET=false
+      - MAX_DET_ORB=128
 # - os: linux
 #   compiler: clang
 #   addons: &2
@@ -180,7 +180,7 @@ install:
 # Compile forte
 - cd ${HOME}/build/evangelistalab/forte
 - FORTE_CMAKE_COM=$(psi4 --plugin-compile)
-- $FORTE_CMAKE_COM -Dambit_DIR=/home/travis/build/ambit-bin/share/cmake/ambit/ -DCMAKE_BUILD_TYPE=${BUILD_TYPE} -DSMALL_BITSET=${SMALL_BITSET} -DENABLE_ForteTests=ON
+- $FORTE_CMAKE_COM -Dambit_DIR=/home/travis/build/ambit-bin/share/cmake/ambit/ -DCMAKE_BUILD_TYPE=${BUILD_TYPE} -DMAX_DET_ORB=${MAX_DET_ORB} -DENABLE_ForteTests=ON
 - make -j2
 - export PYTHONPATH="${HOME}/build/evangelistalab:$PYTHONPATH"
 - hash -r
